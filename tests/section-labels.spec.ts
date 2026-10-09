@@ -14,6 +14,8 @@ test("FR : « Interlude » écrit sous une directive intro s'affiche Interlude (
 });
 
 test("ZH : « 预备副歌/Pre-Refrain » sous une directive verse s'affiche Pré-refrain, en FR comme en 中文 (我神我王)", async ({ page }) => {
+  // 我神我王 a un scan, affiché par défaut : on lit ici ses paroles.
+  await page.addInitScript(() => localStorage.setItem("jianpu-sheet-pref", "never"));
   await page.goto("/songs/我神我王");
   await expect.poll(() => sectionLabels(page)).toEqual(["INTRO", "COUPLET", "PRÉ-REFRAIN", "REFRAIN", "PONT"]);
 

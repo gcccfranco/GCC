@@ -541,9 +541,11 @@ export function PerformanceMode({
 
   const blocks = useMemo(
     // always build with chords=true for stable UIDs (le capo et la tonalité ne
-    // changent ni le nombre ni l'ordre des blocs : les UIDs restent stables)
-    () => buildPerformanceBlocks(items, contents, true, capoActive ? capos : undefined, jianpuManifest, jianpuPref, personalKeys),
-    [items, contents, capoActive, capos, jianpuManifest, jianpuPref, personalKeys],
+    // changent ni le nombre ni l'ordre des blocs : les UIDs restent stables).
+    // Vue structure (batteur) : la structure en grand, jamais le scan (D13) —
+    // sinon le 简谱 affiché par défaut la remplacerait.
+    () => buildPerformanceBlocks(items, contents, true, capoActive ? capos : undefined, jianpuManifest, structureMode ? "never" : jianpuPref, personalKeys),
+    [items, contents, capoActive, capos, jianpuManifest, jianpuPref, structureMode, personalKeys],
   );
 
   // Vue structure : passages consécutifs identiques repliés sur le premier

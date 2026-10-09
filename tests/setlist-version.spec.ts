@@ -66,6 +66,10 @@ async function capture(page: Page, name: string) {
   if (dir) await page.screenshot({ path: `${dir}/${name}-${test.info().project.name}.png` });
 }
 
+/** 一生爱你 a un scan, affiché par défaut : les tests du chant chinois lisent
+ *  ses paroles (préférence de l'appareil réglée sur Paroles). */
+const enParoles = (page: Page) => page.addInitScript(() => localStorage.setItem("jianpu-sheet-pref", "never"));
+
 async function openPartitions(page: Page, extraDocs: Record<string, Record<string, unknown>> = {}, who: FakeProfile = MUSICIEN) {
   await page.route(/docs\.google\.com\/spreadsheets/, (route) =>
     route.fulfill({ status: 200, contentType: "text/csv", body: "" }),
@@ -152,6 +156,7 @@ test("un responsable en mode « Adapter » voit la version de la présidence, pa
 });
 
 test("chant chinois : ma version garde les caractères et le pinyin des autres lignes", async ({ page }) => {
+  await enParoles(page);
   const db = await openPartitions(page);
   await page.getByRole("button", { name: "Ma version" }).click();
   await deleteLine(page, "宝");
@@ -267,6 +272,7 @@ test("mode louange : ma structure, sans les notes d'occurrence de la présidence
 });
 
 test("chant chinois : ma structure ne garde que le refrain, avec son pinyin", async ({ page }) => {
+  await enParoles(page);
   await openPartitions(page, {
     [VERSION_DOC]: myDoc({ "一生爱你": { content: null, structure: ["chorus-3"], shared: false } }),
   });
@@ -379,6 +385,7 @@ test("choisir « Présidence » alors que j'ai ma version, sans la perdre", asyn
 });
 
 test("chant chinois : la version partagée de Ruth, avec son pinyin", async ({ page }) => {
+  await enParoles(page);
   await openPartitions(page, {
     [VERSION_DOC]: myDoc({ "一生爱你": { content: MY_ZH, structure: null, shared: true } }),
   }, CHRISTELLE);

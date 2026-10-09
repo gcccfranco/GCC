@@ -58,12 +58,14 @@ export async function openSheet(
   if (opts.dark) {
     await page.addInitScript(() => localStorage.setItem("theme", "dark"));
   }
+  // Le scan s'affiche par défaut (lot 1 du chantier 简谱) : la préférence
+  // « allumé », posée sans clic, garde la page sur le scan quel que soit le
+  // défaut — un clic sur « 简谱 » l'éteindrait.
+  await page.addInitScript(() => localStorage.setItem("jianpu-sheet-pref", "always"));
   // La page lit ses paramètres en JSON (`safeParseParam`) : `?key=F` est
   // ignoré silencieusement et la partition reste en tonalité d'origine.
   const query = opts.key ? `?key=${encodeURIComponent(JSON.stringify(opts.key))}` : "";
   await page.goto(`/songs/${encodeURIComponent(slug)}${query}`, { waitUntil: "domcontentloaded" });
-
-  await page.getByRole("button", { name: /简谱/ }).click();
 
   const pages = page.locator("[data-jianpu-page]");
   await pages.first().waitFor();

@@ -89,6 +89,11 @@ async function visibleSections(page: Page) {
   return boxes;
 }
 
+/** Un chant à scan (一生爱你) s'ouvre sur son scan, partout : les tests qui
+ *  lisent ses paroles le demandent en paroles (préférence de l'appareil). */
+const enParoles = ({ page }: { page: Page }) =>
+  page.addInitScript(() => localStorage.setItem("jianpu-sheet-pref", "never"));
+
 test.describe("vue structure (batteur)", () => {
   const MF = { tags: ["mf"] };
   const STRUCTURE = ["verse-2-0", "chorus-3-1", "chorus-3-2"];
@@ -204,6 +209,7 @@ test.describe("choix du rôle à la première ouverture", () => {
 });
 
 test.describe("reprise des réglages", () => {
+  test.beforeEach(enParoles);
   const ZH = [item({ songSlug: "一生爱你", position: 1, structureOverride: ["verse-2-0"] })];
   const FR = [item({ songSlug: "abba-pere", position: 1, structureOverride: ["verse-2-0"] })];
   /** Pinyin de 亲 (première syllabe du couplet), sur la page affichée. */
@@ -278,6 +284,7 @@ test.describe("reprise des réglages", () => {
 });
 
 test.describe("tonalité choisie sur la page du chant", () => {
+  test.beforeEach(enParoles);
   const CASES = [
     { slug: "abba-pere", title: "Abba Père", setlistKey: "A", chosen: "B", before: "F#m", after: "G#m" },
     { slug: "一生爱你", title: "一生爱你", setlistKey: "E", chosen: "F", before: "C#m", after: "Dm" },
@@ -339,6 +346,7 @@ test("tonalité choisie : une modulation suit le même écart (FR)", async ({ pa
 });
 
 test.describe("polices du chinois (ZH)", () => {
+  test.beforeEach(enParoles);
   /** Police déclarée pour la première syllabe « qīn » et le caractère « 亲 ». */
   const fonts = (page: Page, scope: string) =>
     page.evaluate((sel) => {
@@ -362,6 +370,7 @@ test.describe("polices du chinois (ZH)", () => {
 });
 
 test.describe("taille par défaut des paroles et accords", () => {
+  test.beforeEach(enParoles);
   /** Taille des lignes de paroles FR et ZH, et rapport pinyin / taille de base, sur la page du chant. */
   const sizes = (page: Page) =>
     page.evaluate(() => {
@@ -392,6 +401,7 @@ test.describe("taille par défaut des paroles et accords", () => {
 });
 
 test.describe("nuancier", () => {
+  test.beforeEach(enParoles);
   test.use({ viewport: { width: 1280, height: 1600 } });
   const NUANCES = {
     "verse-2-0": { tags: ["p"] },

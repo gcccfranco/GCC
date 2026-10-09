@@ -399,7 +399,6 @@ test("page du chant ouverte depuis la setlist : les accords retouchés sur le sc
   ]));
   await page.getByRole("link", { name: "到各山岭去传扬" }).click();
   await page.waitForURL(/\/songs\//);
-  await page.getByRole("button", { name: /简谱/ }).click();
   await page.locator("[data-jianpu-page] img").first().waitFor();
   // Gravure intacte (même tonalité) : seule l'étiquette retouchée se dessine.
   await expect(page.locator("[data-jianpu-label]")).toHaveText(["Em"]);
