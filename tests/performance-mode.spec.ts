@@ -66,8 +66,10 @@ async function quitter(page: Page) {
 /** Badges de la page affichée — hors copie invisible qui sert à mesurer les hauteurs. */
 // Dans le mode louange : en deux volets, les partitions restent montées dessous
 // (docs/spec-deux-volets.md, T4) et portent les mêmes badges.
+// Badges du corps : le bandeau de structure en tête du chant porte aussi les
+// nuances, en texte (lot 2 du chantier 简谱, D12).
 const nuance = (page: Page, text: string | RegExp) =>
-  page.locator("[data-performance-mode] [data-nuance]:not([aria-hidden=true] *)", { hasText: text });
+  page.locator("[data-performance-mode] [data-section] [data-nuance]:not([aria-hidden=true] *)", { hasText: text });
 
 const bg = (l: Locator) => l.evaluate((el) => getComputedStyle(el).backgroundColor);
 const fg = (l: Locator) => l.evaluate((el) => getComputedStyle(el).color);

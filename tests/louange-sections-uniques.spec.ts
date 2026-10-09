@@ -197,7 +197,12 @@ async function reglages(page: Page) {
 /** Quitte le mode louange en rendant la page setlist où elle était (voir performance-mode.spec.ts). */
 async function quitter(page: Page) {
   const y = await page.evaluate(() => window.scrollY);
-  for (let i = 0; i < 2 && (await page.getByRole("dialog").count()) > 0; i++) await page.keyboard.press("Escape");
+  // Un seul Échap pour la feuille : un second, pendant qu'elle se referme,
+  // quitterait le mode louange.
+  if (await page.getByRole("dialog").isVisible()) {
+    await page.keyboard.press("Escape");
+    await expect(page.getByRole("dialog")).toHaveCount(0);
+  }
   await montrerChrome(page);
   await page.getByRole("button", { name: "Quitter" }).click();
   await page.evaluate((to) => window.scrollTo(0, to), y);
@@ -276,3 +281,66 @@ test.describe("Réglages : Rôle et Affichage", () => {
     expect(await page.evaluate(() => localStorage.getItem("perf-hide-lyrics"))).toBe("0");
   });
 });
+
+// ─── Bandeau en tête du chant (L2-T3) ────────────────────────────────────────
+
+/** Bandeau de structure de l'en-tête de chant affiché. */
+const bandeauEntete = (page: Page) => onStage(page, "[data-entete-chant]").getByRole("list", { name: "Structure" });
+const totalPages = async (page: Page) => Number((await compteur(page).innerText()).split("/")[1]);
+
+/** Compte `selector` sur chaque page affichée, de la première à la dernière. */
+async function surToutesLesPages(page: Page, selector: string): Promise<number> {
+  const total = await totalPages(page);
+  let n = 0;
+  for (let p = 1; p <= total; p++) {
+    await expect(compteur(page)).toHaveText(`${p} / ${total}`);
+    n += await onStage(page, selector).count();
+    await page.keyboard.press("ArrowRight");
+  }
+  return n;
+}
+
+test.describe("bandeau de pastilles en tête du chant", () => {
+  test("Ordre joué : huit étapes sans détails, la note reste sur sa section (FR)", async ({ page }) => {
+    await ouvrirMode(page, [ABBA]);
+    await expect(bandeauEntete(page).getByRole("listitem")).toHaveCount(8);
+    await expect(bandeauEntete(page).getByRole("listitem")).toHaveText(["I", "C1", "R", "Pm", "C2", "R", "P", "R×2"]);
+    await expect(onStage(page, "[data-entete-chant]").getByText("Piano seul, voix douces")).toHaveCount(0);
+    expect(await surToutesLesPages(page, "[data-section]"), "neuf passages joués").toBe(9);
+  });
+
+  test("Sections uniques : notes et transitions numérotées sous le bandeau, chaque section une fois (FR)", async ({ page }) => {
+    await ouvrirMode(page, [ABBA], { affichage: "unique" });
+    const entete = onStage(page, "[data-entete-chant]");
+    await expect(entete.getByText("→ Montée de la batterie")).toBeVisible();
+    await expect(entete.getByText("Piano seul, voix douces")).toBeVisible();
+    expect(await surToutesLesPages(page, "[data-section]"), "six sections, une fois chacune").toBe(6);
+  });
+
+  test("pastilles du mode louange : 32 px sur téléphone, 44 px à partir de la tablette (FR)", async ({ page }) => {
+    await ouvrirMode(page, [ABBA]);
+    const pastille = bandeauEntete(page).locator("li > span").first();
+    await expect(pastille).toBeVisible();
+    const attendu = page.viewportSize()!.width < 640 ? 32 : 44;
+    // Hauteur de mise en page : le mode louange agrandit le texte par transform.
+    expect(await pastille.evaluate((el) => (el as HTMLElement).offsetHeight)).toBe(attendu);
+  });
+
+  test("chant sur scan : Sections uniques garde le scan et le bandeau détaillé ; Structure seule l'efface (ZH)", async ({ page }) => {
+    const zh = item({ songSlug: "一生爱你", position: 2, jianpuSheet: true, sectionNotes: { "chorus-3": "Ralentir la dernière ligne" } });
+    await ouvrirMode(page, [zh], { affichage: "unique" });
+    await expect(onStage(page, "[data-jianpu-page]").first()).toBeVisible();
+    const bandeauScan = onStage(page, "ol[aria-label=Structure]");
+    await expect(bandeauScan).toHaveCount(1);
+    await expect(onStage(page, "li").filter({ hasText: "Ralentir la dernière ligne" })).toBeVisible();
+
+    const feuille = await reglages(page);
+    await feuille.getByRole("radiogroup", { name: "Affichage" }).getByRole("radio", { name: "Structure seule" }).click();
+    await page.keyboard.press("Escape");
+    await expect(onStage(page, "[data-section]").first()).toBeVisible();
+    await expect(onStage(page, "[data-jianpu-page]")).toHaveCount(0);
+    await expect(onStage(page, "h2").first()).toHaveText("一生爱你");
+    await expect(bandeauEntete(page)).toHaveCount(0);
+  });
+});
+

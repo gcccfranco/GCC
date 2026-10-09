@@ -277,6 +277,17 @@ function grandEcranTests(nom: string) {
     expect(await boites()).toEqual(avant);
   });
 
+  // Structure seule vient aussi d'« Affichage » (lot 2 du chantier 简谱, D15) :
+  // même vue structure, sans rôle, toujours sans interrupteur.
+  test(`${nom} : Affichage › Structure seule, vue structure sans interrupteur (FR)`, async ({ page }) => {
+    test.skip(!(await grandEcran(page)), "deux colonnes : tablette paysage et ordinateur seulement");
+    await page.addInitScript(() => localStorage.setItem("partition-layout", "structure"));
+    await ouvrirMode(page, [item({ songSlug: "abba-pere", position: 1 })]);
+    await expect(onStage(page, "[data-section]").first()).toBeVisible();
+    await expect(onStage(page, "[data-copy-line]")).toHaveCount(0);
+    await expect(interrupteur(page)).toHaveCount(0);
+  });
+
   test(`${nom} : un trait posé en une colonne ne se charge pas en deux colonnes et revient en une (FR)`, async ({ page }) => {
     test.skip(!(await grandEcran(page)), "deux colonnes : tablette paysage et ordinateur seulement");
     const lues: string[] = [];

@@ -18,8 +18,7 @@ import { GRAND_ECRAN, pagesUneColonne, paginateColumns, twoColumnsPossible, type
 import { useJianpuManifest } from "@/lib/jianpu/images";
 import { getJianpuPref, setJianpuPref, type JianpuPref } from "@/lib/jianpu/preference";
 import { JianpuSheet } from "@/components/jianpu/JianpuSheet";
-import { JianpuStructureStrip } from "@/components/jianpu/JianpuStructureStrip";
-import { SectionView, TransitionNote } from "@/components/song/SongView";
+import { SectionView, StructureStrip, TransitionNote } from "@/components/song/SongView";
 import { pinyin_font } from "@/components/song/pinyinFont";
 import { formatSectionName } from "@/lib/chordpro/parser";
 import { isRepeatOf } from "@/lib/setlist/sectionSteps";
@@ -71,6 +70,7 @@ function BlockRenderer({
   showPinyinGlobal,
   fit = false,
   repeat,
+  bandeau = "simple",
 }: {
   block: PerformanceBlock;
   showChordsGlobal: boolean;
@@ -82,9 +82,11 @@ function BlockRenderer({
   fit?: boolean;
   /** Vue structure : nombre de passages repliés sur cette section (« ×2 »). */
   repeat?: number;
+  /** Bandeau de structure de l'en-tête de chant (D11, D12). */
+  bandeau?: Bandeau;
 }) {
   if (block.kind === "song-header") {
-    return <SongHeader block={block} />;
+    return <SongHeader block={block} bandeau={bandeau} />;
   }
   if (block.kind === "transition-intra") {
     if (!showTransitions) return null;
@@ -130,66 +132,81 @@ function BlockRenderer({
 const langAccent = (language?: "fr" | "zh") =>
   language === "zh" ? "var(--jianpu-color, #b91c1c)" : "var(--chord-color, #2563eb)";
 
-function SongHeader({ block }: { block: SongHeaderBlock }) {
+/** Bandeau de pastilles en tête de chant : sans détails en Ordre joué (D12),
+ *  avec notes et transitions en Sections uniques (D11), aucun en Structure
+ *  seule (la structure est déjà en grand). */
+type Bandeau = "aucun" | "simple" | "details";
+
+function SongHeader({ block, bandeau }: { block: SongHeaderBlock; bandeau: Bandeau }) {
   const { t } = useTranslation();
+  // Mesuré avec l'en-tête : en deux colonnes, il reste en pleine largeur au-dessus.
+  const strip = bandeau !== "aucun" && block.steps?.length ? (
+    <StructureStrip steps={block.steps} details={bandeau === "details"} className="mt-3" />
+  ) : null;
   if (block.fusionSongs?.length) {
     return (
-      <div className="flex items-start gap-2 mb-3 pb-3 border-b border-border">
-        <span className="w-5 h-5 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">
-          {block.position}
-        </span>
-        <Link2 className="h-3.5 w-3.5 text-foreground shrink-0 mt-1" />
-        <div className="flex flex-wrap gap-x-3 gap-y-0.5 min-w-0">
-          {block.fusionSongs.map((s, i) => (
-            <span
-              key={i}
-              className="text-[17px] font-bold text-foreground leading-tight uppercase tracking-tight"
-            >
-              {s.title}
+      <div data-entete-chant className="mb-3 pb-3 border-b border-border">
+        <div className="flex items-start gap-2">
+          <span className="w-5 h-5 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">
+            {block.position}
+          </span>
+          <Link2 className="h-3.5 w-3.5 text-foreground shrink-0 mt-1" />
+          <div className="flex flex-wrap gap-x-3 gap-y-0.5 min-w-0">
+            {block.fusionSongs.map((s, i) => (
               <span
-                className="ml-1.5 font-mono text-xs font-normal normal-case"
-                style={{ color: langAccent(s.language) }}
+                key={i}
+                className="text-[17px] font-bold text-foreground leading-tight uppercase tracking-tight"
               >
-                {s.key}
+                {s.title}
+                <span
+                  className="ml-1.5 font-mono text-xs font-normal normal-case"
+                  style={{ color: langAccent(s.language) }}
+                >
+                  {s.key}
+                </span>
               </span>
-            </span>
-          ))}
+            ))}
+          </div>
         </div>
+        {strip}
       </div>
     );
   }
   return (
-    <div className="flex items-start justify-between gap-4 mb-3 pb-3 border-b border-border">
-      <div className="min-w-0">
-        <div className="flex items-center gap-2">
-          <span className="w-5 h-5 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center shrink-0">
-            {block.position}
-          </span>
-          <h2 className="text-[22px] font-bold text-foreground leading-tight uppercase tracking-tight truncate">
-            {block.title}
-          </h2>
+    <div data-entete-chant className="mb-3 pb-3 border-b border-border">
+      <div className="flex items-start justify-between gap-4">
+        <div className="min-w-0">
+          <div className="flex items-center gap-2">
+            <span className="w-5 h-5 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center shrink-0">
+              {block.position}
+            </span>
+            <h2 className="text-[22px] font-bold text-foreground leading-tight uppercase tracking-tight truncate">
+              {block.title}
+            </h2>
+          </div>
+          {block.titlePinyin && (
+            <p className={`text-xs text-muted-foreground mt-0.5 ml-7 ${pinyin_font.className}`}>{block.titlePinyin}</p>
+          )}
+          <p className="text-xs text-muted-foreground mt-0.5 ml-7">{block.artist}</p>
         </div>
-        {block.titlePinyin && (
-          <p className={`text-xs text-muted-foreground mt-0.5 ml-7 ${pinyin_font.className}`}>{block.titlePinyin}</p>
-        )}
-        <p className="text-xs text-muted-foreground mt-0.5 ml-7">{block.artist}</p>
-      </div>
-      <div className="flex items-center gap-1.5 shrink-0 mt-1">
-        {block.capo ? (
-          <span className="text-xs font-bold font-mono border-2 border-border rounded-full px-2.5 py-0.5 text-muted-foreground">
-            {t("performance.capoBadge", { n: block.capo })}
+        <div className="flex items-center gap-1.5 shrink-0 mt-1">
+          {block.capo ? (
+            <span className="text-xs font-bold font-mono border-2 border-border rounded-full px-2.5 py-0.5 text-muted-foreground">
+              {t("performance.capoBadge", { n: block.capo })}
+            </span>
+          ) : null}
+          <span className="text-sm font-bold font-mono border-2 rounded-full px-2.5 py-0.5"
+            style={{ color: langAccent(block.language), borderColor: langAccent(block.language) }}>
+            {block.songKey}
           </span>
-        ) : null}
-        <span className="text-sm font-bold font-mono border-2 rounded-full px-2.5 py-0.5"
-          style={{ color: langAccent(block.language), borderColor: langAccent(block.language) }}>
-          {block.songKey}
-        </span>
-        {block.setlistKey && (
-          <span className="text-xs font-semibold text-muted-foreground">
-            {t("performance.personalKey", { key: block.setlistKey })}
-          </span>
-        )}
+          {block.setlistKey && (
+            <span className="text-xs font-semibold text-muted-foreground">
+              {t("performance.personalKey", { key: block.setlistKey })}
+            </span>
+          )}
+        </div>
       </div>
+      {strip}
     </div>
   );
 }
@@ -502,6 +519,7 @@ export function PerformanceMode({
   // adaptatives, texte réduit au besoin pour tout faire tenir.
   const structureMode = affichage === "structure" || (hideLyrics && !showChords);
   const affichageVu: PartitionLayout = structureMode ? "structure" : affichage;
+  const bandeau: Bandeau = affichageVu === "structure" ? "aucun" : affichageVu === "unique" ? "details" : "simple";
   // En vue ossature, ni paroles ni accords, quel que soit le chemin.
   const lyricsHidden = hideLyrics || structureMode;
   const chordsShown = showChords && !structureMode;
@@ -1019,6 +1037,7 @@ export function PerformanceMode({
                   chartStyle={chartStyle}
                   showPinyinGlobal={showPinyin}
                   repeat={repeatCount.get(i)}
+                  bandeau={bandeau}
                 />
               )}
             </div>
@@ -1097,6 +1116,7 @@ export function PerformanceMode({
                 showPinyinGlobal={showPinyin}
                 fit={fit}
                 repeat={repeatCount.get(i)}
+                bandeau={bandeau}
               />
             );
           };
@@ -1106,17 +1126,20 @@ export function PerformanceMode({
           // déjà imprimé sur le scan, et les 200 px qu'il coûtait devenaient
           // des marges blanches sur les côtés (la page est contrainte par sa
           // hauteur). Le bandeau reprend ce que le scan ne peut pas savoir :
-          // l'ordre des sections voulu pour ce dimanche.
+          // l'ordre des sections voulu pour ce dimanche. Les pastilles du site
+          // (D14), avec notes et transitions sur chaque page de scan : le scan
+          // ne peut pas les porter (O8).
           if (page.fit) {
             const sheet = blocks[page.cols[0][0]];
             return (
               <div className="flex h-full flex-col">
                 {sheet?.kind === "jianpu-sheet" && (
                   <div className="shrink-0">
-                    <JianpuStructureStrip
+                    <StructureStrip
                       position={sheet.position}
                       steps={sheet.steps}
                       capo={sheet.capo}
+                      details
                       className="mb-1.5"
                     >
                       {sheet.setlistKey && (
@@ -1124,7 +1147,7 @@ export function PerformanceMode({
                           {sheet.songKey} · {t("performance.personalKey", { key: sheet.setlistKey })}
                         </span>
                       )}
-                    </JianpuStructureStrip>
+                    </StructureStrip>
                   </div>
                 )}
                 <div className="min-h-0 flex-1">{renderBlock(page.cols[0][0], true)}</div>
