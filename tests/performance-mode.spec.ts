@@ -1,5 +1,6 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
+import { onStage } from "./helpers/louange";
 
 // Chantier Mode louange (docs/spec-mode-louange.md). Setlist et compte
 // simulés : aucune lecture ni écriture du Firestore de production.
@@ -44,11 +45,6 @@ async function openPerformance(page: Page, items: Record<string, unknown>[], rol
   await page.getByRole("button", { name: /Mode Louange/ }).click();
   await expect(page.getByText("Mise en page…")).toHaveCount(0);
 }
-
-/** Page affichée du mode louange : sans la page setlist restée dessous, ni la
- *  copie invisible qui sert à mesurer les hauteurs. */
-const onStage = (page: Page, selector: string) =>
-  page.locator(`[data-performance-mode] ${selector}:not([aria-hidden=true] *)`);
 
 /** Quitte le mode louange. Avant chaque clic, Playwright fait défiler sa cible
  *  « dans l'écran » ; pendant la transition du plein écran, ce défilement déplace

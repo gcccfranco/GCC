@@ -476,11 +476,7 @@
     "pinyin": "拼音",
     "chartStyle": "段落配色",
     "jianpuSheet": "简谱",
-    "jianpuPref": {
-      "auto": "按负责人设置",
-      "always": "总是使用",
-      "never": "不使用"
-    },
+    "jianpuSheetHint": "默认开启，保存在本设备上。负责人标为「歌词」的歌曲会显示歌词，除非你已自己选择简谱或歌词（在这里或在歌曲页面）。",
     "annotations": "批注",
     "text": "文字",
     "textSmaller": "缩小文字",

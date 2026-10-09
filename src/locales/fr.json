@@ -476,11 +476,7 @@
     "pinyin": "Pinyin",
     "chartStyle": "Couleurs par section",
     "jianpuSheet": "Partition 简谱",
-    "jianpuPref": {
-      "auto": "Choix du responsable",
-      "always": "Toujours",
-      "never": "Jamais"
-    },
+    "jianpuSheetHint": "Allumé par défaut, retenu sur cet appareil. Un chant marqué « Paroles » par le responsable reste en paroles tant que tu n'as pas choisi toi-même entre 简谱 et Paroles (ici ou sur la page d'un chant).",
     "annotations": "Annotations",
     "text": "Texte",
     "textSmaller": "Réduire le texte",

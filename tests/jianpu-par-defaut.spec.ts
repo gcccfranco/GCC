@@ -1,4 +1,11 @@
+import { readFileSync } from "node:fs";
+import vm from "node:vm";
 import { expect, test, type Page } from "@playwright/test";
+import { signInAs, type FakeProfile } from "./helpers/fakeSession";
+import { onStage } from "./helpers/louange";
+import { parseChordPro } from "../src/lib/chordpro/parser";
+import { SetlistFullPDF } from "../src/components/pdf/SetlistFullPDF";
+import { JianpuPDFPage, SongPDFPage } from "../src/components/pdf/SongPDF";
 import {
   interrupteurAllume,
   prefDepuisInterrupteur,
@@ -107,4 +114,218 @@ test.describe("page chant", () => {
     const hautDeLaBarre = await barre.evaluate((el) => el.getBoundingClientRect().top);
     expect(basDeLaFeuille).toBeLessThanOrEqual(hautDeLaBarre);
   });
+});
+
+// ─── Setlist, mode louange, PDF ───────────────────────────────────────────────
+
+const MUSICIEN: FakeProfile = {
+  uid: "uid-musicien",
+  email: "musicien@example.com",
+  firstName: "Léa",
+  lastName: "Martin",
+  planningName: "Léa M.",
+  serviceRoles: { "Culte Francophone": ["musicien"] },
+};
+
+const SETLIST_ID = "setlist-jianpu-defaut";
+
+const item = (over: Record<string, unknown>) => ({
+  keyOverride: null,
+  showChords: true,
+  showPinyin: true,
+  useJianpu: false,
+  structureOverride: null,
+  sectionNotes: {},
+  notes: "",
+  ...over,
+});
+
+const setlist = (items: Record<string, unknown>[]) => ({
+  title: "Culte du 11 octobre",
+  leader: "Noé T.",
+  category: "Culte Francophone",
+  date: "2026-10-11",
+  language: "mixed",
+  notes: "",
+  ownerId: "uid-owner",
+  isPrivate: false,
+  items,
+});
+
+/** Trois chants à scan : choix du responsable absent, « 简谱 », « Paroles ». */
+const TROIS = [
+  item({ songSlug: "一生爱你", position: 1 }),
+  item({ songSlug: "为我而来", position: 2, jianpuSheet: true }),
+  item({ songSlug: "我神我王", position: 3, jianpuSheet: false }),
+];
+
+async function ouvrirPartitions(page: Page, items: Record<string, unknown>[], pref?: string) {
+  if (pref) await page.addInitScript(([k, v]) => localStorage.setItem(k, v), [PREF, pref]);
+  await page.route(/docs\.google\.com\/spreadsheets/, (route) =>
+    route.fulfill({ status: 200, contentType: "text/csv", body: "" }),
+  );
+  const db = await signInAs(page, MUSICIEN, { [`setlists/${SETLIST_ID}`]: setlist(items) }, `/setlists/${SETLIST_ID}`);
+  await page.getByRole("button", { name: "Partitions" }).click();
+  return db;
+}
+
+/** Ce que montre maintenant l'item n° `position` de la vue Partitions. */
+async function etat(page: Page, position: number): Promise<"scan" | "paroles" | "vide"> {
+  const bloc = page.locator(`[data-outline-item="${position}"]`);
+  if ((await bloc.locator("[data-jianpu-page]").count()) > 0) return "scan";
+  return (await bloc.locator("[data-copy-line]").count()) > 0 ? "paroles" : "vide";
+}
+
+/** Rendu des items donnés, attendu tel quel : le manifeste des scans arrive
+ *  après les paroles, la bascule se fait donc en cours de route. */
+const rendus = (page: Page, positions: number[]) =>
+  expect.poll(() => Promise.all(positions.map((n) => etat(page, n))), { timeout: 20_000 });
+
+const menu = async (page: Page) => {
+  await page.getByRole("button", { name: "Plus d'actions" }).click();
+  return page.getByRole("menu");
+};
+
+test.describe("setlist, vue Partitions", () => {
+  test("préférence non réglée : le scan, sauf « Paroles » du responsable", async ({ page }) => {
+    await ouvrirPartitions(page, TROIS);
+    await rendus(page, [1, 2, 3]).toEqual(["scan", "scan", "paroles"]);
+  });
+
+  test("préférence réglée sur 简谱 : le choix de la personne prime (D4)", async ({ page }) => {
+    await ouvrirPartitions(page, TROIS, "always");
+    await rendus(page, [1, 2, 3]).toEqual(["scan", "scan", "scan"]);
+  });
+
+  test("préférence réglée sur Paroles : jamais le scan", async ({ page }) => {
+    await ouvrirPartitions(page, TROIS, "never");
+    await rendus(page, [1, 2, 3]).toEqual(["paroles", "paroles", "paroles"]);
+  });
+
+  test("menu : « Partition 简谱 » est un interrupteur coché, plus de choix à trois", async ({ page }) => {
+    await ouvrirPartitions(page, TROIS);
+    await rendus(page, [1]).toEqual(["scan"]);
+    const m = await menu(page);
+    const interrupteur = m.getByRole("menuitemcheckbox", { name: "Partition 简谱" });
+    await expect(interrupteur).toHaveAttribute("aria-checked", "true");
+    for (const ancien of ["Choix du responsable", "Toujours", "Jamais"]) {
+      await expect(m.getByRole("menuitemradio", { name: ancien })).toHaveCount(0);
+    }
+    await expect(m.getByText(/reste en paroles tant que tu n'as pas choisi toi-même/)).toBeVisible();
+
+    await interrupteur.click();
+    await expect(interrupteur).toHaveAttribute("aria-checked", "false");
+    expect(await lirePref(page)).toBe("never");
+    await page.keyboard.press("Escape");
+    await rendus(page, [1, 2]).toEqual(["paroles", "paroles"]);
+  });
+
+  for (const [stocke, coche] of [["auto", true], ["always", true], ["never", false]] as const) {
+    test(`reprise : « ${stocke} » déjà stocké → interrupteur ${coche ? "coché" : "décoché"}`, async ({ page }) => {
+      await ouvrirPartitions(page, TROIS, stocke);
+      // L'ancien « Choix du responsable » suit encore le « Paroles » de l'item (O2).
+      await rendus(page, [1, 3]).toEqual(stocke === "never" ? ["paroles", "paroles"] : stocke === "auto" ? ["scan", "paroles"] : ["scan", "scan"]);
+      const m = await menu(page);
+      await expect(m.getByRole("menuitemcheckbox", { name: "Partition 简谱" })).toHaveAttribute(
+        "aria-checked",
+        String(coche),
+      );
+      expect(await lirePref(page), "rien n'est réécrit au chargement").toBe(stocke);
+    });
+  }
+});
+
+test("mode louange : le scan par défaut ; l'interrupteur des Réglages est celui de la setlist", async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem("perf-role-preset", "pianiste"));
+  await ouvrirPartitions(page, [item({ songSlug: "一生爱你", position: 1 })]);
+  await page.getByRole("button", { name: /Mode Louange/ }).click();
+  await expect(page.getByText("Mise en page…")).toHaveCount(0);
+  await expect(onStage(page, "[data-jianpu-page]").first()).toBeVisible();
+
+  await page.getByRole("button", { name: "Réglages" }).click();
+  const reglages = page.getByRole("dialog", { name: "Réglages" });
+  const interrupteur = reglages.getByRole("switch", { name: "Partition 简谱" });
+  await expect(interrupteur).toBeChecked();
+  await interrupteur.click();
+  await expect(interrupteur).not.toBeChecked();
+  expect(await lirePref(page)).toBe("never");
+  await page.keyboard.press("Escape");
+  await expect(onStage(page, "[data-section]").first()).toBeVisible();
+  await expect(onStage(page, "[data-jianpu-page]")).toHaveCount(0);
+
+  // En sortant, le menu de la setlist est déjà à jour (un seul état), sans recharger.
+  const y = await page.evaluate(() => window.scrollY);
+  const quitter = page.getByRole("button", { name: "Quitter" });
+  // La barre s'escamote après 3 s : un toucher au centre la rappelle.
+  if (!(await quitter.isVisible())) {
+    const ecran = page.viewportSize()!;
+    await page.mouse.click(ecran.width / 2, ecran.height / 2);
+  }
+  await quitter.click();
+  await page.evaluate((to) => window.scrollTo(0, to), y);
+  const m = await menu(page);
+  await expect(m.getByRole("menuitemcheckbox", { name: "Partition 简谱" })).toHaveAttribute("aria-checked", "false");
+});
+
+test("PDF de setlist : le scan pour l'item sans choix, les paroles pour « Paroles »", () => {
+  const source = readFileSync("content/songs/一生爱你.cho", "utf8");
+  const doc = SetlistFullPDF({
+    setlist: setlist([
+      item({ songSlug: "一生爱你", position: 1 }),
+      item({ songSlug: "一生爱你", position: 2, jianpuSheet: false }),
+    ]) as never,
+    contents: { "一生爱你": { slug: "一生爱你", ast: parseChordPro(source) } },
+    showChords: true,
+    jianpuSheets: JSON.parse(readFileSync("public/jianpu/index.json", "utf8")),
+    // Sans image ré-encodée, le PDF retombe sur les paroles.
+    jianpuImages: { "一生爱你-p1.webp": "data:image/png;base64," },
+  });
+  const pages = (doc.props as { children: { type: unknown }[] }).children;
+  expect(pages.map((p) => (p.type === JianpuPDFPage ? "scan" : p.type === SongPDFPage ? "paroles" : "?"))).toEqual([
+    "scan",
+    "paroles",
+  ]);
+});
+
+test("service worker : les scans et leurs manifestes sont gardés pour le hors-ligne (O15)", async () => {
+  // Le service worker ne met rien en cache sur un serveur local : on l'exécute
+  // ici comme en ligne, avec un cache et un réseau simulés.
+  const handlers: Record<string, (e: unknown) => void> = {};
+  const misEnCache: string[] = [];
+  const cache = {
+    match: async () => undefined,
+    put: async (req: { url: string }) => { misEnCache.push(req.url); },
+    addAll: async () => {},
+  };
+  const origin = "https://louange.example.org";
+  vm.runInNewContext(readFileSync("public/sw.js", "utf8"), {
+    self: {
+      location: { hostname: "louange.example.org", origin },
+      addEventListener: (type: string, fn: (e: unknown) => void) => { handlers[type] = fn; },
+      skipWaiting: () => {},
+    },
+    caches: { open: async () => cache, match: async () => undefined, keys: async () => [] },
+    fetch: async () => ({ ok: true, clone() { return this; } }),
+    URL,
+  });
+  const charger = async (chemin: string) => {
+    let reponse: Promise<unknown> | undefined;
+    handlers.fetch({
+      request: { method: "GET", url: origin + chemin, mode: "no-cors" },
+      respondWith: (p: Promise<unknown>) => { reponse = p; },
+    });
+    await reponse;
+    await new Promise((r) => setTimeout(r, 0));
+  };
+  const scan = `/_next/image?url=${encodeURIComponent("/jianpu/一生爱你-p1.webp")}&w=1080&q=75`;
+  for (const chemin of ["/jianpu/index.json", "/jianpu/chords.json", "/jianpu/一生爱你-p1.webp", scan]) {
+    await charger(chemin);
+  }
+  await charger(`/_next/image?url=${encodeURIComponent("/logo-externe.png")}&w=64&q=75`);
+  expect(misEnCache).toEqual([
+    `${origin}/jianpu/index.json`,
+    `${origin}/jianpu/chords.json`,
+    `${origin}/jianpu/一生爱你-p1.webp`,
+    `${origin}${scan}`,
+  ]);
 });

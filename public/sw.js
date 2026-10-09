@@ -10,8 +10,9 @@
 //         copie en cache ;
 //       • les assets Next.js (/_next/static) sont content-hashés donc
 //         immuables → cache-first sans risque de péremption ;
-//       • le contenu quasi-figé (polices, index des chants, API chant) est
-//         servi en stale-while-revalidate : instantané, rafraîchi en fond ;
+//       • le contenu quasi-figé (polices, index des chants, API chant,
+//         scans 简谱 et leurs manifestes) est servi en stale-while-revalidate :
+//         instantané, rafraîchi en fond ;
 //       • tout le reste (Firestore REST, CSV planning, push) n'est jamais mis
 //         en cache.
 //   Le nom de cache est versionné : à chaque déploiement (nouveau contenu de
@@ -20,7 +21,7 @@
 //   de Next n'y portent pas de nom hashé, et les servir depuis le cache
 //   affichait l'ancien code après chaque modification (16/09/2026).
 
-const CACHE = "gcc-louange-v3";
+const CACHE = "gcc-louange-v4";
 
 /** Serveur de développement : localhost, 127.0.0.1 ou le réseau local. */
 const LOCAL =
@@ -122,11 +123,15 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // Contenu quasi-figé : polices, index des chants, contenu d'un chant.
+  // Contenu quasi-figé : polices, index des chants, contenu d'un chant ; les
+  // scans 简谱, affichés par défaut (lot 1 du chantier 简谱) : manifestes,
+  // images et leurs versions redimensionnées par next/image.
   if (
     url.pathname.startsWith("/fonts/") ||
     url.pathname === "/songs-index.json" ||
     url.pathname.startsWith("/api/song/") ||
+    url.pathname.startsWith("/jianpu/") ||
+    (url.pathname === "/_next/image" && (url.searchParams.get("url") || "").startsWith("/jianpu/")) ||
     url.pathname.startsWith("/icon") ||
     url.pathname === "/logo.png"
   ) {
