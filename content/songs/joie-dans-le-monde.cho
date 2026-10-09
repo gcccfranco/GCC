@@ -4,6 +4,7 @@
 {tempo: 96}
 {language: fr}
 {themes: Adoration, Noël}
+{source: Joie dans le monde - Accords.pdf}
 
 {start_of_verse: Couplet 1}
 [F]Joie dans le monde
@@ -22,15 +23,14 @@ Nous chanterons [F]joie[Bb]
 {start_of_verse: Couplet 2}
 Joie dans le monde
 Le Sauveur règne
+Entonnons ce refrain
 {end_of_verse}
 
 {start_of_chorus: Refrain}
-Les champs et les ﬂeuves
+Les champs et les fleuves
 Les collines et les plaines
 Proclament en chœur ce chant
 Proclament en chœur ce chant
-Titre
-Adaptation
 {end_of_chorus}
 
 {start_of_chorus: Refrain 2}
@@ -47,6 +47,4 @@ Les grandes merveilles
 De Sa justice
 La gloire de Son amour
 La gloire de Son amour
-original : Joy To The World
-: Jonathan Mercier
 {end_of_verse}

@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-08T21:43:18.148Z",
+  "generatedAt": "2026-10-09T14:06:43.928Z",
   "songs": [
     {
       "slug": "abba-pere",
@@ -5369,9 +5369,8 @@
       "recommendedKey": "Ab",
       "tempo": 94,
       "themes": [
-        "consecration",
         "engagement",
-        "confiance"
+        "foi"
       ],
       "youtubeUrl": "https://www.youtube.com/watch?v=uKfqa_sGnTc",
       "spotifyUrl": null,
@@ -5409,8 +5408,9 @@
         },
         {
           "id": "bridge-6",
-          "name": "Pont",
-          "type": "bridge"
+          "name": "Pont (x2)",
+          "type": "bridge",
+          "suffix": "(x2)"
         }
       ]
     },
@@ -5765,31 +5765,79 @@
           "type": "intro"
         },
         {
-          "id": "intro-2",
-          "name": "Intro",
-          "type": "intro"
+          "id": "verse-2",
+          "name": "Couplet 1",
+          "type": "verse",
+          "number": "1"
         },
         {
           "id": "verse-3",
-          "name": "verse",
-          "type": "verse"
+          "name": "Couplet 2",
+          "type": "verse",
+          "number": "2"
         },
         {
-          "id": "verse-4",
-          "name": "Couplet 1",
-          "type": "verse",
+          "id": "chorus-4",
+          "name": "Refrain 1",
+          "type": "chorus",
           "number": "1"
         },
         {
-          "id": "verse-5",
-          "name": "Interlude",
-          "type": "other"
+          "id": "intro-5",
+          "name": "Interlude 1",
+          "type": "intro",
+          "number": "1"
         },
         {
           "id": "verse-6",
-          "name": "Couplet 1",
+          "name": "Couplet 3",
           "type": "verse",
+          "number": "3"
+        },
+        {
+          "id": "chorus-7",
+          "name": "Refrain 2",
+          "type": "chorus",
+          "number": "2"
+        },
+        {
+          "id": "intro-8",
+          "name": "Interlude 2",
+          "type": "intro",
+          "number": "2"
+        },
+        {
+          "id": "bridge-9",
+          "name": "Pont 1",
+          "type": "bridge",
           "number": "1"
+        },
+        {
+          "id": "bridge-10",
+          "name": "Pont 2 (vamp 1)",
+          "type": "bridge",
+          "number": "2",
+          "suffix": "(vamp 1)"
+        },
+        {
+          "id": "chorus-11",
+          "name": "Refrain 3",
+          "type": "chorus",
+          "number": "3"
+        },
+        {
+          "id": "bridge-12",
+          "name": "Pont 3 (vamp 2)",
+          "type": "bridge",
+          "number": "3",
+          "suffix": "(vamp 2)"
+        },
+        {
+          "id": "bridge-13",
+          "name": "Pont 4 (vamp 3)",
+          "type": "bridge",
+          "number": "4",
+          "suffix": "(vamp 3)"
         }
       ]
     },
@@ -6346,7 +6394,7 @@
         },
         {
           "id": "intro-4",
-          "name": "Intro",
+          "name": "Interlude",
           "type": "intro"
         },
         {
@@ -6651,8 +6699,9 @@
       "sections": [
         {
           "id": "intro-1",
-          "name": "Intro",
-          "type": "intro"
+          "name": "Intro (x2)",
+          "type": "intro",
+          "suffix": "(x2)"
         },
         {
           "id": "verse-2",
@@ -6895,8 +6944,9 @@
       "sections": [
         {
           "id": "verse-1",
-          "name": "Couplet",
-          "type": "verse"
+          "name": "Couplet (x2)",
+          "type": "verse",
+          "suffix": "(x2)"
         },
         {
           "id": "chorus-2",
