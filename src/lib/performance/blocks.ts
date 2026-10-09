@@ -378,9 +378,11 @@ export function computePageKey(
   indices: number[],
   layoutSig = "",
 ): string {
+  // `blocks` peut se reconstruire sous la mise en page (affichage changé,
+  // manifeste 简谱 arrivé) : la page porte alors des indices trop grands.
   const uids = indices
     .map((i) => blocks[i])
-    .filter((b): b is SectionBlock => b.kind === "section")
+    .filter((b): b is SectionBlock => b?.kind === "section")
     .map((b) => b.section.uid);
   let h = 0;
   // Repli sur les indices quand la page n'a aucune section (page 100 % transitions) :

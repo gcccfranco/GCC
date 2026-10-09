@@ -2123,6 +2123,8 @@ export function SetlistDetailClient() {
           initialShowChords={chordsTouched ? showChords : undefined}
           setlistId={id}
           setlistTitle={setlist.title}
+          affichage={layout}
+          onAffichageChange={changeLayout}
           onClose={() => {
             if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
             setPerformanceMode(false);

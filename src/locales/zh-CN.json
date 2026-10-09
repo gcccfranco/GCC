@@ -556,7 +556,7 @@
     "songList": "歌曲列表",
     "twoColumns": "双栏",
     "settings": "设置",
-    "view": "视图",
+    "view": "角色",
     "rolePrompt": {
       "title": "你的角色是？",
       "description": "显示内容会根据你的角色调整，之后可在“设置”中更改。",

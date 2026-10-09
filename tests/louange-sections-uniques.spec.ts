@@ -1,9 +1,11 @@
 import { readFileSync } from "fs";
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 import { parseChordPro } from "../src/lib/chordpro/parser";
-import { buildPerformanceBlocks, type PerformanceBlock, type SectionBlock } from "../src/lib/performance/blocks";
+import { buildPerformanceBlocks, computePageKey, type PerformanceBlock, type SectionBlock } from "../src/lib/performance/blocks";
 import type { JianpuManifest } from "../src/lib/jianpu/images";
 import type { SetlistItem } from "../src/types/setList";
+import { signInAs, type FakeProfile } from "./helpers/fakeSession";
+import { fermerMenus, ouvrirAffichage, ouvrirPartitions } from "./helpers/setlist";
 
 // Lot 2 du chantier 简谱 (docs/spec-jianpu-integration.md) : « Sections uniques » et
 // structure dans le mode louange. Setlist « Culte du 11 octobre » (fictive) :
@@ -97,6 +99,16 @@ test.describe("buildPerformanceBlocks : affichage (pur)", () => {
     expect(structure.filter((b) => b.kind === "transition-intra")).toHaveLength(1);
   });
 
+  test("changer d'affichage reconstruit les blocs sous la mise en page : la clé d'une page aux indices périmés se calcule", () => {
+    // Sections uniques donne moins de blocs que l'ordre joué ; la page lue porte
+    // encore, le temps d'un rendu, les indices de l'ancienne mise en page.
+    const unique = buildPerformanceBlocks([ABBA], CONTENTS, true, undefined, undefined, "auto", undefined, { affichage: "unique" });
+    const joue = buildPerformanceBlocks([ABBA], CONTENTS, true);
+    const perimes = [joue.length - 2, joue.length - 1];
+    expect(perimes.every((i) => i >= unique.length)).toBe(true);
+    expect(() => computePageKey(unique, perimes)).not.toThrow();
+  });
+
   test("fusion en structure mixte : même filtre que la vue Partitions, bandeau des deux chants", () => {
     const fusion = item({
       type: "fusion",
@@ -120,5 +132,147 @@ test.describe("buildPerformanceBlocks : affichage (pur)", () => {
     expect(unique.filter((b) => b.kind === "transition-intra")).toHaveLength(0);
     const entete = unique[0] as Extract<PerformanceBlock, { kind: "song-header" }>;
     expect(entete.steps!.map((s) => [s.note, s.transition])).toEqual([["", ""], ["Tous ensemble", ""], ["", "On ralentit"], ["", ""]]);
+  });
+});
+
+// ─── À l'écran ───────────────────────────────────────────────────────────────
+
+const SETLIST_ID = "setlist-sections-uniques";
+const MUSICIEN: FakeProfile = {
+  uid: "uid-musicien",
+  email: "musicien@example.com",
+  serviceRoles: { "Culte Francophone": ["musicien"] },
+};
+
+const setlist = (items: SetlistItem[]) => ({
+  title: "Culte du 11 octobre",
+  leader: "Présidence",
+  category: "Culte Francophone",
+  date: "2026-10-11",
+  language: "mixed",
+  notes: "",
+  ownerId: "uid-owner",
+  isPrivate: false,
+  items,
+});
+
+/** Page affichée du mode louange, sans la page setlist dessous ni les copies de mesure. */
+const onStage = (page: Page, selector: string) =>
+  page.locator(`[data-performance-mode] ${selector}:not([aria-hidden=true] *)`);
+const compteur = (page: Page) => page.locator("[data-performance-mode] span.tabular-nums").last();
+
+/** Ouvre la setlist et lance le mode louange (rôle déjà choisi, `null` = aucun). */
+async function ouvrirMode(page: Page, items: SetlistItem[], { role = "pianiste" as string | null, affichage = null as string | null } = {}) {
+  await page.addInitScript(({ r, a }) => {
+    if (r) localStorage.setItem("perf-role-preset", r);
+    else localStorage.setItem("perf-role-asked", "1");
+    if (a) localStorage.setItem("partition-layout", a);
+  }, { r: role, a: affichage });
+  const db = await signInAs(page, MUSICIEN, { [`setlists/${SETLIST_ID}`]: setlist(items) }, `/setlists/${SETLIST_ID}`);
+  await lancer(page);
+  return db;
+}
+
+async function lancer(page: Page) {
+  await page.getByRole("button", { name: /Mode Louange/ }).click();
+  await expect(compteur(page)).toHaveText(/^\d+ \/ \d+$/);
+}
+
+/** Les barres s'effacent après 3 s : un toucher au centre les rappelle. */
+async function montrerChrome(page: Page) {
+  if (await page.getByRole("button", { name: "Quitter" }).isVisible()) return;
+  const { w, h } = await page.evaluate(() => ({ w: innerWidth, h: innerHeight }));
+  await page.mouse.click(w / 2, h / 2);
+  await expect(page.getByRole("button", { name: "Quitter" })).toBeVisible();
+}
+
+async function reglages(page: Page) {
+  await montrerChrome(page);
+  await page.getByRole("button", { name: "Réglages" }).click();
+  const feuille = page.getByRole("dialog", { name: "Réglages" });
+  await expect(feuille).toBeVisible();
+  return feuille;
+}
+
+/** Quitte le mode louange en rendant la page setlist où elle était (voir performance-mode.spec.ts). */
+async function quitter(page: Page) {
+  const y = await page.evaluate(() => window.scrollY);
+  for (let i = 0; i < 2 && (await page.getByRole("dialog").count()) > 0; i++) await page.keyboard.press("Escape");
+  await montrerChrome(page);
+  await page.getByRole("button", { name: "Quitter" }).click();
+  await page.evaluate((to) => window.scrollTo(0, to), y);
+}
+
+test.describe("Réglages : Rôle et Affichage", () => {
+  test("« Vue » devient « Rôle » ; Affichage à trois choix, partagé avec la setlist sans recharger (FR)", async ({ page }) => {
+    await ouvrirMode(page, [ABBA]);
+    const feuille = await reglages(page);
+    await expect(feuille.getByText("Rôle", { exact: true })).toBeVisible();
+    await expect(feuille.getByText("Vue", { exact: true })).toHaveCount(0);
+    const affichage = feuille.getByRole("radiogroup", { name: "Affichage" });
+    await expect(affichage.getByRole("radio")).toHaveText(["Ordre joué", "Sections uniques", "Structure seule"]);
+    await expect(affichage.getByRole("radio", { name: "Ordre joué" })).toHaveAttribute("aria-checked", "true");
+
+    await affichage.getByRole("radio", { name: "Sections uniques" }).click();
+    await expect(affichage.getByRole("radio", { name: "Sections uniques" })).toHaveAttribute("aria-checked", "true");
+    expect(await page.evaluate(() => localStorage.getItem("partition-layout"))).toBe("unique");
+    // Toucher Affichage désélectionne le rôle, comme « Accords ».
+    await expect(feuille.getByRole("button", { name: "Pianiste" })).toHaveAttribute("aria-pressed", "false");
+
+    await quitter(page);
+    await ouvrirPartitions(page);
+    await ouvrirAffichage(page);
+    await expect(page.getByRole("menuitemradio", { name: "Sections uniques" })).toHaveAttribute("aria-checked", "true");
+    // Et dans l'autre sens : la setlist choisit, le mode louange le montre.
+    await page.getByRole("menuitemradio", { name: "Structure seule" }).click();
+    await fermerMenus(page);
+    await lancer(page);
+    const retour = await reglages(page);
+    await expect(retour.getByRole("radio", { name: "Structure seule" })).toHaveAttribute("aria-checked", "true");
+  });
+
+  test("Batteur → Structure seule écrite ; « Ordre joué » ensuite : plus de rôle, les paroles reviennent (FR)", async ({ page }) => {
+    await ouvrirMode(page, [ABBA]);
+    const feuille = await reglages(page);
+    await feuille.getByRole("button", { name: "Batteur" }).click();
+    await expect(feuille.getByRole("button", { name: "Batteur" })).toHaveAttribute("aria-pressed", "true");
+    const affichage = feuille.getByRole("radiogroup", { name: "Affichage" });
+    await expect(affichage.getByRole("radio", { name: "Structure seule" })).toHaveAttribute("aria-checked", "true");
+    expect(await page.evaluate(() => localStorage.getItem("partition-layout"))).toBe("structure");
+    await expect(onStage(page, "[data-copy-line]")).toHaveCount(0);
+
+    await affichage.getByRole("radio", { name: "Ordre joué" }).click();
+    await expect(affichage.getByRole("radio", { name: "Ordre joué" })).toHaveAttribute("aria-checked", "true");
+    await expect(feuille.locator("button[aria-pressed=true]")).toHaveCount(0);
+    expect(await page.evaluate(() => localStorage.getItem("partition-layout"))).toBe("played");
+    await page.keyboard.press("Escape");
+    await expect(onStage(page, "[data-section] [data-copy-line]").first()).toBeVisible();
+  });
+
+  test("Structure seule choisie dans Affichage : la structure en grand, sans rôle (FR)", async ({ page }) => {
+    await ouvrirMode(page, [ABBA], { role: null });
+    const feuille = await reglages(page);
+    await feuille.getByRole("radiogroup", { name: "Affichage" }).getByRole("radio", { name: "Structure seule" }).click();
+    await page.keyboard.press("Escape");
+    await expect(onStage(page, "[data-section]").first()).toBeVisible();
+    await expect(onStage(page, "[data-copy-line]")).toHaveCount(0);
+    // Un rôle autre que Batteur ramène l'ordre joué (O5).
+    const encore = await reglages(page);
+    await encore.getByRole("button", { name: "Pianiste" }).click();
+    await expect(encore.getByRole("radio", { name: "Ordre joué" })).toHaveAttribute("aria-checked", "true");
+  });
+
+  test("paroles masquées et accords coupés, sans rôle : Affichage montre Structure seule (O7) (FR)", async ({ page }) => {
+    await page.addInitScript(() => localStorage.setItem("perf-hide-lyrics", "1"));
+    await ouvrirMode(page, [ABBA], { role: null });
+    const feuille = await reglages(page);
+    await feuille.getByRole("switch", { name: "Accords" }).click();
+    const affichage = feuille.getByRole("radiogroup", { name: "Affichage" });
+    await expect(affichage.getByRole("radio", { name: "Structure seule" })).toHaveAttribute("aria-checked", "true");
+    // Sections uniques depuis la vue structure : paroles et accords reviennent.
+    await affichage.getByRole("radio", { name: "Sections uniques" }).click();
+    await expect(feuille.getByRole("switch", { name: "Accords" })).toBeChecked();
+    await expect(feuille.getByRole("switch", { name: "Masquer les paroles" })).not.toBeChecked();
+    expect(await page.evaluate(() => localStorage.getItem("perf-hide-lyrics"))).toBe("0");
   });
 });

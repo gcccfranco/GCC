@@ -28,6 +28,7 @@ import { type AnnotationData, serializeAnnotations, deserializeAnnotations } fro
 import { loadAnnotation, saveAnnotation } from "@/lib/firebase/annotations";
 import { getChartStylePref, setChartStylePref } from "@/lib/chartStylePref";
 import { getPersonalKeys, setPersonalKey } from "@/lib/setlist/personalKeys";
+import type { PartitionLayout } from "@/lib/partitionLayoutPref";
 import { getPinyinPref, setPinyinPref } from "@/lib/pinyinPref";
 import { getFontScalePref, setFontScalePref, MIN_FONT_SCALE, MAX_FONT_SCALE } from "@/lib/fontScalePref";
 import { useAuth } from "@/lib/firebase/auth";
@@ -310,6 +311,10 @@ export interface PerformanceModeProps {
   initialShowChords?: boolean;
   setlistId: string;
   setlistTitle: string;
+  /** Affichage (D15) : la préférence `partition-layout`, tenue par la page
+   *  setlist pour que son menu Affichage soit à jour en sortant du mode. */
+  affichage: PartitionLayout;
+  onAffichageChange: (v: PartitionLayout) => void;
   onClose: () => void;
 }
 
@@ -319,6 +324,8 @@ export function PerformanceMode({
   initialShowChords,
   setlistId,
   setlistTitle,
+  affichage,
+  onAffichageChange,
   onClose,
 }: PerformanceModeProps) {
   const { t } = useTranslation();
@@ -452,11 +459,15 @@ export function PerformanceMode({
     setShowChords(p.chords);
     toggleHideLyrics(p.hideLyrics);
     setRolePreset(id);
+    // Le Batteur pose Structure seule ; un autre rôle ramène l'ordre joué
+    // depuis Structure seule seulement (O5) : Sections uniques reste.
+    if (id === "batteur") onAffichageChange("structure");
+    else if (affichage === "structure") onAffichageChange("played");
     try {
       localStorage.setItem("perf-role-preset", id);
       localStorage.setItem("perf-role-asked", "1");
     } catch { /* ignore */ }
-  }, [toggleHideLyrics]);
+  }, [toggleHideLyrics, affichage, onAffichageChange]);
 
   // Première ouverture sur cet appareil : on demande le rôle, retenu ensuite
   // (« Aucun » aussi). Refermer la feuille sans répondre la reporte à la
@@ -486,9 +497,32 @@ export function PerformanceMode({
     });
   }, []);
 
-  // Vue ossature (paroles ET accords masqués) : un chant par page, structure en
-  // colonnes adaptatives, texte réduit au besoin pour tout faire tenir.
-  const structureMode = hideLyrics && !showChords;
+  // Vue ossature : Structure seule, ou paroles ET accords masqués (O7, le
+  // chemin d'avant l'Affichage). Un chant par page, structure en colonnes
+  // adaptatives, texte réduit au besoin pour tout faire tenir.
+  const structureMode = affichage === "structure" || (hideLyrics && !showChords);
+  const affichageVu: PartitionLayout = structureMode ? "structure" : affichage;
+  // En vue ossature, ni paroles ni accords, quel que soit le chemin.
+  const lyricsHidden = hideLyrics || structureMode;
+  const chordsShown = showChords && !structureMode;
+
+  // Toucher Affichage désélectionne le rôle, comme « Accords ». Quitter la
+  // vue ossature rend paroles et accords : sinon le chemin d'O7 la
+  // ramènerait aussitôt.
+  const changeAffichage = useCallback((v: PartitionLayout) => {
+    if (v !== "structure" && structureMode) {
+      toggleHideLyrics(false);
+      setShowChords(true);
+    }
+    clearRolePreset();
+    onAffichageChange(v);
+  }, [structureMode, toggleHideLyrics, clearRolePreset, onAffichageChange]);
+  // « Accords » et « Masquer les paroles » portent sur le corps : les toucher
+  // depuis Structure seule ramène l'ordre joué, comme le faisait « Accords »
+  // pour le batteur avant l'Affichage.
+  const quitterStructureSeule = () => {
+    if (affichage === "structure") onAffichageChange("played");
+  };
 
   // Deux colonnes (lot U5, docs/spec-deux-volets.md Q2–Q3) : sur tablette couchée
   // et sur ordinateur, si la largeur de mise en page le permet, hors vue structure.
@@ -549,8 +583,8 @@ export function PerformanceMode({
   const blocks = useMemo(
     // always build with chords=true for stable UIDs (le capo et la tonalité ne
     // changent ni le nombre ni l'ordre des blocs : les UIDs restent stables)
-    () => buildPerformanceBlocks(items, contents, true, capoActive ? capos : undefined, jianpuManifest, jianpuPref, personalKeys),
-    [items, contents, capoActive, capos, jianpuManifest, jianpuPref, personalKeys],
+    () => buildPerformanceBlocks(items, contents, true, capoActive ? capos : undefined, jianpuManifest, jianpuPref, personalKeys, { affichage: affichageVu }),
+    [items, contents, capoActive, capos, jianpuManifest, jianpuPref, personalKeys, affichageVu],
   );
 
   // Vue structure : passages consécutifs identiques repliés sur le premier
@@ -979,9 +1013,9 @@ export function PerformanceMode({
               {!repeatHidden.has(i) && (
                 <BlockRenderer
                   block={block}
-                  showChordsGlobal={showChords}
+                  showChordsGlobal={chordsShown}
                   showTransitions={showTransitions}
-                  hideLyrics={hideLyrics}
+                  hideLyrics={lyricsHidden}
                   chartStyle={chartStyle}
                   showPinyinGlobal={showPinyin}
                   repeat={repeatCount.get(i)}
@@ -1001,9 +1035,9 @@ export function PerformanceMode({
                   {block.kind !== "song-header" && block.kind !== "jianpu-sheet" && (
                     <BlockRenderer
                       block={block}
-                      showChordsGlobal={showChords}
+                      showChordsGlobal={chordsShown}
                       showTransitions={showTransitions}
-                      hideLyrics={hideLyrics}
+                      hideLyrics={lyricsHidden}
                       chartStyle={chartStyle}
                       showPinyinGlobal={showPinyin}
                     />
@@ -1056,9 +1090,9 @@ export function PerformanceMode({
               <BlockRenderer
                 key={block.uid}
                 block={block}
-                showChordsGlobal={showChords}
+                showChordsGlobal={chordsShown}
                 showTransitions={showTransitions}
-                hideLyrics={hideLyrics}
+                hideLyrics={lyricsHidden}
                 chartStyle={chartStyle}
                 showPinyinGlobal={showPinyin}
                 fit={fit}
@@ -1391,6 +1425,8 @@ export function PerformanceMode({
                 {ROLE_PRESET_IDS.map((id) => (
                   <button
                     key={id}
+                    type="button"
+                    aria-pressed={rolePreset === id}
                     onClick={() => (rolePreset === id ? clearRolePreset() : applyRolePreset(id))}
                     className={`h-9 px-3 rounded-lg border text-xs font-semibold transition-colors ${
                       rolePreset === id
@@ -1399,6 +1435,26 @@ export function PerformanceMode({
                     }`}
                   >
                     {t(`performance.roles.${id}`)}
+                  </button>
+                ))}
+              </div>
+            </div>
+            {/* Affichage (D15) : le même réglage que le menu Affichage de la setlist. */}
+            <div className="space-y-2">
+              <span id="perf-affichage" className="text-sm font-medium text-foreground">{t("setlists.detail.layout.label")}</span>
+              <div role="radiogroup" aria-labelledby="perf-affichage" className="flex rounded-lg bg-secondary p-1">
+                {(["played", "unique", "structure"] as const).map((v) => (
+                  <button
+                    key={v}
+                    type="button"
+                    role="radio"
+                    aria-checked={affichageVu === v}
+                    onClick={() => changeAffichage(v)}
+                    className={`h-9 min-w-0 flex-1 rounded-md px-2 text-[13px] font-semibold whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+                      affichageVu === v ? "bg-background text-foreground shadow-soft" : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    {t(`setlists.detail.layout.${v}`)}
                   </button>
                 ))}
               </div>
@@ -1456,9 +1512,11 @@ export function PerformanceMode({
             )}
             <SettingRow label={t("performance.chords")}>
               <Switch
+                aria-label={t("performance.chords")}
                 checked={showChords}
                 onCheckedChange={(v) => {
                   clearRolePreset();
+                  quitterStructureSeule();
                   setShowChords(v);
                 }}
               />
@@ -1468,9 +1526,11 @@ export function PerformanceMode({
             </SettingRow>
             <SettingRow label={t("performance.hideLyrics")}>
               <Switch
+                aria-label={t("performance.hideLyrics")}
                 checked={hideLyrics}
                 onCheckedChange={(v) => {
                   clearRolePreset();
+                  quitterStructureSeule();
                   toggleHideLyrics(v);
                 }}
               />
