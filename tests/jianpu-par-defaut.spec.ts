@@ -6,6 +6,10 @@ import { onStage } from "./helpers/louange";
 import { parseChordPro } from "../src/lib/chordpro/parser";
 import { SetlistFullPDF } from "../src/components/pdf/SetlistFullPDF";
 import { JianpuPDFPage, SongPDFPage } from "../src/components/pdf/SongPDF";
+import { buildFormItems } from "../src/lib/setlist/formItems";
+import { buildSetlistItems } from "../src/lib/setlist/buildSetlistItems";
+import type { SongIndexEntry } from "../src/types/song";
+import type { SetlistItem } from "../src/types/setList";
 import {
   interrupteurAllume,
   prefDepuisInterrupteur,
@@ -328,4 +332,57 @@ test("service worker : les scans et leurs manifestes sont gardés pour le hors-l
     `${origin}/jianpu/一生爱你-p1.webp`,
     `${origin}${scan}`,
   ]);
+});
+
+// ─── Éditeur : le « Paroles » du responsable s'écrit false, sans en inventer ──
+
+test("éditeur, données : un item sans choix reste sans clé, « Paroles » reste false", () => {
+  const index = JSON.parse(readFileSync("public/songs-index.json", "utf8")).songs as SongIndexEntry[];
+  const songsMap = Object.fromEntries(index.map((s) => [s.slug, s]));
+  const allerRetour = (over: Record<string, unknown>) =>
+    buildSetlistItems(buildFormItems([item({ songSlug: "一生爱你", position: 1, ...over }) as SetlistItem], songsMap))[0];
+  // Sinon le premier enregistrement automatique passerait toute la setlist en « Paroles ».
+  expect("jianpuSheet" in allerRetour({}), "pas de clé inventée").toBe(false);
+  expect(allerRetour({ jianpuSheet: false }).jianpuSheet).toBe(false);
+  expect(allerRetour({ jianpuSheet: true }).jianpuSheet).toBe(true);
+});
+
+test("éditeur : « 谱 简谱 » actif d'office ; le désactiver écrit « Paroles » et l'historique le dit", async ({ page }) => {
+  await page.route(/docs\.google\.com\/spreadsheets/, (route) =>
+    route.fulfill({ status: 200, contentType: "text/csv", body: "" }),
+  );
+  const doc = `setlists/${SETLIST_ID}`;
+  const db = await signInAs(
+    page,
+    MUSICIEN,
+    { [doc]: setlist([item({ songSlug: "abba-pere", position: 1 }), item({ songSlug: "一生爱你", position: 2 })]) },
+    `/setlists/${SETLIST_ID}/edit`,
+  );
+  const dernierEnregistrement = async () => {
+    await expect.poll(() => db.writes.filter((w) => w.path === doc).length).toBeGreaterThan(0);
+    return db.writes.filter((w) => w.path === doc).pop()!.data.items as Record<string, unknown>[];
+  };
+  const bouton = page.getByRole("button", { name: /谱\s*简谱/ });
+  await expect(bouton).toHaveAttribute("aria-pressed", "true");
+
+  // Une retouche ailleurs : l'enregistrement automatique n'écrit pas « Paroles ».
+  await page.getByLabel("Tonalité de Abba Père").selectOption("B");
+  await expect(page.getByText("Enregistré", { exact: true })).toBeVisible({ timeout: 8_000 });
+  let items = await dernierEnregistrement();
+  expect(items.every((i) => !("jianpuSheet" in i)), "aucune clé jianpuSheet écrite").toBe(true);
+
+  const avant = db.writes.length;
+  await bouton.click();
+  await expect(bouton).toHaveAttribute("aria-pressed", "false");
+  await expect.poll(() => db.writes.slice(avant).some((w) => w.path === doc)).toBe(true);
+  items = await dernierEnregistrement();
+  expect(items.find((i) => i.songSlug === "一生爱你")!.jianpuSheet).toBe(false);
+  expect("jianpuSheet" in items.find((i) => i.songSlug === "abba-pere")!).toBe(false);
+
+  await expect(page.getByText("Enregistré", { exact: true })).toBeVisible({ timeout: 8_000 });
+  await page.getByRole("button", { name: "Terminé" }).click();
+  await page.waitForURL((u) => u.pathname.replace(/\/$/, "") === `/setlists/${SETLIST_ID}`);
+  await page.getByRole("button", { name: /Modifiée par Léa M\./ }).click();
+  const historique = page.getByRole("dialog", { name: "Historique des modifications" });
+  await expect(historique.getByText("一生爱你 joué sur les paroles")).toBeVisible();
 });

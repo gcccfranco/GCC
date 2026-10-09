@@ -193,7 +193,8 @@ function readItems(items: SetlistItem[], sectionsOf?: SectionsOf) {
       songs.set(item.songSlug, {
         container: "",
         key: item.keyOverride ?? null,
-        jianpu: !!item.jianpuSheet,
+        // Absent = scan par défaut, comme `true` : seul « Paroles » change.
+        jianpu: item.jianpuSheet !== false,
         noteText: item.notes?.trim() ?? "",
         labels: steps?.map((s) => s.label),
         notes: steps && sectionNoteList(steps, item.sectionNotes),

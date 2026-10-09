@@ -754,6 +754,9 @@ export function SongRow({
 }) {
   const { t } = useTranslation();
   const jianpuScore = useJianpuScore(item.song.slug);
+  // Présélectionné : un chant à scan se joue sur son scan, sauf « Paroles »
+  // choisi ici (jianpuSheet: false).
+  const jianpuActif = item.jianpuSheet !== false;
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: item.uid });
   const [showStructure, setShowStructure] = useState(false);
@@ -846,10 +849,11 @@ export function SongRow({
           {jianpuScore && (
             <button
               type="button"
-              onClick={() => onJianpuSheetChange(!item.jianpuSheet)}
+              onClick={() => onJianpuSheetChange(!jianpuActif)}
+              aria-pressed={jianpuActif}
               title={t("setlists.form.jianpuSheetHint")}
               className={`flex items-center gap-0.5 text-xs px-1.5 py-0.5 rounded border transition-colors ${
-                item.jianpuSheet
+                jianpuActif
                   ? "border-primary/30 bg-secondary text-foreground"
                   : "border-border text-muted-foreground hover:text-foreground"
               }`}
