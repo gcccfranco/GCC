@@ -3,6 +3,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { parseChordPro } from "../src/lib/chordpro/parser";
 import { buildPerformanceBlocks, computePageKey, type PerformanceBlock, type SectionBlock } from "../src/lib/performance/blocks";
 import type { JianpuManifest } from "../src/lib/jianpu/images";
+import { paginateColumns, pagesUneColonne } from "../src/lib/performance/columns";
 import type { SetlistItem } from "../src/types/setList";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { fermerMenus, ouvrirAffichage, ouvrirPartitions } from "./helpers/setlist";
@@ -341,6 +342,115 @@ test.describe("bandeau de pastilles en tête du chant", () => {
     await expect(onStage(page, "[data-jianpu-page]")).toHaveCount(0);
     await expect(onStage(page, "h2").first()).toHaveText("一生爱你");
     await expect(bandeauEntete(page)).toHaveCount(0);
+  });
+});
+
+// ─── Rappel des pages suivantes (L2-T4) ──────────────────────────────────────
+
+test.describe("pagination : place du rappel (pur)", () => {
+  test("une colonne : un chant de trois pages a ses pages 2 et 3 plus courtes de 32 px", () => {
+    // En-tête 0 (50 px), neuf sections de 100 px, page de 400 px.
+    const heights = [50, ...Array(9).fill(100)];
+    const flow = heights.map((_, i) => i);
+    const sansRappel = pagesUneColonne(flow, heights, 400, new Set([0]));
+    expect(sansRappel.map((p) => p.cols[0])).toEqual([[0, 1, 2, 3], [4, 5, 6, 7], [8, 9]]);
+    const avecRappel = pagesUneColonne(flow, heights, 400, new Set([0]), 32);
+    expect(avecRappel.map((p) => p.cols[0])).toEqual([[0, 1, 2, 3], [4, 5, 6], [7, 8, 9]]);
+    for (const [n, p] of avecRappel.entries()) {
+      const room = n === 0 ? 400 : 368;
+      expect(p.cols[0].reduce((s, i) => s + heights[i], 0)).toBeLessThanOrEqual(room);
+    }
+    // Un chant suivant repart d'une page entière.
+    const deuxChants = pagesUneColonne([0, 1, 2, 3, 4, 5], [50, 100, 100, 100, 50, 100], 300, new Set([0, 4]), 32);
+    expect(deuxChants.map((p) => p.cols[0])).toEqual([[0, 1, 2], [3], [4, 5]]);
+  });
+
+  test("deux colonnes : les pages suivantes gardent la place du rappel", () => {
+    const heightsFull = [50, ...Array(12).fill(90)];
+    const heightsColumn = [50, ...Array(12).fill(100)];
+    const flow = Array.from({ length: 12 }, (_, i) => i + 1);
+    const pages = paginateColumns({ flow, header: 0, heightsFull, heightsColumn, pageHeight: 400, reserveSuite: 32 });
+    // Page 1 : 350 px sous l'en-tête, trois blocs par colonne ; page 2 : 368 px, trois aussi.
+    expect(pages[0].cols).toEqual([[1, 2, 3], [4, 5, 6]]);
+    for (const p of pages.slice(1)) for (const col of p.cols) expect(col.length * 100).toBeLessThanOrEqual(368);
+    expect(pages.flatMap((p) => p.cols.flat())).toEqual(flow);
+  });
+});
+
+test.describe("rappel de structure (Sections uniques)", () => {
+  /** Groupes du bandeau d'Abba Père : la 1re occurrence de chaque étape. */
+  const ETAPES = ["intro-1-0", "verse-2-1", "chorus-3-2", "intro-4-3", "verse-5-4", "chorus-3-5", "bridge-6-6", "chorus-3-7"];
+
+  async function pageSuivante(page: Page) {
+    await expect(onStage(page, "[data-section]").first()).toBeVisible();
+    expect(await totalPages(page), "Abba Père en Sections uniques tient sur plusieurs pages").toBeGreaterThan(1);
+    await page.keyboard.press("ArrowRight");
+    await expect(compteur(page)).toHaveText(/^2 \//);
+  }
+
+  test("pages 2 et suivantes : rappel de 24 px en haut, sections de la page cerclées à leur 1re occurrence (FR)", async ({ page }) => {
+    await page.addInitScript(() => localStorage.setItem("perf-font-scale", "1.5"));
+    await ouvrirMode(page, [ABBA], { affichage: "unique" });
+    await expect(onStage(page, "[data-rappel]"), "page 1 : le bandeau, pas de rappel").toHaveCount(0);
+    await pageSuivante(page);
+    const rappel = onStage(page, "[data-rappel]");
+    await expect(rappel).toBeVisible();
+    const pastilles = rappel.locator("li > span");
+    await expect(pastilles).toHaveCount(8);
+    for (const h of await pastilles.evaluateAll((els) => els.map((e) => (e as HTMLElement).offsetHeight))) {
+      expect(Math.abs(h - 24)).toBeLessThanOrEqual(1);
+    }
+    // Au-dessus de toutes les sections de la page.
+    const basRappel = await rappel.evaluate((el) => el.getBoundingClientRect().bottom);
+    const hautSections = await onStage(page, "[data-section]").evaluateAll((els) => Math.min(...els.map((e) => e.getBoundingClientRect().top)));
+    expect(basRappel).toBeLessThanOrEqual(hautSections);
+
+    const premieres = await onStage(page, "[data-section]").evaluateAll((els) => els.map((e) => e.getAttribute("data-section-uids")!.split(" ")[0]));
+    const attendues = premieres.map((uid) => ETAPES.indexOf(uid)).sort((a, b) => a - b);
+    const cerclees = await pastilles.evaluateAll((els) => els.flatMap((e, i) => (e.hasAttribute("data-cerclee") ? [i] : [])));
+    expect(cerclees).toEqual(attendues);
+    expect(cerclees, "le 2e R et R ×2 sont des reprises").not.toContain(5);
+    expect(cerclees).not.toContain(7);
+
+    // Barres escamotées : le rappel est dans la page, il reste.
+    await expect(page.getByRole("button", { name: "Quitter" })).toBeHidden({ timeout: 6000 });
+    await expect(rappel).toBeVisible();
+  });
+
+  test("thème de scène : le cercle est à l'encre claire (FR)", async ({ page }) => {
+    await page.addInitScript(() => {
+      localStorage.setItem("perf-font-scale", "1.5");
+      localStorage.setItem("perf-theme", "dark");
+    });
+    await ouvrirMode(page, [ABBA], { affichage: "unique" });
+    await pageSuivante(page);
+    const cerclee = onStage(page, "[data-rappel] [data-cerclee]").first();
+    await expect(cerclee).toBeVisible();
+    expect(await cerclee.evaluate((el) => getComputedStyle(el).borderTopColor)).toBe("rgb(242, 242, 247)");
+  });
+
+  test("Ordre joué : pas de rappel (FR)", async ({ page }) => {
+    await page.addInitScript(() => localStorage.setItem("perf-font-scale", "1.5"));
+    await ouvrirMode(page, [ABBA]);
+    await pageSuivante(page);
+    await expect(onStage(page, "[data-rappel]")).toHaveCount(0);
+  });
+
+  test("grand écran, deux colonnes : en-tête et bandeau en pleine largeur au-dessus des colonnes (FR)", async ({ page }) => {
+    const grand = await page.evaluate(
+      (q) => matchMedia(q).matches,
+      "(pointer: fine) and (min-width: 1024px), (pointer: coarse) and (orientation: landscape) and (min-width: 1024px)",
+    );
+    test.skip(!grand, "deux colonnes : tablette paysage et ordinateur seulement");
+    await ouvrirMode(page, [ABBA], { affichage: "unique" });
+    const sections = await onStage(page, "[data-section]").evaluateAll((els) => els.map((e) => e.getBoundingClientRect().toJSON() as DOMRect));
+    const gauches = new Set(sections.map((s) => Math.round(s.left)));
+    expect(gauches.size, "deux colonnes").toBe(2);
+    // Le bandeau entier (pastilles, et filet des détails), pas la seule liste qui épouse ses pastilles.
+    const bandeau = (await bandeauEntete(page).locator("xpath=../..").boundingBox())!;
+    const largeur = Math.max(...sections.map((s) => s.right)) - Math.min(...sections.map((s) => s.left));
+    expect(bandeau.width).toBeGreaterThanOrEqual(0.9 * largeur);
+    expect(bandeau.y + bandeau.height).toBeLessThanOrEqual(Math.min(...sections.map((s) => s.top)));
   });
 });
 

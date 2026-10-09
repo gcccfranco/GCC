@@ -125,6 +125,7 @@ function BlockRenderer({
       chartStyle={chartStyle}
       nuanceSize="lg"
       repeat={repeat}
+      occurrenceUids={block.occurrenceUids}
     />
   );
 }
@@ -249,6 +250,9 @@ function splitSheetPages(
 // la pastille « Suivant : … », qui recouvrirait la dernière section.
 const STRUCTURE_MAX_SCALE = 3;
 const NEXT_PILL_RESERVE = 40;
+// Sections uniques : place du rappel de structure (24 px et 8 px dessous) en
+// haut des pages 2 et suivantes d'un chant (D11).
+const RAPPEL_RESERVE = 32;
 
 // Mode ossature : UN CHANT PAR PAGE. L'en-tête occupe la pleine largeur ; les
 // sections (libellés + notes/transitions) sont disposées en 1 colonne si elles
@@ -706,8 +710,9 @@ export function PerformanceMode({
         );
       } else {
         const breakBefore = new Set(blocks.flatMap((b, i) => (b.kind === "song-header" ? [i] : [])));
+        const reserveSuite = affichageVu === "unique" ? RAPPEL_RESERVE : 0;
         computed = splitSheetPages(all, kindOf, (flow) => {
-          if (!twoColumns) return pagesUneColonne(flow, heights, viewportH, breakBefore);
+          if (!twoColumns) return pagesUneColonne(flow, heights, viewportH, breakBefore, reserveSuite);
           // Deux colonnes : chant par chant, chacun ouvre une page.
           const songs: number[][] = [];
           for (const i of flow) {
@@ -722,6 +727,7 @@ export function PerformanceMode({
               heightsFull: heights,
               heightsColumn,
               pageHeight: viewportH,
+              reserveSuite,
             });
           });
         });
@@ -739,7 +745,7 @@ export function PerformanceMode({
       });
     };
     run();
-  }, [blocks, remeasureKey, fontScale, structureMode, twoColumns]);
+  }, [blocks, remeasureKey, fontScale, structureMode, twoColumns, affichageVu]);
 
   // Vue structure agrandie : la mesure se fait à l'échelle 1, mais à l'écran
   // le corps agrandi dispose d'une largeur réduite d'autant, et un libellé
@@ -979,6 +985,19 @@ export function PerformanceMode({
   // dépendrait de la page affichée et les hauteurs mesurées bougeraient à
   // chaque passage sur une partition.
   const fitPage = layout[currentPage]?.fit ?? false;
+  // Sections uniques : sur les pages 2 et suivantes d'un chant, rappel de sa
+  // structure collé en haut de la page (pas dans la barre : il ne s'escamote
+  // pas), les sections imprimées sur la page cerclées à leur 1re occurrence (D11).
+  const rappel =
+    affichageVu === "unique" && !fitPage && currentEntry && (currentPageIndices[0] ?? -1) > currentEntry.index
+      ? currentEntry.block.steps
+      : undefined;
+  const sectionsDeLaPage = new Set(
+    currentPageIndices.flatMap((i) => {
+      const b = blocks[i];
+      return b?.kind === "section" && b.occurrenceUids?.length ? [b.occurrenceUids[0]] : [];
+    }),
+  );
   const renderPadding: React.CSSProperties = fitPage
     ? {
         paddingTop: `calc(0.25rem + var(--sat, 0px) / ${fontScale})`,
@@ -1156,6 +1175,11 @@ export function PerformanceMode({
           }
           return (
             <div>
+              {rappel && (
+                <div data-rappel className="mb-2">
+                  <StructureStrip steps={rappel} compacte cerclees={sectionsDeLaPage} />
+                </div>
+              )}
               {/* En-tête hors échelle, en pleine largeur : vue structure et
                   première page d'un chant en deux colonnes. */}
               {page.header != null && renderBlock(page.header)}

@@ -448,6 +448,8 @@ export function StructureStrip({
   capo,
   songKey,
   details = false,
+  compacte = false,
+  cerclees,
   className = "",
   children,
 }: {
@@ -458,21 +460,29 @@ export function StructureStrip({
   /** Tonalité jouée : une « modulation » vers elle n'en est pas une. */
   songKey?: string;
   details?: boolean;
+  /** Rappel du mode louange (pages suivantes d'un chant en Sections uniques) :
+   *  pastilles de 24 px, sans nuance, modulation ni détails. */
+  compacte?: boolean;
+  /** Occurrences imprimées sur la page : chacune cercle d'encre la première
+   *  étape qui la joue, ses reprises ne le sont pas. */
+  cerclees?: ReadonlySet<string>;
   className?: string;
   /** Badges d'état propres au contexte (copie des paroles, version modifiée…). */
   children?: React.ReactNode;
 }) {
   const { t } = useTranslation();
-  const groups: { step: SectionOccurrence; abbr: string; full: string; repeat: number }[] = [];
+  const groups: { step: SectionOccurrence; abbr: string; full: string; repeat: number; uids: string[] }[] = [];
   for (const step of steps) {
     const full = formatSectionName(step.section, t);
     const last = groups[groups.length - 1];
     if (last && isRepeatOf({ ...last.step, label: last.full }, { ...step, label: full })) {
       last.repeat++;
+      last.uids.push(step.section.uid);
       continue;
     }
-    groups.push({ step, abbr: abbreviateSection(step.section), full, repeat: 1 });
+    groups.push({ step, abbr: abbreviateSection(step.section), full, repeat: 1, uids: [step.section.uid] });
   }
+  const cerclee = new Set([...(cerclees ?? [])].map((uid) => groups.findIndex((g) => g.uids.includes(uid))));
   // Pastille aux couleurs de la section (palette --sec-* de globals.css) :
   // fond clair, lettre en couleur — les mêmes teintes que les cadres du corps.
   const secKey = (type: string) => SECTION_PALETTE_KEY[type] ?? "other";
@@ -497,24 +507,31 @@ export function StructureStrip({
           </span>
         ) : null}
         {/* Pastilles rondes ; la taille suit l'écran : 32 px sous 640 px (neuf étapes
-            sur une rangée à 390 px), 44 px au-delà. Non cliquables : pas de plancher tactile. */}
-        <ol aria-label={t("songs.view.structure")} className="flex flex-wrap items-start gap-x-1.5 gap-y-2 sm:gap-x-3 sm:gap-y-3">
+            sur une rangée à 390 px), 44 px au-delà ; 24 px dans le rappel du mode
+            louange. Non cliquables : pas de plancher tactile. */}
+        <ol aria-label={t("songs.view.structure")} className={compacte ? "flex flex-wrap items-start gap-1.5" : "flex flex-wrap items-start gap-x-1.5 gap-y-2 sm:gap-x-3 sm:gap-y-3"}>
           {groups.map((g, i) => {
             const targetKey = g.step.targetKey && g.step.targetKey !== songKey ? g.step.targetKey : undefined;
             const n = noteNumber.get(g);
             return (
               <li key={i} className="flex flex-col items-center gap-1.5">
-                <span className="relative inline-flex h-8 min-w-8 items-center justify-center rounded-full px-2 sm:h-11 sm:min-w-11 sm:px-2.5" style={{ background: tintOf(g.step.section.type), color: colorOf(g.step.section.type) }}>
-                  <span className="inline-flex items-baseline text-[14px] font-bold leading-none tracking-[0.02em] sm:text-[17px]">
+                <span
+                  data-cerclee={cerclee.has(i) || undefined}
+                  className={`relative inline-flex items-center justify-center rounded-full ${
+                    compacte ? "h-6 min-w-6 px-1.5" : "h-8 min-w-8 px-2 sm:h-11 sm:min-w-11 sm:px-2.5"
+                  } ${cerclee.has(i) ? "border-2 border-foreground" : ""}`}
+                  style={{ background: tintOf(g.step.section.type), color: colorOf(g.step.section.type) }}
+                >
+                  <span className={`inline-flex items-baseline font-bold leading-none tracking-[0.02em] ${compacte ? "text-[11px]" : "text-[14px] sm:text-[17px]"}`}>
                     <abbr title={g.full} className="no-underline [text-decoration:none]">{g.abbr}</abbr>
-                    {g.repeat > 1 && <span className="ml-px text-[11px] font-semibold sm:text-[13px]">×{g.repeat}</span>}
+                    {g.repeat > 1 && <span className={`ml-px font-semibold ${compacte ? "text-[9px]" : "text-[11px] sm:text-[13px]"}`}>×{g.repeat}</span>}
                   </span>
                   {n !== undefined && (
                     <span aria-label={`${n}`} className={`absolute -right-1 -top-1 max-sm:h-4 max-sm:min-w-4 ${numberBadge}`}>{n}</span>
                   )}
                 </span>
-                {targetKey && <span className="font-mono text-[12px] leading-none text-muted-foreground">→ {targetKey}</span>}
-                <NuanceBadge nuance={g.step.nuance} variant="text" />
+                {targetKey && !compacte && <span className="font-mono text-[12px] leading-none text-muted-foreground">→ {targetKey}</span>}
+                {!compacte && <NuanceBadge nuance={g.step.nuance} variant="text" />}
               </li>
             );
           })}

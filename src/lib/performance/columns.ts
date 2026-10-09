@@ -28,19 +28,32 @@ export function twoColumnsPossible(grandEcran: boolean, width: number, fontScale
   return grandEcran && width / fontScale >= MIN_TWO_COLUMNS_WIDTH;
 }
 
+/** Hauteur d'une page qui ne commence pas un chant : `reserveSuite` y est
+ *  gardé pour le rappel de structure (Sections uniques, 32 px ; 0 sinon). */
+const hauteurDePage = (premier: number | undefined, breakBefore: Set<number>, pageHeight: number, reserveSuite: number) =>
+  premier !== undefined && breakBefore.has(premier) ? pageHeight : pageHeight - reserveSuite;
+
 // Mode normal : une colonne par page. Chaque chant commence sur une nouvelle page
 // (breakBefore = en-têtes de chant) ; à l'intérieur d'un chant, remplissage glouton.
-export function paginateBlocks(idxs: number[], heights: number[], viewportH: number, breakBefore: Set<number>): number[][] {
+export function paginateBlocks(
+  idxs: number[],
+  heights: number[],
+  viewportH: number,
+  breakBefore: Set<number>,
+  reserveSuite = 0,
+): number[][] {
   const pages: number[][] = [];
   let current: number[] = [];
   let used = 0;
+  let room = viewportH;
   for (const i of idxs) {
     const h = heights[i];
-    if ((breakBefore.has(i) && current.length > 0) || (current.length > 0 && used + h > viewportH)) {
+    if ((breakBefore.has(i) && current.length > 0) || (current.length > 0 && used + h > room)) {
       pages.push(current);
       current = [];
       used = 0;
     }
+    if (current.length === 0) room = hauteurDePage(i, breakBefore, viewportH, reserveSuite);
     current.push(i);
     used += h;
   }
@@ -50,10 +63,17 @@ export function paginateBlocks(idxs: number[], heights: number[], viewportH: num
 
 /** Les pages d'aujourd'hui, une colonne. Jamais de section coupée : une page qui
  *  déborde quand même (bloc seul plus haut que l'écran) est réduite pour tenir. */
-export function pagesUneColonne(flow: number[], heights: number[], pageHeight: number, breakBefore: Set<number>): PerfPage[] {
-  return paginateBlocks(flow, heights, pageHeight, breakBefore).map((idxs) => {
+export function pagesUneColonne(
+  flow: number[],
+  heights: number[],
+  pageHeight: number,
+  breakBefore: Set<number>,
+  reserveSuite = 0,
+): PerfPage[] {
+  return paginateBlocks(flow, heights, pageHeight, breakBefore, reserveSuite).map((idxs) => {
     const pageH = idxs.reduce((s, i) => s + heights[i], 0);
-    return { header: null, cols: [idxs], scale: Math.min(1, pageHeight / Math.max(1, pageH)) };
+    const room = Math.max(1, hauteurDePage(idxs[0], breakBefore, pageHeight, reserveSuite));
+    return { header: null, cols: [idxs], scale: Math.min(1, room / Math.max(1, pageH)) };
   });
 }
 
@@ -71,6 +91,7 @@ export function paginateColumns({
   heightsFull,
   heightsColumn,
   pageHeight,
+  reserveSuite = 0,
 }: {
   /** Blocs du chant hors en-tête, dans l'ordre joué. */
   flow: number[];
@@ -79,15 +100,17 @@ export function paginateColumns({
   heightsFull: number[];
   heightsColumn: number[];
   pageHeight: number;
+  /** Place gardée en haut des pages suivantes pour le rappel de structure. */
+  reserveSuite?: number;
 }): PerfPage[] {
   const all = header != null ? [header, ...flow] : flow;
   const sum = (idxs: number[], h: number[]) => idxs.reduce((s, i) => s + h[i], 0);
   if (heightsColumn.length === 0 || flow.length < 2 || sum(all, heightsFull) <= pageHeight) {
-    return pagesUneColonne(all, heightsFull, pageHeight, new Set());
+    return pagesUneColonne(all, heightsFull, pageHeight, new Set(header != null ? [header] : []), reserveSuite);
   }
 
   const headerH = header != null ? heightsFull[header] : 0;
-  const room = (page: number) => Math.max(1, pageHeight - (page === 0 ? headerH : 0));
+  const room = (page: number) => Math.max(1, pageHeight - (page === 0 ? headerH : reserveSuite));
 
   // Remplissage glouton : gauche, droite, page suivante ; au moins un bloc par colonne.
   const pages: number[][][] = [];
