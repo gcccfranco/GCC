@@ -5,6 +5,7 @@
 {language: fr}
 {youtube: https://www.youtube.com/watch?v=ZMfGoLcQc_A}
 {themes: Foi, Espérance}
+{source: Tu agiras.pdf}
 
 {start_of_intro: Intro}
 [C#m]  [E]  [C#m]  [E]
@@ -22,29 +23,33 @@ Tu vois un nouveau d[E]épart
 {end_of_verse}
 
 {start_of_chorus: Refrain}
+{needs_review: Source basse fidélité : le C#m est tapé à cheval sur « que | Tu » (à la fin du refrain il est sur « Tu ») ; à confirmer à l'oreille}
 Je ne sais pas ce que [C#m]Tu feras
 Mais Tu [A]agir[E]as (x2)
 Tu es fidèle à Tes pr[C#m]omesses
-[ ]De l’Éden à Sion
-Dans to[B]utes les i[A]mpasses et hors du tombeau
+De l’Éden à Sion
+Dans to[B]utes les i[A]mpasses et hors du tom[E]beau
 Je ne sais pas ce que [C#m]Tu feras
-Mais Tu[A]agir[E]as
+Mais Tu [A]agir[E]as
 {end_of_chorus}
 
 {start_of_verse: Couplet 2}
 Quand le [C#m]monde prend feu
 Tu as déjà prév[A]u un [E]plan
 Et quand tou[C#m]te la Terre tremble
+{needs_review: Source basse fidélité : le A est tapé à cheval sur « É | glise » ; à confirmer à l'oreille}
 Sur cette Pierre Ton [A]Église se [E]tient
+{needs_review: Source basse fidélité : le A est tapé à cheval sur « é | tonné » ; à confirmer à l'oreille}
 [C#m]Non rien ne T’a jamais é[A]tonné
 [E]Non rien ne peut T’intimider
 Et même quand [C#m]tout s’effondre
+{needs_review: Source basse fidélité : le E est tapé à cheval sur « contre | nous » ; à confirmer à l'oreille}
 L’enfer ne peut ri[A]en contre [E]nous
 {end_of_verse}
 
 {start_of_bridge: Pont}
 [A]Tu m’as sorti de [B]l’Égypte
-[C#m]En séparant la me[B]r
+[C#m]En séparant la m[B]er
 [E]Désormais libre pour Te louer
 [G#m]Tout s’accomplit en Toi
 [A]Et quand je vois [B]d’où l’on vient

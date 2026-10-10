@@ -9353,5 +9353,1921 @@
    "decide_par": "def",
    "raison": ""
   }
+ },
+ "Ta-parole-écriture": {},
+ "ta-parole": {
+  "32:decale:C:1": {
+   "statut": "appliqué",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "31:decale:C:1": {
+   "statut": "appliqué",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "26:decale:C:1": {
+   "statut": "appliqué",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "26:decale:Bb:1": {
+   "statut": "appliqué",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "20:manquant:(F):1": {
+   "statut": "appliqué",
+   "decide_par": "session",
+   "raison": "La partition grave un (F) optionnel au-dessus du « r » de « l'Éternel » ; un accord optionnel se transcrit toujours entre parenthèses (01, 02). — inclus dans la ligne de la session — partition : label « (F) » x=258,3 (y=276,8), caractère porteur « r » x0=258,3 de « l'Éte‹r›nel. » : exact"
+  },
+  "13:decale:Dm:1": {
+   "statut": "appliqué",
+   "decide_par": "def",
+   "raison": ""
+  }
+ },
+ "toi-et-moi": {
+  "23:decale:G:1": {
+   "statut": "appliqué",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "22:decale:G:1": {
+   "statut": "appliqué",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "18:decale:Em7:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "18:decale:F7M:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "18:fable:18:decale:Em7:1": {
+   "statut": "appliqué",
+   "decide_par": "session",
+   "raison": "la ligne réécrite est exactement la feuille : Em7 devant le « r » de « Parole », Fmaj7 (F7M) devant le second « r » de « restera », les autres accords inchangés et déjà exacts. Le défaut « non » des deux déplacements venait de l'outil ; la partition fait foi au caractère près (rendu ChordPro). — partition : couche texte, y=378,9 : Bm7 x=60,5 sur « S » (60,5) ; Em7 x=104,1 sur « r » de « Pa‹r›ole » (P 84,6, a 95,2, r 104,1) ; F7M x=170,8 sur le second « r » de « reste‹r›a » (r 170,8, a 176,1) ; Em7 x=216,2 sur « à » ; C/D x=265,1 sur « j » ; D x=318,5 sur « m »"
+  },
+  "18:fable:18:decale:F7M:1": {
+   "statut": "appliqué",
+   "decide_par": "session",
+   "raison": "même ligne réécrite que 18:fable:18:decale:Em7:1 (texte identique) : F7M sur le second « r » de « restera », Em7 sur le « r » de « Parole ». — inclus dans la ligne de 18:fable:18:decale:Em7:1 — partition : F7M x=170,8 sur « r » (170,8) de « reste‹r›a », Em7 x=104,1 sur « r » (104,1) de « Pa‹r›ole »"
+  },
+  "16:decale:G:1": {
+   "statut": "appliqué",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "15:decale:G:1": {
+   "statut": "appliqué",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "9:decale:G:1": {
+   "statut": "appliqué",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "8:decale:Em7:1": {
+   "statut": "appliqué",
+   "decide_par": "def",
+   "raison": ""
+  }
+ },
+ "toi-seul-es-digne": {
+  "38:reporte:F#m:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "38:reporte:E/G#:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "38:reporte:B:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "38:reporte:F#m:2": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "38:reporte:E/G#:2": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "38:reporte:B:2": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "37:reporte:F#m:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "37:reporte:E/G#:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "37:reporte:B:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "37:reporte:F#m:2": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "37:reporte:E/G#:2": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "37:reporte:C#m:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "33:decale:A:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "33:manquant:A:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "33:manquant:B:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "33:manquant:C#m:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "33:manquant:A:2": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "33:manquant:B:2": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "33:manquant:Esus4:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "33:manquant:E:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "33:manquant:A:3": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "33:manquant:B:3": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "33:manquant:C#m:2": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "33:manquant:A:4": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "33:manquant:B:4": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "33:manquant:E:2": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "33:manquant:F#m:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "33:manquant:E/G#:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "33:manquant:B:5": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "33:manquant:F#m:2": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "33:manquant:E/G#:2": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "33:manquant:C#m:3": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "33:manquant:F#m:3": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "33:manquant:E/G#:3": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "33:manquant:B:6": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "33:manquant:F#m:4": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "33:manquant:E/G#:4": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "33:manquant:B:7": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "33:manquant:E/G#:5": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "33:manquant:A:5": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "33:manquant:B:8": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "33:manquant:C#m:4": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "33:manquant:A:6": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "33:manquant:B:9": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "33:manquant:Esus4:2": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "33:manquant:E:3": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "33:manquant:A:7": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "33:manquant:B:10": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "33:manquant:C#m:5": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "33:manquant:A:8": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "33:manquant:B:11": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "33:manquant:E/G#:6": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "33:manquant:A:9": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "33:manquant:B:12": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "33:manquant:C#m:6": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "33:manquant:A:10": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "33:manquant:B:13": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "33:manquant:Esus4:3": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "33:manquant:E:4": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "33:manquant:A:11": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "33:manquant:B:14": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "33:manquant:C#m:7": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "33:manquant:A:12": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "33:manquant:B:15": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "33:manquant:F#m:5": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "33:oeil:10": {
+   "statut": "appliqué",
+   "decide_par": "session",
+   "raison": "A sur l'espace avant « sont » ; C#m, Bsus4 et B déjà exacts. — partition : A x=267,5 sur l'espace idx33 (267,4–272,2) ; C#m x=390,5 sur « a » de « parvis » ; Bsus4 x=494,7 sur « u » de « sauveur » ; B x=544,7 après le point (fin 544,4)"
+  },
+  "33:fable:33:decale:A:1": {
+   "statut": "laissé",
+   "decide_par": "session",
+   "raison": "Même ligne que 33:oeil:10, appliquée par celle-ci. — partition : A x=267,5 sur l'espace avant « sont »"
+  },
+  "31:decale:A:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "31:oeil:9": {
+   "statut": "appliqué",
+   "decide_par": "session",
+   "raison": "A sur l'espace avant « car » ; B et E/G# déjà exacts. — partition : A x=270,7 sur l'espace idx30 (270,6–275,4) ; B x=356,6 sur « e » de « ce » ; E/G# x=466,9 sur « o » de « besoin »"
+  },
+  "31:fable:31:decale:A:1": {
+   "statut": "laissé",
+   "decide_par": "session",
+   "raison": "Même ligne que 31:oeil:9, appliquée par celle-ci. — partition : A x=270,7 sur l'espace avant « car »"
+  },
+  "26:decale:A:1": {
+   "statut": "appliqué",
+   "decide_par": "def",
+   "raison": "inclus dans la ligne de 26:oeil:8"
+  },
+  "26:invente:B:1": {
+   "statut": "appliqué",
+   "decide_par": "def",
+   "raison": "inclus dans la ligne de 26:oeil:8"
+  },
+  "26:invente:A:1": {
+   "statut": "appliqué",
+   "decide_par": "def",
+   "raison": "inclus dans la ligne de 26:oeil:8"
+  },
+  "26:oeil:8": {
+   "statut": "appliqué",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "25:decale:A:1": {
+   "statut": "appliqué",
+   "decide_par": "def",
+   "raison": "inclus dans la ligne de 25:oeil:7"
+  },
+  "25:decale:B:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": "la ligne prend le texte de 25:oeil:7"
+  },
+  "25:oeil:7": {
+   "statut": "appliqué",
+   "decide_par": "session",
+   "raison": "Même mesure que la l. 23 (2e ligne du refrain, labels aux mêmes x). — partition : A x=137,8 et B x=152,2 dans le blanc entre « di » et « gne » ; C#m x=166,6 sur « g »"
+  },
+  "24:decale:A:1": {
+   "statut": "appliqué",
+   "decide_par": "def",
+   "raison": "inclus dans la ligne de 24:oeil:6"
+  },
+  "24:invente:B:1": {
+   "statut": "appliqué",
+   "decide_par": "def",
+   "raison": "inclus dans la ligne de 24:oeil:6"
+  },
+  "24:invente:A:1": {
+   "statut": "appliqué",
+   "decide_par": "def",
+   "raison": "inclus dans la ligne de 24:oeil:6"
+  },
+  "24:oeil:6": {
+   "statut": "appliqué",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "23:decale:A:1": {
+   "statut": "appliqué",
+   "decide_par": "def",
+   "raison": "inclus dans la ligne de 23:oeil:5"
+  },
+  "23:decale:B:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": "la ligne prend le texte de 23:oeil:5"
+  },
+  "23:oeil:5": {
+   "statut": "appliqué",
+   "decide_par": "session",
+   "raison": "A et B sont tous deux dans le blanc entre « di » et « gne » : A juste après « di », B ensuite, C#m sur « g ». La ligne entière est juste ; elle remplace le déplacement par défaut 23:decale:B:1. — partition : A x=137,8 sur le 1er espace après « di » (137,6–142,4) ; B x=152,2 sur le 4e espace (151,9–156,7) ; C#m x=166,6 sur « g » de « gne »"
+  },
+  "19:decale:A:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "19:oeil:4": {
+   "statut": "appliqué",
+   "decide_par": "session",
+   "raison": "A sur l'espace avant « c’est » ; C#m, Bsus4 et B déjà exacts. — partition : A x=271,8 sur l'espace idx32 (271,5–276,3) ; C#m x=399,1 sur « e » de « je » ; Bsus4 x=501,4 sur « e » de « t’adorer » ; B x=550,8 après le point"
+  },
+  "19:fable:19:decale:A:1": {
+   "statut": "laissé",
+   "decide_par": "session",
+   "raison": "Même ligne que 19:oeil:4, appliquée par celle-ci. — partition : A x=271,8 sur l'espace avant « c’est »"
+  },
+  "18:decale:B:1": {
+   "statut": "appliqué",
+   "decide_par": "def",
+   "raison": "inclus dans la ligne de 18:oeil:3"
+  },
+  "18:oeil:3": {
+   "statut": "appliqué",
+   "decide_par": "session",
+   "raison": "B sur le « a » de « pouvais », comme la partition ; A (retrait) et C#m déjà exacts. — partition : A x=34,0 sur le retrait ; B x=145,1 sur « a » de « pouvais » (145,0–154,2) ; C#m x=236,9 sur « e » de « libérer »"
+  },
+  "17:decale:A:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "17:oeil:2": {
+   "statut": "appliqué",
+   "decide_par": "session",
+   "raison": "A sur l'espace avant « et » ; B et E/G# déjà exacts. — partition : A x=292,5 sur l'espace idx34 (292,2–297,0) ; B x=400,3 sur « u » de « tu » ; E/G# x=493,9 sur « n » de « donné »"
+  },
+  "17:fable:17:decale:A:1": {
+   "statut": "laissé",
+   "decide_par": "session",
+   "raison": "Même ligne que 17:oeil:2, appliquée par celle-ci. — partition : A x=292,5 sur l'espace avant « et »"
+  },
+  "15:decale:A:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "15:oeil:1": {
+   "statut": "appliqué",
+   "decide_par": "session",
+   "raison": "A sur l'espace avant « j’étais » ; B et E déjà exacts. — partition : A x=297,9 sur l'espace idx34 (297,7–302,5) ; B x=378,1 sur « à » de « déjà » ; E x=494,3 sur « œ » de « cœur »"
+  },
+  "15:fable:15:decale:A:1": {
+   "statut": "laissé",
+   "decide_par": "session",
+   "raison": "Même ligne que 15:oeil:1, appliquée par celle-ci. — partition : A x=297,9 sur l'espace avant « j’étais »"
+  },
+  "13:decale:A:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "13:decale:E/G#:1": {
+   "statut": "appliqué",
+   "decide_par": "def",
+   "raison": "inclus dans la ligne de 13:oeil:0"
+  },
+  "13:oeil:0": {
+   "statut": "appliqué",
+   "decide_par": "session",
+   "raison": "La ligne proposée met chaque accord sur le caractère de la partition : A sur l'espace avant « me », B sur « u » de « que », E/G# sur l'espace avant « rien. ». — partition : A x=272,6 sur l'espace idx30 (272,5–277,3) avant « me » ; B x=379,7 sur « u » de « que » ; E/G# x=476,9 sur l'espace avant « rien. » (476,7–481,5)"
+  },
+  "13:fable:13:decale:A:1": {
+   "statut": "laissé",
+   "decide_par": "session",
+   "raison": "Même ligne que 13:oeil:0, appliquée par celle-ci (une seule des deux lectures). — partition : A x=272,6 sur l'espace avant « me »"
+  }
+ },
+ "ton-nom": {
+  "24:decale:G5:1": {
+   "statut": "appliqué",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "24:decale:G5:2": {
+   "statut": "appliqué",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "20:decale:D:1": {
+   "statut": "appliqué",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "19:decale:Em7:1": {
+   "statut": "appliqué",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "18:decale:Em7:1": {
+   "statut": "appliqué",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "17:decale:Em7:1": {
+   "statut": "appliqué",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "13:decale:G5:1": {
+   "statut": "appliqué",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "12:decale:G5:1": {
+   "statut": "appliqué",
+   "decide_par": "Timothée",
+   "raison": ""
+  }
+ },
+ "toujours-puissante": {
+  "58:relire:Am:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "53:nom:D/F#:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "53:fable:53:nom:D/F#:1": {
+   "statut": "appliqué",
+   "decide_par": "session",
+   "raison": "La feuille grave D, pas D/F# ; D sur « abondance », G sur « n » de « abondance » : toute la ligne est juste. — partition : D x=435,2 (« a » de « abondance » à 4,2 pt, « n » de « en » à 6,3) ; G x=476,8 (« n » à 3,0 pt, « a » à 3,2, même syllabe)"
+  },
+  "47:nom:D/F#:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "47:fable:47:nom:D/F#:1": {
+   "statut": "appliqué",
+   "decide_par": "session",
+   "raison": "La feuille grave D, pas D/F# ; position inchangée, G sur « n » de « puissant » : toute la ligne est juste. — partition : D x=438,7 (« s » de « si » à 1,6 pt) ; G x=489,7 (« n » à 1,5 pt)"
+  },
+  "46:relire:Em:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "42:instrumental:C:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "42:instrumental:D:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "42:instrumental:D:2": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "42:instrumental:D:3": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "31:relire:Am:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "30:nom:D/B:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "30:relire:Em:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "30:fable:30:nom:D/B:1": {
+   "statut": "laissé",
+   "decide_par": "session",
+   "raison": "Bm est juste (gravé), mais la ligne proposée garde Em sur le « a » de « restaurer » alors que le label est plus proche du « u » : ligne juste donnée dans lignes (l. 30). — partition : Bm x=70,7 (« p » de « pour » à 1,9 pt) ; Em x=146,2 (« u » à 2,6 pt, « a » à 3,6 pt)"
+  },
+  "28:relire:C:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "27:relire:C:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "23:relire:C:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "23:relire:G:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "22:relire:C:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "20:relire:G:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "15:relire:G:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "14:relire:C:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "14:relire:G:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "13:decale:C:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  }
+ },
+ "tout-a-toi": {
+  "45:oeil:7": {
+   "statut": "appliqué",
+   "decide_par": "session",
+   "raison": "Bm commence au-dessus du « e » de « trajectoire ». — partition : p2, y=318,9 : B à x=98,9 = bord gauche du « e » (98,9–104,4) de « Ta traj‹e›ctoire »"
+  },
+  "44:oeil:6": {
+   "statut": "appliqué",
+   "decide_par": "session",
+   "raison": "Eadd4 commence au-dessus du « o » de « moi ». — partition : p2, y=263,3 : E à x=161,9 = bord gauche du « o » (161,9–167,9) de « Sur mesure pour m‹o›i »"
+  },
+  "38:oeil:5": {
+   "statut": "appliqué",
+   "decide_par": "session",
+   "raison": "Bm est gravé après « j’ai », sur l'espace final de la ligne : après la syllabe finie, collé. — partition : p1 col. 2, y=587,3 : B à x=402,5 = espace final (402,5–405,0) de « Tout ce que j’ai‹ › » ; vu sur la découpe 4× : Bm à droite du « i »"
+  },
+  "37:oeil:4": {
+   "statut": "appliqué",
+   "decide_par": "session",
+   "raison": "F#m7 commence au-dessus du « v » de « vie ». — partition : p1 col. 2, y=503,9 : F à x=409,8 = bord gauche du « v » (409,8–414,8) de « Alors voici la ‹v›ie » ; Bm à 332,7 dans le retrait avant « Alors » (345,7)"
+  },
+  "30:oeil:3": {
+   "statut": "appliqué",
+   "decide_par": "session",
+   "raison": "La feuille porte Eadd4 (E + exposant add4) ; « Eadd » est une coquille. Les deux autres accords de la ligne sont exacts (D sur « p » de plans, Bm sur « o » de Toi) et Eadd4 est dans le retrait avant « Mes ». — partition : p1 col. 2, y=326,3 : E à x=332,7 (exposant add4 à 338,3), « Mes » commence à 345,7 ; D à 432,0 = « p » de plans ; Bm à 391,1 = « o » de « Toi » (y=354,1)"
+  },
+  "22:oeil:2": {
+   "statut": "appliqué",
+   "decide_par": "session",
+   "raison": "D est gravé dans le retrait, avant « Mon » : crochet + espace. — partition : p1, y=607,2 : D à x=71,1 ; « Mon » commence à x=84,1"
+  },
+  "20:oeil:1": {
+   "statut": "appliqué",
+   "decide_par": "session",
+   "raison": "D est gravé dans le retrait, avant la 1re lettre de « Mais » : crochet + espace. — partition : p1, y=496,0 : D à x=71,1 ; « Mais » commence à x=84,1 (ligne en retrait, les lignes sans accord de tête commencent à 68,8)"
+  },
+  "16:oeil:0": {
+   "statut": "appliqué",
+   "decide_par": "session",
+   "raison": "Le label Eadd4 commence au-dessus du « i » de « poussière » : pouss[Eadd4]ière. — partition : p1, y=423,3 : E à x=163,6 = bord gauche du « i » (163,6–166,1) de « Sur un sol de pouss‹i›ère » ; vu sur la découpe 4×"
+  }
+ },
+ "tout-puissant": {
+  "21:decale:A:1": {
+   "statut": "appliqué",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "20:decale:A:1": {
+   "statut": "appliqué",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "20:decale:G:1": {
+   "statut": "appliqué",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "16:decale:A:1": {
+   "statut": "appliqué",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "15:decale:D:1": {
+   "statut": "appliqué",
+   "decide_par": "Timothée",
+   "raison": "inclus dans la ligne de la session"
+  },
+  "14:decale:A:1": {
+   "statut": "appliqué",
+   "decide_par": "Timothée",
+   "raison": "inclus dans la ligne de la session"
+  },
+  "13:decale:D:1": {
+   "statut": "appliqué",
+   "decide_par": "Timothée",
+   "raison": "inclus dans la ligne de la session"
+  },
+  "12:decale:A:1": {
+   "statut": "appliqué",
+   "decide_par": "Timothée",
+   "raison": "inclus dans la ligne de la session"
+  },
+  "12:manquant:D:1": {
+   "statut": "appliqué",
+   "decide_par": "Timothée",
+   "raison": "inclus dans la ligne de la session"
+  }
+ },
+ "toutes-choses-nouvelles": {
+  "21:decale:E:1": {
+   "statut": "appliqué",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "17:decale:D:1": {
+   "statut": "appliqué",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "17:decale:F#m:1": {
+   "statut": "appliqué",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "16:decale:D:1": {
+   "statut": "appliqué",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "15:decale:E:1": {
+   "statut": "appliqué",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "10:decale:E:1": {
+   "statut": "appliqué",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "9:decale:D:1": {
+   "statut": "appliqué",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "8:decale:E:1": {
+   "statut": "appliqué",
+   "decide_par": "Timothée",
+   "raison": ""
+  }
+ },
+ "triomphe": {
+  "80:oeil:0": {
+   "statut": "laissé",
+   "decide_par": "session",
+   "raison": "Ni « [B]Nous » (actuel) ni « [B]ta » (opération) : le label « B____ » du Refrain 4 commence au-dessus du « n » final de « chantons » ; la ligne juste est donnée dans lignes. — partition : p4 (image 1072 px de large), ligne d'accords tapée à part (graisse normale, trait de tenue) : bord gauche du B à x=245, dans le « n » de « chanto‹n›s » (glyphe 239–251) ; « Nous » commence à x=70, « ta » à x≈279."
+  }
+ },
+ "tu-agiras": {
+  "53:reporte:G#m:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "52:reporte:E:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "51:reporte:C#m:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "51:reporte:B:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "50:reporte:A:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "50:reporte:B:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "47:relire:B:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "47:oeil:9": {
+   "statut": "appliqué",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "46:relire:B:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "46:oeil:8": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "42:relire:E:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "42:oeil:7": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "41:relire:C#m:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "41:oeil:6": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "38:relire:A:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "38:oeil:5": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "37:relire:C#m:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "37:oeil:4": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "31:relire:A:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "31:relire:E:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "31:oeil:3": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "31:fable:31:relire:A:1": {
+   "statut": "appliqué",
+   "decide_par": "session",
+   "raison": "La feuille écrit « Mais Tu agiras » (espace rendue) ; A commence 0,7 pt avant la fin du « u », son corps au-dessus de l'espace et du « a » : [A]agiras comme à la ligne 26 ; E dans « ras » inchangé. — partition : A x=111,0 (« u » 105,7–111,7, « a » dès 114,7) ; E x=137,0 sur le « a » de « ras » (133,4–138,7)"
+  },
+  "31:fable:31:oeil:3": {
+   "statut": "appliqué",
+   "decide_par": "session",
+   "raison": "Même ligne que 31:fable:31:relire:A:1 : espace rendue entre « Tu » et « agiras », accords inchangés. — inclus dans la ligne de 31:fable:31:relire:A:1 — partition : « Mais Tu agiras » sur la feuille"
+  },
+  "29:manquant:E:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "29:oeil:2": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "29:fable:29:manquant:E:1": {
+   "statut": "appliqué",
+   "decide_par": "session",
+   "raison": "La feuille grave un E au-dessus de « tombeau », absent du .cho ; bord gauche du label dans le « b » : syllabe « beau ». — partition : E x=267,0, « b » de « tombeau » 263,0–269,0 → tom[E]beau"
+  },
+  "29:fable:29:oeil:2": {
+   "statut": "appliqué",
+   "decide_par": "session",
+   "raison": "Même lecture que 29:fable:29:manquant:E:1 (une seule des deux lectures : tom[E]beau, pas tomb[E]eau). — inclus dans la ligne de 29:fable:29:manquant:E:1 — partition : E x=267,0 dans le « b » (263,0–269,0)"
+  },
+  "26:relire:A:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "26:relire:E:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "26:oeil:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "25:relire:C#m:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "25:oeil:0": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "17:relire:E:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "15:relire:E:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "14:relire:C#m:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  }
+ },
+ "tu-es-bon": {
+  "34:decale:Am7:1": {
+   "statut": "appliqué",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "32:decale:C:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "32:colle:C:1": {
+   "statut": "appliqué",
+   "decide_par": "def",
+   "raison": "inclus dans la ligne de 32:fable:32:decale:C:1"
+  },
+  "32:fable:32:decale:C:1": {
+   "statut": "appliqué",
+   "decide_par": "session",
+   "raison": "La feuille de l'église (source retenue) pose l'accord sur l'espace entre « vie » et « Te » : crochet puis espace, ce qui rend aussi l'espace perdu (le site affichait « vieTe »). Même ligne que l'écart 32:colle:C:1 (défaut ok) ; 32:decale:C:1 (non, sans opération) est l'autre lecture du même accord, on ne retient que celle-ci. — partition : Bb (= C en G) x=251,6, espace x0=251,6 entre « vie » (fin 251,6) et « Te » (x0 256,0) : position en l'air, ligne `Un cri [Am7]sur mes lèvres, ma vie[C] Te célèbre.`"
+  },
+  "28:decale:D:1": {
+   "statut": "appliqué",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "15:decale:D:1": {
+   "statut": "appliqué",
+   "decide_par": "def",
+   "raison": ""
+  }
+ },
+ "tu-es-la-lumiere": {
+  "37:decale:A:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "35:decale:A:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "33:decale:A:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "12:decale:C#m:1": {
+   "statut": "appliqué",
+   "decide_par": "def",
+   "raison": ""
+  }
+ },
+ "tu-es-la-vie": {
+  "40:decale:Am:1": {
+   "statut": "appliqué",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "33:decale:Am:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "33:decale:C:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "33:fable:33:decale:Am:1": {
+   "statut": "appliqué",
+   "decide_par": "session",
+   "raison": "le remplacement met Am dans le blanc avant le 2e « Tu » (crochet + espace) et C sur le « o » de « moi » : toute la ligne est alors comme la feuille. — partition : Am x=149,4 sur la dernière des trois espaces avant le 2e « Tu » (149,4-153,9 ; « T » à 153,9) ; C x=128,1 sur « o » de « m‹o›i. », ligne renvoyée de la feuille"
+  },
+  "33:fable:33:decale:C:1": {
+   "statut": "appliqué",
+   "decide_par": "session",
+   "raison": "même remplacement que 33:fable:33:decale:Am:1 (texte identique) : C devant « o » de « moi ». — inclus dans la ligne de 33:fable:33:decale:Am:1 — partition : C x=128,1 au-dessus du « o » de « moi. » sur la ligne renvoyée de la feuille"
+  },
+  "26:decale:F:1": {
+   "statut": "appliqué",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "22:decale:F:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "22:colle:F:1": {
+   "statut": "appliqué",
+   "decide_par": "def",
+   "raison": "inclus dans la ligne de 22:fable:22:decale:F:1"
+  },
+  "22:fable:22:decale:F:1": {
+   "statut": "appliqué",
+   "decide_par": "session",
+   "raison": "la ligne de remplacement met F sur l'espace qui suit « vie, », comme la feuille : « vie,[F] Tu » ; Am en tête reste au-dessus du retrait. — partition : F x=140,5 sur la 1re espace après la virgule (espace 140,5-145,0 ; « T » à 145,0) ; Am x=45,4 sur le retrait (« T » à 54,3)"
+  },
+  "8:decale:Am:1": {
+   "statut": "appliqué",
+   "decide_par": "def",
+   "raison": ""
+  }
+ },
+ "tu-es-le-chant": {
+  "27:decale:Am:1": {
+   "statut": "appliqué",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "22:decale:Bsus4:1": {
+   "statut": "appliqué",
+   "decide_par": "Timothée",
+   "raison": ""
+  }
+ },
+ "tu-es-notre-dieu": {
+  "24:decale:Em:1": {
+   "statut": "appliqué",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "19:decale:G:1": {
+   "statut": "appliqué",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "19:decale:D:1": {
+   "statut": "appliqué",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "19:decale:A:1": {
+   "statut": "appliqué",
+   "decide_par": "Timothée",
+   "raison": ""
+  }
+ },
+ "tu-m-aimes": {
+  "56:decale:B:1": {
+   "statut": "appliqué",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "53:decale:B:1": {
+   "statut": "appliqué",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "52:manquant:B:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "51:invente:B:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": "la ligne est celle mesurée par la session"
+  },
+  "47:decale:B:1": {
+   "statut": "appliqué",
+   "decide_par": "session",
+   "raison": "Sur la partition, G (= B, capo 4) est en l'air, juste après « m'aimes. (x..) », et D (= F#) vient après lui, plus loin en l'air. Le .cho n'a pas « . (x..) » : avec l'opération, B suit « aimes » et F# vient après lui, dans le même ordre que la partition. — partition : x=253,8 sur l'espace qui suit « (x..) », en l'air après la fin des paroles"
+  },
+  "47:decale:F#:1": {
+   "statut": "laissé",
+   "decide_par": "session",
+   "raison": "L'opération mettrait F# avant B, à l'inverse de la partition (G à x=253,8 puis D à x=277,6, les deux en l'air). Une fois la question précédente à ok, F# reste en l'air après B : position juste. — partition : x=277,6, en l'air après « (x..) », derrière le label G"
+  },
+  "40:decale:G#m:1": {
+   "statut": "appliqué",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "40:manquant:E:1": {
+   "statut": "appliqué",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "33:reporte:G#m F# E G#m B E:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "26:decale:E:1": {
+   "statut": "appliqué",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "24:decale:E:1": {
+   "statut": "appliqué",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "19:decale:E:1": {
+   "statut": "appliqué",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "18:decale:F#:1": {
+   "statut": "appliqué",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "18:decale:E:1": {
+   "statut": "appliqué",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "17:decale:B:1": {
+   "statut": "appliqué",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "17:decale:E:1": {
+   "statut": "appliqué",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "16:decale:F#:1": {
+   "statut": "appliqué",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "12:instrumental:G#m:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "12:instrumental:B:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "12:instrumental:E:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "11:instrumental:G#m:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "11:instrumental:F#:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "11:instrumental:E:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  }
+ },
+ "un-chant-nouveau-monte": {
+  "26:decale:E/G#:1": {
+   "statut": "appliqué",
+   "decide_par": "Timothée",
+   "raison": ""
+  }
+ },
+ "un-vin-nouveau": {
+  "35:relire:Gm:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "34:relire:Bb/D:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "33:relire:F:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "32:relire:Bb/D:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "28:invente:(F/A):1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "21:relire:F:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "14:invente:(F/A):1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "13:relire:Eb:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "11:relire:Eb:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  }
+ },
+ "une-flamme-en-moi": {
+  "28:oeil:4": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "25:oeil:3": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "18:oeil:2": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "16:oeil:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "11:oeil:0": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  }
+ },
+ "vases-d-argile": {
+  "33:manquant:G:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "33:manquant:D:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "33:manquant:Em:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "33:manquant:C:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  }
+ },
+ "venez-le-celebrer": {
+  "21:decale:D:1": {
+   "statut": "appliqué",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "21:decale:G:1": {
+   "statut": "appliqué",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "20:decale:Em:1": {
+   "statut": "appliqué",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "15:decale:D:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "15:fable:15:decale:D:1": {
+   "statut": "appliqué",
+   "decide_par": "session",
+   "raison": "Même coupe : la feuille met « …Ton honneur un chant d'amour, Seigneur. » sur une ligne, le .cho coupe avant « Un » ; D est sur l'espace avant « un » → `[D] Un`. G sur « g » de « Seigneur » exact. — partition : y=221,5 : D@256,2 = x0 de l'espace après « honneur » (« honneur‹ ›un ») ; G@415,8 sur « Sei‹g›neur »"
+  },
+  "11:decale:Am:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "11:fable:11:decale:Am:1": {
+   "statut": "appliqué",
+   "decide_par": "session",
+   "raison": "Le .cho coupe la ligne de la feuille entre « venu » et « donner » ; le label Am est sur l'espace entre les deux mots : en début de ligne, crochet + espace (cas Océans de 02). Le reste de la ligne est juste (D4 sur « i » de « vie », D après le point). — partition : y=153,4 : Am@202,8 = x0 de l'espace après « venu » (« venu‹ ›donner ») ; D4@286,4 sur « v‹i›e » ; D@316,0 sur les espaces après « vie. »"
+  }
+ },
+ "viens-souffler-a-nouveau": {
+  "68:relire:G:1": {
+   "statut": "laissé",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "68:manquant:C/E:1": {
+   "statut": "laissé",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "68:manquant:F:1": {
+   "statut": "laissé",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "55:relire:C/E:1": {
+   "statut": "laissé",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "55:fable:55:relire:C/E:1": {
+   "statut": "appliqué",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "51:relire:G:1": {
+   "statut": "laissé",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "50:relire:C:1": {
+   "statut": "laissé",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "47:relire:G:1": {
+   "statut": "laissé",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "46:relire:C:1": {
+   "statut": "laissé",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "27:relire:G:1": {
+   "statut": "laissé",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "26:relire:C:1": {
+   "statut": "laissé",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "14:relire:C:1": {
+   "statut": "laissé",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "8:instrumental:F:1": {
+   "statut": "laissé",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "8:instrumental:C:1": {
+   "statut": "laissé",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "8:instrumental:G:1": {
+   "statut": "laissé",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "8:instrumental:Am:1": {
+   "statut": "laissé",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "8:instrumental:F:2": {
+   "statut": "laissé",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "8:instrumental:C:2": {
+   "statut": "laissé",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "8:instrumental:G:2": {
+   "statut": "laissé",
+   "decide_par": "Timothée",
+   "raison": ""
+  }
+ },
+ "viens-toucher-ma-vie": {
+  "49:nom:F#m7:1": {
+   "statut": "laissé",
+   "decide_par": "Timothée",
+   "raison": "la ligne prend le texte de 49:oeil:8"
+  },
+  "49:decale:A/C#:1": {
+   "statut": "appliqué",
+   "decide_par": "Timothée",
+   "raison": "inclus dans la ligne de 49:oeil:8"
+  },
+  "49:oeil:8": {
+   "statut": "appliqué",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "49:fable:49:nom:F#m7:1": {
+   "statut": "laissé",
+   "decide_par": "Timothée",
+   "raison": "la ligne prend le texte de 49:oeil:8"
+  },
+  "48:decale:E:1": {
+   "statut": "appliqué",
+   "decide_par": "Timothée",
+   "raison": "inclus dans la ligne de 48:oeil:7"
+  },
+  "48:oeil:7": {
+   "statut": "appliqué",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "47:nom:F#m7:1": {
+   "statut": "appliqué",
+   "decide_par": "Timothée",
+   "raison": "inclus dans la ligne de la session"
+  },
+  "47:decale:A/C#:1": {
+   "statut": "appliqué",
+   "decide_par": "Timothée",
+   "raison": "inclus dans la ligne de la session"
+  },
+  "47:oeil:6": {
+   "statut": "appliqué",
+   "decide_par": "Timothée",
+   "raison": "inclus dans la ligne de la session"
+  },
+  "46:decale:E:1": {
+   "statut": "appliqué",
+   "decide_par": "Timothée",
+   "raison": "inclus dans la ligne de 46:oeil:5"
+  },
+  "46:oeil:5": {
+   "statut": "appliqué",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "42:decale:E:1": {
+   "statut": "appliqué",
+   "decide_par": "Timothée",
+   "raison": "inclus dans la ligne de 42:oeil:4"
+  },
+  "42:oeil:4": {
+   "statut": "appliqué",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "40:nom:Dsus2:1": {
+   "statut": "appliqué",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "39:decale:A/C#:1": {
+   "statut": "appliqué",
+   "decide_par": "Timothée",
+   "raison": "inclus dans la ligne de 39:oeil:3"
+  },
+  "39:oeil:3": {
+   "statut": "appliqué",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "37:nom:Dsus2:1": {
+   "statut": "appliqué",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "31:nom:F#m7:1": {
+   "statut": "appliqué",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "29:decale:A/C#:1": {
+   "statut": "appliqué",
+   "decide_par": "Timothée",
+   "raison": "inclus dans la ligne de 29:oeil:2"
+  },
+  "29:oeil:2": {
+   "statut": "appliqué",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "28:nom:F#m7:1": {
+   "statut": "appliqué",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "27:invente:A/C#:1": {
+   "statut": "appliqué",
+   "decide_par": "Timothée",
+   "raison": "inclus dans la ligne de la session"
+  },
+  "27:decale:E:1": {
+   "statut": "appliqué",
+   "decide_par": "Timothée",
+   "raison": "inclus dans la ligne de la session"
+  },
+  "27:manquant:D:1": {
+   "statut": "appliqué",
+   "decide_par": "Timothée",
+   "raison": "inclus dans la ligne de la session"
+  },
+  "27:oeil:1": {
+   "statut": "appliqué",
+   "decide_par": "Timothée",
+   "raison": "inclus dans la ligne de la session"
+  },
+  "23:decale:A:1": {
+   "statut": "appliqué",
+   "decide_par": "Timothée",
+   "raison": "inclus dans la ligne de 23:oeil:0"
+  },
+  "23:nom:Esus:1": {
+   "statut": "laissé",
+   "decide_par": "Timothée",
+   "raison": "la ligne prend le texte de 23:oeil:0"
+  },
+  "23:oeil:0": {
+   "statut": "appliqué",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "23:fable:23:nom:Esus:1": {
+   "statut": "laissé",
+   "decide_par": "Timothée",
+   "raison": "la ligne prend le texte de 23:oeil:0"
+  },
+  "22:nom:F#m7:1": {
+   "statut": "appliqué",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "15:nom:Dsus2:1": {
+   "statut": "appliqué",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "14:invente:Esus:1": {
+   "statut": "appliqué",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "13:manquant:Esus:1": {
+   "statut": "appliqué",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "11:nom:Dsus2:1": {
+   "statut": "appliqué",
+   "decide_par": "Timothée",
+   "raison": ""
+  }
+ },
+ "voici-le-jour": {
+  "61:decale:Bm:1": {
+   "statut": "appliqué",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "61:decale:A:1": {
+   "statut": "appliqué",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "61:manquant:G:1": {
+   "statut": "appliqué",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "61:manquant:D:1": {
+   "statut": "appliqué",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "60:decale:Bm:1": {
+   "statut": "appliqué",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "60:decale:A:1": {
+   "statut": "appliqué",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "60:manquant:G:1": {
+   "statut": "appliqué",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "59:decale:Asus4:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "59:fable:59:decale:Asus4:1": {
+   "statut": "appliqué",
+   "decide_par": "session",
+   "raison": "Rendu ChordPro shir.fr : le label Asus4 commence exactement au bord gauche du « o » de « toi, » ; le .cho le pose devant « i ». La ligne remplacée garde Em, D/F# et G tels qu'ils sont (tous exacts). Seule lecture retenue : l'écart 59:decale:Asus4:1 (non par défaut) est l'autre lecture du même accord et ne s'applique pas. — partition : p.2, ligne « Je te suivrai… » : Asus4 x0=434,58 ; « o » de « toi » [434,39–444,10] → t[Asus4]oi, (Em x0=43,32 sur « e » de « Je » [43,31], D/F# x0=141,96 sur « u » de « sur », G x0=291,90 sur « e » de « espérance »)"
+  },
+  "56:decale:D/F#:1": {
+   "statut": "appliqué",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "54:decale:Bm:1": {
+   "statut": "appliqué",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "37:decale:G:1": {
+   "statut": "appliqué",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "36:decale:A:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "34:decale:G:1": {
+   "statut": "appliqué",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "33:decale:A:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "28:decale:Bm:1": {
+   "statut": "appliqué",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "28:decale:A:1": {
+   "statut": "appliqué",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "26:decale:Bm:1": {
+   "statut": "appliqué",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "24:decale:Bm:1": {
+   "statut": "appliqué",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "19:decale:G:1": {
+   "statut": "appliqué",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "18:decale:A:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "16:decale:G:1": {
+   "statut": "appliqué",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "15:decale:A:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "15:decale:Bm:1": {
+   "statut": "appliqué",
+   "decide_par": "def",
+   "raison": ""
+  }
+ },
+ "yahwe": {
+  "43:decale:F#m:1": {
+   "statut": "appliqué",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "42:decale:A:1": {
+   "statut": "appliqué",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "35:decale:D:1": {
+   "statut": "appliqué",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "35:decale:A:1": {
+   "statut": "appliqué",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "31:decale:A:1": {
+   "statut": "appliqué",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "31:decale:E:1": {
+   "statut": "appliqué",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "27:decale:F#m:1": {
+   "statut": "appliqué",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "22:decale:A:1": {
+   "statut": "appliqué",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "22:decale:E:1": {
+   "statut": "appliqué",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "20:decale:A:1": {
+   "statut": "appliqué",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "19:decale:E:1": {
+   "statut": "appliqué",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "18:decale:C#m:1": {
+   "statut": "appliqué",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "9:decale:F#m:1": {
+   "statut": "appliqué",
+   "decide_par": "Timothée",
+   "raison": ""
+  }
  }
 }

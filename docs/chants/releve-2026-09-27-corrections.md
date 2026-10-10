@@ -23,8 +23,8 @@ Méthode (décisions de Timothée du 08/10/2026, en cours de chantier) :
 | 3 | fascine, feu-du-fondeur, fidele-loyal, gloire-a-son-nom, grace-en-grace, grace-infinie, grande-est-ta-fidelite, havre-de-paix, heritiers, homme-de-douleurs, hosanna, hosanna-ostrini, how-great-thou-art, il-est-la-vie, il-est-temps, il-m-aime, il-regnera, inattendu, infiniment-grand, invitation, j-annoncerai, jamais-marche-seul, je-celebrerai, je-flechis-le-genou, je-loue-ton-nom-eternel, je-louerai-l-eternel | poussé (`72e101ae`) |
 | 4 | je-n-ai-rien-a-craindre, je-reviens-au-coeur, je-te-donne-tout, je-veux-proclamer-le-nom-de-jesus, jesus-je-te-suivrai, jireh, joie-dans-le-monde, jusqu-au-bout, l-amour-de-notre-pere, l-entre-deux, la-benediction, la-croix-seule-me-suffit, la-dans-le-feu, la-passion, la-pour-toi, laissons-entrer, le-fils-de-dieu, le-nom-de-jesus, le-plus-grand, le-roi-est-ne, libere, lumiere-du-monde, ma-passion, ma-raison-de-noel, me-voici, merci, moi-et-ma-maison | poussé (`e1ee8dbd`) |
 | 5 | mon-ancre-et-ma-voile, mon-assurance-est-en-christ, mon-redempteur-vit, mon-secours-est-en-toi, mon-seul-souhait, naitre, ne-pour-nous-donner-la-vie, noel-est-arrive, nos-yeux-sont-sur-toi, notre-pere, nous-tiendrons, nous-voici, nous-voulons-voir-jesus-eleve, o-jesus-mon-sauveur, o-vois, oasis, oceans, oui-je-crois, ouvre-les-yeux-de-mon-coeur, parfaitement-imparfait, personne, pionnier, premiere-place, pres-de-la-croix, prince-de-paix, priorite | poussé (`f821cc6f`) |
-| 6 | promesses, quand-je-contemple, quand-tu-parles, que-ma-bouche-chante-ta-louange, que-nos-chants-soient-comme-un-signe, que-ton-nom-resonne-en-ce-lieu, que-ton-regne-vienne, que-tous-soient-un, quelle-grace, quelle-grace-incomparable, recois-l-adoration, recois-ma-vie, rejouis-toi-mon-ame, relever-le-faible, rememoration, remplis-moi-de-ta-presence, rien-au-monde, rien-n-est-perdu-d-avance, risen, roi-des-rois, saint-esprit, sans-rien-retenir, sauve-avec-puissance, seigneur-je-veux-te-dire, seigneur-par-la-clarte, solo-christo, souffle | poussé avec ce fichier |
-| 7 | ta-parole, Ta-parole-écriture, toi-et-moi, toi-seul-es-digne, ton-nom, toujours-puissante, tout-a-toi, tout-puissant, toutes-choses-nouvelles, triomphe, tu-agiras, tu-es-bon, tu-es-la-lumiere, tu-es-la-vie, tu-es-le-chant, tu-es-notre-dieu, tu-m-aimes, un-chant-nouveau-monte, un-vin-nouveau, une-flamme-en-moi, vases-d-argile, venez-le-celebrer, viens-souffler-a-nouveau, viens-toucher-ma-vie, voici-le-jour, yahwe | à faire |
+| 6 | promesses, quand-je-contemple, quand-tu-parles, que-ma-bouche-chante-ta-louange, que-nos-chants-soient-comme-un-signe, que-ton-nom-resonne-en-ce-lieu, que-ton-regne-vienne, que-tous-soient-un, quelle-grace, quelle-grace-incomparable, recois-l-adoration, recois-ma-vie, rejouis-toi-mon-ame, relever-le-faible, rememoration, remplis-moi-de-ta-presence, rien-au-monde, rien-n-est-perdu-d-avance, risen, roi-des-rois, saint-esprit, sans-rien-retenir, sauve-avec-puissance, seigneur-je-veux-te-dire, seigneur-par-la-clarte, solo-christo, souffle | poussé (`f2bc14ab`) |
+| 7 | ta-parole, Ta-parole-écriture, toi-et-moi, toi-seul-es-digne, ton-nom, toujours-puissante, tout-a-toi, tout-puissant, toutes-choses-nouvelles, triomphe, tu-agiras, tu-es-bon, tu-es-la-lumiere, tu-es-la-vie, tu-es-le-chant, tu-es-notre-dieu, tu-m-aimes, un-chant-nouveau-monte, un-vin-nouveau, une-flamme-en-moi, vases-d-argile, venez-le-celebrer, viens-souffler-a-nouveau, viens-toucher-ma-vie, voici-le-jour, yahwe | poussé avec ce fichier |
 | 8 | 一切歌颂赞美, 一切都更新, 一同齐声宣扬, 一生敬拜你, 一生爱你, 一生跟随, 一粒麦子, 一颗谦卑的心, 不停赞美, 不停赞美你, 丰盛的应许, 为我而来, 为爱而生, 主你是我力量, 主我献上生命给你, 主的喜乐是我力量, 云上太阳, 亲眼看见你, 从心合一, 从早晨到夜晚, 从这代到那代, 伯利恒的喜讯, 住在你里面, 何等恩典, 你们要赞美耶和华, 你坐着为王, 你恩典不离开 | à faire |
 | 9 | 你是唯一, 你是我的一切, 你是我的平安, 你是配的, 你永远如此深爱着我, 你的同在, 你的爱不离不弃, 使命, 信实的神, 倾倒, 充满在这里, 全新的你, 全然向你, 再一次, 再次将我更新, 到各山岭去传扬, 前来敬拜, 医治我, 十字架, 十字架是我的荣耀, 十字架的传达者, 十架的大能, 十架的爱, 只要有你在我左右, 只需要你, 叫我抬起头的神, 向主欢呼, 向我的神献上感谢 | à faire |
 | 10 | 君王就在这里, 吹起复兴的火, 和散那, 哦十字架, 唯有耶稣, 唯独依靠你, 回家, 因着十架爱, 围绕我, 圣灵的江河, 圣诞节耶稣为你而来, 在你宝座前, 在耶稣的脚前, 在这里, 坐在宝座上圣洁羔羊, 复兴的火, 大声敬拜, 大山为我挪开, 大手牵着小手, 天国的子民, 奇异恩典, 奔跑不放弃, 好喜欢与你在一起, 如果你想知道, 如鹰展翅上腾, 安静, 定睛在耶稣身上 | à faire |
@@ -39,11 +39,11 @@ Les 3 397 écarts, chacun compté une seule fois :
 
 | Statut | Timothée | def | session | Total |
 |---|---:|---:|---:|---:|
-| appliqué | 354 | 320 | 205 | 879 |
-| laissé | 244 | 614 | 71 | 929 |
+| appliqué | 430 | 386 | 239 | 1 055 |
+| laissé | 266 | 780 | 80 | 1 126 |
 | doute écrit | 0 | 0 | 0 | 0 |
 | ligne changée depuis l'audit | 0 | 1 | 1 | 2 |
-| à faire (lots non encore poussés) | | | | 1 587 |
+| à faire (lots non encore poussés) | | | | 1 214 |
 | **Total** | | | | **3 397** |
 
 « laissé » réunit les « non » (Timothée ou def), les questions tranchées « non » par la session, les « ok » sans opération et les opérations écartées par la règle de la page (une ligne ne prend qu'un seul remplacement ; un remplacement qui annulerait un « non » de Timothée n'est pas retenu). « doute écrit » : question laissée avec un `{needs_review}` au-dessus de la ligne.
@@ -9180,6 +9180,1641 @@ En-tête : ajout de `{source: Souffle.pdf}`
 - Thèmes inchangés (Adoration, Saint-Esprit, Engagement : dans la liste et défendables).
 - Feuille sans renvoi, noté ici plutôt qu'en needs_review : la feuille s'arrête au couplet 2 sans renvoi : le retour du pré-refrain et du refrain après le couplet 2 n'est pas gravé, rien n'est ajouté.
 
+### Ta-parole-écriture — Ta parole
+
+Lot 7 · partition retenue : `Ta parole 2.pdf` (word-scan, mesure sans-source) · **fichier inchangé**
+
+### ta-parole — Ta parole
+
+Lot 7 · partition retenue : `Ta parole.pdf` (eglise-fpdf, mesure fiable)
+
+Lignes modifiées :
+
+- l. 13 : `Elle est [Bb]lumière [C]sur mon sent[Dm]ier.` → `Elle est [Bb]lumière [C]sur mon sen[Dm]tier.`
+- l. 20 : `A[F]men, a[C]men ! [F/A]Loué [Bb]soit [C]l'Éternel.` → `A[F]men, a[C]men ! [F/A]Loué [Bb]soit [C]l'Éte[(F)]rnel.` *(session)*
+- l. 26 : `En Toi [Bb]j'ai conf[C]iance, [F]Dieu [C/E]Tout-Pui[Dm]ssant, Ét[Bb]ernel, Dieu triom[Csus4]phant.` → `En Toi [Bb]j'ai con[C]fiance, [F]Dieu [C/E]Tout-Pui[Dm]ssant, É[Bb]ternel, Dieu triom[Csus4]phant.`
+- l. 29 : `{start_of_bridge: Pont}` → `{start_of_bridge: Pont (x2)}` *(structure)*
+- l. 31 : `Il a [Bb]command[C]é, tout a [F]été [Dm]fait.` → `Il a [Bb]comman[C]dé, tout a [F]été [Dm]fait.`
+- l. 32 : `[Bb]Parle, Ét[C]ernel, parle [F]encore aujour[Dm]d'hui ;` → `[Bb]Parle, É[C]ternel, parle [F]encore aujour[Dm]d'hui ;`
+
+Mesures sur la partition (accords non exacts et lignes changées par la session) :
+
+| Ligne | Accord | Mesure | Classe | Correction |
+|---|---|---|---|---|
+| 13 | Dm | x=398,4 sur « t » de « sen‹t›ier » | décalé | sen[Dm]tier (défaut ok) |
+| 20 | (F) | x=258,3 sur « r » de « l'Éte‹r›nel » | absent | l'Éte[(F)]rnel |
+| 26 | C | x=131,2 sur « f » de « con‹f›iance » | décalé | con[C]fiance (défaut ok) |
+| 26 | Bb | x=338,4 sur « t » de « É‹t›ernel » | décalé | É[Bb]ternel (défaut ok) |
+| 31 | C | x=132,5 sur « d » de « comman‹d›é » | décalé | comman[C]dé (défaut ok) |
+| 32 | C | x=102,3 sur « t » de « É‹t›ernel » | décalé | É[C]ternel (défaut ok) |
+| 37 | F | x=41,9 sur « m » de « A‹m›en » (Final, y=629,8) | exact (check.py le dit absent : il lit mal la rangée « FC/FB/FB ») | aucune |
+| 37 | C/F | x=90,8 sur « m » de « a‹m›en » | exact (vérifié à l'œil, check.py le dit absent) | aucune |
+| 37 | Bb/F | x=191,3 sur « T » de « Ta bouche » (espace finit à 191,27) | exact (vérifié à l'œil, check.py le dit absent) | aucune |
+| 37 | Bb | x=310,5 sur « T » de « Ta main » | exact (vérifié à l'œil, check.py le dit absent) | aucune |
+
+Forme (sans effet sur la place des accords, détail dans le diff du commit) : 4 ligne(s) — ligne sans paroles : l. 8, 24 ; espace de fin : l. 12, 14 ; mot coupé au tiret : l. 14.
+
+En-tête : ajout de `{source: Ta parole.pdf}`
+
+| Écart | Statut | Par | Raison, partition |
+|---|---|---|---|
+| 32:decale:C:1 | appliqué | def |  |
+| 31:decale:C:1 | appliqué | def |  |
+| 26:decale:C:1 | appliqué | def |  |
+| 26:decale:Bb:1 | appliqué | def |  |
+| 20:manquant:(F):1 | appliqué | session | La partition grave un (F) optionnel au-dessus du « r » de « l'Éternel » ; un accord optionnel se transcrit toujours entre parenthèses (01, 02). — inclus dans la ligne de la session — partition : label « (F) » x=258,3 (y=276,8), caractère porteur « r » x0=258,3 de « l'Éte‹r›nel. » : exact |
+| 13:decale:Dm:1 | appliqué | def |  |
+
+- Partition : Ta parole.pdf (église, FPDF, couche texte) ; mesure par coordonnées des caractères, 70 accords.
+- Les quatre décalés du défaut (l. 13, 26 ×2, 31, 32) sont confirmés par la mesure : la partition pose l'accord une lettre plus tôt (con[C]fiance, É[Bb]ternel, comman[C]dé, É[C]ternel, sen[Dm]tier).
+- Final l. 37 : check.py dit 4 accords « absents de la source » ; vérifié à l'œil sur les coordonnées, la ligne est exacte (l'outil lit mal la rangée d'accords F C/F Bb/F Bb).
+- l. 14 : « sécuri - té » gravé avec le tiret du transcripteur ; le moteur l'écrit « sécurité », accords sur les mêmes caractères (C/E sur « u », Dm sur « é »).
+- Paroles, non appliqué : la partition met « Ta parole est la vérité ; elle est lumière… » sur une seule ligne avec « elle » en minuscule ; le .cho coupe en deux lignes avec « Elle ».
+- Autre source : Ta parole 2.pdf (scan Word, basse fidélité) non retenue.
+- Thèmes : Foi, Adoration conservés (valides).
+
+### toi-et-moi — Toi et moi
+
+Lot 7 · partition retenue : `Toi et moi (G).pdf` (eglise-fpdf, mesure fiable)
+
+Lignes modifiées :
+
+- l. 8 : `[G]Toi et moi[Em7], [C]unis par le [C/D]don de [D]Sa vie,` → `[G]Toi et mo[Em7]i, [C]unis par le [C/D]don de [D]Sa vie,`
+- l. 9 : `[G] À la [Em7]croix où [C]la mort a per[C/D]du sa [D]force, [G]et c'est comme [Em7]ça` → `[G] À la [Em7]croix où [C]la mort a per[C/D]du sa [D]force,[G] et c'est comme [Em7]ça`
+- l. 15 : `Le [C]ciel et la [D]terre passer[G]ont,` → `Le [C]ciel et la [D]terre passe[G]ront,`
+- l. 16 : `Les [C]larmes et les [D]guerres cesser[G]ont,` → `Les [C]larmes et les [D]guerres cesse[G]ront,`
+- l. 18 : `Oui [Bm7]Sa Par[Em7]ole rester[F7M]a [Em7]à [C/D]ja - [D]mais.` → `Oui [Bm7]Sa Pa[Em7]role reste[Fmaj7]ra [Em7]à [C/D]ja[D]mais.`
+- l. 22 : `Les [C]hommes et les [D]anges chanter[G]ont,` → `Les [C]hommes et les [D]anges chante[G]ront,`
+- l. 23 : `Des [C]louanges à Sa [D]gloire à l'un[G]isson,` → `Des [C]louanges à Sa [D]gloire à l'uni[G]sson,`
+
+Mesures sur la partition (accords non exacts et lignes changées par la session) :
+
+| Ligne | Accord | Mesure | Classe | Correction |
+|---|---|---|---|---|
+| 8 | Em7 | x=112,1 sur « i » de « mo‹i›, » (i 112,0) | décalé | mo[Em7]i, (défaut ok) |
+| 9 | G | x=329,0 sur l'espace après « force, » (virgule 324,6, espace 329,0, « e » 333,5) | décalé | force,[G] et (défaut ok) |
+| 15 | G | x=196,6 sur « r » de « passe‹r›ont » (r 196,6) | décalé | passe[G]ront (défaut ok) |
+| 16 | G | x=257,0 sur « r » de « cesse‹r›ont » (r 257,0) | décalé | cesse[G]ront (défaut ok) |
+| 18 | Em7 | x=104,1 sur « r » de « Pa‹r›ole » (r 104,1) | décalé | Pa[Em7]role (question ok) |
+| 18 | F7M | x=170,8 sur le second « r » de « reste‹r›a » (r 170,8) | décalé | reste[F7M]ra (question ok) |
+| 22 | G | x=266,0 sur « r » de « chante‹r›ont » (r 266,0) | décalé | chante[G]ront (défaut ok) |
+| 23 | G | x=255,7 sur le premier « s » de « l'uni‹s›son » (s 255,7) | décalé | l'uni[G]sson (défaut ok) |
+
+Forme (sans effet sur la place des accords, détail dans le diff du commit) : 4 ligne(s) — mot coupé au tiret : l. 10, 11, 17, 25 ; orthographe d'accord : l. 25.
+
+En-tête : ajout de `{source: Toi et moi (G).pdf}`
+
+| Écart | Statut | Par | Raison, partition |
+|---|---|---|---|
+| 23:decale:G:1 | appliqué | def |  |
+| 22:decale:G:1 | appliqué | def |  |
+| 18:decale:Em7:1 | laissé | def |  |
+| 18:decale:F7M:1 | laissé | def |  |
+| 18:fable:18:decale:Em7:1 | appliqué | session | la ligne réécrite est exactement la feuille : Em7 devant le « r » de « Parole », Fmaj7 (F7M) devant le second « r » de « restera », les autres accords inchangés et déjà exacts. Le défaut « non » des deux déplacements venait de l'outil ; la partition fait foi au caractère près (rendu ChordPro). — partition : couche texte, y=378,9 : Bm7 x=60,5 sur « S » (60,5) ; Em7 x=104,1 sur « r » de « Pa‹r›ole » (P 84,6, a 95,2, r 104,1) ; F7M x=170,8 sur le second « r » de « reste‹r›a » (r 170,8, a 176,1) ; Em7 x=216,2 sur « à » ; C/D x=265,1 sur « j » ; D x=318,5 sur « m » |
+| 18:fable:18:decale:F7M:1 | appliqué | session | même ligne réécrite que 18:fable:18:decale:Em7:1 (texte identique) : F7M sur le second « r » de « restera », Em7 sur le « r » de « Parole ». — inclus dans la ligne de 18:fable:18:decale:Em7:1 — partition : F7M x=170,8 sur « r » (170,8) de « reste‹r›a », Em7 x=104,1 sur « r » (104,1) de « Pa‹r›ole » |
+| 16:decale:G:1 | appliqué | def |  |
+| 15:decale:G:1 | appliqué | def |  |
+| 9:decale:G:1 | appliqué | def |  |
+| 8:decale:Em7:1 | appliqué | def |  |
+
+- Source église (FPDF, rendu ChordPro, couche texte fiable) : les 53 accords mesurés ; 45 exacts avant, les 8 décalés corrigés (6 par les défauts « ok », 2 par la ligne 18 réécrite). Aucun accord absent ni inventé, aucun nom différent.
+- Ligne 18 : le commit 3fc950f a ajouté F7M, absent de l'import, sur « rester[F7M]a » ; la feuille le grave une lettre plus tôt (« reste[F7M]ra »). Ce commit rapproche le fichier de la feuille (même ajout exact à la l. 25, « é[F7M]clat ») : ce n'est pas un déplacement à l'écart de la partition, la position de la feuille l'emporte.
+- retouches.js signale aussi la l. 25 (même commit) : elle est déjà exacte (« é[F7M]clat », F7M x=253,5 sur « c » 253,5) ; seule la forme du moteur la touche.
+- Retrait de début de ligne revu sur toutes les lignes : seule la l. 9 est en retrait sur la feuille (« À » à x=54,3, G à x=45,4 au-dessus du retrait) et le fichier a déjà « [G] À ». Les autres lignes commencent à x=45,4 (refrain) ou 31,2 (couplets), sans retrait.
+- F7M s'écrit Fmaj7 (01) et les mots coupés au tiret sur la feuille (« Jé - sus », « Pa - role », « ja - mais ») s'écrivent entiers : laissé au moteur, sans changer de caractère porteur.
+- Autres feuilles du même chant dans Partitions : « Toi et moi - Accords.pdf » et « Toi et moi.pdf », non mesurées ; la feuille retenue est celle du relevé.
+
+### toi-seul-es-digne — Toi seul es digne
+
+Lot 7 · partition retenue : `Toi seul es digne.pdf` (eglise-fpdf, mesure fiable)
+
+Lignes modifiées :
+
+- l. 13 : `[A]Me montre q[B]ue je ne suis [E/G#]rien.` → `[A] Me montre q[B]ue je ne suis[E/G#] rien.`
+- l. 15 : `[A]J’étais déj[B]à près de ton c[E]œur.` → `[A] J’étais déj[B]à près de ton c[E]œur.`
+- l. 17 : `[A]Et pour moi t[B]u as tout do[E/G#]nné.` → `[A] Et pour moi t[B]u as tout do[E/G#]nné.`
+- l. 18 : `[A] Toi seul pouva[B]is me libér[C#m]er, ` → `[A] Toi seul pouv[B]ais me libér[C#m]er,`
+- l. 19 : `[A]C’est pourquoi j[C#m]e veux t’ador[Bsus4]er.[B]` → `[A] C’est pourquoi j[C#m]e veux t’ador[Bsus4]er.[B]`
+- l. 23 : `Toi seul es [A]di [B]- [C#m]gne ` → `Toi seul es di[A] [B]- [C#m]gne`
+- l. 24 : `De recevoi[A]r louange et gl[B]oire pour [B][A]l’éterni[Esus4]té.[E]` → `De recevo[A]ir louange et gl[B]oire pour l’éterni[Esus4]té.[E]`
+- l. 25 : `Toi seul es [A]di [B]- [C#m]gne ` → `Toi seul es di[A] [B]- [C#m]gne`
+- l. 26 : `De recevoi[A]r louange et gl[B]oire pour [B][A]l’éterni[F#m]té.` → `De recevo[A]ir louange et gl[B]oire pour l’éterni[F#m]té.`
+- l. 31 : `[A]Car tu as c[B]e dont j’ai bes[E/G#]oin.` → `[A] Car tu as c[B]e dont j’ai bes[E/G#]oin.`
+- l. 33 : `[A]Sont dans tes p[C#m]arvis, mon sa[Bsus4]uveur.[B]` → `[A] Sont dans tes p[C#m]arvis, mon sa[Bsus4]uveur.[B]`
+- l. 37 : `[F#m]A - [E/G#]llélui - a[B], [F#m]A - [E/G#]llélui - a[C#m] (x...)` → `[F#m] All[E/G#]élui[B]a,[F#m] All[E/G#]élui[C#m]a (x...)` *(session)*
+- l. 38 : `[F#m]A - [E/G#]llélui - a[B], [F#m]A - [E/G#]llélui - a[B]` → `[F#m] All[E/G#]élui[B]a,[F#m] All[E/G#]élui[B]a` *(session)*
+
+Mesures sur la partition (accords non exacts et lignes changées par la session) :
+
+| Ligne | Accord | Mesure | Classe | Correction |
+|---|---|---|---|---|
+| 13 | A | x=272,6 sur l'espace avant « me » | décalé | [A] Me |
+| 13 | E/G# | x=476,9 sur l'espace avant « rien. » | décalé | suis[E/G#] rien. |
+| 15 | A | x=297,9 sur l'espace avant « j’étais » | décalé | [A] J’étais |
+| 17 | A | x=292,5 sur l'espace avant « et » | décalé | [A] Et |
+| 18 | B | x=145,1 sur « a » de « pouvais » | décalé | pouv[B]ais |
+| 19 | A | x=271,8 sur l'espace avant « c’est » | décalé | [A] C’est |
+| 23 | A | x=137,8 sur l'espace juste après « di » | décalé | di[A]  |
+| 23 | B | x=152,2 au milieu du blanc entre « di » et « gne » | équivalent (outil) | di[A] [B]- [C#m]gne : B reste dans le blanc entre « di » et « gne », après A, comme la partition ; check.py retire le tiret et le lit sur « g » (vérifié à l'œil, crops/toi-seul-es-digne/refrain.png) |
+| 24 | A | x=276,4 sur « i » de « recevoir » | décalé | recevo[A]ir |
+| 24 | B | aucun label entre « gl[B]oire » (x=394,1) et Esus4 (x=526,7) | inventé | retiré (présent dès l'import, sur aucune des trois feuilles) |
+| 24 | A | aucun label avant « l’éternité » | inventé | retiré |
+| 25 | A | x=137,8 sur l'espace juste après « di » | décalé | di[A]  |
+| 25 | B | x=152,2 dans le blanc entre « di » et « gne » | équivalent (outil) | di[A] [B]- [C#m]gne : B reste dans le blanc entre « di » et « gne », après A, comme la partition ; check.py retire le tiret et le lit sur « g » (vérifié à l'œil, crops/toi-seul-es-digne/refrain.png) |
+| 26 | A | x=276,4 sur « i » de « recevoir » | décalé | recevo[A]ir |
+| 26 | B | aucun label avant « l’éternité » | inventé | retiré |
+| 26 | A | aucun label avant « l’éternité » | inventé | retiré |
+| 31 | A | x=270,7 sur l'espace avant « car » | décalé | [A] Car |
+| 33 | A | x=267,5 sur l'espace avant « sont » | décalé | [A] Sont |
+| 37 | F#m | x=34,0 sur le retrait avant « All » | décalé | [F#m] A |
+| 37 | E/G# | x=76,6 sur « é » de « élui » (shir.fr « All - élui ») | décalé | ll[E/G#]élui |
+| 37 | B | x=121,2 sur « a » de « a, » | décalé | [B]a, |
+| 37 | F#m | x=135,2 sur l'espace après « a, » | décalé | a,[F#m] A |
+| 37 | E/G# | x=174,5 sur « é » | décalé | ll[E/G#]élui |
+| 37 | C#m | x=219,1 sur « a » | décalé | [C#m]a (x...) |
+| 38 | F#m | x=262,0 sur l'espace avant « all » | décalé | [F#m] A |
+| 38 | E/G# | x=301,2 sur « é » | décalé | ll[E/G#]élui |
+| 38 | B | x=345,8 sur « a » de « a, » | décalé | [B]a, |
+| 38 | F#m | x=359,9 sur l'espace après « a, » | décalé | a,[F#m] A |
+| 38 | E/G# | x=399,1 sur « é » | décalé | ll[E/G#]élui |
+| 38 | B | x=443,8 sur « a » de « a. » | décalé | [B]a |
+| 13 | A | après correction « [A] Me » : check.py le dit encore décalé | exact (outil qui lit mal) | shir.fr met deux lignes du .cho sur une seule ligne gravée ; l'accord est sur le blanc entre les deux moitiés, que le .cho écrit [A] + espace en début de ligne ; check.py ne voit pas ce blanc en début de ligne (vérifié à l'œil) |
+| 15 | A | après correction « [A] J’étais » : check.py le dit encore décalé | exact (outil qui lit mal) | shir.fr met deux lignes du .cho sur une seule ligne gravée ; l'accord est sur le blanc entre les deux moitiés, que le .cho écrit [A] + espace en début de ligne ; check.py ne voit pas ce blanc en début de ligne (vérifié à l'œil) |
+| 17 | A | après correction « [A] Et » : check.py le dit encore décalé | exact (outil qui lit mal) | shir.fr met deux lignes du .cho sur une seule ligne gravée ; l'accord est sur le blanc entre les deux moitiés, que le .cho écrit [A] + espace en début de ligne ; check.py ne voit pas ce blanc en début de ligne (vérifié à l'œil) |
+| 19 | A | après correction « [A] C’est » : check.py le dit encore décalé | exact (outil qui lit mal) | shir.fr met deux lignes du .cho sur une seule ligne gravée ; l'accord est sur le blanc entre les deux moitiés, que le .cho écrit [A] + espace en début de ligne ; check.py ne voit pas ce blanc en début de ligne (vérifié à l'œil) |
+| 31 | A | après correction « [A] Car » : check.py le dit encore décalé | exact (outil qui lit mal) | shir.fr met deux lignes du .cho sur une seule ligne gravée ; l'accord est sur le blanc entre les deux moitiés, que le .cho écrit [A] + espace en début de ligne ; check.py ne voit pas ce blanc en début de ligne (vérifié à l'œil) |
+| 33 | A | après correction « [A] Sont » : check.py le dit encore décalé | exact (outil qui lit mal) | shir.fr met deux lignes du .cho sur une seule ligne gravée ; l'accord est sur le blanc entre les deux moitiés, que le .cho écrit [A] + espace en début de ligne ; check.py ne voit pas ce blanc en début de ligne (vérifié à l'œil) |
+
+Forme (sans effet sur la place des accords, détail dans le diff du commit) : 6 ligne(s) — ligne sans paroles : l. 8 ; espace de fin : l. 12, 14, 16, 30, 32.
+
+En-tête : ajout de `{source: Toi seul es digne.pdf}`
+
+| Écart | Statut | Par | Raison, partition |
+|---|---|---|---|
+| 38:reporte:F#m:1 | laissé | def |  |
+| 38:reporte:E/G#:1 | laissé | def |  |
+| 38:reporte:B:1 | laissé | def |  |
+| 38:reporte:F#m:2 | laissé | def |  |
+| 38:reporte:E/G#:2 | laissé | def |  |
+| 38:reporte:B:2 | laissé | def |  |
+| 37:reporte:F#m:1 | laissé | def |  |
+| 37:reporte:E/G#:1 | laissé | def |  |
+| 37:reporte:B:1 | laissé | def |  |
+| 37:reporte:F#m:2 | laissé | def |  |
+| 37:reporte:E/G#:2 | laissé | def |  |
+| 37:reporte:C#m:1 | laissé | def |  |
+| 33:decale:A:1 | laissé | def |  |
+| 33:manquant:A:1 | laissé | def |  |
+| 33:manquant:B:1 | laissé | def |  |
+| 33:manquant:C#m:1 | laissé | def |  |
+| 33:manquant:A:2 | laissé | def |  |
+| 33:manquant:B:2 | laissé | def |  |
+| 33:manquant:Esus4:1 | laissé | def |  |
+| 33:manquant:E:1 | laissé | def |  |
+| 33:manquant:A:3 | laissé | def |  |
+| 33:manquant:B:3 | laissé | def |  |
+| 33:manquant:C#m:2 | laissé | def |  |
+| 33:manquant:A:4 | laissé | def |  |
+| 33:manquant:B:4 | laissé | def |  |
+| 33:manquant:E:2 | laissé | def |  |
+| 33:manquant:F#m:1 | laissé | def |  |
+| 33:manquant:E/G#:1 | laissé | def |  |
+| 33:manquant:B:5 | laissé | def |  |
+| 33:manquant:F#m:2 | laissé | def |  |
+| 33:manquant:E/G#:2 | laissé | def |  |
+| 33:manquant:C#m:3 | laissé | def |  |
+| 33:manquant:F#m:3 | laissé | def |  |
+| 33:manquant:E/G#:3 | laissé | def |  |
+| 33:manquant:B:6 | laissé | def |  |
+| 33:manquant:F#m:4 | laissé | def |  |
+| 33:manquant:E/G#:4 | laissé | def |  |
+| 33:manquant:B:7 | laissé | def |  |
+| 33:manquant:E/G#:5 | laissé | def |  |
+| 33:manquant:A:5 | laissé | def |  |
+| 33:manquant:B:8 | laissé | def |  |
+| 33:manquant:C#m:4 | laissé | def |  |
+| 33:manquant:A:6 | laissé | def |  |
+| 33:manquant:B:9 | laissé | def |  |
+| 33:manquant:Esus4:2 | laissé | def |  |
+| 33:manquant:E:3 | laissé | def |  |
+| 33:manquant:A:7 | laissé | def |  |
+| 33:manquant:B:10 | laissé | def |  |
+| 33:manquant:C#m:5 | laissé | def |  |
+| 33:manquant:A:8 | laissé | def |  |
+| 33:manquant:B:11 | laissé | def |  |
+| 33:manquant:E/G#:6 | laissé | def |  |
+| 33:manquant:A:9 | laissé | def |  |
+| 33:manquant:B:12 | laissé | def |  |
+| 33:manquant:C#m:6 | laissé | def |  |
+| 33:manquant:A:10 | laissé | def |  |
+| 33:manquant:B:13 | laissé | def |  |
+| 33:manquant:Esus4:3 | laissé | def |  |
+| 33:manquant:E:4 | laissé | def |  |
+| 33:manquant:A:11 | laissé | def |  |
+| 33:manquant:B:14 | laissé | def |  |
+| 33:manquant:C#m:7 | laissé | def |  |
+| 33:manquant:A:12 | laissé | def |  |
+| 33:manquant:B:15 | laissé | def |  |
+| 33:manquant:F#m:5 | laissé | def |  |
+| 33:oeil:10 | appliqué | session | A sur l'espace avant « sont » ; C#m, Bsus4 et B déjà exacts. — partition : A x=267,5 sur l'espace idx33 (267,4–272,2) ; C#m x=390,5 sur « a » de « parvis » ; Bsus4 x=494,7 sur « u » de « sauveur » ; B x=544,7 après le point (fin 544,4) |
+| 33:fable:33:decale:A:1 | laissé | session | Même ligne que 33:oeil:10, appliquée par celle-ci. — partition : A x=267,5 sur l'espace avant « sont » |
+| 31:decale:A:1 | laissé | def |  |
+| 31:oeil:9 | appliqué | session | A sur l'espace avant « car » ; B et E/G# déjà exacts. — partition : A x=270,7 sur l'espace idx30 (270,6–275,4) ; B x=356,6 sur « e » de « ce » ; E/G# x=466,9 sur « o » de « besoin » |
+| 31:fable:31:decale:A:1 | laissé | session | Même ligne que 31:oeil:9, appliquée par celle-ci. — partition : A x=270,7 sur l'espace avant « car » |
+| 26:decale:A:1 | appliqué | def | inclus dans la ligne de 26:oeil:8 |
+| 26:invente:B:1 | appliqué | def | inclus dans la ligne de 26:oeil:8 |
+| 26:invente:A:1 | appliqué | def | inclus dans la ligne de 26:oeil:8 |
+| 26:oeil:8 | appliqué | def |  |
+| 25:decale:A:1 | appliqué | def | inclus dans la ligne de 25:oeil:7 |
+| 25:decale:B:1 | laissé | def | la ligne prend le texte de 25:oeil:7 |
+| 25:oeil:7 | appliqué | session | Même mesure que la l. 23 (2e ligne du refrain, labels aux mêmes x). — partition : A x=137,8 et B x=152,2 dans le blanc entre « di » et « gne » ; C#m x=166,6 sur « g » |
+| 24:decale:A:1 | appliqué | def | inclus dans la ligne de 24:oeil:6 |
+| 24:invente:B:1 | appliqué | def | inclus dans la ligne de 24:oeil:6 |
+| 24:invente:A:1 | appliqué | def | inclus dans la ligne de 24:oeil:6 |
+| 24:oeil:6 | appliqué | def |  |
+| 23:decale:A:1 | appliqué | def | inclus dans la ligne de 23:oeil:5 |
+| 23:decale:B:1 | laissé | def | la ligne prend le texte de 23:oeil:5 |
+| 23:oeil:5 | appliqué | session | A et B sont tous deux dans le blanc entre « di » et « gne » : A juste après « di », B ensuite, C#m sur « g ». La ligne entière est juste ; elle remplace le déplacement par défaut 23:decale:B:1. — partition : A x=137,8 sur le 1er espace après « di » (137,6–142,4) ; B x=152,2 sur le 4e espace (151,9–156,7) ; C#m x=166,6 sur « g » de « gne » |
+| 19:decale:A:1 | laissé | def |  |
+| 19:oeil:4 | appliqué | session | A sur l'espace avant « c’est » ; C#m, Bsus4 et B déjà exacts. — partition : A x=271,8 sur l'espace idx32 (271,5–276,3) ; C#m x=399,1 sur « e » de « je » ; Bsus4 x=501,4 sur « e » de « t’adorer » ; B x=550,8 après le point |
+| 19:fable:19:decale:A:1 | laissé | session | Même ligne que 19:oeil:4, appliquée par celle-ci. — partition : A x=271,8 sur l'espace avant « c’est » |
+| 18:decale:B:1 | appliqué | def | inclus dans la ligne de 18:oeil:3 |
+| 18:oeil:3 | appliqué | session | B sur le « a » de « pouvais », comme la partition ; A (retrait) et C#m déjà exacts. — partition : A x=34,0 sur le retrait ; B x=145,1 sur « a » de « pouvais » (145,0–154,2) ; C#m x=236,9 sur « e » de « libérer » |
+| 17:decale:A:1 | laissé | def |  |
+| 17:oeil:2 | appliqué | session | A sur l'espace avant « et » ; B et E/G# déjà exacts. — partition : A x=292,5 sur l'espace idx34 (292,2–297,0) ; B x=400,3 sur « u » de « tu » ; E/G# x=493,9 sur « n » de « donné » |
+| 17:fable:17:decale:A:1 | laissé | session | Même ligne que 17:oeil:2, appliquée par celle-ci. — partition : A x=292,5 sur l'espace avant « et » |
+| 15:decale:A:1 | laissé | def |  |
+| 15:oeil:1 | appliqué | session | A sur l'espace avant « j’étais » ; B et E déjà exacts. — partition : A x=297,9 sur l'espace idx34 (297,7–302,5) ; B x=378,1 sur « à » de « déjà » ; E x=494,3 sur « œ » de « cœur » |
+| 15:fable:15:decale:A:1 | laissé | session | Même ligne que 15:oeil:1, appliquée par celle-ci. — partition : A x=297,9 sur l'espace avant « j’étais » |
+| 13:decale:A:1 | laissé | def |  |
+| 13:decale:E/G#:1 | appliqué | def | inclus dans la ligne de 13:oeil:0 |
+| 13:oeil:0 | appliqué | session | La ligne proposée met chaque accord sur le caractère de la partition : A sur l'espace avant « me », B sur « u » de « que », E/G# sur l'espace avant « rien. ». — partition : A x=272,6 sur l'espace idx30 (272,5–277,3) avant « me » ; B x=379,7 sur « u » de « que » ; E/G# x=476,9 sur l'espace avant « rien. » (476,7–481,5) |
+| 13:fable:13:decale:A:1 | laissé | session | Même ligne que 13:oeil:0, appliquée par celle-ci (une seule des deux lectures). — partition : A x=272,6 sur l'espace avant « me » |
+
+- Partition retenue : shir.fr en E (couche texte, mesurée au caractère près par rawdict). Tous les accords des lignes chantées vérifiés un par un ; l. 12, 14, 16, 30, 32 déjà exactes (accord du retrait écrit [A] mot).
+- Accords « B A » avant « l’éternité » (l. 24 et 26) : sur aucune des trois feuilles et présents dès l'import du 01/06 (pas une retouche à l'oreille) : retirés.
+- Pont : la partition grave bien ses accords (pas de report) ; places corrigées sur shir.fr, texte de l'église « A - llélui - a (x...) » gardé.
+- Retouches à la main : le seul commit propre au chant (06/08) n'ajoute que des lignes vides et l'en-tête du couplet 2 ; aucune place d'accord protégée.
+- Paroles, non appliqué : shir.fr écrit « di      gne » (blanc sans tiret) et « All - élui - a » ; le .cho garde les tirets et la coupe de l'église.
+- Autres versions : « Toi seul es digne - C.pdf » / « - C 2.pdf » (doublon) et « - D.pdf » : feuille de l'église, accords un caractère plus tôt, fin du 2e refrain « (C) ».
+- extra (non appliqué) : lignes instrumentales de shir.fr (relance C#m B E/G#, solo, sortie C#m Bsus4 B F#m A B) : voir le bloc de structure.
+- check.py après correction : les 6 « décalé » restants sur A (l. 13, 15, 17, 19, 31, 33) et B (l. 23, 25) sont des lectures de l'outil (blanc de jonction entre deux demi-lignes, tiret retiré) ; les accords du pont restent « absent de la source » parce que le texte diffère (« A - llélui » contre « All - élui ») : mesurés à la main, tous exacts (crops/toi-seul-es-digne/pont.png). Les « absent du .cho » sont la relance, le refrain 2, le solo, le final et la sortie : bloc de structure à appliquer par Timothée.
+
+### ton-nom — Ton Nom
+
+Lot 7 · partition retenue : `Ton Nom G.pdf` (eglise-fpdf, mesure fiable)
+
+Lignes modifiées :
+
+- l. 12 : `De [G/B]l'aube au [C9]coucher [D]du solei[G5]l, [G/B]Tes splen[C9]deurs nous [D]émerveill[G5]ent,` → `De [G/B]l'aube au [C9]coucher [D]du sole[G5]il, [G/B]Tes splen[C9]deurs nous [D]émerveill[G5]ent,`
+- l. 13 : `Et [G/B]notre cœ[C9]ur d'enfa[D]nt rép[Em7]ond en [C9]glorifi - [D]ant Ton [G5]Nom.` → `Et [G/B]notre cœ[C9]ur d'enfa[D]nt rép[Em7]ond en [C9]glorifi[D]ant Ton N[G5]om.`
+- l. 17 : `Ton N[Bm7]om, [Em7]comme une [G5]tour aux quatre v[C2]ents,` → `Ton N[Bm7]om,[Em7] comme une [G5]tour aux quatre v[C2]ents,`
+- l. 18 : `Ton N[D]om [Em7]nous rend [G5]forts à chaque inst[C2]ant.` → `Ton N[D]om[Em7] nous rend [G5]forts à chaque inst[C2]ant.`
+- l. 19 : `Ton N[D]om, [Em7]que tous les [G5]peuples entonnent un c[C2]hant,` → `Ton N[D]om,[Em7] que tous les [G5]peuples entonnent un c[C2]hant,`
+- l. 20 : `Car [G/B]aucun autre [C2]nom n'est plus g[Dsus]rand [D]que Ton Nom.` → `Car [G/B]aucun autre [C2]nom n'est plus g[Dsus4]rand[D] que Ton Nom.`
+- l. 24 : `[G/B]Jésus, [C9]forti - [D]fie nos cœur[G5]s [G/B]par Ta [C9]grâce et [D]Ta grandeur[G5],` → `[G/B]Jésus, [C9]forti[D]fie nos cœu[G5]rs [G/B]par Ta [C9]grâce et [D]Ta grandeu[G5]r,`
+
+Mesures sur la partition (accords non exacts et lignes changées par la session) :
+
+| Ligne | Accord | Mesure | Classe | Correction |
+|---|---|---|---|---|
+| 12 | G5 | x=246,8 sur « i » de « sole‹i›l, » (i 246,8) | décalé | sole[G5]il, (ok du relevé) |
+| 13 | G5 | x=420,2 sur « o » de « N‹o›m. » (o 420,2) | décalé | N[G5]om. (ok du relevé) |
+| 17 | Em7 | x=133,4 sur la dernière espace du blanc après « Nom, » (« c » de « comme » à 137,8) | décalé | Nom,[Em7] comme (ok du relevé) |
+| 18 | Em7 | x=120,1 sur l'espace avant « nous » (« n » à 124,5) | décalé | Nom[Em7] nous (ok du relevé) |
+| 19 | Em7 | x=124,5 sur l'espace avant « que » (« q » à 128,9) | décalé | Nom,[Em7] que (ok du relevé) |
+| 20 | D | x=339,2 sur la dernière espace du blanc après « grand » (« q » de « que » à 343,7) | décalé | grand[D] que (ok du relevé) |
+| 24 | G5 | x=241,9 sur « r » de « cœu‹r›s » (r 241,9) | décalé | cœu[G5]rs (ok du relevé) |
+| 24 | G5 | x=490,1 sur « r » de « grandeu‹r›, » (r 490,1) | décalé | grandeu[G5]r, (ok du relevé) |
+
+Forme (sans effet sur la place des accords, détail dans le diff du commit) : 2 ligne(s) — ligne sans paroles : l. 8 ; mot coupé au tiret : l. 25.
+
+En-tête : ajout de `{source: Ton Nom G.pdf}`
+
+| Écart | Statut | Par | Raison, partition |
+|---|---|---|---|
+| 24:decale:G5:1 | appliqué | Timothée |  |
+| 24:decale:G5:2 | appliqué | Timothée |  |
+| 20:decale:D:1 | appliqué | Timothée |  |
+| 19:decale:Em7:1 | appliqué | Timothée |  |
+| 18:decale:Em7:1 | appliqué | Timothée |  |
+| 17:decale:Em7:1 | appliqué | Timothée |  |
+| 13:decale:G5:1 | appliqué | Timothée |  |
+| 12:decale:G5:1 | appliqué | Timothée |  |
+
+- Source église (FPDF, rendu ChordPro, couche texte fiable) : les 54 accords mesurés au caractère ; 46 exacts avant, les 8 décalés sont exactement les écarts du relevé (tous « ok » du relevé), que la feuille confirme. Aucune question, aucun accord absent, inventé ou de nom différent.
+- Retrait de début de ligne revu sur toutes les lignes : aucune ligne chantée n'est en retrait sur la feuille (1re lettre à x=31,2 dans les couplets, 45,4 au refrain) ; seule la l. 24 commence par un accord (G/B x=31,2 sur « J »), déjà « [G/B]Jésus » : rien à changer.
+- Laissé au moteur : l'intro à espaceurs `[ ]`, « Dsus » → Dsus4 (01), les mots coupés au tiret sur la feuille (« glorifi - ant », « forti - fie », « glorifi - er ») écrits entiers.
+- Autres feuilles du même chant dans Partitions : « Ton Nom - G.pdf », « Ton Nom Bb.pdf », « Ton Nom.pdf » (non mesurées) ; les feuilles « Béni soit Ton Nom… » sont un autre chant.
+
+### toujours-puissante — Toujours puissante
+
+Lot 7 · partition retenue : `Toujours puissante.pdf` (traitement-texte, mesure basse-fidelite)
+
+Lignes modifiées :
+
+- l. 8 : `{start_of_intro: Intro}` → `{start_of_intro: Intro (x2)}` *(session (hors relevé))* — La feuille grave la rangée « Em7 C G » deux fois à l'identique (y=103,6 et 119,6) : reprise identique = suffixe (x2) (02, Abba Père). Libellé seulement, même directive.
+- l. 13 : `[Em7]Plus qu’un collier [C]autour d[G]u cou` → `[Em7]Plus qu’un collier auto[C]ur d[G]u cou` *(session)*
+- l. 14 : `[Em7]Beaucoup plus qu’un [C]simple [G]bijou` → `[Em7]Beaucoup plus qu’un s[C]imple [G]bijou` *(session)*
+- l. 15 : `[Em7]La croix de Jésu[C]s mon sa[G]uveur` → `[Em7]La croix de Jésu[C]s mon sau[G]veur` *(session)*
+- l. 23 : `[Em7]Et pour ce monde [C]que [G]tu aimes` → `[Em7]Et pour ce mond[C]e que t[G]u aimes` *(session)*
+- l. 28 : `La croix est [C]tou[G]jours puis[D]sante` → `La croix est t[C]ou[G]jours puis[D]sante` *(session)*
+- l. 30 : `Et [D/B]pour me rest[Em]aurer` → `Et [Bm]pour me resta[Em]urer` *(session)*
+- l. 31 : `La croix est [Am]toujou[Em]rs puissant[D]e` → `La croix est t[Am]oujou[Em]rs puissant[D]e` *(session)*
+- l. 41 : `{start_of_intro: Interlude}` → `{start_of_intro: Interlude (x2)}` *(session (hors relevé))* — La feuille écrit « Interlude : C D Em7 D G D X2 » (y=280,6) : suffixe (x2). Libellé seulement, même directive.
+- l. 46 : `[C]Racheté au prix de [D]ton sang[Em]` → `[C]Racheté au prix de [D]ton sa[Em]ng` *(session)*
+- l. 47 : `Couvert par ton amour [D/F#]si puissa[G]nt` → `Couvert par ton amour [D]si puissa[G]nt`
+- l. 53 : `Tu répands ta grâce en [D/F#]abonda[G]nce` → `Tu répands ta grâce en [D]abonda[G]nce`
+- l. 58 : `La croix est [Am]toujou[D]rs puissa[G]nte` → `La croix est t[Am]oujou[D]rs puissa[G]nte` *(session)*
+
+Mesures sur la partition (accords non exacts et lignes changées par la session) :
+
+| Ligne | Accord | Mesure | Classe | Correction |
+|---|---|---|---|---|
+| 13 | C | x=182,2 ; « u » de « autour » à 1,6 pt (« o » à 5,4) | décalé | auto[C]ur |
+| 14 | C | x=182,2 ; « i » de « simple » à 2,4 pt (« s » à 3,0) | décalé (même syllabe) | s[C]imple |
+| 14 | G | x=218,2 sur l'espace ; « b » de « bijou » à 1,8 pt | équivalent (lettre la plus proche ; l'outil lit l'espace) | [G]bijou gardé |
+| 15 | G | x=200,7 ; « v » de « sauveur » à 3,4 pt, « u » à 3,6 pt | à cheval (sau / veur) | sau[G]veur + {needs_review} |
+| 20 | G | x=159,8 sur l'espace ; « p » de « peine » à 3,4 pt (« à » à 6,3) | équivalent (lettre la plus proche ; l'outil lit l'espace) | [G]peine gardé |
+| 22 | C | x=153,2 dans le « e » de « vie » (début à 3,2 pt ; « p » à 6,5) | exact à la lettre la plus proche (l'outil lit l'espace) | vi[C]e gardé |
+| 23 | C | x=153,2 dans le « e » de « monde » (début à 3,6 pt ; « q » à 6,1) | décalé (autre mot) | mond[C]e |
+| 23 | G | x=185,7 ; « u » de « tu » à 1,2 pt (« t » à 2,7) | décalé (même syllabe) | t[G]u |
+| 27 | C | x=124,2 sur l'espace ; « t » de « toujours » à 2,1 pt (« t » de « est » à 5,3) | équivalent (lettre la plus proche ; l'outil lit l'espace) | [C]toujours gardé |
+| 27 | G | x=141,3 ; « j » à 2,9 pt, « u » à 4,1 pt | exact à la lettre la plus proche (écart 1,2 pt entre « tou » et « jours », pas à cheval) | tou[G]jours gardé |
+| 28 | C | x=128,7 ; « o » de « toujours » à 1,5 pt (« t » à 2,4) | décalé (même syllabe) | t[C]oujours |
+| 30 | D/B | Bm gravé x=70,7 ; « p » de « pour » à 1,9 pt | nom | [Bm]pour |
+| 30 | Em | x=146,2 ; « u » de « restaurer » à 2,6 pt (« a » à 3,6) | décalé (même syllabe) | resta[Em]urer |
+| 31 | Am | x=128,7 ; « o » à 1,5 pt (« t » à 2,4) | décalé (même syllabe) | t[Am]oujours |
+| 42 | C D Em7 D G D | rangée « C D Em7 D G D X2 » (y=280,6) | exact (l'outil ne rapproche pas la rangée instrumentale) | gardé, libellé (x2) |
+| 46 | Em | x=453,7 ; « n » de « sang » à 2,9 pt (« g » à 4,1) | décalé (en l'air dans le .cho) | sa[Em]ng |
+| 47 | D/F# | D gravé x=438,7 ; « s » de « si » à 1,6 pt | nom | [D]si |
+| 53 | D/F# | D gravé x=435,2 ; « a » de « abondance » à 4,2 pt (« n » de « en » à 6,3) | nom | [D]abondance |
+| 53 | G | x=476,8 ; « n » à 3,0 pt, « a » à 3,2 pt, même syllabe « dan » | exact | abonda[G]nce gardé |
+| 58 | Am | x=381,7 ; « o » à 1,5 pt (« t » à 2,4) | décalé (même syllabe) | t[Am]oujours |
+
+Forme (sans effet sur la place des accords, détail dans le diff du commit) : 2 ligne(s) — ligne sans paroles : l. 9, 42.
+
+En-tête : ajout de `{source: Toujours puissante.pdf}`
+
+| Écart | Statut | Par | Raison, partition |
+|---|---|---|---|
+| 58:relire:Am:1 | laissé | def |  |
+| 53:nom:D/F#:1 | laissé | def |  |
+| 53:fable:53:nom:D/F#:1 | appliqué | session | La feuille grave D, pas D/F# ; D sur « abondance », G sur « n » de « abondance » : toute la ligne est juste. — partition : D x=435,2 (« a » de « abondance » à 4,2 pt, « n » de « en » à 6,3) ; G x=476,8 (« n » à 3,0 pt, « a » à 3,2, même syllabe) |
+| 47:nom:D/F#:1 | laissé | def |  |
+| 47:fable:47:nom:D/F#:1 | appliqué | session | La feuille grave D, pas D/F# ; position inchangée, G sur « n » de « puissant » : toute la ligne est juste. — partition : D x=438,7 (« s » de « si » à 1,6 pt) ; G x=489,7 (« n » à 1,5 pt) |
+| 46:relire:Em:1 | laissé | def |  |
+| 42:instrumental:C:1 | laissé | def |  |
+| 42:instrumental:D:1 | laissé | def |  |
+| 42:instrumental:D:2 | laissé | def |  |
+| 42:instrumental:D:3 | laissé | def |  |
+| 31:relire:Am:1 | laissé | def |  |
+| 30:nom:D/B:1 | laissé | def |  |
+| 30:relire:Em:1 | laissé | def |  |
+| 30:fable:30:nom:D/B:1 | laissé | session | Bm est juste (gravé), mais la ligne proposée garde Em sur le « a » de « restaurer » alors que le label est plus proche du « u » : ligne juste donnée dans lignes (l. 30). — partition : Bm x=70,7 (« p » de « pour » à 1,9 pt) ; Em x=146,2 (« u » à 2,6 pt, « a » à 3,6 pt) |
+| 28:relire:C:1 | laissé | def |  |
+| 27:relire:C:1 | laissé | def |  |
+| 23:relire:C:1 | laissé | def |  |
+| 23:relire:G:1 | laissé | def |  |
+| 22:relire:C:1 | laissé | def |  |
+| 20:relire:G:1 | laissé | def |  |
+| 15:relire:G:1 | laissé | def |  |
+| 14:relire:C:1 | laissé | def |  |
+| 14:relire:G:1 | laissé | def |  |
+| 13:decale:C:1 | laissé | def |  |
+
+- Source basse fidélité : feuille Word (Times New Roman, accords aux taquets et aux espaces), une page en deux colonnes ; chaque accord du chant mesuré en x sur la couche texte PyMuPDF (rawdict, bord gauche du label ↔ début de la lettre la plus proche) et regardé sur le rendu 2× (crops/toujours-puissante/p0.png, c_left.png, c_right.png).
+- check.py ne lit aucun accord de cette feuille dans cette passe (73 « absent de la source » avant comme après, artefact de l'outil) : vérifié à l'œil, chaque accord mesuré au x ; les caractères que l'outil désigne (« vers … ») coïncident avec chaque placement écrit.
+- Règle suivie (02, basse fidélité) : lettre la plus proche du bord gauche du label, espaces non comptées ; à cheval (deux lettres de syllabes différentes à moins de 1 pt d'écart) → {needs_review} : un seul cas (l. 15, G de « sauveur »). Deux doutes au total avec celui des retours du refrain : pas d'audio demandé.
+- Tous les accords non cités dans `mesures` sont exacts à cette mesure (Em7 en tête de chaque vers, couplet 3 entier, l. 16, 20 C, 21, 22 G, 29, ponts sauf l. 46 Em).
+- La remarque de lecture sur le C de la l. 13 (même x=182 qu'à la l. 14, ± 1 syllabe) n'est pas un label à cheval : le bord gauche est à 1,6 pt du « u » de « autour », nettement dans « tour » ; posé là, sans doute écrit.
+- Plan déplié (feuille) : Intro (x2) – Couplet 1 – Couplet 2 – Refrain – Couplet 3 – Interlude (x2) – Pont 1 – Pont 2 – Tag ; aucun renvoi gravé, d'où le {needs_review} avant l'Interlude.
+- Autres sources : « Toujours Puissante (G).pdf » est la feuille de l'éditeur (6/8, Intro et Instrumental en mesures, D/B au refrain, D/F# au pont et dans l'instrumental) : le .cho actuel en tenait ses D/B et D/F# ; la partition retenue grave Bm et D. « Tout puissant.pdf » / « Tout puissant .pdf » (shir.fr) : autre chant (taux 0,03).
+- Paroles, non appliqué : la feuille écrit « Echangeant » sans accent et « tu/ta » en minuscules comme le .cho ; aucune différence de paroles vue.
+- Extra (structure) : l'outil compte trois « Intro » sur la feuille (titre + deux rangées d'intro) ; c'est l'Intro (x2), rien d'autre.
+- Feuille sans renvoi, noté ici plutôt qu'en needs_review : la feuille ne grave aucun renvoi : le retour du refrain après le couplet 3, après le pont 1 ou le pont 2 et avant le tag n'est pas écrit, rien n'est ajouté.
+
+### tout-a-toi — Tout à Toi
+
+Lot 7 · partition retenue : `Tout à toi Accord A.pdf` (traitement-texte, mesure impossible)
+
+Lignes modifiées :
+
+- l. 16 : `J’ai bâti [F#m7]ma vie Sur un sol de poussi[Eadd4]ère` → `J’ai bâti [F#m7]ma vie Sur un sol de pouss[Eadd4]ière`
+- l. 20 : `[D]Mais Tu m’as croisé sur c[Bm]ette route` → `[D] Mais Tu m’as croisé sur c[Bm]ette route`
+- l. 22 : `[D]Mon passé sens dessus d[Bm]essous` → `[D] Mon passé sens dessus d[Bm]essous`
+- l. 30 : `[Eadd] Mes rêves et mes [D]plans sont tout à T[Bm]oi` → `[Eadd4] Mes rêves et mes [D]plans sont tout à T[Bm]oi`
+- l. 37 : `[Bm] Alors voici la v[F#m7]ie que je possède` → `[Bm] Alors voici la [F#m7]vie que je possède`
+- l. 38 : `[Eadd4] À Tes pieds je dé[D]pose tout ce que j’a[Bm]i` → `[Eadd4] À Tes pieds je dé[D]pose tout ce que j’ai[Bm]`
+- l. 44 : `Car Tes [F#m7]plans sont faits sur mesure pour mo[Eadd4]i` → `Car Tes [F#m7]plans sont faits sur mesure pour m[Eadd4]oi`
+- l. 45 : `[D] J’avance sur ta tra[Bm]jectoire` → `[D] J’avance sur ta traj[Bm]ectoire`
+
+Mesures sur la partition (accords non exacts et lignes changées par la session) :
+
+| Ligne | Accord | Mesure | Classe | Correction |
+|---|---|---|---|---|
+| 16 | F#m7 | x=105,7 sur « m » de « ma » | exact | [F#m7]ma |
+| 16 | Eadd4 | x=163,6 sur « i » de « pouss‹i›ère » | décalé | pouss[Eadd4]ière |
+| 20 | D | x=71,1 dans le retrait, avant « Mais » (84,1) | décalé | [D] Mais |
+| 20 | Bm | x=92,6 sur « e » de « c‹e›tte » | exact | c[Bm]ette |
+| 22 | D | x=71,1 dans le retrait, avant « Mon » (84,1) | décalé | [D] Mon |
+| 22 | Bm | x=112,5 sur « e » de « d‹e›ssous » | exact | d[Bm]essous |
+| 30 | Eadd4 | x=332,7 dans le retrait avant « Mes » (345,7), exposant add4 | nom | [Eadd4] Mes |
+| 30 | D | x=432,0 sur « p » de « plans » | exact | [D]plans |
+| 30 | Bm | x=391,1 sur « o » de « T‹o›i » | exact | T[Bm]oi |
+| 37 | Bm | x=332,7 dans le retrait avant « Alors » (345,7) | exact | [Bm] Alors |
+| 37 | F#m7 | x=409,8 sur « v » de « vie » | décalé | [F#m7]vie |
+| 38 | Eadd4 | x=332,7 dans le retrait avant « À » (345,7) | exact | [Eadd4] À |
+| 38 | D | x=432,5 sur « p » de « dé‹p›ose » | exact | dé[D]pose |
+| 38 | Bm | x=402,5 sur l'espace après « j’ai » | décalé | j’ai[Bm] |
+| 44 | F#m7 | x=106,8 sur « p » de « plans » | exact | [F#m7]plans |
+| 44 | Eadd4 | x=161,9 sur « o » de « m‹o›i » | décalé | m[Eadd4]oi |
+| 45 | D | x=71,1 dans le retrait avant « J’avance » (84,1) | exact | [D] J’avance |
+| 45 | Bm | x=98,9 sur « e » de « traj‹e›ctoire » | décalé | traj[Bm]ectoire |
+
+Forme (sans effet sur la place des accords, détail dans le diff du commit) : 1 ligne(s) — ligne sans paroles : l. 9.
+
+En-tête : ajout de `{source: Tout à toi Accord A.pdf}`
+
+| Écart | Statut | Par | Raison, partition |
+|---|---|---|---|
+| 45:oeil:7 | appliqué | session | Bm commence au-dessus du « e » de « trajectoire ». — partition : p2, y=318,9 : B à x=98,9 = bord gauche du « e » (98,9–104,4) de « Ta traj‹e›ctoire » |
+| 44:oeil:6 | appliqué | session | Eadd4 commence au-dessus du « o » de « moi ». — partition : p2, y=263,3 : E à x=161,9 = bord gauche du « o » (161,9–167,9) de « Sur mesure pour m‹o›i » |
+| 38:oeil:5 | appliqué | session | Bm est gravé après « j’ai », sur l'espace final de la ligne : après la syllabe finie, collé. — partition : p1 col. 2, y=587,3 : B à x=402,5 = espace final (402,5–405,0) de « Tout ce que j’ai‹ › » ; vu sur la découpe 4× : Bm à droite du « i » |
+| 37:oeil:4 | appliqué | session | F#m7 commence au-dessus du « v » de « vie ». — partition : p1 col. 2, y=503,9 : F à x=409,8 = bord gauche du « v » (409,8–414,8) de « Alors voici la ‹v›ie » ; Bm à 332,7 dans le retrait avant « Alors » (345,7) |
+| 30:oeil:3 | appliqué | session | La feuille porte Eadd4 (E + exposant add4) ; « Eadd » est une coquille. Les deux autres accords de la ligne sont exacts (D sur « p » de plans, Bm sur « o » de Toi) et Eadd4 est dans le retrait avant « Mes ». — partition : p1 col. 2, y=326,3 : E à x=332,7 (exposant add4 à 338,3), « Mes » commence à 345,7 ; D à 432,0 = « p » de plans ; Bm à 391,1 = « o » de « Toi » (y=354,1) |
+| 22:oeil:2 | appliqué | session | D est gravé dans le retrait, avant « Mon » : crochet + espace. — partition : p1, y=607,2 : D à x=71,1 ; « Mon » commence à x=84,1 |
+| 20:oeil:1 | appliqué | session | D est gravé dans le retrait, avant la 1re lettre de « Mais » : crochet + espace. — partition : p1, y=496,0 : D à x=71,1 ; « Mais » commence à x=84,1 (ligne en retrait, les lignes sans accord de tête commencent à 68,8) |
+| 16:oeil:0 | appliqué | session | Le label Eadd4 commence au-dessus du « i » de « poussière » : pouss[Eadd4]ière. — partition : p1, y=423,3 : E à x=163,6 = bord gauche du « i » (163,6–166,1) de « Sur un sol de pouss‹i›ère » ; vu sur la découpe 4× |
+
+- Chant « impossible » pour check.py (grille MultiTracks, exposants lus comme paroles, deux colonnes) : chaque accord mesuré à la couche texte (rawdict, x du label ↔ caractère de la ligne de paroles 11,3 pt dessous, colonne par colonne) et vérifié à l'œil sur découpes 4× dans crops/tout-a-toi/.
+- check.py classe les 44 accords « absent de la source » avant comme après : c'est l'outil qui ne lit pas la grille MultiTracks (aucun accord reconnu), pas un écart. À la mesure à l'œil, après correction, les 44 accords sont exacts.
+- Les 8 questions sont « ok » : chacune met l'accord exactement sous le label. Tous les autres accords du chant (l. 9, 13, 14, 15, 21, 23, 27, 29, 31, 36, 39, 43, 46) sont exacts sur la feuille, y compris les retraits « [D] J’ai », « [D] Persuadé », « [Bm] À », « [Eadd4] Mes/À », « [D] Mon avenir », « [D] J’avance ».
+- Le « ♯ » de F♯m⁷ n'a pas de glyphe dans la couche texte (lu comme espace) : le label se mesure par son F.
+- Autres copies : « Tout a Toi.pdf » et « Tout à toi.pdf » sont la même feuille.
+- Paroles, non appliqué : la feuille écrit « Ta trajectoire » et « Ta grâce guide mes pas » (Couplet 3, l. 45-46), le .cho « ta » ; majuscule de début de ligne sur la feuille, mais c'est aussi le Ta de Dieu ailleurs dans le chant.
+- Indications de jeu de la feuille non reprises (Doucement, Baisser, Batterie sort, Tous ensemble, crescendos) ; auteurs en pied de page.
+- Structure : instrumental, interlude, retours de refrains et final absents ; bloc proposé, à appliquer par Timothée (l'instrumental après Refrain 2 tombe au milieu du chant).
+
+### tout-puissant — Tout puissant
+
+Lot 7 · partition retenue : `Tout puissant.pdf` (shirfr, mesure fiable)
+
+Lignes modifiées :
+
+- l. 11 : `{start_of_verse}` → `{start_of_verse: Couplet}` *(session (hors relevé))* — Couplet unique sans libellé : libellé « Couplet » de la table de 01 ; même directive, seul le libellé change (id de section inchangé).
+- l. 12 : `[Bm]Tu es grand et admirable, [A]tu es saint et vérit[D]able,` → `[Bm] Tu es grand et admir[D]able,[A] tu es saint et vérit[D]able,` *(session)*
+- l. 13 : `[G]Éternel incompara[D]ble, [Em]tu [D]es [A/C#]là.` → `[G] Éternel incompar[D]able, [Em]tu [D]es [A/C#]là.` *(session)*
+- l. 14 : `[Bm]Tu es fort et insond[D]able, [A]infini et redout[D]able,` → `[Bm] Tu es fort et insond[D]able,[A] infini et redout[D]able,` *(session)*
+- l. 15 : `[G]Majestueux, immuab[D]le, [Em]tu [D]es [A/C#]là.` → `[G] Majestueux, immua[D]ble, [Em]tu [D]es [A/C#]là.` *(session)*
+- l. 16 : `Nous te ch[G]antons, nous proc[A]lamons :` → `Nous te ch[G]antons, nous procl[A]amons :`
+- l. 20 : `Tout puiss[D]ant, souve[A]rain, tu tiens m[Bm]a vie dans ta ma[G]in.` → `Tout puiss[D]ant, souver[A]ain, tu tiens m[Bm]a vie dans ta m[G]ain.`
+- l. 21 : `Rédempt[D]eur couron[A]né, par toi [D/F#]je suis libé[G]ré.` → `Rédempt[D]eur couronn[A]é, par toi [D/F#]je suis libé[G]ré.`
+
+Mesures sur la partition (accords non exacts et lignes changées par la session) :
+
+| Ligne | Accord | Mesure | Classe | Correction |
+|---|---|---|---|---|
+| 12 | Bm | x=34,0 sur l'espace de retrait avant « Tu » (y=150,6) | décalé (retrait, non vu par check.py) | [Bm] Tu |
+| 12 | D | x=203,6 sur « a » de « admir‹a›ble » | absent du .cho | admir[D]able |
+| 12 | A | x=241,7 sur l'espace avant « tu » | décalé | able,[A] tu |
+| 12 | D | x=387,7 sur « a » de « vérit‹a›ble » | exact | inchangé |
+| 13 | G | x=34,0 sur l'espace de retrait avant « Éternel » | décalé (retrait) | [G] Éternel |
+| 13 | D | x=176,1 sur « a » de « incompar‹a›ble » | décalé | incompar[D]able |
+| 13 | Em D A/C# | x=219,0 « t » de tu · 254,6 « e » de es · 276,0 « l » de là | exact | inchangé |
+| 14 | Bm | x=34,0 sur l'espace de retrait avant « Tu » | décalé (retrait) | [Bm] Tu |
+| 14 | A | x=229,7 sur l'espace avant « infini » | décalé | able,[A] infini |
+| 14 | D D | x=191,6 « insond‹a›ble » · 351,6 « redout‹a›ble » | exact | inchangé |
+| 15 | G | x=34,0 sur l'espace de retrait avant « Majestueux » | décalé (retrait) | [G] Majestueux |
+| 15 | D | x=194,9 sur « b » de « immua‹b›le » | décalé | immua[D]ble |
+| 15 | Em D A/C# | x=228,6 « t » · 264,2 « e » · 285,6 « l » | exact | inchangé |
+| 16 | A | x=264,4 sur « a » de « procl‹a›mons » | décalé | procl[A]amons (choix ok du relevé) |
+| 20 | A | x=203,8 sur « a » de « souver‹a›in » | décalé | souver[A]ain (choix ok du relevé) |
+| 20 | G | x=437,5 sur « a » de « m‹a›in » | décalé | m[G]ain (choix ok du relevé) |
+| 21 | A | x=203,5 = x0 du « é » de « couronn‹é› » | décalé | couronn[A]é (choix ok du relevé) |
+
+Forme (sans effet sur la place des accords, détail dans le diff du commit) : 2 ligne(s) — ligne sans paroles : l. 8, 34.
+
+En-tête : ajout de `{source: Tout puissant.pdf}`
+
+| Écart | Statut | Par | Raison, partition |
+|---|---|---|---|
+| 21:decale:A:1 | appliqué | Timothée |  |
+| 20:decale:A:1 | appliqué | Timothée |  |
+| 20:decale:G:1 | appliqué | Timothée |  |
+| 16:decale:A:1 | appliqué | Timothée |  |
+| 15:decale:D:1 | appliqué | Timothée | inclus dans la ligne de la session |
+| 14:decale:A:1 | appliqué | Timothée | inclus dans la ligne de la session |
+| 13:decale:D:1 | appliqué | Timothée | inclus dans la ligne de la session |
+| 12:decale:A:1 | appliqué | Timothée | inclus dans la ligne de la session |
+| 12:manquant:D:1 | appliqué | Timothée | inclus dans la ligne de la session |
+
+- Partition : Tout puissant.pdf (shir.fr, 25/12/15, Tonalité : D) ; « Tout puissant .pdf » est le même fichier octet pour octet. Rendu ChordPro : mesure par coordonnées PyMuPDF, et page rendue à 2× regardée (couplet, refrain).
+- Les huit écarts du relevé (tous « ok » du relevé) sont conformes à la partition et appliqués tels quels.
+- Retrait de début de ligne : les quatre lignes du couplet sont en retrait d'une espace sur la feuille, et l'accord de tête (Bm/G à x=34,0) est au-dessus de ce retrait → `[Bm] Tu`, `[G] Éternel`, `[Bm] Tu`, `[G] Majestueux` (check.py ne voit pas le retrait). Les lignes du refrain, de « Nous te chantons » et du pont ne sont pas en retrait.
+- Tous les autres accords (intro 9, refrain, pont, final 9) sont exacts sur la partition.
+- Libellé : `{start_of_verse}` sans libellé → `{start_of_verse: Couplet}`.
+- Structure, non appliquée (à Timothée) : Pont en deux sections (x4)/(x2) au lieu des lignes « (× 4) » / « (× 2) » ; `{start_of_final}` → `{start_of_outro: Final}`. La feuille sépare aussi « Nous te chantons, nous proclamons : » du couplet par une ligne vide (sans libellé) ; le .cho la garde dans le couplet, rien de changé.
+- En-tête : la partition crédite « (nom retiré) – (nom retiré) » ; `{artist: (nom retiré)}` laissé. Thèmes « Adoration, Sainteté » dans la liste, laissés.
+- Le dernier commit propre au chant (e57acfc) ne change qu'une espace dans `{start_of_chorus : Refrain}` : aucune retouche d'accords à protéger.
+
+### toutes-choses-nouvelles — Toutes choses nouvelles
+
+Lot 7 · partition retenue : `Toutes choses nouvelles - F.pdf` (eglise-fpdf, mesure fiable)
+
+Lignes modifiées :
+
+- l. 8 : `Ta grâ[D]ce fait toutes cho[A]ses nouvel[E]les,` → `Ta grâ[D]ce fait toutes cho[A]ses nouve[E]lles,`
+- l. 9 : `Tes œu[D]vres pour nous s[A]ont parfai[E]tes.` → `Tes œ[D]uvres pour nous s[A]ont parfai[E]tes.`
+- l. 10 : `Pour les [D]choses de ce [A]monde, un es[F#m]poir surgi[E]t` → `Pour les [D]choses de ce [A]monde, un es[F#m]poir surg[E]it`
+- l. 15 : `Tu fa[D]is toutes cho[A]ses nouvel[E]les, (x2)` → `Tu fa[D]is toutes cho[A]ses nouve[E]lles, (x2)`
+- l. 16 : `Aujourd'[A/C#]hui et à [D]jamais, Ton [F#m]amour est san[E]s fin,` → `Aujourd'[A/C#]hui et à j[D]amais, Ton [F#m]amour est san[E]s fin,`
+- l. 17 : `Cet [A/C#]espoir est cer[D]tain, a [F#m]- llélu[E]i - [D]a.` → `Cet [A/C#]espoir est ce[D]rtain, a[F#m]llélu[E]i[D]a.`
+- l. 21 : `Ma [D]foi est dans [A]l'invis[E]ible,` → `Ma [D]foi est dans [A]l'invisi[E]ble,`
+
+Mesures sur la partition (accords non exacts et lignes changées par la session) :
+
+| Ligne | Accord | Mesure | Classe | Correction |
+|---|---|---|---|---|
+| 8 | E | x=271,3 sur le 1er « l » de « nouve‹l›les » | décalé | nouve[E]lles (ok du relevé) |
+| 9 | D | x=77,4 sur « u » de « œ‹u›vres » | décalé | œ[D]uvres (ok du relevé) |
+| 10 | E | x=352,2 sur « i » de « surg‹i›t » | décalé | surg[E]it (ok du relevé) |
+| 15 | E | x=244,6 sur le 1er « l » de « nouve‹l›les » | décalé | nouve[E]lles (ok du relevé) |
+| 16 | D | x=164,0 sur « a » de « j‹a›mais » | décalé | j[D]amais (ok du relevé) |
+| 17 | D | x=165,4 sur « r » de « ce‹r›tain » | décalé | ce[D]rtain (ok du relevé) |
+| 17 | F#m | x=214,3 sur la 1re espace après « a » (a 205,4-214,3 ; « - » à 227,7) | décalé | a[F#m] - llélu (ok du relevé), écrit a[F#m]llélu par la forme |
+| 21 | E | x=186,3 sur « b » de « invisi‹b›le » | décalé | invisi[E]ble (ok du relevé) |
+| 8 | les 50 accords (l. 8-11, 15-17, 21-24, 28-31) | contre « Toutes choses nouvelles - F.pdf » : mêmes x que la feuille en A, noms transposés d'une tierce majeure (Bb→D, F→A, C→E, Dm→F#m, Gm→Bm, F/A→A/C#) ; check.py sur la version corrigée contre « Toutes choses nouvelles - Accords.pdf » (même feuille en A) : 50 exacts sur 50 | nom (transposition de la source, pas une erreur) | aucune : le .cho est en A comme {key: A} ; seule la source citée est dans une autre tonalité |
+
+En-tête : ajout de `{source: Toutes choses nouvelles - F.pdf}`
+
+| Écart | Statut | Par | Raison, partition |
+|---|---|---|---|
+| 21:decale:E:1 | appliqué | Timothée |  |
+| 17:decale:D:1 | appliqué | Timothée |  |
+| 17:decale:F#m:1 | appliqué | Timothée |  |
+| 16:decale:D:1 | appliqué | Timothée |  |
+| 15:decale:E:1 | appliqué | Timothée |  |
+| 10:decale:E:1 | appliqué | Timothée |  |
+| 9:decale:D:1 | appliqué | Timothée |  |
+| 8:decale:E:1 | appliqué | Timothée |  |
+
+- Source église FPDF à couche texte (fiable). La partition du relevé, « Toutes choses nouvelles - F.pdf », est en F ; le .cho est en A ({key: A}). « Toutes choses nouvelles - Accords.pdf » est la même feuille en A, aux mêmes x à 0,1 pt près : les 50 accords y ont été mesurés (noms et positions). Contre la feuille en F, check.py classe les 50 accords « nom différent » : c'est la transposition (Bb→D, F→A, C→E, Dm→F#m, Gm→Bm, F/A→A/C#), pas une erreur.
+- À signaler : le moteur écrit {source: Toutes choses nouvelles - F.pdf} (source de l'audit) ; la source qui correspond à la tonalité du .cho est « Toutes choses nouvelles - Accords.pdf ». Le changement de {source:} est laissé à Timothée.
+- Les huit ok du relevé mettent chaque accord sur le caractère de la feuille ; check.py sur la version corrigée (sans la forme) contre « Toutes choses nouvelles - Accords.pdf » : 50 exacts sur 50. Aucune question, aucun écart à reprendre.
+- Retrait de début de ligne revu : aucune ligne de la feuille n'est en retrait (texte à x0=31,2 / 45,4) et le seul accord de début de ligne est J[Bm]e (x=39,2 sur « e »), déjà juste.
+- Paroles, non appliqué : « Tu est Celui qui donne la vie » (l. 22) porte la coquille « est » pour « es » sur la feuille comme dans le .cho.
+- Thèmes inchangés (Adoration, Espérance).
+- Non repris de la feuille : traduction « (nom retiré) », titre original « All things new ».
+
+### triomphe — Triomphe
+
+Lot 7 · partition retenue : `Triomphe.pdf` (word-scan, mesure impossible)
+
+Lignes modifiées :
+
+- l. 70 : `[E]On t'a dépouillé,[F#] Toi tu racheta[B]is` → `[E]On t'a dépouillé,[F#] Toi tu rachetai[B]s` *(session (hors relevé))* — p3 (rendu Eliakim, labels posés au caractère) : E x=65 sur « O » (exact), F# x=293 sur l'espace avant « Toi » (T à 296, exact), B x=493 au bord gauche du « s » de « rachetai‹s› » (glyphe 495–507 ; le « i » finit à 491). Aux l. 73 et 76, le B est bien sur le « i » de « triompha‹i›s » (x=484 dans le glyphe 482–485) : seule la l. 70 est décalée.
+- l. 80 : `[B]Nous chantons ta victoire, Ohhh` → `Nous chanto[B]ns ta victoire, Ohhh` *(session)*
+
+Mesures sur la partition (accords non exacts et lignes changées par la session) :
+
+| Ligne | Accord | Mesure | Classe | Correction |
+|---|---|---|---|---|
+| 80 | B | p4 x=245 sur « n » de « chanto‹n›s » (ligne d'accords tapée à part, « B____ ») | décalé | Nous chanto[B]ns ta victoire, Ohhh |
+| 70 | E | p3 x=65 sur « O » de « On » | exact | [E]On |
+| 70 | F# | p3 x=293 sur l'espace après « dépouillé, » (T de « Toi » à 296) | exact | dépouillé,[F#] Toi |
+| 70 | B | p3 x=493 sur « s » de « rachetai‹s› » (glyphe 495–507) | décalé (même syllabe, autre lettre) | rachetai[B]s |
+| 10 | E G#m F# G#m B D#m | p1 bande grise « Intro : E G#m F# G#m B D#m » lue à l'œil : 6 accords dans l'ordre du fichier | exact (check.py « à relire » : il voit un seul amas) | aucune |
+| 22 | E, B | p1 : E x=178 sur « amo‹u›r », B x=545 sur « donn‹é› » ; check.py apparie la ligne d'accords de « Par amour » à une autre bande (labels x=380/463/567/671 = ligne « Tu as payé… ») | exact (outil qui lit mal) | aucune |
+| 30 | B, B/D#, E | p1 : B x=213 sur « v‹i›e », B/D# x=367 sur « hu‹m›anit », E x=457 sur « ‹é› » ; check.py décale les bandes | exact (outil qui lit mal) | aucune |
+| 31 | G#m, B/D#, F#, B | p1 : G#m x=212 sur « v‹o›ie », B/D# x=348 sur « ét‹e›rnit », F# x=437 sur « ‹é› », B x=573 sur « R‹o›i » | exact (outil qui lit mal) | aucune |
+| 44 | B | p2 : B x=210 sur « au-del‹à› » (glyphe 206–221) | exact (outil qui lit mal : il lit « de ») | aucune |
+| 47 | B | p2 : B x=185 sur « au-d‹e›là » ; le label « ? » x=518 que check.py dit absent appartient à la ligne suivante (B de « triomph‹é› », l. 49) | exact (outil qui lit mal) | aucune |
+| 83 | E, G#m, F# | p4 : E x=354 sur « vo‹i›x », G#m x=394 sur l'espace avant « Oh » (O à 410), F# x=483 sur le 2e « ‹o›h » | exact (check.py apparie la bande de « Célébrons ») | aucune |
+| 84 | G#m, B, D#m | p4 : G#m x=349 sur « jo‹i›e », B x=439 sur l'espace avant « O » (O à 445), D#m x=479 sur le 1er « ‹h›hh » | exact (check.py apparie la bande de « Nous te couronnons ») | aucune |
+
+En-tête : `{source: Triomphe.pdf}` → `{source: Triomphe.pdf}`
+
+| Écart | Statut | Par | Raison, partition |
+|---|---|---|---|
+| 80:oeil:0 | laissé | session | Ni « [B]Nous » (actuel) ni « [B]ta » (opération) : le label « B____ » du Refrain 4 commence au-dessus du « n » final de « chantons » ; la ligne juste est donnée dans lignes. — partition : p4 (image 1072 px de large), ligne d'accords tapée à part (graisse normale, trait de tenue) : bord gauche du B à x=245, dans le « n » de « chanto‹n›s » (glyphe 239–251) ; « Nous » commence à x=70, « ta » à x≈279. |
+
+- Vérifié à l'œil, accord par accord (check.py ne lit pas ce PDF image : refrains sur fond gris) : les 4 pages extraites à leur résolution native (1072–1132 px de large), bord gauche de chaque label apparié au glyphe de la ligne de paroles par projection des colonnes ; 92 accords des lignes chantées + intro et final. Tout est exact sauf l. 70 (B une lettre trop tôt dans « rachetais ») et l. 80 (question du relevé).
+- check.py n'apparie aucune bande des refrains (fond gris) et décale les bandes des couplets : ses 102 « absent de la source », ses « décalé », « à relire » et « absent du .cho » restants sont des erreurs de lecture de l'outil ; chacun de ces accords a été mesuré à l'œil et est exact (voir mesures).
+- Refrain 4, l. 80 : le « B____ » est tapé à part (graisse normale, plus haut que les autres lignes d'accords, trait de tenue) : c'est la seule ligne de basse fidélité de la feuille. Son bord gauche est sur le « n » final de « chantons », pas sur « ta » comme le dit le relevé à l'œil. Le trait suggère un B tenu sur les trois premières lignes du refrain (l. 81 sans accord, B suivant sur « Jés‹u›s » l. 82, exact). À confirmer à l'oreille si l'équipe joue le B dès « Nous ».
+- L. 80 et 70 viennent du commit de création du chant (accords posés d'après la feuille), pas d'une retouche à l'oreille : retouches.js les liste, rien ne les protège. Le message de ce commit dit que le B tenu du Refrain 4 a été « posé sur « Nous chantons » » : si ce choix était une décision d'écoute et non une lecture de la feuille, garder « [B]Nous » ; la feuille met le label sur « chanto‹n›s ».
+- Pont : les labels F# / G#m des l. 68–76 sont sur l'espace après la virgule (« ,[F#] Toi »), sauf l. 75 où G#m est sur la virgule (« condamné[G#m], ») : le fichier suit déjà la feuille.
+- Paroles, non appliqué : la feuille écarte « Oh   oh » et « O hhh » pour loger les accords ; le .cho écrit « Ohoh » et « Ohhh », ce qui est la même parole.
+- Partition non reprise : auteurs (sept noms gravés sous le titre) ; « Momentum Créations ». Intro et Final (x2) conformes. Thèmes actuels (Croix, Salut, Adoration) gardés.
+
+### tu-agiras — Tu agiras
+
+Lot 7 · partition retenue : `Tu agiras.pdf` (traitement-texte, mesure basse-fidelite)
+
+Lignes modifiées :
+
+- l. 29 : `Dans to[B]utes les i[A]mpasses et hors du tombeau` → `Dans to[B]utes les i[A]mpasses et hors du tom[E]beau`
+- l. 31 : `Mais Tu[A]agir[E]as` → `Mais Tu [A]agir[E]as`
+- l. 47 : `[C#m]En séparant la me[B]r` → `[C#m]En séparant la m[B]er`
+
+Mesures sur la partition (accords non exacts et lignes changées par la session) :
+
+| Ligne | Accord | Mesure | Classe | Correction |
+|---|---|---|---|---|
+| 14 | C#m | x=108,0 sur l'espace avant « une » (106,7–109,7), corps du label au-dessus de « une » | équivalent | aucune : Devant [C#m]une |
+| 15 | E | x=192,0 sur l'espace avant « voie » (191,5–194,5), label au-dessus du « v » | équivalent | aucune : [E]voie |
+| 17 | E | x=198,0 dans le « a » de « la » (195,0–200,3), centre du E au-dessus de l'espace avant « foi » | équivalent (± 1 syllabe, penche sur « la ») | aucune : l[E]a foi |
+| 25 | C#m | x=168,0 dans le « e » de « que » (165,0–170,3), le C au-dessus de l'espace et du « T » ; à la ligne 30 la même phrase est tapée à x=174,0 sur le « T » | à cheval que\|Tu | gardé [C#m]Tu + needs_review |
+| 26 | A | x=111,0, 0,7 pt avant la fin du « u » de « Tu », corps au-dessus de l'espace et du « a » (114,7) | équivalent | aucune : [A]agiras |
+| 26 | E | x=137,0 dans le « a » de « ras » (133,4–138,7) | exact à l'œil (check.py lit le « s », même syllabe) | aucune : agir[E]as |
+| 27 | C#m | x=168,0 à 0,2 pt de la frontière r\|o de « promesses » | équivalent (même syllabe « pro ») | aucune |
+| 29 | E | x=267,0 dans le « b » de « tombeau » (263,0–269,0) | absent | tom[E]beau |
+| 31 | A | x=111,0 comme à la ligne 26 | équivalent | Mais Tu [A]agir[E]as (espace rendue) |
+| 31 | E | x=137,0 dans le « a » de « ras » | exact à l'œil | aucune |
+| 36 | A | x=380,8 dans le « v » de « prévu » (376,0–382,0), label au-dessus de « vu » | équivalent (même syllabe « vu ») | aucune : prév[A]u |
+| 37 | C#m | x=371,8 dans le 2e « t » de « toute » (370,1–373,4) | exact à l'œil (check.py lit le « e ») | aucune : tou[C#m]te |
+| 38 | A | x=410,8 au milieu du « É » (407,0–414,4), le A au-dessus de la jonction É\|g | à cheval É\|gli | gardé [A]Église + needs_review |
+| 39 | A | x=425,8 dans le « é » de « étonné » (422,2–427,5), le A au-dessus de la jonction é\|t | à cheval é\|ton | gardé é[A]tonné + needs_review |
+| 41 | C#m | x=389,8 à la frontière t\|o de « tout » | équivalent (même syllabe) | aucune |
+| 42 | E | x=433,8 dans le « e » de « contre » (430,9–436,3), centre du E au-dessus de l'espace avant « nous » | à cheval contre\|nous | gardé [E]nous + needs_review |
+| 46 | B | x=391,8 dans le « l » de « l’Égypte » (389,7–393,0) | exact à l'œil (check.py lit l'apostrophe) | aucune |
+| 47 | B | x=390,4 dans le « e » de « mer » (389,1–394,4) | équivalent (même syllabe) | m[B]er (défaut ok du relevé) |
+| 50 | A B | 2e moitié du pont : la feuille ne grave aucun accord | reporté | gardés (grille de la 1re moitié) |
+| 51 | C#m B | idem | reporté | gardés |
+| 52 | E | idem | reporté | gardé |
+| 53 | G#m | idem | reporté | gardé |
+
+Forme (sans effet sur la place des accords, détail dans le diff du commit) : 1 ligne(s) — espaceur : l. 28.
+
+En-tête : ajout de `{source: Tu agiras.pdf}`
+
+| Écart | Statut | Par | Raison, partition |
+|---|---|---|---|
+| 53:reporte:G#m:1 | laissé | def |  |
+| 52:reporte:E:1 | laissé | def |  |
+| 51:reporte:C#m:1 | laissé | def |  |
+| 51:reporte:B:1 | laissé | def |  |
+| 50:reporte:A:1 | laissé | def |  |
+| 50:reporte:B:1 | laissé | def |  |
+| 47:relire:B:1 | laissé | def |  |
+| 47:oeil:9 | appliqué | def |  |
+| 46:relire:B:1 | laissé | def |  |
+| 46:oeil:8 | laissé | def |  |
+| 42:relire:E:1 | laissé | def |  |
+| 42:oeil:7 | laissé | def |  |
+| 41:relire:C#m:1 | laissé | def |  |
+| 41:oeil:6 | laissé | def |  |
+| 38:relire:A:1 | laissé | def |  |
+| 38:oeil:5 | laissé | def |  |
+| 37:relire:C#m:1 | laissé | def |  |
+| 37:oeil:4 | laissé | def |  |
+| 31:relire:A:1 | laissé | def |  |
+| 31:relire:E:1 | laissé | def |  |
+| 31:oeil:3 | laissé | def |  |
+| 31:fable:31:relire:A:1 | appliqué | session | La feuille écrit « Mais Tu agiras » (espace rendue) ; A commence 0,7 pt avant la fin du « u », son corps au-dessus de l'espace et du « a » : [A]agiras comme à la ligne 26 ; E dans « ras » inchangé. — partition : A x=111,0 (« u » 105,7–111,7, « a » dès 114,7) ; E x=137,0 sur le « a » de « ras » (133,4–138,7) |
+| 31:fable:31:oeil:3 | appliqué | session | Même ligne que 31:fable:31:relire:A:1 : espace rendue entre « Tu » et « agiras », accords inchangés. — inclus dans la ligne de 31:fable:31:relire:A:1 — partition : « Mais Tu agiras » sur la feuille |
+| 29:manquant:E:1 | laissé | def |  |
+| 29:oeil:2 | laissé | def |  |
+| 29:fable:29:manquant:E:1 | appliqué | session | La feuille grave un E au-dessus de « tombeau », absent du .cho ; bord gauche du label dans le « b » : syllabe « beau ». — partition : E x=267,0, « b » de « tombeau » 263,0–269,0 → tom[E]beau |
+| 29:fable:29:oeil:2 | appliqué | session | Même lecture que 29:fable:29:manquant:E:1 (une seule des deux lectures : tom[E]beau, pas tomb[E]eau). — inclus dans la ligne de 29:fable:29:manquant:E:1 — partition : E x=267,0 dans le « b » (263,0–269,0) |
+| 26:relire:A:1 | laissé | def |  |
+| 26:relire:E:1 | laissé | def |  |
+| 26:oeil:1 | laissé | def |  |
+| 25:relire:C#m:1 | laissé | def |  |
+| 25:oeil:0 | laissé | def |  |
+| 17:relire:E:1 | laissé | def |  |
+| 15:relire:E:1 | laissé | def |  |
+| 14:relire:C#m:1 | laissé | def |  |
+
+- Source basse fidélité : feuille Pages, accords placés par espaces de 3 pt ; chaque accord mesuré en coordonnées (rawdict) et vérifié à l'œil sur des rendus 8× (crops/tu-agiras/planche.png).
+- check.py ne lit plus aucun accord de cette feuille (famille inconnue : les 46 accords sortent « absent de la source », avant comme après) : ses « non exact APRÈS » sont tous de l'outil ; chaque accord a été mesuré en coordonnées et vérifié à l'œil, et la table `mesures` donne la lecture de chaque accord qui n'est pas exact.
+- Quatre labels à cheval sur deux syllabes (l. 25, 38, 39, 42) : placement actuel gardé + needs_review ; quatre doutes, donc pas d'audio demandé.
+- Ajouté : E sur « tom[E]beau » (l. 29), absent du .cho. Espace rendue dans « Mais Tu [A]agiras » (l. 31).
+- Pont, 2e moitié (l. 50 à 53) : la feuille ne grave aucun accord ; les accords du .cho reprennent la grille de la 1re moitié : gardés comme accords reportés.
+- check.py se trompe d'une lettre sur plusieurs labels (l. 37 « e » au lieu du 2e « t », l. 46 apostrophe au lieu du « l ») : vérifié à l'œil, le .cho est juste.
+- Autres sources : « Tu agiras (D).pdf » est une copie identique en E ; « Tu agiras 2.pdf » non utilisé.
+- Liste extra (structure de la feuille) : INTRO, COUPLET 1, REFRAIN, COUPLET 2, PONT, TAG, même plan que le .cho ; rien appliqué.
+
+### tu-es-bon — Tu es bon
+
+Lot 7 · partition retenue : `Tu es bon - F.pdf` (eglise-fpdf, mesure fiable)
+
+Lignes modifiées :
+
+- l. 15 : `[G] Ton amour m'émerveil[D]le.` → `[G] Ton amour m'émervei[D]lle.`
+- l. 18 : `{start_of_chorus: Refrain 2}` → `{start_of_chorus: Refrain (x2)}` *(structure)*
+- l. 28 : `[G] Ton amour m'émerveil[D]le.` → `[G] Ton amour m'émervei[D]lle.`
+- l. 32 : `Un cri [Am7]sur mes lèvres, ma vie[C]Te célèbre.` → `Un cri [Am7]sur mes lèvres, ma vie[C] Te célèbre.`
+- l. 34 : `Vent, sol[Am7]eil ou pluie, mon cœur [C]Te redit :` → `Vent, so[Am7]leil ou pluie, mon cœur [C]Te redit :`
+
+Mesures sur la partition (accords non exacts et lignes changées par la session) :
+
+| Ligne | Accord | Mesure | Classe | Correction |
+|---|---|---|---|---|
+| 8 | G | F x=31,2 (ligne instrumentale) | nom différent par transposition seule (partition en F, .cho en G : F +2 = G) ; position exacte | aucune |
+| 8 | C | Bb x=52,7 (ligne instrumentale) | nom différent par transposition seule (partition en F, .cho en G : Bb +2 = C) ; position exacte | aucune |
+| 8 | G | F x=82,9 (ligne instrumentale) | nom différent par transposition seule (partition en F, .cho en G : F +2 = G) ; position exacte | aucune |
+| 8 | C | Bb x=104,4 (ligne instrumentale) | nom différent par transposition seule (partition en F, .cho en G : Bb +2 = C) ; position exacte | aucune |
+| 8 | G | F x=134,5 (ligne instrumentale) | nom différent par transposition seule (partition en F, .cho en G : F +2 = G) ; position exacte | aucune |
+| 8 | C | Bb x=156,0 (ligne instrumentale) | nom différent par transposition seule (partition en F, .cho en G : Bb +2 = C) ; position exacte | aucune |
+| 8 | G | F x=186,2 (ligne instrumentale) | nom différent par transposition seule (partition en F, .cho en G : F +2 = G) ; position exacte | aucune |
+| 8 | C | Bb x=207,7 (ligne instrumentale) | nom différent par transposition seule (partition en F, .cho en G : Bb +2 = C) ; position exacte | aucune |
+| 8 | G | F x=237,9 (ligne instrumentale) | nom différent par transposition seule (partition en F, .cho en G : F +2 = G) ; position exacte | aucune |
+| 12 | G | F x=31,2 sur « ‹j›e veux » | nom différent par transposition seule (partition en F, .cho en G : F +2 = G) ; position exacte | aucune |
+| 13 | C | Bb x=31,2 sur « nes : ‹t›a grâc » | nom différent par transposition seule (partition en F, .cho en G : Bb +2 = C) ; position exacte | aucune |
+| 14 | Em | Dm x=31,2 sur « gale. ‹t›a tend » | nom différent par transposition seule (partition en F, .cho en G : Dm +2 = Em) ; position exacte | aucune |
+| 14 | D/F# | C/E x=282,4 sur « bonté ‹m›e pour » | nom différent par transposition seule (partition en F, .cho en G : C/E +2 = D/F#) ; position exacte | aucune |
+| 15 | G | F x=31,2 sur « suit, ‹t›on amo » | nom différent par transposition seule (partition en F, .cho en G : F +2 = G) ; position exacte | aucune |
+| 15 | D | x=195,2 sur le 1er « l » de « m'émervei‹l›le » (C en F) | décalé + nom transposé | m'émervei[D]lle (défaut ok) |
+| 19 | G | F x=81,8 sur « et je ‹c›hante  » | nom différent par transposition seule (partition en F, .cho en G : F +2 = G) ; position exacte | aucune |
+| 20 | G | F x=81,8 sur « et je ‹d›anse c » | nom différent par transposition seule (partition en F, .cho en G : F +2 = G) ; position exacte | aucune |
+| 21 | C | Bb x=81,8 sur « et je ‹c›rie de » | nom différent par transposition seule (partition en F, .cho en G : Bb +2 = C) ; position exacte | aucune |
+| 25 | G | F x=31,2 sur «  moi. ‹r›ien da » | nom différent par transposition seule (partition en F, .cho en G : F +2 = G) ; position exacte | aucune |
+| 26 | C | Bb x=31,2 sur « pare. ‹l›es océ » | nom différent par transposition seule (partition en F, .cho en G : Bb +2 = C) ; position exacte | aucune |
+| 27 | Em | Dm x=31,2 sur « oire. ‹d›ans me » | nom différent par transposition seule (partition en F, .cho en G : Dm +2 = Em) ; position exacte | aucune |
+| 27 | D/F# | C/E x=356,6 sur « ndeur ‹m›'éblou » | nom différent par transposition seule (partition en F, .cho en G : C/E +2 = D/F#) ; position exacte | aucune |
+| 28 | G | F x=31,2 sur « ouit, ‹t›on amo » | nom différent par transposition seule (partition en F, .cho en G : F +2 = G) ; position exacte | aucune |
+| 28 | D | x=195,2 sur le 1er « l » de « m'émervei‹l›le » (C en F) | décalé + nom transposé | m'émervei[D]lle (défaut ok) |
+| 32 | Am7 | Gm7 x=91,6 sur « n cri ‹s›ur mes » | nom différent par transposition seule (partition en F, .cho en G : Gm7 +2 = Am7) ; position exacte | aucune |
+| 32 | C | x=251,6 sur l'espace entre « vie » et « Te » (Bb en F) | décalé (paroles collées) + nom transposé | ma vie[C] Te célèbre |
+| 33 | G | F x=89,8 sur « tu es ‹b›on, tu » | nom différent par transposition seule (partition en F, .cho en G : F +2 = G) ; position exacte | aucune |
+| 33 | D/F# | C/E x=169,9 sur « tu es ‹b›on. ve » | nom différent par transposition seule (partition en F, .cho en G : C/E +2 = D/F#) ; position exacte | aucune |
+| 34 | Am7 | x=104,1 sur « l » de « so‹l›eil » (Gm7 en F) | décalé + nom transposé | so[Am7]leil (défaut ok) |
+| 34 | C | Bb x=270,3 sur «  cœur ‹t›e redi » | nom différent par transposition seule (partition en F, .cho en G : Bb +2 = C) ; position exacte | aucune |
+| 35 | G | F x=89,8 sur « tu es ‹b›on, tu » | nom différent par transposition seule (partition en F, .cho en G : F +2 = G) ; position exacte | aucune |
+| 35 | D/F# | C/E x=169,9 sur « tu es ‹b›on. » | nom différent par transposition seule (partition en F, .cho en G : C/E +2 = D/F#) ; position exacte | aucune |
+
+Forme (sans effet sur la place des accords, détail dans le diff du commit) : 1 ligne(s) — ligne sans paroles : l. 8.
+
+En-tête : ajout de `{source: Tu es bon - F.pdf}`
+
+| Écart | Statut | Par | Raison, partition |
+|---|---|---|---|
+| 34:decale:Am7:1 | appliqué | def |  |
+| 32:decale:C:1 | laissé | def |  |
+| 32:colle:C:1 | appliqué | def | inclus dans la ligne de 32:fable:32:decale:C:1 |
+| 32:fable:32:decale:C:1 | appliqué | session | La feuille de l'église (source retenue) pose l'accord sur l'espace entre « vie » et « Te » : crochet puis espace, ce qui rend aussi l'espace perdu (le site affichait « vieTe »). Même ligne que l'écart 32:colle:C:1 (défaut ok) ; 32:decale:C:1 (non, sans opération) est l'autre lecture du même accord, on ne retient que celle-ci. — partition : Bb (= C en G) x=251,6, espace x0=251,6 entre « vie » (fin 251,6) et « Te » (x0 256,0) : position en l'air, ligne `Un cri [Am7]sur mes lèvres, ma vie[C] Te célèbre.` |
+| 28:decale:D:1 | appliqué | def |  |
+| 15:decale:D:1 | appliqué | def |  |
+
+- Partition : Tu es bon - F.pdf (église, FPDF, en F) ; le .cho est en G (même arrangement transposé de +2 demi-tons) : les 32 accords sont « nom différent » pour check.py uniquement par transposition (F→G, Bb→C, Dm→Em, C/E→D/F#, C→D, Gm7→Am7), positions mesurées une à une sur les coordonnées. {key: G} n'est pas changé (aucune consigne particulière).
+- Après correction, chaque accord est sur le caractère de la partition : défauts ok l. 15 et 28 (m'émervei[D]lle), l. 34 (so[Am7]leil), question l. 32 (vie[C] Te).
+- Retrait : les couplets sont gravés en retrait (deux espaces) avec l'accord au-dessus du retrait, avant la 1re lettre : `[G] Je veux`, `[C] Ta grâce`, etc., déjà écrit ainsi dans le .cho.
+- Autre source : Tu es bon - G.pdf (shir.fr, en G) : arrangement voisin avec accords de passage (G/F#, G/E, G/D, C/D) et un interlude G C G C… absents de la feuille retenue ; non repris. Elle met le C de la l. 32 sur « t » de « te » : les deux feuilles divergent, la source retenue tranche.
+- Paroles, non appliqué : aucune différence (hors l. 32, réglée).
+- Thèmes : Adoration, Action de grâce conservés (valides).
+
+### tu-es-la-lumiere — Tu es la lumière
+
+Lot 7 · partition retenue : `Tu_es_la_lumière.pdf` (eglise-fpdf, mesure fiable)
+
+Lignes modifiées :
+
+- l. 12 : `Quand Tu es [C#m]là, la nuit de[A]vient lumière.` → `Quand Tu es[C#m] là, la nuit de[A]vient lumière.`
+
+Mesures sur la partition (accords non exacts et lignes changées par la session) :
+
+| Ligne | Accord | Mesure | Classe | Correction |
+|---|---|---|---|---|
+| 12 | C#m | x=123,7 sur l'espace entre « es » et « là » (« l » plus loin, label en l'air), rendu 2× regardé | décalé | Tu es[C#m] là, (défaut ok : crochet + espace) |
+| 33 | A | x=232,1 sur l'espace après « Ciel, », avant « Ta » ; le .cho coupe le vers à cet endroit et la ligne commence par « [A] Ta » | exact (forme [X] mot ; check.py ne voit pas l'espace de début de ligne) | aucune (non par défaut gardé) |
+| 35 | A | x=246,3 sur l'espace après « cœur », avant « Ton » ; ligne recoupée, commence par « [A] Ton » | exact (forme [X] mot ; check.py ne voit pas l'espace de début de ligne) | aucune (non par défaut gardé) |
+| 37 | A | x=219,6 sur l'espace après « ciel, », avant « Ta » ; ligne recoupée, commence par « [A] Ta » | exact (forme [X] mot ; check.py ne voit pas l'espace de début de ligne) | aucune (non par défaut gardé) |
+
+Forme (sans effet sur la place des accords, détail dans le diff du commit) : 2 ligne(s) — espace de fin : l. 34, 36.
+
+En-tête : ajout de `{source: Tu_es_la_lumière.pdf}`
+
+| Écart | Statut | Par | Raison, partition |
+|---|---|---|---|
+| 37:decale:A:1 | laissé | def |  |
+| 35:decale:A:1 | laissé | def |  |
+| 33:decale:A:1 | laissé | def |  |
+| 12:decale:C#m:1 | appliqué | def |  |
+
+- Source église FPDF à couche texte (fiable) : les 36 accords mesurés sur la couche texte, chaque label à 0,0 pt du bord gauche d'un caractère tapé ou d'une espace ; rendu 2× regardé sur la l. 12 et le Pont : conforme.
+- L. 12 : défaut « ok » juste, C#m est gravé sur l'espace avant « là » → « es[C#m] là ».
+- L. 33, 35, 37 : les trois « non » par défaut sont justes : A est gravé sur l'espace avant « Ta » / « Ton », point où le .cho recoupe le vers ; la ligne commence déjà par « [A] » + espace, forme de 02 pour un label sur l'espace. check.py les compte « décalé » parce qu'il ne voit pas l'espace de tête : vérifié à l'œil.
+- Les 32 autres accords sont exacts au caractère près (ex. l. 19 l'e[C#m]spoir x=105,3 sur « s », l. 21 é[A]clairer x=222,7 sur « c », l. 38 cœur [A]Ton x=250,8 sur « T »).
+- Retrait de début de ligne : seule la 1re ligne du Pont est en retrait sur la feuille (deux espaces, « Tu » après) avec B gravé à x=45,4 au-dessus du retrait ; le .cho a déjà « [B] Tu ». Aucune autre ligne en retrait dans sa section (Refrain et Pont sont décalés en bloc, sans accord en tête de ligne) : rien à changer.
+- Structure identique à la feuille (Intro · Couplet 1 · Refrain · Couplet 2 · Pont), paroles identiques (19 lignes ; vers du Pont recoupés en deux lignes dans le .cho, admis). Thèmes Adoration, Foi, Espérance gardés (tous dans la liste).
+- {key: E} ajouté (lint E02), d'après la tonalité gravée.
+- Autres versions nommées par le relevé (Christ est la lumière (C).pdf, Tu es la vie…) : autres chants, sans rapport.
+
+### tu-es-la-vie — Tu es la vie
+
+Lot 7 · partition retenue : `Tu es la vie - Accords C.pdf` (eglise-fpdf, mesure fiable)
+
+Lignes modifiées :
+
+- l. 8 : `[C] En Ton No[Em]m, nous avons t[Am]rouvé la v[F]ie éternelle.` → `[C] En Ton No[Em]m, nous avons tr[Am]ouvé la v[F]ie éternelle.`
+- l. 22 : `[Am] Tu es la vie,[F]Tu vis en moi.` → `[Am] Tu es la vie,[F] Tu vis en moi.`
+- l. 26 : `[C] Sur un ciel g[Em]ris, Ta lumière ja[Am]illit de mil[F]le couleurs vives.` → `[C] Sur un ciel g[Em]ris, Ta lumière ja[Am]illit de mi[F]lle couleurs vives.`
+- l. 33 : `[C] Tu es la v[Em]ie, [Am]Tu es la v[F]ie, Tu vis en mo[C]i.` → `[C] Tu es la v[Em]ie,[Am] Tu es la v[F]ie, Tu vis en m[C]oi.`
+- l. 40 : `Cel[Am]ui qui tient tout l'univers` → `Ce[Am]lui qui tient tout l'univers`
+
+Mesures sur la partition (accords non exacts et lignes changées par la session) :
+
+| Ligne | Accord | Mesure | Classe | Correction |
+|---|---|---|---|---|
+| 8 | Am | x=234,8 sur « o » de « tr‹o›uvé » | décalé | tr[Am]ouvé (défaut ok) |
+| 22 | Am | x=45,4 sur le retrait, « Tu » à 54,3 | exact | [Am] Tu (inchangé) |
+| 22 | F | x=140,5 sur l'espace après « vie, » | décalé | vie,[F] Tu (question ok) |
+| 26 | F | x=309,5 sur le 1er « l » de « mi‹l›le » | décalé | mi[F]lle (défaut ok) |
+| 33 | C | x=45,4 sur le retrait | exact | [C] Tu (inchangé) |
+| 33 | Em | x=123,6 sur « i » de « v‹i›e » | exact | v[Em]ie (inchangé) |
+| 33 | Am | x=149,4 sur la dernière espace avant le 2e « Tu » | décalé | ie,[Am] Tu (question ok) |
+| 33 | F | x=223,2 sur « i » de « v‹i›e » | exact | v[F]ie (inchangé) |
+| 33 | C | x=128,1 sur « o » de « m‹o›i. » (ligne renvoyée de la feuille) | décalé | m[C]oi (question ok) |
+| 40 | Am | x=65,8 sur « l » de « Ce‹l›ui » | décalé | Ce[Am]lui (défaut ok) |
+
+En-tête : ajout de `{source: Tu es la vie - Accords C.pdf}`
+
+| Écart | Statut | Par | Raison, partition |
+|---|---|---|---|
+| 40:decale:Am:1 | appliqué | def |  |
+| 33:decale:Am:1 | laissé | def |  |
+| 33:decale:C:1 | laissé | def |  |
+| 33:fable:33:decale:Am:1 | appliqué | session | le remplacement met Am dans le blanc avant le 2e « Tu » (crochet + espace) et C sur le « o » de « moi » : toute la ligne est alors comme la feuille. — partition : Am x=149,4 sur la dernière des trois espaces avant le 2e « Tu » (149,4-153,9 ; « T » à 153,9) ; C x=128,1 sur « o » de « m‹o›i. », ligne renvoyée de la feuille |
+| 33:fable:33:decale:C:1 | appliqué | session | même remplacement que 33:fable:33:decale:Am:1 (texte identique) : C devant « o » de « moi ». — inclus dans la ligne de 33:fable:33:decale:Am:1 — partition : C x=128,1 au-dessus du « o » de « moi. » sur la ligne renvoyée de la feuille |
+| 26:decale:F:1 | appliqué | def |  |
+| 22:decale:F:1 | laissé | def |  |
+| 22:colle:F:1 | appliqué | def | inclus dans la ligne de 22:fable:22:decale:F:1 |
+| 22:fable:22:decale:F:1 | appliqué | session | la ligne de remplacement met F sur l'espace qui suit « vie, », comme la feuille : « vie,[F] Tu » ; Am en tête reste au-dessus du retrait. — partition : F x=140,5 sur la 1re espace après la virgule (espace 140,5-145,0 ; « T » à 145,0) ; Am x=45,4 sur le retrait (« T » à 54,3) |
+| 8:decale:Am:1 | appliqué | def |  |
+
+- Source église FPDF à couche texte (fiable) : les 44 accords mesurés sur la couche texte ; après correction tous sur le caractère de la feuille.
+- Retrait de début de ligne revu sur toutes les lignes : couplets, pré-refrain, refrain et post-refrain sont en retrait de deux espaces avec l'accord au-dessus du retrait, déjà écrits « [X] mot » ; le pont n'est pas en retrait et n'a pas d'accord en tête. Rien à changer.
+- Ligne 33 : retouches.js signale le commit du 18/07 (Post-Refrain en start_of_postchorus, lignes fusionnées) ; il n'a fait que fusionner deux lignes sans déplacer d'accord (nettoyage, ne protège rien) : la feuille l'emporte. La feuille renvoie « Tu vis en moi. » à la ligne (débordement), le .cho la garde sur une seule ligne.
+- Structure : la feuille grave Couplet 1, Pré-Refrain, Refrain, Couplet 2, Post-Refrain, Pont, comme le .cho ; l'écart relevé par l'outil (libellés composés non lus) est faux. Rien proposé.
+- Thèmes inchangés (Adoration, dans la liste).
+- Non repris de la feuille : traduction « (nom retiré) », titre original « You are life ».
+
+### tu-es-le-chant — Tu es le chant
+
+Lot 7 · partition retenue : `Tu es le chant.pdf` (eglise-fpdf, mesure fiable)
+
+Lignes modifiées :
+
+- l. 22 : `[D] Mon être entier veut T'ador[Bsus4]er.` → `[D] Mon être entier veut T'ado[Bsus4]rer.`
+- l. 27 : `Tu es la mé[Am]lodie de mo[E/G#]n cœur,` → `Tu es la m[Am]élodie de mo[E/G#]n cœur,`
+
+Forme (sans effet sur la place des accords, détail dans le diff du commit) : 1 ligne(s) — espace de fin : l. 20.
+
+En-tête : ajout de `{source: Tu es le chant.pdf}`
+
+| Écart | Statut | Par | Raison, partition |
+|---|---|---|---|
+| 27:decale:Am:1 | appliqué | Timothée |  |
+| 22:decale:Bsus4:1 | appliqué | Timothée |  |
+
+- Mesuré en coordonnées (PyMuPDF rawdict, feuille de l'église, une page) : les 28 accords du chant, tous exacts après les deux « ok » du relevé (l. 22 Bsus4 x=240,5 sur « T'ado‹r›er », l. 27 Am x=120,1 sur « m‹é›lodie »), qui mettent bien l'accord sur le caractère de la partition.
+- Retraits de début de ligne : Couplets 1 et 2 (« ␣␣Seigneur ») et Pré-Refrain (« ␣␣Et quand », « ␣␣Mon être ») ont l'accord gravé au-dessus du retrait (x=31,2 / 45,4, avant la 1re lettre) : le fichier écrit déjà « [E] Seigneur », « [F#m] Et », « [D] Mon ». Refrain sans retrait.
+- L. 28 : E x=292,6 sur l'espace après « louanges. » : « louanges.[E] » déjà juste.
+- Structure : l'écart « extra » (Pré-Refrain absent de la source) est une lecture ratée de l'outil ; la feuille grave Couplet 1, Couplet 2, Pré-Refrain, Refrain, comme le fichier. Le Pré-Refrain y est une seule ligne de paroles, coupée en deux dans le .cho (l. 20–21) : découpage admis, accords inchangés.
+- Autres versions présentes, non mesurées ici : « Tu es le chant - Accords.pdf », « Tu es le chant 2.pdf ». Thème actuel (Adoration) gardé.
+
+### tu-es-notre-dieu — Tu es notre Dieu
+
+Lot 7 · partition retenue : `Tu es notre Dieu - D.pdf` (eglise-fpdf, mesure fiable)
+
+Lignes modifiées :
+
+- l. 19 : `[Em]Tu es notre Dieu, [G][D][A][Em]Tu es notre Dieu.` → `[Em]Tu es notre Dieu,[G][D][A] [Em]Tu es notre Dieu.`
+- l. 24 : `Car Tu leur ouv[Em]riras Tes br[Bm]as.` → `Car Tu leur ou[Em]vriras Tes br[Bm]as.`
+
+Mesures sur la partition (accords non exacts et lignes changées par la session) :
+
+| Ligne | Accord | Mesure | Classe | Correction |
+|---|---|---|---|---|
+| 19 | G | x=172,5 sur la 2e des 21 espaces entre « Dieu, » (virgule 163,6) et « Tu » (T 261,5) : label sur l'espace avant le mot | décalé | Dieu,[G][D][A] [Em]Tu (choix ok du relevé) |
+| 19 | D | x=199,2 sur la 8e espace entre « Dieu, » et « Tu » | décalé | Dieu,[G][D][A] [Em]Tu (choix ok du relevé) |
+| 19 | A | x=230,4 sur la 15e espace entre « Dieu, » et « Tu » | décalé | Dieu,[G][D][A] [Em]Tu (choix ok du relevé) |
+| 24 | Em | x=311,3 sur « v » de « ou‹v›riras » (v 311,3, r 319,3) | décalé | ou[Em]vriras (choix ok du relevé) |
+
+Forme (sans effet sur la place des accords, détail dans le diff du commit) : 6 ligne(s) — espace de fin : l. 8, 10, 23, 25 ; orthographe d'accord : l. 30, 32.
+
+En-tête : ajout de `{source: Tu es notre Dieu - D.pdf}`
+
+| Écart | Statut | Par | Raison, partition |
+|---|---|---|---|
+| 24:decale:Em:1 | appliqué | Timothée |  |
+| 19:decale:G:1 | appliqué | Timothée |  |
+| 19:decale:D:1 | appliqué | Timothée |  |
+| 19:decale:A:1 | appliqué | Timothée |  |
+
+- Source église (FPDF, rendu ChordPro, couche texte fiable) : 34 accords mesurés, 30 exacts avant ; les 4 décalés (l. 19 G, D, A ; l. 24 Em) sont corrigés par les choix « ok » du relevé, qui mettent chaque accord sur le caractère de la partition. Aucun accord absent ni inventé, aucun nom différent, pas de retrait de début de ligne (chaque ligne commence au bord de son bloc, accord au-dessus de la 1re lettre).
+- l. 18 : G (x=362,8) est sur l'espace juste après le point de « Dieu. », D et A plus loin dans les espaces de fin : « Dieu.[G][D][A] » est exact (label après la ponctuation, collé).
+- Paroles, non appliqué : la feuille grave chaque vers des couplets sur une seule ligne avec « car » en minuscule (« Heureux sont les affligés, car Tu viens… ») ; le .cho coupe en deux lignes avec « Car ». Titre gravé en capitales, artiste « Impact » identique.
+- Autres feuilles du même chant : « Tu es notre Dieu - Accords D.pdf » et « Tu es notre Dieu.pdf », non mesurées (la partition retenue est la feuille « - D »).
+- Thèmes inchangés (Adoration, Espérance : dans la liste, défendables).
+
+### tu-m-aimes — Tu m'aimes
+
+Lot 7 · partition retenue : `Tu m_aimes - G Capo 4.pdf` (eglise-fpdf, mesure fiable)
+
+Lignes modifiées :
+
+- l. 16 : `[G#m] J'ai chassé en va[F#]in les [E]trésors de ce monde` → `[G#m] J'ai chassé en [F#]vain les [E]trésors de ce monde`
+- l. 17 : `[G#m] L'âme vide, le c[B]œur [E]brisé` → `[G#m] L'âme vide, le [B]cœur[E] brisé`
+- l. 18 : `[G#m] Tu m'as vu erran[F#]t sur l[E]es routes de ma honte` → `[G#m] Tu m'as vu errant [F#]sur les [E]routes de ma honte`
+- l. 19 : `[F#] Mais Tu ne m'as pas lai[B/D#]ssé t[E]omber` → `[F#] Mais Tu ne m'as pas lai[B/D#]ssé[E] tomber`
+- l. 24 : `[G#m] À courir a[B]près [E]le mien` → `[G#m] À courir a[B]près[E] le mien`
+- l. 26 : `[F#] Pour que les clous per[B/D#]cent [E]Tes mains` → `[F#] Pour que les clous per[B/D#]cent[E] Tes mains`
+- l. 33 : `Ô mon Dieu Tu m'ai[G#m F# E G#m B E]mes` → `Ô mon Dieu Tu m'aim[(G#m)]es[(F#)] [(E)] [(G#m)] [(B)] [(E)]` *(session)*
+- l. 38 : `[G#m] Lorsque Tu as tout [B]a-[E]ccompli` → `[G#m] Lorsque Tu as tout [B]a[E]ccompli` *(session (hors relevé))* — La feuille grave « a - ccompli » (tiret du transcripteur) : G (= B) x=177,9 sur « a », C (= E) x=201,1 sur le premier « c ». Mot écrit entier, chaque accord devant le même caractère (02, « sa - lut » → « sa[F]lut ») ; la forme du moteur ne prend que « mot - [X]suite » avec espaces.
+- l. 40 : `[F#] Tu es revenu [B/D#]à la vie, [G#m]Et Tu me [B/D#]ramènes à [E]la vie. ` → `[F#] Tu es revenu [B/D#]à[E] la vie,[G#m] Et Tu me [B/D#]ramènes à [E]la vie.`
+- l. 47 : `Ô mon Dieu Tu m'[E]aimes  [ ][B][ ][F#]` → `Ô mon Dieu Tu m'[E]aimes[B] [F#]`
+- l. 53 : `Ne peut [E]dérober mon cœu[B]r de l'a[G#m]mour de mon Sauveu[F#]r.` → `Ne peut [E]dérober mon cœur[B] de l'a[G#m]mour de mon Sauveu[F#]r.`
+- l. 56 : `Rien ne [E]pourra m'éloigne[B]r de T[F#]oi` → `Rien ne [E]pourra m'éloigner[B] de T[F#]oi`
+
+Mesures sur la partition (accords non exacts et lignes changées par la session) :
+
+| Ligne | Accord | Mesure | Classe | Correction |
+|---|---|---|---|---|
+| 16 | F# | D x=145,4 sur le « v » de « ‹v›ain » | décalé | en [F#]vain |
+| 16 | G#m | Em x=31,2 sur le retrait avant « J'ai » | exact | [G#m] J'ai (inchangé) |
+| 16 | E | C x=204,1 sur le « t » de « ‹t›résors » | exact | [E]trésors (inchangé) |
+| 17 | B | G x=142,7 sur le « c » de « ‹c›œur » | décalé | le [B]cœur |
+| 17 | E | C x=180,1 sur l'espace entre « cœur » et « brisé » | décalé | cœur[E] brisé |
+| 17 | G#m | Em x=31,2 sur le retrait | exact | inchangé |
+| 18 | F# | D x=168,5 sur le « s » de « ‹s›ur » | décalé | errant [F#]sur |
+| 18 | E | C x=220,1 sur le « r » de « ‹r›outes » | décalé | les [E]routes |
+| 18 | G#m | Em x=31,2 sur le retrait | exact | inchangé |
+| 19 | E | C x=259,2 sur l'espace juste avant « tomber » | décalé | laissé[E] tomber |
+| 19 | B/D# | G/B x=207,6 sur le premier « s » de « lai‹s›sé » | exact | inchangé |
+| 19 | F# | D x=31,2 sur le retrait | exact | inchangé |
+| 24 | E | C x=139,7 sur l'espace entre « après » et « le » | décalé | après[E] le |
+| 24 | B | G x=108,5 sur le « p » de « a‹p›rès » | exact | inchangé |
+| 26 | E | C x=247,3 sur l'espace juste avant « Tes » | décalé | percent[E] Tes |
+| 26 | B/D# | G/B x=199,3 sur le « c » de « per‹c›ent » | exact | inchangé |
+| 33 | G#m F# E G#m B E | (Em x=200,4 sur le « e » de « m'aim‹e›s », D C Em G C) en l'air après « aimes. », le tout entre parenthèses | nom + décalé | m'aim[(G#m)]es[(F#)] [(E)] [(G#m)] [(B)] [(E)] |
+| 40 | E | C x=182,4 sur l'espace juste avant « la vie, » | absent | [B/D#]à[E] la vie |
+| 40 | G#m | Em x=228,6 sur l'espace entre « vie, » et « et » | décalé | vie,[G#m] Et |
+| 40 | B/D# | G/B x=137,9 sur « à » puis x=300,7 sur le « r » de « ‹r›amènes » | exact | inchangé |
+| 47 | B | G x=253,8 en l'air après « (x..) » | équivalent (en l'air) | aimes[B] [F#] |
+| 47 | F# | D x=277,6 en l'air, après G | équivalent (en l'air) | inchangé, après B |
+| 47 | E | C x=174,7 sur le « a » de « m'‹a›imes » | exact | inchangé |
+| 51 | B | G x=164,5 sur le « i » de « v‹i›e, » | exact (l'outil l'a apparié à la l. 52) | gardé |
+| 53 | B | G x=238,3 sur l'espace entre « cœur » et « de » | décalé | cœur[B] de |
+| 56 | B | G x=228,9 sur l'espace entre « m'éloigner » et « de » | décalé | m'éloigner[B] de |
+| 38 | B | G x=177,9 sur « a » de « a - ccompli » | exact | tout [B]a[E]ccompli (tiret retiré) |
+| 38 | E | C x=201,1 sur le premier « c » de « ccompli » | exact | idem |
+| 11 | G#m F# E / G#m B E | Intro absente de la feuille | absent de la source (reporté) | gardée : même enchaînement que la fin du Refrain 1, retrait de section interdit |
+| 51 | B | check.py apparie le G de « v‹i›e » (x=164,5) à « Le présent » et les G/D en l'air de « (x..) » à « Ni la mort » | outil qui lit mal (absent/absent croisés) | aucune : l. 47 et l. 51 sont justes |
+
+Forme (sans effet sur la place des accords, détail dans le diff du commit) : 2 ligne(s) — ligne sans paroles : l. 11, 12.
+
+En-tête : ajout de `{source: Tu m_aimes - G Capo 4.pdf}`
+
+| Écart | Statut | Par | Raison, partition |
+|---|---|---|---|
+| 56:decale:B:1 | appliqué | def |  |
+| 53:decale:B:1 | appliqué | def |  |
+| 52:manquant:B:1 | laissé | def |  |
+| 51:invente:B:1 | laissé | def | la ligne est celle mesurée par la session |
+| 47:decale:B:1 | appliqué | session | Sur la partition, G (= B, capo 4) est en l'air, juste après « m'aimes. (x..) », et D (= F#) vient après lui, plus loin en l'air. Le .cho n'a pas « . (x..) » : avec l'opération, B suit « aimes » et F# vient après lui, dans le même ordre que la partition. — partition : x=253,8 sur l'espace qui suit « (x..) », en l'air après la fin des paroles |
+| 47:decale:F#:1 | laissé | session | L'opération mettrait F# avant B, à l'inverse de la partition (G à x=253,8 puis D à x=277,6, les deux en l'air). Une fois la question précédente à ok, F# reste en l'air après B : position juste. — partition : x=277,6, en l'air après « (x..) », derrière le label G |
+| 40:decale:G#m:1 | appliqué | def |  |
+| 40:manquant:E:1 | appliqué | def |  |
+| 33:reporte:G#m F# E G#m B E:1 | laissé | def |  |
+| 26:decale:E:1 | appliqué | def |  |
+| 24:decale:E:1 | appliqué | def |  |
+| 19:decale:E:1 | appliqué | def |  |
+| 18:decale:F#:1 | appliqué | def |  |
+| 18:decale:E:1 | appliqué | def |  |
+| 17:decale:B:1 | appliqué | def |  |
+| 17:decale:E:1 | appliqué | def |  |
+| 16:decale:F#:1 | appliqué | def |  |
+| 12:instrumental:G#m:1 | laissé | def |  |
+| 12:instrumental:B:1 | laissé | def |  |
+| 12:instrumental:E:1 | laissé | def |  |
+| 11:instrumental:G#m:1 | laissé | def |  |
+| 11:instrumental:F#:1 | laissé | def |  |
+| 11:instrumental:E:1 | laissé | def |  |
+
+- Source : feuille de l'église (rendu ChordPro, couche texte), en G capo 4 ; transposée en B (G→B, D→F#, C→E, Em→G#m, G/B→B/D#). Chaque label mesuré au caractère par PyMuPDF (les labels tombent exactement sur le début d'un caractère).
+- check.py ne transpose pas le capo : tous ses « nom différent » (68 après) sont G/D/C/Em/G/B gravés contre B/F#/E/G#m/B/D# du .cho, même position ; ses « absent » restants sont l'Intro (pas sur la feuille), les six accords entre parenthèses de la fin du Refrain 1 (il ne lit pas le groupe « (Em D C Em G C) ») et l'appariement croisé des l. 47/51/52 — vérifié à l'œil et au x de chaque label.
+- Retraits de début de ligne (couplets 1-3, « À en accepter », « Je n'ai rien fait ») : label au-dessus du retrait, déjà écrits `[X] mot` dans le fichier.
+- Tous les autres accords des couplets, refrains, pont et final sont exacts sur la partition (relevé ligne par ligne).
+- Refrain 1, fin : la partition grave « (Em D C Em G C) » entre parenthèses ; transcrit un crochet par accord, entre parenthèses (01). Cette ligne s'allonge de six accords : à surveiller dans le test « texte agrandi au maximum, rien ne dépasse » (tests/lignes-accords.spec.ts), non lancé ici.
+- Intro (l. 11-12) absente de la feuille : c'est le même enchaînement que la fin du Refrain 1 ; gardée (retrait de section interdit), écarts laissés à « non ».
+- Structure : la feuille n'a pas d'Intro et nomme « Refrain 1 » ce que le .cho appelle « Refrain » ; libellé non changé (pas un écart du relevé).
+- Paroles, non appliqué : la feuille a la ponctuation de fin de ligne (« monde, », « brisé. », « mien ? », « mains ? », « m'aimes. », « s'effacent. », « crois, ») ; « Ni la mort, ni la vie, » ; « Dans les hauts, dans les bas, » ; « et Tu me ramènes » en minuscule ; « Ô mon Dieu Tu m'aimes. (x..) » à la fin du Refrain 2 (reprise du refrain non transcrite).
+
+### un-chant-nouveau-monte — Un chant nouveau monte
+
+Lot 7 · partition retenue : `Un chant nouveau monte — accords A.pdf` (shirfr, mesure fiable)
+
+Lignes modifiées :
+
+- l. 7 : `{start_of_intro: Intro}` → `{start_of_intro: Intro (x2)}` *(structure)*
+- l. 13 : `[A/C#] Pour céléb [D]rer, acclamer l’ [A]Étern[E]el.` → `[A/C#] Pour céléb[D]rer, acclamer l’[A]Étern[E]el.` *(session (hors relevé))* — Mot coupé par une espace à l'endroit de l'accord (« céléb rer », « l’ Éternel », « o h ») : recollé (règle 01), accord sur la même lettre.
+- l. 26 : `Tout pou[A]voir lui est do[E/G#]nné, il règne [A/C#]pour l’éternit[F#m]é.` → `Tout pou[A]voir lui est donn[E/G#]é, il règne [A/C#]pour l’éternit[F#m]é.`
+- l. 31 : `Ne peut l’égal[D]er. (Oh oh, o [F#m]h oh oh oh oh [E]oh !)` → `Ne peut l’égal[D]er. (Oh oh, o[F#m]h oh oh oh oh [E]oh !)` *(session (hors relevé))* — Mot coupé par une espace à l'endroit de l'accord (« céléb rer », « l’ Éternel », « o h ») : recollé (règle 01), accord sur la même lettre.
+- l. 32 : `Ne peut l’égal[D]er. (Oh oh, o [F#m]h oh oh oh oh [E]oh !)` → `Ne peut l’égal[D]er. (Oh oh, o[F#m]h oh oh oh oh [E]oh !)` *(session (hors relevé))* — Mot coupé par une espace à l'endroit de l'accord (« céléb rer », « l’ Éternel », « o h ») : recollé (règle 01), accord sur la même lettre.
+- l. 33 : `Nul n’est comme t[D/B]oi, (Oh oh, o [F#m]h oh oh oh oh [E]oh !)` → `Nul n’est comme t[D/B]oi, (Oh oh, o[F#m]h oh oh oh oh [E]oh !)` *(session (hors relevé))* — Mot coupé par une espace à l'endroit de l'accord (« céléb rer », « l’ Éternel », « o h ») : recollé (règle 01), accord sur la même lettre.
+- l. 34 : `Ne peut t’égal[D]er. (Oh oh, o [F#m]h oh oh oh oh [E]oh !)` → `Ne peut t’égal[D]er. (Oh oh, o[F#m]h oh oh oh oh [E]oh !)` *(session (hors relevé))* — Mot coupé par une espace à l'endroit de l'accord (« céléb rer », « l’ Éternel », « o h ») : recollé (règle 01), accord sur la même lettre.
+- l. 35 : `[A/C#][ ][D][ ][A][ ][E]` → `[A/C#]  [D]  [A]  [E]  [A/C#]  [D]  [A]  [E]` *(structure)*
+
+Mesures sur la partition (accords non exacts et lignes changées par la session) :
+
+| Ligne | Accord | Mesure | Classe | Correction |
+|---|---|---|---|---|
+| 26 | E/G# | x=227,8 sur « é » de « donn‹é› » (x0 227,8) | décalé | donn[E/G#]é (ok du relevé, confirmé par la partition) |
+| 35 | A/C# | 2e passage de la ligne « A/C# D A E ×2 » gravée sous le Final (y=604,8) | absent de la source pour check.py : reprise ×2 dépliée, l'outil ne compte la ligne gravée qu'une fois | aucune |
+| 35 | D | 2e passage de la ligne « A/C# D A E ×2 » gravée sous le Final (y=604,8) | absent de la source pour check.py : reprise ×2 dépliée, l'outil ne compte la ligne gravée qu'une fois | aucune |
+| 35 | A | 2e passage de la ligne « A/C# D A E ×2 » gravée sous le Final (y=604,8) | absent de la source pour check.py : reprise ×2 dépliée, l'outil ne compte la ligne gravée qu'une fois | aucune |
+| 35 | E | 2e passage de la ligne « A/C# D A E ×2 » gravée sous le Final (y=604,8) | absent de la source pour check.py : reprise ×2 dépliée, l'outil ne compte la ligne gravée qu'une fois | aucune |
+
+Forme (sans effet sur la place des accords, détail dans le diff du commit) : 1 ligne(s) — ligne sans paroles : l. 8.
+
+En-tête : ajout de `{source: Un chant nouveau monte — accords A.pdf}`
+
+| Écart | Statut | Par | Raison, partition |
+|---|---|---|---|
+| 26:decale:E/G#:1 | appliqué | Timothée |  |
+
+- Partition : Un chant nouveau monte — accords A.pdf (shir.fr, couche texte ; identique octet pour octet à Un chant nouveau monte.pdf). Les 58 accords mesurés sur les coordonnées : 57 exacts, 1 décalé (l. 26 E/G#, réglé par le « ok » du relevé : la partition le pose devant « é » de « donné »).
+- Retrait : les quatre lignes du couplet commencent par une espace sur la partition, A/C# gravé au-dessus (x=30,0) : `[A/C#] Un chant…`, déjà écrit ainsi.
+- Paroles, non appliqué : l. 13 « céléb rer » et « l’ Éternel » portent une espace parasite (partition « célébrer », « l’Éternel ») ; l. 31 à 34 « o h » pour « oh » (partition « (Oh oh, oh oh oh… »). Les accords y sont déjà sur le bon caractère (D sur « r », A sur « É », F#m sur « h ») ; ces espaces sont à retirer à la main (le site affiche « céléb rer » et « o h »).
+- La partition ne grave pas de libellé « Refrain » (ni de « Couplet ») : les libellés du .cho sont gardés.
+- Autres versions : Accords F / Accords G / - F (feuilles de l'église en F et G), même chant transposé, non mesurées ici.
+- Thèmes : Adoration, Action de grâce conservés (valides).
+- Forme : mots coupés par une espace à l'endroit de l'accord recollés (l. 13 « célébrer », « l’Éternel » ; l. 31-34 « oh »), accords sur les mêmes lettres (règle 01).
+
+### un-vin-nouveau — Un vin nouveau
+
+Lot 7 · partition retenue : `Un vin nouveau.pdf` (traitement-texte, mesure basse-fidelite)
+
+Lignes modifiées :
+
+- l. 11 : `[Bb] Sous la pression, [Eb] Sous la tension` → `[Bb]Sous la pression, [Eb]Sous la tension` *(session)*
+- l. 12 : `[Gm] Tu fais un vin [Eb]nouvea[Bb]u` → `[Gm]Tu fais un vin [Eb]nouvea[Bb]u` *(session (hors relevé))* — Gm x=72,0 = « T » x=72,0 (pas de retrait) → `[Gm]Tu`. Eb x=144,0 sur « n » de « nouveau » (x0 141,6), Bb x=173,7 entre « a » 170,9 et « u » 176,2, plus près du « u » : exacts, inchangés.
+- l. 13 : `[Bb] Je renonce à [Eb]mes propres voies` → `[Bb]Je renonce à [Eb]mes propres voies` *(session)*
+- l. 14 : `[Gm] Tu traces un chemin [Eb]nouve[Bb]au[ ][(F/A)]` → `[Gm]Tu traces un chemin [Eb]nouve[Bb]au[(F/A)]` *(session)*
+
+Mesures sur la partition (accords non exacts et lignes changées par la session) :
+
+| Ligne | Accord | Mesure | Classe | Correction |
+|---|---|---|---|---|
+| 11 | Bb | x=72,0 au-dessus du « S » de « Sous la pression » (x=72,0, y=221) | décalé d'un cran (accord avant le mot au lieu de sur la 1re lettre) → corrigé | [Bb]Sous |
+| 11 | Eb | x=72,0 au-dessus du « S » de « Sous la tension » (x=72,0, y=251) | décalé d'un cran (espace avant le mot) → corrigé | [Eb]Sous |
+| 12 | Gm | x=72,0 = « T » (x=72,0) | décalé d'un cran → corrigé | [Gm]Tu |
+| 12 | Eb Bb | Eb x=144,0 sur « n » (141,6) ; Bb x=173,7 : « a » 170,9 (2,8) / « u » 176,2 (2,5) → « u » | exact (vérifié à l'œil) | inchangé : [Eb]nouvea[Bb]u |
+| 13 | Bb | x=72,0 = « J » (x=72,0) | décalé d'un cran → corrigé | [Bb]Je |
+| 13 | Eb | x=132,0 : espace 131,3, « m » 134,3 (2,3), « à » ≈126 (6,0) → « m » | exact (vérifié à l'œil) | inchangé : [Eb]mes |
+| 14 | Gm | x=72,0 = « T » (x=72,0) | décalé d'un cran → corrigé | [Gm]Tu |
+| 14 | Eb Bb | Eb x=174,0 sur « n » (172,2) ; Bb x=203,7 : « a » 201,5 (2,2) / « u » 206,9 (3,2) → « a » | exact (vérifié à l'œil) | inchangé : [Eb]nouve[Bb]au |
+| 14 | (F/A) | rien sur la feuille Hillsong après « nouveau » (y=341) ; feuille de l'église en C (rendu ChordPro, positions exactes) : « C (G/B) » en fin de ligne (G/B x=264,8, après « nouveau. ») | inventé pour la feuille retenue, mais accord facultatif reporté de la feuille de l'église (même grille, transposée en Bb : (G/B) → (F/A)) : gardé, comme le dit l'avis d'arrangement ; pas de changement d'arrangement | inchangé |
+| 18 | Eb | x=114,0 sur « m » de « m'abandonne » (113,3) | exact (vérifié à l'œil) | inchangé |
+| 19 | Gm F Bb/D | Gm x=84,0 : « n » 79,3 (4,7) / « t » 85,3 (1,3) → « t » ; F x=159,0 sur « m » (157,9) ; Bb/D x=195,0 après « mains » (fin 186,6) | exact (vérifié à l'œil) | inchangé : En[Gm]tre … [F]mains[Bb/D] |
+| 20 | Eb | x=126,0 sur « c » de « confiance » (126,0) | exact (vérifié à l'œil) | inchangé |
+| 21 | F | x=123,0 : « n » de « rien » 119,3 (3,7) / espace 125,3 / « à » 128,3 (5,3) ; label F de 123,0 à 130,3, à cheval sur « rien » et « à » ; feuille de l'église en C (rendu ChordPro, positions exactes) : G x=333,4 sur l'espace avant « craindre » (« à » 324, « c » 338) | à cheval sur la feuille retenue (± 1 syllabe) ; « crain » est à une syllabe de « à », dans la marge de la feuille, et la feuille exacte de l'église met l'accord sur « craindre » : gardé, pas de {needs_review} (le doute est levé par la seconde feuille) | inchangé : [F]craindre |
+| 25 | Bb Eb | Bb x=309,0 et Eb x=309,0 au-dessus du « F » de chaque « Fais » (309,0) | exact (vérifié à l'œil) | inchangé |
+| 26 | Gm Eb Bb | Gm x=309,0 sur « F » ; Eb x=417,0 sur « v » de « veux » (417,7) ; Bb x=477,0 sur « s » de « sois » (476,0) | exact (vérifié à l'œil) | inchangé |
+| 27 | Bb Eb | Bb x=324,0 sur « n » de « n'ai » (322,0) ; Eb x=321,0 sur « s » de « Jésus » (319,0) | exact (vérifié à l'œil) | inchangé |
+| 28 | Gm Eb Bb | Gm x=336,0 : « d » ≈332 (4) / « é » 338,0 (2) → « é » ; Eb x=438,0 sur « v » (438,0) ; Bb x=489,0 : « a » ≈485,6 (3,4) / « u » 490,9 (1,9) → « u » | exact (vérifié à l'œil) | inchangé |
+| 28 | (F/A) | rien sur la feuille Hillsong après « nouveau » (y=361) ; feuille de l'église en C (rendu ChordPro, positions exactes) : « C (G/B) » en fin de ligne (G/B x=334,5) | accord facultatif reporté de la feuille de l'église (transposé) : gardé (écart 28:invente laissé à « non ») | inchangé |
+| 32 | Bb/D | x=339,0 : « d » de « Quand » 335,0 (4,0) / espace 341,0 / « l » 344,0 (5,0) ; label large (Bb/D jusqu'à ≈365) posé sur « le vin » ; feuille de l'église en C (rendu ChordPro, positions exactes) : C/E x=97,8 sur « l » de « le » (98) | à cheval d'un point sur la feuille retenue ; la feuille exacte de l'église tranche « le » : gardé, pas de {needs_review} | inchangé : [Bb/D]le |
+| 32 | Eb | x=390,0 sur « n » de « nouveau » (390,3) | exact (vérifié à l'œil) | inchangé |
+| 33 | Gm | x=375,0 sur « e » de « est » (374,3) | exact (vérifié à l'œil) | inchangé |
+| 33 | F | x=417,0 : « e » 414,6 (2,4) / « l » 420,0 (3,0) ; feuille de l'église en C (rendu ChordPro, positions exactes) : G x=398,5 sur le 1er « l » de « nouvelle » (398) | équivalent : même syllabe « vel » (± 1 syllabe sur la feuille retenue, 0,6 pt d'écart), la feuille exacte de l'église met le « l » : gardé (écart 33:relire:F laissé à « non ») | inchangé : nouve[F]lle |
+| 34 | Bb/D Eb | Bb/D x=324,0 : « y » 319,3 (4,7) / espace 325,3 / « a » 328,3 (4,3) → « a » ; feuille de l'église en C (rendu ChordPro, positions exactes) : C/E x=70,2 sur « a » (70) ; Eb x=356,7 sur « b » de « liberté » (355,0) | exact (vérifié à l'œil) | inchangé : Il y [Bb/D]a la li[Eb]berté (l'écart 34:relire reste « non ») |
+| 35 | Gm | x=357,0 : « a » 354,3 (2,7) / « u » 359,7 (2,7), égalité ; feuille de l'église en C (rendu ChordPro, positions exactes) : Am x=230,3 sur « y » (230) | équivalent : même syllabe « yau » : gardé (écart 35:relire:Gm laissé à « non ») | inchangé : Roy[Gm]aume |
+| 35 | Bb | x=405,0 sur « à » (403,0 ; « l » 399,6) | exact (vérifié à l'œil) | inchangé |
+| 36 | Eb | x=390,0 sur « i » de « anciennes » (390,6) | exact (vérifié à l'œil) | inchangé |
+| 37 | Gm | x=405,0 : « v » 402,0 (3,0) / « e » 408,0 (3,0), égalité ; feuille de l'église en C (rendu ChordPro, positions exactes) : Am sur « v » (180) | équivalent : même syllabe « veau » : gardé | inchangé : nouv[Gm]eau |
+| 37 | F Eb | F x=439,3 : « û » 437,6 (1,7) / « l » 443,6 (4,3) → « û » ; Eb x=483,0 : « o » 479,0 (4,0) / « i » 485,0 (2,0) → « i » | exact (vérifié à l'œil) | inchangé : br[F]ûle en mo[Eb]i |
+
+Forme (sans effet sur la place des accords, détail dans le diff du commit) : 4 ligne(s) — en-tête : l. 8 ; ligature typographique : l. 20, 36 ; espaceur : l. 28.
+
+En-tête : ajout de `{source: Un vin nouveau.pdf}`
+
+| Écart | Statut | Par | Raison, partition |
+|---|---|---|---|
+| 35:relire:Gm:1 | laissé | def |  |
+| 34:relire:Bb/D:1 | laissé | def |  |
+| 33:relire:F:1 | laissé | def |  |
+| 32:relire:Bb/D:1 | laissé | def |  |
+| 28:invente:(F/A):1 | laissé | def |  |
+| 21:relire:F:1 | laissé | def |  |
+| 14:invente:(F/A):1 | laissé | def |  |
+| 13:relire:Eb:1 | laissé | def |  |
+| 11:relire:Eb:1 | laissé | def |  |
+
+- Source basse fidélité : feuille Hillsong mise en page dans Pages, accords en gras alignés aux espaces ; couche texte lue avec PyMuPDF (x de chaque label et de chaque lettre), page rendue à 2× et regardée. check.py ne lit pas cette feuille (« absent de la source » partout) : tous les accords sont vérifiés à l'œil, ligne par ligne.
+- Corrigé : l. 11 à 14, les accords de début de ligne (et le Eb de « Sous la tension ») passent de `[X] mot` à `[X]mot` : la feuille retenue n'a pas de retrait, chaque label est au-dessus de la 1re lettre. Le `[X] mot` venait du retrait de la feuille de l'église en C.
+- Trois labels à cheval sur la feuille retenue (l. 21 F rien/à, l. 32 Bb/D Quand/le, l. 34 Bb/D y/a) : la feuille de l'église en C (Un vin nouveau (C).pdf, rendu ChordPro aux positions exactes, même grille) les met là où le .cho les a déjà (craindre, le, a) ; gardés sans {needs_review}. Aucun doute restant, pas d'audio demandé.
+- Écarts du relevé (tous « non » par défaut, aucune question) : 11:relire:Eb corrigé dans le même sens (sur le « S ») ; 13, 21, 32, 33, 34, 35 laissés (lettre la plus proche ou même syllabe, confirmé par la feuille de l'église) ; 14 et 28 invente (F/A) laissés : accord facultatif de la feuille de l'église (« C (G/B) »), transposé.
+- Arrangement (information) : la feuille de l'église en C ajoute une intro « C F Am F C » (Bb Eb Gm Eb Bb) et le (G/B) facultatif ; non ajoutés. Autres feuilles : Un vin nouveau - C.pdf (même feuille que (C)) et Un vin nouveau - G.pdf (même grille en G).
+- Structure : feuille « COUPLET · PRÉ-REFRAIN · REFRAIN · PONT », identique au .cho (le 2e « REFRAIN » lu par l'outil est « PRÉ-REFRAIN ») ; rien à changer. Thèmes (Saint-Esprit, Engagement) et {key: Bb} inchangés.
+- L. 21 : F à cheval entre « rien » et « à » sur la feuille retenue (basse fidélité) ; gardé sur « craindre » comme la feuille exacte de l'église, avec un {needs_review} (règle 02). (F/A) l. 14 et 28 : gardé, c'est le « (G/B) » facultatif de la feuille de l'église transposé, pas un accord inventé.
+
+### une-flamme-en-moi — Une flamme en moi
+
+Lot 7 · partition retenue : `Une flamme en moi.pdf` (word-scan, mesure impossible)
+
+Lignes modifiées :
+
+- l. 11 : `Brille en [Em]moi, brille en [D7]moi, brille en [C]moi [G]!` → `Brille en [Em]moi, brille en [D]moi, brille en [C]moi [G]!` *(session)*
+- l. 15 : `[G]C’est une flamme d’amour [C]qui m’éclaire dans la nuit` → `[G]C’est une flamme d’amour qui [C]m’éclaire dans la nuit` *(session (hors relevé))* — Do x=595–629 : commence sur l'espace après « qui » (fin x=594), corps au-dessus de « m’ » (x=604–640) ; « qui » commence à x=550. Lettre la plus proche du label : « m » de « m’éclaire » (le transcripteur cale ses labels au début du mot ou 10–20 px avant, jamais 45 px après). Décalé d'un mot dans le .cho.
+- l. 16 : `[G]Et cette lumière d’amour [D7]vient illuminer ma vie` → `[G]Et cette lumière d’amour [D]vient illuminer ma vie` *(session)*
+- l. 18 : `[G]« Que cette lu[C]mière en[G]fin, [D7]vienne briller en [G]moi ! »` → `[G]« Que cette lu[C]mière en[G]fin, [D]vienne briller en [G]moi ! »` *(session)*
+- l. 25 : `[D7]Jeudi je veux le chanter` → `[D]Jeudi je veux le chanter` *(session)*
+- l. 28 : `[G]Le dimanche [C]cette [G]joie vient bril[D7]ler en [G]moi !` → `[G]Le dimanche [C]cette [G]joie vient bril[D]ler en [G]moi ! Oh ! [C]Oh ! [G]Oh !` *(session)*
+
+Mesures sur la partition (accords non exacts et lignes changées par la session) :
+
+| Ligne | Accord | Mesure | Classe | Correction |
+|---|---|---|---|---|
+| 11 | Em | Mim x=392 sur « m » du 1er « moi » (x=390) | exact | brille en [Em]moi |
+| 11 | D7 | Ré x=595 sur le 2e « moi » (x=589) | nom | [D]moi |
+| 11 | C | Do x=784 sur le 3e « moi » (x=789) | exact | [C]moi |
+| 11 | G | Sol x=842 sur l'espace avant « ! » (x=852) | exact | moi [G]! |
+| 15 | G | Sol x=160 sur « C » de « C’est » (x=153, après « 1 - ») | exact | [G]C’est |
+| 15 | C | Do x=595–629 sur l'espace puis « m’ » (x=604) ; « qui » x=550–594 | décalé | qui [C]m’éclaire |
+| 16 | G | Sol x=108 sur « Et » (x=108) | exact | [G]Et |
+| 16 | D7 | Ré x=483 sur « v » de « vient » (x=480) | nom | [D]vient |
+| 18 | G | Sol x=108 sur « « » (x=108) | exact | [G]« Que |
+| 18 | C | Do x=333 sur « i » de « lumière » (x=334), syllabe « miè » (m x=306) | équivalent | lu[C]mière (même syllabe, source ± 1 syllabe) |
+| 18 | G | Sol x=430 sur « f » de « enfin » (x=430) | exact | en[G]fin |
+| 18 | D7 | Ré x=512 sur « vienne » (v x=487, syllabe « vien ») | nom | [D]vienne |
+| 18 | G | Sol x=730 sur « toi » (x=732) — « moi » dans le .cho | exact | en [G]moi |
+| 25 | D7 | Ré x=108 sur « Jeudi » (x=108) | nom | [D]Jeudi |
+| 28 | G | Sol x=108 sur « Le » | exact | [G]Le |
+| 28 | C | Do x=310 sur « c » de « cette » (x=302) | exact | [C]cette |
+| 28 | G | Sol x=390 sur « joie » (j x=376, o x=390), syllabe unique | équivalent | [G]joie |
+| 28 | D7 | Ré x=573 sur le 2e « l » de « briller » (x=573) | nom | bril[D]ler |
+| 28 | G | Sol x=670 sur « moi » (x=664) | exact | [G]moi |
+| 28 | C | Do x=806 sur le 2e « Oh » (x=820), paroles absentes du .cho | absent | ! [C]Oh |
+| 28 | G | Sol x=872 sur « ! Oh » : corps du label au-dessus du 3e « Oh » (x=894), paroles absentes du .cho | absent | ! [G]Oh ! |
+| 8 | G | Sol x=258 sur « Une » (x=258, ligne en retrait, label au-dessus de la 1re lettre) — vérifié à l'œil, check.py n'apparie pas les bandes | exact | inchangé |
+| 9 | C | Do x=258 sur « Cette » — vérifié à l'œil, check.py n'apparie pas les bandes | exact | inchangé |
+| 9 | G | Sol x=784 sur « h » de « malheurs » (h ≈ x=778–797) — vérifié à l'œil, check.py n'apparie pas les bandes | exact | inchangé |
+| 10 | G | Sol x=258 sur « Je » — vérifié à l'œil, check.py n'apparie pas les bandes | exact | inchangé |
+| 17 | G | Sol x=108 sur « En » — vérifié à l'œil, check.py n'apparie pas les bandes | exact | inchangé |
+| 17 | C | Do x=445 sur « je » (j x=437) — vérifié à l'œil, check.py n'apparie pas les bandes | exact | inchangé |
+| 22 | G | Sol x=152 sur « Le » (x=152, après « 2 - ») — vérifié à l'œil, check.py n'apparie pas les bandes | exact | inchangé |
+| 23 | C | Do x=108 sur « Le » — vérifié à l'œil, check.py n'apparie pas les bandes | exact | inchangé |
+| 24 | G | Sol x=108 sur « Mercredi » — vérifié à l'œil, check.py n'apparie pas les bandes | exact | inchangé |
+| 26 | G | Sol x=108 sur « Vendredi » — vérifié à l'œil, check.py n'apparie pas les bandes | exact | inchangé |
+| 27 | C | Do x=108 sur « Samedi » — vérifié à l'œil, check.py n'apparie pas les bandes | exact | inchangé |
+
+En-tête : ajout de `{source: Une flamme en moi.pdf}`
+
+| Écart | Statut | Par | Raison, partition |
+|---|---|---|---|
+| 28:oeil:4 | laissé | def |  |
+| 25:oeil:3 | laissé | def |  |
+| 18:oeil:2 | laissé | def |  |
+| 16:oeil:1 | laissé | def |  |
+| 11:oeil:0 | laissé | def |  |
+
+- Source : capture d'une feuille Word (accords en solfège, alignés aux espaces, police proportionnelle) — source basse fidélité, ± 1 syllabe ; check.py n'apparie pas les bandes (mesure « impossible ») : les 32 accords ont été mesurés à l'œil, par projection des colonnes sur l'image (1228 px), découpes dans crops/une-flamme-en-moi/. x en pixels de l'image du scan (1228 px de large), projection des colonnes encrées.
+- Accords « non exact APRÈS » de preview : tous viennent de check.py qui apparie mal les bandes de l'image (il pose la bande « Mim Ré Do Sol » du refrain sur « C’est une flamme… », celle de « Sol Ré » sur « Et cette lumière… », etc., et compte 6 « [?] » de labels non lus) ; aucun n'est une vraie différence. Les deux « NOUVEAU » (l. 15 [C], l. 16 [D] du fichier actuel) sont ces mêmes erreurs de bande : vérifié à l'œil, chaque accord du chant est mesuré dans « mesures » (exact, ou même syllabe sur source ± 1 syllabe).
+- Ré écrit D7 aux 5 endroits dans le .cho (l. 11, 16, 18, 25, 28) : la feuille dit Ré partout → D. Le D7 vient de l'import d'origine (autre arrangement, avec Em7/Gm/C7/A7) et a été gardé par un autre contributeur quand il a recopié les places de cette feuille (commit d79b6aa) : nettoyage de transcription, pas un déplacement à l'écart de la feuille. Si D7 est un choix à l'oreille, il suffit de le remettre.
+- l. 15 : Do porté sur « m’éclaire » et non plus sur « qui » (label à x=595, 45 px après le début de « qui », corps au-dessus de « m’ »). Seul déplacement de position du chant ; à confirmer à l'oreille si besoin (source ± 1 syllabe).
+- l. 28 : fin « Oh ! Oh ! Oh ! » ajoutée (paroles et accords de la feuille : Do sur le 2e, Sol sur le 3e). Le label Sol commence au-dessus du « ! » qui précède le 3e « Oh » ; ce transcripteur cale ses labels 10–20 px avant le mot (Do du 2e « Oh » : −14 px), d'où le 3e « Oh ».
+- Paroles, non appliqué : l. 18, la feuille dit « vienne briller en toi ! » (phrase adressée aux voisins) ; le .cho dit « moi » depuis un commit dédié d'un autre contributeur (d48e8ca) qui a changé ce seul mot : choix délibéré, laissé ; à trancher par Timothée.
+- Paroles, non appliqué : la feuille n'a pas de virgule après « Une flamme en moi » (l. 8) ; numéros « 1 - », « 2 - » de la feuille non repris (libellés Couplet 1/2).
+- Places dans la même syllabe gardées (source ± 1 syllabe) : l. 18 Do sur le « i » de « lumière » (syllabe « miè », écrit lu[C]mière), Ré sur « vienne » ; l. 28 Sol sur le « o » de « joie » ; l. 16 Ré sur « vient ».
+- Thèmes Saint-Esprit, Adoration : dans la liste, inchangés.
+
+### vases-d-argile — Vases d'argile
+
+Lot 7 · partition retenue : `Vases d’argile.pdf` (shirfr, mesure fiable)
+
+Mesures sur la partition (accords non exacts et lignes changées par la session) :
+
+| Ligne | Accord | Mesure | Classe | Correction |
+|---|---|---|---|---|
+| 33 | G | p1 y=671,8 x=30,0 sur le 1er « O » de la ligne du Pont « Oh ! O h ! (× 2) », pas sur la l. 33 (qui est exacte : D 111,6 sur « o » de « t‹o›us », Em 254,8 sur « n » de « e‹n› », D 285,7 sur « o » de « m‹o›i ») | absent du .cho | section Pont ajoutée après la dernière : [G]O[D]h ! [Em]O[C]h ! |
+| 33 | D | x=43,7 sur « h » du 1er « Oh » (O 30,0, h 43,7) | absent du .cho | [G]O[D]h ! dans le Pont ajouté |
+| 33 | Em | x=73,2 sur le 2e « O » (O 73,2) | absent du .cho | [Em]O[C]h ! dans le Pont ajouté |
+| 33 | C | x=95,4 sur « h » du 2e « Oh » (h 95,4, le rendu l'écarte de son « O ») | absent du .cho | [Em]O[C]h ! dans le Pont ajouté |
+| 28 | Em G Em G | p1 y=504,8 x=30,0 / 52,2 / 64,7 / 86,9 : ligne d'accords sans paroles ni libellé entre le refrain et le couplet 2 | absent du .cho | Interlude à insérer avant le couplet 2 : structure à appliquer par Timothée (insertion au milieu du chant) |
+
+Forme (sans effet sur la place des accords, détail dans le diff du commit) : 1 ligne(s) — espaceur : l. 12.
+
+En-tête : ajout de `{source: Vases d’argile.pdf}`
+
+| Écart | Statut | Par | Raison, partition |
+|---|---|---|---|
+| 33:manquant:G:1 | laissé | def |  |
+| 33:manquant:D:1 | laissé | def |  |
+| 33:manquant:Em:1 | laissé | def |  |
+| 33:manquant:C:1 | laissé | def |  |
+
+- Source shir.fr (rendu ChordPro, couche texte fiable) : les 34 accords du .cho sont exacts au caractère près (check.py, confirmé sur le rendu 2×) ; aucun retrait de début de ligne (toutes les lignes partent de x=30,0).
+- Les 4 écarts « absent du .cho » de la l. 33 (G, D, Em, C, défaut « non ») sont les accords du Pont « Oh ! Oh ! (× 2) » gravé après le couplet 2 : la l. 33 est juste et ne change pas ; le Pont est ajouté après la dernière section avec ses accords mesurés (bloc fable appliqué, permis : ajout après la dernière).
+- Structure à appliquer par Timothée : l'interlude « Em G Em G » entre le refrain et le couplet 2 (insertion au milieu, interdite depuis le cloud) ; bloc proposé dans « structure ».
+- Rien n'indique sur la feuille un retour du refrain après le Pont ; pré-refrain et refrain sans libellé sur la feuille comme dans le .cho (libellés par défaut du site), laissés.
+- Tonalité : la feuille shir.fr grave « Tonalité : Em » (relative mineure, armure identique) ; le .cho a {key: G}, cohérent avec ses accords (couplet Em/G, refrain G D Em C) : non changé, aucune consigne particulière.
+- Autres feuilles : « Vases d'argile.pdf » (église, mêmes accords, « Ô prends », refrain en 3 lignes, Em G Em G en intro, pas de pont) et « Vases d’argile (G).pdf » (Hillsong, Pages, pré-refrain qui finit sur F, couplet 2 sans accords) : non retenues.
+- Liste extra du relevé (interlude Em G Em G, structure Couplet · Interlude · Pont) : citée ici, traitée par la structure ci-dessus.
+- Thèmes inchangés (Grâce, Adoration : dans la liste, défendables).
+
+### venez-le-celebrer — Venez Le célébrer
+
+Lot 7 · partition retenue : `Venez Le célébrer.pdf` (eglise-fpdf, mesure fiable)
+
+Lignes modifiées :
+
+- l. 11 : `[Am]donner la v[D4]ie.[D]` → `[Am] donner la v[D4]ie.[D]`
+- l. 15 : `[D]Un chant d'amour, Sei[G]gneur.` → `[D] Un chant d'amour, Sei[G]gneur.`
+- l. 18 : `{start_of_chorus: Refrain}` → `{start_of_chorus: Refrain (x2)}` *(session (hors relevé))* — La feuille grave « Refrain (x2) » (y=259,8) : reprise identique = suffixe (x2) au libellé (01) ; même directive, seul le libellé change.
+- l. 20 : `[G]célébrer, chant[Em]er,` → `[G]célébrer, chan[Em]ter,`
+- l. 21 : `[Am7]Célébrer, chant[D]er notre Ro[G]i.` → `[Am7]Célébrer, chan[D]ter notre R[G]oi.`
+
+Mesures sur la partition (accords non exacts et lignes changées par la session) :
+
+| Ligne | Accord | Mesure | Classe | Correction |
+|---|---|---|---|---|
+| 11 | Am | x=202,8 sur l'espace entre « venu » et « donner » (y=153,4) | décalé → corrigé ; check.py le lit encore « décalé » après : `[X] mot` en début de ligne .cho tombe sur la coupure entre deux lignes de la feuille, l'outil ne voit pas l'espace avant le mot (outil qui lit mal, pas un écart) | [Am] donner (question ok) |
+| 11 | D4 D | D4 x=286,4 sur « i » de « vie » ; D x=316,0 après « vie. » | exact | inchangé (v[D4]ie.[D]) |
+| 15 | D | x=256,2 sur l'espace entre « honneur » et « un » (y=221,5) | décalé → corrigé ; check.py le lit encore « décalé » après : `[X] mot` en début de ligne .cho tombe sur la coupure entre deux lignes de la feuille, l'outil ne voit pas l'espace avant le mot (outil qui lit mal, pas un écart) | [D] Un (question ok) |
+| 20 | Em | x=346,8 sur « t » de « chan‹t›er » | décalé | chan[Em]ter (défaut ok) |
+| 21 | D | x=150,3 sur « t » de « chan‹t›er » | décalé | chan[D]ter (défaut ok) |
+| 21 | G | x=225,9 sur « o » de « R‹o›i » | décalé | R[G]oi (défaut ok) |
+
+Forme (sans effet sur la place des accords, détail dans le diff du commit) : 3 ligne(s) — espace de fin : l. 8, 12, 19.
+
+En-tête : ajout de `{source: Venez Le célébrer.pdf}`
+
+| Écart | Statut | Par | Raison, partition |
+|---|---|---|---|
+| 21:decale:D:1 | appliqué | def |  |
+| 21:decale:G:1 | appliqué | def |  |
+| 20:decale:Em:1 | appliqué | def |  |
+| 15:decale:D:1 | laissé | def |  |
+| 15:fable:15:decale:D:1 | appliqué | session | Même coupe : la feuille met « …Ton honneur un chant d'amour, Seigneur. » sur une ligne, le .cho coupe avant « Un » ; D est sur l'espace avant « un » → `[D] Un`. G sur « g » de « Seigneur » exact. — partition : y=221,5 : D@256,2 = x0 de l'espace après « honneur » (« honneur‹ ›un ») ; G@415,8 sur « Sei‹g›neur » |
+| 11:decale:Am:1 | laissé | def |  |
+| 11:fable:11:decale:Am:1 | appliqué | session | Le .cho coupe la ligne de la feuille entre « venu » et « donner » ; le label Am est sur l'espace entre les deux mots : en début de ligne, crochet + espace (cas Océans de 02). Le reste de la ligne est juste (D4 sur « i » de « vie », D après le point). — partition : y=153,4 : Am@202,8 = x0 de l'espace après « venu » (« venu‹ ›donner ») ; D4@286,4 sur « v‹i›e » ; D@316,0 sur les espaces après « vie. » |
+
+- Partition : Venez Le célébrer.pdf (FPDF église, tonalité G) ; « Venez Le célébrer (F).pdf » est la même feuille transposée en F (mêmes positions). Rendu ChordPro : mesure par coordonnées PyMuPDF, page rendue à 2× regardée.
+- Les deux questions (lectures de Fable sur 11:decale:Am:1 et 15:decale:D:1) sont « ok » : sur la feuille, Am et D sont sur l'espace où le .cho coupe la ligne → `[Am] donner`, `[D] Un`. Les « non » par défaut de 11:decale:Am:1 et 15:decale:D:1 n'ont pas d'opération : la lecture retenue est celle de Fable.
+- Les trois « ok » par défaut (l. 20 Em, l. 21 D et G) sont conformes à la partition.
+- Tous les autres accords du couplet et du refrain sont exacts ; aucune ligne en retrait (le refrain est décalé en bloc, Am7 sur le « C » de « Célébrer »).
+- Libellé : `{start_of_chorus: Refrain}` → `{start_of_chorus: Refrain (x2)}` (gravé sur la feuille).
+- Paroles, non appliqué : la feuille écrit « car Tu nous fais » (l. 13 du .cho : « Car ») et « un chant d'amour » (l. 15 : « Un ») en minuscules, ces vers continuant la ligne précédente ; la feuille met chaque paire de lignes du couplet sur une seule ligne.
+- « D4 » gardé tel que gravé (01 n'a pas d'entrée pour un « 4 » seul).
+- Traduction (« LTC ») et titre original (« Come on and celebrate ») de la feuille non repris ; ordre de l'en-tête (language avant key/artist) laissé tel quel.
+- check.py après : 18 exacts, 2 « décalé » restants (l. 12 `[Am] donner`, l. 16 `[D] Un`, numéros après insertion de {source:}) : faux positifs de l'outil, qui ne voit pas l'espace de tête quand la ligne de la feuille est coupée en deux lignes .cho ; la forme `[X] mot` est celle de 02 pour un label sur l'espace (vérifié à l'œil sur le rendu 2×).
+
+### viens-souffler-a-nouveau — Viens Souffler à Nouveau
+
+Lot 7 · partition retenue : `Viens Souffler à Nouveau accord C.pdf` (traitement-texte, mesure basse-fidelite) · chant validé par Timothée
+
+Lignes modifiées :
+
+- l. 55 : `Oui déverse[C/E]ton Esprit ([F]déverse Ton Esprit)` → `Oui déverse [C/E]ton Esprit ([F]déverse Ton Esprit)`
+
+Mesures sur la partition (accords non exacts et lignes changées par la session) :
+
+| Ligne | Accord | Mesure | Classe | Correction |
+|---|---|---|---|---|
+| 8 | F | rangée « Intro » de la feuille : F / C / I G / Am / I F / C / I G / / / I (x 70,8, y 86,5) | exact (à l'œil) | aucune : mêmes accords, même ordre |
+| 8 | C | rangée « Intro » de la feuille : F / C / I G / Am / I F / C / I G / / / I (x 70,8, y 86,5) | exact (à l'œil) | aucune : mêmes accords, même ordre |
+| 8 | G | rangée « Intro » de la feuille : F / C / I G / Am / I F / C / I G / / / I (x 70,8, y 86,5) | exact (à l'œil) | aucune : mêmes accords, même ordre |
+| 8 | Am | rangée « Intro » de la feuille : F / C / I G / Am / I F / C / I G / / / I (x 70,8, y 86,5) | exact (à l'œil) | aucune : mêmes accords, même ordre |
+| 8 | F | rangée « Intro » de la feuille : F / C / I G / Am / I F / C / I G / / / I (x 70,8, y 86,5) | exact (à l'œil) | aucune : mêmes accords, même ordre |
+| 8 | C | rangée « Intro » de la feuille : F / C / I G / Am / I F / C / I G / / / I (x 70,8, y 86,5) | exact (à l'œil) | aucune : mêmes accords, même ordre |
+| 8 | G | rangée « Intro » de la feuille : F / C / I G / Am / I F / C / I G / / / I (x 70,8, y 86,5) | exact (à l'œil) | aucune : mêmes accords, même ordre |
+| 12 | F | x=70,8 sur « S » de « Son » | exact (à l'œil) | aucune |
+| 12 | C | x=123,2 sur l'espace avant « vent » (121,8–124,3), « v » à 124,3 | équivalent | aucune : frontière espace/mot, [C]vent |
+| 13 | G | x=70,8 sur « F » de « Feu » | exact (à l'œil) | aucune |
+| 13 | Am | x=127,7 sur « d » de « déferlant » (126,3–132,1) | exact (à l'œil) | aucune |
+| 14 | F | x=70,8 sur « S » de « Saint-Esprit » | exact (à l'œil) | aucune |
+| 14 | C | x=125,7 sur l'espace avant « souffle » (124,8–127,3) | équivalent | aucune : frontière espace/mot, choix « non » du relevé gardé |
+| 14 | G | x=193,6 sur l'espace avant « vies » (192,3–194,7) | équivalent | aucune : frontière espace/mot, [G]vies |
+| 18 | F | x=70,8 sur « R » de « Renonçant » | exact (à l'œil) | aucune |
+| 18 | C | x=130,8 sur « n » de « notre » (129,2–135,0) | exact (à l'œil) | aucune |
+| 19 | G | x=88,3 sur « b » de « braises » (87,8–93,6), ligne d'accords en retrait | exact (à l'œil) | aucune |
+| 19 | Am | x=145,0 sur « v » de « réveil » (144,7–149,7) | exact (à l'œil) | aucune |
+| 20 | F | x=70,8 sur « S » de « Souffle » | exact (à l'œil) | aucune |
+| 20 | C | x=145,5 sur « r » de « ranime » (144,0–147,9) | exact (à l'œil) | aucune |
+| 20 | G | x=188,6 sur « f » de « flamme » (188,5–191,9) | exact (à l'œil) | aucune |
+| 24 | C/E | x=70,8 sur « V » de « Viens » | exact (à l'œil) | aucune |
+| 24 | F | x=143,7 sur « n » de « nouveau » (142,0–147,8) | exact (à l'œil) | aucune |
+| 25 | Am | x=160,6 sur l'espace avant « cieux » (158,5–161,0) | équivalent | aucune : frontière espace/mot, [Am]cieux |
+| 26 | C | x=135,6 sur « s » de « Esprit » (134,2–138,5), label à cheval s\|p | équivalent | aucune : même syllabe « sprit », choix « non » du relevé gardé (chant validé) |
+| 27 | G | x=135,6 sur « s » de « Esprit » (134,2–138,5), label à cheval s\|p | équivalent | aucune : même syllabe « sprit », choix « non » du relevé gardé (chant validé) |
+| 32 | F | x=70,8 sur « N » de « Nos » | exact (à l'œil) | aucune |
+| 32 | C | x=190,2 sur « s » de « sainte » (190,0–194,3) | exact (à l'œil) | aucune |
+| 33 | G | x=70,8 sur « N » de « Nos » | exact (à l'œil) | aucune |
+| 33 | Am | x=174,9 sur l'espace avant « par » (173,2–175,7) | équivalent | aucune : frontière espace/mot, [Am]par |
+| 34 | F | x=70,8 sur « F » de « Feu » | exact (à l'œil) | aucune |
+| 34 | C | x=145,5 sur l'espace avant « fortifie » (143,5–146,0) | équivalent | aucune : frontière espace/mot, [C]fortifie |
+| 34 | G | x=208,6 sur « r » de « reste » (208,5–212,3) | exact (à l'œil) | aucune |
+| 38 | F | x=70,8 sur « D » de « Donc » | exact (à l'œil) | aucune |
+| 38 | C | x=157,9 sur « d » de « de » (156,0–161,7) | exact (à l'œil) | aucune |
+| 39 | G | x=70,8 sur « R » de « Rayonnant » | exact (à l'œil) | aucune |
+| 39 | Am | x=135,2 sur « l » de « lumière » (134,5–137,1) | exact (à l'œil) | aucune |
+| 40 | F | x=70,8 sur « P » de « Pour » | exact (à l'œil) | aucune |
+| 40 | C | x=155,4 sur l'espace avant « Ton » (153,7–156,2) | équivalent | aucune : frontière espace/mot, [C]Ton |
+| 40 | G | x=233,3 sur « p » de « prions » (230,7–236,5) | exact (à l'œil) | aucune |
+| 44 | C/E | x=315,4 sur « V » de « Viens » (colonne 2) | exact (à l'œil) | aucune |
+| 44 | F | x=388,3 sur « n » de « nouveau » (386,6–392,4) | exact (à l'œil) | aucune |
+| 45 | Am | x=405,2 sur l'espace avant « cieux » (403,1–405,6) | équivalent | aucune : frontière espace/mot, [Am]cieux |
+| 46 | C | x=380,1 sur « s » de « Esprit » (378,8–383,1), label à cheval s\|p | équivalent | aucune : même syllabe « sprit », choix « non » du relevé gardé (chant validé) |
+| 47 | G | x=380,1 sur « s » de « Esprit » (378,8–383,1), label à cheval s\|p | équivalent | aucune : même syllabe « sprit », choix « non » du relevé gardé (chant validé) |
+| 50 | C | x=380,1 sur « s » de « Esprit » (378,8–383,1), label à cheval s\|p | équivalent | aucune : même syllabe « sprit », choix « non » du relevé gardé (chant validé) |
+| 51 | G | x=380,1 sur « s » de « Esprit » (378,8–383,1), label à cheval s\|p | équivalent | aucune : même syllabe « sprit », choix « non » du relevé gardé (chant validé) |
+| 48 | C/E | x=315,4 sur « T » de « Ton » | exact (à l'œil) | aucune |
+| 48 | F | x=388,3 sur « n » de « nos » (387,4–393,1) | exact (à l'œil) | aucune |
+| 49 | Am | x=372,9 sur l'espace avant « présence » (371,1–373,6) | équivalent | aucune : frontière espace/mot, [Am]présence |
+| 55 | C/E | x=367,6 à cheval sur le « e » final de « déverse » (363,1–368,6) et l'espace avant « ton » (« t » à 371) | équivalent | aucune de plus : la lecture du relevé « Oui déverse [C/E]ton » (espace rendue) est appliquée par le moteur ; frontière fin de mot/espace, comme les lignes 56–58 |
+| 55 | F | x=420,6 sur « d » de « (déverse » (420,1–425,9) | exact (à l'œil) | aucune |
+| 56 | G | x=355,4 sur « T » de « Ton » (354,1–359,5) | exact (à l'œil) | aucune |
+| 56 | Am | x=404,6 sur « d » de « (déverse » (404,6–410,4) | exact (à l'œil) | aucune |
+| 57 | G/B | x=352,9 sur l'espace avant « Ton » (351,6–354,1) | équivalent | aucune : frontière espace/mot, [G/B]Ton |
+| 57 | C | x=404,8 sur « d » de « (déverse » (404,6–410,4) | exact (à l'œil) | aucune |
+| 58 | C/E | x=352,9 sur l'espace avant « Ton » (351,6–354,1) | équivalent | aucune : frontière espace/mot, [C/E]Ton |
+| 58 | F | x=398,3 au bord droit du « t » final de « Esprit » (395,1–398,8), label surtout après le mot | équivalent | aucune : fin de la même syllabe « prit », Esprit[F] |
+| 62 | F | x=315,4 sur « Q » de « Que » | exact (à l'œil) | aucune |
+| 63 | Am | x=315,4 sur « P » de « Prophétisent » | exact (à l'œil) | aucune |
+| 64 | C | x=315,4 sur « N » de « Nous » | exact (à l'œil) | aucune |
+| 65 | G | x=315,4 sur « S » de « Souffler » | exact (à l'œil) | aucune |
+| 65 | C/E | x=357,1 sur « s » du second « souffler » (355,6–359,9) | exact (à l'œil) | aucune |
+| 66 | F | x=315,4 sur « A » de « Agis » | exact (à l'œil) | aucune |
+| 67 | Am | x=315,4 sur « T » de « Tes » | exact (à l'œil) | aucune |
+| 68 | C | x=315,4 sur « N » de « Nous » | exact (à l'œil) | aucune |
+| 68 | G | x=455,7 sur « r » de « souffler, » (454,4–458,2), .cho devant « e » | équivalent | aucune : même syllabe « fler », choix « non » du relevé gardé (chant validé) |
+
+Forme (sans effet sur la place des accords, détail dans le diff du commit) : 1 ligne(s) — ligne sans paroles : l. 8.
+
+En-tête : ajout de `{source: Viens Souffler à Nouveau accord C.pdf}`
+
+| Écart | Statut | Par | Raison, partition |
+|---|---|---|---|
+| 68:relire:G:1 | laissé | Timothée |  |
+| 68:manquant:C/E:1 | laissé | Timothée |  |
+| 68:manquant:F:1 | laissé | Timothée |  |
+| 55:relire:C/E:1 | laissé | Timothée |  |
+| 55:fable:55:relire:C/E:1 | appliqué | Timothée |  |
+| 51:relire:G:1 | laissé | Timothée |  |
+| 50:relire:C:1 | laissé | Timothée |  |
+| 47:relire:G:1 | laissé | Timothée |  |
+| 46:relire:C:1 | laissé | Timothée |  |
+| 27:relire:G:1 | laissé | Timothée |  |
+| 26:relire:C:1 | laissé | Timothée |  |
+| 14:relire:C:1 | laissé | Timothée |  |
+| 8:instrumental:F:1 | laissé | Timothée |  |
+| 8:instrumental:C:1 | laissé | Timothée |  |
+| 8:instrumental:G:1 | laissé | Timothée |  |
+| 8:instrumental:Am:1 | laissé | Timothée |  |
+| 8:instrumental:F:2 | laissé | Timothée |  |
+| 8:instrumental:C:2 | laissé | Timothée |  |
+| 8:instrumental:G:2 | laissé | Timothée |  |
+
+- Chant validé, source basse fidélité (feuille Word en deux colonnes, accords alignés aux espaces) : check.py ne lit aucun accord (67 « absent de la source », avant comme après, artefact de l'outil qui ne suit pas les deux colonnes) ; les 67 accords ont été mesurés au x par PyMuPDF (rawdict, crops/viens-souffler-a-nouveau/mesure.py) et regardés sur le rendu 2× (p0.png, post.png, pont_fin.png, esprit.png) — vérifié à l'œil.
+- Aucun accord sur une autre syllabe que la partition, aucun nom faux, aucun accord inventé ni absent dans les sections présentes : aucune ligne changée. Les écarts du relevé (« non » sur Es[C]prit/Es[G]prit l. 26, 27, 46, 47, 50, 51, souffl[G]er l. 68, l'espace avant « souffle » l. 14) restent : même syllabe ou frontière mot/espace sur une source ± 1 syllabe.
+- l. 55 : la lecture « Oui déverse [C/E]ton Esprit » (choix « ok » du relevé, espace rendue) est conforme à la feuille : label C/E à cheval sur le « e » final de « déverse » et l'espace, même place que les l. 56–58.
+- Structure vue sur la feuille, non appliquée (chant validé, pas de bloc de structure) : « Interlude : Intro » après le Refrain 1 (F C G Am F C G), « Post-Refrain x2 » et « Pont x2 », renvoi « Refrain 2 » après le pont, puis une section « Fin » : « Déverse [C/E]Ton Esprit[F] » (mêmes x que la l. 58). Les « manquants » C/E et F de la l. 68 sont ceux de cette Fin, pas de la ligne 68 (juste).
+- Paroles, non appliqué : l. 28 « Oh oh ohhhh » sur le .cho, « Oh oh ohhh » sur la feuille.
+- Libellé « Post-Refrain » avec une espace finale dans la directive (l. 54) : laissé (chant validé, pas de libellé).
+- Thèmes « Saint-Esprit, Adoration » inchangés (chant validé, dans la liste) ; {key: C} présent, conforme à la feuille « accord C ».
+
+### viens-toucher-ma-vie — Viens toucher ma vie
+
+Lot 7 · partition retenue : `Viens toucher ma vie.pdf` (eglise-fpdf, mesure fiable) · chant validé par Timothée
+
+Lignes modifiées :
+
+- l. 11 : `[Dsus2] Ô quelle paix dans ces moments` → `[D] Ô quelle paix dans ces moments`
+- l. 13 : `[A] Quand le bruit faiblit` → `[A] Quand le bruit faibl[Esus4]it`
+- l. 14 : `[Esus] Et Tu parles à [A/C#]mon âme` → `Et Tu parles à [A/C#]mon âme`
+- l. 15 : `[Dsus2] Tu as toute mon attention` → `[D] Tu as toute mon attention`
+- l. 22 : `Mon [F#m7]cœur recherche Ta face` → `Mon [F#m]cœur recherche Ta face`
+- l. 23 : `Al[A]ors je cède à To[Esus]i` → `A[A]lors je cède à To[Esus4]i`
+- l. 27 : `Tout[A/C#]en moi est ému par Ton amo[E]ur` → `Tout en [D]moi est ému par Ton a[E]mour` *(session)*
+- l. 28 : `Captivé par qui Tu [F#m7]es` → `Captivé par qui Tu [F#m]es`
+- l. 29 : `Conduis-moi à Te conn[A/C#]aître plus en[D]core` → `Conduis-moi à Te co[A/C#]nnaître plus en[D]core`
+- l. 31 : `Laisser mes peurs derrière [F#m7]moi` → `Laisser mes peurs derrière [F#m]moi`
+- l. 37 : `[Dsus2] Comme le soleil à l’aurore` → `[D] Comme le soleil à l’aurore`
+- l. 39 : `[A] Ta paix me restaure, [E] Tu me donnes l[A/C#]a vie` → `[A] Ta paix me restaure, [E] Tu me donnes [A/C#]la vie`
+- l. 40 : `[Dsus2] Il n’y a aucune hésitation` → `[D] Il n’y a aucune hésitation`
+- l. 42 : `[A] Ô rien n’est compa[E]rable` → `[A] Ô rien n’est compara[E]ble`
+- l. 46 : `À Toi j’ouvre mon [D]cœur Seigneu[E]r` → `À Toi j’ouvre mon [D]cœur Seigneur[E]`
+- l. 47 : `À Toi j’ouvre mon [F#m7]cœur à jamais[A/C#]` → `À Toi j’ouvre mon [F#m]cœur à jama[A/C#]is` *(session)*
+- l. 48 : `Donc fais ce que Toi [D]seul sais fair[E]e` → `Donc fais ce que Toi [D]seul sais faire[E]`
+- l. 49 : `Jésus viens rég[F#m7]ner dans ma vi[A/C#]e` → `Jésus viens rég[F#m7]ner dans ma v[A/C#]ie`
+
+Mesures sur la partition (accords non exacts et lignes changées par la session) :
+
+| Ligne | Accord | Mesure | Classe | Correction |
+|---|---|---|---|---|
+| 23 | Esus | E x=165,4 sur « o » de « Toi » (A x=56,0 sur « l » de « Alors ») | nom différent | aucune : consigne particulière (ligne 23 suit prop(), rien à trancher) ; la partition grave E, l'église écrit Esus au couplet 1 (l. 13 et 17) |
+| 49 | F#m7 | F#m x=147,6 sur « g » de « régner » (même syllabe « gner » que rég[F#m7]ner) ; A/C# x=257,9 sur « i » de « vie » | nom différent | aucune : consigne particulière (ligne 49 suit prop(), rien à trancher) ; la partition grave F#m |
+| 27 | A/C# | aucun accord au-dessus de « Tout en » (D x=104,1 est le premier de la rangée) | inventé | retiré |
+| 27 | D | x=104,1 sur « m » de « moi » | absent | Tout en [D]moi |
+| 27 | E | x=264,1 sur « m » de « amour » | décalé | a[E]mour |
+| 47 | F#m7 | F#m x=173,8 sur « c » de « cœur » | nom | [F#m]cœur |
+| 47 | A/C# | x=263,6 sur « i » de « jamais » | décalé | jama[A/C#]is |
+
+Forme (sans effet sur la place des accords, détail dans le diff du commit) : 1 ligne(s) — orthographe d'accord : l. 17.
+
+En-tête : ajout de `{source: Viens toucher ma vie.pdf}`
+
+| Écart | Statut | Par | Raison, partition |
+|---|---|---|---|
+| 49:nom:F#m7:1 | laissé | Timothée | la ligne prend le texte de 49:oeil:8 |
+| 49:decale:A/C#:1 | appliqué | Timothée | inclus dans la ligne de 49:oeil:8 |
+| 49:oeil:8 | appliqué | Timothée |  |
+| 49:fable:49:nom:F#m7:1 | laissé | Timothée | la ligne prend le texte de 49:oeil:8 |
+| 48:decale:E:1 | appliqué | Timothée | inclus dans la ligne de 48:oeil:7 |
+| 48:oeil:7 | appliqué | Timothée |  |
+| 47:nom:F#m7:1 | appliqué | Timothée | inclus dans la ligne de la session |
+| 47:decale:A/C#:1 | appliqué | Timothée | inclus dans la ligne de la session |
+| 47:oeil:6 | appliqué | Timothée | inclus dans la ligne de la session |
+| 46:decale:E:1 | appliqué | Timothée | inclus dans la ligne de 46:oeil:5 |
+| 46:oeil:5 | appliqué | Timothée |  |
+| 42:decale:E:1 | appliqué | Timothée | inclus dans la ligne de 42:oeil:4 |
+| 42:oeil:4 | appliqué | Timothée |  |
+| 40:nom:Dsus2:1 | appliqué | Timothée |  |
+| 39:decale:A/C#:1 | appliqué | Timothée | inclus dans la ligne de 39:oeil:3 |
+| 39:oeil:3 | appliqué | Timothée |  |
+| 37:nom:Dsus2:1 | appliqué | Timothée |  |
+| 31:nom:F#m7:1 | appliqué | Timothée |  |
+| 29:decale:A/C#:1 | appliqué | Timothée | inclus dans la ligne de 29:oeil:2 |
+| 29:oeil:2 | appliqué | Timothée |  |
+| 28:nom:F#m7:1 | appliqué | Timothée |  |
+| 27:invente:A/C#:1 | appliqué | Timothée | inclus dans la ligne de la session |
+| 27:decale:E:1 | appliqué | Timothée | inclus dans la ligne de la session |
+| 27:manquant:D:1 | appliqué | Timothée | inclus dans la ligne de la session |
+| 27:oeil:1 | appliqué | Timothée | inclus dans la ligne de la session |
+| 23:decale:A:1 | appliqué | Timothée | inclus dans la ligne de 23:oeil:0 |
+| 23:nom:Esus:1 | laissé | Timothée | la ligne prend le texte de 23:oeil:0 |
+| 23:oeil:0 | appliqué | Timothée |  |
+| 23:fable:23:nom:Esus:1 | laissé | Timothée | la ligne prend le texte de 23:oeil:0 |
+| 22:nom:F#m7:1 | appliqué | Timothée |  |
+| 15:nom:Dsus2:1 | appliqué | Timothée |  |
+| 14:invente:Esus:1 | appliqué | Timothée |  |
+| 13:manquant:Esus:1 | appliqué | Timothée |  |
+| 11:nom:Dsus2:1 | appliqué | Timothée |  |
+
+- Partition retenue : feuille de l'église (PDF à couche texte), mesurée au x près (PyMuPDF) ; tous les écarts du relevé confirmés sur la mesure.
+- Lignes 23 et 49 : laissées à prop() selon la consigne particulière ; places justes (même syllabe que la partition) mais noms Esus / F#m7 là où la partition grave E / F#m — à trancher par le relevé s'il veut les noms de l'église.
+- Ligne 27 : A/C# retiré contre la ligne réécrite du relevé (qui le gardait d'après la feuille Hillsong) ; le relevé avait aussi coché son retrait, et la partition retenue n'a aucun accord sur « Tout en ».
+- Ligne 47 : renommage F#m coché par le relevé appliqué en plus de la ligne réécrite (le moteur le perdait).
+- Esus devient Esus4 (l. 13, 17, 23) par l'orthographe canonique du moteur ; F#m7 des l. 12 et 16 est bien gravé F#m7 au couplet 1.
+- Paroles, non appliqué : la partition écrit « restaures » (l. 39, coquille de la feuille), « Fais moi » sans tiret (l. 16) et une ponctuation de fin de ligne absente du .cho.
+- Structure : sections identiques à la partition (Pré-Refrain gravé), rien proposé (chant validé). Thèmes Saint-Esprit, Adoration inchangés.
+- Extra (cité, non appliqué) : diff de paroles de l'outil l. 27/39 (lecture tronquée de l'initiale) ; arrangements Hillsong et OnSong capo 2 non utilisés.
+
+### voici-le-jour — Voici le jour
+
+Lot 7 · partition retenue : `Voici le jour.pdf` (shirfr, mesure fiable)
+
+Lignes modifiées :
+
+- l. 15 : `[A] Je [G]me tourne v[D]ers dema[Bm]in.[A]` → `[A] Je [G]me tourne v[D]ers dem[Bm]ain.[A]`
+- l. 16 : `À [G]toi je rem[D]ets mon ê[Bm]tre enti[A]er, [G]Jés[Em]us.[G]` → `À [G]toi je rem[D]ets mon ê[Bm]tre enti[A]er,[G] Jés[Em]us.[G]`
+- l. 19 : `[G]Je sais que t[D]out ce q[Bm]ue tu a[A]s pour mo[G]i est b[Em]on, si [G]bon.` → `[G]Je sais que t[D]out ce q[Bm]ue tu a[A]s pour m[G]oi est b[Em]on, si [G]bon.`
+- l. 24 : `Il est pour mo[Bm]i un sujet de j[G]oie.` → `Il est pour m[Bm]oi un sujet de j[G]oie.`
+- l. 26 : `Il est pour mo[Bm]i un sujet de j[G]oie.` → `Il est pour m[Bm]oi un sujet de j[G]oie.`
+- l. 28 : `Voici le j[D]our, [Bm][ ][A][ ][G]voici le j[D]our.[Bm][ ][A]` → `Voici le j[D]our,[Bm][A] [G]voici le j[D]our.[Bm] [A]`
+- l. 34 : `À [G]toi je rem[D]ets ma v[Bm]olont[A]é, [G]Jés[Em]us.[G]` → `À [G]toi je rem[D]ets ma v[Bm]olont[A]é,[G] Jés[Em]us.[G]`
+- l. 37 : `[G]Je sais que t[D]out ce q[Bm]ue tu a[A]s pour mo[G]i est b[Em]on, si [G]bon.` → `[G]Je sais que t[D]out ce q[Bm]ue tu a[A]s pour m[G]oi est b[Em]on, si [G]bon.`
+- l. 54 : `Il est pour mo[Bm]i un sujet de j[G]oie.` → `Il est pour m[Bm]oi un sujet de j[G]oie.`
+- l. 56 : `Il est pour mo[D/F#]i un sujet de j[G]oie.` → `Il est pour m[D/F#]oi un sujet de j[G]oie.`
+- l. 57 : `Non, j[Em]e n’aurai pas p[D/F#]eur pour demain, m[G]es craintes sont e[Asus4]ntre tes` → `Non, j[Em]e n’aurai pas p[D/F#]eur pour demain, m[G]es craintes sont e[Asus4]ntre tes mains` *(session (hors relevé))* — Vers coupé en deux par la largeur de la feuille (« …entre tes » / « mains ») : « mains » recollé à son vers (règle 01), accords inchangés.
+- l. 59 : `J[Em]e te suivrai s[D/F#]ur le chemin, mon [G]espérance est en to[Asus4]i,` → `J[Em]e te suivrai s[D/F#]ur le chemin, mon [G]espérance est en t[Asus4]oi,`
+- l. 60 : `Voici le j[D]our, [Bm][ ][A][ ][G]voici le j[D]our.[Bm][ ][A]` → `Voici le j[D]our,[Bm][A] [G]voici le j[D]our.[Bm] [A][G]`
+- l. 61 : `Voici le j[D]our, [Bm][ ][A][ ][G]voici le j[D]our.[Bm][ ][A]` → `Voici le j[D]our,[Bm][A] [G]voici le j[D]our.[Bm] [A][G][D]`
+
+Mesures sur la partition (accords non exacts et lignes changées par la session) :
+
+| Ligne | Accord | Mesure | Classe | Correction |
+|---|---|---|---|---|
+| 15 | A | x=250,0 sur l'espace après « loin, » (p.1, vers « Mes soucis… je me tourne vers demain. ») ; le .cho coupe le vers à cet espace et écrit « [A] Je » | équivalent | aucune : « [A] Je » est la forme crochet + espace ; check.py ne voit pas la coupe de ligne |
+| 15 | Bm | x=432,3 au bord gauche du « a » de « demain » [431,95] | décalé | dem[Bm]ain. (défaut ok, appliqué) |
+| 16 | G | x=282,0 sur l'espace après « entier, » [281,85] | décalé | enti[A]er,[G] Jés[Em]us. (défaut ok, appliqué) |
+| 18 | A | x=306,3 sur le dernier des espaces entre « toi, » et « croyant » ; le .cho coupe là et écrit « [A] Croyant » | équivalent | aucune (outil : coupe de ligne) |
+| 19 | G | x=319,7 au bord gauche du « o » de « moi » [319,52] | décalé | m[G]oi (défaut ok, appliqué) |
+| 24 | Bm | x=374,9 au bord gauche du « o » de « moi » [374,60] | décalé | m[Bm]oi (défaut ok, appliqué) |
+| 26 | Bm | x=345,8 au bord gauche du « o » de « moi » [345,57] | décalé | m[Bm]oi (défaut ok, appliqué) |
+| 28 | Bm | x=134,5 sur le 1er espace après « jour, » [134,42] | décalé | j[D]our,[Bm][A] [G]voici (défaut ok, appliqué) |
+| 28 | A | x=163,3 sur un espace du blanc entre « jour, » et « voici » ; G x=182,5 sur « v » | décalé | dans le même blanc que Bm, avant « voici » (défaut ok, appliqué) |
+| 33 | A | x=263,9 sur l'espace après « loin, » ; le .cho coupe là et écrit « [A] Je » | équivalent | aucune (outil : coupe de ligne) |
+| 34 | G | x=248,1 sur l'espace après « volonté, » [247,94] | décalé | volont[A]é,[G] Jés[Em]us. (défaut ok, appliqué) |
+| 36 | A | x=306,3 sur le blanc entre « toi, » et « croyant » ; le .cho coupe là et écrit « [A] Croyant » | équivalent | aucune (outil : coupe de ligne) |
+| 37 | G | x=319,7 au bord gauche du « o » de « moi » | décalé | m[G]oi (défaut ok, appliqué) |
+| 54 | Bm | x=374,9 au bord gauche du « o » de « moi » | décalé | m[Bm]oi (défaut ok, appliqué) |
+| 56 | D/F# | x=345,8 au bord gauche du « o » de « moi » | décalé | m[D/F#]oi (défaut ok, appliqué) |
+| 59 | Asus4 | x=434,6 au bord gauche du « o » de « toi, » [434,39] | décalé | t[Asus4]oi, (question, ok) |
+| 60 | Bm | x=163,6 sur le 1er espace après « jour, » (p.2) | décalé | j[D]our,[Bm][A] [G]voici (défaut ok, appliqué) |
+| 60 | A | x=192,4 dans le blanc avant « voici » (G x=211,6 sur « v ») | décalé | défaut ok, appliqué |
+| 60 | G | x=351,9 en l'air après « jour. » (après Bm 308,6 et A 337,5) | absent | jour.[Bm] [A][G] (défaut ok, appliqué) |
+| 61 | Bm | x=163,6 sur le 1er espace après « jour, » | décalé | défaut ok, appliqué |
+| 61 | A | x=192,4 dans le blanc avant « voici » | décalé | défaut ok, appliqué |
+| 61 | G | x=351,9 en l'air après « jour. » | absent | défaut ok, appliqué |
+| 61 | D | x=366,2 en l'air après « jour. », dernier accord du chant | absent | jour.[Bm] [A][G][D] (défaut ok, appliqué) |
+
+Forme (sans effet sur la place des accords, détail dans le diff du commit) : 12 ligne(s) — espace de fin : l. 14, 17, 23, 25, 32, 35, 42, 44, 46, 48, 53 ; ligne sans paroles : l. 41.
+
+En-tête : ajout de `{source: Voici le jour.pdf}`
+
+| Écart | Statut | Par | Raison, partition |
+|---|---|---|---|
+| 61:decale:Bm:1 | appliqué | def |  |
+| 61:decale:A:1 | appliqué | def |  |
+| 61:manquant:G:1 | appliqué | def |  |
+| 61:manquant:D:1 | appliqué | def |  |
+| 60:decale:Bm:1 | appliqué | def |  |
+| 60:decale:A:1 | appliqué | def |  |
+| 60:manquant:G:1 | appliqué | def |  |
+| 59:decale:Asus4:1 | laissé | def |  |
+| 59:fable:59:decale:Asus4:1 | appliqué | session | Rendu ChordPro shir.fr : le label Asus4 commence exactement au bord gauche du « o » de « toi, » ; le .cho le pose devant « i ». La ligne remplacée garde Em, D/F# et G tels qu'ils sont (tous exacts). Seule lecture retenue : l'écart 59:decale:Asus4:1 (non par défaut) est l'autre lecture du même accord et ne s'applique pas. — partition : p.2, ligne « Je te suivrai… » : Asus4 x0=434,58 ; « o » de « toi » [434,39–444,10] → t[Asus4]oi, (Em x0=43,32 sur « e » de « Je » [43,31], D/F# x0=141,96 sur « u » de « sur », G x0=291,90 sur « e » de « espérance ») |
+| 56:decale:D/F#:1 | appliqué | def |  |
+| 54:decale:Bm:1 | appliqué | def |  |
+| 37:decale:G:1 | appliqué | def |  |
+| 36:decale:A:1 | laissé | def |  |
+| 34:decale:G:1 | appliqué | def |  |
+| 33:decale:A:1 | laissé | def |  |
+| 28:decale:Bm:1 | appliqué | def |  |
+| 28:decale:A:1 | appliqué | def |  |
+| 26:decale:Bm:1 | appliqué | def |  |
+| 24:decale:Bm:1 | appliqué | def |  |
+| 19:decale:G:1 | appliqué | def |  |
+| 18:decale:A:1 | laissé | def |  |
+| 16:decale:G:1 | appliqué | def |  |
+| 15:decale:A:1 | laissé | def |  |
+| 15:decale:Bm:1 | appliqué | def |  |
+
+- Partition : Voici le jour.pdf (rendu ChordPro shir.fr, couche texte) ; chaque label commence au bord gauche exact d'un caractère (écart ≤ 0,4 pt) : mesure sans ambiguïté, tous les accords du chant relus sur rawdict.
+- Défauts « ok » (18) tous conformes à la partition ; défauts « non » 15/18/33/36:A justes (le vers de la partition est coupé en deux lignes à l'espace qui porte A, « [A] Je » / « [A] Croyant » est la forme crochet + espace) ; 59:decale:Asus4 laissé au profit de son autre lecture (question ok).
+- Après : 157 exacts ; les 4 « décalés » restants de check.py (l. 15, 18, 33, 36, accord A) sont ces coupes de ligne, que l'outil ne voit pas.
+- retouches.js signale l. 59 (commit du 23/08 « Update voici-le-jour.cho ») : ce commit complète les paroles manquantes d'après la feuille (fin de ligne ajoutée, accord posé une lettre trop loin), ce n'est pas une retouche à l'oreille ; la partition l'emporte : t[Asus4]oi.
+- Paroles, non appliqué : Final l. 60-61, la partition chante « Car voici le jour, voici le jour. » (le .cho n'a pas « Car ») ; l. 57-58, le vers est coupé en deux lignes (« …entre tes » / « mains ») et la partition a « mains. » avec un point.
+- Pont l. 49 « (Sur ta vérité) » : Em sur « S », G sur « ) » : exact. Pont l. 41 : ligne d'accords mise en forme par le moteur, ordre gravé A D/F# Bm G D D.
+- Thèmes inchangés (Foi, Espérance, Adoration : tous dans la liste). {key: D} conforme (« Tonalité : D » sur la feuille).
+- Forme : le vers « …entre tes / mains » coupé par la largeur de la feuille est recollé sur une ligne (règle 01).
+
+### yahwe — Yahwé
+
+Lot 7 · partition retenue : `Yahwé A.pdf` (eglise-fpdf, mesure fiable)
+
+Lignes modifiées :
+
+- l. 9 : `[D]de rien, je ne manquerai[F#m].` → `[D]de rien, je ne manquera[F#m]i.`
+- l. 18 : `M'accompagner[C#m]ont devant Sa f[F#m]ace.` → `M'accompagne[C#m]ront devant Sa f[F#m]ace.`
+- l. 19 : `Dans Sa prés[D]ence, tellement de jo[A]ies, tellement de [E]joies !` → `Dans Sa prés[D]ence, tellement de jo[A]ies, tellement de joi[E]es !`
+- l. 20 : `Et tant [D]qu'Il se trouve auprès de mo[A]i,` → `Et tant [D]qu'Il se trouve auprès de m[A]oi,`
+- l. 22 : `Et, dans Son t[D]emple, je reviendra[A]i, je reviendra[E]i.` → `Et, dans Son t[D]emple, je reviendr[A]ai, je reviendr[E]ai.`
+- l. 27 : `La val[D]lée de l'ombre de la mort[F#m],` → `La val[D]lée de l'ombre de la mor[F#m]t,`
+- l. 31 : `De Son amou[A]r, de Son amou[E]r.` → `De Son amo[A]ur, de Son amo[E]ur.`
+- l. 35 : `Yahw[E]é, Yahw[F#m]é, Tu fais briller [D]sur moi Ton soleil[A].` → `Yahw[E]é, Yahw[F#m]é, Tu fais brille[D]r sur moi Ton solei[A]l.`
+- l. 42 : `Bient[A]ôt, Il viendra me chercher et, ` → `Bien[A]tôt, Il viendra me chercher et,`
+- l. 43 : `Dans [D]Sa maison, j'habiterai[F#m].` → `Dans [D]Sa maison, j'habitera[F#m]i.`
+
+Mesures sur la partition (accords non exacts et lignes changées par la session) :
+
+| Ligne | Accord | Mesure | Classe | Correction |
+|---|---|---|---|---|
+| 9 | F#m | x=388,2 = bord gauche du « i » de « manquera‹i›. » (i 388,2) | décalé | manquera[F#m]i. (ok du relevé) |
+| 18 | C#m | x=153,3 = bord gauche du « r » de « m'accompagne‹r›ont » | décalé | M'accompagne[C#m]ront (ok du relevé) |
+| 19 | E | x=426,9 = bord gauche du « e » du second « joi‹e›s » | décalé | joi[E]es ! (ok du relevé) |
+| 20 | A | x=288,5 = bord gauche du « o » de « moi » (m 275,2-288,5 ; o 288,5-297,4 ; i 297,4) | décalé | m[A]oi, (ok du relevé) |
+| 22 | A | x=273,0 = bord gauche du « a » du premier « reviendr‹a›i, » | décalé | reviendr[A]ai, (ok du relevé) |
+| 22 | E | x=369,0 = bord gauche du « a » du second « reviendr‹a›i. » (a 369,1) | décalé | reviendr[E]ai. (ok du relevé) |
+| 27 | F#m | x=407,7 = bord gauche du « t » de « mor‹t›, » | décalé | mor[F#m]t, (ok du relevé) |
+| 31 | A | x=120,1 = bord gauche du « u » du premier « amo‹u›r, » | décalé | amo[A]ur, (ok du relevé) |
+| 31 | E | x=229,5 = bord gauche du « u » du second « amo‹u›r. » | décalé | amo[E]ur. (ok du relevé) |
+| 35 | D | p2 x=247,2 = bord gauche du « r » final de « brille‹r› » (autre mot que « sur », où le .cho le pose) | décalé | brille[D]r sur (ok du relevé) |
+| 35 | A | p2 x=378,8 = bord gauche du « l » de « solei‹l›. » | décalé | solei[A]l. (ok du relevé) |
+| 42 | A | p2 x=63,2 = bord gauche du « t » de « Bien‹t›ôt, » | décalé | Bien[A]tôt, (ok du relevé) |
+| 43 | F#m | p2 x=462,9 = bord gauche du « i » de « j'habitera‹i›. » | décalé | j'habitera[F#m]i. (ok du relevé) |
+
+Forme (sans effet sur la place des accords, détail dans le diff du commit) : 5 ligne(s) — espace de fin : l. 8, 11, 26, 29, 45.
+
+En-tête : ajout de `{source: Yahwé A.pdf}`
+
+| Écart | Statut | Par | Raison, partition |
+|---|---|---|---|
+| 43:decale:F#m:1 | appliqué | Timothée |  |
+| 42:decale:A:1 | appliqué | Timothée |  |
+| 35:decale:D:1 | appliqué | Timothée |  |
+| 35:decale:A:1 | appliqué | Timothée |  |
+| 31:decale:A:1 | appliqué | Timothée |  |
+| 31:decale:E:1 | appliqué | Timothée |  |
+| 27:decale:F#m:1 | appliqué | Timothée |  |
+| 22:decale:A:1 | appliqué | Timothée |  |
+| 22:decale:E:1 | appliqué | Timothée |  |
+| 20:decale:A:1 | appliqué | Timothée |  |
+| 19:decale:E:1 | appliqué | Timothée |  |
+| 18:decale:C#m:1 | appliqué | Timothée |  |
+| 9:decale:F#m:1 | appliqué | Timothée |  |
+
+- Source église FPDF à couche texte (fiable) : les 59 accords mesurés sur la couche texte (rawdict), chaque label à 0,0 pt du bord gauche d'un caractère tapé ; rendu 2× regardé sur le refrain (l. 20-22) et le pont : conforme.
+- Les 13 écarts du relevé (tous « ok » du relevé, déplacement dans le même mot) mettent chaque accord sur le caractère de la partition : rien à contredire, aucune ligne réécrite. Les 46 autres accords sont exacts au caractère près (ex. l. 17 tou[D]jours x=101,4 sur « j », l. 36 chas[D]se x=274,8 sur le 2e « s », l. 46 amou[F#m]r x=462,0 sur « r »).
+- Les flèches « → » de check.py proposent une coupe de syllabe (« manque[F#m]rai », « [A]moi », « so[A]leil ») : ce n'est pas la position de la partition ; la mesure au caractère donne les lignes du relevé.
+- 02 (Cas tranchés) cite « Yahwé, label sur le i de moi → mo[A]i » : sur ce PDF le A de la l. 20 est à x=288,5, bord gauche du « o » (« i » commence à 297,4) → m[A]oi, comme le relevé. Le tableau de 02 est à revoir sur ce point (exemple, pas mesure de ce fichier).
+- Retrait de début de ligne : aucune ligne de la feuille n'est en retrait (1re lettre à x=31,2, les accords de début de ligne à 31,2 sur la 1re lettre) : rien à changer.
+- Structure identique à la feuille (Couplet 1 · Refrain · Couplet 2 · Pont · Couplet 3), paroles identiques (28 lignes, vers recoupés en deux lignes dans le .cho, admis). Thèmes Adoration, Foi gardés ; {key: A} = tonalité gravée.
+- Autres versions dans Partitions : Yahwé (D).pdf, Yahwé - B.pdf, Yahwé - D.pdf, Yahwé - G.pdf (même feuille transposée) ; Yahwe (A).pdf (shir.fr) inutilisable comme référence (anomalie 3.6 de l'audit).
+
 ## Captures (trois appareils)
 
 Lot 1 — captures des 24 chants modifiés regardées sur ordinateur, téléphone et tablette (`tests/nouveau-chant.spec.ts`, tous verts) : aucun accord superposé ni débordant, aucune section vide, aucune directive ni `{needs_review}` visible, libellés conformes au `.cho`. Remarques :
@@ -9216,6 +10851,10 @@ Lot 6 — captures des 26 chants modifiés regardées sur ordinateur, téléphon
 - recois-l-adoration : deux mots coupés au tiret sans espaces (« ado – ra tion », « victoi-re ») écrits entiers, comme les autres (01) ;
 - quelle-grace : le repère `[(x2)]` (texte dans un crochet, refusé par 01 et par le test de transposition) s'écrit `(x2)` après les accords, comme aux autres lignes du chant ;
 - roi-des-rois : fautes de paroles d'origine (« lapierre », « resursuscité »), citées, non corrigées.
+
+Lot 7 — captures des 25 chants modifiés regardées sur ordinateur, téléphone et tablette (`tests/nouveau-chant.spec.ts`, tous verts) : aucun accord superposé, aucune section vide, aucune directive ni `{needs_review}` visible. Remarques :
+- un-chant-nouveau-monte : mots coupés par une espace à l'endroit de l'accord (« céléb rer », « l’ Éternel », « o h ») recollés, accords sur les mêmes lettres (01) ;
+- voici-le-jour : le vers « …entre tes / mains » du Final, coupé par la largeur de la feuille, tient sur une ligne (01).
 
 ## Listes
 
@@ -9262,6 +10901,12 @@ Lot 6 — captures des 26 chants modifiés regardées sur ordinateur, téléphon
 - **priorite**, au-dessus de la l. 23 (`[Am7]Na na na na [Em7]na`) : l'accord Em7 est gravé à cheval entre le 4e et le 5e « na » (feuille alignée aux espaces), posé sur la lettre la plus proche (« a » du 4e) ; à confirmer à l'oreille
 - **seigneur-je-veux-te-dire**, au-dessus de la l. 7 (`[G]J'a[C]bandonne mes [Em]tristes[D]ses, [G]j'a[C]bandonne [Em]mes pei[D]nes`) : feuille Word basse fidélité : le Mim de la 2e moitié est à cheval sur la fin de « abandonne » et « mes », Em laissé sur « mes », à confirmer à l'oreille
 - **seigneur-je-veux-te-dire**, au-dessus de la l. 12 (`[G]J'a[C]bandonne mes [Em]souffran[D]ces, [G]j'a[C]bandonne [Em]ma [D]honte`) : feuille Word basse fidélité : le Mim de la 2e moitié est à cheval sur la fin de « abandonne » et « ma », Em laissé sur « ma », à confirmer à l'oreille
+- **toujours-puissante**, au-dessus de la l. 15 (`[Em7]La croix de Jésu[C]s mon sa[G]uveur`) : G à cheval entre « sau » et « veur » de « sauveur » (feuille Word alignée aux espaces, label à 3,4 pt du « v » et 3,6 pt du « u ») : posé devant « veur », à confirmer à l'écoute
+- **tu-agiras**, au-dessus de la l. 25 (`Je ne sais pas ce que [C#m]Tu feras`) : Source basse fidélité : le C#m est tapé à cheval sur « que | Tu » (à la fin du refrain il est sur « Tu ») ; à confirmer à l'oreille
+- **tu-agiras**, au-dessus de la l. 38 (`Sur cette Pierre Ton [A]Église se [E]tient`) : Source basse fidélité : le A est tapé à cheval sur « É | glise » ; à confirmer à l'oreille
+- **tu-agiras**, au-dessus de la l. 39 (`[C#m]Non rien ne T’a jamais é[A]tonné`) : Source basse fidélité : le A est tapé à cheval sur « é | tonné » ; à confirmer à l'oreille
+- **tu-agiras**, au-dessus de la l. 42 (`L’enfer ne peut ri[A]en contre [E]nous`) : Source basse fidélité : le E est tapé à cheval sur « contre | nous » ; à confirmer à l'oreille
+- **un-vin-nouveau**, au-dessus de la l. 21 (`[Gm]Je n’ai rien à [F]craindre`) : F à cheval entre « rien » et « à » sur la feuille retenue, alignée aux espaces ; la feuille de l'église le met sur « craindre », où il reste : à confirmer à l'oreille
 
 ### Blocs de structure appliqués ou laissés
 
@@ -9341,6 +10986,24 @@ Lot 6 — captures des 26 chants modifiés regardées sur ordinateur, téléphon
 - **sans-rien-retenir** (fable) : laissé — la lecture du bloc conclut à « rien » : sections déjà justes
 - **sauve-avec-puissance** (fable) : laissé — la lecture du bloc conclut à « rien » : sections déjà justes
 - **souffle** (fable) : appliqué — Vu sur la feuille : Couplet 1, Pré-Refrain, Refrain, Couplet 2 (paroles seules, sans accord ni renvoi), comme le .cho ; l'écart de l'outil vient du « PRÉ-REFRAIN » lu « REFRAIN ». La feuille s'arrête au couplet 2 sans renvoi : doute écrit avant le Couplet 2 (cas d'Abba Père, 02), par la liste needs_review ; aucune section ajoutée, retirée ni déplacée.
+- **ta-parole** (fable) : appliqué — La partition grave « Pont (x2) » (y=442,6) : reprise identique, suffixe au libellé, même directive start_of_bridge, id inchangé.
+- **ta-parole** (fable) : laissé — Le bloc de Fable sort la ligne d'accords Bb C Dm Am Bb C F du couplet 2 en un Interlude. Sur la partition, cette ligne est gravée sous le libellé « Couplet 2 » (y=343,5, juste sous le libellé y=327,8), avant les paroles : le .cho actuel suit la partition. En faire une section avant le couplet 2 serait en plus un ajout de section ailleurs qu'à la fin (interdit). Rien n'est changé ; le moteur met la ligne en forme `[Bb]  [C]  …`.
+- **tout-a-toi** (agent) : appliqué — Deux lignes vides à l'intérieur des refrains (l. 28 au milieu de Refrain 1, l. 35 juste après l'ouverture de Refrain 2), absentes de la feuille : retirées. Changement dans les sections (permis) ; aucune section ajoutée, retirée ni déplacée.
+- **tout-puissant** (fable) : laissé — la lecture du bloc conclut à « rien » : sections déjà justes
+- **tu-agiras** (fable) : laissé — la lecture du bloc conclut à « rien » : sections déjà justes
+- **tu-agiras** (agent) : laissé — non appliqué
+- **tu-es-bon** (agent) : appliqué — La partition grave « Refrain (x2) » (y=293,8 ; shir.fr : « × 2 ») ; le .cho écrit « Refrain 2 », que l'index prend pour un second refrain. Changement de libellé seul, même directive start_of_chorus, id inchangé (audit 3.8).
+- **tu-es-la-vie** (fable) : laissé — la lecture du bloc conclut à « rien » : sections déjà justes
+- **tu-es-le-chant** (fable) : laissé — la lecture du bloc conclut à « rien » : sections déjà justes
+- **tu-m-aimes** (fable) : laissé — non appliqué
+- **un-chant-nouveau-monte** (fable) : appliqué — La feuille grave « A/C# D A E ×2 » en tête (y=81,8) : reprise identique, suffixe (x2) au libellé de l'intro, même directive start_of_intro, id inchangé. La même ligne « A/C# D A E ×2 » est gravée sous la dernière ligne du Final (y=604,8), sans libellé : dans le Final (changement à l'intérieur de la section, permis), le suffixe ne peut pas porter sur le libellé (les paroles du Final ne se répètent pas), la ligne s'écrit dépliée, un crochet par accord joué (01, lignes sans paroles).
+- **un-vin-nouveau** (fable) : laissé — la lecture du bloc conclut à « rien » : sections déjà justes
+- **vases-d-argile** (fable) : appliqué — Pont « Oh ! Oh ! (× 2) » gravé après le couplet 2, dernière section du .cho : ajout d'une section après la dernière, permis. Mesure : G x=30,0 sur le 1er « O », D x=43,7 sur son « h », Em x=73,2 sur le 2e « O », C x=95,4 sur son « h » ; « (× 2) » devient le suffixe (x2). Règle aussi les écarts 33:manquant:G/D/Em/C, qui sont ces accords et non ceux de la l. 33 (juste, laissée).
+- **viens-souffler-a-nouveau** (fable) : laissé — chant validé : pas de bloc de structure
+- **viens-toucher-ma-vie** (fable) : laissé — chant validé : pas de bloc de structure
+- **viens-toucher-ma-vie** (agent) : laissé — chant validé : pas de bloc de structure
+- **voici-le-jour** (fable) : laissé — la lecture du bloc conclut à « rien » : sections déjà justes
+- **voici-le-jour** (agent) : appliqué — Ligne « mains » seule (reste du vers coupé, recollé l. 57) retirée ; même section, rien d'autre ne bouge.
 
 ### Structure à appliquer par Timothée
 
@@ -10013,6 +11676,152 @@ King [E/G#]Je - [A]sus, King [C#m]Je - sus [B]is alive
 # 4) l. 64 et 68 : {start_of_final} / {end_of_final} → {start_of_outro: Final} / {end_of_outro} (lint E07)
 ```
 
+- **ta-parole** (agent) : La dernière section est écrite `{start_of_final: Final}` (lint E07, directive refusée). La forme canonique est `{start_of_outro: Final}`, mais c'est un changement de type de section (final → outro), qui change l'id que les setlists enregistrées utilisent.
+
+```
+{start_of_outro: Final}
+A[F]men, a[C/F]men ! Ce que [Bb/F]Ta bouche a dit, [Bb]Ta main l'accomplit.
+A[F]men, a[C/E]men ! Qu'il en [Bb]soit [C]fait ain[F]si.
+{end_of_outro}
+```
+
+- **toi-seul-es-digne** (fable) : shir.fr (partition retenue) grave, après le refrain, une relance « C#m B E/G# », le refrain après le couplet 2 (2e ligne finie sur E), un solo, puis après le pont un final de 4 lignes et une sortie. Le .cho garde la forme courte de la feuille de l'église. Insérer des sections au milieu du chant est interdit ici (numérotation des sections) ; ajouter le seul final en fin de chant donnerait une forme hybride. Accords du bloc mesurés sur shir.fr : identiques à ceux du bloc ci-dessous (le pont, lui, est corrigé dans lignes).
+
+```
+(après {end_of_chorus}, l. 27 :)
+
+{start_of_intro: Interlude}
+[C#m]  [B]  [E/G#]
+{end_of_intro}
+
+(après {end_of_verse}, l. 34 :)
+
+{start_of_chorus: Refrain 2}
+Toi seul es di[A] [B]- [C#m]gne
+De recevo[A]ir louange et gl[B]oire pour l’éterni[Esus4]té.[E]
+Toi seul es di[A] [B]- [C#m]gne
+De recevo[A]ir louange et gl[B]oire pour l’éterni[E]té.
+{end_of_chorus}
+
+{start_of_intro: Solo}
+[A]  [B]  [C#m]  [A]  [B]  [Esus4]  [E]  [A]  [B]  [C#m]  [A]  [B]  [B]
+{end_of_intro}
+
+(après {end_of_bridge}, l. 39 :)
+
+{start_of_outro: Final}
+Toi seul [E/G#]es di[A] [B]- [C#m]gne
+De recevo[A]ir louange et gl[B]oire pour l’éterni[Esus4]té.[E]
+Toi seul es di[A] [B]- [C#m]gne
+De recevo[A]ir louange et gl[B]oire.[E/G#]
+Toi seul es di[A] [B]- [C#m]gne
+De recevo[A]ir louange et gl[B]oire pour l’éterni[Esus4]té.[E]
+Toi seul es di[A] [B]- [C#m]gne
+De recevo[A]ir louange et gl[B]oire pour l’éterni[F#m]té.
+[C#m]  [Bsus4]  [B]  [F#m]  [A]  [B]
+{end_of_outro}
+```
+
+- **toi-seul-es-digne** (agent) : Même constat que le bloc précédent (forme longue de shir.fr : relance, refrain 2, solo, final et sortie) ; voir son bloc_propose.
+
+- **toujours-puissante** (fable) : Du bloc proposé, tout ce qui se fait dans les sections est appliqué par les lignes (Intro (x2), Interlude (x2), Bm l. 30, D l. 47 et 53, accords mesurés) et le doute sur les retours du refrain est posé avant l'Interlude (00 : avant la première section concernée). Reste le changement de type {start_of_final: Tag} → {start_of_tag: Tag} (01, lint E07) : interdit ici (identifiants de sections des setlists).
+
+```
+{start_of_tag: Tag}
+La croix est t[Am]oujou[D]rs puissa[G]nte
+{end_of_tag}
+```
+
+- **tout-a-toi** (fable) : La feuille donne l'ordre joué en pastilles : I C1 C2 R1 R2 Is C3 R1 R2 Is In R1 R2 O. Le .cho s'arrête au Couplet 3. Le premier Instrumental (D Bm F#m7 Eadd4, une ligne en bas de p1 et une en haut de p2, donc x2) se place entre Refrain 2 et Couplet 3 : ajout au milieu, interdit par la règle de structure. Appliquer seulement la fin (après Couplet 3) donnerait un ordre bancal, d'où le bloc entier laissé à Timothée. Les retours R1/R2 sont des boîtes vides (identiques) : on peut aussi ne garder que les instrumentaux, l'interlude et le final. Accords des refrains repris ici d'après la mesure (F#m7 sur « vie », Bm après « j’ai », Eadd4).
+
+```
+(entre Refrain 2 et Couplet 3 :)
+{start_of_intro: Instrumental (x2)}
+[D]  [Bm]  [F#m7]  [Eadd4]
+{end_of_intro}
+
+(après Couplet 3 :)
+{start_of_chorus: Refrain 1}
+Ouvre mes [D]yeux et apprends moi
+[Bm] À percevoir la [F#m7]vie comme Tu la vois
+[Eadd4] Mes rêves et mes [D]plans sont tout à T[Bm]oi
+Oui tout à T[F#m7]oi o[Eadd4]oh
+{end_of_chorus}
+
+{start_of_chorus: Refrain 2}
+Je ne suis [D]rien sans Ton aide
+[Bm] Alors voici la [F#m7]vie que je possède
+[Eadd4] À Tes pieds je dé[D]pose tout ce que j’ai[Bm]
+Tout ce que j’[F#m7]ai o[Eadd4]oh ooh
+{end_of_chorus}
+
+{start_of_intro: Instrumental (x2)}
+[D]  [Bm]  [F#m7]  [Eadd4]
+{end_of_intro}
+
+{start_of_intro: Interlude}
+[D]  [Bm]  [F#m7]  [Eadd4]
+{end_of_intro}
+
+(Refrain 1 et Refrain 2 encore, identiques)
+
+{start_of_outro: Final (x2)}
+[D]  [Bm]  [F#m7]  [Eadd4]
+{end_of_outro}
+```
+
+- **tout-puissant** (agent) : La feuille grave le Pont en deux passages : « Entends nos cris… Seigneur. (× 4) » puis la même strophe avec un D ajouté sur « cœurs » « (× 2) ». Le .cho garde « (× 4) » et « (× 2) » comme lignes chantées (le site les affiche comme des paroles). Les écrire en suffixes demande deux sections Pont : ajout d'une section au milieu du chant, interdit ici.
+
+```
+{start_of_bridge: Pont 1 (x4)}
+[Bm]Entends nos cris, [A]entends nos cœurs,
+[Em]Nous sommes unis [G]pour toi, Seigneur.
+{end_of_bridge}
+
+{start_of_bridge: Pont 2 (x2)}
+[Bm]Entends nos cris, [A]entends nos [D]cœurs,
+[Em]Nous sommes unis [G]pour toi, Seigneur.
+{end_of_bridge}
+```
+
+- **tout-puissant** (agent) : `{start_of_final: Final}` n'est pas une directive de 01 (lint la refuse) : la table donne `{start_of_outro: Final}`. Changement de type de section, interdit ici (id des setlists).
+
+```
+{start_of_outro: Final}
+[Bm]  [D]  [A]  [D]  [G]  [D]  [Em]  [D]  [A]
+{end_of_outro}
+```
+
+- **un-chant-nouveau-monte** (agent) : La dernière section est écrite `{start_of_final: Final}` (lint E07, directive refusée). La forme canonique est `{start_of_outro: Final}`, mais c'est un changement de type de section (final → outro), qui change l'id que les setlists enregistrées utilisent.
+
+```
+{start_of_outro: Final}
+Ne peut l’égal[D]er. (Oh oh, o[F#m]h oh oh oh oh [E]oh !)
+Ne peut l’égal[D]er. (Oh oh, o[F#m]h oh oh oh oh [E]oh !)
+Nul n’est comme t[D/B]oi, (Oh oh, o[F#m]h oh oh oh oh [E]oh !)
+Ne peut t’égal[D]er. (Oh oh, o[F#m]h oh oh oh oh [E]oh !)
+[A/C#]  [D]  [A]  [E]  [A/C#]  [D]  [A]  [E]
+{end_of_outro}
+```
+
+- **vases-d-argile** (agent) : Interlude « Em G Em G » (p1 y=504,8, ligne d'accords sans paroles ni libellé entre le refrain et le couplet 2 = Interlude, 01) : l'insérer avant le couplet 2 décalerait l'id du pont ajouté et ajoute une section au milieu du chant, interdit depuis le cloud (setlists en ligne). Le pont « Oh ! Oh ! », lui, est ajouté après la dernière section (bloc fable appliqué).
+
+```
+(avant {start_of_verse: Couplet 2}, l. 29 :)
+{start_of_intro: Interlude}
+[Em]  [G]  [Em]  [G]
+{end_of_intro}
+
+```
+
+- **voici-le-jour** (agent) : Lint E07 : {start_of_final} n'est pas une directive canonique ; la partition titre la section « Final », qui s'écrit {start_of_outro: Final} (01). Changer le type décale l'id de section (final-1 → outro-1) des setlists enregistrées : interdit ici. Le bloc de structure du relevé (Interlude, double Intro) est un faux écart : la ligne « A D/F# Bm G D D » est déjà en tête du Pont, les deux lignes d'intro déjà dans l'Intro.
+
+```
+{start_of_outro: Final}
+…(lignes inchangées)…
+{end_of_outro}
+```
+
 ### Chants « audio demandé »
 
 - **fidele-loyal**
@@ -10023,6 +11832,7 @@ King [E/G#]Je - [A]sus, King [C#m]Je - sus [B]is alive
 - **ne-pour-nous-donner-la-vie** : avant `intro: Intro` · `verse: Couplet 1` · `chorus: Refrain` · `verse: Couplet 2` → après `intro: Intro` · `verse: Couplet 1` · `chorus: Refrain 1` · `verse: Couplet 2` · `chorus: Refrain 2`
 - **noel-est-arrive** : avant `verse: Couplet 1` · `chorus: Refrain 1` · `verse: Couplet 2` · `bridge: Pont` · `chorus: Refrain 2` → après `verse: Couplet 1` · `chorus: Refrain 1` · `verse: Couplet 2` · `bridge: Pont` · `chorus: Refrain 2` · `chorus: Refrain 1 (G)`
 - **o-vois** : avant `verse: Couplet 1` · `verse: Couplet 2` · `prechorus: Pré-Refrain` · `chorus: Refrain` · `verse: Couplet 3` · `final: ` → après `verse: Couplet 1` · `verse: Couplet 2` · `prechorus: Pré-Refrain` · `chorus: Refrain` · `verse: Couplet 3` · `outro: Final`
+- **vases-d-argile** : avant `verse: Couplet 1` · `prechorus: ` · `chorus: ` · `verse: Couplet 2` → après `verse: Couplet 1` · `prechorus: ` · `chorus: ` · `verse: Couplet 2` · `bridge: Pont (x2)`
 
 ### `{key}` changés
 
@@ -10031,6 +11841,7 @@ King [E/G#]Je - [A]sus, King [C#m]Je - sus [B]is alive
 - **noel-est-arrive** : `{key: Bb}` → `{key: F}` (écart du relevé)
 - **que-ton-nom-resonne-en-ce-lieu** : `{key: C}` → `{key: D}` (écart du relevé)
 - **rejouis-toi-mon-ame** : `{key: G}` → `{key: D}` (écart du relevé)
+- **tu-es-la-lumiere** : (absente) → `{key: E}` — {key} absent (lint E02) ; la feuille grave la tonalité « E » en haut à droite (x=532,2, corps 18), et les accords du .cho (E F#m7 C#m7 A B) sont en mi majeur.
 
 ### Autres changements d'en-tête
 
@@ -10098,10 +11909,16 @@ Aucun.
 - **oasis** : Copie identique de la même feuille.
 - **ouvre-les-yeux-de-mon-coeur** : Le .cho suit la feuille de l'église (pronoms « Te », « Ta », « Ton », « Cieux » en capitale, sections libellées). La feuille shir.fr est le même arrangement en E, accords identiques ligne à ligne ; elle écrit les pronoms en minuscules, l'apostrophe typographique, ne libelle pas le refrain (simple filet), porte le copyright (Open the Eyes of my Heart © 1997 Integrity's Hosanna! Music / LTC) et cale ses étiquettes un peu autrement (A2 collé à « je » sans blanc, E du Final sur « te »).
 - **que-ton-nom-resonne-en-ce-lieu** : Le .cho suit la grille accords.app REPHI7290 imprimée en Ré (fichier mal nommé « (La) ») : mêmes accords, même plan (pont joué deux fois). « - C », « C » et « (C) » (capture iPhone) sont la même grille en Do, « A » la même en La : transpositions pures. « Paroles.pdf » est un autre arrangement (rendu ChordPro en C, « Gauthier Kulula - MLK ») : G/C, F/C, Gsus4 G sur « Ô Jésus », un seul passage du pont. « … 2.pdf » est un doublon iCloud, ignoré.
+- **toi-seul-es-digne** : Même feuille de l'église transposée en D, mêmes places (31 exacts, 37 décalés). « - C 2.pdf » est un doublon iCloud de la feuille en C.
+- **un-vin-nouveau** : Feuille église en C, même grille transposée ; ajoute une intro C F Am F C et un (G/B) facultatif en fin de couplet et de refrain (source du (F/A) du .cho). Les positions du .cho (nouvea[Bb]u) suivent plutôt cette feuille.
+- **vases-d-argile** : Le .cho suit shir.fr (apostrophe typographique) : 34/42 accords exacts, 0 décalé, seuls manquent l'interlude et le pont. La feuille de l'église (apostrophe droite) : 28/38 exacts et 6 décalés, « Ô prends » au lieu de « Oh, prends », refrain en 3 lignes, « Em G Em G » en intro, pas de pont. « Vases d’argile (G).pdf » (Hillsong, Pages) : lignes courtes, pré-refrain qui finit sur F, couplet 2 sans accords (30 %).
+- **viens-toucher-ma-vie** : Grille OnSong capo 2 (Cadd2, Em7, G…) : autre arrangement, final sur Bm ; le .cho ne lui emprunte rien.
 
 ### Remplacements contradictoires cochés sur une même ligne
 
 - **o-vois** l. 56 : 56:oeil:5 et 56:fable:56:oeil:5 ; la ligne suit prop(), donc le premier (56:oeil:5)
+- **viens-toucher-ma-vie** l. 23 : 23:oeil:0 et 23:fable:23:nom:Esus:1 ; la ligne suit prop(), donc le premier (23:oeil:0)
+- **viens-toucher-ma-vie** l. 49 : 49:oeil:8 et 49:fable:49:nom:F#m7:1 ; la ligne suit prop(), donc le premier (49:oeil:8)
 
 ### Listes `extra` du relevé (paroles, pinyin, source), citées sans être appliquées
 
@@ -10237,6 +12054,37 @@ Aucun.
 - **que-nos-chants-soient-comme-un-signe** (paroles) : {"kind":"paroles","diffs":[{"line":32,"cho":"(x2)","source":null}],"total":17}
 - **roi-des-rois** (paroles) : {"kind":"paroles","diffs":[{"line":15,"cho":"et d'un trône de gloire éternelle","source":"et d'un trône de gloire éternel,"},{"line":41,"cho":"quand lapierre fut roulée","source":"uand la pierre fut roulée"},{"line":59,"cho":"m'a resursuscité à jamais","source":"m'a ressuscité à jamais"}],"total":36}
 - **souffle** (paroles) : {"kind":"paroles","diffs":[{"line":28,"cho":"car si lesoufﬂe qui m'anime n'est qu'un emprunt","source":"ar si le soufﬂe qui m'anime n'est qu'un emprunt"}],"total":23}
+- **toi-seul-es-digne** (source) : ligne instrumentale de la source p1 y=342,0 x=34,0
+- **toi-seul-es-digne** (source) : ligne instrumentale de la source p1 y=342,0 x=75,4
+- **toi-seul-es-digne** (source) : ligne instrumentale de la source p1 y=342,0 x=91,9
+- **toi-seul-es-digne** (source) : ligne instrumentale de la source p1 y=527,0 x=34,0
+- **toi-seul-es-digne** (source) : ligne instrumentale de la source p1 y=527,0 x=50,5
+- **toi-seul-es-digne** (source) : ligne instrumentale de la source p1 y=527,0 x=67,1
+- **toi-seul-es-digne** (source) : ligne instrumentale de la source p1 y=527,0 x=108,5
+- **toi-seul-es-digne** (source) : ligne instrumentale de la source p1 y=527,0 x=125,0
+- **toi-seul-es-digne** (source) : ligne instrumentale de la source p1 y=527,0 x=141,6
+- **toi-seul-es-digne** (source) : ligne instrumentale de la source p1 y=527,0 x=183,0
+- **toi-seul-es-digne** (source) : ligne instrumentale de la source p1 y=527,0 x=199,6
+- **toi-seul-es-digne** (source) : ligne instrumentale de la source p1 y=527,0 x=216,1
+- **toi-seul-es-digne** (source) : ligne instrumentale de la source p1 y=527,0 x=232,7
+- **toi-seul-es-digne** (source) : ligne instrumentale de la source p1 y=527,0 x=274,1
+- **toi-seul-es-digne** (source) : ligne instrumentale de la source p1 y=527,0 x=290,7
+- **toi-seul-es-digne** (source) : ligne instrumentale de la source p1 y=527,0 x=307,2
+- **toi-seul-es-digne** (source) : ligne instrumentale de la source p1 y=755,0 x=34,0
+- **toi-seul-es-digne** (source) : ligne instrumentale de la source p1 y=755,0 x=75,4
+- **toi-seul-es-digne** (source) : ligne instrumentale de la source p1 y=755,0 x=116,8
+- **toi-seul-es-digne** (source) : ligne instrumentale de la source p1 y=755,0 x=133,3
+- **toi-seul-es-digne** (source) : ligne instrumentale de la source p1 y=755,0 x=174,7
+- **toi-seul-es-digne** (source) : ligne instrumentale de la source p1 y=755,0 x=191,3
+- **toi-seul-es-digne** (paroles) : {"kind":"paroles","diffs":[{"line":37,"cho":"a - llélui - a, a - llélui - a (x...)","source":null},{"line":38,"cho":"a - llélui - a, a - llélui - a","source":null}],"total":18}
+- **tout-puissant** (paroles) : {"kind":"paroles","diffs":[{"line":27,"cho":"(× 4)","source":null},{"line":30,"cho":"(× 2)","source":null}],"total":13}
+- **tu-m-aimes** (paroles) : {"kind":"paroles","diffs":[{"line":51,"cho":"ni la mort ni la vie,","source":"ni la mort, ni"}],"total":30}
+- **vases-d-argile** (source) : ligne instrumentale de la source p1 y=505,0 x=30,0
+- **vases-d-argile** (source) : ligne instrumentale de la source p1 y=505,0 x=52,2
+- **vases-d-argile** (source) : ligne instrumentale de la source p1 y=505,0 x=64,7
+- **vases-d-argile** (source) : ligne instrumentale de la source p1 y=505,0 x=86,9
+- **viens-souffler-a-nouveau** (paroles) : {"kind":"paroles","diffs":[{"line":28,"cho":"oh oh ohhhh","source":"oh oh ohhh"}],"total":36}
+- **viens-toucher-ma-vie** (paroles) : {"kind":"paroles","diffs":[{"line":27,"cho":"touten moi est ému par ton amour","source":"out en moi est ému par ton amour"},{"line":39,"cho":"ta paix me restaure, tu me donnes la vie","source":"a paix me restaures, tu me donnes la vie"}],"total":27}
 
 ### Pinyin régénéré (`pinyin.py`) sur une ligne dont les caractères changent
 
@@ -10244,16 +12092,16 @@ Aucun.
 
 ### Espaceurs `[ ]` retirés (restés seuls après un déplacement)
 
-feu-du-fondeur l. 21 · seigneur-par-la-clarte l. 35 · seigneur-par-la-clarte l. 27 · seigneur-par-la-clarte l. 12
+feu-du-fondeur l. 21 · seigneur-par-la-clarte l. 35 · seigneur-par-la-clarte l. 27 · seigneur-par-la-clarte l. 12 · tu-m-aimes l. 47 · voici-le-jour l. 61 · voici-le-jour l. 60 · voici-le-jour l. 28
 
 ### Forme corrigée (lignes, par type)
 
-- ligne sans paroles : 60
-- espaceur : 108
-- orthographe d'accord : 45
-- espace de fin : 111
-- mot coupé au tiret : 71
-- en-tête : 3
-- ligature typographique : 15
+- ligne sans paroles : 75
+- espaceur : 111
+- orthographe d'accord : 49
+- espace de fin : 144
+- mot coupé au tiret : 77
+- en-tête : 4
+- ligature typographique : 17
 - espaces : 1
 

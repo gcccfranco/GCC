@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-10T11:48:09.828Z",
+  "generatedAt": "2026-10-10T12:13:50.770Z",
   "songs": [
     {
       "slug": "abba-pere",
@@ -11648,8 +11648,9 @@
         },
         {
           "id": "bridge-5",
-          "name": "Pont",
-          "type": "bridge"
+          "name": "Pont (x2)",
+          "type": "bridge",
+          "suffix": "(x2)"
         },
         {
           "id": "final-6",
@@ -11837,8 +11838,9 @@
       "sections": [
         {
           "id": "intro-1",
-          "name": "Intro",
-          "type": "intro"
+          "name": "Intro (x2)",
+          "type": "intro",
+          "suffix": "(x2)"
         },
         {
           "id": "verse-2",
@@ -11865,8 +11867,9 @@
         },
         {
           "id": "intro-6",
-          "name": "Interlude",
-          "type": "intro"
+          "name": "Interlude (x2)",
+          "type": "intro",
+          "suffix": "(x2)"
         },
         {
           "id": "bridge-7",
@@ -12012,7 +12015,7 @@
         },
         {
           "id": "verse-2",
-          "name": "verse",
+          "name": "Couplet",
           "type": "verse"
         },
         {
@@ -12203,9 +12206,9 @@
         },
         {
           "id": "chorus-3",
-          "name": "Refrain 2",
+          "name": "Refrain (x2)",
           "type": "chorus",
-          "number": "2"
+          "suffix": "(x2)"
         },
         {
           "id": "verse-4",
@@ -12226,7 +12229,7 @@
       "titlePinyin": null,
       "artist": "Église Momentum",
       "language": "fr",
-      "originalKey": "C",
+      "originalKey": "E",
       "recommendedKey": null,
       "tempo": null,
       "themes": [
@@ -12493,8 +12496,9 @@
       "sections": [
         {
           "id": "intro-1",
-          "name": "Intro",
-          "type": "intro"
+          "name": "Intro (x2)",
+          "type": "intro",
+          "suffix": "(x2)"
         },
         {
           "id": "verse-2",
@@ -12637,6 +12641,12 @@
           "name": "Couplet 2",
           "type": "verse",
           "number": "2"
+        },
+        {
+          "id": "bridge-5",
+          "name": "Pont (x2)",
+          "type": "bridge",
+          "suffix": "(x2)"
         }
       ]
     },
@@ -12666,8 +12676,9 @@
         },
         {
           "id": "chorus-2",
-          "name": "Refrain",
-          "type": "chorus"
+          "name": "Refrain (x2)",
+          "type": "chorus",
+          "suffix": "(x2)"
         }
       ]
     },

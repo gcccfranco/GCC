@@ -1053,7 +1053,7 @@ porte le nom « GCC » et le menu par sections dont ces modules ont besoin.
   classeur et le remplacement de trois scans ; trois défauts relevés la veille corrigés. Rien
   commité.
 
-- 08/10/2026 : **relevé des écarts du 27/09 appliqué sur `main`** (consigne du 08/10, go donné pour tous les lots), lots 1 à 6 sur 14 poussés. Chaque accord est remesuré sur la partition comme dans l'audit du corpus et placé comme elle (syllabe en français, caractère en chinois), la partition l'emportant sur un choix du relevé ; forme corrigée sur tout le chant ; reprises chinoises marquées non dépliées (règle ajoutée à 01). Rapport et avancement : `docs/chants/releve-2026-09-27-corrections.md`.
+- 08/10/2026 : **relevé des écarts du 27/09 appliqué sur `main`** (consigne du 08/10, go donné pour tous les lots), lots 1 à 7 sur 14 poussés. Chaque accord est remesuré sur la partition comme dans l'audit du corpus et placé comme elle (syllabe en français, caractère en chinois), la partition l'emportant sur un choix du relevé ; forme corrigée sur tout le chant ; reprises chinoises marquées non dépliées (règle ajoutée à 01). Rapport et avancement : `docs/chants/releve-2026-09-27-corrections.md`.
 
 ## 7. Relecture adversariale (14/09/2026)
 
