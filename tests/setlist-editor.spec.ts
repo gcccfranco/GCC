@@ -182,8 +182,8 @@ test("modification : un changement ailleurs garde les accords retouchés sur un 
     { [`setlists/${SETLIST_ID}`]: { ...SETLIST, items: AVEC_RETOUCHES } },
     `/setlists/${SETLIST_ID}/edit`,
   );
-  await expect(page.getByLabel("Tonalité de Abba Père")).toBeVisible();
-  await page.getByLabel("Tonalité de Abba Père").selectOption("B");
+  await attendreEditeur(page, "Abba Père");
+  await choisirTonalite(page, "Abba Père", "B");
   await expect.poll(() => setlistWrites(db, SETLIST_ID).length).toBeGreaterThan(0);
   const items = setlistWrites(db, SETLIST_ID).pop()!.data.items as Record<string, unknown>[];
   expect(items.find((i) => i.songSlug === "abba-pere")!.keyOverride).toBe("B");

@@ -1426,6 +1426,12 @@ porte le nom « GCC » et le menu par sections dont ces modules ont besoin.
 
 - 08/10/2026 : **relevé des écarts du 27/09 appliqué sur `main`** (consigne du 08/10, go donné pour tous les lots), lots 1 à 7 sur 14 poussés. Chaque accord est remesuré sur la partition comme dans l'audit du corpus et placé comme elle (syllabe en français, caractère en chinois), la partition l'emportant sur un choix du relevé ; forme corrigée sur tout le chant ; reprises chinoises marquées non dépliées (règle ajoutée à 01). Rapport et avancement : `docs/chants/releve-2026-09-27-corrections.md`.
 
+- 08–10/10/2026 : **chantier 简谱, lot 1 « 简谱 par défaut »** (`spec-jianpu-integration.md`) : go et ordre de mise en
+  ligne de Timothée (session cloud) ; L1-T1 à L1-T5 codées sur `main`, relecture critique avant le push (une régression
+  corrigée : le rappel « À reporter sur la partition 简谱 » sur les chants français), **en ligne** (`24def353`) ; L1-T6 :
+  `origin/main` fusionné dans `ui/apple-design` (`2467e46d`), cale K2 posée sur la branche. Coupures par la limite de
+  dépense, relances sans rien refaire. Écarts à valider et rouges connus : « Avancement » de la spec.
+
 ## 7. Relecture adversariale (14/09/2026)
 
 Relecteur à contexte vierge (skill `doubt-driven-development`), chargé de

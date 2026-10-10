@@ -38,7 +38,7 @@ const SETLIST = {
   notes: "",
   ownerId: "uid-owner",
   isPrivate: false,
-  items: [item({ songSlug: "abba-pere", position: 1 }), item({ songSlug: "一生爱你", position: 2 })],
+  items: [item({ songSlug: "abba-pere", position: 1 }), item({ songSlug: "一生爱你", position: 2, jianpuSheet: false })],
 };
 
 async function ouvrir(page: Page, setlist: Record<string, unknown> = SETLIST) {
@@ -153,7 +153,7 @@ test("structure modifiée dans la setlist : « Montrer » trouve la section dans
     ...SETLIST,
     items: [
       item({ songSlug: "abba-pere", position: 1, structureOverride: ["chorus-3-7", "verse-2-8", "chorus-3-9"] }),
-      item({ songSlug: "一生爱你", position: 2 }),
+      item({ songSlug: "一生爱你", position: 2, jianpuSheet: false }),
     ],
   });
   const r = await montrerDepuis(page, page.locator('[data-outline-item="1"]').getByRole("button", { name: "Idées d'harmonie" }).first(), /^(Refrain|Couplet)/);

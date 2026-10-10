@@ -130,9 +130,14 @@ for (const langue of ["fr", "zh"] as const) {
       await page.goto("/songs/abba-pere");
       await expect(page.getByRole("heading", { level: 1, name: /Abba Père/i })).toBeVisible();
       await ecran(page, "chant-abba-pere", langue, theme);
+      // Ce chant a un scan : il s'ouvrirait sur son scan, sans en-tête (lot 1 « 简谱 par défaut »).
+      // Ce pas regarde l'en-tête et les paroles : « Paroles » pour cet appareil, rendu juste après
+      // pour que le pas « partitions » plus bas retrouve le défaut.
+      await page.evaluate(() => localStorage.setItem("jianpu-sheet-pref", "never"));
       await page.goto(`/songs/${encodeURIComponent("一生爱你")}`);
       await expect(page.getByRole("heading", { level: 1, name: /一生爱你/ })).toBeVisible();
       await ecran(page, "chant-yi-sheng-ai-ni", langue, theme);
+      await page.evaluate(() => localStorage.removeItem("jianpu-sheet-pref"));
 
       // ── La setlist : Liste (G) ou deux volets ───────────────────────────────
       await page.goto(`/setlists/${SETLIST_ID}`);

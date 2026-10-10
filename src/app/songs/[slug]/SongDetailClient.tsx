@@ -622,14 +622,17 @@ function useVersionDeLaSetlist(slug: string, setlistId: string | null, position:
           }}
         >
           {showScore && jianpuScore ? (
-            <JianpuSheet
-              entry={jianpuScore}
-              title={song.title}
-              slug={song.slug}
-              playedKey={customize.currentKey !== originalKey ? customize.currentKey : null}
-              originalKey={originalKey}
-              chordEdits={versionSetlist?.retouches}
-            />
+            // Cale K2 (spec jianpu-integration, O14) : au téléphone, la fin de la feuille remonte au-dessus de la barre d'onglets.
+            <div className="max-sm:pb-[calc(78px+var(--tabbar-bottom))]">
+              <JianpuSheet
+                entry={jianpuScore}
+                title={song.title}
+                slug={song.slug}
+                playedKey={customize.currentKey !== originalKey ? customize.currentKey : null}
+                originalKey={originalKey}
+                chordEdits={versionSetlist?.retouches}
+              />
+            </div>
           ) : (
             <SongView
               ast={displayedAST}

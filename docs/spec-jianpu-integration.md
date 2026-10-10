@@ -323,12 +323,12 @@ porte sur les paroles ; **jamais** une assertion affaiblie ni un test retiré.
 
 ### Critères de fini (lot 1)
 
-- [ ] Préférence absente : page chant, vue Partitions, mode louange et PDF de setlist montrent le scan d'un chant qui
+- [x] Préférence absente : page chant, vue Partitions, mode louange et PDF de setlist montrent le scan d'un chant qui
       en a un (trois appareils).
-- [ ] « Partition 简谱 » est un interrupteur dans le menu Affichage et dans les Réglages du mode louange ; plus aucun
+- [x] « Partition 简谱 » est un interrupteur dans le menu Affichage et dans les Réglages du mode louange ; plus aucun
       « Choix du responsable / Toujours / Jamais » à l'écran.
-- [ ] Reprise D3 vérifiée par test (`never`, `always`, `auto`).
-- [ ] Le « Paroles » du responsable s'écrit `false` et vaut pour une préférence non réglée ; une préférence réglée
+- [x] Reprise D3 vérifiée par test (`never`, `always`, `auto`).
+- [x] Le « Paroles » du responsable s'écrit `false` et vaut pour une préférence non réglée ; une préférence réglée
       l'emporte (D4, confirmé en O1).
 - [ ] `npx tsc --noEmit`, `npm run lint`, `npm run validate`, suite complète verte sur les trois appareils (projet par
       projet ou par quarts, voir L1-T5) ; `PW_SLUGS=all` sur `jianpu-sheet.spec.ts` vert.
@@ -743,4 +743,43 @@ décision. Pour O1, c'est la lecture retenue, et non la lecture littérale.
 
 ## Avancement
 
-Rien n'est codé. Questions O1–O16 tranchées le 08/10/2026. Prochaine étape : le go de Timothée, lot par lot.
+**Lot 1 « 简谱 par défaut » : en ligne le 10/10/2026** (go et ordre de mise en ligne de Timothée du 08/10/2026,
+session cloud).
+
+- `main` : L1-T1 à L1-T5, puis un commit « corrections de la relecture » (relecture critique avant le push) : le
+  message « À reporter sur la partition 简谱 » ne vaut plus que pour un chant qui a un scan (le défaut l'affichait sur
+  les chants français) ; « Modifier » garde les accords retouchés sur un scan (`jianpuChords`, report de `5b4c0700`
+  sur l'ancien éditeur) ; la règle `/_next/image` du service worker est retirée (`images.unoptimized` : les scans sont
+  servis sous `/jianpu/`). Poussé : `24def353`.
+- L1-T6 : `origin/main` fusionné dans `ui/apple-design` (`2467e46d`) ; report sur `Volets.tsx` (« Partition 简谱 »
+  présélectionné) et `ListeCourte.tsx` (pastille si `jianpuSheet !== false`) ; tests propres à la branche adaptés.
+
+Écarts avec la spec, à valider par Timothée :
+
+- **K2 (O14)** : sur `main`, aucune cale — la fin de la feuille y est déjà au-dessus de la barre d'onglets (cale en flux
+  de `MobileTabBar`, mesuré). Sur la branche, elle passait 55 px dessous : la cale est posée
+  (`max-sm:pb-[calc(78px+var(--tabbar-bottom))]` sous `JianpuSheet`, page chant). Test « en fin de défilement », projet
+  `telephone`, vert sur les deux branches.
+- **D13 avancée sur `main`** : en vue structure du mode louange (rôle Batteur), un chant à scan montre sa structure,
+  jamais le scan (sans cela, le défaut retirait la structure aux batteurs en ligne). Sur la branche, c'est déjà la règle
+  du lot 2 (`blocks.ts`) : la ligne de `main` n'est pas reprise à la fusion.
+- **Aide de l'interrupteur** (O1) : texte de la spec ; le 中文 (`performance.jianpuSheetHint`) est à relire. Sur `main`,
+  elle parle de « Paroles » alors que l'ancien éditeur n'a que le bouton « 谱 简谱 » (le « Jouer sur » est sur la branche).
+
+Tests : `tests/jianpu-par-defaut.spec.ts` (les neuf de la spec, plus K2 et le service worker), trois appareils. Tests
+existants : préférence « Paroles » (`never`) ou item `jianpuSheet: false` là où ils lisent les paroles, les sections ou
+l'en-tête d'un chant à scan ; aucune assertion affaiblie, aucun test retiré. Suite complète sur `main` avant le push
+(`--workers=1`) : 2 335 verts ; hors des rouges connus (« Exporter en CSV »), trois fichiers rouges, **aussi rouges
+avant le lot** (`72e101ae`, rejoués à charge égale) : `equipes` « bouton d'import » (texte fixe « 13 équipes » ambigu en
+mode strict), `look-barres` (barre d'outils qui ne revient pas après un défilement de −40 px), `songs-list-return`
+(fragile sous charge) ; `copy-lyrics` FR, rouge une fois, vert en rejeu. **Pas lancés** : `PW_SLUGS=all` sur
+`jianpu-sheet.spec.ts`, et la suite complète de la branche (lancés : `jianpu-par-defaut`, les fichiers touchés par la
+fusion et les candidats de la spec, tous verts ; `setlist-g` « « Partitions » rouvre là où on était » échoue une fois
+sur deux au téléphone et à la tablette, autant avant la fusion qu'après).
+
+Relevés de la relecture, laissés pour plus tard : les paroles s'affichent une image avant le scan à l'ouverture
+(accepté par la spec) ; l'interrupteur reste visible, sans effet, en vue structure (lot 2) ; K2 avec un texte agrandi
+(`transform: scale`, déjà vrai pour les paroles) ; les annotations du mode louange sur une page de scan sont rangées par
+indices et se perdent si l'on ajoute un chant avant (existait, plus exposé).
+
+Prochaine étape : le lot 2 (déjà commencé sur la branche par une autre session, L2-T1 à L2-T4), puis le lot 3.
