@@ -247,6 +247,8 @@ test("version partagée : un rang qui n'existe pas ne s'affiche pas", async ({ p
 });
 
 test("chant chinois : « Seulement ce passage » garde le pinyin de l'autre refrain", async ({ page }) => {
+  // 一生爱你 a un scan, affiché par défaut : on retouche ici ses paroles.
+  await page.addInitScript(() => localStorage.setItem("jianpu-sheet-pref", "never"));
   const db = await openPartitions(page);
   await page.getByRole("button", { name: "Ma version" }).click();
   await expect(lyricLine(page, "敬")).toHaveCount(2);

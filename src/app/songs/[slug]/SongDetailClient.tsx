@@ -17,6 +17,7 @@ import { getFontScalePref, setFontScalePref, MIN_FONT_SCALE, MAX_FONT_SCALE } fr
 import { SongView } from "@/components/song/SongView";
 import { JianpuSheet } from "@/components/jianpu/JianpuSheet";
 import { useJianpuScore } from "@/lib/jianpu/images";
+import { getJianpuPref, setJianpuPref, sheetEnabled, prefDepuisInterrupteur, type JianpuPref } from "@/lib/jianpu/preference";
 import { CustomizePanel, type CustomizeState } from "@/components/customPanel/CustomizePanel";
 import type { Song } from "@/types/song";
 import { useTranslation } from "react-i18next";
@@ -100,7 +101,18 @@ function useVersionDeLaSetlist(slug: string, setlistId: string | null, position:
     const isZh = song.language === "zh";
     // Partition 简谱 en image (scan d'origine) — absente pour la plupart des chants
     const jianpuScore = useJianpuScore(song.slug);
-    const [showScore, setShowScore] = useState(false);
+    // Affiché par défaut, selon la préférence de l'appareil (partagée avec la
+    // setlist et le mode louange) ; le choix du responsable ne vaut que dans
+    // la setlist, même ouverte d'ici (O3). Dérivé de la préférence, lue au
+    // montage : il ne peut pas s'en écarter.
+    const [jianpuPref, setJianpuPrefState] = useState<JianpuPref>("auto");
+    useEffect(() => setJianpuPrefState(getJianpuPref()), []);
+    const showScore = sheetEnabled(jianpuPref, undefined);
+    const toggleScore = () => {
+      const next = prefDepuisInterrupteur(!showScore);
+      setJianpuPrefState(next);
+      setJianpuPref(next);
+    };
     const originalKey = ast.metadata.key;
     // Tonalité la plus chantée à GCC : la page y démarre, l'originale reste proposée.
     const recommendedKey = ast.metadata.recommendedKey;
@@ -475,7 +487,8 @@ function useVersionDeLaSetlist(slug: string, setlistId: string | null, position:
               {/* Partition 简谱 (chants zh qui en ont une) */}
               {jianpuScore && (
                 <button aria-label={"简谱"}
-                  onClick={() => setShowScore((v) => !v)}
+                  aria-pressed={showScore}
+                  onClick={toggleScore}
                   className={`h-9 min-w-9 lg:h-8 lg:min-w-8 px-2.5 rounded-full text-xs font-semibold flex items-center justify-center gap-1.5 transition-all duration-150 ${
                     showScore
                       ? "bg-card text-foreground shadow-sm"

@@ -49,6 +49,8 @@ function tropProches(page: Page, ecartMin: number): Promise<string[]> {
 }
 
 async function ouvrir(page: Page, slug: string): Promise<string[]> {
+  // Un chant à scan s'ouvre sur son scan : on mesure ici ses paroles.
+  await page.addInitScript(() => localStorage.setItem("jianpu-sheet-pref", "never"));
   await page.goto(`/songs/${encodeURIComponent(slug)}`);
   await page.locator("[data-copy-line]").first().waitFor();
   await page.evaluate(() => document.fonts.ready);

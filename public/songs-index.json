@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-06T19:56:15.332Z",
+  "generatedAt": "2026-10-10T16:11:38.460Z",
   "songs": [
     {
       "slug": "abba-pere",
@@ -551,8 +551,9 @@
       "recommendedKey": null,
       "tempo": null,
       "themes": [
+        "grace",
         "adoration",
-        "grace"
+        "croix"
       ],
       "youtubeUrl": "https://www.youtube.com/watch?v=FJ3arrDOq5E",
       "spotifyUrl": null,
@@ -563,8 +564,9 @@
       "sections": [
         {
           "id": "intro-1",
-          "name": "Intro",
-          "type": "intro"
+          "name": "Intro (x2)",
+          "type": "intro",
+          "suffix": "(x2)"
         },
         {
           "id": "verse-2",
@@ -829,7 +831,7 @@
       "tempo": 95,
       "themes": [
         "foi",
-        "esperance"
+        "grace"
       ],
       "youtubeUrl": "https://www.youtube.com/watch?v=fvsMqaiCJKA",
       "spotifyUrl": null,
@@ -1538,8 +1540,8 @@
       "recommendedKey": null,
       "tempo": null,
       "themes": [
-        "croix",
-        "grace"
+        "grace",
+        "croix"
       ],
       "youtubeUrl": "https://www.youtube.com/watch?v=sOsT-aZh43A",
       "spotifyUrl": null,
@@ -2008,8 +2010,9 @@
         },
         {
           "id": "instrumental-5",
-          "name": "Instrumental",
-          "type": "other"
+          "name": "Instrumental (x2)",
+          "type": "other",
+          "suffix": "(x2)"
         },
         {
           "id": "verse-6",
@@ -2700,7 +2703,7 @@
       "titlePinyin": null,
       "artist": "Hillsong",
       "language": "fr",
-      "originalKey": "C",
+      "originalKey": "A",
       "recommendedKey": null,
       "tempo": 116,
       "themes": [
@@ -3159,8 +3162,9 @@
         },
         {
           "id": "chorus-2",
-          "name": "Refrain",
-          "type": "chorus"
+          "name": "Refrain (x2)",
+          "type": "chorus",
+          "suffix": "(x2)"
         },
         {
           "id": "verse-3",
@@ -3229,8 +3233,9 @@
       "sections": [
         {
           "id": "intro-1",
-          "name": "Intro",
-          "type": "intro"
+          "name": "Intro (x2)",
+          "type": "intro",
+          "suffix": "(x2)"
         },
         {
           "id": "verse-2",
@@ -3469,8 +3474,9 @@
       "sections": [
         {
           "id": "intro-1",
-          "name": "Intro",
-          "type": "intro"
+          "name": "Intro (x2)",
+          "type": "intro",
+          "suffix": "(x2)"
         },
         {
           "id": "verse-2",
@@ -3744,7 +3750,7 @@
       "titlePinyin": null,
       "artist": "Hillsong",
       "language": "fr",
-      "originalKey": "C",
+      "originalKey": "F",
       "recommendedKey": null,
       "tempo": null,
       "themes": [
@@ -3777,8 +3783,9 @@
         },
         {
           "id": "chorus-4",
-          "name": "Refrain",
-          "type": "chorus"
+          "name": "Refrain (x2)",
+          "type": "chorus",
+          "suffix": "(x2)"
         },
         {
           "id": "verse-5",
@@ -4448,8 +4455,9 @@
       "sections": [
         {
           "id": "intro-1",
-          "name": "Intro",
-          "type": "intro"
+          "name": "Intro (x2)",
+          "type": "intro",
+          "suffix": "(x2)"
         },
         {
           "id": "verse-2",
@@ -4882,8 +4890,9 @@
         },
         {
           "id": "bridge-5",
-          "name": "Pont",
-          "type": "bridge"
+          "name": "Pont (x4)",
+          "type": "bridge",
+          "suffix": "(x4)"
         }
       ]
     },
@@ -5037,8 +5046,9 @@
         },
         {
           "id": "bridge-5",
-          "name": "Pont",
-          "type": "bridge"
+          "name": "Pont (x4)",
+          "type": "bridge",
+          "suffix": "(x4)"
         }
       ]
     },
@@ -5178,8 +5188,9 @@
       "sections": [
         {
           "id": "intro-1",
-          "name": "Intro",
-          "type": "intro"
+          "name": "Intro (une ligne au choix)",
+          "type": "intro",
+          "suffix": "(une ligne au choix)"
         },
         {
           "id": "verse-2",
@@ -5206,9 +5217,10 @@
         },
         {
           "id": "chorus-6",
-          "name": "Refrain 2",
+          "name": "Refrain 2 (x2)",
           "type": "chorus",
-          "number": "2"
+          "number": "2",
+          "suffix": "(x2)"
         },
         {
           "id": "bridge-7",
@@ -5477,9 +5489,8 @@
       "recommendedKey": "Ab",
       "tempo": 94,
       "themes": [
-        "consecration",
         "engagement",
-        "confiance"
+        "foi"
       ],
       "youtubeUrl": "https://www.youtube.com/watch?v=uKfqa_sGnTc",
       "spotifyUrl": null,
@@ -5518,8 +5529,9 @@
         },
         {
           "id": "bridge-6",
-          "name": "Pont",
-          "type": "bridge"
+          "name": "Pont (x2)",
+          "type": "bridge",
+          "suffix": "(x2)"
         }
       ]
     },
@@ -5884,31 +5896,79 @@
           "type": "intro"
         },
         {
-          "id": "intro-2",
-          "name": "Intro",
-          "type": "intro"
+          "id": "verse-2",
+          "name": "Couplet 1",
+          "type": "verse",
+          "number": "1"
         },
         {
           "id": "verse-3",
-          "name": "verse",
-          "type": "verse"
+          "name": "Couplet 2",
+          "type": "verse",
+          "number": "2"
         },
         {
-          "id": "verse-4",
-          "name": "Couplet 1",
-          "type": "verse",
+          "id": "chorus-4",
+          "name": "Refrain 1",
+          "type": "chorus",
           "number": "1"
         },
         {
-          "id": "verse-5",
-          "name": "Interlude",
-          "type": "other"
+          "id": "intro-5",
+          "name": "Interlude 1",
+          "type": "intro",
+          "number": "1"
         },
         {
           "id": "verse-6",
-          "name": "Couplet 1",
+          "name": "Couplet 3",
           "type": "verse",
+          "number": "3"
+        },
+        {
+          "id": "chorus-7",
+          "name": "Refrain 2",
+          "type": "chorus",
+          "number": "2"
+        },
+        {
+          "id": "intro-8",
+          "name": "Interlude 2",
+          "type": "intro",
+          "number": "2"
+        },
+        {
+          "id": "bridge-9",
+          "name": "Pont 1",
+          "type": "bridge",
           "number": "1"
+        },
+        {
+          "id": "bridge-10",
+          "name": "Pont 2 (vamp 1)",
+          "type": "bridge",
+          "number": "2",
+          "suffix": "(vamp 1)"
+        },
+        {
+          "id": "chorus-11",
+          "name": "Refrain 3",
+          "type": "chorus",
+          "number": "3"
+        },
+        {
+          "id": "bridge-12",
+          "name": "Pont 3 (vamp 2)",
+          "type": "bridge",
+          "number": "3",
+          "suffix": "(vamp 2)"
+        },
+        {
+          "id": "bridge-13",
+          "name": "Pont 4 (vamp 3)",
+          "type": "bridge",
+          "number": "4",
+          "suffix": "(vamp 3)"
         }
       ]
     },
@@ -6477,7 +6537,7 @@
         },
         {
           "id": "intro-4",
-          "name": "Intro",
+          "name": "Interlude",
           "type": "intro"
         },
         {
@@ -6789,8 +6849,9 @@
       "sections": [
         {
           "id": "intro-1",
-          "name": "Intro",
-          "type": "intro"
+          "name": "Intro (x2)",
+          "type": "intro",
+          "suffix": "(x2)"
         },
         {
           "id": "verse-2",
@@ -7039,8 +7100,9 @@
       "sections": [
         {
           "id": "verse-1",
-          "name": "Couplet",
-          "type": "verse"
+          "name": "Couplet (x2)",
+          "type": "verse",
+          "suffix": "(x2)"
         },
         {
           "id": "chorus-2",
@@ -7263,8 +7325,9 @@
       "sections": [
         {
           "id": "intro-1",
-          "name": "Intro",
-          "type": "intro"
+          "name": "Intro (x2)",
+          "type": "intro",
+          "suffix": "(x2)"
         },
         {
           "id": "verse-2",
@@ -7529,13 +7592,20 @@
         },
         {
           "id": "chorus-3",
-          "name": "Refrain",
-          "type": "chorus"
+          "name": "Refrain 1",
+          "type": "chorus",
+          "number": "1"
         },
         {
           "id": "verse-4",
           "name": "Couplet 2",
           "type": "verse",
+          "number": "2"
+        },
+        {
+          "id": "chorus-5",
+          "name": "Refrain 2",
+          "type": "chorus",
           "number": "2"
         }
       ]
@@ -7927,7 +7997,7 @@
       "titlePinyin": null,
       "artist": "Be Witness",
       "language": "fr",
-      "originalKey": "Bb",
+      "originalKey": "F",
       "recommendedKey": null,
       "tempo": null,
       "themes": [
@@ -7968,6 +8038,13 @@
           "name": "Refrain 2",
           "type": "chorus",
           "number": "2"
+        },
+        {
+          "id": "chorus-6",
+          "name": "Refrain 1 (G)",
+          "type": "chorus",
+          "number": "1",
+          "suffix": "(G)"
         }
       ]
     },
@@ -8121,8 +8198,7 @@
       "tempo": 130,
       "themes": [
         "mission",
-        "envoi",
-        "consecration"
+        "engagement"
       ],
       "youtubeUrl": "https://www.youtube.com/watch?v=nzMjNgzpfjs",
       "spotifyUrl": null,
@@ -8177,13 +8253,15 @@
       "sections": [
         {
           "id": "verse-1",
-          "name": "Couplet",
-          "type": "verse"
+          "name": "Couplet (x2)",
+          "type": "verse",
+          "suffix": "(x2)"
         },
         {
           "id": "chorus-2",
-          "name": "Refrain",
-          "type": "chorus"
+          "name": "Refrain (x2)",
+          "type": "chorus",
+          "suffix": "(x2)"
         },
         {
           "id": "bridge-3",
@@ -8214,8 +8292,9 @@
       "sections": [
         {
           "id": "intro-1",
-          "name": "Intro",
-          "type": "intro"
+          "name": "Intro (x2)",
+          "type": "intro",
+          "suffix": "(x2)"
         },
         {
           "id": "verse-2",
@@ -8242,8 +8321,9 @@
         },
         {
           "id": "intro-6",
-          "name": "Instru",
-          "type": "intro"
+          "name": "Interlude (x2)",
+          "type": "intro",
+          "suffix": "(x2)"
         },
         {
           "id": "bridge-7",
@@ -8514,9 +8594,9 @@
           "number": "3"
         },
         {
-          "id": "final-6",
-          "name": "final",
-          "type": "other"
+          "id": "outro-6",
+          "name": "Final",
+          "type": "outro"
         }
       ]
     },
@@ -8542,8 +8622,9 @@
       "sections": [
         {
           "id": "intro-1",
-          "name": "Intro",
-          "type": "intro"
+          "name": "Intro (x2)",
+          "type": "intro",
+          "suffix": "(x2)"
         },
         {
           "id": "verse-2",
@@ -9331,8 +9412,8 @@
       "tempo": null,
       "themes": [
         "adoration",
-        "saintete",
-        "creation"
+        "grace",
+        "salut"
       ],
       "youtubeUrl": null,
       "spotifyUrl": null,
@@ -9671,7 +9752,7 @@
       "titlePinyin": null,
       "artist": "Gauthier Kulula",
       "language": "fr",
-      "originalKey": "C",
+      "originalKey": "D",
       "recommendedKey": null,
       "tempo": null,
       "themes": [
@@ -9734,8 +9815,9 @@
       "sections": [
         {
           "id": "intro-1",
-          "name": "Intro",
-          "type": "intro"
+          "name": "Intro (x2)",
+          "type": "intro",
+          "suffix": "(x2)"
         },
         {
           "id": "verse-2",
@@ -10059,7 +10141,7 @@
       "titlePinyin": null,
       "artist": "Hillsong",
       "language": "fr",
-      "originalKey": "G",
+      "originalKey": "D",
       "recommendedKey": null,
       "tempo": null,
       "themes": [
@@ -10425,7 +10507,7 @@
       "tempo": null,
       "themes": [
         "resurrection",
-        "victory"
+        "paques"
       ],
       "youtubeUrl": null,
       "spotifyUrl": null,
@@ -10436,7 +10518,7 @@
       "sections": [
         {
           "id": "intro-1",
-          "name": "INTRO",
+          "name": "Intro",
           "type": "intro"
         },
         {
@@ -10447,8 +10529,9 @@
         },
         {
           "id": "intro-3",
-          "name": "intro",
-          "type": "intro"
+          "name": "Interlude 1",
+          "type": "intro",
+          "number": "1"
         },
         {
           "id": "verse-4",
@@ -10457,14 +10540,14 @@
         },
         {
           "id": "prechorus-5",
-          "name": "prechorus",
+          "name": "Pré-Refrain",
           "type": "prechorus"
         },
         {
           "id": "intro-6",
-          "name": "INTERLUDE 3",
+          "name": "Interlude 2",
           "type": "intro",
-          "number": "3"
+          "number": "2"
         },
         {
           "id": "verse-7",
@@ -10480,8 +10563,9 @@
         },
         {
           "id": "bridge-9",
-          "name": "Pont",
-          "type": "bridge"
+          "name": "Pont (x2)",
+          "type": "bridge",
+          "suffix": "(x2)"
         },
         {
           "id": "final-10",
@@ -11828,8 +11912,9 @@
         },
         {
           "id": "bridge-5",
-          "name": "Pont",
-          "type": "bridge"
+          "name": "Pont (x2)",
+          "type": "bridge",
+          "suffix": "(x2)"
         },
         {
           "id": "final-6",
@@ -12022,8 +12107,9 @@
       "sections": [
         {
           "id": "intro-1",
-          "name": "Intro",
-          "type": "intro"
+          "name": "Intro (x2)",
+          "type": "intro",
+          "suffix": "(x2)"
         },
         {
           "id": "verse-2",
@@ -12050,8 +12136,9 @@
         },
         {
           "id": "intro-6",
-          "name": "Interlude",
-          "type": "intro"
+          "name": "Interlude (x2)",
+          "type": "intro",
+          "suffix": "(x2)"
         },
         {
           "id": "bridge-7",
@@ -12200,7 +12287,7 @@
         },
         {
           "id": "verse-2",
-          "name": "verse",
+          "name": "Couplet",
           "type": "verse"
         },
         {
@@ -12394,9 +12481,9 @@
         },
         {
           "id": "chorus-3",
-          "name": "Refrain 2",
+          "name": "Refrain (x2)",
           "type": "chorus",
-          "number": "2"
+          "suffix": "(x2)"
         },
         {
           "id": "verse-4",
@@ -12417,7 +12504,7 @@
       "titlePinyin": null,
       "artist": "Église Momentum",
       "language": "fr",
-      "originalKey": "C",
+      "originalKey": "E",
       "recommendedKey": null,
       "tempo": null,
       "themes": [
@@ -12690,8 +12777,9 @@
       "sections": [
         {
           "id": "intro-1",
-          "name": "Intro",
-          "type": "intro"
+          "name": "Intro (x2)",
+          "type": "intro",
+          "suffix": "(x2)"
         },
         {
           "id": "verse-2",
@@ -12837,6 +12925,12 @@
           "name": "Couplet 2",
           "type": "verse",
           "number": "2"
+        },
+        {
+          "id": "bridge-5",
+          "name": "Pont (x2)",
+          "type": "bridge",
+          "suffix": "(x2)"
         }
       ]
     },
@@ -12867,8 +12961,9 @@
         },
         {
           "id": "chorus-2",
-          "name": "Refrain",
-          "type": "chorus"
+          "name": "Refrain (x2)",
+          "type": "chorus",
+          "suffix": "(x2)"
         }
       ]
     },

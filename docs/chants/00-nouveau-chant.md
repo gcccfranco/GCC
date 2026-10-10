@@ -98,7 +98,7 @@ Le chant zh sur portée 五线谱 ou sur feuille d'accords : le noter, il n'aura
 pas de calque.
 
 Fini quand : chaque système de la partition est rattaché à une section du
-plan, et chaque renvoi est déplié.
+plan, et chaque renvoi est déplié (sauf reprise marquée d'un chant chinois, 01).
 
 ## 3. Écrire le `.cho`
 

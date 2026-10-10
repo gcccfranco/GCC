@@ -278,7 +278,7 @@ test.describe("Chants en deux volets (ordinateur, tablette couchée)", () => {
   test("le chant ZH sur son scan, dans le volet, sans débordement", async ({ page }) => {
     await page.goto("/songs/一生爱你");
     await listePrete(page);
-    await page.getByTestId("barre-outils").getByRole("button", { name: "简谱" }).click();
+    // Le scan s'affiche par défaut (lot 1 简谱 par défaut) : un clic sur « 简谱 » l'éteindrait.
     const scan = droite(page).locator("img").first();
     await expect(scan).toBeVisible();
     const [s, d] = await Promise.all([scan.boundingBox(), droite(page).boundingBox()]);

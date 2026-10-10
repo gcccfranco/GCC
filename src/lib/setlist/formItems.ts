@@ -22,8 +22,9 @@ export interface FormItem {
   keyOverride: string | null;
   notes: string;
   sectionItems: FormSectionItem[];
-  /** Jouer ce chant sur sa partition 简谱 plutôt que sur les paroles.
-   *  La structure définie ci-dessus reste affichée dans la setlist, mais ne
+  /** Choix du responsable pour un chant qui a un scan : `true` = partition
+   *  简谱, `false` = paroles, absent = non réglé (le scan, par défaut). La
+   *  structure définie ci-dessus reste affichée dans la setlist, mais ne
    *  découpe pas la partition (le scan est indivisible). */
   jianpuSheet?: boolean;
   /** Version adaptée du chant pour cette setlist (mode Adapter, accords et
@@ -121,7 +122,7 @@ function toFormItem(
   sectionTransitions: Record<string, string> = {},
   sectionNuances: Record<string, SectionNuance> = {},
   sectionKeys: Record<string, string> = {},
-  jianpuSheet = false,
+  jianpuSheet?: boolean,
   adapted: { contentOverride?: string | null; sectionOrigins?: Record<string, string>; jianpuChords?: JianpuChords } = {}
 ): FormItem {
   const allSections = itemSections(song, adapted.contentOverride);
@@ -134,7 +135,8 @@ function toFormItem(
     song,
     keyOverride,
     notes,
-    ...(jianpuSheet ? { jianpuSheet: true } : {}),
+    // Jamais de « Paroles » inventé pour un item non réglé.
+    ...(jianpuSheet !== undefined ? { jianpuSheet } : {}),
     sectionItems: orderedSections.map((s, index) => {
       const uid = s.uid ?? `${s.id}-${index}`;
       const idx = occ[s.id] ?? 0;
@@ -172,7 +174,7 @@ export function buildFormItems(
         const songs: FormItem[] = item.fusionSongs.flatMap((fs) => {
           const song = songsMap[fs.songSlug];
           if (!song) return [];
-          return [toFormItem(song, fs.keyOverride, "", fs.structureOverride, fs.sectionNotes, {}, fs.sectionNuances, fs.sectionKeys, false, { contentOverride: fs.contentOverride })];
+          return [toFormItem(song, fs.keyOverride, "", fs.structureOverride, fs.sectionNotes, {}, fs.sectionNuances, fs.sectionKeys, undefined, { contentOverride: fs.contentOverride })];
         });
         if (songs.length === 0) return [];
 

@@ -102,6 +102,15 @@ une parole.
   suffixe ; refrain modulé → section écrite dans la nouvelle tonalité, avec
   la tonalité en suffixe. Une section reste juste affichée **seule** : la
   levée qui ouvre un refrain va dans le refrain, pas à la fin du couplet.
+  **Exception, chants chinois** (décision du 08/10/2026) : quand la partition
+  marque elle-même le retour d'une section (‖: :‖, voltas 1./2., D.S., D.C.,
+  « To Chorus », 反复), le `.cho` ne réécrit pas une section qui revient à
+  l'identique. Reprise immédiate → la section porte `(x2)` ou `(x3)` ; retour
+  après une autre section → c'est la section qui renvoie qui porte le suffixe
+  de la partition (`桥段/Pont (D.S.)`, `桥段/Pont (To Chorus)`), et rien n'est
+  recopié. Un retour modulé (升调, 1=X), ou dont les accords ou les paroles
+  changent, s'écrit en entier avec son suffixe, comme ci-dessus. Les refrains
+  déjà recopiés dans les `.cho` restent tels quels.
 - Deux rangées de paroles sous un même système = deux sections (couplet 1 et
   2), chacune avec ses accords **mesurés**, jamais recopiés de l'autre rangée.
 - Deux strophes d'un même couplet séparées par une ligne vide sur la

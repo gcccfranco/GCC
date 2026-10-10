@@ -4,16 +4,18 @@
 {key: E}
 {language: fr}
 {themes: Adoration, Sainteté}
+{source: Éclipse.pdf}
 
-{start_of_intro: Intro}
-[E][ ][C#m][ ][G#m7][ ][A]
+{start_of_intro: Intro (x2)}
+[E]  [C#m]  [G#m7]  [A]
 {end_of_intro}
 
 {start_of_verse: Couplet 1}
 [E]Ta face bri[C#m]lle de mille feux
 [G#m7]D’une beauté à[A] couper le souffle
 [E]Tu règnes au p[C#m]lus haut des Cieux
-[G#m7]Entouré de [A] grâce et d’amo[E]ur[ ][C#m]
+{needs_review: A à cheval entre « de » et « grâce » (feuille alignée aux espaces) : posé sur « de » où commence le label, peut-être sur « grâce », à confirmer à l’écoute}
+[G#m7]Entouré d[A]e grâce et d’amo[E]ur[C#m]
 Ô [G#m7]Jésus[A]
 {end_of_verse}
 
@@ -22,7 +24,7 @@ Ta gl[E]oire éclipse le [C#m]soleil
 Tout pâ[G#m7]lit face à To[A]i
 Dieu t[E]rois fois saint
 Dieu sa[C#m]ns pareil
-Ô n[G#m7]ul n’est comme T[A]oi
+Ô [G#m7]nul n’est comme [A]Toi
 {end_of_chorus}
 
 {start_of_verse: Couplet 2}

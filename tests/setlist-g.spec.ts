@@ -278,8 +278,11 @@ test.describe("setlist G, téléphone et tablette portrait", () => {
     await ouvrir(page);
     await barre(page).getByRole("button", { name: "Affichage" }).click();
     const menu = page.getByRole("menu");
+    // « Partition 简谱 » est un interrupteur coché par défaut (lot 1 简谱 par défaut) : plus de
+    // « Choix du responsable · Toujours · Jamais ».
+    await expect(menu.getByRole("menuitemcheckbox", { name: "Partition 简谱" })).toHaveAttribute("aria-checked", "true");
     await expect(menu.getByRole("menuitemradio")).toHaveText([
-      "Ordre joué", "Sections uniques", "Structure seule", "Choix du responsable", "Toujours", "Jamais",
+      "Ordre joué", "Sections uniques", "Structure seule",
     ].map((t) => new RegExp(t)));
     await expect(menu.getByRole("menuitemcheckbox", { name: "Pinyin" })).toBeVisible();
     await expect(menu.getByRole("menuitemcheckbox", { name: "Couleurs par section" })).toBeVisible();

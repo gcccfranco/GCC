@@ -5,6 +5,8 @@ import { expect, test, type Page } from "@playwright/test";
 // commence** : dans une setlist, elle part souvent du numéro du chant, qui est
 // hors du chant. La page chant reproduit ce cas en partant du haut de la page.
 test.use({ permissions: ["clipboard-read", "clipboard-write"] });
+// On copie des paroles : un chant à scan (爱的约定) s'ouvrirait sur son scan.
+test.beforeEach(({ page }) => page.addInitScript(() => localStorage.setItem("jianpu-sheet-pref", "never")));
 
 async function copyFromPageTopToSongEnd(page: Page, slug: string) {
   await page.goto(`/songs/${encodeURIComponent(slug)}`);

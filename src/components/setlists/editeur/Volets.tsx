@@ -116,7 +116,7 @@ export function VoletChant({
               { sur: true, libelle: t("setlists.editeur.partition") },
               { sur: false, libelle: t("setlists.editeur.paroles") },
             ].map(({ sur, libelle }) => {
-              const on = !!item.jianpuSheet === sur;
+              const on = (item.jianpuSheet !== false) === sur;
               return (
                 <button
                   key={libelle}

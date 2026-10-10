@@ -16,7 +16,7 @@ import type { PerformanceBlock, SectionBlock, JianpuSheetBlock, SongHeaderBlock 
 import { buildPerformanceBlocks, computePageKey } from "@/lib/performance/blocks";
 import { GRAND_ECRAN, pagesUneColonne, paginateColumns, twoColumnsPossible, type PerfPage } from "@/lib/performance/columns";
 import { useJianpuManifest } from "@/lib/jianpu/images";
-import { getJianpuPref, setJianpuPref, type JianpuPref } from "@/lib/jianpu/preference";
+import { interrupteurAllume, prefDepuisInterrupteur, type JianpuPref } from "@/lib/jianpu/preference";
 import { JianpuSheet } from "@/components/jianpu/JianpuSheet";
 import { SectionView, StructureStrip, TransitionNote } from "@/components/song/SongView";
 import { pinyin_font } from "@/components/song/pinyinFont";
@@ -336,6 +336,10 @@ export interface PerformanceModeProps {
    *  setlist pour que son menu Affichage soit à jour en sortant du mode. */
   affichage: PartitionLayout;
   onAffichageChange: (v: PartitionLayout) => void;
+  /** Préférence « Partition 简谱 » de l'appareil : l'état de la page setlist,
+   *  pour que son menu soit à jour en sortant du mode louange. */
+  jianpuPref: JianpuPref;
+  onJianpuPrefChange: (v: JianpuPref) => void;
   onClose: () => void;
 }
 
@@ -347,6 +351,8 @@ export function PerformanceMode({
   setlistTitle,
   affichage,
   onAffichageChange,
+  jianpuPref,
+  onJianpuPrefChange,
   onClose,
 }: PerformanceModeProps) {
   const { t } = useTranslation();
@@ -454,15 +460,6 @@ export function PerformanceMode({
   const toggleChartStyle = useCallback((v: boolean) => {
     setChartStyle(v);
     setChartStylePref(v);
-  }, []);
-
-  // Partition 简谱 : suivre le choix du responsable, l'imposer, ou l'ignorer.
-  // Par appareil — le pianiste lit le scan pendant que le guitariste lit la
-  // grille, sur la même setlist.
-  const [jianpuPref, setJianpuPrefState] = useState<JianpuPref>(() => getJianpuPref());
-  const changeJianpuPref = useCallback((v: JianpuPref) => {
-    setJianpuPrefState(v);
-    setJianpuPref(v);
   }, []);
 
   // Choisir ou retirer un rôle vaut réponse à la question de la première
@@ -1591,24 +1588,19 @@ export function PerformanceMode({
               <Switch checked={chartStyle} onCheckedChange={toggleChartStyle} />
             </SettingRow>
             {hasJianpuSheets && (
-              <SettingRow label={t("performance.jianpuSheet")}>
-                <div className="flex rounded-md border border-border overflow-hidden">
-                  {(["auto", "always", "never"] as const).map((v) => (
-                    <button
-                      key={v}
-                      type="button"
-                      onClick={() => changeJianpuPref(v)}
-                      className={`px-2.5 py-1 text-xs font-semibold transition-colors ${
-                        jianpuPref === v
-                          ? "bg-secondary text-foreground"
-                          : "text-muted-foreground hover:text-foreground"
-                      }`}
-                    >
-                      {t(`performance.jianpuPref.${v}`)}
-                    </button>
-                  ))}
+              // Partition 简谱 : par appareil — le pianiste lit le scan pendant
+              // que le guitariste lit la grille, sur la même setlist.
+              <div className="flex items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <span className="text-sm font-medium text-foreground">{t("performance.jianpuSheet")}</span>
+                  <p className="text-xs text-muted-foreground">{t("performance.jianpuSheetHint")}</p>
                 </div>
-              </SettingRow>
+                <Switch
+                  aria-label={t("performance.jianpuSheet")}
+                  checked={interrupteurAllume(jianpuPref)}
+                  onCheckedChange={(on) => onJianpuPrefChange(prefDepuisInterrupteur(on))}
+                />
+              </div>
             )}
             {user && (
               <SettingRow label={t("performance.annotations")}>

@@ -247,7 +247,8 @@ test("chant à scan, interrupteur Partition 简谱 / Paroles ; les accords retou
   const choix = volet(page).getByRole("radiogroup", { name: "Jouer sur" });
   await expect(choix.getByRole("radio", { name: "Partition 简谱" })).toBeChecked();
   await choix.getByRole("radio", { name: "Paroles" }).click();
-  await expect.poll(() => itemsEnBase(db)[3]?.jianpuSheet ?? null, { timeout: 10_000 }).toBeFalsy();
+  // « Paroles » s'écrit false (lot 1 简谱 par défaut) : absent veut dire « non réglé », donc le scan.
+  await expect.poll(() => itemsEnBase(db)[3]?.jianpuSheet ?? null, { timeout: 10_000 }).toBe(false);
   expect(itemsEnBase(db)[3].jianpuChords).toEqual(RETOUCHES);
   // Un chant sans scan n'a pas l'interrupteur.
   await reglerElement(page, "Abba Père");

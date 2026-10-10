@@ -1424,6 +1424,8 @@ porte le nom « GCC » et le menu par sections dont ces modules ont besoin.
 - 08/10/2026 (nuit) : **retouches v18** (§ 3 V, point 4) : 22 choix tranchés, `spec-retouches-v18.md`, go, quatre
   voies codées, relues et corrigées, intégration verte (8 433 verts), `ui/apple-design` = `f7afad39` (rien poussé).
 
+- 08/10/2026 : **relevé des écarts du 27/09 appliqué sur `main`** (consigne du 08/10, go donné pour tous les lots), lots 1 à 7 sur 14 poussés. Chaque accord est remesuré sur la partition comme dans l'audit du corpus et placé comme elle (syllabe en français, caractère en chinois), la partition l'emportant sur un choix du relevé ; forme corrigée sur tout le chant ; reprises chinoises marquées non dépliées (règle ajoutée à 01). Rapport et avancement : `docs/chants/releve-2026-09-27-corrections.md`.
+
 ## 7. Relecture adversariale (14/09/2026)
 
 Relecteur à contexte vierge (skill `doubt-driven-development`), chargé de

@@ -4,16 +4,18 @@
 {tempo: 73}
 {language: fr}
 {themes: Adoration, Sainteté}
+{source: O vois.pdf}
 
 {start_of_verse: Couplet 1}
-Ô [B]vois le cœur du Père
-Ce [E]mystère qu’Il a déversé sur nous
+[B]Ô vois le cœur du Père
+Ce m[E]ystère qu’Il a déversé sur nous
 Dans [G#m]Son amour profond
-(Nous) [B]sommes l’objet de Son a[E]ffection
-Toutes [G#m]choses pâlissent telle u[B]ne flamme
+[B](Nous) sommes l’objet de Son a[E]ffection
+{needs_review: l'accord G#m est tapé à cheval sur la fin de « Toutes » et le début de « choses » ; posé sur la lettre la plus proche du label, à confirmer à l'oreille}
+Toute[G#m]s choses pâlissent telle u[B]ne flamme
 Brillant devant le so[E]leil
 Ô Père é[G#m]ternel
-Rien n[F#]’est comme Ton grand [E]amour
+Rien n[F#]’est comme Ton [E]grand amour
 {end_of_verse}
 
 {start_of_verse: Couplet 2}
@@ -39,26 +41,27 @@ Mon âme c[B]hante
 {end_of_chorus}
 
 {start_of_verse: Couplet 3}
-Ô vois ce tendre ami
-L’Esprit qui attise en moi Son saint feu
-Une aide toujours présente
-(Quand) la vérité semble distante
-éclaire mon sentier et garde mon cœur
-Jusqu’à la fin de mes jours
-Ô Esprit de Dieu
-Fais en moi Ta volonté
+Ô [B]vois ce tendre ami
+L’Es[E]prit qui attise en moi Son saint feu
+Une [G#m]aide toujours présente
+(Quand) [B]la vérité semble [E]distante
+é[G#m]claire mon sentier et garde [B]mon cœur
+Jusqu’à la fin de mes [E]jours
+Ô Esprit [G#m]de Dieu
+Fais [F#]en moi Ta [E]volonté
+{needs_review: Ô Esprit de Dieu / Règne en moi : ni accords ni mélodie sur la feuille, même découpe (5 puis 7 syllabes) que le pré-refrain mais aussi que la fin du couplet, mélodie à confirmer à l'oreille avant d'y poser les accords du pré-refrain (G#m ; F# E)}
 Ô Esprit de Dieu
 Règne en moi à tout jamais
 {end_of_verse}
 
-{start_of_final}
+{start_of_outro: Final}
 Mon âme cha[B]nte, mon [F#]Dieu
-(Lui) qu[E]i était et qui s[B]era
+(Lui) q[E]ui était et qui s[B]era
 Ouvrons la [G#m]voie
-Jusqu’à[B]la fin (de) Son œuvre sur [F#sus]Terre[F#]
+Jusqu’à [B]la fin (de) Son œuvre sur [F#sus4]Terre[F#]
 Ô vois [E]Il vient sur les nué[F#]es
 Levons nos [G#m]voix
 (Il) fait de nos louanges Son [E]trône
 Et nous serons touj[B/F#]ours auprès de [B5]Lui
 
-{end_of_final}
+{end_of_outro}

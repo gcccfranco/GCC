@@ -1,6 +1,7 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { basculerAccords, fermerMenus, ouvrirAffichage, ouvrirPartitions } from "./helpers/setlist";
+import { onStage } from "./helpers/louange";
 
 // Chantier Mode louange (docs/spec-mode-louange.md). Setlist et compte
 // simulés : aucune lecture ni écriture du Firestore de production.
@@ -45,11 +46,6 @@ async function openPerformance(page: Page, items: Record<string, unknown>[], rol
   await page.getByRole("button", { name: /Mode Louange/ }).click();
   await expect(page.getByText("Mise en page…")).toHaveCount(0);
 }
-
-/** Page affichée du mode louange : sans la page setlist restée dessous, ni la
- *  copie invisible qui sert à mesurer les hauteurs. */
-const onStage = (page: Page, selector: string) =>
-  page.locator(`[data-performance-mode] ${selector}:not([aria-hidden=true] *)`);
 
 /** Quitte le mode louange. Avant chaque clic, Playwright fait défiler sa cible
  *  « dans l'écran » ; pendant la transition du plein écran, ce défilement déplace
@@ -97,6 +93,11 @@ async function visibleSections(page: Page) {
   for (const card of await cards.all()) boxes.push({ text: (await card.innerText()).replace(/\s+/g, " "), box: (await card.boundingBox())! });
   return boxes;
 }
+
+/** Un chant à scan (一生爱你) s'ouvre sur son scan, partout : les tests qui
+ *  lisent ses paroles le demandent en paroles (préférence de l'appareil). */
+const enParoles = ({ page }: { page: Page }) =>
+  page.addInitScript(() => localStorage.setItem("jianpu-sheet-pref", "never"));
 
 test.describe("vue structure (batteur)", () => {
   const MF = { tags: ["mf"] };
@@ -213,6 +214,7 @@ test.describe("choix du rôle à la première ouverture", () => {
 });
 
 test.describe("reprise des réglages", () => {
+  test.beforeEach(enParoles);
   const ZH = [item({ songSlug: "一生爱你", position: 1, structureOverride: ["verse-2-0"] })];
   const FR = [item({ songSlug: "abba-pere", position: 1, structureOverride: ["verse-2-0"] })];
   /** Pinyin de 亲 (première syllabe du couplet), sur la page affichée. */
@@ -297,6 +299,7 @@ test.describe("reprise des réglages", () => {
 });
 
 test.describe("tonalité choisie sur la page du chant", () => {
+  test.beforeEach(enParoles);
   const CASES = [
     { slug: "abba-pere", title: "Abba Père", setlistKey: "A", chosen: "B", before: "F#m", after: "G#m" },
     { slug: "一生爱你", title: "一生爱你", setlistKey: "E", chosen: "F", before: "C#m", after: "Dm" },
@@ -361,6 +364,7 @@ test("tonalité choisie : une modulation suit le même écart (FR)", async ({ pa
 });
 
 test.describe("polices du chinois (ZH)", () => {
+  test.beforeEach(enParoles);
   /** Police déclarée pour la première syllabe « qīn » et le caractère « 亲 ». */
   const fonts = (page: Page, scope: string) =>
     page.evaluate((sel) => {
@@ -384,6 +388,7 @@ test.describe("polices du chinois (ZH)", () => {
 });
 
 test.describe("taille par défaut des paroles et accords", () => {
+  test.beforeEach(enParoles);
   /** Taille des lignes de paroles FR et ZH, et rapport pinyin / taille de base, sur la page du chant. */
   const sizes = (page: Page) =>
     page.evaluate(() => {
@@ -414,6 +419,7 @@ test.describe("taille par défaut des paroles et accords", () => {
 });
 
 test.describe("nuancier", () => {
+  test.beforeEach(enParoles);
   test.use({ viewport: { width: 1280, height: 1600 } });
   const NUANCES = {
     "verse-2-0": { tags: ["p"] },

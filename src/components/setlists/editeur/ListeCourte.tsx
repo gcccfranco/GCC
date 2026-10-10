@@ -168,7 +168,7 @@ function LigneElement({
               {chant?.song.titlePinyin && (
                 <span className={`text-[13px] ${choisi ? "text-background/70" : "text-muted-foreground"}`}>{chant.song.titlePinyin}</span>
               )}
-              {scan && chant?.jianpuSheet && (
+              {scan && chant?.jianpuSheet !== false && (
                 <span className={`rounded px-1 text-[11px] font-semibold ${choisi ? "bg-background/15" : "bg-secondary text-foreground"}`}>
                   {t("setlists.form.jianpuSheet")}
                 </span>

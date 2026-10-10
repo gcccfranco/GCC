@@ -60,7 +60,7 @@ import { getChartStylePref, setChartStylePref } from "@/lib/chartStylePref";
 import { getPartitionLayoutPref, setPartitionLayoutPref, type PartitionLayout } from "@/lib/partitionLayoutPref";
 import { getPinyinPref, setPinyinPref } from "@/lib/pinyinPref";
 import { jianpuPngDataUrl, loadJianpuChords, loadJianpuManifest, useJianpuManifest } from "@/lib/jianpu/images";
-import { getJianpuPref, setJianpuPref, sheetEnabled, type JianpuPref } from "@/lib/jianpu/preference";
+import { getJianpuPref, setJianpuPref, sheetEnabled, interrupteurAllume, prefDepuisInterrupteur, type JianpuPref } from "@/lib/jianpu/preference";
 import { aDesRetouches } from "@/lib/jianpu/retouches";
 import { fetchSongAST, type SongContent} from "@/lib/api/songs";
 import { PerformanceMode } from "@/components/performance/PerformanceMode";
@@ -226,8 +226,9 @@ export function SetlistDetailClient() {
   const [chartStyle, setChartStyle] = useState(true);
   // Coup d'œil : ordre joué / sections uniques / structure seule — par appareil.
   const [layout, setLayout] = useState<PartitionLayout>("played");
-  // Partition 简谱 : suivre le choix du responsable, l'imposer, ou l'ignorer —
-  // par appareil, comme en mode louange.
+  // Partition 简谱 : affichée par défaut ; l'interrupteur règle l'appareil et
+  // prime alors sur le « Paroles » du responsable. Un seul état, partagé avec
+  // le mode louange.
   const [jianpuPref, setJianpuPrefState] = useState<JianpuPref>("auto");
   const [view, setView] = useState<"liste" | "partitions">("liste");
   const affichePartitions = deuxVolets || view === "partitions";
@@ -1403,23 +1404,16 @@ export function SetlistDetailClient() {
       {hasJianpuSheets && (
         <>
           <DropdownMenuSeparator />
-          <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">
-            {t("performance.jianpuSheet")}
-          </DropdownMenuLabel>
-          <DropdownMenuRadioGroup
-            value={jianpuPref}
-            onValueChange={(v) => changeJianpuPref(v as JianpuPref)}
+          <DropdownMenuCheckboxItem
+            checked={interrupteurAllume(jianpuPref)}
+            onCheckedChange={(on) => changeJianpuPref(prefDepuisInterrupteur(on))}
+            onSelect={(e) => e.preventDefault()}
           >
-            {(["auto", "always", "never"] as const).map((v) => (
-              <DropdownMenuRadioItem
-                key={v}
-                value={v}
-                onSelect={(e) => e.preventDefault()}
-              >
-                {t(`performance.jianpuPref.${v}`)}
-              </DropdownMenuRadioItem>
-            ))}
-          </DropdownMenuRadioGroup>
+            {t("performance.jianpuSheet")}
+          </DropdownMenuCheckboxItem>
+          <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">
+            {t("performance.jianpuSheetHint")}
+          </DropdownMenuLabel>
         </>
       )}
     </>
@@ -2015,7 +2009,7 @@ export function SetlistDetailClient() {
                     // Chant affiché en scan 简谱 : la retouche va bien dans la
                     // version texte, mais elle ne se verra pas sur l'image —
                     // on le dit, avec le changement à reporter à la main.
-                    if (sheetEnabled(jianpuPref, item.jianpuSheet)) {
+                    if (jianpuManifest?.[item.songSlug] && sheetEnabled(jianpuPref, item.jianpuSheet)) {
                       flashFeedback(
                         t("harmonie.reporterJianpu", { quoi: `${s.endroits[0].accords.join(" – ")} → ${apres.join(" – ")}` }),
                       );
@@ -2125,6 +2119,8 @@ export function SetlistDetailClient() {
           setlistTitle={setlist.title}
           affichage={layout}
           onAffichageChange={changeLayout}
+          jianpuPref={jianpuPref}
+          onJianpuPrefChange={changeJianpuPref}
           onClose={() => {
             if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
             setPerformanceMode(false);

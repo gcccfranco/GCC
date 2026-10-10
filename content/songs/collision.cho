@@ -5,9 +5,10 @@
 {language: fr}
 {youtube: https://www.youtube.com/watch?v=WolwIS0_JQA}
 {themes: Engagement, Salut}
+{source: Collision.pdf}
 
 {start_of_intro: Intro}
-[F]  [ ]  [Am]  [G]
+[F]  [Am]  [G]
 {end_of_intro}
 
 {start_of_verse: Couplet 1}
@@ -27,14 +28,14 @@ Combler [G]mon cœur en peine
 {end_of_prechorus}
 
 {start_of_chorus: Refrain}
-J'ai changé de di[F]rection[C/E]
-Quand nos cœurs sont en[Am]trés en collision[G]
-Tu es ma révo[F]lution[C/E]
-La vie comme je l'ai [Am]toujours rêvée[G]
+J'ai changé de di[F]rectio[(F)]n[C/E]
+Quand nos cœurs sont en[Am]trés en co[(Am)]llision[G]
+Tu es ma révo[F]lutio[(F)]n[C/E]
+La vie comme je l'ai [Am]toujours rê[(Am)]vée[G]
 {end_of_chorus}
 
-{start_of_instrumental: Instrumental}
-[F]  [C/E]  [Am]  [G]
+{start_of_instrumental: Instrumental (x2)}
+[F]  [(F)]  [C/E]  [Am]  [(Am)]  [G]
 {end_of_instrumental}
 
 {start_of_verse: Couplet 2}
@@ -46,4 +47,5 @@ Vit tout [G]au fond de moi
 [F]Sur le rythme du Ciel
 [Am]Je fixerai les [G]yeux
 [G]Les yeux sur l'essentiel
+{needs_review: la feuille s'arrête au couplet 2 sans renvoi : le retour du pré-refrain, du refrain et de l'instrumental après ce couplet n'est pas gravé, rien n'est ajouté}
 {end_of_verse}
