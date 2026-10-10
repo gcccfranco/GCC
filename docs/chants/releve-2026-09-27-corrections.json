@@ -12654,5 +12654,1255 @@
    "raison": "Étiquette gravée « C(或Am) » : [C (Am)] (01) ; même ligne de remplacement, places justes. — inclus dans la ligne de 16:fable:16:nom:F:1 — partition : système 5 : C(或Am) x=726 sur le « 2 » = 复"
   }
  },
- "你恩典不离开": {}
+ "你恩典不离开": {},
+ "你是唯一": {
+  "23:oeil:3": {
+   "statut": "appliqué",
+   "decide_par": "session",
+   "raison": "Même système 3, 2e rangée (我) : D gravé sur la blanche de 我, absent du .cho ; ajouté. — partition : mêmes labels que 13:oeil:2, rangée 2"
+  },
+  "19:oeil:1": {
+   "statut": "appliqué",
+   "decide_par": "session",
+   "raison": "Même système 2, 2e rangée de paroles (我) : G au-dessus de 贝, D au-dessus de 一, comme au couplet 1. — partition : mêmes labels que 9:oeil:0, rangée 2 (我是 宝 贝)"
+  },
+  "13:oeil:2": {
+   "statut": "appliqué",
+   "decide_par": "session",
+   "raison": "Système 3, mesure 4 : D est gravé au-dessus de la blanche de 你 (temps 1), absent du .cho ; la ligne proposée l'ajoute sur 你. Bm (如), F#m (上), Em (没), A (取, noire du 3e temps) déjà exacts. — partition : rendu 2× : D au-dessus de la blanche de 你 en tête de mesure 4 ; A au-dessus de la noire de 取 (代 = noire suivante)"
+  },
+  "9:oeil:0": {
+   "statut": "appliqué",
+   "decide_par": "session",
+   "raison": "Système 2, mesure 2 (是 宝 贝 在, noires) : G est gravé au 3e temps, au-dessus de la noire de 贝 ; mesure 4 : D au-dessus de la blanche de 一 (temps 1). La ligne proposée met G sur 贝 et D sur 一 ; D, A (眼, croche du 3e temps), Bm (是), Bm (世), A7 (是, noire syncopée) déjà exacts. — partition : rendu 2× : G x≈2570–2620, tête de 贝 x≈2560 (宝 x≈2435) ; D x≈3755–3820, blanche de 一 x≈3715 ; A7 x≈3320–3385 au-dessus de la noire de 是 x≈3370 (就 x≈3230)"
+  }
+ },
+ "你是我的一切": {
+  "14:decale:(D/F#):1": {
+   "statut": "appliqué",
+   "decide_par": "Timothée",
+   "raison": "inclus dans la ligne de la session"
+  },
+  "9:decale:(D/F#):1": {
+   "statut": "appliqué",
+   "decide_par": "Timothée",
+   "raison": "inclus dans la ligne de la session"
+  }
+ },
+ "你是我的平安": {
+  "35:oeil:0": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": "la ligne est celle mesurée par la session"
+  }
+ },
+ "你是配的": {
+  "24:decale:Gm:1": {
+   "statut": "laissé",
+   "decide_par": "session",
+   "raison": "contre l'« ok » de Timothée, la partition l'emporte : la l.24 (圣洁，圣洁，以圣洁妆饰敬拜你) se chante sur la volta 2 (système 6, y=1239), pas sur la volta 1 (système 5, y=1017) que l'outil a mesurée : sur la volta 2, Gm x=608 sur le « 4 » = 洁, Bb/C x=730 sur le « 2· » = 饰, Bb/F x=875 sur le « 2· » = 拜, F x=992 sur le « 1 » = 你 : la ligne actuelle est juste et les trois « ok » du relevé mettraient Gm sur 以, Bb/C sur 洁, Bb/F sur 饰 (autres caractères) ; seul ajout : le second F x=1113, gravé sur le « 1 » lié de la mesure suivante (你 tenu) → 你[F]。"
+  },
+  "24:decale:Bb/C:1": {
+   "statut": "laissé",
+   "decide_par": "session",
+   "raison": "contre l'« ok » de Timothée, la partition l'emporte : la l.24 (圣洁，圣洁，以圣洁妆饰敬拜你) se chante sur la volta 2 (système 6, y=1239), pas sur la volta 1 (système 5, y=1017) que l'outil a mesurée : sur la volta 2, Gm x=608 sur le « 4 » = 洁, Bb/C x=730 sur le « 2· » = 饰, Bb/F x=875 sur le « 2· » = 拜, F x=992 sur le « 1 » = 你 : la ligne actuelle est juste et les trois « ok » du relevé mettraient Gm sur 以, Bb/C sur 洁, Bb/F sur 饰 (autres caractères) ; seul ajout : le second F x=1113, gravé sur le « 1 » lié de la mesure suivante (你 tenu) → 你[F]。"
+  },
+  "24:decale:Bb/F:1": {
+   "statut": "laissé",
+   "decide_par": "session",
+   "raison": "contre l'« ok » de Timothée, la partition l'emporte : la l.24 (圣洁，圣洁，以圣洁妆饰敬拜你) se chante sur la volta 2 (système 6, y=1239), pas sur la volta 1 (système 5, y=1017) que l'outil a mesurée : sur la volta 2, Gm x=608 sur le « 4 » = 洁, Bb/C x=730 sur le « 2· » = 饰, Bb/F x=875 sur le « 2· » = 拜, F x=992 sur le « 1 » = 你 : la ligne actuelle est juste et les trois « ok » du relevé mettraient Gm sur 以, Bb/C sur 洁, Bb/F sur 饰 (autres caractères) ; seul ajout : le second F x=1113, gravé sur le « 1 » lié de la mesure suivante (你 tenu) → 你[F]。"
+  },
+  "23:decale:Bb/F:1": {
+   "statut": "appliqué",
+   "decide_par": "Timothée",
+   "raison": ""
+  }
+ },
+ "你永远如此深爱着我": {
+  "24:decale:F/A:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": "la ligne est celle mesurée par la session"
+  },
+  "24:decale:C:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": "la ligne est celle mesurée par la session"
+  },
+  "23:decale:C/Bb:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": "la ligne est celle mesurée par la session"
+  },
+  "23:decale:Dm:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "10:decale:Bb:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "10:decale:Bb:2": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  }
+ },
+ "你的同在": {
+  "21:relire:C#m7(b5):1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "20:decale:Em7:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "20:fable:20:decale:Em7:1": {
+   "statut": "appliqué",
+   "decide_par": "session",
+   "raison": "Système 6, 2e moitié : Em7 (x=872) sur la blanche pointée « 2 » où 你 attaque → 爱[Em7]你, juste ; A (x=1036) sur le 2e « − » (3e temps) pendant la tenue de 你, levée 主你 au 4e temps : tenue → 你[A]。” (avant la ponctuation). La ligne de remplacement met les deux comme la partition. — partition : Em7 x=872 sur le « 2 » de 你 ; A x=1036 sur le « − » du 3e temps"
+  },
+  "19:decale:Em7:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "19:decale:A:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "19:fable:19:decale:A:1": {
+   "statut": "appliqué",
+   "decide_par": "session",
+   "raison": "Système 6 : 尊 5, 崇 6, 你 4 (2e temps) tenu sur le « − » du 3e temps, silence « 0 » puis levée 我高 au 4e temps ; A (x=233) est gravé sur ce « − » : l'accord change pendant la tenue de 你 → 尊崇你[A]， (avant la virgule). Em7 (x=20) sur le « 5 » de 尊 : juste. — partition : A x=233–248 sur le « − » (x≈237) du 3e temps, 你 tenu"
+  }
+ },
+ "你的爱不离不弃": {
+  "22:oeil:4": {
+   "statut": "appliqué",
+   "decide_par": "session",
+   "raison": "与我 sont les deux dernières notes « 6 i » de la mesure 29 ; B7 ouvre la mesure 30 sur « 2̇ » = 所. — partition : mesure 30 : B7 (x≈525 du rendu 2×) au-dessus du 1er « 2̇ » = 所 ; E au-dessus du 4e « 2̇ » = 约"
+  },
+  "15:oeil:3": {
+   "statut": "appliqué",
+   "decide_par": "session",
+   "raison": "Pinyin décalé de deux syllabes : « mǎn yǒu » manquait, « nǐ de » en trop. Pinyin régénéré par pinyin.py ; accords de la ligne exacts (D 丰, E 爱, F#m 凡, C#m 名, F#m 人). — inclus dans la ligne de la session — partition : mesures 13-16 : D sur « 6· » = 丰, E sur « 2̇ » = 爱, F#m sur le 1er « i » = 凡, C#m sur « 6 » = 名, F#m sur « 6 — — » = 人"
+  },
+  "14:oeil:2": {
+   "statut": "appliqué",
+   "decide_par": "session",
+   "raison": "D sur 目 (« 6 — — », mesure 10), E sur 帮 (mesure 11, 我的 = levée « 6 6 »), A sur 来 (« 3 — — », mesure 12). La ligne finale retire le C# de fin de ligne, porté par 满有 (lignes l. 14-15). — inclus dans la ligne de la session — partition : mesures 10-12 : D x≈605 sur « 6 » = 目, E x≈735 sur le 1er « 5 » = 帮, A x≈890 sur « 3 » = 来, C# x≈940 sur « 3 3 » = 满有"
+  },
+  "10:oeil:1": {
+   "statut": "appliqué",
+   "decide_par": "session",
+   "raison": "F#m ouvre la mesure 5 sur « 6· » = 一 ; 没有 est la levée « 3 3 », qui porte le C# gravé en fin de mesure 4 (ajouté en tête de ligne, lignes l. 10). — inclus dans la ligne de la session — partition : mesure 5 : F#m (x≈785) au-dessus de « 6· » = 一 ; C# (x≈705) au-dessus de « 3 3 » = 没有"
+  },
+  "9:oeil:0": {
+   "statut": "appliqué",
+   "decide_par": "session",
+   "raison": "F#m ouvre la mesure 1 sur « 6· » = 一 ; 没有 est la levée « 3 3 ». La ligne finale (lignes, l. 9) retire aussi le C# de fin de ligne, porté par 没有 de la ligne suivante. — inclus dans la ligne de la session — partition : mesure 1 : F#m (x≈275 au rendu 2×) au-dessus de « 6· » sous lequel est 一"
+  }
+ },
+ "使命": {
+  "14:nom:F#m:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "14:fable:14:nom:F#m:1": {
+   "statut": "appliqué",
+   "decide_par": "session",
+   "raison": "F#m或A gravé en alternative sur 无 → [F#m (A)] ; le reste de la ligne est juste — partition : système 3 : F#m或A x=367 sur le « 2 » (x≈375) = 无 ; D x=722 sur « 6· » = 海, E x=865 sur « 5̂4 » = 我, F#m x=1048 sur « 2̂3 » = 跟"
+  },
+  "9:nom:F#m:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "9:fable:9:nom:F#m:1": {
+   "statut": "laissé",
+   "decide_par": "session",
+   "raison": "l'alternative [F#m (A)] sur 十 est juste, mais la ligne de remplacement garde F#m après 随 alors que la partition le met sur 随 : la ligne juste est donnée dans `lignes` — partition : F#m或A x=471 sur le « 2 » (x≈485) = 十 ; F#m x=1067 sur le « 3 » (x≈1080) = 随"
+  }
+ },
+ "信实的神": {
+  "20:decale:C:1": {
+   "statut": "appliqué",
+   "decide_par": "def",
+   "raison": "inclus dans la ligne de la session"
+  },
+  "14:relire:Dm:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "14:relire:C:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "10:instrumental:F:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "10:instrumental:C/E:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "10:instrumental:Dm:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "10:instrumental:Bb:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "9:instrumental:F:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "9:instrumental:C/E:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "9:instrumental:Dm:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "9:instrumental:Bb:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "9:instrumental:F:2": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "9:instrumental:C/E:2": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "9:instrumental:Dm:2": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "9:instrumental:Bb:2": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  }
+ },
+ "倾倒": {
+  "19:decale:D/E:1": {
+   "statut": "appliqué",
+   "decide_par": "def",
+   "raison": "inclus dans la ligne de la session"
+  },
+  "19:decale:A:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "10:instrumental:Dmaj7:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "10:instrumental:E:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "10:instrumental:Aadd2:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "9:instrumental:Dmaj7:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "9:instrumental:E:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "9:instrumental:Aadd2:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  }
+ },
+ "充满在这里": {
+  "31:relire:C#/F:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "26:invente:C#m:1": {
+   "statut": "laissé",
+   "decide_par": "session",
+   "raison": "Pas inventé : la partition grave C#m7 sur 息 ; nom corrigé dans lignes (26). — partition : C#m7 x=385 sur le 5· de 息"
+  },
+  "26:decale:F#m7:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "26:decale:Bm7:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": "la ligne est celle mesurée par la session"
+  },
+  "26:decale:D/E:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "26:fable:26:decale:F#m7:1": {
+   "statut": "laissé",
+   "decide_par": "session",
+   "raison": "F#m7, Bm7, D/E et C#m7 justes, mais il manque A sur 让 et les optionnels (G/A A) : la ligne juste est dans lignes (26). — partition : F#m7 x=499 sur le 2̇ de 当"
+  },
+  "26:fable:26:decale:D/E:1": {
+   "statut": "laissé",
+   "decide_par": "session",
+   "raison": "Même replace que 26:fable F#m7 : la ligne juste est dans lignes (26). — partition : D/E x=797 sur le 3̇ de 全"
+  },
+  "25:decale:A:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "25:decale:C#m7:1": {
+   "statut": "appliqué",
+   "decide_par": "def",
+   "raison": "inclus dans la ligne de la session"
+  },
+  "25:fable:25:decale:A:1": {
+   "statut": "laissé",
+   "decide_par": "session",
+   "raison": "A et C#m7 après 里 justes (syncope), mais il manque G/A gravé sur le silence après le dernier 里 : la ligne juste est dans lignes (25). — partition : A x=307 sur le 5 lié ; C#m7 x=551 sur le 5 lié ; G/A x=1204 sur le 0"
+  },
+  "24:invente:C#m:1": {
+   "statut": "laissé",
+   "decide_par": "session",
+   "raison": "Pas inventé : la partition grave C#m7 sur 你 ; nom corrigé dans lignes (24). — partition : C#m7 x=803 sur le 5 de 你 (x≈815)"
+  },
+  "24:decale:E:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "24:fable:24:decale:E:1": {
+   "statut": "laissé",
+   "decide_par": "session",
+   "raison": "C#m7 et E justes, mais il manque l'A gravé sur 让 : la ligne juste est dans lignes (24). — partition : A x=405 sur le 5 de 让 ; E sur le 2̇ lié de 遇 (tenue)"
+  },
+  "19:invente:C#m:1": {
+   "statut": "laissé",
+   "decide_par": "session",
+   "raison": "Pas inventé : la partition grave C# sur le #5 de 伏 ; le nom est corrigé dans lignes (19). — partition : C# x=353, rangée 2 sous 伏"
+  },
+  "19:decale:C#/F:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "19:decale:Bm7:1": {
+   "statut": "appliqué",
+   "decide_par": "def",
+   "raison": "inclus dans la ligne de la session"
+  },
+  "19:fable:19:decale:C#/F:1": {
+   "statut": "laissé",
+   "decide_par": "session",
+   "raison": "C# et C#/F justes, mais ce replace laisse Bm7 sur 同 alors que la volta 2 le grave sur 能 : la ligne juste est dans lignes (19). — partition : C#/F x=488 sur le 7 lié après 你 ; Bm7 sur le 6 du temps fort = 能"
+  },
+  "14:decale:C#/F:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "14:fable:14:decale:C#/F:1": {
+   "statut": "appliqué",
+   "decide_par": "session",
+   "raison": "Le replace met C# sur 绕 et C#/F après 宝 (syncope) : toute la ligne est juste. — inclus dans la ligne de la session — partition : C# x=353 sur #5 (绕) ; C#/F x=488 sur le 7 lié du 2e temps, après 宝"
+  }
+ },
+ "全新的你": {
+  "20:decale:G7:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "20:decale:C:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "19:relire:C:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "10:instrumental:C/G:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "10:instrumental:Dm/F:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "10:instrumental:C/G:2": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "10:instrumental:Dm/F:2": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "10:instrumental:Dm:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "10:instrumental:G:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  }
+ },
+ "全然向你": {
+  "25:decale:A7:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "25:decale:D:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "25:fable:25:decale:A7:1": {
+   "statut": "appliqué",
+   "decide_par": "session",
+   "raison": "Système 9 : « 4 4⌒4 − − | 4 4 3 2 | 1 » ; 一 sur le 1er 4, 世 sur le 2e, lié au 3e puis, par une longue liaison, au 1er 4 de la mesure suivante, où A7 (x=1036) est gravé ; 脚 n'attaque que sur le 2e 4 (x≈1110). L'accord change pendant la tenue de 世 : 一世[A7]脚, sans l'espaceur (qui le ferait lire comme un accord sur un silence avant la voix). — partition : A7 x=1036 y=2100, sur le 4 lié depuis 世 (tenue), 脚 x≈1110 sur le 4 suivant"
+  },
+  "16:decale:Bm7:1": {
+   "statut": "appliqué",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "16:decale:A7:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "15:decale:A7:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": "la ligne est celle mesurée par la session"
+  }
+ },
+ "再一次": {
+  "30:decale:B:1": {
+   "statut": "appliqué",
+   "decide_par": "def",
+   "raison": "inclus dans la ligne de la session"
+  },
+  "29:decale:G:1": {
+   "statut": "appliqué",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "27:decale:G:1": {
+   "statut": "appliqué",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "22:decale:G:1": {
+   "statut": "appliqué",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "20:decale:G:1": {
+   "statut": "appliqué",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "13:decale:G:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  }
+ },
+ "再次将我更新": {
+  "19:decale:B7/D#:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "19:fable:19:decale:B7/D#:1": {
+   "statut": "appliqué",
+   "decide_par": "session",
+   "raison": "syncope liée : B7/D# après 归, collé ; toute la ligne est juste — inclus dans la ligne de la session — partition : B7/D# x=1044 sur le « 1̇ » lié (x≈1045), 归 attaque sur le « 1̇ » x≈1000, 你 sur le « 7 » x≈1095"
+  },
+  "18:decale:E7:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "18:fable:18:decale:E7:1": {
+   "statut": "appliqué",
+   "decide_par": "session",
+   "raison": "syncope liée : E7 après 降, collé ; toute la ligne est juste — inclus dans la ligne de la session — partition : E7 x=951 sur le « 6 » lié (x≈960), 降 attaque sur le « 6 » x≈920, 生 sur le « 5 » x≈1010"
+  }
+ },
+ "到各山岭去传扬": {},
+ "前来敬拜": {
+  "24:decale:D:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "24:fable:24:decale:D:1": {
+   "statut": "appliqué",
+   "decide_par": "session",
+   "raison": "Système 8 « 5 − 5 4⌒| 4 − − − | 0 0 3 1 1⌒| 1 − − − » : G sur le 5 de 子 (儿[G]子), Am sur le 4 − − − lié après 稣 (tenue : 稣[Am]), D sur le premier silence avant 我 (« [D] 我 »), G sur le 1 − − − lié depuis 主, attaqué une croche avant (syncope : 主[G]。, avant le point). Toute la ligne est juste. — partition : calque y=1686 : G x=573 sur le 5 de 子 ; Am x=722 sur le 4 lié ; D x=887 sur le 0 (我 x=975 sous le 3) ; G x=1123 sur le 1 lié de 主"
+  },
+  "19:decale:D:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "19:relire:D:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "19:fable:19:decale:D:1": {
+   "statut": "appliqué",
+   "decide_par": "session",
+   "raison": "Systèmes 4-6 : la levée 0 5 1 2 (荣耀尊) finit le système 4 sans accord ; G gravé sur le 3 − − − de 贵, D sur le 2 où 能 attaque (système 5), Em sur le 2 de 归, C sur le 6. de 配, G/B sur le 5. de 配, Am sur le 4. de 配 ; D sur le silence « 0 » de « 0 4 3 1 » avant 我 (accord avant la voix : crochet puis espace) ; G sur le 1 − − − de 拜. Toute la ligne est juste. — partition : calque : G x=1102 y=840 sur le 3 de 贵 ; D x=33 y=1051 sur le 2 de 能 ; Em x=279 ; C x=763 ; G/B x=999 ; Am x=14 y=1266 ; D x=212 y=1266 sur le 0 (我 x=255 sur le 4) ; G x=411 sur le 1 de 拜"
+  },
+  "19:fable:19:relire:D:1": {
+   "statut": "appliqué",
+   "decide_par": "session",
+   "raison": "Même remplacement que 19:fable:19:decale:D:1 (une seule lecture, la même ligne) : D gravé sur le silence « 0 » avant 我 → « [D] 我 », et le reste de la ligne comme mesuré ci-dessus. — inclus dans la ligne de 19:fable:19:decale:D:1 — partition : calque : D x=212 y=1266 au-dessus du 0 de « 0 4 3 1 » ; 我 x=255 sous le 4"
+  },
+  "18:decale:D:1": {
+   "statut": "appliqué",
+   "decide_par": "def",
+   "raison": "inclus dans la ligne de la session"
+  },
+  "9:instrumental:G:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  }
+ },
+ "医治我": {
+  "23:decale:F#m:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "23:decale:A/E:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "9:instrumental:A:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "9:instrumental:E/G#:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "9:instrumental:F#m:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "9:instrumental:A/E:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "9:instrumental:D:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "9:instrumental:D/E:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "9:instrumental:A:2": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "9:instrumental:E/G#:2": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "9:instrumental:F#m:2": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "9:instrumental:A/E:2": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "9:instrumental:D:2": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "9:instrumental:A/C#:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "9:instrumental:Bm7:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "9:instrumental:D/E:2": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "9:instrumental:A:3": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  }
+ },
+ "十字架": {
+  "31:reporte:E:1": {
+   "statut": "laissé",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "31:reporte:A:1": {
+   "statut": "laissé",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "31:reporte:E:2": {
+   "statut": "laissé",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "31:reporte:B:1": {
+   "statut": "laissé",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "31:reporte:E:3": {
+   "statut": "laissé",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "30:reporte:E:1": {
+   "statut": "laissé",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "30:reporte:A:1": {
+   "statut": "laissé",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "30:reporte:E:2": {
+   "statut": "laissé",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "30:reporte:B:1": {
+   "statut": "laissé",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "26:reporte:E:1": {
+   "statut": "laissé",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "26:reporte:A:1": {
+   "statut": "laissé",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "26:reporte:E:2": {
+   "statut": "laissé",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "26:reporte:B:1": {
+   "statut": "laissé",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "26:reporte:E:3": {
+   "statut": "laissé",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "25:reporte:E:1": {
+   "statut": "laissé",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "25:reporte:A:1": {
+   "statut": "laissé",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "25:reporte:E:2": {
+   "statut": "laissé",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "25:reporte:B:1": {
+   "statut": "laissé",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "21:reporte:E:1": {
+   "statut": "laissé",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "21:reporte:A:1": {
+   "statut": "laissé",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "21:reporte:E:2": {
+   "statut": "laissé",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "21:reporte:B:1": {
+   "statut": "laissé",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "21:reporte:E:3": {
+   "statut": "laissé",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "20:reporte:E:1": {
+   "statut": "laissé",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "20:reporte:A:1": {
+   "statut": "laissé",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "20:reporte:E:2": {
+   "statut": "laissé",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "20:reporte:B:1": {
+   "statut": "laissé",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "16:reporte:E:1": {
+   "statut": "laissé",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "16:reporte:A:1": {
+   "statut": "laissé",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "16:reporte:E:2": {
+   "statut": "laissé",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "16:reporte:B:1": {
+   "statut": "laissé",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "16:reporte:E:3": {
+   "statut": "laissé",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "15:reporte:E:1": {
+   "statut": "laissé",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "15:reporte:A:1": {
+   "statut": "laissé",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "15:reporte:E:2": {
+   "statut": "laissé",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "15:reporte:B:1": {
+   "statut": "laissé",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "11:reporte:E:1": {
+   "statut": "laissé",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "11:reporte:A:1": {
+   "statut": "laissé",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "11:reporte:E:2": {
+   "statut": "laissé",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "11:reporte:B:1": {
+   "statut": "laissé",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "11:reporte:E:3": {
+   "statut": "laissé",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "10:reporte:E:1": {
+   "statut": "laissé",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "10:reporte:A:1": {
+   "statut": "laissé",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "10:reporte:E:2": {
+   "statut": "laissé",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "10:reporte:B:1": {
+   "statut": "laissé",
+   "decide_par": "Timothée",
+   "raison": ""
+  }
+ },
+ "十字架是我的荣耀": {
+  "15:decale:C:1": {
+   "statut": "appliqué",
+   "decide_par": "def",
+   "raison": "inclus dans la ligne de la session"
+  },
+  "15:relire:F:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "15:fable:15:relire:F:1": {
+   "statut": "appliqué",
+   "decide_par": "session",
+   "raison": "rangée 2 du même système : C sur 我 (6e note), F sur 保 (volta 2) : la ligne de remplacement est juste — inclus dans la ligne de la session — partition : rangée 2 : 耶稣基督作我中 sous « 6 1 2 5 3 2 6 » ; C x=1095 sur le « 2 » = 我 ; F x=1452 sur le « 1 » de la volta 2 = 保 (gravé x≈1440)"
+  },
+  "10:decale:C:1": {
+   "statut": "appliqué",
+   "decide_par": "def",
+   "raison": "inclus dans la ligne de la session"
+  },
+  "10:relire:F:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "10:fable:10:relire:F:1": {
+   "statut": "appliqué",
+   "decide_par": "session",
+   "raison": "la ligne de remplacement met C sur 的 et garde F sur 耀 : c'est la partition — inclus dans la ligne de la session — partition : système 2 : mesure « 6 1 2 5 3 2 6 » = 十字架是我的荣 ; C x=1095 sur le « 2 » (6e note, x≈1095) = 的 ; F x=1233 sur le « 1 » de la volta 1 (x≈1230) où 耀 attaque (耀 gravé un peu à gauche, x=1211)"
+  }
+ },
+ "十字架的传达者": {
+  "19:oeil:2": {
+   "statut": "appliqué",
+   "decide_par": "session",
+   "raison": "Système 6 : « 6 6 5 3 » = 架的盼望, un seul 望 ; F#m7 au-dessus du « 3 » de 望. La ligne proposée retire le 望 en double et garde F#m7 sur 望 ; le pinyin compte déjà un seul wàng. D/F# (十), G (架), G/A (力), Bm7 (架), Em7 (里), A7 (着, début du système 7) déjà exacts. — partition : calque : F#m7 x=842–921 au-dessus du « 3 » (x≈875) ; Bm7 x=654 au-dessus du « 6 » de 架 (x≈685)"
+  },
+  "14:oeil:1": {
+   "statut": "appliqué",
+   "decide_par": "session",
+   "raison": "Système 4 : « 3 3 3 2 3 6 2 » = 背起十字架将基 ; F#m7 est gravé au-dessus du 1er « 2 » de la mesure suivante (« 2 2 » = 督馨) : accord sur 督, pas sur 将. D/F# (我, « 6 » de « 6 3 » après « 0 »), Gmaj7 (背), Bm7 (气), Em7 (扬), F#m7 (世), Bm (地) déjà exacts. — partition : calque : F#m7 x=726–807 au-dessus du « 2 » de 督 (x≈790), 将基 sous « 6 2 » de la mesure précédente (x≈640–690)"
+  },
+  "9:oeil:0": {
+   "statut": "appliqué",
+   "decide_par": "session",
+   "raison": "Système 2 : D/F# est gravé au-dessus du 1er « 6 » de la croche « 6 3 » (恳切), pas au-dessus du « 6 » de « 0 6 » (我, après le silence) : accord sur 恳. Gmaj7 (期), F#m7 (再), Bm7 (愧), Em7 (传), F#m7 (主), Bm (架, début du système 3) déjà exacts. La partition chante « 主的十架 » : le pinyin perd son « zì » en trop. — partition : calque : D/F# x=237–310, « 6 » de 恳 x≈265, « 6 » de 我 (0 6) x≈195"
+  }
+ },
+ "十架的大能": {
+  "15:decale:A:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": "la ligne est celle mesurée par la session"
+  },
+  "15:decale:Bm:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "15:relire:E:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "11:instrumental:A:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "11:instrumental:E/G#:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  }
+ },
+ "十架的爱": {
+  "24:decale:D7:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "17:decale:G:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  }
+ },
+ "只要有你在我左右": {
+  "29:decale:D:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "29:oeil:1": {
+   "statut": "appliqué",
+   "decide_par": "session",
+   "raison": "Volta 2 du pont : Am sur la croche de 神, 的 tenu (blanche liée), D gravé sur la noire de 只, levée « 只要 » du retour au refrain (To Chorus) ; aucun accord sur 选. Cette levée et son D sont déjà en tête du refrain ([D]只要, l. 21) : le D sort de la l. 29. — partition : D x=536,4 sur la note x=536,2 sous laquelle 只 (« 选的‹只›要 »), après la blanche liée de 的"
+  },
+  "29:fable:29:decale:D:1": {
+   "statut": "appliqué",
+   "decide_par": "session",
+   "raison": "Même remplacement que 29:oeil:1 (même ligne) : D retiré de 选, il appartient à la levée 只要 du refrain. — inclus dans la ligne de 29:oeil:1 — partition : D x=536,4 sur la noire de 只"
+  },
+  "24:decale:G:1": {
+   "statut": "appliqué",
+   "decide_par": "def",
+   "raison": "inclus dans la ligne de 24:oeil:0"
+  },
+  "24:manquant:C/D:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "24:oeil:0": {
+   "statut": "appliqué",
+   "decide_par": "session",
+   "raison": "Mesures 28–29 : Am sur la croche de 可, C/D sur la croche de 施 (3e temps), G sur la ronde liée où 事 est tenu : [C/D]施行奇事[G]。 (cas tranché de 02). Toute la ligne est juste (C sur 谁, G/B sur 至 exacts). — partition : C/D x=310,0 sur la note x=309,8 sous laquelle 施 ; G x=373,8 au-dessus de la ronde liée depuis 事, sans syllabe"
+  },
+  "24:fable:24:manquant:C/D:1": {
+   "statut": "appliqué",
+   "decide_par": "session",
+   "raison": "Même remplacement que 24:oeil:0 (même ligne) : C/D devant 施, G après 事 et avant 。. — inclus dans la ligne de 24:oeil:0 — partition : C/D x=310,0 sur la croche de 施 ; G x=373,8 sur la ronde liée de 事"
+  }
+ },
+ "只需要你": {
+  "26:invente:Gsus4:1": {
+   "statut": "appliqué",
+   "decide_par": "def",
+   "raison": "inclus dans la ligne de 26:oeil:5"
+  },
+  "26:nom:G:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "26:manquant:F/G:1": {
+   "statut": "appliqué",
+   "decide_par": "def",
+   "raison": "inclus dans la ligne de 26:oeil:5"
+  },
+  "26:oeil:5": {
+   "statut": "appliqué",
+   "decide_par": "session",
+   "raison": "2e fin gravée : F/G sur la noire du 2e 需, C sur la ronde du dernier 你 ; Gsus4 G appartiennent à la 1re fin (ligne 24) ; le F d'ouverture passe sur 尽 (ligne 25). — partition : F/G x=358,5 = note 需 (355,3) ; C x=415,8 = ronde de 祢 (412,5) ; F x=260,1 = 需 ; Am x=175,1 = note liée de 去"
+  },
+  "26:fable:26:nom:G:1": {
+   "statut": "laissé",
+   "decide_par": "session",
+   "raison": "Autre lecture de la même fin : on retient 26:oeil:5, qui en plus déplace le F d'ouverture sur la note liée de 尽 (ligne 25) ; cette lecture garde [F] devant 世, faux. — partition : F x=312,2 sur la noire liée à 盡 (m.33), rien au-dessus de 世"
+  },
+  "25:decale:Am:1": {
+   "statut": "appliqué",
+   "decide_par": "def",
+   "raison": "inclus dans la ligne de 25:oeil:4"
+  },
+  "25:relire:C/G:1": {
+   "statut": "laissé",
+   "decide_par": "session",
+   "raison": "Même gravure que la ligne 23 : C/G sur la croche liée de 阔, devant 高. — partition : C/G x=411,7 = croche liée à 闊 (397,6) ; 高 x=418,7 sous 422,0"
+  },
+  "25:relire:C/G:2": {
+   "statut": "laissé",
+   "decide_par": "session",
+   "raison": "C/G sur la croche liée de 有, devant 止. — partition : C/G x=237,2 = croche liée à 有 (221,2) ; 止 x=245,7 sous 249,0"
+  },
+  "25:oeil:4": {
+   "statut": "appliqué",
+   "decide_par": "session",
+   "raison": "Refrain gravé une 2e fois en entier : Am sur 爱, F sur les notes liées de 深 (m.31) et de 尽 (m.33). — partition : Am x=351,5 = note 愛 ; F x=82,2 = noire liée à 深 (m.31) ; F x=312,2 = noire liée à 盡 (m.33)"
+  },
+  "24:oeil:3": {
+   "statut": "appliqué",
+   "decide_par": "session",
+   "raison": "Le F d'ouverture est celui de la note liée de 尽 (ligne 23) ; 世 est attaqué au temps 2¼ sans nouvel accord. — partition : F x=205,0 sur la noire liée à 盡 ; 世 x=224,1 sous la double croche 227,4, aucun label au-dessus"
+  },
+  "23:decale:Am:1": {
+   "statut": "appliqué",
+   "decide_par": "def",
+   "raison": "inclus dans la ligne de 23:oeil:2"
+  },
+  "23:relire:C/G:1": {
+   "statut": "laissé",
+   "decide_par": "session",
+   "raison": "C/G sur la croche liée qui prolonge 阔 : tenue après 阔, c'est-à-dire devant 高 — position actuelle. — partition : C/G x=307,5 = croche liée à 闊 (note 289,8) ; 高 x=317,9 sous la note 321,2"
+  },
+  "23:relire:C/G:2": {
+   "statut": "laissé",
+   "decide_par": "session",
+   "raison": "C/G sur la croche liée qui prolonge 有 : devant 止, position actuelle. — partition : C/G x=139,0 = croche liée à 有 (note 125,1) ; 止 x=146,0 sous la note 149,3"
+  },
+  "23:oeil:2": {
+   "statut": "appliqué",
+   "decide_par": "session",
+   "raison": "Am sur 爱 ; les deux F sur les notes liées qui prolongent 深 (m.23) et 尽 (m.25) : tenue, après la syllabe et avant la ponctuation. — partition : Am x=232,3 = note 愛 ; F x=390,8 = noire de la m.23 liée à 深 (double croche 364,9) ; 耶 sous la note 410,2 ; F x=205,0 = noire de la m.25 liée à 盡 (176,2)"
+  },
+  "19:relire:Am:1": {
+   "statut": "laissé",
+   "decide_par": "session",
+   "raison": "Am est sur le 1er temps de la m.18, noire de 命 (étiquette poussée de 7 pt à gauche) ; 生 est la dernière croche de la m.17 : 生[Am]命 est juste. Le 简谱 du calque met aussi Am sur le 1̇ de 命. — partition : Am x=281,4 ; note de 命 x=288,1 (char 284,8) ; 生 sur la croche x=268,8 de la mesure précédente"
+  },
+  "19:relire:Am/G:1": {
+   "statut": "laissé",
+   "decide_par": "session",
+   "raison": "Am/G est au 3e temps de la m.18, noire de 你 (basse Am – Am/G – F à la demi-mesure) ; 因 est la double croche du temps 2¾. La ligne actuelle 因[Am/G]你 est juste ; le calque 简谱 met Am/G sur le « 3 » de 你. — partition : Am/G x=325,2 ; 因 double croche x=317,1, 你 noire x=332,9 (même retrait de 7–8 pt que Am)"
+  },
+  "19:relire:Gsus4:1": {
+   "statut": "laissé",
+   "decide_par": "session",
+   "raison": "Gsus4 est sur la ronde de 治 (m.20, 1er temps), attaquée avec lui ; 医 est la dernière croche de la m.19 : 医[Gsus4]治 juste. — partition : Gsus4 x=74,3 ; ronde de 治 x=79,9 (char 75,6) ; G x=112,8 au 3e temps de la ronde → 治[G]。"
+  },
+  "14:relire:F:1": {
+   "statut": "laissé",
+   "decide_par": "session",
+   "raison": "Même gravure que m.5 : F sur le soupir de la m.9, avant 耶. — la ligne prend le texte de 14:oeil:1 — partition : F x=79,4 sur le soupir Œ x=79,4 ; 耶 x=83,4"
+  },
+  "14:relire:G:1": {
+   "statut": "laissé",
+   "decide_par": "session",
+   "raison": "G sur la croche liée qui prolonge 稣 : tenue, 耶稣[G]，. — la ligne prend le texte de 14:oeil:1 — partition : G x=120,2 sur la note x=117,9 liée à 稣 (x=99,7) ; 你 x=125,7 sous la note 129,0"
+  },
+  "14:decale:F:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": "la ligne prend le texte de 14:oeil:1"
+  },
+  "14:oeil:1": {
+   "statut": "appliqué",
+   "decide_par": "session",
+   "raison": "Ligne entière conforme : F sur 流 (décalé corrigé), G sur 上, C sur 价 ; pinyin 为 wèi. — partition : F x=280,4 = note 流 (x=276,3) ; G x=359,8 = note 上 (356,5) ; C x=395,3 = blanche de 價 (392,0)"
+  },
+  "13:relire:F:1": {
+   "statut": "laissé",
+   "decide_par": "session",
+   "raison": "F gravé sur le soupir qui ouvre la m.5, avant l'attaque de 耶 : accord avant la voix. — la ligne prend le texte de 13:oeil:0 — partition : F x=80,3 sur le soupir Œ x=80,3 ; 耶 x=84,3 sous la croche x=87,6"
+  },
+  "13:relire:G:1": {
+   "statut": "laissé",
+   "decide_par": "session",
+   "raison": "G sur la croche liée qui prolonge 稣 (3e temps), sans syllabe : tenue, après 稣 et avant la virgule. — la ligne prend le texte de 13:oeil:0 — partition : G x=119,6 sur la note x=119,6 liée à 稣 (x=101,1, note 104,0) ; 你 x=127,8 sous la note 131,1"
+  },
+  "13:oeil:0": {
+   "statut": "appliqué",
+   "decide_par": "session",
+   "raison": "Ligne entière conforme à la mesure : [F] 耶稣[G]，… les autres accords (C/E 爱, Am 我, F 我, G après 净 sur la ronde liée) exacts ; pinyin 背 bēi. — partition : C/E x=185,4 = note 愛 ; Am x=217,2 = note 我 ; F x=286,1 = note 我 ; G x=433,7 = ronde liée de 淨"
+  }
+ },
+ "叫我抬起头的神": {
+  "13:decale:E/G#:1": {
+   "statut": "appliqué",
+   "decide_par": "def",
+   "raison": "inclus dans la ligne de la session"
+  },
+  "13:decale:F#m7:1": {
+   "statut": "appliqué",
+   "decide_par": "def",
+   "raison": "inclus dans la ligne de la session"
+  },
+  "10:relire:C#m7:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "10:decale:E/B:1": {
+   "statut": "appliqué",
+   "decide_par": "def",
+   "raison": "inclus dans la ligne de la session"
+  }
+ },
+ "向主欢呼": {
+  "26:relire:C:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "26:relire:D7:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "25:decale:Em:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "25:relire:Cmaj7:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "24:decale:Em:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "24:relire:C:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "23:decale:C:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "22:relire:Em:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "22:relire:Cmaj7:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "21:relire:C:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "16:invente:D (D/F#):1": {
+   "statut": "laissé",
+   "decide_par": "session",
+   "raison": "Même mesure que la ligne 11 (couplet 2 sur la même musique) : « D或D/F# » au-dessus du silence avant 安, « [D (D/F#)] 安 » est juste. — partition : étiquette « D或D/F# » x=405 (système 1) sur le 0 de « 0 7 1 2 » ; 安 attaque sur le 7 suivant"
+  },
+  "16:relire:D:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "16:decale:C:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "12:decale:G/B:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "12:decale:G/D:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "11:invente:D (D/F#):1": {
+   "statut": "laissé",
+   "decide_par": "session",
+   "raison": "L'accord n'est pas inventé : la partition grave « D或D/F# » (alternative, écrite [D (D/F#)] selon 01). Le label est au-dessus du 0 (silence) qui ouvre la mesure 2, avant 我 : accord avant l'attaque de la voix, « [D (D/F#)] 我 » est juste. — partition : étiquette « D或D/F# » x=405 (système 1) sur le 0 de « 0 7 1 2 » ; 我 attaque sur le 7 suivant"
+  },
+  "11:relire:D:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  }
+ },
+ "向我的神献上感谢": {
+  "21:oeil:1": {
+   "statut": "appliqué",
+   "decide_par": "session",
+   "raison": "Même correction de pinyin (liàng) ; accords inchangés et justes. — partition : F (x=865) sur 啊, C/E (x=1373) sur 你 (5 – – –), D (x=392) sur 美 (6 – – 6), G (x=1020) sur 器 (2̇ – – –) : tous exacts"
+  },
+  "20:oeil:0": {
+   "statut": "appliqué",
+   "decide_par": "session",
+   "raison": "量 se lit liàng (comme au couplet, ligne 10) ; seul le pinyin change, les accords de la ligne sont déjà ceux du scan. — partition : rangée Bridge du scan : F (x=366) sur 啊 (6 – – –), C/E (x=861) sur 你 (5 – – –), Dm7 (x=1378) sur 美 (4 – – 4), F/G (x=49, rangée suivante) sur 我 (4 3 2 1), C (x=346) sur 器 (3 – – –) : tous exacts"
+  }
+ }
 }
