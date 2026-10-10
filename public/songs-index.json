@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-10T11:11:56.239Z",
+  "generatedAt": "2026-10-10T11:48:09.828Z",
   "songs": [
     {
       "slug": "abba-pere",
@@ -9204,8 +9204,8 @@
       "tempo": null,
       "themes": [
         "adoration",
-        "saintete",
-        "creation"
+        "grace",
+        "salut"
       ],
       "youtubeUrl": null,
       "spotifyUrl": null,
@@ -9537,7 +9537,7 @@
       "titlePinyin": null,
       "artist": "Gauthier Kulula",
       "language": "fr",
-      "originalKey": "C",
+      "originalKey": "D",
       "recommendedKey": null,
       "tempo": null,
       "themes": [
@@ -9598,8 +9598,9 @@
       "sections": [
         {
           "id": "intro-1",
-          "name": "Intro",
-          "type": "intro"
+          "name": "Intro (x2)",
+          "type": "intro",
+          "suffix": "(x2)"
         },
         {
           "id": "verse-2",
@@ -9916,7 +9917,7 @@
       "titlePinyin": null,
       "artist": "Hillsong",
       "language": "fr",
-      "originalKey": "G",
+      "originalKey": "D",
       "recommendedKey": null,
       "tempo": null,
       "themes": [
@@ -10274,7 +10275,7 @@
       "tempo": null,
       "themes": [
         "resurrection",
-        "victory"
+        "paques"
       ],
       "youtubeUrl": null,
       "spotifyUrl": null,
@@ -10284,7 +10285,7 @@
       "sections": [
         {
           "id": "intro-1",
-          "name": "INTRO",
+          "name": "Intro",
           "type": "intro"
         },
         {
@@ -10295,8 +10296,9 @@
         },
         {
           "id": "intro-3",
-          "name": "intro",
-          "type": "intro"
+          "name": "Interlude 1",
+          "type": "intro",
+          "number": "1"
         },
         {
           "id": "verse-4",
@@ -10305,14 +10307,14 @@
         },
         {
           "id": "prechorus-5",
-          "name": "prechorus",
+          "name": "Pré-Refrain",
           "type": "prechorus"
         },
         {
           "id": "intro-6",
-          "name": "INTERLUDE 3",
+          "name": "Interlude 2",
           "type": "intro",
-          "number": "3"
+          "number": "2"
         },
         {
           "id": "verse-7",
@@ -10328,8 +10330,9 @@
         },
         {
           "id": "bridge-9",
-          "name": "Pont",
-          "type": "bridge"
+          "name": "Pont (x2)",
+          "type": "bridge",
+          "suffix": "(x2)"
         },
         {
           "id": "final-10",

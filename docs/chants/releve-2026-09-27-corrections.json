@@ -8378,5 +8378,980 @@
    "decide_par": "session",
    "raison": "La feuille aligne le bord gauche de ses étiquettes à +1..+2 pt du début de la syllabe (l.13 : « ( » 133,8 sur « m » 131,8 de « montre »). Ici « ( » 104,0 et « D » 107,3, « vers » commence à 102,1 (+1,9), « moi » à 122,8 : l'étiquette est nettement sur « vers », pas à cheval. Même écart voulu au couplet 2 (l.45, « au‹t›re »). — inclus dans la ligne de la session — partition : (D/F#) : « ( » x=104,0 sur « v » de « ‹v›ers » (v 102,1 – e 106,9) ; « moi » à 122,8"
   }
+ },
+ "promesses": {
+  "15:decale:F:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "15:fable:15:decale:F:1": {
+   "statut": "appliqué",
+   "decide_par": "session",
+   "raison": "Le remplacement met F devant le 1er « f » de « soufflent », comme la partition ; les trois autres accords de la ligne (Am, C, G) sont déjà exacts, la ligne entière est juste. Lecture retenue à la place de l'écart 15:decale:F:1 (non par défaut, qui laissait F sur la syllabe « flent »). — partition : F x=249,4 = bord gauche du 1er « f » (u 240,5–249,4, f 249,4, 2e f 253,9) ; Am 136,1 « l » de l'ouragan, C 399,7 « t » de tremble, G 457,5 « p » de pas"
+  }
+ },
+ "quand-je-contemple": {
+  "20:decale:Dm7/G:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "20:decale:C:1": {
+   "statut": "appliqué",
+   "decide_par": "def",
+   "raison": "inclus dans la ligne de 20:oeil:4"
+  },
+  "20:oeil:4": {
+   "statut": "appliqué",
+   "decide_par": "session",
+   "raison": "Dm7/G sur l'espace après « Seigneur, » : crochet + espace ; C devant le premier « r » de « T'adorer ». — partition : Dm x=64,0 « j » ; Dm7/G x=177,9 = espace avant « c'est » ; G x=255,6 « T » ; C x=295,1 = « r » de « T'ado‹r›er »"
+  },
+  "20:fable:20:decale:Dm7/G:1": {
+   "statut": "appliqué",
+   "decide_par": "session",
+   "raison": "Même texte que 20:oeil:4, retenu : lecture juste de 20:decale:Dm7/G:1 (accord sur l'espace). — inclus dans la ligne de 20:oeil:4 — partition : Dm7/G x=177,9 sur l'espace avant « c'est »"
+  },
+  "18:decale:Dm/G:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "18:decale:CM7:1": {
+   "statut": "appliqué",
+   "decide_par": "def",
+   "raison": "inclus dans la ligne de 18:oeil:3"
+  },
+  "18:oeil:3": {
+   "statut": "appliqué",
+   "decide_par": "session",
+   "raison": "Dm/G est tapé sur l'espace après « Seigneur, » : crochet + espace ; CM7 devant le premier « r » de « T'adorer » ; Dm et Em7 après le point, en l'air. — partition : Dm x=64,0 « j » ; Dm/G x=177,9 = espace après la virgule (« , » à 173,5, « c » à 182,3) ; G x=255,6 « T » ; CM7 x=295,1 = « r » de « T'ado‹r›er » ; Dm x≈327,8 et Em7 x=361,6 sur les espaces après « . » (314,7)"
+  },
+  "18:fable:18:decale:Dm/G:1": {
+   "statut": "appliqué",
+   "decide_par": "session",
+   "raison": "Même texte que 18:oeil:3, retenu : c'est la lecture juste de 18:decale:Dm/G:1 (accord sur l'espace), l'autre lecture n'a pas d'opération. — inclus dans la ligne de 18:oeil:3 — partition : Dm/G x=177,9 sur l'espace avant « c'est »"
+  },
+  "13:decale:F:1": {
+   "statut": "appliqué",
+   "decide_par": "def",
+   "raison": "inclus dans la ligne de 13:oeil:2"
+  },
+  "13:oeil:2": {
+   "statut": "appliqué",
+   "decide_par": "session",
+   "raison": "F passe devant le « l » de « pâlissent » ; G reste devant « re » (tiret du transcripteur, réécrit entier par la forme). — partition : F x=245,5 = « l » de « pâ‹l›issent » ; F/G x=344,2 « m » de lumiè ; G x=393,1 = « r » de « - re. »"
+  },
+  "10:decale:F:1": {
+   "statut": "appliqué",
+   "decide_par": "def",
+   "raison": "inclus dans la ligne de 10:oeil:1"
+  },
+  "10:oeil:1": {
+   "statut": "appliqué",
+   "decide_par": "session",
+   "raison": "F passe devant le « l » de « pâlissent » ; les quatre autres accords étaient déjà exacts. — partition : F x=245,5 = « l » de « pâ‹l›issent » ; C2 x=99,7 « t » de toutes, Em7 x=172,6 « c » de choses, F/G x=344,2 « m » de lumière, G x=388,7 sur l'espace après « lumière. »"
+  },
+  "9:decale:F:1": {
+   "statut": "appliqué",
+   "decide_par": "def",
+   "raison": "inclus dans la ligne de 9:oeil:0"
+  },
+  "9:oeil:0": {
+   "statut": "appliqué",
+   "decide_par": "session",
+   "raison": "La ligne proposée met F devant le « t » de « beauté », comme la feuille ; C reste sur « je ». — partition : F x=253,5 = bord gauche du « t » de « beau‹t›é » (t à 253,5) ; C x=99,7 sur « j » de « je »"
+  }
+ },
+ "quand-tu-parles": {
+  "67:decale:G:1": {
+   "statut": "appliqué",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "55:decale:A:1": {
+   "statut": "appliqué",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "55:decale:G:1": {
+   "statut": "appliqué",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "48:decale:A:1": {
+   "statut": "appliqué",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "48:decale:G:1": {
+   "statut": "appliqué",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "48:decale:Bm:1": {
+   "statut": "appliqué",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "48:decale:A:2": {
+   "statut": "appliqué",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "48:decale:Bm:2": {
+   "statut": "appliqué",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "46:decale:Bm:1": {
+   "statut": "appliqué",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "44:decale:A:1": {
+   "statut": "appliqué",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "43:decale:Bm:1": {
+   "statut": "appliqué",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "42:decale:Bm:1": {
+   "statut": "appliqué",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "41:decale:Bm:1": {
+   "statut": "appliqué",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "37:decale:D/F#:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "37:fable:37:decale:D/F#:1": {
+   "statut": "appliqué",
+   "decide_par": "session",
+   "raison": "Rendu ChordPro de l'église : le label D/F# commence sur l'espace qui suit la virgule de « suivrai, » (blanc élargi par la largeur du label), avant « je » : crochet puis espace. La ligne de remplacement garde A, G et la queue Bm A G Bm A telles que gravées, et rétablit l'espace des paroles (« suivrai, je »). Elle tient lieu de l'écart 37:decale:D/F#:1 (autre lecture, sans opération). — partition : p. 2, y=262,7 : A x=110,3 sur « v » de « sui‹v›rai », D/F# x=140,5 sur l'espace après « , », G x=214,3 sur « v » du 2e « suivrai », puis Bm 244,5, A 278,1, G 301,0, Bm 324,8, A 358,3 après le point"
+  },
+  "34:decale:A:1": {
+   "statut": "appliqué",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "33:decale:G:1": {
+   "statut": "appliqué",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "33:decale:D:1": {
+   "statut": "appliqué",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "20:decale:D:1": {
+   "statut": "appliqué",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "17:decale:D:1": {
+   "statut": "appliqué",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "11:decale:G:1": {
+   "statut": "appliqué",
+   "decide_par": "def",
+   "raison": ""
+  }
+ },
+ "que-ma-bouche-chante-ta-louange": {},
+ "que-nos-chants-soient-comme-un-signe": {},
+ "que-ton-nom-resonne-en-ce-lieu": {
+  "32:oeil:11": {
+   "statut": "appliqué",
+   "decide_par": "session",
+   "raison": "deuxième La gravé après « seigneurs », le premier déjà juste (au 2e pont, sur le second « seigneurs ») — partition : p. 2 : La x=236,5 sur « g » de « sei‹g›neurs » ; La x=288,4 sur l'espace après « seigneurs »"
+  },
+  "30:oeil:10": {
+   "statut": "appliqué",
+   "decide_par": "session",
+   "raison": "même gravure qu'au 1er pont : Sim, pas Ré — partition : p. 2 : La x=245,2 sur « N » de « ‹N›om » ; Sim x=340,3 sur l'espace après « lieu »"
+  },
+  "25:oeil:9": {
+   "statut": "appliqué",
+   "decide_par": "session",
+   "raison": "au 1er pont La est sur le premier « Seigneur » ; Bm après « lieu » juste — partition : (chevauche les pages 1-2) La x=124,2 sur « g » de « Sei‹g›neur » (col. 9) ; Sim x=383,5 sur l'espace après « lieu » (col. 39)"
+  },
+  "23:oeil:8": {
+   "statut": "appliqué",
+   "decide_par": "session",
+   "raison": "nom d'accord : Sim gravé, pas Ré ; position après « lieu » inchangée — partition : La x=245,2 sur « N » de « ‹N›om » ; Sim x=340,3 sur l'espace après « lieu »"
+  },
+  "18:oeil:7": {
+   "statut": "appliqué",
+   "decide_par": "session",
+   "raison": "toute la ligne juste — partition : La x=81,0 sur « s » de « Jé‹s›us »"
+  },
+  "17:oeil:6": {
+   "statut": "appliqué",
+   "decide_par": "session",
+   "raison": "toute la ligne juste — partition : Sol x=141,5 sur « n » de « ‹n›ous » ; Re x=348,9 sur « a » de « Puiss‹a›nce »"
+  },
+  "16:oeil:5": {
+   "statut": "appliqué",
+   "decide_par": "session",
+   "raison": "toute la ligne juste — partition : La x=167,4 sur « v » de « ‹v›oix » ; Sim x=452,6 sur « s » final de « ange‹s› »"
+  },
+  "15:oeil:4": {
+   "statut": "appliqué",
+   "decide_par": "session",
+   "raison": "toute la ligne juste — partition : Sol x=158,8 sur « t » de « ‹t›remblent » ; Re x=409,4 sur « g » de « louan‹g›es »"
+  },
+  "11:oeil:3": {
+   "statut": "appliqué",
+   "decide_par": "session",
+   "raison": "toute la ligne juste — partition : Sol x=98,3 sur « q » de « ‹q›ue » ; La x=219,3 sur « s » de « ré‹s›onne » ; Re x=340,3 sur « e » de « li‹e›u »"
+  },
+  "10:oeil:2": {
+   "statut": "appliqué",
+   "decide_par": "session",
+   "raison": "toute la ligne juste — partition : Re x=46,4 sur « Q » ; La x=271,1 sur « l » de « ‹l›ieu »"
+  },
+  "9:oeil:1": {
+   "statut": "appliqué",
+   "decide_par": "session",
+   "raison": "toute la ligne juste — partition : Sol x=46,4 sur « Q » ; La x=167,4 sur « s » de « ré‹s›onne » ; Re x=288,4 sur « e » de « li‹e›u »"
+  },
+  "8:oeil:0": {
+   "statut": "appliqué",
+   "decide_par": "session",
+   "raison": "ligne non en retrait sur la feuille, Re au-dessus de la 1re lettre ; La sur le « u » final — partition : Re x=46,4 sur « Q » (col. 0) ; La x=297,0 sur « u » de « lie‹u› »"
+  },
+  "3:oeil:12": {
+   "statut": "appliqué",
+   "decide_par": "session",
+   "raison": "Consigne particulière : la feuille retenue est en ré (titre « (Re) », URL gamme=D, accords Re/La/Sol/Sim) et le .cho n'a que D, A, G, Bm, s'ouvre sur D ; les deux montrent ré sans ambiguïté. {recommended_key} non touché. — partition : en-tête de la feuille : « (Re) », pied de page « gamme=D »"
+  }
+ },
+ "que-ton-regne-vienne": {},
+ "que-tous-soient-un": {
+  "29:decale:B/A:1": {
+   "statut": "appliqué",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "21:decale:E:1": {
+   "statut": "appliqué",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "20:decale:A:1": {
+   "statut": "appliqué",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "17:decale:A:1": {
+   "statut": "appliqué",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "12:decale:B/A:1": {
+   "statut": "appliqué",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "12:decale:C#m:1": {
+   "statut": "appliqué",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "9:decale:B:1": {
+   "statut": "appliqué",
+   "decide_par": "Timothée",
+   "raison": ""
+  }
+ },
+ "quelle-grace": {
+  "32:instrumental:x2:1": {
+   "statut": "laissé",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "11:decale:Am:1": {
+   "statut": "appliqué",
+   "decide_par": "Timothée",
+   "raison": ""
+  }
+ },
+ "quelle-grace-incomparable": {
+  "36:decale:A:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "36:fable:36:decale:A:1": {
+   "statut": "appliqué",
+   "decide_par": "session",
+   "raison": "Même ligne gravée à l'identique : A sur l'espace après « gloire, ». — partition : p1 y=765,7 : Bm x=31,2 retrait ; A x=191,6 sur l'espace avant « Il » (196,1) ; G x=324,1 sur « i » de « rois »"
+  },
+  "30:decale:A:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "30:fable:30:decale:A:1": {
+   "statut": "appliqué",
+   "decide_par": "session",
+   "raison": "Ligne gravée à l'identique des couplets 1 et 2 : A sur l'espace après « gloire, » ; Bm sur le retrait avant « C'est », G sur « i » de « ro‹i›s » déjà justes. — partition : p1 y=629,7 : Bm x=31,2 sur le retrait (deux espaces 31,2 et 35,6) ; A x=191,6 = espace [191,6–196,1] après « , » (fin 191,6), « I » à 196,1 ; G x=324,1 sur « i » [324,1–327,7]"
+  },
+  "24:decale:Bm:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "24:decale:A:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "24:fable:24:decale:Bm:1": {
+   "statut": "appliqué",
+   "decide_par": "session",
+   "raison": "Le remplacement met les trois accords de la ligne comme la partition : Bm sur l'espace après « ! », A sur l'espace après « chante, », G sur « a » de « f‹a›it ». Seule lecture retenue (l'écart 24:decale:Bm:1 reste à « non », même résultat). — partition : p1 y=493,6 : Bm x=75,6 = début de l'espace [75,6–80,0] après « ! » (fin 75,6), « J » à 80,0 ; A x=218,8 = espace [218,8–223,2] après « , » ; G x=361,1 sur « a » [361,1–370,0] de « fait »"
+  },
+  "24:fable:24:decale:A:1": {
+   "statut": "appliqué",
+   "decide_par": "session",
+   "raison": "Même remplacement que la question précédente (ligne entière juste) ; A en l'air après la virgule : « chante,[A] pour ». — inclus dans la ligne de 24:fable:24:decale:Bm:1 — partition : p1 y=493,6 : A x=218,8 sur l'espace [218,8–223,2] entre « chante, » et « pour » (« p » à 223,2)"
+  },
+  "22:decale:A:1": {
+   "statut": "appliqué",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "21:decale:D:1": {
+   "statut": "appliqué",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "17:decale:A:1": {
+   "statut": "appliqué",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "11:decale:A:1": {
+   "statut": "appliqué",
+   "decide_par": "def",
+   "raison": ""
+  }
+ },
+ "recois-l-adoration": {
+  "39:oeil:17": {
+   "statut": "appliqué",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "34:oeil:16": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "34:fable:34:oeil:16": {
+   "statut": "appliqué",
+   "decide_par": "session",
+   "raison": "Sol sur « â » (label sur le « m », une colonne après, comme partout aux couplets ; 7e syllabe) et Lam sur « con » (10e), pas sur « me » ni « de ». — partition : Sol x=250,8 sur « m » de « â‹m›e » ; Lam x=322,8 sur « o » de « féc‹o›nde »"
+  },
+  "33:oeil:15": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "32:oeil:14": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "32:fable:32:oeil:14": {
+   "statut": "appliqué",
+   "decide_par": "session",
+   "raison": "Do sur « mon » (10e syllabe), pas sur la finale « de ». — partition : Do x=322,8 sur « o » de « m‹o›nde »"
+  },
+  "30:oeil:13": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "29:oeil:12": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "28:oeil:11": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "27:oeil:10": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "23:oeil:9": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "23:fable:23:oeil:9": {
+   "statut": "appliqué",
+   "decide_par": "session",
+   "raison": "Sol sur la dernière syllabe « el » d'Emmanuel, pas sur « nu ». — partition : Sol x=343,6 sur « l » de « Emmanue‹l› » ; au refrain les labels tombent au début de syllabe"
+  },
+  "20:oeil:8": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": "la ligne est celle mesurée par la session"
+  },
+  "16:oeil:7": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "16:fable:16:oeil:7": {
+   "statut": "laissé",
+   "decide_par": "session",
+   "raison": "La feuille met tous ses labels de couplet une colonne après le début de la syllabe ; le label sur le « r » est donc celui de la syllabe « è » (pri-è-res, 7e syllabe, comme mi-sè-re), ce que le .cho a déjà. « priè[G]res » poserait Sol sur la finale muette ; même lecture que « â‹m›e » à la l. 34. — partition : Sol x=236,4 sur le 2e « r » de « priè‹r›es »"
+  },
+  "15:oeil:6": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "14:oeil:5": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "13:oeil:4": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "11:oeil:3": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "10:oeil:2": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "9:oeil:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "8:oeil:0": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "8:fable:8:oeil:0": {
+   "statut": "appliqué",
+   "decide_par": "session",
+   "raison": "Sol de la partition sur la syllabe « vé » de « élevé », pas sur « dans » ; Fa et Do restent sur leur syllabe. — partition : Sol x=236,4 sur le « é » final de « élev‹é› » ; « dans » commence à x=250,8"
+  }
+ },
+ "recois-ma-vie": {},
+ "rejouis-toi-mon-ame": {
+  "27:decale:D:1": {
+   "statut": "appliqué",
+   "decide_par": "def",
+   "raison": "inclus dans la ligne de 27:oeil:3"
+  },
+  "27:oeil:3": {
+   "statut": "appliqué",
+   "decide_par": "session",
+   "raison": "D commence au début du « v » de « Sauveur » ; G et Bm restent exacts. — partition : p. 1, D x=250,3 ; « u » x=241,4–250,3, « v » à partir de 250,3 : Sau[D]veur"
+  },
+  "24:decale:D:1": {
+   "statut": "appliqué",
+   "decide_par": "def",
+   "raison": "inclus dans la ligne de 24:oeil:2"
+  },
+  "24:oeil:2": {
+   "statut": "appliqué",
+   "decide_par": "session",
+   "raison": "D commence au début du « f » de « bienfaits » ; D initial, Bm et G restent exacts. — partition : p. 1, D x=241,9 ; « n » x=233,0–241,9, « f » à partir de 241,9 : bien[D]faits"
+  },
+  "15:decale:Bm:1": {
+   "statut": "appliqué",
+   "decide_par": "def",
+   "raison": "inclus dans la ligne de 15:oeil:1"
+  },
+  "15:oeil:1": {
+   "statut": "appliqué",
+   "decide_par": "session",
+   "raison": "Bm commence au début du second « t » de « j'attendais » ; G (espace avant « j'attendais ») et D (« l[D]à ») restent exacts. — partition : p. 1, Bm x=142,2 ; premier « t » x=137,75–142,2, second « t » à partir de 142,2 : j'at[Bm]tendais"
+  },
+  "13:decale:G:1": {
+   "statut": "appliqué",
+   "decide_par": "def",
+   "raison": "inclus dans la ligne de 13:oeil:0"
+  },
+  "13:oeil:0": {
+   "statut": "appliqué",
+   "decide_par": "session",
+   "raison": "Rendu ChordPro de l'église lu au caractère près : G commence au début du « a » de « larme » ; la ligne proposée ne change que cet accord, les trois autres (Bm sur « ver », G sur « sée », D sur « chappe ») sont exacts. — partition : p. 1, G x=93,4 ; « l » de « larme » x=89,85–93,4, « a » à partir de 93,4 : l[G]arme"
+  },
+  "3:oeil:4": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  }
+ },
+ "relever-le-faible": {
+  "30:decale:B:1": {
+   "statut": "appliqué",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "22:decale:B:1": {
+   "statut": "appliqué",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "11:decale:G#m:1": {
+   "statut": "appliqué",
+   "decide_par": "Timothée",
+   "raison": ""
+  }
+ },
+ "rememoration": {
+  "51:decale:B:1": {
+   "statut": "appliqué",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "51:decale:B:2": {
+   "statut": "appliqué",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "50:decale:C#m:1": {
+   "statut": "appliqué",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "50:decale:A:1": {
+   "statut": "appliqué",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "47:decale:A:1": {
+   "statut": "appliqué",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "40:decale:E:1": {
+   "statut": "appliqué",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "39:decale:A:1": {
+   "statut": "appliqué",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "38:decale:B:1": {
+   "statut": "appliqué",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "33:decale:C#m:1": {
+   "statut": "appliqué",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "25:decale:C#m:1": {
+   "statut": "appliqué",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "24:decale:C#m:1": {
+   "statut": "appliqué",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "15:decale:C#m:1": {
+   "statut": "appliqué",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "14:decale:C#m:1": {
+   "statut": "appliqué",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "10:decale:C#m:1": {
+   "statut": "appliqué",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "9:decale:C#m:1": {
+   "statut": "appliqué",
+   "decide_par": "Timothée",
+   "raison": ""
+  }
+ },
+ "remplis-moi-de-ta-presence": {
+  "21:relire:Am:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "20:relire:D:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  }
+ },
+ "rien-au-monde": {
+  "35:decale:A:1": {
+   "statut": "appliqué",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "34:decale:G2:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "34:fable:34:decale:G2:1": {
+   "statut": "appliqué",
+   "decide_par": "session",
+   "raison": "Rendu ChordPro de l'église : G2 commence exactement à la fin de la virgule de « monde, », sur l'espace, 4,5 pt avant le « r » de « rien » : label sur l'espace avant le mot, après la ponctuation → « monde,[G2] rien » (02). Le .cho actuel le pose sur le « r ». Le seul commit propre à la ligne a rétabli l'espace manquante entre « monde, » et « rien » (nettoyage d'espacement, il ne visait pas la position de l'accord) : il ne protège rien. Une seule des deux lectures : l'écart 34:decale:G2:1 (même résultat) reste à son « non » par défaut. — partition : p. 2, G2 x=158,3 ; « , » finit à 158,30, espace 158,3–162,8, « r » de « rien » à 162,8 : monde,[G2] rien"
+  },
+  "11:decale:D:1": {
+   "statut": "appliqué",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "9:decale:D:1": {
+   "statut": "appliqué",
+   "decide_par": "def",
+   "raison": ""
+  }
+ },
+ "rien-n-est-perdu-d-avance": {
+  "23:relire:(Bm):1": {
+   "statut": "laissé",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "9:relire:A:1": {
+   "statut": "laissé",
+   "decide_par": "Timothée",
+   "raison": ""
+  }
+ },
+ "risen": {
+  "54:oeil:2": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "54:fable:54:oeil:2": {
+   "statut": "appliqué",
+   "decide_par": "session",
+   "raison": "Lecture juste : A sur « live », puis la queue B C#m A B C#m après le mot ; ligne entière conforme à la grille (les autres accords de la ligne sont déjà justes). — partition : Grille p. 2 y=342 : A x=347,0 sur le « l » de « a‹l›ive » (x=347) ; B 369,6, C#m 391,0, A 427,5, B 450,1, C#m 471,5 après le mot (fin x≈366)."
+  },
+  "37:oeil:1": {
+   "statut": "appliqué",
+   "decide_par": "session",
+   "raison": "Le A final est gravé : la grille finit l'interlude 3 sur « …C#m B A ». La ligne entière est donnée dans `lignes` (A et C#m décalés d'un mot sur la ligne actuelle, B final d'une syllabe). — inclus dans la ligne de la session — partition : A x=329,8 (p. 1, y=605), après « hallelujah » (fin x≈324) : accord en fin de ligne, collé."
+  },
+  "27:oeil:0": {
+   "statut": "appliqué",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "4:oeil:3": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  }
+ },
+ "roi-des-rois": {
+  "59:decale:A:1": {
+   "statut": "appliqué",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "59:decale:D:1": {
+   "statut": "appliqué",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "56:decale:G:1": {
+   "statut": "appliqué",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "54:decale:D:1": {
+   "statut": "appliqué",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "53:decale:D/F#:1": {
+   "statut": "appliqué",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "52:decale:A:1": {
+   "statut": "appliqué",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "39:decale:Bm:1": {
+   "statut": "appliqué",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "39:decale:G:1": {
+   "statut": "appliqué",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "33:decale:D:1": {
+   "statut": "appliqué",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "29:decale:D/F#:1": {
+   "statut": "appliqué",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "22:decale:G2:1": {
+   "statut": "appliqué",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "21:nom:Bm:1": {
+   "statut": "appliqué",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "21:decale:A:1": {
+   "statut": "appliqué",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "20:nom:G:1": {
+   "statut": "appliqué",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "13:decale:G:1": {
+   "statut": "appliqué",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "9:decale:D:1": {
+   "statut": "appliqué",
+   "decide_par": "Timothée",
+   "raison": ""
+  }
+ },
+ "saint-esprit": {
+  "33:decale:Dm:1": {
+   "statut": "appliqué",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "15:decale:C:1": {
+   "statut": "appliqué",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "8:decale:F:1": {
+   "statut": "appliqué",
+   "decide_par": "Timothée",
+   "raison": ""
+  }
+ },
+ "sans-rien-retenir": {
+  "26:relire:C#/E#:1": {
+   "statut": "laissé",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "12:relire:A#m:1": {
+   "statut": "laissé",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "9:relire:A#m:1": {
+   "statut": "laissé",
+   "decide_par": "Timothée",
+   "raison": ""
+  }
+ },
+ "sauve-avec-puissance": {
+  "39:decale:D:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "39:decale:E:1": {
+   "statut": "appliqué",
+   "decide_par": "def",
+   "raison": "inclus dans la ligne de 39:fable:39:decale:D:1"
+  },
+  "39:fable:39:decale:D:1": {
+   "statut": "appliqué",
+   "decide_par": "session",
+   "raison": "Même vers, seconde fois : D sur l'espace après « chantons », E sur le « i » de « ressuscité » ; le remplacement rend la ligne identique à la partition (espace « chantons pour » rétabli). — partition : p1 y=719,0 : F#m x=87,2 sur « c » ; D x=152,1 sur l'espace avant « pour » (p x=156,5) ; A x=262,4 sur « u » de « du » ; E x=359,3 sur « i » de « ressusc‹i›té »."
+  },
+  "37:decale:D:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "37:decale:E:1": {
+   "statut": "appliqué",
+   "decide_par": "def",
+   "raison": "inclus dans la ligne de 37:fable:37:decale:D:1"
+  },
+  "37:fable:37:decale:D:1": {
+   "statut": "appliqué",
+   "decide_par": "session",
+   "raison": "Le remplacement met D sur l'espace après « chantons » (forme [X] puis espace, en rétablissant l'espace perdu entre « chantons » et « pour ») et garde E sur le « i » de « ressusc‹i›té » : toute la ligne est alors comme la partition. Retenu à la place de 37:decale:D:1 (sans opération). — partition : p1 y=651,0 : F#m x=87,2 sur « c » de « chantons » ; D x=152,1 = l'espace (x=152,1) entre « chantons » et « pour » (p x=156,5) ; A x=262,4 sur « u » de « d‹u » ; E x=359,3 sur « i » de « ressusc‹i›té » ; F#m x=385,0 sur « J » de « Jésus » (x=385,1). Vu sur le rendu 2× : D au-dessus de l'espace."
+  },
+  "30:decale:F#m:1": {
+   "statut": "appliqué",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "28:invente:F#m:1": {
+   "statut": "appliqué",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "23:decale:A:1": {
+   "statut": "appliqué",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "23:decale:E:1": {
+   "statut": "appliqué",
+   "decide_par": "def",
+   "raison": ""
+  }
+ },
+ "seigneur-je-veux-te-dire": {
+  "13:oeil:1": {
+   "statut": "laissé",
+   "decide_par": "session",
+   "raison": "Même mesure qu'à la l. 8 (feuille identique au couplet 2) : ligne juste donnée dans `lignes` (l. 13). — partition : Do x=178, « l » 164-169, « e » 172-185 → l[C]es"
+  },
+  "8:oeil:0": {
+   "statut": "laissé",
+   "decide_par": "session",
+   "raison": "Do est bien sur « les » et non sur « laisse », mais le label commence dans le « e » de « les », et la partition met « ( Do Sol Ré ) » entre parenthèses : la ligne juste est donnée dans `lignes` (l. 8). — partition : page 1 de la photo, 1226 px de large : Do x=178, « l » 164-169, « e » 172-185 → l[C]es"
+  }
+ },
+ "seigneur-par-la-clarte": {
+  "35:decale:E:1": {
+   "statut": "appliqué",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "32:decale:A4:1": {
+   "statut": "appliqué",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "27:decale:E:1": {
+   "statut": "appliqué",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "18:decale:E4:1": {
+   "statut": "appliqué",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "17:decale:E:1": {
+   "statut": "appliqué",
+   "decide_par": "Timothée",
+   "raison": ""
+  },
+  "12:decale:E:1": {
+   "statut": "appliqué",
+   "decide_par": "Timothée",
+   "raison": ""
+  }
+ },
+ "solo-christo": {
+  "26:decale:C:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "26:fable:26:decale:C:1": {
+   "statut": "appliqué",
+   "decide_par": "session",
+   "raison": "La feuille tape « vi - vant » (tiret du transcripteur) et pose C sur l'espace juste avant « vant » ; le mot s'écrit entier (01), l'espace disparaît avec le tiret : C devant le « v » de la 2e syllabe, G sur la 1re. « vi[C] vant » couperait le mot. Seule lecture retenue (26:decale:C:1 n'a pas d'opération). — partition : G x=287,3 sur « v » de « vi » ; C x=308,6 sur l'espace entre « - » et « vant » (« v » de vant à 313,0)"
+  },
+  "18:decale:G:1": {
+   "statut": "appliqué",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "9:decale:Dm7:1": {
+   "statut": "appliqué",
+   "decide_par": "def",
+   "raison": ""
+  }
+ },
+ "souffle": {
+  "31:relire:G:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "28:relire:F:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "28:fable:28:relire:F:1": {
+   "statut": "appliqué",
+   "decide_par": "session",
+   "raison": "La ligne de Fable rétablit l'espace manquante entre « le » et « soufﬂe » et pose F devant « s » : c'est la lettre la plus proche du label ; Am et G inchangés et justes. — inclus dans la ligne de la session — partition : F x=348,0–355,3, bord gauche sur la fin du « e » de « le » (343,7–349,0), corps sur l'espace (349–352) et le « s » (352) : lettre la plus proche « s » (4,0 contre 4,3) ; feuille Word, attaque de « souf »"
+  },
+  "22:relire:G:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "17:relire:F:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  },
+  "13:relire:Dm:1": {
+   "statut": "laissé",
+   "decide_par": "def",
+   "raison": ""
+  }
  }
 }

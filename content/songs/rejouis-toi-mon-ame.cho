@@ -1,8 +1,9 @@
 {title: Réjouis-toi mon âme}
 {artist: Hillsong}
-{key: G}
+{key: D}
 {language: fr}
 {themes: Adoration, Action de grâce}
+{source: Réjouis-toi mon âme.pdf}
 
 {start_of_intro: Intro}
 [Bm]  [G]  [D]
@@ -10,9 +11,9 @@
 
 {start_of_verse: Couplet 1}
 [D]Dieu est proche de tous les [Bm]cœurs [G]bris[D]és.
-Aucune [G]larme [Bm]ver - [G]sée ne Lui é[D]chappe.
-[D]Son amour suffit pour [Bm]con - [G]so - [D]ler.
-L'espoir que [G]j'a[Bm]ttendais est enfin l[D]à.
+Aucune l[G]arme [Bm]ver[G]sée ne Lui é[D]chappe.
+[D]Son amour suffit pour [Bm]con[G]so[D]ler.
+L'espoir que [G]j'at[Bm]tendais est enfin l[D]à.
 {end_of_verse}
 
 {start_of_chorus: Refrain}
@@ -21,10 +22,10 @@ Réjouis-toi mon [G]âme.[D]
 {end_of_chorus}
 
 {start_of_verse: Couplet 2}
-[D]Que ma vie parle de [Bm]Ses [G]bienf[D]aits,
+[D]Que ma vie parle de [Bm]Ses [G]bien[D]faits,
 Car Il est [G]celui [Bm]qui a [G]comblé mon [D]cœur.
-[D]Rien sur terre ne pourra [Bm]m'ar - [G]ra - [D]cher,
-De l'amour [G]in - [Bm]fini de mon Sauv[D]eur.
+[D]Rien sur terre ne pourra [Bm]m'ar[G]ra[D]cher,
+De l'amour [G]in[Bm]fini de mon Sau[D]veur.
 {end_of_verse}
 
 {start_of_bridge: Pont}

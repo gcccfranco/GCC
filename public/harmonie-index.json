@@ -1,5 +1,5 @@
 {
-  "genereLe": "2026-10-10T11:11:56.963Z",
+  "genereLe": "2026-10-10T11:48:10.492Z",
   "fiches": [
     {
       "id": "substitutions/2m7-pour-4",
@@ -41,6 +41,7 @@
         "merci",
         "ne-pour-nous-donner-la-vie",
         "quand-je-contemple",
+        "que-nos-chants-soient-comme-un-signe",
         "venez-le-celebrer",
         "一切都更新",
         "一粒麦子",
@@ -170,6 +171,7 @@
         "quand-tu-parles",
         "que-nos-chants-soient-comme-un-signe",
         "quelle-grace",
+        "rejouis-toi-mon-ame",
         "roi-des-rois",
         "sans-rien-retenir",
         "sauve-avec-puissance",
@@ -377,6 +379,8 @@
         "oui-je-crois",
         "quand-je-contemple",
         "que-ma-bouche-chante-ta-louange",
+        "que-nos-chants-soient-comme-un-signe",
+        "que-ton-nom-resonne-en-ce-lieu",
         "que-tous-soient-un",
         "recois-l-adoration",
         "recois-ma-vie",
@@ -602,6 +606,8 @@
         "oceans",
         "prince-de-paix",
         "priorite",
+        "que-ton-nom-resonne-en-ce-lieu",
+        "risen",
         "tu-es-la-vie",
         "你坐着为王",
         "恒久恒久以前",
@@ -950,7 +956,6 @@
         "au-dessus-de-tout",
         "dieu-a-tant-aime",
         "mon-ancre-et-ma-voile",
-        "rejouis-toi-mon-ame",
         "一生爱你",
         "想起你",
         "我要爱慕你"
@@ -1025,6 +1030,7 @@
         "jireh",
         "le-fils-de-dieu",
         "nous-tiendrons",
+        "quand-je-contemple",
         "为我而来",
         "主的喜乐是我力量",
         "十字架的传达者",
@@ -1642,7 +1648,6 @@
         "o-jesus-mon-sauveur",
         "oceans",
         "que-nos-chants-soient-comme-un-signe",
-        "rejouis-toi-mon-ame",
         "risen",
         "ton-nom",
         "toujours-puissante",
@@ -2503,7 +2508,6 @@
       "repertoire": "*Que nos\nchants soient comme un signe* (pont, en F : F2 « Tu es le bienvenu ») ·\n奇异恩典 (主歌 4, en E : E2 « 我永远属于你 ») · 爱的约定 (副歌 2, en C : CMaj9\n« 到永远 ») · 真实的悔改 (副歌, en F : Fmaj7).",
       "regle": "Portée : dernière occurrence, toute fin du chant · motif `1` final\n· remplacement `1 2` · sûreté : **très sûre**.",
       "exemples": [
-        "que-nos-chants-soient-comme-un-signe",
         "奇异恩典"
       ]
     },
