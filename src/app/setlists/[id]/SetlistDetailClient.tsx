@@ -1386,7 +1386,7 @@ export function SetlistDetailClient() {
                     // Chant affiché en scan 简谱 : la retouche va bien dans la
                     // version texte, mais elle ne se verra pas sur l'image —
                     // on le dit, avec le changement à reporter à la main.
-                    if (sheetEnabled(jianpuPref, item.jianpuSheet)) {
+                    if (jianpuManifest?.[item.songSlug] && sheetEnabled(jianpuPref, item.jianpuSheet)) {
                       flashFeedback(
                         t("harmonie.reporterJianpu", { quoi: `${s.endroits[0].accords.join(" – ")} → ${apres.join(" – ")}` }),
                       );

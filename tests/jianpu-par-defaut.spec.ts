@@ -321,15 +321,17 @@ test("service worker : les scans et leurs manifestes sont gardés pour le hors-l
     await reponse;
     await new Promise((r) => setTimeout(r, 0));
   };
-  const scan = `/_next/image?url=${encodeURIComponent("/jianpu/一生爱你-p1.webp")}&w=1080&q=75`;
-  for (const chemin of ["/jianpu/index.json", "/jianpu/chords.json", "/jianpu/一生爱你-p1.webp", scan]) {
+  // Forme réelle : images non optimisées, le navigateur demande le nom encodé.
+  const scan = `/jianpu/${encodeURIComponent("一生爱你-p1.webp")}`;
+  for (const chemin of ["/jianpu/index.json", "/jianpu/chords.json", scan]) {
     await charger(chemin);
   }
+  // Hors /jianpu/ : jamais gardé ; /_next/image n'est plus une forme de scan.
   await charger(`/_next/image?url=${encodeURIComponent("/logo-externe.png")}&w=64&q=75`);
+  await charger(`/_next/image?url=${encodeURIComponent("/jianpu/一生爱你-p1.webp")}&w=1080&q=75`);
   expect(misEnCache).toEqual([
     `${origin}/jianpu/index.json`,
     `${origin}/jianpu/chords.json`,
-    `${origin}/jianpu/一生爱你-p1.webp`,
     `${origin}${scan}`,
   ]);
 });

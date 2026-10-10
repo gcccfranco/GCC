@@ -124,14 +124,13 @@ self.addEventListener("fetch", (event) => {
   }
 
   // Contenu quasi-figé : polices, index des chants, contenu d'un chant ; les
-  // scans 简谱, affichés par défaut (lot 1 du chantier 简谱) : manifestes,
-  // images et leurs versions redimensionnées par next/image.
+  // scans 简谱, affichés par défaut (lot 1 du chantier 简谱) : manifestes et
+  // images, servis tels quels sous /jianpu/ (images non optimisées).
   if (
     url.pathname.startsWith("/fonts/") ||
     url.pathname === "/songs-index.json" ||
     url.pathname.startsWith("/api/song/") ||
     url.pathname.startsWith("/jianpu/") ||
-    (url.pathname === "/_next/image" && (url.searchParams.get("url") || "").startsWith("/jianpu/")) ||
     url.pathname.startsWith("/icon") ||
     url.pathname === "/logo.png"
   ) {

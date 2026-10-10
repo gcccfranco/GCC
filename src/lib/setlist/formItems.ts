@@ -1,7 +1,7 @@
 import { nextUid } from "@/lib/uid";
 import { resolveStructureOverride } from "@/lib/chordpro/structure";
 import { parseChordPro } from "@/lib/chordpro/parser";
-import type { SetlistItem, SectionNuance } from "@/types/setList";
+import type { JianpuChords, SetlistItem, SectionNuance } from "@/types/setList";
 import type { SongIndexEntry, SectionSummary } from "@/types/song";
 
 export interface FormSectionItem {
@@ -32,6 +32,9 @@ export interface FormItem {
   contentOverride?: string | null;
   /** Provenance des sections matérialisées, reconduite avec le contenu. */
   sectionOrigins?: Record<string, string>;
+  /** Accords retouchés sur le scan 简谱 (mode Adapter, lot 9) : reconduits tels
+   *  quels, comme `contentOverride` — l'éditeur ne les modifie pas. */
+  jianpuChords?: JianpuChords;
 }
 
 export interface FusionMixedSectionForm {
@@ -120,7 +123,7 @@ function toFormItem(
   sectionNuances: Record<string, SectionNuance> = {},
   sectionKeys: Record<string, string> = {},
   jianpuSheet?: boolean,
-  adapted: { contentOverride?: string | null; sectionOrigins?: Record<string, string> } = {}
+  adapted: { contentOverride?: string | null; sectionOrigins?: Record<string, string>; jianpuChords?: JianpuChords } = {}
 ): FormItem {
   const allSections = itemSections(song, adapted.contentOverride);
   const orderedSections: SectionSummary[] = structureOverride && structureOverride.length > 0
@@ -153,6 +156,7 @@ function toFormItem(
     }),
     contentOverride: adapted.contentOverride ?? null,
     ...(adapted.sectionOrigins ? { sectionOrigins: adapted.sectionOrigins } : {}),
+    ...(adapted.jianpuChords ? { jianpuChords: adapted.jianpuChords } : {}),
   };
 }
 
@@ -204,6 +208,6 @@ export function buildFormItems(
 
       const song = songsMap[item.songSlug];
       if (!song) return [];
-      return [toFormItem(song, item.keyOverride, item.notes, item.structureOverride, item.sectionNotes, item.sectionTransitions, item.sectionNuances, item.sectionKeys, item.jianpuSheet, { contentOverride: item.contentOverride, sectionOrigins: item.sectionOrigins })];
+      return [toFormItem(song, item.keyOverride, item.notes, item.structureOverride, item.sectionNotes, item.sectionTransitions, item.sectionNuances, item.sectionKeys, item.jianpuSheet, { contentOverride: item.contentOverride, sectionOrigins: item.sectionOrigins, jianpuChords: item.jianpuChords })];
     });
 }
