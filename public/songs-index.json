@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-09T14:06:43.928Z",
+  "generatedAt": "2026-10-10T11:11:56.239Z",
   "songs": [
     {
       "slug": "abba-pere",
@@ -7164,8 +7164,9 @@
       "sections": [
         {
           "id": "intro-1",
-          "name": "Intro",
-          "type": "intro"
+          "name": "Intro (x2)",
+          "type": "intro",
+          "suffix": "(x2)"
         },
         {
           "id": "verse-2",
@@ -7424,13 +7425,20 @@
         },
         {
           "id": "chorus-3",
-          "name": "Refrain",
-          "type": "chorus"
+          "name": "Refrain 1",
+          "type": "chorus",
+          "number": "1"
         },
         {
           "id": "verse-4",
           "name": "Couplet 2",
           "type": "verse",
+          "number": "2"
+        },
+        {
+          "id": "chorus-5",
+          "name": "Refrain 2",
+          "type": "chorus",
           "number": "2"
         }
       ]
@@ -7812,7 +7820,7 @@
       "titlePinyin": null,
       "artist": "Be Witness",
       "language": "fr",
-      "originalKey": "Bb",
+      "originalKey": "F",
       "recommendedKey": null,
       "tempo": null,
       "themes": [
@@ -7852,6 +7860,13 @@
           "name": "Refrain 2",
           "type": "chorus",
           "number": "2"
+        },
+        {
+          "id": "chorus-6",
+          "name": "Refrain 1 (G)",
+          "type": "chorus",
+          "number": "1",
+          "suffix": "(G)"
         }
       ]
     },
@@ -8002,8 +8017,7 @@
       "tempo": 130,
       "themes": [
         "mission",
-        "envoi",
-        "consecration"
+        "engagement"
       ],
       "youtubeUrl": "https://www.youtube.com/watch?v=nzMjNgzpfjs",
       "spotifyUrl": null,
@@ -8056,13 +8070,15 @@
       "sections": [
         {
           "id": "verse-1",
-          "name": "Couplet",
-          "type": "verse"
+          "name": "Couplet (x2)",
+          "type": "verse",
+          "suffix": "(x2)"
         },
         {
           "id": "chorus-2",
-          "name": "Refrain",
-          "type": "chorus"
+          "name": "Refrain (x2)",
+          "type": "chorus",
+          "suffix": "(x2)"
         },
         {
           "id": "bridge-3",
@@ -8092,8 +8108,9 @@
       "sections": [
         {
           "id": "intro-1",
-          "name": "Intro",
-          "type": "intro"
+          "name": "Intro (x2)",
+          "type": "intro",
+          "suffix": "(x2)"
         },
         {
           "id": "verse-2",
@@ -8120,8 +8137,9 @@
         },
         {
           "id": "intro-6",
-          "name": "Instru",
-          "type": "intro"
+          "name": "Interlude (x2)",
+          "type": "intro",
+          "suffix": "(x2)"
         },
         {
           "id": "bridge-7",
@@ -8386,9 +8404,9 @@
           "number": "3"
         },
         {
-          "id": "final-6",
-          "name": "final",
-          "type": "other"
+          "id": "outro-6",
+          "name": "Final",
+          "type": "outro"
         }
       ]
     },
@@ -8413,8 +8431,9 @@
       "sections": [
         {
           "id": "intro-1",
-          "name": "Intro",
-          "type": "intro"
+          "name": "Intro (x2)",
+          "type": "intro",
+          "suffix": "(x2)"
         },
         {
           "id": "verse-2",

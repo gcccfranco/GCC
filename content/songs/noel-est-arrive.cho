@@ -1,23 +1,26 @@
 {title: Noël est arrivé}
-{key: Bb}
-{artist:  Be Witness}
+{key: F}
+{artist: Be Witness}
 {language: fr}
 {themes: Noël}
+{source: Noël est arrivé.pdf}
 
 {start_of_verse: Couplet 1}
 Le ven[F]t se l[Bb/F]ève, Nous [F]annonce la nou[C/E]velle
 Un sa[Dm]uveur nous est [Bb]né, Le div[F/C]in envoy[C]é
-Un te[F]mps s'ac[Bb/F]hève, Empor[F]tant nos vies anc[C/E]iennes
-Car est [Dm]né le plus[Bb]beau des mys[C4]tère[C3]s
+Un te[F]mps s'ac[Bb/F]hève, Empo[F]rtant nos vies anc[C/E]iennes
+Car est [Dm]né le plus [Bb]beau des mys[C4]tère[C3]s
 {end_of_verse}
 {start_of_chorus: Refrain 1}
-Nous [Bb2]étions dans la n[F]uit, No[C]ël est ar[Dm]rivé
-Un en[Bb2]fant nous est né [F]c'est Noël[C3][C4]
+Nous é[Bb2]tions dans la n[F]uit, N[C]oël est ar[Dm]rivé
+Un en[Bb2]fant nous est né [F]c'est Noël[C4][C3]
+{needs_review: Dm à cheval entre « ter » et « ni » de « éternité » sur la feuille alignée aux espaces (2,9 / 2,6 pt) : posé devant « n », peut-être devant « r », à confirmer à l'oreille}
 Voici [Bb2]l'heure de minui[F]t, Où le [C]Dieu d'éter[Dm]nité
-Vient [Bb]rejoindre notre [F/C]huma[C]nité[F]
+Vient [Bb]rejoindre notre [F/C]hum[C]anité[F]
 {end_of_chorus}
 {start_of_verse: Couplet 2}
-La glo[G]ire du ciel[C], Par l'[G]étoile de lum[D]ière, 
+{needs_review: G à cheval entre « l'é » et « toile » sur la feuille alignée aux espaces (4,6 / 3,2 pt) : posé devant « t », lettre la plus proche, peut-être devant « é », à confirmer à l'oreille}
+La glo[G]ire du ciel[C], Par l'é[G]toile de lum[D]ière,
 Nous [Em]révèle ce[C]lui, Qui vient ch[G/D]anger nos v[D]ies
 {end_of_verse}
 
@@ -25,20 +28,25 @@ Nous [Em]révèle ce[C]lui, Qui vient ch[G/D]anger nos v[D]ies
 Et du [Dm7]fond de l'a[Bb]bîme, Jail[F]lira la lu[C]mière
 Car d[Dm7]éjà Jésus-Ch[Bb]rist accomp[F]lit le mystè[C]re
 Il vien[Dm7]t briser la m[Bb]ort et nous [F]donner la vi[C]e
-Cet en[Bb2]fant c'est n[F/A]otre mes[Eb]sie[Cm6/A][ ][Cm7/Bb][ ][Cm][ ][Gm/D][ ][D]  [G/D]  [C/D]  [D]  [C/D]  [D]
+Cet e[Bb2]nfant c'est n[F/A]otre me[Eb]ssie[Gm/D][Cm][Cm7/Bb][Cm6/A]
+[D]  [G/D]  [C/D]  [D]  [C/D]  [D]
 {end_of_bridge}
 
 {start_of_chorus: Refrain 2}
-C'est N[C2]oël, c'est No[G]ël
+C'est N[C2]oël, c'est N[G]oël
 Voi[D]ci l'Emma[Em]nuel
 Le sa[C2]lut de notre [G]human[D4]ité[D3]
 C'est N[C2]oël, c'est N[G]oël
 La pro[D]messe éte[Em]rnelle
 Que nos [C]vies ne s'[G/D]étein[D]dront j[G]amais
+{end_of_chorus}
+
+{start_of_chorus: Refrain 1 (G)}
 Nous éti[C2]ons dans la n[G]uit
-No[D]ël est ar[Em]rivé
+N[D]oël est ar[Em]rivé
 Un en[C2]fant nous est [G]né c'est N[D4]oël[D3]
 Voici [C2]l'heure de [G]minuit
+{needs_review: Em à cheval entre « ter » et « ni » de « éternité » sur la feuille alignée aux espaces (2,9 / 2,6 pt) : posé devant « n », peut-être devant « r », à confirmer à l'oreille}
 Où le [D/F#]Dieu d'éter[Em]nité
-Vient [C]rejoindre notre[G/D]hum[D]ani[Em]té
+Vient [C]rejoindre notre [G/D]hu[D]mani[Em]té
 {end_of_chorus}
