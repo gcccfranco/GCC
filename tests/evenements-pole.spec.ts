@@ -148,9 +148,9 @@ test("fiche de l'App : un membre du pôle voit l'évènement de pôle avec « S'
 // et de la coordination, avec le badge du pôle (D22) ; la notification de publication
 // ne part qu'aux membres du pôle (D23) ; la route d'inscription refuse les autres (E6).
 
-// Clara : pôle Média (pas DA). Chloé : coordination (pôle « evenement »).
+// Clara : pôle Média (pas DA). Chloé : coordination (cochée) et pôle « evenement ».
 const CLARA: FakeProfile = { uid: "uid-clara", email: "clara@example.com", firstName: "Clara", lastName: "V.", poles: ["media"] };
-const CHLOE: FakeProfile = { uid: "uid-chloe", email: "chloe@example.com", firstName: "Chloé", lastName: "R.", poles: ["evenement"] };
+const CHLOE: FakeProfile = { uid: "uid-chloe", email: "chloe@example.com", firstName: "Chloé", lastName: "R.", poles: ["evenement"], coordination: true };
 const ADMIN = { uid: "uid-admin", email: "tc328829@gmail.com" };
 const qui = (p: FakeProfile) => ({ uid: p.uid, email: p.email });
 

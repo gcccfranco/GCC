@@ -159,7 +159,7 @@ const CULTE = csv([
 
 const P_ADMIN: FakeProfile = { uid: "u-admin", email: ADMIN_EMAILS[0], firstName: "Admin", lastName: "T.", planningName: "Lou M." };
 /** Pôle Événement : son tableau de bord d'office a « Prochains évènements ». */
-const P_EVENEMENT: FakeProfile = { uid: "u-evt", email: "evt@example.org", firstName: "Alix", lastName: "P.", poles: ["evenement"] };
+const P_EVENEMENT: FakeProfile = { uid: "u-evt", email: "evt@example.org", firstName: "Alix", lastName: "P.", poles: ["evenement"], coordination: true };
 
 const MAINTENANT = "2026-09-01T10:00:00Z";
 const DOCS: Record<string, Record<string, unknown>> = {

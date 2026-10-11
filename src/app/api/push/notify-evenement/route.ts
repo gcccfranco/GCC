@@ -40,7 +40,7 @@ export async function POST(req: NextRequest) {
   const snap = await db.collection("evenements").doc(evenementId).get();
   if (!snap.exists) return NextResponse.json({ error: "Évènement introuvable" }, { status: 404 });
   const e = { id: snap.id, ...snap.data() } as Evenement;
-  const profile = ((await db.collection("users").doc(user.uid).get()).data() ?? null) as { annonces?: string[]; poles?: string[] } | null;
+  const profile = ((await db.collection("users").doc(user.uid).get()).data() ?? null) as { annonces?: string[]; coordination?: boolean } | null;
   if (!canEditEvenement(user, profile, e) && !canCreateEvenement(user, profile, e.pour)) {
     return NextResponse.json({ error: "Non autorisé" }, { status: 403 });
   }

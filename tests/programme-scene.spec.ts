@@ -28,7 +28,7 @@ const AVANT_OUVERTURE = new Date("2026-09-20T10:00:00");
 
 const JO: FakeProfile = { uid: "uid-jo", email: "jo@example.com", firstName: "Jo", lastName: "L." };
 const ALICE: FakeProfile = {
-  uid: "uid-alice", email: "alice@example.com", firstName: "Alice", lastName: "Q.", poles: ["evenement"],
+  uid: "uid-alice", email: "alice@example.com", firstName: "Alice", lastName: "Q.", poles: ["evenement"], coordination: true,
 };
 
 // Lot U6, B3 (U1 Q12) : la gestion est au Back-Office ; l'App garde les réservations, celles de

@@ -595,7 +595,7 @@ test.describe("pastilles permises (pur)", () => {
 });
 
 test.describe("peutDeplacer (pur)", () => {
-  const coord = profil({ poles: ["evenement"] });
+  const coord = profil({ coordination: true });
   const ev = evenement({ id: "e", titre: "E", organisateurUid: "u-moi", date: "2026-10-10" });
 
   test("évènement : l'organisateur, la coordination, un admin ; pas un autre membre", () => {

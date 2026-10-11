@@ -26,7 +26,7 @@ export async function POST(req: NextRequest) {
 
     const db = adminDb();
     const ref = db.collection("evenements").doc(evenementId);
-    const profile = ((await db.collection("users").doc(user.uid).get()).data() ?? null) as { poles?: string[] } | null;
+    const profile = ((await db.collection("users").doc(user.uid).get()).data() ?? null) as { coordination?: boolean } | null;
 
     const result = await db.runTransaction(async (tx) => {
       const snap = await tx.get(ref);

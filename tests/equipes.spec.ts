@@ -300,31 +300,5 @@ test("admin : « Recalculer depuis l'organigramme » repose équipes et référe
   expect(envois).toEqual([{ tous: true }]);
 });
 
-// Retours du 06/10/2026 : l'import parti, « Décocher » un pôle hors organigramme (D10)
-// ne vivait que dans son compte rendu. Il passe dans la fiche de Personnes.
-test("admin : Personnes décoche un pôle coché hors organigramme", async ({ page }) => {
-  await simulerSheets(page);
-  const envois: unknown[] = [];
-  await page.route("**/api/equipes/poles", (route) => {
-    envois.push(route.request().postDataJSON());
-    return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ok: true, maj: 1 }) });
-  });
-  await signInAs(
-    page,
-    { uid: "admin1", email: "tc328829@gmail.com", firstName: "Timothée", lastName: "C." },
-    {
-      ...DOCS,
-      "users/u-hors": {
-        email: "hors@example.com", firstName: "Untel", lastName: "B.", planningName: "",
-        serviceRoles: {}, annonces: [], notify: [], poles: ["orga"], equipes: false,
-      },
-    },
-    "/back-office/equipes/personnes",
-  );
-  await page.getByRole("button", { name: /Untel B\./ }).click();
-  await expect(page.getByText(/Coché hors organigramme : Orga/)).toBeVisible();
-  await expect(page.getByText(/Équipes › Import/)).toHaveCount(0);
-  await page.getByRole("button", { name: "Décocher" }).click();
-  await expect(page.getByText(/Coché hors organigramme/)).toHaveCount(0);
-  expect(envois).toEqual([{ uids: ["u-hors"] }]);
-});
+// « Décocher » un pôle hors organigramme (D10) est parti avec la carte « Pôles » de Personnes (lot 1 du
+// chantier « équipes et groupes », EQ26, EQ29) : voir tests/equipes-coordination.spec.ts.

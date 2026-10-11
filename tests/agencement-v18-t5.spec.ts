@@ -227,7 +227,10 @@ test.describe("T5 : Équipes › Personnes", () => {
     // Tri « Récents » : le compte le plus récent d'abord.
     await expect(fiche.getByRole("heading", { level: 2 })).toHaveText("Bérénice A.");
     await expect(fiche).toContainText("Services et rôles");
-    await expect(fiche).toContainText("Pôles");
+    // Lot 1 du chantier « équipes et groupes » (EQ26) : la carte « Pôles » cède la place à la ligne
+    // « Coordination » de la carte Droits.
+    await expect(fiche).toContainText("Coordination");
+    await expect(fiche).not.toContainText("Pôles");
     await expect(fiche).toContainText("Droits");
     await expect(fiche).toContainText("Ses prochains services");
     await expect(fiche).toContainText("Piano");

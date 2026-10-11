@@ -1,12 +1,13 @@
 "use client";
 
 // Équipes › Personnes (lot U6, B2 ; bloc « Membres » sorti de `admin/page.tsx`,
-// l. 794-1075) : liste, fiche, pôles en lecture, droits. Admins seuls (users/{uid}).
+// l. 794-1075) : liste, fiche, droits. Admins seuls (users/{uid}). La carte « Pôles »
+// est partie avec le lot 1 du chantier « équipes et groupes » (EQ26).
 // Agencement v18 (B9 de docs/spec-agencement-v18.md) : les morceaux (données, filtres, ligne,
 // formulaire) sont exportés pour `PersonnesVolets` (Back-Office › Équipes › Personnes, en deux
 // volets) ; `Personnes` les assemble comme avant pour l'ancienne administration.
 import { useEffect, useMemo, useState, type ReactNode } from "react";
-import Link from "next/link";
+import { useTranslation } from "react-i18next";
 import { ChevronDown, ChevronUp, Search, UserRound, X } from "lucide-react";
 import { listProfiles, saveProfile } from "@/lib/firebase/users";
 import { isAdminUser } from "@/lib/access";
@@ -18,10 +19,7 @@ import {
   normalizeName,
 } from "@/lib/planning/names";
 import { ProfileFields, type ProfileFormValue } from "@/components/auth/ProfileFields";
-import { SERVICE_ROLE_LABELS, SERVICE_LIEUX, GROUPES, POLE_LABELS, type ServiceRole, type UserProfile } from "@/types/user";
-import { listEquipes, majPoles } from "@/lib/firebase/equipes";
-import { EQUIPES, polesDesEquipes } from "@/lib/equipes/organigramme";
-import type { Equipe } from "@/types/equipe";
+import { SERVICE_ROLE_LABELS, SERVICE_LIEUX, GROUPES, type ServiceRole, type UserProfile } from "@/types/user";
 import { EDD_CLASSES } from "@/lib/planning/utils";
 import { ANNONCE_SECTIONS } from "@/types/annonce";
 import { NOTIFY_ALL, NOTIFY_GROUPS, audienceLabel } from "@/lib/push/audiences";
@@ -43,55 +41,6 @@ export function profileToForm(p: UserProfile): ProfileFormValue {
   };
 }
 
-/** Pôles d'un membre, en lecture seule : ils viennent des équipes (lot 16, D9).
- *  Un pôle coché hors organigramme se décoche ici (D10) : le serveur repose les
- *  pôles depuis les équipes. Seul endroit depuis le retrait de l'import (06/10/2026). */
-export function PolesDuMembre({ profile, equipes, onDecoche }: { profile: UserProfile; equipes: Equipe[]; onDecoche: () => Promise<void> }) {
-  const [decoche, setDecoche] = useState<"" | "busy" | "erreur">("");
-  const siennes = equipes.filter((e) => e.membres.some((m) => m.uid === profile.uid));
-  const poles = polesDesEquipes(profile.uid, equipes);
-  const coches = (profile.poles ?? []).filter((x) => !poles.includes(x));
-  return (
-    <>
-      <p className="text-xs text-foreground">
-        {poles.length > 0 ? poles.map((x) => POLE_LABELS[x]).join(" · ") : "Aucun"}
-        {siennes.length > 0 && (
-          <>
-            {" — via "}
-            <Link href="/back-office/equipes" className="underline underline-offset-2">
-              {siennes.map((e) => EQUIPES.find((d) => d.id === e.id)?.nom ?? e.id).join(", ")}
-            </Link>
-          </>
-        )}
-      </p>
-      {coches.length > 0 && (
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-          <p className="text-xs text-amber-700 dark:text-amber-400">
-            Coché hors organigramme : {coches.map((x) => POLE_LABELS[x]).join(" · ")}
-          </p>
-          <button
-            type="button"
-            disabled={decoche === "busy"}
-            onClick={async () => {
-              setDecoche("busy");
-              try {
-                await onDecoche();
-                setDecoche("");
-              } catch {
-                setDecoche("erreur");
-              }
-            }}
-            className="text-xs font-semibold text-muted-foreground hover:text-destructive disabled:opacity-60"
-          >
-            {decoche === "busy" ? "…" : "Décocher"}
-          </button>
-          {decoche === "erreur" && <p className="text-xs text-destructive">Impossible de retirer le pôle.</p>}
-        </div>
-      )}
-    </>
-  );
-}
-
 export const FILTERS = ["Tous", ...SERVICE_LIEUX, "EDD", ...GROUPES, "Ne sert pas"] as const;
 
 // Une inscription est « nouvelle » pendant ses 7 premiers jours.
@@ -100,17 +49,15 @@ export function isRecent(d?: Date): boolean {
   return !!d && Date.now() - d.getTime() < NEW_DAYS * 86_400_000;
 }
 
-/** Les données de Personnes : profils, équipes, plannings (lues une fois). */
+/** Les données de Personnes : profils, plannings (lus une fois). */
 export function useDonneesPersonnes() {
   const [profiles, setProfiles] = useState<UserProfile[]>([]);
   const [loadingProfiles, setLoadingProfiles] = useState(true);
   const [planningNames, setPlanningNames] = useState<string[]>([]);
   const [planningData, setPlanningData] = useState<PlanningData | null>(null);
-  const [equipes, setEquipes] = useState<Equipe[]>([]);
 
   useEffect(() => {
     listProfiles().then(setProfiles).finally(() => setLoadingProfiles(false));
-    listEquipes().then(setEquipes);
     loadPlanningData().then((d) => {
       setPlanningData(d);
       setPlanningNames(collectPlanningNames(d));
@@ -126,7 +73,7 @@ export function useDonneesPersonnes() {
     return { musiciens, chanteurs, presidences, nouveaux };
   }, [profiles]);
 
-  return { profiles, setProfiles, loadingProfiles, planningNames, planningData, equipes, stats };
+  return { profiles, setProfiles, loadingProfiles, planningNames, planningData, stats };
 }
 
 /** Recherche, filtre et tri de la liste. */
@@ -290,24 +237,23 @@ export function LignePersonne({
   );
 }
 
-/** Le formulaire d'un membre (identité, services, pôles en lecture, droits) : il tient son
+/** Le formulaire d'un membre (identité, services, droits) : il tient son
  *  brouillon, n'écrit que ses champs (`saveProfile`, masque) et rend le profil à jour. */
 export function FormulairePersonne({
-  p, equipes, planningData, planningNames, onAnnule, onEnregistre, onPoles,
+  p, planningData, planningNames, onAnnule, onEnregistre,
 }: {
   p: UserProfile;
-  equipes: Equipe[];
   planningData: PlanningData | null;
   planningNames: string[];
   onAnnule: () => void;
   onEnregistre: (maj: UserProfile) => void;
-  /** Pôles reposés depuis les équipes (« Décocher »). */
-  onPoles: (poles: UserProfile["poles"]) => void;
 }) {
+  const { t } = useTranslation();
   const [form, setForm] = useState<ProfileFormValue>(() => profileToForm(p));
   const [annonceRights, setAnnonceRights] = useState<string[]>(p.annonces ?? []);
   const [notifyRights, setNotifyRights] = useState<string[]>(p.notify ?? []);
   const [equipesRight, setEquipesRight] = useState(p.equipes ?? false);
+  const [coordination, setCoordination] = useState(p.coordination ?? false);
   const [planningRights, setPlanningRights] = useState<string[]>(p.plannings ?? []);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -323,7 +269,7 @@ export function FormulairePersonne({
       // Seuls les champs tenus ici sont écrits (saveProfile n’envoie que le
       // masque) : `poles` vient des équipes (lot 16, D9) et n’est jamais renvoyé,
       // même périmé. Jusqu’au 19/09/2026 le document entier était remplacé.
-      const patch = { uid: p.uid, ...form, annonces: annonceRights, notify: notifyRights, equipes: equipesRight, plannings: planningRights };
+      const patch = { uid: p.uid, ...form, annonces: annonceRights, notify: notifyRights, equipes: equipesRight, coordination, plannings: planningRights };
       await saveProfile(patch);
       onEnregistre({ ...p, ...patch });
     } catch {
@@ -349,22 +295,6 @@ export function FormulairePersonne({
 
       {/* Back-office coupé (lot 18) : ces trois droits n'ont pas d'objet en ligne. */}
       {BACK_OFFICE && (<>
-      {/* Pôles : donnés par les équipes depuis le lot 16 (D9) — plus aucune
-          case ici, l'organigramme est la seule vérité. */}
-      <div className="rounded-lg border border-dashed border-border p-3 space-y-1">
-        <p className="text-sm font-semibold text-muted-foreground">
-          Pôles (donnés par les équipes ; Louange : automatique avec un rôle de service) :
-        </p>
-        <PolesDuMembre
-          profile={p}
-          equipes={equipes}
-          onDecoche={async () => {
-            await majPoles([p.uid]);
-            onPoles(polesDesEquipes(p.uid, equipes));
-          }}
-        />
-      </div>
-
       {/* Droit de tenir l'organigramme (lot 16, D4) — réservé aux admins */}
       <div className="rounded-lg border border-dashed border-border p-3">
         <p className="text-sm font-semibold text-muted-foreground mb-2">
@@ -380,6 +310,26 @@ export function FormulairePersonne({
           }`}
         >
           {equipesRight ? "✓ " : ""}Équipes (tout l&apos;organigramme)
+        </button>
+      </div>
+
+      {/* Coordination (lot 1 du chantier « équipes et groupes », EQ24 à EQ26) — cochée par un
+          admin seul : aucune équipe ne la donne plus. */}
+      <div className="rounded-lg border border-dashed border-border p-3">
+        <p className="text-sm font-semibold text-muted-foreground mb-2">
+          {t("personnes.coordinationAide")} :
+        </p>
+        <button
+          type="button"
+          aria-pressed={coordination}
+          onClick={() => setCoordination((v) => !v)}
+          className={`px-3 py-1.5 rounded-lg border text-xs font-semibold transition-colors ${
+            coordination
+              ? "bg-secondary border-foreground/30 text-foreground"
+              : "bg-background border-border text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          {coordination && <span aria-hidden>✓ </span>}{t("personnes.coordination")}
         </button>
       </div>
 
@@ -560,12 +510,10 @@ export function ListePersonnes({
               <div className="border-t border-border px-4 py-4">
                 <FormulairePersonne
                   p={p}
-                  equipes={d.equipes}
                   planningData={d.planningData}
                   planningNames={d.planningNames}
                   onAnnule={() => setDeplie(null)}
                   onEnregistre={(u) => { maj(u); setDeplie(null); }}
-                  onPoles={(poles) => maj({ ...p, poles })}
                 />
               </div>
             )}

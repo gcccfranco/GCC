@@ -2706,6 +2706,10 @@
       "presidences_other": "{{count}} présidences"
     }
   },
+  "personnes": {
+    "coordination": "Coordination",
+    "coordinationAide": "Régler la scène, créer pour toute l'église, modifier tout évènement"
+  },
   "tableauDeBord": {
     "widgets": {
       "dimanche": "Ce dimanche",

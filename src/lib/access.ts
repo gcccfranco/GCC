@@ -66,15 +66,16 @@ export function isPoleMember(
   return isAdminUser(user) || (polesDe(profile) as string[]).includes(pole);
 }
 
-/** Coordination des programmes de scène (lot 3 bis) : pôle « événement » du
- *  profil (attribué par un admin) + admins. Crée, modifie, affiche ou masque un
- *  programme, tient l'ordre de passage, déplace ou retire n'importe quel
- *  créneau. Miroir serveur : isCoordination() dans firestore.rules. */
+/** Coordination (lot 3 bis ; lot 1 du chantier « équipes et groupes », EQ24) : le
+ *  droit `coordination` du profil, coché par un admin dans Personnes, + admins. Le
+ *  pôle « événement » ne la donne plus. Règle la scène (programmes, ordre de
+ *  passage, tout créneau), crée pour toute l'église, modifie tout évènement.
+ *  Miroir serveur : isCoordination() dans firestore.rules. */
 export function isCoordination(
   user: { email?: string | null } | null,
-  profile: { poles?: string[] } | null
+  profile: { coordination?: boolean } | null
 ): boolean {
-  return isAdminUser(user) || (profile?.poles ?? []).includes("evenement");
+  return isAdminUser(user) || profile?.coordination === true;
 }
 
 /** Organigramme (lot 16, docs/spec-organigramme.md) : tout membre connecté le
@@ -102,7 +103,7 @@ export function canEditerEquipes(
 /** Créneau sur scène : son auteur + la coordination. Miroir : programmes/{id}/creneaux dans firestore.rules. */
 export function canEditCreneau(
   user: AuthUser,
-  profile: { poles?: string[] } | null,
+  profile: { coordination?: boolean } | null,
   creneau: { auteurUid: string }
 ): boolean {
   return creneau.auteurUid === user.uid || isCoordination(user, profile);
@@ -115,7 +116,7 @@ export function canEditCreneau(
  *  Miroir serveur : reservable() sous programmes/{id}/creneaux, firestore.rules. */
 export function canReserverPour(
   user: AuthUser | null,
-  profile: { poles?: string[] } | null,
+  profile: { coordination?: boolean } | null,
   programme: { ouvert?: boolean; quiAutorises?: string[] },
   qui: string[]
 ): boolean {
@@ -132,7 +133,7 @@ type EvenementDroits = { pour: string; organisateurUid: string; reunion?: boolea
 /** Profil lu par les droits des évènements : sections, pôles, et les équipes de
  *  l'organigramme recopiées par le serveur (lot U6, R4 : `recalculerPoles`). */
 type ProfilEvenement = {
-  serviceRoles?: Record<string, unknown>; poles?: string[]; annonces?: string[];
+  serviceRoles?: Record<string, unknown>; poles?: string[]; coordination?: boolean; annonces?: string[];
   dansEquipes?: string[]; referentDe?: string[];
 };
 
@@ -248,7 +249,7 @@ export function canSeeInscrits(user: AuthUser | null): boolean {
 /** Modifier, dupliquer, supprimer, fermer les inscriptions, retirer un inscrit : organisateur + coordination. */
 export function canEditEvenement(
   user: AuthUser | null,
-  profile: { poles?: string[] } | null,
+  profile: { coordination?: boolean } | null,
   e: EvenementDroits
 ): boolean {
   if (!user) return false;
@@ -492,20 +493,21 @@ export const canDeleteSetlist = canEditSetlist;
 // plannings…). Aucune règle miroir ici.
 
 type ProfilResponsable = {
-  serviceRoles?: Record<string, unknown>; poles?: string[]; plannings?: string[]; notify?: string[];
-  annonces?: string[]; equipes?: boolean; referentDe?: string[]; dansEquipes?: string[];
+  serviceRoles?: Record<string, unknown>; poles?: string[]; coordination?: boolean; plannings?: string[];
+  notify?: string[]; annonces?: string[]; equipes?: boolean; referentDe?: string[]; dansEquipes?: string[];
 };
 const nonVide = (l: string[] | undefined) => (l?.length ?? 0) > 0;
 
 /** Responsable (Q1) : admin, ou au moins un droit donné par un admin ou par l'organigramme —
- *  `poles` écrit, `plannings`, `notify`, `annonces`, droit Équipes, référent d'une équipe.
+ *  `poles` écrit, coordination (EQ18, comme le pôle Événement la donnait), `plannings`, `notify`,
+ *  `annonces`, droit Équipes, référent d'une équipe.
  *  Le pôle Louange implicite d'un rôle de service (`polesDe`) ne compte pas (question 2). */
 export function estResponsable(user: AuthUser | null, profile: ProfilResponsable | null): boolean {
   if (!user) return false;
   if (isAdminUser(user)) return true;
   if (!profile) return false;
-  return nonVide(profile.poles) || nonVide(profile.plannings) || nonVide(profile.notify) || nonVide(profile.annonces)
-    || profile.equipes === true || nonVide(profile.referentDe);
+  return nonVide(profile.poles) || profile.coordination === true || nonVide(profile.plannings) || nonVide(profile.notify)
+    || nonVide(profile.annonces) || profile.equipes === true || nonVide(profile.referentDe);
 }
 
 /** Statistiques des chants (lot U7, docs/spec-statistiques.md, Q2) : admins seulement (T1).

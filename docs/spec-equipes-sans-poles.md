@@ -8,8 +8,7 @@ Le retour des responsables et la piste notée au lot G (`spec-retouches-v18.md`,
 pôle Louange implicite ne trouvait plus les réunions de son pôle dans aucune liste.
 
 - **Date** : 08/10/2026.
-- **Statut** : **spec écrite, questions tranchées le 08/10/2026 (décisions 35 à 45), attend le go de Timothée.**
-  Rien n'est codé.
+- **Statut** : **go de Timothée le 08/10/2026 au soir. EQ-A codée** (voir « Avancement ») ; EQ-B à EQ-F restent.
 - **Base de code** : `ui/apple-design` à `5878ce1`. Le code est identique à `439e5520`, base de la cartographie :
   seuls des documents ont changé depuis. Toutes les références `fichier:ligne` ci-dessous ont été rouvertes à `5878ce1`.
   Celles qu'ajoutent les réponses du 08/10 au soir ont été ouvertes à `ceeb9b2`, au code identique (`git diff 5878ce1
@@ -803,3 +802,73 @@ npx tsx --env-file=.env.local scripts/poles-vers-equipes.ts --ecrire   # migrati
   liste 2), question 4 ajoutée. Attend le go.
 - 08/10/2026 : relecture croisée des cinq specs, incohérences corrigées.
 - 08/10/2026 (soir) : réponses de Timothée intégrées (décisions 35 à 45).
+
+### EQ-A — Coordination (08/10/2026)
+
+Go de code de Timothée le 08/10/2026 au soir.
+
+- **Codé** (EQ24 à EQ26) :
+  - **`users/{uid}.coordination`** (booléen, absent = non) : `UserProfile.coordination`, lu `false` par défaut
+    (`fromFsProfile`, `src/lib/firebase/users.ts`). `isCoordination` le lit (`src/lib/access.ts`), et
+    `isCoordination()` aussi (`firestore.rules`). Le pôle `evenement` ne donne plus rien : un membre de TEAM
+    ÉVÉNEMENTIEL ou d'ACCUEIL J1 n'a plus la scène, ni « Toute l'église », ni « Modifier » sur l'évènement d'un autre.
+    `canEditCreneau`, `canReserverPour`, `canEditEvenement` et les profils lus par `notify-evenement` et
+    `desinscription` sont typés `{ coordination }`. Logique inchangée.
+  - **Garde de création** d'un profil (`firestore.rules`, `match /users/{uid}`) : `get('coordination', false) ==
+    false`. `poles == []` reste jusqu'à EQ-D.
+  - **Personnes** : dans le formulaire, une case « Coordination », sous « Peut modifier l'organigramme », dans le bloc
+    `BACK_OFFICE` (`/admin` en ligne ne la montre pas). Le titre de l'encadré est l'aide (« Régler la scène, créer pour
+    toute l'église, modifier tout évènement »). Dans la fiche, carte Droits, une ligne « Coordination · Oui / Non »
+    sous « Admin ». La carte « Pôles », `PolesDuMembre` et « Coché hors organigramme · Décocher » sont retirés
+    (`Personnes.tsx`, `PersonnesVolets.tsx`). `useDonneesPersonnes` ne lit plus les équipes, qui ne servaient qu'à
+    cette carte.
+  - **Libellés** : `personnes.coordination` (Coordination / 协调) et `personnes.coordinationAide` (Régler la scène,
+    créer pour toute l'église, modifier tout évènement / 管理舞台、为全教会创建、修改所有活动).
+  - **Tests** : `FakeProfile.coordination` (`tests/helpers/fakeSession.ts`), écrit dans `users/{uid}` quand il est
+    donné.
+- **Choix faits faute de réponse dans la spec** :
+  - **`estResponsable` compte `coordination` dès EQ-A** (EQ18, que le relevé range en EQ-B). Sans cela, une personne
+    qui n'a que la case n'aurait pas de Back-Office : elle n'atteindrait ni Pâques ni Noël, que la case lui ouvre. La
+    ligne `poles` reste jusqu'à EQ-B.
+  - **Profils simulés** : `coordination: true` est ajouté **à côté** de `poles: ["evenement"]`, pas à sa place. Le
+    pôle sert encore aux tâches et aux réunions de pôle jusqu'à EQ-B et EQ-C, qui réécriront ces profils. Il est
+    remplacé là où il ne servait qu'à la coordination : tests purs de `scene-saison` (`COORDINATION`) et de
+    `calendrier` (`peutDeplacer`).
+  - **`POLE_LABELS` retiré dès EQ-A** (la table le range en EQ-D) : `PolesDuMembre` était le seul à le lire.
+  - **`equipes.spec.ts`** : le test « Personnes décoche un pôle coché hors organigramme » est retiré avec la carte
+    (EQ29). `equipes-coordination` vérifie qu'elle n'existe plus.
+  - **« Oui » / « Non »** de la ligne restent en français, comme ceux de la ligne « Admin » : la fiche est écrite en
+    dur (Q16 de `spec-back-office.md`). Seul « Coordination » passe par les clés.
+  - **La case est un bouton `aria-pressed`**, comme « Équipes (tout l'organigramme) » juste au-dessus, dans son propre
+    encadré.
+- **Tests vus rouges puis verts** (trois appareils ; cinq projets pour les specs d'agencement) :
+  - `tests/equipes-coordination.spec.ts` (nouveau) : **24 échecs sur 30** sur le code d'avant. Les 6 qui passaient
+    sont des garde-fous : le droit Équipes sans être admin ne voit pas la case, et le référent avec la case, qui
+    avait déjà la coordination par son pôle. Puis **30 réussis**.
+  - `tests/agencement-v18-t5.spec.ts`, fiche de Personnes (« Coordination », plus de « Pôles ») : **3 échecs**
+    sur le code d'avant (en grand), puis vert.
+  - `tests/back-office-coupe.spec.ts` (second serveur) : nouveau test, `/admin` sans la case « Coordination ».
+    `tests/coherence.spec.ts` : enregistrer son propre profil ne renvoie pas `coordination`. Ce sont deux garde-fous,
+    verts avant comme après.
+  - **Specs voisines**, dont les profils ont reçu `coordination` (25 fichiers : `agencement-v18-{confirmations,t2a,
+    t2b,t5,t7}`, `back-office-{admin,coupe,espace}`, `barre-back-office`, `calendrier`, `calendrier-widget`,
+    `coherence`, `equipes`, `evenements`, `evenements-2027`, `evenements-pole`, `pages-en-grand-evenements`,
+    `programme-scene`, `retouches-v18-{ordre,ra}`, `reunions`, `scene-paques-noel`, `scene-saison`,
+    `tableau-de-bord`, `taches-evenements`) : **3 599 réussis, 328 sautés selon l'appareil, 12 échecs**.
+    - 6 échecs venaient de la charge : délais dépassés, une coche lue trop tôt. Ces 6 tests, relancés seuls sur tous
+      leurs appareils, sont verts (24 réussis).
+    - Les 6 autres sont un **échec déjà présent avant le chantier**, vu rouge aussi sur le code d'avant la tranche :
+      `reunions.spec.ts`, « borne du début (horloge simulée) » et « borne du début : un ajout tapé avant 20:00… »,
+      sur les trois appareils. À 19:59, la carte « Sujets » se comporte déjà comme si la réunion avait commencé : pas
+      de champ « Nouveau sujet », sujets en rouge. Il n'a pas de lien avec la coordination (Bruno M., pôle DA).
+      **Non corrigé ici, signalé.**
+  - Captures regardées (ordinateur, téléphone, tablette ; FR et 中文) : la case dans le formulaire, la ligne dans la
+    carte Droits.
+  - `npx tsc --noEmit` et `npm run lint` sans erreur.
+- **Reste** : EQ-B à EQ-F.
+- **Pour Timothée** :
+  - **ne pas publier `firestore.rules` maintenant** : les règles du lot se publient à la bascule, après EQ-F
+    (§ « Ordre de la bascule »). Rien n'est à lancer pour EQ-A. Si une autre publication des règles arrive avant
+    (partage d'une setlist), elle emporte `isCoordination()` : dès cette publication, plus personne n'a la
+    coordination par le pôle Événement, et il faut la cocher dans Personnes ;
+  - relire le 中文 : 协调, 管理舞台、为全教会创建、修改所有活动.

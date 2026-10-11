@@ -26,8 +26,8 @@ const FIXTURE_DECEMBRE = readFileSync(join(__dirname, "fixtures", "sheet-eveneme
 
 const REFUS = "Jusqu'au 31/12/2026, les évènements de toute l'église s'écrivent dans le Sheet des évènements.";
 
-/** Coordination (pôle Évènement) : « Toute l'église », les sections, la réunion du pôle. */
-const COORD: FakeProfile = { uid: "uid-coord", email: "coord@example.org", firstName: "Lison", lastName: "R.", poles: ["evenement"] };
+/** Coordination (cochée) et pôle Évènement : « Toute l'église », les sections, la réunion du pôle. */
+const COORD: FakeProfile = { uid: "uid-coord", email: "coord@example.org", firstName: "Lison", lastName: "R.", poles: ["evenement"], coordination: true };
 const ADMIN: FakeProfile = { uid: "u-admin", email: ADMIN_EMAILS[0], firstName: "Admin", lastName: "T.", planningName: "Lou M." };
 
 const EV = {

@@ -14,7 +14,7 @@ import type { UserProfile } from "../src/types/user";
 
 const ADMIN: FakeProfile = { uid: "uid-admin", email: "tc328829@gmail.com", firstName: "Admin", lastName: "T." };
 /** Alice, pôle Événement (Réussite 2). */
-const ALICE: FakeProfile = { uid: "uid-alice", email: "alice@example.com", firstName: "Alice", lastName: "Q.", poles: ["evenement"] };
+const ALICE: FakeProfile = { uid: "uid-alice", email: "alice@example.com", firstName: "Alice", lastName: "Q.", poles: ["evenement"], coordination: true };
 const DA: FakeProfile = { uid: "uid-da", email: "da@example.com", firstName: "Bruno", lastName: "M.", poles: ["da"] };
 const PLANNINGS: FakeProfile = { uid: "uid-pl", email: "pl@example.com", plannings: ["culte"] };
 const NOTIFY: FakeProfile = { uid: "uid-no", email: "no@example.com", notify: ["Groupe Paix"] };
@@ -33,7 +33,7 @@ const user = (p: FakeProfile) => ({ uid: p.uid, email: p.email });
 const profil = (p: FakeProfile) =>
   ({
     uid: p.uid, email: p.email, firstName: p.firstName ?? "", lastName: p.lastName ?? "", planningName: p.planningName ?? "",
-    serviceRoles: p.serviceRoles ?? {}, annonces: p.annonces ?? [], notify: p.notify ?? [], poles: p.poles ?? [],
+    serviceRoles: p.serviceRoles ?? {}, annonces: p.annonces ?? [], notify: p.notify ?? [], poles: p.poles ?? [], coordination: p.coordination,
     equipes: p.equipes ?? false, plannings: p.plannings ?? [], dansEquipes: p.dansEquipes, referentDe: p.referentDe,
   }) as UserProfile;
 

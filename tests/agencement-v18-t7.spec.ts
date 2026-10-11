@@ -32,8 +32,8 @@ const DOCS: Record<string, Record<string, unknown>> = {
 
 /** Membre d'un groupe, sans droit de création. */
 const MEMBRE: FakeProfile = { uid: "uid-membre", email: "membre@example.com", firstName: "Membre", lastName: "Essai", serviceRoles: { "Groupe Paix": ["chanteur"] } };
-/** Pôle Événement : la coordination, qui crée des évènements. */
-const COORDINATION: FakeProfile = { uid: "uid-coordination", email: "coordination@example.com", firstName: "Coordination", lastName: "Essai", poles: ["evenement"] };
+/** Pôle Événement et la coordination (cochée), qui crée des évènements. */
+const COORDINATION: FakeProfile = { uid: "uid-coordination", email: "coordination@example.com", firstName: "Coordination", lastName: "Essai", poles: ["evenement"], coordination: true };
 
 async function ouvrir(page: Page, qui: FakeProfile, to: string) {
   interdireDialoguesNatifs(page);

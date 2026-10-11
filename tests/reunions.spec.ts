@@ -812,7 +812,7 @@ const REUNION_REGIE = { ...REUNION, titre: "Réunion Régie", pour: "equipe:regi
 const ER = { ...REUNION_REGIE, id: "reunion-regie" } as unknown as Evenement;
 const ROSE: FakeProfile = { uid: "uid-rose", email: "rose@example.com", firstName: "Rose", lastName: "T.", dansEquipes: ["regie"], referentDe: ["regie"] };
 const HUGO: FakeProfile = { uid: "uid-hugo", email: "hugo@example.com", firstName: "Hugo", lastName: "B.", dansEquipes: ["regie"] };
-const COORD: FakeProfile = { uid: "uid-coord", email: "coord@example.com", firstName: "Iris", lastName: "D.", poles: ["evenement"] };
+const COORD: FakeProfile = { uid: "uid-coord", email: "coord@example.com", firstName: "Iris", lastName: "D.", poles: ["evenement"], coordination: true };
 
 const membre = (nom: string, uid: string, referent = false) => ({ nom, uid, mention: referent ? "Référente" : "", referent, essai: false, groupe: "" });
 const ORGANIGRAMME = [

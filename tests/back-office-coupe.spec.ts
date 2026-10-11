@@ -91,6 +91,22 @@ test.describe("back-office coupé : l'administration et Notifier restent où ils
     await expect(page).toHaveURL(/\/notifier\/?$/);
   });
 
+  // Lot 1 du chantier « équipes et groupes » (EQ26, EQ31) : la case « Coordination » est dans le
+  // bloc du back-office de la fiche d'un membre ; l'ancienne administration en ligne ne la montre pas.
+  test("/admin : la fiche d'un membre n'a pas la case « Coordination »", async ({ page }) => {
+    await page.route(/docs\.google\.com\/spreadsheets/, (route) => route.fulfill({ status: 200, contentType: "text/csv", body: "" }));
+    await signInAs(page, ADMIN, {
+      "users/u-hugo": {
+        email: "hugo@example.com", firstName: "Hugo", lastName: "L.", planningName: "",
+        serviceRoles: {}, annonces: [], notify: [], equipes: false, plannings: [],
+      },
+    }, "/admin");
+    await page.getByRole("button", { name: /Hugo L\./ }).click();
+    await expect(page.getByRole("button", { name: "Enregistrer", exact: true })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Coordination", exact: true })).toHaveCount(0);
+    await expect(page.getByText(/Peut modifier l.organigramme/)).toHaveCount(0);
+  });
+
   test("Moi garde Notifier et Administration", async ({ page }) => {
     await signInAs(page, ADMIN, {}, "/moi");
     const moi = page.getByRole("main");

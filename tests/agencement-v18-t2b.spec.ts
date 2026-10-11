@@ -11,8 +11,8 @@ import {
 // volet (téléphone, tablette debout), la liste puis la fiche en page avec « ‹ Évènements ».
 // Personnes fictives.
 
-/** Pôle Événement : la coordination (gère tous les évènements, a la scène). */
-const COORD: FakeProfile = { uid: "uid-alice", email: "alice@example.com", firstName: "Alice", lastName: "Q.", poles: ["evenement"] };
+/** Pôle Événement et la coordination (cochée : gère tous les évènements, a la scène). */
+const COORD: FakeProfile = { uid: "uid-alice", email: "alice@example.com", firstName: "Alice", lastName: "Q.", poles: ["evenement"], coordination: true };
 /** Pôle DA, sans droit d'annonces : n'a que Réunions. */
 const DA: FakeProfile = { uid: "uid-bruno", email: "bruno@example.com", firstName: "Bruno", lastName: "M.", poles: ["da"] };
 

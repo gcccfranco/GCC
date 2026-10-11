@@ -43,7 +43,7 @@ const FOOT = {
 const CULTE = { ...FOOT, titre: "Culte de Noël", type: "eglise", date: "2026-12-24", placesMax: null, inscriptionOuverte: false, inscrits: 0, organisateurUid: "uid-alice" };
 const STEPH: FakeProfile = { uid: "uid-steph", email: "steph@example.com", firstName: "Steph", lastName: "R.", annonces: ["Groupe Bonté"] };
 /** Coordination des évènements : elle duplique. */
-const ALICE: FakeProfile = { uid: "uid-alice", email: "alice@example.com", firstName: "Alice", lastName: "Q.", poles: ["evenement", "da"] };
+const ALICE: FakeProfile = { uid: "uid-alice", email: "alice@example.com", firstName: "Alice", lastName: "Q.", poles: ["evenement", "da"], coordination: true };
 
 const tacheLiee = (over: Record<string, unknown>) => ({
   pole: "evenement", titre: "Réserver la salle", responsableUid: null, responsableNom: "", echeance: "2026-12-10",
@@ -286,7 +286,7 @@ test("retirer un sujet : la fenêtre du site ; Annuler le garde ; Retirer le sup
 // ─── Tableau de bord ─────────────────────────────────────────────────────────
 
 test("revenir à la disposition par défaut : la fenêtre du site ; Annuler garde la disposition ; Remettre la remplace", async ({ page }) => {
-  const coord: FakeProfile = { uid: "uid-alice", email: "alice@example.com", firstName: "Alice", lastName: "Q.", poles: ["evenement"] };
+  const coord: FakeProfile = { uid: "uid-alice", email: "alice@example.com", firstName: "Alice", lastName: "Q.", poles: ["evenement"], coordination: true };
   const db = await ouvrir(page, coord, "/back-office", {
     "backOffice/uid-alice": { tableauDeBord: [{ id: "scene", taille: "l", reglages: {} }], majLe: "2026-09-30T10:00:00Z" },
   });

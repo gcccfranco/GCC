@@ -29,7 +29,7 @@ import type { UserProfile } from "../src/types/user";
 
 const ADMIN: FakeProfile = { uid: "uid-admin", email: "tc328829@gmail.com", firstName: "Admin", lastName: "T." };
 /** Pôle Événement (Réussite 2). */
-const ALICE: FakeProfile = { uid: "uid-alice", email: "alice@example.com", firstName: "Alice", lastName: "Q.", poles: ["evenement"] };
+const ALICE: FakeProfile = { uid: "uid-alice", email: "alice@example.com", firstName: "Alice", lastName: "Q.", poles: ["evenement"], coordination: true };
 /** Louange : un rôle de service et le droit de remplir le Culte. */
 const LOUANGE: FakeProfile = {
   uid: "uid-louange", email: "louange@example.com", firstName: "Lou", lastName: "P.", planningName: "Pers. D",
@@ -37,7 +37,7 @@ const LOUANGE: FakeProfile = {
 };
 const DA: FakeProfile = { uid: "uid-da", email: "da@example.com", firstName: "Bruno", lastName: "M.", poles: ["da"] };
 const LES_DEUX: FakeProfile = {
-  uid: "uid-deux", email: "deux@example.com", poles: ["evenement"],
+  uid: "uid-deux", email: "deux@example.com", poles: ["evenement"], coordination: true,
   serviceRoles: { "Culte Francophone": ["musicien"] }, plannings: ["culte"],
 };
 const ANNONCES: FakeProfile = { uid: "uid-an", email: "an@example.com", annonces: ["Culte Francophone"] };
@@ -46,7 +46,7 @@ const user = (p: FakeProfile) => ({ uid: p.uid, email: p.email });
 const profil = (p: FakeProfile) =>
   ({
     uid: p.uid, email: p.email, firstName: p.firstName ?? "", lastName: p.lastName ?? "", planningName: p.planningName ?? "",
-    serviceRoles: p.serviceRoles ?? {}, annonces: p.annonces ?? [], notify: p.notify ?? [], poles: p.poles ?? [],
+    serviceRoles: p.serviceRoles ?? {}, annonces: p.annonces ?? [], notify: p.notify ?? [], poles: p.poles ?? [], coordination: p.coordination,
     equipes: p.equipes ?? false, plannings: p.plannings ?? [], dansEquipes: p.dansEquipes, referentDe: p.referentDe,
   }) as UserProfile;
 const ids = (w: { id: string }[]) => w.map((x) => x.id);

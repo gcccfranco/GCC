@@ -2693,6 +2693,10 @@
       "presidences_other": "{{count}} 位主领"
     }
   },
+  "personnes": {
+    "coordination": "协调",
+    "coordinationAide": "管理舞台、为全教会创建、修改所有活动"
+  },
   "tableauDeBord": {
     "widgets": {
       "dimanche": "本主日",

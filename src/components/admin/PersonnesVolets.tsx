@@ -12,23 +12,20 @@ import { useState, type ReactNode } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslation } from "react-i18next";
-import { CalendarDays, ChevronRight, Pencil, ShieldCheck, UserRound } from "lucide-react";
+import { CalendarDays, ChevronRight, Pencil, ShieldCheck, UserRound, Users } from "lucide-react";
 import { EnTetePage } from "@/components/layout/EnTetePage";
 import { DeuxVolets } from "@/components/layout/DeuxVolets";
 import { useDisposition } from "@/hooks/useDisposition";
 import { isAdminUser } from "@/lib/access";
-import { majPoles } from "@/lib/firebase/equipes";
-import { polesDesEquipes } from "@/lib/equipes/organigramme";
 import { findMyServices, type PlanningData } from "@/lib/planning/names";
 import { GRILLES } from "@/lib/planning/grilles";
 import { categoryColor, categoryLabel } from "@/lib/serviceColors";
 import { todayIso } from "@/lib/scene/dimanches";
 import { SERVICE_ROLE_LABELS, type UserProfile } from "@/types/user";
-import type { Equipe } from "@/types/equipe";
 import { RailEquipes } from "@/app/back-office/equipes/RailEquipes";
 import { InscriptionsComptes } from "./InscriptionsComptes";
 import {
-  Avatar, FiltresPersonnes, FormulairePersonne, LignePersonne, ListePersonnes, PolesDuMembre, isRecent,
+  Avatar, FiltresPersonnes, FormulairePersonne, LignePersonne, ListePersonnes, isRecent,
   useDonneesPersonnes, useFiltresPersonnes,
 } from "./Personnes";
 
@@ -131,24 +128,20 @@ export function PersonnesVolets() {
         <FormulairePersonne
           key={choisi.uid}
           p={choisi}
-          equipes={d.equipes}
           planningData={d.planningData}
           planningNames={d.planningNames}
           onAnnule={() => setModif(false)}
           onEnregistre={(u) => { maj(u); setModif(false); }}
-          onPoles={(poles) => maj({ ...choisi, poles })}
         />
       </div>
     </div>
   ) : (
     <FicheDuMembre
       p={choisi}
-      equipes={d.equipes}
       planning={d.planningData}
       // La personne passe dans l'adresse dès « Modifier » : sans `?uid=`, la choisie est la
       // première de la liste filtrée, et chercher ou trier remonterait le formulaire sur une autre.
       onModifier={() => { choisir(choisi.uid); setModif(true); }}
-      onPoles={(poles) => maj({ ...choisi, poles })}
     />
   );
 
@@ -175,16 +168,15 @@ function Carte({ titre, note, children, className }: { titre: string; note?: Rea
   );
 }
 
-/** La personne choisie : services et rôles, pôles, droits, prochains services. */
+/** La personne choisie : services et rôles, droits, prochains services. */
 function FicheDuMembre({
-  p, equipes, planning, onModifier, onPoles,
+  p, planning, onModifier,
 }: {
   p: UserProfile;
-  equipes: Equipe[];
   planning: PlanningData | null;
   onModifier: () => void;
-  onPoles: (poles: UserProfile["poles"]) => void;
 }) {
+  const { t } = useTranslation();
   const aujourdhui = todayIso();
   const services = planning && p.planningName
     ? findMyServices(planning, p.planningName).filter((s) => s.date >= aujourdhui).sort((a, b) => a.date.localeCompare(b.date)).slice(0, 5)
@@ -231,13 +223,15 @@ function FicheDuMembre({
           )}
         </Carte>
         <div className="space-y-4">
-          <Carte titre="Pôles" note="donnés par l'organigramme">
-            <PolesDuMembre profile={p} equipes={equipes} onDecoche={async () => { await majPoles([p.uid]); onPoles(polesDesEquipes(p.uid, equipes)); }} />
-          </Carte>
           <Carte titre="Droits">
             <div className={ligne}>
               <span className="flex items-center gap-2 text-muted-foreground"><ShieldCheck className="h-4 w-4" aria-hidden />Admin</span>
               <span className="text-foreground">{isAdminUser(p) ? "Oui" : "Non"}</span>
+            </div>
+            {/* Lot 1 du chantier « équipes et groupes » (EQ26) : la case cochée par un admin. */}
+            <div className={ligne}>
+              <span className="flex items-center gap-2 text-muted-foreground"><Users className="h-4 w-4" aria-hidden />{t("personnes.coordination")}</span>
+              <span className="text-foreground">{p.coordination ? "Oui" : "Non"}</span>
             </div>
             <div className={ligne}>
               <span className="flex items-center gap-2 text-muted-foreground"><CalendarDays className="h-4 w-4" aria-hidden />Écrit dans</span>

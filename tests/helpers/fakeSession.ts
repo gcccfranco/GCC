@@ -18,6 +18,8 @@ export type FakeProfile = {
   planningName?: string;
   serviceRoles?: Record<string, string[]>;
   poles?: string[];
+  /** Coordination (lot 1 du chantier « équipes et groupes », EQ24) — cochée par un admin. */
+  coordination?: boolean;
   /** Droit de tenir l'organigramme (lot 16) — attribué par un admin. */
   equipes?: boolean;
   /** Sections où la personne publie des annonces (droit de créer des évènements pour sa section). */
@@ -347,6 +349,7 @@ export async function signInAs(
       annonces: profile.annonces ?? [],
       notify: profile.notify ?? [],
       poles: profile.poles ?? [],
+      ...(profile.coordination !== undefined ? { coordination: profile.coordination } : {}),
       equipes: profile.equipes ?? false,
       plannings: profile.plannings ?? [],
       ...(profile.dansEquipes ? { dansEquipes: profile.dansEquipes } : {}),

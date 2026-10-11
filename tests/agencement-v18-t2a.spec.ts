@@ -15,8 +15,8 @@ import type { UserProfile } from "../src/types/user";
 // feuille ; le rail d'Évènements perd « Réunions » ; libellés FR et 中文. Personnes fictives.
 
 const ADMIN: FakeProfile = { uid: "uid-admin", email: "tc328829@gmail.com", firstName: "Admin", lastName: "T." };
-/** Pôle Événement : la coordination. */
-const COORD: FakeProfile = { uid: "uid-alice", email: "alice@example.com", firstName: "Alice", lastName: "Q.", poles: ["evenement"] };
+/** Pôle Événement et la coordination (cochée). */
+const COORD: FakeProfile = { uid: "uid-alice", email: "alice@example.com", firstName: "Alice", lastName: "Q.", poles: ["evenement"], coordination: true };
 /** Pôle DA, sans droit d'annonces. */
 const DA: FakeProfile = { uid: "uid-bruno", email: "bruno@example.com", firstName: "Bruno", lastName: "M.", poles: ["da"] };
 const ANNONCEUR: FakeProfile = { uid: "uid-hugo", email: "hugo@example.com", firstName: "Hugo", lastName: "B.", annonces: ["Culte Francophone"] };
@@ -28,7 +28,7 @@ const user = (p: FakeProfile) => ({ uid: p.uid, email: p.email });
 const profil = (p: FakeProfile) =>
   ({
     uid: p.uid, email: p.email, firstName: p.firstName ?? "", lastName: p.lastName ?? "", planningName: p.planningName ?? "",
-    serviceRoles: p.serviceRoles ?? {}, annonces: p.annonces ?? [], notify: p.notify ?? [], poles: p.poles ?? [],
+    serviceRoles: p.serviceRoles ?? {}, annonces: p.annonces ?? [], notify: p.notify ?? [], poles: p.poles ?? [], coordination: p.coordination,
     equipes: p.equipes ?? false, plannings: p.plannings ?? [], dansEquipes: p.dansEquipes, referentDe: p.referentDe,
   }) as UserProfile;
 const permises = (p: FakeProfile) => entreesBackOffice(user(p), profil(p));

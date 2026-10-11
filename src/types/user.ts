@@ -29,13 +29,12 @@ export type EddRole = (typeof EDD_ROLES)[number];
 export const GROUPES = ["Groupe Paix", "Groupe Fidélité", "Groupe Bonté"] as const;
 export type Groupe = (typeof GROUPES)[number];
 
-// Pôles, attribués par un admin. « événement » donne aussi la coordination des
-// programmes de scène (lot 3 bis, isCoordination) ; DA, Média et Orga servent
-// aux tâches par pôle (lot 7). Louange n'est pas coché : il découle des rôles de
-// service (polesDe dans src/lib/access.ts, isTachePole dans firestore.rules).
+// Pôles, attribués par un admin. DA, Média, Orga et Événement servent aux tâches
+// par pôle (lot 7) ; « événement » ne donne plus la coordination (lot 1 du chantier
+// « équipes et groupes » : champ `coordination`). Louange n'est pas coché : il découle
+// des rôles de service (polesDe dans src/lib/access.ts, isTachePole dans firestore.rules).
 export const POLES = ["da", "media", "orga", "evenement"] as const;
 export type Pole = (typeof POLES)[number];
-export const POLE_LABELS: Record<Pole, string> = { da: "DA", media: "Média", orga: "Orga", evenement: "Événement" };
 
 export interface UserProfile {
   uid: string;
@@ -61,9 +60,14 @@ export interface UserProfile {
    *  n'importe qui dans n'importe quelle équipe — attribué par les admins
    *  uniquement. Cf. canEditerEquipes (src/lib/access.ts). */
   equipes?: boolean;
-  /** Pôles de coordination (« evenement » : programmes de scène) — attribués par
-   *  les admins uniquement. Absent = aucun. */
+  /** Pôles des tâches et réunions par pôle (lot 7) — attribués par les admins
+   *  uniquement. Absent = aucun. */
   poles?: Pole[];
+  /** Coordination (lot 1 du chantier « équipes et groupes », décision 6) : régler la
+   *  scène, créer pour toute l'église, modifier tout évènement — cochée par un admin
+   *  dans Personnes, jamais par l'intéressé. Absent = non. Cf. isCoordination
+   *  (src/lib/access.ts). */
+  coordination?: boolean;
   /** Plannings que la personne peut remplir dans l'app (clés de
    *  PUBLISHABLE_PLANNINGS, ex. « culte ») — attribué par les admins uniquement,
    *  planning par planning (lot 17). Absent = aucun.

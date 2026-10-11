@@ -25,7 +25,7 @@ rules_version = '2';
 //   ajoutés par les personnes de la réunion ; ordre et « traité » par
 //   l'organisateur et les admins ; retirés par l'auteur, l'organisateur, un admin.
 // - Programmes de scène (programmes/{id}, lot 3 bis) : lus par les connectés ;
-//   écrits par la coordination (pôle « événement » du profil + admins). Créneaux
+//   écrits par la coordination (droit `coordination` du profil + admins). Créneaux
 //   (programmes/{id}/creneaux) : tout connecté en pose un à son nom — depuis le
 //   lot U1, dans une saison ouverte et pour les groupes permis (reservable()) ;
 //   auteur + coordination le modifient ou le retirent.
@@ -91,6 +91,7 @@ service cloud.firestore {
             && request.resource.data.get('annonces', []) == []
             && request.resource.data.get('notify', []) == []
             && request.resource.data.get('poles', []) == []
+            && request.resource.data.get('coordination', false) == false
             && request.resource.data.get('equipes', false) == false
             && request.resource.data.get('plannings', []) == []
             && request.resource.data.get('dansEquipes', []) == []
@@ -135,9 +136,12 @@ service cloud.firestore {
     }
 
     // Programmes de scène (lot 3 bis, docs/spec-programme-scene.md). Miroir :
-    // isCoordination / canEditCreneau dans src/lib/access.ts.
+    // isCoordination / canEditCreneau dans src/lib/access.ts. La coordination est
+    // le droit `coordination` du profil, coché par un admin (lot 1 du chantier
+    // « équipes et groupes », docs/spec-equipes-sans-poles.md, EQ24) : le pôle
+    // « événement » ne la donne plus.
     function isCoordination() {
-      return isAdmin() || (hasProfile() && 'evenement' in profile().get('poles', []));
+      return isAdmin() || (hasProfile() && profile().get('coordination', false) == true);
     }
 
     // Tâches par pôle (lot 7, docs/spec-taches.md). Chacun ne voit, crée,

@@ -137,7 +137,7 @@ test("onglets : un connecté voit le programme de scène à côté du calendrier
 
 // ─── Tranche E2 : créer, modifier, dupliquer, supprimer, push à la création ──
 
-const ALICE: FakeProfile = { uid: "uid-alice", email: "alice@example.com", firstName: "Alice", lastName: "Q.", poles: ["evenement"] };
+const ALICE: FakeProfile = { uid: "uid-alice", email: "alice@example.com", firstName: "Alice", lastName: "Q.", poles: ["evenement"], coordination: true };
 // Lot U6, B3 : la gestion d'un évènement est au Back-Office, ouvert aux responsables ; Steph
 // organise avec le droit d'annonces de sa section.
 const STEPH: FakeProfile = { uid: "uid-steph", email: "steph@example.com", firstName: "Steph", lastName: "R.", annonces: ["Groupe Bonté"] };

@@ -80,7 +80,7 @@ const PAUL_MEDIA: FakeProfile = { uid: "uid-media", email: "media@example.com", 
 const SANS_POLE: FakeProfile = { uid: "uid-rien", email: "rien@example.com", firstName: "Anne", lastName: "Nopole" };
 const DEUX_POLES: FakeProfile = { uid: "uid-dm", email: "dm@example.com", firstName: "Léa", lastName: "Deux", poles: ["da", "media"] };
 /** Coordination des évènements (elle peut dupliquer et supprimer) et membre de DA. */
-const ALICE: FakeProfile = { uid: "uid-alice", email: "alice@example.com", firstName: "Alice", lastName: "Q.", poles: ["evenement", "da"] };
+const ALICE: FakeProfile = { uid: "uid-alice", email: "alice@example.com", firstName: "Alice", lastName: "Q.", poles: ["evenement", "da"], coordination: true };
 
 type Docs = Record<string, Record<string, unknown>>;
 

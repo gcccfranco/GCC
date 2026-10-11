@@ -36,6 +36,7 @@ function fromFsProfile(raw: RawDoc): UserProfile {
     annonces: (data.annonces as string[]) ?? [],
     notify: (data.notify as string[]) ?? [],
     poles: (data.poles as Pole[]) ?? [],
+    coordination: (data.coordination as boolean) ?? false,
     equipes: (data.equipes as boolean) ?? false,
     plannings: (data.plannings as string[]) ?? [],
     dansEquipes: (data.dansEquipes as string[]) ?? [],
@@ -59,7 +60,7 @@ export async function getProfile(uid: string): Promise<UserProfile | null> {
 export type ProfilePatch = { uid: string } & Partial<Omit<UserProfile, "uid" | "createdAt">>;
 
 function profilVide(uid: string): UserProfile {
-  return { uid, email: "", firstName: "", lastName: "", planningName: "", serviceRoles: {}, annonces: [], notify: [], poles: [], equipes: false, plannings: [] };
+  return { uid, email: "", firstName: "", lastName: "", planningName: "", serviceRoles: {}, annonces: [], notify: [], poles: [], coordination: false, equipes: false, plannings: [] };
 }
 
 /** Écrit les champs donnés, et eux seuls (PATCH avec updateMask) ; crée le

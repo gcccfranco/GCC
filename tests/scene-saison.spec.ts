@@ -176,7 +176,7 @@ test("groupes proposés : tous sans limite, sinon ceux des familles permises, ra
 
 const MEMBRE = { uid: "uid-noe", email: "noe@example.com" };
 const COORD = { uid: "uid-alice", email: "alice@example.com" };
-const POLE_EVENEMENT = { poles: ["evenement"] };
+const COORDINATION = { coordination: true };
 const PERMIS = { ouvert: true, quiAutorises: SAISON.quiAutorises };
 
 test("réserver pour : liste vide → tout membre connecté, pour n'importe quel groupe", () => {
@@ -193,8 +193,8 @@ test("réserver pour : un groupe d'une famille permise → oui ; « Chorale » h
 });
 
 test("réserver pour : la coordination toujours, même un brouillon ; un membre jamais dans un brouillon", () => {
-  expect(canReserverPour(COORD, POLE_EVENEMENT, PERMIS, ["Chorale"])).toBe(true);
-  expect(canReserverPour(COORD, POLE_EVENEMENT, { ...PERMIS, ouvert: false }, ["Chorale"])).toBe(true);
+  expect(canReserverPour(COORD, COORDINATION, PERMIS, ["Chorale"])).toBe(true);
+  expect(canReserverPour(COORD, COORDINATION, { ...PERMIS, ouvert: false }, ["Chorale"])).toBe(true);
   expect(canReserverPour(MEMBRE, null, { ouvert: false, quiAutorises: [] }, ["Jeunes"])).toBe(false);
 });
 
@@ -218,7 +218,7 @@ test("règles Firestore : les créneaux passent par reservable(), miroir de canR
 // ─── S3 : l'écran de la coordination ────────────────────────────────────────
 
 const NOE: FakeProfile = { uid: "uid-noe", email: "noe@example.com", firstName: "Noé", lastName: "L." };
-const ALICE: FakeProfile = { uid: "uid-alice", email: "alice@example.com", firstName: "Alice", lastName: "Q.", poles: ["evenement"] };
+const ALICE: FakeProfile = { uid: "uid-alice", email: "alice@example.com", firstName: "Alice", lastName: "Q.", poles: ["evenement"], coordination: true };
 
 /** « Noël 2026 » de la Réussite, en brouillon. */
 const NOEL26 = {
@@ -238,7 +238,7 @@ const NOEL26 = {
 async function ouvrir(page: Page, who: FakeProfile, docs: Record<string, Record<string, unknown>>, jour = "2026-10-05T10:00:00", chemin?: string) {
   interdireDialoguesNatifs(page);
   await page.clock.setFixedTime(new Date(jour));
-  return signInAs(page, who, docs, chemin ?? (who.poles?.includes("evenement") ? "/back-office/evenements/scene" : "/evenements/scene"));
+  return signInAs(page, who, docs, chemin ?? (who.coordination ? "/back-office/evenements/scene" : "/evenements/scene"));
 }
 /** L'onglet de la section Évènements, dans l'App. */
 async function ongletApp(page: Page, nom: string) {

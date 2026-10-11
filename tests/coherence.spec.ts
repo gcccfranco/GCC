@@ -16,7 +16,7 @@ const lire = (rel: string) => readFileSync(path.join(ROOT, rel), "utf8");
 
 const ADMIN: FakeProfile = {
   uid: "admin1", email: "tc328829@gmail.com", firstName: "Timothée", lastName: "C.",
-  planningName: "Timothée C.", poles: ["da"], equipes: true, plannings: ["culte"],
+  planningName: "Timothée C.", poles: ["da"], equipes: true, plannings: ["culte"], coordination: true,
 };
 const MEMBRE_DA: FakeProfile = { uid: "uid-da", email: "da@example.com", firstName: "Denis", lastName: "F.", poles: ["da"] };
 const MEMBRE: FakeProfile = { uid: "uid-jo", email: "jo@example.com", firstName: "Jo", lastName: "L.", serviceRoles: { "Groupe Paix": ["chanteur"] } };
@@ -49,11 +49,13 @@ test("profil : un admin qui enregistre son profil garde ses pôles, ses équipes
   expect(doc?.poles).toEqual(["da"]);
   expect(doc?.equipes).toBe(true);
   expect(doc?.plannings).toEqual(["culte"]);
+  expect(doc?.coordination).toBe(true);
   // L'écriture ne porte que les champs du formulaire : jamais les droits.
   const patch = db.writes.find((w) => w.path === "users/admin1");
   expect(patch).toBeDefined();
   expect(Object.keys(patch!.data)).not.toContain("poles");
   expect(Object.keys(patch!.data)).not.toContain("plannings");
+  expect(Object.keys(patch!.data)).not.toContain("coordination");
 });
 
 // ─── C2 : la cloche connaît les réunions de pôle ───────────────────────────
