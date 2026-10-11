@@ -14,6 +14,7 @@ const ABBREVIATIONS: Record<string, string> = {
   interlude: "Pm",
   instrumental: "Pm",
   outro: "F",
+  final: "F",
   coda: "F",
   tag: "Tag",
 };

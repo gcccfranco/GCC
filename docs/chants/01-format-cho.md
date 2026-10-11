@@ -78,7 +78,7 @@ une parole.
 | post-refrain | `start_of_postchorus` | `Post-Refrain` | `后副歌/Post-Refrain` |
 | pont | `start_of_bridge` | `Pont` | `桥段/Pont` |
 | interlude | `start_of_intro` | `Interlude` | `间奏/Interlude` |
-| final | `start_of_outro` | `Final` | `结尾/Final` |
+| final | `start_of_outro` | `Final` | `尾声/Final` |
 | tag | `start_of_tag` | `Tag` | `Tag` |
 
 - Le libellé écrit est celui affiché ; la directive fait le type (couleur,
@@ -95,7 +95,13 @@ une parole.
   type : `Refrain final (A)` s'affiche « Refrain (A) »).
 - Le libellé `Final` sous `start_of_outro` s'affiche « Final » (« 结尾 » en
   中文) depuis le 26/09/2026 ; le type reste outro pour les couleurs et les
-  setlists.
+  setlists. En chinois, écrire `尾声/Final` : `结尾/Final` se lit comme
+  `结尾/Outro` et s'affiche « Outro » (lint E08).
+- **Changer le type d'une section** (une section écrite sous la mauvaise
+  directive) change son identifiant (`verse-3` → `prechorus-3`), que les
+  setlists enregistrées gardent : écrire sous l'en-tête `{section_id: verse-3}`,
+  l'ancien identifiant, pour qu'elles retrouvent la section. Ajouter ou retirer
+  une section avant la fin décale aussi les identifiants des suivantes.
 - **Structure dépliée** : l'ordre des sections est celui du chant joué.
   Reprise identique → suffixe `(x2)` ; retour (D.S., « To Chorus ») dont les
   accords ou les paroles changent → section écrite en entier avec son

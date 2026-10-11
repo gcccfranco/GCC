@@ -337,7 +337,7 @@ function useVersionDeLaSetlist(slug: string, setlistId: string | null, position:
                 {/* Fermé : la tonalité seule sur tactile (le suffixe rognait « E ( » à
                     six commandes), tonalité + suffixe sur ordinateur ; la liste native,
                     transparente par-dessus, garde ses libellés complets. */}
-                <span className="relative flex-1 min-w-0 h-9 lg:h-8 flex items-center justify-center gap-0.5 px-1.5 rounded-full text-foreground text-sm font-semibold focus-within:ring-2 focus-within:ring-ring/30">
+                <span className="relative flex-1 min-w-12 h-9 lg:h-8 flex items-center justify-center gap-0.5 px-1.5 rounded-full text-foreground text-sm font-semibold focus-within:ring-2 focus-within:ring-ring/30">
                   <span data-testid="tonalite-courante" className="truncate" aria-hidden>
                     {customize.currentKey}
                     <span className="hidden lg:inline">{keySuffix(customize.currentKey)}</span>

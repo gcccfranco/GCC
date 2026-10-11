@@ -76,6 +76,9 @@ test("avec le droit « table » : une case s'écrit, l'autre case du dimanche es
 
 test("« Exporter en CSV » : le trimestre affiché, deux colonnes, nom du fichier", async ({ page }) => {
   await open(page, MEMBRE, "/planning/table");
+  // Exporter avant que la grille ait lu le Sheet donnait un fichier vide, sans
+  // période dans son nom (« Prépa._Table.csv ») : on attend le dernier dimanche.
+  await expect(laCase(page, "2026-09-27", "equipe")).toContainText("Lydie, Samuel");
   const [download] = await Promise.all([
     page.waitForEvent("download"),
     page.getByRole("button", { name: "Exporter en CSV" }).click(),

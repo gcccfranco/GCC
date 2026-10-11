@@ -254,17 +254,26 @@ function ZhLine({ tokens, pinyin, showChords, showPinyin, hideLyrics = false, ch
   // de caractère à soi (accord seul, espace) et la ponctuation restent collés
   // au caractère qui précède : sinon, sur téléphone, un accord de fin de ligne
   // ou une virgule ouvrait seul la rangée suivante, sous les paroles.
+  // Les lettres d'un mot latin (« So we say, "Merry Christmas" ») restent
+  // ensemble : la ligne ne se coupe qu'entre deux mots.
+  const latin = (ch: string) => ch.trim() !== "" && !isCJK(ch) && !ZH_PUNCTUATION.test(ch);
   const groups: { cols: Col[]; lyric: boolean }[] = [];
   for (const col of cols) {
     const lyric = col.char.trim() !== "" && !ZH_PUNCTUATION.test(col.char);
     const last = groups[groups.length - 1];
+    const prev = last?.cols[last.cols.length - 1];
     if (last?.lyric && !lyric) last.cols.push(col);
+    else if (prev && latin(col.char) && latin(prev.char)) last!.cols.push(col);
     else groups.push({ cols: [col], lyric });
   }
 
   const cellMinWidth = (col: Col): string | undefined => {
     if (isCJK(col.char)) return "1.6em";
-    if (col.chord) return `${col.chord.length * 0.75 + 1}em`;
+    // Un accord seul (sans caractère) prend la largeur de son étiquette : avec
+    // une largeur minimale, les accords qui suivent la dernière parole
+    // (« 弃[(Bm/D)] [(G#/C)] [(Am/C)] … », 奔跑不放弃) formaient un groupe plus
+    // large que l'écran du téléphone, et dépassaient le bord.
+    if (col.chord && col.char.trim() !== "") return `${col.chord.length * 0.75 + 1}em`;
     return undefined;
   };
 

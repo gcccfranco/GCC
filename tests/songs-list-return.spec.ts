@@ -60,7 +60,12 @@ for (const [nom, liste, revenir] of [
       () => [...document.querySelectorAll('li[id^="song-li-"]')].find((li) => li.getBoundingClientRect().top > 150)!.id
     );
     await page.locator(`#${card} a`).click();
-    await page.locator("h1").first().waitFor();
+    // On attend la page du chant elle-même, son bouton de retour compris.
+    // L'attente d'un h1 trouvait celui de la liste (le retour cherchait alors
+    // son bouton encore sur la liste), et un chant ouvert sur son scan 简谱
+    // n'a pas de h1.
+    await page.waitForURL((url) => /^\/songs\/[^/]+\/?$/.test(url.pathname));
+    await page.locator('a[href^="/songs"] path[d="M19 12H5m6-7l-7 7 7 7"]').first().waitFor({ state: "attached" });
     await page.waitForTimeout(600);
 
     await recordFrames(page);

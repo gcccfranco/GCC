@@ -14,6 +14,11 @@ import type { ChordProSection } from "@/types/chordPro";
 
 const BLOCK_TAGS = new Set(["DIV", "P", "H1", "H2", "H3", "LI"]);
 
+/** Le blanc collé à un caractère chinois (ponctuation pleine chasse comprise)
+ *  vient de `[X] 字`, l'accord posé sur une note tenue (02) : il place
+ *  l'accord, ce n'est pas une parole. Le latin garde ses espaces entre mots. */
+const BLANC_CHINOIS = /\s+(?=[\u3000-\u303f\u3400-\u9fff\uff00-\uffef])|(?<=[\u3000-\u303f\u3400-\u9fff\uff00-\uffef])\s+/g;
+
 /** Paroles d'un chant pour la régie (bouton « Copier les paroles ») : les
  *  sections dans l'ordre donné, reprises comprises, une ligne vide entre deux
  *  sections, sans accords ni noms de section ; en chinois, chaque ligne suivie
@@ -29,6 +34,7 @@ export function lyricsText(sections: ChordProSection[]): string {
             .map((t) => t.value)
             .join("")
             .replace(/\s+/g, " ")
+            .replace(BLANC_CHINOIS, "")
             .trim();
           const pinyin = line.pinyin?.trim().split(/\s+/).join(" ");
           return lyric && pinyin ? `${lyric}\n${pinyin}` : lyric;
@@ -50,7 +56,7 @@ function nodeText(node: Node): string {
   for (const child of Array.from(el.childNodes)) out += nodeText(child);
   if (el.hasAttribute("data-copy-line")) {
     const pinyin = el.getAttribute("data-copy-pinyin")?.trim().split(/\s+/).join(" ");
-    return out.replace(/\u00a0/g, " ").replace(/\s+$/, "") + "\n" + (pinyin ? pinyin + "\n" : "");
+    return out.replace(/\u00a0/g, " ").replace(BLANC_CHINOIS, "").replace(/\s+$/, "") + "\n" + (pinyin ? pinyin + "\n" : "");
   }
   if (BLOCK_TAGS.has(el.tagName) && out.trim() && !out.endsWith("\n")) out += "\n";
   return out;
