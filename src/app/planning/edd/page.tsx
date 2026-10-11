@@ -86,6 +86,7 @@ function EddPage() {
       <PlanningGrille
         key={definition.key}
         definition={definition}
+        lignesDuPlanning={toutes}
         periode={libellePeriode}
         filtre={filtre}
         lignes={lignes}

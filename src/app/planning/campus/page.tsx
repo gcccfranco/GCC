@@ -148,6 +148,7 @@ function CampusPage() {
           {moments.length > 0 && dansLApp && <AjouterDate annee={effAnnee} moments={moments} onAjouter={ajouterSeance} />}
           <PlanningGrille
             definition={GRILLE_CAMPUS_MATIN}
+            lignesDuPlanning={grilles.matin}
             periode={annee}
             filtre={filtre}
             legende={t("planning.campus.morning")}
@@ -161,6 +162,7 @@ function CampusPage() {
           />
           <PlanningGrille
             definition={GRILLE_CAMPUS_SOIR}
+            lignesDuPlanning={grilles.soir}
             periode={annee}
             filtre={filtre}
             legende={t("planning.campus.evening")}

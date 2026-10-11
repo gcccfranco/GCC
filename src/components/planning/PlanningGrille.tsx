@@ -1,14 +1,14 @@
 "use client"
 
-import { Fragment, useRef, useState, type MouseEvent, type ReactNode } from "react"
+import { Fragment, useEffect, useRef, useState, type MouseEvent, type ReactNode } from "react"
 import { ChevronDown, History, Lock, Trash2 } from "lucide-react"
 import { useTranslation } from "react-i18next"
 import { useConfirmer } from "@/components/layout/Confirmer"
 import { currentSundayStr, fdFullL, fdLongL, fdShort, getAnnee, getMois, moisName } from "@/lib/planning/utils"
 import { PREMIERE_ANNEE_APP, type ColonneGrille, type DefinitionGrille, type LigneGrille } from "@/lib/planning/grilles"
 import { phraseDuChangement } from "@/lib/planning/historique"
-import { ecrireCase, retirerDate } from "@/lib/firebase/planningGrille"
-import { getHistoriqueGrille, noterChangement, type EntreeGrille } from "@/lib/firebase/planningHistorique"
+import { ecrireCases, retirerDate } from "@/lib/firebase/planningGrille"
+import { getHistoriqueGrille, noterChangements, type EntreeGrille } from "@/lib/firebase/planningHistorique"
 import { historyAuthor } from "@/lib/firebase/setlistHistory"
 import { useProfile } from "@/lib/firebase/users"
 import { colonneDePersonnes, propositions, type CompteDuPlanning } from "@/lib/planning/choisir"
@@ -18,6 +18,8 @@ import { ExportModele, type ExportPlanning } from "./ExportModele"
 import { ChoisirNom } from "./ChoisirNom"
 import { DansLEnTete, type FiltreNom } from "./BarreDeGrille"
 import { useGestionPlanning } from "@/lib/planning/gestion"
+import { parDimanche, type CaseGeste } from "@/lib/planning/gestes"
+import { BanniereGeste } from "./BanniereGeste"
 
 // Grille d'un planning rempli dans l'app (lot 17, docs/spec-planning-grille.md).
 // Table sur ordinateur et tablette — colonne des dates FIGÉE au défilement
@@ -66,7 +68,13 @@ export interface PlanningGrilleProps {
    *  Campus). En modification, une date de l'année de l'app se retire, après
    *  confirmation (canRetirerDate) ; la page relit alors ses lignes. */
   retrait?: { libelle: string; onRetire: () => void }
+  /** Lot 3 (PG10) : toutes les lignes du planning, toutes années, d'où se tire « le dimanche
+   *  précédent » ; absent : les seules lignes affichées. */
+  lignesDuPlanning?: readonly string[][]
 }
+
+/** Ce que le dernier geste a fait (PG6) : sa phrase, ses notes, et les cases à remettre (Annuler). */
+type DernierGeste = { texte: string; notes: string[]; cases: CaseGeste[] }
 
 
 export function PlanningGrille({
@@ -83,6 +91,7 @@ export function PlanningGrille({
   exporter,
   vide,
   retrait,
+  lignesDuPlanning,
 }: PlanningGrilleProps) {
   const { t, i18n } = useTranslation()
   const confirmer = useConfirmer()
@@ -106,9 +115,13 @@ export function PlanningGrille({
   const [entrees, setEntrees] = useState<EntreeGrille[]>([])
   // Dimanches semés pendant la séance : leur document n'existait pas encore.
   const semes = useRef(new Set<string>())
+  const [geste, setGeste] = useState<DernierGeste | null>(null)
   const fini = useRef(false)
 
   const { mesDates, aUnNom, estMoi } = filtre
+
+  // Un autre planning, une autre période : les cases du dernier geste ne sont plus sous les yeux (PG7).
+  useEffect(() => { setGeste(null) }, [definition.key, periode])
 
   /** La présidence d'un dimanche d'Interfranco ou d'Intergroupe : le nom du service. */
   const imposee = (date: string, c: ColonneGrille) =>
@@ -132,6 +145,23 @@ export function PlanningGrille({
     return row
   }
 
+  /** Toutes les lignes du planning par date : les lignes affichées l'emportent sur celles de la page. */
+  const lignesParDate = new Map<string, string[]>()
+  for (const row of lignesDuPlanning ?? []) lignesParDate.set(row[0], row)
+  for (const l of lignes) lignesParDate.set(l.row[0], l.row)
+  const datesDuPlanning = [...lignesParDate.keys()].sort()
+
+  /** La valeur affichée d'une case, par date et clé de colonne (gestes, PG3). */
+  const lireCase = (date: string, cle: string) => {
+    const c = definition.colonnes.find((x) => x.cle === cle)
+    return c ? valeur(date, c, lignesParDate.get(date) ?? []) : ""
+  }
+  /** Une case qu'un geste n'écrit jamais : présidence imposée, colonne en lecture seule (PG2). */
+  const verrou = (date: string, cle: string) => {
+    const c = definition.colonnes.find((x) => x.cle === cle)
+    return !c || !!c.lectureSeule || !!imposee(date, c)
+  }
+
   // La page donne les lignes du trimestre choisi (demande de Timothée du
   // 18/09/2026 : « L'affichage du planning doit être affiché trimestre par
   // trimestre ») : la grille n'a plus de fenêtre à elle.
@@ -149,6 +179,7 @@ export function PlanningGrille({
       mode === "edition" ||
       dansLaFenetre.some((l) => valeur(l.row[0], c, l.row).trim())
   )
+  const dansGeste = (date: string, cle: string) => !!geste?.cases.some((c) => c.date === date && c.cle === cle)
   const largeurMin = 104 + 96 * colonnes.length
 
   async function rechargerHistorique() {
@@ -172,13 +203,13 @@ export function PlanningGrille({
     const cle = `${date}|${c.cle}`
     setModifs((m) => ({ ...m, [cle]: apres }))
     setRefus("")
+    setGeste(null)
     const auteur = historyAuthor(profile)
     try {
-      await ecrireCase({
+      await ecrireCases({
         definition,
         date,
-        colonne: c.cle,
-        valeur: apres,
+        valeurs: { [c.cle]: apres },
         auteur: auteur?.name ?? "",
         // Dimanche absent de la grille : ses autres cases viennent du Sheet, on
         // les recopie une fois, sans quoi la fusion les perdrait. Dès 2027 (lot
@@ -190,7 +221,7 @@ export function PlanningGrille({
       semes.current.add(date)
       setEnregistre(true)
       if (auteur) {
-        await noterChangement(definition.key, auteur, { kind: "case", date, colonne: c.cle, from: avant, to: apres })
+        await noterChangements(definition.key, auteur, [{ kind: "case", date, colonne: c.cle, from: avant, to: apres }])
         if (histoOuvert) await rechargerHistorique()
       }
     } catch {
@@ -203,6 +234,71 @@ export function PlanningGrille({
       })
       setRefus(typeof navigator !== "undefined" && navigator.onLine === false ? "horsLigne" : "droitRetire")
     }
+  }
+
+  /**
+   * Applique un geste (PG4 à PG8) : les valeurs s'affichent, puis UN écrit par dimanche, dans l'ordre
+   * des dates, et UN passage d'historique. Au premier refus, le geste s'arrête et les dimanches pas
+   * encore écrits reprennent leur valeur. `texte` = la phrase de la bannière Annuler (null : Annuler
+   * lui-même, pas de bannière). Rend les cases écrites.
+   */
+  async function appliquer(cases: CaseGeste[], texte: string | null, notes: string[] = []): Promise<CaseGeste[]> {
+    if (!cases.length) return []
+    setRefus("")
+    setEnregistre(false)
+    setGeste(null)
+    setModifs((m) => {
+      const n = { ...m }
+      for (const c of cases) n[`${c.date}|${c.cle}`] = c.apres
+      return n
+    })
+    const auteur = historyAuthor(profile)
+    const ecrites: CaseGeste[] = []
+    for (const groupe of parDimanche(cases)) {
+      const duDimanche = cases.filter((c) => c.date === groupe.date)
+      const l = lignes.find((x) => x.row[0] === groupe.date)
+      try {
+        await ecrireCases({
+          definition,
+          date: groupe.date,
+          valeurs: groupe.champs,
+          auteur: auteur?.name ?? "",
+          semer: !l || getAnnee(groupe.date) >= PREMIERE_ANNEE_APP || datesDansLApp.includes(groupe.date) || semes.current.has(groupe.date)
+            ? undefined
+            : ligneASemer(l),
+        })
+        semes.current.add(groupe.date)
+        ecrites.push(...duDimanche)
+      } catch {
+        const restantes = cases.filter((c) => !ecrites.includes(c))
+        setModifs((m) => {
+          const n = { ...m }
+          for (const c of restantes) {
+            if (c.avant) n[`${c.date}|${c.cle}`] = c.avant
+            else delete n[`${c.date}|${c.cle}`]
+          }
+          return n
+        })
+        setRefus(typeof navigator !== "undefined" && navigator.onLine === false ? "horsLigne" : "droitRetire")
+        break
+      }
+    }
+    if (ecrites.length) {
+      setEnregistre(true)
+      if (auteur) {
+        await noterChangements(definition.key, auteur, ecrites.map((c) => ({ kind: "case", date: c.date, colonne: c.cle, from: c.avant, to: c.apres })))
+        if (histoOuvert) await rechargerHistorique()
+      }
+      if (texte) setGeste({ texte, notes, cases: ecrites })
+    }
+    return ecrites
+  }
+
+  /** Annuler (PG6) : réécrit les valeurs d'avant le geste, telles que la grille les avait. */
+  async function annulerGeste() {
+    if (!geste) return
+    const cases = geste.cases.map((c) => ({ ...c, avant: c.apres, apres: c.avant }))
+    await appliquer(cases, null)
   }
 
   /** Une date posée par erreur (Q10) : seulement en modification, dès l'année de l'app. */
@@ -221,7 +317,7 @@ export function PlanningGrille({
     }
     const auteur = historyAuthor(profile)
     if (auteur) {
-      await noterChangement(definition.key, auteur, { kind: "dimanche", date, retire: true })
+      await noterChangements(definition.key, auteur, [{ kind: "dimanche", date, retire: true }])
       if (histoOuvert) await rechargerHistorique()
     }
     retrait.onRetire()
@@ -368,6 +464,10 @@ export function PlanningGrille({
       )}
 
 
+      {geste && (
+        <BanniereGeste texte={geste.texte} notes={geste.notes} onAnnuler={() => void annulerGeste()} onFermer={() => setGeste(null)} />
+      )}
+
       {peutModifier && (
         <ChoisirNom
           ouverture={choix && {
@@ -457,7 +557,7 @@ export function PlanningGrille({
                       {peutRetirer(date) && <div className="-ml-1.5 mt-0.5">{boutonRetirer(date, false)}</div>}
                     </td>
                     {colonnes.map((c) => (
-                      <td key={c.cle} data-case={`${date}|${c.cle}`} className="px-3 py-2 text-foreground">
+                      <td key={c.cle} data-case={`${date}|${c.cle}`} data-geste={dansGeste(date, c.cle) || undefined} className="px-3 py-2 text-foreground" style={dansGeste(date, c.cle) ? { background: `${couleur}22` } : undefined}>
                         {laCase(l, c)}
                       </td>
                     ))}
@@ -515,7 +615,7 @@ export function PlanningGrille({
                   .map((c) => (
                     <div key={c.cle} className="flex items-baseline gap-2 text-[13px]">
                       <span className="w-24 shrink-0 text-[11px] text-muted-foreground">{t(c.i18n)}</span>
-                      <span data-case={`${date}|${c.cle}`} className="min-w-0 flex-1">{laCase(l, c)}</span>
+                      <span data-case={`${date}|${c.cle}`} data-geste={dansGeste(date, c.cle) || undefined} className="min-w-0 flex-1 rounded-md" style={dansGeste(date, c.cle) ? { background: `${couleur}22` } : undefined}>{laCase(l, c)}</span>
                     </div>
                   ))}
               </div>

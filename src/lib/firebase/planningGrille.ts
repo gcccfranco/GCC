@@ -28,12 +28,21 @@ export type EcritureCase = {
   semer?: string[];
 };
 
-export async function ecrireCase({ definition, date, colonne, valeur, auteur, semer }: EcritureCase): Promise<void> {
+export type EcritureCases = Omit<EcritureCase, "colonne" | "valeur"> & {
+  /** Clé de colonne → valeur : tout un dimanche s'écrit en un seul PATCH (lot 3, PG4). */
+  valeurs: Record<string, string>;
+};
+
+export function ecrireCase({ colonne, valeur, ...reste }: EcritureCase): Promise<void> {
+  return ecrireCases({ ...reste, valeurs: { [colonne]: valeur } });
+}
+
+export async function ecrireCases({ definition, date, valeurs, auteur, semer }: EcritureCases): Promise<void> {
   const champs: Record<string, unknown> = {
     date,
     modifieLe: new Date().toISOString(),
     modifiePar: auteur,
-    [colonne]: valeur,
+    ...valeurs,
   };
   if (semer) {
     for (const c of definition.colonnes) {

@@ -83,6 +83,7 @@ export function PageDatesChoisies({ definition, lire, lireAutre }: {
 
       <PlanningGrille
         definition={definition}
+        lignesDuPlanning={rows}
         periode={periode}
         filtre={filtre}
         lignes={lignesSimples(lignes)}

@@ -92,6 +92,7 @@ function TablePage() {
 
       {gestion && <PlanningGrille
         definition={GRILLE_TABLE}
+        lignesDuPlanning={rows}
         periode={`${tri} ${effAnnee}`}
         filtre={filtre}
         lignes={lignes}

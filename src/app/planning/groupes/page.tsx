@@ -154,6 +154,7 @@ function GroupesPage() {
       <PlanningGrille
         key={definition.key}
         definition={definition}
+        lignesDuPlanning={rows}
         periode={`${effTri} ${effAnnee}`}
         filtre={filtre}
         lignes={lignes}

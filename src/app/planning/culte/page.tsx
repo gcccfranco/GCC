@@ -109,6 +109,7 @@ function CultePage() {
 
       <PlanningGrille
         definition={GRILLE_CULTE}
+        lignesDuPlanning={rows}
         periode={`${effTri} ${effAnnee}`}
         filtre={filtre}
         lignes={lignes}
