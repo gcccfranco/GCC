@@ -1,6 +1,6 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
-import { onStage } from "./helpers/louange";
+import { attendreMiseEnPage, onStage, ouvrirReglages } from "./helpers/louange";
 
 // Chantier Mode louange (docs/spec-mode-louange.md). Setlist et compte
 // simulés : aucune lecture ni écriture du Firestore de production.
@@ -43,7 +43,7 @@ async function openPerformance(page: Page, items: Record<string, unknown>[], rol
   if (role) await page.addInitScript((r) => localStorage.setItem("perf-role-preset", r), role);
   await signInAs(page, MUSICIEN, { [`setlists/${SETLIST_ID}`]: setlist(items) }, `/setlists/${SETLIST_ID}`);
   await page.getByRole("button", { name: /Mode Louange/ }).click();
-  await expect(page.getByText("Mise en page…")).toHaveCount(0);
+  await attendreMiseEnPage(page);
 }
 
 /** Quitte le mode louange. Avant chaque clic, Playwright fait défiler sa cible
@@ -178,7 +178,7 @@ test.describe("choix du rôle à la première ouverture", () => {
   const reopen = async (page: Page) => {
     await quitter(page);
     await page.getByRole("button", { name: /Mode Louange/ }).click();
-    await expect(page.getByText("Mise en page…")).toHaveCount(0);
+    await attendreMiseEnPage(page);
   };
 
   test("appareil vierge : la question apparaît, le rôle choisi s'applique et n'est plus redemandé", async ({ page }) => {
@@ -217,12 +217,9 @@ test.describe("reprise des réglages", () => {
   const lyricLines = (page: Page) => onStage(page, "[data-copy-line]");
   const launch = async (page: Page) => {
     await page.getByRole("button", { name: /Mode Louange/ }).click();
-    await expect(page.getByText("Mise en page…")).toHaveCount(0);
+    await attendreMiseEnPage(page);
   };
-  const settingsText = async (page: Page) => {
-    await page.getByRole("button", { name: "Réglages" }).click();
-    return page.getByRole("dialog", { name: "Réglages" });
-  };
+  const settingsText = (page: Page) => ouvrirReglages(page);
 
   test("pinyin masqué sur la page setlist → masqué en mode louange (ZH)", async ({ page }) => {
     await page.addInitScript(() => localStorage.setItem("perf-role-preset", "pianiste"));
@@ -308,7 +305,7 @@ test.describe("tonalité choisie sur la page du chant", () => {
       await page.locator("select").first().selectOption(c.chosen);
       await page.goBack();
       await page.getByRole("button", { name: /Mode Louange/ }).click();
-      await expect(page.getByText("Mise en page…")).toHaveCount(0);
+      await attendreMiseEnPage(page);
 
       // Repère dans l'en-tête du chant (et dans la barre du haut).
       const mark = onStage(page, "*").getByText(`setlist : ${c.setlistKey}`, { exact: true });
@@ -316,8 +313,7 @@ test.describe("tonalité choisie sur la page du chant", () => {
       await expect(onStage(page, "*").getByText(c.after, { exact: true }).first()).toBeVisible();
 
       // Retour à la tonalité de la setlist : dans les réglages du chant en cours.
-      await page.getByRole("button", { name: "Réglages" }).click();
-      const settings = page.getByRole("dialog", { name: "Réglages" });
+      const settings = await ouvrirReglages(page);
       await settings.getByRole("button", { name: `Revenir à ${c.setlistKey}` }).click();
       await page.keyboard.press("Escape");
       await expect(settings).toBeHidden();
@@ -341,7 +337,7 @@ test("tonalité choisie : une modulation suit le même écart (FR)", async ({ pa
     ]),
   }, `/setlists/${SETLIST_ID}`);
   await page.getByRole("button", { name: /Mode Louange/ }).click();
-  await expect(page.getByText("Mise en page…")).toHaveCount(0);
+  await attendreMiseEnPage(page);
   await expect(onStage(page, "*").getByText("Modulation (Db)", { exact: true }).first()).toBeVisible();
 });
 

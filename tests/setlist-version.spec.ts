@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { expect, test, type Page } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
+import { attendreMiseEnPage } from "./helpers/louange";
 
 // Version perso d'un chant dans une setlist (docs/spec-version-perso.md).
 // V1 : « Ma version » — accords et paroles retouchés pour soi, enregistrés
@@ -119,7 +120,7 @@ test("ma version s'affiche dans la vue partitions et se joue en mode louange", a
   await expect(song(page, 2).getByText("Ma version", { exact: true })).toHaveCount(0);
 
   await page.getByRole("button", { name: /Mode Louange/ }).click();
-  await expect(page.getByText("Mise en page…")).toHaveCount(0);
+  await attendreMiseEnPage(page);
   await expect(onStage(page, "flottait").first()).toBeVisible();
   await expect(onStage(page, "planait")).toHaveCount(0);
   await capture(page, "v1-mode-louange");
@@ -264,7 +265,7 @@ test("mode louange : ma structure, sans les notes d'occurrence de la présidence
   await expect(bodySections(page, 1).getByText("doucement")).toHaveCount(0);
 
   await page.getByRole("button", { name: /Mode Louange/ }).click();
-  await expect(page.getByText("Mise en page…")).toHaveCount(0);
+  await attendreMiseEnPage(page);
   const stage = page.locator("[data-performance-mode] [data-section]:not([aria-hidden=true] *)");
   await expect(stage.first()).toContainText("Couplet 1");
   await expect(page.locator("[data-performance-mode]").getByText("Interlude")).toHaveCount(0);
@@ -327,7 +328,7 @@ test("une version partagée se choisit, et le choix suit mon compte jusqu'en mod
   await page.getByRole("button", { name: "Partitions" }).click();
   await expect(lyricLine(page, "flottait"), "le choix est retrouvé au rechargement").toHaveCount(1);
   await page.getByRole("button", { name: /Mode Louange/ }).click();
-  await expect(page.getByText("Mise en page…")).toHaveCount(0);
+  await attendreMiseEnPage(page);
   await expect(onStage(page, "flottait").first()).toBeVisible();
 });
 

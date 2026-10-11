@@ -6,20 +6,30 @@ test.use({ viewport: { width: 390, height: 664 }, isMobile: true, hasTouch: true
 
 const POSITION = 4000;
 
-/** Enregistre, à chaque image, le défilement et l'opacité de la page. */
+/** Enregistre, à chaque image, le défilement et l'opacité de la page : jusqu'à
+ *  900 ms après la première image où la liste se voit. Une fenêtre fixe de
+ *  900 ms depuis le départ finissait, sous charge, avant que la liste ne
+ *  revienne : aucune image à juger (suite complète du 11/10/2026). */
 async function recordFrames(page: Page) {
   await page.evaluate(() => {
     const frames: { list: boolean; opacity: number; y: number }[] = [];
-    (window as unknown as { __frames: typeof frames }).__frames = frames;
+    const w = window as unknown as { __frames: typeof frames; __framesDone: boolean };
+    w.__frames = frames;
+    w.__framesDone = false;
     const t0 = performance.now();
+    let vue: number | null = null;
     const tick = () => {
       const wrap = document.querySelector("main > div");
-      frames.push({
+      const frame = {
         list: !!document.querySelector('input[type="search"]'),
         opacity: wrap ? Number(getComputedStyle(wrap).opacity) : 0,
         y: Math.round(window.scrollY),
-      });
-      if (performance.now() - t0 < 900) requestAnimationFrame(tick);
+      };
+      frames.push(frame);
+      const now = performance.now();
+      if (vue === null && frame.list && frame.opacity > 0.05) vue = now;
+      if (vue === null ? now - t0 < 10_000 : now - vue < 900) requestAnimationFrame(tick);
+      else w.__framesDone = true;
     };
     requestAnimationFrame(tick);
   });
@@ -70,7 +80,7 @@ for (const [nom, liste, revenir] of [
 
     await recordFrames(page);
     await revenir(page);
-    await page.waitForTimeout(1000);
+    await page.waitForFunction(() => (window as unknown as { __framesDone: boolean }).__framesDone, null, { timeout: 15_000 });
 
     const frames = await page.evaluate(
       () => (window as unknown as { __frames: { list: boolean; opacity: number; y: number }[] }).__frames

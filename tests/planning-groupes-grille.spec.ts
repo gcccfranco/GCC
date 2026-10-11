@@ -80,6 +80,8 @@ test("groupes : avec le droit « paix », une case s'écrit ; Fidélité reste e
   await champ.fill("Psaumes");
   await champ.press("Enter");
   await expect(laCase(page, "2026-09-20", "theme")).toContainText("Psaumes");
+  // La case affiche la valeur avant que l'écriture ne parte : on attend « Enregistré ».
+  await expect(page.getByText("Enregistré")).toBeVisible();
 
   const doc = db.doc("plannings/paix/dimanches/2026-09-20")!;
   expect(doc.theme).toBe("Psaumes");
@@ -101,6 +103,8 @@ test("groupes : les musiciens de Fidélité ont leur propre grille et leur propr
   await champ.fill("Éloïse M.");
   await champ.press("Enter");
   await expect(laCase(page, "2026-09-20", "guitare")).toContainText("Éloïse M.");
+  // La case affiche la valeur avant que l'écriture ne parte : on attend « Enregistré ».
+  await expect(page.getByText("Enregistré")).toBeVisible();
   expect(db.doc("plannings/fideliteMusiciens/dimanches/2026-09-20")?.guitare).toBe("Éloïse M.");
   expect(db.doc("plannings/fidelite/dimanches/2026-09-20")).toBeUndefined();
 });
@@ -113,6 +117,8 @@ test("Intergroupe : se remplit dans l'app et s'exporte en CSV", async ({ page })
   await champ.fill("Daniela W.");
   await champ.press("Enter");
   await expect(laCase(page, "2026-10-04", "choriste3")).toContainText("Daniela W.");
+  // La case affiche la valeur avant que l'écriture ne parte : on attend « Enregistré ».
+  await expect(page.getByText("Enregistré")).toBeVisible();
   expect(db.doc("plannings/intergroupe/dimanches/2026-10-04")?.choriste3).toBe("Daniela W.");
   await page.getByRole("button", { name: "Terminé" }).click();
 
