@@ -51,13 +51,14 @@ Tu es notre seul désir
 [F#]Que la gloire Te revienne
 {end_of_bridge}
 
-{start_of_verse: TAG}
+{start_of_tag: Tag}
+{section_id: verse-7}
 Que la gloire Te r[E]ev[B/D#]ienne
 Que la gloire Te re[G#m]vienne[F#]
 Que la gloire Te re[E]vi[B/D#]enne
 Que la gloire Te re[G#m]vienne[F#]
 
-{end_of_verse}
+{end_of_tag}
 
 {start_of_bridge: Pont 2}
 Tu fais toutes choses nou[E]velles

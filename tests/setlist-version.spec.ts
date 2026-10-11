@@ -298,10 +298,11 @@ const CHRISTELLE: FakeProfile = {
 const CHRISTELLE_DOC = `setlists/${SETLIST_ID}/versions/${CHRISTELLE.uid}`;
 /** La version de Ruth (« flottait »), partagée. */
 const RUTH_SHARED = myDoc({ "abba-pere": { content: MY_ABBA, structure: null, shared: true } });
-/** Version de Ruth de 一生爱你 : première ligne du couplet (et son pinyin) retirée. */
+/** Version de Ruth de 一生爱你 : première ligne du couplet (et son pinyin) retirée.
+ *  Le filtre lit les paroles sans accords : la partition pose A dans « 宝[A]贵 ». */
 const MY_ZH = readFileSync("content/songs/一生爱你.cho", "utf8")
   .split("\n")
-  .filter((l) => !l.includes("宝贵") && !l.startsWith("qīn ài de bǎo guì"))
+  .filter((l) => !l.replace(/\[[^\]]*\]/g, "").includes("宝贵") && !l.startsWith("qīn ài de bǎo guì"))
   .join("\n");
 const versionSelect = (page: Page, position: number) => song(page, position).getByRole("combobox", { name: "Version" });
 const copyButton = (page: Page, position: number) => song(page, position).getByRole("button", { name: "Copier les paroles" });
