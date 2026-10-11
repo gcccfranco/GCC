@@ -27,8 +27,8 @@ Méthode (décisions de Timothée du 08/10/2026, en cours de chantier) :
 | 7 | ta-parole, Ta-parole-écriture, toi-et-moi, toi-seul-es-digne, ton-nom, toujours-puissante, tout-a-toi, tout-puissant, toutes-choses-nouvelles, triomphe, tu-agiras, tu-es-bon, tu-es-la-lumiere, tu-es-la-vie, tu-es-le-chant, tu-es-notre-dieu, tu-m-aimes, un-chant-nouveau-monte, un-vin-nouveau, une-flamme-en-moi, vases-d-argile, venez-le-celebrer, viens-souffler-a-nouveau, viens-toucher-ma-vie, voici-le-jour, yahwe | poussé (`0d614116`) |
 | 8 | 一切歌颂赞美, 一切都更新, 一同齐声宣扬, 一生敬拜你, 一生爱你, 一生跟随, 一粒麦子, 一颗谦卑的心, 不停赞美, 不停赞美你, 丰盛的应许, 为我而来, 为爱而生, 主你是我力量, 主我献上生命给你, 主的喜乐是我力量, 云上太阳, 亲眼看见你, 从心合一, 从早晨到夜晚, 从这代到那代, 伯利恒的喜讯, 住在你里面, 何等恩典, 你们要赞美耶和华, 你坐着为王, 你恩典不离开 | poussé (`2bcac13d`) |
 | 9 | 你是唯一, 你是我的一切, 你是我的平安, 你是配的, 你永远如此深爱着我, 你的同在, 你的爱不离不弃, 使命, 信实的神, 倾倒, 充满在这里, 全新的你, 全然向你, 再一次, 再次将我更新, 到各山岭去传扬, 前来敬拜, 医治我, 十字架, 十字架是我的荣耀, 十字架的传达者, 十架的大能, 十架的爱, 只要有你在我左右, 只需要你, 叫我抬起头的神, 向主欢呼, 向我的神献上感谢 | poussé (`8e6c4b2b`) |
-| 10 | 君王就在这里, 吹起复兴的火, 和散那, 哦十字架, 唯有耶稣, 唯独依靠你, 回家, 因着十架爱, 围绕我, 圣灵的江河, 圣诞节耶稣为你而来, 在你宝座前, 在耶稣的脚前, 在这里, 坐在宝座上圣洁羔羊, 复兴的火, 大声敬拜, 大山为我挪开, 大手牵着小手, 天国的子民, 奇异恩典, 奔跑不放弃, 好喜欢与你在一起, 如果你想知道, 如鹰展翅上腾, 安静, 定睛在耶稣身上 | poussé avec ce fichier |
-| 11 | 宝贵十架, 将天敞开, 尽情地微笑, 尽情的敬拜, 差遣我, 常常喜乐, 得胜的宣告, 恒久恒久以前, 恩典之路, 想起你, 愿为主闪亮, 我们呼求, 我们成为一家人, 我们是光明之子, 我们欢迎君王降临, 我们爱让世界不一样, 我们的神, 我们高举耶稣的名, 我在这里敬拜, 我安然居住, 我已得自由, 我心坚定与你, 我愿为你去, 我是承带神荣耀的器皿, 我渴望看见, 我的家要荣耀主, 我的救赎者活着, 我的生命献给你 | à faire |
+| 10 | 君王就在这里, 吹起复兴的火, 和散那, 哦十字架, 唯有耶稣, 唯独依靠你, 回家, 因着十架爱, 围绕我, 圣灵的江河, 圣诞节耶稣为你而来, 在你宝座前, 在耶稣的脚前, 在这里, 坐在宝座上圣洁羔羊, 复兴的火, 大声敬拜, 大山为我挪开, 大手牵着小手, 天国的子民, 奇异恩典, 奔跑不放弃, 好喜欢与你在一起, 如果你想知道, 如鹰展翅上腾, 安静, 定睛在耶稣身上 | poussé (`06cc76cc`) |
+| 11 | 宝贵十架, 将天敞开, 尽情地微笑, 尽情的敬拜, 差遣我, 常常喜乐, 得胜的宣告, 恒久恒久以前, 恩典之路, 想起你, 愿为主闪亮, 我们呼求, 我们成为一家人, 我们是光明之子, 我们欢迎君王降临, 我们爱让世界不一样, 我们的神, 我们高举耶稣的名, 我在这里敬拜, 我安然居住, 我已得自由, 我心坚定与你, 我愿为你去, 我是承带神荣耀的器皿, 我渴望看见, 我的家要荣耀主, 我的救赎者活着, 我的生命献给你 | poussé avec ce fichier |
 | 12 | 我相信, 我神我王, 我能给你什么, 我要全心赞美, 我要爱慕你, 我要看见, 我要顺服, 我选择喜乐, 我需要有你在我生命中, 所有的荣耀归于你, 打开天窗, 把冷漠变成爱, 拣选, 握住幸福, 握手, 敬拜的心, 新造的人, 无价至宝, 日日夜夜, 旷野中唯一的力量, 明亮晨星, 是为了爱, 是你的爱, 是耶稣的名, 最美的礼物, 有一位神, 有一天 | à faire |
 | 13 | 有你同行, 每一天我需要你, 永恒唯一的盼望, 永活盼望, 求主充满我, 求充满这地, 活出爱, 活着为要敬拜你, 深不见底的爱, 深刻的爱, 深深爱你, 满有能力, 爱中相遇, 爱使我们勇敢, 爱可以再更多一点点, 爱我愿意, 爱的彰显, 爱的约定, 爱赢了, 献上尊荣, 看见复兴, 真实的悔改, 神羔羊配得, 祷告, 给梦想一双翅膀, 耶和华是应当称颂的, 耶和华行了大事, 耶稣万名之上的名 | à faire |
 | 14 | 耶稣我的耶稣, 耶稣的名, 耶稣耶稣, 能不能, 脚步, 若有人在基督里, 荣耀的呼召, 荣耀至高神, 行神迹的神, 认识你真好, 让我得见你的荣面, 让爱走动, 让爱飞翔, 让赞美飞扬, 谢谢你, 谢谢你成为我的家, 赞美中信心不断升起, 赞美之泉, 这一生最美的祝福, 这是耶和华所定的日子, 这条路上我们一起走, 这里有神的同在, 这里有荣耀, 遇见你, 陪我走过春夏秋冬, 香膏的玉瓶, 齐来赞美 | à faire |
@@ -39,11 +39,11 @@ Les 3 397 écarts, chacun compté une seule fois :
 
 | Statut | Timothée | def | session | Total |
 |---|---:|---:|---:|---:|
-| appliqué | 437 | 435 | 399 | 1 271 |
-| laissé | 311 | 1 132 | 136 | 1 579 |
+| appliqué | 439 | 447 | 440 | 1 326 |
+| laissé | 328 | 1 219 | 147 | 1 694 |
 | doute écrit | 0 | 0 | 0 | 0 |
 | ligne changée depuis l'audit | 0 | 1 | 1 | 2 |
-| à faire (lots non encore poussés) | | | | 545 |
+| à faire (lots non encore poussés) | | | | 375 |
 | **Total** | | | | **3 397** |
 
 « laissé » réunit les « non » (Timothée ou def), les questions tranchées « non » par la session, les « ok » sans opération et les opérations écartées par la règle de la page (une ligne ne prend qu'un seul remplacement ; un remplacement qui annulerait un « non » de Timothée n'est pas retenu). « doute écrit » : question laissée avec un `{needs_review}` au-dessus de la ligne.
@@ -14760,6 +14760,1312 @@ Mesures sur la partition (accords non exacts et lignes changées par la session)
 - Paroles conformes au caractère près ; ponctuation gravée (，。；) conforme. Structure : seule reprise gravée ‖: 喔哦哦 :‖, déjà « (x2) ». Aucun changement.
 - Non repris : référence biblique (太14:27-31，诗56:3) et auteurs gravés. Thèmes Foi, Engagement gardés (Espérance défendable).
 
+### 宝贵十架 — 宝贵十架
+
+Lot 11 · partition retenue : `宝贵十架 简谱.jpg` (scan-jianpu, mesure fiable)
+
+Lignes modifiées :
+
+- l. 14 : `主耶[A]稣[C#/G#]，我感谢[F#m]你[A7/E]，你的身[D]体[D/E]，为我而[A]舍。   zhǔ yē sū wǒ gǎn xiè nǐ nǐ de shēn tǐ wéi wǒ ér shě` → `主耶[A]稣[C#/G#]，我感谢[F#m]你[A7/E]，你的身[D]体[D/E]，为我而[D]舍。   zhǔ yē sū wǒ gǎn xiè nǐ nǐ de shēn tǐ wéi wǒ ér shě` *(session (hors relevé))* — Début du système 3 : « D » (x=34) puis « A7/C# » (x=105) gravés au-dessus de « 3 – 0 1 2 1 » ; le « 3 » est 舍. La partition met D sur 舍, le .cho A : nom différent (check.py apparie à tort ce [A] à l'étiquette A de 明, d=+688 px, et compte le D « absent du .cho »). Vu aussi sur le JPG d'origine.
+- l. 16 : `主耶[A]稣[C#/G#]，我感谢[F#m]你[A7/E]，你的宝[D]血[D/E]，为我而[A]流。   zhǔ yē sū wǒ gǎn xiè nǐ nǐ de bǎo xuè wéi wǒ ér liú` → `主耶[A]稣[C#/G#]，我感谢[F#m]你[A7/E]，你的宝[D]血[D/E]，为我而[D]流。   zhǔ yē sū wǒ gǎn xiè nǐ nǐ de bǎo xuè wéi wǒ ér liú` *(session (hors relevé))* — Début du système 5 : même gravure, « D » (x=34) au-dessus du « 3 » = 流, puis A7/C# sur le silence avant 宝. Nom différent : D et non A (check.py apparie ce [A] à l'étiquette A de 典, d=+686 px).
+- l. 22 : `宝贵十[A]架的[A/C#]救恩，是你[D]所立的[B7/D#]约，你[A/E]的爱永远[E7]不会改[A]变。   bǎo guì shí jià de jiù ēn shì nǐ suǒ lì de yuē nǐ de ài yǒng yuǎn bú huì gǎi biàn` → `宝贵十[A]架的救[A/C#]恩，是你[D]所立的[B7/D#]约，你[A/E]的爱永远[E7]不会改[A]变。   bǎo guì shí jià de jiù ēn shì nǐ suǒ lì de yuē nǐ de ài yǒng yuǎn bú huì gǎi biàn`
+
+Mesures sur la partition (accords non exacts et lignes changées par la session) :
+
+| Ligne | Accord | Mesure | Classe | Correction |
+|---|---|---|---|---|
+| 14 | A | étiquette « D » x=34 (système 3) au-dessus du « 3 » de 舍 ; aucune étiquette A sur 舍 | nom | 为我而[D]舍 |
+| 16 | A | étiquette « D » x=34 (système 5) au-dessus du « 3 » de 流 | nom | 为我而[D]流 |
+| 15 | E | 见 attaque sur le dernier « 2 » du système 3 (croche), lié au « 2 – » du système 4 où E est gravé (x=36) : syncope liée, 见[E]。 déjà juste ; l'outil compare aux étiquettes du système 3 seulement | exact (vérifié à l'œil, l'outil lit mal) | aucune |
+| 10 | Esus4 | Esus4 gravé au début du système 2 (x=16) au-dessus de « 5 – –) », fin de l'introduction entre parenthèses : c'est le dernier accord de l'intro, l'outil ne le cherche que sur la rangée du système 1 | exact (vérifié à l'œil, l'outil lit mal) | aucune |
+| 22 | A/C# | x=1187 (système 7) au-dessus du 4e « 3̇ » de « 3̇ 3̇· 4̇ 3̇ 2̇ 1̇ » = 恩 (救 sous le « 4̇ », x=1133) — même figure que 的大[A/C#]能 de la ligne 21 | décalé | 的救[A/C#]恩 (écart ok par défaut, appliqué) |
+
+Forme (sans effet sur la place des accords, détail dans le diff du commit) : 3 ligne(s) — ligne sans paroles : l. 10 ; espaceur : l. 15, 17.
+
+En-tête : ajout de `{source: 宝贵十架 简谱.jpg}`
+
+| Écart | Statut | Par | Raison, partition |
+|---|---|---|---|
+| 22:decale:A/C#:1 | appliqué | def |  |
+| 15:decale:E:1 | laissé | def |  |
+| 10:instrumental:Esus4:1 | laissé | def |  |
+
+- check.py : 49 exact, 2 décalés, 4 absents du .cho, 1 absent de la source. Tous vus à l'œil sur le calque et, pour les D, sur le JPG d'origine.
+- 15:decale:E:1 (non par défaut) : la ligne est juste, 见 anticipe le temps fort lié où E est gravé (syncope liée) ; les « absent du .cho » E (système 4) et Esus4 (système 2) sont ces mêmes accords, posés en fin de système précédent par l'outil.
+- 10:instrumental:Esus4:1 (non par défaut) : Esus4 est bien gravé, en tête du système 2, comme dernier accord de l'intro « (… 5 – –) » : la ligne d'intro est juste.
+- 22:decale:A/C#:1 (ok par défaut) : appliqué, A/C# sur 恩.
+- Les deux « D absent du .cho » (systèmes 3 et 5) : la partition grave D sur 舍 et sur 流, le .cho avait A (check.py appariait ce A à une autre étiquette) : corrigé en D, l. 14 et 16. Calque à revoir : rien à changer au calque, il porte déjà D ; c'est le .cho qui le rejoint.
+- retouches.js : seul le commit initial (transcription) et deux ajouts de lien vidéo touchent le fichier ; aucune retouche à l'oreille.
+- Paroles, non appliqué : la partition écrit 祢 (et non 你) pour Dieu, partout (感谢祢, 祢的身体, 敬拜祢, 是祢所立, 祢的爱).
+- Pinyin, non appliqué : check.py relève 为 « wéi » aux l. 14 et 16 (为我而舍/流 se lit wèi).
+- Structure : intro entre parenthèses, deux couplets écrits en entier (paroles différentes), un refrain, fin ‖ sans reprise : la structure du .cho suit la partition.
+
+### 将天敞开 — 将天敞开
+
+Lot 11 · partition retenue : `将天敞开 简谱.jpg` (scan-jianpu, mesure fiable)
+
+Lignes modifiées :
+
+- l. 8 : `{start_of_intro: 前奏/Intro}` → `{start_of_intro: 前奏/Intro (x2)}` *(session (hors relevé))* — Système 1 : les quatre mesures instrumentales (G D/F# C/E G/D) sont gravées entre ‖: et :‖ (reprise immédiate) : suffixe (x2), sans rien recopier (règle chinoise du 08/10) ; libellé seulement, l'id de section ne change pas.
+- l. 24 : `{start_of_bridge: 桥段/Pont}` → `{start_of_bridge: 桥段/Pont (D.C. al Fine)}` *(session (hors relevé))* — Dernier système : « D.C. al Fine » gravé au-dessus du D final du pont, « Fine » sur la double barre qui clôt le refrain : le retour au début (intro, couplet, refrain) n'est pas recopié, c'est la section qui renvoie qui porte le suffixe (règle chinoise du 08/10) ; libellé seulement.
+
+Mesures sur la partition (accords non exacts et lignes changées par la session) :
+
+| Ligne | Accord | Mesure | Classe | Correction |
+|---|---|---|---|---|
+| 21 | Dm/F | système 6 : x=15 au-dessus du premier 0 de « 0 0 1̇ 1̇ », la voix entre sur 在 (1̇ x≈140) | exact (vérifié à l'œil, l'outil mesure la ligne sur le système 7) | aucune : [Dm/F] 在 |
+| 21 | C/E | x=234 au-dessus du 5̇. (x≈258) = 恒 | exact (vérifié à l'œil, l'outil lit mal) | aucune |
+| 21 | Cm/Eb | x=448 au-dessus du 4̇ (x≈485) = 拜 (敬 est le 3̇ de la mesure précédente) | exact (vérifié à l'œil, l'outil lit mal) | aucune |
+| 21 | G/D | x=659 au-dessus du 5̇. (x≈685) = 路 (premier 哈利路亚) | exact (vérifié à l'œil, l'outil lit mal) | aucune |
+| 21 | C/D | x=857 au-dessus du 4̇. (x≈880) = second 哈 | exact (vérifié à l'œil, l'outil lit mal) | aucune |
+| 21 | G | x=1103 au-dessus du 1̇ (x≈1110) = dernier 亚, avant Fine | exact (vérifié à l'œil) | aucune |
+
+Forme (sans effet sur la place des accords, détail dans le diff du commit) : 3 ligne(s) — ligne sans paroles : l. 9 ; espaces : l. 16 ; espaceur : l. 21.
+
+En-tête : ajout de `{source: 将天敞开 简谱.jpg}`
+
+| Écart | Statut | Par | Raison, partition |
+|---|---|---|---|
+| 21:decale:Dm/F:1 | laissé | def |  |
+| 21:decale:C/E:1 | laissé | def |  |
+| 21:decale:Cm/Eb:1 | laissé | def |  |
+| 21:decale:G/D:1 | laissé | def |  |
+| 21:decale:C/D:1 | laissé | def |  |
+
+- Partition : scan 简谱, même image que le calque 将天敞开-p1.webp (1600 × 2357), 8 systèmes ; accords gravés en G (le .cho est en G).
+- Vérifié à l'œil, système par système, chaque accord du chant (intro l. 9, couplet l. 13-16, refrain l. 20-21, pont l. 25-26) : tous sur le caractère de la note gravée, y compris les accords sur notes liées (下 tenu, 耀 tenu) ; aucune ligne d'accords à changer.
+- Les 5 « décalé » de la l. 21 (« non » par défaut, verdict « garder ») et les 6 « absent du .cho » (rangée y=1666) sont une seule erreur de l'outil : il ne lit pas la rangée de paroles du système 6 et mesure la l. 21 sur le système 7 (pont). La ligne est juste ; rien n'est ajouté.
+- Structure : intro ‖: :‖ → libellé « 前奏/Intro (x2) » ; « D.C. al Fine » à la fin du pont → libellé « 桥段/Pont (D.C. al Fine) » ; rien recopié (règle chinoise), aucune section ajoutée ni déplacée.
+- Paroles, non appliqué : la partition grave « 合一敬拜， » (l. 20, .cho « ； »), « 荣耀归于祢。 » (l. 20, .cho « ； »), « 哈利路亚！哈利路亚！ » (l. 21, .cho « ， » et « 。 »), « 欢迎祢！ » (l. 25 et 26, .cho « ， ») et « 不停息！ » (l. 26, .cho « 。 »).
+- Éléments non repris : titre anglais « Open Heaven », références 赛 64:1 ; 约 1:51, indication « 热情宣扬、赞美地 ».
+
+### 尽情地微笑 — 尽情地微笑
+
+Lot 11 · partition retenue : ` 尽情地微笑.pdf` (scan-jianpu, mesure fiable)
+
+Lignes modifiées :
+
+- l. 14 : `[D]让永恒[A/C#]的爱[Bm]再次包围[D/A]你，让[G]我陪伴[D/F#]你擦[Em]干昨[Asus4]日的泪[D]水。   ràng yǒng héng de ài zài cì bāo wéi nǐ ràng wǒ péi bàn nǐ cā gān zuó rì de lèi shuǐ` → `[D]让永恒[A/C#]的爱[Bm]再次包围[D/A]你，让[G]我陪伴[D/F#]你擦[Em]干[Asus4]昨日的泪[D]水。   ràng yǒng héng de ài zài cì bāo wéi nǐ ràng wǒ péi bàn nǐ cā gān zuó rì de lèi shuǐ`
+- l. 18 : `尽情[D]地微[A/C#]笑，别害[Bm]怕忧[D/A]伤，[G]勇敢地[D/F#]相信[Em]明天[E/G#]有阳[Asus4]光；[A]   jìn qíng dì wēi xiào bié hài pà yōu shāng yǒng gǎn dì xiāng xìn míng tiān yǒu yáng guāng` → `尽情[D]地微[A/C#]笑，别害[Bm]怕忧[D/A]伤，[G]勇敢地[D/F#]相信[Em]明天[E/G#]有阳[Asus4]光[A]；   jìn qíng dì wēi xiào bié hài pà yōu shāng yǒng gǎn dì xiāng xìn míng tiān yǒu yáng guāng` *(session (hors relevé))* — Système 4, fin : « 光 » sur le 2 (Asus4 au-dessus), A gravé au-dessus du tiret « – » qui suit, « 光 » encore tenu : tenue, accord après la syllabe et avant la ponctuation (02). Les autres accords de la ligne sont exacts.
+- l. 19 : `[G]擦干所[D/F#]有眼泪，[F#]你不再[Bm]孤单，神必[Em]赐下重生的力[A][ ]量。   cā gān suǒ yào yǎn lèi nǐ bú zài gū dān shén bì cì xià zhòng shēng de lì liáng` → `[G]擦干所[D/F#]有眼泪，[F#]你不再孤[Bm]单，神必[Em]赐下重生的力[A] 量。   cā gān suǒ yào yǎn lèi nǐ bú zài gū dān shén bì cì xià zhòng shēng de lì liáng`
+- l. 21 : `[G]再次昂[D/F#]首踏出[F#]信心的脚[Bm]步，神必[Em]陪伴你[Asus4]走每一步[D]路。   zài cì áng shǒu tà chū xìn xīn de jiǎo bù shén bì péi bàn nǐ zǒu měi yī bù lù` → `[G]再次昂[D/F#]首踏出[F#]信心的脚[Bm]步，神必[Em]陪伴你[Asus4]走每一步[D]路。[G/D]   zài cì áng shǒu tà chū xìn xīn de jiǎo bù shén bì péi bàn nǐ zǒu měi yī bù lù` *(session (hors relevé))* — Système 7, dernière mesure « 1 5 4 2 » (avant la double barre) : D sur le 1 de « 路 », puis G/D (x=1455) sur le 4, notes instrumentales sans paroles après « 路 » fini : accord absent du .cho, posé après la ponctuation, collé (02).
+
+Mesures sur la partition (accords non exacts et lignes changées par la session) :
+
+| Ligne | Accord | Mesure | Classe | Correction |
+|---|---|---|---|---|
+| 14 | Asus4 | étiquette x=1162 (système 3) sur le 3 de « 3 2 » où attaque « 昨 » (x=1161) | décalé (avant), réglé par l'écart du relevé 14:decale:Asus4:1 | 擦[Em]干[Asus4]昨日 |
+| 19 | Bm | étiquette x=681 (système 5) sur le 1 où attaque « 单 » (x=676) | décalé (avant), réglé par l'écart du relevé 19:decale:Bm:1 | 孤[Bm]单 |
+| 18 | A | étiquette A au-dessus du « – » après le 2 de « 光 » (système 4), « 光 » tenu | équivalent (même caractère, côté ponctuation) | 光[A]； |
+| 18 | D A/C# Bm D/A G D/F# Em E/G# Asus4 | « 地 », « 笑 », « 怕 », « 伤 », « 勇 », « 相 », « 明 », « 有 », « 光 » sous chaque étiquette | exact | aucune |
+| 19 | A | étiquette A (système 5) sur le 6 lié à travers la barre, « 力 » tenu ; « 量 » attaque le 5 suivant | exact (tenue : 力[A] 量) | aucune |
+| 21 | G/D | étiquette G/D x=1455 (système 7) sur le 4 de « 1 5 4 2 », après « 路 » | absent du .cho | 路。[G/D] |
+| 21 | G D/F# F# Bm Em Asus4 D | « 再 », « 首 », « 信 », « 步 », « 陪 », « 走 », « 路 » sous chaque étiquette | exact | aucune |
+|  | D D G/D D D G/D D D G/D A/D D | rangée instrumentale du système 8 (y≈2213), 【间奏/尾奏】, « To Verse or End » | absent du .cho | section Interlude ajoutée après le Refrain (dernière section) |
+
+Forme (sans effet sur la place des accords, détail dans le diff du commit) : 1 ligne(s) — ligne sans paroles : l. 9.
+
+En-tête : ajout de `{source:  尽情地微笑.pdf}`
+
+| Écart | Statut | Par | Raison, partition |
+|---|---|---|---|
+| 19:decale:Bm:1 | appliqué | Timothée |  |
+| 14:decale:Asus4:1 | appliqué | Timothée |  |
+
+- Partition : « 尽情地微笑.pdf » (nom avec une espace en tête), PDF image du même scan 简谱 que le calque public/jianpu/尽情地微笑-p1.webp (1=D, ♩=72) ; deux rangées d'accords, celle en D (la plus proche des chiffres) est celle du .cho, la rangée en F/C au-dessus est une autre tonalité, non reprise. Calque gelé, non touché.
+- Vérifié à l'œil, chaque accord du chant (crops sys3, sys5, ch1_fin, fin dans crops/尽情地微笑) : intro l. 9 (D G/D D A/D G/D D) exacte ; couplet l. 13-14 et refrain l. 18-21 exacts sur le chiffre sous chaque étiquette, sauf les deux décalés réglés par le relevé (Asus4 → 昨, Bm → 单, choix « ok » confirmés par la partition).
+- Corrigé : l. 18 « 光；[A] » → « 光[A]； » (A sur le tiret de « 光 » tenu) ; l. 21, G/D gravé après « 路 » ajouté (« 路。[G/D] »).
+- Structure appliquée : section 间奏/Interlude (To Verse or End) ajoutée après le Refrain (dernière section) : D | D G/D | D | D G/D | D | D G/D A/D | D. Ordre avant : Intro, Couplet, Refrain ; après : Intro, Couplet, Refrain, Interlude. Le « To Verse » ne déplie rien : le .cho n'a qu'un couplet et un refrain, la feuille aussi.
+- Paroles, non appliqué : la partition grave une virgule « ， » après « 符 » (l. 13), « 光 » (l. 18) et « 墙 » (l. 20), le .cho a « ； ».
+- Pinyin, non appliqué (aucun écart ne le porte) : l. 19 « 所有 » écrit « suǒ yào » (→ suǒ yǒu), « 重生 » « zhòng shēng » (→ chóng shēng), « 力量 » « lì liáng » (→ lì liàng).
+- Liste extra du relevé (12 accords « absents du .cho ») : la rangée instrumentale du système 8 et le G/D x=1455, repris par la section Interlude et la l. 21.
+- « Calque à revoir : l.21 +G/D » de l'aperçu : rien à faire, le calque gelé porte déjà l'étiquette G/D (x=1455, système 7) ; le texte la rejoint. Le nom de la partition commence par une espace : la ligne {source:} en hérite.
+
+### 尽情的敬拜 — 尽情的敬拜
+
+Lot 11 · partition retenue : `尽情的敬拜.pdf` (scan-jianpu, mesure fiable)
+
+Forme (sans effet sur la place des accords, détail dans le diff du commit) : 5 ligne(s) — espaces : l. 9, 16 ; espaceur : l. 11, 18, 25.
+
+En-tête : ajout de `{source: 尽情的敬拜.pdf}`
+
+- Scan 简谱 (calque public/jianpu/尽情的敬拜-p1.webp, même scan), deux rangées d'accords : la rangée du bas (1=A) est celle du .cho ; la rangée du haut (G Am7 D7…, un ton plus bas, pour capodastre) n'est pas reprise.
+- Les 26 accords vérifiés à l'œil sur le chiffre sous chaque étiquette : tous au caractère de la partition (check.py : exacts). E/G# des l. 11 et 25 sur le 3e temps tenu / le silence avant la levée : [E/G#] en tête de ligne, avant l'attaque, juste.
+- Couplets : ‖: :‖ avec voltas 1./2. déjà écrits en deux couplets ; rien de déplié ni de retiré.
+- Thèmes absents : ajoutés (Adoration, Engagement).
+- Pinyin, non appliqué : l. 25 哦 écrit « ò », la table d'exceptions de 01 donne « ó ».
+
+### 差遣我 — 差遣我
+
+Lot 11 · partition retenue : `差遣我.pdf` (scan-jianpu, mesure fiable)
+
+Mesures sur la partition (accords non exacts et lignes changées par la session) :
+
+| Ligne | Accord | Mesure | Classe | Correction |
+|---|---|---|---|---|
+| 9 | G D/F# Em Bm/D Am Am/G D | la partition n'a pas d'introduction : elle commence sur la levée 主 du couplet ; la ligne d'intro recopie les accords de la 1re ligne du couplet | absent de la source (gardé : choix « non » du relevé, et retirer la section est interdit par la règle Structure) | aucune |
+
+Forme (sans effet sur la place des accords, détail dans le diff du commit) : 9 ligne(s) — espaces : l. 13, 22, 25 ; espaceur : l. 14, 16, 23, 24, 26, 27 ; espace de fin : l. 23, 26.
+
+En-tête : ajout de `{source: 差遣我.pdf}`
+
+| Écart | Statut | Par | Raison, partition |
+|---|---|---|---|
+| 9:instrumental:G:1 | laissé | Timothée |  |
+| 9:instrumental:D/F#:1 | laissé | Timothée |  |
+| 9:instrumental:Em:1 | laissé | Timothée |  |
+| 9:instrumental:Bm/D:1 | laissé | Timothée |  |
+| 9:instrumental:Am:1 | laissé | Timothée |  |
+| 9:instrumental:Am/G:1 | laissé | Timothée |  |
+| 9:instrumental:D:1 | laissé | Timothée |  |
+
+- Scan 简谱 (1=G, 4/4, ♩=72), même scan que le calque public/jianpu/差遣我-p1.webp ; chaque accord du couplet et du refrain regardé sur le calque, chiffre sous l'étiquette : 36/36 exacts (check.py et l'œil d'accord). Tenues (我[D/F#]，, 命[Bm/D]，, 我[Em]，, 有[C#m7b5]，) et accords sur note liée avant la voix (望[Am/G] 入, 付[Em/D] 出, 我[C] 到, 爱[Em/D] 来, 次[C] 紧) conformes à 02. D sur 抖 (« 2 » après le melisme 3· 43 de 颤), D sur 握, G/B sur 需 vérifiés sur découpe.
+- Intro : la partition n'en grave pas ; la ligne 9 recopie les accords de la 1re ligne du couplet. Le relevé a choisi de la garder (« non ») ; la retirer serait de toute façon un retrait de section, interdit. Laissée telle quelle.
+- Aucune question, aucune ligne changée ; la forme (espaces après ponctuation, [X][ ]) est faite par le moteur.
+- Pinyin, non appliqué : l. 22 et 24, 差 (差遣) est écrit « chà » ; c'est « chāi », comme le title_pinyin et pypinyin.
+- Thèmes absents → Mission, Engagement.
+
+### 常常喜乐 — 常常喜乐
+
+Lot 11 · partition retenue : `常常喜乐 G.pdf` (scan-jianpu, mesure fiable)
+
+Lignes modifiées :
+
+- l. 23 : `[Am]相信就有喜[D]乐。[D7]   xiāng xìn jiù yǒu xǐ lè` → `[Am]相信就有喜[D]乐[D7]。   xiāng xìn jiù yǒu xǐ lè` *(session (hors relevé))* — Scan, système 3 : D (x=626) sur le 2̇ de 乐 (« 2̇ - - - »), lié par un arc au 2̇ du temps 1 de la mesure suivante, où D7 est gravé (x=794) ; 下垂的手 n'attaque qu'ensuite sur « 5 6 1̇ 2̇ ». D7 change donc pendant 乐 tenu : après la syllabe, avant la ponctuation (02, tenue), et non après le « 。 » (qui dirait un silence).
+- l. 28 : `[D/F#]封闭的心[Em]再一次敞开，   fēng bì de xīn zài yī cì chǎng kāi` → `[(D/F#)]封闭的心[Em]再一次敞开，   fēng bì de xīn zài yī cì chǎng kāi` *(session (hors relevé))* — Scan, système 4 : l'accord est gravé entre parenthèses « (D/F#) » (x=174), au-dessus du 5 qui porte 封 : accord optionnel, écrit [(D/F#)] (01), même caractère. Le calque porte déjà l'étiquette « (D/F#) ».
+- l. 32 : `[D/F#]干渴的灵[Em]被主爱充满。   gān kě de lǐng bèi zhǔ ài chōng mǎn` → `[(D/F#)]干渴的灵[Em]被主爱充满。   gān kě de lǐng bèi zhǔ ài chōng mǎn` *(session (hors relevé))* — Scan, système 6 : « (D/F#) » entre parenthèses (x=175), au-dessus du 5 qui porte 干 : accord optionnel, écrit [(D/F#)] (01), même caractère. Le calque porte déjà « (D/F#) ».
+
+Mesures sur la partition (accords non exacts et lignes changées par la session) :
+
+| Ligne | Accord | Mesure | Classe | Correction |
+|---|---|---|---|---|
+| 9 | G C G C G/B C D7 | le scan n'a pas d'introduction : la 1re mesure est la levée chantée de 常常喜乐 | absent de la source | gardé (choix « non » du relevé ; retirer l'intro serait retirer une section) |
+| 23 | D | x=626 système 3, sur le 2̇ de 乐 | exact | inchangé |
+| 23 | D7 | x=794 système 3, sur le 2̇ lié depuis 乐 (temps 1), avant la levée 下垂的手 | équivalent (tenue écrite après la ponctuation) | 喜[D]乐[D7]。 |
+| 28 | (D/F#) | x=174 système 4, sur le 5 de 封 | nom (parenthèses de l'optionnel perdues) | [(D/F#)]封 |
+| 28 | Em | x=398 système 4, sur le 3̇ de 再 | exact | inchangé |
+| 32 | (D/F#) | x=175 système 6, sur le 5 de 干 | nom (parenthèses de l'optionnel perdues) | [(D/F#)]干 |
+| 32 | Em | x=400 système 6, sur le 3̇ de 被 | exact | inchangé |
+
+Forme (sans effet sur la place des accords, détail dans le diff du commit) : 8 ligne(s) — espaces : l. 13, 15, 20, 22, 27, 29, 33, 34.
+
+En-tête : ajout de `{source: 常常喜乐 G.pdf}`
+
+| Écart | Statut | Par | Raison, partition |
+|---|---|---|---|
+| 9:instrumental:G:1 | laissé | Timothée |  |
+| 9:instrumental:C:1 | laissé | Timothée |  |
+| 9:instrumental:G:2 | laissé | Timothée |  |
+| 9:instrumental:C:2 | laissé | Timothée |  |
+| 9:instrumental:G/B:1 | laissé | Timothée |  |
+| 9:instrumental:C:3 | laissé | Timothée |  |
+| 9:instrumental:D7:1 | laissé | Timothée |  |
+
+- Scan 简谱 (même scan que le calque) : chaque accord vérifié à l'œil, système par système, chiffre sous l'étiquette. check.py : 27 exacts sur les lignes chantées ; tous confirmés sur le chiffre (attaque), sauf D7 l.23 (tenue, voir lignes).
+- Intro l.9 (G C G C G/B C D7) : le scan n'en grave aucune ; gardée selon le choix « non » du relevé (7 écarts), et la retirer supprimerait une section.
+- Structure : couplet 1 en volta 1 (高山或低谷… 蒙福 :‖), couplet 2 en volta 2 (流泪撒种必…) ; le .cho écrit les deux couplets, aux paroles différentes : conforme. Refrain gravé une fois. Rien à changer.
+- Annotations du scan, non transcrites : « （原版是Am） » au-dessus de Em (l.15, 主都看顾) et « （原版是Em） » au-dessus de Am (l.16, 相信就能蒙) : l'enregistrement original jouait Am puis Em. Ce n'est pas une alternative gravée du type « 或 » ; si l'équipe veut la proposer : [Em (Am)] et [Am (Em)] (calque à revoir).
+- Calque à revoir : aucun accord ajouté ni retiré ; l.28 et l.32 D/F# devient (D/F#), comme l'étiquette du calque (« (D/F#) »).
+- Paroles, non appliqué : le scan ne grave pas la virgule après 低谷 (l.15, fin de système) ; « 离开! » gravé en demi-chasse (le .cho a « ！ »).
+- Pinyin, non appliqué (relu) : l.16 蒙 « mūn » (méng), l.32 灵 « lǐng » (líng), l.29 担 « dān » (dàn), l.33 量 « liáng » (liàng) ; 荫 « yìn » se défend (死荫).
+
+### 得胜的宣告 — 得胜的宣告
+
+Lot 11 · partition retenue : `得胜的宣告 简谱.png` (finale-zh, mesure impossible)
+
+Lignes modifiées :
+
+- l. 9 : `[D]  [Bm]  [Em]  [G/A]  [A]` → `[D]  [A/C#]  [Bm]  [Em]  [G/A]  [A]`
+- l. 15 : `[D]甩开不信， 只宣[Bm]告你的话语，   shuǎi kāi bù xìn zhī xuān gào nǐ de huà yǔ` → `[D]甩开不信，只宣[Bm]告你的话语，   shuǎi kāi bù xìn zhǐ xuān gào nǐ de huà yǔ`
+- l. 19 : `{start_of_chorus: 副歌 1 (D调)/Refrain 1 (D)}` → `{start_of_chorus: 副歌 1/Refrain 1 (D)}` *(structure)*
+- l. 22 : `[G]在敌人的面[A][ ]前， 你为[F#m]我摆设筵席。[Bm]   zài dí rén de miàn qián nǐ wéi wǒ bǎi shè yán xí` → `[G]在敌人的面[A] 前，你为[F#m]我摆设筵席[Bm]。   zài dí rén de miàn qián nǐ wèi wǒ bǎi shè yán xí`
+- l. 26 : `{start_of_bridge: 桥段 1 (D调)/Pont 1 (D)}` → `{start_of_bridge: 桥段 1/Pont 1 (D)}` *(structure)*
+- l. 27 : `我要[D]得胜得胜宣告， 应许[G/D]祝福将临到！   wǒ yào dé shèng dé shèng xuān gào yīng xū zhù fú jiāng lín dào` → `我要[D]得胜得胜宣告，应许[G/D]祝福将临到！   wǒ yào dé shèng dé shèng xuān gào yīng xǔ zhù fú jiāng lín dào`
+- l. 31 : `{start_of_bridge: 桥段 2 (Eb调)/Pont 2 (Eb)}` → `{start_of_bridge: 桥段 2/Pont 2 (Eb)}` *(structure)*
+- l. 32 : `我要[Eb]得胜得胜呼喊， 耶稣[Ab/Eb]你为我争战！   wǒ yào dé shèng dé shèng hū hǎn yē sū nǐ wéi wǒ zhēng zhàn` → `我要[Eb]得胜得胜呼喊，耶稣[Ab/Eb]你为我争战！   wǒ yào dé shèng dé shèng hū hǎn yē sū nǐ wèi wǒ zhēng zhàn`
+- l. 36 : `{start_of_bridge: 桥段 3 (F调)/Pont 3 (F)}` → `{start_of_bridge: 桥段 3/Pont 3 (F)}` *(structure)*
+- l. 41 : `{start_of_chorus: 副歌 2 (F调)/Refrain 2 (F)}` → `{start_of_chorus: 副歌 2/Refrain 2 (F)}` *(structure)*
+- l. 44 : `[Bb]在敌人的面[C][ ]前， 你为[Am]我摆设筵席。[Dm]   zài dí rén de miàn qián nǐ wéi wǒ bǎi shè yán xí` → `[Bb]在敌人的面[C] 前，你为[Am]我摆设筵席[Dm]。   zài dí rén de miàn qián nǐ wèi wǒ bǎi shè yán xí`
+
+Mesures sur la partition (accords non exacts et lignes changées par la session) :
+
+| Ligne | Accord | Mesure | Classe | Correction |
+|---|---|---|---|---|
+| 9 | A/C# | étiquette x=481, sur la dernière croche « 1 » de la mesure 2 de l'intro | absent | [D]  [A/C#]  [Bm]  [Em]  [G/A]  [A] |
+| 22 | Bm | étiquette Bm(Dm) x=1330 sur le 2 lié qui prolonge 席 (席 x≈1305), avant le point | décalé | 筵席[Bm]。 |
+| 22 | A | étiquette A(C) x=791 sur le 3 lié qui prolonge 面 (面 x≈750), 前 x≈870 sur le 2 suivant | équivalent | aucune : 面[A] 前 = accord sur une note liée sans syllabe, avant l'attaque de 前 (02) |
+| 44 | Dm | même étiquette Bm(Dm) x=1330 sur la tenue de 席 | décalé | 筵席[Dm]。 |
+| 44 | C | même étiquette A(C) x=791 sur la tenue de 面 | équivalent | aucune : 面[C] 前 |
+
+Forme (sans effet sur la place des accords, détail dans le diff du commit) : 11 ligne(s) — espaces : l. 13, 14, 16, 20, 21, 28, 33, 37, 38, 42, 43.
+
+En-tête : ajout de `{source: 得胜的宣告 简谱.png}`
+
+| Écart | Statut | Par | Raison, partition |
+|---|---|---|---|
+| 44:oeil:5 | appliqué | session | Refrain en F, même gravure que la ligne 22 (étiquettes D(F)…) : Dm sur la tenue de 席, avant le point ; pinyin wèi. — partition : Bm(Dm) x=1330 sur le 2 lié qui prolonge 席 |
+| 32:oeil:4 | appliqué | session | 你为我争战 : 为 = wèi (pour), comme pinyin.py. Accords inchangés (Eb sur 得, Ab/Eb sur 你). — partition : même mesure que la ligne 27, 2e rangée de paroles |
+| 27:oeil:3 | appliqué | session | 应许 se lit yīng xǔ (table d'exceptions de 01, pinyin.py donne yīng xǔ). Accords inchangés. — partition : D(Eb)(F) x=48 sur 得 ; G/D(Ab/Eb)(Bb) x=666 sur 祝 |
+| 22:oeil:2 | appliqué | session | Bm(Dm) est gravé sur le « 2 » lié qui prolonge 席 (tenue), avant le point : tenue, après la syllabe et avant la ponctuation (02). 为我 « pour moi » : wèi, comme pinyin.py. — partition : Bm(Dm) x=1330 sur le 2 lié de la mesure suivante ; 席 x≈1305 sur le 2 qui s'y lie ; 这是 = levée 2 3 de la même mesure |
+| 15:oeil:1 | appliqué | session | 只 (seulement) se lit zhǐ ; pinyin.py donne aussi zhǐ. Accords inchangés (D sur 甩, Bm sur 告, exacts). — partition : D x=1045 sur 甩 ; Bm x=35 (rangée suivante) sur 告 |
+| 9:oeil:0 | appliqué | session | Le scan grave A/C# sur la dernière croche (1) de la 2e mesure de l'intro, entre D et Bm ; accord de passage gravé, il manque au .cho. — partition : calque : étiquette A/C# x=481 au-dessus du « 1 » final de la mesure 2, Bm x=571 au début de la mesure 3 |
+
+- Vérifié à l'œil sur le calque (public/jianpu/得胜的宣告-p1.webp, même scan) : check.py ne lit pas les étiquettes à trois tonalités ; chaque accord du chant a été mesuré (étiquette → note → caractère) : tous sur le caractère du scan, sauf A/C# absent de l'intro et Bm/Dm sur la tenue de 席, réglés par les questions.
+- Structure : le scan grave le pont ‖: :‖ chanté trois fois en montant (D, Eb, F, voltes 1.2 / 3) puis To Chorus vers le refrain en F (D.S.) : ce sont des retours modulés, écrits en entier à bon droit (01, exception chinoise) ; rien à changer.
+- Ligne 22/44 : 面[A][ ]前 devient 面[A] 前 par le moteur ; c'est la position « note liée sans syllabe » (02), l'accord tombe sur la tenue de 面 avant l'attaque de 前 : gardé.
+- Pinyin, non appliqué : pinyin.py lit 将临到 « jiàng » ; le .cho a jiāng (futur), qui est juste ; la table de pinyin.py n'a pas l'exception.
+- Accords « non exact APRÈS » de check.py : tous exacts à l'œil, l'outil ne reconnaît pas les étiquettes composées D(F), Bm(Dm), D(Eb)(F), G/D(Ab/Eb)(Bb)… et rapproche chaque accord d'une étiquette simple d'un autre système. Mesures du calque (bord gauche étiquette → caractère) : refrain l.20 D(F) x=63/望, Bm(Dm) 312/力, G(Bb) 559/因, A(C) 863/名 ; l.21 D(F) 1108/安, Bm(Dm) 1357/乐, G(Bb) 32/人, A(C) 316/去 ; l.22 G(Bb) 501/在, F#m(Am) 1058/我 ; l.23 Em(Gm) 41/我, G/A(Bb/C) 304/胜, D(F) 584/告 ; ponts l.27-28-32-33-37-38 D(Eb)(F) 48/得, G/D(Ab/Eb)(Bb) 666/祝-你-赞 (rangées 1, 2, 3), D(Cm)(Dm) 1273/得, G/D(Ab) 355/恩-惧 (volte 1.2), C 1058/唱 (volte 3) ; refrain en F l.42-45 : mêmes étiquettes, 2e tonalité entre parenthèses. Les lignes 32-45 « sans rangée de paroles » sont les 2e et 3e rangées de paroles du pont et le refrain repris en F par To Chorus : même mesure.
+- Calque : l'étiquette A/C# (x=481) y est déjà ; rien à changer (calque gelé).
+- Tonalité : {key: D} gravée 1=D, juste.
+- Libellés : le suffixe de tonalité n'est plus écrit des deux côtés du « / » (« 副歌 1 (D调)/Refrain 1 (D) » → « 副歌 1/Refrain 1 (D) »), comme 01 le demande.
+
+### 恒久恒久以前 — 恒久恒久以前
+
+Lot 11 · partition retenue : `676430caf8dffa11900fff9f.png` (scan-jianpu, mesure impossible)
+
+Lignes modifiées :
+
+- l. 7 : `{themes: noel, salut, adoration, noel_fidelite}` → `{themes: Noël, Salut, Groupe fidélité}` *(en-tête)* — Thèmes écrits en slugs (noel, salut, adoration, noel_fidelite) : noms de la liste. Le chant dit d'abord la naissance (晨星, 伯利恒马槽, 人子降生) → Noël ; puis le salut (释放我们, 救恩铸成) → Salut. Groupe fidélité gardé (étiquette ajoutée exprès par un autre contributeur) ; Adoration (来朝见君王) ne tient plus dans les trois.
+- l. 32 : `你的拣[C#m]选永不改变[B/D#]，牵引我[E][F#] 不断向前[B]。   nǐ de jiǎn xuǎn yǒng bù gǎi biàn qiān yǐn wǒ bù duàn xiàng qián` → `你的拣[C#m]选永不改[B/D#]变，牵引我[E][F#] 不断向前[B]。   nǐ de jiǎn xuǎn yǒng bù gǎi biàn qiān yǐn wǒ bù duàn xiàng qián` *(session (hors relevé))* — Volta 2 du refrain : « 6· 7⌒7 1̇ | 5̇ – 5̇ 4̇ 3̇ 1̇ » ; 改 (x=318–353) sous le « 1̇ », 变 (x=389–425) sous le « 5̇ » du temps fort, où B/D# est gravé (x=394) ; le 5̇ est ensuite tenu et lié, 牵 attaque sur le « 4̇ ». L'accord attaque avec 变 : 改[B/D#]变, pas après la virgule. Décalé d'un caractère.
+
+Mesures sur la partition (accords non exacts et lignes changées par la session) :
+
+| Ligne | Accord | Mesure | Classe | Correction |
+|---|---|---|---|---|
+| 11 | B/D# | x=43 au-dessus du 1er « 0 » de « 0 0 1 2 3 2 » (système 1) : avant l'attaque de 明 → [B/D#] 明 | exact (vérifié à l'œil, l'outil lit mal) | aucune |
+| 11 | E | x=393 au-dessus du « 2 » du temps fort après ‖: ; 晨 est le « 2 » lié depuis la mesure précédente, 星 sur le « 5 » : syncope liée → 晨[E]星 | exact (vérifié à l'œil, l'outil lit mal) | aucune |
+| 11 | F# | x=639 au-dessus du « 0 » de « 0 0 5 » : silence avant 我 → [F#] 我 | exact (vérifié à l'œil, l'outil lit mal) | aucune |
+| 11 | G#m | x=998 au-dessus du « 2 » lié depuis 到 ; 你 sur le « 6̣ » : 到 tenu → 到[G#m]你 | exact (vérifié à l'œil, l'outil lit mal) | aucune |
+| 12 | B/D# | x=1232 (système 1) au-dessus de « 0 0 » avant 灰 → [B/D#] 灰 | exact (vérifié à l'œil, l'outil lit mal) | aucune |
+| 12 | E | x=63 (système 2) au-dessus du « 2 » lié depuis 曾 ; 经 sur le « 5 » → 曾[E]经 | exact (vérifié à l'œil, l'outil lit mal) | aucune |
+| 12 | F# | x=379 au-dessus du « 7 » = 动 (rangée 1) → 有你[F#]动 | exact (vérifié à l'œil, l'outil lit mal) | aucune |
+| 12 | G#m | x=732 (volta 1) au-dessus du « 2 » lié depuis 迹 → 迹[G#m]。 | exact (vérifié à l'œil, l'outil lit mal) | aucune |
+| 16 | B/D# | x=998 (volta 1, système 2) au-dessus de « 0 0 » avant 馨 → [B/D#] 馨 | exact (vérifié à l'œil, l'outil lit mal) | aucune |
+| 16 | E | x=393 (système 1, rangée 2) : même note que 晨/星 → 活[E]祭 | exact (vérifié à l'œil, l'outil lit mal) | aucune |
+| 16 | F# | x=639 au-dessus du « 0 » avant 伯 → [F#] 伯 | exact (vérifié à l'œil, l'outil lit mal) | aucune |
+| 16 | G#m | x=998 au-dessus du « 2 » lié depuis 槽 ; 里 sur le « 6̣ » → 槽[G#m]里 | exact (vérifié à l'œil, l'outil lit mal) | aucune |
+| 17 | B/D# | x=1232 (système 1) avant 一 → [B/D#] 一 | exact (vérifié à l'œil, l'outil lit mal) | aucune |
+| 17 | E | x=63 (système 2) : 追 lié, 寻 sur le « 5 » → 追[E]寻 | exact (vérifié à l'œil, l'outil lit mal) | aucune |
+| 17 | F# | x=379 au-dessus du « 7 » = 的 (rangée 2) → 有你[F#]的 | exact (vérifié à l'œil, l'outil lit mal) | aucune |
+| 17 | G#m | x=1359 (volta 2) au-dessus du « 2 » lié depuis 息 → 息[G#m]。 | exact (vérifié à l'œil, l'outil lit mal) | aucune |
+| 21 | B/D# | x=228 au-dessus du « 1̇ » = 来 → 所以[B/D#]来 | exact (vérifié à l'œil, l'outil lit mal) | aucune |
+| 21 | E | x=564 au-dessus du « 7 » lié depuis 朝 (temps fort) ; 见 sur le « 5 » → 朝[E]见 (étiquette à ~30 px de 见 pour l'outil) | exact (vérifié à l'œil, l'outil lit mal) | aucune |
+| 21 | B/F# | x=898 au-dessus du « 1̇ » = 快 → [B/F#]快 | exact (vérifié à l'œil, l'outil lit mal) | aucune |
+| 21 | G#m | x=1224 au-dessus du « 7 » lié depuis 向 ; 他 sur le « 5 » → 向[G#m]他 | exact (vérifié à l'œil, l'outil lit mal) | aucune |
+| 22 | B/D# | x=65 (système 4) au-dessus du « 3̇ » = 爱 → [B/D#]爱 | exact (vérifié à l'œil, l'outil lit mal) | aucune |
+| 22 | E | x=456 au-dessus du « 2̇ » lié depuis 已 ; 为 sur le « 1̇ » → 已[E]为 | exact (vérifié à l'œil, l'outil lit mal) | aucune |
+| 22 | F# | x=844 au-dessus du « 2̇ » lié depuis 来 (ronde) → 来[F#]。 | exact (vérifié à l'œil, l'outil lit mal) | aucune |
+| 26 | B/D# | x=98 (système 5) au-dessus du « 5· » = 恒 → [B/D#]恒 | exact (vérifié à l'œil, l'outil lit mal) | aucune |
+| 26 | E | x=458 au-dessus du « 2̇· » = 以 → 恒久[E]以 | exact (vérifié à l'œil, l'outil lit mal) | aucune |
+| 26 | F# | x=807 au-dessus du « 4̇ » = 降 → 人子[F#]降 | exact (vérifié à l'œil, l'outil lit mal) | aucune |
+| 26 | G#m | x=1197 au-dessus du « 3̇ » lié depuis 间 → 间[G#m]， | exact (vérifié à l'œil, l'outil lit mal) | aucune |
+| 27 | E | x=76 (volta 1) au-dessus du « 6 » = 人 → 为[E]人 | exact (vérifié à l'œil, l'outil lit mal) | aucune |
+| 27 | B/D# | x=461 au-dessus du « 5 » = 们 → 我[B/D#]们 | exact (vérifié à l'œil, l'outil lit mal) | aucune |
+| 27 | C#m | x=849 au-dessus du « 2̇ » = 能 → 全[C#m]能 | exact (vérifié à l'œil, l'outil lit mal) | aucune |
+| 27 | F# | x=1205 au-dessus du « 2̇ » lié depuis 能 → 能[F#]。 | exact (vérifié à l'œil, l'outil lit mal) | aucune |
+| 31 | B/D# | x=98 (rangée 2) → [B/D#]恒 | exact (vérifié à l'œil, l'outil lit mal) | aucune |
+| 31 | E | x=458 → 恒久[E]以 | exact (vérifié à l'œil, l'outil lit mal) | aucune |
+| 31 | F# | x=807 au-dessus du « 4̇ » = 铸 → 救恩[F#]铸 | exact (vérifié à l'œil, l'outil lit mal) | aucune |
+| 31 | G#m | x=1197 → 间[G#m]， | exact (vérifié à l'œil, l'outil lit mal) | aucune |
+| 32 | C#m | x=56 (volta 2) au-dessus du « 6 » = 选 → 拣[C#m]选 | exact (vérifié à l'œil, l'outil lit mal) | aucune |
+| 32 | B/D# | x=394 au-dessus du « 5̇ » du temps fort, sous lequel 变 est gravé (变 x=389–425 ; 改 x=318–353 sous le « 1̇ » de la mesure précédente) : 变 attaque avec l'accord ; le .cho le met après 变 | décalé | 改[B/D#]变 |
+| 32 | E | x=728 au-dessus du « 1̇ » lié depuis 我 → 我[E] | exact (vérifié à l'œil, l'outil lit mal) | aucune |
+| 32 | F# | x=970 au-dessus du « 0 » avant 不 → [F#] 不 | exact (vérifié à l'œil, l'outil lit mal) | aucune |
+| 32 | B | x=1311 au-dessus du « 1̇ » lié depuis 前 → 前[B]。 | exact (vérifié à l'œil, l'outil lit mal) | aucune |
+
+En-tête : `{source: 676430caf8dffa11900fff9f.png}` → `{source: 676430caf8dffa11900fff9f.png}`
+
+- Source mesure « impossible » pour l'outil (couplets empilés sous une reprise à cheval sur deux systèmes ; check.py classe tout « à relire » ou « absent de la source ») : les 39 accords vérifiés à l'œil, un par un, sur le .webp du calque (même scan), chiffre du jianpu sous chaque étiquette.
+- 38 accords exacts à l'œil ; un seul décalé : B/D# de la volta 2 du refrain, posé après 变 alors que 变 attaque sous l'étiquette (l. 32, corrigé en 改[B/D#]变).
+- Les trois « à relire » de l'avis de source (E sur 见, G#m sur 他, E sur 为) sont des syncopes liées : la syllabe précédente (朝, 向, 已) est liée par-dessus la barre où l'accord est gravé ; le .cho les écrit déjà 朝[E]见, 向[G#m]他, 已[E]为.
+- Structure : couplet ‖: :‖ à deux rangées de paroles et voltas 1/2, refrain ‖: :‖ à deux rangées et voltas 1/2 ; les deux couplets et les deux refrains ont des paroles différentes (et des fins différentes) : rien n'est une reprise identique, la structure du .cho suit la partition.
+- Calque 简谱 : aucun nom d'accord changé, aucun ajouté ni retiré ; seul un déplacement d'un caractère (calque inchangé).
+- Thèmes : quatre étiquettes en slugs ramenées à trois noms de la liste ; Adoration en thème défendable.
+- retouches.js signale la l. 32 : elle vient du commit de saisie du chant (34006047, transcription du scan), pas d'une retouche à l'oreille : la partition l'emporte.
+
+### 恩典之路 — 恩典之路
+
+Lot 11 · partition retenue : `恩典之路.pdf` (scan-jianpu, mesure impossible)
+
+Lignes modifiées :
+
+- l. 19 : `[Gm]永远不变[F/A]的应许， 这[Bb]一生[Bdim][ ]都是祝[Bb/C]福。   nǐ yǒng yuǎn bù biàn de yìng xǔ zhè yī shēng dōu shì zhù fú` → `[Gm]永远不变[F/A]的应许，这[Bb]一生[Bdim] 都是祝[Bb/C]福。   yǒng yuǎn bù biàn de yīng xǔ zhè yī shēng dōu shì zhù fú`
+
+Mesures sur la partition (accords non exacts et lignes changées par la session) :
+
+| Ligne | Accord | Mesure | Classe | Correction |
+|---|---|---|---|---|
+| 11 | F C/E Bb/D D/F# Gm F/A Bb Bdim Bb/C | PDF image (portée), système Intro mes. 1-4 : F, C/E, B♭/D, D/F♯, Gm, F/A, B♭, Bdim, B♭/C dans cet ordre, sans paroles | exact (vérifié à l'œil ; l'outil mesure le calque 简谱, qui est un autre arrangement) | aucune |
+| 12 | F C/E Bb/D D/F# Gm F/A Bb C7 F | Intro mes. 5-9 : F, C/E, B♭/D, D/F♯, Gm, F/A, B♭, C7, F (ronde liée) | exact (vérifié à l'œil ; « nom différent / absent » de l'outil = calque de l'autre arrangement) | aucune |
+| 16 | Bb/D | mes. 11 : B♭/D sur le premier fa, sous lequel « 我 » (après « 引 » sur la double mi de la mes. 10) | exact (vérifié à l'œil ; l'outil lit Dm sur le calque de l'autre arrangement) | aucune |
+| 18 | Bb/D | mes. 15 : B♭/D sur le premier fa, « 愛 » (« 你 » sur la double mi levée) | exact (vérifié à l'œil) | aucune |
+| 18 | D/F# | mes. 15 : D/F♯ sur la blanche la, « 我 » final | exact (vérifié à l'œil) | aucune |
+| 19 | Gm | mes. 16 : Gm sur le ré du 1er temps, « 永 » | exact (vérifié à l'œil ; l'outil apparie au mauvais système du calque) | aucune |
+| 19 | Bb | mes. 17 : B♭ sur la croche la du 1er temps, « 一 » (« 這 » sur la double la levée de la mes. 16) | exact (vérifié à l'œil) | aucune |
+| 19 | Bdim | mes. 17 : Bdim sur la croche sol liée du 3e temps, « 生 » tenu depuis la double sol ; « 都 » attaque la croche fa suivante | exact (tenue : accord après « 生 », avant l'attaque de « 都 » ; l'outil ne voit pas Bdim sur le calque) | aucune : 一生[Bdim] 都 |
+| 23 | Bb/D | mes. 20 : B♭/D sur le premier fa, « 是 » | exact (vérifié à l'œil) | aucune |
+| 25 | Bb/D | mes. 24 : B♭/D sur le premier fa, « 是 » | exact (vérifié à l'œil) | aucune |
+
+Forme (sans effet sur la place des accords, détail dans le diff du commit) : 7 ligne(s) — espaces : l. 16, 17, 18, 23, 24, 25, 26.
+
+En-tête : ajout de `{source: 恩典之路.pdf}`
+
+| Écart | Statut | Par | Raison, partition |
+|---|---|---|---|
+| 19:oeil:0 | appliqué | def |  |
+
+- Partition retenue : 恩典之路.pdf, PDF image d'une partition en portée (2 pages, sans couche texte). check.py le prend pour un scan 简谱 et mesure le calque public/jianpu/恩典之路-p1.webp, qui est un AUTRE arrangement (intro F Bbmaj7/F F/A Bb G7/B C…, Dm au lieu de Bb/D, Gm/F au lieu de Bdim, pas de D/F#) : tous ses « décalé / nom différent / absent » viennent de là.
+- Vérifié à l'œil, chaque accord du chant (rendu 4×, crops v1-v3, c1-c3 dans crops/恩典之路) : intro l. 11-12, couplet l. 16-19, refrain l. 23-26 — les 49 accords du .cho sont ceux de la partition en portée, chacun sur le caractère chanté sous sa note (tenues : C/E sur « 主 / 獨 / 步 » pointés, F/C sur « 路 » ; Bdim sur la tenue de « 生 »). Aucune ligne d'accords à corriger.
+- Seul écart appliqué : 19:oeil:0 (défaut ok) — le pinyin de la l. 19 perd le « nǐ » en trop (15 groupes pour 14 caractères) et 应许 se lit yīng xǔ ; accords inchangés.
+- Calque gelé, non touché : la vue 简谱 du site montre donc l'autre arrangement (accords différents du texte) — à savoir pour les musiciens.
+- Paroles, non appliqué : rien (texte simplifié conforme à la partition en caractères traditionnels).
+- Pas de reprise gravée ; tonalité F et ♩=72 conformes à la partition.
+
+### 想起你 — 想起你
+
+Lot 11 · partition retenue : `想起你.pdf` (scan-jianpu, mesure fiable)
+
+Lignes modifiées :
+
+- l. 10 : `你那[F#m]看不见的手安慰[Esus4]我。[E]   nǐ nà kàn bù jiàn de shǒu ān wèi wǒ` → `你那[F#m]看不见的手安慰[Esus4]我[E]。   nǐ nà kàn bù jiàn de shǒu ān wèi wǒ` *(session (hors relevé))* — Système 2, mesure 1 « 2 − − 0 3 5 » : Esus4 (x=31) sur le 2 où 我 attaque, E (x=153) sur le « − » du 2e temps pendant que 我 est tenu ; 02, tenue : après la syllabe, avant la ponctuation (même caractère).
+- l. 19 : `[Bm]生命窄路[Esus4]有你[E][ ]陪[A]我。   shēng mìng zhǎi lù yǒu nǐ péi wǒ` → `[Bm]生命窄路[Esus4]有你[E]陪[A]我[E/A]。   shēng mìng zhǎi lù yǒu nǐ péi wǒ` *(session (hors relevé))* — Système 5, mesure « 1̇ − − − ‖ » (fin du refrain, Fine) : A (x=40) sur le 1̇ de 我, E/A (x=130) sur un « − » de la tenue de 我, avant la double barre ; E/A gravé et absent du .cho : ajouté après la syllabe, avant la ponctuation (tenue). Le « [ ] » après E est retiré à la main : E est sur le 6 lié depuis 你 (syncope liée, 02 : après la syllabe qui anticipe), « 你[E]陪 » et non « [E] 陪 » (avant l'attaque) que la forme écrirait.
+- l. 23 : `[E/A]心情[A]起起又落落， 好像[D/A]潮起潮[A]落。   xīn qíng qǐ qǐ yòu luò luò hǎo xiàng cháo qǐ cháo luò` → `[E/A] 心情[A]起起又落落，好像[D/A]潮起潮[A]落。   xīn qíng qǐ qǐ yòu luò luò hǎo xiàng cháo qǐ cháo luò`
+- l. 25 : `听你[A]慈声对我说： 一生[D/A]不离[A]开我，   tīng nǐ cí shēng duì wǒ shuō yī shēng bù lí kāi wǒ` → `听你[A]慈声对我说：一生[D/A]不离开[A]我，   tīng nǐ cí shēng duì wǒ shuō yī shēng bù lí kāi wǒ` *(session (hors relevé))* — Système 7, mesure 2 « 1· 1⌒1 5⌒5 3 0 3 » : 不 sur 1·, 离 sur la double croche liée, 开 sur le 5 de la 2e croche du 2e temps, lié au 5 du 3e temps ; A (x=719) est au-dessus de ce 2e 5 (la tenue liée de 开), pas de son attaque : syncope liée (02), l'accord se pose après 开, devant 我. Décalé d'un caractère dans le .cho.
+
+Mesures sur la partition (accords non exacts et lignes changées par la session) :
+
+| Ligne | Accord | Mesure | Classe | Correction |
+|---|---|---|---|---|
+| 23 | E/A | x=899 (système 5) sur le silence « 0 » avant la levée 心情 | décalé (l'outil cherchait au système 1) ; collé à 心 au lieu d'avant l'attaque | [E/A] 心情 |
+| 10 | E | x=153 sur le « − » de la tenue de 我 | équivalent (même caractère, après la ponctuation) | 我[E]。 |
+| 10 | Esus4 | x=31 sur le 2 de 我 | exact | aucune |
+| 19 | E/A | x=130 (rangée vue comme instrumentale par l'outil) sur la tenue de 我, avant la double barre Fine | absent | 我[E/A]。 |
+| 19 | Bm Esus4 E A | Bm x=1135 sur 1̇ de 生, Esus4 x=1369 sur 5· de 有, E x=1489 sur le 6 lié de 你 (syncope), A x=40 (système 5) sur 1̇ de 我 | exact | aucune |
+| 25 | A | x=719 au-dessus du 2e 5, lié depuis l'attaque de 开 (2e croche du 2e temps) | décalé (syncope liée : après 开, pas devant) | 不离开[A]我 |
+| 25 | A D/A | A x=43 sur le 6 de 慈, D/A x=514 sur le 1· de 不 | exact (l'outil ne rapproche pas le système 7 de la ligne) | aucune |
+| 24 | D/A A F#m Esus4 E | système 6 : D/A x=45 sur 潮, A x=295 sur 落 (l. 23), F#m x=585 sur 6 de 慈, Esus4 x=1094 sur 2 de 没, E x=1317 sur la tenue de 没 | exact (outil : « absent du .cho », il ne rapproche pas les systèmes 6-7 des l. 23-26) | aucune |
+| 26 | Bm Esus4 E A | système 7 : Bm x=927 sur 2· de 我, Esus4 x=1073 sur 5 de 典, E x=1200 sur 3 de 的, A x=1335 sur 1 de 诺 | exact (même raison) | aucune |
+| 19 | A, E/A | après correction, check.py rapproche le 我 de la fin du refrain (système 5, rangée sans paroles pour lui) du système 6 et classe A et E/A « décalé » (x=295, x=130) | exact à l'œil (outil qui lit mal) | aucune : A x=40 sur le 1̇ de 我, E/A x=130 sur sa tenue |
+| 19 | E | x=1489 sur le 6 lié depuis l'attaque de 你 (double croche avant le temps), 2̇ de 陪 ensuite ; l'outil mesure 27 px avec le caractère 陪 (paroles décalées des notes sur ce scan) | à relire pour l'outil, exact à l'œil (syncope liée) | 你[E]陪 |
+
+Forme (sans effet sur la place des accords, détail dans le diff du commit) : 3 ligne(s) — espaces : l. 9, 11, 18.
+
+En-tête : ajout de `{source: 想起你.pdf}`
+
+| Écart | Statut | Par | Raison, partition |
+|---|---|---|---|
+| 23:decale:E/A:1 | laissé | def |  |
+| 23:fable:23:decale:E/A:1 | appliqué | session | La ligne proposée met E/A avant l'attaque de 心 (crochet puis espace) ; A sur 起, D/A sur 潮, A sur 落 sont justes : toute la ligne est juste. L'écart « décalé » d'origine reste « non » (une seule lecture). — partition : Système 5, mesure « 5 − 0 0 3 5 » : E/A (x=899) sur le premier « 0 » (3e temps), la levée 心情 (3 5) n'entre qu'au 4e temps ; puis A (x=1132) sur le 6 de 起 ; système 6 : D/A (x=45) sur le 1· de 潮, A (x=295) sur le 3 de 落. |
+
+- Scan 简谱 (calque public/jianpu/想起你-p1.webp) : chaque accord vérifié à l'œil en comptant les notes sous l'étiquette ; l'outil ne rapproche pas les systèmes 6-7 du couplet 2 (« absent du .cho » pour des accords qui sont bien au .cho, à leur caractère).
+- l. 23 : lecture de l'autre relecture retenue (ok) : E/A sur le silence avant la levée 心情 → « [E/A] 心情 ».
+- l. 25 : A gravé sur la tenue liée de 开 (syncope) : « 不离开[A]我 » au lieu de « 不离[A]开我 ».
+- l. 10 : E sur la tenue de 我 : passé avant la ponctuation (02, tenue), même caractère.
+- l. 19 : E/A gravé sur la tenue finale de 我 (mesure de la Fine) ajouté.
+- Structure à appliquer par Timothée : le passage « 哦 哦 » (interlude chanté, système 5) manque entre le refrain et le couplet 2 ; bloc proposé dans structure. La reprise du refrain après le couplet 2 (« To Chorus », « 唱完要继续唱Chorus ») n'est pas dépliée (chant chinois).
+- En-tête : la partition donne 1=A (原调Bb) : {key: A} juste.
+- check.py après : les « décalé » l. 19 (A, E/A) et l. 23 (E/A) sont des erreurs d'appariement de l'outil (système 5 sans rangée de paroles reconnue, système 1 cherché pour le couplet 2) ; vérifiés à l'œil.
+
+### 愿为主闪亮 — 愿为主闪亮
+
+Lot 11 · partition retenue : `愿为主闪亮.pdf` (scan-jianpu, mesure fiable)
+
+Lignes modifiées :
+
+- l. 14 : `[G]渺小[A7]且缺乏，[D]   miǎo xiǎo qiě quē fá` → `[G]渺小[A7]且缺乏[D]，   miǎo xiǎo qiě quē fá` *(session (hors relevé))* — Scan, système 3 : 乏 est attaqué sur le 3 de « 2 3 » avant la barre, lié au « 3 - - - » de la mesure suivante ; D (x=668) est gravé sur ce 3 lié, donc pendant la syllabe tenue : après la syllabe, avant la ponctuation (02, tenue ; cas 施行奇事[G]。).
+
+Mesures sur la partition (accords non exacts et lignes changées par la session) :
+
+| Ligne | Accord | Mesure | Classe | Correction |
+|---|---|---|---|---|
+| 14 | D | scan x=668 système 3, sur le 3 lié qui prolonge 乏 (乏 attaqué sur le 3 d'avant la barre) | décalé (tenue écrite après la ponctuation ; check.py le compte exact, l'écart est sous son seuil) | 缺乏[D]， |
+| 14 | G, A7 | G x=42 sur le 6 de 渺, A7 x=332 sur le 5 de 且 | exact | aucune |
+
+Forme (sans effet sur la place des accords, détail dans le diff du commit) : 2 ligne(s) — espaces : l. 15, 22.
+
+En-tête : ajout de `{source: 愿为主闪亮.pdf}`
+
+- Scan 简谱 (même scan que le calque du site), mesure fiable : 33 accords sur 33 exacts pour check.py. Chaque accord revu à l'œil sur le .webp, système par système : intro Dmaj7 Gmaj7 Dmaj7 Gmaj7, couplet et refrain sur le chiffre et le caractère de la partition (levées 他温 / 他奇 / 我如 sans accord, accord sur 柔 / 妙 / 此).
+- Une seule correction : l.14, D gravé sur la note liée qui prolonge 乏, ramené avant la virgule (tenue, 02).
+- Structure : aucune reprise marquée sur la partition (intro, couplet, refrain, barre finale) ; rien à changer.
+- Pinyin, non appliqué (caractères inchangés) : l.13 只 écrit « zhī », 只是 se lit « zhǐ » ; l.21 头发 écrit « fā », pypinyin donne « fà ».
+- Calque à revoir : aucun (aucun nom d'accord changé, aucun accord ajouté ni retiré).
+
+### 我们呼求 — 我们呼求
+
+Lot 11 · partition retenue : `我们呼求.pdf` (scan-jianpu, mesure fiable)
+
+Lignes modifiées :
+
+- l. 16 : `[D/F#] 以祷告[D/E]寻求你面；[A]   yǐ dǎo gào xún qiú nǐ miàn` → `[D/F#] 以祷告[D/E]寻求你面[A]；   yǐ dǎo gào xún qiú nǐ miàn` *(session (hors relevé))* — A (x=1073) au-dessus de la note liée qui prolonge « 面 » ; tenue : l'accord est gravé sur la tête « 3 » liée depuis la syllabe précédente (ronde liée, aucun nouveau caractère) ; 02 : après la syllabe, avant la ponctuation (même caractère, seule la ponctuation change de côté).
+- l. 18 : `[Bm] 定意单[B]单跟随你。[E]   dìng yì dān dān gēn suí nǐ` → `[Bm] 定意单[B]单跟随你[E]。   dìng yì dān dān gēn suí nǐ` *(session (hors relevé))* — E (x=1074) au-dessus de la note liée qui prolonge « 你 » ; tenue : l'accord est gravé sur la tête « 3 » liée depuis la syllabe précédente (ronde liée, aucun nouveau caractère) ; 02 : après la syllabe, avant la ponctuation (même caractère, seule la ponctuation change de côté).
+- l. 20 : `[D/F#] 求赐下[D/E]父神的心；[A]   qiú cì xià fù shén de xīn` → `[D/F#] 求赐下[D/E]父神的心[A]；   qiú cì xià fù shén de xīn` *(session (hors relevé))* — A (x=1073) au-dessus de la note liée qui prolonge « 心 » ; tenue : l'accord est gravé sur la tête « 3 » liée depuis la syllabe précédente (ronde liée, aucun nouveau caractère) ; 02 : après la syllabe, avant la ponctuation (même caractère, seule la ponctuation change de côté).
+- l. 27 : `[D/F#] 以祷告[D/E]寻求你面；[A]   yǐ dǎo gào xún qiú nǐ miàn` → `[D/F#] 以祷告[D/E]寻求你面[A]；   yǐ dǎo gào xún qiú nǐ miàn` *(session (hors relevé))* — A (x=1073) au-dessus de la note liée qui prolonge « 面 » ; tenue : l'accord est gravé sur la tête « 3 » liée depuis la syllabe précédente (ronde liée, aucun nouveau caractère) ; 02 : après la syllabe, avant la ponctuation (même caractère, seule la ponctuation change de côté).
+- l. 29 : `[Bm] 定意单[B]单跟随你。[E]   dìng yì dān dān gēn suí nǐ` → `[Bm] 定意单[B]单跟随你[E]。   dìng yì dān dān gēn suí nǐ` *(session (hors relevé))* — E (x=1074) au-dessus de la note liée qui prolonge « 你 » ; tenue : l'accord est gravé sur la tête « 3 » liée depuis la syllabe précédente (ronde liée, aucun nouveau caractère) ; 02 : après la syllabe, avant la ponctuation (même caractère, seule la ponctuation change de côté).
+- l. 31 : `[D/F#] 求你来[D/E]掌控全地；[A]   qiú nǐ lái zhǎng kòng quán dì` → `[D/F#] 求你来[D/E]掌控全地[A]；   qiú nǐ lái zhǎng kòng quán dì` *(session (hors relevé))* — A (x=1073) au-dessus de la note liée qui prolonge « 地 » ; tenue : l'accord est gravé sur la tête « 3 » liée depuis la syllabe précédente (ronde liée, aucun nouveau caractère) ; 02 : après la syllabe, avant la ponctuation (même caractère, seule la ponctuation change de côté).
+- l. 38 : `设立你[F#m]宝座在这[A7]地；[G/A] [A7]   shè lì nǐ bǎo zuò zài zhè dì` → `设立你[F#m]宝座在这[A7/E]地[G/A][A7]；   shè lì nǐ bǎo zuò zài zhè dì`
+- l. 42 : `荣耀高[F#m]举你的圣[A7]名；[G/A] [A7]   róng yào gāo jǔ nǐ de shèng míng` → `荣耀高[F#m]举你的圣[A7/E]名[G/A][A7]；   róng yào gāo jǔ nǐ de shèng míng` *(session)*
+
+Mesures sur la partition (accords non exacts et lignes changées par la session) :
+
+| Ligne | Accord | Mesure | Classe | Correction |
+|---|---|---|---|---|
+| 11 | A | rangée instrumentale y=505, x=1046, dernière mesure du prélude | absent (retouche à la main gardée) | aucune : un commit propre au chant (1d883df, « fix: chinese song chord ») a retiré ce A du prélude, retouche à l'oreille intouchable |
+| 11 | F#m Bm E/G# D | rangée instrumentale y=505, x=19 / 236 / 557 / 785 | exact (l'outil ne rapproche pas la 2e rangée du prélude) | aucune |
+| 38 | A7 | étiquette composée x=776, 1er élément « A7/E » sur le 3̇ de 地 | nom | [A7/E]地 |
+| 38 | G/A | même étiquette, 2e temps de la tenue de 地 | équivalent (après la ponctuation au lieu d'avant) | 地[G/A] |
+| 38 | A7 | même étiquette, 3e temps de la tenue de 地 | équivalent (après la ponctuation au lieu d'avant) | 地[G/A][A7]； |
+| 38 | F#m | x=551 sur le 7 de 宝 | exact | aucune |
+| 39 | D | dernier élément de l'étiquette composée x=776, sur le 6 de 你 | exact (l'outil ne lit pas l'étiquette composée) | aucune |
+| 42 | A7 | étiquette composée x=221, « A7/E » sur le 3̇ de 名 | nom | [A7/E]名 |
+| 42 | G/A | même étiquette, 2e temps de la tenue de 名 | équivalent | 名[G/A] |
+| 42 | A7 | même étiquette, 3e temps de la tenue de 名 | équivalent | 名[G/A][A7]； |
+| 42 | F#m | x=16 sur le 7 de 举 | exact | aucune |
+| 43 | D | dernier élément de l'étiquette composée x=221, sur le 6 de 复 | exact (l'outil ne lit pas l'étiquette composée) | aucune |
+| 16 | A | sur la note liée qui prolonge « 面 » | équivalent (même caractère, après la ponctuation) | 面[A] |
+| 20 | A | sur la note liée qui prolonge « 心 » | équivalent (même caractère, après la ponctuation) | 心[A] |
+| 27 | A | sur la note liée qui prolonge « 面 » | équivalent (même caractère, après la ponctuation) | 面[A] |
+| 31 | A | sur la note liée qui prolonge « 地 » | équivalent (même caractère, après la ponctuation) | 地[A] |
+| 18 | E | sur la note liée qui prolonge « 你 » | équivalent (même caractère, après la ponctuation) | 你[E] |
+| 29 | E | sur la note liée qui prolonge « 你 » | équivalent (même caractère, après la ponctuation) | 你[E] |
+
+Forme (sans effet sur la place des accords, détail dans le diff du commit) : 2 ligne(s) — espaces : l. 37, 40.
+
+En-tête : ajout de `{source: 我们呼求.pdf}`
+
+| Écart | Statut | Par | Raison, partition |
+|---|---|---|---|
+| 43:decale:D:1 | laissé | def |  |
+| 42:invente:A7:1 | laissé | session | Rien n'est à supprimer : les trois accords sont gravés dans l'étiquette composée « A7/E G/A A7 D » (x=221, système 9) que l'outil ne lit pas. Seul le nom du premier change (A7 → A7/E) : ligne juste dans lignes. — partition : Système 9 : A7/E sur le 3̇ où 名 attaque, G/A et A7 aux 2e et 3e temps de la tenue, D sur le 6 de 复. |
+| 42:invente:G/A:1 | laissé | session | Rien n'est à supprimer : les trois accords sont gravés dans l'étiquette composée « A7/E G/A A7 D » (x=221, système 9) que l'outil ne lit pas. Seul le nom du premier change (A7 → A7/E) : ligne juste dans lignes. — partition : Système 9 : A7/E sur le 3̇ où 名 attaque, G/A et A7 aux 2e et 3e temps de la tenue, D sur le 6 de 复. |
+| 42:invente:A7:2 | laissé | session | Rien n'est à supprimer : les trois accords sont gravés dans l'étiquette composée « A7/E G/A A7 D » (x=221, système 9) que l'outil ne lit pas. Seul le nom du premier change (A7 → A7/E) : ligne juste dans lignes. — partition : Système 9 : A7/E sur le 3̇ où 名 attaque, G/A et A7 aux 2e et 3e temps de la tenue, D sur le 6 de 复. |
+| 39:decale:D:1 | laissé | def |  |
+| 38:invente:A7:1 | laissé | def |  |
+| 38:invente:G/A:1 | laissé | def |  |
+| 38:invente:A7:2 | laissé | def |  |
+| 38:fable:38:invente:A7:1 | appliqué | session | La ligne proposée met A7/E sur 地 (nom gravé) et G/A A7 pendant la tenue, avant la ponctuation (02, tenue) ; F#m reste sur 宝 (7, x=551). Toute la ligne est juste ; les écarts « inventé » d'origine restent « non » (une seule lecture). — partition : Système 7 : une seule étiquette composée « A7/E G/A A7 D » (x=776) au-dessus de « 3̇ - - - \| 6 » ; notes comptées : 0 5 设 2̇ 立 1̇ 你 \| 7 宝 6 座 7 在 1̇ 这 \| 3̇ 地 - - - \| 6 你. A7/E sur 地, G/A et A7 sur les 2e et 3e temps de la tenue, D sur 你 (l. 39). |
+| 38:fable:38:invente:G/A:1 | appliqué | session | La ligne proposée met A7/E sur 地 (nom gravé) et G/A A7 pendant la tenue, avant la ponctuation (02, tenue) ; F#m reste sur 宝 (7, x=551). Toute la ligne est juste ; les écarts « inventé » d'origine restent « non » (une seule lecture). — inclus dans la ligne de 38:fable:38:invente:A7:1 — partition : Système 7 : une seule étiquette composée « A7/E G/A A7 D » (x=776) au-dessus de « 3̇ - - - \| 6 » ; notes comptées : 0 5 设 2̇ 立 1̇ 你 \| 7 宝 6 座 7 在 1̇ 这 \| 3̇ 地 - - - \| 6 你. A7/E sur 地, G/A et A7 sur les 2e et 3e temps de la tenue, D sur 你 (l. 39). |
+| 38:fable:38:invente:A7:2 | appliqué | session | La ligne proposée met A7/E sur 地 (nom gravé) et G/A A7 pendant la tenue, avant la ponctuation (02, tenue) ; F#m reste sur 宝 (7, x=551). Toute la ligne est juste ; les écarts « inventé » d'origine restent « non » (une seule lecture). — inclus dans la ligne de 38:fable:38:invente:A7:1 — partition : Système 7 : une seule étiquette composée « A7/E G/A A7 D » (x=776) au-dessus de « 3̇ - - - \| 6 » ; notes comptées : 0 5 设 2̇ 立 1̇ 你 \| 7 宝 6 座 7 在 1̇ 这 \| 3̇ 地 - - - \| 6 你. A7/E sur 地, G/A et A7 sur les 2e et 3e temps de la tenue, D sur 你 (l. 39). |
+| 11:instrumental:F#m:1 | laissé | def |  |
+| 11:instrumental:Bm:1 | laissé | def |  |
+| 11:instrumental:E/G#:1 | laissé | def |  |
+| 11:instrumental:D:1 | laissé | def |  |
+
+- Scan 简谱 (calque public/jianpu/我们呼求-p1.webp) : chaque accord vérifié à l'œil en comptant les notes sous l'étiquette (la rangée de paroles est décalée par rapport aux notes : c'est la note qui tranche). Tous les accords hors lignes changées sont à leur caractère.
+- Étiquettes composées « A7/E G/A A7 D » (systèmes 7 et 9) : l'outil les voit comme une seule étiquette, d'où les « inventé » et « décalé » de 38, 39, 42, 43. Après correction, check.py peut encore les lister : outil qui ne lit pas l'étiquette composée.
+- l. 38 : lecture de l'autre relecture retenue (ok) ; l. 42 : même correction écrite à la main (A7 → A7/E). L'historique : un G/A posé sur 在 a été retiré par un autre contributeur (commit 1d883df) : rien n'est gravé là, la correction ne le remet pas.
+- Tenues : A (fin des l. 16, 20, 27, 31) et E (fin des l. 18, 29) sont gravés sur la note liée qui prolonge la dernière syllabe : passés avant la ponctuation (02, tenue), même caractère.
+- Prélude : la partition grave un A final (x=1046, rangée instrumentale 2, mesure « 1.7 73 5 - ) ») que le .cho n'a pas ; un commit propre au chant (1d883df, « fix: chinese song chord ») l'a retiré exprès : retouche à l'oreille, ligne laissée. À l'oreille : remettre [A] en fin de prélude si on suit la partition.
+- Paroles, non appliqué : la partition écrit 祢 (le .cho 你) ; l. 39 la partition a « 看侧耳垂听 » (le .cho « 看耳垂听 », 侧 manquant) ; l. 31 « 掌管全地 » (le .cho « 掌控全地 ») ; ponctuation : 。 en fin de 面/心/地/名 (le .cho ；).
+- Structure : couplet chanté deux fois avec paroles 1./2. sur la 2e moitié ; le .cho l'écrit en Couplet 1 / Couplet 2 (la 1re moitié recopiée, nécessaire car la 2e diffère). Rien à changer.
+- Autre source « 我们呼求 2.pdf » non regardée : le scan retenu est celui du calque.
+
+### 我们成为一家人 — 我们成为一家人
+
+Lot 11 · partition retenue : `我们成为一家人.pdf` (scan-jianpu, mesure fiable)
+
+Lignes modifiées :
+
+- l. 14 : `因着[Ebmaj7]耶稣得洁净，   yīn zhe yē sū dé jié jìng` → `因着[Ebmaj7]耶稣得洁净[F (F/Eb)]，   yīn zhe yē sū dé jié jìng` *(session (hors relevé))* — Fin du système 3 : 净 attaqué sur le 2 de la dernière croche (1 2 liées), lié au « 2 − » du système 4 sous l'étiquette « F或F/Eb » x=65 : syncope liée, l'accord s'écrit après 净, avant la virgule ; nom gravé en alternative → [F (F/Eb)]. Ebmaj7 x=1137 sur le 6 sous 耶 : exact.
+- l. 15 : `[F/Eb]因着[Dm7]耶稣入光明，[Gm7]   yīn zhe yē sū rù guāng míng` → `因着[Dm7]耶稣入光明[Gm7]，   yīn zhe yē sū rù guāng míng`
+- l. 17 : `同享[Ebmaj7]生命的喜悦，[F/Eb]   tóng xiǎng shēng mìng de xǐ yuè` → `同享[Ebmaj7]生命的喜悦[F (F/Eb)]，   tóng xiǎng shēng mìng de xǐ yuè` *(session)*
+- l. 18 : `同在[Dm7]主爱中连接，[Gm7]   tóng zài zhǔ ài zhōng lián jiē` → `同在[Dm7]主爱中连接[Gm7]，   tóng zài zhǔ ài zhōng lián jiē` *(session)*
+- l. 19 : `因着[Cm7]耶稣同受[F]丰盛的[Bb]产业。   yīn zhe yē sū tóng shòu fēng shèng de chǎn yè` → `因着[Cm7]耶稣同受[F]丰盛的产[Bb]业。   yīn zhe yē sū tóng shòu fēng shèng de chǎn yè` *(session (hors relevé))* — Système 6 : 丰盛的产 = 7 7 1 2· ; Bb x=1202 sur le 1 de la mesure suivante, sous 业 (x≈1215) et non 产 (x≈1105) → 产[Bb]业 (décalé d'un caractère, l'outil l'a classé exact à tort). Cm7 x=635 sur 耶, F x=923 sur 丰 : exacts.
+- l. 23 : `因着[Ebmaj7]耶稣同敬拜，   yīn zhe yē sū tóng jìng bài` → `因着[Ebmaj7]耶稣同敬拜[F (F/Eb)]，   yīn zhe yē sū tóng jìng bài` *(session (hors relevé))* — Rangée 2 du refrain, même mélodie que la ligne 14 : 拜 attaqué sur le 2 lié au « 2 − » du système 4 sous « F或F/Eb » x=65 → après 拜, avant la virgule.
+- l. 24 : `[F/Eb]因着[Dm7]耶稣蒙慈爱，[Gm7]   yīn zhe yē sū méng cí ài` → `因着[Dm7]耶稣蒙慈爱[Gm7]，   yīn zhe yē sū méng cí ài`
+- l. 26 : `或在[Ebmaj7]喜乐中欢唱，[F/Eb]   huò zài xǐ lè zhōng huān chàng` → `或在[Ebmaj7]喜乐中欢唱[F (F/Eb)]，   huò zài xǐ lè zhōng huān chàng` *(session)*
+- l. 27 : `或遇[Dm7]苦难同哀伤，[Gm7]   huò yù kǔ nán tóng āi shāng` → `或遇[Dm7]苦难同哀伤[Gm7]，   huò yù kǔ nán tóng āi shāng` *(session)*
+- l. 28 : `因着[Cm7]耶稣同渡[F]人生的[Bb]风浪。   yīn zhe yē sū tóng dù rén shēng de fēng làng` → `因着[Cm7]耶稣同渡[F]人生的风[Bb]浪。   yīn zhe yē sū tóng dù rén shēng de fēng làng` *(session (hors relevé))* — Système 6, rangée 2 : Bb x=1202 sur le 1 sous 浪 (x≈1215), 风 étant sur le 2· (x≈1105) → 风[Bb]浪. Cm7 sur 耶, F x=923 sur 人 : exacts.
+
+Mesures sur la partition (accords non exacts et lignes changées par la session) :
+
+| Ligne | Accord | Mesure | Classe | Correction |
+|---|---|---|---|---|
+| 9 | Bb | système 2, Bb x=57 sur le 3 sous 儿 (x≈70 sur le scan) ; l'outil compare au mauvais amas | exact (outil décalé à tort) | aucune : 成为神[Bb]儿女 |
+| 14 | F (F/Eb) | « F或F/Eb » x=65 système 4 sur le 2 lié depuis 净 (dernière croche du système 3) | absent | 得洁净[F (F/Eb)]， |
+| 15 | F/Eb | rien gravé sur 因 (7 6 sous l'accord du 2 lié) | décalé (syncope de la ligne précédente) | retiré ici, porté après 净 |
+| 15 | Gm7 | x=767 sur le 1 lié depuis 明 | décalé (après la virgule) | 光明[Gm7]， |
+| 16 | Cm7 | système 4, x=1130 sur le 4 sous 耶 | exact (outil décalé à tort, lu au système 6) | aucune |
+| 17 | F (F/Eb) | x=1184 système 5 sur le 2 lié depuis 悦 | décalé + nom | 喜悦[F (F/Eb)]， |
+| 18 | Gm7 | x=367 système 6 sur le 1 lié depuis 接 | décalé | 连接[Gm7]， |
+| 19 | Bb | x=1202 sur le 1 sous 业 | décalé | 产[Bb]业 |
+| 23 | F (F/Eb) | x=65 système 4 sur le 2 lié depuis 拜 | absent | 敬拜[F (F/Eb)]， |
+| 24 | F/Eb | rien gravé sur 因 | décalé | retiré, porté après 拜 |
+| 24 | Gm7 | x=767 sur le 1 lié depuis 爱 | décalé | 慈爱[Gm7]， |
+| 26 | F (F/Eb) | x=1184 sur le 2 lié depuis 唱 | décalé + nom | 欢唱[F (F/Eb)]， |
+| 27 | Gm7 | x=367 sur le 1 lié depuis 伤 | décalé | 哀伤[Gm7]， |
+| 28 | Bb | x=1202 sur le 1 sous 浪 | décalé | 风[Bb]浪 |
+
+Forme (sans effet sur la place des accords, détail dans le diff du commit) : 4 ligne(s) — espaceur : l. 9, 10 ; espaces : l. 16, 25.
+
+En-tête : ajout de `{source: 我们成为一家人.pdf}`
+
+| Écart | Statut | Par | Raison, partition |
+|---|---|---|---|
+| 27:non-mesure:Dm7:1 | laissé | def |  |
+| 27:non-mesure:Gm7:1 | laissé | def |  |
+| 26:non-mesure:Ebmaj7:1 | laissé | def |  |
+| 26:non-mesure:F/Eb:1 | laissé | def |  |
+| 24:decale:F/Eb:1 | laissé | def |  |
+| 24:fable:24:decale:F/Eb:1 | appliqué | session | Même mélodie, rangée 2 : la ligne proposée est juste ; [F (F/Eb)] va après 拜 (ligne 23), Gm7 après 爱 avant la virgule. — partition : système 4, rangée 2 : « F或F/Eb » x=65 sur le 2 lié depuis 拜 ; Dm7 x=406 sur 耶 ; Gm7 x=767 sur le 1 lié depuis 爱. |
+| 18:non-mesure:Dm7:1 | laissé | def |  |
+| 18:non-mesure:Gm7:1 | laissé | def |  |
+| 17:non-mesure:Ebmaj7:1 | laissé | def |  |
+| 17:non-mesure:F/Eb:1 | laissé | def |  |
+| 16:decale:Cm7:1 | laissé | def | la ligne est celle mesurée par la session |
+| 15:decale:F/Eb:1 | laissé | def |  |
+| 15:fable:15:decale:F/Eb:1 | appliqué | session | La ligne proposée est juste : « 因着 » (7 6) se chante sous l'accord gravé en syncope sur le 净 de la ligne 14, rien n'est gravé sur 因 ; Dm7 sur le 5 de 耶 ; Gm7 gravé sur le 1 lié depuis 明 (syncope) : après 明, avant la virgule. L'accord retiré du début de ligne passe à la fin de la ligne 14, écrit [F (F/Eb)] comme gravé (« F或F/Eb »). — partition : système 4 : « F或F/Eb » x=65 sur le 2 lié (净 attaqué sur la dernière croche du système 3) ; Dm7 x=406 sur le 5 sous 耶 ; Gm7 x=767 sur le 1 lié, 明 attaqué une croche avant. |
+| 9:decale:Bb:1 | laissé | def |  |
+
+- Scan 简谱 (calque public/jianpu/我们成为一家人-p1.webp, même scan), vérifié à l'œil système par système : tous les accords du chant sont mesurés.
+- Les quatre « F或F/Eb » et les Gm7 sont gravés sur des notes liées depuis la syllabe de fin de phrase (syncope) : écrits après la syllabe, avant la virgule, en alternative [F (F/Eb)] ; les deux syllabes 因着/同在/或遇 qui suivent (7 6) n'ont pas d'accord gravé.
+- Bb final des deux refrains gravé sur 业 / 浪 et non sur 产 / 风 : check.py l'avait classé exact à tort ; corrigé.
+- check.py lit mal ce scan : il apparie le Bb de 儿女 (l. 9) et le Cm7 de la l. 16 au mauvais système ; ces deux accords sont justes. Le « nom différent » restant sur F (F/Eb) est l'écriture de l'alternative gravée.
+- Paroles, non appliqué : la partition grave « 因着 耶稣同享 » (4 notes 4 1 1 6) là où le .cho a « 耶稣同分享 » (l. 16).
+- Structure : couplet puis refrain à deux rangées de paroles, déjà écrit en 副歌 1 / 副歌 2 ; aucune reprise dépliée, rien à changer.
+- Partition : mention « 另有一张A调 » (autre feuille en A) non reprise.
+- check.py après : « absent de la source » sur [F (F/Eb)] et « F或F/Eb absent du .cho » = l'outil ne lit pas l'alternative ; les lignes 17-18 et 26-27 n'ont pas de rangée trouvée par l'outil, mesurées à l'œil.
+
+### 我们是光明之子 — 我们是光明之子
+
+Lot 11 · partition retenue : `我们是光明之子.pdf` (scan-jianpu, mesure fiable)
+
+Lignes modifiées :
+
+- l. 9 : `[E]  [B]  [C#m]  [A]  [E]  [B]  [C#m]  [A]` → `[E]  [B]  [C#m]  [A]  [E]  [B]  [C#m]  [A]  [E]  [B]  [C#m]  [A]  [E]  [B]  [C#m]  [A]` *(session)*
+- l. 14 : `撒下[G#m]喜乐的种[C#m]子， 让我[E]一天[B/D#]又一天[C#m]， 享受[A]天父所赐的恩典。[B]   sā xià xǐ lè de zhǒng zǐ ràng wǒ yī tiān yòu yī tiān xiǎng shòu tiān fù suǒ cì de ēn diǎn` → `撒下[G#m]喜乐的种[C#m]子，让我[E]一天[B/D#]又一天[C#m]，享受[A]天父所赐的恩典[B]。   sā xià xǐ lè de zhǒng zǐ ràng wǒ yī tiān yòu yī tiān xiǎng shòu tiān fù suǒ cì de ēn diǎn` *(session)*
+- l. 18 : `我们[E]是[B]光明之[E]子， 耶[E/G#]稣在我们[A]的心[B]间，   wǒ men shì guāng míng zhī zǐ yē sū zài wǒ men de xīn jiān ` → `我们[E]是[B]光明之子[E]，耶[E/G#]稣在我们[A]的心[B]间，   wǒ men shì guāng míng zhī zǐ yē sū zài wǒ men de xīn jiān`
+- l. 19 : `撒下[G#m]信心的种[C#m]子， 让我[E]一遍[B/D#]又一[C#m]遍， 冲破[A]黑暗的[B7]种种考验。[E]  sā xià xìn xīn de zhǒng zǐ ràng wǒ yī biàn yòu yī biàn chōng pò hēi àn de zhǒng zhǒng kǎo yàn` → `撒下[G#m]信心的种[C#m]子，让我[E]一遍[B/D#]又一遍[C#m]，冲破[A]黑暗的[B7]种种考验[E]。   sā xià xìn xīn de zhǒng zǐ ràng wǒ yī biàn yòu yī biàn chōng pò hēi àn de zhǒng zhǒng kǎo yàn` *(session)*
+- l. 24 : `[E]笑声[B/D#]与歌声响[C#m]彻天[E/B]边， 让我[A]们向整个世[E][ ]界， 让我[A]们向整个世[E][ ]界，   xiào shēng yǔ gē shēng xiǎng chè tiān biān ràng wǒ men xiàng zhěng gè shì jiè ràng wǒ men xiàng zhěng gè shì jiè` → `[E]笑声与[B/D#]歌声响[C#m]彻天[E/B]边，让我[A]们向整个世[E] 界，让我[A]们向整个世[E] 界，   xiào shēng yǔ gē shēng xiǎng chè tiān biān ràng wǒ men xiàng zhěng gè shì jiè ràng wǒ men xiàng zhěng gè shì jiè`
+- l. 25 : `宣告[A]我们是[B7]“光明之子！”[E]   xuān gào wǒ men shì guāng míng zhī zǐ` → `宣告[A]我们是[B7]“光明之子[E]！”   xuān gào wǒ men shì guāng míng zhī zǐ` *(session (hors relevé))* — E (x=1086 y=1839) sur le 1 de « 1 − − − », lié par un arc depuis le 1 de 子 (vu sur la découpe) : tenue, E après 子 et avant la ponctuation, comme 典[B]。 et 验[E]。 ; A x=584 sur 我, B7 x=823 sur 光 : exacts
+
+Mesures sur la partition (accords non exacts et lignes changées par la session) :
+
+| Ligne | Accord | Mesure | Classe | Correction |
+|---|---|---|---|---|
+| 9 | E B C#m A ×2 | 8 étiquettes de plus, x=751 à 1371 y=332, mesures 5 à 8 de l'intro | absent | 16 accords dans la ligne |
+| 14 | B | x=58 y=1088, sur le 2 tenu de 典 (volta 1) | décalé | 恩典[B]。 |
+| 18 | E | x=522 y=492, sur le 1 lié depuis 子 (rangée 2 identique) | décalé | 之子[E]， (défaut ok) |
+| 19 | C#m | x=805 y=796, sur le 1· lié depuis 遍 | décalé | 又一遍[C#m]， |
+| 19 | B7 | x=574 y=1088, sur le 3 du premier 种 (volta 2) | exact (l'outil a comparé au système 3) | inchangé |
+| 19 | E | x=810 y=1088, sur le 1 lié depuis 验 | décalé (après la ponctuation) | 考验[E]。 |
+| 24 | B/D# | x=262 y=1591, sur le 5 de 歌 | décalé | 与[B/D#]歌 (défaut ok) |
+| 25 | E | x=1086 y=1839, sur le 1 lié depuis 子 | décalé (après la ponctuation) | 子[E]！” |
+
+Forme (sans effet sur la place des accords, détail dans le diff du commit) : 2 ligne(s) — espace de fin : l. 13 ; espaces : l. 23.
+
+En-tête : ajout de `{source: 我们是光明之子.pdf}`
+
+| Écart | Statut | Par | Raison, partition |
+|---|---|---|---|
+| 24:decale:B/D#:1 | appliqué | def |  |
+| 19:decale:C#m:1 | appliqué | def | inclus dans la ligne de la session |
+| 19:decale:B7:1 | laissé | def |  |
+| 19:decale:E:1 | laissé | def |  |
+| 19:fable:19:decale:B7:1 | laissé | session | le remplacement remet C#m sur 遍 au lieu d'après 遍 (le défaut ok de 19:decale:C#m:1 le corrige) ; ligne juste donnée dans lignes (l. 19) — partition : B7 x=574 y=1088 sur le 3 où le premier 种 attaque (juste) ; C#m x=805 y=796 sur le 1· lié depuis 遍 |
+| 19:fable:19:decale:E:1 | laissé | session | même remplacement : E juste (après 验, avant le point) mais C#m remis sur 遍 ; ligne juste donnée dans lignes (l. 19) — partition : E x=810 y=1088 sur le 1 de « 1 − − − » lié depuis 验 (1 à x≈690 aff.) |
+| 18:decale:E:1 | appliqué | def |  |
+| 14:decale:B:1 | laissé | def |  |
+| 14:fable:14:decale:B:1 | appliqué | session | B passe après 典 et avant le point : tenue, comme la partition ; le reste de la ligne est juste — inclus dans la ligne de la session — partition : volta 1 : 典 attaque sur le dernier 2 (x≈1295 aff.) lié au « 2 − − » de la volta 1 ; étiquette B x=58 y=1088 sur ce 2 tenu |
+| 9:instrumental:E:1 | laissé | def |  |
+| 9:instrumental:B:1 | laissé | def |  |
+| 9:instrumental:C#m:1 | laissé | def |  |
+| 9:instrumental:A:1 | laissé | def |  |
+| 9:instrumental:E:2 | laissé | def |  |
+| 9:instrumental:B:2 | laissé | def |  |
+| 9:instrumental:C#m:2 | laissé | def |  |
+| 9:instrumental:A:2 | laissé | def |  |
+
+- Scan 简谱 (calque public/jianpu/我们是光明之子-p1.webp, même scan) : chaque accord vérifié à l'œil sur le chiffre sous l'étiquette ; check.py lit bien la source, ses « absents » du système 4 sont les accords des voltas déjà présents aux l. 14 et 19.
+- Intro : 16 étiquettes gravées sans reprise (mélodie des mesures 5-6 différente des mesures 1-2) : les 16 accords écrits. Calque à revoir : aucun (accords ajoutés au .cho seulement, pas de nom changé).
+- Couplets : ‖: :‖ avec voltas 1./2. ; les deux couplets étaient déjà écrits, rien de déplié ni de retiré.
+- Ligne 24 : E (x=1200 y=1591) et E (x=321 y=1839) sont sur le 2 lié depuis 世, avant 界 ; le fichier écrit 世[E][ ]界 (le moteur en fait 世[E] 界) : position entre les deux caractères, laissée ; 世[E]界 (syncope, 02) serait l'autre écriture.
+- Thèmes absents : ajoutés (Famille de Dieu, Mission).
+- Extra (non appliqué) : accords des voltas B, A, B7, E du système 4 signalés absents par l'outil, en fait présents aux l. 14 et 19.
+
+### 我们欢迎君王降临 — 我们欢迎君王降临
+
+Lot 11 · partition retenue : `我们欢迎君王降临.pdf` (finale-zh, mesure impossible)
+
+Lignes modifiées :
+
+- l. 9 : `[F]宇宙的中心， 耶稣；[Dm] [Bb]世界的中心， 耶稣[C]。   yǔ zhòu de zhōng xīn yē sū shì jiè de zhōng xīn yē sū` → `[F]宇宙的中心，耶稣[Dm]；[Bb]世界的中心，耶稣[C]。   yǔ zhòu de zhōng xīn yē sū shì jiè de zhōng xīn yē sū` *(session (hors relevé))* — Scan, système 1 : 稣 est attaqué sur le 5 d'avant la barre, lié au « 5 - - - » de la mesure suivante ; Dm (x=401) est gravé sur cette note liée, donc pendant la syllabe tenue : après la syllabe, avant la ponctuation (02, tenue), comme le C du même vers (耶稣[C]。) déjà écrit ainsi. La Finale montre la même chose (Dm x=261,4 sur la ronde liée depuis 穌).
+- l. 20 : `我们[Gm]呼喊 欢[Bb/C]迎君王降[F]临。   wǒ men hū hǎn huān yíng jūn wáng jiàng lín` → `我[Gm]们呼喊欢[Bb/C]迎君王降[F]临。   wǒ men hū hǎn huān yíng jūn wáng jiàng lín` *(session)*
+- l. 23 : `{start_of_bridge: 桥段/Pont}` → `{start_of_bridge: 桥段/Pont (D.S.)}` *(session (hors relevé))* — La fin du pont porte « D.S. » (retour au 𝄋 posé sur « 君王降临 » du refrain, Fine à la fin du refrain), avec la levée 我们欢迎. Chant chinois : rien n'est recopié, la section qui renvoie porte le suffixe (01, § Structure dépliée). Libellé seulement, même directive.
+- l. 27 : `[Bb]渴慕更多 [Bb/C]看见你的容面。   kě mù gèng duō kàn jiàn nǐ de róng miàn` → `[Bb]渴慕更多看见[Bb/C]你的容面。   kě mù gèng duō kàn jiàn nǐ de róng miàn` *(session)*
+
+Mesures sur la partition (accords non exacts et lignes changées par la session) :
+
+| Ligne | Accord | Mesure | Classe | Correction |
+|---|---|---|---|---|
+| 9 | Dm | scan x=401 système 1, sur le 5 lié qui prolonge 稣 (稣 attaqué sur le 5 d'avant la barre) | décalé (tenue écrite après la ponctuation) | 耶稣[Dm]； |
+| 20 | Gm | scan x=624 système 6, chiffre 4 sous lequel est 们 (x≈645) ; Finale x=328,8 sur la note de 们 | décalé | 我[Gm]们呼喊 |
+| 27 | Bb/C | scan x=784 système 8, chiffre 6 sous lequel est 你 ; Finale x=389,0 sur la note de 你 | décalé | 看见[Bb/C]你的容面 |
+| 15 | C/E | scan x=321 système 5 / x=334 système 3 : 2 lié qui prolonge 临 | exact (tenue, avant la ponctuation) — check.py le dit décalé parce qu'il recale la 1re ligne du refrain sur le pont | aucune |
+| 15 | Am | scan x=649 système 3 : 5 lié qui prolonge 见 | exact (note liée sans syllabe : [Am] 你) — artefact de l'outil | aucune |
+| 15 | Dm | scan x=947 système 3 : 2 lié qui prolonge 显 | exact (tenue avant la ponctuation) — artefact de l'outil | aucune |
+| 27 | Bb/C | après correction, check.py rapproche l'étiquette Bb/C x=946 du système 7 (celle de 浇, l.25) : la dernière rangée de paroles du pont n'est pas trouvée par l'outil. Sur le système 8, Bb/C x=784 est sur le 6 qui porte 你 | exact à l'œil — artefact de l'outil | aucune |
+| 15 | Bb/C, F, C/E, Am, Dm | étiquettes x=1045 (système 2, levée 我) et x=56, 334, 649, 947 (système 3) : ce sont les accords de la l.15, que l'outil cherche sur le système 7 | présents dans le .cho, au bon caractère — artefact de l'outil | aucune |
+|  | F, Dm, Bb, Bb/C | « rangée instrumentale » y≈1890 : ce sont les étiquettes du dernier système du pont (l.26–27), dont l'outil ne trouve pas la rangée de paroles | présents dans le .cho — artefact de l'outil | aucune |
+
+Forme (sans effet sur la place des accords, détail dans le diff du commit) : 10 ligne(s) — espaces : l. 10, 17, 19, 24, 25, 26 ; espaceur : l. 11, 15, 16, 18.
+
+En-tête : ajout de `{source: 我们欢迎君王降临.pdf}`
+
+| Écart | Statut | Par | Raison, partition |
+|---|---|---|---|
+| 27:oeil:1 | appliqué | session | Sur le scan, Bb/C (x=784, dernier système) ouvre la mesure « 6 5 3 5 », sous laquelle est 祢（你）; 看见 est chanté sur « 1 1 » avant la barre. La Finale le confirme (Bb/C x=389,0 sur la note de 你). — inclus dans la ligne de la session — partition : Bb/C x=784 système 8 → chiffre 6 → 你 |
+| 20:oeil:0 | appliqué | session | Sur le scan, Gm (x=624) est gravé sur le premier 4 de la mesure, sous lequel est 们 (x≈645) ; 我 est sur le 5 de la levée, avant la barre. La Finale (我们欢迎君王降临 2.pdf) met aussi Gm sur la note de 们 (x=328,8). — inclus dans la ligne de la session — partition : Gm x=624 système 6 → chiffre 4 → 们 ; Bb/C x=847 → chiffre 4 → 迎 ; F x=1063 → 1 → 临 |
+
+- Chant « impossible » pour l'outil (dernière rangée du pont non trouvée, 1re ligne du refrain recalée sur le pont) : chaque accord vérifié à l'œil sur le .webp du site (même scan), système par système, et recoupé avec la Finale du même arrangement (我们欢迎君王降临 2.pdf).
+- Deux accords déplacés d'un caractère (l.20 Gm sur 们, l.27 Bb/C sur 你) et un Dm de tenue ramené avant la ponctuation (l.9). Tous les autres accords (couplet, refrain, pont) sont sur le chiffre et le caractère de la partition ; les levées du refrain (我们欢迎 sous Bb/C) et les notes liées sans syllabe ([F] 君, [Am] 你, [C/Bb] 震) sont conformes à 02.
+- Les « absents du .cho » de check.py sur le scan sont des artefacts (la rangée F Dm Bb Bb/C de y≈1890 est celle du dernier système du pont). L'intro F Dm Bb Csus4 n'existe que sur la Finale (autre feuille du même arrangement) : non reprise, la partition retenue n'a pas d'intro.
+- Structure : le pont renvoie au 𝄋 (D.S.) puis Fine à la fin du refrain ; libellé du pont suffixé « (D.S.) », rien de recopié (règle chinoise du 08/10).
+- Paroles, non appliqué : le scan grave « 翻转、 » (l.16, virgule d'énumération absente du .cho), « 热情。 » (l.17, le .cho a « ， ») ; la Finale a « 荣面 » là où le scan et le .cho ont « 容面 » (l.27).
+- Calque à revoir : aucun (aucun nom d'accord changé, aucun accord ajouté ni retiré).
+
+### 我们爱让世界不一样 — 我们爱让世界不一样
+
+Lot 11 · partition retenue : `我们爱让世界不一样 简谱.jpg` (scan-jianpu, mesure fiable)
+
+Lignes modifiées :
+
+- l. 10 : `你和[D]我是[A/C#]天父爱的创[Bm][ ]造，每个[G]人有[D/F#]最美的[Em]梦想；[A]   nǐ hé wǒ shì tiān fù ài de chuàng zào měi gè rén yǒu zuì měi de mèng xiǎng` → `你和[D]我是[A/C#]天父爱的创[Bm] 造，每个[G]人有[D/F#]最美的梦[Em]想；[A]   nǐ hé wǒ shì tiān fù ài de chuàng zào měi gè rén yǒu zuì měi de mèng xiǎng` *(session)*
+- l. 11 : `一路[Bm]上彼些照[Bm/A#][ ]亮，扶[D/A]持拥[E]抱，我[G]们的爱[A]让世界不一[D]样。[G/A]   yī lù shàng bǐ cǐ zhào liàng fú chí yōng bào wǒ men de ài ràng shì jiè bù yī yàng` → `一路[Bm]上彼些照[Bm/A#] 亮，扶[D/A]持拥[E]抱，我[G]们的爱让[A]世界不一[D]样。[G/A]   yī lù shàng bǐ cǐ zhào liàng fú chí yōng bào wǒ men de ài ràng shì jiè bù yī yàng`
+
+Mesures sur la partition (accords non exacts et lignes changées par la session) :
+
+| Ligne | Accord | Mesure | Classe | Correction |
+|---|---|---|---|---|
+| 10 | Em | système 2, Em x=14 sur le 2 de 想 ; 梦 au système 1 x≈1370 | décalé | 梦[Em]想 |
+| 10 | D | système 1, D x=153 sur le 5· de 我 (levée 3 4 = 你和) | exact | 你和[D]我 |
+| 10 | A/C# | système 1, A/C# x=299 sur le 5 (x≈327) de 天 | exact | 是[A/C#]天 |
+| 10 | Bm | système 1, Bm x=592 sur le 2 lié depuis 创 (2⌒2), 造 sur le 1· suivant : tenue | exact | 创[Bm] 造 (forme d'origine gardée) |
+| 10 | G | système 1, G x=977 sur le 5· de 人 (每个 = levée 3 4) | exact | 每个[G]人 |
+| 10 | D/F# | système 1, D/F# x=1130 sur le 5 (x≈1153) de 最 | exact | 有[D/F#]最 |
+| 10 | A | système 2, A x=185 sur le 0 après 想 tenu (2 –) | exact | 想；[A] |
+| 11 | A | système 3, A x=330 sur le 3 (x≈335) de 世 ; 让 est sur le 4 d'avant (x≈262), après 爱 lié 1⌒1 | décalé | 让[A]世界 (défaut ok) |
+| 15 | D/F# | système 3, D/F# x=687 sur le 1 lié depuis 路 (1⌒1, x≈712) ; 唱 sur le 5 suivant : tenue, 一路[D/F#]唱 juste | exact (outil qui lit mal) | aucune |
+| 16 | D/F# | système 4, D/F# x=1156 sur le 1 lié depuis 飞 ; 翔 sur le 5 suivant : tenue, 飞[D/F#]翔 juste | exact (outil qui lit mal) | aucune |
+| 17 | A | système 5, A x=923 sur le 6 lié depuis 方 ; 就 sur le 3 suivant : tenue, 地方[A]就是 juste | exact (outil qui lit mal) | aucune |
+
+Forme (sans effet sur la place des accords, détail dans le diff du commit) : 1 ligne(s) — espaces : l. 17.
+
+En-tête : ajout de `{source: 我们爱让世界不一样 简谱.jpg}`
+
+| Écart | Statut | Par | Raison, partition |
+|---|---|---|---|
+| 17:decale:A:1 | laissé | session | A est gravé sur le 6 lié depuis 方 (6⌒6) ; 就 n'attaque qu'ensuite sur le 3. Tenue : 地方[A]就是, déjà juste ; l'opération le collerait devant 就. — partition : système 5, A x=923 sur le 6 lié (x≈930) ; 方 x≈860, 就 x≈990 |
+| 16:decale:D/F#:1 | laissé | session | D/F# est gravé sur le 1 lié depuis 飞 (1⌒1) ; 翔 n'attaque qu'ensuite sur le 5. Tenue : l'accord après 飞, déjà écrit ainsi ; l'opération le mettrait après 翔. — partition : système 4, D/F# x=1156 sur le 1 lié (x≈1180) ; 飞 x≈1122, 翔 x≈1240 |
+| 15:decale:D/F#:1 | laissé | def |  |
+| 11:decale:A:1 | appliqué | def |  |
+| 10:decale:Em:1 | laissé | session | Sans opération : tranchée par la ligne 10 mesurée (梦[Em]想), donnée en `lignes`. — sans opération : rien à appliquer — partition : système 2, Em x=14 sur le 2 de 想 ; 梦 est attaqué sur le 3 de fin du système 1 |
+| 9:fable-hors:9:decale:Em:1 | laissé | session | Consigne particulière : l'opération vise la ligne de directive l. 9, qui ne se remplace jamais ; la lecture (Em devant 想) est juste et s'applique à la ligne chantée l. 10, donnée en `lignes`. — partition : système 2, Em x=14 sur le 2 qui ouvre le système, sous lequel 想 attaque ; 梦 est sur le dernier 3 du système 1 (x≈1370) |
+
+- Scan 简谱 (calque du site, même scan) : chaque accord vérifié à l'œil sur le chiffre sous l'étiquette, systèmes 1 à 5.
+- Corrections : 梦[Em]想 (l. 10, Em sur le 2 qui ouvre le système 2) et 让[A]世界 (l. 11, défaut ok).
+- Questions 16 et 17 et défaut « non » de la l. 15 : accords sur des notes liées (飞, 方, 路 tenus), déjà écrits après la syllabe tenue ; l'outil les compare à la syllabe suivante.
+- Formes d'origine gardées : 创[Bm] 造 et 照[Bm/A#] 亮 (accord sur la note liée ou le mélisme de 创 / 照, avant l'attaque de la syllabe suivante) ; même caractère porteur, la forme collée 创[Bm]造 serait celle de 02 pour une tenue.
+- Autre version : 我们爱让世界不一样.pdf (Finale), non mesurable par l'outil ; le .cho suit le scan.
+- Paroles, non appliqué : le scan grave 彼此照亮 (l. 11), le .cho a 彼些.
+
+### 我们的神 — 我们的神
+
+Lot 11 · partition retenue : `我们的神.pdf` (scan-jianpu, mesure fiable)
+
+Lignes modifiées :
+
+- l. 24 : `你说[C]话， 命立就[G/B]立； 你吹[C]气， 就得生[G]命。   nǐ shuō huà mìng lì jiù lì nǐ chuī qì jiù dé shēng mìng` → `你说[C]话，命立就[G (G/B)]立；你吹[C]气，就得生[G]命。   nǐ shuō huà mìng lì jiù lì nǐ chuī qì jiù dé shēng mìng`
+- l. 30 : `你说[C]话， 命立就[G/B]立； 你吹[C]气， 就得生[G]命。   nǐ shuō huà mìng lì jiù lì nǐ chuī qì jiù dé shēng mìng` → `你说[C]话，命立就[G (G/B)]立；你吹[C]气，就得生[G]命。   nǐ shuō huà mìng lì jiù lì nǐ chuī qì jiù dé shēng mìng`
+- l. 32 : `[C]圣哉! 圣[Dsus4]哉！   shèng zāi shèng zāi` → `[C]圣哉！圣[Dsus4]哉！[E]   shèng zāi shèng zāi` *(session (hors relevé))* — Volta 2 (dernier système) : Dsus4 x=663 sur le 5 sous 哉 (exact) ; « 1=A » puis E x=1118 sur le 5 tenu sous l'écho entre parenthèses « (我们的 神!) », absent du .cho : l'accord sonne après la dernière syllabe finie de la ligne → après la ponctuation, collé. C x=66 sur le 3 sous 圣 : exact.
+
+Mesures sur la partition (accords non exacts et lignes changées par la session) :
+
+| Ligne | Accord | Mesure | Classe | Correction |
+|---|---|---|---|---|
+| 32 | E | x=1118 y=1887, sur le 5 de la mesure en A, sous « 神!) » de l'écho entre parenthèses (paroles absentes du .cho) | absent | 哉！[E] |
+| 24 | G (G/B) | x=1176 sur le 5 sous 立 | nom | 命立就[G (G/B)]立 |
+| 30 | G (G/B) | x=1176 sur le 5 sous 立 (reprise) | nom | 命立就[G (G/B)]立 |
+| 32 | Dsus4 | volta 2 : x=663 sur le 5 sous le « 哉! » de la volta 2 (x≈660) ; check.py l'apparie au 哉 de la volta 1 (x=332) | exact (outil décalé à tort) | aucune |
+
+Forme (sans effet sur la place des accords, détail dans le diff du commit) : 8 ligne(s) — espaces : l. 14, 20, 25, 26, 31, —, — ; espaceur : l. 19.
+
+En-tête : ajout de `{source: 我们的神.pdf}`
+
+| Écart | Statut | Par | Raison, partition |
+|---|---|---|---|
+| 30:nom:G/B:1 | laissé | def |  |
+| 30:fable:30:nom:G/B:1 | appliqué | session | Pont 2 = même système que le pont 1 (reprise ‖: :‖) : même étiquette « G或G/B » sur 立, [G (G/B)]. — partition : système 5 : « G或G/B » x=1176 sur le 5 sous 立. |
+| 24:nom:G/B:1 | laissé | def |  |
+| 24:fable:24:nom:G/B:1 | appliqué | session | Place juste et nom gravé en alternative « G或G/B » : [G (G/B)] (01). Le reste de la ligne est exact (C sur 话 et 气, G sur 命). — partition : système 5 : « G或G/B » x=1176 sur le 5 grave sous le second 立 (x≈1173). |
+
+- Scan 简谱 (calque public/jianpu/我们的神-p1.webp, même scan), vérifié à l'œil système par système : intro, couplet, refrain et pont sont exacts au caractère (G 说, D/F# 父, Em 荣, C 扬, D 作 ; G 手, D/F# 物, Em 饱, C 认, Dsus4 神 ; [D] avant la levée 我们的, G 神, D/F# 坐, Em 上, G/D 圣, C 满, G/B 耀, Am 民, D 拜 ; G 神, D/F# 我, Em 你, G/D 圣, C 耀, G/B 贵, Am 力, D 都, G 你 ; C 话, G (G/B) 立, C 气, G 命, C 唱, G 路, D/F# pendant 路 tenu, Em 亚 ; C 圣, D / Dsus4 哉).
+- Ponts 1 et 2 : la partition grave une seule fois le pont entre ‖: :‖ avec voltas 1 (D) et 2 (Dsus4) ; les deux sections déjà écrites restent (règle : rien de retiré, la seconde diffère par sa fin).
+- Ajouté après la dernière section : 副歌 2/Refrain 2 (A), retour modulé (« 1=A », « To Chorus ») avec la rangée d'accords en A gravée sur la partition ; la variante entre crochets « [最后一遍副歌] » (F#m E/G# D/A A/C# sur la première phrase) écrite en alternative. Si le refrain en A se chante deux fois (la variante seulement la dernière), c'est à l'oreille de le dire.
+- E de la volta 2 (« 1=A ») ajouté en fin de pont 2, après 哉！ : il est gravé sur l'écho entre parenthèses.
+- Paroles, non appliqué : l'écho « (我们的 神!) » de la volta 2 n'est pas dans le .cho ; l. 32 « 圣哉! » en point d'exclamation demi-chasse (la forme le règle si elle le fait).
+- check.py lit mal ce scan pour les rangées d'accords superposées (refrain en A, variante entre crochets) : ces étiquettes sont mesurées à l'œil ci-dessus.
+- Autre version : « 我们的神 Enfant.pdf » (gravure Finale, arrangement enfant), non retenue.
+- Calque à revoir : G/B → G (G/B) l. 24 et 30, E ajouté l. 32, refrain en A ajouté (étiquettes de la rangée en A vides dans chords.json).
+- check.py après : « décalé » sur Dsus4 (l. 32) = appariement au 哉 de la volta 1, l'accord est juste sur celui de la volta 2 ; « absent de la source » sur [G (G/B)] et le refrain en A = l'outil ne lit ni les alternatives ni les rangées d'accords superposées.
+
+### 我们高举耶稣的名 — 我们高举耶稣的名
+
+Lot 11 · partition retenue : `我们高举耶稣的名.pdf` (scan-jianpu, mesure fiable)
+
+Lignes modifiées :
+
+- l. 15 : `[D/F#][ ]与天使[G]齐声， [A][ ]高举你的[D]名。   yǔ tiān shǐ qí shēng gāo jǔ nǐ de míng` → `[D/F#] 与天使齐[G]声，[A] 高举你的[D]名。   yǔ tiān shǐ qí shēng gāo jǔ nǐ de míng`
+- l. 19 : `我们[G]高举， 高举你的名[D]， 我们[G]高举荣耀的君王[D]。   wǒ men gāo jǔ gāo jǔ nǐ de míng wǒ men gāo jǔ róng yào de jūn wáng` → `[D] 我们[G]高举，高举你的名[D]，我们[G]高举荣耀的君王[D]。   wǒ men gāo jǔ gāo jǔ nǐ de míng wǒ men gāo jǔ róng yào de jūn wáng`
+- l. 20 : `[A/C#]尊贵、 [Bm]荣耀、 颂赞、 能力[G]， 我们[D]高举[A]耶稣的[D]名。   zūn guì róng yào sòng zàn néng lì wǒ men gāo jǔ yē sū de míng` → `[A/C#] 尊贵、[Bm]荣耀、颂赞、能力[G]，我们[D]高举[A]耶稣的[D]名。   zūn guì róng yào sòng zàn néng lì wǒ men gāo jǔ yē sū de míng`
+- l. 23 : `{start_of_bridge: 桥段/Pont}` → `{start_of_bridge: 桥段/Pont (To Chorus)}` *(structure)*
+- l. 25 : `[D]你是明亮的[G]晨星， [D]你的国度[A]没有穷[D]尽。   nǐ shì míng liàng de chén xīng nǐ de guó dù méi yǒu qióng jìn` → `[D]你是明亮的[G]晨星，你的[D]国度[A]没有穷[D]尽。   nǐ shì míng liàng de chén xīng nǐ de guó dù méi yǒu qióng jìn`
+
+Mesures sur la partition (accords non exacts et lignes changées par la session) :
+
+| Ligne | Accord | Mesure | Classe | Correction |
+|---|---|---|---|---|
+| 14 | D/F# | système 2, D/F# x=86 sur le 0 avant 1 1 1 3 3 (大能的君王) ; l'outil a apparié l'étiquette du 2e D/F# (x=730) à cette ligne : couplet 2 écrit une fois sous la reprise | exact (artefact de l'outil) | aucune : [D/F#] 大 |
+| 14 | D/F# | système 2, D/F# x=730 sur le 0 avant 1 1 1 3 2 (尊贵的君王) ; l'outil compare l'étiquette du système 3 (x=54) | exact (artefact de l'outil) | aucune : [D/F#] 尊 |
+| 14 | A | système 2, A x=1078 sur le 2 lié depuis 王 (3 2⌒2 – – –) : tenue | exact (artefact de l'outil) | aucune : 王[A]， |
+| 15 | G | système 3, G x=337 sur le 5· ; 声 x=328 | décalé | 与天使齐[G]声 |
+| 15 | D/F# | système 3, D/F# x=54 sur le 0 avant 与 (x≈103) | exact | [D/F#] 与 |
+| 15 | A | système 3, A x=597 sur le 0 avant 高 (x≈641) | exact | [A] 高举 |
+| 15 | D | système 3, D x=879 sur le 1 de 名 | exact | 你的[D]名 |
+| 19 | D | système 3, D x=1115 au 1er temps de la mesure « 0 0 0 3 5 » après la barre de reprise ; 我们 = 3 5, levée du refrain | absent | [D] 我们 |
+| 19 | D | système 4, D x=542 sur le 3 lié depuis 名 (x=460) : tenue ; l'outil compare au 王 de fin de ligne | exact (artefact de l'outil) | aucune : 名[D]， |
+| 19 | G | système 4, G x=72 et x=925 sur le 6 de 高, après la levée 我们 | exact | 我们[G]高举 |
+| 19 | D | système 5, D x=68 sur le 3 lié depuis 王 (« ⌒3 – 2 ») : tenue, déjà écrit 君王[D]。 ; l'outil le compte absent | exact (artefact de l'outil) | aucune |
+| 20 | A/C# | système 5, A/C# x=189 sur le 2 du mélisme lié de 王 ; 尊 x=251 attaque sur la croche 3 suivante | forme | [A/C#] 尊贵 |
+| 20 | Bm | système 5, Bm x=371 sur le 1 de 荣 | exact | [Bm]荣耀 |
+| 20 | G | système 5, G x=749 sur le 6 lié depuis 力 : tenue | exact | 能力[G]， |
+| 20 | D | système 5, D x=1062 sur le 3 de 高 | exact | 我们[D]高举 |
+| 20 | A | système 5, A x=1197 sur le 2 de 耶 | exact | [A]耶稣的 |
+| 20 | D | système 6, D x=61 sur le 1 de 名 | exact | [D]名 |
+| 25 | D | système 7, D x=719 sur le 3 de 国 ; 你的 = levée 1̇ 1̇ | décalé | 你的[D]国度 |
+| 25 | D | système 7, D x=67 sur le 1 de 你 | exact | [D]你是 |
+| 25 | G | système 7, G x=388 sur le 6 de 晨 | exact | [G]晨星 |
+| 25 | A | système 7, A x=858 sur le 2 de 没 | exact | [A]没有 |
+| 25 | D | système 7, D x=1046 sur le 1 de 尽 | exact | 穷[D]尽 |
+
+Forme (sans effet sur la place des accords, détail dans le diff du commit) : 4 ligne(s) — espaceur : l. 9, 10, 14 ; espaces : l. 24.
+
+En-tête : ajout de `{source: 我们高举耶稣的名.pdf}`
+
+| Écart | Statut | Par | Raison, partition |
+|---|---|---|---|
+| 25:decale:D:1 | appliqué | def | inclus dans la ligne de 25:oeil:2 |
+| 25:oeil:2 | appliqué | session | 你的 est la levée « 1̇ 1̇ » de la mesure d'avant ; D est gravé au début de la mesure « 3 3 2 3 2 », sur le 3 de 国. — partition : système 7, étiquette D x=719 ; 国 x=709 (d=+10), 你 x=591 |
+| 20:decale:A/C#:1 | laissé | def |  |
+| 20:oeil:1 | appliqué | session | A/C# est gravé sur le 2 qui termine le mélisme lié « 3 – 2 » de 王 ; 尊 n'attaque qu'ensuite, sur la croche 3. L'accord sonne avant la voix : crochet puis espace. — partition : système 5, étiquette A/C# x=189 sur le 2 lié ; 尊 x=251 sous la croche 3 suivante |
+| 20:fable:20:decale:A/C#:1 | appliqué | session | Même lecture et même ligne que 20:oeil:1 ([A/C#] 尊贵) ; une seule ligne en résulte. — inclus dans la ligne de 20:oeil:1 — partition : système 5, A/C# x=189 sur le 2 du mélisme de 王, avant 尊 x=251 |
+| 19:decale:D:1 | laissé | def |  |
+| 19:oeil:3 | appliqué | def |  |
+| 15:decale:G:1 | appliqué | def | inclus dans la ligne de 15:oeil:0 |
+| 15:oeil:0 | appliqué | session | G est gravé sur le 5· qui suit la barre (mélisme 5· 43 4), porté par 声 sur la 2e rangée ; 齐 est sur le 5 d'avant la barre. Même place que 我们敬拜[G]你 (l. 10). — partition : système 3, étiquette G x=337 au-dessus du 5· ; 声 x=328 (d=+9), 齐 x=249 |
+| 14:decale:D/F#:1 | laissé | def |  |
+| 14:decale:D/F#:2 | laissé | def |  |
+| 14:decale:A:1 | laissé | def |  |
+
+- Scan 简谱 (calque du site, même scan) : chaque accord vérifié à l'œil sur le chiffre sous l'étiquette, systèmes 2 à 7.
+- Trois corrections : 与天使齐[G]声 (l. 15), [D] 我们 en tête du refrain (l. 19, D gravé sur la mesure de levée après la barre de reprise), [A/C#] 尊贵 (l. 20, accord sur la fin du mélisme de 王), 你的[D]国度 (l. 25).
+- Restants non exacts de check.py : artefacts de l'outil (couplet 2 écrit une fois sous la reprise, l. 14 ; D de 名 tenu, l. 19 ; D du système 5 lié depuis 王, déjà écrit).
+- Intro D/F# G D/F# D non reprise : structure à appliquer par Timothée.
+- Le scan porte une seconde rangée d'accords au-dessus du refrain et du pont (A/G, E/D, B/A…) pour la modulation du 原曲 (« 若升调用上层和弦 ») : non reprise, information seulement.
+- Autres versions : 我们高举耶稣的名2.pdf (partition officielle en G, accords au temps fort, parfois sur d'autres syllabes) et 我们高举耶稣的名 accompagnement.pdf (piano en G, non mesurable) : le .cho suit le scan en D.
+
+### 我在这里敬拜 — 我在这里敬拜
+
+Lot 11 · partition retenue : `我在这里敬拜.pdf` (scan-jianpu, mesure impossible)
+
+Lignes modifiées :
+
+- l. 23 : `[G/A]献上[D]我心， 献上[Bm]敬拜，   xiàn shàng wǒ xīn xiàn shàng jìng bài` → `[G/A]献上[D]我心，献[(D/C#)]上[Bm]敬拜，   xiàn shàng wǒ xīn xiàn shàng jìng bài`
+- l. 24 : `献[G/A]上[G]我的一切， [D/F#]我的意念， [Em]你是阿爸父；  xiàn shàng wǒ de yī qiè wǒ de yì niàn nǐ shì ā bà fù` → `献[(Bm/A)]上[G]我的一切，[D/F#]我的意念，[Em]你是阿爸父；   xiàn shàng wǒ de yī qiè wǒ de yì niàn nǐ shì ā bà fù`
+- l. 28 : `[G/A]献上[D]敬拜， 献[A/C#]上[Bm]我最深的爱，   xiàn shàng jìng bài xiàn shàng wǒ zuì shēn de ài` → `[G/A] 献上[D]敬拜，献[(D/C#)]上[Bm]我最深的爱，   xiàn shàng jìng bài xiàn shàng wǒ zuì shēn de ài` *(session)*
+- l. 29 : `[A]天地[G]都要过去， [D/F#]你爱不变， [Em]不曾放弃我。[Asus4] [A]  tiān dì dōu yào guò qù nǐ ài bù biàn bù céng fàng qì wǒ` → `天[(Bm/A)]地[G]都要过去，[D/F#]你爱不变，[Em]不曾放弃我。[Asus4] [A]   tiān dì dōu yào guò qù nǐ ài bù biàn bù céng fàng qì wǒ`
+- l. 38 : `我爱[D]你， 我爱[A/C#]你[Bm]， 使[D/A]我[G]灵魂苏醒， [D/F#]安慰我心，   wǒ ài nǐ wǒ ài nǐ shǐ wǒ líng hún sū xǐng ān wèi wǒ xīn` → `我爱[D]你，我[A/C#]爱[Bm]你，使[D/A]我[G]灵魂苏醒，[D/F#]安慰我心，   wǒ ài nǐ wǒ ài nǐ shǐ wǒ líng hún sū xǐng ān wèi wǒ xīn`
+
+Mesures sur la partition (accords non exacts et lignes changées par la session) :
+
+| Ligne | Accord | Mesure | Classe | Correction |
+|---|---|---|---|---|
+| 23 | (/C#) | x=419 sur le 5 (x≈455) qui porte 上 de « 献上敬拜 » | absent | 献[(D/C#)]上 |
+| 24 | G/A | « (/A) » x=900 sur le 7 (x≈925) qui porte 上 | nom | 献[(Bm/A)]上 |
+| 28 | G/A | x=1001 sur le 2 lié de 父 (volta 1), 献 attaqué au 3e temps x≈1055 | décalé (collé au lieu d'avant l'attaque) | [G/A] 献上 |
+| 28 | D | x=80 sur le 5 (x≈85), 2e rangée 敬 | exact | [D]敬拜 |
+| 28 | A/C# | « (/C#) » x=419 sur le 5 qui porte 上 | nom | 献[(D/C#)]上 |
+| 28 | Bm | x=1010 sur le 7 (x≈1030) qui porte 我 | exact | 上[Bm]我 |
+| 29 | A | aucune étiquette sur 天 ; « (/A) » x=1500 sur le 7 qui porte 地 | inventé + absent | 天[(Bm/A)]地 |
+| 38 | A/C# | x≈429–505 sur le 6 (x≈455) qui porte 爱 | décalé | 我[A/C#]爱 |
+| 38 | Bm | x≈520 sur le 5 (x≈535) qui porte 你 | décalé | 爱[Bm]你 |
+| 13 | (Dmaj7) | x=20 sur le 1 lié de 拜 (tenu), avant 我 | équivalent | laissé « [(Dmaj7)] 我 » : même intervalle entre 拜 et 我 ; la forme stricte de la tenue serait « 拜[(Dmaj7)]， » |
+| 14 | (Bmadd9) | x=677 sur le 1 lié de 爱 (tenu), avant 全 | équivalent | laissé en tête de ligne « [(Bmadd9)] 全 » : même intervalle entre 爱 et 全 |
+| 18 | (Dmaj7) | comme l. 13 | équivalent | laissé |
+| 19 | (Bmadd9) | comme l. 14 | équivalent | laissé |
+| 19 | Asus4 | x=1142 sur le 2 lié de 我 (tenu) | équivalent | laissé « 我。[Asus4] » (ronde liée sans texte) |
+| 29 | Asus4 | x=1233 sur le 2 lié de 我 (tenu), volta 2 | équivalent | laissé « 我。[Asus4] » |
+| 34 | G/A | x=431 sur le 2 lié de 在 (tenu) | équivalent | laissé « 同在。[G/A] » (la l. 14 écrit la même tenue « 天父[G/A]。 ») |
+| 39 | Asus4 | x=1102 sur le 2 lié de 命 (tenu) | équivalent | laissé « 生命。[Asus4] » |
+| 13 | D | x=1401 sur le 2· (x≈1410) qui porte 敬 ; check.py apparie la 1re rangée de paroles mal (système 1 partagé avec l'intro) | exact (à l'œil ; outil qui lit mal) | laissé « [D]敬拜 » |
+| 18 | D | comme l. 13 | exact (à l'œil ; outil qui lit mal) | laissé |
+| 19 | Em7 | x=805 sur le 5 (x≈805) qui porte 世 (volta 2 du couplet) ; check.py cherche 世 dans une autre rangée | exact (à l'œil ; outil qui lit mal) | laissé « 一生一[Em7]世 » |
+| 33 | A/C#, Bm, D/A, G | étiquettes soudées « A/C# Bm » (x=429) et « D/A G » (x=885) : A/C# sur le 6 de 爱, Bm sur le 5 de 你, D/A sur le 7 de 卧, G x≈985 sur le 6 de 青 ; check.py lit chaque paire comme une seule étiquette | exact (à l'œil ; outil qui lit mal) | laissé |
+| 38 | D/A, G | même rangée d'accords que la l. 33 : D/A sur le 7 de 我 (使我), G sur le 6 de 灵 | exact (à l'œil ; outil qui lit mal) | 使[D/A]我[G]灵 |
+| 9 | D Gmaj7 A13 Gmaj7 | intro gravée x=107, 367, 641, 910 sur le système 1 ; check.py ne rapproche pas la ligne instrumentale | exact (à l'œil ; outil qui lit mal) | laissé |
+
+Forme (sans effet sur la place des accords, détail dans le diff du commit) : 6 ligne(s) — espaceur : l. 13, 14, 18, 19 ; espaces : l. 33, 39.
+
+En-tête : ajout de `{source: 我在这里敬拜.pdf}`
+
+| Écart | Statut | Par | Raison, partition |
+|---|---|---|---|
+| 38:oeil:0 | appliqué | session | Pont : une seule rangée d'accords pour les deux rangées de paroles ; « A/C# Bm » : A/C# sur le 6 qui porte 爱, Bm sur le 5 qui porte 你, comme la ligne 33 « 我[A/C#]爱[Bm]你 ». L'opération remet la ligne 38 comme la partition ; les autres accords sont justes (D sur 你, D/A sur 我 de 使我, G sur 灵, D/F# sur 安). — partition : calque « A/C# Bm » x=429–571 : A/C# x≈429–505 sur le 6 (x≈455) = 爱 ; Bm x≈520 sur le 5 (x≈535) = 你 |
+| 29:oeil:2 | laissé | def |  |
+| 29:fable:29:oeil:2 | appliqué | session | Volta 2 du refrain : « 1̇ − 1̇ 7 », 天 sur le 1̇, 地 sur le 7 ; « (/A) » gravé au-dessus du 7 → (Bm/A) devant 地. Le A plein sur 天 n'est pas gravé (inventé). G sur le 6 de 都, D/F# sur le 3 de 你, Em sur le 5 de 不, Asus4 sur le 2 lié de 我, A sur le silence avant la levée du pont : justes. — partition : calque x=1500–1559 « (/A) », 7 à x≈1525 = 地 ; 天 x≈1430 sous 1̇ ; aucune étiquette au-dessus de 天 |
+| 28:oeil:4 | laissé | def |  |
+| 28:fable:28:oeil:4 | appliqué | session | Même mesure que la ligne 23, 2e rangée de paroles : « (/C#) » optionnel sur le 5 qui porte 上 (« 敬拜，献上 ») → (D/C#), place inchangée. La ligne entière est réécrite dans « lignes » : le G/A d'entrée est gravé sur le 2 lié de 父 (volta 1, avant la levée 献上), donc « [G/A] 献上 ». — inclus dans la ligne de la session — partition : calque x=419–494 « (/C#) » sur le 5 x≈455, 上 2e rangée x≈435–470 |
+| 24:oeil:1 | laissé | def |  |
+| 24:fable:24:oeil:1 | appliqué | session | Volta 1 du refrain : « (/A) » gravé sur le 7 final qui porte 上 (献 sur le 1̇ précédent), sous le Bm tenu depuis la volta : basse La optionnelle, (Bm/A). Le G/A du .cho n'est pas gravé ici ; place inchangée. G sur le 6 de 我, D/F# sur le 3 de 我 (意念), Em sur le 5 de 你 : justes. — partition : calque x=900–958 « (/A) », 7 à x≈925, 上 à x≈900–930 (献 x≈845 sous 1̇ x≈870) |
+| 23:oeil:3 | laissé | def |  |
+| 23:fable:23:oeil:3 | appliqué | session | Refrain, 1re rangée : « (/C#) » entre parenthèses (optionnel, cf. la note « 所有括号里的和弦有时加，有时不加 ») gravé sur le 5 qui porte 上 de « 献上敬拜 », sous le D en cours. Une basse seule « /C# » se lit accord en cours sur C# : (D/C#). Place : devant 上. Le reste de la ligne est juste (G/A sur le 1 qui porte 献 dans la volta 2 du couplet, D sur le 5 de 我, Bm sur le 7· de 敬). — partition : calque x=419–494 « (/C#) », chiffre 5 à x≈455 sous l'étiquette, 上 à x≈435–470 ; Bm x=518 sur 7· (x≈525) = 敬 |
+
+- Source : scan 简谱 (même scan que le calque public/jianpu/我在这里敬拜-p1.webp, gelé, non touché) ; check.py ne lit pas cette page : chaque accord du chant vérifié à l'œil sur les découpes du .webp (crops/我在这里敬拜/g*.png), étiquette → chiffre → caractère.
+- Intro (D Gmaj7 A13 Gmaj7), couplets 1 et 2, pont 1 : tous les accords sont sur le caractère de la partition. Seuls écarts : refrain (basses optionnelles « (/C#) » et « (/A) ») et pont 2 l. 38 (A/C# et Bm décalés d'un caractère).
+- « (/C#) » et « (/A) » : basses seules entre parenthèses, optionnelles selon la note de la partition ; écrites (D/C#) et (Bm/A) (accord en cours sur la basse gravée). Le couplet grave lui « (A/C#) » en entier ; la lecture A/C# du refrain que faisait le .cho n'est pas gravée. L'oreille pourra préférer A/C# : à signaler, pas de doute de lecture.
+- Tenues laissées telles quelles (l. 13/18 Dmaj7, 14/19 Bmadd9, Asus4 l. 19/29/39, G/A l. 34) : l'accord est gravé sur une note liée sans syllabe ; le .cho le place dans le même intervalle entre les deux caractères (tantôt après la ponctuation, tantôt avant le caractère suivant) ; pas d'autre caractère.
+- Structure : la partition fait revenir le couplet (‖: :‖ voltas, « Fine » en fin de couplet 1), le refrain (‖: :‖ voltas, « 接我的一切 ») et le pont (‖: :‖, « To Verse or end ») ; les sections du .cho correspondent aux deux rangées de paroles, aucune reprise identique dépliée : rien à changer. Le retour « To Verse or end » après le pont et la fin possible au « Fine » du couplet 1 ne sont pas écrits (information).
+- Mention « (先低后高) » sur la fin du couplet (mélodie) : non reprise, information.
+- check.py après : les « décalé » restants (D l. 13/18, Em7 l. 19, pont l. 33/38) et les « absent » de l'intro sont des appariements ratés de l'outil (système 1 partagé intro/couplet, étiquettes soudées « A/C# Bm » et « D/A G ») ; les « absent de la source » (D/C#), (Bm/A) sont les « (/C#) » et « (/A) » du calque, écrits avec leur accord. Vérifié à l'œil.
+- Calque gelé : ses étiquettes restent « (/C#) » et « (/A) » (et « A/C# Bm », « D/A G » soudées) ; le .cho écrit (D/C#) et (Bm/A) ; rien touché au calque.
+
+### 我安然居住 — 我安然居住
+
+Lot 11 · partition retenue : `我安然居住.pdf` (scan-jianpu, mesure fiable)
+
+Lignes modifiées :
+
+- l. 10 : `在这[C2]宁静时刻[G/B]， 我听见[Am7]你的声音[C/D]。   zài zhè níng jìng shí kè wǒ tīng jiàn nǐ de shēng yīn` → `在这[C2]宁静时刻，[G/B] 我听见[Am7]你的声音[C/D]。   zài zhè níng jìng shí kè wǒ tīng jiàn nǐ de shēng yīn` *(session (hors relevé))* — Scan, système 1 : G/B (x=1165) est gravé sur le 0 (silence) de « 4 5 0 4 3 1 », après 刻 (croche 5, finie) et avant la levée 我听见 : accord avant l'attaque de la voix, écrit après la ponctuation, « [G/B] 我 » (02), comme la même mélodie l.12 (走进[G/B] 你的). Le .cho le mettait avant « ， », ce qui dirait 刻 tenu.
+- l. 18 : `[D][ ]求你仰[G]起脸[D/F#]来，[Em7]光照我[Em][ ]的心，   qiú nǐ yǎng qǐ liǎn lái guāng zhào wǒ de xīn` → `[D] 求你仰[G]起脸[D/F#]来，光照我[Em7]的心，   qiú nǐ yǎng qǐ liǎn lái guāng zhào wǒ de xīn`
+
+Mesures sur la partition (accords non exacts et lignes changées par la session) :
+
+| Ligne | Accord | Mesure | Classe | Correction |
+|---|---|---|---|---|
+| 10 | C2 | x=986 système 1, sur le 6 de 宁 | exact | inchangé |
+| 10 | G/B | x=1165 système 1, sur le 0 entre 刻 et 我 | équivalent (silence écrit comme une tenue) | 时刻，[G/B] 我听见 |
+| 10 | Am7 | x=57 système 2, sur le 1 de 你 | exact | inchangé |
+| 10 | C/D | x=257 système 2, sur le 2 lié depuis 音 (tenue) | exact | inchangé |
+| 12 | C/D | composite « C/D  B/D# » x=662 système 3 : C/D sur le 2 lié depuis 里 (tenue) | exact (outil : décalé, composite non lu) | inchangé (里[C/D]。) |
+| 13 | B/D# | même composite, B/D# x≈757 sur le 0 de « 0 6 7 », avant la levée 在这 | exact (outil : décalé, comparé au B/D# du système 10) | inchangé ([B/D#] 在这) |
+| 18 | D | x=1143 système 5, sur le 0 de la mesure 2/4, avant la levée 求你仰 | exact | inchangé ([D] 求) |
+| 18 | G | x=53 système 7, sur le 3̇ de 起 | exact | inchangé |
+| 18 | D/F# | x=151 système 7, sur le 7 de 来 | exact | inchangé |
+| 18 | Em7 | x=360 système 7, sur le 2̇ lié depuis 我 (temps 1), 的 x=406 sur le 7 suivant | décalé (avant 光 dans le .cho) | 照我[Em7]的心 (question 18:fable ok) |
+| 18 | Em | aucune étiquette Em : c'est l'Em7 ci-dessus | nom / inventé | retiré (question 18:fable ok) |
+| 19 | Am7 | composite « Am7  Am(maj7) » x=703 système 7, Am7 sur le 4̇ de 心 | exact (outil : décalé, composite non lu) | inchangé |
+| 19 | Am(maj7) | même composite, Am(maj7) x≈787 sur le 6 de 充 | exact (outil : absent de la source) | inchangé |
+
+Forme (sans effet sur la place des accords, détail dans le diff du commit) : 6 ligne(s) — espaces : l. 9, 11 ; espaceur : l. 12, 13, 14, 20.
+
+En-tête : ajout de `{source: 我安然居住.pdf}`
+
+| Écart | Statut | Par | Raison, partition |
+|---|---|---|---|
+| 19:decale:Am7:1 | laissé | def |  |
+| 19:invente:Am(maj7):1 | laissé | session | Am(maj7) est gravé : étiquette composite « Am7  Am(maj7) » (x=703, w=220) que l'outil n'a pas lue ; Am(maj7) commence vers x≈787, sur le 6 de 充 (temps 3). La ligne actuelle 心[Am(maj7)]充 est juste. — partition : système 7 : Am7 sur le 4̇ de 心 (x≈722), Am(maj7) sur le 6 de 充 (x≈797) ; même composite dans la rangée supérieure. |
+| 18:decale:Em7:1 | laissé | def |  |
+| 18:invente:Em:1 | appliqué | session | Aucun Em n'est gravé : l'accord après 我 est l'Em7 mal nommé ; la ligne finale est celle de la lecture retenue (18:fable), qui le retire et pose Em7 à sa place. — inclus dans la ligne de 18:fable:18:decale:Em7:1 — partition : système 7 : seule étiquette entre 来 et 心 : Em7 x=360 (deux rangées). |
+| 18:fable:18:decale:Em7:1 | appliqué | session | La ligne proposée est celle de la partition : aucun accord sur 光 ; Em7 gravé au temps 1 de la mesure, sur le 2̇ lié depuis 我 (tenu), avant 的 : 我[Em7]的心. G sur 起 et D/F# sur 来 inchangés. — partition : système 7 : G x=53 sur 3̇ (起), D/F# x=151 sur 7 (来), Em7 x=360 sur le 2̇1̇ lié depuis le 2̇ de 我, 的 x=406 sur le 7 suivant ; la rangée supérieure (réharmonisation) a aussi Em7 à x=361, rien sur 光. |
+| 13:decale:B/D#:1 | laissé | def |  |
+| 12:decale:C/D:1 | laissé | def |  |
+
+- Scan 简谱 (même scan que le calque) : chaque accord vérifié à l'œil, chiffre sous l'étiquette, système par système. Les « décalés » de check.py (l.12 C/D, l.13 B/D#, l.19 Am7) et l'« absent de la source » Am(maj7) viennent des étiquettes composites « C/D  B/D# » et « Am7  Am(maj7) » que l'outil ne lit pas : .cho juste.
+- l.18 : lecture retenue 18:fable (Em7 sur le 2̇ lié de 我, avant 的 ; pas d'accord sur 光 ; Em retiré). 18:decale:Em7:1 laissé à « non » (autre lecture du même écart).
+- l.10 : G/B ramené après « ， » (accord sur le silence avant 我听见), comme la même mélodie l.12.
+- Tenues gardées telles quelles (accord sur une note liée sans syllabe, entre deux caractères) : l.14 荣[Bm7] 耀, l.20 然[B/D#] 信 ; position juste au caractère près.
+- Non transcrit (liste extra du relevé) : la seconde rangée d'accords au-dessus du refrain et de la fin (G2, D/F# /F B/D#, Em7, C#m7b5, Am7 Am(maj7), C/D D/E Eb/F F/G « chacun un demi-temps », G2, B7(#9) B/D#, Em7 /Eb /D C#m7b5, Am7, C/D), une réharmonisation sans marque de reprise ; les fins « [尾句1] Em7 G/D C#m7b5 » et « [尾句2] Em7 A9b13 » après 住 ; « (C/D) » et « 第二遍没有3-4拍 » (2e fois sans les temps 3-4) sous 时刻 l.13. Le .cho ne déplie pas de 2e passage : à décider par Timothée si l'équipe joue ces variantes.
+- Calque à revoir : aucun (aucun nom d'accord changé, aucun accord ajouté ; l.18 l'accord Em retiré était un doublon de l'étiquette Em7 déjà au calque).
+- Paroles, non appliqué : le scan ne grave pas la virgule après 来 (l.18, 起脸来光照我) ni l'espace « 是 我 » ; « 圣 洁中。 » sans virgule avant (le .cho a « 耀， »).
+
+### 我已得自由 — 我已得自由
+
+Lot 11 · partition retenue : `我已得自由 C.pdf` (scan-jianpu, mesure fiable)
+
+Lignes modifiées :
+
+- l. 13 : `在创[C]世以前， 天[F/C]父他已经爱[C]我， [F/C][G/C][ ]创[C]造我、认[F/C]识我、拣选[G/B]我。[F/A]  [G]   zài chuàng shì yǐ qián tiān fù tā yǐ jīng ài wǒ chuàng zào wǒ rèn shí wǒ jiǎn xuǎn wǒ` → `在创[C]世以前，天[F/C]父他已经爱[C]我，[F/C][G/C] 创[C]造我、认[F/C]识我、拣选[G/B]我[F/A]。[G]   zài chuàng shì yǐ qián tiān fù tā yǐ jīng ài wǒ chuàng zào wǒ rèn shí wǒ jiǎn xuǎn wǒ` *(session (hors relevé))* — système 3, mesure « 2 – – – » de 我 : G/B x=238 sur l'attaque (2), F/A x=342 sur le dernier « – » (4e temps, 我 encore tenu) : tenue, 我[F/A]。 ; G x=398 sur le 1er soupir de la mesure suivante « 0 0 0 2 3 », après 我 fini : 。[G] collé. C sur 世 (x=322), F/C sur 父 (x=532), C sur 我 (x=766), F/C et G/C sur les soupirs avant la levée 创 (x=889, 958), C sur 造 (x=1086), F/C sur 识 (x=21) : exacts.
+- l. 14 : `差派[Dm]独生子 耶[G]稣基督 为[E]我舍命， [Am][ ]从此[Dm]进入， 永[F/G]恒爱的约[C]定。   chà pài dú shēng zǐ yē sū jī dū wèi wǒ shè mìng cóng cǐ jìn rù yǒng héng ài de yuē dìng` → `差派[Dm]独生子耶[G]稣基督为[E]我舍命[Am]，从此[Dm]进入，永[F/G]恒爱的约[C]定。   chà pài dú shēng zǐ yē sū jī dū wèi wǒ shè mìng cóng cǐ jìn rù yǒng héng ài de yuē dìng` *(session (hors relevé))* — 命 attaque sur « 7 1̇ » en fin de système 3, lié par-dessus le saut de système au 1̇ du système 4 (« 1̇ – – 2 3 ») où Am x=27 est gravé : tenue, 舍命[Am]， (et non après la virgule). Dm x=596 sur 独, G x=837 sur le 7 de 稣, E x=1071 sur le 3 de 我, Dm x=180 sur 进, F/G x=356 sur le 1̇ de 恒 (永 est la noire du 4e temps avant la barre), C x=539 sur 定 : exacts.
+- l. 23 : `{start_of_bridge: 桥段/Pont}` → `{start_of_bridge: 桥段/Pont (D.S.)}` *(session (hors relevé))* — le pont finit sur « D.S. al Fine » (retour au 𝄋 du refrain, fin au Fine après 自由) : règle chinoise du 08/10, la section qui renvoie porte le suffixe, rien n'est recopié. Même directive, l'id de section ne change pas.
+
+Mesures sur la partition (accords non exacts et lignes changées par la session) :
+
+| Ligne | Accord | Mesure | Classe | Correction |
+|---|---|---|---|---|
+| 13 | F/A | x=342 sur le 4e temps (« – ») de 我 tenu (G/B x=238 sur l'attaque) | décalé (après la ponctuation au lieu de la tenue) | 拣选[G/B]我[F/A]。 |
+| 13 | G | x=398 sur le 1er soupir de « 0 0 0 2 3 » | exact (après la syllabe finie) | 。[G] |
+| 14 | Am | x=27, système 4, sur le 1̇ lié depuis 命 | décalé (tenue) | 舍命[Am]， |
+| 9 | F/A G/B | système 2, x=22 et x=109 : 8e mesure de l'intro, avant la parenthèse fermante | exact à l'œil (check.py : « absent du .cho » ; l'intro du .cho a bien ses 12 accords, C F/A G/B ×4) | aucune |
+| 20 | Dm | x=725 sur le 1̇ lié depuis 告 (syncope liée) | exact à l'œil (outil : à relire, d=+30 px vers 在) | aucune : 我宣告[Dm]！ |
+| 20 | F/G | x=886 sur le 1̇ lié depuis 督, 里 sur le 2̇ suivant | exact à l'œil (outil : décalé, il compare au caractère suivant) | aucune : 在基督[F/G] 里 |
+
+Forme (sans effet sur la place des accords, détail dans le diff du commit) : 5 ligne(s) — espaceur : l. 18, 19, 20, 24 ; espaces : l. 25.
+
+En-tête : ajout de `{source: 我已得自由 C.pdf}`
+
+| Écart | Statut | Par | Raison, partition |
+|---|---|---|---|
+| 20:relire:Dm:1 | laissé | def |  |
+| 20:decale:F/G:1 | laissé | def |  |
+| 9:instrumental:F/A:1 | laissé | def |  |
+| 9:instrumental:G/B:1 | laissé | def |  |
+
+- Partition : scan 简谱 (我已得自由 C.pdf), le même que public/jianpu/我已得自由-p1.webp ; étiquettes de chords.json, chiffre du jianpu sous chaque étiquette regardé sur découpes agrandies (systèmes 1 à 9). Calque non touché ; aucun nom d'accord changé, aucun accord ajouté ni retiré.
+- Deux tenues corrigées sans changer de caractère : 拣选[G/B]我[F/A]。[G] (F/A au 4e temps de 我 tenu) et 舍命[Am]， (Am sur la note liée depuis 命).
+- Refrain, pont : tous les accords mesurés exacts (dont 告[C]！, 告[G/B]！, 由[F/A]！ sur les notes liées, 大[C/E] 能, 宝[G]血, 能[C] 力, 都 sur le ♯5 sous E, 命 sur le 2. sous D).
+- Reprise marquée : 𝄋 au début du refrain (après la levée « 0 0 3 4 5 我宣告 »), Fine après 自由, D.S. al Fine à la fin du pont : libellé 桥段/Pont (D.S.), refrain non recopié (règle chinoise du 08/10).
+- Écarts du relevé : 9:instrumental F/A et G/B (« non », l'intro a ses 12 accords), 20:relire Dm et 20:decale F/G (« non », syncopes liées justes) : rien ne change.
+- Paroles, non appliqué : la dernière mesure du pont (« 5 – 3 4 5 », sans accord) porte la levée « 我宣告！ » qui ramène au 𝄋 ; le .cho finit le pont sur 名。.
+- Autre feuille du même chant dans Partitions : 我已得自由 - C.pdf (non comparée).
+
+### 我心坚定与你 — 我心坚定与你
+
+Lot 11 · partition retenue : `我心坚定与你.pdf` (scan-jianpu, mesure fiable)
+
+Lignes modifiées :
+
+- l. 9 : `[D/F#][ ]耶稣[E/G#][ ]基督[A]， 圣洁美丽， [D/F#][ ]无人[E/G#][ ]能及。[A]   yē sū jī dū shèng jié měi lì wú rén néng jí` → `[D/F#] 耶稣[E/G#] 基督[A]，圣洁美丽，[D/F#] 无人[E/G#] 能及[A]。   yē sū jī dū shèng jié měi lì wú rén néng jí`
+- l. 10 : `[D/F#][ ]赐我[E/G#][ ]气息[A]， 毫无保留， [D/F#][ ]为我[E/G#][ ]舍命。[A]   cì wǒ qì xī háo wú bǎo liú wèi wǒ shè mìng` → `[D/F#] 赐我[E/G#] 气息[A]，毫无保留，[D/F#] 为我[E/G#] 舍命[A]。   cì wǒ qì xī háo wú bǎo liú wèi wǒ shè mìng`
+- l. 13 : `{start_of_verse: 预备副歌/Pre-Refrain}` → `{start_of_verse: 预备副歌/Pré-Refrain}` *(session (hors relevé))* — libellé canonique de 01 (Pré-Refrain, accent) ; même directive, l'id de section ne change pas. Le type (verse au lieu de prechorus) va en structure.
+- l. 20 : `[D]风浪之[A/C#]中有你同行， [Bm]不畏惧。[E]   fēng làng zhī zhōng yǒu nǐ tóng xíng bù wèi jù` → `[D]风浪之中[A/C#]有你同行，[Bm]不畏惧[E]。   fēng làng zhī zhōng yǒu nǐ tóng xíng bù wèi jù` *(session)*
+- l. 22 : `[D]在你怀中[A/C#]平静安稳， [Bm7]我必得[D/E][ ]安息。[A]   zài nǐ huái zhōng píng jìng ān wěn wǒ bì dé ān xī` → `[D]在你怀中[A/C#]平静安稳，[Bm7]我必得[D/E] 安息[A]。   zài nǐ huái zhōng píng jìng ān wěn wǒ bì dé ān xī` *(session (hors relevé))* — système 8 : A x=1121 sur la ronde 1 liée depuis la croche de 息 (arc par-dessus la barre) : tenue, 息[A]。 comme 及[A]。 et 命[A]。. D x=366 sur 在, A/C# x=566 sur 平, Bm7 x=799 sur 我, D/E x=945 sur le 1 lié depuis 得 (得[D/E] 安, tenue) : exacts.
+
+Mesures sur la partition (accords non exacts et lignes changées par la session) :
+
+| Ligne | Accord | Mesure | Classe | Correction |
+|---|---|---|---|---|
+| 9 | E/G# | x=625 sur le 5 lié depuis 稣 (arc 5⌒5, 3e temps) ; 基 attaque au 4e temps | exact (tenue) | aucune : 耶稣[E/G#] 基督 |
+| 9 | A | A x=68, système 3, sur le « 3 — — 0 » lié depuis 及 | décalé (après la ponctuation au lieu de la tenue) | 能及[A]。 (question 9:fable) |
+| 10 | A | A x=59, système 4, sur le 1 lié depuis 命 | décalé (idem) | 舍命[A]。 (question 10:fable) |
+| 20 | A/C# | x=296 sur la croche 5 de 有 (x=294) | décalé | 风浪之中[A/C#]有 |
+| 20 | E | x=749 sur le 5 lié depuis 惧 | décalé (tenue) | 不畏惧[E]。 |
+| 22 | A | x=1121 sur le 1 lié depuis 息 | décalé (tenue) | 安息[A]。 |
+| 8 | D/F# E/G# A D/F# E/G# D/A D/F# E/G# D/A A D/F# E/G# A | systèmes 1–2 jusqu'à la double barre, sans paroles (intro, 8 mesures) | absent (intro) | aucune dans les lignes : intro en structure, à appliquer par Timothée |
+| 10 | D/F# E/G# A D/F# E/G# | système 3 : D/F# x=352 sur le 0 avant 赐, E/G# x=506 sur le 5 lié de 我, A x=695 sur le 3 lié de 息, D/F# x=1032 sur le 0 avant 为, E/G# x=1186 sur le 2 lié de 我 | exact à l'œil (check.py : « absent du .cho », il apparie la rangée de paroles du système 3 au système 2) | aucune |
+| 9 | A (x2, l. 9 et 10 après) | check.py apparie l'A x=787 (督) à 及 et à 命 et dit « décalé » ; à l'œil, chaque A est sur sa note liée (督, 及, 息, 命) | exact à l'œil (outil qui lit mal) | aucune |
+
+Forme (sans effet sur la place des accords, détail dans le diff du commit) : 4 ligne(s) — espaces : l. 14, 15, 19, 21.
+
+En-tête : ajout de `{source: 我心坚定与你.pdf}`
+
+| Écart | Statut | Par | Raison, partition |
+|---|---|---|---|
+| 20:decale:A/C#:1 | appliqué | def | inclus dans la ligne de la session |
+| 10:decale:A:1 | laissé | def |  |
+| 10:fable:10:decale:A:1 | appliqué | session | même figure que la l. 9 : 命 sur la croche 1, liée au « 1 — — 0 » du système 4 sous A : tenue, 舍命[A]。. Seule lecture retenue ; 10:decale:A:1 reste « non » (息[A] porte l'A x=695). — partition : système 4, étiquette A x=59 au-dessus du 1 lié depuis 命 (système 3, x≈1297) ; A x=695 du système 3 sur le 3 lié depuis 息 |
+| 9:decale:A:1 | laissé | def |  |
+| 9:fable:9:decale:A:1 | appliqué | session | 及 attaque sur la croche 3 (fin du système 2), liée par-dessus le saut de système à la blanche pointée 3 où A est gravé : tenue, l'accord s'écrit après 及 et avant la ponctuation (02, 施行奇事[G]。). La seule des deux lectures retenue ; 9:decale:A:1 (déplacer vers 督) reste « non » : 督[A] porte déjà l'autre A, gravé x=787. — partition : système 3, étiquette A x=68 au-dessus du « 3 — — 0 » lié depuis le 3 de 及 (système 2, x≈1297) ; A x=787 du système 2 est sur le 3 lié depuis 督 |
+
+- Partition : scan 简谱 (我心坚定与你.pdf), le même que public/jianpu/我心坚定与你-p1.webp ; étiquettes de chords.json, chiffre du jianpu sous chaque étiquette regardé sur découpes agrandies (systèmes 2 à 8). Calque non touché ; aucun nom d'accord changé, aucun accord ajouté ni retiré.
+- Quatre tenues corrigées (accord sur la note liée depuis la dernière syllabe, avant la ponctuation) : 能及[A]。, 舍命[A]。 (questions Fable, ok), 不畏惧[E]。, 安息[A]。 ; A/C# de la l. 20 passe sur 有 (défaut ok, juste).
+- check.py lit mal les A de tenue en début de système (A x=68 système 3, A x=59 système 4) : il les dit « absents » et apparie l'A x=787 à 及/命. Les D/F#, E/G#, A du système 3 qu'il dit « absents » sont ceux de la l. 10 (il aligne la rangée de paroles d'un système trop haut) : vérifié à l'œil, ils sont sur 赐我/息/为我/人 comme dans le .cho.
+- La rangée d'accords supérieure (C, G/B, Am, F, C/E, Dm, G, Dm7, F/G…) au-dessus du refrain est une transposition en C, masquée par le calque : le .cho suit la rangée en A (1=A).
+- Structure à appliquer par Timothée : (1) intro de 8 mesures absente ; (2) pré-refrain sous {start_of_verse} au lieu de {start_of_prechorus}.
+- Pas de reprise marquée sur la partition (fin sur double barre après le refrain) : rien à déplier.
+- Titre, non appliqué : la partition grave 我心坚定于你 (于), le titre du .cho est 我心坚定与你 (与) ; les paroles du .cho ont bien 于.
+- Pinyin, non appliqué : 舍命 shè → shě (l. 10), 患难 nán → nàn (l. 14), 重新 zhòng → chóng (l. 15), 降服 fù → fú (l. 21, table d'exceptions de 01).
+
+### 我愿为你去 — 我愿为你去
+
+Lot 11 · partition retenue : `我愿为你去 - D.pdf` (scan-jianpu, mesure fiable)
+
+Lignes modifiées :
+
+- l. 7 : `{themes: 敬拜, 呼召, 奉献}` → `{themes: Engagement, Mission, Saint-Esprit}` *(en-tête)* — Le chant est une prière d'engagement : « je veux aller pour toi », « je ne veux que ce qui te plaît » (奉献 → Engagement) ; l'envoi (呼召, « 我愿为你去 », les nations) → Mission ; il demande le baptême de l'Esprit et du feu et le pont invoque l'amour, le feu et l'Esprit saints → Saint-Esprit. 敬拜 (Adoration) se défend moins : le chant ne s'adresse pas d'abord à la louange.
+- l. 13 : `[Bm/A][ ]因为[G]我愿[A7]为你去。[D]   yīn wèi wǒ yuàn wèi nǐ qù` → `[Bm/A] 因为[G]我愿[A7]为你去[D]。   yīn wèi wǒ yuàn wèi nǐ qù`
+- l. 18 : `[Bm/A]让万[G]国的荣华[D/F#]尽都[Em7]失色；   ràng wàn guó de róng huá jìn dōu shī sè` → `[Bm/A] 让万[G]国的荣华[D/F#]尽都[Em7]失色；   ràng wàn guó de róng huá jìn dōu shī sè`
+- l. 20 : `[Bm/A]因为[G]我愿[A7]为你去。[D]   yīn wèi wǒ yuàn wèi nǐ qù` → `[Bm/A] 因为[G]我愿[A7]为你去[D]。   yīn wèi wǒ yuàn wèi nǐ qù`
+- l. 27 : `[G][ ]靠你的[Em7]恩典站立。 [Asus4] [A7]  kào nǐ de ēn diǎn zhàn lì` → `[G] 靠你的[Em7]恩典站立[Asus4]。[A7]   kào nǐ de ēn diǎn zhàn lì` *(session (hors relevé))* — Volta 1 du refrain : 立 attaque sur la croche « 5 » (x≈410), liée au « 5 » (x≈490) sous Asus4 (x=478) : l'accord change pendant 立 tenu, avant la ponctuation (même lecture que 去[D]。 l. 13 et 20). A7 (x=610) est sur le « — » du 3e temps, après 立 fini, avant la levée 钉痕 de la reprise : après la ponctuation, collé. G sur le silence « 0 » avant 靠 (x=51) et Em7 sur 恩 (x=245) inchangés.
+- l. 34 : `[Em7][ ]靠你的[A]恩典站立[D]。  kào nǐ de ēn diǎn zhàn lì` → `[Em7] 靠你的[A]恩典站[D]立。   kào nǐ de ēn diǎn zhàn lì` *(session (hors relevé))* — Volta 2 : 站 est sur « 1 7 » (x≈1200–1235), 立 attaque sur le « 1 — — — » de la mesure suivante (x≈1305), et D est gravé au-dessus de ce « 1 » (x=1299) : D attaque avec 立, il se pose devant 立 (le .cho le mettait après 立, en tenue). Em7 sur le silence avant 靠 (x=840) et A sur 恩 (« 3· », x=1043) inchangés.
+- l. 37 : `{start_of_bridge: 桥段/Pont}` → `{start_of_bridge: 桥段/Pont (D.S.)}` *(session (hors relevé))* — Le pont se termine sur « D.S. al Fine » (retour au signe du refrain, jusqu'à Fine) ; règle chinoise du 08/10 : la section qui renvoie porte le suffixe, rien n'est recopié. Libellé seulement, même directive, l'id de section ne change pas.
+- l. 39 : `神圣的[G][ ]火， [D]熬炼[A][ ]我！   shén shèng de huǒ áo liàn wǒ` → `神圣的[G]火，[D]熬炼[A] 我！   shén shèng de huǒ áo liàn wǒ` *(session (hors relevé))* — G (x=989) est au-dessus du « 4 » du 1er temps (x≈995), sur lequel 火 attaque : collé, pas crochet-espace. D sur 熬 (« 5· », x=1110) exact. A (x=1264) sur le « 6 » lié depuis 炼, 我 entre sur « 2· » : crochet puis espace, inchangé.
+- l. 40 : `神[D7/F#]圣的[G]使命， [A]占有我！[Bm]   shén shèng de shǐ mìng zhàn yǒu wǒ` → `神[D7/F#]圣的[G]使命，[A]占有我[Bm]！   shén shèng de shǐ mìng zhàn yǒu wǒ` *(session (hors relevé))* — 我 attaque sur la croche « 3 » (x≈385, fin de mesure), liée au « 3 — » de la mesure suivante sous Bm (x=457) : l'accord change pendant 我 tenu, avant la ponctuation (même lecture que l. 13 et 20). D7/F# (圣), G (使), A (占) exacts.
+- l. 41 : `神圣的[Em7]灵， [E7]引领我！[A]   shén shèng de líng yǐn lǐng wǒ` → `神圣的[Em7]灵，[E7]引领我[A]！   shén shèng de líng yǐn lǐng wǒ` *(session (hors relevé))* — 我 attaque sur le « 5 » (x≈1155), lié au « 5 — — » de la mesure suivante sous A (x=1230) : l'accord change pendant 我 tenu, avant la ponctuation. Em7 (灵), E7 (引) exacts.
+
+Mesures sur la partition (accords non exacts et lignes changées par la session) :
+
+| Ligne | Accord | Mesure | Classe | Correction |
+|---|---|---|---|---|
+| 13 | D | D x=63 (volta 1) sur le « 1 » lié depuis 去 ; l'outil a apparié le D x=421 du système 2 | exact à l'œil (tenue), l'outil lit mal | 为你去[D]。 |
+| 18 | Bm/A | x=1002 sur le « 1 » lié, 让 au 4e temps (x≈1080) | équivalent (avant la voix) | [Bm/A] 让万 |
+| 20 | Bm/A | x=986 sur le « — » du 3e temps, 因 au 4e temps (x≈1085) | équivalent (avant la voix) | [Bm/A] 因为 |
+| 20 | D | D x=460 (volta 2) sur le « 1 » lié depuis 去 | exact à l'œil (tenue), l'outil lit mal | 为你去[D]。 |
+| 27 | Asus4 | x=478 sur le « 5 » lié depuis 立 (x≈410) | équivalent (tenue) | 站立[Asus4]。 |
+| 27 | A7 | x=610 sur le « — » du 3e temps, après 立 | exact | aucune |
+| 34 | D | x=1299 au-dessus du « 1 » (x≈1305) sur lequel 立 attaque | décalé (le .cho le mettait après 立) | 站[D]立。 |
+| 39 | G | x=989 au-dessus du « 4 » (x≈995) sur lequel 火 attaque | équivalent (crochet-espace en trop) | 神圣的[G]火 |
+| 40 | Bm | x=457 sur le « 3 » lié depuis 我 (x≈385) | équivalent (tenue) | 占有我[Bm]！ |
+| 41 | A | x=1230 sur le « 5 » lié depuis 我 (x≈1155) | équivalent (tenue) | 引领我[A]！ |
+
+Forme (sans effet sur la place des accords, détail dans le diff du commit) : 11 ligne(s) — espaceur : l. 11, 12, 19, 24, 25, 26, 31, 32, 33, 38 ; espaces : l. 17.
+
+En-tête : ajout de `{source: 我愿为你去 - D.pdf}`
+
+| Écart | Statut | Par | Raison, partition |
+|---|---|---|---|
+| 20:decale:Bm/A:1 | laissé | def |  |
+| 20:decale:D:1 | laissé | def |  |
+| 20:fable:20:decale:Bm/A:1 | appliqué | session | Système 2, 2e rangée : Bm/A est gravé sur le « — » du 3e temps (惧 tenu), 因为 entre au 4e temps sur « 6 7 » : crochet puis espace. Même ligne de remplacement que 20:fable:20:decale:D:1 (D pendant 去 tenu, volta 2). — partition : calque : Bm/A x=986–1068 au-dessus du « — » (x≈1010) ; 因 x≈1070 sous « 6 » (x≈1085) |
+| 20:fable:20:decale:D:1 | appliqué | session | Volta 2 : 去 (double « 1 » de « 2·1 ») est lié au « 1 — — » sous D, avant la levée 钉痕 du refrain : l'accord change pendant 去 tenu, avant la ponctuation, comme ligne 13. Même texte que 20:fable:20:decale:Bm/A:1. — inclus dans la ligne de 20:fable:20:decale:Bm/A:1 — partition : calque : D x=460 (volta 2, système 3) sur le « 1 » lié depuis 去 |
+| 18:decale:Bm/A:1 | laissé | def |  |
+| 18:fable:18:decale:Bm/A:1 | appliqué | session | Système 1, 2e rangée : Bm/A est gravé sur le « 1 » lié depuis 主 (1· ⁀ 1), 让 n'entre qu'au 4e temps sur « 2 3 » : accord avant la voix, crochet puis espace, comme la ligne 11 du couplet 1 (même mesure). G (国), D/F# (尽), Em7 (失) déjà exacts. — partition : calque : Bm/A x=1002–1085 au-dessus du « 1 » lié (x≈1013) ; 让 x≈1069 sous « 2 » (x≈1080) |
+| 13:decale:D:1 | laissé | def |  |
+| 13:fable:13:decale:D:1 | appliqué | session | Fin du système 2 : 去 attaque sur la double « 1 » de « 2·1 », liée au « 1 — — » de la volta 1 où D est gravé : l'accord change pendant 去 tenu, avant la ponctuation (cas 施行奇事[G]。). Bm/A, G, A7 de la ligne déjà exacts ; le crochet-espace de Bm/A est gardé (gravé sur le « — », 因为 entre au 4e temps). — partition : calque : D x=63 (volta 1, système 3) sur le « 1 » lié depuis 去 (x≈1530, système 2) ; l'outil a pris le D x=421 du système 2, qui est celui de 勇/火 |
+
+- Scan 简谱 (1=D, 4/4, ♩=75), même scan que le calque public/jianpu/我愿为你去-p1.webp ; chaque accord du chant regardé sur le calque et le chiffre sous l'étiquette. check.py : 71 exacts, 4 « décalés » qui sont des lectures de l'outil (D des voltas apparié au D du système 2, Bm/A sur note liée) ; 2 « absents » = les D des voltas, posés en tenue l. 13 et 20.
+- Les 4 questions : ok (lecture de la tenue et de l'accord avant la voix).
+- Hors relevé : l. 34, D attaque avec 立 (« 1 — — — » de Fine) : 站[D]立 au lieu de 站立[D] ; l. 39, G attaque avec 火 : collé. Tenue appliquée aussi l. 27, 40, 41 (même figure que 去[D]。).
+- Structure (lue sur la partition) : ‖: couplet (2 rangées, voltas 1/2) :‖ · ‖: refrain (voltas 1/2) :‖ Fine · pont D.S. al Fine. Le .cho a couplet 1, couplet 2, refrain 1 (volta 1), refrain 2 (volta 2), pont : conforme ; seul le libellé du pont reçoit « (D.S.) » (même directive). Rien n'est recopié.
+- Paroles, non appliqué : l. 17, la partition n'a pas de virgule après 异象 (« 我的异象荣耀救主 ») ; le moteur retire seulement l'espace.
+- Pinyin, non appliqué : l. 25 et 32, 只 est écrit « zhī » ; dans 我只愿 c'est « zhǐ » (pypinyin aussi).
+- Calque à revoir : aucun nom d'accord changé, aucun accord ajouté ni retiré.
+- Thèmes : 敬拜, 呼召, 奉献 (hors liste) → Engagement, Mission, Saint-Esprit.
+
+### 我是承带神荣耀的器皿 — 我是承载神荣耀的器皿
+
+Lot 11 · partition retenue : `我是承带神荣耀的器皿 简谱.png` (scan-jianpu, mesure fiable)
+
+Lignes modifiées :
+
+- l. 24 : `[G]被掳的得释放， [C/G]被囚的出监牢，   bèi lǔ de dé shì fàng bèi qiú de chū jiān láo` → `[G]被掳的得释放，[C/D]被囚的出监牢，   bèi lǔ de dé shì fàng bèi qiú de chū jiān láo` *(session (hors relevé))* — Pont, système 8 du scan : l'étiquette gravée au-dessus du second 被 (x=640, sur le 6 x≈655) est C/D, pas C/G (nom différent ; check.py, mal aligné sur le pont, la liste en « absent du .cho »). G x=69 sur le 5 de 被 : exact.
+- l. 25 : `因[G]耶稣的名， 神迹要发生！[D]   yīn yē sū de míng shén jì yào fā shēng` → `因[G]耶稣的名，神迹要发生[D]！   yīn yē sū de míng shén jì yào fā shēng` *(session)*
+
+Mesures sur la partition (accords non exacts et lignes changées par la session) :
+
+| Ligne | Accord | Mesure | Classe | Correction |
+|---|---|---|---|---|
+| 25 | G | étiquette G x=1270 y=1620 (système 8) sur le 3 x≈1280, caractère porteur « 耶 » x≈1280 ; 因 = levée 5 x≈1190 sans accord | exact (check.py : décalé, mauvais système) | aucune : 因[G]耶稣 |
+| 25 | D | étiquette D x=341 y=1841 (système 9) sur le 2 lié (x≈345) ; 生 attaqué sur le 2 souligné x≈280, une croche avant | équivalent (après la ponctuation au lieu d'avant) | 发生[D]！ |
+| 24 | G | étiquette G x=69 y=1620 sur le 5 x≈75, « 被 » x≈75 | exact (check.py : absent du .cho, mauvais système) | aucune |
+| 24 | C/D | étiquette C/D x=640 y=1620 sur le 6 x≈655, « 被 » (被囚) x≈655 | nom | [C/D]被囚 |
+| 9 | G | intro : un seul G gravé (x=46 y=225) pour les huit mesures instrumentales | inventé (répétitions du même accord, gardées par le relevé) | aucune : choix « non » du relevé, même accord, pas d'autre syllabe |
+
+Forme (sans effet sur la place des accords, détail dans le diff du commit) : 7 ligne(s) — espaceur : l. 13, 14 ; espaces : l. 18, 19, 20, 26, 27.
+
+En-tête : ajout de `{source: 我是承带神荣耀的器皿 简谱.png}`
+
+| Écart | Statut | Par | Raison, partition |
+|---|---|---|---|
+| 25:decale:G:1 | laissé | session | contre l'« ok » de Timothée, la partition l'emporte : Contre le choix du relevé (ok sur [G]因) : sur le système 8, 因 est la levée 5 (x≈1190, croche après 0, dans la mesure de C/D) et l'étiquette G (x=1270) est au-dessus du premier 3 de la mesure suivante (x≈1280), sous lequel est 耶 (x≈1280) ; levée sans accord gravé, l'accord précédent continue (02). check.py a mesuré contre le G du système 10 (x=333, 耶稣在这里) : mesure ratée. D (système 9, x=341) est gravé sur le 2 lié au-delà de la barre, 生 étant attaqué une croche avant (2 souligné x≈280) : syncope liée/tenue, l'accord suit la syllabe et précède la ponctuation (02 : 事[G]。). |
+| 9:instrumental:G:1 | laissé | Timothée |  |
+| 9:instrumental:G:2 | laissé | Timothée |  |
+| 9:instrumental:G:3 | laissé | Timothée |  |
+
+- Vérifié à l'œil sur le calque (même scan que la partition) : les 29 étiquettes de chords.json, chaque chiffre du jianpu sous l'étiquette. Couplet et refrain : tout exact ([G] 主 / [Am] 叫 / [G] 医 / [Am] 报 sur un 0 avant la voix, la forme [X][ ] donne [X] mot).
+- check.py se décale au pont (systèmes 8 à 10 appariés aux mauvaises lignes) : ses « absent du .cho » G, C/D, G, D du pont sont les accords des lignes 24-25 ; son « décalé » de la ligne 25 compare au G du système 10.
+- Ligne 25 : contre le choix du relevé, G reste sur 耶 (因 est une levée sans accord gravé).
+- Intro : la partition ne grave qu'un G pour huit mesures ; les quatre [G] du fichier restent (choix « non » du relevé, même accord).
+- Pinyin, non appliqué : ligne 14, 哀 est écrit « ài », c'est « āi ».
+- Structure : Fine après le refrain, pont puis To Chorus ; pas de reprise dépliée dans le fichier, rien à changer.
+- Calque : chords.json porte déjà C/D au-dessus de 被囚 (x=640 y=1620) ; le .cho rejoint le calque, qui reste gelé.
+
+### 我渴望看见 — 我渴望看见
+
+Lot 11 · partition retenue : `我渴望看见 简谱.png` (scan-jianpu, mesure fiable)
+
+Lignes modifiées :
+
+- l. 21 : `像云彩[Dm7]围绕 充满在这[Cm7]地；[F7]   xiàng yún cǎi wéi rào chōng mǎn zài zhè dì` → `像云彩[Dm7]围绕充满在这[Cm7]地[F7]；   xiàng yún cǎi wéi rào chōng mǎn zài zhè dì` *(session (hors relevé))* — Système 4 : « 地 » sur « 5 — — » ; F7 (x=570) est gravé sur le 2e tiret (3e temps), « 地 » encore tenu, le silence ne vient qu'au 4e temps : tenue, accord après la syllabe et avant la ponctuation (02).
+- l. 22 : `圣[Bb]灵如风地吹[C/Bb][ ]进每[F]颗枯[C/E]干的心[Dm][ ]灵，   shèng líng rú fēng dì chuī jìn měi kē kū gān de xīn líng` → `圣[Bb]灵如风地吹[C (C/Bb)] 进每[F]颗枯[C/E]干的心[Dm] 灵，   shèng líng rú fēng dì chuī jìn měi kē kū gān de xīn líng`
+- l. 25 : `祷告的[Dm7]声音 如水不停[Cm7]息；[F7]   dǎo gào de shēng yīn rú shuǐ bù tíng xī` → `祷告的[Dm7]声音如水不停[Cm7]息[F7]；   dǎo gào de shēng yīn rú shuǐ bù tíng xī` *(session (hors relevé))* — Rangée 2 du système 4, même musique que la ligne 21 : F7 (x=570) sur le 3e temps pendant que « 息 » est tenu : après la syllabe, avant la ponctuation (02).
+- l. 26 : `父[Bb]亲回转向儿[C/Bb][ ]女，儿[F]女回[C/E]转向父[Dm][ ]亲，   fù qīn huí zhuǎn xiàng ér nǚ ér nǚ huí zhuǎn xiàng fù qīn` → `父[Bb]亲回转向儿[C (C/Bb)] 女，儿[F]女回[C/E]转向父[Dm] 亲，   fù qīn huí zhuǎn xiàng ér nǚ ér nǚ huí zhuǎn xiàng fù qīn`
+- l. 33 : `[Bb]不停地祷告[C]， [Am7]不停地呼喊[Dm7]，   bù tíng dì dǎo gào bù tíng dì hū hǎn` → `[Bb]不停地祷告[C/Bb]，[Am7]不停地呼喊[Dm7]，   bù tíng dì dǎo gào bù tíng dì hū hǎn`
+- l. 40 : `[Bb]我们在祷告[C]， 我们在[Am7]呼喊[Dm7]，   wǒ men zài dǎo gào wǒ men zài hū hǎn` → `[Bb]我们在祷告[C/Bb]，[Am7]我们在呼喊[Dm7]，   wǒ men zài dǎo gào wǒ men zài hū hǎn`
+
+Mesures sur la partition (accords non exacts et lignes changées par la session) :
+
+| Ligne | Accord | Mesure | Classe | Correction |
+|---|---|---|---|---|
+| 9 | F C/E Gm C | x=138, 304, 506, 741 au-dessus du prélude instrumental du système 1 (sans paroles) | exact (l'outil ne voit pas de rangée instrumentale) | aucune |
+| 16 | Bb/C | x=252 sur le 1 lié du 3e temps ; « 治 » attaque sur le 1 précédent, « 临 » sur le 1 suivant | exact (syncope liée, l'outil le classe « à relire ») | aucune : 医治[Bb/C]临 |
+| 21 | F7 | x=570 sur le 2e tiret de « 地 » tenu (3e temps) | équivalent (même caractère, côté ponctuation) | 地[F7]； |
+| 21 | Dm7 | x=44 sur le 5 où attaque « 围 » | exact | aucune |
+| 21 | Cm7 | x=473 sur le 5 de « 地 » | exact | aucune |
+| 22 | C/Bb | C或C/Bb x=974 sur le 3 lié après « 吹 » | nom | [C (C/Bb)] |
+| 25 | F7 | x=570 sur le 2e tiret de « 息 » tenu | équivalent (même caractère, côté ponctuation) | 息[F7]； |
+| 25 | Dm7 | x=44 sur « 声 » | exact | aucune |
+| 25 | Cm7 | x=473 sur « 息 » | exact | aucune |
+| 26 | C/Bb | C或C/Bb x=974 sur le 3 lié après « 儿 » | nom | [C (C/Bb)] |
+| 33 | C | étiquette C/Bb x=323 (système 7) sur le 2 lié après « 告 » | nom | 告[C/Bb]， |
+| 40 | C | C/Bb x=323 (système 7, rangée 2) sur le 2 lié après « 告 » | nom | 告[C/Bb]， |
+| 40 | Am7 | x=463 sur le 2 du 1er temps où attaque « 我 » (« 我们在呼喊 ») | décalé (3 caractères) | [Am7]我们在呼喊 |
+| 40 | Dm7 | x=737 sur le 1 lié après « 喊 » | exact (l'outil a pris le Dm7 du système 4) | aucune : 喊[Dm7]， |
+| 41 | Bb/C (final) | aucune étiquette après « 代 » au système 7 ; c'est le Bb/C du 𝄋 (x=621, système 3, sur le 0 avant « 我渴望 ») où ramène le D.S. al Fine | reporté (renvoi D.S.) | gardé : 代。[Bb/C], après la ronde finie |
+
+Forme (sans effet sur la place des accords, détail dans le diff du commit) : 10 ligne(s) — espaces : l. 13, 14, 15, 16, 24, 31, 34, 38, 41 ; espaceur : l. 20.
+
+En-tête : ajout de `{source: 我渴望看见 简谱.png}`
+
+| Écart | Statut | Par | Raison, partition |
+|---|---|---|---|
+| 41:decale:Bb/C:1 | laissé | def |  |
+| 40:nom:C:1 | laissé | def |  |
+| 40:decale:Am7:1 | laissé | def |  |
+| 40:decale:Dm7:1 | laissé | def |  |
+| 40:fable:40:nom:C:1 | appliqué | session | Rangée 2 du système 7 : même musique que la ligne 33 ; C/Bb sur la tenue de « 告 », Am7 au 1er temps sur « 我 » de « 我们在呼喊 », Dm7 sur la tenue de « 喊 ». — partition : C/Bb x=323 sur le 2 lié après « 告 » ; Am7 x=463 sur le 2 où attaque « 我 » |
+| 40:fable:40:decale:Am7:1 | appliqué | session | Même remplacement que 40:fable:40:nom:C:1 : Am7 gravé x=463 sur le premier 2 de la mesure, sous lequel attaque « 我 » (rangée 2), et non sur « 呼 » trois caractères plus loin. — inclus dans la ligne de 40:fable:40:nom:C:1 — partition : étiquette Am7 x=463 (système 7) au-dessus du 2 du 1er temps, caractère porteur « 我 » |
+| 33:decale:C:1 | laissé | def |  |
+| 33:fable:33:decale:C:1 | appliqué | session | Système 7, rangée 1 : l'étiquette gravée après « 告 » est C/Bb (comme au pont, ligne 31), pas C ; place juste (tenue de « 告 »). — partition : étiquette C/Bb x=323 (système 7) sur le 2 lié après « 告 » |
+| 26:nom:C/Bb:1 | laissé | def |  |
+| 26:fable:26:nom:C/Bb:1 | appliqué | session | Même étiquette « C或C/Bb » pour la rangée 2 : [C (C/Bb)], place juste entre « 儿 » (tenu) et « 女 ». — partition : étiquette C或C/Bb x=974 (système 4) sur le 3 lié après « 儿 » (rangée 2) |
+| 22:nom:C/Bb:1 | laissé | def |  |
+| 22:fable:22:nom:C/Bb:1 | appliqué | session | Le scan grave l'alternative « C或C/Bb » ; 01 l'écrit [C (C/Bb)]. Place inchangée et juste (吹 attaque sur la double 3 liée au 3 du 3e temps sous l'étiquette). — partition : étiquette C或C/Bb x=974 (système 4) sur le 3 lié après « 吹 », « 进 » sur le 2 suivant |
+| 16:relire:Bb/C:1 | laissé | def |  |
+| 9:instrumental:F:1 | laissé | def |  |
+| 9:instrumental:C/E:1 | laissé | def |  |
+| 9:instrumental:Gm:1 | laissé | def |  |
+| 9:instrumental:C:1 | laissé | def |  |
+
+- Scan 简谱 vérifié à l'œil système par système sur public/jianpu/我渴望看见-p1.webp (calque inchangé) : tous les accords du couplet, du refrain (deux rangées, voltas 1 et 2) et des deux ponts sont sur le caractère gravé, sauf les noms C/Bb (lignes 22, 26 : alternative C或C/Bb ; lignes 33, 40 : C au lieu de C/Bb) et Am7 de la ligne 40 (trois caractères trop loin), corrigés par les questions.
+- Lignes 21 et 25 : F7 gravé au 3e temps pendant la tenue de « 地 » / « 息 » : écrit avant la ponctuation (02, tenue) ; même caractère qu'avant.
+- Ligne 41 : le [Bb/C] final n'est pas gravé dans la mesure de « 代 » ; il note l'accord du 𝄋 (système 3) où le D.S. al Fine ramène après le pont 2 : gardé. Le refrain repris par le D.S. et la reprise ‖: :‖ du refrain ne sont pas dépliés (règle chinoise du 08/10).
+- Lignes 22, 26 : « 心[Dm][ ]灵 », « 吹/儿[C (C/Bb)][ ]进/女 », « 父[Dm][ ]亲 » : accord sur la note liée après la syllabe, avant le caractère suivant : bon caractère ; la forme avec espace est celle du fichier, laissée.
+- Liste extra : F, C/E, Gm, C (système 1) sont le prélude déjà écrit ligne 9 ; C/Bb x=323 système 7 est l'accord de la ligne 40 (corrigé).
+- Pinyin, non appliqué : ligne 13 « 求 qiù » devrait être « qiú » ; « 为 » lignes 14, 32, 39 lu « wéi », le sens (« pour ») donne « wèi ».
+- check.py après : [C (C/Bb)] lignes 22 et 26 classés « absent de la source » et l'étiquette « C或C/Bb » « absent du .cho » : l'outil ne lit pas l'alternative gravée ; vérifié à l'œil, même accord, même place. Calque 简谱 non touché : son étiquette reste « C或C/Bb », les C/Bb des lignes 33 et 40 ont déjà leur étiquette (x=323, système 7).
+
+### 我的家要荣耀主 — 我的家要荣耀主
+
+Lot 11 · partition retenue : `我的家要荣耀主.pdf` (scan-jianpu, mesure fiable)
+
+Lignes modifiées :
+
+- l. 8 : `{start_of_intro: 前奏/Intro}` → `{start_of_intro: 前奏/Intro (x2)}` *(session (hors relevé))* — système 1 : l'intro est encadrée par ‖: … :‖ (reprise immédiate) : suffixe (x2) au libellé, même directive, l'id de section ne change pas.
+- l. 13 : `[D]我的家要[A/C#]荣耀[Bm7]主，[D/A] [G]遵守话语[D/F#]为生[Em7]命。[A]   wǒ de jiā yào róng yào zhǔ zūn shǒu huà yǔ wèi shēng mìng` → `[D]我的家要[A/C#]荣耀[Bm7]主[D/A]，[G]遵守话语[D/F#]为生[Em7]命[A]。   wǒ de jiā yào róng yào zhǔ zūn shǒu huà yǔ wèi shēng mìng` *(session (hors relevé))* — système 2 : D/A x=522 au-dessus du 2e « – » (3e temps) de « 1 – – 0 » où 主 est tenu ; A x=1156 au-dessus du 2e « – » de « 2 – – 0 » où 命 est tenu : l'accord change pendant la syllabe tenue, il s'écrit après elle et avant la ponctuation (02, tenue). D sur 我, A/C# x=240 sur le 2 de 荣, Bm7 x=399 sur 主, G x=664 sur 遵, D/F# x=870 sur le 5̣ de 为, Em7 x=1017 sur 命 : exacts.
+- l. 14 : `[Gmaj7]建立[A/G]祷告[F#m]的祭[Bm7]坛，充满[Em7]赞美[E/G#]的声[Asus4]音。[A]   jiàn lì dǎo gào de jì tán chōng mǎn zàn měi de shēng yīn` → `[Gmaj7]建立[A/G]祷告[F#m]的祭[Bm7]坛，充满[Em7]赞美[E/G#]的声[Asus4]音[A]。   jiàn lì dǎo gào de jì tán chōng mǎn zàn měi de shēng yīn` *(session)*
+- l. 18 : `[D]我的家要[A/C#]敬拜[Bm7]主，[D/A] [G]乐意事奉[D/F#]耶和[Em7]华。[A]   wǒ de jiā yào jìng bài zhǔ lè yì shì fèng yē hé huá` → `[D]我的家要[A/C#]敬拜[Bm7]主[D/A]，[G]乐意事奉[D/F#]耶和[Em7]华[A]。   wǒ de jiā yào jìng bài zhǔ lè yì shì fèng yē hé huá` *(session (hors relevé))* — système 4, même mélodie que le système 2 : D/A x=517 au 3e temps de 主 tenu, A x=1156 au 3e temps de 华 tenu : tenues, 主[D/A]， et 华[A]。. Les autres accords (D, A/C# sur 敬, Bm7, G sur 乐, D/F# sur 耶, Em7 sur 华) : exacts.
+
+Mesures sur la partition (accords non exacts et lignes changées par la session) :
+
+| Ligne | Accord | Mesure | Classe | Correction |
+|---|---|---|---|---|
+| 13 | D/A | x=522 sur le 3e temps (« – ») de 主 tenu, avant le soupir du 4e temps | décalé (après la ponctuation au lieu de la tenue) | 主[D/A]， |
+| 13 | A | x=1156 sur le 3e temps de 命 tenu | décalé (tenue) | 命[A]。 |
+| 14 | A | x=1150 sur le 3e temps de 音 tenu | décalé (tenue) | 音[A]。 |
+| 18 | D/A | x=517 sur le 3e temps de 主 tenu | décalé (tenue) | 主[D/A]， |
+| 18 | A | x=1156 sur le 3e temps de 华 tenu | décalé (tenue) | 华[A]。 |
+| 25 | A | système 7, A x=1166 sur le 2 lié depuis 胜 (胜[A]，) ; système 8, A x=326 sur le 2 de 必 (福[A]必) | exact à l'œil (check.py : A x=1166 « absent du .cho », A x=326 « décalé », appariement croisé) | aucune |
+| 23 | G#dim | x=899 (système 6) et x=209 (système 8) sur le « 3 1 » de 福 ; étiquette plus large que le caractère | exact à l'œil (outil : à relire, d=-24/-22 px) | aucune |
+| 19 | Gmaj7 | x=14 sur le 6 de 活, étiquette dans la marge | exact à l'œil (outil : à relire, d=-23 px) | aucune |
+
+Forme (sans effet sur la place des accords, détail dans le diff du commit) : 3 ligne(s) — espaceur : l. 23, 25, 26.
+
+En-tête : ajout de `{source: 我的家要荣耀主.pdf}`
+
+| Écart | Statut | Par | Raison, partition |
+|---|---|---|---|
+| 25:decale:A:1 | laissé | def |  |
+| 25:relire:G#dim:1 | laissé | def |  |
+| 23:relire:G#dim:1 | laissé | def |  |
+| 19:relire:Gmaj7:1 | laissé | def |  |
+| 14:relire:Gmaj7:1 | laissé | def |  |
+
+- Partition : scan 简谱 (我的家要荣耀主.pdf), le même que public/jianpu/我的家要荣耀主-p1.webp ; étiquettes de chords.json, chiffre du jianpu sous chaque étiquette regardé sur découpes agrandies (systèmes 1 à 8). Calque non touché ; aucun nom d'accord changé, aucun accord ajouté ni retiré.
+- Cinq tenues corrigées sans changer de caractère : l'accord gravé au 3e temps d'une syllabe tenue (« 1 – – 0 », « 2 – – 0 ») passe avant la ponctuation : 主[D/A]，, 命[A]。, 音[A]。 (couplet 1), 主[D/A]，, 华[A]。 (couplet 2).
+- Les trois écarts « relire » (Gmaj7 l. 14 et 19, G#dim l. 23 et 25) et le « décalé » A l. 25 restent « non » : étiquettes en marge ou plus larges que le caractère, et appariement croisé de l'outil ; à l'œil chaque accord est sur son caractère.
+- L'A « absent du .cho » x=1166 (système 7) est le 胜[A]， de la l. 25, déjà présent.
+- Intro : reprise ‖: :‖ gravée, libellé 前奏/Intro (x2) (suffixe, même directive). Rien d'autre n'est reprise sur la partition (fin sur double barre).
+- Pinyin, non appliqué : l. 25 保守 « bǎo chǒu » → « bǎo shǒu ».
+- Autre feuille dans Partitions : 我的家要荣耀主notes.pdf, non regardée comme source (la partition retenue est le scan du calque).
+
+### 我的救赎者活着 — 我的救赎者活着
+
+Lot 11 · partition retenue : `我的救赎者活着.pdf` (scan-jianpu, mesure fiable)
+
+Lignes modifiées :
+
+- l. 15 : `当[D]我在旷野[A]孤独[F#m]时，他[Bm]伴我[E]作我的[A]灯。[G]     dāng wǒ zài kuàng yě gū dú shí tā bàn wǒ zuò wǒ de dēng` → `当[D]我在旷野[A]孤独[F#m]时，他[Bm]伴我作[E]我的[A]灯。[G]   dāng wǒ zài kuàng yě gū dú shí tā bàn wǒ zuò wǒ de dēng`
+- l. 22 : `[D][ ]当号角响起的那[C#]一[C#/F]天[F#m]， 我将[Bm]见他[E]荣光之[A]面。   dāng hào jiǎo xiǎng qǐ de nà yī tiān wǒ jiāng jiàn tā róng guāng zhī miàn` → `[D] 当号角响起的[C#]那[C#/F]一[F#m]天，我将[Bm]见他荣[E]光之[A]面。   dāng hào jiǎo xiǎng qǐ de nà yī tiān wǒ jiāng jiàn tā róng guāng zhī miàn`
+
+Mesures sur la partition (accords non exacts et lignes changées par la session) :
+
+| Ligne | Accord | Mesure | Classe | Correction |
+|---|---|---|---|---|
+| 15 | E | système 4 : E x=749 au-dessus du 3 (x≈757) ; 他 est la levée 3 de la mesure précédente, puis 4(伴) 4(我) 4(作) 3(我) 2 1(的, mélisme) \| 1(灯) : le 3 porte le second 我 | décalé | 他[Bm]伴我作[E]我的 (défaut « ok » appliqué) |
+| 22 | C# | x=450 au-dessus du 3̇ = 那 | décalé (un caractère trop loin, non listé par l'outil) | 的[C#]那 |
+| 22 | C#/F | x=516 au-dessus du 2̇ = 一 | décalé (non listé par l'outil) | [C#/F]一 |
+| 22 | F#m | x=613 au-dessus du 1̇ = 天 (attaque) | décalé (non listé par l'outil) | [F#m]天， |
+| 22 | Bm | x=824 au-dessus du 4̇ = 见 ; l'outil l'a comparé au Bm x=743 du système de la ligne 20 | exact (vérifié à l'œil, l'outil lit mal) | aucune : [Bm]见 (le « ok » par défaut vers 他 est écarté par le remplacement) |
+| 22 | E | x=1041 au-dessus du 1̇ du 3e temps = 光 | décalé | 荣[E]光 |
+| 22 | D | x=13 au-dessus du silence 0, la voix entre sur le 6 (当) | exact (vérifié à l'œil, l'outil lit mal) | aucune : [D] 当 |
+| 22 | A | x=1217 au-dessus du 1̇ final = 面 | exact (vérifié à l'œil, l'outil cherchait au système 7) | aucune |
+
+Forme (sans effet sur la place des accords, détail dans le diff du commit) : 3 ligne(s) — espaceur : l. 19, 20, 21.
+
+En-tête : ajout de `{source: 我的救赎者活着.pdf}`
+
+| Écart | Statut | Par | Raison, partition |
+|---|---|---|---|
+| 22:decale:D:1 | laissé | def |  |
+| 22:decale:Bm:1 | laissé | def | la ligne prend le texte de 22:fable:22:decale:E:1 |
+| 22:decale:E:1 | laissé | def |  |
+| 22:decale:A:1 | laissé | def |  |
+| 22:fable:22:decale:E:1 | appliqué | session | Dernier système (y≈2099), note par note : 0 6(当) 6(号) 7(角) 1̇(响) 7(起) 1̇(的) \| 3̇(那) 2̇(一) 1̇(天) 7(我) 1̇(将) \| 4̇(见) 3̇(他) 2̇(荣) 1̇(光) 7(之) \| 1̇(面). C# est sur le 3̇ de 那, C#/F sur le 2̇ de 一, F#m sur le 1̇ de 天, Bm sur le 4̇ de 见, E sur le 1̇ de 光, A sur le 1̇ de 面, D sur le silence 0 avant la voix. Le remplacement donne exactement cette ligne ; il écarte le « ok » par défaut qui mettait Bm sur 他 (l'outil avait mesuré sur le système de la ligne 20). — partition : calque : D x=13 (sur le 0) ; C# x=450 au-dessus du 3̇ x≈468 = 那 ; C#/F x=516 au-dessus du 2̇ x≈552 = 一 ; F#m x=613 au-dessus du 1̇ x≈635 = 天 ; Bm x=824 au-dessus du 4̇ x≈845 = 见 ; E x=1041 au-dessus du 1̇ x≈1048 = 光 ; A x=1217 au-dessus du 1̇ x≈1225 = 面 |
+| 15:decale:E:1 | appliqué | def |  |
+
+- Partition : scan 简谱 1=A, même image que le calque 我的救赎者活着-p1.webp (1600 × 2271), 8 systèmes ; check.py numérote mal les systèmes 5 à 8 (il ne lit pas de paroles au dernier) : les 11 « absent du .cho » de la liste extra (systèmes 7 et 8) sont les accords des lignes 21 et 22, déjà présents ; rien n'est ajouté.
+- Vérifié à l'œil, système par système, tous les accords des lignes 9, 10, 14, 15, 19, 20, 21, 22 : seuls E (l. 15) et C#, C#/F, F#m, E (l. 22) étaient décalés ; Bm de la l. 22 était juste (le « ok » par défaut 22:decale:Bm:1 l'aurait décalé sur 他 : écarté par le remplacement retenu).
+- Écarts « non » par défaut de la l. 22 (D, A) : mesure ratée de l'outil, lignes justes ; 22:decale:E:1 (déplacer E après 面) : non, E est sur 光, porté par le remplacement 22:fable:22:decale:E:1.
+- Levée « 0 5 1̇ 2̇ » (我知道) avec E sur le 0 à la fin du système 4 : « [E] 我知道 » en tête du refrain, juste. G sur le 1 lié de 灯 : « 灯。[G] », juste.
+- Structure : couplet 1, couplet 2, refrain, sans signe de reprise ni renvoi sur la feuille ; rien à changer.
+- Pinyin : check.py signale 一 « yī » (l. 20) ≠ pypinyin « yí » : ton du dictionnaire, conforme à 01 (pas de sandhi).
+- check.py après : 2 « décalé » restants sur la dernière ligne (E sur 光, A sur 面) : l'outil compare au système de la ligne 20 (E x=1097) et cherche A au système 7 ; vérifiés à l'œil sur le dernier système, justes.
+
+### 我的生命献给你 — 我的生命献给祢
+
+Lot 11 · partition retenue : `我的生命献给你.pdf` (scan-jianpu, mesure impossible)
+
+Lignes modifiées :
+
+- l. 13 : `献上[A]生命，[E/G#]给最爱的[F#m]耶稣，完全[D]顺服[D/E]，完全[A]降服。   xiàn shàng shēng mìng gěi zuì ài de yē sū wán quán shùn fú wán quán xiáng fú` → `献上[A]生命，[E/G#]给最爱的[F#m]耶稣，完全[D]顺服[D/E]，完全[A]降服[A/C#]。   xiàn shàng shēng mìng gěi zuì ài de yē sū wán quán shùn fú wán quán xiáng fú` *(session (hors relevé))* — A/C# gravé x=521,8 au 3e temps de la mes. 12, en l'air pendant la blanche de 服 (x=503,9) ; la croche de 因 est à x=539,5. Le scan 简谱 met A/C# au-dessus du « − » qui prolonge le 5 de 服. Tenue : après 服, avant la ponctuation, comme 顺服[D/E]， (D/E x=415,5, même place dans la mes. 11). Le .cho le posait devant 因, au début de la ligne suivante : décalé d'un caractère.
+- l. 14 : `[A/C#][ ]因你[D]恩典，[D/E]使我得以[A]事[E/G#]奉[F#m]你，你的[Bm]选召没有[Esus4]怀疑。  yīn nǐ ēn diǎn shǐ wǒ dé yǐ shì fèng nǐ nǐ de xuǎn zhào méi yǒu huái yí` → `因你[D]恩典，[D/E]使我得以[A]事[E/G#]奉[F#m]你，你的[Bm]选召没有怀[Esus4]疑。   yīn nǐ ēn diǎn shǐ wǒ dé yǐ shì fèng nǐ nǐ de xuǎn zhào méi yǒu huái yí` *(session)*
+- l. 24 : `{start_of_bridge: 桥段/Bridge}` → `{start_of_bridge: 桥段/Pont (To Chorus)}` *(session (hors relevé))* — La fin du pont porte « To Chorus » (mes. 41, levée 我的生命献给). Chant chinois : le refrain n'est pas recopié, la section qui renvoie porte le suffixe (01, § Structure dépliée) ; libellé canonique 桥段/Pont (01). Libellé seulement, même directive ; aucun test ne vérifie ce libellé.
+- l. 26 : `[A/C#]赐给[D]我奔跑不倦的[E/D]力量， 如鹰[G]展翅上腾[E]翱翔。   cì gěi wǒ bēn pǎo bù juàn de lì liáng rú yīng zhǎn chì shàng téng áo xiáng` → `[A/C#]赐给[D]我奔跑不倦的[E/D]力量，如鹰[G]展翅上腾翱[E]翔。   cì gěi wǒ bēn pǎo bù juàn de lì liáng rú yīng zhǎn chì shàng téng áo xiáng` *(session)*
+
+Mesures sur la partition (accords non exacts et lignes changées par la session) :
+
+| Ligne | Accord | Mesure | Classe | Correction |
+|---|---|---|---|---|
+| 14 | A/C# | x=521,8, 3e temps de la mes. 12, en l'air pendant la blanche de 服 (x=503,9) ; scan : au-dessus du « − » de 服 | décalé | 降服[A/C#]。 en fin de l. 13 |
+| 14 | Esus4 | x=503,1 sur la croche liée depuis 怀 (mes. 16) ; 疑 sur la croche suivante x=515,8 | décalé | 怀[Esus4]疑 |
+| 26 | E | x=413,4 sur la ronde de 翔 (x=410,3) | décalé | 翱[E]翔 |
+| 25 | E/D | x=235,2 sur la double croche liée depuis 梦 (mes. 34) ; 想 attaque sur la croche x=253,1 | exact (tenue) | aucune : 梦[E/D]想 |
+| 25 | F#m | x=482,0 sur la double croche liée depuis 天 (mes. 36) | équivalent | aucune : 天[F#m][ ]上 laisse l'accord entre 天 et 上, même caractère que la tenue 天[F#m]上 ; ligne hors relevé, laissée |
+| 25 | E/G# | Finale x=503,5 (repoussé par F#m ; 上 attaque sur la croche x=499,7) ; scan : au-dessus du 1̇ du 2e temps, pendant 上 lié | équivalent | aucune : l'accord suit 上 dans les deux écritures (上。[E/G#]) ; la forme exacte serait 上[E/G#][A]。 |
+| 25 | A | x=530,8 = 3e temps de la mes. 36, en l'air pendant la blanche de 上 (x=517,0) ; scan : au-dessus du 1̇ du 3e temps | équivalent | aucune, même raison que E/G# |
+| 21 | E | aucun E gravé juste après 你 : 1re fin = A sur 你 puis interlude E/G# F#m D E ; 2e fin = D sur 你 puis interlude E D E | structure | laissé : condensé des interludes absents du .cho, voir structure |
+
+Forme (sans effet sur la place des accords, détail dans le diff du commit) : 3 ligne(s) — espaceur : l. 18, 25 ; espaces : l. 21.
+
+En-tête : ajout de `{source: 我的生命献给你.pdf}`
+
+| Écart | Statut | Par | Raison, partition |
+|---|---|---|---|
+| 26:oeil:1 | appliqué | session | E est gravé sur la ronde de la mes. 40, sous laquelle est 翔 ; 翱 est la dernière croche de la mes. 39. Le scan 简谱 montre le même E au-dessus du 2̇ de 翔. — inclus dans la ligne de la session — partition : Finale p. 2 : E x=413,4, ronde x=413,2, 翔 x=410,3 (翱 x=390,7 sous la croche x=393,6) ; caractère porteur 翔 |
+| 14:oeil:0 | appliqué | def | inclus dans la ligne de la session |
+
+- Source : Finale (export, 2 pages) ; les paroles chinoises n'ont pas de code dans la couche texte, mais leurs glyphes LiHeiPro ont une position : chaque accord mesuré label → tête de note (Maestro) → caractère, puis vérifié à l'œil sur des rendus 5× et sur le scan 简谱 du calque (même arrangement). check.py ne lit pas les paroles : vérifié à l'œil.
+- Intro (l. 9) : A E/G# F#m D | A/C# Bm D/E E | A E/G# F#m D | E, conforme.
+- Refrain (l. 18-21) : tous les accords exacts (E avant 我 sur la note liée, A 你, E/G# 跟, F#m 你, D 耀, E 命, A 记, E/G# 我, F#m 命, D 你, D/E 乐, A 你).
+- Corrigé : A/C# (fin de la l. 13, pendant 服 tenu, au lieu du début de la l. 14), Esus4 (怀[Esus4]疑), E (翱[E]翔), libellé du pont « 桥段/Pont (To Chorus) ».
+- Laissé, équivalent : l. 25 « 天[F#m][ ]上。[E/G#] [A] » ; la partition met F#m pendant 天 lié, E/G# et A aux 2e et 3e temps pendant 上 lié (scan net ; sur la Finale E/G# est repoussé par F#m) : forme exacte « 天[F#m]上[E/G#][A]。 », même caractère porteur.
+- Mes. 36 de la Finale : « F#m E/G# A  A/C# » est une seule chaîne tapée (espaces dans le texte de l'accord), donc ses positions sont approximatives ; A tombe pile au 3e temps et A/C# sur 赐 ; E/G# (x=503,5) se lit sur le scan au 2e temps, pendant 上 lié.
+- Structure à appliquer par Timothée : interludes 1 et 2 et 2e fin (D sur le dernier 你) absents ; le [E] final de la l. 21 tient lieu de retour.
+- Paroles, non appliqué : la partition écrit 祢 (règle du format : 你) ; le scan 简谱 du site ajoute une coda « 我的生命献给耶稣，我爱你，我爱你 » (F#m D D/E A) absente de la Finale retenue.
+- Calque : aucun nom d'accord changé, aucun accord ajouté ni retiré ; A/C# passe de la l. 14 à la fin de la l. 13 (même accord, l'aperçu le liste « calque à revoir ») : le calque met déjà A/C# au-dessus du « − » de 服 tenu, rien à revoir.
+- Autres versions : « 我的生命献给你 - A.pdf » et « 我的生命献给你 A.pdf » (scan 简谱 du calque), « notes.pdf » (doublon), « accompagnement.pdf » (piano), une version enfants en G (png).
+- check.py : 13 exacts, le reste « absent » des deux côtés parce qu'il ne lit pas les paroles (glyphes sans code) : pas un écart réel, chaque accord vérifié à l'œil ci-dessus.
+
 ## Captures (trois appareils)
 
 Lot 1 — captures des 24 chants modifiés regardées sur ordinateur, téléphone et tablette (`tests/nouveau-chant.spec.ts`, tous verts) : aucun accord superposé ni débordant, aucune section vide, aucune directive ni `{needs_review}` visible, libellés conformes au `.cho`. Remarques :
@@ -14817,6 +16123,12 @@ Lot 10 — captures des 26 chants modifiés regardées sur ordinateur, télépho
 - 大手牵着小手 : la section finale ajoutée porte le libellé `尾声/Final` attendu par le lint (`_cho.py`) ; 01 écrit `结尾/Final` et le parseur du site ne reconnaît que 结尾 : à harmoniser (le sommaire affiche « 尾声/Final » brut) ;
 - 奔跑不放弃 : sur téléphone, l'accord E/G# posé après la dernière ponctuation d'une ligne déborde du cadre au lieu de passer à la ligne.
 
+Lot 11 — captures des 28 chants modifiés regardées sur ordinateur, téléphone et tablette (`tests/nouveau-chant.spec.ts`, tous verts) : aucun accord superposé, aucune section vide, aucune directive ni `{needs_review}` visible. Remarques :
+- 得胜的宣告 : le suffixe de tonalité était écrit des deux côtés du « / » (« 副歌 1 (D调)/Refrain 1 (D) ») et s'affichait deux fois : écrit une seule fois, à la fin (01) ;
+- pinyin d'origine faux sur des caractères à plusieurs lectures (nombre de groupes juste, donc hors de la forme) : 差派 `chà` (chāi), 舍命 `shè` (shě) dans 我已得自由 et 我心坚定与你, 重新 `zhòng` (chóng) dans 我心坚定与你, 为 `wéi` (wèi) dans 我渴望看见 et 我的生命献给你, 保守 `bǎo chǒu` (shǒu) dans 我的家要荣耀主, 力量 `lì liáng` (liàng) dans 我的生命献给你 : non touchés, signalés ;
+- 我们爱让世界不一样 : « 彼些 » au lieu de « 彼此 » (le scan écrit 彼此 ; aucun écart du relevé ne le corrige) : non touché, signalé.
+- 得胜的宣告 : banc 简谱, « aucune étiquette n'est rognée par sa voisine » rouge sur ordinateur et tablette, déjà rouge avec le fichier d'origine (calque gelé) : à revoir côté calque.
+
 ## Listes
 
 ### Choix de Timothée passés outre (la partition l'emporte)
@@ -14843,6 +16155,7 @@ Lot 10 — captures des 26 chants modifiés regardées sur ordinateur, télépho
 - **你是配的** l. 24 (24:decale:Bb/F:1, ok) : la l.24 (圣洁，圣洁，以圣洁妆饰敬拜你) se chante sur la volta 2 (système 6, y=1239), pas sur la volta 1 (système 5, y=1017) que l'outil a mesurée : sur la volta 2, Gm x=608 sur le « 4 » = 洁, Bb/C x=730 sur le « 2· » = 饰, Bb/F x=875 sur le « 2· » = 拜, F x=992 sur le « 1 » = 你 : la ligne actuelle est juste et les trois « ok » du relevé mettraient Gm sur 以, Bb/C sur 洁, Bb/F sur 饰 (autres caractères) ; seul ajout : le second F x=1113, gravé sur le « 1 » lié de la mesure suivante (你 tenu) → 你[F]。
 - **奇异恩典** l. 26 (26:oeil:2, ok) : Choix du relevé gardé (E2/G# gravé x=364 sur 3· de 为, pinyin zài). A2 (x=527) gravé sur 1· de la colonne 被/蒙/牌/主 : 牌, pas 福 (le .cho comptait la virgule du couplet 1) — autre caractère, corrigé. A/E (x=1275) sur la tenue de 惧, absent, ajouté.
 - **奇异恩典** l. 11 (11:oeil:0, ok) : Choix du relevé gardé (pinyin sàng). Partition : A/E gravé (x=1275, rangée y=865, commune aux quatre couplets) au-dessus du dernier 1 de la mesure, liaison de 见 tenu : accord absent du couplet, ajouté en tenue après 见.
+- **我是承带神荣耀的器皿** l. 25 (25:decale:G:1, ok) : Contre le choix du relevé (ok sur [G]因) : sur le système 8, 因 est la levée 5 (x≈1190, croche après 0, dans la mesure de C/D) et l'étiquette G (x=1270) est au-dessus du premier 3 de la mesure suivante (x≈1280), sous lequel est 耶 (x≈1280) ; levée sans accord gravé, l'accord précédent continue (02). check.py a mesuré contre le G du système 10 (x=333, 耶稣在这里) : mesure ratée. D (système 9, x=341) est gravé sur le 2 lié au-delà de la barre, 生 étant attaqué une croche avant (2 souligné x≈280) : syncope liée/tenue, l'accord suit la syllabe et précède la ponctuation (02 : 事[G]。).
 
 ### `{needs_review}` posés
 
@@ -15002,6 +16315,11 @@ Lot 10 — captures des 26 chants modifiés regardées sur ordinateur, télépho
 - **天国的子民** (fable) : appliqué — Sur la partition en portée, la première partie (mesures 1 à 8, « 我們是天國的子民 … 我們是天國的子民。 ») se ferme par une barre de reprise :‖ sans ‖: en amont : elle se chante deux fois avant « 我們要彼此真誠相愛 ». Reprise immédiate, chant chinois : suffixe (x2) au libellé, même directive start_of_chorus, rien de recopié.
 - **奇异恩典** (fable) : laissé — chant validé : pas de bloc de structure
 - **奇异恩典** (agent) : laissé — chant validé : pas de bloc de structure
+- **尽情地微笑** (agent) : appliqué — La partition grave après le refrain (double barre fin du système 7) un 【间奏/尾奏】 de 7 mesures sans paroles, système 8 : D | D G/D | D | D G/D | D | D G/D A/D | D, annoté « To Verse or End ». Absent du .cho ; ce n'est pas une reprise (l'intro du système 1 a d'autres accords). Ajout d'une section après la dernière, permis : les sections existantes gardent leur rang. Un accord par étiquette gravée (01, lignes sans paroles), annotation de la partition en suffixe.
+- **得胜的宣告** (agent) : appliqué — Suffixe de tonalité écrit des deux côtés du « / » (« (D调) » et « (D) ») : le site l'affiche deux fois ; 01 le veut une seule fois, à la fin du libellé. Libellés seulement, mêmes directives, aucun test ne les fige.
+- **我们的神** (agent) : appliqué — Après la volta 2 la partition module (« 1=A ») et renvoie au refrain (« To Chorus ») ; ce refrain en A a ses propres accords gravés (rangée au-dessus des systèmes 3 à 5 : A E/G# F#m A/E D A/C# Bm E A), plus une variante entre crochets « [最后一遍副歌] [F#m E/G# D/A A/C#] » sur la première phrase. Retour modulé : écrit en entier avec la tonalité en suffixe (01, exception chinoise), ajouté après la dernière section (permis). Positions recopiées de la rangée en A, mesurée étiquette par étiquette (A x=576 sur 神, E/G# x=671 sur 坐, F#m x=883 sur 上, A/E x=983 sur 圣, D x=1188 sur 满, A/C# x=1301 sur 耀, Bm x=55 sur 民, E x=207 sur 拜 ; A x=450 sur 神, E/G# x=574 sur 我, F#m x=791 sur 你, A/E x=922 sur 圣, D x=1159 sur 耀, A/C# x=1284 sur 贵, Bm x=57 sur 力, E x=166 sur 都, A x=369 sur 你). La variante de la dernière fois s'écrit en alternative [A (F#m)], [F#m (D/A)], [A/E (A/C#)] ; rien n'est gravé sur la levée 我们的 (l'E de la volta 2 continue).
+- **我们高举耶稣的名** (agent) : appliqué — La partition renvoie du pont au refrain (To Chorus) : suffixe du libellé (01), même directive, l'id de section ne change pas.
+- **我的生命献给你** (agent) : laissé — non appliqué
 
 ### Structure à appliquer par Timothée
 
@@ -15968,6 +17286,65 @@ Ne peut t’égal[D]er. (Oh oh, o[F#m]h oh oh oh oh [E]oh !)
 {end_of_interlude}
 ```
 
+- **想起你** (agent) : Après la double barre Fine du refrain, la partition grave un passage chanté « 哦 哦 » avant le 2e couplet (système 5) : D/A (x=277) sur le 1̇ lié depuis 我, E/A (x=370) sur le silence, 哦 sur 1̇ 7 6, A (x=573) sur le 5 du 2e 哦, E/A (x=663) et D/A (x=794) pendant sa tenue ; le E/A suivant (x=899) ouvre le couplet 2 (l. 23). Absent du .cho ; l'ajouter entre le refrain et le couplet 2 est une insertion ailleurs qu'après la dernière section : interdit ici.
+
+```
+{start_of_intro: 间奏/Interlude}
+[D/A]  [E/A] 哦[A]哦[E/A][D/A]，
+{end_of_intro}
+```
+
+- **我们高举耶稣的名** (fable) : Système 1 du scan : quatre mesures de silences « 0 0 0 0 » sous D/F# G D/F# D, avant la barre de reprise du couplet ; absentes du .cho. Les insérer avant le couplet 1 ajoute une section ailleurs qu'après la dernière : changement de structure réservé. Rien d'autre à déplier : « To Chorus » après le pont renvoie au refrain déjà écrit (Fine sur 名).
+
+```
+# avant {start_of_verse: 主歌 1/Couplet 1} (l. 8)
+
+{start_of_intro: 前奏/Intro}
+[D/F#]  [G]  [D/F#]  [D]
+{end_of_intro}
+```
+
+- **我心坚定与你** (agent) : Intro gravée (systèmes 1–2, 8 mesures sans paroles avant la double barre) absente du .cho. Elle se place avant le couplet, donc avant la 1re section : ajout interdit ailleurs qu'après la dernière section (numérotation des sections).
+
+```
+{start_of_intro: 前奏/Intro}
+[D/F#]  [E/G#]  [A]  [D/F#]  [E/G#]  [D/A]  [D/F#]  [E/G#]  [D/A]  [A]  [D/F#]  [E/G#]  [A]
+{end_of_intro}
+```
+
+- **我心坚定与你** (agent) : La partition marque 【Pre-Chorus】 ; le .cho l'écrit sous {start_of_verse}…{end_of_verse}. Changer de type change l'id de section (verse-2 → prechorus-1) : interdit ici.
+
+```
+{start_of_prechorus: 预备副歌/Pré-Refrain}
+…(lignes 14–15 inchangées)…
+{end_of_prechorus}
+```
+
+- **我的生命献给你** (fable) : Couplet + refrain sous ‖: :‖ (mes. 9-28). 1re fin (mes. 25-28, « 間奏1-回Verse ») : A sur 你 puis interlude E/G# F#m D E et levée 献上 vers le couplet ; « 結束時停在A和弦 » : le dernier refrain finit sur A. 2e fin (mes. 29-32, « 間奏2-進Bridge ») : D sur 你 puis interlude E D E vers le pont. Le .cho n'écrit ni les interludes ni la 2e fin (l. 21 finit par « [A]你。[E] »). Ajouter des sections entre le refrain et le pont est interdit (ids des setlists). Chant chinois : le couplet n'est pas recopié ; seul le refrain de la 2e fin (dernier accord D) et les interludes sont à écrire, d'où le bloc ci-dessous (le bloc de l'outil recopiait couplet et refrain : non retenu).
+
+```
+{start_of_chorus: 副歌/Refrain}
+…l. 18-20 inchangées…
+耶稣我爱[D]你， 喜[D/E]乐地跟随[A]你。
+{end_of_chorus}
+
+{start_of_intro: 间奏 1/Interlude 1 (retour au couplet)}
+[E/G#]  [F#m]  [D]  [E]
+{end_of_intro}
+
+{start_of_chorus: 副歌 2/Refrain 2 (2e fin)}
+…l. 18-20…
+耶稣我爱[D]你， 喜[D/E]乐地跟随[D]你。
+{end_of_chorus}
+
+{start_of_intro: 间奏 2/Interlude 2}
+[E]  [D]  [E]
+{end_of_intro}
+
+{start_of_bridge: 桥段/Pont (To Chorus)}
+…
+```
+
 ### Chants « audio demandé »
 
 - **fidele-loyal**
@@ -15985,6 +17362,8 @@ Ne peut t’égal[D]er. (Oh oh, o[F#m]h oh oh oh oh [E]oh !)
 - **圣诞节耶稣为你而来** : avant `intro: 前奏/Intro` · `verse: 主歌 1/Couplet 1` · `verse: 主歌 2/Couplet 2` · `verse: 预备副歌/Pre-Refrain` · `chorus: 副歌/Refrain` · `bridge: 桥段/Pont` → après `intro: 前奏/Intro` · `verse: 主歌 1/Couplet 1` · `verse: 主歌 2/Couplet 2` · `verse: 预备副歌/Pré-Refrain` · `chorus: 副歌/Refrain` · `bridge: 桥段/Pont` · `intro: 间奏/Interlude`
 - **在这里** : avant `verse: 主歌/Couplet` · `chorus: 副歌/Refrain` · `bridge: 桥段/Pont` → après `verse: 主歌/Couplet` · `chorus: 副歌 1/Refrain 1` · `bridge: 桥段/Pont` · `chorus: 副歌 2/Refrain 2 (G)`
 - **大手牵着小手** : avant `intro: 前奏/Intro` · `verse: 主歌 1/Couplet 1` · `verse: 主歌 2/Couplet 2` · `chorus: 副歌/Refrain` · `bridge: 桥段/Pont` → après `intro: 前奏/Intro` · `verse: 主歌 1/Couplet 1` · `verse: 主歌 2/Couplet 2` · `chorus: 副歌/Refrain` · `bridge: 桥段/Pont` · `chorus: 副歌 2/Refrain 2 (F)` · `outro: 尾声/Final`
+- **尽情地微笑** : avant `intro: 前奏/Intro` · `verse: 主歌/Couplet` · `chorus: 副歌/Refrain` → après `intro: 前奏/Intro` · `verse: 主歌/Couplet` · `chorus: 副歌/Refrain` · `intro: 间奏/Interlude (To Verse or End)`
+- **我们的神** : avant `intro: 前奏/Intro` · `verse: 主歌/Couplet` · `chorus: 副歌 1/Refrain 1` · `bridge: 桥段 1/Pont 1` · `bridge: 桥段 2/Pont 2` → après `intro: 前奏/Intro` · `verse: 主歌/Couplet` · `chorus: 副歌 1/Refrain 1` · `bridge: 桥段 1/Pont 1` · `bridge: 桥段 2/Pont 2` · `chorus: 副歌 2/Refrain 2 (A)`
 
 ### `{key}` changés
 
@@ -16044,6 +17423,21 @@ Aucun.
 - **好喜欢与你在一起** : l. 13 +Eb ; l. 9 −Gm7 +G7
 - **如果你想知道** : l. 24 −D/F# +(D/F#) ; l. 23 −D/F# +(D/F#)
 - **如鹰展翅上腾** : l. 21 −D/F# +(Am) +D/F# (Bm) ; l. 19 −D/F# +(Am) +D/F# (Bm)
+- **宝贵十架** : l. 16 −A +D ; l. 14 −A +D
+- **尽情地微笑** : l. 21 +G/D
+- **常常喜乐** : l. 32 −D/F# +(D/F#) ; l. 28 −D/F# +(D/F#)
+- **得胜的宣告** : l. 9 +A/C#
+- **想起你** : l. 19 +E/A
+- **我们呼求** : l. 42 −A7 +A7/E ; l. 38 −A7 +A7/E
+- **我们成为一家人** : l. 26 −F/Eb +F (F/Eb) ; l. 24 −F/Eb ; l. 23 +F (F/Eb) ; l. 17 −F/Eb +F (F/Eb) ; l. 15 −F/Eb ; l. 14 +F (F/Eb)
+- **我们是光明之子** : l. 9 +E×2 +B×2 +C#m×2 +A×2
+- **我们的神** : l. 32 +E ; l. 30 −G/B +G (G/B) ; l. 24 −G/B +G (G/B)
+- **我们高举耶稣的名** : l. 19 +D
+- **我在这里敬拜** : l. 29 −A +(Bm/A) ; l. 28 −A/C# +(D/C#) ; l. 24 −G/A +(Bm/A) ; l. 23 +(D/C#)
+- **我安然居住** : l. 18 −Em
+- **我是承带神荣耀的器皿** : l. 24 −C/G +C/D
+- **我渴望看见** : l. 40 −C +C/Bb ; l. 33 −C +C/Bb ; l. 26 −C/Bb +C (C/Bb) ; l. 22 −C/Bb +C (C/Bb)
+- **我的生命献给你** : l. 14 −A/C# ; l. 13 +A/C#
 
 ### Thèmes
 
@@ -16166,6 +17560,33 @@ Aucun.
 | 如果你想知道 | — | Grâce, Famille de Dieu | session | Thèmes absents. Le chant dit d'abord que l'amour vient de Dieu et se trouve dans son Fils (refrain) : Grâce ; les couplets le montrent autour de nous, sur les visages, chez les parents : Famille de Dieu. Autres défendables : Salut, Adoration. |
 | 如鹰展翅上腾 | — | Espérance, Saint-Esprit, Foi | session | thèmes absents : le chant dit d'abord le relèvement promis à qui attend le Seigneur (« 等候耶和华必从新得力 », « 如鹰展翅上腾 », Ésaïe 40) : Espérance ; puis l'onction reçue (« 领受圣灵恩膏和大能 ») : Saint-Esprit ; et la confiance en Dieu qui entend et donne la force : Foi. Autres défendables : Adoration, Grâce. |
 | 安静 | — | Foi, Adoration, Espérance | session | thèmes absents : le chant dit d'abord la confiance tranquille en Dieu au milieu de la tempête (« 安静…深深知道你是我的神 », Psaume 46:10 ; « 我不害怕 ») : Foi ; puis la louange qui tient dans l'épreuve (« 我仍然要敬拜 », « 我一生要敬拜 ») : Adoration ; et la marche vers la promesse (« 走向应许之处 », « 充满盼望 ») : Espérance. Autres défendables : Saint-Esprit. |
+| 宝贵十架 | — | Croix, Action de grâce, Salut | session | Thèmes absents. Le chant chante d'abord la croix (宝贵十架, le corps donné, le sang versé), en rendant grâce (主耶稣我感谢祢 ; indication « 感恩、敬拜地 » sur la partition) : Croix puis Action de grâce ; le salut qu'elle donne (带我出黑暗进入光明国度, 救恩) : Salut. Adoration (俯伏敬拜祢) et Grâce se défendent. Autres défendables : Adoration, Grâce. |
+| 将天敞开 | — | Adoration, Royaume | session | Le chant appelle la gloire et la présence de Dieu pour l'adorer (« 天上地下，合一敬拜 », « 在永恒里敬拜 », « 宝座前敬拜不停息 ») : Adoration d'abord ; « 万国赞叹你，你是荣耀君王 » donne Royaume. La présence qui descend (Saint-Esprit) et « 圣洁羔羊 » (Sainteté) restent défendables. Autres défendables : Saint-Esprit, Sainteté. |
+| 尽情地微笑 | — | Espérance, Foi | session | Thèmes absents du fichier. Le chant dit d'abord l'espérance (« 明天有阳光 », « 别失望沮丧 », sourire après les larmes), puis la confiance en Dieu qui donne la force et accompagne chaque pas (« 神必赐下重生的力量 », « 信心的脚步 »). Autres défendables : Engagement. |
+| 尽情的敬拜 | — | Adoration, Engagement | session | thèmes absents du fichier : le chant s'adresse d'abord à Jésus pour l'adorer (« 尽情敬拜 », « 举起我的心来敬拜你 »), puis répond par la vie offerte (« 用生命来回应你的爱 ») Autres défendables : Grâce. |
+| 差遣我 | — | Mission, Engagement | session | Thèmes absents du fichier. Le chant est une prière d'envoi : « 差遣我 … 到需要你的人群中 », porter l'espérance et la chaleur au monde → Mission d'abord ; « 我愿付出我所有 », « 献上我的生命 » → Engagement. Autres défendables : Famille de Dieu. |
+| 常常喜乐 | — | Foi, Espérance | session | Thèmes absents du fichier. Le chant appelle à se réjouir et à prier en toute circonstance parce qu'on se fie à Dieu (相信就能蒙福, 相信就有喜乐) ; le refrain dit l'espérance dans l'épreuve (死荫幽谷一路有耶稣陪伴，他永不离开). Autres défendables : Action de grâce, Adoration. |
+| 恒久恒久以前 | noel, salut, adoration, noel_fidelite | Noël, Salut, Groupe fidélité | session | Thèmes écrits en slugs (noel, salut, adoration, noel_fidelite) : noms de la liste. Le chant dit d'abord la naissance (晨星, 伯利恒马槽, 人子降生) → Noël ; puis le salut (释放我们, 救恩铸成) → Salut. Groupe fidélité gardé (étiquette ajoutée exprès par un autre contributeur) ; Adoration (来朝见君王) ne tient plus dans les trois. Autres défendables : Adoration. |
+| 恩典之路 | Grâce, Foi, Espérance | Grâce, Foi, Espérance | session | Thèmes actuels dans la liste et défendables : le chemin de grâce (« 恩典之路 »), la confiance dans le berger, le chemin d'espérance (« 盼望之路 ») ; inchangés. Autres défendables : Action de grâce. |
+| 想起你 | — | Espérance, Foi, Grâce | session | Thèmes absents. Le chant dit d'abord la consolation dans l'épreuve et l'espoir (« 盼望看见彩虹 », « 心不再忧愁 ») : Espérance ; la confiance que Dieu aide à tout traverser (« 还有什么困难不能渡过 ») : Foi ; la promesse de grâce (« 恩典的承诺 ») : Grâce. Autres défendables : Action de grâce. |
+| 愿为主闪亮 | — | Grâce, Engagement | session | Thèmes absents du fichier. Le chant dit d'abord la grâce reçue par qui n'en est pas digne (我只是…一粒沙…而主耶稣接纳我 ; 我如此不配，而主慈爱呼唤不曾停下), puis l'engagement de toute une vie (我一生一世愿为主闪亮). 领我入主爱之家 défendrait Famille de Dieu. Autres défendables : Famille de Dieu, Action de grâce. |
+| 我们呼求 | — | Repentance, Royaume, Adoration | session | Thèmes absents. Le chant dit d'abord la prière de retour (« 转离所有的恶行 », « 回转向你 ») : Repentance ; le refrain appelle le règne de Dieu sur le pays (« 设立你宝座 », « 全能的君王 ») : Royaume ; puis l'adoration des peuples (« 万民都要来敬拜你 »). Autres défendables : Engagement, Mission. |
+| 我们成为一家人 | — | Famille de Dieu, Salut | session | Thèmes absents. Le chant dit d'abord « nous devenons une famille, enfants de Dieu, peuple de son royaume » : Famille de Dieu ; puis ce qui le fonde, « par Jésus purifiés, entrés dans la lumière, partageant la vie ressuscitée » : Salut. Autres défendables : Grâce, Action de grâce. |
+| 我们是光明之子 | — | Famille de Dieu, Mission | session | thèmes absents du fichier : le chant affirme d'abord « nous sommes enfants de lumière » (identité des enfants de Dieu), puis l'envoi : le proclamer au monde entier Autres défendables : Saint-Esprit, Foi. |
+| 我们欢迎君王降临 | — | Adoration, Royaume, Saint-Esprit | session | Thèmes absents du fichier. Le couplet adore Jésus, centre de l'univers et roi de gloire (你是荣耀君王) ; le refrain accueille la venue du Roi (欢迎君王降临) ; le pont demande l'onction en pluie et le réveil (恩膏如雨浇灌这地, 春雨不停息). Autres défendables : Mission. |
+| 我们爱让世界不一样 | — | Famille de Dieu, Mission | session | Thèmes absents du fichier. Le chant dit d'abord l'amour mutuel des croyants, fondé sur 1 Jean 4,19 (我们爱，因神先爱我们 ; 彼此照亮，扶持拥抱 ; 不要独自飞翔) : Famille de Dieu ; puis cet amour qui change le monde (我们的爱让世界不一样) : Mission. Autres défendables : Grâce. |
+| 我们的神 | — | Adoration, Sainteté | session | Thèmes absents. Le chant dit d'abord la gloire du Dieu créateur que les cieux racontent et que tous adorent (« 万民敬拜 », « 我们尊崇你 ») : Adoration ; puis « 圣哉！圣哉！ » et « 圣洁、荣耀、尊贵、能力都归于你 » : Sainteté. Autres défendables : Royaume, Action de grâce. |
+| 我们高举耶稣的名 | — | Adoration, Royaume | session | Thèmes absents du fichier. Le chant dit d'abord l'exaltation du nom de Jésus (我们高举耶稣的名, 敬拜, 尊崇) : Adoration ; puis la royauté du Christ (大能的君王, 你的国度没有穷尽) : Royaume. Autres défendables : Saint-Esprit. |
+| 我在这里敬拜 | — | Adoration, Engagement | session | Thèmes absents. Le chant dit d'abord l'adoration (« 我在这里敬拜 », « 献上敬拜 »), puis le don de soi (« 献上我的一切，我的意念 ») : Adoration, puis Engagement. Grâce (« 你的恩惠，你的慈爱 », psaume 23) et le Père (« 你是阿爸父 ») restent défendables. Autres défendables : Grâce, Famille de Dieu. |
+| 我安然居住 | — | Foi, Adoration | session | Thèmes absents du fichier. Le chant dit d'abord la confiance (你是我全然信靠，耶和华使我安然居住) ; il vient adorer devant le trône et dans la présence de Dieu (我来到你宝座，献上我的祷告 ; 走进你的同在里). Grâce (你的爱已经找到了我，使我配得) se défend. Autres défendables : Grâce, Espérance. |
+| 我已得自由 | — | Salut, Grâce | session | thèmes absents du fichier. Le chant proclame d'abord la libération en Christ (我宣告我已得自由, 基督福音是大能, 定罪已过去, 罪已得赦免) : Salut ; l'amour choisi avant la création et la grâce venue (恩典已经来到) : Grâce. Autres défendables : Croix, Foi. |
+| 我心坚定与你 | — | Foi, Adoration | session | thèmes absents du fichier. Le chant dit d'abord la confiance (我心坚定于你, 眼目专注于你, 风浪之中…不畏惧) : Foi ; il s'ouvre sur la louange de Jésus (圣洁美丽，无人能及) : Adoration. Autres défendables : Engagement, Espérance. |
+| 我愿为你去 | 敬拜, 呼召, 奉献 | Engagement, Mission, Saint-Esprit | session | Le chant est une prière d'engagement : « je veux aller pour toi », « je ne veux que ce qui te plaît » (奉献 → Engagement) ; l'envoi (呼召, « 我愿为你去 », les nations) → Mission ; il demande le baptême de l'Esprit et du feu et le pont invoque l'amour, le feu et l'Esprit saints → Saint-Esprit. 敬拜 (Adoration) se défend moins : le chant ne s'adresse pas d'abord à la louange. Autres défendables : Adoration. |
+| 我是承带神荣耀的器皿 | — | Mission, Saint-Esprit | session | Thèmes absents du fichier. Le chant dit d'abord l'envoi (Ésaïe 61 : annoncer la bonne nouvelle, guérir, libérer ; sel et lumière, porter l'espérance parmi les hommes) : Mission ; il s'ouvre sur « l'Esprit du Seigneur est sur moi » : Saint-Esprit. Autres défendables : Engagement, Espérance. |
+| 我渴望看见 | — | Saint-Esprit, Repentance, Adoration | session | Le chant est d'abord une prière de réveil : le vent de l'Esprit, la gloire de Dieu manifestée, les âmes ranimées ; le couplet parle d'humilité et de repentance, le refrain finit sur l'adoration unie des générations. Autres défendables : Famille de Dieu, Espérance. |
+| 我的家要荣耀主 | — | Engagement, Adoration | session | thèmes absents du fichier. Le chant dit d'abord l'engagement d'une maison à servir Dieu (我和我的全家都要事奉耶和华, Josué 24:15 ; 遵守话语, 乐意事奉) : Engagement ; puis la louange (荣耀主, 敬拜主, 哈利路亚天天赞美) : Adoration. Autres défendables : Famille de Dieu, Action de grâce. |
+| 我的救赎者活着 | — | Résurrection, Espérance, Foi | session | Le chant affirme d'abord que le Rédempteur est vivant (« 我知道我的救赎者活着，他是永活的主 », Job 19:25-27), puis l'espérance de voir sa face au son de la trompette (indication « 宣告、有盼望地 ») ; la confiance (« 我心不再忧虑 ») donne Foi. Autres défendables : Pâques, Adoration. |
+| 我的生命献给你 | — | Engagement, Croix | session | Thèmes absents. Le chant dit d'abord l'offrande de sa vie et la suite du Christ (献上生命、完全顺服、背起十架跟随你) : Engagement ; puis la croix (背起十架、你如何为我舍命) : Croix. Adoration (耶稣我爱你) et Mission (带下你国度) défendables. Autres défendables : Adoration, Mission. |
 
 ### Lignes changées depuis l'audit (intouchables)
 
@@ -16189,6 +17610,7 @@ Aucun.
 - **从心合一** : La feuille D est la gravure imprimée en F (source du calque, printedKey F, transposée par le site) avec les accords D écrits à la main aux mêmes places : mêmes positions, noms parfois enrichis à la main (Bm7, Am7, Em7 pour Bm, Am, Em imprimés ; variante « (G D/F# Em7) » retenue sur 道路远), intro imprimée effacée, CODA barrée (fin par D.S. al Fine), options du pont effacées. Le .cho suit la feuille D. Le 3e fichier « 从心合一.pdf » (portée 赞美之泉, en F, caractères traditionnels) n'a pas été ouvert ici.
 - **在这里** : Le .cho suit le scan (nom retiré) : pas d'intro, caractères simplifiés, C/Bb du pont, et c'est lui qui porte le « 升G调 » du refrain final. L'export Finale (Stream of Praise 2023) ajoute une intro ‖: F Dm Bb C | F Dm Bb C :‖ (x2), grave « To Chorus » sans modulation et « Fine » en fin de refrain, en caractères traditionnels. Les deux feuilles gravent A (le scan ajoute A/C#) sur « 坚定不断 » : le [Am] de la ligne 22 ne vient d'aucune des deux. « 在这里 (F).pdf » est la même empreinte que la source ; les « 充满在这里 » sont un autre chant.
 - **大山为我挪开** : Le .cho déclare le scan (calque du site) mais son intro [E] [B/E] [A] est celle de l'export Finale : le scan grave A/E sur cette mesure. Couplet, refrain, interlude et pont sont identiques sur les deux feuilles (mêmes accords, mêmes places, mêmes voltas, même « To Chorus »). « 大山为我挪开 Complet.pdf » = le même Finale suivi d'une grille de deux pages ; « Accompagnement.pdf » = la partition piano du même arrangement.
+- **我们高举耶稣的名** : Accompagnement piano en G, 3 pages (Intro, Verse 1, Verse 2 écrits en entier) : même grille que la partition officielle, pas une autre harmonisation ; non mesurable (paroles groupées).
 
 ### Remplacements contradictoires cochés sur une même ligne
 
@@ -16651,6 +18073,135 @@ Aucun.
 - **如鹰展翅上腾** (source) : rangée instrumentale y=1764 x=317
 - **如鹰展翅上腾** (source) : rangée instrumentale y=1764 x=453
 - **定睛在耶稣身上** (source) : étiquette x=48 y=1391 (système 5)
+- **宝贵十架** (source) : étiquette x=16 y=593 (système 2)
+- **宝贵十架** (source) : étiquette x=34 y=863 (système 3)
+- **宝贵十架** (source) : étiquette x=36 y=1122 (système 4)
+- **宝贵十架** (source) : étiquette x=34 y=1382 (système 5)
+- **将天敞开** (source) : rangée instrumentale y=1666 x=15
+- **将天敞开** (source) : rangée instrumentale y=1666 x=234
+- **将天敞开** (source) : rangée instrumentale y=1659 x=448
+- **将天敞开** (source) : rangée instrumentale y=1666 x=659
+- **将天敞开** (source) : rangée instrumentale y=1666 x=857
+- **将天敞开** (source) : rangée instrumentale y=1666 x=1103
+- **尽情地微笑** (source) : rangée instrumentale y=2213 x=52
+- **尽情地微笑** (source) : rangée instrumentale y=2213 x=272
+- **尽情地微笑** (source) : rangée instrumentale y=2209 x=354
+- **尽情地微笑** (source) : rangée instrumentale y=2213 x=479
+- **尽情地微笑** (source) : rangée instrumentale y=2213 x=699
+- **尽情地微笑** (source) : rangée instrumentale y=2209 x=782
+- **尽情地微笑** (source) : rangée instrumentale y=2213 x=906
+- **尽情地微笑** (source) : rangée instrumentale y=2213 x=1126
+- **尽情地微笑** (source) : rangée instrumentale y=2209 x=1208
+- **尽情地微笑** (source) : rangée instrumentale y=2209 x=1287
+- **尽情地微笑** (source) : rangée instrumentale y=2213 x=1398
+- **尽情地微笑** (source) : étiquette x=1455 y=1941 (système 7)
+- **想起你** (source) : rangée instrumentale y=1414 x=40
+- **想起你** (source) : rangée instrumentale y=1410 x=130
+- **想起你** (source) : rangée instrumentale y=1410 x=277
+- **想起你** (source) : rangée instrumentale y=1410 x=370
+- **想起你** (source) : rangée instrumentale y=1414 x=573
+- **想起你** (source) : rangée instrumentale y=1410 x=663
+- **想起你** (source) : rangée instrumentale y=1410 x=794
+- **想起你** (source) : rangée instrumentale y=1410 x=899
+- **想起你** (source) : rangée instrumentale y=1410 x=1132
+- **想起你** (source) : étiquette x=45 y=1705 (système 6)
+- **想起你** (source) : étiquette x=585 y=1705 (système 6)
+- **想起你** (source) : étiquette x=1094 y=1705 (système 6)
+- **想起你** (source) : étiquette x=1317 y=1705 (système 6)
+- **想起你** (source) : étiquette x=43 y=1996 (système 7)
+- **想起你** (source) : étiquette x=514 y=1996 (système 7)
+- **想起你** (source) : étiquette x=719 y=1997 (système 7)
+- **想起你** (source) : étiquette x=927 y=1996 (système 7)
+- **想起你** (source) : étiquette x=1073 y=1996 (système 7)
+- **想起你** (source) : étiquette x=1200 y=1996 (système 7)
+- **想起你** (source) : étiquette x=1335 y=1996 (système 7)
+- **我们呼求** (source) : rangée instrumentale y=505 x=19
+- **我们呼求** (source) : rangée instrumentale y=505 x=236
+- **我们呼求** (source) : rangée instrumentale y=505 x=557
+- **我们呼求** (source) : rangée instrumentale y=505 x=785
+- **我们呼求** (source) : rangée instrumentale y=505 x=1046
+- **我们呼求** (source) : étiquette x=664 y=1020 (système 5)
+- **我们呼求** (source) : étiquette x=858 y=1020 (système 5)
+- **我们呼求** (source) : étiquette x=1073 y=1020 (système 5)
+- **我们呼求** (source) : étiquette x=29 y=1268 (système 6)
+- **我们呼求** (source) : étiquette x=405 y=1268 (système 6)
+- **我们呼求** (source) : étiquette x=529 y=1268 (système 6)
+- **我们呼求** (source) : étiquette x=776 y=1514 (système 7)
+- **我们呼求** (source) : étiquette x=221 y=1914 (système 9)
+- **我们是光明之子** (source) : étiquette x=58 y=1088 (système 4)
+- **我们是光明之子** (source) : étiquette x=407 y=1088 (système 4)
+- **我们是光明之子** (source) : étiquette x=574 y=1088 (système 4)
+- **我们是光明之子** (source) : étiquette x=810 y=1088 (système 4)
+- **我们爱让世界不一样** (source) : étiquette x=14 y=721 (système 2)
+- **我们的神** (source) : étiquette x=1118 y=1887 (système 8)
+- **我们高举耶稣的名** (source) : rangée instrumentale y=276 x=57
+- **我们高举耶稣的名** (source) : rangée instrumentale y=276 x=392
+- **我们高举耶稣的名** (source) : rangée instrumentale y=276 x=717
+- **我们高举耶稣的名** (source) : rangée instrumentale y=276 x=1053
+- **我们高举耶稣的名** (source) : étiquette x=1115 y=624 (système 3)
+- **我们高举耶稣的名** (source) : étiquette x=68 y=1226 (système 5)
+- **我安然居住** (source) : rangée instrumentale y=877 x=1131
+- **我安然居住** (source) : rangée instrumentale y=1187 x=51
+- **我安然居住** (source) : rangée instrumentale y=1187 x=150
+- **我安然居住** (source) : rangée instrumentale y=1187 x=361
+- **我安然居住** (source) : rangée instrumentale y=1187 x=491
+- **我安然居住** (source) : rangée instrumentale y=1187 x=703
+- **我安然居住** (source) : rangée instrumentale y=1187 x=1028
+- **我安然居住** (source) : rangée instrumentale y=1537 x=1111
+- **我安然居住** (source) : rangée instrumentale y=1535 x=1201
+- **我安然居住** (source) : rangée instrumentale y=1614 x=56
+- **我安然居住** (source) : rangée instrumentale y=1614 x=182
+- **我安然居住** (source) : rangée instrumentale y=1614 x=415
+- **我安然居住** (source) : rangée instrumentale y=1614 x=744
+- **我安然居住** (source) : rangée instrumentale y=1614 x=903
+- **我安然居住** (source) : rangée instrumentale y=1614 x=1110
+- **我安然居住** (source) : étiquette x=662 y=670 (système 3)
+- **我安然居住** (source) : étiquette x=703 y=1308 (système 7)
+- **我已得自由** (source) : étiquette x=22 y=526 (système 2)
+- **我已得自由** (source) : étiquette x=109 y=526 (système 2)
+- **我心坚定与你** (source) : rangée instrumentale y=218 x=43
+- **我心坚定与你** (source) : rangée instrumentale y=218 x=130
+- **我心坚定与你** (source) : rangée instrumentale y=218 x=247
+- **我心坚定与你** (source) : rangée instrumentale y=218 x=442
+- **我心坚定与你** (source) : rangée instrumentale y=218 x=530
+- **我心坚定与你** (source) : rangée instrumentale y=218 x=671
+- **我心坚定与你** (source) : rangée instrumentale y=218 x=920
+- **我心坚定与你** (source) : rangée instrumentale y=218 x=1058
+- **我心坚定与你** (source) : rangée instrumentale y=218 x=1170
+- **我心坚定与你** (source) : rangée instrumentale y=218 x=1262
+- **我心坚定与你** (source) : étiquette x=53 y=351 (système 2)
+- **我心坚定与你** (source) : étiquette x=168 y=351 (système 2)
+- **我心坚定与你** (source) : étiquette x=282 y=351 (système 2)
+- **我心坚定与你** (source) : étiquette x=68 y=549 (système 3)
+- **我心坚定与你** (source) : étiquette x=352 y=549 (système 3)
+- **我心坚定与你** (source) : étiquette x=506 y=549 (système 3)
+- **我心坚定与你** (source) : étiquette x=695 y=549 (système 3)
+- **我心坚定与你** (source) : étiquette x=1032 y=549 (système 3)
+- **我心坚定与你** (source) : étiquette x=1186 y=549 (système 3)
+- **我心坚定与你** (source) : étiquette x=59 y=748 (système 4)
+- **我愿为你去** (source) : étiquette x=63 y=901 (système 3)
+- **我愿为你去** (source) : étiquette x=460 y=901 (système 3)
+- **我是承带神荣耀的器皿** (source) : étiquette x=69 y=1620 (système 8)
+- **我是承带神荣耀的器皿** (source) : étiquette x=640 y=1620 (système 8)
+- **我是承带神荣耀的器皿** (source) : étiquette x=1270 y=1620 (système 8)
+- **我是承带神荣耀的器皿** (source) : étiquette x=341 y=1841 (système 9)
+- **我渴望看见** (source) : étiquette x=138 y=251 (système 1)
+- **我渴望看见** (source) : étiquette x=304 y=251 (système 1)
+- **我渴望看见** (source) : étiquette x=506 y=251 (système 1)
+- **我渴望看见** (source) : étiquette x=741 y=251 (système 1)
+- **我渴望看见** (source) : étiquette x=323 y=1921 (système 7)
+- **我的家要荣耀主** (source) : étiquette x=1166 y=1706 (système 7)
+- **我的救赎者活着** (source) : rangée instrumentale y=2099 x=13
+- **我的救赎者活着** (source) : rangée instrumentale y=2098 x=450
+- **我的救赎者活着** (source) : rangée instrumentale y=2098 x=516
+- **我的救赎者活着** (source) : rangée instrumentale y=2098 x=613
+- **我的救赎者活着** (source) : rangée instrumentale y=2099 x=824
+- **我的救赎者活着** (source) : rangée instrumentale y=2099 x=1041
+- **我的救赎者活着** (source) : rangée instrumentale y=2099 x=1217
+- **我的救赎者活着** (source) : étiquette x=12 y=1867 (système 7)
+- **我的救赎者活着** (source) : étiquette x=440 y=1864 (système 7)
+- **我的救赎者活着** (source) : étiquette x=753 y=1867 (système 7)
+- **我的救赎者活着** (source) : étiquette x=1163 y=1867 (système 7)
 
 ### Pinyin régénéré (`pinyin.py`) sur une ligne dont les caractères changent
 
@@ -16665,14 +18216,14 @@ feu-du-fondeur l. 21 · seigneur-par-la-clarte l. 35 · seigneur-par-la-clarte l
 
 ### Forme corrigée (lignes, par type)
 
-- ligne sans paroles : 102
-- espaceur : 182
+- ligne sans paroles : 105
+- espaceur : 237
 - orthographe d'accord : 49
-- espace de fin : 152
+- espace de fin : 155
 - mot coupé au tiret : 77
 - en-tête : 4
 - ligature typographique : 17
-- espaces : 40
+- espaces : 122
 - pinyin ramené sur la ligne : 24
 - pinyin ramené sur la ligne (ligne retirée) : 55
 - libellé : 7
