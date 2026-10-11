@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-11T07:28:08.962Z",
+  "generatedAt": "2026-10-11T09:53:08.725Z",
   "songs": [
     {
       "slug": "abba-pere",
@@ -5687,9 +5687,8 @@
       "recommendedKey": null,
       "tempo": 96,
       "themes": [
-        "信心",
-        "信靠",
-        "顺服"
+        "foi",
+        "engagement"
       ],
       "youtubeUrl": null,
       "spotifyUrl": null,
@@ -7527,8 +7526,7 @@
       "recommendedKey": null,
       "tempo": 65,
       "themes": [
-        "敬拜",
-        "渴慕"
+        "adoration"
       ],
       "youtubeUrl": null,
       "spotifyUrl": null,
@@ -8642,9 +8640,8 @@
       "recommendedKey": null,
       "tempo": 60,
       "themes": [
-        "依靠",
-        "信心",
-        "陪伴"
+        "foi",
+        "grace"
       ],
       "youtubeUrl": null,
       "spotifyUrl": null,
@@ -8671,8 +8668,9 @@
         },
         {
           "id": "bridge-4",
-          "name": "桥段/Pont",
-          "type": "bridge"
+          "name": "桥段/Pont (D.S.)",
+          "type": "bridge",
+          "suffix": "(D.S.)"
         }
       ]
     },
@@ -9099,9 +9097,8 @@
       "recommendedKey": null,
       "tempo": 146,
       "themes": [
-        "赞美",
-        "喜乐",
-        "歌唱"
+        "adoration",
+        "engagement"
       ],
       "youtubeUrl": null,
       "spotifyUrl": null,
@@ -9111,8 +9108,9 @@
       "sections": [
         {
           "id": "intro-1",
-          "name": "前奏/Intro",
-          "type": "intro"
+          "name": "前奏/Intro (x2)",
+          "type": "intro",
+          "suffix": "(x2)"
         },
         {
           "id": "verse-2",
@@ -9873,10 +9871,9 @@
       "recommendedKey": null,
       "tempo": 148,
       "themes": [
-        "爱",
-        "盼望",
-        "力量",
-        "梦想"
+        "esperance",
+        "foi",
+        "grace"
       ],
       "youtubeUrl": null,
       "spotifyUrl": null,
@@ -9908,8 +9905,9 @@
         },
         {
           "id": "bridge-5",
-          "name": "桥段/Pont",
-          "type": "bridge"
+          "name": "桥段/Pont (D.S.)",
+          "type": "bridge",
+          "suffix": "(D.S.)"
         }
       ]
     },
@@ -9922,7 +9920,10 @@
       "originalKey": "G",
       "recommendedKey": null,
       "tempo": 115,
-      "themes": [],
+      "themes": [
+        "mission",
+        "esperance"
+      ],
       "youtubeUrl": null,
       "spotifyUrl": null,
       "appleMusicUrl": null,
@@ -9956,9 +9957,8 @@
       "recommendedKey": null,
       "tempo": 66,
       "themes": [
-        "敬拜",
-        "盼望",
-        "荣耀"
+        "adoration",
+        "esperance"
       ],
       "youtubeUrl": null,
       "spotifyUrl": null,
@@ -9983,8 +9983,9 @@
         },
         {
           "id": "bridge-4",
-          "name": "桥段/Pont",
-          "type": "bridge"
+          "name": "桥段/Pont (x2, To Chorus)",
+          "type": "bridge",
+          "suffix": "(x2, To Chorus)"
         }
       ]
     },
@@ -9998,9 +9999,8 @@
       "recommendedKey": null,
       "tempo": 130,
       "themes": [
-        "赞美",
-        "喜乐",
-        "欢呼"
+        "adoration",
+        "action-de-grace"
       ],
       "youtubeUrl": null,
       "spotifyUrl": null,
@@ -10295,9 +10295,8 @@
       "recommendedKey": null,
       "tempo": 84,
       "themes": [
-        "喜乐",
-        "感恩",
-        "依靠"
+        "action-de-grace",
+        "foi"
       ],
       "youtubeUrl": null,
       "spotifyUrl": null,
@@ -10592,9 +10591,9 @@
       "recommendedKey": null,
       "tempo": 66,
       "themes": [
-        "敬拜",
-        "呼召",
-        "信心"
+        "engagement",
+        "adoration",
+        "mission"
       ],
       "youtubeUrl": null,
       "spotifyUrl": null,
@@ -10619,8 +10618,9 @@
         },
         {
           "id": "bridge-4",
-          "name": "桥段/Pont",
-          "type": "bridge"
+          "name": "桥段/Pont (To Chorus)",
+          "type": "bridge",
+          "suffix": "(To Chorus)"
         }
       ]
     },
@@ -10634,9 +10634,8 @@
       "recommendedKey": null,
       "tempo": 76,
       "themes": [
-        "敬拜",
-        "宣告",
-        "宝座"
+        "adoration",
+        "royaume"
       ],
       "youtubeUrl": null,
       "spotifyUrl": null,
@@ -10667,9 +10666,10 @@
         },
         {
           "id": "bridge-5",
-          "name": "桥段 2/Pont 2",
+          "name": "桥段 2/Pont 2 (To Chorus)",
           "type": "bridge",
-          "number": "2"
+          "number": "2",
+          "suffix": "(To Chorus)"
         }
       ]
     },
@@ -10725,7 +10725,10 @@
       "originalKey": "D",
       "recommendedKey": null,
       "tempo": 74,
-      "themes": [],
+      "themes": [
+        "salut",
+        "engagement"
+      ],
       "youtubeUrl": null,
       "spotifyUrl": null,
       "appleMusicUrl": null,
@@ -10749,8 +10752,9 @@
         },
         {
           "id": "bridge-4",
-          "name": "桥段/Pont",
-          "type": "bridge"
+          "name": "桥段/Pont (D.S.)",
+          "type": "bridge",
+          "suffix": "(D.S.)"
         }
       ]
     },
@@ -14577,7 +14581,10 @@
       "originalKey": "G",
       "recommendedKey": null,
       "tempo": 77,
-      "themes": [],
+      "themes": [
+        "engagement",
+        "adoration"
+      ],
       "youtubeUrl": null,
       "spotifyUrl": null,
       "appleMusicUrl": null,
@@ -14768,8 +14775,8 @@
       "recommendedKey": null,
       "tempo": 64,
       "themes": [
-        "感恩",
-        "敬拜"
+        "action-de-grace",
+        "adoration"
       ],
       "youtubeUrl": "https://www.youtube.com/watch?v=ToCWOT18ELU",
       "spotifyUrl": null,
@@ -14812,9 +14819,8 @@
       "recommendedKey": "E",
       "tempo": 75,
       "themes": [
-        "感恩",
-        "友情",
-        "家庭"
+        "action-de-grace",
+        "famille-de-dieu"
       ],
       "youtubeUrl": "https://www.youtube.com/watch?v=y5aMAbQe5JQ",
       "spotifyUrl": null,
@@ -14863,9 +14869,8 @@
       "recommendedKey": null,
       "tempo": 158,
       "themes": [
-        "宣告",
-        "赞美",
-        "得胜"
+        "foi",
+        "adoration"
       ],
       "youtubeUrl": null,
       "spotifyUrl": null,
@@ -15126,7 +15131,10 @@
       "originalKey": "A",
       "recommendedKey": null,
       "tempo": 77,
-      "themes": [],
+      "themes": [
+        "adoration",
+        "salut"
+      ],
       "youtubeUrl": null,
       "spotifyUrl": null,
       "appleMusicUrl": null,
@@ -15217,7 +15225,9 @@
       "originalKey": "D",
       "recommendedKey": null,
       "tempo": 60,
-      "themes": [],
+      "themes": [
+        "adoration"
+      ],
       "youtubeUrl": null,
       "spotifyUrl": null,
       "appleMusicUrl": null,
@@ -15250,7 +15260,10 @@
       "originalKey": "C",
       "recommendedKey": null,
       "tempo": 70,
-      "themes": [],
+      "themes": [
+        "adoration",
+        "saintete"
+      ],
       "youtubeUrl": null,
       "spotifyUrl": null,
       "appleMusicUrl": null,
@@ -15914,7 +15927,10 @@
       "originalKey": "D",
       "recommendedKey": null,
       "tempo": 80,
-      "themes": [],
+      "themes": [
+        "action-de-grace",
+        "adoration"
+      ],
       "youtubeUrl": null,
       "spotifyUrl": null,
       "appleMusicUrl": null,
@@ -16184,9 +16200,9 @@
       "recommendedKey": null,
       "tempo": 80,
       "themes": [
-        "赞美",
-        "恩典",
-        "感谢"
+        "adoration",
+        "grace",
+        "action-de-grace"
       ],
       "youtubeUrl": null,
       "spotifyUrl": null,
@@ -16216,9 +16232,9 @@
       "recommendedKey": null,
       "tempo": 70,
       "themes": [
-        "赞美",
-        "信心",
-        "盼望"
+        "adoration",
+        "foi",
+        "esperance"
       ],
       "youtubeUrl": "https://www.youtube.com/watch?v=yFQn424qMKg",
       "spotifyUrl": null,
@@ -16252,7 +16268,10 @@
       "originalKey": "G",
       "recommendedKey": null,
       "tempo": 152,
-      "themes": [],
+      "themes": [
+        "adoration",
+        "royaume"
+      ],
       "youtubeUrl": null,
       "spotifyUrl": null,
       "appleMusicUrl": null,
@@ -16261,8 +16280,9 @@
       "sections": [
         {
           "id": "intro-1",
-          "name": "前奏/Intro",
-          "type": "intro"
+          "name": "前奏/Intro (x2)",
+          "type": "intro",
+          "suffix": "(x2)"
         },
         {
           "id": "verse-2",
@@ -16292,7 +16312,10 @@
       "originalKey": "F",
       "recommendedKey": null,
       "tempo": 80,
-      "themes": [],
+      "themes": [
+        "famille-de-dieu",
+        "adoration"
+      ],
       "youtubeUrl": null,
       "spotifyUrl": null,
       "appleMusicUrl": null,
@@ -16357,7 +16380,10 @@
       "originalKey": "E",
       "recommendedKey": null,
       "tempo": 83,
-      "themes": [],
+      "themes": [
+        "action-de-grace",
+        "adoration"
+      ],
       "youtubeUrl": null,
       "spotifyUrl": null,
       "appleMusicUrl": null,
@@ -16385,7 +16411,11 @@
       "originalKey": "D",
       "recommendedKey": null,
       "tempo": 80,
-      "themes": [],
+      "themes": [
+        "engagement",
+        "mission",
+        "famille-de-dieu"
+      ],
       "youtubeUrl": null,
       "spotifyUrl": null,
       "appleMusicUrl": null,
@@ -16394,8 +16424,9 @@
       "sections": [
         {
           "id": "verse-1",
-          "name": "主歌/Couplet",
-          "type": "verse"
+          "name": "主歌/Couplet (x2)",
+          "type": "verse",
+          "suffix": "(x2)"
         },
         {
           "id": "chorus-2",
@@ -16420,7 +16451,11 @@
       "originalKey": "D",
       "recommendedKey": null,
       "tempo": 70,
-      "themes": [],
+      "themes": [
+        "foi",
+        "action-de-grace",
+        "grace"
+      ],
       "youtubeUrl": null,
       "spotifyUrl": null,
       "appleMusicUrl": null,
