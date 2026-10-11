@@ -24,7 +24,7 @@ const DOCS: Record<string, Record<string, unknown>> = {
 /** Membre d'un groupe, sans droit de création. */
 const MEMBRE: FakeProfile = { uid: "uid-membre", email: "membre@example.com", firstName: "Membre", lastName: "Essai", serviceRoles: { "Groupe Paix": ["chanteur"] } };
 /** Pôle Événement et la coordination (cochée), qui gère les évènements. */
-const COORDINATION: FakeProfile = { uid: "uid-coordination", email: "coordination@example.com", firstName: "Coordination", lastName: "Essai", poles: ["evenement"], coordination: true };
+const COORDINATION: FakeProfile = { uid: "uid-coordination", email: "coordination@example.com", firstName: "Coordination", lastName: "Essai", poles: ["evenement"], dansEquipes: ["evenementiel"], referentDe: ["evenementiel"], coordination: true };
 
 /** Le partage et le presse-papiers simulés : chaque appel est noté dans `window.__partage`.
  *  `share` : la feuille de partage existe (`true`), est fermée sans partager (`"annule"`, AbortError)
@@ -266,7 +266,7 @@ test.describe("R2 : Date · Heure · Lieu", () => {
 
 const R3_ADMIN: FakeProfile = {
   uid: "uid-admin", email: ADMIN_EMAIL, firstName: "Alix", lastName: "D.", planningName: "Alix D.",
-  poles: ["da"], plannings: ["culte"], serviceRoles: { "Culte Francophone": ["musicien"] },
+  poles: ["da"], dansEquipes: ["da"], referentDe: ["da"], plannings: ["culte"], serviceRoles: { "Culte Francophone": ["musicien"] },
 };
 /** Le n-ième jour après le 3 octobre 2026, en AAAA-MM-JJ. */
 const r3Jour = (n: number) => new Date(Date.UTC(2026, 9, 3 + n)).toISOString().slice(0, 10);
@@ -291,7 +291,7 @@ const R3_DOCS: Record<string, Record<string, unknown>> = Object.fromEntries(R3_N
     lien: "", note: "", prevenir: null, evenement: null, auteurUid: "uid-admin", createdAt: "2026-09-01T10:00:00Z", updatedAt: "2026-09-01T10:00:00Z",
   }],
   [`evenements/e${i}`, { ...R3_EV, titre: `Sortie d'essai ${i + 1}`, date: r3Jour(i * 2) }],
-  [`evenements/r${i}`, { ...R3_EV, titre: `Réunion d'essai ${i + 1}`, pour: "pole:da", date: r3Jour(i * 2 + 1), placesMax: null, inscriptions: "fermees" }],
+  [`evenements/r${i}`, { ...R3_EV, titre: `Réunion d'essai ${i + 1}`, pour: "equipe:da", date: r3Jour(i * 2 + 1), placesMax: null, inscriptions: "fermees" }],
   [`users/u${i}`, {
     email: `essai${i}@example.com`, firstName: `Essai${i + 1}`, lastName: "T.", planningName: `Essai${i + 1} T.`,
     serviceRoles: {}, annonces: [], notify: [], poles: [], equipes: false, plannings: [],

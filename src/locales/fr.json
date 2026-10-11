@@ -2074,7 +2074,6 @@
     "libelleDate": "Date",
     "libelleHeure": "Heure",
     "libelleLieu": "Lieu",
-    "pourPole": "Pôle {{pole}}",
     "noneHint": "Ajoute le prochain avec « Nouvel évènement ».",
     "bientot": "Bientôt",
     "reglageInscriptions": "Inscriptions",
@@ -2627,6 +2626,9 @@
       "louange": "Louange",
       "edd": "EDD"
     },
+    "public": {
+      "louange": "Louange"
+    },
     "index": "Index des équipes",
     "precedentes": "Équipes précédentes",
     "suivantes": "Équipes suivantes",
@@ -2882,14 +2884,13 @@
       "apres": "Les évènements se créent ici ; le Sheet n'est plus lu."
     },
     "aVenir": "À venir",
-    "reunionDePole": "Réunion de pôle · {{pole}}",
     "reunionDEquipe": "Réunion d'équipe · {{equipe}}",
     "organiseePar": "organisée par {{nom}}",
     "dupliquerProchaine": "Dupliquer pour la prochaine",
     "passees": "Passées",
     "gestion": {
       "sousTitreEvenements": "Ce que voit l'assemblée, et sa gestion",
-      "sousTitreReunions": "Les réunions de tes pôles et de tes équipes",
+      "sousTitreReunions": "Les réunions de tes équipes",
       "voirCommeMembre": "Voir comme un membre",
       "contact": "Contact : {{nom}}",
       "exporter": "Exporter",

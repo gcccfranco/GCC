@@ -75,12 +75,12 @@ const DOCS = {
   "poles/media/taches/m1": tacheDoc({ pole: "media", titre: "Montage vidéo de Noël", echeance: "2026-12-20" }),
 };
 
-const RUTH_DA: FakeProfile = { uid: "uid-da", email: "da@example.com", firstName: "Ruth", lastName: "Kouassi", poles: ["da"] };
-const PAUL_MEDIA: FakeProfile = { uid: "uid-media", email: "media@example.com", firstName: "Paul", lastName: "Media", poles: ["media"] };
+const RUTH_DA: FakeProfile = { uid: "uid-da", email: "da@example.com", firstName: "Ruth", lastName: "Kouassi", poles: ["da"], dansEquipes: ["da"], referentDe: ["da"] };
+const PAUL_MEDIA: FakeProfile = { uid: "uid-media", email: "media@example.com", firstName: "Paul", lastName: "Media", poles: ["media"], dansEquipes: ["medias"], referentDe: ["medias"] };
 const SANS_POLE: FakeProfile = { uid: "uid-rien", email: "rien@example.com", firstName: "Anne", lastName: "Nopole" };
-const DEUX_POLES: FakeProfile = { uid: "uid-dm", email: "dm@example.com", firstName: "Léa", lastName: "Deux", poles: ["da", "media"] };
+const DEUX_POLES: FakeProfile = { uid: "uid-dm", email: "dm@example.com", firstName: "Léa", lastName: "Deux", poles: ["da", "media"], dansEquipes: ["da", "medias"], referentDe: ["da", "medias"] };
 /** Coordination des évènements (elle peut dupliquer et supprimer) et membre de DA. */
-const ALICE: FakeProfile = { uid: "uid-alice", email: "alice@example.com", firstName: "Alice", lastName: "Q.", poles: ["evenement", "da"], coordination: true };
+const ALICE: FakeProfile = { uid: "uid-alice", email: "alice@example.com", firstName: "Alice", lastName: "Q.", poles: ["evenement", "da"], dansEquipes: ["evenementiel", "da"], referentDe: ["evenementiel", "da"], coordination: true };
 
 type Docs = Record<string, Record<string, unknown>>;
 
@@ -154,7 +154,7 @@ test("fiche : sans tâche, le bloc le dit ; une info sans date n'a pas de bloc",
 
 test("fiche : une réunion de pôle a aussi son bloc Tâches", async ({ page }) => {
   await member(page, RUTH_DA, "/evenements/reunion", {
-    "evenements/reunion": { ...NOEL, titre: "Réunion DA", type: "info", pour: "pole:da", date: "2026-10-10", heure: "20:00" },
+    "evenements/reunion": { ...NOEL, titre: "Réunion DA", type: "info", pour: "equipe:da", date: "2026-10-10", heure: "20:00" },
     "poles/da/taches/t1": tacheDoc({ titre: "Ordre du jour", echeance: "2026-10-08", evenement: { id: "reunion", titre: "Réunion DA" } }),
   });
   await expect(carte(page).getByRole("checkbox", { name: /Ordre du jour/ })).toBeVisible();

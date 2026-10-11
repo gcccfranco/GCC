@@ -302,9 +302,9 @@ test("captures : Planning, Équipes, Messages au Back-Office ; la Table dans l'A
 // Scène (écran de U1) ; Réunions, entrée à part depuis l'agencement v18 (B15) ; nouveau, fiche de gestion, modifier ;
 // redirections ; « Gérer dans le Back-Office » sur la fiche de l'App (Q14).
 
-const COORD: FakeProfile = { uid: "uid-alice", email: "alice@example.com", firstName: "Alice", lastName: "Q.", poles: ["evenement"], coordination: true };
-const DA_ORG: FakeProfile = { uid: "uid-bruno", email: "bruno@example.com", firstName: "Bruno", lastName: "M.", poles: ["da"] };
-const DA_MEMBRE: FakeProfile = { uid: "uid-dora", email: "dora@example.com", firstName: "Dora", lastName: "P.", poles: ["da"] };
+const COORD: FakeProfile = { uid: "uid-alice", email: "alice@example.com", firstName: "Alice", lastName: "Q.", poles: ["evenement"], dansEquipes: ["evenementiel"], referentDe: ["evenementiel"], coordination: true };
+const DA_ORG: FakeProfile = { uid: "uid-bruno", email: "bruno@example.com", firstName: "Bruno", lastName: "M.", poles: ["da"], dansEquipes: ["da"], referentDe: ["da"] };
+const DA_MEMBRE: FakeProfile = { uid: "uid-dora", email: "dora@example.com", firstName: "Dora", lastName: "P.", poles: ["da"], dansEquipes: ["da"], referentDe: ["da"] };
 const ANNONCEUR: FakeProfile = { uid: "uid-hugo", email: "hugo@example.com", firstName: "Hugo", lastName: "B.", annonces: ["Culte Francophone"] };
 /** Musicien : le pôle Louange implicite, sans être responsable (question 2). */
 const MUSICIEN: FakeProfile = { uid: "uid-mu", email: "mu@example.com", firstName: "Léo", lastName: "V.", serviceRoles: { "Culte Francophone": ["musicien"] } };
@@ -316,13 +316,13 @@ const EV = {
   sansCompte: false, contact: "", organisateurUid: "uid-alice", organisateurNom: "Alice Q.", epingle: false, expiresAt: null,
   inscrits: 0, createdAt: "2026-09-20T10:00:00Z", updatedAt: "2026-09-20T10:00:00Z",
 };
-const REU = { ...EV, type: "eglise", pour: "pole:da", inscriptions: "fermees", inscriptionOuverte: false, lieu: "Salle 2", heure: "20:00", organisateurUid: "uid-bruno", organisateurNom: "Bruno M." };
+const REU = { ...EV, type: "eglise", pour: "equipe:da", inscriptions: "fermees", inscriptionOuverte: false, lieu: "Salle 2", heure: "20:00", organisateurUid: "uid-bruno", organisateurNom: "Bruno M." };
 const DOCS_EV: Record<string, Record<string, unknown>> = {
   "evenements/fete": { ...EV, titre: "Fête de rentrée" },
   "evenements/culte": { ...EV, titre: "Repas du culte", pour: "Culte Francophone", date: "2026-10-24", organisateurUid: "uid-hugo", organisateurNom: "Hugo B." },
   "evenements/reu-da": { ...REU, titre: "Réunion DA", date: "2026-10-10" },
   "evenements/reu-da-sept": { ...REU, titre: "Réunion DA", date: "2026-09-05", compteRendu: { url: "https://docs.google.com/document/d/x", parUid: "uid-bruno", parNom: "Bruno M.", le: "2026-09-06T10:00:00Z" } },
-  "evenements/reu-media": { ...REU, titre: "Réunion Média", pour: "pole:media", organisateurUid: "uid-marc", organisateurNom: "Marc V." },
+  "evenements/reu-media": { ...REU, titre: "Réunion Média", pour: "equipe:medias", organisateurUid: "uid-marc", organisateurNom: "Marc V." },
 };
 const TACHE = {
   pole: "da", titre: "Fond PPT", responsableUid: null, responsableNom: "", echeance: "2026-10-06",
@@ -346,8 +346,10 @@ test("sousPartiesEvenements : Évènements, Scène selon les droits (table Q2)",
   expect(sousPartiesEvenements(u(ADMIN), null)).toEqual(["evenements", "scene"]);
   expect(sousPartiesEvenements(u(COORD), COORD)).toEqual(["evenements", "scene"]);
   expect(sousPartiesEvenements(u(ANNONCEUR), ANNONCEUR)).toEqual(["evenements"]);
-  expect(sousPartiesEvenements(u(DA_ORG), DA_ORG)).toEqual([]);
-  expect(sousPartiesEvenements(u(REFERENTE), REFERENTE)).toEqual([]);
+  // Lot 1 du chantier « équipes et groupes » (décision 43) : un référent a la sous-partie Évènements.
+  expect(sousPartiesEvenements(u(DA_ORG), DA_ORG)).toEqual(["evenements"]);
+  expect(sousPartiesEvenements(u(REFERENTE), REFERENTE)).toEqual(["evenements"]);
+  expect(sousPartiesEvenements(u(MUSICIEN), MUSICIEN)).toEqual([]);
   expect(sousPartiesEvenements(null, null)).toEqual([]);
 });
 
@@ -385,10 +387,11 @@ test.describe("B3 : Tâches", () => {
     await expect(page.getByRole("link", { name: /Les tâches des pôles/ })).toHaveAttribute("href", /^\/back-office\/taches\/?$/);
   });
 
-  test("App : un musicien (pôle Louange implicite) coche ses tâches, sans ligne vers le Back-Office", async ({ page }) => {
+  test("App : un musicien (public Louange) coche ses tâches, et une ligne mène à Tâches au Back-Office (EQ17)", async ({ page }) => {
+    // Lot 1 du chantier « équipes et groupes » (décision 5) : un rôle de service ouvre Tâches et Réunions.
     await ouvrirB3(page, MUSICIEN, "/taches", { "poles/louange/taches/t1": { ...TACHE, pole: "louange", titre: "Envoyer la setlist" } });
     await expect(page.getByRole("checkbox", { name: /Envoyer la setlist/ })).toBeVisible();
-    await expect(page.getByRole("link", { name: /Les tâches des pôles/ })).toHaveCount(0);
+    await expect(page.getByRole("link", { name: /Les tâches des/ })).toHaveAttribute("href", /^\/back-office\/taches\/?$/);
   });
 
   test("liens de la cloche : une tâche confiée ou terminée ouvre « À faire pour moi »", () => {
@@ -430,7 +433,7 @@ test.describe("B3 : Évènements", () => {
 
   test("fiche d'une réunion au Back-Office : en-tête de la planche, Modifier, Dupliquer pour la prochaine, cartes", async ({ page }) => {
     await ouvrirB3(page, DA_ORG, "/back-office/reunions/reu-da");
-    await expect(page.getByText("Réunion de pôle · DA")).toBeVisible();
+    await expect(page.getByText("Réunion d'équipe · DA")).toBeVisible();
     await expect(page.getByRole("heading", { name: "Réunion DA", exact: true })).toBeVisible();
     await expect(page.getByText(/organisée par Bruno M\./)).toBeVisible();
     await expect(page.getByRole("link", { name: "Modifier" })).toHaveAttribute("href", /^\/back-office\/reunions\/reu-da\/modifier\/?$/);
@@ -497,7 +500,7 @@ test.describe("B3 : Évènements", () => {
     await expect(page.getByLabel("Date", { exact: true })).toHaveCount(0);
     // Retouches v18, lot E : « Nouvel évènement » pour un pôle crée un évènement de pôle, pas une
     // réunion : la catégorie « Info » reste permise.
-    await page.getByLabel("Public").selectOption("pole:evenement");
+    await page.getByLabel("Public").selectOption("equipe:evenementiel");
     await expect(categorie).toHaveValue("info");
     // « Nouvelle réunion » : jamais d'Info, la date est demandée.
     await page.goto("/back-office/reunions/nouvelle");
@@ -608,7 +611,7 @@ test.describe("B3 : Évènements", () => {
   test("en 中文 : la fiche d'une réunion au Back-Office", async ({ page }) => {
     await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
     await ouvrirB3(page, DA_ORG, "/back-office/reunions/reu-da");
-    await expect(page.getByText("部门会议 · 美工")).toBeVisible();
+    await expect(page.getByText("团队会议 · 美工组")).toBeVisible();
     await expect(page.getByRole("link", { name: "复制为下一次" })).toBeVisible();
   });
 });

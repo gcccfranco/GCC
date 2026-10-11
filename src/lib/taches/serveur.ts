@@ -3,7 +3,7 @@
 
 import { NextResponse, type NextRequest } from "next/server";
 import { adminDb, verifyIdToken } from "@/lib/push/admin";
-import { isPoleMember, polesDe } from "@/lib/access";
+import { equipesDe, isPoleMember, polesDe } from "@/lib/access";
 import { TACHE_POLES, type Tache, type TachePole } from "@/types/tache";
 
 export const ID = /^[\w-]+$/;
@@ -44,6 +44,15 @@ export async function lireTache(pole: TachePole, id: string): Promise<Tache | nu
 export async function membresDuPole(pole: TachePole, db: FirebaseFirestore.Firestore = adminDb()): Promise<string[]> {
   const snap = await db.collection("users").get();
   return snap.docs.filter((d) => (polesDe(d.data()) as string[]).includes(pole)).map((d) => d.id);
+}
+
+/** uid des membres d'une équipe (lot 1 du chantier « équipes et groupes », EQ11) : les profils
+ *  dont `equipesDe` la contient — `dansEquipes`, et pour « louange » toute personne qui a un rôle
+ *  de service (décision 5). Un admin qui n'y figure pas n'est pas destinataire (EQ3). La base se
+ *  passe pour les tests (évènement d'équipe, `destinatairesEvenement`). */
+export async function membresDeLEquipe(equipe: string, db: FirebaseFirestore.Firestore = adminDb()): Promise<string[]> {
+  const snap = await db.collection("users").get();
+  return snap.docs.filter((d) => equipesDe(d.data()).includes(equipe)).map((d) => d.id);
 }
 
 /** Garde les uid pas encore prévenus pour cette clé, et les marque. */

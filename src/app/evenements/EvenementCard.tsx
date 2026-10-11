@@ -14,7 +14,8 @@ import { isInfo, nowIsoParis, placesRestantes, refusInscription, type EntreeShee
 import { useRaisonInscription } from "@/components/evenements/ChoixInscriptions"
 import { fdFullL } from "@/lib/planning/utils"
 import { categoryColor, categoryLabel, PLANNING_COLORS } from "@/lib/serviceColors"
-import { equipeDuPour, estReunion, poleDuPour, publicDeReunion } from "@/lib/access"
+import { equipeDuPour, estReunion, publicDeReunion } from "@/lib/access"
+import { cleNomEquipe } from "@/lib/equipes/table"
 import type { Evenement } from "@/types/evenement"
 import { buttonVariants } from "@/components/ui/button"
 import { Tile } from "@/components/ui/tile"
@@ -27,7 +28,7 @@ function monthLabel(iso: string, lang: string): string {
   return new Date(y, m - 1, d).toLocaleDateString(lang === "zh-CN" ? "zh-CN" : "fr-FR", { month: "short" })
 }
 
-/** Le public en pastille : « Toute l'église », une section, « Pôle DA », une équipe. */
+/** Le public en pastille : « Toute l'église », une section, une équipe (« TEAM DA », « Louange », EQ23). */
 function PastillePublic({ pour, className }: { pour: string; className: string }) {
   const { t } = useTranslation()
   return (
@@ -35,11 +36,9 @@ function PastillePublic({ pour, className }: { pour: string; className: string }
       style={pour === "eglise" ? undefined : { background: `${categoryColor(pour)}18`, color: categoryColor(pour) }}>
       {pour === "eglise"
         ? t("evenements.pourEglise")
-        : poleDuPour(pour)
-          ? t("evenements.pourPole", { pole: t(`taches.pole.${poleDuPour(pour)}`) })
-          : equipeDuPour(pour)
-            ? t(`equipes.team.${equipeDuPour(pour)}`)
-            : categoryLabel(pour)}
+        : equipeDuPour(pour)
+          ? t(cleNomEquipe(equipeDuPour(pour)!))
+          : categoryLabel(pour)}
     </span>
   )
 }

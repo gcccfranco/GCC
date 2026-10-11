@@ -2,15 +2,15 @@
 // fiches, inscriptions. Les annonces y sont fusionnées (type « info »).
 
 import type { AnnonceLink, AnnonceSection } from "./annonce";
-import type { TachePole } from "./tache";
 
 export const EVENEMENT_TYPES = ["sport", "loisir", "musique", "eglise", "info"] as const;
 export type EvenementType = (typeof EVENEMENT_TYPES)[number];
 
 /** Public visé : toute l'église (calendrier public), une section (membres
- *  connectés de la section), un pôle (réunion, lot 7 : membres du pôle) ou une
- *  équipe de l'organigramme (réunion d'équipe, lot U6, R4 : ses membres). */
-export type EvenementPour = "eglise" | AnnonceSection | `pole:${TachePole}` | `equipe:${string}`;
+ *  connectés de la section) ou une équipe de l'organigramme (réunion ou évènement
+ *  d'équipe, lot U6, R4 : ses membres ; `equipe:louange`, le public Louange élargi).
+ *  Le public de pôle a disparu (lot 1 du chantier « équipes et groupes », EQ19). */
+export type EvenementPour = "eglise" | AnnonceSection | `equipe:${string}`;
 export const POUR_EGLISE = "eglise" as const;
 
 /** Lien du compte rendu d'une réunion (lot U6, docs/spec-back-office.md) :

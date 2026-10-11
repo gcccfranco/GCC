@@ -22,7 +22,8 @@ import { ChoixInscriptions, useRaisonInscription } from "@/components/evenements
 import { QrCodeLink } from "@/components/evenements/QrCode"
 import { Button } from "@/components/ui/button"
 import { useDeuxVolets } from "@/hooks/useDeuxVolets"
-import { equipeDuPour, poleDuPour } from "@/lib/access"
+import { equipeDuPour } from "@/lib/access"
+import { cleNomEquipe } from "@/lib/equipes/table"
 import { isInfo, modeInscriptions, nowIsoParis, refusInscription } from "@/lib/evenements/agenda"
 import { desinscrire } from "@/lib/evenements/inscription"
 import { listInscriptions, updateEvenement } from "@/lib/firebase/evenements"
@@ -80,8 +81,7 @@ export function FicheGestion({ e, user, profile, onSupprimer, erreur, onChange }
 
   const publicLabel = e.pour === "eglise"
     ? t("evenements.pourEglise")
-    : poleDuPour(e.pour) ? t("evenements.pourPole", { pole: t(`taches.pole.${poleDuPour(e.pour)}`) })
-    : equipeDuPour(e.pour) ? t(`equipes.team.${equipeDuPour(e.pour)}`)
+    : equipeDuPour(e.pour) ? t(cleNomEquipe(equipeDuPour(e.pour)!))
     : categoryLabel(e.pour)
   const infos: [typeof CalendarDays, string][] = [
     ...(isInfo(e) ? [] : [[CalendarDays, e.dateFin

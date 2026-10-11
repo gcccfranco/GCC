@@ -20,8 +20,8 @@ const NOEL_2026 = {
   passages: PASSAGES, plages: [{ jour: 0, debut: "14:00", fin: "19:00" }], duree: 60,
   createdBy: "uid-alice", updatedAt: "2026-10-01T10:00:00Z",
 };
-const ALICE: FakeProfile = { uid: "uid-alice", email: "alice@example.com", firstName: "Alice", lastName: "Q.", poles: ["evenement"], coordination: true };
-const BRUNO: FakeProfile = { uid: "uid-bruno", email: "bruno@example.com", firstName: "Bruno", lastName: "V.", poles: ["evenement"], coordination: true };
+const ALICE: FakeProfile = { uid: "uid-alice", email: "alice@example.com", firstName: "Alice", lastName: "Q.", poles: ["evenement"], dansEquipes: ["evenementiel"], referentDe: ["evenementiel"], coordination: true };
+const BRUNO: FakeProfile = { uid: "uid-bruno", email: "bruno@example.com", firstName: "Bruno", lastName: "V.", poles: ["evenement"], dansEquipes: ["evenementiel"], referentDe: ["evenementiel"], coordination: true };
 
 async function ouvrirOrdre(page: Page, qui: FakeProfile, partage?: FakeDb) {
   interdireDialoguesNatifs(page);

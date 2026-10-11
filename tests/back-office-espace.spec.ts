@@ -13,21 +13,28 @@ import type { UserProfile } from "../src/types/user";
 // Lancé aussi sur `tablette-paysage` et `ordinateur-1440` (SPECS_GRAND_ECRAN, Q16 de U4).
 
 const ADMIN: FakeProfile = { uid: "uid-admin", email: "tc328829@gmail.com", firstName: "Admin", lastName: "T." };
-/** Alice, pôle Événement (Réussite 2). */
-const ALICE: FakeProfile = { uid: "uid-alice", email: "alice@example.com", firstName: "Alice", lastName: "Q.", poles: ["evenement"], coordination: true };
-const DA: FakeProfile = { uid: "uid-da", email: "da@example.com", firstName: "Bruno", lastName: "M.", poles: ["da"] };
+/** Alice, de TEAM ÉVÉNEMENTIEL, coordination cochée (Réussite 2). Son pôle sert encore aux tâches
+ *  jusqu'à EQ-C (lot 1 du chantier « équipes et groupes »). */
+const ALICE: FakeProfile = {
+  uid: "uid-alice", email: "alice@example.com", firstName: "Alice", lastName: "Q.", poles: ["evenement"], dansEquipes: ["evenementiel"], coordination: true,
+};
+/** Bruno, simple membre de TEAM DA (son pôle sert encore aux tâches jusqu'à EQ-C). */
+const DA: FakeProfile = { uid: "uid-da", email: "da@example.com", firstName: "Bruno", lastName: "M.", poles: ["da"], dansEquipes: ["da"] };
 const PLANNINGS: FakeProfile = { uid: "uid-pl", email: "pl@example.com", plannings: ["culte"] };
 const NOTIFY: FakeProfile = { uid: "uid-no", email: "no@example.com", notify: ["Groupe Paix"] };
 const ANNONCES: FakeProfile = { uid: "uid-an", email: "an@example.com", annonces: ["Culte Francophone"] };
 const EQUIPIER: FakeProfile = { uid: "uid-eq", email: "eq@example.com", equipes: true };
 const REFERENT: FakeProfile = { uid: "uid-ref", email: "ref@example.com", dansEquipes: ["regie"], referentDe: ["regie"] };
 const MEMBRE_EQUIPE: FakeProfile = { uid: "uid-me", email: "me@example.com", dansEquipes: ["regie"] };
-/** Un choriste sans autre droit (Réussite 1) : le pôle Louange implicite ne compte pas (question 2). */
+/** Un choriste sans autre droit (Réussite 1) : le public Louange ne fait pas un responsable (question 2),
+ *  mais lui ouvre Tâches et Réunions (EQ17). */
 const CHORISTE: FakeProfile = {
   uid: "uid-ch", email: "ch@example.com", firstName: "Chloé", lastName: "R.", planningName: "Chloé R.",
   serviceRoles: { "Culte Francophone": ["chanteur"] },
 };
 const MUSICIEN: FakeProfile = { uid: "uid-mu", email: "mu@example.com", serviceRoles: { "Culte Francophone": ["musicien"] } };
+/** Un membre sans équipe ni rôle de service : rien de neuf pour lui. */
+const MEMBRE: FakeProfile = { uid: "uid-mb", email: "mb@example.com", firstName: "Noa", lastName: "S." };
 
 const user = (p: FakeProfile) => ({ uid: p.uid, email: p.email });
 const profil = (p: FakeProfile) =>
@@ -66,14 +73,14 @@ function menu(page: Page, info: TestInfo) {
 }
 
 test.describe("Back-Office (B1) : qui est responsable (Q1)", () => {
-  test("admin, pôle, plannings, notify, annonces, droit Équipes, référent : oui", () => {
-    for (const p of [ADMIN, ALICE, DA, PLANNINGS, NOTIFY, ANNONCES, EQUIPIER, REFERENT]) {
+  test("admin, coordination, plannings, notify, annonces, droit Équipes, référent : oui", () => {
+    for (const p of [ADMIN, ALICE, PLANNINGS, NOTIFY, ANNONCES, EQUIPIER, REFERENT]) {
       expect(estResponsable(user(p), profil(p)), p.uid).toBe(true);
     }
   });
 
-  test("choriste ou musicien seul, membre d'équipe non référent, visiteur : non", () => {
-    for (const p of [CHORISTE, MUSICIEN, MEMBRE_EQUIPE]) {
+  test("choriste ou musicien seul, membre d'équipe non référent, ancien pôle, visiteur : non", () => {
+    for (const p of [CHORISTE, MUSICIEN, MEMBRE_EQUIPE, DA]) {
       expect(estResponsable(user(p), profil(p)), p.uid).toBe(false);
     }
     expect(estResponsable(null, null)).toBe(false);
@@ -87,30 +94,31 @@ test.describe("Back-Office (B1) : les entrées selon les droits (Q2)", () => {
     expect(entreesBackOffice(user(ADMIN), profil(ADMIN))).toEqual(["tableau", "calendrier", "planning", "taches", "evenements", "reunions", "equipes", "messages", "statistiques"]);
   });
 
-  test("Alice (pôle Événement) : Tableau de bord, Calendrier, Tâches, Évènements, Réunions — pas de Planning", () => {
+  test("Alice (TEAM ÉVÉNEMENTIEL, coordination) : Tableau de bord, Calendrier, Tâches, Évènements, Réunions — pas de Planning", () => {
     expect(entreesBackOffice(user(ALICE), profil(ALICE))).toEqual(["tableau", "calendrier", "taches", "evenements", "reunions"]);
   });
 
   test("chaque droit ouvre ses entrées, et rien d'autre", () => {
     const cas: [FakeProfile, string[]][] = [
-      // v18 (B15) : un pôle sans droit d'annonces a Réunions, pas Évènements.
-      [DA, ["tableau", "calendrier", "taches", "reunions"]],
+      // Lot 1 du chantier « équipes et groupes » (EQ17) : un simple membre a Tâches et Réunions.
+      [DA, ["taches", "reunions"]],
       [PLANNINGS, ["tableau", "calendrier", "planning"]],
       // `notify` donne Messages, et Planning s'il permet de publier un trimestre (canPublishPlanning).
       [NOTIFY, ["tableau", "calendrier", "planning", "messages"]],
       [{ ...NOTIFY, uid: "uid-no2", notify: ["Campus"] }, ["tableau", "calendrier", "messages"]],
       [ANNONCES, ["tableau", "calendrier", "evenements"]],
       [EQUIPIER, ["tableau", "calendrier", "equipes"]],
-      [REFERENT, ["tableau", "calendrier", "reunions"]],
-      // Le pôle Louange implicite ne fait pas un responsable, mais compte pour Tâches et Réunions d'un responsable.
+      // Un référent : Tâches de son équipe, et Évènements (décision 43).
+      [REFERENT, ["tableau", "calendrier", "taches", "evenements", "reunions"]],
+      // Le public Louange ne fait pas un responsable, mais compte pour Tâches et Réunions d'un responsable.
       [{ ...NOTIFY, uid: "uid-no3", serviceRoles: { "Culte Francophone": ["musicien"] } }, ["tableau", "calendrier", "planning", "taches", "reunions", "messages"]],
     ];
     for (const [p, attendu] of cas) expect(entreesBackOffice(user(p), profil(p)), p.uid).toEqual(attendu);
   });
 
-  test("un non-responsable n'a aucune entrée ; un membre d'équipe, la seule entrée Réunions (retouches v18, D29)", () => {
-    for (const p of [CHORISTE, MUSICIEN]) expect(entreesBackOffice(user(p), profil(p)), p.uid).toEqual([]);
-    expect(entreesBackOffice(user(MEMBRE_EQUIPE), profil(MEMBRE_EQUIPE))).toEqual(["reunions"]);
+  test("un non-responsable sans équipe n'a aucune entrée ; un membre d'équipe ou un choriste, Tâches et Réunions (EQ17)", () => {
+    for (const p of [CHORISTE, MUSICIEN, MEMBRE_EQUIPE]) expect(entreesBackOffice(user(p), profil(p)), p.uid).toEqual(["taches", "reunions"]);
+    expect(entreesBackOffice(user(MEMBRE), profil(MEMBRE))).toEqual([]);
     expect(entreesBackOffice(null, null)).toEqual([]);
   });
 
@@ -142,8 +150,8 @@ test.describe("Back-Office (B1) : les widgets permis (table des widgets)", () =>
 });
 
 test.describe("Back-Office (B1) : rien de neuf pour l'assemblée", () => {
-  test("un choriste ne voit aucun sélecteur ; le label et les entrées de l'App sont inchangés", async ({ page }, info) => {
-    await signInAs(page, CHORISTE, {}, "/songs");
+  test("un membre sans équipe ni rôle ne voit aucun sélecteur ; le label et les entrées de l'App sont inchangés", async ({ page }, info) => {
+    await signInAs(page, MEMBRE, {}, "/songs");
     await page.getByRole("searchbox").waitFor();
     await deplierSiTablettePaysage(page, info);
     await expect(page.getByRole("group", { name: "Choisir l'espace" })).toHaveCount(0);
@@ -153,8 +161,15 @@ test.describe("Back-Office (B1) : rien de neuf pour l'assemblée", () => {
     }
   });
 
-  test("« /back-office » répond « Réservé aux responsables » à un choriste", async ({ page }) => {
-    await signInAs(page, CHORISTE, {}, "/back-office");
+  test("un choriste voit le sélecteur : le public Louange lui ouvre Tâches et Réunions (EQ17)", async ({ page }, info) => {
+    await signInAs(page, CHORISTE, {}, "/songs");
+    await page.getByRole("searchbox").waitFor();
+    await deplierSiTablettePaysage(page, info);
+    await expect(selecteur(page).getByRole("link", { name: "Back-Office" })).toBeVisible();
+  });
+
+  test("« /back-office » répond « Réservé aux responsables » à un membre sans équipe ni rôle", async ({ page }) => {
+    await signInAs(page, MEMBRE, {}, "/back-office");
     await expect(page.getByText("Réservé aux responsables.")).toBeVisible();
     await expect(page.getByRole("heading", { name: "Tableau de bord" })).toHaveCount(0);
   });

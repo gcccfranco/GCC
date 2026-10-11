@@ -14,29 +14,32 @@ import type { UserProfile } from "../src/types/user";
 // d'une réunion mène à sa fiche de Back-Office › Réunions ; rappels, notifications et cloche y
 // mènent aussi. G3 : un membre d'équipe sans autre rôle a le sélecteur App · Back-Office et la
 // seule entrée Réunions.
+// Lot 1 du chantier « équipes et groupes » (docs/spec-equipes-sans-poles.md, EQ-B) : le public de
+// pôle devient celui d'une équipe (`equipe:da`, `equipe:louange` pour le public Louange élargi) ;
+// un membre d'équipe ou un choriste a Tâches et Réunions (EQ17, décisions 4 et 5).
 
-/** Samedi 10 octobre à 20:00, pôle DA, organisé par Alice. */
+/** Samedi 10 octobre à 20:00, TEAM DA, organisé par Alice. */
 const BASE = {
-  type: "loisir", pour: "pole:da", date: "2026-10-10", heure: "20:00", heureFin: "", dateFin: "",
+  type: "loisir", pour: "equipe:da", date: "2026-10-10", heure: "20:00", heureFin: "", dateFin: "",
   lieu: "Salle 2", description: "", liens: [], images: [], placesMax: null, inscriptions: "fermees",
   inscriptionDebut: "", inscriptionFin: "", sansCompte: false, lienExterne: "", contact: "",
   organisateurUid: "uid-alice", organisateurNom: "Alice Q.", epingle: false, expiresAt: null, inscrits: 0,
   createdAt: "2026-09-18T10:00:00Z", updatedAt: "2026-09-18T10:00:00Z",
 };
-/** Réunion du pôle DA (« + Nouvelle réunion »). */
+/** Réunion de TEAM DA (« + Nouvelle réunion »). */
 const REUNION_DA = { ...BASE, titre: "Réunion DA", reunion: true };
-/** Réunion d'avant le lot E : public de pôle, sans champ — toujours une réunion. */
+/** Réunion d'avant le lot E : public d'équipe, sans champ — toujours une réunion. */
 const ANCIENNE = { ...BASE, titre: "Point DA", date: "2026-10-08" };
-/** Évènement du pôle DA (lot E) : il reste dans Évènements. */
+/** Évènement de TEAM DA (lot E) : il reste dans Évènements. */
 const SOIREE = { ...BASE, titre: "Soirée DA", reunion: false, inscriptions: "ouvertes", date: "2026-10-12" };
-/** Réunion du pôle Louange : choristes et musiciens en sont, par le pôle implicite d'un rôle de service. */
-const REUNION_LOUANGE = { ...BASE, titre: "Réunion Louange", pour: "pole:louange", reunion: true };
+/** Réunion de Louange : choristes et musiciens en sont, par un rôle de service (public élargi, décision 5). */
+const REUNION_LOUANGE = { ...BASE, titre: "Réunion Louange", pour: "equipe:louange", reunion: true };
 /** Réunion de l'équipe Régie de l'organigramme. */
 const REUNION_REGIE = { ...BASE, titre: "Réunion Régie", pour: "equipe:regie", reunion: true, organisateurUid: "uid-rose", organisateurNom: "Rose T." };
 
 const DOCS = { "evenements/reunion-da": REUNION_DA, "evenements/ancienne": ANCIENNE, "evenements/soiree": SOIREE };
 
-const BRUNO: FakeProfile = { uid: "uid-bruno", email: "bruno@example.com", firstName: "Bruno", lastName: "M.", poles: ["da"] };
+const BRUNO: FakeProfile = { uid: "uid-bruno", email: "bruno@example.com", firstName: "Bruno", lastName: "M.", dansEquipes: ["da"] };
 /** Hugo : membre de l'équipe Régie, sans autre rôle (D29). */
 const HUGO: FakeProfile = { uid: "uid-hugo", email: "hugo@example.com", firstName: "Hugo", lastName: "B.", dansEquipes: ["regie"] };
 const CHORISTE: FakeProfile = { uid: "uid-ch", email: "ch@example.com", firstName: "Chloé", lastName: "R.", serviceRoles: { "Culte Francophone": ["chanteur"] } };
@@ -68,19 +71,19 @@ function menu(page: Page, info: TestInfo) {
 
 // ─── Purs ───────────────────────────────────────────────────────────────────
 
-test("G3 : un membre d'équipe sans autre rôle n'a que Réunions ; un choriste, rien (question 2 inchangée)", () => {
-  expect(entreesBackOffice(qui(HUGO), profil(HUGO))).toEqual(["reunions"]);
-  expect(entreesBackOffice(qui(CHORISTE), profil(CHORISTE))).toEqual([]);
-  // Un référent est responsable : ses entrées ne changent pas.
+test("G3 : un membre d'équipe sans autre rôle, comme un choriste, a Tâches et Réunions (EQ17, décisions 4 et 5)", () => {
+  expect(entreesBackOffice(qui(HUGO), profil(HUGO))).toEqual(["taches", "reunions"]);
+  expect(entreesBackOffice(qui(CHORISTE), profil(CHORISTE))).toEqual(["taches", "reunions"]);
+  // Un référent est responsable : Tâches de son équipe, et Évènements (décision 43).
   const rose = { uid: "uid-rose", email: "rose@example.com", dansEquipes: ["regie"], referentDe: ["regie"] };
-  expect(entreesBackOffice(qui(rose), profil(rose))).toEqual(["tableau", "calendrier", "reunions"]);
+  expect(entreesBackOffice(qui(rose), profil(rose))).toEqual(["tableau", "calendrier", "taches", "evenements", "reunions"]);
 });
 
-test("G2 : la fiche d'une réunion est au Back-Office, celle d'un évènement (de pôle compris) dans l'App", () => {
-  expect(ficheEvenement({ id: "r", pour: "pole:da", reunion: true })).toBe("/back-office/reunions/r");
-  expect(ficheEvenement({ id: "a", pour: "pole:da" })).toBe("/back-office/reunions/a");
+test("G2 : la fiche d'une réunion est au Back-Office, celle d'un évènement (d'équipe compris) dans l'App", () => {
+  expect(ficheEvenement({ id: "r", pour: "equipe:da", reunion: true })).toBe("/back-office/reunions/r");
+  expect(ficheEvenement({ id: "a", pour: "equipe:da" })).toBe("/back-office/reunions/a");
   expect(ficheEvenement({ id: "e", pour: "equipe:regie" })).toBe("/back-office/reunions/e");
-  expect(ficheEvenement({ id: "s", pour: "pole:da", reunion: false })).toBe("/evenements/s");
+  expect(ficheEvenement({ id: "s", pour: "equipe:da", reunion: false })).toBe("/evenements/s");
   expect(ficheEvenement({ id: "f", pour: "eglise" })).toBe("/evenements/f");
 });
 
@@ -92,7 +95,7 @@ test("G2 : le rappel du matin d'une réunion mène au Back-Office ; celui d'un �
   // Deux réunions : la liste des réunions du Back-Office.
   const deux = notificationsDuMatin({ services: [], taches: [], lignes: [veille(reunion), { kind: "compteRendu", evenement: ev(ANCIENNE, "ancienne") }] }, "zh-CN", "2026-10-09");
   expect(deux[0].url).toBe("/back-office/reunions");
-  // Un évènement de pôle : sa fiche de l'App ; une réunion et un évènement : l'agenda de l'App.
+  // Un évènement d'équipe : sa fiche de l'App ; une réunion et un évènement : l'agenda de l'App.
   const soiree = ev(SOIREE, "soiree");
   expect(notificationsDuMatin({ services: [], taches: [], lignes: [{ kind: "veille", evenement: soiree }] }, "fr", "2026-10-11")[0].url).toBe("/evenements/soiree");
   expect(notificationsDuMatin({ services: [], taches: [], lignes: [veille(reunion), { kind: "veille", evenement: soiree }] }, "fr", "2026-10-09")[0].url).toBe("/evenements");
@@ -111,7 +114,7 @@ test("G2 : la notification de publication d'une réunion mène au Back-Office ; 
 
 // ─── Écrans ─────────────────────────────────────────────────────────────────
 
-test("G1 : un membre du pôle ne voit aucune réunion dans Évènements ; l'évènement de pôle y reste", async ({ page }, info) => {
+test("G1 : un membre de l'équipe ne voit aucune réunion dans Évènements ; l'évènement d'équipe y reste", async ({ page }, info) => {
   await ouvrir(page, BRUNO, "/evenements");
   await expect(page.getByRole("link", { name: /Soirée DA/ }).first()).toBeVisible();
   await expect(page.getByText("Réunion DA")).toHaveCount(0);
@@ -148,7 +151,7 @@ test("G2 : l'adresse d'une réunion dans l'App mène à sa fiche de Back-Office 
   await page.waitForURL(/\/back-office\/reunions\/reunion-da\/?$/);
   await expect(page.getByRole("region", { name: /^Sujets/ })).toBeVisible();
   await capture(page, info, "fiche-reunion");
-  // L'évènement de pôle garde sa fiche de l'App.
+  // L'évènement d'équipe garde sa fiche de l'App.
   await page.goto("/evenements/soiree");
   await expect(page.getByRole("heading", { name: "Soirée DA" }).first()).toBeVisible();
   expect(new URL(page.url()).pathname).toMatch(/^\/evenements\/soiree\/?$/);
@@ -163,9 +166,7 @@ test("G2 : la cloche mène la réunion à sa fiche de Back-Office", async ({ pag
   await expect(page.getByRole("menuitem", { name: /Soirée DA/ })).toHaveAttribute("href", /\/evenements\/soiree\/?$/);
 });
 
-test("G2 : sans l'entrée Réunions (choriste, pôle Louange implicite), le lien d'une réunion mène à sa fiche de l'App", async ({ page }) => {
-  // Relecture du lot G : cloche, notification et rappel donnent l'adresse du Back-Office ; qui n'a
-  // pas l'entrée Réunions est renvoyé à la fiche de l'App, où il propose ses sujets.
+test("G2 : un choriste (public Louange, EQ17) suit le lien d'une réunion de Louange jusqu'à sa fiche de Back-Office", async ({ page }) => {
   await ouvrir(page, CHORISTE, "/songs", { "evenements/reunion-louange": REUNION_LOUANGE });
   const cloche = page.getByRole("button", { name: /notification/i });
   await expect(cloche).toBeVisible();
@@ -173,6 +174,19 @@ test("G2 : sans l'entrée Réunions (choriste, pôle Louange implicite), le lien
   const lien = page.getByRole("menuitem", { name: /Réunion Louange/ });
   await expect(lien).toHaveAttribute("href", /\/back-office\/reunions\/reunion-louange\/?$/);
   await lien.click();
+  await page.waitForURL(/\/back-office\/reunions\/reunion-louange\/?$/);
+  await expect(page.getByRole("region", { name: /^Sujets/ })).toBeVisible();
+});
+
+test("G2 : sans l'entrée Réunions (l'organisatrice sortie de l'équipe, sans autre droit), le lien d'une réunion mène à sa fiche de l'App", async ({ page }) => {
+  // Relecture du lot G : cloche, notification et rappel donnent l'adresse du Back-Office ; qui n'a
+  // pas l'entrée Réunions est renvoyé à la fiche de l'App, où il propose ses sujets. Depuis le lot 1
+  // du chantier « équipes et groupes », un choriste a l'entrée (public Louange) : l'organisatrice
+  // qui n'est plus de l'équipe et n'a aucun droit est ce cas.
+  // La cloche ne lui montre pas sa propre réunion : l'adresse vient d'un rappel ou d'une notification.
+  const sortie: FakeProfile = { uid: "uid-alice", email: "alice@example.com", firstName: "Alice", lastName: "Q." };
+  await ouvrir(page, sortie, "/songs", { "evenements/reunion-louange": REUNION_LOUANGE });
+  await page.goto("/back-office/reunions/reunion-louange");
   await page.waitForURL(/\/evenements\/reunion-louange\/?$/);
   await expect(page.getByRole("region", { name: /^Sujets/ })).toBeVisible();
   await expect(page.getByText("Réservé aux responsables.")).toHaveCount(0);
@@ -186,7 +200,7 @@ test("G2 : sans compte, l'adresse d'une réunion au Back-Office propose de se co
   await expect(page.getByRole("link", { name: "Se connecter" })).toHaveAttribute("href", /^\/login\/?\?from=%2Fback-office%2Freunions%2Freunion-louange$/);
 });
 
-test("G3 : un membre d'équipe sans autre rôle — sélecteur, la seule entrée Réunions, ses réunions", async ({ page }, info) => {
+test("G3 : un membre d'équipe sans autre rôle — sélecteur, Tâches et Réunions, ses réunions", async ({ page }, info) => {
   await ouvrir(page, HUGO, "/evenements", { "evenements/reunion-regie": REUNION_REGIE });
   await expect(page.getByRole("heading", { name: "Évènements" }).first()).toBeVisible();
   await expect(page.getByText("Réunion Régie")).toHaveCount(0);
@@ -195,16 +209,17 @@ test("G3 : un membre d'équipe sans autre rôle — sélecteur, la seule entrée
   const selecteur = page.getByRole("group", { name: "Choisir l'espace" }).filter({ visible: true });
   await expect(selecteur.getByRole("link", { name: "Back-Office" })).toBeVisible();
   await selecteur.getByRole("link", { name: "Back-Office" }).click();
-  // Pas de tableau de bord : le Back-Office s'ouvre sur Réunions.
-  await page.waitForURL(/\/back-office\/reunions\/?/);
+  // Pas de tableau de bord : le Back-Office s'ouvre sur sa première entrée, Tâches (EQ17).
+  await page.waitForURL(/\/back-office\/taches(\/[\w-]+)?\/?$/);
+  await page.goto("/back-office/reunions");
   await expect(page.getByRole("link", { name: /Réunion Régie/ }).first()).toBeVisible();
   if (estTablettePaysage(info)) await page.getByTestId("barre-laterale").getByRole("button", { name: /Déplier la barre latérale/ }).tap();
-  await expect(menu(page, info).getByRole("link")).toHaveText(estOrdinateur(info) || estTablettePaysage(info) ? ["Réunions"] : ["Réunions", "Plus"]);
+  await expect(menu(page, info).getByRole("link")).toHaveText(estOrdinateur(info) || estTablettePaysage(info) ? ["Tâches", "Réunions"] : ["Tâches", "Réunions", "Plus"]);
   await capture(page, info, "membre-equipe");
-  // Ni tableau de bord, ni calendrier, ni autre entrée : retour à Réunions.
+  // Ni tableau de bord, ni calendrier, ni autre entrée : retour à Tâches.
   for (const ailleurs of ["/back-office", "/back-office/calendrier", "/back-office/evenements"]) {
     await page.goto(ailleurs);
-    await page.waitForURL(/\/back-office\/reunions\/?$/);
+    await page.waitForURL(/\/back-office\/taches(\/[\w-]+)?\/?$/);
   }
   await expect(page.getByRole("heading", { name: "Tableau de bord" })).toHaveCount(0);
   // L'adresse de sa réunion dans l'App mène au Back-Office, avec les sujets.
@@ -213,8 +228,10 @@ test("G3 : un membre d'équipe sans autre rôle — sélecteur, la seule entrée
   await expect(page.getByRole("region", { name: /^Sujets/ })).toBeVisible();
 });
 
-test("G3 : un choriste n'a toujours ni sélecteur ni Back-Office", async ({ page }) => {
-  await ouvrir(page, CHORISTE, "/back-office", {});
-  await expect(page.getByText("Réservé aux responsables.")).toBeVisible();
-  await expect(page.getByRole("group", { name: "Choisir l'espace" }).filter({ visible: true })).toHaveCount(0);
+test("G3 : un choriste a le sélecteur et le Back-Office, Tâches et Réunions (EQ17, décision 5)", async ({ page }) => {
+  await ouvrir(page, CHORISTE, "/back-office", { "evenements/reunion-louange": REUNION_LOUANGE });
+  await page.waitForURL(/\/back-office\/taches(\/[\w-]+)?\/?$/);
+  await expect(page.getByText("Réservé aux responsables.")).toHaveCount(0);
+  await page.goto("/back-office/reunions");
+  await expect(page.getByRole("link", { name: /Réunion Louange/ }).first()).toBeVisible();
 });

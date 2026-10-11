@@ -14,7 +14,7 @@ import {
 
 const ADMIN: FakeProfile = {
   uid: "uid-admin", email: ADMIN_EMAIL, firstName: "Alix", lastName: "D.", planningName: "Alix D.",
-  poles: ["da", "louange"], plannings: ["culte"], serviceRoles: { "Culte Francophone": ["musicien"] },
+  poles: ["da", "louange"], dansEquipes: ["da", "louange"], referentDe: ["da", "louange"], plannings: ["culte"], serviceRoles: { "Culte Francophone": ["musicien"] },
 };
 
 const EV = {
@@ -36,7 +36,7 @@ const DOCS: Record<string, Record<string, unknown>> = {
   },
   "evenements/foot": { ...EV, titre: "Foot au parc" },
   "evenements/reu-da": {
-    ...EV, titre: "Réunion DA", date: "2026-10-14", type: "eglise", pour: "pole:da", placesMax: null, inscriptions: "fermees",
+    ...EV, titre: "Réunion DA", date: "2026-10-14", type: "eglise", pour: "equipe:da", placesMax: null, inscriptions: "fermees",
     inscriptionOuverte: false, lieu: "Salle 2", heure: "20:00", heureFin: "", contact: "",
   },
   "setlists/s1": {

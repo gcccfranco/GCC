@@ -66,6 +66,37 @@ export function isPoleMember(
   return isAdminUser(user) || (polesDe(profile) as string[]).includes(pole);
 }
 
+// ─── Équipes (lot 1 du chantier « équipes et groupes », docs/spec-equipes-sans-poles.md) ───
+
+type ProfilEquipes = { dansEquipes?: string[]; referentDe?: string[]; serviceRoles?: Record<string, unknown> };
+const ORDRE_EQUIPES = EQUIPES.map((e) => e.id);
+const rangEquipe = (id: string) => (ORDRE_EQUIPES.includes(id) ? ORDRE_EQUIPES.indexOf(id) : ORDRE_EQUIPES.length);
+
+/** Les équipes d'une personne (EQ5) : celles où elle figure (`dansEquipes`, recopié par le serveur
+ *  depuis l'organigramme), plus « louange » dès qu'elle a un rôle de service — une clé de
+ *  `serviceRoles` suffit, même sans rôle (décisions 5 et 42) — dans l'ordre de la table. Seule
+ *  fonction qui calcule « mes équipes » côté client. Miroir serveur : membresDeLEquipe
+ *  (src/lib/taches/serveur.ts) ; miroir des règles : estDeLEquipe(equipe) dans firestore.rules. */
+export function equipesDe(profile: ProfilEquipes | null): string[] {
+  const ids = [...new Set(profile?.dansEquipes ?? [])];
+  if (Object.keys(profile?.serviceRoles ?? {}).length > 0 && !ids.includes("louange")) ids.push("louange");
+  return ids.sort((a, b) => rangEquipe(a) - rangEquipe(b));
+}
+
+/** Être d'une équipe (EQ3, EQ4) : un de ses membres, le public Louange élargi pour « louange », un
+ *  admin. Miroir : estDeLEquipe(equipe) dans firestore.rules. */
+export function estDeLEquipe(user: AuthUser | { email?: string | null } | null, profile: ProfilEquipes | null, equipe: string): boolean {
+  if (!user) return false;
+  return isAdminUser(user) || equipesDe(profile).includes(equipe);
+}
+
+/** En être référent (EQ3) : `referentDe`, recopié par le serveur ; un admin l'est de toutes. Les
+ *  référents de Louange sont ceux de TEAM LOUANGE. Miroir : estReferentDe(equipe) dans firestore.rules. */
+export function estReferentDe(user: AuthUser | { email?: string | null } | null, profile: ProfilEquipes | null, equipe: string): boolean {
+  if (!user) return false;
+  return isAdminUser(user) || (profile?.referentDe ?? []).includes(equipe);
+}
+
 /** Coordination (lot 3 bis ; lot 1 du chantier « équipes et groupes », EQ24) : le
  *  droit `coordination` du profil, coché par un admin dans Personnes, + admins. Le
  *  pôle « événement » ne la donne plus. Règle la scène (programmes, ordre de
@@ -130,18 +161,12 @@ export function canReserverPour(
 // ─── Évènements (lot 6, docs/spec-evenements.md) — miroir : firestore.rules ───
 
 type EvenementDroits = { pour: string; organisateurUid: string; reunion?: boolean | null };
-/** Profil lu par les droits des évènements : sections, pôles, et les équipes de
- *  l'organigramme recopiées par le serveur (lot U6, R4 : `recalculerPoles`). */
+/** Profil lu par les droits des évènements : sections, coordination, droit d'annonces, et les
+ *  équipes de l'organigramme recopiées par le serveur (lot U6, R4 : `recalculerPoles`). */
 type ProfilEvenement = {
-  serviceRoles?: Record<string, unknown>; poles?: string[]; coordination?: boolean; annonces?: string[];
+  serviceRoles?: Record<string, unknown>; coordination?: boolean; annonces?: string[];
   dansEquipes?: string[]; referentDe?: string[];
 };
-
-/** Réunion de pôle (lot 7) : `pour` = « pole:<id> » ; null sinon. */
-export function poleDuPour(pour: string): TachePole | null {
-  const id = pour.startsWith("pole:") ? pour.slice(5) : "";
-  return (TACHE_POLES as readonly string[]).includes(id) ? (id as TachePole) : null;
-}
 
 /** Réunion d'équipe (lot U6, R4, Q8) : `pour` = « equipe:<id> » ; null sinon.
  *  Même motif que les règles (`equipe:[a-z0-9-]+`). */
@@ -150,29 +175,22 @@ export function equipeDuPour(pour: string): string | null {
   return m ? m[1] : null;
 }
 
-/** Public qui peut être celui d'une réunion : un pôle ou une équipe. */
+/** Public qui peut être celui d'une réunion : une équipe (EQ19 : le public de pôle disparaît). */
 export function publicDeReunion(pour: string): boolean {
-  return poleDuPour(pour) !== null || equipeDuPour(pour) !== null;
+  return equipeDuPour(pour) !== null;
 }
 
-/** Réunion : sans inscriptions, avec sujets et compte rendu. Son public est un pôle ou une
- *  équipe, et son champ `reunion` n'est pas `false` (retouches v18, lot E1) : absent, comme
- *  avant le lot E, tout évènement de pôle ou d'équipe est une réunion ; « Nouvel évènement »
- *  écrit `false`, « + Nouvelle réunion » `true`. */
+/** Réunion : sans inscriptions, avec sujets et compte rendu. Son public est une équipe, et son
+ *  champ `reunion` n'est pas `false` (retouches v18, lot E1) : absent, comme avant le lot E, tout
+ *  évènement d'équipe est une réunion ; « Nouvel évènement » écrit `false`, « + Nouvelle réunion » `true`. */
 export function estReunion(e: { pour: string; reunion?: boolean | null }): boolean {
   return publicDeReunion(e.pour) && e.reunion !== false;
 }
 
-/** Membre d'une équipe de l'organigramme, d'après son profil (`dansEquipes`). */
-function estDansEquipe(profile: ProfilEvenement | null, equipe: string): boolean {
-  return (profile?.dansEquipes ?? []).includes(equipe);
-}
-
 /** Qui voit un évènement : « toute l'église » = tout le monde, compte ou non ;
  *  une section = ses membres connectés (clé de serviceRoles), l'organisateur,
- *  la coordination ; une réunion de pôle = les membres du pôle, l'organisateur
- *  et les admins (lot 7) ; une réunion d'équipe = les membres de l'équipe,
- *  l'organisateur et les admins (lot U6, R4). Un évènement de pôle ou d'équipe
+ *  la coordination ; une réunion d'équipe = les membres de l'équipe (Louange élargi,
+ *  estDeLEquipe), l'organisateur et les admins (lot U6, R4 ; EQ20). Un évènement d'équipe
  *  qui n'est pas une réunion (retouches v18, D22) : les mêmes, plus la coordination.
  *  Un visiteur sans compte ne voit que « eglise ». */
 export function canSeeEvenement(
@@ -183,17 +201,14 @@ export function canSeeEvenement(
   if (e.pour === "eglise") return true;
   if (!user) return false;
   if (e.organisateurUid === user.uid) return true;
-  if (publicDeReunion(e.pour) && !estReunion(e) && isCoordination(user, profile)) return true;
-  const pole = poleDuPour(e.pour);
-  if (pole) return isPoleMember(user, profile, pole);
   const equipe = equipeDuPour(e.pour);
-  if (equipe) return isAdminUser(user) || estDansEquipe(profile, equipe);
+  if (equipe) return estDeLEquipe(user, profile, equipe) || (!estReunion(e) && isCoordination(user, profile));
   if (isCoordination(user, profile)) return true;
   return e.pour in (profile?.serviceRoles ?? {});
 }
 
-/** S'inscrire (route /api/evenements/inscription, retouches v18, E6) : un évènement de pôle ou
- *  d'équipe, ceux qui le voient ; les autres publics, comme avant (la période, les places et
+/** S'inscrire (route /api/evenements/inscription, retouches v18, E6) : un évènement d'équipe, ceux
+ *  qui le voient ; les autres publics, comme avant (la période, les places et
  *  « sans compte » se vérifient à part, refusInscription). */
 export function canInscrireEvenement(
   user: AuthUser | null,
@@ -203,40 +218,36 @@ export function canInscrireEvenement(
   return !publicDeReunion(e.pour) || canSeeEvenement(user, profile, e);
 }
 
-/** Qui crée pour un public donné : la coordination pour tout ; un membre dont le
- *  droit d'annonces couvre la section (le droit d'annonces devient un droit de
- *  création pour sa section, tranché le 15/09/2026) ; une réunion de pôle, ses
- *  membres ; une réunion d'équipe, ses référents et les admins (lot U6, R4). */
+/** Qui crée pour un public donné : une réunion ou un évènement d'équipe, ses référents et les
+ *  admins (lot U6, R4 ; décisions 3 et 43) ; sinon la coordination pour tout, ou un membre dont
+ *  le droit d'annonces couvre la section (le droit d'annonces devient un droit de création pour
+ *  sa section, tranché le 15/09/2026). Un autre public préfixé (« pole:… », EQ19) ne se crée
+ *  plus : miroir de la garde `(pole|equipe):.*` des règles. */
 export function canCreateEvenement(
   user: AuthUser | null,
   profile: ProfilEvenement | null,
   pour: string
 ): boolean {
   if (!user) return false;
-  const pole = poleDuPour(pour);
-  if (pole) return isPoleMember(user, profile, pole);
   const equipe = equipeDuPour(pour);
-  if (equipe) return isAdminUser(user) || (profile?.referentDe ?? []).includes(equipe);
+  if (equipe) return estReferentDe(user, profile, equipe);
+  if (pour.includes(":")) return false;
   if (isCoordination(user, profile)) return true;
   return (profile?.annonces ?? []).includes(pour);
 }
 
 /** Publics pour lesquels la personne peut créer (vide = aucun bouton) : ses
- *  sections, puis ses pôles pour les réunions (lot 7), puis les équipes dont
- *  elle est référente (lot U6, R4) — tous les pôles et équipes pour un admin. */
+ *  sections, puis les équipes dont elle est référente (lot U6, R4 ; décision 43) —
+ *  toutes les équipes pour un admin. */
 export function creatableEvenementPours(
   user: AuthUser | null,
   profile: ProfilEvenement | null,
   sections: readonly string[]
 ): string[] {
   if (!user) return [];
-  const admin = isAdminUser(user);
-  const poles = (admin ? [...TACHE_POLES] : polesDe(profile)).map((p) => `pole:${p}`);
-  const equipes = EQUIPES.map((e) => e.id)
-    .filter((id) => admin || (profile?.referentDe ?? []).includes(id))
-    .map((id) => `equipe:${id}`);
-  if (isCoordination(user, profile)) return ["eglise", ...sections, ...poles, ...equipes];
-  return [...sections.filter((s) => (profile?.annonces ?? []).includes(s)), ...poles, ...equipes];
+  const equipes = ORDRE_EQUIPES.filter((id) => estReferentDe(user, profile, id)).map((id) => `equipe:${id}`);
+  if (isCoordination(user, profile)) return ["eglise", ...sections, ...equipes];
+  return [...sections.filter((s) => (profile?.annonces ?? []).includes(s)), ...equipes];
 }
 
 /** Voir qui est inscrit (noms et invités) : tout membre connecté (Timothée,
@@ -261,11 +272,10 @@ export function canEditEvenement(
 // Compte rendu (R3) : estDeLaReunion colle ou retire le lien (allow update de
 // evenements/{id}, champ compteRendu seul) ; lien vérifié par lienCompteRendu.
 
-/** Personne de la réunion : membre du pôle (Louange compris, comme pour les
- *  tâches) ou de l'équipe (`dansEquipes`, R4), l'organisateur, un admin. Comme
- *  dans les règles, l'organisateur et les admins passent même pour un évènement
- *  qui n'est pas une réunion : la carte des sujets ne s'affiche que sur une
- *  réunion (estReunion). */
+/** Personne de la réunion (EQ22) : membre de l'équipe (estDeLEquipe : `dansEquipes`, et le
+ *  public Louange élargi), l'organisateur, un admin. Comme dans les règles, l'organisateur et
+ *  les admins passent même pour un évènement qui n'est pas une réunion : la carte des sujets ne
+ *  s'affiche que sur une réunion (estReunion). */
 export function estDeLaReunion(
   user: AuthUser | null,
   profile: ProfilEvenement | null,
@@ -273,10 +283,8 @@ export function estDeLaReunion(
 ): boolean {
   if (!user) return false;
   if (isAdminUser(user) || e.organisateurUid === user.uid) return true;
-  const pole = poleDuPour(e.pour);
-  if (pole) return isPoleMember(user, profile, pole);
   const equipe = equipeDuPour(e.pour);
-  return equipe !== null && estDansEquipe(profile, equipe);
+  return equipe !== null && estDeLEquipe(user, profile, equipe);
 }
 
 /** Ajouter un sujet : une personne de la réunion, jusqu'au début. La borne se
@@ -493,20 +501,20 @@ export const canDeleteSetlist = canEditSetlist;
 // plannings…). Aucune règle miroir ici.
 
 type ProfilResponsable = {
-  serviceRoles?: Record<string, unknown>; poles?: string[]; coordination?: boolean; plannings?: string[];
+  serviceRoles?: Record<string, unknown>; coordination?: boolean; plannings?: string[];
   notify?: string[]; annonces?: string[]; equipes?: boolean; referentDe?: string[]; dansEquipes?: string[];
 };
 const nonVide = (l: string[] | undefined) => (l?.length ?? 0) > 0;
 
 /** Responsable (Q1) : admin, ou au moins un droit donné par un admin ou par l'organigramme —
- *  `poles` écrit, coordination (EQ18, comme le pôle Événement la donnait), `plannings`, `notify`,
- *  `annonces`, droit Équipes, référent d'une équipe.
- *  Le pôle Louange implicite d'un rôle de service (`polesDe`) ne compte pas (question 2). */
+ *  coordination (EQ18, comme le pôle Événement la donnait), `plannings`, `notify`, `annonces`,
+ *  droit Équipes, référent d'une équipe. Être membre d'une équipe ou du public Louange (un rôle
+ *  de service) ne fait pas un responsable (question 2) ; un pôle ne compte plus (EQ1). */
 export function estResponsable(user: AuthUser | null, profile: ProfilResponsable | null): boolean {
   if (!user) return false;
   if (isAdminUser(user)) return true;
   if (!profile) return false;
-  return nonVide(profile.poles) || profile.coordination === true || nonVide(profile.plannings) || nonVide(profile.notify)
+  return profile.coordination === true || nonVide(profile.plannings) || nonVide(profile.notify)
     || nonVide(profile.annonces) || profile.equipes === true || nonVide(profile.referentDe);
 }
 
@@ -523,24 +531,24 @@ const ENTREES_A_VENIR: readonly Entree[] = [];
 const WIDGETS_A_VENIR: readonly WidgetId[] = [];
 
 /** Les entrées du Back-Office d'une personne (table Q2), dans l'ordre du menu. Pour qui n'est
- *  pas responsable : la seule entrée Réunions s'il est membre d'une équipe de l'organigramme
- *  (retouches v18, lot G, D29 : ses réunions ne sont plus dans Évènements de l'App), rien sinon.
- *  Le pôle Louange implicite d'un rôle de service n'ouvre toujours rien (question 2). */
+ *  pas responsable mais a une équipe (`equipesDe` : membre d'une équipe, ou public Louange par un
+ *  rôle de service) : Tâches et Réunions, rien d'autre (décisions 4 et 5, EQ17) ; rien sinon. */
 export function entreesBackOffice(user: AuthUser | null, profile: ProfilResponsable | null): Entree[] {
   if (!user) return [];
-  if (!estResponsable(user, profile)) return nonVide(profile?.dansEquipes) ? ["reunions"] : [];
+  const equipes = equipesDe(profile).length > 0;
+  if (!estResponsable(user, profile)) return equipes ? ["taches", "reunions"] : [];
   const admin = isAdminUser(user);
-  const pole = polesDe(profile).length > 0;
   const visible: Record<Entree, boolean> = {
     tableau: true,
     calendrier: true,
     planning: admin || nonVide(profile?.plannings)
       || PUBLISHABLE_PLANNINGS.some((p) => canPublishPlanning(p, admin, profile?.notify ?? [])),
-    taches: admin || pole,
-    // Agencement v18 (B15) : Évènements = ceux qu'on gère ; Réunions = ses pôles (Louange
-    // compris) et ses équipes. Affichage seulement : evenements/{id} garde ses règles.
-    evenements: admin || isCoordination(user, profile) || nonVide(profile?.annonces),
-    reunions: admin || pole || nonVide(profile?.dansEquipes) || nonVide(profile?.referentDe),
+    taches: admin || equipes,
+    // Agencement v18 (B15) : Évènements = ceux qu'on gère ou crée (un référent crée pour son
+    // équipe, décision 43) ; Réunions = ses équipes (Louange élargi). Affichage seulement :
+    // evenements/{id} garde ses règles.
+    evenements: admin || isCoordination(user, profile) || nonVide(profile?.annonces) || nonVide(profile?.referentDe),
+    reunions: admin || equipes || nonVide(profile?.referentDe),
     equipes: canEditerEquipes(user, profile),
     messages: admin || nonVide(profile?.notify),
     statistiques: canVoirStatistiques(user),
@@ -574,10 +582,10 @@ export function planningsDuBackOffice(
 }
 
 /** Les widgets qu'une personne peut ajouter à son tableau de bord (table des widgets), dans
- *  l'ordre du catalogue. Vide pour qui n'est pas responsable. */
+ *  l'ordre du catalogue. Vide pour qui n'est pas responsable (il n'a pas de tableau de bord). */
 export function widgetsPermis(user: AuthUser | null, profile: UserProfile | null): WidgetId[] {
+  if (!estResponsable(user, profile)) return [];
   const entrees = entreesBackOffice(user, profile);
-  if (entrees.length === 0) return [];
   const admin = isAdminUser(user);
   const permis: Record<WidgetId, boolean> = {
     dimanche: true,
@@ -609,8 +617,9 @@ export function tachesDuBackOffice(
 }
 
 /** Sous-parties de Back-Office › Évènements (lot U6, B3, table Q2) : Évènements (ceux qu'on
- *  gère : admin, coordination, droit d'annonces) · Scène (coordination, U1). Les réunions ont
- *  leur entrée depuis l'agencement v18 (B15). Affichage seulement. */
+ *  gère ou crée : admin, coordination, droit d'annonces, référent d'une équipe, décision 43) ·
+ *  Scène (coordination, U1). Les réunions ont leur entrée depuis l'agencement v18 (B15).
+ *  Affichage seulement. */
 export type SousPartieEvenements = "evenements" | "scene";
 export function sousPartiesEvenements(
   user: AuthUser | null,
@@ -620,7 +629,7 @@ export function sousPartiesEvenements(
   const admin = isAdminUser(user);
   const coordination = isCoordination(user, profile);
   const parties: SousPartieEvenements[] = [];
-  if (admin || coordination || nonVide(profile?.annonces)) parties.push("evenements");
+  if (admin || coordination || nonVide(profile?.annonces) || nonVide(profile?.referentDe)) parties.push("evenements");
   if (coordination) parties.push("scene");
   return parties;
 }

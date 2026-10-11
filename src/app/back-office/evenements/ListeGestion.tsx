@@ -2,7 +2,7 @@
 
 // Listes du Back-Office (lot U6, B3) : « Évènements », ceux qu'on gère (organisateur,
 // coordination), réunions à part ; « Réunions » (entrée à part depuis l'agencement v18, B15),
-// celles de ses pôles et équipes (toutes pour un admin). Lignes compactes du calendrier, vers la fiche de gestion.
+// celles de ses équipes, Louange élargi (toutes pour un admin). Lignes compactes du calendrier, vers la fiche de gestion.
 // Agencement v18 (B3, B4, docs/spec-agencement-v18.md ; planches `v18-bo-evenements-a`, `v18-bo-reunions`) :
 // la liste vit dans le layout de l'entrée (`VoletsGestion`), sous l'en-tête commun, et reste montée
 // d'une fiche à l'autre ; en grand, à droite, la fiche de l'adresse ou, sur la liste, la prochaine (R11).
@@ -29,14 +29,14 @@ import { AnnonceBascule } from "@/components/evenements/AnnonceBascule";
 import { DeuxVolets } from "@/components/layout/DeuxVolets";
 import { cn } from "@/lib/utils";
 
-/** Qui peut créer dans l'entrée : un évènement (Évènements, un public hors pôle et équipe) ou une
- *  réunion (Réunions, un pôle ou une équipe). Le formulaire « Nouvel évènement » propose aussi les
- *  pôles et équipes (lot E) : le bouton, lui, garde sa règle — un évènement de pôle se crée par qui a
- *  déjà le bouton (admin, coordination, droit d'annonces), pas par un membre de pôle seul, qui a
- *  Réunions (agencement v18, B15). Choix consigné dans docs/spec-retouches-v18.md (V18POLE, relecture),
- *  à confirmer par Timothée ; même règle pour `droits.evenement` du Calendrier. */
+/** Qui peut créer dans l'entrée : une réunion (Réunions : une équipe dont on est référent) ou un
+ *  évènement (Évènements : tout public ouvert, une équipe comprise). Décision 43 (lot 1 du chantier
+ *  « équipes et groupes », EQ21) : les référents créent les évènements d'équipe qui ne sont pas des
+ *  réunions ; le choix V18POLE (docs/spec-retouches-v18.md) est levé. Même règle pour
+ *  `droits.evenement` du Calendrier. */
 export function peutCreerDans(user: User | null, profile: UserProfile | null, reunions: boolean): boolean {
-  return creatableEvenementPours(user, profile, ANNONCE_SECTIONS).some((p) => publicDeReunion(p) === reunions);
+  const pours = creatableEvenementPours(user, profile, ANNONCE_SECTIONS);
+  return reunions ? pours.some(publicDeReunion) : pours.length > 0;
 }
 
 type Gestion = { chargement: boolean; aVenir: Evenement[]; passes: Evenement[] };

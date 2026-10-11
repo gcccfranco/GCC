@@ -297,7 +297,7 @@ test.describe("sources du calendrier (pur)", () => {
       evenement({ id: "foot", titre: "Foot au parc", lieu: "", inscrits: 4, placesMax: 10 }),
       evenement({ id: "repas", titre: "Repas", date: "2026-10-17", heure: "12:00", heureFin: "14:00", lieu: "Salle 1", inscrits: 3 }),
       evenement({ id: "info", titre: "Info", type: "info", date: "" }),
-      evenement({ id: "reu", titre: "Réunion DA", pour: "pole:da" }),
+      evenement({ id: "reu", titre: "Réunion DA", pour: "equipe:da" }),
       evenement({ id: "nov", titre: "Novembre", date: "2026-11-02" }),
     ];
     const e = de(entreesCalendrier(...OCT, d, ctx(ADMIN, null)), "evenements");
@@ -351,14 +351,14 @@ test.describe("sources du calendrier (pur)", () => {
     expect(paix.map((x) => x.titre)).toContain("Section");
   });
 
-  test("réunions : pôle et équipe, vues de leurs membres seulement, violet de la planche", () => {
+  test("réunions d'équipe (plus de pôle, EQ19), vues de leurs membres seulement, violet de la planche", () => {
     const d = vide();
     d.evenements = [
-      evenement({ id: "da", titre: "Réunion DA", pour: "pole:da", date: "2026-10-03", heure: "20:00", lieu: "Salle 2" }),
-      evenement({ id: "media", titre: "Réunion Média", pour: "pole:media", date: "2026-10-03" }),
+      evenement({ id: "da", titre: "Réunion DA", pour: "equipe:da", date: "2026-10-03", heure: "20:00", lieu: "Salle 2" }),
+      evenement({ id: "media", titre: "Réunion Média", pour: "equipe:medias", date: "2026-10-03" }),
       evenement({ id: "eq", titre: "Réunion accueil", pour: "equipe:accueil" as Evenement["pour"], date: "2026-10-08" }),
     ];
-    const membre = profil({ poles: ["da"], dansEquipes: ["accueil"] });
+    const membre = profil({ dansEquipes: ["da", "accueil"] });
     const e = de(entreesCalendrier(...OCT, d, ctx(MOI, membre)), "reunions");
     expect(e.map((x) => x.titre)).toEqual(["Réunion DA", "Réunion accueil"]);
     expect(e[0]).toMatchObject({ cle: "reunions:da:2026-10-03", detail: "20:00 · Salle 2", couleur: "#6b4a8e", moi: true, lien: "/back-office/reunions/da" });
@@ -498,7 +498,7 @@ test.describe("sources du calendrier (pur)", () => {
     d.petitDej = [];
     d.taches = [{ tache: tache({ id: "t", titre: "Tâche", echeance: J }), fois: [] }];
     d.scene = [{ programme: programme(), creneaux: [creneau({ id: "c2", dimanche: J, debut: "16:00", fin: "17:00" }), creneau({ id: "c1", dimanche: J, debut: "14:00", fin: "15:00" })] }];
-    d.evenements = [evenement({ id: "r", titre: "Réunion", pour: "pole:da", date: J, heure: "08:00" }), evenement({ id: "e", titre: "Évènement", date: J, heure: "20:00" })];
+    d.evenements = [evenement({ id: "r", titre: "Réunion", pour: "equipe:da", date: J, heure: "08:00" }), evenement({ id: "e", titre: "Évènement", date: J, heure: "20:00" })];
     d.sheet = [{ date: J, titre: "Sheet", heure: "10:00", heureFin: "", horaire: "10h", lieu: "", responsable: "" }];
     d.seances = [{ category: "Culte Francophone", date: J, leader: "", label: "" }];
     d.mesServices = [];
@@ -614,7 +614,7 @@ test.describe("peutDeplacer (pur)", () => {
   });
 
   test("réunion : son organisateur et la coordination, pas un membre du pôle qui ne l'a pas créée", () => {
-    const reu = evenement({ id: "r", titre: "R", pour: "pole:da", organisateurUid: "u-orga" });
+    const reu = evenement({ id: "r", titre: "R", pour: "equipe:da", organisateurUid: "u-orga" });
     expect(peutDeplacer(MOI, profil({ poles: ["da"] }), { source: "reunions", evenement: reu }, TODAY)).toBe(false);
     expect(peutDeplacer({ uid: "u-orga" }, profil({ poles: ["da"] }), { source: "reunions", evenement: reu }, TODAY)).toBe(true);
     expect(peutDeplacer(AUTRE, coord, { source: "reunions", evenement: reu }, TODAY)).toBe(true);
@@ -695,7 +695,7 @@ test.describe("grille du mois (pur)", () => {
   test("libellé court d'une case : le nom après « Présidence : », l'heure après le titre, « Petit déj : libre »", () => {
     const d = vide();
     d.seances = [{ category: "Culte Francophone", date: "2026-10-04", leader: "Lou M.", label: "" }];
-    d.evenements = [evenement({ id: "r", titre: "Réunion DA", pour: "pole:da", date: "2026-10-03", heure: "20:00" })];
+    d.evenements = [evenement({ id: "r", titre: "Réunion DA", pour: "equipe:da", date: "2026-10-03", heure: "20:00" })];
     d.petitDej = [{ id: "p", dimanche: "2026-10-18", nom: "Famille Test", uid: "" }];
     const e = entreesCalendrier(...OCT, d, ctx(ADMIN, null));
     const court = (cle: string) => libelleCourt(e.find((x) => x.cle === cle)!, "fr");
@@ -725,7 +725,7 @@ const P_PLANNINGS: FakeProfile = { uid: "u-pl", email: "pl@example.org", firstNa
 const MAINTENANT = "2026-09-01T10:00:00Z";
 const DOCS: Record<string, Record<string, unknown>> = {
   "evenements/reu-da": {
-    titre: "Réunion DA", type: "reunion", pour: "pole:da", date: "2026-10-03", heure: "20:00", lieu: "Salle 2",
+    titre: "Réunion DA", type: "reunion", pour: "equipe:da", date: "2026-10-03", heure: "20:00", lieu: "Salle 2",
     organisateurUid: "u-autre", organisateurNom: "Autre", inscrits: 0, createdAt: MAINTENANT, updatedAt: MAINTENANT,
   },
   "evenements/ping": {
@@ -1375,8 +1375,9 @@ test.describe("C4 : captures à regarder", () => {
 
 // ─── C5 : créer depuis un jour ───
 
-/** Membre de deux pôles, sans section : une réunion de ses pôles, des tâches (Q4). */
-const P_POLES: FakeProfile = { uid: "u-da", email: "da@example.org", firstName: "Alix", lastName: "P.", poles: ["da", "media"] };
+/** Référent de TEAM DA et de TEAM MÉDIAS, sans section : une réunion ou un évènement de ses équipes
+ *  (décision 43), des tâches de ses pôles jusqu'à EQ-C (Q4). */
+const P_POLES: FakeProfile = { uid: "u-da", email: "da@example.org", firstName: "Alix", lastName: "P.", poles: ["da", "media"], dansEquipes: ["da", "medias"], referentDe: ["da", "medias"] };
 /** Publie pour une section, sans pôle : un évènement, pas de tâche. */
 const P_SECTION: FakeProfile = { uid: "u-sec", email: "sec@example.org", firstName: "Noa", lastName: "R.", annonces: ["Groupe Paix"] };
 
@@ -1474,12 +1475,16 @@ test.describe("C5 : créer depuis un jour", () => {
     await expect(agenda(page)).toBeVisible();
     await page.getByRole("button", { name: "Créer", exact: true }).click();
     const feuille = page.getByRole("dialog", { name: "Créer" });
-    // Membre de pôles sans section : une réunion de ses pôles (agencement v18 : « Nouvelle réunion »).
+    // Référente sans section : une réunion de ses équipes (agencement v18 : « Nouvelle réunion ») et,
+    // depuis la décision 43, un évènement de ses équipes (« Nouvel évènement »).
     await expect(feuille.getByRole("link", { name: "Nouvelle réunion le 01/10" })).toHaveAttribute(
       "href",
       /^\/back-office\/evenements\/nouveau\/?\?reunion=1&date=2026-10-01$/,
     );
-    await expect(feuille.getByRole("link", { name: /Nouvel évènement/ })).toHaveCount(0);
+    await expect(feuille.getByRole("link", { name: "Nouvel évènement le 01/10" })).toHaveAttribute(
+      "href",
+      /^\/back-office\/evenements\/nouveau\/?\?date=2026-10-01$/,
+    );
     await expect(feuille.getByRole("button", { name: "Nouvelle tâche pour le 01/10" })).toBeVisible();
   });
 

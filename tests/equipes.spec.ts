@@ -137,7 +137,7 @@ const DOCS = {
   },
   "users/u-charlie": {
     email: "charlie@example.com", firstName: "Charlie", lastName: "L.", planningName: "Charlie L.",
-    serviceRoles: {}, annonces: [], notify: [], poles: ["da"], equipes: false,
+    serviceRoles: {}, annonces: [], notify: [], poles: ["da"], dansEquipes: ["da"], referentDe: ["da"], equipes: false,
   },
   "users/u-ruth": {
     email: "ruth@example.com", firstName: "Ruth", lastName: "K.", planningName: "Ruth K.",

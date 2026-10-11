@@ -8,7 +8,7 @@ Le retour des responsables et la piste notée au lot G (`spec-retouches-v18.md`,
 pôle Louange implicite ne trouvait plus les réunions de son pôle dans aucune liste.
 
 - **Date** : 08/10/2026.
-- **Statut** : **go de Timothée le 08/10/2026 au soir. EQ-A codée** (voir « Avancement ») ; EQ-B à EQ-F restent.
+- **Statut** : **go de Timothée le 08/10/2026 au soir. EQ-A et EQ-B codées** (voir « Avancement ») ; EQ-C à EQ-F restent.
 - **Base de code** : `ui/apple-design` à `5878ce1`. Le code est identique à `439e5520`, base de la cartographie :
   seuls des documents ont changé depuis. Toutes les références `fichier:ligne` ci-dessous ont été rouvertes à `5878ce1`.
   Celles qu'ajoutent les réponses du 08/10 au soir ont été ouvertes à `ceeb9b2`, au code identique (`git diff 5878ce1
@@ -872,3 +872,105 @@ Go de code de Timothée le 08/10/2026 au soir.
     (partage d'une setlist), elle emporte `isCoordination()` : dès cette publication, plus personne n'a la
     coordination par le pôle Événement, et il faut la cocher dans Personnes ;
   - relire le 中文 : 协调, 管理舞台、为全教会创建、修改所有活动.
+
+### EQ-B — Accès par équipe, réunions et évènements (08/10/2026)
+
+- **Codé** (EQ2 à EQ5, EQ17 à EQ23) :
+  - **Être d'une équipe** (`src/lib/access.ts`) : `equipesDe(profile)` (les équipes de `dansEquipes`, plus « louange »
+    dès qu'une clé de `serviceRoles` existe, même sans rôle : décisions 5 et 42 ; dans l'ordre de `EQUIPES`),
+    `estDeLEquipe(user, profile, equipe)` et `estReferentDe(user, profile, equipe)` (un admin est des deux partout).
+    Miroirs : `estDeLEquipe(equipe)` et `estReferentDe(equipe)` dans `firestore.rules` ; `membresDeLEquipe(equipe, db)`
+    côté serveur (`src/lib/taches/serveur.ts`, Louange élargi).
+  - **Plus de public de pôle** (EQ19) : `poleDuPour` est supprimé ; `EvenementPour` n'a plus `` `pole:${…}` `` ;
+    `publicDeReunion` = une équipe ; `canSeeEvenement`, `canCreateEvenement`, `creatableEvenementPours`,
+    `estDeLaReunion` et `destinatairesEvenement` ne lisent plus que `equipe:<id>`, par `estDeLEquipe` /
+    `estReferentDe`. Règles : `estDeLaReunion(e)` passe par `estDeLEquipe` ; la création d'un évènement `equipe:` par
+    `estReferentDe` ; la branche `pole:` est retirée, la garde `(pole|equipe):.*` reste. `isTachePole` et
+    `match /poles/{pole}/taches` restent pour les tâches, jusqu'à EQ-C. Refus de l'inscription : « Évènement réservé
+    aux membres de l'équipe. ».
+  - **Back-Office** (EQ17, EQ18, décision 43) : `estResponsable` ne compte plus `poles` ; un non-responsable qui a une
+    équipe (membre, ou public Louange par un rôle de service) a **Tâches et Réunions** ; un responsable a Tâches si
+    `equipesDe` n'est pas vide, Réunions si `equipesDe` ou `referentDe` ne l'est pas, Évènements aussi avec
+    `referentDe` ; `sousPartiesEvenements` donne « Évènements » à un référent. `EspaceBackOffice` ramène un
+    non-responsable à sa première entrée (Tâches) depuis toute adresse hors de Tâches, Réunions et Plus.
+  - **« Nouvel évènement » aux référents** (EQ21) : `peutCreerDans(…, false)` = `creatableEvenementPours(…).length > 0`
+    (en-tête de BO › Évènements) ; `droits.evenement` = `pours.length > 0` (Calendrier : panneau du jour, « + » du
+    téléphone). Le formulaire ne propose à un référent que ses équipes, et écrit `reunion: false`.
+  - **Calendrier** (`src/lib/calendrier/entrees.ts`, réunions seulement) : `mesPoles` et `mesEquipes` deviennent un
+    seul `equipesDe` (« à moi » d'une réunion, visibilité) ; la pastille Réunions suit `equipesDe`. Les tâches du
+    calendrier restent aux pôles jusqu'à EQ-C.
+  - **Libellés** (EQ23) : pastille et option du public « TEAM DA » (`equipes.team.<id>`), en-tête « Réunion d'équipe ·
+    DA » (`equipes.court.<id>`), et « Louange » / 敬拜 pour `equipe:louange` partout (`equipes.public.louange`, clé
+    nouvelle), par `cleNomEquipe(id, court)` (`src/lib/equipes/table.ts`). `backOffice.gestion.sousTitreReunions`
+    réécrit (« Les réunions de tes équipes » / 你所在团队的会议). `evenements.pourPole` et `backOffice.reunionDePole`
+    retirées : plus rien ne les lit.
+- **Choix faits faute de réponse dans la spec** :
+  - **`equipesDe` garde une équipe hors de la table** (un futur `comite-<groupe>` du lot 2), rangée après celles de
+    la table : EQ2 ne borne pas les ids à `EQUIPES`.
+  - **Un public préfixé qui n'est pas une équipe ne se crée plus**, même par la coordination ou un admin :
+    `canCreateEvenement` refuse tout `pour` qui contient « : » hors `equipe:<id>`, miroir de la garde
+    `(pole|equipe):.*` des règles, écrit sans nommer le pôle (critère EQ1). `creatableEvenementPours` ne le
+    proposait déjà plus.
+  - **`widgetsPermis` regarde `estResponsable`** et non plus le nombre d'entrées : un simple membre a désormais Tâches
+    et Réunions, sans tableau de bord ; son commentaire disait déjà « vide pour qui n'est pas responsable ».
+  - **Le nom d'une équipe passe par une seule fonction**, `cleNomEquipe(id, court)` : la règle « Louange » vaut pour
+    trois écrans ici, et pour ceux des tâches en EQ-C.
+  - **`evenements.pourPole` et `backOffice.reunionDePole` sont retirées dès EQ-B** (EQ30 range les clés en EQ-C et
+    EQ-F) : cette tranche était la dernière à les lire.
+  - **Profils simulés des specs voisines** : un profil de pôle devient membre **et référent** de l'équipe cible
+    (`dansEquipes` et `referentDe`), l'équivalent le plus proche de l'ancien pôle (Back-Office complet, création de
+    réunions) ; il garde `poles` tant que les pages de tâches lisent les pôles (EQ-C). Là où le test voulait un
+    responsable qui a Réunions sans Évènements, ou un simple membre, le profil est membre sans être référent.
+  - **`equipes-acces.spec.ts` ne teste pas encore `peutCocher` ni `aFairePour`** : ils arrivent avec EQ-C (EQ8, EQ15),
+    qui ajoutera leurs cas à ce fichier. « Un choriste n'y voit que Louange » se vérifie sur le rail de Tâches, avec
+    une tâche de Louange encore rangée sous `poles/louange` (EQ-C la déplacera).
+  - **`evenements-pole.spec.ts` devient `evenements-equipe.spec.ts`** dès EQ-B (le public de pôle disparaît ici) ; son
+    test de relecture V18POLE est retourné (décision 43).
+  - **G2 du lot G** (`reunions-back-office.spec.ts`) : un choriste a désormais l'entrée Réunions, son lien mène à la
+    fiche du Back-Office ; le renvoi vers la fiche de l'App se vérifie avec l'organisatrice sortie de l'équipe, sans
+    aucun droit. Un membre d'ACCUEIL J1 sans la case n'atteint plus Évènements du tout (`equipes-coordination.spec.ts`).
+- **Tests vus rouges puis verts** (trois appareils ; cinq projets pour les specs d'agencement) :
+  - `tests/equipes-acces.spec.ts` et `tests/equipes-reunions.spec.ts` (nouveaux) : **84 échecs sur 105** sur le code
+    d'avant. Les 21 qui passaient sont des garde-fous : la coordination seule ; la coordination est la case, pas un
+    pôle ; la création d'une réunion d'équipe par un référent ; un membre de TEAM DA voit sa réunion et la pastille
+    « TEAM DA » ; réunions précédentes et reprise au public `equipe:`. Puis **108 réussis** : les 105, plus le test
+    « en 中文 » (团队会议 · 敬拜) ajouté après le code, avec les captures, et donc pas vu rouge.
+  - Specs voisines réécrites dans cette tranche (le public de pôle, `estResponsable`, les entrées, Louange) :
+    `evenements-equipe` (ex-`evenements-pole`), `reunions`, `reunions-back-office`, `back-office-espace`,
+    `agencement-v18-t2a`, `agencement-v18-t2b`, `back-office-admin`, `barre-back-office`, `calendrier`,
+    `calendrier-deplacer`, `calendrier-widget`, `equipes-coordination`, `evenements`, `evenements-2027`, `taches`
+    (le test de réunion, et « la réunion du pôle DA se voit du pôle DA », l'échec relevé le 08/10/2026 : il cherchait
+    la réunion dans Évènements de l'App, où elle n'est plus depuis le lot G ; réécrit, il la cherche au Back-Office et
+    passe), et les profils ou les publics simulés de 21 autres fichiers.
+  - Passage des 58 fichiers qui touchent pôles, réunions, évènements ou Back-Office : **5 942 réussis, 813 sautés selon
+    l'appareil, 37 échecs**. 26 venaient d'attentes d'avant la décision 43 et EQ17 (le référent a Évènements, un
+    musicien a Tâches, « 团队会议 · 美工组 »…) : tests réécrits, puis verts (**71 réussis, 8 sautés** en relance). 2
+    étaient de la charge (`agencement-v18-regles`, planning en barre réduite ; `scene-paques-noel`, P7 en tablette
+    couchée) : verts relancés seuls. Les 9 autres sont **sans lien avec la tranche, signalés, non corrigés** :
+    - `reunions.spec.ts`, « borne du début » (2 tests × 3 appareils), déjà relevés à EQ-A : l'horloge simulée
+      (`2026-10-03T19:59`) est lue dans le fuseau du navigateur, UTC dans le conteneur, soit 21:59 à Paris : la réunion
+      a déjà commencé. Sur un poste à l'heure de Paris, ils passent ;
+    - `programme-scene.spec.ts`, « membre : ni gestion du programme ni onglet Scène vide » (× 3) : le test ne fixe pas
+      l'horloge ; lancé un dimanche soir (11/10/2026, 22 h 50 à Paris), la semaine affichée n'a plus aucun créneau
+      réservable, donc aucun bouton « Réserver ».
+  - Les 49 autres fichiers qui connectent un membre (le sélecteur App · Back-Office s'affiche désormais pour tout
+    rôle de service) : **2 367 réussis, 372 sautés, 17 échecs, tous antérieurs à la tranche**, relancés sur le code
+    d'avant (`06d0fad4`) : `louange-sections-uniques` (2 tests purs × 5 projets : la structure du chant attendu a
+    changé, « Intro (x2) ») et `setlist-editeur-piste2`, « clavier (Q13) » (× 5 : plus de pastille « Intro, étape 1 »)
+    échouent de même, côté chants ; `chants-deux-volets` (tablette couchée) aussi ; `setlist-g`, « « Partitions »
+    rouvre là où on était » (tablette), est instable : 3 échecs sur 8 sur le code d'avant, 2 sur 8 avec la tranche.
+  - **État intermédiaire jusqu'à EQ-C**, vu sur les captures : un choriste voit au Back-Office les tâches de Louange
+    encore rangées par pôle, avec « + Nouvelle tâche » et « Tout le pôle » (règles d'avant EQ8) ; la fiche d'un
+    évènement garde « Nouvelle tâche » pour tout membre du pôle. EQ-C les met aux règles des équipes.
+  - Captures regardées (ordinateur, téléphone, tablette ; FR et 中文) : le Back-Office d'un simple membre (Tâches,
+    Réunions), la réunion de Louange côté choriste, la pastille « Louange » / 敬拜, « Nouvel évènement » d'une
+    référente.
+  - `npx tsc --noEmit` et `npm run lint` sans erreur.
+- **Reste** : EQ-C à EQ-F.
+- **Pour Timothée** :
+  - **ne pas publier `firestore.rules` maintenant** : comme pour EQ-A, les règles du lot se publient à la bascule,
+    après EQ-F (§ « Ordre de la bascule »). Si une autre publication arrive avant (partage d'une setlist), elle emporte
+    aussi la fin des réunions de pôle : les sujets et le compte rendu des réunions `pole:*` ne seraient plus lisibles
+    par leurs membres jusqu'à la migration ;
+  - relire le 中文 : 敬拜 (le public Louange, `equipes.public.louange`), 你所在团队的会议 ;
+  - rien à lancer pour EQ-B.

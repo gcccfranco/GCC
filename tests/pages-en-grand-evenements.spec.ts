@@ -26,7 +26,7 @@ const PIXEL = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcS
 const DOCS = { "evenements/louange": LOUANGE, "evenements/foot": FOOT, "evenements/paix": PAIX, "evenements/parking": INFO };
 
 const SACHA: FakeProfile = { uid: "uid-sacha", email: "sacha@example.com", firstName: "Sacha", lastName: "L.", serviceRoles: { "Groupe Paix": ["chanteur"] } };
-const ALICE: FakeProfile = { uid: "uid-alice", email: "alice@example.com", firstName: "Alice", lastName: "Q.", poles: ["evenement"], coordination: true };
+const ALICE: FakeProfile = { uid: "uid-alice", email: "alice@example.com", firstName: "Alice", lastName: "Q.", poles: ["evenement"], dansEquipes: ["evenementiel"], referentDe: ["evenementiel"], coordination: true };
 
 async function membre(page: Page, qui: FakeProfile, adresse: string) {
   await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));

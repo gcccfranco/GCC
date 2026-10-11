@@ -197,7 +197,7 @@ test.describe("déplacer (pur)", () => {
   });
 
   test("réunion : « Prévenir les membres de la réunion »", () => {
-    const reu = evenement({ id: "reu", titre: "Réunion DA", pour: "pole:da", date: "2026-10-03" });
+    const reu = evenement({ id: "reu", titre: "Réunion DA", pour: "equipe:da", date: "2026-10-03" });
     expect(planDeplacement(entree("reunions", "reu", "2026-10-03"), "2026-10-05", donnees({ evenements: [reu] }), horloge))
       .toMatchObject({ type: "evenement", prevenir: "membres", champs: { date: "2026-10-05" } });
   });
@@ -291,7 +291,7 @@ test.describe("prévenir (pur)", () => {
 
   test("destinataires : inscrits avec compte (ou membres de la réunion), sans l'auteur du geste, une fois chacun", () => {
     expect(destinatairesDeplacement(deplace(), ["u-a", null, "u-orga", "u-b", "u-a", undefined])).toEqual(["u-a", "u-b"]);
-    const reunion = deplace({ pour: "pole:da", deplacement: { de: "2026-10-08", vers: "2026-10-09", le: "2026-09-30T08:12:00.000Z", parUid: "u-membre" } });
+    const reunion = deplace({ pour: "equipe:da", deplacement: { de: "2026-10-08", vers: "2026-10-09", le: "2026-09-30T08:12:00.000Z", parUid: "u-membre" } });
     expect(destinatairesDeplacement(reunion, ["u-orga", "u-membre", "u-c"])).toEqual(["u-orga", "u-c"]);
     expect(destinatairesDeplacement(deplace({ deplacement: null }), ["u-a"])).toEqual([]);
   });
@@ -337,9 +337,9 @@ const CULTE = csv([
 
 const P_ADMIN: FakeProfile = { uid: "u-admin", email: ADMIN_EMAILS[0], firstName: "Admin", lastName: "T." };
 /** Organise le tournoi et la réunion ; membre du pôle DA. */
-const P_ORGA: FakeProfile = { uid: "u-orga", email: "orga@example.org", firstName: "Orane", lastName: "G.", poles: ["da"] };
+const P_ORGA: FakeProfile = { uid: "u-orga", email: "orga@example.org", firstName: "Orane", lastName: "G.", poles: ["da"], dansEquipes: ["da"], referentDe: ["da"] };
 /** Membre du pôle DA qui n'organise rien. */
-const P_MEMBRE: FakeProfile = { uid: "u-membre", email: "membre@example.org", firstName: "Mael", lastName: "B.", poles: ["da"] };
+const P_MEMBRE: FakeProfile = { uid: "u-membre", email: "membre@example.org", firstName: "Mael", lastName: "B.", poles: ["da"], dansEquipes: ["da"], referentDe: ["da"] };
 /** Auteur de créneaux, responsable des plannings, sans pôle (pas la coordination). */
 const P_AUTEUR: FakeProfile = { uid: "u-auteur", email: "auteur@example.org", firstName: "Ines", lastName: "R.", plannings: ["culte"] };
 
@@ -350,7 +350,7 @@ const DOCS: Record<string, Record<string, unknown>> = {
     organisateurUid: "u-orga", organisateurNom: "Orane G.", createdAt: MAINTENANT, updatedAt: MAINTENANT,
   },
   "evenements/reu-da": {
-    titre: "Réunion DA", type: "loisir", pour: "pole:da", date: "2026-10-08", heure: "20:00", lieu: "Salle 2",
+    titre: "Réunion DA", type: "loisir", pour: "equipe:da", date: "2026-10-08", heure: "20:00", lieu: "Salle 2",
     organisateurUid: "u-orga", organisateurNom: "Orane G.", inscrits: 0, createdAt: MAINTENANT, updatedAt: MAINTENANT,
   },
   "evenements/passe": {

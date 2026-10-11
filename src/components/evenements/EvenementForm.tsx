@@ -13,7 +13,8 @@ import { useTranslation } from "react-i18next"
 import { ImagePlus, Trash2 } from "lucide-react"
 import { compressImage } from "@/lib/utils/compressImage"
 import { categoryLabel } from "@/lib/serviceColors"
-import { equipeDuPour, estReunion, poleDuPour, publicDeReunion } from "@/lib/access"
+import { equipeDuPour, estReunion, publicDeReunion } from "@/lib/access"
+import { cleNomEquipe } from "@/lib/equipes/table"
 import { EVENEMENT_TYPES, type Evenement, type EvenementType } from "@/types/evenement"
 import { ChoixInscriptions } from "@/components/evenements/ChoixInscriptions"
 import { borneInscription, modeInscriptions } from "@/lib/evenements/agenda"
@@ -83,10 +84,10 @@ export function EvenementForm({ initial, pours, creation, inscrits = 0, titreCac
   const [busy, setBusy] = useState(false)
   const [compressing, setCompressing] = useState(false)
   const info = v.type === "info"
-  // Réunion de pôle (lot 7) ou d'équipe (lot U6, R4) : pas d'inscriptions. Un évènement de pôle
-  // (`reunion: false`, « Nouvel évènement », lot E) en a, comme un évènement de l'assemblée.
+  // Réunion d'équipe (lot U6, R4) : pas d'inscriptions. Un évènement d'équipe (`reunion: false`,
+  // « Nouvel évènement », lot E) en a, comme un évènement de l'assemblée.
   const reunion = estReunion(v)
-  // Un évènement de pôle ou d'équipe ne se voit que de ses membres : pas d'inscription sans compte
+  // Un évènement d'équipe ne se voit que de ses membres : pas d'inscription sans compte
   // (la route la refuse, retouches v18, E6).
   const reserve = publicDeReunion(v.pour)
   const sansInscription = { inscriptions: "fermees" as const, inscriptionDebut: "", inscriptionFin: "", sansCompte: false, placesMax: null, lienExterne: "" }
@@ -194,9 +195,8 @@ export function EvenementForm({ initial, pours, creation, inscrits = 0, titreCac
                 ...(estReunion({ ...v, pour: e.target.value }) ? { ...sansInscription, ...(info ? { type: TYPE_REUNION } : {}) } : {}),
               })}>
               {pours.map((p) => {
-                const pole = poleDuPour(p)
                 const equipe = equipeDuPour(p)
-                return <option key={p} value={p}>{p === "eglise" ? t("evenements.pourEglise") : pole ? t("evenements.pourPole", { pole: t(`taches.pole.${pole}`) }) : equipe ? t(`equipes.team.${equipe}`) : categoryLabel(p)}</option>
+                return <option key={p} value={p}>{p === "eglise" ? t("evenements.pourEglise") : equipe ? t(cleNomEquipe(equipe)) : categoryLabel(p)}</option>
               })}
             </select>
           </div>

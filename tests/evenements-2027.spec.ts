@@ -27,7 +27,7 @@ const FIXTURE_DECEMBRE = readFileSync(join(__dirname, "fixtures", "sheet-eveneme
 const REFUS = "Jusqu'au 31/12/2026, les évènements de toute l'église s'écrivent dans le Sheet des évènements.";
 
 /** Coordination (cochée) et pôle Évènement : « Toute l'église », les sections, la réunion du pôle. */
-const COORD: FakeProfile = { uid: "uid-coord", email: "coord@example.org", firstName: "Lison", lastName: "R.", poles: ["evenement"], coordination: true };
+const COORD: FakeProfile = { uid: "uid-coord", email: "coord@example.org", firstName: "Lison", lastName: "R.", poles: ["evenement"], dansEquipes: ["evenementiel"], referentDe: ["evenementiel"], coordination: true };
 const ADMIN: FakeProfile = { uid: "u-admin", email: ADMIN_EMAILS[0], firstName: "Admin", lastName: "T.", planningName: "Lou M." };
 
 const EV = {
@@ -121,13 +121,13 @@ test.describe("B1 : le formulaire refuse « Toute l'église » avant la bascule"
     // Retouches v18, lot E : une réunion se crée par « + Nouvelle réunion ».
     const { db } = await ouvrir(page, COORD, "/back-office/reunions/nouvelle", "2026-12-15T10:00:00");
     await page.getByLabel("Nom de l'évènement").fill("Réunion de fin d'année");
-    await page.getByLabel("Public").selectOption("pole:evenement");
+    await page.getByLabel("Public").selectOption("equipe:evenementiel");
     await page.getByLabel("Date", { exact: true }).fill("2026-12-20");
     await expect(page.getByText(REFUS)).toHaveCount(0);
     await creer(page);
     // Agencement v18 (B15) : une réunion se gère sous Réunions.
     await expect(page).toHaveURL(/\/back-office\/reunions\/fake-\d+\/?$/);
-    expect(ecrit(db)?.data).toMatchObject({ pour: "pole:evenement", date: "2026-12-20" });
+    expect(ecrit(db)?.data).toMatchObject({ pour: "equipe:evenementiel", date: "2026-12-20" });
   });
 
   test("modifier : un évènement déjà là se corrige ; le reculer en 2026 ou le passer à « Toute l'église » est refusé", async ({ page }) => {
@@ -607,7 +607,7 @@ test.describe("Q3 : déplacer un évènement de toute l'église de 2027 en 2026 
     const section = ev({ id: "paix", date: "2027-01-16", pour: "Groupe Paix" });
     expect(planDeplacement(de("evenements", "paix", "2027-01-16"), "2026-12-19", donnees([section]), horloge))
       .toMatchObject({ type: "evenement", champs: { date: "2026-12-19" } });
-    const reunion = ev({ id: "reu", date: "2027-01-16", pour: "pole:evenement" });
+    const reunion = ev({ id: "reu", date: "2027-01-16", pour: "equipe:evenementiel" });
     expect(planDeplacement(de("reunions", "reu", "2027-01-16"), "2026-12-19", donnees([reunion]), horloge))
       .toMatchObject({ type: "evenement", champs: { date: "2026-12-19" } });
   });

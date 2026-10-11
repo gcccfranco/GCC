@@ -3,9 +3,9 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { verifyIdToken } from "@/lib/push/admin";
 import { uidsForCategory } from "@/lib/push/recipients";
-import { canInscrireEvenement, equipeDuPour, poleDuPour } from "@/lib/access";
+import { canInscrireEvenement, equipeDuPour } from "@/lib/access";
 import { nowIsoParis, refusInscription, type RefusInscription } from "@/lib/evenements/agenda";
-import { membresDuPole } from "@/lib/taches/serveur";
+import { membresDeLEquipe } from "@/lib/taches/serveur";
 import type { Evenement } from "@/types/evenement";
 
 export class HttpError extends Error {
@@ -33,20 +33,13 @@ export function errorResponse(e: unknown) {
 }
 
 /** Membres concernés par un évènement : toute l'église, les membres de la
- *  section visée, ceux du pôle pour une réunion de pôle (lot 7), ceux de
- *  l'équipe pour une réunion d'équipe (lot U6, R4 : `dansEquipes` du profil,
- *  ce que lisent les règles). */
+ *  section visée, ceux de l'équipe pour une réunion ou un évènement d'équipe
+ *  (lot U6, R4 ; retouches v18 D23 ; EQ20 : `membresDeLEquipe`, Louange élargi,
+ *  ce que lisent les règles), lus dans la même base. */
 export async function destinatairesEvenement(db: FirebaseFirestore.Firestore, e: Pick<Evenement, "pour">): Promise<string[]> {
-  const pole = poleDuPour(e.pour);
   const equipe = equipeDuPour(e.pour);
   if (e.pour === "eglise") return (await db.collection("users").get()).docs.map((d) => d.id);
-  if (equipe) {
-    return (await db.collection("users").get()).docs
-      .filter((d) => ((d.data().dansEquipes as string[] | undefined) ?? []).includes(equipe))
-      .map((d) => d.id);
-  }
-  // Pôle : ses membres seuls (lot 7 ; évènement de pôle, retouches v18 D23), lus dans la même base.
-  return pole ? membresDuPole(pole, db) : uidsForCategory(e.pour);
+  return equipe ? membresDeLEquipe(equipe, db) : uidsForCategory(e.pour);
 }
 
 const REFUS: Record<RefusInscription, string> = {
@@ -61,7 +54,7 @@ const REFUS: Record<RefusInscription, string> = {
 /** L'inscription de /api/evenements/inscription, base passée (testable) : avec compte, une place au
  *  nom du profil (id = uid, réinscription = mise à jour des invités) ; sans compte, `nomLibre`, id
  *  aléatoire. Le compteur et la place s'écrivent dans une même transaction. HttpError 403 (sans
- *  compte refusé, évènement de pôle ou d'équipe pour qui ne le voit pas, retouches v18 E6), 404, 409. */
+ *  compte refusé, évènement d'équipe pour qui ne le voit pas, retouches v18 E6), 404, 409. */
 export async function inscrire(
   db: FirebaseFirestore.Firestore,
   user: { uid: string; email: string } | null,
@@ -71,8 +64,8 @@ export async function inscrire(
   let nom = nomLibre;
   let profil: Parameters<typeof canInscrireEvenement>[1] = null;
   if (user) {
-    // Le profil entier : ses pôles, ses sections et ses équipes décident de l'accès (E6).
-    const p = (await db.collection("users").doc(user.uid).get()).data() as { firstName?: string; lastName?: string; email?: string; poles?: string[]; serviceRoles?: Record<string, unknown>; dansEquipes?: string[] } | undefined;
+    // Le profil entier : ses sections et ses équipes (Louange élargi) décident de l'accès (E6).
+    const p = (await db.collection("users").doc(user.uid).get()).data() as { firstName?: string; lastName?: string; email?: string; serviceRoles?: Record<string, unknown>; dansEquipes?: string[] } | undefined;
     nom = [p?.firstName, p?.lastName].filter(Boolean).join(" ").trim() || p?.email || user.email;
     profil = p ?? null;
   }
@@ -82,8 +75,8 @@ export async function inscrire(
     if (!snap.exists) throw new HttpError(404, "Évènement introuvable");
     const e = snap.data() as Evenement;
     if (!user && !e.sansCompte) throw new HttpError(403, "Inscription réservée aux membres connectés.");
-    // Évènement de pôle ou d'équipe (retouches v18, E6) : ceux qui le voient seulement.
-    if (!canInscrireEvenement(user, profil, e)) throw new HttpError(403, "Évènement réservé aux membres du pôle.");
+    // Évènement d'équipe (retouches v18, E6 ; EQ20) : ceux qui le voient seulement.
+    if (!canInscrireEvenement(user, profil, e)) throw new HttpError(403, "Évènement réservé aux membres de l'équipe.");
     const iid = user ? user.uid : ref.collection("inscriptions").doc().id;
     const iref = ref.collection("inscriptions").doc(iid);
     const existing = user ? await tx.get(iref) : null;

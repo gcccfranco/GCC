@@ -1,17 +1,18 @@
 "use client"
 
 // En-tête d'une réunion au Back-Office (lot U6, B3, planche bo-reunion-avant) :
-// « Réunion de pôle · DA » (ou « Réunion d'équipe · Régie », nom court de l'équipe), le titre, « Samedi 3 octobre ·
+// « Réunion d'équipe · Régie » (nom court de l'équipe ; « Louange » pour le public Louange, EQ23), le titre, « Samedi 3 octobre ·
 // 20:00 · Salle 2 · organisée par Alice Q. » ; à droite, pour qui la gère, « Dupliquer pour la prochaine »,
 // « Modifier » et « ⋯ » (Supprimer).
 // Agencement v18 (B4, planche `v18-bo-reunions`) : en grand, la fiche est dans le volet de droite, sous
-// l'en-tête « Réunions » : badge du pôle, titre en h2 de 24 px. En un volet, la fiche est une page : l'en-tête
+// l'en-tête « Réunions » : badge de l'équipe, titre en h2 de 24 px. En un volet, la fiche est une page : l'en-tête
 // commun (`EnTetePage`) avec « ‹ Réunions » pour seul retour (R8), le titre en h1.
 import type { CSSProperties } from "react"
 import Link from "next/link"
 import { useTranslation } from "react-i18next"
 import { Copy, Pencil, Trash2, Users } from "lucide-react"
-import { equipeDuPour, poleDuPour } from "@/lib/access"
+import { equipeDuPour } from "@/lib/access"
+import { cleNomEquipe } from "@/lib/equipes/table"
 import { categoryColor } from "@/lib/serviceColors"
 import { titreDuJour } from "@/app/evenements/scene/libelles"
 import type { Evenement } from "@/types/evenement"
@@ -23,11 +24,8 @@ import { useDeuxVolets } from "@/hooks/useDeuxVolets"
 export function EnTeteReunion({ e, gestion, onSupprimer }: { e: Evenement; gestion: boolean; onSupprimer: () => void }) {
   const { t, i18n } = useTranslation()
   const deuxVolets = useDeuxVolets()
-  const pole = poleDuPour(e.pour)
-  const equipe = equipeDuPour(e.pour)
-  const libelle = pole
-    ? t("backOffice.reunionDePole", { pole: t(`taches.pole.${pole}`) })
-    : t("backOffice.reunionDEquipe", { equipe: t(`equipes.court.${equipe}`) })
+  const equipe = equipeDuPour(e.pour) ?? ""
+  const libelle = t("backOffice.reunionDEquipe", { equipe: t(cleNomEquipe(equipe, true)) })
   const ligne = [
     e.date ? titreDuJour(e.date, i18n.language) : "",
     e.heure,

@@ -13,12 +13,17 @@ import type { UserProfile } from "../src/types/user";
 // ou membre d'une équipe ; adresses `/back-office/reunions/*` qui montent les composants
 // d'aujourd'hui ; les trois anciennes adresses redirigent ; « Plus », la barre du bas et sa
 // feuille ; le rail d'Évènements perd « Réunions » ; libellés FR et 中文. Personnes fictives.
+// Lot 1 du chantier « équipes et groupes » (docs/spec-equipes-sans-poles.md, EQ-B) : le pôle DA devient
+// TEAM DA, dont Bruno est référent ; un référent gagne Tâches et Évènements (décision 43). Qui n'a que
+// Réunions, sans Évènements : un responsable membre d'une équipe, non référent (NOTIFY_EQUIPE).
 
 const ADMIN: FakeProfile = { uid: "uid-admin", email: "tc328829@gmail.com", firstName: "Admin", lastName: "T." };
-/** Pôle Événement et la coordination (cochée). */
-const COORD: FakeProfile = { uid: "uid-alice", email: "alice@example.com", firstName: "Alice", lastName: "Q.", poles: ["evenement"], coordination: true };
-/** Pôle DA, sans droit d'annonces. */
-const DA: FakeProfile = { uid: "uid-bruno", email: "bruno@example.com", firstName: "Bruno", lastName: "M.", poles: ["da"] };
+/** TEAM ÉVÉNEMENTIEL et la coordination (cochée) ; son pôle sert encore aux tâches jusqu'à EQ-C. */
+const COORD: FakeProfile = {
+  uid: "uid-alice", email: "alice@example.com", firstName: "Alice", lastName: "Q.", poles: ["evenement"], dansEquipes: ["evenementiel"], coordination: true,
+};
+/** Référent de TEAM DA, sans droit d'annonces ; son pôle sert encore aux tâches jusqu'à EQ-C. */
+const DA: FakeProfile = { uid: "uid-bruno", email: "bruno@example.com", firstName: "Bruno", lastName: "M.", poles: ["da"], dansEquipes: ["da"], referentDe: ["da"] };
 const ANNONCEUR: FakeProfile = { uid: "uid-hugo", email: "hugo@example.com", firstName: "Hugo", lastName: "B.", annonces: ["Culte Francophone"] };
 const REFERENTE: FakeProfile = { uid: "uid-ref", email: "ref@example.com", dansEquipes: ["regie"], referentDe: ["regie"] };
 /** Responsable (notifier) et membre d'une équipe, sans en être référent. */
@@ -39,7 +44,7 @@ const EV = {
   sansCompte: false, contact: "", organisateurUid: "uid-alice", organisateurNom: "Alice Q.", epingle: false, expiresAt: null,
   inscrits: 0, createdAt: "2026-09-20T10:00:00Z", updatedAt: "2026-09-20T10:00:00Z",
 };
-const REU = { ...EV, type: "eglise", pour: "pole:da", inscriptions: "fermees", inscriptionOuverte: false, lieu: "Salle 2", heure: "20:00", organisateurUid: "uid-bruno", organisateurNom: "Bruno M." };
+const REU = { ...EV, type: "eglise", pour: "equipe:da", inscriptions: "fermees", inscriptionOuverte: false, lieu: "Salle 2", heure: "20:00", organisateurUid: "uid-bruno", organisateurNom: "Bruno M." };
 const DOCS: Record<string, Record<string, unknown>> = {
   "evenements/fete": { ...EV, titre: "Fête de rentrée" },
   "evenements/reu-da": { ...REU, titre: "Réunion DA", date: "2026-10-10" },
@@ -76,28 +81,33 @@ test.describe("T2a : les droits d'affichage (B15)", () => {
     expect(permises(ADMIN)).toEqual(["tableau", "calendrier", "planning", "taches", "evenements", "reunions", "equipes", "messages", "statistiques"]);
   });
 
-  test("pôle DA sans droit d'annonces : Réunions, pas Évènements ; droit d'annonces seul : l'inverse ; coordination : les deux", () => {
-    expect(permises(DA)).toEqual(["tableau", "calendrier", "taches", "reunions"]);
+  test("membre d'équipe responsable sans droit d'annonces : Réunions, pas Évènements ; droit d'annonces seul : l'inverse ; coordination, référent : les deux", () => {
+    expect(permises(NOTIFY_EQUIPE)).toEqual(["tableau", "calendrier", "taches", "reunions", "messages"]);
+    expect(permises(DA), "référent (décision 43)").toEqual(["tableau", "calendrier", "taches", "evenements", "reunions"]);
     expect(permises(ANNONCEUR)).toEqual(["tableau", "calendrier", "evenements"]);
     expect(permises(COORD)).toEqual(["tableau", "calendrier", "taches", "evenements", "reunions"]);
   });
 
-  test("un référent, ou un responsable membre d'une équipe, a Réunions", () => {
-    expect(permises(REFERENTE)).toEqual(["tableau", "calendrier", "reunions"]);
-    expect(permises(NOTIFY_EQUIPE)).toEqual(["tableau", "calendrier", "reunions", "messages"]);
+  test("un référent, ou un responsable membre d'une équipe, a Réunions ; le référent, Tâches et Évènements aussi (décision 43)", () => {
+    expect(permises(REFERENTE)).toEqual(["tableau", "calendrier", "taches", "evenements", "reunions"]);
+    expect(permises(NOTIFY_EQUIPE)).toEqual(["tableau", "calendrier", "taches", "reunions", "messages"]);
+    // Sa barre du bas par défaut : Évènements prend la place de Réunions, qui va dans « Plus » (EQ18).
+    expect(barreAffichee(null, permises(REFERENTE))).toEqual(["tableau", "calendrier", "taches", "evenements"]);
   });
 
   test("les sous-parties d'Évènements n'ont plus « Réunions »", () => {
     expect(sousPartiesEvenements(user(ADMIN), null)).toEqual(["evenements", "scene"]);
     expect(sousPartiesEvenements(user(COORD), profil(COORD))).toEqual(["evenements", "scene"]);
     expect(sousPartiesEvenements(user(ANNONCEUR), profil(ANNONCEUR))).toEqual(["evenements"]);
-    expect(sousPartiesEvenements(user(DA), profil(DA))).toEqual([]);
+    expect(sousPartiesEvenements(user(NOTIFY_EQUIPE), profil(NOTIFY_EQUIPE))).toEqual([]);
+    expect(sousPartiesEvenements(user(DA), profil(DA)), "référent (décision 43)").toEqual(["evenements"]);
   });
 
   test("« Prochains évènements » permis avec l'une ou l'autre entrée ; le raccourci « Nouvel évènement » suit Évènements seul", () => {
-    expect(widgetsPermis(user(DA), profil(DA))).toContain("evenements");
+    expect(widgetsPermis(user(NOTIFY_EQUIPE), profil(NOTIFY_EQUIPE))).toContain("evenements");
     expect(widgetsPermis(user(ANNONCEUR), profil(ANNONCEUR))).toContain("evenements");
-    expect(raccourcisPermis(user(DA), profil(DA), {}).map((r) => r.id)).not.toContain("evenement");
+    expect(raccourcisPermis(user(NOTIFY_EQUIPE), profil(NOTIFY_EQUIPE), {}).map((r) => r.id)).not.toContain("evenement");
+    expect(raccourcisPermis(user(DA), profil(DA), {}).map((r) => r.id), "référent (décision 43)").toContain("evenement");
     expect(raccourcisPermis(user(ANNONCEUR), profil(ANNONCEUR), {}).map((r) => r.id)).toContain("evenement");
   });
 
@@ -107,7 +117,7 @@ test.describe("T2a : les droits d'affichage (B15)", () => {
   });
 
   test("une barre enregistrée avec Évènements, relue pour qui n'a que Réunions, se complète dans l'ordre du menu", () => {
-    expect(barreAffichee(["tableau", "evenements", "calendrier", "taches"], permises(DA))).toEqual(["tableau", "calendrier", "taches", "reunions"]);
+    expect(barreAffichee(["tableau", "evenements", "calendrier", "taches"], permises(NOTIFY_EQUIPE))).toEqual(["tableau", "calendrier", "taches", "reunions"]);
   });
 });
 
@@ -125,17 +135,17 @@ test.describe("T2a : le menu", () => {
     await expect(menu.getByRole("link", { name: "Évènements" })).not.toHaveAttribute("aria-current", "page");
   });
 
-  test("pôle DA : Réunions dans la barre du bas par défaut (téléphone, tablette portrait), marqué sur sa page", async ({ page }, info) => {
+  test("membre d'équipe responsable : Réunions dans la barre du bas par défaut (téléphone, tablette portrait), marqué sur sa page", async ({ page }, info) => {
     test.skip(estGrandEcran(info), "la barre du bas : téléphone et tablette en portrait");
-    await ouvrir(page, DA, "/back-office/reunions");
+    await ouvrir(page, NOTIFY_EQUIPE, "/back-office/reunions");
     await expect(barreDuBas(page).getByRole("link")).toHaveText(["Accueil", "Calendrier", "Tâches", "Réunions", "Plus"]);
     await expect(barreDuBas(page).getByRole("link", { name: "Réunions" })).toHaveAttribute("aria-current", "page");
   });
 
   test("une barre enregistrée avec Évènements, pour qui n'a que Réunions : elle se complète sans erreur", async ({ page }, info) => {
     test.skip(estGrandEcran(info), "la barre du bas : téléphone et tablette en portrait");
-    await ouvrir(page, DA, "/back-office", {
-      ...DOCS, "backOffice/uid-bruno": { barreDuBas: ["tableau", "evenements", "calendrier", "taches"], majLe: "2026-09-30T10:00:00Z" },
+    await ouvrir(page, NOTIFY_EQUIPE, "/back-office", {
+      ...DOCS, "backOffice/uid-ne": { barreDuBas: ["tableau", "evenements", "calendrier", "taches"], majLe: "2026-09-30T10:00:00Z" },
     });
     await expect(barreDuBas(page).getByRole("link")).toHaveText(["Accueil", "Calendrier", "Tâches", "Réunions", "Plus"]);
   });
@@ -223,7 +233,7 @@ test.describe("T2a : les adresses /back-office/reunions/*", () => {
     await expect(page.getByLabel("Public")).toBeVisible();
     const publics = await page.getByLabel("Public").locator("option").allTextContents();
     expect(publics.length).toBeGreaterThan(0);
-    expect(publics.every((p) => p.startsWith("Pôle ") || p.startsWith("TEAM"))).toBe(true);
+    expect(publics.every((p) => p.startsWith("TEAM"))).toBe(true);
     await page.getByLabel("Nom de l'évènement").fill("Réunion de rentrée");
     await page.getByLabel("Date", { exact: true }).fill("2026-10-20");
     await page.getByRole("button", { name: "Créer l'évènement" }).click();
@@ -280,8 +290,8 @@ test.describe("T2a, relecture : là où mènent le widget et le guide", () => {
   });
   const widget = (page: Page) => page.getByTestId("grille-widgets").getByRole("region", { name: "Prochains évènements", exact: true });
 
-  test("pôle DA (Réunions sans Évènements) : « Tout voir » du widget mène à ses réunions", async ({ page }) => {
-    await ouvrir(page, DA, "/back-office", avecLeWidget(DA));
+  test("membre d'équipe responsable (Réunions sans Évènements) : « Tout voir » du widget mène à ses réunions", async ({ page }) => {
+    await ouvrir(page, NOTIFY_EQUIPE, "/back-office", avecLeWidget(NOTIFY_EQUIPE));
     await expect(widget(page).getByRole("link", { name: "Tout voir" })).toHaveAttribute("href", /^\/back-office\/reunions\/?$/);
   });
 

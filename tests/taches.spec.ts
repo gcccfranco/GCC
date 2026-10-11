@@ -134,10 +134,10 @@ function jour(n: number): string {
 }
 
 const MEMBRE_DA: FakeProfile = {
-  uid: "uid-da", email: "da@example.com", firstName: "Ruth", lastName: "Kouassi", poles: ["da"],
+  uid: "uid-da", email: "da@example.com", firstName: "Ruth", lastName: "Kouassi", poles: ["da"], dansEquipes: ["da"], referentDe: ["da"],
 };
 const MEMBRE_MEDIA: FakeProfile = {
-  uid: "uid-media", email: "media@example.com", firstName: "Paul", lastName: "Media", poles: ["media"],
+  uid: "uid-media", email: "media@example.com", firstName: "Paul", lastName: "Media", poles: ["media"], dansEquipes: ["medias"], referentDe: ["medias"],
 };
 const SANS_POLE: FakeProfile = { uid: "uid-rien", email: "rien@example.com", firstName: "Anne", lastName: "Nopole" };
 
@@ -325,7 +325,7 @@ test("nommer quelqu'un d'autre responsable le prévient", async ({ page }) => {
     await route.fulfill({ contentType: "application/json", body: JSON.stringify({ ok: true, notified: 1 }) });
   });
   const db = await signInAs(page, MEMBRE_DA, {
-    "users/uid-paul": { email: "paul@example.com", firstName: "Paul", lastName: "Dupont", planningName: "", serviceRoles: {}, annonces: [], notify: [], poles: ["da"] },
+    "users/uid-paul": { email: "paul@example.com", firstName: "Paul", lastName: "Dupont", planningName: "", serviceRoles: {}, annonces: [], notify: [], poles: ["da"], dansEquipes: ["da"], referentDe: ["da"] },
   }, "/back-office/taches/da");
   const { form, creer } = await nouvelleTache(page);
   await form.getByLabel("Titre").fill("Affiche");
@@ -340,53 +340,60 @@ test("nommer quelqu'un d'autre responsable le prévient", async ({ page }) => {
 
 // ── Réunions de pôle dans le calendrier (T4) ────────────────────────────────
 
-test("réunion de pôle : visible et créée par les membres du pôle, jamais sans compte", () => {
-  const reunion = { pour: "pole:da", organisateurUid: "uid-x" };
+// Lot 1 du chantier « équipes et groupes » (EQ-B) : la réunion de pôle devient celle d'une équipe ;
+// ses membres la voient, ses référents la créent (décision 3).
+test("réunion d'équipe : visible des membres, créée par les référents, jamais sans compte", () => {
+  const reunion = { pour: "equipe:da", organisateurUid: "uid-x" };
   const membre = { uid: "u1", email: "da@example.com" };
-  expect(canSeeEvenement(membre, { poles: ["da"] }, reunion)).toBe(true);
-  expect(canSeeEvenement(membre, { poles: ["media"] }, reunion)).toBe(false);
+  expect(canSeeEvenement(membre, { dansEquipes: ["da"] }, reunion)).toBe(true);
+  expect(canSeeEvenement(membre, { dansEquipes: ["medias"] }, reunion)).toBe(false);
   expect(canSeeEvenement(null, null, reunion)).toBe(false);
   expect(canSeeEvenement({ uid: "a", email: "tc328829@gmail.com" }, null, reunion)).toBe(true);
-  expect(canCreateEvenement(membre, { poles: ["da"] }, "pole:da")).toBe(true);
-  expect(canCreateEvenement(membre, { poles: ["da"] }, "pole:media")).toBe(false);
-  expect(creatableEvenementPours(membre, { poles: ["da"], serviceRoles: { "Groupe Paix": ["chanteur"] } }, ["Groupe Paix"]))
-    .toEqual(["pole:da", "pole:louange"]);
+  expect(canCreateEvenement(membre, { dansEquipes: ["da"], referentDe: ["da"] }, "equipe:da")).toBe(true);
+  expect(canCreateEvenement(membre, { dansEquipes: ["da"] }, "equipe:da")).toBe(false);
+  expect(canCreateEvenement(membre, { dansEquipes: ["da"], referentDe: ["da"] }, "equipe:medias")).toBe(false);
+  expect(creatableEvenementPours(membre, { dansEquipes: ["da"], referentDe: ["da"], serviceRoles: { "Groupe Paix": ["chanteur"] } }, ["Groupe Paix"]))
+    .toEqual(["equipe:da"]);
 });
 
 const REUNION = {
-  titre: "Réunion DA", type: "info", pour: "pole:da", date: "2026-10-10", heure: "20:00", heureFin: "", dateFin: "",
+  titre: "Réunion DA", type: "info", pour: "equipe:da", date: "2026-10-10", heure: "20:00", heureFin: "", dateFin: "",
   lieu: "Salle 2", description: "Bilan du trimestre", liens: [], images: [], placesMax: null, inscriptionOuverte: false,
   sansCompte: false, contact: "", organisateurUid: "uid-autre", organisateurNom: "Marc Autre", epingle: false, expiresAt: null,
   inscrits: 0, createdAt: "2026-09-20T10:00:00Z", updatedAt: "2026-09-20T10:00:00Z",
 };
 
-test("calendrier : la réunion du pôle DA se voit du pôle DA, pas du pôle Média", async ({ page }) => {
+// Retouches v18, lot G : une réunion n'est plus dans Évènements de l'App, mais au Back-Office › Réunions
+// (d'où l'échec relevé le 08/10/2026 sur ce test, qui la cherchait dans /evenements) ; lot 1 du chantier
+// « équipes et groupes » (EQ-B) : la réunion de pôle devient celle de TEAM DA.
+test("calendrier : la réunion de TEAM DA se voit de TEAM DA (Back-Office › Réunions), pas de TEAM MÉDIAS", async ({ page }) => {
   await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
-  await signInAs(page, MEMBRE_DA, { "evenements/reunion": { ...REUNION, type: "eglise" } }, "/evenements");
-  await expect(page.getByRole("link", { name: /Réunion DA/ })).toBeVisible();
+  await signInAs(page, MEMBRE_DA, { "evenements/reunion": { ...REUNION, type: "eglise" } }, "/back-office/reunions");
+  await expect(page.getByRole("link", { name: /Réunion DA/ }).first()).toBeVisible();
 });
 
-test("calendrier : un membre d'un autre pôle ne voit pas la réunion", async ({ page }) => {
+test("calendrier : un membre d'une autre équipe ne voit pas la réunion", async ({ page }) => {
   await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
-  await signInAs(page, MEMBRE_MEDIA, { "evenements/reunion": { ...REUNION, type: "eglise" } }, "/evenements");
-  await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+  await signInAs(page, MEMBRE_MEDIA, { "evenements/reunion": { ...REUNION, type: "eglise" } }, "/back-office/reunions");
+  await expect(page.getByRole("heading", { level: 1, name: "Réunions" })).toBeVisible();
+  await expect(page.getByText("Aucune réunion").first()).toBeVisible();
   await expect(page.getByRole("link", { name: /Réunion DA/ })).toHaveCount(0);
 });
 
-test("créer une réunion de pôle : pas d'inscriptions", async ({ page }) => {
+test("créer une réunion d'équipe : pas d'inscriptions", async ({ page }) => {
   await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
   let pushed = false;
   await page.route("**/api/push/notify-evenement", (route) => { pushed = true; return route.fulfill({ json: { ok: true } }); });
   // Retouches v18, lot E : une réunion se crée par « + Nouvelle réunion » (« Nouvel évènement » = évènement de pôle).
   const db = await signInAs(page, MEMBRE_DA, {}, "/back-office/reunions/nouvelle");
-  await page.getByLabel("Public").selectOption({ label: "Pôle DA" });
+  await page.getByLabel("Public").selectOption({ label: "TEAM DA" });
   await expect(page.getByRole("radiogroup", { name: "Inscriptions" })).toHaveCount(0);
   await page.getByLabel("Nom de l'évènement").fill("Réunion DA");
   await page.getByLabel("Date", { exact: true }).fill("2026-10-10");
   await page.getByRole("button", { name: "Créer l'évènement" }).click();
   await expect(page.getByRole("heading", { name: "Réunion DA" })).toBeVisible();
   const created = db.writes.find((w) => w.method === "POST" && w.path.startsWith("evenements/"));
-  expect(created?.data).toMatchObject({ pour: "pole:da", inscriptions: "fermees", sansCompte: false, placesMax: null });
+  expect(created?.data).toMatchObject({ pour: "equipe:da", inscriptions: "fermees", sansCompte: false, placesMax: null });
   await expect.poll(() => pushed).toBe(true);
 });
 

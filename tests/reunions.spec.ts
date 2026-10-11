@@ -33,13 +33,16 @@ import type { RappelTache } from "../src/lib/taches/messages";
 // (`pour: "equipe:<id>"`), créées par un référent ou un admin, vues et
 // nourries de sujets par les membres de l'équipe (`dansEquipes`, `referentDe`,
 // recopiés sur le profil par le serveur), invisibles pour les autres.
+// Lot 1 du chantier « équipes et groupes » (docs/spec-equipes-sans-poles.md, EQ-B) : le public de
+// pôle disparaît ; la réunion de DA est celle de TEAM DA (`equipe:da`), Louange est `equipe:louange`
+// (public élargi), et seuls les référents créent.
 
 const ROOT = path.resolve(__dirname, "..");
 const lire = (rel: string) => readFileSync(path.join(ROOT, rel), "utf8");
 
-/** Réunion du pôle DA, samedi 3 octobre à 20:00, organisée par Alice. */
+/** Réunion de TEAM DA, samedi 3 octobre à 20:00, organisée par Alice. */
 const REUNION = {
-  titre: "Réunion DA", type: "loisir", pour: "pole:da", date: "2026-10-03", heure: "20:00", heureFin: "", dateFin: "",
+  titre: "Réunion DA", type: "loisir", pour: "equipe:da", date: "2026-10-03", heure: "20:00", heureFin: "", dateFin: "",
   lieu: "Salle 2", description: "", liens: [], images: [], placesMax: null, inscriptions: "fermees",
   inscriptionDebut: "", inscriptionFin: "", sansCompte: false, lienExterne: "", contact: "",
   organisateurUid: "uid-alice", organisateurNom: "Alice Q.", epingle: false, expiresAt: null, inscrits: 0,
@@ -47,10 +50,11 @@ const REUNION = {
 };
 const E = { ...REUNION, id: "reunion-da" } as unknown as Evenement;
 
-const ALICE: FakeProfile = { uid: "uid-alice", email: "alice@example.com", firstName: "Alice", lastName: "Q.", poles: ["da"] };
-const BRUNO: FakeProfile = { uid: "uid-bruno", email: "bruno@example.com", firstName: "Bruno", lastName: "M.", poles: ["da"] };
-const CLARA: FakeProfile = { uid: "uid-clara", email: "clara@example.com", firstName: "Clara", lastName: "P.", poles: ["da"] };
-const NOE: FakeProfile = { uid: "uid-noe", email: "noe@example.com", firstName: "Noé", lastName: "V.", poles: ["media"] };
+/** Alice : référente de TEAM DA (elle crée les réunions). Bruno, Clara : membres. Noé : TEAM MÉDIAS. */
+const ALICE: FakeProfile = { uid: "uid-alice", email: "alice@example.com", firstName: "Alice", lastName: "Q.", dansEquipes: ["da"], referentDe: ["da"] };
+const BRUNO: FakeProfile = { uid: "uid-bruno", email: "bruno@example.com", firstName: "Bruno", lastName: "M.", dansEquipes: ["da"] };
+const CLARA: FakeProfile = { uid: "uid-clara", email: "clara@example.com", firstName: "Clara", lastName: "P.", dansEquipes: ["da"] };
+const NOE: FakeProfile = { uid: "uid-noe", email: "noe@example.com", firstName: "Noé", lastName: "V.", dansEquipes: ["medias"] };
 const ADMIN: FakeProfile = { uid: "admin1", email: "tc328829@gmail.com", firstName: "Admin", lastName: "T." };
 const MUSICIEN: FakeProfile = { uid: "uid-musicien", email: "musicien@example.com", serviceRoles: { "Culte Francophone": ["musicien"] } };
 
@@ -92,14 +96,14 @@ async function attendreOrdre(page: Page, attendu: string[]) {
 
 // ─── Purs : droits (miroir de firestore.rules) ──────────────────────────────
 
-test("droits : est de la réunion le membre du pôle, l'organisatrice et un admin ; pas un autre pôle", () => {
+test("droits : est de la réunion le membre de l'équipe, l'organisatrice et un admin ; pas une autre équipe", () => {
   expect(estDeLaReunion(user(BRUNO), BRUNO, E)).toBe(true);
   expect(estDeLaReunion(user(NOE), NOE, E)).toBe(false);
   expect(estDeLaReunion(user(ADMIN), null, E)).toBe(true);
-  expect(estDeLaReunion(user(ALICE), { poles: [] }, E), "l'organisatrice, même sortie du pôle").toBe(true);
+  expect(estDeLaReunion(user(ALICE), { dansEquipes: [] }, E), "l'organisatrice, même sortie de l'équipe").toBe(true);
   expect(estDeLaReunion(null, null, E)).toBe(false);
-  // Le pôle Louange se lit comme pour les tâches : avoir un rôle de service.
-  expect(estDeLaReunion(user(MUSICIEN), MUSICIEN, { ...E, pour: "pole:louange" })).toBe(true);
+  // Le public Louange : avoir un rôle de service suffit (décision 5).
+  expect(estDeLaReunion(user(MUSICIEN), MUSICIEN, { ...E, pour: "equipe:louange" })).toBe(true);
 });
 
 test("droits : ajouter jusqu'au début seulement, pour une personne de la réunion", () => {
@@ -131,7 +135,7 @@ test("règles : la sous-collection des sujets reprend les mêmes droits", () => 
   expect(bloc).toMatch(/traite == false/);
   expect(bloc).toMatch(/organise\(id\) && changeSeulement\(\['ordre', 'traite'\]\)/);
   expect(bloc).toMatch(/allow delete: if signedIn\(\) && \(organise\(id\) \|\| resource\.data\.auteurUid == request\.auth\.uid\)/);
-  expect(rules).toMatch(/function estDeLaReunion\(e\)[\s\S]*isTachePole\(e\.pour\.split\(':'\)\[1\]\)/);
+  expect(rules).toMatch(/function estDeLaReunion\(e\)[\s\S]*estDeLEquipe\(e\.pour\.split\(':'\)\[1\]\)/);
   expect(rules).toMatch(/function organise\(id\) \{ return isAdmin\(\) \|\| reunion\(id\)\.organisateurUid == request\.auth\.uid; \}/);
 });
 
@@ -391,7 +395,7 @@ const R = (id: string, date: string, extra: Partial<Evenement> = {}) => ({ ...E,
 test("réunions précédentes : du même public, avant celle-ci (date et heure), la plus récente d'abord", () => {
   const liste = [
     R("juin", "2026-06-06"), R("nov", "2026-11-07"), R("sept", "2026-09-05"), E,
-    R("media", "2026-09-12", { pour: "pole:media" }), R("meme-jour-avant", "2026-10-03", { heure: "18:00" }),
+    R("media", "2026-09-12", { pour: "equipe:medias" }), R("meme-jour-avant", "2026-10-03", { heure: "18:00" }),
   ];
   expect(reunionsPrecedentes(liste, E).map((r) => r.id)).toEqual(["meme-jour-avant", "sept", "juin"]);
 });
@@ -428,7 +432,7 @@ test("règles R2 : une personne de la réunion marque un sujet repris, une seule
 });
 
 // Relecture du lot U6 : le marquage « repris » ne vaut que pour une réunion du même public.
-test("règles R2 : « repris dans » désigne une réunion qui existe, du même pôle ou de la même équipe", () => {
+test("règles R2 : « repris dans » désigne une réunion qui existe, de la même équipe", () => {
   const rules = lire("firestore.rules");
   const debut = rules.indexOf("match /sujets/{sid}");
   const bloc = rules.slice(debut, rules.indexOf("}", rules.indexOf("allow delete", debut)));
@@ -457,12 +461,12 @@ const question = (page: Page) => page.getByRole("alertdialog", { name: "Reprendr
 const precedentes = (page: Page) => page.getByRole("region", { name: "Réunions précédentes" });
 const sansPush = (page: Page) => page.route("**/api/push/notify-evenement", (route) => route.fulfill({ json: { ok: true } }));
 
-/** Nouvelle réunion du pôle DA par « Créer » (le seul public d'Alice). Retouches v18, lot E :
- *  « Nouvel évènement » crée un évènement de pôle ; une réunion se crée par « + Nouvelle réunion ». */
+/** Nouvelle réunion de TEAM DA par « Créer » (le seul public d'Alice). Retouches v18, lot E :
+ *  « Nouvel évènement » crée un évènement d'équipe ; une réunion se crée par « + Nouvelle réunion ». */
 async function creerReunion(page: Page, date: string) {
   await page.goto("/back-office/reunions/nouvelle");
   await page.getByLabel("Nom de l'évènement").fill("Réunion DA");
-  await expect(page.getByLabel("Public")).toHaveValue("pole:da");
+  await expect(page.getByLabel("Public")).toHaveValue("equipe:da");
   await page.getByLabel("Date", { exact: true }).fill(date);
   await page.getByLabel("Horaire", { exact: true }).fill("20:00");
   await page.getByRole("button", { name: "Créer l'évènement" }).click();
@@ -535,7 +539,7 @@ test("reprise, non : rien n'est écrit, le sujet reste rouge et revient à la cr
   await expect(lignes(page).nth(3)).toContainText("Bruno M. · 01/10 · non traité");
 });
 
-test("reprise : les sujets laissés par plusieurs réunions du pôle, ni ceux d'un autre pôle, ni ceux d'une réunion à venir", async ({ page }) => {
+test("reprise : les sujets laissés par plusieurs réunions de l'équipe, ni ceux d'une autre équipe, ni ceux d'une réunion à venir", async ({ page }) => {
   const db = await ouvrir(page, ALICE, "2026-10-04T10:00:00", {
     ...APRES,
     "evenements/reunion-sept": autreReunion("2026-09-05"),
@@ -543,8 +547,8 @@ test("reprise : les sujets laissés par plusieurs réunions du pôle, ni ceux d'
     "evenements/reunion-sept/sujets/v2": { ...sujet("Déjà repris", CLARA, "2026-09-01T10:00:00Z", 1), reprisDans: "reunion-da" },
     "evenements/reunion-oct10": autreReunion("2026-10-10"),
     "evenements/reunion-oct10/sujets/f1": sujet("Pas encore discuté", BRUNO, "2026-10-04T08:00:00Z", 0),
-    "evenements/reunion-media": autreReunion("2026-09-12", { pour: "pole:media", organisateurUid: "uid-noe" }),
-    "evenements/reunion-media/sujets/m1": sujet("Sujet du pôle Média", NOE, "2026-09-10T09:00:00Z", 0),
+    "evenements/reunion-media": autreReunion("2026-09-12", { pour: "equipe:medias", organisateurUid: "uid-noe" }),
+    "evenements/reunion-media/sujets/m1": sujet("Sujet de TEAM MÉDIAS", NOE, "2026-09-10T09:00:00Z", 0),
   });
   await sansPush(page);
   await expect(lignes(page)).toHaveCount(4);
@@ -576,7 +580,7 @@ test("reprise : sans sujet laissé, pas de question, la réunion se crée direct
   expect(db.writes.filter((w) => w.path.includes("/sujets/"))).toEqual([]);
 });
 
-test("réunions précédentes : celles du pôle avant celle-ci, la plus récente d'abord, avec leur compte rendu", async ({ page }, info) => {
+test("réunions précédentes : celles de l'équipe avant celle-ci, la plus récente d'abord, avec leur compte rendu", async ({ page }, info) => {
   const cr = (url: string) => ({ url, parUid: "uid-clara", parNom: "Clara P.", le: "2026-09-06T10:00:00Z" });
   await ouvrir(page, BRUNO, "2026-10-02T18:00:00", {
     ...SUJETS,
@@ -584,7 +588,7 @@ test("réunions précédentes : celles du pôle avant celle-ci, la plus récente
     "evenements/reunion-sept": autreReunion("2026-09-05", { compteRendu: cr("https://docs.google.com/document/d/sept") }),
     "evenements/reunion-juil": autreReunion("2026-07-04", { compteRendu: cr("https://docs.google.com/document/d/juil") }),
     "evenements/reunion-nov": autreReunion("2026-11-07"),
-    "evenements/reunion-media": autreReunion("2026-09-12", { pour: "pole:media" }),
+    "evenements/reunion-media": autreReunion("2026-09-12", { pour: "equipe:medias" }),
   });
   const rangs = precedentes(page).getByRole("listitem");
   await expect(rangs).toHaveCount(3);
@@ -602,7 +606,7 @@ test("réunions précédentes : celles du pôle avant celle-ci, la plus récente
   await expect(page.getByRole("heading", { name: "Réunion DA du 2026-09-05" })).toBeVisible();
 });
 
-test("réunions précédentes : pas de carte pour la première réunion du pôle", async ({ page }) => {
+test("réunions précédentes : pas de carte pour la première réunion de l'équipe", async ({ page }) => {
   await ouvrir(page, BRUNO, "2026-10-02T18:00:00", { ...SUJETS, "evenements/reunion-nov": autreReunion("2026-11-07") });
   await expect(lignes(page)).toHaveCount(4);
   await expect(precedentes(page)).toHaveCount(0);
@@ -812,7 +816,7 @@ const REUNION_REGIE = { ...REUNION, titre: "Réunion Régie", pour: "equipe:regi
 const ER = { ...REUNION_REGIE, id: "reunion-regie" } as unknown as Evenement;
 const ROSE: FakeProfile = { uid: "uid-rose", email: "rose@example.com", firstName: "Rose", lastName: "T.", dansEquipes: ["regie"], referentDe: ["regie"] };
 const HUGO: FakeProfile = { uid: "uid-hugo", email: "hugo@example.com", firstName: "Hugo", lastName: "B.", dansEquipes: ["regie"] };
-const COORD: FakeProfile = { uid: "uid-coord", email: "coord@example.com", firstName: "Iris", lastName: "D.", poles: ["evenement"], coordination: true };
+const COORD: FakeProfile = { uid: "uid-coord", email: "coord@example.com", firstName: "Iris", lastName: "D.", coordination: true };
 
 const membre = (nom: string, uid: string, referent = false) => ({ nom, uid, mention: referent ? "Référente" : "", referent, essai: false, groupe: "" });
 const ORGANIGRAMME = [
@@ -820,14 +824,14 @@ const ORGANIGRAMME = [
   { id: "regie", pole: null, membres: [membre("Rose T.", "uid-rose", true), membre("Hugo B.", "uid-hugo"), membre("Sans Compte", "")] },
 ];
 
-test("équipe d'une réunion : « equipe:<id> » ; une réunion = un pôle ou une équipe", () => {
+test("équipe d'une réunion : « equipe:<id> » ; une réunion = une équipe, plus un pôle (EQ19)", () => {
   expect(equipeDuPour("equipe:regie")).toBe("regie");
   expect(equipeDuPour("equipe:accueil-j1")).toBe("accueil-j1");
   expect(equipeDuPour("equipe:")).toBeNull();
   expect(equipeDuPour("pole:da")).toBeNull();
   expect(equipeDuPour("Culte Francophone")).toBeNull();
   expect(estReunion({ pour: "equipe:regie" })).toBe(true);
-  expect(estReunion({ pour: "pole:da" })).toBe(true);
+  expect(estReunion({ pour: "pole:da" })).toBe(false);
   expect(estReunion({ pour: "eglise" })).toBe(false);
 });
 
@@ -918,21 +922,26 @@ test("droits d'une réunion d'équipe : la créer = un référent de l'équipe o
 
 test("règles R4 : membres (dansEquipes) de la réunion d'équipe, création par un référent, champs fermés à la création du profil", () => {
   const rules = lire("firestore.rules");
-  expect(rules).toMatch(/function estDeLaReunion\(e\)[\s\S]*e\.pour\.matches\('equipe:\[a-z0-9-\]\+'\) && hasProfile\(\) && e\.pour\.split\(':'\)\[1\] in profile\(\)\.get\('dansEquipes', \[\]\)/);
+  // Lot 1 du chantier « équipes et groupes » (EQ-B) : `dansEquipes` et `referentDe` se lisent par
+  // estDeLEquipe (Louange élargi) et estReferentDe.
+  expect(rules).toMatch(/function estDeLaReunion\(e\)[\s\S]*e\.pour\.matches\('equipe:\[a-z0-9-\]\+'\) && estDeLEquipe\(e\.pour\.split\(':'\)\[1\]\)/);
+  expect(rules).toMatch(/function estDeLEquipe\(equipe\) \{[\s\S]*?equipe in profile\(\)\.get\('dansEquipes', \[\]\)/);
+  expect(rules).toMatch(/function estReferentDe\(equipe\) \{[\s\S]*?equipe in profile\(\)\.get\('referentDe', \[\]\)/);
   const create = rules.slice(rules.indexOf("match /evenements/{id}"), rules.indexOf("allow update", rules.indexOf("match /evenements/{id}")));
-  expect(create).toMatch(/request\.resource\.data\.pour\.matches\('equipe:\[a-z0-9-\]\+'\)[\s\S]*request\.resource\.data\.pour\.split\(':'\)\[1\] in profile\(\)\.get\('referentDe', \[\]\)/);
+  expect(create).toMatch(/request\.resource\.data\.pour\.matches\('equipe:\[a-z0-9-\]\+'\)\s*&& estReferentDe\(request\.resource\.data\.pour\.split\(':'\)\[1\]\)/);
   const profil = rules.slice(rules.indexOf("match /users/{uid}"), rules.indexOf("allow update", rules.indexOf("match /users/{uid}")));
   expect(profil).toMatch(/request\.resource\.data\.get\('dansEquipes', \[\]\) == \[\]/);
   expect(profil).toMatch(/request\.resource\.data\.get\('referentDe', \[\]\) == \[\]/);
 });
 
-// Relecture du lot U6 : miroir exact de canCreateEvenement — une réunion de pôle ou d'équipe ne
-// passe pas par la branche « coordination » (qui ne crée que pour l'église et les sections).
-test("règles : réunions de pôle et d'équipe créées par leurs seuls ayants droit, même pour la coordination", () => {
+// Relecture du lot U6 : miroir exact de canCreateEvenement — une réunion d'équipe ne passe pas par
+// la branche « coordination » (qui ne crée que pour l'église et les sections). Plus de branche de
+// pôle (EQ-B) ; la garde « (pole|equipe):.* » reste.
+test("règles : réunions d'équipe créées par leurs seuls ayants droit, même pour la coordination", () => {
   const rules = lire("firestore.rules");
   const create = rules.slice(rules.indexOf("match /evenements/{id}"), rules.indexOf("allow update", rules.indexOf("match /evenements/{id}")));
-  expect(create).toMatch(/request\.resource\.data\.pour\.matches\('pole:\[a-z\]\+'\)\s*&& isTachePole\(request\.resource\.data\.pour\.split\(':'\)\[1\]\)/);
-  expect(create).toMatch(/request\.resource\.data\.pour\.matches\('equipe:\[a-z0-9-\]\+'\)\s*&& \(isAdmin\(\) \|\| \(hasProfile\(\)/);
+  expect(create).not.toMatch(/pour\.matches\('pole:/);
+  expect(create).toMatch(/request\.resource\.data\.pour\.matches\('equipe:\[a-z0-9-\]\+'\)\s*&& estReferentDe\(/);
   expect(create).toMatch(/!request\.resource\.data\.pour\.matches\('\(pole\|equipe\):\.\*'\)\s*&& \(isCoordination\(\)/);
   // Plus de « isCoordination() || … » qui couvrirait tous les publics.
   expect(create).not.toMatch(/&& \(isCoordination\(\)\s*\|\|\s*\(hasProfile\(\) && request\.resource\.data\.pour in profile\(\)\.get\('annonces', \[\]\)\)\s*\|\|\s*\(request/);
@@ -971,9 +980,11 @@ test("référente : elle crée la réunion de son équipe, sans inscriptions, et
 
 test("membre de l'équipe, non référent : pas de réunion d'équipe à créer", async ({ page }) => {
   // Lot U6, B3 : créer est au Back-Office, réservé aux responsables (un référent l'est).
-  // Retouches v18, lot G (D29) : le membre a la seule entrée Réunions, sans « + Nouvelle réunion ».
+  // Retouches v18, lot G (D29) ; lot 1 du chantier « équipes et groupes » (EQ17) : le membre a
+  // Tâches et Réunions, sans « + Nouvelle réunion » ; ailleurs, ramené à Tâches.
   await ouvrirRegie(page, HUGO, "/back-office/evenements/nouveau");
-  await page.waitForURL(/\/back-office\/reunions\/?$/);
+  await page.waitForURL(/\/back-office\/taches(\/[\w-]+)?\/?$/);
+  await page.goto("/back-office/reunions");
   await expect(page.getByRole("link", { name: /Réunion Régie/ }).first()).toBeVisible();
   await expect(page.getByRole("link", { name: /Nouvelle réunion/ })).toHaveCount(0);
 });
@@ -991,7 +1002,7 @@ test("membre de l'équipe : il retrouve la réunion au Back-Office › Réunions
   await expect(page.getByRole("link", { name: /Réunion Régie/ }).first()).toBeVisible();
 });
 
-for (const [qui, nom] of [[NOE, "un autre pôle"], [COORD, "la coordination"]] as const) {
+for (const [qui, nom] of [[NOE, "une autre équipe"], [COORD, "la coordination"]] as const) {
   test(`non-membre de l'équipe (${nom}) : ni la réunion ni ses sujets, ni dans l'agenda`, async ({ page }) => {
     await ouvrirRegie(page, qui);
     await expect(page.getByText("Évènement introuvable")).toBeVisible();

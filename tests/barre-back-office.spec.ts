@@ -18,7 +18,7 @@ import type { UserProfile } from "../src/types/user";
 
 const ADMIN: FakeProfile = { uid: "uid-admin", email: "tc328829@gmail.com", firstName: "Admin", lastName: "T." };
 /** Pôle Événement (Réussite 2) et coordination (cochée). */
-const ALICE: FakeProfile = { uid: "uid-alice", email: "alice@example.com", firstName: "Alice", lastName: "Q.", poles: ["evenement"], coordination: true };
+const ALICE: FakeProfile = { uid: "uid-alice", email: "alice@example.com", firstName: "Alice", lastName: "Q.", poles: ["evenement"], dansEquipes: ["evenementiel"], referentDe: ["evenementiel"], coordination: true };
 const PLANNINGS: FakeProfile = { uid: "uid-pl", email: "pl@example.com", firstName: "Paul", lastName: "N.", plannings: ["culte"] };
 /** Droit de notifier un groupe (Messages › Notifier seulement), et Planning par la publication. */
 const NOTIFY: FakeProfile = { uid: "uid-no", email: "no@example.com", firstName: "Nora", lastName: "V.", notify: ["Groupe Paix"] };
@@ -205,8 +205,8 @@ test.describe("Barre du bas (B6) : « Plus »", () => {
   });
 
   test("le contenu d'une carte suit les droits : Messages = Notifier seul, sans pastille ; Équipes = Organigramme", async ({ page }) => {
-    // Notifier un groupe, le droit Équipes et le pôle DA : sept entrées, trois dans « Plus ».
-    await ouvrir(page, { ...NOTIFY, equipes: true, poles: ["da"] });
+    // Notifier un groupe, le droit Équipes et membre de TEAM DA : sept entrées, trois dans « Plus ».
+    await ouvrir(page, { ...NOTIFY, equipes: true, poles: ["da"], dansEquipes: ["da"] });
     await expect(onglets(page)).toHaveText(["Accueil", "Calendrier", "Tâches", "Planning", "Plus"]);
     await barre(page).getByRole("link", { name: "Plus" }).click();
     const cartes = page.getByTestId("plus-entree");

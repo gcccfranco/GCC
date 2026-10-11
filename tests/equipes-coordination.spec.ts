@@ -157,7 +157,18 @@ test("Personnes : le droit Équipes sans être admin ne montre pas la case", asy
 
 // ─── Ce qu'ouvre la case ─────────────────────────────────────────────────────
 
-for (const [qui, profil] of [["un référent de TEAM ÉVÉNEMENTIEL", HUGO], ["un membre de TEAM ACCUEIL J1", NINA]] as const) {
+// Depuis EQ-B, un simple membre d'équipe n'a que Tâches et Réunions (EQ17) : sans la case, ACCUEIL J1
+// n'atteint même plus Évènements ; seul le référent (responsable) a l'entrée à vérifier ici.
+test("sans la case, un membre de TEAM ACCUEIL J1 n'a pas Évènements : ses adresses le ramènent à Tâches (EQ17)", async ({ page }) => {
+  await ouvrir(page, NINA, "/moi", { "evenements/foot": FOOT });
+  await page.goto("/back-office/evenements/scene/noel");
+  await page.waitForURL(/\/back-office\/taches(\/[\w-]+)?\/?$/);
+  await page.goto("/back-office/evenements/foot");
+  await page.waitForURL(/\/back-office\/taches(\/[\w-]+)?\/?$/);
+  await expect(page.getByRole("link", { name: "Modifier" })).toHaveCount(0);
+});
+
+for (const [qui, profil] of [["un référent de TEAM ÉVÉNEMENTIEL", HUGO]] as const) {
   test(`sans la case, ${qui} n'a ni Pâques ni Noël, ni « Toute l'église », ni « Modifier » sur l'évènement d'un autre`, async ({ page }) => {
     await ouvrir(page, profil, "/back-office/evenements/scene/noel", { "evenements/foot": FOOT });
     await expect(page.getByText("Réservé à la coordination.")).toBeVisible();

@@ -2066,7 +2066,6 @@
     "libelleDate": "日期",
     "libelleHeure": "时间",
     "libelleLieu": "地点",
-    "pourPole": "{{pole}}部门",
     "noneHint": "点「新建活动」添加下一个活动。",
     "bientot": "即将开放",
     "reglageInscriptions": "报名",
@@ -2614,6 +2613,9 @@
       "louange": "敬拜组",
       "edd": "主日学"
     },
+    "public": {
+      "louange": "敬拜"
+    },
     "index": "团队索引",
     "precedentes": "上一组团队",
     "suivantes": "下一组团队",
@@ -2865,14 +2867,13 @@
       "apres": "活动请在这里创建；系统不再读取活动表（Sheet）。"
     },
     "aVenir": "即将举行",
-    "reunionDePole": "部门会议 · {{pole}}",
     "reunionDEquipe": "团队会议 · {{equipe}}",
     "organiseePar": "组织者：{{nom}}",
     "dupliquerProchaine": "复制为下一次",
     "passees": "已结束",
     "gestion": {
       "sousTitreEvenements": "会众看到的活动，以及它们的管理",
-      "sousTitreReunions": "你所在事工组和团队的会议",
+      "sousTitreReunions": "你所在团队的会议",
       "voirCommeMembre": "以成员身份查看",
       "contact": "联系人：{{nom}}",
       "exporter": "导出",

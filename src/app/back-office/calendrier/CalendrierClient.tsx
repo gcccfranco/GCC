@@ -225,11 +225,12 @@ export function CalendrierClient() {
   const demanderDate = (e: EntreeCalendrier) => deplacer(e, null);
 
   // Créer (Q4) : chaque bouton seulement pour qui a le droit — un évènement si un public lui est
-  // ouvert (un membre de pôle y crée une réunion), une tâche parmi ses pôles (tous pour un admin).
+  // ouvert (un référent crée pour son équipe, décision 43, EQ21), une réunion pour une équipe dont
+  // on est référent, une tâche parmi ses pôles (tous pour un admin).
   const pours = creatableEvenementPours(user, profile, ANNONCE_SECTIONS);
   const mesPoles: TachePole[] = !user ? [] : isAdminUser(user) ? [...TACHE_POLES] : polesDe(profile);
   const droits: DroitsCreation = {
-    evenement: pours.some((p) => !publicDeReunion(p)),
+    evenement: pours.length > 0,
     reunion: pours.some(publicDeReunion),
     tache: mesPoles.length > 0,
   };

@@ -3,10 +3,12 @@
 // Garde de l'espace Back-Office (lot U6, B1) : « Réservé aux responsables » pour les autres,
 // comme l'ancienne page d'administration. Affichage seulement : chaque sous-partie garde
 // sa règle dans firestore.rules.
-// Retouches v18, lot G (G3, D29) : un membre d'équipe sans autre rôle entre, pour la seule
-// entrée Réunions (et « Plus », la page de la barre du bas) ; toute autre adresse y ramène.
-// G2 : un connecté sans l'entrée Réunions (un choriste, du pôle Louange par son rôle de service)
-// qui suit le lien d'une réunion (cloche, notification, rappel) est mené à sa fiche de l'App.
+// Retouches v18, lot G (G3, D29) ; lot 1 du chantier « équipes et groupes » (EQ17, décisions 4
+// et 5) : qui n'est pas responsable mais a une équipe (membre d'une équipe, ou public Louange par
+// un rôle de service) entre, pour Tâches et Réunions (et « Plus », la page de la barre du bas) ;
+// toute autre adresse le ramène à sa première entrée.
+// G2 : un connecté sans l'entrée Réunions qui suit le lien d'une réunion (cloche, notification,
+// rappel) est mené à sa fiche de l'App.
 import { useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -21,9 +23,10 @@ export function EspaceBackOffice({ children }: { children: React.ReactNode }) {
   const pathname = usePathname() || "/back-office";
   const { user, profile, loading } = useProfile();
   const entrees = entreesBackOffice(user, profile);
-  const horsReunions = !loading && entrees.length > 0 && !estResponsable(user, profile)
-    && !/^\/back-office\/(reunions|plus)(\/|$)/.test(pathname);
-  useEffect(() => { if (horsReunions) router.replace("/back-office/reunions"); }, [horsReunions, router]);
+  const premiere = entrees[0];
+  const horsDesSiennes = !loading && entrees.length > 0 && !estResponsable(user, profile)
+    && !/^\/back-office\/(taches|reunions|plus)(\/|$)/.test(pathname);
+  useEffect(() => { if (horsDesSiennes) router.replace(`/back-office/${premiere}`); }, [horsDesSiennes, premiere, router]);
   const reunionId = !loading && user && !entrees.includes("reunions")
     ? /^\/back-office\/reunions\/([\w-]+)\/?$/.exec(pathname)?.[1] : undefined;
   const versApp = reunionId && reunionId !== "nouvelle" ? `/evenements/${reunionId}` : null;
@@ -53,7 +56,7 @@ export function EspaceBackOffice({ children }: { children: React.ReactNode }) {
       </div>
     );
   }
-  if (horsReunions) return null;
+  if (horsDesSiennes) return null;
   // `relative` : le contenu se peint au-dessus du halo fixe (globals.css, `.halo`) ; sans lui, le
   // bleu gris du Back-Office (agencement v18, R12) voilait le titre et les premières cartes.
   return <div className="relative">{children}</div>;

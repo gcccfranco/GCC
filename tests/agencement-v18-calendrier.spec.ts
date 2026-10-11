@@ -21,7 +21,7 @@ const PLANNINGS: FakeProfile = { uid: "u-pl", email: "pl@example.org", firstName
 const MAINTENANT = "2026-09-01T10:00:00Z";
 const DOCS: Record<string, Record<string, unknown>> = {
   "evenements/reu-da": {
-    titre: "Réunion DA", type: "reunion", pour: "pole:da", date: "2026-10-03", heure: "20:00", lieu: "Salle 2",
+    titre: "Réunion DA", type: "reunion", pour: "equipe:da", date: "2026-10-03", heure: "20:00", lieu: "Salle 2",
     organisateurUid: "u-autre", organisateurNom: "Autre", inscrits: 0, createdAt: MAINTENANT, updatedAt: MAINTENANT,
   },
   "evenements/ping": {

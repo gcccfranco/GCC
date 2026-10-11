@@ -16,7 +16,7 @@ const ADMIN: FakeProfile = {
   lastName: "C.",
   planningName: "Timothée",
   serviceRoles: { "Culte Francophone": ["musicien"] },
-  poles: ["da", "media", "orga", "evenement"],
+  poles: ["da", "media", "orga", "evenement"], dansEquipes: ["da", "medias", "orga", "evenementiel"], referentDe: ["da", "medias", "orga", "evenementiel"],
 };
 const barreDuBas = (page: Page) => page.getByRole("navigation", { name: "Navigation principale" });
 const phone = { viewport: { width: 390, height: 664 }, isMobile: true, hasTouch: true, deviceScaleFactor: 2 };

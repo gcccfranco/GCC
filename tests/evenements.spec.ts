@@ -137,7 +137,7 @@ test("onglets : un connecté voit le programme de scène à côté du calendrier
 
 // ─── Tranche E2 : créer, modifier, dupliquer, supprimer, push à la création ──
 
-const ALICE: FakeProfile = { uid: "uid-alice", email: "alice@example.com", firstName: "Alice", lastName: "Q.", poles: ["evenement"], coordination: true };
+const ALICE: FakeProfile = { uid: "uid-alice", email: "alice@example.com", firstName: "Alice", lastName: "Q.", poles: ["evenement"], dansEquipes: ["evenementiel"], referentDe: ["evenementiel"], coordination: true };
 // Lot U6, B3 : la gestion d'un évènement est au Back-Office, ouvert aux responsables ; Steph
 // organise avec le droit d'annonces de sa section.
 const STEPH: FakeProfile = { uid: "uid-steph", email: "steph@example.com", firstName: "Steph", lastName: "R.", annonces: ["Groupe Bonté"] };
@@ -189,8 +189,9 @@ test("créer : un responsable avec le droit d'annonces ne crée que pour sa sect
   let pushed = false;
   await page.route("**/api/push/notify-evenement", (route) => { pushed = true; return route.fulfill({ json: { ok: true } }); });
   await page.getByRole("link", { name: "Nouvel évènement" }).click();
-  // Sa section, puis la réunion du pôle Louange (lot 7 : un rôle de service = pôle Louange).
-  await expect(page.getByLabel("Public").locator("option")).toHaveText(["Groupe Paix", "Pôle Louange"]);
+  // Sa section seule : un rôle de service le met dans le public Louange, mais seuls les référents de
+  // TEAM LOUANGE créent pour lui (lot 1 du chantier « équipes et groupes », décision 5).
+  await expect(page.getByLabel("Public").locator("option")).toHaveText(["Groupe Paix"]);
   await expect(page.getByLabel("Public")).toHaveValue("Groupe Paix");
   await page.getByLabel("Nom de l'évènement").fill("Prière du groupe");
   await page.getByLabel("Date", { exact: true }).fill("2026-10-20");
@@ -831,9 +832,9 @@ test("calendrier : une info épinglée et un évènement passé restent sur une 
   await expect(page.getByRole("link", { name: /Pique-nique de rentrée/ }).getByTestId("banniere")).toHaveCount(0);
 });
 
-test("calendrier : une réunion de pôle n'y est pas, même pour un membre du pôle (retouches v18, lot G)", async ({ page }) => {
-  const reunion = { ...FOOT, titre: "Réunion DA", pour: "pole:da", placesMax: null, inscriptionOuverte: false, inscrits: 0 };
-  await member(page, { ...JO, poles: ["da"] }, "/evenements", { ...DOCS, "evenements/reunion": reunion });
+test("calendrier : une réunion d'équipe n'y est pas, même pour un membre de l'équipe (retouches v18, lot G)", async ({ page }) => {
+  const reunion = { ...FOOT, titre: "Réunion DA", pour: "equipe:da", placesMax: null, inscriptionOuverte: false, inscrits: 0 };
+  await member(page, { ...JO, poles: ["da"], dansEquipes: ["da"], referentDe: ["da"] }, "/evenements", { ...DOCS, "evenements/reunion": reunion });
   await expect(page.getByRole("link", { name: /Foot/ }).first()).toBeVisible();
   await expect(page.getByText("Réunion DA")).toHaveCount(0);
 });
@@ -922,7 +923,7 @@ test("période P4 : les inscriptions qui s'ouvrent aujourd'hui, en automatique s
   expect(ouvertureDuJour({ ...e, inscriptions: "ouvertes" as const }, "2026-10-05")).toBe(false);
   expect(ouvertureDuJour({ ...e, inscriptions: "fermees" as const }, "2026-10-05")).toBe(false);
   expect(ouvertureDuJour({ ...e, inscriptionDebut: "" }, "2026-10-05")).toBe(false);
-  expect(ouvertureDuJour({ ...e, pour: "pole:da" as const }, "2026-10-05")).toBe(false);
+  expect(ouvertureDuJour({ ...e, pour: "equipe:da" as const }, "2026-10-05")).toBe(false);
   expect(ouvertureDuJour({ ...e, date: "2026-10-01" }, "2026-10-05"), "évènement déjà passé").toBe(false);
 });
 

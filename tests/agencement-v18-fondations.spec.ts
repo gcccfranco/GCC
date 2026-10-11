@@ -14,7 +14,7 @@ import {
 
 const ADMIN: FakeProfile = {
   uid: "uid-admin", email: ADMIN_EMAIL, firstName: "Alix", lastName: "D.", planningName: "Alix D.",
-  poles: ["da"], plannings: ["culte"],
+  poles: ["da"], dansEquipes: ["da"], referentDe: ["da"], plannings: ["culte"],
 };
 
 const tache = (titre: string, echeance: string) => ({

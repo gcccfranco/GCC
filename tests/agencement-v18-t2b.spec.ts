@@ -12,9 +12,9 @@ import {
 // Personnes fictives.
 
 /** Pôle Événement et la coordination (cochée : gère tous les évènements, a la scène). */
-const COORD: FakeProfile = { uid: "uid-alice", email: "alice@example.com", firstName: "Alice", lastName: "Q.", poles: ["evenement"], coordination: true };
-/** Pôle DA, sans droit d'annonces : n'a que Réunions. */
-const DA: FakeProfile = { uid: "uid-bruno", email: "bruno@example.com", firstName: "Bruno", lastName: "M.", poles: ["da"] };
+const COORD: FakeProfile = { uid: "uid-alice", email: "alice@example.com", firstName: "Alice", lastName: "Q.", poles: ["evenement"], dansEquipes: ["evenementiel"], referentDe: ["evenementiel"], coordination: true };
+/** Référent de TEAM DA (lot 1 du chantier « équipes et groupes » ; son pôle sert encore aux tâches jusqu'à EQ-C). */
+const DA: FakeProfile = { uid: "uid-bruno", email: "bruno@example.com", firstName: "Bruno", lastName: "M.", poles: ["da"], dansEquipes: ["da"], referentDe: ["da"] };
 
 const EV = {
   titre: "", type: "loisir", pour: "eglise", date: "2026-10-17", heure: "14:00", heureFin: "16:00", dateFin: "",
@@ -22,7 +22,7 @@ const EV = {
   sansCompte: false, contact: "Alice Q.", organisateurUid: "uid-alice", organisateurNom: "Alice Q.", epingle: false, expiresAt: null,
   inscrits: 0, createdAt: "2026-09-20T10:00:00Z", updatedAt: "2026-09-20T10:00:00Z",
 };
-const REU = { ...EV, type: "eglise", pour: "pole:da", placesMax: null, inscriptions: "fermees", inscriptionOuverte: false, lieu: "Salle 2", heure: "20:00", heureFin: "", contact: "", organisateurUid: "uid-bruno", organisateurNom: "Bruno M." };
+const REU = { ...EV, type: "eglise", pour: "equipe:da", placesMax: null, inscriptions: "fermees", inscriptionOuverte: false, lieu: "Salle 2", heure: "20:00", heureFin: "", contact: "", organisateurUid: "uid-bruno", organisateurNom: "Bruno M." };
 const DOCS: Record<string, Record<string, unknown>> = {
   "evenements/foot": { ...EV, titre: "Foot au parc", date: "2026-10-10", lieu: "Parc de Bercy", inscrits: 3 },
   "evenements/foot/inscriptions/uid-noe": { uid: "uid-noe", nom: "Noé T.", invites: 1, createdAt: "2026-10-02T10:00:00Z" },
@@ -240,7 +240,7 @@ test.describe("T2b : Back-Office › Réunions", () => {
   test("l'agencement commun : en-tête « Réunions », sous-titre, sans rail", async ({ page }) => {
     await ouvrir(page, DA, "/back-office/reunions");
     await expect(enTete(page).getByRole("heading", { level: 1, name: "Réunions" })).toBeVisible();
-    await expect(enTete(page)).toContainText("Les réunions de tes pôles et de tes équipes");
+    await expect(enTete(page)).toContainText("Les réunions de tes équipes");
     await expect(ongletsRail(page)).toHaveCount(0);
     await expect(enTete(page).getByRole("link", { name: "Nouvelle réunion" })).toHaveAttribute("href", /^\/back-office\/reunions\/nouvelle\/?$/);
     await verifierAgencement(page, { contenu: contenu(page), onglets: { rail: 0, pilules: 0 } });
@@ -261,7 +261,7 @@ test.describe("T2b : Back-Office › Réunions", () => {
     await expect(titreFiche(page, "Réunion DA")).toBeVisible();
     await expect(liste(page).locator('[aria-current="page"]')).toHaveAttribute("href", /^\/back-office\/reunions\/reu-da\/?$/);
     const fiche = volet(page);
-    await expect(fiche.getByText("Réunion de pôle · DA")).toBeVisible();
+    await expect(fiche.getByText("Réunion d'équipe · DA")).toBeVisible();
     await expect(fiche.getByRole("link", { name: "Dupliquer pour la prochaine" })).toHaveAttribute("href", /^\/back-office\/reunions\/nouvelle\/?\?from=reu-da$/);
     await expect(fiche.getByRole("link", { name: "Modifier" })).toHaveAttribute("href", /^\/back-office\/reunions\/reu-da\/modifier\/?$/);
     await expect(fiche.getByTestId("sujets-carte")).toBeVisible();

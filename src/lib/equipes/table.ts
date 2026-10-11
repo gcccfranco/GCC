@@ -17,6 +17,14 @@ export interface EquipeDef {
   sousColonnes?: boolean;
 }
 
+/** Clé de langue du nom d'une équipe (lot 1 du chantier « équipes et groupes », EQ23) : le nom
+ *  long (`equipes.team.<id>`, « TEAM DA ») ou court (`equipes.court.<id>`, « DA ») ; pour
+ *  « louange », le public élargi `equipes.public.louange` (« Louange », 敬拜, EQ4), jamais
+ *  « TEAM LOUANGE » : il est plus large que l'équipe. */
+export function cleNomEquipe(id: string, court = false): string {
+  return id === "louange" ? "equipes.public.louange" : `equipes.${court ? "court" : "team"}.${id}`;
+}
+
 /** Les 13 équipes, dans l'ordre du Sheet. Une équipe hors de cette table n'est
  *  jamais créée : elle ressort dans `inconnues` (D8). */
 export const EQUIPES: EquipeDef[] = [

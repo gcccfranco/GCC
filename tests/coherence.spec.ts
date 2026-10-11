@@ -16,14 +16,14 @@ const lire = (rel: string) => readFileSync(path.join(ROOT, rel), "utf8");
 
 const ADMIN: FakeProfile = {
   uid: "admin1", email: "tc328829@gmail.com", firstName: "Timothée", lastName: "C.",
-  planningName: "Timothée C.", poles: ["da"], equipes: true, plannings: ["culte"], coordination: true,
+  planningName: "Timothée C.", poles: ["da"], dansEquipes: ["da"], referentDe: ["da"], equipes: true, plannings: ["culte"], coordination: true,
 };
-const MEMBRE_DA: FakeProfile = { uid: "uid-da", email: "da@example.com", firstName: "Denis", lastName: "F.", poles: ["da"] };
+const MEMBRE_DA: FakeProfile = { uid: "uid-da", email: "da@example.com", firstName: "Denis", lastName: "F.", poles: ["da"], dansEquipes: ["da"], referentDe: ["da"] };
 const MEMBRE: FakeProfile = { uid: "uid-jo", email: "jo@example.com", firstName: "Jo", lastName: "L.", serviceRoles: { "Groupe Paix": ["chanteur"] } };
 
-/** Réunion du pôle DA créée par Alice : un évènement `pour: "pole:da"` (lot 7). */
+/** Réunion du pôle DA créée par Alice : un évènement `pour: "equipe:da"` (lot 7). */
 const REUNION_DA = {
-  titre: "Réunion DA", type: "info", pour: "pole:da", date: "2026-10-03", heure: "20:00", heureFin: "", dateFin: "",
+  titre: "Réunion DA", type: "info", pour: "equipe:da", date: "2026-10-03", heure: "20:00", heureFin: "", dateFin: "",
   lieu: "Salle 2", description: "", liens: [], images: [], placesMax: null, inscriptions: "fermees",
   inscriptionDebut: "", inscriptionFin: "", sansCompte: false, lienExterne: "", contact: "",
   organisateurUid: "uid-alice", organisateurNom: "Alice", epingle: false, expiresAt: "", inscrits: 0,

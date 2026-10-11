@@ -95,7 +95,8 @@ test.describe("widget Calendrier (pur)", () => {
     const admin = { uid: "u-admin", email: ADMIN_EMAILS[0] };
     expect(widgetsPermis(admin, null)).toContain("calendrier");
     const da = { uid: "u-da", email: "da@example.org" };
-    const profilDa = { uid: "u-da", email: "da@example.org", poles: ["da"], serviceRoles: {}, annonces: [], notify: [] } as unknown as UserProfile;
+    // Référent de TEAM DA (lot 1 du chantier « équipes et groupes » : un pôle ne fait plus un responsable).
+    const profilDa = { uid: "u-da", email: "da@example.org", dansEquipes: ["da"], referentDe: ["da"], serviceRoles: {}, annonces: [], notify: [] } as unknown as UserProfile;
     expect(widgetsPermis(da, profilDa)).toContain("calendrier");
     expect(dispositionParDefaut(admin, null).find((w) => w.id === "calendrier")).toEqual({ id: "calendrier", taille: "m", reglages: {} });
   });
@@ -159,12 +160,12 @@ const CULTE = csv([
 
 const P_ADMIN: FakeProfile = { uid: "u-admin", email: ADMIN_EMAILS[0], firstName: "Admin", lastName: "T.", planningName: "Lou M." };
 /** Pôle Événement : son tableau de bord d'office a « Prochains évènements ». */
-const P_EVENEMENT: FakeProfile = { uid: "u-evt", email: "evt@example.org", firstName: "Alix", lastName: "P.", poles: ["evenement"], coordination: true };
+const P_EVENEMENT: FakeProfile = { uid: "u-evt", email: "evt@example.org", firstName: "Alix", lastName: "P.", poles: ["evenement"], dansEquipes: ["evenementiel"], referentDe: ["evenementiel"], coordination: true };
 
 const MAINTENANT = "2026-09-01T10:00:00Z";
 const DOCS: Record<string, Record<string, unknown>> = {
   "evenements/reu-da": {
-    titre: "Réunion DA", type: "reunion", pour: "pole:da", date: "2026-10-03", heure: "20:00", lieu: "Salle 2",
+    titre: "Réunion DA", type: "reunion", pour: "equipe:da", date: "2026-10-03", heure: "20:00", lieu: "Salle 2",
     organisateurUid: "u-autre", organisateurNom: "Autre", inscrits: 0, createdAt: MAINTENANT, updatedAt: MAINTENANT,
   },
   "evenements/ping": {

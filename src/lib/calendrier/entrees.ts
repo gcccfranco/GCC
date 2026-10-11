@@ -11,6 +11,7 @@ import {
   canSeeEvenement,
   canSeeSetlist,
   equipeDuPour,
+  equipesDe,
   estReunion,
   isAdminUser,
   isPoleMember,
@@ -199,13 +200,13 @@ export function peutDeplacer(
 }
 
 /** Pastilles à montrer (Q2), dans l'ordre de la planche : une source n'apparaît que si
- *  la personne a quelque chose à y voir — Tâches : un pôle ; Réunions : un pôle ou une
- *  équipe ; un admin toujours. */
+ *  la personne a quelque chose à y voir — Tâches : un pôle ; Réunions : une équipe (Louange
+ *  élargi, EQ14) ; un admin toujours. */
 export function sourcesPermises(user: Utilisateur | null, profile: ProfilCalendrier | null): SourceCalendrier[] {
   const admin = isAdminUser(user);
   const poles = polesDe(profile).length > 0;
-  const equipes = (profile?.dansEquipes ?? []).length > 0;
-  return ORDRE_PASTILLES.filter((s) => (s === "taches" ? admin || poles : s === "reunions" ? admin || poles || equipes : true));
+  const equipes = equipesDe(profile).length > 0;
+  return ORDRE_PASTILLES.filter((s) => (s === "taches" ? admin || poles : s === "reunions" ? admin || equipes : true));
 }
 
 /** Pastilles allumées et « Seulement moi ». */
@@ -345,8 +346,8 @@ function sheet(d: DonneesCalendrier, debut: string, fin: string): EntreeCalendri
 
 function evenements(d: DonneesCalendrier, c: ContexteCalendrier, debut: string, fin: string): EntreeCalendrier[] {
   const m = MOTS[c.lang];
-  const mesPoles = polesDe(c.profile) as string[];
-  const mesEquipes = c.profile?.dansEquipes ?? [];
+  // Ses équipes, Louange élargi (EQ14) : « à moi » pour une réunion, et visibilité.
+  const mesEquipes = equipesDe(c.profile);
   const out: EntreeCalendrier[] = [];
   for (const e of d.evenements) {
     if (!ISO.test(e.date)) continue; // une info sans date n'est pas au calendrier ; une date mal formée non plus
@@ -357,7 +358,7 @@ function evenements(d: DonneesCalendrier, c: ContexteCalendrier, debut: string, 
     const source = reunion ? "reunions" : "evenements";
     const moi =
       e.organisateurUid === c.user.uid ||
-      (reunion ? mesPoles.includes(e.pour.slice(5)) || (equipe !== null && mesEquipes.includes(equipe)) : d.mesInscriptions.includes(e.id));
+      (reunion ? equipe !== null && mesEquipes.includes(equipe) : d.mesInscriptions.includes(e.id));
     const inscrits = !e.lienExterne && e.inscrits > 0 ? m.inscrits(e.inscrits, e.placesMax) : "";
     const detail = joindre([plage(e.heure, e.heureFin), e.lieu, inscrits]);
     const deplacable = peutDeplacer(c.user, c.profile, { source, evenement: e }, c.today);

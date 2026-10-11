@@ -29,15 +29,15 @@ import type { UserProfile } from "../src/types/user";
 
 const ADMIN: FakeProfile = { uid: "uid-admin", email: "tc328829@gmail.com", firstName: "Admin", lastName: "T." };
 /** Pôle Événement (Réussite 2). */
-const ALICE: FakeProfile = { uid: "uid-alice", email: "alice@example.com", firstName: "Alice", lastName: "Q.", poles: ["evenement"], coordination: true };
+const ALICE: FakeProfile = { uid: "uid-alice", email: "alice@example.com", firstName: "Alice", lastName: "Q.", poles: ["evenement"], dansEquipes: ["evenementiel"], referentDe: ["evenementiel"], coordination: true };
 /** Louange : un rôle de service et le droit de remplir le Culte. */
 const LOUANGE: FakeProfile = {
   uid: "uid-louange", email: "louange@example.com", firstName: "Lou", lastName: "P.", planningName: "Pers. D",
   serviceRoles: { "Culte Francophone": ["musicien"] }, plannings: ["culte"],
 };
-const DA: FakeProfile = { uid: "uid-da", email: "da@example.com", firstName: "Bruno", lastName: "M.", poles: ["da"] };
+const DA: FakeProfile = { uid: "uid-da", email: "da@example.com", firstName: "Bruno", lastName: "M.", poles: ["da"], dansEquipes: ["da"], referentDe: ["da"] };
 const LES_DEUX: FakeProfile = {
-  uid: "uid-deux", email: "deux@example.com", poles: ["evenement"], coordination: true,
+  uid: "uid-deux", email: "deux@example.com", poles: ["evenement"], dansEquipes: ["evenementiel"], referentDe: ["evenementiel"], coordination: true,
   serviceRoles: { "Culte Francophone": ["musicien"] }, plannings: ["culte"],
 };
 const ANNONCES: FakeProfile = { uid: "uid-an", email: "an@example.com", annonces: ["Culte Francophone"] };
@@ -80,7 +80,7 @@ const DOCS: Record<string, Record<string, unknown>> = {
   "evenements/e4": { titre: "Pique-nique", type: "loisir", pour: "eglise", date: "2026-11-21", heure: "", placesMax: null, inscrits: 0, inscriptions: "ouvertes" },
   "evenements/e5": { titre: "Culte de fête", type: "eglise", pour: "eglise", date: "2026-12-24", heure: "18:00", placesMax: null, inscrits: 0, inscriptions: "fermees" },
   "evenements/e6": { titre: "Brocante passée", type: "loisir", pour: "eglise", date: "2026-09-20", heure: "", placesMax: null, inscrits: 0, inscriptions: "ouvertes" },
-  "evenements/e7": { titre: "Réunion du pôle", type: "eglise", pour: "pole:evenement", date: "2026-10-03", heure: "20:00", placesMax: null, inscrits: 0 },
+  "evenements/e7": { titre: "Réunion du pôle", type: "eglise", pour: "equipe:evenementiel", date: "2026-10-03", heure: "20:00", placesMax: null, inscrits: 0 },
   // Scène : le programme affiché et deux créneaux à venir, un passé.
   "programmes/p1": { nom: "Noël", jourJ: "2026-12-20", debut: "2026-09-27", visible: true, passages: [], createdBy: "uid-alice", updatedAt: "" },
   "programmes/p1/creneaux/c0": { dimanche: "2026-09-27", debut: "15:00", fin: "16:00", quoi: "Danse", qui: ["Gp Paix"], note: "" },
@@ -301,7 +301,7 @@ test.describe("Tableau de bord (B4) : données des widgets, règles pures", () =
 
   test("prochains évènements : visibles, à venir, sans réunions, bornés, section choisie", () => {
     const e = (id: string, date: string, pour = "eglise") => ({ id, titre: id, type: "loisir", pour, date, heure: "", dateFin: "", expiresAt: null, organisateurUid: "x" }) as Evenement;
-    const tous = [e("passe", "2026-09-20"), e("b", "2026-10-17"), e("a", "2026-10-10"), e("reunion", "2026-10-03", "pole:evenement"),
+    const tous = [e("passe", "2026-09-20"), e("b", "2026-10-17"), e("a", "2026-10-10"), e("reunion", "2026-10-03", "equipe:evenementiel"),
       e("section", "2026-10-12", "Culte Francophone"), e("c", "2026-11-07"), e("d", "2026-11-21")];
     expect(evenementsAVenir(tous, user(ALICE), profil(ALICE), "2026-10-01", {}).map((x) => x.id)).toEqual(["a", "section", "b"]);
     expect(evenementsAVenir(tous, user(DA), profil(DA), "2026-10-01", { nombre: 5 }).map((x) => x.id)).toEqual(["a", "b", "c", "d"]);
