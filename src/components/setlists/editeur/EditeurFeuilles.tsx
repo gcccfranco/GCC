@@ -35,7 +35,7 @@ export function EditeurFeuilles({
   const { t } = useTranslation();
   const [ouverte, setOuverte] = useState(false);
   const feuille = useMemo(() => ({ fermer: () => setOuverte(false) }), []);
-  const v = useVolet({ items, setItems, songs, actions, feuille });
+  const v = useVolet({ items, setItems, songs, actions, feuille, equipe: champs.equipe });
   useStandaloneScrollLock(ouverte);
 
   const ouvrir = (uid: string) => {
@@ -43,17 +43,20 @@ export function EditeurFeuilles({
     setOuverte(true);
   };
   const bibliotheque = v.vue.nom === "bibliotheque";
+  const vueEquipe = v.vue.nom === "equipe";
 
   return (
     <div data-editeur-feuilles className="min-h-screen bg-background">
       <div className="mx-auto max-w-3xl px-4 pb-44 pt-4 sm:px-7">
-        <EnTeteEditeur champs={champs} retour={{ onClick: isEdit ? onTerminer : undefined }} />
+        <EnTeteEditeur
+          champs={{ ...champs, ouvrirEquipe: () => { v.ouvrirEquipe(); setOuverte(true); } }}
+          retour={{ onClick: isEdit ? onTerminer : undefined }} />
         <div className="mt-4 border-t border-border pt-3">
           {items.length > 0 ? (
             <ListeCourte
               items={items}
               // La ligne en encre tant que sa feuille est ouverte.
-              choisi={ouverte && !bibliotheque ? v.choisi : null}
+              choisi={ouverte && !bibliotheque && !vueEquipe ? v.choisi : null}
               onChoisir={ouvrir}
               onDragEnd={actions.onDragEnd}
             />
@@ -106,7 +109,9 @@ export function EditeurFeuilles({
           onCloseAutoFocus={(e) => {
             // Le focus revient à ce qui a ouvert la feuille : la ligne de l'élément, ou
             // « Ajouter des chants » (un toucher ne donne pas toujours le focus au bouton).
-            const cible = bibliotheque
+            const cible = vueEquipe
+              ? document.querySelector<HTMLElement>("[data-puce-equipe]")
+              : bibliotheque
               ? document.querySelector<HTMLElement>("[data-barre-editeur] [data-ouvrir-bibliotheque]")
               : document.querySelector<HTMLElement>(`[data-liste-courte] [data-uid="${CSS.escape(v.choisi ?? "")}"] [data-ligne]`);
             if (!cible) return;

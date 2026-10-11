@@ -78,7 +78,7 @@ export function EditeurDeuxColonnes({
   onTerminer,
 }: ProprietesEditeur) {
   const { t } = useTranslation();
-  const v = useVolet({ items, setItems, songs, actions, feuille: null });
+  const v = useVolet({ items, setItems, songs, actions, feuille: null, equipe: champs.equipe });
   // « + » entre deux éléments : ordinateur seulement, pas la tablette couchée (spec).
   const ordinateur = useEditeurOrdinateur();
   const voletRef = useRef<HTMLElement>(null);
@@ -105,12 +105,12 @@ export function EditeurDeuxColonnes({
       <section data-colonne-setlist aria-label={t("common.header.setlists")} className="flex min-h-0 flex-col border-r border-border">
         <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pb-8 pt-6">
           <div className="px-1">
-            <EnTeteEditeur champs={champs} />
+            <EnTeteEditeur champs={{ ...champs, ouvrirEquipe: v.ouvrirEquipe }} />
           </div>
           <div className="mt-4 border-t border-border pt-3">
             <ListeCourte
               items={items}
-              choisi={v.vue.nom === "bibliotheque" ? null : v.choisi}
+              choisi={v.vue.nom === "bibliotheque" || v.vue.nom === "equipe" ? null : v.choisi}
               onChoisir={v.choisir}
               onDragEnd={actions.onDragEnd}
               insertion={ordinateur ? { active: v.insertionActive, onInserer: v.insererIci } : undefined}

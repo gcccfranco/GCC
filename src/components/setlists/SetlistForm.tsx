@@ -13,7 +13,9 @@ import {
   deleteSetlist,
 } from "@/lib/firebase/setlists";
 import { useProfile } from "@/lib/firebase/users";
-import { creatableCategories, isAdminUser } from "@/lib/access";
+import { creatableCategories, isAdminUser, canDeleteSetlist } from "@/lib/access";
+import type { FSSetlist } from "@/lib/firebase/setlists";
+import type { RolePartage } from "@/lib/setlist/partage";
 import { loadPlanningData, setlistSeances, normalizeName, type PlanningData, type SetlistSeance } from "@/lib/planning/names";
 import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
@@ -50,6 +52,9 @@ export interface SetlistFormInitial {
   notes: string;
   isPrivate: boolean;
   ownerId: string | null;
+  /** L'équipe de la setlist (docs/spec-partage-setlist.md). */
+  editeurs?: string[];
+  rolesPartage?: Record<string, RolePartage>;
   items: FormListItem[];
 }
 
@@ -114,6 +119,15 @@ export function SetlistForm({ mode, setlistId, songs, initial, prefill }: Setlis
   const [items, setItems] = useState<FormListItem[]>(initial?.items ?? []);
   const [moment, setMoment] = useState<"matin" | "soir" | undefined>(initial?.moment ?? prefill?.moment);
   const ownerId = initial?.ownerId ?? null;
+  // L'équipe (PS6) : ses champs ne partent que pour qui peut la changer, et un champ vide
+  // seulement s'il a déjà existé.
+  const [editeurs, setEditeurs] = useState<string[]>(initial?.editeurs ?? []);
+  const [rolesPartage, setRolesPartage] = useState<Record<string, RolePartage>>(initial?.rolesPartage ?? {});
+  const equipeEcriteRef = useRef(!!initial?.editeurs);
+  if (editeurs.length > 0) equipeEcriteRef.current = true;
+  const peutChangerEquipe = !isEdit || (!!user && (ownerId === user.uid || isAdminUser(user)));
+  const visibiliteLecture =
+    isEdit && !!user && !canDeleteSetlist(user, profile, { ownerId, isPrivate: initial?.isPrivate, category: initial?.category ?? "" } as FSSetlist);
 
   // ── Sélecteurs planning : présidence (liste) + date (manuelle) ───────────
   const [planning, setPlanning] = useState<PlanningData | null>(null);
@@ -262,6 +276,9 @@ export function SetlistForm({ mode, setlistId, songs, initial, prefill }: Setlis
     isPrivate,
     // Création : le créateur devient propriétaire. Modification : on conserve le propriétaire.
     ownerId: isEdit ? ownerId : (user?.uid ?? null),
+    ...(peutChangerEquipe && equipeEcriteRef.current
+      ? { editeurs, rolesPartage: Object.fromEntries(editeurs.map((u) => [u, rolesPartage[u] ?? "musicien"])) }
+      : {}),
   };
   const payloadJson = JSON.stringify(payload);
   const invalidReason = isEdit ? missingField() : "";
@@ -563,6 +580,20 @@ export function SetlistForm({ mode, setlistId, songs, initial, prefill }: Setlis
       onLeaderSelect,
       isPrivate,
       setIsPrivate,
+      visibiliteLecture,
+      equipe: {
+        editeurs,
+        roles: rolesPartage,
+        peutChanger: peutChangerEquipe,
+        categorie: category,
+        ownerId: isEdit ? ownerId : (user?.uid ?? null),
+        ajouter: (uid, role) => {
+          setEditeurs((prev) => (prev.includes(uid) ? prev : [...prev, uid]));
+          setRolesPartage((prev) => ({ ...prev, [uid]: role }));
+        },
+        retirer: (uid) => setEditeurs((prev) => prev.filter((u) => u !== uid)),
+        changerRole: (uid, role) => setRolesPartage((prev) => ({ ...prev, [uid]: role })),
+      },
       notes,
       setNotes,
       needsAuth,

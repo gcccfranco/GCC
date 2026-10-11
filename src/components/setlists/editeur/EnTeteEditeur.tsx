@@ -3,8 +3,9 @@
 import { useRef, type ReactNode } from "react";
 import Link from "next/link";
 import { useTranslation } from "react-i18next";
-import { AlertTriangle, CalendarDays, ChevronDown, ChevronLeft, Globe, Lock, Mic, Pencil } from "lucide-react";
+import { AlertTriangle, CalendarDays, ChevronDown, ChevronLeft, Globe, Lock, Mic, Pencil, Users } from "lucide-react";
 import { categoryColor } from "@/lib/serviceColors";
+import type { EtatEquipe } from "@/components/setlists/editeur/VoletEquipe";
 
 // En-tête compact de l'éditeur (lot U5 bis, T3, Q5) : le formulaire devient l'en-tête de la
 // colonne setlist — titre modifiable, puces Catégorie · Date (+ Matin / Soir au Campus) ·
@@ -31,6 +32,11 @@ export interface ChampsEnTete {
   onLeaderSelect: (v: string) => void;
   isPrivate: boolean;
   setIsPrivate: (v: boolean) => void;
+  /** Seuls le propriétaire et les admins changent la visibilité : pour l'équipe, en lecture. */
+  visibiliteLecture: boolean;
+  /** L'équipe de la setlist, et l'ouverture de sa vue (posée par l'éditeur qui tient le volet). */
+  equipe: EtatEquipe;
+  ouvrirEquipe?: () => void;
   notes: string;
   setNotes: (v: string) => void;
   /** Pas connecté : la catégorie demande une connexion. */
@@ -220,12 +226,26 @@ export function EnTeteEditeur({
             value={c.isPrivate ? "privee" : "partagee"}
             onChange={(e) => c.setIsPrivate(e.target.value === "privee")}
             aria-label={t("setlists.form.visibilityLabel")}
+            disabled={c.visibiliteLecture}
             className={selectDePuce}
           >
             <option value="partagee">{t("setlists.editeur.partagee")}</option>
             <option value="privee">{t("setlists.editeur.privee")}</option>
           </select>
         </Puce>
+
+        {c.ouvrirEquipe && (c.equipe.peutChanger || c.equipe.editeurs.length > 0) && (
+          <button
+            type="button"
+            data-puce-equipe
+            onClick={c.ouvrirEquipe}
+            className="inline-flex h-10 items-center gap-1.5 rounded-full border border-border bg-background px-3.5 text-sm font-semibold text-foreground hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+          >
+            <Users className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
+            {t("setlists.equipe.puce")}
+            {c.equipe.editeurs.length > 0 && ` · ${c.equipe.editeurs.length}`}
+          </button>
+        )}
       </div>
 
       {c.needsAuth && (
@@ -239,7 +259,7 @@ export function EnTeteEditeur({
       )}
       {c.isPrivate && (
         <p className={`text-xs ${c.connecte ? "text-muted-foreground" : "text-violet-700 dark:text-violet-400"}`}>
-          {c.connecte ? t("setlists.form.privateToggle") : !c.authLoading ? t("setlists.form.privateLoginRequired") : null}
+          {c.connecte ? t(c.equipe.editeurs.length > 0 ? "setlists.equipe.priveeAvecEquipe" : "setlists.form.privateToggle") : !c.authLoading ? t("setlists.form.privateLoginRequired") : null}
         </p>
       )}
 

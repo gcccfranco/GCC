@@ -42,6 +42,8 @@ export function EditSetlistClient() {
         notes: sl.notes,
         isPrivate: sl.isPrivate ?? false,
         ownerId: sl.ownerId ?? null,
+        editeurs: sl.editeurs,
+        rolesPartage: sl.rolesPartage,
         items: buildFormItems(sl.items, songsMap),
       });
     });

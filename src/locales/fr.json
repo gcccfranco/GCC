@@ -244,6 +244,9 @@
       "canEdit": "Vous pouvez modifier",
       "readOnly": "Lecture seule",
       "editableBy": "Modifiable par : créateur, musiciens et présidence de {{category}}, et admins",
+      "editableByOwnerEquipe": "Privée — visible et modifiable par son créateur et son équipe",
+      "editableByEquipe": "Modifiable par : créateur, son équipe, musiciens et présidence de {{category}}, et admins",
+      "sharePrivateEquipe": "Setlist privée — seule son équipe pourra l'ouvrir",
       "editableByOwner": "Privée — visible et modifiable uniquement par son créateur",
       "loadError": "Impossible de charger la setlist. Vérifie ta connexion.",
       "notifyTeam": "Prévenir l'équipe",
@@ -334,6 +337,23 @@
       "tonalites": "tonalités de la setlist",
       "equipe": "L'équipe de ce service",
       "dapres": "d'après le planning"
+    },
+    "equipe": {
+      "puce": "Équipe",
+      "titre": "L'équipe de cette setlist",
+      "aide": "Les personnes choisies voient et modifient la setlist, même privée, et sont prévenues quand elle est prête.",
+      "lectureSeule": "Seuls son créateur et les admins changent l'équipe.",
+      "ajouter": "Ajouter quelqu'un",
+      "recherche": "Chercher un nom…",
+      "duService": "Musiciens et choristes de {{categorie}}",
+      "tous": "Voir tous les comptes",
+      "dejaLa": "Dans l'équipe",
+      "retirer": "Retirer {{nom}}",
+      "choisie": "choisie dans la setlist",
+      "planningEtChoisie": "d'après le planning et la setlist",
+      "priveeAvecEquipe": "Privée : visible et modifiable par son créateur et son équipe",
+      "personne": "Personne pour l'instant.",
+      "aucunResultat": "Aucun compte trouvé."
     },
     "editeur": {
       "fil": "Fil d'Ariane",

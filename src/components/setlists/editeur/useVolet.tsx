@@ -14,6 +14,7 @@ import {
 import type { SongIndexEntry } from "@/types/song";
 import { numerosDesElements } from "@/components/setlists/editeur/ListeCourte";
 import { Bibliotheque } from "@/components/setlists/editeur/Bibliotheque";
+import { VoletEquipe, type EtatEquipe } from "@/components/setlists/editeur/VoletEquipe";
 import { ChoixFusion, VoletChant, VoletFusion, VoletTransition } from "@/components/setlists/editeur/Volets";
 
 // Ce que montre le volet de l'éditeur (lot U5 bis) : les réglages de l'élément
@@ -34,7 +35,7 @@ export interface ActionsEditeur {
   onDragEnd: (e: DragEndEvent) => void;
 }
 
-export type Vue = { nom: "reglages" } | { nom: "bibliotheque" } | { nom: "fusionner"; depart: string };
+export type Vue = { nom: "reglages" } | { nom: "bibliotheque" } | { nom: "equipe" } | { nom: "fusionner"; depart: string };
 
 export function useVolet({
   items,
@@ -42,6 +43,7 @@ export function useVolet({
   songs,
   actions,
   feuille,
+  equipe,
 }: {
   items: FormListItem[];
   setItems: (items: FormListItem[]) => void;
@@ -49,6 +51,8 @@ export function useVolet({
   actions: ActionsEditeur;
   /** Petits écrans : le volet est une feuille ; « Retirer » et « Terminé » la ferment. */
   feuille: { fermer: () => void } | null;
+  /** L'équipe de la setlist (docs/spec-partage-setlist.md) : la vue « Équipe » du volet. */
+  equipe: EtatEquipe;
 }) {
   const { t } = useTranslation();
   // Grand écran : le premier élément choisi à l'ouverture de « Modifier » (Q7), la
@@ -74,7 +78,7 @@ export function useVolet({
   const element = items.find((i) => i.uid === choisi) ?? null;
 
   /** Clé du contenu : le volet repart du haut quand elle change. */
-  const cle = vue.nom === "reglages" ? `r-${choisi}` : vue.nom === "fusionner" ? `f-${vue.depart}` : "b";
+  const cle = vue.nom === "reglages" ? `r-${choisi}` : vue.nom === "fusionner" ? `f-${vue.depart}` : vue.nom === "equipe" ? "e" : "b";
 
   /** « Ajouter des chants » : la bibliothèque, ajouts à la fin. */
   function ouvrirBibliotheque() {
@@ -88,6 +92,12 @@ export function useVolet({
     if (vue.nom !== "bibliotheque") setAjoutes(new Set());
     setInsertion(index);
     setVue({ nom: "bibliotheque" });
+  }
+
+  /** La puce « Équipe » : la vue de l'équipe de la setlist. */
+  function ouvrirEquipe() {
+    setInsertion(null);
+    setVue({ nom: "equipe" });
   }
 
   function choisir(uid: string) {
@@ -144,6 +154,7 @@ export function useVolet({
         />
       );
     }
+    if (vue.nom === "equipe") return <VoletEquipe equipe={equipe} />;
     if (vue.nom === "fusionner") {
       const depart = chantsSeuls.find((c) => c.uid === vue.depart);
       return depart ? (
@@ -198,5 +209,5 @@ export function useVolet({
   /** Point d'insertion montré dans la liste, tant que la bibliothèque est ouverte. */
   const insertionActive = vue.nom === "bibliotheque" ? insertion : null;
 
-  return { choisi, vue, setVue: changerVue, cle, choisir, ouvrirBibliotheque, insererIci, insertionActive, contenu };
+  return { choisi, vue, setVue: changerVue, cle, choisir, ouvrirBibliotheque, ouvrirEquipe, insererIci, insertionActive, contenu };
 }

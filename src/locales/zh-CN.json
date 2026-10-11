@@ -244,6 +244,9 @@
       "canEdit": "可编辑",
       "readOnly": "只读",
       "editableBy": "可编辑者：创建者、{{category}}的乐手／主领和管理员",
+      "editableByOwnerEquipe": "私人——仅创建者及其服事团队可见和编辑",
+      "editableByEquipe": "可编辑者：创建者、其服事团队、{{category}}的乐手／主领和管理员",
+      "sharePrivateEquipe": "私人歌单——只有其服事团队可以打开",
       "editableByOwner": "私人——仅创建者可见和编辑",
       "loadError": "无法加载歌单，请检查网络连接。",
       "notifyTeam": "通知团队",
@@ -334,6 +337,23 @@
       "tonalites": "本歌单的调性",
       "equipe": "本次服事团队",
       "dapres": "根据排班表"
+    },
+    "equipe": {
+      "puce": "服事团队",
+      "titre": "本歌单服事团队",
+      "aide": "选中的人可以查看和编辑此歌单（即使是私人歌单），歌单就绪时会收到通知。",
+      "lectureSeule": "只有创建者和管理员可以更改服事团队。",
+      "ajouter": "添加成员",
+      "recherche": "搜索姓名…",
+      "duService": "{{categorie}}的乐手与和声",
+      "tous": "查看所有账号",
+      "dejaLa": "已在服事团队中",
+      "retirer": "移除{{nom}}",
+      "choisie": "在歌单中选定",
+      "planningEtChoisie": "根据排班表与歌单",
+      "priveeAvecEquipe": "私人：仅创建者及其服事团队可查看和编辑",
+      "personne": "暂无成员。",
+      "aucunResultat": "未找到账号。"
     },
     "editeur": {
       "fil": "导航路径",
