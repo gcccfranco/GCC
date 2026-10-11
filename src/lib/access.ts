@@ -452,6 +452,7 @@ export function canSeeSetlist(
   setlist: FSSetlist
 ): boolean {
   if (setlist.ownerId === user.uid) return true;
+  if (setlist.editeurs?.includes(user.uid)) return true;
   if (setlist.isPrivate) return false;
   if (isAdminUser(user)) return true;
   return profile ? visibleCategories(profile).includes(setlist.category) : false;
@@ -482,6 +483,17 @@ export function canEditSetlist(
   profile: UserProfile | null,
   setlist: FSSetlist
 ): boolean {
+  return canDeleteSetlist(user, profile, setlist) || !!setlist.editeurs?.includes(user.uid);
+}
+
+/** Suppression : la logique d'avant le partage (propriétaire ; privée → non ; admin ; niveau
+ *  « edit »). L'équipe d'une setlist (`editeurs`) la modifie mais ne la supprime pas ni ne change
+ *  sa visibilité. Miroir serveur : `canDeleteSetlistDoc` dans firestore.rules (`allow delete`). */
+export function canDeleteSetlist(
+  user: AuthUser,
+  profile: UserProfile | null,
+  setlist: FSSetlist
+): boolean {
   if (setlist.ownerId === user.uid) return true;
   if (setlist.isPrivate) return false;
   if (isAdminUser(user)) return true;
@@ -489,11 +501,15 @@ export function canEditSetlist(
   return roles ? categoryLevel(setlist.category, roles) === "edit" : false;
 }
 
-/** Suppression : exactement le droit de modification, sous son vrai nom, pour
- *  que la liste (suppression groupée, lot 10) et la fiche ne puissent pas
- *  diverger. Aucun droit nouveau. Miroir serveur : `allow delete` sur
- *  setlists/{id} dans firestore.rules. */
-export const canDeleteSetlist = canEditSetlist;
+/** Choisir l'équipe de la setlist (`editeurs`, `rolesPartage`) : le propriétaire, ou un admin sur
+ *  une setlist qu'il peut modifier. Miroir : `allow update` de setlists/{id}. */
+export function canSetSetlistTeam(
+  user: AuthUser,
+  profile: UserProfile | null,
+  setlist: FSSetlist
+): boolean {
+  return canEditSetlist(user, profile, setlist) && (setlist.ownerId === user.uid || isAdminUser(user));
+}
 
 // ─── Back-Office (lot U6, docs/spec-back-office.md) ──────────────────────────
 // Affichage seulement : le sélecteur et le menu ne protègent aucune donnée,

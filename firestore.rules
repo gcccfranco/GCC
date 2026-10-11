@@ -8,6 +8,9 @@ rules_version = '2';
 //   création : le créateur doit se déclarer propriétaire (ownerId = uid, figé ensuite) ;
 //   modification/suppression réservées au créateur (ownerId), aux musiciens et à la
 //   présidence du même service, et aux admins.
+//   L'équipe d'une setlist (`editeurs`, choisie par son propriétaire ou un admin) la voit et la
+//   modifie, même privée ; elle ne la supprime pas et ne change ni `editeurs`, ni
+//   `rolesPartage`, ni `isPrivate`.
 //   Exception : le lien de présentation (presentationUrl) peut aussi être posé par
 //   la régie inscrite au planning ce jour-là — via /api/setlist/presentation
 //   (Firebase Admin, qui lit le planning), jamais par le client. Aucune règle ici.
@@ -331,9 +334,20 @@ service cloud.firestore {
           || isAdmin()
           || request.resource.data.category == resource.data.category
           || isEditorOf(request.resource.data.category)
+        )
+        // L'équipe : seuls le propriétaire et les admins la changent.
+        && (
+          resource.data.get('ownerId', '') == request.auth.uid
+          || isAdmin()
+          || !request.resource.data.diff(resource.data).affectedKeys().hasAny(['editeurs', 'rolesPartage'])
+        )
+        // La visibilité : pas l'équipe.
+        && (
+          canDeleteSetlistDoc(resource.data)
+          || !request.resource.data.diff(resource.data).affectedKeys().hasAny(['isPrivate'])
         );
-      // Suppression : exactement le droit de modification (lot 10).
-      allow delete: if signedIn() && canEditSetlistDoc(resource.data);
+      // Suppression : le droit de modification d'avant le partage — pas l'équipe.
+      allow delete: if signedIn() && canDeleteSetlistDoc(resource.data);
 
       // Historique des modifications (docs/spec-setlist.md) : lu par tout
       // connecté, comme la setlist ; écrit par qui peut la modifier
@@ -362,12 +376,19 @@ service cloud.firestore {
       }
     }
 
-    // Miroir de canEditSetlist (src/lib/access.ts) : une setlist privée ne se
-    // modifie que par son propriétaire.
-    function canEditSetlistDoc(setlist) {
+    // Miroir de canDeleteSetlist (src/lib/access.ts) : une setlist privée ne se
+    // supprime que par son propriétaire.
+    function canDeleteSetlistDoc(setlist) {
       return setlist.get('ownerId', '') == request.auth.uid
         || (!setlist.get('isPrivate', false)
             && (isAdmin() || (hasProfile() && isEditorOf(setlist.category))));
+    }
+
+    // Miroir de canEditSetlist (src/lib/access.ts) : une setlist privée ne se
+    // modifie que par son propriétaire et son équipe.
+    function canEditSetlistDoc(setlist) {
+      return canDeleteSetlistDoc(setlist)
+        || request.auth.uid in setlist.get('editeurs', []);
     }
 
     // Harmonie (lot 9, docs/spec-harmonie.md). Le catalogue lui-même est un

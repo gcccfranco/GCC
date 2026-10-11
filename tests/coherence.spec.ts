@@ -124,13 +124,16 @@ test("préférences : la bascule « Annonces » a disparu avec les annonces", ()
 
 // ─── I1 : une setlist privée ne se modifie ni ne se supprime en REST ───────
 
-test("règles : la modification et la suppression d'une setlist passent par canEditSetlistDoc", () => {
+test("règles : la modification d'une setlist passe par canEditSetlistDoc, la suppression par canDeleteSetlistDoc", () => {
   const rules = lire("firestore.rules");
   const bloc = rules.slice(rules.indexOf("match /setlists/{id}"), rules.indexOf("match /history/{entryId}"));
   const update = bloc.slice(bloc.indexOf("allow update"), bloc.indexOf("allow delete"));
   const del = bloc.slice(bloc.indexOf("allow delete"));
   expect(update).toContain("canEditSetlistDoc(resource.data)");
-  expect(del).toContain("canEditSetlistDoc(resource.data)");
+  expect(del).toContain("canDeleteSetlistDoc(resource.data)");
+  // Une privée ne se supprime pas en REST par un autre que son propriétaire.
+  const sup = rules.slice(rules.indexOf("function canDeleteSetlistDoc"));
+  expect(sup.slice(0, 400)).toContain("!setlist.get('isPrivate', false)");
 });
 
 // ─── I3 : un seul rapprochement de noms ────────────────────────────────────

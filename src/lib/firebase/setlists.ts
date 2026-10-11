@@ -39,6 +39,11 @@ export interface FSSetlist {
   ownerId?: string | null;
   /** Lien de la présentation (PPT) de la régie — écrit par /api/setlist/presentation. */
   presentationUrl?: string;
+  /** L'équipe de la setlist (docs/spec-partage-setlist.md) : uids qui la voient et la modifient,
+   *  choisis par le propriétaire ou un admin. Absent = personne. */
+  editeurs?: string[];
+  /** Rôle de chaque personne de `editeurs`, pour l'affichage (absent = musicien). */
+  rolesPartage?: Record<string, "musicien" | "chanteur">;
 }
 
 // ─── Firestore REST API ───────────────────────────────────────────────────────
@@ -248,6 +253,30 @@ export async function getSetlistsSince(sinceMs: number, max: number): Promise<FS
   const byId = new Map<string, FSSetlist>();
   for (const s of [...created, ...updated]) byId.set(s.id, s);
   return [...byId.values()].filter((s) => !s.isPrivate && !s.isDraft);
+}
+
+/** Les setlists dont `uid` est de l'équipe (`editeurs`), brouillons écartés. Refiltrée par
+ *  l'appelant : la requête n'est pas crue sur parole. */
+export async function getSetlistsPartagees(uid: string): Promise<FSSetlist[]> {
+  const headers = await authHeader();
+  const res = await fetch(`${FS_BASE}:runQuery`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...headers },
+    body: JSON.stringify({
+      structuredQuery: {
+        from: [{ collectionId: "setlists" }],
+        where: {
+          fieldFilter: { field: { fieldPath: "editeurs" }, op: "ARRAY_CONTAINS", value: { stringValue: uid } },
+        },
+      },
+    }),
+  });
+  if (!res.ok) return [];
+  const rows = await res.json() as Array<{ document?: RawDoc }>;
+  return rows
+    .filter((r) => r.document)
+    .map((r) => fromFsDoc(r.document!))
+    .filter((s) => !s.isDraft && !!s.editeurs?.includes(uid));
 }
 
 export async function getMySetlists(uid: string): Promise<FSSetlist[]> {
