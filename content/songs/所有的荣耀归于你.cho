@@ -4,9 +4,11 @@
 {tempo: 67}
 {artist: 赞美之泉}
 {language: zh}
+{themes: Adoration, Royaume}
+{source: 所有的荣耀归于你F.pdf}
 
-{start_of_intro: 前奏/Intro}
-[F] [Bbmaj7/F] [F] [Bbmaj7/F]
+{start_of_intro: 前奏/Intro (x2)}
+[F]  [Bbmaj7/F]  [F]  [Bbmaj7/F]
 {end_of_intro}
 
 {start_of_verse: 主歌/Couplet}

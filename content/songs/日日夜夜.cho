@@ -4,9 +4,10 @@
 {key: G}
 {tempo: 70}
 {language: zh}
-{themes: 敬拜, 宣告, 祭坛}
+{themes: Adoration, Sainteté}
+{source: 日日夜夜 简谱.jpg}
 
-{start_of_intro: 前奏/Intro}
+{start_of_intro: 前奏/Intro (x2)}
 [G]  [C/G]  [G]  [C/G]
 {end_of_intro}
 
@@ -26,12 +27,12 @@
 
 {start_of_chorus: 副歌/Refrain}
 [C/D]圣哉、[G]圣哉、[G/B]圣哉，昔[C]在今在永在；   shèng zāi shèng zāi shèng zāi xī zài jīn zài yǒng zài
-[G/B]荣耀、[Am]荣耀、[Am/G]荣耀，配[C/D]得颂赞爱[D7]戴。  róng yào róng yào róng yào pèi dé sòng zàn ài dài
+[G/B]荣耀、[Am]荣耀、[Am/G]荣耀，配[C/D]得颂赞爱[D7]戴。   róng yào róng yào róng yào pèi dé sòng zàn ài dài
 圣哉、[G]圣哉、[G/F]圣哉，全[C/E]地向你跪[Cm/Eb]拜，   shèng zāi shèng zāi shèng zāi quán dì xiàng nǐ guì bài
 尊贵荣[G/D]耀都[C/D]归宝座羔[G]羊。   zūn guì róng yào dōu guī bǎo zuò gāo yáng
 {end_of_chorus}
 
-{start_of_bridge: 桥段/Pont}
-[C]日日夜夜[D/C]， [Bm]不停献上[Em]， 祷告[Am]如香[C/D]不停升起[G]；[G7]   rì rì yè yè bù tíng xiàn shàng dǎo gào rú xiāng bù tíng shēng qǐ
-[C]日日夜夜[D/C]， [Bm]不停献上[Em]， 赞美[Am]献祭[C/D]永不断续[G]。   rì rì yè yè bù tíng xiàn shàng zàn měi xiàn jì yǒng bù duàn xù
+{start_of_bridge: 桥段/Pont (D.S.)}
+[C]日日夜夜[D/C]，[Bm]不停献上[Em]，祷告[Am]如香[C/D]不停升起[G]；[G7]   rì rì yè yè bù tíng xiàn shàng dǎo gào rú xiāng bù tíng shēng qǐ
+[C]日日夜夜[D/C]，[Bm]不停献上[Em]，赞美[Am]献祭[C/D]永不断续[G]。   rì rì yè yè bù tíng xiàn shàng zàn měi xiàn jì yǒng bù duàn xù
 {end_of_bridge}

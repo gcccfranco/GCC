@@ -4,7 +4,8 @@
 {key: F}
 {tempo: 68}
 {language: zh}
-{themes: 敬拜, 赞美, 和散那}
+{themes: Adoration, Noël}
+{source: 和散那.pdf}
 
 {start_of_verse: 主歌/Couplet}
 凡有气[F]息，[(A7b9)]荣耀敬拜[Dm]你。   fán yǒu qì xī róng yào jìng bài nǐ
@@ -18,7 +19,7 @@
 和[F]散那！和[Am]散那！哈[Bb]利路[F/A]亚！荣耀[Gm]归与[Bb/C]至高真[F]神。   hé sàn nà hé sàn nà hā lì lù yà róng yào guī yǔ zhì gāo zhēn shén
 {end_of_chorus}
 
-{start_of_bridge: 桥段/Pont}
+{start_of_bridge: 桥段/Pont (To Chorus)}
 [Bb]天使天军，[F/A]齐声赞美。   tiān shǐ tiān jūn qí shēng zàn měi
 [Bb]哈利路[Dm]亚！   hā lì lù yà
 [Bb]天使天军，[F/A]齐声赞美。   tiān shǐ tiān jūn qí shēng zàn měi

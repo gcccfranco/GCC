@@ -4,8 +4,10 @@
 {key: F}
 {tempo: 110}
 {language: zh}
+{themes: Foi, Adoration}
+{source: 信实的神.pdf}
 
-{start_of_intro: 前奏/Intro}
+{start_of_intro: 前奏/Intro (x2)}
 [F]  [C/E]  [Dm]  [Bb]
 [F]  [C/E]  [Dm]  [Bb]
 {end_of_intro}
@@ -17,6 +19,6 @@
 
 {start_of_chorus: 副歌/Refrain}
 [F]他的应许[C/E]永不改变[Dm]不落空[F/C]，   tā de yìng xǔ yǒng bù gǎi biàn bù luò kōng
-[Bb]众山怎样[F/A]围绕[Gm]耶路撒[C]冷，   zhòng shān zěn yàng wéi rào yē lù sā lěng
+[Bb]众山怎样[F/A]围绕[Gm]耶路撒冷[C]，   zhòng shān zěn yàng wéi rào yē lù sā lěng
 [F]耶和华也[C/E]照样[Dm]围绕我们[F/C]，[Bb]从今时直[C]到永远。[F]   yē hé huá yě zhào yàng wéi rào wǒ men cóng jīn shí zhí dào yǒng yuǎn
 {end_of_chorus}
