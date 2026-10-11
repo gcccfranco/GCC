@@ -8,18 +8,19 @@
 {themes: Adoration, Espérance, Foi}
 {source: 你是我的平安 简谱.png}
 
-{start_of_verse: 前奏/Intro}
+{start_of_intro: 前奏/Intro}
+{section_id: verse-1}
 [D]  [Dmaj7]  [D]  [Dmaj7]
-{end_of_verse}
+{end_of_intro}
 
 {start_of_verse: 主歌/Couplet}
-喔主耶稣[D]，是我的平安[G]，风浪中你掌管[Em7]，你与[Asus4] 我同[D] 在。   wō zhǔ yē sū shì wǒ de píng ān fēng làng zhōng nǐ zhǎng guǎn nǐ yǔ wǒ tóng zài
-喔主[G/A]耶稣[D]，是我的盼望[G]，生命中的光[Em7]，你永[Asus4] 不离[D] 开。   wō zhǔ yē sū shì wǒ de pàn wàng shēng mìng zhōng de guāng nǐ yǒng bù lí kāi
+喔主耶稣[D]，是我的平安[G]，风浪中你掌管[Em7]，你与[Asus4] 我同[D] 在。   ō zhǔ yē sū shì wǒ de píng ān fēng làng zhōng nǐ zhǎng guǎn nǐ yǔ wǒ tóng zài
+喔主[G/A]耶稣[D]，是我的盼望[G]，生命中的光[Em7]，你永[Asus4] 不离[D] 开。   ō zhǔ yē sū shì wǒ de pàn wàng shēng mìng zhōng de guāng nǐ yǒng bù lí kāi
 {end_of_verse}
 
 {start_of_chorus: 副歌/Refrain}
-你是磐石[F#m7]，你是我救赎[Bm7]，你是我[Em7] 患难中随[Asus4]时的帮助[D]，   nǐ shì pán shí nǐ shì wǒ jiù shú nǐ shì wǒ huàn nán zhōng suí shí de bāng zhù
-将我隐藏[F#m7]，在你翅膀荫下[Bm7]，我要全心[Em7] 来敬拜你[Asus4]，喔主耶稣[D]。   jiāng wǒ yǐn cáng zài nǐ chì bǎng yīn xià wǒ yào quán xīn lái jìng bài nǐ wō zhǔ yē sū
+你是磐石[F#m7]，你是我救赎[Bm7]，你是我[Em7] 患难中随[Asus4]时的帮助[D]，   nǐ shì pán shí nǐ shì wǒ jiù shú nǐ shì wǒ huàn nàn zhōng suí shí de bāng zhù
+将我隐藏[F#m7]，在你翅膀荫下[Bm7]，我要全心[Em7] 来敬拜你[Asus4]，喔主耶稣[D]。   jiāng wǒ yǐn cáng zài nǐ chì bǎng yīn xià wǒ yào quán xīn lái jìng bài nǐ ō zhǔ yē sū
 {end_of_chorus}
 
 {start_of_bridge: 桥段 1/Pont 1}

@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-11T09:54:22.726Z",
+  "generatedAt": "2026-10-11T16:16:30.093Z",
   "songs": [
     {
       "slug": "abba-pere",
@@ -22,8 +22,9 @@
       "sections": [
         {
           "id": "intro-1",
-          "name": "Intro",
-          "type": "intro"
+          "name": "Intro (x2)",
+          "type": "intro",
+          "suffix": "(x2)"
         },
         {
           "id": "verse-2",
@@ -354,7 +355,7 @@
         },
         {
           "id": "coda-5",
-          "name": "尾奏/Outro (D.C. al Coda)",
+          "name": "尾声/Final (D.C. al Coda)",
           "type": "outro",
           "suffix": "(D.C. al Coda)"
         }
@@ -1800,8 +1801,8 @@
         },
         {
           "id": "bridge-4",
-          "name": "Instrumental",
-          "type": "bridge"
+          "name": "Interlude",
+          "type": "intro"
         },
         {
           "id": "outro-5",
@@ -2052,8 +2053,8 @@
         },
         {
           "id": "instrumental-5",
-          "name": "Instrumental (x2)",
-          "type": "other",
+          "name": "Interlude (x2)",
+          "type": "intro",
           "suffix": "(x2)"
         },
         {
@@ -2962,7 +2963,7 @@
         {
           "id": "final-7",
           "name": "Final",
-          "type": "other"
+          "type": "outro"
         }
       ]
     },
@@ -3262,7 +3263,7 @@
         {
           "id": "final-4",
           "name": "Final",
-          "type": "other"
+          "type": "outro"
         }
       ]
     },
@@ -4249,8 +4250,8 @@
         },
         {
           "id": "bridge-7",
-          "name": "TAG",
-          "type": "bridge"
+          "name": "Tag",
+          "type": "other"
         }
       ]
     },
@@ -5039,7 +5040,7 @@
         {
           "id": "final-4",
           "name": "Final",
-          "type": "other"
+          "type": "outro"
         }
       ]
     },
@@ -5100,7 +5101,7 @@
         {
           "id": "final-7",
           "name": "Final",
-          "type": "other"
+          "type": "outro"
         }
       ]
     },
@@ -5368,8 +5369,9 @@
         },
         {
           "id": "final-4",
-          "name": "Final",
-          "type": "other"
+          "name": "Final (x4)",
+          "type": "outro",
+          "suffix": "(x4)"
         }
       ]
     },
@@ -5418,7 +5420,7 @@
         {
           "id": "final-5",
           "name": "Final",
-          "type": "other"
+          "type": "outro"
         }
       ]
     },
@@ -6696,7 +6698,7 @@
         },
         {
           "id": "verse-7",
-          "name": "TAG",
+          "name": "Tag",
           "type": "other"
         },
         {
@@ -7262,7 +7264,7 @@
         {
           "id": "final-3",
           "name": "Final",
-          "type": "other"
+          "type": "outro"
         }
       ]
     },
@@ -7389,7 +7391,7 @@
         {
           "id": "verse-3",
           "name": "Pré-Refrain 1",
-          "type": "chorus",
+          "type": "prechorus",
           "number": "1"
         },
         {
@@ -7406,7 +7408,7 @@
         {
           "id": "verse-6",
           "name": "Pré-Refrain 2",
-          "type": "chorus",
+          "type": "prechorus",
           "number": "2"
         }
       ]
@@ -8133,7 +8135,7 @@
     {
       "slug": "你坐着为王",
       "title": "你坐着为王",
-      "titlePinyin": "Nǐ zuò zhe wèi wáng",
+      "titlePinyin": "Nǐ zuò zhe wéi wáng",
       "artist": "施弘美",
       "language": "zh",
       "originalKey": "F",
@@ -8314,7 +8316,7 @@
         {
           "id": "final-6",
           "name": "Final",
-          "type": "other"
+          "type": "outro"
         }
       ]
     },
@@ -8712,7 +8714,7 @@
         {
           "id": "final-4",
           "name": "Final",
-          "type": "other"
+          "type": "outro"
         }
       ]
     },
@@ -8765,7 +8767,7 @@
           "number": "3"
         },
         {
-          "id": "outro-6",
+          "id": "final-6",
           "name": "Final",
           "type": "outro"
         }
@@ -9649,7 +9651,7 @@
         {
           "id": "final-8",
           "name": "Final",
-          "type": "other"
+          "type": "outro"
         }
       ]
     },
@@ -10286,8 +10288,8 @@
         },
         {
           "id": "final-4",
-          "name": "final",
-          "type": "other"
+          "name": "Final",
+          "type": "outro"
         }
       ]
     },
@@ -10373,7 +10375,7 @@
         {
           "id": "final-6",
           "name": "Final",
-          "type": "other"
+          "type": "outro"
         }
       ]
     },
@@ -10757,8 +10759,8 @@
         },
         {
           "id": "final-10",
-          "name": "final",
-          "type": "other"
+          "name": "Final",
+          "type": "outro"
         }
       ]
     },
@@ -11024,8 +11026,8 @@
         },
         {
           "id": "verse-2",
-          "name": "预备副歌/Pre-Refrain",
-          "type": "chorus"
+          "name": "预备副歌/Pré-Refrain",
+          "type": "prechorus"
         },
         {
           "id": "chorus-3",
@@ -11395,7 +11397,7 @@
         {
           "id": "verse-4",
           "name": "预备副歌/Pré-Refrain",
-          "type": "chorus"
+          "type": "prechorus"
         },
         {
           "id": "chorus-5",
@@ -11614,8 +11616,8 @@
         },
         {
           "id": "outro-5",
-          "name": "结尾/Tag (To Chorus)",
-          "type": "outro",
+          "name": "Tag (To Chorus)",
+          "type": "other",
           "suffix": "(To Chorus)"
         }
       ]
@@ -11894,7 +11896,7 @@
         },
         {
           "id": "verse-4",
-          "name": "尾声/Coda",
+          "name": "尾声/Final",
           "type": "outro"
         }
       ]
@@ -12174,7 +12176,7 @@
         {
           "id": "final-6",
           "name": "Final",
-          "type": "other"
+          "type": "outro"
         }
       ]
     },
@@ -12562,7 +12564,7 @@
         {
           "id": "final-5",
           "name": "Final",
-          "type": "other"
+          "type": "outro"
         }
       ]
     },
@@ -13010,7 +13012,7 @@
         {
           "id": "final-8",
           "name": "Final",
-          "type": "other"
+          "type": "outro"
         }
       ]
     },
@@ -13058,7 +13060,7 @@
         {
           "id": "final-5",
           "name": "Final",
-          "type": "other"
+          "type": "outro"
         }
       ]
     },
@@ -13399,7 +13401,7 @@
         {
           "id": "final-6",
           "name": "Final",
-          "type": "other"
+          "type": "outro"
         }
       ]
     },
@@ -14210,8 +14212,9 @@
       "sections": [
         {
           "id": "intro-1",
-          "name": "前奏/Intro",
-          "type": "intro"
+          "name": "前奏/Intro (x2)",
+          "type": "intro",
+          "suffix": "(x2)"
         },
         {
           "id": "verse-2",
@@ -14220,18 +14223,20 @@
         },
         {
           "id": "verse-3",
-          "name": "预备副歌/Pre-Refrain",
-          "type": "chorus"
+          "name": "预备副歌/Pré-Refrain",
+          "type": "prechorus"
         },
         {
           "id": "chorus-4",
-          "name": "副歌/Refrain",
-          "type": "chorus"
+          "name": "副歌/Refrain (x2)",
+          "type": "chorus",
+          "suffix": "(x2)"
         },
         {
           "id": "bridge-5",
-          "name": "桥段/Pont",
-          "type": "bridge"
+          "name": "桥段/Pont (x3, To Chorus)",
+          "type": "bridge",
+          "suffix": "(x3, To Chorus)"
         }
       ]
     },
@@ -14382,7 +14387,7 @@
         {
           "id": "verse-2",
           "name": "预备副歌/Pré-Refrain",
-          "type": "chorus"
+          "type": "prechorus"
         },
         {
           "id": "chorus-3",
@@ -14933,8 +14938,9 @@
         },
         {
           "id": "verse-4",
-          "name": "结尾/Ending",
-          "type": "verse"
+          "name": "尾声/Final (多次反复)",
+          "type": "outro",
+          "suffix": "(多次反复)"
         }
       ]
     },
@@ -15297,8 +15303,8 @@
         },
         {
           "id": "bridge-3",
-          "name": "前副歌/Pre-Refrain",
-          "type": "bridge"
+          "name": "预备副歌/Pré-Refrain",
+          "type": "prechorus"
         },
         {
           "id": "chorus-4",
@@ -16106,13 +16112,13 @@
         {
           "id": "bridge-4",
           "name": "主歌 3/Couplet 3",
-          "type": "bridge",
+          "type": "verse",
           "number": "3"
         },
         {
           "id": "bridge-5",
           "name": "主歌 4/Couplet 4 (To Chorus)",
-          "type": "bridge",
+          "type": "verse",
           "number": "4",
           "suffix": "(To Chorus)"
         }
@@ -16876,8 +16882,8 @@
         },
         {
           "id": "verse-3",
-          "name": "预备副歌/Pre-Refrain",
-          "type": "chorus"
+          "name": "预备副歌/Pré-Refrain",
+          "type": "prechorus"
         },
         {
           "id": "chorus-4",
@@ -17033,7 +17039,7 @@
         },
         {
           "id": "outro-4",
-          "name": "结尾/Final",
+          "name": "尾声/Final",
           "type": "outro"
         }
       ]

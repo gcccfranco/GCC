@@ -3,6 +3,7 @@ import { readFileSync } from "fs";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { ouvrirPartitions } from "./helpers/setlist";
 import { loadChords, openSheet, overlayLabels, songKey } from "./helpers/jianpu";
+import { attendreMiseEnPage } from "./helpers/louange";
 
 // 有一位神, signalé par Timothée le 01/10/2026 : « le .cho et le .json ne sont
 // pas sur la même gamme ». Le .cho est en D ; le scan est la version « C调 »
@@ -106,7 +107,7 @@ test.describe("scan gravé dans une autre tonalité que le .cho", () => {
     await page.addInitScript(() => localStorage.setItem("perf-role-preset", "pianiste"));
     await ouvrirSetlist(page);
     await page.getByRole("button", { name: "Mode louange" }).click();
-    await expect(page.getByText("Mise en page…")).toHaveCount(0);
+    await attendreMiseEnPage(page);
     // Le mode louange rend chaque bloc deux fois (copie de mesure invisible) :
     // les deux copies portent le même calque.
     const visibles = page.locator("[data-performance-mode] [data-jianpu-label]");

@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import vm from "node:vm";
 import { expect, test, type Page } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
-import { onStage } from "./helpers/louange";
+import { attendreMiseEnPage, onStage, ouvrirReglages } from "./helpers/louange";
 import { fermerMenus, ouvrirAffichage, ouvrirPartitions as afficherPartitions } from "./helpers/setlist";
 import { attendreEditeur, choisirTonalite, fermerFeuille, reglerElement, volet } from "./helpers/editeurSetlist";
 import { parseChordPro } from "../src/lib/chordpro/parser";
@@ -243,11 +243,10 @@ test("mode louange : le scan par défaut ; l'interrupteur des Réglages est celu
   await page.addInitScript(() => localStorage.setItem("perf-role-preset", "pianiste"));
   await ouvrirPartitions(page, [item({ songSlug: "一生爱你", position: 1 })]);
   await page.getByRole("button", { name: /Mode Louange/ }).click();
-  await expect(page.getByText("Mise en page…")).toHaveCount(0);
+  await attendreMiseEnPage(page);
   await expect(onStage(page, "[data-jianpu-page]").first()).toBeVisible();
 
-  await page.getByRole("button", { name: "Réglages" }).click();
-  const reglages = page.getByRole("dialog", { name: "Réglages" });
+  const reglages = await ouvrirReglages(page);
   const interrupteur = reglages.getByRole("switch", { name: "Partition 简谱" });
   await expect(interrupteur).toBeChecked();
   await interrupteur.click();

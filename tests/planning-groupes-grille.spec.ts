@@ -80,6 +80,8 @@ test("groupes : avec le droit « paix », une case s'écrit ; Fidélité reste e
   await champ.fill("Psaumes");
   await champ.press("Enter");
   await expect(laCase(page, "2026-09-20", "theme")).toContainText("Psaumes");
+  // La case affiche la valeur avant que l'écriture ne parte : on attend « Enregistré ».
+  await expect(page.getByText("Enregistré")).toBeVisible();
 
   const doc = db.doc("plannings/paix/dimanches/2026-09-20")!;
   expect(doc.theme).toBe("Psaumes");
@@ -102,6 +104,8 @@ test("Intergroupe : se remplit dans l'app et s'exporte au modèle du Sheet", asy
   await champ.fill("Daniela W.");
   await champ.press("Enter");
   await expect(laCase(page, "2026-10-04", "choriste3")).toContainText("Daniela W.");
+  // La case affiche la valeur avant que l'écriture ne parte : on attend « Enregistré ».
+  await expect(page.getByText("Enregistré")).toBeVisible();
   expect(db.doc("plannings/intergroupe/dimanches/2026-10-04")?.choriste3).toBe("Daniela W.");
 
   // Lot U2, P7 : « Exporter (modèle du Sheet) » remplace le CSV du lot 17 (question 6).

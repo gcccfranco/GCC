@@ -62,6 +62,8 @@ test("avec le droit sur le matin : une case s'écrit, le soir reste en lecture, 
   await champ.fill("Esther C.");
   await champ.press("Enter");
   await expect(laCase(page, "campusMatin", "2026-09-20", "piano")).toContainText("Esther C.");
+  // La case affiche la valeur avant que l'écriture ne parte : on attend « Enregistré ».
+  await expect(page.getByText("Enregistré")).toBeVisible();
 
   const doc = db.doc("plannings/campusMatin/dimanches/2026-09-20")!;
   expect(doc.piano).toBe("Esther C.");

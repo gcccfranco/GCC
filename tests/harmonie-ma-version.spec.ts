@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { expect, test, type Page } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
+import { attendreMiseEnPage } from "./helpers/louange";
 import { ouvrirPartitions } from "./helpers/setlist";
 
 // Lot 9, tranche MV (docs/spec-harmonie.md) : dans « Ma version », une retouche
@@ -189,7 +190,7 @@ test("le mode louange joue le passage retouché seul", async ({ page }) => {
   await expect(lyricLine(page, "Papa")).toHaveCount(1);
 
   await page.getByRole("button", { name: /Mode Louange/ }).click();
-  await expect(page.getByText("Mise en page…")).toHaveCount(0);
+  await attendreMiseEnPage(page);
   await expect(onStage(page, "Papa")).toHaveCount(1);
   await capture(page, "mv-mode-louange");
 });

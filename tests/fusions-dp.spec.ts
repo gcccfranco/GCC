@@ -10,6 +10,7 @@ import { parseChordPro } from "../src/lib/chordpro/parser";
 import { buildSetlistItems } from "../src/lib/setlist/buildSetlistItems";
 import type { FormItem } from "../src/lib/setlist/formItems";
 import type { SongIndexEntry } from "../src/types/song";
+import { attendreMiseEnPage } from "./helpers/louange";
 
 // Fusions et Dernière phrase (docs/spec-fusions-dp.md), retours de Timothée du
 // 27/09/2026, go du 01/10/2026. Chant FR (Abba Père, en A) + chant ZH (一生爱你,
@@ -297,7 +298,7 @@ test("mode louange : la Dernière phrase d'un chant de fusion est jouée", async
   await page.addInitScript(() => localStorage.setItem("perf-role-preset", "pianiste"));
   await ouvrir(page, setlist([item({ songSlug: "一生爱你", position: 1 }), FUSION_MIXTE_DP]));
   await page.getByRole("button", { name: "Mode louange" }).click();
-  await expect(page.getByText("Mise en page…")).toHaveCount(0);
+  await attendreMiseEnPage(page);
   await expect(page.locator("[data-performance-mode]").getByText("Dernière phrase – R").first()).toBeAttached();
 });
 

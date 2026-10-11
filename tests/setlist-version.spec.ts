@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { expect, test, type Page } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
+import { attendreMiseEnPage } from "./helpers/louange";
 import { enDeuxVolets, ouvrirAffichage, ouvrirListe, ouvrirPartitions } from "./helpers/setlist";
 
 // Version perso d'un chant dans une setlist (docs/spec-version-perso.md).
@@ -120,7 +121,7 @@ test("ma version s'affiche dans la vue partitions et se joue en mode louange", a
   await expect(song(page, 2).getByText("Ma version", { exact: true })).toHaveCount(0);
 
   await page.getByRole("button", { name: /Mode Louange/ }).click();
-  await expect(page.getByText("Mise en page…")).toHaveCount(0);
+  await attendreMiseEnPage(page);
   await expect(onStage(page, "flottait").first()).toBeVisible();
   await expect(onStage(page, "planait")).toHaveCount(0);
   await capture(page, "v1-mode-louange");
@@ -268,7 +269,7 @@ test("mode louange : ma structure, sans les notes d'occurrence de la présidence
   await expect(bodySections(page, 1).getByText("doucement")).toHaveCount(0);
 
   await page.getByRole("button", { name: /Mode Louange/ }).click();
-  await expect(page.getByText("Mise en page…")).toHaveCount(0);
+  await attendreMiseEnPage(page);
   const stage = page.locator("[data-performance-mode] [data-section]:not([aria-hidden=true] *)");
   await expect(stage.first()).toContainText("Couplet 1");
   await expect(page.locator("[data-performance-mode]").getByText("Interlude")).toHaveCount(0);
@@ -302,10 +303,11 @@ const CHRISTELLE: FakeProfile = {
 const CHRISTELLE_DOC = `setlists/${SETLIST_ID}/versions/${CHRISTELLE.uid}`;
 /** La version de Ruth (« flottait »), partagée. */
 const RUTH_SHARED = myDoc({ "abba-pere": { content: MY_ABBA, structure: null, shared: true } });
-/** Version de Ruth de 一生爱你 : première ligne du couplet (et son pinyin) retirée. */
+/** Version de Ruth de 一生爱你 : première ligne du couplet (et son pinyin) retirée.
+ *  Le filtre lit les paroles sans accords : la partition pose A dans « 宝[A]贵 ». */
 const MY_ZH = readFileSync("content/songs/一生爱你.cho", "utf8")
   .split("\n")
-  .filter((l) => !l.includes("宝贵") && !l.startsWith("qīn ài de bǎo guì"))
+  .filter((l) => !l.replace(/\[[^\]]*\]/g, "").includes("宝贵") && !l.startsWith("qīn ài de bǎo guì"))
   .join("\n");
 const versionSelect = (page: Page, position: number) => song(page, position).getByRole("combobox", { name: "Version" });
 const copyButton = (page: Page, position: number) => song(page, position).getByRole("button", { name: "Copier les paroles" });
@@ -330,7 +332,7 @@ test("une version partagée se choisit, et le choix suit mon compte jusqu'en mod
   await ouvrirPartitions(page);
   await expect(lyricLine(page, "flottait"), "le choix est retrouvé au rechargement").toHaveCount(1);
   await page.getByRole("button", { name: /Mode Louange/ }).click();
-  await expect(page.getByText("Mise en page…")).toHaveCount(0);
+  await attendreMiseEnPage(page);
   await expect(onStage(page, "flottait").first()).toBeVisible();
 });
 

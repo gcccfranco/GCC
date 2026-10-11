@@ -1,10 +1,12 @@
-import { transposeChord } from "@/lib/transpose";
+import { transposeLabel } from "@/lib/transpose";
 import type { ChordProAST, ChordProSection, Token } from "@/types/chordPro";
 
 function transposeTokens(tokens: Token[], semitones: number, targetKey: string): Token[] {
   return tokens.map((t) =>
     t.type === "chord"
-      ? { ...t, value: transposeChord(t.value, semitones, targetKey) }
+      ? // `transposeLabel`, pas `transposeChord` : une alternative `[D (Bm)]` (01)
+        // se transpose en entier — le second accord restait dans l'ancienne tonalité.
+        { ...t, value: transposeLabel(t.value, semitones, targetKey) }
       : t
   );
 }

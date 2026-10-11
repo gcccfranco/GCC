@@ -88,6 +88,9 @@ test("abréviations : une lettre par sorte de section, le numéro des couplets, 
   expect(abbreviateSection(s("other", "Instrumental"))).toBe("Pm");
   expect(abbreviateSection(s("other", "间奏"))).toBe("Pm");
   expect(abbreviateSection(s("outro", "Outro"))).toBe("F");
+  // « Final » sous une directive outro (01) s'abrège comme une outro, en 中文 aussi.
+  expect(abbreviateSection(s("outro", "Final"))).toBe("F");
+  expect(abbreviateSection(s("outro", "尾声/Final"))).toBe("F");
   expect(abbreviateSection(s("other", "Coda"))).toBe("F");
   expect(abbreviateSection(s("other", "Tag"))).toBe("Tag");
   expect(abbreviateSection(s("other", "Dernière phrase (Refrain)"))).toBe("Dp");

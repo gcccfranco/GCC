@@ -57,15 +57,14 @@
   "1452,41": "Em(Gm)",
   "1452,304": "G/A(Bb/C)",
   "1452,584": "D(F)",
-  "1452,1236": "至Eb调、",
-  "1452,1359": "F调)",
+  "1452,1236": "至Eb调、F调)",
   "1684,48": "D(Eb)(F)",
   "1684,666": "G/D(Ab/Eb)(Bb)",
   "1684,1273": "D(Cm)(Dm)",
   "2007,355": "G/D(Ab)",
   "2007,1058": "C"
  },
- "corrections_verified": "page relue rangée par rangée sur les bandes d'encre (band 287 · 423 · 632 · 1032 · 1256 · 1452 · 1684 · 2007). À partir du 【Chorus】 la gravure écrit des **étiquettes composites** : l'accord de la tonalité de la page suivi, entre parenthèses, de celui des reprises en Eb puis en F — « D(F) », « Bm(Dm) », « G/A(Bb/C) », puis « D(Eb)(F) », « G/D(Ab/Eb)(Bb) », « D(Cm)(Dm) » au pont. Elles correspondent exactement aux trois blocs du .cho (桥段 1 D / 桥段 2 Eb / 桥段 3 F) et `transposeLabel` réécrit la ligne entière, donc les deux jeux montent ensemble : la page ne reste jamais à deux tonalités. Les deux morceaux de la note du pont qui nomment une tonalité (« 至Eb调、 » et « F调) ») sont corrigés pour suivre, le reste de la note est laissé intact. « A/C# » (intro, x=481) est gravé mais absent du vocabulaire du .cho : c'est une basse de passage, écrite telle quelle par la correction. Page en ré et .cho en ré (song_semitones = 0). 2026-09-18 (itération 63)",
+ "corrections_verified": "page relue rangée par rangée sur les bandes d'encre (band 287 · 423 · 632 · 1032 · 1256 · 1452 · 1684 · 2007). À partir du 【Chorus】 la gravure écrit des **étiquettes composites** : l'accord de la tonalité de la page suivi, entre parenthèses, de celui des reprises en Eb puis en F — « D(F) », « Bm(Dm) », « G/A(Bb/C) », puis « D(Eb)(F) », « G/D(Ab/Eb)(Bb) », « D(Cm)(Dm) » au pont. Elles correspondent exactement aux trois blocs du .cho (桥段 1 D / 桥段 2 Eb / 桥段 3 F) et `transposeLabel` réécrit la ligne entière, donc les deux jeux montent ensemble : la page ne reste jamais à deux tonalités. Les deux morceaux de la note du pont qui nomment une tonalité (« 至Eb调、 » et « F调) ») sont corrigés pour suivre, le reste de la note est laissé intact. « A/C# » (intro, x=481) est gravé mais absent du vocabulaire du .cho : c'est une basse de passage, écrite telle quelle par la correction. Page en ré et .cho en ré (song_semitones = 0). 2026-09-18 (itération 63) Les deux morceaux de la note du pont sont réunis en une étiquette « 至Eb调、F调) » : séparés, le second rognait le « 、 » du premier une fois transposé (test jianpu-sheet, ordinateur et tablette) ; planche D→Eb relue, « 至E调、Gb调) » entier. 2026-10-11",
  "extra_labels": [
   {
    "x": 181,
@@ -298,16 +297,9 @@
   {
    "x": 1236,
    "y": 1452,
-   "w": 100,
+   "w": 175,
    "h": 45,
-   "c": "至Eb调、"
-  },
-  {
-   "x": 1359,
-   "y": 1452,
-   "w": 52,
-   "h": 45,
-   "c": "F调)"
+   "c": "至Eb调、F调)"
   },
   {
    "x": 48,

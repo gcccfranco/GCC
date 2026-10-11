@@ -78,7 +78,7 @@ une parole.
 | post-refrain | `start_of_postchorus` | `Post-Refrain` | `后副歌/Post-Refrain` |
 | pont | `start_of_bridge` | `Pont` | `桥段/Pont` |
 | interlude | `start_of_intro` | `Interlude` | `间奏/Interlude` |
-| final | `start_of_outro` | `Final` | `结尾/Final` |
+| final | `start_of_outro` | `Final` | `尾声/Final` |
 | tag | `start_of_tag` | `Tag` | `Tag` |
 
 - Le libellé écrit est celui affiché ; la directive fait le type (couleur,
@@ -95,7 +95,13 @@ une parole.
   type : `Refrain final (A)` s'affiche « Refrain (A) »).
 - Le libellé `Final` sous `start_of_outro` s'affiche « Final » (« 结尾 » en
   中文) depuis le 26/09/2026 ; le type reste outro pour les couleurs et les
-  setlists.
+  setlists. En chinois, écrire `尾声/Final` : `结尾/Final` se lit comme
+  `结尾/Outro` et s'affiche « Outro » (lint E08).
+- **Changer le type d'une section** (une section écrite sous la mauvaise
+  directive) change son identifiant (`verse-3` → `prechorus-3`), que les
+  setlists enregistrées gardent : écrire sous l'en-tête `{section_id: verse-3}`,
+  l'ancien identifiant, pour qu'elles retrouvent la section. Ajouter ou retirer
+  une section avant la fin décale aussi les identifiants des suivantes.
 - **Structure dépliée** : l'ordre des sections est celui du chant joué.
   Reprise identique → suffixe `(x2)` ; retour (D.S., « To Chorus ») dont les
   accords ou les paroles changent → section écrite en entier avec son
@@ -210,6 +216,67 @@ L'accord s'écrit **tel que gravé**, à l'orthographe près d'un même symbole 
 | 钉十架 | dìng shí jià |
 | 钉死 | dìng sǐ |
 | 人子 | rén zǐ |
+| 福分 | fú fèn |
+| 生命中 | shēng mìng zhōng |
+| 爱子 | ài zǐ |
+| 必得 | bì dé |
+| 子民 | zǐ mín |
+| 完全地 | wán quán de |
+| 握着 | wò zhe |
+| 活得 | huó de |
+| 同行 | tóng xíng |
+| 变为 | biàn wéi |
+| 值得 | zhí dé |
+| 转动的影 | zhuàn dòng de yǐng |
+| 阿们 | ā mén |
+| 耶利哥 | yē lì gē |
+| 看为 | kàn wéi |
+| 如此地 | rú cǐ de |
+| 长阔 | cháng kuò |
+| 止尽 | zhǐ jìn |
+| 之子 | zhī zǐ |
+| 都将 | dōu jiāng |
+| 歌为我 | gē wéi wǒ |
+| 擦干 | cā gān |
+| 为祝福 | wéi zhù fú |
+| 流血 | liú xuè |
+| 尽在 | jìn zài |
+| 为王 | wéi wáng |
+| 为祭 | wéi jì |
+| 独生子 | dú shēng zǐ |
+| 找不着 | zhǎo bù zháo |
+| 得着 | dé zháo |
+| 为主发光 | wèi zhǔ fā guāng |
+| 为我冠冕 | wéi wǒ guān miǎn |
+| 哪里 | nǎ lǐ |
+| 得胜 | dé shèng |
+| 将临 | jiāng lín |
+| 耶路撒冷 | yē lù sā lěng |
+| 心为心 | xīn wéi xīn |
+| 看得见 | kàn de jiàn |
+| 看哪 | kàn na |
+| 听哪 | tīng na |
+| 细数 | xì shǔ |
+| 都为了 | dōu wèi le |
+| 量给 | liáng gěi |
+| 紧紧地 | jǐn jǐn de |
+| 化为 | huà wéi |
+| 烧尽 | shāo jìn |
+| 尽都 | jìn dōu |
+| 为损失 | wéi sǔn shī |
+| 苦为小事 | kǔ wéi xiǎo shì |
+| 尽情地 | jìn qíng de |
+| 得见 | dé jiàn |
+| 更深地 | gèng shēn de |
+| 难处 | nán chù |
+| 藉十架 | jiè shí jià |
+| 诶诶 | ēi ēi |
+| 头戴 | tóu dài |
+| 神儿子 | shén ér zǐ |
+| 都会 | dōu huì |
+| 大声地 | dà shēng de |
+| 都交托 | dōu jiāo tuō |
+| 你名为 | nǐ míng wéi |
 
 ## Source
 

@@ -50,7 +50,8 @@ Mes mains sont tend[D]ues vers t[Bm]oi,
 ([Em]Sur ta vérité[G])
 {end_of_bridge}
 
-{start_of_final: Final}
+{start_of_outro: Final}
+{section_id: final-6}
 Car voici le j[D]our que tu as f[A/C#]ait,
 Il est pour m[Bm]oi un sujet de j[G]oie.
 Voici le j[D]our que tu as f[A/C#]ait,
@@ -59,4 +60,4 @@ Non, j[Em]e n’aurai pas p[D/F#]eur pour demain, m[G]es craintes sont e[Asus4]n
 J[Em]e te suivrai s[D/F#]ur le chemin, mon [G]espérance est en t[Asus4]oi,
 Voici le j[D]our,[Bm][A] [G]voici le j[D]our.[Bm] [A][G]
 Voici le j[D]our,[Bm][A] [G]voici le j[D]our.[Bm] [A][G][D]
-{end_of_final}
+{end_of_outro}

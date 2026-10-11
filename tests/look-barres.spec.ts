@@ -1,5 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
+import { attendreMiseEnPage } from "./helpers/louange";
 import { enDeuxVolets } from "./helpers/setlist";
 
 // 5C1, tranche V8 (docs/spec-look.md § « V8 », 27/09/2026 ; remplace V7) : le texte ne
@@ -275,7 +276,7 @@ test.describe("barres (5C1, V8) : opaques, elles repeignent la page qu'elles cac
     await page.addInitScript(() => localStorage.setItem("perf-role-preset", "pianiste"));
     await signInAs(page, MUSICIEN, { "setlists/culte": FICHE }, "/setlists/culte");
     await page.getByRole("button", { name: "Mode louange" }).click();
-    await expect(page.getByText("Mise en page…")).toHaveCount(0);
+    await attendreMiseEnPage(page);
     const voilees = page.locator(".material-chrome.material-steady");
     await expect(voilees).toHaveCount(2); // la barre du haut et celle du bas
     for (const fond of await voilees.evaluateAll((els) => els.map((el) => getComputedStyle(el).backgroundColor))) expect(fond).toBe(VOILE);

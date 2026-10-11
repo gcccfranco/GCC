@@ -115,7 +115,8 @@ export function parseSectionHeader(typeKey: string, value: string) {
   }
 
   // Refine the type if generic or based on standard labels in the name
-  const lowerLabel = label.toLowerCase();
+  // Sans le suffixe entre parenthèses : « Tag (To Chorus) » n'est pas un refrain.
+  const lowerLabel = cleanLabel.toLowerCase();
   if (type === "other" || type === "verse") {
     if (lowerLabel.includes("couplet") || lowerLabel.includes("verse") || lowerLabel.includes("主歌")) {
       type = "verse";
@@ -379,6 +380,14 @@ export function parseChordPro(source: string): ChordProAST {
           break;
         case "apple_music":
           metadata.appleMusicUrl = value || null;
+          break;
+        // Identifiant gardé d'une section dont le type a changé (`final-6`
+        // passé en outro) : les setlists enregistrées le désignent encore.
+        case "section_id":
+          if (currentSection && value) {
+            currentSection.id = value;
+            currentSection.uid = `${value}-${uidCounter - 1}`;
+          }
           break;
         // Directives connues à ignorer silencieusement
         case "c":

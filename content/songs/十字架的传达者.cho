@@ -8,7 +8,7 @@
 
 {start_of_verse: 主歌 1/Couplet 1}
 我是[Gmaj7]极微小的人，罪人[F#m7]中的罪[Bm7]魁，虽然[Gmaj7]如此，[A7] 主呼召[Dmaj7]我。   wǒ shì jí wēi xiǎo de rén zuì rén zhōng de zuì kuí suī rán rú cǐ zhǔ hū zhào wǒ
-我[D/F#]恳切[Gmaj7]期待盼望不[F#m7]再羞[Bm7]愧，放胆[Em7]传扬[F#m7]主的十[Bm]架。   wǒ kěn qiè qī dài pàn wàng bú zài xiū kuì fàng dǎn chuán yáng zhǔ de shí jià
+我[D/F#]恳切[Gmaj7]期待盼望不[F#m7]再羞[Bm7]愧，放胆[Em7]传扬[F#m7]主的十[Bm]架。   wǒ kěn qiè qī dài pàn wàng bù zài xiū kuì fàng dǎn chuán yáng zhǔ de shí jià
 {end_of_verse}
 
 {start_of_verse: 主歌 2/Couplet 2}
@@ -17,10 +17,11 @@
 {end_of_verse}
 
 {start_of_chorus: 副歌/Refrain}
-[D/A]如今[G]不论生或[G/A]死，都是[Bm7]为了主荣[F#m7]耀，无论[Em7]生或死，[A7] 我属于[Dmaj7]主。   rú jīn bú lùn shēng huò sǐ dōu shì wèi le zhǔ róng yào wú lùn shēng huò sǐ wǒ shǔ yú zhǔ
+[D/A]如今[G]不论生或[G/A]死，都是[Bm7]为了主荣[F#m7]耀，无论[Em7]生或死，[A7] 我属于[Dmaj7]主。   rú jīn bù lùn shēng huò sǐ dōu shì wèi le zhǔ róng yào wú lùn shēng huò sǐ wǒ shǔ yú zhǔ
 [D/F#]十字[G]架的能[G/A]力，十字[Bm7]架的盼[F#m7]望，在我[Em7]里面，有主活[A7]着。   shí zì jià de néng lì shí zì jià de pàn wàng zài wǒ lǐ miàn yǒu zhǔ huó zhe
 {end_of_chorus}
 
-{start_of_verse: 尾声/Coda}
+{start_of_outro: 尾声/Final}
+{section_id: verse-4}
 [Bm]架，[D/A]我的[Gmaj7]爱，我[F#m7]的十字[Bm]架。   jià wǒ de ài wǒ de shí zì jià
-{end_of_verse}
+{end_of_outro}

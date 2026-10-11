@@ -77,6 +77,10 @@ export default defineConfig({
     baseURL: BASE_URL,
     trace: "on-first-retry",
     screenshot: "only-on-failure",
+    // Sans locale (LANG vide, conteneur cloud), Chromium ne sait pas écrire un
+    // nom de fichier non ASCII et enregistre « download » : « EDD_中班_….csv »,
+    // « Prépa._Table_….csv » perdaient leur nom dans les tests d'export (11/10/2026).
+    launchOptions: { env: { ...process.env, LANG: process.env.LANG || "C.UTF-8" } },
   },
   // Trois appareils, toujours (consigne de Timothée du 14/09/2026, CLAUDE.md),
   // tous sous Chromium (émulation de taille et de toucher ; WebKit écarté).

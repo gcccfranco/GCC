@@ -80,3 +80,25 @@ test.describe("sélecteur de tonalité", () => {
     expect([...parcourues].sort()).toEqual([...DOUZE].sort());
   });
 });
+
+// Transposé, le chant affiche le bouton de retour à sa tonalité par défaut
+// dans la même pilule : sur téléphone, la tonalité rognée ne laissait que la
+// flèche (不停赞美你 en G, recommandée F — captures du lot 8, relevé du 27/09).
+test("transposé, la tonalité reste lisible entière à côté du bouton de retour", async ({ page }) => {
+  // Vue paroles : sa barre porte aussi 拼 et 谱, la plus chargée.
+  await page.addInitScript(() => localStorage.setItem("jianpu-sheet-pref", "never"));
+  await page.goto(`/songs/${encodeURIComponent("不停赞美你")}?key=${encodeURIComponent(JSON.stringify("G"))}`, {
+    waitUntil: "domcontentloaded",
+  });
+  await expect(page.locator("select").first()).toHaveValue("G");
+  // La barre est complète une fois la vue paroles montée (bouton du pinyin).
+  await expect(page.getByRole("button", { name: "Pinyin" })).toBeVisible();
+  await page.evaluate(() => document.fonts.ready);
+  const tonalite = page.getByTestId("tonalite-courante");
+  const { large, plein } = await tonalite.evaluate((el) => ({
+    large: el.getBoundingClientRect().width,
+    plein: el.scrollWidth,
+  }));
+  expect(large).toBeGreaterThan(0);
+  expect(plein).toBeLessThanOrEqual(Math.ceil(large));
+});
