@@ -945,5 +945,21 @@ rappel faux sur deux chants au même `section.uid` (C5).
   transparent ; (c) test 1 : « zone sans encre » = bloc de 12 px de l'image d'origine à ≥ 250 de luminance (les
   filigranes gris n'y entrent pas, D8) ; (d) test 11 : l'accord retouché garde sa qualité (G7 → A7), le pavé part de
   l'accord touché. Rien pour Timothée (aucun libellé). Reste : L3-T2b (fenêtre, compensation), L3-T2c (messages, K4).
+  Vérifié par Opus (12/10/2026) : 0 constat bloquant ni important, 0 corrigé. Tests : `jianpu-integration` 65 / 65 sur
+  les cinq projets ; voisines sur ordinateur (`jianpu-sheet` sans `PW_SLUGS`, `harmonie-jianpu`, `fusions-dp`,
+  `jianpu-par-defaut`, `jianpu-tonalite-cho`) 77 / 77 ; `tsc` et `eslint` propres. Mutations : gomme décalée de 3 px →
+  tests 6 et 11 rouges (le volet « gomme au même endroit » du 11 teste bien la règle) ; gomme sans fond blanc → test 3
+  rouge (7 coins sur 70 tombent sur l'encre gravée). Contrôles jetables, trois appareils : gomme = écriture (x, y, w, h,
+  corps, fonte, graisse, `zIndex`) à 0,5 px près sur 亲眼看见你 (« （X调） »), 从这代到那代 et 无价至宝 (`alt`/`opt`),
+  一生跟随 (cadre à `c`), 一生爱你 ; gommes toutes `rgb(255, 255, 255)` ; setlist à deux scans (一生爱你 en D, 为我而来,
+  3 pages, deux copies des filtres) : chaque groupe prend le filtre, papier transparent au pixel sur les 3 pages, clair et
+  sombre ; Chromium résout aussi un filtre dont la seule copie est sous `display:none` (aucun écran ne monte d'ailleurs
+  un `JianpuSheet` caché ainsi : le conteneur de mesure du mode louange est en `opacity: 0`). Captures regardées
+  (téléphone, tablette, ordinateur) : 一生爱你 E et D, clair et sombre, 一生跟随 (filigrane « KUAN » gris gardé, D8), calque
+  partiel simulé (accords bleus `rgb(29, 78, 216)` sur le scan en encre), Adapter (pavé sur G7, retouche A7 à l'encre,
+  aucun pavé) : conformes à v20-jp-a-chant-telephone / -sombre-telephone / -tablette / -adapter-telephone, hors en-tête
+  gravé et segment « 简谱 · Paroles » (L3-T2b, L3-T3). Laissé : WebKit (iPad) non testable ici (Chromium seul) — les `id`
+  répétés des filtres sont à regarder pendant la mesure iOS de L3-T7 ; `PW_SLUGS=all` non rejoué (les oracles ne lisent
+  que les écritures, inchangées par le dernier changement de la gomme).
 
 Prochaine étape : L3-T2b (fenêtre, compensation, lecture de `cadrage.json`) ; le lot 2 attend le passage complet.
