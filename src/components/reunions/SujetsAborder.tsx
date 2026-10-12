@@ -1,6 +1,6 @@
 "use client"
 
-// « Sujets à aborder » d'une réunion de pôle (lot U6, R1, docs/spec-back-office.md ;
+// « Sujets à aborder » d'une réunion d'équipe (lot U6, R1, docs/spec-back-office.md ;
 // planches bo-reunion-avant et bo-reunion-apres-telephone). Toute personne de
 // la réunion ajoute un sujet jusqu'au début ; l'auteur, l'organisateur et les
 // admins le retirent ; l'organisateur et les admins ordonnent (glisser, ou

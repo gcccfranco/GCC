@@ -80,10 +80,10 @@ export function useNotifications() {
 
       for (const e of evenements) {
         if (e.organisateurUid === user.uid) continue;
-        // Même règle que la fiche : section du profil, réunion de son pôle
-        // (`pole:x`, lot 7), coordination, admins. Avant le 19/09/2026 le filtre
-        // ne connaissait que les catégories de service : aucune réunion de
-        // pôle n'atteignait la cloche.
+        // Même règle que la fiche : section du profil, réunion de son équipe
+        // (`equipe:x`, lot 7), coordination, admins. Avant le 19/09/2026 le filtre
+        // ne connaissait que les catégories de service : aucune réunion
+        // d'équipe n'atteignait la cloche.
         if (!canSeeEvenement(user, profile, e)) continue;
         const ts = Date.parse(e.createdAt) || 0;
         if (!ts) continue;

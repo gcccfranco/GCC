@@ -12,9 +12,9 @@ import {
 // Personnes fictives.
 
 /** Pôle Événement et la coordination (cochée : gère tous les évènements, a la scène). */
-const COORD: FakeProfile = { uid: "uid-alice", email: "alice@example.com", firstName: "Alice", lastName: "Q.", poles: ["evenement"], dansEquipes: ["evenementiel"], referentDe: ["evenementiel"], coordination: true };
+const COORD: FakeProfile = { uid: "uid-alice", email: "alice@example.com", firstName: "Alice", lastName: "Q.", dansEquipes: ["evenementiel"], referentDe: ["evenementiel"], coordination: true };
 /** Référent de TEAM DA (lot 1 du chantier « équipes et groupes » ; son pôle sert encore aux tâches jusqu'à EQ-C). */
-const DA: FakeProfile = { uid: "uid-bruno", email: "bruno@example.com", firstName: "Bruno", lastName: "M.", poles: ["da"], dansEquipes: ["da"], referentDe: ["da"] };
+const DA: FakeProfile = { uid: "uid-bruno", email: "bruno@example.com", firstName: "Bruno", lastName: "M.", dansEquipes: ["da"], referentDe: ["da"] };
 
 const EV = {
   titre: "", type: "loisir", pour: "eglise", date: "2026-10-17", heure: "14:00", heureFin: "16:00", dateFin: "",

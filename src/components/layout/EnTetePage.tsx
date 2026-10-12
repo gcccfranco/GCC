@@ -12,7 +12,7 @@
 //     titre={t("taches.titre")}
 //     sousTitre={t("taches.sousTitre")}
 //     action={<BoutonNouveau label={t("taches.nouvelle")} href="/back-office/taches/da/nouvelle" />}
-//     onglets={<OngletsRail etiquette={t("taches.poles")} onglets={poles} />}
+//     onglets={<OngletsRail etiquette={t("taches.equipes")} onglets={equipes} />}
 //   />
 
 import Link from "next/link";

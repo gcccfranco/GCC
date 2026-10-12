@@ -17,7 +17,6 @@ export type FakeProfile = {
   lastName?: string;
   planningName?: string;
   serviceRoles?: Record<string, string[]>;
-  poles?: string[];
   /** Coordination (lot 1 du chantier « équipes et groupes », EQ24) — cochée par un admin. */
   coordination?: boolean;
   /** Droit de tenir l'organigramme (lot 16) — attribué par un admin. */
@@ -29,7 +28,7 @@ export type FakeProfile = {
   /** Plannings que la personne peut remplir dans l'app (lot 17). */
   plannings?: string[];
   /** Équipes de l'organigramme où la personne figure, et celles dont elle est
-   *  référente (lot U6, R4) — écrites par le serveur seul (`recalculerPoles`). */
+   *  référente (lot U6, R4) — écrites par le serveur seul (`recalculerRattachement`). */
   dansEquipes?: string[];
   referentDe?: string[];
   /** Vrai = compte qui n'a pas encore vu l'accueil de première connexion (lot 8).
@@ -352,7 +351,6 @@ export async function signInAs(
       serviceRoles: profile.serviceRoles ?? {},
       annonces: profile.annonces ?? [],
       notify: profile.notify ?? [],
-      poles: profile.poles ?? [],
       ...(profile.coordination !== undefined ? { coordination: profile.coordination } : {}),
       equipes: profile.equipes ?? false,
       plannings: profile.plannings ?? [],

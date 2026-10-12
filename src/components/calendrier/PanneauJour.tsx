@@ -112,7 +112,7 @@ const BOUTON =
   "inline-flex h-10 w-full items-center justify-center gap-2 rounded-full px-4 text-sm font-semibold transition-opacity duration-150 hover:opacity-85 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground";
 
 /** Qui peut créer quoi depuis un jour : un évènement (un public hors réunions lui est ouvert), une
- *  réunion (un pôle ou une équipe), une tâche (un de ses pôles). */
+ *  réunion (une équipe), une tâche (une de ses équipes). */
 export type DroitsCreation = { evenement: boolean; reunion: boolean; tache: boolean };
 
 const lienEvenement = (date: string) => `/back-office/evenements/nouveau?date=${date}`;

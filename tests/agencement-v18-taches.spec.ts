@@ -13,10 +13,10 @@ import {
 // tâche » et « Modifier » ouvrent le formulaire dans le volet ; sur un volet, la feuille.
 // Firestore et date simulés, personnes fictives, aucune vraie notification.
 
-const RUTH: FakeProfile = { uid: "uid-ruth", email: "ruth@example.com", firstName: "Ruth", lastName: "K.", poles: ["da", "media"], dansEquipes: ["da", "medias"], referentDe: ["da", "medias"] };
+const RUTH: FakeProfile = { uid: "uid-ruth", email: "ruth@example.com", firstName: "Ruth", lastName: "K.", dansEquipes: ["da", "medias"], referentDe: ["da", "medias"] };
 
 const LEA = {
-  email: "lea@example.com", firstName: "Léa", lastName: "M.", planningName: "", serviceRoles: {}, annonces: [], notify: [], poles: ["da"], dansEquipes: ["da"], referentDe: ["da"],
+  email: "lea@example.com", firstName: "Léa", lastName: "M.", planningName: "", serviceRoles: {}, annonces: [], notify: [], dansEquipes: ["da"], referentDe: ["da"],
 };
 
 function tacheDoc(over: Record<string, unknown> = {}) {

@@ -1,8 +1,7 @@
 "use client";
 
 // Équipes › Personnes (lot U6, B2 ; bloc « Membres » sorti de `admin/page.tsx`,
-// l. 794-1075) : liste, fiche, droits. Admins seuls (users/{uid}). La carte « Pôles »
-// est partie avec le lot 1 du chantier « équipes et groupes » (EQ26).
+// l. 794-1075) : liste, fiche, droits. Admins seuls (users/{uid}).
 // Agencement v18 (B9 de docs/spec-agencement-v18.md) : les morceaux (données, filtres, ligne,
 // formulaire) sont exportés pour `PersonnesVolets` (Back-Office › Équipes › Personnes, en deux
 // volets) ; `Personnes` les assemble comme avant pour l'ancienne administration.
@@ -267,8 +266,8 @@ export function FormulairePersonne({
     setError("");
     try {
       // Seuls les champs tenus ici sont écrits (saveProfile n’envoie que le
-      // masque) : `poles` vient des équipes (lot 16, D9) et n’est jamais renvoyé,
-      // même périmé. Jusqu’au 19/09/2026 le document entier était remplacé.
+      // masque) : `dansEquipes` et `referentDe` viennent des équipes (lot 16, D9) et ne sont
+      // jamais renvoyés, même périmés. Jusqu’au 19/09/2026 le document entier était remplacé.
       const patch = { uid: p.uid, ...form, annonces: annonceRights, notify: notifyRights, equipes: equipesRight, coordination, plannings: planningRights };
       await saveProfile(patch);
       onEnregistre({ ...p, ...patch });

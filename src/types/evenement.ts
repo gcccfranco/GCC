@@ -9,7 +9,7 @@ export type EvenementType = (typeof EVENEMENT_TYPES)[number];
 /** Public visé : toute l'église (calendrier public), une section (membres
  *  connectés de la section) ou une équipe de l'organigramme (réunion ou évènement
  *  d'équipe, lot U6, R4 : ses membres ; `equipe:louange`, le public Louange élargi).
- *  Le public de pôle a disparu (lot 1 du chantier « équipes et groupes », EQ19). */
+ *  Seul `equipe:<id>` désigne une équipe (lot 1 du chantier « équipes et groupes », EQ19). */
 export type EvenementPour = "eglise" | AnnonceSection | `equipe:${string}`;
 export const POUR_EGLISE = "eglise" as const;
 
@@ -86,7 +86,7 @@ export interface Evenement {
   deplacement?: Deplacement | null;
   /** Réunion (sans inscriptions, avec sujets et compte rendu) ou évènement (retouches v18, lot E1) :
    *  « + Nouvelle réunion » écrit `true`, « Nouvel évènement » `false`. Absent (avant le lot E) =
-   *  une réunion si le public est un pôle ou une équipe. Lu par `estReunion` (src/lib/access.ts). */
+   *  une réunion si le public est une équipe. Lu par `estReunion` (src/lib/access.ts). */
   reunion?: boolean;
   /** Inscrits + invités — tenu par le serveur seulement. */
   inscrits: number;

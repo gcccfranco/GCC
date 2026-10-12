@@ -20,7 +20,7 @@ const user = (p: FakeProfile) => ({ uid: p.uid, email: p.email });
 const profil = (p: FakeProfile) =>
   ({
     uid: p.uid, email: p.email, firstName: p.firstName ?? "", lastName: p.lastName ?? "", planningName: "",
-    serviceRoles: {}, annonces: [], notify: [], poles: [], equipes: false, plannings: p.plannings ?? [],
+    serviceRoles: {}, annonces: [], notify: [], equipes: false, plannings: p.plannings ?? [],
   }) as unknown as UserProfile;
 
 const estOrdinateur = (info: TestInfo) => info.project.name.startsWith("ordinateur");

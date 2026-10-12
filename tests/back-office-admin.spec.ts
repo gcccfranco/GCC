@@ -302,9 +302,9 @@ test("captures : Planning, Équipes, Messages au Back-Office ; la Table dans l'A
 // Scène (écran de U1) ; Réunions, entrée à part depuis l'agencement v18 (B15) ; nouveau, fiche de gestion, modifier ;
 // redirections ; « Gérer dans le Back-Office » sur la fiche de l'App (Q14).
 
-const COORD: FakeProfile = { uid: "uid-alice", email: "alice@example.com", firstName: "Alice", lastName: "Q.", poles: ["evenement"], dansEquipes: ["evenementiel"], referentDe: ["evenementiel"], coordination: true };
-const DA_ORG: FakeProfile = { uid: "uid-bruno", email: "bruno@example.com", firstName: "Bruno", lastName: "M.", poles: ["da"], dansEquipes: ["da"], referentDe: ["da"] };
-const DA_MEMBRE: FakeProfile = { uid: "uid-dora", email: "dora@example.com", firstName: "Dora", lastName: "P.", poles: ["da"], dansEquipes: ["da"], referentDe: ["da"] };
+const COORD: FakeProfile = { uid: "uid-alice", email: "alice@example.com", firstName: "Alice", lastName: "Q.", dansEquipes: ["evenementiel"], referentDe: ["evenementiel"], coordination: true };
+const DA_ORG: FakeProfile = { uid: "uid-bruno", email: "bruno@example.com", firstName: "Bruno", lastName: "M.", dansEquipes: ["da"], referentDe: ["da"] };
+const DA_MEMBRE: FakeProfile = { uid: "uid-dora", email: "dora@example.com", firstName: "Dora", lastName: "P.", dansEquipes: ["da"], referentDe: ["da"] };
 const ANNONCEUR: FakeProfile = { uid: "uid-hugo", email: "hugo@example.com", firstName: "Hugo", lastName: "B.", annonces: ["Culte Francophone"] };
 /** Musicien : le public Louange (décision 5), sans être responsable (question 2). */
 const MUSICIEN: FakeProfile = { uid: "uid-mu", email: "mu@example.com", firstName: "Léo", lastName: "V.", serviceRoles: { "Culte Francophone": ["musicien"] } };

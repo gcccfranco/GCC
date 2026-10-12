@@ -20,10 +20,10 @@ import type { UserProfile } from "../src/types/user";
 const ADMIN: FakeProfile = { uid: "uid-admin", email: "tc328829@gmail.com", firstName: "Admin", lastName: "T." };
 /** TEAM ÉVÉNEMENTIEL et la coordination (cochée) ; son pôle sert encore aux tâches jusqu'à EQ-C. */
 const COORD: FakeProfile = {
-  uid: "uid-alice", email: "alice@example.com", firstName: "Alice", lastName: "Q.", poles: ["evenement"], dansEquipes: ["evenementiel"], coordination: true,
+  uid: "uid-alice", email: "alice@example.com", firstName: "Alice", lastName: "Q.", dansEquipes: ["evenementiel"], coordination: true,
 };
 /** Référent de TEAM DA, sans droit d'annonces ; son pôle sert encore aux tâches jusqu'à EQ-C. */
-const DA: FakeProfile = { uid: "uid-bruno", email: "bruno@example.com", firstName: "Bruno", lastName: "M.", poles: ["da"], dansEquipes: ["da"], referentDe: ["da"] };
+const DA: FakeProfile = { uid: "uid-bruno", email: "bruno@example.com", firstName: "Bruno", lastName: "M.", dansEquipes: ["da"], referentDe: ["da"] };
 const ANNONCEUR: FakeProfile = { uid: "uid-hugo", email: "hugo@example.com", firstName: "Hugo", lastName: "B.", annonces: ["Culte Francophone"] };
 const REFERENTE: FakeProfile = { uid: "uid-ref", email: "ref@example.com", dansEquipes: ["regie"], referentDe: ["regie"] };
 /** Responsable (notifier) et membre d'une équipe, sans en être référent. */
@@ -33,7 +33,7 @@ const user = (p: FakeProfile) => ({ uid: p.uid, email: p.email });
 const profil = (p: FakeProfile) =>
   ({
     uid: p.uid, email: p.email, firstName: p.firstName ?? "", lastName: p.lastName ?? "", planningName: p.planningName ?? "",
-    serviceRoles: p.serviceRoles ?? {}, annonces: p.annonces ?? [], notify: p.notify ?? [], poles: p.poles ?? [], coordination: p.coordination,
+    serviceRoles: p.serviceRoles ?? {}, annonces: p.annonces ?? [], notify: p.notify ?? [], coordination: p.coordination,
     equipes: p.equipes ?? false, plannings: p.plannings ?? [], dansEquipes: p.dansEquipes, referentDe: p.referentDe,
   }) as UserProfile;
 const permises = (p: FakeProfile) => entreesBackOffice(user(p), profil(p));
@@ -300,17 +300,17 @@ test.describe("T2a, relecture : là où mènent le widget et le guide", () => {
     await expect(widget(page).getByRole("link", { name: "Tout voir" })).toHaveAttribute("href", /^\/back-office\/evenements\/?$/);
   });
 
-  test("le guide dit que les réunions de pôle se créent dans Réunions", async ({ page }) => {
+  test("le guide dit que les réunions d'équipe se créent dans Réunions", async ({ page }) => {
     await ouvrir(page, DA, "/guide");
-    await expect(page.locator("section#taches")).toContainText("Les réunions de pôle se créent dans Back-Office › Réunions.");
-    await expect(page.locator("section#evenements")).toContainText("Les réunions de pôle se créent dans Back-Office › Réunions › « Nouvelle réunion ».");
-    await expect(page.locator("section#evenements")).not.toContainText("comme les sorties de section et les réunions de pôle");
+    await expect(page.locator("section#taches")).toContainText("Les réunions d'équipe se créent dans Back-Office › Réunions.");
+    await expect(page.locator("section#evenements")).toContainText("Les réunions d'équipe se créent dans Back-Office › Réunions › « Nouvelle réunion ».");
+    await expect(page.locator("section#evenements")).not.toContainText("comme les sorties de section et les réunions d'équipe");
   });
 
-  test("en 中文 : le guide dit que les réunions de pôle se créent dans 会议", async ({ page }) => {
+  test("en 中文 : le guide dit que les réunions d'équipe se créent dans 会议", async ({ page }) => {
     await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
     await ouvrir(page, DA, "/guide");
-    await expect(page.locator("section#taches")).toContainText("部门会议请在 后台 › 会议中创建。");
-    await expect(page.locator("section#evenements")).toContainText("部门会议请在 后台 › 会议 ›「新建会议」中创建。");
+    await expect(page.locator("section#taches")).toContainText("团队会议请在 后台 › 会议中创建。");
+    await expect(page.locator("section#evenements")).toContainText("团队会议请在 后台 › 会议 ›「新建会议」中创建。");
   });
 });

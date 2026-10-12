@@ -337,9 +337,9 @@ const CULTE = csv([
 
 const P_ADMIN: FakeProfile = { uid: "u-admin", email: ADMIN_EMAILS[0], firstName: "Admin", lastName: "T." };
 /** Organise le tournoi et la réunion ; référente de TEAM DA. */
-const P_ORGA: FakeProfile = { uid: "u-orga", email: "orga@example.org", firstName: "Orane", lastName: "G.", poles: ["da"], dansEquipes: ["da"], referentDe: ["da"] };
+const P_ORGA: FakeProfile = { uid: "u-orga", email: "orga@example.org", firstName: "Orane", lastName: "G.", dansEquipes: ["da"], referentDe: ["da"] };
 /** Référent de TEAM DA qui n'organise rien. */
-const P_MEMBRE: FakeProfile = { uid: "u-membre", email: "membre@example.org", firstName: "Mael", lastName: "B.", poles: ["da"], dansEquipes: ["da"], referentDe: ["da"] };
+const P_MEMBRE: FakeProfile = { uid: "u-membre", email: "membre@example.org", firstName: "Mael", lastName: "B.", dansEquipes: ["da"], referentDe: ["da"] };
 /** Auteur de créneaux, responsable des plannings, sans équipe (pas la coordination). */
 const P_AUTEUR: FakeProfile = { uid: "u-auteur", email: "auteur@example.org", firstName: "Ines", lastName: "R.", plannings: ["culte"] };
 

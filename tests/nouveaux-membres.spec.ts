@@ -91,7 +91,7 @@ const MEMBRE: FakeProfile = { uid: "uid-membre", email: "membre@example.com", fi
 
 test("guide : les sections d'aujourd'hui, plus les Annonces", async ({ page }) => {
   await signInAs(page, MEMBRE, {}, "/guide");
-  for (const titre of ["Évènements", "Programme de scène", "Vue partitions et coup d'œil", "Ma version d'un chant", "Tâches des pôles", "Moi et réglages"]) {
+  for (const titre of ["Évènements", "Programme de scène", "Vue partitions et coup d'œil", "Ma version d'un chant", "Tâches des équipes", "Moi et réglages"]) {
     await expect(page.getByRole("heading", { name: titre, level: 2 })).toBeVisible();
   }
   await expect(page.getByRole("heading", { name: "Annonces", level: 2 })).toHaveCount(0);
@@ -170,7 +170,7 @@ test("en 中文, aucun texte français sur les écrans membres principaux", asyn
   test.setTimeout(90_000);
   await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
   const francais = textesFrancais();
-  await signInAs(page, { ...MEMBRE, poles: ["da"], dansEquipes: ["da"], referentDe: ["da"] }, {}, "/moi");
+  await signInAs(page, { ...MEMBRE, dansEquipes: ["da"], referentDe: ["da"] }, {}, "/moi");
   for (const chemin of ["/moi", "/songs", "/taches", "/back-office/taches/da", "/setlists", "/evenements"]) {
     if (chemin !== "/moi") await page.goto(chemin);
     await expect(page.locator("html")).toHaveAttribute("lang", "zh-CN");
@@ -202,7 +202,7 @@ test("en 中文, la proposition de chant n'a plus de français", async ({ page }
 
 test("en 中文, le formulaire de nouvelle tâche n'a plus de français", async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
-  await signInAs(page, { ...MEMBRE, poles: ["da"], dansEquipes: ["da"], referentDe: ["da"] }, {}, "/back-office/taches/da");
+  await signInAs(page, { ...MEMBRE, dansEquipes: ["da"], referentDe: ["da"] }, {}, "/back-office/taches/da");
   // Agencement v18 (T1, B2) : en grand, le formulaire dans le volet ; sur un volet, la feuille.
   const enGrand = ["ordinateur", "ordinateur-1440", "tablette-paysage"].includes(test.info().project.name);
   await page.getByRole(enGrand ? "link" : "button", { name: "新任务" }).click();

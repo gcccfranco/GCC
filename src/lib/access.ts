@@ -104,8 +104,8 @@ export function equipesOuCreer(user: AuthUser | { email?: string | null } | null
 }
 
 /** Coordination (lot 3 bis ; lot 1 du chantier « équipes et groupes », EQ24) : le
- *  droit `coordination` du profil, coché par un admin dans Personnes, + admins. Le
- *  pôle « événement » ne la donne plus. Règle la scène (programmes, ordre de
+ *  droit `coordination` du profil, coché par un admin dans Personnes, + admins. Aucune
+ *  équipe ne la donne. Règle la scène (programmes, ordre de
  *  passage, tout créneau), crée pour toute l'église, modifie tout évènement.
  *  Miroir serveur : isCoordination() dans firestore.rules. */
 export function isCoordination(
@@ -127,8 +127,8 @@ export function canVoirEquipes(user: AuthUser | null): boolean {
  *  donné le droit « Équipes » (Timothée, 18/09/2026 — D4 rouverte). Le droit
  *  porte sur tout l'organigramme, d'où un booléen et non une liste. Miroir
  *  serveur : isEquipier() dans firestore.rules pour equipes/{id}, et
- *  exigerDroitEquipes (src/lib/equipes/serveur.ts) pour les pôles, qui restent
- *  écrits par le serveur seul — `allow update` des profils ne bouge pas. */
+ *  exigerDroitEquipes (src/lib/equipes/serveur.ts) pour le rattachement, qui reste
+ *  écrit par le serveur seul — `allow update` des profils ne bouge pas. */
 export function canEditerEquipes(
   user: AuthUser | null,
   profile: { equipes?: boolean } | null
@@ -181,7 +181,7 @@ export function equipeDuPour(pour: string): string | null {
   return m ? m[1] : null;
 }
 
-/** Public qui peut être celui d'une réunion : une équipe (EQ19 : le public de pôle disparaît). */
+/** Public qui peut être celui d'une réunion : une équipe (EQ19). */
 export function publicDeReunion(pour: string): boolean {
   return equipeDuPour(pour) !== null;
 }
@@ -227,8 +227,8 @@ export function canInscrireEvenement(
 /** Qui crée pour un public donné : une réunion ou un évènement d'équipe, ses référents et les
  *  admins (lot U6, R4 ; décisions 3 et 43) ; sinon la coordination pour tout, ou un membre dont
  *  le droit d'annonces couvre la section (le droit d'annonces devient un droit de création pour
- *  sa section, tranché le 15/09/2026). Un autre public préfixé (« pole:… », EQ19) ne se crée
- *  plus : miroir de la garde `(pole|equipe):.*` des règles. */
+ *  sa section, tranché le 15/09/2026). Un autre public préfixé (EQ19) ne se crée plus :
+ *  miroir de la garde des règles. */
 export function canCreateEvenement(
   user: AuthUser | null,
   profile: ProfilEvenement | null,
@@ -534,9 +534,9 @@ type ProfilResponsable = {
 const nonVide = (l: string[] | undefined) => (l?.length ?? 0) > 0;
 
 /** Responsable (Q1) : admin, ou au moins un droit donné par un admin ou par l'organigramme —
- *  coordination (EQ18, comme le pôle Événement la donnait), `plannings`, `notify`, `annonces`,
+ *  coordination (EQ18), `plannings`, `notify`, `annonces`,
  *  droit Équipes, référent d'une équipe. Être membre d'une équipe ou du public Louange (un rôle
- *  de service) ne fait pas un responsable (question 2) ; un pôle ne compte plus (EQ1). */
+ *  de service) ne fait pas un responsable (question 2). */
 export function estResponsable(user: AuthUser | null, profile: ProfilResponsable | null): boolean {
   if (!user) return false;
   if (isAdminUser(user)) return true;

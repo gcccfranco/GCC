@@ -414,7 +414,7 @@ const DOCS_WIDGET: Record<string, Record<string, unknown>> = {
   "programmes/paques-2027/creneaux/p1": { ...resaDe("p1", "2027-02-07", "15:00", "16:00"), quoi: "Danse", qui: ["Gp Paix"] },
   "programmes/noel-2027": { nom: "Noël 2027", fete: "noel", annee: 2027, jourJ: "2027-12-24", debut: "2027-10-01", ouvert: false, passages: [], createdBy: "uid-alice", updatedAt: "" },
 };
-const ALICE_EVT: FakeProfile = { uid: "uid-alice", email: "alice@example.com", firstName: "Alice", lastName: "Q.", poles: ["evenement"], dansEquipes: ["evenementiel"], referentDe: ["evenementiel"], coordination: true };
+const ALICE_EVT: FakeProfile = { uid: "uid-alice", email: "alice@example.com", firstName: "Alice", lastName: "Q.", dansEquipes: ["evenementiel"], referentDe: ["evenementiel"], coordination: true };
 
 async function tableauDeBord(page: Page, docs: Record<string, Record<string, unknown>>) {
   await page.clock.setFixedTime(new Date("2026-10-09T10:00:00"));

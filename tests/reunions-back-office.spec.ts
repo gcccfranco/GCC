@@ -45,7 +45,7 @@ const HUGO: FakeProfile = { uid: "uid-hugo", email: "hugo@example.com", firstNam
 const CHORISTE: FakeProfile = { uid: "uid-ch", email: "ch@example.com", firstName: "Chloé", lastName: "R.", serviceRoles: { "Culte Francophone": ["chanteur"] } };
 
 const qui = (p: FakeProfile) => ({ uid: p.uid, email: p.email });
-const profil = (p: FakeProfile) => ({ serviceRoles: {}, annonces: [], notify: [], poles: [], plannings: [], ...p }) as unknown as UserProfile;
+const profil = (p: FakeProfile) => ({ serviceRoles: {}, annonces: [], notify: [], plannings: [], ...p }) as unknown as UserProfile;
 const ev = (x: Record<string, unknown>, id: string) => ({ ...x, id }) as unknown as Evenement;
 
 const estOrdinateur = (info: TestInfo) => info.project.name.startsWith("ordinateur");

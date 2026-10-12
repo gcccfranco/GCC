@@ -65,13 +65,13 @@ export function entreeBackOffice(e: Entree): EntreeBarre {
 }
 
 /** Où se gère un évènement au Back-Office (agencement v18, B15) : une réunion sous l'entrée
- *  Réunions, un évènement sous Évènements — un évènement de pôle compris (lot E). Sa fiche est `${base}/<id>`. */
+ *  Réunions, un évènement sous Évènements — un évènement d'équipe compris (lot E). Sa fiche est `${base}/<id>`. */
 export function baseBackOffice(e: { pour: string; reunion?: boolean }): "/back-office/reunions" | "/back-office/evenements" {
   return estReunion(e) ? "/back-office/reunions" : "/back-office/evenements";
 }
 
 /** La fiche d'un évènement (retouches v18, lot G, G2) : une réunion à Back-Office › Réunions,
- *  tout autre évènement (de pôle compris, lot E) dans l'App. Liens des rappels, des
+ *  tout autre évènement (d'équipe compris, lot E) dans l'App. Liens des rappels, des
  *  notifications et de la cloche. */
 export function ficheEvenement(e: { id: string; pour: string; reunion?: boolean | null }): string {
   return `${estReunion(e) ? "/back-office/reunions" : "/evenements"}/${e.id}`;

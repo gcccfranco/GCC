@@ -1,4 +1,4 @@
-// Réunions de pôle (lot U6, docs/spec-back-office.md) : les « Sujets à aborder »
+// Réunions d'équipe (lot U6, docs/spec-back-office.md) : les « Sujets à aborder »
 // d'une réunion, un document par sujet dans evenements/{id}/sujets/{sid} — un
 // tableau dans l'évènement se réécrirait en entier, et deux ajouts simultanés
 // s'effaceraient (Q7). Droits : firestore.rules et src/lib/access.ts.

@@ -12,7 +12,7 @@ const DOCS: Record<string, Record<string, unknown>> = {
   "plannings/culte/dimanches/2027-01-24": { date: "2027-01-24", piano: "Yann M.", guitare: "Éloïse M." },
   "plannings/culte/dimanches/2027-01-31": { date: "2027-01-31", piano: "Hugo L." },
   // Un compte relié à « Alice Q. » : les autres noms collés sont « sans compte ».
-  "users/uid-alice": { email: "alice@example.com", firstName: "Alice", lastName: "Q.", planningName: "Alice Q.", serviceRoles: {}, annonces: [], notify: [], poles: [] },
+  "users/uid-alice": { email: "alice@example.com", firstName: "Alice", lastName: "Q.", planningName: "Alice Q.", serviceRoles: {}, annonces: [], notify: [] },
 }
 
 async function ouvrir(page: Page, vers: string, docs = DOCS) {

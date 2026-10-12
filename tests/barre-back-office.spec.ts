@@ -18,7 +18,7 @@ import type { UserProfile } from "../src/types/user";
 
 const ADMIN: FakeProfile = { uid: "uid-admin", email: "tc328829@gmail.com", firstName: "Admin", lastName: "T." };
 /** Pôle Événement (Réussite 2) et coordination (cochée). */
-const ALICE: FakeProfile = { uid: "uid-alice", email: "alice@example.com", firstName: "Alice", lastName: "Q.", poles: ["evenement"], dansEquipes: ["evenementiel"], referentDe: ["evenementiel"], coordination: true };
+const ALICE: FakeProfile = { uid: "uid-alice", email: "alice@example.com", firstName: "Alice", lastName: "Q.", dansEquipes: ["evenementiel"], referentDe: ["evenementiel"], coordination: true };
 const PLANNINGS: FakeProfile = { uid: "uid-pl", email: "pl@example.com", firstName: "Paul", lastName: "N.", plannings: ["culte"] };
 /** Droit de notifier un groupe (Messages › Notifier seulement), et Planning par la publication. */
 const NOTIFY: FakeProfile = { uid: "uid-no", email: "no@example.com", firstName: "Nora", lastName: "V.", notify: ["Groupe Paix"] };
@@ -27,7 +27,7 @@ const user = (p: FakeProfile) => ({ uid: p.uid, email: p.email });
 const profil = (p: FakeProfile) =>
   ({
     uid: p.uid, email: p.email, firstName: p.firstName ?? "", lastName: p.lastName ?? "", planningName: p.planningName ?? "",
-    serviceRoles: p.serviceRoles ?? {}, annonces: p.annonces ?? [], notify: p.notify ?? [], poles: p.poles ?? [], coordination: p.coordination,
+    serviceRoles: p.serviceRoles ?? {}, annonces: p.annonces ?? [], notify: p.notify ?? [], coordination: p.coordination,
     equipes: p.equipes ?? false, plannings: p.plannings ?? [], dansEquipes: p.dansEquipes, referentDe: p.referentDe,
   }) as UserProfile;
 const permises = (p: FakeProfile) => entreesBackOffice(user(p), profil(p));
@@ -189,7 +189,7 @@ test.describe("Barre du bas (B6) : « Plus »", () => {
     await expect(cartes.filter({ hasText: "Évènements" })).toHaveAttribute("href", /^\/back-office\/evenements\/?$/);
     const equipes = cartes.filter({ hasText: "Équipes" });
     await expect(equipes).toHaveAttribute("href", /^\/back-office\/equipes\/?$/);
-    await expect(equipes).toContainText("Organigramme, pôles · personnes et droits");
+    await expect(equipes).toContainText("Organigramme · personnes et droits");
     const messages = cartes.filter({ hasText: "Messages" });
     await expect(messages).toContainText("Signalements, propositions de chants · notifier · questionnaire");
     await expect(messages.getByTestId("pastille")).toHaveText("2");
@@ -208,7 +208,7 @@ test.describe("Barre du bas (B6) : « Plus »", () => {
 
   test("le contenu d'une carte suit les droits : Messages = Notifier seul, sans pastille ; Équipes = Organigramme", async ({ page }) => {
     // Notifier un groupe, le droit Équipes et membre de TEAM DA : sept entrées, trois dans « Plus ».
-    await ouvrir(page, { ...NOTIFY, equipes: true, poles: ["da"], dansEquipes: ["da"] });
+    await ouvrir(page, { ...NOTIFY, equipes: true, dansEquipes: ["da"] });
     await expect(onglets(page)).toHaveText(["Accueil", "Calendrier", "Tâches", "Planning", "Plus"]);
     await barre(page).getByRole("link", { name: "Plus" }).click();
     const cartes = page.getByTestId("plus-entree");
@@ -218,7 +218,7 @@ test.describe("Barre du bas (B6) : « Plus »", () => {
     await expect(messages).not.toContainText("Signalements");
     await expect(messages.getByTestId("pastille")).toHaveCount(0);
     const equipes = cartes.filter({ hasText: "Équipes" });
-    await expect(equipes).toContainText("Organigramme, pôles");
+    await expect(equipes).toContainText("Organigramme");
     await expect(equipes).not.toContainText("personnes");
   });
 

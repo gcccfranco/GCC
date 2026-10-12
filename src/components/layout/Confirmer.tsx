@@ -8,7 +8,7 @@
 // sans changer la logique :
 //
 //   const confirmer = useConfirmer();
-//   if (!(await confirmer({ titre: "Supprimer la tâche ?", texte: "Elle disparaît pour tout le pôle.",
+//   if (!(await confirmer({ titre: "Supprimer la tâche ?", texte: "Elle disparaît pour toute l'équipe.",
 //                           action: "Supprimer", destructif: true }))) return;
 //
 // Une seule fenêtre à la fois : une demande pendant qu'une autre est ouverte répond `false` à la

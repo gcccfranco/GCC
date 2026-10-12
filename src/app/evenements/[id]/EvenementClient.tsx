@@ -138,7 +138,7 @@ export function EvenementClient({ espace = "app", id: idDonne }: { espace?: "app
     getEvenement(id).then(setEvenement).catch(() => setEvenement(null))
   }, [id, authLoading])
 
-  // Lot U6 (R2) : les réunions du même pôle ou de la même équipe (R4), pour
+  // Lot U6 (R2) : les réunions de la même équipe (R4), pour
   // « Réunions précédentes » et dater un sujet « repris le … ».
   const pourReunion = user && evenement && estReunion(evenement) ? evenement.pour : null
   const [memePublic, setMemePublic] = useState<Evenement[]>([])

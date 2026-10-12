@@ -1,7 +1,7 @@
 "use client";
 
 // Back-Office › Réunions (agencement v18, B4 et B15 ; planche `v18-bo-reunions`) : une entrée à part,
-// les réunions de ses pôles et de ses équipes (toutes pour un admin). En-tête « Réunions », sans rail
+// les réunions de ses équipes (toutes pour un admin). En-tête « Réunions », sans rail
 // (pas de sous-parties), « + Nouvelle réunion » ; dessous, deux volets : « À venir » puis « Passées »,
 // la prochaine ouverte d'office ; la fiche, « nouvelle » et « modifier » dans le volet de droite.
 // Affichage seulement : evenements/{id} garde ses règles.

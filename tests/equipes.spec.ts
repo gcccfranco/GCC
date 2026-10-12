@@ -120,11 +120,11 @@ const DOCS = {
   },
   "users/u-charlie": {
     email: "charlie@example.com", firstName: "Charlie", lastName: "L.", planningName: "Charlie L.",
-    serviceRoles: {}, annonces: [], notify: [], poles: ["da"], dansEquipes: ["da"], referentDe: ["da"], equipes: false,
+    serviceRoles: {}, annonces: [], notify: [], dansEquipes: ["da"], referentDe: ["da"], equipes: false,
   },
   "users/u-ruth": {
     email: "ruth@example.com", firstName: "Ruth", lastName: "K.", planningName: "Ruth K.",
-    serviceRoles: {}, annonces: [], notify: [], poles: [], equipes: false,
+    serviceRoles: {}, annonces: [], notify: [], equipes: false,
   },
 };
 
@@ -241,11 +241,11 @@ test("onglet Musiciens : un président ou une choriste n'y figure pas (retours d
       "users/u-ruth": { ...DOCS["users/u-ruth"], serviceRoles: { "Culte Francophone": ["musicien"] } },
       "users/u-paul": {
         email: "paul@example.com", firstName: "Paul", lastName: "W.", planningName: "Paul W.",
-        serviceRoles: { "Culte Francophone": ["presidence"] }, annonces: [], notify: [], poles: [], equipes: false,
+        serviceRoles: { "Culte Francophone": ["presidence"] }, annonces: [], notify: [], equipes: false,
       },
       "users/u-daniela": {
         email: "daniela@example.com", firstName: "Daniela", lastName: "W.", planningName: "Daniela W.",
-        serviceRoles: { "Culte Francophone": ["chanteur"] }, annonces: [], notify: [], poles: [], equipes: false,
+        serviceRoles: { "Culte Francophone": ["chanteur"] }, annonces: [], notify: [], equipes: false,
       },
     },
     "/equipes",

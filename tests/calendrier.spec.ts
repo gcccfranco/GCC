@@ -1384,7 +1384,7 @@ test.describe("C4 : captures à regarder", () => {
 
 /** Référent de TEAM DA et de TEAM MÉDIAS, sans section : une réunion ou un évènement de ses équipes
  *  (décision 43), des tâches de ses équipes (Q4, EQ14). */
-const P_POLES: FakeProfile = { uid: "u-da", email: "da@example.org", firstName: "Alix", lastName: "P.", poles: ["da", "media"], dansEquipes: ["da", "medias"], referentDe: ["da", "medias"] };
+const P_POLES: FakeProfile = { uid: "u-da", email: "da@example.org", firstName: "Alix", lastName: "P.", dansEquipes: ["da", "medias"], referentDe: ["da", "medias"] };
 /** Publie pour une section, sans équipe : un évènement, pas de tâche. */
 const P_SECTION: FakeProfile = { uid: "u-sec", email: "sec@example.org", firstName: "Noa", lastName: "R.", annonces: ["Groupe Paix"] };
 

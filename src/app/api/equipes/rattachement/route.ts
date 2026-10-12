@@ -8,7 +8,7 @@ import { BACK_OFFICE } from "@/lib/backOffice"
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-// Rattachement aux équipes (lot 16, D4 du 18/09/2026 ; ex-/api/equipes/poles, renommée au
+// Rattachement aux équipes (lot 16, D4 du 18/09/2026 ; route renommée au
 // lot 1 du chantier « équipes et groupes », EQ28). `users/{uid}.dansEquipes` et `referentDe`
 // restent fermés au navigateur (`allow update: if isAdmin()` dans firestore.rules) : c'est
 // cette route qui les repose, après avoir revérifié que l'appelant a bien le droit de tenir

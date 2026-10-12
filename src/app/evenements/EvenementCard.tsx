@@ -147,7 +147,7 @@ export function PlusInfos({ e }: { e: Evenement }) {
 }
 
 /** Bas de la grande carte : l'état d'inscription, puis le compteur. Une info
- *  ou une réunion (de pôle ou d'équipe) n'a pas d'inscriptions : rien. */
+ *  ou une réunion d'équipe n'a pas d'inscriptions : rien. */
 function PiedCarte({ e, inscrit }: { e: Evenement; inscrit: boolean }) {
   const { t } = useTranslation()
   const raison = useRaisonInscription()
@@ -232,7 +232,7 @@ export function EvenementCard({ evenement: e, past, href, actif = false, inscrit
         <div className="min-w-0 flex-1">
           <p className="font-semibold text-foreground truncate">{e.epingle ? "📌 " : ""}{e.titre}</p>
           <p className="text-sm text-muted-foreground truncate">
-            {/* Évènement réservé à un pôle ou une équipe (retouches v18, E4) : son badge, comme sur la carte. */}
+            {/* Évènement réservé à une équipe (retouches v18, E4) : son badge, comme sur la carte. */}
             {reserve && <PastillePublic pour={e.pour} className={`mr-1.5 px-1.5 py-px text-xs ${actif ? "!bg-background" : ""}`} />}
             {[e.heure, e.lieu].filter(Boolean).join(" · ")}
           </p>

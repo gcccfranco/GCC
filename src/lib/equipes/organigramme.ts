@@ -11,8 +11,8 @@ import { EQUIPES } from "./table";
 export { EQUIPES, type EquipeDef } from "./table";
 
 /** Ce que l'organigramme recopie sur un profil (lot U6, R4, Q8) : les équipes où il
- *  figure et celles dont il est référent, dans l'ordre de la table. Les pôles ont
- *  disparu (lot 1 du chantier « équipes et groupes », EQ27, EQ28).
+ *  figure et celles dont il est référent, dans l'ordre de la table. Les droits
+ *  des équipes ne passent que par ces deux champs (lot 1 du chantier « équipes et groupes », EQ28).
  *  Les règles lisent le profil, pas les 13 équipes (patron D9). */
 export function rattachementDe(
   uid: string,

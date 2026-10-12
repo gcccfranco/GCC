@@ -869,13 +869,13 @@
       "evenements": {
         "title": "Évènements",
         "for": "Lecture pour tous · création selon tes droits",
-        "body": "L'onglet **Évènements** rassemble le calendrier de l'église : sorties, cultes spéciaux et infos. Sans compte, on voit les évènements de toute l'église ; connecté, tu vois aussi ceux de ta section et de tes pôles.",
+        "body": "L'onglet **Évènements** rassemble le calendrier de l'église : sorties, cultes spéciaux et infos. Sans compte, on voit les évènements de toute l'église ; connecté, tu vois aussi ceux de ta section et de tes équipes.",
         "points": [
           "Ouvre un évènement pour voir le lieu, l'heure et les places restantes, puis **S'inscrire**, avec tes invités.",
           "Les **infos** épinglées restent en tête du calendrier : elles remplacent les anciennes annonces.",
-          "Avec le droit d'annonces d'une section, ou dans un pôle, tu peux **créer** un évènement pour ta section ou une **réunion de pôle**.",
+          "Avec le droit d'annonces d'une section, ou comme référent d'une équipe, tu peux **créer** un évènement pour ta section ou pour ton équipe.",
           "Tu reçois un rappel la veille des évènements auxquels tu es inscrit.",
-          "**Où créer un évènement** : ceux de toute l'église datés jusqu'au {{jour}} s'écrivent dans le Sheet des évènements ; à partir de 2027, ils se créent dans le **Back-Office › Évènements › « Nouvel évènement »**, comme les sorties de section. Les réunions de pôle se créent dans **Back-Office › Réunions › « Nouvelle réunion »**."
+          "**Où créer un évènement** : ceux de toute l'église datés jusqu'au {{jour}} s'écrivent dans le Sheet des évènements ; à partir de 2027, ils se créent dans le **Back-Office › Évènements › « Nouvel évènement »**, comme les sorties de section. Les réunions d'équipe se créent dans **Back-Office › Réunions › « Nouvelle réunion »**."
         ],
         "tip": "L'organisateur retrouve la liste des inscrits et un **QR code** sur la fiche de l'évènement."
       },
@@ -927,14 +927,14 @@
         "tip": "Le bandeau, le PDF et le lien de présentation restent sur la version de la présidence."
       },
       "taches": {
-        "title": "Tâches des pôles",
-        "for": "Membres des pôles DA, Média, Orga, Louange, Événement",
-        "body": "Chaque pôle suit ses tâches dans **Tâches** : qui fait quoi, pour quand. Tu ne vois que les tâches de tes pôles.",
+        "title": "Tâches des équipes",
+        "for": "Membres d'une équipe et du public Louange",
+        "body": "Chaque équipe suit ses tâches dans **Tâches** : qui fait quoi, pour quand. Tu ne vois que les tâches de tes équipes ; les référents les créent.",
         "points": [
-          "Coche une tâche quand elle est faite ; si la tâche le prévoit, le pôle suivant ou la régie du dimanche est prévenu.",
+          "Coche une tâche qui t'est confiée quand elle est faite (les référents cochent toutes celles de l'équipe) ; si la tâche le prévoit, l'équipe suivante ou la régie du dimanche est prévenue.",
           "Une tâche peut revenir **chaque semaine**, **toutes les deux semaines** ou **chaque mois**.",
           "Tu reçois un rappel 3 jours et 1 jour avant l'échéance, et le lendemain si elle n'est pas faite.",
-          "Les **réunions de pôle** se créent dans **Back-Office › Réunions**."
+          "Les **réunions d'équipe** se créent dans **Back-Office › Réunions**."
         ],
         "tip": "« Mes tâches », dans Moi, montre ce qui reste à faire pour toi."
       },

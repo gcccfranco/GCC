@@ -4,14 +4,14 @@
 // est pré-rempli sans les dates. Réservé à qui peut créer (coordination,
 // droit d'annonces d'une section). En dupliquant, on propose de copier les
 // tâches des équipes où l'on crée (EQ16), rattachées à l'évènement source, aux mêmes délais (lot 14).
-// Une réunion de pôle (lot U6, R2) : si des réunions déjà tenues du même pôle
+// Une réunion d'équipe (lot U6, R2) : si des réunions déjà tenues de la même équipe
 // ont laissé des sujets, on demande s'il faut les reprendre (Créer comme Dupliquer).
 // Lot U6, B3 : le formulaire est au Back-Office (`/back-office/evenements/nouveau`).
 // Agencement v18 (B15) : « Nouvelle réunion » est `/back-office/reunions/nouvelle` (`reunion`),
 // qui ne propose que les réunions ; l'ancienne `…/evenements/nouveau?reunion=1` y redirige.
 // Lot U8, C5 : `?date=AAAA-MM-JJ` (un jour du calendrier) pré-remplit la date.
 // Retouches v18, lot E1 : « Nouvelle réunion » écrit `reunion: true` ; « Nouvel évènement » écrit
-// `reunion: false`, quel que soit le public (un pôle ou une équipe compris : un évènement de pôle).
+// `reunion: false`, quel que soit le public (une équipe comprise : un évènement d'équipe).
 // Agencement v18 (B3, B4) : en grand, le formulaire s'ouvre dans le volet de droite, sous l'en-tête de
 // l'entrée et à côté de la liste ; en un volet, c'est une page, avec « ‹ Évènements » (ou « ‹ Réunions »).
 

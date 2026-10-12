@@ -193,7 +193,7 @@ const fp = (p: UserProfile): FakeProfile => ({
 });
 const ANNUAIRE = Object.fromEntries([LEA, JOEL, HUGO, MUSICIEN_CULTE].map((p) => [
   `users/${p.uid}`,
-  { email: p.email, firstName: p.firstName, lastName: p.lastName, planningName: p.planningName, serviceRoles: p.serviceRoles, annonces: [], notify: [], poles: [] },
+  { email: p.email, firstName: p.firstName, lastName: p.lastName, planningName: p.planningName, serviceRoles: p.serviceRoles, annonces: [], notify: [] },
 ]));
 const item = (over: Record<string, unknown>) => ({
   keyOverride: null, showChords: true, showPinyin: true, useJianpu: false, structureOverride: null, sectionNotes: {}, notes: "", ...over,

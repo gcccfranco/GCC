@@ -27,7 +27,7 @@ const FIXTURE_DECEMBRE = readFileSync(join(__dirname, "fixtures", "sheet-eveneme
 const REFUS = "Jusqu'au 31/12/2026, les évènements de toute l'église s'écrivent dans le Sheet des évènements.";
 
 /** Coordination (cochée) et pôle Évènement : « Toute l'église », les sections, la réunion du pôle. */
-const COORD: FakeProfile = { uid: "uid-coord", email: "coord@example.org", firstName: "Lison", lastName: "R.", poles: ["evenement"], dansEquipes: ["evenementiel"], referentDe: ["evenementiel"], coordination: true };
+const COORD: FakeProfile = { uid: "uid-coord", email: "coord@example.org", firstName: "Lison", lastName: "R.", dansEquipes: ["evenementiel"], referentDe: ["evenementiel"], coordination: true };
 const ADMIN: FakeProfile = { uid: "u-admin", email: ADMIN_EMAILS[0], firstName: "Admin", lastName: "T.", planningName: "Lou M." };
 
 const EV = {
@@ -117,7 +117,7 @@ test.describe("B1 : le formulaire refuse « Toute l'église » avant la bascule"
     expect(ecrit(db)?.data).toMatchObject({ pour: "Groupe Paix", date: "2026-12-20" });
   });
 
-  test("une réunion de pôle le 20/12/2026 passe", async ({ page }) => {
+  test("une réunion d'équipe le 20/12/2026 passe", async ({ page }) => {
     // Retouches v18, lot E : une réunion se crée par « + Nouvelle réunion ».
     const { db } = await ouvrir(page, COORD, "/back-office/reunions/nouvelle", "2026-12-15T10:00:00");
     await page.getByLabel("Nom de l'évènement").fill("Réunion de fin d'année");
@@ -502,7 +502,7 @@ test.describe("B3 : la ligne d'annonce en tête du Back-Office", () => {
     await expect(annonce(page)).toHaveCount(0);
   });
 
-  test("les réunions de pôle n'ont pas la ligne (elles ne passent jamais par le Sheet)", async ({ page }) => {
+  test("les réunions d'équipe n'ont pas la ligne (elles ne passent jamais par le Sheet)", async ({ page }) => {
     await ouvrir(page, COORD, "/back-office/reunions", "2026-12-15T10:00:00");
     await expect(page.getByRole("link", { name: /Nouvelle réunion/ })).toBeVisible();
     await expect(annonce(page)).toHaveCount(0);
@@ -523,7 +523,7 @@ test.describe("B3 : le guide dit où créer un évènement", () => {
     await ouvrir(page, COORD, "/guide", "2026-12-15T10:00:00");
     const section = page.locator("section#evenements");
     await expect(section).toContainText(
-      "Où créer un évènement : ceux de toute l'église datés jusqu'au 31/12/2026 s'écrivent dans le Sheet des évènements ; à partir de 2027, ils se créent dans le Back-Office › Évènements › « Nouvel évènement », comme les sorties de section. Les réunions de pôle se créent dans Back-Office › Réunions › « Nouvelle réunion ».",
+      "Où créer un évènement : ceux de toute l'église datés jusqu'au 31/12/2026 s'écrivent dans le Sheet des évènements ; à partir de 2027, ils se créent dans le Back-Office › Évènements › « Nouvel évènement », comme les sorties de section. Les réunions d'équipe se créent dans Back-Office › Réunions › « Nouvelle réunion ».",
     );
   });
 
@@ -531,7 +531,7 @@ test.describe("B3 : le guide dit où créer un évènement", () => {
     await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
     await ouvrir(page, COORD, "/guide", "2026-12-15T10:00:00");
     await expect(page.locator("section#evenements")).toContainText(
-      "在哪里创建活动：日期在 31/12/2026 之前（含）的全教会活动写在活动表（Sheet）中；从 2027 年起，请在 后台 › 活动 ›「新建活动」中创建，小组外出也一样。部门会议请在 后台 › 会议 ›「新建会议」中创建。",
+      "在哪里创建活动：日期在 31/12/2026 之前（含）的全教会活动写在活动表（Sheet）中；从 2027 年起，请在 后台 › 活动 ›「新建活动」中创建，小组外出也一样。团队会议请在 后台 › 会议 ›「新建会议」中创建。",
     );
   });
 });

@@ -358,7 +358,7 @@ test("E6 : la route d'inscription lit le profil en base — un membre de l'équi
     "evenements/soiree": soiree,
     "evenements/regie": { ...soiree, pour: "equipe:regie" },
     "users/uid-bruno": { firstName: "Bruno", lastName: "M.", dansEquipes: ["da"] },
-    "users/uid-clara": { firstName: "Clara", lastName: "V.", dansEquipes: ["medias"], poles: ["da"] },
+    "users/uid-clara": { firstName: "Clara", lastName: "V.", dansEquipes: ["medias"] },
     "users/uid-rose": { firstName: "Rose", lastName: "L.", dansEquipes: ["regie"] },
   });
   const res = await inscrire(db, qui(BRUNO), { evenementId: "soiree", invites: 0, nomLibre: "" });

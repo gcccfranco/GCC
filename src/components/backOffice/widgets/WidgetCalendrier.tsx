@@ -40,7 +40,7 @@ export function WidgetCalendrier({ widget }: { widget: Widget }) {
   const profil = profile as ProfilCalendrier | null;
   const today = todayIso();
   const { debut, fin } = fenetreDuWidget(widget.taille, today);
-  // Lu une fois le profil connu : « mes services » et les pôles en dépendent.
+  // Lu une fois le profil connu : « mes services » et mes équipes en dépendent.
   const pret = !loading && user !== null;
 
   const r = widget.reglages;

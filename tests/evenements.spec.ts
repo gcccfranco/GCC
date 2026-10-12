@@ -137,7 +137,7 @@ test("onglets : un connecté voit le programme de scène à côté du calendrier
 
 // ─── Tranche E2 : créer, modifier, dupliquer, supprimer, push à la création ──
 
-const ALICE: FakeProfile = { uid: "uid-alice", email: "alice@example.com", firstName: "Alice", lastName: "Q.", poles: ["evenement"], dansEquipes: ["evenementiel"], referentDe: ["evenementiel"], coordination: true };
+const ALICE: FakeProfile = { uid: "uid-alice", email: "alice@example.com", firstName: "Alice", lastName: "Q.", dansEquipes: ["evenementiel"], referentDe: ["evenementiel"], coordination: true };
 // Lot U6, B3 : la gestion d'un évènement est au Back-Office, ouvert aux responsables ; Steph
 // organise avec le droit d'annonces de sa section.
 const STEPH: FakeProfile = { uid: "uid-steph", email: "steph@example.com", firstName: "Steph", lastName: "R.", annonces: ["Groupe Bonté"] };
@@ -834,7 +834,7 @@ test("calendrier : une info épinglée et un évènement passé restent sur une 
 
 test("calendrier : une réunion d'équipe n'y est pas, même pour un membre de l'équipe (retouches v18, lot G)", async ({ page }) => {
   const reunion = { ...FOOT, titre: "Réunion DA", pour: "equipe:da", placesMax: null, inscriptionOuverte: false, inscrits: 0 };
-  await member(page, { ...JO, poles: ["da"], dansEquipes: ["da"], referentDe: ["da"] }, "/evenements", { ...DOCS, "evenements/reunion": reunion });
+  await member(page, { ...JO, dansEquipes: ["da"], referentDe: ["da"] }, "/evenements", { ...DOCS, "evenements/reunion": reunion });
   await expect(page.getByRole("link", { name: /Foot/ }).first()).toBeVisible();
   await expect(page.getByText("Réunion DA")).toHaveCount(0);
 });

@@ -76,12 +76,12 @@ const DOCS = {
   "equipes/medias/taches/m1": tacheDoc({ equipe: "medias", titre: "Montage vidéo de Noël", echeance: "2026-12-20" }),
 };
 
-const RUTH_DA: FakeProfile = { uid: "uid-da", email: "da@example.com", firstName: "Ruth", lastName: "Kouassi", poles: ["da"], dansEquipes: ["da"], referentDe: ["da"] };
-const PAUL_MEDIA: FakeProfile = { uid: "uid-media", email: "media@example.com", firstName: "Paul", lastName: "Media", poles: ["media"], dansEquipes: ["medias"], referentDe: ["medias"] };
+const RUTH_DA: FakeProfile = { uid: "uid-da", email: "da@example.com", firstName: "Ruth", lastName: "Kouassi", dansEquipes: ["da"], referentDe: ["da"] };
+const PAUL_MEDIA: FakeProfile = { uid: "uid-media", email: "media@example.com", firstName: "Paul", lastName: "Media", dansEquipes: ["medias"], referentDe: ["medias"] };
 const SANS_POLE: FakeProfile = { uid: "uid-rien", email: "rien@example.com", firstName: "Anne", lastName: "Nopole" };
-const DEUX_POLES: FakeProfile = { uid: "uid-dm", email: "dm@example.com", firstName: "Léa", lastName: "Deux", poles: ["da", "media"], dansEquipes: ["da", "medias"], referentDe: ["da", "medias"] };
+const DEUX_POLES: FakeProfile = { uid: "uid-dm", email: "dm@example.com", firstName: "Léa", lastName: "Deux", dansEquipes: ["da", "medias"], referentDe: ["da", "medias"] };
 /** Coordination des évènements (elle peut dupliquer et supprimer) et membre de DA. */
-const ALICE: FakeProfile = { uid: "uid-alice", email: "alice@example.com", firstName: "Alice", lastName: "Q.", poles: ["evenement", "da"], dansEquipes: ["evenementiel", "da"], referentDe: ["evenementiel", "da"], coordination: true };
+const ALICE: FakeProfile = { uid: "uid-alice", email: "alice@example.com", firstName: "Alice", lastName: "Q.", dansEquipes: ["evenementiel", "da"], referentDe: ["evenementiel", "da"], coordination: true };
 
 type Docs = Record<string, Record<string, unknown>>;
 

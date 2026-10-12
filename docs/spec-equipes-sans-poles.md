@@ -8,7 +8,7 @@ Le retour des responsables et la piste notée au lot G (`spec-retouches-v18.md`,
 pôle Louange implicite ne trouvait plus les réunions de son pôle dans aucune liste.
 
 - **Date** : 08/10/2026.
-- **Statut** : **go de Timothée le 08/10/2026 au soir. EQ-A à EQ-E codées** (voir « Avancement ») ; EQ-F reste.
+- **Statut** : **go de Timothée le 08/10/2026 au soir. EQ-A à EQ-F codées** (voir « Avancement ») ; reste la bascule, par Timothée.
 - **Base de code** : `ui/apple-design` à `5878ce1`. Le code est identique à `439e5520`, base de la cartographie :
   seuls des documents ont changé depuis. Toutes les références `fichier:ligne` ci-dessous ont été rouvertes à `5878ce1`.
   Celles qu'ajoutent les réponses du 08/10 au soir ont été ouvertes à `ceeb9b2`, au code identique (`git diff 5878ce1
@@ -1115,3 +1115,27 @@ Go de code de Timothée le 08/10/2026 au soir.
   - `FIREBASE_SERVICE_ACCOUNT` dans `.env.local`, puis `npx tsx --env-file=.env.local scripts/poles-vers-equipes.ts` (à blanc) : lire les listes ; ajouter à la main à l'équipe cible qui doit garder un accès (liste 2, décision 40), nommer un référent là où des tâches « toute l'équipe » n'en ont pas (liste 4b, décision 41), noter qui cocher en « Coordination » (liste 3) ;
   - publier `firestore.rules`, puis le même script avec `--ecrire`, puis de nouveau à blanc (0 opération) ;
   - rien à relire en 中文 pour EQ-E (aucun libellé de site).
+
+### EQ-F — Nettoyage et passage complet (12/10/2026)
+
+- **Codé** (EQ1, EQ30, tranche EQ-F) :
+  - **Critère EQ1 tenu** : `grep -rniE "\bp[ôo]les?\b|TachePole|polesDe|isPoleMember|isTachePole" src firestore.rules` ne trouve plus que `src/lib/equipes/migration.ts` et la garde `(pole|equipe):` des règles (création d'un évènement, EQ21), plus 5 lignes qui citent seulement le NOM de la spec `spec-equipes-sans-poles` (`src/types/tache.ts:2`, `src/lib/access.ts:46`, `firestore.rules:140`, `:157`, `:164`) : le test les exclut.
+  - **`firestore.rules`** : la ligne `get('poles', []) == []` de la création de profil est retirée (le champ n'est plus une donnée du site ; la migration l'efface) ; tête de fichier et commentaires sans « pôle ».
+  - **Commentaires** réécrits : `EnTetePage.tsx`, `deuxVolets.ts` (`[equipe]`), `useNotifications.ts`, `profil/page.tsx`, cron (`lignesEvenements`), `NouveauClient.tsx`, types `evenement` et `reunion`, `access.ts`, `organigramme.ts`, etc.
+  - **Libellés** : plus aucun « pôle » en FR ni « 部门 » en 中文 ; clés d'EQ30 absentes des deux langues ; guide (tâches, évènements) réécrit sans pôle.
+  - **Tests** : `FakeProfile.poles` retiré de `tests/helpers/fakeSession.ts` (la base d'après la migration) ; profils simulés des specs voisines sans `poles` (restent seuls les profils « d'avant la migration » des tests de migration et de `recalculerRattachement`). `tests/barre-back-office.spec.ts` : deux attentes disaient encore « Organigramme, pôles » (la carte « Plus » de Équipes a été réécrite en EQ-D, la spec ne tournait pas sur téléphone et tablette alors) : corrigées.
+- **Relu par Opus : 3 constats (mineurs), 2 corrigés ; laissé : le 3 (fenêtre `poles` sur création de profil, conforme à la spec).** (1) La phrase sur le grep d'EQ1 disait « ne trouve plus que `migration.ts` et la garde » : corrigée (5 lignes citent le nom de la spec). (2) Les profils « d'avant la migration » de `equipes-acces.spec.ts` (`ANCIEN`) et `equipes-reunions.spec.ts` (`hugoAvecPole`, `u-hugo`) portent de nouveau un `poles` résiduel (champ hors du type `FakeProfile`, par cast) : « un `users.poles` restant ne donne rien » est vraiment testé. Mutation en scratch (`access.ts` relisant `poles`) : rouge ; non commitée.
+- **Choix faits faute de réponse** :
+  - **Le critère EQ1 est un test** (`tests/equipes-nettoyage.spec.ts`, pur, il lit les sources) : il casserait si un « pôle » revenait dans `src` ou dans les règles. Le nom de la spec (`spec-equipes-sans-poles`) dans un commentaire n'est pas compté.
+  - **Passage complet** : les fichiers « agencement » (`agencement-v18-*`, `pages-en-grand-*`, `equipes-agencement`) sur les cinq projets ; les autres specs que cite la spec, plus `back-office-coupe`, sur les trois appareils.
+- **Tests vus rouges puis verts** :
+  - `tests/equipes-nettoyage.spec.ts` (nouveau, 6 tests x 3 appareils = 18) : **15 échecs sur 18** sur le code d'avant (HEAD, `b5437a1`) ; seul « clés retirées par EQ30 » passait déjà ; puis **18 verts**.
+  - Passage complet, serveur de test sur le port 3100, charge élevée de la machine : agencement, cinq projets, 1 350 tests : **1 067 verts, 282 sautés (propres à un appareil), 1 délai** (`agencement-v18-fondations` « rail en boutons (Statistiques) », téléphone, 34 s sous charge) **vert relancé seul**. Les autres specs, trois appareils, plus `back-office-coupe` (second serveur), 3 510 tests : **3 235 verts, 264 sautés, 11 échecs** : 6 = « borne du début » de `reunions.spec.ts` (horloge UTC, d'avant le chantier) ; 4 = `barre-back-office` « Plus » (le texte « pôles » ci-dessus, corrigé : 44 verts, 19 sautés) ; 1 = `back-office-admin` « droit Équipes sans être admin » (délai de 17,9 s sous charge, vert relancé seul sur les trois appareils). Un premier passage a été invalidé et relancé en entier : le serveur du port 3100 s'était arrêté en cours de route.
+  - Captures regardées (`equipes-agencement`, `PW_CAPTURES`, les cinq tailles produites ; ordinateur, téléphone en 中文 et tablette regardés) : fiche de Personnes (Droits avec « Coordination · Non », plus de carte Pôles), organigramme 中文 au téléphone, rail de Tâches sur tablette : nets, sans débordement.
+  - `npx tsc --noEmit` et `npm run lint` sans erreur (57 avertissements d'avant).
+- **Reste** : la bascule, par Timothée (ci-dessous). Code mort repéré, non supprimé : aucun nouveau.
+- **Pour Timothée** (bascule, § « Ordre de la bascule ») :
+  - **publier `firestore.rules` seulement après le relevé et avec la migration**, dans la même séance (tâches sous `equipes/*/taches`, `coordination` à la création de profil) ;
+  - lancer le relevé à blanc, puis `--ecrire`, puis de nouveau à blanc (0 opération) : `npx tsx --env-file=.env.local scripts/poles-vers-equipes.ts` ;
+  - cocher « Coordination » dans Équipes › Personnes pour qui doit régler la scène ; dire aux référents qu'ils ont l'entrée Évènements ;
+  - relire le 中文 d'EQ30 (liste des entrées EQ-C et EQ-D) et celui du guide des tâches et des évènements.

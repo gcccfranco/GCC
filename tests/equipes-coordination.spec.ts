@@ -15,12 +15,12 @@ const ADMIN: FakeProfile = { uid: "uid-admin", email: ADMIN_EMAIL, firstName: "A
  *  qui donnait la coordination ; il ne donne plus rien. */
 const HUGO: FakeProfile = {
   uid: "u-hugo", email: "hugo@example.com", firstName: "Hugo", lastName: "L.",
-  poles: ["evenement"], dansEquipes: ["evenementiel"], referentDe: ["evenementiel"],
+  dansEquipes: ["evenementiel"], referentDe: ["evenementiel"],
 };
 /** Simple membre de TEAM ACCUEIL J1, sans la case. */
 const NINA: FakeProfile = {
   uid: "u-nina", email: "nina@example.com", firstName: "Nina", lastName: "B.",
-  poles: ["evenement"], dansEquipes: ["accueil-j1"],
+  dansEquipes: ["accueil-j1"],
 };
 /** Le même référent, à qui un admin a coché « Coordination ». */
 const HUGO_COORD: FakeProfile = { ...HUGO, coordination: true };
@@ -31,7 +31,7 @@ const ELSA: FakeProfile = { uid: "u-elsa", email: "elsa@example.com", firstName:
 
 const PROFIL = (p: FakeProfile, over: Record<string, unknown> = {}) => ({
   email: p.email, firstName: p.firstName, lastName: p.lastName, planningName: "",
-  serviceRoles: {}, annonces: [], notify: [], poles: p.poles ?? [], equipes: false, plannings: [],
+  serviceRoles: {}, annonces: [], notify: [], equipes: false, plannings: [],
   ...(p.dansEquipes ? { dansEquipes: p.dansEquipes } : {}), ...(p.referentDe ? { referentDe: p.referentDe } : {}),
   ...over,
 });

@@ -99,10 +99,10 @@ export async function listEvenements(publicOnly: boolean): Promise<Evenement[]> 
   return (await runQuery("", query)).map(fromFsEvenement);
 }
 
-/** Réunions d'un même public (`pole:da`…), dans le désordre (lot U6, R2) : une
+/** Réunions d'un même public (`equipe:da`…), dans le désordre (lot U6, R2) : une
  *  égalité seule, sans tri, ne demande pas d'index composite. Le filtre est
  *  rejoué ici : le reste du code ne dépend pas de celui de la requête. Les
- *  évènements du même pôle qui ne sont pas des réunions (lot E) sont écartés. */
+ *  évènements de la même équipe qui ne sont pas des réunions (lot E) sont écartés. */
 export async function listReunionsDu(pour: string): Promise<Evenement[]> {
   const docs = await runQuery("", {
     from: [{ collectionId: "evenements" }],

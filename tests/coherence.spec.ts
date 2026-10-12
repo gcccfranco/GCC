@@ -16,9 +16,9 @@ const lire = (rel: string) => readFileSync(path.join(ROOT, rel), "utf8");
 
 const ADMIN: FakeProfile = {
   uid: "admin1", email: "tc328829@gmail.com", firstName: "Timothée", lastName: "C.",
-  planningName: "Timothée C.", poles: ["da"], dansEquipes: ["da"], referentDe: ["da"], equipes: true, plannings: ["culte"], coordination: true,
+  planningName: "Timothée C.", dansEquipes: ["da"], referentDe: ["da"], equipes: true, plannings: ["culte"], coordination: true,
 };
-const MEMBRE_DA: FakeProfile = { uid: "uid-da", email: "da@example.com", firstName: "Denis", lastName: "F.", poles: ["da"], dansEquipes: ["da"], referentDe: ["da"] };
+const MEMBRE_DA: FakeProfile = { uid: "uid-da", email: "da@example.com", firstName: "Denis", lastName: "F.", dansEquipes: ["da"], referentDe: ["da"] };
 const MEMBRE: FakeProfile = { uid: "uid-jo", email: "jo@example.com", firstName: "Jo", lastName: "L.", serviceRoles: { "Groupe Paix": ["chanteur"] } };
 
 /** Réunion du pôle DA créée par Alice : un évènement `pour: "equipe:da"` (lot 7). */
@@ -39,28 +39,28 @@ async function open(page: Page, who: FakeProfile, to: string, docs: Record<strin
 
 // ─── C4 : le profil ne remplace plus le document entier ────────────────────
 
-test("profil : un admin qui enregistre son profil garde ses pôles, ses équipes et ses plannings", async ({ page }) => {
+test("profil : un admin qui enregistre son profil garde ses équipes et ses plannings", async ({ page }) => {
   const db = await open(page, ADMIN, "/profil");
   await page.getByLabel("Prénom").fill("Timo");
   await page.getByRole("button", { name: "Enregistrer mon profil" }).click();
   await page.waitForURL(/\/setlists\/?$/);
   const doc = db.doc("users/admin1");
   expect(doc?.firstName).toBe("Timo");
-  expect(doc?.poles).toEqual(["da"]);
+  expect(doc?.dansEquipes).toEqual(["da"]);
   expect(doc?.equipes).toBe(true);
   expect(doc?.plannings).toEqual(["culte"]);
   expect(doc?.coordination).toBe(true);
   // L'écriture ne porte que les champs du formulaire : jamais les droits.
   const patch = db.writes.find((w) => w.path === "users/admin1");
   expect(patch).toBeDefined();
-  expect(Object.keys(patch!.data)).not.toContain("poles");
+  expect(Object.keys(patch!.data)).not.toContain("dansEquipes");
   expect(Object.keys(patch!.data)).not.toContain("plannings");
   expect(Object.keys(patch!.data)).not.toContain("coordination");
 });
 
-// ─── C2 : la cloche connaît les réunions de pôle ───────────────────────────
+// ─── C2 : la cloche connaît les réunions d'équipe ───────────────────────────
 
-test("cloche : une réunion de pôle apparaît pour un membre du pôle, pas pour un autre membre", async ({ page }) => {
+test("cloche : une réunion d'équipe apparaît pour un membre de l'équipe, pas pour un autre membre", async ({ page }) => {
   await open(page, MEMBRE_DA, "/evenements", { "evenements/reunion-da": REUNION_DA });
   const cloche = page.getByRole("button", { name: /notification/i });
   await expect(cloche).toContainText("1");

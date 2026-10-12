@@ -8,7 +8,7 @@
 //   <MenuActions actions={[
 //     { label: "Dupliquer", icone: Copy, onSelect: dupliquer },
 //     { label: "Supprimer", icone: Trash2, destructif: true, onSelect: supprimer,
-//       confirmer: { titre: `Supprimer « ${titre} » ?`, texte: "Elle disparaît pour tout le pôle.", action: "Supprimer" } },
+//       confirmer: { titre: `Supprimer « ${titre} » ?`, texte: "Elle disparaît pour toute l'équipe.", action: "Supprimer" } },
 //   ]} />
 //
 // Il s'ouvre au clavier (Entrée, Espace, flèche bas) et se parcourt aux flèches (Radix).

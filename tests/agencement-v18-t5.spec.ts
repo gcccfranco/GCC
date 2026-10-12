@@ -20,7 +20,7 @@ const M = (nom: string, over: Partial<MembreEquipe> = {}): MembreEquipe =>
 
 const PROFIL = (prenom: string, nom: string, over: Record<string, unknown> = {}) => ({
   email: `${prenom.toLowerCase()}@example.com`, firstName: prenom, lastName: nom, planningName: `${prenom} ${nom}`,
-  serviceRoles: {}, annonces: [], notify: [], poles: [], equipes: false, plannings: [], ...over,
+  serviceRoles: {}, annonces: [], notify: [], equipes: false, plannings: [], ...over,
 });
 
 const DOCS: Record<string, Record<string, unknown>> = {
@@ -31,7 +31,7 @@ const DOCS: Record<string, Record<string, unknown>> = {
   },
   // La base simulée date tous les comptes du 01/01/2026 (`createTime`) : « Récents » garde l'ordre
   // de `listProfiles` (par nom) ; aucun compte n'a moins de sept jours au 06/10/2026.
-  "users/u-berenice": PROFIL("Bérénice", "A.", { serviceRoles: { "Culte Francophone": ["musicien"] }, poles: ["da"], dansEquipes: ["da"], referentDe: ["da"] }),
+  "users/u-berenice": PROFIL("Bérénice", "A.", { serviceRoles: { "Culte Francophone": ["musicien"] }, dansEquipes: ["da"], referentDe: ["da"] }),
   "users/u-gaspard": PROFIL("Gaspard", "O.", { serviceRoles: { "Culte Francophone": ["presidence"] }, plannings: ["culte"] }),
   "users/u-ysee": PROFIL("Ysée", "R."),
   "config/app": { registrationOpen: true },

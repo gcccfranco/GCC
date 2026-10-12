@@ -33,7 +33,7 @@ const CHRISTELLE: FakeProfile = {
 };
 
 /** Un autre compte, pour l'autocomplétion : son nom de planning n'est nulle part dans la grille. */
-const ESTHER = { email: "esther@example.com", firstName: "Esther", lastName: "Chen", planningName: "Esther C.", serviceRoles: {}, annonces: [], notify: [], poles: [] };
+const ESTHER = { email: "esther@example.com", firstName: "Esther", lastName: "Chen", planningName: "Esther C.", serviceRoles: {}, annonces: [], notify: [] };
 
 /** Ouvre `to` le vendredi 18/09/2026 : dimanche courant = 20/09, trimestre T3. */
 async function open(page: Page, who: FakeProfile, to: string, docs: Record<string, Record<string, unknown>> = {}) {

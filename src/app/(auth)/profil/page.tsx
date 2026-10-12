@@ -91,7 +91,7 @@ export default function ProfilPage() {
         firstName: form.firstName.trim(),
         lastName: form.lastName.trim(),
         planningName: form.planningName.trim(),
-        // Les droits (annonces, notify, poles, equipes, plannings) ne sont pas
+        // Les droits (annonces, notify, coordination, equipes, plannings) ne sont pas
         // envoyés : saveProfile n'écrit que les champs donnés, ils restent intacts.
       });
       // Retour à la page d'origine (?from=…) plutôt que /setlists systématique

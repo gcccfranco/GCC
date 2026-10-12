@@ -16,7 +16,7 @@ const ADMIN: FakeProfile = {
   lastName: "C.",
   planningName: "Timothée",
   serviceRoles: { "Culte Francophone": ["musicien"] },
-  poles: ["da", "media", "orga", "evenement"], dansEquipes: ["da", "medias", "orga", "evenementiel"], referentDe: ["da", "medias", "orga", "evenementiel"],
+  dansEquipes: ["da", "medias", "orga", "evenementiel"], referentDe: ["da", "medias", "orga", "evenementiel"],
 };
 const barreDuBas = (page: Page) => page.getByRole("navigation", { name: "Navigation principale" });
 const phone = { viewport: { width: 390, height: 664 }, isMobile: true, hasTouch: true, deviceScaleFactor: 2 };
@@ -462,7 +462,7 @@ test.describe("back-office coupé : le partage d'une setlist est en ligne", () =
     ({ uid, email: `${uid}@example.com`, firstName: prenom, lastName: nom, planningName, serviceRoles: { [service]: ["chanteur"] } });
   const LEA = profilFictif("lea", "Léa", "Martin", "Léa M.", "Culte Francophone");
   const JOEL = profilFictif("joel", "Joël", "Faure", "Joël F.", "Groupe Paix"); // hors de la catégorie : seul le partage la lui montre
-  const annuaire = Object.fromEntries([LEA, JOEL].map((p) => [`users/${p.uid}`, { email: p.email, firstName: p.firstName, lastName: p.lastName, planningName: p.planningName, serviceRoles: p.serviceRoles, annonces: [], notify: [], poles: [] }]));
+  const annuaire = Object.fromEntries([LEA, JOEL].map((p) => [`users/${p.uid}`, { email: p.email, firstName: p.firstName, lastName: p.lastName, planningName: p.planningName, serviceRoles: p.serviceRoles, annonces: [], notify: [] }]));
   const item = { songSlug: "abba-pere", position: 1, keyOverride: null, showChords: true, showPinyin: true, useJianpu: false, structureOverride: null, sectionNotes: {}, notes: "" };
   const setlist = { title: "Culte partagé", leader: "Présidence A", category: "Culte Francophone", date: "2026-11-01", language: "fr", notes: "", ownerId: "lea", isPrivate: true, items: [item], editeurs: ["joel"], rolesPartage: { joel: "musicien" } };
   const base = { ...annuaire, "setlists/sl-partage": setlist };

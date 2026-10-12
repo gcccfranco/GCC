@@ -14,7 +14,7 @@ import {
 
 const ADMIN: FakeProfile = {
   uid: "uid-admin", email: ADMIN_EMAIL, firstName: "Alix", lastName: "D.", planningName: "Alix D.",
-  poles: ["da", "louange"], dansEquipes: ["da", "louange"], referentDe: ["da", "louange"], plannings: ["culte"], serviceRoles: { "Culte Francophone": ["musicien"] },
+  dansEquipes: ["da", "louange"], referentDe: ["da", "louange"], plannings: ["culte"], serviceRoles: { "Culte Francophone": ["musicien"] },
 };
 
 const EV = {

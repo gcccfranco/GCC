@@ -556,7 +556,7 @@ test("P9 · colonnes de personnes : le thème, les chants et la répétition res
 const DOCS_P9: Record<string, Record<string, unknown>> = {
   ...Object.fromEntries(COMPTES_P9.map((c, i) => [`users/uid-p9-${i}`, {
     email: `p9-${i}@example.com`, firstName: c.prenom, lastName: c.nomDeFamille, planningName: c.nom,
-    serviceRoles: c.serviceRoles, annonces: [], notify: [], poles: [],
+    serviceRoles: c.serviceRoles, annonces: [], notify: [], 
   }])),
   // Un nom sans compte déjà dans la grille ; « Baptême » et « Séance de louange » n'en sont pas (relevé T0).
   "plannings/paix/dimanches/2027-01-03": { date: "2027-01-03", presidence: "Invité A.", musiciens: "Séance de louange", orateur: "Baptême" },

@@ -38,7 +38,7 @@ export async function listEquipes({ strict = false }: { strict?: boolean } = {})
 }
 
 /** Réécrit la liste des membres en bloc (une liste, pas un ensemble de retouches). Le PATCH
- *  porte un masque : l'ancien champ `pole`, que le relevé de la migration lit encore (EQ-E),
+ *  porte un masque : l'ancien champ de rattachement, que le relevé de la migration lit encore (EQ-E),
  *  n'est ni écrit ni effacé. */
 export async function saveEquipe(
   id: string,

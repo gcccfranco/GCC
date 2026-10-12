@@ -24,7 +24,7 @@ rules_version = '2';
 //   Réunions d'équipe (« equipe:<id> », lot U6, R4) : créées par un référent de
 //   l'équipe, lues (sujets, compte rendu) par ses membres — `dansEquipes` et
 //   `referentDe` du profil, écrits par le serveur seul.
-//   Sujets d'une réunion de pôle ou d'équipe (evenements/{id}/sujets, lot U6) : lus et
+//   Sujets d'une réunion d'équipe (evenements/{id}/sujets, lot U6) : lus et
 //   ajoutés par les personnes de la réunion ; ordre et « traité » par
 //   l'organisateur et les admins ; retirés par l'auteur, l'organisateur, un admin.
 // - Programmes de scène (programmes/{id}, lot 3 bis) : lus par les connectés ;
@@ -93,7 +93,6 @@ service cloud.firestore {
         || (request.auth.uid == uid
             && request.resource.data.get('annonces', []) == []
             && request.resource.data.get('notify', []) == []
-            && request.resource.data.get('poles', []) == []
             && request.resource.data.get('coordination', false) == false
             && request.resource.data.get('equipes', false) == false
             && request.resource.data.get('plannings', []) == []
@@ -155,8 +154,8 @@ service cloud.firestore {
     // Programmes de scène (lot 3 bis, docs/spec-programme-scene.md). Miroir :
     // isCoordination / canEditCreneau dans src/lib/access.ts. La coordination est
     // le droit `coordination` du profil, coché par un admin (lot 1 du chantier
-    // « équipes et groupes », docs/spec-equipes-sans-poles.md, EQ24) : le pôle
-    // « événement » ne la donne plus.
+    // « équipes et groupes », docs/spec-equipes-sans-poles.md, EQ24) : aucune équipe
+    // ne la donne.
     function isCoordination() {
       return isAdmin() || (hasProfile() && profile().get('coordination', false) == true);
     }
@@ -234,8 +233,8 @@ service cloud.firestore {
       allow read: if resource.data.pour == 'eglise' || signedIn();
       // Réunion ou évènement d'équipe (lot U6, R4 ; décisions 3 et 43) :
       // « equipe:<id> », créé par un référent de l'équipe (`referentDe` du profil,
-      // recopié par le serveur) ou un admin. Le public de pôle a disparu (EQ19) :
-      // la garde « (pole|equipe):.* » empêche d'en créer un. La coordination ne
+      // recopié par le serveur) ou un admin. Un public hors `equipe:` n'existe plus (EQ19) :
+      // la garde plus bas empêche d'en créer un. La coordination ne
       // crée que pour l'église et les sections (relecture du lot U6 : miroir exact
       // de canCreateEvenement).
       allow create: if signedIn()

@@ -147,8 +147,8 @@ async function rappelsTaches(
 }
 
 /** Lignes d'évènements du matin (préférence « Évènements »), par membre pas
- *  encore prévenu : la veille d'un évènement (lot 6 ; réunion de pôle ou
- *  d'équipe : tout le pôle ou toute l'équipe, avec le nombre de sujets à aborder, R3, R4), le compte rendu d'une réunion
+ *  encore prévenu : la veille d'un évènement (lot 6 ; réunion
+ *  d'équipe : toute l'équipe, avec le nombre de sujets à aborder, R3, R4), le compte rendu d'une réunion
  *  collé depuis hier (R3 : les autres personnes de la réunion), les inscriptions
  *  qui s'ouvrent aujourd'hui (docs/spec-inscriptions-periode.md), les évènements
  *  déplacés depuis le calendrier, case « Prévenir » cochée (lot U8, C7). */

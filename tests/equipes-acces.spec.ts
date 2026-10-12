@@ -37,17 +37,19 @@ const PAUL: FakeProfile = { uid: "u-paul", email: "paul@example.com", firstName:
 const SACHA: FakeProfile = { uid: "u-sacha", email: "sacha@example.com", firstName: "Sacha", lastName: "R.", serviceRoles: { "Groupe Paix": [] } };
 /** Coordination cochée, sans équipe. */
 const IRIS: FakeProfile = { uid: "u-iris", email: "iris@example.com", firstName: "Iris", lastName: "D.", coordination: true };
-/** Un ancien pôle seul, sans équipe (profil d'avant la migration) : il ne donne plus rien. */
-const ANCIEN: FakeProfile = { uid: "u-ancien", email: "ancien@example.com", firstName: "Noé", lastName: "B.", poles: ["da"] };
+/** Un profil d'avant la migration : son ancien champ `poles` (resté sur le document) ne donne plus rien. */
+const ANCIEN: FakeProfile & { poles: string[] } = { uid: "u-ancien", email: "ancien@example.com", firstName: "Noé", lastName: "B.", poles: ["evenement", "louange"] };
 
 const user = (p: FakeProfile) => ({ uid: p.uid, email: p.email });
 const profil = (p: FakeProfile) =>
   ({
     uid: p.uid, email: p.email, firstName: p.firstName ?? "", lastName: p.lastName ?? "", planningName: "",
-    serviceRoles: p.serviceRoles ?? {}, annonces: p.annonces ?? [], notify: p.notify ?? [], poles: p.poles ?? [],
+    serviceRoles: p.serviceRoles ?? {}, annonces: p.annonces ?? [], notify: p.notify ?? [], 
     coordination: p.coordination, equipes: p.equipes ?? false, plannings: p.plannings ?? [], dansEquipes: p.dansEquipes,
     referentDe: p.referentDe,
-  }) as UserProfile;
+    // Champ résiduel (hors du type) : un profil d'avant la migration le garde, et il ne doit rien donner.
+    poles: (p as { poles?: string[] }).poles,
+  }) as unknown as UserProfile;
 
 // ─── Pur : être d'une équipe, en être référent ───────────────────────────────
 
@@ -85,7 +87,7 @@ test.describe("pur : les équipes d'une personne (EQ3 à EQ5)", () => {
   });
 
   test("garde-fou : la coordination est la case, pas un pôle (EQ-A)", () => {
-    expect(isCoordination(user(ANCIEN), { ...profil(ANCIEN), poles: ["evenement"] } as UserProfile)).toBe(false);
+    expect(isCoordination(user(ANCIEN), profil(ANCIEN))).toBe(false);
     expect(isCoordination(user(IRIS), profil(IRIS))).toBe(true);
   });
 });
@@ -258,7 +260,11 @@ test.describe("écrans : le Back-Office d'un simple membre (EQ17)", () => {
   });
 
   test("un ancien pôle seul, sans équipe : « Réservé aux responsables »", async ({ page }) => {
-    await ouvrir(page, ANCIEN, "/back-office");
+    // Le document porte encore son ancien champ `poles` (la fausse base ne l'écrit pas d'elle-même).
+    const { poles, ...base } = ANCIEN;
+    await ouvrir(page, ANCIEN, "/back-office", {
+      [`users/${ANCIEN.uid}`]: { ...base, email: ANCIEN.email, planningName: "", serviceRoles: {}, annonces: [], notify: [], equipes: false, plannings: [], poles },
+    });
     await expect(page.getByText("Réservé aux responsables.")).toBeVisible();
     await expect(page.getByRole("group", { name: "Choisir l'espace" }).filter({ visible: true })).toHaveCount(0);
   });

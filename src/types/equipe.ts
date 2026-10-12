@@ -4,7 +4,7 @@
 
 
 /** Une personne dans une équipe. `uid` vide = nom du Sheet sans compte : elle
- *  apparaît dans l'organigramme mais ne reçoit rien et n'a pas de pôle. */
+ *  apparaît dans l'organigramme mais ne reçoit rien. */
 export interface MembreEquipe {
   /** Graphie du Sheet : « Charlie L. », « 周小秋 » — jamais traduite. */
   nom: string;
@@ -20,7 +20,6 @@ export interface MembreEquipe {
 
 export interface Equipe {
   id: string;
-  /** Pôle donné par l'appartenance ; null = l'équipe n'en donne aucun. */
   membres: MembreEquipe[];
   updatedAt: string;
   parUid: string;

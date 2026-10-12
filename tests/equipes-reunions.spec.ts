@@ -80,7 +80,7 @@ test.describe("pur : réunions et évènements d'équipe (EQ19 à EQ22)", () => 
     expect(publicDeReunion("pole:da")).toBe(false);
     expect(publicDeReunion("equipe:louange")).toBe(true);
     expect(estReunion({ pour: "pole:da" })).toBe(false);
-    const hugoAvecPole: FakeProfile = { ...HUGO, poles: ["da"] };
+    const hugoAvecPole = { ...HUGO, poles: ["louange"] } as FakeProfile; // champ résiduel, hors du type
     expect(canSeeEvenement(qui(HUGO), hugoAvecPole, ANCIENNE_DA)).toBe(false);
   });
 

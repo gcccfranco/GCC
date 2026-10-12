@@ -8,7 +8,7 @@ import { signInAs, type FakeProfile } from "./helpers/fakeSession";
 // Téléphone : la fiche en page (`/taches/[pole]/[id]`). Le formulaire ne s'ouvre plus qu'avec
 // « Modifier ». Firestore et date simulés ; personnes fictives.
 
-const RUTH: FakeProfile = { uid: "uid-da", email: "da@example.com", firstName: "Ruth", lastName: "K.", poles: ["da"], dansEquipes: ["da"], referentDe: ["da"] };
+const RUTH: FakeProfile = { uid: "uid-da", email: "da@example.com", firstName: "Ruth", lastName: "K.", dansEquipes: ["da"], referentDe: ["da"] };
 
 function tacheDoc(over: Record<string, unknown> = {}) {
   return {
