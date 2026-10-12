@@ -21,6 +21,8 @@ import {
   PUBLISHABLE_PLANNINGS,
   canPublishPlanning,
   getPublishedQuarters,
+  peutPrevenir,
+  triVisibilitiesAnnee,
 } from "@/lib/planning/releases"
 import { BACK_OFFICE } from "@/lib/backOffice"
 import { useGestionPlanning } from "@/lib/planning/gestion"
@@ -88,10 +90,12 @@ function GroupesPage() {
   const rows = grp === "paix" ? paix : grp === "bonte" ? bonte : fid
 
   const peutModifier = gestion && canEditPlanning(user, profile, definition.key)
-  const { datesDansLApp, comptes } = useGrilleApp(definition.key, peutModifier)
-
   // Trimestres futurs non publiés du groupe actif : masqués aux membres, marqués aux publieurs.
   const planning = PUBLISHABLE_PLANNINGS.find(p => p.key === grp)!
+  // Lot 3 (PG35) : qui publie ou notifie ce planning prévient des changements, même sans remplir la grille.
+  const peutPrev = gestion && peutPrevenir(planning, isAdminUser(user), profile?.notify ?? [])
+  const { datesDansLApp, comptes, ecrites } = useGrilleApp(definition.key, peutModifier || peutPrev)
+  const [publications, setPublications] = useState(0)
   const canPublish = gestion && canPublishPlanning(planning, isAdminUser(user), profile?.notify ?? [])
   // Q4 (lot U2) : le brouillon se montre à qui remplit ou publie ce planning, et aux admins.
   const voitBrouillon = canPublish || peutModifier
@@ -138,7 +142,10 @@ function GroupesPage() {
             annee={effAnnee}
             tri={effTri}
             publie={!unpublishedTris.includes(effTri)}
-            onChange={(published) => setPubByGrp((prev) => ({ ...prev, [`${grp}_${effAnnee}`]: published }))}
+            onChange={(published) => {
+              setPubByGrp((prev) => ({ ...prev, [`${grp}_${effAnnee}`]: published }))
+              if (published.includes(effTri)) setPublications((n) => n + 1)
+            }}
           />
         )}
         <FiltreDeNom filtre={filtre} couleur={color} />
@@ -161,6 +168,11 @@ function GroupesPage() {
         peutModifier={peutModifier}
         datesDansLApp={datesDansLApp}
         comptes={comptes}
+        casesEcrites={ecrites}
+        // PG34 : un trimestre que les membres voient (publié, en cours ou passé) ; jamais un brouillon.
+        prevenir={peutPrev && !loading && effTri && triVisibilitiesAnnee(effAnnee, anneeCourante, pubByGrp[`${grp}_${effAnnee}`] ?? [], getCurrentTri(), false).some((v) => v.tri === effTri && v.visible)
+          ? { planning, annee: effAnnee, tri: effTri, trimestre: trimestre(effTri, effAnnee), publications }
+          : undefined}
         dimanchesSpeciaux={dimanchesSpeciaux(interfranco, intergroupe)}
         // P7 : les responsables du planning et les admins exportent (Q13).
         exporter={voitBrouillon ? { annee: effAnnee, rang: Number(effTri.slice(1)) || 1, tout: isAdminUser(user) } : undefined}

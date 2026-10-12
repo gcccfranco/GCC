@@ -18,6 +18,8 @@ import {
   PUBLISHABLE_PLANNINGS,
   canPublishPlanning,
   getPublishedQuarters,
+  peutPrevenir,
+  triVisibilitiesAnnee,
 } from "@/lib/planning/releases"
 import { OngletsRail } from "@/components/layout/Onglets"
 import { BarreDeGrille, FiltreDeNom, compterCasesVides, ongletsDePeriode, useFiltreNom, useTrimestreEnLettres } from "@/components/planning/BarreDeGrille"
@@ -53,7 +55,10 @@ function CultePage() {
   const filtre = useFiltreNom()
   const trimestre = useTrimestreEnLettres()
   const peutModifier = gestion && canEditPlanning(user, profile, "culte")
-  const { datesDansLApp, comptes } = useGrilleApp("culte", peutModifier)
+  // Lot 3 (PG35) : qui publie ou notifie ce planning prévient des changements, même sans remplir la grille.
+  const peutPrev = gestion && peutPrevenir(CULTE, isAdminUser(user), profile?.notify ?? [])
+  const { datesDansLApp, comptes, ecrites } = useGrilleApp("culte", peutModifier || peutPrev)
+  const [publications, setPublications] = useState(0)
 
   useEffect(() => {
     const year = new Date().getFullYear()
@@ -98,7 +103,10 @@ function CultePage() {
             annee={effAnnee}
             tri={effTri}
             publie={!unpublishedTris.includes(effTri)}
-            onChange={(p) => setPublished((prev) => ({ ...prev, [effAnnee]: p }))}
+            onChange={(p) => {
+              setPublished((prev) => ({ ...prev, [effAnnee]: p }))
+              if (p.includes(effTri)) setPublications((n) => n + 1)
+            }}
           />
         )}
         <FiltreDeNom filtre={filtre} couleur={GRILLE_CULTE.couleur} />
@@ -116,6 +124,11 @@ function CultePage() {
         peutModifier={peutModifier}
         datesDansLApp={datesDansLApp}
         comptes={comptes}
+        casesEcrites={ecrites}
+        // PG34 : un trimestre que les membres voient (publié, en cours ou passé) ; jamais un brouillon.
+        prevenir={peutPrev && status !== "loading" && effTri && triVisibilitiesAnnee(effAnnee, anneeCourante, published[effAnnee] ?? [], getCurrentTri(), false).some((v) => v.tri === effTri && v.visible)
+          ? { planning: CULTE, annee: effAnnee, tri: effTri, trimestre: trimestre(effTri, effAnnee), publications }
+          : undefined}
         // P7 : les responsables du planning et les admins exportent (Q13).
         exporter={voitBrouillon ? { annee: effAnnee, rang: Number(effTri.slice(1)) || 1, tout: isAdminUser(user) } : undefined}
         dateBadge={(row, all) =>

@@ -3,6 +3,12 @@ import {
   GRILLE_CAMPUS_MATIN, GRILLE_CULTE, GRILLE_INTERFRANCO, GRILLE_TABLE,
 } from "../src/lib/planning/grilles";
 import {
+  borne, casesDuTrimestre, changementsDepuis, verifierReference, datesDesChangements, etatApres, personnesTouchees, premierDimancheDepuis, verifierChangements,
+} from "../src/lib/planning/prevenir";
+import { changementPlanningMessage, changementPlanningParDefaut } from "../src/lib/push/messages";
+import { PUBLISHABLE_PLANNINGS, peutPrevenir } from "../src/lib/planning/releases";
+import { GRILLE_PAIX } from "../src/lib/planning/grilles";
+import {
   colonnesACopier, datesApres, enTexteTabule, lignePrecedente, lireCollage, parDimanche, planCollage, planCopie, planRemplir,
 } from "../src/lib/planning/gestes";
 
@@ -149,4 +155,163 @@ test("planCollage : une cellule de plus de 200 caractères est refusée et compt
   const plan = planCollage({ bloc: [["x".repeat(201), "Ruth K."]], ligne: 0, col: 0, dates: ["2027-01-03"], cles: ["a", "b"], lire: () => "", verrou: () => false });
   expect(plan.tropLongues).toBe(1);
   expect(plan.cases.map((c) => c.apres)).toEqual(["Ruth K."]);
+});
+
+// ─── PG-E : prévenir des changements (PG33 à PG47) ──────────────────────────
+
+const ETAT = {
+  cases: { "2026-11-15|presidence": "Ruth K.", "2026-11-22|musiciens": "Hugo L.", "2026-11-22|orateur": "Joël F.", "2026-11-29|theme": "Ancien thème", "2026-11-08|presidence": "Ruth K." },
+};
+
+test("premierDimancheDepuis : le dimanche en cours est le premier dimanche égal ou postérieur au jour", () => {
+  expect(premierDimancheDepuis("2026-11-15")).toBe("2026-11-15");
+  expect(premierDimancheDepuis("2026-11-16")).toBe("2026-11-22");
+  expect(premierDimancheDepuis("2026-11-21")).toBe("2026-11-22");
+});
+
+test("casesDuTrimestre : sans case vide, sans colonne en lecture seule, sans présidence imposée", () => {
+  const lignes = [
+    ["2026-11-15", "Anaïs P.", "", "", ""],
+    ["2026-11-22", "Interfranco", "Hugo L.", "Orateur O.", ""],
+  ];
+  const cases = casesDuTrimestre(GRILLE_PAIX, lignes, { "2026-11-22": "Interfranco" });
+  expect(cases).toEqual({ "2026-11-15|presidence": "Anaïs P.", "2026-11-22|musiciens": "Hugo L.", "2026-11-22|orateur": "Orateur O." });
+  const table = casesDuTrimestre(GRILLE_TABLE, [["2026-11-15", "Équipe E.", "Yann M.", ""]], {});
+  expect(Object.keys(table).every((k) => !k.endsWith("|petitDej"))).toBe(true);
+});
+
+test("changementsDepuis : ajouts, retraits et vidages ; un dimanche passé, une valeur du Sheet et le même nom ne comptent pas", () => {
+  const cases = {
+    "2026-11-15|presidence": "Anaïs P.", "2026-11-22|musiciens": "Pasteur Lin", "2026-11-29|theme": "Nouveau thème",
+    "2026-11-08|presidence": "Hugo L.", "2026-12-06|piano": "Zoé T.", "2026-12-13|sono": "Éloïse M.",
+  };
+  const ecrites = new Set([
+    "2026-11-15|presidence", "2026-11-22|musiciens", "2026-11-22|orateur", "2026-11-29|theme", "2026-11-08|presidence", "2026-12-13|sono",
+  ]);
+  const ch = changementsDepuis({ ...ETAT, cases: { ...ETAT.cases, "2026-12-13|sono": "Éloïse M." } }, cases, ecrites, "2026-11-15");
+  expect(ch).toEqual([
+    { date: "2026-11-15", cle: "presidence", avant: "Ruth K.", apres: "Anaïs P." },
+    { date: "2026-11-22", cle: "musiciens", avant: "Hugo L.", apres: "Pasteur Lin" },
+    { date: "2026-11-22", cle: "orateur", avant: "Joël F.", apres: "" },
+    { date: "2026-11-29", cle: "theme", avant: "Ancien thème", apres: "Nouveau thème" },
+  ]);
+  // Une case jamais écrite dans l'app (valeur du Sheet, reprise de Fidélité) n'est jamais « changée » : piano du 06/12 absent de `ecrites`.
+  expect(ch.some((c) => c.cle === "piano")).toBe(false);
+  expect(changementsDepuis(null, cases, ecrites, "2026-11-15")).toEqual([]);
+  expect(datesDesChangements(ch)).toEqual(["2026-11-15", "2026-11-22", "2026-11-29"]);
+});
+
+test("personnesTouchees : ajout, retrait, une personne sur deux cases comptée une fois, sans compte, texte libre ignoré", () => {
+  const ch = [
+    { date: "2026-11-15", cle: "presidence", avant: "Ruth K.", apres: "Anaïs P." },
+    { date: "2026-11-22", cle: "musiciens", avant: "Hugo L., Ruth K.", apres: "Pasteur Lin, Anaïs P." },
+    { date: "2026-11-29", cle: "theme", avant: "A", apres: "Léa M." },
+  ];
+  const gens = personnesTouchees(ch, (n) => n !== "Pasteur Lin");
+  const par = Object.fromEntries(gens.map((p) => [p.nom, p]));
+  expect(Object.keys(par).sort()).toEqual(["Anaïs P.", "Hugo L.", "Pasteur Lin", "Ruth K."]);
+  expect(par["Anaïs P."].motifs).toEqual([
+    { sens: "ajout", date: "2026-11-15", cle: "presidence" },
+    { sens: "ajout", date: "2026-11-22", cle: "musiciens" },
+  ]);
+  // Ruth K. est retirée de deux cases : une personne, deux motifs.
+  expect(par["Ruth K."].motifs.map((m) => m.sens)).toEqual(["retrait", "retrait"]);
+  expect(par["Pasteur Lin"].compte).toBe(false);
+  expect(par["Hugo L."].compte).toBe(true);
+});
+
+test("personnesTouchees : déplacée (retirée d'une case, ajoutée à une autre) porte les deux pastilles", () => {
+  const gens = personnesTouchees([
+    { date: "2026-11-15", cle: "presidence", avant: "Ruth K.", apres: "" },
+    { date: "2026-11-22", cle: "orateur", avant: "", apres: "Ruth K." },
+  ], () => true);
+  expect(gens).toHaveLength(1);
+  expect(gens[0].motifs.map((m) => m.sens)).toEqual(["retrait", "ajout"]);
+});
+
+test("verifierChangements : avant, après, date et trimestre doivent correspondre", () => {
+  const dimanches = { "2026-11-15": { presidence: "Anaïs P." }, "2026-11-22": { orateur: "" } };
+  const bon = { date: "2026-11-15", cle: "presidence", avant: "Ruth K.", apres: "Anaïs P." };
+  const T = { annee: 2026, tri: "T4" };
+  expect(verifierChangements(ETAT, dimanches, [bon], "2026-11-15", T)).toEqual({ ok: true });
+  expect(verifierChangements(ETAT, dimanches, [{ ...bon, avant: "Autre" }], "2026-11-15", T).ok).toBe(false);
+  expect(verifierChangements(ETAT, dimanches, [{ ...bon, apres: "Autre" }], "2026-11-15", T).ok).toBe(false);
+  expect(verifierChangements(ETAT, dimanches, [{ date: "2026-11-08", cle: "presidence", avant: "Ruth K.", apres: "" }], "2026-11-15", T).ok).toBe(false);
+  expect(verifierChangements(ETAT, dimanches, [{ date: "2027-01-03", cle: "presidence", avant: "", apres: "" }], "2026-11-15", T).ok).toBe(false);
+  expect(verifierChangements(ETAT, dimanches, [], "2026-11-15", T).ok).toBe(false);
+  // Un vidage : « après » absent du document = vide.
+  expect(verifierChangements(ETAT, dimanches, [{ date: "2026-11-22", cle: "orateur", avant: "Joël F.", apres: "" }], "2026-11-15", T)).toEqual({ ok: true });
+});
+
+test("etatApres : l'état annoncé reprend les valeurs « après » ; une case vidée disparaît", () => {
+  const apres = etatApres(ETAT, [
+    { date: "2026-11-15", cle: "presidence", avant: "Ruth K.", apres: "Anaïs P." },
+    { date: "2026-11-22", cle: "orateur", avant: "Joël F.", apres: "" },
+  ]);
+  expect(apres["2026-11-15|presidence"]).toBe("Anaïs P.");
+  expect(apres).not.toHaveProperty("2026-11-22|orateur");
+  expect(apres["2026-11-22|musiciens"]).toBe("Hugo L.");
+});
+
+test("peutPrevenir : admin, notify « tout le monde », notify de la catégorie ; ni l'un ni l'autre, ni `plannings` seul", () => {
+  const paix = PUBLISHABLE_PLANNINGS.find((p) => p.key === "paix")!;
+  expect(peutPrevenir(paix, true, [])).toBe(true);
+  expect(peutPrevenir(paix, false, ["*"])).toBe(true);
+  expect(peutPrevenir(paix, false, ["Groupe Paix"])).toBe(true);
+  expect(peutPrevenir(paix, false, ["Groupe Bonté"])).toBe(false);
+  expect(peutPrevenir(paix, false, [])).toBe(false);
+});
+
+test("changementPlanningParDefaut : titre et message pré-remplis, FR et 中文", () => {
+  expect(changementPlanningParDefaut({ label: "Groupe Paix", dates: ["2026-11-15", "2026-11-22"] }, "fr")).toEqual({
+    title: "Planning Paix : changement le 15/11 et le 22/11",
+    body: "Le planning du groupe Paix a changé. Ouvre-le pour voir ta place.",
+  });
+  expect(changementPlanningParDefaut({ label: "Culte Franco", dates: ["2026-11-15"] }, "fr")).toEqual({
+    title: "Planning Culte Franco : changement le 15/11",
+    body: "Le planning du Culte Franco a changé. Ouvre-le pour voir ta place.",
+  });
+  expect(changementPlanningParDefaut({ label: "Groupe Paix", dates: ["2026-11-15", "2026-11-22", "2026-11-29", "2026-12-06"] }, "fr").title)
+    .toBe("Planning Paix : changement le 15/11, le 22/11, le 29/11 et 1 autre");
+  const zh = changementPlanningParDefaut({ label: "Groupe Paix", dates: ["2026-11-15", "2026-11-22"] }, "zh-CN");
+  expect(zh.title).toContain("11月15日");
+  expect(zh.title).toContain("11月22日");
+});
+
+test("changementPlanningMessage : la place de chacun après le changement, ou « tu n'es plus au planning »", () => {
+  const jours = [{ date: "2026-11-15", roles: ["Présidence"] }, { date: "2026-11-22", roles: [] }];
+  const fr = changementPlanningMessage({ titre: "T", message: "M", jours }, "fr");
+  expect(fr.title).toBe("T");
+  expect(fr.body).toBe("Dim. 15/11 : Présidence\nDim. 22/11 : tu n'es plus au planning\nM");
+  const zh = changementPlanningMessage({ titre: "T", message: "M", jours: [{ date: "2026-11-15", roles: ["司会", "吉他"] }, { date: "2026-11-22", roles: [] }] }, "zh-CN");
+  expect(zh.body).toBe("11月15日主日：司会、吉他\n11月22日主日：你已不在服事表上\nM");
+});
+
+test("verifierChangements : refuse sans état annoncé (brouillon) et pour une case jamais écrite dans le document", () => {
+  const T = { annee: 2026, tri: "T4" };
+  const ch = { date: "2026-11-15", cle: "presidence", avant: "", apres: "" };
+  expect(verifierChangements(null, {}, [{ ...ch, avant: "", apres: "Anaïs P." }], "2026-11-15", T).ok).toBe(false);
+  expect(verifierChangements(undefined, { "2026-11-15": { presidence: "Anaïs P." } }, [{ ...ch, apres: "Anaïs P." }], "2026-11-15", T).ok).toBe(false);
+  // Un « avant » forgé sur une case que le document ne porte pas : refusé.
+  expect(verifierChangements({ cases: { "2026-11-15|presidence": "Nom X" } }, { "2026-11-15": {} }, [{ ...ch, avant: "Nom X", apres: "" }], "2026-11-15", T).ok).toBe(false);
+});
+
+test("borne : les valeurs longues sont tronquées de la même façon des deux côtés, jamais rejetées", () => {
+  const long = "x".repeat(500);
+  expect(borne(long)).toHaveLength(200);
+  const cases = casesDuTrimestre(GRILLE_PAIX, [["2026-11-15", "", "", "", long]], {});
+  expect(cases["2026-11-15|theme"]).toHaveLength(200);
+  const T = { annee: 2026, tri: "T4" };
+  const etat = { cases: { "2026-11-29|theme": "a" } };
+  expect(verifierChangements(etat, { "2026-11-29": { theme: long } }, [{ date: "2026-11-29", cle: "theme", avant: "a", apres: borne(long) }], "2026-11-15", T)).toEqual({ ok: true });
+});
+
+test("verifierReference : dates du trimestre seulement, valeurs égales au document quand il les porte", () => {
+  const T = { annee: 2026, tri: "T4" };
+  const docs = { "2026-11-15": { presidence: "Anaïs P." } };
+  expect(verifierReference({ "2026-11-15|presidence": "Anaïs P.", "2026-11-22|piano": "Valeur du Sheet" }, docs, T)).toEqual({ ok: true });
+  expect(verifierReference({ "2026-11-15|presidence": "Nom X" }, docs, T).ok).toBe(false);
+  expect(verifierReference({ "2027-01-03|presidence": "A. B." }, {}, T).ok).toBe(false);
+  expect(verifierReference({ "pas une clé": "x" }, {}, T).ok).toBe(false);
+  expect(verifierReference(Object.fromEntries(Array.from({ length: 700 }, (_, i) => [`2026-11-15|c${i}`, "x"])), {}, T).ok).toBe(false);
 });

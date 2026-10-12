@@ -12,6 +12,7 @@
 // client, le panneau de publication ET la route serveur /api/planning/release.
 
 import { NOTIFY_ALL } from "@/lib/push/audiences"
+import type { EtatAnnonce } from "./prevenir"
 
 export interface PublishablePlanning {
   /** Clé stable : id Firestore + sélecteur de groupe de la page Groupes. */
@@ -52,6 +53,12 @@ export function canPublishPlanning(
   notifyRights: string[]
 ): boolean {
   return isAdmin || notifyRights.includes(NOTIFY_ALL) || notifyRights.includes(planning.permission)
+}
+
+/** Lot 3 (PG35) : qui voit « Prévenir des changements » et peut l'envoyer. Dans ce lot, qui peut publier ;
+ *  le lot 2 l'étend (rôles qui publient ou notifient). Un seul endroit, la page et la route l'appellent. */
+export function peutPrevenir(planning: PublishablePlanning, isAdmin: boolean, notifyRights: string[]): boolean {
+  return canPublishPlanning(planning, isAdmin, notifyRights)
 }
 
 export interface TriVisibility {
@@ -118,5 +125,28 @@ export async function getPublishedQuarters(key: string, year: number): Promise<s
       .filter(Boolean)
   } catch {
     return []
+  }
+}
+
+/**
+ * Lot 3 (PG36) : ce qui a été annoncé de chaque trimestre d'une année (champ `annonces` du même
+ * document), par trimestre. Absent ou illisible = aucun état.
+ */
+export async function lireAnnonces(key: string, year: number): Promise<Record<string, EtatAnnonce>> {
+  type Champs = Record<string, { stringValue?: string; mapValue?: { fields?: Champs } }>
+  try {
+    const res = await fetch(`${FS_DOCS}/planningReleases/${key}_${year}`, { cache: "no-store" })
+    if (!res.ok) return {}
+    const raw = (await res.json()) as { fields?: { annonces?: { mapValue?: { fields?: Champs } } } }
+    const out: Record<string, EtatAnnonce> = {}
+    for (const [tri, v] of Object.entries(raw.fields?.annonces?.mapValue?.fields ?? {})) {
+      const f = v.mapValue?.fields ?? {}
+      const cases: Record<string, string> = {}
+      for (const [k, x] of Object.entries(f.cases?.mapValue?.fields ?? {})) if (x.stringValue) cases[k] = x.stringValue
+      out[tri] = { cases, le: f.le?.stringValue, par: f.par?.stringValue, publieLe: f.publieLe?.stringValue }
+    }
+    return out
+  } catch {
+    return {}
   }
 }

@@ -304,6 +304,10 @@ export async function signInAs(
   partage?: FakeDb,
 ): Promise<FakeDb> {
   const token = idToken(profile);
+  // Lot 3 (PG37) : la grille d'un trimestre publié envoie son état annoncé à la route serveur ; jamais la
+  // vraie route. Un test qui veut voir l'appel pose sa propre route (la dernière posée gagne).
+  await page.route("**/api/planning/changements", (route) =>
+    route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ok: true }) }));
   await page.route(/identitytoolkit\.googleapis\.com/, (route) => {
     const url = route.request().url();
     if (url.includes("accounts:signInWithPassword")) {

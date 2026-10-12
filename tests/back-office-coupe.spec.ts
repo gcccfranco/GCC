@@ -71,7 +71,7 @@ test.describe("back-office coupé : une adresse tapée à la main tombe dans le 
     });
   }
 
-  for (const route of ["/api/taches/assigne", "/api/taches/fait", "/api/equipes/poles", "/api/scene/conflit", "/api/evenements/inscription", "/api/evenements/desinscription", "/api/push/notify-evenement"]) {
+  for (const route of ["/api/taches/assigne", "/api/taches/fait", "/api/equipes/poles", "/api/scene/conflit", "/api/evenements/inscription", "/api/evenements/desinscription", "/api/push/notify-evenement", "/api/planning/changements"]) {
     test(`${route} répond 404`, async ({ request }) => {
       const reponse = await request.post(`${BASE_URL_COUPE}${route}/`, { data: {} });
       expect(reponse.status()).toBe(404);

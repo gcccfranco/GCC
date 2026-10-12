@@ -23,6 +23,7 @@ import { colonnesACopier, datesApres, enTexteTabule, lignePrecedente, lireCollag
 import { BanniereGeste, BarreCollage, BarreSelection } from "./BanniereGeste"
 import { useClavier, useSelectionGrille, type Poignees } from "./useSelectionGrille"
 import { FenetreCopie, type DemandeCopie } from "./FenetreCopie"
+import { PrevenirChangements, usePrevenir, type PrevenirProp } from "./PrevenirChangements"
 
 // Grille d'un planning rempli dans l'app (lot 17, docs/spec-planning-grille.md).
 // Table sur ordinateur et tablette — colonne des dates FIGÉE au défilement
@@ -74,6 +75,11 @@ export interface PlanningGrilleProps {
   /** Lot 3 (PG10) : toutes les lignes du planning, toutes années, d'où se tire « le dimanche
    *  précédent » ; absent : les seules lignes affichées. */
   lignesDuPlanning?: readonly string[][]
+  /** Lot 3 (PG33 à PG47) : le trimestre affiché est publié et la personne peut prévenir des changements
+   *  (`peutPrevenir`, pas `peutModifier`) : bannière, points et feuille. Absent : rien de tout cela. */
+  prevenir?: PrevenirProp
+  /** Les cases écrites dans l'app (`date|clé`, `useGrilleApp`) : seules celles-ci peuvent être « changées » (PG38). */
+  casesEcrites?: ReadonlySet<string>
 }
 
 const AVEC_SURVOL = "(hover: hover)"
@@ -107,6 +113,8 @@ export function PlanningGrille({
   vide,
   retrait,
   lignesDuPlanning,
+  prevenir,
+  casesEcrites,
 }: PlanningGrilleProps) {
   const { t, i18n } = useTranslation()
   const confirmer = useConfirmer()
@@ -204,6 +212,17 @@ export function PlanningGrille({
       !c.optionnelle ||
       mode === "edition" ||
       dansLaFenetre.some((l) => valeur(l.row[0], c, l.row).trim())
+  )
+
+  // Prévenir des changements (PG33 à PG47) : les cases changées depuis l'état annoncé (un point chacune).
+  const ecritesAppEtSeance = new Set([...(casesEcrites ?? []), ...Object.keys(modifs)])
+  const prev = usePrevenir({ prevenir, definition, rows: dansLaFenetre.map(ligneAffichee), speciaux: dimanchesSpeciaux, ecrites: ecritesAppEtSeance, comptes })
+  const aChange = (date: string, cle: string) => prev.points.has(`${date}|${cle}`) || undefined
+  const pointChange = (date: string, cle: string) => aChange(date, cle) && (
+    <>
+      <span aria-hidden data-point className="pointer-events-none absolute right-1 top-1 h-2 w-2 rounded-full bg-orange-500" />
+      <span className="sr-only">{t("planning.prevenir.caseChangee")}</span>
+    </>
   )
 
   // Copier-coller au clavier (PG22 à PG32) : pointeur fin, tableau, grille en modification.
@@ -772,6 +791,8 @@ export function PlanningGrille({
         />
       )}
 
+      <PrevenirChangements prev={prev} prevenir={prevenir} definition={definition} />
+
       {peutModifier && (
         <FenetreCopie
           demande={fenetreCopie}
@@ -892,12 +913,14 @@ export function PlanningGrille({
                         data-apercu={marqueApercu(date, c.cle)}
                         data-selection={marqueSelection(rangDate(date), j, date, c.cle)}
                         data-sans-compte={dansSansCompte(date, c.cle) || undefined}
+                        data-changement={aChange(date, c.cle)}
                         onMouseDownCapture={(e) => { if (actifClavier && e.shiftKey) e.preventDefault() }}
                         onClickCapture={(e) => surCase(e, date, c.cle)}
-                        className={`px-3 py-2 text-foreground ${dansSansCompte(date, c.cle) ? "[&_button]:underline [&_button]:decoration-dotted [&_button]:underline-offset-4" : ""}`}
+                        className={`relative px-3 py-2 text-foreground ${aChange(date, c.cle) ? "bg-amber-100/70 dark:bg-amber-500/15" : ""} ${dansSansCompte(date, c.cle) ? "[&_button]:underline [&_button]:decoration-dotted [&_button]:underline-offset-4" : ""}`}
                         style={styleCase(rangDate(date), j, date, c.cle)}
                       >
                         {caseOuApercu(l, c)}
+                        {pointChange(date, c.cle)}
                       </td>
                     ))}
                   </tr>
@@ -964,12 +987,13 @@ export function PlanningGrille({
                 {colonnes
                   // En lecture, une case vide ne prend pas de place ; en
                   // modification, toutes s'affichent pour pouvoir les remplir
-                  // (sauf celles en lecture seule, qui ne se remplissent pas ici).
-                  .filter((c) => (mode === "edition" && !c.lectureSeule) || valeur(date, c, l.row).trim())
+                  // (sauf celles en lecture seule, qui ne se remplissent pas ici). Une case vidée depuis
+                  // la publication reste, pour porter son point.
+                  .filter((c) => (mode === "edition" && !c.lectureSeule) || valeur(date, c, l.row).trim() || aChange(date, c.cle))
                   .map((c) => (
                     <div key={c.cle} className="flex items-baseline gap-2 text-[13px]">
                       <span className="w-24 shrink-0 text-[11px] text-muted-foreground">{t(c.i18n)}</span>
-                      <span data-case={`${date}|${c.cle}`} data-geste={dansGeste(date, c.cle) || undefined} data-apercu={marqueApercu(date, c.cle)} className="min-w-0 flex-1 rounded-md" style={dansGeste(date, c.cle) ? { background: `${couleur}22` } : undefined}>{caseOuApercu(l, c)}</span>
+                      <span data-case={`${date}|${c.cle}`} data-geste={dansGeste(date, c.cle) || undefined} data-apercu={marqueApercu(date, c.cle)} data-changement={aChange(date, c.cle)} className={`relative min-w-0 flex-1 rounded-md ${aChange(date, c.cle) ? "bg-amber-100/70 pr-4 dark:bg-amber-500/15" : ""}`} style={dansGeste(date, c.cle) ? { background: `${couleur}22` } : undefined}>{caseOuApercu(l, c)}{pointChange(date, c.cle)}</span>
                     </div>
                   ))}
               </div>

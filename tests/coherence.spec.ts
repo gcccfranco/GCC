@@ -185,7 +185,7 @@ test("admin : l'adresse est reconnue quelle que soit sa casse, partout", () => {
   expect(isAdminEmail("jo@example.com")).toBe(false);
   expect(isAdminEmail(null)).toBe(false);
   for (const rel of [
-    "src/lib/equipes/serveur.ts", "src/app/api/planning/release/route.ts", "src/app/api/push/notify-audience/route.ts",
+    "src/lib/equipes/serveur.ts", "src/app/api/planning/release/route.ts", "src/app/api/planning/changements/route.ts", "src/app/api/push/notify-audience/route.ts",
     "src/app/api/push/notify-setlist/route.ts",
   ]) {
     expect(lire(rel), rel).not.toContain("ADMIN_EMAILS.includes(");

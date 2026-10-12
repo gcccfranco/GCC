@@ -33,3 +33,40 @@ export function planningReleaseMessage(p: PlanningRelease, lang: NotifLang): { t
   const tri = p.annee ? `${p.tri} ${p.annee}` : p.tri;
   return { title: `Planning ${tri} en ligne`, body: `Le planning ${p.label} du ${tri} est disponible.` };
 }
+
+// ─── Lot 3 (docs/spec-planning-gestes.md, PG43, PG44) : « Prévenir des changements » ───
+
+const jourMois = (iso: string) => `${parseInt(iso.slice(8, 10))}/${parseInt(iso.slice(5, 7))}`;
+const moisJour = (iso: string) => `${parseInt(iso.slice(5, 7))}月${parseInt(iso.slice(8, 10))}日`;
+
+/** Titre et message pré-remplis (PG44). `label` : « Groupe Paix » ou « Culte Franco » ; `dates` : AAAA-MM-JJ. */
+export function changementPlanningParDefaut(p: { label: string; dates: string[] }, lang: NotifLang): { title: string; body: string } {
+  const groupe = p.label.startsWith("Groupe ");
+  const nom = p.label.replace(/^Groupe /, "");
+  const vues = p.dates.slice(0, 3);
+  const autres = p.dates.length - vues.length;
+  if (lang === "zh-CN") {
+    const jours = vues.map(moisJour).join("、") + (autres ? ` 等 ${p.dates.length} 天` : "");
+    return { title: `${nom}服事表有变动：${jours}`, body: `${nom}服事表有变动，请打开查看你的安排。` };
+  }
+  const jours = vues.map((d) => `le ${jourMois(d)}`);
+  const fin = autres ? `${jours.join(", ")} et ${autres} autre${autres > 1 ? "s" : ""}` : jours.length > 1 ? `${jours.slice(0, -1).join(", ")} et ${jours[jours.length - 1]}` : jours[0];
+  return {
+    title: `Planning ${nom} : changement ${fin}`,
+    body: `Le planning du ${groupe ? `groupe ${nom}` : p.label} a changé. Ouvre-le pour voir ta place.`,
+  };
+}
+
+/** Le push d'une personne (PG43) : sa place après le changement pour chaque dimanche touché, puis le message.
+ *  `roles` : les noms de ses colonnes ce jour-là, déjà dans sa langue ; vide = elle n'y est plus. */
+export function changementPlanningMessage(
+  p: { titre: string; message: string; jours: { date: string; roles: string[] }[] },
+  lang: NotifLang,
+): { title: string; body: string } {
+  const lignes = p.jours.map((j) =>
+    lang === "zh-CN"
+      ? `${moisJour(j.date)}主日：${j.roles.length ? j.roles.join("、") : "你已不在服事表上"}`
+      : `Dim. ${jourMois(j.date)} : ${j.roles.length ? j.roles.join(", ") : "tu n'es plus au planning"}`,
+  );
+  return { title: p.titre, body: [...lignes, p.message].filter(Boolean).join("\n") };
+}
