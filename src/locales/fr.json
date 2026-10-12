@@ -614,6 +614,7 @@
     "hideLyrics": "Masquer les paroles",
     "pinyin": "Pinyin",
     "chartStyle": "Couleurs par section",
+    "affichageHint": "Le même réglage que le menu Affichage de la setlist.",
     "jianpuSheet": "Partition 简谱",
     "jianpuSheetHint": "Allumé par défaut, retenu sur cet appareil. Un chant marqué « Paroles » par le responsable reste en paroles tant que tu n'as pas choisi toi-même entre 简谱 et Paroles (ici ou sur la page d'un chant).",
     "annotations": "Annotations",
@@ -781,7 +782,8 @@
           "Choisis l'outil, l'épaisseur (les cases montrent l'épaisseur réelle du trait) et la couleur.",
           "Tes annotations sont enregistrées sur ton compte et réapparaissent à la même mise en page.",
           "Ajuste la **taille du texte** et **affiche/masque les accords** directement depuis le mode.",
-          "**Vues par rôle** : l'affichage s'adapte à ton instrument en un geste — **Pianiste**, **Guitariste** (avec capo), **Présidence**, **Choriste** ou **Batteur**."
+          "**Rôle** : l'affichage s'adapte à ton instrument en un geste — **Pianiste**, **Guitariste** (avec capo), **Présidence**, **Choriste** ou **Batteur**.",
+          "**Affichage** : ordre joué, sections uniques (chaque section une fois, la structure du chant en tête) ou structure seule — le même réglage que dans la setlist."
         ]
       },
       "setlists": {

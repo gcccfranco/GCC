@@ -1577,6 +1577,7 @@ export function PerformanceMode({
                   </button>
                 ))}
               </div>
+              <p className="text-xs text-muted-foreground">{t("performance.affichageHint")}</p>
             </div>
             {currentEntry?.block.setlistKey && currentEntry.block.songSlug && (
               <div className="flex items-center justify-between gap-3">

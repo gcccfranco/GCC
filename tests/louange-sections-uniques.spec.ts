@@ -275,6 +275,7 @@ test.describe("Réglages : Rôle et Affichage", () => {
     const feuille = await reglages(page);
     await expect(feuille.getByText("Rôle", { exact: true })).toBeVisible();
     await expect(feuille.getByText("Vue", { exact: true })).toHaveCount(0);
+    await expect(feuille.getByText("Le même réglage que le menu Affichage de la setlist.")).toBeVisible();
     const affichage = feuille.getByRole("radiogroup", { name: "Affichage" });
     await expect(affichage.getByRole("radio")).toHaveText(["Ordre joué", "Sections uniques", "Structure seule"]);
     await expect(affichage.getByRole("radio", { name: "Ordre joué" })).toHaveAttribute("aria-checked", "true");

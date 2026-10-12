@@ -782,4 +782,45 @@ Relevés de la relecture, laissés pour plus tard : les paroles s'affichent une 
 (`transform: scale`, déjà vrai pour les paroles) ; les annotations du mode louange sur une page de scan sont rangées par
 indices et se perdent si l'on ajoute un chant avant (existait, plus exposé).
 
-Prochaine étape : le lot 2 (déjà commencé sur la branche par une autre session, L2-T1 à L2-T4), puis le lot 3.
+**Lot 2 « Sections uniques et structure en mode louange » : codé sur `ui/apple-design` (09 au 12/10/2026)**
+
+- L2-T1 `23f38389` : `buildPerformanceBlocks` reçoit l'affichage (objet d'options) ; Sections uniques, Structure seule
+  sans scan (D13), `steps` sur l'en-tête, `occurrenceUids` sur les sections.
+- L2-T2 `5bc09e2e` : « Vue » devient « Rôle » ; rangée « Affichage » (même préférence `partition-layout` que la
+  setlist, un seul état) ; le Batteur pose Structure seule.
+- L2-T3 `2ba7bbd0` : bandeau de pastilles en tête de chaque chant (sans détails en Ordre joué, avec en Sections
+  uniques) et sur les pages de scan ; `JianpuStructureStrip` supprimé.
+- L2-T4 `9485e061` : rappel de 24 px cerclé sur les pages suivantes (Sections uniques) ; `reserveSuite` dans
+  `columns.ts`.
+- L2-T5 `db2cf81c` : `signatureAffichage` (pure, dans `blocks.ts`) ; l'affichage entre dans la clé des annotations.
+- L2-T6 : libellés (`performance.affichageHint`), point « Affichage » du guide, `docs/spec-coup-d-oeil.md` (D14), et
+  ce bloc.
+- Relu par Opus (12/10/2026) : 10 constats ; corrigés C1 à C6, C8, C9 (commit `ad3cc6bd`) ; laissés : C7 — toucher
+  Affichage désélectionne le rôle comme la spec le dit, donc le guitariste perd son capo jusqu'à ce qu'il le
+  resélectionne (à confirmer par Timothée) ; C10 — signature sans « as » (choix faute de réponse b).
+
+Choix faits faute de réponse (à valider par Timothée) :
+
+- a. « Accords » et « Masquer les paroles » touchés depuis Structure seule ramènent l'Ordre joué (comme « Accords »
+  sortait le batteur de la vue structure avant l'Affichage).
+- b. La signature des annotations écrit Structure seule comme la vue ossature (accords coupés, paroles masquées), sans
+  marqueur « as » : la vue structure du batteur garde ses traits d'avant ; « au » en Sections uniques.
+- c. L'assertion « pastilles 32/44 px » côté mode louange est dans `louange-sections-uniques.spec.ts`, pas dans
+  `look-louange.spec.ts` (qui n'ouvre pas le mode louange).
+- d. Le rappel réservait 32 px fixes : une structure trop longue pour une rangée (≈ 12 étapes au téléphone) passait à
+  la ligne et mordait sur la marge de sécurité de 24 px. Corrigé depuis par C3 : la réserve de chaque chant est la
+  hauteur mesurée de son rappel (au moins 32 px).
+
+Tests : `louange-sections-uniques.spec.ts` (pur : blocs, pagination, signature ; à l'écran : réglages, bandeau, rappel,
+scan), ajoutée à `SPECS_GRAND_ECRAN` ; existants adaptés : `performance-mode` (batteur qui repasse en Ordre joué dans la
+setlist ; nuancier lu dans le corps), `mode-louange-colonnes` (Structure seule venue d'Affichage), `coup-d-oeil` (choix
+fait dans le mode louange retrouvé dans la setlist) ; aucune assertion affaiblie, aucun test retiré. Plantages et
+défauts trouvés et corrigés : `computePageKey` sur indices périmés ; ancre de lecture par indice (C1) ; cercles du
+rappel faux sur deux chants au même `section.uid` (C5).
+
+- O16 : un `partition-layout` déjà réglé dans la setlist s'applique désormais au mode louange — à dire dans l'annonce de
+  la mise en ligne.
+- Ce que Timothée doit faire : relire le 中文 (`performance.view` 角色, `performance.affichageHint`, le point du guide).
+- Reste : passage complet de la suite et vérification d'Opus (tests et captures).
+
+Prochaine étape : le lot 3 (le lot 2 attend le passage complet et la vérification d'Opus).
