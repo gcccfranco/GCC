@@ -109,3 +109,54 @@ Verdicts : accepté (proposition gardée), corrigé (valeur posée à la main), 
 | 我们是光明之子 | 187 | 187 | accepté | titre, ♩, album, verset coupés ; crédits gardés avec 1=E |
 | 我们欢迎君王降临 | 201 | 181 | corrigé | proposition tranchait le haut du titre anglais « We Long to Meet » ; coupe dans la bande blanche sous le titre : titre et tampon coupés ; titre anglais, album, verset, crédits gardés |
 | 我们爱让世界不一样 | 240 | 240 | accepté | titre coupé ; titre anglais, verset, ♩ et crédits gardés (bande commune avec 1=D) |
+
+## Tranche L3-T1d
+
+| chant | proposé | certifié | verdict | note |
+|---|---|---|---|---|
+| 我们的神 | 138 | 138 | accepté | titre, album coupés ; versets, crédits gardés avec 1=G |
+| 我们高举耶稣的名 | 175 | 175 | accepté | titre, album coupés ; crédit 曲 chevauche le « 4/4 », gardé |
+| 我在这里敬拜 | 199 | 199 | accepté | titre, album, versets coupés ; ligne juste au-dessus du « 1=D 4/4 » |
+| 我安然居住 | 13 | 13 | sans coupe propre | encre continue du titre au « 4/4 » (速度, album, crédits) ; marge blanche du haut seule, en-tête gardé |
+| 我已得自由 | 211 | 211 | accepté | titre coupé ; titre anglais, versets, ♩ et crédits gardés (même bande que 1=C) |
+| 我心坚定与你 | 124 | 124 | accepté | titre, album, crédit 词 coupés ; versets et crédit 曲 gardés avec 1=A |
+| 我愿为你去 | 145 | 145 | accepté | titre, album coupés ; ligne juste au-dessus du « 1=D 4/4 », rien tranché |
+| 我是承带神荣耀的器皿 | 147 | 147 | accepté | titre, album coupés ; versets et crédits gardés avec 1=G |
+| 我渴望看见 | 96 | 96 | accepté | titre coupé ; album, versets, crédits gardés (aucune bande blanche, crédit chevauche le « 4/4 ») |
+| 我的家要荣耀主 | 211 | 211 | accepté | titre coupé ; titre anglais, verset, ♩ et crédits gardés (même bande que 1=D) |
+| 我的救赎者活着 | 235 | 235 | accepté | titre coupé ; titre anglais, verset, ♩ et crédits gardés (même bande que 1=A) |
+| 我的生命献给你 | 115 | 115 | accepté | tempo et titre coupés ; album, crédits gardés avec 1=A |
+| 我相信 | 13 | 13 | sans coupe propre | encre continue (titre, 速度, album, versets, crédits) jusqu'au « 4/4 » ; marge blanche du haut seule |
+| 我神我王 | 140 | 140 | accepté | titre, album « KUA Originals » coupés ; versets et crédit 2 lignes gardés avec 1=D |
+| 我能给你什么 | 127 | 127 | accepté | titre, album coupés ; versets, crédits gardés avec 1=F |
+| 我要全心赞美 | 239 | 239 | accepté | titre coupé ; titre anglais, versets, ♩ et crédits gardés |
+| 我要爱慕你 | 219 | 219 | accepté | titre, titre anglais, album, 译 coupés ; crédit « Takafumi… » gardé (descend de 3 px sur le haut du « 4/4 », pas de coupe propre) |
+| 我要看见 | 148 | 148 | accepté | titre, album, crédit 词 coupés ; versets et crédit 曲 gardés avec 1=C |
+| 我要顺服 | 243 | 243 | accepté | titre coupé ; titre anglais, ♩ et crédits gardés |
+| 我选择喜乐 | 150 | 150 | accepté | titre, album coupés ; versets, crédits gardés avec 1=G |
+| 我需要有你在我生命中 | 175 | 175 | accepté | titre, album, 共3张 coupés ; crédits, (C/G) gardés avec 1=C |
+| 所有的荣耀归于你 | 138 | 138 | accepté | titre, album coupés ; verset et crédits gardés avec 1=F |
+| 打开天窗 | 133 | 133 | accepté | titre, album, crédit coupés ; versets gardés avec 1=D ; ligne dans la bande blanche sous l'album |
+| 把冷漠变成爱 | 127 | 127 | accepté | titre, album coupés ; crédits gardés avec 1=D |
+| 拣选 | 176 | 176 | accepté | titre, album, versets coupés ; crédit 词曲 gardé avec 1=F |
+| 握住幸福 | 14 | 14 | sans coupe propre | titre, album, 前奏 et 1=G sur une encre continue ; marge blanche du haut seule |
+| 握手 | 86 | 86 | accepté | titre coupé ; album gardé (son bas et le haut du « 4/4 » se recouvrent de 3 px), pas de coupe propre |
+| 敬拜的心 | 131 | 131 | accepté | titre, album coupés ; crédit gardé avec 1=F |
+| 新造的人 | 98 | 98 | accepté | titre coupé ; album et crédits (chevauchent le « 4/4 ») gardés, pas de coupe propre |
+| 无价至宝 | 2 | 2 | sans coupe propre | encre continue (速度, titre, album, crédits, 1=♭B) ; marge blanche du haut seule |
+| 日日夜夜 | 237 | 237 | accepté | titre coupé ; titre anglais, versets, ♩ et crédits gardés |
+| 旷野中唯一的力量 | 85 | 132 | corrigé | proposition 85 gardait album et crédit 词曲 ; coupe à 132 : album, crédit coupés (reste 1 rangée très pâle de 曲), « 4/4 » et versets entiers |
+| 明亮晨星 | 127 | 127 | accepté | titre, album coupés ; versets, crédits gardés avec 1=F |
+| 是为了爱 | 136 | 136 | accepté | titre, album coupés ; versets, crédits gardés (crédit chevauche le « 4/4 ») |
+| 是你的爱 | 255 | 255 | accepté | titre et titre anglais « It's Your Love » coupés ; versets, ♩ et crédits gardés |
+| 是耶稣的名 | 85 | 85 | accepté | titre coupé ; album et crédits (chevauchent le « 4/4 ») gardés, pas de coupe propre |
+| 最美的礼物 | 243 | 243 | accepté | titre coupé ; titre anglais, verset, ♩ et crédits gardés |
+| 有一位神 | 12 | 12 | sans coupe propre | encre continue (tempo, 共3张, titre, album, crédits) ; marge blanche du haut seule |
+| 有一天 | 71 | 71 | accepté | titre coupé ; ligne juste au-dessus de « A 4/4 » et du crédit |
+| 有你同行 | 140 | 140 | accepté | titre, album coupés ; versets et crédit (chevauche le « 4/4 ») gardés |
+| 每一天我需要你 | 193 | 193 | accepté | titre, tampon coupés ; titre anglais, ♩, crédits gardés avec 1=C |
+| 永恒唯一的盼望 | 127 | 127 | accepté | titre, album coupés ; crédit gardé avec 1=E |
+| 永活盼望 | 13 | 13 | sans coupe propre | titre, tempo, titre anglais, crédits sur une encre continue avec 1=D ; marge blanche du haut seule |
+| 求主充满我 | 234 | 234 | accepté | titre coupé ; titre anglais, versets, ♩ et crédits gardés |
+| 求充满这地 | 142 | 142 | accepté | titre, tempo, album, crédits coupés ; ligne juste au-dessus du « 1=E 4/4 » |
+| 活出爱 | 153 | 153 | accepté | titre, album, crédit coupés ; ligne juste au-dessus du « 1=C 12/8 » |

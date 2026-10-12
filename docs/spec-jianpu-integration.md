@@ -861,4 +861,12 @@ rappel faux sur deux chants au même `section.uid` (C5).
   marge vide est coupée), 在这里 `128` (la proposition `234` tranchait les crédits ; en-tête gardé, marge de 128 px coupée).
   Total certifié : 97 / 189.
 
+- **L3-T1d, 12/10/2026 — recadrage : 46 pages certifiées à l'œil** (registre : `docs/chantier-jianpu/cadrage-certification.md`).
+  **39 acceptées, 1 corrigée, 6 sans coupe propre.** Corrigée : 旷野中唯一的力量 `132` (la proposition `85` laissait album et crédit
+  sous la ligne ; une coupe à 132 les retire, « 4/4 » et versets entiers, il ne reste qu'une rangée très pâle du bas de « 曲 »).
+  Sans coupe propre (encre continue du titre au « 4/4 », marge blanche du haut seule) : 我安然居住 `13`, 我相信 `13`, 握住幸福 `14`,
+  无价至宝 `2`, 有一位神 `12`, 永活盼望 `13`. Cas notables : 我要爱慕你, 握手, 新造的人, 是耶稣的名, 有你同行 gardent album ou crédits
+  (recouvrement de 2 à 3 px avec le haut du « 4/4 », aucune coupe sans contact) ; 我已得自由, 我的家要荣耀主, 我的救赎者活着, 日日夜夜,
+  最美的礼物, 求主充满我, 我要全心赞美, 我要顺服 gardent le titre anglais (même bande que « 1=X »). Total certifié : 143 / 189.
+
 Prochaine étape : le lot 3 (le lot 2 attend le passage complet et la vérification d'Opus).
