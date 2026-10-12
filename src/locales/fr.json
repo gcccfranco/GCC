@@ -353,6 +353,7 @@
       "planningEtChoisie": "d'après le planning et la setlist",
       "priveeAvecEquipe": "Privée : visible et modifiable par son créateur et son équipe",
       "personne": "Personne pour l'instant.",
+      "inconnu": "Membre inconnu",
       "aucunResultat": "Aucun compte trouvé."
     },
     "editeur": {

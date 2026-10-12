@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { listProfiles } from "@/lib/firebase/users";
 import { candidatsDeLEquipe, nomCourt, roleParDefaut, type RolePartage } from "@/lib/setlist/partage";
+import { TitreVolet } from "@/components/setlists/editeur/feuille";
 import type { UserProfile } from "@/types/user";
 
 // La vue « L'équipe de cette setlist » du volet (docs/spec-partage-setlist.md, PS3) : les comptes
@@ -38,7 +39,8 @@ export function VoletEquipe({ equipe }: { equipe: EtatEquipe }) {
   }, []);
 
   const parUid = useMemo(() => new Map((profils ?? []).map((p) => [p.uid, p])), [profils]);
-  const membres = equipe.editeurs.map((uid) => parUid.get(uid)).filter((p): p is UserProfile => !!p);
+  // Un uid sans profil garde sa ligne (nom neutre) : sans elle, la puce le compte mais rien ne permet de le retirer.
+  const membres = equipe.editeurs.map((uid) => ({ uid, nom: parUid.has(uid) ? nomCourt(parUid.get(uid)!) : t("setlists.equipe.inconnu") }));
   const { duService, tous: tousLesComptes } = useMemo(
     () => candidatsDeLEquipe(profils ?? [], equipe.categorie, equipe.ownerId),
     [profils, equipe.categorie, equipe.ownerId],
@@ -73,7 +75,7 @@ export function VoletEquipe({ equipe }: { equipe: EtatEquipe }) {
 
   return (
     <div className="space-y-4">
-      <h2 className="text-xl font-bold tracking-tight">{t("setlists.equipe.titre")}</h2>
+      <TitreVolet className="text-xl font-bold tracking-tight">{t("setlists.equipe.titre")}</TitreVolet>
       <p className="text-sm text-muted-foreground">{t("setlists.equipe.aide")}</p>
       {!equipe.peutChanger && <p className="text-sm font-medium">{t("setlists.equipe.lectureSeule")}</p>}
 
@@ -83,7 +85,7 @@ export function VoletEquipe({ equipe }: { equipe: EtatEquipe }) {
             const role = equipe.roles[p.uid] ?? "musicien";
             return (
               <li key={p.uid} className="flex flex-wrap items-center justify-between gap-2 px-3.5 py-2.5">
-                <span className="text-sm font-semibold">{nomCourt(p)}</span>
+                <span className="text-sm font-semibold">{p.nom}</span>
                 <span className="flex items-center gap-1.5">
                   {(["musicien", "chanteur"] as const).map((r) =>
                     equipe.peutChanger ? (
@@ -106,7 +108,7 @@ export function VoletEquipe({ equipe }: { equipe: EtatEquipe }) {
                     <button
                       type="button"
                       onClick={() => equipe.retirer(p.uid)}
-                      aria-label={t("setlists.equipe.retirer", { nom: nomCourt(p) })}
+                      aria-label={t("setlists.equipe.retirer", { nom: p.nom })}
                       className={`${bouton} text-muted-foreground hover:text-foreground`}
                     >
                       ✕
@@ -118,7 +120,7 @@ export function VoletEquipe({ equipe }: { equipe: EtatEquipe }) {
           })}
         </ul>
       ) : (
-        <p className="text-sm text-muted-foreground">{t("setlists.equipe.personne")}</p>
+        profils !== null && <p className="text-sm text-muted-foreground">{t("setlists.equipe.personne")}</p>
       )}
 
       {equipe.peutChanger && (

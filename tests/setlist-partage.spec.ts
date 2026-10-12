@@ -204,7 +204,7 @@ test.describe("partage : l'éditeur", () => {
     expect(db.doc(brouillon.path)?.rolesPartage).toEqual({ joel: "chanteur" });
   });
 
-  test("modification : ajouter Hugo s'enregistre tout seul (FR + 中文)", async ({ page }) => {
+  test("modification : ajouter Hugo s'enregistre tout seul (FR)", async ({ page }) => {
     await planningVide(page);
     const db = await signInAs(page, fp(LEA), { ...ANNUAIRE, [CHEMIN]: DOC({ editeurs: ["joel"], rolesPartage: { joel: "musicien" } }) }, `/setlists/${ID}/edit`);
     await attendreEditeur(page, "Abba Père");
@@ -217,6 +217,17 @@ test.describe("partage : l'éditeur", () => {
     expect((db.doc(CHEMIN)?.rolesPartage as Record<string, string>).hugo).toBe("chanteur"); // Groupe Bonté : choriste
     await fermerFeuille(page);
     await expect(puceEquipe(page)).toHaveText(/Équipe · 2/);
+  });
+
+  test("un compte de l'équipe sans profil garde sa ligne et se retire", async ({ page }) => {
+    await planningVide(page);
+    const db = await signInAs(page, fp(LEA), { ...ANNUAIRE, [CHEMIN]: DOC({ editeurs: ["joel", "fantome"], rolesPartage: { joel: "musicien", fantome: "musicien" } }) }, `/setlists/${ID}/edit`);
+    await attendreEditeur(page, "Abba Père");
+    await expect(puceEquipe(page)).toHaveText(/Équipe · 2/);
+    await puceEquipe(page).click();
+    await expect(volet(page).getByText("Personne pour l'instant.")).toHaveCount(0);
+    await volet(page).getByRole("button", { name: "Retirer Membre inconnu" }).click();
+    await expect.poll(() => db.doc(CHEMIN)?.editeurs, { timeout: 10_000 }).toEqual(["joel"]);
   });
 
   test("中文 : la puce et la vue de l'équipe", async ({ page }) => {
@@ -249,7 +260,7 @@ test.describe("partage : l'éditeur", () => {
     await expect(volet(page).getByRole("button", { name: /^Retirer/ })).toHaveCount(0);
     // L'historique s'écrit sous son nom.
     const histo = db.list(`${CHEMIN}/history`).map((p) => db.doc(p));
-    expect(histo.some((h) => h?.authorUid === "joel")).toBe(true);
+    expect(histo.some((h) => h?.authorUid === "joel" && h?.authorName === "Joël F.")).toBe(true);
   });
 
   test("un musicien de la catégorie, hors équipe", async ({ page }) => {
