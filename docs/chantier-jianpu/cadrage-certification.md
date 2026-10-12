@@ -160,3 +160,54 @@ Verdicts : accepté (proposition gardée), corrigé (valeur posée à la main), 
 | 求主充满我 | 234 | 234 | accepté | titre coupé ; titre anglais, versets, ♩ et crédits gardés |
 | 求充满这地 | 142 | 142 | accepté | titre, tempo, album, crédits coupés ; ligne juste au-dessus du « 1=E 4/4 » |
 | 活出爱 | 153 | 153 | accepté | titre, album, crédit coupés ; ligne juste au-dessus du « 1=C 12/8 » |
+
+## Tranche L3-T1e
+
+| chant | proposé | certifié | verdict | note |
+|---|---|---|---|---|
+| 深不见底的爱 | 202 | 202 | accepté | titre, ♩, album, versets coupés ; crédit sur la ligne 1=G gardé |
+| 深刻的爱 | 88 | 88 | accepté | titre chinois coupé ; titre anglais, versets, tempo et crédits gardés (partagent des rangées avec le « 4/4 ») |
+| 深深爱你 | 223 | 205 | corrigé | proposition (223) tranchait « Deeply In Love » ; coupe dans la bande blanche sous le titre chinois : titre coupé, titre anglais, tempo, crédits gardés (aucune coupe propre plus basse : les jambages de « p », « y » touchent le haut du « 4/4 ») |
+| 满有能力 | 239 | 239 | accepté | titre chinois coupé ; titre anglais, versets, tempo et crédits gardés (même bande que 1=♭B) |
+| 爱中相遇 | 142 | 142 | accepté | titre, titre anglais coupés ; crédits et tempo gardés ; ligne juste au-dessus du « 1=C 4/4 » |
+| 爱使我们勇敢 | 124 | 124 | accepté | titre, ♩, album coupés ; 2ᵉ ligne de la note « [原调…] » gardée (même bande que « 1=G »), rien tranché |
+| 爱可以再更多一点点 | 228 | 214 | corrigé | proposition (228) tranchait « More Love » ; coupe dans la bande blanche sous le titre : titre coupé ; titre anglais, verset, tempo, crédit gardés |
+| 爱我愿意 | 135 | 135 | accepté | titre, ♩, album coupés ; crédits sur la ligne 1=D gardés |
+| 爱的彰显 | 180 | 180 | accepté | titre, ♩, titre anglais, album coupés ; crédits sur la ligne 1=G gardés |
+| 爱的约定 | 126 | 126 | accepté | titre, ♩, crédit coupés ; album et 2ᵉ crédit gardés ; ligne dans la rangée blanche au-dessus du « 1=C 4/4 » |
+| 爱赢了 | 215 | 215 | accepté | titre, titre anglais, album, crédit coupés ; crédits de la ligne 1=A gardés |
+| 献上尊荣 | 193 | 193 | accepté | titre, filigrane coupés ; titre anglais, ♩, versets, crédits gardés (même bande que 1=F) |
+| 看见复兴 | 199 | 199 | accepté | titre, ♩, album, versets, crédit coupés ; ligne juste au-dessus du « 1=A 4/4 » |
+| 真实的悔改 | 239 | 239 | accepté | titre chinois coupé ; titre anglais, versets, tempo et crédit gardés (même bande que 1=F) |
+| 神羔羊配得 | 13 | 132 | corrigé | proposition dans la marge (13) ; coupe propre à 132 entre les jambages du titre anglais / crédit et le haut de « 周巽光 译 » : titre, ♩, « [共2张…] », titre anglais, crédit coupés ; album, 2ᵉ ligne de crédit gardés |
+| 祷告 | 246 | 246 | accepté | titre chinois coupé ; « I Pray », tempo et crédit gardés (même bande que 1=E) |
+| 给梦想一双翅膀 | 77 | 77 | accepté | titre coupé ; titre anglais, tempo, crédits gardés |
+| 耶和华是应当称颂的 | 125 | 125 | accepté | titre, ♩, album coupés ; note « [共2张…] », verset et crédits gardés (sur la ligne 1=F) |
+| 耶和华行了大事 | 241 | 241 | accepté | titre chinois coupé ; titre anglais, versets, tempo, crédits gardés (même bande que 1=♭B) |
+| 耶稣万名之上的名 | 138 | 188 | corrigé | proposition (138) laissait verset, note « [另有一张…] » et crédit ; coupe propre juste au-dessus du « 1=E 4/4 » (rangée 186–190) : titre, album, verset coupés ; 2ᵉ ligne de note « 这张是Capo=1] » gardée |
+| 耶稣我的耶稣 | 139 | 139 | accepté | titre, ♩, album coupés ; crédit sur la ligne 1=D gardé |
+| 耶稣的名 | 243 | 243 | accepté | titre chinois coupé ; titre anglais, versets, tempo, note (可选用吉它弹奏), crédit gardés |
+| 耶稣耶稣 | 10 | 156 | corrigé | proposition dans la marge (10) ; coupe propre à 156 sous les deux lignes de crédit : titre, filigrane, crédits coupés ; « 1=C 4/4 », « 诗150:6 », ♩ gardés (filigrane pâle traversé) |
+| 能不能 | 219 | 219 | accepté | titre, filigrane coupés ; titre anglais, tempo, verset et crédits gardés |
+| 脚步 | 3 | 3 | sans coupe propre | filigrane, titre, titre anglais, crédits, tempo et 1=C s'enchevêtrent sans coupe propre : en-tête gardé entier, marge du haut seule |
+| 若有人在基督里 | 130 | 130 | accepté | titre, titre anglais coupés ; mention « 2021 KUA GLOBAL », tempo et crédits gardés (partagent la bande du « 4/4 ») |
+| 荣耀的呼召 | 194 | 194 | accepté | titre, filigrane coupés ; titre anglais, tempo, crédits gardés |
+| 荣耀至高神 | 143 | 143 | accepté | titre, ♩, album coupés ; versets et crédit gardés (sur la ligne 1=D) |
+| 行神迹的神 | 196 | 196 | accepté | rangée « C1 C2 R… », titre, filigrane coupés ; titre anglais, tempo, versets, crédits gardés |
+| 认识你真好 | 140 | 179 | corrigé | proposition (140) gardait la 1ʳᵉ ligne de crédit ; coupe dans l'interligne des crédits (178–180) : titre, ♩, album, « 万美兰、洪启元 词 » coupés ; « 游智婷 曲 » gardé |
+| 让我得见你的荣面 | 96 | 96 | accepté | titre, ♩ coupés ; album, note « [共6张…] » et crédit gardés (même bande que 1=C) |
+| 让爱走动 | 175 | 175 | accepté | titre, ♩, album, verset coupés ; crédit et « 前奏 » gardés |
+| 让爱飞翔 | 241 | 241 | accepté | titre chinois coupé ; titre anglais, album, tempo, crédit gardés |
+| 让赞美飞扬 | 176 | 176 | accepté | titre, ♩, album, versets coupés ; crédits et note « 此歌谱是… » gardés |
+| 谢谢你成为我的家 | 150 | 150 | accepté | titre, ♩, note « [有多张…] », album, crédit coupés ; verset gardé (sur la ligne 1=D) |
+| 赞美中信心不断升起 | 201 | 201 | accepté | titre, ♩, album, versets, crédit coupés ; ligne juste au-dessus du « 1=C 4/4 » |
+| 赞美之泉 | 125 | 125 | accepté | titre, filigrane (adresse de site) coupés ; crédits à droite du « D 4/4 » gardés |
+| 这一生最美的祝福 | 227 | 205 | corrigé | proposition (227) tranchait « The Gift of Knowing You » ; coupe dans la bande blanche sous le titre : titre coupé ; titre anglais, verset, tempo, crédits gardés |
+| 这是耶和华所定的日子 | 136 | 136 | accepté | titre, ♩, album coupés ; verset et crédit gardés |
+| 这条路上我们一起走 | 91 | 130 | corrigé | proposition (91) gardait « 《迦南诗选》 » ; coupe à 130, 1 rangée sous le bas de l'album et au ras du haut du « 4/4 » : titre, album coupés ; crédit gardé |
+| 这里有神的同在 | 3 | 3 | sans coupe propre | note « [另有一张E调] » (à gauche) chevauche le bas du titre et le haut de « 《迦南诗选》 » : aucune coupe propre, en-tête gardé entier, marge du haut seule |
+| 这里有荣耀 | 190 | 190 | accepté | titre, ♩, album, versets coupés ; crédit sur la ligne 1=G gardé |
+| 遇见你 | 13 | 13 | sans coupe propre | titre, titre anglais, album, crédits, tempo et 1=D sur une même encre (pas de rangée blanche) : en-tête gardé entier, marge du haut seule |
+| 陪我走过春夏秋冬 | 12 | 12 | sans coupe propre | titre, album, crédits et 1=C sans rangée blanche (crédit chevauche le titre) : en-tête gardé entier, marge du haut seule |
+| 香膏的玉瓶 | 197 | 197 | accepté | titre, ♩, titre anglais, album, 1ʳᵉ ligne de crédit coupés ; « Walker Beach 词曲» gardé (rien tranché) |
+| 齐来赞美 | 145 | 145 | accepté | titre, ♩, album coupés ; verset et crédit gardés |

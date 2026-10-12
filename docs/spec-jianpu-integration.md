@@ -871,4 +871,17 @@ rappel faux sur deux chants au même `section.uid` (C5).
   (recouvrement de 2 à 3 px avec le haut du « 4/4 », aucune coupe sans contact) ; 我已得自由, 我的家要荣耀主, 我的救赎者活着, 日日夜夜,
   最美的礼物, 求主充满我, 我要全心赞美, 我要顺服 gardent le titre anglais (même bande que « 1=X »). Total certifié : 143 / 189.
 
+- **L3-T1e, 12/10/2026 — recadrage : 46 pages certifiées à l'œil, dernier lot** (registre : `docs/chantier-jianpu/cadrage-certification.md`).
+  **34 acceptées, 8 corrigées, 4 sans coupe propre.** Total certifié : **189 / 189, 0 restant** (`cadrage.py etat`).
+  Corrigées (la proposition tranchait un glyphe ou laissait un titre, album ou crédit alors qu'une coupe propre existait) :
+  深深爱你 `205` et 这一生最美的祝福 `205` et 爱可以再更多一点点 `214` (la proposition tranchait le titre anglais ; coupe dans la bande
+  blanche sous le titre chinois), 神羔羊配得 `132` (la proposition tombait dans la marge ; coupe entre les jambages et le haut de
+  « 周巽光 译 »), 耶稣万名之上的名 `188`, 耶稣耶稣 `156`, 这条路上我们一起走 `130` (album retiré par une coupe sans contact), 认识你真好 `179`
+  (dans l'interligne des crédits). Sans coupe propre (en-tête entier, marge du haut seule) : 脚步 `3`, 这里有神的同在 `3`, 遇见你 `13`,
+  陪我走过春夏秋冬 `12`. Méthode : en plus de `profil.py`, une recherche de coupes sans contact (aucun pixel d'encre d'une rangée
+  voisin d'un pixel de la suivante) sur le haut de chaque page, pour ne rater ni coupe plus basse ni jambage tranché.
+  Cas notables : 香膏的玉瓶 perd la 1ʳᵉ ligne de son crédit (« Zach Neese & ») mais garde « Walker Beach 词曲 », rien tranché ; titre anglais
+  gardé (même bande que « 1=X ») sur 深刻的爱, 满有能力, 真实的悔改, 祷告, 耶和华行了大事, 耶稣的名, 荣耀的呼召, 行神迹的神, 让爱飞翔.
+  Tests purs `jianpu-integration.spec.ts` (ordinateur) : 2 passed. Reste du lot 3 : les tranches suivantes (rendu dans `JianpuSheet`).
+
 Prochaine étape : le lot 3 (le lot 2 attend le passage complet et la vérification d'Opus).
