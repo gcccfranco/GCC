@@ -24,8 +24,16 @@
  *   npx tsx scripts/jianpu/audit-browser.ts 认识你真好
  *   npx tsx scripts/jianpu/audit-browser.ts 认识你真好 F --dark
  *   npx tsx scripts/jianpu/audit-browser.ts 认识你真好 --page=1 --slice=500
+ *   npx tsx scripts/jianpu/audit-browser.ts 一生爱你 --cadrage [--dark]
  *
- * Sortie : scripts/jianpu/debug/_pw-<slug>-<n>.png
+ * `--cadrage` (chantier 简谱, L3-T1, docs/spec-jianpu-integration.md) : le haut
+ * de la page entière tel que le navigateur le rend, avec la **ligne de coupe**
+ * `top` (certifiée dans public/jianpu/cadrage.json, sinon proposée par
+ * scripts/jianpu/cadrage.py) et la partie coupée voilée de rouge. Page refusée
+ * si la ligne tranche des crédits ou le haut d'un « 4/4 », ou si un titre, un
+ * album, des versets ou « （C调） » restent sous elle quand une coupe propre existe.
+ *
+ * Sortie : scripts/jianpu/debug/_pw-<slug>-<n>.png ; _pw-<slug>-cadrage-p<n>.png
  */
 
 import fs from "node:fs";
@@ -55,12 +63,23 @@ const frames = !process.argv.includes("--no-frames");
 // alternative n'est qu'un masque vide — ce qu'elle écrit une fois demandée
 // n'était vu par aucune planche (itération 59).
 const alt = process.argv.includes("--alt");
+const cadrage = process.argv.includes("--cadrage");
 const pageIndex = flag("page", 0);
 const sliceH = flag("slice", 380);
 const overlap = flag("overlap", 60);
 const width = flag("width", 1400);
 
 const chords = loadChords();
+
+/** `top` de la page : certifié, sinon proposé, sinon absent. */
+function topDeCoupe(): { top: number; certifie: boolean } | undefined {
+  const lire = (fichier: string) =>
+    fs.existsSync(fichier) ? (JSON.parse(fs.readFileSync(fichier, "utf8")) as Record<string, number[]>)[slug]?.[pageIndex] : undefined;
+  const certifie = lire(path.resolve(__dirname, "..", "..", "public", "jianpu", "cadrage.json"));
+  if (certifie !== undefined) return { top: certifie, certifie: true };
+  const propose = lire(path.join(OUT_DIR, "cadrage-propose.json"));
+  return propose !== undefined ? { top: propose, certifie: false } : undefined;
+}
 const printedKey = chords[slug]?.printedKey;
 const target = args[1] ?? (printedKey ? auditKey(slug, printedKey) : "F#");
 
@@ -171,10 +190,45 @@ async function planche(browser: Browser, before: Buffer, after: Buffer) {
   await context.close();
 }
 
+/** Le haut de la page, page entière, avec la ligne de coupe. */
+async function planchecadrage(browser: Browser) {
+  const coupe = topDeCoupe();
+  if (!coupe) throw new Error(`${slug} : aucun top — python3 scripts/jianpu/cadrage.py propose ${slug}`);
+  const context = await browser.newContext({
+    baseURL: BASE_URL,
+    viewport: { width: 1000, height: 1000 },
+    deviceScaleFactor: 1.5,
+    colorScheme: dark ? "dark" : "light",
+  });
+  const page = await context.newPage();
+  const sheets = await openSheet(page, slug, { dark, gravure: true });
+  const sheet = sheets.nth(pageIndex);
+  await sheet.waitFor();
+  const clip = await sheet.evaluate((host, top) => {
+    const img = host.querySelector("img")!;
+    const k = img.getBoundingClientRect().height / img.naturalHeight;
+    const voile = document.createElement("div");
+    voile.style.cssText = `position:absolute;left:0;right:0;top:0;height:${top * k}px;background:rgba(220,38,38,.16);border-bottom:2px solid rgb(220,38,38);z-index:50;pointer-events:none`;
+    host.appendChild(voile);
+    const r = host.getBoundingClientRect();
+    return { x: r.left + window.scrollX, y: r.top + window.scrollY, width: r.width, height: Math.min(r.height, top * k + 260) };
+  }, coupe.top);
+  const file = path.join(OUT_DIR, `_pw-${slug}-cadrage-p${pageIndex + 1}${dark ? "-sombre" : ""}.png`);
+  fs.mkdirSync(OUT_DIR, { recursive: true });
+  await page.screenshot({ path: file, clip, fullPage: true });
+  await context.close();
+  console.log(file);
+  console.log(`\n${slug} p.${pageIndex + 1} : coupe à ${coupe.top} px (${coupe.certifie ? "certifiée" : "proposée"})`);
+}
+
 async function main() {
   const server = await ensureServer();
   const browser = await chromium.launch();
   try {
+    if (cadrage) {
+      await planchecadrage(browser);
+      return;
+    }
     const before = await shoot(browser);
     const after = await shoot(browser, target);
     await planche(browser, before, after);

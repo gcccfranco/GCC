@@ -823,4 +823,25 @@ rappel faux sur deux chants au même `section.uid` (C5).
 - Ce que Timothée doit faire : relire le 中文 (`performance.view` 角色, `performance.affichageHint`, le point du guide).
 - Reste : passage complet de la suite et vérification d'Opus (tests et captures).
 
+**Lot 3 « Piste A partout » : en cours sur ui/apple-design**
+
+- **L3-T1a, 12/10/2026 — recadrage : script, planche, trois premières pages certifiées.** Codé : `scripts/jianpu/cadrage.py`
+  (`propose`, `certifier`, `etat` ; règle de la spec reprise telle quelle : dernière rangée entièrement blanche, pixels ≥ 245,
+  au-dessus de `min(keyLabel.y, 1re étiquette.y)` ; repli `− 0,6 × labelH` ; pages 2 et suivantes : 0 ; proposition dans
+  `scripts/jianpu/debug/cadrage-propose.json`, ignoré par git ; seule une valeur certifiée entre dans
+  `public/jianpu/cadrage.json`, absent = pas de recadrage, O9) ; `audit-browser.ts --cadrage` (haut de la page entière, ligne
+  de coupe rouge, partie coupée voilée ; `--page=`, `--dark`) ; section « Recadrage » dans `scripts/jianpu/LOOP.md` ;
+  `tests/jianpu-integration.spec.ts` ajoutée à `SPECS_GRAND_ECRAN`. Propositions sur les 189 chants : **21 à `top` < 30**
+  (pas de coupe propre : l'en-tête reste, à regarder de près), dont **10 au repli** (aucune rangée blanche).
+  **Certifiées** (planche regardée) : 一生爱你 `[176]` (ligne juste au-dessus de « 1= E 4/4 », titre, album, versets et ♩ coupés,
+  « 4/4 » et crédits « 词曲 » entiers ; lisible en sombre) ; 为我而来 `[131, 0]` (p. 1 : ligne au-dessus de « 1= C 6/8 » et de
+  la note « [这张是原版…] », crédits entiers ; p. 2 : commence sur les accords, rien à couper) ; 一生跟随 `[111]` (repli, filigrane gris
+  sur tout le scan : le titre est coupé, « 1=F 4/4 » et « 作词 / 作曲 » entiers). Reste : les 186 autres chants (T1b à T1e).
+  Empreinte de `chords.json` : la valeur de la spec (`b657b56e…`, relevée le 08/10/2026) était juste ce jour-là ; le fichier
+  a été régénéré depuis par des corrections du corpus venues de `main` (`1b488bdf`, entre autres), sans le lot 3. Le test
+  porte l'empreinte du 12/10/2026 (`ecf3ea0d…`) : c'est elle que le lot 3 ne doit pas changer. Tests : `jianpu-integration.spec.ts` rouge (6 échecs : trois appareils × empreinte fausse
+  et `cadrage.json` temporaire invalide), puis vert : **6 passed** (ordinateur, téléphone, tablette). Environnement : le
+  `node_modules` de la copie de travail est un lien hors racine, que Turbopack refuse ; serveurs lancés en
+  `next dev --webpack` sur 3200 et 3201. Rien pour Timothée à ce stade (aucun libellé nouveau).
+
 Prochaine étape : le lot 3 (le lot 2 attend le passage complet et la vérification d'Opus).
