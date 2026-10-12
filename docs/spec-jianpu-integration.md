@@ -844,4 +844,10 @@ rappel faux sur deux chants au même `section.uid` (C5).
   `node_modules` de la copie de travail est un lien hors racine, que Turbopack refuse ; serveurs lancés en
   `next dev --webpack` sur 3200 et 3201. Rien pour Timothée à ce stade (aucun libellé nouveau).
 
+- **L3-T1b, 12/10/2026 — recadrage : 47 pages certifiées à l'œil** (registre : `docs/chantier-jianpu/cadrage-certification.md`).
+  **37 acceptées, 6 corrigées, 4 sans coupe propre**, : 一切歌颂赞美 `185`, 主的喜乐是我力量 `259`, 从心合一 `132`,
+  你是我的一切 `119`, 到各山岭去传扬 `204`, 一生敬拜你 `294` (corrigées : la proposition laissait album, titre anglais ou verset
+  sous la ligne alors qu'une coupe propre existait, ou rognait 1 px du « 4/4 ») ; 为爱而生 `0` (le repli tranchait les crédits,
+  aucune bande blanche), 你们要赞美耶和华 `12`, 你的爱不离不弃 `14`, 全然向你 `4` (en-tête entier). Total certifié : 50 / 189.
+
 Prochaine étape : le lot 3 (le lot 2 attend le passage complet et la vérification d'Opus).
