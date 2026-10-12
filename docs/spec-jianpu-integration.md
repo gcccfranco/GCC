@@ -864,7 +864,6 @@ rappel faux sur deux chants au même `section.uid` (C5).
   et `cadrage.json` temporaire invalide), puis vert : **6 passed** (ordinateur, téléphone, tablette). Environnement : le
   `node_modules` de la copie de travail est un lien hors racine, que Turbopack refuse ; serveurs lancés en
   `next dev --webpack` sur 3200 et 3201. Rien pour Timothée à ce stade (aucun libellé nouveau).
-
 - **L3-T1b, 12/10/2026 — recadrage : 47 pages certifiées à l'œil** (registre : `docs/chantier-jianpu/cadrage-certification.md`).
   **37 acceptées, 6 corrigées, 4 sans coupe propre**, : 一切歌颂赞美 `185`, 主的喜乐是我力量 `259`, 从心合一 `132`,
   你是我的一切 `119`, 到各山岭去传扬 `204`, 一生敬拜你 `294` (corrigées : la proposition laissait album, titre anglais ou verset
@@ -911,4 +910,40 @@ rappel faux sur deux chants au même `section.uid` (C5).
   acceptées tirées au hasard) ; 21 justes, aucune correction : chaque valeur est dans la plus basse bande sans contact au-dessus
   de « 1=X » ; 香膏的玉瓶 garde « Walker Beach 词曲 » parce que ce crédit chevauche le « 4/4 ».
 
-Prochaine étape : L3-T2 (le scan en encre dans `JianpuSheet`) ; le lot 2 attend le passage complet et la vérification d'Opus.
+- **L3-T2a, 12/10/2026 — `JianpuSheet` en piste A, première partie : le scan en encre (filtre, gommes et écritures, sans
+  fenêtre).** Codé : jeton `--jianpu-encre` (`globals.css` : `240 3.4% 11.4%` = `--foreground` en clair, `240 5.9% 90%` =
+  `#e4e4e7` en sombre) ; deux filtres SVG en ligne (`jianpu-encre-clair`, `jianpu-encre-sombre`, `sRGB`, matrice
+  « RVB = encre, A = alpha − luminance » puis `feFuncA slope 2.33 intercept −0.28`), rendus une fois par `JianpuSheet`
+  (`JianpuFiltres`) ; le groupe `data-jianpu-filtre` (l'image et la couche des gommes) prend `filter: url(#…clair)`, et
+  `url(#…sombre)` sous `.dark`, par deux règles de `globals.css` ; `dark:invert dark:hue-rotate-180` et `dark:bg-black`
+  supprimés. Chaque boîte du calque (cadre « 1=X », « （X调） », étiquettes) est décrite une fois (`boitesCalque`) et sort
+  deux fois (`rendreBoite`), mêmes `left/top/hauteur/minWidth/fontSize` et mêmes `zIndex` : une **gomme** (`data-jianpu-gomme`,
+  `aria-hidden`, fond blanc, texte transparent pour garder la même largeur, aucun `data-jianpu-label`) dans le groupe
+  filtré, et une **écriture** au-dessus (sans fond, `hsl(var(--jianpu-encre))`, bleu gardé pour un calque partiel ; elle
+  garde `data-jianpu-label/keylabel/retouche/alt/opt`). Les accords ajoutés n'ont pas de gomme. Les deux couches portent
+  `data-jianpu-calque` (la « gravure seule » des tests cache donc aussi les gommes). La zone tactile (`cibleRetouche`) reste
+  au-dessus, aux mêmes coordonnées. `tests/helpers/jianpu.ts` : aucune modification (seules les écritures portent
+  `data-jianpu-label`, les oracles `overlayLabels` / `troncatures` sont restés valables tels quels).
+  Tests (`jianpu-integration.spec.ts`, tests 1 à 4, 6 et 11, plus le jeton) : **11 rouges** avant le code (projet ordinateur ;
+  les 2 tests de données de T1a restent verts) — le 11 rouge pour une attente fausse de ma part (« A » au lieu de « A7 »), corrigée
+  aussitôt ; sa part « gomme au même endroit » n'a donc pas été vue rouge à elle seule — puis **13 passed** sur chacun des cinq projets
+  (ordinateur, téléphone, tablette, tablette-paysage, ordinateur-1440) : papier transparent (≈ 900 blocs de papier pur lus au pixel, ± 3), pas d'`invert`, gomme invisible
+  au coin, encre `rgb(28, 28, 30)` / `rgb(228, 228, 231)`, coordonnées du calque, Adapter. Captures regardées (一生爱你, E et
+  D, clair et sombre, téléphone, tablette, ordinateur) : le papier a disparu, l'encre se lit sur le halo en clair et sur le
+  noir en sombre, le grand mouton du fond s'efface et le petit du pied reste, aucun pavé autour des accords réécrits ; le
+  titre gravé est encore là (le recadrage est de L3-T2b).
+  Specs voisines (ordinateur) : `jianpu-sheet` (sans `PW_SLUGS`), `harmonie-jianpu`, `fusions-dp`, `jianpu-par-defaut`,
+  `jianpu-tonalite-cho` : 76 / 77 verts, le rouge étant `jianpu-tonalite-cho` « scan gravé en C » : `getByText('（D调）')`
+  trouvait la gomme et l'écriture (deux textes) ; corrigé dans le code, non dans le test : la gomme n'a plus de texte dans
+  le DOM (`data-jianpu-gomme` = le texte, rendu par `after:content-[attr(…)]`, transparent), puis `jianpu-integration` (5
+  projets), `jianpu-tonalite-cho` et `harmonie-jianpu` rejoués verts. `PW_SLUGS=all npx playwright test
+  tests/jianpu-sheet.spec.ts --project=ordinateur` : **954 verts sur 955** ; l'échec, « Target crashed » du navigateur sur
+  `我们欢迎君王降临` en charge (deux workers), est vert rejoué seul (5 / 5). Les oracles de `tests/helpers/jianpu.ts` n'ont
+  pas été réécrits.
+  Choix faute de réponse : (a) filtres rendus par chaque `JianpuSheet` (ids en double dans une setlist, identiques donc
+  sans effet) plutôt qu'une fois dans la page ; (b) la gomme prend la largeur de l'écriture par un pseudo-élément
+  transparent ; (c) test 1 : « zone sans encre » = bloc de 12 px de l'image d'origine à ≥ 250 de luminance (les
+  filigranes gris n'y entrent pas, D8) ; (d) test 11 : l'accord retouché garde sa qualité (G7 → A7), le pavé part de
+  l'accord touché. Rien pour Timothée (aucun libellé). Reste : L3-T2b (fenêtre, compensation), L3-T2c (messages, K4).
+
+Prochaine étape : L3-T2b (fenêtre, compensation, lecture de `cadrage.json`) ; le lot 2 attend le passage complet.

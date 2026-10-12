@@ -218,6 +218,8 @@
     /* Semantic music colors */
     --chord-color: #3f63cf;   /* bleu PDF FR */
     --jianpu-color: #b3261d;
+    /* Encre du scan 简谱 (piste A, docs/spec-jianpu-integration.md) : = --foreground en clair. */
+    --jianpu-encre: 240 3.4% 11.4%;  /* #1c1c1e */
     --pinyin-color: #8a8f98;
     --sheet-accent: #1c6e7c;
 
@@ -273,6 +275,7 @@
 
     --chord-color: #8fb0ff;   /* bleu PDF FR dark */
     --jianpu-color: #ff7d72;
+    --jianpu-encre: 240 5.9% 90%;    /* #e4e4e7 : encre adoucie du scan (D10), distincte de --foreground */
     --pinyin-color: #888e98;
     --sheet-accent: #63c3cf;
 
@@ -364,6 +367,11 @@
     letter-spacing: 0.1em;
     color: var(--sec-c, #6b7080);
   }
+  /* Le scan 简谱 est de l'encre sur le fond du site : le groupe filtré (image + gommes)
+     passe par un filtre SVG « luminance → alpha » (JianpuSheet). Les valeurs RVB de
+     l'encre sont codées en dur dans les deux filtres, comme --jianpu-encre. */
+  [data-jianpu-filtre] { filter: url(#jianpu-encre-clair); }
+  .dark [data-jianpu-filtre] { filter: url(#jianpu-encre-sombre); }
   .font-jianpu {
     color: var(--jianpu-color);
     font-weight: 700;
