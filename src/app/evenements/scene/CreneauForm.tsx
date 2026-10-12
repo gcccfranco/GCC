@@ -64,16 +64,18 @@ export function QuiChecklist({ value, onChange }: { value: string[]; onChange: (
 
 /** Une pastille de la feuille : case ou bouton radio posé sur toute la
  *  pastille (invisible), coche dessinée quand elle est choisie. */
-function Pastille({ type, name, label, checked, onChange }: {
+function Pastille({ type, name, label, checked, onChange, retire }: {
   type: "radio" | "checkbox"
   name: string
   label: string
   checked: boolean
   onChange: () => void
+  /** Valeur sortie de la liste : grisée (la marque « retiré » est dans `label`). */
+  retire?: boolean
 }) {
   return (
     <label
-      className={`relative inline-flex h-11 items-center gap-1.5 rounded-xl px-3.5 text-sm font-semibold has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ring ${checked ? "svc-ink" : "bg-card text-foreground/80 shadow-[inset_0_0_0_1px_hsl(var(--border))]"}`}
+      className={`relative inline-flex h-11 items-center gap-1.5 rounded-xl px-3.5 text-sm font-semibold has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ring ${retire ? "opacity-60" : ""} ${checked ? "svc-ink" : "bg-card text-foreground/80 shadow-[inset_0_0_0_1px_hsl(var(--border))]"}`}
       style={checked ? { "--svc": COLOR, background: `${COLOR}1a`, boxShadow: `inset 0 0 0 1.5px ${COLOR}` } as CSSProperties : undefined}
     >
       <input type={type} name={name} checked={checked} onChange={onChange} className="absolute inset-0 cursor-pointer opacity-0" />
@@ -176,8 +178,10 @@ function Champs({ submitLabel, place, places, initial, quiOptions, quiLimite, on
           }>
             {quiOptions.map((q) => {
               const checked = v.qui.includes(q)
+              const retire = !(QUI as readonly string[]).includes(q)
               return (
-                <Pastille key={q} type="checkbox" name="creneau-qui" label={q} checked={checked}
+                <Pastille key={q} type="checkbox" name="creneau-qui" retire={retire}
+                  label={retire ? `${q} · ${t("planning.programme.quiRetire")}` : q} checked={checked}
                   onChange={() => setV({ ...v, qui: checked ? v.qui.filter((x) => x !== q) : [...v.qui, q] })} />
               )
             })}

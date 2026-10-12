@@ -28,7 +28,7 @@ function lienHttps(s: string): boolean {
 
 /** Valide et nettoie la liste des musiques et danses d'un passage (CF22) : dix au plus ; type
  *  Musique ou Danse ; titre obligatoire de 80 caractères au plus ; lien https ou vide ; durée et
- *  départ « m:ss » ou vides ; note de 200 caractères au plus. */
+ *  départ « m:ss » ou vides ; note de 200 caractères au plus ; deux médias de même id refusés (« format »). */
 export function validerMedias(entree: unknown): ResultatMedias {
   if (!Array.isArray(entree)) return { ok: false, erreur: "format" };
   if (entree.length > MEDIAS_MAX) return { ok: false, erreur: "trop" };
@@ -38,6 +38,7 @@ export function validerMedias(entree: unknown): ResultatMedias {
     const m = brut as Record<string, unknown>;
     const texte = (k: string) => (typeof m[k] === "string" ? (m[k] as string) : "");
     if (typeof m.id !== "string" || !m.id) return { ok: false, erreur: "format" };
+    if (medias.some((x) => x.id === m.id)) return { ok: false, erreur: "format" };
     if (m.type !== "musique" && m.type !== "danse") return { ok: false, erreur: "type" };
     const titre = texte("titre").trim();
     if (!titre || titre.length > 80) return { ok: false, erreur: "titre" };

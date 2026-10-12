@@ -834,6 +834,46 @@ test("P6 — Réserver : les dix groupes d'emblée, sans « + N » (décision 34
   await expect(f.getByRole("button", { name: "Réserver", exact: true })).toBeEnabled();
 });
 
+// Spec chants des fêtes, « Retiré » (CF3, décision 34) : une valeur sortie de la liste (Jeunes) encore portée par
+// un passage ou une réservation reste cochée, grisée et marquée « retiré » ; elle n'est plus proposée à un nouveau.
+test("Retiré — ordre de passage : « Jeunes » reste coché et grisé « retiré » ; absent d'un nouveau passage", async ({ page }) => {
+  const doc = { ...DOC_NOEL_ANCIEN, passages: [{ quoi: "Chant", qui: ["Jeunes", "Gp Paix"], titre: "Ancien numéro" }] };
+  await ouvrirFete(page, `${BO}/noel?vue=ordre`, { "programmes/x7Kq2": doc }, "2026-10-09", ALICE_EVT);
+  await page.getByRole("listitem").filter({ hasText: "Ancien numéro" }).getByRole("button", { name: "Modifier" }).click();
+  const jeunes = page.getByRole("checkbox", { name: "Jeunes · retiré" });
+  await expect(jeunes).toBeChecked();
+  await expect(jeunes.locator("xpath=ancestor::label")).toHaveClass(/opacity-60/);
+  await expect(page.getByRole("checkbox", { name: "Gp Paix" })).toBeChecked();
+  await expect(page.getByRole("checkbox", { name: /retiré/ })).toHaveCount(1);
+  await jeunes.click();
+  await expect(page.getByRole("checkbox", { name: /Jeunes/ })).toHaveCount(0);
+  await page.getByRole("button", { name: "Annuler" }).click();
+  await page.getByRole("button", { name: "Ajouter un passage" }).click();
+  await expect(page.getByRole("checkbox", { name: /Jeunes/ })).toHaveCount(0);
+  await expect(page.getByRole("checkbox")).toHaveCount(10);
+});
+
+test("Retiré — « Modifier » une réservation qui porte « Jeunes » : coché, grisé, « retiré »", async ({ page }) => {
+  const docs = { ...DOCS_P5, "programmes/x7Kq2/creneaux/s": { ...RESAS_P5["programmes/x7Kq2/creneaux/s"], qui: ["Jeunes"] } };
+  await ouvrirFete(page, "/evenements/scene/noel", docs);
+  await plus(ligneDe(page, "Dimanche 11 octobre", "Sketch · Jeunes")).click();
+  await page.getByRole("menuitem", { name: "Modifier" }).click();
+  const f = page.getByRole("dialog");
+  const jeunes = f.getByRole("checkbox", { name: "Jeunes · retiré" });
+  await expect(jeunes).toBeChecked();
+  await expect(jeunes.locator("xpath=ancestor::label")).toHaveClass(/opacity-60/);
+  await expect(f.getByRole("checkbox")).toHaveCount(11);
+  await expect(f.getByRole("checkbox", { name: /retiré/ })).toHaveCount(1);
+});
+
+test("Retiré — en 中文 : la marque « 已移除 »", async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
+  const doc = { ...DOC_NOEL_ANCIEN, passages: [{ quoi: "Chant", qui: ["Chorale"], titre: "Ancien numéro" }] };
+  await ouvrirFete(page, `${BO}/noel?vue=ordre`, { "programmes/x7Kq2": doc }, "2026-10-09", ALICE_EVT);
+  await page.getByRole("listitem").filter({ hasText: "Ancien numéro" }).getByRole("button", { name: "修改" }).click();
+  await expect(page.getByRole("checkbox", { name: "Chorale · 已移除" })).toBeChecked();
+});
+
 test("P6 — ma réservation : « à moi » à la place de mon nom et « ⋯ » (Déplacer, Modifier, Retirer), dans la semaine et dans « Mes réservations » ; plus de boutons sous la ligne", async ({ page }) => {
   await ouvrirFete(page, "/evenements/scene/noel", DOCS_P5);
   const sketch = ligneDe(page, "Dimanche 11 octobre", "Sketch · Gp Amour");

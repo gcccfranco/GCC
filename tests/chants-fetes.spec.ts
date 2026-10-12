@@ -3,14 +3,14 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import { QUI, type MediaPassage, type Passage } from "../src/types/programme";
 import { FAMILLES, quiPermis } from "../src/lib/scene/saison";
-import { FETE_CATEGORIES, ALL_CATEGORIES } from "../src/lib/firebase/setlists";
+import { FETE_CATEGORIES, ALL_CATEGORIES, toFsFields } from "../src/lib/firebase/setlists";
 import { libelleQui, groupeDuQui } from "../src/lib/fetes/qui";
 import { nouvelIdPassage, validerMedias } from "../src/lib/fetes/passages";
 import {
   ayantsDroitDuQui, droitsDeSaisie, periodeEddDuJour, titreSetlistFete,
   type ContexteFetes, type ProfilFete,
 } from "../src/lib/fetes/droits";
-import { estUnChant, resoudrePropositions } from "../src/lib/setlist/propositions";
+import { estUnChant, propositionsEnDouble, resoudrePropositions } from "../src/lib/setlist/propositions";
 import { parseChordPro } from "../src/lib/chordpro/parser";
 import { categoryColor, CATEGORY_COLORS, PLANNING_COLORS } from "../src/lib/serviceColors";
 import type { SetlistItem } from "../src/types/setList";
@@ -106,6 +106,11 @@ test.describe("liste « Qui » et familles (décision 34, CF3-CF5)", () => {
     // « Qui peut réserver » se range par famille (groupes, EDD, louange) ; les mêmes dix valeurs que QUI.
     expect(quiPermis({})).toEqual(["Gp Paix", "Gp Fidélité", "Gp Bonté", "Gp Amour", "Gp Joie", "EDD 小班", "EDD 中班", "EDD 大班", "EDD 高班", "Franco"]);
     expect([...quiPermis({})].sort()).toEqual([...QUI].sort());
+  });
+
+  test("quiPermis : une saison qui ne garde que des valeurs retirées retombe sur les dix Qui actuels (choix faute de réponse)", () => {
+    expect(quiPermis({ quiAutorises: ["Jeunes", "Chorale", "敬拜团"] })).toEqual(quiPermis({}));
+    expect(quiPermis({ quiAutorises: ["Jeunes", "Gp Paix"] })).toEqual(["Gp Paix"]);
   });
 
   test("groupeDuQui : l'id du groupe, sinon null", () => {
@@ -227,6 +232,11 @@ test.describe("passages et médias (CF1, CF22)", () => {
     expect(validerMedias("pas un tableau")).toMatchObject({ ok: false });
   });
 
+  test("validerMedias : deux médias de même id refusés", () => {
+    expect(validerMedias([media({ id: "m1" }), media({ id: "m1", titre: "Autre" })])).toMatchObject({ ok: false, erreur: "format" });
+    expect(validerMedias([media({ id: "m1" }), media({ id: "m2" })])).toMatchObject({ ok: true });
+  });
+
   test("validerMedias rend des médias nettoyés (titre rogné)", () => {
     const r = validerMedias([media({ titre: "  Danse  " })]);
     expect(r.ok && r.medias[0].titre).toBe("Danse");
@@ -252,6 +262,11 @@ test.describe("propositions de chant (CF21)", () => {
   test("sans proposition, la liste revient telle quelle", () => {
     const items = [chant("a")];
     expect(resoudrePropositions(items, INDEX)).toBe(items);
+  });
+
+  test("propositionsEnDouble : un identifiant porté par deux chants est signalé (npm run validate)", () => {
+    expect(propositionsEnDouble(INDEX)).toEqual([]);
+    expect(propositionsEnDouble([...INDEX, { slug: "copie", proposition: "p42" }])).toEqual(["{proposition: p42} portée par plusieurs chants : douce-nuit, copie"]);
   });
 
   test("estUnChant : ni transition ni proposition", () => {
@@ -303,5 +318,47 @@ test.describe("couleurs de Noël et de Pâques (CF26, décision 47)", () => {
     });
     expect(PLANNING_COLORS.scene).toBe("#3f51a3");
     expect(categoryColor("Inconnue")).toBe("#64748b");
+  });
+});
+
+test.describe("getSetlistsDeFete (CF24)", () => {
+  const doc = (id: string, o: Record<string, unknown>) =>
+    ({ document: { name: `projects/p/databases/(default)/documents/setlists/${id}`, fields: toFsFields(o) } });
+  const lignes = [
+    doc("a", { isDraft: false, fete: { programme: "noel-2026", passage: "p1", qui: "Gp Paix" } }),
+    doc("brouillon", { isDraft: true, fete: { programme: "noel-2026", passage: "p2", qui: "Gp Paix" } }),
+    doc("autre-fete", { isDraft: false, fete: { programme: "paques-2026", passage: "p3", qui: "Franco" } }),
+    doc("ordinaire", { isDraft: false }),
+    {},
+  ];
+
+  /** Recharge le module avec l'interrupteur voulu (la constante est lue à l'import) et un `fetch` simulé. */
+  async function appeler(interrupteur: "0" | "1") {
+    const avant = process.env.NEXT_PUBLIC_BACK_OFFICE;
+    process.env.NEXT_PUBLIC_BACK_OFFICE = interrupteur;
+    for (const k of Object.keys(require.cache)) if (/src[\\/]lib[\\/](backOffice|firebase[\\/]setlists)\./.test(k)) delete require.cache[k];
+    const appels: string[] = [];
+    const vrai = globalThis.fetch;
+    globalThis.fetch = (async (url: string) => { appels.push(String(url)); return new Response(JSON.stringify(lignes), { status: 200 }); }) as typeof fetch;
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports -- rechargement voulu du module (constante lue à l'import)
+      const { getSetlistsDeFete } = require("../src/lib/firebase/setlists") as typeof import("../src/lib/firebase/setlists");
+      return { rendu: await getSetlistsDeFete("noel-2026"), appels };
+    } finally {
+      globalThis.fetch = vrai;
+      if (avant === undefined) delete process.env.NEXT_PUBLIC_BACK_OFFICE; else process.env.NEXT_PUBLIC_BACK_OFFICE = avant;
+    }
+  }
+
+  test("sans l'interrupteur du back-office : [] et aucune requête", async () => {
+    const { rendu, appels } = await appeler("0");
+    expect(rendu).toEqual([]);
+    expect(appels).toEqual([]);
+  });
+
+  test("avec l'interrupteur : la requête n'est pas crue sur parole (brouillons, autre fête, sans fête écartés)", async () => {
+    const { rendu, appels } = await appeler("1");
+    expect(appels).toHaveLength(1);
+    expect(rendu.map((s) => s.id)).toEqual(["a"]);
   });
 });

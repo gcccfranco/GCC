@@ -36,3 +36,12 @@ export function resoudrePropositions(items: SetlistItem[], index: readonly Chant
     };
   });
 }
+
+/** Les `{proposition}` portées par plus d'un chant (le dernier gagnerait en silence dans
+ *  `resoudrePropositions`) : un message par identifiant en double. Sert à `npm run validate`. */
+export function propositionsEnDouble(index: readonly ChantIndexe[]): string[] {
+  const parId = new Map<string, string[]>();
+  for (const c of index) if (c.proposition) parId.set(c.proposition, [...(parId.get(c.proposition) ?? []), c.slug]);
+  return [...parId].filter(([, slugs]) => slugs.length > 1)
+    .map(([id, slugs]) => `{proposition: ${id}} portée par plusieurs chants : ${slugs.join(", ")}`);
+}

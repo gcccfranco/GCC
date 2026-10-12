@@ -272,7 +272,10 @@ export type Famille = (typeof FAMILLES)[number]["cle"];
 export function quiPermis(p: { quiAutorises?: string[] }): string[] {
   const permis = p.quiAutorises ?? [];
   const parFamille: string[] = FAMILLES.flatMap((f) => f.qui);
-  return permis.length === 0 ? parFamille : parFamille.filter((q) => permis.includes(q));
+  // Choix faute de réponse : si la saison ne garde que des valeurs retirées (Jeunes, Chorale…), aucune
+  // n'est proposée ; on retombe alors sur l'ensemble des Qui actuels plutôt que sur une feuille vide.
+  const retenus = parFamille.filter((q) => permis.includes(q));
+  return retenus.length === 0 ? parFamille : retenus;
 }
 
 /** Familles dont tous les groupes sont permis, dans l'ordre de l'écran. */
