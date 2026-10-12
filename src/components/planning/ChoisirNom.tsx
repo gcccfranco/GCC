@@ -32,28 +32,39 @@ const suivreLargeur = (rappel: () => void) => {
   mq.addEventListener("change", rappel)
   return () => mq.removeEventListener("change", rappel)
 }
-const useOrdinateur = () =>
+export const useOrdinateur = () =>
   useSyncExternalStore(suivreLargeur, () => window.matchMedia(LARGE).matches, () => false)
 
 const LARGEUR_MENU = 264
 const HAUTEUR_MENU = 380
+
+/** « Remplir vers le bas » (lot 3, PG18 à PG20) : absent, l'entrée n'est pas offerte. */
+export type RemplirVersLeBas = {
+  /** Sa phrase d'aide (ou « Aucune case vide plus bas ce trimestre. »). */
+  aide: string
+  /** Aucune case vide à remplir : l'entrée est grisée. */
+  grise: boolean
+  onRemplir: () => void
+}
 
 export function ChoisirNom({
   ouverture,
   onFermer,
   proposer,
   onEcrire,
+  remplir,
 }: {
   ouverture: OuvertureChoix | null
   onFermer: () => void
   proposer: (recherche: string) => Proposition[]
   /** Le nom à écrire dans la case ("" : la vider). */
   onEcrire: (nom: string) => void
+  remplir?: RemplirVersLeBas
 }) {
   const ordinateur = useOrdinateur()
   useStandaloneScrollLock(!!ouverture && !ordinateur)
   const changer = (ouvert: boolean) => { if (!ouvert) onFermer() }
-  const menu = ouverture && <Menu key={ouverture.titre} ouverture={ouverture} proposer={proposer} onEcrire={onEcrire} />
+  const menu = ouverture && <Menu key={ouverture.titre} ouverture={ouverture} proposer={proposer} onEcrire={onEcrire} remplir={remplir} />
 
   if (ordinateur) {
     const a = ouverture?.ancre
@@ -97,10 +108,12 @@ function Menu({
   ouverture,
   proposer,
   onEcrire,
+  remplir,
 }: {
   ouverture: OuvertureChoix
   proposer: (recherche: string) => Proposition[]
   onEcrire: (nom: string) => void
+  remplir?: RemplirVersLeBas
 }) {
   const { t } = useTranslation()
   const id = useId()
@@ -197,6 +210,17 @@ function Menu({
           </Fragment>
         ))}
       </ul>
+      {remplir && (
+        <button
+          type="button"
+          disabled={remplir.grise}
+          onClick={remplir.onRemplir}
+          className="flex min-h-10 w-full flex-col items-start justify-center rounded-lg px-2.5 py-2 text-left text-[15px] sm:text-sm text-foreground hover:bg-secondary disabled:opacity-60 disabled:hover:bg-transparent"
+        >
+          <span className="font-medium">{t("planning.gestes.remplirBas")}</span>
+          <span className="text-xs text-muted-foreground">{remplir.aide}</span>
+        </button>
+      )}
       <button
         type="button"
         onClick={ecrireALaMain}

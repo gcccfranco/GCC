@@ -16,10 +16,10 @@ import { colonneDePersonnes, propositions, type CompteDuPlanning } from "@/lib/p
 import { splitNames } from "@/lib/planning/names"
 import { canRetirerDate } from "@/lib/access"
 import { ExportModele, type ExportPlanning } from "./ExportModele"
-import { ChoisirNom } from "./ChoisirNom"
+import { ChoisirNom, useOrdinateur } from "./ChoisirNom"
 import { DansLEnTete, type FiltreNom } from "./BarreDeGrille"
 import { useGestionPlanning } from "@/lib/planning/gestion"
-import { colonnesACopier, lignePrecedente, parDimanche, planCopie, type CaseGeste } from "@/lib/planning/gestes"
+import { colonnesACopier, datesApres, lignePrecedente, parDimanche, planCopie, planRemplir, type CaseGeste } from "@/lib/planning/gestes"
 import { BanniereGeste } from "./BanniereGeste"
 import { FenetreCopie, type DemandeCopie } from "./FenetreCopie"
 
@@ -232,7 +232,20 @@ export function PlanningGrille({
       c.plan.vides.length && t("planning.gestes.nomPoseReste"),
     ].filter(Boolean).join(" ")
   }
-  const apercuCopie = apercu ? copiePour(apercu)?.plan.vides ?? [] : []
+  /** « Remplir vers le bas » pour la case dont « Choisir » est ouvert (PG18, PG19) : null si la case
+   *  ne porte pas un seul nom. Les dimanches sont les lignes données à la grille, « Mes dates » ignoré. */
+  const remplirPour = () => {
+    if (!choix || mode !== "edition" || choix.c.lectureSeule) return null
+    const date = choix.l.row[0]
+    const nom = valeur(date, choix.c, choix.l.row).trim()
+    if (!nom || !colonneDePersonnes(choix.c.cle) || splitNames(nom).length > 1 || imposee(date, choix.c)) return null
+    return { nom, ...planRemplir({ cle: choix.c.cle, nom, dates: datesApres(lignes.map((l) => l.row[0]), date), lire: lireCase, verrou }) }
+  }
+  const remplissage = remplirPour()
+  // L'aperçu n'est posé que si « Choisir » est un menu : en feuille, elle cacherait la grille (PG20).
+  const menuOuvert = useOrdinateur()
+  const apercuRemplir = remplissage && menuOuvert ? remplissage.cases : []
+  const apercuCopie = [...(apercu ? copiePour(apercu)?.plan.vides ?? [] : []), ...apercuRemplir]
   const casePrevue = (date: string, cle: string) => apercuCopie.find((c) => c.date === date && c.cle === cle)
   /** La case en aperçu (PG14) : le nom qui sera écrit, en gras, dans un cadre en pointillé. */
   const caseOuApercu = (l: LigneGrille, c: ColonneGrille): ReactNode => {
@@ -606,6 +619,20 @@ export function PlanningGrille({
             ancre: choix.ancre,
           }}
           onFermer={() => setChoix(null)}
+          remplir={remplissage ? {
+            grise: remplissage.cases.length === 0,
+            aide: remplissage.cases.length
+              ? t("planning.gestes.remplirAide", { nom: remplissage.nom, count: remplissage.cases.length, fin: fdShort(remplissage.fin) })
+              : t("planning.gestes.rienARemplir"),
+            onRemplir: () => {
+              setChoix(null)
+              void appliquer(
+                remplissage.cases,
+                t("planning.gestes.rempli", { nom: remplissage.nom, count: remplissage.cases.length, fin: fdShort(remplissage.fin) }),
+                remplissage.verrouillees ? [t("planning.gestes.verrouillees", { count: remplissage.verrouillees })] : [],
+              )
+            },
+          } : undefined}
           proposer={(recherche) => propositions(definition, choix?.c.cle ?? "", comptes, lignes.map((l) => l.row), recherche)}
           onEcrire={(nom) => {
             if (!choix) return
