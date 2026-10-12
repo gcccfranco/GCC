@@ -2,7 +2,7 @@
 // Contourne firestore.rules : sert à lire tous les abonnements push / profils et
 // à écrire le journal de notifications. À n'importer QUE depuis du code serveur.
 
-import { initializeApp, getApps, getApp, cert, type App } from "firebase-admin/app";
+import { applicationDefault, initializeApp, getApps, getApp, cert, type App } from "firebase-admin/app";
 import { getFirestore, type Firestore } from "firebase-admin/firestore";
 import { getAuth, type DecodedIdToken } from "firebase-admin/auth";
 
@@ -22,6 +22,13 @@ function loadServiceAccount(): ServiceAccountJson {
 
 function adminApp(): App {
   if (getApps().length) return getApp();
+  if (!process.env.FIREBASE_SERVICE_ACCOUNT?.trim()) {
+    return initializeApp({
+      credential: applicationDefault(),
+      projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+    });
+  }
+
   const sa = loadServiceAccount();
   return initializeApp({
     credential: cert({

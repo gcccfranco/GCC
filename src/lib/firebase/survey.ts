@@ -6,6 +6,7 @@ import {
   fromFsValue,
   type RawDoc,
 } from "./setlists";
+import { FIREBASE_PROJECT_ID } from "./config";
 import type { SurveyAnswers, SurveyResponse } from "@/types/survey";
 
 function fromFsResponse(raw: RawDoc): SurveyResponse {
@@ -69,7 +70,7 @@ export async function saveSurveyResponse(
   const mask = Object.keys(fields)
     .map((f) => `updateMask.fieldPaths=${f}`)
     .join("&");
-  const docName = `projects/gcclouange/databases/(default)/documents/surveyResponses/${uid}`;
+  const docName = `projects/${FIREBASE_PROJECT_ID}/databases/(default)/documents/surveyResponses/${uid}`;
   const res = await fetch(`${FS_BASE}/surveyResponses/${uid}?${mask}`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json", ...headers },

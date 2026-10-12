@@ -10,6 +10,8 @@ const firebaseConfig = {
   appId:             process.env.NEXT_PUBLIC_FIREBASE_APP_ID             ,
 };
 
+export const FIREBASE_PROJECT_ID = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID ?? "gcclouange";
+
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
 
 // Firestore est consommé via l'API REST (voir lib/firebase/setlists.ts) —

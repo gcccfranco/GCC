@@ -1,0 +1,30 @@
+{
+  "name": "Next.js Dev Container",
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
+
+  // Réseau pour communiquer avec la BDD du docker-compose
+  "runArgs": [
+    // "--network=gcc-network",
+    "--env-file",
+    "${localWorkspaceFolder}/.env"
+  ],
+
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+      },
+      "extensions": [
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "prisma.prisma"
+      ]
+    }
+  },
+
+  "postCreateCommand": "npm install",
+  "remoteUser": "node"
+}

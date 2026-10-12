@@ -1,7 +1,7 @@
-import { auth } from "@/lib/firebase/config";
+import { auth, FIREBASE_PROJECT_ID } from "@/lib/firebase/config";
 
 const FS_BASE =
-  "https://firestore.googleapis.com/v1/projects/gcclouange/databases/(default)/documents";
+  `https://firestore.googleapis.com/v1/projects/${FIREBASE_PROJECT_ID}/databases/(default)/documents`;
 
 async function authHeader(): Promise<Record<string, string>> {
   if (!auth.currentUser) return {};
@@ -44,7 +44,7 @@ export async function saveAnnotation(
     const headers = await authHeader();
     const id = docId(userId, setlistId, pageKey);
     const encodedId = encodeURIComponent(id);
-    const docName = `projects/gcclouange/databases/(default)/documents/annotations/${id}`;
+    const docName = `projects/${FIREBASE_PROJECT_ID}/databases/(default)/documents/annotations/${id}`;
     await fetch(
       `${FS_BASE}/annotations/${encodedId}?updateMask.fieldPaths=strokes&updateMask.fieldPaths=updatedAt`,
       {

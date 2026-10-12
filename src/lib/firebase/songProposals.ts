@@ -6,6 +6,7 @@ import {
   fromFsValue,
   type RawDoc,
 } from "./setlists";
+import { FIREBASE_PROJECT_ID } from "./config";
 import type { SongProposal, SongProposalStatus } from "@/types/songProposal";
 
 function fromFsProposal(raw: RawDoc): SongProposal {
@@ -66,7 +67,7 @@ export async function setProposalStatus(
   status: SongProposalStatus
 ): Promise<void> {
   const headers = await authHeader();
-  const docName = `projects/gcclouange/databases/(default)/documents/songProposals/${id}`;
+  const docName = `projects/${FIREBASE_PROJECT_ID}/databases/(default)/documents/songProposals/${id}`;
   const res = await fetch(
     `${FS_BASE}/songProposals/${id}?updateMask.fieldPaths=status`,
     {

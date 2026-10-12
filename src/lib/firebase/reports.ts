@@ -6,6 +6,7 @@ import {
   fromFsValue,
   type RawDoc,
 } from "./setlists";
+import { FIREBASE_PROJECT_ID } from "./config";
 import type { Report, ReportKind, ReportStatus } from "@/types/report";
 
 function fromFsReport(raw: RawDoc): Report {
@@ -49,7 +50,7 @@ export async function getReports(): Promise<Report[]> {
 
 export async function setReportStatus(id: string, status: ReportStatus): Promise<void> {
   const headers = await authHeader();
-  const docName = `projects/gcclouange/databases/(default)/documents/reports/${id}`;
+  const docName = `projects/${FIREBASE_PROJECT_ID}/databases/(default)/documents/reports/${id}`;
   const res = await fetch(`${FS_BASE}/reports/${id}?updateMask.fieldPaths=status`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json", ...headers },

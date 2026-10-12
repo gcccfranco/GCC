@@ -1,0 +1,49 @@
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        USER_UID: ${UID:-1000}
+        USER_GID: ${GID:-1000}
+    image: gcccdp:latest
+    container_name: gcccdp
+    restart: always
+    ports:
+      - "80:3000"
+    env_file:
+      - .env
+    environment:
+      GOOGLE_APPLICATION_CREDENTIALS: /secret/gcloud/application_default_credentials.json
+    volumes:
+      # - .:/app
+      - ~/.config/gcloud/application_default_credentials.json:/secret/gcloud/application_default_credentials.json:ro
+    networks:
+      - gcc-network
+    # depends_on:
+    #   db:
+    #     condition: service_healthy
+
+  # db:
+  #   image: postgres:18-bookworm
+  #   container_name: db
+  #   restart: always
+  #   env_file:
+  #     - db.env
+  #   environment:
+  #     POSTGRES_USER: ${POSTGRES_USER}
+  #     POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+  #     POSTGRES_DB: ${POSTGRES_DB}
+  #   ports:
+  #     - "5432:5432"
+  #   volumes:
+  #     - postgres_data:/var/lib/postgresql/data
+  #   networks:
+  #     - gcc-network
+
+networks:
+  gcc-network:
+    driver: bridge
+
+volumes:
+  postgres_data:

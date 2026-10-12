@@ -85,7 +85,7 @@ export function triVisibilities(
 // planningReleases/{key}_{year}. Doc absent / erreur réseau = rien de publié.
 
 const FS_DOCS =
-  "https://firestore.googleapis.com/v1/projects/gcclouange/databases/(default)/documents"
+  `https://firestore.googleapis.com/v1/projects/${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID ?? "gcclouange"}/databases/(default)/documents`
 
 export async function getPublishedQuarters(key: string, year: number): Promise<string[]> {
   try {

@@ -17,7 +17,7 @@ export function ecritDansLApp(key: string): boolean {
 }
 
 const FS_DOCS =
-  "https://firestore.googleapis.com/v1/projects/gcclouange/databases/(default)/documents"
+  `https://firestore.googleapis.com/v1/projects/${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID ?? "gcclouange"}/databases/(default)/documents`
 
 // Même cache court que `fetchSheet` (sheets.ts l. 64-83) : les pages planning
 // sont des composants client, sans quoi chaque montage relit la grille.

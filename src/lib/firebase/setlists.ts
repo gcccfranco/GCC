@@ -1,4 +1,4 @@
-import { auth } from "@/lib/firebase/config";
+import { auth, FIREBASE_PROJECT_ID } from "@/lib/firebase/config";
 import { SERVICE_LIEUX } from "@/types/user";
 import type { SetlistItem } from "@/types/setList";
 
@@ -45,7 +45,7 @@ export interface FSSetlist {
 // Using the REST API instead of the Firebase SDK to avoid WebChannel
 // connectivity issues in certain browser environments.
 
-export const FS_BASE = "https://firestore.googleapis.com/v1/projects/gcclouange/databases/(default)/documents";
+export const FS_BASE = `https://firestore.googleapis.com/v1/projects/${FIREBASE_PROJECT_ID}/databases/(default)/documents`;
 
 export async function authHeader(): Promise<Record<string, string>> {
   if (!auth.currentUser) return {};
@@ -274,7 +274,7 @@ export async function updateSetlist(
     ...toFsFields(data as Record<string, unknown>),
     updatedAt: { timestampValue: new Date().toISOString() },
   };
-  const docName = `projects/gcclouange/databases/(default)/documents/setlists/${id}`;
+  const docName = `projects/${FIREBASE_PROJECT_ID}/databases/(default)/documents/setlists/${id}`;
   const mask = [...Object.keys(data), "updatedAt"]
     .map((f) => `updateMask.fieldPaths=${encodeURIComponent(f)}`)
     .join("&");
