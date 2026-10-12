@@ -25,7 +25,7 @@ const DOCS: Record<string, Record<string, unknown>> = {
     titre: "Tournoi de ping", type: "loisir", pour: "eglise", date: "2026-10-15", heure: "19:00", lieu: "Gymnase",
     placesMax: 10, inscrits: 4, organisateurUid: "u-autre", organisateurNom: "Autre", createdAt: MAINTENANT, updatedAt: MAINTENANT,
   },
-  "poles/da/taches/noel": {
+  "equipes/da/taches/noel": {
     titre: "Chants de Noël", responsableUid: null, responsableNom: "", echeance: "2026-10-15", repetition: null,
     lien: "", note: "", prevenir: null, evenement: null, auteurUid: "u-autre", createdAt: MAINTENANT, updatedAt: MAINTENANT,
   },

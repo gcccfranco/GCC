@@ -29,8 +29,8 @@ const item = (songSlug: string, position: number) => ({
 });
 
 const DOCS: Record<string, Record<string, unknown>> = {
-  "poles/da/taches/t1": {
-    pole: "da", titre: "Préparer les affiches", responsableUid: "uid-admin", responsableNom: "Alix D.", echeance: "2026-10-09",
+  "equipes/da/taches/t1": {
+    equipe: "da", titre: "Préparer les affiches", responsableUid: "uid-admin", responsableNom: "Alix D.", echeance: "2026-10-09",
     repetition: null, lien: "", note: "", prevenir: null, evenement: null, auteurUid: "uid-admin",
     createdAt: "2026-09-01T10:00:00Z", updatedAt: "2026-09-01T10:00:00Z",
   },

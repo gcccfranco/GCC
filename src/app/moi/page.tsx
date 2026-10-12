@@ -26,9 +26,8 @@ import { ReportDialog } from "@/components/report/ReportDialog";
 import { useSetLanguage } from "@/lib/I18nProvider";
 import { useAuth, logOut } from "@/lib/firebase/auth";
 import { useProfile } from "@/lib/firebase/users";
-import { isAdminUser, polesDe } from "@/lib/access";
+import { equipesDesTaches, isAdminUser } from "@/lib/access";
 import { BACK_OFFICE } from "@/lib/backOffice";
-import { TACHE_POLES } from "@/types/tache";
 
 const TOGGLE = "rounded-full bg-secondary px-3 py-1.5 text-sm font-semibold text-foreground transition-transform duration-150 active:scale-[.96] cursor-pointer";
 
@@ -49,8 +48,8 @@ function MoiClient() {
   const admin = isAdminUser(user);
   const canNotify = admin || (profile?.notify?.length ?? 0) > 0;
   const name = [profile?.firstName, profile?.lastName].filter(Boolean).join(" ");
-  // « Mes tâches » (lot 7) : seulement pour les membres d'un pôle et les admins.
-  const poles = useMemo(() => (admin ? [...TACHE_POLES] : polesDe(profile)), [admin, profile]);
+  // « Mes tâches » (lot 7 ; EQ15) : seulement pour les membres d'une équipe (Louange élargi) et les admins.
+  const equipes = useMemo(() => equipesDesTaches(user, profile), [user, profile]);
 
   const carte = "raised rounded-2xl px-4 py-1.5";
   const blocs = {
@@ -113,7 +112,7 @@ function MoiClient() {
   const apercus = (
     <div key="apercus" className="grid items-start gap-4 md:grid-cols-2">
       <ApercuServices />
-      {BACK_OFFICE && poles.length > 0 && user && <ApercuTaches poles={poles} uid={user.uid} />}
+      {BACK_OFFICE && equipes.length > 0 && user && <ApercuTaches equipes={equipes} />}
       {!harmonie.chargement && harmonie.peut && <ApercuHarmonie piano={harmonie.piano} />}
       {BACK_OFFICE && user && <ApercuEquipes uid={user.uid} />}
     </div>

@@ -12,10 +12,10 @@ import {
   canSeeSetlist,
   equipeDuPour,
   equipesDe,
+  estDeLEquipe,
+  estReferentDe,
   estReunion,
   isAdminUser,
-  isPoleMember,
-  polesDe,
 } from "@/lib/access";
 import { lienOngletSheet, type EntreeSheet } from "@/lib/evenements/sheet";
 import type { FSSetlist } from "@/lib/firebase/setlists";
@@ -29,8 +29,8 @@ import { feteDe } from "@/lib/scene/fetes";
 import { quiCategories } from "@/lib/scene/rappels";
 import { PLANNING_COLORS, categoryColor, categoryLabel, serviceColor } from "@/lib/serviceColors";
 import { GRILLES_DU_SERVICE } from "@/lib/tableauDeBord/donnees";
-import { addDays, echeancesDe } from "@/lib/taches/echeances";
-import { poleLabel } from "@/lib/taches/messages";
+import { aFairePour, addDays, echeancesDe } from "@/lib/taches/echeances";
+import { nomEquipe } from "@/lib/taches/messages";
 import type { Evenement } from "@/types/evenement";
 import type { Creneau, Programme } from "@/types/programme";
 import type { LignePetitDej } from "@/types/petitDej";
@@ -75,7 +75,7 @@ export interface EntreeCalendrier {
   moi: boolean;
   /** Droits existants (Q2) et règles de Q6, par peutDeplacer. */
   deplacable: boolean;
-  /** Fiche, page du pôle, setlist, onglet du Sheet. */
+  /** Fiche, page de l'équipe, setlist, onglet du Sheet. */
   lien: string;
   /** Services seulement : colonnes à remplir (clés `planning.roles.*`), « Cases vides : … »
    *  du panneau du jour ; absent quand rien ne manque ou que le planning n'est pas lu. */
@@ -106,7 +106,7 @@ export interface DonneesCalendrier {
   evenements: Evenement[];
   /** Ids des évènements où je suis inscrit. */
   mesInscriptions: string[];
-  /** Tâches de mes pôles, avec leurs fois. */
+  /** Tâches de mes équipes, avec leurs fois. */
   taches: { tache: Tache; fois: Fois[] }[];
   /** Éditions de la scène affichées (`editionsAffichees` : Pâques et Noël), chacune avec ses créneaux. */
   scene: { programme: Programme; creneaux: Creneau[] }[];
@@ -161,13 +161,13 @@ const dans = (date: string, debut: string, fin: string) => !!date && date >= deb
 /** Ce qu'on demande à déplacer. « sheet » : une entrée du Sheet des évènements. */
 export type CibleDeplacement =
   | { source: "evenements" | "reunions"; evenement: Pick<Evenement, "pour" | "organisateurUid" | "date"> }
-  | { source: "taches"; tache: Pick<Tache, "pole" | "repetition">; date: string; fois: Fois[] }
+  | { source: "taches"; tache: Pick<Tache, "equipe" | "repetition">; date: string; fois: Fois[] }
   | { source: "scene"; creneau: Pick<Creneau, "auteurUid" | "qui" | "dimanche">; programme: Pick<Programme, "ouvert" | "quiAutorises"> }
   | { source: "services" | "sheet" | "setlists" | "petitDej" };
 
 /** Peut-on soulever cette entrée (Q5, Q6) ? Évènement et réunion : organisateur
  *  et coordination (canEditEvenement), pas avant aujourd'hui. Tâche : unique,
- *  membre du pôle, pas terminée (même passée). Créneau : son auteur s'il peut
+ *  référent de son équipe ou admin (EQ8), pas terminée (même passée). Créneau : son auteur s'il peut
  *  réserver pour son groupe (canReserverPour), la coordination toujours, pas
  *  avant aujourd'hui. Le reste ne bouge jamais. Le jour visé (aujourd'hui au
  *  plus tôt, créneau libre de la grille) se vérifie au dépôt (C6). */
@@ -185,7 +185,7 @@ export function peutDeplacer(
     case "taches":
       return (
         !cible.tache.repetition &&
-        isPoleMember(user, profile, cible.tache.pole) &&
+        estReferentDe(user, profile, cible.tache.equipe) &&
         !cible.fois.some((f) => f.date === cible.date && f.etat === "terminee")
       );
     case "scene":
@@ -200,13 +200,12 @@ export function peutDeplacer(
 }
 
 /** Pastilles à montrer (Q2), dans l'ordre de la planche : une source n'apparaît que si
- *  la personne a quelque chose à y voir — Tâches : un pôle ; Réunions : une équipe (Louange
- *  élargi, EQ14) ; un admin toujours. */
+ *  la personne a quelque chose à y voir — Tâches et Réunions : une équipe (Louange élargi,
+ *  EQ14) ; un admin toujours. */
 export function sourcesPermises(user: Utilisateur | null, profile: ProfilCalendrier | null): SourceCalendrier[] {
   const admin = isAdminUser(user);
-  const poles = polesDe(profile).length > 0;
   const equipes = equipesDe(profile).length > 0;
-  return ORDRE_PASTILLES.filter((s) => (s === "taches" ? admin || poles : s === "reunions" ? admin || equipes : true));
+  return ORDRE_PASTILLES.filter((s) => (s === "taches" || s === "reunions" ? admin || equipes : true));
 }
 
 /** Pastilles allumées et « Seulement moi ». */
@@ -412,12 +411,11 @@ function scene(d: DonneesCalendrier, c: ContexteCalendrier, debut: string, fin: 
 }
 
 function taches(d: DonneesCalendrier, c: ContexteCalendrier, debut: string, fin: string): EntreeCalendrier[] {
-  const mesPoles = polesDe(c.profile) as string[];
   const out: EntreeCalendrier[] = [];
   for (const { tache: t, fois } of d.taches) {
-    if (!isPoleMember(c.user, c.profile, t.pole)) continue;
+    if (!estDeLEquipe(c.user, c.profile, t.equipe)) continue;
     for (const date of echeancesDe(t, debut, fin)) {
-      const terminee = fois.some((f) => f.date === date && f.etat === "terminee");
+      const laFois = fois.find((f) => f.date === date) ?? null;
       out.push({
         source: "taches",
         cle: `taches:${t.id}:${date}`,
@@ -425,13 +423,14 @@ function taches(d: DonneesCalendrier, c: ContexteCalendrier, debut: string, fin:
         heure: "",
         heureFin: "",
         titre: t.titre,
-        detail: joindre([poleLabel(t.pole, c.lang), t.responsableNom || MOTS[c.lang].echeance]),
+        detail: joindre([nomEquipe(t.equipe, c.lang, true), t.responsableNom || MOTS[c.lang].echeance]),
         couleur: COULEURS_CALENDRIER.taches.point,
         duSheet: false,
-        // « Mes tâches » (aFairePour) : à moi, ou à mon pôle sans responsable, pas terminée.
-        moi: !terminee && (t.responsableUid === c.user.uid || (t.responsableUid === null && mesPoles.includes(t.pole))),
+        // « Mes tâches » (aFairePour, EQ14) : à moi, ou sans responsable dans une équipe dont je suis
+        // référent, pas terminée.
+        moi: aFairePour([{ tache: t, date, fois: laFois }], c.user, c.profile).length > 0,
         deplacable: peutDeplacer(c.user, c.profile, { source: "taches", tache: t, date, fois }, c.today),
-        lien: `/taches/${t.pole}`,
+        lien: `/taches/${t.equipe}`,
         repetee: t.repetition ? true : undefined,
       });
     }

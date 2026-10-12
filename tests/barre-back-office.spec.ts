@@ -158,10 +158,12 @@ test.describe("Barre du bas (B6) : la barre", () => {
   });
 
   test("une page hors de la barre marque « Plus »", async ({ page }) => {
-    await ouvrir(page, ADMIN, {}, "/back-office/equipes");
+    await ouvrir(page, ADMIN, {
+      "equipes/da/taches/t1": { equipe: "da", titre: "Affiche", responsableUid: null, responsableNom: "", echeance: "2026-10-05", repetition: null },
+    }, "/back-office/equipes");
     await expect(barre(page).getByRole("link", { name: "Plus" })).toHaveAttribute("aria-current", "page");
     await barre(page).getByRole("link", { name: "Tâches" }).click();
-    // L'entrée Tâches mène au premier pôle de la personne (B3).
+    // L'entrée Tâches mène à la première équipe du rail (B3, EQ9 : celles qui ont une tâche).
     await expect(page).toHaveURL(/\/back-office\/taches\/da\/?$/);
     await expect(barre(page).getByRole("link", { name: "Tâches" })).toHaveAttribute("aria-current", "page");
     await expect(barre(page).getByRole("link", { name: "Plus" })).not.toHaveAttribute("aria-current", "page");
@@ -222,7 +224,7 @@ test.describe("Barre du bas (B6) : « Plus »", () => {
 
   test("Alice, quatre de ses cinq entrées dans la barre : « Plus » n'a que la carte de Réunions", async ({ page }) => {
     // Barre enregistrée à deux onglets : complétée dans l'ordre du menu (Q13). Depuis v18 (B15),
-    // la coordination a aussi Réunions (son pôle), la cinquième entrée, qui reste dans « Plus ».
+    // Alice a aussi Réunions (son équipe), la cinquième entrée, qui reste dans « Plus ».
     await ouvrir(page, ALICE, { "backOffice/uid-alice": { barreDuBas: ["tableau", "evenements"], majLe: "2026-09-30T10:00:00Z" } });
     await expect(onglets(page)).toHaveText(["Accueil", "Évènements", "Calendrier", "Tâches", "Plus"]);
     await barre(page).getByRole("link", { name: "Plus" }).click();
@@ -235,9 +237,9 @@ test.describe("Barre du bas (B6) : « Plus »", () => {
     const qui: FakeProfile = { ...ALICE, plannings: ["culte"], equipes: true };
     await ouvrir(page, qui, {
       "backOffice/uid-alice": { barreDuBas: ["tableau", "planning", "evenements", "equipes"], majLe: "2026-09-30T10:00:00Z" },
-      "poles/evenement/taches/t1": { titre: "Affiche", responsableUid: "uid-alice", responsableNom: "Alice Q.", echeance: "2026-09-28", repetition: null },
-      "poles/evenement/taches/t2": { titre: "Salle", responsableUid: null, responsableNom: "", echeance: "2026-10-05", repetition: null },
-      "poles/evenement/taches/t3": { titre: "Courses", responsableUid: "uid-autre", responsableNom: "Pers. B", echeance: "2026-10-05", repetition: null },
+      "equipes/evenementiel/taches/t1": { titre: "Affiche", responsableUid: "uid-alice", responsableNom: "Alice Q.", echeance: "2026-09-28", repetition: null },
+      "equipes/evenementiel/taches/t2": { titre: "Salle", responsableUid: null, responsableNom: "", echeance: "2026-10-05", repetition: null },
+      "equipes/evenementiel/taches/t3": { titre: "Courses", responsableUid: "uid-autre", responsableNom: "Pers. B", echeance: "2026-10-05", repetition: null },
     });
     await expect(onglets(page)).toHaveText(["Accueil", "Planning", "Évènements", "Équipes", "Plus"]);
     await barre(page).getByRole("link", { name: "Plus" }).click();

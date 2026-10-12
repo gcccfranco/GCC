@@ -5,12 +5,13 @@
 import { sourcesPermises } from "@/lib/calendrier/entrees";
 import { MOI, sourcesDuWidget } from "@/lib/calendrier/widget";
 import { grilleDe, GRILLES } from "@/lib/planning/grilles";
+import { cleNomEquipe } from "@/lib/equipes/table";
 import { categoryLabel } from "@/lib/serviceColors";
 import { ANNONCE_SECTIONS } from "@/types/annonce";
 import type { Reglages, WidgetId } from "@/types/backOffice";
 import type { UserProfile } from "@/types/user";
 import {
-  SERVICES, planningsCasesVides, polesAFaire, raccourcisPermis, servicesDuDimanche, servicesSetlists,
+  SERVICES, equipesAFaire, planningsCasesVides, raccourcisPermis, servicesDuDimanche, servicesSetlists,
 } from "./donnees";
 
 type AuthUser = { uid: string; email?: string | null };
@@ -22,7 +23,7 @@ export type GroupeReglages = {
   cle: keyof Reglages;
   /** Clé de traduction du titre du groupe (« Services », « Sur », « Afficher »…). */
   titre: string;
-  /** Plusieurs choix à la fois (services, pôles…) ou un seul (nombre, horizon…). */
+  /** Plusieurs choix à la fois (services, équipes…) ou un seul (nombre, horizon…). */
   plusieurs: boolean;
   choix: ChoixReglage[];
   actifs: string[];
@@ -49,8 +50,8 @@ export function groupesDeReglages(
     case "dimanche":
       return [plusieurs("services", "services", services(SERVICES), servicesDuDimanche(r, user, profile))];
     case "afaire":
-      return [plusieurs("poles", "poles",
-        polesAFaire({}, user, profile).map((p) => ({ valeur: p, i18n: `taches.pole.${p}` })), polesAFaire(r, user, profile))];
+      return [plusieurs("equipes", "equipes",
+        equipesAFaire({}, user, profile).map((e) => ({ valeur: e, i18n: cleNomEquipe(e, true) })), equipesAFaire(r, user, profile))];
     case "setlists":
       return [
         plusieurs("services", "services", services(servicesSetlists({ services: SERVICES }, user, profile)), servicesSetlists(r, user, profile)),

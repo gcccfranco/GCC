@@ -8,7 +8,7 @@ export type WidgetId = (typeof WIDGETS)[number];
 export type Taille = "s" | "m" | "l";
 /** Clé absente = défaut de la table des widgets. */
 export type Reglages = Partial<{
-  services: string[]; poles: string[]; plannings: string[]; section: string; nombre: number;
+  services: string[]; equipes: string[]; plannings: string[]; section: string; nombre: number;
   horizon: number; periode: "3m" | "6m" | "12m" | "tout"; programme: string; liste: "sansCompte" | "nouveaux";
   raccourcis: string[]; sources: string[]; seulementMoi: boolean;
 }>;

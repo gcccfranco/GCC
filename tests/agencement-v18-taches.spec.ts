@@ -7,7 +7,7 @@ import {
 
 // Agencement v18, tranche T1 (docs/spec-agencement-v18.md, B1 et B2 ; planches `v18-bo-taches`,
 // `v18-bo-tache-nouvelle`) : Back-Office › Tâches en deux volets. En-tête « Tâches » au-dessus des
-// deux volets, rail des pôles avec le compte, « + Nouvelle tâche » ; à gauche la liste du pôle en
+// deux volets, rail des équipes avec le compte, « + Nouvelle tâche » ; à gauche la liste de l'équipe en
 // carte (En retard · Cette semaine · Plus tard, « Terminées (n) » repliées), à droite la fiche à
 // lire (état, infos, Note et Historique), « Modifier » et « ⋯ › Supprimer ». En grand, « Nouvelle
 // tâche » et « Modifier » ouvrent le formulaire dans le volet ; sur un volet, la feuille.
@@ -21,7 +21,7 @@ const LEA = {
 
 function tacheDoc(over: Record<string, unknown> = {}) {
   return {
-    pole: "da", titre: "Fond PPT", responsableUid: null, responsableNom: "", echeance: "2026-10-05",
+    equipe: "da", titre: "Fond PPT", responsableUid: null, responsableNom: "", echeance: "2026-10-05",
     repetition: null, lien: "", note: "", prevenir: null, evenement: null, auteurUid: "uid-ruth",
     createdAt: "2026-09-01T10:00:00Z", updatedAt: "2026-09-01T10:00:00Z", ...over,
   };
@@ -29,22 +29,22 @@ function tacheDoc(over: Record<string, unknown> = {}) {
 
 const DOCS = {
   "users/uid-lea": LEA,
-  "poles/da/taches/t1": tacheDoc({
+  "equipes/da/taches/t1": tacheDoc({
     titre: "Affiche de Noël", responsableUid: "uid-ruth", responsableNom: "Ruth K.", echeance: "2026-09-28",
-    evenement: { id: "noel", titre: "Culte de Noël" }, prevenir: { pole: "media" },
+    evenement: { id: "noel", titre: "Culte de Noël" }, prevenir: { equipe: "medias" },
     lien: "https://example.com/affiche-noel", note: "Format A3 et version Instagram",
     auteurUid: "uid-lea", createdAt: "2026-09-21T10:00:00Z",
   }),
-  "poles/da/taches/t1/fois/2026-09-28": {
+  "equipes/da/taches/t1/fois/2026-09-28": {
     date: "2026-09-28", parUid: "uid-ruth", parNom: "Ruth K.", le: "2026-09-29T09:00:00Z", etat: "encours", debutLe: "2026-09-29T09:00:00Z",
   },
-  "poles/da/taches/t2": tacheDoc({ titre: "Fond PPT du culte", echeance: "2026-10-01", repetition: { rythme: "semaine" } }),
-  "poles/da/taches/t3": tacheDoc({ titre: "Livret de l'Avent", echeance: "2026-11-16" }),
-  "poles/da/taches/t4": tacheDoc({ titre: "Visuel du repas", echeance: "2026-09-25" }),
-  "poles/da/taches/t4/fois/2026-09-25": {
+  "equipes/da/taches/t2": tacheDoc({ titre: "Fond PPT du culte", echeance: "2026-10-01", repetition: { rythme: "semaine" } }),
+  "equipes/da/taches/t3": tacheDoc({ titre: "Livret de l'Avent", echeance: "2026-11-16" }),
+  "equipes/da/taches/t4": tacheDoc({ titre: "Visuel du repas", echeance: "2026-09-25" }),
+  "equipes/da/taches/t4/fois/2026-09-25": {
     date: "2026-09-25", parUid: "uid-ruth", parNom: "Ruth K.", le: "2026-09-26T09:00:00Z", etat: "terminee", debutLe: "2026-09-25T09:00:00Z",
   },
-  "poles/media/taches/m1": tacheDoc({ pole: "media", titre: "Vidéo d'annonce", echeance: "2026-10-04" }),
+  "equipes/medias/taches/m1": tacheDoc({ equipe: "medias", titre: "Vidéo d'annonce", echeance: "2026-10-04" }),
 };
 
 /** Jeudi 1er octobre 2026. */
@@ -57,11 +57,11 @@ async function ouvrir(page: Page, adresse: string) {
 const liste = (page: Page) => page.locator('[data-volet="liste"]');
 const detail = (page: Page) => page.locator('[data-volet="detail"]');
 const ligne = (page: Page, titre: string) => liste(page).getByRole("button", { name: new RegExp(`^${titre}`) });
-/** Le bloc des volets (ou la liste seule) : toute la zone ; un rail (les pôles), aucune rangée de pilules. */
+/** Le bloc des volets (ou la liste seule) : toute la zone ; un rail (les équipes), aucune rangée de pilules. */
 const surLaListe = (page: Page) => ({ contenu: liste(page).locator(".."), onglets: { rail: 1, pilules: 0 } });
 const nouvelleTache = (page: Page) => page.getByRole(estGrandEcran(test.info()) ? "link" : "button", { name: "Nouvelle tâche" });
 
-/** Chemin Firestore d'une requête (`poles/da:runQuery`, `poles/da/taches/t3`), sans le préfixe du projet. */
+/** Chemin Firestore d'une requête (`equipes/da:runQuery`, `equipes/da/taches/t3`), sans le préfixe du projet. */
 const cheminFirestore = (url: string) => decodeURIComponent(new URL(url).pathname.split("/documents")[1] ?? "").replace(/^\//, "");
 
 /** Retient les réponses aux requêtes choisies jusqu'à `relacher()` (lecture lente simulée). À poser
@@ -87,13 +87,13 @@ async function capture(page: Page, nom: string) {
   await page.screenshot({ path: `${dir}/${nom}-${test.info().project.name}.png` });
 }
 
-test("l'agencement commun : en-tête « Tâches », rail des pôles avec le compte, aucune fenêtre native", async ({ page }) => {
+test("l'agencement commun : en-tête « Tâches », rail des équipes avec le compte, aucune fenêtre native", async ({ page }) => {
   await ouvrir(page, "/back-office/taches/da");
   await expect(ligne(page, "Affiche de Noël")).toBeVisible();
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Tâches");
-  await expect(page.locator("header[data-entete-page]")).toContainText("Les tâches des pôles : ce qui est en retard d'abord");
+  await expect(page.locator("header[data-entete-page]")).toContainText("Les tâches de tes équipes : ce qui est en retard d'abord");
   const rail = ongletsRail(page).filter({ visible: true });
-  await expect(rail.getByRole("link")).toHaveText([/^DA\s*·\s*3$/, /^Média\s*·\s*1$/]);
+  await expect(rail.getByRole("link")).toHaveText([/^DA\s*·\s*3$/, /^Médias\s*·\s*1$/]);
   await expect(rail.getByRole("link", { name: /^DA/ })).toHaveAttribute("aria-current", "page");
   await verifierAgencement(page, surLaListe(page));
   await capture(page, "v18-bo-taches");
@@ -103,8 +103,8 @@ test("pendant la lecture des tâches : ni « Aucune tâche », ni compte à zér
   interdireDialoguesNatifs(page);
   await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
   await signInAs(page, RUTH, DOCS, "/back-office");
-  // Les tâches du pôle DA tardent à venir (réseau lent).
-  const lecture = await retenir(page, (r) => cheminFirestore(r.url()) === "poles/da:runQuery");
+  // Les tâches de TEAM DA tardent à venir (réseau lent).
+  const lecture = await retenir(page, (r) => cheminFirestore(r.url()) === "equipes/da:runQuery");
   await page.goto("/back-office/taches/da");
   await expect.poll(lecture.vues).toBeGreaterThan(0);
   const rail = ongletsRail(page).filter({ visible: true });
@@ -113,10 +113,10 @@ test("pendant la lecture des tâches : ni « Aucune tâche », ni compte à zér
   await expect(rail.getByRole("link", { name: /^DA/ })).toHaveText(/^DA$/);
   lecture.relacher();
   await expect(ligne(page, "Affiche de Noël")).toBeVisible();
-  await expect(rail.getByRole("link")).toHaveText([/^DA\s*·\s*3$/, /^Média\s*·\s*1$/]);
+  await expect(rail.getByRole("link")).toHaveText([/^DA\s*·\s*3$/, /^Médias\s*·\s*1$/]);
 });
 
-test("changer l'état d'une tâche ne relit que son pôle", async ({ page }) => {
+test("changer l'état d'une tâche ne relit que son équipe", async ({ page }) => {
   const db = await ouvrir(page, "/back-office/taches/da/t3");
   const etat = page.getByRole("radiogroup", { name: "État" }).filter({ visible: true });
   await expect(etat.getByRole("radio", { name: "À faire" })).toHaveAttribute("aria-checked", "true");
@@ -125,9 +125,9 @@ test("changer l'état d'une tâche ne relit que son pôle", async ({ page }) => 
   await etat.getByRole("radio", { name: "Terminée" }).click();
   // L'état affiché vient de la relecture : quand il change, elle est finie.
   await expect(etat.getByRole("radio", { name: "Terminée" })).toHaveAttribute("aria-checked", "true");
-  expect(db.writes.some((w) => w.path === "poles/da/taches/t3/fois/2026-11-16")).toBe(true);
-  expect(relues).toContain("poles/da:runQuery");
-  expect(relues.filter((c) => c.startsWith("poles/media")), "le pôle Média n'est pas relu").toEqual([]);
+  expect(db.writes.some((w) => w.path === "equipes/da/taches/t3/fois/2026-11-16")).toBe(true);
+  expect(relues).toContain("equipes/da:runQuery");
+  expect(relues.filter((c) => c.startsWith("equipes/medias")), "TEAM MÉDIAS n'est pas relue").toEqual([]);
 });
 
 test("« Modifier » : le responsable est déjà choisi pendant la lecture des membres", async ({ page }) => {
@@ -199,7 +199,7 @@ test.describe("en grand (deux volets)", () => {
     const form = detail(page).getByRole("form", { name: "Nouvelle tâche" });
     await expect(form).toBeVisible();
     await expect(page.getByRole("dialog")).toHaveCount(0);
-    await expect(form.getByRole("group", { name: "Pôle" }).getByRole("button", { name: "DA" })).toHaveAttribute("aria-pressed", "true");
+    await expect(form.getByRole("group", { name: "Équipe" }).getByRole("button", { name: "DA" })).toHaveAttribute("aria-pressed", "true");
     await form.getByLabel("Titre").fill("Affiche de la retraite");
     await form.getByLabel("Échéance").fill("2026-10-06");
     await form.getByRole("tablist", { name: "Répétition" }).getByRole("tab", { name: "Semaine", exact: true }).click();
@@ -207,9 +207,9 @@ test.describe("en grand (deux volets)", () => {
     // Annuler, puis le bouton plein, en bas à droite (R13).
     await expect(form.getByRole("button", { name: /^(Annuler|Créer la tâche)$/ })).toHaveText(["Annuler", "Créer la tâche"]);
     await form.getByRole("button", { name: "Créer la tâche" }).click();
-    await expect.poll(() => db.writes.find((w) => w.method === "POST" && w.path.startsWith("poles/da/taches/"))).toBeTruthy();
-    const cree = db.writes.find((w) => w.method === "POST" && w.path.startsWith("poles/da/taches/"))!;
-    expect(cree.data).toMatchObject({ titre: "Affiche de la retraite", pole: "da", echeance: "2026-10-06", repetition: { rythme: "semaine" }, auteurUid: "uid-ruth" });
+    await expect.poll(() => db.writes.find((w) => w.method === "POST" && w.path.startsWith("equipes/da/taches/"))).toBeTruthy();
+    const cree = db.writes.find((w) => w.method === "POST" && w.path.startsWith("equipes/da/taches/"))!;
+    expect(cree.data).toMatchObject({ titre: "Affiche de la retraite", equipe: "da", echeance: "2026-10-06", repetition: { rythme: "semaine" }, auteurUid: "uid-ruth" });
     const id = cree.path.split("/").pop();
     await expect(page).toHaveURL(new RegExp(`/back-office/taches/da/${id}/?$`));
     await expect(detail(page).getByRole("heading", { level: 2, name: "Affiche de la retraite" })).toBeVisible();
@@ -220,7 +220,7 @@ test.describe("en grand (deux volets)", () => {
     await ouvrir(page, "/back-office/taches/da/nouvelle");
     const form = detail(page).getByRole("form", { name: "Nouvelle tâche" });
     await expect(form).toBeVisible();
-    // Le formulaire ajoute au rail des pôles le pôle en pilules et la répétition en rail (B2, planche `v18-bo-tache-nouvelle`).
+    // Le formulaire ajoute au rail des équipes l'équipe en pilules et la répétition en rail (B2, planche `v18-bo-tache-nouvelle`).
     await verifierAgencement(page, { contenu: liste(page).locator(".."), onglets: { rail: 2, pilules: 1 } });
     const carte = (await form.boundingBox())!;
     const annuler = (await form.getByRole("button", { name: "Annuler" }).boundingBox())!;
@@ -242,15 +242,15 @@ test.describe("en grand (deux volets)", () => {
     await verifierAgencement(page, surLaListe(page));
   });
 
-  test("le pôle d'une nouvelle tâche se choisit en pilules", async ({ page }) => {
+  test("l'équipe d'une nouvelle tâche se choisit en pilules", async ({ page }) => {
     const db = await ouvrir(page, "/back-office/taches/da/nouvelle");
     const form = detail(page).getByRole("form", { name: "Nouvelle tâche" });
-    await form.getByRole("group", { name: "Pôle" }).getByRole("button", { name: "Média" }).click();
+    await form.getByRole("group", { name: "Équipe" }).getByRole("button", { name: "Médias" }).click();
     await form.getByLabel("Titre").fill("Montage du teaser");
     await form.getByLabel("Échéance").fill("2026-10-12");
     await form.getByRole("button", { name: "Créer la tâche" }).click();
-    await expect(page).toHaveURL(/\/back-office\/taches\/media\/[^/]+\/?$/);
-    expect(db.writes.find((w) => w.method === "POST" && w.path.startsWith("poles/media/taches/"))?.data).toMatchObject({ titre: "Montage du teaser", pole: "media" });
+    await expect(page).toHaveURL(/\/back-office\/taches\/medias\/[^/]+\/?$/);
+    expect(db.writes.find((w) => w.method === "POST" && w.path.startsWith("equipes/medias/taches/"))?.data).toMatchObject({ titre: "Montage du teaser", equipe: "medias" });
   });
 
   test("Annuler referme le formulaire sans rien écrire", async ({ page }) => {
@@ -258,7 +258,7 @@ test.describe("en grand (deux volets)", () => {
     await detail(page).getByRole("button", { name: "Annuler" }).click();
     await expect(page).toHaveURL(/\/back-office\/taches\/da\/?$/);
     await expect(detail(page).getByRole("heading", { level: 2, name: "Affiche de Noël" })).toBeVisible();
-    expect(db.writes.filter((w) => w.path.startsWith("poles/"))).toEqual([]);
+    expect(db.writes.filter((w) => w.path.startsWith("equipes/"))).toEqual([]);
   });
 
   test("« Modifier » ouvre le formulaire dans le volet ; enregistrer met la fiche à jour", async ({ page }) => {
@@ -271,7 +271,7 @@ test.describe("en grand (deux volets)", () => {
     await form.getByLabel("Titre").fill("Livret de l'Avent 2026");
     await form.getByRole("button", { name: "Enregistrer" }).click();
     await expect(detail(page).getByRole("heading", { level: 2, name: "Livret de l'Avent 2026" })).toBeVisible();
-    expect(db.doc("poles/da/taches/t3")).toMatchObject({ titre: "Livret de l'Avent 2026" });
+    expect(db.doc("equipes/da/taches/t3")).toMatchObject({ titre: "Livret de l'Avent 2026" });
   });
 });
 
@@ -288,7 +288,7 @@ test("« ⋯ › Supprimer » : la fenêtre du site ; Annuler garde la tâche, S
   await page.getByRole("menuitem", { name: "Supprimer" }).click();
   await repondreDansLeSite(page, "Supprimer");
   await expect(page).toHaveURL(/\/back-office\/taches\/da\/?$/);
-  await expect.poll(() => db.doc("poles/da/taches/t3")).toBeUndefined();
+  await expect.poll(() => db.doc("equipes/da/taches/t3")).toBeUndefined();
   await expect(ligne(page, "Livret de l'Avent")).toHaveCount(0);
 });
 
@@ -306,7 +306,7 @@ test("« ⋯ › Supprimer » refusé par la base : un message, la fiche reste, 
   await expect(page.getByRole("status").filter({ hasText: "L'enregistrement a échoué. Réessaie." })).toBeVisible();
   await expect(page).toHaveURL(/\/back-office\/taches\/da\/t3\/?$/);
   await expect(page.getByRole("heading", { name: "Livret de l'Avent" })).toBeVisible();
-  expect(db.doc("poles/da/taches/t3")).toBeDefined();
+  expect(db.doc("equipes/da/taches/t3")).toBeDefined();
   expect(erreurs).toEqual([]);
 });
 
@@ -339,7 +339,7 @@ test.describe("un volet (téléphone, tablette portrait)", () => {
     await feuille.getByRole("button", { name: "Enregistrer" }).click();
     await expect(feuille).toHaveCount(0);
     await expect(ligne(page, "Affiche de la retraite")).toBeVisible();
-    expect(db.writes.find((w) => w.method === "POST" && w.path.startsWith("poles/da/taches/"))?.data).toMatchObject({ titre: "Affiche de la retraite" });
+    expect(db.writes.find((w) => w.method === "POST" && w.path.startsWith("equipes/da/taches/"))?.data).toMatchObject({ titre: "Affiche de la retraite" });
   });
 
   test("« Modifier » ouvre la feuille d'aujourd'hui", async ({ page }) => {

@@ -298,7 +298,7 @@ test("captures : Planning, Équipes, Messages au Back-Office ; la Table dans l'A
 });
 
 // ═══ B3 — Tâches et Évènements ═══════════════════════════════════════════════
-// `/back-office/taches[/pôle]` ; `/taches` = « À faire pour moi » ; Évènements ·
+// `/back-office/taches[/équipe]` ; `/taches` = « À faire pour moi » ; Évènements ·
 // Scène (écran de U1) ; Réunions, entrée à part depuis l'agencement v18 (B15) ; nouveau, fiche de gestion, modifier ;
 // redirections ; « Gérer dans le Back-Office » sur la fiche de l'App (Q14).
 
@@ -306,7 +306,7 @@ const COORD: FakeProfile = { uid: "uid-alice", email: "alice@example.com", first
 const DA_ORG: FakeProfile = { uid: "uid-bruno", email: "bruno@example.com", firstName: "Bruno", lastName: "M.", poles: ["da"], dansEquipes: ["da"], referentDe: ["da"] };
 const DA_MEMBRE: FakeProfile = { uid: "uid-dora", email: "dora@example.com", firstName: "Dora", lastName: "P.", poles: ["da"], dansEquipes: ["da"], referentDe: ["da"] };
 const ANNONCEUR: FakeProfile = { uid: "uid-hugo", email: "hugo@example.com", firstName: "Hugo", lastName: "B.", annonces: ["Culte Francophone"] };
-/** Musicien : le pôle Louange implicite, sans être responsable (question 2). */
+/** Musicien : le public Louange (décision 5), sans être responsable (question 2). */
 const MUSICIEN: FakeProfile = { uid: "uid-mu", email: "mu@example.com", firstName: "Léo", lastName: "V.", serviceRoles: { "Culte Francophone": ["musicien"] } };
 const REFERENTE: FakeProfile = { uid: "uid-ref", email: "ref@example.com", dansEquipes: ["regie"], referentDe: ["regie"] };
 
@@ -325,7 +325,7 @@ const DOCS_EV: Record<string, Record<string, unknown>> = {
   "evenements/reu-media": { ...REU, titre: "Réunion Média", pour: "equipe:medias", organisateurUid: "uid-marc", organisateurNom: "Marc V." },
 };
 const TACHE = {
-  pole: "da", titre: "Fond PPT", responsableUid: null, responsableNom: "", echeance: "2026-10-06",
+  equipe: "da", titre: "Fond PPT", responsableUid: null, responsableNom: "", echeance: "2026-10-06",
   repetition: null, lien: "", note: "", prevenir: null, auteurUid: "uid-bruno",
   createdAt: "2026-09-01T10:00:00Z", updatedAt: "2026-09-01T10:00:00Z",
 };
@@ -354,22 +354,26 @@ test("sousPartiesEvenements : Évènements, Scène selon les droits (table Q2)",
 });
 
 test.describe("B3 : Tâches", () => {
-  test("un membre du pôle DA : Tâches mène à son pôle, où les tâches se gèrent", async ({ page }) => {
-    await ouvrirB3(page, DA_ORG, "/back-office/taches", { "poles/da/taches/t1": TACHE });
+  test("un référent de TEAM DA : Tâches mène à son équipe, où les tâches se gèrent", async ({ page }) => {
+    await ouvrirB3(page, DA_ORG, "/back-office/taches", { "equipes/da/taches/t1": TACHE });
     await expect(page).toHaveURL(/\/back-office\/taches\/da\/?$/);
     await expect(page.getByRole("heading", { level: 1, name: "Tâches" })).toBeVisible();
-    // Agencement v18 (T1, B1) : le rail des pôles, même pour un seul (il porte le nom et le compte) ;
+    // Agencement v18 (T1, B1) : le rail des équipes, même pour une seule (il porte le nom et le compte) ;
     // « + Nouvelle tâche » en pilule (lien) en grand, en rond (bouton) sur un volet.
     await expect(ongletsRail(page).getByRole("link")).toHaveText([/^DA\s*·\s*1$/]);
     await expect(page.getByRole(estGrandEcran(test.info()) ? "link" : "button", { name: "Nouvelle tâche" })).toBeVisible();
     await expect(page.getByRole("checkbox", { name: /Fond PPT/ })).toBeVisible();
   });
 
-  test("admin : un onglet par pôle, dans l'ordre", async ({ page }) => {
-    await ouvrirB3(page, ADMIN, "/back-office/taches/media");
-    // Agencement v18 (T1, B1) : le rail des pôles, avec le compte de chacun.
-    await expect(ongletsRail(page).getByRole("link")).toHaveText([/^DA/, /^Média/, /^Orga/, /^Louange/, /^Événement/]);
-    await expect(ongletsRail(page).getByRole("link", { name: /^Média/ })).toHaveAttribute("aria-current", "page");
+  test("admin : un onglet par équipe qui a des tâches, dans l'ordre de la table (EQ9)", async ({ page }) => {
+    await ouvrirB3(page, ADMIN, "/back-office/taches/medias", {
+      "equipes/louange/taches/l1": { ...TACHE, equipe: "louange", titre: "Envoyer la setlist" },
+      "equipes/medias/taches/m1": { ...TACHE, equipe: "medias", titre: "Photos du culte" },
+      "equipes/da/taches/t1": TACHE,
+    });
+    // Agencement v18 (T1, B1) : le rail des équipes, avec le compte de chacune ; pas treize onglets vides.
+    await expect(ongletsRail(page).getByRole("link")).toHaveText([/^DA/, /^Médias/, /^Louange/]);
+    await expect(ongletsRail(page).getByRole("link", { name: /^Médias/ })).toHaveAttribute("aria-current", "page");
   });
 
   test("ancienne adresse : /taches/da mène à Back-Office › Tâches › DA", async ({ page }) => {
@@ -378,24 +382,27 @@ test.describe("B3 : Tâches", () => {
     await expect(ongletsRail(page).getByRole("link", { name: /^DA/ })).toHaveAttribute("aria-current", "page");
   });
 
-  test("App : /taches = « À faire pour moi », et une ligne vers les tâches des pôles pour un responsable", async ({ page }) => {
-    await ouvrirB3(page, DA_ORG, "/taches", { "poles/da/taches/t1": TACHE });
+  test("App : /taches = « À faire pour moi », et une ligne vers les tâches des équipes pour un responsable", async ({ page }) => {
+    await ouvrirB3(page, DA_ORG, "/taches", { "equipes/da/taches/t1": TACHE });
     await expect(page.getByRole("heading", { name: "À faire pour moi" })).toBeVisible();
     await expect(page.getByRole("checkbox", { name: /Fond PPT/ })).toBeVisible();
-    // Plus de liste des pôles dans l'App.
+    // Plus de liste des équipes dans l'App.
     await expect(page.getByRole("link", { name: "DA", exact: true })).toHaveCount(0);
-    await expect(page.getByRole("link", { name: /Les tâches des pôles/ })).toHaveAttribute("href", /^\/back-office\/taches\/?$/);
+    await expect(page.getByRole("link", { name: /Les tâches des équipes/ })).toHaveAttribute("href", /^\/back-office\/taches\/?$/);
   });
 
   test("App : un musicien (public Louange) coche ses tâches, et une ligne mène à Tâches au Back-Office (EQ17)", async ({ page }) => {
     // Lot 1 du chantier « équipes et groupes » (décision 5) : un rôle de service ouvre Tâches et Réunions.
-    await ouvrirB3(page, MUSICIEN, "/taches", { "poles/louange/taches/t1": { ...TACHE, pole: "louange", titre: "Envoyer la setlist" } });
+    // Une tâche qui lui est confiée : « toute l'équipe », elle n'est qu'aux référents (décision 41).
+    await ouvrirB3(page, MUSICIEN, "/taches", {
+      "equipes/louange/taches/t1": { ...TACHE, equipe: "louange", titre: "Envoyer la setlist", responsableUid: "uid-mu", responsableNom: "Léo V." },
+    });
     await expect(page.getByRole("checkbox", { name: /Envoyer la setlist/ })).toBeVisible();
     await expect(page.getByRole("link", { name: /Les tâches des/ })).toHaveAttribute("href", /^\/back-office\/taches\/?$/);
   });
 
   test("liens de la cloche : une tâche confiée ou terminée ouvre « À faire pour moi »", () => {
-    // Une page de pôle est au Back-Office, fermée à qui n'est pas responsable (un musicien du pôle Louange).
+    // La page d'une équipe est au Back-Office ; « À faire pour moi » est ouvert à tout membre.
     for (const route of ["src/app/api/taches/assigne/route.ts", "src/app/api/taches/fait/route.ts"]) {
       const code = readFileSync(route, "utf8");
       expect(code).not.toMatch(/url ?[:=] ?`\/taches\/\$\{/);
@@ -547,7 +554,7 @@ test.describe("B3 : Évènements", () => {
     await expect(page.getByLabel("Public")).toBeVisible();
     const publics = await page.getByLabel("Public").locator("option").allTextContents();
     expect(publics.length).toBeGreaterThan(0);
-    expect(publics.every((p) => p.startsWith("Pôle ") || p.startsWith("TEAM"))).toBe(true);
+    expect(publics.every((p) => p.startsWith("TEAM") || p === "Louange")).toBe(true);
     await expect(page.getByRole("radiogroup", { name: "Inscriptions" })).toHaveCount(0);
   });
 
@@ -619,7 +626,7 @@ test.describe("B3 : Évènements", () => {
 test("captures B3 : Tâches, Évènements, Réunions, fiche d'une réunion, Scène", async ({ page }, info) => {
   const dossier = "test-results/back-office-captures";
   const capture = (nom: string) => page.screenshot({ path: `${dossier}/b3-${nom}-${info.project.name}.png`, fullPage: true });
-  await ouvrirB3(page, ADMIN, "/back-office/taches/da", { ...DOCS_EV, "poles/da/taches/t1": TACHE });
+  await ouvrirB3(page, ADMIN, "/back-office/taches/da", { ...DOCS_EV, "equipes/da/taches/t1": TACHE });
   await expect(page.getByRole("checkbox", { name: /Fond PPT/ })).toBeVisible();
   await capture("taches");
   await page.goto("/back-office/evenements");
@@ -632,6 +639,6 @@ test("captures B3 : Tâches, Évènements, Réunions, fiche d'une réunion, Scè
   await expect(page.getByRole("region", { name: "Réunions précédentes" })).toBeVisible();
   await capture("reunion");
   await page.goto("/taches");
-  await expect(page.getByRole("link", { name: /Les tâches des pôles/ })).toBeVisible();
+  await expect(page.getByRole("link", { name: /Les tâches des équipes/ })).toBeVisible();
   await capture("app-taches");
 });

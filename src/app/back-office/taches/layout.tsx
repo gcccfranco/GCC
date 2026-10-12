@@ -1,28 +1,28 @@
 "use client";
 
-// Back-Office › Tâches (lot U6, B3, table Q2) : un onglet par pôle de la personne (Louange
-// compris ; tous pour un admin), la page d'un pôle dessous. Dans l'App, `/taches` garde
-// « À faire pour moi » (question 3). Le menu règle l'affichage seulement : poles/{pôle}/taches
-// garde sa règle (isTachePole).
-// Agencement v18 (B1, docs/spec-agencement-v18.md) : les tâches de tous les pôles de la personne
+// Back-Office › Tâches (lot U6, B3, table Q2) : un onglet par équipe de la personne (Louange élargi ;
+// toutes pour un admin) qui a une tâche ou dont elle est référente (EQ9), la page d'une équipe
+// dessous. Dans l'App, `/taches` garde « À faire pour moi » (question 3). Le menu règle l'affichage
+// seulement : equipes/{équipe}/taches garde sa règle (estDeLEquipe).
+// Agencement v18 (B1, docs/spec-agencement-v18.md) : les tâches de toutes les équipes de la personne
 // se lisent une fois ici, pour le compte du rail et pour la fiche (`FicheTache`, la même que dans
-// l'App) ; l'en-tête et les deux volets sont posés par `[pole]/layout.tsx`. Les pages lisent
+// l'App) ; l'en-tête et les deux volets sont posés par `[equipe]/layout.tsx`. Les pages lisent
 // `?date=` : Suspense pour le rendu statique.
 import { Suspense, useMemo } from "react";
 import { useProfile } from "@/lib/firebase/users";
-import { tachesDuBackOffice } from "@/lib/access";
+import { equipesDesTaches } from "@/lib/access";
 import { useTaches } from "@/lib/taches/useTaches";
 import { todayIso } from "@/lib/scene/dimanches";
 import { FournirTaches } from "@/components/taches/SectionTaches";
 
 function Taches({ children }: { children: React.ReactNode }) {
   const { user, profile, loading } = useProfile();
-  const poles = useMemo(() => tachesDuBackOffice(user, profile), [user, profile]);
-  const { items, loading: lecture, reload } = useTaches(loading ? [] : poles);
+  const equipes = useMemo(() => equipesDesTaches(user, profile), [user, profile]);
+  const { items, loading: lecture, reload } = useTaches(loading ? [] : equipes);
   const parNom = profile ? `${profile.firstName} ${profile.lastName}`.trim() || profile.email : user?.email ?? "";
   // Le profil puis les tâches : tant que l'un se lit, ni « Aucune tâche » ni compte à zéro.
   const chargement = loading || lecture;
-  const valeur = { poles, items, chargement, reload, aujourdhui: todayIso(), parNom, racine: "/back-office/taches", backOffice: true };
+  const valeur = { equipes, items, chargement, reload, aujourdhui: todayIso(), parNom, racine: "/back-office/taches", backOffice: true };
   return <FournirTaches value={valeur}>{children}</FournirTaches>;
 }
 

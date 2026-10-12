@@ -19,11 +19,11 @@ const EV = {
   inscrits: 0, createdAt: "2026-09-20T10:00:00Z", updatedAt: "2026-09-20T10:00:00Z",
 };
 const TACHE = {
-  pole: "da", titre: "Fond PPT", responsableUid: null, responsableNom: "", echeance: "2026-10-06",
+  equipe: "da", titre: "Fond PPT", responsableUid: null, responsableNom: "", echeance: "2026-10-06",
   repetition: null, lien: "", note: "", prevenir: null, auteurUid: "uid-admin",
   createdAt: "2026-09-01T10:00:00Z", updatedAt: "2026-09-01T10:00:00Z",
 };
-const DOCS = { "evenements/fete": EV, "poles/da/taches/t1": TACHE };
+const DOCS = { "evenements/fete": EV, "equipes/da/taches/t1": TACHE };
 
 /** Les pages qui n'avaient pas de halo (relevé du 06/10/2026), App puis Back-Office. */
 const PAGES = [

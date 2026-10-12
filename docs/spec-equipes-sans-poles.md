@@ -8,7 +8,7 @@ Le retour des responsables et la piste notée au lot G (`spec-retouches-v18.md`,
 pôle Louange implicite ne trouvait plus les réunions de son pôle dans aucune liste.
 
 - **Date** : 08/10/2026.
-- **Statut** : **go de Timothée le 08/10/2026 au soir. EQ-A et EQ-B codées** (voir « Avancement ») ; EQ-C à EQ-F restent.
+- **Statut** : **go de Timothée le 08/10/2026 au soir. EQ-A, EQ-B et EQ-C codées** (voir « Avancement ») ; EQ-D à EQ-F restent.
 - **Base de code** : `ui/apple-design` à `5878ce1`. Le code est identique à `439e5520`, base de la cartographie :
   seuls des documents ont changé depuis. Toutes les références `fichier:ligne` ci-dessous ont été rouvertes à `5878ce1`.
   Celles qu'ajoutent les réponses du 08/10 au soir ont été ouvertes à `ceeb9b2`, au code identique (`git diff 5878ce1
@@ -974,3 +974,97 @@ Go de code de Timothée le 08/10/2026 au soir.
     par leurs membres jusqu'à la migration ;
   - relire le 中文 : 敬拜 (le public Louange, `equipes.public.louange`), 你所在团队的会议 ;
   - rien à lancer pour EQ-B.
+
+### EQ-C — Tâches par équipe (12/10/2026)
+
+- **Codé** (EQ6 à EQ16, décisions 2, 3, 5 et 41) :
+  - **Chemin et modèle** (EQ6, EQ7) : `equipes/{equipe}/taches/{id}` et `…/fois/{date}` ; `Tache.equipe` (id) remplace
+    `pole`, `Prevenir` vaut `{ equipe }`, `{ regie }` ou `null` ; `TACHE_POLES` et `TachePole` sont supprimés
+    (`src/types/tache.ts`) ; `Reglages.equipes` remplace `Reglages.poles` (`src/types/backOffice.ts`). Le client REST
+    (`src/lib/firebase/taches.ts`), `useTaches`, `prevenir.ts`, `creerTache` suivent.
+  - **Droits** (`src/lib/access.ts`) : `peutCocher(user, profile, tache)` (EQ8 : référent ou admin, toute tâche ;
+    sinon membre **et** responsable), `equipesDesTaches` (ses équipes, Louange élargi ; toutes pour un admin),
+    `equipesOuCreer` (`referentDe` ; toutes pour un admin). `polesDe`, `isPoleMember` et `tachesDuBackOffice` sont
+    supprimés. `aFairePour(lignes, user, profile)` (`src/lib/taches/echeances.ts`, EQ15) : à moi, ou sans responsable
+    dans une équipe dont je suis référent ; `equipesDuRail` (EQ9) : les équipes qui ont une tâche, plus celles dont on
+    est référent.
+  - **Règles** (`firestore.rules`) : `match /equipes/{equipe}/taches/{id}` (lecture `estDeLEquipe`, création,
+    modification, suppression `estReferentDe`, `equipe` = chemin) et `match …/fois/{date}` (référent, ou membre et
+    responsable = soi, `get('responsableUid', null)`) ; `isTachePole` et `match /poles/{pole}/taches/{id}` supprimés.
+  - **Serveur** (`src/lib/taches/serveur.ts`, EQ11, EQ12) : `estEquipe`, `appelant` (jeton), `tacheDeLAppelant(db,
+    qui, equipe, tacheId, geste)` (profil lu par le serveur : 403 « Pas dans cette équipe » ; 404 « Tâche
+    introuvable » ; `assigne` : 403 « Réservé aux référents de l'équipe » ; `fait` : 403 « Tu ne peux pas cocher cette
+    tâche » sans `peutCocher`), `referentsDeLEquipe`, `ciblesDuRappel`, `equipeDuChemin` ; `appelantDuPole`,
+    `membresDuPole`, `lireTache` et `estPole` supprimés. Routes `/api/taches/assigne` et `/fait` : corps
+    `{ equipe, tacheId[, date] }`, `cible: "equipe"`, clés `tache-assigne-${equipe}-…`, `tache-fait-${equipe}-…`.
+    Cron : seules les tâches sous `equipes/{e}/taches` ; une tâche sans responsable rappelle les référents de
+    l'équipe (`ciblesDuRappel`) ; clés `rappel-tache-${quand}-${equipe}-…` (`cleRappelTache`,
+    `src/lib/taches/messages.ts`).
+  - **Notifications** (EQ13) : le nom long de l'équipe, lu dans `equipes.team.*` des deux fichiers de langue
+    (`nomEquipe`, `src/lib/taches/messages.ts`) : « TEAM MÉDIAS · pour vendredi 16 octobre », « Léa M. (TEAM MÉDIAS)
+    l'a terminée. », 媒体组 · 截止 …, （媒体组）已完成 ; « Louange » / 敬拜 pour `louange`.
+  - **Écrans** : dossiers `[pole]` renommés `[equipe]` (`/taches/[equipe]`, `/back-office/taches/[equipe]`). Rail de
+    Back-Office › Tâches selon EQ9 (une admin sans tâche n'a pas treize onglets vides) ; sans onglet, « Pas encore de
+    tâche pour tes équipes. » avec « + Nouvelle tâche » à qui crée quelque part ; « + Nouvelle tâche » parmi
+    `equipesOuCreer` (pilules en grand, liste au doigt) ; responsables proposés = membres de l'équipe choisie (Louange
+    élargi) ; « Quand c'est fait, prévenir » propose les autres équipes sous leur nom (EQ10). `TacheLigne` : case inerte
+    sans le droit de cocher. Fiche : « Modifier » et « ⋯ › Supprimer » aux référents et aux admins, l'état inerte sans
+    `peutCocher`. Calendrier (EQ14 : tâches des équipes, détail au nom court, lien `/taches/<équipe>`, « à moi » par
+    `aFairePour`, « Déplacer » aux référents, « Nouvelle tâche » parmi `equipesOuCreer`), widget « À faire » (réglage
+    « Équipes », `equipesAFaire`), pastille Tâches, « Plus » (« tâches de tes équipes / de toutes les équipes »), lien
+    Tâches de la barre du haut (`equipesDe`), aperçu « Mes tâches » de Moi (EQ15) ; fiche d'un évènement (carte masquée
+    sans tâche liée ni droit de créer, « Nouvelle tâche » aux référents) et duplication (seules les tâches des équipes
+    où l'on crée), EQ16.
+  - **Libellés** (EQ30, FR et 中文) : nouvelles `taches.champs.equipe`, `taches.equipes`, `taches.aucuneEquipe`,
+    `taches.aucuneTache`, `taches.equipePrevenue`, `backOffice.tachesDesEquipes`, `backOffice.plus.contenu.tesEquipes`
+    et `toutesLesEquipes`, `tableauDeBord.reglages.equipes` ; réécrites `taches.subtitle`, `taches.pasMembre`,
+    `taches.pourTous`, `taches.sousTitreBackOffice` ; retirées `taches.aucunPole`, `taches.prevenirPole`,
+    `taches.polePrevenu`, `taches.champs.pole`, `taches.poles`, `backOffice.tachesDesPoles`, `tesPoles`, `tousLesPoles`,
+    `tableauDeBord.reglages.poles`.
+- **Choix faits faute de réponse dans la spec** :
+  - **`taches.pole.*` est gardée jusqu'à EQ-D** (EQ30 la retire) : la pastille « Donne le pôle » et le sélecteur du pôle
+    de l'organigramme (`EquipesClient.tsx`, EQ-D) la lisent encore.
+  - **Le rail pendant la lecture** montre les équipes dont on est référent, sans compte ; les autres arrivent avec les
+    tâches. Un référent ne voit donc pas son rail apparaître d'un coup.
+  - **« + Nouvelle tâche » sur l'équipe d'un autre** : qui crée ailleurs le voit aussi sur une équipe où il n'est que
+    membre ; le formulaire part alors de la première équipe où il crée. Sans aucune équipe où créer, pas de bouton.
+  - **Fiche sans le droit de cocher** : l'état reste affiché, ses trois boutons inertes (et non masqués), comme la case
+    de la ligne. La case inerte est à demi-teinte.
+  - **Une seule fonction de contrôle pour les deux routes**, `tacheDeLAppelant`, base passée (testable sur une base
+    simulée, comme `inscrire`) ; elle remplace `appelantDeLEquipe` et `lireTache(equipe, id)` que nommait la spec.
+  - **`ciblesDuRappel` relit les profils pour chaque rappel sans responsable** (au lieu d'une lecture pour tout le
+    cron) : le cron passe une fois par jour, et la fonction se teste seule.
+  - **« À moi » exige aussi `peutCocher` pour la tâche dont on est le responsable** : un responsable sorti de l'équipe
+    ne la compte plus. Pour un admin, toute tâche « toute l'équipe » est à lui (EQ15, « toutes pour un admin ») :
+    « Seulement moi » du widget Calendrier d'un admin la montre désormais (`calendrier-widget.spec.ts` réécrit).
+  - **Noms** : le Calendrier prend le nom court (« Médias · Joël F. »), comme les autres écrans de tâches (EQ23) ;
+    « Quand c'est fait, prévenir » (formulaire et fiche) prend le nom long (« TEAM DA »), comme « Équipe prévenue : TEAM
+    DA. ». La liste de « Prévenir » : les douze autres équipes de la table, Louange comprise.
+  - **`/back-office/taches/<équipe>/nouvelle`** ramène à la liste de l'équipe qui ne crée nulle part.
+  - **Règles** : `match /equipes/{equipe}/taches/{id}` est écrit à part, au même niveau que `match /equipes/{id}`
+    (même effet qu'imbriqué : les règles de l'organigramme ne s'étendent pas aux tâches).
+  - **Fiche d'un évènement** : pendant la lecture, la carte n'apparaît qu'à qui crée (sinon elle n'a encore rien à
+    montrer).
+- **Tests vus rouges puis verts** (la tranche sur les trois appareils ; les specs voisines sur l'ordinateur seul) :
+  - `tests/equipes-taches.spec.ts` (nouveau) : **67 échecs sur 69** sur le code d'avant (2 sautés : la pastille de la
+    barre latérale, propre à l'ordinateur), puis **69 tests, 67 verts, 2 sautés** (3 appareils), vérifiés le 12/10 (rouges vus par la tentative précédente, avant la pause).
+  - `tests/equipes-acces.spec.ts`, trois tests purs ajoutés (`peutCocher`, `aFairePour`, `equipesDesTaches` et
+    `equipesOuCreer`) : **9 échecs sur 9**, puis verts ; le choriste de Louange y lit sa tâche sous `equipes/louange`.
+  - Specs voisines réécrites (chemins `equipes/…`, champ `equipe`, libellés, droits de la décision 41) :
+    ordinateur seul, le 12/10 : `taches` + `taches-evenements` + `calendrier-widget` + `calendrier-deplacer` + `tableau-de-bord` 168 verts (4 sautés) ; `back-office-admin` + `evenements` 124 verts ; `calendrier`, `back-office-espace`, `barre-back-office`, `reunions`, `halo-partout` 178 verts, 2 échecs = « borne du début » de `reunions` (horloge UTC, déjà là avant le chantier) ; `pages-en-grand-taches`, `retouches-v18-*`, `back-office-coupe`, `agencement-v18-*` 241 verts. (Un premier passage groupé a donné des délais de 40 s : serveurs `next dev` restés d'un passage tué ; relancés seuls, verts.) `equipes-acces` : un délai de premier chargement, vert au second passage.
+  - Captures regardées (ordinateur, téléphone, tablette ; FR et 中文) : `PW_CAPTURES` de `equipes-taches` : rail admin (ordinateur), formulaire « Nouvelle tâche » (téléphone), fiche en 中文 (tablette) regardés, nets ; les 18 PNG (6 vues × 3 appareils) produits
+  - `npx tsc --noEmit` et `npm run lint` sans erreur.
+- **Reste** : EQ-D à EQ-F ; le passage des specs voisines sur trois appareils (et cinq pour l'agencement) revient à EQ-F. Repéré pour EQ-D : le commentaire de `POLES` (`src/types/user.ts:35`) nomme encore
+  `polesDe` et `isTachePole`, qui n'existent plus ; `taches.pole.*` à retirer avec la pastille de l'organigramme. Pour
+  EQ-F : commentaires `src/lib/deuxVolets.ts:36`, `:43` (`[pole]`), cron (`lignesEvenements`, « réunion de pôle »),
+  `NouveauClient.tsx:7`, `:14`.
+- **Pour Timothée** :
+  - **ne pas publier `firestore.rules` maintenant** : les tâches sont désormais lues sous `equipes/*/taches`, que seule
+    la migration (EQ-E) remplit. Publier avant la migration rendrait les tâches existantes (encore sous `poles/`)
+    illisibles. Les règles du lot se publient à la bascule, après EQ-F (§ « Ordre de la bascule ») ;
+  - en local, d'ici la migration, Back-Office › Tâches est vide (les tâches de la base partagée sont encore sous
+    `poles/`) ; rien n'est perdu, rien n'est réécrit ;
+  - relire le 中文 : 团队, 你不属于任何团队：任务只对团队成员开放。, 你不属于这个团队。, 你的团队暂时还没有任务。, 整个团队,
+    已通知：{{equipe}}。, 团队任务, 你所在团队的任务：逾期的排在前面, 各团队的任务, 你所在团队的任务, 所有团队的任务 ;
+    et dans les notifications, le nom long des équipes (媒体组 · 截止 …, （媒体组）已完成) ;
+  - rien à lancer pour EQ-C.

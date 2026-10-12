@@ -46,7 +46,7 @@ const STEPH: FakeProfile = { uid: "uid-steph", email: "steph@example.com", first
 const ALICE: FakeProfile = { uid: "uid-alice", email: "alice@example.com", firstName: "Alice", lastName: "Q.", poles: ["evenement", "da"], dansEquipes: ["evenementiel", "da"], referentDe: ["evenementiel", "da"], coordination: true };
 
 const tacheLiee = (over: Record<string, unknown>) => ({
-  pole: "evenement", titre: "Réserver la salle", responsableUid: null, responsableNom: "", echeance: "2026-12-10",
+  equipe: "evenementiel", titre: "Réserver la salle", responsableUid: null, responsableNom: "", echeance: "2026-12-10",
   repetition: null, lien: "", note: "", prevenir: null, evenement: { id: "culte", titre: "Culte de Noël" }, auteurUid: "uid-alice",
   createdAt: "2026-09-01T10:00:00Z", updatedAt: "2026-09-01T10:00:00Z", ...over,
 });
@@ -101,8 +101,8 @@ test("retirer un inscrit : la fenêtre du site ; Annuler le garde ; Retirer le d
 test("dupliquer un évènement qui a des tâches : la fenêtre du site demande ; Annuler le crée sans elles, Copier avec", async ({ page, browser }) => {
   const docs = {
     "evenements/culte": CULTE,
-    "poles/evenement/taches/e1": tacheLiee({}),
-    "poles/evenement/taches/e2": tacheLiee({ titre: "Commander le goûter", echeance: "2026-12-23" }),
+    "equipes/evenementiel/taches/e1": tacheLiee({}),
+    "equipes/evenementiel/taches/e2": tacheLiee({ titre: "Commander le goûter", echeance: "2026-12-23" }),
   };
   async function dupliquer(p: Page, reponse: "Annuler" | "Copier les tâches") {
     await p.route("**/api/push/notify-evenement", (route) => route.fulfill({ json: { ok: true } }));
@@ -119,14 +119,14 @@ test("dupliquer un évènement qui a des tâches : la fenêtre du site demande ;
 
   const refus = await dupliquer(page, "Annuler");
   expect(ecritures(refus, "POST", "evenements/"), "l'évènement est créé").toHaveLength(1);
-  expect(ecritures(refus, "POST", "poles/"), "sans ses tâches").toEqual([]);
+  expect(ecritures(refus, "POST", "equipes/"), "sans ses tâches").toEqual([]);
 
   // Une autre session, mêmes réglages d'appareil.
   const { defaultBrowserType: _ignore, ...use } = test.info().project.use as Record<string, unknown>;
   const contexte = await browser.newContext({ ...(use as BrowserContextOptions), baseURL: new URL(page.url()).origin });
   try {
     const accord = await dupliquer(await contexte.newPage(), "Copier les tâches");
-    await expect.poll(() => ecritures(accord, "POST", "poles/evenement/taches/").length).toBe(2);
+    await expect.poll(() => ecritures(accord, "POST", "equipes/evenementiel/taches/").length).toBe(2);
   } finally {
     await contexte.close();
   }
@@ -140,7 +140,7 @@ const RUTH_DA: FakeProfile = { uid: "uid-da", email: "da@example.com", firstName
 // est dans « ⋯ » de la fiche (agencement v18, T1 : tests/agencement-v18-taches.spec.ts).
 test("supprimer une tâche : la fenêtre du site ; Annuler la garde ; Supprimer la retire", async ({ page }) => {
   const db = await ouvrir(page, RUTH_DA, "/taches/da/t1", {
-    "poles/da/taches/t1": { ...tacheLiee({}), pole: "da", titre: "Fond PPT", evenement: null, auteurUid: "uid-da" },
+    "equipes/da/taches/t1": { ...tacheLiee({}), equipe: "da", titre: "Fond PPT", evenement: null, auteurUid: "uid-da" },
   });
   await page.getByRole("button", { name: "Modifier", exact: true }).click();
   const form = page.getByRole("dialog", { name: "Modifier la tâche" });
@@ -149,12 +149,12 @@ test("supprimer une tâche : la fenêtre du site ; Annuler la garde ; Supprimer 
   await capture(page, "confirmer-supprimer-tache");
   await repondreDansLeSite(page, "Annuler");
   await expect(form, "le formulaire reste ouvert").toBeVisible();
-  expect(ecritures(db, "DELETE", "poles/")).toEqual([]);
+  expect(ecritures(db, "DELETE", "equipes/")).toEqual([]);
 
   await form.getByRole("button", { name: "Supprimer" }).click();
   await repondreDansLeSite(page, "Supprimer");
   await expect(form).toHaveCount(0);
-  await expect.poll(() => db.doc("poles/da/taches/t1")).toBeUndefined();
+  await expect.poll(() => db.doc("equipes/da/taches/t1")).toBeUndefined();
 });
 
 // ─── Planning ────────────────────────────────────────────────────────────────

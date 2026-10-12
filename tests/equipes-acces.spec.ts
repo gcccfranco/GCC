@@ -2,9 +2,11 @@ import { expect, test, type Page, type TestInfo } from "@playwright/test";
 import { ADMIN_EMAIL, signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { ongletsRail } from "./helpers/agencement";
 import {
-  canCreateEvenement, creatableEvenementPours, entreesBackOffice, equipesDe, estDeLEquipe, estReferentDe, estResponsable,
-  isCoordination, sousPartiesEvenements, widgetsPermis,
+  canCreateEvenement, creatableEvenementPours, entreesBackOffice, equipesDe, equipesDesTaches, equipesOuCreer, estDeLEquipe,
+  estReferentDe, estResponsable, isCoordination, peutCocher, sousPartiesEvenements, widgetsPermis,
 } from "../src/lib/access";
+import { aFairePour, type Ligne } from "../src/lib/taches/echeances";
+import type { Tache } from "../src/types/tache";
 import { barreParDefaut } from "../src/lib/tableauDeBord/barre";
 import { raccourcisPermis } from "../src/lib/tableauDeBord/donnees";
 import { ANNONCE_SECTIONS } from "../src/types/annonce";
@@ -14,8 +16,9 @@ import type { UserProfile } from "../src/types/user";
 // Lot 1 du chantier « équipes et groupes » (docs/spec-equipes-sans-poles.md), tranche EQ-B :
 // être d'une équipe (`dansEquipes`) ou du public Louange (TEAM LOUANGE, plus toute personne qui a
 // un rôle de service : décisions 5 et 42), en être référent (`referentDe`) ; ce que cela ouvre au
-// Back-Office (EQ17, EQ18, décisions 4 et 43). Un pôle ne donne plus rien. Les tâches elles-mêmes
-// (`peutCocher`, `aFairePour`) arrivent avec EQ-C. Base simulée, noms fictifs.
+// Back-Office (EQ17, EQ18, décisions 4 et 43). Un pôle ne donne plus rien. Tranche EQ-C : qui coche
+// une tâche (`peutCocher`), ce qui est « à moi » (`aFairePour`), ses équipes de tâches (EQ8, EQ9,
+// EQ15, décision 41). Base simulée, noms fictifs.
 
 const ADMIN: FakeProfile = { uid: "uid-admin", email: ADMIN_EMAIL, firstName: "Alix", lastName: "D." };
 /** Référente de TEAM MÉDIAS, sans autre droit (Réussite 1 et 6). */
@@ -84,6 +87,53 @@ test.describe("pur : les équipes d'une personne (EQ3 à EQ5)", () => {
   test("garde-fou : la coordination est la case, pas un pôle (EQ-A)", () => {
     expect(isCoordination(user(ANCIEN), { ...profil(ANCIEN), poles: ["evenement"] } as UserProfile)).toBe(false);
     expect(isCoordination(user(IRIS), profil(IRIS))).toBe(true);
+  });
+});
+
+// ─── Pur : cocher une tâche, « à moi » (tranche EQ-C) ───────────────────────
+
+test.describe("pur : cocher une tâche et « à moi » (EQ8, EQ9, EQ15, décision 41)", () => {
+  const tache = (over: Partial<Tache>): Tache => ({
+    id: "t", equipe: "medias", titre: "Tâche", responsableUid: null, responsableNom: "", echeance: "2026-10-12", repetition: null,
+    lien: "", note: "", prevenir: null, evenement: null, auteurUid: "u-lea", createdAt: "", updatedAt: "", ...over,
+  });
+
+  test("peutCocher : le responsable s'il est de l'équipe ; « toute l'équipe » : les référents et les admins seulement", () => {
+    expect(peutCocher(user(JOEL), profil(JOEL), tache({ responsableUid: "u-joel" })), "sa tâche").toBe(true);
+    expect(peutCocher(user(JOEL), profil(JOEL), tache({ responsableUid: "u-lea" })), "celle d'un autre membre").toBe(false);
+    expect(peutCocher(user(JOEL), profil(JOEL), tache({ responsableUid: null })), "toute l'équipe : un simple membre non").toBe(false);
+    expect(peutCocher(user(LEA), profil(LEA), tache({ responsableUid: null })), "toute l'équipe : la référente oui").toBe(true);
+    expect(peutCocher(user(LEA), profil(LEA), tache({ responsableUid: "u-joel" })), "la référente coche toute tâche de l'équipe").toBe(true);
+    expect(peutCocher(user(ADMIN), null, tache({ equipe: "theologie", responsableUid: null })), "un admin oui").toBe(true);
+    expect(peutCocher(user(HUGO), profil(HUGO), tache({ responsableUid: "u-hugo" })), "responsable sorti de l'équipe").toBe(false);
+    expect(peutCocher(user(MAELLE), profil(MAELLE), tache({ equipe: "louange", responsableUid: "u-maelle" })), "Louange élargi").toBe(true);
+    expect(peutCocher(user(MAELLE), profil(MAELLE), tache({ equipe: "louange", responsableUid: null }))).toBe(false);
+    expect(peutCocher(null, null, tache({ responsableUid: null }))).toBe(false);
+  });
+
+  test("aFairePour : une tâche sans responsable est « à moi » pour une référente, pas pour un simple membre", () => {
+    const ligne = (over: Partial<Tache>): Ligne => ({ tache: tache(over), date: "2026-10-12", fois: null });
+    const lignes = [
+      ligne({ id: "sienne", responsableUid: "u-joel" }),
+      ligne({ id: "tous", responsableUid: null }),
+      ligne({ id: "autre", responsableUid: "u-lea" }),
+      { ...ligne({ id: "faite", responsableUid: "u-joel" }), fois: { date: "2026-10-12", parUid: "u-joel", parNom: "Joël F.", le: "", etat: "terminee" as const, debutLe: "" } },
+    ];
+    const ids = (l: Ligne[]) => l.map((x) => x.tache.id);
+    expect(ids(aFairePour(lignes, user(JOEL), profil(JOEL)))).toEqual(["sienne"]);
+    expect(ids(aFairePour(lignes, user(LEA), profil(LEA)))).toEqual(["tous", "autre"]);
+    expect(ids(aFairePour(lignes, user(ADMIN), null)), "un admin : toute l'équipe partout").toEqual(["tous"]);
+  });
+
+  test("equipesDesTaches : ses équipes (toutes pour un admin) ; equipesOuCreer : celles dont on est référent", () => {
+    expect(equipesDesTaches(user(JOEL), profil(JOEL))).toEqual(["medias"]);
+    expect(equipesDesTaches(user(MAELLE), profil(MAELLE))).toEqual(["louange"]);
+    expect(equipesDesTaches(user(ADMIN), null)).toEqual(EQUIPES.map((e) => e.id));
+    expect(equipesDesTaches(null, profil(JOEL))).toEqual([]);
+    expect(equipesOuCreer(user(JOEL), profil(JOEL))).toEqual([]);
+    expect(equipesOuCreer(user(LEA), profil(LEA))).toEqual(["medias"]);
+    expect(equipesOuCreer(user(MAELLE), profil(MAELLE)), "un choriste ne crée rien").toEqual([]);
+    expect(equipesOuCreer(user(ADMIN), null)).toEqual(EQUIPES.map((e) => e.id));
   });
 });
 
@@ -198,7 +248,7 @@ test.describe("écrans : le Back-Office d'un simple membre (EQ17)", () => {
 
   test("un choriste sans équipe : le Back-Office s'ouvre, Tâches ne montre que Louange", async ({ page }, info) => {
     await ouvrir(page, MAELLE, "/back-office", {
-      "poles/louange/taches/t1": { titre: "Choisir les chants de Noël", responsableUid: null, responsableNom: "", echeance: "2026-10-15", repetition: null },
+      "equipes/louange/taches/t1": { equipe: "louange", titre: "Choisir les chants de Noël", responsableUid: null, responsableNom: "", echeance: "2026-10-15", repetition: null },
     });
     await page.waitForURL(/\/back-office\/taches(\/[\w-]+)?\/?$/);
     await expect(ongletsRail(page).getByRole("link")).toHaveText([/^Louange/]);

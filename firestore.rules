@@ -161,25 +161,27 @@ service cloud.firestore {
       return isAdmin() || (hasProfile() && profile().get('coordination', false) == true);
     }
 
-    // Tâches par pôle (lot 7, docs/spec-taches.md). Chacun ne voit, crée,
-    // modifie et coche que les tâches de ses pôles ; les admins voient tout.
-    // Louange = avoir au moins un rôle de service. Miroir : polesDe /
-    // isPoleMember (src/lib/access.ts).
-    function isTachePole(pole) {
-      return isAdmin() || (hasProfile() && (
-        pole in profile().get('poles', [])
-        || (pole == 'louange' && profile().get('serviceRoles', {}).size() > 0)
-      ));
-    }
-
-    match /poles/{pole}/taches/{id} {
-      allow read, update, delete: if signedIn() && isTachePole(pole);
-      allow create: if signedIn() && isTachePole(pole)
+    // Tâches par équipe (lot 7, docs/spec-taches.md ; lot 1 du chantier « équipes et groupes »,
+    // docs/spec-equipes-sans-poles.md, EQ6 à EQ8, décisions 2, 3 et 41). L'équipe se lit dans le
+    // chemin. Ses membres (Louange élargi) voient ; ses référents et les admins créent, modifient,
+    // suppriment. Cocher : le responsable s'il est de l'équipe ; une tâche sans responsable
+    // (« toute l'équipe »), les référents et les admins. Les règles de equipes/{id} ne s'étendent pas
+    // à cette sous-collection. Miroir : estDeLEquipe, equipesOuCreer, peutCocher (src/lib/access.ts).
+    match /equipes/{equipe}/taches/{id} {
+      allow read: if signedIn() && estDeLEquipe(equipe);
+      allow create: if signedIn() && estReferentDe(equipe)
         && request.resource.data.auteurUid == request.auth.uid
-        && request.resource.data.pole == pole;
+        && request.resource.data.equipe == equipe;
+      allow update: if signedIn() && estReferentDe(equipe) && request.resource.data.equipe == equipe;
+      allow delete: if signedIn() && estReferentDe(equipe);
 
+      // `get('responsableUid', null)` : une tâche sans le champ se lit « toute l'équipe ».
       match /fois/{date} {
-        allow read, write: if signedIn() && isTachePole(pole);
+        allow read: if signedIn() && estDeLEquipe(equipe);
+        allow write: if signedIn() && (estReferentDe(equipe)
+          || (estDeLEquipe(equipe)
+              && get(/databases/$(database)/documents/equipes/$(equipe)/taches/$(id)).data.get('responsableUid', null)
+                 == request.auth.uid));
       }
     }
 

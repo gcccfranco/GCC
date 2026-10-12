@@ -35,20 +35,20 @@ const MEMBRE: FakeProfile = { uid: "uid-membre", email: "lea@example.com", first
 /** À la guitare dans le planning (colonne « Guitariste »), jamais au piano : Harmonie sans les sons du RD-2000. */
 const GUITARISTE: FakeProfile = { uid: "uid-samuel", email: "samuel@example.com", firstName: "Samuel", lastName: "K.", planningName: "Samuel K.", serviceRoles: {} };
 
-const tache = (pole: string, titre: string, echeance: string, responsableUid: string | null = null) => ({
-  pole, titre, responsableUid, responsableNom: responsableUid ? "Autre P." : "", echeance, repetition: null, lien: "", note: "",
+const tache = (equipe: string, titre: string, echeance: string, responsableUid: string | null = null) => ({
+  equipe, titre, responsableUid, responsableNom: responsableUid ? "Autre P." : "", echeance, repetition: null, lien: "", note: "",
   prevenir: null, evenement: null, auteurUid: "uid-autre", createdAt: "2026-09-01T10:00:00Z", updatedAt: "2026-09-01T10:00:00Z",
 });
 const membre = (nom: string, uid: string, over: Record<string, unknown> = {}) => ({ nom, uid, mention: "", referent: false, essai: false, groupe: "", ...over });
 const equipe = (pole: string | null, membres: unknown[]) => ({ pole, membres, updatedAt: "2026-09-01T10:00:00Z", parUid: "uid-autre", parNom: "Autre P." });
 
 const DOCS = {
-  "poles/da/taches/t1": tache("da", "Fond PPT", "2026-10-05"),
-  "poles/da/taches/t2": tache("da", "Affiche de Noël", "2026-10-08"),
-  "poles/da/taches/t2/fois/2026-10-08": { date: "2026-10-08", parUid: "uid-admin", parNom: "Noé T.", le: "2026-09-28T10:00:00Z", etat: "encours", debutLe: "2026-09-28T10:00:00Z" },
-  "poles/orga/taches/t3": tache("orga", "Planning du trimestre", "2026-10-12"),
-  "poles/louange/taches/t4": tache("louange", "Choisir les chants de Noël", "2026-10-15"),
-  "poles/media/taches/t5": tache("media", "Photos du culte", "2026-10-06", "uid-autre"), // pas pour moi
+  "equipes/da/taches/t1": tache("da", "Fond PPT", "2026-10-05"),
+  "equipes/da/taches/t2": tache("da", "Affiche de Noël", "2026-10-08"),
+  "equipes/da/taches/t2/fois/2026-10-08": { date: "2026-10-08", parUid: "uid-admin", parNom: "Noé T.", le: "2026-09-28T10:00:00Z", etat: "encours", debutLe: "2026-09-28T10:00:00Z" },
+  "equipes/orga/taches/t3": tache("orga", "Planning du trimestre", "2026-10-12"),
+  "equipes/louange/taches/t4": tache("louange", "Choisir les chants de Noël", "2026-10-15"),
+  "equipes/medias/taches/t5": tache("medias", "Photos du culte", "2026-10-06", "uid-autre"), // pas pour moi
   "coursProgres/uid-admin": { fini: { "le-son-les-notes-et-le-clavier": "2026-09-01T10:00:00Z", "le-rythme-et-la-mesure": "2026-09-02T10:00:00Z" } },
   "equipes/da": equipe("da", [membre("Noé T.", "uid-admin", { referent: true }), membre("Zoé R.", "uid-zoe")]),
   "equipes/louange": equipe(null, [membre("Noé T.", "uid-admin", { groupe: "Pianistes" }), membre("Ruth K.", "uid-ruth"), membre("Yann B.", "")]),

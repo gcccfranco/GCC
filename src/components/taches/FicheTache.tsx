@@ -1,15 +1,17 @@
 "use client";
 
 // Fiche d'une tâche, à lire (lot U4 bis, B4, docs/spec-pages-en-grand.md, Q8 ; planches
-// `mes-taches-ordinateur`, `mes-taches-fiche-telephone`) : pôle, titre, l'état à trois
+// `mes-taches-ordinateur`, `mes-taches-fiche-telephone`) : équipe, titre, l'état à trois
 // positions (À faire · En cours · Terminée), puis échéance, responsable, répétition,
 // évènement, « Quand c'est fait, prévenir », lien et note. « Modifier » ouvre le formulaire
 // d'aujourd'hui (`TacheForm`). En grand, à droite de la liste, sans « Retour » ; en un volet,
-// la page `/taches/[pole]/[id]`, avec « ‹ Tâches ».
+// la page `/taches/[equipe]/[id]`, avec « ‹ Tâches ».
 // Back-Office › Tâches (agencement v18, B1, B2 ; planche `v18-bo-taches`) : la même fiche, titrée
 // en h2 sous l'en-tête « Tâches » en grand (en un volet, son propre `EnTetePage` avec « ‹ Tâches »),
 // « Modifier » et « ⋯ › Supprimer », « Note » et « Historique » côte à côte ; en grand, « Modifier »
 // ouvre le formulaire dans le volet au lieu de la feuille.
+// Lot 1 du chantier « équipes et groupes » (EQ8, décision 41) : « Modifier » et « ⋯ › Supprimer » aux
+// référents et aux admins ; l'état ne se choisit que par qui peut cocher la tâche (`peutCocher`).
 
 import { useEffect, useId, useState } from "react";
 import Link from "next/link";
@@ -24,12 +26,14 @@ import { depuisQuand } from "@/components/taches/TacheLigne";
 import { texteRetour } from "@/components/taches/retour";
 import { useMesTaches } from "@/components/taches/SectionTaches";
 import { useDeuxVolets } from "@/hooks/useDeuxVolets";
+import { estReferentDe, peutCocher } from "@/lib/access";
+import { cleNomEquipe } from "@/lib/equipes/table";
 import { getProfile, useProfile } from "@/lib/firebase/users";
 import { choisirEtat, deleteTache, updateTache, type TacheValues } from "@/lib/firebase/taches";
 import { lignesDeTache, type Ligne } from "@/lib/taches/echeances";
 import { prevenirFait, prevenirResponsable } from "@/lib/taches/prevenir";
 import { cn } from "@/lib/utils";
-import type { EtatFois, Fois, Tache, TachePole } from "@/types/tache";
+import type { EtatFois, Fois, Tache } from "@/types/tache";
 
 const locale = (lang: string) => (lang === "zh-CN" ? "zh-CN" : "fr-FR");
 const majuscule = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
@@ -47,16 +51,16 @@ function laLigne(tache: Tache, lignes: Ligne[], date: string | null): Ligne {
     ?? { tache, date: date ?? tache.echeance, fois: null };
 }
 
-export function FicheTache({ pole, id, date }: { pole: string; id: string; date: string | null }) {
+export function FicheTache({ equipe, id, date }: { equipe: string; id: string; date: string | null }) {
   const { t } = useTranslation();
   const deuxVolets = useDeuxVolets();
-  const { poles, items, chargement, aujourdhui, backOffice } = useMesTaches();
-  const item = items.find((x) => x.tache.pole === pole && x.tache.id === id);
+  const { equipes, items, chargement, aujourdhui } = useMesTaches();
+  const item = items.find((x) => x.tache.equipe === equipe && x.tache.id === id);
 
   let contenu: React.ReactNode;
-  if (!poles.includes(pole as TachePole)) contenu = <p className="text-sm text-muted-foreground">{t("taches.pasMembre")}</p>;
+  if (!equipes.includes(equipe)) contenu = <p className="text-sm text-muted-foreground">{t("taches.pasMembre")}</p>;
   else if (!item) contenu = chargement ? null : <p className="text-sm text-muted-foreground">{t("taches.introuvable")}</p>;
-  else contenu = <Fiche key={`${pole}/${id}/${date ?? ""}`} ligne={laLigne(item.tache, lignesDeTache(item.tache, item.fois, aujourdhui), date)} toutesLesFois={item.fois} />;
+  else contenu = <Fiche key={`${equipe}/${id}/${date ?? ""}`} ligne={laLigne(item.tache, lignesDeTache(item.tache, item.fois, aujourdhui), date)} toutesLesFois={item.fois} />;
 
   return (
     // R10 : la fiche ne pose plus de marge en grand ; en un volet, son en-tête la porte (App et
@@ -72,11 +76,14 @@ function Fiche({ ligne, toutesLesFois }: { ligne: Ligne; toutesLesFois: Fois[] }
   const router = useRouter();
   const titreId = useId();
   const deuxVolets = useDeuxVolets();
-  const { user } = useProfile();
+  const { user, profile } = useProfile();
   const { reload, parNom, racine, backOffice, aujourdhui } = useMesTaches();
   const { tache, date, fois } = ligne;
   const [modifier, setModifier] = useState(false);
-  // Lus à la première ouverture du formulaire ; le formulaire garde ceux du pôle.
+  // EQ8 : gérer (modifier, supprimer) aux référents et aux admins ; cocher selon `peutCocher`.
+  const gerer = estReferentDe(user, profile, tache.equipe);
+  const cochable = peutCocher(user, profile, tache);
+  // Lus à la première ouverture du formulaire ; le formulaire garde ceux de l'équipe.
   const membres = useMembres(modifier);
   const [retour, setRetour] = useState("");
   // Historique (B1) : le nom de l'auteur se lit dans son profil (une lecture, profils lisibles par tout connecté).
@@ -94,33 +101,33 @@ function Fiche({ ligne, toutesLesFois }: { ligne: Ligne; toutesLesFois: Fois[] }
   }, [backOffice, tache.auteurUid]);
 
   async function choisir(nouvel: Etat) {
-    if (!user || nouvel === etat) return;
+    if (!user || !cochable || nouvel === etat) return;
     setRetour("");
-    await choisirEtat(tache.pole, tache.id, date, fois, nouvel === "afaire" ? null : (nouvel as EtatFois), { uid: user.uid, nom: parNom });
-    await reload(tache.pole);
+    await choisirEtat(tache.equipe, tache.id, date, fois, nouvel === "afaire" ? null : (nouvel as EtatFois), { uid: user.uid, nom: parNom });
+    await reload(tache.equipe);
     if (nouvel === "terminee" && tache.prevenir) {
-      setRetour(texteRetour(t, await prevenirFait(tache.pole, tache.id, date), tache));
+      setRetour(texteRetour(t, await prevenirFait(tache.equipe, tache.id, date), tache));
     }
   }
 
   async function enregistrer(values: TacheValues) {
     if (!user) return;
-    await updateTache(tache.pole, tache.id, values);
+    await updateTache(tache.equipe, tache.id, values);
     setModifier(false);
-    await reload(tache.pole);
+    await reload(tache.equipe);
     // Nommé par quelqu'un d'autre : le nouveau responsable est prévenu.
     if (values.responsableUid && values.responsableUid !== user.uid && values.responsableUid !== tache.responsableUid) {
-      prevenirResponsable(tache.pole, tache.id);
+      prevenirResponsable(tache.equipe, tache.id);
     }
   }
 
   // On ne quitte la fiche qu'une fois la tâche supprimée et la liste relue. L'erreur remonte au
   // formulaire de l'App (`onDelete`) ; « ⋯ › Supprimer » la dit dans la fiche (le menu est fermé).
   async function supprimer() {
-    await deleteTache(tache.pole, tache.id, toutesLesFois);
+    await deleteTache(tache.equipe, tache.id, toutesLesFois);
     setModifier(false);
-    await reload(tache.pole);
-    router.push(backOffice ? `${racine}/${tache.pole}` : "/taches");
+    await reload(tache.equipe);
+    router.push(backOffice ? `${racine}/${tache.equipe}` : "/taches");
   }
   async function supprimerDepuisLeMenu() {
     setRetour("");
@@ -133,8 +140,8 @@ function Fiche({ ligne, toutesLesFois }: { ligne: Ligne; toutesLesFois: Fois[] }
 
   const jour = majuscule(new Date(`${date}T12:00:00`).toLocaleDateString(locale(i18n.language), { weekday: "long", day: "numeric", month: "long" }));
   const prevenir = tache.prevenir
-    ? "pole" in tache.prevenir
-      ? t("taches.prevenirPole", { pole: t(`taches.pole.${tache.prevenir.pole}`) })
+    ? "equipe" in tache.prevenir
+      ? t(cleNomEquipe(tache.prevenir.equipe))
       : t("taches.prevenirRegie", { service: tache.prevenir.regie })
     : null;
   const sousTitre = etat === "encours" && fois
@@ -170,7 +177,7 @@ function Fiche({ ligne, toutesLesFois }: { ligne: Ligne; toutesLesFois: Fois[] }
   if (auteur !== undefined) historique.push(`${t("taches.fiche.creeePar", { nom: auteur ?? t("taches.fiche.unMembre") })} · ${jourCourt(tache.createdAt, i18n.language)}`);
   const SousTitre = deuxVolets ? "h3" : "h2";
 
-  const boutonModifier = (
+  const boutonModifier = gerer && (
     <button
       type="button"
       onClick={() => setModifier(true)}
@@ -183,21 +190,20 @@ function Fiche({ ligne, toutesLesFois }: { ligne: Ligne; toutesLesFois: Fois[] }
       {t("taches.fiche.modifier")}
     </button>
   );
-  const menu = backOffice && (
+  const menu = backOffice && gerer && (
     <MenuActions actions={[{
       label: t("taches.supprimer"), icone: Trash2, destructif: true, onSelect: supprimerDepuisLeMenu,
       confirmer: { titre: t("taches.confirmerSuppression"), action: t("common.buttons.delete") },
     }]} />
   );
-  const badgePole = (
-    <span className="inline-block rounded-full bg-secondary px-2.5 py-0.5 text-xs font-semibold">
-      {t("taches.prevenirPole", { pole: t(`taches.pole.${tache.pole}`) })}
-    </span>
+  const nomEquipe = t(cleNomEquipe(tache.equipe, true));
+  const badgeEquipe = (
+    <span className="inline-block rounded-full bg-secondary px-2.5 py-0.5 text-xs font-semibold">{nomEquipe}</span>
   );
 
   // En grand au Back-Office, « Modifier » remplace la fiche par le formulaire (B2).
   if (dansLeVolet && modifier) {
-    return <TacheForm enLigne open pole={tache.pole} initial={tache} membres={membres} onSubmit={enregistrer} onClose={() => setModifier(false)} />;
+    return <TacheForm enLigne open equipe={tache.equipe} initial={tache} membres={membres} onSubmit={enregistrer} onClose={() => setModifier(false)} />;
   }
 
   return (
@@ -205,15 +211,15 @@ function Fiche({ ligne, toutesLesFois }: { ligne: Ligne; toutesLesFois: Fois[] }
       {!deuxVolets ? (
         // Un volet : la fiche est une page, avec le seul retour (R8) et son titre en h1.
         <EnTetePage
-          retour={{ href: backOffice ? `${racine}/${tache.pole}` : racine, label: t("taches.title") }}
+          retour={{ href: backOffice ? `${racine}/${tache.equipe}` : racine, label: t("taches.title") }}
           titre={<span id={titreId}>{tache.titre}</span>}
-          sousTitre={t("taches.prevenirPole", { pole: t(`taches.pole.${tache.pole}`) })}
+          sousTitre={nomEquipe}
           outils={<>{boutonModifier}{menu}</>}
         />
       ) : (
         <header className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            {badgePole}
+            {badgeEquipe}
             {/* En grand, sous l'en-tête « Tâches » : un h2 de 24 px (R3). */}
             <h2 id={titreId} className="mt-2 text-2xl font-bold leading-tight tracking-tight text-balance">{tache.titre}</h2>
           </div>
@@ -248,8 +254,10 @@ function Fiche({ ligne, toutesLesFois }: { ligne: Ligne; toutesLesFois: Fois[] }
               role="radio"
               aria-checked={etat === e}
               onClick={() => choisir(e)}
+              disabled={!cochable}
               className={cn(
-                "min-h-9 flex-1 whitespace-nowrap rounded-full px-4 font-semibold transition-colors duration-150",
+                "min-h-9 flex-1 whitespace-nowrap rounded-full px-4 font-semibold transition-colors duration-150 disabled:cursor-default",
+                !cochable && etat !== e && "opacity-50",
                 etat === e ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground",
               )}
             >
@@ -295,15 +303,15 @@ function Fiche({ ligne, toutesLesFois }: { ligne: Ligne; toutesLesFois: Fois[] }
       )}
 
       {/* La feuille : l'App, et le Back-Office en un volet (Supprimer est alors dans « ⋯ »). */}
-      <TacheForm
+      {gerer && <TacheForm
         open={modifier}
-        pole={tache.pole}
+        equipe={tache.equipe}
         initial={tache}
         membres={membres}
         onSubmit={enregistrer}
         onDelete={backOffice ? undefined : supprimer}
         onClose={() => setModifier(false)}
-      />
+      />}
     </article>
   );
 }

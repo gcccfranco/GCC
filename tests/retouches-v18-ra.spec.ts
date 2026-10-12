@@ -286,8 +286,8 @@ const R3_DOCS: Record<string, Record<string, unknown>> = Object.fromEntries(R3_N
     title: `Culte d'essai ${i + 1}`, leader: "Alix D.", category: "Culte Francophone", date: r3Jour(i * 3), language: "mixed",
     notes: "", ownerId: "uid-admin", isPrivate: false, items: [r3Item("hosanna", 1), r3Item("abba-pere", 2)],
   }],
-  [`poles/da/taches/t${i}`, {
-    pole: "da", titre: `Tâche d'essai ${i + 1}`, responsableUid: null, responsableNom: "", echeance: r3Jour(i * 2), repetition: null,
+  [`equipes/da/taches/t${i}`, {
+    equipe: "da", titre: `Tâche d'essai ${i + 1}`, responsableUid: null, responsableNom: "", echeance: r3Jour(i * 2), repetition: null,
     lien: "", note: "", prevenir: null, evenement: null, auteurUid: "uid-admin", createdAt: "2026-09-01T10:00:00Z", updatedAt: "2026-09-01T10:00:00Z",
   }],
   [`evenements/e${i}`, { ...R3_EV, titre: `Sortie d'essai ${i + 1}`, date: r3Jour(i * 2) }],

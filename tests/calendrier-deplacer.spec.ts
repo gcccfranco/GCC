@@ -48,7 +48,7 @@ const evenement = (e: Partial<Evenement> & Pick<Evenement, "id" | "titre">): Eve
 });
 
 const tache = (t: Partial<Tache> & Pick<Tache, "id" | "titre">): Tache => ({
-  pole: "da",
+  equipe: "da",
   responsableUid: null,
   responsableNom: "",
   echeance: "2026-10-15",
@@ -336,11 +336,11 @@ const CULTE = csv([
 ]);
 
 const P_ADMIN: FakeProfile = { uid: "u-admin", email: ADMIN_EMAILS[0], firstName: "Admin", lastName: "T." };
-/** Organise le tournoi et la réunion ; membre du pôle DA. */
+/** Organise le tournoi et la réunion ; référente de TEAM DA. */
 const P_ORGA: FakeProfile = { uid: "u-orga", email: "orga@example.org", firstName: "Orane", lastName: "G.", poles: ["da"], dansEquipes: ["da"], referentDe: ["da"] };
-/** Membre du pôle DA qui n'organise rien. */
+/** Référent de TEAM DA qui n'organise rien. */
 const P_MEMBRE: FakeProfile = { uid: "u-membre", email: "membre@example.org", firstName: "Mael", lastName: "B.", poles: ["da"], dansEquipes: ["da"], referentDe: ["da"] };
-/** Auteur de créneaux, responsable des plannings, sans pôle (pas la coordination). */
+/** Auteur de créneaux, responsable des plannings, sans équipe (pas la coordination). */
 const P_AUTEUR: FakeProfile = { uid: "u-auteur", email: "auteur@example.org", firstName: "Ines", lastName: "R.", plannings: ["culte"] };
 
 const DOCS: Record<string, Record<string, unknown>> = {
@@ -357,16 +357,16 @@ const DOCS: Record<string, Record<string, unknown>> = {
     titre: "Sortie passée", type: "loisir", pour: "eglise", date: "2026-09-30", heure: "18:00",
     organisateurUid: "u-orga", organisateurNom: "Orane G.", inscrits: 0, createdAt: MAINTENANT, updatedAt: MAINTENANT,
   },
-  "poles/da/taches/noel": {
+  "equipes/da/taches/noel": {
     titre: "Chants de Noël", responsableUid: null, responsableNom: "", echeance: "2026-10-15", repetition: null,
     lien: "", note: "", prevenir: null, evenement: null, auteurUid: "u-autre", createdAt: MAINTENANT, updatedAt: MAINTENANT,
   },
-  "poles/da/taches/affiche": {
+  "equipes/da/taches/affiche": {
     titre: "Affiche du tournoi", responsableUid: null, responsableNom: "", echeance: "2026-10-20", repetition: null,
     lien: "", note: "", prevenir: null, evenement: { id: "ping", titre: "Tournoi de ping" }, auteurUid: "u-autre",
     createdAt: MAINTENANT, updatedAt: MAINTENANT,
   },
-  "poles/da/taches/hebdo": {
+  "equipes/da/taches/hebdo": {
     titre: "Fond PPT", responsableUid: null, responsableNom: "", echeance: "2026-10-02", repetition: { rythme: "semaine" },
     lien: "", note: "", prevenir: null, evenement: null, auteurUid: "u-autre", createdAt: MAINTENANT, updatedAt: MAINTENANT,
   },
@@ -420,7 +420,7 @@ const panneauADroite = (info: TestInfo) => info.project.name.startsWith("ordinat
 const GLISSER = "glisser : vue Mois sur ordinateur et tablettes ; le téléphone passe par « Déplacer… »";
 /** Les écritures des sources du calendrier (la connexion écrit aussi son profil, ailleurs). */
 const ecritures = (db: Awaited<ReturnType<typeof ouvrir>>) =>
-  db.writes.filter((w) => /^(evenements|poles|programmes|setlists|petitDej)\//.test(w.path));
+  db.writes.filter((w) => /^(evenements|equipes\/[^/]+\/taches|programmes|setlists|petitDej)\//.test(w.path));
 
 /** Soulève `source` et l'amène au-dessus de `cible`, sans lâcher. */
 async function soulever(page: Page, source: Locator, cible: Locator) {
@@ -462,8 +462,8 @@ test.describe("C6 : glisser en vue Mois", () => {
     dlg = page.getByRole("alertdialog", { name: /Chants de Noël/ });
     await dlg.getByRole("button", { name: "Déplacer", exact: true }).click();
     await expect(dlg).toHaveCount(0);
-    expect(ecritures(db)).toMatchObject([{ method: "PATCH", path: "poles/da/taches/noel", data: { echeance: "2026-10-14" } }]);
-    expect(db.doc("poles/da/taches/noel")).toMatchObject({ echeance: "2026-10-14", titre: "Chants de Noël" });
+    expect(ecritures(db)).toMatchObject([{ method: "PATCH", path: "equipes/da/taches/noel", data: { echeance: "2026-10-14" } }]);
+    expect(db.doc("equipes/da/taches/noel")).toMatchObject({ echeance: "2026-10-14", titre: "Chants de Noël" });
     await expect(jour(page, "2026-10-14").locator('[data-source="taches"]')).toContainText("Chants de Noël");
     await expect(jour(page, "2026-10-15").locator('[data-source="taches"]')).toHaveCount(0);
   });
@@ -587,7 +587,7 @@ test.describe("C6 : glisser en vue Mois", () => {
       await glisser(page, chip, jour(page, "2026-10-23"));
       await expect(page.getByRole("alertdialog")).toHaveCount(0);
     }
-    // Sa tâche de pôle, oui.
+    // Une tâche de son équipe, oui (référent).
     await expect(jour(page, "2026-10-15").locator('[data-source="taches"]')).toHaveAttribute("data-deplacable", "true");
     expect(ecritures(db)).toEqual([]);
   });
@@ -658,7 +658,7 @@ test.describe("C6 : « Déplacer… »", () => {
     await dlg.getByRole("button", { name: "Déplacer", exact: true }).focus();
     await page.keyboard.press("Enter");
     await expect(dlg).toHaveCount(0);
-    expect(ecritures(db)).toMatchObject([{ method: "PATCH", path: "poles/da/taches/noel", data: { echeance: "2026-10-14" } }]);
+    expect(ecritures(db)).toMatchObject([{ method: "PATCH", path: "equipes/da/taches/noel", data: { echeance: "2026-10-14" } }]);
   });
 
   test("une date passée dans le champ : « Pas avant aujourd'hui », « Déplacer » absent (ordinateur et tablettes)", async ({ page }, info) => {
@@ -685,7 +685,7 @@ test.describe("C6 : « Déplacer… »", () => {
     await expect(dlg).toContainText("Déplacer « Chants de Noël » du jeudi 15 au mercredi 14 octobre ?");
     await dlg.getByRole("button", { name: "Déplacer", exact: true }).click();
     await expect(dlg).toHaveCount(0);
-    expect(ecritures(db)).toMatchObject([{ method: "PATCH", path: "poles/da/taches/noel", data: { echeance: "2026-10-14" } }]);
+    expect(ecritures(db)).toMatchObject([{ method: "PATCH", path: "equipes/da/taches/noel", data: { echeance: "2026-10-14" } }]);
   });
 
   test("téléphone : la feuille d'une tâche répétée dit « Change la répétition dans la tâche », sans « Déplacer… »", async ({ page }, info) => {

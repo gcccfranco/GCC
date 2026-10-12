@@ -2,7 +2,7 @@ import { EDD_CLASSES } from "@/lib/planning/utils";
 import { aCommence } from "@/lib/evenements/agenda";
 import type { Evenement } from "@/types/evenement";
 import type { FSSetlist } from "@/lib/firebase/setlists";
-import { TACHE_POLES, type TachePole } from "@/types/tache";
+import type { Tache } from "@/types/tache";
 import { EQUIPES } from "@/lib/equipes/table";
 import { PUBLISHABLE_PLANNINGS, canPublishPlanning } from "@/lib/planning/releases";
 import { ENTREES, WIDGETS, type Entree, type WidgetId } from "@/types/backOffice";
@@ -43,29 +43,6 @@ export function canEditProfile(
   return isAdminUser(user) || !profile;
 }
 
-/** Pôles d'une personne pour les tâches (lot 7, docs/spec-taches.md) : ceux
- *  cochés par un admin, plus « louange » dès qu'elle a un rôle de service.
- *  Miroir serveur : isTachePole() dans firestore.rules. */
-export function polesDe(
-  profile: { poles?: string[]; serviceRoles?: Record<string, unknown> } | null
-): TachePole[] {
-  const poles = (profile?.poles ?? []).filter((p): p is TachePole => (TACHE_POLES as readonly string[]).includes(p));
-  if (Object.keys(profile?.serviceRoles ?? {}).length > 0 && !poles.includes("louange")) poles.push("louange");
-  return poles;
-}
-
-/** Voir, créer, modifier et cocher les tâches d'un pôle : ses membres et les
- *  admins (chacun ne voit que les tâches de ses pôles, tranché le 16/09/2026).
- *  Miroir serveur : isTachePole() dans firestore.rules. */
-export function isPoleMember(
-  user: { email?: string | null } | null,
-  profile: { poles?: string[]; serviceRoles?: Record<string, unknown> } | null,
-  pole: string
-): boolean {
-  if (!user) return false;
-  return isAdminUser(user) || (polesDe(profile) as string[]).includes(pole);
-}
-
 // ─── Équipes (lot 1 du chantier « équipes et groupes », docs/spec-equipes-sans-poles.md) ───
 
 type ProfilEquipes = { dansEquipes?: string[]; referentDe?: string[]; serviceRoles?: Record<string, unknown> };
@@ -95,6 +72,35 @@ export function estDeLEquipe(user: AuthUser | { email?: string | null } | null, 
 export function estReferentDe(user: AuthUser | { email?: string | null } | null, profile: ProfilEquipes | null, equipe: string): boolean {
   if (!user) return false;
   return isAdminUser(user) || (profile?.referentDe ?? []).includes(equipe);
+}
+
+/** Changer l'état d'une fois d'une tâche, « cocher » (EQ8, décisions 3 et 41) : les référents de son
+ *  équipe et les admins, toute tâche ; un membre, celles dont il est le responsable. Une tâche « toute
+ *  l'équipe » (sans responsable) ne se coche donc que par les référents et les admins. Miroir :
+ *  `match …/fois/{date}` dans firestore.rules ; serveur : /api/taches/fait (tacheDeLAppelant). */
+export function peutCocher(
+  user: AuthUser | null,
+  profile: ProfilEquipes | null,
+  tache: Pick<Tache, "equipe" | "responsableUid">,
+): boolean {
+  if (!user) return false;
+  return estReferentDe(user, profile, tache.equipe)
+    || (estDeLEquipe(user, profile, tache.equipe) && tache.responsableUid === user.uid);
+}
+
+/** Les équipes dont on lit les tâches (EQ9) : les siennes, Louange élargi (`equipesDe`) ; toutes pour
+ *  un admin. Affichage : equipes/{equipe}/taches garde sa règle (estDeLEquipe). */
+export function equipesDesTaches(user: AuthUser | { email?: string | null } | null, profile: ProfilEquipes | null): string[] {
+  if (!user) return [];
+  return isAdminUser(user) ? [...ORDRE_EQUIPES] : equipesDe(profile);
+}
+
+/** Les équipes où l'on crée une tâche (EQ8, EQ9) : celles dont on est référent, dans l'ordre de la
+ *  table ; toutes pour un admin. Créer emporte modifier, supprimer, déplacer, lier à un évènement. */
+export function equipesOuCreer(user: AuthUser | { email?: string | null } | null, profile: ProfilEquipes | null): string[] {
+  if (!user) return [];
+  if (isAdminUser(user)) return [...ORDRE_EQUIPES];
+  return [...new Set(profile?.referentDe ?? [])].sort((a, b) => rangEquipe(a) - rangEquipe(b));
 }
 
 /** Coordination (lot 3 bis ; lot 1 du chantier « équipes et groupes », EQ24) : le
@@ -618,18 +624,6 @@ export function widgetsPermis(user: AuthUser | null, profile: UserProfile | null
     raccourcis: true,
   };
   return WIDGETS.filter((w) => permis[w] && !WIDGETS_A_VENIR.includes(w));
-}
-
-/** Les pôles de Back-Office › Tâches (lot U6, B3, table Q2) : ses pôles, Louange compris
- *  (`polesDe`), dans l'ordre de TACHE_POLES ; tous pour un admin. */
-export function tachesDuBackOffice(
-  user: AuthUser | { email?: string | null } | null,
-  profile: { poles?: string[]; serviceRoles?: Record<string, unknown> } | null
-): TachePole[] {
-  if (!user) return [];
-  if (isAdminUser(user)) return [...TACHE_POLES];
-  const siens = polesDe(profile);
-  return TACHE_POLES.filter((p) => siens.includes(p));
 }
 
 /** Sous-parties de Back-Office › Évènements (lot U6, B3, table Q2) : Évènements (ceux qu'on

@@ -39,7 +39,7 @@ const minuscule = (s: string) => s.charAt(0).toLowerCase() + s.slice(1);
 async function ecrire(plan: PlanDeplacement, choix: { prevenir: boolean; place: Place | null }, uid: string) {
   switch (plan.type) {
     case "tache":
-      return deplacerTache(plan.tache.pole, plan.tache.id, plan.vers, plan.fois);
+      return deplacerTache(plan.tache.equipe, plan.tache.id, plan.vers, plan.fois);
     case "evenement": {
       // Case cochée : `deplacement` pour le rappel du matin (C7) ; sinon vidé, pour
       // qu'un déplacement précédent ne soit pas annoncé à la place de celui-ci.

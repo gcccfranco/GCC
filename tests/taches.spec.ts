@@ -2,16 +2,17 @@ import { expect, test, type Page } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { estGrandEcran, ongletsRail } from "./helpers/agencement";
 import { echeancesDe, lignesDeTache, grouperLignes, dimancheApres, aFairePour } from "../src/lib/taches/echeances";
-import { polesDe, isPoleMember, canSeeEvenement, canCreateEvenement, creatableEvenementPours } from "../src/lib/access";
+import { equipesDesTaches, peutCocher, canSeeEvenement, canCreateEvenement, creatableEvenementPours } from "../src/lib/access";
 import type { Tache, Fois } from "../src/types/tache";
 import { nouvelleTacheMessage, tacheFaiteMessage, rappelsDuJour, ligneRappelTache, corpsAvecTaches } from "../src/lib/taches/messages";
 
-// Lot 7 « Tâches par pôle » (docs/spec-taches.md) — fonctions pures.
+// Lot 7 « Tâches » (docs/spec-taches.md), rangées par équipe depuis le lot 1 du chantier « équipes et
+// groupes » (docs/spec-equipes-sans-poles.md, EQ-C) — fonctions pures.
 
 function tache(over: Partial<Tache> = {}): Tache {
   return {
     id: "t1",
-    pole: "da",
+    equipe: "da",
     titre: "Fond PPT",
     responsableUid: null,
     responsableNom: "",
@@ -105,16 +106,20 @@ test("groupes : en retard, cette semaine (jusqu'à dimanche), plus tard, faites"
 
 // ── Membres et régie ────────────────────────────────────────────────────────
 
-test("pôles : cochés dans le profil, Louange = avoir un rôle de service ; un admin voit tout", () => {
-  expect(polesDe({ poles: ["da"], serviceRoles: {} })).toEqual(["da"]);
-  expect(polesDe({ poles: ["media"], serviceRoles: { "Culte Francophone": ["musicien"] } })).toEqual(["media", "louange"]);
-  expect(polesDe(null)).toEqual([]);
-  const membre = { email: "membre@example.com" };
-  expect(isPoleMember(membre, { poles: ["da"] }, "da")).toBe(true);
-  expect(isPoleMember(membre, { poles: ["da"] }, "media")).toBe(false);
-  expect(isPoleMember(membre, { serviceRoles: { "Groupe Paix": ["chanteur"] } }, "louange")).toBe(true);
-  expect(isPoleMember({ email: "tc328829@gmail.com" }, null, "orga")).toBe(true);
-  expect(isPoleMember(null, { poles: ["da"] }, "da")).toBe(false);
+test("équipes des tâches : celles de l'organigramme, Louange = avoir un rôle de service ; un admin voit tout", () => {
+  const membre = { uid: "u-membre", email: "membre@example.com" };
+  expect(equipesDesTaches(membre, { dansEquipes: ["da"], serviceRoles: {} })).toEqual(["da"]);
+  expect(equipesDesTaches(membre, { dansEquipes: ["medias"], serviceRoles: { "Culte Francophone": ["musicien"] } })).toEqual(["medias", "louange"]);
+  expect(equipesDesTaches(membre, null)).toEqual([]);
+  expect(equipesDesTaches({ email: "tc328829@gmail.com" }, null)).toHaveLength(13);
+  expect(equipesDesTaches(null, { dansEquipes: ["da"] })).toEqual([]);
+});
+
+test("cocher : une tâche « toute l'équipe » par une référente, pas par un simple membre (décision 41)", () => {
+  const toute = tache({ equipe: "da", responsableUid: null });
+  expect(peutCocher({ uid: "u-ref", email: "ref@example.com" }, { dansEquipes: ["da"], referentDe: ["da"] }, toute)).toBe(true);
+  expect(peutCocher({ uid: "u-membre", email: "membre@example.com" }, { dansEquipes: ["da"] }, toute)).toBe(false);
+  expect(peutCocher({ uid: "u-membre", email: "membre@example.com" }, { dansEquipes: ["da"] }, { ...toute, responsableUid: "u-membre" })).toBe(true);
 });
 
 test("régie à prévenir : le dimanche qui suit l'échéance", () => {
@@ -123,7 +128,7 @@ test("régie à prévenir : le dimanche qui suit l'échéance", () => {
   expect(dimancheApres("2026-09-20")).toBe("2026-09-27"); // dimanche
 });
 
-// ── Interface : page d'un pôle, création, coche, visibilité, Moi ────────────
+// ── Interface : page d'une équipe, création, coche, visibilité, Moi ─────────
 
 /** Date locale d'aujourd'hui décalée de `n` jours (le navigateur des tests
  *  tourne sur la même horloge). */
@@ -143,7 +148,7 @@ const SANS_POLE: FakeProfile = { uid: "uid-rien", email: "rien@example.com", fir
 
 function tacheDoc(over: Record<string, unknown> = {}) {
   return {
-    pole: "da", titre: "Fond PPT", responsableUid: null, responsableNom: "", echeance: jour(0),
+    equipe: "da", titre: "Fond PPT", responsableUid: null, responsableNom: "", echeance: jour(0),
     repetition: null, lien: "", note: "", prevenir: null, auteurUid: "uid-da",
     createdAt: "2026-09-01T10:00:00Z", updatedAt: "2026-09-01T10:00:00Z", ...over,
   };
@@ -172,10 +177,10 @@ async function nouvelleTache(page: Page) {
 }
 const laListe = (page: Page) => page.locator('[data-volet="liste"]');
 
-test("un membre du pôle voit ses tâches rangées et en coche une, qui passe dans « Faites »", async ({ page }) => {
+test("une référente de l'équipe voit ses tâches rangées et en coche une, qui passe dans « Faites »", async ({ page }) => {
   const db = await signInAs(page, MEMBRE_DA, {
-    "poles/da/taches/t1": tacheDoc(),
-    "poles/da/taches/t2": tacheDoc({ titre: "Affiche Noël", echeance: jour(-3) }),
+    "equipes/da/taches/t1": tacheDoc(),
+    "equipes/da/taches/t2": tacheDoc({ titre: "Affiche Noël", echeance: jour(-3) }),
   }, "/back-office/taches/da");
   await expect(ongletsRail(page).getByRole("link", { name: /^DA/ })).toHaveAttribute("aria-current", "page");
   await expect(groupe(page, "En retard").getByText("Affiche Noël")).toBeVisible();
@@ -187,26 +192,26 @@ test("un membre du pôle voit ses tâches rangées et en coche une, qui passe da
   await expect(cercle).toHaveAttribute("aria-checked", "mixed");
   await cercle.click();
   await expect((await terminees(page)).getByText("Fond PPT")).toBeVisible();
-  expect(db.doc(`poles/da/taches/t1/fois/${jour(0)}`))
+  expect(db.doc(`equipes/da/taches/t1/fois/${jour(0)}`))
     .toMatchObject({ date: jour(0), parUid: "uid-da", parNom: "Ruth Kouassi", etat: "terminee" });
 });
 
-test("créer une tâche pour tout le pôle", async ({ page }) => {
+test("créer une tâche pour toute l'équipe", async ({ page }) => {
   const db = await signInAs(page, MEMBRE_DA, {}, "/back-office/taches/da");
   const { form, creer } = await nouvelleTache(page);
   await form.getByLabel("Titre").fill("Vidéo d'annonce");
   await form.getByLabel("Échéance").fill(jour(1));
   await form.getByRole("button", { name: creer }).click();
   await expect(form).toHaveCount(0);
-  const cree = db.writes.find((w) => w.method === "POST" && w.path.startsWith("poles/da/taches/"));
-  expect(cree?.data).toMatchObject({ titre: "Vidéo d'annonce", pole: "da", echeance: jour(1), responsableUid: null, repetition: null, auteurUid: "uid-da" });
+  const cree = db.writes.find((w) => w.method === "POST" && w.path.startsWith("equipes/da/taches/"));
+  expect(cree?.data).toMatchObject({ titre: "Vidéo d'annonce", equipe: "da", echeance: jour(1), responsableUid: null, repetition: null, auteurUid: "uid-da" });
   await expect(laListe(page).getByText("Vidéo d'annonce")).toBeVisible();
 });
 
 test("une tâche répétée chaque semaine : cochée, la fois suivante apparaît", async ({ page }) => {
   await signInAs(page, MEMBRE_DA, {
-    "poles/da/taches/t1": tacheDoc({ echeance: jour(-7), repetition: { rythme: "semaine" } }),
-    [`poles/da/taches/t1/fois/${jour(-7)}`]: { date: jour(-7), parUid: "uid-da", parNom: "Ruth Kouassi", le: new Date().toISOString() },
+    "equipes/da/taches/t1": tacheDoc({ echeance: jour(-7), repetition: { rythme: "semaine" } }),
+    [`equipes/da/taches/t1/fois/${jour(-7)}`]: { date: jour(-7), parUid: "uid-da", parNom: "Ruth Kouassi", le: new Date().toISOString() },
   }, "/back-office/taches/da");
   const cercle = groupe(page, "Cette semaine").getByRole("checkbox", { name: /Fond PPT/ });
   await expect(cercle).toHaveAttribute("aria-checked", "false");
@@ -218,30 +223,33 @@ test("une tâche répétée chaque semaine : cochée, la fois suivante apparaît
   await expect(groupe(page, "Plus tard").getByText("Fond PPT")).toBeVisible();
 });
 
-test("un membre d'un autre pôle ne voit pas les tâches du pôle", async ({ page }) => {
-  await signInAs(page, MEMBRE_MEDIA, { "poles/da/taches/t1": tacheDoc() }, "/back-office/taches/da");
-  await expect(page.getByText("Tu ne fais pas partie de ce pôle.")).toBeVisible();
+test("un membre d'une autre équipe ne voit pas les tâches de l'équipe", async ({ page }) => {
+  await signInAs(page, MEMBRE_MEDIA, { "equipes/da/taches/t1": tacheDoc() }, "/back-office/taches/da");
+  await expect(page.getByText("Tu ne fais pas partie de cette équipe.")).toBeVisible();
   await expect(page.getByText("Fond PPT")).toHaveCount(0);
 });
 
-test("Tâches : chacun voit ses pôles (Back-Office › Tâches, lot U6), et rien hors pôle", async ({ page }) => {
-  await signInAs(page, { ...MEMBRE_DA, serviceRoles: { "Culte Francophone": ["musicien"] } }, {}, "/back-office/taches/da");
-  // Agencement v18 (T1, B1) : le rail des pôles, chacun avec son compte.
+test("Tâches : chacun voit ses équipes (Back-Office › Tâches, lot U6), et rien hors de ses équipes", async ({ page }) => {
+  await signInAs(page, { ...MEMBRE_DA, serviceRoles: { "Culte Francophone": ["musicien"] } }, {
+    "equipes/louange/taches/l1": tacheDoc({ equipe: "louange", titre: "Envoyer la setlist" }),
+  }, "/back-office/taches/da");
+  // Agencement v18 (T1, B1) : le rail des équipes, chacune avec son compte ; une équipe sans tâche
+  // n'a d'onglet que pour ses référents (EQ9).
   await expect(ongletsRail(page).getByRole("link")).toHaveText([/^DA/, /^Louange/]);
 });
 
-test("Moi : « Mes tâches » compte mes tâches et celles de mon pôle sans responsable", async ({ page }) => {
+test("Moi : « Mes tâches » compte mes tâches et, référente, celles de mon équipe sans responsable", async ({ page }) => {
   await signInAs(page, MEMBRE_DA, {
-    "poles/da/taches/t1": tacheDoc(),
-    "poles/da/taches/t2": tacheDoc({ titre: "Pour Paul", responsableUid: "uid-paul", responsableNom: "Paul" }),
-    "poles/da/taches/t3": tacheDoc({ titre: "Pour moi", responsableUid: "uid-da", responsableNom: "Ruth Kouassi", echeance: jour(20) }),
+    "equipes/da/taches/t1": tacheDoc(),
+    "equipes/da/taches/t2": tacheDoc({ titre: "Pour Paul", responsableUid: "uid-paul", responsableNom: "Paul" }),
+    "equipes/da/taches/t3": tacheDoc({ titre: "Pour moi", responsableUid: "uid-da", responsableNom: "Ruth Kouassi", echeance: jour(20) }),
   }, "/moi");
   const ligne = page.getByRole("link", { name: /Mes tâches/ });
   await expect(ligne).toBeVisible();
   await expect(ligne).toContainText("2");
 });
 
-test("Moi : pas de « Mes tâches » hors pôle", async ({ page }) => {
+test("Moi : pas de « Mes tâches » sans équipe", async ({ page }) => {
   await signInAs(page, SANS_POLE, {}, "/moi");
   // La carte du compte porte aussi « Mon profil » (U4 bis, B5).
   await expect(page.getByRole("link", { name: /profil/i }).first()).toBeVisible();
@@ -251,11 +259,11 @@ test("Moi : pas de « Mes tâches » hors pôle", async ({ page }) => {
 // ── Notifications (T3) ──────────────────────────────────────────────────────
 
 test("messages : nouvelle tâche et tâche faite, en français et en chinois", () => {
-  const t = tache({ titre: "Fond PPT", pole: "da", echeance: "2026-09-18" });
-  expect(nouvelleTacheMessage(t, "fr")).toEqual({ title: "Nouvelle tâche : Fond PPT", body: "Pôle DA · pour vendredi 18 septembre" });
+  const t = tache({ titre: "Fond PPT", equipe: "da", echeance: "2026-09-18" });
+  expect(nouvelleTacheMessage(t, "fr")).toEqual({ title: "Nouvelle tâche : Fond PPT", body: "TEAM DA · pour vendredi 18 septembre" });
   expect(nouvelleTacheMessage(t, "zh-CN").title).toBe("新任务：Fond PPT");
-  expect(tacheFaiteMessage(t, "Ruth Kouassi", "fr")).toEqual({ title: "Tâche faite : Fond PPT", body: "Ruth Kouassi (DA) l'a terminée." });
-  expect(tacheFaiteMessage(t, "Ruth Kouassi", "zh-CN").body).toBe("Ruth Kouassi（美工）已完成。");
+  expect(tacheFaiteMessage(t, "Ruth Kouassi", "fr")).toEqual({ title: "Tâche faite : Fond PPT", body: "Ruth Kouassi (TEAM DA) l'a terminée." });
+  expect(tacheFaiteMessage(t, "Ruth Kouassi", "zh-CN").body).toBe("Ruth Kouassi（美工组）已完成。");
 });
 
 test("rappels du jour : J-3, J-1 et le lendemain de l'échéance, jamais une fois cochée", () => {
@@ -272,12 +280,12 @@ test("rappels du jour : J-3, J-1 et le lendemain de l'échéance, jamais une foi
 });
 
 test("rappel : les tâches s'ajoutent à la notification de service du jour", () => {
-  const r = { tache: tache({ titre: "Fond PPT", pole: "da" }), date: "2026-09-18", quand: "J3" as const };
-  expect(ligneRappelTache(r, "fr")).toBe("À faire : Fond PPT (DA), vendredi 18 septembre");
-  expect(ligneRappelTache({ ...r, quand: "retard" }, "fr")).toBe("En retard : Fond PPT (DA), pour hier");
-  expect(ligneRappelTache(r, "zh-CN")).toBe("待办：Fond PPT（美工），9月18日星期五");
+  const r = { tache: tache({ titre: "Fond PPT", equipe: "da" }), date: "2026-09-18", quand: "J3" as const };
+  expect(ligneRappelTache(r, "fr")).toBe("À faire : Fond PPT (TEAM DA), vendredi 18 septembre");
+  expect(ligneRappelTache({ ...r, quand: "retard" }, "fr")).toBe("En retard : Fond PPT (TEAM DA), pour hier");
+  expect(ligneRappelTache(r, "zh-CN")).toBe("待办：Fond PPT（美工组），9月18日星期五");
   expect(corpsAvecTaches("Dimanche 20 septembre (dans 3 jours) : Culte Franco (Piano)", [r], "fr"))
-    .toBe("Dimanche 20 septembre (dans 3 jours) : Culte Franco (Piano)\nÀ faire : Fond PPT (DA), vendredi 18 septembre");
+    .toBe("Dimanche 20 septembre (dans 3 jours) : Culte Franco (Piano)\nÀ faire : Fond PPT (TEAM DA), vendredi 18 septembre");
 });
 
 test("cocher une tâche qui prévient la régie : la route part, la régie est dite prévenue", async ({ page }) => {
@@ -287,23 +295,23 @@ test("cocher une tâche qui prévient la régie : la route part, la régie est d
     await route.fulfill({ contentType: "application/json", body: JSON.stringify({ ok: true, notified: 1, linked: true, cible: "regie" }) });
   });
   await signInAs(page, MEMBRE_DA, {
-    "poles/da/taches/t1": tacheDoc({ prevenir: { regie: "Culte Francophone" } }),
+    "equipes/da/taches/t1": tacheDoc({ prevenir: { regie: "Culte Francophone" } }),
   }, "/back-office/taches/da");
   const cercle = groupe(page, "Cette semaine").getByRole("checkbox", { name: /Fond PPT/ });
   await cercle.click();
   await expect(cercle).toHaveAttribute("aria-checked", "mixed");
   await cercle.click();
   await expect(page.getByRole("status")).toHaveText("Régie prévenue.");
-  expect(recu).toEqual({ pole: "da", tacheId: "t1", date: jour(0) });
+  expect(recu).toEqual({ equipe: "da", tacheId: "t1", date: jour(0) });
 });
 
-test("cocher : sans régie reliée à un compte, on le dit ; un pôle prévenu est nommé", async ({ page }) => {
+test("cocher : sans régie reliée à un compte, on le dit ; une équipe prévenue est nommée", async ({ page }) => {
   let reponse = { ok: true, notified: 0, linked: false, cible: "regie" };
   await page.route("**/api/taches/fait", (route) =>
     route.fulfill({ contentType: "application/json", body: JSON.stringify(reponse) }));
   await signInAs(page, MEMBRE_DA, {
-    "poles/da/taches/t1": tacheDoc({ prevenir: { regie: "Culte Francophone" } }),
-    "poles/da/taches/t2": tacheDoc({ titre: "Visuel", prevenir: { pole: "media" } }),
+    "equipes/da/taches/t1": tacheDoc({ prevenir: { regie: "Culte Francophone" } }),
+    "equipes/da/taches/t2": tacheDoc({ titre: "Visuel", prevenir: { equipe: "medias" } }),
   }, "/back-office/taches/da");
   const terminer = async (titre: RegExp) => {
     const cercle = groupe(page, "Cette semaine").getByRole("checkbox", { name: titre });
@@ -313,13 +321,13 @@ test("cocher : sans régie reliée à un compte, on le dit ; un pôle prévenu e
   };
   await terminer(/Fond PPT/);
   await expect(page.getByRole("status")).toHaveText("Personne n'a été prévenu : aucune régie reliée à un compte.");
-  reponse = { ok: true, notified: 2, linked: true, cible: "pole" };
+  reponse = { ok: true, notified: 2, linked: true, cible: "equipe" };
   await terminer(/Visuel/);
-  await expect(page.getByRole("status")).toHaveText("Pôle Média prévenu.");
+  await expect(page.getByRole("status")).toHaveText("Équipe prévenue : TEAM MÉDIAS.");
 });
 
 test("nommer quelqu'un d'autre responsable le prévient", async ({ page }) => {
-  let recu: { pole?: string; tacheId?: string } | null = null;
+  let recu: { equipe?: string; tacheId?: string } | null = null;
   await page.route("**/api/taches/assigne", async (route) => {
     recu = route.request().postDataJSON();
     await route.fulfill({ contentType: "application/json", body: JSON.stringify({ ok: true, notified: 1 }) });
@@ -333,9 +341,9 @@ test("nommer quelqu'un d'autre responsable le prévient", async ({ page }) => {
   await form.getByLabel("Responsable").selectOption({ label: "Paul Dupont" });
   await form.getByRole("button", { name: creer }).click();
   await expect(form).toHaveCount(0);
-  const cree = db.writes.find((w) => w.method === "POST" && w.path.startsWith("poles/da/taches/"));
+  const cree = db.writes.find((w) => w.method === "POST" && w.path.startsWith("equipes/da/taches/"));
   expect(cree?.data).toMatchObject({ responsableUid: "uid-paul", responsableNom: "Paul Dupont" });
-  await expect.poll(() => recu).toEqual({ pole: "da", tacheId: cree!.path.split("/").pop() });
+  await expect.poll(() => recu).toEqual({ equipe: "da", tacheId: cree!.path.split("/").pop() });
 });
 
 // ── Réunions de pôle dans le calendrier (T4) ────────────────────────────────
@@ -443,9 +451,11 @@ test("une fois en cours ne disparaît jamais ; une fois terminée sort après 30
 test("« Mes tâches » compte une fois en cours, pas une fois terminée", () => {
   const today = "2026-12-14";
   const mienne = tache({ id: "m", responsableUid: "uid-da", responsableNom: "Ruth", echeance: "2026-12-10" });
-  expect(aFairePour(lignesDeTache(mienne, [enCours("2026-12-10")], today), "uid-da").map((l) => l.date))
+  const ruth = { uid: "uid-da", email: "da@example.com" };
+  const profil = { dansEquipes: ["da"] };
+  expect(aFairePour(lignesDeTache(mienne, [enCours("2026-12-10")], today), ruth, profil).map((l) => l.date))
     .toEqual(["2026-12-10"]);
-  expect(aFairePour(lignesDeTache(mienne, [fait("2026-12-10", "2026-12-13T09:00:00Z")], today), "uid-da")).toEqual([]);
+  expect(aFairePour(lignesDeTache(mienne, [fait("2026-12-10", "2026-12-13T09:00:00Z")], today), ruth, profil)).toEqual([]);
 });
 
 test("rappel « en cours » : rien avant l'échéance, puis une ligne chaque matin", () => {
@@ -467,17 +477,17 @@ test("rappel « en cours » : rien avant l'échéance, puis une ligne chaque mat
 });
 
 test("ligne « en cours » : depuis n jours, aujourd'hui ou sans date, en français et en 中文", () => {
-  const base = { tache: tache({ titre: "Fond PPT", pole: "da" as const }), date: "2026-12-10", quand: "encours" as const };
-  expect(ligneRappelTache({ ...base, depuis: 3 }, "fr")).toBe("En cours depuis 3 jours : Fond PPT (DA)");
-  expect(ligneRappelTache({ ...base, depuis: 1 }, "fr")).toBe("En cours depuis 1 jour : Fond PPT (DA)");
-  expect(ligneRappelTache({ ...base, depuis: 0 }, "fr")).toBe("En cours depuis aujourd'hui : Fond PPT (DA)");
-  expect(ligneRappelTache(base, "fr")).toBe("En cours : Fond PPT (DA)");
-  expect(ligneRappelTache({ ...base, depuis: 3 }, "zh-CN")).toBe("进行中 3 天：Fond PPT（美工）");
-  expect(ligneRappelTache({ ...base, depuis: 0 }, "zh-CN")).toBe("今天开始：Fond PPT（美工）");
-  expect(ligneRappelTache(base, "zh-CN")).toBe("进行中：Fond PPT（美工）");
+  const base = { tache: tache({ titre: "Fond PPT", equipe: "da" }), date: "2026-12-10", quand: "encours" as const };
+  expect(ligneRappelTache({ ...base, depuis: 3 }, "fr")).toBe("En cours depuis 3 jours : Fond PPT (TEAM DA)");
+  expect(ligneRappelTache({ ...base, depuis: 1 }, "fr")).toBe("En cours depuis 1 jour : Fond PPT (TEAM DA)");
+  expect(ligneRappelTache({ ...base, depuis: 0 }, "fr")).toBe("En cours depuis aujourd'hui : Fond PPT (TEAM DA)");
+  expect(ligneRappelTache(base, "fr")).toBe("En cours : Fond PPT (TEAM DA)");
+  expect(ligneRappelTache({ ...base, depuis: 3 }, "zh-CN")).toBe("进行中 3 天：Fond PPT（美工组）");
+  expect(ligneRappelTache({ ...base, depuis: 0 }, "zh-CN")).toBe("今天开始：Fond PPT（美工组）");
+  expect(ligneRappelTache(base, "zh-CN")).toBe("进行中：Fond PPT（美工组）");
   // Une seule notification : la ligne s'ajoute au rappel de service du jour.
   expect(corpsAvecTaches("Dimanche 13 décembre (dans 3 jours) : Culte Franco (Piano)", [{ ...base, depuis: 3 }], "fr"))
-    .toBe("Dimanche 13 décembre (dans 3 jours) : Culte Franco (Piano)\nEn cours depuis 3 jours : Fond PPT (DA)");
+    .toBe("Dimanche 13 décembre (dans 3 jours) : Culte Franco (Piano)\nEn cours depuis 3 jours : Fond PPT (TEAM DA)");
 });
 
 test("le cercle cycle À faire → En cours → Terminé → À faire", async ({ page }) => {
@@ -487,9 +497,9 @@ test("le cercle cycle À faire → En cours → Terminé → À faire", async ({
     return route.fulfill({ contentType: "application/json", body: JSON.stringify({ ok: true, notified: 1, linked: true, cible: "regie" }) });
   });
   const db = await signInAs(page, MEMBRE_DA, {
-    "poles/da/taches/t1": tacheDoc({ prevenir: { regie: "Culte Francophone" } }),
+    "equipes/da/taches/t1": tacheDoc({ prevenir: { regie: "Culte Francophone" } }),
   }, "/back-office/taches/da");
-  const chemin = `poles/da/taches/t1/fois/${jour(0)}`;
+  const chemin = `equipes/da/taches/t1/fois/${jour(0)}`;
   const cercle = page.getByRole("checkbox", { name: /Fond PPT/ });
   await expect(cercle).toHaveAttribute("aria-checked", "false");
 
@@ -515,8 +525,8 @@ test("le cercle cycle À faire → En cours → Terminé → À faire", async ({
 
 test("la ligne d'une fois en cours dit depuis quand et par qui", async ({ page }) => {
   await signInAs(page, MEMBRE_DA, {
-    "poles/da/taches/t1": tacheDoc({ echeance: jour(-3) }),
-    [`poles/da/taches/t1/fois/${jour(-3)}`]: {
+    "equipes/da/taches/t1": tacheDoc({ echeance: jour(-3) }),
+    [`equipes/da/taches/t1/fois/${jour(-3)}`]: {
       date: jour(-3), parUid: "uid-da", parNom: "Ruth Kouassi", le: `${jour(-2)}T09:00:00Z`,
       etat: "encours", debutLe: `${jour(-2)}T09:00:00Z`,
     },
@@ -540,7 +550,7 @@ test("le formulaire propose « Chaque année », sans semaine du mois", async ({
   await form.getByRole("button", { name: creer }).click();
   await expect(form).toHaveCount(0);
   await expect(laListe(page).getByText("Fond PPT de Noël")).toBeVisible();
-  const cree = db.writes.find((w) => w.method === "POST" && w.path.startsWith("poles/da/taches/"));
+  const cree = db.writes.find((w) => w.method === "POST" && w.path.startsWith("equipes/da/taches/"));
   expect(cree?.data).toMatchObject({ titre: "Fond PPT de Noël", echeance: jour(2), repetition: { rythme: "an" } });
 });
 
@@ -550,16 +560,16 @@ async function capture(page: Page, name: string) {
   if (dir) await page.screenshot({ path: `${dir}/${name}-${test.info().project.name}.png` });
 }
 
-test("capture : les trois états sur la page d'un pôle", async ({ page }) => {
+test("capture : les trois états sur la page d'une équipe", async ({ page }) => {
   await signInAs(page, MEMBRE_DA, {
-    "poles/da/taches/t1": tacheDoc({ titre: "Fond PPT de Noël", echeance: jour(-4), repetition: { rythme: "an" } }),
-    [`poles/da/taches/t1/fois/${jour(-4)}`]: {
+    "equipes/da/taches/t1": tacheDoc({ titre: "Fond PPT de Noël", echeance: jour(-4), repetition: { rythme: "an" } }),
+    [`equipes/da/taches/t1/fois/${jour(-4)}`]: {
       date: jour(-4), parUid: "uid-da", parNom: "Ruth Kouassi", le: `${jour(-1)}T09:00:00Z`,
       etat: "encours", debutLe: `${jour(-1)}T09:00:00Z`,
     },
-    "poles/da/taches/t2": tacheDoc({ titre: "Affiche de la retraite", echeance: jour(1) }),
-    "poles/da/taches/t3": tacheDoc({ titre: "Vidéo d'annonce", echeance: jour(-2) }),
-    [`poles/da/taches/t3/fois/${jour(-2)}`]: {
+    "equipes/da/taches/t2": tacheDoc({ titre: "Affiche de la retraite", echeance: jour(1) }),
+    "equipes/da/taches/t3": tacheDoc({ titre: "Vidéo d'annonce", echeance: jour(-2) }),
+    [`equipes/da/taches/t3/fois/${jour(-2)}`]: {
       date: jour(-2), parUid: "uid-da", parNom: "Ruth Kouassi", le: `${jour(-1)}T18:00:00Z`,
       etat: "terminee", debutLe: `${jour(-2)}T09:00:00Z`,
     },

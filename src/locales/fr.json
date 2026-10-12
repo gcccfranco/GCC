@@ -2294,9 +2294,10 @@
       "louange": "Louange",
       "evenement": "Événement"
     },
-    "subtitle": "Tâches du pôle",
-    "aucunPole": "Tu ne fais partie d'aucun pôle : les tâches sont réservées aux membres des pôles.",
-    "pasMembre": "Tu ne fais pas partie de ce pôle.",
+    "subtitle": "Tâches de l'équipe",
+    "aucuneEquipe": "Tu ne fais partie d'aucune équipe : les tâches sont réservées aux membres des équipes.",
+    "pasMembre": "Tu ne fais pas partie de cette équipe.",
+    "aucuneTache": "Pas encore de tâche pour tes équipes.",
     "rienAFaire": "Rien à faire pour l'instant.",
     "vide": "Aucune tâche pour l'instant. Ajoute la première avec « Nouvelle tâche ».",
     "nouvelle": "Nouvelle tâche",
@@ -2307,7 +2308,7 @@
       "plusTard": "Plus tard",
       "faites": "Faites"
     },
-    "pourTous": "Tout le pôle",
+    "pourTous": "Toute l'équipe",
     "faitePar": "Faite par {{nom}}",
     "commenceePar": "Commencée par {{nom}}",
     "enCoursDepuis_one": "En cours depuis {{count}} jour",
@@ -2327,7 +2328,7 @@
       "note": "Note",
       "prevenir": "Quand c'est fait, prévenir",
       "evenement": "Évènement",
-      "pole": "Pôle"
+      "equipe": "Équipe"
     },
     "rythme": {
       "aucun": "Une seule fois",
@@ -2344,7 +2345,6 @@
       "-1": "Dernière semaine"
     },
     "prevenirPersonne": "Personne",
-    "prevenirPole": "Pôle {{pole}}",
     "prevenirRegie": "Régie {{service}}, le dimanche suivant",
     "enregistrer": "Enregistrer",
     "supprimer": "Supprimer",
@@ -2354,13 +2354,13 @@
     "titreRequis": "Donne un titre à la tâche.",
     "echeanceRequise": "Choisis une échéance.",
     "regiePrevenue": "Régie prévenue.",
-    "polePrevenu": "Pôle {{pole}} prévenu.",
+    "equipePrevenue": "Équipe prévenue : {{equipe}}.",
     "personnePrevenue": "Personne n'a été prévenu : aucune régie reliée à un compte.",
     "pourEvenement": "pour {{titre}}",
     "detacherEvenement": "Détacher de l'évènement",
     "introuvable": "Cette tâche n'existe plus.",
-    "sousTitreBackOffice": "Les tâches des pôles : ce qui est en retard d'abord",
-    "poles": "Pôles",
+    "sousTitreBackOffice": "Les tâches de tes équipes : ce qui est en retard d'abord",
+    "equipes": "Équipes",
     "terminees": "Terminées ({{count}})",
     "creer": "Créer la tâche",
     "rythmeCourt": {
@@ -2891,7 +2891,7 @@
     },
     "reglages": {
       "services": "Services",
-      "poles": "Pôles",
+      "equipes": "Équipes",
       "plannings": "Plannings",
       "sur": "Sur",
       "afficher": "Afficher",
@@ -2951,7 +2951,7 @@
       "scene": "Scène"
     },
     "gerer": "Gérer dans le Back-Office",
-    "tachesDesPoles": "Les tâches des pôles",
+    "tachesDesEquipes": "Les tâches des équipes",
     "sceneReserve": "Réservé à la coordination.",
     "aucunEvenement": "Aucun évènement à gérer.",
     "aucuneReunion": "Aucune réunion.",
@@ -3009,8 +3009,8 @@
         "calendrier": "services, réunions, évènements",
         "plannings": "plannings",
         "sansCompte": "sans compte",
-        "tesPoles": "tâches de tes pôles",
-        "tousLesPoles": "tâches de tous les pôles",
+        "tesEquipes": "tâches de tes équipes",
+        "toutesLesEquipes": "tâches de toutes les équipes",
         "fiches": "fiches, inscrits, période",
         "reunions": "sujets, comptes rendus",
         "scene": "programmes de scène",

@@ -28,7 +28,7 @@ import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { useSearchParams } from "next/navigation";
 import { useTranslation } from "react-i18next";
 import { Check, ChevronLeft, ChevronRight, CloudOff, SlidersHorizontal, UserRound } from "lucide-react";
-import { creatableEvenementPours, isAdminUser, polesDe, publicDeReunion } from "@/lib/access";
+import { creatableEvenementPours, equipesOuCreer, publicDeReunion } from "@/lib/access";
 import type { TacheValues } from "@/lib/firebase/taches";
 import { useProfile } from "@/lib/firebase/users";
 import { chargerCalendrier, chargerPeriode, enOrdre, type LectureCalendrier } from "@/lib/calendrier/charger";
@@ -48,7 +48,6 @@ import { avantBascule, jourDeParis } from "@/lib/evenements/bascule";
 import { todayIso } from "@/lib/scene/dimanches";
 import { cn } from "@/lib/utils";
 import { ANNONCE_SECTIONS } from "@/types/annonce";
-import { TACHE_POLES, type TachePole } from "@/types/tache";
 import type { NotifLang } from "@/types/user";
 import { AgendaSemaines, CartesDuJour, FeuilleEntree, ListeAgenda, useTitreDuJour } from "@/components/calendrier/Agenda";
 import { DialogueDeplacer, type DemandeDeplacement } from "@/components/calendrier/Deplacer";
@@ -226,13 +225,13 @@ export function CalendrierClient() {
 
   // Créer (Q4) : chaque bouton seulement pour qui a le droit — un évènement si un public lui est
   // ouvert (un référent crée pour son équipe, décision 43, EQ21), une réunion pour une équipe dont
-  // on est référent, une tâche parmi ses pôles (tous pour un admin).
+  // on est référent, une tâche parmi les équipes où l'on crée (EQ14 : référent ; toutes pour un admin).
   const pours = creatableEvenementPours(user, profile, ANNONCE_SECTIONS);
-  const mesPoles: TachePole[] = !user ? [] : isAdminUser(user) ? [...TACHE_POLES] : polesDe(profile);
+  const ouCreer = equipesOuCreer(user, profile);
   const droits: DroitsCreation = {
     evenement: pours.length > 0,
     reunion: pours.some(publicDeReunion),
-    tache: mesPoles.length > 0,
+    tache: ouCreer.length > 0,
   };
   const peutCreer = droits.evenement || droits.reunion || droits.tache;
   // La feuille « Créer » du téléphone : le jour touché du Mois à points ; en Agenda, où aucun jour ne
@@ -242,10 +241,10 @@ export function CalendrierClient() {
   const boutonsCreation = (date: string) => (
     <BoutonsCreation date={date} lang={lang} droits={droits} onNouvelleTache={nouvelleTache(date)} />
   );
-  // Comme sur la page du pôle (`creerTache`) : nommé par quelqu'un d'autre, le responsable est prévenu.
-  async function enregistrerTache(values: TacheValues, pole: TachePole) {
+  // Comme sur la page de l'équipe (`creerTache`) : nommé par quelqu'un d'autre, le responsable est prévenu.
+  async function enregistrerTache(values: TacheValues, equipe: string) {
     if (!user) return;
-    await creerTache(pole, values, user.uid);
+    await creerTache(equipe, values, user.uid);
     setTacheLe(null);
     setLecture((n) => n + 1);
   }
@@ -474,11 +473,11 @@ export function CalendrierClient() {
           </DrawerContent>
         </Drawer>
       )}
-      {mesPoles.length > 0 && (
+      {ouCreer.length > 0 && (
         <TacheForm
           open={tacheLe !== null}
-          pole={mesPoles[0]}
-          poles={mesPoles}
+          equipe={ouCreer[0]}
+          equipes={ouCreer}
           echeance={tacheLe ?? undefined}
           initial={null}
           membres={membres}

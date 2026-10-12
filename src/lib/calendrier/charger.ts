@@ -9,7 +9,7 @@
 // de la page, ligne du widget). Firestore en REST seulement. Le Sheet des évènements se lit à
 // part, par période affichée (lireSheetEvenements).
 
-import { canSeeEvenement, estReunion, isAdminUser, polesDe } from "@/lib/access";
+import { canSeeEvenement, equipesDesTaches, estReunion } from "@/lib/access";
 import { ORDRE_PASTILLES, type DonneesCalendrier, type ProfilCalendrier, type SourceCalendrier } from "@/lib/calendrier/entrees";
 import { getInscription, listEvenements } from "@/lib/firebase/evenements";
 import { listCreneaux, listProgrammes } from "@/lib/firebase/programmes";
@@ -22,7 +22,7 @@ import { planningsCasesVides } from "@/lib/tableauDeBord/donnees";
 import { lireGrilles } from "@/lib/tableauDeBord/lecture";
 import { echeancesDe } from "@/lib/taches/echeances";
 import type { Evenement } from "@/types/evenement";
-import { TACHE_POLES, type Tache } from "@/types/tache";
+import type { Tache } from "@/types/tache";
 
 type Utilisateur = { uid: string; email?: string | null };
 
@@ -56,7 +56,8 @@ export async function chargerCalendrier(
    *  setlists ne se lisent qu'une fois, pour « Ce dimanche » et « Setlists à préparer », U6). */
   { pourLeWidget = false }: { pourLeWidget?: boolean } = {},
 ): Promise<LectureCalendrier> {
-  const poles = isAdminUser(user) ? [...TACHE_POLES] : polesDe(profile);
+  // Les tâches des équipes de la personne, Louange élargi ; toutes pour un admin (EQ14).
+  const equipes = equipesDesTaches(user, profile);
   const echecs: SourceCalendrier[] = [];
   /** Une lecture qui rejette (réseau coupé, Firestore bloqué) : sa valeur vide, et sa source nommée. */
   const sinon = <T,>(vide: T, ...sources: SourceCalendrier[]) => (): T => {
@@ -66,7 +67,7 @@ export async function chargerCalendrier(
   const [planning, evenements, taches, scene, petitDej, setlists, grilles] = await Promise.all([
     loadPlanningData().catch(sinon(null, "services")),
     listEvenements(false).catch(sinon<Evenement[]>([], "evenements", "reunions")),
-    Promise.all(poles.map((p) => listTachesSeules(p).catch(sinon<Tache[]>([], "taches")))).then((l) => l.flat()),
+    Promise.all(equipes.map((e) => listTachesSeules(e).catch(sinon<Tache[]>([], "taches")))).then((l) => l.flat()),
     lireScene(today).catch(sinon([], "scene")),
     // Lecteur de U3 : une lecture en échec donne null (rien, jamais « Libre »).
     lirePetitDej().catch(sinon(null, "petitDej")),
@@ -99,7 +100,7 @@ const touche = (e: Evenement, debut: string, fin: string) => {
 
 /** Les données de la période `debut` → `fin` : les fois des tâches qui y ont une échéance (les
  *  autres n'y ont pas d'entrée) ; mes inscriptions, aux évènements ouverts qui y tombent et que je
- *  vois (un évènement d'un autre pôle n'est pas lu, retouches v18), pour « Seulement moi »
+ *  vois (un évènement d'une autre équipe n'est pas lu, retouches v18), pour « Seulement moi »
  *  seulement (sinon aucune lecture). */
 export async function chargerPeriode(
   base: BaseCalendrier,

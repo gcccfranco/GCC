@@ -72,7 +72,7 @@ const evenement = (e: Partial<Evenement> & Pick<Evenement, "id" | "titre">): Eve
 });
 
 const tache = (t: Partial<Tache> & Pick<Tache, "id" | "titre">): Tache => ({
-  pole: "da",
+  equipe: "da",
   responsableUid: null,
   responsableNom: "",
   echeance: "2026-10-15",
@@ -414,14 +414,14 @@ test.describe("sources du calendrier (pur)", () => {
     ]);
   });
 
-  test("tâches : chaque échéance (une tâche répétée a une entrée par fois), « DA · échéance », pôles de la personne seulement", () => {
+  test("tâches : chaque échéance (une tâche répétée a une entrée par fois), « DA · échéance », équipes de la personne seulement", () => {
     const d = vide();
     d.taches = [
       { tache: tache({ id: "ppt", titre: "Fond PPT du culte", echeance: "2026-10-01" }), fois: [] },
-      { tache: tache({ id: "setl", titre: "Envoyer la setlist", pole: "louange", echeance: "2026-10-02", responsableUid: "u-moi", responsableNom: "Alix P.", repetition: { rythme: "semaine" } }), fois: [] },
-      { tache: tache({ id: "media", titre: "Vidéo", pole: "media" }), fois: [] },
+      { tache: tache({ id: "setl", titre: "Envoyer la setlist", equipe: "louange", echeance: "2026-10-02", responsableUid: "u-moi", responsableNom: "Alix P.", repetition: { rythme: "semaine" } }), fois: [] },
+      { tache: tache({ id: "media", titre: "Vidéo", equipe: "medias" }), fois: [] },
     ];
-    const membre = profil({ poles: ["da"], serviceRoles: { "Culte Francophone": ["musicien"] } });
+    const membre = profil({ dansEquipes: ["da"], serviceRoles: { "Culte Francophone": ["musicien"] } });
     const e = de(entreesCalendrier(...OCT, d, ctx(MOI, membre)), "taches");
     expect(e.map((x) => x.cle)).toEqual([
       "taches:ppt:2026-10-01",
@@ -437,7 +437,7 @@ test.describe("sources du calendrier (pur)", () => {
     expect(e.map((x) => x.repetee ?? false)).toEqual([false, true, true, true, true, true]);
   });
 
-  test("tâches : « moi » = responsable moi, ou mon pôle sans responsable, et pas terminée", () => {
+  test("tâches : « moi » = responsable moi, ou sans responsable dans une équipe dont je suis référent, et pas terminée", () => {
     const d = vide();
     d.taches = [
       { tache: tache({ id: "a", titre: "Sans responsable", echeance: "2026-10-05" }), fois: [] },
@@ -445,9 +445,17 @@ test.describe("sources du calendrier (pur)", () => {
       { tache: tache({ id: "c", titre: "À un autre", echeance: "2026-10-07", responsableUid: "u-autre", responsableNom: "Noé R." }), fois: [] },
       { tache: tache({ id: "d", titre: "Faite", echeance: "2026-10-08" }), fois: [fois("2026-10-08", "terminee")] },
     ];
-    const e = de(entreesCalendrier(...OCT, d, ctx(MOI, profil({ poles: ["da"] }))), "taches");
+    const e = de(entreesCalendrier(...OCT, d, ctx(MOI, profil({ dansEquipes: ["da"], referentDe: ["da"] }))), "taches");
     expect(e.map((x) => [x.titre, x.moi])).toEqual([
       ["Sans responsable", true],
+      ["À moi", true],
+      ["À un autre", false],
+      ["Faite", false],
+    ]);
+    // Un simple membre : la tâche « toute l'équipe » n'est pas à lui (décision 41).
+    const simple = de(entreesCalendrier(...OCT, d, ctx(MOI, profil({ dansEquipes: ["da"] }))), "taches");
+    expect(simple.map((x) => [x.titre, x.moi])).toEqual([
+      ["Sans responsable", false],
       ["À moi", true],
       ["À un autre", false],
       ["Faite", false],
@@ -538,7 +546,7 @@ test.describe("sources du calendrier (pur)", () => {
     const par = (s: EntreeCalendrier["source"]) => de(e, s)[0];
     expect(par("services").detail).toBe("司会：Alix P.");
     expect(par("evenements").detail).toBe("19:00 · 已报名 4/10");
-    expect(par("taches").detail).toBe("美工 · 截止");
+    expect(par("taches").detail).toBe("美工组 · 截止");
     expect(par("scene").titre).toBe("舞台 · Chant EDD 中班");
     expect(par("petitDej")).toMatchObject({ titre: "早餐", detail: "空闲" });
     expect(par("setlists").detail).toBe("Culte Franco · 1 首");
@@ -555,7 +563,7 @@ test.describe("filtres : pastilles et « Seulement moi » (pur)", () => {
       { tache: tache({ id: "t1", titre: "À moi", responsableUid: "u-moi", responsableNom: "Alix P." }), fois: [] },
       { tache: tache({ id: "t2", titre: "À un autre", responsableUid: "u-autre", responsableNom: "Noé R." }), fois: [] },
     ];
-    return entreesCalendrier(...OCT, d, ctx(MOI, profil({ poles: ["da"] })));
+    return entreesCalendrier(...OCT, d, ctx(MOI, profil({ dansEquipes: ["da"] })));
   };
 
   test("une pastille éteinte retire sa source", () => {
@@ -574,19 +582,17 @@ test.describe("pastilles permises (pur)", () => {
   // celui d'un jour (SOURCES) met les réunions avant.
   const PLANCHE = ["services", "evenements", "taches", "reunions", "scene", "petitDej", "setlists"];
 
-  test("sans pôle ni équipe : ni Tâches ni Réunions", () => {
+  test("sans équipe : ni Tâches ni Réunions", () => {
     expect(sourcesPermises(MOI, profil())).toEqual(["services", "evenements", "scene", "petitDej", "setlists"]);
   });
 
-  test("un pôle (Louange compris, par un rôle de service) : Tâches et Réunions, dans l'ordre de la planche", () => {
+  test("le public Louange (un rôle de service) : Tâches et Réunions, dans l'ordre de la planche", () => {
     expect(ORDRE_PASTILLES).toEqual(PLANCHE);
     expect(sourcesPermises(MOI, profil({ serviceRoles: { "Culte Francophone": ["musicien"] } }))).toEqual(PLANCHE);
   });
 
-  test("une équipe sans pôle : Réunions, pas Tâches", () => {
-    expect(sourcesPermises(MOI, profil({ dansEquipes: ["accueil"] }))).toEqual([
-      "services", "evenements", "reunions", "scene", "petitDej", "setlists",
-    ]);
+  test("une équipe de l'organigramme : Tâches et Réunions (EQ14 : les 13 équipes ont des tâches)", () => {
+    expect(sourcesPermises(MOI, profil({ dansEquipes: ["accueil-j1"] }))).toEqual(PLANCHE);
   });
 
   test("un admin : toutes, dans l'ordre de la planche", () => {
@@ -613,19 +619,20 @@ test.describe("peutDeplacer (pur)", () => {
     expect(peutDeplacer(MOI, profil(), { source: "evenements", evenement: { ...passe, date: TODAY } }, TODAY)).toBe(true);
   });
 
-  test("réunion : son organisateur et la coordination, pas un membre du pôle qui ne l'a pas créée", () => {
+  test("réunion : son organisateur et la coordination, pas un membre de l'équipe qui ne l'a pas créée", () => {
     const reu = evenement({ id: "r", titre: "R", pour: "equipe:da", organisateurUid: "u-orga" });
-    expect(peutDeplacer(MOI, profil({ poles: ["da"] }), { source: "reunions", evenement: reu }, TODAY)).toBe(false);
-    expect(peutDeplacer({ uid: "u-orga" }, profil({ poles: ["da"] }), { source: "reunions", evenement: reu }, TODAY)).toBe(true);
+    expect(peutDeplacer(MOI, profil({ dansEquipes: ["da"] }), { source: "reunions", evenement: reu }, TODAY)).toBe(false);
+    expect(peutDeplacer({ uid: "u-orga" }, profil({ dansEquipes: ["da"] }), { source: "reunions", evenement: reu }, TODAY)).toBe(true);
     expect(peutDeplacer(AUTRE, coord, { source: "reunions", evenement: reu }, TODAY)).toBe(true);
   });
 
-  test("tâche unique : les membres du pôle et les admins ; pas un autre", () => {
+  test("tâche unique : les référents de l'équipe et les admins (EQ8) ; pas un simple membre ni un autre", () => {
     const t = tache({ id: "t", titre: "T" });
     const cible = { source: "taches" as const, tache: t, date: t.echeance, fois: [] };
-    expect(peutDeplacer(MOI, profil({ poles: ["da"] }), cible, TODAY)).toBe(true);
+    expect(peutDeplacer(MOI, profil({ dansEquipes: ["da"], referentDe: ["da"] }), cible, TODAY)).toBe(true);
     expect(peutDeplacer(ADMIN, null, cible, TODAY)).toBe(true);
-    expect(peutDeplacer(MOI, profil({ poles: ["media"] }), cible, TODAY)).toBe(false);
+    expect(peutDeplacer(MOI, profil({ dansEquipes: ["da"] }), cible, TODAY)).toBe(false);
+    expect(peutDeplacer(MOI, profil({ dansEquipes: ["medias"], referentDe: ["medias"] }), cible, TODAY)).toBe(false);
   });
 
   test("tâche répétée : ne se glisse pas", () => {
@@ -666,7 +673,7 @@ test.describe("peutDeplacer (pur)", () => {
     d.evenements = [ev, evenement({ id: "autre", titre: "Autre", date: "2026-10-12" })];
     d.taches = [{ tache: tache({ id: "u", titre: "Unique" }), fois: [] }, { tache: tache({ id: "r", titre: "Répétée", repetition: { rythme: "mois", rang: 3 } }), fois: [] }];
     d.scene = [{ programme: programme(), creneaux: [creneau({ id: "c", auteurUid: "u-moi", qui: ["Jeunes"] })] }];
-    const e = entreesCalendrier(...OCT, d, ctx(MOI, profil({ poles: ["da"] })));
+    const e = entreesCalendrier(...OCT, d, ctx(MOI, profil({ dansEquipes: ["da"], referentDe: ["da"] })));
     const dep = Object.fromEntries(e.map((x) => [x.cle, x.deplacable]));
     expect(dep["evenements:e:2026-10-10"]).toBe(true);
     expect(dep["evenements:autre:2026-10-12"]).toBe(false);
@@ -719,7 +726,7 @@ const CULTE = csv([
 ]);
 
 const P_ADMIN: FakeProfile = { uid: "u-admin", email: ADMIN_EMAILS[0], firstName: "Admin", lastName: "T.", planningName: "Lou M." };
-/** Responsable des plannings, sans pôle : ni Tâches ni Réunions (Q2). */
+/** Responsable des plannings, sans équipe : ni Tâches ni Réunions (Q2). */
 const P_PLANNINGS: FakeProfile = { uid: "u-pl", email: "pl@example.org", firstName: "Noa", lastName: "V.", plannings: ["culte"] };
 
 const MAINTENANT = "2026-09-01T10:00:00Z";
@@ -737,7 +744,7 @@ const DOCS: Record<string, Record<string, unknown>> = {
     titre: "Baptêmes", type: "culte", pour: "eglise", date: "2026-10-04", heure: "11:00", lieu: "Église",
     organisateurUid: "u-autre", organisateurNom: "Autre", inscrits: 0, createdAt: MAINTENANT, updatedAt: MAINTENANT,
   },
-  "poles/da/taches/noel": {
+  "equipes/da/taches/noel": {
     titre: "Chants de Noël", responsableUid: null, responsableNom: "", echeance: "2026-10-15", repetition: null,
     lien: "", note: "", prevenir: null, evenement: null, auteurUid: "u-autre", createdAt: MAINTENANT, updatedAt: MAINTENANT,
   },
@@ -966,7 +973,7 @@ test.describe("C3 : la page du calendrier en Mois", () => {
     await expect(panneau.getByRole("button", { name: /Déplacer/ })).toHaveCount(0);
   });
 
-  test("sans pôle : ni pastille Tâches ni Réunions, et aucune tâche", async ({ page }, info) => {
+  test("sans équipe : ni pastille Tâches ni Réunions, et aucune tâche", async ({ page }, info) => {
     await ouvrir(page, P_PLANNINGS);
     const groupe = await sourcesAffichees(page, info);
     await expect(groupe.getByRole("button", { name: "Services" })).toBeVisible();
@@ -1079,7 +1086,7 @@ test.describe("relecture du lot : setlist du culte, ordre des pastilles, lecture
     });
     await ouvrir(page, P_ADMIN, {
       docs: {
-        "poles/da/taches/ancienne": {
+        "equipes/da/taches/ancienne": {
           titre: "Affiche de 2024", responsableUid: null, responsableNom: "", echeance: "2024-10-15", repetition: null,
           lien: "", note: "", prevenir: null, evenement: null, auteurUid: "u-autre", createdAt: MAINTENANT, updatedAt: MAINTENANT,
         },
@@ -1093,7 +1100,7 @@ test.describe("relecture du lot : setlist du culte, ordre des pastilles, lecture
   test("une source illisible : bandeau qui la nomme, et le reste s'affiche", async ({ page }, info) => {
     await ouvrir(page);
     // Firestore injoignable pour les tâches (réseau qui bloque) : la liste rejette.
-    await page.route(/documents\/poles\/[a-z-]+:runQuery/, (route) => route.abort("internetdisconnected"));
+    await page.route(/documents\/equipes\/[a-z0-9-]+:runQuery/, (route) => route.abort("internetdisconnected"));
     await page.reload();
     await expect(page.getByTestId("calendrier")).not.toHaveAttribute("aria-busy", "true");
     await expect(page.getByRole("status").filter({ hasText: "Lecture impossible : Tâches" })).toBeVisible();
@@ -1134,7 +1141,7 @@ test.describe("C3 : captures à regarder", () => {
 
 /** Une tâche aujourd'hui (planche : « Fond PPT du culte », « DA · échéance ») et une sortie en novembre. */
 const DOCS_AGENDA: Record<string, Record<string, unknown>> = {
-  "poles/da/taches/ppt": {
+  "equipes/da/taches/ppt": {
     titre: "Fond PPT du culte", responsableUid: null, responsableNom: "", echeance: "2026-10-01", repetition: null,
     lien: "", note: "", prevenir: null, evenement: null, auteurUid: "u-autre", createdAt: MAINTENANT, updatedAt: MAINTENANT,
   },
@@ -1376,9 +1383,9 @@ test.describe("C4 : captures à regarder", () => {
 // ─── C5 : créer depuis un jour ───
 
 /** Référent de TEAM DA et de TEAM MÉDIAS, sans section : une réunion ou un évènement de ses équipes
- *  (décision 43), des tâches de ses pôles jusqu'à EQ-C (Q4). */
+ *  (décision 43), des tâches de ses équipes (Q4, EQ14). */
 const P_POLES: FakeProfile = { uid: "u-da", email: "da@example.org", firstName: "Alix", lastName: "P.", poles: ["da", "media"], dansEquipes: ["da", "medias"], referentDe: ["da", "medias"] };
-/** Publie pour une section, sans pôle : un évènement, pas de tâche. */
+/** Publie pour une section, sans équipe : un évènement, pas de tâche. */
 const P_SECTION: FakeProfile = { uid: "u-sec", email: "sec@example.org", firstName: "Noa", lastName: "R.", annonces: ["Groupe Paix"] };
 
 /** Le jour touché : sur grand écran, le menu « Ajouter ce jour-là » du volet du jour (agencement v18,
@@ -1428,19 +1435,19 @@ test.describe("C5 : créer depuis un jour", () => {
     await expect(page.getByLabel("Date", { exact: true })).toHaveValue("");
   });
 
-  test("« Nouvelle tâche pour le 11/10 » : échéance du jour, choix parmi mes pôles ; enregistrée, elle apparaît ce jour-là", async ({ page }, info) => {
+  test("« Nouvelle tâche pour le 11/10 » : échéance du jour, choix parmi mes équipes ; enregistrée, elle apparaît ce jour-là", async ({ page }, info) => {
     const db = await ouvrir(page, P_POLES);
     const ou = await creerDepuis(page, info, "2026-10-11", "Dimanche 11 octobre");
     await ou.bouton("Nouvelle tâche pour le 11/10").click();
     const form = page.getByRole("dialog", { name: "Nouvelle tâche" });
     await expect(form.getByLabel("Échéance")).toHaveValue("2026-10-11");
-    await expect(form.getByLabel("Pôle").locator("option")).toHaveText(["DA", "Média"]);
-    await form.getByLabel("Pôle").selectOption("media");
+    await expect(form.getByLabel("Équipe").locator("option")).toHaveText(["DA", "Médias"]);
+    await form.getByLabel("Équipe").selectOption("medias");
     await form.getByLabel("Titre").fill("Affiche du concert");
     await form.getByRole("button", { name: "Enregistrer" }).click();
     await expect(form).toHaveCount(0);
-    const ecrite = db.writes.find((w) => w.method === "POST" && w.path.startsWith("poles/media/taches/"));
-    expect(ecrite?.data).toMatchObject({ titre: "Affiche du concert", echeance: "2026-10-11", pole: "media", repetition: null });
+    const ecrite = db.writes.find((w) => w.method === "POST" && w.path.startsWith("equipes/medias/taches/"));
+    expect(ecrite?.data).toMatchObject({ titre: "Affiche du concert", echeance: "2026-10-11", equipe: "medias", repetition: null });
     // Le calendrier relit ses sources : la tâche est sur le 11.
     if (estTelephone(info)) {
       await expect(page.getByTestId("jour-choisi").locator('[data-source="taches"]')).toContainText("Affiche du concert");
@@ -1449,7 +1456,7 @@ test.describe("C5 : créer depuis un jour", () => {
     }
   });
 
-  test("sans droit, pas de bouton : ni tâche sans pôle, ni évènement sans section ni pôle", async ({ page }, info) => {
+  test("sans droit, pas de bouton : ni tâche sans équipe référente, ni évènement sans section ni équipe", async ({ page }, info) => {
     await ouvrir(page, P_PLANNINGS);
     if (estTelephone(info)) {
       await expect(page.getByRole("button", { name: "Créer", exact: true })).toHaveCount(0);
@@ -1461,7 +1468,7 @@ test.describe("C5 : créer depuis un jour", () => {
     }
   });
 
-  test("une section sans pôle : « Nouvel évènement » seul", async ({ page }, info) => {
+  test("une section sans équipe : « Nouvel évènement » seul", async ({ page }, info) => {
     await ouvrir(page, P_SECTION);
     const ou = await creerDepuis(page, info, "2026-10-11", "Dimanche 11 octobre");
     await expect(ou.lien("Nouvel évènement le 11/10")).toBeVisible();

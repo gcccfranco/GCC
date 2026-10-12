@@ -1,14 +1,17 @@
 "use client";
 
-// Back-Office › Tâches d'un pôle (lot 7, docs/spec-taches.md ; lot U6, B3). Agencement v18 (B1, B2,
-// docs/spec-agencement-v18.md ; planches `v18-bo-taches`, `v18-bo-tache-nouvelle`) : l'en-tête
-// « Tâches » (rail des pôles avec le compte, « + Nouvelle tâche ») au-dessus de deux volets ; à
-// gauche la liste du pôle (En retard · Cette semaine · Plus tard, « Terminées (n) » repliées), qui
-// reste montée d'une tâche à l'autre ; à droite la page de l'adresse : la fiche
+// Back-Office › Tâches d'une équipe (lot 7, docs/spec-taches.md ; lot U6, B3). Agencement v18 (B1,
+// B2, docs/spec-agencement-v18.md ; planches `v18-bo-taches`, `v18-bo-tache-nouvelle`) : l'en-tête
+// « Tâches » (rail des équipes avec le compte, « + Nouvelle tâche ») au-dessus de deux volets ; à
+// gauche la liste de l'équipe (En retard · Cette semaine · Plus tard, « Terminées (n) » repliées),
+// qui reste montée d'une tâche à l'autre ; à droite la page de l'adresse : la fiche
 // (`[id]`), le formulaire (`nouvelle`), ou sur la liste la première tâche à faire (R11).
 // Un volet (téléphone, tablette debout) : la liste, puis la fiche en page avec « ‹ Tâches » ;
-// « Nouvelle tâche » ouvre la feuille d'aujourd'hui sur la liste. Réservé aux membres du pôle et
-// aux admins (affichage ; poles/{pôle}/taches garde sa règle).
+// « Nouvelle tâche » ouvre la feuille d'aujourd'hui sur la liste. Réservé aux membres de l'équipe
+// (Louange élargi) et aux admins (affichage ; equipes/{équipe}/taches garde sa règle).
+// Lot 1 du chantier « équipes et groupes » (EQ8, EQ9) : le rail n'a que les équipes qui ont une tâche,
+// plus celles dont on est référent ; « + Nouvelle tâche » à qui crée quelque part (`equipesOuCreer`),
+// dans l'équipe affichée si on y crée ; la case d'une tâche qu'on ne peut pas cocher est inerte.
 
 import { useState } from "react";
 import { useParams, usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -25,58 +28,64 @@ import { adresseDeLaLigne, useMesTaches } from "@/components/taches/SectionTache
 import { texteRetour } from "@/components/taches/retour";
 import { creerTache, useMembres } from "@/components/taches/creerTache";
 import { useDeuxVolets } from "@/hooks/useDeuxVolets";
+import { equipesOuCreer, peutCocher } from "@/lib/access";
 import { estSurLaListe } from "@/lib/deuxVolets";
+import { cleNomEquipe } from "@/lib/equipes/table";
 import { useProfile } from "@/lib/firebase/users";
 import { cyclerEtat, type TacheValues } from "@/lib/firebase/taches";
-import { grouperLignes, lignesDeTache, type Ligne } from "@/lib/taches/echeances";
+import { equipesDuRail, grouperLignes, lignesDeTache, type Ligne } from "@/lib/taches/echeances";
 import { prevenirFait } from "@/lib/taches/prevenir";
 import { cn } from "@/lib/utils";
-import { TACHE_POLES, type TachePole } from "@/types/tache";
 
-export default function PoleLayout({ children }: { children: React.ReactNode }) {
+export default function EquipeLayout({ children }: { children: React.ReactNode }) {
   const { t } = useTranslation();
-  const { pole: brut } = useParams<{ pole: string }>();
+  const { equipe: brut } = useParams<{ equipe: string }>();
   const chemin = usePathname() ?? "";
   const deuxVolets = useDeuxVolets();
-  const { user } = useProfile();
-  const { poles, items, chargement, reload, aujourdhui, racine } = useMesTaches();
+  const { user, profile } = useProfile();
+  const { equipes, items, chargement, reload, aujourdhui, racine } = useMesTaches();
   const [feuille, setFeuille] = useState(false);
   const membres = useMembres(feuille);
-  const pole = (TACHE_POLES as readonly string[]).includes(brut) && poles.includes(brut as TachePole) ? (brut as TachePole) : null;
-  const racinePole = `${racine}/${brut}`;
+  const equipe = equipes.includes(brut) ? brut : null;
+  const racineEquipe = `${racine}/${brut}`;
+  const rail = equipesDuRail(equipes, items.map((x) => x.tache), profile?.referentDe);
+  // « + Nouvelle tâche » (EQ8, EQ9) : dans l'équipe affichée si on y crée, sinon la première où l'on crée.
+  const ouCreer = equipesOuCreer(user, profile);
+  const depart = equipe && ouCreer.includes(equipe) ? equipe : ouCreer[0];
 
   // Le compte du rail : les tâches qui ont encore une fois à faire (une tâche répétée compte une fois).
-  const compte = (p: TachePole) => new Set(items
-    .filter((x) => x.tache.pole === p)
+  const compte = (e: string) => new Set(items
+    .filter((x) => x.tache.equipe === e)
     .flatMap(({ tache, fois }) => lignesDeTache(tache, fois, aujourdhui))
     .filter((l) => l.fois?.etat !== "terminee")
     .map((l) => l.tache.id)).size;
 
-  async function creerDansLaFeuille(values: TacheValues, p: TachePole) {
+  async function creerDansLaFeuille(values: TacheValues, e: string) {
     if (!user) return;
-    await creerTache(p, values, user.uid);
+    await creerTache(e, values, user.uid);
     setFeuille(false);
-    await reload(p);
+    await reload(e);
   }
 
   // En un volet, la fiche est une page qui pose son propre en-tête (« ‹ Tâches »).
-  const enTete = (deuxVolets || estSurLaListe(chemin, racinePole)) && (
+  const enTete = (deuxVolets || estSurLaListe(chemin, racineEquipe)) && (
     <EnTetePage
       titre={t("backOffice.entrees.taches")}
       sousTitre={t("taches.sousTitreBackOffice")}
-      action={pole && (deuxVolets
-        ? <BoutonNouveau label={t("taches.nouvelle")} href={`${racinePole}/nouvelle`} />
+      action={equipe && depart && (deuxVolets
+        ? <BoutonNouveau label={t("taches.nouvelle")} href={`${racine}/${depart}/nouvelle`} />
         : <BoutonNouveau label={t("taches.nouvelle")} onClick={() => setFeuille(true)} />)}
-      onglets={poles.length > 0 && (
+      onglets={rail.length > 0 && (
+        // Pendant la lecture, les seules équipes dont on est référent, sans compte.
         <OngletsRail
-          etiquette={t("taches.poles")}
-          onglets={poles.map((p) => ({ id: p, label: t(`taches.pole.${p}`), href: `${racine}/${p}`, compte: chargement ? undefined : compte(p) }))}
+          etiquette={t("taches.equipes")}
+          onglets={rail.map((e) => ({ id: e, label: t(cleNomEquipe(e, true)), href: `${racine}/${e}`, compte: chargement ? undefined : compte(e) }))}
         />
       )}
     />
   );
 
-  if (!pole) {
+  if (!equipe) {
     return (
       <>
         {enTete}
@@ -85,7 +94,7 @@ export default function PoleLayout({ children }: { children: React.ReactNode }) 
     );
   }
 
-  const lignes = items.filter((x) => x.tache.pole === pole).flatMap(({ tache, fois }) => lignesDeTache(tache, fois, aujourdhui));
+  const lignes = items.filter((x) => x.tache.equipe === equipe).flatMap(({ tache, fois }) => lignesDeTache(tache, fois, aujourdhui));
   const g = grouperLignes(lignes, aujourdhui);
   const premiere = [...g.enRetard, ...g.cetteSemaine, ...g.plusTard][0];
 
@@ -93,27 +102,29 @@ export default function PoleLayout({ children }: { children: React.ReactNode }) 
     <>
       {enTete}
       <DeuxVolets
-        racine={racinePole}
+        racine={racineEquipe}
         largeurListe={380}
-        liste={<ListeDuPole pole={pole} lignes={lignes} premiere={premiere} />}
+        liste={<ListeDeLEquipe equipe={equipe} lignes={lignes} premiere={premiere} />}
         premier={chargement ? null : premiere
-          ? <FicheTache pole={pole} id={premiere.tache.id} date={premiere.date} />
+          ? <FicheTache equipe={equipe} id={premiere.tache.id} date={premiere.date} />
           : <p className="raised rounded-2xl px-5 py-4 text-sm text-muted-foreground">{t("taches.vide")}</p>}
       >
         {children}
       </DeuxVolets>
-      <TacheForm open={feuille} pole={pole} initial={null} membres={membres} onSubmit={creerDansLaFeuille} onClose={() => setFeuille(false)} />
+      {depart && (
+        <TacheForm open={feuille} equipe={depart} equipes={ouCreer} initial={null} membres={membres} onSubmit={creerDansLaFeuille} onClose={() => setFeuille(false)} />
+      )}
     </>
   );
 }
 
-function ListeDuPole({ pole, lignes, premiere }: { pole: TachePole; lignes: Ligne[]; premiere?: Ligne }) {
+function ListeDeLEquipe({ equipe, lignes, premiere }: { equipe: string; lignes: Ligne[]; premiere?: Ligne }) {
   const { t } = useTranslation();
   const router = useRouter();
   const chemin = usePathname() ?? "";
   const dateVoulue = useSearchParams().get("date");
   const deuxVolets = useDeuxVolets();
-  const { user } = useProfile();
+  const { user, profile } = useProfile();
   const { chargement, reload, aujourdhui, parNom, racine } = useMesTaches();
   const [retour, setRetour] = useState("");
   const [terminees, setTerminees] = useState(false);
@@ -129,10 +140,10 @@ function ListeDuPole({ pole, lignes, premiere }: { pole: TachePole; lignes: Lign
   async function cocher(l: Ligne) {
     if (!user) return;
     setRetour("");
-    const etat = await cyclerEtat(pole, l.tache.id, l.date, l.fois, { uid: user.uid, nom: parNom });
-    await reload(pole);
+    const etat = await cyclerEtat(equipe, l.tache.id, l.date, l.fois, { uid: user.uid, nom: parNom });
+    await reload(equipe);
     if (etat === "terminee" && l.tache.prevenir) {
-      setRetour(texteRetour(t, await prevenirFait(pole, l.tache.id, l.date), l.tache));
+      setRetour(texteRetour(t, await prevenirFait(equipe, l.tache.id, l.date), l.tache));
     }
   }
 
@@ -140,7 +151,8 @@ function ListeDuPole({ pole, lignes, premiere }: { pole: TachePole; lignes: Lign
     <TacheLigne
       key={`${l.tache.id}-${l.date}`}
       ligne={l}
-      onToggle={() => cocher(l)}
+      // Case inerte sans le droit de cocher (EQ8, décision 41).
+      onToggle={peutCocher(user, profile, l.tache) ? () => cocher(l) : undefined}
       onOpen={() => router.push(adresseDeLaLigne(l, racine))}
       actif={estOuverte(l)}
     />

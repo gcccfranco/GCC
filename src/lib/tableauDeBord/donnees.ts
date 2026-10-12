@@ -2,7 +2,7 @@
 // Module pur : les widgets (src/components/backOffice/widgets/) lisent la base, puis
 // passent ici ce qu'ils ont lu. Dates ISO « AAAA-MM-JJ », comparées comme du texte.
 import {
-  canCreateSetlist, canSeeEvenement, creatableCategories, entreesBackOffice, estReunion, isAdminUser, polesDe,
+  canCreateSetlist, canSeeEvenement, creatableCategories, entreesBackOffice, equipesDesTaches, estReunion, isAdminUser,
 } from "@/lib/access";
 import { byDate, isExpired, isInfo, isPast, refusInscription } from "@/lib/evenements/agenda";
 import type { EntreeSheet } from "@/lib/evenements/sheet";
@@ -21,7 +21,6 @@ import type { Reglages } from "@/types/backOffice";
 import type { Evenement } from "@/types/evenement";
 import type { LignePetitDej } from "@/types/petitDej";
 import type { Creneau } from "@/types/programme";
-import { TACHE_POLES, type TachePole } from "@/types/tache";
 import type { UserProfile } from "@/types/user";
 
 type AuthUser = { uid: string; email?: string | null };
@@ -142,10 +141,11 @@ export function seancesDesServices(rows: Record<string, string[][]>, services: s
 
 // ─── 2. À faire ──────────────────────────────────────────────────────────────
 
-/** Réglage « pôles » : les siens (tous pour un admin), Louange compris. */
-export function polesAFaire(r: Reglages, user: AuthUser | null, profile: UserProfile | null): TachePole[] {
-  const siens = isAdminUser(user) ? [...TACHE_POLES] : polesDe(profile);
-  return r.poles ? siens.filter((p) => r.poles!.includes(p)) : siens;
+/** Réglage « équipes » (EQ15) : les siennes, Louange élargi (toutes pour un admin), dans l'ordre de
+ *  la table. Une équipe sans tâche n'affiche rien : rien à masquer ici (EQ9). */
+export function equipesAFaire(r: Reglages, user: AuthUser | null, profile: UserProfile | null): string[] {
+  const siennes = equipesDesTaches(user, profile);
+  return r.equipes ? siennes.filter((e) => r.equipes!.includes(e)) : siennes;
 }
 
 /** Ce qui reste à faire jusqu'à J+7, en retard d'abord ; `max` lignes, le retard compté en entier. */

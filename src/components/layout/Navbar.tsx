@@ -10,7 +10,7 @@ import { Sun, Moon, Globe, LogIn, ChevronDown } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useAuth } from "@/lib/firebase/auth";
 import { useProfile } from "@/lib/firebase/users";
-import { isAdminUser, polesDe } from "@/lib/access";
+import { equipesDe, isAdminUser } from "@/lib/access";
 import { useScrollDirection } from "@/hooks/useScrollDirection";
 import { BACK_OFFICE } from "@/lib/backOffice";
 import { saveNotifLang } from "@/lib/firebase/notifPrefs";
@@ -209,8 +209,8 @@ export function Navbar() {
                 {t("common.header.myServices")}
               </Link>
             )}
-            {/* Tâches (lot 7) : pour les membres d'un pôle et les admins. */}
-            {BACK_OFFICE && !authLoading && user && (admin || polesDe(profile).length > 0) && (
+            {/* Tâches (lot 7 ; EQ15) : pour les membres d'une équipe (Louange élargi) et les admins. */}
+            {BACK_OFFICE && !authLoading && user && (admin || equipesDe(profile).length > 0) && (
               <Link href="/taches" className={sectionClass(isActiveTaches)}>
                 {t("common.header.taches")}
               </Link>

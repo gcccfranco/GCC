@@ -668,10 +668,10 @@ test("compte rendu : la ligne du rappel du lendemain, en français et en 中文"
   expect(ligneCompteRendu(E, "zh-CN")).toBe("会议记录已添加：Réunion DA（10月3日）");
 });
 
-/** Une tâche du pôle DA à faire dans 3 jours. */
+/** Une tâche de TEAM DA à faire dans 3 jours. */
 const RAPPEL_TACHE = {
   tache: {
-    id: "t1", pole: "da", titre: "Fond PPT", responsableUid: null, responsableNom: "", echeance: "2026-10-05", repetition: null,
+    id: "t1", equipe: "da", titre: "Fond PPT", responsableUid: null, responsableNom: "", echeance: "2026-10-05", repetition: null,
     lien: "", note: "", prevenir: null, evenement: null, auteurUid: "uid-alice", createdAt: "2026-09-01T10:00:00Z", updatedAt: "2026-09-01T10:00:00Z",
   },
   date: "2026-10-05", quand: "J3" as const,
@@ -686,7 +686,7 @@ test("un seul message quand service, tâche et réunion tombent le même jour (F
   expect(n[0]).toMatchObject({ title: "Rappel de service", url: "/mes-services", tag: "rappel-J3-2026-10-04", kind: "reminder" });
   expect(n[0].body).toBe([
     "Dimanche 4 octobre (dans 3 jours) : Culte Franco (Piano)",
-    "À faire : Fond PPT (DA), lundi 5 octobre",
+    "À faire : Fond PPT (TEAM DA), lundi 5 octobre",
     "Réunion DA demain, 20:00 : 1 sujet",
     "Compte rendu ajouté : Réunion DA du 5 septembre",
   ].join("\n"));
@@ -696,13 +696,13 @@ test("le même message en 中文", () => {
   const n = notificationsDuMatin({ services: [SERVICE], taches: [RAPPEL_TACHE], lignes: [VEILLE] }, "zh-CN", "2026-10-02");
   expect(n).toHaveLength(1);
   expect(n[0].title).toBe("服务提醒");
-  expect(n[0].body.split("\n")).toEqual(["10月4日星期日（3天后）：法语崇拜（钢琴）", "待办：Fond PPT（美工），10月5日星期一", "明天 20:00：Réunion DA（1 个议题）"]);
+  expect(n[0].body.split("\n")).toEqual(["10月4日星期日（3天后）：法语崇拜（钢琴）", "待办：Fond PPT（美工组），10月5日星期一", "明天 20:00：Réunion DA（1 个议题）"]);
 });
 
 test("sans service : tâche et réunion dans un seul message ; réunion seule, un message vers sa fiche", () => {
   const avecTache = notificationsDuMatin({ services: [], taches: [RAPPEL_TACHE], lignes: [VEILLE] }, "fr", "2026-10-02");
   expect(avecTache).toHaveLength(1);
-  expect(avecTache[0]).toMatchObject({ title: "Rappel de tâches", url: "/taches", body: "À faire : Fond PPT (DA), lundi 5 octobre\nRéunion DA demain, 20:00 : 1 sujet" });
+  expect(avecTache[0]).toMatchObject({ title: "Rappel de tâches", url: "/taches", body: "À faire : Fond PPT (TEAM DA), lundi 5 octobre\nRéunion DA demain, 20:00 : 1 sujet" });
 
   const seule = notificationsDuMatin({ services: [], taches: [], lignes: [VEILLE] }, "fr", "2026-10-02");
   expect(seule).toEqual([{ title: "Rappel — Réunion DA", body: "Réunion DA demain, 20:00 : 1 sujet", url: "/back-office/reunions/reunion-da", tag: "rappel-evenements-2026-10-02", kind: "evenement" }]);

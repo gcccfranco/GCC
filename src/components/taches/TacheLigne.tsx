@@ -24,13 +24,15 @@ export function depuisQuand(t: TFunction, fois: Fois): string {
 
 /** Une fois de tâche : cercle à trois états (À faire → En cours → Terminé),
  *  titre, puis échéance · responsable · rythme · où ça en est. Toucher la
- *  ligne ouvre la tâche. */
-export function TacheLigne({ ligne, onToggle, onOpen, poleLabel, sansEvenement, actif }: {
+ *  ligne ouvre la tâche. Sans `onToggle` (pas le droit de la cocher, EQ8 :
+ *  la tâche d'un autre, ou « toute l'équipe » pour un simple membre), le
+ *  cercle est inerte. */
+export function TacheLigne({ ligne, onToggle, onOpen, equipeLabel, sansEvenement, actif }: {
   ligne: Ligne;
-  onToggle: () => void;
+  onToggle?: () => void;
   onOpen?: () => void;
-  /** Nom du pôle, quand la liste mélange plusieurs pôles. */
-  poleLabel?: string;
+  /** Nom de l'équipe, quand la liste mélange plusieurs équipes. */
+  equipeLabel?: string;
   /** Sur la fiche de l'évènement lui-même : « pour Noël 2026 » n'apprend rien. */
   sansEvenement?: boolean;
   /** La tâche ouverte à côté, en deux volets (lot U4 bis, B4) : la ligne s'allume en encre. */
@@ -43,7 +45,7 @@ export function TacheLigne({ ligne, onToggle, onOpen, poleLabel, sansEvenement, 
   const terminee = fois?.etat === "terminee";
   const details = [
     date_,
-    poleLabel,
+    equipeLabel,
     tache.responsableUid ? tache.responsableNom : t("taches.pourTous"),
     tache.repetition ? t(`taches.rythme.${tache.repetition.rythme}`) : null,
     // Du texte, pas un lien : toute la zone est déjà le bouton qui ouvre la tâche.
@@ -63,7 +65,8 @@ export function TacheLigne({ ligne, onToggle, onOpen, poleLabel, sansEvenement, 
         aria-checked={enCours ? "mixed" : terminee}
         aria-label={t("taches.cocher", { titre: tache.titre, date: date_ })}
         onClick={onToggle}
-        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full active:scale-[.94] transition-transform duration-150 cursor-pointer"
+        disabled={!onToggle}
+        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full active:scale-[.94] transition-transform duration-150 cursor-pointer disabled:cursor-default disabled:opacity-50 disabled:active:scale-100"
       >
         <span className={`flex h-[22px] w-[22px] items-center justify-center rounded-full border-2 ${
           terminee ? "border-foreground bg-foreground text-background"

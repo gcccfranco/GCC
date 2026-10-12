@@ -18,7 +18,7 @@ const ADMIN: FakeProfile = {
 };
 
 const tache = (titre: string, echeance: string) => ({
-  pole: "da", titre, responsableUid: null, responsableNom: "", echeance, repetition: null, lien: "", note: "",
+  equipe: "da", titre, responsableUid: null, responsableNom: "", echeance, repetition: null, lien: "", note: "",
   prevenir: null, evenement: null, auteurUid: "uid-admin", createdAt: "2026-09-01T10:00:00Z", updatedAt: "2026-09-01T10:00:00Z",
 });
 const EV = {
@@ -33,8 +33,8 @@ const item = (songSlug: string, position: number) => ({
 });
 
 const DOCS: Record<string, Record<string, unknown>> = {
-  "poles/da/taches/t1": tache("Préparer les affiches", "2026-10-08"),
-  "poles/da/taches/t2": tache("Fond PPT du culte", "2026-10-12"),
+  "equipes/da/taches/t1": tache("Préparer les affiches", "2026-10-08"),
+  "equipes/da/taches/t2": tache("Fond PPT du culte", "2026-10-12"),
   "evenements/foot": EV,
   "setlists/s1": {
     title: "Culte du 11 octobre", leader: "Alix D.", category: "Culte Francophone", date: "2026-10-11", language: "mixed",

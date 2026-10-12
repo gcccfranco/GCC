@@ -18,6 +18,7 @@ import { BACK_OFFICE } from "@/lib/backOffice";
 import { listEquipes } from "@/lib/firebase/equipes";
 import { useProfile } from "@/lib/firebase/users";
 import { EQUIPES } from "@/lib/equipes/organigramme";
+import { cleNomEquipe } from "@/lib/equipes/table";
 import { leconsDansLOrdre, useCoursIndex, useCoursProgres } from "@/lib/harmonie/useCours";
 import { joursAvant, reunirServices, type ServiceDuJour } from "@/lib/planning/accueil";
 import { adresseDuService } from "@/lib/planning/mesServices";
@@ -30,7 +31,6 @@ import { useTaches } from "@/lib/taches/useTaches";
 import { serviceColor } from "@/lib/serviceColors";
 import type { Equipe } from "@/types/equipe";
 import type { LignePetitDej } from "@/types/petitDej";
-import type { TachePole } from "@/types/tache";
 
 const LIGNE = "flex items-center gap-3 py-2.5";
 const SOUS = "block truncate text-[13px] text-muted-foreground";
@@ -136,13 +136,15 @@ export function ApercuServices() {
 
 // ── Mes tâches ──────────────────────────────────────────────────────────────────────────────
 
-export function ApercuTaches({ poles, uid }: { poles: TachePole[]; uid: string }) {
+/** « Mes tâches » : ce qui est à moi (`aFairePour`, EQ15) dans mes équipes. */
+export function ApercuTaches({ equipes }: { equipes: string[] }) {
   const { t, i18n } = useTranslation();
-  const { items, loading: chargement } = useTaches(poles);
+  const { user, profile } = useProfile();
+  const { items, loading: chargement } = useTaches(equipes);
   const aujourdhui = todayIso();
   const aFaire = useMemo(
-    () => aFairePour(items.flatMap(({ tache, fois }) => lignesDeTache(tache, fois, aujourdhui)), uid).sort((a, b) => a.date.localeCompare(b.date)),
-    [items, aujourdhui, uid],
+    () => aFairePour(items.flatMap(({ tache, fois }) => lignesDeTache(tache, fois, aujourdhui)), user, profile).sort((a, b) => a.date.localeCompare(b.date)),
+    [items, aujourdhui, user, profile],
   );
   return (
     <Apercu
@@ -154,10 +156,10 @@ export function ApercuTaches({ poles, uid }: { poles: TachePole[]; uid: string }
       {!chargement && aFaire.length === 0 && <Vide>{t("moi.apercus.rienAFaire")}</Vide>}
       {aFaire.slice(0, 3).map((l) => {
         const enCours = l.fois?.etat === "encours";
-        const details = [enCours ? t("taches.etat.encours") : null, dateCourte(l.date, i18n.language), t(`taches.pole.${l.tache.pole}`)]
+        const details = [enCours ? t("taches.etat.encours") : null, dateCourte(l.date, i18n.language), t(cleNomEquipe(l.tache.equipe, true))]
           .filter(Boolean).join(" · ");
         return (
-          <div key={`${l.tache.pole}/${l.tache.id}/${l.date}`} data-testid="apercu-ligne">
+          <div key={`${l.tache.equipe}/${l.tache.id}/${l.date}`} data-testid="apercu-ligne">
             <Link href={adresseDeLaLigne(l)} className={LIGNE}>
               <span
                 aria-hidden

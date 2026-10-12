@@ -3,7 +3,7 @@
 // Création d'un évènement (lot 6), ou duplication (`?from=id`) : le formulaire
 // est pré-rempli sans les dates. Réservé à qui peut créer (coordination,
 // droit d'annonces d'une section). En dupliquant, on propose de copier les
-// tâches de ses pôles rattachées à l'évènement source, aux mêmes délais (lot 14).
+// tâches des équipes où l'on crée (EQ16), rattachées à l'évènement source, aux mêmes délais (lot 14).
 // Une réunion de pôle (lot U6, R2) : si des réunions déjà tenues du même pôle
 // ont laissé des sujets, on demande s'il faut les reprendre (Créer comme Dupliquer).
 // Lot U6, B3 : le formulaire est au Back-Office (`/back-office/evenements/nouveau`).
@@ -24,7 +24,7 @@ import { useDeuxVolets } from "@/hooks/useDeuxVolets"
 import { baseBackOffice } from "@/lib/navigation"
 import { useAuth } from "@/lib/firebase/auth"
 import { useProfile } from "@/lib/firebase/users"
-import { creatableEvenementPours, isAdminUser, polesDe, publicDeReunion } from "@/lib/access"
+import { creatableEvenementPours, equipesOuCreer, publicDeReunion } from "@/lib/access"
 import { createEvenement, getEvenement } from "@/lib/firebase/evenements"
 import { createTache } from "@/lib/firebase/taches"
 import { lireSujetsAReprendre, reprendreSujets } from "@/lib/firebase/sujets"
@@ -35,7 +35,6 @@ import { notifyEvenement } from "@/lib/evenements/notify"
 import { tachesDupliquees } from "@/lib/taches/echeances"
 import { useTaches } from "@/lib/taches/useTaches"
 import { ANNONCE_SECTIONS } from "@/types/annonce"
-import { TACHE_POLES } from "@/types/tache"
 import { EMPTY_EVENEMENT, EvenementForm, type EvenementValues } from "@/components/evenements/EvenementForm"
 
 export function NouveauClient({ reunion = false }: { reunion?: boolean }) {
@@ -54,9 +53,9 @@ export function NouveauClient({ reunion = false }: { reunion?: boolean }) {
   const { profile, loading: profileLoading } = useProfile()
   const [initial, setInitial] = useState<EvenementValues | null>(from ? null : vide)
   // Duplication : la date de l'évènement source (le formulaire repart sans) et
-  // les tâches de mes pôles, pour les copier aux mêmes délais.
+  // les tâches des équipes où je crée (EQ16), pour les copier aux mêmes délais.
   const [sourceDate, setSourceDate] = useState("")
-  const { items } = useTaches(!from ? [] : isAdminUser(user) ? [...TACHE_POLES] : polesDe(profile))
+  const { items } = useTaches(!from ? [] : equipesOuCreer(user, profile))
   // La question de la reprise attend sa réponse : `repondre` tient la promesse.
   const [aReprendre, setAReprendre] = useState<SujetAReprendre[] | null>(null)
   const repondre = useRef<(reprendre: boolean) => void>(() => {})
@@ -116,7 +115,7 @@ export function NouveauClient({ reunion = false }: { reunion?: boolean }) {
             && await confirmer({ titre: t("evenements.copierTaches", { count: liees.length }), action: t("evenements.copierTachesOui") })) {
             try {
               for (const c of tachesDupliquees(liees, sourceDate, values.date, { id, titre: values.titre })) {
-                await createTache(c.pole, c.values, user.uid)
+                await createTache(c.equipe, c.values, user.uid)
               }
             } catch {
               // L'évènement existe : on ouvre sa fiche, dont le bloc Tâches montre ce qui a été copié.

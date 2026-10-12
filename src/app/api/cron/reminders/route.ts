@@ -11,10 +11,11 @@ import { destinatairesEvenement } from "@/lib/evenements/serveur";
 import { cleDeplacement, cleVeille, deplacementsAPrevenir, destinatairesDeplacement } from "@/lib/calendrier/prevenir";
 import type { Evenement } from "@/types/evenement";
 import type { Sujet } from "@/types/reunion";
-import { rappelsDuJour, type RappelTache } from "@/lib/taches/messages";
+import { cleRappelTache, rappelsDuJour, type RappelTache } from "@/lib/taches/messages";
+import { ciblesDuRappel, equipeDuChemin } from "@/lib/taches/serveur";
 import { nombreSujetsAAborder, notificationsDuMatin, type LigneEvenement, type ServiceDuJour } from "@/lib/reunions/rappels";
-import { estReunion, polesDe } from "@/lib/access";
-import type { Fois, Tache, TachePole } from "@/types/tache";
+import { estReunion } from "@/lib/access";
+import type { Fois, Tache } from "@/types/tache";
 import type { Creneau, Programme } from "@/types/programme";
 import { editionsAffichees } from "@/lib/scene/fetes";
 import { ajouterPetitDejAuxRappels, lirePetitDej } from "@/lib/petitdej/lignes";
@@ -103,18 +104,23 @@ async function sceneCreneaux(db: FirebaseFirestore.Firestore, dates: string[], t
 
 /** Rappels de tâches du jour (lot 7, docs/spec-taches.md) : J-3, J-1 et le
  *  lendemain d'une échéance sans document, plus les fois « en cours » et en
- *  retard (lot 13, chaque matin), au responsable ou à tout le pôle,
- *  préférence « Tâches », une fois par (rappel, destinataire). Renvoie, pour
- *  chaque destinataire, ses rappels et les clés notifLog à marquer. */
+ *  retard (lot 13, chaque matin), au responsable ou, sans responsable, aux
+ *  référents de l'équipe (EQ12, décision 41), préférence « Tâches », une fois
+ *  par (rappel, destinataire). Seules les tâches rangées sous
+ *  equipes/{e}/taches comptent : une tâche restée à l'ancien chemin (migration
+ *  pas lancée) n'est pas rappelée. Renvoie, pour chaque destinataire, ses rappels
+ *  et les clés notifLog à marquer. */
 async function rappelsTaches(
   db: FirebaseFirestore.Firestore,
   today: string,
 ): Promise<Map<string, { rappels: RappelTache[]; keys: string[] }>> {
   const snap = await db.collectionGroup("taches").get();
   const items = await Promise.all(
-    snap.docs.map(async (doc) => {
-      const pole = doc.ref.parent.parent?.id as TachePole;
-      const tache = { ...(doc.data() as Omit<Tache, "id">), id: doc.id, pole };
+    snap.docs.flatMap((doc) => {
+      const equipe = equipeDuChemin(doc.ref.path);
+      return equipe ? [{ doc, equipe }] : [];
+    }).map(async ({ doc, equipe }) => {
+      const tache = { ...(doc.data() as Omit<Tache, "id" | "equipe">), id: doc.id, equipe };
       // `etat` et `debutLe` manquent aux documents d'avant le lot 13 : terminés.
       const fois = (await doc.ref.collection("fois").get()).docs.map((f) => {
         const d = f.data() as Partial<Fois>;
@@ -127,15 +133,9 @@ async function rappelsTaches(
   const out = new Map<string, { rappels: RappelTache[]; keys: string[] }>();
   if (!rappels.length) return out;
 
-  const users = await db.collection("users").get();
-  const membres = (pole: TachePole) => users.docs.filter((d) => (polesDe(d.data()) as string[]).includes(pole)).map((d) => d.id);
   for (const r of rappels) {
-    // « en cours » revient chaque matin : le jour d'envoi entre dans la clé,
-    // sinon la ligne ne sortirait qu'une seule fois (lot 13).
-    const key = r.quand === "encours"
-      ? `rappel-tache-encours-${r.tache.pole}-${r.tache.id}-${r.date}-${today}`
-      : `rappel-tache-${r.quand}-${r.tache.pole}-${r.tache.id}-${r.date}`;
-    const cibles = r.tache.responsableUid ? [r.tache.responsableUid] : membres(r.tache.pole);
+    const key = cleRappelTache(r, today);
+    const cibles = await ciblesDuRappel(r.tache, db);
     for (const u of await freshUids(db, await filterUidsByNotifPref(cibles, "taches"), key)) {
       const entry = out.get(u) ?? { rappels: [], keys: [] };
       entry.rappels.push(r);

@@ -13,12 +13,11 @@ import type { UserProfile } from "../src/types/user";
 // Lancé aussi sur `tablette-paysage` et `ordinateur-1440` (SPECS_GRAND_ECRAN, Q16 de U4).
 
 const ADMIN: FakeProfile = { uid: "uid-admin", email: "tc328829@gmail.com", firstName: "Admin", lastName: "T." };
-/** Alice, de TEAM ÉVÉNEMENTIEL, coordination cochée (Réussite 2). Son pôle sert encore aux tâches
- *  jusqu'à EQ-C (lot 1 du chantier « équipes et groupes »). */
+/** Alice, de TEAM ÉVÉNEMENTIEL, coordination cochée (Réussite 2). */
 const ALICE: FakeProfile = {
   uid: "uid-alice", email: "alice@example.com", firstName: "Alice", lastName: "Q.", poles: ["evenement"], dansEquipes: ["evenementiel"], coordination: true,
 };
-/** Bruno, simple membre de TEAM DA (son pôle sert encore aux tâches jusqu'à EQ-C). */
+/** Bruno, simple membre de TEAM DA. */
 const DA: FakeProfile = { uid: "uid-da", email: "da@example.com", firstName: "Bruno", lastName: "M.", poles: ["da"], dansEquipes: ["da"] };
 const PLANNINGS: FakeProfile = { uid: "uid-pl", email: "pl@example.com", plannings: ["culte"] };
 const NOTIFY: FakeProfile = { uid: "uid-no", email: "no@example.com", notify: ["Groupe Paix"] };
@@ -216,15 +215,17 @@ test.describe("Back-Office (B1) : le sélecteur et le menu", () => {
     );
   });
 
-  test("une entrée du menu mène à sa page du Back-Office (Tâches : le pôle de la personne, B3)", async ({ page }, info) => {
-    await signInAs(page, ALICE, {}, "/back-office");
+  test("une entrée du menu mène à sa page du Back-Office (Tâches : l'équipe de la personne, B3)", async ({ page }, info) => {
+    await signInAs(page, ALICE, {
+      "equipes/evenementiel/taches/t1": { equipe: "evenementiel", titre: "Salle", responsableUid: "uid-alice", responsableNom: "Alice Q.", echeance: "2026-10-05", repetition: null },
+    }, "/back-office");
     await expect(page.getByRole("heading", { name: "Tableau de bord" })).toBeVisible();
     await deplierSiTablettePaysage(page, info);
     await menu(page, info).getByRole("link", { name: "Tâches" }).click();
-    await expect(page).toHaveURL(/\/back-office\/taches\/evenement\/?$/);
+    await expect(page).toHaveURL(/\/back-office\/taches\/evenementiel\/?$/);
     await expect(page.getByRole("heading", { level: 1, name: "Tâches" })).toBeVisible();
-    // Agencement v18 (T1, B1) : le pôle est l'onglet actif du rail.
-    await expect(page.locator('[data-onglets="rail"]').getByRole("link", { name: /^Événement/ })).toHaveAttribute("aria-current", "page");
+    // Agencement v18 (T1, B1) : l'équipe est l'onglet actif du rail.
+    await expect(page.locator('[data-onglets="rail"]').getByRole("link", { name: /^Événementiel/ })).toHaveAttribute("aria-current", "page");
     // Le sélecteur reste dans l'espace Back-Office.
     await deplierSiTablettePaysage(page, info);
     await expect(selecteur(page).getByRole("link", { name: "Back-Office" })).toHaveAttribute("aria-current", "true");
@@ -328,10 +329,10 @@ test.describe("Back-Office : pastilles de la barre latérale (Q15)", () => {
     "reports/r2": { kind: "site", title: "Réglé", status: "resolved", createdAt: "2026-09-29T10:00:00Z" },
     "songProposals/p1": { title: "Un chant", youtubeUrl: "https://example.com/v", status: "pending", createdAt: "2026-09-30T10:00:00Z" },
     // À faire pour l'admin : la sienne en retard et une sans responsable ; pas celle d'un autre.
-    "poles/da/taches/t1": { titre: "Affiche", responsableUid: "uid-admin", responsableNom: "Admin T.", echeance: "2026-09-28", repetition: null },
-    "poles/orga/taches/t2": { titre: "Salle", responsableUid: null, responsableNom: "", echeance: "2026-10-05", repetition: null },
-    "poles/media/taches/t3": { titre: "Photos", responsableUid: "uid-autre", responsableNom: "Pers. B", echeance: "2026-10-05", repetition: null },
-    "poles/da/taches/t4": { titre: "Fond du culte", responsableUid: "uid-da", responsableNom: "Bruno M.", echeance: "2026-10-03", repetition: null },
+    "equipes/da/taches/t1": { titre: "Affiche", responsableUid: "uid-admin", responsableNom: "Admin T.", echeance: "2026-09-28", repetition: null },
+    "equipes/orga/taches/t2": { titre: "Salle", responsableUid: null, responsableNom: "", echeance: "2026-10-05", repetition: null },
+    "equipes/medias/taches/t3": { titre: "Photos", responsableUid: "uid-autre", responsableNom: "Pers. B", echeance: "2026-10-05", repetition: null },
+    "equipes/da/taches/t4": { titre: "Fond du culte", responsableUid: "uid-da", responsableNom: "Bruno M.", echeance: "2026-10-03", repetition: null },
   };
 
   test("grand écran : Tâches (à faire pour moi) et Messages (en attente) portent leur compte", async ({ page }, info) => {

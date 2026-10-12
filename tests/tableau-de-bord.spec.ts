@@ -7,9 +7,10 @@ import {
   ajouterWidget, catalogue, changerReglages, changerTaille, deplacerWidget, dispositionAffichee, dispositionParDefaut, retirerWidget,
 } from "../src/lib/tableauDeBord/disposition";
 import { choisirReglage, groupesDeReglages } from "../src/lib/tableauDeBord/reglages";
+import { EQUIPES } from "../src/lib/equipes/table";
 import {
   aFaireDuTableau, ceDimanche, creneauxAVenir, etatInscriptions, evenementsAVenir, nomsSansCompte, nouveauxComptes,
-  petitDejAVenir, polesAFaire, prochainsDimanches, raccourcisPermis, seancesDesServices, servicesDuDimanche, servicesSetlists,
+  petitDejAVenir, equipesAFaire, prochainsDimanches, raccourcisPermis, seancesDesServices, servicesDuDimanche, servicesSetlists,
 } from "../src/lib/tableauDeBord/donnees";
 import { casesVides } from "../src/lib/planning/casesVides";
 import { GRILLE_CULTE, GRILLE_INTERFRANCO } from "../src/lib/planning/grilles";
@@ -69,10 +70,10 @@ const DOCS: Record<string, Record<string, unknown>> = {
     title: "Culte du 4", category: "Culte Francophone", date: "2026-10-04", leader: "Pers. A", language: "fr", notes: "",
     items: [], isDraft: false, isPrivate: false, presentationUrl: "https://example.com/ppt", createdAt: "2026-09-30T10:00:00Z",
   },
-  // Tâches : une en retard et une à venir au pôle Événement, une au pôle DA.
-  "poles/evenement/taches/t1": { titre: "Affiche de Noël", responsableUid: null, responsableNom: "", echeance: "2026-09-28", repetition: null },
-  "poles/evenement/taches/t2": { titre: "Réserver la salle", responsableUid: null, responsableNom: "", echeance: "2026-10-05", repetition: null },
-  "poles/da/taches/t3": { titre: "Fond du culte", responsableUid: null, responsableNom: "", echeance: "2026-10-02", repetition: null },
+  // Tâches : une en retard et une à venir à TEAM ÉVÉNEMENTIEL, une à TEAM DA.
+  "equipes/evenementiel/taches/t1": { titre: "Affiche de Noël", responsableUid: null, responsableNom: "", echeance: "2026-09-28", repetition: null },
+  "equipes/evenementiel/taches/t2": { titre: "Réserver la salle", responsableUid: null, responsableNom: "", echeance: "2026-10-05", repetition: null },
+  "equipes/da/taches/t3": { titre: "Fond du culte", responsableUid: null, responsableNom: "", echeance: "2026-10-02", repetition: null },
   // Évènements : cinq à venir, un passé, une réunion (jamais dans ce widget).
   "evenements/e1": { titre: "Foot au parc", type: "sport", pour: "eglise", date: "2026-10-10", heure: "19:00", placesMax: 10, inscrits: 4, inscriptions: "ouvertes" },
   "evenements/e2": { titre: "Repas de section", type: "loisir", pour: "eglise", date: "2026-10-17", heure: "12:00", placesMax: null, inscrits: 0, inscriptions: "ouvertes" },
@@ -283,10 +284,10 @@ test.describe("Tableau de bord (B4) : données des widgets, règles pures", () =
     expect(servicesSetlists({ services: ["Groupe Paix"] }, user(LOUANGE), profil(LOUANGE))).toEqual([]);
   });
 
-  test("à faire : pôles (tous pour un admin), en retard d'abord, sept jours d'avance", () => {
-    expect(polesAFaire({}, user(ADMIN), null)).toEqual(["da", "media", "orga", "louange", "evenement"]);
-    expect(polesAFaire({}, user(LES_DEUX), profil(LES_DEUX))).toEqual(["evenement", "louange"]);
-    expect(polesAFaire({ poles: ["louange", "da"] }, user(LES_DEUX), profil(LES_DEUX))).toEqual(["louange"]);
+  test("à faire : équipes (toutes pour un admin), en retard d'abord, sept jours d'avance", () => {
+    expect(equipesAFaire({}, user(ADMIN), null)).toEqual(EQUIPES.map((e) => e.id));
+    expect(equipesAFaire({}, user(LES_DEUX), profil(LES_DEUX))).toEqual(["evenementiel", "louange"]);
+    expect(equipesAFaire({ equipes: ["louange", "da"] }, user(LES_DEUX), profil(LES_DEUX))).toEqual(["louange"]);
     const t = (id: string, echeance: string) => ({ tache: { id, echeance } as Tache, date: echeance, fois: null });
     const r = aFaireDuTableau([t("b", "2026-10-05"), t("a", "2026-09-28"), t("c", "2026-10-30"), t("d", "2026-10-08")], "2026-10-01");
     expect(r.enRetard).toBe(1);
@@ -570,14 +571,14 @@ test.describe("Personnaliser (B5) : règles pures", () => {
   });
 
   test("réglages à plusieurs choix : cocher, décocher, jamais vide", () => {
-    const [poles] = groupesDeReglages("afaire", {}, user(LES_DEUX), profil(LES_DEUX));
-    expect([poles.cle, poles.plusieurs, poles.choix.map((c) => c.valeur), poles.actifs])
-      .toEqual(["poles", true, ["evenement", "louange"], ["evenement", "louange"]]);
-    const sansLouange = choisirReglage({}, poles, "louange");
-    expect(sansLouange).toEqual({ poles: ["evenement"] });
+    const [equipes] = groupesDeReglages("afaire", {}, user(LES_DEUX), profil(LES_DEUX));
+    expect([equipes.cle, equipes.plusieurs, equipes.choix.map((c) => c.valeur), equipes.actifs])
+      .toEqual(["equipes", true, ["evenementiel", "louange"], ["evenementiel", "louange"]]);
+    const sansLouange = choisirReglage({}, equipes, "louange");
+    expect(sansLouange).toEqual({ equipes: ["evenementiel"] });
     const [seul] = groupesDeReglages("afaire", sansLouange, user(LES_DEUX), profil(LES_DEUX));
-    expect(seul.actifs).toEqual(["evenement"]);
-    expect(choisirReglage(sansLouange, seul, "evenement"), "le dernier choix reste").toEqual(sansLouange);
+    expect(seul.actifs).toEqual(["evenementiel"]);
+    expect(choisirReglage(sansLouange, seul, "evenementiel"), "le dernier choix reste").toEqual(sansLouange);
   });
 
   test("réglages des autres widgets : services, plannings, horizons, programme, liste, raccourcis", () => {

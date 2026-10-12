@@ -2266,9 +2266,10 @@
       "louange": "敬拜",
       "evenement": "活动"
     },
-    "subtitle": "部门任务",
-    "aucunPole": "你不属于任何部门：任务只对部门成员开放。",
-    "pasMembre": "你不属于这个部门。",
+    "subtitle": "团队任务",
+    "aucuneEquipe": "你不属于任何团队：任务只对团队成员开放。",
+    "pasMembre": "你不属于这个团队。",
+    "aucuneTache": "你的团队暂时还没有任务。",
     "rienAFaire": "目前没有要做的事。",
     "vide": "还没有任务。点击「新任务」添加第一个。",
     "nouvelle": "新任务",
@@ -2279,7 +2280,7 @@
       "plusTard": "以后",
       "faites": "已完成"
     },
-    "pourTous": "整个部门",
+    "pourTous": "整个团队",
     "faitePar": "{{nom}} 已完成",
     "commenceePar": "{{nom}} 已开始",
     "enCoursDepuis_one": "进行中 {{count}} 天",
@@ -2299,7 +2300,7 @@
       "note": "备注",
       "prevenir": "完成后通知",
       "evenement": "活动",
-      "pole": "部门"
+      "equipe": "团队"
     },
     "rythme": {
       "aucun": "仅一次",
@@ -2316,7 +2317,6 @@
       "-1": "最后一周"
     },
     "prevenirPersonne": "不通知",
-    "prevenirPole": "{{pole}}部门",
     "prevenirRegie": "{{service}}的音控/投影（下一个主日）",
     "enregistrer": "保存",
     "supprimer": "删除",
@@ -2326,13 +2326,13 @@
     "titreRequis": "请填写任务标题。",
     "echeanceRequise": "请选择截止日期。",
     "regiePrevenue": "已通知音控/投影。",
-    "polePrevenu": "已通知{{pole}}部门。",
+    "equipePrevenue": "已通知：{{equipe}}。",
     "personnePrevenue": "没有通知任何人：没有与账号关联的音控/投影。",
     "pourEvenement": "用于 {{titre}}",
     "detacherEvenement": "取消关联活动",
     "introuvable": "该任务已不存在。",
-    "sousTitreBackOffice": "各部门的任务：逾期的排在前面",
-    "poles": "部门",
+    "sousTitreBackOffice": "你所在团队的任务：逾期的排在前面",
+    "equipes": "团队",
     "terminees": "已完成（{{count}}）",
     "creer": "创建任务",
     "rythmeCourt": {
@@ -2859,7 +2859,7 @@
     },
     "reglages": {
       "services": "服事",
-      "poles": "部门",
+      "equipes": "团队",
       "plannings": "排班表",
       "sur": "范围",
       "afficher": "显示",
@@ -2916,7 +2916,7 @@
       "scene": "舞台"
     },
     "gerer": "在后台管理",
-    "tachesDesPoles": "各部门的任务",
+    "tachesDesEquipes": "各团队的任务",
     "sceneReserve": "仅限协调组。",
     "aucunEvenement": "没有需要管理的活动。",
     "aucuneReunion": "暂无会议。",
@@ -2974,8 +2974,8 @@
         "calendrier": "服事、会议、活动",
         "plannings": "排班表",
         "sansCompte": "无账号",
-        "tesPoles": "你所在部门的任务",
-        "tousLesPoles": "所有部门的任务",
+        "tesEquipes": "你所在团队的任务",
+        "toutesLesEquipes": "所有团队的任务",
         "fiches": "活动、报名、报名时间",
         "reunions": "议题、会议记录",
         "scene": "舞台节目",

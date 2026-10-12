@@ -32,7 +32,7 @@ function morceaux(e: Entree, admin: boolean, coordination: boolean): string[] {
   const d = "backOffice.plus.contenu";
   switch (e) {
     case "planning": return [`${d}.plannings`, ...(admin ? [`${d}.sansCompte`] : [])];
-    case "taches": return [admin ? `${d}.tousLesPoles` : `${d}.tesPoles`];
+    case "taches": return [admin ? `${d}.toutesLesEquipes` : `${d}.tesEquipes`];
     case "evenements": return [`${d}.fiches`, ...(coordination ? [`${d}.scene`] : [])];
     case "equipes": return [`${d}.organigramme`, ...(admin ? [`${d}.personnes`] : [])];
     case "messages": return admin ? [`${d}.reception`, `${d}.notifier`, `${d}.questionnaire`] : [`${d}.notifier`];

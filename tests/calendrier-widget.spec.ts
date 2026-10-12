@@ -159,7 +159,7 @@ const CULTE = csv([
 ]);
 
 const P_ADMIN: FakeProfile = { uid: "u-admin", email: ADMIN_EMAILS[0], firstName: "Admin", lastName: "T.", planningName: "Lou M." };
-/** Pôle Événement : son tableau de bord d'office a « Prochains évènements ». */
+/** Référent de TEAM ÉVÉNEMENTIEL, coordination cochée : son tableau de bord d'office a « Prochains évènements ». */
 const P_EVENEMENT: FakeProfile = { uid: "u-evt", email: "evt@example.org", firstName: "Alix", lastName: "P.", poles: ["evenement"], dansEquipes: ["evenementiel"], referentDe: ["evenementiel"], coordination: true };
 
 const MAINTENANT = "2026-09-01T10:00:00Z";
@@ -172,7 +172,7 @@ const DOCS: Record<string, Record<string, unknown>> = {
     titre: "Tournoi de ping", type: "loisir", pour: "eglise", date: "2026-10-22", heure: "19:00", lieu: "Gymnase",
     placesMax: 10, inscrits: 4, inscriptions: "ouvertes", organisateurUid: "u-autre", organisateurNom: "Autre", createdAt: MAINTENANT, updatedAt: MAINTENANT,
   },
-  "poles/da/taches/fond": {
+  "equipes/da/taches/fond": {
     titre: "Fond du culte", responsableUid: null, responsableNom: "", echeance: "2026-10-02", repetition: null,
     lien: "", note: "", prevenir: null, evenement: null, auteurUid: "u-autre", createdAt: MAINTENANT, updatedAt: MAINTENANT,
   },
@@ -252,10 +252,12 @@ test.describe("C8 : le widget Calendrier", () => {
     await expect(lignes(page).nth(2)).toContainText(/Mar\. 6.*Soirée louange/);
   });
 
-  test("« Seulement moi » dans les réglages : ne restent que mes entrées (mon service du 4)", async ({ page }) => {
+  test("« Seulement moi » dans les réglages : ne restent que mes entrées (mon service du 4 ; admin : la tâche « toute l'équipe », EQ15)", async ({ page }) => {
     await ouvrir(page, "s", { seulementMoi: true });
-    await expect(lignes(page)).toHaveCount(1);
-    await expect(lignes(page).nth(0)).toContainText(/Dim\. 4.*Culte Franco/);
+    // Un admin est référent de toutes les équipes : une tâche sans responsable est à lui (aFairePour, décision 41).
+    await expect(lignes(page)).toHaveCount(2);
+    await expect(lignes(page).nth(0)).toContainText("Fond du culte");
+    await expect(lignes(page).nth(1)).toContainText(/Dim\. 4.*Culte Franco/);
     await expect(widgetCal(page)).not.toContainText("Repas partagé");
   });
 
@@ -364,7 +366,7 @@ test.describe("relecture du lot : le widget ne dépend ni du Sheet ni de l'histo
     await sheets(page);
     await signInAs(page, P_ADMIN, {
       ...DOCS,
-      "poles/da/taches/ancienne": {
+      "equipes/da/taches/ancienne": {
         titre: "Affiche de 2024", responsableUid: null, responsableNom: "", echeance: "2024-10-15", repetition: null,
         lien: "", note: "", prevenir: null, evenement: null, auteurUid: "u-autre", createdAt: MAINTENANT, updatedAt: MAINTENANT,
       },
