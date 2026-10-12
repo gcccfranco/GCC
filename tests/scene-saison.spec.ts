@@ -23,13 +23,13 @@ const NOEL = {
 };
 
 /** La saison de la « Réussite » : du 01/10 au 20/12, samedi 10:00–12:00 et
- *  dimanche 14:00–19:00, créneaux d'1 h, Groupes, EDD, Jeunes et Louange. */
+ *  dimanche 14:00–19:00, créneaux d'1 h, Groupes et EDD (pas Louange : Culte Francophone n'y est pas permis). */
 const SAISON = saisonDe({
   ...NOEL,
   fin: "2026-12-20",
   plages: [{ jour: 6, debut: "10:00", fin: "12:00" }, { jour: 0, debut: "14:00", fin: "19:00" }],
   duree: 60,
-  quiAutorises: [...FAMILLES[0].qui, ...FAMILLES[1].qui, ...FAMILLES[2].qui, ...FAMILLES[3].qui],
+  quiAutorises: [...FAMILLES[0].qui, ...FAMILLES[1].qui],
   ouvert: false,
 });
 
@@ -152,24 +152,25 @@ test("fermeture : le volet se ferme le lendemain de `fin`, sinon du dernier dima
   expect(reservationsClosed("2026-12-07", "2026-12-24", "2026-12-06")).toBe(true);
 });
 
-test("familles : Groupes, EDD, Jeunes, Louange, Chorale ; « Jeunes » et « Chorale » sont des groupes du « Qui »", () => {
-  expect(FAMILLES.map((f) => f.cle)).toEqual(["groupes", "edd", "jeunes", "louange", "chorale"]);
-  expect(FAMILLES[3].qui).toEqual(["Franco", "敬拜团"]);
-  expect(QUI).toContain("Jeunes");
-  expect(QUI).toContain("Chorale");
+test("familles : Groupes, EDD, Louange (lot « chants des fêtes », décision 34) ; chaque groupe d'une famille est dans le « Qui »", () => {
+  expect(FAMILLES.map((f) => f.cle)).toEqual(["groupes", "edd", "louange"]);
+  expect(FAMILLES[2].qui).toEqual(["Franco"]);
+  expect(QUI).not.toContain("Jeunes");
+  expect(QUI).not.toContain("Chorale");
+  expect(QUI).not.toContain("敬拜团");
   for (const f of FAMILLES) for (const q of f.qui) expect(QUI).toContain(q);
 });
 
 test("groupes proposés : tous sans limite, sinon ceux des familles permises, rangés par famille comme la planche", () => {
   const parFamille = [
-    "Gp Bonté", "Gp Fidélité", "Gp Paix", "Gp Amour", "Gp Joie", "EDD 小班", "EDD 中班", "EDD 大班", "EDD 高班",
-    "Jeunes", "Franco", "敬拜团", "Chorale",
+    "Gp Paix", "Gp Fidélité", "Gp Bonté", "Gp Amour", "Gp Joie", "EDD 小班", "EDD 中班", "EDD 大班", "EDD 高班",
+    "Franco",
   ];
   expect(quiPermis({})).toEqual(parFamille);
   expect(quiPermis({ quiAutorises: [] })).toEqual(parFamille);
   expect([...quiPermis({})].sort()).toEqual([...QUI].sort());
-  expect(quiPermis({ quiAutorises: SAISON.quiAutorises })).not.toContain("Chorale");
-  expect(quiPermis({ quiAutorises: ["Franco", "Jeunes"] })).toEqual(["Jeunes", "Franco"]);
+  expect(quiPermis({ quiAutorises: SAISON.quiAutorises })).not.toContain("Franco");
+  expect(quiPermis({ quiAutorises: ["Franco", "Gp Amour"] })).toEqual(["Gp Amour", "Franco"]);
 });
 
 // ─── S2 : droits, en double (access.ts et firestore.rules) ─────────────────
@@ -180,22 +181,22 @@ const COORDINATION = { coordination: true };
 const PERMIS = { ouvert: true, quiAutorises: SAISON.quiAutorises };
 
 test("réserver pour : liste vide → tout membre connecté, pour n'importe quel groupe", () => {
-  expect(canReserverPour(MEMBRE, null, { ouvert: true, quiAutorises: [] }, ["Chorale"])).toBe(true);
+  expect(canReserverPour(MEMBRE, null, { ouvert: true, quiAutorises: [] }, ["Franco"])).toBe(true);
   expect(canReserverPour(MEMBRE, null, {}, ["Gp Joie"]), "programme d'avant U1").toBe(true);
   expect(canReserverPour(null, null, {}, ["Gp Joie"]), "rien sans compte").toBe(false);
 });
 
-test("réserver pour : un groupe d'une famille permise → oui ; « Chorale » hors familles → non", () => {
-  expect(canReserverPour(MEMBRE, null, PERMIS, ["Jeunes"])).toBe(true);
+test("réserver pour : un groupe d'une famille permise → oui ; « Franco » hors familles → non", () => {
+  expect(canReserverPour(MEMBRE, null, PERMIS, ["Gp Amour"])).toBe(true);
   expect(canReserverPour(MEMBRE, null, PERMIS, ["Gp Paix", "EDD 中班"])).toBe(true);
-  expect(canReserverPour(MEMBRE, null, PERMIS, ["Chorale"])).toBe(false);
-  expect(canReserverPour(MEMBRE, null, PERMIS, ["Jeunes", "Chorale"])).toBe(false);
+  expect(canReserverPour(MEMBRE, null, PERMIS, ["Franco"])).toBe(false);
+  expect(canReserverPour(MEMBRE, null, PERMIS, ["Gp Amour", "Franco"])).toBe(false);
 });
 
 test("réserver pour : la coordination toujours, même un brouillon ; un membre jamais dans un brouillon", () => {
-  expect(canReserverPour(COORD, COORDINATION, PERMIS, ["Chorale"])).toBe(true);
-  expect(canReserverPour(COORD, COORDINATION, { ...PERMIS, ouvert: false }, ["Chorale"])).toBe(true);
-  expect(canReserverPour(MEMBRE, null, { ouvert: false, quiAutorises: [] }, ["Jeunes"])).toBe(false);
+  expect(canReserverPour(COORD, COORDINATION, PERMIS, ["Franco"])).toBe(true);
+  expect(canReserverPour(COORD, COORDINATION, { ...PERMIS, ouvert: false }, ["Franco"])).toBe(true);
+  expect(canReserverPour(MEMBRE, null, { ouvert: false, quiAutorises: [] }, ["Gp Amour"])).toBe(false);
 });
 
 test("règles Firestore : les créneaux passent par reservable(), miroir de canReserverPour", () => {
@@ -293,8 +294,8 @@ test("brouillon : la coordination voit la saison et l'aperçu dans l'onglet Noë
   c = await reglageSaison(page, "Un créneau dure");
   await expect(c.getByRole("button", { name: "1 h", exact: true, pressed: true })).toBeVisible();
   c = await reglageSaison(page, "Qui peut réserver");
-  await expect(c.getByRole("button", { name: "Jeunes", pressed: true })).toBeVisible();
-  await expect(c.getByRole("button", { name: "Chorale", pressed: false })).toBeVisible();
+  await expect(c.getByRole("button", { name: "EDD", pressed: true })).toBeVisible();
+  await expect(c.getByRole("button", { name: "Louange", pressed: false })).toBeVisible();
   await expect(c.getByRole("button", { name: "Tout membre connecté", pressed: false })).toBeVisible();
   // La règle du chevauchement est dans la carte entière (pas dans les feuilles du téléphone).
   if (!estTelephone(test.info())) await expect(carte(page)).toContainText("Deux créneaux qui se chevauchent restent refusés ; la coordination et les admins peuvent tout déplacer.");
@@ -362,7 +363,7 @@ test("une fermeture le jour J ou après affiche l'erreur et n'écrit rien", asyn
 });
 
 test("hors grille : passer à 1 h 30 avec une réservation à 15:00 la signale, elle reste en base, « Déplacer » la pose sur un créneau libre", async ({ page }) => {
-  const c1 = { ...resa("2026-10-11", "15:00", "16:00"), quoi: "Sketch", qui: ["Jeunes"], auteurUid: "uid-noe", auteurNom: "Noé L." };
+  const c1 = { ...resa("2026-10-11", "15:00", "16:00"), quoi: "Sketch", qui: ["Gp Amour"], auteurUid: "uid-noe", auteurNom: "Noé L." };
   const db = await ouvrir(page, ALICE, { "programmes/noel": { ...NOEL26, ouvert: true }, "programmes/noel/creneaux/c1": c1 }, undefined, SAISON_NOEL);
   await (await reglageSaison(page, "Un créneau dure")).getByRole("button", { name: "1 h 30", exact: true }).click();
   await expect.poll(() => patches(db).length).toBe(1);
@@ -383,7 +384,7 @@ test("hors grille : passer à 1 h 30 avec une réservation à 15:00 la signale, 
 });
 
 test("l'ordre de passage s'ouvre depuis la colonne de la fête, modifiable par la coordination", async ({ page }) => {
-  await ouvrir(page, ALICE, { "programmes/noel": { ...NOEL26, passages: [{ quoi: "Chant", qui: ["Chorale"], titre: "Douce nuit" }] } });
+  await ouvrir(page, ALICE, { "programmes/noel": { ...NOEL26, passages: [{ quoi: "Chant", qui: ["Gp Joie"], titre: "Douce nuit" }] } });
   await page.getByRole("button", { name: /Ordre de passage du jour J/ }).click();
   await expect(page.getByRole("list", { name: "Ordre de Passage jour J" }).getByRole("listitem")).toContainText(["Douce nuit"]);
   await expect(page.getByRole("button", { name: "Ajouter un passage" })).toBeVisible();
@@ -443,9 +444,9 @@ test("qui peut réserver : « Tout membre connecté » vide la liste ; une famil
   await expect(c.getByRole("button", { name: "Tout membre connecté", pressed: true })).toBeVisible();
   await expect(c.getByRole("button", { name: "Groupes", pressed: false })).toBeVisible();
   await expect.poll(() => patches(db).at(-1)?.data.quiAutorises).toEqual([]);
-  await c.getByRole("button", { name: "Chorale" }).click();
+  await c.getByRole("button", { name: "Louange" }).click();
   await expect(c.getByRole("button", { name: "Tout membre connecté", pressed: false })).toBeVisible();
-  await expect.poll(() => patches(db).at(-1)?.data.quiAutorises).toEqual(["Chorale"]);
+  await expect.poll(() => patches(db).at(-1)?.data.quiAutorises).toEqual(["Franco"]);
 });
 
 test("hors grille : « Retirer » supprime la réservation après la confirmation du site", async ({ page }) => {
@@ -484,12 +485,12 @@ test("中文 : la saison est traduite, dates comprises", async ({ page }) => {
 });
 
 test("captures : la saison, brouillon avec deux réservations, puis lancée (à regarder)", async ({ page }) => {
-  const sketch = { ...resa("2026-10-10", "10:00", "11:00"), quoi: "Sketch", qui: ["Jeunes"] };
+  const sketch = { ...resa("2026-10-10", "10:00", "11:00"), quoi: "Sketch", qui: ["Gp Amour"] };
   const chant = resa("2026-10-11", "17:00", "18:00");
   await ouvrir(page, ALICE, {
     "programmes/noel": NOEL26, "programmes/noel/creneaux/a": sketch, "programmes/noel/creneaux/b": chant,
   });
-  await expect(apercu(page).getByText("Sketch · Jeunes")).toBeVisible();
+  await expect(apercu(page).getByText("Sketch · Gp Amour")).toBeVisible();
   await capture(page, "u1-saison-brouillon");
   await lancer(page).click();
   await expect(page.getByText("Réservations lancées")).toBeVisible();
@@ -517,9 +518,9 @@ test("créneaux libres : la grille à venir moins les créneaux pris ou commenc�
 });
 
 test("familles d'une liste « qui » : celles dont tous les groupes sont permis ; et l'inverse", () => {
-  expect(famillesDe(SAISON.quiAutorises)).toEqual(["groupes", "edd", "jeunes", "louange"]);
+  expect(famillesDe(SAISON.quiAutorises)).toEqual(["groupes", "edd"]);
   expect(famillesDe([])).toEqual([]);
-  expect(quiDesFamilles(["jeunes", "louange"])).toEqual(["Franco", "敬拜团", "Jeunes"]);
+  expect(quiDesFamilles(["edd", "louange"])).toEqual(["Franco", "EDD 小班", "EDD 中班", "EDD 大班", "EDD 高班"]);
 });
 
 // ─── S4 : l'écran des membres ───────────────────────────────────────────────
@@ -529,7 +530,7 @@ test("familles d'une liste « qui » : celles dont tous les groupes sont permis 
 const OUVERT = { ...NOEL26, ouvert: true };
 const LEA: FakeProfile = { uid: "uid-lea", email: "lea@example.com", firstName: "Léa", lastName: "M." };
 /** Réservation de Noé, dimanche 11 octobre à 15:00 (parcours « Réussite »). */
-const SKETCH = { ...resa("2026-10-11", "15:00", "16:00", "s"), quoi: "Sketch", qui: ["Jeunes"], auteurUid: "uid-noe", auteurNom: "Noé L." };
+const SKETCH = { ...resa("2026-10-11", "15:00", "16:00", "s"), quoi: "Sketch", qui: ["Gp Amour"], auteurUid: "uid-noe", auteurNom: "Noé L." };
 
 const bloc = (page: Page, jour: string) => page.getByRole("region", { name: jour, exact: true });
 /** Pâques · Noël, P5 : une semaine à la fois ; on choisit la semaine dans la liste (ou les pastilles). */
@@ -554,7 +555,7 @@ test("membres : un bloc par jour de la semaine choisie, en toutes lettres, chaqu
   await expect(bloc(page, "Samedi 3 octobre").getByRole("button", { name: /^Réserver/ })).toHaveCount(0);
 });
 
-test("membres : « Réserver » ouvre la feuille sur ce créneau, sans heure à taper ; 15:00 « Sketch · Jeunes » s'écrit 15:00–16:00 à son nom", async ({ page }) => {
+test("membres : « Réserver » ouvre la feuille sur ce créneau, sans heure à taper ; 15:00 « Sketch · Gp Amour » s'écrit 15:00–16:00 à son nom", async ({ page }) => {
   const db = await ouvrir(page, NOE, { "programmes/noel": OUVERT });
   await bloc(page, "Dimanche 11 octobre").getByRole("button", { name: "Réserver 15:00 – 16:00" }).click();
   const f = feuille(page);
@@ -563,31 +564,29 @@ test("membres : « Réserver » ouvre la feuille sur ce créneau, sans heure à 
   await expect(f.getByLabel("Début")).toHaveCount(0);
   await expect(f.getByLabel("Jour", { exact: true })).toHaveCount(0);
   await f.getByRole("radio", { name: "Sketch" }).check();
-  await f.getByRole("button", { name: /^\+ 3/ }).click();
-  await f.getByRole("checkbox", { name: "Jeunes" }).check();
+  await f.getByRole("checkbox", { name: "Gp Amour" }).check();
   await f.getByLabel("Note").fill("Avec la sono");
   await f.getByRole("button", { name: "Réserver", exact: true }).click();
   await expect(feuille(page)).toHaveCount(0);
-  const ligne = bloc(page, "Dimanche 11 octobre").getByRole("listitem").filter({ hasText: "Sketch · Jeunes" });
+  const ligne = bloc(page, "Dimanche 11 octobre").getByRole("listitem").filter({ hasText: "Sketch · Gp Amour" });
   await expect(ligne).toContainText("15:00");
   // P6 : sur sa propre réservation, « à moi » remplace son nom.
   await expect(ligne).toContainText("à moi");
   await expect(ligne).toContainText("Avec la sono");
   const cree = db.writes.find((w) => w.method === "POST" && w.path.startsWith("programmes/noel/creneaux/"));
   expect(cree?.data).toMatchObject({
-    dimanche: "2026-10-11", debut: "15:00", fin: "16:00", quoi: "Sketch", qui: ["Jeunes"], note: "Avec la sono",
+    dimanche: "2026-10-11", debut: "15:00", fin: "16:00", quoi: "Sketch", qui: ["Gp Amour"], note: "Avec la sono",
     auteurUid: "uid-noe", auteurNom: "Noé L.",
   });
 });
 
-test("membres : la feuille ne propose que les groupes permis (pas « Chorale ») ; rien de coché, rien ne s'écrit", async ({ page }) => {
+test("membres : la feuille ne propose que les groupes permis (pas « Franco ») ; rien de coché, rien ne s'écrit", async ({ page }) => {
   const db = await ouvrir(page, NOE, { "programmes/noel": OUVERT });
   await bloc(page, "Samedi 10 octobre").getByRole("button", { name: "Réserver 10:00 – 11:00" }).click();
   const f = feuille(page);
   await expect(f.getByText("Qui · les groupes permis pour cette saison")).toBeVisible();
-  await f.getByRole("button", { name: /^\+ 3/ }).click();
-  await expect(f.getByRole("checkbox")).toHaveCount(12);
-  await expect(f.getByRole("checkbox", { name: "Chorale" })).toHaveCount(0);
+  await expect(f.getByRole("checkbox")).toHaveCount(9);
+  await expect(f.getByRole("checkbox", { name: "Franco" })).toHaveCount(0);
   // Pâques · Noël, P6 (Q15) : rien de coché d'avance, le bouton attend quoi et qui.
   await expect(f.getByRole("radio", { checked: true })).toHaveCount(0);
   await f.getByRole("radio", { name: "Séance louange" }).check();
@@ -598,8 +597,7 @@ test("membres : la feuille ne propose que les groupes permis (pas « Chorale »)
 test("membres : sans limite, la feuille propose tous les groupes ; la coordination n'est jamais limitée", async ({ page }) => {
   await ouvrir(page, ALICE, { "programmes/noel": OUVERT }, undefined, "/evenements/scene");
   await bloc(page, "Samedi 10 octobre").getByRole("button", { name: "Réserver 10:00 – 11:00" }).click();
-  await feuille(page).getByRole("button", { name: /^\+ 4/ }).click();
-  await expect(feuille(page).getByRole("checkbox", { name: "Chorale" })).toBeVisible();
+  await expect(feuille(page).getByRole("checkbox", { name: "Franco" })).toBeVisible();
   await expect(feuille(page).getByText("Qui", { exact: true })).toBeVisible();
 });
 
@@ -608,7 +606,7 @@ test("membres : la réservation d'un autre montre son auteur, sans bouton ; une 
   await ouvrir(page, LEA, { "programmes/noel": OUVERT, "programmes/noel/creneaux/s": SKETCH, "programmes/noel/creneaux/l": long });
   const dimanche = bloc(page, "Dimanche 11 octobre");
   await expect(dimanche.getByRole("listitem")).toHaveText([
-    /14:00\s*Libre\s*Réserver/, /15:00\s*Sketch · Jeunes\s*Noé L\./, /16:00\s*Libre\s*Réserver/,
+    /14:00\s*Libre\s*Réserver/, /15:00\s*Sketch · Gp Amour\s*Noé L\./, /16:00\s*Libre\s*Réserver/,
     /^17:00\s*→ 18:30\s*Chant · EDD 中班\s*17:00 – 18:30 · prend aussi le créneau de 18:00\s*Alice Q\.$/,
   ]);
   await expect(dimanche.getByText("Pris", { exact: true })).toHaveCount(0);
@@ -630,7 +628,7 @@ test("membres : un créneau commencé aujourd'hui ne se réserve plus", async ({
 test("membres : « ⋯ » › Déplacer pose sa réservation sur un créneau libre de la saison, en pastilles jour par jour", async ({ page }) => {
   const pris = { ...resa("2026-10-17", "10:00", "11:00", "p"), auteurUid: "uid-lea", auteurNom: "Léa M." };
   const db = await ouvrir(page, NOE, { "programmes/noel": OUVERT, "programmes/noel/creneaux/s": SKETCH, "programmes/noel/creneaux/p": pris });
-  const ligne = bloc(page, "Dimanche 11 octobre").getByRole("listitem").filter({ hasText: "Sketch · Jeunes" });
+  const ligne = bloc(page, "Dimanche 11 octobre").getByRole("listitem").filter({ hasText: "Sketch · Gp Amour" });
   await ligne.getByRole("button", { name: /^Plus d'actions/ }).click();
   await page.getByRole("menuitem", { name: "Déplacer" }).click();
   const f = feuille(page);
@@ -642,16 +640,16 @@ test("membres : « ⋯ » › Déplacer pose sa réservation sur un créneau lib
   await samedi.getByRole("radio", { name: "11:00 – 12:00" }).check();
   await f.getByRole("button", { name: "Déplacer", exact: true }).click();
   await expect(feuille(page)).toHaveCount(0);
-  await expect(bloc(page, "Dimanche 11 octobre").getByText("Sketch · Jeunes")).toHaveCount(0);
+  await expect(bloc(page, "Dimanche 11 octobre").getByText("Sketch · Gp Amour")).toHaveCount(0);
   await choisirSemaine(page, /^17 – 18 oct\./);
-  await expect(bloc(page, "Samedi 17 octobre").getByRole("listitem").filter({ hasText: "Sketch · Jeunes" })).toContainText("11:00");
-  expect(db.doc("programmes/noel/creneaux/s")).toMatchObject({ dimanche: "2026-10-17", debut: "11:00", fin: "12:00", quoi: "Sketch", qui: ["Jeunes"] });
+  await expect(bloc(page, "Samedi 17 octobre").getByRole("listitem").filter({ hasText: "Sketch · Gp Amour" })).toContainText("11:00");
+  expect(db.doc("programmes/noel/creneaux/s")).toMatchObject({ dimanche: "2026-10-17", debut: "11:00", fin: "12:00", quoi: "Sketch", qui: ["Gp Amour"] });
 });
 
 test("membres : « ⋯ » › Retirer sa réservation après la confirmation du site rend le créneau libre", async ({ page }) => {
   const db = await ouvrir(page, NOE, { "programmes/noel": OUVERT, "programmes/noel/creneaux/s": SKETCH });
   const dimanche = bloc(page, "Dimanche 11 octobre");
-  await dimanche.getByRole("listitem").filter({ hasText: "Sketch · Jeunes" }).getByRole("button", { name: /^Plus d'actions/ }).click();
+  await dimanche.getByRole("listitem").filter({ hasText: "Sketch · Gp Amour" }).getByRole("button", { name: /^Plus d'actions/ }).click();
   await page.getByRole("menuitem", { name: "Retirer" }).click();
   await page.getByRole("alertdialog").getByRole("button", { name: "Retirer", exact: true }).click();
   await expect(dimanche.getByRole("button", { name: "Réserver 15:00 – 16:00" })).toBeVisible();
@@ -662,7 +660,7 @@ test("membres : la coordination modifie ou retire toute réservation et la voit 
   const long = { ...resa("2026-10-11", "17:00", "18:30", "l"), auteurUid: "uid-noe", auteurNom: "Noé L." };
   await ouvrir(page, ALICE, { "programmes/noel": OUVERT, "programmes/noel/creneaux/s": SKETCH, "programmes/noel/creneaux/l": long }, undefined, "/evenements/scene");
   const dimanche = bloc(page, "Dimanche 11 octobre");
-  const sketch = dimanche.getByRole("listitem").filter({ hasText: "Sketch · Jeunes" });
+  const sketch = dimanche.getByRole("listitem").filter({ hasText: "Sketch · Gp Amour" });
   await sketch.getByRole("button", { name: /^Plus d'actions/ }).click();
   await expect(page.getByRole("menuitem")).toHaveText([/^Déplacer/, /^Modifier/, /^Retirer/]);
   await page.keyboard.press("Escape");
@@ -701,7 +699,7 @@ test("membres en 中文 : jours, lignes et feuille traduits", async ({ page }) =
 test("captures : l'écran des membres et la feuille « Réserver » (à regarder, planches scene-reserver-*)", async ({ page }) => {
   const franco = { ...resa("2026-10-10", "10:00", "11:00", "f"), quoi: "Séance louange", qui: ["Franco"], auteurUid: "uid-lea", auteurNom: "Léa M." };
   const chant = resa("2026-10-11", "17:00", "18:00", "c");
-  const danse = { ...resa("2026-10-17", "11:00", "12:00", "d"), quoi: "Danse", qui: ["Jeunes"], auteurUid: "uid-noe", auteurNom: "Noé L." };
+  const danse = { ...resa("2026-10-17", "11:00", "12:00", "d"), quoi: "Danse", qui: ["Gp Amour"], auteurUid: "uid-noe", auteurNom: "Noé L." };
   await ouvrir(page, NOE, {
     "programmes/noel": OUVERT, "programmes/noel/creneaux/f": franco, "programmes/noel/creneaux/c": chant, "programmes/noel/creneaux/d": danse,
   });
@@ -709,8 +707,7 @@ test("captures : l'écran des membres et la feuille « Réserver » (à regarder
   await capture(page, "u1-membres");
   await bloc(page, "Dimanche 11 octobre").getByRole("button", { name: "Réserver 15:00 – 16:00" }).click();
   await feuille(page).getByRole("radio", { name: "Sketch" }).check();
-  await feuille(page).getByRole("button", { name: /^\+ 3/ }).click();
-  await feuille(page).getByRole("checkbox", { name: "Jeunes" }).check();
+  await feuille(page).getByRole("checkbox", { name: "Gp Amour" }).check();
   await page.waitForTimeout(600); // fin de l'animation de la feuille
   const dir = process.env.PW_CAPTURES;
   if (dir) await page.screenshot({ path: `${dir}/u1-membres-feuille-${test.info().project.name}.png` });
@@ -734,7 +731,7 @@ test("passé : le programme suivant annoncé n'est jamais un brouillon (Q3)", as
 });
 
 test("passer de Noël à Pâques au Back-Office pendant que les créneaux de Noël répondent en retard : l'aperçu de Pâques reste vide", async ({ page }) => {
-  const sketch = { ...resa("2026-12-06", "15:00", "16:00", "s"), quoi: "Sketch", qui: ["Jeunes"] };
+  const sketch = { ...resa("2026-12-06", "15:00", "16:00", "s"), quoi: "Sketch", qui: ["Gp Amour"] };
   await ouvrir(page, ALICE, { "programmes/noel": OUVERT, "programmes/noel/creneaux/s": sketch }, "2026-12-05T10:00:00", SAISON_NOEL);
   await expect(apercu(page).getByText("Semaine du 5 au 6 décembre")).toBeVisible();
   // Désormais, les créneaux de Noël répondent en retard : une lecture périmée
@@ -746,12 +743,12 @@ test("passer de Noël à Pâques au Back-Office pendant que les créneaux de No�
   await page.getByRole("link", { name: "Pâques", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Saison de Pâques 2027" })).toBeVisible();
   await page.waitForTimeout(1500); // la réponse en retard, s'il y en a une, est arrivée
-  await expect(apercu(page).getByText("Sketch · Jeunes")).toHaveCount(0);
+  await expect(apercu(page).getByText("Sketch · Gp Amour")).toHaveCount(0);
   await expect(page.getByRole("region", { name: /hors grille/ })).toHaveCount(0);
 });
 
 test("Pâques en brouillon : même pendant le chargement, l'aperçu ne montre rien de Noël", async ({ page }) => {
-  const sketch = { ...resa("2026-10-11", "15:00", "16:00", "s"), quoi: "Sketch", qui: ["Jeunes"] };
+  const sketch = { ...resa("2026-10-11", "15:00", "16:00", "s"), quoi: "Sketch", qui: ["Gp Amour"] };
   const long = resa("2026-10-11", "17:00", "18:30", "l");
   await ouvrir(page, ALICE, {
     "programmes/noel": OUVERT, "programmes/noel/creneaux/s": sketch, "programmes/noel/creneaux/l": long, "programmes/paques": { ...PAQUES, debut: "2027-02-01" },
@@ -764,7 +761,7 @@ test("Pâques en brouillon : même pendant le chargement, l'aperçu ne montre ri
   await page.getByRole("link", { name: "Pâques", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Saison de Pâques 2027" })).toBeVisible();
   // Relevé immédiat, sans nouvel essai : rien de Noël ne doit passer, même un instant.
-  expect(await apercu(page).getByText("Sketch · Jeunes").count()).toBe(0);
+  expect(await apercu(page).getByText("Sketch · Gp Amour").count()).toBe(0);
   expect(await page.getByRole("region", { name: /hors grille/ }).count()).toBe(0);
   await expect(apercu(page).getByRole("region", { name: "Dimanche 7 février" }).getByRole("listitem")).toHaveCount(5);
 });
@@ -793,7 +790,7 @@ test("deux coordinateurs : un réglage écrit par l'autre (la durée) s'affiche 
   await expect((await reglageSaison(page, "Un créneau dure")).getByRole("button", { name: "1 h", exact: true, pressed: true })).toBeVisible();
   // L'autre coordinateur passe la durée à 1 h 30.
   db.set("programmes/noel", { ...NOEL26, duree: 90, updatedAt: "2026-10-05T10:01:00Z" });
-  await (await reglageSaison(page, "Qui peut réserver")).getByRole("button", { name: "Chorale" }).click();
+  await (await reglageSaison(page, "Qui peut réserver")).getByRole("button", { name: "Louange" }).click();
   await expect.poll(() => patches(db).length).toBe(1);
   await expect((await reglageSaison(page, "Un créneau dure")).getByRole("button", { name: "1 h 30", exact: true, pressed: true })).toBeVisible();
   await (await reglageSaison(page, "Qui peut réserver")).getByRole("button", { name: "Tout membre connecté" }).click();
@@ -816,8 +813,7 @@ test("membres : un créneau qui commence pendant que la feuille est ouverte est 
   await bloc(page, "Dimanche 11 octobre").getByRole("button", { name: "Réserver 15:00 – 16:00" }).click();
   const f = feuille(page);
   await f.getByRole("radio", { name: "Sketch" }).check();
-  await f.getByRole("button", { name: /^\+ 3/ }).click();
-  await f.getByRole("checkbox", { name: "Jeunes" }).check();
+  await f.getByRole("checkbox", { name: "Gp Amour" }).check();
   await page.clock.setFixedTime(new Date("2026-10-11T15:05:00"));
   await f.getByRole("button", { name: "Réserver", exact: true }).click();
   await expect(f.getByRole("alert")).toHaveText("Ce créneau a déjà commencé : il ne se réserve plus.");
@@ -851,12 +847,10 @@ test("« Retirer » qui échoue le dit au-dessus du tableau de toutes les réser
   await expect(toutes.getByRole("table")).toContainText("15:00 – 16:00");
 });
 
-test("membres : la feuille range les groupes par famille, comme la planche (Groupes, EDD, Jeunes, Louange)", async ({ page }) => {
+test("membres : la feuille range les groupes permis par famille, comme la planche (Groupes, EDD)", async ({ page }) => {
   await ouvrir(page, NOE, { "programmes/noel": OUVERT });
   await bloc(page, "Samedi 10 octobre").getByRole("button", { name: "Réserver 10:00 – 11:00" }).click();
-  await feuille(page).getByRole("button", { name: /^\+ 3/ }).click();
   await expect(feuille(page).getByRole("group", { name: /^Qui/ }).locator("label")).toHaveText([
-    "Gp Bonté", "Gp Fidélité", "Gp Paix", "Gp Amour", "Gp Joie", "EDD 小班", "EDD 中班", "EDD 大班", "EDD 高班",
-    "Jeunes", "Franco", "敬拜团",
+    "Gp Paix", "Gp Fidélité", "Gp Bonté", "Gp Amour", "Gp Joie", "EDD 小班", "EDD 中班", "EDD 大班", "EDD 高班",
   ]);
 });

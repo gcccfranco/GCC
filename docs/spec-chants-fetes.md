@@ -552,3 +552,26 @@ npm test -- tests/back-office-coupe.spec.ts
 - 08/10/2026 (soir) : réponses de Timothée intégrées (décisions 35 à 45).
 - 08/10/2026 (soir) : question 15 tranchée (décision 46, lecture (a)) ; plus aucune question ouverte.
 - 08/10/2026 (soir) : couleurs de Noël et de Pâques choisies sur la planche (décision 47, CF26, CF-G).
+- 12/10/2026 — **CF-A codée** (modèle et logique pure ; commit `V19FETES CF-A`). Codé : `QUI` dans l'ordre de la décision 34
+  (sans 敬拜团, Jeunes, Chorale), `FAMILLES` à trois (groupes, edd, louange), `Passage.id` et `medias` (`MediaPassage`),
+  `FSSetlist.fete`, `FETE_CATEGORIES` (hors `ALL_CATEGORIES`), `getSetlistsDeFete` (rend `[]` sans `BACK_OFFICE`, CF24),
+  `SetlistItem` « proposition », `src/lib/fetes/qui.ts` (`libelleQui`, `groupeDuQui`), `passages.ts` (`nouvelIdPassage`,
+  `validerMedias`), `droits.ts` (`ayantsDroitDuQui`, `droitsDeSaisie`, `periodeEddDuJour`, `titreSetlistFete`),
+  `src/lib/setlist/propositions.ts` (`resoudrePropositions`, `estUnChant`), directive `{proposition}` (parseur, `Song`,
+  `loadSong`), `libelleQui` dans les rappels du matin et le message de conflit. Aucun écran de fête.
+  Choix faute de réponse : (1) le lot 2 (`groupes/{id}`, `groupeDe`) n'est pas codé : `ayantsDroitDuQui` prend un
+  **contexte** de données simples (`ContexteFetes` : profils avec `groupe`, `coordination` déjà résolu, `groupes` avec
+  président, VP, rôles et `saisirFetes`, planning EDD, jour J) que la route de CF-B construira, sans importer le lot 2 ;
+  (2) le jour J donne la période EDD (`periodeEddDuJour(jourJ)`, même découpage que `periodeEdd`) ; (3) une raison par
+  compte (la première du tableau CF16) ; (4) `proposition` n'entre dans `songs-index.json` que pour un chant qui en a une
+  (champ facultatif de `Song`) : l'index n'a pas été régénéré, aucun chant n'en porte ; (5) pour que la suite reste verte,
+  CF3 est faite ici plutôt qu'en CF-C : `QuiChecklist` garde une valeur retirée cochée et grisée « retiré »
+  (`planning.programme.quiRetire`, FR et 中文), la feuille « Réserver » montre les dix valeurs sans « + N » ; les clés
+  de langue `autresGroupes` et `familles.jeunes/chorale`, devenues sans emploi, sont retirées ; les pastilles « Qui »
+  ne passent pas encore par `libelleQui` (CF-C).
+  Tests : `tests/chants-fetes.spec.ts` (27 tests × 3 appareils) vu rouge (modules absents : « No tests found ») puis vert
+  (81). Specs existantes mises à jour : `scene-saison.spec.ts` (familles à trois, plus de « + N », « Jeunes » → « Gp Amour »
+  et « Chorale » → « Franco » comme groupe hors saison), `scene-paques-noel.spec.ts` (P6 : dix cases d'emblée,
+  `trois` familles, « Jeunes » → « Gp Amour »). Verts sur ordinateur : scene-saison, scene-paques-noel, programme-scene,
+  retouches-v18-ordre, calendrier, calendrier-deplacer, calendrier-widget, tableau-de-bord. À faire par Timothée : relire
+  le 中文 « 已移除 » ; rien à publier (aucune règle touchée). Reste : CF-B à CF-E.

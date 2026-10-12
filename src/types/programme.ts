@@ -5,15 +5,16 @@
 /** Ce qu'on répète ou présente — liste en dur (Timothée, 14/09/2026). */
 export const QUOI = ["Séance louange", "Chant", "Danse", "Sketch", "Spectacle"] as const;
 
-/** Qui répète ou passe — liste en dur (Timothée, 14/09/2026). Les libellés qui
- *  correspondent à une catégorie de l'app servent aux rappels (cf.
- *  src/lib/scene/rappels.ts, quiCategory). « Jeunes » et « Chorale » (lot U1,
- *  docs/spec-scene-saison.md) n'ont pas de catégorie : rappel à l'auteur seul. */
+/** Qui répète ou passe — liste en dur, dans l'ordre de la décision 34 (lot « chants des fêtes »,
+ *  docs/spec-chants-fetes.md) : une seule liste pour les passages et les réservations. Les libellés
+ *  qui correspondent à une catégorie de l'app servent aux rappels (cf. src/lib/scene/rappels.ts,
+ *  quiCategory). La valeur stockée « Franco » s'affiche « Culte Francophone » (libelleQui,
+ *  src/lib/fetes/qui.ts). 敬拜团, Jeunes et Chorale sont retirés : une donnée ancienne qui les porte
+ *  est lue telle quelle. */
 export const QUI = [
+  "Gp Paix", "Gp Fidélité", "Gp Bonté", "Gp Amour", "Gp Joie",
+  "Franco",
   "EDD 小班", "EDD 中班", "EDD 大班", "EDD 高班",
-  "Gp Bonté", "Gp Fidélité", "Gp Paix", "Gp Amour", "Gp Joie",
-  "Franco", "敬拜团",
-  "Jeunes", "Chorale",
 ] as const;
 
 /** Lot U1 : une plage horaire réservable, par jour de la semaine (0 = dimanche). */
@@ -29,9 +30,31 @@ export type Duree = 30 | 60 | 90 | 120;
 
 /** Une ligne de l'ordre de passage du jour J — sans horaire ni durée. */
 export interface Passage {
+  /** Identifiant stable (8 caractères [a-z0-9]) tiré à la création ; absent dans un passage d'avant
+   *  le lot « chants des fêtes » (docs/spec-chants-fetes.md, CF1). */
+  id?: string;
   quoi: string;
+  /** Une ou plusieurs valeurs de QUI ; plusieurs = danse ou sketch, sans chants (décision 37). */
   qui: string[];
   titre: string;
+  /** Musiques et danses du passage, pour la régie (décision 27). Absent = aucune. */
+  medias?: MediaPassage[];
+}
+
+/** Une musique ou une danse d'un passage (CF22). */
+export interface MediaPassage {
+  id: string;
+  type: "musique" | "danse";
+  /** Obligatoire, 80 caractères au plus. */
+  titre: string;
+  /** https, "" = sans. */
+  lien: string;
+  /** « m:ss », "" = sans. */
+  duree: string;
+  /** « m:ss », "" = sans. */
+  depart: string;
+  /** Pour la régie, 200 caractères au plus, "" = sans. */
+  note: string;
 }
 
 /** Document programmes/{id}. Les dates sont en ISO « AAAA-MM-JJ ». */

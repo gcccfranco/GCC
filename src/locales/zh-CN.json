@@ -1352,6 +1352,7 @@
       "fin": "结束",
       "quoi": "内容",
       "qui": "参与者",
+      "quiRetire": "已移除",
       "note": "备注",
       "noteHint": "音响、器材、说明…",
       "save": "保存",
@@ -1503,8 +1504,6 @@
       "deplacer": "调整",
       "deplacerTitre": "调整预约",
       "choisisQuoiQui": "请选择内容和参与者",
-      "autresGroupes_one": "其他团体",
-      "autresGroupes_other": "其他团体",
       "facultatif": "可选",
       "resume": "预约季：{{from}} → {{to}} · {{jours}} · {{duree}} · {{qui}}",
       "modifierSaison": "修改预约季",
@@ -1533,9 +1532,7 @@
       "familles": {
         "groupes": "小组",
         "edd": "主日学",
-        "jeunes": "青年",
-        "louange": "敬拜",
-        "chorale": "诗班"
+        "louange": "敬拜"
       },
       "erreurs": {
         "dateInvalide": "请选择开始日期和截止日期。",

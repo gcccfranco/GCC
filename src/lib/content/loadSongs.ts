@@ -52,6 +52,7 @@ export function loadSong(slug: string): Song {
     language: m.language,
     originalKey: m.key,
     recommendedKey: m.recommendedKey,
+    ...(m.proposition ? { proposition: m.proposition } : {}),
     tempo: m.tempo,
     themes: m.themes.map(slugifyTheme),
     youtubeUrl: m.youtubeUrl,

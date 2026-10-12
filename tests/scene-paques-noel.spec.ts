@@ -141,15 +141,15 @@ test("éditions affichées : Noël passé reste affiché jusqu'à J + 7, puis di
 });
 
 test("réglages repris : Noël 2026 → Noël 2027 ouvert le 01/10/2027, mêmes plages, brouillon, ordre vide", () => {
-  const quatre = [...FAMILLES[0].qui, ...FAMILLES[1].qui, ...FAMILLES[2].qui, ...FAMILLES[3].qui];
+  const trois = [...FAMILLES[0].qui, ...FAMILLES[1].qui, ...FAMILLES[2].qui];
   const plages = [{ jour: 6, debut: "10:00", fin: "12:00" }, { jour: 0, debut: "14:00", fin: "19:00" }];
   const noel2026 = prog({
-    fin: "2026-12-20", plages, duree: 60, quiAutorises: quatre, ouvert: true,
+    fin: "2026-12-20", plages, duree: 60, quiAutorises: trois, ouvert: true,
     passages: [{ quoi: "Chant", qui: ["Gp Paix"], titre: "Hymne" }],
   });
   expect(reglagesRepris(noel2026, "noel", 2027)).toEqual({
     nom: "Noël 2027", fete: "noel", annee: 2027, jourJ: "2027-12-24", debut: "2027-10-01",
-    plages, duree: 60, quiAutorises: quatre, passages: [], ouvert: false,
+    plages, duree: 60, quiAutorises: trois, passages: [], ouvert: false,
   });
 });
 
@@ -278,7 +278,7 @@ const PAQUES_LANCE = prog({ id: "paques-2027", nom: "Pâques 2027", fete: "paque
 const NOEL_BROUILLON = prog({ id: "noel-2026", fete: "noel", annee: 2026, ouvert: false });
 
 const resaDe = (id: string, dimanche: string, debut: string, fin: string): Creneau => ({
-  id, dimanche, debut, fin, quoi: "Chant", qui: ["Jeunes"], note: "", auteurUid: "u-autre", auteurNom: "Autre",
+  id, dimanche, debut, fin, quoi: "Chant", qui: ["Gp Amour"], note: "", auteurUid: "u-autre", auteurNom: "Autre",
   createdAt: "2026-09-01T10:00:00Z", updatedAt: "2026-09-01T10:00:00Z",
 });
 
@@ -455,7 +455,7 @@ test("widget Scène : un brouillon seul n'est pas montré", async ({ page }) => 
 // Horloge au vendredi 09/10/2026 (la « Réussite » de la spec) sauf mention.
 
 const PASSAGES_NOEL = [
-  { quoi: "Séance louange", qui: ["敬拜团"], titre: "Ouverture" },
+  { quoi: "Séance louange", qui: ["Franco"], titre: "Ouverture" },
   { quoi: "Chant", qui: ["EDD 小班"], titre: "Jésus est né" },
   { quoi: "Sketch", qui: ["Gp Paix"], titre: "La nuit de Bethléem" },
 ];
@@ -643,9 +643,9 @@ test("P4 — captures à regarder (planches v18-scene-a-sans-saison-* et v18-sce
 const A_JO = { auteurUid: "uid-jo", auteurNom: "Jo L." };
 const RESAS_P5: Record<string, Record<string, unknown>> = {
   "programmes/x7Kq2/creneaux/f": { ...resaDe("f", "2026-10-10", "10:00", "11:00"), quoi: "Séance louange", qui: ["Franco"], auteurUid: "uid-lea", auteurNom: "Léa M." },
-  "programmes/x7Kq2/creneaux/s": { ...resaDe("s", "2026-10-11", "16:00", "17:00"), quoi: "Sketch", qui: ["Jeunes"], ...A_JO },
+  "programmes/x7Kq2/creneaux/s": { ...resaDe("s", "2026-10-11", "16:00", "17:00"), quoi: "Sketch", qui: ["Gp Amour"], ...A_JO },
   "programmes/x7Kq2/creneaux/l": { ...resaDe("l", "2026-10-11", "17:00", "18:30"), quoi: "Chant", qui: ["EDD 中班"], auteurUid: "uid-alice", auteurNom: "Alice Q." },
-  "programmes/x7Kq2/creneaux/d": { ...resaDe("d", "2026-10-17", "11:00", "12:00"), quoi: "Danse", qui: ["Jeunes"], ...A_JO },
+  "programmes/x7Kq2/creneaux/d": { ...resaDe("d", "2026-10-17", "11:00", "12:00"), quoi: "Danse", qui: ["Gp Amour"], ...A_JO },
 };
 const DOCS_P5 = { "programmes/x7Kq2": DOC_NOEL_ANCIEN, ...RESAS_P5 };
 const LEA_MEMBRE: FakeProfile = { uid: "uid-lea", email: "lea@example.com", firstName: "Léa", lastName: "M." };
@@ -660,8 +660,8 @@ test("P5 — « Mes réservations » en tête avec le compte, puis la semaine du
   const mes = mesReservations(page);
   await expect(mes.getByTestId("compte")).toHaveText("2");
   await expect(mes.getByRole("listitem")).toHaveText([
-    /11\s*oct\.\s*Sketch · Jeunes\s*dim\. 11 oct\. · 16:00 – 17:00/,
-    /17\s*oct\.\s*Danse · Jeunes\s*sam\. 17 oct\. · 11:00 – 12:00/,
+    /11\s*oct\.\s*Sketch · Gp Amour\s*dim\. 11 oct\. · 16:00 – 17:00/,
+    /17\s*oct\.\s*Danse · Gp Amour\s*sam\. 17 oct\. · 11:00 – 12:00/,
   ]);
   expect((await mes.boundingBox())!.y).toBeLessThan((await listeSemaines(page).boundingBox())!.y);
   await expect(semaineChoisie(page)).toHaveText(/^10 – 11 oct\./);
@@ -671,7 +671,7 @@ test("P5 — « Mes réservations » en tête avec le compte, puis la semaine du
   await expect(jour(page, "Samedi 3 octobre")).toHaveCount(0);
   // Hors grille (Q13) : une ligne, à son heure, qui prend aussi 18:00 ; pas de « Pris ».
   await expect(jour(page, "Dimanche 11 octobre").getByRole("listitem")).toHaveText([
-    /14:00\s*Libre/, /15:00\s*Libre/, /16:00\s*Sketch · Jeunes/,
+    /14:00\s*Libre/, /15:00\s*Libre/, /16:00\s*Sketch · Gp Amour/,
     /17:00\s*→ 18:30\s*Chant · EDD 中班\s*17:00 – 18:30 · prend aussi le créneau de 18:00/,
   ]);
   await expect(page.getByText("Pris", { exact: true })).toHaveCount(0);
@@ -724,7 +724,7 @@ test("P5 — changer de semaine : la liste et ‹ › changent la semaine et l'a
   await listeSemaines(page).getByRole("button", { name: /^17 – 18 oct\./ }).click();
   await expect(page).toHaveURL(/[?&]semaine=2026-10-12/);
   await expect(semaineChoisie(page)).toHaveText(/^17 – 18 oct\./);
-  await expect(jour(page, "Samedi 17 octobre")).toContainText("Danse · Jeunes");
+  await expect(jour(page, "Samedi 17 octobre")).toContainText("Danse · Gp Amour");
   await expect(jour(page, "Samedi 10 octobre")).toHaveCount(0);
   if (estGrandEcran(test.info())) {
     await page.getByRole("button", { name: "Semaine suivante" }).click();
@@ -743,10 +743,10 @@ test("P5 — changer de semaine : la liste et ‹ › changent la semaine et l'a
 
 test("P5 — toucher une de mes réservations choisit sa semaine", async ({ page }) => {
   await ouvrirFete(page, "/evenements/scene/noel", DOCS_P5);
-  await mesReservations(page).getByRole("button", { name: /^17 oct\. Danse · Jeunes/ }).click();
+  await mesReservations(page).getByRole("button", { name: /^17 oct\. Danse · Gp Amour/ }).click();
   await expect(page).toHaveURL(/[?&]semaine=2026-10-12/);
   await expect(semaineChoisie(page)).toHaveText(/^17 – 18 oct\./);
-  await expect(jour(page, "Samedi 17 octobre").getByRole("listitem").filter({ hasText: "Danse · Jeunes" })).toBeVisible();
+  await expect(jour(page, "Samedi 17 octobre").getByRole("listitem").filter({ hasText: "Danse · Gp Amour" })).toBeVisible();
 });
 
 test("P5 — deux volets (ordinateur, ordinateur-1440, tablette couchée) : les semaines à gauche, la semaine choisie à droite", async ({ page }) => {
@@ -822,23 +822,21 @@ test("P6 — Réserver : rien de coché, « Choisis quoi et qui » inactif ; Cha
   await expect(semaineChoisie(page).locator('[data-case="pris"]')).toHaveCount(5);
 });
 
-test("P6 — Réserver : neuf groupes, puis « + 4 » déplie le reste", async ({ page }) => {
+test("P6 — Réserver : les dix groupes d'emblée, sans « + N » (décision 34, CF3) ; 敬拜团, Jeunes et Chorale ne sont plus proposés", async ({ page }) => {
   await ouvrirFete(page, "/evenements/scene/noel", DOCS_P5);
   await jour(page, "Dimanche 11 octobre").getByRole("button", { name: "Réserver 14:00 – 15:00" }).click();
   const f = page.getByRole("dialog");
-  await expect(f.getByRole("checkbox")).toHaveCount(9);
-  await expect(f.getByRole("checkbox", { name: "Jeunes" })).toHaveCount(0);
-  await f.getByRole("button", { name: /^\+ 4/ }).click();
-  await expect(f.getByRole("checkbox")).toHaveCount(13);
-  await expect(f.getByRole("button", { name: /^\+ 4/ })).toHaveCount(0);
-  await f.getByRole("checkbox", { name: "Jeunes" }).check();
+  await expect(f.getByRole("checkbox")).toHaveCount(10);
+  await expect(f.getByRole("button", { name: /^\+ \d/ })).toHaveCount(0);
+  for (const retire of ["Jeunes", "Chorale", "敬拜团"]) await expect(f.getByRole("checkbox", { name: retire })).toHaveCount(0);
+  await f.getByRole("checkbox", { name: "Gp Amour" }).check();
   await f.getByRole("radio", { name: "Sketch" }).check();
   await expect(f.getByRole("button", { name: "Réserver", exact: true })).toBeEnabled();
 });
 
 test("P6 — ma réservation : « à moi » à la place de mon nom et « ⋯ » (Déplacer, Modifier, Retirer), dans la semaine et dans « Mes réservations » ; plus de boutons sous la ligne", async ({ page }) => {
   await ouvrirFete(page, "/evenements/scene/noel", DOCS_P5);
-  const sketch = ligneDe(page, "Dimanche 11 octobre", "Sketch · Jeunes");
+  const sketch = ligneDe(page, "Dimanche 11 octobre", "Sketch · Gp Amour");
   await expect(sketch).toContainText("à moi");
   await expect(sketch).not.toContainText("Jo L.");
   await expect(sketch.getByRole("button", { name: "Modifier" })).toHaveCount(0);
@@ -857,7 +855,7 @@ test("P6 — ma réservation : « à moi » à la place de mon nom et « ⋯ » 
 
 test("P6 — un autre membre n'a ni « ⋯ » ni « à moi » sur ma réservation", async ({ page }) => {
   await ouvrirFete(page, "/evenements/scene/noel", DOCS_P5, "2026-10-09", LEA_MEMBRE);
-  const sketch = ligneDe(page, "Dimanche 11 octobre", "Sketch · Jeunes");
+  const sketch = ligneDe(page, "Dimanche 11 octobre", "Sketch · Gp Amour");
   await expect(sketch).toContainText("Jo L.");
   await expect(sketch).not.toContainText("à moi");
   await expect(plus(sketch)).toHaveCount(0);
@@ -868,13 +866,13 @@ test("P6 — la coordination a « ⋯ » sur toutes les réservations", async ({
   await ouvrirFete(page, "/evenements/scene/noel", DOCS_P5, "2026-10-09", ALICE_EVT);
   await expect(plus(jour(page, "Samedi 10 octobre"))).toHaveCount(1);
   await expect(plus(jour(page, "Dimanche 11 octobre"))).toHaveCount(2);
-  await expect(ligneDe(page, "Dimanche 11 octobre", "Sketch · Jeunes")).toContainText("Jo L.");
+  await expect(ligneDe(page, "Dimanche 11 octobre", "Sketch · Gp Amour")).toContainText("Jo L.");
   await expect(ligneDe(page, "Dimanche 11 octobre", "Chant · EDD 中班")).toContainText("à moi");
 });
 
 test("P6 — « ⋯ » › Déplacer : les créneaux libres en pastilles, jour par jour, sans liste déroulante ; le nouveau créneau s'écrit", async ({ page }) => {
   const db = await ouvrirFete(page, "/evenements/scene/noel", DOCS_P5);
-  await plus(ligneDe(page, "Dimanche 11 octobre", "Sketch · Jeunes")).click();
+  await plus(ligneDe(page, "Dimanche 11 octobre", "Sketch · Gp Amour")).click();
   await page.getByRole("menuitem", { name: "Déplacer" }).click();
   const f = page.getByRole("dialog");
   await expect(f.getByRole("heading", { name: "Déplacer la réservation" })).toBeVisible();
@@ -893,44 +891,44 @@ test("P6 — « ⋯ » › Déplacer : les créneaux libres en pastilles, jour p
   await samedi17.getByRole("radio", { name: "10:00 – 11:00" }).check();
   await f.getByRole("button", { name: "Déplacer", exact: true }).click();
   await expect(page.getByRole("dialog")).toHaveCount(0);
-  expect(db.doc("programmes/x7Kq2/creneaux/s")).toMatchObject({ dimanche: "2026-10-17", debut: "10:00", fin: "11:00", quoi: "Sketch", qui: ["Jeunes"] });
-  await expect(ligneDe(page, "Dimanche 11 octobre", "Sketch · Jeunes")).toHaveCount(0);
+  expect(db.doc("programmes/x7Kq2/creneaux/s")).toMatchObject({ dimanche: "2026-10-17", debut: "10:00", fin: "11:00", quoi: "Sketch", qui: ["Gp Amour"] });
+  await expect(ligneDe(page, "Dimanche 11 octobre", "Sketch · Gp Amour")).toHaveCount(0);
   await expect(jour(page, "Dimanche 11 octobre").getByRole("button", { name: "Réserver 16:00 – 17:00" })).toBeVisible();
 });
 
 test("P6 — « ⋯ » › Modifier : Quoi, Qui, Note, sans créneau à choisir ; le créneau reste", async ({ page }) => {
   const db = await ouvrirFete(page, "/evenements/scene/noel", DOCS_P5);
-  await plus(ligneDe(page, "Dimanche 11 octobre", "Sketch · Jeunes")).click();
+  await plus(ligneDe(page, "Dimanche 11 octobre", "Sketch · Gp Amour")).click();
   await page.getByRole("menuitem", { name: "Modifier" }).click();
   const f = page.getByRole("dialog");
   await expect(f.getByRole("heading", { name: "Modifier le créneau" })).toBeVisible();
   await expect(f).toContainText("Dimanche 11 octobre · 16:00 – 17:00");
   await expect(f.getByRole("radio")).toHaveCount(5);
   await expect(f.getByRole("radio", { name: "Sketch" })).toBeChecked();
-  // « Jeunes », au-delà des neuf premiers, est choisi : la liste est dépliée.
-  await expect(f.getByRole("checkbox", { name: "Jeunes" })).toBeChecked();
+  // « Gp Amour », au-delà des neuf premiers, est choisi : la liste est dépliée.
+  await expect(f.getByRole("checkbox", { name: "Gp Amour" })).toBeChecked();
   await f.getByRole("radio", { name: "Danse" }).check();
   await f.getByLabel("Note · facultatif").fill("Avec la sono");
   await f.getByRole("button", { name: "Enregistrer", exact: true }).click();
   await expect(page.getByRole("dialog")).toHaveCount(0);
-  expect(db.doc("programmes/x7Kq2/creneaux/s")).toMatchObject({ dimanche: "2026-10-11", debut: "16:00", fin: "17:00", quoi: "Danse", qui: ["Jeunes"], note: "Avec la sono" });
-  await expect(ligneDe(page, "Dimanche 11 octobre", "Danse · Jeunes")).toContainText("Avec la sono");
+  expect(db.doc("programmes/x7Kq2/creneaux/s")).toMatchObject({ dimanche: "2026-10-11", debut: "16:00", fin: "17:00", quoi: "Danse", qui: ["Gp Amour"], note: "Avec la sono" });
+  await expect(ligneDe(page, "Dimanche 11 octobre", "Danse · Gp Amour")).toContainText("Avec la sono");
 });
 
 test("P6 — « ⋯ » › Retirer : la confirmation de l'app, aucune fenêtre du navigateur ; « Annuler » ne retire rien, « Retirer » envoie le DELETE", async ({ page }) => {
   const db = await ouvrirFete(page, "/evenements/scene/noel", DOCS_P5);
-  const sketch = ligneDe(page, "Dimanche 11 octobre", "Sketch · Jeunes");
+  const sketch = ligneDe(page, "Dimanche 11 octobre", "Sketch · Gp Amour");
   await plus(sketch).click();
   await page.getByRole("menuitem", { name: "Retirer" }).click();
   const confirmation = page.getByRole("alertdialog");
   await expect(confirmation).toContainText("Retirer ce créneau ?");
-  await expect(confirmation).toContainText("Sketch · Jeunes, dimanche 11 octobre · 16:00 – 17:00 : le créneau redevient libre.");
+  await expect(confirmation).toContainText("Sketch · Gp Amour, dimanche 11 octobre · 16:00 – 17:00 : le créneau redevient libre.");
   await confirmation.getByRole("button", { name: "Annuler" }).click();
   await expect(confirmation).toHaveCount(0);
   expect(db.writes.filter((w) => w.method === "DELETE")).toHaveLength(0);
   await expect(sketch).toBeVisible();
   // Depuis « Mes réservations », cette fois.
-  await plus(mesReservations(page).getByRole("listitem").filter({ hasText: "Sketch · Jeunes" })).click();
+  await plus(mesReservations(page).getByRole("listitem").filter({ hasText: "Sketch · Gp Amour" })).click();
   await page.getByRole("menuitem", { name: "Retirer" }).click();
   await page.getByRole("alertdialog").getByRole("button", { name: "Retirer", exact: true }).click();
   await expect(jour(page, "Dimanche 11 octobre").getByRole("button", { name: "Réserver 16:00 – 17:00" })).toBeVisible();
@@ -941,7 +939,7 @@ test("P6 — « ⋯ » › Retirer : la confirmation de l'app, aucune fenêtre d
 test("P6 — en chinois : « 我的 », le menu et la feuille", async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
   await ouvrirFete(page, "/evenements/scene/noel", DOCS_P5);
-  const sketch = page.getByRole("region", { name: "10月11日星期日", exact: true }).getByRole("listitem").filter({ hasText: "Sketch · Jeunes" });
+  const sketch = page.getByRole("region", { name: "10月11日星期日", exact: true }).getByRole("listitem").filter({ hasText: "Sketch · Gp Amour" });
   await expect(sketch).toContainText("我的");
   await sketch.getByRole("button", { name: /^更多操作/ }).click();
   await expect(page.getByRole("menuitem")).toHaveText([/^调整/, /^修改/, /^删除/]);
@@ -964,7 +962,7 @@ test("P6 — captures à regarder (planches v18-scene-a-membres-* et v18-scene-a
   await page.screenshot({ path: `${dir}/p6-feuille-${test.info().project.name}.png` });
   await page.keyboard.press("Escape");
   await expect(page.getByRole("dialog")).toHaveCount(0);
-  await plus(ligneDe(page, "Dimanche 11 octobre", "Sketch · Jeunes")).click();
+  await plus(ligneDe(page, "Dimanche 11 octobre", "Sketch · Gp Amour")).click();
   await page.getByRole("menuitem", { name: "Déplacer" }).click();
   await page.waitForTimeout(600);
   await page.screenshot({ path: `${dir}/p6-deplacer-${test.info().project.name}.png` });
@@ -1234,10 +1232,10 @@ const DOCS_P8 = {
 const tableau = (page: Page) => page.getByRole("table", { name: "Toutes les réservations" });
 const lignesTableau = (page: Page) => tableau(page).locator("tbody tr");
 const filtres = (page: Page) => page.getByRole("group", { name: "Filtrer les réservations" });
-/** Noël 2026 comme l'a laissé la saison : quatre familles, samedi et dimanche, 1 h. */
+/** Noël 2026 comme l'a laissé la saison : trois familles, samedi et dimanche, 1 h. */
 const DOC_NOEL_2026 = {
   ...DOC_NOEL_ANCIEN, fete: "noel", annee: 2026, ouvert: true,
-  quiAutorises: ["Gp Bonté", "Gp Fidélité", "Gp Paix", "Gp Amour", "Gp Joie", "EDD 小班", "EDD 中班", "EDD 大班", "EDD 高班", "Jeunes", "Franco", "敬拜团"],
+  quiAutorises: ["Gp Paix", "Gp Fidélité", "Gp Bonté", "Gp Amour", "Gp Joie", "EDD 小班", "EDD 中班", "EDD 大班", "EDD 高班", "Franco"],
 };
 
 test("P8 — réservations ouvertes : « Toutes les réservations » par défaut, le tableau Jour · Créneau · Quoi · Qui · Réservé par, un jour par groupe de lignes", async ({ page }) => {
@@ -1253,7 +1251,7 @@ test("P8 — réservations ouvertes : « Toutes les réservations » par défaut
   const lignes = lignesTableau(page);
   await expect(lignes).toHaveCount(4);
   await expect(lignes.nth(0)).toContainText(/sam\. 10 oct\.\s*10:00 – 11:00\s*Séance louange\s*Franco\s*Léa M\./);
-  await expect(lignes.nth(1)).toContainText(/dim\. 11 oct\.\s*16:00 – 17:00\s*Sketch\s*Jeunes\s*Jo L\./);
+  await expect(lignes.nth(1)).toContainText(/dim\. 11 oct\.\s*16:00 – 17:00\s*Sketch\s*Gp Amour\s*Jo L\./);
   // Le second créneau du dimanche : le jour n'est pas répété.
   await expect(lignes.nth(2).locator("td").first()).toHaveText("");
   await expect(lignes.nth(2)).toContainText("17:00 – 18:30");
@@ -1542,7 +1540,7 @@ test("P9 — une colonne (téléphone, tablette portrait) : saison lancée → �
   const samedi = semaine.getByRole("region", { name: "Samedi 10 octobre", exact: true });
   const dimanche = semaine.getByRole("region", { name: "Dimanche 11 octobre", exact: true });
   await expect(samedi.getByRole("listitem")).toHaveText([/^10:00 – 11:00\s*Séance louange · Franco · Léa M\./]);
-  await expect(dimanche.getByRole("listitem")).toHaveText([/^16:00 – 17:00\s*Sketch · Jeunes · Jo L\./, /^17:00 – 18:30\s*Hors grille\s*Chant · EDD 中班 · Alice Q\./]);
+  await expect(dimanche.getByRole("listitem")).toHaveText([/^16:00 – 17:00\s*Sketch · Gp Amour · Jo L\./, /^17:00 – 18:30\s*Hors grille\s*Chant · EDD 中班 · Alice Q\./]);
   await expect(plus(samedi)).toHaveCount(1);
   await expect(plus(dimanche)).toHaveCount(2);
   // Ni tableau ni liste des semaines sur une colonne : le tableau est à un toucher.
@@ -1660,7 +1658,7 @@ test("relecture — Back-Office : la lecture de la scène échoue (réseau coup�
 
 test("relecture — « ⋯ » d'une réservation : une ligne d'aide sous chaque action (planche v18-scene-a-membres-ordinateur)", async ({ page }) => {
   await ouvrirFete(page, "/evenements/scene/noel", DOCS_P5);
-  await plus(ligneDe(page, "Dimanche 11 octobre", "Sketch · Jeunes")).click();
+  await plus(ligneDe(page, "Dimanche 11 octobre", "Sketch · Gp Amour")).click();
   const action = (nom: string) => page.getByRole("menuitem", { name: nom, exact: true });
   await expect(action("Déplacer")).toHaveAccessibleDescription("Choisir un autre créneau libre");
   await expect(action("Modifier")).toHaveAccessibleDescription("Quoi, qui, note");
@@ -1671,7 +1669,7 @@ test("relecture — « ⋯ » d'une réservation : une ligne d'aide sous chaque 
 test("relecture — en chinois, l'aide sous chaque action du « ⋯ »", async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
   await ouvrirFete(page, "/evenements/scene/noel", DOCS_P5);
-  const sketch = page.getByRole("region", { name: "10月11日星期日", exact: true }).getByRole("listitem").filter({ hasText: "Sketch · Jeunes" });
+  const sketch = page.getByRole("region", { name: "10月11日星期日", exact: true }).getByRole("listitem").filter({ hasText: "Sketch · Gp Amour" });
   await sketch.getByRole("button", { name: /^更多操作/ }).click();
   await expect(page.getByRole("menuitem", { name: "调整", exact: true })).toHaveAccessibleDescription("选择另一个空闲时段");
   await expect(page.getByRole("menuitem", { name: "修改", exact: true })).toHaveAccessibleDescription("内容、参与者、备注");
@@ -1702,7 +1700,7 @@ test("relecture — captures à regarder (menu « ⋯ » avec ses aides, lecture
   test.skip(!dir, "captures seulement avec PW_CAPTURES");
   const nom = test.info().project.name;
   await ouvrirFete(page, "/evenements/scene/noel", DOCS_P5);
-  await plus(ligneDe(page, "Dimanche 11 octobre", "Sketch · Jeunes")).click();
+  await plus(ligneDe(page, "Dimanche 11 octobre", "Sketch · Gp Amour")).click();
   await expect(page.getByRole("menuitem")).toHaveCount(3);
   await page.waitForTimeout(400);
   await page.screenshot({ path: `${dir}/relecture-menu-${nom}.png` });

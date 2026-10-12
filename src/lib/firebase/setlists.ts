@@ -1,5 +1,6 @@
 import { auth } from "@/lib/firebase/config";
 import { SERVICE_LIEUX } from "@/types/user";
+import { BACK_OFFICE } from "@/lib/backOffice";
 import type { SetlistItem } from "@/types/setList";
 
 // ─── Categories ───────────────────────────────────────────────────────────────
@@ -17,6 +18,11 @@ export const FREE_CATEGORIES = [
 ] as const;
 
 export const ALL_CATEGORIES = [...RESTRICTED_CATEGORIES, ...FREE_CATEGORIES];
+
+/** Catégories des setlists de fête (docs/spec-chants-fetes.md, décision 32). Hors de `ALL_CATEGORIES` :
+ *  on ne crée jamais une setlist de fête depuis « Nouvelle setlist », et les écrans qui parcourent
+ *  `ALL_CATEGORIES` (statistiques, prochaines setlists, profil) ne changent pas. */
+export const FETE_CATEGORIES = ["Noël", "Pâques"] as const;
 
 // ─── Firestore types ──────────────────────────────────────────────────────────
 
@@ -44,6 +50,10 @@ export interface FSSetlist {
   editeurs?: string[];
   /** Rôle de chaque personne de `editeurs`, pour l'affichage (absent = musicien). */
   rolesPartage?: Record<string, "musicien" | "chanteur">;
+  /** Setlist d'un passage de fête (docs/spec-chants-fetes.md) : l'édition (`programmes/{id}`), le
+   *  passage et son seul « Qui » à la dernière saisie. Écrit par le serveur seul ; absent = setlist
+   *  ordinaire. */
+  fete?: { programme: string; passage: string; qui: string };
 }
 
 // ─── Firestore REST API ───────────────────────────────────────────────────────
@@ -277,6 +287,31 @@ export async function getSetlistsPartagees(uid: string): Promise<FSSetlist[]> {
     .filter((r) => r.document)
     .map((r) => fromFsDoc(r.document!))
     .filter((s) => !s.isDraft && !!s.editeurs?.includes(uid));
+}
+
+/** Les setlists d'une édition de fête (`fete.programme`), brouillons écartés, refiltrées côté client
+ *  (la requête n'est pas crue sur parole). Sans l'interrupteur du back-office : rien (CF24). */
+export async function getSetlistsDeFete(programme: string): Promise<FSSetlist[]> {
+  if (!BACK_OFFICE) return [];
+  const headers = await authHeader();
+  const res = await fetch(`${FS_BASE}:runQuery`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...headers },
+    body: JSON.stringify({
+      structuredQuery: {
+        from: [{ collectionId: "setlists" }],
+        where: {
+          fieldFilter: { field: { fieldPath: "fete.programme" }, op: "EQUAL", value: { stringValue: programme } },
+        },
+      },
+    }),
+  });
+  if (!res.ok) return [];
+  const rows = await res.json() as Array<{ document?: RawDoc }>;
+  return rows
+    .filter((r) => r.document)
+    .map((r) => fromFsDoc(r.document!))
+    .filter((s) => !s.isDraft && s.fete?.programme === programme);
 }
 
 export async function getMySetlists(uid: string): Promise<FSSetlist[]> {

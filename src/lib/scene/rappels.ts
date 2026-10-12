@@ -3,12 +3,13 @@
 
 import type { ReminderService } from "@/lib/push/reminderMessage";
 import type { Creneau } from "@/types/programme";
+import { libelleQui } from "@/lib/fetes/qui";
 
 export const SCENE_SERVICE = "Entraînement sur scène";
 
 // « Qui » d'un créneau → catégorie de l'app (clé de serviceRoles) dont les
 // membres reçoivent le rappel. Sans correspondance (EDD 小班, Gp Amour, Gp Joie,
-// 敬拜团), seul l'auteur est prévenu.
+// et les anciens 敬拜团, Jeunes, Chorale), seul l'auteur est prévenu.
 const QUI_CATEGORY: Record<string, string> = {
   Franco: "Culte Francophone",
   "EDD 中班": "中班",
@@ -29,5 +30,5 @@ export function quiCategories(qui: string[]): string[] {
 
 /** Ligne de rappel d'un créneau : « Entraînement sur scène (Chant · EDD 中班) à 17:00–18:30 ». */
 export function sceneReminder(c: Pick<Creneau, "debut" | "fin" | "quoi" | "qui">): ReminderService {
-  return { service: SCENE_SERVICE, roles: [`${c.quoi} · ${c.qui.join(", ")}`], time: `${c.debut}–${c.fin}` };
+  return { service: SCENE_SERVICE, roles: [`${c.quoi} · ${c.qui.map((q) => libelleQui(q)).join(", ")}`], time: `${c.debut}–${c.fin}` };
 }

@@ -259,11 +259,9 @@ type Qui = (typeof QUI)[number];
 
 /** Familles de « Qui peut réserver » (Q5), dans l'ordre de l'écran. */
 export const FAMILLES = [
-  { cle: "groupes", qui: ["Gp Bonté", "Gp Fidélité", "Gp Paix", "Gp Amour", "Gp Joie"] },
+  { cle: "groupes", qui: ["Gp Paix", "Gp Fidélité", "Gp Bonté", "Gp Amour", "Gp Joie"] },
   { cle: "edd", qui: ["EDD 小班", "EDD 中班", "EDD 大班", "EDD 高班"] },
-  { cle: "jeunes", qui: ["Jeunes"] },
-  { cle: "louange", qui: ["Franco", "敬拜团"] },
-  { cle: "chorale", qui: ["Chorale"] },
+  { cle: "louange", qui: ["Franco"] },
 ] as const satisfies readonly { cle: string; qui: readonly Qui[] }[];
 
 export type Famille = (typeof FAMILLES)[number]["cle"];

@@ -6,8 +6,8 @@
 // 15:00 – 16:00 »), puis quoi (un), qui (un ou plusieurs, limité aux groupes
 // permis), note. Pâques · Noël, P6 (docs/spec-scene-paques-noel.md, Q14, Q15 ;
 // planche v18-scene-a-feuille-telephone) : rien n'est coché d'avance, le bouton
-// plein dit « Choisis quoi et qui » tant qu'il manque l'un ou l'autre ; au-delà
-// de neuf groupes, « + N » déplie le reste. « Déplacer » ne propose que les
+// plein dit « Choisis quoi et qui » tant qu'il manque l'un ou l'autre. La liste
+// « Qui » tient en dix valeurs (docs/spec-chants-fetes.md, CF3) : plus de « + N ». « Déplacer » ne propose que les
 // créneaux libres, en pastilles jour par jour (le créneau actuel compris), sans
 // liste déroulante, et ne touche ni quoi ni qui.
 
@@ -34,21 +34,26 @@ export type CreneauValues = {
   note: string
 }
 
-/** Cases « Qui » (un ou plusieurs) de l'ordre de passage. */
+/** Cases « Qui » (un ou plusieurs) de l'ordre de passage. Une valeur retirée de la liste (敬拜团,
+ *  Jeunes, Chorale) encore présente dans le passage reste affichée, cochée et grisée « retiré », pour
+ *  que la coordination la décoche ; elle n'est plus proposée à un nouveau passage (CF3). */
 export function QuiChecklist({ value, onChange }: { value: string[]; onChange: (qui: string[]) => void }) {
   const { t } = useTranslation()
+  const retires = value.filter((q) => !(QUI as readonly string[]).includes(q))
   return (
     <fieldset className="space-y-1">
       <legend className="text-xs font-semibold">{t("planning.programme.qui")}</legend>
       <div className="flex flex-wrap gap-2">
-        {QUI.map((q) => {
+        {[...QUI, ...retires].map((q) => {
           const checked = value.includes(q)
+          const retire = retires.includes(q)
           return (
-            <label key={q} className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-semibold cursor-pointer ${checked ? "" : "bg-background border-border text-muted-foreground"}`}
+            <label key={q} className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-semibold cursor-pointer ${checked ? "" : "bg-background border-border text-muted-foreground"} ${retire ? "opacity-60" : ""}`}
               style={checked ? { background: `${PLANNING_COLORS.scene}15`, borderColor: PLANNING_COLORS.scene, color: PLANNING_COLORS.scene } : undefined}>
               <input type="checkbox" className="h-3.5 w-3.5" checked={checked}
                 onChange={() => onChange(checked ? value.filter((x) => x !== q) : [...value, q])} />
               {q}
+              {retire && <span className="font-normal"> · {t("planning.programme.quiRetire")}</span>}
             </label>
           )
         })}
@@ -122,21 +127,14 @@ export function CreneauForm({ open, title, onCancel, ...champs }: Props) {
   )
 }
 
-/** Groupes montrés avant « + N » (planche : neuf, puis « + 3 »). */
-const QUI_VISIBLES = 9
-
 function Champs({ submitLabel, place, places, initial, quiOptions, quiLimite, onSubmit, onCancel }: Omit<Props, "open" | "title">) {
   const { t, i18n } = useTranslation()
   const [v, setV] = useState<CreneauValues>(initial)
   const [error, setError] = useState("")
   const [busy, setBusy] = useState(false)
-  // Un groupe déjà choisi au-delà des neuf premiers déplie la liste d'emblée.
-  const [tousQui, setTousQui] = useState(() => quiOptions.slice(QUI_VISIBLES).some((q) => initial.qui.includes(q)))
   const jours = places ? [...new Set(places.map((p) => p.jour))] : []
   const choisie = (p: Place) => p.jour === v.dimanche && cle(p) === cle(v)
   const pret = places ? places.some(choisie) : v.quoi !== "" && v.qui.length > 0
-  const quiMontres = tousQui ? quiOptions : quiOptions.slice(0, QUI_VISIBLES)
-  const caches = quiOptions.length - quiMontres.length
 
   async function submit(e: FormEvent) {
     e.preventDefault()
@@ -176,19 +174,13 @@ function Champs({ submitLabel, place, places, initial, quiOptions, quiLimite, on
               {quiLimite && <span className="font-normal"> · {t("planning.saison.quiPermisTitre")}</span>}
             </>
           }>
-            {quiMontres.map((q) => {
+            {quiOptions.map((q) => {
               const checked = v.qui.includes(q)
               return (
                 <Pastille key={q} type="checkbox" name="creneau-qui" label={q} checked={checked}
                   onChange={() => setV({ ...v, qui: checked ? v.qui.filter((x) => x !== q) : [...v.qui, q] })} />
               )
             })}
-            {caches > 0 && (
-              <button type="button" onClick={() => setTousQui(true)}
-                className="inline-flex h-11 items-center rounded-xl px-3 text-sm font-semibold text-muted-foreground hover:bg-secondary">
-                + {caches}<span className="sr-only"> {t("planning.saison.autresGroupes", { count: caches })}</span>
-              </button>
-            )}
           </Groupe>
           <div className="space-y-2">
             <label htmlFor="creneau-note" className="text-[13px] font-semibold text-muted-foreground">

@@ -5,6 +5,7 @@
 import { formatReminderDate } from "@/lib/push/reminderMessage";
 import type { Creneau } from "@/types/programme";
 import type { NotifLang } from "@/types/user";
+import { libelleQui } from "@/lib/fetes/qui";
 
 /** Une clé par programme et par paire de créneaux, dans un ordre stable. */
 export function conflictKey(programmeId: string, creneauIds: string[]): string {
@@ -12,7 +13,7 @@ export function conflictKey(programmeId: string, creneauIds: string[]): string {
 }
 
 function slot(c: Creneau, lang: NotifLang): string {
-  const who = `${c.quoi} · ${c.qui.join(", ")}`;
+  const who = `${c.quoi} · ${c.qui.map((q) => libelleQui(q, lang === "fr" ? "fr" : "zh")).join(", ")}`;
   return lang === "fr"
     ? `${c.debut}–${c.fin} (${who}, ${c.auteurNom})`
     : `${c.debut}–${c.fin}（${who}，${c.auteurNom}）`;

@@ -1383,6 +1383,7 @@
       "fin": "Fin",
       "quoi": "Quoi",
       "qui": "Qui",
+      "quiRetire": "retiré",
       "note": "Note",
       "noteHint": "Sono, matériel, précision…",
       "save": "Enregistrer",
@@ -1534,8 +1535,6 @@
       "deplacer": "Déplacer",
       "deplacerTitre": "Déplacer la réservation",
       "choisisQuoiQui": "Choisis quoi et qui",
-      "autresGroupes_one": "autre groupe",
-      "autresGroupes_other": "autres groupes",
       "facultatif": "facultatif",
       "resume": "Saison : {{from}} → {{to}} · {{jours}} · {{duree}} · {{qui}}",
       "modifierSaison": "Modifier la saison",
@@ -1564,9 +1563,7 @@
       "familles": {
         "groupes": "Groupes",
         "edd": "EDD",
-        "jeunes": "Jeunes",
-        "louange": "Louange",
-        "chorale": "Chorale"
+        "louange": "Louange"
       },
       "erreurs": {
         "dateInvalide": "Choisis une date d'ouverture et une date de fermeture.",
