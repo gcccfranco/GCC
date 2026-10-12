@@ -886,5 +886,8 @@ rappel faux sur deux chants au même `section.uid` (C5).
   Cas notables : 香膏的玉瓶 perd la 1ʳᵉ ligne de son crédit (« Zach Neese & ») mais garde « Walker Beach 词曲 », rien tranché ; titre anglais
   gardé (même bande que « 1=X ») sur 深刻的爱, 满有能力, 真实的悔改, 祷告, 耶和华行了大事, 耶稣的名, 荣耀的呼召, 行神迹的神, 让爱飞翔.
   Tests purs `jianpu-integration.spec.ts` (ordinateur) : 2 passed. Reste du lot 3 : les tranches suivantes (rendu dans `JianpuSheet`).
+  Vérifié par Opus (12/10/2026) : 21 pages regardées (les 8 corrigées, les 4 sans coupe propre, 香膏的玉瓶, 祷告, 耶稣的名 et 6
+  acceptées tirées au hasard) ; 21 justes, aucune correction : chaque valeur est dans la plus basse bande sans contact au-dessus
+  de « 1=X » ; 香膏的玉瓶 garde « Walker Beach 词曲 » parce que ce crédit chevauche le « 4/4 ».
 
-Prochaine étape : le lot 3 (le lot 2 attend le passage complet et la vérification d'Opus).
+Prochaine étape : L3-T2 (le scan en encre dans `JianpuSheet`) ; le lot 2 attend le passage complet et la vérification d'Opus.
