@@ -59,6 +59,8 @@ const SPECS_GRAND_ECRAN = [
   /scene-paques-noel\.spec\.ts/,
   // Agencement v18 (docs/spec-agencement-v18.md) : chaque tranche, F1 comprise, sur les cinq projets.
   /agencement-v18-.*\.spec\.ts/,
+  // Lot 3 du chantier « équipes et groupes » (docs/spec-planning-gestes.md, PG-Z) : les gestes du planning.
+  /planning-gestes-agencement\.spec\.ts/,
   // Retouches après v18 (docs/spec-retouches-v18.md), lot R seulement (retouches-v18-ra, -agenda, -ordre,
   // -pilules-stats…) : cinq projets. Les specs des lots E et F (evenements-equipe, ex-evenements-pole ; planning-fidelite) gardent trois appareils.
   /retouches-v18(-.*)?\.spec\.ts/,
