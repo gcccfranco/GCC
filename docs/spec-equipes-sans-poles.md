@@ -8,7 +8,7 @@ Le retour des responsables et la piste notée au lot G (`spec-retouches-v18.md`,
 pôle Louange implicite ne trouvait plus les réunions de son pôle dans aucune liste.
 
 - **Date** : 08/10/2026.
-- **Statut** : **go de Timothée le 08/10/2026 au soir. EQ-A, EQ-B et EQ-C codées** (voir « Avancement ») ; EQ-D à EQ-F restent.
+- **Statut** : **go de Timothée le 08/10/2026 au soir. EQ-A à EQ-E codées** (voir « Avancement ») ; EQ-F reste.
 - **Base de code** : `ui/apple-design` à `5878ce1`. Le code est identique à `439e5520`, base de la cartographie :
   seuls des documents ont changé depuis. Toutes les références `fichier:ligne` ci-dessous ont été rouvertes à `5878ce1`.
   Celles qu'ajoutent les réponses du 08/10 au soir ont été ouvertes à `ceeb9b2`, au code identique (`git diff 5878ce1
@@ -1091,3 +1091,27 @@ Go de code de Timothée le 08/10/2026 au soir.
 - **Pour Timothée** :
   - **ne pas publier `firestore.rules` maintenant** (voir EQ-C) ; rien à lancer pour EQ-D ;
   - relire le 中文 : « GCC 法语堂 {{annee}} 组织架构 » (sans « 部门 »), l'aide de « 按组织架构重新计算 » (为每个团队成员重新设定其所属团队和负责的团队：成员由此可以查看团队的会议和任务，负责人可以创建。) et « 组织架构 » du menu Plus.
+
+### EQ-E — Migration (12/10/2026)
+
+- **Codé** (§ Migration, décisions 7, 8, 40, 41) :
+  - **`src/lib/equipes/migration.ts`** (nouveau, sans Admin SDK) : `POLE_VERS_EQUIPE` (da, media -> medias, orga, evenement -> evenementiel, louange) ; un `Magasin` (la base vue comme des documents à chemin : `lire`, `lister`, `listerIds`, `ecrire`, `maj`, `supprimer`) ; `lireEtat`, `releveEtPlan` (pur), `planifier` (lit, n'écrit jamais), `appliquer` (dans l'ordre des étapes), `formaterReleve` (texte du terminal).
+  - **Relevé** (listes 1 à 6) : pôles cochés hors organigramme ; pertes d'accès, avec le repère « n'aura plus que Tâches et Réunions » ; coordination d'avant ; tâches au responsable hors équipe cible et « toute l'équipe » d'une équipe sans référent ; chiffres (tâches et fois par pôle, `prevenir` visant un pôle, évènements `pole:*` avec sujets, tableaux de bord, clés `notifLog`, profils à recalculer) ; plan compté par étape.
+  - **Plan en 7 étapes**, dans cet ordre : (1) `dansEquipes` et `referentDe` de tous les profils ; (2) tâches et fois recopiées sous `equipes/{équipe}/taches` (même id, `pole` retiré, `equipe` posé, `prevenir.pole` traduit), puis la source supprimée, fois d'abord ; (3) `evenements.pour` `pole:*` -> `equipe:*` ; (4) réglage `poles` des widgets « À faire » -> `equipes` ; (5) clés `notifLog` de Média et d'Événement recopiées sous leur nouveau nom ; (6) `equipes.pole` retiré ; (7) `users.poles` retiré, en dernier.
+  - **`scripts/poles-vers-equipes.ts`** (nouveau, Admin SDK) : à blanc par défaut (toute écriture lève sans `--ecrire`), imprime le projet visé, le relevé et le plan ; avec `--ecrire`, applique étape par étape puis relit : « Nouveau passage à blanc : 0 opération ».
+- **Choix faits faute de réponse** :
+  - **Le pôle d'une équipe se lit dans `equipes/{id}.pole` tel que stocké**, sans repli sur l'ancienne table (supprimée en EQ-D) : c'est ce que l'ancien code calculait (`?? null`).
+  - **Liste 2 = une seule liste à deux repères** (« même liste, un second repère »). Y figure qui perd un pôle (donné par une autre équipe que la cible, ou coché à la main, sans être dans la cible), et aussi qui n'avait le Back-Office complet que par un pôle (aucun droit planning, notifier, annonces, Équipes, ni `referentDe` d'après l'organigramme), **même simple membre de son équipe cible** : EQ17 (b) le range ici. Les admins n'y figurent pas, ni en liste 3.
+  - **Un document déjà sous `equipes/` est un conflit s'il diffère de la copie attendue** : ni écrasé, ni sa source supprimée, listé en fin de relevé (« à régler à la main »). Un document identique (passage interrompu) n'est pas réécrit, mais sa source est supprimée. Le spec disait « réécrite à l'identique » : même résultat, une écriture de moins.
+  - **Un `pour` `pole:<inconnu>`** n'est pas deviné : compté « de pôle inconnu », non migré. Un pôle inconnu dans le réglage d'un widget est écarté.
+  - **Clés `notifLog`** : copiées seulement si la nouvelle n'existe pas ; les ids seuls sont listés (`listDocuments`), les documents lus uniquement pour les clés concernées.
+  - **Les réunions `equipe:louange` déjà là et `pole:louange`** se rejoignent sans rien faire de plus (même public).
+- **Tests vus rouges puis verts** (trois appareils) :
+  - `tests/equipes-migration.spec.ts` (nouveau, pur, base en mémoire) : rouge = module et script absents (le fichier ne se charge pas, « No tests found ») ; puis **51 verts** (17 tests x 3 appareils) : la correspondance ; listes 1 à 6 ; chaque étape ; second passage « 0 opération » ; reprise d'un passage interrompu ; conflit ; à blanc sans aucune écriture ; le script n'écrit qu'avec `--ecrire`.
+  - `npx tsc --noEmit` et `npm run lint` sans erreur. Le script, lancé sans `FIREBASE_SERVICE_ACCOUNT`, s'arrête proprement (« FIREBASE_SERVICE_ACCOUNT manquant ») : il n'a jamais touché une base.
+- **Relu par Opus : 5 constats (tous mineurs), 5 corrigés ; rien de laissé.** (1) Liste 2 : un profil avec un pôle mais sans équipe ni rôle de service est maintenant imprimé « plus aucune entrée (aucune équipe) », non plus « Tâches et Réunions seulement » (`sansEntree`, `access.ts` rend `[]`). (2) Coupure entre les étapes 6 et 7 : le relevé détecte la reprise (`reprise` : plus aucun `equipes.pole`, des `users.poles` restants), laisse les listes 1 et 2 vides et le dit. Limite : une base où aucune équipe n'a jamais eu le champ `pole` est prise pour une reprise. (3) Pôle inconnu : `poles/<inconnu>/taches` (via `listerIds("poles")`, fantômes compris) et `prevenir.pole` inconnu sont comptés et non migrés (`prevenir` laissé tel quel, plus de recopie en `equipe`). (4) Liste 4a : un admin responsable n'y figure plus. (5) Tests : rattachement périmé remis à `[]` ; garde « à blanc » testée par comportement (`enLectureSeule`, appliquer lève sans rien changer), le script l'utilise. `tests/equipes-migration.spec.ts` : 23 tests x 3 appareils = 69 verts ; 4 nouveaux tests de relevé et le test de garde vus rouges avant le code (le test 5a passait d'emblée : comportement déjà juste, test ajouté).
+- **Reste** : EQ-F (nettoyage, critère EQ1 : `grep` ne trouve plus que `migration.ts` et la garde des règles ; `poles == []` des règles de création de profil et `FakeProfile.poles` à retirer ; passage complet des specs voisines).
+- **Pour Timothée** (bascule, § « Ordre de la bascule », après EQ-F) :
+  - `FIREBASE_SERVICE_ACCOUNT` dans `.env.local`, puis `npx tsx --env-file=.env.local scripts/poles-vers-equipes.ts` (à blanc) : lire les listes ; ajouter à la main à l'équipe cible qui doit garder un accès (liste 2, décision 40), nommer un référent là où des tâches « toute l'équipe » n'en ont pas (liste 4b, décision 41), noter qui cocher en « Coordination » (liste 3) ;
+  - publier `firestore.rules`, puis le même script avec `--ecrire`, puis de nouveau à blanc (0 opération) ;
+  - rien à relire en 中文 pour EQ-E (aucun libellé de site).
