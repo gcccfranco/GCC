@@ -12,6 +12,7 @@ import {
 } from "../src/lib/fetes/droits";
 import { estUnChant, resoudrePropositions } from "../src/lib/setlist/propositions";
 import { parseChordPro } from "../src/lib/chordpro/parser";
+import { categoryColor, CATEGORY_COLORS, PLANNING_COLORS } from "../src/lib/serviceColors";
 import type { SetlistItem } from "../src/types/setList";
 
 // Lot « chants des fêtes » (docs/spec-chants-fetes.md), tranches CF-A (modèle et logique pure),
@@ -285,5 +286,22 @@ test.describe("documentation du répertoire (CF-F, décision 45 Q12)", () => {
     expect(t).toContain("{proposition: <id>}");
     expect(t).toMatch(/Chant né d'une proposition/);
     expect(t).toMatch(/identifiant de la proposition/);
+  });
+});
+
+test.describe("couleurs de Noël et de Pâques (CF26, décision 47)", () => {
+  test("Noël vert sapin, Pâques violet", () => {
+    expect(categoryColor("Noël")).toBe("#17633f");
+    expect(categoryColor("Pâques")).toBe("#7c3aed");
+  });
+
+  test("les dix couleurs gelées ne changent pas, la scène non plus ; une catégorie inconnue reste grise", () => {
+    expect(CATEGORY_COLORS).toMatchObject({
+      "Culte Francophone": "#2d5a65", Intergroupe: "#a87b0f", Interfranco: "#9d3c63", Campus: "#2471a3",
+      "Groupe Paix": "#6b4a8e", "Groupe Fidélité": "#a03030", "Groupe Bonté": "#8b4a2e",
+      "中班": "#3b6d11", "大班": "#3b6d11", "高班": "#3b6d11",
+    });
+    expect(PLANNING_COLORS.scene).toBe("#3f51a3");
+    expect(categoryColor("Inconnue")).toBe("#64748b");
   });
 });
