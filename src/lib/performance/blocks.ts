@@ -179,7 +179,13 @@ export function buildPerformanceBlocks(
           const msTarget = ms.keyChange ?? fs?.sectionKeys?.[ms.sectionId];
           const msKeyChange = msTarget && msTarget !== fusionKey ? msTarget : undefined;
           return [{ ms, ast, section, fs, fusionKey, msKeyChange }];
-        });
+        }).map((p, index) => ({
+          ...p,
+          // Deux chants peuvent porter le même `section.uid` (« chorus-3-2 » dans
+          // chacun) : chaque passage a donc son identifiant, que les cercles du
+          // rappel retrouvent sans se tromper de pastille.
+          occId: `${p.ms.songSlug}:${index}`,
+        }));
         if (fusionMeta.length > 0) {
           blocks.push({
             kind: "song-header",
@@ -189,8 +195,10 @@ export function buildPerformanceBlocks(
             songKey: fusionMeta.map((m) => m.key).join(" / "),
             position: item.position,
             fusionSongs: fusionMeta,
-            steps: passages.map(({ ms, section, fs, msKeyChange }) => ({
-              section,
+            steps: passages.map(({ ms, section, fs, msKeyChange, occId }) => ({
+              // StructureStrip ne se sert de l'uid que pour les cercles ; le bloc
+              // section garde le sien (clé des annotations, computePageKey).
+              section: { ...section, uid: occId },
               note: ms.note ?? fs?.sectionNotes?.[ms.sectionId] ?? "",
               transition: ms.transition ?? "",
               nuance: ms.nuance ?? fs?.sectionNuances?.[ms.sectionId],
@@ -200,11 +208,11 @@ export function buildPerformanceBlocks(
         }
         // Sections uniques : chaque section une fois par chant et par
         // tonalité, comme la vue Partitions.
-        const shown = unique
-          ? passages.filter((p, i) => passages.findIndex((q) =>
-              q.ms.songSlug === p.ms.songSlug && q.section.id === p.section.id && q.msKeyChange === p.msKeyChange) === i)
-          : passages;
-        for (const { ms, ast, section, fs, fusionKey, msKeyChange } of shown) {
+        const memeImpression = (p: (typeof passages)[number], q: (typeof passages)[number]) =>
+          q.ms.songSlug === p.ms.songSlug && q.section.id === p.section.id && q.msKeyChange === p.msKeyChange;
+        const shown = unique ? passages.filter((p, i) => passages.findIndex((q) => memeImpression(p, q)) === i) : passages;
+        for (const passage of shown) {
+          const { ms, ast, section, fs, fusionKey, msKeyChange, occId } = passage;
           blocks.push({
             kind: "section",
             uid: uid(),
@@ -220,7 +228,7 @@ export function buildPerformanceBlocks(
             songTitle: ast.metadata.title,
             songKey: fusionKey,
             songSourceLabel: multiSong ? ast.metadata.title : undefined,
-            occurrenceUids: [section.uid],
+            occurrenceUids: unique ? passages.filter((q) => memeImpression(passage, q)).map((q) => q.occId) : [occId],
           });
           if (ms.transition && !unique) blocks.push({ kind: "transition-intra", uid: uid(), text: ms.transition });
         }
@@ -404,6 +412,50 @@ export function signatureAffichage({
   const accords = showChords && !ossature;
   const paroles = !hideLyrics && !ossature;
   return `c${accords ? 1 : 0}t${showTransitions ? 1 : 0}l${paroles ? 0 : 1}${chartStyle ? "s1" : ""}${capo ? `k${capo}` : ""}${personalKey ? `p${personalKey}` : ""}z${Math.round(fontScale * 100)}${affichage === "unique" ? "au" : ""}`;
+}
+
+/** Identité stable d'un bloc d'une mise en page à l'autre : les indices ne le
+ *  sont pas (changer d'affichage reconstruit les blocs). Le chant par la
+ *  position de l'item et le rang de son en-tête (une fusion hors structure
+ *  mixte en a un par chant) ; une section par les occurrences qu'elle joue. */
+export type AncreLecture = { position: number; rang: number; uids: string[] | null };
+
+/** Chant de chaque bloc : position de l'item et rang de l'en-tête parmi ceux de
+ *  même position. */
+function chantsDesBlocs(blocks: PerformanceBlock[]): ({ position: number; rang: number } | null)[] {
+  const rangs = new Map<number, number>();
+  let courant: { position: number; rang: number } | null = null;
+  return blocks.map((b) => {
+    if (b.kind === "song-header") {
+      const rang = rangs.get(b.position) ?? 0;
+      rangs.set(b.position, rang + 1);
+      courant = { position: b.position, rang };
+    }
+    return courant;
+  });
+}
+
+export function ancreDeLecture(blocks: PerformanceBlock[], index: number): AncreLecture | null {
+  const b = blocks[index];
+  const chant = chantsDesBlocs(blocks)[index];
+  if (!b || !chant) return null;
+  return { ...chant, uids: b.kind === "section" && b.occurrenceUids?.length ? b.occurrenceUids : null };
+}
+
+/** Blocs de la nouvelle mise en page où reprendre la lecture, du plus précis au
+ *  plus large : la section du même chant qui joue l'une des occurrences lues,
+ *  puis l'en-tête de ce chant. Vide quand le chant n'existe plus. */
+export function retrouverAncre(blocks: PerformanceBlock[], ancre: AncreLecture): number[] {
+  const chants = chantsDesBlocs(blocks);
+  const memeChant = (i: number) => chants[i]?.position === ancre.position && chants[i]?.rang === ancre.rang;
+  const trouves: number[] = [];
+  const section = ancre.uids
+    ? blocks.findIndex((b, i) => b.kind === "section" && memeChant(i) && !!b.occurrenceUids?.some((u) => ancre.uids!.includes(u)))
+    : -1;
+  if (section >= 0) trouves.push(section);
+  const entete = blocks.findIndex((b, i) => b.kind === "song-header" && memeChant(i));
+  if (entete >= 0) trouves.push(entete);
+  return trouves;
 }
 
 export function computePageKey(

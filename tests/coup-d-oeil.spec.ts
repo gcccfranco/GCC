@@ -2,6 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { attendreEditeur, reglerElement } from "./helpers/editeurSetlist";
 import { fermerMenus, ouvrirAffichage, ouvrirPartitions } from "./helpers/setlist";
+import { ouvrirReglages } from "./helpers/louange";
 import { abbreviateSection } from "../src/lib/chordpro/abbreviations";
 import { uniqueSections } from "../src/lib/setlist/uniqueSections";
 import { isLastPhraseOnly, materializeLastPhrase } from "../src/lib/setlist/lastPhrase";
@@ -209,6 +210,36 @@ test.describe("modes d'affichage de la vue partitions", () => {
     await openPartitions(page);
     await expect(page.getByRole("list", { name: "Structure" }).first()).toBeVisible();
     await expect(page.locator("[data-section]")).toHaveCount(0);
+  });
+
+  test("choix fait dans le mode louange : retrouvé dans le menu Affichage de la setlist, sans recharger", async ({ page }) => {
+    await page.addInitScript(() => localStorage.setItem("perf-role-asked", "1"));
+    await signInAs(page, MUSICIEN, { [`setlists/${SETLIST_ID}`]: setlist() }, `/setlists/${SETLIST_ID}`);
+    await page.getByRole("button", { name: /Mode Louange/ }).click();
+    const reglages = await ouvrirReglages(page);
+    const affichage = reglages.getByRole("radiogroup", { name: "Affichage" });
+    await expect(affichage.getByRole("radio", { name: "Ordre joué" })).toHaveAttribute("aria-checked", "true");
+    await affichage.getByRole("radio", { name: "Sections uniques" }).click();
+    expect(await page.evaluate(() => localStorage.getItem("partition-layout"))).toBe("unique");
+
+    // Quitter le mode louange (Échap referme d'abord la feuille).
+    await page.keyboard.press("Escape");
+    await expect(page.getByRole("dialog")).toHaveCount(0);
+    const quitter = page.getByRole("button", { name: "Quitter" });
+    await expect(async () => {
+      if (!(await quitter.isVisible())) {
+        const ecran = page.viewportSize()!;
+        await page.mouse.click(ecran.width / 2, ecran.height / 2);
+      }
+      await quitter.click({ timeout: 2_000 });
+    }).toPass({ timeout: 20_000 });
+    await expect(page.locator("[data-performance-mode]")).toHaveCount(0);
+
+    await ouvrirPartitions(page);
+    await ouvrirAffichage(page);
+    await expect(page.getByRole("menuitemradio", { name: "Sections uniques" })).toHaveAttribute("aria-checked", "true");
+    await fermerMenus(page);
+    await expect(song1Sections(page)).toHaveCount(2);
   });
 
   test("mode Adapter : ordre joué forcé, le bandeau reste", async ({ page }) => {

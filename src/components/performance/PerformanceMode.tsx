@@ -13,7 +13,7 @@ import {
   DrawerTitle,
 } from "@/components/ui/drawer";
 import type { PerformanceBlock, SectionBlock, JianpuSheetBlock, SongHeaderBlock } from "@/lib/performance/blocks";
-import { buildPerformanceBlocks, computePageKey, signatureAffichage } from "@/lib/performance/blocks";
+import { ancreDeLecture, buildPerformanceBlocks, computePageKey, retrouverAncre, signatureAffichage, type AncreLecture } from "@/lib/performance/blocks";
 import { GRAND_ECRAN, pagesUneColonne, paginateColumns, twoColumnsPossible, type PerfPage } from "@/lib/performance/columns";
 import { useJianpuManifest } from "@/lib/jianpu/images";
 import { interrupteurAllume, prefDepuisInterrupteur, type JianpuPref } from "@/lib/jianpu/preference";
@@ -21,7 +21,7 @@ import { JianpuSheet } from "@/components/jianpu/JianpuSheet";
 import { SectionView, StructureStrip, TransitionNote } from "@/components/song/SongView";
 import { pinyin_font } from "@/components/song/pinyinFont";
 import { formatSectionName } from "@/lib/chordpro/parser";
-import { isRepeatOf } from "@/lib/setlist/sectionSteps";
+import { isRepeatOf, type SectionOccurrence } from "@/lib/setlist/sectionSteps";
 import { AnnotationCanvas, StrokesLayer } from "./AnnotationCanvas";
 import { type AnnotationData, serializeAnnotations, deserializeAnnotations } from "@/lib/annotations/strokes";
 import { loadAnnotation, saveAnnotation } from "@/lib/firebase/annotations";
@@ -86,7 +86,7 @@ function BlockRenderer({
   bandeau?: Bandeau;
 }) {
   if (block.kind === "song-header") {
-    return <SongHeader block={block} bandeau={bandeau} />;
+    return <SongHeader block={block} bandeau={bandeau} showTransitions={showTransitions} />;
   }
   if (block.kind === "transition-intra") {
     if (!showTransitions) return null;
@@ -138,11 +138,16 @@ const langAccent = (language?: "fr" | "zh") =>
  *  seule (la structure est déjà en grand). */
 type Bandeau = "aucun" | "simple" | "details";
 
-function SongHeader({ block, bandeau }: { block: SongHeaderBlock; bandeau: Bandeau }) {
+/** « Transitions » coupé : le bandeau n'en montre plus (les notes restent). */
+function sansTransitions(steps: SectionOccurrence[], showTransitions: boolean): SectionOccurrence[] {
+  return showTransitions ? steps : steps.map((s) => (s.transition ? { ...s, transition: "" } : s));
+}
+
+function SongHeader({ block, bandeau, showTransitions }: { block: SongHeaderBlock; bandeau: Bandeau; showTransitions: boolean }) {
   const { t } = useTranslation();
   // Mesuré avec l'en-tête : en deux colonnes, il reste en pleine largeur au-dessus.
   const strip = bandeau !== "aucun" && block.steps?.length ? (
-    <StructureStrip steps={block.steps} details={bandeau === "details"} className="mt-3" />
+    <StructureStrip steps={sansTransitions(block.steps, showTransitions)} details={bandeau === "details"} className="mt-3" />
   ) : null;
   if (block.fusionSongs?.length) {
     return (
@@ -368,11 +373,15 @@ export function PerformanceMode({
   });
   // Rôle contredit par les accords choisis juste avant sur la page setlist :
   // désélectionné, et l'affichage reprend celui de la page (paroles comprises).
+  // Même chose pour le Batteur quand l'Affichage de l'appareil n'est pas
+  // Structure seule (D15, dans les deux sens) : sans cela, son rôle l'emporterait.
   const roleOverridden =
-    storedRole !== null && initialShowChords !== undefined && ROLE_PRESETS[storedRole].chords !== initialShowChords;
+    storedRole !== null &&
+    ((initialShowChords !== undefined && ROLE_PRESETS[storedRole].chords !== initialShowChords) ||
+      (storedRole === "batteur" && affichage !== "structure"));
   const [rolePreset, setRolePreset] = useState<RolePreset | null>(roleOverridden ? null : storedRole);
   const [showChords, setShowChords] = useState(
-    initialShowChords ?? (storedRole ? ROLE_PRESETS[storedRole].chords : true),
+    initialShowChords ?? (storedRole && !roleOverridden ? ROLE_PRESETS[storedRole].chords : true),
   );
   const [showTransitions, setShowTransitions] = useState(true);
   const [hideLyrics, setHideLyrics] = useState(() => {
@@ -571,7 +580,16 @@ export function PerformanceMode({
   const blockRefs = useRef<(HTMLDivElement | null)[]>([]);
   const blockColRefs = useRef<(HTMLDivElement | null)[]>([]);
   // Page lue et son premier bloc : ancre de la lecture quand la mise en page change.
-  const readingRef = useRef<{ page: number; block: number | undefined }>({ page: 0, block: undefined });
+  // Un indice ne survit pas à une reconstruction des blocs (changement
+  // d'affichage) : l'ancre porte aussi l'identité du bloc (chant, occurrences)
+  // et les blocs de la mise en page où elle a été prise.
+  const readingRef = useRef<{ page: number; block: number | undefined; blocks?: PerformanceBlock[]; ancre?: AncreLecture | null }>({
+    page: 0,
+    block: undefined,
+  });
+  const layoutBlocksRef = useRef<PerformanceBlock[] | null>(null);
+  // Hauteur du rappel de chaque chant (Sections uniques), mesurée en copie.
+  const rappelRefs = useRef<(HTMLDivElement | null)[]>([]);
   const measureInnerRef = useRef<HTMLDivElement | null>(null);
   const chromeTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const tapStart = useRef<{ x: number; y: number; time: number } | null>(null);
@@ -688,6 +706,23 @@ export function PerformanceMode({
       const widths = rects.map((r, i) => (structureMode && blocks[i]?.kind === "section" ? r?.width ?? 0 : 0));
       const kindOf = (i: number) => blocks[i]?.kind;
       const all = blocks.map((_, i) => i);
+      // Sections uniques : la réserve de chaque chant est la hauteur de son
+      // rappel (marge comprise), au moins la rangée de 32 px. Il passe à la
+      // ligne quand le texte grossit (huit pastilles ≈ 249 px de large).
+      const reserves = new Map<number, number>();
+      if (affichageVu === "unique") {
+        blocks.forEach((b, i) => {
+          if (b.kind !== "song-header") return;
+          const mesuree = rappelRefs.current[i]?.getBoundingClientRect().height ?? 0;
+          reserves.set(i, Math.max(RAPPEL_RESERVE, Math.ceil(mesuree)));
+        });
+      }
+      const enteteDe = new Map<number, number>();
+      let courant = -1;
+      blocks.forEach((b, i) => {
+        if (b.kind === "song-header") courant = i;
+        enteteDe.set(i, courant);
+      });
       let computed: PerfPage[];
       if (structureMode) {
         // Un chant par page : on regroupe l'en-tête et ses sections, puis layoutSong.
@@ -707,16 +742,16 @@ export function PerformanceMode({
         );
       } else {
         const breakBefore = new Set(blocks.flatMap((b, i) => (b.kind === "song-header" ? [i] : [])));
-        const reserveSuite = affichageVu === "unique" ? RAPPEL_RESERVE : 0;
         computed = splitSheetPages(all, kindOf, (flow) => {
-          if (!twoColumns) return pagesUneColonne(flow, heights, viewportH, breakBefore, reserveSuite);
-          // Deux colonnes : chant par chant, chacun ouvre une page.
+          // Chant par chant (chacun ouvre une page) : chacun garde la réserve de son rappel.
           const songs: number[][] = [];
           for (const i of flow) {
             if (kindOf(i) === "song-header" || songs.length === 0) songs.push([]);
             songs[songs.length - 1].push(i);
           }
           return songs.flatMap((song) => {
+            const reserveSuite = reserves.get(enteteDe.get(song[0]) ?? -1) ?? 0;
+            if (!twoColumns) return pagesUneColonne(song, heights, viewportH, breakBefore, reserveSuite);
             const header = kindOf(song[0]) === "song-header" ? song[0] : null;
             return paginateColumns({
               flow: header != null ? song.slice(1) : song,
@@ -729,15 +764,27 @@ export function PerformanceMode({
           });
         });
       }
+      layoutBlocksRef.current = blocks;
       setLayout(computed);
       // La lecture reste à l'écran quand la mise en page change (« 2 colonnes »,
       // rotation, taille du texte) : la page qui contient le premier bloc de la
-      // page lue. Une page tournée entre-temps n'est pas déplacée.
+      // page lue. Une page tournée entre-temps n'est pas déplacée. Si les blocs
+      // ont été reconstruits (changement d'affichage), l'indice ne désigne plus
+      // le même bloc : on retrouve la section du même chant qui joue les mêmes
+      // occurrences, sinon l'en-tête de ce chant.
+      const pageDe = (i: number) => computed.findIndex((p) => p.header === i || p.cols.some((c) => c.includes(i)));
       setCurrentPage((prev) => {
-        const { page, block } = readingRef.current;
-        const anchored = page === prev && block !== undefined
-          ? computed.findIndex((p) => p.header === block || p.cols.some((c) => c.includes(block)))
-          : -1;
+        const { page, block, blocks: lus, ancre } = readingRef.current;
+        let anchored = -1;
+        if (page === prev && block !== undefined) {
+          if (lus === blocks) anchored = pageDe(block);
+          else if (ancre) {
+            for (const i of retrouverAncre(blocks, ancre)) {
+              anchored = pageDe(i);
+              if (anchored >= 0) break;
+            }
+          }
+        }
         return anchored >= 0 ? anchored : Math.min(prev, Math.max(0, computed.length - 1));
       });
     };
@@ -831,7 +878,16 @@ export function PerformanceMode({
 
   const currentPageIndices = pages[currentPage] ?? [];
   useEffect(() => {
-    readingRef.current = { page: currentPage, block: pages[currentPage]?.[0] };
+    // `pages` répond aux blocs de la dernière mise en page, pas forcément à ceux
+    // du rendu en cours (reconstruits avant que la pagination ne soit refaite).
+    const lus = layoutBlocksRef.current;
+    const block = pages[currentPage]?.[0];
+    readingRef.current = {
+      page: currentPage,
+      block,
+      blocks: lus ?? undefined,
+      ancre: lus && block !== undefined ? ancreDeLecture(lus, block) : null,
+    };
   }, [pages, currentPage]);
   // Sommaire : un en-tête de chant par entrée, avec sa page de départ
   const songEntries = useMemo(
@@ -1065,6 +1121,19 @@ export function PerformanceMode({
             </div>
           ))}
         </div>
+        {/* Sections uniques : le rappel de chaque chant, à la largeur de la page, pour
+            réserver sa vraie hauteur (il passe à la ligne quand le texte grossit). */}
+        {affichageVu === "unique" && (
+          <div className="absolute top-0 left-0" style={{ width: `calc(100% / ${fontScale})`, ...contentPadding }}>
+            {blocks.map((block, i) =>
+              block.kind === "song-header" && block.steps?.length ? (
+                <div key={block.uid} ref={(el) => { rappelRefs.current[i] = el; }} className="flow-root">
+                  <div className="mb-2"><StructureStrip steps={block.steps} compacte /></div>
+                </div>
+              ) : null,
+            )}
+          </div>
+        )}
         {/* Deux colonnes : la même mesure à la largeur d'une colonne (gouttière
             de 2rem, comme le rendu). Seuls les blocs qui vont en colonne y sont
             rendus : l'en-tête reste en pleine largeur, un scan 简谱 sur sa page. */}
@@ -1159,7 +1228,7 @@ export function PerformanceMode({
                   <div className="shrink-0">
                     <StructureStrip
                       position={sheet.position}
-                      steps={sheet.steps}
+                      steps={sansTransitions(sheet.steps, showTransitions)}
                       capo={sheet.capo}
                       details
                       className="mb-1.5"
@@ -1563,7 +1632,7 @@ export function PerformanceMode({
             <SettingRow label={t("performance.chords")}>
               <Switch
                 aria-label={t("performance.chords")}
-                checked={showChords}
+                checked={chordsShown}
                 onCheckedChange={(v) => {
                   clearRolePreset();
                   quitterStructureSeule();
@@ -1577,7 +1646,7 @@ export function PerformanceMode({
             <SettingRow label={t("performance.hideLyrics")}>
               <Switch
                 aria-label={t("performance.hideLyrics")}
-                checked={hideLyrics}
+                checked={lyricsHidden}
                 onCheckedChange={(v) => {
                   clearRolePreset();
                   quitterStructureSeule();
@@ -1593,7 +1662,7 @@ export function PerformanceMode({
             <SettingRow label={t("performance.chartStyle")}>
               <Switch checked={chartStyle} onCheckedChange={toggleChartStyle} />
             </SettingRow>
-            {hasJianpuSheets && (
+            {hasJianpuSheets && !structureMode && (
               // Partition 简谱 : par appareil — le pianiste lit le scan pendant
               // que le guitariste lit la grille, sur la même setlist.
               <div className="flex items-center justify-between gap-3">

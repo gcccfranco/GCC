@@ -19,7 +19,7 @@ const contenu = (slug: string) => {
   const source = readFileSync(`content/songs/${slug}.cho`, "utf8");
   return { slug, ast: parseChordPro(source), source };
 };
-const CONTENTS = Object.fromEntries(["abba-pere", "一生爱你", "为我而来"].map((s) => [s, contenu(s)]));
+const CONTENTS = Object.fromEntries(["abba-pere", "一生爱你", "为我而来", "beni-soit-ton-nom"].map((s) => [s, contenu(s)]));
 const MANIFESTE = JSON.parse(readFileSync("public/jianpu/index.json", "utf8")) as JianpuManifest;
 
 const item = (over: Partial<SetlistItem> & { songSlug: string; position: number }): SetlistItem => ({
@@ -41,6 +41,8 @@ const ABBA = item({
   sectionTransitions: { "verse-5-4": "Montée de la batterie" },
   sectionNotes: { "chorus-3-5": "Piano seul, voix douces" },
 });
+/** Un second chant FR, pour lire ailleurs que sur le premier chant. */
+const BENI = item({ songSlug: "beni-soit-ton-nom", position: 4 });
 const YISHENG = item({ songSlug: "一生爱你", position: 2, keyOverride: "D", jianpuSheet: true });
 
 const sections = (blocks: PerformanceBlock[]) => blocks.filter((b): b is SectionBlock => b.kind === "section");
@@ -133,6 +135,42 @@ test.describe("buildPerformanceBlocks : affichage (pur)", () => {
     const entete = unique[0] as Extract<PerformanceBlock, { kind: "song-header" }>;
     expect(entete.steps!.map((s) => [s.note, s.transition])).toEqual([["", ""], ["Tous ensemble", ""], ["", "On ralentit"], ["", ""]]);
   });
+
+  test("fusion en structure mixte : deux chants au même uid de section, chaque passage a son identifiant (C5)", () => {
+    const fusion = item({
+      type: "fusion",
+      songSlug: "",
+      position: 4,
+      fusionSongs: [
+        { songSlug: "abba-pere", keyOverride: null, structureOverride: null, sectionNotes: {} },
+        { songSlug: "为我而来", keyOverride: null, structureOverride: null, sectionNotes: {} },
+      ],
+      mixedStructure: [
+        { songSlug: "abba-pere", sectionId: "chorus-3" },
+        { songSlug: "为我而来", sectionId: "chorus-3" },
+        { songSlug: "abba-pere", sectionId: "chorus-3" },
+        { songSlug: "为我而来", sectionId: "chorus-3", keyChange: "D" },
+      ],
+    });
+    // Le défaut qui rendait les cercles faux : le même uid dans les deux chants.
+    const uidAbba = CONTENTS["abba-pere"].ast.sections.find((s) => s.id === "chorus-3")!.uid;
+    const uidZh = CONTENTS["为我而来"].ast.sections.find((s) => s.id === "chorus-3")!.uid;
+    expect(uidAbba).toBe(uidZh);
+
+    const ids = ["abba-pere:0", "为我而来:1", "abba-pere:2", "为我而来:3"];
+    const unique = buildPerformanceBlocks([fusion], CONTENTS, true, undefined, undefined, "auto", undefined, { affichage: "unique" });
+    const entete = unique[0] as Extract<PerformanceBlock, { kind: "song-header" }>;
+    expect(entete.steps!.map((s) => s.section.uid), "un identifiant par passage").toEqual(ids);
+    // Le bloc garde sa section et son uid (clé des annotations, computePageKey).
+    expect(sections(unique).every((b) => b.section.uid === uidAbba)).toBe(true);
+    expect(sections(unique).map((b) => b.occurrenceUids)).toEqual([
+      ["abba-pere:0", "abba-pere:2"], ["为我而来:1"], ["为我而来:3"],
+    ]);
+
+    const joue = buildPerformanceBlocks([fusion], CONTENTS, true, undefined, undefined, "auto", undefined, { affichage: "played" });
+    expect(sections(joue).map((b) => b.occurrenceUids)).toEqual(ids.map((id) => [id]));
+    expect(sections(joue).every((b) => b.section.uid === uidAbba)).toBe(true);
+  });
 });
 
 // ─── À l'écran ───────────────────────────────────────────────────────────────
@@ -206,6 +244,29 @@ async function quitter(page: Page) {
   await montrerChrome(page);
   await page.getByRole("button", { name: "Quitter" }).click();
   await page.evaluate((to) => window.scrollTo(0, to), y);
+}
+
+/** Titre du chant lu, dans la barre du haut (elle s'escamote, mais reste dans la page). */
+const titreBarre = (page: Page) => page.locator("[data-performance-mode] p.truncate.font-semibold.leading-tight").first();
+
+/** Tourne les pages jusqu'à l'en-tête de ce chant. */
+async function allerAuChant(page: Page, titre: string) {
+  const total = Number((await compteur(page).innerText()).split("/")[1]);
+  for (let p = 1; p <= total; p++) {
+    if ((await onStage(page, "h2").filter({ hasText: titre }).count()) > 0) return;
+    await page.keyboard.press("ArrowRight");
+    await expect(compteur(page)).toHaveText(`${p + 1} / ${total}`);
+  }
+  throw new Error(`en-tête de « ${titre} » introuvable sur ${total} pages`);
+}
+
+/** Choisit un Affichage dans les Réglages ouverts, puis attend la nouvelle mise en page. */
+async function choisirAffichage(feuille: ReturnType<Page["getByRole"]>, page: Page, nom: string) {
+  await feuille.getByRole("radiogroup", { name: "Affichage" }).getByRole("radio", { name: nom }).click();
+  await page.locator("[data-performance-mode]").waitFor();
+  await expect(page.getByText("Mise en page…")).toHaveCount(0, { timeout: 20_000 });
+  // La mise en page se refait après le rendu : laisser l'ancre jouer avant de lire.
+  await page.waitForTimeout(400);
 }
 
 test.describe("Réglages : Rôle et Affichage", () => {
@@ -282,6 +343,85 @@ test.describe("Réglages : Rôle et Affichage", () => {
   });
 });
 
+test.describe("Réglages : corrections de la relecture", () => {
+  test("changer d'Affichage pendant la lecture reste sur le chant lu, à chaque sens (C1) (FR)", async ({ page }) => {
+    await page.addInitScript(() => localStorage.setItem("perf-font-scale", "1.5"));
+    await ouvrirMode(page, [ABBA, BENI], { affichage: "unique" });
+    // L'indicateur de problèmes de `next dev` (404 de ressources, avertissements) recouvre le bouton Réglages.
+    await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" });
+    await allerAuChant(page, "Béni soit Ton Nom");
+    await expect(titreBarre(page)).toHaveText("Béni soit Ton Nom");
+
+    const feuille = await reglages(page);
+    for (const nom of ["Ordre joué", "Sections uniques", "Structure seule", "Ordre joué", "Sections uniques"]) {
+      await choisirAffichage(feuille, page, nom);
+      await expect(titreBarre(page), `Affichage « ${nom} » : toujours le 2e chant`).toHaveText("Béni soit Ton Nom");
+    }
+    await page.keyboard.press("Escape");
+    await expect(page.getByRole("dialog")).toHaveCount(0);
+    await expect(onStage(page, "h2").first()).toHaveText("Béni soit Ton Nom");
+
+    // Sur la 2e page du chant (si elle existe) : l'ancre est la section lue.
+    await page.keyboard.press("ArrowRight");
+    if ((await onStage(page, "h2").count()) === 0 && (await titreBarre(page).innerText()) === "Béni soit Ton Nom") {
+      const encore = await reglages(page);
+      await choisirAffichage(encore, page, "Ordre joué");
+      await expect(titreBarre(page), "page 2 du chant lu, Sections uniques → Ordre joué").toHaveText("Béni soit Ton Nom");
+    }
+  });
+
+  test("rôle Batteur mémorisé, Sections uniques choisies dans la setlist : le mode s'ouvre en Sections uniques, sans rôle (C2) (FR)", async ({ page }) => {
+    await ouvrirMode(page, [ABBA], { role: "batteur", affichage: "unique" });
+    await expect(onStage(page, "[data-copy-line]").first()).toBeVisible();
+    const feuille = await reglages(page);
+    await expect(feuille.getByRole("radiogroup", { name: "Affichage" }).getByRole("radio", { name: "Sections uniques" })).toHaveAttribute("aria-checked", "true");
+    await expect(feuille.getByRole("button", { name: "Batteur" })).toHaveAttribute("aria-pressed", "false");
+    // Rien n'est écrit à l'ouverture : le rôle mémorisé reste celui de l'appareil.
+    expect(await page.evaluate(() => localStorage.getItem("perf-role-preset"))).toBe("batteur");
+  });
+
+  test("rôle Batteur mémorisé sans choix d'Affichage : toujours Structure seule (C2) (FR)", async ({ page }) => {
+    await ouvrirMode(page, [ABBA], { role: "batteur" });
+    await expect(onStage(page, "[data-section]").first()).toBeVisible();
+    await expect(onStage(page, "[data-copy-line]")).toHaveCount(0);
+    const feuille = await reglages(page);
+    await expect(feuille.getByRole("button", { name: "Batteur" })).toHaveAttribute("aria-pressed", "true");
+  });
+
+  test("Structure seule venue d'Affichage : « Accords » décoché et « Masquer les paroles » coché, comme l'écran (C4) (FR)", async ({ page }) => {
+    await ouvrirMode(page, [ABBA], { role: null });
+    const feuille = await reglages(page);
+    await expect(feuille.getByRole("switch", { name: "Accords" })).toBeChecked();
+    await expect(feuille.getByRole("switch", { name: "Masquer les paroles" })).not.toBeChecked();
+    await feuille.getByRole("radiogroup", { name: "Affichage" }).getByRole("radio", { name: "Structure seule" }).click();
+    await expect(feuille.getByRole("switch", { name: "Accords" })).not.toBeChecked();
+    await expect(feuille.getByRole("switch", { name: "Masquer les paroles" })).toBeChecked();
+  });
+
+  test("« Transitions » coupé retire aussi les transitions du bandeau, la note reste (C6) (FR)", async ({ page }) => {
+    await ouvrirMode(page, [ABBA], { affichage: "unique" });
+    const entete = onStage(page, "[data-entete-chant]");
+    await expect(entete.getByText("→ Montée de la batterie")).toBeVisible();
+    const feuille = await reglages(page);
+    await feuille.getByText("Transitions", { exact: true }).locator("xpath=..").getByRole("switch").click();
+    await page.keyboard.press("Escape");
+    await expect(page.getByRole("dialog")).toHaveCount(0);
+    await expect(entete.getByText("Piano seul, voix douces")).toBeVisible();
+    await expect(entete.getByText("→ Montée de la batterie")).toHaveCount(0);
+  });
+
+  test("« Partition 简谱 » n'est proposé qu'hors Structure seule (C8) (ZH)", async ({ page }) => {
+    await ouvrirMode(page, [YISHENG], { role: null });
+    const feuille = await reglages(page);
+    const interrupteur = feuille.getByRole("switch", { name: "Partition 简谱" });
+    await expect(interrupteur, "Ordre joué : le réglage est là").toBeVisible();
+    await feuille.getByRole("radiogroup", { name: "Affichage" }).getByRole("radio", { name: "Structure seule" }).click();
+    await expect(interrupteur, "Structure seule : sans effet, donc absent").toHaveCount(0);
+    await feuille.getByRole("radiogroup", { name: "Affichage" }).getByRole("radio", { name: "Ordre joué" }).click();
+    await expect(interrupteur).toBeVisible();
+  });
+});
+
 // ─── Bandeau en tête du chant (L2-T3) ────────────────────────────────────────
 
 /** Bandeau de structure de l'en-tête de chant affiché. */
@@ -307,6 +447,27 @@ test.describe("bandeau de pastilles en tête du chant", () => {
     await expect(bandeauEntete(page).getByRole("listitem")).toHaveText(["I", "C1", "R", "Pm", "C2", "R", "P", "R×2"]);
     await expect(onStage(page, "[data-entete-chant]").getByText("Piano seul, voix douces")).toHaveCount(0);
     expect(await surToutesLesPages(page, "[data-section]"), "neuf passages joués").toBe(9);
+  });
+
+  test("Ordre joué, deux chants : l'en-tête de chacun porte sa liste « Structure » (C9) (FR)", async ({ page }) => {
+    await ouvrirMode(page, [ABBA, BENI]);
+    await expect(onStage(page, "h2").first()).toHaveText("Abba Père");
+    await expect(bandeauEntete(page).getByRole("listitem")).toHaveCount(8);
+    await allerAuChant(page, "Béni soit Ton Nom");
+    await expect(onStage(page, "[data-entete-chant]")).toHaveCount(1);
+    await expect(bandeauEntete(page)).toBeVisible();
+    expect(await bandeauEntete(page).getByRole("listitem").count(), "Béni soit Ton Nom a ses étapes").toBeGreaterThan(0);
+  });
+
+  test("neuf étapes non repliées tiennent sur une rangée du bandeau, au téléphone (C9) (FR)", async ({ page }) => {
+    test.skip(page.viewportSize()!.width >= 640, "propre au téléphone");
+    // I · C1 · R · Pm · C2 · R · P · Pm · R : aucune reprise consécutive, donc neuf pastilles.
+    const neuf = { ...ABBA, structureOverride: ["intro-1-0", "verse-2-1", "chorus-3-2", "intro-4-3", "verse-5-4", "chorus-3-5", "bridge-6-6", "intro-4-7", "chorus-3-8"] };
+    await ouvrirMode(page, [neuf]);
+    const pastilles = bandeauEntete(page).locator("li > span");
+    await expect(pastilles).toHaveCount(9);
+    const hauts = await pastilles.evaluateAll((els) => els.map((e) => Math.round(e.getBoundingClientRect().top)));
+    expect(hauts.filter((y) => y === hauts[0]).length, `neuf étapes, rangées à ${[...new Set(hauts)]}`).toBe(9);
   });
 
   test("Sections uniques : notes et transitions numérotées sous le bandeau, chaque section une fois (FR)", async ({ page }) => {
@@ -415,6 +576,37 @@ test.describe("rappel de structure (Sections uniques)", () => {
     await expect(page.getByRole("button", { name: "Quitter" })).toBeHidden({ timeout: 6000 });
     await expect(rappel).toBeVisible();
   });
+
+  // Deux chants dont une page de Sections uniques est presque pleine : un rappel
+  // sur deux rangées (62 px) déborde alors de la réserve fixe de 32 px.
+  for (const slug of ["quand-tu-parles", "la-pour-toi"]) {
+    test(`texte à 150 % : le rappel passe à la ligne, la réserve le suit et rien ne déborde, ${slug} (C3) (FR)`, async ({ page }) => {
+      await page.addInitScript(() => localStorage.setItem("perf-font-scale", "1.5"));
+      await ouvrirMode(page, [item({ songSlug: slug, position: 1 })], { affichage: "unique" });
+      await expect(compteur(page)).toHaveText(/^1 \/ [2-9]/);
+      await page.keyboard.press("ArrowRight");
+      await expect(compteur(page)).toHaveText(/^2 \//);
+      const rappel = onStage(page, "[data-rappel]");
+      const une = await rappel.locator("li > span").first().evaluate((el) => (el as HTMLElement).offsetHeight);
+      test.skip((await rappel.evaluate((el) => (el as HTMLElement).offsetHeight)) < 2 * une, "le rappel tient sur une rangée : la réserve fixe suffit");
+      const total = await totalPages(page);
+      for (let p = 2; p <= total; p++) {
+        await expect(compteur(page)).toHaveText(`${p} / ${total}`);
+        // Rappel (marge comprise) et sections tiennent dans le budget de la page :
+        // hauteur visible − marges de page (16 + 16) − sécurité (24), en px de mise en page.
+        const { depasse, bas, hauteur } = await page.evaluate(() => {
+          const visible = (sel: string) => [...document.querySelectorAll<HTMLElement>(`[data-performance-mode] ${sel}`)].filter((e) => !e.closest("[aria-hidden=true]"));
+          const [r] = visible("[data-rappel]");
+          const bas = Math.max(...visible("[data-section]").map((e) => e.getBoundingClientRect().bottom));
+          const budget = innerHeight / 1.5 - 16 - 16 - 24;
+          return { depasse: (bas - r.getBoundingClientRect().top) / 1.5 - budget, bas, hauteur: innerHeight };
+        });
+        expect(depasse, `page ${p} : le rappel et les sections dépassent le budget de la page de ${depasse.toFixed(1)} px`).toBeLessThanOrEqual(1);
+        expect(bas, `page ${p} : le bas de la dernière section est dans la zone visible`).toBeLessThanOrEqual(hauteur);
+        if (p < total) await page.keyboard.press("ArrowRight");
+      }
+    });
+  }
 
   test("thème de scène : le cercle est à l'encre claire (FR)", async ({ page }) => {
     await page.addInitScript(() => {
