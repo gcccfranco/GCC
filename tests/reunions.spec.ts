@@ -8,7 +8,7 @@ import {
   peutOrdonnerSujets, peutRetirerSujet,
 } from "../src/lib/access";
 import { EQUIPES, rattachementDe } from "../src/lib/equipes/organigramme";
-import { recalculerDepuisOrganigramme, recalculerPoles } from "../src/lib/equipes/serveur";
+import { recalculerDepuisOrganigramme, recalculerRattachement } from "../src/lib/equipes/serveur";
 import { destinatairesEvenement } from "../src/lib/evenements/serveur";
 import { copieReprise, estRouge, reordonner, reunionsALire, reunionsPrecedentes, sujetsAReprendre, trierSujets } from "../src/lib/reunions/sujets";
 import type { Evenement } from "../src/types/evenement";
@@ -820,8 +820,8 @@ const COORD: FakeProfile = { uid: "uid-coord", email: "coord@example.com", first
 
 const membre = (nom: string, uid: string, referent = false) => ({ nom, uid, mention: referent ? "Référente" : "", referent, essai: false, groupe: "" });
 const ORGANIGRAMME = [
-  { id: "da", pole: "da" as const, membres: [membre("Hugo B.", "uid-hugo")] },
-  { id: "regie", pole: null, membres: [membre("Rose T.", "uid-rose", true), membre("Hugo B.", "uid-hugo"), membre("Sans Compte", "")] },
+  { id: "da", membres: [membre("Hugo B.", "uid-hugo")] },
+  { id: "regie", membres: [membre("Rose T.", "uid-rose", true), membre("Hugo B.", "uid-hugo"), membre("Sans Compte", "")] },
 ];
 
 test("équipe d'une réunion : « equipe:<id> » ; une réunion = une équipe, plus un pôle (EQ19)", () => {
@@ -835,11 +835,11 @@ test("équipe d'une réunion : « equipe:<id> » ; une réunion = une équipe, p
   expect(estReunion({ pour: "eglise" })).toBe(false);
 });
 
-test("rattachement : pôles, équipes et équipes dont on est référent, dans l'ordre de l'organigramme", () => {
-  expect(rattachementDe("uid-hugo", ORGANIGRAMME)).toEqual({ poles: ["da"], dansEquipes: ["da", "regie"], referentDe: [] });
-  expect(rattachementDe("uid-rose", ORGANIGRAMME)).toEqual({ poles: [], dansEquipes: ["regie"], referentDe: ["regie"] });
-  expect(rattachementDe("uid-personne", ORGANIGRAMME)).toEqual({ poles: [], dansEquipes: [], referentDe: [] });
-  expect(rattachementDe("", ORGANIGRAMME), "un nom sans compte n'a rien").toEqual({ poles: [], dansEquipes: [], referentDe: [] });
+test("rattachement : équipes et équipes dont on est référent, dans l'ordre de l'organigramme", () => {
+  expect(rattachementDe("uid-hugo", ORGANIGRAMME)).toEqual({ dansEquipes: ["da", "regie"], referentDe: [] });
+  expect(rattachementDe("uid-rose", ORGANIGRAMME)).toEqual({ dansEquipes: ["regie"], referentDe: ["regie"] });
+  expect(rattachementDe("uid-personne", ORGANIGRAMME)).toEqual({ dansEquipes: [], referentDe: [] });
+  expect(rattachementDe("", ORGANIGRAMME), "un nom sans compte n'a rien").toEqual({ dansEquipes: [], referentDe: [] });
 });
 
 /** Base Admin simulée : les profils et les équipes, et les mises à jour reçues. */
@@ -855,19 +855,19 @@ function fausseBase(users: Record<string, Record<string, unknown>>) {
         update: async (data: Record<string, unknown>) => { ecrits.push({ uid, data }); users[uid] = { ...users[uid], ...data }; },
       }),
     }),
-  } as unknown as Parameters<typeof recalculerPoles>[0];
+  } as unknown as Parameters<typeof recalculerRattachement>[0];
   return { db, ecrits, users };
 }
 
-test("recalculerPoles recopie aussi dansEquipes et referentDe sur le profil ; rien n'est réécrit s'il n'a pas changé", async () => {
+test("recalculerRattachement recopie aussi dansEquipes et referentDe sur le profil ; rien n'est réécrit s'il n'a pas changé", async () => {
   const { db, ecrits } = fausseBase({ "uid-rose": { poles: [] }, "uid-hugo": { poles: ["da"] } });
-  const equipes = ORGANIGRAMME.map(({ id, pole, membres }) => ({ id, pole, membres }));
-  expect(await recalculerPoles(db, ["uid-rose", "uid-hugo", "uid-absent"], equipes)).toBe(2);
+  const equipes = ORGANIGRAMME.map(({ id, membres }) => ({ id, membres }));
+  expect(await recalculerRattachement(db, ["uid-rose", "uid-hugo", "uid-absent"], equipes)).toBe(2);
   expect(ecrits).toEqual([
-    { uid: "uid-rose", data: { poles: [], dansEquipes: ["regie"], referentDe: ["regie"] } },
-    { uid: "uid-hugo", data: { poles: ["da"], dansEquipes: ["da", "regie"], referentDe: [] } },
+    { uid: "uid-rose", data: { dansEquipes: ["regie"], referentDe: ["regie"] } },
+    { uid: "uid-hugo", data: { dansEquipes: ["da", "regie"], referentDe: [] } },
   ]);
-  expect(await recalculerPoles(db, ["uid-rose", "uid-hugo"], equipes)).toBe(0);
+  expect(await recalculerRattachement(db, ["uid-rose", "uid-hugo"], equipes)).toBe(0);
   expect(ecrits).toHaveLength(2);
 });
 

@@ -23,14 +23,13 @@ import { Drawer, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle } f
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useProfile, listProfiles } from "@/lib/firebase/users";
-import { listEquipes, majPoles, saveEquipe } from "@/lib/firebase/equipes";
+import { listEquipes, majRattachement, saveEquipe } from "@/lib/firebase/equipes";
 import { canEditerEquipes, isAdminUser } from "@/lib/access";
 import { EQUIPES, type EquipeDef } from "@/lib/equipes/organigramme";
 import { COLONNES_MUSICIENS, matriceMusiciens, type LigneMusicien } from "@/lib/equipes/musiciens";
 import { findMyServices, loadPlanningData, type PlanningData } from "@/lib/planning/names";
 import { categoryLabel } from "@/lib/serviceColors";
-import { PLANNING_COLORS } from "@/lib/serviceColors";
-import { POLES, SERVICE_ROLE_LABELS, type Pole, type UserProfile } from "@/types/user";
+import { SERVICE_ROLE_LABELS, type UserProfile } from "@/types/user";
 import type { Equipe, MembreEquipe } from "@/types/equipe";
 
 const nomComplet = (p: UserProfile) =>
@@ -224,7 +223,6 @@ function PanneauEquipe({
               <EditionEquipe
                 key={def.id}
                 def={def}
-                pole={equipe?.pole ?? def.pole}
                 membres={equipe?.membres ?? []}
                 profils={profils}
                 onClose={onClose}
@@ -254,7 +252,6 @@ function CarteEquipe({
   onModifier: () => void;
 }) {
   const { t } = useTranslation();
-  const pole = equipe?.pole ?? def.pole;
   const membres = equipe?.membres ?? [];
   const soustitre = t(`equipes.soustitre.${def.id}`);
   const groupes = [...new Set(membres.map((m) => m.groupe))];
@@ -296,14 +293,6 @@ function CarteEquipe({
         </div>
         {soustitre && <p className="text-xs text-muted-foreground">{soustitre}</p>}
         <div className="flex flex-wrap items-center gap-1.5">
-          {pole && (
-            <span
-              className="text-[11px] font-semibold px-2 py-0.5 rounded-full"
-              style={{ background: `${PLANNING_COLORS.scene}15`, color: PLANNING_COLORS.scene }}
-            >
-              {t("equipes.donnePole", { pole: t(`taches.pole.${pole}`) })}
-            </span>
-          )}
           {membres.length > 0 && (
             <span className="text-[11px] text-muted-foreground">
               {t("equipes.membres", { count: membres.length })}
@@ -359,10 +348,9 @@ function LigneMembre({ membre, onFiche }: { membre: MembreEquipe; onFiche: (uid:
 // ── Édition (droit « Équipes ») ─────────────────────────────────────────────
 
 function EditionEquipe({
-  def, pole, membres, profils, onClose, onEnregistre,
+  def, membres, profils, onClose, onEnregistre,
 }: {
   def: EquipeDef;
-  pole: Pole | null;
   membres: MembreEquipe[];
   profils: UserProfile[];
   onClose: () => void;
@@ -371,7 +359,6 @@ function EditionEquipe({
   const { t } = useTranslation();
   const { user, profile } = useProfile();
   const [brouillon, setBrouillon] = useState<MembreEquipe[]>(membres);
-  const [poleChoisi, setPoleChoisi] = useState<Pole | null>(pole);
   const [recherche, setRecherche] = useState("");
   const [erreur, setErreur] = useState("");
   const [enCours, setEnCours] = useState(false);
@@ -396,12 +383,12 @@ function EditionEquipe({
     setErreur("");
     try {
       const nom = profile ? nomComplet(profile) : (user.email ?? "");
-      await saveEquipe(def.id, { pole: poleChoisi, membres: brouillon }, { uid: user.uid, nom });
-      // Les pôles se reposent côté serveur : le navigateur n'écrit pas un profil.
+      await saveEquipe(def.id, brouillon, { uid: user.uid, nom });
+      // Le rattachement se repose côté serveur : le navigateur n'écrit pas un profil.
       const touches = [...membres, ...brouillon].map((m) => m.uid).filter(Boolean);
-      await majPoles([...new Set(touches)]);
+      await majRattachement([...new Set(touches)]);
       onEnregistre({
-        id: def.id, pole: poleChoisi, membres: brouillon,
+        id: def.id, membres: brouillon,
         updatedAt: new Date().toISOString(), parUid: user.uid, parNom: nom,
       });
     } catch {
@@ -413,20 +400,6 @@ function EditionEquipe({
 
   return (
     <div className="space-y-2.5 border-t border-border pt-3">
-      <label className="block space-y-1">
-        <span className="text-xs font-semibold text-muted-foreground">{t("equipes.poleEquipe")}</span>
-        <select
-          value={poleChoisi ?? ""}
-          onChange={(e) => setPoleChoisi((e.target.value || null) as Pole | null)}
-          className="h-10 w-full rounded-lg border border-border bg-background px-2 text-sm"
-        >
-          <option value="">{t("equipes.aucunPole")}</option>
-          {POLES.map((p) => (
-            <option key={p} value={p}>{t(`taches.pole.${p}`)}</option>
-          ))}
-        </select>
-      </label>
-
       <div className="space-y-1.5">
         {brouillon.map((m, i) => (
           <div key={`${m.nom}-${i}`} className="rounded-lg border border-border p-2 space-y-1.5">

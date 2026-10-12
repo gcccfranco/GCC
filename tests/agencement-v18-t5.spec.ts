@@ -67,7 +67,8 @@ test.describe("T5 : Équipes › Organigramme", () => {
     await ouvrir(page, "/back-office/equipes");
     await expect(page.getByTestId("equipe-da")).toBeVisible();
     await expect(titre(page)).toHaveText("Équipes");
-    await expect(enTete(page)).toContainText("il donne les pôles de chacun");
+    await expect(enTete(page)).toContainText("Organigramme GCC Franco");
+    await expect(enTete(page)).not.toContainText("pôles");
     await expect(page.getByTestId("bandeau-equipes")).toBeVisible();
     const bandeau = page.getByTestId("bandeau-equipes");
     await verifierAgencement(page, { premierBloc: bandeau, contenu: bandeau, onglets: { rail: 1, pilules: 1 } });
@@ -83,14 +84,14 @@ test.describe("T5 : Équipes › Organigramme", () => {
     // toucher ; l'aide (ce que le calcul écrit sur les profils) se lit avant de lancer.
     interdireDialoguesNatifs(page);
     const envois: unknown[] = [];
-    await page.route("**/api/equipes/poles", (route) => {
+    await page.route("**/api/equipes/rattachement", (route) => {
       envois.push(route.request().postDataJSON());
       return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ok: true, maj: 4 }) });
     });
     await ouvrir(page, "/back-office/equipes");
     const bouton = enTete(page).getByRole("button", { name: "Recalculer depuis l'organigramme" });
     await bouton.click();
-    await expect(fenetreDuSite(page)).toContainText("ouvre les réunions d'équipe à leurs membres");
+    await expect(fenetreDuSite(page)).toContainText("les réunions et les tâches de leur équipe");
     await repondreDansLeSite(page, "Annuler");
     expect(envois).toEqual([]);
     await bouton.click();
@@ -101,7 +102,7 @@ test.describe("T5 : Équipes › Organigramme", () => {
 
   test("le sous-titre porte l'année en cours", async ({ page }) => {
     await ouvrir(page, "/back-office/equipes", DOCS, ADMIN, new Date("2027-02-01T10:00:00"));
-    await expect(enTete(page)).toContainText("Organigramme GCC Franco 2027 : il donne les pôles de chacun");
+    await expect(enTete(page)).toContainText("Organigramme GCC Franco 2027");
   });
 
   test("droit Équipes sans être admin : ni rail ni sa marge dans l'en-tête", async ({ page }) => {
@@ -128,7 +129,7 @@ test.describe("T5 : Équipes › Organigramme", () => {
   });
 
   test("crayon → panneau d'édition ; enregistrer met à jour la carte", async ({ page }, info) => {
-    await page.route("**/api/equipes/poles", (route) =>
+    await page.route("**/api/equipes/rattachement", (route) =>
       route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ok: true, maj: 1 }) }));
     const db = await ouvrir(page, "/back-office/equipes");
     const carte = page.getByTestId("equipe-da");

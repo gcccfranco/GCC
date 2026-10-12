@@ -67,7 +67,7 @@ const MEMBRES: Record<string, MembreEquipe[]> = {
 const DOCS = Object.fromEntries(
   EQUIPES.map((def) => [
     `equipes/${def.id}`,
-    { pole: def.pole, membres: MEMBRES[def.id], updatedAt: "2026-10-01T10:00:00Z", parUid: "", parNom: "" },
+    { membres: MEMBRES[def.id], updatedAt: "2026-10-01T10:00:00Z", parUid: "", parNom: "" },
   ]),
 );
 

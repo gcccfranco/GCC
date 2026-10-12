@@ -12,7 +12,7 @@ import {
   type RawDoc,
 } from "./setlists";
 import { useAuth } from "./auth";
-import type { Pole, ServiceRole, UserProfile } from "@/types/user";
+import type { ServiceRole, UserProfile } from "@/types/user";
 
 export async function signUp(email: string, password: string): Promise<User> {
   const cred = await createUserWithEmailAndPassword(auth, email, password);
@@ -35,7 +35,6 @@ function fromFsProfile(raw: RawDoc): UserProfile {
     serviceRoles: (data.serviceRoles as Record<string, ServiceRole[]>) ?? {},
     annonces: (data.annonces as string[]) ?? [],
     notify: (data.notify as string[]) ?? [],
-    poles: (data.poles as Pole[]) ?? [],
     coordination: (data.coordination as boolean) ?? false,
     equipes: (data.equipes as boolean) ?? false,
     plannings: (data.plannings as string[]) ?? [],
@@ -60,13 +59,13 @@ export async function getProfile(uid: string): Promise<UserProfile | null> {
 export type ProfilePatch = { uid: string } & Partial<Omit<UserProfile, "uid" | "createdAt">>;
 
 function profilVide(uid: string): UserProfile {
-  return { uid, email: "", firstName: "", lastName: "", planningName: "", serviceRoles: {}, annonces: [], notify: [], poles: [], coordination: false, equipes: false, plannings: [] };
+  return { uid, email: "", firstName: "", lastName: "", planningName: "", serviceRoles: {}, annonces: [], notify: [], coordination: false, equipes: false, plannings: [] };
 }
 
 /** Écrit les champs donnés, et eux seuls (PATCH avec updateMask) ; crée le
  *  document s'il n'existe pas. Avant le 19/09/2026 le PATCH remplaçait le
- *  document entier : un admin qui enregistrait son profil perdait `poles`,
- *  `equipes` et `plannings`, que la page Profil n'envoie pas. */
+ *  document entier : un admin qui enregistrait son profil perdait `equipes`,
+ *  et `plannings`, que la page Profil n'envoie pas. */
 export async function saveProfile(patch: ProfilePatch): Promise<void> {
   const { uid, ...rest } = patch;
   const data = Object.fromEntries(Object.entries(rest).filter(([, v]) => v !== undefined));

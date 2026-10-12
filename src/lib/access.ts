@@ -168,7 +168,7 @@ export function canReserverPour(
 
 type EvenementDroits = { pour: string; organisateurUid: string; reunion?: boolean | null };
 /** Profil lu par les droits des évènements : sections, coordination, droit d'annonces, et les
- *  équipes de l'organigramme recopiées par le serveur (lot U6, R4 : `recalculerPoles`). */
+ *  équipes de l'organigramme recopiées par le serveur (lot U6, R4 : `recalculerRattachement`). */
 type ProfilEvenement = {
   serviceRoles?: Record<string, unknown>; coordination?: boolean; annonces?: string[];
   dansEquipes?: string[]; referentDe?: string[];

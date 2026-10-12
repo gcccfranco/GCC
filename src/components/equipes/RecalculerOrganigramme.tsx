@@ -2,7 +2,7 @@
 
 // « Recalculer depuis l'organigramme » (lot U6, R4) : pose équipes et référents
 // (`dansEquipes`, `referentDe`) de tous les membres des équipes — les pôles ne
-// bougent pas. Admins seuls (`{ tous: true }` de /api/equipes/poles). Retours du
+// bougent pas. Admins seuls (`{ tous: true }` de /api/equipes/rattachement). Retours du
 // 06/10/2026 : l'onglet Import qui le portait est retiré. Agencement v18 (B8 de
 // docs/spec-agencement-v18.md) : le bouton passe dans l'en-tête d'Équipes (outil en
 // contour), son résultat s'affiche sous l'en-tête : le hook rend les deux morceaux, que
@@ -26,7 +26,7 @@ export function useRecalculOrganigramme() {
     setEtat("busy");
     setErreur("");
     try {
-      const res = await fetch("/api/equipes/poles", {
+      const res = await fetch("/api/equipes/rattachement", {
         method: "POST",
         headers: { "Content-Type": "application/json", ...(await authHeader()) },
         body: JSON.stringify({ tous: true }),

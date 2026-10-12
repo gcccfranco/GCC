@@ -1068,3 +1068,26 @@ Go de code de Timothée le 08/10/2026 au soir.
     已通知：{{equipe}}。, 团队任务, 你所在团队的任务：逾期的排在前面, 各团队的任务, 你所在团队的任务, 所有团队的任务 ;
     et dans les notifications, le nom long des équipes (媒体组 · 截止 …, （媒体组）已完成) ;
   - rien à lancer pour EQ-C.
+
+### EQ-D — Organigramme sans pôles (12/10/2026)
+
+- **Codé** (EQ1 en partie, EQ27 à EQ29) :
+  - `pole` retiré de `EquipeDef` (`src/lib/equipes/table.ts`), de `Equipe` (`src/types/equipe.ts`), de `EquipeServeur` et de la lecture REST (`firebase/equipes.ts`). `POLES`, `Pole` et `UserProfile.poles` supprimés (`src/types/user.ts`) ; `users.ts` ne lit plus `poles`.
+  - `polesDesEquipes` supprimé ; `rattachementDe` rend `{ dansEquipes, referentDe }` ; `recalculerPoles` devient `recalculerRattachement` (plus de paramètre `champs`, les deux champs toujours) ; `recalculerDepuisOrganigramme` l'appelle.
+  - Route `/api/equipes/poles` → `/api/equipes/rattachement` (`git mv`, même contrôle `exigerDroitEquipes`, 404 sans `BACK_OFFICE`) ; `majPoles` → `majRattachement` ; `CLAUDE.md` mis à jour.
+  - `EquipesClient.tsx` : pastille « Donne le pôle … » et sélecteur « Pôle donné par cette équipe » retirés. `PolesDuMembre` et la carte Pôles de Personnes étaient déjà partis (EQ-A).
+  - Libellés (FR et 中文) : retirées `taches.pole.*`, `equipes.donnePole`, `poleEquipe`, `aucunPole` ; réécrites `equipes.sousTitreGestion`, `equipes.recalcul.aide`, `backOffice.plus.contenu.organigramme`.
+- **Choix faits faute de réponse** :
+  - **`saveEquipe` écrit avec un masque** (`membres`, `updatedAt`, `parUid`, `parNom`) : sans lui, chaque enregistrement d'équipe en local aurait effacé l'ancien champ `equipes/{id}.pole`, que le relevé d'EQ-E lit (« les valeurs stockées, pas la table »). Le champ reste donc intact jusqu'à la migration.
+  - **Correspondance équipe → pôle par défaut**, supprimée avec la table, à recopier pour EQ-E : orga, comité franco, théologie → `orga` ; da, décoration → `da` ; médias → `media` ; événementiel, accueil J1 → `evenement` ; développement, régie, traduction, louange, EDD → aucun.
+  - **`FakeProfile.poles` gardé** dans `tests/helpers/fakeSession.ts` (et dans quelques profils simulés) : il simule la base d'avant la migration (profil `ANCIEN` d'`equipes-acces`). Retrait à EQ-F.
+  - **`firestore.rules` ligne 96** (`get('poles', []) == []` à la création de profil) laissée : elle protège encore le champ que lit la migration ; critère EQ1 (grep) revient à EQ-F. Seuls les commentaires de règles sont changés.
+- **Tests vus rouges puis verts** :
+  - 9 échecs sur le code d'avant (ordinateur) : `equipes.spec` 3 (table sans `pole`, panneau, aide), `equipes-agencement` 3, `agencement-v18-t5` 3 ; les tests purs de `reunions.spec` (`rattachementDe`, `recalculerRattachement`) ne compilaient plus sans le code.
+  - Rouges honnêtes : `equipes-agencement` n'a que 3 rouges sur 7 sur ordinateur (pastille, panneau, sous-titre) ; la fiche Personnes, le membre, la référente et le rail étaient déjà verts (EQ-A à EQ-C).
+  - Puis, verts : `equipes.spec` sur ses trois appareils **36 verts** ; `equipes-agencement` sur les cinq projets **35 verts** ; voisines sur ordinateur (`reunions`, `coherence`, `equipes-acces`, `equipes-coordination`, `back-office-coupe`, `pages-en-grand-guide-equipes`, `agencement-v18-t5`) **220 verts**, 3 sautés, hors les 2 « borne du début » de `reunions` (d'avant le chantier). `tsc` et `lint` sans erreur.
+  - Captures regardées : organigramme FR téléphone et ordinateur-1440, 中文 ordinateur et tablette couchée, panneau d'édition tablette, Back-Office de la référente au téléphone (barre Accueil · Calendrier · Tâches · Évènements · Plus ; la page y est vide dans la capture, prise avant l'arrivée des tâches : EQ-C). Plus de pastille ni de sélecteur ; ordinateur-1440, tablette couchée et téléphone sans débordement.
+- **Reste** : EQ-E (migration, relevé), EQ-F (nettoyage : `taches.poles` en commentaire d'`EnTetePage.tsx:15`, commentaire de `useNotifications.ts:84`, `profil/page.tsx:94`, `FakeProfile.poles`, critère EQ1). `CLAUDE.md` cite encore `/api/equipes/importer`, route retirée depuis 144c36c : signalé, non corrigé.
+- **Pour Timothée** :
+  - **ne pas publier `firestore.rules` maintenant** (voir EQ-C) ; rien à lancer pour EQ-D ;
+  - relire le 中文 : « GCC 法语堂 {{annee}} 组织架构 » (sans « 部门 »), l'aide de « 按组织架构重新计算 » (为每个团队成员重新设定其所属团队和负责的团队：成员由此可以查看团队的会议和任务，负责人可以创建。) et « 组织架构 » du menu Plus.

@@ -29,13 +29,6 @@ export type EddRole = (typeof EDD_ROLES)[number];
 export const GROUPES = ["Groupe Paix", "Groupe Fidélité", "Groupe Bonté"] as const;
 export type Groupe = (typeof GROUPES)[number];
 
-// Pôles, attribués par un admin. DA, Média, Orga et Événement servent aux tâches
-// par pôle (lot 7) ; « événement » ne donne plus la coordination (lot 1 du chantier
-// « équipes et groupes » : champ `coordination`). Louange n'est pas coché : il découle
-// des rôles de service (polesDe dans src/lib/access.ts, isTachePole dans firestore.rules).
-export const POLES = ["da", "media", "orga", "evenement"] as const;
-export type Pole = (typeof POLES)[number];
-
 export interface UserProfile {
   uid: string;
   email: string;
@@ -60,9 +53,6 @@ export interface UserProfile {
    *  n'importe qui dans n'importe quelle équipe — attribué par les admins
    *  uniquement. Cf. canEditerEquipes (src/lib/access.ts). */
   equipes?: boolean;
-  /** Pôles des tâches et réunions par pôle (lot 7) — attribués par les admins
-   *  uniquement. Absent = aucun. */
-  poles?: Pole[];
   /** Coordination (lot 1 du chantier « équipes et groupes », décision 6) : régler la
    *  scène, créer pour toute l'église, modifier tout évènement — cochée par un admin
    *  dans Personnes, jamais par l'intéressé. Absent = non. Cf. isCoordination
@@ -75,7 +65,7 @@ export interface UserProfile {
   plannings?: string[];
   /** Équipes de l'organigramme où la personne figure, et celles dont elle est
    *  référente (ids de EQUIPES, lot U6, R4) : recopiées par le serveur seul
-   *  (`recalculerPoles`, src/lib/equipes/serveur.ts), comme `poles`. Les règles
+   *  (`recalculerRattachement`, src/lib/equipes/serveur.ts). Les règles
    *  les lisent pour les réunions d'équipe. Absent = aucune. */
   dansEquipes?: string[];
   referentDe?: string[];

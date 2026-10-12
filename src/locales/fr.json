@@ -2324,13 +2324,6 @@
     "title": "Tâches",
     "mesTaches": "Mes tâches",
     "aFairePourMoi": "À faire pour moi",
-    "pole": {
-      "da": "DA",
-      "media": "Média",
-      "orga": "Orga",
-      "louange": "Louange",
-      "evenement": "Événement"
-    },
     "subtitle": "Tâches de l'équipe",
     "aucuneEquipe": "Tu ne fais partie d'aucune équipe : les tâches sont réservées aux membres des équipes.",
     "pasMembre": "Tu ne fais pas partie de cette équipe.",
@@ -2706,7 +2699,7 @@
       "bouton": "Recalculer depuis l'organigramme",
       "question": "Recalculer depuis l'organigramme ?",
       "action": "Recalculer",
-      "aide": "Repose, pour chaque membre d'une équipe, ses équipes et ses référents (ses pôles ne changent pas) : c'est ce qui ouvre les réunions d'équipe à leurs membres et leur création aux référents.",
+      "aide": "Repose, pour chaque membre d'une équipe, ses équipes et celles dont il est référent : c'est ce qui ouvre aux membres les réunions et les tâches de leur équipe, et aux référents leur création.",
       "fait_one": "{{count}} profil mis à jour.",
       "fait_other": "{{count}} profils mis à jour.",
       "erreur": "Recalcul impossible."
@@ -2762,7 +2755,6 @@
       "louange": "Franco / Inter",
       "edd": "École du Dimanche"
     },
-    "donnePole": "Donne le pôle {{pole}}",
     "referent": "Référent",
     "essai": "en essai",
     "membres_one": "{{count}} personne",
@@ -2775,8 +2767,6 @@
     "nomLibre": "Ajouter « {{nom}} » sans compte",
     "retirer": "Retirer {{nom}}",
     "mention": "Mention",
-    "poleEquipe": "Pôle donné par cette équipe",
-    "aucunPole": "Aucun",
     "erreur": "L'enregistrement a échoué.",
     "fiche": {
       "equipes": "Ses équipes",
@@ -2811,7 +2801,7 @@
     },
     "matriceVide": "Personne ne sert au planning pour l'instant.",
     "nom": "Nom",
-    "sousTitreGestion": "Organigramme GCC Franco {{annee}} : il donne les pôles de chacun",
+    "sousTitreGestion": "Organigramme GCC Franco {{annee}}",
     "vue": "Vue",
     "modifierEquipe": "Modifier {{nom}}",
     "compte": {
@@ -3051,7 +3041,7 @@
         "fiches": "fiches, inscrits, période",
         "reunions": "sujets, comptes rendus",
         "scene": "programmes de scène",
-        "organigramme": "organigramme, pôles",
+        "organigramme": "organigramme",
         "personnes": "personnes et droits",
         "reception": "signalements, propositions de chants",
         "notifier": "notifier",

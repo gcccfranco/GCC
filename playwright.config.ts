@@ -22,6 +22,8 @@ const SPECS_GRAND_ECRAN = [
   /setlist-regie\.spec\.ts/,
   /setlist-partage\.spec\.ts/,
   /coup-d-oeil\.spec\.ts/,
+  // Lot 1 du chantier « équipes et groupes » (docs/spec-equipes-sans-poles.md, EQ-D) : l'organigramme sans pôles.
+  /equipes-agencement\.spec\.ts/,
   // Lot U5 (docs/spec-deux-volets.md) : la setlist en deux volets.
   /setlist-deux-volets\.spec\.ts/,
   // … et Chants en deux volets.

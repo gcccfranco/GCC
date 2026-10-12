@@ -2291,13 +2291,6 @@
     "title": "任务",
     "mesTaches": "我的任务",
     "aFairePourMoi": "我要做的",
-    "pole": {
-      "da": "美工",
-      "media": "媒体",
-      "orga": "组织",
-      "louange": "敬拜",
-      "evenement": "活动"
-    },
     "subtitle": "团队任务",
     "aucuneEquipe": "你不属于任何团队：任务只对团队成员开放。",
     "pasMembre": "你不属于这个团队。",
@@ -2670,7 +2663,7 @@
       "bouton": "按组织架构重新计算",
       "question": "按组织架构重新计算？",
       "action": "重新计算",
-      "aide": "为每个团队成员重新设定其所属团队和负责人身份（所在部门不变）：团队成员由此可以参加团队会议，负责人可以创建会议。",
+      "aide": "为每个团队成员重新设定其所属团队和负责的团队：成员由此可以查看团队的会议和任务，负责人可以创建。",
       "fait_one": "已更新 {{count}} 份资料。",
       "fait_other": "已更新 {{count}} 份资料。",
       "erreur": "无法重新计算。"
@@ -2726,7 +2719,6 @@
       "louange": "法语堂 / 联合",
       "edd": "主日学"
     },
-    "donnePole": "归入{{pole}}部门",
     "referent": "负责人",
     "essai": "试用中",
     "membres_one": "{{count}} 人",
@@ -2739,8 +2731,6 @@
     "nomLibre": "添加「{{nom}}」（没有账号）",
     "retirer": "移除 {{nom}}",
     "mention": "备注",
-    "poleEquipe": "这个团队带来的部门",
-    "aucunPole": "无",
     "erreur": "保存失败。",
     "fiche": {
       "equipes": "所属团队",
@@ -2775,7 +2765,7 @@
     },
     "matriceVide": "目前没有人在排班中。",
     "nom": "姓名",
-    "sousTitreGestion": "GCC 法语堂 {{annee}} 组织架构：它决定每个人所属的部门",
+    "sousTitreGestion": "GCC 法语堂 {{annee}} 组织架构",
     "vue": "视图",
     "modifierEquipe": "修改{{nom}}",
     "compte": {
@@ -3011,7 +3001,7 @@
         "fiches": "活动、报名、报名时间",
         "reunions": "议题、会议记录",
         "scene": "舞台节目",
-        "organigramme": "组织架构、部门",
+        "organigramme": "组织架构",
         "personnes": "人员与权限",
         "reception": "问题反馈、诗歌推荐",
         "notifier": "发送通知",

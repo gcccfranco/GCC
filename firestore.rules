@@ -23,7 +23,7 @@ rules_version = '2';
 //   serveur seulement.
 //   Réunions d'équipe (« equipe:<id> », lot U6, R4) : créées par un référent de
 //   l'équipe, lues (sujets, compte rendu) par ses membres — `dansEquipes` et
-//   `referentDe` du profil, écrits par le serveur seul comme `poles`.
+//   `referentDe` du profil, écrits par le serveur seul.
 //   Sujets d'une réunion de pôle ou d'équipe (evenements/{id}/sujets, lot U6) : lus et
 //   ajoutés par les personnes de la réunion ; ordre et « traité » par
 //   l'organisateur et les admins ; retirés par l'auteur, l'organisateur, un admin.
@@ -33,8 +33,8 @@ rules_version = '2';
 //   lot U1, dans une saison ouverte et pour les groupes permis (reservable()) ;
 //   auteur + coordination le modifient ou le retirent.
 // - Organigramme (equipes/{id}, lot 16) : lu par les connectés ; écrit par les
-//   admins et par les comptes portant le droit `equipes`. Les pôles qui en
-//   découlent (users/{uid}.poles) restent écrits par le serveur seul.
+//   admins et par les comptes portant le droit `equipes`. Le rattachement qui en
+//   découle (users/{uid}.dansEquipes et referentDe) reste écrit par le serveur seul.
 // - config/app : état des inscriptions (registrationOpen), lisible publiquement,
 //   modifiable par les admins depuis la page /admin.
 // - Plannings remplis dans l'app (plannings/{key}/dimanches, lot 17) : lus
@@ -125,8 +125,8 @@ service cloud.firestore {
     // et par les comptes à qui un admin a donné le droit `equipes` sur leur
     // profil (D4, rouverte par Timothée le 18/09/2026 : « pouvoir donner la
     // possibilité à certains de modifier tout l'organigramme »).
-    // `users/{uid}.poles` n'est PAS ouvert pour autant : placer quelqu'un dans
-    // une équipe passe par /api/equipes/poles (Admin SDK, qui revérifie ce même
+    // `users/{uid}.dansEquipes` n'est PAS ouvert pour autant : placer quelqu'un dans
+    // une équipe passe par /api/equipes/rattachement (Admin SDK, qui revérifie ce même
     // droit) — `allow update` sur users/{uid} reste aux admins.
     // Miroir client : canVoirEquipes / canEditerEquipes (src/lib/access.ts).
     function isEquipier() {

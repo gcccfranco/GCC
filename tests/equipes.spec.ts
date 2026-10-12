@@ -1,7 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import { signInAs } from "./helpers/fakeSession";
 import type { PlanningData } from "../src/lib/planning/names";
-import { EQUIPES, polesDesEquipes } from "../src/lib/equipes/organigramme";
+import { EQUIPES } from "../src/lib/equipes/organigramme";
 import { COLONNES_MUSICIENS, matriceMusiciens, type ProfilMusicien } from "../src/lib/equipes/musiciens";
 import { canEditerEquipes, canVoirEquipes } from "../src/lib/access";
 import type { MembreEquipe } from "../src/types/equipe";
@@ -11,29 +11,12 @@ import type { MembreEquipe } from "../src/types/equipe";
 // rattachement des noms du Sheet sont partis avec l'import, le 06/10/2026
 // (« on va tout faire manuellement ») : leurs tests aussi.
 
-// ── Pôles donnés par les équipes ────────────────────────────────────────────
+// ── Plus de pôles (lot 1 du chantier « équipes et groupes », EQ-D, EQ27) ────
 
-const membre = (uid: string): MembreEquipe =>
-  ({ nom: "X", uid, mention: "", referent: false, essai: false, groupe: "" });
-
-test("pôles : l'appartenance à une équipe donne son pôle, en sortir le retire", () => {
-  const equipes = [
-    { id: "da", pole: "da" as const, membres: [membre("u1")] },
-    { id: "medias", pole: "media" as const, membres: [membre("u2")] },
-    { id: "decoration", pole: "da" as const, membres: [membre("u1")] },
-  ];
-  expect(polesDesEquipes("u1", equipes)).toEqual(["da"]);
-  expect(polesDesEquipes("u2", equipes)).toEqual(["media"]);
-  expect(polesDesEquipes("u3", equipes)).toEqual([]);
-  expect(polesDesEquipes("", equipes)).toEqual([]);
-});
-
-test("pôles : LOUANGE, RÉGIE et EDD n'écrivent rien — « louange » reste dérivé des rôles de service", () => {
-  for (const id of ["louange", "regie", "edd"]) {
-    expect(EQUIPES.find((e) => e.id === id)?.pole).toBeNull();
-  }
-  const equipes = [{ id: "louange", pole: null, membres: [membre("u1")] }];
-  expect(polesDesEquipes("u1", equipes)).toEqual([]);
+test("la table des équipes ne donne plus de pôle ; l'organigramme n'a plus la fonction qui les calculait", async () => {
+  for (const e of EQUIPES) expect(e, e.id).not.toHaveProperty("pole");
+  const organigramme = await import("../src/lib/equipes/organigramme");
+  expect(organigramme).not.toHaveProperty("polesDesEquipes");
 });
 
 test("droits : tout connecté voit l'organigramme, les admins et le droit « Équipes » le modifient", () => {
@@ -168,11 +151,11 @@ test("page Équipes : « en essai », un nom rattaché ouvre la fiche, un nom li
 });
 
 // Lot U6, B2 (question 4) : l'organigramme se modifie au Back-Office, Équipes › Organigramme.
-test("Équipes › Organigramme : le droit « Équipes » ajoute un membre et fait recalculer les pôles", async ({ page }) => {
+test("Équipes › Organigramme : le droit « Équipes » ajoute un membre et fait recalculer le rattachement", async ({ page }) => {
   await simulerSheets(page);
   let appels = 0;
   let envoye: { uids?: string[] } = {};
-  await page.route("**/api/equipes/poles", (route) => {
+  await page.route("**/api/equipes/rattachement", (route) => {
     appels++;
     envoye = route.request().postDataJSON() as { uids?: string[] };
     return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ok: true, maj: 1 }) });
@@ -184,9 +167,14 @@ test("Équipes › Organigramme : le droit « Équipes » ajoute un membre et fa
     "/back-office/equipes",
   );
   const carte = page.getByTestId("equipe-da");
+  // EQ27 : plus de pastille « Donne le pôle … » sur les cartes.
+  await expect(page.getByText(/Donne le pôle/)).toHaveCount(0);
   // Agencement v18 (B8) : le crayon de la carte ouvre le panneau d'édition.
   await carte.getByRole("button", { name: "Modifier TEAM DA" }).click();
   const panneau = page.getByRole("dialog", { name: "TEAM DA" });
+  // EQ27 : ni sélecteur « Pôle donné par cette équipe », ni liste de pôles.
+  await expect(panneau.getByText("Pôle donné par cette équipe")).toHaveCount(0);
+  await expect(panneau.getByRole("combobox")).toHaveCount(0);
   await panneau.getByPlaceholder("Ajouter un membre").fill("Ruth");
   await panneau.getByRole("button", { name: /Ruth K\./ }).click();
   await panneau.getByRole("button", { name: "Enregistrer" }).click();
@@ -196,7 +184,12 @@ test("Équipes › Organigramme : le droit « Équipes » ajoute un membre et fa
   await expect(carte.getByRole("button", { name: "Modifier TEAM DA" })).toBeVisible();
   const ecrit = db.doc("equipes/da") as { membres: MembreEquipe[] } | undefined;
   expect(ecrit?.membres.filter((m) => m.uid === "u-ruth")).toHaveLength(1);
-  // Les anciens membres restent, et le pôle de l'équipe ne bouge pas.
+  // Le corps n'écrit plus `pole` (masque : membres et signature) ; le champ stocké, que le relevé
+  // de la migration lira (EQ-E), reste tel quel.
+  const patch = db.writes.find((w) => w.path === "equipes/da");
+  expect(patch?.data).not.toHaveProperty("pole");
+  expect((ecrit as { pole?: string } | undefined)?.pole).toBe("da");
+  // Les anciens membres restent.
   expect(ecrit?.membres.map((m) => m.nom)).toEqual(["Charlie L.", "Justine C.", "Ruth K."]);
   expect(appels).toBe(1);
   expect(envoye.uids).toEqual(expect.arrayContaining(["u-charlie", "u-ruth"]));
@@ -282,7 +275,7 @@ test("中文 : les noms d'équipe sont traduits, les noms de personnes ne le son
 test("admin : « Recalculer depuis l'organigramme » repose équipes et référents des profils existants (lot U6, R4)", async ({ page }) => {
   await simulerSheets(page);
   const envois: unknown[] = [];
-  await page.route("**/api/equipes/poles", (route) => {
+  await page.route("**/api/equipes/rattachement", (route) => {
     envois.push(route.request().postDataJSON());
     return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ok: true, maj: 12 }) });
   });
@@ -291,10 +284,10 @@ test("admin : « Recalculer depuis l'organigramme » repose équipes et référe
   // Agencement v18 (B8) : dans l'en-tête ; son aide dans l'infobulle du bouton et, relecture de
   // T5, dans la fenêtre du site qui le confirme (au toucher, l'infobulle n'existe pas).
   const bouton = page.getByRole("button", { name: "Recalculer depuis l'organigramme" });
-  await expect(bouton).toHaveAttribute("title", /réunions d.équipe/);
+  await expect(bouton).toHaveAttribute("title", /réunions et les tâches de leur équipe/);
   await bouton.click();
   const fenetre = page.getByRole("alertdialog");
-  await expect(fenetre).toContainText(/réunions d.équipe/);
+  await expect(fenetre).toContainText(/réunions et les tâches de leur équipe/);
   await fenetre.getByRole("button", { name: "Recalculer", exact: true }).click();
   await expect(page.getByText("12 profils mis à jour.")).toBeVisible();
   expect(envois).toEqual([{ tous: true }]);
