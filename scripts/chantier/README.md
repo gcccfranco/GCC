@@ -1,5 +1,8 @@
 # Orchestrateur du chantier « équipes et groupes »
 
+> **Depuis le 12/10/2026, le chantier se code dans des sessions visibles, avec relecture automatique par Opus de
+> chaque tranche : voir `methode-visible.md`.** L'orchestrateur ci-dessous (sans écran) n'est gardé que pour mémoire.
+
 Fait coder la suite du chantier (lots 1, partage, 3, 2 puis 4) tranche par tranche, à moindre coût, sans session qui
 gonfle. Mis en place le 12/10/2026 à la demande de Timothée.
 
