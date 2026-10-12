@@ -821,7 +821,28 @@ rappel faux sur deux chants au même `section.uid` (C5).
 - O16 : un `partition-layout` déjà réglé dans la setlist s'applique désormais au mode louange — à dire dans l'annonce de
   la mise en ligne.
 - Ce que Timothée doit faire : relire le 中文 (`performance.view` 角色, `performance.affichageHint`, le point du guide).
-- Reste : passage complet de la suite et vérification d'Opus (tests et captures).
+- Vérifié par Opus (12/10/2026) : 1 constat, 1 corrigé (mineur : un rôle autre que Batteur mémorisé restait
+  sélectionné quand l'Affichage de la setlist était Structure seule — Pianiste allumé avec un écran sans paroles ni
+  accords ; il cède désormais à l'Affichage comme le Batteur de C2, rien d'écrit ; test ajouté, vu rouge puis vert).
+  Corrections C1 à C6, C8, C9 relues et conformes (ancre `ancreDeLecture` / `retrouverAncre`, batteur et Affichage,
+  réserve mesurée du rappel, interrupteurs en Structure seule, uids des fusions mixtes, Transitions, interrupteur 简谱
+  masqué). Tests : `louange-sections-uniques` cinq projets (avant correction 146 verts, 14 sautés ; après, dans les
+  passes ci-dessous) ; `louange-sections-uniques`, `performance-mode`, `mode-louange-colonnes`, `coup-d-oeil`,
+  `look-louange`, `jianpu-par-defaut` sur ordinateur, téléphone, tablette : 392 verts, 52 sautés, 0 rouge ;
+  `louange-sections-uniques`, `mode-louange-colonnes`, `look-louange` sur tablette-paysage et ordinateur-1440 : 156
+  verts, 26 sautés, 0 rouge ; specs voisines qui ouvrent le mode louange, sur ordinateur (`deux-volets-finitions`, `fusions-dp`, `harmonie-ma-version`,
+  `jianpu-tonalite-cho`, `navigation-grand-ecran`, `pages-en-grand-accueil`, `setlist-deux-volets`, `setlist-g`,
+  `setlist-version`) : 131 verts, 52 sautés, 0 rouge. `tsc` propre.
+  Captures regardées (Ordre joué, Sections uniques, Structure seule, clair et scène, cinq tailles ; Réglages au
+  téléphone, à la tablette et en iPad paysage) : conformes aux maquettes `v20-ml-*` (bandeau sans détails / avec ①②,
+  rappel de 24 px avec R, Pm, C2 puis C2 et P cerclés, cercle clair en scène, en-tête et bandeau au-dessus des deux
+  colonnes, 一生爱你 sans scan en Structure seule, Batteur → Structure seule). Écarts, hors lot 2 : en-tête du site
+  au-dessus du scan (K3, lot 3) ; « Fin de la setlist » (O10, suites) ; l'interrupteur 简谱 dessiné en Structure seule
+  sur `v20-ml-reglages-ipad-paysage`, retiré par C8 ; à 1 280 × 720 et 1 440 × 900, Abba Père prend deux pages en
+  deux colonnes là où la maquette (texte à 85 %) en dessine une (pagination gloutonne du lot U5, inchangée). Laissés :
+  C7 et le choix b (à confirmer par Timothée) ; le test C1 ne vérifie la page 2 que si le chant en a une (vrai au
+  téléphone, sauté ailleurs) ; le test C3 ne s'exerce qu'au téléphone (ailleurs le rappel tient sur une rangée).
+- Reste : passage complet de la suite.
 
 **Lot 3 « Piste A partout » : en cours sur ui/apple-design**
 

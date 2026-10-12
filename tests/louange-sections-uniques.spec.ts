@@ -381,6 +381,16 @@ test.describe("Réglages : corrections de la relecture", () => {
     expect(await page.evaluate(() => localStorage.getItem("perf-role-preset"))).toBe("batteur");
   });
 
+  test("rôle Pianiste mémorisé, Structure seule choisie dans la setlist : le mode s'ouvre en Structure seule, sans rôle (FR)", async ({ page }) => {
+    await ouvrirMode(page, [ABBA], { role: "pianiste", affichage: "structure" });
+    await expect(onStage(page, "[data-section]").first()).toBeVisible();
+    await expect(onStage(page, "[data-copy-line]")).toHaveCount(0);
+    const feuille = await reglages(page);
+    await expect(feuille.getByRole("radiogroup", { name: "Affichage" }).getByRole("radio", { name: "Structure seule" })).toHaveAttribute("aria-checked", "true");
+    await expect(feuille.getByRole("button", { name: "Pianiste" }), "le rôle cède à l'Affichage, comme le Batteur (C2)").toHaveAttribute("aria-pressed", "false");
+    expect(await page.evaluate(() => localStorage.getItem("perf-role-preset"))).toBe("pianiste");
+  });
+
   test("rôle Batteur mémorisé sans choix d'Affichage : toujours Structure seule (C2) (FR)", async ({ page }) => {
     await ouvrirMode(page, [ABBA], { role: "batteur" });
     await expect(onStage(page, "[data-section]").first()).toBeVisible();

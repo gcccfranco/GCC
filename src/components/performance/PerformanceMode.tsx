@@ -373,12 +373,12 @@ export function PerformanceMode({
   });
   // Rôle contredit par les accords choisis juste avant sur la page setlist :
   // désélectionné, et l'affichage reprend celui de la page (paroles comprises).
-  // Même chose pour le Batteur quand l'Affichage de l'appareil n'est pas
-  // Structure seule (D15, dans les deux sens) : sans cela, son rôle l'emporterait.
+  // Même chose quand l'Affichage de l'appareil contredit le rôle (D15, dans les
+  // deux sens) : le Batteur hors Structure seule, un autre rôle en Structure seule.
   const roleOverridden =
     storedRole !== null &&
     ((initialShowChords !== undefined && ROLE_PRESETS[storedRole].chords !== initialShowChords) ||
-      (storedRole === "batteur" && affichage !== "structure"));
+      (storedRole === "batteur") !== (affichage === "structure"));
   const [rolePreset, setRolePreset] = useState<RolePreset | null>(roleOverridden ? null : storedRole);
   const [showChords, setShowChords] = useState(
     initialShowChords ?? (storedRole && !roleOverridden ? ROLE_PRESETS[storedRole].chords : true),
