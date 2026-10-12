@@ -17,7 +17,7 @@
 import { useEffect, useId, useRef, useState, type ReactNode } from "react"
 import { useTranslation } from "react-i18next"
 import { useConfirmer } from "@/components/layout/Confirmer"
-import { Coffee, Pencil, Plus, Trash2 } from "lucide-react"
+import { Coffee, Pencil, Trash2, UserPlus } from "lucide-react"
 import { MenuActions } from "@/components/layout/MenuActions"
 import { Tile } from "@/components/ui/tile"
 import { canEditPetitDej, canGererPetitDej } from "@/lib/access"
@@ -45,8 +45,8 @@ export function dateCourte(iso: string, lang: string): string {
   return `${d === 1 ? "1er" : d} ${new Date(y, m - 1, d).toLocaleDateString("fr-FR", { month: "short" })}`
 }
 
-/** Une saisie en cours : réécrire une ligne (`id`), ou en ajouter une (`id` nul) ;
- *  `inscription` : son propre nom, quand le profil n'en donne aucun. */
+/** Une saisie en cours : réécrire une ligne (`id`), ou son propre nom (`inscription`, `id` nul),
+ *  quand le profil n'en donne aucun. */
 type Saisie = { dimanche: string; id: string | null; valeur: string; inscription?: boolean }
 
 /** L'état partagé de la carte « Petit déj » et de « Ton petit déj » : les lignes lues, la saisie
@@ -58,7 +58,7 @@ export function usePetitDej(onLignes?: (lignes: LignePetitDej[]) => void) {
   const [lignes, setLignes] = useState<LignePetitDej[] | "illisible" | null>(null)
   const [saisie, setSaisie] = useState<Saisie | null>(null)
   // Un message sous un dimanche : « X vient de s'inscrire. », ou un refus.
-  const [annonce, setAnnonce] = useState<{ dimanche: string; texte: string } | null>(null)
+  const [annonce, setAnnonce] = useState<{ dimanche: string; texte: string; formulaire?: boolean } | null>(null)
   const [enCours, setEnCours] = useState(false)
   // Entrée puis la sortie du champ (démonté) : une seule fin de saisie.
   const fini = useRef(false)
@@ -83,20 +83,29 @@ export function usePetitDej(onLignes?: (lignes: LignePetitDej[]) => void) {
   }, [onLignes])
 
   /** Écrit, dit le refus éventuel sous le dimanche, puis relit (le cache est oublié par l'écriture). */
-  async function ecrire(dimanche: string, action: () => Promise<void>) {
+  async function ecrire(dimanche: string, action: () => Promise<void>, formulaire = false): Promise<boolean> {
     setAnnonce(null)
     setEnCours(true)
+    let ok = true
     try {
       await action()
     } catch (e) {
+      ok = false
       // Hors ligne, refus des règles (403), ou tout autre échec : trois messages.
       const horsLigne = typeof navigator !== "undefined" && navigator.onLine === false
       const cle = horsLigne ? "planning.grille.horsLigne" : e instanceof RefusDesRegles ? "planning.grille.droitRetire" : "planning.petitDej.echec"
-      setAnnonce({ dimanche, texte: t(cle) })
+      setAnnonce({ dimanche, texte: t(cle), formulaire })
     } finally {
       setEnCours(false)
       await lire()
     }
+    return ok
+  }
+
+  /** « Inscrire quelqu'un » (PG52) : une ligne pour quelqu'un d'autre, `uid` vide. Faux si refusée. */
+  function inscrireQuelqu(dimanche: string, nom: string): Promise<boolean> {
+    if (!user) return Promise.resolve(false)
+    return ecrire(dimanche, async () => { await ajouterLigne(dimanche, nom, user.uid) }, true)
   }
 
   function sInscrire(dimanche: string) {
@@ -140,12 +149,10 @@ export function usePetitDej(onLignes?: (lignes: LignePetitDej[]) => void) {
     } else if (id) {
       const avant = Array.isArray(lignes) ? lignes.find((l) => l.id === id)?.nom : undefined
       if (avant !== nom) void ecrire(dimanche, () => renommerLigne(id, nom))
-    } else {
-      void ecrire(dimanche, async () => { await ajouterLigne(dimanche, nom, user.uid) })
     }
   }
 
-  return { user, profile, lignes, saisie, setSaisie, annonce, enCours, sun, peutGerer, sInscrire, retirer, commencer, terminer }
+  return { user, profile, lignes, saisie, setSaisie, annonce, enCours, sun, peutGerer, sInscrire, retirer, commencer, terminer, inscrireQuelqu, setAnnonce }
 }
 
 export type EtatPetitDej = ReturnType<typeof usePetitDej>
@@ -187,6 +194,83 @@ function ChampDeSaisie({ etat, label, liste }: { etat: EtatPetitDej; label: stri
 /** La carte « Petit déj » montre-t-elle ce dimanche (l'année et le trimestre choisis) ? */
 const dansLaPeriode = (dimanche: string, annee: number, tri: string) => dimanche.startsWith(`${annee}-`) && getTri(dimanche) === tri
 
+/** Les dimanches que « Inscrire quelqu'un » propose (PG51) : ceux du trimestre affiché, à partir du dimanche en cours. */
+const dimanchesProposes = (annee: number, tri: string, sun: string) =>
+  dimanchesDe(annee).filter((d) => dansLaPeriode(d, annee, tri) && d >= sun)
+
+/** « dim. 15 nov. » ; 中文 « 11月15日 ». */
+function dateMenu(iso: string, lang: string): string {
+  if (lang === "zh-CN") return dateCourte(iso, lang)
+  const [y, m, d] = iso.split("-").map(Number)
+  return new Date(y, m - 1, d).toLocaleDateString("fr-FR", { weekday: "short", day: "numeric", month: "short" })
+}
+
+/** Le formulaire « Inscrire quelqu'un » (PG50), sous l'en-tête de la carte. Composant du module : le
+ *  champ garde son focus à chaque frappe. Reste ouvert sur un refus, qui s'affiche dessous. */
+function FormulaireInscrire({ etat, dimanches, listeId, onFerme }: {
+  etat: EtatPetitDej
+  dimanches: string[]
+  listeId: string
+  onFerme: () => void
+}) {
+  const { t, i18n } = useTranslation()
+  const { lignes, annonce, enCours, inscrireQuelqu } = etat
+  const titreId = useId()
+  const pris = (d: string) => Array.isArray(lignes) && lignes.some((l) => l.dimanche === d)
+  const [dimanche, setDimanche] = useState(() => dimanches.find((d) => !pris(d)) ?? dimanches[0])
+  const [nom, setNom] = useState("")
+
+  async function valider() {
+    const n = nom.trim()
+    if (!n || enCours) return
+    if (await inscrireQuelqu(dimanche, n)) onFerme()
+  }
+
+  return (
+    <div
+      role="group"
+      aria-labelledby={titreId}
+      className="mb-2 rounded-xl border border-border bg-secondary/40 p-3"
+      onKeyDown={(e) => { if (e.key === "Escape") { e.preventDefault(); onFerme() } }}
+    >
+      <p id={titreId} className="pb-2 text-sm font-bold text-foreground">{t("planning.petitDej.inscrireQuelquun")}</p>
+      <div className="flex flex-col gap-2 sm:flex-row">
+        <select
+          aria-label={t("planning.petitDej.dimanche")}
+          value={dimanche}
+          onChange={(e) => setDimanche(e.target.value)}
+          className="h-10 shrink-0 rounded-md border bg-background px-2 text-[16px] sm:text-sm text-foreground"
+        >
+          {dimanches.map((d) => <option key={d} value={d}>{dateMenu(d, i18n.language)}</option>)}
+        </select>
+        <input
+          autoFocus
+          type="text"
+          maxLength={NOM_MAX}
+          list={listeId}
+          aria-label={t("planning.petitDej.nomPersonne")}
+          placeholder={t("planning.petitDej.nomPersonne")}
+          value={nom}
+          onChange={(e) => setNom(e.target.value)}
+          onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); void valider() } }}
+          className="h-10 w-full min-w-0 rounded-md border bg-background px-2 text-[16px] sm:text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/20"
+          style={{ borderColor: COULEUR }}
+        />
+      </div>
+      {annonce?.formulaire && <p role="status" className="pt-2 text-[13px] text-muted-foreground">{annonce.texte}</p>}
+      <div className="flex flex-wrap items-center gap-2 pt-2">
+        <p className="min-w-0 flex-1 text-[13px] text-muted-foreground">{t("planning.petitDej.dejaPris")}</p>
+        <button type="button" onClick={onFerme} className="h-9 rounded-full bg-secondary px-3.5 text-sm font-semibold text-foreground hover:bg-secondary/70">
+          {t("common.buttons.cancel")}
+        </button>
+        <button type="button" disabled={enCours} onClick={() => void valider()} className="h-9 rounded-full px-3.5 text-sm font-semibold text-white disabled:opacity-60" style={{ background: FOND }}>
+          {t("planning.petitDej.inscrireBouton")}
+        </button>
+      </div>
+    </div>
+  )
+}
+
 export function PetitDejCarte({ etat, annee, tri, nomsDesComptes }: {
   etat: EtatPetitDej
   annee: number
@@ -196,7 +280,9 @@ export function PetitDejCarte({ etat, annee, tri, nomsDesComptes }: {
   nomsDesComptes: readonly string[]
 }) {
   const { t, i18n } = useTranslation()
-  const { user, profile, lignes, saisie, annonce, enCours, sun, peutGerer, sInscrire, commencer } = etat
+  const { user, profile, lignes, saisie, annonce, enCours, sun, peutGerer, sInscrire } = etat
+  const [formulaireOuvert, setFormulaireOuvert] = useState(false)
+  const boutonInscrire = useRef<HTMLButtonElement>(null)
   const titreId = useId()
   const listeId = useId()
   const dimanches = dimanchesDe(annee).filter((d) => dansLaPeriode(d, annee, tri))
@@ -205,8 +291,10 @@ export function PetitDejCarte({ etat, annee, tri, nomsDesComptes }: {
 
   const champ = (label: string, suggestions: boolean) => <ChampDeSaisie etat={etat} label={label} liste={suggestions ? listeId : undefined} />
 
+  const proposes = dimanchesProposes(annee, tri, sun)
+  const peutInscrire = peutGerer && !!user && Array.isArray(lignes) && proposes.length > 0
+
   const bouton = "h-9 shrink-0 rounded-full px-3.5 text-sm font-semibold transition-[background-color,color,transform] duration-150 active:scale-[.96] disabled:opacity-60"
-  const boutonGris = `${bouton} bg-secondary text-foreground hover:bg-secondary/70`
 
   function laLigne(l: LignePetitDej): ReactNode {
     if (saisie?.id === l.id) return <div key={l.id} className="flex min-h-9 items-center">{champ(t("planning.petitDej.modifier"), false)}</div>
@@ -247,22 +335,7 @@ export function PetitDejCarte({ etat, annee, tri, nomsDesComptes }: {
             </div>
           ))}
           {siennes.map(laLigne)}
-          {ouvert && peutGerer && (
-            saisie && saisie.dimanche === d && saisie.id === null && !saisie.inscription ? (
-              <div className="flex min-h-9 items-center">{champ(t("planning.petitDej.ajouter"), true)}</div>
-            ) : (
-              <button
-                type="button"
-                disabled={enCours}
-                onClick={() => commencer({ dimanche: d, id: null, valeur: "" })}
-                className={`${boutonGris} inline-flex items-center gap-1.5 text-muted-foreground`}
-              >
-                <Plus className="h-4 w-4" aria-hidden />
-                {t("planning.petitDej.ajouter")}
-              </button>
-            )
-          )}
-          {annonce?.dimanche === d && (
+          {annonce?.dimanche === d && !annonce.formulaire && (
             <p role="status" className="text-[13px] text-muted-foreground">{annonce.texte}</p>
           )}
         </div>
@@ -278,9 +351,26 @@ export function PetitDejCarte({ etat, annee, tri, nomsDesComptes }: {
         </span>
         <h3 id={titreId} className="text-[17px] font-bold text-foreground">{t("planning.tabs.petitDej")}</h3>
         {libres !== null && (
-          <span className="ml-auto text-[13px] text-muted-foreground">{t("planning.petitDej.libresSur", { count: libres, total: dimanches.length })}</span>
+          <span className={`ml-auto text-[13px] text-muted-foreground ${peutInscrire ? "max-sm:hidden" : ""}`}>{t("planning.petitDej.libresSur", { count: libres, total: dimanches.length })}</span>
+        )}
+        {peutInscrire && (
+          <button
+            ref={boutonInscrire}
+            type="button"
+            aria-expanded={formulaireOuvert}
+            disabled={enCours}
+            onClick={() => { etat.setAnnonce(null); setFormulaireOuvert(true) }}
+            className={`${bouton} ml-auto sm:ml-0 inline-flex items-center gap-1.5 text-white`}
+            style={{ background: FOND }}
+          >
+            <UserPlus className="h-4 w-4" aria-hidden />
+            {t("planning.petitDej.inscrireQuelquun")}
+          </button>
         )}
       </div>
+      {peutInscrire && formulaireOuvert && (
+        <FormulaireInscrire key={`${annee}-${tri}`} etat={etat} dimanches={proposes} listeId={listeId} onFerme={() => { setFormulaireOuvert(false); etat.setAnnonce((a) => (a?.formulaire ? null : a)); boutonInscrire.current?.focus() }} />
+      )}
       {lignes === "illisible" ? (
         <p className="border-t border-border pt-3 pb-1.5 text-sm text-muted-foreground">{t("planning.petitDej.illisible")}</p>
       ) : lignes === null ? (
@@ -310,6 +400,7 @@ export function TonPetitDej({ etat, annee, tri }: { etat: EtatPetitDej; annee: n
   const prochaine = Array.isArray(lignes) && user
     ? lignes.filter((l) => l.uid === user.uid && l.dimanche >= sun).sort((a, b) => (a.dimanche < b.dimanche ? -1 : 1))[0]
     : undefined
+  const aLeBouton = etat.peutGerer && Array.isArray(lignes) && dimanchesProposes(annee, tri, sun).length > 0
   const langue = i18n.language === "zh-CN" ? "zh-CN" : "fr-FR"
 
   let corps: ReactNode
@@ -344,7 +435,7 @@ export function TonPetitDej({ etat, annee, tri }: { etat: EtatPetitDej; annee: n
     <section aria-labelledby={titreId} className="raised min-w-0 rounded-2xl px-4 pt-3 pb-3.5">
       <h3 id={titreId} className="pb-2 text-[17px] font-bold text-foreground">{t("planning.petitDej.ton")}</h3>
       {corps}
-      <p className="mt-3 border-t border-border pt-2.5 text-[13px] text-muted-foreground">{t("planning.petitDej.astuce")}</p>
+      <p className="mt-3 border-t border-border pt-2.5 text-[13px] text-muted-foreground">{t("planning.petitDej.astuce")}{aLeBouton && ` ${t("planning.petitDej.astuceAutres")}`}</p>
     </section>
   )
 }

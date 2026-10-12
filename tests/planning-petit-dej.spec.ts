@@ -501,6 +501,8 @@ test("carte : aucun bouton sur la ligne d'un autre ni un dimanche passé, pas de
   await expect(le20.getByRole("button", { name: "Je m'inscris" })).toBeVisible();
   await expect(carte.getByText("Isabelle L.", { exact: false }), "un nom du Sheet n'apparaît nulle part").toHaveCount(0);
   await expect(carte.getByRole("button", { name: "Ajouter une ligne" })).toHaveCount(0);
+  await expect(carte.getByRole("button", { name: "Inscrire quelqu'un" }), "PG48 : un membre n'a pas le bouton").toHaveCount(0);
+  await expect(carteDe(page, "Ton petit déj").getByText("Pour inscrire quelqu'un d'autre", { exact: false }), "PG53 : la phrase seulement pour qui a le bouton").toHaveCount(0);
 });
 
 test("carte : une ligne arrivée entre-temps — le message, et rien n'est écrit", async ({ page }) => {
@@ -527,8 +529,12 @@ test("carte : un écrivain du planning Table ajoute « Les jeunes du Campus » e
   await expect(le20.getByRole("button", { name: "Je m'inscris" }), "il peut aussi s'inscrire lui-même").toBeVisible();
   await capture(page, "petit-dej-carte-ecrivain");
 
-  await le20.getByRole("button", { name: "Ajouter une ligne" }).click();
-  const champ = le20.getByRole("combobox", { name: "Ajouter une ligne" });
+  await expect(carte.getByRole("button", { name: "Ajouter une ligne" }), "PG49 : plus de bouton par rangée").toHaveCount(0);
+  await carte.getByRole("button", { name: "Inscrire quelqu'un" }).click();
+  const formulaire = carte.getByRole("group", { name: "Inscrire quelqu'un" });
+  await expect(formulaire.getByRole("combobox", { name: "Dimanche" }), "PG51 : le premier dimanche libre d'office").toHaveValue("2026-09-20");
+  await capture(page, "petit-dej-formulaire");
+  const champ = formulaire.getByRole("combobox", { name: "Nom de la personne ou de la famille" });
   await champ.fill("Les jeunes du Campus");
   await champ.press("Enter");
   await expect(le20.getByText("Les jeunes du Campus", { exact: true })).toBeVisible();
@@ -539,12 +545,143 @@ test("carte : un écrivain du planning Table ajoute « Les jeunes du Campus » e
   });
 
   const le27 = rangee(carte, "2026-09-27");
-  await expect(le27.getByRole("button", { name: "Ajouter une ligne" }), "sur chaque dimanche à venir, même pris").toBeVisible();
+  await expect(carteDe(page, "Ton petit déj").getByText("Pour inscrire quelqu'un d'autre, même un dimanche déjà pris : « Inscrire quelqu'un ».")).toBeVisible();
   await choisirDansLeMenu(page, le27, "Retirer");
   await repondreDansLeSite(page, "Retirer");
   await expect(le27.getByText("Libre", { exact: true })).toBeVisible();
   expect(db.doc("petitDej/a")).toBeUndefined();
   await expect(rangee(carte, "2026-09-13").getByRole("button"), "le passé, même pour un écrivain : aucun bouton").toHaveCount(0);
+});
+
+test("carte : « Inscrire quelqu'un » — formulaire, dimanche déjà pris, dimanches proposés, annuler, nom vide, refus", async ({ page }) => {
+  const db = await ouvrirTable(page, ECRIVAIN_TABLE, docsPetitDej([
+    ligne({ id: "a", dimanche: "2026-09-27", nom: "Famille Martin", uid: "uid-autre", auteurUid: "uid-autre" }),
+    ligne({ id: "p", dimanche: "2026-09-13", nom: "Charlie B.", uid: "uid-autre", auteurUid: "uid-autre" }),
+  ]));
+  const carte = carteDe(page);
+  await expect(carte.getByRole("group", { name: "Inscrire quelqu'un" })).toHaveCount(0);
+  await carte.getByRole("button", { name: "Inscrire quelqu'un" }).click();
+  const formulaire = carte.getByRole("group", { name: "Inscrire quelqu'un" });
+  await expect(formulaire.getByText("Un dimanche déjà pris : la ligne s'ajoute à côté.")).toBeVisible();
+  const menu = formulaire.getByRole("combobox", { name: "Dimanche" });
+  const valeurs = await menu.locator("option").evaluateAll((o) => o.map((x) => (x as HTMLOptionElement).value));
+  expect(valeurs, "à partir du dimanche en cours, le trimestre seulement, pris ou libres").toEqual([
+    "2026-09-20", "2026-09-27",
+  ]);
+  await expect(menu.locator("option").nth(1)).toHaveText("dim. 27 sept.");
+  // Échap annule, rien d'écrit.
+  const champ = formulaire.getByRole("combobox", { name: "Nom de la personne ou de la famille" });
+  await champ.fill("Léa M.");
+  await champ.press("Escape");
+  await expect(carte.getByRole("group", { name: "Inscrire quelqu'un" })).toHaveCount(0);
+  expect(ecrituresPetitDej(db.writes, "POST")).toHaveLength(0);
+  // Un nom vide est refusé : le formulaire reste ouvert.
+  await carte.getByRole("button", { name: "Inscrire quelqu'un" }).click();
+  await formulaire.getByRole("button", { name: "Inscrire", exact: true }).click();
+  await expect(formulaire).toBeVisible();
+  expect(ecrituresPetitDej(db.writes, "POST")).toHaveLength(0);
+  // Un dimanche déjà pris : la ligne s'ajoute à côté.
+  await menu.selectOption("2026-09-27");
+  await formulaire.getByRole("combobox", { name: "Nom de la personne ou de la famille" }).fill("Joël F.");
+  await formulaire.getByRole("button", { name: "Inscrire", exact: true }).click();
+  const le27 = rangee(carte, "2026-09-27");
+  await expect(le27.getByText("Joël F.", { exact: true })).toBeVisible();
+  await expect(le27.getByText("Famille Martin", { exact: true })).toBeVisible();
+  await expect(carte.getByRole("group", { name: "Inscrire quelqu'un" })).toHaveCount(0);
+  expect(ecrituresPetitDej(db.writes, "POST")[0].data).toMatchObject({ dimanche: "2026-09-27", nom: "Joël F.", uid: "", auteurUid: ECRIVAIN_TABLE.uid });
+});
+
+test("carte : « Inscrire quelqu'un » refusé par le serveur — le message sous le formulaire, qui reste ouvert", async ({ page }) => {
+  await ouvrirTable(page, ECRIVAIN_TABLE);
+  await refuserLesInscriptions(page, 500);
+  const carte = carteDe(page);
+  await carte.getByRole("button", { name: "Inscrire quelqu'un" }).click();
+  const formulaire = carte.getByRole("group", { name: "Inscrire quelqu'un" });
+  await formulaire.getByRole("combobox", { name: "Nom de la personne ou de la famille" }).fill("Hugo L.");
+  await formulaire.getByRole("button", { name: "Inscrire", exact: true }).click();
+  await expect(formulaire.getByText("Enregistrement impossible, réessaie.")).toBeVisible();
+});
+
+test("carte en 中文 : « 替别人报名 », dimanche en 月日, phrase de l'astuce", async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
+  await ouvrirTable(page, ECRIVAIN_TABLE);
+  const carte = carteDe(page, "早餐");
+  await carte.getByRole("button", { name: "替别人报名" }).click();
+  const formulaire = carte.getByRole("group", { name: "替别人报名" });
+  await expect(formulaire.getByRole("combobox", { name: "主日" }).locator("option").first()).toHaveText("9月20日");
+  await expect(carteDe(page, "你的早餐")).toContainText("替别人报名");
+});
+
+test("carte : sans dimanche à venir dans le trimestre affiché, pas de bouton « Inscrire quelqu'un »", async ({ page }) => {
+  await ouvrirTable(page, ECRIVAIN_TABLE);
+  await page.getByRole("tab", { name: "T2", exact: true }).click();
+  await expect(carteDe(page).getByText("Libre", { exact: true })).toHaveCount(0);
+  await expect(carteDe(page).getByRole("button", { name: "Inscrire quelqu'un" })).toHaveCount(0);
+});
+
+test("carte : le trimestre change pendant que le formulaire est ouvert — « Inscrire » écrit sur le dimanche affiché", async ({ page }) => {
+  const db = await ouvrirTable(page, ECRIVAIN_TABLE);
+  const carte = carteDe(page);
+  await carte.getByRole("button", { name: "Inscrire quelqu'un" }).click();
+  await expect(carte.getByRole("combobox", { name: "Dimanche" })).toHaveValue("2026-09-20");
+  await page.getByRole("tab", { name: "T4", exact: true }).click();
+  const menu = carte.getByRole("combobox", { name: "Dimanche" });
+  await expect(menu).toHaveValue("2026-10-04");
+  await carte.getByRole("combobox", { name: "Nom de la personne ou de la famille" }).fill("Léa M.");
+  await carte.getByRole("button", { name: "Inscrire", exact: true }).click();
+  await expect(rangee(carte, "2026-10-04").getByText("Léa M.", { exact: true })).toBeVisible();
+  expect(ecrituresPetitDej(db.writes, "POST")[0].data).toMatchObject({ dimanche: "2026-10-04", nom: "Léa M." });
+  await expect(carte.getByRole("button", { name: "Inscrire quelqu'un" }), "le focus revient au bouton").toBeFocused();
+});
+
+test("carte : le premier dimanche libre est choisi d'office, pas le premier proposé ; nom limité à 80 ; noms des comptes suggérés ; Annuler rend le focus", async ({ page }) => {
+  await ouvrirTable(page, ECRIVAIN_TABLE, {
+    ...docsPetitDej([ligne({ id: "a", dimanche: "2026-09-20", nom: "Famille Martin", uid: "uid-autre", auteurUid: "uid-autre" })]),
+    "users/uid-lea": { email: "lea@example.com", planningName: "Léa M.", plannings: ["table"] },
+  });
+  const carte = carteDe(page);
+  await carte.getByRole("button", { name: "Inscrire quelqu'un" }).click();
+  await expect(carte.getByRole("combobox", { name: "Dimanche" })).toHaveValue("2026-09-27");
+  const champ = carte.getByRole("combobox", { name: "Nom de la personne ou de la famille" });
+  await expect(champ).toHaveAttribute("maxlength", "80");
+  await expect(carte.locator("datalist option[value='Léa M.']")).toHaveCount(1);
+  await carte.getByRole("button", { name: "Annuler" }).click();
+  await expect(carte.getByRole("button", { name: "Inscrire quelqu'un" })).toBeFocused();
+});
+
+test("carte : « Retirer » refusé n'apparaît pas sous le formulaire, et Annuler n'efface pas le message d'une rangée", async ({ page }) => {
+  await ouvrirTable(page, ECRIVAIN_TABLE, docsPetitDej([
+    ligne({ id: "a", dimanche: "2026-09-27", nom: "Famille Martin", uid: "uid-autre", auteurUid: "uid-autre" }),
+  ]));
+  const carte = carteDe(page);
+  await page.route(/firestore\.googleapis\.com.*\/documents\/petitDej\/a/, (route) =>
+    route.request().method() === "DELETE" ? route.fulfill({ status: 500, contentType: "application/json", body: "{}" }) : route.fallback());
+  await choisirDansLeMenu(page, rangee(carte, "2026-09-27"), "Retirer");
+  await repondreDansLeSite(page, "Retirer");
+  const message = rangee(carte, "2026-09-27").getByRole("status");
+  await expect(message).toBeVisible();
+  await carte.getByRole("button", { name: "Inscrire quelqu'un" }).click();
+  await expect(carte.getByRole("group", { name: "Inscrire quelqu'un" }).getByRole("status")).toHaveCount(0);
+  await expect(message, "ouvrir le formulaire vide le message d'une rangée").toHaveCount(0);
+});
+
+test("carte : inscriptions illisibles — un écrivain n'a pas le bouton « Inscrire quelqu'un »", async ({ page }) => {
+  await ouvrirTable(page, ECRIVAIN_TABLE);
+  await page.route(/firestore\.googleapis\.com.*:runQuery/, (route) =>
+    (route.request().postData() ?? "").includes('"petitDej"')
+      ? route.fulfill({ status: 503, contentType: "application/json", body: "{}" })
+      : route.fallback(),
+  );
+  await page.reload();
+  await expect(carteDe(page).getByText("Inscriptions illisibles pour l'instant.")).toBeVisible();
+  await expect(carteDe(page).getByRole("button", { name: "Inscrire quelqu'un" })).toHaveCount(0);
+});
+
+test("carte : sur ordinateur et tablette « n libres sur N » reste à côté du bouton, sur téléphone le bouton le remplace (PG49)", async ({ page }, info) => {
+  await ouvrirTable(page, ECRIVAIN_TABLE);
+  const compteur = carteDe(page).getByText(/libres? sur 13/);
+  if (info.project.name === "telephone") await expect(compteur).toBeHidden();
+  else await expect(compteur).toBeVisible();
 });
 
 test("carte : inscriptions illisibles — le message, ni « Libre » ni bouton", async ({ page }) => {
