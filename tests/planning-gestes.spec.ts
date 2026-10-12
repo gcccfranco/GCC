@@ -239,6 +239,13 @@ test("verifierChangements : avant, après, date et trimestre doivent correspondr
   expect(verifierChangements(ETAT, dimanches, [{ date: "2026-11-08", cle: "presidence", avant: "Ruth K.", apres: "" }], "2026-11-15", T).ok).toBe(false);
   expect(verifierChangements(ETAT, dimanches, [{ date: "2027-01-03", cle: "presidence", avant: "", apres: "" }], "2026-11-15", T).ok).toBe(false);
   expect(verifierChangements(ETAT, dimanches, [], "2026-11-15", T).ok).toBe(false);
+  // REVUE : seule une colonne de la grille, hors lecture seule, peut changer (pas modifiePar, pas un champ inconnu).
+  const colonnes = new Set(["presidence", "orateur"]);
+  const intrus = { date: "2026-11-15", cle: "modifiePar", avant: "", apres: "x" };
+  const dim2 = { "2026-11-15": { presidence: "Anaïs P.", modifiePar: "x" } };
+  expect(verifierChangements({ cases: {} } as never, dim2, [intrus], "2026-11-15", T).ok).toBe(true);
+  expect(verifierChangements({ cases: {} } as never, dim2, [intrus], "2026-11-15", T, colonnes)).toEqual({ ok: false, raison: "colonne hors grille" });
+  expect(verifierChangements(ETAT, dimanches, [bon], "2026-11-15", T, colonnes)).toEqual({ ok: true });
   // Un vidage : « après » absent du document = vide.
   expect(verifierChangements(ETAT, dimanches, [{ date: "2026-11-22", cle: "orateur", avant: "Joël F.", apres: "" }], "2026-11-15", T)).toEqual({ ok: true });
 });

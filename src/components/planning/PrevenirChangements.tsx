@@ -331,7 +331,7 @@ function Feuille({ prev, prevenir, definition, onFermer, onIgnorer, onEnvoye }: 
           <button type="button" onClick={onIgnorer} className="py-1 text-sm font-semibold underline underline-offset-2 sm:mr-auto">
             {t("planning.prevenir.nePasPrevenir")}
           </button>
-          <AlertDialogCancel className="mt-0 rounded-full">{t("planning.gestes.annuler")}</AlertDialogCancel>
+          <AlertDialogCancel className="mt-0 rounded-full">{t("common.buttons.cancel")}</AlertDialogCancel>
           <Button type="button" disabled={enCours || cochees.length === 0} onClick={() => void envoyer()} className="rounded-full">
             {t("planning.prevenir.envoyer", { count: cochees.length })}
           </Button>

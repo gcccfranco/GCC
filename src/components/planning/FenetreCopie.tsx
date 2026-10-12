@@ -60,7 +60,7 @@ export function FenetreCopie({ demande, libelle, onChoix }: {
         )}
         <AlertDialogFooter className="gap-2 sm:space-x-0">
           <AlertDialogCancel className="mt-0 rounded-full" onClick={() => onChoix(null)}>
-            {t("planning.gestes.annuler")}
+            {t("common.buttons.cancel")}
           </AlertDialogCancel>
           <AlertDialogAction
             className={buttonVariants({ variant: "secondary", className: "rounded-full text-foreground" })}

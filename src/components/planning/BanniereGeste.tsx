@@ -57,7 +57,7 @@ export function BarreCollage({ count, remplace, videsSeulement, onAnnuler, onVid
     >
       <p className="min-w-0 flex-1 basis-64">{t("planning.gestes.apercu", { count, remplace })}</p>
       <button type="button" onClick={onAnnuler} className="shrink-0 font-semibold underline underline-offset-2">
-        {t("planning.gestes.annuler")}
+        {t("common.buttons.cancel")}
       </button>
       <button
         type="button"

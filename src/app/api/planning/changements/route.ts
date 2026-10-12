@@ -145,7 +145,8 @@ export async function POST(req: NextRequest) {
     await db.runTransaction(async (tx) => {
       const etat = lireEtat((await tx.get(ref)).data());
       dimanches = await dimanchesDe(dates, (r) => tx.getAll(...r));
-      const verdict = verifierChangements(etat, dimanches, changements, dimancheEnCours, { annee, tri });
+      const verdict = verifierChangements(etat, dimanches, changements, dimancheEnCours, { annee, tri },
+        new Set(definition.colonnes.filter((c) => !c.lectureSeule).map((c) => c.cle)));
       if (!verdict.ok) throw new Conflit(verdict.raison);
       tx.set(ref, { annonces: { [tri]: { ...(etat?.publieLe ? { publieLe: etat.publieLe } : {}), cases: etatApres(etat, changements), le: maintenant, par: uid } } }, { mergeFields: [`annonces.${tri}`] });
     });

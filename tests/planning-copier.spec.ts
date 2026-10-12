@@ -330,3 +330,23 @@ test("Culte 2026 : le dimanche vient du Sheet, le PATCH porte la case copiée et
   expect(doc).toMatchObject({ sainteCene: "Ruth K.", presidence: "Jonathan Z.", piano: "Jo M." })
   expect(doc).not.toHaveProperty("petitDej")
 })
+
+test("ordinateur — REVUE : pendant l'écriture la grille est inerte (ni pastille, ni ⋯, ni clavier), la bannière ne vient qu'après", async ({ page }) => {
+  ordinateurSeul()
+  await ouvrirCulte2027(page)
+  let liberer: () => void = () => {}
+  const retenue = new Promise<void>((ok) => { liberer = ok })
+  await page.route(/firestore\.googleapis\.com.*dimanches/, async (route) => {
+    if (route.request().method() === "PATCH") await retenue
+    await route.fallback()
+  })
+  await ligne(page, "2027-01-24").hover()
+  await page.getByRole("button", { name: "Copier le 17/1" }).click()
+  const grille = page.locator("[data-en-cours]")
+  await expect(grille).toHaveCount(1)
+  await expect(grille).toHaveAttribute("inert", /.*/)
+  await expect(page.getByTestId("banniere-geste")).toHaveCount(0)
+  liberer()
+  await expect(page.getByTestId("banniere-geste")).toContainText("8 cases copiées")
+  await expect(page.locator("[data-en-cours]")).toHaveCount(0)
+})

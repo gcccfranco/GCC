@@ -139,6 +139,9 @@ export function PlanningGrille({
   // Dimanches semés pendant la séance : leur document n'existait pas encore.
   const semes = useRef(new Set<string>())
   const [geste, setGeste] = useState<DernierGeste | null>(null)
+  // Une écriture de geste est en cours : la grille est inerte (pastille, ⋯, Choisir, clavier) jusqu'à la fin.
+  const [enCours, setEnCours] = useState(false)
+  const enCoursRef = useRef(false)
   const fini = useRef(false)
   // « Copier le dimanche précédent » (PG13 à PG15) : le dimanche dont l'aperçu est posé, et la fenêtre.
   const [apercu, setApercu] = useState<string | null>(null)
@@ -422,7 +425,18 @@ export function PlanningGrille({
    * lui-même, pas de bannière). Rend les cases écrites.
    */
   async function appliquer(cases: CaseGeste[], texte: string | null, notes: string[] = [], sansCompte: string[] = []): Promise<CaseGeste[]> {
-    if (!cases.length) return []
+    if (!cases.length || enCoursRef.current) return []
+    enCoursRef.current = true
+    setEnCours(true)
+    try {
+      return await ecrireGeste(cases, texte, notes, sansCompte)
+    } finally {
+      enCoursRef.current = false
+      setEnCours(false)
+    }
+  }
+
+  async function ecrireGeste(cases: CaseGeste[], texte: string | null, notes: string[], sansCompte: string[]): Promise<CaseGeste[]> {
     setRefus("")
     setEnregistre(false)
     setGeste(null)
@@ -556,7 +570,7 @@ export function PlanningGrille({
   }
 
   poignees.current = {
-    occupe: !!choix || !!edition || !!fenetreCopie,
+    occupe: !!choix || !!edition || !!fenetreCopie || enCours,
     apercu: !!collage,
     texte: texteCopie,
     coller,
@@ -835,7 +849,7 @@ export function PlanningGrille({
       )}
 
       {/* ── Grille (ordinateur, tablette) ── */}
-      <div ref={enveloppe} className="relative">
+      <div ref={enveloppe} data-en-cours={enCours || undefined} inert={enCours ? true : undefined} className="relative">
       <div data-testid="grille-defilement" inert={collage ? true : undefined} className={`hidden sm:block overflow-x-auto ${app ? "raised rounded-2xl" : "rounded-xl border border-border"}`}>
         <table className="w-full text-sm border-collapse" style={{ minWidth: largeurMin }}>
           <thead>
