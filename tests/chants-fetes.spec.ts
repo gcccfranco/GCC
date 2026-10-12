@@ -1,4 +1,6 @@
 import { expect, test } from "@playwright/test";
+import { readFileSync } from "node:fs";
+import path from "node:path";
 import { QUI, type MediaPassage, type Passage } from "../src/types/programme";
 import { FAMILLES, quiPermis } from "../src/lib/scene/saison";
 import { FETE_CATEGORIES, ALL_CATEGORIES } from "../src/lib/firebase/setlists";
@@ -266,5 +268,22 @@ test.describe("directive {proposition} (CF21, CF-F)", () => {
   });
   test("absente : null", () => {
     expect(parseChordPro("{title: X}\n{key: G}\n").metadata.proposition).toBeNull();
+  });
+});
+
+test.describe("documentation du répertoire (CF-F, décision 45 Q12)", () => {
+  const lire = (rel: string) => readFileSync(path.resolve(__dirname, "..", rel), "utf8");
+
+  test("01-format-cho.md décrit la directive {proposition} : seulement sur identifiant donné, jamais inventée", () => {
+    const t = lire("docs/chants/01-format-cho.md");
+    expect(t).toMatch(/\| `proposition` \|/);
+    expect(t).toMatch(/jamais inventé/);
+  });
+
+  test("00-nouveau-chant.md dit quand l'écrire (réception), où (étape 3) et quoi rapporter (étape 7)", () => {
+    const t = lire("docs/chants/00-nouveau-chant.md");
+    expect(t).toContain("{proposition: <id>}");
+    expect(t).toMatch(/Chant né d'une proposition/);
+    expect(t).toMatch(/identifiant de la proposition/);
   });
 });
