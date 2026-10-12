@@ -13,7 +13,7 @@ import {
   DrawerTitle,
 } from "@/components/ui/drawer";
 import type { PerformanceBlock, SectionBlock, JianpuSheetBlock, SongHeaderBlock } from "@/lib/performance/blocks";
-import { buildPerformanceBlocks, computePageKey } from "@/lib/performance/blocks";
+import { buildPerformanceBlocks, computePageKey, signatureAffichage } from "@/lib/performance/blocks";
 import { GRAND_ECRAN, pagesUneColonne, paginateColumns, twoColumnsPossible, type PerfPage } from "@/lib/performance/columns";
 import { useJianpuManifest } from "@/lib/jianpu/images";
 import { interrupteurAllume, prefDepuisInterrupteur, type JianpuPref } from "@/lib/jianpu/preference";
@@ -848,12 +848,18 @@ export function PerformanceMode({
   // Capo du chant courant — une page ne chevauche jamais deux chants
   const currentCapo = capoActive ? capos[currentEntry?.block.songSlug ?? ""] ?? 0 : 0;
   const currentPersonalKey = currentEntry?.block.setlistKey ? currentEntry.block.songKey : "";
-  // Les annotations sont liées à la mise en page : accords, transitions et
-  // taille de texte font partie de la clé.
-  // « s1 » / « kN » seulement quand style chart ou capo est actif : les clés
-  // d'annotations existantes (sans ces marqueurs) restent valables sinon.
-  // « p<tonalité> » seulement quand une tonalité est choisie sur l'appareil.
-  const layoutSig = `c${showChords ? 1 : 0}t${showTransitions ? 1 : 0}l${hideLyrics ? 1 : 0}${chartStyle ? "s1" : ""}${currentCapo ? `k${currentCapo}` : ""}${currentPersonalKey ? `p${currentPersonalKey}` : ""}z${Math.round(fontScale * 100)}`;
+  // Les annotations sont liées à la mise en page (signatureAffichage) : une
+  // page en Sections uniques a sa propre clé (O12).
+  const layoutSig = signatureAffichage({
+    showChords,
+    showTransitions,
+    hideLyrics,
+    chartStyle,
+    capo: currentCapo,
+    personalKey: currentPersonalKey,
+    fontScale,
+    affichage: affichageVu,
+  });
   // « x2 » seulement sur une page posée en deux colonnes : une page en une
   // colonne garde sa clé, et ses traits ne se mêlent pas à ceux d'une autre mise en page.
   const currentPageKey = computePageKey(blocks, currentPageIndices, `${layoutSig}${layout[currentPage]?.twoColumns ? "x2" : ""}`);

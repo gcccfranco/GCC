@@ -1,7 +1,7 @@
 import { readFileSync } from "fs";
 import { expect, test, type Page } from "@playwright/test";
 import { parseChordPro } from "../src/lib/chordpro/parser";
-import { buildPerformanceBlocks, computePageKey, type PerformanceBlock, type SectionBlock } from "../src/lib/performance/blocks";
+import { buildPerformanceBlocks, computePageKey, signatureAffichage, type PerformanceBlock, type SectionBlock } from "../src/lib/performance/blocks";
 import type { JianpuManifest } from "../src/lib/jianpu/images";
 import { paginateColumns, pagesUneColonne } from "../src/lib/performance/columns";
 import type { SetlistItem } from "../src/types/setList";
@@ -44,18 +44,17 @@ const ABBA = item({
 const YISHENG = item({ songSlug: "一生爱你", position: 2, keyOverride: "D", jianpuSheet: true });
 
 const sections = (blocks: PerformanceBlock[]) => blocks.filter((b): b is SectionBlock => b.kind === "section");
-const noms = (blocks: PerformanceBlock[]) => sections(blocks).map((b) => b.section.name);
 
 // ─── 1. Blocs, sans navigateur ───────────────────────────────────────────────
 
 test.describe("buildPerformanceBlocks : affichage (pur)", () => {
   test("Sections uniques : chaque section une fois, sans note ni transition ; Ordre joué inchangé", () => {
     const unique = buildPerformanceBlocks([ABBA], CONTENTS, true, undefined, undefined, "auto", undefined, { affichage: "unique" });
-    expect(noms(unique)).toEqual(["Intro", "Couplet 1", "Refrain", "Interlude", "Couplet 2", "Pont"]);
+    expect(sections(unique).map((b) => b.section.id)).toEqual(["intro-1", "verse-2", "chorus-3", "intro-4", "verse-5", "bridge-6"]);
     expect(sections(unique).every((b) => !b.note && !b.nuance), "aucune note portée par les sections").toBe(true);
     expect(unique.filter((b) => b.kind === "transition-intra")).toHaveLength(0);
     // Chaque impression dit quelles occurrences elle représente : le refrain, les quatre.
-    expect(sections(unique).find((b) => b.section.name === "Refrain")!.occurrenceUids).toEqual([
+    expect(sections(unique).find((b) => b.section.id === "chorus-3")!.occurrenceUids).toEqual([
       "chorus-3-2", "chorus-3-5", "chorus-3-7", "chorus-3-8",
     ]);
 
@@ -80,8 +79,8 @@ test.describe("buildPerformanceBlocks : affichage (pur)", () => {
     expect(steps[5].note).toBe("Piano seul, voix douces");
     // 升调 : le refrain rejoué en C est réimprimé, sa tonalité à part.
     const unique = buildPerformanceBlocks([avecMod], CONTENTS, true, undefined, undefined, "auto", undefined, { affichage: "unique" });
-    expect(sections(unique).map((b) => `${b.section.name}${b.keyChange ? `→${b.keyChange}` : ""}`)).toEqual([
-      "Intro", "Couplet 1", "Refrain", "Interlude", "Couplet 2", "Pont", "Refrain→C",
+    expect(sections(unique).map((b) => `${b.section.id}${b.keyChange ? `→${b.keyChange}` : ""}`)).toEqual([
+      "intro-1", "verse-2", "chorus-3", "intro-4", "verse-5", "bridge-6", "chorus-3→C",
     ]);
   });
 
@@ -454,3 +453,31 @@ test.describe("rappel de structure (Sections uniques)", () => {
   });
 });
 
+// ─── Annotations (L2-T5) ─────────────────────────────────────────────────────
+
+test.describe("signatureAffichage (pur)", () => {
+  const reglages = { showChords: true, showTransitions: true, hideLyrics: false, chartStyle: false, fontScale: 1 };
+
+  test("Ordre joué : la chaîne d'avant le lot ; Sections uniques et Structure seule : une autre", () => {
+    // La signature construite dans PerformanceMode avant le lot 2.
+    const avant = (o: { showChords: boolean; showTransitions: boolean; hideLyrics: boolean; chartStyle: boolean; capo?: number; personalKey?: string; fontScale: number }) =>
+      `c${o.showChords ? 1 : 0}t${o.showTransitions ? 1 : 0}l${o.hideLyrics ? 1 : 0}${o.chartStyle ? "s1" : ""}${o.capo ? `k${o.capo}` : ""}${o.personalKey ? `p${o.personalKey}` : ""}z${Math.round(o.fontScale * 100)}`;
+    for (const o of [reglages, { ...reglages, chartStyle: true, capo: 3, personalKey: "B", fontScale: 1.2 }, { ...reglages, showChords: false, hideLyrics: true }]) {
+      expect(signatureAffichage({ ...o, affichage: "played" })).toBe(avant(o));
+      expect(signatureAffichage(o)).toBe(avant(o));
+    }
+    expect(signatureAffichage({ ...reglages, affichage: "unique" })).not.toBe(avant(reglages));
+    expect(signatureAffichage({ ...reglages, affichage: "structure" })).not.toBe(avant(reglages));
+    // Structure seule rend la vue ossature du batteur : même clé que ses traits d'avant.
+    const batteur = { ...reglages, showChords: false, hideLyrics: true };
+    expect(signatureAffichage({ ...reglages, affichage: "structure" })).toBe(avant(batteur));
+  });
+
+  test("la même page a deux clés en Ordre joué et en Sections uniques", () => {
+    const blocs = buildPerformanceBlocks([ABBA], CONTENTS, true);
+    const page = [0, 1, 2];
+    expect(computePageKey(blocs, page, signatureAffichage({ ...reglages, affichage: "played" }))).not.toBe(
+      computePageKey(blocs, page, signatureAffichage({ ...reglages, affichage: "unique" })),
+    );
+  });
+});

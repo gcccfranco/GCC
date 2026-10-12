@@ -373,6 +373,39 @@ export function buildPerformanceBlocks(
   return blocks;
 }
 
+/** Signature de mise en page d'une page du mode louange, partie de la clé de
+ *  ses annotations : accords, transitions, paroles, style « chart » (s1),
+ *  capo (kN), tonalité choisie sur l'appareil (p…) et taille du texte.
+ *  L'affichage y entre aussi (O12) : rien en Ordre joué, pour que les clés
+ *  d'aujourd'hui ne changent pas ; « au » en Sections uniques ; Structure
+ *  seule s'écrit comme la vue ossature qu'elle rend (accords coupés, paroles
+ *  masquées) — la vue structure du batteur garde ainsi ses traits, par quelque
+ *  chemin qu'on y arrive. */
+export function signatureAffichage({
+  showChords,
+  showTransitions,
+  hideLyrics,
+  chartStyle,
+  capo,
+  personalKey,
+  fontScale,
+  affichage = "played",
+}: {
+  showChords: boolean;
+  showTransitions: boolean;
+  hideLyrics: boolean;
+  chartStyle: boolean;
+  capo?: number;
+  personalKey?: string;
+  fontScale: number;
+  affichage?: PartitionLayout;
+}): string {
+  const ossature = affichage === "structure";
+  const accords = showChords && !ossature;
+  const paroles = !hideLyrics && !ossature;
+  return `c${accords ? 1 : 0}t${showTransitions ? 1 : 0}l${paroles ? 0 : 1}${chartStyle ? "s1" : ""}${capo ? `k${capo}` : ""}${personalKey ? `p${personalKey}` : ""}z${Math.round(fontScale * 100)}${affichage === "unique" ? "au" : ""}`;
+}
+
 export function computePageKey(
   blocks: PerformanceBlock[],
   indices: number[],
