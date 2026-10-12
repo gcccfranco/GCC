@@ -849,6 +849,8 @@ rappel faux sur deux chants au même `section.uid` (C5).
   你是我的一切 `119`, 到各山岭去传扬 `204`, 一生敬拜你 `294` (corrigées : la proposition laissait album, titre anglais ou verset
   sous la ligne alors qu'une coupe propre existait, ou rognait 1 px du « 4/4 ») ; 为爱而生 `0` (le repli tranchait les crédits,
   aucune bande blanche), 你们要赞美耶和华 `12`, 你的爱不离不弃 `14`, 全然向你 `4` (en-tête entier). Total certifié : 50 / 189.
+  Vérifié par Opus (12/10/2026) : 18 pages regardées (les 10 corrigées ou sans coupe propre, 8 acceptées tirées au hasard) ;
+  17 justes ; 主的喜乐是我力量 ramené de 259 à 231 (259 tranchait le titre anglais) ; 为爱而生 de 0 à 129 (marge blanche seule).
 
 - **L3-T1c, 12/10/2026 — recadrage : 47 pages certifiées à l'œil** (registre : `docs/chantier-jianpu/cadrage-certification.md`).
   **38 acceptées, 6 corrigées, 3 sans coupe propre.** Corrigées : 哦十字架 `168` (filigrane sur tout l'en-tête, la proposition

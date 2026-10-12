@@ -19,10 +19,10 @@ Verdicts : accepté (proposition gardée), corrigé (valeur posée à la main), 
 | 不停赞美 | 139 | 139 | accepté | titre, album coupés ; ligne juste au-dessus du « 1=X 4/4 », rien tranché |
 | 不停赞美你 | 139 | 139 | accepté | titre, album coupés ; ligne juste au-dessus du « 1=X 4/4 », rien tranché |
 | 丰盛的应许 | 179 | 179 | accepté | titre, album coupés ; ligne juste au-dessus du « 1=X 4/4 », rien tranché |
-| 为爱而生 | 239 | 0 | sans coupe propre | repli (aucune rangée blanche) tranchait les crédits ; titre, 速度, album et 1=E sur des bandes qui se chevauchent : en-tête gardé entier |
+| 为爱而生 | 239 | 129 | sans coupe propre | repli (aucune rangée blanche) tranchait les crédits ; titre, 速度, album et 1=E sur des bandes qui se chevauchent : en-tête gardé entier ; vérification Opus : 129 ne coupe que la marge blanche du haut (le bord du scan, colonne 1467, cachait cette rangée à la règle), comme les autres pages sans coupe propre |
 | 主你是我力量 | 244 | 244 | accepté | titre coupé ; titre anglais gardé (chevauche 1=G) |
 | 主我献上生命给你 | 149 | 149 | accepté | titre, album coupés ; ligne juste au-dessus du « 1=X 4/4 », rien tranché |
-| 主的喜乐是我力量 | 231 | 259 | corrigé | titre anglais restait ; coupe sous sa dernière rangée, au-dessus du « 4/4 » ; verset, crédits et ♩ sur la ligne gardés |
+| 主的喜乐是我力量 | 231 | 231 | accepté (vérification Opus) | la correction à 259 tranchait les jambages du titre anglais (« y », « g », rangées 259-267, « 4 » à 260) ; 231 est une vraie rangée blanche : titre chinois coupé, titre anglais, verset et crédits entiers |
 | 云上太阳 | 134 | 134 | accepté | titre, album coupés ; crédits 词/曲 gardés |
 | 亲眼看见你 | 147 | 147 | accepté | titre, album coupés ; ligne juste au-dessus du « 1=X 4/4 », rien tranché |
 | 从心合一 | 84 | 132 | corrigé | album et crédits restaient ; coupe juste au-dessus de « 1=F 4/4 » et de la note (间奏) |
