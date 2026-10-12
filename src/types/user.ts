@@ -69,6 +69,14 @@ export interface UserProfile {
    *  les lisent pour les réunions d'équipe. Absent = aucune. */
   dansEquipes?: string[];
   referentDe?: string[];
+  /** Lot 2 (organigrammes des groupes, OG2, OG19) — écrits par le serveur seul. `groupe` : id d'un
+   *  groupe (`paix`…`joie`), `""` = sans groupe ; absent = déduit de `serviceRoles` (`groupeDe`,
+   *  src/lib/groupes/organigramme.ts). Les trois listes : plannings remplis ou publiés par un rôle (clés
+   *  de planning) et audiences notifiées par un rôle, à part de `plannings` et `notify` cochés par un admin. */
+  groupe?: string;
+  remplitParRole?: string[];
+  publieParRole?: string[];
+  notifieParRole?: string[];
   /** Date d'inscription = createTime du document Firestore users/{uid}, en lecture
    *  seule (jamais persisté comme champ). Renseigné pour tous les profils existants. */
   createdAt?: Date;

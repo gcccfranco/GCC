@@ -31,6 +31,13 @@ export type FakeProfile = {
    *  référente (lot U6, R4) — écrites par le serveur seul (`recalculerRattachement`). */
   dansEquipes?: string[];
   referentDe?: string[];
+  /** Lot 2 (organigrammes des groupes, OG2, OG19) — écrits par le serveur seul : le groupe (`""` =
+   *  sans groupe ; absent = déduit de `serviceRoles`) et les plannings / audiences que le profil
+   *  remplit, publie ou notifie par un rôle. */
+  groupe?: string;
+  remplitParRole?: string[];
+  publieParRole?: string[];
+  notifieParRole?: string[];
   /** Vrai = compte qui n'a pas encore vu l'accueil de première connexion (lot 8).
    *  Par défaut l'accueil est déjà vu, pour ne pas masquer les pages testées. */
   accueil?: boolean;
@@ -356,6 +363,10 @@ export async function signInAs(
       plannings: profile.plannings ?? [],
       ...(profile.dansEquipes ? { dansEquipes: profile.dansEquipes } : {}),
       ...(profile.referentDe ? { referentDe: profile.referentDe } : {}),
+      ...(profile.groupe !== undefined ? { groupe: profile.groupe } : {}),
+      ...(profile.remplitParRole ? { remplitParRole: profile.remplitParRole } : {}),
+      ...(profile.publieParRole ? { publieParRole: profile.publieParRole } : {}),
+      ...(profile.notifieParRole ? { notifieParRole: profile.notifieParRole } : {}),
     },
     ...(profile.accueil ? {} : { [`onboarding/${profile.uid}`]: { vu: true, le: "2026-09-01T10:00:00Z" } }),
     ...docs,

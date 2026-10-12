@@ -12,6 +12,7 @@ import {
   type RawDoc,
 } from "./setlists";
 import { useAuth } from "./auth";
+import { lireChampsGroupe } from "@/lib/groupes/organigramme";
 import type { ServiceRole, UserProfile } from "@/types/user";
 
 export async function signUp(email: string, password: string): Promise<User> {
@@ -40,6 +41,7 @@ function fromFsProfile(raw: RawDoc): UserProfile {
     plannings: (data.plannings as string[]) ?? [],
     dansEquipes: (data.dansEquipes as string[]) ?? [],
     referentDe: (data.referentDe as string[]) ?? [],
+    ...lireChampsGroupe(data),
     // Date d'inscription = createTime du document (créé à l'inscription) ; disponible
     // rétroactivement pour tous les profils, contrairement à un champ écrit à la main.
     createdAt: raw.createTime ? new Date(raw.createTime) : undefined,
