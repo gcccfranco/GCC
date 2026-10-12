@@ -117,6 +117,9 @@ export function lireCollage(texte: string): string[][] {
   return lignes
 }
 
+/** Longueur au-delà de laquelle une cellule collée est refusée. */
+export const CELLULE_MAX = 200
+
 /** Coller un bloc à partir d'une ancre (PG26 et PG27). */
 export function planCollage(p: {
   bloc: readonly (readonly string[])[]
@@ -127,9 +130,9 @@ export function planCollage(p: {
   cles: readonly string[]
   lire: LireCase
   verrou: VerrouCase
-}): { cases: CaseGeste[]; remplace: number; vides: number; horsGrille: number; verrouillees: number } {
+}): { cases: CaseGeste[]; remplace: number; vides: number; horsGrille: number; verrouillees: number; tropLongues: number } {
   const cases: CaseGeste[] = []
-  let remplace = 0, vides = 0, horsGrille = 0, verrouillees = 0
+  let remplace = 0, vides = 0, horsGrille = 0, verrouillees = 0, tropLongues = 0
   p.bloc.forEach((cellules, i) => {
     cellules.forEach((brut, j) => {
       const date = p.dates[p.ligne + i]
@@ -139,6 +142,8 @@ export function planCollage(p: {
       if (p.verrou(date, cle)) { verrouillees++; return }
       // Une cellule vide n'efface jamais une case : seul ⌫ vide (PG27).
       if (!apres) return
+      // Une cellule démesurée (un tableau entier collé dans une case) n'est pas un nom : refusée et comptée.
+      if (apres.length > CELLULE_MAX) { tropLongues++; return }
       const avant = p.lire(date, cle)
       if (avant === apres) return
       cases.push({ date, cle, avant, apres })
@@ -146,7 +151,7 @@ export function planCollage(p: {
       else vides++
     })
   })
-  return { cases, remplace, vides, horsGrille, verrouillees }
+  return { cases, remplace, vides, horsGrille, verrouillees, tropLongues }
 }
 
 /** Une plage en texte tabulé (PG25) ; une case `masque` se copie vide. */

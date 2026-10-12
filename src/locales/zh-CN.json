@@ -1093,6 +1093,8 @@
       "apercu_other": "粘贴预览：{{count}} 格，其中 {{remplace}} 格会替换已有名字（橙色）。点“粘贴”之前不会写入。",
       "casesVidesSeulement": "只填空格",
       "colle_other": "已粘贴 {{count}} 格，其中替换了 {{remplace}} 个名字。",
+      "tropLongues_other": "{{count}} 个过长的单元格已忽略。",
+      "etAutres_other": "等另外 {{count}} 个",
       "sansCompte": "“{{noms}}”：没有账号。",
       "horsGrille_other": "超出表格的 {{count}} 格已忽略。",
       "verrouillees_other": "{{count}} 个锁定的格子保持不变。",

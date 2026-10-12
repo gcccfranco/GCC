@@ -144,3 +144,9 @@ test("parDimanche : un groupe par dimanche, dans l'ordre des dates, tous les cha
     { date: "2027-01-17", champs: { piano: "A", ppt: "C" } },
   ]);
 });
+
+test("planCollage : une cellule de plus de 200 caractères est refusée et comptée", () => {
+  const plan = planCollage({ bloc: [["x".repeat(201), "Ruth K."]], ligne: 0, col: 0, dates: ["2027-01-03"], cles: ["a", "b"], lire: () => "", verrou: () => false });
+  expect(plan.tropLongues).toBe(1);
+  expect(plan.cases.map((c) => c.apres)).toEqual(["Ruth K."]);
+});

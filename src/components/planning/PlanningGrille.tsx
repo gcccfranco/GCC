@@ -1,6 +1,6 @@
 "use client"
 
-import { Fragment, useEffect, useRef, useState, useSyncExternalStore, type MouseEvent, type ReactNode } from "react"
+import { Fragment, useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore, type CSSProperties, type MouseEvent, type ReactNode } from "react"
 import { ChevronDown, Copy, History, Lock, Trash2 } from "lucide-react"
 import { useTranslation } from "react-i18next"
 import { useConfirmer } from "@/components/layout/Confirmer"
@@ -13,14 +13,15 @@ import { getHistoriqueGrille, noterChangements, type EntreeGrille } from "@/lib/
 import { historyAuthor } from "@/lib/firebase/setlistHistory"
 import { useProfile } from "@/lib/firebase/users"
 import { colonneDePersonnes, propositions, type CompteDuPlanning } from "@/lib/planning/choisir"
-import { splitNames } from "@/lib/planning/names"
+import { normalizeName, splitNames } from "@/lib/planning/names"
 import { canRetirerDate } from "@/lib/access"
 import { ExportModele, type ExportPlanning } from "./ExportModele"
 import { ChoisirNom, useOrdinateur } from "./ChoisirNom"
 import { DansLEnTete, type FiltreNom } from "./BarreDeGrille"
 import { useGestionPlanning } from "@/lib/planning/gestion"
-import { colonnesACopier, datesApres, lignePrecedente, parDimanche, planCopie, planRemplir, type CaseGeste } from "@/lib/planning/gestes"
-import { BanniereGeste } from "./BanniereGeste"
+import { colonnesACopier, datesApres, enTexteTabule, lignePrecedente, lireCollage, parDimanche, planCollage, planCopie, planRemplir, type CaseGeste } from "@/lib/planning/gestes"
+import { BanniereGeste, BarreCollage, BarreSelection } from "./BanniereGeste"
+import { useClavier, useSelectionGrille, type Poignees } from "./useSelectionGrille"
 import { FenetreCopie, type DemandeCopie } from "./FenetreCopie"
 
 // Grille d'un planning rempli dans l'app (lot 17, docs/spec-planning-grille.md).
@@ -85,7 +86,10 @@ const suivreSurvol = (rappel: () => void) => {
 const useSurvol = () => useSyncExternalStore(suivreSurvol, () => window.matchMedia(AVEC_SURVOL).matches, () => false)
 
 /** Ce que le dernier geste a fait (PG6) : sa phrase, ses notes, et les cases à remettre (Annuler). */
-type DernierGeste = { texte: string; notes: string[]; cases: CaseGeste[] }
+type DernierGeste = { texte: string; notes: string[]; cases: CaseGeste[]; sansCompte?: string[] }
+
+/** Un collage qui remplace des noms, en attente de « Coller » (PG29) : rien n'est encore écrit. */
+type Collage = { cases: CaseGeste[]; remplace: number; notes: string[] }
 
 
 export function PlanningGrille({
@@ -132,11 +136,18 @@ export function PlanningGrille({
   const [apercu, setApercu] = useState<string | null>(null)
   const [fenetreCopie, setFenetreCopie] = useState<DemandeCopie | null>(null)
   const survol = useSurvol()
+  const [collage, setCollage] = useState<Collage | null>(null)
+  // Un refus qui n'a rien écrit (collage ou ⌫ sans case à écrire) : il se dit, sans toucher à l'« Annuler » du dernier geste.
+  const [avis, setAvis] = useState<string[]>([])
+  const enveloppe = useRef<HTMLDivElement>(null)
+  const poignees = useRef<Poignees>(null as unknown as Poignees)
+  const [posBarre, setPosBarre] = useState<CSSProperties | null>(null)
+  const clavier = useClavier()
 
   const { mesDates, aUnNom, estMoi } = filtre
 
   // Un autre planning, une autre période : les cases du dernier geste ne sont plus sous les yeux (PG7).
-  useEffect(() => { setGeste(null) }, [definition.key, periode])
+  useEffect(() => { setGeste(null); setCollage(null); setAvis([]) }, [definition.key, periode])
 
   /** La présidence d'un dimanche d'Interfranco ou d'Intergroupe : le nom du service. */
   const imposee = (date: string, c: ColonneGrille) =>
@@ -195,6 +206,15 @@ export function PlanningGrille({
       dansLaFenetre.some((l) => valeur(l.row[0], c, l.row).trim())
   )
 
+  // Copier-coller au clavier (PG22 à PG32) : pointeur fin, tableau, grille en modification.
+  const actifClavier = clavier && mode === "edition"
+  const datesAffichees = affichees.map((l) => l.row[0])
+  const clesAffichees = colonnes.map((c) => c.cle)
+  const { sel, plage, choisir: choisirCase, etendre, effacer } = useSelectionGrille(datesAffichees, clesAffichees, actifClavier, poignees)
+  const datesPlage = plage ? datesAffichees.slice(plage.r0, plage.r1 + 1) : []
+  const clesPlage = plage ? clesAffichees.slice(plage.c0, plage.c1 + 1) : []
+  useEffect(() => { effacer() }, [definition.key, periode, effacer])
+
   /** Copier le dimanche précédent sur `date` (PG10 à PG16) ; null : pas en modification. Un planning
    *  hebdomadaire dont le J−7 manque garde sa source (vide, PG10) ; à dates choisies sans date
    *  précédente, `source` est null. Dans les deux cas rien n'est offert (PG16). */
@@ -245,13 +265,14 @@ export function PlanningGrille({
   // L'aperçu n'est posé que si « Choisir » est un menu : en feuille, elle cacherait la grille (PG20).
   const menuOuvert = useOrdinateur()
   const apercuRemplir = remplissage && menuOuvert ? remplissage.cases : []
-  const apercuCopie = [...(apercu ? copiePour(apercu)?.plan.vides ?? [] : []), ...apercuRemplir]
+  const apercuCopie = [...(apercu ? copiePour(apercu)?.plan.vides ?? [] : []), ...apercuRemplir, ...(collage?.cases ?? [])]
   const casePrevue = (date: string, cle: string) => apercuCopie.find((c) => c.date === date && c.cle === cle)
   /** La case en aperçu (PG14) : le nom qui sera écrit, en gras, dans un cadre en pointillé. */
   const caseOuApercu = (l: LigneGrille, c: ColonneGrille): ReactNode => {
     const prevue = casePrevue(l.row[0], c.cle)
+    // En orange quand l'aperçu remplace un nom (PG29).
     return prevue
-      ? <span className="block w-full min-h-8 rounded-md border border-dashed px-1.5 py-1 font-bold" style={{ borderColor: couleur }}>{prevue.apres}</span>
+      ? <span className={`block w-full min-h-8 rounded-md border border-dashed px-1.5 py-1 font-bold ${prevue.avant.trim() ? "border-orange-500 bg-orange-500/15" : ""}`} style={prevue.avant.trim() ? undefined : { borderColor: couleur }}>{prevue.apres}</span>
       : laCase(l, c)
   }
 
@@ -313,6 +334,11 @@ export function PlanningGrille({
     )
   }
 
+  const marqueApercu = (date: string, cle: string) => {
+    const prevue = casePrevue(date, cle)
+    return prevue ? (prevue.avant.trim() && collage?.cases.includes(prevue) ? "remplace" : "") : undefined
+  }
+  const rangDate = (date: string) => datesAffichees.indexOf(date)
   const dansGeste = (date: string, cle: string) => !!geste?.cases.some((c) => c.date === date && c.cle === cle)
   const largeurMin = 104 + 96 * colonnes.length
 
@@ -376,11 +402,12 @@ export function PlanningGrille({
    * encore écrits reprennent leur valeur. `texte` = la phrase de la bannière Annuler (null : Annuler
    * lui-même, pas de bannière). Rend les cases écrites.
    */
-  async function appliquer(cases: CaseGeste[], texte: string | null, notes: string[] = []): Promise<CaseGeste[]> {
+  async function appliquer(cases: CaseGeste[], texte: string | null, notes: string[] = [], sansCompte: string[] = []): Promise<CaseGeste[]> {
     if (!cases.length) return []
     setRefus("")
     setEnregistre(false)
     setGeste(null)
+    setAvis([])
     setModifs((m) => {
       const n = { ...m }
       for (const c of cases) n[`${c.date}|${c.cle}`] = c.apres
@@ -423,10 +450,137 @@ export function PlanningGrille({
         await noterChangements(definition.key, auteur, ecrites.map((c) => ({ kind: "case", date: c.date, colonne: c.cle, from: c.avant, to: c.apres })))
         if (histoOuvert) await rechargerHistorique()
       }
-      if (texte) setGeste({ texte, notes, cases: ecrites })
+      if (texte) setGeste({ texte, notes, cases: ecrites, sansCompte })
     }
     return ecrites
   }
+
+  // ── Copier-coller au clavier (PG23 à PG31) ──
+
+  /** La plage en texte tabulé (PG25) ; une présidence imposée se copie vide. */
+  function texteCopie() {
+    return enTexteTabule(datesPlage, clesPlage, lireCase, (d, cle) => {
+      const c = definition.colonnes.find((x) => x.cle === cle)
+      return !!c && !!imposee(d, c)
+    })
+  }
+
+  /** Les noms sans compte parmi les cases écrites (PG30) : aucun `planningName` ne leur correspond. */
+  const connus = new Set(comptes.map((c) => normalizeName(c.nom)))
+  function sansCompteDe(cases: CaseGeste[]) {
+    const noms: string[] = []
+    const cles: string[] = []
+    for (const c of cases) {
+      if (!colonneDePersonnes(c.cle)) continue
+      const inconnus = splitNames(c.apres).filter((n) => !connus.has(normalizeName(n)))
+      if (!inconnus.length) continue
+      cles.push(`${c.date}|${c.cle}`)
+      for (const n of inconnus) if (!noms.includes(n)) noms.push(n)
+    }
+    return { noms, cles }
+  }
+  const notesCollage = (p: { horsGrille: number; verrouillees: number; tropLongues?: number }, noms: string[]) => [
+    ...(p.verrouillees ? [t("planning.gestes.verrouillees", { count: p.verrouillees })] : []),
+    ...(p.tropLongues ? [t("planning.gestes.tropLongues", { count: p.tropLongues })] : []),
+    ...(p.horsGrille ? [t("planning.gestes.horsGrille", { count: p.horsGrille })] : []),
+    ...(noms.length
+      ? [t("planning.gestes.sansCompte", {
+          noms: noms.slice(0, 3).join(", ") + (noms.length > 3 ? ` ${t("planning.gestes.etAutres", { count: noms.length - 3 })}` : ""),
+        })]
+      : []),
+  ]
+
+  function collerCases(cases: CaseGeste[], p: { horsGrille: number; verrouillees: number; tropLongues?: number }) {
+    const { noms, cles } = sansCompteDe(cases)
+    const remplace = cases.filter((c) => c.avant.trim()).length
+    void appliquer(cases, t("planning.gestes.colle", { count: cases.length, remplace }), notesCollage(p, noms), cles)
+  }
+
+  /** ⌘V (PG26 à PG29) : sans nom remplacé, le collage s'écrit ; sinon l'aperçu attend « Coller ». */
+  function coller(texte: string) {
+    if (!plage) return
+    const bloc = lireCollage(texte)
+    if (!bloc.length) return
+    const p = planCollage({ bloc, ligne: plage.r0, col: plage.c0, dates: datesAffichees, cles: clesAffichees, lire: lireCase, verrou })
+    if (!p.cases.length) {
+      // Tout est refusé ou hors de la grille : on le dit, sans toucher à l'« Annuler » du dernier geste.
+      setAvis(notesCollage(p, []))
+      return
+    }
+    setAvis([])
+    if (p.remplace) setCollage({ cases: p.cases, remplace: p.remplace, notes: notesCollage(p, []) })
+    else collerCases(p.cases, p)
+  }
+  function validerCollage(videsSeulement: boolean) {
+    const c = collage
+    setCollage(null)
+    if (!c) return
+    const cases = videsSeulement ? c.cases.filter((x) => !x.avant.trim()) : c.cases
+    // Les notes de l'aperçu (cases verrouillées, hors de la grille) sont refaites avec les noms sans compte.
+    const { noms, cles } = sansCompteDe(cases)
+    const remplace = cases.filter((x) => x.avant.trim()).length
+    void appliquer(cases, t("planning.gestes.colle", { count: cases.length, remplace }), [...c.notes, ...notesCollage({ horsGrille: 0, verrouillees: 0 }, noms)], cles)
+  }
+
+  /** ⌫ (PG31) : vide les cases de la plage, sauf les verrouillées ; la même bannière Annuler. */
+  function viderPlage() {
+    const cases: CaseGeste[] = []
+    let verrouillees = 0
+    for (const d of datesPlage) for (const cle of clesPlage) {
+      if (verrou(d, cle)) { verrouillees++; continue }
+      const avant = lireCase(d, cle)
+      if (avant.trim()) cases.push({ date: d, cle, avant, apres: "" })
+    }
+    const notes = verrouillees ? [t("planning.gestes.verrouillees", { count: verrouillees })] : []
+    if (!cases.length) { setAvis(notes); return }
+    void appliquer(cases, t("planning.gestes.videes", { count: cases.length }), notes)
+  }
+
+  poignees.current = {
+    occupe: !!choix || !!edition || !!fenetreCopie,
+    apercu: !!collage,
+    texte: texteCopie,
+    coller,
+    vider: viderPlage,
+    ouvrir: (c) => enveloppe.current?.querySelector<HTMLElement>(`[data-case="${c.date}|${c.cle}"] button`)?.click(),
+    validerApercu: () => validerCollage(false),
+    annulerApercu: () => setCollage(null),
+  }
+
+  // La barre de sélection se pose sous la dernière case de la plage (PG23).
+  const derniere = plage ? `${datesAffichees[plage.r1]}|${clesAffichees[plage.c1]}` : ""
+  useLayoutEffect(() => {
+    const cadre = enveloppe.current
+    const cellule = derniere ? cadre?.querySelector<HTMLElement>(`[data-case="${derniere}"]`) : null
+    if (!cadre || !cellule) { setPosBarre(null); return }
+    const c = cadre.getBoundingClientRect()
+    const r = cellule.getBoundingClientRect()
+    setPosBarre({ top: r.bottom - c.top + 6, left: Math.max(8, Math.min(r.left - c.left, c.width - 470)) })
+  }, [derniere, affichees.length])
+
+  /** Un clic choisit la case ; Maj + clic étend la plage sans rien ouvrir (PG23, PG24). */
+  function surCase(e: MouseEvent, date: string, cle: string) {
+    if (!actifClavier) return
+    if (e.shiftKey && sel) { e.preventDefault(); e.stopPropagation(); etendre({ date, cle }) }
+    else choisirCase({ date, cle })
+  }
+  /** Le trait de la plage, posé en ombre intérieure sur ses seules arêtes. */
+  function styleCase(i: number, j: number, date: string, cle: string): CSSProperties | undefined {
+    const fond = dansGeste(date, cle) ? `${couleur}22` : undefined
+    if (!plage || i < plage.r0 || i > plage.r1 || j < plage.c0 || j > plage.c1) return fond ? { background: fond } : undefined
+    const bords = [
+      i === plage.r0 && `inset 0 2px 0 0 ${couleur}`,
+      i === plage.r1 && `inset 0 -2px 0 0 ${couleur}`,
+      j === plage.c0 && `inset 2px 0 0 0 ${couleur}`,
+      j === plage.c1 && `inset -2px 0 0 0 ${couleur}`,
+    ].filter(Boolean).join(", ")
+    return { background: fond ?? `${couleur}12`, boxShadow: bords }
+  }
+  const marqueSelection = (i: number, j: number, date: string, cle: string) =>
+    !plage || i < plage.r0 || i > plage.r1 || j < plage.c0 || j > plage.c1
+      ? undefined
+      : sel?.ancre.date === date && sel.ancre.cle === cle ? "ancre" : "plage"
+  const dansSansCompte = (date: string, cle: string) => !!geste?.sansCompte?.includes(`${date}|${cle}`)
 
   /** Annuler (PG6) : réécrit les valeurs d'avant le geste, telles que la grille les avait. */
   async function annulerGeste() {
@@ -598,8 +752,24 @@ export function PlanningGrille({
       )}
 
 
+      {avis.length > 0 && <BanniereGeste texte={avis[0]} notes={avis.slice(1)} onFermer={() => setAvis([])} />}
+
       {geste && (
-        <BanniereGeste texte={geste.texte} notes={geste.notes} onAnnuler={() => void annulerGeste()} onFermer={() => setGeste(null)} />
+        // Pendant l'aperçu d'un collage, l'« Annuler » du geste d'avant est périmé : inerte (PG29).
+        <div inert={collage ? true : undefined}>
+          <BanniereGeste texte={geste.texte} notes={geste.notes} onAnnuler={() => void annulerGeste()} onFermer={() => setGeste(null)} />
+        </div>
+      )}
+
+      {collage && (
+        <BarreCollage
+          count={collage.cases.length}
+          remplace={collage.remplace}
+          videsSeulement={collage.cases.some((c) => !c.avant.trim())}
+          onAnnuler={() => setCollage(null)}
+          onVides={() => validerCollage(true)}
+          onColler={() => validerCollage(false)}
+        />
       )}
 
       {peutModifier && (
@@ -644,7 +814,8 @@ export function PlanningGrille({
       )}
 
       {/* ── Grille (ordinateur, tablette) ── */}
-      <div data-testid="grille-defilement" className={`hidden sm:block overflow-x-auto ${app ? "raised rounded-2xl" : "rounded-xl border border-border"}`}>
+      <div ref={enveloppe} className="relative">
+      <div data-testid="grille-defilement" inert={collage ? true : undefined} className={`hidden sm:block overflow-x-auto ${app ? "raised rounded-2xl" : "rounded-xl border border-border"}`}>
         <table className="w-full text-sm border-collapse" style={{ minWidth: largeurMin }}>
           <thead>
             <tr data-testid="grille-colonnes" className={app ? "bg-secondary text-muted-foreground" : "text-white"}>
@@ -713,8 +884,19 @@ export function PlanningGrille({
                       {peutRetirer(date) && <div className="-ml-1.5 mt-0.5">{boutonRetirer(date, false)}</div>}
                       {survol ? pastilleCopie(date) : <div className="mt-1">{menuCopie(date)}</div>}
                     </td>
-                    {colonnes.map((c) => (
-                      <td key={c.cle} data-case={`${date}|${c.cle}`} data-geste={dansGeste(date, c.cle) || undefined} data-apercu={casePrevue(date, c.cle) ? "" : undefined} className="px-3 py-2 text-foreground" style={dansGeste(date, c.cle) ? { background: `${couleur}22` } : undefined}>
+                    {colonnes.map((c, j) => (
+                      <td
+                        key={c.cle}
+                        data-case={`${date}|${c.cle}`}
+                        data-geste={dansGeste(date, c.cle) || undefined}
+                        data-apercu={marqueApercu(date, c.cle)}
+                        data-selection={marqueSelection(rangDate(date), j, date, c.cle)}
+                        data-sans-compte={dansSansCompte(date, c.cle) || undefined}
+                        onMouseDownCapture={(e) => { if (actifClavier && e.shiftKey) e.preventDefault() }}
+                        onClickCapture={(e) => surCase(e, date, c.cle)}
+                        className={`px-3 py-2 text-foreground ${dansSansCompte(date, c.cle) ? "[&_button]:underline [&_button]:decoration-dotted [&_button]:underline-offset-4" : ""}`}
+                        style={styleCase(rangDate(date), j, date, c.cle)}
+                      >
                         {caseOuApercu(l, c)}
                       </td>
                     ))}
@@ -724,6 +906,16 @@ export function PlanningGrille({
             })}
           </tbody>
         </table>
+      </div>
+      {actifClavier && plage && posBarre && !collage && (
+        <BarreSelection
+          count={datesPlage.length * clesPlage.length}
+          dimanches={datesPlage.length}
+          colonnes={clesPlage.length}
+          style={posBarre}
+          onFermer={effacer}
+        />
+      )}
       </div>
 
       {/* ── Une carte par dimanche (téléphone) ── */}
@@ -777,7 +969,7 @@ export function PlanningGrille({
                   .map((c) => (
                     <div key={c.cle} className="flex items-baseline gap-2 text-[13px]">
                       <span className="w-24 shrink-0 text-[11px] text-muted-foreground">{t(c.i18n)}</span>
-                      <span data-case={`${date}|${c.cle}`} data-geste={dansGeste(date, c.cle) || undefined} data-apercu={casePrevue(date, c.cle) ? "" : undefined} className="min-w-0 flex-1 rounded-md" style={dansGeste(date, c.cle) ? { background: `${couleur}22` } : undefined}>{caseOuApercu(l, c)}</span>
+                      <span data-case={`${date}|${c.cle}`} data-geste={dansGeste(date, c.cle) || undefined} data-apercu={marqueApercu(date, c.cle)} className="min-w-0 flex-1 rounded-md" style={dansGeste(date, c.cle) ? { background: `${couleur}22` } : undefined}>{caseOuApercu(l, c)}</span>
                     </div>
                   ))}
               </div>
@@ -786,6 +978,8 @@ export function PlanningGrille({
         })}
       </div>
 
+
+      {actifClavier && <p className="hidden sm:block text-xs text-muted-foreground">{t("planning.gestes.clavier")}</p>}
 
       {/* ── Pied de grille : on prévient, on ne se retire pas (T3) ── */}
       <p className="text-xs text-muted-foreground">{t("planning.grille.pasDispo")}</p>
