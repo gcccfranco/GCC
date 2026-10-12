@@ -1,9 +1,10 @@
 "use client"
 
-import { Fragment, useEffect, useRef, useState, type MouseEvent, type ReactNode } from "react"
-import { ChevronDown, History, Lock, Trash2 } from "lucide-react"
+import { Fragment, useEffect, useRef, useState, useSyncExternalStore, type MouseEvent, type ReactNode } from "react"
+import { ChevronDown, Copy, History, Lock, Trash2 } from "lucide-react"
 import { useTranslation } from "react-i18next"
 import { useConfirmer } from "@/components/layout/Confirmer"
+import { MenuActions } from "@/components/layout/MenuActions"
 import { currentSundayStr, fdFullL, fdLongL, fdShort, getAnnee, getMois, moisName } from "@/lib/planning/utils"
 import { PREMIERE_ANNEE_APP, type ColonneGrille, type DefinitionGrille, type LigneGrille } from "@/lib/planning/grilles"
 import { phraseDuChangement } from "@/lib/planning/historique"
@@ -18,8 +19,9 @@ import { ExportModele, type ExportPlanning } from "./ExportModele"
 import { ChoisirNom } from "./ChoisirNom"
 import { DansLEnTete, type FiltreNom } from "./BarreDeGrille"
 import { useGestionPlanning } from "@/lib/planning/gestion"
-import { parDimanche, type CaseGeste } from "@/lib/planning/gestes"
+import { colonnesACopier, lignePrecedente, parDimanche, planCopie, type CaseGeste } from "@/lib/planning/gestes"
 import { BanniereGeste } from "./BanniereGeste"
+import { FenetreCopie, type DemandeCopie } from "./FenetreCopie"
 
 // Grille d'un planning rempli dans l'app (lot 17, docs/spec-planning-grille.md).
 // Table sur ordinateur et tablette — colonne des dates FIGÉE au défilement
@@ -73,6 +75,15 @@ export interface PlanningGrilleProps {
   lignesDuPlanning?: readonly string[][]
 }
 
+const AVEC_SURVOL = "(hover: hover)"
+const suivreSurvol = (rappel: () => void) => {
+  const mq = window.matchMedia(AVEC_SURVOL)
+  mq.addEventListener("change", rappel)
+  return () => mq.removeEventListener("change", rappel)
+}
+/** Le pointeur peut-il survoler ? Oui : la pastille « Copier le … » ; non : le « ⋯ » du dimanche. */
+const useSurvol = () => useSyncExternalStore(suivreSurvol, () => window.matchMedia(AVEC_SURVOL).matches, () => false)
+
 /** Ce que le dernier geste a fait (PG6) : sa phrase, ses notes, et les cases à remettre (Annuler). */
 type DernierGeste = { texte: string; notes: string[]; cases: CaseGeste[] }
 
@@ -117,6 +128,10 @@ export function PlanningGrille({
   const semes = useRef(new Set<string>())
   const [geste, setGeste] = useState<DernierGeste | null>(null)
   const fini = useRef(false)
+  // « Copier le dimanche précédent » (PG13 à PG15) : le dimanche dont l'aperçu est posé, et la fenêtre.
+  const [apercu, setApercu] = useState<string | null>(null)
+  const [fenetreCopie, setFenetreCopie] = useState<DemandeCopie | null>(null)
+  const survol = useSurvol()
 
   const { mesDates, aUnNom, estMoi } = filtre
 
@@ -179,6 +194,112 @@ export function PlanningGrille({
       mode === "edition" ||
       dansLaFenetre.some((l) => valeur(l.row[0], c, l.row).trim())
   )
+
+  /** Copier le dimanche précédent sur `date` (PG10 à PG16) ; null : pas en modification. Un planning
+   *  hebdomadaire dont le J−7 manque garde sa source (vide, PG10) ; à dates choisies sans date
+   *  précédente, `source` est null. Dans les deux cas rien n'est offert (PG16). */
+  const copiePour = (date: string) => {
+    if (mode !== "edition") return null
+    const source = lignePrecedente(definition, datesDuPlanning, date)
+      ?? (definition.dates === "dimanches" ? new Date(new Date(`${date}T12:00:00Z`).getTime() - 7 * 86_400_000).toISOString().slice(0, 10) : null)
+    if (!source) return { source: null, plan: { vides: [], remplace: [], verrouillees: 0 }, offert: false }
+    const plan = planCopie({ colonnes: colonnesACopier(definition), source, cible: date, lire: lireCase, verrou })
+    return { source, plan, offert: plan.vides.length + plan.remplace.length > 0 }
+  }
+  /** L'aide de l'infobulle et du menu : ce qui sera copié, et ce qui ne l'est pas (PG14, PG15). */
+  const colonnesExclues = () =>
+    definition.colonnes.filter((x) => x.cle === "orateur" || x.cle === "theme").map((x) => t(x.i18n)).join(", ")
+  const aideCopie = (c: NonNullable<ReturnType<typeof copiePour>>) => {
+    if (!c.source) return undefined
+    const d = fdShort(c.source)
+    if (!c.offert) return t("planning.gestes.rienACopier", { date: d })
+    const base = c.plan.vides.length
+      ? t("planning.gestes.copierAide", { date: d, count: c.plan.vides.length })
+      : t("planning.gestes.copierAideRemplacer", { date: d, count: c.plan.remplace.length })
+    const exclues = colonnesExclues()
+    return exclues ? `${base} ${t("planning.gestes.exclues", { colonnes: exclues })}` : base
+  }
+  /** L'infobulle de la pastille (PG14) : « Les N cases vides reprennent le 17/1. … Un nom déjà posé reste. » */
+  const infobulleCopie = (c: NonNullable<ReturnType<typeof copiePour>>) => {
+    if (!c.source) return ""
+    const d = fdShort(c.source)
+    const exclues = colonnesExclues()
+    return [
+      c.plan.vides.length
+        ? t("planning.gestes.copierInfobulle", { date: d, count: c.plan.vides.length })
+        : t("planning.gestes.copierAideRemplacer", { date: d, count: c.plan.remplace.length }),
+      exclues && t("planning.gestes.exclues", { colonnes: exclues }),
+      c.plan.vides.length && t("planning.gestes.nomPoseReste"),
+    ].filter(Boolean).join(" ")
+  }
+  const apercuCopie = apercu ? copiePour(apercu)?.plan.vides ?? [] : []
+  const casePrevue = (date: string, cle: string) => apercuCopie.find((c) => c.date === date && c.cle === cle)
+  /** La case en aperçu (PG14) : le nom qui sera écrit, en gras, dans un cadre en pointillé. */
+  const caseOuApercu = (l: LigneGrille, c: ColonneGrille): ReactNode => {
+    const prevue = casePrevue(l.row[0], c.cle)
+    return prevue
+      ? <span className="block w-full min-h-8 rounded-md border border-dashed px-1.5 py-1 font-bold" style={{ borderColor: couleur }}>{prevue.apres}</span>
+      : laCase(l, c)
+  }
+
+  function faireCopie(source: string, cible: string, cases: CaseGeste[], verrouillees: number) {
+    void appliquer(
+      cases,
+      t("planning.gestes.copie", { cible: fdShort(cible), source: fdShort(source), count: cases.length }),
+      verrouillees ? [t("planning.gestes.verrouillees", { count: verrouillees })] : [],
+    )
+  }
+  /** Le geste (PG12, PG13) : sans fenêtre quand il ne tombe que dans des cases vides. */
+  function copier(date: string) {
+    const c = copiePour(date)
+    setApercu(null)
+    if (!c?.offert || !c.source) return
+    if (c.plan.remplace.length) setFenetreCopie({ source: c.source, cible: date, vides: c.plan.vides, remplace: c.plan.remplace, verrouillees: c.plan.verrouillees })
+    else faireCopie(c.source, date, c.plan.vides, c.plan.verrouillees)
+  }
+  function choixDeLaFenetre(choix: "vides" | "tout" | null) {
+    const d = fenetreCopie
+    setFenetreCopie(null)
+    if (!d || !choix) return
+    faireCopie(d.source, d.cible, choix === "tout" ? [...d.vides, ...d.remplace] : d.vides, d.verrouillees)
+  }
+
+  /** Le « ⋯ » du dimanche (PG15) : tablette, téléphone, et les cartes. */
+  const menuCopie = (date: string) => {
+    const c = copiePour(date)
+    if (!c) return null
+    return (
+      <MenuActions
+        onOuvert={(ouvert) => setApercu(ouvert ? date : null)}
+        actions={[{ label: t("planning.gestes.copierPrecedent"), icone: Copy, aide: aideCopie(c), desactive: !c.offert, onSelect: () => copier(date) }]}
+      />
+    )
+  }
+  /** La pastille au survol de la ligne (PG14), dans la cellule de la date du tableau. */
+  const pastilleCopie = (date: string) => {
+    const c = copiePour(date)
+    if (!c?.offert || !c.source) return null
+    return (
+      <>
+      <button
+        type="button"
+        onClick={() => copier(date)}
+        onMouseEnter={() => setApercu(date)}
+        onMouseLeave={() => setApercu(null)}
+        onFocus={() => setApercu(date)}
+        onBlur={() => setApercu(null)}
+        title={`${t("planning.gestes.copierPrecedent")}. ${infobulleCopie(c)}`}
+        aria-describedby={`copie-aide-${date}`}
+        className="mt-1 inline-flex min-h-7 items-center gap-1 rounded-full border border-dashed border-border bg-card px-2 text-[11px] font-semibold text-foreground opacity-0 transition-opacity hover:bg-secondary focus-visible:opacity-100 group-hover/ligne:opacity-100"
+      >
+        <Copy className="h-3 w-3" aria-hidden />
+        {t("planning.gestes.copierLe", { date: fdShort(c.source) })}
+      </button>
+      <span id={`copie-aide-${date}`} className="sr-only">{infobulleCopie(c)}</span>
+      </>
+    )
+  }
+
   const dansGeste = (date: string, cle: string) => !!geste?.cases.some((c) => c.date === date && c.cle === cle)
   const largeurMin = 104 + 96 * colonnes.length
 
@@ -469,6 +590,14 @@ export function PlanningGrille({
       )}
 
       {peutModifier && (
+        <FenetreCopie
+          demande={fenetreCopie}
+          libelle={(cle) => { const x = definition.colonnes.find((d) => d.cle === cle); return x ? t(x.i18n) : cle }}
+          onChoix={choixDeLaFenetre}
+        />
+      )}
+
+      {peutModifier && (
         <ChoisirNom
           ouverture={choix && {
             titre: `${t(choix.c.i18n)} · ${fdShort(choix.l.row[0])}`,
@@ -530,7 +659,7 @@ export function PlanningGrille({
                       </td>
                     </tr>
                   )}
-                  <tr className="border-t border-border" style={{ background: fond }}>
+                  <tr className="group/ligne border-t border-border" style={{ background: fond }}>
                     <td
                       data-date-cell={date}
                       className="sticky left-0 z-10 w-[112px] px-3 py-2 font-semibold whitespace-nowrap bg-card"
@@ -555,10 +684,11 @@ export function PlanningGrille({
                       )}
                       {dateBadge?.(l.row, toutes)}
                       {peutRetirer(date) && <div className="-ml-1.5 mt-0.5">{boutonRetirer(date, false)}</div>}
+                      {survol ? pastilleCopie(date) : <div className="mt-1">{menuCopie(date)}</div>}
                     </td>
                     {colonnes.map((c) => (
-                      <td key={c.cle} data-case={`${date}|${c.cle}`} data-geste={dansGeste(date, c.cle) || undefined} className="px-3 py-2 text-foreground" style={dansGeste(date, c.cle) ? { background: `${couleur}22` } : undefined}>
-                        {laCase(l, c)}
+                      <td key={c.cle} data-case={`${date}|${c.cle}`} data-geste={dansGeste(date, c.cle) || undefined} data-apercu={casePrevue(date, c.cle) ? "" : undefined} className="px-3 py-2 text-foreground" style={dansGeste(date, c.cle) ? { background: `${couleur}22` } : undefined}>
+                        {caseOuApercu(l, c)}
                       </td>
                     ))}
                   </tr>
@@ -604,7 +734,12 @@ export function PlanningGrille({
                   </span>
                 )}
                 {dateBadge?.(l.row, toutes)}
-                {peutRetirer(date) && <span className="ml-auto">{boutonRetirer(date, true)}</span>}
+                {(peutRetirer(date) || mode === "edition") && (
+                  <span className="ml-auto flex items-center gap-1">
+                    {peutRetirer(date) && boutonRetirer(date, true)}
+                    {menuCopie(date)}
+                  </span>
+                )}
               </div>
               <div className="px-3.5 py-2.5 space-y-1">
                 {colonnes
@@ -615,7 +750,7 @@ export function PlanningGrille({
                   .map((c) => (
                     <div key={c.cle} className="flex items-baseline gap-2 text-[13px]">
                       <span className="w-24 shrink-0 text-[11px] text-muted-foreground">{t(c.i18n)}</span>
-                      <span data-case={`${date}|${c.cle}`} data-geste={dansGeste(date, c.cle) || undefined} className="min-w-0 flex-1 rounded-md" style={dansGeste(date, c.cle) ? { background: `${couleur}22` } : undefined}>{laCase(l, c)}</span>
+                      <span data-case={`${date}|${c.cle}`} data-geste={dansGeste(date, c.cle) || undefined} data-apercu={casePrevue(date, c.cle) ? "" : undefined} className="min-w-0 flex-1 rounded-md" style={dansGeste(date, c.cle) ? { background: `${couleur}22` } : undefined}>{caseOuApercu(l, c)}</span>
                     </div>
                   ))}
               </div>

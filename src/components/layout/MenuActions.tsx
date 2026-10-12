@@ -42,9 +42,16 @@ export type ActionDuMenu = {
    *  soit fermé, et le focus ne revient pas au « ⋯ ». Sinon le menu, encore monté pendant sa
    *  sortie, reprend le focus au champ, qui se ferme aussitôt. */
   ouvreUnChamp?: boolean;
+  /** Grisée et inactive (son `aide` dit pourquoi). */
+  desactive?: boolean;
 };
 
-export function MenuActions({ actions, label }: { actions: ActionDuMenu[]; label?: string }) {
+export function MenuActions({ actions, label, onOuvert }: {
+  actions: ActionDuMenu[];
+  label?: string;
+  /** Appelé à l'ouverture et à la fermeture du menu (un aperçu posé tant qu'il est ouvert). */
+  onOuvert?: (ouvert: boolean) => void;
+}) {
   const { t } = useTranslation();
   const confirmer = useConfirmer();
   const enAttente = useRef<ActionDuMenu | null>(null);
@@ -57,7 +64,7 @@ export function MenuActions({ actions, label }: { actions: ActionDuMenu[]; label
   };
 
   return (
-    <DropdownMenu modal={false}>
+    <DropdownMenu modal={false} onOpenChange={onOuvert}>
       <DropdownMenuTrigger
         aria-label={label ?? t("common.moreActions")}
         className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-background text-foreground shadow-[inset_0_0_0_1px_hsl(var(--border))] transition-colors hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
@@ -83,6 +90,7 @@ export function MenuActions({ actions, label }: { actions: ActionDuMenu[]; label
               key={i}
               // Le menu se ferme d'abord : la fenêtre de confirmation prend alors le focus.
               onSelect={() => { void choisir(a); }}
+              disabled={a.desactive}
               aria-describedby={a.aide ? `${id}-${i}` : undefined}
               className={cn(a.destructif && "text-destructive focus:text-destructive", a.aide && "items-start")}
             >
