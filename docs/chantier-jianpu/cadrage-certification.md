@@ -88,7 +88,7 @@ Verdicts : accepté (proposition gardée), corrigé (valeur posée à la main), 
 | 天国的子民 | 13 | 107 | corrigé | titre et ♩ coupés net sous la dernière rangée du titre (106) ; album et crédits gardés (1 px du haut des crédits perdu) |
 | 奇异恩典 | 143 | 143 | accepté | titre, titre anglais coupés ; notes, crédits (chevauchent 1=E) et verset gardés |
 | 奔跑不放弃 | 13 | 13 | sans coupe propre | titre, note (原曲…), album, verset, crédits, 速度 et 1=E sans aucune rangée blanche entre eux : en-tête gardé entier, seule la marge vide est coupée |
-| 好喜欢与你在一起 | 133 | 164 | corrigé | verset restait ; coupe dans la rangée quasi blanche (164) juste au-dessus du ♭ exposant de « 1=♭B 4/4 » ; note (共5张…) et crédits gardés |
+| 好喜欢与你在一起 | 133 | 165 | corrigé | verset restait ; coupe dans la rangée quasi blanche (164) juste au-dessus du ♭ exposant de « 1=♭B 4/4 » ; note (共5张…) et crédits gardés ; vérification Opus : 164 → 165 (à 164, 2 px pâles de la parenthèse « （ » du verset restaient ; 165 est sans contact) |
 | 如果你想知道 | 177 | 177 | accepté | titre, ♩, album, verset coupés ; crédits gardés avec 1=G |
 | 如鹰展翅上腾 | 111 | 111 | accepté | titre, ♩ coupés ; album et crédits gardés (bande commune avec 1=G) |
 | 安静 | 143 | 143 | accepté | titre, titre anglais coupés ; verset, ♩ et crédits gardés |

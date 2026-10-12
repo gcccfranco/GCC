@@ -860,6 +860,8 @@ rappel faux sur deux chants au même `section.uid` (C5).
   (la proposition tranchait le haut du titre anglais). Sans coupe propre : 和散那 `11`, 奔跑不放弃 `13` (en-tête entier, seule la
   marge vide est coupée), 在这里 `128` (la proposition `234` tranchait les crédits ; en-tête gardé, marge de 128 px coupée).
   Total certifié : 97 / 189.
+  Vérifié par Opus (12/10/2026) : 17 pages regardées (les 9 corrigées ou sans coupe propre, 8 acceptées tirées au hasard) ;
+  16 justes ; 好喜欢与你在一起 164 → 165 (une coupe sans contact existait un pixel plus bas).
 
 - **L3-T1d, 12/10/2026 — recadrage : 46 pages certifiées à l'œil** (registre : `docs/chantier-jianpu/cadrage-certification.md`).
   **39 acceptées, 1 corrigée, 6 sans coupe propre.** Corrigée : 旷野中唯一的力量 `132` (la proposition `85` laissait album et crédit
