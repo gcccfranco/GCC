@@ -128,9 +128,9 @@ export function SetlistForm({ mode, setlistId, songs, initial, prefill }: Setlis
   const peutChangerEquipe =
     !!user &&
     (!isEdit ||
-      canSetSetlistTeam(user, profile, { ownerId, isPrivate: initial?.isPrivate, category: initial?.category ?? "" } as FSSetlist));
+      canSetSetlistTeam(user, profile, { ownerId, isPrivate: initial?.isPrivate, category: initial?.category ?? "", editeurs: initial?.editeurs } as FSSetlist));
   const visibiliteLecture =
-    isEdit && !!user && !canDeleteSetlist(user, profile, { ownerId, isPrivate: initial?.isPrivate, category: initial?.category ?? "" } as FSSetlist);
+    isEdit && !!user && !canDeleteSetlist(user, profile, { ownerId, isPrivate: initial?.isPrivate, category: initial?.category ?? "", editeurs: initial?.editeurs } as FSSetlist);
 
   // ── Sélecteurs planning : présidence (liste) + date (manuelle) ───────────
   const [planning, setPlanning] = useState<PlanningData | null>(null);

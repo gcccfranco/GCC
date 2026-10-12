@@ -507,6 +507,11 @@ export function canDeleteSetlist(
   return roles ? categoryLevel(setlist.category, roles) === "edit" : false;
 }
 
+/** Changer la catégorie d'une setlist : qui peut la supprimer (propriétaire, admin, niveau « edit »),
+ *  pas l'équipe — sinon un membre d'équipe se donnerait, par la nouvelle catégorie, le droit de la
+ *  supprimer. Miroir : la garde sur `category` de `allow update` (firestore.rules). */
+export const canChangeSetlistCategory = canDeleteSetlist;
+
 /** Choisir l'équipe de la setlist (`editeurs`, `rolesPartage`) : le propriétaire, ou un admin sur
  *  une setlist qu'il peut modifier. Miroir : `allow update` de setlists/{id}. */
 export function canSetSetlistTeam(

@@ -327,7 +327,9 @@ service cloud.firestore {
       // canEditSetlistDoc (le propriétaire ; sinon, setlist non privée, un
       // admin ou un musicien/présidence du service) — jusqu'au 19/09/2026 la
       // règle ignorait `isPrivate`, contrairement au client. Un musicien/
-      // présidence ne déplace la setlist que vers une catégorie où il sert aussi.
+      // présidence ne déplace la setlist que vers une catégorie où il sert aussi ;
+      // l'équipe (`editeurs`) ne la déplace pas du tout (sinon, en se donnant un rôle
+      // dans la nouvelle catégorie, elle gagnerait le droit de la supprimer — PS8).
       allow update: if signedIn()
         && request.resource.data.get('ownerId', null) == resource.data.get('ownerId', null)
         && canEditSetlistDoc(resource.data)
@@ -335,7 +337,7 @@ service cloud.firestore {
           resource.data.get('ownerId', '') == request.auth.uid
           || isAdmin()
           || request.resource.data.category == resource.data.category
-          || isEditorOf(request.resource.data.category)
+          || (canDeleteSetlistDoc(resource.data) && isEditorOf(request.resource.data.category))
         )
         // L'équipe : seuls le propriétaire et les admins la changent.
         && (

@@ -2,7 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
-import { isAdminEmail } from "../src/lib/access";
+import { isAdminEmail, canChangeSetlistCategory, canDeleteSetlist } from "../src/lib/access";
 import { normalizeName } from "../src/lib/planning/names";
 import { NOTIF_TYPES, DEFAULT_NOTIF_PREFS } from "../src/types/user";
 import { planningReleaseMessage, setlistReadyMessage } from "../src/lib/push/messages";
@@ -131,6 +131,9 @@ test("règles : la modification d'une setlist passe par canEditSetlistDoc, la su
   const del = bloc.slice(bloc.indexOf("allow delete"));
   expect(update).toContain("canEditSetlistDoc(resource.data)");
   expect(del).toContain("canDeleteSetlistDoc(resource.data)");
+  // Changer de catégorie : miroir de canChangeSetlistCategory (= canDeleteSetlist), pas l'équipe.
+  expect(update).toContain("(canDeleteSetlistDoc(resource.data) && isEditorOf(request.resource.data.category))");
+  expect(canChangeSetlistCategory).toBe(canDeleteSetlist);
   // Une privée ne se supprime pas en REST par un autre que son propriétaire.
   const sup = rules.slice(rules.indexOf("function canDeleteSetlistDoc"));
   expect(sup.slice(0, 400)).toContain("!setlist.get('isPrivate', false)");

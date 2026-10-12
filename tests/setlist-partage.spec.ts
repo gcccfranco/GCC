@@ -60,6 +60,8 @@ test.describe("partage : droits (pur)", () => {
     expect(canSetSetlistTeam(ADMIN, null, PUBLIQUE)).toBe(true);
     expect(canSetSetlistTeam(ADMIN, null, PRIVEE)).toBe(false);
     expect(canSetPresentationLink(user(JOEL), JOEL, PRIVEE, false)).toBe(true);
+    // Admin dans l'équipe d'une privée d'autrui : il en choisit l'équipe (la règle l'accorde).
+    expect(canSetSetlistTeam(ADMIN, null, setlist({ isPrivate: true, editeurs: ["admin1"] }))).toBe(true);
   });
 });
 
@@ -169,6 +171,8 @@ test.describe("partage : règles Firestore (texte)", () => {
     expect(update).toContain("affectedKeys().hasAny(['isPrivate'])");
     expect(update).toContain("canDeleteSetlistDoc(resource.data)");
     expect(del).toContain("canDeleteSetlistDoc(resource.data)");
+    // Changer de catégorie : réservé à qui peut supprimer (sinon l'équipe se donnerait ce droit).
+    expect(update).toMatch(/request\.resource\.data\.category == resource\.data\.category\s*\|\|\s*\(\s*canDeleteSetlistDoc\(resource\.data\)/);
     const edit = rules.slice(rules.indexOf("function canEditSetlistDoc"), rules.indexOf("function canEditSetlistDoc") + 300);
     expect(edit).toContain("canDeleteSetlistDoc(setlist)");
     expect(edit).toContain("request.auth.uid in setlist.get('editeurs', [])");
@@ -303,6 +307,7 @@ test.describe("partage : l'éditeur", () => {
     expect((db.doc(CHEMIN)?.items as { keyOverride: string }[])[0].keyOverride).toBe("B");
     await fermerFeuille(page);
     await expect(page.getByLabel("Visibilité")).toBeDisabled();
+    await expect(page.getByLabel("Catégorie")).toBeDisabled(); // changer de catégorie ouvrirait la suppression
     await puceEquipe(page).click();
     await expect(volet(page).getByText("Seuls son créateur et les admins changent l'équipe.")).toBeVisible();
     await expect(volet(page).getByRole("button", { name: "Ajouter quelqu'un" })).toHaveCount(0);

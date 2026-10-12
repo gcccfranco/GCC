@@ -32,7 +32,7 @@ export interface ChampsEnTete {
   onLeaderSelect: (v: string) => void;
   isPrivate: boolean;
   setIsPrivate: (v: boolean) => void;
-  /** Seuls le propriétaire et les admins changent la visibilité : pour l'équipe, en lecture. */
+  /** Seuls le propriétaire et les admins (qui peuvent supprimer) changent la visibilité et la catégorie : pour l'équipe, en lecture. */
   visibiliteLecture: boolean;
   /** L'équipe de la setlist, et l'ouverture de sa vue (posée par l'éditeur qui tient le volet). */
   equipe: EtatEquipe;
@@ -143,6 +143,7 @@ export function EnTeteEditeur({
             value={c.category}
             onChange={(e) => c.onCategoryChange(e.target.value)}
             aria-label={t("setlists.form.categoryLabel")}
+            disabled={c.visibiliteLecture}
             className={selectDePuce}
           >
             <option value="">{t("setlists.form.categoryPlaceholder")}</option>
