@@ -7,7 +7,7 @@
 // d'après le planning, avec « Ouvrir » (la setlist en deux volets de U5) et « Mode louange ».
 // Toucher un chant ouvre la setlist aux partitions de ce chant (U5, Q9).
 
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTranslation } from "react-i18next";
@@ -20,6 +20,9 @@ import { serviceButtonFill } from "@/lib/serviceButton";
 import { formatDate } from "@/lib/utils/formatDate";
 import { parsePresentationUrl } from "@/lib/setlist/presentationLink";
 import { equipeDuService } from "@/lib/setlist/equipeDuService";
+import { equipeDeLaSetlist } from "@/lib/setlist/partage";
+import { listProfiles } from "@/lib/firebase/users";
+import type { UserProfile } from "@/types/user";
 import { getJianpuPref } from "@/lib/jianpu/preference";
 import { ListView } from "@/app/setlists/[id]/_components/ListView";
 import { SetlistHistory } from "@/app/setlists/[id]/_components/SetlistHistory";
@@ -42,7 +45,20 @@ export function ApercuSetlist({
   const couleur = categoryColor(setlist.category);
   const presentation = setlist.presentationUrl ? parsePresentationUrl(setlist.presentationUrl) : null;
   const chants = setlist.items.filter((i) => i.type !== "transition").length;
-  const equipe = useMemo(() => (planning ? equipeDuService(planning, setlist) : []), [planning, setlist]);
+  const duPlanning = useMemo(() => (planning ? equipeDuService(planning, setlist) : []), [planning, setlist]);
+  // L'équipe choisie dans la setlist (PS12) : les profils ne sont lus que si elle en a une.
+  const aUneEquipe = !!setlist.editeurs?.length;
+  const [profils, setProfils] = useState<UserProfile[]>([]);
+  useEffect(() => {
+    if (!aUneEquipe) return;
+    let vivant = true;
+    listProfiles().then((p) => vivant && setProfils(p)).catch(() => {});
+    return () => { vivant = false; };
+  }, [aUneEquipe]);
+  const equipe = useMemo(
+    () => (aUneEquipe ? equipeDeLaSetlist(duPlanning, setlist, profils) : duPlanning),
+    [aUneEquipe, duPlanning, setlist, profils],
+  );
   const lien = `/setlists/${setlist.id}`;
 
   return (
@@ -104,7 +120,13 @@ export function ApercuSetlist({
           />
         </article>
 
-        {equipe.length > 0 && <CarteEquipe equipe={equipe} monNom={monNom} />}
+        {equipe.length > 0 && (
+          aUneEquipe
+            ? duPlanning.length > 0
+              ? <CarteEquipe equipe={equipe} monNom={monNom} sousTitre="setlists.equipe.planningEtChoisie" />
+              : <CarteEquipe equipe={equipe} monNom={monNom} titre="setlists.equipe.titre" sousTitre="setlists.equipe.choisie" />
+            : <CarteEquipe equipe={equipe} monNom={monNom} />
+        )}
       </div>
     </section>
   );

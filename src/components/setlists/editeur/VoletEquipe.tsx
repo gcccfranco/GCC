@@ -40,7 +40,8 @@ export function VoletEquipe({ equipe }: { equipe: EtatEquipe }) {
 
   const parUid = useMemo(() => new Map((profils ?? []).map((p) => [p.uid, p])), [profils]);
   // Un uid sans profil garde sa ligne (nom neutre) : sans elle, la puce le compte mais rien ne permet de le retirer.
-  const membres = equipe.editeurs.map((uid) => ({ uid, nom: parUid.has(uid) ? nomCourt(parUid.get(uid)!) : t("setlists.equipe.inconnu") }));
+  // Tant que les profils n'ont pas répondu, aucune ligne : tout le monde serait « Membre inconnu » avec des « Retirer » identiques.
+  const membres = profils === null ? [] : equipe.editeurs.map((uid) => ({ uid, nom: parUid.has(uid) ? nomCourt(parUid.get(uid)!) : t("setlists.equipe.inconnu") }));
   const { duService, tous: tousLesComptes } = useMemo(
     () => candidatsDeLEquipe(profils ?? [], equipe.categorie, equipe.ownerId),
     [profils, equipe.categorie, equipe.ownerId],

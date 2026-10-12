@@ -455,3 +455,30 @@ test.describe("back-office coupé : Fidélité en un seul tableau", () => {
     await page.screenshot({ path: test.info().outputPath("ancien-tableau-fidelite.png"), fullPage: true, animations: "disabled" });
   });
 });
+
+// Le partage d'une setlist (docs/spec-partage-setlist.md, PS17) n'est pas du back-office : il est en ligne.
+test.describe("back-office coupé : le partage d'une setlist est en ligne", () => {
+  const profilFictif = (uid: string, prenom: string, nom: string, planningName: string, service: string): FakeProfile =>
+    ({ uid, email: `${uid}@example.com`, firstName: prenom, lastName: nom, planningName, serviceRoles: { [service]: ["chanteur"] } });
+  const LEA = profilFictif("lea", "Léa", "Martin", "Léa M.", "Culte Francophone");
+  const JOEL = profilFictif("joel", "Joël", "Faure", "Joël F.", "Groupe Paix"); // hors de la catégorie : seul le partage la lui montre
+  const annuaire = Object.fromEntries([LEA, JOEL].map((p) => [`users/${p.uid}`, { email: p.email, firstName: p.firstName, lastName: p.lastName, planningName: p.planningName, serviceRoles: p.serviceRoles, annonces: [], notify: [], poles: [] }]));
+  const item = { songSlug: "abba-pere", position: 1, keyOverride: null, showChords: true, showPinyin: true, useJianpu: false, structureOverride: null, sectionNotes: {}, notes: "" };
+  const setlist = { title: "Culte partagé", leader: "Présidence A", category: "Culte Francophone", date: "2026-11-01", language: "fr", notes: "", ownerId: "lea", isPrivate: true, items: [item], editeurs: ["joel"], rolesPartage: { joel: "musicien" } };
+  const base = { ...annuaire, "setlists/sl-partage": setlist };
+  const planningVide = (page: Page) => page.route(/docs\.google\.com\/spreadsheets/, (route) => route.fulfill({ status: 200, contentType: "text/csv", body: "" }));
+
+  test("la puce « Équipe » est dans l'éditeur du propriétaire", async ({ page }) => {
+    await planningVide(page);
+    await signInAs(page, LEA, base, "/setlists/sl-partage/edit");
+    await expect(page.getByRole("button", { name: /^Équipe · 1/ })).toBeVisible();
+  });
+
+  test("une personne de l'équipe voit la setlist privée, marquée « Dans l'équipe »", async ({ page }) => {
+    await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
+    await planningVide(page);
+    await signInAs(page, JOEL, base, "/setlists");
+    const rangee = page.getByRole("link", { name: /Culte partagé/ }).first();
+    await expect(rangee).toContainText("Dans l'équipe");
+  });
+});

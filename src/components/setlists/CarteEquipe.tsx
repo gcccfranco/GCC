@@ -26,14 +26,20 @@ function Noms({ valeur, monNom }: { valeur: string; monNom: string }) {
   );
 }
 
-export function CarteEquipe({ equipe, monNom, niveau = 3 }: { equipe: RoleEquipe[]; monNom: string; niveau?: 2 | 3 }) {
+export function CarteEquipe({
+  equipe, monNom, niveau = 3, titre = "setlists.apercu.equipe", sousTitre = "setlists.apercu.dapres",
+}: {
+  equipe: RoleEquipe[]; monNom: string; niveau?: 2 | 3;
+  /** Clés de traduction du titre et du sous-titre (PS12 : l'équipe choisie dans la setlist). */
+  titre?: string; sousTitre?: string;
+}) {
   const { t } = useTranslation();
   const id = useId();
   const Titre = niveau === 2 ? "h2" : "h3";
   return (
     <section aria-labelledby={id} className="raised rounded-2xl px-5 pb-3 pt-4">
-      <Titre id={id} className="text-base font-bold">{t("setlists.apercu.equipe")}</Titre>
-      <p className="text-xs text-muted-foreground">{t("setlists.apercu.dapres")}</p>
+      <Titre id={id} className="text-base font-bold">{t(titre)}</Titre>
+      <p className="text-xs text-muted-foreground">{t(sousTitre)}</p>
       <dl className="mt-2">
         {equipe.map(([cle, noms]) => (
           <div key={cle} className="flex min-w-0 gap-3 border-t border-border/70 py-1.5 text-sm">

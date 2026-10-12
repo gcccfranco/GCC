@@ -2,7 +2,7 @@
 
 import { GuideLien } from "@/components/guide/GuideLien";
 import { useEffect, useState, useMemo } from "react";
-import { ALL_CATEGORIES, getSetlists, getMySetlists, deleteSetlists, type FSSetlist } from "@/lib/firebase/setlists";
+import { ALL_CATEGORIES, getSetlists, getMySetlists, getSetlistsPartagees, deleteSetlists, type FSSetlist } from "@/lib/firebase/setlists";
 import { useProfile } from "@/lib/firebase/users";
 import { visibleCategories, canCreateSetlist, canDeleteSetlist, canSeeSetlist, isAdminUser } from "@/lib/access";
 import {
@@ -12,6 +12,7 @@ import {
   normalizeName,
   type PlanningData,
 } from "@/lib/planning/names";
+import { estDansLePartage, nomCourt } from "@/lib/setlist/partage";
 import { useTranslation } from "react-i18next";
 import { Search, X, Lock, LogIn, UserPen } from "lucide-react";
 import Link from "next/link";
@@ -47,6 +48,8 @@ export default function SetlistsPage() {
   const { user, profile, loading: authLoading } = useProfile();
   const [setlists, setSetlists] = useState<FSSetlist[]>([]);
   const [mySetlists, setMySetlists] = useState<FSSetlist[]>([]);
+  // Celles dont on est de l'équipe (PS10) : lues à part, fusionnées par id avec la liste commune.
+  const [partagees, setPartagees] = useState<FSSetlist[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMine, setLoadingMine] = useState(true);
   const [planning, setPlanning] = useState<PlanningData | null>(null);
@@ -106,10 +109,23 @@ export default function SetlistsPage() {
     if (authLoading) return;
     if (!user) { setSetlists([]); setLoading(false); return; }
     setLoading(true);
-    getSetlists()
-      .then(setSetlists)
+    Promise.all([getSetlists(), getSetlistsPartagees(user.uid).catch(() => [] as FSSetlist[])])
+      .then(([toutes, miennes]) => {
+        setSetlists(toutes);
+        setPartagees(miennes);
+      })
       .finally(() => setLoading(false));
   }, [user, authLoading]);
+
+  // Liste commune + setlists de l'équipe, sans doublon (la requête n'est pas crue sur parole).
+  const toutes = useMemo(() => {
+    const parId = new Map(setlists.map((s) => [s.id, s]));
+    for (const s of partagees) if (user && estDansLePartage(s, user.uid) && !parId.has(s.id)) parId.set(s.id, s);
+    return [...parId.values()];
+  }, [setlists, partagees, user]);
+  // « Dans l'équipe » : une setlist qu'on ne verrait pas par ses catégories ni comme propriétaire.
+  const dansLEquipe = (s: FSSetlist) =>
+    !!user && estDansLePartage(s, user.uid) && s.ownerId !== user.uid && !myCategories.includes(s.category);
 
   useEffect(() => {
     if (!user) { setMySetlists([]); setLoadingMine(false); return; }
@@ -133,11 +149,12 @@ export default function SetlistsPage() {
     const useMine = onlyMine && !!profile?.planningName;
     // Visibilité : setlists de ses services/groupe (+ celles qu'on a créées). Le filtre
     // « Mes services » restreint en plus aux dates où l'on sert réellement (accès conservé).
-    const list = setlists.filter(
+    const list = toutes.filter(
       (s) =>
-        (myCategories.includes(s.category) || s.ownerId === user?.uid) &&
+        !!user && canSeeSetlist(user, profile, s) &&
         matches(s) &&
         (!useMine ||
+          estDansLePartage(s, user.uid) ||
           (s.category === "Campus"
             ? (!!s.moment && myServiceKeys.has(`${s.date}|Campus|m:${s.moment}`)) ||
               myServiceKeys.has(`${s.date}|Campus|l:${normalizeName(s.leader ?? "")}`)
@@ -147,7 +164,7 @@ export default function SetlistsPage() {
     return tab === "upcoming"
       ? list.filter((s) => s.date >= todayStr).sort((a, b) => a.date.localeCompare(b.date))
       : list.filter((s) => s.date < todayStr).sort((a, b) => b.date.localeCompare(a.date));
-  }, [tab, setlists, mySetlists, matches, todayStr, myCategories, user, onlyMine, profile, myServiceKeys]);
+  }, [tab, toutes, mySetlists, matches, todayStr, user, profile, onlyMine, myServiceKeys]);
 
   // L'aperçu (en grand) : celui de l'adresse, sinon la première setlist de la liste filtrée (Q3).
   // Une adresse peut viser une setlist d'un autre onglet (lien partagé) : seulement si la page
@@ -155,7 +172,7 @@ export default function SetlistsPage() {
   const choisie =
     (apercu &&
       (displayed.find((s) => s.id === apercu) ??
-        [...setlists, ...mySetlists].find((s) => s.id === apercu && !!user && canSeeSetlist(user, profile, s)))) ||
+        [...toutes, ...mySetlists].find((s) => s.id === apercu && !!user && canSeeSetlist(user, profile, s)))) ||
     displayed[0] ||
     null;
 
@@ -200,6 +217,7 @@ export default function SetlistsPage() {
     // Pas de rechargement : les deux effets de chargement ne dépendent que de
     // `user` et ne se rejoueraient pas. On retire les supprimées en local.
     setSetlists((prev) => prev.filter((s) => !ok.includes(s.id)));
+    setPartagees((prev) => prev.filter((s) => !ok.includes(s.id)));
     setMySetlists((prev) => prev.filter((s) => !ok.includes(s.id)));
     // Les ratées restent cochées : réessayer est un seul appui.
     setCoches(new Set(ko));
@@ -456,6 +474,7 @@ export default function SetlistsPage() {
                     selectable={selectionMode ? peutSupprimer(s) : undefined}
                     selected={coches.has(s.id)}
                     onToggle={() => basculer(s.id)}
+                    dansLEquipe={dansLEquipe(s)}
                   />
                 </li>
               ))}
@@ -471,6 +490,7 @@ export default function SetlistsPage() {
                   onToggle={() => basculer(s.id)}
                   onApercu={grand ? () => setApercu(s.id) : undefined}
                   actif={grand && !selectionMode && s.id === choisie?.id}
+                  dansLEquipe={dansLEquipe(s)}
                 />
               </li>
             ))}
@@ -492,7 +512,7 @@ export default function SetlistsPage() {
           largeurListe={400}
           liste={<div className="relative px-4 pb-4 pt-4">{contenuListe}</div>}
           premier={choisie && (
-            <ApercuSetlist setlist={choisie} songsMap={songsMap} planning={planning} monNom={profile?.planningName ?? ""} />
+            <ApercuSetlist setlist={choisie} songsMap={songsMap} planning={planning} monNom={profile ? nomCourt(profile) : ""} />
           )}
         >
           {null}

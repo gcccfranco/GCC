@@ -812,9 +812,19 @@ export function SetlistDetailClient() {
   async function handleShare() {
     if (!setlist) return;
     const url = `${window.location.origin}/setlists/${id}`;
-    if (setlist.isPrivate) {
+    // Privée avec équipe : le lien s'ouvre pour son équipe seulement (PS14), il est copié et on le dit.
+    const privee = !!setlist.isPrivate;
+    const avecEquipe = !!setlist.editeurs?.length;
+    if (privee && !avecEquipe) {
       // Le destinataire n'y aura pas accès tant qu'elle est privée
       flashFeedback(t("setlists.detail.sharePrivateWarning"));
+      return;
+    }
+    if (privee) {
+      try {
+        await navigator.clipboard.writeText(url);
+        flashFeedback(t("setlists.detail.sharePrivateEquipe"));
+      } catch { /* clipboard indisponible */ }
       return;
     }
     if (navigator.share) {
@@ -1362,8 +1372,8 @@ export function SetlistDetailClient() {
       </Badge>
       <span className="text-xs text-muted-foreground">
         {setlist.isPrivate
-          ? t("setlists.detail.editableByOwner")
-          : t("setlists.detail.editableBy", {
+          ? t(setlist.editeurs?.length ? "setlists.detail.editableByOwnerEquipe" : "setlists.detail.editableByOwner")
+          : t(setlist.editeurs?.length ? "setlists.detail.editableByEquipe" : "setlists.detail.editableBy", {
               category: t("categories." + setlist.category, { defaultValue: setlist.category }),
             })}
       </span>

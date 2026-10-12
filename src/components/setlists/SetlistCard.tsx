@@ -21,6 +21,7 @@ export function SetlistCard({
   onToggle,
   onApercu,
   actif = false,
+  dansLEquipe = false,
 }: {
   setlist: FSSetlist;
   /** Mode sélection (lot 10) : `undefined` = pas de mode, la ligne est le lien
@@ -34,6 +35,8 @@ export function SetlistCard({
   onApercu?: () => void;
   /** La setlist dont l'aperçu est montré : ligne allumée (planche `setlists-ordinateur`). */
   actif?: boolean;
+  /** Setlist partagée avec soi (PS10), hors de ses catégories : la marque « Dans l'équipe ». */
+  dansLEquipe?: boolean;
 }) {
   const { t, i18n } = useTranslation();
   const color = categoryColor(setlist.category);
@@ -52,6 +55,11 @@ export function SetlistCard({
           <span className="truncate text-base font-semibold text-foreground">{setlist.title}</span>
           {setlist.isPrivate && (
             <Lock className="h-3.5 w-3.5 shrink-0 text-muted-foreground" aria-label={t("setlists.list.private")} />
+          )}
+          {dansLEquipe && (
+            <span className="shrink-0 rounded-full border border-current/30 px-1.5 text-[11px] font-semibold text-muted-foreground">
+              {t("setlists.equipe.dejaLa")}
+            </span>
           )}
         </span>
         <span className="flex text-sm text-muted-foreground">

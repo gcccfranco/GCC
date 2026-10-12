@@ -226,6 +226,7 @@ test.describe("partage : l'éditeur", () => {
     await expect(puceEquipe(page)).toHaveText(/Équipe · 2/);
     await puceEquipe(page).click();
     await expect(volet(page).getByText("Personne pour l'instant.")).toHaveCount(0);
+    await expect(volet(page).getByText("Joël F.")).toBeVisible(); // profils arrivés : sinon tout le monde serait « Membre inconnu »
     await volet(page).getByRole("button", { name: "Retirer Membre inconnu" }).click();
     await expect.poll(() => db.doc(CHEMIN)?.editeurs, { timeout: 10_000 }).toEqual(["joel"]);
   });
@@ -275,4 +276,158 @@ test.describe("partage : l'éditeur", () => {
     await expect(page.getByText(/^Seuls le créateur de la setlist/)).toBeVisible();
     await expect(page.locator("[data-liste-courte]")).toHaveCount(0);
   });
+});
+
+// ─── Où la trouver (PS-C) ────────────────────────────────────────────────────
+
+const ENTETE_CULTE = ["2026 DATE", "Présidence", "Choristes", "", "Pianiste", "Guitariste", "Batterie", "Sono + Live", "PPT", "Orateur", "Traducteur", "Sainte cène", "Notes"];
+const csvCulte = [ENTETE_CULTE, ["04/10", "Léa M.", "Noé T.", "Inès V.", "Ruth K.", "Samuel K.", "Paul D.", "Marc A.", "Rémi K.", "Hélène W.", "Jun L.", "", ""]]
+  .map((r) => r.map((c) => `"${c}"`).join(",")).join("\n");
+const planningCulte = (page: Page) =>
+  page.route(/docs\.google\.com\/spreadsheets/, (route) =>
+    route.fulfill({ status: 200, contentType: "text/csv", body: new URL(route.request().url()).searchParams.get("sheet") === "Franco_Louange" ? csvCulte : "" }));
+const horloge = (page: Page) => page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
+const GRAND = ["ordinateur", "tablette-paysage", "ordinateur-1440"];
+
+const PUB = DOC({ title: "Culte partagé", date: "2026-11-01", editeurs: ["joel"], rolesPartage: { joel: "musicien" } });
+const PRIV = DOC({ title: "Privée partagée", date: "2026-11-08", isPrivate: true, editeurs: ["joel"], rolesPartage: { joel: "musicien" } });
+const PRIV_SEULE = DOC({ title: "Privée de Léa", date: "2026-11-15", isPrivate: true });
+const LISTE = { "setlists/sl-pub": PUB, "setlists/sl-priv": PRIV, "setlists/sl-seule": PRIV_SEULE };
+const rangee = (page: Page, titre: string) => page.getByRole("link", { name: new RegExp(titre) }).first();
+
+test.describe("partage : la liste des setlists (PS10)", () => {
+  test("Joël voit ce qui est partagé avec lui, marqué « Dans l'équipe »", async ({ page }) => {
+    await horloge(page);
+    await planningVide(page);
+    const requetes: string[] = [];
+    page.on("request", (r) => { if (r.url().includes(":runQuery") && r.postData()) requetes.push(r.postData()!); });
+    await signInAs(page, fp(JOEL), { ...ANNUAIRE, ...LISTE }, "/setlists");
+    await expect(rangee(page, "Culte partagé")).toContainText("Dans l'équipe");
+    await expect(rangee(page, "Privée partagée")).toContainText("Dans l'équipe");
+    await expect(rangee(page, "Privée partagée").getByLabel("Privée")).toBeVisible();
+    await expect(page.getByRole("link", { name: /Privée de Léa/ })).toHaveCount(0);
+    expect(requetes.some((b) => b.includes("ARRAY_CONTAINS") && b.includes('"joel"'))).toBe(true);
+    // L'équipe ne supprime pas : pas de suppression groupée.
+    await expect(page.getByRole("button", { name: "Sélectionner" })).toHaveCount(0);
+  });
+
+  test("le propriétaire ne voit pas la marque, et garde la suppression groupée", async ({ page }) => {
+    await horloge(page);
+    await planningVide(page);
+    await signInAs(page, fp(LEA), { ...ANNUAIRE, ...LISTE }, "/setlists");
+    await expect(rangee(page, "Culte partagé")).toBeVisible();
+    await expect(rangee(page, "Culte partagé")).not.toContainText("Dans l'équipe");
+    await expect(page.getByRole("button", { name: "Sélectionner" })).toBeVisible();
+  });
+
+  test("un musicien hors équipe ne voit pas la privée, et son adresse dit « pas d'accès »", async ({ page }) => {
+    await horloge(page);
+    await planningVide(page);
+    // Sans nom de planning : le filtre « Mes services » ne s'applique pas.
+    await signInAs(page, { ...fp(MUSICIEN_CULTE), planningName: "" },
+      { ...ANNUAIRE, "users/mus": { ...(ANNUAIRE["users/mus"] as object), planningName: "" }, ...LISTE }, "/setlists");
+    await expect(rangee(page, "Culte partagé")).toBeVisible();
+    await expect(page.getByRole("link", { name: /Privée partagée/ })).toHaveCount(0);
+    await expect(rangee(page, "Culte partagé")).not.toContainText("Dans l'équipe"); // il sert dans la catégorie
+    await page.goto("/setlists/sl-priv");
+    await expect(page.getByText("Tu n'as pas accès à cette setlist")).toBeVisible();
+  });
+});
+
+test.describe("partage : la carte de l'équipe dans l'aperçu (PS12)", () => {
+  test.beforeEach(({}, info) => { test.skip(!GRAND.includes(info.project.name), "aperçu : en grand seulement"); });
+  const apercu = (page: Page) => page.getByRole("region", { name: "Aperçu de la setlist" });
+
+  test("hors planning : « choisie dans la setlist », Joël en pastille, avec ou sans nom de planning", async ({ page }) => {
+    await horloge(page);
+    await planningVide(page);
+    await signInAs(page, fp(JOEL), { ...ANNUAIRE, ...LISTE }, "/setlists?apercu=sl-pub");
+    await expect(apercu(page).getByRole("heading", { name: "L'équipe de cette setlist" })).toBeVisible();
+    await expect(apercu(page).getByText("choisie dans la setlist")).toBeVisible();
+    await expect(apercu(page).getByTestId("moi")).toHaveText("Joël F.");
+    await expect(apercu(page).getByText("Musiciens")).toBeVisible();
+  });
+
+  test("sans nom de planning, la pastille prend le prénom et l'initiale", async ({ page }) => {
+    await horloge(page);
+    await planningVide(page);
+    const sansNom = { ...ANNUAIRE, "users/joel": { ...(ANNUAIRE["users/joel"] as object), planningName: "" }, ...LISTE };
+    await signInAs(page, { ...fp(JOEL), planningName: "" }, sansNom, "/setlists?apercu=sl-pub");
+    await expect(apercu(page).getByTestId("moi")).toHaveText("Joël F.");
+  });
+
+  test("liée à un culte du planning : la carte du planning, Hugo ajouté aux Choristes", async ({ page }) => {
+    await horloge(page);
+    await planningCulte(page);
+    const doc = DOC({ title: "Culte du 4", date: "2026-10-04", editeurs: ["hugo"], rolesPartage: { hugo: "chanteur" } });
+    await signInAs(page, fp(MUSICIEN_CULTE), { ...ANNUAIRE, "setlists/sl-4": doc }, "/setlists?apercu=sl-4");
+    await expect(apercu(page).getByRole("heading", { name: "L'équipe de ce service" })).toBeVisible();
+    await expect(apercu(page).getByText("d'après le planning et la setlist")).toBeVisible();
+    await expect(apercu(page).locator("dd").filter({ hasText: "Hugo L." })).toBeVisible();
+    await expect(apercu(page).locator("dd").filter({ hasText: "Noé T." })).toContainText("Hugo L.");
+  });
+
+  test("中文 : le titre et le sous-titre de la carte", async ({ page }) => {
+    await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
+    await horloge(page);
+    await planningVide(page);
+    await signInAs(page, fp(JOEL), { ...ANNUAIRE, ...LISTE }, "/setlists?apercu=sl-pub");
+    const zone = page.getByRole("region", { name: "歌单预览" });
+    await expect(zone.getByRole("heading", { name: "本歌单服事团队" })).toBeVisible();
+    await expect(zone.getByText("在歌单中选定")).toBeVisible();
+  });
+});
+
+test.describe("partage : la page d'une setlist (PS14, PS15)", () => {
+  test.beforeEach(({}, info) => { test.skip(!GRAND.includes(info.project.name), "page en deux volets : ordinateur et tablette couchée"); });
+  test.use({ permissions: ["clipboard-read", "clipboard-write"] });
+  const menu = (page: Page) => page.locator("[data-en-tete]").getByRole("button", { name: "Plus d'actions" });
+
+  test("Joël (équipe) sur la privée : peut modifier, ne supprime pas, droits en toutes lettres", async ({ page }) => {
+    await planningVide(page);
+    await signInAs(page, fp(JOEL), { ...ANNUAIRE, ...LISTE }, "/setlists/sl-priv");
+    await expect(page.getByText("Vous pouvez modifier")).toBeVisible();
+    await expect(page.getByText("Privée — visible et modifiable par son créateur et son équipe")).toBeVisible();
+    await menu(page).click();
+    await expect(page.getByRole("menuitem", { name: "Prévenir l'équipe" })).toBeVisible();
+    await expect(page.getByRole("menuitem", { name: "Supprimer" })).toHaveCount(0);
+  });
+
+  test("publique avec équipe : « Modifiable par : créateur, son équipe, … » ; Léa supprime", async ({ page }) => {
+    await planningVide(page);
+    await signInAs(page, fp(LEA), { ...ANNUAIRE, ...LISTE }, "/setlists/sl-pub");
+    await expect(page.getByText("Modifiable par : créateur, son équipe, musiciens et présidence de Culte Francophone, et admins")).toBeVisible();
+    await menu(page).click();
+    await expect(page.getByRole("menuitem", { name: "Supprimer" })).toBeVisible();
+  });
+
+  test("sans équipe, les textes d'avant restent", async ({ page }) => {
+    await planningVide(page);
+    await signInAs(page, fp(LEA), { ...ANNUAIRE, "setlists/sl-x": DOC({ isPrivate: true }) }, "/setlists/sl-x");
+    await expect(page.getByText("Privée — visible et modifiable uniquement par son créateur")).toBeVisible();
+  });
+
+  test("« Partager » une privée avec équipe copie le lien et le dit", async ({ page }) => {
+    await planningVide(page);
+    await page.addInitScript(() => Object.defineProperty(navigator, "share", { value: undefined, configurable: true }));
+    await signInAs(page, fp(LEA), { ...ANNUAIRE, ...LISTE }, "/setlists/sl-priv");
+    await menu(page).click();
+    await page.getByRole("menuitem", { name: "Partager" }).click();
+    await expect(page.getByText("Setlist privée — seule son équipe pourra l'ouvrir")).toBeVisible();
+    expect(await page.evaluate(() => navigator.clipboard.readText())).toContain("/setlists/sl-priv");
+  });
+
+  test("« Partager » une privée sans équipe refuse, comme avant", async ({ page }) => {
+    await planningVide(page);
+    await signInAs(page, fp(LEA), { ...ANNUAIRE, "setlists/sl-x": DOC({ isPrivate: true }) }, "/setlists/sl-x");
+    await menu(page).click();
+    await page.getByRole("menuitem", { name: "Partager" }).click();
+    await expect(page.getByText("Setlist privée — visible uniquement par toi")).toBeVisible();
+  });
+});
+
+test("Dupliquer ne recopie pas l'équipe (PS15)", () => {
+  const src = lire("src/lib/firebase/setlists.ts");
+  const dup = src.slice(src.indexOf("export async function duplicateSetlist"));
+  expect(dup.slice(0, dup.indexOf("\n}\n"))).not.toMatch(/editeurs|rolesPartage/);
 });
