@@ -135,14 +135,14 @@ export function verifierChangements(
   chs: readonly ChangementAnnonce[],
   dimancheEnCours: string,
   trimestre: { annee: number; tri: string },
-  colonnes?: ReadonlySet<string>,
+  colonnes: ReadonlySet<string>,
 ): { ok: true } | { ok: false; raison: string } {
   if (!chs.length) return { ok: false, raison: "aucun changement" }
   // Un trimestre jamais annoncé (brouillon, ou pas encore amorcé) n'a rien à prévenir (PG34).
   if (!etat) return { ok: false, raison: "pas d'état annoncé" }
   for (const c of chs) {
     // Une colonne de la grille, hors lecture seule (modifiePar, etc.) : sinon n'importe quel champ du document passerait.
-    if (colonnes && !colonnes.has(c.cle)) return { ok: false, raison: "colonne hors grille" }
+    if (!colonnes.has(c.cle)) return { ok: false, raison: "colonne hors grille" }
     if (!/^\d{4}-\d{2}-\d{2}$/.test(c.date) || getAnnee(c.date) !== trimestre.annee || getTri(c.date) !== trimestre.tri) return { ok: false, raison: "hors du trimestre" }
     if (c.date < dimancheEnCours) return { ok: false, raison: "dimanche passé" }
     if ((etat?.cases[cleDeCase(c.date, c.cle)] ?? "") !== c.avant) return { ok: false, raison: "avant différent de l'état annoncé" }

@@ -381,7 +381,7 @@ export function PlanningGrille({
   async function enregistrer(l: LigneGrille, c: ColonneGrille, apres: string) {
     const date = l.row[0]
     const avant = valeur(date, c, l.row)
-    if (avant === apres) return
+    if (avant === apres || enCoursRef.current) return
     const cle = `${date}|${c.cle}`
     setModifs((m) => ({ ...m, [cle]: apres }))
     setRefus("")
@@ -956,7 +956,7 @@ export function PlanningGrille({
       </div>
 
       {/* ── Une carte par dimanche (téléphone) ── */}
-      <div className="sm:hidden space-y-2.5">
+      <div inert={enCours ? true : undefined} data-cartes-en-cours={enCours || undefined} className="sm:hidden space-y-2.5">
         {affichees.length === 0 && (
           <p className="px-4 py-8 text-center text-sm text-muted-foreground border border-dashed border-border rounded-xl">
             {vide ?? t("planning.grille.aVenir")}

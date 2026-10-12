@@ -159,6 +159,7 @@ test("planCollage : une cellule de plus de 200 caractères est refusée et compt
 
 // ─── PG-E : prévenir des changements (PG33 à PG47) ──────────────────────────
 
+const TOUT = new Set(["presidence", "musiciens", "orateur", "theme", "percussion"]);
 const ETAT = {
   cases: { "2026-11-15|presidence": "Ruth K.", "2026-11-22|musiciens": "Hugo L.", "2026-11-22|orateur": "Joël F.", "2026-11-29|theme": "Ancien thème", "2026-11-08|presidence": "Ruth K." },
 };
@@ -233,21 +234,20 @@ test("verifierChangements : avant, après, date et trimestre doivent correspondr
   const dimanches = { "2026-11-15": { presidence: "Anaïs P." }, "2026-11-22": { orateur: "" } };
   const bon = { date: "2026-11-15", cle: "presidence", avant: "Ruth K.", apres: "Anaïs P." };
   const T = { annee: 2026, tri: "T4" };
-  expect(verifierChangements(ETAT, dimanches, [bon], "2026-11-15", T)).toEqual({ ok: true });
-  expect(verifierChangements(ETAT, dimanches, [{ ...bon, avant: "Autre" }], "2026-11-15", T).ok).toBe(false);
-  expect(verifierChangements(ETAT, dimanches, [{ ...bon, apres: "Autre" }], "2026-11-15", T).ok).toBe(false);
-  expect(verifierChangements(ETAT, dimanches, [{ date: "2026-11-08", cle: "presidence", avant: "Ruth K.", apres: "" }], "2026-11-15", T).ok).toBe(false);
-  expect(verifierChangements(ETAT, dimanches, [{ date: "2027-01-03", cle: "presidence", avant: "", apres: "" }], "2026-11-15", T).ok).toBe(false);
-  expect(verifierChangements(ETAT, dimanches, [], "2026-11-15", T).ok).toBe(false);
+  expect(verifierChangements(ETAT, dimanches, [bon], "2026-11-15", T, TOUT)).toEqual({ ok: true });
+  expect(verifierChangements(ETAT, dimanches, [{ ...bon, avant: "Autre" }], "2026-11-15", T, TOUT).ok).toBe(false);
+  expect(verifierChangements(ETAT, dimanches, [{ ...bon, apres: "Autre" }], "2026-11-15", T, TOUT).ok).toBe(false);
+  expect(verifierChangements(ETAT, dimanches, [{ date: "2026-11-08", cle: "presidence", avant: "Ruth K.", apres: "" }], "2026-11-15", T, TOUT).ok).toBe(false);
+  expect(verifierChangements(ETAT, dimanches, [{ date: "2027-01-03", cle: "presidence", avant: "", apres: "" }], "2026-11-15", T, TOUT).ok).toBe(false);
+  expect(verifierChangements(ETAT, dimanches, [], "2026-11-15", T, TOUT).ok).toBe(false);
   // REVUE : seule une colonne de la grille, hors lecture seule, peut changer (pas modifiePar, pas un champ inconnu).
   const colonnes = new Set(["presidence", "orateur"]);
   const intrus = { date: "2026-11-15", cle: "modifiePar", avant: "", apres: "x" };
   const dim2 = { "2026-11-15": { presidence: "Anaïs P.", modifiePar: "x" } };
-  expect(verifierChangements({ cases: {} } as never, dim2, [intrus], "2026-11-15", T).ok).toBe(true);
   expect(verifierChangements({ cases: {} } as never, dim2, [intrus], "2026-11-15", T, colonnes)).toEqual({ ok: false, raison: "colonne hors grille" });
   expect(verifierChangements(ETAT, dimanches, [bon], "2026-11-15", T, colonnes)).toEqual({ ok: true });
   // Un vidage : « après » absent du document = vide.
-  expect(verifierChangements(ETAT, dimanches, [{ date: "2026-11-22", cle: "orateur", avant: "Joël F.", apres: "" }], "2026-11-15", T)).toEqual({ ok: true });
+  expect(verifierChangements(ETAT, dimanches, [{ date: "2026-11-22", cle: "orateur", avant: "Joël F.", apres: "" }], "2026-11-15", T, TOUT)).toEqual({ ok: true });
 });
 
 test("etatApres : l'état annoncé reprend les valeurs « après » ; une case vidée disparaît", () => {
@@ -297,10 +297,10 @@ test("changementPlanningMessage : la place de chacun après le changement, ou «
 test("verifierChangements : refuse sans état annoncé (brouillon) et pour une case jamais écrite dans le document", () => {
   const T = { annee: 2026, tri: "T4" };
   const ch = { date: "2026-11-15", cle: "presidence", avant: "", apres: "" };
-  expect(verifierChangements(null, {}, [{ ...ch, avant: "", apres: "Anaïs P." }], "2026-11-15", T).ok).toBe(false);
-  expect(verifierChangements(undefined, { "2026-11-15": { presidence: "Anaïs P." } }, [{ ...ch, apres: "Anaïs P." }], "2026-11-15", T).ok).toBe(false);
+  expect(verifierChangements(null, {}, [{ ...ch, avant: "", apres: "Anaïs P." }], "2026-11-15", T, TOUT).ok).toBe(false);
+  expect(verifierChangements(undefined, { "2026-11-15": { presidence: "Anaïs P." } }, [{ ...ch, apres: "Anaïs P." }], "2026-11-15", T, TOUT).ok).toBe(false);
   // Un « avant » forgé sur une case que le document ne porte pas : refusé.
-  expect(verifierChangements({ cases: { "2026-11-15|presidence": "Nom X" } }, { "2026-11-15": {} }, [{ ...ch, avant: "Nom X", apres: "" }], "2026-11-15", T).ok).toBe(false);
+  expect(verifierChangements({ cases: { "2026-11-15|presidence": "Nom X" } }, { "2026-11-15": {} }, [{ ...ch, avant: "Nom X", apres: "" }], "2026-11-15", T, TOUT).ok).toBe(false);
 });
 
 test("borne : les valeurs longues sont tronquées de la même façon des deux côtés, jamais rejetées", () => {
@@ -310,7 +310,7 @@ test("borne : les valeurs longues sont tronquées de la même façon des deux c�
   expect(cases["2026-11-15|theme"]).toHaveLength(200);
   const T = { annee: 2026, tri: "T4" };
   const etat = { cases: { "2026-11-29|theme": "a" } };
-  expect(verifierChangements(etat, { "2026-11-29": { theme: long } }, [{ date: "2026-11-29", cle: "theme", avant: "a", apres: borne(long) }], "2026-11-15", T)).toEqual({ ok: true });
+  expect(verifierChangements(etat, { "2026-11-29": { theme: long } }, [{ date: "2026-11-29", cle: "theme", avant: "a", apres: borne(long) }], "2026-11-15", T, TOUT)).toEqual({ ok: true });
 });
 
 test("verifierReference : dates du trimestre seulement, valeurs égales au document quand il les porte", () => {

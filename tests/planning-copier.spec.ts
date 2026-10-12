@@ -350,3 +350,21 @@ test("ordinateur — REVUE : pendant l'écriture la grille est inerte (ni pastil
   await expect(page.getByTestId("banniere-geste")).toContainText("8 cases copiées")
   await expect(page.locator("[data-en-cours]")).toHaveCount(0)
 })
+
+test("telephone — REVUE : pendant l'écriture les cartes sont inertes (⋯ Copier, cases)", async ({ page }) => {
+  test.skip(test.info().project.name !== "telephone", "cartes : téléphone")
+  const db = await ouvrirCulte2027(page)
+  let liberer: () => void = () => {}
+  const retenue = new Promise<void>((ok) => { liberer = ok })
+  await page.route(/firestore\.googleapis\.com.*dimanches/, async (route) => {
+    if (route.request().method() === "PATCH") await retenue
+    await route.fallback()
+  })
+  await ligne(page, "2027-01-24").getByRole("button", { name: "Plus d'actions" }).click()
+  await page.getByRole("menuitem", { name: /Copier le dimanche précédent/ }).click()
+  await expect(page.locator("[data-cartes-en-cours]")).toHaveAttribute("inert", /.*/)
+  liberer()
+  await expect(page.getByTestId("banniere-geste")).toContainText("8 cases copiées")
+  await expect(page.locator("[data-cartes-en-cours]")).toHaveCount(0)
+  void db
+})
