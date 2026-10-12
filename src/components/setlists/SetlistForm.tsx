@@ -15,7 +15,7 @@ import {
 import { useProfile } from "@/lib/firebase/users";
 import { creatableCategories, isAdminUser, canDeleteSetlist, canSetSetlistTeam } from "@/lib/access";
 import type { FSSetlist } from "@/lib/firebase/setlists";
-import type { RolePartage } from "@/lib/setlist/partage";
+import { notifierSetlistPrete, type RolePartage } from "@/lib/setlist/partage";
 import { loadPlanningData, setlistSeances, normalizeName, type PlanningData, type SetlistSeance } from "@/lib/planning/names";
 import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
@@ -288,9 +288,9 @@ export function SetlistForm({ mode, setlistId, songs, initial, prefill }: Setlis
   // Dernier état, lu par les minuteries et en quittant la page. L'objet
   // lui-même est envoyé (et non son JSON) : un `moment` retiré doit partir à
   // null pour effacer l'ancien.
-  const latestRef = useRef({ json: payloadJson, valid: !invalidReason, payload });
+  const latestRef = useRef({ json: payloadJson, valid: !invalidReason, payload, editeurs });
   useEffect(() => {
-    latestRef.current = { json: payloadJson, valid: !invalidReason, payload };
+    latestRef.current = { json: payloadJson, valid: !invalidReason, payload, editeurs };
   });
 
   // Création : le brouillon part au premier changement (un chant, un champ),
@@ -415,7 +415,8 @@ export function SetlistForm({ mode, setlistId, songs, initial, prefill }: Setlis
     return () => {
       window.removeEventListener("beforeunload", warn);
       void saveEdit().then(() => {
-        if (savedOnceRef.current && setlistId && !JSON.parse(savedJsonRef.current).isPrivate) {
+        if (savedOnceRef.current && setlistId &&
+          notifierSetlistPrete({ isPrivate: JSON.parse(savedJsonRef.current).isPrivate, editeurs: latestRef.current.editeurs })) {
           void notifySetlistReady(setlistId);
         }
       });
@@ -514,9 +515,9 @@ export function SetlistForm({ mode, setlistId, songs, initial, prefill }: Setlis
       const author = historyAuthor(profile);
       if (author) await recordCreation(savedId, author);
       // Prévient automatiquement l'équipe si la setlist est prête (≥ 4 chants),
-      // une seule fois. Ne bloque pas la navigation. Jamais pour une setlist
-      // privée (brouillon personnel → ne doit pas notifier l'équipe planifiée).
-      if (!isPrivate) void notifySetlistReady(savedId);
+      // une seule fois. Ne bloque pas la navigation. Une setlist privée ne prévient
+      // que son équipe choisie (PS13), jamais l'équipe du planning.
+      if (notifierSetlistPrete({ isPrivate, editeurs })) void notifySetlistReady(savedId);
       router.push(`/setlists/${savedId}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : t("setlists.form.errorDefault"));

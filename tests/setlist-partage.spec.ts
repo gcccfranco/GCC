@@ -6,6 +6,7 @@ import {
 } from "../src/lib/access";
 import {
   estDansLePartage, candidatsDeLEquipe, roleParDefaut, nomCourt, equipeDeLaSetlist, aPrevenir,
+  peutPrevenirEquipe, notifierSetlistPrete, horodatageEnvoi,
 } from "../src/lib/setlist/partage";
 import type { FSSetlist } from "../src/lib/firebase/setlists";
 import type { UserProfile } from "../src/types/user";
@@ -106,6 +107,53 @@ test.describe("partage : fonctions pures", () => {
     // auto : déjà prévenus exclus, ajout tardif prévenu, planning déjà fait ignoré
     expect(aPrevenir(setlist({ editeurs: ["e1", "e2"] }), { ...base, auto: true, prevenus: ["e1"], planningDejaPrevenu: true })).toEqual(["e2"]);
     expect(aPrevenir(setlist({ editeurs: ["e1"] }), { ...base, auto: true, prevenus: ["e1"], planningDejaPrevenu: true })).toEqual([]);
+  });
+
+  test("qui peut déclencher « Setlist prête » (PS13)", () => {
+    const sl = (o: Partial<FSSetlist>) => setlist(o);
+    const nul = { estAdmin: false, estExecutant: false };
+    // publique : propriétaire, équipe, admin, exécutant de la catégorie
+    expect(peutPrevenirEquipe(sl({}), { uid: "lea", ...nul })).toBe(true);
+    expect(peutPrevenirEquipe(sl({ editeurs: ["joel"] }), { uid: "joel", ...nul })).toBe(true);
+    expect(peutPrevenirEquipe(sl({}), { uid: "x", ...nul, estAdmin: true })).toBe(true);
+    expect(peutPrevenirEquipe(sl({}), { uid: "mus", ...nul, estExecutant: true })).toBe(true);
+    expect(peutPrevenirEquipe(sl({}), { uid: "x", ...nul })).toBe(false);
+    // privée avec équipe : le propriétaire et l'équipe seulement
+    expect(peutPrevenirEquipe(sl({ isPrivate: true, editeurs: ["joel"] }), { uid: "joel", ...nul })).toBe(true);
+    expect(peutPrevenirEquipe(sl({ isPrivate: true, editeurs: ["joel"] }), { uid: "lea", ...nul })).toBe(true);
+    expect(peutPrevenirEquipe(sl({ isPrivate: true, editeurs: ["joel"] }), { uid: "mus", ...nul, estExecutant: true })).toBe(false);
+    expect(peutPrevenirEquipe(sl({ isPrivate: true, editeurs: ["joel"] }), { uid: "admin", ...nul, estAdmin: true })).toBe(false);
+  });
+
+  test("quand l'éditeur appelle la route (PS13)", () => {
+    expect(notifierSetlistPrete(setlist({}))).toBe(true);
+    expect(notifierSetlistPrete(setlist({ editeurs: ["joel"] }))).toBe(true);
+    expect(notifierSetlistPrete(setlist({ isPrivate: true }))).toBe(false);
+    expect(notifierSetlistPrete(setlist({ isPrivate: true, editeurs: [] }))).toBe(false);
+    expect(notifierSetlistPrete(setlist({ isPrivate: true, editeurs: ["joel"] }))).toBe(true);
+  });
+
+  test("le délai de 24 h du bouton manuel ne repart pas d'un envoi auto à l'équipe seule", () => {
+    expect(horodatageEnvoi({ auto: true, planningTouche: 0, maintenant: 500 })).toBeUndefined();
+    expect(horodatageEnvoi({ auto: true, planningTouche: 2, maintenant: 500 })).toBe(500);
+    expect(horodatageEnvoi({ auto: false, planningTouche: 0, maintenant: 500 })).toBe(500);
+    expect(horodatageEnvoi({ auto: false, planningTouche: 3, maintenant: 500 })).toBe(500);
+  });
+
+  test("la route lit l'équipe dans le document et garde la trace des prévenus (texte)", () => {
+    const route = lire("src/app/api/push/notify-setlist/route.ts");
+    expect(route).toContain("aPrevenir(");
+    expect(route).toContain("peutPrevenirEquipe(");
+    expect(route).toContain("partagePrevenus");
+    expect(route).toContain("arrayUnion");
+    expect(route).toContain("editeurs?: string[]");
+    expect(route).toContain("horodatageEnvoi(");
+    // jamais lu dans la requête : la déstructuration du corps sans `editeurs`, et chaque accès `.editeurs` sur le document `sl`
+    const corps = route.match(/const \{([^}]*)\} = \(await req\.json/);
+    expect(corps).not.toBeNull();
+    expect(corps![1]).not.toContain("editeurs");
+    expect(route).not.toMatch(/\b(?:body|data|payload|req)\.editeurs/);
+    for (const m of route.matchAll(/(\w+)\??\.editeurs/g)) expect(m[1]).toBe("sl");
   });
 });
 
@@ -262,6 +310,57 @@ test.describe("partage : l'éditeur", () => {
     // L'historique s'écrit sous son nom.
     const histo = db.list(`${CHEMIN}/history`).map((p) => db.doc(p));
     expect(histo.some((h) => h?.authorUid === "joel" && h?.authorName === "Joël F.")).toBe(true);
+  });
+
+  test("« Setlist prête » : une privée avec équipe prévient en quittant l'éditeur, une privée seule non (PS13)", async ({ page }) => {
+    await planningVide(page);
+    const appels: string[] = [];
+    await page.route("**/api/push/notify-setlist", (route) => {
+      appels.push(route.request().postData() ?? "");
+      return route.fulfill({ status: 200, contentType: "application/json", body: '{"ok":true}' });
+    });
+    const db = await signInAs(page, fp(JOEL), {
+      ...ANNUAIRE,
+      [CHEMIN]: DOC({ isPrivate: true, editeurs: ["joel"], rolesPartage: { joel: "musicien" } }),
+      "setlists/sl-seule": DOC({ isPrivate: true, ownerId: "joel" }),
+    }, `/setlists/${ID}/edit`);
+    await attendreEditeur(page, "Abba Père");
+    await choisirTonalite(page, "Abba Père", "B");
+    await expect.poll(() => ecritures(db, CHEMIN).length, { timeout: 10_000 }).toBeGreaterThan(0);
+    await page.evaluate(() => history.back());
+    await expect.poll(() => appels.length).toBe(1);
+    expect(appels[0]).toContain(ID);
+    // Privée sans équipe (celle de Joël) : aucun appel.
+    await page.goto("/setlists/sl-seule/edit");
+    await attendreEditeur(page, "Abba Père");
+    await choisirTonalite(page, "Abba Père", "B");
+    await expect.poll(() => ecritures(db, "setlists/sl-seule").length, { timeout: 10_000 }).toBeGreaterThan(0);
+    await page.evaluate(() => history.back());
+    await page.waitForTimeout(1_500);
+    expect(appels).toHaveLength(1);
+  });
+
+  test("« Setlist prête » : « Publier » une privée avec équipe appelle la route (PS13)", async ({ page }) => {
+    await planningVide(page);
+    const appels: string[] = [];
+    await page.route("**/api/push/notify-setlist", (route) => {
+      appels.push(route.request().postData() ?? "");
+      return route.fulfill({ status: 200, contentType: "application/json", body: '{"ok":true}' });
+    });
+    await signInAs(page, fp(LEA), ANNUAIRE, "/setlists/new?autre=1");
+    await page.getByLabel("Titre").fill("Soirée privée");
+    await page.getByLabel("Catégorie").selectOption("Culte Francophone");
+    await champPresidence(page).selectOption("__other__");
+    await page.getByPlaceholder("ex. Timothée").fill("Présidence A");
+    await ajouterChant(page, "Abba Père");
+    await page.getByLabel("Visibilité").selectOption("privee");
+    await puceEquipe(page).click();
+    await volet(page).getByRole("button", { name: "Ajouter quelqu'un" }).click();
+    await volet(page).getByRole("button", { name: "Voir tous les comptes" }).click();
+    await volet(page).getByRole("button", { name: "Joël F.", exact: true }).click();
+    await fermerFeuille(page);
+    await page.getByRole("button", { name: "Publier" }).click();
+    await expect.poll(() => appels.length, { timeout: 10_000 }).toBe(1);
   });
 
   test("un musicien de la catégorie, hors équipe", async ({ page }) => {

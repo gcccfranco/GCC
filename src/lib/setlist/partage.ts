@@ -82,3 +82,23 @@ export function aPrevenir(
   const planning = setlist.isPrivate || (o.auto && o.planningDejaPrevenu) ? [] : o.planning;
   return [...new Set([...planning, ...equipe])];
 }
+
+/** L'éditeur appelle la route « Setlist prête » : une setlist non privée, ou privée avec une équipe (PS13). */
+export const notifierSetlistPrete = (setlist: Pick<FSSetlist, "isPrivate" | "editeurs">): boolean =>
+  !setlist.isPrivate || !!setlist.editeurs?.length;
+
+/** Qui déclenche l'envoi (PS13) : son propriétaire et son équipe ; sur une publique, aussi un admin
+ *  ou un exécutant de la catégorie. Une privée avec équipe n'ouvre pas l'envoi aux autres. */
+export function peutPrevenirEquipe(
+  setlist: Pick<FSSetlist, "ownerId" | "isPrivate" | "editeurs">,
+  o: { uid: string; estAdmin: boolean; estExecutant: boolean },
+): boolean {
+  if (setlist.ownerId === o.uid || estDansLePartage(setlist, o.uid)) return true;
+  return !setlist.isPrivate && (o.estAdmin || o.estExecutant);
+}
+
+/** Valeur de `lastSentAt` à écrire après un envoi, ou `undefined` pour garder l'ancienne. Un envoi
+ *  automatique à l'équipe seule ne doit pas relancer le délai de 24 h du bouton manuel : le planning
+ *  n'a pas été prévenu. */
+export const horodatageEnvoi = (o: { auto: boolean; planningTouche: number; maintenant: number }): number | undefined =>
+  !o.auto || o.planningTouche > 0 ? o.maintenant : undefined;

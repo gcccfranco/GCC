@@ -4,7 +4,9 @@ import { sendPushToUids } from "@/lib/push/send";
 import { loadPlanningNameIndex, resolveNamesToUids, filterUidsByNotifPref, loadNotifLangs } from "@/lib/push/recipients";
 import { setlistReadyMessage } from "@/lib/push/messages";
 import { loadPlanningData, servantsForDate, normalizeName } from "@/lib/planning/names";
+import { FieldValue } from "firebase-admin/firestore";
 import { isAdminEmail, categoryLevel } from "@/lib/access";
+import { aPrevenir, horodatageEnvoi, peutPrevenirEquipe } from "@/lib/setlist/partage";
 import type { ServiceRole } from "@/types/user";
 
 export const runtime = "nodejs";
@@ -59,6 +61,7 @@ export async function POST(req: NextRequest) {
     moment?: "matin" | "soir";
     ownerId?: string;
     isPrivate?: boolean;
+    editeurs?: string[];
     items?: { type?: string }[];
   };
 
@@ -66,8 +69,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Catégorie de setlist manquante" }, { status: 400 });
   }
 
-  // Une setlist privée (brouillon personnel) ne notifie jamais l'équipe planifiée.
-  if (sl.isPrivate) {
+  // Une setlist privée ne notifie jamais l'équipe du planning ; avec une équipe
+  // choisie (`editeurs`, lue ici dans le document), elle prévient cette équipe seule.
+  const equipeChoisie = sl.editeurs ?? [];
+  if (sl.isPrivate && equipeChoisie.length === 0) {
     if (auto) return NextResponse.json({ ok: true, skipped: "private" });
     return NextResponse.json({ error: "Cette setlist est privée." }, { status: 400 });
   }
@@ -83,11 +88,12 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // 4. Autorisation : propriétaire, admin, ou exécutant du Culte Franco
+  // 4. Autorisation : propriétaire, équipe de la setlist ; sur une non privée, aussi
+  //    admin ou exécutant de la catégorie.
   const isAdmin = isAdminEmail(email);
   const isOwner = sl.ownerId === uid;
   let isPerformer = false;
-  if (!isAdmin && !isOwner) {
+  if (!sl.isPrivate && !isAdmin && !isOwner && !equipeChoisie.includes(uid)) {
     const me = (await db.collection("users").doc(uid).get()).data() as
       | { serviceRoles?: Record<string, ServiceRole[]> }
       | undefined;
@@ -96,7 +102,7 @@ export async function POST(req: NextRequest) {
     // Exécutant = niveau create/edit sur la catégorie (la régie seule en lecture est exclue).
     isPerformer = !!rolesAtCat && categoryLevel(sl.category, rolesAtCat) !== "view";
   }
-  if (!isAdmin && !isOwner && !isPerformer) {
+  if (!peutPrevenirEquipe({ ownerId: sl.ownerId, isPrivate: sl.isPrivate, editeurs: equipeChoisie }, { uid, estAdmin: isAdmin, estExecutant: isPerformer })) {
     return NextResponse.json({ error: "Action non autorisée" }, { status: 403 });
   }
 
@@ -105,9 +111,14 @@ export async function POST(req: NextRequest) {
   const logSnap = await logRef.get();
   const lastSentAt = logSnap.exists ? (logSnap.data()?.lastSentAt as number | undefined) : undefined;
   const lastRecipients = logSnap.exists ? (logSnap.data()?.recipients as number | undefined) : undefined;
+  const prevenus = logSnap.exists ? ((logSnap.data()?.partagePrevenus as string[] | undefined) ?? []) : [];
+  const planningDejaPrevenu = !!lastSentAt && (lastRecipients ?? 0) > 0;
   if (auto) {
-    // Auto : une seule fois, dès lors que l'équipe a déjà été touchée.
-    if (lastSentAt && (lastRecipients ?? 0) > 0) {
+    // Auto : le planning une seule fois, dès qu'il a été touché ; chaque personne de
+    // l'équipe choisie une seule fois. Rien de nouveau : déjà envoyé.
+    const planningFait = !!sl.isPrivate || planningDejaPrevenu;
+    const equipeNouvelle = aPrevenir({ isPrivate: true, editeurs: equipeChoisie }, { planning: [], prevenus, planningDejaPrevenu, auto: true });
+    if (planningFait && equipeNouvelle.length === 0) {
       return NextResponse.json({ ok: true, skipped: "already-sent" });
     }
   } else if (lastSentAt && Date.now() - lastSentAt < RESEND_COOLDOWN_MS) {
@@ -124,7 +135,7 @@ export async function POST(req: NextRequest) {
   const dateISO = (sl.date ?? "").slice(0, 10);
   const planning = await loadPlanningData();
   const wantLeader = normalizeName(sl.leader ?? "");
-  const team = servantsForDate(planning, dateISO).filter(
+  const team = sl.isPrivate ? [] : servantsForDate(planning, dateISO).filter(
     (s) =>
       s.category === sl.category &&
       !!s.serviceRole &&
@@ -138,7 +149,11 @@ export async function POST(req: NextRequest) {
   if (unresolved.length) {
     console.warn(`[notify-setlist] noms non appariés (${dateISO}):`, unresolved);
   }
-  const prefUids = await filterUidsByNotifPref(uids, "setlists");
+  const destinataires = aPrevenir(
+    { isPrivate: sl.isPrivate, editeurs: equipeChoisie },
+    { planning: uids, prevenus, planningDejaPrevenu, auto: !!auto },
+  );
+  const prefUids = await filterUidsByNotifPref(destinataires, "setlists");
 
   // 7. Envoi, une fournée par langue (lot 8) : chacun lit le message dans la
   // sienne. Resté en français seul jusqu'au 19/09/2026.
@@ -160,8 +175,17 @@ export async function POST(req: NextRequest) {
   // En auto sans destinataire joignable, on ne mémorise rien : la prochaine
   // sauvegarde réessaiera et le bouton manuel reste utilisable.
   if (!auto || result.recipients > 0) {
+    // `recipients` ne compte que le planning ; l'équipe choisie a sa liste d'uids prévenus.
+    const planningTouche = prefUids.filter((u) => uids.includes(u)).length;
+    const equipePrevenue = equipeChoisie.filter((u) => prefUids.includes(u));
+    const envoyeLe = horodatageEnvoi({ auto: !!auto, planningTouche, maintenant: Date.now() });
     await logRef.set(
-      { lastSentAt: Date.now(), setlistId, recipients: result.recipients },
+      {
+        ...(envoyeLe !== undefined ? { lastSentAt: envoyeLe } : {}),
+        setlistId,
+        ...(planningTouche > 0 || lastRecipients === undefined ? { recipients: planningTouche } : {}),
+        ...(equipePrevenue.length ? { partagePrevenus: FieldValue.arrayUnion(...equipePrevenue) } : {}),
+      },
       { merge: true }
     );
   }
