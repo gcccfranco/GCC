@@ -126,7 +126,7 @@ Verdicts : accepté (proposition gardée), corrigé (valeur posée à la main), 
 | 我的家要荣耀主 | 211 | 211 | accepté | titre coupé ; titre anglais, verset, ♩ et crédits gardés (même bande que 1=D) |
 | 我的救赎者活着 | 235 | 235 | accepté | titre coupé ; titre anglais, verset, ♩ et crédits gardés (même bande que 1=A) |
 | 我的生命献给你 | 115 | 115 | accepté | tempo et titre coupés ; album, crédits gardés avec 1=A |
-| 我相信 | 13 | 13 | sans coupe propre | encre continue (titre, 速度, album, versets, crédits) jusqu'au « 4/4 » ; marge blanche du haut seule |
+| 我相信 | 13 | 171 | corrigé (vérification Opus) | la règle ne voyait aucune rangée blanche ; à 171 la coupe est sans contact visible (seuls des pixels de halo 227–243) : titre, album, versets et crédits coupés, « 1= F 4/4 » entier |
 | 我神我王 | 140 | 140 | accepté | titre, album « KUA Originals » coupés ; versets et crédit 2 lignes gardés avec 1=D |
 | 我能给你什么 | 127 | 127 | accepté | titre, album coupés ; versets, crédits gardés avec 1=F |
 | 我要全心赞美 | 239 | 239 | accepté | titre coupé ; titre anglais, versets, ♩ et crédits gardés |
@@ -140,7 +140,7 @@ Verdicts : accepté (proposition gardée), corrigé (valeur posée à la main), 
 | 把冷漠变成爱 | 127 | 127 | accepté | titre, album coupés ; crédits gardés avec 1=D |
 | 拣选 | 176 | 176 | accepté | titre, album, versets coupés ; crédit 词曲 gardé avec 1=F |
 | 握住幸福 | 14 | 14 | sans coupe propre | titre, album, 前奏 et 1=G sur une encre continue ; marge blanche du haut seule |
-| 握手 | 86 | 86 | accepté | titre coupé ; album gardé (son bas et le haut du « 4/4 » se recouvrent de 3 px), pas de coupe propre |
+| 握手 | 86 | 120 | corrigé (vérification Opus) | à 120 la coupe est sans contact visible (seuls des pixels de halo 227–243) : titre et album coupés, « 1= D 4/4 » entier |
 | 敬拜的心 | 131 | 131 | accepté | titre, album coupés ; crédit gardé avec 1=F |
 | 新造的人 | 98 | 98 | accepté | titre coupé ; album et crédits (chevauchent le « 4/4 ») gardés, pas de coupe propre |
 | 无价至宝 | 2 | 2 | sans coupe propre | encre continue (速度, titre, album, crédits, 1=♭B) ; marge blanche du haut seule |

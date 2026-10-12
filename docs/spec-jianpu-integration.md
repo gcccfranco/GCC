@@ -870,6 +870,9 @@ rappel faux sur deux chants au même `section.uid` (C5).
   无价至宝 `2`, 有一位神 `12`, 永活盼望 `13`. Cas notables : 我要爱慕你, 握手, 新造的人, 是耶稣的名, 有你同行 gardent album ou crédits
   (recouvrement de 2 à 3 px avec le haut du « 4/4 », aucune coupe sans contact) ; 我已得自由, 我的家要荣耀主, 我的救赎者活着, 日日夜夜,
   最美的礼物, 求主充满我, 我要全心赞美, 我要顺服 gardent le titre anglais (même bande que « 1=X »). Total certifié : 143 / 189.
+  Vérifié par Opus (12/10/2026) : 19 pages regardées (les 7 corrigées ou sans coupe propre, 5 cas notables, 7 acceptées tirées
+  au hasard) ; 17 justes ; 我相信 13 → 171 et 握手 86 → 120 (une coupe sans contact existait : seuls des pixels de halo 227–243
+  la touchent, ignorés par le barème) ; planches regardées après correction.
 
 - **L3-T1e, 12/10/2026 — recadrage : 46 pages certifiées à l'œil, dernier lot** (registre : `docs/chantier-jianpu/cadrage-certification.md`).
   **34 acceptées, 8 corrigées, 4 sans coupe propre.** Total certifié : **189 / 189, 0 restant** (`cadrage.py etat`).
