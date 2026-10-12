@@ -850,4 +850,13 @@ rappel faux sur deux chants au même `section.uid` (C5).
   sous la ligne alors qu'une coupe propre existait, ou rognait 1 px du « 4/4 ») ; 为爱而生 `0` (le repli tranchait les crédits,
   aucune bande blanche), 你们要赞美耶和华 `12`, 你的爱不离不弃 `14`, 全然向你 `4` (en-tête entier). Total certifié : 50 / 189.
 
+- **L3-T1c, 12/10/2026 — recadrage : 47 pages certifiées à l'œil** (registre : `docs/chantier-jianpu/cadrage-certification.md`).
+  **38 acceptées, 6 corrigées, 3 sans coupe propre.** Corrigées : 哦十字架 `168` (filigrane sur tout l'en-tête, la proposition
+  tombait dans la marge ; coupe dans le vide sous le titre), 大手牵着小手 `86` (rangée d'1 px blanche sous le titre), 天国的子民
+  `107` (coupe nette sous la dernière rangée du titre, 1 px du haut des crédits perdu), 好喜欢与你在一起 `164` (le verset restait ;
+  coupe juste au-dessus du ♭ exposant), 我们成为一家人 `91` (rangée quasi blanche entre titre et album), 我们欢迎君王降临 `181`
+  (la proposition tranchait le haut du titre anglais). Sans coupe propre : 和散那 `11`, 奔跑不放弃 `13` (en-tête entier, seule la
+  marge vide est coupée), 在这里 `128` (la proposition `234` tranchait les crédits ; en-tête gardé, marge de 128 px coupée).
+  Total certifié : 97 / 189.
+
 Prochaine étape : le lot 3 (le lot 2 attend le passage complet et la vérification d'Opus).

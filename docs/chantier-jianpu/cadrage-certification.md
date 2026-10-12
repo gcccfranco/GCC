@@ -57,3 +57,55 @@ Verdicts : accepté (proposition gardée), corrigé (valeur posée à la main), 
 | 十字架的传达者 | 250 | 250 | accepté | titre coupé ; annotations grises à droite en partie gardées |
 | 十架的大能 | 125 | 125 | accepté | titre, album coupés ; ligne juste au-dessus du « 1=X 4/4 », rien tranché |
 | 十架的爱 | 243 | 243 | accepté | titre coupé ; titre anglais et crédits gardés |
+
+## Tranche L3-T1c
+
+| chant | proposé | certifié | verdict | note |
+|---|---|---|---|---|
+| 只要有你在我左右 | 69 | 69 | accepté | titre coupé ; titre anglais et crédits gardés (sur la ligne 1=G) |
+| 只需要你 | 153 | 153 | accepté | titre, titre anglais coupés ; verset et crédits chevauchent le « 4/4 », gardés |
+| 叫我抬起头的神 | 211 | 211 | accepté | titre coupé ; titre anglais, verset et crédits gardés (bande commune avec 1=E) |
+| 向主欢呼 | 100 | 100 | accepté | titre et ♩ coupés ; titre anglais et crédits gardés (bande commune avec 1=G) |
+| 向我的神献上感谢 | 150 | 150 | accepté | titre, album coupés ; verset et crédits sur la ligne 1=C gardés |
+| 君王就在这里 | 96 | 96 | accepté | titre coupé ; album, note (原曲…), verset et crédits gardés (chevauchent le « 4/4 ») |
+| 吹起复兴的火 | 157 | 157 | accepté | titre, album, ♩ coupés ; verset et crédits sur la ligne 1=C gardés |
+| 和散那 | 11 | 11 | sans coupe propre | titre, ♩, notes, album, verset et crédits sur une seule bande avec 1=F : en-tête gardé entier (11 px de marge blanche seulement) |
+| 唯有耶稣 | 208 | 208 | accepté | titre, ♩, album, verset, crédits coupés ; ligne juste au-dessus du « 1=F 4/4 », rien tranché |
+| 哦十字架 | 13 | 168 | corrigé | filigrane sur tout l'en-tête, proposition à 13 px ; coupe dans le vide entre le titre et « 1=F 4/4 » (filigrane pâle seul traversé) ; crédits et ♩ gardés |
+| 唯独依靠你 | 118 | 118 | accepté | titre, ♩ coupés ; album et crédits gardés (chevauchent le « 1=E 4/4 ») |
+| 回家 | 223 | 223 | accepté | titre coupé ; titre anglais, verset, crédits et ♩ gardés (bande commune avec 1=D) |
+| 因着十架爱 | 140 | 140 | accepté | titre, ♩, album coupés ; ligne juste au-dessus du « 1=F 4/4 », crédits gardés |
+| 围绕我 | 199 | 199 | accepté | titre, ♩, album, verset coupés ; ligne juste au-dessus du « 1=F 4/4 », crédits gardés |
+| 圣灵的江河 | 103 | 103 | accepté | titre coupé ; titre anglais, verset, ♩ et crédits gardés (bande commune avec 1=F) |
+| 在你宝座前 | 244 | 244 | accepté | titre coupé ; titre anglais, verset, ♩ et crédits gardés (bande commune avec 1=A) |
+| 在耶稣的脚前 | 244 | 244 | accepté | titre coupé ; titre anglais, verset, ♩ et crédits gardés (bande commune avec 1=D) |
+| 坐在宝座上圣洁羔羊 | 182 | 182 | accepté | titre, ♩, deux lignes d'album, crédits coupés ; verset gardé avec 1=C |
+| 复兴的火 | 124 | 124 | accepté | titre, ♩, album coupés ; crédits (sur la bande de 1=C) gardés |
+| 大声敬拜 | 126 | 126 | accepté | titre, album, 1re ligne de la note (敬拜专辑…) coupés ; 2e ligne de la note, verset et crédits gardés |
+| 在这里 | 234 | 128 | sans coupe propre | proposition (234) tranchait les crédits ; titre, 速度, album, crédits et 1=F s'enchevêtrent sans bande blanche : en-tête gardé entier, seule la marge vide du haut (130 px, un filet d'1 px) est coupée |
+| 大山为我挪开 | 143 | 143 | accepté | titre, ♩, album coupés ; note (另有一张D调), verset et crédits gardés |
+| 大手牵着小手 | 14 | 86 | corrigé | proposition dans la marge ; rangée blanche (1 px) entre le titre et album/1=D/crédits : titre coupé, le reste gardé |
+| 天国的子民 | 13 | 107 | corrigé | titre et ♩ coupés net sous la dernière rangée du titre (106) ; album et crédits gardés (1 px du haut des crédits perdu) |
+| 奇异恩典 | 143 | 143 | accepté | titre, titre anglais coupés ; notes, crédits (chevauchent 1=E) et verset gardés |
+| 奔跑不放弃 | 13 | 13 | sans coupe propre | titre, note (原曲…), album, verset, crédits, 速度 et 1=E sans aucune rangée blanche entre eux : en-tête gardé entier, seule la marge vide est coupée |
+| 好喜欢与你在一起 | 133 | 164 | corrigé | verset restait ; coupe dans la rangée quasi blanche (164) juste au-dessus du ♭ exposant de « 1=♭B 4/4 » ; note (共5张…) et crédits gardés |
+| 如果你想知道 | 177 | 177 | accepté | titre, ♩, album, verset coupés ; crédits gardés avec 1=G |
+| 如鹰展翅上腾 | 111 | 111 | accepté | titre, ♩ coupés ; album et crédits gardés (bande commune avec 1=G) |
+| 安静 | 143 | 143 | accepté | titre, titre anglais coupés ; verset, ♩ et crédits gardés |
+| 定睛在耶稣身上 | 153 | 153 | accepté | titre, ♩, album coupés ; verset et crédits gardés (bande commune avec 1=C) |
+| 宝贵十架 | 243 | 243 | accepté | titre coupé ; titre anglais, verset, ♩ et crédits gardés (bande commune avec 1=A) |
+| 将天敞开 | 241 | 241 | accepté | titre coupé ; titre anglais, verset, ♩ et crédits gardés (bande commune avec 1=C) |
+| 尽情地微笑 | 123 | 123 | accepté | titre, ♩ coupés ; album, note (共8张…) et crédits gardés (bande commune avec 1=D) |
+| 尽情的敬拜 | 139 | 139 | accepté | titre, ♩, album coupés ; ligne juste au-dessus du « 1=A 4/4 », crédits gardés |
+| 差遣我 | 129 | 129 | accepté | titre, ♩, album coupés ; ligne juste au-dessus du « 1=G 4/4 », crédits gardés |
+| 常常喜乐 | 178 | 178 | accepté | titre, ♩, album, verset, crédits coupés ; ligne juste au-dessus du « 1=G 4/4 », rien tranché |
+| 得胜的宣告 | 207 | 207 | accepté | titre, ♩, album, verset, crédits coupés ; ligne juste au-dessus du « 1=D 4/4 », note (后面依次升…) gardée |
+| 恒久恒久以前 | 151 | 151 | accepté | titre, ♩, album coupés ; note (有多张…) et crédits gardés (bande commune avec 1=B) |
+| 恩典之路 | 242 | 242 | accepté | titre coupé ; titre anglais, verset, ♩ et crédits gardés (bande commune avec 1=F) |
+| 想起你 | 139 | 139 | accepté | titre, ♩, album coupés ; crédits et note (原调Bb) gardés (bande commune avec 1=A) |
+| 愿为主闪亮 | 145 | 145 | accepté | titre, ♩, album, crédits coupés ; ligne juste au-dessus du « 1=D 4/4 », rien tranché |
+| 我们呼求 | 203 | 203 | accepté | titre coupé ; titre anglais, 2007 Hong Kong, verset, ♩ et crédits gardés (bande commune avec 1=A) |
+| 我们成为一家人 | 13 | 91 | corrigé | proposition dans la marge ; rangée quasi blanche entre le titre et l'album : titre et ♩ coupés ; album, ♭ de « 1=♭B 4/4 » et note gardés |
+| 我们是光明之子 | 187 | 187 | accepté | titre, ♩, album, verset coupés ; crédits gardés avec 1=E |
+| 我们欢迎君王降临 | 201 | 181 | corrigé | proposition tranchait le haut du titre anglais « We Long to Meet » ; coupe dans la bande blanche sous le titre : titre et tampon coupés ; titre anglais, album, verset, crédits gardés |
+| 我们爱让世界不一样 | 240 | 240 | accepté | titre coupé ; titre anglais, verset, ♩ et crédits gardés (bande commune avec 1=D) |
