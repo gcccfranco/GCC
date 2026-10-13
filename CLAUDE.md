@@ -40,8 +40,12 @@ ils ne voient pas le composant réel. Détail du protocole dans
 
 - **Trois appareils, toujours** (consigne de Timothée du 14/09/2026) : tout test
   Playwright tourne sur **ordinateur, téléphone et tablette** (un projet par
-  appareil dans `playwright.config.ts`, tous sous Chromium : WebKit écarté). Les captures regardées à l'œil aussi :
-  les trois tailles. Un test propre à un appareil le dit dans son titre.
+  appareil dans `playwright.config.ts`, tous sous Chromium : WebKit écarté). Un test propre à un appareil le dit
+  dans son titre.
+- **Quatre dispositions** (`docs/spec-navigation-grand-ecran.md`, Q1) : téléphone, tablette portrait, tablette
+  paysage (barre latérale réduite), ordinateur ; lecture plafonnée à 1 440 px. Toute modification d'interface se
+  regarde à l'œil sur les quatre, plus 1 440 px pour une page de lecture. Une spec qui teste l'agencement d'une page
+  s'ajoute à `SPECS_GRAND_ECRAN` (`playwright.config.ts`) : sans ça, elle ne tourne que sur trois appareils.
 - **Deux serveurs de test** : le second (`PW_PORT + 1`, interrupteur du back-office coupé) a son propre dossier de build `.next-coupe` — Next 16 refuse deux `next dev` dans le même dossier. Au démarrage il peut réécrire une ligne de `next-env.d.ts` (chemin des types) : **ne pas la commiter**, un `npm run dev` ordinaire la remet.
 - `tests/helpers/jianpu.ts` : ouvrir un chant, afficher sa 简谱, lire le calque.
 - La page chant lit ses paramètres d'URL en **JSON** : `?key=%22F%22`, pas `?key=F`.
