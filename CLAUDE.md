@@ -116,6 +116,10 @@ s'écrit ici, pas seulement en mémoire.
   Zones gelées sauf demande explicite : § 2 « Restent gelés » de `docs/audit-ui-apple-design.md`.
 - **Agents en parallèle** : quelques-uns à la fois (neuf d'un coup ont épuisé la limite de dépense du mois, le
   04/10/2026) ; un agent coupé se reprend par SendMessage, contexte intact.
+- **Déléguer** aux agents de `.claude/agents/` : `chercheur` (Haiku) pour une recherche qui parcourt plusieurs
+  fichiers, `testeur` (Haiku) pour lancer une suite de tests et en rapporter les échecs, `executant` (Sonnet) pour
+  appliquer une modification déjà décidée et décrite. La conversation principale garde le jugement : specs, planches,
+  débogage, relecture du diff, regard sur les captures et les 简谱.
 
 ## Comportement (guidelines Karpathy)
 
