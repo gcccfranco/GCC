@@ -47,6 +47,11 @@ ils ne voient pas le composant réel. Détail du protocole dans
 - La page chant lit ses paramètres d'URL en **JSON** : `?key=%22F%22`, pas `?key=F`.
 - Viser `localhost` et non `127.0.0.1` : `next dev` bloque ses ressources en
   cross-origin et la page arrive **non hydratée** — visible mais morte.
+- Pièges vus : le service worker charge lui-même polices, `songs-index.json` et `/api/song/*`, hors de portée de
+  `page.route` (`test.use({ serviceWorkers: "block" })` pour les substituer) ; lire `db.writes` **après** un signe à
+  l'écran (`toBeVisible`) — un test qui rougit sur un appareil différent à chaque passe est une course ; en mode
+  louange, viser la scène avec le helper `onStage` de `tests/performance-mode.spec.ts` (une copie de mesure
+  invisible double chaque bloc).
 
 ## Architecture clé
 - **Chants** : fichiers `.cho` (ChordPro) dans `content/songs/`, parsés au build → `public/songs-index.json` (utilisé côté client pour liste/recherche)
@@ -83,7 +88,9 @@ ils ne voient pas le composant réel. Détail du protocole dans
 - Toute modif des permissions doit être faite en double : `src/lib/access.ts` (client) **et** `firestore.rules` (serveur)
 
 ## Sessions cloud (claude.ai/code) — règles de Timothée (08/10/2026)
-Une session cloud n'a pas la mémoire des sessions locales : ces règles valent pour elle comme pour les autres.
+Une session cloud n'a pas la mémoire des sessions locales : ces règles valent pour elle comme pour les autres
+(complétées le 13/10/2026 avec celles qui n'étaient qu'en mémoire locale). Une nouvelle consigne durable de Timothée
+s'écrit ici, pas seulement en mémoire.
 - **Branches** : `ui/apple-design` = le travail en cours. Tout s'y fait, directement : **aucune autre branche**, pas de
   branche de lot à fusionner. `main` = le site en ligne (Vercel déploie chaque push) : n'y pousser **que sur un ordre
   explicite de Timothée, donné au moment même** (un « oui » à une autre question n'en est pas un). Une correction faite
@@ -94,11 +101,21 @@ Une session cloud n'a pas la mémoire des sessions locales : ces règles valent 
 - **Secrets** : l'environnement cloud ne contient que les variables `NEXT_PUBLIC_*` (configuration web, publique).
   Aucune lecture de la vraie base Firestore, aucune vraie notification : tout est simulé dans les tests
   (`tests/helpers/fakeSession.ts`). Une modification de `firestore.rules` se publie à la main par Timothée : le dire.
-- **Dépôt public** : aucun nom réel de membre dans les tests, fixtures, specs ou commits ; des noms fictifs.
+- **Dépôt public** : aucun nom réel de membre dans les tests, fixtures, specs ou commits ; des noms fictifs, inventés
+  pour chaque nouveau test (les lignes de planning de `src/lib/planning/data.ts`, recopiées dans d'anciens tests, sont
+  de vrais noms).
 - **Tests** : `npx playwright install --with-deps chromium` au début de la session, puis les règles « Tests — Playwright »
   ci-dessus (trois appareils toujours ; les cinq projets pour les specs d'agencement).
-- **Méthode** : specs dans `docs/`, feuille de route `docs/feuille-de-route.md` ; on ne code un lot qu'après le go de
-  Timothée ; un commit par lot ou par tranche, message en français.
+- **Méthode** : specs dans `docs/`, feuille de route `docs/feuille-de-route.md` ; un commit par lot ou par tranche,
+  message en français.
+- **Go** : un lot se code sur un mot explicite de Timothée, donné **après** la spec (« go », « feu vert », « vas-y pour
+  le lot N ») ; une phrase au futur ou au conditionnel (« tu peux le coder », « je le montrerai ») décrit un plan. Un go
+  vaut pour un lot, pas pour le suivant, ni pour une mise en ligne. Dans le doute, demander « go pour le lot N ? ».
+- **Design** : une demande qui change l'apparence ou l'organisation des écrans commence par une planche (artefact HTML
+  ou Figma : pistes aux trois tailles, recommandation marquée, questions à trancher), puis la spec, puis le code sur go.
+  Zones gelées sauf demande explicite : § 2 « Restent gelés » de `docs/audit-ui-apple-design.md`.
+- **Agents en parallèle** : quelques-uns à la fois (neuf d'un coup ont épuisé la limite de dépense du mois, le
+  04/10/2026) ; un agent coupé se reprend par SendMessage, contexte intact.
 
 ## Comportement (guidelines Karpathy)
 

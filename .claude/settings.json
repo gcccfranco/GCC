@@ -1,5 +1,15 @@
 {
   "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo \"Rappel (.claude/CLAUDE.md, Skills obligatoires) : si cette demande mène à écrire du code, un design, une spec ou un commit, invoquer d'abord using-agent-skills puis chaque skill de sa phase avec l'outil Skill, avant la première ligne concernée. Coder seulement sur un go explicite de Timothée (CLAUDE.md, Go).\""
+          }
+        ]
+      }
+    ],
     "PreToolUse": [
       {
         "matcher": "Bash",
