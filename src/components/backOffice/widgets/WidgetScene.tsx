@@ -11,6 +11,7 @@ import { creneauxAVenir } from "@/lib/tableauDeBord/donnees";
 import { useLecture } from "@/lib/tableauDeBord/lecture";
 import type { Widget } from "@/types/backOffice";
 import { CadreWidget, Message, Rangee, jourCourt } from "./Cadre";
+import { libelleQui } from "@/lib/fetes/qui"
 
 export function WidgetScene({ widget }: { widget: Widget }) {
   const { t, i18n } = useTranslation();
@@ -39,7 +40,7 @@ export function WidgetScene({ widget }: { widget: Widget }) {
         : (
           <div>
             {valeur.creneaux.map((c) => (
-              <Rangee key={c.id} testId="ligne-creneau" detail={[c.quoi, ...(c.qui.length ? [c.qui.join(", ")] : [])].join(" · ")}>
+              <Rangee key={c.id} testId="ligne-creneau" detail={[c.quoi, ...(c.qui.length ? [c.qui.map((q) => libelleQui(q, i18n.language === "zh-CN" ? "zh" : "fr")).join(", ")] : [])].join(" · ")}>
                 <b className="font-semibold">{jourCourt(c.dimanche, i18n.language)} {c.debut}</b>
               </Rangee>
             ))}

@@ -44,7 +44,7 @@ import { Retour } from "@/components/layout/EnTetePage"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Apercu } from "@/app/evenements/scene/Apercu"
 import { Entrainements, type MorceauxEntrainements } from "@/app/evenements/scene/Entrainements"
-import { OrdrePassage } from "@/app/evenements/scene/OrdrePassage"
+import { OrdreAvecChants } from "@/app/evenements/scene/OrdreAvecChants"
 import { SaisonForm, type AutreFete, type SaisonPatch } from "@/app/evenements/scene/SaisonForm"
 import { heureCourte, jourEnLettres } from "@/app/evenements/scene/libelles"
 import { rangerReservations, ToutesReservations } from "./ToutesReservations"
@@ -433,8 +433,10 @@ export function FeteGestion({ fete }: { fete: Fete }) {
           )}
         </div>
         {/* Q16 : modifiable jusqu'au jour J compris, ensuite en lecture. */}
-        <OrdrePassage
-          passages={programme.passages}
+        {/* Chants, musiques et danses en lecture sous chaque passage (CF9) ; l'impression les garde. */}
+        <OrdreAvecChants
+          programme={programme}
+          actions={false}
           canEdit={!enLecture}
           onSave={(passages: Passage[]) => ecrire({ passages }, true)}
         />

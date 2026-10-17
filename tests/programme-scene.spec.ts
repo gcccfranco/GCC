@@ -253,7 +253,7 @@ test("programme : la coordination ajoute un passage, écrit dans le document du 
   const liste = page.getByRole("list", { name: "Ordre de Passage jour J" });
   await expect(liste.getByRole("listitem").nth(2)).toContainText("La nuit de Bethléem");
   const write = db.writes.filter((w) => w.method === "PATCH" && w.path === "programmes/noel").pop();
-  expect(write?.data.passages).toEqual([...PASSAGES, { quoi: "Sketch", qui: ["Gp Paix"], titre: "La nuit de Bethléem" }]);
+  expect(write?.data.passages).toEqual([...PASSAGES, { quoi: "Sketch", qui: ["Gp Paix"], titre: "La nuit de Bethléem", id: expect.stringMatching(/^[a-z0-9]{8}$/) }]); // un passage né reçoit son identifiant (CF1)
 });
 
 test("programme : la coordination modifie puis retire un passage", async ({ page }) => {

@@ -33,6 +33,7 @@ import { DeuxVolets } from "@/components/layout/DeuxVolets"
 import { Retour } from "@/components/layout/EnTetePage"
 import { Entrainements } from "./Entrainements"
 import { OrdrePassage } from "./OrdrePassage"
+import { OrdreAvecChants } from "./OrdreAvecChants"
 import { joursDeLaSemaine, jourEnLettres } from "./libelles"
 
 const COLOR = PLANNING_COLORS.scene
@@ -210,7 +211,7 @@ export function FeteClient({ fete }: { fete: Fete }) {
       </span>
       <span className="min-w-0 flex-1">
         <span className="block text-[15px] font-semibold">{t("planning.fete.ordreEntree")}</span>
-        <span className="block text-[13px] text-muted-foreground">{jourEnLettres(jourJ, lang)} · {numeros(programme!)}</span>
+        <span className="block text-[13px] text-muted-foreground">{jourEnLettres(jourJ, lang)} · {programme!.passages.length ? t("planning.fete.passagesEtChants", { count: programme!.passages.length }) : t("planning.fete.aucunNumero")}</span>
       </span>
       <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
     </button>
@@ -225,18 +226,27 @@ export function FeteClient({ fete }: { fete: Fete }) {
 
   // ─── Ce qui se lit à droite (ou dessous, sur téléphone) ──────────────────
 
-  const ordreDe = (p: Programme, sousTitre: string) => (
-    <section className="space-y-3" aria-labelledby={`ordre-${p.id}`}>
+  const ordreDe = (p: Programme, sousTitre: string, courante = false) => {
+    const entete = (
       <div>
         <h2 id={`ordre-${p.id}`} className="text-[22px] leading-tight font-bold tracking-tight text-foreground">
           {t("planning.fete.ordreTitre", { edition: libelleEdition(fete, anneeDe(p)!, langue) })}
         </h2>
         <p className="mt-1 text-[13.5px] text-muted-foreground">{sousTitre}</p>
       </div>
-      <OrdrePassage passages={p.passages} canEdit={false} onSave={async () => undefined} />
-    </section>
-  )
-  const ordreCourant = programme && ordreDe(programme, majuscule(fdFullL(jourJ, lang)))
+    )
+    return (
+      <section className="space-y-3" aria-labelledby={`ordre-${p.id}`}>
+        {courante ? <OrdreAvecChants programme={p} actions entete={entete} /> : (
+          <>
+            {entete}
+            <OrdrePassage passages={p.passages} canEdit={false} onSave={async () => undefined} />
+          </>
+        )}
+      </section>
+    )
+  }
+  const ordreCourant = programme && ordreDe(programme, majuscule(fdFullL(jourJ, lang)), true)
   const commentReserver = (
     <div className="raised rounded-2xl flex items-start gap-3 p-4">
       <CircleHelp className="mt-0.5 h-5 w-5 shrink-0 text-foreground" aria-hidden />

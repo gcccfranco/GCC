@@ -22,6 +22,7 @@ import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/u
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { titreDuJour } from "./libelles"
+import { libelleQui } from "@/lib/fetes/qui"
 
 const COLOR = PLANNING_COLORS.scene
 
@@ -38,7 +39,8 @@ export type CreneauValues = {
  *  Jeunes, Chorale) encore présente dans le passage reste affichée, cochée et grisée « retiré », pour
  *  que la coordination la décoche ; elle n'est plus proposée à un nouveau passage (CF3). */
 export function QuiChecklist({ value, onChange }: { value: string[]; onChange: (qui: string[]) => void }) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
+  const langue = i18n.language === "zh-CN" ? "zh" : "fr"
   const retires = value.filter((q) => !(QUI as readonly string[]).includes(q))
   return (
     <fieldset className="space-y-1">
@@ -52,7 +54,7 @@ export function QuiChecklist({ value, onChange }: { value: string[]; onChange: (
               style={checked ? { background: `${PLANNING_COLORS.scene}15`, borderColor: PLANNING_COLORS.scene, color: PLANNING_COLORS.scene } : undefined}>
               <input type="checkbox" className="h-3.5 w-3.5" checked={checked}
                 onChange={() => onChange(checked ? value.filter((x) => x !== q) : [...value, q])} />
-              {q}
+              {libelleQui(q, langue)}
               {retire && <span className="font-normal"> · {t("planning.programme.quiRetire")}</span>}
             </label>
           )
@@ -131,6 +133,7 @@ export function CreneauForm({ open, title, onCancel, ...champs }: Props) {
 
 function Champs({ submitLabel, place, places, initial, quiOptions, quiLimite, onSubmit, onCancel }: Omit<Props, "open" | "title">) {
   const { t, i18n } = useTranslation()
+  const langue = i18n.language === "zh-CN" ? "zh" : "fr"
   const [v, setV] = useState<CreneauValues>(initial)
   const [error, setError] = useState("")
   const [busy, setBusy] = useState(false)
@@ -181,7 +184,7 @@ function Champs({ submitLabel, place, places, initial, quiOptions, quiLimite, on
               const retire = !(QUI as readonly string[]).includes(q)
               return (
                 <Pastille key={q} type="checkbox" name="creneau-qui" retire={retire}
-                  label={retire ? `${q} · ${t("planning.programme.quiRetire")}` : q} checked={checked}
+                  label={retire ? `${libelleQui(q, langue)} · ${t("planning.programme.quiRetire")}` : libelleQui(q, langue)} checked={checked}
                   onChange={() => setV({ ...v, qui: checked ? v.qui.filter((x) => x !== q) : [...v.qui, q] })} />
               )
             })}

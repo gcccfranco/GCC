@@ -26,6 +26,8 @@ const SPECS_GRAND_ECRAN = [
   /jianpu-integration\.spec\.ts/,
   // Lot 1 du chantier « équipes et groupes » (docs/spec-equipes-sans-poles.md, EQ-D) : l'organigramme sans pôles.
   /equipes-agencement\.spec\.ts/,
+  // Lot « chants des fêtes » (docs/spec-chants-fetes.md, CF-C) : la page de la fête, chants et musiques dans l'ordre de passage.
+  /chants-fetes-agencement\.spec\.ts/,
   // Lot U5 (docs/spec-deux-volets.md) : la setlist en deux volets.
   /setlist-deux-volets\.spec\.ts/,
   // … et Chants en deux volets.

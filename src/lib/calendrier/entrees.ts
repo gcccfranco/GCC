@@ -36,6 +36,7 @@ import type { Creneau, Programme } from "@/types/programme";
 import type { LignePetitDej } from "@/types/petitDej";
 import type { Fois, Tache } from "@/types/tache";
 import type { NotifLang, UserProfile } from "@/types/user";
+import { libelleQui } from "@/lib/fetes/qui";
 
 export type SourceCalendrier = "services" | "evenements" | "taches" | "reunions" | "scene" | "petitDej" | "setlists";
 
@@ -400,7 +401,7 @@ function scene(d: DonneesCalendrier, c: ContexteCalendrier, debut: string, fin: 
       date: x.dimanche,
       heure: x.debut,
       heureFin: x.fin,
-      titre: `${m.scene} · ${[x.quoi, x.qui.join(", ")].filter(Boolean).join(" ")}`,
+      titre: `${m.scene} · ${[x.quoi, x.qui.map((q) => libelleQui(q, c.lang === "zh-CN" ? "zh" : "fr")).join(", ")].filter(Boolean).join(" ")}`,
       detail: joindre([plage(x.debut, x.fin), x.note]),
       couleur: PLANNING_COLORS.scene,
       duSheet: false,

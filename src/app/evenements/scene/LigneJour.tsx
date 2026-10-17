@@ -11,6 +11,7 @@ import { useTranslation } from "react-i18next"
 import { PLANNING_COLORS } from "@/lib/serviceColors"
 import type { Ligne } from "@/lib/scene/saison"
 import type { Creneau } from "@/types/programme"
+import { libelleQui } from "@/lib/fetes/qui"
 
 const COLOR = PLANNING_COLORS.scene
 
@@ -45,7 +46,7 @@ export function LigneJour({ ligne, droite, badges, conflit, sous }: {
         <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-3 gap-y-1">
           {reserve ? (
             <span className="min-w-0">
-              <span className="block font-semibold svc-ink">{reserve.creneau.quoi} · {reserve.creneau.qui.join(", ")}</span>
+              <span className="block font-semibold svc-ink">{reserve.creneau.quoi} · {reserve.creneau.qui.map((q) => libelleQui(q, i18n.language === "zh-CN" ? "zh" : "fr")).join(", ")}</span>
               {heures && (
                 <span className="block text-[12.5px] text-muted-foreground">
                   {ligne.debut} – {ligne.fin} · {t("planning.saison.prendAussi", { count: reserve.aussi.length, heures })}

@@ -373,7 +373,7 @@ test.describe("Tableau de bord (B4) : écrans", () => {
 
     const scene = widget(page, "Scène");
     await expect(scene.getByRole("heading", { name: "Scène · Noël 2026" })).toBeVisible();
-    await expect(scene.getByTestId("ligne-creneau")).toHaveText([/4 oct\. 17:00.*Chant · EDD 中班/, /11 oct\. 14:00.*Sketch · Franco/]);
+    await expect(scene.getByTestId("ligne-creneau")).toHaveText([/4 oct\. 17:00.*Chant · EDD 中班/, /11 oct\. 14:00.*Sketch · Culte Francophone/]);
   });
 
   test("louange : setlists à préparer et cases vides du Culte", async ({ page }) => {

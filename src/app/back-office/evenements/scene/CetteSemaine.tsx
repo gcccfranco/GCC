@@ -14,6 +14,7 @@ import { horsGrille, saisonDe, semainesDe } from "@/lib/scene/saison"
 import type { Creneau, Programme } from "@/types/programme"
 import { BadgeHorsGrille } from "@/app/evenements/scene/Apercu"
 import { semaineCourte, titreDuJour } from "@/app/evenements/scene/libelles"
+import { libelleQui } from "@/lib/fetes/qui"
 
 /** Le dimanche qui clôt la semaine de ce lundi. */
 function dimancheDe(lundi: string): string {
@@ -64,7 +65,7 @@ export function CetteSemaine({ programme, creneaux, menu, erreur }: {
                       {c.debut} – {c.fin}
                       {hors.has(c.id) && <BadgeHorsGrille />}
                     </p>
-                    <p className="text-[13px] text-muted-foreground">{[c.quoi, c.qui.join(", "), c.auteurNom].join(" · ")}</p>
+                    <p className="text-[13px] text-muted-foreground">{[c.quoi, c.qui.map((q) => libelleQui(q, i18n.language === "zh-CN" ? "zh" : "fr")).join(", "), c.auteurNom].join(" · ")}</p>
                   </div>
                   {menu(c)}
                 </li>

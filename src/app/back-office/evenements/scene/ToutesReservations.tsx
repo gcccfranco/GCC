@@ -18,6 +18,7 @@ import type { Creneau, Programme } from "@/types/programme"
 import { Pilules } from "@/components/layout/Onglets"
 import { BadgeHorsGrille } from "@/app/evenements/scene/Apercu"
 import { jourCourt } from "@/app/evenements/scene/libelles"
+import { libelleQui } from "@/lib/fetes/qui"
 
 const COLOR = PLANNING_COLORS.scene
 
@@ -111,7 +112,7 @@ export function ToutesReservations({ programme, creneaux, titre, voirCommeMembre
                       {c.quoi}
                     </span>
                   </td>
-                  <td className="whitespace-nowrap px-3 py-3">{c.qui.join(", ")}</td>
+                  <td className="whitespace-nowrap px-3 py-3">{c.qui.map((q) => libelleQui(q, i18n.language === "zh-CN" ? "zh" : "fr")).join(", ")}</td>
                   <td className="whitespace-nowrap px-3 py-3 text-foreground/80">{c.auteurNom}</td>
                   <td className="px-3 py-2 text-right">
                     {estHors ? (

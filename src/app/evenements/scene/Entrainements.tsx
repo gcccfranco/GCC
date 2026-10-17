@@ -37,6 +37,7 @@ import { BadgeHorsGrille } from "./Apercu"
 import { CreneauForm, type CreneauValues } from "./CreneauForm"
 import { LigneJour } from "./LigneJour"
 import { bornesSemaine, jourCourt, jourEnLettres, joursCourts, semaineCourte, titreDuJour, tuileDate } from "./libelles"
+import { libelleQui } from "@/lib/fetes/qui"
 
 const COLOR = PLANNING_COLORS.scene
 
@@ -122,7 +123,8 @@ export function Entrainements({ programme, creneaux, user, profile, onChanged, o
   const [erreurRetrait, setErreurRetrait] = useState("")
 
   const conflicts = new Set(creneaux.filter((c) => creneaux.some((o) => o.id !== c.id && overlaps(c, o))).map((c) => c.id))
-  const slotLabel = (c: Creneau) => `${c.debut} – ${c.fin} · ${c.quoi} · ${c.qui.join(", ")} (${c.auteurNom})`
+  const quiDe = (c: Creneau) => c.qui.map((q) => libelleQui(q, lang === "zh-CN" ? "zh" : "fr")).join(", ")
+  const slotLabel = (c: Creneau) => `${c.debut} – ${c.fin} · ${c.quoi} · ${quiDe(c)} (${c.auteurNom})`
   const auteurNom = profile ? `${profile.firstName} ${profile.lastName}`.trim() || profile.email : user.email ?? ""
   // Q4 : la coordination n'est pas limitée ; un membre choisit parmi les groupes permis.
   const quiLimite = !coordination && saison.quiAutorises.length > 0
@@ -184,13 +186,13 @@ export function Entrainements({ programme, creneaux, user, profile, onChanged, o
       label: t("planning.programme.remove"), aide: t("planning.semaines.aideRetirer"), icone: Trash2, destructif: true, onSelect: () => remove(c),
       confirmer: {
         titre: t("planning.programme.confirmRemove"),
-        texte: t("planning.semaines.retirerTexte", { resa: `${c.quoi} · ${c.qui.join(", ")}`, jour: jourEnLettres(c.dimanche, lang), debut: c.debut, fin: c.fin }),
+        texte: t("planning.semaines.retirerTexte", { resa: `${c.quoi} · ${quiDe(c)}`, jour: jourEnLettres(c.dimanche, lang), debut: c.debut, fin: c.fin }),
         action: t("planning.programme.remove"),
       },
     },
   ]
   const menu = (c: Creneau) => canEditCreneau(user, profile, c) && (
-    <MenuActions actions={actionsDe(c)} label={`${t("common.moreActions")} · ${c.quoi} · ${c.qui.join(", ")}`} />
+    <MenuActions actions={actionsDe(c)} label={`${t("common.moreActions")} · ${c.quoi} · ${quiDe(c)}`} />
   )
 
   /** Choisit une semaine : l'adresse change, sans entrée d'historique (Q9). La semaine prend
@@ -251,7 +253,7 @@ export function Entrainements({ programme, creneaux, user, profile, onChanged, o
             >
               <TuileDate iso={c.dimanche} lang={lang} />
               <span className="min-w-0 flex-1">
-                <span className="block truncate text-[15px] font-semibold">{c.quoi} · {c.qui.join(", ")}</span>
+                <span className="block truncate text-[15px] font-semibold">{c.quoi} · {quiDe(c)}</span>
                 <span className="block text-[13px] text-muted-foreground tabular-nums">{jourCourt(c.dimanche, lang)} · {c.debut} – {c.fin}</span>
               </span>
             </button>

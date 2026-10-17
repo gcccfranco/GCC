@@ -426,7 +426,7 @@ async function tableauDeBord(page: Page, docs: Record<string, Record<string, unk
 test("widget Scène : sans réglage, l'édition au jour J le plus proche — « Scène · Noël 2026 » et ses créneaux", async ({ page }) => {
   const w = await tableauDeBord(page, DOCS_WIDGET);
   await expect(w.getByRole("heading", { name: "Scène · Noël 2026" })).toBeVisible();
-  await expect(w.getByTestId("ligne-creneau")).toHaveText([/11 oct\. 14:00.*Sketch · Franco/]);
+  await expect(w.getByTestId("ligne-creneau")).toHaveText([/11 oct\. 14:00.*Sketch · Culte Francophone/]);
 });
 
 test("widget Scène : ses réglages proposent les éditions affichées (Pâques 2027, Noël 2026), jamais un brouillon", async ({ page }) => {
@@ -560,7 +560,7 @@ test("P4 — ordre de passage : une seule entrée, en bas, en lecture même pour
   await ouvrirFete(page, "/evenements/scene/noel", { "programmes/x7Kq2": DOC_NOEL_ANCIEN }, "2026-10-09", ALICE_EVT);
   const entree = page.getByRole("button", { name: /Ordre de passage du jour J/ });
   await expect(entree).toHaveCount(1);
-  await expect(entree).toContainText("jeudi 24 décembre · 3 numéros");
+  await expect(entree).toContainText("jeudi 24 décembre · 3 passages et leurs chants");
   expect((await entree.boundingBox())!.y).toBeGreaterThan((await enTeteFete(page).boundingBox())!.y);
   await expect(page.getByRole("link", { name: "Gérer dans le Back-Office" })).toBeVisible();
   const avant = await historique(page);
@@ -886,7 +886,7 @@ test("P6 — ma réservation : « à moi » à la place de mon nom et « ⋯ » 
   await page.keyboard.press("Escape");
   await expect(plus(mesReservations(page))).toHaveCount(2);
   // La réservation d'un autre : son auteur, sans « ⋯ ».
-  const franco = ligneDe(page, "Samedi 10 octobre", "Séance louange · Franco");
+  const franco = ligneDe(page, "Samedi 10 octobre", "Séance louange · Culte Francophone");
   await expect(franco).toContainText("Léa M.");
   await expect(plus(franco)).toHaveCount(0);
   await expect(plus(ligneDe(page, "Dimanche 11 octobre", "Chant · EDD 中班"))).toHaveCount(0);
@@ -899,7 +899,7 @@ test("P6 — un autre membre n'a ni « ⋯ » ni « à moi » sur ma réservatio
   await expect(sketch).toContainText("Jo L.");
   await expect(sketch).not.toContainText("à moi");
   await expect(plus(sketch)).toHaveCount(0);
-  await expect(ligneDe(page, "Samedi 10 octobre", "Séance louange · Franco")).toContainText("à moi");
+  await expect(ligneDe(page, "Samedi 10 octobre", "Séance louange · Culte Francophone")).toContainText("à moi");
 });
 
 test("P6 — la coordination a « ⋯ » sur toutes les réservations", async ({ page }) => {
@@ -1290,7 +1290,7 @@ test("P8 — réservations ouvertes : « Toutes les réservations » par défaut
   await expect(tableau(page).getByRole("columnheader")).toHaveText(["Jour", "Créneau", "Quoi", "Qui", "Réservé par", ""]);
   const lignes = lignesTableau(page);
   await expect(lignes).toHaveCount(4);
-  await expect(lignes.nth(0)).toContainText(/sam\. 10 oct\.\s*10:00 – 11:00\s*Séance louange\s*Franco\s*Léa M\./);
+  await expect(lignes.nth(0)).toContainText(/sam\. 10 oct\.\s*10:00 – 11:00\s*Séance louange\s*Culte Francophone\s*Léa M\./);
   await expect(lignes.nth(1)).toContainText(/dim\. 11 oct\.\s*16:00 – 17:00\s*Sketch\s*Gp Amour\s*Jo L\./);
   // Le second créneau du dimanche : le jour n'est pas répété.
   await expect(lignes.nth(2).locator("td").first()).toHaveText("");
@@ -1579,7 +1579,7 @@ test("P9 — une colonne (téléphone, tablette portrait) : saison lancée → �
   await expect(semaine).toContainText("10 – 11 oct.");
   const samedi = semaine.getByRole("region", { name: "Samedi 10 octobre", exact: true });
   const dimanche = semaine.getByRole("region", { name: "Dimanche 11 octobre", exact: true });
-  await expect(samedi.getByRole("listitem")).toHaveText([/^10:00 – 11:00\s*Séance louange · Franco · Léa M\./]);
+  await expect(samedi.getByRole("listitem")).toHaveText([/^10:00 – 11:00\s*Séance louange · Culte Francophone · Léa M\./]);
   await expect(dimanche.getByRole("listitem")).toHaveText([/^16:00 – 17:00\s*Sketch · Gp Amour · Jo L\./, /^17:00 – 18:30\s*Hors grille\s*Chant · EDD 中班 · Alice Q\./]);
   await expect(plus(samedi)).toHaveCount(1);
   await expect(plus(dimanche)).toHaveCount(2);
