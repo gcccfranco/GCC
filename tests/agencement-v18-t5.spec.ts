@@ -71,7 +71,8 @@ test.describe("T5 : Équipes › Organigramme", () => {
     await expect(enTete(page)).not.toContainText("pôles");
     await expect(page.getByTestId("bandeau-equipes")).toBeVisible();
     const bandeau = page.getByTestId("bandeau-equipes");
-    await verifierAgencement(page, { premierBloc: bandeau, contenu: bandeau, onglets: { rail: 1, pilules: 1 } });
+    // Deux rangées de pilules depuis le lot 2 (OG-C) : le sélecteur Église · Paix · … et Équipes · Musiciens.
+    await verifierAgencement(page, { premierBloc: bandeau, contenu: bandeau, onglets: { rail: 1, pilules: 2 } });
     // Rail : Organigramme · Personnes ; sous-onglets Équipes · Musiciens en pilules.
     await expect(ongletsRail(page).getByRole("link")).toHaveText(["Organigramme", "Personnes"]);
     await expect(pilules(page).filter({ hasText: "Musiciens" }).getByRole("button")).toHaveText(["Équipes", "Musiciens"]);

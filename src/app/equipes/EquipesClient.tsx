@@ -42,8 +42,12 @@ const referentsDabord = (a: MembreEquipe, b: MembreEquipe) =>
 export function EquipesClient({
   gestion = false,
   enTete,
+  selecteur,
 }: {
   gestion?: boolean;
+  /** Le sélecteur Église · Paix · … des organigrammes (lot 2, OG-C) : à gauche, Équipes · Musiciens
+   *  à droite (en dessous sur téléphone et tablette debout). */
+  selecteur?: ReactNode;
   /** Au Back-Office : l'en-tête commun (titre, sous-titre, outils, rail) ; `sousEnTete` se pose
    *  sous les pilules Équipes · Musiciens (le résultat de « Recalculer »). */
   enTete?: Omit<ComponentProps<typeof EnTetePage>, "apres"> & { sousEnTete?: ReactNode };
@@ -119,7 +123,12 @@ export function EquipesClient({
         titre={enTete?.titre ?? t("equipes.title")}
         apres={
           <>
-            {vues}
+            {selecteur ? (
+              <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
+                <div className="min-w-0">{selecteur}</div>
+                <div className="shrink-0">{vues}</div>
+              </div>
+            ) : vues}
             {enTete?.sousEnTete}
           </>
         }

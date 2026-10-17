@@ -141,6 +141,8 @@ export function OngletsRail({
  * 40 px de haut et 15 px au doigt (téléphone, tablette debout ou couchée), ≈ 28 px et 13 px en gras
  * dès 1 024 px de large avec un pointeur fin (la planche `v18-bo-statistiques`).
  * La rangée défile horizontalement quand elle ne tient pas (douze sensations sur un téléphone).
+ * `pastille` (organigrammes des groupes, lot 2, OG-C) : un point de la couleur devant le nom, sur
+ * toutes les pilules, active comprise (blanc sur la couleur).
  */
 export function Pilules<T extends string>({
   etiquette,
@@ -152,7 +154,7 @@ export function Pilules<T extends string>({
   /** Nom du groupe de filtres, lu par les lecteurs d'écran. */
   etiquette: string;
   /** `couleur` : celle de la pilule active (le service d'un planning) ; l'encre sinon. `href` : un lien. */
-  options: { cle: T; nom: string; couleur?: string; href?: string }[];
+  options: { cle: T; nom: string; couleur?: string; href?: string; pastille?: string }[];
   valeur: T | null;
   /** `null` = filtre retiré (retoucher la pilule active l'enlève). */
   choisir: (v: T | null) => void;
@@ -176,10 +178,13 @@ export function Pilules<T extends string>({
           "h-10 px-3.5 text-[15px] [@media(pointer:fine)_and_(min-width:1024px)]:h-7 [@media(pointer:fine)_and_(min-width:1024px)]:px-3 [@media(pointer:fine)_and_(min-width:1024px)]:text-[13px] [@media(pointer:fine)_and_(min-width:1024px)]:font-semibold",
           actif ? "bg-foreground text-background font-semibold" : "bg-secondary text-foreground/80 active:bg-secondary/70",
         );
+        const point = o.pastille && (
+          <span aria-hidden className="mr-1.5 h-2 w-2 shrink-0 rounded-full" style={{ background: actif && o.couleur ? "#fff" : o.pastille }} />
+        );
         if (o.href) {
           return (
             <Link key={o.cle} href={o.href} aria-current={actif ? "page" : undefined} style={style} className={classe}>
-              {o.nom}
+              {point}{o.nom}
             </Link>
           );
         }
@@ -192,7 +197,7 @@ export function Pilules<T extends string>({
             style={style}
             className={classe}
           >
-            {o.nom}
+            {point}{o.nom}
           </button>
         );
       })}

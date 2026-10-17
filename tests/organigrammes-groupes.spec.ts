@@ -844,3 +844,285 @@ test.describe("OG-B · navigateur", () => {
     await expect(page.getByRole("button", { name: "Envoyer à 3 personnes" })).toBeEnabled();
   });
 });
+
+// ═══ Tranche OG-C : Back-Office › Équipes › Organigramme ═════════════════════
+
+test.describe("OG-C · Back-Office › Équipes › Organigramme", () => {
+  const compte = (uid: string, prenom: string, nom: string, o: Partial<FakeProfile> = {}): FakeProfile =>
+    ({ uid, email: `${uid}@example.com`, firstName: prenom, lastName: nom, planningName: `${prenom} ${nom}`, serviceRoles: {}, ...o });
+  const ADMIN = compte("adm", "Admin", "T.", { email: ADMIN_EMAILS[0] });
+  const RUTH = compte("ruth", "Ruth", "K.", { groupe: "paix", referentDe: ["comite-paix"], dansEquipes: ["comite-paix"] });
+  const LUC = compte("luc", "Luc", "B.", { groupe: "paix" });
+  const COMPTES: FakeProfile[] = [
+    RUTH, LUC,
+    compte("lea", "Léa", "M.", { groupe: "paix" }), compte("clara", "Clara", "B.", { groupe: "paix" }),
+    compte("joel", "Joël", "F.", { groupe: "paix" }), compte("hugo", "Hugo", "L.", { groupe: "paix" }),
+    compte("sam", "Sam", "R.", { groupe: "paix" }), compte("noe", "Noé", "P.", { groupe: "paix" }),
+    compte("manon", "Manon", "P.", { groupe: "paix" }), compte("maelle", "Maëlle", "G."),
+    compte("marc", "Marc", "A.", { groupe: "bonte" }), compte("ana", "Ana", "T.", { groupe: "joie" }),
+  ];
+  // Paix : Ruth K. préside, deux VP ; Musiciens plein (3 sur 3, Ma Lin sans compte), Planning sans limite.
+  const GROUPE_PAIX: OrganigrammeGroupe = {
+    id: "paix", president: t("Ruth K.", "ruth"), vp: [t("Léa M.", "lea"), t("Clara B.", "clara")],
+    roles: [
+      role("r-mus", "Musiciens", { nomZh: "司琴", places: 3, colonne: "musiciens", titulaires: [t("Joël F.", "joel"), t("Hugo L.", "hugo"), t("Ma Lin")] }),
+      role("r-resp", "Responsable louange", { comite: true, places: 1, droits: droits({ remplir: true, publier: true }), titulaires: [t("Noé P.", "noe")] }),
+      role("r-plan", "Planning", { droits: droits({ remplir: true }), titulaires: [t("Sam R.", "sam"), t("Ma Lin")] }),
+    ],
+    updatedAt: "", parUid: "", parNom: "",
+  };
+  const docs = (o: Record<string, Record<string, unknown>> = {}) => ({
+    ...Object.fromEntries(COMPTES.map(({ uid, ...p }) => [`users/${uid}`, p as Record<string, unknown>])),
+    "groupes/paix": docGroupe(GROUPE_PAIX),
+    "groupes/bonte": docGroupe({ ...BONTE, roles: [role("b-acc", "Accueil", { titulaires: [t("Marc A.", "marc")] })] }),
+    ...o,
+  });
+  async function ouvrir(page: Page, qui: FakeProfile, to: string, d = docs()) {
+    const routes: Record<string, unknown>[] = [];
+    await page.route("**/api/equipes/groupes", async (route) => {
+      routes.push(route.request().postDataJSON() as Record<string, unknown>);
+      await route.fulfill({ json: { ok: true, maj: 1, ignores: [] } });
+    });
+    await page.route(/docs\.google\.com\/spreadsheets/, (route) => route.fulfill({ status: 200, contentType: "text/csv", body: "" }));
+    const db = await signInAs(page, qui, d, to);
+    return { db, routes };
+  }
+  const selecteur = (page: Page) => page.getByRole("group", { name: "Organigrammes", exact: true });
+  const carte = (page: Page, id: string) => page.locator(`[data-role="${id}"]`);
+  const ecrituresGroupe = (db: { writes: { method: string; path: string; data: Record<string, unknown> }[] }, id: string) =>
+    db.writes.filter((w) => w.path === `groupes/${id}` || (w.method === "POST" && w.path.startsWith("groupes")));
+
+  test("admin : Église garde le bandeau et Équipes · Musiciens ; Paix montre En tête, le comité et les rôles", async ({ page }) => {
+    await ouvrir(page, ADMIN, "/back-office/equipes");
+    await expect(selecteur(page).getByRole("button")).toHaveText(["Église", "Paix", "Fidélité", "Bonté", "Amour", "Joie"]);
+    await expect(page.getByTestId("equipe-orga")).toBeVisible();
+    await expect(page.getByRole("group", { name: "Vue" }).getByRole("button", { name: "Musiciens" })).toBeVisible();
+    await selecteur(page).getByRole("button", { name: "Paix" }).click();
+    await expect(page).toHaveURL(/\/back-office\/equipes\/?\?groupe=paix$/);
+    await expect(page.getByRole("region", { name: "En tête" })).toContainText("Ruth K.");
+    await expect(page.getByRole("region", { name: "Le comité" }).first()).toContainText("Noé P.");
+    await expect(carte(page, "r-mus")).toContainText("3 sur 3 places");
+    await expect(carte(page, "r-mus")).toContainText("Colonne Musiciens");
+    await expect(carte(page, "r-resp")).toContainText("Publie");
+    await expect(carte(page, "r-resp")).not.toContainText("Remplit le planning");
+    await expect(page.getByTestId("equipe-orga")).toHaveCount(0);
+  });
+
+  test("admin : « Nommer » crée groupes/joie, deux places de VP par défaut, « + » en offre une troisième (maxVp: 3)", async ({ page }) => {
+    const { db, routes } = await ouvrir(page, ADMIN, "/back-office/equipes?groupe=joie");
+    await page.getByRole("button", { name: "Nommer", exact: true }).click();
+    const feuille = page.getByRole("dialog");
+    await expect(feuille.getByText("Vice-présidents · au plus 2")).toBeVisible();
+    await expect(feuille.getByRole("button", { name: "À nommer" })).toHaveCount(3);
+    await feuille.getByRole("button", { name: "Une place de vice-président en plus" }).click();
+    await expect(feuille.getByText("Vice-présidents · au plus 3")).toBeVisible();
+    await expect(feuille.getByRole("button", { name: "À nommer" })).toHaveCount(4);
+    await feuille.getByRole("region", { name: "Président", exact: true }).getByRole("button", { name: "À nommer" }).click();
+    await page.getByRole("searchbox", { name: "Rechercher un nom" }).fill("Ana");
+    await page.getByRole("button", { name: /^Ana T\./ }).click();
+    await expect(feuille.getByRole("region", { name: "Président", exact: true })).toContainText("Ana T.");
+    await feuille.getByRole("button", { name: "Enregistrer" }).click();
+    await expect(feuille).toBeHidden();
+    const [creation] = ecrituresGroupe(db, "joie");
+    expect(creation.path).toBe("groupes/joie");
+    expect(creation.method).toBe("POST");
+    expect(creation.data).toMatchObject({ maxVp: 3, president: { nom: "Ana T.", uid: "ana" } });
+    expect(routes).toEqual([{ groupe: "joie", uids: ["ana"] }]);
+  });
+
+  test("admin : deux VP nommés, « − » ne descend pas sous 2", async ({ page }) => {
+    await ouvrir(page, ADMIN, "/back-office/equipes?groupe=paix");
+    await page.getByRole("button", { name: "Nommer", exact: true }).click();
+    const feuille = page.getByRole("dialog");
+    await expect(feuille.getByText("Vice-présidents · au plus 2")).toBeVisible();
+    await expect(feuille.getByRole("button", { name: "Une place de vice-président en moins" })).toBeDisabled();
+  });
+
+  test("président sans droit Équipes : entrée Équipes, Paix ouvert et modifiable ; ni « Nommer » ni plafond ; Bonté et Église en lecture ; pas de rail", async ({ page }) => {
+    await ouvrir(page, RUTH, "/back-office/equipes");
+    // Sans `?groupe=`, la page s'ouvre sur le groupe qu'il tient.
+    await expect(selecteur(page).getByRole("button", { name: "Paix" })).toHaveAttribute("aria-pressed", "true");
+    await expect(page.getByRole("button", { name: "Nouveau rôle" })).toBeVisible();
+    await expect(carte(page, "r-mus").getByRole("button", { name: "Modifier le rôle Musiciens" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Nommer", exact: true })).toHaveCount(0);
+    await expect(page.getByRole("link", { name: "Personnes" })).toHaveCount(0);
+    await selecteur(page).getByRole("button", { name: "Bonté" }).click();
+    await expect(carte(page, "b-acc")).toContainText("Marc A.");
+    await expect(carte(page, "b-acc").getByRole("button", { name: /Modifier le rôle/ })).toHaveCount(0);
+    await expect(carte(page, "b-acc").getByRole("button", { name: "Ajouter un titulaire" })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Nouveau rôle" })).toHaveCount(0);
+    await selecteur(page).getByRole("button", { name: "Église" }).click();
+    await expect(page.getByTestId("equipe-orga")).toBeVisible();
+    await expect(page.getByRole("button", { name: /^Modifier TEAM/ })).toHaveCount(0);
+  });
+
+  test("« Nouveau rôle » Paix : Thème absent, cadenas d'une colonne prise, Publier coche Remplir, quatre cases ; écrit droits.saisirFetes puis appelle la route", async ({ page }) => {
+    const { db, routes } = await ouvrir(page, RUTH, "/back-office/equipes?groupe=paix");
+    await page.getByRole("button", { name: "Nouveau rôle" }).click();
+    const form = page.getByRole("form", { name: "Nouveau rôle" });
+    const colonnes = form.getByRole("group", { name: "Colonne du planning reliée" });
+    await expect(colonnes.getByRole("button", { name: /Thème/ })).toHaveCount(0);
+    await expect(colonnes.getByRole("button", { name: /Musiciens/ })).toBeDisabled();
+    await expect(form.getByRole("checkbox")).toHaveCount(5); // au comité + quatre droits
+    await form.getByRole("checkbox", { name: /Publier le planning/ }).check();
+    await expect(form.getByRole("checkbox", { name: /Remplir le planning du groupe/ })).toBeChecked();
+    await expect(form.getByRole("checkbox", { name: /Remplir le planning du groupe/ })).toBeDisabled();
+    await expect(form.getByRole("button", { name: "Créer le rôle" })).toBeDisabled();
+    await form.getByRole("textbox", { name: "Nom du rôle" }).fill("Accueil");
+    await colonnes.getByRole("button", { name: /Orateur/ }).click();
+    await form.getByRole("checkbox", { name: /Saisir les chants des fêtes/ }).check();
+    await form.getByRole("button", { name: "Créer le rôle" }).click();
+    await expect(form).toBeHidden();
+    const ecrit = ecrituresGroupe(db, "paix").at(-1)!;
+    expect(ecrit.method).toBe("PATCH");
+    expect((ecrit.data.roles as RoleGroupe[]).at(-1)).toMatchObject({
+      nom: "Accueil", colonne: "orateur", droits: { remplir: true, publier: true, notifier: false, saisirFetes: true },
+    });
+    await expect.poll(() => routes.length).toBe(1);
+    const accueil = page.locator("[data-role]").filter({ hasText: "Accueil" });
+    await expect(accueil).toContainText("Saisit les chants des fêtes");
+  });
+
+  test("« Nouveau rôle » Joie : la phrase sans planning, Notifier et Saisir les chants des fêtes seulement", async ({ page }) => {
+    const { db } = await ouvrir(page, ADMIN, "/back-office/equipes?groupe=joie");
+    // Groupe sans rôle : « Nouveau rôle » en tête et sous « Aucun rôle pour l'instant ».
+    await expect(page.getByText("Aucun rôle pour l'instant")).toBeVisible();
+    await page.getByRole("button", { name: "Nouveau rôle" }).first().click();
+    const form = page.getByRole("form", { name: "Nouveau rôle" });
+    await expect(form).toContainText("Le Groupe Joie n'a pas de planning : pas de colonne à relier, ni de droit sur le planning.");
+    await expect(form.getByRole("group", { name: "Colonne du planning reliée" })).toHaveCount(0);
+    await expect(form.getByRole("checkbox")).toHaveCount(3); // au comité, Notifier, Saisir les chants
+    await form.getByRole("textbox", { name: "Nom du rôle" }).fill("Accueil");
+    await form.getByRole("checkbox", { name: /Saisir les chants des fêtes/ }).check();
+    await form.getByRole("button", { name: "Créer le rôle" }).click();
+    await expect(form).toBeHidden();
+    const [creation] = ecrituresGroupe(db, "joie");
+    expect(creation.path).toBe("groupes/joie");
+    expect((creation.data.roles as RoleGroupe[])[0]).toMatchObject({ nom: "Accueil", colonne: null, droits: { saisirFetes: true } });
+  });
+
+  test("groupes/paix modifié après la lecture : « Modifié par … entre-temps : recharge », rien d'écrit, pas de route, le formulaire reste (OG37)", async ({ page }) => {
+    const { db, routes } = await ouvrir(page, RUTH, "/back-office/equipes?groupe=paix");
+    await expect(carte(page, "r-mus")).toBeVisible();
+    db.set("groupes/paix", { ...docGroupe(GROUPE_PAIX), parNom: "Léa M." });
+    await page.getByRole("button", { name: "Nouveau rôle" }).click();
+    const form = page.getByRole("form", { name: "Nouveau rôle" });
+    await form.getByRole("textbox", { name: "Nom du rôle" }).fill("Accueil");
+    await form.getByRole("button", { name: "Créer le rôle" }).click();
+    await expect(form.getByRole("alert")).toHaveText("Modifié par Léa M. entre-temps : recharge");
+    await expect(form).toBeVisible();
+    expect(db.writes.filter((w) => w.path.startsWith("groupes"))).toEqual([]);
+    expect(routes).toEqual([]);
+  });
+
+  test("« Relier à un compte » : présent pour un admin sur un titulaire sans compte, absent pour un président ; remplace le nom dans ses deux rôles", async ({ page, browser }) => {
+    const { db, routes } = await ouvrir(page, ADMIN, "/back-office/equipes?groupe=paix");
+    await carte(page, "r-plan").click();
+    const fiche = page.getByRole("dialog");
+    await fiche.getByRole("button", { name: "Actions pour Ma Lin" }).click();
+    await page.getByRole("menuitem", { name: "Relier à un compte" }).click();
+    await page.getByRole("searchbox", { name: "Rechercher un nom" }).fill("Manon");
+    await expect(page.getByText("Ajouter « Manon » sans compte")).toHaveCount(0);
+    await page.getByRole("button", { name: /^Manon P\./ }).click();
+    await expect.poll(() => routes.length).toBe(1);
+    const ecrit = ecrituresGroupe(db, "paix").at(-1)!;
+    const roles = ecrit.data.roles as RoleGroupe[];
+    expect(roles.find((r) => r.id === "r-mus")!.titulaires).toContainEqual({ nom: "Manon P.", uid: "manon" });
+    expect(roles.find((r) => r.id === "r-plan")!.titulaires).toContainEqual({ nom: "Manon P.", uid: "manon" });
+    expect(roles.flatMap((r) => r.titulaires).some((x) => x.nom === "Ma Lin")).toBe(false);
+    expect(routes[0]).toMatchObject({ groupe: "paix" });
+    expect(routes[0].uids).toContain("manon");
+
+    const president = await (await browser.newContext()).newPage();
+    await ouvrir(president, RUTH, "/back-office/equipes?groupe=paix");
+    await carte(president, "r-plan").click();
+    await president.getByRole("dialog").getByRole("button", { name: "Actions pour Ma Lin" }).click();
+    await expect(president.getByRole("menuitem", { name: "Retirer" })).toBeVisible();
+    await expect(president.getByRole("menuitem", { name: "Relier à un compte" })).toHaveCount(0);
+  });
+
+  test("« Ajouter un titulaire » : une recherche, « entrera dans le Groupe Paix », autre groupe grisé, « sans compte » en bas ; rôle plein sans « Ajouter »", async ({ page }) => {
+    const { db } = await ouvrir(page, RUTH, "/back-office/equipes?groupe=paix");
+    await expect(carte(page, "r-mus").getByRole("button", { name: "Ajouter un titulaire" })).toHaveCount(0);
+    await carte(page, "r-plan").getByRole("button", { name: "Ajouter un titulaire" }).click();
+    await page.getByRole("searchbox", { name: "Rechercher un nom" }).fill("ma");
+    const comptes = page.getByRole("region", { name: "Comptes" });
+    await expect(comptes.getByRole("button")).toHaveText([/Manon P\.Groupe Paix/, /Maëlle G\.Sans groupe · entrera dans le Groupe Paix/, /Marc A\.Dans le Groupe Bonté : un admin peut le changer de groupe/]);
+    await expect(comptes.getByRole("button", { name: /Marc A\./ })).toBeDisabled();
+    await expect(page.getByRole("region", { name: "Sans compte" })).toContainText("Ajouter « ma » sans compte");
+    await comptes.getByRole("button", { name: /Maëlle G\./ }).click();
+    await expect(carte(page, "r-plan")).toContainText("Maëlle G.");
+    const roles = ecrituresGroupe(db, "paix").at(-1)!.data.roles as RoleGroupe[];
+    expect(roles.find((r) => r.id === "r-plan")!.titulaires).toContainEqual({ nom: "Maëlle G.", uid: "maelle" });
+  });
+
+  test("deux gestes de suite s'écrivent (version reprise) ; la route reçoit aussi le titulaire retiré", async ({ page }) => {
+    const { db, routes } = await ouvrir(page, RUTH, "/back-office/equipes?groupe=paix");
+    await carte(page, "r-plan").getByRole("button", { name: "Ajouter un titulaire" }).click();
+    await page.getByRole("searchbox", { name: "Rechercher un nom" }).fill("Manon");
+    await page.getByRole("button", { name: /^Manon P\./ }).click();
+    await expect(carte(page, "r-plan")).toContainText("Manon P.");
+    await expect.poll(() => routes.length).toBe(1);
+    await carte(page, "r-plan").getByRole("button", { name: "Planning", exact: true }).click();
+    await page.getByRole("dialog").getByRole("button", { name: "Actions pour Sam R." }).click();
+    await page.getByRole("menuitem", { name: "Retirer" }).click();
+    await expect(carte(page, "r-plan")).not.toContainText("Sam R.");
+    await expect.poll(() => routes.length).toBe(2);
+    expect(db.writes.filter((w) => w.path === "groupes/paix" && w.method === "PATCH")).toHaveLength(2);
+    expect(routes[1].uids).toContain("sam");
+  });
+
+  test("la route répond en erreur : « Les droits n'ont pas été recopiés : réessaie », l'organigramme reste écrit ; « Réessayer » la rappelle", async ({ page }) => {
+    const { db } = await ouvrir(page, RUTH, "/back-office/equipes?groupe=paix");
+    let appels = 0;
+    await page.route("**/api/equipes/groupes", async (route) => {
+      appels++;
+      await route.fulfill(appels === 1 ? { status: 500, json: { error: "panne" } } : { json: { ok: true, maj: 1, ignores: [] } });
+    });
+    await carte(page, "r-plan").getByRole("button", { name: "Ajouter un titulaire" }).click();
+    await page.getByRole("searchbox", { name: "Rechercher un nom" }).fill("Manon");
+    await page.getByRole("button", { name: /^Manon P\./ }).click();
+    const alerte = page.getByRole("alert").filter({ hasText: "Les droits n'ont pas été recopiés : réessaie" });
+    await expect(alerte).toBeVisible();
+    expect(db.writes.filter((w) => w.path === "groupes/paix")).toHaveLength(1);
+    await page.getByRole("button", { name: "Réessayer" }).click();
+    await expect(alerte).toHaveCount(0);
+    expect(appels).toBe(2);
+  });
+
+  test("admin : « Nommer » sur Paix, « + » puis un troisième VP, écrit maxVp: 3 et trois VP", async ({ page }) => {
+    const { db } = await ouvrir(page, ADMIN, "/back-office/equipes?groupe=paix");
+    await page.getByRole("button", { name: "Nommer", exact: true }).click();
+    const feuille = page.getByRole("dialog");
+    await feuille.getByRole("button", { name: "Une place de vice-président en plus" }).click();
+    await feuille.getByRole("button", { name: "À nommer" }).click();
+    await page.getByRole("searchbox", { name: "Rechercher un nom" }).fill("Joël");
+    await page.getByRole("button", { name: /^Joël F\./ }).click();
+    await feuille.getByRole("button", { name: "Enregistrer" }).click();
+    await expect(feuille).toBeHidden();
+    const ecrit = db.writes.filter((w) => w.path === "groupes/paix").at(-1)!;
+    expect(ecrit.data.maxVp).toBe(3);
+    expect((ecrit.data.vp as { uid: string }[]).map((v) => v.uid)).toEqual(["lea", "clara", "joel"]);
+  });
+
+  test("simple membre : /back-office/equipes refusé (renvoyé à ses tâches)", async ({ page }) => {
+    await ouvrir(page, LUC, "/back-office/equipes");
+    await expect(page.getByRole("heading", { level: 1, name: "Tâches" })).toBeVisible();
+    await expect(page.getByRole("navigation", { name: "Navigation principale" }).getByRole("link", { name: "Équipes" })).toHaveCount(0);
+    await expect(selecteur(page)).toHaveCount(0);
+  });
+});
+
+test.describe("OG-C · libellés", () => {
+  const cles = (o: unknown, p = ""): string[] =>
+    o && typeof o === "object" ? Object.entries(o).flatMap(([k, v]) => cles(v, p ? `${p}.${k}` : k)) : [p];
+  test("le bloc groupes a les mêmes clés en français et en 中文 ; Bonté s'y écrit 恩慈 (décision 45)", () => {
+    const fr = JSON.parse(readFileSync("src/locales/fr.json", "utf8")).groupes;
+    const zh = JSON.parse(readFileSync("src/locales/zh-CN.json", "utf8")).groupes;
+    expect(cles(zh).sort()).toEqual(cles(fr).sort());
+    expect(zh.court.bonte).toBe("恩慈");
+    expect(zh.form.sansPlanning).toContain("{{groupe}}");
+    expect(zh.enTete.auPlus).toBe("副主席 · 最多 {{n}} 位");
+    expect(zh.droit.saisirFetes).toBe("填写节日诗歌");
+  });
+});

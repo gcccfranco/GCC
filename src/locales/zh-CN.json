@@ -2659,6 +2659,139 @@
       "titre": "接下一首"
     }
   },
+  "groupes": {
+    "eglise": "教会",
+    "selecteur": "组织架构",
+    "court": {
+      "paix": "和平",
+      "fidelite": "信实",
+      "bonte": "恩慈",
+      "amour": "仁爱",
+      "joie": "喜乐"
+    },
+    "sousTitre_one": "{{groupe}} · {{count}} 人 · 组织架构由其主席、副主席和管理员维护",
+    "sousTitre_other": "{{groupe}} · {{count}} 人 · 组织架构由其主席、副主席和管理员维护",
+    "enTete": {
+      "titre": "带领",
+      "nommesParAdmin": "由管理员任命",
+      "nommer": "任命",
+      "aNommer": "待任命",
+      "president": "主席",
+      "vicePresident": "副主席",
+      "vicePresidents": "副主席",
+      "auPlus": "副主席 · 最多 {{n}} 位",
+      "moinsVp": "减少一个副主席名额",
+      "plusVp": "增加一个副主席名额"
+    },
+    "comite": {
+      "titre": "委员会",
+      "titreN": "委员会 · {{n}}",
+      "personnes_one": "{{count}} 人 · 一个团队",
+      "personnes_other": "{{count}} 人 · 一个团队",
+      "aide": "主席、副主席及勾选“委员会”的岗位。负责人：主席和副主席。",
+      "reunions": "委员会的会议和任务"
+    },
+    "roles": "岗位 · {{n}}",
+    "autresRoles": "其他岗位 · {{n}}",
+    "aucunRole": "暂无岗位",
+    "legende": {
+      "relie": "已关联排班表"
+    },
+    "sansCompte": "无账号",
+    "auComite": "委员会成员",
+    "ajouterTitulaire": "添加担任者",
+    "retirer": "移除",
+    "dansGroupe": "属于{{groupe}}",
+    "droitsNonRecopies": "权限未能同步，请重试",
+    "reessayer": "重试",
+    "lectureImpossible": "无法读取组织架构。",
+    "recharger": "重新加载",
+    "places": {
+      "sur_one": "{{n}}/{{count}} 个名额",
+      "sur_other": "{{n}}/{{count}} 个名额",
+      "sansLimite_one": "{{count}} 人 · 不限名额",
+      "sansLimite_other": "{{count}} 人 · 不限名额",
+      "personne": "无人",
+      "libre": "空缺"
+    },
+    "pastille": {
+      "colonne": "{{colonne}}栏",
+      "remplit": "填写排班表",
+      "publie": "发布",
+      "notifie": "通知团契",
+      "saisitFetes": "填写节日诗歌"
+    },
+    "role": {
+      "nouveau": "新岗位",
+      "modifier": "修改岗位",
+      "creer": "创建岗位",
+      "supprimer": "删除岗位",
+      "modifierNom": "修改岗位{{nom}}",
+      "supprimerTitre": "删除岗位“{{nom}}”？",
+      "supprimerTexte": "担任者将失去此岗位，其关联的排班栏也会释放。"
+    },
+    "form": {
+      "sousTitre": "{{groupe}} · 主席、副主席或管理员",
+      "nom": "岗位名称",
+      "nomZh": "中文名称",
+      "facultatif": "选填",
+      "places": "名额",
+      "videSansLimite": "留空 = 不限",
+      "sansLimite": "不限",
+      "moins": "减少一个名额",
+      "plus": "增加一个名额",
+      "titulaires_one": "{{count}} 人",
+      "titulaires_other": "{{count}} 人",
+      "auComite": "委员会",
+      "auComiteAide": "担任者进入委员会。",
+      "colonne": "关联的排班栏",
+      "colonneAide": "“选择”会优先列出担任者",
+      "aucune": "无",
+      "colonnePrise": "该栏已关联其他岗位",
+      "cadenas": "带锁的栏目已关联其他岗位。主题不是人员：不能关联。",
+      "sansPlanning": "{{groupe}}没有排班表：无可关联的栏目，也无排班权限。",
+      "droits": "权限"
+    },
+    "droit": {
+      "remplir": "填写团契排班表",
+      "remplirAide": "填写{{groupe}}排班表的格子",
+      "publier": "发布排班表",
+      "publierAide": "发布一个季度并“通知变动”",
+      "notifier": "通知团契",
+      "notifierAide": "向{{groupe}}全体发送通知",
+      "saisirFetes": "填写节日诗歌",
+      "saisirFetesAide": "担任者填写本团契在圣诞节和复活节节目中的诗歌。"
+    },
+    "fiche": {
+      "titulaires": "担任者",
+      "planning": "排班表",
+      "ouvrirPlanning": "打开排班表",
+      "droits": "岗位权限",
+      "modifier": "修改",
+      "oui": "是",
+      "non": "否",
+      "aussi": "也担任 {{roles}}",
+      "actionsDe": "{{nom}}的操作",
+      "dansColonne": "在{{colonne}}栏，“选择”会优先列出{{noms}}。",
+      "recoivent": "担任者会收到{{groupe}}的通知。"
+    },
+    "recherche": {
+      "chercher": "搜索姓名",
+      "comptes": "账号",
+      "sansCompte": "无账号",
+      "ajouter": "添加",
+      "entrera": "无团契 · 将加入{{groupe}}",
+      "deja": "已担任",
+      "autre": "属于{{groupe}}：管理员可为其更换团契",
+      "ajouterSansCompte": "添加无账号的“{{nom}}”",
+      "sansCompteAide": "请写全名：此人不会收到通知"
+    },
+    "relier": {
+      "action": "关联账号",
+      "titre": "将“{{nom}}”关联到账号",
+      "sousTitre": "涵盖其在{{groupe}}的所有岗位"
+    }
+  },
   "equipes": {
     "title": "团队",
     "sousTitre": "GCC 法语堂 2026 组织架构",

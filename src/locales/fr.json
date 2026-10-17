@@ -2695,6 +2695,139 @@
       "titre": "Vers le chant suivant"
     }
   },
+  "groupes": {
+    "eglise": "Église",
+    "selecteur": "Organigrammes",
+    "court": {
+      "paix": "Paix",
+      "fidelite": "Fidélité",
+      "bonte": "Bonté",
+      "amour": "Amour",
+      "joie": "Joie"
+    },
+    "sousTitre_one": "{{groupe}} · {{count}} personne · organigramme tenu par son président, ses VP et les admins",
+    "sousTitre_other": "{{groupe}} · {{count}} personnes · organigramme tenu par son président, ses VP et les admins",
+    "enTete": {
+      "titre": "En tête",
+      "nommesParAdmin": "nommés par un admin",
+      "nommer": "Nommer",
+      "aNommer": "À nommer",
+      "president": "Président",
+      "vicePresident": "Vice-président",
+      "vicePresidents": "Vice-présidents",
+      "auPlus": "Vice-présidents · au plus {{n}}",
+      "moinsVp": "Une place de vice-président en moins",
+      "plusVp": "Une place de vice-président en plus"
+    },
+    "comite": {
+      "titre": "Le comité",
+      "titreN": "Le comité · {{n}}",
+      "personnes_one": "{{count}} personne · une équipe",
+      "personnes_other": "{{count}} personnes · une équipe",
+      "aide": "Le président, les VP et les rôles cochés « au comité ». Référents : le président et les VP.",
+      "reunions": "Réunions et tâches du comité"
+    },
+    "roles": "Rôles · {{n}}",
+    "autresRoles": "Autres rôles · {{n}}",
+    "aucunRole": "Aucun rôle pour l'instant",
+    "legende": {
+      "relie": "relié au planning"
+    },
+    "sansCompte": "sans compte",
+    "auComite": "au comité",
+    "ajouterTitulaire": "Ajouter un titulaire",
+    "retirer": "Retirer",
+    "dansGroupe": "Dans le {{groupe}}",
+    "droitsNonRecopies": "Les droits n'ont pas été recopiés : réessaie",
+    "reessayer": "Réessayer",
+    "lectureImpossible": "Lecture des organigrammes impossible.",
+    "recharger": "Recharger",
+    "places": {
+      "sur_one": "{{n}} sur {{count}} place",
+      "sur_other": "{{n}} sur {{count}} places",
+      "sansLimite_one": "{{count}} titulaire · sans limite",
+      "sansLimite_other": "{{count}} titulaires · sans limite",
+      "personne": "Personne",
+      "libre": "Place libre"
+    },
+    "pastille": {
+      "colonne": "Colonne {{colonne}}",
+      "remplit": "Remplit le planning",
+      "publie": "Publie",
+      "notifie": "Notifie le groupe",
+      "saisitFetes": "Saisit les chants des fêtes"
+    },
+    "role": {
+      "nouveau": "Nouveau rôle",
+      "modifier": "Modifier le rôle",
+      "creer": "Créer le rôle",
+      "supprimer": "Supprimer le rôle",
+      "modifierNom": "Modifier le rôle {{nom}}",
+      "supprimerTitre": "Supprimer le rôle « {{nom}} » ?",
+      "supprimerTexte": "Ses titulaires le perdent, et sa colonne du planning se libère."
+    },
+    "form": {
+      "sousTitre": "{{groupe}} · président, VP ou admin",
+      "nom": "Nom du rôle",
+      "nomZh": "Nom en chinois",
+      "facultatif": "facultatif",
+      "places": "Nombre de places",
+      "videSansLimite": "vide = sans limite",
+      "sansLimite": "Sans limite",
+      "moins": "Une place en moins",
+      "plus": "Une place en plus",
+      "titulaires_one": "{{count}} titulaire",
+      "titulaires_other": "{{count}} titulaires",
+      "auComite": "Au comité",
+      "auComiteAide": "Ses titulaires entrent au comité.",
+      "colonne": "Colonne du planning reliée",
+      "colonneAide": "« Choisir » y proposera d'abord les titulaires",
+      "aucune": "Aucune",
+      "colonnePrise": "colonne déjà reliée à un autre rôle",
+      "cadenas": "Cadenas : colonne déjà reliée à un autre rôle. Thème n'est pas une personne : pas de lien.",
+      "sansPlanning": "Le {{groupe}} n'a pas de planning : pas de colonne à relier, ni de droit sur le planning.",
+      "droits": "Droits"
+    },
+    "droit": {
+      "remplir": "Remplir le planning du groupe",
+      "remplirAide": "Écrire dans les cases du planning du {{groupe}}",
+      "publier": "Publier le planning",
+      "publierAide": "Publier un trimestre et « Prévenir des changements »",
+      "notifier": "Notifier le groupe",
+      "notifierAide": "Envoyer une notification à tout le {{groupe}}",
+      "saisirFetes": "Saisir les chants des fêtes",
+      "saisirFetesAide": "Ses titulaires saisissent les chants du passage du groupe à Noël et à Pâques."
+    },
+    "fiche": {
+      "titulaires": "Titulaires",
+      "planning": "Planning",
+      "ouvrirPlanning": "Ouvrir le planning",
+      "droits": "Droits du rôle",
+      "modifier": "Modifier",
+      "oui": "Oui",
+      "non": "Non",
+      "aussi": "aussi {{roles}}",
+      "actionsDe": "Actions pour {{nom}}",
+      "dansColonne": "Dans la colonne {{colonne}}, « Choisir » propose d'abord {{noms}}.",
+      "recoivent": "Les titulaires reçoivent les notifications du {{groupe}}."
+    },
+    "recherche": {
+      "chercher": "Rechercher un nom",
+      "comptes": "Comptes",
+      "sansCompte": "Sans compte",
+      "ajouter": "Ajouter",
+      "entrera": "Sans groupe · entrera dans le {{groupe}}",
+      "deja": "Déjà titulaire",
+      "autre": "Dans le {{groupe}} : un admin peut le changer de groupe",
+      "ajouterSansCompte": "Ajouter « {{nom}} » sans compte",
+      "sansCompteAide": "Écris le nom complet : il n'aura pas de notification"
+    },
+    "relier": {
+      "action": "Relier à un compte",
+      "titre": "Relier « {{nom}} » à un compte",
+      "sousTitre": "dans tous ses rôles du {{groupe}}"
+    }
+  },
   "equipes": {
     "title": "Équipes",
     "sousTitre": "Organigramme GCC Franco 2026",

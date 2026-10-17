@@ -68,6 +68,8 @@ const SPECS_GRAND_ECRAN = [
   /retouches-v18(-.*)?\.spec\.ts/,
   // Chantier 简谱 (docs/spec-jianpu-integration.md), lot 2 : en-tête et bandeau au-dessus des deux colonnes.
   /louange-sections-uniques\.spec\.ts/,
+  // Lot 2 du chantier « équipes et groupes » (docs/spec-organigrammes-groupes.md, OG-C) : l'organigramme d'un groupe.
+  /organigrammes-groupes-agencement\.spec\.ts/,
 ];
 
 export default defineConfig({
