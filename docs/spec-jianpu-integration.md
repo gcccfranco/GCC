@@ -1056,4 +1056,34 @@ rappel faux sur deux chants au même `section.uid` (C5).
   gravé (gardé : le bandeau dit ce qui se joue). Laissés : boutons du segment à 28 px (maquette) et sans navigation aux
   flèches (comme `Volets.tsx`). Relire le 中文 « 简谱 · 歌词 ».
 
-Prochaine étape : L3-T4 (setlist, vue Partitions) ; le lot 2 attend le passage complet.
+- **L3-T4, 17/10/2026 — setlist, vue Partitions** (go de Timothée du 17/10/2026). Codé : un chant sur scan passe par la
+  même ligne n° + badges et le même `SongView` qu'un chant en paroles (titre lié, pinyin, auteurs, ♩, pastille, bandeau
+  avec détails) ; le scan, précédé des bandeaux « 升调 », est son `corps` (prop de L3-T3) ; en Structure seule, pas de
+  corps : l'en-tête complet et le bandeau, sans scan. Le petit titre lié à droite des pastilles disparaît. Bandeaux
+  « 升调 » au style des messages P7 (`rounded-[12px] bg-secondary px-3 py-2 text-xs`, texte à l'encre). Adapter et Ma
+  version : inchangés (`chordEdits`, `onEditChords` sur la couche écriture depuis L3-T2a).
+  Tests (`jianpu-integration.spec.ts`, « L3-T4 » ×5 : en-tête identique à celui d'Abba Père — n° et titre à la même
+  place dans le bloc, lien, auteurs, ♩, pastille, note, ordre titre → bandeau → scan ; écart visible identique après un
+  scan et après des paroles, même bord gauche ; Structure seule ; bandeau 升调 en clair et en sombre) : 4 rouges avant le
+  code pour la bonne raison ; le test d'écart, vert avant (la règle tenait déjà : 40 px dans les deux cas), mord sous
+  mutation (cale de 40 px sous le scan → rouge). Puis 25 / 25 sur les cinq projets. Agent testeur : `jianpu-integration`
+  158 / 160 sur cinq projets (2 délais au `reload` du test 7, verts rejoués seuls) ; 11 specs voisines (`coup-d-oeil`,
+  `harmonie-*`, `fusions-dp`, `setlist-g`, `setlist-version`, `setlist-deux-volets`, `deux-volets-finitions`,
+  `jianpu-par-defaut`, `setlist-regie`) sur trois appareils : 391 verts, 76 sautés, 25 rouges sous une charge de ≈ 15
+  (vérification Opus en parallèle) ; tous verts rejoués seuls, sauf `setlist-g:176`, `setlist-version:315` et
+  `deux-volets-finitions:106` (téléphone, tablette), **verts sur l'ancien code comme sur le nouveau** une fois la
+  machine au calme (12 / 12 chacun). Captures regardées (téléphone, tablette, tablette paysage, ordinateur, 1 440 ; clair,
+  sombre, Structure seule ; 为我而来, 一生爱你 en D avec note et 升调, Abba Père) : conformes à `v20-jp-a-setlist-telephone`,
+  même bord gauche et même écart. Planche `npm run jianpu:audit 一生爱你 D` : inchangée (coupe au-dessus de « 1=D »,
+  accords encadrés).
+  Vérifié par Opus (17/10/2026) : rien de bloquant ; badges, Ma version (`bodyStructure`), sections uniques, 升调, notes,
+  impression et fusions comparés à l'ancien rendu. Corrigé : le test d'écart comparait les blocs (égaux par construction)
+  et lisait trois boîtes séparément pendant le recadrage → il mesure l'encre visible, d'un coup, attendu stable.
+  **À voir par Timothée** : (a) le scan suit maintenant la colonne des paroles (`max-w-2xl`, P5) : à 1 440 px il passe
+  de ≈ 772 px à ≈ 686 px (−11 %) ; inchangé au téléphone, à la tablette et à l'ordinateur 1 280 (colonne déjà plus
+  étroite) ; (b) **écart de lecture** : la maquette pose le n° sur la ligne du titre et « orig. E » sous la pastille ;
+  suivi : le texte de la spec (« même en-tête qu'un chant en paroles » : n° et badges sur la ligne au-dessus, pas de
+  « orig. ») ; (c) le titre d'un chant sur scan s'imprime désormais (l'ancien lien était `print:hidden`, et le titre
+  gravé est coupé depuis L3-T2b). Rien pour Timothée côté libellés.
+
+Prochaine étape : L3-T5 (mode louange) ; le lot 2 attend le passage complet.

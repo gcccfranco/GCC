@@ -552,3 +552,120 @@ test("7 page chant : sur le scan, les notes venues de la setlist passent dans le
   await page.locator('[data-jianpu-page="0"] img').waitFor();
   await expect(page.getByText("Ralentir la dernière ligne")).toBeVisible();
 });
+
+// ─── L3-T4 : setlist, vue Partitions — un chant sur scan a l'en-tête d'un chant en paroles ──
+
+const T4_DOC = "setlists/setlist-t4";
+/** 一生爱你 sur scan (en D, une note, un 升调) entre deux chants en paroles. */
+const T4_SETLIST = {
+  title: "Culte du 21 septembre", leader: "Jonathan Z.", category: "Culte Francophone", date: "2026-09-21",
+  language: "mixed", notes: "", ownerId: "uid-owner", isPrivate: false,
+  items: [
+    { songSlug: "abba-pere", position: 1 },
+    { songSlug: SLUG, position: 2, jianpuSheet: true, keyOverride: "D", notes: "Plus calme", sectionKeys: { "chorus-3": "E" } },
+    { songSlug: "a-la-croix", position: 3 },
+  ].map((over) => ({
+    keyOverride: null, showChords: true, showPinyin: true, useJianpu: false,
+    structureOverride: null, sectionNotes: {}, notes: "", ...over,
+  })),
+};
+
+async function ouvrirSetlistT4(page: Page, { dark = false, layout }: { dark?: boolean; layout?: string } = {}) {
+  await page.addInitScript(() => localStorage.setItem("jianpu-sheet-pref", "always"));
+  if (dark) await page.addInitScript(() => localStorage.setItem("theme", "dark"));
+  if (layout) await page.addInitScript((l) => localStorage.setItem("partition-layout", l), layout);
+  await page.route(/docs\.google\.com\/spreadsheets/, (route) => route.fulfill({ status: 200, contentType: "text/csv", body: "" }));
+  await signInAs(page, MUSICIEN, { [T4_DOC]: T4_SETLIST }, "/setlists/setlist-t4");
+  await ouvrirPartitions(page);
+  await page.locator('[data-outline-item="3"]').waitFor();
+}
+
+/** L'en-tête d'un chant de la vue Partitions, mesuré depuis le haut de son bloc. */
+async function enTete(page: Page, position: number, titre: string) {
+  const bloc = page.locator(`[data-outline-item="${position}"]`);
+  const h1 = bloc.getByRole("heading", { level: 1, name: titre });
+  await expect(h1).toBeVisible();
+  await expect(h1.getByRole("link")).toHaveAttribute("href", /\/songs\//);
+  const [b, h, rond, bandeau] = await Promise.all([
+    bloc.boundingBox(),
+    h1.boundingBox(),
+    bloc.getByText(String(position), { exact: true }).first().boundingBox(),
+    bloc.getByRole("list", { name: "Structure" }).boundingBox(),
+  ]);
+  return { dx: h!.x - b!.x, dy: h!.y - b!.y, x: h!.x, bas: h!.y + h!.height, rondY: rond!.y - b!.y, bandeau: bandeau!, bloc: b! };
+}
+
+test("L3-T4 vue Partitions : un chant sur scan a le même en-tête qu'un chant en paroles (n°, titre lié, auteurs, ♩, pastille, bandeau)", async ({ page }) => {
+  await ouvrirSetlistT4(page);
+  await page.locator('[data-outline-item="2"] [data-jianpu-page="0"] img').waitFor();
+  const paroles = await enTete(page, 1, "Abba Père");
+  const scan = await enTete(page, 2, SLUG);
+  // Même place du n° et du titre dans le bloc, même bord gauche.
+  expect(Math.abs(scan.dx - paroles.dx), "titre au même retrait").toBeLessThan(1);
+  expect(Math.abs(scan.dy - paroles.dy), "titre à la même hauteur").toBeLessThan(1);
+  expect(Math.abs(scan.rondY - paroles.rondY), "n° à la même hauteur").toBeLessThan(1);
+  const bloc = page.locator('[data-outline-item="2"]');
+  await expect(bloc.getByText("曾祥怡词 / 游智婷曲")).toBeVisible();
+  await expect(bloc.getByText("♩")).toBeVisible();
+  await expect(bloc.getByText("D", { exact: true }).first()).toBeVisible();
+  await expect(bloc.getByText("Plus calme")).toBeVisible();
+  // Titre, puis bandeau, puis le scan.
+  const fenetre = (await bloc.locator("[data-jianpu-fenetre]").first().boundingBox())!;
+  expect(scan.bas).toBeLessThanOrEqual(scan.bandeau.y);
+  expect(scan.bandeau.y + scan.bandeau.height).toBeLessThanOrEqual(fenetre.y);
+});
+
+test("L3-T4 vue Partitions : le chant suivant commence au même écart après un scan qu'après des paroles", async ({ page }) => {
+  await ouvrirSetlistT4(page);
+  await page.locator('[data-outline-item="2"] [data-jianpu-page="0"] img').waitFor();
+  // L'écart qui se voit : de la fin de l'encre (dernière section, dernière fenêtre) au n° du
+  // chant suivant ; mesuré d'un coup, et attendu stable (la fenêtre se coupe après l'image).
+  const ecarts = () => page.evaluate(() => {
+    const bloc = (i: number) => document.querySelector(`[data-outline-item="${i}"]`)!;
+    const bas = (els: NodeListOf<Element>) => els[els.length - 1].getBoundingClientRect().bottom;
+    const rond = (i: number) => Array.from(bloc(i).querySelectorAll("span")).find((s) => s.textContent === String(i))!.getBoundingClientRect();
+    return {
+      apresParoles: rond(2).top - bas(bloc(1).querySelectorAll("[data-section]")),
+      apresScan: rond(3).top - bas(bloc(2).querySelectorAll("[data-jianpu-fenetre]")),
+      bords: [rond(2).left, rond(3).left],
+    };
+  });
+  await expect.poll(async () => { const e = await ecarts(); return Math.abs(e.apresScan - e.apresParoles); }, { message: "même écart visible" }).toBeLessThan(1);
+  const { bords } = await ecarts();
+  expect(Math.abs(bords[0] - bords[1]), "même bord gauche").toBeLessThan(1);
+});
+
+test("L3-T4 vue Partitions, Structure seule : le chant sur scan garde l'en-tête complet, sans scan", async ({ page }) => {
+  await ouvrirSetlistT4(page, { layout: "structure" });
+  const paroles = await enTete(page, 1, "Abba Père");
+  const scan = await enTete(page, 2, SLUG);
+  expect(Math.abs(scan.dx - paroles.dx)).toBeLessThan(1);
+  expect(Math.abs(scan.dy - paroles.dy)).toBeLessThan(1);
+  await expect(page.locator('[data-outline-item="2"] [data-jianpu-fenetre]')).toHaveCount(0);
+  await expect(page.locator('[data-outline-item="2"]').getByText("Plus calme")).toBeVisible();
+});
+
+for (const th of THEMES) {
+  test(`L3-T4 vue Partitions (${th.nom}) : le bandeau « 升调 » en jetons du site, sous l'en-tête, au-dessus du scan`, async ({ page }) => {
+    await ouvrirSetlistT4(page, { dark: th.dark });
+    const bandeau = page.locator('[data-outline-item="2"] [data-bandeau-modulation]');
+    await expect(bandeau).toContainText("on monte en E");
+    const s = await bandeau.evaluate((d) => {
+      const c = getComputedStyle(d);
+      const ref = document.createElement("i");
+      ref.style.color = "hsl(var(--secondary))";
+      document.body.append(ref);
+      const secondaire = getComputedStyle(ref).color;
+      ref.remove();
+      return { fond: c.backgroundColor, texte: c.color, rayon: c.borderRadius, secondaire };
+    });
+    expect(s.fond).toBe(s.secondaire);
+    expect(s.texte).toBe(th.encre);
+    expect(s.rayon).toBe("12px");
+    const scan = await enTete(page, 2, SLUG);
+    const b = (await bandeau.boundingBox())!;
+    const fenetre = (await page.locator('[data-outline-item="2"] [data-jianpu-fenetre]').first().boundingBox())!;
+    expect(scan.bandeau.y + scan.bandeau.height).toBeLessThanOrEqual(b.y);
+    expect(b.y + b.height).toBeLessThanOrEqual(fenetre.y);
+  });
+}

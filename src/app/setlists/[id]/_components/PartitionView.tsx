@@ -417,8 +417,7 @@ function NormalSongItem({
   const playedSections = item.structureOverride?.length
     ? resolveStructureOverride(ast.sections, item.structureOverride)
     : ast.sections;
-  // Partition 简谱 : le scan porte déjà titre, auteur et tonalité. À la place,
-  // la structure jouée — qu'un scan ne peut pas connaître.
+  // Partition 简谱 : les 升调 de la structure jouée, qu'un scan ne peut pas montrer.
   const steps = jianpuScore ? resolveSectionOccurrences(playedSections, item) : [];
 
   // Badges d'état : ils ne sont pas dans le scan et suivent donc l'item, que
@@ -510,55 +509,12 @@ function NormalSongItem({
   );
   return (
     <div data-outline-item={item.position} className="print:break-before-page first:print:break-before-auto">
-      {jianpuScore ? (
-        <StructureStrip position={item.position} steps={steps} songKey={ast.metadata.key} details className="mb-3 pb-2 border-b border-border print:mb-2">
-          {/* Le titre est dans le scan ; le lien vers la page du chant, ici. */}
-          <Link href={titleHref} className="text-sm font-semibold text-foreground hover:underline underline-offset-2 print:hidden">
-            {ast.metadata.title}
-          </Link>
-          {badges}
-        </StructureStrip>
-      ) : (
-        <div className="flex items-center gap-2 mb-3 print:mb-2 flex-wrap">
-          <span className="w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center shrink-0">
-            {item.position}
-          </span>
-          {badges}
-        </div>
-      )}
-      {jianpuScore ? (
-        // Structure seule : le bandeau suffit, le scan ne s'affiche pas.
-        layout !== "structure" && (
-          <>
-            {/* Un 升调 ne se voit pas sur un scan : le dire au-dessus (lot 9). */}
-            {steps
-              .filter((st) => st.targetKey)
-              .map((st) => (
-                <p
-                  key={st.section.uid}
-                  data-bandeau-modulation
-                  className="mb-2 rounded-lg bg-secondary px-3 py-1.5 text-[13px] font-medium text-foreground"
-                >
-                  {t("harmonie.bandeauModulation", {
-                    section: st.section.name || st.section.type,
-                    ton: st.targetKey,
-                  })}
-                </p>
-              ))}
-          <JianpuSheet
-            entry={jianpuScore}
-            title={ast.metadata.title}
-            slug={item.songSlug}
-            playedKey={item.keyOverride && item.keyOverride !== songKey ? item.keyOverride : null}
-            originalKey={songKey}
-            chordEdits={item.jianpuChords}
-            onEditChords={
-              editMode && onEditJianpu ? (next) => onEditJianpu(origIndex, next) : undefined
-            }
-          />
-          </>
-        )
-      ) : (
+      <div className="flex items-center gap-2 mb-3 print:mb-2 flex-wrap">
+        <span className="w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center shrink-0">
+          {item.position}
+        </span>
+        {badges}
+      </div>
       <SongView
         ast={ast}
         showChords={showChordsGlobal && item.showChords}
@@ -574,8 +530,42 @@ function NormalSongItem({
         bodyStructure={version?.bodyStructure}
         titleHref={titleHref}
         onLineSelect={editMode ? (line, sectionUid) => onSelectLine?.(origIndex, line, sectionUid) : undefined}
+        corps={
+          // Partition 简谱 : le scan prend la place des paroles, sous le même
+          // en-tête (K3). Structure seule : ni l'un ni l'autre.
+          jianpuScore && layout !== "structure" ? (
+            <>
+              {/* Un 升调 ne se voit pas sur un scan : le dire au-dessus (lot 9). */}
+              {steps
+                .filter((st) => st.targetKey)
+                .map((st) => (
+                  <p
+                    key={st.section.uid}
+                    data-bandeau-modulation
+                    className="mb-2 rounded-[12px] bg-secondary px-3 py-2 text-xs"
+                    style={{ color: "hsl(var(--jianpu-encre))" }}
+                  >
+                    {t("harmonie.bandeauModulation", {
+                      section: st.section.name || st.section.type,
+                      ton: st.targetKey,
+                    })}
+                  </p>
+                ))}
+              <JianpuSheet
+                entry={jianpuScore}
+                title={ast.metadata.title}
+                slug={item.songSlug}
+                playedKey={item.keyOverride && item.keyOverride !== songKey ? item.keyOverride : null}
+                originalKey={songKey}
+                chordEdits={item.jianpuChords}
+                onEditChords={
+                  editMode && onEditJianpu ? (next) => onEditJianpu(origIndex, next) : undefined
+                }
+              />
+            </>
+          ) : undefined
+        }
       />
-      )}
     </div>
   );
 }
