@@ -595,9 +595,10 @@ export function JianpuSheet({ entry, title, slug, layout = "flow", playedKey: de
       {/* `fit` : la zone restante devient un conteneur de taille, ce qui permet
           de borner la page en hauteur (100cqh) autant qu'en largeur (100%).
           Borner la seule hauteur suffisait pour un scan portrait, mais un scan
-          large débordait alors des deux côtés. */}
+          large débordait alors des deux côtés. Calée en haut : bornée par la
+          largeur (téléphone), la page commence sous le bandeau (L3-T5a). */}
       <div
-        className={fit ? "flex min-h-0 w-full flex-1 items-center justify-center" : "contents"}
+        className={fit ? "flex min-h-0 w-full flex-1 items-start justify-center" : "contents"}
         style={fit ? { containerType: "size" } : undefined}
       >
       {shownPages.map((page, n) => {

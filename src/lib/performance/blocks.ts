@@ -85,8 +85,10 @@ export type JianpuSheetBlock = {
   capo?: number;
   /** Tonalité de la setlist, quand une autre a été choisie sur cet appareil. */
   setlistKey?: string;
-  /** Rang du chant dans la setlist, repris par le bandeau de structure. */
+  /** Rang du chant dans la setlist, repris par l'en-tête au-dessus du scan. */
   position: number;
+  /** Tempo du `.cho` (♩), repris par l'en-tête au-dessus du scan. */
+  tempo?: number;
   /** Structure jouée : le scan ne la porte pas (il ignore l'ordre et les
    *  reprises décidés pour ce dimanche), le bandeau au-dessus l'affiche. */
   steps: SectionOccurrence[];
@@ -337,6 +339,7 @@ export function buildPerformanceBlocks(
           capo: capo || undefined,
           setlistKey: personalKey ? setlistKey : undefined,
           position: item.position,
+          tempo: ast.metadata.tempo ?? undefined,
           steps,
         });
       });

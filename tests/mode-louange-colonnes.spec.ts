@@ -255,9 +255,12 @@ function grandEcranTests(nom: string) {
     await expect(onStage(page, "[data-section]")).toHaveCount(0);
     // Le scan visible est sa fenêtre : l'image remonte au-dessus d'elle de l'en-tête gravé coupé (L3-T2b).
     const boite = (await onStage(page, "[data-jianpu-fenetre]").first().boundingBox())!;
-    const { w, h } = await page.evaluate(() => ({ w: innerWidth, h: innerHeight }));
-    expect(boite.y).toBeGreaterThanOrEqual(0);
-    expect(boite.y + boite.height, "scan entier en hauteur").toBeLessThanOrEqual(h + 0.5);
+    const w = await page.evaluate(() => innerWidth);
+    // Entre les deux barres, affichées ou escamotées (K1, L3-T5a).
+    const haut = (await page.locator("[data-performance-mode] .material-chrome:has(span.tabular-nums)").boundingBox())!;
+    const bas = (await page.locator("[data-performance-mode] .material-chrome:has(button[aria-label='Quitter'])").boundingBox())!;
+    expect(boite.y, "scan sous la barre du haut").toBeGreaterThanOrEqual(haut.y + haut.height - 0.5);
+    expect(boite.y + boite.height, "scan au-dessus de la barre du bas").toBeLessThanOrEqual(bas.y + 0.5);
     expect(boite.x + boite.width, "scan entier en largeur").toBeLessThanOrEqual(w + 0.5);
     await capture(page, "louange-2-colonnes-scan");
   });

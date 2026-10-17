@@ -1086,4 +1086,39 @@ rappel faux sur deux chants au même `section.uid` (C5).
   « orig. ») ; (c) le titre d'un chant sur scan s'imprime désormais (l'ancien lien était `print:hidden`, et le titre
   gravé est coupé depuis L3-T2b). Rien pour Timothée côté libellés.
 
-Prochaine étape : L3-T5 (mode louange) ; le lot 2 attend le passage complet.
+- **L3-T5a, 17/10/2026 — mode louange : K1 et en-tête d'une ligne** (go de Timothée du 17/10/2026). Codé : les deux
+  barres sont mesurées (`ResizeObserver`, bordure comprise, encoche comprise) et une page de scan (`fit`) prend leur hauteur
+  en marge haute et basse (divisée par `fontScale`, le contenu étant agrandi par `transform`) : le scan tient entre elles,
+  et ne bouge pas quand elles s'escamotent (K1). Au-dessus du bandeau, l'en-tête du chant sur une ligne
+  (`data-entete-scan` : n°, titre, ♩ tempo, capo, pastille de la tonalité jouée, « setlist : X ») ; le bandeau perd le n°
+  et le capo qu'il portait (props `position` et `capo` de `StructureStrip`, sans autre appelant, retirées). `tempo` ajouté
+  au bloc `jianpu-sheet`. En `fit`, la page est calée en haut (`items-start`) : bornée par la largeur (téléphone), elle
+  commence sous le bandeau, comme sur `v20-jp-a-louange-telephone` ; bornée par la hauteur, rien ne change. Place
+  comptée (téléphone, A+ 150 %, capo et tonalité de l'appareil) : le titre garde 3 em (« 一生… »), « setlist : X » se
+  tronque d'abord (il est aussi dans la barre du haut).
+  Tests (`jianpu-integration.spec.ts`) : test 8 K1 (scan sous la barre du haut et au-dessus de celle du bas, barres
+  affichées puis escamotées, même boîte), en-tête d'une ligne (quatre éléments sur la ligne du titre, dans l'ordre, au-dessus
+  du bandeau, lui-même au-dessus du scan), A+ 150 % avec capo (titre ≥ 40 px). Rouges avant le code pour la bonne raison
+  (scan à 54 px sous une barre de 56 à 60 px sur ordinateur, tablette, tablette paysage ; pas d'en-tête ; titre à 0 px) ;
+  au téléphone, le scan était déjà sous la barre (le test y rougissait sur l'en-tête absent). `mode-louange-colonnes`
+  « scan entier » : bornes = les barres (spec, « Tests existants qui changent »), rouge sur l'ancien code, vert sur le
+  nouveau. Agent testeur : `jianpu-integration` + `mode-louange-colonnes` sur cinq projets, 227 verts, 17 sautés, 1 rouge
+  (P7 sombre, tablette paysage, délai de 30 s, vert rejoué seul) ; `performance-mode`, `louange-sections-uniques`,
+  `look-louange`, `jianpu-par-defaut`, `jianpu-sheet` sur trois appareils : 367 verts, 35 sautés, 0 rouge. Captures
+  regardées (téléphone, tablette, tablette paysage, ordinateur, 1 440 ; clair et sombre ; 为我而来 p. 1 et 2, 一生爱你 en D,
+  barres affichées et escamotées ; téléphone A+ 150 % avec capo) : conformes à `v20-jp-a-louange-telephone` et
+  `-tablette`. Planche `npm run jianpu:audit 一生爱你 D` : inchangée.
+  Vérifié par Opus (17/10/2026) : rien de bloquant ; A+ / A− (150 % et 80 %, téléphone et tablette, scan entre les
+  barres), barre du bas sur deux lignes, loupe d'annotation, « Suivant » (dans la zone de la barre du bas, il ne couvre
+  plus le scan), Sections uniques, Structure seule, fusions. Corrigés : titre réduit à 0 px au téléphone en A+ 150 % avec
+  capo et tonalité de l'appareil (test ajouté) ; tests K1 qui mesuraient avant l'arrivée de `cadrage.json` (ils attendent
+  le recadrage) ; props orphelines de `StructureStrip` ; `ResizeObserver` sur la bordure. **À trancher par Timothée** :
+  (a) **les annotations déjà posées sur une page de scan sont décalées** : les traits sont en coordonnées d'écran, la clé
+  de page n'a pas changé, et le scan descend et rapetisse (tablette : haut ≈ 50 → 128 px, ≈ 120 px de hauteur en moins ;
+  L3-T2b l'avait déjà déplacé) — accepter, ou changer la clé des pages de scan (les anciens traits disparaissent au lieu
+  d'être faux) ; (b) en paysage sur ordinateur 1 280 × 720 et sur l'iPad paysage, le scan, borné par la hauteur, perd la
+  hauteur des barres (≈ 120 px) : il est plus petit qu'avant, jusqu'à L3-T5b (bandeau en colonne, scan sur toute la
+  hauteur). Laissés (mineurs) : la partie droite de l'en-tête est une copie de celle de `SongHeader` ; pastille à la
+  couleur des chants zh (tous les scans le sont) ; tempo écrit « ♩ 65 » (maquette) et non « ♩ = 65 » (page chant).
+
+Prochaine étape : L3-T5b (colonne paysage) ; le lot 2 attend le passage complet.

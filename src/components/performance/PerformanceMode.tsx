@@ -239,7 +239,7 @@ function splitSheetPages(
       continue;
     }
     // L'en-tête juste avant la partition part avec elle. Il n'est pas rendu
-    // (le scan porte déjà titre, auteur et tonalité) mais reste rattaché à la
+    // (la page de scan a son en-tête d'une ligne) mais reste rattaché à la
     // page : le sommaire, la progression dans le chant et le panneau capo
     // repèrent le chant courant par l'indice de son en-tête.
     const last = flow[flow.length - 1];
@@ -592,6 +592,21 @@ export function PerformanceMode({
   const rappelRefs = useRef<(HTMLDivElement | null)[]>([]);
   const measureInnerRef = useRef<HTMLDivElement | null>(null);
   const chromeTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  // Hauteur des barres, pour qu'une page de scan tienne entre elles (K1).
+  const barreHautRef = useRef<HTMLDivElement>(null);
+  const barreBasRef = useRef<HTMLDivElement>(null);
+  const [barres, setBarres] = useState({ haut: 0, bas: 0 });
+  useLayoutEffect(() => {
+    const haut = barreHautRef.current;
+    const bas = barreBasRef.current;
+    if (!haut || !bas) return;
+    const mesurer = () => setBarres({ haut: haut.offsetHeight, bas: bas.offsetHeight });
+    mesurer();
+    const ro = new ResizeObserver(mesurer);
+    ro.observe(haut, { box: "border-box" });
+    ro.observe(bas, { box: "border-box" });
+    return () => ro.disconnect();
+  }, []);
   const tapStart = useRef<{ x: number; y: number; time: number } | null>(null);
 
   // Annotations vectorielles de la page courante (toujours chargées, pas
@@ -1057,10 +1072,12 @@ export function PerformanceMode({
       return b?.kind === "section" && b.occurrenceUids?.length ? [b.occurrenceUids[0]] : [];
     }),
   );
+  // K1 : le scan tient entre les deux barres, mesurées (encoche comprise). Elles
+  // s'escamotent sans changer de taille : la page ne bouge pas avec elles.
   const renderPadding: React.CSSProperties = fitPage
     ? {
-        paddingTop: `calc(0.25rem + var(--sat, 0px) / ${fontScale})`,
-        paddingBottom: `calc(0.25rem + var(--sab, 0px) / ${fontScale})`,
+        paddingTop: barres.haut ? `calc(0.25rem + ${barres.haut / fontScale}px)` : `calc(0.25rem + var(--sat, 0px) / ${fontScale})`,
+        paddingBottom: barres.bas ? `calc(0.25rem + ${barres.bas / fontScale}px)` : `calc(0.25rem + var(--sab, 0px) / ${fontScale})`,
         paddingLeft: `calc(0.25rem + var(--sal, 0px) / ${fontScale})`,
         paddingRight: `calc(0.25rem + var(--sar, 0px) / ${fontScale})`,
       }
@@ -1211,12 +1228,12 @@ export function PerformanceMode({
               />
             );
           };
-          // Page 简谱 : bandeau de structure en haut, scan à l'échelle de la
-          // hauteur qui reste. Pas de pagination — un scan ne se coupe pas en
-          // deux. L'en-tête de chant n'est pas rendu : tout ce qu'il porte est
-          // déjà imprimé sur le scan, et les 200 px qu'il coûtait devenaient
-          // des marges blanches sur les côtés (la page est contrainte par sa
-          // hauteur). Le bandeau reprend ce que le scan ne peut pas savoir :
+          // Page 简谱 : en-tête d'une ligne et bandeau de structure en haut, scan
+          // à l'échelle de la hauteur qui reste. Pas de pagination — un scan ne
+          // se coupe pas en deux. L'en-tête complet du chant n'est pas rendu :
+          // ses 200 px devenaient des marges blanches sur les côtés (la page est
+          // contrainte par sa hauteur) ; une ligne remplace le titre gravé, coupé
+          // depuis L3-T2b (K3). Le bandeau reprend ce que le scan ne peut pas savoir :
           // l'ordre des sections voulu pour ce dimanche. Les pastilles du site
           // (D14), avec notes et transitions sur chaque page de scan : le scan
           // ne peut pas les porter (O8).
@@ -1225,20 +1242,44 @@ export function PerformanceMode({
             return (
               <div className="flex h-full flex-col">
                 {sheet?.kind === "jianpu-sheet" && (
-                  <div className="shrink-0">
+                  // Retrait des autres pages (px-6) : la page de scan n'a que 0,25rem de marge.
+                  <div className="shrink-0 px-5">
+                    {/* En-tête du chant sur une ligne (K3) : le titre gravé est coupé. */}
+                    <div data-entete-scan className="mb-2 flex items-center gap-2">
+                      <span className="w-5 h-5 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center shrink-0">
+                        {sheet.position}
+                      </span>
+                      <h2 className="min-w-[3em] truncate text-[22px] font-bold text-foreground leading-tight uppercase tracking-tight">
+                        {sheet.songTitle}
+                      </h2>
+                      {sheet.tempo ? (
+                        <span className="shrink-0 flex items-baseline gap-1 text-xs font-medium text-muted-foreground">
+                          <span className="text-foreground/70 text-[15px] leading-none">♩</span>{sheet.tempo}
+                        </span>
+                      ) : null}
+                      {/* Place comptée (téléphone, A+) : « setlist : X » se tronque avant le titre. */}
+                      <span className="ml-auto flex min-w-0 items-center gap-1.5">
+                        {sheet.capo ? (
+                          <span className="shrink-0 text-xs font-bold font-mono border-2 border-border rounded-full px-2.5 py-0.5 text-muted-foreground">
+                            {t("performance.capoBadge", { n: sheet.capo })}
+                          </span>
+                        ) : null}
+                        <span className="shrink-0 text-sm font-bold font-mono border-2 rounded-full px-2.5 py-0.5"
+                          style={{ color: langAccent("zh"), borderColor: langAccent("zh") }}>
+                          {sheet.songKey}
+                        </span>
+                        {sheet.setlistKey && (
+                          <span className="min-w-0 truncate text-xs font-semibold text-muted-foreground">
+                            {t("performance.personalKey", { key: sheet.setlistKey })}
+                          </span>
+                        )}
+                      </span>
+                    </div>
                     <StructureStrip
-                      position={sheet.position}
                       steps={sansTransitions(sheet.steps, showTransitions)}
-                      capo={sheet.capo}
                       details
                       className="mb-1.5"
-                    >
-                      {sheet.setlistKey && (
-                        <span className="text-[11px] font-semibold text-muted-foreground">
-                          {sheet.songKey} · {t("performance.personalKey", { key: sheet.setlistKey })}
-                        </span>
-                      )}
-                    </StructureStrip>
+                    />
                   </div>
                 )}
                 <div className="min-h-0 flex-1">{renderBlock(page.cols[0][0], true)}</div>
@@ -1368,6 +1409,7 @@ export function PerformanceMode({
       >
         {/* Top bar */}
         <div
+          ref={barreHautRef}
           className="absolute top-0 left-0 right-0 pointer-events-auto material-chrome material-steady shadow-[0_1px_0_hsl(var(--border))] px-4 py-3 flex items-center gap-3"
           style={{
             paddingTop: "calc(0.75rem + var(--sat, 0px))",
@@ -1429,6 +1471,7 @@ export function PerformanceMode({
 
         {/* Bottom bar */}
         <div
+          ref={barreBasRef}
           className="absolute bottom-0 left-0 right-0 pointer-events-auto material-chrome material-steady shadow-[0_-1px_0_hsl(var(--border))] px-3 py-2.5 flex items-center gap-1.5 flex-wrap"
           style={{
             paddingBottom: "calc(0.625rem + var(--sab, 0px))",

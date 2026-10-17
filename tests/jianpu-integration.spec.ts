@@ -669,3 +669,96 @@ for (const th of THEMES) {
     expect(b.y + b.height).toBeLessThanOrEqual(fenetre.y);
   });
 }
+
+// ─── L3-T5a : mode louange — K1 (le scan entre les barres) et l'en-tête d'une ligne ─
+
+async function ouvrirLouangeT5(page: Page, role = "pianiste") {
+  await page.route(/docs\.google\.com\/spreadsheets/, (route) => route.fulfill({ status: 200, contentType: "text/csv", body: "" }));
+  await page.addInitScript((r) => localStorage.setItem("perf-role-preset", r), role);
+  await signInAs(page, MUSICIEN, {
+    "setlists/setlist-t5": {
+      title: "Culte du 21 septembre", leader: "Jonathan Z.", category: "Culte Francophone", date: "2026-09-21",
+      language: "mixed", notes: "", ownerId: "uid-owner", isPrivate: false,
+      items: [{ songSlug: SLUG, position: 1, keyOverride: "D", showChords: true, showPinyin: true, useJianpu: false,
+        structureOverride: null, sectionNotes: {}, notes: "", jianpuSheet: true }],
+    },
+  }, "/setlists/setlist-t5");
+  await page.getByRole("button", { name: /Mode Louange/ }).click();
+  await expect(page.locator("[data-performance-mode] span.tabular-nums").last()).toHaveText(/^\d+ \/ \d+$/, { timeout: 30_000 });
+  await expect.poll(async () => (await fenetres(page, "[data-performance-mode]")).length, { timeout: 30_000 }).toBe(1);
+  // Recadrage arrivé (cadrage.json) : la fenêtre ne bouge plus.
+  const { w, h } = INDEX[SLUG].pages[0];
+  const top = CADRAGE[SLUG][0];
+  await expect.poll(async () => ratio((await fenetres(page, "[data-performance-mode]"))[0].fenetre) / (w / (h - top))).toBeCloseTo(1, 2);
+}
+
+/** Bas de la barre du haut, haut de la barre du bas (elles restent en place, escamotées). */
+async function barres(page: Page) {
+  const haut = (await page.locator("[data-performance-mode] .material-chrome:has(span.tabular-nums)").boundingBox())!;
+  const bas = (await page.locator("[data-performance-mode] .material-chrome:has(button[aria-label='Quitter'])").boundingBox())!;
+  return { hautBas: haut.y + haut.height, basHaut: bas.y };
+}
+
+test("8 K1 (mode louange) : le scan et son en-tête tiennent entre les deux barres, affichées puis escamotées", async ({ page }) => {
+  test.setTimeout(90_000);
+  await ouvrirLouangeT5(page);
+  const chrome = page.locator("[data-performance-mode] .material-chrome:has(span.tabular-nums)").locator("xpath=..");
+  // Barres affichées (elles s'escamotent après 3 s : un toucher au centre les rappelle).
+  const { w, h } = await page.evaluate(() => ({ w: innerWidth, h: innerHeight }));
+  if ((await chrome.evaluate((el) => getComputedStyle(el).opacity)) !== "1") await page.mouse.click(w / 2, h / 2);
+  await expect(chrome).toHaveCSS("opacity", "1");
+  const b = await barres(page);
+  const [affichee] = await fenetres(page, "[data-performance-mode]");
+  expect(affichee.fenetre.top, "scan sous la barre du haut").toBeGreaterThanOrEqual(b.hautBas - 0.5);
+  expect(affichee.fenetre.bottom, "scan au-dessus de la barre du bas").toBeLessThanOrEqual(b.basHaut + 0.5);
+  const entete = page.locator("[data-performance-mode] [data-entete-scan]:not([aria-hidden=true] *)");
+  expect((await entete.boundingBox())!.y, "en-tête sous la barre du haut").toBeGreaterThanOrEqual(b.hautBas - 0.5);
+  // Barres escamotées (un toucher au centre) : le scan ne bouge pas.
+  await page.mouse.click(w / 2, h / 2);
+  await expect(chrome).toHaveCSS("opacity", "0");
+  const [escamotee] = await fenetres(page, "[data-performance-mode]");
+  expect(await barres(page)).toEqual(b);
+  for (const k of ["top", "bottom", "left", "right"] as const) expect(escamotee.fenetre[k]).toBeCloseTo(affichee.fenetre[k], 0);
+});
+
+test("L3-T5a en-tête d'une ligne (mode louange) : n°, titre, ♩, pastille de tonalité, puis le bandeau, puis le scan", async ({ page }) => {
+  test.setTimeout(90_000);
+  await ouvrirLouangeT5(page);
+  const entete = page.locator("[data-performance-mode] [data-entete-scan]:not([aria-hidden=true] *)");
+  await expect(entete).toBeVisible();
+  const [rond, titre, tempo, pastille] = await Promise.all([
+    entete.getByText("1", { exact: true }).boundingBox(),
+    entete.getByRole("heading", { name: SLUG }).boundingBox(),
+    entete.getByText(/♩\s*65/).boundingBox(),
+    entete.getByText("D", { exact: true }).boundingBox(),
+  ]);
+  const milieu = (r: { y: number; height: number }) => r.y + r.height / 2;
+  for (const r of [rond!, tempo!, pastille!]) expect(Math.abs(milieu(r) - milieu(titre!)), "sur la ligne du titre").toBeLessThan(6);
+  expect(rond!.x + rond!.width).toBeLessThanOrEqual(titre!.x);
+  expect(titre!.x + titre!.width).toBeLessThanOrEqual(tempo!.x);
+  expect(tempo!.x + tempo!.width).toBeLessThanOrEqual(pastille!.x);
+  const e = (await entete.boundingBox())!;
+  expect(e.height, "une seule ligne").toBeLessThan(48);
+  const bandeau = page.locator("[data-performance-mode]").getByRole("list", { name: "Structure" });
+  const s = (await bandeau.boundingBox())!;
+  const [f] = await fenetres(page, "[data-performance-mode]");
+  expect(e.y + e.height, "en-tête au-dessus du bandeau").toBeLessThanOrEqual(s.y + 0.5);
+  expect(s.y + s.height, "bandeau au-dessus du scan").toBeLessThanOrEqual(f.fenetre.top + 0.5);
+});
+
+test("L3-T5a en-tête d'une ligne (mode louange), A+ 150 %, capo et tonalité de l'appareil : le titre reste lisible, rien ne sort de l'écran", async ({ page }) => {
+  test.setTimeout(90_000);
+  await page.addInitScript((slug) => {
+    localStorage.setItem("perf-font-scale", "1.5");
+    localStorage.setItem("perf-capos", JSON.stringify({ [slug]: 2 }));
+    localStorage.setItem("perf-personal-keys", JSON.stringify({ "setlist-t5": { [slug]: "E" } }));
+  }, SLUG);
+  // Le capo ne s'affiche qu'au guitariste.
+  await ouvrirLouangeT5(page, "guitariste");
+  const entete = page.locator("[data-performance-mode] [data-entete-scan]:not([aria-hidden=true] *)");
+  await expect(entete.getByText(/Capo/)).toBeVisible();
+  const titre = (await entete.getByRole("heading", { name: SLUG }).boundingBox())!;
+  expect(titre.width, "titre lisible (au moins deux caractères)").toBeGreaterThanOrEqual(40);
+  const e = (await entete.boundingBox())!;
+  expect(e.x + e.width).toBeLessThanOrEqual(page.viewportSize()!.width + 0.5);
+});

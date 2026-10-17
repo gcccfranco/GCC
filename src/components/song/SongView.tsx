@@ -453,8 +453,6 @@ export function NuanceBadge({ nuance, size = "sm", variant = "badge" }: { nuance
  *  peut pas les porter : scan 简谱, sections uniques, structure seule. */
 export function StructureStrip({
   steps,
-  position,
-  capo,
   songKey,
   details = false,
   compacte = false,
@@ -463,9 +461,6 @@ export function StructureStrip({
   children,
 }: {
   steps: SectionOccurrence[];
-  /** Numéro du chant dans la setlist, quand le bandeau tient lieu d'en-tête. */
-  position?: number;
-  capo?: number;
   /** Tonalité jouée : une « modulation » vers elle n'en est pas une. */
   songKey?: string;
   details?: boolean;
@@ -505,16 +500,6 @@ export function StructureStrip({
   return (
     <div className={className}>
       <div className="flex flex-wrap items-start gap-x-3 gap-y-2">
-        {position !== undefined && (
-          <span className="w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center shrink-0">
-            {position}
-          </span>
-        )}
-        {capo ? (
-          <span className="text-[10px] font-bold font-mono border border-border rounded-full px-1.5 py-0.5 text-muted-foreground">
-            {t("performance.capoBadge", { n: capo })}
-          </span>
-        ) : null}
         {/* Pastilles rondes ; la taille suit l'écran : 32 px sous 640 px (neuf étapes
             sur une rangée à 390 px), 44 px au-delà ; 24 px dans le rappel du mode
             louange. Non cliquables : pas de plancher tactile. */}
