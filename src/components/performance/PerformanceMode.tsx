@@ -935,8 +935,11 @@ export function PerformanceMode({
   // colonne garde sa clé, et ses traits ne se mêlent pas à ceux d'une autre mise en page.
   // « j2 » sur une page de scan : le scan a bougé (L3-T2b, L3-T5a) et les traits sont en
   // coordonnées d'écran ; ceux d'avant ne s'y chargent plus plutôt que tomber à côté des
-  // notes (gardés dans Firestore). À incrémenter si le scan bouge encore (L3-T5b).
-  const currentPageKey = computePageKey(blocks, currentPageIndices, `${layoutSig}${layout[currentPage]?.twoColumns ? "x2" : ""}${layout[currentPage]?.fit ? "j2" : ""}`);
+  // notes (gardés dans Firestore). « j3 » en paysage sur grand écran : la structure y passe
+  // en colonne et le scan glisse à droite en grandissant (L3-T5b). À incrémenter si le scan
+  // bouge encore.
+  const cleScan = layout[currentPage]?.fit ? (ecran.grand ? "j3" : "j2") : "";
+  const currentPageKey = computePageKey(blocks, currentPageIndices, `${layoutSig}${layout[currentPage]?.twoColumns ? "x2" : ""}${cleScan}`);
 
   // Charger les traits de la page courante (toujours — affichage permanent)
   useEffect(() => {
@@ -1001,6 +1004,9 @@ export function PerformanceMode({
   // Touch/pointer tap handling
   const handlePointerDown = useCallback((e: React.PointerEvent) => {
     if (e.pointerType === "pen") return;
+    // Clic sur une barre de défilement (colonne du scan, barres toujours affichées) : pas un toucher.
+    const el = e.target as HTMLElement;
+    if (el.clientWidth > 0 && el.scrollHeight > el.clientHeight && e.nativeEvent.offsetX >= el.clientWidth) return;
     tapStart.current = { x: e.clientX, y: e.clientY, time: Date.now() };
   }, []);
 
@@ -1075,6 +1081,8 @@ export function PerformanceMode({
       return b?.kind === "section" && b.occurrenceUids?.length ? [b.occurrenceUids[0]] : [];
     }),
   );
+  // L3-T5b : page de scan en paysage sur grand écran, structure en colonne à gauche.
+  const colonneScan = fitPage && ecran.grand;
   // K1 : le scan tient entre les deux barres, mesurées (encoche comprise). Elles
   // s'escamotent sans changer de taille : la page ne bouge pas avec elles.
   const renderPadding: React.CSSProperties = fitPage
@@ -1242,47 +1250,98 @@ export function PerformanceMode({
           // ne peut pas les porter (O8).
           if (page.fit) {
             const sheet = blocks[page.cols[0][0]];
+            const enTete = sheet?.kind === "jianpu-sheet" ? sheet : null;
+            const rond = enTete && (
+              <span className="w-5 h-5 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center shrink-0">
+                {enTete.position}
+              </span>
+            );
+            const tempo = enTete?.tempo ? (
+              <span className="shrink-0 flex items-baseline gap-1 text-xs font-medium text-muted-foreground">
+                <span className="text-foreground/70 text-[15px] leading-none">♩</span>{enTete.tempo}
+              </span>
+            ) : null;
+            // Place comptée (téléphone, A+) : « setlist : X » se tronque avant le titre.
+            const tonalite = enTete && (
+              <span className={`${colonneScan ? "flex-wrap " : "ml-auto "}flex min-w-0 items-center gap-1.5`}>
+                {enTete.capo ? (
+                  <span className="shrink-0 text-xs font-bold font-mono border-2 border-border rounded-full px-2.5 py-0.5 text-muted-foreground">
+                    {t("performance.capoBadge", { n: enTete.capo })}
+                  </span>
+                ) : null}
+                <span className="shrink-0 text-sm font-bold font-mono border-2 rounded-full px-2.5 py-0.5"
+                  style={{ color: langAccent("zh"), borderColor: langAccent("zh") }}>
+                  {enTete.songKey}
+                </span>
+                {enTete.setlistKey && (
+                  <span className="min-w-0 truncate text-xs font-semibold text-muted-foreground">
+                    {t("performance.personalKey", { key: enTete.setlistKey })}
+                  </span>
+                )}
+              </span>
+            );
+            const bandeauScan = enTete && (
+              <StructureStrip
+                steps={sansTransitions(enTete.steps, showTransitions)}
+                details
+                colonne={colonneScan}
+                className={colonneScan ? "" : "mb-1.5"}
+              />
+            );
+            // Paysage sur grand écran : l'en-tête et le bandeau passent dans une
+            // colonne de la marge gauche, « Suivant » en bas ; le scan, seul à
+            // droite, prend toute la hauteur entre les barres.
+            if (colonneScan) {
+              return (
+                <div className="flex h-full gap-6">
+                  <div data-colonne-scan className="flex h-full w-[200px] shrink-0 flex-col pl-5 pt-1">
+                    {enTete && (
+                      <>
+                        <div data-entete-scan className="mb-4">
+                          <div className="flex items-start gap-2">
+                            <span className="mt-1">{rond}</span>
+                            <h2 className="min-w-0 break-words text-[22px] font-bold text-foreground leading-tight uppercase tracking-tight">
+                              {enTete.songTitle}
+                            </h2>
+                          </div>
+                          <div className="mt-1.5 flex flex-wrap items-center gap-2 pl-7">
+                            {tempo}
+                            {tonalite}
+                          </div>
+                        </div>
+                        {/* Une structure longue défile seule : « Suivant » reste en bas. */}
+                        <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden">{bandeauScan}</div>
+                      </>
+                    )}
+                    {isLastPageOfSong && nextEntry && (
+                      <div data-suivant className="mt-auto shrink-0 pt-4 pb-1">
+                        <p className="text-xs text-muted-foreground">→ {t("performance.next")}</p>
+                        <p className="text-sm">
+                          <span className="font-semibold text-foreground">{nextEntry.block.title}</span>
+                          <span className="ml-1.5 font-mono text-muted-foreground">{nextEntry.block.songKey}</span>
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                  <div className="h-full min-w-0 flex-1">{renderBlock(page.cols[0][0], true)}</div>
+                </div>
+              );
+            }
             return (
               <div className="flex h-full flex-col">
-                {sheet?.kind === "jianpu-sheet" && (
+                {enTete && (
                   // Retrait des autres pages (px-6) : la page de scan n'a que 0,25rem de marge.
                   <div className="shrink-0 px-5">
                     {/* En-tête du chant sur une ligne (K3) : le titre gravé est coupé. */}
                     <div data-entete-scan className="mb-2 flex items-center gap-2">
-                      <span className="w-5 h-5 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center shrink-0">
-                        {sheet.position}
-                      </span>
+                      {rond}
                       <h2 className="min-w-[3em] truncate text-[22px] font-bold text-foreground leading-tight uppercase tracking-tight">
-                        {sheet.songTitle}
+                        {enTete.songTitle}
                       </h2>
-                      {sheet.tempo ? (
-                        <span className="shrink-0 flex items-baseline gap-1 text-xs font-medium text-muted-foreground">
-                          <span className="text-foreground/70 text-[15px] leading-none">♩</span>{sheet.tempo}
-                        </span>
-                      ) : null}
-                      {/* Place comptée (téléphone, A+) : « setlist : X » se tronque avant le titre. */}
-                      <span className="ml-auto flex min-w-0 items-center gap-1.5">
-                        {sheet.capo ? (
-                          <span className="shrink-0 text-xs font-bold font-mono border-2 border-border rounded-full px-2.5 py-0.5 text-muted-foreground">
-                            {t("performance.capoBadge", { n: sheet.capo })}
-                          </span>
-                        ) : null}
-                        <span className="shrink-0 text-sm font-bold font-mono border-2 rounded-full px-2.5 py-0.5"
-                          style={{ color: langAccent("zh"), borderColor: langAccent("zh") }}>
-                          {sheet.songKey}
-                        </span>
-                        {sheet.setlistKey && (
-                          <span className="min-w-0 truncate text-xs font-semibold text-muted-foreground">
-                            {t("performance.personalKey", { key: sheet.setlistKey })}
-                          </span>
-                        )}
-                      </span>
+                      {tempo}
+                      {tonalite}
                     </div>
-                    <StructureStrip
-                      steps={sansTransitions(sheet.steps, showTransitions)}
-                      details
-                      className="mb-1.5"
-                    />
+                    {bandeauScan}
                   </div>
                 )}
                 <div className="min-h-0 flex-1">{renderBlock(page.cols[0][0], true)}</div>
@@ -1330,8 +1389,9 @@ export function PerformanceMode({
       </div>
 
       {/* ── « Suivant : … » sur la dernière page d'un chant ── */}
-      {isLastPageOfSong && nextEntry && (
+      {isLastPageOfSong && nextEntry && !colonneScan && (
         <div
+          data-suivant
           className="absolute left-0 right-0 flex justify-center pointer-events-none"
           style={{ zIndex: 5, bottom: "calc(0.625rem + var(--sab, 0px))" }}
         >

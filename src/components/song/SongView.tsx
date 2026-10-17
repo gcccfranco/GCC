@@ -456,6 +456,7 @@ export function StructureStrip({
   songKey,
   details = false,
   compacte = false,
+  colonne = false,
   cerclees,
   className = "",
   children,
@@ -467,6 +468,9 @@ export function StructureStrip({
   /** Rappel du mode louange (pages suivantes d'un chant en Sections uniques) :
    *  pastilles de 24 px, sans nuance, modulation ni détails. */
   compacte?: boolean;
+  /** Colonne de la marge du mode louange (page de scan en paysage) : pastilles
+   *  empilées, chacune suivie de son nom, de « → X » et de sa nuance. */
+  colonne?: boolean;
   /** Occurrences imprimées sur la page : chacune cercle d'encre la première
    *  étape qui la joue, ses reprises ne le sont pas. */
   cerclees?: ReadonlySet<string>;
@@ -503,12 +507,12 @@ export function StructureStrip({
         {/* Pastilles rondes ; la taille suit l'écran : 32 px sous 640 px (neuf étapes
             sur une rangée à 390 px), 44 px au-delà ; 24 px dans le rappel du mode
             louange. Non cliquables : pas de plancher tactile. */}
-        <ol aria-label={t("songs.view.structure")} className={compacte ? "flex flex-wrap items-start gap-1.5" : "flex flex-wrap items-start gap-x-1.5 gap-y-2 sm:gap-x-3 sm:gap-y-3"}>
+        <ol aria-label={t("songs.view.structure")} className={colonne ? "flex flex-col gap-2" : compacte ? "flex flex-wrap items-start gap-1.5" : "flex flex-wrap items-start gap-x-1.5 gap-y-2 sm:gap-x-3 sm:gap-y-3"}>
           {groups.map((g, i) => {
             const targetKey = g.step.targetKey && g.step.targetKey !== songKey ? g.step.targetKey : undefined;
             const n = noteNumber.get(g);
             return (
-              <li key={i} className="flex flex-col items-center gap-1.5">
+              <li key={i} className={colonne ? "flex items-center gap-3" : "flex flex-col items-center gap-1.5"}>
                 <span
                   data-cerclee={cerclee.has(i) || undefined}
                   className={`relative inline-flex items-center justify-center rounded-full ${
@@ -524,8 +528,19 @@ export function StructureStrip({
                     <span aria-label={`${n}`} className={`absolute -right-1 -top-1 max-sm:h-4 max-sm:min-w-4 ${numberBadge}`}>{n}</span>
                   )}
                 </span>
-                {targetKey && !compacte && <span className="font-mono text-[12px] leading-none text-muted-foreground">→ {targetKey}</span>}
-                {!compacte && <NuanceBadge nuance={g.step.nuance} variant="text" />}
+                {colonne ? (
+                  // Nom, modulation et nuance passent à la ligne dans la largeur de la colonne.
+                  <span className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
+                    <span className="text-[15px] font-semibold leading-tight text-foreground">{g.full}</span>
+                    {targetKey && <span className="font-mono text-[12px] leading-none text-muted-foreground">→ {targetKey}</span>}
+                    <NuanceBadge nuance={g.step.nuance} variant="text" />
+                  </span>
+                ) : (
+                  <>
+                    {targetKey && !compacte && <span className="font-mono text-[12px] leading-none text-muted-foreground">→ {targetKey}</span>}
+                    {!compacte && <NuanceBadge nuance={g.step.nuance} variant="text" />}
+                  </>
+                )}
               </li>
             );
           })}

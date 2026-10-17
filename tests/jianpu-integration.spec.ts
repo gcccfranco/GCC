@@ -724,6 +724,8 @@ test("8 K1 (mode louange) : le scan et son en-tête tiennent entre les deux barr
 test("L3-T5a en-tête d'une ligne (mode louange) : n°, titre, ♩, pastille de tonalité, puis le bandeau, puis le scan", async ({ page }) => {
   test.setTimeout(90_000);
   await ouvrirLouangeT5(page);
+  // En paysage sur grand écran, l'en-tête et le bandeau sont dans la colonne de gauche (L3-T5b).
+  test.skip(await grandEcran(page), "téléphone et tablette en portrait");
   const entete = page.locator("[data-performance-mode] [data-entete-scan]:not([aria-hidden=true] *)");
   await expect(entete).toBeVisible();
   const [rond, titre, tempo, pastille] = await Promise.all([
@@ -771,5 +773,119 @@ test("L3-T5a annotations : une page de scan a sa propre clé (« j2 ») — les 
     if (m && r.method() === "GET") lues.push(decodeURIComponent(m[1]));
   });
   await ouvrirLouangeT5(page);
-  await expect.poll(() => lues.at(-1) ?? "").toMatch(/j2$/);
+  // En paysage sur grand écran, la colonne (L3-T5b) a encore déplacé le scan : « j3 ».
+  await expect.poll(() => lues.at(-1) ?? "").toMatch((await grandEcran(page)) ? /j3$/ : /j2$/);
 });
+
+// ─── L3-T5b : mode louange — en paysage sur grand écran, la structure en colonne ─
+
+const grandEcran = (page: Page) =>
+  page.evaluate(() => matchMedia("(pointer: fine) and (min-width: 1024px), (pointer: coarse) and (orientation: landscape) and (min-width: 1024px)").matches);
+
+/** 一生爱你 en D puis Abba Père : la page du scan est la dernière du chant, « Suivant » y est. */
+async function ouvrirLouangeT5b(page: Page, over: Record<string, unknown> = {}, role = "pianiste") {
+  await page.route(/docs\.google\.com\/spreadsheets/, (route) => route.fulfill({ status: 200, contentType: "text/csv", body: "" }));
+  await page.addInitScript((r) => localStorage.setItem("perf-role-preset", r), role);
+  const item = { showChords: true, showPinyin: true, useJianpu: false, structureOverride: null, notes: "" };
+  await signInAs(page, MUSICIEN, {
+    "setlists/setlist-t5b": {
+      title: "Culte du 21 septembre", leader: "Jonathan Z.", category: "Culte Francophone", date: "2026-09-21",
+      language: "mixed", notes: "", ownerId: "uid-owner", isPrivate: false,
+      items: [
+        { ...item, songSlug: SLUG, position: 1, keyOverride: "D", jianpuSheet: true,
+          sectionNotes: { "chorus-3": "Ralentir la dernière ligne" }, ...over },
+        { ...item, songSlug: "abba-pere", position: 2, keyOverride: null, sectionNotes: {} },
+      ],
+    },
+  }, "/setlists/setlist-t5b");
+  await page.getByRole("button", { name: /Mode Louange/ }).click();
+  await expect(page.locator("[data-performance-mode] span.tabular-nums").last()).toHaveText(/^\d+ \/ \d+$/, { timeout: 30_000 });
+  const { w, h } = INDEX[SLUG].pages[0];
+  const top = CADRAGE[SLUG][0];
+  await expect.poll(async () => (await fenetres(page, "[data-performance-mode]")).length, { timeout: 30_000 }).toBe(1);
+  await expect.poll(async () => ratio((await fenetres(page, "[data-performance-mode]"))[0].fenetre) / (w / (h - top))).toBeCloseTo(1, 2);
+}
+
+test("8 K1, paysage grand écran (mode louange) : la structure en colonne à gauche, « Suivant » en bas de la colonne, le scan sur toute la hauteur", async ({ page }) => {
+  test.setTimeout(90_000);
+  await ouvrirLouangeT5b(page);
+  test.skip(!(await grandEcran(page)), "paysage sur grand écran seulement");
+  const b = await barres(page);
+  const colonne = page.locator("[data-performance-mode] [data-colonne-scan]:not([aria-hidden=true] *)");
+  await expect(colonne).toBeVisible();
+  const c = (await colonne.boundingBox())!;
+  const [f] = await fenetres(page, "[data-performance-mode]");
+  expect(c.x + c.width, "colonne à gauche du scan").toBeLessThanOrEqual(f.fenetre.left + 0.5);
+  expect(c.width, "≈ 200 px (à la taille du texte)").toBeLessThanOrEqual(240);
+  expect(c.y, "colonne sous la barre du haut").toBeGreaterThanOrEqual(b.hautBas - 0.5);
+  expect(c.y + c.height, "colonne au-dessus de la barre du bas").toBeLessThanOrEqual(b.basHaut + 0.5);
+  // L'en-tête du chant, le bandeau (pastilles avec leur nom, note numérotée), puis « Suivant ».
+  await expect(colonne.locator("[data-entete-scan]").getByRole("heading", { name: SLUG })).toBeVisible();
+  const bandeau = colonne.getByRole("list", { name: "Structure" });
+  await expect(bandeau).toBeVisible();
+  await expect(bandeau.getByText("Refrain", { exact: true }).first()).toBeVisible();
+  await expect(colonne.getByText("Ralentir la dernière ligne")).toBeVisible();
+  const suivant = colonne.locator("[data-suivant]");
+  await expect(suivant).toContainText("Abba Père");
+  const s = (await suivant.boundingBox())!;
+  const l = (await bandeau.boundingBox())!;
+  expect(s.y, "« Suivant » sous le bandeau").toBeGreaterThan(l.y + l.height);
+  expect(s.y + s.height, "« Suivant » en bas de la colonne").toBeGreaterThan(c.y + c.height - 60);
+  // Une seule pastille « Suivant » : celle du bas de l'écran ne s'ajoute pas.
+  await expect(page.locator("[data-performance-mode] [data-suivant]")).toHaveCount(1);
+  // Le scan, sans rien au-dessus de lui, prend la hauteur entre les barres (bornée par la largeur sinon).
+  const libre = b.basHaut - b.hautBas;
+  expect(f.fenetre.height, "scan sur toute la hauteur").toBeGreaterThanOrEqual(libre - 12);
+});
+
+test("L3-T5b colonne : structure de 12 étapes, nuances et modulation — « Suivant » reste à l'écran, rien ne déborde à droite", async ({ page }) => {
+  test.setTimeout(90_000);
+  const ids = ["intro-1", "verse-2", "chorus-3"];
+  const ordre = [0, 1, 2, 1, 2, 0, 1, 2, 1, 2, 0, 1].map((n, i) => `${ids[n]}-${i}`);
+  await ouvrirLouangeT5b(page, {
+    structureOverride: ordre,
+    sectionNuances: { [ordre[1]]: { tags: ["acappella", "instrumental", "ff"] }, [ordre[2]]: { tags: ["cresc", "tutti"] } },
+    sectionKeys: { "chorus-3": "E" },
+  });
+  test.skip(!(await grandEcran(page)), "paysage sur grand écran seulement");
+  const b = await barres(page);
+  const colonne = page.locator("[data-performance-mode] [data-colonne-scan]:not([aria-hidden=true] *)");
+  await expect(colonne.getByRole("list", { name: "Structure" }).locator("> li")).toHaveCount(12);
+  const suivant = colonne.locator("[data-suivant]");
+  await expect(suivant).toBeInViewport({ ratio: 1 });
+  const s = (await suivant.boundingBox())!;
+  expect(s.y + s.height, "« Suivant » au-dessus de la barre du bas").toBeLessThanOrEqual(b.basHaut + 0.5);
+  const debord = await colonne.evaluate((c) => {
+    const droite = c.getBoundingClientRect().right;
+    return {
+      largeur: c.scrollWidth - c.clientWidth,
+      dehors: Array.from(c.querySelectorAll("li *"), (e) => e.getBoundingClientRect().right - droite).filter((d) => d > 0.5),
+    };
+  });
+  expect(debord.largeur, "pas de défilement horizontal").toBeLessThanOrEqual(0);
+  expect(debord.dehors, "rien à droite de la colonne").toEqual([]);
+});
+
+test("L3-T5b colonne, A+ 150 %, capo et tonalité de l'appareil : « setlist : X » se lit en entier", async ({ page }) => {
+  test.setTimeout(90_000);
+  await page.addInitScript((slug) => {
+    localStorage.setItem("perf-font-scale", "1.5");
+    localStorage.setItem("perf-capos", JSON.stringify({ [slug]: 2 }));
+    localStorage.setItem("perf-personal-keys", JSON.stringify({ "setlist-t5b": { [slug]: "E" } }));
+  }, SLUG);
+  await ouvrirLouangeT5b(page, {}, "guitariste");
+  test.skip(!(await grandEcran(page)), "paysage sur grand écran seulement");
+  const entete = page.locator("[data-performance-mode] [data-colonne-scan] [data-entete-scan]:not([aria-hidden=true] *)");
+  await expect(entete.getByText(/Capo/)).toBeVisible();
+  const tronques = await entete.evaluate((e) => Array.from(e.querySelectorAll("span, h2"), (x) => x.scrollWidth - x.clientWidth).filter((d) => d > 0));
+  expect(tronques, "aucun texte tronqué").toEqual([]);
+});
+
+test("L3-T5b hors paysage grand écran (mode louange) : pas de colonne, le bandeau au-dessus du scan", async ({ page }) => {
+  test.setTimeout(90_000);
+  await ouvrirLouangeT5b(page);
+  test.skip(await grandEcran(page), "téléphone et tablette en portrait");
+  await expect(page.locator("[data-performance-mode] [data-colonne-scan]")).toHaveCount(0);
+  await expect(page.locator("[data-performance-mode]").getByText(/Suivant/).first()).toBeVisible();
+});
+

@@ -1440,7 +1440,8 @@ porte le nom « GCC » et le menu par sections dont ces modules ont besoin.
   à L3-T1e (recadrage certifié à l'œil, 189 / 189), L3-T2a (scan en encre), L3-T2b (fenêtre : en-tête gravé coupé),
   L3-T2c (messages P7, K4), L3-T3 (page chant : en-tête du site, segment « 简谱 · Paroles »), L3-T4 (setlist, vue
   Partitions : en-tête d'un chant en paroles au-dessus du scan), L3-T5a (mode louange : scan entre les barres, K1 ;
-  en-tête d'une ligne) faites et vérifiées par Opus ; reste L3-T5b (colonne paysage), L3-T6, L3-T7. Questions ouvertes :
+  en-tête d'une ligne), L3-T5b (mode louange en paysage : structure en colonne à gauche, scan sur toute la hauteur)
+  faites et vérifiées par Opus ; reste L3-T6, L3-T7. Questions ouvertes :
   « Avancement » de la spec.
 
 ## 7. Relecture adversariale (14/09/2026)

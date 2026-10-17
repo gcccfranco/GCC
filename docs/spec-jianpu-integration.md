@@ -1122,4 +1122,40 @@ rappel faux sur deux chants au même `section.uid` (C5).
   (bandeau en colonne, scan sur toute la hauteur). Laissés (mineurs) : la partie droite de l'en-tête est une copie de celle de `SongHeader` ; pastille à la
   couleur des chants zh (tous les scans le sont) ; tempo écrit « ♩ 65 » (maquette) et non « ♩ = 65 » (page chant).
 
-Prochaine étape : L3-T5b (colonne paysage) ; le lot 2 attend le passage complet.
+- **L3-T5b, 17/10/2026 — mode louange : la structure en colonne en paysage** (go de Timothée du 17/10/2026). Codé : sur une
+  page de scan (`fit`) en paysage sur grand écran (`GRAND_ECRAN` : iPad couché, ordinateur ; `colonneScan`), l'en-tête du
+  chant et le bandeau passent dans une colonne de 200 px à gauche (`data-colonne-scan`) : n° et titre, puis ♩, capo,
+  pastille et « setlist : X » (qui passent à la ligne), puis le bandeau en colonne (`StructureStrip colonne` : pastilles
+  empilées, chacune suivie de son nom, de « → X » et de sa nuance, qui passent à la ligne ; notes numérotées dessous) ;
+  une structure longue défile seule, « Suivant » reste en bas de la colonne (dernière page du chant ; la pastille du bas
+  de l'écran n'est plus rendue dans ce cas). Le scan, seul à droite, prend toute la hauteur entre les barres (K1 gardé).
+  Téléphone et tablette debout : inchangés (L3-T5a). Un clic sur une barre de défilement (barres toujours affichées sur
+  ordinateur) n'est plus pris pour un toucher qui tourne la page.
+  Tests (`jianpu-integration.spec.ts`) : « 8 K1, paysage grand écran » (colonne à gauche du scan, ≤ 240 px, entre les
+  barres ; en-tête, bandeau avec « Refrain » et la note ; « Suivant » sous le bandeau, en bas, un seul ; scan sur la
+  hauteur libre à 12 px près), « hors paysage » (pas de colonne), « structure de 12 étapes, nuances et modulation »
+  (« Suivant » à l'écran, rien ne déborde à droite), « A+ 150 %, capo et tonalité de l'appareil » (rien de tronqué) ;
+  « L3-T5a en-tête d'une ligne » limité au téléphone et à la tablette debout. Rouges avant le code pour la bonne raison
+  (pas de colonne ; puis, après la vérification Opus, « Suivant » hors écran, nuances coupées, « setlist… » tronqué),
+  puis verts. Agent testeur, avant la vérification : `jianpu-integration` + `mode-louange-colonnes` sur cinq projets
+  235 verts, 25 sautés ; `performance-mode`, `louange-sections-uniques`, `look-louange`, `jianpu-par-defaut` sur trois
+  appareils 313 verts, 35 sautés ; `performance-mode` + `look-louange` en tablette paysage et ordinateur 1 440 : 114
+  verts, 18 sautés ; 0 rouge. Après les corrections : `jianpu-integration` sur cinq projets 208 verts, 12 sautés ;
+  `performance-mode`, `mode-louange-colonnes`, `louange-sections-uniques` sur trois appareils 190 verts, 23 sautés ;
+  `performance-mode` en tablette paysage et ordinateur 1 440 : 46 verts ; 0 rouge. Captures regardées (téléphone, tablette,
+  tablette paysage, ordinateur, 1 440 ; clair et sombre ; A+ 150 % ; 一生爱你 en D, 为我而来 p. 1 et 2, structure de 12
+  étapes avec nuances, capo et tonalité de l'appareil) : conformes à `v20-jp-a-louange-sombre-ipad-paysage`,
+  `-louange-ordinateur` et `v20-ml-uniques-zh-ipad-paysage` ; téléphone et tablette debout inchangés.
+  Vérifié par Opus (17/10/2026) : rien de bloquant ; rotation paysage ↔ portrait, 为我而来 (K4 à droite, « Suivant » en p. 2
+  seulement), Sections uniques, Structure seule (pas de scan), « 2 colonnes », loupe, autres appelants de
+  `StructureStrip` vérifiés ; cinq mutations tuées par les tests. Corrigés : colonne qui débordait par le bas (« Suivant »
+  et notes cachés dès ≈ 9 étapes sur iPad) ; clic sur la barre de défilement qui reculait d'une page ; nuances coupées à
+  droite ; « setlist : X » tronqué à A+. **À trancher par Timothée** : (a) au-delà de ≈ 9 étapes, le bandeau de la
+  colonne défile (la dernière pastille coupée en bas est le seul signe) — garder, ou passer en pastilles de 32 px
+  quand la place manque. Annotations : le scan glisse d'≈ 220 px vers la droite et grandit en paysage grand écran ;
+  suivant la règle posée avec la clé `j2` (L3-T5a), la clé d'une page de scan y passe à `j3` (`j2` ailleurs, où le scan
+  n'a pas bougé) ; test « L3-T5a annotations » adapté (`j3` en paysage grand écran), vert sur tablette, tablette
+  paysage et ordinateur, et « trait posé en une colonne » (`mode-louange-colonnes`) vert. Rien pour Timothée côté
+  libellés (aucun nouveau texte).
+
+Prochaine étape : L3-T6 (PDF de setlist) ; le lot 2 attend le passage complet.
