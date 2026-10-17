@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
-import { repondreDansLeSite } from "./helpers/agencement";
+import { estGrandEcran, fenetreDuSite, repondreDansLeSite } from "./helpers/agencement";
 import { GROUPES } from "../src/types/user";
 import type { OrganigrammeGroupe, RoleGroupe } from "../src/types/groupe";
 import {
@@ -23,6 +23,10 @@ import { uidsDesAudiences, uidsDuGroupe } from "../src/lib/push/recipients";
 import { rattachementDe } from "../src/lib/equipes/organigramme";
 import { lireEquipes, recalculerDepuisOrganigramme, recalculerRattachement } from "../src/lib/equipes/serveur";
 import { changerGroupe, exigerTenirGroupe, lireGroupes } from "../src/lib/groupes/serveur";
+import {
+  correspondAuFiltreGroupe, droitsParRoles, filtresPersonnes, nombreSansGroupe, nomsDistincts, postesDeCompte,
+  titulairesSansCompte,
+} from "../src/lib/groupes/personnes";
 
 // Lot 2 du chantier « équipes et groupes » (docs/spec-organigrammes-groupes.md), tranche OG-A :
 // modèle et logique pure, aucun écran. Les tranches suivantes ajoutent leurs essais à ce fichier.
@@ -1124,5 +1128,232 @@ test.describe("OG-C · libellés", () => {
     expect(zh.form.sansPlanning).toContain("{{groupe}}");
     expect(zh.enTete.auPlus).toBe("副主席 · 最多 {{n}} 位");
     expect(zh.droit.saisirFetes).toBe("填写节日诗歌");
+  });
+});
+
+// ─── OG-D · Personnes et Sans compte ─────────────────────────────────────────
+
+test.describe("OG-D · logique pure (filtres, rôles d'une personne, titulaires sans compte)", () => {
+  test("filtresPersonnes : Amour, Joie et « Sans groupe » seulement interrupteur ouvert ; les filtres d'avant restent", () => {
+    const ferme = filtresPersonnes(false);
+    const ouvert = filtresPersonnes(true);
+    expect(ferme).not.toContain("Groupe Amour");
+    expect(ferme).not.toContain("Sans groupe");
+    expect(ouvert).toEqual([...ferme.slice(0, ferme.indexOf("Ne sert pas")), "Groupe Amour", "Groupe Joie", "Sans groupe", "Ne sert pas"]);
+    expect(ouvert).toContain("EDD");
+    expect(ouvert).toContain("Culte Francophone");
+  });
+
+  test("correspondAuFiltreGroupe : suit groupeDe (champ ou déduit) ; sans interrupteur, la clé de serviceRoles", () => {
+    const parCle = { serviceRoles: { "Groupe Paix": [] } };
+    const parChamp = { groupe: "joie", serviceRoles: {} };
+    const deuxCles = { serviceRoles: { "Groupe Paix": [], "Groupe Bonté": [] } };
+    const rien = { serviceRoles: {} };
+    expect(correspondAuFiltreGroupe(parCle, "Groupe Paix", true)).toBe(true);
+    expect(correspondAuFiltreGroupe(parChamp, "Groupe Joie", true)).toBe(true);
+    expect(correspondAuFiltreGroupe(parChamp, "Groupe Paix", true)).toBe(false);
+    // Un compte qui sert dans deux groupes est « Sans groupe » (OG2).
+    expect(correspondAuFiltreGroupe(deuxCles, "Groupe Paix", true)).toBe(false);
+    expect(correspondAuFiltreGroupe(deuxCles, "Sans groupe", true)).toBe(true);
+    expect(correspondAuFiltreGroupe(rien, "Sans groupe", true)).toBe(true);
+    expect(correspondAuFiltreGroupe(parCle, "Sans groupe", true)).toBe(false);
+    // Ancienne administration : la clé seule.
+    expect(correspondAuFiltreGroupe(deuxCles, "Groupe Paix", false)).toBe(true);
+    // Pas un filtre de groupe.
+    expect(correspondAuFiltreGroupe(parCle, "EDD", true)).toBeNull();
+    expect(correspondAuFiltreGroupe(parCle, "Tous", false)).toBeNull();
+  });
+
+  test("nombreSansGroupe : les comptes dont groupeDe est nul", () => {
+    expect(nombreSansGroupe([{ serviceRoles: {} }, { groupe: "amour" }, { groupe: "", serviceRoles: { "Groupe Paix": [] } }, { serviceRoles: { "Groupe Bonté": [] } }])).toBe(2);
+  });
+
+  test("postesDeCompte : président, VP, puis ses rôles (au comité d'abord) ; rien pour un autre ou sans compte", () => {
+    const g = { ...PAIX, vp: [t("Joël F.", "joel")] };
+    expect(postesDeCompte(g, "ruth")).toEqual([{ fixe: "president" }]);
+    // Joël : VP, puis Musiciens.
+    expect(postesDeCompte(g, "joel").map((p) => p.fixe ?? p.role!.id)).toEqual(["vp", "r-mus"]);
+    // Noé : « Responsable louange » (au comité) avant tout autre rôle.
+    const noe = postesDeCompte({ ...g, roles: [g.roles[4], { ...g.roles[1], titulaires: [t("Joël F.", "joel")] }, { ...g.roles[4], id: "r-x", titulaires: [t("Joël F.", "joel")] }] }, "joel");
+    expect(noe.map((p) => p.fixe ?? p.role!.id)).toEqual(["vp", "r-resp", "r-x"]);
+    expect(postesDeCompte(g, "inconnu")).toEqual([]);
+    expect(postesDeCompte(g, "")).toEqual([]);
+    expect(postesDeCompte(undefined, "ruth")).toEqual([]);
+  });
+
+  test("droitsParRoles : Publier inclut Remplir ; Notifier à part ; rien → tout faux", () => {
+    expect(droitsParRoles({})).toEqual({ remplit: false, publie: false, notifie: false });
+    expect(droitsParRoles({ remplitParRole: ["paix"] })).toEqual({ remplit: true, publie: false, notifie: false });
+    expect(droitsParRoles({ publieParRole: ["paix"] })).toEqual({ remplit: true, publie: true, notifie: false });
+    expect(droitsParRoles({ notifieParRole: ["Groupe Joie"] })).toEqual({ remplit: false, publie: false, notifie: true });
+  });
+
+  test("titulairesSansCompte (OG32) : un par nom et par groupe, présidence, VP et rôles ; les comptes n'y sont pas", () => {
+    const paix: OrganigrammeGroupe = { ...PAIX, president: t("Ruth K.", "ruth"), vp: [t("Éli Sans")] };
+    const l = titulairesSansCompte([paix, JOIE, { ...BONTE, vp: [t("Éli sans")] }]);
+    // « Ma Lin » tient deux rôles du groupe Paix : une seule personne (OG15).
+    const malin = l.find((x) => x.nom === "Ma Lin")!;
+    expect(malin.groupe).toBe("paix");
+    expect(malin.postes.map((p) => p.role!.id)).toEqual(["r-mus", "r-plan"]);
+    expect(l.filter((x) => x.nom === "Ma Lin")).toHaveLength(1);
+    // Le même nom (sans accents ni casse) dans deux groupes : une ligne par groupe.
+    expect(l.filter((x) => x.nom.toLowerCase() === "éli sans").map((x) => x.groupe)).toEqual(["paix", "bonte"]);
+    expect(l.find((x) => x.nom === "Éli Sans")!.postes).toEqual([{ fixe: "vp" }]);
+    // Aucun compte, ordre de la table.
+    expect(l.map((x) => x.nom)).toEqual(["Éli Sans", "Ma Lin", "Éli sans"]);
+    expect(titulairesSansCompte([])).toEqual([]);
+  });
+
+  test("nomsDistincts : un nom écrit dans un planning et dans un organigramme n'est compté qu'une fois (OG32)", () => {
+    expect(nomsDistincts(["Ma Lin", "Zoé Q."], ["ma lin", "Éli Sans", " "], ["Eli sans"])).toEqual(["Ma Lin", "Zoé Q.", "Éli Sans"]);
+  });
+});
+
+test.describe("OG-D · navigateur (Personnes, Sans compte)", () => {
+  const compte = (uid: string, prenom: string, nom: string, o: Partial<FakeProfile> = {}): FakeProfile =>
+    ({ uid, email: `${uid}@example.com`, firstName: prenom, lastName: nom, planningName: `${prenom} ${nom}`, serviceRoles: {}, ...o });
+  const ADMIN = compte("adm", "Admin", "T.", { email: ADMIN_EMAILS[0] });
+  const JOEL = compte("joel", "Joël", "F.", { groupe: "paix", remplitParRole: ["paix"], publieParRole: ["paix"], notifieParRole: ["Groupe Paix"], dansEquipes: ["comite-paix"] });
+  const COMPTES: FakeProfile[] = [
+    JOEL,
+    compte("ruth", "Ruth", "K.", { groupe: "paix", referentDe: ["comite-paix"], dansEquipes: ["comite-paix"] }),
+    compte("ana", "Ana", "T.", { groupe: "joie" }),
+    compte("marc", "Marc", "A.", { serviceRoles: { "Groupe Bonté": ["musicien"] } }),
+    compte("yann", "Yann", "M."),
+    compte("doublon", "Eva", "D.", { serviceRoles: { "Groupe Paix": [], "Groupe Bonté": [] } }),
+  ];
+  const GROUPE_PAIX: OrganigrammeGroupe = {
+    id: "paix", president: t("Ruth K.", "ruth"), vp: [],
+    roles: [
+      role("r-mus", "Musiciens", { nomZh: "司琴", colonne: "musiciens", titulaires: [t("Joël F.", "joel"), t("Ma Lin")] }),
+      role("r-resp", "Responsable louange", { nomZh: "敬拜负责人", comite: true, droits: droits({ publier: true, remplir: true }), titulaires: [t("Joël F.", "joel")] }),
+      role("r-plan", "Planning", { titulaires: [t("Ma Lin")] }),
+    ],
+    updatedAt: "", parUid: "", parNom: "",
+  };
+  const docs = () => ({
+    ...Object.fromEntries([ADMIN, ...COMPTES].map(({ uid, ...p }) => [`users/${uid}`, p as Record<string, unknown>])),
+    "groupes/paix": docGroupe(GROUPE_PAIX),
+  });
+  async function ouvrir(page: Page, to: string) {
+    const routes: Record<string, unknown>[] = [];
+    await page.route("**/api/equipes/groupes", async (route) => {
+      routes.push(route.request().postDataJSON() as Record<string, unknown>);
+      await route.fulfill({ json: { ok: true, maj: 1, ignores: [] } });
+    });
+    await page.route(/docs\.google\.com\/spreadsheets/, (route) => route.fulfill({ status: 200, contentType: "text/csv", body: "" }));
+    const db = await signInAs(page, ADMIN, docs(), to);
+    return { db, routes };
+  }
+  const fiche = (page: Page) => page.locator("article");
+
+  test("Personnes : le sous-titre compte les inscrits, les groupes et les comptes sans groupe ; trois filtres de plus", async ({ page }) => {
+    await ouvrir(page, "/back-office/equipes/personnes");
+    // Sans groupe : Marc (clé de Bonté seule : déduit Bonté, donc avec groupe), Yann, Eva (deux clés) et l'admin : 3.
+    await expect(page.locator("header[data-entete-page]")).toContainText("7 inscrits · 5 groupes · 3 sans groupe");
+    const filtres = page.getByRole("group", { name: "Filtrer les membres" });
+    await expect(filtres.getByRole("button", { name: "Groupe Amour" })).toBeVisible();
+    await expect(filtres.getByRole("button", { name: "Groupe Joie" })).toBeVisible();
+    await filtres.getByRole("button", { name: "Sans groupe" }).click();
+    const lignes = page.getByRole("button", { name: /Yann M\.|Eva D\./ });
+    await expect(lignes).toHaveCount(2);
+    await expect(page.getByRole("button", { name: /Joël F\./ })).toHaveCount(0);
+    await filtres.getByRole("button", { name: "Groupe Joie" }).click();
+    await expect(page.getByRole("button", { name: /Ana T\./ })).toBeVisible();
+    await expect(page.getByRole("button", { name: /Yann M\./ })).toHaveCount(0);
+  });
+
+  test("Personnes : la ligne dit le groupe et les rôles ; « Sans groupe » pour qui n'en a pas", async ({ page }) => {
+    await ouvrir(page, "/back-office/equipes/personnes");
+    const joel = page.getByRole("button", { name: /Joël F\./ });
+    await expect(joel).toContainText("Groupe Paix · Responsable louange, Musiciens");
+    await expect(page.getByRole("button", { name: /Yann M\./ })).toContainText("Sans groupe");
+    await expect(page.getByRole("button", { name: /Ruth K\./ })).toContainText("Groupe Paix · Président");
+  });
+
+  test("la fiche : carte Groupe, Rôles dans le Groupe Paix, Droits « par ses rôles », Services et équipes", async ({ page }) => {
+    await ouvrir(page, "/back-office/equipes/personnes?uid=joel");
+    const f = fiche(page);
+    await expect(f.getByRole("heading", { level: 2 })).toHaveText("Joël F.");
+    const groupe = f.getByRole("region", { name: "Groupe", exact: true });
+    await expect(groupe).toContainText("Groupe Paix");
+    await expect(groupe).toContainText("un seul groupe par personne");
+    await expect(groupe).toContainText("Changer de groupe retire ses rôles du Groupe Paix (admin seulement).");
+    const roles = f.getByRole("region", { name: "Rôles dans le Groupe Paix" });
+    await expect(roles).toContainText("Responsable louange");
+    await expect(roles).toContainText("敬拜负责人");
+    await expect(roles).toContainText("au comité");
+    await expect(roles).toContainText("Musiciens");
+    await expect(roles).toContainText("Colonne Musiciens");
+    await expect(roles.getByRole("link", { name: "Organigramme" })).toHaveAttribute("href", /\/back-office\/equipes\/?\?groupe=paix$/);
+    const droitsCarte = f.getByRole("region", { name: "Droits" });
+    await expect(droitsCarte).toContainText("Par ses rôles");
+    await expect(droitsCarte).toContainText("Remplit et publie le planning");
+    await expect(droitsCarte).toContainText("Celles du Groupe Paix");
+    await expect(droitsCarte).toContainText("Coordination : cochée par un admin. Admin : liste des adresses, ne se coche pas.");
+    await expect(f.getByRole("region", { name: "Services et équipes" })).toContainText("pendant la transition");
+    await expect(f).not.toContainText("Services et rôles");
+  });
+
+  test("la fiche d'un compte sans groupe : pas de carte Rôles, « Sans groupe »", async ({ page }) => {
+    await ouvrir(page, "/back-office/equipes/personnes?uid=yann");
+    const f = fiche(page);
+    await expect(f.getByRole("region", { name: "Groupe", exact: true })).toContainText("Sans groupe");
+    await expect(f.getByRole("region", { name: /^Rôles dans le/ })).toHaveCount(0);
+    await expect(f.getByRole("region", { name: "Droits" })).toContainText(/Par ses rôles\s*—/);
+  });
+
+  test("« Changer de groupe » : feuille des cinq groupes et « Sans groupe », confirmation dans le site, route changerGroupe", async ({ page }) => {
+    const { routes } = await ouvrir(page, "/back-office/equipes/personnes?uid=joel");
+    await fiche(page).getByRole("button", { name: "Changer de groupe" }).click();
+    const feuille = page.getByRole("dialog");
+    await expect(feuille.getByRole("button")).toHaveText([/^Paix\s*groupe actuel$/, "Fidélité", "Bonté", "Amour", "Joie", "Sans groupe"]);
+    await feuille.getByRole("button", { name: "Joie" }).click();
+    await expect(fenetreDuSite(page)).toContainText("Changer de groupe retire ses rôles du Groupe Paix");
+    await repondreDansLeSite(page, "Changer de groupe");
+    await expect.poll(() => routes.length).toBe(1);
+    expect(routes[0]).toEqual({ changerGroupe: { uid: "joel", groupe: "joie" } });
+  });
+
+  test("« Changer de groupe » : « Annuler » dans la confirmation n'appelle pas la route", async ({ page }) => {
+    const { routes } = await ouvrir(page, "/back-office/equipes/personnes?uid=joel");
+    await fiche(page).getByRole("button", { name: "Changer de groupe" }).click();
+    await page.getByRole("dialog").getByRole("button", { name: "Sans groupe" }).click();
+    await repondreDansLeSite(page, "Annuler");
+    expect(routes).toHaveLength(0);
+  });
+
+  test("téléphone et tablette debout : une personne s'ouvre en page entière, avec le retour « Personnes »", async ({ page }, info) => {
+    test.skip(estGrandEcran(info), "propre aux affichages à un volet");
+    await ouvrir(page, "/back-office/equipes/personnes");
+    await page.getByRole("button", { name: /Joël F\./ }).click();
+    await expect(page).toHaveURL(/[?&]uid=joel/);
+    await expect(fiche(page).getByRole("heading", { level: 2 })).toHaveText("Joël F.");
+    await expect(page.getByRole("button", { name: /Yann M\./ })).toHaveCount(0);
+    await page.getByRole("button", { name: "Personnes", exact: true }).click();
+    await expect(page.getByRole("button", { name: /Yann M\./ })).toBeVisible();
+  });
+
+  test("Planning › Sans compte : un nom écrit aussi dans un planning n'est compté qu'une fois (OG32)", async ({ page }) => {
+    const csv = [["2026 DATE", "Présidence", "Choristes", "", "Pianiste", "Guitariste", "Batterie", "Sono + Live", "PPT", "Orateur", "Traducteur", "Sainte cène", "Notes"],
+      ["11/10", "Ma Lin", "", "", "Zoé Q.", "", "", "", "", "", "", "", ""]].map((r) => r.map((c) => `"${c}"`).join(",")).join("\n");
+    await page.route(/docs\.google\.com\/spreadsheets/, (route) => route.fulfill({ status: 200, contentType: "text/csv", body: new URL(route.request().url()).searchParams.get("sheet") === "Franco_Louange" ? csv : "" }));
+    await page.route("**/api/equipes/groupes", (route) => route.fulfill({ json: { ok: true, maj: 0, ignores: [] } }));
+    await signInAs(page, ADMIN, docs(), "/back-office/planning/sans-compte");
+    await expect(page.getByRole("region", { name: /^Titulaires sans compte/ })).toContainText("Ma Lin");
+    const planning = page.locator("div.rounded-xl", { hasText: /^Planning sans compte/ }).first();
+    await expect(planning).toContainText("Zoé Q.");
+    await expect(planning).not.toContainText("Ma Lin");
+  });
+
+  test("Planning › Sans compte : le bloc « Titulaires sans compte » mène à l'organigramme du groupe", async ({ page }) => {
+    await ouvrir(page, "/back-office/planning/sans-compte");
+    const bloc = page.getByRole("region", { name: /^Titulaires sans compte/ });
+    await expect(bloc).toContainText("Titulaires sans compte (1)");
+    const ligne = bloc.getByRole("link", { name: /Ma Lin/ });
+    await expect(ligne).toContainText("Groupe Paix");
+    await expect(ligne).toContainText("Musiciens");
+    await expect(ligne).toContainText("Planning");
+    await expect(ligne).toHaveAttribute("href", /\/back-office\/equipes\/?\?groupe=paix$/);
   });
 });

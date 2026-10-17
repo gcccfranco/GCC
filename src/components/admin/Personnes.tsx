@@ -5,10 +5,15 @@
 // Agencement v18 (B9 de docs/spec-agencement-v18.md) : les morceaux (données, filtres, ligne,
 // formulaire) sont exportés pour `PersonnesVolets` (Back-Office › Équipes › Personnes, en deux
 // volets) ; `Personnes` les assemble comme avant pour l'ancienne administration.
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { ChevronDown, ChevronUp, Search, UserRound, X } from "lucide-react";
 import { listProfiles, saveProfile } from "@/lib/firebase/users";
+import { listGroupes } from "@/lib/firebase/groupes";
+import { groupeDe } from "@/lib/groupes/organigramme";
+import { FILTRE_SANS_GROUPE, correspondAuFiltreGroupe, filtresPersonnes, postesDeCompte, type PosteDeCompte } from "@/lib/groupes/personnes";
+import { TABLE_GROUPES, groupeDef } from "@/lib/groupes/table";
+import type { OrganigrammeGroupe } from "@/types/groupe";
 import { isAdminUser } from "@/lib/access";
 import {
   loadPlanningData,
@@ -18,7 +23,7 @@ import {
   normalizeName,
 } from "@/lib/planning/names";
 import { ProfileFields, type ProfileFormValue } from "@/components/auth/ProfileFields";
-import { SERVICE_ROLE_LABELS, SERVICE_LIEUX, GROUPES, type ServiceRole, type UserProfile } from "@/types/user";
+import { SERVICE_ROLE_LABELS, type ServiceRole, type UserProfile } from "@/types/user";
 import { EDD_CLASSES } from "@/lib/planning/utils";
 import { ANNONCE_SECTIONS } from "@/types/annonce";
 import { NOTIFY_ALL, NOTIFY_GROUPS, audienceLabel } from "@/lib/push/audiences";
@@ -40,10 +45,12 @@ export function profileToForm(p: UserProfile): ProfileFormValue {
   };
 }
 
-export const FILTERS = ["Tous", ...SERVICE_LIEUX, "EDD", ...GROUPES, "Ne sert pas"] as const;
+/** Les filtres de la liste : Amour, Joie et « Sans groupe » s'y ajoutent interrupteur ouvert (OG-D). */
+export const FILTERS = filtresPersonnes();
 
 // Une inscription est « nouvelle » pendant ses 7 premiers jours.
 const NEW_DAYS = 7;
+const GROUPES_CATEGORIES = new Set(TABLE_GROUPES.map((x) => x.categorie));
 export function isRecent(d?: Date): boolean {
   return !!d && Date.now() - d.getTime() < NEW_DAYS * 86_400_000;
 }
@@ -54,9 +61,18 @@ export function useDonneesPersonnes() {
   const [loadingProfiles, setLoadingProfiles] = useState(true);
   const [planningNames, setPlanningNames] = useState<string[]>([]);
   const [planningData, setPlanningData] = useState<PlanningData | null>(null);
+  /** Les organigrammes des groupes (interrupteur ouvert) ; `null` = pas lus (ou lecture en échec) : l'écran s'en passe. */
+  const [groupes, setGroupes] = useState<OrganigrammeGroupe[] | null>(null);
+
+  /** Relit comptes et groupes après « Changer de groupe » ; la liste reste affichée pendant ce temps. */
+  const relire = useCallback(() => {
+    listProfiles().then(setProfiles).catch(() => {});
+    if (BACK_OFFICE) listGroupes().then((l) => setGroupes(l.map((x) => x.groupe))).catch(() => setGroupes(null));
+  }, []);
 
   useEffect(() => {
     listProfiles().then(setProfiles).finally(() => setLoadingProfiles(false));
+    if (BACK_OFFICE) listGroupes().then((l) => setGroupes(l.map((x) => x.groupe))).catch(() => setGroupes(null));
     loadPlanningData().then((d) => {
       setPlanningData(d);
       setPlanningNames(collectPlanningNames(d));
@@ -72,13 +88,13 @@ export function useDonneesPersonnes() {
     return { musiciens, chanteurs, presidences, nouveaux };
   }, [profiles]);
 
-  return { profiles, setProfiles, loadingProfiles, planningNames, planningData, stats };
+  return { profiles, setProfiles, loadingProfiles, planningNames, planningData, stats, groupes, relire };
 }
 
 /** Recherche, filtre et tri de la liste. */
 export function useFiltresPersonnes(profiles: UserProfile[]) {
   const [query, setQuery] = useState("");
-  const [filter, setFilter] = useState<(typeof FILTERS)[number]>("Tous");
+  const [filter, setFilter] = useState<string>("Tous");
   const [sort, setSort] = useState<"recent" | "name">("recent");
 
   const displayed = useMemo(() => {
@@ -94,7 +110,10 @@ export function useFiltresPersonnes(profiles: UserProfile[]) {
         if (filter === "Tous") return true;
         if (filter === "EDD") return (EDD_CLASSES as readonly string[]).some((c) => c in p.serviceRoles);
         if (filter === "Ne sert pas") return Object.keys(p.serviceRoles).length === 0;
-        // Lieux + groupes : la catégorie est une clé de serviceRoles
+        // Groupes : `groupeDe` interrupteur ouvert, la clé de serviceRoles sinon (OG-D).
+        const groupe = correspondAuFiltreGroupe(p, filter);
+        if (groupe !== null) return groupe;
+        // Lieux : la catégorie est une clé de serviceRoles
         return filter in p.serviceRoles;
       })
       .sort((a, b) => {
@@ -112,6 +131,7 @@ export function useFiltresPersonnes(profiles: UserProfile[]) {
 
 /** Recherche, filtres en pilules (R4), tri Récents · A–Z. */
 export function FiltresPersonnes({ f }: { f: ReturnType<typeof useFiltresPersonnes> }) {
+  const { t } = useTranslation();
   return (
     <div className="space-y-2">
       <div className="relative">
@@ -137,8 +157,8 @@ export function FiltresPersonnes({ f }: { f: ReturnType<typeof useFiltresPersonn
         etiquette="Filtrer les membres"
         options={FILTERS.map((x) => ({
           cle: x,
-          nom: x === "Tous" || x === "EDD" || x === "Ne sert pas" ? x : categoryLabel(x),
-          couleur: x === "EDD" ? "#3b6d11" : x !== "Tous" && x !== "Ne sert pas" ? categoryColor(x) : undefined,
+          nom: x === FILTRE_SANS_GROUPE ? t("groupes.personnes.sansGroupe") : x === "Tous" || x === "EDD" || x === "Ne sert pas" ? x : categoryLabel(x),
+          couleur: x === "EDD" ? "#3b6d11" : x !== "Tous" && x !== "Ne sert pas" && x !== FILTRE_SANS_GROUPE ? categoryColor(x) : undefined,
         }))}
         valeur={f.filter}
         choisir={(v) => f.setFilter(v ?? "Tous")}
@@ -176,28 +196,49 @@ export function Avatar({ p, grand }: { p: UserProfile; grand?: boolean }) {
   );
 }
 
-/** Les services d'un membre en étiquettes (« Nouveau » d'abord). */
-export function ServicesDuMembre({ p }: { p: UserProfile }) {
+/** Le libellé d'un poste de groupe : « Président », « Vice-président », ou le nom du rôle (中文 si la langue le demande). */
+export function libellePoste(t: (k: string) => string, zh: boolean, poste: PosteDeCompte): string {
+  if (poste.fixe) return t(poste.fixe === "president" ? "groupes.enTete.president" : "groupes.enTete.vicePresident");
+  return (zh && poste.role.nomZh) || poste.role.nom;
+}
+
+/** Les services d'un membre en étiquettes (« Nouveau » d'abord). Interrupteur ouvert : « Groupe Paix ·
+ *  Responsable louange, Musiciens » (rôles lus dans `groupes` s'ils le sont) ou « Sans groupe » remplace les
+ *  étiquettes de clé de groupe de `serviceRoles` (OG-D). */
+export function ServicesDuMembre({ p, groupes }: { p: UserProfile; groupes?: OrganigrammeGroupe[] | null }) {
+  const { t, i18n } = useTranslation();
+  const avecGroupes = BACK_OFFICE;
+  const g = avecGroupes ? groupeDe(p) : null;
+  const def = g ? groupeDef(g) : undefined;
+  const postes = def ? postesDeCompte(groupes?.find((x) => x.id === def.id), p.uid) : [];
+  const roles = Object.entries(p.serviceRoles).filter(([cat]) => !(avecGroupes && GROUPES_CATEGORIES.has(cat)));
   return (
     <div className="flex flex-wrap gap-1">
       {isRecent(p.createdAt) && <Pill label="Nouveau" color="#16a34a" />}
-      {Object.entries(p.serviceRoles).map(([cat, roles]) => (
+      {avecGroupes && (def
+        ? <Pill
+            label={[t(`categories.${def.categorie}`), ...(postes.length ? [postes.map((x) => libellePoste(t, i18n.language === "zh-CN", x)).join(", ")] : [])].join(" · ")}
+            color={categoryColor(def.categorie)}
+          />
+        : <Pill label={t("groupes.personnes.sansGroupe")} />)}
+      {roles.map(([cat, roles]) => (
         <Pill
           key={cat}
           label={`${categoryLabel(cat)}${roles.length ? " · " + roles.map((r) => SERVICE_ROLE_LABELS[r]).join("/") : ""}`}
           color={categoryColor(cat)}
         />
       ))}
-      {Object.keys(p.serviceRoles).length === 0 && <Pill label="Ne sert pas" />}
+      {Object.keys(p.serviceRoles).length === 0 && !avecGroupes && <Pill label="Ne sert pas" />}
     </div>
   );
 }
 
 /** Une ligne de la liste : avatar, nom, e-mail, services. `fin` : chevron ou autre. */
 export function LignePersonne({
-  p, onClick, compact, actif, deplie, fin,
+  p, onClick, compact, actif, deplie, fin, groupes,
 }: {
   p: UserProfile;
+  groupes?: OrganigrammeGroupe[] | null;
   onClick: () => void;
   /** Deux volets (B9) : avatar, nom, services ; l'e-mail et la date sont dans la fiche. */
   compact?: boolean;
@@ -229,7 +270,7 @@ export function LignePersonne({
             {p.createdAt ? ` · inscrit le ${p.createdAt.toLocaleDateString("fr-FR")}` : ""}
           </p>
         )}
-        <ServicesDuMembre p={p} />
+        <ServicesDuMembre p={p} groupes={groupes} />
       </div>
       {fin}
     </button>
@@ -500,6 +541,7 @@ export function ListePersonnes({
             <LignePersonne
               p={p}
               deplie={isEditing}
+              groupes={d.groupes}
               onClick={() => setDeplie(isEditing ? null : p.uid)}
               fin={isEditing
                 ? <ChevronUp className="h-4 w-4 text-muted-foreground shrink-0 mt-2" />

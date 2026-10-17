@@ -184,7 +184,7 @@ test.describe("T5 : Équipes › Personnes", () => {
     interdireDialoguesNatifs(page);
     await ouvrir(page, "/back-office/equipes/personnes");
     await expect(titre(page)).toHaveText("Équipes");
-    await expect(enTete(page)).toContainText("4 inscrits · 1 musicien · 1 présidence");
+    await expect(enTete(page)).toContainText("4 inscrits · 5 groupes · 4 sans groupe");
     const inscriptions = enTete(page).getByRole("region", { name: "Inscriptions" });
     await expect(inscriptions).toContainText("Inscriptions ouvertes");
     await expect(inscriptions.getByRole("switch")).toBeChecked();
@@ -209,7 +209,8 @@ test.describe("T5 : Équipes › Personnes", () => {
 
   test("les comptes de la semaine : « Voir les n » les montre", async ({ page }, info) => {
     // Le 04/01/2026, les quatre comptes (créés le 01/01) ont moins de sept jours.
-    await ouvrir(page, "/back-office/equipes/personnes?uid=u-ysee", DOCS, ADMIN, new Date("2026-01-04T10:00:00"));
+    // Un volet : `?uid=` ouvrirait la personne en page entière, sans la carte des inscriptions.
+    await ouvrir(page, estGrandEcran(info) ? "/back-office/equipes/personnes?uid=u-ysee" : "/back-office/equipes/personnes", DOCS, ADMIN, new Date("2026-01-04T10:00:00"));
     const inscriptions = enTete(page).getByRole("region", { name: "Inscriptions" });
     await expect(inscriptions).toContainText("4 nouveaux comptes");
     await inscriptions.getByRole("button", { name: "Voir les 4" }).click();
@@ -228,7 +229,7 @@ test.describe("T5 : Équipes › Personnes", () => {
     const fiche = page.locator('[data-volet="detail"]');
     // Tri « Récents » : le compte le plus récent d'abord.
     await expect(fiche.getByRole("heading", { level: 2 })).toHaveText("Bérénice A.");
-    await expect(fiche).toContainText("Services et rôles");
+    await expect(fiche).toContainText("Services et équipes");
     // Lot 1 du chantier « équipes et groupes » (EQ26) : la carte « Pôles » cède la place à la ligne
     // « Coordination » de la carte Droits.
     await expect(fiche).toContainText("Coordination");
@@ -248,8 +249,9 @@ test.describe("T5 : Équipes › Personnes", () => {
     if (estGrandEcran(info)) {
       await expect(page.locator('[data-volet="detail"]').getByRole("heading", { level: 2 })).toHaveText("Ysée R.");
     } else {
-      // Un volet : la ligne de la personne se déplie, avec son formulaire.
-      await expect(page.getByRole("button", { name: /Ysée R\./ })).toHaveAttribute("aria-expanded", "true");
+      // Un volet : la personne s'ouvre en page entière ; « Modifier » montre le formulaire.
+      await expect(page.locator("article").getByRole("heading", { level: 2 })).toHaveText("Ysée R.");
+      await page.getByRole("button", { name: "Modifier", exact: true }).click();
       await expect(page.getByRole("button", { name: "Enregistrer" })).toBeVisible();
     }
   });

@@ -66,7 +66,7 @@ for (const [langue, sousTitre] of [
     await expect(enTete(page)).not.toContainText(/pôles|部门/);
     await expect(page.getByText(/Donne le pôle|归入.*部门/)).toHaveCount(0);
     const bandeau = page.getByTestId("bandeau-equipes");
-    await verifierAgencement(page, { premierBloc: bandeau, contenu: bandeau, onglets: { rail: 1, pilules: 1 } });
+    await verifierAgencement(page, { premierBloc: bandeau, contenu: bandeau, onglets: { rail: 1, pilules: 2 } });
     // Rien ne déborde d'une carte (le bandeau défile en lui-même, pas la page : verifierAgencement).
     for (const carte of await page.getByTestId(/^equipe-/).all()) {
       expect(await carte.evaluate((el) => el.scrollWidth - el.clientWidth), "le contenu de la carte tient dedans").toBeLessThanOrEqual(1);
@@ -94,7 +94,9 @@ test("fiche de Personnes : ligne « Coordination » dans Droits, plus de carte P
     await expect(fiche).toContainText(/Coordination\s*Non/);
     await expect(fiche.getByRole("heading", { name: "Pôles" })).toHaveCount(0);
   } else {
-    // Un volet : la ligne ouvre le formulaire, où la case est à côté des autres droits.
+    // Un volet : la personne s'ouvre en page entière : la ligne « Coordination » de Droits, puis « Modifier » pour la case.
+    await expect(page.locator("article")).toContainText(/Coordination\s*Non/);
+    await page.getByRole("button", { name: "Modifier", exact: true }).click();
     await expect(page.getByRole("button", { name: "Coordination", exact: true })).toBeVisible();
   }
   await expect(page.getByText("Coché hors organigramme")).toHaveCount(0);

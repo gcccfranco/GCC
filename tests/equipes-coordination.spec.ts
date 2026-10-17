@@ -94,8 +94,9 @@ test("Personnes : un admin coche « Coordination » ; le masque porte `coordinat
   const db = await ouvrir(page, ADMIN, "/back-office/equipes/personnes?uid=u-hugo", { "users/u-hugo": PROFIL(HUGO) });
   if (estGrandEcran(info)) {
     await expect(carteDroits(page)).toContainText(/Admin\s*Non\s*Coordination\s*Non/);
-    await fiche(page).getByRole("button", { name: "Modifier" }).click();
   }
+  // Un volet : la fiche est une page entière, « Modifier » ouvre le formulaire.
+  await page.getByRole("button", { name: "Modifier", exact: true }).click();
   const coche = page.getByRole("button", { name: "Coordination", exact: true });
   await expect(coche).toHaveAttribute("aria-pressed", "false");
   await expect(page.getByText("Régler la scène, créer pour toute l'église, modifier tout évènement")).toBeVisible();
@@ -114,8 +115,8 @@ test("Personnes : un admin coche « Coordination » ; le masque porte `coordinat
     await expect(carteDroits(page)).toContainText(/Admin\s*Non\s*Coordination\s*Oui/);
     await capture(page, "coordination-fiche");
   } else {
-    // Un volet : la ligne se replie à l'enregistrement ; rouverte, la case est cochée.
-    await page.getByRole("button", { name: /Hugo L\./ }).click();
+    // Un volet : la page revient à la fiche à l'enregistrement ; « Modifier » rouvre le formulaire, la case est cochée.
+    await page.getByRole("button", { name: "Modifier", exact: true }).click();
     await expect(page.getByRole("button", { name: "Coordination", exact: true })).toHaveAttribute("aria-pressed", "true");
   }
 });
@@ -126,8 +127,8 @@ test("Personnes en 中文 : « 协调 », cochée", async ({ page }, info: TestI
   if (estGrandEcran(info)) {
     await expect(carteDroits(page)).toContainText(/Admin\s*Non\s*协调\s*Oui/);
     await capture(page, "coordination-fiche-zh");
-    await fiche(page).getByRole("button", { name: "Modifier" }).click();
   }
+  await page.getByRole("button", { name: /^(Modifier|修改)$/ }).click();
   await expect(page.getByRole("button", { name: "协调", exact: true })).toHaveAttribute("aria-pressed", "true");
   await expect(page.getByText("管理舞台、为全教会创建、修改所有活动")).toBeVisible();
   await capture(page, "coordination-formulaire-zh");
@@ -141,8 +142,8 @@ test("Personnes : plus de carte « Pôles » ni de « Coché hors organigramme �
   if (estGrandEcran(info)) {
     await expect(carteDroits(page)).toBeVisible();
     await expect(fiche(page).getByRole("heading", { name: "Pôles" })).toHaveCount(0);
-    await fiche(page).getByRole("button", { name: "Modifier" }).click();
   }
+  await page.getByRole("button", { name: "Modifier", exact: true }).click();
   await expect(page.getByRole("button", { name: "Coordination", exact: true })).toBeVisible();
   await expect(page.getByText(/Pôles \(donnés par les équipes/)).toHaveCount(0);
   await expect(page.getByText(/Coché hors organigramme/)).toHaveCount(0);

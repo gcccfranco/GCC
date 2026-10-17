@@ -125,3 +125,55 @@ test("中文 : le groupe se lit sans débordement, sélecteur et libellés tradu
   await verifierSansDebordement(page);
   await capture(page, "org-groupe-zh");
 });
+
+// ─── OG-D : Personnes et Sans compte ─────────────────────────────────────────
+
+const JOEL: FakeProfile & Record<string, unknown> = {
+  uid: "joel", email: "joel@example.com", firstName: "Joël", lastName: "F.", planningName: "Joël F.", serviceRoles: {},
+  groupe: "paix", remplitParRole: ["paix"], publieParRole: ["paix"], notifieParRole: ["Groupe Paix"], dansEquipes: ["comite-paix"],
+};
+const DOCS_PERSONNES = {
+  "groupes/paix": PAIX,
+  ...Object.fromEntries([JOEL, { uid: "ana", email: "ana@example.com", firstName: "Ana", lastName: "T.", planningName: "Ana T.", serviceRoles: {}, groupe: "joie" }]
+    .map(({ uid, ...p }) => [`users/${uid}`, p as Record<string, unknown>])),
+};
+
+async function ouvrirPersonnes(page: Page, to: string, zh = false) {
+  if (zh) await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
+  await page.route("**/api/equipes/groupes", (route) => route.fulfill({ json: { ok: true, maj: 0, ignores: [] } }));
+  await page.route(/docs\.google\.com\/spreadsheets/, (route) => route.fulfill({ status: 200, contentType: "text/csv", body: "" }));
+  await signInAs(page, ADMIN, DOCS_PERSONNES, to);
+}
+
+test("Personnes : la fiche (Groupe, Rôles, Droits) sans débordement ; « Changer de groupe » en panneau (grand) ou feuille", async ({ page }) => {
+  await ouvrirPersonnes(page, "/back-office/equipes/personnes?uid=joel");
+  const fiche = page.locator("article");
+  await expect(fiche.getByRole("region", { name: "Rôles dans le Groupe Paix" })).toBeVisible();
+  await verifierSansDebordement(page);
+  await capture(page, "personne-fiche");
+  await fiche.getByRole("button", { name: "Changer de groupe" }).click();
+  const panneau = page.getByRole("dialog");
+  await expect(panneau.getByRole("button", { name: "Sans groupe" })).toBeVisible();
+  const boite = (await panneau.boundingBox())!;
+  const largeur = page.viewportSize()!.width;
+  if (grand()) expect(Math.round(boite.width), "panneau de 420 px à droite").toBe(420);
+  else expect(Math.round(boite.width), "feuille sur toute la largeur").toBeGreaterThanOrEqual(largeur - 1);
+  await capture(page, "personne-changer");
+  await page.keyboard.press("Escape");
+  await verifierSansDebordement(page);
+});
+
+test("Personnes en 中文 : la fiche et le panneau se lisent sans débordement", async ({ page }) => {
+  await ouvrirPersonnes(page, "/back-office/equipes/personnes?uid=joel", true);
+  await expect(page.locator("article").getByRole("region", { name: "在和平团契的岗位" })).toBeVisible();
+  await expect(page.locator("article")).toContainText("更换团契");
+  await verifierSansDebordement(page);
+  await capture(page, "personne-fiche-zh");
+});
+
+test("Planning › Sans compte : le bloc des titulaires sans compte sans débordement", async ({ page }) => {
+  await ouvrirPersonnes(page, "/back-office/planning/sans-compte");
+  await expect(page.getByRole("region", { name: /^Titulaires sans compte/ })).toContainText("Inès V.");
+  await verifierSansDebordement(page);
+  await capture(page, "sans-compte");
+});
