@@ -9,6 +9,8 @@ import {
 } from "../src/lib/access";
 import { EQUIPES, rattachementDe } from "../src/lib/equipes/organigramme";
 import { recalculerDepuisOrganigramme, recalculerRattachement } from "../src/lib/equipes/serveur";
+import { TABLE_GROUPES } from "../src/lib/groupes/table";
+import { lireGroupe } from "../src/lib/groupes/organigramme";
 import { destinatairesEvenement } from "../src/lib/evenements/serveur";
 import { copieReprise, estRouge, reordonner, reunionsALire, reunionsPrecedentes, sujetsAReprendre, trierSujets } from "../src/lib/reunions/sujets";
 import type { Evenement } from "../src/types/evenement";
@@ -849,7 +851,8 @@ function fausseBase(users: Record<string, Record<string, unknown>>) {
   const equipes = Object.fromEntries(ORGANIGRAMME.map(({ id, ...e }) => [id, e as Record<string, unknown>]));
   const db = {
     collection: (nom: string) => ({
-      get: async () => ({ docs: docs(nom === "equipes" ? equipes : users) }),
+      // Aucun document groupes/* (lot 2) : la recopie les lit vides.
+      get: async () => ({ docs: docs(nom === "equipes" ? equipes : nom === "groupes" ? {} : users) }),
       doc: (uid: string) => ({
         get: async () => ({ exists: uid in users, data: () => users[uid] }),
         update: async (data: Record<string, unknown>) => { ecrits.push({ uid, data }); users[uid] = { ...users[uid], ...data }; },
@@ -862,12 +865,13 @@ function fausseBase(users: Record<string, Record<string, unknown>>) {
 test("recalculerRattachement recopie aussi dansEquipes et referentDe sur le profil ; rien n'est réécrit s'il n'a pas changé", async () => {
   const { db, ecrits } = fausseBase({ "uid-rose": { poles: [] }, "uid-hugo": { poles: ["da"] } });
   const equipes = ORGANIGRAMME.map(({ id, membres }) => ({ id, membres }));
-  expect(await recalculerRattachement(db, ["uid-rose", "uid-hugo", "uid-absent"], equipes)).toBe(2);
+  const groupes = TABLE_GROUPES.map((g) => lireGroupe(g.id, {}));
+  expect((await recalculerRattachement(db, ["uid-rose", "uid-hugo", "uid-absent"], equipes, groupes)).maj).toBe(2);
   expect(ecrits).toEqual([
     { uid: "uid-rose", data: { dansEquipes: ["regie"], referentDe: ["regie"] } },
     { uid: "uid-hugo", data: { dansEquipes: ["da", "regie"], referentDe: [] } },
   ]);
-  expect(await recalculerRattachement(db, ["uid-rose", "uid-hugo"], equipes)).toBe(0);
+  expect((await recalculerRattachement(db, ["uid-rose", "uid-hugo"], equipes, groupes)).maj).toBe(0);
   expect(ecrits).toHaveLength(2);
 });
 

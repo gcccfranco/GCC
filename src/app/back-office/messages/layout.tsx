@@ -7,7 +7,7 @@
 // onglets (`EnTetePage`, le titre ne bouge plus), puis la page sur toute la zone.
 import { useTranslation } from "react-i18next";
 import { useProfile } from "@/lib/firebase/users";
-import { isAdminUser } from "@/lib/access";
+import { audiencesNotifiables, isAdminUser } from "@/lib/access";
 import { EnTetePage } from "@/components/layout/EnTetePage";
 import { OngletsRail, type OngletRail } from "@/components/layout/Onglets";
 
@@ -15,7 +15,7 @@ export default function MessagesLayout({ children }: { children: React.ReactNode
   const { t } = useTranslation();
   const { user, profile } = useProfile();
   const admin = isAdminUser(user);
-  const notifier = admin || (profile?.notify?.length ?? 0) > 0;
+  const notifier = admin || audiencesNotifiables(profile).length > 0;
   const onglets: OngletRail[] = [
     ...(admin ? [{ id: "reception", href: "/back-office/messages", label: t("backOffice.parties.reception") }] : []),
     ...(notifier ? [{ id: "notifier", href: "/back-office/messages/notifier", label: t("backOffice.parties.notifier") }] : []),

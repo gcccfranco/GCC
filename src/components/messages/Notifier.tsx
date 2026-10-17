@@ -8,7 +8,8 @@ import { isAdminUser } from "@/lib/access";
 import { normalizeName } from "@/lib/planning/names";
 import { authHeader } from "@/lib/firebase/setlists";
 import type { UserProfile } from "@/types/user";
-import { NOTIFY_ALL, NOTIFY_GROUPS, audienceLabel } from "@/lib/push/audiences";
+import { NOTIFY_ALL, NOTIFY_GROUPS, audienceLabel, audiencesNotifiables } from "@/lib/push/audiences";
+import { estDuGroupe } from "@/lib/groupes/organigramme";
 import { PUBLISHABLE_PLANNINGS, canPublishPlanning } from "@/lib/planning/releases";
 import { PublishPlanningPanel } from "@/components/planning/PublishPlanningPanel";
 import { Pilules } from "@/components/layout/Onglets";
@@ -40,7 +41,10 @@ const DESTINATIONS: { value: string; label: string }[] = [
 export function Notifier({ backOffice = false, titre }: { backOffice?: boolean; titre?: ReactNode }) {
   const { user, profile, loading } = useProfile();
   const admin = isAdminUser(user);
-  const rights = useMemo(() => profile?.notify ?? [], [profile]);
+  // Lot 2 (OG24) : les audiences de `notify` et celles d'un rôle de groupe (`notifieParRole`).
+  const rights = useMemo(() => audiencesNotifiables(profile), [profile]);
+  // « Publier un planning » (ancienne page seulement) garde la seule liste `notify` (OG23).
+  const notifyRights = useMemo(() => profile?.notify ?? [], [profile]);
   const canAll = admin || rights.includes(NOTIFY_ALL);
   const allows = (a: string) => admin || rights.includes(NOTIFY_ALL) || rights.includes(a);
 
@@ -54,8 +58,8 @@ export function Notifier({ backOffice = false, titre }: { backOffice?: boolean; 
   );
 
   const canPublishAny = useMemo(
-    () => PUBLISHABLE_PLANNINGS.some((p) => canPublishPlanning(p, admin, rights)),
-    [admin, rights]
+    () => PUBLISHABLE_PLANNINGS.some((p) => canPublishPlanning(p, admin, notifyRights)),
+    [admin, notifyRights]
   );
 
   const [mode, setMode] = useState<"notif" | "publish">("notif");
@@ -77,7 +81,7 @@ export function Notifier({ backOffice = false, titre }: { backOffice?: boolean; 
   // Personnes de l'audience choisie (tout le monde = tous les profils).
   const pool = useMemo(() => {
     if (!profiles || !audience) return [];
-    return audience === NOTIFY_ALL ? profiles : profiles.filter((p) => audience in p.serviceRoles);
+    return audience === NOTIFY_ALL ? profiles : profiles.filter((p) => estDuGroupe(p, audience));
   }, [profiles, audience]);
 
   const shownPool = useMemo(() => {
@@ -101,7 +105,7 @@ export function Notifier({ backOffice = false, titre }: { backOffice?: boolean; 
       return;
     }
     const p =
-      audience === NOTIFY_ALL ? profiles : profiles.filter((x) => audience in x.serviceRoles);
+      audience === NOTIFY_ALL ? profiles : profiles.filter((x) => estDuGroupe(x, audience));
     setSelected(new Set(p.map((x) => x.uid)));
     setPeopleQuery("");
   }, [audience, profiles]);
@@ -500,7 +504,7 @@ export function Notifier({ backOffice = false, titre }: { backOffice?: boolean; 
       )}
 
       {mode === "publish" ? (
-        <PublishPlanningPanel isAdmin={admin} notifyRights={rights} />
+        <PublishPlanningPanel isAdmin={admin} notifyRights={notifyRights} />
       ) : (
       <div className="rounded-xl bg-card shadow-soft p-5 space-y-4">
         {selectAudience}

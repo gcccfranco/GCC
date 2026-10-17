@@ -5,7 +5,7 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useProfile } from "@/lib/firebase/users";
-import { isAdminUser } from "@/lib/access";
+import { audiencesNotifiables, isAdminUser } from "@/lib/access";
 import { ReceptionVolets } from "@/components/messages/ReceptionVolets";
 import { ReserveAuxAdmins } from "@/components/admin/commun";
 
@@ -13,7 +13,7 @@ export default function ReceptionPage() {
   const router = useRouter();
   const { user, profile } = useProfile();
   const admin = isAdminUser(user);
-  const notifier = !admin && (profile?.notify?.length ?? 0) > 0;
+  const notifier = !admin && audiencesNotifiables(profile).length > 0;
 
   useEffect(() => {
     if (notifier) router.replace("/back-office/messages/notifier");

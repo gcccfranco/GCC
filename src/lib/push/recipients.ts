@@ -4,6 +4,8 @@
 import { adminDb } from "./admin";
 import { normalizeName } from "@/lib/planning/names";
 import { ADMIN_EMAILS } from "@/lib/access";
+import { BACK_OFFICE } from "@/lib/backOffice";
+import { estDuGroupe } from "@/lib/groupes/organigramme";
 import type { ServiceRole, NotifType, NotifLang } from "@/types/user";
 
 /** uid des comptes administrateurs (ADMIN_EMAILS). Cible des notifications de
@@ -62,6 +64,31 @@ export async function uidsForCategory(category: string): Promise<string[]> {
     if (category in sr) out.push(doc.id);
   }
   return out;
+}
+
+/** uid des comptes d'une audience de groupe (lot 2, OG28, décision 45 : tout le groupe) : la clé
+ *  dans `serviceRoles` (comme avant, D17) ou le groupe de la personne (`groupeDe`, interrupteur
+ *  ouvert seulement, OG27). Pour une autre catégorie, la clé seule — comme `uidsForCategory`.
+ *  Cible de la publication d'un trimestre et de Notifier. La base se passe pour les tests. */
+export async function uidsDuGroupe(
+  categorie: string,
+  db: FirebaseFirestore.Firestore = adminDb(),
+  backOffice: boolean = BACK_OFFICE,
+): Promise<string[]> {
+  const snap = await db.collection("users").get();
+  return snap.docs.filter((d) => estDuGroupe(d.data(), categorie, backOffice)).map((d) => d.id);
+}
+
+/** Les personnes qu'un expéditeur peut viser une à une (Notifier, « personnes précises ») : celles
+ *  d'au moins une de ses audiences, membres des groupes compris (OG24, OG28). Lit les profils une fois. */
+export async function uidsDesAudiences(
+  categories: string[],
+  db: FirebaseFirestore.Firestore = adminDb(),
+  backOffice: boolean = BACK_OFFICE,
+): Promise<Set<string>> {
+  if (!categories.length) return new Set();
+  const snap = await db.collection("users").get();
+  return new Set(snap.docs.filter((d) => categories.some((c) => estDuGroupe(d.data(), c, backOffice))).map((d) => d.id));
 }
 
 /** Ensemble des uid servant dans au moins une des `categories` (clés de serviceRoles).

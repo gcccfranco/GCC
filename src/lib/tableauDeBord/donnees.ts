@@ -105,8 +105,9 @@ export function ceDimanche(
 /** Réglage « plannings » : ceux qu'on remplit (sinon ceux qu'on publie) ; le Culte pour un admin. */
 export function planningsCasesVides(r: Reglages, user: AuthUser | null, profile: UserProfile | null): string[] {
   const admin = isAdminUser(user);
-  const remplis = (profile?.plannings ?? []).filter((k) => GRILLES.some((g) => g.key === k));
-  const publies = PUBLISHABLE_PLANNINGS.filter((p) => canPublishPlanning(p, admin, profile?.notify ?? [])).map((p) => p.key);
+  // Lot 2 (OG22, OG23) : aussi ce qu'on remplit ou publie par un rôle de groupe.
+  const remplis = [...new Set([...(profile?.plannings ?? []), ...(profile?.remplitParRole ?? [])])].filter((k) => GRILLES.some((g) => g.key === k));
+  const publies = PUBLISHABLE_PLANNINGS.filter((p) => canPublishPlanning(p, admin, profile?.notify ?? [], profile?.publieParRole ?? [])).map((p) => p.key);
   const permis = admin ? GRILLES.map((g) => g.key) : [...new Set([...remplis, ...publies])];
   if (r.plannings) return permis.filter((k) => r.plannings!.includes(k));
   if (admin) return [GRILLE_CULTE.key];

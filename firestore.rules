@@ -39,7 +39,10 @@ rules_version = '2';
 //   modifiable par les admins depuis la page /admin.
 // - Plannings remplis dans l'app (plannings/{key}/dimanches, lot 17) : lus
 //   publiquement (pages planning consultées sans compte) ; écrits par les
-//   admins et par les profils dont `plannings` porte la clé du planning.
+//   admins et par les profils dont `plannings` porte la clé du planning, ou `remplitParRole`
+//   (rôle d'un groupe, recopié par le serveur, lot 2, docs/spec-organigrammes-groupes.md).
+// - Organigrammes des groupes (groupes/{g}, lot 2) : lus par les connectés ; tenus par les admins
+//   et par le président et les VP du groupe ; président, VP et plafond des VP : admins seuls.
 //
 // La liste des admins doit rester synchronisée avec ADMIN_EMAILS dans src/lib/access.ts.
 
@@ -97,7 +100,12 @@ service cloud.firestore {
             && request.resource.data.get('equipes', false) == false
             && request.resource.data.get('plannings', []) == []
             && request.resource.data.get('dansEquipes', []) == []
-            && request.resource.data.get('referentDe', []) == [])
+            && request.resource.data.get('referentDe', []) == []
+            // Lot 2 (organigrammes des groupes) : groupe et droits par rôle, recopiés par le serveur seul.
+            && request.resource.data.get('groupe', null) == null
+            && request.resource.data.get('remplitParRole', []) == []
+            && request.resource.data.get('publieParRole', []) == []
+            && request.resource.data.get('notifieParRole', []) == [])
       );
       // Une fois le profil créé, seuls les admins peuvent le modifier.
       allow update: if isAdmin();
@@ -139,16 +147,45 @@ service cloud.firestore {
 
     // Équipes (lot 1 du chantier « équipes et groupes », docs/spec-equipes-sans-poles.md) : est d'une
     // équipe qui y figure (`dansEquipes`, recopié par le serveur) ; « louange » aussi à toute personne
-    // qui a un rôle de service, une clé de `serviceRoles` suffit (décisions 5 et 42). En est référent
+    // qui a un rôle de service, une clé de `serviceRoles` suffit (décisions 5 et 42), ou un groupe
+    // (champ `groupe` non vide, recopié par le serveur, lot 2, OG38). En est référent
     // qui y est référent (`referentDe`, recopié par le serveur). Les admins sont des deux partout.
     // Miroir : estDeLEquipe / estReferentDe (src/lib/access.ts).
     function estDeLEquipe(equipe) {
       return isAdmin() || (hasProfile() && (
         equipe in profile().get('dansEquipes', [])
-        || (equipe == 'louange' && profile().get('serviceRoles', {}).size() > 0)));
+        || (equipe == 'louange' && (profile().get('serviceRoles', {}).size() > 0
+                                    || profile().get('groupe', '') != ''))));
     }
     function estReferentDe(equipe) {
       return isAdmin() || (hasProfile() && equipe in profile().get('referentDe', []));
+    }
+
+    // Organigrammes des groupes (lot 2, docs/spec-organigrammes-groupes.md). Lus par tout connecté (décision 16) ;
+    // tenus par les admins et par le président et les VP du groupe : leur `referentDe` porte « comite-<g> »,
+    // recopié par le serveur seul (patron D9 de docs/spec-organigramme.md, lot 16). Président, VP et plafond des VP
+    // (maxVp, 2 si absent) : admins seuls (décisions 11 et 36). Miroir client : canTenirGroupe, placesVp ;
+    // serveur : exigerTenirGroupe.
+    function tientGroupe(g) {
+      return isAdmin() || (hasProfile() && ('comite-' + g) in profile().get('referentDe', []));
+    }
+
+    // Plafond des VP du document écrit : maxVp absent (= 2) ou entier de 1 à 9, et pas plus de VP que lui.
+    function vpDansLePlafond() {
+      let max = request.resource.data.get('maxVp', 2);
+      return max is int && max >= 1 && max <= 9
+        && request.resource.data.get('vp', []).size() <= max;
+    }
+
+    match /groupes/{g} {
+      allow read: if signedIn();
+      allow create: if isAdmin() && g in ['paix', 'fidelite', 'bonte', 'amour', 'joie'] && vpDansLePlafond();
+      allow update: if signedIn() && tientGroupe(g) && vpDansLePlafond()
+        && (isAdmin()
+            || (request.resource.data.get('president', null) == resource.data.get('president', null)
+                && request.resource.data.get('vp', []) == resource.data.get('vp', [])
+                && request.resource.data.get('maxVp', null) == resource.data.get('maxVp', null)));
+      allow delete: if false;
     }
 
     // Programmes de scène (lot 3 bis, docs/spec-programme-scene.md). Miroir :
@@ -501,10 +538,12 @@ service cloud.firestore {
     // sa colonne (updateMask), donc deux personnes ne s'effacent jamais.
     // Lecture PUBLIQUE, comme planningReleases : les pages planning se
     // consultent sans compte, et le CSV gviz du Google Sheet l'est déjà.
-    // Écriture : les admins, et les profils dont `plannings` porte la clé.
+    // Écriture : les admins, et les profils dont `plannings` porte la clé — ou `remplitParRole`,
+    // recopié par le serveur depuis l'organigramme du groupe (lot 2, OG22).
     // Miroir client : canEditPlanning (src/lib/access.ts).
     function peutEcrirePlanning(key) {
-      return isAdmin() || (hasProfile() && key in profile().get('plannings', []));
+      return isAdmin() || (hasProfile() && (key in profile().get('plannings', [])
+                                            || key in profile().get('remplitParRole', [])));
     }
 
     match /plannings/{key} {

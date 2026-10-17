@@ -71,7 +71,7 @@ test.describe("back-office coupé : une adresse tapée à la main tombe dans le 
     });
   }
 
-  for (const route of ["/api/taches/assigne", "/api/taches/fait", "/api/equipes/rattachement", "/api/scene/conflit", "/api/evenements/inscription", "/api/evenements/desinscription", "/api/push/notify-evenement", "/api/planning/changements"]) {
+  for (const route of ["/api/taches/assigne", "/api/taches/fait", "/api/equipes/rattachement", "/api/scene/conflit", "/api/evenements/inscription", "/api/evenements/desinscription", "/api/push/notify-evenement", "/api/planning/changements", "/api/equipes/groupes"]) {
     test(`${route} répond 404`, async ({ request }) => {
       const reponse = await request.post(`${BASE_URL_COUPE}${route}/`, { data: {} });
       expect(reponse.status()).toBe(404);
@@ -105,6 +105,26 @@ test.describe("back-office coupé : l'administration et Notifier restent où ils
     await expect(page.getByRole("button", { name: "Enregistrer", exact: true })).toBeVisible();
     await expect(page.getByRole("button", { name: "Coordination", exact: true })).toHaveCount(0);
     await expect(page.getByText(/Peut modifier l.organigramme/)).toHaveCount(0);
+  });
+
+  // Lot 2 (organigrammes des groupes, OG27) : les droits venus des rôles d'un groupe ne comptent pas
+  // en ligne, et les audiences Groupe Amour et Groupe Joie n'y existent pas.
+  test("rôles de groupe sans effet en ligne : ni Notifier dans Moi, ni Amour ni Joie dans Notifier", async ({ page }) => {
+    const TITULAIRE: FakeProfile = {
+      uid: "uid-zoe", email: "zoe@example.com", firstName: "Zoé", lastName: "W.",
+      groupe: "joie", notifieParRole: ["Groupe Joie"], publieParRole: ["paix"], remplitParRole: ["paix"],
+    };
+    await signInAs(page, TITULAIRE, {}, "/moi");
+    await expect(page.getByRole("main").getByRole("link", { name: /Mes services/ })).toBeVisible();
+    await expect(page.getByRole("main").getByRole("link", { name: "Notifier" })).toHaveCount(0);
+    await page.goto("/notifier");
+    await expect(page.getByRole("button", { name: "Publier un planning" })).toHaveCount(0);
+
+    await signInAs(page, ADMIN, {}, "/notifier");
+    await expect(page.getByRole("heading", { name: "Envoyer une notification" })).toBeVisible();
+    await expect(page.getByRole("option", { name: "Groupe Paix" })).toHaveCount(1);
+    await expect(page.getByRole("option", { name: "Groupe Joie" })).toHaveCount(0);
+    await expect(page.getByRole("option", { name: "Groupe Amour" })).toHaveCount(0);
   });
 
   test("Moi garde Notifier et Administration", async ({ page }) => {

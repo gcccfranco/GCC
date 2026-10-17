@@ -1,4 +1,6 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
+import { signInAs, type FakeProfile } from "./helpers/fakeSession";
+import { repondreDansLeSite } from "./helpers/agencement";
 import { GROUPES } from "../src/types/user";
 import type { OrganigrammeGroupe, RoleGroupe } from "../src/types/groupe";
 import {
@@ -10,6 +12,17 @@ import {
 } from "../src/lib/groupes/organigramme";
 import { propositions, propositionsReliees, type CompteDuPlanning } from "../src/lib/planning/choisir";
 import { GRILLE_BONTE, GRILLE_CULTE, GRILLE_PAIX } from "../src/lib/planning/grilles";
+import { readFileSync } from "node:fs";
+import {
+  ADMIN_EMAILS, audiencesNotifiables, canEditPlanning, canTenirGroupe, creatableEvenementPours, entreesBackOffice,
+  equipesDe, equipesDesTaches, equipesOuCreer, estDeLEquipe, estResponsable, planningsDuBackOffice, tientUnGroupe,
+} from "../src/lib/access";
+import { canPublishPlanning, droitsDePublication, getPlanning, peutPrevenir } from "../src/lib/planning/releases";
+import { isValidAudience, notifyGroups, peutNotifierAudience } from "../src/lib/push/audiences";
+import { uidsDesAudiences, uidsDuGroupe } from "../src/lib/push/recipients";
+import { rattachementDe } from "../src/lib/equipes/organigramme";
+import { lireEquipes, recalculerDepuisOrganigramme, recalculerRattachement } from "../src/lib/equipes/serveur";
+import { changerGroupe, exigerTenirGroupe, lireGroupes } from "../src/lib/groupes/serveur";
 
 // Lot 2 du chantier « équipes et groupes » (docs/spec-organigrammes-groupes.md), tranche OG-A :
 // modèle et logique pure, aucun écran. Les tranches suivantes ajoutent leurs essais à ce fichier.
@@ -455,5 +468,357 @@ test.describe("« Choisir » relié à un rôle (OG29, OG30)", () => {
       { nom: "Zed A.", duRole: true },
       { nom: "Abel B.", duRole: false },
     ]);
+  });
+});
+
+// ═══ Tranche OG-B : droits, recopie, route, notifications ════════════════════
+
+/** Base Admin simulée (patron `fausseBase` de tests/reunions.spec.ts) : profils, équipes de l'église et
+ *  documents groupes/*, avec les écritures reçues (`update` d'un profil, `set` d'un groupe, lot groupé). */
+function fausseBaseGroupes(
+  users: Record<string, Record<string, unknown>>,
+  groupes: Record<string, Record<string, unknown>> = {},
+  equipes: Record<string, Record<string, unknown>> = {},
+) {
+  const ecrits: { chemin: string; data: Record<string, unknown> }[] = [];
+  const lots: number[] = [];
+  const collections: Record<string, Record<string, Record<string, unknown>>> = { users, groupes, equipes };
+  const docs = (m: Record<string, Record<string, unknown>>) => Object.entries(m).map(([id, d]) => ({ id, data: () => d }));
+  const ref = (nom: string, id: string) => ({
+    _chemin: `${nom}/${id}`,
+    get: async () => ({ exists: id in collections[nom], data: () => collections[nom][id] }),
+    update: async (data: Record<string, unknown>) => {
+      ecrits.push({ chemin: `${nom}/${id}`, data });
+      collections[nom][id] = { ...collections[nom][id], ...data };
+    },
+    set: async (data: Record<string, unknown>) => {
+      ecrits.push({ chemin: `${nom}/${id}`, data });
+      collections[nom][id] = data;
+    },
+  });
+  const db = {
+    collection: (nom: string) => ({ get: async () => ({ docs: docs(collections[nom] ?? {}) }), doc: (id: string) => ref(nom, id) }),
+    batch: () => {
+      const ops: (() => Promise<void>)[] = [];
+      const lot = {
+        set: (r: ReturnType<typeof ref>, data: Record<string, unknown>) => { ops.push(() => r.set(data)); return lot; },
+        update: (r: ReturnType<typeof ref>, data: Record<string, unknown>) => { ops.push(() => r.update(data)); return lot; },
+        commit: async () => { lots.push(ops.length); for (const op of ops) await op(); },
+      };
+      return lot;
+    },
+  } as unknown as FirebaseFirestore.Firestore;
+  return { db, ecrits, lots, users, groupes };
+}
+
+/** Un document groupes/{id} tel que Firestore le garde (sans `id`). */
+const docGroupe = ({ id: _id, ...g }: OrganigrammeGroupe) => g as unknown as Record<string, unknown>;
+
+test.describe("OG-B · recopie partagée en base simulée (OG3, OG19, OG20)", () => {
+  test("un document equipes/comite-paix écrit à la main n'ajoute ni membre ni référent au comité", async () => {
+    const equipes = [{ id: "comite-paix", membres: [{ nom: "Pirate", uid: "pirate", referent: true }] }];
+    expect(rattachementDe("pirate", equipes)).toEqual({ dansEquipes: [], referentDe: [] });
+    const { db } = fausseBaseGroupes({ pirate: { equipes: true } }, {}, { "comite-paix": { membres: equipes[0].membres } });
+    await recalculerRattachement(db, ["pirate"], await lireEquipes(db), await lireGroupes(db));
+    const lu = (await db.collection("users").doc("pirate").get()).data() as Record<string, unknown>;
+    expect(lu.referentDe ?? []).toEqual([]);
+    expect(lu.dansEquipes ?? []).toEqual([]);
+  });
+
+  test("équipes de l'église gardées, comité après elles ; listes par rôle ; sans groupe → groupe posé ; autre groupe → ignores", async () => {
+    const { db, ecrits } = fausseBaseGroupes(
+      {
+        ruth: { serviceRoles: { "Groupe Paix": ["presidence"] } },
+        noe: { groupe: "paix" },
+        hugo: {}, // sans groupe : entre dans Paix
+        eli: { groupe: "bonte" }, // titulaire dans Paix sans en être
+      },
+      { paix: docGroupe(PAIX), joie: docGroupe(JOIE), bonte: docGroupe(BONTE) },
+      { da: { membres: [{ nom: "Ruth K.", uid: "ruth", referent: true }] } },
+    );
+    const r = await recalculerRattachement(db, ["ruth", "noe", "hugo", "eli"], await lireEquipes(db), await lireGroupes(db));
+    expect(r.ignores).toEqual([{ uid: "eli", groupe: "paix" }]);
+    const ecrit = (uid: string) => ecrits.find((e) => e.chemin === `users/${uid}`)?.data;
+    expect(ecrit("ruth")).toEqual({
+      dansEquipes: ["da", "comite-paix"], referentDe: ["da", "comite-paix"],
+      remplitParRole: ["paix"], publieParRole: ["paix"], notifieParRole: ["Groupe Paix"],
+    });
+    expect(ecrit("noe")).toEqual({ dansEquipes: ["comite-paix"], remplitParRole: ["paix"], publieParRole: ["paix"] });
+    expect(ecrit("hugo")).toEqual({ groupe: "paix" });
+    expect(ecrit("eli")).toBeUndefined();
+    expect(r.maj).toBe(3);
+  });
+
+  test("un profil inchangé n'est pas réécrit ; retirer un titulaire retire ses droits", async () => {
+    const base = fausseBaseGroupes({ noe: { groupe: "paix" }, sam: { groupe: "paix" } }, { paix: docGroupe(PAIX) });
+    const relire = async () => recalculerRattachement(base.db, ["noe", "sam"], [], await lireGroupes(base.db));
+    expect((await relire()).maj).toBe(2);
+    expect((await relire()).maj).toBe(0);
+    base.groupes.paix = docGroupe({ ...PAIX, roles: PAIX.roles.map((r) => ({ ...r, titulaires: r.titulaires.filter((x) => x.uid !== "noe") })) });
+    expect((await relire()).maj).toBe(1);
+    expect(base.users.noe).toMatchObject({ groupe: "paix", dansEquipes: [], remplitParRole: [], publieParRole: [] });
+    expect(base.users.sam).toMatchObject({ remplitParRole: ["paix"] });
+  });
+
+  test("« Recalculer depuis l'organigramme » compte aussi les comptes cités dans groupes/*", async () => {
+    const { db, users } = fausseBaseGroupes({ ana: { groupe: "joie" }, tom: {} }, { joie: docGroupe(JOIE) });
+    expect(await recalculerDepuisOrganigramme(db)).toBe(2);
+    expect(users.ana).toMatchObject({ notifieParRole: ["Groupe Joie"], referentDe: ["comite-joie"], dansEquipes: ["comite-joie"] });
+    expect(users.tom).toMatchObject({ groupe: "joie", referentDe: ["comite-joie"] });
+  });
+
+  test("changerGroupe (admins) : retiré de la présidence, des VP et des rôles de l'ancien groupe, une écriture groupée", async () => {
+    const base = fausseBaseGroupes({ noe: { groupe: "paix", dansEquipes: ["comite-paix"], remplitParRole: ["paix"], publieParRole: ["paix"] }, lea: { groupe: "paix" } },
+      { paix: docGroupe(PAIX) });
+    await expect(changerGroupe(base.db, { uid: "lea", email: "lea@example.com" }, "noe", "bonte")).rejects.toMatchObject({ status: 403 });
+    await changerGroupe(base.db, { uid: "adm", email: ADMIN_EMAILS[0] }, "noe", "bonte");
+    expect(base.lots).toEqual([2]);
+    expect(base.users.noe).toMatchObject({ groupe: "bonte", dansEquipes: [], remplitParRole: [], publieParRole: [] });
+    const paix = lireGroupe("paix", base.groupes.paix);
+    expect(paix.roles.flatMap((r) => r.titulaires).some((x) => x.uid === "noe")).toBe(false);
+    // La VP : retirée des VP. « Sans groupe » : groupe "".
+    await changerGroupe(base.db, { uid: "adm", email: ADMIN_EMAILS[0] }, "lea", "");
+    expect(lireGroupe("paix", base.groupes.paix).vp).toEqual([]);
+    expect(base.users.lea).toMatchObject({ groupe: "", referentDe: [], notifieParRole: [] });
+  });
+
+  test("exigerTenirGroupe : admin, président, VP oui ; droit Équipes seul, membre, autre groupe : 403", async () => {
+    const { db } = fausseBaseGroupes({
+      ruth: { referentDe: ["comite-paix"] }, lea: { referentDe: ["comite-paix"] },
+      eq: { equipes: true }, mei: { dansEquipes: ["comite-paix"] }, ana: { referentDe: ["comite-joie"] },
+    });
+    await expect(exigerTenirGroupe({ uid: "adm", email: ADMIN_EMAILS[0] }, "paix", db)).resolves.toBeUndefined();
+    await expect(exigerTenirGroupe({ uid: "ruth", email: "r@x.fr" }, "paix", db)).resolves.toBeUndefined();
+    await expect(exigerTenirGroupe({ uid: "lea", email: "l@x.fr" }, "paix", db)).resolves.toBeUndefined();
+    for (const uid of ["eq", "mei", "ana"]) {
+      await expect(exigerTenirGroupe({ uid, email: `${uid}@x.fr` }, "paix", db), uid).rejects.toMatchObject({ status: 403 });
+    }
+    await expect(exigerTenirGroupe(null, "paix", db)).rejects.toMatchObject({ status: 401 });
+    await expect(exigerTenirGroupe({ uid: "adm", email: ADMIN_EMAILS[0] }, "comite-paix", db)).rejects.toMatchObject({ status: 400 });
+  });
+});
+
+test.describe("OG-B · miroirs client (OG22 à OG27)", () => {
+  const admin = { uid: "adm", email: ADMIN_EMAILS[0] };
+  const u = (uid: string) => ({ uid, email: `${uid}@example.com` });
+  const paix = getPlanning("paix")!;
+  const bonte = getPlanning("bonte")!;
+  const culte = getPlanning("culte")!;
+  const PRESIDENT = { groupe: "paix", referentDe: ["comite-paix"], dansEquipes: ["comite-paix"], remplitParRole: ["paix"], publieParRole: ["paix"], notifieParRole: ["Groupe Paix"] };
+  const NOTIFIE = { groupe: "paix", notifieParRole: ["Groupe Paix"] };
+  type Profil = { referentDe?: string[]; dansEquipes?: string[]; equipes?: boolean };
+  const EQUIPIER: Profil = { equipes: true };
+  const MEMBRE_COMITE: Profil = { dansEquipes: ["comite-paix"] };
+
+  test("Remplir : canEditPlanning lit plannings ou remplitParRole", () => {
+    expect(canEditPlanning(u("sam"), { remplitParRole: ["paix"] }, "paix")).toBe(true);
+    expect(canEditPlanning(u("sam"), { remplitParRole: ["paix"] }, "bonte")).toBe(false);
+    expect(canEditPlanning(u("sam"), { plannings: ["paix"] }, "paix")).toBe(true);
+  });
+
+  test("Publier : canPublishPlanning avec publieParRole ; un rôle « Notifier » seul ne publie pas", () => {
+    expect(canPublishPlanning(paix, false, [], ["paix"])).toBe(true);
+    expect(canPublishPlanning(bonte, false, [], ["paix"])).toBe(false);
+    expect(canPublishPlanning(paix, false, [])).toBe(false);
+    expect(canPublishPlanning(paix, false, [], [], )).toBe(false);
+  });
+
+  test("peutPrevenir : un rôle « Notifier » seul de Paix prévient pour Paix, pas pour Bonté ni le Culte ; Publier aussi ; Remplir seul non", () => {
+    expect(peutPrevenir(paix, false, [], [], ["Groupe Paix"])).toBe(true);
+    expect(peutPrevenir(bonte, false, [], [], ["Groupe Paix"])).toBe(false);
+    expect(peutPrevenir(culte, false, [], [], ["Groupe Paix"])).toBe(false);
+    expect(peutPrevenir(paix, false, [], ["paix"], [])).toBe(true);
+    expect(peutPrevenir(paix, false, [], [], [])).toBe(false);
+  });
+
+  test("audiencesNotifiables = notify ∪ notifieParRole ; interrupteur coupé → notify seul", () => {
+    expect(audiencesNotifiables({ notify: ["Campus"], notifieParRole: ["Groupe Joie"] }, true)).toEqual(["Campus", "Groupe Joie"]);
+    expect(audiencesNotifiables({ notify: ["Campus"], notifieParRole: ["Groupe Joie"] }, false)).toEqual(["Campus"]);
+    expect(audiencesNotifiables(null, true)).toEqual([]);
+  });
+
+  test("canTenirGroupe et tientUnGroupe : admin, président et VP du groupe ; droit Équipes seul → aucun groupe (décision 44)", () => {
+    expect(canTenirGroupe(admin, null, "joie")).toBe(true);
+    expect(canTenirGroupe(u("ruth"), PRESIDENT, "paix")).toBe(true);
+    expect(canTenirGroupe(u("ruth"), PRESIDENT, "bonte")).toBe(false);
+    expect(canTenirGroupe(u("mei"), MEMBRE_COMITE, "paix")).toBe(false);
+    expect(canTenirGroupe(u("eq"), EQUIPIER, "paix")).toBe(false);
+    expect(tientUnGroupe(u("ruth"), PRESIDENT)).toBe(true);
+    expect(tientUnGroupe(u("eq"), EQUIPIER)).toBe(false);
+    // `comite-franco` est une équipe de l'église, pas un comité de groupe.
+    expect(tientUnGroupe(u("x"), { referentDe: ["comite-franco"] })).toBe(false);
+    expect(tientUnGroupe(null, PRESIDENT)).toBe(false);
+  });
+
+  test("entreesBackOffice d'un président sans droit Équipes : Équipes et Planning en plus de Tâches, Réunions, Évènements", () => {
+    const entrees = entreesBackOffice(u("ruth"), PRESIDENT);
+    for (const e of ["equipes", "planning", "taches", "reunions", "evenements", "messages"] as const) expect(entrees, e).toContain(e);
+    expect(estResponsable(u("ruth"), PRESIDENT)).toBe(true);
+    expect(estResponsable(u("x"), { remplitParRole: ["paix"] })).toBe(true);
+    expect(estResponsable(u("x"), { publieParRole: ["paix"] })).toBe(true);
+    expect(estResponsable(u("x"), { notifieParRole: ["Groupe Joie"] })).toBe(true);
+    expect(planningsDuBackOffice(u("ruth"), PRESIDENT)).toEqual(["groupes"]);
+    expect(planningsDuBackOffice(u("x"), { remplitParRole: ["fidelite"] })).toEqual(["groupes"]);
+  });
+
+  test("un rôle « Notifier » seul de Paix : entrée Planning, avec Paix (OG26)", () => {
+    expect(entreesBackOffice(u("mei"), NOTIFIE)).toContain("planning");
+    expect(planningsDuBackOffice(u("mei"), NOTIFIE)).toEqual(["groupes"]);
+    expect(planningsDuBackOffice(u("mei"), { notifieParRole: ["Groupe Joie"] })).toEqual([]);
+  });
+
+  test("droit Équipes seul : l'entrée Équipes (l'église), aucun groupe modifiable", () => {
+    expect(entreesBackOffice(u("eq"), { equipes: true })).toContain("equipes");
+    expect(TABLE_GROUPES.some((g) => canTenirGroupe(u("eq"), EQUIPIER, g.id))).toBe(false);
+  });
+
+  test("creatableEvenementPours → equipe:comite-paix pour le président, pas pour un simple membre du comité", () => {
+    expect(creatableEvenementPours(u("ruth"), PRESIDENT, [])).toEqual(["equipe:comite-paix"]);
+    expect(creatableEvenementPours(u("mei"), { dansEquipes: ["comite-paix"] }, [])).toEqual([]);
+    expect(creatableEvenementPours(admin, null, []).slice(-5)).toEqual(COMITES.map((c) => `equipe:${c}`));
+  });
+
+  test("le comité dans les tâches : un membre le lit, le président y crée ; un admin voit les cinq comités après les équipes", () => {
+    expect(equipesDesTaches(u("mei"), { dansEquipes: ["comite-paix", "da"] })).toEqual(["da", "comite-paix"]);
+    expect(equipesOuCreer(u("ruth"), PRESIDENT)).toEqual(["comite-paix"]);
+    expect(equipesDesTaches(admin, null).slice(-5)).toEqual([...COMITES]);
+  });
+
+  test("public Louange (OG38, décision 42) : un membre de Joie par le seul champ groupe en fait partie ; ni clé ni groupe → non", () => {
+    expect(estDeLEquipe(u("zoe"), { groupe: "joie" }, "louange")).toBe(true);
+    expect(equipesDe({ groupe: "amour" })).toEqual(["louange"]);
+    expect(estDeLEquipe(u("x"), { groupe: "" }, "louange")).toBe(false);
+    expect(estDeLEquipe(u("x"), {}, "louange")).toBe(false);
+  });
+});
+
+test.describe("OG-B · règles Firestore (miroir, texte de firestore.rules)", () => {
+  const rules = readFileSync("firestore.rules", "utf8");
+
+  test("groupes/{g} : les ids de la règle sont ceux de la table ; lu par tout connecté, jamais supprimé", () => {
+    const bloc = rules.slice(rules.indexOf("match /groupes/{g}"));
+    const ids = /g in \[([^\]]+)\]/.exec(bloc)?.[1].split(",").map((s) => s.trim().replace(/'/g, ""));
+    expect(ids).toEqual(TABLE_GROUPES.map((g) => g.id));
+    expect(bloc).toMatch(/allow read: if signedIn\(\);/);
+    expect(bloc).toMatch(/allow delete: if false;/);
+  });
+
+  test("tientGroupe et plafond des VP (décision 36) : un non-admin ne change ni president, ni vp, ni maxVp ; maxVp de 1 à 9 ; vp ≤ plafond", () => {
+    expect(rules).toMatch(/function tientGroupe\(g\)[\s\S]*?\('comite-' \+ g\) in profile\(\)\.get\('referentDe', \[\]\)/);
+    const plafond = rules.slice(rules.indexOf("function vpDansLePlafond"), rules.indexOf("match /groupes/{g}"));
+    expect(plafond).toMatch(/get\('maxVp', 2\)/);
+    expect(plafond).toMatch(/max is int && max >= 1 && max <= 9/);
+    expect(plafond).toMatch(/get\('vp', \[\]\)\.size\(\) <= max/);
+    const bloc = rules.slice(rules.indexOf("match /groupes/{g}"));
+    expect(bloc).toMatch(/allow create: if isAdmin\(\)[^;]*vpDansLePlafond\(\)/);
+    for (const champ of ["president", "vp", "maxVp"]) {
+      expect(bloc, champ).toMatch(new RegExp(`request\\.resource\\.data\\.get\\('${champ}', [^)]+\\) == resource\\.data\\.get\\('${champ}'`));
+    }
+  });
+
+  test("peutEcrirePlanning lit aussi remplitParRole ; création d'un profil sans groupe ni listes par rôle", () => {
+    expect(rules).toMatch(/function peutEcrirePlanning\(key\)[\s\S]*?key in profile\(\)\.get\('remplitParRole', \[\]\)/);
+    const creation = rules.slice(rules.indexOf("match /users/{uid}"), rules.indexOf("allow update: if isAdmin();"));
+    expect(creation).toMatch(/request\.resource\.data\.get\('groupe', null\) == null/);
+    for (const champ of ["remplitParRole", "publieParRole", "notifieParRole"]) {
+      expect(creation, champ).toContain(`request.resource.data.get('${champ}', []) == []`);
+    }
+  });
+
+  test("public Louange : la branche Louange de estDeLEquipe compte un champ groupe non vide", () => {
+    expect(rules).toMatch(/function estDeLEquipe\(equipe\)[\s\S]*?profile\(\)\.get\('groupe', ''\) != ''/);
+  });
+});
+
+test.describe("OG-B · destinataires, audiences, routes (OG24, OG25, OG28)", () => {
+  test("uidsDuGroupe : clé ∪ groupe ; interrupteur coupé → clé seule", async () => {
+    const { db } = fausseBaseGroupes({
+      a: { serviceRoles: { "Groupe Paix": ["musicien"] } },
+      b: { groupe: "paix" },
+      c: { serviceRoles: { "Groupe Paix": [] }, groupe: "bonte" },
+      d: { groupe: "joie" },
+      e: {},
+    });
+    expect((await uidsDuGroupe("Groupe Paix", db, true)).sort()).toEqual(["a", "b", "c"]);
+    expect((await uidsDuGroupe("Groupe Paix", db, false)).sort()).toEqual(["a", "c"]);
+    expect(await uidsDuGroupe("Groupe Joie", db, true)).toEqual(["d"]);
+    expect(await uidsDuGroupe("Groupe Joie", db, false)).toEqual([]);
+    expect([...(await uidsDesAudiences(["Groupe Joie", "Groupe Bonté"], db, true))].sort()).toEqual(["c", "d"]);
+  });
+
+  test("Groupe Amour et Groupe Joie dans la rangée Groupes, seulement interrupteur ouvert", () => {
+    const groupes = (bo: boolean) => notifyGroups(bo).find((g) => g.label === "Groupes")!.audiences;
+    expect(groupes(true)).toEqual(["Groupe Paix", "Groupe Fidélité", "Groupe Bonté", "Groupe Amour", "Groupe Joie"]);
+    expect(groupes(false)).toEqual(["Groupe Paix", "Groupe Fidélité", "Groupe Bonté"]);
+    expect(isValidAudience("Groupe Joie", true)).toBe(true);
+    expect(isValidAudience("Groupe Joie", false)).toBe(false);
+  });
+
+  test("publication et Notifier : acceptés par un rôle, refusés sans ; rôles ignorés interrupteur coupé", () => {
+    const paix = getPlanning("paix")!;
+    const moi = { notify: [], publieParRole: ["paix"], notifieParRole: ["Groupe Joie"] };
+    expect(droitsDePublication(paix, false, moi, true)).toBe(true);
+    expect(droitsDePublication(paix, false, moi, false)).toBe(false);
+    expect(droitsDePublication(paix, false, { notifieParRole: ["Groupe Paix"] }, true)).toBe(false);
+    expect(peutNotifierAudience("Groupe Joie", false, moi, true)).toBe(true);
+    expect(peutNotifierAudience("Groupe Joie", false, moi, false)).toBe(false);
+    expect(peutNotifierAudience("Groupe Paix", false, moi, true)).toBe(false);
+    expect(peutNotifierAudience("Groupe Paix", true, null, true)).toBe(true);
+  });
+});
+
+// ─── OG-B dans le navigateur : planning du groupe et Notifier ────────────────
+
+test.describe("OG-B · navigateur", () => {
+  /** Ouvre `to` le vendredi 18/09/2026 (T3 en cours, T4 en brouillon), Sheet vide. */
+  async function ouvrir(page: Page, qui: FakeProfile, to: string, docs: Record<string, Record<string, unknown>> = {}) {
+    await page.clock.setFixedTime(new Date("2026-09-18T10:00:00"));
+    await page.route(/docs\.google\.com\/spreadsheets/, (route) => route.fulfill({ status: 200, contentType: "text/csv", body: "" }));
+    return signInAs(page, qui, docs, to);
+  }
+  const PUBLIE: FakeProfile = { uid: "noe", email: "noe@example.com", firstName: "Noé", lastName: "P.", groupe: "paix", remplitParRole: ["paix"], publieParRole: ["paix"] };
+  const NOTIFIE: FakeProfile = { uid: "mei", email: "mei@example.com", firstName: "Mei", lastName: "Z.", groupe: "paix", notifieParRole: ["Groupe Paix"] };
+  const plannings = (page: Page) => page.getByRole("navigation", { name: "Plannings" });
+
+  test("un titulaire « Publier » de Paix publie un trimestre depuis la page du planning", async ({ page }) => {
+    await ouvrir(page, PUBLIE, "/back-office/planning");
+    await expect(page).toHaveURL(/\/back-office\/planning\/groupes\/?$/);
+    await expect(plannings(page).getByRole("link")).toHaveText(["Groupes"]);
+    const corps: unknown[] = [];
+    await page.route("**/api/planning/release", async (route) => {
+      corps.push(route.request().postDataJSON());
+      await route.fulfill({ json: { ok: true, published: ["T4"], notified: true, sent: 0 } });
+    });
+    await page.getByRole("tab", { name: /^T4/ }).click();
+    await page.getByRole("button", { name: "Publier le T4" }).click();
+    await repondreDansLeSite(page, "Publier le T4");
+    await expect.poll(() => corps).toEqual([{ key: "paix", tri: "T4", publish: true, year: 2026 }]);
+  });
+
+  test("un titulaire « Notifier » seul de Paix : entrée Planning, grille en lecture, pas de « Publier le T… »", async ({ page }) => {
+    await ouvrir(page, NOTIFIE, "/back-office/planning");
+    await expect(page).toHaveURL(/\/back-office\/planning\/groupes\/?$/);
+    await expect(page.locator("[data-grille]")).toBeVisible();
+    await expect(page.getByRole("button", { name: /^Publier le T\d/ })).toHaveCount(0);
+    await expect(page.locator("[data-case]").filter({ visible: true }).first()).toBeVisible();
+    await expect(page.locator("[data-case]").getByRole("button", { name: /Choisir/ })).toHaveCount(0);
+  });
+
+  test("Notifier : un titulaire « Notifier » de Joie voit « Groupe Joie », ses destinataires comptent les membres du groupe", async ({ page }) => {
+    const JOIE_NOTIFIE: FakeProfile = { uid: "zoe", email: "zoe@example.com", firstName: "Zoé", lastName: "W.", groupe: "joie", notifieParRole: ["Groupe Joie"] };
+    const membre = (uid: string, prenom: string, o: Record<string, unknown>) =>
+      ({ [`users/${uid}`]: { email: `${uid}@example.com`, firstName: prenom, lastName: "T.", planningName: "", serviceRoles: {}, ...o } });
+    await ouvrir(page, JOIE_NOTIFIE, "/back-office/messages/notifier", {
+      ...membre("ana", "Ana", { groupe: "joie" }),
+      ...membre("tom", "Tom", { groupe: "joie" }),
+      ...membre("luc", "Luc", { groupe: "paix" }),
+      ...membre("zoe", "Zoé", { groupe: "joie", notifieParRole: ["Groupe Joie"] }),
+    });
+    await page.getByRole("group", { name: "Audience" }).getByRole("button", { name: "Groupes" }).click();
+    await expect(page.getByRole("group", { name: "Groupes" }).getByRole("button")).toHaveText(["Groupe Joie"]);
+    await page.getByRole("group", { name: "Groupes" }).getByRole("button", { name: "Groupe Joie" }).click();
+    await page.getByRole("textbox", { name: "Titre" }).fill("Pique-nique");
+    await page.getByRole("textbox", { name: "Message" }).fill("Dimanche après le culte.");
+    await expect(page.getByRole("button", { name: "Envoyer à 3 personnes" })).toBeEnabled();
   });
 });

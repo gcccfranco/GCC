@@ -4,7 +4,9 @@ import type { Evenement } from "@/types/evenement";
 import type { FSSetlist } from "@/lib/firebase/setlists";
 import type { Tache } from "@/types/tache";
 import { EQUIPES } from "@/lib/equipes/table";
-import { PUBLISHABLE_PLANNINGS, canPublishPlanning } from "@/lib/planning/releases";
+import { COMITES, groupeDef } from "@/lib/groupes/table";
+import { PUBLISHABLE_PLANNINGS, peutPrevenir } from "@/lib/planning/releases";
+import { audiencesNotifiables } from "@/lib/push/audiences";
 import { ENTREES, WIDGETS, type Entree, type WidgetId } from "@/types/backOffice";
 import {
   GROUPES,
@@ -45,18 +47,22 @@ export function canEditProfile(
 
 // ─── Équipes (lot 1 du chantier « équipes et groupes », docs/spec-equipes-sans-poles.md) ───
 
-type ProfilEquipes = { dansEquipes?: string[]; referentDe?: string[]; serviceRoles?: Record<string, unknown> };
-const ORDRE_EQUIPES = EQUIPES.map((e) => e.id);
+type ProfilEquipes = { dansEquipes?: string[]; referentDe?: string[]; serviceRoles?: Record<string, unknown>; groupe?: string | null };
+/** Les équipes de l'église, puis les comités des cinq groupes (lot 2, OG17, OG20) : un comité est une
+ *  équipe calculée depuis groupes/{id}, sans document equipes/comite-*. */
+const ORDRE_EQUIPES = [...EQUIPES.map((e) => e.id), ...COMITES];
 const rangEquipe = (id: string) => (ORDRE_EQUIPES.includes(id) ? ORDRE_EQUIPES.indexOf(id) : ORDRE_EQUIPES.length);
 
 /** Les équipes d'une personne (EQ5) : celles où elle figure (`dansEquipes`, recopié par le serveur
  *  depuis l'organigramme), plus « louange » dès qu'elle a un rôle de service — une clé de
- *  `serviceRoles` suffit, même sans rôle (décisions 5 et 42) — dans l'ordre de la table. Seule
+ *  `serviceRoles` suffit, même sans rôle (décisions 5 et 42) — ou un groupe (champ `groupe` non
+ *  vide, lot 2, OG38), dans l'ordre de la table (équipes de l'église, puis comités). Seule
  *  fonction qui calcule « mes équipes » côté client. Miroir serveur : membresDeLEquipe
  *  (src/lib/taches/serveur.ts) ; miroir des règles : estDeLEquipe(equipe) dans firestore.rules. */
 export function equipesDe(profile: ProfilEquipes | null): string[] {
   const ids = [...new Set(profile?.dansEquipes ?? [])];
-  if (Object.keys(profile?.serviceRoles ?? {}).length > 0 && !ids.includes("louange")) ids.push("louange");
+  const louange = Object.keys(profile?.serviceRoles ?? {}).length > 0 || (typeof profile?.groupe === "string" && profile.groupe !== "");
+  if (louange && !ids.includes("louange")) ids.push("louange");
   return ids.sort((a, b) => rangEquipe(a) - rangEquipe(b));
 }
 
@@ -136,6 +142,24 @@ export function canEditerEquipes(
   if (!user) return false;
   return isAdminUser(user) || profile?.equipes === true;
 }
+
+/** Tenir l'organigramme d'un groupe (lot 2, OG9, OG26) : admin, ou président / VP du groupe — leur
+ *  `referentDe` porte le comité du groupe, recopié par le serveur seul. Le droit Équipes ne le donne
+ *  pas (décision 44). Miroir : tientGroupe(g) dans firestore.rules ; serveur : exigerTenirGroupe. */
+export function canTenirGroupe(user: AuthUser | null, profile: { referentDe?: string[] } | null, groupe: string): boolean {
+  if (!user) return false;
+  const def = groupeDef(groupe);
+  return !!def && (isAdminUser(user) || (profile?.referentDe ?? []).includes(def.comite));
+}
+
+/** Président ou VP d'au moins un groupe (entrée Équipes du Back-Office, OG26). Par la liste des
+ *  comités, jamais par le préfixe : `comite-franco` est une équipe de l'église. */
+export function tientUnGroupe(user: AuthUser | null, profile: { referentDe?: string[] } | null): boolean {
+  if (!user) return false;
+  return isAdminUser(user) || (profile?.referentDe ?? []).some((id) => COMITES.includes(id));
+}
+
+export { audiencesNotifiables };
 
 /** Créneau sur scène : son auteur + la coordination. Miroir : programmes/{id}/creneaux dans firestore.rules. */
 export function canEditCreneau(
@@ -323,17 +347,18 @@ export function peutOrdonnerSujets(user: AuthUser | null, e: EvenementDroits): b
 
 /** Remplir les cases d'un planning dans l'app (lot 17, docs/spec-planning-grille.md) :
  *  les admins, et les profils dont `plannings` contient sa clé — coché par un
- *  admin, planning par planning. Ne donne PAS le droit de publier un trimestre
+ *  admin, planning par planning — ou `remplitParRole` (rôle d'un groupe, lot 2, OG22 ; pour un
+ *  rôle, Publier inclut Remplir). Ne donne PAS le droit de publier un trimestre
  *  (canPublishPlanning, src/lib/planning/releases.ts, qui dépend de `notify`) :
  *  deux gestes différents, deux droits (D10).
  *  Miroir serveur : plannings/{key}/dimanches dans firestore.rules. */
 export function canEditPlanning(
   user: { email?: string | null } | null,
-  profile: { plannings?: string[] } | null,
+  profile: { plannings?: string[]; remplitParRole?: string[] } | null,
   key: string
 ): boolean {
   if (!user) return false;
-  return isAdminUser(user) || (profile?.plannings ?? []).includes(key);
+  return isAdminUser(user) || (profile?.plannings ?? []).includes(key) || (profile?.remplitParRole ?? []).includes(key);
 }
 
 /** Petit déj (lot U3, docs/spec-petit-dej.md, Q8) : poser une ligne pour
@@ -530,19 +555,21 @@ export function canSetSetlistTeam(
 type ProfilResponsable = {
   serviceRoles?: Record<string, unknown>; coordination?: boolean; plannings?: string[];
   notify?: string[]; annonces?: string[]; equipes?: boolean; referentDe?: string[]; dansEquipes?: string[];
+  groupe?: string | null; remplitParRole?: string[]; publieParRole?: string[]; notifieParRole?: string[];
 };
 const nonVide = (l: string[] | undefined) => (l?.length ?? 0) > 0;
 
 /** Responsable (Q1) : admin, ou au moins un droit donné par un admin ou par l'organigramme —
  *  coordination (EQ18), `plannings`, `notify`, `annonces`,
- *  droit Équipes, référent d'une équipe. Être membre d'une équipe ou du public Louange (un rôle
+ *  droit Équipes, référent d'une équipe, un droit venu d'un rôle de groupe (lot 2, OG26). Être membre d'une équipe ou du public Louange (un rôle
  *  de service) ne fait pas un responsable (question 2). */
 export function estResponsable(user: AuthUser | null, profile: ProfilResponsable | null): boolean {
   if (!user) return false;
   if (isAdminUser(user)) return true;
   if (!profile) return false;
   return profile.coordination === true || nonVide(profile.plannings) || nonVide(profile.notify)
-    || nonVide(profile.annonces) || profile.equipes === true || nonVide(profile.referentDe);
+    || nonVide(profile.annonces) || profile.equipes === true || nonVide(profile.referentDe)
+    || nonVide(profile.remplitParRole) || nonVide(profile.publieParRole) || nonVide(profile.notifieParRole);
 }
 
 /** Statistiques des chants (lot U7, docs/spec-statistiques.md, Q2) : admins seulement (T1).
@@ -568,16 +595,15 @@ export function entreesBackOffice(user: AuthUser | null, profile: ProfilResponsa
   const visible: Record<Entree, boolean> = {
     tableau: true,
     calendrier: true,
-    planning: admin || nonVide(profile?.plannings)
-      || PUBLISHABLE_PLANNINGS.some((p) => canPublishPlanning(p, admin, profile?.notify ?? [])),
+    planning: admin || nonVide(profile?.plannings) || planningsDuBackOffice(user, profile).length > 0,
     taches: admin || equipes,
     // Agencement v18 (B15) : Évènements = ceux qu'on gère ou crée (un référent crée pour son
     // équipe, décision 43) ; Réunions = ses équipes (Louange élargi). Affichage seulement :
     // evenements/{id} garde ses règles.
     evenements: admin || isCoordination(user, profile) || nonVide(profile?.annonces) || nonVide(profile?.referentDe),
     reunions: admin || equipes || nonVide(profile?.referentDe),
-    equipes: canEditerEquipes(user, profile),
-    messages: admin || nonVide(profile?.notify),
+    equipes: canEditerEquipes(user, profile) || tientUnGroupe(user, profile),
+    messages: admin || audiencesNotifiables(profile).length > 0,
     statistiques: canVoirStatistiques(user),
   };
   return ENTREES.filter((e) => visible[e] && !ENTREES_A_VENIR.includes(e));
@@ -595,16 +621,19 @@ function ongletDeLaGrille(key: string): OngletPlanning | null {
   return (ONGLETS_PLANNING as readonly string[]).includes(key) ? (key as OngletPlanning) : null;
 }
 
-/** Les plannings du Back-Office (lot U6, B2, table Q2) : ceux qu'on remplit (`plannings`) ou
- *  publie (`canPublishPlanning`), dans l'ordre des onglets ; tous pour un admin. */
+/** Les plannings du Back-Office (lot U6, B2, table Q2) : ceux qu'on remplit (`plannings`,
+ *  `remplitParRole`), publie (`canPublishPlanning`) ou dont on prévient des changements
+ *  (`peutPrevenir` : un rôle « Notifier » seul y voit la grille en lecture, lot 2, OG26), dans
+ *  l'ordre des onglets ; tous pour un admin. */
 export function planningsDuBackOffice(
   user: { email?: string | null } | null,
-  profile: { plannings?: string[]; notify?: string[] } | null
+  profile: { plannings?: string[]; notify?: string[]; remplitParRole?: string[]; publieParRole?: string[]; notifieParRole?: string[] } | null
 ): OngletPlanning[] {
   if (!user) return [];
   if (isAdminUser(user)) return [...ONGLETS_PLANNING];
-  const publies = PUBLISHABLE_PLANNINGS.filter((p) => canPublishPlanning(p, false, profile?.notify ?? [])).map((p) => p.key);
-  const siens = new Set([...(profile?.plannings ?? []), ...publies].map(ongletDeLaGrille));
+  const publies = PUBLISHABLE_PLANNINGS.filter((p) =>
+    peutPrevenir(p, false, profile?.notify ?? [], profile?.publieParRole ?? [], profile?.notifieParRole ?? [])).map((p) => p.key);
+  const siens = new Set([...(profile?.plannings ?? []), ...(profile?.remplitParRole ?? []), ...publies].map(ongletDeLaGrille));
   return ONGLETS_PLANNING.filter((o) => siens.has(o));
 }
 

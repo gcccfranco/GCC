@@ -34,7 +34,7 @@ export function dispositionParDefaut(user: AuthUser | null, profile: UserProfile
   if (!isAdminUser(user)) {
     voulus = ["dimanche", "afaire"];
     if (isCoordination(user, profile) || nonVide(profile?.annonces)) voulus.push("evenements", "scene");
-    if (Object.keys(profile?.serviceRoles ?? {}).length > 0 || nonVide(profile?.plannings)) voulus.push("planning", "setlists");
+    if (Object.keys(profile?.serviceRoles ?? {}).length > 0 || nonVide(profile?.plannings) || nonVide(profile?.remplitParRole)) voulus.push("planning", "setlists");
   }
   return ORDRE_DU_CATALOGUE
     .filter((id) => voulus.includes(id) && permis.includes(id))

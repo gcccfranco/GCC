@@ -19,9 +19,9 @@ import { canEditPlanning, isAdminUser } from "@/lib/access"
 import { PLANNING_COLORS } from "@/lib/serviceColors"
 import {
   PUBLISHABLE_PLANNINGS,
-  canPublishPlanning,
+  droitsDePublication,
   getPublishedQuarters,
-  peutPrevenir,
+  droitsDePrevenir,
   triVisibilitiesAnnee,
 } from "@/lib/planning/releases"
 import { BACK_OFFICE } from "@/lib/backOffice"
@@ -93,10 +93,10 @@ function GroupesPage() {
   // Trimestres futurs non publiés du groupe actif : masqués aux membres, marqués aux publieurs.
   const planning = PUBLISHABLE_PLANNINGS.find(p => p.key === grp)!
   // Lot 3 (PG35) : qui publie ou notifie ce planning prévient des changements, même sans remplir la grille.
-  const peutPrev = gestion && peutPrevenir(planning, isAdminUser(user), profile?.notify ?? [])
+  const peutPrev = gestion && droitsDePrevenir(planning, isAdminUser(user), profile)
   const { datesDansLApp, comptes, ecrites } = useGrilleApp(definition.key, peutModifier || peutPrev)
   const [publications, setPublications] = useState(0)
-  const canPublish = gestion && canPublishPlanning(planning, isAdminUser(user), profile?.notify ?? [])
+  const canPublish = gestion && droitsDePublication(planning, isAdminUser(user), profile)
   // Q4 (lot U2) : le brouillon se montre à qui remplit ou publie ce planning, et aux admins.
   const voitBrouillon = canPublish || peutModifier
   const {

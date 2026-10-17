@@ -570,6 +570,8 @@
     "Groupe Paix": "Groupe Paix",
     "Groupe Fidélité": "Groupe Fidélité",
     "Groupe Bonté": "Groupe Bonté",
+    "Groupe Amour": "Groupe Amour",
+    "Groupe Joie": "Groupe Joie",
     "中班": "Zhong Ban (中班)",
     "大班": "Da Ban (大班)",
     "高班": "Gao Ban (高班)"
@@ -2721,7 +2723,12 @@
       "decoration": "TEAM DÉCORATION",
       "accueil-j1": "TEAM ACCUEIL J1",
       "louange": "TEAM LOUANGE",
-      "edd": "TEAM EDD"
+      "edd": "TEAM EDD",
+      "comite-paix": "COMITÉ PAIX",
+      "comite-fidelite": "COMITÉ FIDÉLITÉ",
+      "comite-bonte": "COMITÉ BONTÉ",
+      "comite-amour": "COMITÉ AMOUR",
+      "comite-joie": "COMITÉ JOIE"
     },
     "court": {
       "orga": "Orga",
@@ -2736,7 +2743,12 @@
       "decoration": "Décoration",
       "accueil-j1": "Accueil J1",
       "louange": "Louange",
-      "edd": "EDD"
+      "edd": "EDD",
+      "comite-paix": "Comité Paix",
+      "comite-fidelite": "Comité Fidélité",
+      "comite-bonte": "Comité Bonté",
+      "comite-amour": "Comité Amour",
+      "comite-joie": "Comité Joie"
     },
     "public": {
       "louange": "Louange"

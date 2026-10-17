@@ -16,9 +16,9 @@ import { useProfile } from "@/lib/firebase/users"
 import { canEditPlanning, isAdminUser } from "@/lib/access"
 import {
   PUBLISHABLE_PLANNINGS,
-  canPublishPlanning,
+  droitsDePublication,
   getPublishedQuarters,
-  peutPrevenir,
+  droitsDePrevenir,
   triVisibilitiesAnnee,
 } from "@/lib/planning/releases"
 import { OngletsRail } from "@/components/layout/Onglets"
@@ -56,7 +56,7 @@ function CultePage() {
   const trimestre = useTrimestreEnLettres()
   const peutModifier = gestion && canEditPlanning(user, profile, "culte")
   // Lot 3 (PG35) : qui publie ou notifie ce planning prévient des changements, même sans remplir la grille.
-  const peutPrev = gestion && peutPrevenir(CULTE, isAdminUser(user), profile?.notify ?? [])
+  const peutPrev = gestion && droitsDePrevenir(CULTE, isAdminUser(user), profile)
   const { datesDansLApp, comptes, ecrites } = useGrilleApp("culte", peutModifier || peutPrev)
   const [publications, setPublications] = useState(0)
 
@@ -66,7 +66,7 @@ function CultePage() {
       .then(entries => setPublished(Object.fromEntries(entries)))
   }, [])
 
-  const canPublish = gestion && canPublishPlanning(CULTE, isAdminUser(user), profile?.notify ?? [])
+  const canPublish = gestion && droitsDePublication(CULTE, isAdminUser(user), profile)
   // Q4 (lot U2) : le brouillon se montre à qui remplit ou publie ce planning, et aux admins.
   const voitBrouillon = canPublish || peutModifier
   const {

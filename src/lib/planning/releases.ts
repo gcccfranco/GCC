@@ -12,6 +12,7 @@
 // client, le panneau de publication ET la route serveur /api/planning/release.
 
 import { NOTIFY_ALL } from "@/lib/push/audiences"
+import { BACK_OFFICE } from "@/lib/backOffice"
 import type { EtatAnnonce } from "./prevenir"
 
 export interface PublishablePlanning {
@@ -46,19 +47,48 @@ export function triRank(tri: string): number {
 }
 
 /** Admins + porteurs du droit notif « tout le monde » + porteurs du droit notif
- *  propre à ce planning peuvent le publier. */
+ *  propre à ce planning peuvent le publier ; plus, lot 2 (OG23), qui le publie par un rôle de
+ *  son groupe (`publieParRole`, recopié par le serveur). « Notifier » ne donne pas « Publier ». */
 export function canPublishPlanning(
   planning: PublishablePlanning,
   isAdmin: boolean,
-  notifyRights: string[]
+  notifyRights: string[],
+  publieParRole: string[] = []
 ): boolean {
   return isAdmin || notifyRights.includes(NOTIFY_ALL) || notifyRights.includes(planning.permission)
+    || publieParRole.includes(planning.key)
 }
 
-/** Lot 3 (PG35) : qui voit « Prévenir des changements » et peut l'envoyer. Dans ce lot, qui peut publier ;
- *  le lot 2 l'étend (rôles qui publient ou notifient). Un seul endroit, la page et la route l'appellent. */
-export function peutPrevenir(planning: PublishablePlanning, isAdmin: boolean, notifyRights: string[]): boolean {
-  return canPublishPlanning(planning, isAdmin, notifyRights)
+/** Lot 3 (PG35), étendu au lot 2 (OG23, décision 25 : « ceux qui publient ou notifient ce planning ») :
+ *  qui voit « Prévenir des changements » et peut l'envoyer. Un rôle « Notifier » seul prévient donc
+ *  sans pouvoir publier. Un seul endroit, la page et la route l'appellent. */
+export function peutPrevenir(
+  planning: PublishablePlanning,
+  isAdmin: boolean,
+  notifyRights: string[],
+  publieParRole: string[] = [],
+  notifieParRole: string[] = []
+): boolean {
+  return canPublishPlanning(planning, isAdmin, notifyRights, publieParRole) || notifieParRole.includes(planning.notifyAudience)
+}
+
+/** Les listes d'un profil que lisent la publication et « Prévenir » ; celles des rôles ne comptent
+ *  que si `backOffice` (OG27 : local et en ligne partagent Firestore). */
+type ProfilPublie = { notify?: string[]; publieParRole?: string[]; notifieParRole?: string[] }
+
+/** Publier ce planning, profil relu (route /api/planning/release, pages du planning). */
+export function droitsDePublication(
+  planning: PublishablePlanning, isAdmin: boolean, profil: ProfilPublie | null, backOffice: boolean = BACK_OFFICE
+): boolean {
+  return canPublishPlanning(planning, isAdmin, profil?.notify ?? [], backOffice ? profil?.publieParRole ?? [] : [])
+}
+
+/** Prévenir des changements de ce planning, profil relu (route /api/planning/changements, pages). */
+export function droitsDePrevenir(
+  planning: PublishablePlanning, isAdmin: boolean, profil: ProfilPublie | null, backOffice: boolean = BACK_OFFICE
+): boolean {
+  return peutPrevenir(planning, isAdmin, profil?.notify ?? [],
+    backOffice ? profil?.publieParRole ?? [] : [], backOffice ? profil?.notifieParRole ?? [] : [])
 }
 
 export interface TriVisibility {

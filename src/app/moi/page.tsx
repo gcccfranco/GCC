@@ -26,7 +26,7 @@ import { ReportDialog } from "@/components/report/ReportDialog";
 import { useSetLanguage } from "@/lib/I18nProvider";
 import { useAuth, logOut } from "@/lib/firebase/auth";
 import { useProfile } from "@/lib/firebase/users";
-import { equipesDesTaches, isAdminUser } from "@/lib/access";
+import { audiencesNotifiables, equipesDesTaches, isAdminUser } from "@/lib/access";
 import { BACK_OFFICE } from "@/lib/backOffice";
 
 const TOGGLE = "rounded-full bg-secondary px-3 py-1.5 text-sm font-semibold text-foreground transition-transform duration-150 active:scale-[.96] cursor-pointer";
@@ -46,7 +46,7 @@ function MoiClient() {
   const isZh = i18n.language === "zh-CN";
   const dark = resolvedTheme === "dark";
   const admin = isAdminUser(user);
-  const canNotify = admin || (profile?.notify?.length ?? 0) > 0;
+  const canNotify = admin || audiencesNotifiables(profile).length > 0;
   const name = [profile?.firstName, profile?.lastName].filter(Boolean).join(" ");
   // « Mes tâches » (lot 7 ; EQ15) : seulement pour les membres d'une équipe (Louange élargi) et les admins.
   const equipes = useMemo(() => equipesDesTaches(user, profile), [user, profile]);

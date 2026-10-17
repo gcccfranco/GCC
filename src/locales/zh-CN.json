@@ -567,6 +567,8 @@
     "Groupe Paix": "和平团契",
     "Groupe Fidélité": "信实团契",
     "Groupe Bonté": "恩慈团契",
+    "Groupe Amour": "仁爱团契",
+    "Groupe Joie": "喜乐团契",
     "中班": "中班",
     "大班": "大班",
     "高班": "高班"
@@ -2685,7 +2687,12 @@
       "decoration": "布置组",
       "accueil-j1": "迎新组",
       "louange": "敬拜组",
-      "edd": "主日学"
+      "edd": "主日学",
+      "comite-paix": "和平团契委员会",
+      "comite-fidelite": "信实团契委员会",
+      "comite-bonte": "恩慈团契委员会",
+      "comite-amour": "仁爱团契委员会",
+      "comite-joie": "喜乐团契委员会"
     },
     "court": {
       "orga": "统筹组",
@@ -2700,7 +2707,12 @@
       "decoration": "布置组",
       "accueil-j1": "迎新组",
       "louange": "敬拜组",
-      "edd": "主日学"
+      "edd": "主日学",
+      "comite-paix": "和平委员会",
+      "comite-fidelite": "信实委员会",
+      "comite-bonte": "恩慈委员会",
+      "comite-amour": "仁爱委员会",
+      "comite-joie": "喜乐委员会"
     },
     "public": {
       "louange": "敬拜"

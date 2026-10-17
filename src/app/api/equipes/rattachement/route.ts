@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { adminDb } from "@/lib/push/admin";
 import { HttpError, errorResponse, optionalUser } from "@/lib/evenements/serveur";
 import { isAdminEmail } from "@/lib/access";
-import { exigerDroitEquipes, lireEquipes, recalculerDepuisOrganigramme, recalculerRattachement } from "@/lib/equipes/serveur";
+import { exigerDroitEquipes, lireEquipes, lireGroupes, recalculerDepuisOrganigramme, recalculerRattachement } from "@/lib/equipes/serveur";
 import { BACK_OFFICE } from "@/lib/backOffice"
 
 export const runtime = "nodejs";
@@ -31,7 +31,9 @@ export async function POST(req: NextRequest) {
     if (!uids) throw new HttpError(400, "Requête incomplète");
 
     const db = adminDb();
-    const maj = await recalculerRattachement(db, uids, await lireEquipes(db));
+    // Les groupes aussi (lot 2, OG20) : la recopie n'efface ni les ids de comité ni les listes par rôle.
+    const [equipes, groupes] = await Promise.all([lireEquipes(db), lireGroupes(db)]);
+    const { maj } = await recalculerRattachement(db, uids, equipes, groupes);
     return NextResponse.json({ ok: true, maj });
   } catch (e) {
     return errorResponse(e);

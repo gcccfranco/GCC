@@ -6,7 +6,7 @@ import { loadNotifLangs, loadPlanningNameIndex } from "@/lib/push/recipients";
 import { changementPlanningMessage, changementPlanningParDefaut } from "@/lib/push/messages";
 import { isAdminEmail } from "@/lib/access";
 import { BACK_OFFICE } from "@/lib/backOffice";
-import { getPlanning, peutPrevenir, triVisibilitiesAnnee, TRI_ORDER } from "@/lib/planning/releases";
+import { getPlanning, droitsDePrevenir, triVisibilitiesAnnee, TRI_ORDER } from "@/lib/planning/releases";
 import { getTri } from "@/lib/planning/utils";
 import { grilleDe } from "@/lib/planning/grilles";
 import { colonneDePersonnes } from "@/lib/planning/choisir";
@@ -75,12 +75,12 @@ export async function POST(req: NextRequest) {
 
   // Droits de l'appelant, relus ici (jamais crus sur parole).
   const isAdmin = isAdminEmail(email);
-  let rights: string[] = [];
-  if (!isAdmin) {
-    const me = (await adminDb().collection("users").doc(uid).get()).data() as { notify?: string[] } | undefined;
-    rights = me?.notify ?? [];
-  }
-  if (!peutPrevenir(planning, isAdmin, rights)) return NextResponse.json({ error: "Action non autorisée" }, { status: 403 });
+  // Lot 2 (OG23) : aussi `publieParRole` et `notifieParRole`, relus (interrupteur ouvert seulement).
+  const me = isAdmin
+    ? null
+    : ((await adminDb().collection("users").doc(uid).get()).data() as
+      { notify?: string[]; publieParRole?: string[]; notifieParRole?: string[] } | undefined) ?? null;
+  if (!droitsDePrevenir(planning, isAdmin, me)) return NextResponse.json({ error: "Action non autorisée" }, { status: 403 });
 
   const db = adminDb();
   const ref = db.collection("planningReleases").doc(`${planning.key}_${annee}`);
