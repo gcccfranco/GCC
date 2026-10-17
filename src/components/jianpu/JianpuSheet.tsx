@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, type CSSProperties } from "react";
+import { Fragment, useMemo, useState, type CSSProperties } from "react";
 import { Trans, useTranslation } from "react-i18next";
 import Image from "next/image";
 import type { JianpuEntry } from "@/lib/jianpu/images";
@@ -115,6 +115,11 @@ function fitFont(
  *  fenêtre la fait déborder de la colonne, pour que le bord de l'encre tombe
  *  sur celui des paroles (piste A, P5). */
 const MARGE_SOURCE = 14;
+
+/** Les messages au-dessus du scan (piste A, P7) : jetons du site, surface
+ *  `--secondary`, texte à l'encre du scan, rayon 12 px. */
+const MESSAGE = "w-full max-w-2xl rounded-[12px] bg-secondary px-3 py-2 text-xs";
+const ENCRE: CSSProperties = { color: "hsl(var(--jianpu-encre))" };
 
 /** Les deux filtres « luminance → alpha » du scan (piste A) : RVB = l'encre, A =
  *  alpha − luminance (le papier blanc devient transparent, l'encre reste), puis un
@@ -258,6 +263,15 @@ export function JianpuSheet({ entry, title, slug, layout = "flow", playedKey: de
   // qui ont été réécrits — montrer où l'on est sûr vaut mieux que laisser
   // croire que toute la page est convertie.
   const partial = Boolean(overlayOn && chords?.complete === false);
+  // **K4.** Le calque ne couvre que la première page : une page suivante garde
+  // ses accords gravés. Quand le calque transpose (tonalité jouée ≠ gravée, ou
+  // capo), on le dit au-dessus d'elle.
+  const pageNonTransposee = (i: number) => Boolean(chords && i > 0 && chordSemitones !== 0);
+  const avertissementPage = (i: number) => (
+    <div key={`k4-${i}`} data-jianpu-accords-origine={i} className={MESSAGE} style={ENCRE}>
+      {t("jianpu.accordsOriginePage", { n: i + 1, key: chords?.printedKey ?? "" })}
+    </div>
+  );
   // **Le sélecteur de tonalité.** Certaines gravures portent deux jeux
   // d'accords pour la même musique : des positions de capo empilées
   // au-dessus des accords réels. Les publier tous les deux ferait une page
@@ -531,14 +545,14 @@ export function JianpuSheet({ entry, title, slug, layout = "flow", playedKey: de
       <JianpuFiltres />
 
       {staleChords && (
-        <div className="w-full max-w-2xl rounded-lg border border-amber-300/70 bg-amber-50/90 px-3 py-2 text-xs text-amber-900 dark:border-amber-700/50 dark:bg-amber-950/30 dark:text-amber-300">
+        <div className={MESSAGE} style={ENCRE}>
           <span className="font-semibold">{t("jianpu.jouerEn", { key: playedKey })}</span>{" "}
           {t("jianpu.accordsOrigine")}
         </div>
       )}
 
       {partial && (
-        <div className="w-full max-w-2xl rounded-lg border border-amber-300/70 bg-amber-50/90 px-3 py-2 text-xs text-amber-900 dark:border-amber-700/50 dark:bg-amber-950/30 dark:text-amber-300">
+        <div className={MESSAGE} style={ENCRE}>
           <span className="font-semibold">{t("jianpu.jouerEn", { key: playedKey })}</span>{" "}
           <Trans
             i18nKey={chords?.keyLabel ? "jianpu.partiel" : "jianpu.partielIndication"}
@@ -550,20 +564,19 @@ export function JianpuSheet({ entry, title, slug, layout = "flow", playedKey: de
 
       {selector && (
         <div className="flex w-full max-w-2xl items-center justify-center gap-2 text-xs">
-          <span className="text-neutral-500 dark:text-neutral-400">{t("jianpu.accords")}</span>
-          <div className="inline-flex overflow-hidden rounded-full border border-neutral-300 dark:border-neutral-700">
+          <span className="text-muted-foreground" aria-hidden>{t("jianpu.accords")}</span>
+          <div role="radiogroup" aria-label={t("jianpu.accords")} className="inline-flex rounded-full bg-secondary p-1">
             {[false, true].map((v) => (
               <button
                 key={String(v)}
                 type="button"
+                role="radio"
                 data-jianpu-altkey={v ? "on" : "off"}
-                aria-pressed={showAlt === v}
+                aria-checked={showAlt === v}
                 onClick={() => setShowAlt(v)}
                 className={
-                  "px-3 py-1 font-medium transition-colors " +
-                  (showAlt === v
-                    ? "bg-neutral-900 text-white dark:bg-neutral-100 dark:text-neutral-900"
-                    : "text-neutral-600 hover:bg-neutral-100 dark:text-neutral-400 dark:hover:bg-neutral-800")
+                  "h-8 rounded-full px-4 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring " +
+                  (showAlt === v ? "bg-background text-foreground shadow-soft" : "text-muted-foreground hover:text-foreground")
                 }
               >
                 {v
@@ -576,6 +589,8 @@ export function JianpuSheet({ entry, title, slug, layout = "flow", playedKey: de
           </div>
         </div>
       )}
+
+      {fit && shownPages.map((_, n) => firstShown + n).filter(pageNonTransposee).map(avertissementPage)}
 
       {/* `fit` : la zone restante devient un conteneur de taille, ce qui permet
           de borner la page en hauteur (100cqh) autant qu'en largeur (100%).
@@ -597,8 +612,9 @@ export function JianpuSheet({ entry, title, slug, layout = "flow", playedKey: de
         const top = cadrage?.[i] ?? 0;
         const visible = page.h - top;
         return (
+        <Fragment key={page.file}>
+        {!fit && pageNonTransposee(i) && avertissementPage(i)}
         <div
-          key={page.file}
           data-jianpu-fenetre={top}
           className={fit ? "relative mx-auto overflow-hidden" : "relative overflow-hidden"}
           style={{
@@ -682,6 +698,7 @@ export function JianpuSheet({ entry, title, slug, layout = "flow", playedKey: de
           )}
         </div>
         </div>
+        </Fragment>
         );
       })}
       </div>

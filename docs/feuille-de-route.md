@@ -1435,6 +1435,9 @@ porte le nom « GCC » et le menu par sections dont ces modules ont besoin.
   corrigée : le rappel « À reporter sur la partition 简谱 » sur les chants français), **en ligne** (`24def353`) ; L1-T6 :
   `origin/main` fusionné dans `ui/apple-design` (`2467e46d`), cale K2 posée sur la branche. Coupures par la limite de
   dépense, relances sans rien refaire. Écarts à valider et rouges connus : « Avancement » de la spec.
+- 12–17/10/2026 : **chantier 简谱, lot 3 « piste A partout »** (`spec-jianpu-integration.md`, `ui/apple-design`) : L3-T1a
+  à L3-T1e (recadrage certifié à l'œil, 189 / 189), L3-T2a (scan en encre), L3-T2b (fenêtre : en-tête gravé coupé),
+  L3-T2c (messages P7, K4) faites et vérifiées par Opus ; reste L3-T3 à L3-T7. Questions ouvertes : « Avancement » de la spec.
 
 ## 7. Relecture adversariale (14/09/2026)
 

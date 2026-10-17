@@ -2519,6 +2519,7 @@
   },
   "jianpu": {
     "jouerEn": "Jouer en {{key}}.",
+    "accordsOriginePage": "Page {{n}} : les accords imprimés sont ceux d'origine ({{key}}) et ne suivent pas la transposition ; les chiffres, eux, restent justes.",
     "accordsOrigine": "Les chiffres du 简谱 restent justes dans toutes les tonalités, mais les accords imprimés sur cette partition sont ceux d'origine et ne suivent pas la transposition.",
     "partiel": "Seuls les accords <bleu>en bleu</bleu> ont été transposés. Les autres sont ceux d'origine ({{key}}) et ne suivent pas la transposition ; les chiffres, eux, restent justes.",
     "partielIndication": "Seuls les accords <bleu>en bleu</bleu> ont été transposés. Les autres sont ceux d'origine ({{key}}), comme l'indication « 1={{key}} » en haut de page, et ne suivent pas la transposition ; les chiffres, eux, restent justes.",

@@ -383,3 +383,99 @@ test("5 fenêtre (mode louange, fit) : ratio w / (h − top), la page tient à l
   expect(f.fenetre.left).toBeGreaterThanOrEqual(f.colonne.left - 0.5);
   expect(f.fenetre.right).toBeLessThanOrEqual(f.colonne.right + 0.5);
 });
+
+// ─── L3-T2c : les messages en jetons du site (P7), et K4 ─────────────────────
+
+/** Sert un `chords.json` retouché : aucun scan n'est aujourd'hui sans calque ni à calque
+ *  partiel, mais les deux messages existent et doivent prendre le style du site. */
+async function calquesModifies(page: Page, modifier: (c: Record<string, Record<string, unknown>>) => void) {
+  const c = JSON.parse(readFileSync("public/jianpu/chords.json", "utf8"));
+  modifier(c);
+  await page.route("**/jianpu/chords.json", (route) => route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(c) }));
+}
+
+/** Fond, texte, rayon et bordure d'un message, et la couleur de --secondary. */
+async function styleMessage(page: Page, texte: RegExp) {
+  const el = page.getByText(texte).locator("xpath=ancestor-or-self::div[1]");
+  await expect(el).toBeVisible();
+  return el.evaluate((d) => {
+    const s = getComputedStyle(d);
+    const ref = document.createElement("i");
+    ref.style.color = "hsl(var(--secondary))";
+    document.body.append(ref);
+    const secondaire = getComputedStyle(ref).color;
+    ref.remove();
+    return { fond: s.backgroundColor, texte: s.color, rayon: s.borderRadius, bordure: s.borderTopWidth, secondaire };
+  });
+}
+
+for (const th of THEMES) {
+  test(`P7 messages (${th.nom}) : « jouer en » sans calque — surface --secondary, texte à l'encre, rayon 12 px`, async ({ page }) => {
+    await calquesModifies(page, (c) => delete c[SLUG]);
+    // Pas d'`openSheet` : il attend les étiquettes du calque, retiré ici.
+    await page.addInitScript(() => localStorage.setItem("jianpu-sheet-pref", "always"));
+    if (th.dark) await page.addInitScript(() => localStorage.setItem("theme", "dark"));
+    await page.goto(`/songs/${encodeURIComponent(SLUG)}?key=${encodeURIComponent(JSON.stringify("D"))}`);
+    await page.locator('[data-jianpu-page="0"] img').waitFor();
+    const s = await styleMessage(page, /ne suivent pas la transposition/);
+    expect(s.fond).toBe(s.secondaire);
+    expect(s.texte).toBe(th.encre);
+    expect(s.rayon).toBe("12px");
+    expect(s.bordure).toBe("0px");
+  });
+
+  test(`P7 messages (${th.nom}) : calque partiel — même style, accords en bleu gardés`, async ({ page }) => {
+    await calquesModifies(page, (c) => (c[SLUG].complete = false));
+    await openSheet(page, SLUG, { key: "D", dark: th.dark });
+    const s = await styleMessage(page, /ont été transposés/);
+    expect(s.fond).toBe(s.secondaire);
+    expect(s.texte).toBe(th.encre);
+    expect(s.rayon).toBe("12px");
+    const bleus = await page.evaluate(() => [...new Set(Array.from(document.querySelectorAll<HTMLElement>("[data-jianpu-label]"), (e) => getComputedStyle(e).color))]);
+    expect(bleus).toHaveLength(1);
+    expect(bleus[0]).not.toBe(th.encre);
+  });
+}
+
+test("P7 sélecteur « D seul | D et F » : le segmenté du site (radiogroup, piste --secondary)", async ({ page }) => {
+  await openSheet(page, "无价至宝", { key: "D" });
+  const groupe = page.getByRole("radiogroup", { name: "Accords" });
+  await expect(groupe).toBeVisible();
+  const choix = groupe.getByRole("radio");
+  await expect(choix).toHaveCount(2);
+  await expect(choix.first()).toHaveAttribute("aria-checked", "true");
+  const piste = await groupe.evaluate((g) => {
+    const ref = document.createElement("i");
+    ref.style.color = "hsl(var(--secondary))";
+    document.body.append(ref);
+    const secondaire = getComputedStyle(ref).color;
+    ref.remove();
+    return { fond: getComputedStyle(g).backgroundColor, secondaire };
+  });
+  expect(piste.fond).toBe(piste.secondaire);
+  await page.locator('[data-jianpu-altkey="on"]').click();
+  await expect(choix.last()).toHaveAttribute("aria-checked", "true");
+  await expect(page.locator('[data-jianpu-opt="shown"]').first()).toBeAttached();
+});
+
+const K4 = /Page 2 : les accords imprimés sont ceux d'origine \(C\)/;
+
+test("9 K4 : 为我而来 en D — l'avertissement est au-dessus de la page 2, pas de la page 1", async ({ page }) => {
+  await openSheet(page, "为我而来", { key: "D" });
+  const avertissement = page.getByText(K4);
+  await expect(avertissement).toHaveCount(1);
+  await expect(avertissement).toBeVisible();
+  const [a, p1, p2] = await Promise.all([
+    avertissement.boundingBox(),
+    page.locator('[data-jianpu-page="0"]').boundingBox(),
+    page.locator('[data-jianpu-page="1"]').boundingBox(),
+  ]);
+  expect(a!.y + a!.height, "au-dessus de la page 2").toBeLessThanOrEqual(p2!.y + 0.5);
+  expect(a!.y, "sous la page 1").toBeGreaterThanOrEqual(p1!.y + p1!.height - 0.5);
+});
+
+test("9 K4 : 为我而来 en C (tonalité gravée) — pas d'avertissement", async ({ page }) => {
+  await openSheet(page, "为我而来");
+  await expect(page.locator('[data-jianpu-page="1"]')).toBeAttached();
+  await expect(page.getByText(/les accords imprimés sont ceux d'origine/)).toHaveCount(0);
+});

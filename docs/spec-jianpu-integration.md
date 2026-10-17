@@ -993,5 +993,36 @@ rappel faux sur deux chants au même `section.uid` (C5).
   sur téléphone (reste sous-pixel du « 1=E » gravé), à regarder à plusieurs échelles. `tsc` : erreurs préexistantes
   seulement (`write-excel-file` absent de `node_modules` ici). Rien pour Timothée côté libellés.
 
-Prochaine étape : L3-T2c (messages P7, K4) — tests écrits mais non commités (le code n'est pas fait) ; le lot 2 attend
-le passage complet.
+- **L3-T2c, 17/10/2026 — messages P7 et K4** (go de Timothée du 17/10/2026). Codé : les bandeaux « jouer en » (sans
+  calque) et « calque partiel » passent en jetons du site (`rounded-[12px] bg-secondary`, texte `hsl(var(--jianpu-encre))`,
+  sans bordure ; le bleu des accords d'un calque partiel est gardé) ; le sélecteur « D seul | D et F » devient le segmenté
+  du site (copie de `Volets.tsx` : `radiogroup` nommé « Accords : », `radio` / `aria-checked`, piste `--secondary` ;
+  `data-jianpu-altkey` gardé) ; **K4** : sur une page d'index > 0 (sans calque) quand le calque transpose
+  (`chordSemitones ≠ 0`, capo compris), `jianpu.accordsOriginePage` au-dessus de la page (`data-jianpu-accords-origine`) ;
+  en `fit` (mode louange, une page par écran), avec les autres messages au-dessus du scan.
+  Tests (`jianpu-integration.spec.ts`) : P7 (« jouer en » et calque partiel, servis par un `chords.json` modifié — aucun
+  scan n'est aujourd'hui sans calque ni partiel —, clair et sombre), sélecteur sur 无价至宝, test 9 (为我而来 en D : au-dessus
+  de la page 2, sous la page 1 ; sans transposition : absent). Rouges avant le code pour la bonne raison (ambre, pas de
+  sélecteur, pas d'avertissement ; deux tests d'abord rouges pour une erreur d'écriture : `openSheet` attendait un calque
+  retiré, « en C » ne se demande pas par l'URL ; corrigés puis revus rouges), le cas « sans transposition » vert avant et
+  après ; puis verts. `jianpu-sheet.spec.ts` « pas d'avertissement » : rouge sur 为我而来 sans adaptation (le K4 sort),
+  adapté comme le dit la spec (aucun message sur la page 1, seuls ceux de K4 ailleurs). Agent testeur :
+  `jianpu-integration` **115 / 115 sur les cinq projets** ; voisines (`jianpu-sheet`, `harmonie-jianpu`, `fusions-dp`,
+  `jianpu-par-defaut`, `jianpu-tonalite-cho`, `mode-louange-colonnes`, `louange-sections-uniques`, `chants-deux-volets`,
+  `coup-d-oeil`) sur trois appareils : 427 verts, 61 sautés, 1 rouge (`louange-sections-uniques` C8, ordinateur : la mise en
+  page du mode louange au-delà de 5 s sous charge ; vert rejoué seul) ; `PW_SLUGS=为我而来,一生爱你,无价至宝,从这代到那代`
+  `jianpu-sheet` : 75 / 75. Captures regardées (téléphone, tablette, ordinateur, clair et sombre) : K4 entre les deux pages de
+  为我而来, segmenté sur 无价至宝, calque partiel simulé (bandeau gris, accords bleus).
+  Vérifié par Opus (17/10/2026) : rien de bloquant ; mode louange `fit` (scan tenu à l'écran avec l'avertissement, mesure
+  intacte), capo, vue Partitions vérifiés à la main. Corrigés : le test « pas d'avertissement » était circulaire (il vérifie
+  maintenant qu'aucun avertissement ne vise la page 1) ; `id` du libellé « Accords : » possible en double (setlist, copie
+  de mesure) → `aria-label`. **À trancher par Timothée** : (a) **le texte K4 de la spec est en partie faux sur 为我而来** : la
+  page 2 module (« 1= D » gravé avant le refrain, accords en ré ensuite), « ceux d'origine (C) » ne vaut que pour sa
+  première moitié — proposition : retirer la tonalité de la phrase, ou écrire « (C, puis D) » ; (b) relire le 中文
+  `jianpu.accordsOriginePage` (« 第 {{n}} 页：印的和弦是原调（{{key}}），不会随移调改变；数字仍然正确。 »). Laissés (mineurs) : en mode
+  louange au téléphone, l'avertissement reste sous le bandeau et le scan, borné par la largeur, est centré ≈ 90 px plus
+  bas ; en flux, l'avertissement est à égale distance des deux pages (le « Page 2 » le rattache) ; le segmenté n'a pas
+  la navigation aux flèches d'un radiogroup (même manque que `Volets.tsx`).
+
+Prochaine étape : L3-T3 (page chant : en-tête du site, segment « 简谱 · Paroles », K2) ; le lot 2 attend le passage
+complet.
