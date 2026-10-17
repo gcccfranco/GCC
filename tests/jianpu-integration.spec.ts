@@ -289,3 +289,97 @@ test("11 Adapter : toucher une écriture ouvre le pavé sur la bonne étiquette,
   });
   expect(Math.abs(e.left - g.left) + Math.abs(e.top - g.top)).toBeLessThan(0.5);
 });
+
+// ─── L3-T2b : la fenêtre — l'en-tête gravé coupé, le bord de l'encre sur celui de la colonne ──
+
+const CADRAGE = lire<Record<string, number[]>>("public/jianpu/cadrage.json");
+const INDEX = lire<Manifeste>("public/jianpu/index.json");
+
+/** Les fenêtres affichées et ce qu'elles montrent, en px CSS. `colonne` : la boîte du
+ *  premier ancêtre qui en a une (le conteneur du scan, `display: contents` sauté). */
+async function fenetres(page: Page, racine = "") {
+  return page.evaluate((racine) => {
+    const boite = (el: Element) => el.getBoundingClientRect().toJSON() as DOMRect;
+    return Array.from(document.querySelectorAll<HTMLElement>(`${racine} [data-jianpu-fenetre]`))
+      .filter((f) => !f.closest("[aria-hidden=true]"))
+      .map((f) => {
+        let p = f.parentElement!;
+        while (getComputedStyle(p).display === "contents") p = p.parentElement!;
+        const img = f.querySelector("img")!;
+        return {
+          fenetre: boite(f),
+          colonne: boite(p),
+          img: boite(img),
+          naturel: img.naturalWidth,
+          cadre: Array.from(f.querySelectorAll("[data-jianpu-keylabel]"), boite),
+          debordement: getComputedStyle(f).overflow,
+        };
+      });
+  }, racine);
+}
+
+const ratio = (r: { width: number; height: number }) => r.width / r.height;
+
+test("5 fenêtre (page chant) : ratio w / (h − top), « 1=D » dedans, titre gravé dehors, encre au bord de la colonne", async ({ page }) => {
+  await openSheet(page, SLUG, { key: "D" });
+  const { w, h } = INDEX[SLUG].pages[0];
+  const top = CADRAGE[SLUG][0];
+  expect(top, "一生爱你 est recadré").toBeGreaterThan(100);
+  await expect.poll(async () => (await fenetres(page)).length).toBe(1);
+  await expect.poll(async () => ratio((await fenetres(page))[0].fenetre) / (w / (h - top))).toBeCloseTo(1, 2);
+  const [f] = await fenetres(page);
+  expect(f.debordement).toBe("hidden");
+  const k = f.img.width / f.naturel;
+  // L'image remonte de `top` : son haut (titre, album, versets) est au-dessus du bord de la fenêtre.
+  expect(Math.abs(f.img.top - (f.fenetre.top - top * k)), "image remontée de top × échelle").toBeLessThan(1);
+  expect(Math.abs(f.img.bottom - f.fenetre.bottom), "le pied reste").toBeLessThan(1);
+  // « 1=D » entièrement dans la fenêtre.
+  expect(f.cadre).toHaveLength(1);
+  expect(f.cadre[0].top).toBeGreaterThanOrEqual(f.fenetre.top - 0.5);
+  expect(f.cadre[0].bottom).toBeLessThanOrEqual(f.fenetre.bottom + 0.5);
+  // Compensation (P5) : la marge blanche de 14 px rognée à la source déborde de la
+  // colonne, le bord de l'encre tombe sur celui des paroles.
+  expect(Math.abs(f.fenetre.left + 14 * k - f.colonne.left), "bord gauche de l'encre").toBeLessThan(1);
+  expect(Math.abs(f.fenetre.right - 14 * k - f.colonne.right), "bord droit de l'encre").toBeLessThan(1);
+  // `<main>` défile en largeur (`overflow-x-auto`) : c'est lui qui déborderait, pas le document.
+  expect(await page.evaluate(() => [...document.querySelectorAll("main")].every((m) => m.scrollWidth <= m.clientWidth)), "pas de défilement horizontal").toBe(true);
+});
+
+test("5 fenêtre (page chant, deux pages) : 为我而来 p. 1 recadrée, p. 2 entière", async ({ page }) => {
+  const slug = "为我而来";
+  await openSheet(page, slug, { key: "D" });
+  const pages = INDEX[slug].pages;
+  const tops = CADRAGE[slug];
+  expect(tops).toEqual([131, 0]);
+  await expect.poll(async () => (await fenetres(page)).length).toBe(2);
+  await expect.poll(async () => ratio((await fenetres(page))[0].fenetre) / (pages[0].w / (pages[0].h - tops[0]))).toBeCloseTo(1, 2);
+  const [, p2] = await fenetres(page);
+  expect(ratio(p2.fenetre) / (pages[1].w / pages[1].h)).toBeCloseTo(1, 2);
+  expect(Math.abs(p2.img.top - p2.fenetre.top), "page 2 : rien de coupé").toBeLessThan(1);
+});
+
+test("5 fenêtre (mode louange, fit) : ratio w / (h − top), la page tient à l'écran, centrée sans compensation", async ({ page }) => {
+  await page.route(/docs\.google\.com\/spreadsheets/, (route) => route.fulfill({ status: 200, contentType: "text/csv", body: "" }));
+  await page.addInitScript(() => localStorage.setItem("perf-role-preset", "pianiste"));
+  await signInAs(page, MUSICIEN, {
+    "setlists/setlist-fenetre": {
+      title: "Culte du 21 septembre", leader: "Jonathan Z.", category: "Culte Francophone", date: "2026-09-21",
+      language: "mixed", notes: "", ownerId: "uid-owner", isPrivate: false,
+      items: [{ songSlug: SLUG, position: 1, keyOverride: null, showChords: true, showPinyin: true, useJianpu: false,
+        structureOverride: null, sectionNotes: {}, notes: "", jianpuSheet: true }],
+    },
+  }, "/setlists/setlist-fenetre");
+  await page.getByRole("button", { name: /Mode Louange/ }).click();
+  // Serveur froid ou chargé : la mise en page (polices chinoises) prend plusieurs secondes.
+  await expect(page.locator("[data-performance-mode] span.tabular-nums").last()).toHaveText(/^\d+ \/ \d+$/, { timeout: 30_000 });
+  const { w, h } = INDEX[SLUG].pages[0];
+  const top = CADRAGE[SLUG][0];
+  await expect.poll(async () => (await fenetres(page, "[data-performance-mode]")).length).toBe(1);
+  await expect.poll(async () => ratio((await fenetres(page, "[data-performance-mode]"))[0].fenetre) / (w / (h - top))).toBeCloseTo(1, 2);
+  const [f] = await fenetres(page, "[data-performance-mode]");
+  const ecran = page.viewportSize()!;
+  expect(f.fenetre.top).toBeGreaterThanOrEqual(0);
+  expect(f.fenetre.bottom).toBeLessThanOrEqual(ecran.height + 0.5);
+  expect(f.fenetre.left).toBeGreaterThanOrEqual(f.colonne.left - 0.5);
+  expect(f.fenetre.right).toBeLessThanOrEqual(f.colonne.right + 0.5);
+});

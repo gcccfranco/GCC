@@ -4,7 +4,7 @@ import { useMemo, useState, type CSSProperties } from "react";
 import { Trans, useTranslation } from "react-i18next";
 import Image from "next/image";
 import type { JianpuEntry } from "@/lib/jianpu/images";
-import { cleJouee, jianpuImageUrl, useJianpuChords } from "@/lib/jianpu/images";
+import { cleJouee, jianpuImageUrl, useJianpuCadrage, useJianpuChords } from "@/lib/jianpu/images";
 import { aDesRetouches, cibleRetouche, type CibleRetouche } from "@/lib/jianpu/retouches";
 import { JianpuChordSheet } from "@/components/jianpu/JianpuChordSheet";
 import type { JianpuChords } from "@/types/setList";
@@ -110,6 +110,12 @@ function fitFont(
   return Math.max(fontPx * plancher, sp / unit);
 }
 
+/** Marge blanche laissée autour de l'encre quand le scan a été rogné
+ *  (`PAD` de `scripts/jianpu/build-images.py`, en pixels de l'image). La
+ *  fenêtre la fait déborder de la colonne, pour que le bord de l'encre tombe
+ *  sur celui des paroles (piste A, P5). */
+const MARGE_SOURCE = 14;
+
 /** Les deux filtres « luminance → alpha » du scan (piste A) : RVB = l'encre, A =
  *  alpha − luminance (le papier blanc devient transparent, l'encre reste), puis un
  *  seuil (`slope 2.33`, `intercept −0.28`) qui efface la trame et le gris clair.
@@ -186,6 +192,7 @@ export function JianpuSheet({ entry, title, slug, layout = "flow", playedKey: de
   const { t } = useTranslation();
   const fit = layout === "fit";
   const chords = useJianpuChords(slug);
+  const cadrage = useJianpuCadrage(slug);
   const playedKey = cleJouee(demandee, originalKey, chords?.printedKey);
   // Retouches (lot 9) : l'accord retouché remplace le gravé partout où le
   // calque parle de lui, y compris dans l'ordre de peinture.
@@ -582,27 +589,43 @@ export function JianpuSheet({ entry, title, slug, layout = "flow", playedKey: de
         const i = firstShown + n;
         const calque = (overlayOn || retouchesOn || retouchable) && i === 0 && chords;
         const cal = calque ? boitesCalque(i) : [];
+        // La fenêtre (piste A, P3) : la page et son calque remontent ensemble de
+        // `top` pixels image, l'en-tête gravé passe au-dessus du bord et
+        // disparaît. Aucune coordonnée du calque ne change. Tant que le
+        // recadrage n'est pas chargé (premier scan de la visite), la page
+        // s'affiche entière : un fichier lent ne doit jamais cacher le scan.
+        const top = cadrage?.[i] ?? 0;
+        const visible = page.h - top;
         return (
         <div
           key={page.file}
+          data-jianpu-fenetre={top}
+          className={fit ? "relative mx-auto overflow-hidden" : "relative overflow-hidden"}
+          style={{
+            aspectRatio: `${page.w} / ${visible}`,
+            ...(fit
+              ? { width: `min(100%, calc(100cqh * ${page.w} / ${visible}))` }
+              : {
+                  // Page chant, vue Partitions : la marge blanche déborde de la colonne.
+                  width: `calc(100% * ${page.w} / ${page.w - 2 * MARGE_SOURCE})`,
+                  marginInline: `calc(-100% * ${MARGE_SOURCE} / ${page.w - 2 * MARGE_SOURCE})`,
+                }),
+          }}
+        >
+        <div
           data-jianpu-page={i}
-          className={fit ? "relative mx-auto" : "relative w-full"}
+          className="relative w-full"
           // `containerType: inline-size` permet d'exprimer la taille du texte du
           // calque en cqw : il suit l'échelle de l'image sans mesure JS.
           style={{
             containerType: "inline-size",
-            ...(fit
-              ? {
-                  aspectRatio: `${page.w} / ${page.h}`,
-                  width: `min(100%, calc(100cqh * ${page.w} / ${page.h}))`,
-                }
-              : {}),
+            transform: top ? `translateY(${(-top / page.h) * 100}%)` : undefined,
           }}
         >
           {/* Le groupe filtré (piste A) : l'image et les gommes. Le filtre « luminance
               → alpha » rend le papier transparent ; une gomme, blanche, devient
               transparente et efface l'accord gravé au lieu de le couvrir. */}
-          <div data-jianpu-filtre className={fit ? "relative h-full w-full" : "relative w-full"}>
+          <div data-jianpu-filtre className="relative w-full">
             <Image
               src={jianpuImageUrl(page.file)}
               alt={
@@ -613,7 +636,7 @@ export function JianpuSheet({ entry, title, slug, layout = "flow", playedKey: de
               width={page.w}
               height={page.h}
               priority={n === 0}
-              className={fit ? "h-full w-full object-contain" : "h-auto w-full"}
+              className="h-auto w-full"
               sizes={fit ? "100vw" : "(min-width: 1024px) 900px, 100vw"}
             />
             {calque && (
@@ -657,6 +680,7 @@ export function JianpuSheet({ entry, title, slug, layout = "flow", playedKey: de
             )}
             </>
           )}
+        </div>
         </div>
         );
       })}

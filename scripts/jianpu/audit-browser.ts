@@ -33,6 +33,10 @@
  * si la ligne tranche des crédits ou le haut d'un « 4/4 », ou si un titre, un
  * album, des versets ou « （C调） » restent sous elle quand une coupe propre existe.
  *
+ * Depuis L3-T2b, le site montre le scan dans une **fenêtre** qui coupe l'en-tête gravé.
+ * La planche, elle, montre toujours la **page entière** (fenêtre ouverte) avec la ligne
+ * de coupe en pointillé rouge : ce qui est au-dessus n'est pas affiché sur le site.
+ *
  * Sortie : scripts/jianpu/debug/_pw-<slug>-<n>.png ; _pw-<slug>-cadrage-p<n>.png
  */
 
@@ -81,6 +85,11 @@ function topDeCoupe(): { top: number; certifie: boolean } | undefined {
   return propose !== undefined ? { top: propose, certifie: false } : undefined;
 }
 const printedKey = chords[slug]?.printedKey;
+
+/** Ouvre la fenêtre du site (piste A, L3-T2b) : la page entière, non remontée. */
+const PAGE_ENTIERE =
+  "[data-jianpu-fenetre]{overflow:visible!important;aspect-ratio:auto!important}" +
+  "[data-jianpu-page]{transform:none!important}";
 const target = args[1] ?? (printedKey ? auditKey(slug, printedKey) : "F#");
 
 /** Capture la page `pageIndex` du scan, telle que le navigateur la rend. */
@@ -93,6 +102,17 @@ async function shoot(browser: Browser, key?: string): Promise<Buffer> {
   });
   const page: Page = await context.newPage();
   const sheets = await openSheet(page, slug, { key, dark, gravure: !key });
+  await page.addStyleTag({ content: PAGE_ENTIERE });
+  const coupe = topDeCoupe();
+  if (coupe?.top) {
+    await sheets.nth(pageIndex).evaluate((host, top) => {
+      const img = host.querySelector("img")!;
+      const k = img.getBoundingClientRect().height / img.naturalHeight;
+      const ligne = document.createElement("div");
+      ligne.style.cssText = `position:absolute;left:0;right:0;top:${top * k}px;border-top:2px dashed rgb(220,38,38);z-index:50;pointer-events:none`;
+      host.appendChild(ligne);
+    }, coupe.top);
+  }
   if (alt && key) await page.locator('[data-jianpu-altkey="on"]').click();
   if (frames && key) {
     // « Un accord sans cadre n'est pas converti » — le cadre de contrôle de
@@ -202,6 +222,7 @@ async function planchecadrage(browser: Browser) {
   });
   const page = await context.newPage();
   const sheets = await openSheet(page, slug, { dark, gravure: true });
+  await page.addStyleTag({ content: PAGE_ENTIERE });
   const sheet = sheets.nth(pageIndex);
   await sheet.waitFor();
   const clip = await sheet.evaluate((host, top) => {

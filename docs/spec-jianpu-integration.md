@@ -962,4 +962,36 @@ rappel faux sur deux chants au même `section.uid` (C5).
   répétés des filtres sont à regarder pendant la mesure iOS de L3-T7 ; `PW_SLUGS=all` non rejoué (les oracles ne lisent
   que les écritures, inchangées par le dernier changement de la gomme).
 
-Prochaine étape : L3-T2b (fenêtre, compensation, lecture de `cadrage.json`) ; le lot 2 attend le passage complet.
+- **L3-T2b, 17/10/2026 — `JianpuSheet` en piste A, deuxième partie : la fenêtre.** Codé : `useJianpuCadrage` (`images.ts`,
+  lit `public/jianpu/cadrage.json`, absent ou en échec → pas de coupe ; résultat gardé au niveau du module) ; chaque page est
+  posée dans une fenêtre `data-jianpu-fenetre` (`overflow: hidden`, ratio `w / (h − top)`) ; `data-jianpu-page` reste la
+  page entière, remontée par `translateY(−top / h)` avec son calque, sa zone tactile et ses gommes (aucune coordonnée ne
+  change, les oracles de `tests/helpers/jianpu.ts` restent valables) ; en `fit`, largeur `min(100%, calc(100cqh * w / (h − top)))` ;
+  en flux (page chant, vue Partitions), compensation de la marge de 14 px : largeur `w / (w − 28)` et `margin-inline`
+  `−14 / (w − 28)` (formule exacte pour que le bord d'encre tombe sur la colonne ; la spec écrit « 14 / w », à 0,1 px près).
+  Planche `npm run jianpu:audit` : la fenêtre y est ouverte (page entière) et la coupe tracée en pointillé rouge.
+  Tests (`jianpu-integration.spec.ts`, test 5 ×3 : page chant 一生爱你 en D, 为我而来 p. 1 coupée / p. 2 entière, mode louange
+  `fit`) : rouges avant le code (le test `fit` d'abord pour une autre raison, la fenêtre de rôle ; corrigé, puis revu rouge
+  pour la bonne : aucune fenêtre), puis verts ; la spec entière **80 / 80 sur les cinq projets**. Voisines sur ordinateur,
+  téléphone, tablette (`jianpu-sheet` sans `PW_SLUGS`, `harmonie-jianpu`, `fusions-dp`, `jianpu-par-defaut`, `jianpu-tonalite-cho`,
+  `mode-louange-colonnes`, `louange-sections-uniques`, `chants-deux-volets`, `coup-d-oeil`, `setlist-g`) : 492 verts, 95 sautés,
+  4 rouges — `mode-louange-colonnes` « scan entier » mesurait l'image, qui dépasse maintenant la fenêtre vers le haut : il
+  mesure la fenêtre (bornes inchangées), 58 / 58 sur cinq projets ; `setlist-g` « « Partitions » rouvre là où on était »
+  (téléphone, tablette) et « Liste ramène la ligne 1 » (téléphone) : rejoués, 3 verts sur 4, le rouge restant étant le test
+  déjà noté instable au lot 1 (une fois sur deux, avant comme après). Captures regardées (一生爱你 D, clair et sombre ;
+  为我而来 p. 1 et p. 2 ; téléphone, tablette, ordinateur, iPad paysage) et planche 一生爱你 → D : le scan commence à
+  « 1=D 4/4 », titre, album et versets coupés, crédits « 词曲 » et pied (petit mouton) gardés, bord de l'encre sur la colonne.
+  Vérifié par Opus (17/10/2026) : rien de bloquant. Corrigés : la page était cachée tant que `cadrage.json` n'était pas
+  arrivé (un fichier qui ne répond pas la cachait pour toujours) → elle s'affiche entière puis se coupe, une fois par
+  visite ; état initial pris du module (plus de clignement à chaque page du mode louange) ; délai du test `fit` (30 s,
+  serveur froid) ; contrôle de débordement porté sur `<main>` (`overflow-x-auto`). **À trancher par Timothée** :
+  (a) la marge réelle n'est pas 14 px sur ~99 pages sur 190 (`build-images.py` rogne à 14 px puis réduit à 1 600 px, et
+  tronque à 0 quand l'encre touche le bord) : l'encre y déborde de la colonne de 2 à 5 px ; corriger demanderait une marge
+  par page dans les données (O9) ; (b) 十字架, 好喜欢与你在一起, 有一天 : le haut de la gomme d'un accord ou du cadre (2 à 5 px)
+  passe au-dessus de la coupe, aucun glyphe rogné (capture) ; (c) 你们要赞美耶和华 (paysage) : titre gravé sur la ligne de
+  « F=1 4/4 », il reste visible (donnée L3-T1). Laissé pour L3-T7 : un point d'un pixel à gauche du « 1=D » au zoom A+ 1,5
+  sur téléphone (reste sous-pixel du « 1=E » gravé), à regarder à plusieurs échelles. `tsc` : erreurs préexistantes
+  seulement (`write-excel-file` absent de `node_modules` ici). Rien pour Timothée côté libellés.
+
+Prochaine étape : L3-T2c (messages P7, K4) — tests écrits mais non commités (le code n'est pas fait) ; le lot 2 attend
+le passage complet.

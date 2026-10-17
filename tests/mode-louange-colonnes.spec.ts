@@ -253,7 +253,8 @@ function grandEcranTests(nom: string) {
     }
     await expect(scan.first()).toBeVisible();
     await expect(onStage(page, "[data-section]")).toHaveCount(0);
-    const boite = (await scan.first().boundingBox())!;
+    // Le scan visible est sa fenêtre : l'image remonte au-dessus d'elle de l'en-tête gravé coupé (L3-T2b).
+    const boite = (await onStage(page, "[data-jianpu-fenetre]").first().boundingBox())!;
     const { w, h } = await page.evaluate(() => ({ w: innerWidth, h: innerHeight }));
     expect(boite.y).toBeGreaterThanOrEqual(0);
     expect(boite.y + boite.height, "scan entier en hauteur").toBeLessThanOrEqual(h + 0.5);
