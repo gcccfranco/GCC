@@ -10,6 +10,7 @@ import {
   changerPlafondVp, colonnesProposees, colonnesReliables, estDuGroupe, groupeDe, lireChampsGroupe,
   lireGroupe, membresComite, placesVp, placesVpLibres, recopieDeGroupe, relierACompte, roleDeColonne,
 } from "../src/lib/groupes/organigramme";
+import { PLANNING_COLORS, categoryColor } from "../src/lib/serviceColors";
 import { datesCourtes, propositions, propositionsReliees, type CompteDuPlanning } from "../src/lib/planning/choisir";
 import { GRILLE_BONTE, GRILLE_CULTE, GRILLE_PAIX } from "../src/lib/planning/grilles";
 import { readFileSync } from "node:fs";
@@ -1582,5 +1583,27 @@ test.describe("OG-F · « Choisir » relié aux rôles", () => {
     const tete = page.getByTestId("grille-colonnes").filter({ visible: true });
     await expect(tete.getByRole("img", { name: "Reliée au rôle Musiciens" })).toBeVisible();
     await expect(tete.getByRole("img", { name: /^Reliée au rôle/ })).toHaveCount(1);
+  });
+});
+
+test.describe("OG-G · couleurs d'Amour et de Joie (décision 47, OG36)", () => {
+  test("Groupe Amour fuchsia, Groupe Joie sarcelle ; les dix couleurs gelées ne changent pas", () => {
+    expect(categoryColor("Groupe Amour")).toBe("#a21caf");
+    expect(categoryColor("Groupe Joie")).toBe("#0f766e");
+    const gelees: Record<string, string> = {
+      "Culte Francophone": "#2d5a65", "Intergroupe": "#a87b0f", "Interfranco": "#9d3c63", "Campus": "#2471a3",
+      "Groupe Paix": "#6b4a8e", "Groupe Fidélité": "#a03030", "Groupe Bonté": "#8b4a2e",
+      "中班": "#3b6d11", "大班": "#3b6d11", "高班": "#3b6d11",
+    };
+    for (const [cat, couleur] of Object.entries(gelees)) expect(categoryColor(cat), cat).toBe(couleur);
+    // Une catégorie inconnue reste grise.
+    expect(categoryColor("Groupe Inconnu")).toBe("#64748b");
+  });
+
+  test("les couleurs des plannings sont intactes", () => {
+    expect(PLANNING_COLORS).toEqual({
+      culte: "#2d5a65", table: "#c87941", edd: "#3b6d11", campus: "#2471a3", intergroupe: "#a87b0f",
+      interfranco: "#9d3c63", paix: "#6b4a8e", fidelite: "#a03030", bonte: "#8b4a2e", scene: "#3f51a3",
+    });
   });
 });

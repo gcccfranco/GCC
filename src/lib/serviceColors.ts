@@ -34,6 +34,10 @@ export const CATEGORY_COLORS: Record<string, string> = {
   // choisi sur la planche commune des couleurs ; les dix valeurs ci-dessus restent gelées.
   "Noël": "#17633f",
   "Pâques": "#7c3aed",
+  // Groupes Amour et Joie (docs/spec-organigrammes-groupes.md, OG36, décision 47) : ajout validé par
+  // Timothée, choisi sur la planche commune des couleurs ; les dix valeurs gelées ne changent pas.
+  "Groupe Amour": "#a21caf",
+  "Groupe Joie": "#0f766e",
 };
 
 /** Couleur d'une catégorie de setlist. */
