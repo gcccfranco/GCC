@@ -90,6 +90,7 @@ ils ne voient pas le composant réel. Détail du protocole dans
 - Un commit par étape ou par lot, pas un commit par fichier (consigne de Timothée du 13/09/2026)
 - Tester sur au moins 1 chant FR + 1 chant ZH avant de valider une étape
 - Toute modif des permissions doit être faite en double : `src/lib/access.ts` (client) **et** `firestore.rules` (serveur)
+- Gestes sur les quatre systèmes (Windows, Android, iOS, macOS) : raccourcis par les évènements du navigateur (copy, paste), jamais par ⌘ seul ; Suppr et ⌫ font la même chose ; tout ce qui s'offre au survol a un équivalent au toucher ; les libellés disent ⌘ sur Apple, Ctrl ailleurs.
 
 ## Sessions cloud (claude.ai/code) — règles de Timothée (08/10/2026)
 Une session cloud n'a pas la mémoire des sessions locales : ces règles valent pour elle comme pour les autres

@@ -3,11 +3,12 @@
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore, type MutableRefObject } from "react"
 
 // Sélection d'une plage de cases au clavier (lot 3, PG22 à PG26, PG31) : une case choisie (l'ancre),
-// une plage avec Maj + clic, les flèches, ⌘C, ⌘V et ⌫. Réservée au pointeur fin avec survol : un
-// doigt sur une tablette sans clavier ne laisse ni sélection ni barre.
+// une plage avec Maj + clic, les flèches, ⌘C, ⌘V et ⌫. Réservée à un appareil qui a **un** pointeur fin
+// avec survol (souris, trackpad, stylet) : un doigt sur une tablette sans clavier ne laisse ni sélection
+// ni barre, une tablette avec trackpad ou souris les a.
 
-// Pointeur fin ET tableau affiché (`sm`, 640 px) : sous cette largeur les cartes n'ont pas de sélection.
-const POINTEUR_FIN = "(hover: hover) and (pointer: fine) and (min-width: 640px)"
+// Un pointeur fin quelconque (`any-`) ET tableau affiché (`sm`, 640 px) : sous cette largeur les cartes n'ont pas de sélection.
+const POINTEUR_FIN = "(any-hover: hover) and (any-pointer: fine) and (min-width: 640px)"
 const suivre = (rappel: () => void) => {
   const mq = window.matchMedia(POINTEUR_FIN)
   mq.addEventListener("change", rappel)
