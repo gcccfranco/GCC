@@ -6,12 +6,31 @@ import { useTranslation } from "react-i18next";
 import { AlertTriangle, CalendarDays, ChevronDown, ChevronLeft, Globe, Lock, Mic, Pencil, Users } from "lucide-react";
 import { categoryColor } from "@/lib/serviceColors";
 import type { EtatEquipe } from "@/components/setlists/editeur/VoletEquipe";
+import { jourEnLettres } from "@/app/evenements/scene/libelles";
 
 // En-tête compact de l'éditeur (lot U5 bis, T3, Q5) : le formulaire devient l'en-tête de la
 // colonne setlist — titre modifiable, puces Catégorie · Date (+ Matin / Soir au Campus) ·
 // Présidence · Visibilité, ligne « Notes pour l'équipe ». Les règles des champs restent
 // celles de SetlistForm (titre automatique, présidence du planning, « Autre »).
 // Sur téléphone et tablette en portrait (T4), le fil devient « ‹ Nouvelle setlist ».
+
+/** Ce que l'éditeur sait du passage d'une setlist de fête (docs/spec-chants-fetes.md, CF19). */
+export interface ContexteFeteEditeur {
+  /** « Noël 2026 », dans la langue de l'écran. */
+  titreFete: string;
+  /** Segment de l'adresse de la page de la fête : `/evenements/scene/{fete}`. */
+  fete: string;
+  /** Catégorie de la setlist (« Noël », « Pâques »). */
+  categorie: string;
+  jour: string;
+  /** Rang du passage dans l'ordre de passage ; `null` s'il n'y est plus. */
+  numero: number | null;
+  titrePassage: string;
+  /** Titre de la setlist dans la langue de l'écran (CF10). */
+  titreAffiche: string;
+  /** Ouvert depuis « Saisir les chants » : « ‹ Noël 2026 » ramène à la page de la fête. */
+  depuisFete: boolean;
+}
 
 export interface ChampsEnTete {
   isEdit: boolean;
@@ -45,6 +64,8 @@ export interface ChampsEnTete {
   connecte: boolean;
   authLoading: boolean;
   loginFrom: string;
+  /** Setlist d'un passage de fête : titre, catégorie et date ne se changent pas ici, ni la visibilité ni l'équipe. */
+  fete?: ContexteFeteEditeur;
 }
 
 const puce =
@@ -77,6 +98,18 @@ function jourCourt(iso: string, langue: string): string {
   return texte.charAt(0).toUpperCase() + texte.slice(1);
 }
 
+/** « Musiques et danses : sur la page de Noël 2026 » : elles se tiennent sur la ligne du passage, pas ici (CF19). */
+export function LienMusiquesEtDanses({ fete }: { fete: ContexteFeteEditeur }) {
+  const { t } = useTranslation();
+  return (
+    <p className="mt-4 text-[13px] text-muted-foreground">
+      <Link href={`/evenements/scene/${fete.fete}`} className="underline underline-offset-2 hover:text-foreground">
+        {t("setlists.fete.musiquesSur", { fete: fete.titreFete })}
+      </Link>
+    </p>
+  );
+}
+
 export function EnTeteEditeur({
   champs: c,
   retour,
@@ -93,9 +126,21 @@ export function EnTeteEditeur({
   const rondRetour =
     "flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-secondary text-foreground transition-colors hover:bg-secondary/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
 
+  const f = c.fete;
+  // Setlist de fête ouverte depuis la page de la fête : « ‹ Noël 2026 » y ramène (CF19) ; l'enregistrement
+  // en cours part au démontage de l'éditeur.
+  const retourFete = f?.depuisFete ? (
+    <div className="flex items-center gap-2.5 text-[15px] font-medium text-muted-foreground">
+      <Link href={`/evenements/scene/${f.fete}`} aria-label={t("common.buttons.back")} className={rondRetour}>
+        <ChevronLeft className="h-4 w-4" aria-hidden />
+      </Link>
+      <span>{f.titreFete}</span>
+    </div>
+  ) : null;
+
   return (
     <div className="space-y-3.5">
-      {retour ? (
+      {retourFete ?? (retour ? (
         <div className="flex items-center gap-2.5 text-[15px] font-medium text-muted-foreground">
           {retour.onClick ? (
             <button type="button" onClick={retour.onClick} aria-label={t("common.buttons.back")} className={rondRetour}>
@@ -114,30 +159,60 @@ export function EnTeteEditeur({
           <span aria-hidden> › </span>
           <span>{nomPage}</span>
         </nav>
+      ))}
+
+      {f ? (
+        <h1 className="text-[24px] font-bold leading-tight tracking-tight text-foreground sm:text-[28px]">{f.titreAffiche}</h1>
+      ) : (
+        <div className="flex items-center gap-2">
+          <input
+            ref={titreRef}
+            type="text"
+            value={c.title}
+            onChange={(e) => c.setTitle(e.target.value)}
+            aria-label={t("setlists.form.titleLabel")}
+            placeholder={t("setlists.form.titlePlaceholder")}
+            className="min-w-0 max-w-full rounded-lg bg-transparent text-[24px] sm:text-[28px] [field-sizing:content] font-bold leading-tight tracking-tight text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+          />
+          <button
+            type="button"
+            tabIndex={-1}
+            aria-hidden
+            onClick={() => titreRef.current?.focus()}
+            className="shrink-0 text-muted-foreground hover:text-foreground"
+          >
+            <Pencil className="h-4 w-4" />
+          </button>
+        </div>
       )}
 
-      <div className="flex items-center gap-2">
-        <input
-          ref={titreRef}
-          type="text"
-          value={c.title}
-          onChange={(e) => c.setTitle(e.target.value)}
-          aria-label={t("setlists.form.titleLabel")}
-          placeholder={t("setlists.form.titlePlaceholder")}
-          className="min-w-0 max-w-full rounded-lg bg-transparent text-[24px] sm:text-[28px] [field-sizing:content] font-bold leading-tight tracking-tight text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
-        />
-        <button
-          type="button"
-          tabIndex={-1}
-          aria-hidden
-          onClick={() => titreRef.current?.focus()}
-          className="shrink-0 text-muted-foreground hover:text-foreground"
-        >
-          <Pencil className="h-4 w-4" />
-        </button>
-      </div>
+      {f && (
+        <div className="flex flex-wrap gap-2">
+          {/* Catégorie, jour et passage : non modifiables (CF19) ; seule la présidence se change. */}
+          <span className="inline-flex min-h-10 items-center gap-2 rounded-full border border-border bg-background px-3.5 text-sm font-semibold text-foreground">
+            <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: categoryColor(f.categorie) }} aria-hidden />
+            {[
+              t("categories." + f.categorie, { defaultValue: f.categorie }),
+              jourEnLettres(f.jour, i18n.language),
+              f.numero ? t("setlists.fete.passageN", { n: f.numero }) : null,
+              f.titrePassage,
+            ].filter(Boolean).join(" · ")}
+          </span>
+          <label className={`${puce} pr-3.5`}>
+            <Mic className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
+            <input
+              type="text"
+              value={c.leader}
+              onChange={(e) => c.setLeader(e.target.value)}
+              aria-label={t("setlists.form.leaderLabel")}
+              placeholder={t("setlists.form.leaderPlaceholder")}
+              className="w-36 bg-transparent text-sm font-semibold text-foreground placeholder:font-normal placeholder:text-muted-foreground focus:outline-none"
+            />
+          </label>
+        </div>
+      )}
 
-      <div className="flex flex-wrap gap-2">
+      {!f && <div className="flex flex-wrap gap-2">
         <Puce icone={<span className="h-2 w-2 shrink-0 rounded-full" style={{ background: c.category ? categoryColor(c.category) : "hsl(var(--muted-foreground))" }} aria-hidden />}>
           <select
             value={c.category}
@@ -247,7 +322,7 @@ export function EnTeteEditeur({
             {c.equipe.editeurs.length > 0 && ` · ${c.equipe.editeurs.length}`}
           </button>
         )}
-      </div>
+      </div>}
 
       {c.needsAuth && (
         <p className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-400">

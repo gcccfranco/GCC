@@ -138,6 +138,11 @@ export function PartitionsView({
           return <TransitionBanner key={`transition-${idx}`} text={item.transitionText} />;
         }
 
+        // ── Chant hors répertoire en attente (setlist de fête, CF21) ──
+        if (item.type === "proposition") {
+          return <p key={`proposition-${idx}`} className="text-sm text-muted-foreground">{item.proposition?.titre} — {t("planning.fete.propositionEnAttente")}</p>;
+        }
+
         // ── Fusion item ──
         if (item.type === "fusion" && item.fusionSongs) {
           // Préparer les ASTs transposés par slug — la version adaptée de

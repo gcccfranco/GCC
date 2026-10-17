@@ -12,6 +12,7 @@
 
 import type { ChordProSection } from "@/types/chordPro";
 import type { SetlistItem } from "@/types/setList";
+import { estUnChant } from "@/lib/setlist/propositions";
 import type { SongContent } from "@/lib/api/songs";
 import { playedSections } from "@/lib/setlist/playedSections";
 
@@ -55,7 +56,7 @@ export function lyricsText(sections: ChordProSection[]): string {
  *  transitions exclues, deux lignes vides entre deux chants. */
 export function setlistLyricsText(items: SetlistItem[], contents: Record<string, SongContent>): string {
   return [...items]
-    .filter((item) => item.type !== "transition")
+    .filter(estUnChant)
     .sort((a, b) => a.position - b.position)
     .map((item) => lyricsText(playedSections(item, contents)))
     .filter(Boolean)

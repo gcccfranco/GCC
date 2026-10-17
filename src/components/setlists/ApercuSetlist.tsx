@@ -7,6 +7,7 @@
 // d'après le planning, avec « Ouvrir » (la setlist en deux volets de U5) et « Mode louange ».
 // Toucher un chant ouvre la setlist aux partitions de ce chant (U5, Q9).
 
+import { resoudrePropositions } from "@/lib/setlist/propositions";
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -111,7 +112,7 @@ export function ApercuSetlist({
             <span className="text-xs text-muted-foreground">{t("setlists.apercu.tonalites")}</span>
           </p>
           <ListView
-            items={setlist.items}
+            items={resoudrePropositions(setlist.items, Object.values(songsMap))}
             songsMap={songsMap}
             jianpuPref={getJianpuPref()}
             current={null}

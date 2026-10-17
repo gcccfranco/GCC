@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next";
 import { Plus } from "lucide-react";
 import { Drawer, DrawerContent } from "@/components/ui/drawer";
 import { useStandaloneScrollLock } from "@/hooks/useStandaloneScrollLock";
-import { EnTeteEditeur } from "@/components/setlists/editeur/EnTeteEditeur";
+import { EnTeteEditeur, LienMusiquesEtDanses } from "@/components/setlists/editeur/EnTeteEditeur";
 import { ListeCourte } from "@/components/setlists/editeur/ListeCourte";
 import { BoutonFinal, type ProprietesEditeur } from "@/components/setlists/editeur/EditeurDeuxColonnes";
 import { FeuilleContexte } from "@/components/setlists/editeur/feuille";
@@ -31,11 +31,12 @@ export function EditeurFeuilles({
   saving,
   onPublier,
   onTerminer,
+  proposer,
 }: ProprietesEditeur) {
   const { t } = useTranslation();
   const [ouverte, setOuverte] = useState(false);
   const feuille = useMemo(() => ({ fermer: () => setOuverte(false) }), []);
-  const v = useVolet({ items, setItems, songs, actions, feuille, equipe: champs.equipe });
+  const v = useVolet({ items, setItems, songs, actions, feuille, equipe: champs.equipe, proposer });
   useStandaloneScrollLock(ouverte);
 
   const ouvrir = (uid: string) => {
@@ -75,6 +76,7 @@ export function EditeurFeuilles({
           <Plus className="h-4 w-4" aria-hidden />
           {t("setlists.form.addTransition")}
         </button>
+        {champs.fete && <LienMusiquesEtDanses fete={champs.fete} />}
         {items.length > 0 && <p className="mt-4 text-[13px] text-muted-foreground">{t("setlists.editeur.aideListe")}</p>}
       </div>
 

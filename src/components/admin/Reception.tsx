@@ -308,6 +308,7 @@ export function Reception({ onEnAttente }: { onEnAttente?: (n: number) => void }
                         Proposé par {p.authorName}
                         {p.createdAt ? ` · ${p.createdAt.toLocaleDateString("fr-FR")}` : ""}
                       </p>
+                      {p.setlistId && <p className="text-xs text-muted-foreground truncate">Pour {p.setlistTitre} · identifiant à recopier dans le .cho : {p.id}</p>}
                     </div>
                     <div className="flex items-center gap-1.5 shrink-0">
                       {p.status === "accepted" && <Pill label="Traité" color="#16a34a" />}

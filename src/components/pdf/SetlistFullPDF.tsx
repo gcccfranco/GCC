@@ -1,6 +1,7 @@
 import { Document } from "@react-pdf/renderer";
 import { SongPDFPage, FusionPDFPage, TransitionPDFPage, JianpuPDFPage, CompactStrip, compactStripHeight, type FusionPDFSong, type PdfSectionStyle } from "@/components/pdf/SongPDF";
 import { compactTransitions } from "@/lib/pdf/compact";
+import { enAttente } from "@/lib/setlist/propositions";
 import { resolveStructureOverride } from "@/lib/chordpro/structure";
 import { resolveSectionOccurrences } from "@/lib/setlist/sectionSteps";
 import { cleJouee, type JianpuCadrage, type JianpuChordsManifest, type JianpuManifest } from "@/lib/jianpu/images";
@@ -27,6 +28,7 @@ export function SetlistFullPDF({
   jianpuPref = "auto",
   sectionStyle = "classic",
   layout = "played",
+  language = "fr",
 }: {
   setlist: FSSetlist;
   contents: Record<string, SongContent>;
@@ -46,6 +48,8 @@ export function SetlistFullPDF({
   /** « unique » = PDF compact (docs/spec-export-pdf.md) : bandeau + sections
    *  uniques ; une transition finit la page du chant d'avant. */
   layout?: "played" | "unique";
+  /** Langue de l'interface : le texte d'une proposition en attente. */
+  language?: string;
 }) {
   const sorted = [...setlist.items].sort((a, b) => a.position - b.position);
   const footer = `${setlist.title} - ${setlist.leader}`;
@@ -65,6 +69,10 @@ export function SetlistFullPDF({
               footerCenter={footer}
             />
           ];
+        }
+
+        if (item.type === "proposition") {
+          return [<TransitionPDFPage key={`proposition-${idx}`} text={`${item.proposition?.titre ?? ""} — ${enAttente(language)}`} footerCenter={footer} />];
         }
 
         if (item.type === "fusion" && item.fusionSongs) {

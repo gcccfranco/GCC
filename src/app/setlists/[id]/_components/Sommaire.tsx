@@ -59,6 +59,8 @@ export function Sommaire({
         <p className="px-2 pb-2 text-[13px] font-semibold text-muted-foreground">{t("setlists.detail.sommaire")}</p>
         <ol className="space-y-1">
           {chants.map((item, i) => {
+            // Une proposition garde son numéro (comme la liste) mais n'a rien à ouvrir.
+            if (item.type === "proposition") return null;
             const num = i + 1;
             const lu = item.position === current;
             const fusion = item.type === "fusion" && !!item.fusionSongs;

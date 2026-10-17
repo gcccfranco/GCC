@@ -9,6 +9,7 @@ import {
   itemSections,
   type FormFusionItem,
   type FormItem,
+  type FormPropositionItem,
   type FormTransitionItem,
   type FusionMixedSectionForm,
 } from "@/lib/setlist/formItems";
@@ -340,6 +341,23 @@ export function VoletTransition({
           className="w-full resize-none rounded-xl border border-dashed border-amber-300 bg-amber-50/50 px-3.5 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-amber-400/30 dark:border-amber-700 dark:bg-amber-950/20"
         />
       </section>
+      <div className="flex justify-end">
+        <button type="button" onClick={onRetirer} className={boutonRetirer}>
+          <Trash2 className="h-4 w-4" aria-hidden />
+          {t("setlists.editeur.retirer")}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/** Un chant hors répertoire en attente (setlist de fête, CF20) : son titre, ce qu'il attend, « Retirer ». */
+export function VoletProposition({ item, onRetirer }: { item: FormPropositionItem; onRetirer: () => void }) {
+  const { t } = useTranslation();
+  return (
+    <div className="space-y-6">
+      <EnTeteVolet surtitre={t("planning.fete.propositionEnAttente")} titre={item.titre} />
+      <p className="text-sm text-muted-foreground">{t("setlists.fete.propositionAide")}</p>
       <div className="flex justify-end">
         <button type="button" onClick={onRetirer} className={boutonRetirer}>
           <Trash2 className="h-4 w-4" aria-hidden />

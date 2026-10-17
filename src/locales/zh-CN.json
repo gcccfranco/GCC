@@ -160,6 +160,23 @@
     "errorNetwork": "网络出错——请检查网络后重试。"
   },
   "setlists": {
+    "fete": {
+        "propositionAide": "还不在诗歌库中。本节目会保留这份推荐；诗歌一进入诗歌库，它就变成该诗歌。",
+        "proposerDescription": "你的推荐会发给管理员。诗歌进入诗歌库之前，本节目会保留这份推荐。",
+        "proposerEtAjouter": "推荐并加入",
+        "proposer": "推荐《{{titre}}》",
+        "passageN": "第 {{n}} 个节目",
+        "musiquesSur": "音乐和舞蹈：见{{fete}}页面",
+        "pageDe": "{{fete}}页面",
+        "saisiePar": "由 {{nom}} 填写",
+        "musiquesEtDanses": "音乐和舞蹈",
+        "pourLaRegie": "供音控使用",
+        "aucune": "本节目没有。",
+        "ordre": "上场顺序",
+        "iSurN": "第 {{i}} / {{n}} 个",
+        "dansLOrdre": "在上场顺序中",
+        "passageVoisin": "第 {{i}} 个节目 · {{qui}}"
+    },
     "list": {
       "title": "GCC 敬拜诗歌",
       "newButton": "新建歌单",
@@ -573,7 +590,9 @@
     "Groupe Joie": "喜乐团契",
     "中班": "中班",
     "大班": "大班",
-    "高班": "高班"
+    "高班": "高班",
+    "Noël": "圣诞节",
+    "Pâques": "复活节"
   },
   "performance": {
     "layout": "排版中…",
@@ -3249,6 +3268,7 @@
       }
     },
     "reception": {
+      "pourSetlist": "用于 {{setlist}} · 请抄入 .cho 的标识：{{id}}",
       "filtres": "筛选消息",
       "tout": "全部",
       "signalements": "问题反馈",

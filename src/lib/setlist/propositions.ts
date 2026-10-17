@@ -3,6 +3,13 @@
 // Fonctions pures.
 
 import type { SetlistItem } from "@/types/setList";
+import fr from "@/locales/fr.json";
+import zh from "@/locales/zh-CN.json";
+
+/** « proposition en attente », pour les rendus hors React (PDF). */
+export function enAttente(langue: string): string {
+  return (langue === "zh-CN" ? zh : fr).planning.fete.propositionEnAttente;
+}
 
 /** Ce que la résolution lit de l'index des chants. */
 export type ChantIndexe = { slug: string; proposition?: string | null };

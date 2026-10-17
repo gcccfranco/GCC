@@ -160,6 +160,23 @@
     "errorNetwork": "Problème de réseau — vérifie ta connexion et réessaie."
   },
   "setlists": {
+    "fete": {
+        "propositionAide": "Pas encore au répertoire. Le passage garde la proposition en attente ; elle devient le chant dès qu'il est au répertoire.",
+        "proposerDescription": "Ta proposition est envoyée aux administrateurs. Le passage la garde en attente jusqu'à ce que le chant soit au répertoire.",
+        "proposerEtAjouter": "Proposer et ajouter",
+        "proposer": "Proposer « {{titre}} »",
+        "passageN": "passage {{n}}",
+        "musiquesSur": "Musiques et danses : sur la page de {{fete}}",
+        "pageDe": "Page de {{fete}}",
+        "saisiePar": "saisie par {{nom}}",
+        "musiquesEtDanses": "Musiques et danses",
+        "pourLaRegie": "pour la régie",
+        "aucune": "Aucune pour ce passage.",
+        "ordre": "L'ordre de passage",
+        "iSurN": "{{i}} sur {{n}}",
+        "dansLOrdre": "Dans l'ordre de passage",
+        "passageVoisin": "Passage {{i}} · {{qui}}"
+    },
     "list": {
       "title": "GCC Louange",
       "newButton": "Nouvelle setlist",
@@ -576,7 +593,9 @@
     "Groupe Joie": "Groupe Joie",
     "中班": "Zhong Ban (中班)",
     "大班": "Da Ban (大班)",
-    "高班": "Gao Ban (高班)"
+    "高班": "Gao Ban (高班)",
+    "Noël": "Noël",
+    "Pâques": "Pâques"
   },
   "performance": {
     "layout": "Mise en page…",
@@ -3289,6 +3308,7 @@
       }
     },
     "reception": {
+      "pourSetlist": "Pour {{setlist}} · identifiant à recopier dans le .cho : {{id}}",
       "filtres": "Filtrer les messages",
       "tout": "Tout",
       "signalements": "Signalements",

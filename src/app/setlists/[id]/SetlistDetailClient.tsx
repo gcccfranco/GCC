@@ -36,7 +36,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { getSetlist, deleteSetlist, duplicateSetlist, updateSetlist, authHeader, type FSSetlist } from "@/lib/firebase/setlists";
 import { useProfile } from "@/lib/firebase/users";
-import { canSeeSetlist, canEditSetlist, canDeleteSetlist, canDuplicateSetlist, canSetPresentationLink, canHaveSetlistVersion } from "@/lib/access";
+import { canSeeSetlist, canEditSetlist, canDeleteSetlist, canDuplicateSetlist, canSetPresentationLink, canHaveSetlistVersion, estRegieDeFete } from "@/lib/access";
 import { useTranslation } from "react-i18next";
 import type { SongIndexEntry } from "@/types/song";
 import type { JianpuChords, SetlistItem } from "@/types/setList";
@@ -49,6 +49,9 @@ import { ListView } from "./_components/ListView";
 import { PartitionsView } from "./_components/PartitionView";
 import { Sommaire } from "./_components/Sommaire";
 import { PresentationLink } from "./_components/PresentationLink";
+import { CartesFete, RepereFete, SousTitreFete, usePassageDeLaSetlist } from "./_components/FeteDeLaSetlist";
+import { estUnChant, resoudrePropositions } from "@/lib/setlist/propositions";
+import { titreAffiche } from "@/lib/fetes/droits";
 import { parsePresentationUrl } from "@/lib/setlist/presentationLink";
 import { setlistLyricsText } from "@/components/song/copyLyrics";
 import { SetlistHistory } from "./_components/SetlistHistory";
@@ -208,6 +211,7 @@ export function SetlistDetailClient() {
     };
   }, [setlist, deuxVolets]);
   const [songsMap, setSongsMap] = useState<Record<string, SongIndexEntry>>({});
+  const passageFete = usePassageDeLaSetlist(setlist);
   // Relit l'historique après une adaptation écrite depuis cette page.
   const [historyVersion, setHistoryVersion] = useState(0);
   // Adaptations successives depuis cette page : un seul passage (adapter puis
@@ -402,7 +406,8 @@ export function SetlistDetailClient() {
       // Règles pas publiées, hors-ligne… : la présidence seule, sans erreur.
       getSetlistVersions(id).catch(() => ({})),
     ]).then(([sl, index, v]) => {
-      setSetlist(sl);
+      // Une proposition dont le `.cho` est arrivé devient le chant (CF21).
+      setSetlist(sl && { ...sl, items: resoudrePropositions(sl.items, index.songs ?? []) });
       setVersions(v);
       const map: Record<string, SongIndexEntry> = {};
       for (const s of index.songs ?? []) map[s.slug] = s;
@@ -499,7 +504,7 @@ export function SetlistDetailClient() {
 
   /** Premier chant de la setlist (les transitions n'en sont pas). */
   const premierChant = () =>
-    [...(setlist?.items ?? [])].filter((i) => i.type !== "transition").sort((a, b) => a.position - b.position)[0]?.position ?? 1;
+    [...(setlist?.items ?? [])].filter(estUnChant).sort((a, b) => a.position - b.position)[0]?.position ?? 1;
 
   /** Liste → Partitions : une entrée d'historique, que « Liste » et le retour du
    *  navigateur referment. Un chant donné y est amené ; sinon on revient là où
@@ -765,6 +770,7 @@ export function SetlistDetailClient() {
             jianpuPref={jianpuPref}
             sectionStyle={style === "classic" ? "classic" : "colors"}
             layout={style === "compact" ? "unique" : "played"}
+            language={i18n.language}
           />
         ).toBlob();
         const url = URL.createObjectURL(blob);
@@ -1323,7 +1329,7 @@ export function SetlistDetailClient() {
   // Notif « setlist prête » : pour toute setlist modifiable par l'utilisateur,
   // contenant au moins 4 vrais chants (hors transitions). Toutes catégories.
   const realSongCount = setlist.items.filter((i) => i.type !== "transition").length;
-  const canNotifyTeam = canEdit;
+  const canNotifyTeam = canEdit && !setlist.fete;
   // Le toggle pinyin n'a de sens que si la setlist contient au moins un chant zh.
   const hasZhSong = setlist.items.some(
     (i) =>
@@ -1334,7 +1340,7 @@ export function SetlistDetailClient() {
     user,
     profile,
     setlist,
-    !!profile?.serviceRoles[setlist.category]?.includes("regie"),
+    setlist.fete ? estRegieDeFete(profile, setlist) : !!profile?.serviceRoles[setlist.category]?.includes("regie"),
   );
   const presentationHref = setlist.presentationUrl ? parsePresentationUrl(setlist.presentationUrl) : null;
   // « Copier toutes les paroles » (question 6) : seulement si chaque chant suit la
@@ -1549,15 +1555,17 @@ export function SetlistDetailClient() {
             <div className="flex flex-wrap items-end gap-x-6 gap-y-3 px-7 pb-4 pt-5">
               {/* Le titre garde 18rem au moins : sinon les boutons passent dessous. */}
               <div className="min-w-0 flex-[1_1_18rem]">
+                {setlist.fete ? <RepereFete setlist={setlist} passage={passageFete} /> : (
                 <p className="flex items-center gap-1.5 text-[13px] font-semibold" style={{ color: categoryColor(setlist.category) }}>
                   <span aria-hidden className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ backgroundColor: categoryColor(setlist.category) }} />
                   {t("categories." + setlist.category, { defaultValue: setlist.category })} · {formatDate(setlist.date, i18n.language)}
-                </p>
-                <h1 className="mt-1 text-[28px] font-bold leading-tight tracking-[-0.01em] text-foreground">{setlist.title}</h1>
-                {(setlist.leader || setlist.notes) && (
+                </p>)}
+                <h1 className="mt-1 text-[28px] font-bold leading-tight tracking-[-0.01em] text-foreground">{titreAffiche(setlist, i18n.language === "zh-CN" ? "zh" : "fr")}</h1>
+                {setlist.fete && <SousTitreFete setlist={setlist} passage={passageFete} />}
+                {(setlist.fete ? !!setlist.notes : (setlist.leader || setlist.notes)) && (
                   <p className="mt-0.5 text-[13px] text-muted-foreground">
-                    {setlist.leader && <>{t("setlists.detail.leaderLabel")} {setlist.leader}</>}
-                    {setlist.leader && setlist.notes && " · "}
+                    {!setlist.fete && setlist.leader && <>{t("setlists.detail.leaderLabel")} {setlist.leader}</>}
+                    {!setlist.fete && setlist.leader && setlist.notes && " · "}
                     {setlist.notes}
                   </p>
                 )}
@@ -1688,6 +1696,7 @@ export function SetlistDetailClient() {
               ) : (
                 partitions
               )}
+              {passageFete && <CartesFete passage={passageFete} />}
             </div>
           </div>
         </div>
@@ -1857,11 +1866,12 @@ export function SetlistDetailClient() {
               <div className="flex items-start gap-3">
                 <div className="flex-1">
                   <div className="flex items-center gap-3 flex-wrap">
-                    <h1 className="text-2xl font-bold text-foreground">{setlist.title}</h1>
+                    <h1 className="text-2xl font-bold text-foreground">{titreAffiche(setlist, i18n.language === "zh-CN" ? "zh" : "fr")}</h1>
                   </div>
+                  {setlist.fete ? <div className="mt-1"><RepereFete setlist={setlist} passage={passageFete} /><SousTitreFete setlist={setlist} passage={passageFete} /></div> : (
                   <p className="text-muted-foreground capitalize mt-1 text-sm">
                     {formatDate(setlist.date, i18n.language)}
-                  </p>
+                  </p>)}
                   <SetlistHistory key={historyVersion} setlistId={id} songsMap={songsMap} />
                 </div>
                 <span className="text-xs px-2 py-0.5 rounded border border-border text-muted-foreground shrink-0 mt-1">
@@ -1869,10 +1879,10 @@ export function SetlistDetailClient() {
                 </span>
               </div>
               <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
-                <span className="px-2 py-0.5 rounded bg-muted text-foreground text-xs">
+                {!setlist.fete && <span className="px-2 py-0.5 rounded bg-muted text-foreground text-xs">
                   {t("categories." + setlist.category, { defaultValue: setlist.category })}
-                </span>
-                {setlist.leader && (
+                </span>}
+                {!setlist.fete && setlist.leader && (
                   <span>{t("setlists.detail.leaderLabel")} <span className="text-foreground">{setlist.leader}</span></span>
                 )}
               </div>
@@ -1942,6 +1952,7 @@ export function SetlistDetailClient() {
                 )}
               </div>
             )}
+            {passageFete && <CartesFete passage={passageFete} />}
           </div>
         </>
       )}

@@ -6,7 +6,7 @@ import { Plus } from "lucide-react";
 import type { FormListItem } from "@/lib/setlist/formItems";
 import { categoryColor } from "@/lib/serviceColors";
 import type { SongIndexEntry } from "@/types/song";
-import { EnTeteEditeur, type ChampsEnTete } from "@/components/setlists/editeur/EnTeteEditeur";
+import { EnTeteEditeur, LienMusiquesEtDanses, type ChampsEnTete } from "@/components/setlists/editeur/EnTeteEditeur";
 import { ListeCourte } from "@/components/setlists/editeur/ListeCourte";
 import { useVolet, type ActionsEditeur } from "@/components/setlists/editeur/useVolet";
 import { useEditeurOrdinateur } from "@/hooks/useEditeurDeuxColonnes";
@@ -29,6 +29,8 @@ export interface ProprietesEditeur {
   saving: boolean;
   onPublier: () => void;
   onTerminer: () => void;
+  /** Setlist de fête (CF20) : proposer un chant hors répertoire depuis la bibliothèque. */
+  proposer?: (titre: string, index?: number) => void;
 }
 
 /** « Publier » à la couleur du culte dès que la catégorie est connue (question 9), ou « Terminé ». */
@@ -76,9 +78,10 @@ export function EditeurDeuxColonnes({
   saving,
   onPublier,
   onTerminer,
+  proposer,
 }: ProprietesEditeur) {
   const { t } = useTranslation();
-  const v = useVolet({ items, setItems, songs, actions, feuille: null, equipe: champs.equipe });
+  const v = useVolet({ items, setItems, songs, actions, feuille: null, equipe: champs.equipe, proposer });
   // « + » entre deux éléments : ordinateur seulement, pas la tablette couchée (spec).
   const ordinateur = useEditeurOrdinateur();
   const voletRef = useRef<HTMLElement>(null);
@@ -137,6 +140,7 @@ export function EditeurDeuxColonnes({
               {t("setlists.form.addTransition")}
             </button>
           </div>
+          {champs.fete && <LienMusiquesEtDanses fete={champs.fete} />}
         </div>
         <div className="flex shrink-0 items-center gap-3 border-t border-border bg-background px-6 py-4">
           <p role="status" className="min-w-0 flex-1 text-[13px] font-medium text-muted-foreground">{statut}</p>

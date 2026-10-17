@@ -118,6 +118,7 @@ export function Bibliotheque({
   ajoutes,
   onAjouter,
   onTermine,
+  proposer,
 }: {
   songs: SongIndexEntry[];
   /** Slugs déjà dans la setlist (chants seuls et chants des fusions). */
@@ -126,6 +127,8 @@ export function Bibliotheque({
   ajoutes: Set<string>;
   onAjouter: (song: SongIndexEntry) => void;
   onTermine: () => void;
+  /** Setlist de fête (CF20) : « Proposer « … » » quand la recherche ne trouve rien. */
+  proposer?: (titre: string) => void;
 }) {
   const { t, i18n } = useTranslation();
   const feuille = useFeuille();
@@ -209,7 +212,22 @@ export function Bibliotheque({
       </p>
 
       {resultats.length === 0 ? (
-        <p className="py-8 text-center text-sm text-muted-foreground">{t("setlists.editeur.aucunResultat")}</p>
+        <div className="py-8 text-center">
+          <p className="text-sm text-muted-foreground">{t("setlists.editeur.aucunResultat")}</p>
+          {proposer && filtres.recherche.trim() && chantsDeLaBibliotheque(songs, { ...filtres, langue: "tous", theme: null, tempo: null }).length === 0 && (
+            <div className="mt-4 space-y-2">
+              <button
+                type="button"
+                onClick={() => proposer(filtres.recherche.trim())}
+                className="inline-flex min-h-11 items-center gap-2 rounded-full bg-foreground px-5 text-sm font-semibold text-background transition-colors hover:bg-foreground/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              >
+                <Plus className="h-4 w-4 shrink-0" aria-hidden />
+                {t("setlists.fete.proposer", { titre: filtres.recherche.trim() })}
+              </button>
+              <p className="mx-auto max-w-sm text-[13px] text-muted-foreground">{t("setlists.fete.propositionAide")}</p>
+            </div>
+          )}
+        </div>
       ) : (
         <ul className="mt-2 flex-1 border-t border-border">
           {resultats.map((song) => {

@@ -1,7 +1,7 @@
 import "./helpers/cleFirebase";
 import { expect, test, type Page } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
-import { estGrandEcran, estTelephone, interdireDialoguesNatifs, verifierAgencement } from "./helpers/agencement";
+import { estGrandEcran, estTelephone, interdireDialoguesNatifs, verifierAgencement, verifierSansDebordement } from "./helpers/agencement";
 
 // Lot « chants des fêtes », CF-C : l'agencement de la page de la fête sur les cinq projets (téléphone,
 // tablette portrait, tablette paysage, ordinateur, 1 440 px). Captures dans CAPTURES si la variable est posée.
@@ -80,5 +80,38 @@ for (const langue of ["fr", "zh-CN"] as const) {
 
     if (process.env.CAPTURES) await page.waitForTimeout(800);
     if (process.env.CAPTURES) await page.screenshot({ path: `${process.env.CAPTURES}/fete-${langue}-${info.project.name}.png`, fullPage: !estGrandEcran(info) });
+  });
+}
+
+// CF-D : l'éditeur et la page d'une setlist de fête (CF14, CF19) sur les cinq projets.
+const MUSIQUE = { id: "m9", type: "musique", titre: "Entrée des bergers", lien: "https://exemple.org/musique", duree: "2:10", depart: "", note: "Lumière douce" };
+const DOCS_CFD = {
+  ...DOCS,
+  "programmes/noel-2026": { ...DOCS["programmes/noel-2026"], passages: passages.map((p) => (p.id === "p1aaaaaa" ? { ...p, medias: [MUSIQUE] } : p)) },
+  "setlists/noel-2026-p2bbbbbb": {
+    ...DOCS["setlists/noel-2026-p1aaaaaa"], title: "Noël 2026 · Gp Joie", editeurs: [], fete: { programme: "noel-2026", passage: "p2bbbbbb", qui: "Gp Joie" }, items: [item("beni-soit-ton-nom")],
+  },
+};
+
+for (const langue of ["fr", "zh-CN"] as const) {
+  test(`éditeur d'une setlist de fête (${langue}) : sans débordement`, async ({ page }, info) => {
+    await page.addInitScript((l) => localStorage.setItem("i18nextLng", l), langue);
+    await page.route(/docs\.google\.com\/spreadsheets/, (route) => route.fulfill({ status: 200, contentType: "text/csv", body: "" }));
+    await page.clock.setFixedTime(new Date("2026-10-09T10:00:00"));
+    await signInAs(page, MEMBRE, DOCS_CFD, "/setlists/noel-2026-p1aaaaaa/edit?depuis=fete");
+    await expect(page.locator("[data-liste-courte] [data-ligne]").first()).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1 })).toContainText(langue === "fr" ? "Noël 2026" : "圣诞节 2026");
+    await verifierSansDebordement(page);
+    if (process.env.CAPTURES) await page.screenshot({ path: `${process.env.CAPTURES}/fete-editeur-${langue}-${info.project.name}.png` });
+  });
+
+  test(`page d'une setlist de fête (${langue}) : cartes sans débordement`, async ({ page }, info) => {
+    await page.addInitScript((l) => localStorage.setItem("i18nextLng", l), langue);
+    await page.clock.setFixedTime(new Date("2026-10-09T10:00:00"));
+    await signInAs(page, MEMBRE, DOCS_CFD, "/setlists/noel-2026-p1aaaaaa");
+    await expect(page.getByRole("region", { name: langue === "fr" ? "L'ordre de passage" : "上场顺序" })).toBeVisible();
+    await expect(page.getByRole("region", { name: /Musiques et danses|音乐和舞蹈/ })).toContainText("Entrée des bergers");
+    await verifierSansDebordement(page);
+    if (process.env.CAPTURES) await page.screenshot({ path: `${process.env.CAPTURES}/fete-setlist-${langue}-${info.project.name}.png`, fullPage: true });
   });
 }

@@ -5,7 +5,9 @@ import { useTranslation } from "react-i18next";
 import type { DragEndEvent } from "@dnd-kit/core";
 import {
   fusionner,
+  isFormChant,
   isFormFusion,
+  isFormProposition,
   isFormTransition,
   type FormItem,
   type FormListItem,
@@ -15,7 +17,7 @@ import type { SongIndexEntry } from "@/types/song";
 import { numerosDesElements } from "@/components/setlists/editeur/ListeCourte";
 import { Bibliotheque } from "@/components/setlists/editeur/Bibliotheque";
 import { VoletEquipe, type EtatEquipe } from "@/components/setlists/editeur/VoletEquipe";
-import { ChoixFusion, VoletChant, VoletFusion, VoletTransition } from "@/components/setlists/editeur/Volets";
+import { ChoixFusion, VoletChant, VoletFusion, VoletProposition, VoletTransition } from "@/components/setlists/editeur/Volets";
 
 // Ce que montre le volet de l'éditeur (lot U5 bis) : les réglages de l'élément
 // choisi, le choix des chants à fusionner, ou la bibliothèque. Partagé par les deux
@@ -44,6 +46,7 @@ export function useVolet({
   actions,
   feuille,
   equipe,
+  proposer,
 }: {
   items: FormListItem[];
   setItems: (items: FormListItem[]) => void;
@@ -53,6 +56,8 @@ export function useVolet({
   feuille: { fermer: () => void } | null;
   /** L'équipe de la setlist (docs/spec-partage-setlist.md) : la vue « Équipe » du volet. */
   equipe: EtatEquipe;
+  /** Setlist de fête : la bibliothèque propose un chant absent du répertoire (CF20). */
+  proposer?: (titre: string, index?: number) => void;
 }) {
   const { t } = useTranslation();
   // Grand écran : le premier élément choisi à l'ouverture de « Modifier » (Q7), la
@@ -68,13 +73,13 @@ export function useVolet({
   const pris = useMemo(() => {
     const slugs = new Set<string>();
     for (const item of items) {
-      if (isFormTransition(item)) continue;
+      if (isFormTransition(item) || isFormProposition(item)) continue;
       if (isFormFusion(item)) item.songs.forEach((s) => slugs.add(s.song.slug));
       else slugs.add(item.song.slug);
     }
     return slugs;
   }, [items]);
-  const chantsSeuls = items.filter((i): i is FormItem => !isFormFusion(i) && !isFormTransition(i));
+  const chantsSeuls = items.filter(isFormChant);
   const element = items.find((i) => i.uid === choisi) ?? null;
 
   /** Clé du contenu : le volet repart du haut quand elle change. */
@@ -151,6 +156,7 @@ export function useVolet({
             setAjoutes((prev) => new Set(prev).add(song.slug));
           }}
           onTermine={onTermineBibliotheque}
+          proposer={proposer && ((titre) => proposer(titre, insertion ?? undefined))}
         />
       );
     }
@@ -179,6 +185,7 @@ export function useVolet({
         />
       );
     }
+    if (isFormProposition(element)) return <VoletProposition item={element} onRetirer={() => retirer(element.uid)} />;
     if (isFormFusion(element)) {
       return (
         <VoletFusion

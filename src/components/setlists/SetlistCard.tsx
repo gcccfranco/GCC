@@ -146,7 +146,7 @@ export function SetlistCarteChants({
         {chants.map((it, n) => {
           const song = songsMap[it.songSlug];
           const fusion = it.type === "fusion" && !!it.fusionSongs;
-          const titre = fusion ? it.fusionSongs!.map((f) => songsMap[f.songSlug]?.title ?? f.songSlug).join(" / ") : (song?.title ?? it.songSlug);
+          const titre = fusion ? it.fusionSongs!.map((f) => songsMap[f.songSlug]?.title ?? f.songSlug).join(" / ") : (it.proposition?.titre ?? song?.title ?? it.songSlug);
           const tonalite = it.keyOverride ?? song?.originalKey;
           return (
             <li key={`${it.position}-${n}`} className="flex min-h-9 items-center gap-2.5 border-t border-border/70 py-1 text-[15px]">

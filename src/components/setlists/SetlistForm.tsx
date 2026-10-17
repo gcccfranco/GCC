@@ -25,6 +25,7 @@ import {
   type FormFusionItem,
   type FormListItem,
   type FusionMixedSectionForm,
+  isFormChant,
   isFormFusion,
   insererA,
   isFormTransition,
@@ -41,6 +42,8 @@ import { todayIso } from "@/lib/scene/dimanches";
 import { FREE_CATEGORIES } from "@/lib/firebase/setlists";
 import { useEditeurDeuxColonnes } from "@/hooks/useEditeurDeuxColonnes";
 import { EditeurDeuxColonnes, type ProprietesEditeur } from "@/components/setlists/editeur/EditeurDeuxColonnes";
+import type { ContexteFeteEditeur } from "@/components/setlists/editeur/EnTeteEditeur";
+import { SongProposalDrawer } from "@/components/songs/SongProposalDrawer";
 import { EditeurFeuilles } from "@/components/setlists/editeur/EditeurFeuilles";
 
 export interface SetlistFormInitial {
@@ -70,6 +73,8 @@ export interface SetlistFormProps {
   /** Création depuis « Pour quel service ? » (lot U5 bis) : catégorie, date et
    *  moment du service ; la présidence est relue au planning. Lu au montage. */
   prefill?: Preremplissage;
+  /** Mode modification d'une setlist de fête : le passage, pour l'en-tête (docs/spec-chants-fetes.md, CF19). */
+  contexteFete?: ContexteFeteEditeur;
 }
 
 /** Titre automatique « Catégorie JJ/MM [Soir] » (éditable). */
@@ -96,7 +101,7 @@ async function notifySetlistReady(setlistId: string): Promise<void> {
   }
 }
 
-export function SetlistForm({ mode, setlistId, songs, initial, prefill }: SetlistFormProps) {
+export function SetlistForm({ mode, setlistId, songs, initial, prefill, contexteFete }: SetlistFormProps) {
   // Ordinateur et tablette en paysage : la piste 2 en deux colonnes (lot U5 bis, T3) ;
   // téléphone et tablette en portrait : la liste en grand et des feuilles (T4).
   const deuxColonnes = useEditeurDeuxColonnes();
@@ -121,6 +126,10 @@ export function SetlistForm({ mode, setlistId, songs, initial, prefill }: Setlis
   const [items, setItems] = useState<FormListItem[]>(initial?.items ?? []);
   const [moment, setMoment] = useState<"matin" | "soir" | undefined>(initial?.moment ?? prefill?.moment);
   const ownerId = initial?.ownerId ?? null;
+  // Setlist d'un passage de fête : jamais de « setlist prête » (CF15).
+  const estFete = !!initial?.fete;
+  // Chant hors répertoire : le titre cherché pendant que le tiroir « Proposer » est ouvert (CF20).
+  const [propositionPour, setPropositionPour] = useState<{ titre: string; index?: number } | null>(null);
   // L'équipe (PS6) : ses champs ne partent que pour qui peut la changer, et un champ vide
   // seulement s'il a déjà existé.
   const [editeurs, setEditeurs] = useState<string[]>(initial?.editeurs ?? []);
@@ -417,17 +426,17 @@ export function SetlistForm({ mode, setlistId, songs, initial, prefill }: Setlis
     return () => {
       window.removeEventListener("beforeunload", warn);
       void saveEdit().then(() => {
-        if (savedOnceRef.current && setlistId &&
+        if (savedOnceRef.current && setlistId && !estFete &&
           notifierSetlistPrete({ isPrivate: JSON.parse(savedJsonRef.current).isPrivate, editeurs: latestRef.current.editeurs })) {
           void notifySetlistReady(setlistId);
         }
       });
     };
-  }, [isEdit, saveEdit, setlistId]);
+  }, [isEdit, saveEdit, setlistId, estFete]);
 
   async function finishEdit() {
     await saveEdit();
-    router.push(`/setlists/${setlistId}`);
+    router.push(contexteFete?.depuisFete ? `/evenements/scene/${contexteFete.fete}` : `/setlists/${setlistId}`);
   }
 
   // ── Song actions ───────────────────────────────────────
@@ -435,6 +444,11 @@ export function SetlistForm({ mode, setlistId, songs, initial, prefill }: Setlis
   function addSong(song: SongIndexEntry, index?: number) {
     // Un chant ajouté démarre dans la tonalité recommandée (la plus chantée à GCC).
     const item: FormItem = { uid: nextUid(), song, keyOverride: song.recommendedKey ?? null, notes: "", sectionItems: makeDefaultSections(song.sections ?? []) };
+    setItems((prev) => insererA(prev, Math.min(index ?? prev.length, prev.length), item));
+  }
+
+  function addProposition(proposition: { id: string; titre: string }, index?: number) {
+    const item: FormListItem = { uid: nextUid(), kind: "proposition", id: proposition.id, titre: proposition.titre };
     setItems((prev) => insererA(prev, Math.min(index ?? prev.length, prev.length), item));
   }
 
@@ -450,7 +464,7 @@ export function SetlistForm({ mode, setlistId, songs, initial, prefill }: Setlis
 
   function patch(uid: string, update: Partial<FormItem>) {
     setItems((prev) =>
-      prev.map((i) => (i.uid === uid && !isFormFusion(i) && !isFormTransition(i) ? { ...i, ...update } : i))
+      prev.map((i) => (i.uid === uid && isFormChant(i) ? { ...i, ...update } : i))
     );
   }
 
@@ -606,6 +620,7 @@ export function SetlistForm({ mode, setlistId, songs, initial, prefill }: Setlis
       connecte: !!user,
       authLoading,
       loginFrom,
+      fete: contexteFete,
     },
     actions: {
       addSong,
@@ -621,7 +636,24 @@ export function SetlistForm({ mode, setlistId, songs, initial, prefill }: Setlis
     saving,
     onPublier: () => void publish(),
     onTerminer: () => void finishEdit(),
+    proposer: estFete ? (titre, index) => setPropositionPour({ titre, index }) : undefined,
   };
 
-  return deuxColonnes ? <EditeurDeuxColonnes {...proprietes} /> : <EditeurFeuilles {...proprietes} />;
+  return (
+    <>
+      {deuxColonnes ? <EditeurDeuxColonnes {...proprietes} /> : <EditeurFeuilles {...proprietes} />}
+      {propositionPour !== null && setlistId && (
+        <SongProposalDrawer
+          controle={{
+            open: true,
+            onOpenChange: (o) => { if (!o) setPropositionPour(null); },
+            titreInitial: propositionPour.titre,
+            setlistId,
+            setlistTitre: title,
+            onAjoutee: (p) => addProposition(p, propositionPour.index),
+          }}
+        />
+      )}
+    </>
+  );
 }

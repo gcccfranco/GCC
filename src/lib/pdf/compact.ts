@@ -4,6 +4,7 @@
 
 import type { ChordProSection } from "@/types/chordPro";
 import type { SetlistItem } from "@/types/setList";
+import { estUnChant } from "@/lib/setlist/propositions";
 import { abbreviateSection } from "@/lib/chordpro/abbreviations";
 import { isRepeatOf, resolveSectionOccurrences, type SectionOccurrence } from "@/lib/setlist/sectionSteps";
 import { uniqueSections, type UniqueSection } from "@/lib/setlist/uniqueSections";
@@ -48,7 +49,7 @@ export function compactTransitions(
   const standalone = new Set<number>();
   let lastSong = -1;
   items.forEach((it, i) => {
-    if (it.type !== "transition") {
+    if (estUnChant(it)) {
       lastSong = i;
       return;
     }

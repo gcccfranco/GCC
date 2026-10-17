@@ -150,3 +150,10 @@ export function droitsDeSaisie(passage: Pick<Passage, "qui">, ctx: ContexteFetes
 export function titreSetlistFete(fete: "noel" | "paques", annee: number, qui: string, langue: Language = "fr"): string {
   return `${libelleEdition(fete, annee, langue)} · ${libelleQui(qui, langue)}`;
 }
+
+/** Le titre à afficher d'une setlist : celle d'une fête se recalcule dans la langue de l'écran (CF10, le titre
+ *  stocké est le français) ; une autre garde son titre. */
+export function titreAffiche(setlist: { title: string; fete?: { programme: string; qui: string } }, langue: Language): string {
+  const m = /^(noel|paques)-(\d{4})$/.exec(setlist.fete?.programme ?? "");
+  return m && setlist.fete ? titreSetlistFete(m[1] as "noel" | "paques", Number(m[2]), setlist.fete.qui, langue) : setlist.title;
+}

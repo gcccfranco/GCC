@@ -319,6 +319,7 @@ export function ReceptionVolets() {
         <div className="flex gap-1.5">{badges(m)}</div>
         <h2 className="mt-2 text-[24px] font-bold leading-[30px] tracking-tight text-foreground text-balance">{(m.r ?? m.p).title}</h2>
         <p className="mb-4 mt-0.5 text-sm text-muted-foreground">{auteur(m)}</p>
+        {m.p?.setlistId && <p className="mb-4 text-sm text-muted-foreground">{t("backOffice.reception.pourSetlist", { setlist: m.p.setlistTitre, id: m.p.id })}</p>}
         {corps(m, true)}
       </div>
     );

@@ -7,7 +7,7 @@ import { SortableContext, sortableKeyboardCoordinates, useSortable, verticalList
 import { CSS } from "@dnd-kit/utilities";
 import { ChevronRight, CirclePlus, GripVertical, MessageSquare } from "lucide-react";
 import { useJianpuScore } from "@/lib/jianpu/images";
-import { isFormFusion, isFormTransition, itemSections, type FormItem, type FormListItem } from "@/lib/setlist/formItems";
+import { isFormChant, isFormFusion, isFormProposition, isFormTransition, itemSections, type FormItem, type FormListItem } from "@/lib/setlist/formItems";
 import { KeyPill } from "@/components/ui/key-pill";
 import { PastilleSection, dessinSection } from "@/components/setlists/editeur/Reglages";
 
@@ -20,6 +20,7 @@ import { PastilleSection, dessinSection } from "@/components/setlists/editeur/Re
 /** Titre d'un élément tel que la liste le nomme (et son bouton) : le chant, « A / B », « Transition ». */
 export function titreElement(item: FormListItem, transition: string): string {
   if (isFormTransition(item)) return transition;
+  if (isFormProposition(item)) return item.titre;
   if (isFormFusion(item)) return item.songs.map((s) => s.song.title).join(" / ");
   return item.song.title;
 }
@@ -97,7 +98,7 @@ function LigneElement({
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: item.uid });
   const titre = titreElement(item, t("setlists.form.transitionLabel"));
   const style = { transform: CSS.Transform.toString(transform), transition };
-  const chant = !isFormTransition(item) && !isFormFusion(item) ? item : null;
+  const chant = isFormChant(item) ? item : null;
   const scan = useJianpuScore(chant?.song.slug);
 
   // Le bouton couvre toute la ligne (`before:`), sauf la poignée, au-dessus de lui.
@@ -136,6 +137,32 @@ function LigneElement({
               <span className="flex items-baseline gap-2.5">
                 <span className="text-sm font-semibold text-amber-700 dark:text-amber-400">{titre}</span>
                 {item.text && <span className="truncate text-sm text-foreground/80">{item.text}</span>}
+              </span>,
+            )}
+          </div>
+        </div>
+      </li>
+    );
+  }
+
+  if (isFormProposition(item)) {
+    return (
+      <li ref={setNodeRef} style={style} data-element data-uid={item.uid} className={classeLi}>
+        {boutonInserer}
+        <div
+          className={`relative flex items-center gap-3 rounded-xl border border-dashed px-3 py-3 ${
+            choisi ? "border-orange-500 bg-orange-100 dark:bg-orange-900/40" : "border-orange-300 bg-orange-50/70 dark:border-orange-700 dark:bg-orange-950/20"
+          }`}
+        >
+          <Poignee titre={titre} attributes={attributes} listeners={listeners} choisi={false} />
+          <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-secondary text-xs font-semibold text-foreground">{numero}</span>
+          <div className="min-w-0 flex-1">
+            {bouton(
+              <span className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+                <span className="text-[15px] font-semibold leading-snug">{titre}</span>
+                <span className="rounded-full px-2 py-0.5 text-xs font-semibold" style={{ background: "#ea580c1f", color: "#c2410c" }}>
+                  {t("planning.fete.propositionEnAttente")}
+                </span>
               </span>,
             )}
           </div>

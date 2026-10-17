@@ -113,6 +113,18 @@ export function ListView({
         // Numéro = nombre de chants (transitions exclues) jusqu'ici inclus.
         const num = sorted.slice(0, idx + 1).filter((x) => x.type !== "transition").length;
 
+        // ── Chant hors répertoire en attente (setlist de fête, CF21) ──
+        if (item.type === "proposition") {
+          return (
+            <li key={`proposition-${idx}`} className="flex items-center gap-3 py-3">
+              <span className="shrink-0 w-7 h-7 rounded-full bg-muted flex items-center justify-center text-xs font-bold text-muted-foreground">{num}</span>
+              <span className="text-sm text-foreground">
+                <span className="font-semibold">{item.proposition?.titre}</span> — {t("planning.fete.propositionEnAttente")}
+              </span>
+            </li>
+          );
+        }
+
         // ── Fusion item ──
         if (item.type === "fusion" && item.fusionSongs) {
           return (

@@ -151,6 +151,9 @@ export function buildPerformanceBlocks(
       continue;
     }
 
+    // Chant hors répertoire en attente : rien à jouer.
+    if (item.type === "proposition") continue;
+
     // ── Fusion ──
     if (item.type === "fusion" && item.fusionSongs) {
       const asts: Record<string, ChordProAST> = {};
