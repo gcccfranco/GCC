@@ -303,14 +303,16 @@ test.describe("louange (T3) : sélecteur de tonalité, téléphone et tablette",
     test.skip((info.project.use.viewport?.width ?? 0) >= 1024, "largeur tactile seulement (sous 1024 px)");
   });
 
-  // 16/09/2026 : sur un chant 中文 avec partition 简谱 (six commandes), le
+  // 16/09/2026 : sur un chant 中文 avec partition 简谱 (six commandes alors ; cinq depuis
+  // que le bouton 谱 a quitté la barre pour le segment « 简谱 · Paroles », L3-T3), le
   // sélecteur natif rognait la tonalité (« E ( »). Fermé, il n'affiche plus
   // que la tonalité ; la liste ouverte garde « (orig.) » et « (reco.) ».
   test("la tonalité reste lisible dans le sélecteur fermé, la liste garde ses libellés, changer de tonalité fonctionne", async ({ page }) => {
     await page.goto(`/songs/${encodeURIComponent("一生爱你")}`);
     const barre = page.getByTestId("barre-outils");
     await barre.waitFor();
-    await expect(barre.getByRole("button", { name: "简谱" }), "chant à six commandes").toBeVisible();
+    await expect(barre.getByRole("button", { name: "Pinyin" }), "chant 中文").toBeVisible();
+    await expect(barre.getByRole("button", { name: "简谱" }), "chant à cinq commandes : 谱 a quitté la barre").toHaveCount(0);
     await page.evaluate(() => Promise.all(document.getAnimations().map((a) => a.finished.catch(() => {}))));
     const tonalite = page.getByTestId("tonalite-courante");
     // innerText : le suffixe « (orig.) » existe dans le DOM mais n'est affiché que sur ordinateur.

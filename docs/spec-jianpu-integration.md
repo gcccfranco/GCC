@@ -1024,5 +1024,36 @@ rappel faux sur deux chants au même `section.uid` (C5).
   bas ; en flux, l'avertissement est à égale distance des deux pages (le « Page 2 » le rattache) ; le segmenté n'a pas
   la navigation aux flèches d'un radiogroup (même manque que `Volets.tsx`).
 
-Prochaine étape : L3-T3 (page chant : en-tête du site, segment « 简谱 · Paroles », K2) ; le lot 2 attend le passage
-complet.
+- **L3-T3, 17/10/2026 — page chant** (go de Timothée du 17/10/2026). Codé : la page chant rend toujours `SongView` ;
+  deux props nouvelles, `corps` (remplace les sections : le scan, avec sa cale K2) et `bascule` (posée dans les `children`
+  de `StructureStrip`, à droite des pastilles). L'en-tête du site (titre, pinyin, auteurs, ♩, pastille de tonalité) et le
+  bandeau restent donc au-dessus du scan (K3) ; sur le scan, le bandeau porte les détails (notes, transitions, nuances
+  venues de la setlist ou de « Ma version », que le scan ne montre pas). Segment « 简谱 · Paroles » (`radiogroup`,
+  `songs.detail.basculeJianpu`, 中文 « 简谱 · 歌词 » ; `songs.detail.paroles`) : 32 px, piste `--secondary`, segment actif
+  à l'encre (`--jianpu-encre`, texte `--background`), `print:hidden` ; il lit et écrit la préférence du lot 1. Le bouton
+  谱 quitte la barre d'outils. **Écart de lecture** : la spec dit « sous les pastilles, aligné à droite », la maquette
+  `v20-jp-a-chant-telephone` le dessine **sur la rangée des pastilles**, à droite ; suivi : la maquette (il passe sous
+  les pastilles quand la place manque).
+  Tests (`jianpu-integration.spec.ts`, test 7 ×4 : en-tête au-dessus du scan, segment calé à droite et 32 px, couleurs,
+  pas de bouton 谱 ; « Paroles » garde l'en-tête et règle la préférence ; chant sans scan sans segment ; notes de la
+  setlist dans le bandeau) : rouges avant le code (et le dernier rouge sans son correctif seul), puis verts sur les cinq
+  projets. Existants adaptés (spec, « Tests existants qui changent ») : `jianpu-par-defaut` (bouton 谱 → segment ; K2 : on
+  va jusqu'à la page 2 avant d'attendre son image, chargée en différé et repoussée par l'en-tête), `look-louange` (cinq
+  commandes), `chants-deux-volets` (titre du site au-dessus du scan). K2 reste vérifié par `jianpu-par-defaut` (téléphone),
+  pas dans le test 7. Agent testeur : `jianpu-integration`, `look-louange`, `chants-deux-volets`, `coup-d-oeil`,
+  `look-halo`, `deux-volets-finitions` sur cinq projets : 539 verts, 90 sautés, 1 rouge (premier chargement > 30 s,
+  tablette-paysage, vert rejoué) ; 15 specs de la page chant et du 简谱 sur trois appareils : 393 verts, 5 sautés, 1 rouge
+  (`harmonie-idees`, `db.writes` lu avant l'écriture, vert rejoué). Un premier lancement, sous la charge de quatre
+  serveurs (vérification Opus en parallèle), avait 82 rouges non reproduits au second. Environnement : `write-excel-file`
+  manquait dans `node_modules` (installé, sans toucher à `package.json`) — il faisait répondre 500 au serveur après une
+  page planning. Captures regardées (téléphone, tablette, iPad paysage, ordinateur, 1 440 ; 一生爱你 en E et en D, clair et
+  sombre, en paroles ; Abba Père) : conformes à `v20-jp-a-chant-*` (en-tête, pastilles I · C · R, segment, scan dès
+  « 1= E 4/4 »).
+  Vérifié par Opus (17/10/2026) : rien de bloquant ; zoom A+ 150 %, impression (segment masqué, en-tête et scan
+  imprimés), Adapter / Ma version / version de setlist vérifiés. Corrigés : détails du bandeau sur le scan ; libellé
+  « Paroles » propre à la page chant ; `span` au lieu de `div` dans le bandeau ; commentaire périmé. **À trancher par
+  Timothée** : avec une structure perso, le bandeau au-dessus du scan montre l'ordre perso alors que le scan suit l'ordre
+  gravé (gardé : le bandeau dit ce qui se joue). Laissés : boutons du segment à 28 px (maquette) et sans navigation aux
+  flèches (comme `Volets.tsx`). Relire le 中文 « 简谱 · 歌词 ».
+
+Prochaine étape : L3-T4 (setlist, vue Partitions) ; le lot 2 attend le passage complet.

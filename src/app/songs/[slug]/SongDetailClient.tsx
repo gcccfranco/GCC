@@ -108,8 +108,8 @@ function useVersionDeLaSetlist(slug: string, setlistId: string | null, position:
     const [jianpuPref, setJianpuPrefState] = useState<JianpuPref>("auto");
     useEffect(() => setJianpuPrefState(getJianpuPref()), []);
     const showScore = sheetEnabled(jianpuPref, undefined);
-    const toggleScore = () => {
-      const next = prefDepuisInterrupteur(!showScore);
+    const choisirScore = (on: boolean) => {
+      const next = prefDepuisInterrupteur(on);
       setJianpuPrefState(next);
       setJianpuPref(next);
     };
@@ -484,22 +484,6 @@ function useVersionDeLaSetlist(slug: string, setlistId: string | null, position:
                     </button>
                   )}
 
-              {/* Partition 简谱 (chants zh qui en ont une) */}
-              {jianpuScore && (
-                <button aria-label={"简谱"}
-                  aria-pressed={showScore}
-                  onClick={toggleScore}
-                  className={`h-9 min-w-9 lg:h-8 lg:min-w-8 px-2.5 rounded-full text-xs font-semibold flex items-center justify-center gap-1.5 transition-all duration-150 ${
-                    showScore
-                      ? "bg-card text-foreground shadow-sm"
-                      : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  <span className="font-bold">谱</span>
-                  <span className="libelle-chant">简谱</span>
-                </button>
-              )}
-
               {/* Menu ⋯ : médias / personnaliser / PDF */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -621,20 +605,51 @@ function useVersionDeLaSetlist(slug: string, setlistId: string | null, position:
             setBarPinned(true);
           }}
         >
-          {showScore && jianpuScore ? (
-            // Cale K2 (spec jianpu-integration, O14) : au téléphone, la fin de la feuille remonte au-dessus de la barre d'onglets.
-            <div className="max-sm:pb-[calc(78px+var(--tabbar-bottom))]">
-              <JianpuSheet
-                entry={jianpuScore}
-                title={song.title}
-                slug={song.slug}
-                playedKey={customize.currentKey !== originalKey ? customize.currentKey : null}
-                originalKey={originalKey}
-                chordEdits={versionSetlist?.retouches}
-              />
-            </div>
-          ) : (
+          {/* L'en-tête du site reste au-dessus du scan (K3) ; le segment « 简谱 · Paroles »
+              à droite des pastilles règle la préférence de l'appareil (D5). */}
             <SongView
+              bascule={
+                jianpuScore ? (
+                  <span role="radiogroup" aria-label={t("songs.detail.basculeJianpu")} className="inline-flex h-8 rounded-full bg-secondary p-0.5 print:hidden">
+                    {[
+                      { on: true, libelle: "简谱" },
+                      { on: false, libelle: t("songs.detail.paroles") },
+                    ].map(({ on, libelle }) => (
+                      <button
+                        key={libelle}
+                        type="button"
+                        role="radio"
+                        aria-checked={showScore === on}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          choisirScore(on);
+                        }}
+                        className={`h-7 rounded-full px-3 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+                          showScore === on ? "text-background" : "text-muted-foreground hover:text-foreground"
+                        }`}
+                        style={showScore === on ? { backgroundColor: "hsl(var(--jianpu-encre))" } : undefined}
+                      >
+                        {libelle}
+                      </button>
+                    ))}
+                  </span>
+                ) : undefined
+              }
+              corps={
+                showScore && jianpuScore ? (
+                  // Cale K2 (spec jianpu-integration, O14) : au téléphone, la fin de la feuille remonte au-dessus de la barre d'onglets.
+                  <div className="max-sm:pb-[calc(78px+var(--tabbar-bottom))]">
+                    <JianpuSheet
+                      entry={jianpuScore}
+                      title={song.title}
+                      slug={song.slug}
+                      playedKey={customize.currentKey !== originalKey ? customize.currentKey : null}
+                      originalKey={originalKey}
+                      chordEdits={versionSetlist?.retouches}
+                    />
+                  </div>
+                ) : undefined
+              }
               ast={displayedAST}
               showChords={customize.showChords}
               showPinyin={customize.showPinyin}
@@ -645,7 +660,6 @@ function useVersionDeLaSetlist(slug: string, setlistId: string | null, position:
               sectionKeys={sectionsKeys}
               chartStyle={chartStyle}
             />
-          )}
         </main>
 
         {/* Panneau de personnalisation */}

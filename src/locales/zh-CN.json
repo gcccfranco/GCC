@@ -108,6 +108,8 @@
       "upcomingHelp": "与「歌单」页相同：你有角色的服事和小组的歌单。"
     },
     "detail": {
+      "paroles": "歌词",
+      "basculeJianpu": "简谱 · 歌词",
       "backToAll": "诗歌",
       "chords": "和弦",
       "pinyin": "拼音",

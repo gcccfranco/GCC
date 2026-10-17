@@ -730,6 +730,12 @@ export interface SongViewProps {
   /** Dans une setlist : le titre mène à la page du chant, dans ses réglages
    *  (docs/spec-deux-volets.md, Q12). */
   titleHref?: LinkProps["href"];
+  /** Commande posée à droite des pastilles (page chant : le segment
+   *  « 简谱 · Paroles », chantier 简谱 L3-T3). */
+  bascule?: React.ReactNode;
+  /** Remplace le corps (sections) sous l'en-tête et le bandeau : le scan 简谱
+   *  garde ainsi l'en-tête du site au-dessus de lui (K3). */
+  corps?: React.ReactNode;
 }
 
 export function SongView({
@@ -747,6 +753,8 @@ export function SongView({
   layout = "played",
   bodyStructure = null,
   titleHref,
+  bascule,
+  corps,
 }: SongViewProps) {
   const { t } = useTranslation();
   const isZh = ast.metadata.language === "zh";
@@ -822,11 +830,14 @@ export function SongView({
       {/* Bandeau de structure (coup d'œil) : notes et transitions y passent
           dès que le corps ne les porte plus (sections uniques, structure seule,
           structure perso — même en ordre joué, défaut depuis le 20/09/2026). */}
-      <StructureStrip steps={steps} songKey={ast.metadata.key} details={layout !== "played" || personalSteps !== null} className="pt-2 pb-3" />
+      {/* Sur le scan (`corps`), le bandeau porte seul notes, transitions et nuances. */}
+      <StructureStrip steps={steps} songKey={ast.metadata.key} details={corps !== undefined || layout !== "played" || personalSteps !== null} className="pt-2 pb-3">
+        {bascule}
+      </StructureStrip>
 
       {/* Corps : ordre joué, ou chaque section une fois (les réglages
-          d'occurrence restent dans le bandeau), ou rien du tout. */}
-      <div>
+          d'occurrence restent dans le bandeau), ou rien du tout — ou le scan. */}
+      {corps ?? <div>
         {shown.map(({ step, uids, withDetails }, i) => {
           const { section } = step;
           // Modulation (升调) : la section s'affiche transposée dans sa tonalité cible.
@@ -853,7 +864,7 @@ export function SongView({
             </div>
           );
         })}
-      </div>
+      </div>}
     </div>
   );
 }

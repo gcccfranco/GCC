@@ -108,6 +108,8 @@
       "upcomingHelp": "Les mêmes que dans l'onglet Setlists : celles des services et des groupes où tu as un rôle."
     },
     "detail": {
+      "paroles": "Paroles",
+      "basculeJianpu": "简谱 · Paroles",
       "backToAll": "Retour",
       "chords": "Accords",
       "pinyin": "Pinyin",

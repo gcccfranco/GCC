@@ -68,13 +68,17 @@ async function scanCharge(page: Page) {
 }
 
 test.describe("page chant", () => {
-  const bouton谱 = (page: Page) => page.getByRole("button", { name: "简谱", exact: true });
+  // Le segment « 简谱 · Paroles » sous l'en-tête (L3-T3) remplace le bouton 谱 de la barre.
+  const bouton谱 = (page: Page) =>
+    page.getByRole("radiogroup", { name: "简谱 · Paroles" }).getByRole("radio", { name: "简谱" });
+  const boutonParoles = (page: Page) =>
+    page.getByRole("radiogroup", { name: "简谱 · Paroles" }).getByRole("radio", { name: "Paroles" });
 
   test("un chant à scan s'ouvre sur son scan, sans action ; un chant FR reste en paroles", async ({ page }) => {
     await page.goto(`/songs/${encodeURIComponent("一生爱你")}`);
     await scanCharge(page);
     await expect(page.locator("[data-copy-line]"), "aucune ligne de paroles").toHaveCount(0);
-    await expect(bouton谱(page)).toHaveAttribute("aria-pressed", "true");
+    await expect(bouton谱(page)).toHaveAttribute("aria-checked", "true");
     expect(await lirePref(page), "rien n'est écrit au chargement").toBeNull();
 
     await page.goto("/songs/abba-pere");
@@ -83,32 +87,35 @@ test.describe("page chant", () => {
     await expect(bouton谱(page)).toHaveCount(0);
   });
 
-  test("le bouton 谱 règle la préférence de l'appareil : paroles, retenues au rechargement, puis scan", async ({ page }) => {
+  test("le segment « 简谱 · Paroles » règle la préférence de l'appareil : paroles, retenues au rechargement, puis scan", async ({ page }) => {
     await page.goto(`/songs/${encodeURIComponent("一生爱你")}`);
     await scanCharge(page);
 
-    await bouton谱(page).click();
+    await boutonParoles(page).click();
     await expect(page.locator("[data-copy-line]").first()).toBeVisible();
     await expect(page.locator("[data-jianpu-page]")).toHaveCount(0);
-    await expect(bouton谱(page)).toHaveAttribute("aria-pressed", "false");
+    await expect(bouton谱(page)).toHaveAttribute("aria-checked", "false");
     expect(await lirePref(page)).toBe("never");
 
     await page.reload();
     await expect(page.locator("[data-copy-line]").first()).toBeVisible();
-    await expect(bouton谱(page)).toHaveAttribute("aria-pressed", "false");
+    await expect(bouton谱(page)).toHaveAttribute("aria-checked", "false");
     await expect(page.locator("[data-jianpu-page]")).toHaveCount(0);
 
     await bouton谱(page).click();
     await scanCharge(page);
-    await expect(bouton谱(page)).toHaveAttribute("aria-pressed", "true");
+    await expect(bouton谱(page)).toHaveAttribute("aria-checked", "true");
     expect(await lirePref(page)).toBe("always");
   });
 
   test("téléphone : en fin de défilement, la fin de la feuille reste au-dessus de la barre d'onglets (K2)", async ({ page }) => {
     test.skip(test.info().project.name !== "telephone", "la barre d'onglets du téléphone");
     await page.goto(`/songs/${encodeURIComponent("为我而来")}`);
-    await scanCharge(page);
+    // La page 2 est chargée en différé (`next/image`) : depuis que l'en-tête du site est
+    // au-dessus du scan (L3-T3), elle est plus loin ; on va jusqu'à elle avant d'attendre.
     await expect(page.locator("[data-jianpu-page]")).toHaveCount(2);
+    await page.locator("[data-jianpu-page]").last().scrollIntoViewIfNeeded();
+    await scanCharge(page);
     await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
     // Un léger retour vers le haut fait revenir la barre, comme au doigt.
     await page.waitForTimeout(300);

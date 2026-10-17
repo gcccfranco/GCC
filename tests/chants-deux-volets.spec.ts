@@ -278,9 +278,11 @@ test.describe("Chants en deux volets (ordinateur, tablette couchée)", () => {
   test("le chant ZH sur son scan, dans le volet, sans débordement", async ({ page }) => {
     await page.goto("/songs/一生爱你");
     await listePrete(page);
-    // Le scan s'affiche par défaut (lot 1 简谱 par défaut) : un clic sur « 简谱 » l'éteindrait.
-    const scan = droite(page).locator("img").first();
+    // Le scan s'affiche par défaut (lot 1 简谱 par défaut), sous l'en-tête du site (L3-T3).
+    const scan = droite(page).locator("[data-jianpu-page] img").first();
     await expect(scan).toBeVisible();
+    // L'en-tête du site reste au-dessus du scan (K3, L3-T3).
+    await expect(droite(page).getByRole("heading", { level: 1, name: "一生爱你" })).toBeVisible();
     const [s, d] = await Promise.all([scan.boundingBox(), droite(page).boundingBox()]);
     expect(s!.x).toBeGreaterThanOrEqual(d!.x);
     expect(s!.x + s!.width).toBeLessThanOrEqual(d!.x + d!.width + 1);

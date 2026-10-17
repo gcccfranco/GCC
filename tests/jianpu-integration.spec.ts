@@ -479,3 +479,76 @@ test("9 K4 : 为我而来 en C (tonalité gravée) — pas d'avertissement", asy
   await expect(page.locator('[data-jianpu-page="1"]')).toBeAttached();
   await expect(page.getByText(/les accords imprimés sont ceux d'origine/)).toHaveCount(0);
 });
+
+// ─── L3-T3 : la page chant — en-tête du site au-dessus du scan, segment « 简谱 · Paroles » ──
+
+test("7 page chant : en-tête du site au-dessus du scan, segment « 简谱 · Paroles » à droite des pastilles, plus de bouton 谱", async ({ page }) => {
+  await page.goto(`/songs/${encodeURIComponent(SLUG)}`);
+  await page.locator('[data-jianpu-page="0"] img').waitFor();
+  const titre = page.getByRole("heading", { level: 1, name: SLUG });
+  await expect(titre).toBeVisible();
+  const segment = page.getByRole("radiogroup", { name: "简谱 · Paroles" });
+  await expect(segment).toBeVisible();
+  await expect(segment.getByRole("radio", { name: "简谱" })).toHaveAttribute("aria-checked", "true");
+  await expect(segment.getByRole("radio", { name: "Paroles" })).toHaveAttribute("aria-checked", "false");
+  await expect(page.getByTestId("barre-outils").getByRole("button", { name: "简谱" })).toHaveCount(0);
+
+  // Ordre : titre, pastilles et segment, puis le scan ; le segment est sur la rangée des pastilles ou dessous, calé à droite.
+  const [h1, seg, pastilles, fenetre] = await Promise.all([
+    titre.boundingBox(),
+    segment.boundingBox(),
+    page.getByRole("list", { name: "Structure" }).boundingBox(),
+    page.locator("[data-jianpu-fenetre]").first().boundingBox(),
+  ]);
+  expect(h1!.y + h1!.height).toBeLessThanOrEqual(pastilles!.y);
+  expect(seg!.y).toBeGreaterThanOrEqual(pastilles!.y - 1);
+  expect(seg!.y + seg!.height).toBeLessThanOrEqual(fenetre!.y);
+  expect(Math.round(seg!.height), "32 px").toBe(32);
+  const bordDroit = await titre.evaluate((h) => h.closest(".max-w-2xl")!.getBoundingClientRect().right);
+  expect(Math.abs(seg!.x + seg!.width - bordDroit), "calé à droite").toBeLessThan(1);
+  // Piste --secondary, segment actif à l'encre.
+  const couleurs = await segment.evaluate((g) => {
+    const ref = (v: string) => {
+      const i = document.createElement("i");
+      i.style.color = v;
+      document.body.append(i);
+      const c = getComputedStyle(i).color;
+      i.remove();
+      return c;
+    };
+    const actif = g.querySelector('[aria-checked="true"]')!;
+    return { piste: getComputedStyle(g).backgroundColor, actif: getComputedStyle(actif).backgroundColor, secondaire: ref("hsl(var(--secondary))"), encre: ref("hsl(var(--jianpu-encre))") };
+  });
+  expect(couleurs.piste).toBe(couleurs.secondaire);
+  expect(couleurs.actif).toBe(couleurs.encre);
+});
+
+test("7 page chant : « Paroles » garde l'en-tête et règle la préférence de l'appareil, « 简谱 » ramène le scan", async ({ page }) => {
+  await page.goto(`/songs/${encodeURIComponent(SLUG)}`);
+  await page.locator('[data-jianpu-page="0"] img').waitFor();
+  const segment = page.getByRole("radiogroup", { name: "简谱 · Paroles" });
+  await segment.getByRole("radio", { name: "Paroles" }).click();
+  await expect(page.locator("[data-copy-line]").first()).toBeVisible();
+  await expect(page.locator("[data-jianpu-page]")).toHaveCount(0);
+  await expect(page.getByRole("heading", { level: 1, name: SLUG })).toBeVisible();
+  await expect(segment.getByRole("radio", { name: "Paroles" })).toHaveAttribute("aria-checked", "true");
+  expect(await page.evaluate(() => localStorage.getItem("jianpu-sheet-pref"))).toBe("never");
+  await page.reload();
+  await expect(page.locator("[data-copy-line]").first()).toBeVisible();
+  await segment.getByRole("radio", { name: "简谱" }).click();
+  await page.locator('[data-jianpu-page="0"] img').waitFor();
+  expect(await page.evaluate(() => localStorage.getItem("jianpu-sheet-pref"))).toBe("always");
+});
+
+test("7 page chant : un chant sans scan n'a pas de segment", async ({ page }) => {
+  await page.goto("/songs/abba-pere");
+  await expect(page.locator("[data-copy-line]").first()).toBeVisible();
+  await expect(page.getByRole("radiogroup", { name: "简谱 · Paroles" })).toHaveCount(0);
+});
+
+test("7 page chant : sur le scan, les notes venues de la setlist passent dans le bandeau", async ({ page }) => {
+  const notes = encodeURIComponent(JSON.stringify({ "chorus-3": "Ralentir la dernière ligne" }));
+  await page.goto(`/songs/${encodeURIComponent(SLUG)}?sectionNotes=${notes}`);
+  await page.locator('[data-jianpu-page="0"] img').waitFor();
+  await expect(page.getByText("Ralentir la dernière ligne")).toBeVisible();
+});
