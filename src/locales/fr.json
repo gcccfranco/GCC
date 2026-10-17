@@ -2829,6 +2829,15 @@
       "titre": "Relier « {{nom}} » à un compte",
       "sousTitre": "dans tous ses rôles du {{groupe}}"
     },
+    "choisir": {
+      "titulaires": "Titulaires du rôle {{role}}",
+      "libre": "Libre",
+      "deja": "Déjà le {{dates}}",
+      "voirGroupe": "Voir tout le groupe ({{n}})",
+      "groupe": "Le groupe",
+      "aucunRole": "Aucun rôle",
+      "reliee": "Reliée au rôle {{role}}"
+    },
     "app": {
       "toi": "toi",
       "sousTitre": "Organigrammes de l'église et des groupes",

@@ -210,3 +210,36 @@ test("App › Équipes : l'église garde son bandeau, le sélecteur à gauche et
   await verifierSansDebordement(page);
   await capture(page, "app-eglise");
 });
+
+// ─── OG-F : « Choisir » relié à un rôle ──────────────────────────────────────
+
+test("Planning Paix : « Choisir » relié au rôle (menu contre la case en grand, feuille sinon), groupe déplié, sans débordement", async ({ page }) => {
+  await page.clock.setFixedTime(new Date("2026-11-15T10:00:00"));
+  await page.route(/docs\.google\.com\/spreadsheets/, (route) => route.fulfill({ status: 200, contentType: "text/csv", body: "" }));
+  const compte = (uid: string, prenom: string, nom: string, o: Record<string, unknown> = {}) =>
+    [`users/${uid}`, { email: `${uid}@example.com`, firstName: prenom, lastName: nom, planningName: `${prenom} ${nom}`, serviceRoles: {}, groupe: "paix", ...o }] as const;
+  const ruth = { uid: "ruth", email: "ruth@example.com", firstName: "Ruth", lastName: "K.", planningName: "Ruth K.", groupe: "paix", remplitParRole: ["paix"], referentDe: ["comite-paix"] };
+  await signInAs(page, { ...ruth }, {
+    ...Object.fromEntries([compte("joel", "Joël", "F."), compte("hugo", "Hugo", "L."), compte("sam", "Sam", "R."), compte("lea", "Léa", "M.")]),
+    "groupes/paix": PAIX,
+    "plannings/paix/dimanches/2027-01-10": { date: "2027-01-10", musiciens: "Joël F." },
+  }, "/back-office/planning/groupes");
+  await page.getByRole("tab", { name: "2027", exact: true }).click();
+  const caseVide = page.locator('[data-case="2027-01-17|musiciens"]').filter({ visible: true });
+  await caseVide.getByRole("button").first().click();
+  const liste = page.getByRole("listbox", { name: /^Titulaires du rôle/ });
+  await expect(liste).toBeVisible();
+  await page.getByRole("button", { name: /^Voir tout le groupe/ }).click();
+  await expect(page.getByRole("option").first()).toBeVisible();
+  const boite = (await page.getByRole("combobox").evaluate((e) => {
+    const m = e.closest("[role=dialog]") as HTMLElement;
+    const r = m.getBoundingClientRect();
+    return { x: r.x, y: r.y, w: r.width, h: r.height, sw: m.scrollWidth - m.clientWidth };
+  }));
+  const vp = page.viewportSize()!;
+  expect(boite.x, "dans l'écran, à gauche").toBeGreaterThanOrEqual(0);
+  expect(boite.x + boite.w, "dans l'écran, à droite").toBeLessThanOrEqual(vp.width + 1);
+  expect(boite.y, "dans l'écran, en haut").toBeGreaterThanOrEqual(-1);
+  expect(boite.sw, "sans débordement horizontal").toBeLessThanOrEqual(1);
+  await capture(page, "choisir-relie");
+});

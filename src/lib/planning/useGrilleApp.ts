@@ -5,6 +5,11 @@ import { fetchCasesEcrites, fetchGrille } from "./grille"
 import { lireAnnonces } from "./releases"
 import type { EtatAnnonce } from "./prevenir"
 import { listProfiles } from "@/lib/firebase/users"
+import { listGroupes } from "@/lib/firebase/groupes"
+import { groupeDe } from "@/lib/groupes/organigramme"
+import { TABLE_GROUPES } from "@/lib/groupes/table"
+import { BACK_OFFICE } from "@/lib/backOffice"
+import type { OrganigrammeGroupe } from "@/types/groupe"
 import type { CompteDuPlanning } from "./choisir"
 
 /**
@@ -16,10 +21,14 @@ import type { CompteDuPlanning } from "./choisir"
  * sans remplir). `ecrites` : les cases présentes dans les documents de l'app, `date|clé`.
  * Même code pour les onze grilles (19/09/2026).
  */
-export function useGrilleApp(key: string, avecComptes: boolean) {
+export function useGrilleApp(key: string, avecComptes: boolean, avecGroupe = false) {
   const [datesDansLApp, setDatesDansLApp] = useState<string[]>([])
   const [ecrites, setEcrites] = useState<ReadonlySet<string>>(new Set())
   const [comptes, setComptes] = useState<CompteDuPlanning[]>([])
+  const [comptesLus, setComptesLus] = useState(false)
+  // Lot 2 (OG-F) : l'organigramme du groupe dont c'est le planning, au Back-Office seulement (OG27) ;
+  // sans lui, « Choisir » ne change pas (OG30).
+  const [groupe, setGroupe] = useState<OrganigrammeGroupe | undefined>(undefined)
 
   useEffect(() => {
     let vivant = true
@@ -33,13 +42,26 @@ export function useGrilleApp(key: string, avecComptes: boolean) {
     let vivant = true
     listProfiles()
       .then((ps) => {
-        if (vivant) setComptes(ps.map((p) => ({ nom: p.planningName, prenom: p.firstName, nomDeFamille: p.lastName, serviceRoles: p.serviceRoles })))
+        if (vivant) setComptesLus(true)
+        if (vivant) setComptes(ps.map((p) => ({ nom: p.planningName, prenom: p.firstName, nomDeFamille: p.lastName, serviceRoles: p.serviceRoles, uid: p.uid, groupe: groupeDe(p) })))
       })
       .catch(() => { /* comptes en moins, nom écrit à la main inchangé */ })
     return () => { vivant = false }
   }, [avecComptes])
 
-  return { datesDansLApp, comptes, ecrites }
+  useEffect(() => {
+    setGroupe(undefined)
+    const def = TABLE_GROUPES.find((g) => g.planning === key)
+    if (!BACK_OFFICE || !avecGroupe || !def) return
+    let vivant = true
+    listGroupes()
+      .then((l) => { if (vivant) setGroupe(l.find((x) => x.groupe.id === def.id)?.groupe) })
+      .catch(() => { /* sans l'organigramme, « Choisir » reste celui d'avant */ })
+    return () => { vivant = false }
+  }, [key, avecGroupe])
+
+  // Sans les comptes, les titulaires avec compte manqueraient : « Choisir » reste celui d'avant.
+  return { datesDansLApp, comptes, ecrites, groupe: comptesLus ? groupe : undefined }
 }
 
 /**

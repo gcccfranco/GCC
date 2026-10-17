@@ -12,7 +12,11 @@ import { ecrireCases, retirerDate } from "@/lib/firebase/planningGrille"
 import { getHistoriqueGrille, noterChangements, type EntreeGrille } from "@/lib/firebase/planningHistorique"
 import { historyAuthor } from "@/lib/firebase/setlistHistory"
 import { useProfile } from "@/lib/firebase/users"
-import { colonneDePersonnes, propositions, type CompteDuPlanning } from "@/lib/planning/choisir"
+import { colonneDePersonnes, propositions, propositionsReliees, type CompteDuPlanning } from "@/lib/planning/choisir"
+import { roleDeColonne } from "@/lib/groupes/organigramme"
+import { groupeDef } from "@/lib/groupes/table"
+import type { OrganigrammeGroupe } from "@/types/groupe"
+import { Link2 } from "lucide-react"
 import { normalizeName, splitNames } from "@/lib/planning/names"
 import { canRetirerDate } from "@/lib/access"
 import { ExportModele, type ExportPlanning } from "./ExportModele"
@@ -48,6 +52,8 @@ export interface PlanningGrilleProps {
   datesDansLApp: readonly string[]
   /** Les comptes, pour « Choisir » (lot U2, P9 ; remplace l'autocomplétion D12). */
   comptes: readonly CompteDuPlanning[]
+  /** Lot 2 (OG-F) : l'organigramme du groupe dont c'est le planning (page des groupes, Back-Office) : « Choisir » propose d'abord les titulaires du rôle relié à la colonne (OG29), et l'en-tête d'une colonne reliée porte l'icône de lien (OG31). */
+  groupe?: OrganigrammeGroupe
   /** Badge optionnel à côté de la date (Sainte Cène), comme PlanningTable. */
   dateBadge?: (row: string[], allRows: string[][]) => ReactNode
   /** Période affichée (le trimestre choisi par la page), reprise par l'export. */
@@ -104,6 +110,7 @@ export function PlanningGrille({
   peutModifier,
   datesDansLApp,
   comptes,
+  groupe,
   dateBadge,
   periode,
   filtre,
@@ -838,6 +845,7 @@ export function PlanningGrille({
               )
             },
           } : undefined}
+          reliees={groupe ? (recherche) => propositionsReliees(definition, choix?.c.cle ?? "", groupe, comptes, dansLaFenetre.map(ligneAffichee), recherche) : undefined}
           proposer={(recherche) => propositions(definition, choix?.c.cle ?? "", comptes, lignes.map((l) => l.row), recherche)}
           onEcrire={(nom) => {
             if (!choix) return
@@ -863,6 +871,13 @@ export function PlanningGrille({
               {colonnes.map((c) => (
                 <th key={c.cle} className="px-3 py-2.5 text-left text-[11px] font-semibold whitespace-nowrap" style={app ? undefined : { background: couleur }}>
                   {t(c.i18n)}
+                  {!app && groupe && groupeDef(groupe.id)?.planning === definition.key && roleDeColonne(groupe, c.cle) && (
+                    <Link2
+                      role="img"
+                      aria-label={t("groupes.choisir.reliee", { role: (i18n.language === "zh-CN" && roleDeColonne(groupe, c.cle)!.nomZh) || roleDeColonne(groupe, c.cle)!.nom })}
+                      className="ml-1 inline h-3 w-3 align-[-1px] opacity-80"
+                    />
+                  )}
                 </th>
               ))}
             </tr>

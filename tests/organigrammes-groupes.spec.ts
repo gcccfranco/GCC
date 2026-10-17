@@ -10,7 +10,7 @@ import {
   changerPlafondVp, colonnesProposees, colonnesReliables, estDuGroupe, groupeDe, lireChampsGroupe,
   lireGroupe, membresComite, placesVp, placesVpLibres, recopieDeGroupe, relierACompte, roleDeColonne,
 } from "../src/lib/groupes/organigramme";
-import { propositions, propositionsReliees, type CompteDuPlanning } from "../src/lib/planning/choisir";
+import { datesCourtes, propositions, propositionsReliees, type CompteDuPlanning } from "../src/lib/planning/choisir";
 import { GRILLE_BONTE, GRILLE_CULTE, GRILLE_PAIX } from "../src/lib/planning/grilles";
 import { readFileSync } from "node:fs";
 import {
@@ -1454,5 +1454,133 @@ test.describe("OG-E · App › Équipes", () => {
     await expect(page.locator("header[data-entete-page]")).toContainText("教会及各团契的组织架构");
     await expect(page.locator("[data-moi-bandeau]")).toContainText("你");
     await expect(page.locator("[data-moi-bandeau]")).toContainText("我的服事");
+  });
+});
+
+test.describe("OG-F · « Choisir » relié aux rôles", () => {
+  const compte = (uid: string, prenom: string, nom: string, o: Partial<FakeProfile> = {}): FakeProfile =>
+    ({ uid, email: `${uid}@example.com`, firstName: prenom, lastName: nom, planningName: `${prenom} ${nom}`, serviceRoles: {}, ...o });
+  const RUTH = compte("ruth", "Ruth", "K.", { groupe: "paix", remplitParRole: ["paix"], publieParRole: ["paix"], referentDe: ["comite-paix"], dansEquipes: ["comite-paix"] });
+  const COMPTES: FakeProfile[] = [
+    RUTH, compte("joel", "Joël", "F.", { groupe: "paix" }), compte("hugo", "Hugo", "L.", { groupe: "paix" }),
+    compte("sam", "Sam", "R.", { groupe: "paix" }), compte("lea", "Léa", "M.", { groupe: "paix" }),
+    compte("zoe", "Zoé", "Q.", { groupe: "bonte" }),
+  ];
+  const GROUPE: OrganigrammeGroupe = {
+    id: "paix", president: t("Ruth K.", "ruth"), vp: [t("Léa M.", "lea")],
+    roles: [
+      role("r-mus", "Musiciens", { nomZh: "司琴", colonne: "musiciens", titulaires: [t("Joël F.", "joel"), t("Hugo L.", "hugo"), t("Ma Lin")] }),
+      role("r-plan", "Planning", { titulaires: [t("Sam R.", "sam")] }),
+    ],
+    updatedAt: "", parUid: "", parNom: "",
+  };
+  // Joël joue les 10 et 24/1 ; la case du 17/1 est vide.
+  const DOCS = (groupe: boolean = true) => ({
+    ...Object.fromEntries(COMPTES.map(({ uid, ...p }) => [`users/${uid}`, p as Record<string, unknown>])),
+    ...(groupe ? { "groupes/paix": docGroupe(GROUPE) } : {}),
+    "plannings/paix/dimanches/2027-01-10": { date: "2027-01-10", musiciens: "Joël F.", orateur: "Eva N." },
+    "plannings/paix/dimanches/2027-01-24": { date: "2027-01-24", musiciens: "Joël F." },
+  });
+  async function ouvrir(page: Page, d = DOCS()) {
+    await page.clock.setFixedTime(new Date("2026-11-15T10:00:00"));
+    await page.route(/docs\.google\.com\/spreadsheets/, (route) => route.fulfill({ status: 200, contentType: "text/csv", body: "" }));
+    const db = await signInAs(page, RUTH, d, "/back-office/planning/groupes");
+    await page.getByRole("tab", { name: "2027", exact: true }).click();
+    await expect(page.locator("[data-date-cell='2027-01-17'], [data-date-carte='2027-01-17']").filter({ visible: true })).toHaveCount(1);
+    return db;
+  }
+  const laCase = (page: Page, date: string, colonne: string) => page.locator(`[data-case="${date}|${colonne}"]`).filter({ visible: true });
+  const choisir = (page: Page, date: string, colonne: string) => laCase(page, date, colonne).getByRole("button").first().click();
+  const liste = (page: Page) => page.getByRole("listbox", { name: "Titulaires du rôle Musiciens" });
+
+  test("datesCourtes : « 4 et le 11/10 » ; des mois différents se séparent ; trois dates", () => {
+    expect(datesCourtes(["2026-10-11", "2026-10-04"])).toBe("4 et le 11/10");
+    expect(datesCourtes(["2027-01-10"])).toBe("10/1");
+    expect(datesCourtes(["2026-09-28", "2026-10-05"])).toBe("28/9 et le 5/10");
+    expect(datesCourtes(["2026-10-04", "2026-10-11", "2026-10-18"])).toBe("4, le 11 et le 18/10");
+    expect(datesCourtes(["2026-09-27", "2026-10-04", "2026-10-11"])).toBe("27/9, le 4 et le 11/10");
+    expect(datesCourtes(["2026-10-04", "2026-10-11"], "zh-CN")).toBe("4和11/10");
+  });
+
+  test("case Musiciens : titulaires du rôle (Libre / Déjà le … / sans compte), groupe replié, « Écrire un nom sans compte… » en bas", async ({ page }) => {
+    await ouvrir(page);
+    await choisir(page, "2027-01-17", "musiciens");
+    await expect(liste(page).getByRole("option")).toHaveText([/^Joël F\.\s*Déjà le 10 et le 24\/1$/, /^Hugo L\.\s*Libre$/, /^Ma Lin\s*sans compte\s*Libre$/]);
+    const bascule = page.getByRole("button", { name: /^Voir tout le groupe \(\d+\)$/ });
+    await expect(bascule).toHaveAttribute("aria-expanded", "false");
+    await expect(page.getByRole("option", { name: /Sam R\./ })).toHaveCount(0);
+    await bascule.click();
+    await expect(page.getByRole("option", { name: /Sam R\./ })).toContainText("Planning");
+    await expect(page.getByRole("option", { name: /Léa M\./ })).toContainText("Vice-président");
+    await expect(page.getByRole("option", { name: /Ruth K\./ })).toContainText("Président");
+    // Un compte d'ailleurs : par la recherche seulement.
+    await expect(page.getByRole("option", { name: /Zoé Q\./ })).toHaveCount(0);
+    const boutons = await page.getByRole("button").evaluateAll((els) => els.map((e) => e.textContent ?? ""));
+    expect(boutons.findIndex((b) => b.includes("Voir tout le groupe"))).toBeLessThan(boutons.findIndex((b) => b.includes("Écrire un nom sans compte")));
+  });
+
+  test("choisir un titulaire écrit son nom de planning dans la case", async ({ page }) => {
+    const db = await ouvrir(page);
+    await choisir(page, "2027-01-17", "musiciens");
+    await liste(page).getByRole("option", { name: /Hugo L\./ }).click();
+    await expect.poll(() => db.writes.some((w) => w.path === "plannings/paix/dimanches/2027-01-17" && w.data.musiciens === "Hugo L.")).toBe(true);
+  });
+
+  test("la recherche déplie le groupe et trouve, après lui, les comptes d'ailleurs", async ({ page }) => {
+    await ouvrir(page);
+    await choisir(page, "2027-01-17", "musiciens");
+    await page.getByRole("combobox").fill("Zo");
+    await expect(page.getByRole("option", { name: /Zoé Q\./ })).toBeVisible();
+    await expect(page.getByRole("option", { name: /Hugo L\./ })).toHaveCount(0);
+    await page.getByRole("combobox").fill("Sam");
+    await expect(page.getByRole("option", { name: /Sam R\./ })).toContainText("Planning");
+  });
+
+  test("« Remplir vers le bas » entre « Voir tout le groupe » (replié, puis déplié) et « Écrire un nom sans compte… »", async ({ page }) => {
+    await ouvrir(page);
+    await choisir(page, "2027-01-24", "musiciens");
+    const ordre = async () => (await page.getByRole("button").evaluateAll((els) => els.map((e) => e.textContent ?? "")));
+    for (const deplie of [false, true]) {
+      if (deplie) await page.getByRole("button", { name: /^Voir tout le groupe/ }).click();
+      const b = await ordre();
+      const iGroupe = b.findIndex((x) => x.includes("Voir tout le groupe"));
+      const iRemplir = b.findIndex((x) => x.includes("Remplir vers le bas"));
+      const iSansCompte = b.findIndex((x) => x.includes("Écrire un nom sans compte"));
+      expect(iGroupe).toBeGreaterThan(-1);
+      expect(iRemplir).toBeGreaterThan(iGroupe);
+      expect(iRemplir).toBeLessThan(iSansCompte);
+    }
+  });
+
+  test("colonne non reliée, ou aucun organigramme : « Choisir » d'avant", async ({ page, browser }) => {
+    await ouvrir(page);
+    await choisir(page, "2027-01-17", "orateur");
+    await expect(page.getByText("Titulaires du rôle")).toHaveCount(0);
+    await expect(page.getByRole("button", { name: /Voir tout le groupe/ })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: /Écrire un nom sans compte/ })).toBeVisible();
+    const autre = await (await browser.newContext()).newPage();
+    await ouvrir(autre, DOCS(false));
+    await choisir(autre, "2027-01-17", "musiciens");
+    await expect(autre.getByText("Titulaires du rôle")).toHaveCount(0);
+    await expect(autre.getByRole("option", { name: /Hugo L\./ })).toBeVisible();
+  });
+
+  test("un titulaire placé chaque dimanche : la ligne « Déjà le … » ne fait pas déborder le menu", async ({ page }) => {
+    const dimanches = ["03", "10", "17", "24", "31"].map((j) => `2027-01-${j}`).concat(["07", "14", "21", "28"].map((j) => `2027-02-${j}`), ["07", "14", "21", "28"].map((j) => `2027-03-${j}`));
+    const d = { ...DOCS(), ...Object.fromEntries(dimanches.map((j) => [`plannings/paix/dimanches/${j}`, { date: j, musiciens: "Joël F." }])) };
+    await ouvrir(page, d);
+    await page.locator('[data-case="2027-01-17|musiciens"]').filter({ visible: true }).getByRole("button").first().click();
+    const option = liste(page).getByRole("option", { name: /Joël F\./ });
+    await expect(option).toContainText("Déjà le");
+    const sw = await option.evaluate((e) => { const c = e.closest("div.overflow-y-auto") as HTMLElement; return c.scrollWidth - c.clientWidth; });
+    expect(sw, "le conteneur qui défile ne déborde pas en largeur").toBeLessThanOrEqual(1);
+  });
+
+  test("l'en-tête d'une colonne reliée porte l'icône de lien (Back-Office, hors téléphone)", async ({ page }, info) => {
+    test.skip(info.project.name === "telephone", "le tableau n'existe pas sur téléphone (cartes)");
+    await ouvrir(page);
+    const tete = page.getByTestId("grille-colonnes").filter({ visible: true });
+    await expect(tete.getByRole("img", { name: "Reliée au rôle Musiciens" })).toBeVisible();
+    await expect(tete.getByRole("img", { name: /^Reliée au rôle/ })).toHaveCount(1);
   });
 });

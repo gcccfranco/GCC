@@ -7,7 +7,7 @@ import { useTranslation } from "react-i18next"
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer"
 import { Button } from "@/components/ui/button"
 import { useStandaloneScrollLock } from "@/hooks/useStandaloneScrollLock"
-import type { Proposition } from "@/lib/planning/choisir"
+import { datesCourtes, type Proposition, type PropositionsReliees } from "@/lib/planning/choisir"
 
 // « Choisir » une personne dans une case (lot U2, P9, docs/spec-planning-2027.md,
 // question 5 ; planche bo-planning-2027) : une recherche, les comptes qui ont le
@@ -36,7 +36,7 @@ export const useOrdinateur = () =>
   useSyncExternalStore(suivreLargeur, () => window.matchMedia(LARGE).matches, () => false)
 
 const LARGEUR_MENU = 264
-const HAUTEUR_MENU = 380
+const HAUTEUR_MENU = 440
 
 /** « Remplir vers le bas » (lot 3, PG18 à PG20) : absent, l'entrée n'est pas offerte. */
 export type RemplirVersLeBas = {
@@ -53,6 +53,7 @@ export function ChoisirNom({
   proposer,
   onEcrire,
   remplir,
+  reliees,
 }: {
   ouverture: OuvertureChoix | null
   onFermer: () => void
@@ -60,11 +61,13 @@ export function ChoisirNom({
   /** Le nom à écrire dans la case ("" : la vider). */
   onEcrire: (nom: string) => void
   remplir?: RemplirVersLeBas
+  /** Lot 2 (OG29) : les titulaires du rôle relié à la colonne, le groupe replié, la recherche ; `null` (ou absent) = « Choisir » d'avant. */
+  reliees?: (recherche: string) => PropositionsReliees | null
 }) {
   const ordinateur = useOrdinateur()
   useStandaloneScrollLock(!!ouverture && !ordinateur)
   const changer = (ouvert: boolean) => { if (!ouvert) onFermer() }
-  const menu = ouverture && <Menu key={ouverture.titre} ouverture={ouverture} proposer={proposer} onEcrire={onEcrire} remplir={remplir} />
+  const menu = ouverture && <Menu key={ouverture.titre} ouverture={ouverture} proposer={proposer} onEcrire={onEcrire} remplir={remplir} reliees={reliees} />
 
   if (ordinateur) {
     const a = ouverture?.ancre
@@ -109,19 +112,33 @@ function Menu({
   proposer,
   onEcrire,
   remplir,
+  reliees,
 }: {
   ouverture: OuvertureChoix
   proposer: (recherche: string) => Proposition[]
   onEcrire: (nom: string) => void
   remplir?: RemplirVersLeBas
+  reliees?: (recherche: string) => PropositionsReliees | null
 }) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
+  const zh = i18n.language === "zh-CN"
   const id = useId()
   const [recherche, setRecherche] = useState("")
   const [actif, setActif] = useState(0)
   const [saisie, setSaisie] = useState<string | null>(null)
-  const noms = proposer(recherche)
-  const deuxGroupes = noms.some((p) => p.duRole) && noms.some((p) => !p.duRole)
+  const [groupeOuvert, setGroupeOuvert] = useState(false)
+  const rel = reliees?.(recherche) ?? null
+  const cherche = recherche.trim() !== ""
+  // Une recherche déplie le groupe : ce qu'elle trouve se voit (OG29).
+  const voirGroupe = groupeOuvert || cherche
+  const noms: Proposition[] = rel
+    ? [
+        ...rel.titulaires.map((x) => ({ nom: x.nom, duRole: true })),
+        ...(voirGroupe ? rel.groupe.map((x) => ({ nom: x.nom, duRole: false })) : []),
+        ...rel.autres,
+      ]
+    : proposer(recherche)
+  const deuxGroupes = !rel && noms.some((p) => p.duRole) && noms.some((p) => !p.duRole)
 
   // « Écrire un nom sans compte… » : le champ reprend la recherche, ou la case.
   const ecrireALaMain = () => setSaisie(recherche.trim() || ouverture.valeur)
@@ -145,8 +162,9 @@ function Menu({
     )
   }
 
-  const option = (p: Proposition, i: number) => (
+  const option = (p: Proposition, i: number, sous?: string, sansCompte?: boolean) => (
     <li
+      key={`${id}-${i}`}
       id={`${id}-${i}`}
       role="option"
       aria-selected={i === actif}
@@ -158,8 +176,12 @@ function Menu({
         i === actif ? "bg-secondary" : ""
       }`}
     >
-      <span className="min-w-0 truncate">{p.nom}</span>
-      {p.duRole && <span className="shrink-0 text-xs text-muted-foreground">{ouverture.libelle}</span>}
+      <span className="min-w-[4rem] shrink-0 truncate">
+        {p.nom}
+        {sansCompte && <span className="ml-1.5 text-[11px] text-muted-foreground">{t("groupes.sansCompte")}</span>}
+      </span>
+      {sous !== undefined ? <span title={sous} className="min-w-0 max-w-[55%] truncate text-xs text-muted-foreground">{sous}</span>
+        : p.duRole && <span className="shrink-0 text-xs text-muted-foreground">{ouverture.libelle}</span>}
     </li>
   )
   const entete = (cle: string) => (
@@ -178,7 +200,7 @@ function Menu({
           role="combobox"
           aria-expanded
           aria-autocomplete="list"
-          aria-controls={`${id}-liste`}
+          aria-controls={rel && voirGroupe && (rel.groupe.length > 0 || rel.autres.length > 0) ? `${id}-liste ${id}-liste2` : `${id}-liste`}
           aria-activedescendant={noms.length ? `${id}-${actif}` : undefined}
           aria-label={t("planning.choisir.chercher")}
           placeholder={t("planning.choisir.chercher")}
@@ -196,6 +218,46 @@ function Menu({
           className="h-10 w-full rounded-full bg-secondary pl-8 pr-3 text-[16px] sm:text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus-visible:ring-1 focus-visible:ring-ring/30"
         />
       </div>
+      {rel ? (
+        <div className="mt-1 max-h-[40vh] overflow-y-auto overscroll-contain lg:max-h-60">
+          <ul id={`${id}-liste`} role="listbox" aria-label={t("groupes.choisir.titulaires", { role: (zh && rel.role.nomZh) || rel.role.nom })}>
+            {rel.titulaires.length > 0 && (
+              <li role="presentation" className="px-2.5 pb-1 pt-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                {t("groupes.choisir.titulaires", { role: (zh && rel.role.nomZh) || rel.role.nom })}
+              </li>
+            )}
+            {rel.titulaires.map((x, i) => option(
+              { nom: x.nom, duRole: true }, i,
+              x.deja.length ? t("groupes.choisir.deja", { dates: datesCourtes(x.deja, i18n.language) }) : t("groupes.choisir.libre"),
+              x.sansCompte,
+            ))}
+          </ul>
+          {!cherche && rel.groupe.length > 0 && (
+            <button
+              type="button"
+              aria-expanded={groupeOuvert}
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => { setGroupeOuvert((o) => !o); setActif(0) }}
+              className="flex min-h-10 w-full items-center rounded-lg px-2.5 py-2 text-left text-[15px] sm:text-sm font-medium text-foreground hover:bg-secondary"
+            >
+              {t("groupes.choisir.voirGroupe", { n: rel.groupe.length })}
+            </button>
+          )}
+          {voirGroupe && (rel.groupe.length > 0 || rel.autres.length > 0) && (
+            <ul id={`${id}-liste2`} role="listbox" aria-label={t("groupes.choisir.groupe")}>
+              {rel.groupe.map((m, k) => option(
+                { nom: m.nom, duRole: false }, rel.titulaires.length + k,
+                m.roles.length
+                  ? m.roles.map((r) => (r.fixe === "president" ? t("groupes.enTete.president") : r.fixe === "vp" ? t("groupes.enTete.vicePresident") : (zh && r.nomZh) || r.nom)).join(", ")
+                  : t("groupes.choisir.aucunRole"),
+                m.sansCompte,
+              ))}
+              {rel.autres.length > 0 && entete("planning.choisir.autres")}
+              {rel.autres.map((p, k) => option({ nom: p.nom, duRole: false }, rel.titulaires.length + rel.groupe.length + k))}
+            </ul>
+          )}
+        </div>
+      ) : (
       <ul
         id={`${id}-liste`}
         role="listbox"
@@ -210,6 +272,7 @@ function Menu({
           </Fragment>
         ))}
       </ul>
+      )}
       {remplir && (
         <button
           type="button"

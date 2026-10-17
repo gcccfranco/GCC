@@ -2793,6 +2793,15 @@
       "titre": "将“{{nom}}”关联到账号",
       "sousTitre": "涵盖其在{{groupe}}的所有岗位"
     },
+    "choisir": {
+      "titulaires": "{{role}}的担任者",
+      "libre": "有空",
+      "deja": "已排 {{dates}}",
+      "voirGroupe": "查看全部团契成员（{{n}}）",
+      "groupe": "团契成员",
+      "aucunRole": "无岗位",
+      "reliee": "已关联岗位{{role}}"
+    },
     "app": {
       "toi": "你",
       "sousTitre": "教会及各团契的组织架构",

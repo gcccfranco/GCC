@@ -230,3 +230,17 @@ export function propositionsReliees(
 
   return { role: { id: role.id, nom: role.nom, nomZh: role.nomZh }, titulaires, groupe: membres, autres }
 }
+
+/**
+ * « 4 et le 11/10 » : les dimanches (AAAA-MM-JJ) d'une indication « Déjà le … » (OG29). Les jours d'un
+ * même mois se suivent avant le mois (« 4 et le 11/10 ») ; des mois différents se séparent (« 28/9 et le
+ * 5/10 »). Le « le » est français ; ailleurs la liste suit la langue (`Intl.ListFormat`).
+ */
+export function datesCourtes(isos: readonly string[], langue = "fr"): string {
+  const tries = [...isos].sort().map((iso) => { const [, m, j] = iso.split("-"); return { m: String(Number(m)), j: String(Number(j)) } })
+  // Le mois s'accole au dernier jour de chaque mois : « 27/9, le 4 et le 11/10 ».
+  const elements = tries.map((d, i) => (tries[i + 1]?.m === d.m ? d.j : `${d.j}/${d.m}`))
+  if (!langue.startsWith("fr")) return new Intl.ListFormat(langue, { style: "long", type: "conjunction" }).format(elements)
+  const avecLe = elements.map((x, i) => (i ? `le ${x}` : x))
+  return avecLe.length <= 2 ? avecLe.join(" et ") : `${avecLe.slice(0, -1).join(", ")} et ${avecLe[avecLe.length - 1]}`
+}
