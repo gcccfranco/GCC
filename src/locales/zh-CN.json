@@ -2793,6 +2793,13 @@
       "titre": "将“{{nom}}”关联到账号",
       "sousTitre": "涵盖其在{{groupe}}的所有岗位"
     },
+    "app": {
+      "toi": "你",
+      "sousTitre": "教会及各团契的组织架构",
+      "toiDans": "你在{{groupe}}。你会收到团契的通知。",
+      "toiDansRoles": "你在{{groupe}}：{{roles}}。你会收到团契的通知；你的日期在<lien>“我的服事”</lien>中。",
+      "toiRoles": "你：{{roles}}。你的日期在<lien>“我的服事”</lien>中。"
+    },
     "personnes": {
       "groupesSansGroupe_one": "5 个团契 · {{count}} 人无团契",
       "groupesSansGroupe_other": "5 个团契 · {{count}} 人无团契",

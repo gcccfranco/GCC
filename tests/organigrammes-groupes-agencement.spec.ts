@@ -177,3 +177,36 @@ test("Planning › Sans compte : le bloc des titulaires sans compte sans débord
   await verifierSansDebordement(page);
   await capture(page, "sans-compte");
 });
+
+// ─── OG-E : App › Équipes ────────────────────────────────────────────────────
+
+test("App › Équipes : un groupe en lecture, colonnes de rôles, sélecteur sur une rangée, bandeau « Toi », sans débordement", async ({ page }) => {
+  await page.route(/docs\.google\.com\/spreadsheets/, (route) => route.fulfill({ status: 200, contentType: "text/csv", body: "" }));
+  const membre = { uid: "joel", email: "joel@example.com", firstName: "Joël", lastName: "F.", planningName: "Joël F.", serviceRoles: {}, groupe: "paix" };
+  const { uid: _u, ...profil } = membre;
+  await signInAs(page, { ...ADMIN, ...membre }, { "groupes/paix": PAIX, "users/joel": profil as Record<string, unknown> }, "/equipes");
+  await expect(page.locator("[data-role]").first()).toBeVisible();
+  await expect(page.locator("[data-moi-bandeau]")).toBeVisible();
+  await verifierAgencement(page);
+  expect(await colonnesDeRoles(page), "colonnes de rôles").toBe(COLONNES[projet()]);
+  const boutons = page.getByRole("group", { name: "Organigrammes", exact: true }).getByRole("button");
+  const ys = await boutons.evaluateAll((els) => els.map((e) => Math.round(e.getBoundingClientRect().y)));
+  expect(new Set(ys).size, "le sélecteur tient sur une rangée").toBe(1);
+  await verifierSansDebordement(page);
+  await capture(page, "app-groupe");
+});
+
+test("App › Équipes : l'église garde son bandeau, le sélecteur à gauche et Équipes · Musiciens à droite en grand", async ({ page }) => {
+  await signInAs(page, { ...ADMIN, uid: "yann", email: "yann@example.com" }, { "users/yann": { email: "yann@example.com", firstName: "Yann", lastName: "M.", planningName: "Yann M.", serviceRoles: {} } }, "/equipes");
+  await expect(page.getByTestId("bandeau-equipes")).toBeVisible();
+  const selecteur = page.getByRole("group", { name: "Organigrammes", exact: true });
+  const vues = page.getByRole("group", { name: "Vue" });
+  const a = (await selecteur.boundingBox())!;
+  const b = (await vues.boundingBox())!;
+  if (grand()) {
+    expect(b.x, "Équipes · Musiciens à droite du sélecteur").toBeGreaterThan(a.x + a.width - 1);
+    expect(Math.abs(a.y - b.y), "sur la même rangée").toBeLessThan(24);
+  } else expect(b.y, "dessous").toBeGreaterThan(a.y);
+  await verifierSansDebordement(page);
+  await capture(page, "app-eglise");
+});

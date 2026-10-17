@@ -59,6 +59,12 @@ export function postesDeCompte(groupe: OrganigrammeGroupe | undefined, uid: stri
   return [...fixes, ...[...siens.filter((r) => r.comite), ...siens.filter((r) => !r.comite)].map((role): PosteDeCompte => ({ role }))];
 }
 
+/** Le libellé d'un poste de groupe : « Président », « Vice-président », ou le nom du rôle (中文 si la langue le demande). */
+export function libellePoste(t: (k: string) => string, zh: boolean, poste: PosteDeCompte): string {
+  if (poste.fixe) return t(poste.fixe === "president" ? "groupes.enTete.president" : "groupes.enTete.vicePresident");
+  return (zh && poste.role.nomZh) || poste.role.nom;
+}
+
 /** Ce que les listes recopiées sur le profil disent de ses droits « par ses rôles » (OG19). */
 export function droitsParRoles(profil: {
   remplitParRole?: readonly string[]; publieParRole?: readonly string[]; notifieParRole?: readonly string[];

@@ -1357,3 +1357,102 @@ test.describe("OG-D · navigateur (Personnes, Sans compte)", () => {
     await expect(ligne).toHaveAttribute("href", /\/back-office\/equipes\/?\?groupe=paix$/);
   });
 });
+
+test.describe("OG-E · App › Équipes", () => {
+  const compte = (uid: string, prenom: string, nom: string, o: Partial<FakeProfile> = {}): FakeProfile =>
+    ({ uid, email: `${uid}@example.com`, firstName: prenom, lastName: nom, planningName: `${prenom} ${nom}`, serviceRoles: {}, ...o });
+  const JOEL = compte("joel", "Joël", "F.", { groupe: "paix" });
+  const LUC = compte("luc", "Luc", "B.", { groupe: "paix" });
+  const YANN = compte("yann", "Yann", "M.");
+  const RUTH = compte("ruth", "Ruth", "K.", { groupe: "paix", referentDe: ["comite-paix"], dansEquipes: ["comite-paix"] });
+  const ADMIN = compte("adm", "Admin", "T.", { email: ADMIN_EMAILS[0], groupe: "paix" });
+  const PAIX_APP: OrganigrammeGroupe = {
+    id: "paix", president: t("Ruth K.", "ruth"), vp: [],
+    roles: [
+      role("r-mus", "Musiciens", { nomZh: "司琴", places: 3, colonne: "musiciens", titulaires: [t("Joël F.", "joel"), t("Ma Lin")] }),
+      role("r-acc", "Accueil", { places: 1, titulaires: [] }),
+    ],
+    updatedAt: "", parUid: "", parNom: "",
+  };
+  const docs = () => ({
+    ...Object.fromEntries([JOEL, LUC, YANN, RUTH, ADMIN].map(({ uid, ...p }) => [`users/${uid}`, p as Record<string, unknown>])),
+    "groupes/paix": docGroupe(PAIX_APP),
+    "groupes/bonte": docGroupe({ ...BONTE, roles: [role("b-acc", "Accueil", { titulaires: [t("Marc A.", "marc")] })] }),
+  });
+  async function ouvrir(page: Page, qui: FakeProfile, to = "/equipes", zh = false) {
+    if (zh) await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
+    await page.route(/docs\.google\.com\/spreadsheets/, (route) => route.fulfill({ status: 200, contentType: "text/csv", body: "" }));
+    return signInAs(page, qui, docs(), to);
+  }
+  const selecteur = (page: Page) => page.getByRole("group", { name: "Organigrammes", exact: true });
+  const carte = (page: Page, id: string) => page.locator(`[data-role="${id}"]`);
+
+  test("six pilules ; la page s'ouvre sur le groupe de la personne, « Toi », son nom marqué, une place libre, aucun outil de modification", async ({ page }, info) => {
+    await ouvrir(page, JOEL);
+    await expect(selecteur(page).getByRole("button")).toHaveText(["Église", "Paix", "Fidélité", "Bonté", "Amour", "Joie"]);
+    await expect(selecteur(page).getByRole("button", { name: "Paix" })).toHaveAttribute("aria-pressed", "true");
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Équipes");
+    await expect(page.locator("header[data-entete-page]")).toContainText("Organigrammes de l'église et des groupes");
+    const moi = page.locator("[data-moi-bandeau]");
+    if (info.project.name === "telephone") await expect(moi).toHaveText("Toi : Musiciens. Tes dates sont dans « Mes services ».");
+    else await expect(moi).toHaveText("Toi dans le Groupe Paix : Musiciens. Tu reçois les notifications du groupe ; tes dates sont dans « Mes services ».");
+    await expect(moi.getByRole("link", { name: "« Mes services »" })).toHaveAttribute("href", /\/mes-services/);
+    await expect(carte(page, "r-mus").locator("[data-moi]")).toContainText("Joël F.");
+    await expect(carte(page, "r-mus")).toContainText("2 sur 3 places");
+    await expect(carte(page, "r-mus")).toContainText("Place libre");
+    await expect(carte(page, "r-acc")).toContainText("Place libre");
+    await expect(page.getByRole("button", { name: /^Modifier le rôle/ })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Nommer" })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Ajouter un titulaire" })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Nouveau rôle" })).toHaveCount(0);
+  });
+
+  test("sans rôle : « Toi dans le Groupe Paix. Tu reçois les notifications du groupe. »", async ({ page }) => {
+    await ouvrir(page, LUC);
+    await expect(page.locator("[data-moi-bandeau]")).toHaveText("Toi dans le Groupe Paix. Tu reçois les notifications du groupe.");
+    await expect(page.locator("[data-moi]")).toHaveCount(0);
+  });
+
+  test("sans groupe : l'église, avec le sélecteur et Équipes · Musiciens ; choisir Bonté lit Bonté, sans bandeau « Toi »", async ({ page }) => {
+    await ouvrir(page, YANN);
+    await expect(page.getByTestId("bandeau-equipes")).toBeVisible();
+    await expect(selecteur(page).getByRole("button", { name: "Église" })).toHaveAttribute("aria-pressed", "true");
+    await selecteur(page).getByRole("button", { name: "Bonté" }).click();
+    await expect(page).toHaveURL(/\/equipes\/?\?groupe=bonte$/);
+    await expect(carte(page, "b-acc")).toContainText("Marc A.");
+    await expect(page.locator("[data-moi-bandeau]")).toHaveCount(0);
+    await expect(page.getByRole("button", { name: /^Modifier le rôle/ })).toHaveCount(0);
+  });
+
+  test("un clic sur une carte ouvre la fiche en lecture ; « Ouvrir le planning » mène à l'App", async ({ page }) => {
+    await ouvrir(page, JOEL);
+    await carte(page, "r-mus").click();
+    const fiche = page.getByRole("dialog");
+    await expect(fiche).toContainText("Titulaires");
+    await expect(fiche).toContainText("Droits du rôle");
+    await expect(fiche.getByRole("button", { name: "Modifier" })).toHaveCount(0);
+    await expect(fiche.getByRole("button", { name: /Actions pour/ })).toHaveCount(0);
+    await expect(fiche.getByRole("link", { name: "Ouvrir le planning" })).toHaveAttribute("href", /^\/planning\/groupes/);
+  });
+
+  test("un président et un admin lisent aussi sans rien pouvoir modifier dans l'App", async ({ page, browser }) => {
+    await ouvrir(page, RUTH);
+    await expect(page.locator("[data-role]").first()).toBeVisible();
+    await expect(page.getByRole("button", { name: /^Modifier le rôle/ })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Nommer" })).toHaveCount(0);
+    const admin = await (await browser.newContext()).newPage();
+    await ouvrir(admin, ADMIN);
+    await expect(admin.locator("[data-role]").first()).toBeVisible();
+    await expect(admin.getByRole("button", { name: /^Modifier le rôle/ })).toHaveCount(0);
+    await expect(admin.getByRole("button", { name: "Nommer" })).toHaveCount(0);
+    await expect(admin.getByRole("button", { name: "Nouveau rôle" })).toHaveCount(0);
+  });
+
+  test("中文 : sélecteur, sous-titre et bandeau « Toi » traduits", async ({ page }) => {
+    await ouvrir(page, JOEL, "/equipes", true);
+    await expect(page.getByRole("group", { name: "组织架构", exact: true })).toBeVisible();
+    await expect(page.locator("header[data-entete-page]")).toContainText("教会及各团契的组织架构");
+    await expect(page.locator("[data-moi-bandeau]")).toContainText("你");
+    await expect(page.locator("[data-moi-bandeau]")).toContainText("我的服事");
+  });
+});

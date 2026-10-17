@@ -53,7 +53,7 @@ export function PastillesRole({ role, groupeId }: { role: RoleGroupe; groupeId: 
 }
 
 export function CarteRole({
-  role, groupeId, couleur, peutTenir, grise, onFiche, onModifier, onAjouter,
+  role, groupeId, couleur, peutTenir, grise, onFiche, onModifier, onAjouter, lecture = false, moi = "",
 }: {
   role: RoleGroupe;
   groupeId: string;
@@ -64,9 +64,13 @@ export function CarteRole({
   onFiche: () => void;
   onModifier: () => void;
   onAjouter: (ancre: DOMRect) => void;
+  /** App › Équipes (OG-E) : une place libre s'affiche « Place libre », et le nom de `moi` en pastille sombre. */
+  lecture?: boolean;
+  moi?: string;
 }) {
   const { t } = useTranslation();
   const { plein } = etatPlaces(role);
+  const placesLibres = lecture && role.places !== null ? Math.min(Math.max(role.places - role.titulaires.length, 0), 9) : 0;
   const arrete = (e: MouseEvent) => e.stopPropagation();
   return (
     <section
@@ -103,19 +107,26 @@ export function CarteRole({
           </button>
         )}
       </header>
-      {role.titulaires.length > 0 && (
+      {(role.titulaires.length > 0 || placesLibres > 0) && (
         <ul className="space-y-1.5">
           {role.titulaires.map((x) => {
             const autre = grise(x);
+            const c = !!moi && x.uid === moi;
             return (
-              <li key={x.uid || x.nom} className={`flex items-center gap-2 text-sm ${autre ? "opacity-50" : ""}`}>
+              <li key={x.uid || x.nom} data-moi={c ? "" : undefined} className={`flex items-center gap-2 text-sm ${autre ? "opacity-50" : ""}`}>
                 <Initiales nom={x.nom} pointille={!x.uid} />
-                <span className="min-w-0 truncate text-foreground">{x.nom}</span>
+                <span className={c ? "min-w-0 truncate rounded-full bg-foreground px-2 py-0.5 font-semibold text-background" : "min-w-0 truncate text-foreground"}>{x.nom}{c && <span className="sr-only"> ({t("groupes.app.toi")})</span>}</span>
                 {!x.uid && <Pastille>{t("groupes.sansCompte")}</Pastille>}
                 {autre && <span className="text-[11px] text-muted-foreground">{autre}</span>}
               </li>
             );
           })}
+          {Array.from({ length: placesLibres }, (_, i) => (
+            <li key={`libre-${i}`} className="flex items-center gap-2 text-sm text-muted-foreground">
+              <span aria-hidden className="h-6 w-6 shrink-0 rounded-full border border-dashed border-muted-foreground/50" />
+              {t("groupes.places.libre")}
+            </li>
+          ))}
         </ul>
       )}
       {peutTenir && !plein && (

@@ -22,7 +22,7 @@ import { useConfirmer } from "@/components/layout/Confirmer";
 import { Panneau } from "@/components/groupes/Panneau";
 import { changerGroupeDe } from "@/lib/firebase/groupes";
 import { groupeDe } from "@/lib/groupes/organigramme";
-import { droitsParRoles, nombreSansGroupe, postesDeCompte } from "@/lib/groupes/personnes";
+import { droitsParRoles, libellePoste, nombreSansGroupe, postesDeCompte } from "@/lib/groupes/personnes";
 import { TABLE_GROUPES, groupeDef } from "@/lib/groupes/table";
 import type { OrganigrammeGroupe } from "@/types/groupe";
 import { findMyServices, type PlanningData } from "@/lib/planning/names";
@@ -34,7 +34,7 @@ import { BACK_OFFICE } from "@/lib/backOffice";
 import { RailEquipes } from "@/app/back-office/equipes/RailEquipes";
 import { InscriptionsComptes } from "./InscriptionsComptes";
 import {
-  Avatar, FiltresPersonnes, FormulairePersonne, LignePersonne, ListePersonnes, isRecent, libellePoste,
+  Avatar, FiltresPersonnes, FormulairePersonne, LignePersonne, ListePersonnes, isRecent,
   useDonneesPersonnes, useFiltresPersonnes,
 } from "./Personnes";
 

@@ -166,7 +166,19 @@ export function EquipesClient({
   }
 
   // App (agencement v18, tranche Z) : l'en-tête commun, Équipes · Musiciens dessous.
-  const enTeteApp = <EnTetePage titre={t("equipes.title")} sousTitre={t("equipes.sousTitre")} apres={vues} />;
+  // Lot 2 (OG-E) : le sélecteur Église · Paix · … à gauche, Équipes · Musiciens à droite, et le sous-titre des organigrammes.
+  const enTeteApp = (
+    <EnTetePage
+      titre={t("equipes.title")}
+      sousTitre={selecteur ? t("groupes.app.sousTitre") : t("equipes.sousTitre")}
+      apres={selecteur ? (
+        <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
+          <div className="min-w-0">{selecteur}</div>
+          <div className="shrink-0">{vues}</div>
+        </div>
+      ) : vues}
+    />
+  );
   if (bandeau) {
     return (
       <div className="relative">

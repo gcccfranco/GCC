@@ -2829,6 +2829,13 @@
       "titre": "Relier « {{nom}} » à un compte",
       "sousTitre": "dans tous ses rôles du {{groupe}}"
     },
+    "app": {
+      "toi": "toi",
+      "sousTitre": "Organigrammes de l'église et des groupes",
+      "toiDans": "Toi dans le {{groupe}}. Tu reçois les notifications du groupe.",
+      "toiDansRoles": "Toi dans le {{groupe}} : {{roles}}. Tu reçois les notifications du groupe ; tes dates sont dans <lien>« Mes services »</lien>.",
+      "toiRoles": "Toi : {{roles}}. Tes dates sont dans <lien>« Mes services »</lien>."
+    },
     "personnes": {
       "groupesSansGroupe_one": "5 groupes · {{count}} sans groupe",
       "groupesSansGroupe_other": "5 groupes · {{count}} sans groupe",

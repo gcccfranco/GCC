@@ -11,7 +11,7 @@ import { ChevronDown, ChevronUp, Search, UserRound, X } from "lucide-react";
 import { listProfiles, saveProfile } from "@/lib/firebase/users";
 import { listGroupes } from "@/lib/firebase/groupes";
 import { groupeDe } from "@/lib/groupes/organigramme";
-import { FILTRE_SANS_GROUPE, correspondAuFiltreGroupe, filtresPersonnes, postesDeCompte, type PosteDeCompte } from "@/lib/groupes/personnes";
+import { FILTRE_SANS_GROUPE, correspondAuFiltreGroupe, filtresPersonnes, libellePoste, postesDeCompte } from "@/lib/groupes/personnes";
 import { TABLE_GROUPES, groupeDef } from "@/lib/groupes/table";
 import type { OrganigrammeGroupe } from "@/types/groupe";
 import { isAdminUser } from "@/lib/access";
@@ -194,12 +194,6 @@ export function Avatar({ p, grand }: { p: UserProfile; grand?: boolean }) {
       {(p.firstName[0] ?? "") + (p.lastName[0] ?? "") || <UserRound className="h-4 w-4" />}
     </span>
   );
-}
-
-/** Le libellé d'un poste de groupe : « Président », « Vice-président », ou le nom du rôle (中文 si la langue le demande). */
-export function libellePoste(t: (k: string) => string, zh: boolean, poste: PosteDeCompte): string {
-  if (poste.fixe) return t(poste.fixe === "president" ? "groupes.enTete.president" : "groupes.enTete.vicePresident");
-  return (zh && poste.role.nomZh) || poste.role.nom;
 }
 
 /** Les services d'un membre en étiquettes (« Nouveau » d'abord). Interrupteur ouvert : « Groupe Paix ·

@@ -40,7 +40,10 @@ function useProchains(groupeId: string, colonne: string | null): { date: string;
 
 export function FicheRole({
   groupe, role, couleur, peutTenir, admin, grise, alerte, enCours, onFermer, onModifier, onSupprimer, onAjouter, onRetirer, onRelier,
+  lienPlanning = "/back-office/planning/groupes",
 }: {
+  /** « Ouvrir le planning » : l'onglet Groupes du Back-Office, ou celui de l'App (OG-E). */
+  lienPlanning?: string;
   groupe: OrganigrammeGroupe;
   role: RoleGroupe | null;
   couleur: string;
@@ -142,7 +145,7 @@ export function FicheRole({
             <section aria-label={t("groupes.fiche.planning")} className="space-y-2">
               <div className="flex items-center justify-between gap-2">
                 <h3 className="text-sm font-bold text-foreground">{t("groupes.fiche.planning")}</h3>
-                <Link href="/back-office/planning/groupes" className="text-sm font-semibold underline underline-offset-2">{t("groupes.fiche.ouvrirPlanning")}</Link>
+                <Link href={lienPlanning} className="text-sm font-semibold underline underline-offset-2">{t("groupes.fiche.ouvrirPlanning")}</Link>
               </div>
               {role.titulaires.length > 0 && (
                 <p className="text-xs text-muted-foreground">

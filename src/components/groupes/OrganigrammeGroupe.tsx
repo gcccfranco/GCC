@@ -9,7 +9,9 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { ChevronRight, Link2, Lock } from "lucide-react";
-import { useTranslation } from "react-i18next";
+import { Trans, useTranslation } from "react-i18next";
+import { Halo } from "@/components/layout/Halo";
+import { libellePoste, postesDeCompte } from "@/lib/groupes/personnes";
 import { EnTetePage } from "@/components/layout/EnTetePage";
 import { BoutonNouveau } from "@/components/layout/BoutonNouveau";
 import { Button } from "@/components/ui/button";
@@ -58,8 +60,10 @@ type Recherche =
   | { mode: "relier"; nom: string };
 
 export function OrganigrammeGroupe({
-  lu, profils, selecteur, onglets, onLu, onRelire,
+  lu, profils, selecteur, onglets, onLu, onRelire, app = false,
 }: {
+  /** App › Équipes (OG-E) : tout se lit, rien ne se modifie, même pour un admin ; bandeau « Toi ». */
+  app?: boolean;
   lu: GroupeLu;
   profils: UserProfile[];
   /** Le sélecteur Église · Paix · …, sous l'en-tête. */
@@ -76,8 +80,8 @@ export function OrganigrammeGroupe({
   const def = groupeDef(groupe.id)!;
   const nomGroupe = t(`categories.${def.categorie}`);
   const couleur = categoryColor(def.categorie);
-  const admin = isAdminUser(user);
-  const peutTenir = canTenirGroupe(user, profile, groupe.id);
+  const admin = !app && isAdminUser(user);
+  const peutTenir = !app && canTenirGroupe(user, profile, groupe.id);
   const telephone = useDisposition() === "telephone";
 
   const [ficheId, setFicheId] = useState<string | null>(null);
@@ -176,6 +180,8 @@ export function OrganigrammeGroupe({
       groupeId={groupe.id}
       couleur={couleur}
       peutTenir={peutTenir}
+      lecture={app}
+      moi={app ? user?.uid : undefined}
       grise={grise}
       onFiche={() => setFicheId(r.id)}
       onModifier={() => { setErreurForm(""); setForm({ role: r }); }}
@@ -188,6 +194,18 @@ export function OrganigrammeGroupe({
       : groupe.vp.some((v) => (v.uid ? v.uid === x.uid : v.nom === x.nom)) ? t("groupes.enTete.vicePresident")
       : groupe.roles.filter((r) => r.comite && r.titulaires.some((y) => (y.uid ? y.uid === x.uid : y.nom === x.nom))).map((r) => r.nom).join(", ");
   const membreDuComite = admin || (profile?.dansEquipes ?? []).includes(def.comite);
+  // « Toi » (OG-E) : le bandeau de la personne sur son propre groupe.
+  const moi = app ? user?.uid : undefined;
+  const moiPostes = app && user && profile && groupeDe(profile) === groupe.id ? postesDeCompte(groupe, user.uid).map((x) => libellePoste(t, zh, x)) : null;
+  const bandeauMoi = moiPostes && (
+    <p data-moi-bandeau="" className="mx-[var(--marge-page)] mb-4 rounded-2xl bg-secondary px-4 py-3 text-sm text-foreground">
+      <Trans
+        i18nKey={moiPostes.length ? (telephone ? "groupes.app.toiRoles" : "groupes.app.toiDansRoles") : "groupes.app.toiDans"}
+        values={{ groupe: nomGroupe, roles: moiPostes.join(", ") }}
+        components={{ lien: <Link href="/mes-services" className="font-semibold underline underline-offset-2" /> }}
+      />
+    </p>
+  );
 
   const enTete = (
     <section aria-label={t("groupes.enTete.titre")} className="raised rounded-2xl p-4">
@@ -201,9 +219,9 @@ export function OrganigrammeGroupe({
         )}
       </div>
       <h3 className="mt-3 text-sm font-semibold text-foreground">{t("groupes.enTete.president")}{!zh && <span className="ml-1 font-normal text-muted-foreground">主席</span>}</h3>
-      <Personne t={groupe.president} vide={t("groupes.enTete.aNommer")} />
+      <Personne t={groupe.president} vide={t("groupes.enTete.aNommer")} moi={moi} />
       <h3 className="mt-3 text-sm font-semibold text-foreground">{t("groupes.enTete.vicePresidents")}{!zh && <span className="ml-1 font-normal text-muted-foreground">副主席</span>}</h3>
-      {groupe.vp.length ? groupe.vp.map((v) => <Personne key={v.uid || v.nom} t={v} vide="" />) : <Personne t={null} vide={t("groupes.enTete.aNommer")} />}
+      {groupe.vp.length ? groupe.vp.map((v) => <Personne key={v.uid || v.nom} t={v} vide="" moi={moi} />) : <Personne t={null} vide={t("groupes.enTete.aNommer")} />}
     </section>
   );
 
@@ -234,7 +252,7 @@ export function OrganigrammeGroupe({
             {comite.map((x) => (
               <li key={x.uid || x.nom} className="flex items-center gap-2 border-t border-border py-2 text-sm">
                 <Initiales nom={x.nom} pointille={!x.uid} />
-                <span className="font-semibold text-foreground">{x.nom}</span>
+                <span data-moi={app && user && x.uid === user.uid ? "" : undefined} className={app && user && x.uid === user.uid ? "rounded-full bg-foreground px-2 py-0.5 font-semibold text-background" : "font-semibold text-foreground"}>{x.nom}</span>
                 <span className="truncate text-xs text-muted-foreground">{libelleRole(x)}</span>
               </li>
             ))}
@@ -251,11 +269,11 @@ export function OrganigrammeGroupe({
     </div>
   );
 
-  return (
+  const page = (
     <>
       <EnTetePage
-        titre={t("backOffice.entrees.equipes")}
-        sousTitre={t("groupes.sousTitre", { groupe: nomGroupe, count: personnes })}
+        titre={app ? t("equipes.title") : t("backOffice.entrees.equipes")}
+        sousTitre={app ? t("groupes.app.sousTitre") : t("groupes.sousTitre", { groupe: nomGroupe, count: personnes })}
         action={peutTenir ? <BoutonNouveau label={t("groupes.role.nouveau")} onClick={() => { setErreurForm(""); setForm({ role: null }); }} /> : undefined}
         onglets={onglets}
         apres={
@@ -272,6 +290,7 @@ export function OrganigrammeGroupe({
           </>
         }
       />
+      {bandeauMoi}
       <div className="space-y-6 px-[var(--marge-page)] pb-10">
         <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
           {enTete}
@@ -320,6 +339,7 @@ export function OrganigrammeGroupe({
         onAjouter={(ancre) => fiche && ouvrirRecherche({ mode: "ajouter", roleId: fiche.id }, ancre)}
         onRetirer={(x) => fiche && geste(retirerTitulaire(groupe, fiche.id, x))}
         onRelier={(x) => ouvrirRecherche({ mode: "relier", nom: x.nom }, null)}
+        lienPlanning={app ? "/planning/groupes" : undefined}
       />
 
       {peutTenir && (
@@ -375,14 +395,23 @@ export function OrganigrammeGroupe({
       />
     </>
   );
+  if (!app) return page;
+  return (
+    <div className="relative">
+      <Halo variant="moi" color="hsl(var(--foreground))" />
+      <div className="relative">{page}</div>
+    </div>
+  );
 }
 
-function Personne({ t, vide }: { t: Titulaire | null; vide: string }) {
+function Personne({ t, vide, moi = "" }: { t: Titulaire | null; vide: string; moi?: string }) {
+  const { t: tr } = useTranslation();
   if (!t) return vide ? <p className="mt-1.5 text-sm text-muted-foreground">{vide}</p> : null;
+  const c = !!moi && t.uid === moi;
   return (
-    <p className="mt-1.5 flex items-center gap-2 text-sm text-foreground">
+    <p data-moi={c ? "" : undefined} className="mt-1.5 flex items-center gap-2 text-sm text-foreground">
       <Initiales nom={t.nom} pointille={!t.uid} />
-      {t.nom}
+      <span className={c ? "rounded-full bg-foreground px-2 py-0.5 font-semibold text-background" : undefined}>{t.nom}{c && <span className="sr-only"> ({tr("groupes.app.toi")})</span>}</span>
     </p>
   );
 }
