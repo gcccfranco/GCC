@@ -8,6 +8,7 @@ import {
 } from "../src/lib/tableauDeBord/disposition";
 import { choisirReglage, groupesDeReglages } from "../src/lib/tableauDeBord/reglages";
 import { EQUIPES } from "../src/lib/equipes/table";
+import { COMITES } from "../src/lib/groupes/table";
 import {
   aFaireDuTableau, ceDimanche, creneauxAVenir, etatInscriptions, evenementsAVenir, nomsSansCompte, nouveauxComptes,
   petitDejAVenir, equipesAFaire, prochainsDimanches, raccourcisPermis, seancesDesServices, servicesDuDimanche, servicesSetlists,
@@ -285,7 +286,7 @@ test.describe("Tableau de bord (B4) : données des widgets, règles pures", () =
   });
 
   test("à faire : équipes (toutes pour un admin), en retard d'abord, sept jours d'avance", () => {
-    expect(equipesAFaire({}, user(ADMIN), null)).toEqual(EQUIPES.map((e) => e.id));
+    expect(equipesAFaire({}, user(ADMIN), null)).toEqual([...EQUIPES.map((e) => e.id), ...COMITES]);
     expect(equipesAFaire({}, user(LES_DEUX), profil(LES_DEUX))).toEqual(["evenementiel", "louange"]);
     expect(equipesAFaire({ equipes: ["louange", "da"] }, user(LES_DEUX), profil(LES_DEUX))).toEqual(["louange"]);
     const t = (id: string, echeance: string) => ({ tache: { id, echeance } as Tache, date: echeance, fois: null });

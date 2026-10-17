@@ -6,7 +6,7 @@ import { isAdminEmail } from "@/lib/access";
 import { HttpError } from "@/lib/evenements/serveur";
 import { lireEquipes, lireGroupes, recopieDuCompte } from "@/lib/equipes/serveur";
 import type { OrganigrammeGroupe } from "@/types/groupe";
-import { groupeDe } from "./organigramme";
+import { comptesCites, groupeDe } from "./organigramme";
 import { estGroupeId, groupeDef } from "./table";
 
 export { lireGroupes } from "@/lib/equipes/serveur";
@@ -38,8 +38,10 @@ function sans(g: OrganigrammeGroupe, uid: string): OrganigrammeGroupe {
 /**
  * « Changer de groupe » (OG5, admins seuls) : retire la personne de la présidence, des VP et de tous
  * les rôles de son ancien groupe, écrit `groupe` (un id, ou `""` = sans groupe) et recopie son
- * profil, en une seule écriture groupée. Sa clé de `serviceRoles` n'est pas touchée (D17). « Sans
- * groupe » ne lui laisse aucun droit de groupe, même si un autre document la cite encore.
+ * profil, en une seule écriture groupée. Sa clé de `serviceRoles` n'est pas touchée (D17). Le document
+ * de l'ancien groupe n'est réécrit que s'il la cite, à la condition qu'il n'ait pas changé depuis sa
+ * lecture (comme OG37). « Sans groupe » ne lui laisse aucun droit de groupe ; un autre document qui la
+ * citerait encore la ferait entrer dans ce groupe au prochain recalcul (OG3).
  */
 export async function changerGroupe(
   db: FirebaseFirestore.Firestore,
@@ -56,8 +58,10 @@ export async function changerGroupe(
   const data = snap.data() ?? {};
 
   const ancien = groupeDe(data);
+  if ((ancien ?? "") === groupe) return { maj: 0 };
   const avant = await lireGroupes(db);
-  const apres = avant.map((g) => (g.id === ancien ? sans(g, uid) : g));
+  const doc = avant.find((g) => g.id === ancien && comptesCites(g).includes(uid));
+  const apres = avant.map((g) => (g === doc ? sans(g, uid) : g));
   const { listes } = recopieDuCompte(uid, { ...data, groupe }, await lireEquipes(db), apres);
   if (groupe === "") {
     // Sans groupe : les ids de comité et les listes par rôle tombent, les équipes de l'église restent.
@@ -70,11 +74,15 @@ export async function changerGroupe(
   }
 
   const lot = db.batch();
-  const doc = apres.find((g) => g.id === ancien);
   if (doc) {
-    const { id, ...champs } = doc;
+    const { president, vp, roles } = sans(doc, uid);
+    const ref = db.collection("groupes").doc(doc.id);
+    const lu = await ref.get();
     const par = ((await db.collection("users").doc(appelant.uid).get()).data()?.firstName as string | undefined) ?? "";
-    lot.set(db.collection("groupes").doc(id), { ...champs, updatedAt: new Date().toISOString(), parUid: appelant.uid, parNom: par });
+    const champs = { president, vp, roles, updatedAt: new Date().toISOString(), parUid: appelant.uid, parNom: par };
+    // Précondition sur la version lue : un président qui enregistre entre-temps fait échouer le lot.
+    if (lu.updateTime) lot.update(ref, champs, { lastUpdateTime: lu.updateTime });
+    else lot.update(ref, champs);
   }
   lot.update(ref, { groupe, ...listes });
   await lot.commit();

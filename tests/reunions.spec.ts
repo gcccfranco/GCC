@@ -9,7 +9,7 @@ import {
 } from "../src/lib/access";
 import { EQUIPES, rattachementDe } from "../src/lib/equipes/organigramme";
 import { recalculerDepuisOrganigramme, recalculerRattachement } from "../src/lib/equipes/serveur";
-import { TABLE_GROUPES } from "../src/lib/groupes/table";
+import { COMITES, TABLE_GROUPES } from "../src/lib/groupes/table";
 import { lireGroupe } from "../src/lib/groupes/organigramme";
 import { destinatairesEvenement } from "../src/lib/evenements/serveur";
 import { copieReprise, estRouge, reordonner, reunionsALire, reunionsPrecedentes, sujetsAReprendre, trierSujets } from "../src/lib/reunions/sujets";
@@ -867,9 +867,10 @@ test("recalculerRattachement recopie aussi dansEquipes et referentDe sur le prof
   const equipes = ORGANIGRAMME.map(({ id, membres }) => ({ id, membres }));
   const groupes = TABLE_GROUPES.map((g) => lireGroupe(g.id, {}));
   expect((await recalculerRattachement(db, ["uid-rose", "uid-hugo", "uid-absent"], equipes, groupes)).maj).toBe(2);
+  // Seuls les champs changés s'écrivent (lot 2, OG20) : un `referentDe` absent reste absent.
   expect(ecrits).toEqual([
     { uid: "uid-rose", data: { dansEquipes: ["regie"], referentDe: ["regie"] } },
-    { uid: "uid-hugo", data: { dansEquipes: ["da", "regie"], referentDe: [] } },
+    { uid: "uid-hugo", data: { dansEquipes: ["da", "regie"] } },
   ]);
   expect((await recalculerRattachement(db, ["uid-rose", "uid-hugo"], equipes, groupes)).maj).toBe(0);
   expect(ecrits).toHaveLength(2);
@@ -884,7 +885,7 @@ test("« Recalculer depuis l'organigramme » : tous les membres des équipes, et
   });
   expect(await recalculerDepuisOrganigramme(db)).toBe(2);
   expect(ecrits).toEqual([
-    { uid: "uid-hugo", data: { dansEquipes: ["da", "regie"], referentDe: [] } },
+    { uid: "uid-hugo", data: { dansEquipes: ["da", "regie"] } },
     { uid: "uid-rose", data: { dansEquipes: ["regie"], referentDe: ["regie"] } },
   ]);
   expect(users["uid-rose"].poles).toEqual(["da"]);
@@ -921,7 +922,8 @@ test("droits d'une réunion d'équipe : la créer = un référent de l'équipe o
   expect(creatableEvenementPours(user(ROSE), ROSE, ["Culte Francophone"])).toEqual(["equipe:regie"]);
   expect(creatableEvenementPours(user(HUGO), HUGO, ["Culte Francophone"])).toEqual([]);
   const admin = creatableEvenementPours(user(ADMIN), null, ["Culte Francophone"]);
-  expect(admin.filter((p) => p.startsWith("equipe:"))).toEqual(EQUIPES.map((e) => `equipe:${e.id}`));
+  // Les comités des groupes après les équipes de l'église (lot 2, OG17).
+  expect(admin.filter((p) => p.startsWith("equipe:"))).toEqual([...EQUIPES.map((e) => e.id), ...COMITES].map((id) => `equipe:${id}`));
 });
 
 test("règles R4 : membres (dansEquipes) de la réunion d'équipe, création par un référent, champs fermés à la création du profil", () => {

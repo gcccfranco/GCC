@@ -4,8 +4,8 @@ import { adminDb } from "@/lib/push/admin";
 import { isAdminEmail } from "@/lib/access";
 import { HttpError } from "@/lib/evenements/serveur";
 import { rattachementDe } from "./organigramme";
-import { groupeDe, lireGroupe, recopieDeGroupe } from "@/lib/groupes/organigramme";
-import { TABLE_GROUPES, type GroupeId } from "@/lib/groupes/table";
+import { comptesCites, groupeDe, lireGroupe, recopieDeGroupe } from "@/lib/groupes/organigramme";
+import { COMITES, TABLE_GROUPES, type GroupeId } from "@/lib/groupes/table";
 import type { MembreEquipe } from "@/types/equipe";
 import type { OrganigrammeGroupe } from "@/types/groupe";
 
@@ -87,17 +87,19 @@ export async function recalculerRattachement(
   return { maj, ignores };
 }
 
-/** Les comptes cités dans un document de groupe (président, VP, titulaires). */
-export function comptesDuGroupe(g: OrganigrammeGroupe): string[] {
-  return [g.president, ...g.vp, ...g.roles.flatMap((r) => r.titulaires)].map((t) => t?.uid ?? "").filter(Boolean);
-}
-
 /** « Recalculer depuis l'organigramme » (bouton admin, lot U6, R4) : pose les champs recopiés de
  *  tous les comptes rangés dans une équipe ou cités dans un groupe (lot 2, OG20) — les profils
- *  d'avant R4 ne les ont pas. */
+ *  d'avant R4 ne les ont pas — et de ceux qui portent encore un comité ou un droit par rôle sans
+ *  être cités (une recopie qui a échoué après une écriture) : ils les perdent. */
 export async function recalculerDepuisOrganigramme(db: FirebaseFirestore.Firestore): Promise<number> {
-  const [equipes, groupes] = await Promise.all([lireEquipes(db), lireGroupes(db)]);
-  const uids = [...equipes.flatMap((e) => e.membres.map((m) => m.uid)), ...groupes.flatMap(comptesDuGroupe)];
+  const [equipes, groupes, users] = await Promise.all([lireEquipes(db), lireGroupes(db), db.collection("users").get()]);
+  const restes = users.docs.filter((d) => {
+    const x = d.data();
+    const liste = (k: string) => (Array.isArray(x[k]) ? (x[k] as string[]) : []);
+    return [...liste("dansEquipes"), ...liste("referentDe")].some((id) => COMITES.includes(id))
+      || ["remplitParRole", "publieParRole", "notifieParRole"].some((k) => liste(k).length > 0);
+  }).map((d) => d.id);
+  const uids = [...equipes.flatMap((e) => e.membres.map((m) => m.uid)), ...groupes.flatMap(comptesCites), ...restes];
   return (await recalculerRattachement(db, uids, equipes, groupes)).maj;
 }
 

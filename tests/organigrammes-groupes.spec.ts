@@ -582,6 +582,25 @@ test.describe("OG-B · recopie partagée en base simulée (OG3, OG19, OG20)", ()
     expect(base.users.lea).toMatchObject({ groupe: "", referentDe: [], notifieParRole: [] });
   });
 
+  test("changerGroupe : vers son propre groupe, rien ; non citée dans l'ancien groupe, son document n'est pas réécrit", async () => {
+    const admin = { uid: "adm", email: ADMIN_EMAILS[0] };
+    const base = fausseBaseGroupes({ sam: { groupe: "paix" }, luc: { serviceRoles: { "Groupe Paix": ["musicien"] } } }, { paix: docGroupe(PAIX) });
+    expect(await changerGroupe(base.db, admin, "sam", "paix")).toEqual({ maj: 0 });
+    expect(base.ecrits).toEqual([]);
+    await changerGroupe(base.db, admin, "luc", "joie");
+    expect(base.ecrits.map((e) => e.chemin)).toEqual(["users/luc"]);
+    expect(base.users.luc).toMatchObject({ groupe: "joie", serviceRoles: { "Groupe Paix": ["musicien"] } });
+  });
+
+  test("« Recalculer depuis l'organigramme » répare un ancien président qui n'est plus cité nulle part", async () => {
+    const { db, users } = fausseBaseGroupes(
+      { ancien: { groupe: "paix", referentDe: ["comite-paix"], dansEquipes: ["comite-paix"], publieParRole: ["paix"] }, rien: {} },
+      { paix: docGroupe({ ...PAIX, president: null, vp: [], roles: [] }) },
+    );
+    expect(await recalculerDepuisOrganigramme(db)).toBe(1);
+    expect(users.ancien).toMatchObject({ referentDe: [], dansEquipes: [], publieParRole: [] });
+  });
+
   test("exigerTenirGroupe : admin, président, VP oui ; droit Équipes seul, membre, autre groupe : 403", async () => {
     const { db } = fausseBaseGroupes({
       ruth: { referentDe: ["comite-paix"] }, lea: { referentDe: ["comite-paix"] },
@@ -796,12 +815,15 @@ test.describe("OG-B · navigateur", () => {
   });
 
   test("un titulaire « Notifier » seul de Paix : entrée Planning, grille en lecture, pas de « Publier le T… »", async ({ page }) => {
-    await ouvrir(page, NOTIFIE, "/back-office/planning");
+    await ouvrir(page, NOTIFIE, "/back-office/planning", {
+      "plannings/paix/dimanches/2026-09-20": { date: "2026-09-20", musiciens: "Joël F." },
+    });
     await expect(page).toHaveURL(/\/back-office\/planning\/groupes\/?$/);
     await expect(page.locator("[data-grille]")).toBeVisible();
+    const laCase = page.locator('[data-case="2026-09-20|musiciens"]').filter({ visible: true });
+    await expect(laCase).toHaveText("Joël F.");
+    await expect(laCase.getByRole("button")).toHaveCount(0);
     await expect(page.getByRole("button", { name: /^Publier le T\d/ })).toHaveCount(0);
-    await expect(page.locator("[data-case]").filter({ visible: true }).first()).toBeVisible();
-    await expect(page.locator("[data-case]").getByRole("button", { name: /Choisir/ })).toHaveCount(0);
   });
 
   test("Notifier : un titulaire « Notifier » de Joie voit « Groupe Joie », ses destinataires comptent les membres du groupe", async ({ page }) => {

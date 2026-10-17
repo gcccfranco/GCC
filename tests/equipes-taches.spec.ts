@@ -9,6 +9,7 @@ import { groupesDeReglages } from "../src/lib/tableauDeBord/reglages";
 import { cleRappelTache, ligneRappelTache, nouvelleTacheMessage, tacheFaiteMessage } from "../src/lib/taches/messages";
 import { ciblesDuRappel, equipeDuChemin, tacheDeLAppelant } from "../src/lib/taches/serveur";
 import { EQUIPES } from "../src/lib/equipes/table";
+import { COMITES } from "../src/lib/groupes/table";
 import type { Tache } from "../src/types/tache";
 import type { UserProfile } from "../src/types/user";
 
@@ -215,12 +216,12 @@ test.describe("pur : le calendrier et le widget « À faire » lisent les équip
     expect(sourcesPermises(user(JOEL), profil({ uid: "u-x", email: "x@example.com" }))).not.toContain("taches");
   });
 
-  test("widget « À faire » : le réglage « Équipes » propose ses équipes (les 13 pour un admin)", () => {
+  test("widget « À faire » : le réglage « Équipes » propose ses équipes (les 13 et les 5 comités pour un admin)", () => {
     const [groupe] = groupesDeReglages("afaire", {}, user(LEA), profil(LEA));
     expect([groupe.cle, groupe.titre, groupe.choix, groupe.actifs])
       .toEqual(["equipes", "tableauDeBord.reglages.equipes", [{ valeur: "medias", i18n: "equipes.court.medias" }], ["medias"]]);
     const [tout] = groupesDeReglages("afaire", {}, user(ADMIN), null);
-    expect(tout.choix.map((c) => c.valeur)).toEqual(EQUIPES.map((e) => e.id));
+    expect(tout.choix.map((c) => c.valeur)).toEqual([...EQUIPES.map((e) => e.id), ...COMITES]);
     expect(tout.choix.find((c) => c.valeur === "louange")?.i18n).toBe("equipes.public.louange");
     expect(equipesAFaire({ equipes: ["louange", "da"] }, user(ADMIN), null)).toEqual(["da", "louange"]);
     expect(equipesAFaire({}, user(MAELLE), profil(MAELLE))).toEqual(["louange"]);
@@ -385,14 +386,15 @@ test.describe("écrans : chacun ses équipes (Réussite 3 et 4, EQ9)", () => {
   });
 
   test("liste vide : le rail n'a que les équipes qui ont une tâche, plus celles dont on est référent", async ({ page }) => {
-    // Un admin : les équipes qui ont des tâches, pas 13 onglets vides ; il crée dans les 13.
+    // Un admin : les équipes qui ont des tâches, pas 13 onglets vides ; il crée dans les 13 et dans
+    // les 5 comités des groupes (lot 2, OG17).
     await ouvrir(page, ADMIN, "/back-office/taches/medias");
     await expect(ongletsRail(page).getByRole("link")).toHaveText([/^DA/, /^Médias/, /^Louange/]);
     const { form } = await nouvelleTache(page);
     const choix = estGrandEcran(test.info())
       ? form.getByRole("group", { name: "Équipe" }).getByRole("button")
       : form.getByLabel("Équipe").locator("option");
-    await expect(choix).toHaveCount(13);
+    await expect(choix).toHaveCount(EQUIPES.length + COMITES.length);
     await capture(page, "taches-admin-rail");
   });
 

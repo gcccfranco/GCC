@@ -129,7 +129,7 @@ test.describe("pur : réunions et évènements d'équipe (EQ19 à EQ22)", () => 
 
   test("règles : estDeLEquipe (Louange élargi), estReferentDe ; plus de branche de pôle pour les réunions", () => {
     const rules = lire("firestore.rules");
-    expect(rules).toMatch(/function estDeLEquipe\(equipe\) \{[\s\S]*?equipe in profile\(\)\.get\('dansEquipes', \[\]\)[\s\S]*?equipe == 'louange' && profile\(\)\.get\('serviceRoles', \{\}\)\.size\(\) > 0/);
+    expect(rules).toMatch(/function estDeLEquipe\(equipe\) \{[\s\S]*?equipe in profile\(\)\.get\('dansEquipes', \[\]\)[\s\S]*?equipe == 'louange' && \(?profile\(\)\.get\('serviceRoles', \{\}\)\.size\(\) > 0/);
     expect(rules).toMatch(/function estReferentDe\(equipe\) \{\s*return isAdmin\(\) \|\| \(hasProfile\(\) && equipe in profile\(\)\.get\('referentDe', \[\]\)\);/);
     const reunion = rules.match(/function estDeLaReunion\(e\) \{[\s\S]*?\n {4}\}/)![0];
     expect(reunion).toMatch(/e\.pour\.matches\('equipe:\[a-z0-9-\]\+'\) && estDeLEquipe\(e\.pour\.split\(':'\)\[1\]\)/);

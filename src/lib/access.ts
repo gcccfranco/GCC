@@ -603,7 +603,9 @@ export function entreesBackOffice(user: AuthUser | null, profile: ProfilResponsa
     evenements: admin || isCoordination(user, profile) || nonVide(profile?.annonces) || nonVide(profile?.referentDe),
     reunions: admin || equipes || nonVide(profile?.referentDe),
     equipes: canEditerEquipes(user, profile) || tientUnGroupe(user, profile),
-    messages: admin || audiencesNotifiables(profile).length > 0,
+    // Le Back-Office n'existe qu'interrupteur ouvert (OG27) : les rôles comptent ici, sans dépendre de
+    // la variable du processus (un test pur ne la voit pas).
+    messages: admin || audiencesNotifiables(profile, true).length > 0,
     statistiques: canVoirStatistiques(user),
   };
   return ENTREES.filter((e) => visible[e] && !ENTREES_A_VENIR.includes(e));

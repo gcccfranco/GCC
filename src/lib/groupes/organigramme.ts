@@ -198,6 +198,11 @@ export function relierACompte(groupe: OrganigrammeGroupe, nom: string, compte: T
   };
 }
 
+/** Les comptes cités dans le document (président, VP, titulaires) : ceux que la route recopie. */
+export function comptesCites(groupe: OrganigrammeGroupe): string[] {
+  return [...new Set([groupe.president, ...groupe.vp, ...groupe.roles.flatMap((r) => r.titulaires)].map((t) => t?.uid ?? "").filter(Boolean))];
+}
+
 // ─── Ce que le serveur recopie sur un profil (OG19, OG3) ─────────────────────
 
 export interface RecopieGroupe {
