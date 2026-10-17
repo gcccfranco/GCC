@@ -59,7 +59,7 @@ import { songVersionView, type SongVersionView } from "@/lib/setlist/versionChoi
 import { getChartStylePref, setChartStylePref } from "@/lib/chartStylePref";
 import { getPartitionLayoutPref, setPartitionLayoutPref, type PartitionLayout } from "@/lib/partitionLayoutPref";
 import { getPinyinPref, setPinyinPref } from "@/lib/pinyinPref";
-import { jianpuPngDataUrl, loadJianpuChords, loadJianpuManifest, useJianpuManifest } from "@/lib/jianpu/images";
+import { jianpuPngDataUrl, loadJianpuCadrage, loadJianpuChords, loadJianpuManifest, useJianpuManifest } from "@/lib/jianpu/images";
 import { getJianpuPref, setJianpuPref, sheetEnabled, interrupteurAllume, prefDepuisInterrupteur, type JianpuPref } from "@/lib/jianpu/preference";
 import { aDesRetouches } from "@/lib/jianpu/retouches";
 import { fetchSongAST, type SongContent} from "@/lib/api/songs";
@@ -738,17 +738,18 @@ export function SetlistDetailClient() {
         const { SetlistFullPDF } = await import("@/components/pdf/SetlistFullPDF");
         // Le rendu PDF n'exécute pas d'effets : les manifestes 简谱 doivent
         // être résolus avant l'appel.
-        const [sheets, sheetChords] = await Promise.all([loadJianpuManifest(), loadJianpuChords()]);
-        // Ré-encodage PNG des seules pages réellement imprimées.
+        const [sheets, sheetChords, cadrage] = await Promise.all([loadJianpuManifest(), loadJianpuChords(), loadJianpuCadrage()]);
+        // Ré-encodage PNG des seules pages réellement imprimées, coupées sous
+        // l'en-tête gravé.
         const sheetFiles = setlist.items.flatMap((it) =>
           sheetEnabled(jianpuPref, it.jianpuSheet)
-            ? (sheets[it.songSlug]?.pages ?? []).map((p) => p.file)
+            ? (sheets[it.songSlug]?.pages ?? []).map((p, i) => ({ file: p.file, top: cadrage[it.songSlug]?.[i] ?? 0 }))
             : [],
         );
         const sheetImages: Record<string, string> = {};
         await Promise.all(
-          sheetFiles.map(async (file) => {
-            const url = await jianpuPngDataUrl(file);
+          sheetFiles.map(async ({ file, top }) => {
+            const url = await jianpuPngDataUrl(file, top);
             if (url) sheetImages[file] = url;
           }),
         );
@@ -759,6 +760,7 @@ export function SetlistDetailClient() {
             showChords={showChords}
             jianpuSheets={sheets}
             jianpuChords={sheetChords}
+            jianpuCadrage={cadrage}
             jianpuImages={sheetImages}
             jianpuPref={jianpuPref}
             sectionStyle={style === "classic" ? "classic" : "colors"}

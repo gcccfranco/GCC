@@ -186,22 +186,23 @@ export function useJianpuScore(slug: string | null | undefined) {
 
 /** Les scans sont servis en WebP, que @react-pdf/renderer ne sait pas lire
  *  (JPEG et PNG uniquement). Le PDF étant fabriqué dans le navigateur, on
- *  ré-encode la page en PNG via un canvas avant de la lui passer. */
-export async function jianpuPngDataUrl(file: string): Promise<string | null> {
+ *  ré-encode la page en PNG via un canvas avant de la lui passer. `top` : les
+ *  rangées de l'en-tête gravé, coupées (`cadrage.json`). */
+export async function jianpuPngDataUrl(file: string, top = 0): Promise<string | null> {
   try {
     const res = await fetch(jianpuImageUrl(file));
     if (!res.ok) return null;
     const bitmap = await createImageBitmap(await res.blob());
     const canvas = document.createElement("canvas");
     canvas.width = bitmap.width;
-    canvas.height = bitmap.height;
+    canvas.height = bitmap.height - top;
     const ctx = canvas.getContext("2d");
     if (!ctx) return null;
     // Le scan d'origine est sur fond blanc opaque ; le canvas, lui, part
     // transparent — un aplat blanc évite un fond noir dans le PDF.
     ctx.fillStyle = "#fff";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-    ctx.drawImage(bitmap, 0, 0);
+    ctx.drawImage(bitmap, 0, -top);
     return canvas.toDataURL("image/png");
   } catch {
     return null;

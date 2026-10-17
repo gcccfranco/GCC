@@ -1,9 +1,13 @@
 import { createHash } from "crypto";
 import { readFileSync, existsSync } from "fs";
+import { inflateSync } from "zlib";
 import { expect, test, type Page } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { loadChords, openSheet } from "./helpers/jianpu";
-import { ouvrirPartitions } from "./helpers/setlist";
+import { enDeuxVolets, ouvrirPartitions } from "./helpers/setlist";
+import { parseChordPro } from "../src/lib/chordpro/parser";
+import { SetlistFullPDF } from "../src/components/pdf/SetlistFullPDF";
+import { JianpuPDFPage } from "../src/components/pdf/SongPDF";
 
 // Chantier 简谱, lot 3 (docs/spec-jianpu-integration.md) : piste A, le scan fondu
 // dans la page. Tests purs d'abord (données), le rendu ensuite.
@@ -889,3 +893,163 @@ test("L3-T5b hors paysage grand écran (mode louange) : pas de colonne, le bande
   await expect(page.locator("[data-performance-mode]").getByText(/Suivant/).first()).toBeVisible();
 });
 
+// ─── L3-T6 : PDF de setlist — le scan coupé sous l'en-tête gravé, le calque décalé de −top ─
+
+type ElementPdf = { type: unknown; props: Record<string, unknown> & { children?: unknown; style?: Record<string, number> } };
+
+/** Les éléments react-pdf d'une page, composants maison dépliés (ils n'ont pas de hooks). */
+function deplier(n: unknown): ElementPdf[] {
+  if (Array.isArray(n)) return n.flatMap(deplier);
+  if (!n || typeof n !== "object" || !("props" in n)) return [];
+  const el = n as ElementPdf;
+  if (typeof el.type === "function") return deplier((el.type as (p: unknown) => unknown)(el.props));
+  return [el, ...deplier(el.props.children)];
+}
+const texte = (el: ElementPdf) => [el.props.children].flat().filter((c) => typeof c === "string").join("");
+
+/** Les pages 简谱 d'un PDF de setlist : un chant, sa tonalité. */
+function pagesPdf(slug: string, keyOverride: string | null) {
+  const doc = SetlistFullPDF({
+    setlist: {
+      title: "Culte du 21 septembre", leader: "Jonathan Z.", category: "Culte Francophone", date: "2026-09-21",
+      language: "mixed", notes: "", ownerId: "uid-owner", isPrivate: false,
+      items: [{ songSlug: slug, position: 1, keyOverride, showChords: true, showPinyin: true, useJianpu: false,
+        structureOverride: null, sectionNotes: {}, notes: "" }],
+    } as never,
+    contents: { [slug]: { slug, ast: parseChordPro(readFileSync(`content/songs/${slug}.cho`, "utf8")) } },
+    showChords: true,
+    jianpuSheets: INDEX as never,
+    jianpuChords: lire("public/jianpu/chords.json"),
+    jianpuCadrage: CADRAGE,
+    jianpuImages: Object.fromEntries(INDEX[slug].pages.map((p) => [p.file, "data:image/png;base64,"])),
+  });
+  const pages = (doc.props as { children: ElementPdf[] }).children.flat().filter((p) => p.type === JianpuPDFPage);
+  expect(pages).toHaveLength(INDEX[slug].pages.length);
+  return pages.map((p) => ({ props: p.props, elements: deplier((JianpuPDFPage as (x: unknown) => unknown)(p.props)) }));
+}
+
+test("10 PDF : 一生爱你 en D — l'image a la hauteur h − top à l'échelle, et « 1=D » est décalé de −top", () => {
+  const [p] = pagesPdf(SLUG, "D");
+  const { w, h } = INDEX[SLUG].pages[0];
+  const top = CADRAGE[SLUG][0];
+  expect(p.props.top).toBe(top);
+  const image = p.elements.find((e) => e.type === "IMAGE")!;
+  const { width: imgW, height: imgH } = image.props.style!;
+  expect(imgH / imgW, "image coupée : ratio (h − top) / w").toBeCloseTo((h - top) / w, 3);
+  // « 1=D » : la position du calque d'aujourd'hui, remontée de top à l'échelle de l'image.
+  const c = lire<Record<string, { w: number; labelH: number; keyLabel: { x: number; y: number; w: number; h: number } }>>("public/jianpu/chords.json")[SLUG];
+  const k = imgW / w;
+  const ck = imgW / c.w;
+  const cadreTop = (c.keyLabel.y - 6) * ck - top * k;
+  const cle = p.elements.find((e) => e.type === "TEXT" && texte(e) === "1=D")!;
+  expect(cle, "« 1=D » réécrit").toBeTruthy();
+  expect(cle.props.style!.top).toBeCloseTo(cadreTop + (c.keyLabel.h + 8) * ck - c.labelH * ck, 3);
+  expect(cle.props.style!.top, "dans l'image").toBeGreaterThan(0);
+});
+
+test("10 PDF : l'image prend toute la largeur du cadre (échelle calculée sur h − top)", () => {
+  const [p] = pagesPdf(SLUG, "D");
+  // A4 moins les marges de page (SHEET_BOX_W, SongPDF.tsx) : 一生爱你 coupé est borné par la largeur.
+  expect(p.elements.find((e) => e.type === "IMAGE")!.props.style!.width).toBeCloseTo(595.28 - 2 * 50, 1);
+});
+
+test("10 PDF : « （X调） » du titre gravé — pas réécrit quand il est coupé, réécrit à sa place sinon", () => {
+  // 亲眼看见你 : « （D调） » gravé au-dessus de la coupe (y 10 < top 147).
+  const [coupe] = pagesPdf("亲眼看见你", "E");
+  expect(coupe.elements.filter((e) => e.type === "TEXT" && /调）$/.test(texte(e)))).toEqual([]);
+  // 有一位神 : coupe à 12 px, « （C调） » gravé dessous, réécrit dans la tonalité du .cho (D).
+  const [garde] = pagesPdf("有一位神", null);
+  const titre = garde.elements.find((e) => e.type === "TEXT" && texte(e) === "（D调）");
+  expect(titre, "« （D调） » réécrit").toBeTruthy();
+  expect(titre!.props.style!.top, "dans l'image").toBeGreaterThan(-2);
+});
+
+test("10 PDF : 为我而来, deux pages — la p. 1 coupée, la p. 2 entière", () => {
+  const pages = pagesPdf("为我而来", null);
+  expect(pages.map((p) => p.props.top ?? 0)).toEqual(CADRAGE["为我而来"]);
+  pages.forEach((p, i) => {
+    const { w, h } = INDEX["为我而来"].pages[i];
+    const s = p.elements.find((e) => e.type === "IMAGE")!.props.style!;
+    expect(s.height / s.width).toBeCloseTo((h - CADRAGE["为我而来"][i]) / w, 3);
+  });
+});
+
+const K4_PDF = /^Page 2 : les accords imprimés sont ceux d'origine \(C\) et ne suivent pas la transposition ; les chiffres, eux, restent justes\.$/;
+
+test("O11 K4 au PDF : 为我而来 en D — la ligne est en tête de la page 2, au-dessus du scan, absente de la page 1", () => {
+  const [p1, p2] = pagesPdf("为我而来", "D");
+  expect(p1.elements.some((e) => e.type === "TEXT" && /accords imprimés/.test(texte(e)))).toBe(false);
+  const i = p2.elements.findIndex((e) => e.type === "TEXT" && K4_PDF.test(texte(e)));
+  expect(i, "avertissement sur la page 2").toBeGreaterThanOrEqual(0);
+  expect(i, "au-dessus du scan").toBeLessThan(p2.elements.findIndex((e) => e.type === "IMAGE"));
+  // Plus l'ancien « Jouer en D — … ceux d'origine » sous la page 2.
+  expect(p2.elements.some((e) => e.type === "TEXT" && /^Jouer en/.test(texte(e)))).toBe(false);
+});
+
+test("O11 K4 au PDF : 为我而来 en C (tonalité gravée) — aucun avertissement", () => {
+  for (const p of pagesPdf("为我而来", null)) {
+    expect(p.elements.some((e) => e.type === "TEXT" && /accords imprimés|^Jouer en/.test(texte(e)))).toBe(false);
+  }
+});
+
+test("10 PDF téléchargé : 一生爱你 en D — le scan ré-encodé fait w × (h − top) pixels", async ({ page }) => {
+  test.setTimeout(120_000);
+  await page.addInitScript(() => localStorage.setItem("jianpu-sheet-pref", "always"));
+  await page.route(/docs\.google\.com\/spreadsheets/, (route) => route.fulfill({ status: 200, contentType: "text/csv", body: "" }));
+  await signInAs(page, MUSICIEN, {
+    "setlists/setlist-t6": {
+      title: "Culte du 21 septembre", leader: "Jonathan Z.", category: "Culte Francophone", date: "2026-09-21",
+      language: "mixed", notes: "", ownerId: "uid-owner", isPrivate: false,
+      items: [{ songSlug: SLUG, position: 1, keyOverride: "D", showChords: true, showPinyin: true, useJianpu: false,
+        structureOverride: null, sectionNotes: {}, notes: "", jianpuSheet: true }],
+    },
+  }, "/setlists/setlist-t6");
+  await ouvrirPartitions(page);
+  if (await enDeuxVolets(page)) {
+    await page.locator("[data-en-tete]").getByRole("button", { name: "PDF", exact: true }).click();
+  } else {
+    await page.getByRole("button", { name: "Plus d'actions" }).click();
+    await page.getByRole("menuitem", { name: "PDF" }).click();
+  }
+  const [download] = await Promise.all([
+    page.waitForEvent("download", { timeout: 90_000 }),
+    page.getByRole("dialog", { name: "Quel PDF ?" }).getByRole("button", { name: "Télécharger" }).click(),
+  ]);
+  const pdf = readFileSync((await download.path())!).toString("latin1");
+  // Les images du PDF (et leur masque alpha) : /Subtype /Image … /Width … /Height …
+  const tailles = [...pdf.matchAll(/<<[^>]*\/Subtype \/Image[^>]*>>/g)].map((m) => [
+    Number(/\/Width (\d+)/.exec(m[0])?.[1]), Number(/\/Height (\d+)/.exec(m[0])?.[1]),
+  ]);
+  const { w, h, file } = INDEX[SLUG].pages[0];
+  const top = CADRAGE[SLUG][0];
+  expect(tailles.length).toBeGreaterThan(0);
+  expect(tailles).toContainEqual([w, h - top]);
+  expect(tailles).not.toContainEqual([w, h]);
+  // C'est bien le haut qui est coupé : rangée par rangée, l'encre de l'image du PDF (RVB brut,
+  // FlateDecode) est celle du scan à partir de la rangée top, décodé par le navigateur.
+  const dico = new RegExp(`<<[^>]*/Width ${w}\\s+/Height ${h - top}\\s[^>]*/ColorSpace /DeviceRGB[^>]*/Length (\\d+)\\s*>>\\s*stream\\r?\\n`).exec(pdf)!;
+  expect(dico, "image RVB du scan").toBeTruthy();
+  const brut = inflateSync(Buffer.from(pdf.slice(dico.index + dico[0].length, dico.index + dico[0].length + Number(dico[1])), "latin1"));
+  const encrePdf = Array.from({ length: h - top }, (_, r) => {
+    let n = 0;
+    for (let x = 0; x < w; x++) if (brut[(r * w + x) * 3] < 128) n++;
+    return n;
+  });
+  const encreScan = await page.evaluate(async ({ file, top }) => {
+    const bitmap = await createImageBitmap(await (await fetch(`/jianpu/${encodeURIComponent(file)}`)).blob());
+    const c = document.createElement("canvas");
+    c.width = bitmap.width;
+    c.height = bitmap.height;
+    const ctx = c.getContext("2d")!;
+    ctx.fillStyle = "#fff";
+    ctx.fillRect(0, 0, c.width, c.height);
+    ctx.drawImage(bitmap, 0, 0);
+    const { data } = ctx.getImageData(0, top, c.width, c.height - top);
+    return Array.from({ length: c.height - top }, (_, r) => {
+      let n = 0;
+      for (let x = 0; x < c.width; x++) if (data[(r * c.width + x) * 4] < 128) n++;
+      return n;
+    });
+  }, { file, top });
+  expect(encrePdf).toEqual(encreScan);
+});

@@ -3,7 +3,7 @@ import { SongPDFPage, FusionPDFPage, TransitionPDFPage, JianpuPDFPage, CompactSt
 import { compactTransitions } from "@/lib/pdf/compact";
 import { resolveStructureOverride } from "@/lib/chordpro/structure";
 import { resolveSectionOccurrences } from "@/lib/setlist/sectionSteps";
-import { type JianpuChordsManifest, type JianpuManifest } from "@/lib/jianpu/images";
+import { cleJouee, type JianpuCadrage, type JianpuChordsManifest, type JianpuManifest } from "@/lib/jianpu/images";
 import { sheetEnabled, type JianpuPref } from "@/lib/jianpu/preference";
 import { transposeAST } from "@/lib/transposeAST";
 import { semitonesTo } from "@/lib/transpose";
@@ -22,6 +22,7 @@ export function SetlistFullPDF({
   showChords,
   jianpuSheets,
   jianpuChords,
+  jianpuCadrage,
   jianpuImages,
   jianpuPref = "auto",
   sectionStyle = "classic",
@@ -34,6 +35,9 @@ export function SetlistFullPDF({
    *  d'effets, ils ne peuvent donc pas venir d'un hook. */
   jianpuSheets?: JianpuManifest;
   jianpuChords?: JianpuChordsManifest;
+  /** Recadrage des scans (`cadrage.json`) : les images de `jianpuImages` sont
+   *  déjà coupées de ces rangées, le calque remonte d'autant. */
+  jianpuCadrage?: JianpuCadrage;
   /** Pages de scan ré-encodées en PNG (data URL), par nom de fichier :
    *  react-pdf ne lit pas le WebP dans lequel les scans sont servis. */
   jianpuImages?: Record<string, string>;
@@ -138,13 +142,21 @@ export function SetlistFullPDF({
                 item,
               )
             : [];
+          // K4 (O11) : les pages suivantes n'ont pas de calque ; quand celui de la
+          // première transpose, elles le disent en tête.
+          const calque = jianpuChords?.[item.songSlug];
+          const cleCalque = calque ? cleJouee(playedKey, baseAst.metadata.key, calque.printedKey) : null;
+          const accordsOrigine = calque && cleCalque && semitonesTo(calque.printedKey, cleCalque) !== 0 ? calque.printedKey : null;
           return sheet.pages.map((page, pageIdx) => (
             <JianpuPDFPage
               key={`${item.songSlug}-${idx}-jianpu-${pageIdx}`}
               src={sheetSrcs![pageIdx]!}
               page={page}
               // Le calque n'est relevé que sur la première page du scan.
-              chords={pageIdx === 0 ? jianpuChords?.[item.songSlug] : null}
+              chords={pageIdx === 0 ? calque : null}
+              pageIndex={pageIdx}
+              top={jianpuCadrage?.[item.songSlug]?.[pageIdx] ?? 0}
+              accordsOrigine={pageIdx > 0 ? accordsOrigine : null}
               title={ast.metadata.title}
               titlePinyin={ast.metadata.titlePinyin}
               playedKey={playedKey}

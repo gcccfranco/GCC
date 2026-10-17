@@ -1158,4 +1158,33 @@ rappel faux sur deux chants au même `section.uid` (C5).
   paysage et ordinateur, et « trait posé en une colonne » (`mode-louange-colonnes`) vert. Rien pour Timothée côté
   libellés (aucun nouveau texte).
 
-Prochaine étape : L3-T6 (PDF de setlist) ; le lot 2 attend le passage complet.
+- **L3-T6, 17/10/2026 — PDF de setlist** (go de Timothée du 17/10/2026). Codé : `jianpuPngDataUrl(file, top)` coupe le
+  scan sous l'en-tête gravé (canvas de `h − top`, `drawImage` à `−top`) ; `SetlistDetailClient` charge `cadrage.json` avec
+  les manifestes et le passe à `SetlistFullPDF` (`jianpuCadrage`) ; `JianpuPDFPage` reçoit `top` : échelle calculée sur
+  `h − top`, calque remonté de `top × k` (`SheetLabel dy` : seul endroit où le recadrage devient un décalage), « （X调） »
+  du titre gravé non réécrit quand il est dans la partie coupée ; l'en-tête maison (titre KaiTi, pinyin, pastille) reste,
+  plus de titre en double ; encre noire sur fond blanc (le scan tel quel) ; le PDF du chant seul reste sans scan (D17).
+  **K4 (O11)** : en tête d'une page suivante (sans calque) quand le calque de la première page transpose, la ligne
+  « Page n : les accords imprimés sont ceux d'origine (X) … » (texte de `jianpu.accordsOriginePage`, en français comme
+  le reste du PDF) ; l'ancien « Jouer en X — … ceux d'origine » ne sort plus que sur la première page (chant sans calque).
+  Tests (`jianpu-integration.spec.ts`) : 10 (一生爱你 en D : ratio `(h − top) / w`, « 1=D » à sa place moins `top × k` ;
+  image à la largeur du cadre ; 为我而来 p. 1 coupée, p. 2 entière ; « （X调） » coupé sur 亲眼看见你, réécrit sur 有一位神 ;
+  PDF réellement téléchargé : l'image fait `w × (h − top)` pixels et, rangée par rangée, son encre est celle du scan à
+  partir de la rangée `top`), O11 (为我而来 en D : en tête de la p. 2, au-dessus du scan, absent de la p. 1, plus de
+  « Jouer en » ; en C : rien). Rouges avant le code pour la bonne raison (pas de `top`, pas de K4, image entière), le cas
+  « en C » vert avant et après ; les tests ajoutés après la vérification Opus mordent sous mutation (`drawImage` à 0 ;
+  condition « （X调） » retirée ; échelle sur `h`). Agent testeur : `jianpu-integration` sur cinq projets (avec L3-T5b) 208
+  verts, 12 sautés, 0 rouge ; après les tests ajoutés, `jianpu-integration -g "PDF|O11"` sur cinq projets 35 / 35,
+  `export-pdf` et `jianpu-par-defaut` sur trois appareils 85 verts, 2 sautés, 0 rouge. PDF classique et compact téléchargés et regardés (pdftoppm ; 一生爱你 en D,
+  为我而来 en D et en C) : conformes à `v20-jp-a-pdf-a4` (en-tête maison, scan dès « 1=D 4/4 », calque aligné au zoom
+  150 dpi, K4 en tête de la p. 2 en D seulement, compact : bandeau puis scan).
+  Vérifié par Opus (17/10/2026) : rien de bloquant ni d'important ; les 189 chants rendus en PDF transposés, classique et
+  compact avec transition longue : une page A4 par page de scan, aucun débordement ; unités (`chords.json` = `index.json`
+  = WebP), `cadrage.json` absent → page entière, chants à `titleKey` sous la coupe (有一位神, 永活盼望, 陪我走过春夏秋冬),
+  pages paysage, pavés qui dépassent la coupe de 1 à 1,5 pt (十字架, 有一天, 好喜欢与你在一起 : invisibles), fusions, condition
+  K4 identique au web (capo en moins : le PDF n'en a pas). Corrigés : trois trous de test (coupe en haut et non en bas,
+  « （X调） » coupé, échelle). **À trancher par Timothée** : le texte K4 sur 为我而来 (« ceux d'origine (C) » alors que la
+  p. 2 module en D) — question (a) de L3-T2c, le PDF en hérite. Vu en passant, d'avant cette tranche : un trait de
+  l'accord gravé dépasse du pavé blanc après « Gmaj7 » sur 为我而来 (PDF et calque web ont le même pavé ; L3-T7).
+
+Prochaine étape : L3-T7 (vérification d'ensemble) ; le lot 2 attend le passage complet.
