@@ -358,7 +358,11 @@ service cloud.firestore {
       allow read: if signedIn();
       // Création : le créateur doit se déclarer propriétaire (ownerId = uid)
       allow create: if signedIn()
-        && request.resource.data.get('ownerId', null) == request.auth.uid;
+        && request.resource.data.get('ownerId', null) == request.auth.uid
+        // Une setlist de fête naît de /api/fetes/saisir (Admin SDK), jamais d'un navigateur
+        // (docs/spec-chants-fetes.md, « Droits en double »).
+        && !('fete' in request.resource.data)
+        && !(request.resource.data.get('category', '') in ['Noël', 'Pâques']);
       // Modification : ownerId ne change jamais ; qui peut modifier =
       // canEditSetlistDoc (le propriétaire ; sinon, setlist non privée, un
       // admin ou un musicien/présidence du service) — jusqu'au 19/09/2026 la
@@ -385,6 +389,23 @@ service cloud.firestore {
         && (
           canDeleteSetlistDoc(resource.data)
           || !request.resource.data.diff(resource.data).affectedKeys().hasAny(['isPrivate'])
+        )
+        // Fête (docs/spec-chants-fetes.md) : `fete` n'est jamais posé ni retiré depuis un navigateur ;
+        // aucune setlist n'entre dans la catégorie Noël ou Pâques ; une setlist de fête garde sa
+        // catégorie, son équipe (`editeurs`, `rolesPartage`, écrits par le serveur seul, même pas par
+        // un admin ou la coordination) et reste publique.
+        && request.resource.data.get('fete', null) == resource.data.get('fete', null)
+        && (
+          !(request.resource.data.get('category', '') in ['Noël', 'Pâques'])
+          || request.resource.data.get('category', '') == resource.data.get('category', '')
+        )
+        && (
+          resource.data.get('fete', null) == null
+          || (
+            request.resource.data.get('category', '') == resource.data.get('category', '')
+            && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['editeurs', 'rolesPartage'])
+            && request.resource.data.get('isPrivate', false) == false
+          )
         );
       // Suppression : le droit de modification d'avant le partage — pas l'équipe.
       allow delete: if signedIn() && canDeleteSetlistDoc(resource.data);
@@ -421,7 +442,9 @@ service cloud.firestore {
     function canDeleteSetlistDoc(setlist) {
       return setlist.get('ownerId', '') == request.auth.uid
         || (!setlist.get('isPrivate', false)
-            && (isAdmin() || (hasProfile() && isEditorOf(setlist.category))));
+            && (isAdmin() || (hasProfile() && isEditorOf(setlist.category))))
+        // Setlist de fête : la coordination (docs/spec-chants-fetes.md).
+        || (setlist.get('fete', null) != null && isCoordination());
     }
 
     // Miroir de canEditSetlist (src/lib/access.ts) : une setlist privée ne se

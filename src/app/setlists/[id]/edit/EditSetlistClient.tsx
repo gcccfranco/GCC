@@ -43,6 +43,7 @@ export function EditSetlistClient() {
         isPrivate: sl.isPrivate ?? false,
         ownerId: sl.ownerId ?? null,
         editeurs: sl.editeurs,
+        fete: sl.fete,
         rolesPartage: sl.rolesPartage,
         items: buildFormItems(sl.items, songsMap),
       });

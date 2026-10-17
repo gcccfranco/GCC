@@ -7,6 +7,7 @@ import { normalizeName, splitNames } from "@/lib/planning/names";
 import { EDD_PERIODES, type EddPeriode } from "@/lib/planning/utils";
 import type { Language } from "@/types/common";
 import type { Passage } from "@/types/programme";
+import type { OrganigrammeGroupe, RoleGroupe } from "@/types/groupe";
 import { libelleEdition } from "@/lib/scene/fetes";
 import { groupeDuQui, libelleQui } from "./qui";
 
@@ -21,13 +22,12 @@ export interface ProfilFete {
   coordination: boolean;
 }
 
-/** Un document `groupes/{id}` (lot 2) : président, VP, rôles reliés ou non à une colonne du planning,
- *  titulaires (uids). `saisirFetes` = la case « Saisir les chants des fêtes » du rôle (absent = non). */
-export interface GroupeFete {
-  president: string | null;
-  vps: readonly string[];
-  roles: readonly { colonne: string | null; saisirFetes?: boolean; titulaires: readonly string[] }[];
-}
+/** Un document `groupes/{id}` du lot 2 (`OrganigrammeGroupe`), réduit à ce que la règle lit : président,
+ *  VP, rôles (colonne reliée, case « Saisir les chants des fêtes », titulaires). Un `Titulaire` sans
+ *  compte a un `uid` vide : il ne compte pas. */
+export type GroupeFete = Pick<OrganigrammeGroupe, "president" | "vp"> & {
+  roles: readonly Pick<RoleGroupe, "colonne" | "droits" | "titulaires">[];
+};
 
 /** Le planning EDD tel que `loadPlanningData` le rend : par période, par classe, des lignes
  *  `[date, présidence, suppléant, piano, cajon, guitare, cours]`. */
@@ -86,8 +86,8 @@ export function ayantsDroitDuQui(qui: string, ctx: ContexteFetes): AyantDroit[] 
     // Un président, un VP ou un titulaire ne compte que s'il appartient au groupe (OG2, OG3).
     const duGroupe = (uid: string) => profil(uid)?.groupe === groupe;
     if (doc) {
-      if (doc.president && duGroupe(doc.president)) ajoute(doc.president, "president");
-      for (const uid of doc.vps) if (duGroupe(uid)) ajoute(uid, "vp");
+      if (doc.president?.uid && duGroupe(doc.president.uid)) ajoute(doc.president.uid, "president");
+      for (const { uid } of doc.vp) if (uid && duGroupe(uid)) ajoute(uid, "vp");
     }
     // (a) rôle de service « musicien » du groupe (transition, D17 du lot 2) ; la présidence de séance
     // ne saisit pas à ce titre (décision 45, Q10).
@@ -97,9 +97,9 @@ export function ayantsDroitDuQui(qui: string, ctx: ContexteFetes): AyantDroit[] 
       const colonnes = COLONNES_MUSICIENS[groupe] ?? [];
       for (const role of doc.roles) {
         // (b) titulaires d'un rôle relié à une colonne de musicien ; (c) rôles avec la case cochée.
-        const raison: RaisonDroit | null = role.colonne && colonnes.includes(role.colonne) ? "role-musicien" : role.saisirFetes === true ? "role-coche" : null;
+        const raison: RaisonDroit | null = role.colonne && colonnes.includes(role.colonne) ? "role-musicien" : role.droits?.saisirFetes === true ? "role-coche" : null;
         if (!raison) continue;
-        for (const uid of role.titulaires) if (duGroupe(uid)) ajoute(uid, raison);
+        for (const { uid } of role.titulaires) if (uid && duGroupe(uid)) ajoute(uid, raison);
       }
     }
   } else if (qui.startsWith("EDD ")) {

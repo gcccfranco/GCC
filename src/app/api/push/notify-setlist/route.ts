@@ -8,6 +8,7 @@ import { FieldValue } from "firebase-admin/firestore";
 import { isAdminEmail, categoryLevel } from "@/lib/access";
 import { aPrevenir, horodatageEnvoi, peutPrevenirEquipe } from "@/lib/setlist/partage";
 import type { ServiceRole } from "@/types/user";
+import { BACK_OFFICE } from "@/lib/backOffice";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -62,8 +63,16 @@ export async function POST(req: NextRequest) {
     ownerId?: string;
     isPrivate?: boolean;
     editeurs?: string[];
+    fete?: unknown;
     items?: { type?: string }[];
   };
+
+  // Une setlist de fête n'existe pas en ligne (CF24) et n'a ni équipe de planning ni « setlist prête »
+  // (CF15) : ses `editeurs` ne sont pas une équipe à prévenir.
+  if (sl.fete) {
+    if (!BACK_OFFICE) return new Response(null, { status: 404 });
+    return NextResponse.json({ error: "Pas de prévenance pour une setlist de fête" }, { status: 400 });
+  }
 
   if (!sl.category) {
     return NextResponse.json({ error: "Catégorie de setlist manquante" }, { status: 400 });

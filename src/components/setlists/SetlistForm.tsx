@@ -55,6 +55,8 @@ export interface SetlistFormInitial {
   /** L'équipe de la setlist (docs/spec-partage-setlist.md). */
   editeurs?: string[];
   rolesPartage?: Record<string, RolePartage>;
+  /** Setlist d'un passage de fête (docs/spec-chants-fetes.md) : ses droits ne sont pas ceux d'une setlist ordinaire. */
+  fete?: FSSetlist["fete"];
   items: FormListItem[];
 }
 
@@ -128,9 +130,9 @@ export function SetlistForm({ mode, setlistId, songs, initial, prefill }: Setlis
   const peutChangerEquipe =
     !!user &&
     (!isEdit ||
-      canSetSetlistTeam(user, profile, { ownerId, isPrivate: initial?.isPrivate, category: initial?.category ?? "", editeurs: initial?.editeurs } as FSSetlist));
+      canSetSetlistTeam(user, profile, { ownerId, isPrivate: initial?.isPrivate, category: initial?.category ?? "", editeurs: initial?.editeurs, fete: initial?.fete } as FSSetlist));
   const visibiliteLecture =
-    isEdit && !!user && !canDeleteSetlist(user, profile, { ownerId, isPrivate: initial?.isPrivate, category: initial?.category ?? "", editeurs: initial?.editeurs } as FSSetlist);
+    isEdit && !!user && !canDeleteSetlist(user, profile, { ownerId, isPrivate: initial?.isPrivate, category: initial?.category ?? "", editeurs: initial?.editeurs, fete: initial?.fete } as FSSetlist);
 
   // ── Sélecteurs planning : présidence (liste) + date (manuelle) ───────────
   const [planning, setPlanning] = useState<PlanningData | null>(null);

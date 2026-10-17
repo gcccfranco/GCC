@@ -473,6 +473,8 @@ export function canDuplicateSetlist(
   profile: UserProfile | null,
   setlist: FSSetlist
 ): boolean {
+  // Une setlist de fête naît d'un passage (docs/spec-chants-fetes.md, CF15) : pas de copie, admin compris.
+  if (setlist.fete) return false;
   if (isAdminUser(user)) return true;
   return !!profile && creatableCategories(profile).includes(setlist.category);
 }
@@ -484,6 +486,8 @@ export function canSeeSetlist(
 ): boolean {
   if (setlist.ownerId === user.uid) return true;
   if (setlist.editeurs?.includes(user.uid)) return true;
+  // Une setlist de fête se voit de tout connecté (CF12, décision 32) ; elle n'est jamais privée.
+  if (setlist.fete) return true;
   if (setlist.isPrivate) return false;
   if (isAdminUser(user)) return true;
   return profile ? visibleCategories(profile).includes(setlist.category) : false;
@@ -526,6 +530,9 @@ export function canDeleteSetlist(
   setlist: FSSetlist
 ): boolean {
   if (setlist.ownerId === user.uid) return true;
+  // Setlist de fête : la coordination la supprime (et la modifie, via canEditSetlist) ; ownerId est
+  // `null` et personne ne sert dans la catégorie Noël ou Pâques. Miroir : canDeleteSetlistDoc.
+  if (setlist.fete && isCoordination(user, profile)) return true;
   if (setlist.isPrivate) return false;
   if (isAdminUser(user)) return true;
   const roles = profile?.serviceRoles[setlist.category];
@@ -544,7 +551,19 @@ export function canSetSetlistTeam(
   profile: UserProfile | null,
   setlist: FSSetlist
 ): boolean {
+  // Une setlist de fête a ses `editeurs` écrits par le serveur seul (CF18), même pour un admin.
+  if (setlist.fete) return false;
   return canEditSetlist(user, profile, setlist) && (setlist.ownerId === user.uid || isAdminUser(user));
+}
+
+/** Lien de présentation d'une setlist de fête (CF27, décision 45, Q7) : la régie hors planning =
+ *  les membres de TEAM RÉGIE (`dansEquipes` ∋ `regie`). Sert de drapeau `regie` à
+ *  `canSetPresentationLink` (client pour le bouton, /api/setlist/presentation pour l'écriture). */
+export function estRegieDeFete(
+  profile: { dansEquipes?: string[] } | null,
+  setlist: Pick<FSSetlist, "fete">
+): boolean {
+  return !!setlist.fete && !!profile?.dansEquipes?.includes("regie");
 }
 
 // ─── Back-Office (lot U6, docs/spec-back-office.md) ──────────────────────────

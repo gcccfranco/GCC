@@ -14,6 +14,7 @@ import { estUnChant, propositionsEnDouble, resoudrePropositions } from "../src/l
 import { parseChordPro } from "../src/lib/chordpro/parser";
 import { categoryColor, CATEGORY_COLORS, PLANNING_COLORS } from "../src/lib/serviceColors";
 import type { SetlistItem } from "../src/types/setList";
+import type { DroitsRole } from "../src/types/groupe";
 
 // Lot « chants des fêtes » (docs/spec-chants-fetes.md), tranches CF-A (modèle et logique pure),
 // CF-F (documentation, parseur) et CF-G (couleurs). Noms fictifs.
@@ -53,18 +54,25 @@ const PROFILS: ProfilFete[] = [
   profil("autre", { dansEquipes: ["regie"] }),
 ];
 
+// Documents `groupes/{id}` au format du lot 2 : Titulaire = { nom, uid } (uid vide = sans compte).
+const t = (uid: string) => ({ nom: uid, uid });
+const role = (colonne: string | null, titulaires: string[], saisirFetes?: boolean) => ({
+  colonne, titulaires: titulaires.map(t),
+  droits: { remplir: false, publier: false, notifier: false, ...(saisirFetes === undefined ? {} : { saisirFetes }) } as DroitsRole,
+});
+
 const GROUPES: ContexteFetes["groupes"] = {
   paix: {
-    president: "ruth", vps: ["lea"],
+    president: t("ruth"), vp: [t("lea"), { nom: "Sans compte", uid: "" }],
     roles: [
-      { colonne: "musiciens", titulaires: ["noe"] },
-      { colonne: "orateur", saisirFetes: true, titulaires: ["mei"] },
-      { colonne: "orateur", titulaires: ["hugo"] },
-      { colonne: "percussion", saisirFetes: true, titulaires: ["eli"] }, // d'un autre groupe : ignoré
+      role("musiciens", ["noe"]),
+      role("orateur", ["mei"], true),
+      role("orateur", ["hugo"]),
+      role("percussion", ["eli"], true), // d'un autre groupe : ignoré
     ],
   },
-  fidelite: { president: null, vps: [], roles: [{ colonne: "guitariste", titulaires: ["gui"] }] },
-  joie: { president: "ana", vps: ["tom"], roles: [{ colonne: null, saisirFetes: true, titulaires: ["sam"] }, { colonne: null, titulaires: ["hugo"] }] },
+  fidelite: { president: null, vp: [], roles: [role("guitariste", ["gui"])] },
+  joie: { president: t("ana"), vp: [t("tom")], roles: [role(null, ["sam"], true), role(null, ["hugo"])] },
 };
 
 // Planning EDD 中班 : un dimanche d'octobre, de Nov–Déc 2026 et de Nov–Déc 2025 ; guitare = colonne 5.
@@ -140,7 +148,7 @@ test.describe("qui saisit (CF16, décisions 30, 35, 45)", () => {
   });
 
   test("un rôle écrit sans le champ saisirFetes ne donne aucun droit", () => {
-    const ctx = { ...CTX, groupes: { ...GROUPES, paix: { ...GROUPES.paix, roles: [{ colonne: "orateur", titulaires: ["mei"] }] } } };
+    const ctx = { ...CTX, groupes: { ...GROUPES, paix: { ...GROUPES.paix, roles: [role("orateur", ["mei"])] } } };
     expect(uids("Gp Paix", ctx)).not.toContain("mei");
   });
 

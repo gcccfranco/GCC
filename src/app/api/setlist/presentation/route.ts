@@ -5,7 +5,8 @@ import { sendPushToUids } from "@/lib/push/send";
 import { recordNotification } from "@/lib/push/notifications";
 import { loadPlanningNameIndex, filterUidsByNotifPref, loadNotifLangs } from "@/lib/push/recipients";
 import { loadPlanningData, servantsForDate } from "@/lib/planning/names";
-import { canEditSetlist, canSetPresentationLink } from "@/lib/access";
+import { canEditSetlist, canSetPresentationLink, estRegieDeFete } from "@/lib/access";
+import { BACK_OFFICE } from "@/lib/backOffice";
 import {
   isOnDutyRegie,
   parsePresentationUrl,
@@ -86,14 +87,18 @@ export async function POST(req: NextRequest) {
   const snap = await ref.get();
   if (!snap.exists) return NextResponse.json({ error: "Setlist introuvable" }, { status: 404 });
   const setlist = { id: setlistId, ...snap.data() } as FSSetlist;
+  // Une setlist de fête n'existe pas en ligne (docs/spec-chants-fetes.md, CF24) : même Firestore, autre site.
+  if (setlist.fete && !BACK_OFFICE) return new Response(null, { status: 404 });
   const profile = ((await db.collection("users").doc(user.uid).get()).data() ?? null) as UserProfile | null;
   const safeProfile = profile && { ...profile, serviceRoles: profile.serviceRoles ?? {} };
 
-  // Le planning n'est lu que si l'édition ne suffit pas déjà.
-  const regie =
-    !canEditSetlist(user, safeProfile, setlist) &&
-    !setlist.isPrivate &&
-    isOnDutyRegie(servantsForDate(await loadPlanningData(), (setlist.date ?? "").slice(0, 10)), setlist, profile?.planningName ?? "");
+  // Le planning n'est lu que si l'édition ne suffit pas déjà. Une setlist de fête n'a pas de planning
+  // de catégorie : la régie y est TEAM RÉGIE (CF27, décision 45, Q7).
+  const regie = setlist.fete
+    ? estRegieDeFete(profile, setlist)
+    : !canEditSetlist(user, safeProfile, setlist) &&
+      !setlist.isPrivate &&
+      isOnDutyRegie(servantsForDate(await loadPlanningData(), (setlist.date ?? "").slice(0, 10)), setlist, profile?.planningName ?? "");
   if (!canSetPresentationLink(user, safeProfile, setlist, regie)) {
     return NextResponse.json(
       { error: "Seule la régie inscrite au planning ce jour-là (ou qui peut modifier la setlist) peut changer ce lien." },
