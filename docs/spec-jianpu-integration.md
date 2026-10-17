@@ -1112,13 +1112,14 @@ rappel faux sur deux chants au même `section.uid` (C5).
   barres), barre du bas sur deux lignes, loupe d'annotation, « Suivant » (dans la zone de la barre du bas, il ne couvre
   plus le scan), Sections uniques, Structure seule, fusions. Corrigés : titre réduit à 0 px au téléphone en A+ 150 % avec
   capo et tonalité de l'appareil (test ajouté) ; tests K1 qui mesuraient avant l'arrivée de `cadrage.json` (ils attendent
-  le recadrage) ; props orphelines de `StructureStrip` ; `ResizeObserver` sur la bordure. **À trancher par Timothée** :
-  (a) **les annotations déjà posées sur une page de scan sont décalées** : les traits sont en coordonnées d'écran, la clé
-  de page n'a pas changé, et le scan descend et rapetisse (tablette : haut ≈ 50 → 128 px, ≈ 120 px de hauteur en moins ;
-  L3-T2b l'avait déjà déplacé) — accepter, ou changer la clé des pages de scan (les anciens traits disparaissent au lieu
-  d'être faux) ; (b) en paysage sur ordinateur 1 280 × 720 et sur l'iPad paysage, le scan, borné par la hauteur, perd la
-  hauteur des barres (≈ 120 px) : il est plus petit qu'avant, jusqu'à L3-T5b (bandeau en colonne, scan sur toute la
-  hauteur). Laissés (mineurs) : la partie droite de l'en-tête est une copie de celle de `SongHeader` ; pastille à la
+  le recadrage) ; props orphelines de `StructureStrip` ; `ResizeObserver` sur la bordure. **Points ouverts, laissés à mon
+  choix par Timothée (17/10/2026)** : (a) les annotations déjà posées sur une page de scan tombaient à côté des notes (traits
+  en coordonnées d'écran ; le scan descend et rapetisse, tablette : haut ≈ 50 → 128 px) → **une page de scan a sa propre
+  clé** (suffixe `j2`) : les anciens traits ne s'y chargent plus, ils restent dans Firestore (un retour arrière du code
+  les rendrait) ; à passer à `j3` si L3-T5b déplace encore le scan. Test : la clé lue d'une page de scan finit par `j2`
+  (rouge avant, vert après) ; le test « trait posé en une colonne » (`mode-louange-colonnes`) reste vert ; (b) en paysage
+  (ordinateur 1 280 × 720, iPad), le scan, borné par la hauteur, perd ≈ 120 px → **gardé** : le corriger, c'est L3-T5b
+  (bandeau en colonne, scan sur toute la hauteur). Laissés (mineurs) : la partie droite de l'en-tête est une copie de celle de `SongHeader` ; pastille à la
   couleur des chants zh (tous les scans le sont) ; tempo écrit « ♩ 65 » (maquette) et non « ♩ = 65 » (page chant).
 
 Prochaine étape : L3-T5b (colonne paysage) ; le lot 2 attend le passage complet.

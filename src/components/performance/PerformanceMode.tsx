@@ -933,7 +933,10 @@ export function PerformanceMode({
   });
   // « x2 » seulement sur une page posée en deux colonnes : une page en une
   // colonne garde sa clé, et ses traits ne se mêlent pas à ceux d'une autre mise en page.
-  const currentPageKey = computePageKey(blocks, currentPageIndices, `${layoutSig}${layout[currentPage]?.twoColumns ? "x2" : ""}`);
+  // « j2 » sur une page de scan : le scan a bougé (L3-T2b, L3-T5a) et les traits sont en
+  // coordonnées d'écran ; ceux d'avant ne s'y chargent plus plutôt que tomber à côté des
+  // notes (gardés dans Firestore). À incrémenter si le scan bouge encore (L3-T5b).
+  const currentPageKey = computePageKey(blocks, currentPageIndices, `${layoutSig}${layout[currentPage]?.twoColumns ? "x2" : ""}${layout[currentPage]?.fit ? "j2" : ""}`);
 
   // Charger les traits de la page courante (toujours — affichage permanent)
   useEffect(() => {

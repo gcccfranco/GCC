@@ -762,3 +762,14 @@ test("L3-T5a en-tête d'une ligne (mode louange), A+ 150 %, capo et tonalité de
   const e = (await entete.boundingBox())!;
   expect(e.x + e.width).toBeLessThanOrEqual(page.viewportSize()!.width + 0.5);
 });
+
+test("L3-T5a annotations : une page de scan a sa propre clé (« j2 ») — les traits posés avant que le scan ne bouge ne s'y chargent plus", async ({ page }) => {
+  test.setTimeout(90_000);
+  const lues: string[] = [];
+  page.on("request", (r) => {
+    const m = r.url().match(/\/documents\/(annotations\/[^?]+)/);
+    if (m && r.method() === "GET") lues.push(decodeURIComponent(m[1]));
+  });
+  await ouvrirLouangeT5(page);
+  await expect.poll(() => lues.at(-1) ?? "").toMatch(/j2$/);
+});
