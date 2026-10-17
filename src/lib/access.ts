@@ -200,6 +200,13 @@ export function canEditPlanning(
  *  Filtrage côté navigateur, comme le reste du site (choix de confiance
  *  assumé, cf. CLAUDE.md) — aucune règle Firestore : les fiches sont des
  *  fichiers publics. */
+/** Cours d'Harmonie (C2, C4) : chacun coche ses chapitres ; seuls les admins
+ *  voient la progression des autres. Miroir serveur : firestore.rules,
+ *  `coursProgres/{uid}` (lecture : soi ou admin ; écriture : soi). */
+export function canSeeTeamCoursProgres(user: { email?: string | null } | null): boolean {
+  return isAdminUser(user);
+}
+
 export function canUseHarmonie(
   user: { email?: string | null } | null,
   services: { role: string }[],

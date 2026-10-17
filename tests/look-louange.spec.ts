@@ -1,4 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
+import * as fs from "fs";
+import * as path from "path";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
 
 // Lot 4 « Nouveau look », tranche T3 : louange (docs/spec-look.md).
@@ -15,6 +17,8 @@ const ENCRE = "rgb(28, 28, 30)";
 const BLEU_FR = "rgb(63, 99, 207)"; // --fr-accent
 const ROUGE_ZH = "rgb(179, 38, 29)"; // --zh-accent
 const CULTE = "rgb(45, 90, 101)"; // PLANNING_COLORS.culte
+/** Le répertoire grandit : le total se lit dans l'index, il ne se fige pas ici. */
+const TOTAL = JSON.parse(fs.readFileSync(path.join(process.cwd(), "public", "songs-index.json"), "utf8")).songs.length;
 
 const ligne = (page: Page, titre: string) => page.locator('li[id^="song-li-"]').filter({ hasText: titre }).first();
 const couleur = (l: ReturnType<Page["locator"]>) => l.evaluate((el) => getComputedStyle(el).color);
@@ -47,7 +51,7 @@ test.describe("louange (T3) : liste des chants", () => {
     await page.goto("/songs?theme=adoration");
     await page.getByRole("searchbox").waitFor();
     await expect(page.locator("select").first()).toHaveValue("adoration");
-    await expect(page.getByText(/résultats? sur 370/)).toBeVisible();
+    await expect(page.getByText(new RegExp(`résultats? sur ${TOTAL}`))).toBeVisible();
     await expect(page.locator("select").first().locator("option")).toContainText(["Adoration", "Foi"]);
   });
 

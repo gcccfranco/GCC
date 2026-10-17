@@ -4,12 +4,13 @@
 {language: fr}
 {youtube: https://www.youtube.com/watch?v=aEboHH22kSA}
 {themes: Grâce, Adoration}
+{source: Vases d’argile.pdf}
 
 {start_of_verse: Couplet 1}
 J’étais [Em]brisé, vide et sans [G]espoir.
 Ta grâce m’a [Em]trouvé, m’a rest[G]auré.
 Je n’ai rien [Em]à moi mais, tel que [G]je suis,
-Tu me l[D]ibères, tu me l[Em]ib[ ][D]ères.
+Tu me l[D]ibères, tu me l[Em]ib[D]ères.
 {end_of_verse}
 
 {start_of_prechorus}
@@ -32,4 +33,8 @@ Tu places ton [Em]trésor dans des vases d’a[G]rgile.
 Oh, prends mon [Em]cœur, Père ! Je veux te [G]servir
 Pour que t[D]ous voient ta vie e[Em]n m[D]oi.
 {end_of_verse}
+
+{start_of_bridge: Pont (x2)}
+[G]O[D]h ! [Em]O[C]h !
+{end_of_bridge}
 

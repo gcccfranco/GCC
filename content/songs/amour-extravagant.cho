@@ -3,10 +3,11 @@
 {key: E}
 {language: fr}
 {youtube: https://www.youtube.com/watch?v=FJ3arrDOq5E}
-{themes: Adoration, Grace}
+{themes: Grâce, Adoration, Croix}
+{source: Amour extravagant.pdf}
 
-{start_of_intro: Intro}
-[C#m]  [B] [ ] [A]  [E]
+{start_of_intro: Intro (x2)}
+[C#m]  [B]  [A]  [E]
 {end_of_intro}
 
 {start_of_verse: Couplet 1}
@@ -25,7 +26,7 @@ Oh, l'a[C#m]mour renversant, [B]extravagant, [A]infini de [E]Dieu.
 
 {start_of_verse: Couplet 2}
 [C#m] Je Te reje[B]tais, sans relâche, [A]Tu m'aimais,
-[C#m] Oui, Tu es si [B]bon en[A]vers moi.
+[C#m] Oui, Tu es [B]si bon en[A]vers moi.
 [C#m] Je me sentais [B]vain, Tu m'as o[A]ffert la croix.
 [C#m] Oui, Tu es [B]si tendre en[A]vers moi.
 {end_of_verse}

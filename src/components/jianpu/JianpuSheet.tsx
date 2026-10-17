@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { Trans, useTranslation } from "react-i18next";
 import Image from "next/image";
 import type { JianpuEntry } from "@/lib/jianpu/images";
-import { jianpuImageUrl, useJianpuChords } from "@/lib/jianpu/images";
+import { cleJouee, jianpuImageUrl, useJianpuChords } from "@/lib/jianpu/images";
 import { aDesRetouches, cibleRetouche, type CibleRetouche } from "@/lib/jianpu/retouches";
 import { JianpuChordSheet } from "@/components/jianpu/JianpuChordSheet";
 import type { JianpuChords } from "@/types/setList";
@@ -122,6 +122,9 @@ type JianpuSheetProps = {
   /** Tonalité à jouer. Si le chant a un calque, les accords sont réécrits
    *  dedans ; sinon un bandeau prévient que ceux du scan ne suivent pas. */
   playedKey?: string | null;
+  /** Tonalité du `.cho`, jouée quand `playedKey` est absent (voir `cleJouee`).
+   *  Obligatoire : l'oublier rendrait un scan gravé ailleurs dans sa tonalité. */
+  originalKey: string | null | undefined;
   /** Capo (frets) : les accords du calque passent en positions, comme les
    *  grilles ChordPro du Mode Louange. Le « 1=X » et la tonalité du titre
    *  décrivent le son produit et ne bougent donc pas. */
@@ -146,10 +149,11 @@ type JianpuSheetProps = {
  *  Le calque est en HTML positionné en pourcentage de l'image, pas en
  *  PNG pré-rendu : 124 chants × 12 tonalités serait intenable, et la
  *  transposition doit rester instantanée. */
-export function JianpuSheet({ entry, title, slug, layout = "flow", playedKey, capo = 0, pageIndex, chordEdits, onEditChords }: JianpuSheetProps) {
+export function JianpuSheet({ entry, title, slug, layout = "flow", playedKey: demandee, originalKey, capo = 0, pageIndex, chordEdits, onEditChords }: JianpuSheetProps) {
   const { t } = useTranslation();
   const fit = layout === "fit";
   const chords = useJianpuChords(slug);
+  const playedKey = cleJouee(demandee, originalKey, chords?.printedKey);
   // Retouches (lot 9) : l'accord retouché remplace le gravé partout où le
   // calque parle de lui, y compris dans l'ordre de peinture.
   const retouches = chordEdits?.changed ?? {};
@@ -386,7 +390,7 @@ export function JianpuSheet({ entry, title, slug, layout = "flow", playedKey, ca
               contrôle en Python, qui travaillent sur l'image d'origine. */}
           {(overlayOn || retouchesOn || retouchable) && i === 0 && chords && (
             <>
-            <div className="pointer-events-none absolute inset-0" aria-hidden>
+            <div data-jianpu-calque className="pointer-events-none absolute inset-0" aria-hidden>
               {overlayOn && chords.keyLabel && (() => {
                 const kl = chords.keyLabel!;
                 const keyShown = kl.c

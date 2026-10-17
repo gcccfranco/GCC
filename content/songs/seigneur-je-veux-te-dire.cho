@@ -2,20 +2,23 @@
 {key: G}
 {language: fr}
 {themes: Engagement, Foi}
+{source: Seigneur je veux te dire Oui.pdf}
 
 {start_of_verse: Couplet 1}
-[G]J'a[C]bandonne mes [Em]tristes[D]ses, [G]j'a[C]bandonne [Em]mes pei[D]nes
-[G]Je les [C]laisse tom[Em]ber pour la [D]joie du Sei[G]gneur[C][G][D]
+{needs_review: feuille Word basse fidélité : le Mim de la 2e moitié est à cheval sur la fin de « abandonne » et « mes », Em laissé sur « mes », à confirmer à l'oreille}
+[G]J'a[C]bandonne mes [Em]trist[D]esses, [G]j'a[C]bandonne [Em]mes [D]peines
+[G]Je l[C]es laisse tom[Em]ber pour la [D]joie du Sei[G]gneur[(C)][(G)][(D)]
 {end_of_verse}
 
 {start_of_verse: Couplet 2}
-[G]J'a[C]bandonne mes [Em]souffran[D]ces, [G]j'a[C]bandonne [Em]ma [D]honte
-[G]Je les [C]laisse tom[Em]ber pour la [D]joie du Sei[G]gneur[C][G][D]
+{needs_review: feuille Word basse fidélité : le Mim de la 2e moitié est à cheval sur la fin de « abandonne » et « ma », Em laissé sur « ma », à confirmer à l'oreille}
+[G]J'a[C]bandonne mes [Em]souff[D]rances, [G]j'a[C]bandonne [Em]ma [D]honte
+[G]Je l[C]es laisse tom[Em]ber pour la [D]joie du Sei[G]gneur[(C)][(G)][(D)]
 {end_of_verse}
 
 {start_of_chorus: Refrain}
-[G]Seigneur, je [C]veux te [Em]dire [D]OUI !
-[G]Seigneur, je [C]veux te [Em]dire [D]OUI !
-[G]Seigneur, je [C]veux te [Em]dire [D]OUI !
-AM[G]EN...[ ][C][ ][G][ ][D]
+[G]Seigneur, [C]je veux [Em]te dire [D]OUI !
+[G]Seigneur, [C]je veux [Em]te dire [D]OUI !
+[G]Seigneur, [C]je veux [Em]te dire [D]OUI !
+A[G]MEN[C]...[G] [D]
 {end_of_chorus}

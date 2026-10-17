@@ -8,14 +8,15 @@ import index from "../public/songs-index.json";
 // aux pinyin du dessus.
 
 /** 我能给你什么 : le plus d'accords orphelins et de virgules en tête de rangée
- *  sur téléphone ; 大手牵着小手 : l'accord final seul ; 爱的彰显 : rangées serrées.
+ *  sur téléphone ; 大手牵着小手 : l'accord final seul ; 爱的彰显 : rangées serrées ;
+ *  奔跑不放弃 : un accord après la ponctuation finale dépassait le bord.
  *  `PW_CHANTS_ZH=all` passe les 188 chants chinois (long : à lancer sur un seul
  *  appareil, `--project=telephone`). */
 const CHANTS = process.env.PW_CHANTS_ZH === "all"
   ? index.songs.filter((s) => s.language === "zh").map((s) => s.slug)
-  : ["我能给你什么", "大手牵着小手", "爱的彰显"];
+  : ["我能给你什么", "大手牵着小手", "爱的彰显", "奔跑不放弃"];
 
-type Mesure = { orphelins: string[]; ponctuations: string[]; ecartDansLigne: number | null; ecartEntreLignes: number | null };
+type Mesure = { orphelins: string[]; ponctuations: string[]; debords: string[]; ecartDansLigne: number | null; ecartEntreLignes: number | null };
 
 /** Les rangées de chaque ligne chinoise telles que le navigateur les pose. */
 function mesurer(page: Page): Promise<Mesure> {
@@ -31,7 +32,9 @@ function mesurer(page: Page): Promise<Mesure> {
       const b = r.getBoundingClientRect();
       return b.height ? b : null;
     };
-    const out: Mesure = { orphelins: [], ponctuations: [], ecartDansLigne: null, ecartEntreLignes: null };
+    const out: Mesure = { orphelins: [], ponctuations: [], debords: [], ecartDansLigne: null, ecartEntreLignes: null };
+    // Bord droit de la page : un accord ne doit jamais le dépasser (rogné à l'écran).
+    const bord = document.documentElement.clientWidth;
     const min = (a: number | null, b: number) => (a === null ? b : Math.min(a, b));
     // Ligne précédente de la même section seulement (chaque ligne a son propre
     // `div`, la section est au-dessus) : d'une section à l'autre, un titre s'intercale.
@@ -58,6 +61,10 @@ function mesurer(page: Page): Promise<Mesure> {
       const basPinyin = (r: typeof colonnes) => Math.max(...r.map((c) => boiteTexte(c.pinyin)?.bottom ?? -Infinity));
       const aDesParoles = colonnes.some((c) => PAROLE.test(c.caractere));
 
+      for (const c of colonnes) {
+        const droite = c.accord ? boiteTexte(c.accord)?.right ?? 0 : 0;
+        if (droite > bord + 0.5) out.debords.push(`[${c.accord!.textContent}] ${Math.round(droite)} > ${bord}`);
+      }
       rangees.forEach((r, i) => {
         if (i > 0 && aDesParoles && !r.some((c) => PAROLE.test(c.caractere)) && r.some((c) => c.accord)) {
           out.orphelins.push(`${texte(rangees[i - 1])} ⏎ ${texte(r)}`);
@@ -77,6 +84,8 @@ function mesurer(page: Page): Promise<Mesure> {
 }
 
 async function ouvrir(page: Page, slug: string): Promise<Mesure> {
+  // Un chant à scan s'ouvre sur son scan : on mesure ici ses paroles.
+  await page.addInitScript(() => localStorage.setItem("jianpu-sheet-pref", "never"));
   await page.goto(`/songs/${encodeURIComponent(slug)}`);
   await page.locator("[data-copy-line]").first().waitFor();
   await page.evaluate(() => document.fonts.ready);
@@ -90,6 +99,10 @@ for (const slug of CHANTS) {
 
   test(`${slug} — ligne coupée : aucune rangée ne commence par une ponctuation`, async ({ page }) => {
     expect((await ouvrir(page, slug)).ponctuations).toEqual([]);
+  });
+
+  test(`${slug} — aucun accord ne dépasse le bord de l'écran`, async ({ page }) => {
+    expect((await ouvrir(page, slug)).debords).toEqual([]);
   });
 
   test(`${slug} — ligne coupée : les accords gardent l'écart d'une ligne à l'autre`, async ({ page }) => {

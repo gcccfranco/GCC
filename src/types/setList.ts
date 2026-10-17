@@ -15,6 +15,9 @@ export type FusionSong = {
   sectionNuances?: Record<string, SectionNuance>;
   /** Modulation (升调) par section : uid de section → tonalité cible. */
   sectionKeys?: Record<string, string>;
+  /** Version adaptée de ce chant dans la fusion : ses sections « Dernière
+   *  phrase » (docs/spec-fusions-dp.md) ; absent = le chant d'origine. */
+  contentOverride?: string | null;
 };
 
 export type FusionMixedSection = {

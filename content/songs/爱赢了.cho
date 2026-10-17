@@ -4,7 +4,8 @@
 {key: A}
 {tempo: 66}
 {language: zh}
-{themes: 宣告, 敬拜, 被爱}
+{themes: Grâce, Foi, Adoration}
+{source: 爱赢了.pdf}
 
 {start_of_jianpu}
 # Transcription depuis 爱赢了A.pdf (灵栖清泉) — rythmes lus au zoom 2-4x, accords aux positions pixel
@@ -45,35 +46,27 @@ J: 0_ 5_2'_ | [Dmaj9]1'._ [Esus4]5'_ 5'*_ 5=7= (1'_ [A]1'_) 0 0 |]
 W: 没人如此地爱我。
 {end_of_jianpu}
 
-{start_of_verse: 主歌/Couplet}
-[Dmaj9][ ]我知[E]道你爱我[C#m7]，我知[F#m7]道你爱我，耶稣。
-wǒ   zhī   dào   nǐ   ài   wǒ   wǒ   zhī   dào   nǐ   ài   wǒ   yē   sū
-[Dmaj9][ ]我知[E]道你爱我[A]，此时此刻此时此刻。
-wǒ   zhī   dào   nǐ   ài   wǒ   cǐ   shí   cǐ   kè   cǐ   shí   cǐ   kè
+{start_of_verse: 主歌/Couplet (x2)}
+[Dmaj9] 我知[E]道你爱我[C#m7]，我知[F#m7]道你爱我，耶稣。   wǒ zhī dào nǐ ài wǒ wǒ zhī dào nǐ ài wǒ yē sū
+[Dmaj9] 我知[E]道你爱我[A]，此时此刻此时此刻。   wǒ zhī dào nǐ ài wǒ cǐ shí cǐ kè cǐ shí cǐ kè
 {end_of_verse}
 
-{start_of_prechorus: 前副歌/Pré-Refrain}
-[Dmaj9]我只想[Esus4]信靠你，你[C#m7]的爱使[F#m7]我坚定，
-wǒ   zhǐ   xiǎng   xìn   kào   nǐ   nǐ   de   ài   shǐ   wǒ   jiān   dìng
-让[Dmaj9]我有信心[Esus4]居住在[Asus4]你爱[A]里。
-ràng   wǒ   yǒu   xìn   xīn   jū   zhù   zài   nǐ   ài   lǐ
+{start_of_prechorus: 预备副歌/Pré-Refrain (x2)}
+[Dmaj9]我只想[Esus4]信靠你，你[C#m7]的爱使[F#m7]我坚定，   wǒ zhǐ xiǎng xìn kào nǐ nǐ de ài shǐ wǒ jiān dìng
+让[Dmaj9]我有信心[Esus4]居住在[Asus4]你爱里[A]。   ràng wǒ yǒu xìn xīn jū zhù zài nǐ ài lǐ
 {end_of_prechorus}
 
-{start_of_chorus: 副歌/Refrain}
-我相[Dmaj9][ ]信[Esus4][ ]你的[C#m7][ ]爱，[F#m7][ ]享受[Dmaj9][ ]在[Esus4][ ]你怀[Asus4]里[A]。
-wǒ   xiāng   xìn   nǐ   de   ài   xiǎng   shòu   zài   nǐ   huái   lǐ
+{start_of_chorus: 副歌/Refrain (x2)}
+我相[Dmaj9] 信[Esus4] 你的[C#m7] 爱，[F#m7] 享受[Dmaj9] 在[Esus4] 你怀[Asus4]里[A]。   wǒ xiāng xìn nǐ de ài xiǎng shòu zài nǐ huái lǐ
 {end_of_chorus}
 
-{start_of_bridge: 桥段/Pont}
-[Dmaj9]我不可能[Esus4]赚取你的爱，[C#m7]我知道不[F#m7]是因我配得，
-wǒ   bù   kě   néng   zhuàn   qǔ   nǐ   de   ài   wǒ   zhī   dào   bù   shì   yīn   wǒ   pèi   dé
-[Dmaj9]你爱我只[Esus4]因为你是爱，[Asus4]爱赢了[A]。
-nǐ   ài   wǒ   zhǐ   yīn   wèi   nǐ   shì   ài   ài   yíng   le
+{start_of_bridge: 桥段/Pont (D.S.)}
+[Dmaj9]我不可能[Esus4]赚取你的爱，[C#m7]我知道不[F#m7]是因我配得，   wǒ bù kě néng zhuàn qǔ nǐ de ài wǒ zhī dào bù shì yīn wǒ pèi dé
+[Dmaj9]你爱我只[Esus4]因为你是爱，[Asus4]爱赢了[A]。   nǐ ài wǒ zhǐ yīn wèi nǐ shì ài ài yíng le
 {end_of_bridge}
 
-{start_of_coda: 尾奏/Outro}
-没人[Dmaj9]像[Esus4]你一样[C#m7]爱[F#m7]我，
-méi   rén   xiàng   nǐ   yī   yàng   ài   wǒ
-没人[Dmaj9]如[Esus4]此地爱[A][ ]我。
-méi   rén   rú   cǐ   de   ài   wǒ
-{end_of_coda}
+{start_of_outro: 尾声/Final (D.C. al Coda)}
+{section_id: coda-5}
+[Asus4] 此时[A]此刻此时没人[Dmaj9]像[Esus4]你一样[C#m7]爱[F#m7]我，   cǐ shí cǐ kè cǐ shí méi rén xiàng nǐ yī yàng ài wǒ
+没人[Dmaj9]如[Esus4]此地爱[A] 我。   méi rén rú cǐ de ài wǒ
+{end_of_outro}

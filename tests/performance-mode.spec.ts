@@ -1,5 +1,6 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
+import { attendreMiseEnPage, onStage, ouvrirReglages } from "./helpers/louange";
 
 // Chantier Mode louange (docs/spec-mode-louange.md). Setlist et compte
 // simulés : aucune lecture ni écriture du Firestore de production.
@@ -42,13 +43,8 @@ async function openPerformance(page: Page, items: Record<string, unknown>[], rol
   if (role) await page.addInitScript((r) => localStorage.setItem("perf-role-preset", r), role);
   await signInAs(page, MUSICIEN, { [`setlists/${SETLIST_ID}`]: setlist(items) }, `/setlists/${SETLIST_ID}`);
   await page.getByRole("button", { name: /Mode Louange/ }).click();
-  await expect(page.getByText("Mise en page…")).toHaveCount(0);
+  await attendreMiseEnPage(page);
 }
-
-/** Page affichée du mode louange : sans la page setlist restée dessous, ni la
- *  copie invisible qui sert à mesurer les hauteurs. */
-const onStage = (page: Page, selector: string) =>
-  page.locator(`[data-performance-mode] ${selector}:not([aria-hidden=true] *)`);
 
 /** Quitte le mode louange. Avant chaque clic, Playwright fait défiler sa cible
  *  « dans l'écran » ; pendant la transition du plein écran, ce défilement déplace
@@ -92,6 +88,11 @@ async function visibleSections(page: Page) {
   for (const card of await cards.all()) boxes.push({ text: (await card.innerText()).replace(/\s+/g, " "), box: (await card.boundingBox())! });
   return boxes;
 }
+
+/** Un chant à scan (一生爱你) s'ouvre sur son scan, partout : les tests qui
+ *  lisent ses paroles le demandent en paroles (préférence de l'appareil). */
+const enParoles = ({ page }: { page: Page }) =>
+  page.addInitScript(() => localStorage.setItem("jianpu-sheet-pref", "never"));
 
 test.describe("vue structure (batteur)", () => {
   const MF = { tags: ["mf"] };
@@ -177,7 +178,7 @@ test.describe("choix du rôle à la première ouverture", () => {
   const reopen = async (page: Page) => {
     await quitter(page);
     await page.getByRole("button", { name: /Mode Louange/ }).click();
-    await expect(page.getByText("Mise en page…")).toHaveCount(0);
+    await attendreMiseEnPage(page);
   };
 
   test("appareil vierge : la question apparaît, le rôle choisi s'applique et n'est plus redemandé", async ({ page }) => {
@@ -208,6 +209,7 @@ test.describe("choix du rôle à la première ouverture", () => {
 });
 
 test.describe("reprise des réglages", () => {
+  test.beforeEach(enParoles);
   const ZH = [item({ songSlug: "一生爱你", position: 1, structureOverride: ["verse-2-0"] })];
   const FR = [item({ songSlug: "abba-pere", position: 1, structureOverride: ["verse-2-0"] })];
   /** Pinyin de 亲 (première syllabe du couplet), sur la page affichée. */
@@ -215,12 +217,9 @@ test.describe("reprise des réglages", () => {
   const lyricLines = (page: Page) => onStage(page, "[data-copy-line]");
   const launch = async (page: Page) => {
     await page.getByRole("button", { name: /Mode Louange/ }).click();
-    await expect(page.getByText("Mise en page…")).toHaveCount(0);
+    await attendreMiseEnPage(page);
   };
-  const settingsText = async (page: Page) => {
-    await page.getByRole("button", { name: "Réglages" }).click();
-    return page.getByRole("dialog", { name: "Réglages" });
-  };
+  const settingsText = (page: Page) => ouvrirReglages(page);
 
   test("pinyin masqué sur la page setlist → masqué en mode louange (ZH)", async ({ page }) => {
     await page.addInitScript(() => localStorage.setItem("perf-role-preset", "pianiste"));
@@ -282,6 +281,7 @@ test.describe("reprise des réglages", () => {
 });
 
 test.describe("tonalité choisie sur la page du chant", () => {
+  test.beforeEach(enParoles);
   const CASES = [
     { slug: "abba-pere", title: "Abba Père", setlistKey: "A", chosen: "B", before: "F#m", after: "G#m" },
     { slug: "一生爱你", title: "一生爱你", setlistKey: "E", chosen: "F", before: "C#m", after: "Dm" },
@@ -305,7 +305,7 @@ test.describe("tonalité choisie sur la page du chant", () => {
       await page.locator("select").first().selectOption(c.chosen);
       await page.goBack();
       await page.getByRole("button", { name: /Mode Louange/ }).click();
-      await expect(page.getByText("Mise en page…")).toHaveCount(0);
+      await attendreMiseEnPage(page);
 
       // Repère dans l'en-tête du chant (et dans la barre du haut).
       const mark = onStage(page, "*").getByText(`setlist : ${c.setlistKey}`, { exact: true });
@@ -313,8 +313,7 @@ test.describe("tonalité choisie sur la page du chant", () => {
       await expect(onStage(page, "*").getByText(c.after, { exact: true }).first()).toBeVisible();
 
       // Retour à la tonalité de la setlist : dans les réglages du chant en cours.
-      await page.getByRole("button", { name: "Réglages" }).click();
-      const settings = page.getByRole("dialog", { name: "Réglages" });
+      const settings = await ouvrirReglages(page);
       await settings.getByRole("button", { name: `Revenir à ${c.setlistKey}` }).click();
       await page.keyboard.press("Escape");
       await expect(settings).toBeHidden();
@@ -338,11 +337,12 @@ test("tonalité choisie : une modulation suit le même écart (FR)", async ({ pa
     ]),
   }, `/setlists/${SETLIST_ID}`);
   await page.getByRole("button", { name: /Mode Louange/ }).click();
-  await expect(page.getByText("Mise en page…")).toHaveCount(0);
+  await attendreMiseEnPage(page);
   await expect(onStage(page, "*").getByText("Modulation (Db)", { exact: true }).first()).toBeVisible();
 });
 
 test.describe("polices du chinois (ZH)", () => {
+  test.beforeEach(enParoles);
   /** Police déclarée pour la première syllabe « qīn » et le caractère « 亲 ». */
   const fonts = (page: Page, scope: string) =>
     page.evaluate((sel) => {
@@ -366,6 +366,7 @@ test.describe("polices du chinois (ZH)", () => {
 });
 
 test.describe("taille par défaut des paroles et accords", () => {
+  test.beforeEach(enParoles);
   /** Taille des lignes de paroles FR et ZH, et rapport pinyin / taille de base, sur la page du chant. */
   const sizes = (page: Page) =>
     page.evaluate(() => {
@@ -396,6 +397,7 @@ test.describe("taille par défaut des paroles et accords", () => {
 });
 
 test.describe("nuancier", () => {
+  test.beforeEach(enParoles);
   test.use({ viewport: { width: 1280, height: 1600 } });
   const NUANCES = {
     "verse-2-0": { tags: ["p"] },

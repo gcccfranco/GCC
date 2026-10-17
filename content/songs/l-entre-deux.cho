@@ -4,12 +4,13 @@
 {tempo: 76}
 {language: fr}
 {themes: Foi, Espérance}
+{source: L’entre-Deux.pdf}
 
 {start_of_verse: Couplet 1}
 [C#m]À Ton appel j’ai délaissé
 [B]Mes anciennes voies pour avancer
 [A]Où tout autour est instable
-[ ]Où plus rien n’est confortable
+[A]Où plus rien n’est confortable
 [C#m]Sans aucun regard en arrière
 [B]Avec Ta Parole pour repère
 [A]Mon cœur est en transition
@@ -18,11 +19,14 @@
 
 {start_of_chorus: Refrain}
 Alors au c[A]œur de l’entre-deux[E]
-Ce moment où [C#m]je me trouve au mil[B]ieu
+{needs_review: B à cheval sur « il » de « milieu » (feuille alignée aux espaces) : posé sur « mi », peut-être sur « lieu », à confirmer à l’écoute}
+Ce moment où [C#m]je me trouve au m[B]ilieu
 Entre la prom[A]esse et la victoire[E]
-Jésus Tu es [C#m]mon seul espo[B]ir
+{needs_review: C#m à cheval entre « es » et « mon » (feuille alignée aux espaces) : posé sur « es » comme le début du label, peut-être sur « mon », à confirmer à l’écoute}
+Jésus Tu e[C#m]s mon seul espo[B]ir
 Tu connais la [A]fin dès le débu[E]t
-Et Tu conduis mon [C#m]cœur dans l’in[B]connu
+{needs_review: C#m à cheval entre « mon » et « cœur » (feuille alignée aux espaces) : posé sur « mon » comme le début du label, peut-être sur « cœur », à confirmer à l’écoute}
+Et Tu conduis mo[C#m]n cœur dans l’in[B]connu
 Toute ma confi[A]ance se trouve en To[E]i
 Ce que Tu as [C#m]dit Tu le fe[B]ras
 {end_of_chorus}
@@ -31,7 +35,7 @@ Ce que Tu as [C#m]dit Tu le fe[B]ras
 [C#m]Tu me donnes les yeux de la foi
 [B]Pour voir que Tu combats pour moi
 [A]Dieu Tu règnes sans partage
-[ ]Sur chaque étape du voyage
+Sur chaque étape du voyage
 [C#m]Alors qu’importe les vents contraires
 [B]Les vallées et les déserts
 [A]Je suis en sécurité
@@ -40,7 +44,7 @@ Ce que Tu as [C#m]dit Tu le fe[B]ras
 
 {start_of_bridge: Pont}
 Je [B]choisis de Te lou[E]er
-[A]Comme si le combat ét[B]ait déjà remport[E]é[ ][A]
-Je [B]choisis de T’ador[E]er
-[A]Comme si ma course ét[B]ait déjà termin[E]ée[ ][A]
+[A]Comme si le combat ét[B]ait déjà remport[E]é[A]
+Je [B]choisis de T’ado[E]rer
+[A]Comme si ma course ét[B]ait déjà termin[E]ée[A]
 {end_of_bridge}

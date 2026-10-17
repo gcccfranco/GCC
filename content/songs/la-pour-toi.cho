@@ -5,9 +5,10 @@
 {language: fr}
 {youtube: https://www.youtube.com/watch?v=N9RGEhhVPMk}
 {themes: Adoration, Engagement, Saint-Esprit}
+{source: Là pour Toi accord B.pdf}
 
 {start_of_intro: Intro}
-[B][ ][G#m][ ][F#][ ][E]
+[B]  [G#m]  [F#]  [E]
 {end_of_intro}
 
 {start_of_verse: Couplet 1}
@@ -29,14 +30,14 @@ Nous Te laissons la place
 [F#]Jésus transfo[E]rme nos cœurs
 {end_of_chorus}
 
-{start_of_intro: Intro}
-[B][ ][G#m][ ][F#][ ][E]
+{start_of_intro: Interlude}
+[B]  [G#m]  [F#]  [E]
 {end_of_intro}
 
 {start_of_verse: Couplet 2}
 Ta puissance de vie
 Règne en nous aujourd’hui
-Le tombeau vide conﬁrme
+Le tombeau vide confirme
 Que rien ne T’est impossible
 Comme dans la chambre haute
 Remplis-nous à nouveau
@@ -50,13 +51,14 @@ Tu es notre seul désir
 [F#]Que la gloire Te revienne
 {end_of_bridge}
 
-{start_of_verse: TAG}
+{start_of_tag: Tag}
+{section_id: verse-7}
 Que la gloire Te r[E]ev[B/D#]ienne
 Que la gloire Te re[G#m]vienne[F#]
 Que la gloire Te re[E]vi[B/D#]enne
 Que la gloire Te re[G#m]vienne[F#]
 
-{end_of_verse}
+{end_of_tag}
 
 {start_of_bridge: Pont 2}
 Tu fais toutes choses nou[E]velles

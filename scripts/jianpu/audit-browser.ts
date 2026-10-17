@@ -73,7 +73,7 @@ async function shoot(browser: Browser, key?: string): Promise<Buffer> {
     colorScheme: dark ? "dark" : "light",
   });
   const page: Page = await context.newPage();
-  const sheets = await openSheet(page, slug, { key, dark });
+  const sheets = await openSheet(page, slug, { key, dark, gravure: !key });
   if (alt && key) await page.locator('[data-jianpu-altkey="on"]').click();
   if (frames && key) {
     // « Un accord sans cadre n'est pas converti » — le cadre de contrôle de

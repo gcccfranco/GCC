@@ -54,6 +54,8 @@ const up = (() => {
  *  toujours la tonalité explicitement, l'originale comprise. */
 async function ouvrir(page: Page, tonalite: string) {
   const query = `?key=${encodeURIComponent(JSON.stringify(tonalite))}`;
+  // Un chant à scan s'ouvre sur son scan : ces tests lisent ses paroles.
+  await page.addInitScript(() => localStorage.setItem("jianpu-sheet-pref", "never"));
   await page.goto(`/songs/${encodeURIComponent(slug)}${query}`, { waitUntil: "domcontentloaded" });
   await expect(page.locator("select").first()).toHaveValue(tonalite);
 }

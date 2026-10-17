@@ -3,19 +3,20 @@
 {key: G}
 {language: fr}
 {themes: Adoration, Action de grâce}
+{source: Tu es bon - F.pdf}
 
 {start_of_intro: Intro}
-[G][ ][C][ ][G][ ][C][ ][G][ ][C][ ][G][ ][C][ ][G]
+[G]  [C]  [G]  [C]  [G]  [C]  [G]  [C]  [G]
 {end_of_intro}
 
 {start_of_verse: Couplet 1}
 [G] Je veux le proclamer du sommet des montagnes :
 [C] Ta grâce est sans limite, Ta bonté sans égale.
 [Em] Ta tendresse m'envahit, Ta bonté [D/F#]me poursuit,
-[G] Ton amour m'émerveil[D]le.
+[G] Ton amour m'émervei[D]lle.
 {end_of_verse}
 
-{start_of_chorus: Refrain 2}
+{start_of_chorus: Refrain (x2)}
 Et je [G]chante car Tu es bon.
 Et je [G]danse car Tu es bon.
 Et je [C]crie de joie : Tu es bon, Tu es bon pour moi.
@@ -25,12 +26,12 @@ Et je [C]crie de joie : Tu es bon, Tu es bon pour moi.
 [G] Rien dans tout l'univers à Toi ne se compare.
 [C] Les océans, la terre, sont reflets de Ta gloire.
 [Em] Dans mes plus sombres nuits, Ta splendeur [D/F#]m'éblouit,
-[G] Ton amour m'émerveil[D]le.
+[G] Ton amour m'émervei[D]lle.
 {end_of_verse}
 
 {start_of_bridge: Pont}
-Un cri [Am7]sur mes lèvres, ma vie[C]Te célèbre.
+Un cri [Am7]sur mes lèvres, ma vie[C] Te célèbre.
 Tu es [G]bon, Tu es [D/F#]bon.
-Vent, sol[Am7]eil ou pluie, mon cœur [C]Te redit :
+Vent, so[Am7]leil ou pluie, mon cœur [C]Te redit :
 Tu es [G]bon, Tu es [D/F#]bon.
 {end_of_bridge}

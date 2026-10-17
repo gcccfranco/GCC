@@ -14,7 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { ChordPad } from "@/components/setlists/ChordPad";
 import { useStandaloneScrollLock } from "@/hooks/useStandaloneScrollLock";
-import { transposeChord } from "@/lib/transpose";
+import { transposeLabel } from "@/lib/transpose";
 import {
   type EditableLine,
   parseEditableLine,
@@ -65,7 +65,7 @@ function transposeLine(line: EditableLine, semitones: number, targetKey: string)
   if (semitones === 0) return line;
   return {
     ...line,
-    anchors: line.anchors.map((a) => ({ ...a, chord: transposeChord(a.chord, semitones, targetKey) })),
+    anchors: line.anchors.map((a) => ({ ...a, chord: transposeLabel(a.chord, semitones, targetKey) })),
   };
 }
 

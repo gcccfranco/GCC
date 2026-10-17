@@ -10,6 +10,9 @@
 
 import { transposeLabel } from "@/lib/transpose";
 
+/** Tonalité dans laquelle les fiches écrivent leurs accords. */
+export const TON_DES_FICHES = "D";
+
 /** Découpe « **gras**, *italique*, `accords` » en morceaux rendus. */
 export function TexteFiche({ texte, demiTons, tonalite }: { texte: string; demiTons: number; tonalite: string }) {
   const morceaux = texte.split(/(\*\*[^*]+\*\*|\*[^*]+\*|`[^`]+`)/g).filter(Boolean);

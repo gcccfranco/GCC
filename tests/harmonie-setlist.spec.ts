@@ -122,11 +122,28 @@ test("chant lu sur son scan 简谱 : l'app rappelle de reporter le changement", 
   await page.addInitScript(() => localStorage.setItem("jianpu-sheet-pref", "always"));
   await ouvrirPartitions(page);
   await page.getByRole("button", { name: "Ma version" }).click();
-  await page.getByRole("button", { name: "Idées d'harmonie" }).first().click();
+  // Le chant à scan est le second (Abba Père, en premier, n'en a pas).
+  await page.locator('[data-outline-item="2"]').getByRole("button", { name: "Idées d'harmonie" }).click();
   await expect(page.locator("[data-idees-harmonie]")).toBeVisible();
   const premiere = page.locator("[data-suggestion]").first();
   await premiere.getByRole("button", { name: "Essayer dans Ma version" }).click();
   await expect(page.getByText(/À reporter sur la partition 简谱/)).toBeVisible();
+});
+
+test("chant sans scan 简谱 : pas de rappel « À reporter sur la partition 简谱 »", async ({ page }) => {
+  // Sans préférence stockée, le scan est le défaut — mais Abba Père n'en a pas :
+  // la retouche se voit directement dans la version texte.
+  const db = await ouvrirPartitions(page);
+  await page.getByRole("button", { name: "Ma version" }).click();
+  await page.locator('[data-outline-item="1"]').getByRole("button", { name: "Idées d'harmonie" }).click();
+  await expect(page.locator("[data-idees-harmonie]")).toBeVisible();
+  const premiere = page.locator("[data-suggestion]").first();
+  await premiere.getByRole("button", { name: "Essayer dans Ma version" }).click();
+  await expect(page.locator("[data-idees-harmonie]")).toBeHidden();
+  await expect.poll(() => db.writes.some((w) => w.path === VERSION_DOC), "la retouche est bien écrite").toBe(true);
+  // Compte immédiat (sans attente) : le message dure 3 s, un `toHaveCount(0)`
+  // attendrait sa disparition et passerait à tort.
+  expect(await page.getByText(/À reporter sur la partition 简谱/).count()).toBe(0);
 });
 
 test("un 升调 se voit au-dessus du scan 简谱, qui ne peut pas le montrer", async ({ page }) => {

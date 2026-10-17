@@ -57,7 +57,7 @@ ils ne voient pas le composant réel. Détail du protocole dans
 - **Confidentialité (choix assumé)** : les rules autorisent `read: if signedIn()` sur **toutes** les setlists et tous les profils. Le filtrage `isPrivate` / visibilité par service (`canSeeSetlist`, `src/lib/access.ts`) est **côté client uniquement** — un membre connecté peut techniquement lire en REST une setlist privée ou un profil. Acceptable pour un outil interne de confiance ; ne pas re-signaler comme faille sans nouvelle demande de durcissement.
 - **Routes API** (18, toutes sous `src/app/api/`) : `/api/song/[slug]` (contenu d'un chant), `/api/report` (signalement par email via Resend — env `RESEND_API_KEY`, `MAIL_TO`, `EMAIL_FROM` sur Vercel), `/api/cron/reminders` (seul cron), `/api/push/*` (notify-setlist, notify-evenement, notify-audience, broadcast), `/api/setlist/presentation`, `/api/evenements/{inscription,desinscription}`, `/api/scene/conflit`, `/api/taches/{assigne,fait}`, `/api/equipes/{importer,poles}`, `/api/planning/release`, `/api/admin/{migrer-annonces,importer-planning}`
 - **Planning** : Google Sheet public lu en CSV (`src/lib/planning/sheets.ts`) + données statiques (`data.ts`)
-- **PWA** : service worker `public/sw.js` — push + cache hors-ligne. Cache versionné (`gcc-louange-vN`, purgé à l'activation). **Rien n'est mis en cache sur un serveur local** (`localhost`, `127.0.0.1`, réseau local) : en développement les fichiers de Next n'ont pas de nom hashé, et le cache servait l'ancien code après chaque modification (16/09/2026). Stratégies : HTML **network-first** (le déploiement en ligne gagne toujours → pas de page périmée), `/_next/static/*` **cache-first** (content-hashé, immuable), polices + `songs-index.json` + `/api/song/*` **stale-while-revalidate**, reste réseau-seul. Firestore/Sheets/YouTube (autres origines) jamais mis en cache.
+- **PWA** : service worker `public/sw.js` — push + cache hors-ligne. Cache versionné (`gcc-louange-vN`, purgé à l'activation). **Rien n'est mis en cache sur un serveur local** (`localhost`, `127.0.0.1`, réseau local) : en développement les fichiers de Next n'ont pas de nom hashé, et le cache servait l'ancien code après chaque modification (16/09/2026). Stratégies : HTML **network-first** (le déploiement en ligne gagne toujours → pas de page périmée), `/_next/static/*` **cache-first** (content-hashé, immuable), polices + `songs-index.json` + `/api/song/*` + scans 简谱 (`/jianpu/*`, gardés hors ligne depuis qu'ils s'affichent par défaut) **stale-while-revalidate**, reste réseau-seul. Firestore/Sheets/YouTube (autres origines) jamais mis en cache.
 - **Hébergement** : Vercel. La CI GitHub (`.github/workflows/deploy.yml`) fait typecheck + validate.
 - **Interrupteur du back-office** (lot 18, 20/09/2026, `docs/spec-mise-en-ligne.md`) : `BACK_OFFICE` (`src/lib/backOffice.ts`) = `NEXT_PUBLIC_BACK_OFFICE === "1"`. Posé à `1` dans `.env.local`, **absent sur Vercel** : en ligne, tâches, équipes, planning en grille, section Évènements, scène et blocs admin associés sont coupés (entrées masquées, pages et routes en 404, planning = `AncienTableau.tsx` lu dans le Sheet seul, rappel du matin réduit aux services). Toute nouvelle fonctionnalité de back-office passe derrière cette constante. ⚠ Local et en ligne partagent le même Firestore.
 
@@ -82,6 +82,24 @@ ils ne voient pas le composant réel. Détail du protocole dans
 - Tester sur au moins 1 chant FR + 1 chant ZH avant de valider une étape
 - Toute modif des permissions doit être faite en double : `src/lib/access.ts` (client) **et** `firestore.rules` (serveur)
 
+## Sessions cloud (claude.ai/code) — règles de Timothée (08/10/2026)
+Une session cloud n'a pas la mémoire des sessions locales : ces règles valent pour elle comme pour les autres.
+- **Branches** : `ui/apple-design` = le travail en cours. Tout s'y fait, directement : **aucune autre branche**, pas de
+  branche de lot à fusionner. `main` = le site en ligne (Vercel déploie chaque push) : n'y pousser **que sur un ordre
+  explicite de Timothée, donné au moment même** (un « oui » à une autre question n'en est pas un). Une correction faite
+  sur `main` est ensuite reportée sur `ui/apple-design` par une fusion (jamais de rebase de `main`).
+- **Pousser** : `git pull --rebase` sur la branche juste avant chaque push (d'autres sessions poussent aussi) ; jamais de
+  `push --force`, jamais de suppression de branche. Indexer **par nom** (jamais `git add -A`) ; ne jamais commiter
+  `next-env.d.ts` ni `tsconfig.json` réécrits par un serveur de test, `test-results/`, `.next*/`.
+- **Secrets** : l'environnement cloud ne contient que les variables `NEXT_PUBLIC_*` (configuration web, publique).
+  Aucune lecture de la vraie base Firestore, aucune vraie notification : tout est simulé dans les tests
+  (`tests/helpers/fakeSession.ts`). Une modification de `firestore.rules` se publie à la main par Timothée : le dire.
+- **Dépôt public** : aucun nom réel de membre dans les tests, fixtures, specs ou commits ; des noms fictifs.
+- **Tests** : `npx playwright install --with-deps chromium` au début de la session, puis les règles « Tests — Playwright »
+  ci-dessus (trois appareils toujours ; les cinq projets pour les specs d'agencement).
+- **Méthode** : specs dans `docs/`, feuille de route `docs/feuille-de-route.md` ; on ne code un lot qu'après le go de
+  Timothée ; un commit par lot ou par tranche, message en français.
+
 ## Comportement (guidelines Karpathy)
 
 ### Penser avant de coder
@@ -105,6 +123,20 @@ ils ne voient pas le composant réel. Détail du protocole dans
 ### Exécution orientée objectif
 - Définir des critères de succès vérifiables avant de commencer.
 - Pour les tâches multi-étapes, énoncer un plan bref avec vérification à chaque étape.
+
+## Agent skills
+
+### Issue tracker
+
+Pas d'issues GitHub : le travail se suit dans `docs/feuille-de-route.md` et une spec par lot dans `docs/spec-*.md`. Voir `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Les cinq étiquettes par défaut : `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`. Voir `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Un seul contexte : `CONTEXT.md` et `docs/adr/` à la racine, créés au besoin. Voir `docs/agents/domain.md`.
 
 ## graphify
 

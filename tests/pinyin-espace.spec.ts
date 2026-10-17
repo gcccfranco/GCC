@@ -5,6 +5,8 @@ import { expect, test } from "@playwright/test";
 // (« chuàng », « shuāng ») la déborde et venait toucher sa voisine
 // (« quánnéngchuàng »). Un espace doit rester visible entre deux pinyins.
 test("chant ZH : un espace reste visible entre deux pinyins voisins", async ({ page }) => {
+  // 有一位神 a un scan, affiché par défaut : on mesure ici ses paroles.
+  await page.addInitScript(() => localStorage.setItem("jianpu-sheet-pref", "never"));
   await page.goto(`/songs/${encodeURIComponent("有一位神")}`);
   await page.locator("[data-copy-pinyin]").first().waitFor();
   await page.evaluate(() => document.fonts.ready);

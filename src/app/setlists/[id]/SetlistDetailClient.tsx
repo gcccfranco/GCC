@@ -53,7 +53,7 @@ import { getChartStylePref, setChartStylePref } from "@/lib/chartStylePref";
 import { getPartitionLayoutPref, setPartitionLayoutPref, type PartitionLayout } from "@/lib/partitionLayoutPref";
 import { getPinyinPref, setPinyinPref } from "@/lib/pinyinPref";
 import { jianpuPngDataUrl, loadJianpuChords, loadJianpuManifest, useJianpuManifest } from "@/lib/jianpu/images";
-import { getJianpuPref, setJianpuPref, sheetEnabled, type JianpuPref } from "@/lib/jianpu/preference";
+import { getJianpuPref, setJianpuPref, sheetEnabled, interrupteurAllume, prefDepuisInterrupteur, type JianpuPref } from "@/lib/jianpu/preference";
 import { aDesRetouches } from "@/lib/jianpu/retouches";
 import { fetchSongAST, type SongContent} from "@/lib/api/songs";
 import { PerformanceMode } from "@/components/performance/PerformanceMode";
@@ -144,8 +144,9 @@ export function SetlistDetailClient() {
   const [chartStyle, setChartStyle] = useState(true);
   // Coup d'œil : ordre joué / sections uniques / structure seule — par appareil.
   const [layout, setLayout] = useState<PartitionLayout>("played");
-  // Partition 简谱 : suivre le choix du responsable, l'imposer, ou l'ignorer —
-  // par appareil, comme en mode louange.
+  // Partition 简谱 : affichée par défaut ; l'interrupteur règle l'appareil et
+  // prime alors sur le « Paroles » du responsable. Un seul état, partagé avec
+  // le mode louange.
   const [jianpuPref, setJianpuPrefState] = useState<JianpuPref>("auto");
   const [view, setView] = useState<"liste" | "partitions">("liste");
   const [deleting, setDeleting] = useState(false);
@@ -486,6 +487,8 @@ export function SetlistDetailClient() {
   const accesHarmonie = useAccesHarmonie();
   const [instrumentHarmonie] = useInstrument(accesHarmonie);
   const [ideesTarget, setIdeesTarget] = useState<number | null>(null);
+  // Dans une fusion : celui de ses chants dont on lit les idées.
+  const [ideesChant, setIdeesChant] = useState<string | null>(null);
 
   // ── Adapter le chant (accords/paroles par setlist) ──────────────────────────
 
@@ -1125,23 +1128,16 @@ export function SetlistDetailClient() {
                       {hasJianpuSheets && (
                         <>
                           <DropdownMenuSeparator />
-                          <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">
-                            {t("performance.jianpuSheet")}
-                          </DropdownMenuLabel>
-                          <DropdownMenuRadioGroup
-                            value={jianpuPref}
-                            onValueChange={(v) => changeJianpuPref(v as JianpuPref)}
+                          <DropdownMenuCheckboxItem
+                            checked={interrupteurAllume(jianpuPref)}
+                            onCheckedChange={(on) => changeJianpuPref(prefDepuisInterrupteur(on))}
+                            onSelect={(e) => e.preventDefault()}
                           >
-                            {(["auto", "always", "never"] as const).map((v) => (
-                              <DropdownMenuRadioItem
-                                key={v}
-                                value={v}
-                                onSelect={(e) => e.preventDefault()}
-                              >
-                                {t(`performance.jianpuPref.${v}`)}
-                              </DropdownMenuRadioItem>
-                            ))}
-                          </DropdownMenuRadioGroup>
+                            {t("performance.jianpuSheet")}
+                          </DropdownMenuCheckboxItem>
+                          <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">
+                            {t("performance.jianpuSheetHint")}
+                          </DropdownMenuLabel>
                         </>
                       )}
                       <DropdownMenuSeparator />
@@ -1312,7 +1308,7 @@ export function SetlistDetailClient() {
               onChooseVersion={(itemIndex, value) => persistChoice(setlist.items[itemIndex].songSlug, value)}
               onShare={(itemIndex, shared) => persistMine(setlist.items[itemIndex].songSlug, { shared })}
               onEditJianpu={handleEditJianpu}
-              onIdees={accesHarmonie.peut ? (itemIndex) => setIdeesTarget(itemIndex) : undefined}
+              onIdees={accesHarmonie.peut ? (itemIndex, slug) => { setIdeesTarget(itemIndex); setIdeesChant(slug ?? null); } : undefined}
             />
           </>
         )}
@@ -1321,9 +1317,16 @@ export function SetlistDetailClient() {
       {/* Idées d'harmonie du chant (lot 9) */}
       {ideesTarget !== null && setlist?.items[ideesTarget] && (() => {
         const item = setlist.items[ideesTarget];
-        const ast = itemAst(editMine ? withMine(item) : item, contents[item.songSlug]);
+        // Fusion : les idées du chant touché, dans sa tonalité et sa version
+        // adaptée. Elles se lisent ; rien ne s'applique à la fusion.
+        const chantFusion = item.type === "fusion" ? item.fusionSongs?.find((fs) => fs.songSlug === ideesChant) : undefined;
+        if (item.type === "fusion" && !chantFusion) return null;
+        const slug = chantFusion?.songSlug ?? item.songSlug;
+        const ast = chantFusion
+          ? itemAst(chantFusion, contents[slug])
+          : itemAst(editMine ? withMine(item) : item, contents[item.songSlug]);
         if (!ast) return null;
-        const tonalite = item.keyOverride ?? ast.metadata.key;
+        const tonalite = (chantFusion ?? item).keyOverride ?? ast.metadata.key;
         // Le chant suivant, pour la transition : les fusions et les items sans
         // chant sont sautés (la spec les exclut).
         const suivantItem = setlist.items
@@ -1340,9 +1343,9 @@ export function SetlistDetailClient() {
         return (
           <IdeesSheet
             open
-            onClose={() => setIdeesTarget(null)}
-            slug={item.songSlug}
-            titre={songsMap[item.songSlug]?.title ?? item.songSlug}
+            onClose={() => { setIdeesTarget(null); setIdeesChant(null); }}
+            slug={slug}
+            titre={songsMap[slug]?.title ?? slug}
             sections={ast.sections}
             tonalite={tonalite}
             tonaliteOrigine={ast.metadata.key}
@@ -1371,7 +1374,7 @@ export function SetlistDetailClient() {
                 : undefined
             }
             onEssayer={
-              editMine
+              editMine && !chantFusion
                 ? (s, apres) => {
                     const source = sourceForItem(item);
                     if (!source) return;
@@ -1383,7 +1386,7 @@ export function SetlistDetailClient() {
                     // Chant affiché en scan 简谱 : la retouche va bien dans la
                     // version texte, mais elle ne se verra pas sur l'image —
                     // on le dit, avec le changement à reporter à la main.
-                    if (sheetEnabled(jianpuPref, item.jianpuSheet)) {
+                    if (jianpuManifest?.[item.songSlug] && sheetEnabled(jianpuPref, item.jianpuSheet)) {
                       flashFeedback(
                         t("harmonie.reporterJianpu", { quoi: `${s.endroits[0].accords.join(" – ")} → ${apres.join(" – ")}` }),
                       );
@@ -1490,6 +1493,8 @@ export function SetlistDetailClient() {
           initialShowChords={chordsTouched ? showChords : undefined}
           setlistId={id}
           setlistTitle={setlist.title}
+          jianpuPref={jianpuPref}
+          onJianpuPrefChange={changeJianpuPref}
           onClose={() => {
             if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
             setPerformanceMode(false);

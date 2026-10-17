@@ -67,12 +67,12 @@ export function SetlistFullPDF({
           const fusionSongsData = item.fusionSongs
             .filter((fs) => !!contents[fs.songSlug])
             .map((fs): FusionPDFSong => {
-              let ast = contents[fs.songSlug].ast;
+              let ast = itemAst(fs, contents[fs.songSlug])!;
               if (fs.keyOverride && fs.keyOverride !== ast.metadata.key) {
                 const semitones = semitonesTo(ast.metadata.key, fs.keyOverride);
                 ast = transposeAST(ast, semitones, fs.keyOverride);
               }
-              return { slug: fs.songSlug, ast, sectionNotes: fs.sectionNotes ?? {}, sectionNuances: fs.sectionNuances ?? {}, sectionKeys: fs.sectionKeys ?? {} };
+              return { slug: fs.songSlug, ast, sectionNotes: fs.sectionNotes ?? {}, sectionNuances: fs.sectionNuances ?? {}, sectionKeys: fs.sectionKeys ?? {}, structureOverride: fs.structureOverride };
             });
 
           if (fusionSongsData.length === 0) return [];
@@ -101,7 +101,8 @@ export function SetlistFullPDF({
               showChords={showChords}
               showPinyin={fs.ast.metadata.language === "zh"}
               useJianpu={false}
-              structureOverride={item.fusionSongs![fsIdx].structureOverride}
+              // Sa structure à lui : la liste est filtrée, son rang n'y est plus le même.
+              structureOverride={fs.structureOverride}
               sectionNotes={fs.sectionNotes}
               sectionNuances={fs.sectionNuances}
               sectionKeys={fs.sectionKeys}
@@ -147,6 +148,7 @@ export function SetlistFullPDF({
               title={ast.metadata.title}
               titlePinyin={ast.metadata.titlePinyin}
               playedKey={playedKey}
+              originalKey={baseAst.metadata.key}
               headerHeight={pageIdx === 0 ? 56 : 0}
               footerCenter={footer}
               strip={compact && pageIdx === 0

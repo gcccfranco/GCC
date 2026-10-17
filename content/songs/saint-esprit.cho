@@ -3,16 +3,17 @@
 {key: C}
 {language: fr}
 {themes: Saint-Esprit, Adoration}
+{source: Saint-Esprit.pdf}
 
 {start_of_verse: Couplet 1}
-[C] Tu es notre espoir, rien n'a plus de valeur[F],
+[C] Tu es notre espoir, rien n'a plus de valeu[F]r,
 Rien n'est aussi grand, et rien n'est plus b[C]eau
 Que Ta p[F]résence.
 {end_of_verse}
 
 {start_of_verse: Couplet 2}
 [C] J'ai vu, j'ai goûté, l'amour le plus d[F]oux,
-Mon cœur est enfin libre et ma honte disparaî[C]t
+Mon cœur est enfin libre et ma honte dispara[C]ît
 Dans Ta p[F]résence.
 {end_of_verse}
 
@@ -30,5 +31,5 @@ Sei[C]gneur nos cœurs soupirent après Ta gloire,
 
 {start_of_bridge: Pont 2}
 [F] Que nous so[C/E]yons plus sen[Dm]sibles à Ta [C/E]présence,
-[F] Que nous vi[C/E]vions les merv[Dm]eilles de Ta [C/E]bonté.
+[F] Que nous vi[C/E]vions les mer[Dm]veilles de Ta [C/E]bonté.
 {end_of_bridge}

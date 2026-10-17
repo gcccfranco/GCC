@@ -86,7 +86,8 @@ peut ajouter une **« Dernière phrase » (Dp)** dans l'éditeur.
    « Version modifiée » masqué quand `contentOverride` = chant original +
    blocs Dp seulement (`isLastPhraseOnly`). Historique : une phrase
    « Dernière phrase ajoutée » plutôt que « accords adaptés ».
-   - Fusions : pas de Dp (hors lot).
+   - Fusions : pas de Dp (hors lot). *Revu le 01/10/2026 : Dp par chant de fusion,
+     `spec-fusions-dp.md`.*
 
 ## Hypothèses (à corriger en testant)
 

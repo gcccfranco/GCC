@@ -69,6 +69,18 @@ export type JianpuChords = {
 };
 export type JianpuChordsManifest = Record<string, JianpuChords>;
 
+/** Tonalité dans laquelle se joue un scan. Les pages ne passent `demandee` que
+ *  si elle diffère de la tonalité du .cho ; sans elle on joue le .cho, qui
+ *  n'est pas toujours celle de la gravure (11 scans depuis le 02/10/2026, dont
+ *  有一位神 : .cho en D, scan en C). null = rien à transposer, la gravure reste intacte. */
+export function cleJouee(
+  demandee: string | null | undefined,
+  originalKey: string | null | undefined,
+  printedKey: string | undefined,
+): string | null {
+  return demandee ?? (printedKey && originalKey && originalKey !== printedKey ? originalKey : null);
+}
+
 let chordsPromise: Promise<JianpuChordsManifest> | null = null;
 
 export function loadJianpuChords(): Promise<JianpuChordsManifest> {

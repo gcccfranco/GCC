@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { expect, test, type Page } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
+import { attendreMiseEnPage } from "./helpers/louange";
 
 // Lot 9, tranche MV (docs/spec-harmonie.md) : dans « Ma version », une retouche
 // d'une section répétée vaut pour « Toutes les répétitions » (comme avant) ou
@@ -188,7 +189,7 @@ test("le mode louange joue le passage retouché seul", async ({ page }) => {
   await expect(lyricLine(page, "Papa")).toHaveCount(1);
 
   await page.getByRole("button", { name: /Mode Louange/ }).click();
-  await expect(page.getByText("Mise en page…")).toHaveCount(0);
+  await attendreMiseEnPage(page);
   await expect(onStage(page, "Papa")).toHaveCount(1);
   await capture(page, "mv-mode-louange");
 });
@@ -246,6 +247,8 @@ test("version partagée : un rang qui n'existe pas ne s'affiche pas", async ({ p
 });
 
 test("chant chinois : « Seulement ce passage » garde le pinyin de l'autre refrain", async ({ page }) => {
+  // 一生爱你 a un scan, affiché par défaut : on retouche ici ses paroles.
+  await page.addInitScript(() => localStorage.setItem("jianpu-sheet-pref", "never"));
   const db = await openPartitions(page);
   await page.getByRole("button", { name: "Ma version" }).click();
   await expect(lyricLine(page, "敬")).toHaveCount(2);

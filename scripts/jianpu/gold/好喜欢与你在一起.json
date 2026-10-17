@@ -1,354 +1,693 @@
 {
  "slug": "好喜欢与你在一起",
+ "source": "page remplacée le 02/10/2026 sur décision de Timothée (« 14 scans sont gravés dans une autre tonalité que leur .cho, corrige ça ») : « 好喜欢与你在一起 C.pdf » (1=C, titre « （C调） », sous un .cho en si bémol) cède la place à « 好喜欢与你在一起 Bb.pdf », la planche **si bémol** de la même série « [共5张：C/Bb(原调)/A/G调、级数] » — même gravure, même mise en page, scan embarqué 2896×4096 (1280×1810 avant). La page est gravée dans la tonalité du .cho : plus de `printed_key`, `song_semitones` = 0. Le calque de la page en ut est archivé sous `calque_page_C_retire` : ses coordonnées portent sur l'ancienne image (1450 px de large, 1360 pour la nouvelle) et ne valent rien sur celle-ci.",
  "face": "verdana-bold",
- "printed_key": "C",
- "key_label": {
-  "x": 18,
-  "y": 209,
-  "w": 75,
-  "h": 24
- },
- "key_label_verified": "mesure measure-keylabel (vote 1= + lettre attendue), zoom relu à l’œil sur planche de lot, lettre confrontée à printedKey, 2026-08-22",
+ "face_verified": "hérité de la page en ut, même gravure (verdana-bold) — à confirmer par la lecture de la nouvelle image.",
  "extra_chords": [
   "G7"
  ],
+ "extra_chords_verified": "« G7 » gravé à la 2e mesure de l'intro, absent du .cho (repris de la page en ut, relu sur la nouvelle page).",
+ "corrections": {
+  "252,395": "Bb/D",
+  "252,821": "Bb/D",
+  "458,89": "Bb",
+  "458,436": "Bb7",
+  "458,1069": "先Eb后Edim",
+  "714,61": "Bb/D",
+  "1354,1037": "Bb7",
+  "1770,508": "Eb/F"
+ },
+ "corrections_verified": "amas relus au zoom (propose-extra --all --hidden, planches _extra-1 et _extra-2 du 02/10/2026) : sept accords lus justes mais sous le seuil ou sans l'unanimité du jury, « Eb/F » de la dernière rangée lu « F/Eb » (corrigé), et la composite « 先Eb后Edim » écrite telle qu'imprimée — `transpose_label` réécrit la ligne entière.",
+ "not_labels": [
+  "1142,118"
+ ],
+ "not_labels_verified": "« 【Chorus】 » en tête de la rangée y=1142 : une mention de section, pas un accord.",
  "extra_labels": [
   {
-   "x": 181,
-   "y": 272,
-   "w": 46,
-   "h": 29,
-   "c": "F/Eb"
-  },
-  {
-   "x": 421,
-   "y": 272,
-   "w": 44,
-   "h": 29,
-   "c": "Bb/D"
-  },
-  {
-   "x": 874,
-   "y": 272,
-   "w": 44,
-   "h": 29,
-   "c": "Bb/D"
-  },
-  {
-   "x": 72,
-   "y": 763,
-   "w": 44,
-   "h": 22,
-   "c": "Bb/D"
-  },
-  {
-   "x": 83,
-   "y": 984,
-   "w": 48,
-   "h": 39,
+   "x": 76,
+   "y": 920,
+   "w": 57,
+   "h": 27,
    "c": "Bb/F"
   },
   {
-   "x": 565,
-   "y": 984,
-   "w": 18,
-   "h": 39,
+   "x": 533,
+   "y": 937,
+   "w": 11,
+   "h": 22,
    "c": "F"
   },
   {
-   "x": 1025,
-   "y": 984,
-   "w": 15,
-   "h": 39,
+   "x": 958,
+   "y": 937,
+   "w": 30,
+   "h": 22,
    "c": "Bb"
   },
   {
-   "x": 621,
-   "y": 1217,
+   "x": 57,
+   "y": 166,
+   "w": 9,
+   "h": 22,
+   "c": ""
+  }
+ ],
+ "extra_labels_verified": "le 4e système (2e fin) : « Bb/F » gravé au-dessus du filet du crochet de 2e fin, qui le soude à la bande y=921 typée « numbers » ; « F » et « Bb » plus bas, à droite du crochet. Rangée trouvée en comptant les systèmes (huit rangées de chiffres, sept rangées d'accords lues). Boîtes mesurées sur l'encre ; celle de « Bb/F » s'arrête au bas de sa barre oblique (946) pour que le fond ne couvre pas le filet du crochet à y=955. Plus le masque du bémol exposant du cadre « 1= ♭B » (x=57, y=166, 9 × 22), sans texte : sans lui un « ♭ » resterait au-dessus du cadre réécrit et se lirait « 1=♭C ».",
+ "title_key": {
+  "x": 842,
+  "y": 14,
+  "w": 178,
+  "h": 62
+ },
+ "title_key_verified": "mention « （Bb调） » du titre, candidate #3 de `measure-titlekey` élue sur la planche _tk du 02/10/2026 : les deux parenthèses comprises (les #1 et #2 coupaient la parenthèse ouvrante, la #4 prenait « 起 »). La page en ut la gravait déjà (« （C调） ») sans qu'elle ait été mesurée. La mention de série « [共5张：C/Bb(原调)/A/G调、级数] » décrit la série et reste telle quelle.",
+ "key_label": {
+  "x": 15,
+  "y": 192,
+  "w": 70,
+  "h": 22
+ },
+ "key_label_verified": "mesuré au profil d'encre le 02/10/2026 : la page grave « 1= ♭B », bémol **antéposé en exposant** (x=57…65, y=166…187), lettres « 1= B » sur y=192…213. La candidate #2 de `measure-keylabel` (x=15, w=51, h=34) s'arrêtait avant le « B » et sa #1 était la ligne de tempo ♩=132. Le cadre prend la hauteur des lettres ; le bémol est masqué à part, sans texte (`extra_labels`, c vide) — même geste que 十架的大能 et 无价至宝, la même famille de planches. Lettre gravée ♭B = .cho = printedKey.",
+ "ordre_des_etiquettes": "les étiquettes sont publiées et gelées **dans l'ordre du calque archivé** : l'étiquette n est le même accord, à la même place de la même rangée, que l'étiquette n de l'ancienne page (appariement système par système puis de gauche à droite, chaque nom contrôlé par transposition −2 demi-tons de l'ancien vers le nouveau, enharmonie près). Les retouches de setlist (`jianpuChords.changed[n]`) visent donc toujours le même accord ; mais leur texte est écrit dans la tonalité **gravée**, qui passe de ut à si bémol : une retouche existante sur ce chant se lirait décalée de −2 demi-tons, et un accord ajouté (`added`, en pixels du scan) tomberait à côté — à migrer s'il en existe. Le masque du bémol du cadre, sans pendant sur l'ancienne page, est ajouté à la fin (étiquette 37).",
+ "verified": "planche navigateur Bb→B (npm run jianpu:audit, serveur à part sur le port 3300) relue sur les sept tranches le 02/10/2026 : les huit rangées d'accords portent leurs 37 étiquettes encadrées en rouge et réécrites d'un demi-ton (Eb→E, F/Eb→F#/E, Bb/D→B/D#, G7→G#7, Cm→C#m, Edim→Fdim, la composite « 先Eb后Edim » → « 先E后Fdim », Bb/F→B/F#, D/F#→D#/G, Eb/F→E/F#…), aucun accord resté en si bémol ; le cadre « 1= ♭B » devient « 1=B », son bémol exposant masqué (seul cadre orange de la planche : un masque vide, dont le rendu égale le gravé par construction). La mention « （Bb调） » du titre, cachée sur la tranche 1 par la barre d'outils de l'appli, est relue sur une capture de l'en-tête à fenêtre haute : elle devient « （B调） ». Le filet du crochet de 2e fin sous « Bb/F » reste entier, comme les arcs, 【Chorus】 et la mention de série. `sweep-browser` : un seul signalement, « 1=B ∩ ∅ » (le cadre touche le masque vide du bémol, peint dessous — faux positif connu, cf. 无价至宝 et 十架的大能) ; aucun tronqué aux douze tonalités (`--keys`) ; `worklist` : PRÊT, 37/37 ; `bandes.py` 0 ; `grille.py` 0.",
+ "calque_page_C_retire": {
+  "face": "verdana-bold",
+  "printed_key": "C",
+  "key_label": {
+   "x": 18,
+   "y": 209,
+   "w": 75,
+   "h": 24
+  },
+  "key_label_verified": "mesure measure-keylabel (vote 1= + lettre attendue), zoom relu à l’œil sur planche de lot, lettre confrontée à printedKey, 2026-08-22",
+  "extra_chords": [
+   "G7"
+  ],
+  "extra_labels": [
+   {
+    "x": 181,
+    "y": 272,
+    "w": 46,
+    "h": 29,
+    "c": "F/Eb"
+   },
+   {
+    "x": 421,
+    "y": 272,
+    "w": 44,
+    "h": 29,
+    "c": "Bb/D"
+   },
+   {
+    "x": 874,
+    "y": 272,
+    "w": 44,
+    "h": 29,
+    "c": "Bb/D"
+   },
+   {
+    "x": 72,
+    "y": 763,
+    "w": 44,
+    "h": 22,
+    "c": "Bb/D"
+   },
+   {
+    "x": 83,
+    "y": 984,
+    "w": 48,
+    "h": 39,
+    "c": "Bb/F"
+   },
+   {
+    "x": 565,
+    "y": 984,
+    "w": 18,
+    "h": 39,
+    "c": "F"
+   },
+   {
+    "x": 1025,
+    "y": 984,
+    "w": 15,
+    "h": 39,
+    "c": "Bb"
+   },
+   {
+    "x": 621,
+    "y": 1217,
+    "w": 47,
+    "h": 27,
+    "c": "F/Eb"
+   },
+   {
+    "x": 1135,
+    "y": 491,
+    "w": 163,
+    "h": 26,
+    "c": "先Eb后Edim"
+   }
+  ],
+  "extra_verified": "zooms relus à l’œil sur planche de lot (propose-extra --all --hidden), 2026-08-25 (itération 33)",
+  "extra_composites_verified": "étiquettes composites (或 / 代替 / 先…后 / groupe entre parenthèses), lues à l’œil sur planche de lot et écrites telles qu’imprimées ; `transpose_label` réécrit la ligne entière. 2026-08-25 (itération 34)",
+  "not_labels": [
+   "1217,128",
+   "308,1110",
+   "308,1134",
+   "308,202",
+   "308,219",
+   "308,559",
+   "308,581"
+  ],
+  "not_labels_verified": "six fragments d'arcs de liaison de la rangée y=308 et la mention 【Chorus】 — 2026-08-30 (itération 40)",
+  "verified": "transposé C→C# dans Chrome headless (npm run jianpu:audit, 7 tranches relues + thème sombre) : 37 accords et le cadre 1=C#, la ligne composite « 先F后F#dim », les deux crochets de reprise (C/E…G et C/G…C) et E/G#→F/A compris ; aucun accord resté en C, aucun accord sans cadre, aucune barre de mesure ni arc recouvert. Décalage song_semitones = 2 vérifié avant lecture (page gravée en C, .cho en Bb) — 2026-09-02 (itération 41)",
+  "frozen_labels": [
+   {
+    "x": 61,
+    "y": 272,
+    "w": 11,
+    "h": 29,
+    "c": "F"
+   },
+   {
+    "x": 578,
+    "y": 272,
+    "w": 34,
+    "h": 29,
+    "c": "A7"
+   },
+   {
+    "x": 794,
+    "y": 272,
+    "w": 43,
+    "h": 29,
+    "c": "Dm"
+   },
+   {
+    "x": 984,
+    "y": 272,
+    "w": 10,
+    "h": 29,
+    "c": "F"
+   },
+   {
+    "x": 1040,
+    "y": 272,
+    "w": 81,
+    "h": 29,
+    "c": "F#dim"
+   },
+   {
+    "x": 1178,
+    "y": 272,
+    "w": 17,
+    "h": 29,
+    "c": "G"
+   },
+   {
+    "x": 103,
+    "y": 491,
+    "w": 15,
+    "h": 29,
+    "c": "C"
+   },
+   {
+    "x": 465,
+    "y": 491,
+    "w": 33,
+    "h": 29,
+    "c": "C7"
+   },
+   {
+    "x": 799,
+    "y": 491,
+    "w": 11,
+    "h": 29,
+    "c": "F"
+   },
+   {
+    "x": 404,
+    "y": 763,
+    "w": 44,
+    "h": 22,
+    "c": "Am"
+   },
+   {
+    "x": 738,
+    "y": 763,
+    "w": 43,
+    "h": 22,
+    "c": "Dm"
+   },
+   {
+    "x": 1116,
+    "y": 763,
+    "w": 17,
+    "h": 22,
+    "c": "G"
+   },
+   {
+    "x": 345,
+    "y": 1217,
+    "w": 11,
+    "h": 27,
+    "c": "F"
+   },
+   {
+    "x": 878,
+    "y": 1217,
+    "w": 39,
+    "h": 27,
+    "c": "Em"
+   },
+   {
+    "x": 1198,
+    "y": 1217,
+    "w": 44,
+    "h": 27,
+    "c": "Am"
+   },
+   {
+    "x": 69,
+    "y": 1443,
+    "w": 43,
+    "h": 22,
+    "c": "Dm"
+   },
+   {
+    "x": 429,
+    "y": 1443,
+    "w": 18,
+    "h": 22,
+    "c": "G"
+   },
+   {
+    "x": 770,
+    "y": 1443,
+    "w": 15,
+    "h": 22,
+    "c": "C"
+   },
+   {
+    "x": 1104,
+    "y": 1443,
+    "w": 32,
+    "h": 22,
+    "c": "C7"
+   },
+   {
+    "x": 76,
+    "y": 1662,
+    "w": 11,
+    "h": 28,
+    "c": "F"
+   },
+   {
+    "x": 412,
+    "y": 1662,
+    "w": 47,
+    "h": 28,
+    "c": "G/F"
+   },
+   {
+    "x": 742,
+    "y": 1662,
+    "w": 39,
+    "h": 28,
+    "c": "Em"
+   },
+   {
+    "x": 911,
+    "y": 1662,
+    "w": 63,
+    "h": 28,
+    "c": "E/G#"
+   },
+   {
+    "x": 1111,
+    "y": 1662,
+    "w": 43,
+    "h": 28,
+    "c": "Am"
+   },
+   {
+    "x": 81,
+    "y": 1885,
+    "w": 44,
+    "h": 23,
+    "c": "Dm"
+   },
+   {
+    "x": 552,
+    "y": 1885,
+    "w": 45,
+    "h": 23,
+    "c": "F/G"
+   },
+   {
+    "x": 774,
+    "y": 1885,
+    "w": 18,
+    "h": 23,
+    "c": "G"
+   },
+   {
+    "x": 1014,
+    "y": 1885,
+    "w": 15,
+    "h": 23,
+    "c": "C"
+   },
+   {
+    "x": 181,
+    "y": 272,
+    "w": 46,
+    "h": 29,
+    "c": "G/F"
+   },
+   {
+    "x": 421,
+    "y": 272,
+    "w": 44,
+    "h": 29,
+    "c": "C/E"
+   },
+   {
+    "x": 874,
+    "y": 272,
+    "w": 44,
+    "h": 29,
+    "c": "C/E"
+   },
+   {
+    "x": 72,
+    "y": 763,
+    "w": 44,
+    "h": 22,
+    "c": "C/E"
+   },
+   {
+    "x": 83,
+    "y": 984,
+    "w": 48,
+    "h": 39,
+    "c": "C/G"
+   },
+   {
+    "x": 565,
+    "y": 984,
+    "w": 18,
+    "h": 39,
+    "c": "G"
+   },
+   {
+    "x": 1025,
+    "y": 984,
+    "w": 15,
+    "h": 39,
+    "c": "C"
+   },
+   {
+    "x": 621,
+    "y": 1217,
+    "w": 47,
+    "h": 27,
+    "c": "G/F"
+   },
+   {
+    "x": 1135,
+    "y": 491,
+    "w": 163,
+    "h": 26,
+    "c": "先F后F#dim"
+   }
+  ]
+ },
+ "frozen_labels": [
+  {
+   "x": 49,
+   "y": 252,
+   "w": 29,
+   "h": 27,
+   "c": "Eb"
+  },
+  {
+   "x": 542,
+   "y": 252,
+   "w": 33,
+   "h": 27,
+   "c": "G7"
+  },
+  {
+   "x": 745,
+   "y": 252,
+   "w": 39,
+   "h": 27,
+   "c": "Cm"
+  },
+  {
+   "x": 918,
+   "y": 252,
+   "w": 28,
+   "h": 27,
+   "c": "Eb"
+  },
+  {
+   "x": 977,
+   "y": 252,
+   "w": 61,
+   "h": 27,
+   "c": "Edim"
+  },
+  {
+   "x": 1110,
+   "y": 252,
+   "w": 10,
+   "h": 27,
+   "c": "F"
+  },
+  {
+   "x": 89,
+   "y": 458,
+   "w": 31,
+   "h": 27,
+   "c": "Bb"
+  },
+  {
+   "x": 436,
+   "y": 458,
+   "w": 46,
+   "h": 27,
+   "c": "Bb7"
+  },
+  {
+   "x": 744,
+   "y": 458,
+   "w": 29,
+   "h": 27,
+   "c": "Eb"
+  },
+  {
+   "x": 378,
+   "y": 714,
+   "w": 42,
+   "h": 21,
+   "c": "Gm"
+  },
+  {
+   "x": 693,
+   "y": 714,
+   "w": 39,
+   "h": 21,
+   "c": "Cm"
+  },
+  {
+   "x": 1052,
+   "y": 714,
+   "w": 11,
+   "h": 21,
+   "c": "F"
+  },
+  {
+   "x": 316,
+   "y": 1142,
+   "w": 28,
+   "h": 25,
+   "c": "Eb"
+  },
+  {
+   "x": 824,
+   "y": 1142,
+   "w": 41,
+   "h": 25,
+   "c": "Dm"
+  },
+  {
+   "x": 1127,
+   "y": 1142,
+   "w": 42,
+   "h": 25,
+   "c": "Gm"
+  },
+  {
+   "x": 61,
+   "y": 1354,
+   "w": 39,
+   "h": 21,
+   "c": "Cm"
+  },
+  {
+   "x": 405,
+   "y": 1354,
+   "w": 10,
+   "h": 21,
+   "c": "F"
+  },
+  {
+   "x": 717,
+   "y": 1354,
+   "w": 30,
+   "h": 21,
+   "c": "Bb"
+  },
+  {
+   "x": 1037,
+   "y": 1354,
    "w": 47,
+   "h": 21,
+   "c": "Bb7"
+  },
+  {
+   "x": 63,
+   "y": 1561,
+   "w": 28,
+   "h": 26,
+   "c": "Eb"
+  },
+  {
+   "x": 387,
+   "y": 1561,
+   "w": 55,
+   "h": 26,
+   "c": "F/Eb"
+  },
+  {
+   "x": 696,
+   "y": 1561,
+   "w": 41,
+   "h": 26,
+   "c": "Dm"
+  },
+  {
+   "x": 855,
+   "y": 1561,
+   "w": 59,
+   "h": 26,
+   "c": "D/F#"
+  },
+  {
+   "x": 1044,
+   "y": 1561,
+   "w": 42,
+   "h": 26,
+   "c": "Gm"
+  },
+  {
+   "x": 72,
+   "y": 1770,
+   "w": 39,
+   "h": 22,
+   "c": "Cm"
+  },
+  {
+   "x": 508,
+   "y": 1770,
+   "w": 56,
+   "h": 22,
+   "c": "Eb/F"
+  },
+  {
+   "x": 743,
+   "y": 1770,
+   "w": 10,
+   "h": 22,
+   "c": "F"
+  },
+  {
+   "x": 954,
+   "y": 1770,
+   "w": 31,
+   "h": 22,
+   "c": "Bb"
+  },
+  {
+   "x": 169,
+   "y": 252,
+   "w": 56,
    "h": 27,
    "c": "F/Eb"
   },
   {
-   "x": 1135,
-   "y": 491,
-   "w": 163,
-   "h": 26,
-   "c": "先Eb后Edim"
-  }
- ],
- "extra_verified": "zooms relus à l’œil sur planche de lot (propose-extra --all --hidden), 2026-08-25 (itération 33)",
- "extra_composites_verified": "étiquettes composites (或 / 代替 / 先…后 / groupe entre parenthèses), lues à l’œil sur planche de lot et écrites telles qu’imprimées ; `transpose_label` réécrit la ligne entière. 2026-08-25 (itération 34)",
- "not_labels": [
-  "1217,128",
-  "308,1110",
-  "308,1134",
-  "308,202",
-  "308,219",
-  "308,559",
-  "308,581"
- ],
- "not_labels_verified": "six fragments d'arcs de liaison de la rangée y=308 et la mention 【Chorus】 — 2026-08-30 (itération 40)",
- "verified": "transposé C→C# dans Chrome headless (npm run jianpu:audit, 7 tranches relues + thème sombre) : 37 accords et le cadre 1=C#, la ligne composite « 先F后F#dim », les deux crochets de reprise (C/E…G et C/G…C) et E/G#→F/A compris ; aucun accord resté en C, aucun accord sans cadre, aucune barre de mesure ni arc recouvert. Décalage song_semitones = 2 vérifié avant lecture (page gravée en C, .cho en Bb) — 2026-09-02 (itération 41)",
- "frozen_labels": [
+   "x": 395,
+   "y": 252,
+   "w": 63,
+   "h": 27,
+   "c": "Bb/D"
+  },
+  {
+   "x": 821,
+   "y": 252,
+   "w": 62,
+   "h": 27,
+   "c": "Bb/D"
+  },
   {
    "x": 61,
-   "y": 272,
-   "w": 11,
-   "h": 29,
-   "c": "F"
-  },
-  {
-   "x": 578,
-   "y": 272,
-   "w": 34,
-   "h": 29,
-   "c": "A7"
-  },
-  {
-   "x": 794,
-   "y": 272,
-   "w": 43,
-   "h": 29,
-   "c": "Dm"
-  },
-  {
-   "x": 984,
-   "y": 272,
-   "w": 10,
-   "h": 29,
-   "c": "F"
-  },
-  {
-   "x": 1040,
-   "y": 272,
-   "w": 81,
-   "h": 29,
-   "c": "F#dim"
-  },
-  {
-   "x": 1178,
-   "y": 272,
-   "w": 17,
-   "h": 29,
-   "c": "G"
-  },
-  {
-   "x": 103,
-   "y": 491,
-   "w": 15,
-   "h": 29,
-   "c": "C"
-  },
-  {
-   "x": 465,
-   "y": 491,
-   "w": 33,
-   "h": 29,
-   "c": "C7"
-  },
-  {
-   "x": 799,
-   "y": 491,
-   "w": 11,
-   "h": 29,
-   "c": "F"
-  },
-  {
-   "x": 404,
-   "y": 763,
-   "w": 44,
-   "h": 22,
-   "c": "Am"
-  },
-  {
-   "x": 738,
-   "y": 763,
-   "w": 43,
-   "h": 22,
-   "c": "Dm"
-  },
-  {
-   "x": 1116,
-   "y": 763,
-   "w": 17,
-   "h": 22,
-   "c": "G"
-  },
-  {
-   "x": 345,
-   "y": 1217,
-   "w": 11,
-   "h": 27,
-   "c": "F"
-  },
-  {
-   "x": 878,
-   "y": 1217,
-   "w": 39,
-   "h": 27,
-   "c": "Em"
-  },
-  {
-   "x": 1198,
-   "y": 1217,
-   "w": 44,
-   "h": 27,
-   "c": "Am"
-  },
-  {
-   "x": 69,
-   "y": 1443,
-   "w": 43,
-   "h": 22,
-   "c": "Dm"
-  },
-  {
-   "x": 429,
-   "y": 1443,
-   "w": 18,
-   "h": 22,
-   "c": "G"
-  },
-  {
-   "x": 770,
-   "y": 1443,
-   "w": 15,
-   "h": 22,
-   "c": "C"
-  },
-  {
-   "x": 1104,
-   "y": 1443,
-   "w": 32,
-   "h": 22,
-   "c": "C7"
+   "y": 714,
+   "w": 63,
+   "h": 21,
+   "c": "Bb/D"
   },
   {
    "x": 76,
-   "y": 1662,
+   "y": 920,
+   "w": 57,
+   "h": 27,
+   "c": "Bb/F"
+  },
+  {
+   "x": 533,
+   "y": 937,
    "w": 11,
-   "h": 28,
+   "h": 22,
    "c": "F"
   },
   {
-   "x": 412,
-   "y": 1662,
-   "w": 47,
-   "h": 28,
-   "c": "G/F"
-  },
-  {
-   "x": 742,
-   "y": 1662,
-   "w": 39,
-   "h": 28,
-   "c": "Em"
-  },
-  {
-   "x": 911,
-   "y": 1662,
-   "w": 63,
-   "h": 28,
-   "c": "E/G#"
-  },
-  {
-   "x": 1111,
-   "y": 1662,
-   "w": 43,
-   "h": 28,
-   "c": "Am"
-  },
-  {
-   "x": 81,
-   "y": 1885,
-   "w": 44,
-   "h": 23,
-   "c": "Dm"
-  },
-  {
-   "x": 552,
-   "y": 1885,
-   "w": 45,
-   "h": 23,
-   "c": "F/G"
-  },
-  {
-   "x": 774,
-   "y": 1885,
-   "w": 18,
-   "h": 23,
-   "c": "G"
-  },
-  {
-   "x": 1014,
-   "y": 1885,
-   "w": 15,
-   "h": 23,
-   "c": "C"
-  },
-  {
-   "x": 181,
-   "y": 272,
-   "w": 46,
-   "h": 29,
-   "c": "G/F"
-  },
-  {
-   "x": 421,
-   "y": 272,
-   "w": 44,
-   "h": 29,
-   "c": "C/E"
-  },
-  {
-   "x": 874,
-   "y": 272,
-   "w": 44,
-   "h": 29,
-   "c": "C/E"
-  },
-  {
-   "x": 72,
-   "y": 763,
-   "w": 44,
+   "x": 958,
+   "y": 937,
+   "w": 30,
    "h": 22,
-   "c": "C/E"
+   "c": "Bb"
   },
   {
-   "x": 83,
-   "y": 984,
-   "w": 48,
-   "h": 39,
-   "c": "C/G"
+   "x": 584,
+   "y": 1142,
+   "w": 55,
+   "h": 25,
+   "c": "F/Eb"
   },
   {
-   "x": 565,
-   "y": 984,
-   "w": 18,
-   "h": 39,
-   "c": "G"
-  },
-  {
-   "x": 1025,
-   "y": 984,
-   "w": 15,
-   "h": 39,
-   "c": "C"
-  },
-  {
-   "x": 621,
-   "y": 1217,
-   "w": 47,
+   "x": 1069,
+   "y": 458,
+   "w": 154,
    "h": 27,
-   "c": "G/F"
+   "c": "先Eb后Edim"
   },
   {
-   "x": 1135,
-   "y": 491,
-   "w": 163,
-   "h": 26,
-   "c": "先F后F#dim"
+   "x": 57,
+   "y": 166,
+   "w": 9,
+   "h": 22,
+   "c": ""
   }
  ]
 }

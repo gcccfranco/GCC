@@ -4,16 +4,17 @@
 {key: F}
 {tempo: 146}
 {language: zh}
-{themes: 赞美, 喜乐, 歌唱}
+{themes: Adoration, Engagement}
+{source: 齐来赞美.pdf}
 
-{start_of_intro: 前奏/Intro}
-[F] [Bb] [C] [F]
+{start_of_intro: 前奏/Intro (x2)}
+[F]  [Bb]  [C]  [F]
 {end_of_intro}
 
 {start_of_verse: 主歌 1/Couplet 1}
-大山[F]小山都要来赞美，太阳[Bb]月亮星星来赞美，   dà shān xiǎo shān dōu yào lái zàn měi tài yáng yuè liang xīng xing lái zàn měi
+大山[F]小山都要来赞美，太阳[Bb]月亮星星来赞美，   dà shān xiǎo shān dōu yào lái zàn měi tài yáng yuè liàng xīng xīng lái zàn měi
 海洋[C]与河流齐来赞美耶和华[F]。   hǎi yáng yǔ hé liú qí lái zàn měi yē hé huá
-大山[F]小山都要来赞美，太阳[Bb]月亮星星来赞美，   dà shān xiǎo shān dōu yào lái zàn měi tài yáng yuè liang xīng xing lái zàn měi
+大山[F]小山都要来赞美，太阳[Bb]月亮星星来赞美，   dà shān xiǎo shān dōu yào lái zàn měi tài yáng yuè liàng xīng xīng lái zàn měi
 万物[C]要歌唱，齐来赞美耶和华[F]。   wàn wù yào gē chàng qí lái zàn měi yē hé huá
 {end_of_verse}
 

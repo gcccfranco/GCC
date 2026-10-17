@@ -32,7 +32,7 @@ async function main() {
   for (const k of [undefined, key]) {
     const ctx = await browser.newContext({ baseURL: BASE_URL, viewport: { width: 1400, height: 1000 }, deviceScaleFactor: 3 });
     const page = await ctx.newPage();
-    const sheets = await openSheet(page, slug, { key: k });
+    const sheets = await openSheet(page, slug, { key: k, gravure: !k });
     const buf = await sheets.nth(0).screenshot();
     shots[k ?? "gravé"] = `data:image/png;base64,${buf.toString("base64")}`;
     await ctx.close();

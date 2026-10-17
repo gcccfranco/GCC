@@ -5,8 +5,9 @@
 {language: fr}
 {youtube: https://www.youtube.com/watch?v=BB69mWyQYAU}
 {themes: Foi, Espérance}
+{source: Oasis (Terres arides) - Accords.pdf}
 
-{start_of_intro: Intro}
+{start_of_intro: Intro (x2)}
 [C#m]  [B]  [A]
 {end_of_intro}
 
@@ -15,7 +16,7 @@
 [C#m]Dans la val[B]lée des ossements [A]desséchés
 [C#m]Je m’accrocher[B]ai à Ta Parole
 [A]Ton Esprit sera la boussole
-[C#m]Qui me cond[B]uit sur ce ch[A]emin
+[C#m]Qui me con[B]duit sur ce ch[A]emin
 {end_of_verse}
 
 {start_of_verse: Couplet 2}
@@ -28,13 +29,13 @@ Tu m’aides à faire un pas de plus
 
 {start_of_chorus: Refrain}
 [A]Toi mon oasis de [C#m]grâce
-Et ma source en plein dés[B]ert
+Et ma source en plein dé[B]sert
 Je trouve un refuge en [F#m9]Toi
-[ ]Dans le cœur d’amour du Père
+Dans le cœur d’amour du Père
 [A]Ici je suis à ma [C#m]place
 Pas besoin de changer [B]d’air
 Je trouve un refuge en [F#m9]Toi
-[ ]Dans le cœur d’amour du Père
+Dans le cœur d’amour du Père
 {end_of_chorus}
 
 {start_of_verse: Couplet 3}
@@ -46,8 +47,8 @@ Le Chemin, la Vérité, la Vie
 Le Chemin, la Vérité, la Vie
 {end_of_verse}
 
-{start_of_intro: Instru}
-[A][ ][C#m][ ][B][ ][F#m]
+{start_of_intro: Interlude (x2)}
+[A]  [C#m]  [B]  [F#m]
 {end_of_intro}
 
 {start_of_bridge: Pont}

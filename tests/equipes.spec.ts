@@ -358,7 +358,8 @@ test("admin : le bouton d'import rend compte de ce qu'il n'a pas su rattacher", 
   await signInAs(page, { uid: "admin1", email: "tc328829@gmail.com", firstName: "Timothée", lastName: "C." }, DOCS, "/admin");
   await page.getByRole("button", { name: /Équipes/ }).click();
   await page.getByRole("button", { name: "Importer l'organigramme du Sheet" }).click();
-  await expect(page.getByText(/13 équipes/)).toBeVisible();
+  // Le compte rendu, pas l'explication de l'onglet (qui cite aussi « 13 équipes »).
+  await expect(page.getByText(/13 équipes, 96 membres/)).toBeVisible();
   await expect(page.getByText("Kitty S.")).toBeVisible();
   await expect(page.getByText("Untel B.")).toBeVisible();
 });

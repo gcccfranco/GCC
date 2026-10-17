@@ -1,5 +1,10 @@
 import { expect, test, type Page } from "@playwright/test";
 import { signInAs, type FakeDb, type FakeProfile } from "./helpers/fakeSession";
+import { buildFormItems } from "../src/lib/setlist/formItems";
+import { buildSetlistItems } from "../src/lib/setlist/buildSetlistItems";
+import type { SetlistItem } from "../src/types/setList";
+import type { SongIndexEntry } from "../src/types/song";
+import { readFileSync } from "fs";
 
 // Chantier Setlist, lot 1 (docs/spec-setlist.md) : l'éditeur est une seule
 // page, enregistrée automatiquement ; « Publier » à la création seulement.
@@ -144,4 +149,43 @@ test("modification : quitter l'éditeur sans « Terminé » envoie le changement
   await expect.poll(() => db.doc(`setlists/${SETLIST_ID}`)?.notes).toBe("Thème : la paix");
   await expect.poll(() => notified.length).toBe(1);
   expect(notified[0]).toContain(SETLIST_ID);
+});
+
+// « Modifier » réécrit tous les items : les accords retouchés sur un scan 简谱
+// (mode Adapter, `jianpuChords`) doivent être reconduits tels quels.
+const RETOUCHES = { changed: { 0: "Em7", 3: "" }, added: [{ page: 0, x: 800, y: 1163, c: "G" }] };
+const INDEX = (JSON.parse(readFileSync("public/songs-index.json", "utf8")) as { songs: SongIndexEntry[] }).songs;
+const SONGS_MAP = Object.fromEntries(INDEX.map((s) => [s.slug, s]));
+const AVEC_RETOUCHES = [
+  item({ songSlug: "abba-pere", position: 1 }),
+  item({ songSlug: "一生爱你", position: 2, jianpuSheet: true, jianpuChords: RETOUCHES }),
+] as SetlistItem[];
+
+test("(pur) jianpuChords : relus par buildFormItems, réécrits par buildSetlistItems", () => {
+  const relus = buildSetlistItems(buildFormItems(AVEC_RETOUCHES, SONGS_MAP));
+  expect(relus[1].songSlug).toBe("一生爱你");
+  expect(relus[1].jianpuSheet).toBe(true);
+  expect(relus[1].jianpuChords).toEqual(RETOUCHES);
+});
+
+test("(pur) jianpuChords : un chant sans retouche n'a pas la clé", () => {
+  const relus = buildSetlistItems(buildFormItems(AVEC_RETOUCHES, SONGS_MAP));
+  expect("jianpuChords" in relus[0]).toBe(false);
+});
+
+test("modification : un changement ailleurs garde les accords retouchés sur un scan 简谱", async ({ page }) => {
+  await emptyPlanning(page);
+  const db = await signInAs(
+    page,
+    MUSICIEN,
+    { [`setlists/${SETLIST_ID}`]: { ...SETLIST, items: AVEC_RETOUCHES } },
+    `/setlists/${SETLIST_ID}/edit`,
+  );
+  await expect(page.getByLabel("Tonalité de Abba Père")).toBeVisible();
+  await page.getByLabel("Tonalité de Abba Père").selectOption("B");
+  await expect.poll(() => setlistWrites(db, SETLIST_ID).length).toBeGreaterThan(0);
+  const items = setlistWrites(db, SETLIST_ID).pop()!.data.items as Record<string, unknown>[];
+  expect(items.find((i) => i.songSlug === "abba-pere")!.keyOverride).toBe("B");
+  expect(items.find((i) => i.songSlug === "一生爱你")!.jianpuChords, "retouches du scan conservées").toEqual(RETOUCHES);
+  expect("jianpuChords" in items.find((i) => i.songSlug === "abba-pere")!).toBe(false);
 });

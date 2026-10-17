@@ -141,3 +141,20 @@ test("un batteur n'a pas l'entrée « Idées d'harmonie »", async ({ page }) =>
   await page.getByRole("button", { name: /Plus d'actions|More actions|更多操作/ }).click();
   await expect(page.getByRole("menuitem", { name: "Idées d'harmonie" })).toHaveCount(0);
 });
+
+// Retour du 01/10/2026 : une idée sans remplacement d'accords (« Le tag : répéter
+// la dernière phrase ») citait sa fiche avec les ** du markdown.
+test("une idée qui cite sa fiche la rend comme la fiche : du gras, pas de ** brut", async ({ page }) => {
+  await page.route(/docs\.google\.com\/spreadsheets/, (route) => {
+    const sheet = new URL(route.request().url()).searchParams.get("sheet");
+    return route.fulfill({ status: 200, contentType: "text/csv", body: sheet === "Franco_Louange" ? CULTE : "" });
+  });
+  await signInAs(page, JO, {}, `/songs/${encodeURIComponent("一生爱你")}`);
+  await ouvrirLaFeuille(page);
+  const voirPlus = page.getByRole("button", { name: "Voir plus" });
+  if (await voirPlus.isVisible()) await voirPlus.click();
+  const tag = page.locator("[data-suggestion]", { hasText: "Le tag" });
+  await expect(tag).toBeVisible();
+  await expect(tag).not.toContainText("**");
+  await expect(tag.locator("strong", { hasText: "dernière ligne répétée" })).toBeVisible();
+});

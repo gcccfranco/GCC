@@ -1,7 +1,7 @@
 import { nextUid } from "@/lib/uid";
 import { resolveStructureOverride } from "@/lib/chordpro/structure";
 import { parseChordPro } from "@/lib/chordpro/parser";
-import type { SetlistItem, SectionNuance } from "@/types/setList";
+import type { JianpuChords, SetlistItem, SectionNuance } from "@/types/setList";
 import type { SongIndexEntry, SectionSummary } from "@/types/song";
 
 export interface FormSectionItem {
@@ -22,8 +22,9 @@ export interface FormItem {
   keyOverride: string | null;
   notes: string;
   sectionItems: FormSectionItem[];
-  /** Jouer ce chant sur sa partition 简谱 plutôt que sur les paroles.
-   *  La structure définie ci-dessus reste affichée dans la setlist, mais ne
+  /** Choix du responsable pour un chant qui a un scan : `true` = partition
+   *  简谱, `false` = paroles, absent = non réglé (le scan, par défaut). La
+   *  structure définie ci-dessus reste affichée dans la setlist, mais ne
    *  découpe pas la partition (le scan est indivisible). */
   jianpuSheet?: boolean;
   /** Version adaptée du chant pour cette setlist (mode Adapter, accords et
@@ -31,6 +32,9 @@ export interface FormItem {
   contentOverride?: string | null;
   /** Provenance des sections matérialisées, reconduite avec le contenu. */
   sectionOrigins?: Record<string, string>;
+  /** Accords retouchés sur le scan 简谱 (mode Adapter, lot 9) : reconduits tels
+   *  quels, comme `contentOverride` — l'éditeur ne les modifie pas. */
+  jianpuChords?: JianpuChords;
 }
 
 export interface FusionMixedSectionForm {
@@ -97,7 +101,7 @@ function resolveNuance(
  *  setlist si elle existe (elle peut contenir des sections matérialisées,
  *  absentes de l'index des chants), sinon celles du chant. L'uid reprend la
  *  convention de toFormItem — `<id>-<rang>` — pour les sections de l'index. */
-function itemSections(song: SongIndexEntry, contentOverride?: string | null): SectionSummary[] {
+export function itemSections(song: SongIndexEntry, contentOverride?: string | null): SectionSummary[] {
   if (!contentOverride) return song.sections ?? [];
   return parseChordPro(contentOverride).sections.map((s, index) => ({
     id: s.id,
@@ -118,8 +122,8 @@ function toFormItem(
   sectionTransitions: Record<string, string> = {},
   sectionNuances: Record<string, SectionNuance> = {},
   sectionKeys: Record<string, string> = {},
-  jianpuSheet = false,
-  adapted: { contentOverride?: string | null; sectionOrigins?: Record<string, string> } = {}
+  jianpuSheet?: boolean,
+  adapted: { contentOverride?: string | null; sectionOrigins?: Record<string, string>; jianpuChords?: JianpuChords } = {}
 ): FormItem {
   const allSections = itemSections(song, adapted.contentOverride);
   const orderedSections: SectionSummary[] = structureOverride && structureOverride.length > 0
@@ -131,7 +135,8 @@ function toFormItem(
     song,
     keyOverride,
     notes,
-    ...(jianpuSheet ? { jianpuSheet: true } : {}),
+    // Jamais de « Paroles » inventé pour un item non réglé.
+    ...(jianpuSheet !== undefined ? { jianpuSheet } : {}),
     sectionItems: orderedSections.map((s, index) => {
       const uid = s.uid ?? `${s.id}-${index}`;
       const idx = occ[s.id] ?? 0;
@@ -151,6 +156,7 @@ function toFormItem(
     }),
     contentOverride: adapted.contentOverride ?? null,
     ...(adapted.sectionOrigins ? { sectionOrigins: adapted.sectionOrigins } : {}),
+    ...(adapted.jianpuChords ? { jianpuChords: adapted.jianpuChords } : {}),
   };
 }
 
@@ -168,7 +174,7 @@ export function buildFormItems(
         const songs: FormItem[] = item.fusionSongs.flatMap((fs) => {
           const song = songsMap[fs.songSlug];
           if (!song) return [];
-          return [toFormItem(song, fs.keyOverride, "", fs.structureOverride, fs.sectionNotes, {}, fs.sectionNuances, fs.sectionKeys)];
+          return [toFormItem(song, fs.keyOverride, "", fs.structureOverride, fs.sectionNotes, {}, fs.sectionNuances, fs.sectionKeys, undefined, { contentOverride: fs.contentOverride })];
         });
         if (songs.length === 0) return [];
 
@@ -177,9 +183,10 @@ export function buildFormItems(
           mixedStructure = item.mixedStructure.flatMap((ms): FusionMixedSectionForm[] => {
             const song = songsMap[ms.songSlug];
             if (!song) return [];
-            const section = (song.sections ?? []).find((s) => s.id === ms.sectionId);
-            if (!section) return [];
             const fusionSong = item.fusionSongs!.find((fs) => fs.songSlug === ms.songSlug);
+            // Une Dernière phrase n'existe que dans la version adaptée du chant.
+            const section = itemSections(song, fusionSong?.contentOverride).find((s) => s.id === ms.sectionId);
+            if (!section) return [];
             const nuance = ms.nuance ?? fusionSong?.sectionNuances?.[ms.sectionId];
             return [{
               uid: nextUid(),
@@ -201,6 +208,6 @@ export function buildFormItems(
 
       const song = songsMap[item.songSlug];
       if (!song) return [];
-      return [toFormItem(song, item.keyOverride, item.notes, item.structureOverride, item.sectionNotes, item.sectionTransitions, item.sectionNuances, item.sectionKeys, item.jianpuSheet, { contentOverride: item.contentOverride, sectionOrigins: item.sectionOrigins })];
+      return [toFormItem(song, item.keyOverride, item.notes, item.structureOverride, item.sectionNotes, item.sectionTransitions, item.sectionNuances, item.sectionKeys, item.jianpuSheet, { contentOverride: item.contentOverride, sectionOrigins: item.sectionOrigins, jianpuChords: item.jianpuChords })];
     });
 }

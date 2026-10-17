@@ -1,10 +1,14 @@
 import { expect, test, type Page } from "@playwright/test";
+import { parseChordPro } from "../src/lib/chordpro/parser";
+import { lyricsText } from "../src/components/song/copyLyrics";
 
 // La régie copie les paroles vers PowerPoint ou Canva. Le texte doit arriver
 // ligne par ligne, sans accords, **quel que soit l'endroit où la sélection
 // commence** : dans une setlist, elle part souvent du numéro du chant, qui est
 // hors du chant. La page chant reproduit ce cas en partant du haut de la page.
 test.use({ permissions: ["clipboard-read", "clipboard-write"] });
+// On copie des paroles : un chant à scan (爱的约定) s'ouvrirait sur son scan.
+test.beforeEach(({ page }) => page.addInitScript(() => localStorage.setItem("jianpu-sheet-pref", "never")));
 
 async function copyFromPageTopToSongEnd(page: Page, slug: string) {
   await page.goto(`/songs/${encodeURIComponent(slug)}`);
@@ -64,7 +68,7 @@ test("un morceau d'une seule ligne se copie sans ses accords", async ({ page }) 
 test("chant ZH : caractères puis pinyin, ligne par ligne, sans accords ni sections", async ({ page }) => {
   const clip = await copyFromPageTopToSongEnd(page, "爱的约定");
   const lines = clip["text/plain"].split("\n");
-  const at = lines.indexOf("两千年前的夜晚， 耶稣降生在伯利恒。");
+  const at = lines.indexOf("两千年前的夜晚，耶稣降生在伯利恒。");
   expect(at, "ligne de caractères copiée").toBeGreaterThanOrEqual(0);
   expect(lines[at + 1], "sa ligne de pinyin juste dessous").toBe(
     "liǎng qiān nián qián de yè wǎn yē sū jiàng shēng zài bó lì héng",
@@ -90,6 +94,24 @@ test("chant ZH : le pinyin est copié même masqué à l'écran", async ({ page 
   });
   await page.keyboard.press("ControlOrMeta+c");
   expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(
-    "两千年前的夜晚， 耶稣降生在伯利恒。\nliǎng qiān nián qián de yè wǎn yē sū jiàng shēng zài bó lì héng",
+    "两千年前的夜晚，耶稣降生在伯利恒。\nliǎng qiān nián qián de yè wǎn yē sū jiàng shēng zài bó lì héng",
   );
+});
+
+// Un accord sur une note tenue s'écrit `[X] 字` (02) : l'espace sert au
+// placement de l'accord, pas aux paroles. Copiées, elles n'en gardent rien,
+// et le texte latin d'une ligne chinoise garde ses espaces entre les mots.
+test("chant ZH : l'espace d'un accord sur une note tenue (`[X] 字`) n'est pas copiée", () => {
+  const { sections } = parseChordPro(`{title: t}
+{language: zh}
+{start_of_chorus: 副歌/Refrain}
+[A/B] 一生爱[E]你，[G#]一生敬拜[C#m]你，[Bm] 一[E7]生爱[A]你，   yī shēng ài nǐ yī shēng jìng bài nǐ yī shēng ài nǐ
+一切[C#]再也不一[F#m]样。So we [D]say   yī qiè zài yě bù yī yàng
+{end_of_chorus}`);
+  expect(lyricsText(sections).split("\n")).toEqual([
+    "一生爱你，一生敬拜你，一生爱你，",
+    "yī shēng ài nǐ yī shēng jìng bài nǐ yī shēng ài nǐ",
+    "一切再也不一样。So we say",
+    "yī qiè zài yě bù yī yàng",
+  ]);
 });

@@ -4,6 +4,7 @@
 {tempo: 74}
 {language: fr}
 {themes: Foi, Espérance}
+{source: Je n’ai rien à craindre.pdf}
 
 {start_of_verse: Couplet 1}
 Dieu e[F]st ma pa[Gm7]ix
@@ -13,27 +14,30 @@ Il fait [Dm7]fuir tous mes géan[Bb]ts
 {end_of_verse}
 
 {start_of_chorus: Refrain}
-Je n’ai rien [F]à craindre, car Tu es [Gm7]là
+Je n’ai rien [F]à craindre, car Tu e[Gm7]s là
 [Dm7] Tu chasses toutes mes peur[Bb]s
-Je n’ai rien [F]à craindre, car Tu me [Gm7]tiens
+Je n’ai rien [F]à craindre, car Tu m[Gm7]e tiens
 [Dm7] Mon cœur est dans la pa[Bb]ix
-Je n’ai rien [F]à craindre[Gm7][ ][Dm7][ ][Bb]
+Je n’ai rien [F]à craindre[Gm7] [Dm7] [Bb]
 {end_of_chorus}
 
+{needs_review: la feuille s'arrête à l'Interlude sans renvoi : le retour du refrain après le couplet 2 et après le pont n'est pas gravé, rien n'est ajouté}
+
 {start_of_verse: Couplet 2}
-Dieu e[F]st ﬁdè[Gm7]le
+Dieu e[F]st fidè[Gm7]le
 Tout ce [Dm7]qu’Il dit s’accompl[Bb]it
-Dans [F]Son rep[Gm7]os, ma foi [Dm7]s’aligne à Sa grâ[Bb]ce
+Dans S[F]on rep[Gm7]os, ma foi [Dm7]s’aligne à Sa grâ[Bb]ce
 {end_of_verse}
 
 {start_of_bridge: Pont}
 Oui le bon[F]heur et la grâce
-M’ac[Gm7]compagneront
+M’a[Gm7]ccompagneront
 Tout[Dm7]e ma vie
 Tout[Bb]e ma vie
 {end_of_bridge}
 
 {start_of_intro: Interlude}
-[F][ ][Gm7][ ][Dm7]Ton amour me suit
+[F]  [Gm7]
+[Dm7] Ton amour me suit
 [Bb] Ton amour me poursuit
 {end_of_intro}

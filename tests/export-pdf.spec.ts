@@ -6,6 +6,7 @@ import { compactPlan, compactTransitions, stripGroups } from "../src/lib/pdf/com
 import { parseChordPro } from "../src/lib/chordpro/parser";
 import { resolveStructureOverride } from "../src/lib/chordpro/structure";
 import { readFileSync } from "fs";
+import { SetlistFullPDF } from "../src/components/pdf/SetlistFullPDF";
 
 // Lot 5 « Export PDF » (docs/spec-export-pdf.md) : au téléchargement, choisir
 // Classique · Couleurs par section (chant et setlist) · Compact (setlist).
@@ -213,4 +214,29 @@ test("setlist en vue partitions : le compact se télécharge sous son nom", asyn
     sheet.getByRole("button", { name: "Télécharger" }).click(),
   ]);
   expect(download.suggestedFilename()).toBe("Culte du 21 septembre-compact.pdf");
+});
+
+// Relevé le 01/10/2026 : dans une fusion « à la suite », les données des chants
+// sont filtrées (chant sans contenu retiré) mais la structure était relue par
+// rang dans la liste complète — un chant manquant décalait toutes les autres.
+test("PDF, fusion à la suite dont un chant manque : chaque page garde la structure de son chant", () => {
+  const abba = readFileSync("content/songs/abba-pere.cho", "utf8");
+  const doc = SetlistFullPDF({
+    setlist: setlist({
+      items: [item({
+        type: "fusion",
+        songSlug: "",
+        position: 1,
+        fusionSongs: [
+          { songSlug: "chant-absent", keyOverride: null, structureOverride: ["verse-1-0"], sectionNotes: {} },
+          { songSlug: "abba-pere", keyOverride: null, structureOverride: ["chorus-3-0"], sectionNotes: {} },
+        ],
+        mixedStructure: null,
+      })],
+    }) as never,
+    contents: { "abba-pere": { slug: "abba-pere", ast: parseChordPro(abba) } },
+    showChords: true,
+  });
+  const pages = (doc.props as { children: { props: { structureOverride?: string[] | null } }[] }).children;
+  expect(pages.map((p) => p.props.structureOverride)).toEqual([["chorus-3-0"]]);
 });

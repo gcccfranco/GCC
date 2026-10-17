@@ -3,9 +3,10 @@
 {key: G}
 {language: fr}
 {themes: Engagement, Foi}
+{source: Priorité - G.pdf}
 
 {start_of_intro: Intro}
-[Am7][ ][Em7][ ][D][ ][Dsus4][ ][Em7]
+[Am7]  [Em7]  [D]  [Dsus4]  [Em7]
 {end_of_intro}
 
 {start_of_verse: Couplet 1}
@@ -13,36 +14,38 @@
 [D]À courir contre la [(D/F#)]montre
 Par me[Em7]s propres forces
 [Am7]Mais lorsque j’étais [Em7]distant
-[D]Tu es venu vers [(D/F#)]moi
+[D]Tu es venu [(D/F#)]vers moi
 M’offrant [Em7]une seconde chance
 {end_of_verse}
 
 {start_of_prechorus: Pré-Refrain}
-[Am7]Na na na na [Em7]na
+{needs_review: l'accord Em7 est gravé à cheval entre le 4e et le 5e « na » (feuille alignée aux espaces), posé sur la lettre la plus proche (« a » du 4e) ; à confirmer à l'oreille}
+[Am7]Na na na n[Em7]a na
 Fini de tourne[D]r en rond, désormais
-[Am7]Na na na na [Em7]na
-Tu es ma moti[D]vation
+{needs_review: l'accord Em7 est gravé à cheval entre le 4e et le 5e « na » (feuille alignée aux espaces), posé sur la lettre la plus proche (« a » du 4e) ; à confirmer à l'oreille}
+[Am7]Na na na n[Em7]a na
+Tu es ma mot[D]ivation
 Jésus à [Em7]tout jamais
 {end_of_prechorus}
 
 {start_of_chorus: Refrain}
 [Am7]La vie est bien tro[Em7]p courte
 Pour hésiter en[D]core,
-[ ]Je veux courir la course
+Je veux courir la course
 Vers [Em7]Ton cœur
 [Am7]Pas une minute [Em7]à perdre
 À vivre pour moi-[D]même,
-[ ]Lorsque Ta voix m’appelle
+Lorsque Ta voix m’appelle
 Vers [Em7]Ton cœur
 {end_of_chorus}
 
 
 {start_of_verse: Couplet 2}
 [Am7]Mon cœur synchr[Em7]onisé
-[D]Je vis pour une [(D/F#)]cause
+[D]Je vis pour un[(D/F#)]e cause
 Plus grand[Em7]e que moi-même
 [Am7]Ma nouvelle ré[Em7]alité
-[D]Plus que toute autre [(D/F#)]chose
+[D]Plus que toute au[(D/F#)]tre chose
 C’est voir v[Em7]enir Ton Règne
 {end_of_verse}
 
@@ -52,5 +55,5 @@ C’est voir v[Em7]enir Ton Règne
 [D]Le premier et le dernier
 Mon seul v[Em7]rai moteur
 [Am7]Tu es tout ce que j’ai
-[Em7]Ce que j’ai de mei[Dsus4]lleur[ ][D]
+[Em7]Ce que j’ai de mei[Dsus4]lleur[D]
 {end_of_bridge}

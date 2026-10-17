@@ -74,6 +74,9 @@ test("avec le droit sur 中班 : une case s'écrit dans la grille de la classe, 
 
 test("« Exporter en CSV » : la classe et la période affichées", async ({ page }) => {
   await open(page, MEMBRE, "/planning/edd");
+  // Exporter avant que la grille ait lu le Sheet donnait un fichier vide, sans
+  // période dans son nom (« EDD_中班.csv ») : on attend le dernier dimanche.
+  await expect(laCase(page, "2026-09-27", "presidence")).toContainText("Lydie W.");
   const [download] = await Promise.all([
     page.waitForEvent("download"),
     page.getByRole("button", { name: "Exporter en CSV" }).click(),
