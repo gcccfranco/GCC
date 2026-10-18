@@ -37,18 +37,17 @@ test("page du chant : une originale écrite autrement (C#) reste dans le sélect
   expect(await optionTexts(page)).toContain("C# (orig.)");
 });
 
-test("page du chant : le bouton de retour ramène à la recommandée", async ({ page }) => {
+test("page du chant : plus de bouton de retour à la recommandée (retiré le 18/10/2026)", async ({ page }) => {
   const select = await openSong(page, "/songs/je-reviens-au-coeur");
-  // Le rendu du serveur porte déjà l'originale (Eb) et le bouton de retour : choisir Eb
-  // avant l'hydratation « réussit », puis la page passe à D et le bouton disparaît sous le
-  // clic. On attend donc la recommandée, posée une fois la page hydratée.
   await expect(select).toHaveValue("D");
   // Avant l'hydratation le choix est perdu : on recommence jusqu'à ce que la page réponde.
   await expect(async () => {
     await select.selectOption("Eb");
     await expect(select).toHaveValue("Eb", { timeout: 500 });
   }).toPass({ timeout: 15_000 });
-  await page.getByRole("button", { name: "Revenir à la tonalité recommandée" }).click();
+  await expect(page.getByRole("button", { name: "Revenir à la tonalité recommandée" })).toHaveCount(0);
+  // La recommandée reste dans le sélecteur.
+  await select.selectOption("D");
   await expect(select).toHaveValue("D");
 });
 

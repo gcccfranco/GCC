@@ -169,6 +169,24 @@ test("téléphone couché : la seconde rangée aussi, et elle s'escamote avec la
   await expect.poll(async () => (await seconde.boundingBox())!.y).toBeGreaterThan(0);
 });
 
+test("barre rappelée d'un tap après défilement : collée en haut, sans trou sous l'en-tête escamoté", async ({ page }) => {
+  await ouvrir(page, "abba-pere");
+  await page.evaluate(() => window.scrollBy(0, 800));
+  // L'en-tête et la barre s'escamotent ensemble.
+  await expect.poll(async () => { const b = await barre(page).boundingBox(); return b!.y + b!.height; }).toBeLessThanOrEqual(0);
+  // Un tap sur la partition rappelle la barre seule : elle prend la place de l'en-tête.
+  // Au point de l'écran : `locator.click` ferait d'abord défiler, ce qui ramène aussi l'en-tête.
+  const { height } = page.viewportSize()!;
+  const partition = (await page.locator("main.song-zoom").boundingBox())!;
+  await page.mouse.click(Math.round(partition.x + 30), Math.round(height / 2));
+  // L'en-tête, lui, reste escamoté.
+  await expect.poll(async () => { const n = await page.locator("header").first().boundingBox(); return n ? n.y + n.height : 0; }).toBeLessThanOrEqual(1);
+  // Mesurer une fois la glissade finie (300 ms), pas en route.
+  await barre(page).evaluate((el) => Promise.all(el.getAnimations().map((a) => a.finished)));
+  expect(Math.abs((await barre(page).boundingBox())!.y), "la barre colle en haut de l'écran").toBeLessThanOrEqual(1);
+  await capture(page, "barre-chant-rappelee");
+});
+
 test.describe("deux volets : partition et barre jusqu'à 900 px (Q8)", () => {
   test.beforeEach(({}, info) => test.skip(info.project.name !== "ordinateur-1440", "ordinateur, 1 440 et 1 920 px"));
 
