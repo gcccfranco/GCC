@@ -1128,6 +1128,13 @@ largeur alignée sur la partition, Vidéo · PDF · Idées sortis du menu ⋯ (o
 d'actions sur téléphone ; partition jusqu'à 900 px en deux volets. **T1, T2, T3 codées et poussées le 18/10/2026**
 (détail et écarts dans l'« Avancement » de la spec), **à valider par Timothée**.
 
+### Y. Setlist au seul créateur, corbeille, absences (Timothée, 18/10/2026) → `spec-createur-corbeille-absences.md`
+
+Trois lots : **SC1** modifier et supprimer = le créateur seul, les autres voient et dupliquent en privé ; **SC2**
+corbeille des setlists supprimées (section de « Archives », restaurer, purge à 30 jours) ; **SC3** congés et absences
+saisis dans le profil, « Choisir » du planning trie Disponibles puis « Absent ». **Spec écrite, Q1 à Q12 à trancher**,
+planche ensuite pour SC2 et SC3 ; rien de codé.
+
 ## 4. Carte des modules de l'app « GCC »
 
 À valider par Timothée avant toute spec de module (les modules existants ne
