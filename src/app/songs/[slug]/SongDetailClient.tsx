@@ -304,7 +304,7 @@ function useVersionDeLaSetlist(slug: string, setlistId: string | null, position:
       <div className="relative min-h-screen print:min-h-0 bg-background" style={{ width: `${100 / fontScale}%` }}>
         <Halo variant="chant" color="var(--sec-chorus)" />
         {/* Barre de contrôles */}
-        <div data-testid="barre-outils" className={`print:hidden fixed left-0 right-0 top-[var(--nav-h)] [--barre-top:var(--nav-h)] z-10 material-chrome transition-transform duration-300 ${ scrollVisible || barPinned ? "translate-y-0" : "-translate-y-[calc(100%+var(--nav-h))]"}`}>
+        <div data-testid="barre-outils" className={`print:hidden fixed left-0 right-0 top-[var(--nav-h)] [--barre-top:var(--nav-h)] z-10 material-chrome transition-transform duration-300 ${ scrollVisible ? "translate-y-0" : barPinned ? "-translate-y-[calc(var(--nav-h)-var(--sat))]" : "-translate-y-[calc(100%+var(--nav-h))]"}`}>
           <FondDeBarre sousNavbar />
           <div className = "max-w-3xl mx-auto w-full flex flex-nowrap gap-1 items-center py-2 px-1.5">
             <Button
@@ -375,24 +375,6 @@ function useVersionDeLaSetlist(slug: string, setlistId: string | null, position:
               >
                 +
               </Button>
-              {/* Retour à la tonalité par défaut (recommandée, sinon d'origine) d'un tap */}
-              {customize.currentKey !== defaultKey && (
-                <Button
-                  variant="ghost"
-                  size="icon-lg"
-                  className="h-9 w-9 lg:h-8 lg:w-8 rounded-full text-muted-foreground"
-                  aria-label={t(recommendedKey ? "customize.panel.keyBackToRecommended" : "customize.panel.keyOriginal")}
-                  title={t(recommendedKey ? "customize.panel.keyBackToRecommended" : "customize.panel.keyOriginal")}
-                  onClick={() =>
-                    setCustomize((c) => ({ ...c, semitones: semitonesTo(originalKey, defaultKey), currentKey: defaultKey }))
-                  }
-                >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
-                    <path d="M3 3v5h5" />
-                  </svg>
-                </Button>
-              )}
             </div>
 
             <div className="raised ml-auto flex gap-0.5 items-center justify-end rounded-full p-0.5">
