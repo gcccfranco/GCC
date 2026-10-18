@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect, useLayoutEffect, useRef } from "react";
 import Link from "next/link";
-import { MoreHorizontal, Download, Play, X, TriangleAlert , Music, Music2, Settings, ChevronDown, Sparkles, FileText } from "lucide-react";
+import { MoreHorizontal, Play, X, TriangleAlert , Music, Music2, Settings, ChevronDown, Sparkles, FileText, Headphones } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -355,32 +355,31 @@ function useVersionDeLaSetlist(slug: string, setlistId: string | null, position:
     return () => ro.disconnect();
   }, [isZh, youtubeId, accesHarmonie.peut, customize.currentKey, setlistDOrigine, deuxVolets]);
 
-  // Menu ⋯ (spec-barre-chant.md, Q3) : Vidéo, PDF et Idées n'y sont que sur téléphone
-  // (`dans-menu-chant`) ; deux déclencheurs, un seul visible (globals.css).
+  // Menu ⋯ (spec-barre-chant.md, Q3, Q5) : Vidéo, PDF et Idées sont dans la barre partout ;
+  // l'écoute y reste dès la tablette debout, le téléphone a son bouton « Écouter » (`ecoute-menu`).
+  const ecoute = (classe?: string) => (
+    <>
+      {song.spotifyUrl && (
+        <DropdownMenuItem asChild className={classe}>
+          <a href={song.spotifyUrl} target="_blank" rel="noopener noreferrer">
+            <Music className="h-3.5 w-3.5 text-muted-foreground" />
+            Spotify
+          </a>
+        </DropdownMenuItem>
+      )}
+      {song.appleMusicUrl && (
+        <DropdownMenuItem asChild className={classe}>
+          <a href={song.appleMusicUrl} target="_blank" rel="noopener noreferrer">
+            <Music2 className="h-3.5 w-3.5 text-muted-foreground" />
+            Apple Music
+          </a>
+        </DropdownMenuItem>
+      )}
+    </>
+  );
   const menuChant = (
                 <DropdownMenuContent align="end" className="w-52">
-                  {youtubeId && (
-                    <DropdownMenuItem className="dans-menu-chant" onClick={() => setShowVideo((v) => !v)}>
-                      {!showVideo ? <Play className="h-3.5 w-3.5 text-muted-foreground" /> : <X className="h-3.5 w-3.5 text-muted-foreground" />}
-                      {t("songs.detail.video")}
-                    </DropdownMenuItem>
-                  )}
-                  {song.spotifyUrl && (
-                    <DropdownMenuItem asChild>
-                      <a href={song.spotifyUrl} target="_blank" rel="noopener noreferrer">
-                        <Music className="h-3.5 w-3.5 text-muted-foreground" />
-                        Spotify
-                      </a>
-                    </DropdownMenuItem>
-                  )}
-                  {song.appleMusicUrl && (
-                    <DropdownMenuItem asChild>
-                      <a href={song.appleMusicUrl} target="_blank" rel="noopener noreferrer">
-                        <Music2 className="h-3.5 w-3.5 text-muted-foreground" />
-                        Apple Music
-                      </a>
-                    </DropdownMenuItem>
-                  )}
+                  {ecoute("ecoute-menu")}
                   <DropdownMenuCheckboxItem
                     checked={chartStyle}
                     onCheckedChange={toggleChartStyle}
@@ -392,22 +391,89 @@ function useVersionDeLaSetlist(slug: string, setlistId: string | null, position:
                     <Settings className="h-3.5 w-3.5 text-muted-foreground" />
                     {t("songs.detail.customize")}
                   </DropdownMenuItem>
-                  <DropdownMenuItem className="dans-menu-chant" disabled={downloading} onClick={() => setShowPdfChoice(true)}>
-                    <Download className="h-3.5 w-3.5 text-muted-foreground" />
-                    {downloading ? "…" : t("songs.detail.downloadPdf") || "PDF"}
-                  </DropdownMenuItem>
-                  {accesHarmonie.peut && (
-                    <DropdownMenuItem className="dans-menu-chant" onClick={() => setShowIdees(true)}>
-                      <Sparkles className="h-3.5 w-3.5 text-muted-foreground" />
-                      {t("harmonie.idees")}
-                    </DropdownMenuItem>
-                  )}
                   <DropdownMenuItem onClick= {() => setShowReport(true)}>
                     <TriangleAlert className='h-3.5 w-3.5 text-muted-foreground'/>
                     {t('songs.detail.report')}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
   );
+
+  // Les actions (Q2, Q5) : au bout de la rangée dès la tablette debout, sur la seconde rangée du
+  // téléphone, libellées et avec « Écouter » en plus. Les deux sont rendues, une seule est visible.
+  const tel = (variante: "rangee" | "tel") => variante === "tel";
+  const actions = (variante: "rangee" | "tel") => {
+    const classe = tel(variante)
+      ? "raised h-9 shrink-0 gap-1.5 px-3.5 rounded-full text-xs font-semibold bg-card text-foreground hover:bg-card"
+      : "h-9 lg:h-8 min-w-9 lg:min-w-8 px-2.5 rounded-full text-xs font-semibold";
+    const libelle = tel(variante) ? undefined : "libelle-action";
+    const ecouterPossible = !!(song.spotifyUrl || song.appleMusicUrl);
+    return (
+      <>
+        {youtubeId && (
+          <Button
+            variant="secondary"
+            aria-label={t("songs.detail.video")}
+            title={t("songs.detail.video")}
+            aria-pressed={showVideo}
+            onClick={() => setShowVideo((v) => !v)}
+            className={`${classe} ${showVideo ? "!bg-foreground !text-background hover:!bg-foreground/90" : ""}`}
+          >
+            {!showVideo ? <Play className="h-4 w-4" /> : <X className="h-4 w-4" />}
+            <span className={libelle}>{t("songs.detail.video")}</span>
+          </Button>
+        )}
+        <Button
+          variant="secondary"
+          aria-label={t("songs.detail.downloadPdf") || "PDF"}
+          title={t("songs.detail.downloadPdf") || "PDF"}
+          disabled={downloading}
+          onClick={() => setShowPdfChoice(true)}
+          className={classe}
+        >
+          <FileText className="h-4 w-4" />
+          <span className={libelle}>{t("songs.detail.downloadPdf") || "PDF"}</span>
+        </Button>
+        {tel(variante) && ecouterPossible && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="secondary" className={classe}>
+                <Headphones className="h-4 w-4" />
+                {t("songs.detail.listen")}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-44">
+              {ecoute()}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
+        {accesHarmonie.peut && (
+          <Button
+            variant="secondary"
+            aria-label={t("harmonie.idees")}
+            title={t("harmonie.idees")}
+            onClick={() => setShowIdees(true)}
+            className={classe}
+          >
+            <Sparkles className="h-4 w-4" />
+            <span className={libelle}>{t("harmonie.ideesCourt")}</span>
+          </Button>
+        )}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="secondary"
+              size="icon-lg"
+              className={tel(variante) ? `${classe} w-9 px-0` : "h-9 w-9 lg:h-8 lg:w-8 rounded-full"}
+              aria-label={t("common.moreActions")}
+            >
+              <MoreHorizontal className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          {menuChant}
+        </DropdownMenu>
+      </>
+    );
+  };
 
   return (
       <div className="relative min-h-screen print:min-h-0 bg-background" style={{ width: `${100 / fontScale}%`, "--zoom-chant": fontScale } as React.CSSProperties}>
@@ -565,21 +631,6 @@ function useVersionDeLaSetlist(slug: string, setlistId: string | null, position:
                     </button>
                   )}
 
-              {/* Téléphone : le menu ⋯ reste au bout du groupe ; dès la tablette debout, il passe
-                  au bout des actions (globals.css, `.menu-tel`). */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon-lg"
-                    className="menu-tel h-9 w-9 lg:h-8 lg:w-8 rounded-full text-muted-foreground"
-                    aria-label={t("common.moreActions")}
-                  >
-                    <MoreHorizontal className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                {menuChant}
-              </DropdownMenu>
             </div>
 
             {/* Dès la tablette debout (spec-barre-chant.md, Q2, Q3) : « faire » à droite d'un filet,
@@ -587,58 +638,13 @@ function useVersionDeLaSetlist(slug: string, setlistId: string | null, position:
                 Personnaliser et Signaler (globals.css, `.actions-chant`). */}
             <div className="actions-chant ml-auto shrink-0 items-center gap-1">
               <span aria-hidden className="mx-1 h-5 w-px bg-border" />
-              {youtubeId && (
-                <Button
-                  variant="secondary"
-                  aria-label={t("songs.detail.video")}
-                  title={t("songs.detail.video")}
-                  aria-pressed={showVideo}
-                  onClick={() => setShowVideo((v) => !v)}
-                  className={`h-9 lg:h-8 min-w-9 lg:min-w-8 px-2.5 rounded-full text-xs font-semibold ${
-                    showVideo ? "bg-foreground text-background hover:bg-foreground/90" : ""
-                  }`}
-                >
-                  {!showVideo ? <Play className="h-4 w-4" /> : <X className="h-4 w-4" />}
-                  <span className="libelle-action">{t("songs.detail.video")}</span>
-                </Button>
-              )}
-              <Button
-                variant="secondary"
-                aria-label={t("songs.detail.downloadPdf") || "PDF"}
-                title={t("songs.detail.downloadPdf") || "PDF"}
-                disabled={downloading}
-                onClick={() => setShowPdfChoice(true)}
-                className="h-9 lg:h-8 min-w-9 lg:min-w-8 px-2.5 rounded-full text-xs font-semibold"
-              >
-                <FileText className="h-4 w-4" />
-                <span className="libelle-action">{t("songs.detail.downloadPdf") || "PDF"}</span>
-              </Button>
-              {accesHarmonie.peut && (
-                <Button
-                  variant="secondary"
-                  aria-label={t("harmonie.idees")}
-                  title={t("harmonie.idees")}
-                  onClick={() => setShowIdees(true)}
-                  className="h-9 lg:h-8 min-w-9 lg:min-w-8 px-2.5 rounded-full text-xs font-semibold"
-                >
-                  <Sparkles className="h-4 w-4" />
-                  <span className="libelle-action">{t("harmonie.ideesCourt")}</span>
-                </Button>
-              )}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="secondary"
-                    size="icon-lg"
-                    className="h-9 w-9 lg:h-8 lg:w-8 rounded-full"
-                    aria-label={t("common.moreActions")}
-                  >
-                    <MoreHorizontal className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                {menuChant}
-              </DropdownMenu>
+              {actions("rangee")}
             </div>
+          </div>
+          {/* Téléphone, couché compris (Q5) : les actions sur une seconde rangée, qui défile en
+              largeur, colle sous la première et s'escamote avec elle (globals.css, `.actions-tel`). */}
+          <div className="actions-tel max-w-2xl mx-auto w-full gap-2 overflow-x-auto px-1.5 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            {actions("tel")}
           </div>
 
           {/* Embed YouTube */}

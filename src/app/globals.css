@@ -642,16 +642,24 @@
 /* Téléphone : comme avant, pas de libellé sous 620 px de rangée (la pilule de tonalité, qui
    rétrécit, ne ferait jamais déborder la ligne : la mesure ne suffit pas). */
 @container (min-width: 620px) { .rangee-chant[data-libelles="2"] .libelle-chant { display: inline; } }
-/* Téléphone, même couché (moins de 500 px de haut) : le menu ⋯ au bout du groupe garde Vidéo,
-   PDF et Idées. Dès la tablette debout : la rangée s'aligne sur la partition (mêmes bords que
-   `main`), les actions sortent à droite d'un filet, le menu ⋯ les suit au bout (Q1 à Q3). */
-.actions-chant { display: none; }
+/* Téléphone, même couché (moins de 500 px de haut) : la rangée d'avant, sans ⋯ ; dessous, la
+   seconde rangée d'actions (Q5, `.actions-tel`) — 44 px de plus sous la barre, d'où les marges
+   hautes de la partition et de la vidéo (48 et 82 px sans elle). Dès la tablette debout : la
+   rangée s'aligne sur la partition (mêmes bords que `main`), les actions sortent à droite d'un
+   filet, l'écoute passe dans ⋯ (Q1 à Q3). */
+.actions-chant, .ecoute-menu { display: none; }
+.actions-tel { display: flex; }
+@media screen and (max-width: 767.98px), screen and (max-height: 499.98px) {
+  .song-zoom { margin-top: 92px; }
+  .video-chant { margin-top: 126px; }
+  .video-chant ~ .song-zoom { margin-top: 48px; }
+}
 @media (min-width: 768px) and (min-height: 500px) {
   .rangee-chant { padding-inline: 1rem; }
   .rangee-chant[data-libelles="2"] .libelle-chant,
   .rangee-chant:is([data-libelles="1"], [data-libelles="2"]) .libelle-action { display: inline; }
-  .actions-chant { display: flex; }
-  .dans-menu-chant, .menu-tel { display: none; }
+  .actions-chant, .ecoute-menu { display: flex; }
+  .actions-tel { display: none; }
   .groupe-chant { margin-left: 0; }
 }
 

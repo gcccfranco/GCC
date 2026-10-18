@@ -31,10 +31,7 @@ async function ouvrir(page: Page, slug: string) {
   await signInAs(page, ADMIN, {}, `/songs/${encodeURIComponent(slug)}`);
   await expect(page.locator("main.song-zoom").getByRole("heading", { level: 1 })).toBeVisible();
   // Le bouton Idées arrive avec le profil : la rangée est complète quand il est là.
-  const idees = actionsDansLaBarre(page)
-    ? barre(page).getByRole("button", { name: "Idées d'harmonie" })
-    : barre(page).getByRole("button", { name: "Plus d'actions" });
-  await expect(idees).toBeVisible();
+  await expect(barre(page).getByRole("button", { name: "Idées d'harmonie" })).toBeAttached();
 }
 
 async function uneSeuleLigne(page: Page) {
@@ -91,13 +88,33 @@ for (const chant of CHANTS) {
         await expect(page.getByRole("dialog")).toBeVisible();
         await page.keyboard.press("Escape");
       } else {
-        // Téléphone : PDF et Idées dans le menu ⋯ (T1 ne touche pas au téléphone).
+        // Q5 : téléphone, couché compris — la rangée d'avant, sans ⋯ ; dessous, une seconde rangée
+        // Vidéo · PDF · (Écouter, si le chant a un lien) · Idées · ⋯, qui défile en largeur.
+        const seconde = b.locator(".actions-tel");
+        await expect(seconde).toBeVisible();
+        const noms = [...(chant.video ? ["Vidéo"] : []), "PDF", "Idées d'harmonie", "Plus d'actions"];
+        for (const n of noms) await expect(seconde.getByRole("button", { name: n, exact: true })).toBeAttached();
+        await expect(rangee(page).getByRole("button", { name: "Plus d'actions" })).toHaveCount(0);
+        await expect(seconde.getByRole("button", { name: "Écouter" }), "aucun lien d'écoute dans ces chants").toHaveCount(0);
+        const [r1, r2] = await Promise.all([rangee(page).boundingBox(), seconde.boundingBox()]);
+        expect(Math.abs(r2!.y - (r1!.y + r1!.height)), "collée sous la première").toBeLessThanOrEqual(1);
+        expect(r2!.height, "une seule ligne").toBeLessThanOrEqual(48);
+        // Le titre du chant commence sous la barre, pas dessous.
+        const titre = (await page.locator("main.song-zoom").getByRole("heading", { level: 1 }).boundingBox())!;
+        expect(titre.y).toBeGreaterThanOrEqual(r2!.y + r2!.height);
         await capture(page, `barre-chant-${chant.zh ? "zh" : "fr"}`);
-        await b.getByRole("button", { name: "Plus d'actions" }).click();
-        await expect(page.getByRole("menuitem", { name: "PDF" })).toBeVisible();
-        await expect(page.getByRole("menuitem", { name: "Idées d'harmonie" })).toBeVisible();
-        await expect(page.getByRole("menuitem", { name: "Vidéo" })).toHaveCount(chant.video ? 1 : 0);
+        // Le menu ⋯ ne garde que les couleurs, Personnaliser et Signalement.
+        await seconde.getByRole("button", { name: "Plus d'actions" }).click();
+        await expect(page.getByRole("menuitem", { name: "Personnaliser" })).toBeVisible();
+        for (const n of ["Vidéo", "PDF", "Idées d'harmonie"]) await expect(page.getByRole("menuitem", { name: n })).toHaveCount(0);
         await page.keyboard.press("Escape");
+        // Chaque action se joint : PDF ouvre « Quel PDF ? » (Q6), Idées sa feuille.
+        await seconde.getByRole("button", { name: "PDF", exact: true }).click();
+        await expect(page.getByRole("dialog")).toBeVisible();
+        await page.keyboard.press("Escape");
+        await expect(page.getByRole("dialog")).toHaveCount(0);
+        await seconde.getByRole("button", { name: "Idées d'harmonie" }).click();
+        await expect(page.locator("[data-idees-harmonie]")).toBeVisible();
       }
     });
 
@@ -114,7 +131,6 @@ for (const chant of CHANTS) {
 }
 
 test("Vidéo : le bouton ouvre le lecteur sous la barre et se marque actif (Q7)", async ({ page }) => {
-  test.skip(!actionsDansLaBarre(page), "tablettes et ordinateur ; le téléphone a T2");
   await ouvrir(page, "abba-pere");
   const video = barre(page).getByRole("button", { name: "Vidéo", exact: true });
   await expect(video).toHaveAttribute("aria-pressed", "false");
@@ -126,7 +142,25 @@ test("Vidéo : le bouton ouvre le lecteur sous la barre et se marque actif (Q7)"
   expect(lb!.y, "le lecteur est sous la barre").toBeGreaterThanOrEqual(bb!.y + bb!.height - 1);
   await uneSeuleLigne(page);
   await capture(page, "barre-chant-video");
+  // La partition reprend juste sous le lecteur.
+  const titre = (await page.locator("main.song-zoom").getByRole("heading", { level: 1 }).boundingBox())!;
+  expect(titre.y).toBeGreaterThan(lb!.y + lb!.height);
   await video.click();
   await expect(video).toHaveAttribute("aria-pressed", "false");
   await expect(lecteur).toHaveCount(0);
+});
+
+test("téléphone couché : la seconde rangée aussi, et elle s'escamote avec la barre (Q5)", async ({ page }, info) => {
+  test.skip(info.project.name !== "telephone", "téléphone seulement");
+  await page.setViewportSize({ width: 915, height: 412 });
+  await ouvrir(page, "abba-pere");
+  const seconde = barre(page).locator(".actions-tel");
+  await expect(seconde).toBeVisible();
+  await uneSeuleLigne(page);
+  await capture(page, "barre-chant-fr-couche");
+  // La barre (et sa seconde rangée) s'escamote au défilement, revient en remontant.
+  await page.evaluate(() => window.scrollBy(0, 600));
+  await expect.poll(async () => (await seconde.boundingBox())!.y + (await seconde.boundingBox())!.height).toBeLessThanOrEqual(0);
+  await page.evaluate(() => window.scrollBy(0, -200));
+  await expect.poll(async () => (await seconde.boundingBox())!.y).toBeGreaterThan(0);
 });

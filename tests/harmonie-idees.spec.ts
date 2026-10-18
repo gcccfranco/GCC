@@ -28,17 +28,11 @@ async function ouvrirChant(page: Page, qui: FakeProfile, docs: Record<string, Re
   return signInAs(page, qui, docs, "/songs/hosanna");
 }
 
-/** Dès la tablette debout, « Idées d'harmonie » est un bouton de la barre ; sur téléphone,
- *  une entrée du menu ⋯ (lot U5, docs/spec-deux-volets.md, Q16). */
+/** « Idées d'harmonie » est un bouton de la barre : au bout de la rangée dès la tablette debout,
+ *  sur la seconde rangée du téléphone (docs/spec-barre-chant.md, Q2, Q5). */
 async function ouvrirLaFeuille(page: Page) {
-  const { width, height } = page.viewportSize()!;
-  if (width >= 768 && height >= 500) {
-    // Le bouton arrive avec le profil (accès à l'Harmonie) : `click` l'attend.
-    await page.getByTestId("barre-outils").getByRole("button", { name: "Idées d'harmonie" }).click();
-  } else {
-    await page.getByRole("button", { name: /Plus d'actions|More actions|更多操作/ }).click();
-    await page.getByRole("menuitem", { name: "Idées d'harmonie" }).click();
-  }
+  // Le bouton arrive avec le profil (accès à l'Harmonie) : `click` l'attend.
+  await page.getByTestId("barre-outils").getByRole("button", { name: "Idées d'harmonie" }).click();
   await expect(page.locator("[data-idees-harmonie]")).toBeVisible();
 }
 
@@ -88,7 +82,7 @@ test("une idée de l'équipe s'ajoute, avec l'instrument de son auteur", async (
   await page.getByLabel("Avant (accords)").fill("G");
   await page.getByLabel("Après (accords)").fill("Gmaj7");
   await page.getByRole("button", { name: "Enregistrer" }).click();
-  await expect(page.getByText("Pont : tenir le 4 deux mesures")).toBeVisible();
+  await expect(page.locator("[data-idee]").getByText("Pont : tenir le 4 deux mesures")).toBeVisible();
   const ecrit = db.writes.find((w) => w.path.startsWith("harmonie/hosanna/idees/"));
   expect(ecrit!.data.texte).toBe("Pont : tenir le 4 deux mesures");
   expect(ecrit!.data.instrument, "Jo est au piano").toBe("piano");
@@ -109,7 +103,9 @@ test("une idée écrite dans une autre tonalité se range dans celle du chant", 
   // Attendre que l'idée s'affiche avant de lire les écritures : sans cela le
   // test lisait db.writes avant que l'enregistrement soit parti (rouge au
   // hasard selon l'appareil, sous charge).
-  await expect(page.getByText("Refrain : ouvrir l'accord")).toBeVisible();
+  // L'idée enregistrée (`[data-idee]`, après l'écriture et la relecture) — le texte seul pouvait
+  // se trouver ailleurs à l'écran avant l'envoi (rouge au hasard, 18/10/2026).
+  await expect(page.locator("[data-idee]").getByText("Refrain : ouvrir l'accord")).toBeVisible();
 
   const ecrit = db.writes.find((w) => w.path.startsWith("harmonie/hosanna/idees/"))!;
   expect(ecrit.data.avant, "rangée dans la tonalité du chant").toBe("G");

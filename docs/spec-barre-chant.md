@@ -81,3 +81,11 @@ action est joignable (visible, ou dans ⋯ là où la spec le dit), +1 demi-ton 
   remplace « Idées d'harmonie » dans la rangée (le nom accessible reste complet). Tests :
   `tests/barre-chant.spec.ts` (cinq projets) ; `lignes-accords` attend désormais l'hydratation avant de cliquer sur
   Accords (course vue sur tablette).
+- **T2 (18/10/2026)** — téléphone, couché compris : la rangée d'avant sans ⋯ (A− A+ et Accords gagnent la place) ;
+  dessous, la seconde rangée Vidéo · PDF · Écouter · Idées · ⋯, libellée, qui défile en largeur, dans la barre (elle
+  colle et s'escamote avec elle) ; marges hautes recalées (partition 92 px au lieu de 48, vidéo 126 au lieu de 82).
+  Le menu ⋯ ne porte plus Vidéo, PDF ni Idées nulle part ; Spotify et Apple Music y restent dès la tablette debout,
+  sous « Écouter » sur téléphone. **À savoir** : aucun des 379 chants n'a aujourd'hui de lien Spotify ou Apple Music
+  (`{spotify: …}`), donc « Écouter » ne s'affiche encore nulle part. Tests mis à la règle Q5 : `chants-deux-volets`
+  (téléphone), `harmonie-idees` et `export-pdf` (le bouton de la barre partout) ; `harmonie-idees` lit ses écritures
+  après l'idée enregistrée (`[data-idee]`, course vue sur téléphone et tablette).

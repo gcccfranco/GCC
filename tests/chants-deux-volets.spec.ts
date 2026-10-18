@@ -334,15 +334,16 @@ test.describe("Chants en un volet (téléphone, tablette debout)", () => {
     await capture(page, "chants-chant-tablette");
   });
 
-  test("téléphone : rien ne change, Idées d'harmonie et PDF restent dans ⋯", async ({ page }, info) => {
+  test("téléphone : Idées d'harmonie et PDF sur la seconde rangée de la barre (spec-barre-chant.md, Q5)", async ({ page }, info) => {
     test.skip(info.project.name !== "telephone", "téléphone seulement");
     await signInAs(page, ADMIN, {}, "/songs/abba-pere");
     const barre = page.getByTestId("barre-outils");
     await expect(barre.getByRole("link", { name: "Retour" })).toBeVisible();
-    await expect(barre.getByRole("button", { name: "PDF" })).toBeHidden();
+    await expect(barre.getByRole("button", { name: "PDF" })).toBeVisible();
+    await expect(barre.getByRole("button", { name: "Idées d'harmonie" })).toBeVisible();
     await barre.getByRole("button", { name: "Plus d'actions" }).click();
-    await expect(page.getByRole("menuitem", { name: "PDF" })).toBeVisible();
-    await expect(page.getByRole("menuitem", { name: "Idées d'harmonie" })).toBeVisible();
+    await expect(page.getByRole("menuitem", { name: "PDF" })).toHaveCount(0);
+    await expect(page.getByRole("menuitem", { name: "Idées d'harmonie" })).toHaveCount(0);
   });
 });
 
