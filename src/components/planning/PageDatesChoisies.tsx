@@ -37,7 +37,7 @@ export function PageDatesChoisies({ definition, lire, lireAutre }: {
   const gestion = useGestionPlanning()
   const filtre = useFiltreNom()
   const peutModifier = gestion && canEditPlanning(user, profile, definition.key)
-  const { datesDansLApp, comptes } = useGrilleApp(definition.key, peutModifier)
+  const { datesDansLApp, comptes, absenceDe } = useGrilleApp(definition.key, peutModifier)
 
   const recharger = () => lire().then(setRows).catch(() => { /* lignes d'avant gardées */ })
   useEffect(() => {
@@ -90,6 +90,7 @@ export function PageDatesChoisies({ definition, lire, lireAutre }: {
         peutModifier={peutModifier}
         datesDansLApp={datesDansLApp}
         comptes={comptes}
+        absenceDe={absenceDe}
         exporter={peutModifier ? { annee: effAnnee, rang: 1, tout: isAdminUser(user) } : undefined}
         vide={dansLApp ? t("planning.annee.aucun", { annee: effAnnee }) : undefined}
         retrait={{ libelle: t("planning.annee.retirer"), onRetire: () => void recharger() }}

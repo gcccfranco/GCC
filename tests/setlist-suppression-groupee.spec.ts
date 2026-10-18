@@ -78,9 +78,10 @@ async function planningVide(page: Page) {
 }
 
 /** Les règles refusent la suppression (403) des chemins donnés, comme pour une
- *  setlist qu'on n'a pas le droit d'effacer. Le reste de la base continue de
- *  répondre. Rend la liste des suppressions refusées, dans l'ordre : refusées,
- *  elles n'arrivent jamais jusqu'à `db.writes`. */
+ *  setlist qu'on n'a pas le droit d'effacer. Depuis la corbeille (SC2), « supprimer »
+ *  est un PATCH de `supprimeeLe` / `supprimeePar` : c'est lui qui est refusé. Le reste
+ *  de la base continue de répondre. Rend la liste des suppressions refusées, dans
+ *  l'ordre : refusées, elles n'arrivent jamais jusqu'à `db.writes`. */
 async function refuserLesSuppressions(
   page: Page,
   refusee: (path: string) => boolean = () => true,
@@ -89,7 +90,7 @@ async function refuserLesSuppressions(
   await page.route(/firestore\.googleapis\.com/, (route) => {
     const request = route.request();
     const path = decodeURIComponent(new URL(request.url()).pathname.split("/documents/")[1] ?? "");
-    if (request.method() !== "DELETE" || !refusee(path)) return route.fallback();
+    if (request.method() !== "PATCH" || !refusee(path)) return route.fallback();
     refuses.push(path);
     return route.fulfill({
       status: 403,
@@ -112,12 +113,12 @@ test("fiche : une suppression refusée laisse sur la setlist au lieu de se faire
   );
   await expect(page.getByRole("heading", { name: "Répétition du 10 janvier" })).toBeVisible();
 
-  const refuses = await refuserLesSuppressions(page);
+  const refuses = await refuserLesSuppressions(page, (path) => path === "setlists/s1");
   await page.getByRole("button", { name: "Plus d'actions" }).click();
   await page.getByRole("menuitem", { name: "Supprimer" }).click();
-  await page.getByRole("button", { name: "Oui, supprimer" }).click();
+  await page.getByRole("button", { name: "Mettre à la corbeille" }).click();
 
-  // Le DELETE est bien parti et a été refusé ; la setlist est donc toujours là.
+  // Le PATCH est bien parti et a été refusé ; la setlist est donc toujours là.
   await expect.poll(() => refuses).toEqual(["setlists/s1"]);
   // Sans `checkRest`, la fiche prenait le refus pour une réussite et filait
   // vers /setlists : on lui laisse largement le temps de partir, et on vérifie
@@ -310,12 +311,14 @@ test("la barre d'action est en tête de liste et reste à portée quand la liste
 // ── S3 : la confirmation qui nomme, le résultat, les langues ─────────────────
 
 const dialogue = (page: Page) => page.getByRole("alertdialog");
-const resultat = (page: Page) => page.getByRole("status");
+// Le bandeau « Annuler » dit ce qui est parti à la corbeille ; le message, ce qui a raté.
+const bandeau = (page: Page) => page.getByTestId("bandeau-corbeille");
+const resultat = (page: Page) => page.getByRole("status").filter({ hasText: /pas pu|无法/ });
 
 async function confirmer(page: Page) {
   await boutonSupprimer(page).click();
   await expect(dialogue(page)).toBeVisible();
-  await dialogue(page).getByRole("button", { name: "Oui, supprimer" }).click();
+  await dialogue(page).getByRole("button", { name: "Mettre à la corbeille" }).click();
 }
 
 test("la confirmation nomme les setlists et leurs dates", async ({ page }) => {
@@ -324,13 +327,13 @@ test("la confirmation nomme les setlists et leurs dates", async ({ page }) => {
   await cocher(page, "Répétition du 10 janvier", "Répétition du 17 janvier", "Culte du 24 janvier");
   await boutonSupprimer(page).click();
 
-  await expect(dialogue(page).getByRole("heading")).toHaveText("Supprimer 3 setlists ?");
+  await expect(dialogue(page).getByRole("heading")).toHaveText("Mettre 3 setlists à la corbeille ?");
   await expect(dialogue(page).getByRole("listitem")).toHaveText([
     /Répétition du 10 janvier.*10 janvier 2027/,
     /Répétition du 17 janvier.*17 janvier 2027/,
     /Culte du 24 janvier.*24 janvier 2027/,
   ]);
-  await expect(dialogue(page)).toContainText("Cette action est définitive.");
+  await expect(dialogue(page)).toContainText("Elles restent 30 jours dans la corbeille");
 });
 
 test("une seule cochée : la confirmation parle au singulier", async ({ page }) => {
@@ -339,7 +342,7 @@ test("une seule cochée : la confirmation parle au singulier", async ({ page }) 
   await cocher(page, "Culte du 24 janvier");
   await boutonSupprimer(page).click();
 
-  await expect(dialogue(page).getByRole("heading")).toHaveText("Supprimer cette setlist ?");
+  await expect(dialogue(page).getByRole("heading")).toHaveText("Mettre cette setlist à la corbeille ?");
   await expect(dialogue(page).getByRole("listitem")).toHaveText([/Culte du 24 janvier/]);
 });
 
@@ -353,7 +356,7 @@ test("douze cochées : huit titres, puis « … et 4 autres »", async ({ page }
   for (let i = 1; i <= 12; i++) await cocher(page, `Répétition n° ${i}`);
   await boutonSupprimer(page).click();
 
-  await expect(dialogue(page).getByRole("heading")).toHaveText("Supprimer 12 setlists ?");
+  await expect(dialogue(page).getByRole("heading")).toHaveText("Mettre 12 setlists à la corbeille ?");
   await expect(dialogue(page).getByRole("listitem")).toHaveCount(8);
   await expect(dialogue(page)).toContainText("… et 4 autres");
 });
@@ -379,12 +382,15 @@ test("trois cochées confirmées : trois suppressions, rien d'autre, et le mode 
   await confirmer(page);
 
   await expect(lignes(page)).toHaveCount(2);
-  await expect(resultat(page)).toHaveText("3 setlists supprimées.");
-  expect(ecrituresSetlists(db), "trois suppressions, et rien d'autre").toEqual([
-    "DELETE setlists/s1",
-    "DELETE setlists/s2",
-    "DELETE setlists/s3",
+  await expect(bandeau(page)).toHaveText(/3 setlists mises à la corbeille/);
+  expect(ecrituresSetlists(db), "trois mises à la corbeille, aucun DELETE, rien d'autre").toEqual([
+    "PATCH setlists/s1",
+    "PATCH setlists/s2",
+    "PATCH setlists/s3",
   ]);
+  for (const id of ["s1", "s2", "s3"]) {
+    expect(db.doc(`setlists/${id}`)).toMatchObject({ supprimeePar: LEA.uid, supprimeeLe: expect.any(String) });
+  }
   await expect(cases(page)).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Sélectionner" })).toBeVisible();
 });
@@ -397,11 +403,11 @@ test("une suppression refusée au milieu : les autres partent, la ratée est nom
   await confirmer(page);
 
   await expect(lignes(page)).toHaveCount(3);
-  await expect(resultat(page)).toContainText("2 setlists supprimées.");
+  await expect(bandeau(page)).toHaveText(/2 setlists mises à la corbeille/);
   await expect(resultat(page)).toContainText("Répétition du 17 janvier");
   await expect(resultat(page)).toContainText("n'a pas pu être supprimée.");
-  // Trois DELETE sont bien partis : deux acceptés, un refusé.
-  expect(ecrituresSetlists(db)).toEqual(["DELETE setlists/s1", "DELETE setlists/s3"]);
+  // Trois PATCH sont bien partis : deux acceptés, un refusé.
+  expect(ecrituresSetlists(db)).toEqual(["PATCH setlists/s1", "PATCH setlists/s3"]);
   expect(refuses).toEqual(["setlists/s2"]);
   // La ratée reste cochée, le mode reste ouvert : réessayer est un seul appui.
   await expect(page.getByRole("checkbox", { name: "Répétition du 17 janvier" })).toBeChecked();
@@ -417,7 +423,7 @@ test("un refus d'entrée n'arrête pas le lot : les suivantes partent quand mêm
   await confirmer(page);
 
   await expect(lignes(page)).toHaveCount(3);
-  expect(ecrituresSetlists(db)).toEqual(["DELETE setlists/s2", "DELETE setlists/s3"]);
+  expect(ecrituresSetlists(db)).toEqual(["PATCH setlists/s2", "PATCH setlists/s3"]);
   expect(refuses).toEqual(["setlists/s1"]);
   await expect(page.getByRole("checkbox", { name: "Répétition du 10 janvier" })).toBeChecked();
 });
@@ -434,11 +440,11 @@ test("en 中文, la confirmation et le résultat sont traduits", async ({ page }
   await page.getByRole("button", { name: "删除（1）" }).click();
 
   // Le chinois n'a qu'une forme : i18next y choisit toujours « _other ».
-  await expect(dialogue(page).getByRole("heading")).toHaveText("删除 1 个歌单？");
-  await expect(dialogue(page)).toContainText("此操作无法撤销。");
-  await dialogue(page).getByRole("button", { name: "确认删除" }).click();
+  await expect(dialogue(page).getByRole("heading")).toHaveText("把 1 个歌单移到回收站？");
+  await expect(dialogue(page)).toContainText("在回收站保留 30 天");
+  await dialogue(page).getByRole("button", { name: "移到回收站" }).click();
 
   await expect(lignes(page)).toHaveCount(4);
-  await expect(resultat(page)).toHaveText("已删除 1 个歌单。");
-  expect(ecrituresSetlists(db)).toEqual(["DELETE setlists/s3"]);
+  await expect(bandeau(page)).toHaveText(/1 个歌单已移到回收站/);
+  expect(ecrituresSetlists(db)).toEqual(["PATCH setlists/s3"]);
 });

@@ -1,8 +1,8 @@
 "use client";
 
 import { GuideLien } from "@/components/guide/GuideLien";
-import { useEffect, useState, useMemo } from "react";
-import { ALL_CATEGORIES, FETE_CATEGORIES, getSetlists, getMySetlists, getSetlistsPartagees, deleteSetlists, type FSSetlist } from "@/lib/firebase/setlists";
+import { useEffect, useState, useMemo, useCallback } from "react";
+import { ALL_CATEGORIES, FETE_CATEGORIES, getSetlists, getMySetlists, getSetlistsPartagees, deleteSetlist, deleteSetlists, getCorbeille, mettreALaCorbeilleGroupe, restaurerSetlist, type FSSetlist } from "@/lib/firebase/setlists";
 import { useProfile } from "@/lib/firebase/users";
 import { visibleCategories, canCreateSetlist, canDeleteSetlist, canSeeSetlist, isAdminUser } from "@/lib/access";
 import {
@@ -20,12 +20,13 @@ import { anneeDe, editionsDe, feteDe, libelleEdition } from "@/lib/scene/fetes";
 import { jourEnLettres } from "@/app/evenements/scene/libelles";
 import { titreAffiche } from "@/lib/fetes/droits";
 import type { Programme } from "@/types/programme";
-import { Search, X, Lock, LogIn, UserPen } from "lucide-react";
+import { Search, X, Lock, LogIn, UserPen, ChevronDown } from "lucide-react";
 import Link from "next/link";
 import { EnTetePage } from "@/components/layout/EnTetePage";
 import { BoutonNouveau } from "@/components/layout/BoutonNouveau";
 import { OngletsRail } from "@/components/layout/Onglets";
 import { SetlistCard, SetlistCarteChants } from "@/components/setlists/SetlistCard";
+import { BandeauCorbeille } from "@/components/setlists/BandeauCorbeille";
 import { ApercuSetlist } from "@/components/setlists/ApercuSetlist";
 import { DeuxVolets } from "@/components/layout/DeuxVolets";
 import { useDisposition } from "@/hooks/useDisposition";
@@ -160,6 +161,42 @@ export default function SetlistsPage() {
     getMySetlists(user.uid).then(setMySetlists).finally(() => setLoadingMine(false));
   }, [user]);
 
+  // ── Corbeille (SC2, docs/spec-createur-corbeille-absences.md) ──
+  // Les ids du bandeau « Annuler » (la suppression qui vient d'avoir lieu), la section repliée en bas
+  // d'« Archives », et la setlist dont la suppression définitive attend confirmation.
+  const [enCorbeille, setEnCorbeille] = useState<string[]>([]);
+  const fermerBandeau = useCallback(() => setEnCorbeille([]), []);
+  const [corbeille, setCorbeille] = useState<FSSetlist[]>([]);
+  const [corbeilleOuverte, setCorbeilleOuverte] = useState(false);
+  const [aSupprimerDefinitivement, setASupprimerDefinitivement] = useState<FSSetlist | null>(null);
+  const [versionCorbeille, setVersionCorbeille] = useState(0);
+
+  // Venue de la fiche (`?corbeille=id1,id2`) : le bandeau s'affiche ; l'adresse est ensuite réécrite sans
+  // ce paramètre par `useSetlistsNavState` (replaceState, pas de rechargement).
+  useEffect(() => {
+    const ids = new URLSearchParams(window.location.search).get("corbeille");
+    if (ids) setEnCorbeille(ids.split(",").filter(Boolean));
+  }, []);
+
+  useEffect(() => {
+    if (!user || tab !== "archived") return;
+    getCorbeille().then(setCorbeille).catch(() => {});
+  }, [user, tab, versionCorbeille]);
+
+  /** Relit les listes de la page sans l'écran « Chargement » : après une restauration. */
+  async function rafraichir() {
+    if (!user) return;
+    const [toutesLues, miennes, privees] = await Promise.all([
+      getSetlists(),
+      getSetlistsPartagees(user.uid).catch(() => [] as FSSetlist[]),
+      getMySetlists(user.uid),
+    ]);
+    setSetlists(toutesLues);
+    setPartagees(miennes);
+    setMySetlists(privees);
+    setVersionCorbeille((v) => v + 1);
+  }
+
   // Filtre commun : catégorie + recherche
   const matches = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -224,6 +261,16 @@ export default function SetlistsPage() {
   const peutSupprimer = (s: FSSetlist) => !!user && canDeleteSetlist(user, profile, s);
   const supprimables = displayed.filter(peutSupprimer);
   const selection = supprimables.filter((s) => coches.has(s.id));
+  // « Mettre à la corbeille » pour des setlists ordinaires ; une fête dans la sélection garde la confirmation définitive.
+  const avecFete = selection.some((s) => !!s.fete);
+  // La corbeille ne montre que ce qu'on pourrait supprimer : un musicien ne voit pas celle d'un autre.
+  const corbeilleVisible = corbeille.filter(peutSupprimer);
+  const dateCourte = (iso: string) => {
+    const d = new Date(iso);
+    return i18n.language === "zh-CN"
+      ? `${d.getMonth() + 1}月${d.getDate()}日`
+      : new Intl.DateTimeFormat("fr-FR", { day: "2-digit", month: "2-digit" }).format(d);
+  };
 
   // Changer d'onglet vide la sélection : aucune ligne n'est commune d'un onglet
   // à l'autre, et revenir ne doit pas ramener des cases cochées oubliées.
@@ -246,9 +293,18 @@ export default function SetlistsPage() {
   }
 
   async function supprimerSelection() {
+    if (!user) return;
     const cibles = selection;
     setEnCours(true);
-    const { ok, ko } = await deleteSetlists(cibles.map((s) => s.id));
+    // Les setlists ordinaires vont à la corbeille ; celles d'une fête restent supprimées pour de bon (SC2, Q3).
+    const ordinaires = cibles.filter((s) => !s.fete);
+    const fetes = cibles.filter((s) => s.fete);
+    const vers = ordinaires.length
+      ? await mettreALaCorbeilleGroupe(ordinaires.map((s) => s.id), user.uid)
+      : { ok: [] as string[], ko: [] as string[] };
+    const definitives = fetes.length ? await deleteSetlists(fetes.map((s) => s.id)) : { ok: [] as string[], ko: [] as string[] };
+    const ok = [...vers.ok, ...definitives.ok];
+    const ko = [...vers.ko, ...definitives.ko];
     // Pas de rechargement : les deux effets de chargement ne dépendent que de
     // `user` et ne se rejoueraient pas. On retire les supprimées en local.
     setSetlists((prev) => prev.filter((s) => !ok.includes(s.id)));
@@ -257,9 +313,14 @@ export default function SetlistsPage() {
     // Les ratées restent cochées : réessayer est un seul appui.
     setCoches(new Set(ko));
     const rates = cibles.filter((s) => ko.includes(s.id)).map((s) => `« ${s.title} »`);
+    if (vers.ok.length) {
+      setEnCorbeille(vers.ok);
+      setVersionCorbeille((v) => v + 1);
+    }
+    // Les mises à la corbeille se disent par le bandeau « Annuler » ; ici, les suppressions définitives et les échecs.
     setMessage(
       [
-        ok.length ? t("setlists.list.deleteDone", { count: ok.length }) : null,
+        definitives.ok.length ? t("setlists.list.deleteDone", { count: definitives.ok.length }) : null,
         rates.length
           ? t("setlists.list.deleteFailed", { count: rates.length, titles: rates.join(", ") })
           : null,
@@ -270,6 +331,41 @@ export default function SetlistsPage() {
     window.setTimeout(() => setMessage(null), 6000);
     setEnCours(false);
     if (ko.length === 0) setSelectionMode(false);
+  }
+
+  async function annulerCorbeille() {
+    const ids = enCorbeille;
+    try {
+      for (const id of ids) await restaurerSetlist(id);
+    } catch {
+      setMessage(t("setlists.corbeille.erreur"));
+      window.setTimeout(() => setMessage(null), 6000);
+    }
+    setEnCorbeille([]);
+    await rafraichir().catch(() => {});
+  }
+
+  async function restaurer(s: FSSetlist) {
+    try {
+      await restaurerSetlist(s.id);
+      await rafraichir();
+    } catch {
+      setMessage(t("setlists.corbeille.erreur"));
+      window.setTimeout(() => setMessage(null), 6000);
+    }
+  }
+
+  async function supprimerDefinitivement(s: FSSetlist) {
+    setEnCours(true);
+    try {
+      await deleteSetlist(s.id);
+      setVersionCorbeille((v) => v + 1);
+    } catch {
+      setMessage(t("setlists.corbeille.erreur"));
+      window.setTimeout(() => setMessage(null), 6000);
+    }
+    setEnCours(false);
+    setASupprimerDefinitivement(null);
   }
 
   const emptyMessage = query
@@ -495,6 +591,10 @@ export default function SetlistsPage() {
           </div>
         )}
 
+        {enCorbeille.length > 0 && (
+          <BandeauCorbeille count={enCorbeille.length} onAnnuler={annulerCorbeille} onFermer={fermerBandeau} />
+        )}
+
         {/* ── Barre d'action de la sélection ──
              En tête de liste sur les trois appareils, et **collante** sous la
              navbar : sur une longue liste elle reste à portée sans remonter.
@@ -574,6 +674,54 @@ export default function SetlistsPage() {
           )
         )}
         {feteFiltree && tab !== "mine" && piedFete}
+        {tab === "archived" && corbeilleVisible.length > 0 && (
+          <section className="mt-8" data-testid="corbeille">
+            <button
+              type="button"
+              aria-expanded={corbeilleOuverte}
+              onClick={() => setCorbeilleOuverte((o) => !o)}
+              className="flex min-h-11 w-full items-center justify-between gap-3 text-left"
+            >
+              <span className="min-w-0">
+                <span className="block text-[15px] font-semibold text-foreground">
+                  {t("setlists.corbeille.titre", { count: corbeilleVisible.length })}
+                </span>
+                <span className="block text-[13px] text-muted-foreground">{t("setlists.corbeille.aide")}</span>
+              </span>
+              <ChevronDown className={`h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-150 ${corbeilleOuverte ? "rotate-180" : ""}`} aria-hidden />
+            </button>
+            {corbeilleOuverte && (
+              <ul className="mt-1">
+                {corbeilleVisible.map((s) => (
+                  <li key={s.id} className="border-t border-border/70 py-3">
+                    <p className="text-[15px] font-semibold text-foreground">{titreAffiche(s, i18n.language === "zh-CN" ? "zh" : "fr")}</p>
+                    <p className="text-[13px] text-muted-foreground">
+                      <span className="capitalize">{formatDate(s.date, i18n.language)}</span>
+                      {" · "}
+                      {t("setlists.corbeille.supprimeeLe", { date: dateCourte(s.supprimeeLe!) })}
+                    </p>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        onClick={() => void restaurer(s)}
+                        className="h-11 rounded-full bg-secondary px-5 text-sm font-semibold text-foreground transition-[background-color,transform] duration-150 hover:bg-muted active:scale-[.97]"
+                      >
+                        {t("setlists.corbeille.restaurer")}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setASupprimerDefinitivement(s)}
+                        className="h-11 rounded-full px-4 text-sm font-semibold text-destructive transition-[background-color,transform] duration-150 hover:bg-destructive/10 active:scale-[.97]"
+                      >
+                        {t("setlists.corbeille.supprimerDefinitivement")}
+                      </button>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+        )}
         <GuideLien section="setlists" />
       </>
   );
@@ -602,7 +750,7 @@ export default function SetlistsPage() {
           <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle>
-                {t("setlists.list.deleteSelectedTitle", { count: selection.length })}
+                {avecFete ? t("setlists.list.deleteSelectedTitle", { count: selection.length }) : t("setlists.list.trashTitle", { count: selection.length })}
               </AlertDialogTitle>
               <AlertDialogDescription asChild>
                 <div>
@@ -620,7 +768,9 @@ export default function SetlistsPage() {
                       {t("setlists.list.deleteMore", { count: selection.length - 8 })}
                     </p>
                   )}
-                  <p className="mt-2">{t("setlists.list.deleteSelectedBody")}</p>
+                  <p className="mt-2">
+                    {avecFete ? t("setlists.list.deleteSelectedBody") : t("setlists.list.trashBody", { count: selection.length })}
+                  </p>
                 </div>
               </AlertDialogDescription>
             </AlertDialogHeader>
@@ -631,7 +781,32 @@ export default function SetlistsPage() {
                 onClick={() => void supprimerSelection()}
                 className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               >
-                {enCours ? "…" : t("setlists.detail.deleteYes")}
+                {enCours ? "…" : avecFete ? t("setlists.detail.deleteYes") : t("setlists.list.trashYes")}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        {/* ── Suppression définitive depuis la corbeille ── */}
+        <AlertDialog open={!!aSupprimerDefinitivement} onOpenChange={(o) => !o && setASupprimerDefinitivement(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>
+                {t("setlists.corbeille.definitifTitre", { titre: aSupprimerDefinitivement ? titreAffiche(aSupprimerDefinitivement, i18n.language === "zh-CN" ? "zh" : "fr") : "" })}
+              </AlertDialogTitle>
+              <AlertDialogDescription>{t("setlists.corbeille.definitifCorps")}</AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={enCours}>{t("setlists.detail.deleteCancel")}</AlertDialogCancel>
+              <AlertDialogAction
+                disabled={enCours}
+                onClick={(e) => {
+                  e.preventDefault();
+                  if (aSupprimerDefinitivement) void supprimerDefinitivement(aSupprimerDefinitivement);
+                }}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                {enCours ? "…" : t("setlists.corbeille.supprimerDefinitivement")}
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>

@@ -1135,6 +1135,16 @@ d'actions sur téléphone ; partition jusqu'à 900 px en deux volets. **T1, T2, 
 recommandations : « Fermer » / « Rouvrir » au Back-Office (champ `fermees`), créneaux pris gardés, état « Fermées »
 pour les membres, `reservable()` bloque aussi côté règles. **Attend le go** (une tranche, FR-A).
 
+### Z. Setlist au seul créateur, corbeille, absences (Timothée, 18/10/2026) → `spec-createur-corbeille-absences.md`
+
+Trois lots : **SC1** modifier et supprimer = le créateur seul, les autres voient et dupliquent en privé ; **SC2**
+corbeille des setlists supprimées (section de « Archives », restaurer, purge à 30 jours) ; **SC3** congés et absences
+saisis dans le profil, « Choisir » du planning trie Disponibles puis « Absent ». **Spec écrite ; Q1–Q3, Q8–Q9, Q11 tranchées le 18/10/2026** (admins gardent les droits, l'équipe modifie,
+fêtes inchangées, absences vues et saisies par qui fait les plannings et les admins, saisie en ligne),
+**go le 18/10/2026 pour SC1, SC2, SC3 sans planche**, codés par une session orchestratrice. **SC1, SC2 et SC3 codés et
+poussés le 18/10/2026** (détail dans l'« Avancement » de la spec), **à valider par Timothée** ; `firestore.rules`
+**à publier à la main par Timothée** (droits des setlists, corbeille, absences) ; rien en ligne.
+
 ## 4. Carte des modules de l'app « GCC »
 
 À valider par Timothée avant toute spec de module (les modules existants ne

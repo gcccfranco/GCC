@@ -119,6 +119,10 @@ s'écrit ici, pas seulement en mémoire.
 - **Design** : une demande qui change l'apparence ou l'organisation des écrans commence par une planche (artefact HTML
   ou Figma : pistes aux trois tailles, recommandation marquée, questions à trancher), puis la spec, puis le code sur go.
   Zones gelées sauf demande explicite : § 2 « Restent gelés » de `docs/audit-ui-apple-design.md`.
+- **Coder = une session orchestratrice** (Timothée, 18/10/2026) : une session cloud qui reçoit un go ne code pas
+  elle-même ; elle lance une **nouvelle session** (`create_session`) qui orchestre le code (agents `executant`,
+  `testeur`), sur la même branche, avec la spec et les décisions dans sa consigne. La session d'origine garde la spec,
+  les planches et le suivi.
 - **Agents en parallèle** : quelques-uns à la fois (neuf d'un coup ont épuisé la limite de dépense du mois, le
   04/10/2026) ; un agent coupé se reprend par SendMessage, contexte intact.
 - **Déléguer** aux agents de `.claude/agents/` : `chercheur` (Haiku) pour une recherche qui parcourt plusieurs

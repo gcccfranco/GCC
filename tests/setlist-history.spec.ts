@@ -36,7 +36,8 @@ const SETLIST = {
   date: "2026-09-21",
   language: "mixed",
   notes: "",
-  ownerId: "uid-owner",
+  // SC1 (docs/spec-createur-corbeille-absences.md) : seul le créateur modifie — la setlist est la sienne.
+  ownerId: "uid-musicien",
   isPrivate: false,
   items: [
     item({ songSlug: "abba-pere", position: 1 }),

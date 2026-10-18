@@ -43,7 +43,8 @@ const SETLIST = {
   date: "2026-10-04",
   language: "mixed",
   notes: "Thème : la grâce.",
-  ownerId: "uid-owner",
+  // SC1 (docs/spec-createur-corbeille-absences.md) : seul le créateur modifie — la setlist est la sienne.
+  ownerId: "uid-musicien",
   isPrivate: false,
   presentationUrl: CANVA,
   items: [

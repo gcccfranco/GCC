@@ -8,6 +8,7 @@
 
 import type { OrganigrammeGroupe, Titulaire } from "@/types/groupe"
 import type { ServiceRole } from "@/types/user"
+import type { Absence } from "@/types/absence"
 import { groupeDef } from "@/lib/groupes/table"
 import type { DefinitionGrille } from "./grilles"
 import { normalizeName, splitNames } from "./names"
@@ -243,4 +244,48 @@ export function datesCourtes(isos: readonly string[], langue = "fr"): string {
   if (!langue.startsWith("fr")) return new Intl.ListFormat(langue, { style: "long", type: "conjunction" }).format(elements)
   const avecLe = elements.map((x, i) => (i ? `le ${x}` : x))
   return avecLe.length <= 2 ? avecLe.join(" et ") : `${avecLe.slice(0, -1).join(", ")} et ${avecLe[avecLe.length - 1]}`
+}
+
+// ─── Congés et absences (SC3, docs/spec-createur-corbeille-absences.md) ──────
+
+/** L'absence qui couvre `date` (AAAA-MM-JJ), bornes comprises ; `null` sinon. */
+export function absenceLe(absences: readonly Absence[], date: string): Absence | null {
+  return absences.find((a) => a.du <= date && date <= a.au) ?? null
+}
+
+/**
+ * Sépare une liste de propositions en disponibles et absents ce jour-là, chaque groupe dans l'ordre
+ * d'entrée. Une personne absente reste proposée : on ne bloque pas (SC3.5).
+ */
+export function rangerParAbsence<T extends { nom: string }>(
+  liste: readonly T[],
+  absenceDe: (nom: string) => Absence | null,
+): { disponibles: T[]; absents: Array<T & { absence: Absence }> } {
+  const disponibles: T[] = []
+  const absents: Array<T & { absence: Absence }> = []
+  for (const x of liste) {
+    const absence = absenceDe(x.nom)
+    if (absence) absents.push({ ...x, absence })
+    else disponibles.push(x)
+  }
+  return { disponibles, absents }
+}
+
+const jourMois = (iso: string, langue: "fr" | "zh") => {
+  const [, m, j] = iso.split("-")
+  return langue === "zh" ? `${Number(m)}月${Number(j)}日` : `${j}/${m}`
+}
+
+/** « absent du 12/10 au 26/10 » / « absent le 12/10 » ; 中文 « 10月12日至10月26日请假 » / « 10月12日请假 ». */
+export function periodeAbsence(a: Pick<Absence, "du" | "au">, langue: "fr" | "zh"): string {
+  if (langue === "zh") return a.du === a.au ? `${jourMois(a.du, "zh")}请假` : `${jourMois(a.du, "zh")}至${jourMois(a.au, "zh")}请假`
+  return a.du === a.au ? `absent le ${jourMois(a.du, "fr")}` : `absent du ${jourMois(a.du, "fr")} au ${jourMois(a.au, "fr")}`
+}
+
+/** Une date AAAA-MM-JJ pour la liste de « Mes absences » : « 12/10/2026 » / « 2026年10月12日 » ;
+ *  `sansAnnee` (fin de période en 中文) : « 10月26日 ». */
+export function dateAbsence(iso: string, langue: "fr" | "zh", sansAnnee = false): string {
+  const [a, m, j] = iso.split("-")
+  if (langue === "zh") return `${sansAnnee ? "" : `${a}年`}${Number(m)}月${Number(j)}日`
+  return `${j}/${m}/${a}`
 }

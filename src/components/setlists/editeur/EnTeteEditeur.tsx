@@ -53,6 +53,8 @@ export interface ChampsEnTete {
   setIsPrivate: (v: boolean) => void;
   /** Seuls le propriétaire et les admins (qui peuvent supprimer) changent la visibilité et la catégorie : pour l'équipe, en lecture. */
   visibiliteLecture: boolean;
+  /** Copie privée dans une catégorie où l'on ne crée pas (SC1.3) : la visibilité reste « privée ». */
+  resteePrivee?: boolean;
   /** L'équipe de la setlist, et l'ouverture de sa vue (posée par l'éditeur qui tient le volet). */
   equipe: EtatEquipe;
   ouvrirEquipe?: () => void;
@@ -302,7 +304,7 @@ export function EnTeteEditeur({
             value={c.isPrivate ? "privee" : "partagee"}
             onChange={(e) => c.setIsPrivate(e.target.value === "privee")}
             aria-label={t("setlists.form.visibilityLabel")}
-            disabled={c.visibiliteLecture}
+            disabled={c.visibiliteLecture || c.resteePrivee}
             className={selectDePuce}
           >
             <option value="partagee">{t("setlists.editeur.partagee")}</option>

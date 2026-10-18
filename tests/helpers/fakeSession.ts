@@ -221,7 +221,7 @@ export async function fakeFirestore(
       const parent = tail.slice(0, -":runQuery".length);
       const q = (request.postDataJSON() as {
         structuredQuery: {
-          from: { collectionId: string }[];
+          from: { collectionId: string; allDescendants?: boolean }[];
           orderBy?: { field: { fieldPath: string }; direction?: string }[];
           limit?: number;
         };
@@ -231,7 +231,10 @@ export async function fakeFirestore(
       // une date donnée en texte par le test se trient ensemble.
       const sortKey = (p: string) =>
         String(Object.values(((store.get(p) ?? {})[order?.field.fieldPath ?? ""] ?? {}) as object)[0] ?? "");
-      let paths = children(parent ? `${parent}/${q.from[0].collectionId}` : q.from[0].collectionId);
+      // `allDescendants` (collection group) : tous les documents dont l'avant-dernier segment du chemin est la collection.
+      let paths = q.from[0].allDescendants
+        ? [...store.keys()].filter((p) => p.split("/").slice(-2, -1)[0] === q.from[0].collectionId)
+        : children(parent ? `${parent}/${q.from[0].collectionId}` : q.from[0].collectionId);
       if (order) {
         paths.sort((a, b) => sortKey(a).localeCompare(sortKey(b)));
         if (order.direction === "DESCENDING") paths.reverse();

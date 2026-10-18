@@ -12,7 +12,8 @@ import { ecrireCases, retirerDate } from "@/lib/firebase/planningGrille"
 import { getHistoriqueGrille, noterChangements, type EntreeGrille } from "@/lib/firebase/planningHistorique"
 import { historyAuthor } from "@/lib/firebase/setlistHistory"
 import { useProfile } from "@/lib/firebase/users"
-import { colonneDePersonnes, propositions, propositionsReliees, type CompteDuPlanning } from "@/lib/planning/choisir"
+import { colonneDePersonnes, periodeAbsence, propositions, propositionsReliees, type CompteDuPlanning } from "@/lib/planning/choisir"
+import type { Absence } from "@/types/absence"
 import { roleDeColonne } from "@/lib/groupes/organigramme"
 import { groupeDef } from "@/lib/groupes/table"
 import type { OrganigrammeGroupe } from "@/types/groupe"
@@ -52,6 +53,8 @@ export interface PlanningGrilleProps {
   datesDansLApp: readonly string[]
   /** Les comptes, pour « Choisir » (lot U2, P9 ; remplace l'autocomplétion D12). */
   comptes: readonly CompteDuPlanning[]
+  /** SC3 (congés et absences) : l'absence d'un nom de planning à une date, pour qui fait les plannings ; absent, « Choisir » et les cases ne changent pas. */
+  absenceDe?: (nom: string, date: string) => Absence | null
   /** Lot 2 (OG-F) : l'organigramme du groupe dont c'est le planning (page des groupes, Back-Office) : « Choisir » propose d'abord les titulaires du rôle relié à la colonne (OG29), et l'en-tête d'une colonne reliée porte l'icône de lien (OG31). */
   groupe?: OrganigrammeGroupe
   /** Badge optionnel à côté de la date (Sainte Cène), comme PlanningTable. */
@@ -110,6 +113,7 @@ export function PlanningGrille({
   peutModifier,
   datesDansLApp,
   comptes,
+  absenceDe,
   groupe,
   dateBadge,
   periode,
@@ -234,6 +238,16 @@ export function PlanningGrille({
       <span className="sr-only">{t("planning.prevenir.caseChangee")}</span>
     </>
   )
+
+  // SC3.6 (Q10) : un petit mot « absent » à côté du nom, la période en infobulle ; pas de notification.
+  const marqueAbsent = (date: string, val: string) => {
+    const absence = val ? absenceDe?.(val, date) : null
+    return absence && (
+      <span title={periodeAbsence(absence, i18n.language === "zh-CN" ? "zh" : "fr")} className="ml-1.5 text-[11px] text-amber-700 dark:text-amber-400">
+        {t("planning.choisir.absentMarque")}
+      </span>
+    )
+  }
 
   // Copier-coller au clavier (PG22 à PG32) : pointeur fin, tableau, grille en modification.
   const actifClavier = clavier && mode === "edition"
@@ -736,6 +750,7 @@ export function PlanningGrille({
           style={{ borderColor: `${couleur}55` }}
         >
           {val}
+          {marqueAbsent(l.row[0], val)}
         </button>
       )
     }
@@ -754,7 +769,12 @@ export function PlanningGrille({
       )
     }
     // La couleur du service reste aux dates (A2) : son nom se repère en encre.
-    return <span className={estMoi(val) ? "rounded-md bg-foreground px-1.5 py-0.5 font-semibold text-background" : ""}>{val || "—"}</span>
+    return (
+      <>
+        <span className={estMoi(val) ? "rounded-md bg-foreground px-1.5 py-0.5 font-semibold text-background" : ""}>{val || "—"}</span>
+        {marqueAbsent(l.row[0], val)}
+      </>
+    )
   }
 
   const phrase = (auteurNom: string, ch: EntreeGrille["changes"][number]) => {
@@ -845,6 +865,7 @@ export function PlanningGrille({
               )
             },
           } : undefined}
+          absenceDe={absenceDe && choix ? (nom) => absenceDe(nom, choix.l.row[0]) : undefined}
           reliees={groupe ? (recherche) => propositionsReliees(definition, choix?.c.cle ?? "", groupe, comptes, dansLaFenetre.map(ligneAffichee), recherche) : undefined}
           proposer={(recherche) => propositions(definition, choix?.c.cle ?? "", comptes, lignes.map((l) => l.row), recherche)}
           onEcrire={(nom) => {

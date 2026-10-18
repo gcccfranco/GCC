@@ -156,6 +156,7 @@ function CampusPage() {
             peutModifier={peutMatin}
             datesDansLApp={matinApp.datesDansLApp}
             comptes={matinApp.comptes}
+            absenceDe={matinApp.absenceDe}
             exporter={peutMatin ? exporter : undefined}
             vide={vide}
             retrait={retrait}
@@ -170,6 +171,7 @@ function CampusPage() {
             peutModifier={peutSoir}
             datesDansLApp={soirApp.datesDansLApp}
             comptes={soirApp.comptes}
+            absenceDe={soirApp.absenceDe}
             // Un seul « Exporter » dans l'en-tête (v18, B6) : la page exportée mêle matin et soir.
             exporter={peutSoir && !peutMatin ? exporter : undefined}
             vide={vide}

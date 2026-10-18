@@ -55,7 +55,9 @@ test.describe("partage : droits (pur)", () => {
       expect(canEditSetlist(user(HUGO), HUGO, s)).toBe(false);
     }
     expect(canEditSetlist(user(MUSICIEN_CULTE), MUSICIEN_CULTE, PRIVEE)).toBe(false);
-    expect(canDeleteSetlist(user(MUSICIEN_CULTE), MUSICIEN_CULTE, PUBLIQUE)).toBe(true);
+    // SC1 (docs/spec-createur-corbeille-absences.md) : un musicien du service ne modifie ni ne supprime plus.
+    expect(canEditSetlist(user(MUSICIEN_CULTE), MUSICIEN_CULTE, PUBLIQUE)).toBe(false);
+    expect(canDeleteSetlist(user(MUSICIEN_CULTE), MUSICIEN_CULTE, PUBLIQUE)).toBe(false);
     expect(canSetSetlistTeam(user(MUSICIEN_CULTE), MUSICIEN_CULTE, PUBLIQUE)).toBe(false);
     expect(canSetSetlistTeam(ADMIN, null, PUBLIQUE)).toBe(true);
     expect(canSetSetlistTeam(ADMIN, null, PRIVEE)).toBe(false);
@@ -171,8 +173,8 @@ test.describe("partage : règles Firestore (texte)", () => {
     expect(update).toContain("affectedKeys().hasAny(['isPrivate'])");
     expect(update).toContain("canDeleteSetlistDoc(resource.data)");
     expect(del).toContain("canDeleteSetlistDoc(resource.data)");
-    // Changer de catégorie : réservé à qui peut supprimer (sinon l'équipe se donnerait ce droit).
-    expect(update).toMatch(/request\.resource\.data\.category == resource\.data\.category\s*\|\|\s*\(\s*canDeleteSetlistDoc\(resource\.data\)/);
+    // Changer de catégorie : le propriétaire et les admins seulement (sinon l'équipe se donnerait ce droit).
+    expect(update).toMatch(/\|\| isAdmin\(\)\s*\|\|\s*request\.resource\.data\.category == resource\.data\.category\s*\)/);
     const edit = rules.slice(rules.indexOf("function canEditSetlistDoc"), rules.indexOf("function canEditSetlistDoc") + 300);
     expect(edit).toContain("canDeleteSetlistDoc(setlist)");
     expect(edit).toContain("request.auth.uid in setlist.get('editeurs', [])");
@@ -368,14 +370,18 @@ test.describe("partage : l'éditeur", () => {
     await expect.poll(() => appels.length, { timeout: 10_000 }).toBe(1);
   });
 
-  test("un musicien de la catégorie, hors équipe", async ({ page }) => {
+  test("un musicien de la catégorie, hors équipe : ne modifie plus (SC1), duplique pour ses notes", async ({ page }) => {
     await planningVide(page);
-    const db = await signInAs(page, fp(MUSICIEN_CULTE), { ...ANNUAIRE, [CHEMIN]: DOC(), "setlists/sl-privee": DOC({ isPrivate: true }) }, `/setlists/${ID}/edit`);
-    await attendreEditeur(page, "Abba Père");
-    await expect(puceEquipe(page)).toHaveCount(0);
-    await choisirTonalite(page, "Abba Père", "B");
-    await expect.poll(() => ecritures(db, CHEMIN).length, { timeout: 10_000 }).toBeGreaterThan(0);
-    for (const w of ecritures(db, CHEMIN)) expect(Object.keys(w.data)).not.toContain("editeurs");
+    await signInAs(page, fp(MUSICIEN_CULTE), { ...ANNUAIRE, [CHEMIN]: DOC(), "setlists/sl-privee": DOC({ isPrivate: true }) }, `/setlists/${ID}/edit`);
+    await expect(page.getByText(/^Seuls le créateur de la setlist/)).toBeVisible();
+    await expect(page.locator("[data-liste-courte]")).toHaveCount(0);
+    await page.goto(`/setlists/${ID}`);
+    await expect(page.getByText("Lecture seule")).toBeVisible();
+    await expect(page.getByText("Modifiable par son créateur seulement (et les admins)")).toBeVisible();
+    await page.getByRole("button", { name: "Plus d'actions" }).filter({ visible: true }).first().click();
+    await expect(page.getByRole("menuitem", { name: "Dupliquer pour mes notes" })).toBeVisible();
+    await expect(page.getByRole("menuitem", { name: "Supprimer" })).toHaveCount(0);
+    await page.keyboard.press("Escape");
     await page.goto("/setlists/sl-privee/edit");
     await expect(page.getByText(/^Seuls le créateur de la setlist/)).toBeVisible();
     await expect(page.locator("[data-liste-courte]")).toHaveCount(0);
@@ -497,10 +503,10 @@ test.describe("partage : la page d'une setlist (PS14, PS15)", () => {
     await expect(page.getByRole("menuitem", { name: "Supprimer" })).toHaveCount(0);
   });
 
-  test("publique avec équipe : « Modifiable par : créateur, son équipe, … » ; Léa supprime", async ({ page }) => {
+  test("publique avec équipe : « Modifiable par son créateur et son équipe seulement » ; Léa supprime", async ({ page }) => {
     await planningVide(page);
     await signInAs(page, fp(LEA), { ...ANNUAIRE, ...LISTE }, "/setlists/sl-pub");
-    await expect(page.getByText("Modifiable par : créateur, son équipe, musiciens et présidence de Culte Francophone, et admins")).toBeVisible();
+    await expect(page.getByText("Modifiable par son créateur et son équipe seulement (et les admins)")).toBeVisible();
     await menu(page).click();
     await expect(page.getByRole("menuitem", { name: "Supprimer" })).toBeVisible();
   });

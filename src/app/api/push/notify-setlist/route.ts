@@ -54,6 +54,8 @@ export async function POST(req: NextRequest) {
   // 2. Chargement de la setlist
   const snap = await db.collection("setlists").doc(setlistId).get();
   if (!snap.exists) return NextResponse.json({ error: "Setlist introuvable" }, { status: 404 });
+  // Une setlist à la corbeille n'existe plus pour personne (SC2.2).
+  if (snap.get("supprimeeLe")) return NextResponse.json({ error: "Setlist introuvable" }, { status: 404 });
   const sl = snap.data() as {
     title?: string;
     leader?: string;

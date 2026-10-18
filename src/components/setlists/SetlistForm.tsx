@@ -551,6 +551,9 @@ export function SetlistForm({ mode, setlistId, songs, initial, prefill, contexte
     : profile
     ? creatableCategories(profile)
     : [];
+  // Copie privée d'une setlist d'une catégorie où l'on ne crée pas (SC1.3, Q4) : elle reste privée,
+  // tant qu'elle n'est pas déplacée dans une catégorie à soi.
+  const resteePrivee = isEdit && isPrivate && !!initial?.isPrivate && !myCats.includes(category);
   const allowedRestricted = RESTRICTED_CATEGORIES.filter(
     (c) => myCats.includes(c) || c === initial?.category
   );
@@ -601,6 +604,7 @@ export function SetlistForm({ mode, setlistId, songs, initial, prefill, contexte
       isPrivate,
       setIsPrivate,
       visibiliteLecture,
+      resteePrivee,
       equipe: {
         editeurs,
         roles: rolesPartage,

@@ -18,6 +18,7 @@ import { estReunion } from "@/lib/access";
 import type { Fois, Tache } from "@/types/tache";
 import type { Creneau, Programme } from "@/types/programme";
 import { editionsAffichees } from "@/lib/scene/fetes";
+import { limiteDePurge } from "@/lib/setlists/corbeille";
 import { ajouterPetitDejAuxRappels, lirePetitDej } from "@/lib/petitdej/lignes";
 import { lignesMercredi, petitDejTitre, prochainDimanche } from "@/lib/petitdej/rappel";
 import type { LignePetitDej } from "@/types/petitDej";
@@ -229,6 +230,14 @@ async function petitDejDuMercredi(
   return { cle, uids: new Set(await freshUids(db, await filterUidsByNotifPref(comptes, "petitDej"), cle)) };
 }
 
+/** Corbeille des setlists (SC2.5) : supprime pour de bon, avec leurs sous-collections (history, versions),
+ *  celles mises à la corbeille il y a plus de 30 jours. */
+async function purgerCorbeille(db: FirebaseFirestore.Firestore): Promise<number> {
+  const perimees = await db.collection("setlists").where("supprimeeLe", "<", limiteDePurge(new Date())).get();
+  for (const doc of perimees.docs) await db.recursiveDelete(doc.ref);
+  return perimees.size;
+}
+
 export async function GET(req: NextRequest) {
   const secret = process.env.CRON_SECRET;
   const authz = req.headers.get("authorization");
@@ -237,6 +246,13 @@ export async function GET(req: NextRequest) {
   }
 
   const db = adminDb();
+  // Hors de l'interrupteur du back-office : la corbeille des setlists existe en ligne. Un échec ne
+  // coupe pas les rappels.
+  try {
+    await purgerCorbeille(db);
+  } catch (e) {
+    console.error("[cron] purge de la corbeille des setlists", e);
+  }
   const today = isoInDays(0);
   const [planning, index] = await Promise.all([loadPlanningData(), loadPlanningNameIndex()]);
   // Back-office coupé (lot 18, docs/spec-mise-en-ligne.md) : le rappel du matin ne
