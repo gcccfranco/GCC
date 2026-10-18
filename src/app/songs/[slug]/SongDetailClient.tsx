@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect, useLayoutEffect, useRef } from "react";
 import Link from "next/link";
-import { MoreHorizontal, Play, X, TriangleAlert , Music, Music2, Settings, ChevronDown, Sparkles, FileText, Headphones } from "lucide-react";
+import { MoreHorizontal, Play, X, TriangleAlert , Settings, ChevronDown, Sparkles, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -355,31 +355,10 @@ function useVersionDeLaSetlist(slug: string, setlistId: string | null, position:
     return () => ro.disconnect();
   }, [isZh, youtubeId, accesHarmonie.peut, customize.currentKey, setlistDOrigine, deuxVolets]);
 
-  // Menu ⋯ (spec-barre-chant.md, Q3, Q5) : Vidéo, PDF et Idées sont dans la barre partout ;
-  // l'écoute y reste dès la tablette debout, le téléphone a son bouton « Écouter » (`ecoute-menu`).
-  const ecoute = (classe?: string) => (
-    <>
-      {song.spotifyUrl && (
-        <DropdownMenuItem asChild className={classe}>
-          <a href={song.spotifyUrl} target="_blank" rel="noopener noreferrer">
-            <Music className="h-3.5 w-3.5 text-muted-foreground" />
-            Spotify
-          </a>
-        </DropdownMenuItem>
-      )}
-      {song.appleMusicUrl && (
-        <DropdownMenuItem asChild className={classe}>
-          <a href={song.appleMusicUrl} target="_blank" rel="noopener noreferrer">
-            <Music2 className="h-3.5 w-3.5 text-muted-foreground" />
-            Apple Music
-          </a>
-        </DropdownMenuItem>
-      )}
-    </>
-  );
+  // Menu ⋯ (spec-barre-chant.md, Q3, Q5) : Vidéo, PDF et Idées sont dans la barre partout ; plus
+  // de Spotify ni d'Apple Music (Timothée, 18/10/2026 : les chants n'ont que YouTube).
   const menuChant = (
                 <DropdownMenuContent align="end" className="w-52">
-                  {ecoute("ecoute-menu")}
                   <DropdownMenuCheckboxItem
                     checked={chartStyle}
                     onCheckedChange={toggleChartStyle}
@@ -399,14 +378,14 @@ function useVersionDeLaSetlist(slug: string, setlistId: string | null, position:
   );
 
   // Les actions (Q2, Q5) : au bout de la rangée dès la tablette debout, sur la seconde rangée du
-  // téléphone, libellées et avec « Écouter » en plus. Les deux sont rendues, une seule est visible.
+  // téléphone, libellées. Idées et ⋯ en icône seule. Les deux sont rendues, une seule est visible.
   const tel = (variante: "rangee" | "tel") => variante === "tel";
   const actions = (variante: "rangee" | "tel") => {
     const classe = tel(variante)
       ? "raised h-9 shrink-0 gap-1.5 px-3.5 rounded-full text-xs font-semibold bg-card text-foreground hover:bg-card"
       : "h-9 lg:h-8 min-w-9 lg:min-w-8 px-2.5 rounded-full text-xs font-semibold";
     const libelle = tel(variante) ? undefined : "libelle-action";
-    const ecouterPossible = !!(song.spotifyUrl || song.appleMusicUrl);
+    const carre = tel(variante) ? `${classe} w-9 px-0` : "h-9 w-9 lg:h-8 lg:w-8 rounded-full";
     return (
       <>
         {youtubeId && (
@@ -433,29 +412,15 @@ function useVersionDeLaSetlist(slug: string, setlistId: string | null, position:
           <FileText className="h-4 w-4" />
           <span className={libelle}>{t("songs.detail.downloadPdf") || "PDF"}</span>
         </Button>
-        {tel(variante) && ecouterPossible && (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="secondary" className={classe}>
-                <Headphones className="h-4 w-4" />
-                {t("songs.detail.listen")}
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-44">
-              {ecoute()}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        )}
         {accesHarmonie.peut && (
           <Button
             variant="secondary"
             aria-label={t("harmonie.idees")}
             title={t("harmonie.idees")}
             onClick={() => setShowIdees(true)}
-            className={classe}
+            className={carre}
           >
             <Sparkles className="h-4 w-4" />
-            <span className={libelle}>{t("harmonie.ideesCourt")}</span>
           </Button>
         )}
         <DropdownMenu>
@@ -463,7 +428,7 @@ function useVersionDeLaSetlist(slug: string, setlistId: string | null, position:
             <Button
               variant="secondary"
               size="icon-lg"
-              className={tel(variante) ? `${classe} w-9 px-0` : "h-9 w-9 lg:h-8 lg:w-8 rounded-full"}
+              className={carre}
               aria-label={t("common.moreActions")}
             >
               <MoreHorizontal className="h-4 w-4" />
@@ -634,7 +599,7 @@ function useVersionDeLaSetlist(slug: string, setlistId: string | null, position:
             </div>
 
             {/* Dès la tablette debout (spec-barre-chant.md, Q2, Q3) : « faire » à droite d'un filet,
-                Vidéo · PDF · Idées d'harmonie · ⋯ ; le menu ne garde que l'écoute, les couleurs,
+                Vidéo · PDF · Idées d'harmonie · ⋯ ; le menu ne garde que les couleurs,
                 Personnaliser et Signaler (globals.css, `.actions-chant`). */}
             <div className="actions-chant ml-auto shrink-0 items-center gap-1">
               <span aria-hidden className="mx-1 h-5 w-px bg-border" />

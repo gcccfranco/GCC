@@ -82,6 +82,8 @@ for (const chant of CHANTS) {
         await expect(page.getByRole("menuitem", { name: "Signalement" })).toBeVisible();
         await expect(page.getByRole("menuitemcheckbox")).toHaveCount(1);
         for (const n of ["Vidéo", "PDF", "Idées d'harmonie"]) await expect(page.getByRole("menuitem", { name: n })).toHaveCount(0);
+        // Ni Spotify ni Apple Music (Timothée, 18/10/2026) : Personnaliser et Signalement, plus Couleurs.
+        await expect(page.getByRole("menuitem")).toHaveCount(2);
         await page.keyboard.press("Escape");
         // Q6 : le bouton PDF ouvre la fenêtre « Quel PDF ? ».
         await b.getByRole("button", { name: "PDF", exact: true }).click();
@@ -89,13 +91,13 @@ for (const chant of CHANTS) {
         await page.keyboard.press("Escape");
       } else {
         // Q5 : téléphone, couché compris — la rangée d'avant, sans ⋯ ; dessous, une seconde rangée
-        // Vidéo · PDF · (Écouter, si le chant a un lien) · Idées · ⋯, qui défile en largeur.
+        // Vidéo · PDF · Idées · ⋯, qui défile en largeur (pas d'« Écouter » : YouTube seul, 18/10/2026).
         const seconde = b.locator(".actions-tel");
         await expect(seconde).toBeVisible();
         const noms = [...(chant.video ? ["Vidéo"] : []), "PDF", "Idées d'harmonie", "Plus d'actions"];
         for (const n of noms) await expect(seconde.getByRole("button", { name: n, exact: true })).toBeAttached();
         await expect(rangee(page).getByRole("button", { name: "Plus d'actions" })).toHaveCount(0);
-        await expect(seconde.getByRole("button", { name: "Écouter" }), "aucun lien d'écoute dans ces chants").toHaveCount(0);
+        await expect(seconde.getByRole("button", { name: "Écouter" })).toHaveCount(0);
         const [r1, r2] = await Promise.all([rangee(page).boundingBox(), seconde.boundingBox()]);
         expect(Math.abs(r2!.y - (r1!.y + r1!.height)), "collée sous la première").toBeLessThanOrEqual(1);
         expect(r2!.height, "une seule ligne").toBeLessThanOrEqual(48);
@@ -107,6 +109,8 @@ for (const chant of CHANTS) {
         await seconde.getByRole("button", { name: "Plus d'actions" }).click();
         await expect(page.getByRole("menuitem", { name: "Personnaliser" })).toBeVisible();
         for (const n of ["Vidéo", "PDF", "Idées d'harmonie"]) await expect(page.getByRole("menuitem", { name: n })).toHaveCount(0);
+        // Ni Spotify ni Apple Music (Timothée, 18/10/2026) : Personnaliser et Signalement, plus Couleurs.
+        await expect(page.getByRole("menuitem")).toHaveCount(2);
         await page.keyboard.press("Escape");
         // Chaque action se joint : PDF ouvre « Quel PDF ? » (Q6), Idées sa feuille.
         await seconde.getByRole("button", { name: "PDF", exact: true }).click();
@@ -171,7 +175,9 @@ test.describe("deux volets : partition et barre jusqu'à 900 px (Q8)", () => {
   test("à 1 440 px, Abba Père a tous ses libellés sur une ligne", async ({ page }) => {
     await ouvrir(page, "abba-pere");
     await expect(rangee(page)).toHaveAttribute("data-libelles", "2");
-    for (const n of ["Accords", "Vidéo", "PDF", "Idées"]) await expect(rangee(page).getByText(n, { exact: true })).toBeVisible();
+    for (const n of ["Accords", "Vidéo", "PDF"]) await expect(rangee(page).getByText(n, { exact: true })).toBeVisible();
+    // Idées d'harmonie : l'icône seule (Timothée, 18/10/2026), son nom reste pour les lecteurs d'écran.
+    expect(await rangee(page).getByRole("button", { name: "Idées d'harmonie" }).innerText()).toBe("");
     await uneSeuleLigne(page);
   });
 
