@@ -86,6 +86,8 @@ export async function POST(req: NextRequest) {
   const ref = db.collection("setlists").doc(setlistId);
   const snap = await ref.get();
   if (!snap.exists) return NextResponse.json({ error: "Setlist introuvable" }, { status: 404 });
+  // Une setlist à la corbeille n'existe plus pour personne (SC2.2).
+  if (snap.get("supprimeeLe")) return NextResponse.json({ error: "Setlist introuvable" }, { status: 404 });
   const setlist = { id: setlistId, ...snap.data() } as FSSetlist;
   // Une setlist de fête n'existe pas en ligne (docs/spec-chants-fetes.md, CF24) : même Firestore, autre site.
   if (setlist.fete && !BACK_OFFICE) return new Response(null, { status: 404 });

@@ -118,6 +118,23 @@ avis contraire.
   admin), `tests/setlist-partage.spec.ts` (musicien hors équipe : lecture seule, « Dupliquer pour mes notes »). Les
   suites de l'éditeur ouvraient la setlist d'un autre avec un profil musicien : leur setlist est désormais la sienne.
 
+### SC2 — codé le 18/10/2026
+
+- **Supprimer** (fiche ou sélection de `/setlists`) écrit `supprimeeLe` / `supprimeePar` (PATCH à deux champs, sans
+  toucher `updatedAt`) ; bandeau « Setlist mise à la corbeille — Annuler » 8 s sur `/setlists`
+  (`BandeauCorbeille.tsx`). Une setlist de **fête** reste supprimée pour de bon (Q3), avec ses textes d'avant.
+- **Partout ailleurs** : filtre `horsCorbeille` dans toutes les lectures de `src/lib/firebase/setlists.ts`
+  (`getSetlist` rend `null`) ; `notify-setlist` et `setlist/presentation` répondent « introuvable ».
+- **Corbeille** : section repliée « Corbeille (N) » en bas d'« Archives », seulement si elle contient une setlist que
+  la personne pourrait supprimer ; Restaurer, Supprimer définitivement (confirmation). FR + 中文.
+- **Purge** : `/api/cron/reminders` supprime (avec `history` et `versions`) les setlists à la corbeille depuis plus
+  de 30 jours, hors interrupteur du back-office ; un échec ne coupe pas les rappels.
+- **Règles** : poser ou retirer `supprimeeLe` / `supprimeePar` = droit de supprimer, `supprimeePar` = soi.
+  **À publier à la main par Timothée.**
+- Regardé à l'œil : bandeau et corbeille dépliée sur téléphone, tablette portrait et paysage, ordinateur, 1 440 px.
+- **Tests** : `tests/setlist-corbeille.spec.ts` (nouveau), `tests/setlist-suppression-groupee.spec.ts` (PATCH au
+  lieu de DELETE).
+
 ## Questions à trancher
 
 | Q | Question | Recommandation |

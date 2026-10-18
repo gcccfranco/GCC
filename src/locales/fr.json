@@ -216,7 +216,25 @@
       "deleteSelectedTitle_other": "Supprimer {{count}} setlists ?",
       "deleteSelectedBody": "Cette action est définitive.",
       "deleteMore_one": "… et {{count}} autre",
-      "deleteMore_other": "… et {{count}} autres"
+      "deleteMore_other": "… et {{count}} autres",
+      "trashTitle_one": "Mettre cette setlist à la corbeille ?",
+      "trashTitle_other": "Mettre {{count}} setlists à la corbeille ?",
+      "trashBody_one": "Elle reste 30 jours dans la corbeille, en bas de l'onglet Archives, et peut être restaurée.",
+      "trashBody_other": "Elles restent 30 jours dans la corbeille, en bas de l'onglet Archives, et peuvent être restaurées.",
+      "trashYes": "Mettre à la corbeille"
+    },
+    "corbeille": {
+      "bandeau_one": "Setlist mise à la corbeille",
+      "bandeau_other": "{{count}} setlists mises à la corbeille",
+      "annuler": "Annuler",
+      "titre": "Corbeille ({{count}})",
+      "aide": "Les setlists supprimées restent ici 30 jours.",
+      "supprimeeLe": "Supprimée le {{date}}",
+      "restaurer": "Restaurer",
+      "supprimerDefinitivement": "Supprimer définitivement",
+      "definitifTitre": "Supprimer définitivement « {{titre}} » ?",
+      "definitifCorps": "Elle ne pourra plus être restaurée.",
+      "erreur": "L'opération a échoué. Réessaie."
     },
     "detail": {
       "backToAll": "←",
@@ -227,6 +245,9 @@
       "deleteButton": "Supprimer",
       "deleteConfirm": "Confirmer ?",
       "deleteYes": "Oui, supprimer",
+      "trashTitle": "Mettre cette setlist à la corbeille ?",
+      "trashBody": "Elle reste 30 jours dans la corbeille, en bas de l'onglet Archives, et peut être restaurée.",
+      "trashYes": "Mettre à la corbeille",
       "deleteCancel": "Annuler",
       "notFound": "Setlist introuvable.",
       "loginRequired": "Connecte-toi pour voir cette setlist.",

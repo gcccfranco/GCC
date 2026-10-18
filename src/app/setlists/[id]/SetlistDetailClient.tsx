@@ -34,7 +34,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { getSetlist, deleteSetlist, duplicateSetlist, updateSetlist, authHeader, type FSSetlist } from "@/lib/firebase/setlists";
+import { getSetlist, deleteSetlist, mettreALaCorbeille, duplicateSetlist, updateSetlist, authHeader, type FSSetlist } from "@/lib/firebase/setlists";
 import { useProfile } from "@/lib/firebase/users";
 import { canSeeSetlist, canEditSetlist, canDeleteSetlist, canDuplicateSetlist, canSetPresentationLink, canHaveSetlistVersion, estRegieDeFete } from "@/lib/access";
 import { useTranslation } from "react-i18next";
@@ -786,11 +786,17 @@ export function SetlistDetailClient() {
   }
 
   async function handleDelete() {
-    if (!setlist) return;
+    if (!setlist || !user) return;
     setDeleting(true);
     try {
-      await deleteSetlist(id);
-      router.push("/setlists");
+      // Setlist de fête : suppression définitive comme avant (SC2, Q3) ; les autres vont à la corbeille.
+      if (setlist.fete) {
+        await deleteSetlist(id);
+        router.push("/setlists");
+      } else {
+        await mettreALaCorbeille(id, user.uid);
+        router.push(`/setlists?corbeille=${encodeURIComponent(id)}`);
+      }
     } catch {
       setDeleting(false);
       setConfirmDelete(false);
@@ -2064,8 +2070,8 @@ export function SetlistDetailClient() {
       <AlertDialog open={confirmDelete} onOpenChange={setConfirmDelete}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>{t("setlists.detail.deleteButton")}</AlertDialogTitle>
-            <AlertDialogDescription>{t("setlists.detail.deleteConfirm")}</AlertDialogDescription>
+            <AlertDialogTitle>{setlist?.fete ? t("setlists.detail.deleteButton") : t("setlists.detail.trashTitle")}</AlertDialogTitle>
+            <AlertDialogDescription>{setlist?.fete ? t("setlists.detail.deleteConfirm") : t("setlists.detail.trashBody")}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>{t("setlists.detail.deleteCancel")}</AlertDialogCancel>
@@ -2074,7 +2080,7 @@ export function SetlistDetailClient() {
               onClick={handleDelete}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              {deleting ? "…" : t("setlists.detail.deleteYes")}
+              {deleting ? "…" : setlist?.fete ? t("setlists.detail.deleteYes") : t("setlists.detail.trashYes")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

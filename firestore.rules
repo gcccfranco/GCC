@@ -403,6 +403,13 @@ service cloud.firestore {
             && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['editeurs', 'rolesPartage'])
             && request.resource.data.get('isPrivate', false) == false
           )
+        )
+        // Corbeille (SC2, docs/spec-createur-corbeille-absences.md) : mettre une setlist à la corbeille
+        // ou l'en sortir = le droit de la supprimer ; `supprimeePar` est toujours soi-même.
+        && (
+          !request.resource.data.diff(resource.data).affectedKeys().hasAny(['supprimeeLe', 'supprimeePar'])
+          || (canDeleteSetlistDoc(resource.data)
+              && request.resource.data.get('supprimeePar', request.auth.uid) == request.auth.uid)
         );
       // Suppression : le droit de modification d'avant le partage — pas l'équipe.
       allow delete: if signedIn() && canDeleteSetlistDoc(resource.data);

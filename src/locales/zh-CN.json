@@ -216,7 +216,25 @@
       "deleteSelectedTitle_other": "删除 {{count}} 个歌单？",
       "deleteSelectedBody": "此操作无法撤销。",
       "deleteMore_one": "……还有 {{count}} 个",
-      "deleteMore_other": "……还有 {{count}} 个"
+      "deleteMore_other": "……还有 {{count}} 个",
+      "trashTitle_one": "把此歌单移到回收站？",
+      "trashTitle_other": "把 {{count}} 个歌单移到回收站？",
+      "trashBody_one": "它会在回收站保留 30 天（在“存档”标签底部），可以恢复。",
+      "trashBody_other": "歌单会在回收站保留 30 天（在“存档”标签底部），可以恢复。",
+      "trashYes": "移到回收站"
+    },
+    "corbeille": {
+      "bandeau_one": "歌单已移到回收站",
+      "bandeau_other": "{{count}} 个歌单已移到回收站",
+      "annuler": "撤销",
+      "titre": "回收站（{{count}}）",
+      "aide": "已删除的歌单在这里保留 30 天。",
+      "supprimeeLe": "删除于 {{date}}",
+      "restaurer": "恢复",
+      "supprimerDefinitivement": "永久删除",
+      "definitifTitre": "永久删除“{{titre}}”？",
+      "definitifCorps": "删除后无法恢复。",
+      "erreur": "操作失败，请重试。"
     },
     "detail": {
       "backToAll": "←",
@@ -227,6 +245,9 @@
       "deleteButton": "删除",
       "deleteConfirm": "确认删除？",
       "deleteYes": "确认删除",
+      "trashTitle": "把此歌单移到回收站？",
+      "trashBody": "它会在回收站保留 30 天（在“存档”标签底部），可以恢复。",
+      "trashYes": "移到回收站",
       "deleteCancel": "取消",
       "notFound": "未找到该歌单。",
       "loginRequired": "请登录查看此歌单。",

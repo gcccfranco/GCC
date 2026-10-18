@@ -378,7 +378,7 @@ test.describe("partage : l'éditeur", () => {
     await page.goto(`/setlists/${ID}`);
     await expect(page.getByText("Lecture seule")).toBeVisible();
     await expect(page.getByText("Modifiable par son créateur seulement (et les admins)")).toBeVisible();
-    await page.locator("[data-en-tete]").getByRole("button", { name: "Plus d'actions" }).click();
+    await page.getByRole("button", { name: "Plus d'actions" }).filter({ visible: true }).first().click();
     await expect(page.getByRole("menuitem", { name: "Dupliquer pour mes notes" })).toBeVisible();
     await expect(page.getByRole("menuitem", { name: "Supprimer" })).toHaveCount(0);
     await page.keyboard.press("Escape");
