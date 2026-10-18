@@ -72,6 +72,8 @@ const SPECS_GRAND_ECRAN = [
   /louange-sections-uniques\.spec\.ts/,
   // Lot 2 du chantier « équipes et groupes » (docs/spec-organigrammes-groupes.md, OG-C) : l'organigramme d'un groupe.
   /organigrammes-groupes-agencement\.spec\.ts/,
+  // Barre de la page d'un chant, piste A (docs/spec-barre-chant.md) : la rangée sur les quatre dispositions et 1 440 px.
+  /barre-chant\.spec\.ts/,
 ];
 
 export default defineConfig({

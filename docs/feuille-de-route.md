@@ -1119,6 +1119,14 @@ les sessions cloud, directement sur `ui/apple-design`.
 
 **Lot 4 (V19FETES, `docs/spec-chants-fetes.md`)** : CF-A à CF-G codées (le 18/10/2026 : CF-D éditeur et page d'une setlist de fête, CF-E liste Setlists et interrupteur) ; reste à Timothée : publier `firestore.rules` (ordre dans l'« Avancement » de la spec) et relire le 中文.
 
+### X. Barre de la page d'un chant (Timothée, 18/10/2026) → `spec-barre-chant.md`
+
+« Fais-moi des propositions de dispositions, essaie d'utiliser au maximum la place que tu as sur le volet à droite de
+l'écran. » Planche à trois pistes (https://claude.ai/artifact/YQ9eoxRh7CmRsAtMgZ2TNw) ; **piste A « Une barre, tout
+dedans » choisie**, Q5 à Q8 tranchées sur les recommandations, **go le 18/10/2026 pour T1, T2 et T3** : rangée pleine
+largeur alignée sur la partition, Vidéo · PDF · Idées sortis du menu ⋯ (ordinateur, tablettes) ; seconde rangée
+d'actions sur téléphone ; partition jusqu'à 900 px en deux volets.
+
 ## 4. Carte des modules de l'app « GCC »
 
 À valider par Timothée avant toute spec de module (les modules existants ne

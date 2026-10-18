@@ -633,19 +633,25 @@
 .chants-volets:where(:not([data-sur-liste])) > .chants-entete,
 .chants-volets:where(:not([data-sur-liste])) > .chants-liste { display: none; }
 
-/* Barre du chant : libellés selon la largeur de la rangée (requête de conteneur ; la rangée
-   ne contient aucun élément fixe, et ni `main` ni ses ancêtres n'en portent : U4, Q9).
-   620 px : là où le téléphone les cachait (sous 640 px de fenêtre). */
+/* Barre du chant, piste A (docs/spec-barre-chant.md, Q4) : libellés par priorité, jamais de
+   deuxième ligne — tous (2), ceux des actions Vidéo, PDF, Idées seuls (1), aucun (0). Le niveau
+   est mesuré sur la rangée (`SongDetailClient`, `data-libelles`) : des seuils fixes, calés sur la
+   rangée la plus chargée (Retour, ↺, Pinyin), cachaient tout sur la tablette couchée. */
 .rangee-chant { container-type: inline-size; }
-.libelle-chant, .libelle-idees { display: none; }
-@container (min-width: 620px) { .libelle-chant { display: inline; } }
-@container (min-width: 760px) { .libelle-idees { display: inline; } }
-/* Dès la tablette debout, Idées d'harmonie et PDF quittent le menu ⋯ ; un téléphone, même
-   couché (moins de 500 px de haut), les garde dans le menu. */
-.hors-menu-chant { display: none; }
+.libelle-chant, .libelle-action { display: none; }
+/* Téléphone : comme avant, pas de libellé sous 620 px de rangée (la pilule de tonalité, qui
+   rétrécit, ne ferait jamais déborder la ligne : la mesure ne suffit pas). */
+@container (min-width: 620px) { .rangee-chant[data-libelles="2"] .libelle-chant { display: inline; } }
+/* Téléphone, même couché (moins de 500 px de haut) : le menu ⋯ au bout du groupe garde Vidéo,
+   PDF et Idées. Dès la tablette debout : la rangée s'aligne sur la partition (mêmes bords que
+   `main`), les actions sortent à droite d'un filet, le menu ⋯ les suit au bout (Q1 à Q3). */
+.actions-chant { display: none; }
 @media (min-width: 768px) and (min-height: 500px) {
-  .hors-menu-chant { display: flex; }
-  .dans-menu-chant { display: none; }
+  .rangee-chant { padding-inline: 1rem; }
+  .rangee-chant[data-libelles="2"] .libelle-chant,
+  .rangee-chant:is([data-libelles="1"], [data-libelles="2"]) .libelle-action { display: inline; }
+  .actions-chant { display: flex; }
+  .dans-menu-chant, .menu-tel { display: none; }
   .groupe-chant { margin-left: 0; }
 }
 
