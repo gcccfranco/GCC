@@ -164,3 +164,36 @@ test("téléphone couché : la seconde rangée aussi, et elle s'escamote avec la
   await page.evaluate(() => window.scrollBy(0, -200));
   await expect.poll(async () => (await seconde.boundingBox())!.y).toBeGreaterThan(0);
 });
+
+test.describe("deux volets : partition et barre jusqu'à 900 px (Q8)", () => {
+  test.beforeEach(({}, info) => test.skip(info.project.name !== "ordinateur-1440", "ordinateur, 1 440 et 1 920 px"));
+
+  test("à 1 440 px, Abba Père a tous ses libellés sur une ligne", async ({ page }) => {
+    await ouvrir(page, "abba-pere");
+    await expect(rangee(page)).toHaveAttribute("data-libelles", "2");
+    for (const n of ["Accords", "Vidéo", "PDF", "Idées"]) await expect(rangee(page).getByText(n, { exact: true })).toBeVisible();
+    await uneSeuleLigne(page);
+  });
+
+  for (const chant of CHANTS) {
+    test(`à 1 920 px, ${chant.slug} : 900 px de partition, la barre aux mêmes bords`, async ({ page }) => {
+      await page.setViewportSize({ width: 1920, height: 1080 });
+      await ouvrir(page, chant.slug);
+      const main = (await page.locator("main.song-zoom").boundingBox())!;
+      expect(Math.round(main.width)).toBe(900);
+      const r = (await rangee(page).boundingBox())!;
+      expect(Math.abs(r.x - main.x)).toBeLessThanOrEqual(1);
+      expect(Math.abs(r.width - main.width)).toBeLessThanOrEqual(1);
+      await uneSeuleLigne(page);
+      if (chant.zh) {
+        // La 简谱 suit la colonne : plus large que les 640 px d'avant, sans déborder du volet.
+        const scan = (await page.locator("[data-jianpu-page] img").first().boundingBox())!;
+        expect(scan.width).toBeGreaterThan(800);
+        const volet = (await page.locator("[data-volet-chant]").boundingBox())!;
+        expect(scan.x + scan.width).toBeLessThanOrEqual(volet.x + volet.width + 1);
+      }
+      expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(0);
+      await capture(page, `barre-chant-1920-${chant.zh ? "zh" : "fr"}`);
+    });
+  }
+});

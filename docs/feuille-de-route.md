@@ -1125,7 +1125,8 @@ les sessions cloud, directement sur `ui/apple-design`.
 l'écran. » Planche à trois pistes (https://claude.ai/artifact/YQ9eoxRh7CmRsAtMgZ2TNw) ; **piste A « Une barre, tout
 dedans » choisie**, Q5 à Q8 tranchées sur les recommandations, **go le 18/10/2026 pour T1, T2 et T3** : rangée pleine
 largeur alignée sur la partition, Vidéo · PDF · Idées sortis du menu ⋯ (ordinateur, tablettes) ; seconde rangée
-d'actions sur téléphone ; partition jusqu'à 900 px en deux volets.
+d'actions sur téléphone ; partition jusqu'à 900 px en deux volets. **T1, T2, T3 codées et poussées le 18/10/2026**
+(détail et écarts dans l'« Avancement » de la spec), **à valider par Timothée**.
 
 ## 4. Carte des modules de l'app « GCC »
 

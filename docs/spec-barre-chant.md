@@ -89,3 +89,8 @@ action est joignable (visible, ou dans ⋯ là où la spec le dit), +1 demi-ton 
   (`{spotify: …}`), donc « Écouter » ne s'affiche encore nulle part. Tests mis à la règle Q5 : `chants-deux-volets`
   (téléphone), `harmonie-idees` et `export-pdf` (le bouton de la barre partout) ; `harmonie-idees` lit ses écritures
   après l'idée enregistrée (`[data-idee]`, course vue sur téléphone et tablette).
+- **T3 (18/10/2026)** — en deux volets (tablette couchée, ordinateur), `main`, la vue du chant et la rangée de la barre
+  vont jusqu'à 900 px (trois copies du bloc deux volets de `globals.css`) ; la 简谱 suit la colonne, `JianpuSheet`
+  n'est pas touché. À 1 440 px le volet (≈ 712 px) borne encore la largeur, Abba Père a tous ses libellés ; à
+  1 920 px, 900 px de partition, la barre aux mêmes bords. `npm run jianpu:audit` à 1 920 px de fenêtre sur
+  一生爱你 (E → F) et 认识你真好 (G → F) : chaque accord encadré et transposé, planches regardées.
