@@ -2,7 +2,10 @@ import { expect, test, type Page } from "@playwright/test";
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
-import { isAdminEmail, canChangeSetlistCategory, canDeleteSetlist } from "../src/lib/access";
+import { isAdminEmail, canChangeSetlistCategory, canDeleteSetlist, canEditSetlist, canDuplicateSetlist } from "../src/lib/access";
+type AuthUser = { uid: string; email?: string | null };
+import type { UserProfile } from "../src/types/user";
+import type { FSSetlist } from "../src/lib/firebase/setlists";
 import { normalizeName } from "../src/lib/planning/names";
 import { NOTIF_TYPES, DEFAULT_NOTIF_PREFS } from "../src/types/user";
 import { planningReleaseMessage, setlistReadyMessage } from "../src/lib/push/messages";
@@ -131,12 +134,48 @@ test("règles : la modification d'une setlist passe par canEditSetlistDoc, la su
   const del = bloc.slice(bloc.indexOf("allow delete"));
   expect(update).toContain("canEditSetlistDoc(resource.data)");
   expect(del).toContain("canDeleteSetlistDoc(resource.data)");
-  // Changer de catégorie : miroir de canChangeSetlistCategory (= canDeleteSetlist), pas l'équipe.
-  expect(update).toContain("(canDeleteSetlistDoc(resource.data) && isEditorOf(request.resource.data.category))");
+  // Changer de catégorie : miroir de canChangeSetlistCategory (= canDeleteSetlist : propriétaire, admin), pas l'équipe.
+  expect(update).toContain("resource.data.get('ownerId', '') == request.auth.uid\n          || isAdmin()\n          || request.resource.data.category == resource.data.category\n        )");
   expect(canChangeSetlistCategory).toBe(canDeleteSetlist);
   // Une privée ne se supprime pas en REST par un autre que son propriétaire.
   const sup = rules.slice(rules.indexOf("function canDeleteSetlistDoc"));
-  expect(sup.slice(0, 400)).toContain("!setlist.get('isPrivate', false)");
+  const fonction = sup.slice(0, sup.indexOf("\n    }"));
+  expect(fonction).toContain("!setlist.get('isPrivate', false) && isAdmin()");
+  // SC1 : le niveau « edit » de la catégorie (musiciens, présidence) ne donne plus la suppression.
+  expect(fonction).not.toContain("isEditorOf");
+});
+
+// ─── SC1 : le créateur seul modifie et supprime (docs/spec-createur-corbeille-absences.md) ───
+
+test("SC1 : créateur, admin, équipe, musicien de la catégorie — modifier, supprimer, dupliquer", () => {
+  const createur = { uid: "u-createur", email: "createur@exemple.test" } as AuthUser;
+  const musicien = { uid: "u-musicien", email: "musicien@exemple.test" } as AuthUser;
+  const choriste = { uid: "u-choriste", email: "choriste@exemple.test" } as AuthUser;
+  const equipier = { uid: "u-equipier", email: "equipier@exemple.test" } as AuthUser;
+  const admin = { uid: "u-admin", email: "tc328829@gmail.com" } as AuthUser;
+  const profil = (roles: string[]) => ({ serviceRoles: { "Culte Francophone": roles } }) as unknown as UserProfile;
+  const s = { ownerId: createur.uid, category: "Culte Francophone", isPrivate: false, editeurs: [equipier.uid], items: [] } as unknown as FSSetlist;
+
+  expect(canEditSetlist(createur, profil(["chanteur"]), s)).toBe(true);
+  expect(canDeleteSetlist(createur, profil(["chanteur"]), s)).toBe(true);
+  // Musicien et présidence du service : voient et dupliquent, ne modifient ni ne suppriment plus.
+  for (const role of ["musicien", "presidence"]) {
+    expect(canEditSetlist(musicien, profil([role]), s), role).toBe(false);
+    expect(canDeleteSetlist(musicien, profil([role]), s), role).toBe(false);
+    expect(canDuplicateSetlist(musicien, profil([role]), s), role).toBe(true);
+  }
+  // Choriste (niveau « create ») et régie (« view ») : dupliquent aussi (copie privée, Q4).
+  expect(canDuplicateSetlist(choriste, profil(["regie"]), s)).toBe(true);
+  expect(canDuplicateSetlist(choriste, null, s)).toBe(false);
+  // Équipe : modifie, ne supprime pas (Q2).
+  expect(canEditSetlist(equipier, null, s)).toBe(true);
+  expect(canDeleteSetlist(equipier, null, s)).toBe(false);
+  // Admin : modifie et supprime une setlist non privée (Q1), pas une privée.
+  expect(canEditSetlist(admin, null, s)).toBe(true);
+  expect(canDeleteSetlist(admin, null, s)).toBe(true);
+  expect(canDeleteSetlist(admin, null, { ...s, isPrivate: true })).toBe(false);
+  // Fête : pas de copie (CF15).
+  expect(canDuplicateSetlist(admin, null, { ...s, fete: { programme: "p1", passage: "a1", qui: "musique" } } as unknown as FSSetlist)).toBe(false);
 });
 
 // ─── I3 : un seul rapprochement de noms ────────────────────────────────────

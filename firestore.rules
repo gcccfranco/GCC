@@ -364,12 +364,10 @@ service cloud.firestore {
         && !('fete' in request.resource.data)
         && !(request.resource.data.get('category', '') in ['Noël', 'Pâques']);
       // Modification : ownerId ne change jamais ; qui peut modifier =
-      // canEditSetlistDoc (le propriétaire ; sinon, setlist non privée, un
-      // admin ou un musicien/présidence du service) — jusqu'au 19/09/2026 la
-      // règle ignorait `isPrivate`, contrairement au client. Un musicien/
-      // présidence ne déplace la setlist que vers une catégorie où il sert aussi ;
-      // l'équipe (`editeurs`) ne la déplace pas du tout (sinon, en se donnant un rôle
-      // dans la nouvelle catégorie, elle gagnerait le droit de la supprimer — PS8).
+      // canEditSetlistDoc (le propriétaire, son équipe ; sur une setlist non
+      // privée, un admin — SC1, docs/spec-createur-corbeille-absences.md).
+      // Seuls le propriétaire et les admins changent la catégorie ; l'équipe
+      // (`editeurs`) ne la déplace pas (PS8).
       allow update: if signedIn()
         && request.resource.data.get('ownerId', null) == resource.data.get('ownerId', null)
         && canEditSetlistDoc(resource.data)
@@ -377,7 +375,6 @@ service cloud.firestore {
           resource.data.get('ownerId', '') == request.auth.uid
           || isAdmin()
           || request.resource.data.category == resource.data.category
-          || (canDeleteSetlistDoc(resource.data) && isEditorOf(request.resource.data.category))
         )
         // L'équipe : seuls le propriétaire et les admins la changent.
         && (
@@ -440,9 +437,10 @@ service cloud.firestore {
     // Miroir de canDeleteSetlist (src/lib/access.ts) : une setlist privée ne se
     // supprime que par son propriétaire.
     function canDeleteSetlistDoc(setlist) {
+      // Le créateur seul (docs/spec-createur-corbeille-absences.md, SC1) ; les admins sur une
+      // setlist non privée (Q1) ; le niveau « edit » de la catégorie n'y donne plus droit.
       return setlist.get('ownerId', '') == request.auth.uid
-        || (!setlist.get('isPrivate', false)
-            && (isAdmin() || (hasProfile() && isEditorOf(setlist.category))))
+        || (!setlist.get('isPrivate', false) && isAdmin())
         // Setlist de fête : la coordination (docs/spec-chants-fetes.md).
         || (setlist.get('fete', null) != null && isCoordination());
     }

@@ -1311,7 +1311,7 @@ export function SetlistDetailClient() {
     );
   }
 
-  // Modification : créateur + musiciens du même service
+  // Modification : le créateur, son équipe, les admins (SC1, docs/spec-createur-corbeille-absences.md)
   const canEdit = canEditSetlist(user, profile, setlist);
   // Suppression : le même droit, sous son nom — la liste (lot 10) s'en sert aussi
   const canDelete = canDeleteSetlist(user, profile, setlist);
@@ -1457,7 +1457,7 @@ export function SetlistDetailClient() {
       {canDuplicate && (
         <DropdownMenuItem disabled={duplicating} onClick={() => handleDuplicate()}>
           <Copy className="h-3.5 w-3.5 text-muted-foreground" />
-          {duplicating ? "…" : t("setlists.detail.duplicate")}
+          {duplicating ? "…" : t(canEdit ? "setlists.detail.duplicate" : "setlists.detail.duplicateForNotes")}
         </DropdownMenuItem>
       )}
       <DropdownMenuItem onClick={() => handleShare()}>
@@ -1596,6 +1596,13 @@ export function SetlistDetailClient() {
                     <Pencil className="h-4 w-4" aria-hidden />
                     {t("setlists.detail.editButton")}
                   </Link>
+                )}
+                {/* SC1.5 : qui ne peut pas modifier duplique en copie privée pour ses notes. */}
+                {!canEdit && canDuplicate && (
+                  <button type="button" disabled={duplicating} onClick={() => handleDuplicate()} className={PILULE}>
+                    <Copy className="h-4 w-4" aria-hidden />
+                    {duplicating ? "…" : t("setlists.detail.duplicateForNotes")}
+                  </button>
                 )}
                 <button
                   type="button"

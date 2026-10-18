@@ -93,6 +93,31 @@ Donc SC1.1 devient : `canDeleteSetlist` = propriétaire **ou** admin (**ou** coo
 présidence) ne donne plus ni modification ni suppression. Q4, Q5, Q6, Q7, Q10, Q12 : recommandations retenues sauf
 avis contraire.
 
+## Avancement
+
+### SC1 — codé le 18/10/2026
+
+- **Droits** (`src/lib/access.ts`) : `canDeleteSetlist` = propriétaire, admin sur une setlist non privée, coordination
+  sur une fête ; `canEditSetlist` = cela **ou** l'équipe (`editeurs`). Le niveau « edit » de la catégorie (musiciens,
+  présidence) ne donne plus rien sur la setlist d'un autre. `canDuplicateSetlist` = qui **voit** la setlist (sauf
+  fête) ; la copie reste privée, au duplicateur, dans la même catégorie (Q4).
+- **Miroir** (`firestore.rules`) : `canDeleteSetlistDoc` sans `isEditorOf` ; changer la catégorie = propriétaire ou
+  admin (la clause « musicien de la nouvelle catégorie » n'avait plus d'effet, retirée). **À publier à la main par
+  Timothée** dans la console Firebase.
+- **Écrans** : ligne des droits « Modifiable par son créateur seulement (et les admins) » (ou « … et son équipe… ») ;
+  pour qui ne peut pas modifier, la pastille « Dupliquer pour mes notes » (setlist en deux volets) et l'entrée du menu
+  ⋯ du même nom ; message de l'éditeur refusé réécrit. FR + 中文.
+- **Écart assumé** : une copie privée dans une catégorie où l'on ne crée pas (choriste, régie) garde la visibilité
+  « Privée » verrouillée dans l'éditeur, tant qu'elle n'est pas déplacée dans une catégorie à soi — sinon la copie
+  « pour mes notes » aurait pu être publiée là où l'on ne sert pas. Garde côté navigateur seulement, comme la
+  création (la règle `allow create` ne regarde pas la catégorie).
+- **Q1, lu à la lettre** : l'admin garde modifier et supprimer sur les setlists **non privées** ; une privée d'autrui
+  reste au seul créateur (l'admin ne la voit pas non plus), comme avant.
+- Régie du jour (Q5) : inchangée, `canSetPresentationLink` garde sa clause régie.
+- **Tests** : `tests/coherence.spec.ts` (client ↔ règles, créateur / musicien / présidence / choriste / équipe /
+  admin), `tests/setlist-partage.spec.ts` (musicien hors équipe : lecture seule, « Dupliquer pour mes notes »). Les
+  suites de l'éditeur ouvraient la setlist d'un autre avec un profil musicien : leur setlist est désormais la sienne.
+
 ## Questions à trancher
 
 | Q | Question | Recommandation |

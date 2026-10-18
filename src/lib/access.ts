@@ -466,17 +466,17 @@ export function canCreateSetlist(
   return !!profile && creatableCategories(profile).length > 0;
 }
 
-/** Peut-on dupliquer cette setlist ? Dupliquer crée une copie dans la même catégorie,
- *  donc réservé à qui peut créer dans cette catégorie (la régie en est exclue). */
+/** Peut-on dupliquer cette setlist ? Qui la voit (SC1.3, docs/spec-createur-corbeille-absences.md) :
+ *  la copie est privée, au duplicateur, dans la même catégorie (Q4) — c'est le moyen d'y mettre
+ *  ses notes quand on ne peut pas la modifier. */
 export function canDuplicateSetlist(
-  user: { email?: string | null } | null,
+  user: AuthUser,
   profile: UserProfile | null,
   setlist: FSSetlist
 ): boolean {
   // Une setlist de fête naît d'un passage (docs/spec-chants-fetes.md, CF15) : pas de copie, admin compris.
   if (setlist.fete) return false;
-  if (isAdminUser(user)) return true;
-  return !!profile && creatableCategories(profile).includes(setlist.category);
+  return canSeeSetlist(user, profile, setlist);
 }
 
 export function canSeeSetlist(
@@ -507,7 +507,6 @@ export function canSetPresentationLink(
   return canEditSetlist(user, profile, setlist) || (!setlist.isPrivate && regie);
 }
 
-/** Modification : créateur de la setlist + niveau « edit » sur la catégorie (musicien, présidence) (+ admins). */
 /** Version perso d'un chant dans une setlist (docs/spec-version-perso.md) :
  *  qui voit la setlist peut avoir la sienne. Miroir serveur dans
  *  firestore.rules (setlists/{id}/versions/{uid} : écrit par son propriétaire). */
@@ -521,9 +520,11 @@ export function canEditSetlist(
   return canDeleteSetlist(user, profile, setlist) || !!setlist.editeurs?.includes(user.uid);
 }
 
-/** Suppression : la logique d'avant le partage (propriétaire ; privée → non ; admin ; niveau
- *  « edit »). L'équipe d'une setlist (`editeurs`) la modifie mais ne la supprime pas ni ne change
- *  sa visibilité. Miroir serveur : `canDeleteSetlistDoc` dans firestore.rules (`allow delete`). */
+/** Suppression : le créateur seul (SC1, docs/spec-createur-corbeille-absences.md), plus les admins sur
+ *  une setlist non privée (Q1) et la coordination sur une setlist de fête (Q3). Le niveau « edit » de
+ *  la catégorie (musiciens, présidence) n'y donne plus droit. L'équipe d'une setlist (`editeurs`) la
+ *  modifie mais ne la supprime pas ni ne change sa visibilité (Q2). Miroir serveur :
+ *  `canDeleteSetlistDoc` dans firestore.rules (`allow delete`). */
 export function canDeleteSetlist(
   user: AuthUser,
   profile: UserProfile | null,
@@ -534,12 +535,10 @@ export function canDeleteSetlist(
   // `null` et personne ne sert dans la catégorie Noël ou Pâques. Miroir : canDeleteSetlistDoc.
   if (setlist.fete && isCoordination(user, profile)) return true;
   if (setlist.isPrivate) return false;
-  if (isAdminUser(user)) return true;
-  const roles = profile?.serviceRoles[setlist.category];
-  return roles ? categoryLevel(setlist.category, roles) === "edit" : false;
+  return isAdminUser(user);
 }
 
-/** Changer la catégorie d'une setlist : qui peut la supprimer (propriétaire, admin, niveau « edit »),
+/** Changer la catégorie d'une setlist : qui peut la supprimer (propriétaire, admin),
  *  pas l'équipe — sinon un membre d'équipe se donnerait, par la nouvelle catégorie, le droit de la
  *  supprimer. Miroir : la garde sur `category` de `allow update` (firestore.rules). */
 export const canChangeSetlistCategory = canDeleteSetlist;
