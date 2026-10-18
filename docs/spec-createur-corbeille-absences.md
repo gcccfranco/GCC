@@ -9,7 +9,8 @@
 > indisponibles sur les dates. »
 
 **État : Q1, Q2, Q3, Q8, Q9, Q11 tranchées le 18/10/2026** (voir « Décisions ») ; planche pour les lots 2 et 3, puis go
-lot par lot. Rien n'est codé.
+lot par lot. **Go le 18/10/2026 pour SC1, SC2 et SC3, sans planche** (choix de Timothée) : codés par une
+session orchestratrice.
 
 Trois lots indépendants, dans cet ordre (du plus petit au plus gros) :
 
