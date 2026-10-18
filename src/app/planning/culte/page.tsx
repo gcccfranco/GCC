@@ -57,7 +57,7 @@ function CultePage() {
   const peutModifier = gestion && canEditPlanning(user, profile, "culte")
   // Lot 3 (PG35) : qui publie ou notifie ce planning prévient des changements, même sans remplir la grille.
   const peutPrev = gestion && droitsDePrevenir(CULTE, isAdminUser(user), profile)
-  const { datesDansLApp, comptes, ecrites } = useGrilleApp("culte", peutModifier || peutPrev)
+  const { datesDansLApp, comptes, ecrites, absenceDe } = useGrilleApp("culte", peutModifier || peutPrev)
   const [publications, setPublications] = useState(0)
 
   useEffect(() => {
@@ -124,6 +124,7 @@ function CultePage() {
         peutModifier={peutModifier}
         datesDansLApp={datesDansLApp}
         comptes={comptes}
+        absenceDe={absenceDe}
         casesEcrites={ecrites}
         // PG34 : un trimestre que les membres voient (publié, en cours ou passé) ; jamais un brouillon.
         prevenir={peutPrev && status !== "loading" && effTri && triVisibilitiesAnnee(effAnnee, anneeCourante, published[effAnnee] ?? [], getCurrentTri(), false).some((v) => v.tri === effTri && v.visible)

@@ -704,6 +704,21 @@
     "evenement": "Évènement",
     "tache": "Tâche"
   },
+  "absences": {
+    "titre": "Mes absences",
+    "aide": "Congés, vacances ou absence d'un jour : ceux qui font les plannings les voient.",
+    "pourQui": "Pour qui ?",
+    "moi": "Moi",
+    "aucune": "Aucune absence prévue.",
+    "ajouter": "Ajouter une absence",
+    "du": "Du",
+    "au": "Au",
+    "motif": "Motif (facultatif)",
+    "periode": "Du {{du}} au {{au}}",
+    "jour": "Le {{date}}",
+    "supprimer": "Supprimer l'absence : {{periode}}",
+    "erreur": "Impossible de joindre le serveur. Réessaie."
+  },
   "profile": {
     "title": "Mon profil",
     "welcome": "Bienvenue ! Complète ton profil pour accéder aux setlists de tes services et à l'onglet « Mes Services ».",
@@ -1578,7 +1593,10 @@
       "sansCompte": "Écrire un nom sans compte…",
       "avecRole": "Avec ce rôle",
       "autres": "Autres noms",
-      "vider": "Vider la case"
+      "vider": "Vider la case",
+      "absent": "Absent",
+      "absentMarque": "absent",
+      "absentCeJour": "{{nom}}, absent ce jour-là"
     },
     "saison": {
       "label": "Scène",

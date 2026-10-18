@@ -112,6 +112,34 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
+    // Congés et absences (SC3, docs/spec-createur-corbeille-absences.md ; Q8, Q9) : chacun écrit et lit
+    // les siennes ; ceux qui font les plannings (admins, ou `plannings` non vide) en saisissent pour
+    // quelqu'un et lisent celles de tous. Le motif n'est masqué que côté navigateur (canVoirMotifAbsence).
+    // Miroir client : faitDesPlannings, canSaisirAbsence (src/lib/access.ts). Règle à publier à la main.
+    function faitDesPlannings() {
+      return isAdmin() || (hasProfile() && profile().get('plannings', []).size() > 0);
+    }
+
+    function absenceValide() {
+      let d = request.resource.data;
+      return d.keys().hasOnly(['du', 'au', 'motif'])
+        && d.get('du', null) is string && d.get('au', null) is string
+        && d.du.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')
+        && d.au.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')
+        && d.du <= d.au
+        && (!('motif' in d) || (d.motif is string && d.motif.size() <= 200));
+    }
+
+    match /users/{uid}/absences/{id} {
+      allow read, delete: if signedIn() && (request.auth.uid == uid || faitDesPlannings());
+      allow create, update: if signedIn() && (request.auth.uid == uid || faitDesPlannings()) && absenceValide();
+    }
+
+    // Lecture de toutes les absences d'un coup (collection group) : qui fait les plannings.
+    match /{chemin=**}/absences/{id} {
+      allow read: if signedIn() && faitDesPlannings();
+    }
+
     match /annonces/{id} {
       allow read: if signedIn();
       // Publication : admins + membres dont le profil liste la section dans `annonces`

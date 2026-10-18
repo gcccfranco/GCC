@@ -327,7 +327,7 @@ test.describe("Profil (A13)", () => {
     await expect(entete.getByRole("link", { name: "Moi" })).toHaveAttribute("href", /^\/moi\/?$/);
     await expect(entete.getByRole("heading", { level: 1, name: "Mon profil" })).toBeVisible();
     await expect(entete.getByText(ADMIN_EMAIL, { exact: true })).toBeVisible();
-    await verifierAgencement(page, { contenu: page.locator("form#formulaire-profil"), onglets: SANS_ONGLETS });
+    await verifierAgencement(page, { contenu: page.locator("[data-contenu-profil]") /* le formulaire est en `contents` depuis « Mes absences » (SC3) */, onglets: SANS_ONGLETS });
   });
 
   test("« Enregistrer » dans l'en-tête dès 768 px, en bas sur téléphone ; il enregistre", async ({ page }, info) => {

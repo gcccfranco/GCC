@@ -1134,9 +1134,9 @@ Trois lots : **SC1** modifier et supprimer = le créateur seul, les autres voien
 corbeille des setlists supprimées (section de « Archives », restaurer, purge à 30 jours) ; **SC3** congés et absences
 saisis dans le profil, « Choisir » du planning trie Disponibles puis « Absent ». **Spec écrite ; Q1–Q3, Q8–Q9, Q11 tranchées le 18/10/2026** (admins gardent les droits, l'équipe modifie,
 fêtes inchangées, absences vues et saisies par qui fait les plannings et les admins, saisie en ligne),
-**go le 18/10/2026 pour SC1, SC2, SC3 sans planche**, codés par une session orchestratrice. **SC1 et SC2 codés le
-18/10/2026** (détail dans l'« Avancement » de la spec) ; `firestore.rules` **à publier à la main par Timothée** ;
-rien en ligne.
+**go le 18/10/2026 pour SC1, SC2, SC3 sans planche**, codés par une session orchestratrice. **SC1, SC2 et SC3 codés et
+poussés le 18/10/2026** (détail dans l'« Avancement » de la spec), **à valider par Timothée** ; `firestore.rules`
+**à publier à la main par Timothée** (droits des setlists, corbeille, absences) ; rien en ligne.
 
 ## 4. Carte des modules de l'app « GCC »
 

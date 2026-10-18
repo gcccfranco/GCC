@@ -23,6 +23,7 @@ import {
 } from "@/components/auth/ProfileFields";
 import { EnTetePage } from "@/components/layout/EnTetePage";
 import { PushToggle } from "@/components/push/PushToggle";
+import { MesAbsences } from "@/components/profil/MesAbsences";
 import { cn } from "@/lib/utils";
 
 const FORMULAIRE = "formulaire-profil";
@@ -148,12 +149,11 @@ export default function ProfilPage() {
           </Alert>
         )}
 
-        <form
-          id={FORMULAIRE}
-          onSubmit={handleSubmit}
-          className="grid items-start gap-4 md:grid-cols-2 lg:grid-cols-[minmax(0,.9fr)_minmax(0,1.25fr)]"
-        >
-          <div className="min-w-0 space-y-4">
+        {/* « Mes absences » (SC3.2) vit hors du formulaire du profil : le formulaire est en `contents`, ses
+            blocs restent des cases de la même grille, et la section se place sous les notifications. */}
+        <div data-contenu-profil className="grid items-start gap-4 md:grid-cols-2 md:grid-rows-[auto_1fr] lg:grid-cols-[minmax(0,.9fr)_minmax(0,1.25fr)]">
+        <form id={FORMULAIRE} onSubmit={handleSubmit} className="contents">
+          <div className="order-1 min-w-0 space-y-4 md:col-start-1 md:row-start-1">
             <fieldset
               disabled={!canEdit}
               aria-label={t("signup.steps.identity")}
@@ -175,17 +175,19 @@ export default function ProfilPage() {
           <fieldset
             disabled={!canEdit}
             aria-label={t("profile.fields.accessTitle")}
-            className={cn("raised min-w-0 rounded-2xl p-5", !canEdit && "opacity-60")}
+            className={cn("raised order-3 min-w-0 rounded-2xl p-5 md:col-start-2 md:row-span-2 md:row-start-1", !canEdit && "opacity-60")}
           >
             <ServiceGrid value={form} onChange={setForm} deriveFromPlanning={deriveFromPlanning} />
           </fieldset>
 
           {canEdit && (
-            <Button type="submit" disabled={saving} className="h-11 w-full md:hidden">
+            <Button type="submit" disabled={saving} className="order-4 h-11 w-full md:hidden">
               {saving ? t("profile.saving") : t("profile.save")}
             </Button>
           )}
         </form>
+        <div className="order-2 min-w-0 md:col-start-1 md:row-start-2"><MesAbsences /></div>
+        </div>
       </div>
     </div>
   );

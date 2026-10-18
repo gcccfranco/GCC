@@ -55,7 +55,7 @@ function TablePage() {
   const peutModifier = gestion && canEditPlanning(user, profile, GRILLE_TABLE.key)
   // Les comptes : « Choisir » de la grille (Back-Office), suggestions de la carte Petit
   // déj (App) — les mêmes personnes, écrivains de la Table et admins.
-  const { datesDansLApp, comptes } = useGrilleApp(GRILLE_TABLE.key, canGererPetitDej(user, profile))
+  const { datesDansLApp, comptes, absenceDe } = useGrilleApp(GRILLE_TABLE.key, canGererPetitDej(user, profile))
   // Lot U3 : la carte Petit déj suggère les noms de planning des comptes.
   const nomsDesComptes = comptes.map((c) => c.nom).filter(Boolean)
   // Lot U2 : l'année suivante s'ouvre à qui remplit, et à tous dès une case remplie.
@@ -99,6 +99,7 @@ function TablePage() {
         peutModifier={peutModifier}
         datesDansLApp={datesDansLApp}
         comptes={comptes}
+        absenceDe={absenceDe}
         exporter={peutModifier ? { annee: effAnnee, rang: Number(tri.slice(1)), tout: isAdminUser(user) } : undefined}
       />}
     </div>

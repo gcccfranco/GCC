@@ -701,6 +701,21 @@
     "evenement": "活动",
     "tache": "任务"
   },
+  "absences": {
+    "titre": "我的请假",
+    "aide": "休假、假期或某一天不在：排班负责人可以看到。",
+    "pourQui": "为谁？",
+    "moi": "我",
+    "aucune": "没有安排的请假。",
+    "ajouter": "添加请假",
+    "du": "从",
+    "au": "到",
+    "motif": "原因（可选）",
+    "periode": "{{du}}至{{au}}",
+    "jour": "{{date}}",
+    "supprimer": "删除请假：{{periode}}",
+    "erreur": "无法连接服务器，请重试。"
+  },
   "profile": {
     "title": "我的资料",
     "welcome": "欢迎！完善你的资料即可访问你所服事的歌单以及「我的服事」页面。",
@@ -1547,7 +1562,10 @@
       "sansCompte": "输入没有账号的名字…",
       "avecRole": "担任此职",
       "autres": "其他姓名",
-      "vider": "清空"
+      "vider": "清空",
+      "absent": "请假",
+      "absentMarque": "请假",
+      "absentCeJour": "{{nom}}，当天请假"
     },
     "saison": {
       "label": "舞台",

@@ -94,7 +94,7 @@ function GroupesPage() {
   const planning = PUBLISHABLE_PLANNINGS.find(p => p.key === grp)!
   // Lot 3 (PG35) : qui publie ou notifie ce planning prévient des changements, même sans remplir la grille.
   const peutPrev = gestion && droitsDePrevenir(planning, isAdminUser(user), profile)
-  const { datesDansLApp, comptes, ecrites, groupe } = useGrilleApp(definition.key, peutModifier || peutPrev, gestion)
+  const { datesDansLApp, comptes, ecrites, groupe, absenceDe } = useGrilleApp(definition.key, peutModifier || peutPrev, gestion)
   const [publications, setPublications] = useState(0)
   const canPublish = gestion && droitsDePublication(planning, isAdminUser(user), profile)
   // Q4 (lot U2) : le brouillon se montre à qui remplit ou publie ce planning, et aux admins.
@@ -168,6 +168,7 @@ function GroupesPage() {
         peutModifier={peutModifier}
         datesDansLApp={datesDansLApp}
         comptes={comptes}
+        absenceDe={absenceDe}
         groupe={groupe}
         casesEcrites={ecrites}
         // PG34 : un trimestre que les membres voient (publié, en cours ou passé) ; jamais un brouillon.

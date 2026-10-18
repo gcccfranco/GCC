@@ -7,7 +7,8 @@ import { useTranslation } from "react-i18next"
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer"
 import { Button } from "@/components/ui/button"
 import { useStandaloneScrollLock } from "@/hooks/useStandaloneScrollLock"
-import { datesCourtes, type Proposition, type PropositionsReliees } from "@/lib/planning/choisir"
+import { datesCourtes, periodeAbsence, rangerParAbsence, type Proposition, type PropositionsReliees } from "@/lib/planning/choisir"
+import type { Absence } from "@/types/absence"
 
 // « Choisir » une personne dans une case (lot U2, P9, docs/spec-planning-2027.md,
 // question 5 ; planche bo-planning-2027) : une recherche, les comptes qui ont le
@@ -54,6 +55,7 @@ export function ChoisirNom({
   onEcrire,
   remplir,
   reliees,
+  absenceDe,
 }: {
   ouverture: OuvertureChoix | null
   onFermer: () => void
@@ -63,11 +65,13 @@ export function ChoisirNom({
   remplir?: RemplirVersLeBas
   /** Lot 2 (OG29) : les titulaires du rôle relié à la colonne, le groupe replié, la recherche ; `null` (ou absent) = « Choisir » d'avant. */
   reliees?: (recherche: string) => PropositionsReliees | null
+  /** SC3.4 : l'absence d'un nom à la date de la case ; les absents se rangent à part, en dernier, et restent choisissables (SC3.5). Absent, rien ne change. */
+  absenceDe?: (nom: string) => Absence | null
 }) {
   const ordinateur = useOrdinateur()
   useStandaloneScrollLock(!!ouverture && !ordinateur)
   const changer = (ouvert: boolean) => { if (!ouvert) onFermer() }
-  const menu = ouverture && <Menu key={ouverture.titre} ouverture={ouverture} proposer={proposer} onEcrire={onEcrire} remplir={remplir} reliees={reliees} />
+  const menu = ouverture && <Menu key={ouverture.titre} ouverture={ouverture} proposer={proposer} onEcrire={onEcrire} remplir={remplir} reliees={reliees} absenceDe={absenceDe} />
 
   if (ordinateur) {
     const a = ouverture?.ancre
@@ -113,12 +117,14 @@ function Menu({
   onEcrire,
   remplir,
   reliees,
+  absenceDe,
 }: {
   ouverture: OuvertureChoix
   proposer: (recherche: string) => Proposition[]
   onEcrire: (nom: string) => void
   remplir?: RemplirVersLeBas
   reliees?: (recherche: string) => PropositionsReliees | null
+  absenceDe?: (nom: string) => Absence | null
 }) {
   const { t, i18n } = useTranslation()
   const zh = i18n.language === "zh-CN"
@@ -131,14 +137,29 @@ function Menu({
   const cherche = recherche.trim() !== ""
   // Une recherche déplie le groupe : ce qu'elle trouve se voit (OG29).
   const voirGroupe = groupeOuvert || cherche
-  const noms: Proposition[] = rel
+  // SC3.4 : les absents ce jour-là, rangés à part en dernier (toutes sections réunies).
+  const trier = <T extends { nom: string }>(l: T[]) =>
+    absenceDe ? rangerParAbsence(l, absenceDe) : { disponibles: l, absents: [] as Array<T & { absence: Absence }> }
+  const relT = rel && trier(rel.titulaires)
+  const relG = rel && trier(rel.groupe)
+  const relA = rel && trier(rel.autres)
+  const plat = rel ? null : trier(proposer(recherche))
+  const absents: Array<Proposition & { absence: Absence }> = rel
+    ? [...relT!.absents.map((x) => ({ nom: x.nom, duRole: true, absence: x.absence })),
+       ...(voirGroupe ? relG!.absents.map((x) => ({ nom: x.nom, duRole: false, absence: x.absence })) : []),
+       ...relA!.absents.map((x) => ({ nom: x.nom, duRole: false, absence: x.absence }))]
+    : plat!.absents
+  const noms: Array<Proposition & { absence?: Absence }> = rel
     ? [
-        ...rel.titulaires.map((x) => ({ nom: x.nom, duRole: true })),
-        ...(voirGroupe ? rel.groupe.map((x) => ({ nom: x.nom, duRole: false })) : []),
-        ...rel.autres,
+        ...relT!.disponibles.map((x) => ({ nom: x.nom, duRole: true })),
+        ...(voirGroupe ? relG!.disponibles.map((x) => ({ nom: x.nom, duRole: false })) : []),
+        ...relA!.disponibles,
+        ...absents,
       ]
-    : proposer(recherche)
-  const deuxGroupes = !rel && noms.some((p) => p.duRole) && noms.some((p) => !p.duRole)
+    : [...plat!.disponibles, ...plat!.absents]
+  const nbDisponibles = noms.length - absents.length
+  const deuxGroupes = !rel && plat!.disponibles.some((p) => p.duRole) && plat!.disponibles.some((p) => !p.duRole)
+  const langue = zh ? "zh" : "fr"
 
   // « Écrire un nom sans compte… » : le champ reprend la recherche, ou la case.
   const ecrireALaMain = () => setSaisie(recherche.trim() || ouverture.valeur)
@@ -162,25 +183,27 @@ function Menu({
     )
   }
 
-  const option = (p: Proposition, i: number, sous?: string, sansCompte?: boolean) => (
+  const option = (p: Proposition, i: number, sous?: string, sansCompte?: boolean, absence?: Absence) => (
     <li
       key={`${id}-${i}`}
       id={`${id}-${i}`}
       role="option"
       aria-selected={i === actif}
+      aria-label={absence ? t("planning.choisir.absentCeJour", { nom: p.nom }) : undefined}
       // Le champ de recherche garde le focus (et le clavier du téléphone).
       onMouseDown={(e) => e.preventDefault()}
       onMouseMove={() => setActif(i)}
       onClick={() => onEcrire(p.nom)}
       className={`flex min-h-10 cursor-pointer items-center justify-between gap-3 rounded-lg px-2.5 py-2 text-[15px] sm:text-sm ${
         i === actif ? "bg-secondary" : ""
-      }`}
+      } ${absence ? "text-muted-foreground opacity-70" : ""}`}
     >
       <span className="min-w-[4rem] shrink-0 truncate">
         {p.nom}
         {sansCompte && <span className="ml-1.5 text-[11px] text-muted-foreground">{t("groupes.sansCompte")}</span>}
       </span>
-      {sous !== undefined ? <span title={sous} className="min-w-0 max-w-[55%] truncate text-xs text-muted-foreground">{sous}</span>
+      {absence ? <span title={periodeAbsence(absence, langue)} className="min-w-0 max-w-[55%] truncate text-xs">{periodeAbsence(absence, langue)}</span>
+        : sous !== undefined ? <span title={sous} className="min-w-0 max-w-[55%] truncate text-xs text-muted-foreground">{sous}</span>
         : p.duRole && <span className="shrink-0 text-xs text-muted-foreground">{ouverture.libelle}</span>}
     </li>
   )
@@ -221,12 +244,12 @@ function Menu({
       {rel ? (
         <div className="mt-1 max-h-[40vh] overflow-y-auto overscroll-contain lg:max-h-60">
           <ul id={`${id}-liste`} role="listbox" aria-label={t("groupes.choisir.titulaires", { role: (zh && rel.role.nomZh) || rel.role.nom })}>
-            {rel.titulaires.length > 0 && (
+            {relT!.disponibles.length > 0 && (
               <li role="presentation" className="px-2.5 pb-1 pt-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
                 {t("groupes.choisir.titulaires", { role: (zh && rel.role.nomZh) || rel.role.nom })}
               </li>
             )}
-            {rel.titulaires.map((x, i) => option(
+            {relT!.disponibles.map((x, i) => option(
               { nom: x.nom, duRole: true }, i,
               x.deja.length ? t("groupes.choisir.deja", { dates: datesCourtes(x.deja, i18n.language) }) : t("groupes.choisir.libre"),
               x.sansCompte,
@@ -243,17 +266,23 @@ function Menu({
               {t("groupes.choisir.voirGroupe", { n: rel.groupe.length })}
             </button>
           )}
-          {voirGroupe && (rel.groupe.length > 0 || rel.autres.length > 0) && (
+          {voirGroupe && (relG!.disponibles.length > 0 || relA!.disponibles.length > 0) && (
             <ul id={`${id}-liste2`} role="listbox" aria-label={t("groupes.choisir.groupe")}>
-              {rel.groupe.map((m, k) => option(
-                { nom: m.nom, duRole: false }, rel.titulaires.length + k,
+              {relG!.disponibles.map((m, k) => option(
+                { nom: m.nom, duRole: false }, relT!.disponibles.length + k,
                 m.roles.length
                   ? m.roles.map((r) => (r.fixe === "president" ? t("groupes.enTete.president") : r.fixe === "vp" ? t("groupes.enTete.vicePresident") : (zh && r.nomZh) || r.nom)).join(", ")
                   : t("groupes.choisir.aucunRole"),
                 m.sansCompte,
               ))}
-              {rel.autres.length > 0 && entete("planning.choisir.autres")}
-              {rel.autres.map((p, k) => option({ nom: p.nom, duRole: false }, rel.titulaires.length + rel.groupe.length + k))}
+              {relA!.disponibles.length > 0 && entete("planning.choisir.autres")}
+              {relA!.disponibles.map((p, k) => option({ nom: p.nom, duRole: false }, relT!.disponibles.length + relG!.disponibles.length + k))}
+            </ul>
+          )}
+          {absents.length > 0 && (
+            <ul id={`${id}-absents`} role="listbox" aria-label={t("planning.choisir.absent")}>
+              {entete("planning.choisir.absent")}
+              {absents.map((p, k) => option(p, nbDisponibles + k, undefined, false, p.absence))}
             </ul>
           )}
         </div>
@@ -268,7 +297,8 @@ function Menu({
         {noms.map((p, i) => (
           <Fragment key={p.nom}>
             {deuxGroupes && i === premierAutre && entete("planning.choisir.autres")}
-            {option(p, i)}
+            {p.absence && i === nbDisponibles && entete("planning.choisir.absent")}
+            {option(p, i, undefined, false, p.absence)}
           </Fragment>
         ))}
       </ul>

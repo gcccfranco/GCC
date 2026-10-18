@@ -1,16 +1,20 @@
 "use client"
 
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import { fetchCasesEcrites, fetchGrille } from "./grille"
 import { lireAnnonces } from "./releases"
 import type { EtatAnnonce } from "./prevenir"
-import { listProfiles } from "@/lib/firebase/users"
+import { listProfiles, useProfile } from "@/lib/firebase/users"
 import { listGroupes } from "@/lib/firebase/groupes"
 import { groupeDe } from "@/lib/groupes/organigramme"
 import { TABLE_GROUPES } from "@/lib/groupes/table"
 import { BACK_OFFICE } from "@/lib/backOffice"
+import { listerToutesAbsences } from "@/lib/firebase/absences"
+import { canVoirAbsencesDeTous } from "@/lib/access"
+import { normalizeName } from "./names"
+import type { Absence } from "@/types/absence"
 import type { OrganigrammeGroupe } from "@/types/groupe"
-import type { CompteDuPlanning } from "./choisir"
+import { absenceLe, type CompteDuPlanning } from "./choisir"
 
 /**
  * Ce qu'une page de planning donne à `PlanningGrille` en plus des lignes :
@@ -26,6 +30,10 @@ export function useGrilleApp(key: string, avecComptes: boolean, avecGroupe = fal
   const [ecrites, setEcrites] = useState<ReadonlySet<string>>(new Set())
   const [comptes, setComptes] = useState<CompteDuPlanning[]>([])
   const [comptesLus, setComptesLus] = useState(false)
+  // SC3.4 : les absences de tous, pour qui fait les plannings (« Choisir » les range à part).
+  const { user, profile } = useProfile()
+  const [absences, setAbsences] = useState<Absence[]>([])
+  const voitAbsences = avecComptes && canVoirAbsencesDeTous(user, profile)
   // Lot 2 (OG-F) : l'organigramme du groupe dont c'est le planning, au Back-Office seulement (OG27) ;
   // sans lui, « Choisir » ne change pas (OG30).
   const [groupe, setGroupe] = useState<OrganigrammeGroupe | undefined>(undefined)
@@ -50,6 +58,31 @@ export function useGrilleApp(key: string, avecComptes: boolean, avecGroupe = fal
   }, [avecComptes])
 
   useEffect(() => {
+    if (!voitAbsences) return
+    let vivant = true
+    listerToutesAbsences()
+      .then((l) => { if (vivant) setAbsences(l) })
+      .catch(() => { /* sans les absences, « Choisir » reste celui d'avant */ })
+    return () => { vivant = false }
+  }, [voitAbsences])
+
+  // Le nom de planning d'un compte relie l'absence (par l'uid) à la case de la grille.
+  const absencesParNom = useMemo(() => {
+    const m = new Map<string, Absence[]>()
+    if (!voitAbsences) return m
+    const nomDe = new Map(comptes.filter((c) => c.uid).map((c) => [c.uid!, normalizeName(c.nom)]))
+    for (const a of absences) {
+      const nom = nomDe.get(a.uid)
+      if (nom) m.set(nom, [...(m.get(nom) ?? []), a])
+    }
+    return m
+  }, [voitAbsences, absences, comptes])
+  const absenceDe = useCallback(
+    (nom: string, date: string): Absence | null => absenceLe(absencesParNom.get(normalizeName(nom)) ?? [], date),
+    [absencesParNom],
+  )
+
+  useEffect(() => {
     setGroupe(undefined)
     const def = TABLE_GROUPES.find((g) => g.planning === key)
     if (!BACK_OFFICE || !avecGroupe || !def) return
@@ -61,7 +94,7 @@ export function useGrilleApp(key: string, avecComptes: boolean, avecGroupe = fal
   }, [key, avecGroupe])
 
   // Sans les comptes, les titulaires avec compte manqueraient : « Choisir » reste celui d'avant.
-  return { datesDansLApp, comptes, ecrites, groupe: comptesLus ? groupe : undefined }
+  return { datesDansLApp, comptes, ecrites, groupe: comptesLus ? groupe : undefined, absenceDe }
 }
 
 /**

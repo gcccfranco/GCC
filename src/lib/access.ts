@@ -361,6 +361,46 @@ export function canEditPlanning(
   return isAdminUser(user) || (profile?.plannings ?? []).includes(key) || (profile?.remplitParRole ?? []).includes(key);
 }
 
+/** Congés et absences (SC3, docs/spec-createur-corbeille-absences.md ; Q8, Q9) : « ceux qui font les
+ *  plannings », c'est-à-dire les admins et les profils dont `plannings` n'est pas vide. Ils saisissent une
+ *  absence pour quelqu'un d'autre et lisent celles de tous.
+ *  Miroir serveur : faitDesPlannings() et users/{uid}/absences/{id} dans firestore.rules. */
+export function faitDesPlannings(
+  user: { email?: string | null } | null,
+  profile: { plannings?: string[] } | null
+): boolean {
+  if (!user) return false;
+  return isAdminUser(user) || (profile?.plannings ?? []).length > 0;
+}
+
+/** Saisir ou supprimer une absence : la personne elle-même, ou qui fait les plannings. */
+export function canSaisirAbsence(
+  user: { uid: string; email?: string | null } | null,
+  profile: { plannings?: string[] } | null,
+  uidCible: string
+): boolean {
+  if (!user) return false;
+  return user.uid === uidCible || faitDesPlannings(user, profile);
+}
+
+/** Lire les absences de tous (la grille des plannings). */
+export function canVoirAbsencesDeTous(
+  user: { email?: string | null } | null,
+  profile: { plannings?: string[] } | null
+): boolean {
+  return faitDesPlannings(user, profile);
+}
+
+/** Le motif d'une absence : la personne et les admins. Côté navigateur seulement, comme le reste de la
+ *  confidentialité du site (les rules laissent lire l'absence entière à qui fait les plannings). */
+export function canVoirMotifAbsence(
+  user: { uid: string; email?: string | null } | null,
+  uidCible: string
+): boolean {
+  if (!user) return false;
+  return user.uid === uidCible || isAdminUser(user);
+}
+
 /** Petit déj (lot U3, docs/spec-petit-dej.md, Q8) : poser une ligne pour
  *  quelqu'un, réécrire ou retirer n'importe laquelle — les écrivains du planning
  *  Table et les admins, le droit qui remplit déjà la grille Table. Poser SA

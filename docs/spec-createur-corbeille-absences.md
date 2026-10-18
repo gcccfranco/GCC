@@ -8,7 +8,8 @@
 > personnes disponibles apparaissent en premier, suivis d'une section « Absent » regroupant les personnes
 > indisponibles sur les dates. »
 
-**État : Q1, Q2, Q3, Q8, Q9, Q11 tranchées le 18/10/2026** (voir « Décisions ») ; planche pour les lots 2 et 3, puis go
+**État : SC1, SC2, SC3 codés le 18/10/2026, à valider par Timothée ; `firestore.rules` à publier à la main ; rien en
+ligne.** Q1, Q2, Q3, Q8, Q9, Q11 tranchées le 18/10/2026 (voir « Décisions ») ; planche pour les lots 2 et 3, puis go
 lot par lot. **Go le 18/10/2026 pour SC1, SC2 et SC3, sans planche** (choix de Timothée) : codés par une
 session orchestratrice.
 
@@ -134,6 +135,30 @@ avis contraire.
 - Regardé à l'œil : bandeau et corbeille dépliée sur téléphone, tablette portrait et paysage, ordinateur, 1 440 px.
 - **Tests** : `tests/setlist-corbeille.spec.ts` (nouveau), `tests/setlist-suppression-groupee.spec.ts` (PATCH au
   lieu de DELETE).
+
+### SC3 — codé le 18/10/2026
+
+- **Modèle** : `users/{uid}/absences/{id}` = `{ du, au, motif? }` (`src/lib/firebase/absences.ts`, type
+  `src/types/absence.ts`).
+- **Droits** (`access.ts` + `firestore.rules`) : `faitDesPlannings` = admin ou `plannings` non vide ; chacun écrit
+  et lit les siennes, qui fait les plannings en saisit pour quelqu'un et lit celles de tous (lecture groupée par
+  collection group, règle `match /{chemin=**}/absences/{id}`). Forme validée côté règles (dates `AAAA-MM-JJ`,
+  `du <= au`, motif ≤ 200 caractères). Le **motif** n'est montré qu'à la personne et aux admins, côté navigateur
+  seulement (comme le reste de la confidentialité du site). **À publier à la main par Timothée.**
+- **Mon profil** (en ligne) : section « Mes absences » sous les notifications — absences en cours ou à venir,
+  « Ajouter une absence » (du, au, motif facultatif), supprimer ; « Pour qui ? » pour qui fait les plannings
+  (motif masqué quand un responsable non admin saisit pour un autre). Le `<form>` du profil passe en `contents`
+  pour que la section, hors du formulaire, prenne place dans la même grille.
+- **« Choisir »** (planning en grille, donc local seulement) : Disponibles dans l'ordre d'avant, puis la section
+  « Absent » grisée avec la période ; un absent reste cliquable (« absent ce jour-là » pour les lecteurs d'écran).
+  En mode relié (organigramme), les absents des titulaires, du groupe et des autres se regroupent dans cette
+  dernière section. Fonctions pures `absenceLe`, `rangerParAbsence`, `periodeAbsence` dans `choisir.ts`.
+- **Marque** (Q10) : une case remplie par une personne absente ce jour-là porte le mot « absent » en ambre discret,
+  la période au survol ; pas de notification.
+- Regardé à l'œil : « Mes absences » (formulaire ouvert) et « Choisir » avec la section « Absent », téléphone,
+  tablette portrait et paysage, ordinateur.
+- **Tests** : `tests/absences.spec.ts` (nouveau) ; le fake Firestore lit une collection group ;
+  `tests/agencement-v18-moi.spec.ts` mesure la grille du profil (`[data-contenu-profil]`).
 
 ## Questions à trancher
 
