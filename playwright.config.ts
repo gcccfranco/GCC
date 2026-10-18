@@ -61,6 +61,8 @@ const SPECS_GRAND_ECRAN = [
   /agencement-barre-reduite\.spec\.ts/,
   // Scène Pâques · Noël (docs/spec-scene-paques-noel.md) : onglets de fête, une semaine à la fois.
   /scene-paques-noel\.spec\.ts/,
+  // … et fermer les réservations avant la date de fin (docs/spec-fermer-reservations.md, FR-A) : la vue Saison.
+  /fermer-reservations\.spec\.ts/,
   // Agencement v18 (docs/spec-agencement-v18.md) : chaque tranche, F1 comprise, sur les cinq projets.
   /agencement-v18-.*\.spec\.ts/,
   // Lot 3 du chantier « équipes et groupes » (docs/spec-planning-gestes.md, PG-Z) : les gestes du planning.

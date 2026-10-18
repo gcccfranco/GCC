@@ -311,7 +311,7 @@ test("brouillon : la coordination voit la saison et l'aperçu dans l'onglet Noë
 test("« Lancer les réservations » écrit `ouvert: true` en un seul PATCH, et l'onglet Noël de l'App montre la grille", async ({ page }) => {
   const db = await ouvrir(page, ALICE, { "programmes/noel": NOEL26 });
   await lancer(page).click();
-  await expect(page.getByText("Réservations lancées")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Fermer les réservations", exact: true })).toBeVisible();
   expect(patches(db)).toHaveLength(1);
   expect(patches(db)[0].data).toMatchObject({ ouvert: true });
   expect(Object.keys(patches(db)[0].data).sort()).toEqual(["modifiePar", "ouvert", "updatedAt"]);
@@ -493,7 +493,7 @@ test("captures : la saison, brouillon avec deux réservations, puis lancée (à 
   await expect(apercu(page).getByText("Sketch · Gp Amour")).toBeVisible();
   await capture(page, "u1-saison-brouillon");
   await lancer(page).click();
-  await expect(page.getByText("Réservations lancées")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Fermer les réservations", exact: true })).toBeVisible();
   await (await reglageSaison(page, "Un créneau dure")).getByRole("button", { name: "1 h 30", exact: true }).click();
   await fermerFeuille(page);
   // Sur une colonne (P9), la saison s'est ouverte en page : retour à la fête.

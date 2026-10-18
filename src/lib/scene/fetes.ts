@@ -105,11 +105,13 @@ export function editionCourante(fete: Fete, programmes: Programme[], today: stri
 export type EtatEdition = "aucune" | "brouillon" | "bientot" | "ouvertes" | "fermees" | "passee";
 
 /** Où en est une édition le jour `today` (Q5). Un document sans `ouvert` est
- *  lancé (U1, Q7). Après le jour J, toujours `passee`. */
+ *  lancé (U1, Q7). Après le jour J, toujours `passee`. Fermée à la main (`fermees`, FR5) :
+ *  `fermees` jusqu'au jour J, avant même l'ouverture. */
 export function etatEdition(edition: Edition, today: string): EtatEdition {
   const p = edition.programme;
   if (!p) return "aucune";
   if (p.ouvert === false) return "brouillon";
+  if (p.fermees === true) return today <= p.jourJ ? "fermees" : "passee";
   if (today < p.debut) return "bientot";
   if (!reservationsClosed(today, p.jourJ, p.fin)) return "ouvertes";
   return today <= p.jourJ ? "fermees" : "passee";

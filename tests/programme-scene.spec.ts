@@ -90,7 +90,7 @@ test("coordination : sans aucun programme, l'onglet Noël du Back-Office crée l
   expect(ecritures(db)[0]).toMatchObject({ method: "POST", path: "programmes/noel-2026" });
   expect(ecritures(db)[0].data).toMatchObject({ fete: "noel", annee: 2026, jourJ: "2026-12-24", ouvert: false, duree: 90, createdBy: "uid-alice" });
   await page.getByRole("button", { name: "Lancer les réservations", exact: true }).click();
-  await expect(page.getByText("Réservations lancées")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Fermer les réservations", exact: true })).toBeVisible();
   expect(ecritures(db, "PATCH").at(-1)?.data).toMatchObject({ ouvert: true });
   await (await ongletApp(page, "Noël")).click();
   await expect(page.getByText("Les réservations ouvriront le lundi 2 novembre")).toBeVisible();

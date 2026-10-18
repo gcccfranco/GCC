@@ -1119,10 +1119,10 @@ test("P7 — Pâques ouvert le 01/12/2026 croise Noël 2026 (jusqu'au 20/12) : l
   await expect(page.getByRole("button", { name: "Lancer les réservations", exact: true })).toBeEnabled();
 });
 
-test("P7 — « Lancer les réservations » : un PATCH de `ouvert` seul ; « Réservations lancées » ; la grille dans l'App après l'ouverture", async ({ page }) => {
+test("P7 — « Lancer les réservations » : un PATCH de `ouvert` seul ; « Fermer les réservations » ; la grille dans l'App après l'ouverture", async ({ page }) => {
   const db = await ouvrirFete(page, `${BO}/paques`, { "programmes/paques-2027": DOC_PAQUES_2027_BROUILLON }, "2026-10-09", ALICE_EVT);
   await page.getByRole("button", { name: "Lancer les réservations", exact: true }).click();
-  await expect(page.getByText("Réservations lancées")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Fermer les réservations", exact: true })).toBeVisible();
   const ecrites = ecrituresProgrammes(db);
   expect(ecrites).toHaveLength(1);
   expect(ecrites[0]).toMatchObject({ method: "PATCH", path: "programmes/paques-2027" });
@@ -1199,7 +1199,7 @@ test("P7 — Noël 2026 ancien document, ouvert : « Ouvertes », la saison en r
   // P8 : lancée, la fête s'ouvre sur « Toutes les réservations » ; la saison est à un toucher.
   await colonne.getByRole("button", { name: /^Saison/ }).click();
   await expect(page.getByRole("heading", { name: "Saison de Noël 2026" })).toBeVisible();
-  await expect(page.getByText("Réservations lancées")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Fermer les réservations", exact: true })).toBeVisible();
   for (const libelle of ["Nouveau programme", "Masquer", "Afficher", "Modifier le programme", "Fermer", "Préparer la saison", "Modifier la saison"]) {
     await expect(page.getByRole("button", { name: libelle, exact: true })).toHaveCount(0);
   }

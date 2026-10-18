@@ -602,7 +602,7 @@ test.describe("B3 : Évènements", () => {
     // P8-P9 : une saison lancée s'ouvre sur ses réservations ; la saison est à un toucher.
     await page.getByRole("region", { name: "Cette fête" }).getByRole("button", { name: /^Saison/ }).click();
     await expect(page.getByRole("heading", { name: "Saison de Noël 2026" })).toBeVisible();
-    await expect(page.getByText("Réservations lancées")).toBeVisible();
+    await expect(page.getByRole("button", { name: "Fermer les réservations", exact: true })).toBeVisible();
     await page.goto("/evenements/scene");
     await expect(page.getByRole("heading", { name: "Noël 2026" })).toBeVisible();
     await expect(page.getByRole("heading", { name: "Saison de Noël 2026" })).toHaveCount(0);

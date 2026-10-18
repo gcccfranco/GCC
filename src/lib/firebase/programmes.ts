@@ -47,6 +47,7 @@ function fromFsProgramme(raw: RawDoc & { updateTime?: string }): Programme {
     ...(data.duree != null && { duree: data.duree as Duree }),
     ...(data.quiAutorises != null && { quiAutorises: data.quiAutorises as string[] }),
     ...(data.ouvert != null && { ouvert: data.ouvert as boolean }),
+    ...(data.fermees != null && { fermees: data.fermees as boolean }),
     // Pâques · Noël : seulement si le champ existe — absent = déduit du jour J (feteDe).
     ...(data.fete != null && { fete: data.fete as Programme["fete"] }),
     ...(data.annee != null && { annee: data.annee as number }),

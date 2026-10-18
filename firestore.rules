@@ -257,9 +257,11 @@ service cloud.firestore {
       // pour des groupes permis par « Qui peut réserver » (liste vide = tout membre
       // connecté) ; la coordination n'est pas limitée. Un get() par écriture.
       // Miroir : canReserverPour (src/lib/access.ts).
+      // Une édition fermée à la main (`fermees`, docs/spec-fermer-reservations.md, FR10) refuse création et modification ; la suppression reste permise.
       function reservable(programmeId, qui) {
         let p = get(/databases/$(database)/documents/programmes/$(programmeId)).data;
         return p.get('ouvert', true) == true
+          && p.get('fermees', false) != true
           && (p.get('quiAutorises', []).size() == 0 || qui.hasOnly(p.quiAutorises));
       }
 

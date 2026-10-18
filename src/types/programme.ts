@@ -81,6 +81,9 @@ export interface Programme {
   quiAutorises?: string[];
   /** `false` = brouillon, jamais affiché ; absent = ouvert (programme d'avant U1). */
   ouvert?: boolean;
+  /** `true` = réservations fermées à la main avant la date de fin (docs/spec-fermer-reservations.md) ; absent ou
+   *  `false` = l'état suit les dates. `debut` et `fin` ne sont jamais réécrits : rouvrir les retrouve. */
+  fermees?: boolean;
   // Pâques · Noël (docs/spec-scene-paques-noel.md, Q1-Q2) : absents dans un
   // programme d'avant ce lot = déduits du mois et de l'année du jour J
   // (feteDe, anneeDe, src/lib/scene/fetes.ts).

@@ -23,7 +23,7 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { useTranslation } from "react-i18next"
-import { CircleCheck, ChevronDown, ChevronRight, History, List, ListOrdered, Plus, Printer, Send, SlidersHorizontal, type LucideIcon } from "lucide-react"
+import { CircleCheck, ChevronDown, ChevronRight, History, List, ListOrdered, Lock, LockOpen, Plus, Printer, Send, SlidersHorizontal, type LucideIcon } from "lucide-react"
 import { useAuth } from "@/lib/firebase/auth"
 import { useProfile } from "@/lib/firebase/users"
 import { isCoordination } from "@/lib/access"
@@ -41,6 +41,7 @@ import type { Creneau, Passage, Plage, Programme } from "@/types/programme"
 import { Button } from "@/components/ui/button"
 import { DeuxVolets } from "@/components/layout/DeuxVolets"
 import { Retour } from "@/components/layout/EnTetePage"
+import { useConfirmer } from "@/components/layout/Confirmer"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Apercu } from "@/app/evenements/scene/Apercu"
 import { Entrainements, type MorceauxEntrainements } from "@/app/evenements/scene/Entrainements"
@@ -74,6 +75,7 @@ export function FeteGestion({ fete }: { fete: Fete }) {
   const pathname = usePathname() ?? `/back-office/evenements/scene/${fete}`
   const params = useSearchParams()
   const disposition = useDisposition()
+  const confirmer = useConfirmer()
   const deuxVolets = disposition === "grand"
   const [programmes, setProgrammes] = useState<Programme[] | null>(null)
   const [charge, setCharge] = useState<{ pour: string; creneaux: Creneau[] } | null>(null)
@@ -193,11 +195,21 @@ export function FeteGestion({ fete }: { fete: Fete }) {
     return true
   }
 
-  /** Lance les réservations ; la saison reste à l'écran (« Réservations lancées ») au lieu de
+  /** Lance les réservations ; la saison reste à l'écran (« Fermer les réservations » à la place du bouton) au lieu de
    *  céder la place à « Toutes les réservations », vue par défaut d'une édition lancée. */
   async function lancer() {
     changer({ vue: "saison" })
     await ecrire({ ouvert: true })
+  }
+
+  /** Ferme les réservations avant la date de fin (FR6), après confirmation ; les dates restent. */
+  async function fermer() {
+    if (!(await confirmer({
+      titre: t("planning.gestion.fermerConfirmTitre", { edition: titre }),
+      texte: t("planning.gestion.fermerConfirmTexte"),
+      action: t("planning.gestion.fermerConfirmer"),
+    }))) return
+    await ecrire({ fermees: true })
   }
 
   /** Le jour J, avec l'année quand ce n'est pas celle d'aujourd'hui (« dimanche 28 mars 2027 »). */
@@ -350,6 +362,15 @@ export function FeteGestion({ fete }: { fete: Fete }) {
       <Send aria-hidden /> {t("planning.gestion.lancer")}
     </Button>
   )
+  // FR6, FR7 : à la place de « Lancer », une fois lancée et jusqu'au jour J ; après, l'édition est passée.
+  const fermeeALaMain = edition.programme?.fermees === true
+  const boutonFermer = lance && etat !== "passee" && (
+    <Button variant="outline" className={deuxVolets ? "rounded-full" : "h-12 w-full rounded-full text-[15px]"}
+      onClick={fermeeALaMain ? () => ecrire({ fermees: false }) : fermer}>
+      {fermeeALaMain ? <LockOpen aria-hidden /> : <Lock aria-hidden />}
+      {t(fermeeALaMain ? "planning.gestion.rouvrir" : "planning.gestion.fermer")}
+    </Button>
+  )
   const vueSaison = (
     <div className="space-y-4">
       <header className="flex flex-wrap items-start gap-3">
@@ -360,9 +381,7 @@ export function FeteGestion({ fete }: { fete: Fete }) {
           </div>
           <p className="mt-1 text-[13.5px] text-muted-foreground">{t("planning.gestion.sousTitreSaison")}</p>
         </div>
-        {lance ? (
-          <p className="shrink-0 py-2 text-sm font-semibold text-foreground">{t("planning.gestion.lancees")}</p>
-        ) : deuxVolets && boutonLancer}
+        {deuxVolets && (lance ? boutonFermer : boutonLancer)}
       </header>
       {deuxVolets ? (
         <div className="flex flex-wrap items-start gap-5">
@@ -372,7 +391,7 @@ export function FeteGestion({ fete }: { fete: Fete }) {
       ) : (
         <>
           {reglagesSaison}
-          {!lance && boutonLancer}
+          {lance ? boutonFermer : boutonLancer}
           {apercu}
         </>
       )}

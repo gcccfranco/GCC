@@ -2,7 +2,7 @@
 
 - **Origine** : Timothée, 18/10/2026 : « j'ai lancé les réservations, mais j'arrive plus à fermer les réservations
   pour noël » ; « il faudrait donner la possibilité de fermer les réservations pour noël avant la date de fin ».
-- **Statut** : spec écrite, questions tranchées le 18/10/2026 (FR1 à FR4), **attend le go de Timothée**. Rien n'est codé.
+- **Statut** : questions tranchées le 18/10/2026 (FR1 à FR4) ; **FR-A codée le 18/10/2026, à valider par Timothée**.
 - **Base de code** : `ui/apple-design` à `2046396a`.
 - Lève en partie le « Demander avant » de `docs/spec-scene-paques-noel.md` (« repasser une saison lancée en
   brouillon ») : on ne repasse pas en brouillon, on **ferme**, et on peut rouvrir.
@@ -94,3 +94,19 @@ les membres.
 ## Avancement
 
 - 18/10/2026 : spec écrite, FR1 à FR4 tranchées ; attend le go.
+- 18/10/2026 : go de Timothée, **FR-A codée** sur `ui/apple-design`.
+  - Codé : `fermees?: boolean` sur `Programme`, lu par `fromFsProgramme` (`src/lib/firebase/programmes.ts`) ;
+    `etatEdition` (FR5) ; vue Saison, « Fermer les réservations » (contour, confirmation du site) et « Rouvrir les
+    réservations » (sans confirmation) à la place du texte « Réservations lancées », jusqu'au jour J compris (FR6,
+    FR7) ; `reservable()` (FR10) ; libellés FR et 中文, `planning.gestion.lancees` retiré.
+  - Écarts et choix faits faute de réponse :
+    - le `PATCH` porte `fermees` avec `modifiePar` et `updatedAt`, que toute écriture du Back-Office signe déjà
+      (comme « Lancer ») ; `debut`, `fin` et `ouvert` ne sont jamais dans le masque ;
+    - miroir client : `canReserverPour` (`src/lib/access.ts`) refuse aussi une édition `fermees` (règle de CLAUDE.md :
+      toute permission en double) ;
+    - icônes cadenas fermé / ouvert sur les deux boutons (« Lancer » a la sienne) ;
+    - sur deux volets, quand le volet droit est étroit (ordinateur 1 280 px, tablette couchée), le bouton passe sous le
+      titre, dans l'en-tête, comme « Lancer » au même endroit ; à droite du titre à 1 440 px.
+  - Tests : `tests/fermer-reservations.spec.ts` (ajoutée à `SPECS_GRAND_ECRAN`, cinq projets) ; les tests qui
+    attendaient « Réservations lancées » attendent désormais le bouton « Fermer les réservations ».
+  - Restent à Timothée : **publier `firestore.rules`** dans la console Firebase ; relire le 中文.

@@ -1133,7 +1133,9 @@ d'actions sur téléphone ; partition jusqu'à 900 px en deux volets. **T1, T2, 
 « Il faudrait donner la possibilité de fermer les réservations pour Noël avant la date de fin. » Une fois lancée, une
 édition ne se fermait que par la date (et pas du tout avant son ouverture). FR1 à FR4 tranchées sur les
 recommandations : « Fermer » / « Rouvrir » au Back-Office (champ `fermees`), créneaux pris gardés, état « Fermées »
-pour les membres, `reservable()` bloque aussi côté règles. **Attend le go** (une tranche, FR-A).
+pour les membres, `reservable()` bloque aussi côté règles. **FR-A codée le 18/10/2026, à valider par Timothée** :
+« Fermer » / « Rouvrir » dans la vue Saison, champ `fermees`, `etatEdition`, `reservable()` (**`firestore.rules` à
+publier par Timothée**), 中文 à relire (voir l'« Avancement » de la spec).
 
 ### Z. Setlist au seul créateur, corbeille, absences (Timothée, 18/10/2026) → `spec-createur-corbeille-absences.md`
 

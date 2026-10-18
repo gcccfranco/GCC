@@ -178,12 +178,14 @@ export function canEditCreneau(
 export function canReserverPour(
   user: AuthUser | null,
   profile: { coordination?: boolean } | null,
-  programme: { ouvert?: boolean; quiAutorises?: string[] },
+  programme: { ouvert?: boolean; fermees?: boolean; quiAutorises?: string[] },
   qui: string[]
 ): boolean {
   if (!user) return false;
   if (isCoordination(user, profile)) return true;
   if (programme.ouvert === false) return false;
+  // Fermée à la main (docs/spec-fermer-reservations.md, FR10) : miroir de reservable().
+  if (programme.fermees === true) return false;
   const permis = programme.quiAutorises ?? [];
   return permis.length === 0 || qui.every((q) => permis.includes(q));
 }
