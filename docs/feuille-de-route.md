@@ -1132,7 +1132,8 @@ d'actions sur téléphone ; partition jusqu'à 900 px en deux volets. **T1, T2, 
 
 Trois lots : **SC1** modifier et supprimer = le créateur seul, les autres voient et dupliquent en privé ; **SC2**
 corbeille des setlists supprimées (section de « Archives », restaurer, purge à 30 jours) ; **SC3** congés et absences
-saisis dans le profil, « Choisir » du planning trie Disponibles puis « Absent ». **Spec écrite, Q1 à Q12 à trancher**,
+saisis dans le profil, « Choisir » du planning trie Disponibles puis « Absent ». **Spec écrite ; Q1–Q3, Q8–Q9, Q11 tranchées le 18/10/2026** (admins gardent les droits, l'équipe modifie,
+fêtes inchangées, absences vues et saisies par qui fait les plannings et les admins, saisie en ligne),
 planche ensuite pour SC2 et SC3 ; rien de codé.
 
 ## 4. Carte des modules de l'app « GCC »

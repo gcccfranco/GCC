@@ -8,8 +8,8 @@
 > personnes disponibles apparaissent en premier, suivis d'une section « Absent » regroupant les personnes
 > indisponibles sur les dates. »
 
-**État : à trancher** (questions en fin de spec), puis planche pour les écrans des lots 2 et 3, puis go lot par lot.
-Rien n'est codé.
+**État : Q1, Q2, Q3, Q8, Q9, Q11 tranchées le 18/10/2026** (voir « Décisions ») ; planche pour les lots 2 et 3, puis go
+lot par lot. Rien n'est codé.
 
 Trois lots indépendants, dans cet ordre (du plus petit au plus gros) :
 
@@ -76,6 +76,21 @@ plutôt qu'un onglet de plus.
 | SC3.5 | Choisir une personne absente reste **possible** (on ne bloque pas), avec un mot « Absent ce jour-là ». |
 | SC3.6 | Une case déjà remplie par une personne qui pose ensuite une absence : marque discrète dans la grille (Q10). |
 | SC3.7 | La saisie des absences (SC3.2) peut être en ligne ; le tri de « Choisir » ne sert qu'avec le planning en grille, donc **seulement en local** tant que le back-office est coupé (Q11). |
+
+## Décisions (Timothée, 18/10/2026)
+
+| Q | Décision |
+|---|----------|
+| Q1 | Les **admins** gardent modifier et supprimer sur toutes les setlists. |
+| Q2 | L'**équipe de la setlist** (`editeurs`) garde la **modification**, pas la suppression (déjà le cas). |
+| Q3 | Les **setlists de fête** gardent leur régime (coordination), hors du lot. |
+| Q8, Q9 | **Ceux qui font les plannings** (`plannings` non vide sur le profil) **et les admins** saisissent une absence pour quelqu'un d'autre et voient les absences de tous. |
+| Q11 | La **saisie des absences est en ligne** dès SC3 ; le tri de « Choisir » reste derrière l'interrupteur du back-office. |
+
+Donc SC1.1 devient : `canDeleteSetlist` = propriétaire **ou** admin (**ou** coordination pour une fête) ;
+`canEditSetlist` = `canDeleteSetlist` **ou** `editeurs ∋ uid`. Le niveau « edit » de la catégorie (musiciens,
+présidence) ne donne plus ni modification ni suppression. Q4, Q5, Q6, Q7, Q10, Q12 : recommandations retenues sauf
+avis contraire.
 
 ## Questions à trancher
 
