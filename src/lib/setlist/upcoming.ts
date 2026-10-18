@@ -5,7 +5,8 @@ import type { UserProfile } from "@/types/user";
 /** « Prochaines setlists » de Chants en deux volets (lot U5, docs/spec-deux-volets.md, Q17) :
  *  les `max` prochaines (date ≥ `today`, AAAA-MM-JJ) que `canSeeSetlist` laisse voir — la
  *  règle de l'onglet Setlists, sans son filtre « Mes services » (question 9) —, brouillons
- *  exclus, par date puis dans l'ordre des catégories. La date est refiltrée ici : la
+ *  exclus, setlists de fête exclues (neuf lignes d'un même jour y prendraient la place des prochains
+ *  services, CF25), par date puis dans l'ordre des catégories. La date est refiltrée ici : la
  *  requête n'est pas crue sur parole. */
 export function upcomingSetlists(
   all: FSSetlist[],
@@ -17,7 +18,7 @@ export function upcomingSetlists(
   const ordre = ALL_CATEGORIES as readonly string[];
   const rang = (c: string) => (ordre.includes(c) ? ordre.indexOf(c) : ordre.length);
   return all
-    .filter((s) => s.date >= today && !s.isDraft && canSeeSetlist(user, profile, s))
+    .filter((s) => s.date >= today && !s.isDraft && !s.fete && canSeeSetlist(user, profile, s))
     .sort((a, b) => a.date.localeCompare(b.date) || rang(a.category) - rang(b.category))
     .slice(0, max);
 }

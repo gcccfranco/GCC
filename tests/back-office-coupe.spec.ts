@@ -502,3 +502,38 @@ test.describe("back-office coupé : le partage d'une setlist est en ligne", () =
     await expect(rangee).toContainText("Dans l'équipe");
   });
 });
+
+// Lot « chants des fêtes », CF24 : local et en ligne partagent le même Firestore, les setlists de fête saisies en
+// local ne doivent pas paraître en ligne. Le membre est éditeur de la setlist (la requête sur `editeurs` la ramènerait).
+test.describe("back-office coupé : les setlists de fête n'existent pas", () => {
+  const MO: FakeProfile = { uid: "uid-mo", email: "mo@example.com", firstName: "Mo", lastName: "M.", planningName: "Mo M.", serviceRoles: { "Groupe Paix": ["musicien"] } };
+  const fete = { title: "Noël 2026 · Gp Paix", leader: "Ruth K.", category: "Noël", date: "2026-12-24", language: "fr", notes: "", isDraft: false, isPrivate: false, ownerId: null, createdAt: new Date("2026-10-05T10:00:00Z"), editeurs: ["uid-mo"], fete: { programme: "noel-2026", passage: "p1aaaaaa", qui: "Gp Paix" }, items: [{ songSlug: "abba-pere", position: 1, keyOverride: null, showChords: true, showPinyin: false, useJianpu: false, structureOverride: null, sectionNotes: {}, notes: "" }] };
+  const docs = { "setlists/noel-2026-p1aaaaaa": fete };
+  const planningVide = (page: Page) => page.route(/docs\.google\.com\/spreadsheets/, (route) => route.fulfill({ status: 200, contentType: "text/csv", body: "" }));
+
+  test("absente de /setlists (« Mes services » décoché), sans groupe « Fêtes » dans le menu", async ({ page }) => {
+    await planningVide(page);
+    await page.addInitScript(() => localStorage.setItem("setlists-only-mine", "0"));
+    await page.clock.setFixedTime(new Date("2026-10-09T10:00:00"));
+    await signInAs(page, MO, docs, "/setlists");
+    await expect(page.getByText("Aucun culte à venir.")).toBeVisible();
+    await expect(page.getByRole("link", { name: /Noël 2026/ })).toHaveCount(0);
+    await expect(page.locator('optgroup[label="Fêtes"]')).toHaveCount(0);
+  });
+
+  test("sa page est introuvable", async ({ page }) => {
+    await planningVide(page);
+    await signInAs(page, MO, docs, "/setlists/noel-2026-p1aaaaaa");
+    await expect(page.getByText("Setlist introuvable").first()).toBeVisible();
+    await expect(page.getByText("Noël 2026 · Gp Paix")).toHaveCount(0);
+  });
+
+  test("un lien « ?cat=Noël » retombe sur « Toutes » : une setlist ordinaire reste listée", async ({ page }) => {
+    await planningVide(page);
+    await page.addInitScript(() => localStorage.setItem("setlists-only-mine", "0"));
+    await page.clock.setFixedTime(new Date("2026-10-09T10:00:00"));
+    const ordinaire = { ...fete, title: "Culte du 18", category: "Groupe Paix", date: "2026-10-18", fete: undefined, editeurs: [] };
+    await signInAs(page, MO, { ...docs, "setlists/culte-18": ordinaire }, "/setlists?cat=No%C3%ABl");
+    await expect(page.getByRole("link", { name: /Culte du 18/ })).toBeVisible();
+  });
+});

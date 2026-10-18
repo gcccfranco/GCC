@@ -100,6 +100,8 @@ export function useNotifications() {
 
       for (const s of setlists) {
         if (s.ownerId === user.uid) continue;
+        // Une setlist de fête n'annonce rien : chaque saisie en ferait une ligne aux admins (CF15).
+        if (s.fete) continue;
         if (!admin && !cats.includes(s.category)) continue;
         const created = s.createdAt?.getTime() ?? 0;
         const updated = s.updatedAt?.getTime() ?? 0;

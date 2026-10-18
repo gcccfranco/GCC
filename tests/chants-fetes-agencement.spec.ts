@@ -115,3 +115,21 @@ for (const langue of ["fr", "zh-CN"] as const) {
     if (process.env.CAPTURES) await page.screenshot({ path: `${process.env.CAPTURES}/fete-setlist-${langue}-${info.project.name}.png`, fullPage: true });
   });
 }
+
+// CF-E : Setlists filtrées sur Noël (liste, aperçu en deux volets, cartes sur la tablette) sur les cinq projets.
+for (const langue of ["fr", "zh-CN"] as const) {
+  test(`Setlists › Noël (${langue}) : liste dans l'ordre de passage, « Sans chant », sans débordement`, async ({ page }, info) => {
+    await page.addInitScript((l) => localStorage.setItem("i18nextLng", l), langue);
+    await page.route(/docs\.google\.com\/spreadsheets/, (route) => route.fulfill({ status: 200, contentType: "text/csv", body: "" }));
+    await page.clock.setFixedTime(new Date("2026-10-09T10:00:00"));
+    await signInAs(page, MEMBRE, DOCS_CFD, "/setlists?cat=No%C3%ABl");
+    await expect(page.getByRole("link", { name: /Gp Joie/ }).first()).toBeVisible();
+    await expect(page.getByText(langue === "fr" ? /Sans chant : 3 · Le grand spectacle/ : /没有诗歌：3 · Le grand spectacle/)).toBeVisible();
+    if (estGrandEcran(info)) {
+      // Deux volets : l'aperçu porte les cartes « Musiques et danses » et « L'ordre de passage ».
+      await expect(page.getByRole("region", { name: langue === "fr" ? "L'ordre de passage" : "上场顺序" })).toBeVisible();
+    }
+    await verifierSansDebordement(page);
+    if (process.env.CAPTURES) await page.screenshot({ path: `${process.env.CAPTURES}/fete-liste-${langue}-${info.project.name}.png` });
+  });
+}

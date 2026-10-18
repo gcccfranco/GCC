@@ -1117,6 +1117,8 @@ Grill en cinq rondes et planche v19 faits le 08/10/2026 : **tout est dans `docs/
 3 gestes du planning et petit déj, 4 chants de Noël et de Pâques. Specs à écrire, puis go. Le travail se fait dans
 les sessions cloud, directement sur `ui/apple-design`.
 
+**Lot 4 (V19FETES, `docs/spec-chants-fetes.md`)** : CF-A à CF-G codées (le 18/10/2026 : CF-D éditeur et page d'une setlist de fête, CF-E liste Setlists et interrupteur) ; reste à Timothée : publier `firestore.rules` (ordre dans l'« Avancement » de la spec) et relire le 中文.
+
 ## 4. Carte des modules de l'app « GCC »
 
 À valider par Timothée avant toute spec de module (les modules existants ne

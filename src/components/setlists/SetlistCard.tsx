@@ -9,6 +9,7 @@ import { categoryColor } from "@/lib/serviceColors";
 import { Tile } from "@/components/ui/tile";
 import { KeyPill } from "@/components/ui/key-pill";
 import type { SongIndexEntry } from "@/types/song";
+import { titreAffiche } from "@/lib/fetes/droits";
 
 // Ligne d'une setlist dans une liste groupée : la vignette porte la date dans
 // la couleur de la catégorie (docs/spec-look.md, « Listes et vignettes »).
@@ -22,8 +23,11 @@ export function SetlistCard({
   onApercu,
   actif = false,
   dansLEquipe = false,
+  fete,
 }: {
   setlist: FSSetlist;
+  /** Setlist de fête : le titre du passage et son rang, pour les lignes « Les bergers · Ruth K. » et « Noël · passage 3 » (CF13). */
+  fete?: { titrePassage: string; numero: number | null };
   /** Mode sélection (lot 10) : `undefined` = pas de mode, la ligne est le lien
    *  d'avant ; `false` = mode, mais pas le droit de supprimer (pas de case) ;
    *  `true` = case à cocher, et toute la ligne la bascule. */
@@ -52,7 +56,7 @@ export function SetlistCard({
       <Tile color={color} big={jour.getDate()} small={mois} size="lg" className={actif ? "!bg-background" : undefined} />
       <span className="min-w-0 flex-1">
         <span className="flex items-center gap-1.5">
-          <span className="truncate text-base font-semibold text-foreground">{setlist.title}</span>
+          <span className="truncate text-base font-semibold text-foreground">{titreAffiche(setlist, i18n.language === "zh-CN" ? "zh" : "fr")}</span>
           {setlist.isPrivate && (
             <Lock className="h-3.5 w-3.5 shrink-0 text-muted-foreground" aria-label={t("setlists.list.private")} />
           )}
@@ -63,11 +67,18 @@ export function SetlistCard({
           )}
         </span>
         <span className="flex text-sm text-muted-foreground">
-          {setlist.leader && <span className="shrink-0">{setlist.leader}&nbsp;·&nbsp;</span>}
-          <span className="truncate capitalize">{formatDate(setlist.date, i18n.language)}</span>
+          {fete ? (
+            <span className="truncate">{[fete.titrePassage, setlist.leader].filter(Boolean).join(" · ")}</span>
+          ) : (
+            <>
+              {setlist.leader && <span className="shrink-0">{setlist.leader}&nbsp;·&nbsp;</span>}
+              <span className="truncate capitalize">{formatDate(setlist.date, i18n.language)}</span>
+            </>
+          )}
         </span>
         <span className="block truncate text-xs text-muted-foreground">
           {t("categories." + setlist.category, { defaultValue: setlist.category })}
+          {fete?.numero ? ` · ${t("setlists.fete.passageN", { n: fete.numero })}` : ""}
           {" · "}
           {t("setlists.list.songCounter", { count: chants })}
         </span>

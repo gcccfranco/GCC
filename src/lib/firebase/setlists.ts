@@ -147,6 +147,10 @@ function withTimeout<T>(promise: Promise<T>, ms: number, message: string): Promi
   ]);
 }
 
+/** Sans l'interrupteur du back-office, une setlist de fête n'existe pas : local et en ligne partagent le même
+ *  Firestore (docs/spec-chants-fetes.md, CF24). Un seul endroit pour toutes les lectures. */
+const sansFetes = (s: FSSetlist): boolean => BACK_OFFICE || !s.fete;
+
 // ─── CRUD ─────────────────────────────────────────────────────────────────────
 
 export async function getSetlists(): Promise<FSSetlist[]> {
@@ -166,7 +170,7 @@ export async function getSetlists(): Promise<FSSetlist[]> {
   return rows
     .filter((r) => r.document)
     .map((r) => fromFsDoc(r.document!))
-    .filter((s) => !s.isPrivate && !s.isDraft);
+    .filter((s) => !s.isPrivate && !s.isDraft && sansFetes(s));
 }
 
 /** Setlists datées de `today` (AAAA-MM-JJ) ou après, par date, `max` au plus : la lecture
@@ -196,7 +200,7 @@ export async function getSetlistsFrom(today: string, max = 30, { strict = false 
     return [];
   }
   const rows = (await res.json()) as Array<{ document?: RawDoc }>;
-  return rows.filter((r) => r.document).map((r) => fromFsDoc(r.document!));
+  return rows.filter((r) => r.document).map((r) => fromFsDoc(r.document!)).filter(sansFetes);
 }
 
 /** Setlists datées de `depuis` (« AAAA-MM-JJ ») ou après, ni privées ni brouillons : celles du
@@ -220,7 +224,7 @@ export async function getSetlistsDepuis(depuis: string): Promise<FSSetlist[]> {
   return rows
     .filter((r) => r.document)
     .map((r) => fromFsDoc(r.document!))
-    .filter((s) => !s.isPrivate && !s.isDraft);
+    .filter((s) => !s.isPrivate && !s.isDraft && sansFetes(s));
 }
 
 /** Setlists récentes pour le badge de notifications (cloche). Deux requêtes
@@ -262,7 +266,7 @@ export async function getSetlistsSince(sinceMs: number, max: number): Promise<FS
   ]);
   const byId = new Map<string, FSSetlist>();
   for (const s of [...created, ...updated]) byId.set(s.id, s);
-  return [...byId.values()].filter((s) => !s.isPrivate && !s.isDraft);
+  return [...byId.values()].filter((s) => !s.isPrivate && !s.isDraft && sansFetes(s));
 }
 
 /** Les setlists dont `uid` est de l'équipe (`editeurs`), brouillons écartés. Refiltrée par
@@ -286,7 +290,7 @@ export async function getSetlistsPartagees(uid: string): Promise<FSSetlist[]> {
   return rows
     .filter((r) => r.document)
     .map((r) => fromFsDoc(r.document!))
-    .filter((s) => !s.isDraft && !!s.editeurs?.includes(uid));
+    .filter((s) => !s.isDraft && !!s.editeurs?.includes(uid) && sansFetes(s));
 }
 
 /** Les setlists d'une édition de fête (`fete.programme`), brouillons écartés, refiltrées côté client
@@ -339,7 +343,7 @@ export async function getMySetlists(uid: string): Promise<FSSetlist[]> {
   return rows
     .filter((r) => r.document)
     .map((r) => fromFsDoc(r.document!))
-    .filter((s) => s.isPrivate === true && !s.isDraft)
+    .filter((s) => s.isPrivate === true && !s.isDraft && sansFetes(s))
     .sort((a, b) => {
       const aTs = a.createdAt?.getTime() ?? 0;
       const bTs = b.createdAt?.getTime() ?? 0;
@@ -356,7 +360,8 @@ export async function getSetlist(id: string): Promise<FSSetlist | null> {
   if (res.status === 404 || res.status === 403) return null;
   await checkRest(res);
   const raw = await res.json() as RawDoc;
-  return fromFsDoc(raw);
+  const setlist = fromFsDoc(raw);
+  return sansFetes(setlist) ? setlist : null;
 }
 
 export async function createSetlist(

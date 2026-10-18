@@ -2,7 +2,7 @@
 
 import { GuideLien } from "@/components/guide/GuideLien";
 import { useEffect, useState, useMemo } from "react";
-import { ALL_CATEGORIES, getSetlists, getMySetlists, getSetlistsPartagees, deleteSetlists, type FSSetlist } from "@/lib/firebase/setlists";
+import { ALL_CATEGORIES, FETE_CATEGORIES, getSetlists, getMySetlists, getSetlistsPartagees, deleteSetlists, type FSSetlist } from "@/lib/firebase/setlists";
 import { useProfile } from "@/lib/firebase/users";
 import { visibleCategories, canCreateSetlist, canDeleteSetlist, canSeeSetlist, isAdminUser } from "@/lib/access";
 import {
@@ -14,6 +14,12 @@ import {
 } from "@/lib/planning/names";
 import { estDansLePartage, nomCourt } from "@/lib/setlist/partage";
 import { useTranslation } from "react-i18next";
+import { BACK_OFFICE } from "@/lib/backOffice";
+import { listProgrammes } from "@/lib/firebase/programmes";
+import { anneeDe, editionsDe, feteDe, libelleEdition } from "@/lib/scene/fetes";
+import { jourEnLettres } from "@/app/evenements/scene/libelles";
+import { titreAffiche } from "@/lib/fetes/droits";
+import type { Programme } from "@/types/programme";
 import { Search, X, Lock, LogIn, UserPen } from "lucide-react";
 import Link from "next/link";
 import { EnTetePage } from "@/components/layout/EnTetePage";
@@ -50,13 +56,18 @@ export default function SetlistsPage() {
   const [mySetlists, setMySetlists] = useState<FSSetlist[]>([]);
   // Celles dont on est de l'équipe (PS10) : lues à part, fusionnées par id avec la liste commune.
   const [partagees, setPartagees] = useState<FSSetlist[]>([]);
+  // Les éditions des fêtes : l'ordre de passage des setlists de fête, « Sans chant » (CF13).
+  const [programmes, setProgrammes] = useState<Programme[]>([]);
+  const [programmesLus, setProgrammesLus] = useState(!BACK_OFFICE);
   const [loading, setLoading] = useState(true);
   const [loadingMine, setLoadingMine] = useState(true);
   const [planning, setPlanning] = useState<PlanningData | null>(null);
   // Onglet, recherche, catégorie : dans l'URL (retour navigateur fidèle).
   // « Mes services » : mémorisé sur l'appareil (coché par défaut).
-  const { categoryFilter, setCategoryFilter, tab, setTab, query, setQuery, onlyMine, setOnlyMine, apercu, setApercu } =
+  const { categoryFilter: categorieDemandee, setCategoryFilter, tab, setTab, query, setQuery, onlyMine, setOnlyMine, apercu, setApercu } =
     useSetlistsNavState();
+  // Un lien « ?cat=Noël » ouvert là où les fêtes sont coupées : « Toutes ».
+  const categoryFilter = !BACK_OFFICE && (FETE_CATEGORIES as readonly string[]).includes(categorieDemandee) ? "Toutes" : categorieDemandee;
   const disposition = useDisposition();
   const grand = disposition === "grand";
 
@@ -125,7 +136,23 @@ export default function SetlistsPage() {
   }, [setlists, partagees, user]);
   // « Dans l'équipe » : une setlist qu'on ne verrait pas par ses catégories ni comme propriétaire.
   const dansLEquipe = (s: FSSetlist) =>
-    !!user && estDansLePartage(s, user.uid) && s.ownerId !== user.uid && !myCategories.includes(s.category);
+    !s.fete && !!user && estDansLePartage(s, user.uid) && s.ownerId !== user.uid && !myCategories.includes(s.category);
+
+  // Une setlist de fête : rang de son passage dans l'ordre de passage ; sans élément, ou dont le passage a
+  // été retiré de l'ordre, elle n'a pas de ligne (CF11, CF13).
+  const edition = (s: FSSetlist) => programmes.find((p) => p.id === s.fete?.programme);
+  const rangPassage = (s: FSSetlist) => edition(s)?.passages.findIndex((p) => p.id === s.fete?.passage) ?? -1;
+  const listee = (s: FSSetlist) => !s.fete || (s.items.length > 0 && (!edition(s) || rangPassage(s) >= 0));
+  const infosFete = (s: FSSetlist) => ({
+    titrePassage: edition(s)?.passages[rangPassage(s)]?.titre ?? "",
+    numero: rangPassage(s) >= 0 ? rangPassage(s) + 1 : null,
+  });
+  const feteFiltree = (FETE_CATEGORIES as readonly string[]).includes(categoryFilter);
+
+  useEffect(() => {
+    if (!user || !BACK_OFFICE) return;
+    listProgrammes().then(setProgrammes).catch(() => {}).finally(() => setProgrammesLus(true));
+  }, [user]);
 
   useEffect(() => {
     if (!user) { setMySetlists([]); setLoadingMine(false); return; }
@@ -140,9 +167,10 @@ export default function SetlistsPage() {
       (categoryFilter === "Toutes" || s.category === categoryFilter) &&
       (!q ||
         s.title.toLowerCase().includes(q) ||
+        titreAffiche(s, i18n.language === "zh-CN" ? "zh" : "fr").toLowerCase().includes(q) ||
         (s.leader ?? "").toLowerCase().includes(q) ||
         s.date.includes(q));
-  }, [categoryFilter, query]);
+  }, [categoryFilter, query, i18n.language]);
 
   const displayed = useMemo(() => {
     if (tab === "mine") return mySetlists.filter(matches);
@@ -152,19 +180,26 @@ export default function SetlistsPage() {
     const list = toutes.filter(
       (s) =>
         !!user && canSeeSetlist(user, profile, s) &&
+        listee(s) &&
         matches(s) &&
         (!useMine ||
           estDansLePartage(s, user.uid) ||
+          // Sous « Noël » ou « Pâques », toutes les setlists de la fête : rien ne s'y rattache à un service.
+          (!!s.fete && feteFiltree) ||
           (s.category === "Campus"
             ? (!!s.moment && myServiceKeys.has(`${s.date}|Campus|m:${s.moment}`)) ||
               myServiceKeys.has(`${s.date}|Campus|l:${normalizeName(s.leader ?? "")}`)
             : myServiceKeys.has(`${s.date}|${s.category}`)) ||
           s.ownerId === user?.uid)
     );
+    // Un même jour, les setlists d'une fête suivent l'ordre de passage.
+    const memeJour = (a: FSSetlist, b: FSSetlist) =>
+      (a.fete ? 1 : 0) - (b.fete ? 1 : 0) || (a.fete?.programme ?? "").localeCompare(b.fete?.programme ?? "") || rangPassage(a) - rangPassage(b);
     return tab === "upcoming"
-      ? list.filter((s) => s.date >= todayStr).sort((a, b) => a.date.localeCompare(b.date))
-      : list.filter((s) => s.date < todayStr).sort((a, b) => b.date.localeCompare(a.date));
-  }, [tab, toutes, mySetlists, matches, todayStr, user, profile, onlyMine, myServiceKeys]);
+      ? list.filter((s) => s.date >= todayStr).sort((a, b) => a.date.localeCompare(b.date) || memeJour(a, b))
+      : list.filter((s) => s.date < todayStr).sort((a, b) => b.date.localeCompare(a.date) || memeJour(a, b));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tab, toutes, mySetlists, matches, todayStr, user, profile, onlyMine, myServiceKeys, programmes, feteFiltree]);
 
   // L'aperçu (en grand) : celui de l'adresse, sinon la première setlist de la liste filtrée (Q3).
   // Une adresse peut viser une setlist d'un autre onglet (lien partagé) : seulement si la page
@@ -326,6 +361,34 @@ export default function SetlistsPage() {
     </button>
   );
 
+  // Sous « Noël » ou « Pâques » : l'édition (la prochaine, ou la plus récente en Archives), et les passages
+  // qui n'ont pas de setlist non vide, dans l'ordre de passage (CF13).
+  const editionFiltree = feteFiltree
+    ? editionsDe(categoryFilter === "Pâques" ? "paques" : "noel", programmes)
+        .filter((p) => p.ouvert !== false)
+        .filter((p) => (tab === "upcoming" ? p.jourJ >= todayStr : p.jourJ < todayStr))
+        .sort((a, b) => (tab === "upcoming" ? a.jourJ.localeCompare(b.jourJ) : b.jourJ.localeCompare(a.jourJ)))[0]
+    : undefined;
+  const sansChant = editionFiltree
+    ? editionFiltree.passages
+        .map((p, i) => ({ p, i }))
+        .filter(({ p }) => !toutes.some((s) => s.fete?.programme === editionFiltree.id && s.fete.passage === p.id && s.items.length > 0))
+        .map(({ p, i }) => `${i + 1} · ${p.titre}`)
+    : [];
+  const enteteFete = editionFiltree && (
+    <div className="mb-4 space-y-1">
+      <h2 className="text-[15px] font-semibold text-foreground">
+        {libelleEdition(feteDe(editionFiltree)!, anneeDe(editionFiltree) ?? 0, i18n.language === "zh-CN" ? "zh" : "fr")}
+        {" · "}
+        {jourEnLettres(editionFiltree.jourJ, i18n.language)}
+      </h2>
+    </div>
+  );
+  // « Sans chant » en bas de la liste (CF13) ; pas pendant une recherche, qui réduit la liste.
+  const piedFete = editionFiltree && sansChant.length > 0 && !loading && !query.trim() && (
+    <p className="mt-4 text-[13px] text-muted-foreground">{t("setlists.fete.sansChant", { liste: sansChant.join(", ") })}</p>
+  );
+
   const contenuListe = (
       <>
         {/* ── Vues : le rail (R4) ── */}
@@ -410,9 +473,20 @@ export default function SetlistsPage() {
                   </option>
                 ))}
               </optgroup>
+              {BACK_OFFICE && (
+                <optgroup label={t("setlists.list.fetes")}>
+                  {FETE_CATEGORIES.map((cat) => (
+                    <option key={cat} value={cat}>
+                      {t("categories." + cat, { defaultValue: cat })}
+                    </option>
+                  ))}
+                </optgroup>
+              )}
             </select>
           </div>
         </div>
+
+        {feteFiltree && tab !== "mine" && enteteFete}
 
         {/* ── Résultat de la dernière suppression ── */}
         {message && (
@@ -451,7 +525,7 @@ export default function SetlistsPage() {
         )}
 
         {/* ── Contenu ── */}
-        {(tab === "mine" ? loadingMine : loading) ? (
+        {(tab === "mine" ? loadingMine : loading || !programmesLus) ? (
           <div className="text-sm text-muted-foreground text-center py-16">
             {t("common.loading")}
           </div>
@@ -475,6 +549,7 @@ export default function SetlistsPage() {
                     selected={coches.has(s.id)}
                     onToggle={() => basculer(s.id)}
                     dansLEquipe={dansLEquipe(s)}
+                    fete={s.fete ? infosFete(s) : undefined}
                   />
                 </li>
               ))}
@@ -491,12 +566,14 @@ export default function SetlistsPage() {
                   onApercu={grand ? () => setApercu(s.id) : undefined}
                   actif={grand && !selectionMode && s.id === choisie?.id}
                   dansLEquipe={dansLEquipe(s)}
+                  fete={s.fete ? infosFete(s) : undefined}
                 />
               </li>
             ))}
           </ul>
           )
         )}
+        {feteFiltree && tab !== "mine" && piedFete}
         <GuideLien section="setlists" />
       </>
   );
@@ -532,7 +609,7 @@ export default function SetlistsPage() {
                   <ul className="list-disc pl-5 space-y-0.5">
                     {selection.slice(0, 8).map((s) => (
                       <li key={s.id}>
-                        {s.title}
+                        {titreAffiche(s, i18n.language === "zh-CN" ? "zh" : "fr")}
                         {" · "}
                         <span className="capitalize">{formatDate(s.date, i18n.language)}</span>
                       </li>

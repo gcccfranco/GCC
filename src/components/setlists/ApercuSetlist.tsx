@@ -28,6 +28,8 @@ import { getJianpuPref } from "@/lib/jianpu/preference";
 import { ListView } from "@/app/setlists/[id]/_components/ListView";
 import { SetlistHistory } from "@/app/setlists/[id]/_components/SetlistHistory";
 import { CarteEquipe } from "@/components/setlists/CarteEquipe";
+import { CartesFete, usePassageDeLaSetlist } from "@/app/setlists/[id]/_components/FeteDeLaSetlist";
+import { titreAffiche } from "@/lib/fetes/droits";
 
 export function ApercuSetlist({
   setlist,
@@ -43,12 +45,14 @@ export function ApercuSetlist({
 }) {
   const { t, i18n } = useTranslation();
   const router = useRouter();
+  const passageFete = usePassageDeLaSetlist(setlist);
   const couleur = categoryColor(setlist.category);
   const presentation = setlist.presentationUrl ? parsePresentationUrl(setlist.presentationUrl) : null;
   const chants = setlist.items.filter((i) => i.type !== "transition").length;
   const duPlanning = useMemo(() => (planning ? equipeDuService(planning, setlist) : []), [planning, setlist]);
   // L'équipe choisie dans la setlist (PS12) : les profils ne sont lus que si elle en a une.
-  const aUneEquipe = !!setlist.editeurs?.length;
+  // Les `editeurs` d'une fête sont les ayants droit écrits par le serveur, pas une équipe choisie.
+  const aUneEquipe = !setlist.fete && !!setlist.editeurs?.length;
   const [profils, setProfils] = useState<UserProfile[]>([]);
   useEffect(() => {
     if (!aUneEquipe) return;
@@ -73,7 +77,7 @@ export function ApercuSetlist({
               {" · "}{formatDate(setlist.date, i18n.language)}
             </span>
           </p>
-          <h2 className="mt-1 text-[24px] font-bold leading-tight tracking-tight text-foreground text-balance">{setlist.title}</h2>
+          <h2 className="mt-1 text-[24px] font-bold leading-tight tracking-tight text-foreground text-balance">{titreAffiche(setlist, i18n.language === "zh-CN" ? "zh" : "fr")}</h2>
           {(setlist.leader || presentation) && (
             <p className="mt-0.5 flex flex-wrap items-center gap-x-1.5 text-sm text-muted-foreground">
               {setlist.leader && <span>{t("planning.accueil.presidence", { nom: setlist.leader })}</span>}
@@ -128,6 +132,7 @@ export function ApercuSetlist({
               : <CarteEquipe equipe={equipe} monNom={monNom} titre="setlists.equipe.titre" sousTitre="setlists.equipe.choisie" />
             : <CarteEquipe equipe={equipe} monNom={monNom} />
         )}
+        {passageFete && <CartesFete passage={passageFete} />}
       </div>
     </section>
   );

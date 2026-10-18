@@ -37,7 +37,7 @@ export function usePassageDeLaSetlist(setlist: FSSetlist | null): PassageDeLaSet
     }).catch(() => {});
     return () => { vivant = false; };
   }, [edition]);
-  if (!setlist?.fete || !lu) return null;
+  if (!setlist?.fete || !lu || lu.programme.id !== edition) return null;
   const fete = feteDe(lu.programme);
   const annee = anneeDe(lu.programme);
   if (!fete || annee === null) return null;
