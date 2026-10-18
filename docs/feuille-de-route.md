@@ -1444,8 +1444,9 @@ porte le nom « GCC » et le menu par sections dont ces modules ont besoin.
   Partitions : en-tête d'un chant en paroles au-dessus du scan), L3-T5a (mode louange : scan entre les barres, K1 ;
   en-tête d'une ligne), L3-T5b (mode louange en paysage : structure en colonne à gauche, scan sur toute la hauteur),
   L3-T6 (PDF de setlist : scan coupé sous l'en-tête gravé, calque décalé, K4 en tête de page) faites et vérifiées par
-  Opus ; reste L3-T7. Questions ouvertes :
-  « Avancement » de la spec.
+  Opus ; L3-T7 partie cloud (18/10/2026) : `PW_SLUGS=all` 955 / 955 sur trois appareils, `jianpu-integration` vert sur
+  cinq projets, planches clair et sombre et captures aux cinq projets regardées ; trois défauts du calque gelé, d'avant le
+  lot, à trancher. Reste en local (Timothée) : mesure iOS, suite complète. Questions ouvertes : « Avancement » de la spec.
 
 ## 7. Relecture adversariale (14/09/2026)
 

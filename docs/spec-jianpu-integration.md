@@ -629,17 +629,18 @@ Nouvelle spec **`tests/jianpu-integration.spec.ts`**, trois appareils **et** les
 
 ### Critères de fini (lot 3)
 
-- [ ] Plus aucun rectangle blanc ni bloc noir : le scan est de l'encre sur le fond du site, en clair et en sombre, sur
+- [x] Plus aucun rectangle blanc ni bloc noir : le scan est de l'encre sur le fond du site, en clair et en sombre, sur
       page chant, vue Partitions, mode louange ; encre noire au PDF.
-- [ ] En-tête gravé coupé au-dessus de « 1=X 4/4 » sur les 190 pages (dont 189 premières pages recadrées et 为我而来
+- [x] En-tête gravé coupé au-dessus de « 1=X 4/4 » sur les 190 pages (dont 189 premières pages recadrées et 为我而来
       p. 2 à `top = 0`), **certifié à l'œil** à la planche d'audit ; pied
       gardé ; `chords.json` intact ; `PW_SLUGS=all` vert.
-- [ ] K1 (barres), K2 (barre d'onglets), K3 (en-tête du site au-dessus de tout scan), K4 (avertissement page 2) vérifiés
+- [x] K1 (barres), K2 (barre d'onglets), K3 (en-tête du site au-dessus de tout scan), K4 (avertissement page 2) vérifiés
       par test aux trois appareils (et cinq projets pour K1).
-- [ ] Segment « 简谱 · Paroles » sous les pastilles de la page chant, même préférence que l'interrupteur ; bouton 谱
+- [x] Segment « 简谱 · Paroles » sous les pastilles de la page chant, même préférence que l'interrupteur ; bouton 谱
       retiré.
 - [ ] Mesure iOS faite par Timothée (défilement de la vue Partitions) ; repli canvas seulement si elle le demande.
-- [ ] Captures regardées aux trois tailles et cinq projets, Abba Père + 一生爱你 + 为我而来 + 一生跟随.
+- [x] Captures regardées aux trois tailles et cinq projets, Abba Père + 一生爱你 + 为我而来 + 一生跟随.
+      (Cochés le 18/10/2026, L3-T7 cloud ; trois défauts du calque gelé, d'avant le lot, restent à trancher : « Avancement ».)
 
 ---
 
@@ -1187,4 +1188,37 @@ rappel faux sur deux chants au même `section.uid` (C5).
   p. 2 module en D) — question (a) de L3-T2c, le PDF en hérite. Vu en passant, d'avant cette tranche : un trait de
   l'accord gravé dépasse du pavé blanc après « Gmaj7 » sur 为我而来 (PDF et calque web ont le même pavé ; L3-T7).
 
-Prochaine étape : L3-T7 (vérification d'ensemble) ; le lot 2 attend le passage complet.
+- **L3-T7, 17–18/10/2026 — vérification d'ensemble, partie cloud** (go de Timothée du 17/10/2026). Aucun code changé.
+  Tests (agent testeur) : `PW_SLUGS=all` sur `jianpu-sheet.spec.ts`, **955 / 955 sur chacun des trois appareils**
+  (ordinateur 38,6 min, téléphone 32,3 min, tablette 22,0 min), servi par un build de production (`next build` dans
+  `.next-prod`, `next start` sur 3100) : sous `next dev`, la passe faisait ~2 h 40 par appareil et des chargements
+  dépassaient 30 s sous la charge (expirations, aucune assertion rouge) ; `jianpu-integration.spec.ts` sur les cinq
+  projets (`next dev`) : 223 verts, 12 sautés, 0 rouge. Planches d'audit (`jianpu:audit --no-frames`, transposées d'un
+  demi-ton) regardées en clair et en sombre : 一生爱你, 为我而来 p. 1 et p. 2, les six pages où le filtre laisse le plus de
+  gris (mesure sur les WebP : part de pixels à demi-transparents après le seuil — 一生跟随, 赞美之泉, 耶稣耶稣,
+  耶稣万名之上的名, 哦十字架, 住在你里面), la gravure fine 有一天 et une page paysage (你们要赞美耶和华). Encre propre sur le
+  halo et sur le noir, aucun pavé autour des accords réécrits ; liaisons, points et soulignés des gravures fines entiers ;
+  filigranes gris (« KUAN », « music… », adresses) restés pâles, comme accepté (D8). Le « trait après Gmaj7 » de 为我而来
+  (L3-T6) n'est pas un défaut : c'est la ligne de la 1re volta, gommée sous l'accord, gardée de part et d'autre comme sur
+  la gravure. Captures aux cinq projets (spec jetable, non commitée) regardées : page chant (Abba Père, 一生爱你 en E et en
+  D sombre, 为我而来 en D avec K4, 一生跟随, A+ 150 %), vue Partitions claire et sombre (一生爱你, 为我而来, 一生跟随 sous Abba
+  Père), mode louange (en-tête d'une ligne au téléphone et à la tablette, colonne de structure à gauche en paysage et à
+  l'ordinateur, K4 au-dessus de la p. 2) : conformes aux maquettes `v20-jp-a-*`.
+  **Trois défauts vus, tous d'avant le lot 3** (même formule et même pavé blanc sur `main`), qui viennent du calque gelé
+  (`chords.json`, « aucune coordonnée ne bouge ») : rien de corrigé, **à trancher par Timothée** :
+  (a) **住在你里面** : la boîte du « 1=X » (`keyLabel.h` = 15 px pour une gravure de ~21) est trop basse — le haut du « 1 »
+  et du « D » gravés dépasse de la gomme et « 1=Eb » s'écrit petit en dessous (seule page sur 189 où la boîte est sous
+  les ¾ du corps des accords, avec 你们要赞美耶和华, propre) ;
+  (b) **赞美之泉**, première rangée : l'exposant du « A⁷ » gravé dépasse de la gomme, un filet reste au-dessus du « b » de
+  « Bb7 » (les autres « A⁷ » de la page sont entièrement gommés) ;
+  (c) **téléphone, A+ 150 %** : un filet d'un pixel à gauche du « 1=D » (bord du « 1 » gravé, arrondi de l'échelle) ; propre
+  aux autres échelles et appareils. Le corriger, c'est élargir la gomme seule, contraire à « gomme et écriture aux mêmes
+  x, y, w, h » (test 6).
+  Environnement : un `npm install --no-save` (pour `write-excel-file`, absent ici et requis par le build) a fait dériver
+  Next et Playwright ; `node_modules` remis au lockfile par `npm ci`, aucun fichier suivi touché.
+  **Reste pour Timothée, en local** : la mesure du défilement de la vue Partitions avec plusieurs scans sur l'iPad
+  (Safari, filtre SVG) et un regard sur les `id` répétés des filtres sous WebKit ; la suite complète de la branche
+  (`npm test -- --project=<appareil> --shard=i/4`, plus les deux projets grand écran pour `SPECS_GRAND_ECRAN`).
+
+Prochaine étape : la mesure iOS et la suite complète en local (Timothée), puis les questions (a) à (c) ; le lot 2
+attend le passage complet.
