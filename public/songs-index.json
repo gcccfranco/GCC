@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-11T16:16:30.093Z",
+  "generatedAt": "2026-10-18T19:12:57.434Z",
   "songs": [
     {
       "slug": "abba-pere",
@@ -241,6 +241,45 @@
           "id": "chorus-3",
           "name": "副歌/Refrain",
           "type": "chorus"
+        }
+      ]
+    },
+    {
+      "slug": "aimez-vous-les-uns-les-autres",
+      "title": "Aimez-vous les uns les autres",
+      "titlePinyin": null,
+      "artist": "Inconnu",
+      "language": "fr",
+      "originalKey": "F",
+      "recommendedKey": null,
+      "tempo": null,
+      "themes": [
+        "famille-de-dieu",
+        "engagement"
+      ],
+      "youtubeUrl": null,
+      "spotifyUrl": null,
+      "appleMusicUrl": null,
+      "hasJianpu": false,
+      "jianpuKey": null,
+      "ajouteLe": null,
+      "sections": [
+        {
+          "id": "verse-1",
+          "name": "Couplet 1",
+          "type": "verse",
+          "number": "1"
+        },
+        {
+          "id": "chorus-2",
+          "name": "Refrain",
+          "type": "chorus"
+        },
+        {
+          "id": "verse-3",
+          "name": "Couplet 2",
+          "type": "verse",
+          "number": "2"
         }
       ]
     },
@@ -2105,6 +2144,71 @@
           "id": "bridge-4",
           "name": "Pont",
           "type": "bridge"
+        }
+      ]
+    },
+    {
+      "slug": "comment-ne-pas-te-louer",
+      "title": "Comment ne pas Te louer",
+      "titlePinyin": null,
+      "artist": "Glorious",
+      "language": "fr",
+      "originalKey": "F",
+      "recommendedKey": null,
+      "tempo": null,
+      "themes": [
+        "adoration",
+        "action-de-grace"
+      ],
+      "youtubeUrl": null,
+      "spotifyUrl": null,
+      "appleMusicUrl": null,
+      "hasJianpu": false,
+      "jianpuKey": null,
+      "ajouteLe": null,
+      "sections": [
+        {
+          "id": "chorus-1",
+          "name": "Refrain",
+          "type": "chorus"
+        },
+        {
+          "id": "verse-2",
+          "name": "Couplet 1",
+          "type": "verse",
+          "number": "1"
+        },
+        {
+          "id": "chorus-3",
+          "name": "Refrain",
+          "type": "chorus"
+        },
+        {
+          "id": "verse-4",
+          "name": "Couplet 2",
+          "type": "verse",
+          "number": "2"
+        },
+        {
+          "id": "chorus-5",
+          "name": "Refrain",
+          "type": "chorus"
+        },
+        {
+          "id": "verse-6",
+          "name": "Couplet 3",
+          "type": "verse",
+          "number": "3"
+        },
+        {
+          "id": "chorus-7",
+          "name": "Refrain",
+          "type": "chorus"
+        },
+        {
+          "id": "chorus-8",
+          "name": "Refrain",
+          "type": "chorus"
         }
       ]
     },
@@ -12433,7 +12537,7 @@
         "adoration",
         "engagement"
       ],
-      "youtubeUrl": "http://youtube.com/watch?v=uCA2jOPLXPM",
+      "youtubeUrl": "https://www.youtube.com/watch?v=cxWy0MPm_-c",
       "spotifyUrl": null,
       "appleMusicUrl": null,
       "hasJianpu": false,
@@ -15364,6 +15468,56 @@
       ]
     },
     {
+      "slug": "仰望神儿子",
+      "title": "仰望神儿子",
+      "titlePinyin": "Yǎng wàng shén ér zǐ",
+      "artist": "约书亚乐团",
+      "language": "zh",
+      "originalKey": "A",
+      "recommendedKey": null,
+      "tempo": 124,
+      "themes": [
+        "adoration",
+        "royaume"
+      ],
+      "youtubeUrl": null,
+      "spotifyUrl": null,
+      "appleMusicUrl": null,
+      "hasJianpu": false,
+      "jianpuKey": null,
+      "ajouteLe": null,
+      "sections": [
+        {
+          "id": "verse-1",
+          "name": "主歌 1/Couplet 1",
+          "type": "verse",
+          "number": "1"
+        },
+        {
+          "id": "prechorus-2",
+          "name": "预备副歌/Pré-Refrain",
+          "type": "prechorus"
+        },
+        {
+          "id": "chorus-3",
+          "name": "副歌/Refrain",
+          "type": "chorus"
+        },
+        {
+          "id": "tag-4",
+          "name": "Tag (x2)",
+          "type": "other",
+          "suffix": "(x2)"
+        },
+        {
+          "id": "verse-5",
+          "name": "主歌 2/Couplet 2",
+          "type": "verse",
+          "number": "2"
+        }
+      ]
+    },
+    {
       "slug": "耶和华是应当称颂的",
       "title": "耶和华是应当称颂的",
       "titlePinyin": "Yē hé huá shì yīng dāng chēng sòng de",
@@ -15411,6 +15565,59 @@
           "name": "桥段/Pont (x2, To Chorus)",
           "type": "bridge",
           "suffix": "(x2, To Chorus)"
+        }
+      ]
+    },
+    {
+      "slug": "耶和华所定的日子",
+      "title": "耶和华所定的日子",
+      "titlePinyin": "Yē hé huá suǒ dìng de rì zǐ",
+      "artist": "",
+      "language": "zh",
+      "originalKey": "F",
+      "recommendedKey": null,
+      "tempo": 124,
+      "themes": [],
+      "youtubeUrl": null,
+      "spotifyUrl": null,
+      "appleMusicUrl": null,
+      "hasJianpu": false,
+      "jianpuKey": null,
+      "ajouteLe": null,
+      "sections": [
+        {
+          "id": "intro-1",
+          "name": "前奏 Intro",
+          "type": "intro"
+        },
+        {
+          "id": "verse-2",
+          "name": "主歌1/Couplet1",
+          "type": "verse",
+          "number": "1"
+        },
+        {
+          "id": "verse-3",
+          "name": "主歌2/Couplet2",
+          "type": "verse",
+          "number": "2"
+        },
+        {
+          "id": "chorus-4",
+          "name": "副歌/Refrain",
+          "type": "chorus"
+        },
+        {
+          "id": "bridge-5",
+          "name": "桥段1/Pont 1",
+          "type": "bridge",
+          "number": "1"
+        },
+        {
+          "id": "bridge-6",
+          "name": "桥段2/Pont 2",
+          "type": "bridge",
+          "number": "2"
         }
       ]
     },
