@@ -1128,6 +1128,13 @@ largeur alignée sur la partition, Vidéo · PDF · Idées sortis du menu ⋯ (o
 d'actions sur téléphone ; partition jusqu'à 900 px en deux volets. **T1, T2, T3 codées et poussées le 18/10/2026**
 (détail et écarts dans l'« Avancement » de la spec), **à valider par Timothée**.
 
+### Y. Fermer les réservations d'une fête avant la date (Timothée, 18/10/2026) → `spec-fermer-reservations.md`
+
+« Il faudrait donner la possibilité de fermer les réservations pour Noël avant la date de fin. » Une fois lancée, une
+édition ne se fermait que par la date (et pas du tout avant son ouverture). FR1 à FR4 tranchées sur les
+recommandations : « Fermer » / « Rouvrir » au Back-Office (champ `fermees`), créneaux pris gardés, état « Fermées »
+pour les membres, `reservable()` bloque aussi côté règles. **Attend le go** (une tranche, FR-A).
+
 ## 4. Carte des modules de l'app « GCC »
 
 À valider par Timothée avant toute spec de module (les modules existants ne
