@@ -1,0 +1,260 @@
+{
+ "slug": "仰望神儿子",
+ "printed_key": "A",
+ "printed_key_verified": "en-tête « 1= A 4/4（原调C）» lu à l'œil avant toute mesure : la page est en la, comme {key} du .cho ; « 原调C » décrit l'original (Hillsong) et reste tel quel. 2026-10-18",
+ "corrections": {
+  "1188,476": "D",
+  "1188,820": "A",
+  "1188,1234": "E",
+  "1431,458": "D",
+  "1431,807": "A",
+  "1431,1213": "E",
+  "1673,84": "E",
+  "1673,491": "D",
+  "1673,811": "A",
+  "1673,1234": "E"
+ },
+ "not_labels": [
+  "1188,30",
+  "1431,609",
+  "1431,1061",
+  "1673,356",
+  "1673,446",
+  "1673,1086",
+  "1673,1364"
+ ],
+ "not_rows": [
+  195,
+  354,
+  648,
+  785,
+  1617,
+  1948
+ ],
+ "extra_labels": [
+  {
+   "x": 250,
+   "y": 326,
+   "w": 19,
+   "h": 25,
+   "c": "D"
+  },
+  {
+   "x": 546,
+   "y": 326,
+   "w": 21,
+   "h": 25,
+   "c": "A"
+  },
+  {
+   "x": 987,
+   "y": 326,
+   "w": 14,
+   "h": 25,
+   "c": "E"
+  },
+  {
+   "x": 53,
+   "y": 757,
+   "w": 19,
+   "h": 25,
+   "c": "D"
+  },
+  {
+   "x": 444,
+   "y": 757,
+   "w": 21,
+   "h": 25,
+   "c": "A"
+  },
+  {
+   "x": 905,
+   "y": 757,
+   "w": 14,
+   "h": 25,
+   "c": "E"
+  },
+  {
+   "x": 73,
+   "y": 1978,
+   "w": 14,
+   "h": 25,
+   "c": "E"
+  },
+  {
+   "x": 475,
+   "y": 1978,
+   "w": 19,
+   "h": 25,
+   "c": "D"
+  },
+  {
+   "x": 737,
+   "y": 1978,
+   "w": 21,
+   "h": 25,
+   "c": "A"
+  },
+  {
+   "x": 992,
+   "y": 1978,
+   "w": 14,
+   "h": 25,
+   "c": "E"
+  }
+ ],
+ "key_label": {
+  "x": 14,
+  "y": 221,
+  "w": 88,
+  "h": 27
+ },
+ "key_label_verified": "measure-keylabel, candidat 2 (« 1=  A », y=221), lettre gravée = printedKey. 2026-10-18",
+ "corrections_verified": "dix étiquettes des rangées lues par read() (pré-refrain ×2, refrain), toutes relues au zoom et sous le seuil avec des polices de substitution (conteneur Linux). 2026-10-18",
+ "not_labels_verified": "numéro de volta « 2 » (1188,30) et arcs de liaison (1431 et 1673) : aucun accord. 2026-10-18",
+ "not_rows_verified": "195 = ligne d'auteurs, 354 et 785 = arcs, 648 = paroles, 1617 = 【Chorus】, 1948 = « (先高后低) » : aucune n'est une rangée d'accords. 2026-10-18",
+ "extra_labels_verified": "rangées d'accords du 1er système (y≈326), du 2e (y≈757) et du Tag (y≈1978) jamais typées « chords » ; boîtes mesurées sur l'encre. propose-extra --all --hidden ne propose ensuite que des non-accords (【Verse】, voltas, arcs, zéros du Tag). 2026-10-18",
+ "verified": "planche navigateur (npm run jianpu:audit) relue tranche par tranche, 7/7, en A→Bb : 6 rangées d'accords, 20 étiquettes toutes encadrées de rouge et réécrites (D→Eb, A→Bb, E→F), le cadre « 1= A » devient « 1=Bb », « （原调C）» reste tel quel. Aucun cadre orange, aucun accord sans cadre. Thèmes clair seulement. 2026-10-18",
+ "frozen_labels": [
+  {
+   "x": 476,
+   "y": 1188,
+   "w": 19,
+   "h": 25,
+   "c": "D"
+  },
+  {
+   "x": 820,
+   "y": 1188,
+   "w": 20,
+   "h": 25,
+   "c": "A"
+  },
+  {
+   "x": 1234,
+   "y": 1188,
+   "w": 14,
+   "h": 25,
+   "c": "E"
+  },
+  {
+   "x": 458,
+   "y": 1431,
+   "w": 19,
+   "h": 34,
+   "c": "D"
+  },
+  {
+   "x": 807,
+   "y": 1431,
+   "w": 20,
+   "h": 34,
+   "c": "A"
+  },
+  {
+   "x": 1213,
+   "y": 1431,
+   "w": 14,
+   "h": 34,
+   "c": "E"
+  },
+  {
+   "x": 84,
+   "y": 1673,
+   "w": 14,
+   "h": 31,
+   "c": "E"
+  },
+  {
+   "x": 491,
+   "y": 1673,
+   "w": 19,
+   "h": 31,
+   "c": "D"
+  },
+  {
+   "x": 811,
+   "y": 1673,
+   "w": 20,
+   "h": 31,
+   "c": "A"
+  },
+  {
+   "x": 1234,
+   "y": 1673,
+   "w": 14,
+   "h": 31,
+   "c": "E"
+  },
+  {
+   "x": 250,
+   "y": 326,
+   "w": 19,
+   "h": 25,
+   "c": "D"
+  },
+  {
+   "x": 546,
+   "y": 326,
+   "w": 21,
+   "h": 25,
+   "c": "A"
+  },
+  {
+   "x": 987,
+   "y": 326,
+   "w": 14,
+   "h": 25,
+   "c": "E"
+  },
+  {
+   "x": 53,
+   "y": 757,
+   "w": 19,
+   "h": 25,
+   "c": "D"
+  },
+  {
+   "x": 444,
+   "y": 757,
+   "w": 21,
+   "h": 25,
+   "c": "A"
+  },
+  {
+   "x": 905,
+   "y": 757,
+   "w": 14,
+   "h": 25,
+   "c": "E"
+  },
+  {
+   "x": 73,
+   "y": 1978,
+   "w": 14,
+   "h": 25,
+   "c": "E"
+  },
+  {
+   "x": 475,
+   "y": 1978,
+   "w": 19,
+   "h": 25,
+   "c": "D"
+  },
+  {
+   "x": 737,
+   "y": 1978,
+   "w": 21,
+   "h": 25,
+   "c": "A"
+  },
+  {
+   "x": 992,
+   "y": 1978,
+   "w": 14,
+   "h": 25,
+   "c": "E"
+  }
+ ]
+}
