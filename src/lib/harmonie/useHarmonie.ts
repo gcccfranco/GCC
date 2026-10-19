@@ -56,13 +56,13 @@ export function useAccesHarmonie(): AccesHarmonie {
   }, [loading, nom]);
 
   return useMemo(() => {
-    const acces = canUseHarmonie(user, (nom ? services : []) ?? []);
+    const acces = canUseHarmonie(user, (nom ? services : []) ?? [], profile);
     return {
       ...acces,
       peut: acces.piano || acces.guitare,
       chargement: loading || (Boolean(nom) && services === null),
     };
-  }, [user, nom, services, loading]);
+  }, [user, profile, nom, services, loading]);
 }
 
 /** Instrument regardé en dernier sur cet appareil (`harmonie-instrument`). */

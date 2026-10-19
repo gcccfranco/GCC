@@ -39,7 +39,7 @@ function OrganigrammePage() {
   const organigrammes = useOrganigrammes();
   const eglise = canEditerEquipes(user, profile);
   if (!eglise && !tientUnGroupe(user, profile)) return <ReserveAuxAdmins connecte={!!user} retour="/back-office/equipes" />;
-  const admin = isAdminUser(user);
+  const admin = isAdminUser(user, profile);
 
   // Ouverture : `?groupe=` ; sinon le groupe que tient un président ou un VP sans le droit Équipes ; sinon Église.
   const demande = params.get("groupe") ?? "";

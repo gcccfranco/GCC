@@ -40,7 +40,7 @@ const DESTINATIONS: { value: string; label: string }[] = [
  *  n personnes »), à droite l'aperçu de la notification puis les derniers envois. */
 export function Notifier({ backOffice = false, titre }: { backOffice?: boolean; titre?: ReactNode }) {
   const { user, profile, loading } = useProfile();
-  const admin = isAdminUser(user);
+  const admin = isAdminUser(user, profile);
   // Lot 2 (OG24) : les audiences de `notify` et celles d'un rôle de groupe (`notifieParRole`).
   const rights = useMemo(() => audiencesNotifiables(profile), [profile]);
   // « Publier un planning » (ancienne page seulement) garde la seule liste `notify` (OG23).

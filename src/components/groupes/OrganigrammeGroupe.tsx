@@ -80,7 +80,7 @@ export function OrganigrammeGroupe({
   const def = groupeDef(groupe.id)!;
   const nomGroupe = t(`categories.${def.categorie}`);
   const couleur = categoryColor(def.categorie);
-  const admin = !app && isAdminUser(user);
+  const admin = !app && isAdminUser(user, profile);
   const peutTenir = !app && canTenirGroupe(user, profile, groupe.id);
   const telephone = useDisposition() === "telephone";
 

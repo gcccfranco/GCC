@@ -14,7 +14,7 @@ import { OngletsRail, type OngletRail } from "@/components/layout/Onglets";
 export default function MessagesLayout({ children }: { children: React.ReactNode }) {
   const { t } = useTranslation();
   const { user, profile } = useProfile();
-  const admin = isAdminUser(user);
+  const admin = isAdminUser(user, profile);
   const notifier = admin || audiencesNotifiables(profile).length > 0;
   const onglets: OngletRail[] = [
     ...(admin ? [{ id: "reception", href: "/back-office/messages", label: t("backOffice.parties.reception") }] : []),

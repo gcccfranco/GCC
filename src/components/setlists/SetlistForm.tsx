@@ -546,7 +546,7 @@ export function SetlistForm({ mode, setlistId, songs, initial, prefill, contexte
 
   // Catégories proposées : celles où le profil peut CRÉER (+ la catégorie actuelle en édition) — admins : toutes.
   // La régie ne peut pas créer de setlist de culte : exclue ici via creatableCategories.
-  const myCats = isAdminUser(user)
+  const myCats = isAdminUser(user, profile)
     ? [...ALL_CATEGORIES]
     : profile
     ? creatableCategories(profile)

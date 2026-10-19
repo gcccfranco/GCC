@@ -109,7 +109,7 @@ export default function SetlistsPage() {
   }, [planning, profile]);
 
   // Catégories accessibles selon le profil (services + EDD + groupe) — admins : toutes
-  const admin = isAdminUser(user);
+  const admin = isAdminUser(user, profile);
   const myCategories = useMemo(
     () => (admin ? [...ALL_CATEGORIES] : profile ? visibleCategories(profile) : []),
     [profile, admin]

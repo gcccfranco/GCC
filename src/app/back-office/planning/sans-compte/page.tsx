@@ -7,7 +7,7 @@ import { SansCompte } from "@/components/admin/SansCompte";
 import { ReserveAuxAdmins } from "@/components/admin/commun";
 
 export default function Page() {
-  const { user } = useProfile();
-  if (!isAdminUser(user)) return <ReserveAuxAdmins connecte={!!user} retour="/back-office/planning/sans-compte" />;
+  const { user, profile } = useProfile();
+  if (!isAdminUser(user, profile)) return <ReserveAuxAdmins connecte={!!user} retour="/back-office/planning/sans-compte" />;
   return <SansCompte />;
 }

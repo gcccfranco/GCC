@@ -44,7 +44,8 @@ const nom = (p: UserProfile) => `${p.firstName} ${p.lastName}`.trim() || p.email
 export function PersonnesVolets() {
   const { t } = useTranslation();
   const d = useDonneesPersonnes();
-  const admin = isAdminUser(useProfile().user);
+  const moi = useProfile();
+  const admin = isAdminUser(moi.user, moi.profile);
   const f = useFiltresPersonnes(d.profiles);
   const grand = useDisposition() === "grand";
   const router = useRouter();
@@ -381,7 +382,7 @@ function FicheDuMembre({
           <Carte titre="Droits">
             <div className={ligne}>
               <span className="flex items-center gap-2 text-muted-foreground"><ShieldCheck className="h-4 w-4" aria-hidden />Admin</span>
-              <span className="text-foreground">{isAdminUser(p) ? "Oui" : "Non"}</span>
+              <span className="text-foreground">{isAdminUser(p, p) ? "Oui" : "Non"}</span>
             </div>
             {/* Lot 1 du chantier « équipes et groupes » (EQ26) : la case cochée par un admin. */}
             <div className={ligne}>

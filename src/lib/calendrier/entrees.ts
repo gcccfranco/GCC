@@ -204,7 +204,7 @@ export function peutDeplacer(
  *  la personne a quelque chose à y voir — Tâches et Réunions : une équipe (Louange élargi,
  *  EQ14) ; un admin toujours. */
 export function sourcesPermises(user: Utilisateur | null, profile: ProfilCalendrier | null): SourceCalendrier[] {
-  const admin = isAdminUser(user);
+  const admin = isAdminUser(user, profile);
   const equipes = equipesDe(profile).length > 0;
   return ORDRE_PASTILLES.filter((s) => (s === "taches" || s === "reunions" ? admin || equipes : true));
 }

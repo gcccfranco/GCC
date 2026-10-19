@@ -107,7 +107,7 @@ export function SujetsAborder({ evenement: e, user, profile, reunions = [] }: {
 
   useEffect(() => { charger() }, [charger])
 
-  const ordonner = peutOrdonnerSujets(user, e)
+  const ordonner = peutOrdonnerSujets(user, e, profile)
   const commencee = aCommence(e, now)
   const liste = sujets ?? []
   const traites = liste.filter((s) => s.traite).length
@@ -228,7 +228,7 @@ export function SujetsAborder({ evenement: e, user, profile, reunions = [] }: {
             <ul aria-label={t("evenements.sujets.titre")} className="divide-y divide-border">
               {liste.map((s) => (
                 <LigneSujet key={s.id} sujet={s} rouge={estRouge(e, s, now)} provenance={provenance(s)} ordonner={ordonner}
-                  retirer={peutRetirerSujet(user, e, s)} onTraite={() => basculer(s)} onRetirer={() => retirer(s)} />
+                  retirer={peutRetirerSujet(user, e, s, profile)} onTraite={() => basculer(s)} onRetirer={() => retirer(s)} />
               ))}
             </ul>
           </SortableContext>

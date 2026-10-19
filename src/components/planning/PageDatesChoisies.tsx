@@ -91,7 +91,7 @@ export function PageDatesChoisies({ definition, lire, lireAutre }: {
         datesDansLApp={datesDansLApp}
         comptes={comptes}
         absenceDe={absenceDe}
-        exporter={peutModifier ? { annee: effAnnee, rang: 1, tout: isAdminUser(user) } : undefined}
+        exporter={peutModifier ? { annee: effAnnee, rang: 1, tout: isAdminUser(user, profile) } : undefined}
         vide={dansLApp ? t("planning.annee.aucun", { annee: effAnnee }) : undefined}
         retrait={{ libelle: t("planning.annee.retirer"), onRetire: () => void recharger() }}
       />

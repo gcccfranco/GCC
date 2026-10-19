@@ -108,7 +108,7 @@ export function EquipesClient({
       profils={profils}
       equipes={equipes}
       planning={planning}
-      admin={isAdminUser(user)}
+      admin={isAdminUser(user, profile)}
       onClose={() => setFiche(null)}
     />
   );

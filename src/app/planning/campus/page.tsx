@@ -96,7 +96,7 @@ function CampusPage() {
   const data = (sub === "louange" ? louange : entrainement).filter((s) => getAnnee(s.date) === effAnnee)
   const { days, order } = groupByDay(data)
   const annee = t("planning.grille.periodeAnnee", { annee: effAnnee })
-  const exporter = { annee: effAnnee, rang: 1, tout: isAdminUser(user) }
+  const exporter = { annee: effAnnee, rang: 1, tout: isAdminUser(user, profile) }
   const vide = dansLApp ? t("planning.annee.aucun", { annee: effAnnee }) : undefined
   const relire = () => void fetchCampusGrilles().then(setGrilles)
   const retrait = { libelle: t("planning.annee.retirerSeance"), onRetire: relire }

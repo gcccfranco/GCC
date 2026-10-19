@@ -51,10 +51,10 @@ async function ouvrirPlusSiPetitEcran(page: Page, info: TestInfo) {
 
 test.describe("Statistiques (S2) : le droit (Q2)", () => {
   test("canVoirStatistiques : un admin oui ; un responsable non admin, un membre, un visiteur non", () => {
-    expect(canVoirStatistiques(user(ADMIN))).toBe(true);
-    expect(canVoirStatistiques(user(RESPONSABLE))).toBe(false);
-    expect(canVoirStatistiques({ email: "membre@example.com" })).toBe(false);
-    expect(canVoirStatistiques(null)).toBe(false);
+    expect(canVoirStatistiques(user(ADMIN), null)).toBe(true);
+    expect(canVoirStatistiques(user(RESPONSABLE), null)).toBe(false);
+    expect(canVoirStatistiques({ email: "membre@example.com" }, null)).toBe(false);
+    expect(canVoirStatistiques(null, null)).toBe(false);
   });
 
   test("l'entrée « statistiques » est la 8e du menu d'un admin, absente de celui d'un responsable", () => {

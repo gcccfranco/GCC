@@ -98,7 +98,7 @@ export function Navbar() {
   const isActiveMesServices = pathname.startsWith("/mes-services");
   const isActiveEvenements = pathname.startsWith("/evenements");
   const isActiveTaches = pathname.startsWith("/taches");
-  const admin = isAdminUser(user);
+  const admin = isAdminUser(user, profile);
   const headerLabel = t(labelDeSection(pathname));
   const { displayName, initial } = useNomDuMembre();
   // Lot U6 (spec-back-office.md, question 5) : pour un responsable, le sélecteur

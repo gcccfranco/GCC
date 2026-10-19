@@ -524,7 +524,7 @@ test.describe("OG-B · recopie partagée en base simulée (OG3, OG19, OG20)", ()
     const equipes = [{ id: "comite-paix", membres: [{ nom: "Pirate", uid: "pirate", referent: true }] }];
     expect(rattachementDe("pirate", equipes)).toEqual({ dansEquipes: [], referentDe: [] });
     const { db } = fausseBaseGroupes({ pirate: { equipes: true } }, {}, { "comite-paix": { membres: equipes[0].membres } });
-    await recalculerRattachement(db, ["pirate"], await lireEquipes(db), await lireGroupes(db));
+    await recalculerRattachement(db, ["pirate"], await lireEquipes(db), await lireGroupes(db), true);
     const lu = (await db.collection("users").doc("pirate").get()).data() as Record<string, unknown>;
     expect(lu.referentDe ?? []).toEqual([]);
     expect(lu.dansEquipes ?? []).toEqual([]);
@@ -541,7 +541,7 @@ test.describe("OG-B · recopie partagée en base simulée (OG3, OG19, OG20)", ()
       { paix: docGroupe(PAIX), joie: docGroupe(JOIE), bonte: docGroupe(BONTE) },
       { da: { membres: [{ nom: "Ruth K.", uid: "ruth", referent: true }] } },
     );
-    const r = await recalculerRattachement(db, ["ruth", "noe", "hugo", "eli"], await lireEquipes(db), await lireGroupes(db));
+    const r = await recalculerRattachement(db, ["ruth", "noe", "hugo", "eli"], await lireEquipes(db), await lireGroupes(db), true);
     expect(r.ignores).toEqual([{ uid: "eli", groupe: "paix" }]);
     const ecrit = (uid: string) => ecrits.find((e) => e.chemin === `users/${uid}`)?.data;
     expect(ecrit("ruth")).toEqual({
@@ -556,7 +556,7 @@ test.describe("OG-B · recopie partagée en base simulée (OG3, OG19, OG20)", ()
 
   test("un profil inchangé n'est pas réécrit ; retirer un titulaire retire ses droits", async () => {
     const base = fausseBaseGroupes({ noe: { groupe: "paix" }, sam: { groupe: "paix" } }, { paix: docGroupe(PAIX) });
-    const relire = async () => recalculerRattachement(base.db, ["noe", "sam"], [], await lireGroupes(base.db));
+    const relire = async () => recalculerRattachement(base.db, ["noe", "sam"], [], await lireGroupes(base.db), true);
     expect((await relire()).maj).toBe(2);
     expect((await relire()).maj).toBe(0);
     base.groupes.paix = docGroupe({ ...PAIX, roles: PAIX.roles.map((r) => ({ ...r, titulaires: r.titulaires.filter((x) => x.uid !== "noe") })) });
@@ -567,7 +567,7 @@ test.describe("OG-B · recopie partagée en base simulée (OG3, OG19, OG20)", ()
 
   test("« Recalculer depuis l'organigramme » compte aussi les comptes cités dans groupes/*", async () => {
     const { db, users } = fausseBaseGroupes({ ana: { groupe: "joie" }, tom: {} }, { joie: docGroupe(JOIE) });
-    expect(await recalculerDepuisOrganigramme(db)).toBe(2);
+    expect(await recalculerDepuisOrganigramme(db, true)).toBe(2);
     expect(users.ana).toMatchObject({ notifieParRole: ["Groupe Joie"], referentDe: ["comite-joie"], dansEquipes: ["comite-joie"] });
     expect(users.tom).toMatchObject({ groupe: "joie", referentDe: ["comite-joie"] });
   });
@@ -602,7 +602,7 @@ test.describe("OG-B · recopie partagée en base simulée (OG3, OG19, OG20)", ()
       { ancien: { groupe: "paix", referentDe: ["comite-paix"], dansEquipes: ["comite-paix"], publieParRole: ["paix"] }, rien: {} },
       { paix: docGroupe({ ...PAIX, president: null, vp: [], roles: [] }) },
     );
-    expect(await recalculerDepuisOrganigramme(db)).toBe(1);
+    expect(await recalculerDepuisOrganigramme(db, true)).toBe(1);
     expect(users.ancien).toMatchObject({ referentDe: [], dansEquipes: [], publieParRole: [] });
   });
 

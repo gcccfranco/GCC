@@ -19,8 +19,8 @@ import { ReserveAuxAdmins } from "@/components/admin/commun";
 type AdminTab = "reception" | "membres" | "inscriptions" | "planning" | "questionnaire";
 
 export function AncienneAdmin() {
-  const { user, loading } = useProfile();
-  const admin = isAdminUser(user);
+  const { user, profile, loading } = useProfile();
+  const admin = isAdminUser(user, profile);
   const [tab, setTab] = useState<AdminTab>("membres");
   const [enAttente, setEnAttente] = useState(0);
   const [inscrits, setInscrits] = useState(0);

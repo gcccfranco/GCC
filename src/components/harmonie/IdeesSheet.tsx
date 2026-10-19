@@ -237,7 +237,7 @@ function Contenu({ slug, titre, sections, tonalite, tonaliteOrigine, instrument,
                   {fiches.find((f) => f.id === r.suggestion.split("__")[0])?.nom ?? r.suggestion}
                   {r.auteur && ` · ${r.auteur}`}
                 </span>
-                {(r.uid === user?.uid || isAdminUser(user)) && (
+                {(r.uid === user?.uid || isAdminUser(user, profile)) && (
                   <button
                     type="button"
                     className="shrink-0 underline underline-offset-4"
@@ -323,7 +323,7 @@ function Contenu({ slug, titre, sections, tonalite, tonaliteOrigine, instrument,
         tonalite={tonalite}
         tonaliteOrigine={tonaliteOrigine ?? tonalite}
         moi={user ? { uid: user.uid, nom } : null}
-        admin={isAdminUser(user)}
+        admin={isAdminUser(user, profile)}
         recharger={async () => setIdees(await getIdees(slug))}
       />
     </div>

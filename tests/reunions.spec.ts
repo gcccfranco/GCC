@@ -117,14 +117,14 @@ test("droits : ajouter jusqu'au début seulement, pour une personne de la réuni
 
 test("droits : retirer = l'auteur, l'organisatrice, un admin ; ordonner et cocher = l'organisatrice, un admin", () => {
   const deBruno = { auteurUid: BRUNO.uid };
-  expect(peutRetirerSujet(user(BRUNO), E, deBruno)).toBe(true);
-  expect(peutRetirerSujet(user(CLARA), E, deBruno)).toBe(false);
-  expect(peutRetirerSujet(user(ALICE), E, deBruno)).toBe(true);
-  expect(peutRetirerSujet(user(ADMIN), E, deBruno)).toBe(true);
-  expect(peutOrdonnerSujets(user(ALICE), E)).toBe(true);
-  expect(peutOrdonnerSujets(user(ADMIN), E)).toBe(true);
-  expect(peutOrdonnerSujets(user(BRUNO), E)).toBe(false);
-  expect(peutOrdonnerSujets(null, E)).toBe(false);
+  expect(peutRetirerSujet(user(BRUNO), E, deBruno, null)).toBe(true);
+  expect(peutRetirerSujet(user(CLARA), E, deBruno, null)).toBe(false);
+  expect(peutRetirerSujet(user(ALICE), E, deBruno, null)).toBe(true);
+  expect(peutRetirerSujet(user(ADMIN), E, deBruno, null)).toBe(true);
+  expect(peutOrdonnerSujets(user(ALICE), E, null)).toBe(true);
+  expect(peutOrdonnerSujets(user(ADMIN), E, null)).toBe(true);
+  expect(peutOrdonnerSujets(user(BRUNO), E, null)).toBe(false);
+  expect(peutOrdonnerSujets(null, E, null)).toBe(false);
 });
 
 test("règles : la sous-collection des sujets reprend les mêmes droits", () => {
@@ -866,13 +866,13 @@ test("recalculerRattachement recopie aussi dansEquipes et referentDe sur le prof
   const { db, ecrits } = fausseBase({ "uid-rose": { poles: [] }, "uid-hugo": { poles: ["da"] } });
   const equipes = ORGANIGRAMME.map(({ id, membres }) => ({ id, membres }));
   const groupes = TABLE_GROUPES.map((g) => lireGroupe(g.id, {}));
-  expect((await recalculerRattachement(db, ["uid-rose", "uid-hugo", "uid-absent"], equipes, groupes)).maj).toBe(2);
+  expect((await recalculerRattachement(db, ["uid-rose", "uid-hugo", "uid-absent"], equipes, groupes, true)).maj).toBe(2);
   // Seuls les champs changés s'écrivent (lot 2, OG20) : un `referentDe` absent reste absent.
   expect(ecrits).toEqual([
     { uid: "uid-rose", data: { dansEquipes: ["regie"], referentDe: ["regie"] } },
     { uid: "uid-hugo", data: { dansEquipes: ["da", "regie"] } },
   ]);
-  expect((await recalculerRattachement(db, ["uid-rose", "uid-hugo"], equipes, groupes)).maj).toBe(0);
+  expect((await recalculerRattachement(db, ["uid-rose", "uid-hugo"], equipes, groupes, true)).maj).toBe(0);
   expect(ecrits).toHaveLength(2);
 });
 
@@ -883,14 +883,14 @@ test("« Recalculer depuis l'organigramme » : tous les membres des équipes, et
     "uid-rose": { poles: ["da"] }, "uid-hugo": { poles: ["da"] },
     "uid-hors": { poles: ["orga"] }, // pôle coché hors organigramme (D10) : on n'y touche pas ici
   });
-  expect(await recalculerDepuisOrganigramme(db)).toBe(2);
+  expect(await recalculerDepuisOrganigramme(db, true)).toBe(2);
   expect(ecrits).toEqual([
     { uid: "uid-hugo", data: { dansEquipes: ["da", "regie"] } },
     { uid: "uid-rose", data: { dansEquipes: ["regie"], referentDe: ["regie"] } },
   ]);
   expect(users["uid-rose"].poles).toEqual(["da"]);
   // Relancé : rien n'a changé, rien n'est réécrit.
-  expect(await recalculerDepuisOrganigramme(db)).toBe(0);
+  expect(await recalculerDepuisOrganigramme(db, true)).toBe(0);
 });
 
 test("destinataires d'une réunion d'équipe : les comptes dont le profil porte l'équipe", async () => {

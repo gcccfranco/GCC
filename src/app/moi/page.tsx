@@ -45,7 +45,7 @@ function MoiClient() {
 
   const isZh = i18n.language === "zh-CN";
   const dark = resolvedTheme === "dark";
-  const admin = isAdminUser(user);
+  const admin = isAdminUser(user, profile);
   const canNotify = admin || audiencesNotifiables(profile).length > 0;
   const name = [profile?.firstName, profile?.lastName].filter(Boolean).join(" ");
   // « Mes tâches » (lot 7 ; EQ15) : seulement pour les membres d'une équipe (Louange élargi) et les admins.

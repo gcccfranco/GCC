@@ -22,7 +22,7 @@ const SANS_COMPTE = "/back-office/planning/sans-compte";
 
 export default function PlanningLayout({ children }: { children: React.ReactNode }) {
   const { t } = useTranslation();
-  const { user } = useProfile();
+  const { user, profile } = useProfile();
   const [sousTitre, setSousTitre] = useState<HTMLElement | null>(null);
   const [outils, setOutils] = useState<HTMLElement | null>(null);
 
@@ -35,7 +35,7 @@ export default function PlanningLayout({ children }: { children: React.ReactNode
         sousTitre={<span ref={setSousTitre} className="whitespace-normal" />}
         outils={<span ref={setOutils} className="flex items-center gap-2" />}
         onglets={
-          isAdminUser(user) ? (
+          isAdminUser(user, profile) ? (
             <OngletsRail
               etiquette={t("backOffice.sousParties")}
               onglets={[

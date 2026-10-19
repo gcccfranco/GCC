@@ -48,7 +48,7 @@ export function PagePlus() {
   const [feuille, setFeuille] = useState(false);
   const [erreur, setErreur] = useState(false);
   const app = useDernierePage("app");
-  const admin = isAdminUser(user);
+  const admin = isAdminUser(user, profile);
   const permises = entreesBackOffice(user, profile);
   const { charge, enregistree } = useBarreDuBas(user && permises.length > 0 ? user.uid : null);
   const barre = barreAffichee(enregistree, permises);

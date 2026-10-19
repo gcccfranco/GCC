@@ -54,7 +54,7 @@ export function MenuCompte({
   const { profile } = useProfile();
   const { displayName, planningName } = useNomDuMembre();
   const [reportOpen, setReportOpen] = useState(false);
-  const admin = isAdminUser(user);
+  const admin = isAdminUser(user, profile);
   // Lot U6, B2 : Notifier et l'administration passent au Back-Office (sélecteur) ; en ligne,
   // interrupteur coupé, le menu les garde.
   const canNotify = !BACK_OFFICE && (admin || (profile?.notify?.length ?? 0) > 0);
