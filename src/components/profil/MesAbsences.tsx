@@ -75,7 +75,7 @@ export function MesAbsences() {
 
   if (!user) return null;
 
-  const voirMotif = canVoirMotifAbsence(user, uidCible, profile);
+  const voirMotif = canVoirMotifAbsence(user, uidCible);
   const peutSaisir = canSaisirAbsence(user, profile, uidCible);
   const aVenir = absences.filter((a) => a.au >= aujourdhui()).sort((a, b) => a.du.localeCompare(b.du));
   const periode = (a: Absence) => a.du === a.au

@@ -3,7 +3,7 @@ import { adminDb, verifyIdToken } from "@/lib/push/admin";
 import { sendPushToUids, sendPushToAll } from "@/lib/push/send";
 import { recordNotification } from "@/lib/push/notifications";
 import { uidsDesAudiences, uidsDuGroupe } from "@/lib/push/recipients";
-import { estBeta, isFondateur } from "@/lib/access";
+import { isAdminEmail } from "@/lib/access";
 import { NOTIFY_ALL, audiencesNotifiables, isValidAudience, peutNotifierAudience } from "@/lib/push/audiences";
 import { createHash } from "node:crypto";
 
@@ -70,11 +70,10 @@ export async function POST(req: NextRequest) {
   }
 
   // 3. Droits de l'expéditeur
-  // Admin = fondateur ou membre de Bêta (profil relu, sans seconde lecture).
-  const profil = isFondateur({ email }) ? undefined : (await adminDb().collection("users").doc(uid).get()).data() as
-    { notify?: string[]; notifieParRole?: string[]; dansEquipes?: string[] } | undefined;
-  const isAdmin = isFondateur({ email }) || estBeta(profil);
-  const me = isAdmin ? null : profil ?? null;
+  const isAdmin = isAdminEmail(email);
+  const me = isAdmin
+    ? null
+    : ((await adminDb().collection("users").doc(uid).get()).data() as { notify?: string[]; notifieParRole?: string[] } | undefined) ?? null;
   const rights = audiencesNotifiables(me);
   const canAll = isAdmin || rights.includes(NOTIFY_ALL);
 

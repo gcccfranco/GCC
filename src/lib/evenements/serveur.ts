@@ -1,9 +1,9 @@
 // Outils partagés des routes /api/evenements/* (serveur seulement).
 
 import { NextResponse, type NextRequest } from "next/server";
-import { adminDb, verifyIdToken } from "@/lib/push/admin";
+import { verifyIdToken } from "@/lib/push/admin";
 import { uidsForCategory } from "@/lib/push/recipients";
-import { canInscrireEvenement, equipeDuPour, estBeta, isFondateur } from "@/lib/access";
+import { canInscrireEvenement, equipeDuPour } from "@/lib/access";
 import { nowIsoParis, refusInscription, type RefusInscription } from "@/lib/evenements/agenda";
 import { membresDeLEquipe } from "@/lib/taches/serveur";
 import type { Evenement } from "@/types/evenement";
@@ -25,14 +25,6 @@ export async function optionalUser(req: NextRequest): Promise<{ uid: string; ema
   } catch {
     throw new HttpError(401, "Token invalide");
   }
-}
-
-/** Admin, côté serveur : fondateur (adresse du jeton) ou membre de Bêta (`dansEquipes` du profil, lu
- *  par l'Admin SDK). Miroir de isAdminUser (src/lib/access.ts) et de isAdmin() (firestore.rules). */
-export async function estAdminServeur(user: { uid: string; email: string } | null, db = adminDb()): Promise<boolean> {
-  if (!user) return false;
-  if (isFondateur(user)) return true;
-  return estBeta((await db.collection("users").doc(user.uid).get()).data() as { dansEquipes?: string[] } | undefined);
 }
 
 export function errorResponse(e: unknown) {

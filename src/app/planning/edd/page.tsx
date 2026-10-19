@@ -94,7 +94,7 @@ function EddPage() {
         datesDansLApp={datesDansLApp}
         comptes={comptes}
         absenceDe={absenceDe}
-        exporter={peutModifier ? { annee: effAnnee, rang: EDD_PERIODES.indexOf(periode) + 1, tout: isAdminUser(user, profile) } : undefined}
+        exporter={peutModifier ? { annee: effAnnee, rang: EDD_PERIODES.indexOf(periode) + 1, tout: isAdminUser(user) } : undefined}
       />
     </div>
   )

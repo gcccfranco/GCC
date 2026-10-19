@@ -4,7 +4,7 @@ import { sendPushToUids, allSubscriberUids } from "@/lib/push/send";
 import { recordNotification } from "@/lib/push/notifications";
 import { uidsDuGroupe, loadNotifLangs } from "@/lib/push/recipients";
 import { planningReleaseMessage } from "@/lib/push/messages";
-import { estBeta, isFondateur } from "@/lib/access";
+import { isAdminEmail } from "@/lib/access";
 import { NOTIFY_ALL } from "@/lib/push/audiences";
 import { getPlanning, droitsDePublication, TRI_ORDER } from "@/lib/planning/releases";
 
@@ -53,11 +53,10 @@ export async function POST(req: NextRequest) {
   const doPublish = publish !== false;
 
   // 3. Droits de l'expéditeur
-  // Admin = fondateur ou membre de Bêta (profil relu, sans seconde lecture).
-  const profil = isFondateur({ email }) ? undefined : (await adminDb().collection("users").doc(uid).get()).data() as
-    { notify?: string[]; publieParRole?: string[]; dansEquipes?: string[] } | undefined;
-  const isAdmin = isFondateur({ email }) || estBeta(profil);
-  const me = isAdmin ? null : profil ?? null;
+  const isAdmin = isAdminEmail(email);
+  const me = isAdmin
+    ? null
+    : ((await adminDb().collection("users").doc(uid).get()).data() as { notify?: string[]; publieParRole?: string[] } | undefined) ?? null;
   if (!droitsDePublication(planning, isAdmin, me)) {
     return NextResponse.json({ error: "Action non autorisée" }, { status: 403 });
   }

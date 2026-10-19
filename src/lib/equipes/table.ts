@@ -39,7 +39,3 @@ export const EQUIPES: EquipeDef[] = [
   { id: "edd", nom: "TEAM EDD", soustitre: "École du Dimanche", cle: "edd", sousColonnes: true },
 ];
 
-
-/** L'équipe Bêta (docs/spec-acces-beta.md) : hors de EQUIPES comme les comités. Définie ici (sans
- *  dépendance) pour être lue par organigramme.ts sans cycle ; réexportée par src/lib/access.ts. */
-export const EQUIPE_BETA = "beta";

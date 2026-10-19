@@ -72,7 +72,7 @@ export function AncienTableau() {
 
   // Trimestres futurs non publiés du groupe actif : masqués aux membres, marqués aux publieurs.
   const planning = PUBLISHABLE_PLANNINGS.find(p => p.key === grp)!
-  const canPublish = canPublishPlanning(planning, isAdminUser(user, profile), profile?.notify ?? [])
+  const canPublish = canPublishPlanning(planning, isAdminUser(user), profile?.notify ?? [])
   const vis = triVisibilities(TRI_ORDER, pubByGrp[grp] ?? [], getCurrentTri(), canPublish)
   const visibleTris = vis.filter(v => v.visible).map(v => v.tri)
   const unpublishedTris = vis.filter(v => v.unpublished).map(v => v.tri)

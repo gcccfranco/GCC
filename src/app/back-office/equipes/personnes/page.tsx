@@ -10,8 +10,8 @@ import { PersonnesVolets } from "@/components/admin/PersonnesVolets";
 import { ReserveAuxAdmins } from "@/components/admin/commun";
 
 export default function Page() {
-  const { user, profile } = useProfile();
-  if (!isAdminUser(user, profile)) return <ReserveAuxAdmins connecte={!!user} retour="/back-office/equipes/personnes" />;
+  const { user } = useProfile();
+  if (!isAdminUser(user)) return <ReserveAuxAdmins connecte={!!user} retour="/back-office/equipes/personnes" />;
   // `?uid=` (la personne choisie) se lit par `useSearchParams` : sous une frontière Suspense.
   return (
     <Suspense>

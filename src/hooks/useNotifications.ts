@@ -71,7 +71,7 @@ export function useNotifications() {
         getNotifsSince(since, MAX_ITEMS),
       ]);
 
-      const admin = isAdminUser(user, profile);
+      const admin = isAdminUser(user);
       const cats = profile ? visibleCategories(profile) : [];
 
       // Nouveautés depuis `since` (mêmes filtres qu'avant : pas soi-même, et

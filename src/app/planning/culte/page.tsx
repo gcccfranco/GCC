@@ -56,7 +56,7 @@ function CultePage() {
   const trimestre = useTrimestreEnLettres()
   const peutModifier = gestion && canEditPlanning(user, profile, "culte")
   // Lot 3 (PG35) : qui publie ou notifie ce planning prévient des changements, même sans remplir la grille.
-  const peutPrev = gestion && droitsDePrevenir(CULTE, isAdminUser(user, profile), profile)
+  const peutPrev = gestion && droitsDePrevenir(CULTE, isAdminUser(user), profile)
   const { datesDansLApp, comptes, ecrites, absenceDe } = useGrilleApp("culte", peutModifier || peutPrev)
   const [publications, setPublications] = useState(0)
 
@@ -66,7 +66,7 @@ function CultePage() {
       .then(entries => setPublished(Object.fromEntries(entries)))
   }, [])
 
-  const canPublish = gestion && droitsDePublication(CULTE, isAdminUser(user, profile), profile)
+  const canPublish = gestion && droitsDePublication(CULTE, isAdminUser(user), profile)
   // Q4 (lot U2) : le brouillon se montre à qui remplit ou publie ce planning, et aux admins.
   const voitBrouillon = canPublish || peutModifier
   const {
@@ -131,7 +131,7 @@ function CultePage() {
           ? { planning: CULTE, annee: effAnnee, tri: effTri, trimestre: trimestre(effTri, effAnnee), publications }
           : undefined}
         // P7 : les responsables du planning et les admins exportent (Q13).
-        exporter={voitBrouillon ? { annee: effAnnee, rang: Number(effTri.slice(1)) || 1, tout: isAdminUser(user, profile) } : undefined}
+        exporter={voitBrouillon ? { annee: effAnnee, rang: Number(effTri.slice(1)) || 1, tout: isAdminUser(user) } : undefined}
         dateBadge={(row, all) =>
           isFirstSundayOfMonth(row[0], all) ? (
             <span className="inline-block text-xs font-bold px-1.5 py-0.5 rounded bg-red-50 text-red-700 border border-red-200 mt-0.5">

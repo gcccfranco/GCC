@@ -22,7 +22,7 @@ export function CreateSetlistClient() {
   const params = useSearchParams();
   const { user, profile, loading } = useProfile();
   const [songs, setSongs] = useState<SongIndexEntry[]>([]);
-  const admin = isAdminUser(user, profile);
+  const admin = isAdminUser(user);
   // Catégories que l'éditeur accepte (admins : toutes), et celles du profil,
   // seules proposées par « Pour quel service ? » (question ouverte 2).
   const permises = useMemo(
@@ -56,7 +56,7 @@ export function CreateSetlistClient() {
     );
   }
 
-  if (!profile && !isAdminUser(user, profile)) {
+  if (!profile && !isAdminUser(user)) {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-3 px-4">
         <p className="text-sm text-muted-foreground">{t("setlists.list.profileRequired")}</p>

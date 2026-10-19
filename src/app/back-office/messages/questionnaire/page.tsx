@@ -7,7 +7,7 @@ import { SurveyResults } from "@/components/admin/SurveyResults";
 import { ReserveAuxAdmins } from "@/components/admin/commun";
 
 export default function QuestionnairePage() {
-  const { user, profile } = useProfile();
-  if (!isAdminUser(user, profile)) return <ReserveAuxAdmins connecte={!!user} retour="/back-office/messages/questionnaire" />;
+  const { user } = useProfile();
+  if (!isAdminUser(user)) return <ReserveAuxAdmins connecte={!!user} retour="/back-office/messages/questionnaire" />;
   return <SurveyResults backOffice />;
 }

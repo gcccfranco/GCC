@@ -61,9 +61,9 @@ test.describe("SC3 · droits (access.ts) et règles (firestore.rules)", () => {
     expect(canSaisirAbsence(membre, { plannings: ["culte"] }, "uid-autre")).toBe(true);
     expect(canVoirAbsencesDeTous(membre, null)).toBe(false);
     expect(canVoirAbsencesDeTous(membre, { plannings: ["culte"] })).toBe(true);
-    expect(canVoirMotifAbsence(membre, "uid-m", null)).toBe(true);
-    expect(canVoirMotifAbsence(membre, "uid-autre", null)).toBe(false);
-    expect(canVoirMotifAbsence(admin, "uid-autre", null)).toBe(true);
+    expect(canVoirMotifAbsence(membre, "uid-m")).toBe(true);
+    expect(canVoirMotifAbsence(membre, "uid-autre")).toBe(false);
+    expect(canVoirMotifAbsence(admin, "uid-autre")).toBe(true);
   });
 
   test("firestore.rules : absences d'un profil et collection group, par faitDesPlannings()", () => {

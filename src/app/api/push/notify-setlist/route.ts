@@ -5,8 +5,7 @@ import { loadPlanningNameIndex, resolveNamesToUids, filterUidsByNotifPref, loadN
 import { setlistReadyMessage } from "@/lib/push/messages";
 import { loadPlanningData, servantsForDate, normalizeName } from "@/lib/planning/names";
 import { FieldValue } from "firebase-admin/firestore";
-import { categoryLevel } from "@/lib/access";
-import { estAdminServeur } from "@/lib/evenements/serveur";
+import { isAdminEmail, categoryLevel } from "@/lib/access";
 import { aPrevenir, horodatageEnvoi, peutPrevenirEquipe } from "@/lib/setlist/partage";
 import type { ServiceRole } from "@/types/user";
 import { BACK_OFFICE } from "@/lib/backOffice";
@@ -102,7 +101,7 @@ export async function POST(req: NextRequest) {
 
   // 4. Autorisation : propriétaire, équipe de la setlist ; sur une non privée, aussi
   //    admin ou exécutant de la catégorie.
-  const isAdmin = await estAdminServeur({ uid, email }, db);
+  const isAdmin = isAdminEmail(email);
   const isOwner = sl.ownerId === uid;
   let isPerformer = false;
   if (!sl.isPrivate && !isAdmin && !isOwner && !equipeChoisie.includes(uid)) {

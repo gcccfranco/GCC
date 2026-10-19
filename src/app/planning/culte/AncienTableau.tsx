@@ -41,7 +41,7 @@ export function AncienTableau() {
   }, [])
 
   // Trimestres futurs non publiés : masqués aux membres, marqués pour les publieurs.
-  const canPublish = canPublishPlanning(CULTE, isAdminUser(user, profile), profile?.notify ?? [])
+  const canPublish = canPublishPlanning(CULTE, isAdminUser(user), profile?.notify ?? [])
   const vis = triVisibilities(TRI_ORDER, published, getCurrentTri(), canPublish)
   const visibleTris = vis.filter(v => v.visible).map(v => v.tri)
   const unpublishedTris = vis.filter(v => v.unpublished).map(v => v.tri)

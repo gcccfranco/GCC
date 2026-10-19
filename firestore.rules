@@ -53,7 +53,7 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    function isFondateur() {
+    function isAdmin() {
       return signedIn() && request.auth.token.email in [
         'tc328829@gmail.com',
         'gcccfranco@gmail.com',
@@ -67,12 +67,6 @@ service cloud.firestore {
 
     function hasProfile() {
       return exists(/databases/$(database)/documents/users/$(request.auth.uid));
-    }
-
-    // Admin = fondateur (liste en dur, synchronisée avec ADMIN_EMAILS) ou membre de l'équipe Bêta
-    // (docs/spec-acces-beta.md). Miroir : isAdminUser (src/lib/access.ts).
-    function isAdmin() {
-      return isFondateur() || (signedIn() && hasProfile() && 'beta' in profile().get('dansEquipes', []));
     }
 
     // Musicien ou présidence du service correspondant à la catégorie de la setlist
@@ -96,10 +90,9 @@ service cloud.firestore {
       allow read: if signedIn();
       // Création (première complétion) : l'intéressé crée son propre profil sans
       // s'attribuer de droits d'annonces ni de notifications ; les admins peuvent
-      // créer n'importe quel profil (verrou n° 3 aussi ici : un non-fondateur ne crée pas un profil
-      // déjà dans Bêta).
+      // créer n'importe quel profil.
       allow create: if signedIn() && (
-        (isAdmin() && (isFondateur() || !('beta' in request.resource.data.get('dansEquipes', []))))
+        isAdmin()
         || (request.auth.uid == uid
             && request.resource.data.get('annonces', []) == []
             && request.resource.data.get('notify', []) == []
@@ -115,11 +108,8 @@ service cloud.firestore {
             && request.resource.data.get('notifieParRole', []) == [])
       );
       // Une fois le profil créé, seuls les admins peuvent le modifier.
-      // Verrou n° 3 (accès bêta) : seul un fondateur ajoute ou retire `beta` de `dansEquipes`.
-      allow update: if isAdmin() && (isFondateur()
-        || ('beta' in request.resource.data.get('dansEquipes', [])) == ('beta' in resource.data.get('dansEquipes', [])));
-      // …et à la suppression : un non-fondateur n'efface pas un profil de Bêta pour le recréer sans.
-      allow delete: if isAdmin() && (isFondateur() || !('beta' in resource.data.get('dansEquipes', [])));
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
     }
 
     // Congés et absences (SC3, docs/spec-createur-corbeille-absences.md ; Q8, Q9) : chacun écrit et lit
@@ -180,9 +170,7 @@ service cloud.firestore {
 
     match /equipes/{id} {
       allow read: if signedIn();
-      // Verrou n° 1 (accès bêta) : seul un fondateur écrit l'équipe Bêta, sinon un `equipes: true`
-      // s'y mettrait et gagnerait les pouvoirs d'un admin.
-      allow create, update, delete: if signedIn() && isEquipier() && (id != 'beta' || isFondateur());
+      allow create, update, delete: if signedIn() && isEquipier();
     }
 
     // Équipes (lot 1 du chantier « équipes et groupes », docs/spec-equipes-sans-poles.md) : est d'une

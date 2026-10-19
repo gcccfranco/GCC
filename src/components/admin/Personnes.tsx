@@ -253,7 +253,7 @@ export function LignePersonne({
       <div className="min-w-0 flex-1 space-y-1">
         <p className="text-sm font-semibold text-foreground truncate">
           {p.firstName} {p.lastName}
-          {isAdminUser(p, p) && (
+          {isAdminUser(p) && (
             <span className="ml-2 text-xs font-semibold text-muted-foreground">admin</span>
           )}
         </p>

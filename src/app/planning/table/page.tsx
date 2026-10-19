@@ -100,7 +100,7 @@ function TablePage() {
         datesDansLApp={datesDansLApp}
         comptes={comptes}
         absenceDe={absenceDe}
-        exporter={peutModifier ? { annee: effAnnee, rang: Number(tri.slice(1)), tout: isAdminUser(user, profile) } : undefined}
+        exporter={peutModifier ? { annee: effAnnee, rang: Number(tri.slice(1)), tout: isAdminUser(user) } : undefined}
       />}
     </div>
   )

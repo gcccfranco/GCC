@@ -104,7 +104,7 @@ export function ceDimanche(
 
 /** Réglage « plannings » : ceux qu'on remplit (sinon ceux qu'on publie) ; le Culte pour un admin. */
 export function planningsCasesVides(r: Reglages, user: AuthUser | null, profile: UserProfile | null): string[] {
-  const admin = isAdminUser(user, profile);
+  const admin = isAdminUser(user);
   // Lot 2 (OG22, OG23) : aussi ce qu'on remplit ou publie par un rôle de groupe.
   const remplis = [...new Set([...(profile?.plannings ?? []), ...(profile?.remplitParRole ?? [])])].filter((k) => GRILLES.some((g) => g.key === k));
   const publies = PUBLISHABLE_PLANNINGS.filter((p) => canPublishPlanning(p, admin, profile?.notify ?? [], profile?.publieParRole ?? [])).map((p) => p.key);
@@ -118,7 +118,7 @@ export function planningsCasesVides(r: Reglages, user: AuthUser | null, profile:
 
 /** Réglage « services » : ceux où l'on crée des setlists (défaut : les siens ; le Culte pour un admin qui n'en a pas). */
 export function servicesSetlists(r: Reglages, user: AuthUser | null, profile: UserProfile | null): string[] {
-  const admin = isAdminUser(user, profile);
+  const admin = isAdminUser(user);
   const siens = profile ? SERVICES.filter((s) => creatableCategories(profile).includes(s)) : [];
   const permis = admin ? SERVICES : siens;
   if (r.services) return permis.filter((s) => r.services!.includes(s));

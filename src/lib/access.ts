@@ -3,7 +3,7 @@ import { aCommence } from "@/lib/evenements/agenda";
 import type { Evenement } from "@/types/evenement";
 import type { FSSetlist } from "@/lib/firebase/setlists";
 import type { Tache } from "@/types/tache";
-import { EQUIPES, EQUIPE_BETA } from "@/lib/equipes/table";
+import { EQUIPES } from "@/lib/equipes/table";
 import { COMITES, groupeDef } from "@/lib/groupes/table";
 import { PUBLISHABLE_PLANNINGS, peutPrevenir } from "@/lib/planning/releases";
 import { audiencesNotifiables } from "@/lib/push/audiences";
@@ -22,10 +22,6 @@ export const ADMIN_EMAILS = [
   "david.code999@gmail.com",
 ];
 
-// Équipe Bêta (docs/spec-acces-beta.md) : ses membres ont les pouvoirs d'un admin. Hors de EQUIPES
-// comme les comités ; écrite par les fondateurs seuls. Constante définie dans equipes/table (sans cycle).
-export { EQUIPE_BETA };
-
 type AuthUser = { uid: string; email?: string | null };
 
 /** Une adresse d'admin, quelle que soit sa casse — seule comparaison à utiliser,
@@ -35,24 +31,8 @@ export function isAdminEmail(email: string | null | undefined): boolean {
   return !!email && ADMIN_EMAILS.includes(email.toLowerCase());
 }
 
-/** Admin fondateur : les adresses de ADMIN_EMAILS, en dur. Seuls à écrire l'équipe Bêta et la mention
- *  `beta` d'un profil ; seuls destinataires des envois aux admins (Q2). */
-export function isFondateur(user: { email?: string | null } | null): boolean {
+export function isAdminUser(user: { email?: string | null } | null): boolean {
   return isAdminEmail(user?.email);
-}
-
-/** Membre de l'équipe Bêta (`dansEquipes` du profil, recopié par le serveur). */
-export function estBeta(profile: { dansEquipes?: readonly string[] } | null | undefined): boolean {
-  return (profile?.dansEquipes ?? []).includes(EQUIPE_BETA);
-}
-
-/** Admin = fondateur ou membre de Bêta. `profile` est celui de `user` (le second paramètre est
- *  obligatoire : pas de profil, pas de Bêta). Miroir : isAdmin() dans firestore.rules. */
-export function isAdminUser(
-  user: { email?: string | null } | null,
-  profile: { dansEquipes?: string[] } | null | undefined
-): boolean {
-  return isFondateur(user) || (!!user && estBeta(profile));
 }
 
 /** Modification du profil : autorisée tant qu'il n'existe pas encore (première
@@ -60,10 +40,9 @@ export function isAdminUser(
  *  Miroir serveur dans firestore.rules (users/{uid} : create libre, update admin). */
 export function canEditProfile(
   user: { email?: string | null } | null,
-  profile: UserProfile | null,
-  profilAppelant: { dansEquipes?: string[] } | null
+  profile: UserProfile | null
 ): boolean {
-  return isAdminUser(user, profilAppelant) || !profile;
+  return isAdminUser(user) || !profile;
 }
 
 // ─── Équipes (lot 1 du chantier « équipes et groupes », docs/spec-equipes-sans-poles.md) ───
@@ -75,13 +54,13 @@ const ORDRE_EQUIPES = [...EQUIPES.map((e) => e.id), ...COMITES];
 const rangEquipe = (id: string) => (ORDRE_EQUIPES.includes(id) ? ORDRE_EQUIPES.indexOf(id) : ORDRE_EQUIPES.length);
 
 /** Les équipes d'une personne (EQ5) : celles où elle figure (`dansEquipes`, recopié par le serveur
- *  depuis l'organigramme, sans Bêta : ce n'est pas une équipe de travail, Q1), plus « louange » dès qu'elle a un rôle de service — une clé de
+ *  depuis l'organigramme), plus « louange » dès qu'elle a un rôle de service — une clé de
  *  `serviceRoles` suffit, même sans rôle (décisions 5 et 42) — ou un groupe (champ `groupe` non
  *  vide, lot 2, OG38), dans l'ordre de la table (équipes de l'église, puis comités). Seule
  *  fonction qui calcule « mes équipes » côté client. Miroir serveur : membresDeLEquipe
  *  (src/lib/taches/serveur.ts) ; miroir des règles : estDeLEquipe(equipe) dans firestore.rules. */
 export function equipesDe(profile: ProfilEquipes | null): string[] {
-  const ids = [...new Set(profile?.dansEquipes ?? [])].filter((id) => id !== EQUIPE_BETA);
+  const ids = [...new Set(profile?.dansEquipes ?? [])];
   const louange = Object.keys(profile?.serviceRoles ?? {}).length > 0 || (typeof profile?.groupe === "string" && profile.groupe !== "");
   if (louange && !ids.includes("louange")) ids.push("louange");
   return ids.sort((a, b) => rangEquipe(a) - rangEquipe(b));
@@ -91,14 +70,14 @@ export function equipesDe(profile: ProfilEquipes | null): string[] {
  *  admin. Miroir : estDeLEquipe(equipe) dans firestore.rules. */
 export function estDeLEquipe(user: AuthUser | { email?: string | null } | null, profile: ProfilEquipes | null, equipe: string): boolean {
   if (!user) return false;
-  return isAdminUser(user, profile) || equipesDe(profile).includes(equipe);
+  return isAdminUser(user) || equipesDe(profile).includes(equipe);
 }
 
 /** En être référent (EQ3) : `referentDe`, recopié par le serveur ; un admin l'est de toutes. Les
  *  référents de Louange sont ceux de TEAM LOUANGE. Miroir : estReferentDe(equipe) dans firestore.rules. */
 export function estReferentDe(user: AuthUser | { email?: string | null } | null, profile: ProfilEquipes | null, equipe: string): boolean {
   if (!user) return false;
-  return isAdminUser(user, profile) || (profile?.referentDe ?? []).includes(equipe);
+  return isAdminUser(user) || (profile?.referentDe ?? []).includes(equipe);
 }
 
 /** Changer l'état d'une fois d'une tâche, « cocher » (EQ8, décisions 3 et 41) : les référents de son
@@ -119,14 +98,14 @@ export function peutCocher(
  *  un admin. Affichage : equipes/{equipe}/taches garde sa règle (estDeLEquipe). */
 export function equipesDesTaches(user: AuthUser | { email?: string | null } | null, profile: ProfilEquipes | null): string[] {
   if (!user) return [];
-  return isAdminUser(user, profile) ? [...ORDRE_EQUIPES] : equipesDe(profile);
+  return isAdminUser(user) ? [...ORDRE_EQUIPES] : equipesDe(profile);
 }
 
 /** Les équipes où l'on crée une tâche (EQ8, EQ9) : celles dont on est référent, dans l'ordre de la
  *  table ; toutes pour un admin. Créer emporte modifier, supprimer, déplacer, lier à un évènement. */
 export function equipesOuCreer(user: AuthUser | { email?: string | null } | null, profile: ProfilEquipes | null): string[] {
   if (!user) return [];
-  if (isAdminUser(user, profile)) return [...ORDRE_EQUIPES];
+  if (isAdminUser(user)) return [...ORDRE_EQUIPES];
   return [...new Set(profile?.referentDe ?? [])].sort((a, b) => rangEquipe(a) - rangEquipe(b));
 }
 
@@ -137,9 +116,9 @@ export function equipesOuCreer(user: AuthUser | { email?: string | null } | null
  *  Miroir serveur : isCoordination() dans firestore.rules. */
 export function isCoordination(
   user: { email?: string | null } | null,
-  profile: { coordination?: boolean; dansEquipes?: string[] } | null
+  profile: { coordination?: boolean } | null
 ): boolean {
-  return isAdminUser(user, profile) || profile?.coordination === true;
+  return isAdminUser(user) || profile?.coordination === true;
 }
 
 /** Organigramme (lot 16, docs/spec-organigramme.md) : tout membre connecté le
@@ -158,26 +137,26 @@ export function canVoirEquipes(user: AuthUser | null): boolean {
  *  écrit par le serveur seul — `allow update` des profils ne bouge pas. */
 export function canEditerEquipes(
   user: AuthUser | null,
-  profile: { equipes?: boolean; dansEquipes?: string[] } | null
+  profile: { equipes?: boolean } | null
 ): boolean {
   if (!user) return false;
-  return isAdminUser(user, profile) || profile?.equipes === true;
+  return isAdminUser(user) || profile?.equipes === true;
 }
 
 /** Tenir l'organigramme d'un groupe (lot 2, OG9, OG26) : admin, ou président / VP du groupe — leur
  *  `referentDe` porte le comité du groupe, recopié par le serveur seul. Le droit Équipes ne le donne
  *  pas (décision 44). Miroir : tientGroupe(g) dans firestore.rules ; serveur : exigerTenirGroupe. */
-export function canTenirGroupe(user: AuthUser | null, profile: { referentDe?: string[]; dansEquipes?: string[] } | null, groupe: string): boolean {
+export function canTenirGroupe(user: AuthUser | null, profile: { referentDe?: string[] } | null, groupe: string): boolean {
   if (!user) return false;
   const def = groupeDef(groupe);
-  return !!def && (isAdminUser(user, profile) || (profile?.referentDe ?? []).includes(def.comite));
+  return !!def && (isAdminUser(user) || (profile?.referentDe ?? []).includes(def.comite));
 }
 
 /** Président ou VP d'au moins un groupe (entrée Équipes du Back-Office, OG26). Par la liste des
  *  comités, jamais par le préfixe : `comite-franco` est une équipe de l'église. */
-export function tientUnGroupe(user: AuthUser | null, profile: { referentDe?: string[]; dansEquipes?: string[] } | null): boolean {
+export function tientUnGroupe(user: AuthUser | null, profile: { referentDe?: string[] } | null): boolean {
   if (!user) return false;
-  return isAdminUser(user, profile) || (profile?.referentDe ?? []).some((id) => COMITES.includes(id));
+  return isAdminUser(user) || (profile?.referentDe ?? []).some((id) => COMITES.includes(id));
 }
 
 export { audiencesNotifiables };
@@ -185,7 +164,7 @@ export { audiencesNotifiables };
 /** Créneau sur scène : son auteur + la coordination. Miroir : programmes/{id}/creneaux dans firestore.rules. */
 export function canEditCreneau(
   user: AuthUser,
-  profile: { coordination?: boolean; dansEquipes?: string[] } | null,
+  profile: { coordination?: boolean } | null,
   creneau: { auteurUid: string }
 ): boolean {
   return creneau.auteurUid === user.uid || isCoordination(user, profile);
@@ -198,7 +177,7 @@ export function canEditCreneau(
  *  Miroir serveur : reservable() sous programmes/{id}/creneaux, firestore.rules. */
 export function canReserverPour(
   user: AuthUser | null,
-  profile: { coordination?: boolean; dansEquipes?: string[] } | null,
+  profile: { coordination?: boolean } | null,
   programme: { ouvert?: boolean; fermees?: boolean; quiAutorises?: string[] },
   qui: string[]
 ): boolean {
@@ -313,7 +292,7 @@ export function canSeeInscrits(user: AuthUser | null): boolean {
 /** Modifier, dupliquer, supprimer, fermer les inscriptions, retirer un inscrit : organisateur + coordination. */
 export function canEditEvenement(
   user: AuthUser | null,
-  profile: { coordination?: boolean; dansEquipes?: string[] } | null,
+  profile: { coordination?: boolean } | null,
   e: EvenementDroits
 ): boolean {
   if (!user) return false;
@@ -335,7 +314,7 @@ export function estDeLaReunion(
   e: EvenementDroits
 ): boolean {
   if (!user) return false;
-  if (isAdminUser(user, profile) || e.organisateurUid === user.uid) return true;
+  if (isAdminUser(user) || e.organisateurUid === user.uid) return true;
   const equipe = equipeDuPour(e.pour);
   return equipe !== null && estDeLEquipe(user, profile, equipe);
 }
@@ -356,17 +335,16 @@ export function peutAjouterSujet(
 export function peutRetirerSujet(
   user: AuthUser | null,
   e: EvenementDroits,
-  sujet: { auteurUid: string },
-  profile: { dansEquipes?: string[] } | null
+  sujet: { auteurUid: string }
 ): boolean {
   if (!user) return false;
-  return sujet.auteurUid === user.uid || peutOrdonnerSujets(user, e, profile);
+  return sujet.auteurUid === user.uid || peutOrdonnerSujets(user, e);
 }
 
 /** Ordonner les sujets et cocher « traité » : l'organisateur, un admin. */
-export function peutOrdonnerSujets(user: AuthUser | null, e: EvenementDroits, profile: { dansEquipes?: string[] } | null): boolean {
+export function peutOrdonnerSujets(user: AuthUser | null, e: EvenementDroits): boolean {
   if (!user) return false;
-  return isAdminUser(user, profile) || e.organisateurUid === user.uid;
+  return isAdminUser(user) || e.organisateurUid === user.uid;
 }
 
 /** Remplir les cases d'un planning dans l'app (lot 17, docs/spec-planning-grille.md) :
@@ -378,11 +356,11 @@ export function peutOrdonnerSujets(user: AuthUser | null, e: EvenementDroits, pr
  *  Miroir serveur : plannings/{key}/dimanches dans firestore.rules. */
 export function canEditPlanning(
   user: { email?: string | null } | null,
-  profile: { plannings?: string[]; remplitParRole?: string[]; dansEquipes?: string[] } | null,
+  profile: { plannings?: string[]; remplitParRole?: string[] } | null,
   key: string
 ): boolean {
   if (!user) return false;
-  return isAdminUser(user, profile) || (profile?.plannings ?? []).includes(key) || (profile?.remplitParRole ?? []).includes(key);
+  return isAdminUser(user) || (profile?.plannings ?? []).includes(key) || (profile?.remplitParRole ?? []).includes(key);
 }
 
 /** Congés et absences (SC3, docs/spec-createur-corbeille-absences.md ; Q8, Q9) : « ceux qui font les
@@ -391,16 +369,16 @@ export function canEditPlanning(
  *  Miroir serveur : faitDesPlannings() et users/{uid}/absences/{id} dans firestore.rules. */
 export function faitDesPlannings(
   user: { email?: string | null } | null,
-  profile: { plannings?: string[]; dansEquipes?: string[] } | null
+  profile: { plannings?: string[] } | null
 ): boolean {
   if (!user) return false;
-  return isAdminUser(user, profile) || (profile?.plannings ?? []).length > 0;
+  return isAdminUser(user) || (profile?.plannings ?? []).length > 0;
 }
 
 /** Saisir ou supprimer une absence : la personne elle-même, ou qui fait les plannings. */
 export function canSaisirAbsence(
   user: { uid: string; email?: string | null } | null,
-  profile: { plannings?: string[]; dansEquipes?: string[] } | null,
+  profile: { plannings?: string[] } | null,
   uidCible: string
 ): boolean {
   if (!user) return false;
@@ -410,7 +388,7 @@ export function canSaisirAbsence(
 /** Lire les absences de tous (la grille des plannings). */
 export function canVoirAbsencesDeTous(
   user: { email?: string | null } | null,
-  profile: { plannings?: string[]; dansEquipes?: string[] } | null
+  profile: { plannings?: string[] } | null
 ): boolean {
   return faitDesPlannings(user, profile);
 }
@@ -419,11 +397,10 @@ export function canVoirAbsencesDeTous(
  *  confidentialité du site (les rules laissent lire l'absence entière à qui fait les plannings). */
 export function canVoirMotifAbsence(
   user: { uid: string; email?: string | null } | null,
-  uidCible: string,
-  profile: { dansEquipes?: string[] } | null
+  uidCible: string
 ): boolean {
   if (!user) return false;
-  return user.uid === uidCible || isAdminUser(user, profile);
+  return user.uid === uidCible || isAdminUser(user);
 }
 
 /** Petit déj (lot U3, docs/spec-petit-dej.md, Q8) : poser une ligne pour
@@ -433,7 +410,7 @@ export function canVoirMotifAbsence(
  *  dans firestore.rules. */
 export function canGererPetitDej(
   user: { email?: string | null } | null,
-  profile: { plannings?: string[]; dansEquipes?: string[] } | null
+  profile: { plannings?: string[] } | null
 ): boolean {
   return canEditPlanning(user, profile, "table");
 }
@@ -443,7 +420,7 @@ export function canGererPetitDej(
  *  côté client seulement, comme le reste du filtrage du site). */
 export function canEditPetitDej(
   user: AuthUser | null,
-  profile: { plannings?: string[]; dansEquipes?: string[] } | null,
+  profile: { plannings?: string[] } | null,
   ligne: { uid: string; dimanche: string },
   dimancheEnCours: string
 ): boolean {
@@ -461,7 +438,7 @@ export const PLANNINGS_DATES_CHOISIES = ["interfranco", "intergroupe", "campusMa
  *  Miroir serveur : `allow delete` de plannings/{key}/dimanches dans firestore.rules. */
 export function canRetirerDate(
   user: { email?: string | null } | null,
-  profile: { plannings?: string[]; dansEquipes?: string[] } | null,
+  profile: { plannings?: string[] } | null,
   key: string
 ): boolean {
   return (PLANNINGS_DATES_CHOISIES as readonly string[]).includes(key) && canEditPlanning(user, profile, key);
@@ -479,16 +456,15 @@ export function canRetirerDate(
 /** Cours d'Harmonie (C2, C4) : chacun coche ses chapitres ; seuls les admins
  *  voient la progression des autres. Miroir serveur : firestore.rules,
  *  `coursProgres/{uid}` (lecture : soi ou admin ; écriture : soi). */
-export function canSeeTeamCoursProgres(user: { email?: string | null } | null, profile: { dansEquipes?: string[] } | null): boolean {
-  return isAdminUser(user, profile);
+export function canSeeTeamCoursProgres(user: { email?: string | null } | null): boolean {
+  return isAdminUser(user);
 }
 
 export function canUseHarmonie(
   user: { email?: string | null } | null,
   services: { role: string }[],
-  profile: { dansEquipes?: string[] } | null,
 ): { piano: boolean; guitare: boolean } {
-  if (isAdminUser(user, profile)) return { piano: true, guitare: true };
+  if (isAdminUser(user)) return { piano: true, guitare: true };
   const roles = new Set(services.map((s) => s.role));
   return { piano: roles.has("Piano"), guitare: roles.has("Guitare") };
 }
@@ -528,7 +504,7 @@ export function canCreateSetlist(
   user: { email?: string | null } | null,
   profile: UserProfile | null
 ): boolean {
-  if (isAdminUser(user, profile)) return true;
+  if (isAdminUser(user)) return true;
   return !!profile && creatableCategories(profile).length > 0;
 }
 
@@ -555,7 +531,7 @@ export function canSeeSetlist(
   // Une setlist de fête se voit de tout connecté (CF12, décision 32) ; elle n'est jamais privée.
   if (setlist.fete) return true;
   if (setlist.isPrivate) return false;
-  if (isAdminUser(user, profile)) return true;
+  if (isAdminUser(user)) return true;
   return profile ? visibleCategories(profile).includes(setlist.category) : false;
 }
 
@@ -601,7 +577,7 @@ export function canDeleteSetlist(
   // `null` et personne ne sert dans la catégorie Noël ou Pâques. Miroir : canDeleteSetlistDoc.
   if (setlist.fete && isCoordination(user, profile)) return true;
   if (setlist.isPrivate) return false;
-  return isAdminUser(user, profile);
+  return isAdminUser(user);
 }
 
 /** Changer la catégorie d'une setlist : qui peut la supprimer (propriétaire, admin),
@@ -618,7 +594,7 @@ export function canSetSetlistTeam(
 ): boolean {
   // Une setlist de fête a ses `editeurs` écrits par le serveur seul (CF18), même pour un admin.
   if (setlist.fete) return false;
-  return canEditSetlist(user, profile, setlist) && (setlist.ownerId === user.uid || isAdminUser(user, profile));
+  return canEditSetlist(user, profile, setlist) && (setlist.ownerId === user.uid || isAdminUser(user));
 }
 
 /** Lien de présentation d'une setlist de fête (CF27, décision 45, Q7) : la régie hors planning =
@@ -649,7 +625,7 @@ const nonVide = (l: string[] | undefined) => (l?.length ?? 0) > 0;
  *  de service) ne fait pas un responsable (question 2). */
 export function estResponsable(user: AuthUser | null, profile: ProfilResponsable | null): boolean {
   if (!user) return false;
-  if (isAdminUser(user, profile)) return true;
+  if (isAdminUser(user)) return true;
   if (!profile) return false;
   return profile.coordination === true || nonVide(profile.plannings) || nonVide(profile.notify)
     || nonVide(profile.annonces) || profile.equipes === true || nonVide(profile.referentDe)
@@ -658,8 +634,8 @@ export function estResponsable(user: AuthUser | null, profile: ProfilResponsable
 
 /** Statistiques des chants (lot U7, docs/spec-statistiques.md, Q2) : admins seulement (T1).
  *  Sans règle Firestore : rien de nouveau n'est lu ni écrit (précédent `canUseHarmonie`). */
-export function canVoirStatistiques(user: { email?: string | null } | null, profile: { dansEquipes?: string[] } | null): boolean {
-  return isAdminUser(user, profile);
+export function canVoirStatistiques(user: { email?: string | null } | null): boolean {
+  return isAdminUser(user);
 }
 
 /** Entrées et widgets qui arrivent avec leur lot (Q17). Chaque lot retire la sienne de ces
@@ -675,7 +651,7 @@ export function entreesBackOffice(user: AuthUser | null, profile: ProfilResponsa
   if (!user) return [];
   const equipes = equipesDe(profile).length > 0;
   if (!estResponsable(user, profile)) return equipes ? ["taches", "reunions"] : [];
-  const admin = isAdminUser(user, profile);
+  const admin = isAdminUser(user);
   const visible: Record<Entree, boolean> = {
     tableau: true,
     calendrier: true,
@@ -690,7 +666,7 @@ export function entreesBackOffice(user: AuthUser | null, profile: ProfilResponsa
     // Le Back-Office n'existe qu'interrupteur ouvert (OG27) : les rôles comptent ici, sans dépendre de
     // la variable du processus (un test pur ne la voit pas).
     messages: admin || audiencesNotifiables(profile, true).length > 0,
-    statistiques: canVoirStatistiques(user, profile),
+    statistiques: canVoirStatistiques(user),
   };
   return ENTREES.filter((e) => visible[e] && !ENTREES_A_VENIR.includes(e));
 }
@@ -713,10 +689,10 @@ function ongletDeLaGrille(key: string): OngletPlanning | null {
  *  l'ordre des onglets ; tous pour un admin. */
 export function planningsDuBackOffice(
   user: { email?: string | null } | null,
-  profile: { plannings?: string[]; notify?: string[]; remplitParRole?: string[]; publieParRole?: string[]; notifieParRole?: string[]; dansEquipes?: string[] } | null
+  profile: { plannings?: string[]; notify?: string[]; remplitParRole?: string[]; publieParRole?: string[]; notifieParRole?: string[] } | null
 ): OngletPlanning[] {
   if (!user) return [];
-  if (isAdminUser(user, profile)) return [...ONGLETS_PLANNING];
+  if (isAdminUser(user)) return [...ONGLETS_PLANNING];
   const publies = PUBLISHABLE_PLANNINGS.filter((p) =>
     peutPrevenir(p, false, profile?.notify ?? [], profile?.publieParRole ?? [], profile?.notifieParRole ?? [])).map((p) => p.key);
   const siens = new Set([...(profile?.plannings ?? []), ...(profile?.remplitParRole ?? []), ...publies].map(ongletDeLaGrille));
@@ -728,7 +704,7 @@ export function planningsDuBackOffice(
 export function widgetsPermis(user: AuthUser | null, profile: UserProfile | null): WidgetId[] {
   if (!estResponsable(user, profile)) return [];
   const entrees = entreesBackOffice(user, profile);
-  const admin = isAdminUser(user, profile);
+  const admin = isAdminUser(user);
   const permis: Record<WidgetId, boolean> = {
     dimanche: true,
     calendrier: true,
@@ -737,7 +713,7 @@ export function widgetsPermis(user: AuthUser | null, profile: UserProfile | null
     planning: entrees.includes("planning"),
     // Une seule entrée couvrait les deux avant v18 : le widget reste permis avec l'une ou l'autre.
     evenements: entrees.includes("evenements") || entrees.includes("reunions"),
-    chants: canVoirStatistiques(user, profile),
+    chants: canVoirStatistiques(user),
     petitdej: true,
     scene: true,
     comptes: admin,
@@ -756,7 +732,7 @@ export function sousPartiesEvenements(
   profile: ProfilResponsable | null
 ): SousPartieEvenements[] {
   if (!user) return [];
-  const admin = isAdminUser(user, profile);
+  const admin = isAdminUser(user);
   const coordination = isCoordination(user, profile);
   const parties: SousPartieEvenements[] = [];
   if (admin || coordination || nonVide(profile?.annonces) || nonVide(profile?.referentDe)) parties.push("evenements");

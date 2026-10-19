@@ -1,7 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { adminDb } from "@/lib/push/admin";
 import { HttpError, errorResponse, optionalUser } from "@/lib/evenements/serveur";
-import { isFondateur } from "@/lib/access";
 import { lireEquipes, lireGroupes, recalculerRattachement } from "@/lib/equipes/serveur";
 import { changerGroupe, exigerTenirGroupe } from "@/lib/groupes/serveur";
 import { BACK_OFFICE } from "@/lib/backOffice";
@@ -33,7 +32,7 @@ export async function POST(req: NextRequest) {
     const uids = Array.isArray(body.uids) ? body.uids.filter((u): u is string => typeof u === "string").slice(0, 200) : null;
     if (!uids) throw new HttpError(400, "Requête incomplète");
     const [equipes, groupes] = await Promise.all([lireEquipes(db), lireGroupes(db)]);
-    const { maj, ignores } = await recalculerRattachement(db, uids, equipes, groupes, isFondateur(user));
+    const { maj, ignores } = await recalculerRattachement(db, uids, equipes, groupes);
     return NextResponse.json({ ok: true, maj, ignores });
   } catch (e) {
     return errorResponse(e);

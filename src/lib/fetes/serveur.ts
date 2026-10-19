@@ -3,7 +3,7 @@
 // « aujourd'hui » en paramètres.
 
 import { FieldValue } from "firebase-admin/firestore";
-import { estBeta, isAdminEmail, isFondateur } from "@/lib/access";
+import { isAdminEmail } from "@/lib/access";
 import { HttpError } from "@/lib/evenements/serveur";
 import { lireGroupes } from "@/lib/equipes/serveur";
 import { groupeDe } from "@/lib/groupes/organigramme";
@@ -54,12 +54,12 @@ export async function lireContexteFetes(
       serviceRoles,
       dansEquipes: liste(x.dansEquipes),
       planningName: typeof x.planningName === "string" ? x.planningName : "",
-      coordination: isAdminEmail(x.email as string | undefined) || estBeta({ dansEquipes: liste(x.dansEquipes) }) || x.coordination === true,
+      coordination: isAdminEmail(x.email as string | undefined) || x.coordination === true,
     };
   });
   const moi = profils.find((p) => p.uid === appelant.uid);
-  if (!moi) profils.push({ uid: appelant.uid, groupe: null, serviceRoles: {}, dansEquipes: [], planningName: "", coordination: isFondateur(appelant) });
-  else if (isFondateur(appelant) || estBeta(moi)) moi.coordination = true;
+  if (!moi) profils.push({ uid: appelant.uid, groupe: null, serviceRoles: {}, dansEquipes: [], planningName: "", coordination: isAdminEmail(appelant.email) });
+  else if (isAdminEmail(appelant.email)) moi.coordination = true;
   return { profils, groupes: Object.fromEntries(groupes.map((g) => [g.id, g])), edd, jourJ };
 }
 

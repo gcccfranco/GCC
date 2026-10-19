@@ -6,16 +6,16 @@
 // Ici, un responsable non admin lit le message de /admin (Q2). Français seul (Q14).
 // S3, S4 : le titre, le sélecteur des trois vues et leur contenu (StatistiquesClient) ; en-tête v18.
 import { ShieldCheck } from "lucide-react";
-import { useProfile } from "@/lib/firebase/users";
+import { useAuth } from "@/lib/firebase/auth";
 import { canVoirStatistiques } from "@/lib/access";
 import { StatistiquesClient } from "./StatistiquesClient";
 
 export default function StatistiquesPage() {
-  // Le profil porte Bêta (admin) : on attend sa lecture avant d'afficher un refus.
-  const { user, profile, loading } = useProfile();
+  // `useAuth` n'est pas partagé : sa première lecture rend `null`, ne pas l'afficher comme un refus.
+  const { user, loading } = useAuth();
 
   if (loading) return null;
-  if (!canVoirStatistiques(user, profile)) {
+  if (!canVoirStatistiques(user)) {
     return (
       <div className="min-h-[60vh] flex flex-col items-center justify-center gap-3 px-4 text-center">
         <ShieldCheck className="h-8 w-8 text-muted-foreground" aria-hidden />

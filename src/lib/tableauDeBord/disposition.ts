@@ -31,7 +31,7 @@ const nonVide = (l: unknown[] | undefined) => (l?.length ?? 0) > 0;
 export function dispositionParDefaut(user: AuthUser | null, profile: UserProfile | null): Widget[] {
   const permis = widgetsPermis(user, profile);
   let voulus: WidgetId[] = permis;
-  if (!isAdminUser(user, profile)) {
+  if (!isAdminUser(user)) {
     voulus = ["dimanche", "afaire"];
     if (isCoordination(user, profile) || nonVide(profile?.annonces)) voulus.push("evenements", "scene");
     if (Object.keys(profile?.serviceRoles ?? {}).length > 0 || nonVide(profile?.plannings) || nonVide(profile?.remplitParRole)) voulus.push("planning", "setlists");

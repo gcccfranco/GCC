@@ -31,7 +31,7 @@ function useEnAttente(actif: boolean): number {
  *  la liste change ; une entrée absente n'est pas lue. */
 export function usePastilles(entrees: readonly Entree[]): Partial<Record<Entree, number>> {
   const { user, profile } = useProfile();
-  const admin = isAdminUser(user, profile);
+  const admin = isAdminUser(user);
   const avecTaches = entrees.includes("taches");
   // `useTaches` relit selon la liste des équipes (en texte) : un nouveau tableau à chaque rendu ne relance rien.
   const { items } = useTaches(avecTaches ? equipesDesTaches(user, profile) : []);

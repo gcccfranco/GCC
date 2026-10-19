@@ -12,7 +12,7 @@ import { ReserveAuxAdmins } from "@/components/admin/commun";
 export default function ReceptionPage() {
   const router = useRouter();
   const { user, profile } = useProfile();
-  const admin = isAdminUser(user, profile);
+  const admin = isAdminUser(user);
   const notifier = !admin && audiencesNotifiables(profile).length > 0;
 
   useEffect(() => {

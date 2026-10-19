@@ -13,8 +13,9 @@ import { Check } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Group, GroupRow } from "@/components/ui/group";
 import { canSeeTeamCoursProgres } from "@/lib/access";
+import { useAuth } from "@/lib/firebase/auth";
 import { getProgresDeLEquipe, type Progres } from "@/lib/firebase/coursProgres";
-import { listProfiles, useProfile } from "@/lib/firebase/users";
+import { listProfiles } from "@/lib/firebase/users";
 import { leconsDansLOrdre } from "@/lib/harmonie/useCours";
 import { cn } from "@/lib/utils";
 import type { ChapitreResume } from "@/types/cours";
@@ -169,7 +170,7 @@ export function SommaireCours({
   surLien?: () => void;
 }) {
   const { t } = useTranslation();
-  const { user, profile } = useProfile();
+  const { user } = useAuth();
   const { chapitres, fini } = useCoursCharge();
 
   const modeEmploi = chapitres.find((c) => c.partie === 0);
@@ -225,7 +226,7 @@ export function SommaireCours({
         </Group>
       )}
 
-      {enTete && canSeeTeamCoursProgres(user, profile) && lecons.length > 0 && <ProgresDeLEquipe lecons={lecons} />}
+      {enTete && canSeeTeamCoursProgres(user) && lecons.length > 0 && <ProgresDeLEquipe lecons={lecons} />}
     </div>
   );
 }

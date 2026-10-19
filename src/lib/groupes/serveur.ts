@@ -2,9 +2,9 @@
 // docs/spec-organigrammes-groupes.md, OG5, OG21) : serveur seulement, Admin SDK.
 
 import { adminDb } from "@/lib/push/admin";
-import { estBeta, isFondateur } from "@/lib/access";
-import { HttpError, estAdminServeur } from "@/lib/evenements/serveur";
-import { lireEquipes, lireGroupes, recopieDuCompte, verrouBeta } from "@/lib/equipes/serveur";
+import { isAdminEmail } from "@/lib/access";
+import { HttpError } from "@/lib/evenements/serveur";
+import { lireEquipes, lireGroupes, recopieDuCompte } from "@/lib/equipes/serveur";
 import type { OrganigrammeGroupe } from "@/types/groupe";
 import { comptesCites, groupeDe } from "./organigramme";
 import { estGroupeId, groupeDef } from "./table";
@@ -13,17 +13,16 @@ export { lireGroupes } from "@/lib/equipes/serveur";
 
 type Appelant = { uid: string; email: string } | null;
 
-/** Tenir l'organigramme d'un groupe, revérifié ici (OG21) : admin (fondateur ou Bêta), ou `referentDe` ∋ le comité du
+/** Tenir l'organigramme d'un groupe, revérifié ici (OG21) : admin, ou `referentDe` ∋ le comité du
  *  groupe, relu en base — le président et les VP. Le droit Équipes ne suffit pas (décision 44).
  *  Miroirs : canTenirGroupe (src/lib/access.ts), tientGroupe(g) (firestore.rules). */
 export async function exigerTenirGroupe(user: Appelant, groupe: string, db: FirebaseFirestore.Firestore = adminDb()): Promise<void> {
   if (!user) throw new HttpError(401, "Non authentifié");
   const def = groupeDef(groupe);
   if (!def) throw new HttpError(400, "Groupe inconnu");
-  if (isFondateur(user)) return;
-  const data = (await db.collection("users").doc(user.uid).get()).data();
-  const referentDe = (data?.referentDe as string[] | undefined) ?? [];
-  if (!(estBeta(data) || referentDe.includes(def.comite))) throw new HttpError(403, "Réservé au président, aux VP du groupe et aux admins");
+  if (isAdminEmail(user.email)) return;
+  const referentDe = ((await db.collection("users").doc(user.uid).get()).data()?.referentDe as string[] | undefined) ?? [];
+  if (!referentDe.includes(def.comite)) throw new HttpError(403, "Réservé au président, aux VP du groupe et aux admins");
 }
 
 /** Le document sans la personne : ni président, ni VP, ni titulaire. */
@@ -51,7 +50,7 @@ export async function changerGroupe(
   groupe: string,
 ): Promise<{ maj: number }> {
   if (!appelant) throw new HttpError(401, "Non authentifié");
-  if (!(await estAdminServeur(appelant, db))) throw new HttpError(403, "Réservé aux admins");
+  if (!isAdminEmail(appelant.email)) throw new HttpError(403, "Réservé aux admins");
   if (!uid || (groupe !== "" && !estGroupeId(groupe))) throw new HttpError(400, "Requête incomplète");
   const ref = db.collection("users").doc(uid);
   const snap = await ref.get();
@@ -64,7 +63,6 @@ export async function changerGroupe(
   const doc = avant.find((g) => g.id === ancien && comptesCites(g).includes(uid));
   const apres = avant.map((g) => (g === doc ? sans(g, uid) : g));
   const { listes } = recopieDuCompte(uid, { ...data, groupe }, await lireEquipes(db), apres);
-  verrouBeta(listes, data, isFondateur(appelant));
   if (groupe === "") {
     // Sans groupe : les ids de comité et les listes par rôle tombent, les équipes de l'église restent.
     const comites = new Set(apres.map((g) => groupeDef(g.id)!.comite));

@@ -93,10 +93,10 @@ function GroupesPage() {
   // Trimestres futurs non publiés du groupe actif : masqués aux membres, marqués aux publieurs.
   const planning = PUBLISHABLE_PLANNINGS.find(p => p.key === grp)!
   // Lot 3 (PG35) : qui publie ou notifie ce planning prévient des changements, même sans remplir la grille.
-  const peutPrev = gestion && droitsDePrevenir(planning, isAdminUser(user, profile), profile)
+  const peutPrev = gestion && droitsDePrevenir(planning, isAdminUser(user), profile)
   const { datesDansLApp, comptes, ecrites, groupe, absenceDe } = useGrilleApp(definition.key, peutModifier || peutPrev, gestion)
   const [publications, setPublications] = useState(0)
-  const canPublish = gestion && droitsDePublication(planning, isAdminUser(user, profile), profile)
+  const canPublish = gestion && droitsDePublication(planning, isAdminUser(user), profile)
   // Q4 (lot U2) : le brouillon se montre à qui remplit ou publie ce planning, et aux admins.
   const voitBrouillon = canPublish || peutModifier
   const {
@@ -177,7 +177,7 @@ function GroupesPage() {
           : undefined}
         dimanchesSpeciaux={dimanchesSpeciaux(interfranco, intergroupe)}
         // P7 : les responsables du planning et les admins exportent (Q13).
-        exporter={voitBrouillon ? { annee: effAnnee, rang: Number(effTri.slice(1)) || 1, tout: isAdminUser(user, profile) } : undefined}
+        exporter={voitBrouillon ? { annee: effAnnee, rang: Number(effTri.slice(1)) || 1, tout: isAdminUser(user) } : undefined}
       />
     </div>
   )

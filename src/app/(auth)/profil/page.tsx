@@ -76,7 +76,7 @@ export default function ProfilPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!user || !form || !canEditProfile(user, profile, profile)) return;
+    if (!user || !form || !canEditProfile(user, profile)) return;
     setError("");
     if (!form.firstName.trim() || !form.lastName.trim()) {
       setError(t("profile.errorName"));
@@ -104,7 +104,7 @@ export default function ProfilPage() {
     }
   }
 
-  const canEdit = canEditProfile(user, profile, profile);
+  const canEdit = canEditProfile(user, profile);
   const deriveFromPlanning = planningData
     ? (name: string) => deriveServiceRolesFromPlanning(planningData, name)
     : undefined;
