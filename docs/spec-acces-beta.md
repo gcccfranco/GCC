@@ -9,7 +9,8 @@ Demande de Timothée, 19/10/2026 :
 
 Choix entre A (Bêta ouvre la porte, chacun garde ses droits) et B (Bêta donne tout, comme un admin) : **B**.
 
-Statut : **spec écrite le 19/10/2026, questions à trancher, attend le go.**
+Statut : **spec écrite le 19/10/2026 ; Q1–Q4 tranchées le 19/10/2026 sur les recommandations (« OK aux
+recommandations ») ; attend le go.**
 
 ## Objectif
 
@@ -64,7 +65,7 @@ depuis l'organigramme, sans toucher au code.
 ### Dans l'organigramme
 
 Une carte « Bêta » à part, sous l'organigramme de l'église (Back-Office › Équipes › Organigramme), avec « Ajouter »
-et « Retirer » pour les admins fondateurs, en lecture pour les autres admins. Pas de planche : une carte du même
+et « Retirer » pour les admins fondateurs, en lecture pour les autres admins ; absente de App › Équipes (Q1). Pas de planche : une carte du même
 modèle que celles des équipes.
 
 ## Prérequis à la mise en ligne
@@ -76,9 +77,9 @@ Bêta ne sert qu'en ligne. Il faut, dans l'ordre et chacun sur ordre explicite d
 2. la **fusion de `ui/apple-design` dans `main`** : tout le nouveau site part en ligne pour tout le monde (look,
    setlists au créateur, corbeille, barre du chant…), Back-Office coupé sauf pour Bêta.
 
-## Questions à trancher
+## Questions tranchées (19/10/2026, sur les recommandations)
 
-| # | Question | Recommandation |
+| # | Question | Décision |
 | --- | --- | --- |
 | Q1 | Bêta apparaît-elle dans App › Équipes (la vue que tout membre lit) ? | **Non**, au Back-Office seulement. |
 | Q2 | Les envois destinés aux admins (s'il y en a) partent-ils aussi aux membres de Bêta ? | **Non**, ils restent aux fondateurs. |
