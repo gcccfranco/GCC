@@ -10,7 +10,8 @@ Demande de Timothée, 19/10/2026 :
 Choix entre A (Bêta ouvre la porte, chacun garde ses droits) et B (Bêta donne tout, comme un admin) : **B**.
 
 Statut : **spec écrite le 19/10/2026 ; Q1–Q4 tranchées le 19/10/2026 sur les recommandations (« OK aux
-recommandations ») ; attend le go.**
+recommandations ») ; **go le 19/10/2026** pour BT-A, BT-B, BT-C (« go pour l'accès bêta »), codé par une session
+orchestratrice. **Fusion dans `main` interdite tant que Timothée ne le dit pas.**
 
 ## Objectif
 

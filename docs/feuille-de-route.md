@@ -1152,7 +1152,8 @@ poussés le 18/10/2026** (détail dans l'« Avancement » de la spec), **à vali
 « J'ajoute les personnes dedans comme ça ils ont accès au back office en entier. » Une équipe **Bêta** dans
 l'organigramme ; ses membres ont les pouvoirs d'un admin (choix **B** du 19/10/2026), Back-Office compris, même en
 ligne où l'interrupteur est coupé. Seuls les trois admins fondateurs y ajoutent quelqu'un. **Spec écrite, Q1–Q4 tranchées le
-19/10/2026 sur les recommandations, attend le go** ; en ligne seulement après la bascule V19EQUIPES et la fusion de la branche dans `main`.
+19/10/2026 sur les recommandations, go le 19/10/2026** (BT-A à BT-C, session orchestratrice ; pas de fusion dans
+`main` sans ordre) ; en ligne seulement après la bascule V19EQUIPES et la fusion de la branche dans `main`.
 
 ## 4. Carte des modules de l'app « GCC »
 
