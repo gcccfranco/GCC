@@ -1147,6 +1147,13 @@ fêtes inchangées, absences vues et saisies par qui fait les plannings et les a
 poussés le 18/10/2026** (détail dans l'« Avancement » de la spec), **à valider par Timothée** ; `firestore.rules`
 **à publier à la main par Timothée** (droits des setlists, corbeille, absences) ; rien en ligne.
 
+### AA. Accès bêta au Back-Office (Timothée, 19/10/2026) → `spec-acces-beta.md`
+
+« J'ajoute les personnes dedans comme ça ils ont accès au back office en entier. » Une équipe **Bêta** dans
+l'organigramme ; ses membres ont les pouvoirs d'un admin (choix **B** du 19/10/2026), Back-Office compris, même en
+ligne où l'interrupteur est coupé. Seuls les trois admins fondateurs y ajoutent quelqu'un. **Spec écrite, Q1–Q4 à
+trancher, attend le go** ; en ligne seulement après la bascule V19EQUIPES et la fusion de la branche dans `main`.
+
 ## 4. Carte des modules de l'app « GCC »
 
 À valider par Timothée avant toute spec de module (les modules existants ne
