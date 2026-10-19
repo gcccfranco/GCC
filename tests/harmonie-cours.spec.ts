@@ -53,7 +53,9 @@ test("le cours importé : 23 chapitres à cocher, 79 exercices, niveaux de 5 · 
 
 test("un pianiste trouve le cours en tête d'Harmonie, rangé par niveau", async ({ page }) => {
   await entrer(page, RUTH, "/harmonie");
-  await page.getByRole("link", { name: /Cours de théorie musicale/ }).click();
+  // Agencement v18 (A16) : la carte du cours sur téléphone, l'onglet « Cours » du rail dès 768 px.
+  if (test.info().project.name === "telephone") await page.getByRole("link", { name: /Cours de théorie musicale/ }).click();
+  else await page.locator("header[data-entete-page]").getByRole("link", { name: "Cours", exact: true }).click();
   await page.waitForURL(/\/harmonie\/cours\/?$/);
   await expect(page.getByRole("link", { name: "Mode d'emploi" })).toBeVisible();
   for (const [n, nom, total] of [[1, "Fondations", 5], [2, "Accompagnateur", 6], [3, "Musicien d'équipe", 5], [4, "Directeur musical", 7]] as const) {
@@ -66,7 +68,10 @@ test("un pianiste trouve le cours en tête d'Harmonie, rangé par niveau", async
 test("un chapitre : sommaire, texte, exercices ; un tableau large défile dans son cadre, pas la page", async ({ page }) => {
   const ch6 = CH(6);
   await entrer(page, RUTH, `/harmonie/cours/${ch6.id}`);
-  await expect(page.getByRole("heading", { level: 1 })).toHaveText(`6. Tous les accords`);
+  // h1 seul, h2 sous l'en-tête « Harmonie » en deux volets (agencement v18, R3).
+  await expect(page.locator(`[data-chapitre="${ch6.id}"] header`).getByRole("heading").first()).toHaveText(`6. Tous les accords`);
+  // Tablette debout (U4 bis, B3) : le sommaire est dans le panneau « Sommaire », par-dessus la leçon.
+  if (test.info().project.name === "tablette") await page.getByRole("button", { name: "Sommaire" }).click();
   await expect(page.getByRole("navigation", { name: "Sommaire" }).getByRole("listitem")).toHaveCount(ch6.sousParties.length);
   await expect(page.locator("[data-sous-partie]")).toHaveCount(ch6.sousParties.length);
   const exercices = page.locator("[data-sous-partie]").filter({ has: page.getByRole("heading", { name: /Exercices$/ }) });
@@ -117,7 +122,8 @@ test("« J'ai fini » n'écrit que ce chapitre dans coursProgres/<mon uid>, et t
   const db = await entrer(page, RUTH, `/harmonie/cours/${ch1.id}`);
   await page.getByRole("button", { name: "J'ai fini" }).click();
   await expect(page.getByText(/^Fini le /)).toBeVisible();
-  await expect(page.getByRole("link", { name: /Prochain chapitre/ })).toContainText("2.");
+  // Sous la leçon : en grand, la liste du cours à gauche a aussi sa ligne « Prochain chapitre » (U4 bis, B3).
+  await expect(page.locator("[data-j-ai-fini]").getByRole("link", { name: /Prochain chapitre/ })).toContainText("2.");
   const cours = () => db.writes.filter((w) => w.path.startsWith("coursProgres/"));
   await expect.poll(() => cours().map((w) => `${w.method} ${w.path}`)).toEqual([`PATCH coursProgres/${RUTH.uid}`]);
   expect(Object.keys((cours()[0].data.fini ?? {}) as object), "ce seul chapitre").toEqual([ch1.id]);

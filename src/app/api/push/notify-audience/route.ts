@@ -2,9 +2,9 @@ import { NextResponse, type NextRequest } from "next/server";
 import { adminDb, verifyIdToken } from "@/lib/push/admin";
 import { sendPushToUids, sendPushToAll } from "@/lib/push/send";
 import { recordNotification } from "@/lib/push/notifications";
-import { uidsForCategory, uidsForCategories } from "@/lib/push/recipients";
+import { uidsDesAudiences, uidsDuGroupe } from "@/lib/push/recipients";
 import { isAdminEmail } from "@/lib/access";
-import { NOTIFY_ALL, isValidAudience } from "@/lib/push/audiences";
+import { NOTIFY_ALL, audiencesNotifiables, isValidAudience, peutNotifierAudience } from "@/lib/push/audiences";
 import { createHash } from "node:crypto";
 
 export const runtime = "nodejs";
@@ -13,7 +13,8 @@ export const maxDuration = 60;
 
 // Notification manuelle, soit à une AUDIENCE (tout le monde / un culte / un groupe /
 // une classe EDD), soit à des PERSONNES précises (liste d'uids). Réservée aux admins
-// et aux comptes dont `notify` couvre la cible. Sert aux annonces de changement de
+// et aux comptes dont `notify` couvre la cible — ou `notifieParRole`, recopié depuis les
+// organigrammes des groupes (lot 2, OG24), interrupteur ouvert seulement (OG27). Sert aux annonces de changement de
 // planning et de planning du trimestre.
 
 export async function POST(req: NextRequest) {
@@ -70,13 +71,10 @@ export async function POST(req: NextRequest) {
 
   // 3. Droits de l'expéditeur
   const isAdmin = isAdminEmail(email);
-  let rights: string[] = [];
-  if (!isAdmin) {
-    const me = (await adminDb().collection("users").doc(uid).get()).data() as
-      | { notify?: string[] }
-      | undefined;
-    rights = me?.notify ?? [];
-  }
+  const me = isAdmin
+    ? null
+    : ((await adminDb().collection("users").doc(uid).get()).data() as { notify?: string[]; notifieParRole?: string[] } | undefined) ?? null;
+  const rights = audiencesNotifiables(me);
   const canAll = isAdmin || rights.includes(NOTIFY_ALL);
 
   // 4a. Mode « personnes précises »
@@ -84,7 +82,7 @@ export async function POST(req: NextRequest) {
     const wanted = [...new Set(targetUids.filter((u) => typeof u === "string"))];
     if (!canAll) {
       // L'expéditeur ne peut cibler que des personnes de ses catégories autorisées.
-      const allowed = await uidsForCategories(rights.filter((r) => r !== NOTIFY_ALL));
+      const allowed = await uidsDesAudiences(rights.filter((r) => r !== NOTIFY_ALL));
       if (wanted.some((u) => !allowed.has(u))) {
         return NextResponse.json({ error: "Action non autorisée" }, { status: 403 });
       }
@@ -105,11 +103,11 @@ export async function POST(req: NextRequest) {
   if (!audience || !isValidAudience(audience)) {
     return NextResponse.json({ error: "Audience invalide" }, { status: 400 });
   }
-  if (!isAdmin && !rights.includes(NOTIFY_ALL) && !rights.includes(audience)) {
+  if (!peutNotifierAudience(audience, isAdmin, me)) {
     return NextResponse.json({ error: "Action non autorisée" }, { status: 403 });
   }
   const isAll = audience === NOTIFY_ALL;
-  const catUids = isAll ? [] : await uidsForCategory(audience);
+  const catUids = isAll ? [] : await uidsDuGroupe(audience);
   const result = isAll ? await sendPushToAll(payload) : await sendPushToUids(catUids, payload);
   await recordNotification({
     title: payload.title,

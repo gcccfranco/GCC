@@ -16,6 +16,7 @@ import {
   unsubscribeFromPush,
 } from "@/lib/push/client";
 import { getNotifPrefs, saveNotifPrefs } from "@/lib/firebase/notifPrefs";
+import { BACK_OFFICE } from "@/lib/backOffice";
 import {
   NOTIF_TYPES,
   NOTIF_TYPE_LABELS,
@@ -23,6 +24,9 @@ import {
   type NotifPrefs,
   type NotifType,
 } from "@/types/user";
+
+// « Petit déj » (lot U3, PD4) n'a d'expéditeur qu'interrupteur ouvert : coupé, pas de bascule (Q14).
+const TYPES_AFFICHES = NOTIF_TYPES.filter((type) => BACK_OFFICE || type !== "petitDej");
 
 /** Réglage d'abonnement aux notifications push (rappels de service + setlist prête).
  *  Affiché sur la page profil. Gère la contrainte iOS (PWA installée requise). */
@@ -128,19 +132,22 @@ export function PushToggle() {
         {supported && !needsInstall && !denied && enabled && prefs && (
           <div className="mt-4 pt-4 border-t border-border space-y-3">
             <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
-              Recevoir
+              {t("push.recevoir", { defaultValue: "Recevoir" })}
             </p>
-            {NOTIF_TYPES.map((type) => (
-              <div key={type} className="flex items-center justify-between gap-3">
-                <span className="text-sm text-foreground">{NOTIF_TYPE_LABELS[type]}</span>
-                <Switch
-                  checked={prefs[type]}
-                  disabled={prefBusy === type}
-                  onCheckedChange={(v) => togglePref(type, v)}
-                  aria-label={NOTIF_TYPE_LABELS[type]}
-                />
-              </div>
-            ))}
+            {TYPES_AFFICHES.map((type) => {
+              const libelle = t(`push.types.${type}`, { defaultValue: NOTIF_TYPE_LABELS[type] });
+              return (
+                <div key={type} className="flex items-center justify-between gap-3">
+                  <span className="text-sm text-foreground">{libelle}</span>
+                  <Switch
+                    checked={prefs[type]}
+                    disabled={prefBusy === type}
+                    onCheckedChange={(v) => togglePref(type, v)}
+                    aria-label={libelle}
+                  />
+                </div>
+              );
+            })}
           </div>
         )}
 

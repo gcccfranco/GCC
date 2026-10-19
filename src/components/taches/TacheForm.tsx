@@ -1,14 +1,17 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useId, useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
+import { useConfirmer } from "@/components/layout/Confirmer";
+import { OngletsRail, Pilules } from "@/components/layout/Onglets";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useStandaloneScrollLock } from "@/hooks/useStandaloneScrollLock";
 import { SERVICE_LIEUX, type UserProfile } from "@/types/user";
-import { TACHE_POLES, type Prevenir, type Rythme, type Tache, type TachePole } from "@/types/tache";
-import { polesDe } from "@/lib/access";
+import type { Prevenir, Rythme, Tache } from "@/types/tache";
+import { equipesDe } from "@/lib/access";
+import { EQUIPES, cleNomEquipe } from "@/lib/equipes/table";
 import type { TacheValues } from "@/lib/firebase/taches";
 
 const LABEL = "text-xs font-semibold";
@@ -16,11 +19,11 @@ const FIELD = "w-full h-10 rounded-lg bg-secondary px-3 text-base md:text-sm";
 
 function prevenirValue(p: Prevenir): string {
   if (!p) return "";
-  return "pole" in p ? `pole:${p.pole}` : `regie:${p.regie}`;
+  return "equipe" in p ? `equipe:${p.equipe}` : `regie:${p.regie}`;
 }
 
 function parsePrevenir(v: string): Prevenir {
-  if (v.startsWith("pole:")) return { pole: v.slice(5) as TachePole };
+  if (v.startsWith("equipe:")) return { equipe: v.slice(7) };
   if (v.startsWith("regie:")) return { regie: v.slice(6) };
   return null;
 }
@@ -31,25 +34,41 @@ function rangDe(iso: string): number {
   return n > 4 ? -1 : n;
 }
 
-/** Feuille de création ou de modification d'une tâche (lot 7). */
-export function TacheForm({ open, pole, poles, evenement, initial, membres, onSubmit, onDelete, onClose }: {
+const RYTHMES = ["semaine", "2semaines", "mois", "an"] as const;
+
+/** Feuille de création ou de modification d'une tâche (lot 7). `enLigne` (agencement v18, B2 ;
+ *  planche `v18-bo-tache-nouvelle`) : en grand au Back-Office, le formulaire est une carte dans le
+ *  volet de droite (équipe en pilules, répétition en rail, « Annuler · Créer la tâche »), plus une
+ *  feuille ; le calendrier et l'App gardent la feuille. */
+export function TacheForm({ open, enLigne, equipe, equipes, evenement, echeance, initial, membres, onSubmit, onDelete, onClose }: {
   open: boolean;
-  pole: TachePole;
-  /** Pôles où créer la tâche, depuis la fiche d'un évènement (lot 14) : un
-   *  choix s'il y en a plusieurs, `pole` étant celui de départ. */
-  poles?: TachePole[];
+  /** Une carte dans la page au lieu d'une feuille (Back-Office en grand). */
+  enLigne?: boolean;
+  equipe: string;
+  /** Équipes où créer la tâche (`equipesOuCreer`, EQ10) : un choix s'il y en a plusieurs, `equipe`
+   *  étant celle de départ. */
+  equipes?: string[];
   /** Évènement auquel rattacher une nouvelle tâche (lot 14). */
   evenement?: Tache["evenement"];
+  /** Échéance d'une nouvelle tâche, depuis un jour du calendrier (lot U8, C5). */
+  echeance?: string;
   /** Valeurs de départ ; `null` = nouvelle tâche. */
   initial: TacheValues | null;
-  /** Proposés comme responsables : ceux du pôle de la tâche. */
+  /** Proposés comme responsables : ceux de l'équipe de la tâche. */
   membres: UserProfile[];
-  onSubmit: (values: TacheValues, pole: TachePole) => Promise<void>;
+  onSubmit: (values: TacheValues, equipe: string) => Promise<void>;
   onDelete?: () => Promise<void>;
   onClose: () => void;
 }) {
-  useStandaloneScrollLock(open);
+  useStandaloneScrollLock(open && !enLigne);
   const { t } = useTranslation();
+  if (enLigne) {
+    return open ? (
+      <div className="raised max-w-[720px] rounded-2xl pt-5">
+        <Champs enLigne equipe={equipe} equipes={equipes} evenement={evenement} echeance={echeance} initial={initial} membres={membres} onSubmit={onSubmit} onDelete={onDelete} onClose={onClose} />
+      </div>
+    ) : null;
+  }
   return (
     <Drawer open={open} onOpenChange={(o) => !o && onClose()}>
       <DrawerContent className="max-h-[92vh] md:max-w-lg md:mx-auto" aria-describedby={undefined}>
@@ -57,19 +76,21 @@ export function TacheForm({ open, pole, poles, evenement, initial, membres, onSu
           <DrawerTitle>{initial ? t("taches.modifier") : t("taches.nouvelle")}</DrawerTitle>
         </DrawerHeader>
         {open && (
-          <Champs pole={pole} poles={poles} evenement={evenement} initial={initial} membres={membres} onSubmit={onSubmit} onDelete={onDelete} onClose={onClose} />
+          <Champs equipe={equipe} equipes={equipes} evenement={evenement} echeance={echeance} initial={initial} membres={membres} onSubmit={onSubmit} onDelete={onDelete} onClose={onClose} />
         )}
       </DrawerContent>
     </Drawer>
   );
 }
 
-function Champs({ pole: poleDepart, poles, evenement, initial, membres, onSubmit, onDelete, onClose }: Omit<Parameters<typeof TacheForm>[0], "open">) {
+function Champs({ enLigne, equipe: equipeDepart, equipes, evenement, echeance, initial, membres, onSubmit, onDelete, onClose }: Omit<Parameters<typeof TacheForm>[0], "open">) {
   const { t } = useTranslation();
-  const [pole, setPole] = useState(poleDepart);
+  const titreId = useId();
+  const confirmer = useConfirmer();
+  const [equipe, setEquipe] = useState(equipeDepart);
   const [v, setV] = useState<TacheValues>(
     initial ?? {
-      titre: "", responsableUid: null, responsableNom: "", echeance: "", repetition: null,
+      titre: "", responsableUid: null, responsableNom: "", echeance: echeance ?? "", repetition: null,
       lien: "", note: "", prevenir: null, evenement: evenement ?? null,
     },
   );
@@ -77,6 +98,15 @@ function Champs({ pole: poleDepart, poles, evenement, initial, membres, onSubmit
   const [busy, setBusy] = useState(false);
   const set = (patch: Partial<TacheValues>) => setV((x) => ({ ...x, ...patch }));
   const rythme = v.repetition?.rythme ?? "";
+  // Les membres de l'équipe choisie, Louange élargi (EQ10).
+  const proposes = membres.filter((m) => equipesDe(m).includes(equipe));
+
+  function changerEquipe(e: string) {
+    setEquipe(e);
+    // Le responsable est un membre de l'équipe, et une équipe ne se prévient pas elle-même.
+    const soiMeme = !!v.prevenir && "equipe" in v.prevenir && v.prevenir.equipe === e;
+    set({ responsableUid: null, responsableNom: "", ...(soiMeme ? { prevenir: null } : {}) });
+  }
 
   function setRythme(r: Rythme | "") {
     if (!r) return set({ repetition: null });
@@ -90,7 +120,7 @@ function Champs({ pole: poleDepart, poles, evenement, initial, membres, onSubmit
     setBusy(true);
     setError("");
     try {
-      await onSubmit({ ...v, titre: v.titre.trim(), lien: v.lien.trim(), note: v.note.trim() }, pole);
+      await onSubmit({ ...v, titre: v.titre.trim(), lien: v.lien.trim(), note: v.note.trim() }, equipe);
     } catch {
       setError(t("taches.erreur"));
     } finally {
@@ -99,7 +129,7 @@ function Champs({ pole: poleDepart, poles, evenement, initial, membres, onSubmit
   }
 
   async function remove() {
-    if (!onDelete || !window.confirm(t("taches.confirmerSuppression"))) return;
+    if (!onDelete || !(await confirmer({ titre: t("taches.confirmerSuppression"), action: t("common.buttons.delete"), destructif: true }))) return;
     setBusy(true);
     try {
       await onDelete();
@@ -110,23 +140,28 @@ function Champs({ pole: poleDepart, poles, evenement, initial, membres, onSubmit
   }
 
   return (
-    <form onSubmit={submit} className="px-4 pb-6 space-y-4 overflow-y-auto">
-      {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
-      {poles && poles.length > 1 && (
-        <div className="space-y-1">
-          <label htmlFor="tache-pole" className={LABEL}>{t("taches.champs.pole")}</label>
-          <select id="tache-pole" className={FIELD} value={pole}
-            onChange={(e) => {
-              const p = e.target.value as TachePole;
-              setPole(p);
-              // Le responsable est un membre du pôle, et un pôle ne se prévient pas lui-même.
-              const soiMeme = !!v.prevenir && "pole" in v.prevenir && v.prevenir.pole === p;
-              set({ responsableUid: null, responsableNom: "", ...(soiMeme ? { prevenir: null } : {}) });
-            }}>
-            {poles.map((p) => <option key={p} value={p}>{t(`taches.pole.${p}`)}</option>)}
-          </select>
+    <form onSubmit={submit} aria-labelledby={enLigne ? titreId : undefined} className={enLigne ? "space-y-4 px-5 pb-5" : "px-4 pb-6 space-y-4 overflow-y-auto"}>
+      {enLigne && (
+        <div className="flex items-baseline justify-between gap-3">
+          <h2 id={titreId} className="text-lg font-bold">{initial ? t("taches.modifier") : t("taches.nouvelle")}</h2>
+          <span className="text-[13px] text-muted-foreground">{t(cleNomEquipe(equipe, true))}</span>
         </div>
       )}
+      {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
+      {equipes && equipes.length > 1 && (enLigne ? (
+        <div className="space-y-1.5">
+          <p className={LABEL}>{t("taches.champs.equipe")}</p>
+          <Pilules etiquette={t("taches.champs.equipe")} obligatoire valeur={equipe} choisir={(e) => e && changerEquipe(e)}
+            options={equipes.map((e) => ({ cle: e, nom: t(cleNomEquipe(e, true)) }))} />
+        </div>
+      ) : (
+        <div className="space-y-1">
+          <label htmlFor="tache-equipe" className={LABEL}>{t("taches.champs.equipe")}</label>
+          <select id="tache-equipe" className={FIELD} value={equipe} onChange={(e) => changerEquipe(e.target.value)}>
+            {equipes.map((e) => <option key={e} value={e}>{t(cleNomEquipe(e, true))}</option>)}
+          </select>
+        </div>
+      ))}
       <div className="space-y-1">
         <label htmlFor="tache-titre" className={LABEL}>{t("taches.champs.titre")}</label>
         <Input id="tache-titre" value={v.titre} maxLength={80} onChange={(e) => set({ titre: e.target.value })} />
@@ -148,7 +183,9 @@ function Champs({ pole: poleDepart, poles, evenement, initial, membres, onSubmit
               set({ responsableUid: m?.uid ?? null, responsableNom: m ? `${m.firstName} ${m.lastName}`.trim() : "" });
             }}>
             <option value="">{t("taches.pourTous")}</option>
-            {membres.filter((m) => polesDe(m).includes(pole)).map((m) => <option key={m.uid} value={m.uid}>{`${m.firstName} ${m.lastName}`.trim() || m.email}</option>)}
+            {proposes.map((m) => <option key={m.uid} value={m.uid}>{`${m.firstName} ${m.lastName}`.trim() || m.email}</option>)}
+            {/* Le responsable de la tâche reste affiché, membres pas encore lus ou parti de l'équipe. */}
+            {v.responsableUid && !proposes.some((m) => m.uid === v.responsableUid) && <option value={v.responsableUid}>{v.responsableNom}</option>}
           </select>
         </div>
       </div>
@@ -166,6 +203,23 @@ function Champs({ pole: poleDepart, poles, evenement, initial, membres, onSubmit
               </Button>
             )}
           </div>
+        </div>
+      ) : enLigne ? (
+        <div className="space-y-1.5">
+          <p className={LABEL}>{t("taches.champs.repetition")}</p>
+          <OngletsRail etiquette={t("taches.champs.repetition")} actif={rythme || "aucun"}
+            choisir={(id) => setRythme(id === "aucun" ? "" : (id as Rythme))}
+            onglets={["aucun", ...RYTHMES].map((r) => ({ id: r, label: t(`taches.rythmeCourt.${r}`) }))} />
+          {rythme === "an" && <p className="text-xs text-muted-foreground">{t("taches.anAide")}</p>}
+          {rythme === "mois" && (
+            <div className="max-w-xs space-y-1 pt-1.5">
+              <label htmlFor="tache-rang" className={LABEL}>{t("taches.champs.rang")}</label>
+              <select id="tache-rang" className={FIELD} value={String(v.repetition?.rang ?? 1)}
+                onChange={(e) => set({ repetition: { rythme: "mois", rang: Number(e.target.value) } })}>
+                {["1", "2", "3", "4", "-1"].map((r) => <option key={r} value={r}>{t(`taches.rang.${r}`)}</option>)}
+              </select>
+            </div>
+          )}
         </div>
       ) : (
       <div className="grid grid-cols-2 gap-3">
@@ -195,8 +249,9 @@ function Champs({ pole: poleDepart, poles, evenement, initial, membres, onSubmit
         <label htmlFor="tache-prevenir" className={LABEL}>{t("taches.champs.prevenir")}</label>
         <select id="tache-prevenir" className={FIELD} value={prevenirValue(v.prevenir)} onChange={(e) => set({ prevenir: parsePrevenir(e.target.value) })}>
           <option value="">{t("taches.prevenirPersonne")}</option>
-          {TACHE_POLES.filter((p) => p !== pole).map((p) => (
-            <option key={p} value={`pole:${p}`}>{t("taches.prevenirPole", { pole: t(`taches.pole.${p}`) })}</option>
+          {/* Les autres équipes, sous leur nom (EQ10), puis les régies. */}
+          {EQUIPES.filter((e) => e.id !== equipe).map((e) => (
+            <option key={e.id} value={`equipe:${e.id}`}>{t(cleNomEquipe(e.id))}</option>
           ))}
           {SERVICE_LIEUX.map((s) => (
             <option key={s} value={`regie:${s}`}>{t("taches.prevenirRegie", { service: t(`categories.${s}`, { defaultValue: s }) })}</option>
@@ -211,6 +266,13 @@ function Champs({ pole: poleDepart, poles, evenement, initial, membres, onSubmit
         <label htmlFor="tache-note" className={LABEL}>{t("taches.champs.note")}</label>
         <Input id="tache-note" value={v.note} maxLength={160} onChange={(e) => set({ note: e.target.value })} />
       </div>
+      {enLigne ? (
+        // Formulaires (R13) : en bas de la carte, à droite, « Annuler » puis le bouton plein.
+        <div className="flex justify-end gap-2 border-t border-border/70 pt-4">
+          <Button type="button" variant="outline" className="rounded-full" onClick={onClose}>{t("taches.annuler")}</Button>
+          <Button type="submit" className="rounded-full" disabled={busy}>{initial ? t("taches.enregistrer") : t("taches.creer")}</Button>
+        </div>
+      ) : (
       <div className="flex flex-wrap items-center gap-2 pt-1">
         <Button type="submit" disabled={busy}>{t("taches.enregistrer")}</Button>
         <Button type="button" variant="ghost" onClick={onClose}>{t("taches.annuler")}</Button>
@@ -220,6 +282,7 @@ function Champs({ pole: poleDepart, poles, evenement, initial, membres, onSubmit
           </Button>
         )}
       </div>
+      )}
     </form>
   );
 }

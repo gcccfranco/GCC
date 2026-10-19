@@ -39,7 +39,7 @@ export type JianpuChords = {
 };
 
 export type SetlistItem = {
-  type?: "fusion" | "transition";
+  type?: "fusion" | "transition" | "proposition";
   songSlug: string;
   position: number;
   keyOverride: string | null;
@@ -76,6 +76,10 @@ export type SetlistItem = {
   fusionSongs?: FusionSong[];
   mixedStructure?: FusionMixedSection[] | null;
   transitionText?: string;
+  /** Chant hors répertoire d'une setlist de fête (`type: "proposition"`, `songSlug: ""`) : `id` de
+   *  `songProposals/{id}` ; devient le chant dès qu'un `.cho` porte `{proposition: <id>}`
+   *  (docs/spec-chants-fetes.md, CF21). */
+  proposition?: { id: string; titre: string };
 };
 
 export type Setlist = {

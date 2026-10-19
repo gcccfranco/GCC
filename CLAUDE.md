@@ -40,13 +40,22 @@ ils ne voient pas le composant réel. Détail du protocole dans
 
 - **Trois appareils, toujours** (consigne de Timothée du 14/09/2026) : tout test
   Playwright tourne sur **ordinateur, téléphone et tablette** (un projet par
-  appareil dans `playwright.config.ts`, tous sous Chromium : WebKit écarté). Les captures regardées à l'œil aussi :
-  les trois tailles. Un test propre à un appareil le dit dans son titre.
+  appareil dans `playwright.config.ts`, tous sous Chromium : WebKit écarté). Un test propre à un appareil le dit
+  dans son titre.
+- **Quatre dispositions** (`docs/spec-navigation-grand-ecran.md`, Q1) : téléphone, tablette portrait, tablette
+  paysage (barre latérale réduite), ordinateur ; lecture plafonnée à 1 440 px. Toute modification d'interface se
+  regarde à l'œil sur les quatre, plus 1 440 px pour une page de lecture. Une spec qui teste l'agencement d'une page
+  s'ajoute à `SPECS_GRAND_ECRAN` (`playwright.config.ts`) : sans ça, elle ne tourne que sur trois appareils.
 - **Deux serveurs de test** : le second (`PW_PORT + 1`, interrupteur du back-office coupé) a son propre dossier de build `.next-coupe` — Next 16 refuse deux `next dev` dans le même dossier. Au démarrage il peut réécrire une ligne de `next-env.d.ts` (chemin des types) : **ne pas la commiter**, un `npm run dev` ordinaire la remet.
 - `tests/helpers/jianpu.ts` : ouvrir un chant, afficher sa 简谱, lire le calque.
 - La page chant lit ses paramètres d'URL en **JSON** : `?key=%22F%22`, pas `?key=F`.
 - Viser `localhost` et non `127.0.0.1` : `next dev` bloque ses ressources en
   cross-origin et la page arrive **non hydratée** — visible mais morte.
+- Pièges vus : le service worker charge lui-même polices, `songs-index.json` et `/api/song/*`, hors de portée de
+  `page.route` (`test.use({ serviceWorkers: "block" })` pour les substituer) ; lire `db.writes` **après** un signe à
+  l'écran (`toBeVisible`) — un test qui rougit sur un appareil différent à chaque passe est une course ; en mode
+  louange, viser la scène avec le helper `onStage` de `tests/performance-mode.spec.ts` (une copie de mesure
+  invisible double chaque bloc).
 
 ## Architecture clé
 - **Chants** : fichiers `.cho` (ChordPro) dans `content/songs/`, parsés au build → `public/songs-index.json` (utilisé côté client pour liste/recherche)
@@ -55,7 +64,7 @@ ils ne voient pas le composant réel. Détail du protocole dans
 - **Comptes & rôles** : profils dans `users/{uid}` (rôles, lieux de service, EDD, groupe). Permissions client dans `src/lib/access.ts`, miroir serveur dans `firestore.rules`.
 - **`firestore.rules`** : versionné ici mais doit être **publié manuellement dans la console Firebase** pour prendre effet. La liste des admins doit rester synchronisée avec `ADMIN_EMAILS` dans `src/lib/access.ts`.
 - **Confidentialité (choix assumé)** : les rules autorisent `read: if signedIn()` sur **toutes** les setlists et tous les profils. Le filtrage `isPrivate` / visibilité par service (`canSeeSetlist`, `src/lib/access.ts`) est **côté client uniquement** — un membre connecté peut techniquement lire en REST une setlist privée ou un profil. Acceptable pour un outil interne de confiance ; ne pas re-signaler comme faille sans nouvelle demande de durcissement.
-- **Routes API** (18, toutes sous `src/app/api/`) : `/api/song/[slug]` (contenu d'un chant), `/api/report` (signalement par email via Resend — env `RESEND_API_KEY`, `MAIL_TO`, `EMAIL_FROM` sur Vercel), `/api/cron/reminders` (seul cron), `/api/push/*` (notify-setlist, notify-evenement, notify-audience, broadcast), `/api/setlist/presentation`, `/api/evenements/{inscription,desinscription}`, `/api/scene/conflit`, `/api/taches/{assigne,fait}`, `/api/equipes/{importer,poles}`, `/api/planning/release`, `/api/admin/{migrer-annonces,importer-planning}`
+- **Routes API** (20, toutes sous `src/app/api/`) : `/api/song/[slug]` (contenu d'un chant), `/api/report` (signalement par email via Resend — env `RESEND_API_KEY`, `MAIL_TO`, `EMAIL_FROM` sur Vercel), `/api/cron/reminders` (seul cron), `/api/push/*` (notify-setlist, notify-evenement, notify-audience, broadcast), `/api/setlist/presentation`, `/api/evenements/{inscription,desinscription}`, `/api/scene/conflit`, `/api/taches/{assigne,fait}`, `/api/equipes/{rattachement,groupes}`, `/api/planning/{release,changements}`, `/api/fetes/{droits,saisir,musiques}`, `/api/admin/{migrer-annonces,importer-planning}`
 - **Planning** : Google Sheet public lu en CSV (`src/lib/planning/sheets.ts`) + données statiques (`data.ts`)
 - **PWA** : service worker `public/sw.js` — push + cache hors-ligne. Cache versionné (`gcc-louange-vN`, purgé à l'activation). **Rien n'est mis en cache sur un serveur local** (`localhost`, `127.0.0.1`, réseau local) : en développement les fichiers de Next n'ont pas de nom hashé, et le cache servait l'ancien code après chaque modification (16/09/2026). Stratégies : HTML **network-first** (le déploiement en ligne gagne toujours → pas de page périmée), `/_next/static/*` **cache-first** (content-hashé, immuable), polices + `songs-index.json` + `/api/song/*` + scans 简谱 (`/jianpu/*`, gardés hors ligne depuis qu'ils s'affichent par défaut) **stale-while-revalidate**, reste réseau-seul. Firestore/Sheets/YouTube (autres origines) jamais mis en cache.
 - **Hébergement** : Vercel. La CI GitHub (`.github/workflows/deploy.yml`) fait typecheck + validate.
@@ -81,9 +90,12 @@ ils ne voient pas le composant réel. Détail du protocole dans
 - Un commit par étape ou par lot, pas un commit par fichier (consigne de Timothée du 13/09/2026)
 - Tester sur au moins 1 chant FR + 1 chant ZH avant de valider une étape
 - Toute modif des permissions doit être faite en double : `src/lib/access.ts` (client) **et** `firestore.rules` (serveur)
+- Gestes sur les quatre systèmes (Windows, Android, iOS, macOS) : raccourcis par les évènements du navigateur (copy, paste), jamais par ⌘ seul ; Suppr et ⌫ font la même chose ; tout ce qui s'offre au survol a un équivalent au toucher ; les libellés disent ⌘ sur Apple, Ctrl ailleurs.
 
 ## Sessions cloud (claude.ai/code) — règles de Timothée (08/10/2026)
-Une session cloud n'a pas la mémoire des sessions locales : ces règles valent pour elle comme pour les autres.
+Une session cloud n'a pas la mémoire des sessions locales : ces règles valent pour elle comme pour les autres
+(complétées le 13/10/2026 avec celles qui n'étaient qu'en mémoire locale). Une nouvelle consigne durable de Timothée
+s'écrit ici, pas seulement en mémoire.
 - **Branches** : `ui/apple-design` = le travail en cours. Tout s'y fait, directement : **aucune autre branche**, pas de
   branche de lot à fusionner. `main` = le site en ligne (Vercel déploie chaque push) : n'y pousser **que sur un ordre
   explicite de Timothée, donné au moment même** (un « oui » à une autre question n'en est pas un). Une correction faite
@@ -94,11 +106,29 @@ Une session cloud n'a pas la mémoire des sessions locales : ces règles valent 
 - **Secrets** : l'environnement cloud ne contient que les variables `NEXT_PUBLIC_*` (configuration web, publique).
   Aucune lecture de la vraie base Firestore, aucune vraie notification : tout est simulé dans les tests
   (`tests/helpers/fakeSession.ts`). Une modification de `firestore.rules` se publie à la main par Timothée : le dire.
-- **Dépôt public** : aucun nom réel de membre dans les tests, fixtures, specs ou commits ; des noms fictifs.
+- **Dépôt public** : aucun nom réel de membre dans les tests, fixtures, specs ou commits ; des noms fictifs, inventés
+  pour chaque nouveau test (les lignes de planning de `src/lib/planning/data.ts`, recopiées dans d'anciens tests, sont
+  de vrais noms).
 - **Tests** : `npx playwright install --with-deps chromium` au début de la session, puis les règles « Tests — Playwright »
   ci-dessus (trois appareils toujours ; les cinq projets pour les specs d'agencement).
-- **Méthode** : specs dans `docs/`, feuille de route `docs/feuille-de-route.md` ; on ne code un lot qu'après le go de
-  Timothée ; un commit par lot ou par tranche, message en français.
+- **Méthode** : specs dans `docs/`, feuille de route `docs/feuille-de-route.md` ; un commit par lot ou par tranche,
+  message en français.
+- **Go** : un lot se code sur un mot explicite de Timothée, donné **après** la spec (« go », « feu vert », « vas-y pour
+  le lot N ») ; une phrase au futur ou au conditionnel (« tu peux le coder », « je le montrerai ») décrit un plan. Un go
+  vaut pour un lot, pas pour le suivant, ni pour une mise en ligne. Dans le doute, demander « go pour le lot N ? ».
+- **Design** : une demande qui change l'apparence ou l'organisation des écrans commence par une planche (artefact HTML
+  ou Figma : pistes aux trois tailles, recommandation marquée, questions à trancher), puis la spec, puis le code sur go.
+  Zones gelées sauf demande explicite : § 2 « Restent gelés » de `docs/audit-ui-apple-design.md`.
+- **Coder = une session orchestratrice** (Timothée, 18/10/2026) : une session cloud qui reçoit un go ne code pas
+  elle-même ; elle lance une **nouvelle session** (`create_session`) qui orchestre le code (agents `executant`,
+  `testeur`), sur la même branche, avec la spec et les décisions dans sa consigne. La session d'origine garde la spec,
+  les planches et le suivi.
+- **Agents en parallèle** : quelques-uns à la fois (neuf d'un coup ont épuisé la limite de dépense du mois, le
+  04/10/2026) ; un agent coupé se reprend par SendMessage, contexte intact.
+- **Déléguer** aux agents de `.claude/agents/` : `chercheur` (Haiku) pour une recherche qui parcourt plusieurs
+  fichiers, `testeur` (Haiku) pour lancer une suite de tests et en rapporter les échecs, `executant` (Sonnet) pour
+  appliquer une modification déjà décidée et décrite. La conversation principale garde le jugement : specs, planches,
+  débogage, relecture du diff, regard sur les captures et les 简谱.
 
 ## Comportement (guidelines Karpathy)
 

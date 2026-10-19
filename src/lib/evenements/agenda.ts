@@ -2,6 +2,8 @@
 // places restantes. Dates ISO comparées comme du texte.
 
 import type { Evenement, ModeInscriptions } from "@/types/evenement";
+import { avantBascule } from "@/lib/evenements/bascule";
+import { lienOngletSheet, type EntreeSheet } from "@/lib/evenements/sheet";
 
 export const isInfo = (e: Pick<Evenement, "type" | "date">) => e.type === "info" || !e.date;
 
@@ -61,6 +63,47 @@ export function groupByMonth<E extends Pick<Evenement, "date" | "heure" | "type"
 export function daysAgo(today: string, days: number): string {
   const [y, m, d] = today.split("-").map(Number);
   return new Date(Date.UTC(y, m - 1, d) - days * 86_400_000).toISOString().slice(0, 10);
+}
+
+/** Une entrée du Sheet telle que l'agenda public la montre : `responsable` et `lien` (l'onglet
+ *  du mois, pour s'inscrire sur le tableau) sont vides sans compte, et pour une entrée passée ;
+ *  `lien` aussi sans responsable (le Sheet n'a de bloc « INSCRIPTIONS » que sous un responsable). */
+export type EntreeSheetPublique = EntreeSheet & { lien: string };
+
+export type ElementAgenda =
+  | { source: "app"; date: string; heure: string; fin: string; evenement: Evenement }
+  | { source: "sheet"; date: string; heure: string; fin: string; entree: EntreeSheetPublique };
+
+export interface AgendaPublic {
+  aVenir: { key: string; label: string; elements: ElementAgenda[] }[];
+  /** Les trois derniers mois, plus récents d'abord. */
+  passes: ElementAgenda[];
+}
+
+/** L'agenda public (lot U9, B2, docs/spec-evenements-2027.md Q2) : les évènements datés de l'app
+ *  (déjà filtrés par ce que le lecteur peut voir) et, avant la bascule, les entrées du Sheet ;
+ *  à venir par mois, passés derrière le lien. Rien de nominatif sans compte. */
+export function agendaPublic(app: Evenement[], sheet: EntreeSheet[], connecte: boolean, today: string, lang: string): AgendaPublic {
+  const elements: ElementAgenda[] = [
+    ...app.filter((e) => !isInfo(e)).map((e) => ({ source: "app" as const, date: e.date, heure: e.heure, fin: finDe(e), evenement: e })),
+    ...sheet.filter((s) => avantBascule(s.date)).map((s) => {
+      const visible = connecte && s.date >= today;
+      return {
+        source: "sheet" as const, date: s.date, heure: s.heure, fin: s.date,
+        entree: { ...s, responsable: visible ? s.responsable : "", lien: visible && s.responsable ? lienOngletSheet(s.date) : "" },
+      };
+    }),
+  ];
+  const aVenir: AgendaPublic["aVenir"] = [];
+  for (const x of elements.filter((x) => x.fin >= today).sort(byDate)) {
+    const key = x.date.slice(0, 7);
+    let g = aVenir.find((y) => y.key === key);
+    if (!g) { g = { key, label: monthLabel(key, lang), elements: [] }; aVenir.push(g); }
+    g.elements.push(x);
+  }
+  const since = daysAgo(today, 92);
+  const passes = elements.filter((x) => x.fin < today && x.fin >= since).sort((a, b) => b.date.localeCompare(a.date));
+  return { aVenir, passes };
 }
 
 export type RefusInscription = "externe" | "fermee" | "pasEncore" | "terminee" | "commencee" | "complet";

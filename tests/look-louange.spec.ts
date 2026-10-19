@@ -2,6 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 import * as fs from "fs";
 import * as path from "path";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
+import { ouvrirPartitions } from "./helpers/setlist";
 
 // Lot 4 « Nouveau look », tranche T3 : louange (docs/spec-look.md).
 const MUSICIEN: FakeProfile = {
@@ -74,7 +75,9 @@ test.describe("louange (T3) : page du chant", () => {
       // Pendant l'animation d'entrée de la page, un ancêtre transformé fait
       // office de repère pour la barre fixée : mesurer une fois l'animation finie.
       await page.evaluate(() => Promise.all(document.getAnimations().map((a) => a.finished.catch(() => {}))));
-      const [b, h] = await Promise.all([barre.boundingBox(), page.locator("header").boundingBox()]);
+      // La navbar : l'en-tête commun « Chants » (`EnTetePage`, agencement v18 R1 et A5) est aussi un <header>,
+      // monté sur la page d'un chant (masqué en un volet).
+      const [b, h] = await Promise.all([barre.boundingBox(), page.locator("header.barre-haut").boundingBox()]);
       expect(Math.round(b!.y), "la barre reste collée sous la navbar").toBe(Math.round(h!.y + h!.height));
       const pilule = page.getByTestId("pilule-tonalite");
       // 5C1 : ce qui se touche est en relief — surface blanche et ombre, plus un aplat gris.
@@ -104,7 +107,7 @@ test.describe("louange : barre d'outils de la setlist, une seule ligne sur tél�
     keyOverride: null, showChords: true, showPinyin: true, useJianpu: false,
     structureOverride: null, sectionNotes: {}, notes: "", ...over,
   });
-  // Le pire cas : on peut modifier (Adapter), avoir sa version, et un chant 中文 ajoute « Pinyin ».
+  // Le pire cas : on peut modifier (Adapter) et avoir sa version (Pinyin est passé dans « Affichage »).
   const setlist = {
     title: "高班", leader: "David C.", category: "Culte Francophone", date: "2026-09-20",
     language: "mixed", notes: "", ownerId: "uid-owner", isPrivate: false,
@@ -112,6 +115,39 @@ test.describe("louange : barre d'outils de la setlist, une seule ligne sur tél�
   };
   const AIDE_ADAPTER = /Mode adaptation/;
   const AIDE_MA_VERSION = /^Ma version :/;
+
+  /** Deux volets (docs/spec-deux-volets.md, T4, Q7) : plus de barre d'outils, l'en-tête
+   *  pleine largeur porte Adapter · Ma version · Modifier · PDF · ⋯ · Mode louange (pas de
+   *  Présentation sans lien), libellés compris ; la rangée tient sur une ligne, à droite du
+   *  titre ou dessous, jamais par-dessus, ni sous la barre latérale (`bord`), ni hors de l'écran. */
+  async function enTeteSurUneLigne(page: Page, largeur: number, bord: number) {
+    const enTete = page.locator("[data-en-tete]");
+    await expect(enTete.getByRole("button", { name: "Mode Louange" })).toBeVisible();
+    await expect(page.getByTestId("barre-outils")).toHaveCount(0);
+    const boites = await enTete.locator("a, button").evaluateAll((els) =>
+      els
+        .filter((el) => (el as HTMLElement).offsetParent !== null)
+        .map((el) => {
+          const r = el.getBoundingClientRect();
+          return { nom: el.getAttribute("aria-label") ?? el.textContent?.trim() ?? "", milieu: r.top + r.height / 2, haut: r.top, gauche: r.left, droite: r.right };
+        }),
+    );
+    expect(boites.map((b) => b.nom)).toEqual(["Adapter", "Ma version", "Modifier", "PDF", "Plus d'actions", "Mode Louange"]);
+    const milieux = boites.map((b) => b.milieu);
+    expect(Math.max(...milieux) - Math.min(...milieux), `une seule ligne : ${JSON.stringify(boites.map((b) => [b.nom, Math.round(b.milieu)]))}`).toBeLessThan(4);
+    const titre = (await enTete.getByRole("heading", { level: 1 }).boundingBox())!;
+    for (const b of boites) {
+      expect.soft(b.gauche, `${b.nom} ne passe pas sous la barre latérale`).toBeGreaterThanOrEqual(bord);
+      expect.soft(b.droite, `${b.nom} ne sort pas à droite`).toBeLessThanOrEqual(largeur);
+      expect.soft(b.gauche >= titre.x + titre.width || b.haut >= titre.y + titre.height, `${b.nom} ne passe pas sur le titre`).toBe(true);
+    }
+    expect(await enTete.evaluate((el) => el.scrollWidth <= el.clientWidth), "l'en-tête ne déborde pas").toBe(true);
+    await expect(enTete.getByText("Mode Louange", { exact: true }), "libellés compris").toBeVisible();
+    await enTete.getByRole("button", { name: "Adapter" }).click();
+    await expect(page.getByText(AIDE_ADAPTER)).toBeVisible();
+    await enTete.getByRole("button", { name: "Ma version" }).click();
+    await expect(page.getByText(AIDE_MA_VERSION)).toBeVisible();
+  }
 
   const ECRANS: [number, number, string][] = [
     [320, 568, "portrait"], [360, 740, "portrait"], [375, 667, "portrait"], [390, 844, "portrait"], [402, 874, "portrait"], [430, 932, "portrait"],
@@ -123,9 +159,13 @@ test.describe("louange : barre d'outils de la setlist, une seule ligne sur tél�
     test(`${largeur} × ${hauteur} (${sens}) : toutes les commandes sur une ligne, rien ne dépasse`, async ({ page }) => {
       await page.setViewportSize({ width: largeur, height: hauteur });
       await signInAs(page, MUSICIEN, { [`setlists/${SETLIST_ID}`]: setlist }, `/setlists/${SETLIST_ID}`);
-      await page.getByRole("button", { name: "Partitions" }).click();
+      await ouvrirPartitions(page);
+      // iPad couché : deux volets, l'en-tête du grand écran (barre latérale de 68 px).
+      if (sens === "iPad paysage") return enTeteSurUneLigne(page, largeur, 68);
       const barre = page.getByTestId("barre-outils");
-      await expect(barre.getByRole("button", { name: "Pinyin" })).toBeVisible();
+      // Setlist G (docs/spec-deux-volets.md, Q3 et Q11) : « Affichage » remplace
+      // Pinyin dans la barre ; la bascule Liste | Partitions est sous l'en-tête.
+      await expect(barre.getByRole("button", { name: "Affichage" })).toBeVisible();
 
       const boites = await barre.locator("a, button").evaluateAll((els) =>
         els
@@ -135,11 +175,12 @@ test.describe("louange : barre d'outils de la setlist, une seule ligne sur tél�
             return { nom: el.getAttribute("aria-label") ?? "", milieu: r.top + r.height / 2, gauche: r.left, droite: r.right, h: r.height, l: r.width };
           }),
       );
-      expect(boites.length, "retour, liste, partitions, accords, pinyin, mode louange, ⋯ au moins").toBeGreaterThanOrEqual(7);
+      expect(boites.length, "retour, affichage, (adapter), accords, (ma version), mode louange, ⋯").toBe(largeur >= 390 ? 7 : 5);
       const milieux = boites.map((b) => b.milieu);
       expect(Math.max(...milieux) - Math.min(...milieux), `une seule ligne : ${JSON.stringify(boites.map((b) => [b.nom, Math.round(b.milieu)]))}`).toBeLessThan(4);
       for (const b of boites) {
-        expect.soft(b.gauche, `${b.nom} ne sort pas à gauche`).toBeGreaterThanOrEqual(0);
+        // iPad couché : la barre latérale réduite (68 px, lot U4, N4) est à gauche.
+        expect.soft(b.gauche, `${b.nom} ne sort pas à gauche`).toBeGreaterThanOrEqual(sens === "iPad paysage" ? 68 : 0);
         expect.soft(b.droite, `${b.nom} ne sort pas à droite`).toBeLessThanOrEqual(largeur);
         expect.soft(Math.min(b.h, b.l), `${b.nom} : pas plus petit qu'avant (32 px)`).toBeGreaterThanOrEqual(32);
       }
@@ -169,11 +210,70 @@ test.describe("louange : barre d'outils de la setlist, une seule ligne sur tél�
       }
     });
   }
+
+  // Lot U4, N2 : sur ordinateur, la barre d'outils commence au bord de la barre latérale
+  // dépliée (248 px). Les libellés n'arrivent que s'ils tiennent dans ce qui reste : ce test
+  // « une seule ligne » mesure le seuil (des libellés trop tôt feraient passer la barre sur
+  // deux lignes, `flex-wrap` étant le filet). N3 : de même à côté de la barre réduite (68 px).
+  test.describe("ordinateur, à côté de la barre latérale dépliée (U4)", () => {
+    test.use({ isMobile: false, hasTouch: false, deviceScaleFactor: 1 });
+    test.beforeEach(({}, info) => {
+      test.skip(!info.project.name.startsWith("ordinateur"), "pointeur fin : projets ordinateur seulement");
+    });
+    for (const largeur of [1024, 1180, 1280, 1366, 1440, 1920]) {
+      test(`ordinateur ${largeur} × 900 : une ligne, rien sous la barre latérale ni hors de l'écran`, async ({ page }) => {
+        await page.setViewportSize({ width: largeur, height: 900 });
+        await signInAs(page, MUSICIEN, { [`setlists/${SETLIST_ID}`]: setlist }, `/setlists/${SETLIST_ID}`);
+        await ouvrirPartitions(page);
+        // Deux volets dès 900 px utiles, soit 1 148 px de fenêtre (docs/spec-deux-volets.md, Q1).
+        if (largeur >= 1148) return enTeteSurUneLigne(page, largeur, 248);
+        const barre = page.getByTestId("barre-outils");
+        await expect(barre.getByRole("button", { name: "Affichage" })).toBeVisible();
+        const boites = await barre.locator("a, button").evaluateAll((els) =>
+          els
+            .filter((el) => (el as HTMLElement).offsetParent !== null)
+            .map((el) => {
+              const r = el.getBoundingClientRect();
+              return { nom: el.getAttribute("aria-label") ?? "", milieu: r.top + r.height / 2, gauche: r.left, droite: r.right };
+            }),
+        );
+        expect(boites.length, "retour, affichage, adapter, accords, ma version, mode louange, ⋯").toBe(7);
+        const milieux = boites.map((b) => b.milieu);
+        expect(Math.max(...milieux) - Math.min(...milieux), `une seule ligne : ${JSON.stringify(boites.map((b) => [b.nom, Math.round(b.milieu)]))}`).toBeLessThan(4);
+        for (const b of boites) {
+          expect.soft(b.gauche, `${b.nom} ne passe pas sous la barre latérale`).toBeGreaterThanOrEqual(248);
+          expect.soft(b.droite, `${b.nom} ne sort pas à droite`).toBeLessThanOrEqual(largeur);
+        }
+        expect(await barre.evaluate((el) => el.scrollWidth <= el.clientWidth), "la barre ne déborde pas").toBe(true);
+        // 1 024 px : 776 px à côté de la barre, les libellés ne tiennent pas.
+        await expect(barre.getByText("Mode Louange", { exact: true })).toBeHidden();
+      });
+    }
+  });
+
+  test.describe("ordinateur, à côté de la barre latérale réduite (U4, N3)", () => {
+    test.use({ isMobile: false, hasTouch: false, deviceScaleFactor: 1 });
+    test.beforeEach(async ({ page }, info) => {
+      test.skip(!info.project.name.startsWith("ordinateur"), "pointeur fin : projets ordinateur seulement");
+      await page.addInitScript(() => localStorage.setItem("barre-laterale", "reduite"));
+    });
+    // Barre réduite : 956 px utiles dès 1 024 px, deux volets toujours (docs/spec-deux-volets.md, Q1).
+    for (const largeur of [1024, 1180, 1280, 1440]) {
+      test(`ordinateur ${largeur} × 900, barre réduite : une ligne, rien sous la barre latérale ni hors de l'écran`, async ({ page }) => {
+        await page.setViewportSize({ width: largeur, height: 900 });
+        await signInAs(page, MUSICIEN, { [`setlists/${SETLIST_ID}`]: setlist }, `/setlists/${SETLIST_ID}`);
+        await ouvrirPartitions(page);
+        await enTeteSurUneLigne(page, largeur, 68);
+      });
+    }
+  });
 });
 
 test.describe("louange (T3) : barre d'outils du chant, téléphone et tablette", () => {
   test.beforeEach(({}, info) => {
-    test.skip(info.project.name === "ordinateur", "cibles tactiles : téléphone et tablette seulement");
+    // Dès 1024 px (`lg`), la barre du chant passe à 32 px quel que soit le pointeur : l'iPad
+    // couché (projet tablette-paysage, lot U4) y est donc comme l'ordinateur — inchangé par U4.
+    test.skip((info.project.use.viewport?.width ?? 0) >= 1024, "cibles tactiles : téléphone et tablette en portrait seulement");
   });
 
   // Cibles tactiles (16/09/2026) : les boutons faisaient 32 px sur téléphone
@@ -200,17 +300,19 @@ test.describe("louange (T3) : barre d'outils du chant, téléphone et tablette",
 
 test.describe("louange (T3) : sélecteur de tonalité, téléphone et tablette", () => {
   test.beforeEach(({}, info) => {
-    test.skip(info.project.name === "ordinateur", "largeur tactile seulement");
+    test.skip((info.project.use.viewport?.width ?? 0) >= 1024, "largeur tactile seulement (sous 1024 px)");
   });
 
-  // 16/09/2026 : sur un chant 中文 avec partition 简谱 (six commandes), le
+  // 16/09/2026 : sur un chant 中文 avec partition 简谱 (six commandes alors ; cinq depuis
+  // que le bouton 谱 a quitté la barre pour le segment « 简谱 · Paroles », L3-T3), le
   // sélecteur natif rognait la tonalité (« E ( »). Fermé, il n'affiche plus
   // que la tonalité ; la liste ouverte garde « (orig.) » et « (reco.) ».
   test("la tonalité reste lisible dans le sélecteur fermé, la liste garde ses libellés, changer de tonalité fonctionne", async ({ page }) => {
     await page.goto(`/songs/${encodeURIComponent("一生爱你")}`);
     const barre = page.getByTestId("barre-outils");
     await barre.waitFor();
-    await expect(barre.getByRole("button", { name: "简谱" }), "chant à six commandes").toBeVisible();
+    await expect(barre.getByRole("button", { name: "Pinyin" }), "chant 中文").toBeVisible();
+    await expect(barre.getByRole("button", { name: "简谱" }), "chant à cinq commandes : 谱 a quitté la barre").toHaveCount(0);
     await page.evaluate(() => Promise.all(document.getAnimations().map((a) => a.finished.catch(() => {}))));
     const tonalite = page.getByTestId("tonalite-courante");
     // innerText : le suffixe « (orig.) » existe dans le DOM mais n'est affiché que sur ordinateur.

@@ -1,5 +1,6 @@
 import { auth, FIREBASE_PROJECT_ID } from "@/lib/firebase/config";
 import { SERVICE_LIEUX } from "@/types/user";
+import { BACK_OFFICE } from "@/lib/backOffice";
 import type { SetlistItem } from "@/types/setList";
 
 // ─── Categories ───────────────────────────────────────────────────────────────
@@ -17,6 +18,11 @@ export const FREE_CATEGORIES = [
 ] as const;
 
 export const ALL_CATEGORIES = [...RESTRICTED_CATEGORIES, ...FREE_CATEGORIES];
+
+/** Catégories des setlists de fête (docs/spec-chants-fetes.md, décision 32). Hors de `ALL_CATEGORIES` :
+ *  on ne crée jamais une setlist de fête depuis « Nouvelle setlist », et les écrans qui parcourent
+ *  `ALL_CATEGORIES` (statistiques, prochaines setlists, profil) ne changent pas. */
+export const FETE_CATEGORIES = ["Noël", "Pâques"] as const;
 
 // ─── Firestore types ──────────────────────────────────────────────────────────
 
@@ -39,6 +45,20 @@ export interface FSSetlist {
   ownerId?: string | null;
   /** Lien de la présentation (PPT) de la régie — écrit par /api/setlist/presentation. */
   presentationUrl?: string;
+  /** L'équipe de la setlist (docs/spec-partage-setlist.md) : uids qui la voient et la modifient,
+   *  choisis par le propriétaire ou un admin. Absent = personne. */
+  editeurs?: string[];
+  /** Rôle de chaque personne de `editeurs`, pour l'affichage (absent = musicien). */
+  rolesPartage?: Record<string, "musicien" | "chanteur">;
+  /** Setlist d'un passage de fête (docs/spec-chants-fetes.md) : l'édition (`programmes/{id}`), le
+   *  passage et son seul « Qui » à la dernière saisie. Écrit par le serveur seul ; absent = setlist
+   *  ordinaire. */
+  fete?: { programme: string; passage: string; qui: string };
+  /** Corbeille (SC2, docs/spec-createur-corbeille-absences.md) : date-heure ISO de la mise à la corbeille
+   *  et uid de qui l'a faite. Absents = setlist en place ; présents = elle n'apparaît que dans la corbeille
+   *  et le cron la purge après 30 jours. */
+  supprimeeLe?: string;
+  supprimeePar?: string;
 }
 
 // ─── Firestore REST API ───────────────────────────────────────────────────────
@@ -132,6 +152,13 @@ function withTimeout<T>(promise: Promise<T>, ms: number, message: string): Promi
   ]);
 }
 
+/** Sans l'interrupteur du back-office, une setlist de fête n'existe pas : local et en ligne partagent le même
+ *  Firestore (docs/spec-chants-fetes.md, CF24). Un seul endroit pour toutes les lectures. */
+const sansFetes = (s: FSSetlist): boolean => BACK_OFFICE || !s.fete;
+
+/** Une setlist à la corbeille (`supprimeeLe`) n'apparaît dans aucune lecture ordinaire (SC2.2). */
+const horsCorbeille = (s: FSSetlist): boolean => !s.supprimeeLe;
+
 // ─── CRUD ─────────────────────────────────────────────────────────────────────
 
 export async function getSetlists(): Promise<FSSetlist[]> {
@@ -151,7 +178,61 @@ export async function getSetlists(): Promise<FSSetlist[]> {
   return rows
     .filter((r) => r.document)
     .map((r) => fromFsDoc(r.document!))
-    .filter((s) => !s.isPrivate && !s.isDraft);
+    .filter((s) => !s.isPrivate && !s.isDraft && sansFetes(s) && horsCorbeille(s));
+}
+
+/** Setlists datées de `today` (AAAA-MM-JJ) ou après, par date, `max` au plus : la lecture
+ *  bornée des « Prochaines setlists » de Chants (lot U5, docs/spec-deux-volets.md, Q17).
+ *  Un seul champ, donc un index simple. Rien n'est filtré ici : brouillons, privées et
+ *  visibilité se trient côté client (`upcomingSetlists`). Hors ligne : rien.
+ *  `strict` : un refus (jeton expiré, règle) lève au lieu de rendre `[]` — « Pour quel
+ *  service ? » (lot U5 bis) ne doit pas re-proposer un service déjà préparé. */
+export async function getSetlistsFrom(today: string, max = 30, { strict = false } = {}): Promise<FSSetlist[]> {
+  const headers = await authHeader();
+  const res = await fetch(`${FS_BASE}:runQuery`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...headers },
+    body: JSON.stringify({
+      structuredQuery: {
+        from: [{ collectionId: "setlists" }],
+        where: {
+          fieldFilter: { field: { fieldPath: "date" }, op: "GREATER_THAN_OR_EQUAL", value: { stringValue: today } },
+        },
+        orderBy: [{ field: { fieldPath: "date" }, direction: "ASCENDING" }],
+        limit: max,
+      },
+    }),
+  });
+  if (!res.ok) {
+    if (strict) await checkRest(res);
+    return [];
+  }
+  const rows = (await res.json()) as Array<{ document?: RawDoc }>;
+  return rows.filter((r) => r.document).map((r) => fromFsDoc(r.document!)).filter((s) => sansFetes(s) && horsCorbeille(s));
+}
+
+/** Setlists datées de `depuis` (« AAAA-MM-JJ ») ou après, ni privées ni brouillons : celles du
+ *  tableau de bord du Back-Office (lot U6). Filtre mono-champ, pas d'index composite. Contrairement
+ *  à `getSetlists`, lève si la lecture échoue : un widget dit alors « Lecture impossible »,
+ *  jamais « Pas de setlist ». */
+export async function getSetlistsDepuis(depuis: string): Promise<FSSetlist[]> {
+  const headers = await authHeader();
+  const res = await fetch(`${FS_BASE}:runQuery`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...headers },
+    body: JSON.stringify({
+      structuredQuery: {
+        from: [{ collectionId: "setlists" }],
+        where: { fieldFilter: { field: { fieldPath: "date" }, op: "GREATER_THAN_OR_EQUAL", value: { stringValue: depuis } } },
+      },
+    }),
+  });
+  await checkRest(res);
+  const rows = await res.json() as Array<{ document?: RawDoc }>;
+  return rows
+    .filter((r) => r.document)
+    .map((r) => fromFsDoc(r.document!))
+    .filter((s) => !s.isPrivate && !s.isDraft && sansFetes(s) && horsCorbeille(s));
 }
 
 /** Setlists récentes pour le badge de notifications (cloche). Deux requêtes
@@ -193,7 +274,56 @@ export async function getSetlistsSince(sinceMs: number, max: number): Promise<FS
   ]);
   const byId = new Map<string, FSSetlist>();
   for (const s of [...created, ...updated]) byId.set(s.id, s);
-  return [...byId.values()].filter((s) => !s.isPrivate && !s.isDraft);
+  return [...byId.values()].filter((s) => !s.isPrivate && !s.isDraft && sansFetes(s) && horsCorbeille(s));
+}
+
+/** Les setlists dont `uid` est de l'équipe (`editeurs`), brouillons écartés. Refiltrée par
+ *  l'appelant : la requête n'est pas crue sur parole. */
+export async function getSetlistsPartagees(uid: string): Promise<FSSetlist[]> {
+  const headers = await authHeader();
+  const res = await fetch(`${FS_BASE}:runQuery`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...headers },
+    body: JSON.stringify({
+      structuredQuery: {
+        from: [{ collectionId: "setlists" }],
+        where: {
+          fieldFilter: { field: { fieldPath: "editeurs" }, op: "ARRAY_CONTAINS", value: { stringValue: uid } },
+        },
+      },
+    }),
+  });
+  if (!res.ok) return [];
+  const rows = await res.json() as Array<{ document?: RawDoc }>;
+  return rows
+    .filter((r) => r.document)
+    .map((r) => fromFsDoc(r.document!))
+    .filter((s) => !s.isDraft && !!s.editeurs?.includes(uid) && sansFetes(s) && horsCorbeille(s));
+}
+
+/** Les setlists d'une édition de fête (`fete.programme`), brouillons écartés, refiltrées côté client
+ *  (la requête n'est pas crue sur parole). Sans l'interrupteur du back-office : rien (CF24). */
+export async function getSetlistsDeFete(programme: string): Promise<FSSetlist[]> {
+  if (!BACK_OFFICE) return [];
+  const headers = await authHeader();
+  const res = await fetch(`${FS_BASE}:runQuery`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...headers },
+    body: JSON.stringify({
+      structuredQuery: {
+        from: [{ collectionId: "setlists" }],
+        where: {
+          fieldFilter: { field: { fieldPath: "fete.programme" }, op: "EQUAL", value: { stringValue: programme } },
+        },
+      },
+    }),
+  });
+  if (!res.ok) return [];
+  const rows = await res.json() as Array<{ document?: RawDoc }>;
+  return rows
+    .filter((r) => r.document)
+    .map((r) => fromFsDoc(r.document!))
+    .filter((s) => !s.isDraft && s.fete?.programme === programme && horsCorbeille(s));
 }
 
 export async function getMySetlists(uid: string): Promise<FSSetlist[]> {
@@ -221,7 +351,7 @@ export async function getMySetlists(uid: string): Promise<FSSetlist[]> {
   return rows
     .filter((r) => r.document)
     .map((r) => fromFsDoc(r.document!))
-    .filter((s) => s.isPrivate === true && !s.isDraft)
+    .filter((s) => s.isPrivate === true && !s.isDraft && sansFetes(s) && horsCorbeille(s))
     .sort((a, b) => {
       const aTs = a.createdAt?.getTime() ?? 0;
       const bTs = b.createdAt?.getTime() ?? 0;
@@ -238,7 +368,8 @@ export async function getSetlist(id: string): Promise<FSSetlist | null> {
   if (res.status === 404 || res.status === 403) return null;
   await checkRest(res);
   const raw = await res.json() as RawDoc;
-  return fromFsDoc(raw);
+  const setlist = fromFsDoc(raw);
+  return sansFetes(setlist) && horsCorbeille(setlist) ? setlist : null;
 }
 
 export async function createSetlist(
@@ -289,6 +420,85 @@ export async function updateSetlist(
   );
 
   await checkRest(res);
+}
+
+const MASQUE_CORBEILLE = ["supprimeeLe", "supprimeePar"]
+  .map((f) => `updateMask.fieldPaths=${f}`)
+  .join("&");
+
+/** Met une setlist à la corbeille (SC2.1) : deux champs, pas de `updatedAt` (la setlist n'a pas été
+ *  modifiée, et la cloche ne doit pas la signaler). Se défait par `restaurerSetlist`. */
+export async function mettreALaCorbeille(id: string, uid: string): Promise<void> {
+  const headers = await authHeader();
+  const docName = `projects/gcclouange/databases/(default)/documents/setlists/${id}`;
+  const res = await withTimeout(
+    fetch(`${FS_BASE}/setlists/${id}?${MASQUE_CORBEILLE}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", ...headers },
+      body: JSON.stringify({
+        name: docName,
+        fields: toFsFields({ supprimeeLe: new Date().toISOString(), supprimeePar: uid }),
+      }),
+    }),
+    20_000,
+    "Délai dépassé — vérifie ta connexion internet et réessaie."
+  );
+  await checkRest(res);
+}
+
+/** Comme `deleteSetlists` : séquentiel, continue après un échec, rend les réussies et les ratées. */
+export async function mettreALaCorbeilleGroupe(ids: string[], uid: string): Promise<{ ok: string[]; ko: string[] }> {
+  const ok: string[] = [];
+  const ko: string[] = [];
+  for (const id of ids) {
+    try {
+      await mettreALaCorbeille(id, uid);
+      ok.push(id);
+    } catch {
+      ko.push(id);
+    }
+  }
+  return { ok, ko };
+}
+
+/** Sort une setlist de la corbeille (SC2.4) : le masque nomme les deux champs, le corps n'en porte
+ *  aucun, Firestore les retire. */
+export async function restaurerSetlist(id: string): Promise<void> {
+  const headers = await authHeader();
+  const docName = `projects/gcclouange/databases/(default)/documents/setlists/${id}`;
+  const res = await withTimeout(
+    fetch(`${FS_BASE}/setlists/${id}?${MASQUE_CORBEILLE}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", ...headers },
+      body: JSON.stringify({ name: docName, fields: {} }),
+    }),
+    20_000,
+    "Délai dépassé — vérifie ta connexion internet et réessaie."
+  );
+  await checkRest(res);
+}
+
+/** Les setlists à la corbeille, la plus récemment supprimée d'abord. Même requête que `getSetlists` ;
+ *  l'appelant garde celles que la personne pourrait supprimer. */
+export async function getCorbeille(): Promise<FSSetlist[]> {
+  const headers = await authHeader();
+  const res = await fetch(`${FS_BASE}:runQuery`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...headers },
+    body: JSON.stringify({
+      structuredQuery: {
+        from: [{ collectionId: "setlists" }],
+        orderBy: [{ field: { fieldPath: "createdAt" }, direction: "DESCENDING" }],
+      },
+    }),
+  });
+  if (!res.ok) return [];
+  const rows = await res.json() as Array<{ document?: RawDoc }>;
+  return rows
+    .filter((r) => r.document)
+    .map((r) => fromFsDoc(r.document!))
+    .filter((s) => !!s.supprimeeLe && !s.isDraft && sansFetes(s))
+    .sort((a, b) => (b.supprimeeLe ?? "").localeCompare(a.supprimeeLe ?? ""));
 }
 
 export async function deleteSetlist(id: string): Promise<void> {

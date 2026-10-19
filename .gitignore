@@ -164,3 +164,11 @@ scripts/jianpu/debug/
 /playwright-report/
 /blob-report/
 /playwright/.cache/
+
+# Prototype Figma (scripts/figma) : captures, scripts générés, copie figée du Sheet (noms de personnes)
+scripts/figma/out/
+scripts/figma/code/
+scripts/figma/sheets/
+scripts/figma/test-results/
+scripts/planche/root/
+scripts/planche/apercu/

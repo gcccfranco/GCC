@@ -1,14 +1,45 @@
-import { expect, test, type Page } from "@playwright/test";
-import { signInAs, type FakeProfile } from "./helpers/fakeSession";
+import { expect, test, type Locator, type Page } from "@playwright/test";
+import { readFileSync } from "node:fs";
+import { abonneAuxNotifications, fsDoc, signInAs, type FakeProfile } from "./helpers/fakeSession";
+import { fenetreDuSite, repondreDansLeSite } from "./helpers/agencement";
 import { parsePetitDej } from "../src/lib/planning/sheets";
 import { findMyServices, type PlanningData } from "../src/lib/planning/names";
-import { reminderBody, reminderServicesFor } from "../src/lib/push/reminderMessage";
+import { reminderBody, reminderServicesFor, type ReminderService } from "../src/lib/push/reminderMessage";
+import {
+  ajouterPetitDejAuxRappels, estLibre, lirePetitDej, oublierPetitDej, rangeesPetitDej,
+} from "../src/lib/petitdej/lignes";
+import { servicesPetitDejDuCompte } from "../src/lib/petitdej/services";
+import { canEditPetitDej, canGererPetitDej } from "../src/lib/access";
+import { GRILLE_TABLE } from "../src/lib/planning/grilles";
+import { serviceButtonFill } from "../src/lib/serviceButton";
+import { PLANNING_COLORS } from "../src/lib/serviceColors";
+import type { LignePetitDej } from "../src/types/petitDej";
+import { estMercredi, lignesMercredi, petitDejTitre, prochainDimanche } from "../src/lib/petitdej/rappel";
+import { avecLignes } from "../src/lib/evenements/rappel";
+import { DEFAULT_NOTIF_PREFS, NOTIF_TYPE_LABELS, NOTIF_TYPES } from "../src/types/user";
 
-// Lot 1b (docs/spec-planning-petits-lots.md), codé sans attendre le fichier de
-// Christelle : le petit déj se lit dans le bloc « PETIT DÉJEUNER » de l'onglet
-// existant Franco_Table_PtD (colonnes 17 DATE / 18 NOM pour janvier → juin,
-// 19 / 20 pour juillet → décembre). Ce dimanche, Mes services, rappels ; pas
-// d'onglet. Visible seulement quand la case est remplie.
+// Lot 1b (docs/spec-planning-petits-lots.md) : le petit déj se lisait dans le
+// bloc « PETIT DÉJEUNER » de l'onglet Franco_Table_PtD (colonnes 17 DATE / 18 NOM
+// pour janvier → juin, 19 / 20 pour juillet → décembre). Ce dimanche, Mes
+// services, rappels ; pas d'onglet.
+//
+// Lot U3 (docs/spec-petit-dej.md), tranche PD1 : interrupteur ouvert, les
+// inscriptions (`petitDej/{id}`, une ligne par document) sont la SEULE source
+// (T8) ; le Sheet ne parle plus. Les écrans du lot 1b, Sheet compris, se
+// vérifient désormais dans back-office-coupe.spec.ts (interrupteur coupé).
+// Tranche PD2 : la carte « Petit déj » en tête de Planning › Table (s'inscrire,
+// réécrire, retirer ; les écrivains du planning Table posent pour d'autres) et
+// la colonne Petit déj de la grille en lecture seule (Q12).
+// Tranche PD3 : une ligne posée par « Je m'inscris » compte pour son inscrit
+// (Q9) dans « Ton prochain service », « Mes services » (même sans nom de
+// planning) et les rappels J-7 / J-3 / J-1, sans doublon.
+// Tranche PD4 : le mercredi, si le dimanche qui vient est libre, une ligne de
+// plus dans le rappel du matin (T5, Q5) ; préférence « Petit déj », active par
+// défaut, dans Mon profil › Notifications, liste « Recevoir » traduite (question 7).
+// Le cron lui-même se relit, il ne s'exécute pas ici (comme le reste du cron).
+// Tranche PD5 : la reprise (T11, Q13) des noms de la grille Table — retirée le
+// 06/10/2026 avec les autres importations (« on va tout faire manuellement »),
+// route, bouton et tests compris.
 
 const csv = (rows: string[][]) => rows.map((r) => r.map((c) => `"${c}"`).join(",")).join("\n");
 
@@ -25,13 +56,22 @@ const TABLE_PTD = csv([
 
 const CHARLIE: FakeProfile = { uid: "uid-charlie", email: "charlie@example.com", planningName: "Charlie B." };
 
+/** Une ligne du petit déj telle que Firestore la garde (`petitDej/{id}`). */
+const ligne = (l: Partial<LignePetitDej> & Pick<LignePetitDej, "id" | "dimanche" | "nom">): LignePetitDej => ({
+  uid: "", auteurUid: "uid-ecrivain", creeLe: "2026-09-01T10:00:00.000Z", modifieLe: "2026-09-01T10:00:00.000Z", ...l,
+});
+
+/** Les documents simulés `petitDej/{id}` à partir de lignes. */
+const docsPetitDej = (lignes: LignePetitDej[]) =>
+  Object.fromEntries(lignes.map(({ id, ...data }) => [`petitDej/${id}`, data]));
+
 /** Capture à regarder à l'œil (PW_CAPTURES=<dossier>), une par appareil. */
 async function capture(page: Page, name: string) {
   const dir = process.env.PW_CAPTURES;
   if (dir) await page.screenshot({ path: `${dir}/${name}-${test.info().project.name}.png`, fullPage: true });
 }
 
-async function open(page: Page, dimanche: string, to: string) {
+async function open(page: Page, dimanche: string, to: string, docs: Record<string, Record<string, unknown>> = {}, qui: FakeProfile = CHARLIE) {
   const vendredi = new Date(`${dimanche}T10:00:00`);
   vendredi.setDate(vendredi.getDate() - 2);
   await page.clock.setFixedTime(vendredi);
@@ -43,10 +83,10 @@ async function open(page: Page, dimanche: string, to: string) {
       body: sheet === "Franco_Table_PtD" ? TABLE_PTD : "",
     });
   });
-  await signInAs(page, CHARLIE, {}, to);
+  return signInAs(page, qui, docs, to);
 }
 
-// ─── Lecture de la feuille ───────────────────────────────────────────────────
+// ─── Lecture de la feuille (lot 1b, interrupteur coupé) ──────────────────────
 
 test("les deux blocs de dates sont lus, et « A & B » fait deux noms", () => {
   const rows = [
@@ -65,7 +105,7 @@ test("les deux blocs de dates sont lus, et « A & B » fait deux noms", () => {
 // ─── Services et rappels ─────────────────────────────────────────────────────
 
 const vide: PlanningData = {
-  culte: [], dejeuner: [], petitDej: [], paix: [], fidelite: [], fideliteMusic: [],
+  culte: [], dejeuner: [], petitDej: [], paix: [], fidelite: [],
   bonte: [], edd: {}, campus: [], intergroupe: [], interfranco: [],
 };
 
@@ -95,32 +135,850 @@ test("le rappel nomme le petit déj, en français et en 中文", () => {
   );
 });
 
-// ─── Écran ───────────────────────────────────────────────────────────────────
+// ─── U3 · PD1 : les lignes (pur) ─────────────────────────────────────────────
 
-test("Ce dimanche : la ligne Petit déj apparaît quand la case est remplie", async ({ page }) => {
-  await open(page, "2026-09-20", "/planning");
+test("rangeesPetitDej : les textes d'un dimanche joints par « , » dans l'ordre d'inscription, un dimanche sans ligne absent", () => {
+  const lignes = [
+    ligne({ id: "c", dimanche: "2026-10-11", nom: "Les jeunes du Campus", creeLe: "2026-09-03T08:00:00.000Z" }),
+    ligne({ id: "a", dimanche: "2026-10-04", nom: "Famille Martin", creeLe: "2026-09-02T08:00:00.000Z" }),
+    ligne({ id: "b", dimanche: "2026-10-11", nom: "Inès L.", creeLe: "2026-09-01T08:00:00.000Z" }),
+  ];
+  expect(rangeesPetitDej(lignes)).toEqual([
+    ["2026-10-04", "Famille Martin"],
+    ["2026-10-11", "Inès L., Les jeunes du Campus"],
+  ]);
+  expect(rangeesPetitDej([])).toEqual([]);
+});
+
+test("estLibre : un dimanche sans ligne est libre, une ligne suffit à le prendre", () => {
+  const lignes = [ligne({ id: "a", dimanche: "2026-10-04", nom: "Famille Martin" })];
+  expect(estLibre(lignes, "2026-10-11")).toBe(true);
+  expect(estLibre(lignes, "2026-10-04")).toBe(false);
+});
+
+// ─── U3 · PD1 : les droits (miroir de firestore.rules) ──────────────────────
+
+const MEMBRE = { uid: "uid-membre", email: "membre@example.com" };
+const AUTRE = { uid: "uid-autre", email: "autre@example.com" };
+const ECRIVAIN = { uid: "uid-ecrivain", email: "ecrivain@example.com" };
+const ADMIN = { uid: "uid-admin", email: "tc328829@gmail.com" };
+const DIMANCHE_EN_COURS = "2026-09-20";
+
+test("canGererPetitDej : les écrivains du planning Table et les admins, personne d'autre", () => {
+  expect(canGererPetitDej(MEMBRE, { plannings: [] })).toBe(false);
+  expect(canGererPetitDej(MEMBRE, { plannings: ["culte"] }), "écrire un autre planning ne suffit pas").toBe(false);
+  expect(canGererPetitDej(ECRIVAIN, { plannings: ["table"] })).toBe(true);
+  expect(canGererPetitDej(ADMIN, null)).toBe(true);
+  expect(canGererPetitDej(null, { plannings: ["table"] })).toBe(false);
+});
+
+test("canEditPetitDej : l'inscrit sur sa ligne à venir, les écrivains Table et les admins ; personne un dimanche passé", () => {
+  const sienne = { uid: MEMBRE.uid, dimanche: "2026-09-27" };
+  const posee = { uid: "", dimanche: "2026-09-27" };
+  expect(canEditPetitDej(MEMBRE, { plannings: [] }, sienne, DIMANCHE_EN_COURS), "l'inscrit, sur sa ligne").toBe(true);
+  expect(canEditPetitDej(AUTRE, { plannings: [] }, sienne, DIMANCHE_EN_COURS), "un autre membre").toBe(false);
+  expect(canEditPetitDej(MEMBRE, { plannings: [] }, posee, DIMANCHE_EN_COURS), "une ligne posée pour quelqu'un").toBe(false);
+  expect(canEditPetitDej(ECRIVAIN, { plannings: ["table"] }, sienne, DIMANCHE_EN_COURS), "écrivain Table").toBe(true);
+  expect(canEditPetitDej(ADMIN, null, posee, DIMANCHE_EN_COURS), "admin").toBe(true);
+  expect(canEditPetitDej(null, null, sienne, DIMANCHE_EN_COURS), "sans compte").toBe(false);
+  expect(canEditPetitDej(MEMBRE, { plannings: [] }, { ...sienne, dimanche: DIMANCHE_EN_COURS }, DIMANCHE_EN_COURS), "le dimanche même reste ouvert").toBe(true);
+
+  const passee = { uid: MEMBRE.uid, dimanche: "2026-09-13" };
+  expect(canEditPetitDej(MEMBRE, { plannings: [] }, passee, DIMANCHE_EN_COURS), "passé : pas l'inscrit").toBe(false);
+  expect(canEditPetitDej(ECRIVAIN, { plannings: ["table"] }, passee, DIMANCHE_EN_COURS), "passé : pas l'écrivain").toBe(false);
+  expect(canEditPetitDej(ADMIN, null, passee, DIMANCHE_EN_COURS), "passé : pas l'admin").toBe(false);
+});
+
+test("firestore.rules porte la règle petitDej/{id}, en double avec access.ts", () => {
+  const rules = readFileSync("firestore.rules", "utf8");
+  const debut = rules.indexOf("match /petitDej/{id}");
+  expect(debut, "le bloc existe, après peutEcrirePlanning").toBeGreaterThan(rules.indexOf("function peutEcrirePlanning"));
+  const bloc = rules.slice(debut, rules.indexOf("\n    }", debut));
+  const partie = (de: string, a?: string) => bloc.slice(bloc.indexOf(de), a ? bloc.indexOf(a) : undefined);
+  expect(partie("allow read", "allow create")).toContain("if true");
+  const create = partie("allow create", "allow update");
+  expect(create).toContain("request.resource.data.auteurUid == request.auth.uid");
+  expect(create).toContain("request.resource.data.uid == request.auth.uid");
+  expect(create).toContain("request.resource.data.uid == '' && peutEcrirePlanning('table')");
+  const update = partie("allow update", "allow delete");
+  for (const fige of ["dimanche", "uid", "auteurUid"]) {
+    expect(update, `${fige} figé`).toContain(`request.resource.data.${fige} == resource.data.${fige}`);
+  }
+  expect(update).toContain("resource.data.uid == request.auth.uid || peutEcrirePlanning('table')");
+  expect(partie("allow delete")).toContain("resource.data.uid == request.auth.uid || peutEcrirePlanning('table')");
+});
+
+// ─── U3 · PD1 : rattachement par le compte (Q9) ─────────────────────────────
+
+test("servicesPetitDejDuCompte : « Famille Martin » reste un service de son inscrit, sans doublon", () => {
+  const lignes = [
+    ligne({ id: "a", dimanche: "2026-10-11", nom: "Famille Martin", uid: CHARLIE.uid, auteurUid: CHARLIE.uid }),
+    ligne({ id: "b", dimanche: "2026-10-04", nom: "Famille Martin", uid: CHARLIE.uid, auteurUid: CHARLIE.uid }),
+    ligne({ id: "c", dimanche: "2026-10-04", nom: "Charlie et ses amis", uid: CHARLIE.uid, auteurUid: CHARLIE.uid }),
+    ligne({ id: "d", dimanche: "2026-10-18", nom: "Famille Martin", uid: "uid-autre", auteurUid: "uid-autre" }),
+    ligne({ id: "e", dimanche: "2026-10-25", nom: "Famille Martin" }),
+  ];
+  expect(servicesPetitDejDuCompte(lignes, CHARLIE.uid, ""), "même sans nom de planning ; deux lignes le même dimanche = un service").toEqual([
+    { date: "2026-10-04", service: "Petit déj", role: "Équipe", leader: "" },
+    { date: "2026-10-11", service: "Petit déj", role: "Équipe", leader: "" },
+  ]);
+  expect(servicesPetitDejDuCompte(lignes, "", ""), "une ligne posée par un écrivain ne se rattache que par son texte").toEqual([]);
+
+  const portantSonNom = [ligne({ id: "f", dimanche: "2026-11-01", nom: "Charlie B., Isabelle L.", uid: CHARLIE.uid })];
+  expect(
+    servicesPetitDejDuCompte(portantSonNom, CHARLIE.uid, "Charlie B."),
+    "le texte porte déjà son nom de planning : findMyServices le trouve, pas de doublon",
+  ).toEqual([]);
+});
+
+test("lignes.ts n'importe pas names.ts : pas de cycle sheets → lignes → names → sheets", () => {
+  const source = readFileSync("src/lib/petitdej/lignes.ts", "utf8");
+  expect(source).not.toMatch(/from "@\/lib\/planning\/names"/);
+  expect(readFileSync("src/lib/planning/names.ts", "utf8"), "le cycle passait par ici").toMatch(/from "\.\/sheets"/);
+});
+
+// ─── U3 · PD1 : la lecture REST publique (Q10) ──────────────────────────────
+
+test("lirePetitDej : la collection en REST public, sans jeton, triée, gardée cinq minutes", async () => {
+  const appels: { url: string; init?: RequestInit }[] = [];
+  const avant = globalThis.fetch;
+  globalThis.fetch = (async (url: string, init?: RequestInit) => {
+    appels.push({ url: String(url), init });
+    return new Response(JSON.stringify([
+      { document: fsDoc("petitDej/b", { dimanche: "2026-10-04", nom: "Les jeunes du Campus", uid: "", auteurUid: "uid-ecrivain", creeLe: "2026-09-03T08:00:00.000Z", modifieLe: "2026-09-03T08:00:00.000Z" }) },
+      { document: fsDoc("petitDej/a", { dimanche: "2026-10-04", nom: "Famille Martin", uid: "uid-charlie", auteurUid: "uid-charlie", creeLe: "2026-09-02T08:00:00.000Z", modifieLe: "2026-09-02T08:00:00.000Z" }) },
+      { readTime: "2026-09-18T10:00:00Z" },
+    ]), { status: 200, headers: { "Content-Type": "application/json" } });
+  }) as typeof fetch;
+  try {
+    oublierPetitDej();
+    const lignes = await lirePetitDej();
+    expect(lignes).toEqual([
+      { id: "a", dimanche: "2026-10-04", nom: "Famille Martin", uid: "uid-charlie", auteurUid: "uid-charlie", creeLe: "2026-09-02T08:00:00.000Z", modifieLe: "2026-09-02T08:00:00.000Z" },
+      { id: "b", dimanche: "2026-10-04", nom: "Les jeunes du Campus", uid: "", auteurUid: "uid-ecrivain", creeLe: "2026-09-03T08:00:00.000Z", modifieLe: "2026-09-03T08:00:00.000Z" },
+    ]);
+    expect(appels).toHaveLength(1);
+    expect(appels[0].url).toMatch(/\/documents:runQuery$/);
+    expect(JSON.stringify(appels[0].init?.body)).toContain("petitDej");
+    expect(JSON.stringify(appels[0].init?.headers ?? {}), "lecture publique : aucun jeton").not.toContain("Authorization");
+
+    await lirePetitDej();
+    expect(appels, "le cache sert la seconde lecture").toHaveLength(1);
+    oublierPetitDej();
+    await lirePetitDej();
+    expect(appels, "oublié après une écriture : relu").toHaveLength(2);
+  } finally {
+    globalThis.fetch = avant;
+    oublierPetitDej();
+  }
+});
+
+test("lirePetitDej : une lecture en échec est une erreur, pas « personne »", async () => {
+  const avant = globalThis.fetch;
+  globalThis.fetch = (async () => new Response("{}", { status: 503 })) as typeof fetch;
+  try {
+    oublierPetitDej();
+    await expect(lirePetitDej()).rejects.toThrow();
+  } finally {
+    globalThis.fetch = avant;
+    oublierPetitDej();
+  }
+});
+
+// ─── U3 · PD1 : écrans, les lignes seule source (interrupteur ouvert) ──────
+
+test("Ce dimanche : la ligne Petit déj vient des inscriptions, plus du Sheet", async ({ page }) => {
+  await open(page, "2026-09-20", "/planning", docsPetitDej([
+    ligne({ id: "a", dimanche: "2026-09-20", nom: "Famille Martin", uid: "uid-autre", auteurUid: "uid-autre" }),
+  ]));
   const dimanche = page.getByRole("region", { name: /Ce dimanche/ });
   await expect(dimanche.getByText("Petit déj", { exact: true })).toBeVisible();
-  await expect(dimanche.getByText("Charlie B., Isabelle L.")).toBeVisible();
-  await capture(page, "ce-dimanche-petit-dej");
+  await expect(dimanche.getByText("Famille Martin")).toBeVisible();
+  await expect(dimanche.getByText("Charlie B., Isabelle L."), "le nom du Sheet n'apparaît plus").toHaveCount(0);
+  await capture(page, "ce-dimanche-petit-dej-lignes");
 });
 
-test("Ce dimanche : pas de ligne Petit déj quand la case est vide", async ({ page }) => {
-  await open(page, "2026-09-13", "/planning");
+// Accueil A (lot U4 bis, B1, docs/spec-pages-en-grand.md, Q14) : interrupteur ouvert, sans
+// inscription le petit déj est « Libre », avec « Je m'inscris » ; le Sheet ne parle plus (U3, T8).
+// Interrupteur coupé, pas de ligne (pages-en-grand-accueil).
+test("Ce dimanche : sans inscription, le petit déj est « Libre » avec « Je m'inscris », même si le Sheet en porte un", async ({ page }) => {
+  await open(page, "2026-09-20", "/planning");
   const dimanche = page.getByRole("region", { name: /Ce dimanche/ });
-  await expect(dimanche.getByText("Daniel F.", { exact: false }), "la Prépa. Table reste").toBeVisible();
-  await expect(dimanche.getByText("Petit déj", { exact: true })).toHaveCount(0);
+  await expect(dimanche.getByText("Ruth K.", { exact: false }), "la Prépa. Table reste").toBeVisible();
+  await expect(dimanche.getByText("Libre", { exact: true })).toBeVisible();
+  await expect(dimanche.getByRole("link", { name: "Je m'inscris" })).toBeVisible();
+  await expect(dimanche.getByText("Charlie B., Isabelle L.")).toHaveCount(0);
 });
 
-test("Mes services : le petit déj est un service à part entière", async ({ page }) => {
-  await open(page, "2026-09-20", "/mes-services");
-  await expect(page.getByText("Petit déj", { exact: true })).toBeVisible();
-  await capture(page, "mes-services-petit-dej");
+test("Ce dimanche : inscriptions illisibles, ni ligne Petit déj ni retour au Sheet (T8, Q10)", async ({ page }) => {
+  await open(page, "2026-09-20", "/planning");
+  await page.route(/firestore\.googleapis\.com.*:runQuery/, (route) =>
+    (route.request().postData() ?? "").includes('"petitDej"')
+      ? route.fulfill({ status: 503, contentType: "application/json", body: "{}" })
+      : route.fallback(),
+  );
+  await page.reload();
+  const dimanche = page.getByRole("region", { name: /Ce dimanche/ });
+  await expect(dimanche.getByText("Ruth K.", { exact: false }), "la Prépa. Table reste").toBeVisible();
+  await expect(dimanche.getByText("Petit déj", { exact: true })).toHaveCount(0);
+  await expect(dimanche.getByText("Charlie B., Isabelle L."), "pas de secours par le Sheet").toHaveCount(0);
+});
+
+test("Mes services : une ligne à son nom de planning est un service, le Sheet ne compte plus", async ({ page }) => {
+  await open(page, "2026-09-20", "/mes-services", docsPetitDej([
+    ligne({ id: "a", dimanche: "2026-09-27", nom: "Charlie B." }),
+  ]));
+  const petitDej = page.getByRole("listitem").filter({ hasText: "Petit déj" });
+  await expect(petitDej).toHaveCount(1);
+  await expect(petitDej, "le 27/09 des inscriptions, pas le 20/09 du Sheet").toContainText("27");
+  await expect(petitDej).not.toContainText("20 sept");
+  await capture(page, "mes-services-petit-dej-lignes");
 });
 
 test("en 中文 : libellé traduit", async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
-  await open(page, "2026-09-20", "/planning");
+  await open(page, "2026-09-20", "/planning", docsPetitDej([
+    ligne({ id: "a", dimanche: "2026-09-20", nom: "Famille Martin" }),
+  ]));
   const dimanche = page.getByRole("region", { name: /本主日/ });
   await expect(dimanche.getByText("早餐", { exact: true })).toBeVisible();
+  await expect(dimanche.getByText("Famille Martin")).toBeVisible();
+});
+
+// ─── U3 · PD2 : la grille, colonne Petit déj en lecture seule (Q12, pur) ────
+
+test("la colonne Petit déj de la grille Table est en lecture seule", () => {
+  const petitDej = GRILLE_TABLE.colonnes.find((c) => c.cle === "petitDej")!;
+  expect(petitDej.lectureSeule).toBe(true);
+  expect(GRILLE_TABLE.colonnes.find((c) => c.cle === "equipe")!.lectureSeule, "l'équipe reste une case").toBeFalsy();
+});
+
+test("« Je m'inscris » à la couleur de la Table : libellé blanc lisible (AA, 4,5), serviceColors.ts intact", () => {
+  const lum = (hex: string) => {
+    const [r, g, b] = [1, 3, 5].map((i) => {
+      const x = parseInt(hex.slice(i, i + 2), 16) / 255;
+      return x <= 0.03928 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4;
+    });
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  };
+  const surBlanc = (hex: string) => 1.05 / (lum(hex) + 0.05);
+  expect(PLANNING_COLORS.table, "la couleur gelée ne bouge pas").toBe("#c87941");
+  expect(surBlanc(PLANNING_COLORS.table), "la couleur gelée seule ne passe pas").toBeLessThan(4.5);
+  expect(surBlanc(serviceButtonFill(PLANNING_COLORS.table))).toBeGreaterThanOrEqual(4.5);
+  expect(serviceButtonFill("#a87b0f"), "l'Intergroupe ne change pas").toBe("#966d0d");
+});
+
+// ─── U3 · PD2 : la carte « Petit déj » de Planning › Table ──────────────────
+
+/** A le droit d'écrire le planning Table : pose et retire des lignes pour d'autres (T10). */
+const ECRIVAIN_TABLE: FakeProfile = {
+  uid: "uid-ecrivain", email: "ecrivain@example.com", firstName: "Noa", lastName: "Test", planningName: "Noa T.",
+  plannings: ["table"],
+};
+
+/** Ouvre Planning › Table le vendredi 18/09/2026 : dimanche en cours = 20/09, trimestre T3. */
+async function ouvrirTable(page: Page, qui: FakeProfile, docs: Record<string, Record<string, unknown>> = {}) {
+  await page.clock.setFixedTime(new Date("2026-09-18T10:00:00"));
+  await page.route(/docs\.google\.com\/spreadsheets/, (route) => {
+    const sheet = new URL(route.request().url()).searchParams.get("sheet");
+    return route.fulfill({ status: 200, contentType: "text/csv", body: sheet === "Franco_Table_PtD" ? TABLE_PTD : "" });
+  });
+  return signInAs(page, qui, docs, "/planning/table");
+}
+
+const carteDe = (page: Page, titre = "Petit déj") => page.getByRole("region", { name: titre, exact: true });
+/** Agencement v18 (A4) : une ligne qu'on peut toucher porte un « ⋯ » (Modifier, Retirer). */
+async function choisirDansLeMenu(page: Page, rangee: Locator, action: string, plus = "Plus d'actions") {
+  await rangee.getByRole("button", { name: plus }).click();
+  await page.getByRole("menuitem", { name: action }).click();
+}
+const rangee = (carte: Locator, dimanche: string) => carte.locator(`[data-dimanche="${dimanche}"]`);
+const ecrituresPetitDej = (writes: { method: string; path: string; data: Record<string, unknown> }[], method: string) =>
+  writes.filter((w) => w.method === method && w.path.startsWith("petitDej/"));
+
+/** Contraste du libellé sur le fond d'un bouton, calculé dans le navigateur. */
+const contraste = (bouton: Locator) =>
+  bouton.evaluate((el) => {
+    const s = getComputedStyle(el);
+    const lum = (css: string) => {
+      const [r, g, b] = (css.match(/\d+(\.\d+)?/g) ?? []).slice(0, 3).map((v) => {
+        const x = Number(v) / 255;
+        return x <= 0.03928 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4;
+      });
+      return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+    };
+    const [a, b] = [lum(s.color), lum(s.backgroundColor)].sort((x, y) => y - x);
+    return (a + 0.05) / (b + 0.05);
+  });
+
+test("carte : un dimanche à venir sans ligne dit « Libre » ; « Je m'inscris » pose une ligne à mon nom, rattachée à mon compte", async ({ page }) => {
+  const db = await ouvrirTable(page, CHARLIE);
+  const carte = carteDe(page);
+  await expect(carte.getByRole("heading", { name: "Petit déj" })).toBeVisible();
+  // Agencement v18 (A4) : « n libres sur N » ; l'astuce passe dans « Ton petit déj ».
+  await expect(carte.getByText("2 libres sur 13")).toBeVisible();
+  await expect(carteDe(page, "Ton petit déj").getByText("Tu peux écrire « Famille … » à la place de ton nom.")).toBeVisible();
+
+  const le27 = rangee(carte, "2026-09-27");
+  await expect(le27).toContainText("27 sept.");
+  await expect(le27.getByText("Libre", { exact: true })).toBeVisible();
+  const inscrire = le27.getByRole("button", { name: "Je m'inscris" });
+  expect(await contraste(inscrire), "libellé blanc sur le fond foncé de la Table").toBeGreaterThanOrEqual(4.5);
+  await capture(page, "petit-dej-carte-membre");
+
+  await inscrire.click();
+  await expect(le27.getByText("Charlie B.", { exact: true })).toBeVisible();
+  await expect(le27.getByText("Libre", { exact: true })).toHaveCount(0);
+  const posees = ecrituresPetitDej(db.writes, "POST");
+  expect(posees).toHaveLength(1);
+  expect(posees[0].data).toMatchObject({ dimanche: "2026-09-27", nom: "Charlie B.", uid: CHARLIE.uid, auteurUid: CHARLIE.uid });
+  await expect(le27.getByTestId("moi"), "ma ligne, en encre").toHaveText("Charlie B.");
+  await expect(le27.getByRole("button", { name: "Plus d'actions" })).toBeVisible();
+  // Lot U6, B2 : la grille de la Table n'est plus dans l'App (Back-Office seulement).
+});
+
+test("carte : ✎ réécrit ma ligne « Famille Martin » (tient au rechargement) ; Échap annule, un texte vide est refusé", async ({ page }) => {
+  const db = await ouvrirTable(page, CHARLIE, docsPetitDej([
+    ligne({ id: "m", dimanche: "2026-09-27", nom: "Charlie B.", uid: CHARLIE.uid, auteurUid: CHARLIE.uid }),
+  ]));
+  const le27 = rangee(carteDe(page), "2026-09-27");
+  const champ = le27.getByRole("textbox", { name: "Modifier" });
+
+  await choisirDansLeMenu(page, le27, "Modifier");
+  await champ.fill("Autre chose");
+  await champ.press("Escape");
+  await expect(le27.getByText("Charlie B.", { exact: true })).toBeVisible();
+
+  await choisirDansLeMenu(page, le27, "Modifier");
+  await champ.fill("   ");
+  await champ.press("Enter");
+  await expect(le27.getByText("Charlie B.", { exact: true })).toBeVisible();
+  expect(ecrituresPetitDej(db.writes, "PATCH"), "rien d'écrit : Échap, puis vide").toHaveLength(0);
+
+  await choisirDansLeMenu(page, le27, "Modifier");
+  await champ.fill("Famille Martin");
+  await champ.press("Enter");
+  await expect(le27.getByText("Famille Martin", { exact: true })).toBeVisible();
+  expect(db.doc("petitDej/m")).toMatchObject({ nom: "Famille Martin", uid: CHARLIE.uid, auteurUid: CHARLIE.uid, dimanche: "2026-09-27" });
+
+  await page.reload();
+  await expect(rangee(carteDe(page), "2026-09-27").getByText("Famille Martin", { exact: true })).toBeVisible();
+});
+
+test("carte : « Retirer » demande confirmation et rend le dimanche « Libre »", async ({ page }) => {
+  const db = await ouvrirTable(page, CHARLIE, docsPetitDej([
+    ligne({ id: "m", dimanche: "2026-09-27", nom: "Famille Martin", uid: CHARLIE.uid, auteurUid: CHARLIE.uid }),
+  ]));
+  const le27 = rangee(carteDe(page), "2026-09-27");
+  await choisirDansLeMenu(page, le27, "Retirer");
+  await expect(fenetreDuSite(page).getByRole("heading", { name: "Retirer cette ligne ?" })).toBeVisible();
+  await repondreDansLeSite(page, "Retirer");
+  await expect(le27.getByText("Libre", { exact: true })).toBeVisible();
+  await expect(le27.getByRole("button", { name: "Je m'inscris" })).toBeVisible();
+  expect(db.doc("petitDej/m"), "le document est supprimé").toBeUndefined();
+});
+
+test("carte : aucun bouton sur la ligne d'un autre ni un dimanche passé, pas de ＋ pour un membre, le Sheet ne parle pas", async ({ page }) => {
+  await ouvrirTable(page, CHARLIE, docsPetitDej([
+    ligne({ id: "a", dimanche: "2026-09-27", nom: "Famille Martin", uid: "uid-autre", auteurUid: "uid-autre" }),
+    ligne({ id: "p", dimanche: "2026-09-13", nom: "Charlie B.", uid: CHARLIE.uid, auteurUid: CHARLIE.uid }),
+  ]));
+  const carte = carteDe(page);
+  const le27 = rangee(carte, "2026-09-27");
+  await expect(le27.getByText("Famille Martin", { exact: true })).toBeVisible();
+  await expect(le27.getByRole("button"), "la ligne d'un autre : le texte seul").toHaveCount(0);
+
+  const le13 = rangee(carte, "2026-09-13");
+  await expect(le13.getByText("Charlie B.", { exact: true })).toBeVisible();
+  await expect(le13.getByRole("button"), "un dimanche passé, même ma ligne : aucun bouton").toHaveCount(0);
+  const le6 = rangee(carte, "2026-09-06");
+  await expect(le6).toContainText("6 sept.");
+  await expect(le6.getByText("Libre", { exact: true }), "un dimanche passé sans ligne n'est pas « Libre »").toHaveCount(0);
+  await expect(le6.getByRole("button")).toHaveCount(0);
+
+  const le20 = rangee(carte, "2026-09-20");
+  await expect(le20.getByText("Libre", { exact: true }), "le dimanche même reste ouvert ; le Sheet le portait").toBeVisible();
+  await expect(le20.getByRole("button", { name: "Je m'inscris" })).toBeVisible();
+  await expect(carte.getByText("Isabelle L.", { exact: false }), "un nom du Sheet n'apparaît nulle part").toHaveCount(0);
+  await expect(carte.getByRole("button", { name: "Ajouter une ligne" })).toHaveCount(0);
+  await expect(carte.getByRole("button", { name: "Inscrire quelqu'un" }), "PG48 : un membre n'a pas le bouton").toHaveCount(0);
+  await expect(carteDe(page, "Ton petit déj").getByText("Pour inscrire quelqu'un d'autre", { exact: false }), "PG53 : la phrase seulement pour qui a le bouton").toHaveCount(0);
+});
+
+test("carte : une ligne arrivée entre-temps — le message, et rien n'est écrit", async ({ page }) => {
+  const db = await ouvrirTable(page, CHARLIE);
+  const le27 = rangee(carteDe(page), "2026-09-27");
+  await expect(le27.getByRole("button", { name: "Je m'inscris" })).toBeVisible();
+  db.set("petitDej/x", {
+    dimanche: "2026-09-27", nom: "Famille Martin", uid: "uid-autre", auteurUid: "uid-autre",
+    creeLe: "2026-09-18T09:00:00.000Z", modifieLe: "2026-09-18T09:00:00.000Z",
+  });
+  await le27.getByRole("button", { name: "Je m'inscris" }).click();
+  await expect(le27.getByText("Famille Martin vient de s'inscrire.")).toBeVisible();
+  await expect(le27.getByText("Famille Martin", { exact: true })).toBeVisible();
+  await expect(le27.getByRole("button")).toHaveCount(0);
+  expect(ecrituresPetitDej(db.writes, "POST")).toHaveLength(0);
+});
+
+test("carte : un écrivain du planning Table ajoute « Les jeunes du Campus » et retire la ligne d'un autre", async ({ page }) => {
+  const db = await ouvrirTable(page, ECRIVAIN_TABLE, docsPetitDej([
+    ligne({ id: "a", dimanche: "2026-09-27", nom: "Famille Martin", uid: "uid-autre", auteurUid: "uid-autre" }),
+  ]));
+  const carte = carteDe(page);
+  const le20 = rangee(carte, "2026-09-20");
+  await expect(le20.getByRole("button", { name: "Je m'inscris" }), "il peut aussi s'inscrire lui-même").toBeVisible();
+  await capture(page, "petit-dej-carte-ecrivain");
+
+  await expect(carte.getByRole("button", { name: "Ajouter une ligne" }), "PG49 : plus de bouton par rangée").toHaveCount(0);
+  await carte.getByRole("button", { name: "Inscrire quelqu'un" }).click();
+  const formulaire = carte.getByRole("group", { name: "Inscrire quelqu'un" });
+  await expect(formulaire.getByRole("combobox", { name: "Dimanche" }), "PG51 : le premier dimanche libre d'office").toHaveValue("2026-09-20");
+  await capture(page, "petit-dej-formulaire");
+  const champ = formulaire.getByRole("combobox", { name: "Nom de la personne ou de la famille" });
+  await champ.fill("Les jeunes du Campus");
+  await champ.press("Enter");
+  await expect(le20.getByText("Les jeunes du Campus", { exact: true })).toBeVisible();
+  const posees = ecrituresPetitDej(db.writes, "POST");
+  expect(posees).toHaveLength(1);
+  expect(posees[0].data, "une ligne pour quelqu'un : uid vide").toMatchObject({
+    dimanche: "2026-09-20", nom: "Les jeunes du Campus", uid: "", auteurUid: ECRIVAIN_TABLE.uid,
+  });
+
+  const le27 = rangee(carte, "2026-09-27");
+  await expect(carteDe(page, "Ton petit déj").getByText("Pour inscrire quelqu'un d'autre, même un dimanche déjà pris : « Inscrire quelqu'un ».")).toBeVisible();
+  await choisirDansLeMenu(page, le27, "Retirer");
+  await repondreDansLeSite(page, "Retirer");
+  await expect(le27.getByText("Libre", { exact: true })).toBeVisible();
+  expect(db.doc("petitDej/a")).toBeUndefined();
+  await expect(rangee(carte, "2026-09-13").getByRole("button"), "le passé, même pour un écrivain : aucun bouton").toHaveCount(0);
+});
+
+test("carte : « Inscrire quelqu'un » — formulaire, dimanche déjà pris, dimanches proposés, annuler, nom vide, refus", async ({ page }) => {
+  const db = await ouvrirTable(page, ECRIVAIN_TABLE, docsPetitDej([
+    ligne({ id: "a", dimanche: "2026-09-27", nom: "Famille Martin", uid: "uid-autre", auteurUid: "uid-autre" }),
+    ligne({ id: "p", dimanche: "2026-09-13", nom: "Charlie B.", uid: "uid-autre", auteurUid: "uid-autre" }),
+  ]));
+  const carte = carteDe(page);
+  await expect(carte.getByRole("group", { name: "Inscrire quelqu'un" })).toHaveCount(0);
+  await carte.getByRole("button", { name: "Inscrire quelqu'un" }).click();
+  const formulaire = carte.getByRole("group", { name: "Inscrire quelqu'un" });
+  await expect(formulaire.getByText("Un dimanche déjà pris : la ligne s'ajoute à côté.")).toBeVisible();
+  const menu = formulaire.getByRole("combobox", { name: "Dimanche" });
+  const valeurs = await menu.locator("option").evaluateAll((o) => o.map((x) => (x as HTMLOptionElement).value));
+  expect(valeurs, "à partir du dimanche en cours, le trimestre seulement, pris ou libres").toEqual([
+    "2026-09-20", "2026-09-27",
+  ]);
+  await expect(menu.locator("option").nth(1)).toHaveText("dim. 27 sept.");
+  // Échap annule, rien d'écrit.
+  const champ = formulaire.getByRole("combobox", { name: "Nom de la personne ou de la famille" });
+  await champ.fill("Léa M.");
+  await champ.press("Escape");
+  await expect(carte.getByRole("group", { name: "Inscrire quelqu'un" })).toHaveCount(0);
+  expect(ecrituresPetitDej(db.writes, "POST")).toHaveLength(0);
+  // Un nom vide est refusé : le formulaire reste ouvert.
+  await carte.getByRole("button", { name: "Inscrire quelqu'un" }).click();
+  await formulaire.getByRole("button", { name: "Inscrire", exact: true }).click();
+  await expect(formulaire).toBeVisible();
+  expect(ecrituresPetitDej(db.writes, "POST")).toHaveLength(0);
+  // Un dimanche déjà pris : la ligne s'ajoute à côté.
+  await menu.selectOption("2026-09-27");
+  await formulaire.getByRole("combobox", { name: "Nom de la personne ou de la famille" }).fill("Joël F.");
+  await formulaire.getByRole("button", { name: "Inscrire", exact: true }).click();
+  const le27 = rangee(carte, "2026-09-27");
+  await expect(le27.getByText("Joël F.", { exact: true })).toBeVisible();
+  await expect(le27.getByText("Famille Martin", { exact: true })).toBeVisible();
+  await expect(carte.getByRole("group", { name: "Inscrire quelqu'un" })).toHaveCount(0);
+  expect(ecrituresPetitDej(db.writes, "POST")[0].data).toMatchObject({ dimanche: "2026-09-27", nom: "Joël F.", uid: "", auteurUid: ECRIVAIN_TABLE.uid });
+});
+
+test("carte : « Inscrire quelqu'un » refusé par le serveur — le message sous le formulaire, qui reste ouvert", async ({ page }) => {
+  await ouvrirTable(page, ECRIVAIN_TABLE);
+  await refuserLesInscriptions(page, 500);
+  const carte = carteDe(page);
+  await carte.getByRole("button", { name: "Inscrire quelqu'un" }).click();
+  const formulaire = carte.getByRole("group", { name: "Inscrire quelqu'un" });
+  await formulaire.getByRole("combobox", { name: "Nom de la personne ou de la famille" }).fill("Hugo L.");
+  await formulaire.getByRole("button", { name: "Inscrire", exact: true }).click();
+  await expect(formulaire.getByText("Enregistrement impossible, réessaie.")).toBeVisible();
+});
+
+test("carte en 中文 : « 替别人报名 », dimanche en 月日, phrase de l'astuce", async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
+  await ouvrirTable(page, ECRIVAIN_TABLE);
+  const carte = carteDe(page, "早餐");
+  await carte.getByRole("button", { name: "替别人报名" }).click();
+  const formulaire = carte.getByRole("group", { name: "替别人报名" });
+  await expect(formulaire.getByRole("combobox", { name: "主日" }).locator("option").first()).toHaveText("9月20日");
+  await expect(carteDe(page, "你的早餐")).toContainText("替别人报名");
+});
+
+test("carte : sans dimanche à venir dans le trimestre affiché, pas de bouton « Inscrire quelqu'un »", async ({ page }) => {
+  await ouvrirTable(page, ECRIVAIN_TABLE);
+  await page.getByRole("tab", { name: "T2", exact: true }).click();
+  await expect(carteDe(page).getByText("Libre", { exact: true })).toHaveCount(0);
+  await expect(carteDe(page).getByRole("button", { name: "Inscrire quelqu'un" })).toHaveCount(0);
+});
+
+test("carte : le trimestre change pendant que le formulaire est ouvert — « Inscrire » écrit sur le dimanche affiché", async ({ page }) => {
+  const db = await ouvrirTable(page, ECRIVAIN_TABLE);
+  const carte = carteDe(page);
+  await carte.getByRole("button", { name: "Inscrire quelqu'un" }).click();
+  await expect(carte.getByRole("combobox", { name: "Dimanche" })).toHaveValue("2026-09-20");
+  await page.getByRole("tab", { name: "T4", exact: true }).click();
+  const menu = carte.getByRole("combobox", { name: "Dimanche" });
+  await expect(menu).toHaveValue("2026-10-04");
+  await carte.getByRole("combobox", { name: "Nom de la personne ou de la famille" }).fill("Léa M.");
+  await carte.getByRole("button", { name: "Inscrire", exact: true }).click();
+  await expect(rangee(carte, "2026-10-04").getByText("Léa M.", { exact: true })).toBeVisible();
+  expect(ecrituresPetitDej(db.writes, "POST")[0].data).toMatchObject({ dimanche: "2026-10-04", nom: "Léa M." });
+  await expect(carte.getByRole("button", { name: "Inscrire quelqu'un" }), "le focus revient au bouton").toBeFocused();
+});
+
+test("carte : le premier dimanche libre est choisi d'office, pas le premier proposé ; nom limité à 80 ; noms des comptes suggérés ; Annuler rend le focus", async ({ page }) => {
+  await ouvrirTable(page, ECRIVAIN_TABLE, {
+    ...docsPetitDej([ligne({ id: "a", dimanche: "2026-09-20", nom: "Famille Martin", uid: "uid-autre", auteurUid: "uid-autre" })]),
+    "users/uid-lea": { email: "lea@example.com", planningName: "Léa M.", plannings: ["table"] },
+  });
+  const carte = carteDe(page);
+  await carte.getByRole("button", { name: "Inscrire quelqu'un" }).click();
+  await expect(carte.getByRole("combobox", { name: "Dimanche" })).toHaveValue("2026-09-27");
+  const champ = carte.getByRole("combobox", { name: "Nom de la personne ou de la famille" });
+  await expect(champ).toHaveAttribute("maxlength", "80");
+  await expect(carte.locator("datalist option[value='Léa M.']")).toHaveCount(1);
+  await carte.getByRole("button", { name: "Annuler" }).click();
+  await expect(carte.getByRole("button", { name: "Inscrire quelqu'un" })).toBeFocused();
+});
+
+test("carte : « Retirer » refusé n'apparaît pas sous le formulaire, et Annuler n'efface pas le message d'une rangée", async ({ page }) => {
+  await ouvrirTable(page, ECRIVAIN_TABLE, docsPetitDej([
+    ligne({ id: "a", dimanche: "2026-09-27", nom: "Famille Martin", uid: "uid-autre", auteurUid: "uid-autre" }),
+  ]));
+  const carte = carteDe(page);
+  await page.route(/firestore\.googleapis\.com.*\/documents\/petitDej\/a/, (route) =>
+    route.request().method() === "DELETE" ? route.fulfill({ status: 500, contentType: "application/json", body: "{}" }) : route.fallback());
+  await choisirDansLeMenu(page, rangee(carte, "2026-09-27"), "Retirer");
+  await repondreDansLeSite(page, "Retirer");
+  const message = rangee(carte, "2026-09-27").getByRole("status");
+  await expect(message).toBeVisible();
+  await carte.getByRole("button", { name: "Inscrire quelqu'un" }).click();
+  await expect(carte.getByRole("group", { name: "Inscrire quelqu'un" }).getByRole("status")).toHaveCount(0);
+  await expect(message, "ouvrir le formulaire vide le message d'une rangée").toHaveCount(0);
+});
+
+test("carte : inscriptions illisibles — un écrivain n'a pas le bouton « Inscrire quelqu'un »", async ({ page }) => {
+  await ouvrirTable(page, ECRIVAIN_TABLE);
+  await page.route(/firestore\.googleapis\.com.*:runQuery/, (route) =>
+    (route.request().postData() ?? "").includes('"petitDej"')
+      ? route.fulfill({ status: 503, contentType: "application/json", body: "{}" })
+      : route.fallback(),
+  );
+  await page.reload();
+  await expect(carteDe(page).getByText("Inscriptions illisibles pour l'instant.")).toBeVisible();
+  await expect(carteDe(page).getByRole("button", { name: "Inscrire quelqu'un" })).toHaveCount(0);
+});
+
+test("carte : sur ordinateur et tablette « n libres sur N » reste à côté du bouton, sur téléphone le bouton le remplace (PG49)", async ({ page }, info) => {
+  await ouvrirTable(page, ECRIVAIN_TABLE);
+  const compteur = carteDe(page).getByText(/libres? sur 13/);
+  if (info.project.name === "telephone") await expect(compteur).toBeHidden();
+  else await expect(compteur).toBeVisible();
+});
+
+test("carte : inscriptions illisibles — le message, ni « Libre » ni bouton", async ({ page }) => {
+  await ouvrirTable(page, CHARLIE);
+  await page.route(/firestore\.googleapis\.com.*:runQuery/, (route) =>
+    (route.request().postData() ?? "").includes('"petitDej"')
+      ? route.fulfill({ status: 503, contentType: "application/json", body: "{}" })
+      : route.fallback(),
+  );
+  await page.reload();
+  const carte = carteDe(page);
+  await expect(carte.getByText("Inscriptions illisibles pour l'instant.")).toBeVisible();
+  await expect(carte.getByText("Libre", { exact: true })).toHaveCount(0);
+  await expect(carte.getByRole("button")).toHaveCount(0);
+  await capture(page, "petit-dej-carte-illisible");
+});
+
+test("carte en 中文 : titre, trimestre, date, « 空闲 » et « 我来报名 »", async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
+  await ouvrirTable(page, CHARLIE, docsPetitDej([
+    ligne({ id: "a", dimanche: "2026-09-20", nom: "Famille Martin", uid: CHARLIE.uid, auteurUid: CHARLIE.uid }),
+  ]));
+  const carte = carteDe(page, "早餐");
+  await expect(carte.getByRole("heading", { name: "早餐" })).toBeVisible();
+  await expect(carte.getByText("13 个主日中 1 个空闲")).toBeVisible();
+  const le27 = rangee(carte, "2026-09-27");
+  await expect(le27).toContainText("9月27日");
+  await expect(le27.getByText("空闲", { exact: true })).toBeVisible();
+  await expect(le27.getByRole("button", { name: "我来报名" })).toBeVisible();
+  const le20 = rangee(carte, "2026-09-20");
+  await le20.getByRole("button", { name: "更多操作" }).click();
+  await expect(page.getByRole("menuitem", { name: "修改" })).toBeVisible();
+  await expect(page.getByRole("menuitem", { name: "移除" })).toBeVisible();
+  await page.keyboard.press("Escape");
+  const ton = carteDe(page, "你的早餐");
+  await expect(ton.getByText("可以写“某某家庭”代替你的名字。")).toBeVisible();
+  await capture(page, "petit-dej-carte-zh");
+});
+
+// ─── U3 · relecture : les échecs d'écriture et le nom pré-rempli ───────────
+
+/** Répond `status` à toute écriture POST d'une ligne `petitDej`, avant la base simulée. */
+async function refuserLesInscriptions(page: Page, status: number) {
+  await page.route(/firestore\.googleapis\.com.*\/documents\/petitDej(\?|$)/, (route) =>
+    route.request().method() === "POST"
+      ? route.fulfill({ status, contentType: "application/json", body: JSON.stringify({ error: { code: status, message: "refus simulé" } }) })
+      : route.fallback(),
+  );
+}
+
+test("carte : un échec du serveur (500) dit « Enregistrement impossible, réessaie. », pas « tu n'as plus le droit »", async ({ page }) => {
+  await ouvrirTable(page, CHARLIE);
+  await refuserLesInscriptions(page, 500);
+  const le27 = rangee(carteDe(page), "2026-09-27");
+  await le27.getByRole("button", { name: "Je m'inscris" }).click();
+  await expect(le27.getByRole("status")).toHaveText("Enregistrement impossible, réessaie.");
+  await expect(le27.getByText("Libre", { exact: true }), "rien n'est écrit, le dimanche reste libre").toBeVisible();
+});
+
+test("carte : un refus des règles (403) garde le message des droits", async ({ page }) => {
+  await ouvrirTable(page, CHARLIE);
+  await refuserLesInscriptions(page, 403);
+  const le27 = rangee(carteDe(page), "2026-09-27");
+  await le27.getByRole("button", { name: "Je m'inscris" }).click();
+  await expect(le27.getByRole("status")).toContainText("tu n’as plus le droit de modifier ce planning, ou les règles n’ont pas été publiées");
+});
+
+test("carte en 中文 : un échec du serveur a son message traduit", async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
+  await ouvrirTable(page, CHARLIE);
+  await refuserLesInscriptions(page, 500);
+  const le27 = rangee(carteDe(page, "早餐"), "2026-09-27");
+  await le27.getByRole("button", { name: "我来报名" }).click();
+  await expect(le27.getByRole("status")).toHaveText("保存失败，请重试。");
+});
+
+/** Un compte sans prénom ni nom de planning (profil incomplet). */
+const SANS_PRENOM: FakeProfile = { uid: "uid-sans-prenom", email: "adresse.privee@example.com", firstName: "", lastName: "" };
+
+test("carte : sans prénom ni nom de planning, « Je m'inscris » demande un nom ; l'adresse mail n'est jamais écrite", async ({ page }) => {
+  const db = await ouvrirTable(page, SANS_PRENOM);
+  const le27 = rangee(carteDe(page), "2026-09-27");
+  await le27.getByRole("button", { name: "Je m'inscris" }).click();
+  const champ = le27.getByRole("textbox", { name: "Ton nom" });
+  await expect(champ).toBeVisible();
+  await expect(champ).toHaveValue("");
+  expect(ecrituresPetitDej(db.writes, "POST"), "rien d'écrit avant le nom").toHaveLength(0);
+  await capture(page, "petit-dej-carte-sans-prenom");
+
+  await champ.press("Escape");
+  await expect(le27.getByRole("button", { name: "Je m'inscris" }), "Échap annule").toBeVisible();
+
+  await le27.getByRole("button", { name: "Je m'inscris" }).click();
+  await champ.fill("Famille Martin");
+  await champ.press("Enter");
+  await expect(le27.getByText("Famille Martin", { exact: true })).toBeVisible();
+  const posees = ecrituresPetitDej(db.writes, "POST");
+  expect(posees).toHaveLength(1);
+  expect(posees[0].data, "une inscription : rattachée à son compte").toMatchObject({
+    dimanche: "2026-09-27", nom: "Famille Martin", uid: SANS_PRENOM.uid, auteurUid: SANS_PRENOM.uid,
+  });
+  expect(JSON.stringify(db.writes.filter((w) => w.path.startsWith("petitDej/"))), "ni début d'adresse mail").not.toContain("adresse.privee");
+});
+
+// ─── U3 · PD3 : Ce dimanche, Mes services, rappels — rattachés par le compte (Q9) ─
+
+/** Un compte de l'assemblée, sans nom de planning. */
+const SANS_NOM: FakeProfile = { uid: "uid-sans-nom", email: "sans-nom@example.com", firstName: "Camille", lastName: "Exemple" };
+
+test("rappels J-7 / J-3 / J-1 : « Petit déj » ajouté par le compte, sans doublon, une ligne sans inscrit ne prévient personne", () => {
+  // Ce que le cron a déjà trouvé par les noms de planning, le dimanche 20/09.
+  const charlie: ReminderService[] = [{ service: "Petit déj", roles: [] }];
+  const ruth: ReminderService[] = [{ service: "Culte Franco", roles: ["Piano"] }];
+  const parUid = new Map([[CHARLIE.uid, charlie], ["uid-ruth", ruth]]);
+  const lignes = [
+    ligne({ id: "a", dimanche: "2026-09-20", nom: "Charlie B.", uid: CHARLIE.uid, auteurUid: CHARLIE.uid }),
+    ligne({ id: "b", dimanche: "2026-09-20", nom: "Famille Martin", uid: SANS_NOM.uid, auteurUid: SANS_NOM.uid }),
+    ligne({ id: "c", dimanche: "2026-09-20", nom: "Les amis de Camille", uid: SANS_NOM.uid, auteurUid: SANS_NOM.uid }),
+    ligne({ id: "d", dimanche: "2026-09-20", nom: "Ruth et les siens", uid: "uid-ruth", auteurUid: "uid-ruth" }),
+    ligne({ id: "e", dimanche: "2026-09-20", nom: "Les jeunes du Campus" }),
+    ligne({ id: "f", dimanche: "2026-09-27", nom: "Famille Durand", uid: "uid-autre", auteurUid: "uid-autre" }),
+  ];
+
+  ajouterPetitDejAuxRappels(parUid, lignes, "2026-09-20");
+
+  expect(parUid.get(CHARLIE.uid), "déjà trouvé par son nom de planning : pas de doublon").toEqual([{ service: "Petit déj", roles: [] }]);
+  expect(parUid.get(SANS_NOM.uid), "sans nom de planning, deux lignes le même dimanche : un service").toEqual([{ service: "Petit déj", roles: [] }]);
+  expect(parUid.get("uid-ruth"), "à la suite de ses autres services, dans le même message").toEqual([
+    { service: "Culte Franco", roles: ["Piano"] }, { service: "Petit déj", roles: [] },
+  ]);
+  expect(ruth, "la liste partagée par les comptes d'un même nom n'est pas touchée").toEqual([{ service: "Culte Franco", roles: ["Piano"] }]);
+  expect([...parUid.keys()].sort(), "ni ligne posée pour quelqu'un (uid vide), ni autre dimanche").toEqual([CHARLIE.uid, SANS_NOM.uid, "uid-ruth"].sort());
+
+  expect(reminderBody("2026-09-20", "J1", parUid.get(SANS_NOM.uid)!, "fr")).toBe("Dimanche 20 septembre (demain) : Petit déj");
+  expect(reminderBody("2026-09-20", "J1", parUid.get(SANS_NOM.uid)!, "zh-CN")).toBe("9月20日星期日（明天）：早餐");
+  expect(reminderBody("2026-09-20", "J3", parUid.get("uid-ruth")!, "fr")).toBe(
+    "Dimanche 20 septembre (dans 3 jours) : Culte Franco (Piano) · Petit déj",
+  );
+});
+
+// Accueil A (lot U4 bis, B1, Q14) : « Ton prochain service » est devenu la carte du prochain
+// service de « Pour moi ».
+test("Ce dimanche : « Pour moi » compte ma ligne « Famille Martin », une seule fois", async ({ page }) => {
+  // Vendredi 25/09 : le Sheet n'a plus rien pour Charlie, seules ses lignes comptent.
+  await open(page, "2026-09-27", "/planning", docsPetitDej([
+    ligne({ id: "a", dimanche: "2026-09-27", nom: "Famille Martin", uid: CHARLIE.uid, auteurUid: CHARLIE.uid }),
+    ligne({ id: "b", dimanche: "2026-09-27", nom: "Charlie et ses amis", uid: CHARLIE.uid, auteurUid: CHARLIE.uid }),
+  ]));
+  const prochain = page.getByRole("region", { name: "Pour moi" }).locator("[data-carte]").first();
+  await expect(prochain).toContainText("Petit déj · Équipe");
+  expect((await prochain.innerText()).match(/Petit déj/g), "deux lignes le même dimanche : un seul « Petit déj »").toHaveLength(1);
+  await expect(prochain.getByTestId("tuile")).toContainText("27");
+  await capture(page, "ce-dimanche-prochain-petit-dej");
+});
+
+test("Ce dimanche : un compte sans nom de planning voit son petit déj en prochain service ; la ligne d'un autre, non", async ({ page }) => {
+  await open(page, "2026-09-27", "/planning", docsPetitDej([
+    ligne({ id: "a", dimanche: "2026-10-04", nom: "Famille Martin", uid: SANS_NOM.uid, auteurUid: SANS_NOM.uid }),
+    ligne({ id: "b", dimanche: "2026-09-27", nom: "Famille Durand", uid: "uid-autre", auteurUid: "uid-autre" }),
+  ]), SANS_NOM);
+  const prochain = page.getByRole("region", { name: "Pour moi" }).locator("[data-carte]").first();
+  await expect(prochain).toContainText("Petit déj · Équipe");
+  await expect(prochain.getByTestId("tuile"), "le 04/10, pas le 27/09 d'un autre").toContainText("4");
+  await expect(prochain.getByTestId("tuile")).toContainText("oct");
+});
+
+test("Ce dimanche : sans ligne à moi ni nom de planning, pas de prochain service", async ({ page }) => {
+  await open(page, "2026-09-27", "/planning", docsPetitDej([
+    ligne({ id: "a", dimanche: "2026-09-27", nom: "Famille Durand", uid: "uid-autre", auteurUid: "uid-autre" }),
+  ]), SANS_NOM);
+  const dimanche = page.getByRole("region", { name: /Ce dimanche/ });
+  await expect(dimanche.getByText("Famille Durand"), "la ligne d'un autre reste dans Ce dimanche").toBeVisible();
+  await expect(page.getByRole("region", { name: "Pour moi" })).toHaveCount(0);
+});
+
+test("Mes services : « Famille Martin » reste un service de son inscrit, sans doublon avec son nom de planning", async ({ page }) => {
+  await open(page, "2026-09-20", "/mes-services", docsPetitDej([
+    ligne({ id: "a", dimanche: "2026-09-27", nom: "Famille Martin", uid: CHARLIE.uid, auteurUid: CHARLIE.uid }),
+    ligne({ id: "b", dimanche: "2026-10-04", nom: "Charlie B.", uid: CHARLIE.uid, auteurUid: CHARLIE.uid }),
+    ligne({ id: "c", dimanche: "2026-10-11", nom: "Famille Durand", uid: "uid-autre", auteurUid: "uid-autre" }),
+  ]));
+  const petitDej = page.getByRole("listitem").filter({ hasText: "Petit déj" });
+  await expect(petitDej, "le 27/09 par le compte, le 04/10 par le nom et le compte : une fois chacun").toHaveCount(2);
+  await expect(petitDej.nth(0)).toContainText("27");
+  await expect(petitDej.nth(1)).toContainText("4 oct");
+  await expect(page.getByText("3 à venir"), "avec la Prépa. Table du 20/09").toBeVisible();
+});
+
+test("Mes services : un compte sans nom de planning voit ses petits déj, sous son prénom et son nom", async ({ page }) => {
+  await open(page, "2026-09-20", "/mes-services", docsPetitDej([
+    ligne({ id: "a", dimanche: "2026-09-27", nom: "Famille Martin", uid: SANS_NOM.uid, auteurUid: SANS_NOM.uid }),
+    ligne({ id: "b", dimanche: "2026-10-04", nom: "Famille Durand", uid: "uid-autre", auteurUid: "uid-autre" }),
+  ]), SANS_NOM);
+  await expect(page.getByRole("heading", { name: "Mes services" })).toBeVisible();
+  await expect(page.getByText("Les dates où Camille Exemple apparaît dans les plannings")).toBeVisible();
+  await expect(page.getByText(/Choisis ton nom de planning/)).toHaveCount(0);
+  const petitDej = page.getByRole("listitem").filter({ hasText: "Petit déj" });
+  await expect(petitDej, "le sien, pas celui d'un autre").toHaveCount(1);
+  await expect(petitDej).toContainText("27");
+  await capture(page, "mes-services-sans-nom-petit-dej");
+});
+
+test("Mes services : un compte sans nom de planning ni ligne garde « choisis ton nom »", async ({ page }) => {
+  await open(page, "2026-09-20", "/mes-services", docsPetitDej([
+    ligne({ id: "a", dimanche: "2026-09-27", nom: "Famille Durand", uid: "uid-autre", auteurUid: "uid-autre" }),
+  ]), SANS_NOM);
+  await expect(page.getByText(/Choisis ton nom de planning/)).toBeVisible();
+  await expect(page.getByRole("listitem").filter({ hasText: "Petit déj" })).toHaveCount(0);
+});
+
+test("Mes services en 中文 : un compte sans nom de planning voit ses petits déj", async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
+  await open(page, "2026-09-20", "/mes-services", docsPetitDej([
+    ligne({ id: "a", dimanche: "2026-09-27", nom: "Famille Martin", uid: SANS_NOM.uid, auteurUid: SANS_NOM.uid }),
+  ]), SANS_NOM);
+  await expect(page.getByRole("listitem").filter({ hasText: "Petit déj" })).toHaveCount(1);
+  // Le pied de la barre latérale (lot U4) porte aussi le nom : la phrase de la page seule.
+  await expect(page.getByText(/Camille Exemple\s*出现在排班表中/)).toBeVisible();
+});
+
+// ─── U3 · PD4 : le mercredi (T5, Q5) ────────────────────────────────────────
+
+test("le mercredi : le dimanche qui vient est à J+4 ; les autres jours ne sont pas des mercredis", () => {
+  expect(estMercredi("2026-09-16")).toBe(true);
+  expect(estMercredi("2026-09-17"), "un jeudi").toBe(false);
+  expect(estMercredi("2026-09-20"), "un dimanche").toBe(false);
+  expect(prochainDimanche("2026-09-16")).toBe("2026-09-20");
+  expect(prochainDimanche("2026-09-30"), "d'un mois sur l'autre").toBe("2026-10-04");
+});
+
+test("lignesMercredi : dimanche libre, la ligne puis « Ne plus recevoir », en français et en 中文, fondues à la suite du rappel", () => {
+  const autreDimanche = [ligne({ id: "a", dimanche: "2026-09-27", nom: "Famille Martin" })];
+  const fr = lignesMercredi("2026-09-16", autreDimanche, "fr");
+  expect(fr, "une ligne d'un autre dimanche ne prend pas le 20").toEqual([
+    "Dimanche 20 septembre : personne pour le petit déj.",
+    "Ne plus recevoir : Moi › Mon profil › Notifications › Petit déj",
+  ]);
+  expect(lignesMercredi("2026-09-16", [], "zh-CN")).toEqual([
+    "9月20日星期日：还没有人负责早餐。",
+    "不再接收：我 › 我的资料 › 通知 › 早餐",
+  ]);
+  expect(
+    avecLignes("Samedi 19 septembre (dans 3 jours) : Groupe Paix (Piano)", fr),
+    "une notification, pas une de plus : le corps du rappel, puis les deux lignes",
+  ).toBe([
+    "Samedi 19 septembre (dans 3 jours) : Groupe Paix (Piano)",
+    "Dimanche 20 septembre : personne pour le petit déj.",
+    "Ne plus recevoir : Moi › Mon profil › Notifications › Petit déj",
+  ].join("\n"));
+  expect(petitDejTitre("fr"), "seule, la notification porte ce titre").toBe("Petit déj");
+  expect(petitDejTitre("zh-CN")).toBe("早餐");
+});
+
+test("lignesMercredi : rien si le dimanche est pris, si la lecture a échoué (Q10), ni un autre jour", () => {
+  const pris = [ligne({ id: "a", dimanche: "2026-09-20", nom: "Les jeunes du Campus" })];
+  expect(lignesMercredi("2026-09-16", pris, "fr"), "une ligne suffit à prendre le dimanche (T2)").toEqual([]);
+  expect(lignesMercredi("2026-09-16", null, "fr"), "une lecture en échec n'est pas « personne »").toEqual([]);
+  expect(lignesMercredi("2026-09-17", [], "fr"), "un jeudi").toEqual([]);
+  expect(lignesMercredi("2026-09-20", [], "zh-CN"), "un dimanche").toEqual([]);
+});
+
+test("préférence « Petit déj » : un type de notification, active par défaut", () => {
+  expect(NOTIF_TYPES).toContain("petitDej");
+  expect(DEFAULT_NOTIF_PREFS.petitDej).toBe(true);
+  expect(NOTIF_TYPE_LABELS.petitDej).toBe("Petit déj");
+});
+
+// Les réglages des notifications sont dans Moi › Réglages depuis U4 bis, B5 (plus dans le profil).
+test("Moi › Réglages › Notifications : la bascule « Petit déj » est active par défaut ; l'éteindre écrit notifPrefs/{uid}.petitDej = false", async ({ page }) => {
+  await abonneAuxNotifications(page);
+  const db = await signInAs(page, CHARLIE, {}, "/moi");
+  await page.getByRole("region", { name: "Réglages" }).getByRole("button", { name: /Notifications/ }).click();
+  await expect(page.getByText("Recevoir", { exact: true })).toBeVisible();
+  const bascule = page.getByRole("switch", { name: "Petit déj" });
+  await expect(bascule, "aucun document notifPrefs : actif par défaut").toBeChecked();
+  await bascule.scrollIntoViewIfNeeded();
+  await capture(page, "profil-notifications-petit-dej");
+
+  await bascule.click();
+  await expect(bascule).not.toBeChecked();
+  await expect.poll(() => db.doc(`notifPrefs/${CHARLIE.uid}`)?.petitDej).toBe(false);
+  expect(db.doc(`notifPrefs/${CHARLIE.uid}`), "les autres préférences restent").toMatchObject({
+    reminders: true, setlists: true, evenements: true, taches: true,
+  });
+});
+
+test("Moi › Réglages › Notifications en 中文 : la liste « Recevoir » est traduite ; une préférence éteinte le reste", async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
+  await abonneAuxNotifications(page);
+  await signInAs(page, CHARLIE, { [`notifPrefs/${CHARLIE.uid}`]: { petitDej: false } }, "/moi");
+  await page.getByRole("region", { name: "设置" }).getByRole("button", { name: /通知/ }).click();
+  await expect(page.getByText("接收", { exact: true })).toBeVisible();
+  for (const nom of ["服侍提醒", "歌单已准备好", "活动", "任务"]) {
+    await expect(page.getByRole("switch", { name: nom }), nom).toBeChecked();
+  }
+  await expect(page.getByRole("switch", { name: "早餐" }), "éteinte dans notifPrefs").not.toBeChecked();
+  await expect(page.getByText("Petit déj", { exact: true })).toHaveCount(0);
+  await page.getByRole("switch", { name: "早餐" }).scrollIntoViewIfNeeded();
+  await capture(page, "profil-notifications-petit-dej-zh");
 });

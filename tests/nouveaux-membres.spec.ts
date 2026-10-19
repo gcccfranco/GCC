@@ -91,7 +91,7 @@ const MEMBRE: FakeProfile = { uid: "uid-membre", email: "membre@example.com", fi
 
 test("guide : les sections d'aujourd'hui, plus les Annonces", async ({ page }) => {
   await signInAs(page, MEMBRE, {}, "/guide");
-  for (const titre of ["Évènements", "Programme de scène", "Vue partitions et coup d'œil", "Ma version d'un chant", "Tâches des pôles", "Moi et réglages"]) {
+  for (const titre of ["Évènements", "Programme de scène", "Vue partitions et coup d'œil", "Ma version d'un chant", "Tâches des équipes", "Moi et réglages"]) {
     await expect(page.getByRole("heading", { name: titre, level: 2 })).toBeVisible();
   }
   await expect(page.getByRole("heading", { name: "Annonces", level: 2 })).toHaveCount(0);
@@ -170,8 +170,8 @@ test("en 中文, aucun texte français sur les écrans membres principaux", asyn
   test.setTimeout(90_000);
   await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
   const francais = textesFrancais();
-  await signInAs(page, { ...MEMBRE, poles: ["da"] }, {}, "/moi");
-  for (const chemin of ["/moi", "/songs", "/taches", "/taches/da", "/setlists", "/evenements"]) {
+  await signInAs(page, { ...MEMBRE, dansEquipes: ["da"], referentDe: ["da"] }, {}, "/moi");
+  for (const chemin of ["/moi", "/songs", "/taches", "/back-office/taches/da", "/setlists", "/evenements"]) {
     if (chemin !== "/moi") await page.goto(chemin);
     await expect(page.locator("html")).toHaveAttribute("lang", "zh-CN");
     await page.waitForTimeout(800);
@@ -193,16 +193,20 @@ test("en 中文, la fenêtre de signalement n'a plus de français", async ({ pag
 test("en 中文, la proposition de chant n'a plus de français", async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
   await signInAs(page, MEMBRE, {}, "/songs");
-  await page.getByRole("button", { name: "推荐新诗歌" }).click();
+  // Agencement v18 (A5) : dès 768 px, l'action de l'en-tête ; sur téléphone, le lien en bas de liste.
+  // Les deux disent « 推荐新诗歌 » (retouches v18, D18).
+  await page.getByRole("button", { name: "推荐新诗歌", exact: true }).click();
   await expect(page.getByRole("heading", { name: "推荐新诗歌" })).toBeVisible();
   expect(await francaisAffiche(page, textesFrancais())).toEqual([]);
 });
 
 test("en 中文, le formulaire de nouvelle tâche n'a plus de français", async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
-  await signInAs(page, { ...MEMBRE, poles: ["da"] }, {}, "/taches/da");
-  await page.getByRole("button", { name: "新任务" }).click();
-  await expect(page.getByRole("dialog", { name: "新任务" })).toBeVisible();
+  await signInAs(page, { ...MEMBRE, dansEquipes: ["da"], referentDe: ["da"] }, {}, "/back-office/taches/da");
+  // Agencement v18 (T1, B2) : en grand, le formulaire dans le volet ; sur un volet, la feuille.
+  const enGrand = ["ordinateur", "ordinateur-1440", "tablette-paysage"].includes(test.info().project.name);
+  await page.getByRole(enGrand ? "link" : "button", { name: "新任务" }).click();
+  await expect(page.getByRole(enGrand ? "form" : "dialog", { name: "新任务" })).toBeVisible();
   expect(await francaisAffiche(page, textesFrancais())).toEqual([]);
 });
 

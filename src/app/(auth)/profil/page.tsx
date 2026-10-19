@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslation } from "react-i18next";
+import { Check } from "lucide-react";
 import { useProfile, saveProfile } from "@/lib/firebase/users";
 import { canEditProfile } from "@/lib/access";
 import {
@@ -12,14 +13,20 @@ import {
   type PlanningData,
 } from "@/lib/planning/names";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
-  ProfileFields,
+  IdentityFields,
+  PlanningNameField,
+  ServiceGrid,
   EMPTY_PROFILE_FORM,
   type ProfileFormValue,
 } from "@/components/auth/ProfileFields";
+import { EnTetePage } from "@/components/layout/EnTetePage";
 import { PushToggle } from "@/components/push/PushToggle";
+import { MesAbsences } from "@/components/profil/MesAbsences";
+import { cn } from "@/lib/utils";
+
+const FORMULAIRE = "formulaire-profil";
 
 export default function ProfilPage() {
   const { t } = useTranslation();
@@ -85,7 +92,7 @@ export default function ProfilPage() {
         firstName: form.firstName.trim(),
         lastName: form.lastName.trim(),
         planningName: form.planningName.trim(),
-        // Les droits (annonces, notify, poles, equipes, plannings) ne sont pas
+        // Les droits (annonces, notify, coordination, equipes, plannings) ne sont pas
         // envoyés : saveProfile n'écrit que les champs donnés, ils restent intacts.
       });
       // Retour à la page d'origine (?from=…) plutôt que /setlists systématique
@@ -102,16 +109,28 @@ export default function ProfilPage() {
     ? (name: string) => deriveServiceRolesFromPlanning(planningData, name)
     : undefined;
 
+  // A13 (agencement v18 ; planche `v18-app-profil`, plus récente que U4 bis Q10) : l'en-tête commun,
+  // « ‹ Moi », « Enregistrer » à droite du titre dès 768 px (en bas sur téléphone, R7) ; deux
+  // colonnes dès la tablette portrait — identité puis la carte Notifications (`PushToggle` tel quel,
+  // le même réglage que Moi › Réglages) à gauche, services et rôles à droite ; une sur téléphone.
+  const enregistrer = saving ? t("profile.saving") : t("profile.enregistrer");
   return (
-    <div className="min-h-screen bg-background px-4 py-10">
-      <div className="w-full max-w-lg mx-auto">
-        <div className="mb-6 text-center">
-          <h1 className="text-xl font-bold text-foreground">{t("profile.title")}</h1>
-          <p className="text-sm text-muted-foreground mt-1">{user.email}</p>
-        </div>
+    <div className="pb-10">
+      <EnTetePage
+        retour={{ href: "/moi", label: t("moi.title") }}
+        titre={t("profile.title")}
+        sousTitre={user.email}
+        action={canEdit && (
+          <Button type="submit" form={FORMULAIRE} disabled={saving} aria-label={t("profile.save")} className="hidden h-10 gap-2 rounded-full px-[18px] text-[14.5px] font-semibold md:inline-flex">
+            <Check className="h-4 w-4" strokeWidth={2.4} aria-hidden />
+            {enregistrer}
+          </Button>
+        )}
+      />
 
+      <div className="space-y-4 px-[var(--marge-page)]">
         {!profile && (
-          <Alert className="mb-5 border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-400">
+          <Alert className="border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-400">
             <AlertDescription className="text-inherit">
               {t("profile.welcome")}
             </AlertDescription>
@@ -119,44 +138,56 @@ export default function ProfilPage() {
         )}
 
         {!canEdit && (
-          <Alert className="mb-5">
+          <Alert>
             <AlertDescription>{t("profile.locked")}</AlertDescription>
           </Alert>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-5">
-          <Card>
-            <CardContent className="p-5">
-              <fieldset disabled={!canEdit} className={!canEdit ? "opacity-60" : undefined}>
-                <ProfileFields
-                  value={form}
-                  onChange={setForm}
-                  planningNames={planningNames}
-                  deriveFromPlanning={deriveFromPlanning}
-                />
-              </fieldset>
-            </CardContent>
-          </Card>
+        {error && (
+          <Alert variant="destructive">
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
 
-          {error && (
-            <Alert variant="destructive">
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
+        {/* « Mes absences » (SC3.2) vit hors du formulaire du profil : le formulaire est en `contents`, ses
+            blocs restent des cases de la même grille, et la section se place sous les notifications. */}
+        <div data-contenu-profil className="grid items-start gap-4 md:grid-cols-2 md:grid-rows-[auto_1fr] lg:grid-cols-[minmax(0,.9fr)_minmax(0,1.25fr)]">
+        <form id={FORMULAIRE} onSubmit={handleSubmit} className="contents">
+          <div className="order-1 min-w-0 space-y-4 md:col-start-1 md:row-start-1">
+            <fieldset
+              disabled={!canEdit}
+              aria-label={t("signup.steps.identity")}
+              className={cn("raised min-w-0 space-y-6 rounded-2xl p-5", !canEdit && "opacity-60")}
+            >
+              <IdentityFields value={form} onChange={setForm} />
+              <PlanningNameField
+                value={form}
+                onChange={setForm}
+                planningNames={planningNames}
+                deriveFromPlanning={deriveFromPlanning}
+              />
+            </fieldset>
+            <section aria-label={t("moi.notifications")} className="raised overflow-hidden rounded-2xl">
+              <PushToggle />
+            </section>
+          </div>
+
+          <fieldset
+            disabled={!canEdit}
+            aria-label={t("profile.fields.accessTitle")}
+            className={cn("raised order-3 min-w-0 rounded-2xl p-5 md:col-start-2 md:row-span-2 md:row-start-1", !canEdit && "opacity-60")}
+          >
+            <ServiceGrid value={form} onChange={setForm} deriveFromPlanning={deriveFromPlanning} />
+          </fieldset>
 
           {canEdit && (
-            <Button type="submit" disabled={saving} className="w-full h-11">
+            <Button type="submit" disabled={saving} className="order-4 h-11 w-full md:hidden">
               {saving ? t("profile.saving") : t("profile.save")}
             </Button>
           )}
         </form>
-
-        {/* Notifications push — disponible une fois le profil créé */}
-        {profile && (
-          <div className="mt-5">
-            <PushToggle />
-          </div>
-        )}
+        <div className="order-2 min-w-0 md:col-start-1 md:row-start-2"><MesAbsences /></div>
+        </div>
       </div>
     </div>
   );

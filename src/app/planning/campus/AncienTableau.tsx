@@ -49,7 +49,7 @@ export function AncienTableau() {
   const { days, order } = groupByDay(data)
 
   return (
-    <div className="max-w-2xl space-y-4 mx-auto">
+    <div className="max-w-2xl space-y-4">
       <div className="flex flex-wrap gap-3 items-center justify-between">
         <h2 className="text-base font-bold text-foreground">{t("planning.pages.campus")}</h2>
         {loading && <span className="text-xs text-muted-foreground">{t("common.loading")}</span>}

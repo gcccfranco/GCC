@@ -29,14 +29,6 @@ export type EddRole = (typeof EDD_ROLES)[number];
 export const GROUPES = ["Groupe Paix", "Groupe Fidélité", "Groupe Bonté"] as const;
 export type Groupe = (typeof GROUPES)[number];
 
-// Pôles, attribués par un admin. « événement » donne aussi la coordination des
-// programmes de scène (lot 3 bis, isCoordination) ; DA, Média et Orga servent
-// aux tâches par pôle (lot 7). Louange n'est pas coché : il découle des rôles de
-// service (polesDe dans src/lib/access.ts, isTachePole dans firestore.rules).
-export const POLES = ["da", "media", "orga", "evenement"] as const;
-export type Pole = (typeof POLES)[number];
-export const POLE_LABELS: Record<Pole, string> = { da: "DA", media: "Média", orga: "Orga", evenement: "Événement" };
-
 export interface UserProfile {
   uid: string;
   email: string;
@@ -61,14 +53,30 @@ export interface UserProfile {
    *  n'importe qui dans n'importe quelle équipe — attribué par les admins
    *  uniquement. Cf. canEditerEquipes (src/lib/access.ts). */
   equipes?: boolean;
-  /** Pôles de coordination (« evenement » : programmes de scène) — attribués par
-   *  les admins uniquement. Absent = aucun. */
-  poles?: Pole[];
+  /** Coordination (lot 1 du chantier « équipes et groupes », décision 6) : régler la
+   *  scène, créer pour toute l'église, modifier tout évènement — cochée par un admin
+   *  dans Personnes, jamais par l'intéressé. Absent = non. Cf. isCoordination
+   *  (src/lib/access.ts). */
+  coordination?: boolean;
   /** Plannings que la personne peut remplir dans l'app (clés de
    *  PUBLISHABLE_PLANNINGS, ex. « culte ») — attribué par les admins uniquement,
    *  planning par planning (lot 17). Absent = aucun.
    *  Cf. canEditPlanning (src/lib/access.ts). */
   plannings?: string[];
+  /** Équipes de l'organigramme où la personne figure, et celles dont elle est
+   *  référente (ids de EQUIPES, lot U6, R4) : recopiées par le serveur seul
+   *  (`recalculerRattachement`, src/lib/equipes/serveur.ts). Les règles
+   *  les lisent pour les réunions d'équipe. Absent = aucune. */
+  dansEquipes?: string[];
+  referentDe?: string[];
+  /** Lot 2 (organigrammes des groupes, OG2, OG19) — écrits par le serveur seul. `groupe` : id d'un
+   *  groupe (`paix`…`joie`), `""` = sans groupe ; absent = déduit de `serviceRoles` (`groupeDe`,
+   *  src/lib/groupes/organigramme.ts). Les trois listes : plannings remplis ou publiés par un rôle (clés
+   *  de planning) et audiences notifiées par un rôle, à part de `plannings` et `notify` cochés par un admin. */
+  groupe?: string;
+  remplitParRole?: string[];
+  publieParRole?: string[];
+  notifieParRole?: string[];
   /** Date d'inscription = createTime du document Firestore users/{uid}, en lecture
    *  seule (jamais persisté comme champ). Renseigné pour tous les profils existants. */
   createdAt?: Date;
@@ -83,7 +91,10 @@ export interface UserProfile {
 // évènements depuis le lot 6, plus aucun expéditeur ne consultait cette
 // préférence ; un champ `annonces` encore présent dans notifPrefs/{uid} est
 // simplement ignoré à la lecture.
-export const NOTIF_TYPES = ["reminders", "setlists", "evenements", "taches"] as const;
+// « petitDej » (lot U3, docs/spec-petit-dej.md, PD4) : la ligne du mercredi quand
+// le dimanche qui vient n'a personne pour le petit déj ; bascule masquée tant que
+// le back-office est coupé (Q14).
+export const NOTIF_TYPES = ["reminders", "setlists", "evenements", "taches", "petitDej"] as const;
 export type NotifType = (typeof NOTIF_TYPES)[number];
 export type NotifPrefs = Record<NotifType, boolean>;
 
@@ -92,6 +103,7 @@ export const DEFAULT_NOTIF_PREFS: NotifPrefs = {
   setlists: true,
   evenements: true,
   taches: true,
+  petitDej: true,
 };
 
 /** Langue des envois automatiques (rappels), mémorisée dans notifPrefs/{uid}.lang
@@ -103,4 +115,5 @@ export const NOTIF_TYPE_LABELS: Record<NotifType, string> = {
   setlists: "Setlist prête",
   evenements: "Évènements",
   taches: "Tâches",
+  petitDej: "Petit déj",
 };

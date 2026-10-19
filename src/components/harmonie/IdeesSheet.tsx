@@ -49,13 +49,34 @@ export type Props = {
   suivant?: { titre: string; tonalite: string };
   /** Poser une modulation sur la setlist — seulement pour qui peut la modifier. */
   onModuler?: (m: Modulation, prop: ModulationProposee) => void;
+  /** Dans une setlist : sélecteur du chant lu. Les identifiants de section se
+   *  répètent d'un chant à l'autre (« chorus-3-2 ») : « Montrer » cherche là. */
+  portee?: string;
 };
+
+/** La section visée, dans le chant lu : d'abord son occurrence, sinon (structure
+ *  modifiée dans la setlist, qui renumérote les occurrences) la première
+ *  occurrence de la même section. */
+function trouverLaSection(sectionUid: string, portee?: string): HTMLElement | null {
+  // Toutes les sections sous la portée (une fusion mélangée enveloppe chaque
+  // section de son chant à part).
+  const sections = Array.from(
+    document.querySelectorAll<HTMLElement>(portee ? `${portee} [data-section-uids]` : "[data-section-uids]"),
+  );
+  const uids = (el: HTMLElement) => (el.dataset.sectionUids ?? "").split(" ");
+  const sectionId = (uid: string) => uid.replace(/-\d+$/, "");
+  return (
+    sections.find((el) => uids(el).includes(sectionUid)) ??
+    sections.find((el) => uids(el).some((u) => sectionId(u) === sectionId(sectionUid))) ??
+    null
+  );
+}
 
 /** Montre l'endroit visé dans la partition affichée derrière la feuille : les
  *  sections portent déjà `data-section-uids` (le sommaire s'en sert). La
  *  feuille se ferme, la section défile au centre et s'entoure un instant. */
-function montrerLEndroit(endroit: Endroit, fermer: () => void) {
-  const el = document.querySelector<HTMLElement>(`[data-section-uids~="${endroit.sectionUid}"]`);
+function montrerLEndroit(endroit: Endroit, fermer: () => void, portee?: string) {
+  const el = trouverLaSection(endroit.sectionUid, portee);
   if (!el) return;
   fermer();
   requestAnimationFrame(() => {
@@ -87,7 +108,7 @@ function degres(accords: string, tonalite: string): string {
   return suite.length ? suite.map(chiffreDuDegre).join(" – ") : "";
 }
 
-function Contenu({ slug, titre, sections, tonalite, tonaliteOrigine, instrument, onEssayer, suivant, onModuler, onClose }: Props) {
+function Contenu({ slug, titre, sections, tonalite, tonaliteOrigine, instrument, onEssayer, suivant, onModuler, onClose, portee }: Props) {
   const { t } = useTranslation();
   const { user, profile } = useProfile();
   const { fiches } = useCatalogue();
@@ -171,7 +192,7 @@ function Contenu({ slug, titre, sections, tonalite, tonaliteOrigine, instrument,
                   )
                 )}
                 <div className="mt-2 flex flex-wrap items-center gap-2">
-                  <Button variant="secondary" size="sm" onClick={() => montrerLEndroit(s.endroits[0], onClose)}>
+                  <Button variant="secondary" size="sm" onClick={() => montrerLEndroit(s.endroits[0], onClose, portee)}>
                     {t("harmonie.montrer")}
                   </Button>
                   {onEssayer && apercu && (

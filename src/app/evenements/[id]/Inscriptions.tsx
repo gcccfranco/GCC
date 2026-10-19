@@ -12,6 +12,7 @@
 import { useEffect, useState, type FormEvent } from "react"
 import Link from "next/link"
 import { useTranslation } from "react-i18next"
+import { useConfirmer } from "@/components/layout/Confirmer"
 import { Check } from "lucide-react"
 import type { User } from "firebase/auth"
 import { canSeeInscrits } from "@/lib/access"
@@ -34,7 +35,7 @@ const INVITES = [0, 1, 2, 3, 4, 5]
 const pleinDe = (pour: string): React.CSSProperties | undefined =>
   pour === "eglise" ? undefined : { backgroundColor: serviceButtonFill(categoryColor(pour)), color: "#ffffff" }
 
-function ListeInscrits({ liste, busy, onRetirer }: { liste: Inscription[]; busy?: boolean; onRetirer?: (i: Inscription) => void }) {
+export function ListeInscrits({ liste, busy, onRetirer }: { liste: Inscription[]; busy?: boolean; onRetirer?: (i: Inscription) => void }) {
   const { t } = useTranslation()
   return (
     <ul className="divide-y divide-border text-left" aria-label={t("evenements.inscrits")}>
@@ -205,6 +206,7 @@ export function PanneauInscriptions({ evenement: e, relire, onInscrits, onMode, 
   onRetire: (id: string) => void
 }) {
   const { t } = useTranslation()
+  const confirmer = useConfirmer()
   const raison = useRaisonInscription()
   const [liste, setListe] = useState<Inscription[] | null>(null)
   const [showListe, setShowListe] = useState(false)
@@ -254,8 +256,8 @@ export function PanneauInscriptions({ evenement: e, relire, onInscrits, onMode, 
         </Button>
       )}
       {showListe && liste && liste.length > 0 && (
-        <ListeInscrits liste={liste} busy={busy} onRetirer={(i) => {
-          if (!window.confirm(t("evenements.confirmRetirer", { nom: i.nom }))) return
+        <ListeInscrits liste={liste} busy={busy} onRetirer={async (i) => {
+          if (!(await confirmer({ titre: t("evenements.confirmRetirer", { nom: i.nom }), action: t("common.buttons.remove"), destructif: true }))) return
           run(async () => {
             const r = await desinscrire(e.id, i.id)
             onInscrits(r.inscrits)

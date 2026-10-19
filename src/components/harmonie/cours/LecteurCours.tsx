@@ -6,6 +6,7 @@
 
 import { useTranslation } from "react-i18next";
 import { TexteFiche } from "@/components/harmonie/TexteFiche";
+import { cn } from "@/lib/utils";
 import type { BlocCours, ItemListe } from "@/types/cours";
 
 /** Texte d'un bloc : les accords entre accents graves ne se transposent pas. */
@@ -42,23 +43,42 @@ function Bloc({ bloc, schemas }: { bloc: BlocCours; schemas: Record<string, Reac
       return <h3 className="pt-1 text-[17px] font-semibold">{bloc.texte}</h3>;
     case "liste":
       return <Liste ordonnee={bloc.ordonnee} items={bloc.items} />;
-    case "tableau":
-      // Un tableau large défile dans son cadre, jamais la page (téléphone).
+    case "tableau": {
+      // Un tableau large défile dans son cadre, jamais la page. Sur téléphone, au-delà de trois
+      // colonnes (« Toutes les cadences », six), chaque ligne devient un bloc : la première case
+      // en titre, les autres sous leur en-tête (lot U4 bis, B3, question 4) ; rien ne glisse.
+      const empile = bloc.entetes.length > 3;
       return (
-        <div className="overflow-x-auto rounded-xl border border-border" data-cours-tableau>
-          <table className="w-full border-collapse text-[15px]">
-            <thead>
+        <div
+          className={cn("overflow-x-auto rounded-xl border border-border", empile && "max-sm:overflow-visible")}
+          data-cours-tableau
+        >
+          <table className={cn("w-full border-collapse text-[15px]", empile && "max-sm:block")}>
+            <thead className={cn(empile && "max-sm:hidden")}>
               <tr className="bg-secondary/60">
                 {bloc.entetes.map((e, i) => (
                   <th key={i} className="whitespace-nowrap px-3 py-2 text-left font-semibold"><Texte texte={e} /></th>
                 ))}
               </tr>
             </thead>
-            <tbody>
+            <tbody className={cn(empile && "max-sm:block")}>
               {bloc.lignes.map((ligne, i) => (
-                <tr key={i} className="border-t border-border">
+                <tr key={i} className={cn("border-t border-border", empile && "max-sm:block max-sm:px-3 max-sm:py-2.5 max-sm:first:border-t-0")}>
                   {ligne.map((c, j) => (
-                    <td key={j} className="px-3 py-2 align-top"><Texte texte={c} /></td>
+                    <td
+                      key={j}
+                      className={cn(
+                        "px-3 py-2 align-top",
+                        empile && (j === 0
+                          ? "max-sm:block max-sm:px-0 max-sm:pt-0 max-sm:pb-1 max-sm:text-[17px] max-sm:font-semibold"
+                          : "max-sm:grid max-sm:grid-cols-[6.5rem_1fr] max-sm:gap-2 max-sm:px-0 max-sm:py-0.5"),
+                      )}
+                    >
+                      {empile && j > 0 && (
+                        <span className="text-[13px] leading-6 text-muted-foreground sm:hidden"><Texte texte={bloc.entetes[j] ?? ""} /></span>
+                      )}
+                      <span><Texte texte={c} /></span>
+                    </td>
                   ))}
                 </tr>
               ))}
@@ -66,6 +86,7 @@ function Bloc({ bloc, schemas }: { bloc: BlocCours; schemas: Record<string, Reac
           </table>
         </div>
       );
+    }
     case "code":
       return (
         <pre className="overflow-x-auto rounded-xl bg-secondary/60 px-3 py-2.5 font-chord text-[15px] leading-relaxed" data-cours-grille>

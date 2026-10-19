@@ -12,7 +12,9 @@ export default function manifest(): MetadataRoute.Manifest {
     display: "standalone",
     background_color: "#ffffff",
     theme_color: "#ffffff",
-    orientation: "portrait",
+    // Pas d'orientation imposée (lot U5, docs/spec-deux-volets.md, question 7) :
+    // « portrait » figeait l'app Android installée, sans deux volets ni deux
+    // colonnes sur une tablette couchée.
     icons: [
       {
         src: "/apple-icon.png",

@@ -3,8 +3,9 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { verifyIdToken } from "@/lib/push/admin";
 import { uidsForCategory } from "@/lib/push/recipients";
-import { poleDuPour } from "@/lib/access";
-import { membresDuPole } from "@/lib/taches/serveur";
+import { canInscrireEvenement, equipeDuPour } from "@/lib/access";
+import { nowIsoParis, refusInscription, type RefusInscription } from "@/lib/evenements/agenda";
+import { membresDeLEquipe } from "@/lib/taches/serveur";
 import type { Evenement } from "@/types/evenement";
 
 export class HttpError extends Error {
@@ -32,9 +33,61 @@ export function errorResponse(e: unknown) {
 }
 
 /** Membres concernés par un évènement : toute l'église, les membres de la
- *  section visée, ou ceux du pôle pour une réunion (lot 7). */
+ *  section visée, ceux de l'équipe pour une réunion ou un évènement d'équipe
+ *  (lot U6, R4 ; retouches v18 D23 ; EQ20 : `membresDeLEquipe`, Louange élargi,
+ *  ce que lisent les règles), lus dans la même base. */
 export async function destinatairesEvenement(db: FirebaseFirestore.Firestore, e: Pick<Evenement, "pour">): Promise<string[]> {
-  const pole = poleDuPour(e.pour);
+  const equipe = equipeDuPour(e.pour);
   if (e.pour === "eglise") return (await db.collection("users").get()).docs.map((d) => d.id);
-  return pole ? membresDuPole(pole) : uidsForCategory(e.pour);
+  return equipe ? membresDeLEquipe(equipe, db) : uidsForCategory(e.pour);
+}
+
+const REFUS: Record<RefusInscription, string> = {
+  externe: "Les inscriptions se font sur un formulaire externe.",
+  fermee: "Les inscriptions sont fermées.",
+  pasEncore: "Les inscriptions ne sont pas encore ouvertes.",
+  terminee: "Les inscriptions sont closes.",
+  commencee: "L'évènement a déjà commencé.",
+  complet: "Il n'y a plus assez de places.",
+};
+
+/** L'inscription de /api/evenements/inscription, base passée (testable) : avec compte, une place au
+ *  nom du profil (id = uid, réinscription = mise à jour des invités) ; sans compte, `nomLibre`, id
+ *  aléatoire. Le compteur et la place s'écrivent dans une même transaction. HttpError 403 (sans
+ *  compte refusé, évènement d'équipe pour qui ne le voit pas, retouches v18 E6), 404, 409. */
+export async function inscrire(
+  db: FirebaseFirestore.Firestore,
+  user: { uid: string; email: string } | null,
+  { evenementId, invites, nomLibre }: { evenementId: string; invites: number; nomLibre: string },
+) {
+  const ref = db.collection("evenements").doc(evenementId);
+  let nom = nomLibre;
+  let profil: Parameters<typeof canInscrireEvenement>[1] = null;
+  if (user) {
+    // Le profil entier : ses sections et ses équipes (Louange élargi) décident de l'accès (E6).
+    const p = (await db.collection("users").doc(user.uid).get()).data() as { firstName?: string; lastName?: string; email?: string; serviceRoles?: Record<string, unknown>; dansEquipes?: string[] } | undefined;
+    nom = [p?.firstName, p?.lastName].filter(Boolean).join(" ").trim() || p?.email || user.email;
+    profil = p ?? null;
+  }
+
+  return db.runTransaction(async (tx) => {
+    const snap = await tx.get(ref);
+    if (!snap.exists) throw new HttpError(404, "Évènement introuvable");
+    const e = snap.data() as Evenement;
+    if (!user && !e.sansCompte) throw new HttpError(403, "Inscription réservée aux membres connectés.");
+    // Évènement d'équipe (retouches v18, E6 ; EQ20) : ceux qui le voient seulement.
+    if (!canInscrireEvenement(user, profil, e)) throw new HttpError(403, "Évènement réservé aux membres de l'équipe.");
+    const iid = user ? user.uid : ref.collection("inscriptions").doc().id;
+    const iref = ref.collection("inscriptions").doc(iid);
+    const existing = user ? await tx.get(iref) : null;
+    const prev = existing?.exists ? 1 + ((existing.data()?.invites as number) ?? 0) : 0;
+    const sansMoi = (e.inscrits ?? 0) - prev;
+    const refus = refusInscription({ ...e, inscrits: sansMoi }, invites, nowIsoParis());
+    if (refus) throw new HttpError(409, REFUS[refus]);
+    const createdAt = existing?.exists ? (existing.data()?.createdAt as string) : new Date().toISOString();
+    const inscrits = sansMoi + 1 + invites;
+    tx.set(iref, { uid: user?.uid ?? null, nom, invites, createdAt });
+    tx.update(ref, { inscrits });
+    return { inscrits, mine: { id: iid, uid: user?.uid ?? null, nom, invites, createdAt } };
+  });
 }

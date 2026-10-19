@@ -1,10 +1,8 @@
-// Tâches par pôle (lot 7, docs/spec-taches.md). Firestore :
-// poles/{pole}/taches/{id} et poles/{pole}/taches/{id}/fois/{AAAA-MM-JJ}.
-
-/** Pôles d'une tâche. « louange » n'est jamais stocké dans un profil : en est
- *  membre qui a au moins un rôle de service (voir polesDe, src/lib/access.ts). */
-export const TACHE_POLES = ["da", "media", "orga", "louange", "evenement"] as const;
-export type TachePole = (typeof TACHE_POLES)[number];
+// Tâches par équipe (lot 7, docs/spec-taches.md ; lot 1 du chantier « équipes et groupes »,
+// docs/spec-equipes-sans-poles.md, EQ6, EQ7). Firestore : equipes/{equipe}/taches/{id} et
+// equipes/{equipe}/taches/{id}/fois/{AAAA-MM-JJ}. Une équipe est désignée par son id
+// (src/lib/equipes/table.ts) ; « louange » est le public Louange élargi (voir equipesDe,
+// src/lib/access.ts).
 
 export type Rythme = "semaine" | "2semaines" | "mois" | "an";
 
@@ -16,15 +14,16 @@ export interface Repetition {
   rang?: number;
 }
 
-/** Qui prévenir quand une fois est cochée : les membres d'un pôle, ou la régie
+/** Qui prévenir quand une fois est cochée : les membres d'une équipe, ou la régie
  *  de ce service le dimanche qui suit l'échéance (planning). */
-export type Prevenir = { pole: TachePole } | { regie: string } | null;
+export type Prevenir = { equipe: string } | { regie: string } | null;
 
 export interface Tache {
   id: string;
-  pole: TachePole;
+  /** Id de l'équipe, celui du chemin. */
+  equipe: string;
   titre: string;
-  /** null = pour tout le pôle. */
+  /** null = pour toute l'équipe. */
   responsableUid: string | null;
   responsableNom: string;
   /** AAAA-MM-JJ : l'échéance d'une tâche unique, la première d'une tâche répétée. */

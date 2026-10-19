@@ -23,6 +23,7 @@ function fromFsProposal(raw: RawDoc): SongProposal {
     authorId: (data.authorId as string) ?? "",
     authorName: (data.authorName as string) ?? "",
     createdAt: (data.createdAt as Date | null) ?? null,
+    ...(data.setlistId ? { setlistId: data.setlistId as string, setlistTitre: (data.setlistTitre as string) ?? "" } : {}),
   };
 }
 
@@ -45,7 +46,7 @@ export async function getSongProposals(): Promise<SongProposal[]> {
 }
 
 export async function createSongProposal(
-  data: Pick<SongProposal, "title" | "youtubeUrl" | "pdfUrl" | "authorId" | "authorName">
+  data: Pick<SongProposal, "title" | "youtubeUrl" | "pdfUrl" | "authorId" | "authorName" | "setlistId" | "setlistTitre">
 ): Promise<string> {
   const headers = await authHeader();
   const fields = {

@@ -107,6 +107,44 @@ export function useJianpuChords(slug: string | null | undefined) {
   return slug ? (manifest[slug] ?? null) : null;
 }
 
+/** Recadrage des scans (piste A, chantier 简谱) : pour chaque page, les pixels
+ *  du haut à couper (titre, album, versets gravés) pour que la page commence à
+ *  la ligne « 1=X 4/4 ». Donnée certifiée à l'œil (`scripts/jianpu/cadrage.py`) ;
+ *  un chant ou une page absents ne sont pas recadrés. */
+export type JianpuCadrage = Record<string, number[]>;
+
+let cadragePromise: Promise<JianpuCadrage> | null = null;
+/** Le fichier une fois arrivé : un scan monté ensuite (page suivante du mode
+ *  louange) part directement recadré, sans une image entière avant la coupe. */
+let cadrageCharge: JianpuCadrage | null = null;
+
+export function loadJianpuCadrage(): Promise<JianpuCadrage> {
+  cadragePromise ??= fetch("/jianpu/cadrage.json")
+    .then((r) => (r.ok ? (r.json() as Promise<JianpuCadrage>) : {}))
+    .catch(() => ({}))
+    .then((c) => (cadrageCharge = c));
+  return cadragePromise;
+}
+
+/** Les `top` des pages d'un chant (`[]` s'il n'est pas recadré), ou
+ *  `undefined` tant que le fichier n'est pas chargé. */
+export function useJianpuCadrage(slug: string | null | undefined): number[] | undefined {
+  const [cadrage, setCadrage] = useState<JianpuCadrage | null>(cadrageCharge);
+
+  useEffect(() => {
+    let alive = true;
+    loadJianpuCadrage().then((c) => {
+      if (alive) setCadrage(c);
+    });
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  if (!cadrage) return undefined;
+  return (slug && cadrage[slug]) || [];
+}
+
 /** Manifeste des partitions 简谱 disponibles en image (généré par
  *  scripts/jianpu/build-images.py). Chargé une seule fois par session. */
 let manifestPromise: Promise<JianpuManifest> | null = null;
@@ -148,22 +186,23 @@ export function useJianpuScore(slug: string | null | undefined) {
 
 /** Les scans sont servis en WebP, que @react-pdf/renderer ne sait pas lire
  *  (JPEG et PNG uniquement). Le PDF étant fabriqué dans le navigateur, on
- *  ré-encode la page en PNG via un canvas avant de la lui passer. */
-export async function jianpuPngDataUrl(file: string): Promise<string | null> {
+ *  ré-encode la page en PNG via un canvas avant de la lui passer. `top` : les
+ *  rangées de l'en-tête gravé, coupées (`cadrage.json`). */
+export async function jianpuPngDataUrl(file: string, top = 0): Promise<string | null> {
   try {
     const res = await fetch(jianpuImageUrl(file));
     if (!res.ok) return null;
     const bitmap = await createImageBitmap(await res.blob());
     const canvas = document.createElement("canvas");
     canvas.width = bitmap.width;
-    canvas.height = bitmap.height;
+    canvas.height = bitmap.height - top;
     const ctx = canvas.getContext("2d");
     if (!ctx) return null;
     // Le scan d'origine est sur fond blanc opaque ; le canvas, lui, part
     // transparent — un aplat blanc évite un fond noir dans le PDF.
     ctx.fillStyle = "#fff";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-    ctx.drawImage(bitmap, 0, 0);
+    ctx.drawImage(bitmap, 0, -top);
     return canvas.toDataURL("image/png");
   } catch {
     return null;

@@ -10,6 +10,74 @@ export const BASE_URL = `http://localhost:${PORT}`;
  *  docs/spec-mise-en-ligne.md) : ce que verra le site en ligne. */
 export const BASE_URL_COUPE = `http://localhost:${PORT + 1}`;
 
+/** Lot U4 : specs lancées aussi sur `tablette-paysage` et `ordinateur-1440` —
+ *  la navigation, le halo qui part du bord de la barre, et le dimanche (setlist,
+ *  barre d'outils, sommaire, mode louange). */
+const SPECS_GRAND_ECRAN = [
+  /navigation-grand-ecran\.spec\.ts/,
+  /look-navigation\.spec\.ts/,
+  /look-halo(-defilement)?\.spec\.ts/,
+  /look-louange\.spec\.ts/,
+  /performance-mode\.spec\.ts/,
+  /setlist-regie\.spec\.ts/,
+  /setlist-partage\.spec\.ts/,
+  /coup-d-oeil\.spec\.ts/,
+  // Chantier 简谱, lot 3 (docs/spec-jianpu-integration.md) : la piste A sur toutes les surfaces.
+  /jianpu-integration\.spec\.ts/,
+  // Lot 1 du chantier « équipes et groupes » (docs/spec-equipes-sans-poles.md, EQ-D) : l'organigramme sans pôles.
+  /equipes-agencement\.spec\.ts/,
+  // Lot « chants des fêtes » (docs/spec-chants-fetes.md, CF-C) : la page de la fête, chants et musiques dans l'ordre de passage.
+  /chants-fetes-agencement\.spec\.ts/,
+  // Lot U5 (docs/spec-deux-volets.md) : la setlist en deux volets.
+  /setlist-deux-volets\.spec\.ts/,
+  // … et Chants en deux volets.
+  /chants-deux-volets\.spec\.ts/,
+  // … le mode louange en deux colonnes, et le parcours de T6 (captures, FR et ZH, clair et sombre).
+  /mode-louange-colonnes\.spec\.ts/,
+  /deux-volets-finitions\.spec\.ts/,
+  // Lot U4 bis (docs/spec-pages-en-grand.md, Q16) : toutes les pages en grand.
+  /pages-en-grand-.*\.spec\.ts/,
+  // Lot U6 (spec-back-office.md, Tests) : l'espace Back-Office, B1.
+  /back-office-espace\.spec\.ts/,
+  // Lot U8 (spec-calendrier.md, Tests) : la page du calendrier, Mois sur la tablette couchée.
+  /calendrier\.spec\.ts/,
+  /calendrier-deplacer\.spec\.ts/,
+  /calendrier-widget\.spec\.ts/,
+  // Lot U9 (spec-evenements-2027.md) : ligne d'annonce, pastille et calendrier, agenda public.
+  /evenements-2027\.spec\.ts/,
+  // B2 : Planning, Équipes, Messages rangés dans le Back-Office (pleine largeur, barre latérale).
+  /back-office-admin\.spec\.ts/,
+  // B4 : le tableau de bord (grille de 4 en paysage et à 1 440 px).
+  /tableau-de-bord\.spec\.ts/,
+  // Lot U5 bis (docs/spec-editeur-setlist.md) : l'éditeur de setlist en deux colonnes.
+  /setlist-editeur-piste2\.spec\.ts/,
+  // … et sa bibliothèque (T5 : « + » entre deux éléments sur ordinateur, pas sur tablette couchée).
+  /setlist-bibliotheque\.spec\.ts/,
+  // … et le choix des chants à fusionner, dans le volet de droite.
+  /setlist-fusionner\.spec\.ts/,
+  // Lot U7 (spec-statistiques.md, Tests) : la page Statistiques et son entrée du menu.
+  /statistiques\.spec\.ts/,
+  // Retours du 06/10/2026 : barre réduite, aucune bande vide entre la barre et la page.
+  /agencement-barre-reduite\.spec\.ts/,
+  // Scène Pâques · Noël (docs/spec-scene-paques-noel.md) : onglets de fête, une semaine à la fois.
+  /scene-paques-noel\.spec\.ts/,
+  // … et fermer les réservations avant la date de fin (docs/spec-fermer-reservations.md, FR-A) : la vue Saison.
+  /fermer-reservations\.spec\.ts/,
+  // Agencement v18 (docs/spec-agencement-v18.md) : chaque tranche, F1 comprise, sur les cinq projets.
+  /agencement-v18-.*\.spec\.ts/,
+  // Lot 3 du chantier « équipes et groupes » (docs/spec-planning-gestes.md, PG-Z) : les gestes du planning.
+  /planning-gestes-agencement\.spec\.ts/,
+  // Retouches après v18 (docs/spec-retouches-v18.md), lot R seulement (retouches-v18-ra, -agenda, -ordre,
+  // -pilules-stats…) : cinq projets. Les specs des lots E et F (evenements-equipe, ex-evenements-pole ; planning-fidelite) gardent trois appareils.
+  /retouches-v18(-.*)?\.spec\.ts/,
+  // Chantier 简谱 (docs/spec-jianpu-integration.md), lot 2 : en-tête et bandeau au-dessus des deux colonnes.
+  /louange-sections-uniques\.spec\.ts/,
+  // Lot 2 du chantier « équipes et groupes » (docs/spec-organigrammes-groupes.md, OG-C) : l'organigramme d'un groupe.
+  /organigrammes-groupes-agencement\.spec\.ts/,
+  // Barre de la page d'un chant, piste A (docs/spec-barre-chant.md) : la rangée sur les quatre dispositions et 1 440 px.
+  /barre-chant\.spec\.ts/,
+];
+
 export default defineConfig({
   testDir: "./tests",
   fullyParallel: true,
@@ -35,6 +103,12 @@ export default defineConfig({
     { name: "ordinateur", use: { ...devices["Desktop Chrome"] } },
     { name: "telephone", use: { ...devices["Pixel 7"] } },
     { name: "tablette", use: { ...devices["iPad (gen 7)"], defaultBrowserType: "chromium" } },
+    // ── Lot U4 (docs/spec-navigation-grand-ecran.md, Q16) ──────────────────────
+    // La tablette couchée (barre latérale réduite) et la lecture à 1 440 px, que
+    // les trois appareils ne montrent pas. Limités à la navigation et aux specs du
+    // dimanche : toute la suite sur cinq projets coûterait deux tiers de temps en plus.
+    { name: "tablette-paysage", testMatch: SPECS_GRAND_ECRAN, use: { ...devices["iPad (gen 7) landscape"], defaultBrowserType: "chromium" } },
+    { name: "ordinateur-1440", testMatch: SPECS_GRAND_ECRAN, use: { ...devices["Desktop Chrome"], viewport: { width: 1440, height: 900 } } },
   ],
   webServer: [
     {

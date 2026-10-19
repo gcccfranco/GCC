@@ -2,11 +2,11 @@ import { NextResponse, type NextRequest } from "next/server";
 import { adminDb, verifyIdToken } from "@/lib/push/admin";
 import { sendPushToUids, allSubscriberUids } from "@/lib/push/send";
 import { recordNotification } from "@/lib/push/notifications";
-import { uidsForCategory, loadNotifLangs } from "@/lib/push/recipients";
+import { uidsDuGroupe, loadNotifLangs } from "@/lib/push/recipients";
 import { planningReleaseMessage } from "@/lib/push/messages";
 import { isAdminEmail } from "@/lib/access";
 import { NOTIFY_ALL } from "@/lib/push/audiences";
-import { getPlanning, canPublishPlanning, TRI_ORDER } from "@/lib/planning/releases";
+import { getPlanning, droitsDePublication, TRI_ORDER } from "@/lib/planning/releases";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -15,8 +15,10 @@ export const maxDuration = 60;
 // Publication d'un trimestre de planning (Culte / groupes). Révèle l'onglet du
 // trimestre côté membres (flag planningReleases/{key}_{year}.published[]) et, à
 // la PREMIÈRE publication, envoie une notification push à l'audience du planning
-// (Culte → tout le monde ; groupe → membres du groupe). Réservé aux admins et aux
-// comptes dont le droit `notify` couvre ce planning. `publish:false` re-masque le
+// (Culte → tout le monde ; groupe → membres du groupe, clé de `serviceRoles` ou groupe de la
+// personne, lot 2, OG28). Réservé aux admins, aux comptes dont le droit `notify` couvre ce
+// planning, et à qui le publie par un rôle de son groupe (`publieParRole`, OG23, interrupteur
+// ouvert seulement, OG27). `publish:false` re-masque le
 // trimestre (sans notification, sans re-notif à une republication).
 
 export async function POST(req: NextRequest) {
@@ -52,14 +54,10 @@ export async function POST(req: NextRequest) {
 
   // 3. Droits de l'expéditeur
   const isAdmin = isAdminEmail(email);
-  let rights: string[] = [];
-  if (!isAdmin) {
-    const me = (await adminDb().collection("users").doc(uid).get()).data() as
-      | { notify?: string[] }
-      | undefined;
-    rights = me?.notify ?? [];
-  }
-  if (!canPublishPlanning(planning, isAdmin, rights)) {
+  const me = isAdmin
+    ? null
+    : ((await adminDb().collection("users").doc(uid).get()).data() as { notify?: string[]; publieParRole?: string[] } | undefined) ?? null;
+  if (!droitsDePublication(planning, isAdmin, me)) {
     return NextResponse.json({ error: "Action non autorisée" }, { status: 403 });
   }
 
@@ -84,13 +82,15 @@ export async function POST(req: NextRequest) {
   if (doPublish && !already) {
     // Une fournée par langue (lot 8) : resté en français seul jusqu'au 19/09/2026.
     const tous = planning.notifyAudience === NOTIFY_ALL;
-    const cible = tous ? await allSubscriberUids() : await uidsForCategory(planning.notifyAudience);
+    const cible = tous ? await allSubscriberUids() : await uidsDuGroupe(planning.notifyAudience);
     const langs = await loadNotifLangs(cible);
     const tag = `release-${planning.key}-${yr}-${tri}`;
+    // Lot U2 : l'année dans le message dès qu'elle n'est pas l'année en cours.
+    const release = { label: planning.label, tri, ...(yr !== new Date().getFullYear() ? { annee: yr } : {}) };
     for (const lang of ["fr", "zh-CN"] as const) {
       const groupe = cible.filter((u) => (langs.get(u) ?? "fr") === lang);
       if (!groupe.length) continue;
-      const message = planningReleaseMessage({ label: planning.label, tri }, lang);
+      const message = planningReleaseMessage(release, lang);
       const result = await sendPushToUids(groupe, { ...message, url: "/planning", tag });
       sent += result.sent;
       // Cloche : une entrée par fournée pour une catégorie ; « tout le monde »
@@ -98,7 +98,7 @@ export async function POST(req: NextRequest) {
       if (!tous) await recordNotification({ ...message, url: "/planning", kind: "broadcast", recipients: groupe });
     }
     if (tous) {
-      const fr = planningReleaseMessage({ label: planning.label, tri }, "fr");
+      const fr = planningReleaseMessage(release, "fr");
       await recordNotification({ ...fr, url: "/planning", kind: "broadcast", everyone: true });
     }
     notified = true;

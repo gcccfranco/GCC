@@ -1,8 +1,9 @@
 import type { EddDataStructure, EddPeriode, CampusSeance } from "./utils"
 import { EDD_CLASSES, EDD_PERIODES, getMois } from "./utils"
-import { fetchGrille } from "./grille"
+import { fetchCasesEcrites, fetchGrille } from "./grille"
 import { BACK_OFFICE } from "@/lib/backOffice"
-import { CLES_EDD, fusionnerLignes } from "./grilles"
+import { CLES_EDD, completerMusiciensFidelite, fusionnerLignes } from "./grilles"
+import { avecPetitDej, lirePetitDej, rangeesPetitDej } from "@/lib/petitdej/lignes"
 
 /** Les dimanches écrits dans l'app. Back-office coupé (lot 18) : aucun — le site
  *  en ligne lit le Google Sheet seul. Local et en ligne partagent le même
@@ -40,19 +41,13 @@ export function parseCSV(txt: string): string[][] {
   return rows
 }
 
-/** Année pour une date JJ/MM sans année. Les feuilles ne couvrent que l'année
- *  en cours : on retourne donc l'année civile actuelle par défaut, et on ne
- *  bascule sur une année adjacente qu'au voisinage du nouvel an — jamais en
- *  milieu d'année. (L'ancienne heuristique « année la plus proche » projetait
- *  à tort une date de janvier vue en juillet sur l'année suivante.) */
-export function inferYear(_day: number, month: number): number {
-  const now = new Date()
-  const year = now.getFullYear()
-  const cur = now.getMonth() + 1 // mois courant, 1–12
-  if (cur >= 11 && month <= 2) return year + 1 // fin d'année → dates de début d'année à venir
-  if (cur <= 2 && month >= 11) return year - 1 // début d'année → dates de fin d'année écoulée
-  return year
-}
+/** Année des dates JJ/MM du Google Sheet : c'est le fichier du planning 2026
+ *  (« [2026 QG] Planning »), qui le restera — le planning 2027 se fait dans
+ *  l'app (lot U2, docs/spec-planning-2027.md). Deviner l'année d'après la date
+ *  du jour rangeait, dès le 1er novembre, les dimanches de janvier-février du
+ *  Sheet dans l'année suivante : services fantômes dans « Mes services » et les
+ *  rappels. */
+export const ANNEE_DU_SHEET = 2026
 
 export function parseDate(s: string): string | null {
   if (!s) return null
@@ -66,7 +61,7 @@ export function parseDate(s: string): string | null {
   if (m3) return `20${m3[3]}-${m3[2].padStart(2,"0")}-${m3[1].padStart(2,"0")}`
   // DD/MM sans année — format utilisé par la plupart des feuilles (Culte, Groupes, Déjeuner…)
   const m4 = s.match(/^(\d{1,2})\/(\d{1,2})$/)
-  if (m4) return `${inferYear(+m4[1], +m4[2])}-${m4[2].padStart(2,"0")}-${m4[1].padStart(2,"0")}`
+  if (m4) return `${ANNEE_DU_SHEET}-${m4[2].padStart(2,"0")}-${m4[1].padStart(2,"0")}`
   return null
 }
 
@@ -154,9 +149,18 @@ export async function lireTableSheet(): Promise<string[][]> {
   return [...parDate.values()].sort((a, b) => a[0] < b[0] ? -1 : 1)
 }
 
-/** [date, équipe, petit déj] : la grille « table » réunie au Sheet. */
+/** Petit déj, interrupteur ouvert (lot U3, docs/spec-petit-dej.md) : les
+ *  inscriptions sont la seule source (T8), le Sheet ne parle plus. Une lecture en
+ *  échec rend vide ici ; la carte de l'onglet Table, elle, le dit (Q10). Coupé :
+ *  jamais lues, Firestore étant partagé entre le local et le site en ligne (Q14). */
+const rangeesDesInscriptions = () => lirePetitDej().then(rangeesPetitDej, () => [] as string[][])
+
+/** [date, équipe, petit déj] : la grille « table » réunie au Sheet ; ouvert, la
+ *  colonne 2 porte les inscriptions (T9), même un dimanche que le Sheet ignore. */
 export async function fetchTable(): Promise<string[][]> {
-  return fusionnerLignes(await grilleDeLApp("table"), await lireTableSheet())
+  const inscriptions = BACK_OFFICE ? rangeesDesInscriptions() : null
+  const rows = fusionnerLignes(await grilleDeLApp("table"), await lireTableSheet())
+  return inscriptions ? avecPetitDej(rows, await inscriptions) : rows
 }
 
 /** [date, équipe] des dimanches où une équipe est inscrite. */
@@ -166,6 +170,7 @@ export async function fetchDejeuner(): Promise<string[][]> {
 
 /** [date, noms] des dimanches où un petit déj est inscrit. */
 export async function fetchPetitDej(): Promise<string[][]> {
+  if (BACK_OFFICE) return rangeesDesInscriptions()
   return (await fetchTable()).filter(r => r[2]).map(r => [r[0], r[2]])
 }
 
@@ -183,9 +188,14 @@ async function fetchMulti(sheets: string[], cols: number): Promise<string[][]> {
   return all.sort((a, b) => a[0] < b[0] ? -1 : 1)
 }
 
-export const lirePaixSheet = () => fetchMulti(["Paix_T1","Paix _T2","Paix _T3","Paix_T4"], 4)
+// Paix et Bonté : PERCUSSION en colonne 5 (lot U2, P5 ; Paix T4, Bonté T3 et
+// T4 en 2026), jamais MÉNAGES (colonne 6, vide). Lue derrière l'interrupteur
+// (Q14) : en ligne, l'ancien tableau, « Mes services » et les rappels lisent le
+// Sheet comme avant.
+const COLONNES_GROUPE = BACK_OFFICE ? 5 : 4
+export const lirePaixSheet = () => fetchMulti(["Paix_T1","Paix _T2","Paix _T3","Paix_T4"], COLONNES_GROUPE)
 export const lireFideliteSheet = () => fetchMulti(["Fidélité_T1","Fidélité_T2","Fidélité_T3","Fidélité_T4"], 4)
-export const lireBonteSheet = () => fetchMulti(["Bonté_T1","Bonté _T2","Bonté _T3","Bonté_T4"], 4)
+export const lireBonteSheet = () => fetchMulti(["Bonté_T1","Bonté _T2","Bonté _T3","Bonté_T4"], COLONNES_GROUPE)
 
 export async function lireFideliteMusiciensSheet(): Promise<string[][]> {
   const rows = await fetchSheet("Fidélité_Musicien")
@@ -200,8 +210,16 @@ export async function fetchPaix(): Promise<string[][]> {
   return fusionnerLignes(await grilleDeLApp("paix"), await lirePaixSheet())
 }
 
+/** Fidélité, sept cases (lot F, D25 et D27) : Présidence, Guitariste et Batterie vides sont repris
+ *  du planning des musiciens — sa grille de l'app, puis l'onglet `Fidélité_Musicien` du Sheet (seul
+ *  lu quand le back-office est coupé) — sauf une case vidée dans l'app, qui reste vide. */
 export async function fetchFidelite(): Promise<string[][]> {
-  return fusionnerLignes(await grilleDeLApp("fidelite"), await lireFideliteSheet())
+  const [groupe, musiciens, ecrites] = await Promise.all([
+    Promise.all([grilleDeLApp("fidelite"), lireFideliteSheet()]).then(([g, s]) => fusionnerLignes(g, s)),
+    fetchFideliteMusic(),
+    BACK_OFFICE ? fetchCasesEcrites("fidelite") : new Set<string>(),
+  ])
+  return completerMusiciensFidelite(groupe, musiciens, ecrites)
 }
 
 export async function fetchFideliteMusic(): Promise<string[][]> {
@@ -241,7 +259,8 @@ export async function fetchInterfranco(): Promise<string[][]> {
 }
 
 // EDD : l'onglet énumère les dimanches classe par classe (le nom de la classe
-// en colonne 7 ouvre un bloc) ; cinq colonnes par ligne.
+// en colonne 7 ouvre un bloc) ; cinq colonnes par ligne, plus COURS (colonne 6,
+// lot U2, P5) derrière l'interrupteur, comme la percussion des groupes.
 export async function lireEddSheet(classe: (typeof EDD_CLASSES)[number]): Promise<string[][]> {
   const rows = await fetchSheet("EDD")
   const out: string[][] = []
@@ -252,7 +271,8 @@ export async function lireEddSheet(classe: (typeof EDD_CLASSES)[number]): Promis
     if (!dt) continue
     if (r[7] && (EDD_CLASSES as readonly string[]).includes(r[7].trim())) cls = r[7].trim()
     if (cls !== classe) continue
-    out.push([dt, r[1]||"", r[2]||"", r[3]||"", r[4]||"", r[5]||""])
+    const ligne = [dt, r[1]||"", r[2]||"", r[3]||"", r[4]||"", r[5]||""]
+    out.push(BACK_OFFICE ? [...ligne, r[6]||""] : ligne)
   }
   return out
 }
@@ -307,7 +327,7 @@ export function seanceCampus(row: string[], moment: "Matin" | "Soir"): CampusSea
     }
     entLieu = rest.join(" ").trim()
   }
-  return { d: `${label} ${moment}`, pres, ch, mu, rg, ent, entTime, entLieu, chants: [row[9]||"", row[10]||"", row[11]||"", row[12]||""] }
+  return { d: `${label} ${moment}`, date: row[0], pres, ch, mu, rg, ent, entTime, entLieu, chants: [row[9]||"", row[10]||"", row[11]||"", row[12]||""] }
 }
 
 /** Les deux grilles du Campus (matin, soir) réunies au Sheet, dans la forme de leur définition. */

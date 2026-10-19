@@ -1,20 +1,23 @@
-// Notifications des tâches par pôle (lot 7, docs/spec-taches.md) : nouvelle
-// tâche, tâche faite, rappels d'échéance ajoutés à la notification du jour.
-// Fonctions pures, en français ou en 中文, partagées avec les tests.
+// Notifications des tâches par équipe (lot 7, docs/spec-taches.md ; lot 1 du chantier « équipes et
+// groupes », EQ12, EQ13) : nouvelle tâche, tâche faite, rappels d'échéance ajoutés à la notification
+// du jour. Fonctions pures, en français ou en 中文, partagées avec les tests.
 
+import fr from "@/locales/fr.json";
+import zh from "@/locales/zh-CN.json";
+import { cleNomEquipe } from "@/lib/equipes/table";
 import { formatReminderDate } from "@/lib/push/reminderMessage";
 import { addDays, echeancesDe, joursEntre } from "@/lib/taches/echeances";
 import type { NotifLang } from "@/types/user";
-import type { Fois, Tache, TachePole } from "@/types/tache";
+import type { Fois, Tache } from "@/types/tache";
 
-// Mêmes mots que les locales (taches.pole).
-const POLE: Record<NotifLang, Record<TachePole, string>> = {
-  fr: { da: "DA", media: "Média", orga: "Orga", louange: "Louange", evenement: "Événement" },
-  "zh-CN": { da: "美工", media: "媒体", orga: "组织", louange: "敬拜", evenement: "活动" },
-};
+const LOCALES: Record<NotifLang, unknown> = { fr, "zh-CN": zh };
 
-export function poleLabel(pole: TachePole, lang: NotifLang): string {
-  return POLE[lang][pole];
+/** Nom d'une équipe, lu dans les fichiers de langue (une seule source, EQ13) : le long (« TEAM
+ *  MÉDIAS », 媒体组) pour les notifications, le court (« Médias ») pour les écrans ; « Louange » /
+ *  敬拜 pour le public Louange (EQ4). Une équipe hors des fichiers garde son id. */
+export function nomEquipe(equipe: string, lang: NotifLang, court = false): string {
+  const nom = cleNomEquipe(equipe, court).split(".").reduce<unknown>((o, k) => (o as Record<string, unknown> | undefined)?.[k], LOCALES[lang]);
+  return typeof nom === "string" ? nom : equipe;
 }
 
 /** Date dans une phrase : « vendredi 18 septembre » / « 9月18日星期五 ». */
@@ -23,16 +26,16 @@ function dateDansPhrase(iso: string, lang: NotifLang): string {
   return lang === "fr" ? s.charAt(0).toLowerCase() + s.slice(1) : s;
 }
 
-export function nouvelleTacheMessage(t: Pick<Tache, "titre" | "pole" | "echeance">, lang: NotifLang) {
+export function nouvelleTacheMessage(t: Pick<Tache, "titre" | "equipe" | "echeance">, lang: NotifLang) {
   return lang === "fr"
-    ? { title: `Nouvelle tâche : ${t.titre}`, body: `Pôle ${poleLabel(t.pole, "fr")} · pour ${dateDansPhrase(t.echeance, "fr")}` }
-    : { title: `新任务：${t.titre}`, body: `${poleLabel(t.pole, "zh-CN")}部门 · 截止 ${dateDansPhrase(t.echeance, "zh-CN")}` };
+    ? { title: `Nouvelle tâche : ${t.titre}`, body: `${nomEquipe(t.equipe, "fr")} · pour ${dateDansPhrase(t.echeance, "fr")}` }
+    : { title: `新任务：${t.titre}`, body: `${nomEquipe(t.equipe, "zh-CN")} · 截止 ${dateDansPhrase(t.echeance, "zh-CN")}` };
 }
 
-export function tacheFaiteMessage(t: Pick<Tache, "titre" | "pole">, parNom: string, lang: NotifLang) {
+export function tacheFaiteMessage(t: Pick<Tache, "titre" | "equipe">, parNom: string, lang: NotifLang) {
   return lang === "fr"
-    ? { title: `Tâche faite : ${t.titre}`, body: `${parNom} (${poleLabel(t.pole, "fr")}) l'a terminée.` }
-    : { title: `任务完成：${t.titre}`, body: `${parNom}（${poleLabel(t.pole, "zh-CN")}）已完成。` };
+    ? { title: `Tâche faite : ${t.titre}`, body: `${parNom} (${nomEquipe(t.equipe, "fr")}) l'a terminée.` }
+    : { title: `任务完成：${t.titre}`, body: `${parNom}（${nomEquipe(t.equipe, "zh-CN")}）已完成。` };
 }
 
 export type RappelTache = {
@@ -68,7 +71,7 @@ export function rappelsDuJour(items: { tache: Tache; fois: Fois[] }[], today: st
 }
 
 export function ligneRappelTache(r: RappelTache, lang: NotifLang): string {
-  const quoi = lang === "fr" ? `${r.tache.titre} (${poleLabel(r.tache.pole, "fr")})` : `${r.tache.titre}（${poleLabel(r.tache.pole, "zh-CN")}）`;
+  const quoi = lang === "fr" ? `${r.tache.titre} (${nomEquipe(r.tache.equipe, "fr")})` : `${r.tache.titre}（${nomEquipe(r.tache.equipe, "zh-CN")}）`;
   if (r.quand === "encours") {
     if (r.depuis === undefined) return lang === "fr" ? `En cours : ${quoi}` : `进行中：${quoi}`;
     if (r.depuis === 0) return lang === "fr" ? `En cours depuis aujourd'hui : ${quoi}` : `今天开始：${quoi}`;
@@ -78,6 +81,14 @@ export function ligneRappelTache(r: RappelTache, lang: NotifLang): string {
   }
   if (r.quand === "retard") return lang === "fr" ? `En retard : ${quoi}, pour hier` : `逾期：${quoi}，昨天到期`;
   return lang === "fr" ? `À faire : ${quoi}, ${dateDansPhrase(r.date, "fr")}` : `待办：${quoi}，${dateDansPhrase(r.date, "zh-CN")}`;
+}
+
+/** Clé notifLog d'un rappel (EQ12) : `rappel-tache-${quand}-${equipe}-${id}-${date}` ; « en cours »
+ *  revient chaque matin, le jour d'envoi entre dans la clé (lot 13). */
+export function cleRappelTache(r: RappelTache, today: string): string {
+  return r.quand === "encours"
+    ? `rappel-tache-encours-${r.tache.equipe}-${r.tache.id}-${r.date}-${today}`
+    : `rappel-tache-${r.quand}-${r.tache.equipe}-${r.tache.id}-${r.date}`;
 }
 
 export function rappelTachesTitre(lang: NotifLang): string {

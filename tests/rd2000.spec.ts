@@ -37,13 +37,18 @@ async function capture(page: Page, name: string) {
   if (dir) await page.screenshot({ path: `${dir}/${name}-${test.info().project.name}.png` });
 }
 
-test("un pianiste trouve les sons en tête d'Harmonie, ouverts sur « Par moment »", async ({ page }) => {
+test("un pianiste trouve les sons en tête d'Harmonie, ouverts sur « Par moment »", async ({ page }, info) => {
   await entrer(page, JO, "/harmonie");
-  const ligne = page.getByRole("link", { name: /Sons du RD-2000/ });
-  await expect(ligne).toContainText(`${ESSENTIELS} essentiels sur ${DONNEES.sons.length.toLocaleString("fr-FR")}`);
-  await ligne.click();
+  // Agencement v18 (A16) : l'onglet « Sons du RD-2000 » du rail partout ; la carte, sur téléphone seulement.
+  const onglet = page.locator("header[data-entete-page]").getByRole("link", { name: "Sons du RD-2000" });
+  await expect(onglet).toBeVisible();
+  if (info.project.name === "telephone") {
+    const ligne = page.locator("[data-harmonie]").getByRole("link", { name: /Sons du RD-2000/ });
+    await expect(ligne).toContainText(`${ESSENTIELS} essentiels sur ${DONNEES.sons.length.toLocaleString("fr-FR")}`);
+    await ligne.click();
+  } else await onglet.click();
   await page.waitForURL(/\/harmonie\/rd2000\/?$/);
-  await expect(page.getByRole("button", { name: "Par moment" })).toHaveAttribute("aria-pressed", "true");
+  await expect(page.getByRole("tab", { name: "Par moment" })).toHaveAttribute("aria-selected", "true");
   await expect(page.locator("[data-moment]")).toHaveCount(DONNEES.moments.length);
   await expect(page.locator("[data-regle]")).toBeVisible();
   await capture(page, "rd2000-par-moment");
@@ -68,7 +73,7 @@ test("un guitariste n'a ni la ligne ni la page", async ({ page }) => {
 
 test("tous les sons : ★★★ d'abord, « Tous » donne le catalogue, la recherche porte sur tout", async ({ page }) => {
   await entrer(page, JO, "/harmonie/rd2000");
-  await page.getByRole("button", { name: "Tous les sons" }).click();
+  await page.getByRole("tab", { name: "Tous les sons" }).click();
   await expect(page.locator("[data-vue=sons] [data-son]")).toHaveCount(ESSENTIELS);
   await page.getByRole("button", { name: "Tous", exact: true }).click();
   await expect(page.locator("[data-vue=sons] [data-son]")).toHaveCount(DONNEES.sons.length);
@@ -87,7 +92,7 @@ test("tous les sons : ★★★ d'abord, « Tous » donne le catalogue, la reche
 
 test("premier choix : un badge sur la ligne et sur la page du son, plus d'étoile dans le commentaire", async ({ page }) => {
   await entrer(page, JO, "/harmonie/rd2000");
-  await page.getByRole("button", { name: "Tous les sons" }).click();
+  await page.getByRole("tab", { name: "Tous les sons" }).click();
   const ligne = (n: string) => page.locator("[data-vue=sons] a", { has: page.locator(`[data-son="${n}"]`) });
   await expect(ligne("S01").getByText("Premier choix", { exact: true })).toBeVisible();
   await expect(ligne("0019").getByText("Premier choix", { exact: true }), "un ★★★ sans la marque").toHaveCount(0);
@@ -101,7 +106,8 @@ test("premier choix : un badge sur la ligne et sur la page du son, plus d'étoil
 test("la page d'un ★★★ : sa fiche de réglages, un titre par écran, et le MIDI", async ({ page }) => {
   const fiche = DONNEES.fiches.find((f) => f.n === "S01")!;
   await entrer(page, JO, "/harmonie/rd2000/S01");
-  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Stage Grand");
+  // h1 seul (téléphone, tablette portrait), h2 sous l'en-tête « Harmonie » en deux volets (agencement v18, R3).
+  await expect(page.locator('[data-son-page="S01"] header').getByRole("heading")).toHaveText("Stage Grand");
   await expect(page.locator("[data-reglage]")).toHaveCount(fiche.reglages.length);
   const ecrans = fiche.reglages.map((r) => r.ecran).filter((e, i, a) => a.indexOf(e) === i);
   await expect(page.locator("[data-reglages] h2")).toHaveText(ecrans);
@@ -125,7 +131,7 @@ test("un son sans fiche renvoie aux recettes ; une recette montre ses sons d'exe
 
 test("paramètres et mode d'emploi : tous les paramètres, sans les lignes propres au tableur", async ({ page }) => {
   await entrer(page, JO, "/harmonie/rd2000");
-  await page.getByRole("button", { name: "Paramètres" }).click();
+  await page.getByRole("tab", { name: "Paramètres" }).click();
   await expect(page.locator("[data-parametre]")).toHaveCount(DONNEES.parametres.length);
   await page.getByRole("button", { name: "Mode d'emploi" }).click();
   await expect(page.locator("[data-vue=legende]")).toBeVisible();
@@ -135,6 +141,6 @@ test("paramètres et mode d'emploi : tous les paramètres, sans les lignes propr
 test("interface 中文 : libellés chinois, et le contenu est annoncé en français", async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
   await entrer(page, JO, "/harmonie/rd2000");
-  await expect(page.getByRole("button", { name: "按环节" })).toBeVisible();
+  await expect(page.getByRole("tab", { name: "按环节" })).toBeVisible();
   await expect(page.getByText("内容为法文。").first()).toBeVisible();
 });

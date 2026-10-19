@@ -10,40 +10,46 @@ import { getPdfStylePref, setPdfStylePref, type PdfStyle } from "@/lib/pdfStyleP
 
 /** Fenêtre « Quel PDF ? » (lot 5, docs/spec-export-pdf.md) : deux choix pour
  *  un chant, trois pour une setlist ; le dernier choix de l'appareil revient
- *  présélectionné. `onDownload` génère le fichier ; la fenêtre se ferme après. */
+ *  présélectionné. `onDownload` génère le fichier ; la fenêtre se ferme après.
+ *  `onListe` (setlist en deux volets, docs/spec-deux-volets.md, Q8) : le PDF
+ *  liste en plus, puisqu'il n'y a plus de vue liste pour le télécharger. */
 export function PdfChoiceSheet({
   open,
   onClose,
   forSetlist,
   onDownload,
+  onListe,
 }: {
   open: boolean;
   onClose: () => void;
   forSetlist: boolean;
   onDownload: (style: PdfStyle) => Promise<void>;
+  onListe?: () => Promise<void>;
 }) {
   useStandaloneScrollLock(open);
   return (
     <Drawer open={open} onOpenChange={(o) => !o && onClose()}>
       <DrawerContent className="md:max-w-md md:mx-auto" aria-describedby={undefined}>
         {/* Monté à l'ouverture : la préférence est relue à chaque fois. */}
-        {open && <Choices forSetlist={forSetlist} onClose={onClose} onDownload={onDownload} />}
+        {open && <Choices forSetlist={forSetlist} onClose={onClose} onDownload={onDownload} onListe={onListe} />}
       </DrawerContent>
     </Drawer>
   );
 }
 
-function Choices({ forSetlist, onClose, onDownload }: Omit<Parameters<typeof PdfChoiceSheet>[0], "open">) {
+function Choices({ forSetlist, onClose, onDownload, onListe }: Omit<Parameters<typeof PdfChoiceSheet>[0], "open">) {
   const { t } = useTranslation();
-  const [style, setStyle] = useState<PdfStyle>(() => getPdfStylePref(forSetlist));
+  const [style, setStyle] = useState<PdfStyle | "liste">(() => getPdfStylePref(forSetlist));
   const [busy, setBusy] = useState(false);
-  const styles: PdfStyle[] = forSetlist ? ["classic", "colors", "compact"] : ["classic", "colors"];
+  const styles: (PdfStyle | "liste")[] = forSetlist ? ["classic", "colors", "compact"] : ["classic", "colors"];
+  if (onListe) styles.push("liste");
 
   async function download() {
     setBusy(true);
-    setPdfStylePref(style);
+    // La liste n'est pas une mise en page de partition : elle n'est pas retenue.
+    if (style !== "liste") setPdfStylePref(style);
     try {
-      await onDownload(style);
+      await (style === "liste" ? onListe?.() : onDownload(style));
       onClose();
     } finally {
       setBusy(false);

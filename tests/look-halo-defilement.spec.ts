@@ -9,7 +9,7 @@ test.use({ launchOptions: { ignoreDefaultArgs: ["--hide-scrollbars"] } });
 
 for (const chemin of ["/songs", "/songs/beni-soit-ton-nom"]) {
   test(`ordinateur, barre de défilement classique : ${chemin} ne s'élargit pas`, async ({ page }) => {
-    test.skip(test.info().project.name !== "ordinateur", "propre à l'ordinateur");
+    test.skip(!test.info().project.name.startsWith("ordinateur"), "propre à l'ordinateur (1 280 et 1 440 px, lot U4)");
     await page.goto(chemin);
     await page.getByTestId("halo").waitFor();
     await page.addStyleTag({ content: "html{overflow-y:scroll}::-webkit-scrollbar{width:15px}" });

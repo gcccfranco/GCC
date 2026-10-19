@@ -28,9 +28,11 @@ async function ouvrirChant(page: Page, qui: FakeProfile, docs: Record<string, Re
   return signInAs(page, qui, docs, "/songs/hosanna");
 }
 
+/** « Idées d'harmonie » est un bouton de la barre : au bout de la rangée dès la tablette debout,
+ *  sur la seconde rangée du téléphone (docs/spec-barre-chant.md, Q2, Q5). */
 async function ouvrirLaFeuille(page: Page) {
-  await page.getByRole("button", { name: /Plus d'actions|More actions|更多操作/ }).click();
-  await page.getByRole("menuitem", { name: "Idées d'harmonie" }).click();
+  // Le bouton arrive avec le profil (accès à l'Harmonie) : `click` l'attend.
+  await page.getByTestId("barre-outils").getByRole("button", { name: "Idées d'harmonie" }).click();
   await expect(page.locator("[data-idees-harmonie]")).toBeVisible();
 }
 
@@ -80,7 +82,7 @@ test("une idée de l'équipe s'ajoute, avec l'instrument de son auteur", async (
   await page.getByLabel("Avant (accords)").fill("G");
   await page.getByLabel("Après (accords)").fill("Gmaj7");
   await page.getByRole("button", { name: "Enregistrer" }).click();
-  await expect(page.getByText("Pont : tenir le 4 deux mesures")).toBeVisible();
+  await expect(page.locator("[data-idee]").getByText("Pont : tenir le 4 deux mesures")).toBeVisible();
   const ecrit = db.writes.find((w) => w.path.startsWith("harmonie/hosanna/idees/"));
   expect(ecrit!.data.texte).toBe("Pont : tenir le 4 deux mesures");
   expect(ecrit!.data.instrument, "Jo est au piano").toBe("piano");
@@ -101,7 +103,9 @@ test("une idée écrite dans une autre tonalité se range dans celle du chant", 
   // Attendre que l'idée s'affiche avant de lire les écritures : sans cela le
   // test lisait db.writes avant que l'enregistrement soit parti (rouge au
   // hasard selon l'appareil, sous charge).
-  await expect(page.getByText("Refrain : ouvrir l'accord")).toBeVisible();
+  // L'idée enregistrée (`[data-idee]`, après l'écriture et la relecture) — le texte seul pouvait
+  // se trouver ailleurs à l'écran avant l'envoi (rouge au hasard, 18/10/2026).
+  await expect(page.locator("[data-idee]").getByText("Refrain : ouvrir l'accord")).toBeVisible();
 
   const ecrit = db.writes.find((w) => w.path.startsWith("harmonie/hosanna/idees/"))!;
   expect(ecrit.data.avant, "rangée dans la tonalité du chant").toBe("G");
@@ -120,7 +124,8 @@ test("une idée déjà écrite est lisible, avec « nouveau » la première fois
   await ouvrirLaFeuille(page);
   await expect(page.getByText("Refrain : capo 2, formes de C")).toBeVisible();
   await expect(page.getByText("Éloïse M. · Guitare")).toBeVisible();
-  await expect(page.getByText("nouveau")).toBeVisible();
+  // Dans la feuille : en deux volets, la liste des chants à côté a ses « … nouveau » (lot U5).
+  await expect(page.locator("[data-idees-harmonie]").getByText("nouveau", { exact: true })).toBeVisible();
   await expect(page.locator("[data-idee='i1']").getByRole("button", { name: "Modifier" }), "on ne modifie pas l'idée d'un autre").toHaveCount(0);
 });
 
@@ -140,6 +145,7 @@ test("un batteur n'a pas l'entrée « Idées d'harmonie »", async ({ page }) =>
   await ouvrirChant(page, YIYI);
   await page.getByRole("button", { name: /Plus d'actions|More actions|更多操作/ }).click();
   await expect(page.getByRole("menuitem", { name: "Idées d'harmonie" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Idées d'harmonie" })).toHaveCount(0);
 });
 
 // Retour du 01/10/2026 : une idée sans remplacement d'accords (« Le tag : répéter

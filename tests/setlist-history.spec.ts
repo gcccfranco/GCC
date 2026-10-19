@@ -1,6 +1,8 @@
 import { readFileSync } from "node:fs";
 import { expect, test, type Page } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
+import { attendreEditeur, champNoteDuChant, champNotes, champPresidence, choisirTonalite, fermerFeuille, ligneSection, reglerElement, retirerChant, retirerSection } from "./helpers/editeurSetlist";
+import { ouvrirPartitions } from "./helpers/setlist";
 
 // Chantier Setlist, lot 2 (docs/spec-setlist.md) : historique des
 // modifications, une entrée par passage, lu depuis la page de la setlist.
@@ -34,7 +36,8 @@ const SETLIST = {
   date: "2026-09-21",
   language: "mixed",
   notes: "",
-  ownerId: "uid-owner",
+  // SC1 (docs/spec-createur-corbeille-absences.md) : seul le créateur modifie — la setlist est la sienne.
+  ownerId: "uid-musicien",
   isPrivate: false,
   items: [
     item({ songSlug: "abba-pere", position: 1 }),
@@ -65,12 +68,13 @@ async function openEditor(page: Page, extraDocs: Record<string, Record<string, u
     { [`setlists/${SETLIST_ID}`]: SETLIST, ...extraDocs },
     `/setlists/${SETLIST_ID}/edit`,
   );
-  await expect(page.getByLabel("Tonalité de Abba Père")).toBeVisible();
+  await attendreEditeur(page, "Abba Père");
   return db;
 }
 
 async function finishAndOpenHistory(page: Page) {
   await expect(page.getByText("Enregistré", { exact: true })).toBeVisible({ timeout: 8_000 });
+  await fermerFeuille(page);
   await page.getByRole("button", { name: "Terminé" }).click();
   await page.waitForURL((u) => u.pathname.replace(/\/$/, "") === `/setlists/${SETLIST_ID}`);
   await page.getByRole("button", { name: /Modifiée par Ruth K\./ }).click();
@@ -79,8 +83,9 @@ async function finishAndOpenHistory(page: Page) {
 
 test("après une retouche, la setlist dit qui l'a modifiée et quoi (FR + 中文 dans la setlist)", async ({ page }) => {
   await openEditor(page);
-  await page.getByLabel("Tonalité de Abba Père").selectOption("B");
-  await page.getByLabel("Tonalité de 一生爱你").selectOption("F");
+  await choisirTonalite(page, "Abba Père", "B");
+  await choisirTonalite(page, "一生爱你", "F");
+  await fermerFeuille(page);
   await page.getByLabel("Titre").fill("Culte du 21 septembre (révisé)");
 
   const sheet = await finishAndOpenHistory(page);
@@ -94,7 +99,7 @@ test("une retouche moins de 15 min après la précédente rejoint la même entr�
   await openEditor(page, {
     [`setlists/${SETLIST_ID}/history/avant`]: entry("uid-musicien", "Ruth K.", minutesAgo(5), [{ kind: "notes" }]),
   });
-  await page.getByLabel("Tonalité de Abba Père").selectOption("B");
+  await choisirTonalite(page, "Abba Père", "B");
 
   const sheet = await finishAndOpenHistory(page);
   await expect(sheet.getByRole("article")).toHaveCount(1);
@@ -107,7 +112,7 @@ test("une retouche plus de 15 min après la précédente ouvre une nouvelle entr
   await openEditor(page, {
     [`setlists/${SETLIST_ID}/history/avant`]: entry("uid-musicien", "Ruth K.", minutesAgo(20), [{ kind: "notes" }]),
   });
-  await page.getByLabel("Tonalité de Abba Père").selectOption("B");
+  await choisirTonalite(page, "Abba Père", "B");
 
   const sheet = await finishAndOpenHistory(page);
   await sheet.getByRole("button", { name: "Voir plus" }).click();
@@ -118,10 +123,10 @@ test("une retouche plus de 15 min après la précédente ouvre une nouvelle entr
 
 test("une modification annulée dans le même passage ne laisse pas de phrase", async ({ page }) => {
   await openEditor(page);
-  await page.getByLabel("Tonalité de Abba Père").selectOption("B");
+  await choisirTonalite(page, "Abba Père", "B");
   await expect(page.getByText("Enregistré", { exact: true })).toBeVisible({ timeout: 8_000 });
-  await page.getByLabel("Tonalité de 一生爱你").selectOption("F");
-  await page.getByLabel("Tonalité de Abba Père").selectOption("");
+  await choisirTonalite(page, "一生爱你", "F");
+  await choisirTonalite(page, "Abba Père", null);
 
   const sheet = await finishAndOpenHistory(page);
   await expect(sheet.getByText("Tonalité de 一生爱你 : E → F")).toBeVisible();
@@ -165,10 +170,10 @@ test("en 中文, la ligne et les phrases sont traduites", async ({ page }) => {
 
 test("publier une nouvelle setlist écrit « A créé la setlist »", async ({ page }) => {
   await emptyPlanning(page);
-  await signInAs(page, MUSICIEN, {}, "/setlists/new");
+  await signInAs(page, MUSICIEN, {}, "/setlists/new?autre=1");
   await page.getByLabel("Titre").fill("Culte du 28 septembre");
   await page.getByLabel("Catégorie").selectOption("Culte Francophone");
-  await page.getByLabel("Présidence *", { exact: true }).selectOption("__other__");
+  await champPresidence(page).selectOption("__other__");
   await page.getByPlaceholder("ex. Timothée").fill("Jonathan Z.");
   await page.getByRole("button", { name: "Publier" }).click();
   await page.waitForURL(/\/setlists\/fake-/);
@@ -184,7 +189,7 @@ test("si l'historique est refusé, la setlist est quand même enregistrée", asy
       ? route.fallback()
       : route.fulfill({ status: 403, contentType: "application/json", body: '{"error":{"code":403}}' }),
   );
-  await page.getByLabel("Tonalité de Abba Père").selectOption("B");
+  await choisirTonalite(page, "Abba Père", "B");
   await expect
     .poll(() => (db.doc(`setlists/${SETLIST_ID}`)?.items as { keyOverride: string | null }[])[0].keyOverride)
     .toBe("B");
@@ -198,7 +203,7 @@ test("rétablir l'original d'un chant adapté (vue partitions) s'écrit dans l'h
     item({ songSlug: "一生爱你", position: 2 }),
   ] };
   await signInAs(page, MUSICIEN, { [`setlists/${SETLIST_ID}`]: adapted }, `/setlists/${SETLIST_ID}`);
-  await page.getByRole("button", { name: "Partitions" }).click();
+  await ouvrirPartitions(page);
   await page.getByRole("button", { name: "Adapter" }).click();
   await page.getByRole("button", { name: "Rétablir l'original" }).click();
   await page.getByRole("button", { name: "Rétablir", exact: true }).click();
@@ -209,7 +214,7 @@ test("rétablir l'original d'un chant adapté (vue partitions) s'écrit dans l'h
 test("vue partitions : adapter une ligne puis rétablir l'original ne laisse pas de phrase", async ({ page }) => {
   const db = await signInAs(page, MUSICIEN, { [`setlists/${SETLIST_ID}`]: { ...SETLIST, ownerId: MUSICIEN.uid } }, `/setlists/${SETLIST_ID}`);
   const phrases = () => db.list(`setlists/${SETLIST_ID}/history`).map((p) => (db.doc(p)?.changes as unknown[]).length);
-  await page.getByRole("button", { name: "Partitions" }).click();
+  await ouvrirPartitions(page);
   await page.getByRole("button", { name: "Adapter" }).click();
   await page.getByRole("button").filter({ hasText: "planait" }).first().click();
   await page.getByRole("button", { name: "Supprimer la ligne" }).click();
@@ -231,10 +236,10 @@ test("éditeur resté ouvert : une retouche 20 min après la précédente ouvre 
   await openEditor(page);
   const start = Date.now();
   await page.clock.setFixedTime(start);
-  await page.getByLabel("Tonalité de Abba Père").selectOption("B");
+  await choisirTonalite(page, "Abba Père", "B");
   await expect(page.getByText("Enregistré", { exact: true })).toBeVisible({ timeout: 8_000 });
   await page.clock.setFixedTime(start + 20 * 60_000);
-  await page.getByLabel("Tonalité de 一生爱你").selectOption("F");
+  await choisirTonalite(page, "一生爱你", "F");
 
   const sheet = await finishAndOpenHistory(page);
   await sheet.getByRole("button", { name: "Voir plus" }).click();
@@ -245,18 +250,14 @@ test("éditeur resté ouvert : une retouche 20 min après la précédente ouvre 
 
 // ─── Avant / après (docs/spec-historique-avant-apres.md) ─────────────────────
 
-/** Ligne d'une section dans l'éditeur de structure. */
-const sectionRow = (page: Page, name: string) =>
-  page.locator("div.rounded.border.text-xs").filter({ hasText: new RegExp(`^\\s*${name}\\s*$`) });
-
 /** Phrase d'un changement dans la feuille (l'élément de liste qui la porte). */
 const changeItem = (sheet: ReturnType<Page["getByRole"]>, phrase: string) =>
   sheet.locator("article > ul > li").filter({ hasText: phrase });
 
 test("H1 — structure : la section retirée et la section ajoutée se voient avant / après", async ({ page }) => {
   await openEditor(page);
-  await page.getByRole("button", { name: "Structure", exact: true }).first().click();
-  await sectionRow(page, "Pont").getByRole("button").last().click();
+  await reglerElement(page, "Abba Père");
+  await retirerSection(page, "Pont");
   await page.getByRole("button", { name: "Refrain", exact: true }).click();
 
   const sheet = await finishAndOpenHistory(page);
@@ -268,11 +269,11 @@ test("H1 — structure : la section retirée et la section ajoutée se voient av
 
 test("H1 — structure retouchée puis remise comme avant : pas de phrase de structure", async ({ page }) => {
   await openEditor(page);
-  await page.getByRole("button", { name: "Structure", exact: true }).first().click();
-  await sectionRow(page, "Pont").getByRole("button").last().click();
+  await reglerElement(page, "Abba Père");
+  await retirerSection(page, "Pont");
   await expect(page.getByText("Enregistré", { exact: true })).toBeVisible({ timeout: 8_000 });
   await page.getByRole("button", { name: "Pont", exact: true }).click();
-  await page.getByLabel("Tonalité de Abba Père").selectOption("B");
+  await choisirTonalite(page, "Abba Père", "B");
 
   const sheet = await finishAndOpenHistory(page);
   await expect(sheet.getByText("Tonalité de Abba Père : A → B")).toBeVisible();
@@ -293,7 +294,7 @@ test("H1 — deux retouches à moins de 15 min : l'avant de la première, l'apr�
       { kind: "structure", song: "abba-pere", from: ["I", "C1", "R", "Pm", "C2", "P"], to: ["I", "C1", "R", "Pm", "C2"] },
     ]),
   });
-  await page.getByRole("button", { name: /^Structure/ }).first().click();
+  await reglerElement(page, "Abba Père");
   await page.getByRole("button", { name: "Refrain", exact: true }).click();
 
   const sheet = await finishAndOpenHistory(page);
@@ -355,8 +356,7 @@ test("H1 — en 中文, avant / après traduits", async ({ page }) => {
 
 test("H2 — chant retiré : « Voir avant / après » montre la liste des chants", async ({ page }) => {
   await openEditor(page);
-  const row = page.locator("div.flex.items-start.gap-2.p-3").filter({ has: page.getByLabel("Tonalité de 一生爱你") });
-  await row.getByRole("button").last().click();
+  await retirerChant(page, "一生爱你");
 
   const sheet = await finishAndOpenHistory(page);
   await expect(sheet.getByText("A retiré 一生爱你")).toBeVisible();
@@ -399,7 +399,7 @@ test("H2 — chant déplacé, fusion ajoutée ; deux colonnes sauf sur télépho
 
 test("H3 — notes de la setlist : mots ajoutés et retirés, ponctuation à part", async ({ page }) => {
   await openEditor(page, { [`setlists/${SETLIST_ID}`]: { ...SETLIST, notes: "Prier avant le culte, puis annonces" } });
-  await page.getByLabel("Notes (optionnel)").fill("Prier longtemps avant le culte");
+  await champNotes(page).fill("Prier longtemps avant le culte");
 
   const sheet = await finishAndOpenHistory(page);
   const change = changeItem(sheet, "Notes de la setlist modifiées");
@@ -412,7 +412,7 @@ test("H3 — note d'un chant en 中文 : caractère par caractère", async ({ pa
   await openEditor(page, {
     [`setlists/${SETLIST_ID}`]: { ...SETLIST, items: [SETLIST.items[0], { ...SETLIST.items[1], notes: "慢一点" }] },
   });
-  await page.getByPlaceholder("Note (optionnel)…").nth(1).fill("慢一点再唱");
+  await (await champNoteDuChant(page, "一生爱你")).fill("慢一点再唱");
 
   const sheet = await finishAndOpenHistory(page);
   const change = changeItem(sheet, "Note de 一生爱你 modifiée");
@@ -457,8 +457,8 @@ test("H3 — notes de section par section ; une ancienne entrée garde sa phrase
 
 test("H3 — note de section écrite dans l'éditeur : nommée par son abréviation", async ({ page }) => {
   await openEditor(page);
-  await page.getByRole("button", { name: "Structure", exact: true }).first().click();
-  await sectionRow(page, "Refrain").getByTitle("Note").click();
+  await reglerElement(page, "Abba Père");
+  await ligneSection(page, "Refrain").getByTitle("Note").click();
   // Le champ de la note de section prend le focus à l'ouverture.
   await page.keyboard.type("Tout doux");
 
@@ -480,7 +480,7 @@ test("H1 — mode Adapter, copie d'une section répétée : pas de phrase de str
     ],
   };
   const db = await signInAs(page, MUSICIEN, { [`setlists/${SETLIST_ID}`]: repeated }, `/setlists/${SETLIST_ID}`);
-  await page.getByRole("button", { name: "Partitions" }).click();
+  await ouvrirPartitions(page);
   await page.getByRole("button", { name: "Adapter" }).click();
   // Ligne du 2e Couplet 1 : l'édition matérialise une copie de la section.
   await page.getByRole("button").filter({ hasText: "planait" }).last().click();
@@ -519,6 +519,8 @@ const FUSION = {
 async function openFusionEditor(page: Page) {
   await emptyPlanning(page);
   await signInAs(page, MUSICIEN, { [`setlists/${SETLIST_ID}`]: FUSION }, `/setlists/${SETLIST_ID}/edit`);
+  await attendreEditeur(page, "Abba Père / 一生爱你");
+  await reglerElement(page, "Abba Père / 一生爱你");
 }
 
 test("Fusion — note et transition du mélange : leurs phrases, sans « Structure … modifiée »", async ({ page }) => {

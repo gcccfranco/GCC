@@ -134,7 +134,11 @@ test.describe("partition 简谱", () => {
     test(`${slug} — calque complet, donc pas de bandeau d'avertissement`, async ({ page }) => {
       await openSheet(page, slug, { key: target });
       await expect(page.getByText(/ont été transposés/)).toHaveCount(0);
-      await expect(page.getByText(/ne suivent pas la transposition/)).toHaveCount(0);
+      // Seul message admis : celui d'une page suivante sans calque (K4, 为我而来 p. 2), jamais sur la page 1.
+      await expect(page.locator('[data-jianpu-accords-origine="0"]')).toHaveCount(0);
+      await expect(page.getByText(/ne suivent pas la transposition/)).toHaveCount(
+        await page.locator("[data-jianpu-accords-origine]").count()
+      );
     });
   }
 

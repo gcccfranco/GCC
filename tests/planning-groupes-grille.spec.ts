@@ -1,12 +1,13 @@
 import { expect, test, type Page } from "@playwright/test";
 import { readFileSync } from "node:fs";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
+import { lirePdf } from "./helpers/pdf";
 import { GRILLES, grilleDe } from "../src/lib/planning/grilles";
 import { PLANNINGS_APP } from "../src/lib/planning/grille";
 
 // Lot 17, tranche G6 (Timothée, 19/09/2026 : « pouvoir modifier tous les
-// plannings sur le site ») : les grilles simples — les trois groupes, les
-// musiciens de Fidélité, Intergroupe et Interfranco — se remplissent dans
+// plannings sur le site ») : les grilles simples — les trois groupes,
+// Intergroupe et Interfranco — se remplissent dans
 // l'app comme le Culte, chacune avec son droit (`plannings` du profil).
 
 const csv = (rows: string[][]) => rows.map((r) => r.map((c) => `"${c}"`).join(",")).join("\n");
@@ -53,7 +54,7 @@ test("toutes les grilles sont définies, à clés uniques, et toutes ont l'app p
   expect(new Set(cles).size).toBe(cles.length);
   expect(cles).toEqual(expect.arrayContaining([
     "culte", "table", "eddZhongban", "eddDaban", "eddGaoban", "campusMatin", "campusSoir",
-    "intergroupe", "interfranco", "paix", "fidelite", "fideliteMusiciens", "bonte",
+    "intergroupe", "interfranco", "paix", "fidelite", "bonte",
   ]));
   expect(PLANNINGS_APP).toEqual(cles);
   for (const g of GRILLES) {
@@ -66,15 +67,14 @@ test("toutes les grilles sont définies, à clés uniques, et toutes ont l'app p
 
 test("groupes : la grille du Groupe Paix, en lecture pour un membre", async ({ page }) => {
   await open(page, MEMBRE, "/planning/groupes");
-  await expect(page.getByTestId("grille-bandeau")).toContainText("Paix");
+  await expect(page.getByRole("tab", { name: "Paix", exact: true })).toHaveAttribute("aria-selected", "true");
   await expect(laCase(page, "2026-09-20", "presidence")).toContainText("Delphine Z.");
   await expect(laCase(page, "2026-09-27", "theme")).toContainText("Nouveau Testament");
   await expect(page.getByRole("button", { name: "Modifier" })).toHaveCount(0);
 });
 
 test("groupes : avec le droit « paix », une case s'écrit ; Fidélité reste en lecture", async ({ page }) => {
-  const db = await open(page, profil(["paix"]), "/planning/groupes");
-  await page.getByRole("button", { name: "Modifier" }).click();
+  const db = await open(page, profil(["paix"]), "/back-office/planning/groupes");
   await laCase(page, "2026-09-20", "theme").getByRole("button").click();
   const champ = laCase(page, "2026-09-20", "theme").getByLabel("Thème", { exact: true });
   await champ.fill("Psaumes");
@@ -87,45 +87,37 @@ test("groupes : avec le droit « paix », une case s'écrit ; Fidélité reste e
   expect(doc.theme).toBe("Psaumes");
   expect(doc.presidence, "les autres cases sont recopiées du Sheet").toBe("Delphine Z.");
 
-  await page.getByRole("button", { name: "Fidélité", exact: true }).click();
+  await page.getByRole("tab", { name: "Fidélité", exact: true }).click();
   await expect(laCase(page, "2026-09-20", "pianiste")).toContainText("Eva C.");
-  await expect(page.getByRole("button", { name: "Modifier" })).toHaveCount(0);
+  await expect(laCase(page, "2026-09-20", "pianiste").getByRole("button"), "Fidélité : en lecture").toHaveCount(0);
 });
 
-test("groupes : les musiciens de Fidélité ont leur propre grille et leur propre droit", async ({ page }) => {
-  const db = await open(page, profil(["fideliteMusiciens"]), "/planning/groupes");
-  await page.getByRole("button", { name: "Fidélité", exact: true }).click();
-  await expect(page.getByRole("button", { name: "Modifier" }), "le planning du groupe n'est pas le sien").toHaveCount(0);
-  await page.getByRole("button", { name: /Planning musiciens/ }).click();
-  await page.getByRole("button", { name: "Modifier" }).click();
-  await laCase(page, "2026-09-20", "guitare").getByRole("button").click();
-  const champ = laCase(page, "2026-09-20", "guitare").getByLabel("Guitare", { exact: true });
-  await champ.fill("Éloïse M.");
-  await champ.press("Enter");
-  await expect(laCase(page, "2026-09-20", "guitare")).toContainText("Éloïse M.");
-  // La case affiche la valeur avant que l'écriture ne parte : on attend « Enregistré ».
-  await expect(page.getByText("Enregistré")).toBeVisible();
-  expect(db.doc("plannings/fideliteMusiciens/dimanches/2026-09-20")?.guitare).toBe("Éloïse M.");
-  expect(db.doc("plannings/fidelite/dimanches/2026-09-20")).toBeUndefined();
-});
+// Lot F (spec-retouches-v18.md, D24) : le planning des musiciens de Fidélité a disparu ; Guitariste
+// et Batterie s'écrivent dans le planning du groupe (tests/planning-fidelite.spec.ts).
 
-test("Intergroupe : se remplit dans l'app et s'exporte en CSV", async ({ page }) => {
-  const db = await open(page, profil(["intergroupe"]), "/planning/intergroupe");
-  await page.getByRole("button", { name: "Modifier" }).click();
+test("Intergroupe : se remplit dans l'app et s'exporte au modèle du Sheet", async ({ page }) => {
+  const db = await open(page, profil(["intergroupe"]), "/back-office/planning/intergroupe");
   await laCase(page, "2026-10-04", "choriste3").getByRole("button").click();
-  const champ = laCase(page, "2026-10-04", "choriste3").getByLabel("Choriste 3", { exact: true });
+  // P9 (lot U2) : « Choisir », puis un nom écrit à la main.
+  await page.getByRole("button", { name: "Écrire un nom sans compte…" }).click();
+  const champ = page.getByRole("textbox", { name: "Choriste 3", exact: true });
   await champ.fill("Daniela W.");
   await champ.press("Enter");
   await expect(laCase(page, "2026-10-04", "choriste3")).toContainText("Daniela W.");
   // La case affiche la valeur avant que l'écriture ne parte : on attend « Enregistré ».
   await expect(page.getByText("Enregistré")).toBeVisible();
   expect(db.doc("plannings/intergroupe/dimanches/2026-10-04")?.choriste3).toBe("Daniela W.");
-  await page.getByRole("button", { name: "Terminé" }).click();
 
+  // Lot U2, P7 : « Exporter (modèle du Sheet) » remplace le CSV du lot 17 (question 6).
+  await page.getByRole("button", { name: "Exporter (modèle du Sheet)" }).click();
+  const fenetre = page.getByRole("dialog", { name: "Exporter" });
+  await fenetre.getByRole("radio", { name: "Toute l'année · Intergroupe" }).click();
   const [download] = await Promise.all([
-    page.waitForEvent("download"),
-    page.getByRole("button", { name: "Exporter en CSV" }).click(),
+    page.waitForEvent("download", { timeout: 120_000 }),
+    fenetre.getByRole("button", { name: "PDF", exact: true }).click(),
   ]);
-  expect(download.suggestedFilename()).toBe("Intergroupe_2026-10-04_2026-10-04.csv");
-  expect(readFileSync(await download.path(), "utf8")).toContain("04/10,Paul W.,Alice Q.,Inès L.,Daniela W.,Jo M.");
+  expect(download.suggestedFilename()).toBe("Intergroupe_2026.pdf");
+  const lignes = lirePdf(readFileSync(await download.path())).pages[0].lignes;
+  const i = lignes.indexOf("04/10");
+  expect(lignes.slice(i, i + 6)).toEqual(["04/10", "Paul W.", "Alice Q.", "Inès L.", "Daniela W.", "Jo M."]);
 });

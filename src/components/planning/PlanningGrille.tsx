@@ -1,16 +1,34 @@
 "use client"
 
-import { Fragment, useEffect, useMemo, useRef, useState, type ReactNode } from "react"
-import { Download, History, Lock, User, X } from "lucide-react"
+import { Fragment, useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore, type CSSProperties, type MouseEvent, type ReactNode } from "react"
+import { ChevronDown, Copy, History, Lock, Trash2 } from "lucide-react"
 import { useTranslation } from "react-i18next"
-import { currentSundayStr, fdLongL, fdShort, getMois, moisName } from "@/lib/planning/utils"
-import type { ColonneGrille, DefinitionGrille, LigneGrille } from "@/lib/planning/grilles"
+import { useConfirmer } from "@/components/layout/Confirmer"
+import { MenuActions } from "@/components/layout/MenuActions"
+import { currentSundayStr, fdFullL, fdLongL, fdShort, getAnnee, getMois, moisName } from "@/lib/planning/utils"
+import { PREMIERE_ANNEE_APP, type ColonneGrille, type DefinitionGrille, type LigneGrille } from "@/lib/planning/grilles"
 import { phraseDuChangement } from "@/lib/planning/historique"
-import { colonnesExportees, nomFichier, versCSV } from "@/lib/planning/csv"
-import { ecrireCase } from "@/lib/firebase/planningGrille"
-import { getHistoriqueGrille, noterChangement, type EntreeGrille } from "@/lib/firebase/planningHistorique"
+import { ecrireCases, retirerDate } from "@/lib/firebase/planningGrille"
+import { getHistoriqueGrille, noterChangements, type EntreeGrille } from "@/lib/firebase/planningHistorique"
 import { historyAuthor } from "@/lib/firebase/setlistHistory"
 import { useProfile } from "@/lib/firebase/users"
+import { colonneDePersonnes, periodeAbsence, propositions, propositionsReliees, type CompteDuPlanning } from "@/lib/planning/choisir"
+import type { Absence } from "@/types/absence"
+import { roleDeColonne } from "@/lib/groupes/organigramme"
+import { groupeDef } from "@/lib/groupes/table"
+import type { OrganigrammeGroupe } from "@/types/groupe"
+import { Link2 } from "lucide-react"
+import { normalizeName, splitNames } from "@/lib/planning/names"
+import { canRetirerDate } from "@/lib/access"
+import { ExportModele, type ExportPlanning } from "./ExportModele"
+import { ChoisirNom, useOrdinateur } from "./ChoisirNom"
+import { DansLEnTete, type FiltreNom } from "./BarreDeGrille"
+import { useGestionPlanning } from "@/lib/planning/gestion"
+import { colonnesACopier, datesApres, enTexteTabule, lignePrecedente, lireCollage, parDimanche, planCollage, planCopie, planRemplir, type CaseGeste } from "@/lib/planning/gestes"
+import { BanniereGeste, BarreCollage, BarreSelection } from "./BanniereGeste"
+import { useClavier, useSelectionGrille, type Poignees } from "./useSelectionGrille"
+import { FenetreCopie, type DemandeCopie } from "./FenetreCopie"
+import { PrevenirChangements, usePrevenir, type PrevenirProp } from "./PrevenirChangements"
 
 // Grille d'un planning rempli dans l'app (lot 17, docs/spec-planning-grille.md).
 // Table sur ordinateur et tablette — colonne des dates FIGÉE au défilement
@@ -28,17 +46,65 @@ export interface PlanningGrilleProps {
   definition: DefinitionGrille
   /** Lignes déjà filtrées par la publication (lignesPubliees). */
   lignes: LigneGrille[]
-  /** La personne peut-elle remplir les cases ? (canEditPlanning) */
+  /** La personne peut-elle remplir les cases ? (canEditPlanning, au Back-Office seulement :
+   *  lot U6, B2, Q14). Si oui, la grille s'ouvre directement en modification. */
   peutModifier: boolean
   /** Dimanches déjà écrits dans la grille de l'app — les autres viennent du Sheet. */
   datesDansLApp: readonly string[]
-  /** Noms de planning des comptes, pour l'autocomplétion (D12). */
-  nomsDesComptes: readonly string[]
+  /** Les comptes, pour « Choisir » (lot U2, P9 ; remplace l'autocomplétion D12). */
+  comptes: readonly CompteDuPlanning[]
+  /** SC3 (congés et absences) : l'absence d'un nom de planning à une date, pour qui fait les plannings ; absent, « Choisir » et les cases ne changent pas. */
+  absenceDe?: (nom: string, date: string) => Absence | null
+  /** Lot 2 (OG-F) : l'organigramme du groupe dont c'est le planning (page des groupes, Back-Office) : « Choisir » propose d'abord les titulaires du rôle relié à la colonne (OG29), et l'en-tête d'une colonne reliée porte l'icône de lien (OG31). */
+  groupe?: OrganigrammeGroupe
   /** Badge optionnel à côté de la date (Sainte Cène), comme PlanningTable. */
   dateBadge?: (row: string[], allRows: string[][]) => ReactNode
-  /** Période affichée, écrite dans le bandeau (le trimestre choisi par la page). */
+  /** Période affichée (le trimestre choisi par la page), reprise par l'export. */
   periode: string
+  /** « Mon prénom » et « Mes dates », tenus par la page et affichés dans la rangée de la grille
+   *  (`BarreDeGrille`, agencement v18) : deux grilles d'une page (Campus) suivent le même. */
+  filtre: FiltreNom
+  /** Le nom de la grille quand la page en montre plusieurs (Campus : Matin, Soir). */
+  legende?: string
+  /** Lot U2 (Q5) : date → service (Interfranco, Intergroupe) qui tient ce
+   *  dimanche, tiré de sa grille (`dimanchesSpeciaux`). La présidence affiche ce
+   *  nom, non modifiable, et l'export le porte ; il n'est jamais recopié dans le
+   *  document du groupe. */
+  dimanchesSpeciaux?: Readonly<Record<string, string>>
+  /** Lot U2, P7 : « Exporter (modèle du Sheet) », pour les responsables du
+   *  planning (qui remplit, qui publie) et les admins (Q13) ; absent = pas d'export. */
+  exporter?: ExportPlanning
+  /** Texte d'une période sans ligne (« Aucun dimanche posé pour 2027. ») ;
+   *  absent : « Planning à venir ». */
+  vide?: string
+  /** Lot U2 (Q10) : planning à dates choisies (Interfranco, Intergroupe,
+   *  Campus). En modification, une date de l'année de l'app se retire, après
+   *  confirmation (canRetirerDate) ; la page relit alors ses lignes. */
+  retrait?: { libelle: string; onRetire: () => void }
+  /** Lot 3 (PG10) : toutes les lignes du planning, toutes années, d'où se tire « le dimanche
+   *  précédent » ; absent : les seules lignes affichées. */
+  lignesDuPlanning?: readonly string[][]
+  /** Lot 3 (PG33 à PG47) : le trimestre affiché est publié et la personne peut prévenir des changements
+   *  (`peutPrevenir`, pas `peutModifier`) : bannière, points et feuille. Absent : rien de tout cela. */
+  prevenir?: PrevenirProp
+  /** Les cases écrites dans l'app (`date|clé`, `useGrilleApp`) : seules celles-ci peuvent être « changées » (PG38). */
+  casesEcrites?: ReadonlySet<string>
 }
+
+const AVEC_SURVOL = "(hover: hover)"
+const suivreSurvol = (rappel: () => void) => {
+  const mq = window.matchMedia(AVEC_SURVOL)
+  mq.addEventListener("change", rappel)
+  return () => mq.removeEventListener("change", rappel)
+}
+/** Le pointeur peut-il survoler ? Oui : la pastille « Copier le … » ; non : le « ⋯ » du dimanche. */
+const useSurvol = () => useSyncExternalStore(suivreSurvol, () => window.matchMedia(AVEC_SURVOL).matches, () => false)
+
+/** Ce que le dernier geste a fait (PG6) : sa phrase, ses notes, et les cases à remettre (Annuler). */
+type DernierGeste = { texte: string; notes: string[]; cases: CaseGeste[]; sansCompte?: string[] }
+
+/** Un collage qui remplace des noms, en attente de « Coller » (PG29) : rien n'est encore écrit. */
+type Collage = { cases: CaseGeste[]; remplace: number; notes: string[] }
 
 
 export function PlanningGrille({
@@ -46,54 +112,102 @@ export function PlanningGrille({
   lignes,
   peutModifier,
   datesDansLApp,
-  nomsDesComptes,
+  comptes,
+  absenceDe,
+  groupe,
   dateBadge,
   periode,
+  filtre,
+  legende,
+  dimanchesSpeciaux,
+  exporter,
+  vide,
+  retrait,
+  lignesDuPlanning,
+  prevenir,
+  casesEcrites,
 }: PlanningGrilleProps) {
   const { t, i18n } = useTranslation()
-  const { profile } = useProfile()
+  const confirmer = useConfirmer()
+  const { user, profile } = useProfile()
   const couleur = definition.couleur
   const sun = currentSundayStr()
+  // Agencement v18 (A2) : dans l'App, la grille en carte, en-tête gris, la couleur du service sur
+  // les dates seulement ; au Back-Office, l'en-tête de couleur de la planche `v18-bo-planning-a`.
+  const app = !useGestionPlanning()
 
-  const [mode, setMode] = useState<"lecture" | "edition">("lecture")
+  // Lot U6, B2 (Q14, question 5 de U2) : plus de bouton « Modifier » ; qui peut remplir
+  // la grille (au Back-Office) l'a directement en modification, les cases « Choisir ».
+  const mode: "lecture" | "edition" = peutModifier ? "edition" : "lecture"
   const [modifs, setModifs] = useState<Record<string, string>>({})
   const [edition, setEdition] = useState<{ date: string; cle: string; valeur: string } | null>(null)
+  // « Choisir » ouvert sur une case de personne (P9) ; la case cliquée pose le menu.
+  const [choix, setChoix] = useState<{ l: LigneGrille; c: ColonneGrille; ancre: DOMRect } | null>(null)
   const [refus, setRefus] = useState<"" | "droitRetire" | "horsLigne">("")
   const [enregistre, setEnregistre] = useState(false)
   const [histoOuvert, setHistoOuvert] = useState(false)
   const [entrees, setEntrees] = useState<EntreeGrille[]>([])
   // Dimanches semés pendant la séance : leur document n'existait pas encore.
   const semes = useRef(new Set<string>())
+  const [geste, setGeste] = useState<DernierGeste | null>(null)
+  // Une écriture de geste est en cours : la grille est inerte (pastille, ⋯, Choisir, clavier) jusqu'à la fin.
+  const [enCours, setEnCours] = useState(false)
+  const enCoursRef = useRef(false)
   const fini = useRef(false)
+  // « Copier le dimanche précédent » (PG13 à PG15) : le dimanche dont l'aperçu est posé, et la fenêtre.
+  const [apercu, setApercu] = useState<string | null>(null)
+  const [fenetreCopie, setFenetreCopie] = useState<DemandeCopie | null>(null)
+  const survol = useSurvol()
+  const [collage, setCollage] = useState<Collage | null>(null)
+  // Un refus qui n'a rien écrit (collage ou ⌫ sans case à écrire) : il se dit, sans toucher à l'« Annuler » du dernier geste.
+  const [avis, setAvis] = useState<string[]>([])
+  const enveloppe = useRef<HTMLDivElement>(null)
+  const poignees = useRef<Poignees>(null as unknown as Poignees)
+  const [posBarre, setPosBarre] = useState<CSSProperties | null>(null)
+  const clavier = useClavier()
 
-  // Prénom mémorisé sur l'appareil, prérempli depuis le profil (PlanningTable).
-  const [nom, setNom] = useState("")
-  const [mesDates, setMesDates] = useState(false)
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem("planningName")
-      if (saved) { setNom(saved); return }
-    } catch { /* stockage indisponible */ }
-    if (profile?.planningName) setNom(profile.planningName)
-  }, [profile])
+  const { mesDates, aUnNom, estMoi } = filtre
 
-  function changerNom(v: string) {
-    setNom(v)
-    try { localStorage.setItem("planningName", v) } catch { /* ignore */ }
-  }
+  // Un autre planning, une autre période : les cases du dernier geste ne sont plus sous les yeux (PG7).
+  useEffect(() => { setGeste(null); setCollage(null); setAvis([]) }, [definition.key, periode])
 
-  const aiguille = nom.trim().toLowerCase()
-  const aUnNom = aiguille.length >= 2
-  const estMoi = (cell: string) => aUnNom && cell.toLowerCase().includes(aiguille)
+  /** La présidence d'un dimanche d'Interfranco ou d'Intergroupe : le nom du service. */
+  const imposee = (date: string, c: ColonneGrille) =>
+    c.cle === "presidence" ? dimanchesSpeciaux?.[date] : undefined
 
   const valeur = (date: string, c: ColonneGrille, row: string[]) =>
-    modifs[`${date}|${c.cle}`] ?? row[c.index] ?? ""
+    imposee(date, c) ?? modifs[`${date}|${c.cle}`] ?? row[c.index] ?? ""
 
   /** La ligne telle qu'elle est affichée (modifications locales comprises). */
   const ligneAffichee = (l: LigneGrille) => {
     const row = [...l.row]
     for (const c of definition.colonnes) row[c.index] = valeur(l.row[0], c, l.row)
     return row
+  }
+
+  /** La ligne à recopier (« semer ») : l'affichée, sauf une présidence imposée,
+   *  qui reste celle du groupe — la marque n'entre jamais dans son document. */
+  const ligneASemer = (l: LigneGrille) => {
+    const row = ligneAffichee(l)
+    for (const c of definition.colonnes) if (imposee(l.row[0], c)) row[c.index] = l.row[c.index] ?? ""
+    return row
+  }
+
+  /** Toutes les lignes du planning par date : les lignes affichées l'emportent sur celles de la page. */
+  const lignesParDate = new Map<string, string[]>()
+  for (const row of lignesDuPlanning ?? []) lignesParDate.set(row[0], row)
+  for (const l of lignes) lignesParDate.set(l.row[0], l.row)
+  const datesDuPlanning = [...lignesParDate.keys()].sort()
+
+  /** La valeur affichée d'une case, par date et clé de colonne (gestes, PG3). */
+  const lireCase = (date: string, cle: string) => {
+    const c = definition.colonnes.find((x) => x.cle === cle)
+    return c ? valeur(date, c, lignesParDate.get(date) ?? []) : ""
+  }
+  /** Une case qu'un geste n'écrit jamais : présidence imposée, colonne en lecture seule (PG2). */
+  const verrou = (date: string, cle: string) => {
+    const c = definition.colonnes.find((x) => x.cle === cle)
+    return !c || !!c.lectureSeule || !!imposee(date, c)
   }
 
   // La page donne les lignes du trimestre choisi (demande de Timothée du
@@ -113,22 +227,163 @@ export function PlanningGrille({
       mode === "edition" ||
       dansLaFenetre.some((l) => valeur(l.row[0], c, l.row).trim())
   )
-  const largeurMin = 104 + 96 * colonnes.length
-  const listeId = `noms-${definition.key}`
 
-  const noms = useMemo(() => {
-    const vus = new Set<string>()
-    for (const l of lignes) {
-      for (const c of definition.colonnes) {
-        for (const part of (l.row[c.index] ?? "").split(/[,;/]/)) {
-          const n = part.trim()
-          if (n.length > 1 && !/\d/.test(n)) vus.add(n)
-        }
-      }
-    }
-    for (const n of nomsDesComptes) if (n.trim()) vus.add(n.trim())
-    return [...vus].sort((a, b) => a.localeCompare(b, "fr"))
-  }, [lignes, definition, nomsDesComptes])
+  // Prévenir des changements (PG33 à PG47) : les cases changées depuis l'état annoncé (un point chacune).
+  const ecritesAppEtSeance = new Set([...(casesEcrites ?? []), ...Object.keys(modifs)])
+  const prev = usePrevenir({ prevenir, definition, rows: dansLaFenetre.map(ligneAffichee), speciaux: dimanchesSpeciaux, ecrites: ecritesAppEtSeance, comptes })
+  const aChange = (date: string, cle: string) => prev.points.has(`${date}|${cle}`) || undefined
+  const pointChange = (date: string, cle: string) => aChange(date, cle) && (
+    <>
+      <span aria-hidden data-point className="pointer-events-none absolute right-1 top-1 h-2 w-2 rounded-full bg-orange-500" />
+      <span className="sr-only">{t("planning.prevenir.caseChangee")}</span>
+    </>
+  )
+
+  // SC3.6 (Q10) : un petit mot « absent » à côté du nom, la période en infobulle ; pas de notification.
+  const marqueAbsent = (date: string, val: string) => {
+    const absence = val ? absenceDe?.(val, date) : null
+    return absence && (
+      <span title={periodeAbsence(absence, i18n.language === "zh-CN" ? "zh" : "fr")} className="ml-1.5 text-[11px] text-amber-700 dark:text-amber-400">
+        {t("planning.choisir.absentMarque")}
+      </span>
+    )
+  }
+
+  // Copier-coller au clavier (PG22 à PG32) : pointeur fin, tableau, grille en modification.
+  const actifClavier = clavier && mode === "edition"
+  const datesAffichees = affichees.map((l) => l.row[0])
+  const clesAffichees = colonnes.map((c) => c.cle)
+  const { sel, plage, choisir: choisirCase, etendre, effacer } = useSelectionGrille(datesAffichees, clesAffichees, actifClavier, poignees)
+  const datesPlage = plage ? datesAffichees.slice(plage.r0, plage.r1 + 1) : []
+  const clesPlage = plage ? clesAffichees.slice(plage.c0, plage.c1 + 1) : []
+  useEffect(() => { effacer() }, [definition.key, periode, effacer])
+
+  /** Copier le dimanche précédent sur `date` (PG10 à PG16) ; null : pas en modification. Un planning
+   *  hebdomadaire dont le J−7 manque garde sa source (vide, PG10) ; à dates choisies sans date
+   *  précédente, `source` est null. Dans les deux cas rien n'est offert (PG16). */
+  const copiePour = (date: string) => {
+    if (mode !== "edition") return null
+    const source = lignePrecedente(definition, datesDuPlanning, date)
+      ?? (definition.dates === "dimanches" ? new Date(new Date(`${date}T12:00:00Z`).getTime() - 7 * 86_400_000).toISOString().slice(0, 10) : null)
+    if (!source) return { source: null, plan: { vides: [], remplace: [], verrouillees: 0 }, offert: false }
+    const plan = planCopie({ colonnes: colonnesACopier(definition), source, cible: date, lire: lireCase, verrou })
+    return { source, plan, offert: plan.vides.length + plan.remplace.length > 0 }
+  }
+  /** L'aide de l'infobulle et du menu : ce qui sera copié, et ce qui ne l'est pas (PG14, PG15). */
+  const colonnesExclues = () =>
+    definition.colonnes.filter((x) => x.cle === "orateur" || x.cle === "theme").map((x) => t(x.i18n)).join(", ")
+  const aideCopie = (c: NonNullable<ReturnType<typeof copiePour>>) => {
+    if (!c.source) return undefined
+    const d = fdShort(c.source)
+    if (!c.offert) return t("planning.gestes.rienACopier", { date: d })
+    const base = c.plan.vides.length
+      ? t("planning.gestes.copierAide", { date: d, count: c.plan.vides.length })
+      : t("planning.gestes.copierAideRemplacer", { date: d, count: c.plan.remplace.length })
+    const exclues = colonnesExclues()
+    return exclues ? `${base} ${t("planning.gestes.exclues", { colonnes: exclues })}` : base
+  }
+  /** L'infobulle de la pastille (PG14) : « Les N cases vides reprennent le 17/1. … Un nom déjà posé reste. » */
+  const infobulleCopie = (c: NonNullable<ReturnType<typeof copiePour>>) => {
+    if (!c.source) return ""
+    const d = fdShort(c.source)
+    const exclues = colonnesExclues()
+    return [
+      c.plan.vides.length
+        ? t("planning.gestes.copierInfobulle", { date: d, count: c.plan.vides.length })
+        : t("planning.gestes.copierAideRemplacer", { date: d, count: c.plan.remplace.length }),
+      exclues && t("planning.gestes.exclues", { colonnes: exclues }),
+      c.plan.vides.length && t("planning.gestes.nomPoseReste"),
+    ].filter(Boolean).join(" ")
+  }
+  /** « Remplir vers le bas » pour la case dont « Choisir » est ouvert (PG18, PG19) : null si la case
+   *  ne porte pas un seul nom. Les dimanches sont les lignes données à la grille, « Mes dates » ignoré. */
+  const remplirPour = () => {
+    if (!choix || mode !== "edition" || choix.c.lectureSeule) return null
+    const date = choix.l.row[0]
+    const nom = valeur(date, choix.c, choix.l.row).trim()
+    if (!nom || !colonneDePersonnes(choix.c.cle) || splitNames(nom).length > 1 || imposee(date, choix.c)) return null
+    return { nom, ...planRemplir({ cle: choix.c.cle, nom, dates: datesApres(lignes.map((l) => l.row[0]), date), lire: lireCase, verrou }) }
+  }
+  const remplissage = remplirPour()
+  // L'aperçu n'est posé que si « Choisir » est un menu : en feuille, elle cacherait la grille (PG20).
+  const menuOuvert = useOrdinateur()
+  const apercuRemplir = remplissage && menuOuvert ? remplissage.cases : []
+  const apercuCopie = [...(apercu ? copiePour(apercu)?.plan.vides ?? [] : []), ...apercuRemplir, ...(collage?.cases ?? [])]
+  const casePrevue = (date: string, cle: string) => apercuCopie.find((c) => c.date === date && c.cle === cle)
+  /** La case en aperçu (PG14) : le nom qui sera écrit, en gras, dans un cadre en pointillé. */
+  const caseOuApercu = (l: LigneGrille, c: ColonneGrille): ReactNode => {
+    const prevue = casePrevue(l.row[0], c.cle)
+    // En orange quand l'aperçu remplace un nom (PG29).
+    return prevue
+      ? <span className={`block w-full min-h-8 rounded-md border border-dashed px-1.5 py-1 font-bold ${prevue.avant.trim() ? "border-orange-500 bg-orange-500/15" : ""}`} style={prevue.avant.trim() ? undefined : { borderColor: couleur }}>{prevue.apres}</span>
+      : laCase(l, c)
+  }
+
+  function faireCopie(source: string, cible: string, cases: CaseGeste[], verrouillees: number) {
+    void appliquer(
+      cases,
+      t("planning.gestes.copie", { cible: fdShort(cible), source: fdShort(source), count: cases.length }),
+      verrouillees ? [t("planning.gestes.verrouillees", { count: verrouillees })] : [],
+    )
+  }
+  /** Le geste (PG12, PG13) : sans fenêtre quand il ne tombe que dans des cases vides. */
+  function copier(date: string) {
+    const c = copiePour(date)
+    setApercu(null)
+    if (!c?.offert || !c.source) return
+    if (c.plan.remplace.length) setFenetreCopie({ source: c.source, cible: date, vides: c.plan.vides, remplace: c.plan.remplace, verrouillees: c.plan.verrouillees })
+    else faireCopie(c.source, date, c.plan.vides, c.plan.verrouillees)
+  }
+  function choixDeLaFenetre(choix: "vides" | "tout" | null) {
+    const d = fenetreCopie
+    setFenetreCopie(null)
+    if (!d || !choix) return
+    faireCopie(d.source, d.cible, choix === "tout" ? [...d.vides, ...d.remplace] : d.vides, d.verrouillees)
+  }
+
+  /** Le « ⋯ » du dimanche (PG15) : tablette, téléphone, et les cartes. */
+  const menuCopie = (date: string) => {
+    const c = copiePour(date)
+    if (!c) return null
+    return (
+      <MenuActions
+        onOuvert={(ouvert) => setApercu(ouvert ? date : null)}
+        actions={[{ label: t("planning.gestes.copierPrecedent"), icone: Copy, aide: aideCopie(c), desactive: !c.offert, onSelect: () => copier(date) }]}
+      />
+    )
+  }
+  /** La pastille au survol de la ligne (PG14), dans la cellule de la date du tableau. */
+  const pastilleCopie = (date: string) => {
+    const c = copiePour(date)
+    if (!c?.offert || !c.source) return null
+    return (
+      <>
+      <button
+        type="button"
+        onClick={() => copier(date)}
+        onMouseEnter={() => setApercu(date)}
+        onMouseLeave={() => setApercu(null)}
+        onFocus={() => setApercu(date)}
+        onBlur={() => setApercu(null)}
+        title={`${t("planning.gestes.copierPrecedent")}. ${infobulleCopie(c)}`}
+        aria-describedby={`copie-aide-${date}`}
+        className="mt-1 inline-flex min-h-7 items-center gap-1 rounded-full border border-dashed border-border bg-card px-2 text-[11px] font-semibold text-foreground opacity-0 transition-opacity hover:bg-secondary focus-visible:opacity-100 group-hover/ligne:opacity-100"
+      >
+        <Copy className="h-3 w-3" aria-hidden />
+        {t("planning.gestes.copierLe", { date: fdShort(c.source) })}
+      </button>
+      <span id={`copie-aide-${date}`} className="sr-only">{infobulleCopie(c)}</span>
+      </>
+    )
+  }
+
+  const marqueApercu = (date: string, cle: string) => {
+    const prevue = casePrevue(date, cle)
+    return prevue ? (prevue.avant.trim() && collage?.cases.includes(prevue) ? "remplace" : "") : undefined
+  }
+  const rangDate = (date: string) => datesAffichees.indexOf(date)
+  const dansGeste = (date: string, cle: string) => !!geste?.cases.some((c) => c.date === date && c.cle === cle)
+  const largeurMin = 104 + 96 * colonnes.length
 
   async function rechargerHistorique() {
     try {
@@ -147,26 +402,29 @@ export function PlanningGrille({
   async function enregistrer(l: LigneGrille, c: ColonneGrille, apres: string) {
     const date = l.row[0]
     const avant = valeur(date, c, l.row)
-    if (avant === apres) return
+    if (avant === apres || enCoursRef.current) return
     const cle = `${date}|${c.cle}`
     setModifs((m) => ({ ...m, [cle]: apres }))
     setRefus("")
+    setGeste(null)
     const auteur = historyAuthor(profile)
     try {
-      await ecrireCase({
+      await ecrireCases({
         definition,
         date,
-        colonne: c.cle,
-        valeur: apres,
+        valeurs: { [c.cle]: apres },
         auteur: auteur?.name ?? "",
         // Dimanche absent de la grille : ses autres cases viennent du Sheet, on
-        // les recopie une fois, sans quoi la fusion les perdrait.
-        semer: datesDansLApp.includes(date) || semes.current.has(date) ? undefined : ligneAffichee(l),
+        // les recopie une fois, sans quoi la fusion les perdrait. Dès 2027 (lot
+        // U2, Q2), rien à recopier : la case n'écrit qu'elle.
+        semer: getAnnee(date) >= PREMIERE_ANNEE_APP || datesDansLApp.includes(date) || semes.current.has(date)
+          ? undefined
+          : ligneASemer(l),
       })
       semes.current.add(date)
       setEnregistre(true)
       if (auteur) {
-        await noterChangement(definition.key, auteur, { kind: "case", date, colonne: c.cle, from: avant, to: apres })
+        await noterChangements(definition.key, auteur, [{ kind: "case", date, colonne: c.cle, from: avant, to: apres }])
         if (histoOuvert) await rechargerHistorique()
       }
     } catch {
@@ -180,6 +438,245 @@ export function PlanningGrille({
       setRefus(typeof navigator !== "undefined" && navigator.onLine === false ? "horsLigne" : "droitRetire")
     }
   }
+
+  /**
+   * Applique un geste (PG4 à PG8) : les valeurs s'affichent, puis UN écrit par dimanche, dans l'ordre
+   * des dates, et UN passage d'historique. Au premier refus, le geste s'arrête et les dimanches pas
+   * encore écrits reprennent leur valeur. `texte` = la phrase de la bannière Annuler (null : Annuler
+   * lui-même, pas de bannière). Rend les cases écrites.
+   */
+  async function appliquer(cases: CaseGeste[], texte: string | null, notes: string[] = [], sansCompte: string[] = []): Promise<CaseGeste[]> {
+    if (!cases.length || enCoursRef.current) return []
+    enCoursRef.current = true
+    setEnCours(true)
+    try {
+      return await ecrireGeste(cases, texte, notes, sansCompte)
+    } finally {
+      enCoursRef.current = false
+      setEnCours(false)
+    }
+  }
+
+  async function ecrireGeste(cases: CaseGeste[], texte: string | null, notes: string[], sansCompte: string[]): Promise<CaseGeste[]> {
+    setRefus("")
+    setEnregistre(false)
+    setGeste(null)
+    setAvis([])
+    setModifs((m) => {
+      const n = { ...m }
+      for (const c of cases) n[`${c.date}|${c.cle}`] = c.apres
+      return n
+    })
+    const auteur = historyAuthor(profile)
+    const ecrites: CaseGeste[] = []
+    for (const groupe of parDimanche(cases)) {
+      const duDimanche = cases.filter((c) => c.date === groupe.date)
+      const l = lignes.find((x) => x.row[0] === groupe.date)
+      try {
+        await ecrireCases({
+          definition,
+          date: groupe.date,
+          valeurs: groupe.champs,
+          auteur: auteur?.name ?? "",
+          semer: !l || getAnnee(groupe.date) >= PREMIERE_ANNEE_APP || datesDansLApp.includes(groupe.date) || semes.current.has(groupe.date)
+            ? undefined
+            : ligneASemer(l),
+        })
+        semes.current.add(groupe.date)
+        ecrites.push(...duDimanche)
+      } catch {
+        const restantes = cases.filter((c) => !ecrites.includes(c))
+        setModifs((m) => {
+          const n = { ...m }
+          for (const c of restantes) {
+            if (c.avant) n[`${c.date}|${c.cle}`] = c.avant
+            else delete n[`${c.date}|${c.cle}`]
+          }
+          return n
+        })
+        setRefus(typeof navigator !== "undefined" && navigator.onLine === false ? "horsLigne" : "droitRetire")
+        break
+      }
+    }
+    if (ecrites.length) {
+      setEnregistre(true)
+      if (auteur) {
+        await noterChangements(definition.key, auteur, ecrites.map((c) => ({ kind: "case", date: c.date, colonne: c.cle, from: c.avant, to: c.apres })))
+        if (histoOuvert) await rechargerHistorique()
+      }
+      if (texte) setGeste({ texte, notes, cases: ecrites, sansCompte })
+    }
+    return ecrites
+  }
+
+  // ── Copier-coller au clavier (PG23 à PG31) ──
+
+  /** La plage en texte tabulé (PG25) ; une présidence imposée se copie vide. */
+  function texteCopie() {
+    return enTexteTabule(datesPlage, clesPlage, lireCase, (d, cle) => {
+      const c = definition.colonnes.find((x) => x.cle === cle)
+      return !!c && !!imposee(d, c)
+    })
+  }
+
+  /** Les noms sans compte parmi les cases écrites (PG30) : aucun `planningName` ne leur correspond. */
+  const connus = new Set(comptes.map((c) => normalizeName(c.nom)))
+  function sansCompteDe(cases: CaseGeste[]) {
+    const noms: string[] = []
+    const cles: string[] = []
+    for (const c of cases) {
+      if (!colonneDePersonnes(c.cle)) continue
+      const inconnus = splitNames(c.apres).filter((n) => !connus.has(normalizeName(n)))
+      if (!inconnus.length) continue
+      cles.push(`${c.date}|${c.cle}`)
+      for (const n of inconnus) if (!noms.includes(n)) noms.push(n)
+    }
+    return { noms, cles }
+  }
+  const notesCollage = (p: { horsGrille: number; verrouillees: number; tropLongues?: number }, noms: string[]) => [
+    ...(p.verrouillees ? [t("planning.gestes.verrouillees", { count: p.verrouillees })] : []),
+    ...(p.tropLongues ? [t("planning.gestes.tropLongues", { count: p.tropLongues })] : []),
+    ...(p.horsGrille ? [t("planning.gestes.horsGrille", { count: p.horsGrille })] : []),
+    ...(noms.length
+      ? [t("planning.gestes.sansCompte", {
+          noms: noms.slice(0, 3).join(", ") + (noms.length > 3 ? ` ${t("planning.gestes.etAutres", { count: noms.length - 3 })}` : ""),
+        })]
+      : []),
+  ]
+
+  function collerCases(cases: CaseGeste[], p: { horsGrille: number; verrouillees: number; tropLongues?: number }) {
+    const { noms, cles } = sansCompteDe(cases)
+    const remplace = cases.filter((c) => c.avant.trim()).length
+    void appliquer(cases, t("planning.gestes.colle", { count: cases.length, remplace }), notesCollage(p, noms), cles)
+  }
+
+  /** ⌘V (PG26 à PG29) : sans nom remplacé, le collage s'écrit ; sinon l'aperçu attend « Coller ». */
+  function coller(texte: string) {
+    if (!plage) return
+    const bloc = lireCollage(texte)
+    if (!bloc.length) return
+    const p = planCollage({ bloc, ligne: plage.r0, col: plage.c0, dates: datesAffichees, cles: clesAffichees, lire: lireCase, verrou })
+    if (!p.cases.length) {
+      // Tout est refusé ou hors de la grille : on le dit, sans toucher à l'« Annuler » du dernier geste.
+      setAvis(notesCollage(p, []))
+      return
+    }
+    setAvis([])
+    if (p.remplace) setCollage({ cases: p.cases, remplace: p.remplace, notes: notesCollage(p, []) })
+    else collerCases(p.cases, p)
+  }
+  function validerCollage(videsSeulement: boolean) {
+    const c = collage
+    setCollage(null)
+    if (!c) return
+    const cases = videsSeulement ? c.cases.filter((x) => !x.avant.trim()) : c.cases
+    // Les notes de l'aperçu (cases verrouillées, hors de la grille) sont refaites avec les noms sans compte.
+    const { noms, cles } = sansCompteDe(cases)
+    const remplace = cases.filter((x) => x.avant.trim()).length
+    void appliquer(cases, t("planning.gestes.colle", { count: cases.length, remplace }), [...c.notes, ...notesCollage({ horsGrille: 0, verrouillees: 0 }, noms)], cles)
+  }
+
+  /** ⌫ (PG31) : vide les cases de la plage, sauf les verrouillées ; la même bannière Annuler. */
+  function viderPlage() {
+    const cases: CaseGeste[] = []
+    let verrouillees = 0
+    for (const d of datesPlage) for (const cle of clesPlage) {
+      if (verrou(d, cle)) { verrouillees++; continue }
+      const avant = lireCase(d, cle)
+      if (avant.trim()) cases.push({ date: d, cle, avant, apres: "" })
+    }
+    const notes = verrouillees ? [t("planning.gestes.verrouillees", { count: verrouillees })] : []
+    if (!cases.length) { setAvis(notes); return }
+    void appliquer(cases, t("planning.gestes.videes", { count: cases.length }), notes)
+  }
+
+  poignees.current = {
+    occupe: !!choix || !!edition || !!fenetreCopie || enCours,
+    apercu: !!collage,
+    texte: texteCopie,
+    coller,
+    vider: viderPlage,
+    ouvrir: (c) => enveloppe.current?.querySelector<HTMLElement>(`[data-case="${c.date}|${c.cle}"] button`)?.click(),
+    validerApercu: () => validerCollage(false),
+    annulerApercu: () => setCollage(null),
+  }
+
+  // La barre de sélection se pose sous la dernière case de la plage (PG23).
+  const derniere = plage ? `${datesAffichees[plage.r1]}|${clesAffichees[plage.c1]}` : ""
+  useLayoutEffect(() => {
+    const cadre = enveloppe.current
+    const cellule = derniere ? cadre?.querySelector<HTMLElement>(`[data-case="${derniere}"]`) : null
+    if (!cadre || !cellule) { setPosBarre(null); return }
+    const c = cadre.getBoundingClientRect()
+    const r = cellule.getBoundingClientRect()
+    setPosBarre({ top: r.bottom - c.top + 6, left: Math.max(8, Math.min(r.left - c.left, c.width - 470)) })
+  }, [derniere, affichees.length])
+
+  /** Un clic choisit la case ; Maj + clic étend la plage sans rien ouvrir (PG23, PG24). */
+  function surCase(e: MouseEvent, date: string, cle: string) {
+    if (!actifClavier) return
+    if (e.shiftKey && sel) { e.preventDefault(); e.stopPropagation(); etendre({ date, cle }) }
+    else choisirCase({ date, cle })
+  }
+  /** Le trait de la plage, posé en ombre intérieure sur ses seules arêtes. */
+  function styleCase(i: number, j: number, date: string, cle: string): CSSProperties | undefined {
+    const fond = dansGeste(date, cle) ? `${couleur}22` : undefined
+    if (!plage || i < plage.r0 || i > plage.r1 || j < plage.c0 || j > plage.c1) return fond ? { background: fond } : undefined
+    const bords = [
+      i === plage.r0 && `inset 0 2px 0 0 ${couleur}`,
+      i === plage.r1 && `inset 0 -2px 0 0 ${couleur}`,
+      j === plage.c0 && `inset 2px 0 0 0 ${couleur}`,
+      j === plage.c1 && `inset -2px 0 0 0 ${couleur}`,
+    ].filter(Boolean).join(", ")
+    return { background: fond ?? `${couleur}12`, boxShadow: bords }
+  }
+  const marqueSelection = (i: number, j: number, date: string, cle: string) =>
+    !plage || i < plage.r0 || i > plage.r1 || j < plage.c0 || j > plage.c1
+      ? undefined
+      : sel?.ancre.date === date && sel.ancre.cle === cle ? "ancre" : "plage"
+  const dansSansCompte = (date: string, cle: string) => !!geste?.sansCompte?.includes(`${date}|${cle}`)
+
+  /** Annuler (PG6) : réécrit les valeurs d'avant le geste, telles que la grille les avait. */
+  async function annulerGeste() {
+    if (!geste) return
+    const cases = geste.cases.map((c) => ({ ...c, avant: c.apres, apres: c.avant }))
+    await appliquer(cases, null)
+  }
+
+  /** Une date posée par erreur (Q10) : seulement en modification, dès l'année de l'app. */
+  const peutRetirer = (date: string) =>
+    !!retrait && mode === "edition" && getAnnee(date) >= PREMIERE_ANNEE_APP && canRetirerDate(user, profile, definition.key)
+
+  async function retirer(date: string) {
+    if (!retrait || !(await confirmer({ titre: t("planning.annee.confirmerRetrait", { date: fdFullL(date, i18n.language) }),
+      texte: t("planning.annee.confirmerRetraitTexte"), action: t("common.buttons.remove"), destructif: true }))) return
+    setRefus("")
+    try {
+      await retirerDate(definition, date)
+    } catch {
+      setRefus(typeof navigator !== "undefined" && navigator.onLine === false ? "horsLigne" : "droitRetire")
+      return
+    }
+    const auteur = historyAuthor(profile)
+    if (auteur) {
+      await noterChangements(definition.key, auteur, [{ kind: "dimanche", date, retire: true }])
+      if (histoOuvert) await rechargerHistorique()
+    }
+    retrait.onRetire()
+  }
+
+  const boutonRetirer = (date: string, avecTexte: boolean) => (
+    <button
+      type="button"
+      onClick={() => void retirer(date)}
+      aria-label={retrait?.libelle}
+      title={retrait?.libelle}
+      className="inline-flex min-h-8 items-center gap-1 rounded-md px-1.5 text-[11px] font-semibold text-muted-foreground hover:bg-destructive/10 hover:text-destructive active:bg-destructive/10"
+    >
+      <Trash2 className="h-3.5 w-3.5" aria-hidden />
+      {avecTexte && retrait?.libelle}
+    </button>
+  )
 
   function terminer(l: LigneGrille, c: ColonneGrille, commit: boolean) {
     if (fini.current) return
@@ -195,7 +692,6 @@ export function PlanningGrille({
       <input
         autoFocus
         type="text"
-        list={listeId}
         aria-label={t(c.i18n)}
         value={edition?.valeur ?? ""}
         onChange={(e) => setEdition((ed) => (ed ? { ...ed, valeur: e.target.value } : ed))}
@@ -212,7 +708,53 @@ export function PlanningGrille({
   function laCase(l: LigneGrille, c: ColonneGrille): ReactNode {
     const val = valeur(l.row[0], c, l.row)
     if (edition?.date === l.row[0] && edition.cle === c.cle) return champ(l, c)
-    if (mode === "edition") {
+    // Une colonne en lecture seule (le petit déj, géré dans sa carte) reste du texte.
+    const modifiable = mode === "edition" && !c.lectureSeule
+    const service = imposee(l.row[0], c)
+    if (service && modifiable) {
+      // Tirée de la grille du service : rien à modifier ici (planche bo-planning-2027).
+      return (
+        <span
+          title={t("planning.grille.dimancheSpecial", { service })}
+          className="inline-flex min-h-8 items-center gap-1.5 rounded-md border border-transparent px-1.5 py-1"
+        >
+          {val}
+          <Lock className="h-3 w-3 text-muted-foreground" aria-hidden />
+        </span>
+      )
+    }
+    // Une case qui porte déjà plusieurs noms (équipe de la Table, musiciens)
+    // s'écrit en texte, préremplie : « Choisir » remplacerait tous les noms.
+    if (modifiable && colonneDePersonnes(c.cle) && splitNames(val).length <= 1) {
+      // Lot U2, P9 : une case de personne s'ouvre sur « Choisir » ; vide, elle
+      // le dit en pointillé gris (planche bo-planning-2027).
+      const ouvrir = (e: MouseEvent<HTMLButtonElement>) =>
+        setChoix({ l, c, ancre: e.currentTarget.getBoundingClientRect() })
+      if (!val) {
+        return (
+          <button
+            type="button"
+            onClick={ouvrir}
+            className="inline-flex min-h-8 items-center gap-1 rounded-lg border-[1.5px] border-dashed border-border px-2 py-1 text-[13px] text-muted-foreground hover:bg-secondary active:bg-secondary"
+          >
+            {t("planning.choisir.bouton")}
+            <ChevronDown className="h-3 w-3" aria-hidden />
+          </button>
+        )
+      }
+      return (
+        <button
+          type="button"
+          onClick={ouvrir}
+          className="w-full min-h-8 rounded-md border border-dashed px-1.5 py-1 text-left hover:bg-secondary active:bg-secondary"
+          style={{ borderColor: `${couleur}55` }}
+        >
+          {val}
+          {marqueAbsent(l.row[0], val)}
+        </button>
+      )
+    }
+    if (modifiable) {
       return (
         <button
           type="button"
@@ -226,11 +768,18 @@ export function PlanningGrille({
         </button>
       )
     }
-    return <span className={estMoi(val) ? "font-bold" : ""} style={estMoi(val) ? { color: couleur } : undefined}>{val || "—"}</span>
+    // La couleur du service reste aux dates (A2) : son nom se repère en encre.
+    return (
+      <>
+        <span className={estMoi(val) ? "rounded-md bg-foreground px-1.5 py-0.5 font-semibold text-background" : ""}>{val || "—"}</span>
+        {marqueAbsent(l.row[0], val)}
+      </>
+    )
   }
 
   const phrase = (auteurNom: string, ch: EntreeGrille["changes"][number]) => {
     if (ch.kind === "import") return t("planning.grille.importe", { auteur: auteurNom, count: ch.count })
+    if (ch.kind === "dimanche") return t(`planning.grille.${phraseDuChangement(ch)}`, { auteur: auteurNom, date: fdLongL(ch.date, i18n.language) })
     const col = definition.colonnes.find((x) => x.cle === ch.colonne)
     return t(`planning.grille.${phraseDuChangement(ch)}`, {
       auteur: auteurNom,
@@ -241,138 +790,17 @@ export function PlanningGrille({
     })
   }
 
-  // ── Export (G4, D5) : la période affichée, telle qu'elle est à l'écran ──
-  const lignesExport = () => dansLaFenetre.map(ligneAffichee)
-  const sousTitre = [
-    definition.sousTitre ?? (definition.i18nSousTitre ? t(definition.i18nSousTitre) : ""),
-    periode,
-    definition.i18nHoraire ? t(definition.i18nHoraire) : "",
-  ].filter(Boolean).join(" · ")
-
-  function telecharger(blob: Blob, nom: string) {
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement("a")
-    a.href = url
-    a.download = nom
-    a.click()
-    URL.revokeObjectURL(url)
-  }
-
-  function exporterCSV() {
-    const rows = lignesExport()
-    telecharger(
-      new Blob([versCSV(rows, definition, (k) => t(k), t("planning.roles.date"))], { type: "text/csv;charset=utf-8" }),
-      nomFichier(definition.label, rows, "csv")
-    )
-  }
-
-  const [pdfEnCours, setPdfEnCours] = useState(false)
-  async function exporterPDF() {
-    setPdfEnCours(true)
-    try {
-      const rows = lignesExport()
-      const cols = colonnesExportees(definition, rows)
-      // Chargés à la demande : @react-pdf/renderer est lourd (cf. SongDetailClient).
-      const [{ pdf }, { PlanningPDF }] = await Promise.all([import("@react-pdf/renderer"), import("@/components/pdf/PlanningPDF")])
-      const blob = await pdf(
-        <PlanningPDF
-          titre={t(definition.i18nTitre)}
-          sousTitre={sousTitre}
-          couleur={couleur}
-          entetes={[t("planning.roles.date"), ...cols.map((c) => t(c.i18n))]}
-          lignes={rows.map((r, i) => ({
-            cells: [fdShort(r[0]), ...cols.map((c) => r[c.index] ?? "")],
-            mois: i === 0 || getMois(rows[i - 1][0]) !== getMois(r[0]) ? moisName(getMois(r[0]), i18n.language) : undefined,
-          }))}
-          lang={i18n.language}
-        />
-      ).toBlob()
-      telecharger(blob, nomFichier(definition.label, rows, "pdf"))
-    } finally {
-      setPdfEnCours(false)
-    }
-  }
-
   return (
     <div className="space-y-3" data-grille={definition.key}>
-      {/* ── Bandeau : planning, période, horaire (T4) ── */}
-      <div
-        data-testid="grille-bandeau"
-        className="rounded-xl px-3.5 py-2.5 text-sm font-semibold text-white"
-        style={{ background: couleur }}
-      >
-        {t(definition.i18nTitre)}
-        <span className="font-normal opacity-90">
-          {" · "}
-          {sousTitre}
-        </span>
-      </div>
-
-      {/* ── Mon prénom, Mes dates, Modifier ── */}
-      <div className="flex items-center gap-2 flex-wrap">
-        <div className="relative flex-1 min-w-[160px] max-w-[220px]">
-          <User className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
-          <input
-            type="text"
-            value={nom}
-            onChange={(e) => changerNom(e.target.value)}
-            placeholder={t("planning.table.myName")}
-            className="w-full h-10 sm:h-8 pl-8 pr-8 rounded-full border border-transparent bg-secondary text-foreground text-[16px] sm:text-sm focus:outline-none focus:ring-2 focus:ring-ring/20"
-          />
-          {nom && (
-            <button
-              onClick={() => { changerNom(""); setMesDates(false) }}
-              className="absolute right-0 top-1/2 -translate-y-1/2 p-2.5 text-muted-foreground hover:text-foreground active:text-foreground"
-              aria-label={t("planning.table.clear")}
-            >
-              <X className="h-3 w-3" />
-            </button>
-          )}
-        </div>
-        {aUnNom && (
-          <button
-            onClick={() => setMesDates((v) => !v)}
-            className={`h-10 sm:h-8 px-3 rounded-full text-sm font-semibold transition-[background-color,color,transform] duration-150 active:scale-[.96] cursor-pointer ${
-              mesDates ? "text-white" : "bg-secondary text-muted-foreground hover:text-foreground"
-            }`}
-            style={mesDates ? { background: couleur } : undefined}
-          >
-            {t("planning.table.myDates")}
-          </button>
-        )}
-        {peutModifier && (
-          <button
-            onClick={() => { setEdition(null); setEnregistre(false); setMode((m) => (m === "edition" ? "lecture" : "edition")) }}
-            className={`h-10 sm:h-8 px-3 rounded-full text-sm font-semibold transition-[background-color,color,transform] duration-150 active:scale-[.96] cursor-pointer ${
-              mode === "edition" ? "text-white" : "bg-secondary text-muted-foreground hover:text-foreground"
-            }`}
-            style={mode === "edition" ? { background: couleur } : undefined}
-          >
-            {t(mode === "edition" ? "planning.grille.termine" : "planning.grille.modifier")}
-          </button>
-        )}
+      {/* Agencement v18 (B6) : l'export et « Enregistré » dans les outils de l'en-tête ; le service,
+          la période et les filtres dans la rangée de la grille (BarreDeGrille). */}
+      <DansLEnTete ou="outils">
         {enregistre && (
           <span aria-live="polite" className="text-xs text-muted-foreground">{t("planning.grille.enregistre")}</span>
         )}
-        {/* Export de la période affichée (G4) : CSV recollable dans le Sheet, ou PDF. */}
-        <button
-          type="button"
-          onClick={exporterCSV}
-          className="h-10 sm:h-8 px-3 rounded-full text-sm font-semibold bg-secondary text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 transition-[background-color,color,transform] duration-150 active:scale-[.96] cursor-pointer"
-        >
-          <Download className="h-3.5 w-3.5" aria-hidden />
-          {t("planning.grille.exporter")}
-        </button>
-        <button
-          type="button"
-          onClick={() => void exporterPDF()}
-          disabled={pdfEnCours}
-          className="h-10 sm:h-8 px-3 rounded-full text-sm font-semibold bg-secondary text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 transition-[background-color,color,transform] duration-150 active:scale-[.96] cursor-pointer disabled:opacity-60"
-        >
-          <Download className="h-3.5 w-3.5" aria-hidden />
-          {t("planning.grille.exporterPdf")}
-        </button>
-      </div>
+        {exporter && <ExportModele definition={definition} periode={periode} exporter={exporter} />}
+      </DansLEnTete>
+      {legende && <h3 className="text-[15px] font-bold text-foreground">{legende}</h3>}
 
       {refus && (
         <p className="rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-foreground">
@@ -384,26 +812,93 @@ export function PlanningGrille({
       )}
 
 
+      {avis.length > 0 && <BanniereGeste texte={avis[0]} notes={avis.slice(1)} onFermer={() => setAvis([])} />}
+
+      {geste && (
+        // Pendant l'aperçu d'un collage, l'« Annuler » du geste d'avant est périmé : inerte (PG29).
+        <div inert={collage ? true : undefined}>
+          <BanniereGeste texte={geste.texte} notes={geste.notes} onAnnuler={() => void annulerGeste()} onFermer={() => setGeste(null)} />
+        </div>
+      )}
+
+      {collage && (
+        <BarreCollage
+          count={collage.cases.length}
+          remplace={collage.remplace}
+          videsSeulement={collage.cases.some((c) => !c.avant.trim())}
+          onAnnuler={() => setCollage(null)}
+          onVides={() => validerCollage(true)}
+          onColler={() => validerCollage(false)}
+        />
+      )}
+
+      <PrevenirChangements prev={prev} prevenir={prevenir} definition={definition} />
+
       {peutModifier && (
-        <datalist id={listeId}>
-          {noms.map((n) => <option key={n} value={n} />)}
-        </datalist>
+        <FenetreCopie
+          demande={fenetreCopie}
+          libelle={(cle) => { const x = definition.colonnes.find((d) => d.cle === cle); return x ? t(x.i18n) : cle }}
+          onChoix={choixDeLaFenetre}
+        />
+      )}
+
+      {peutModifier && (
+        <ChoisirNom
+          ouverture={choix && {
+            titre: `${t(choix.c.i18n)} · ${fdShort(choix.l.row[0])}`,
+            libelle: t(choix.c.i18n),
+            valeur: valeur(choix.l.row[0], choix.c, choix.l.row),
+            ancre: choix.ancre,
+          }}
+          onFermer={() => setChoix(null)}
+          remplir={remplissage ? {
+            grise: remplissage.cases.length === 0,
+            aide: remplissage.cases.length
+              ? t("planning.gestes.remplirAide", { nom: remplissage.nom, count: remplissage.cases.length, fin: fdShort(remplissage.fin) })
+              : t("planning.gestes.rienARemplir"),
+            onRemplir: () => {
+              setChoix(null)
+              void appliquer(
+                remplissage.cases,
+                t("planning.gestes.rempli", { nom: remplissage.nom, count: remplissage.cases.length, fin: fdShort(remplissage.fin) }),
+                remplissage.verrouillees ? [t("planning.gestes.verrouillees", { count: remplissage.verrouillees })] : [],
+              )
+            },
+          } : undefined}
+          absenceDe={absenceDe && choix ? (nom) => absenceDe(nom, choix.l.row[0]) : undefined}
+          reliees={groupe ? (recherche) => propositionsReliees(definition, choix?.c.cle ?? "", groupe, comptes, dansLaFenetre.map(ligneAffichee), recherche) : undefined}
+          proposer={(recherche) => propositions(definition, choix?.c.cle ?? "", comptes, lignes.map((l) => l.row), recherche)}
+          onEcrire={(nom) => {
+            if (!choix) return
+            setChoix(null)
+            setEnregistre(false)
+            void enregistrer(choix.l, choix.c, nom.trim())
+          }}
+        />
       )}
 
       {/* ── Grille (ordinateur, tablette) ── */}
-      <div data-testid="grille-defilement" className="hidden sm:block overflow-x-auto rounded-xl border border-border">
+      <div ref={enveloppe} data-en-cours={enCours || undefined} inert={enCours ? true : undefined} className="relative">
+      <div data-testid="grille-defilement" inert={collage ? true : undefined} className={`hidden sm:block overflow-x-auto ${app ? "raised rounded-2xl" : "rounded-xl border border-border"}`}>
         <table className="w-full text-sm border-collapse" style={{ minWidth: largeurMin }}>
           <thead>
-            <tr data-testid="grille-colonnes" className="text-white">
+            <tr data-testid="grille-colonnes" className={app ? "bg-secondary text-muted-foreground" : "text-white"}>
               <th
-                className="sticky left-0 z-20 px-3 py-2.5 text-left text-[11px] font-semibold whitespace-nowrap"
-                style={{ background: couleur }}
+                className={`sticky left-0 z-20 px-3 py-2.5 text-left text-[11px] font-semibold whitespace-nowrap ${app ? "bg-secondary" : ""}`}
+                style={app ? undefined : { background: couleur }}
               >
                 {t("planning.roles.date")}
               </th>
               {colonnes.map((c) => (
-                <th key={c.cle} className="px-3 py-2.5 text-left text-[11px] font-semibold whitespace-nowrap" style={{ background: couleur }}>
+                <th key={c.cle} className="px-3 py-2.5 text-left text-[11px] font-semibold whitespace-nowrap" style={app ? undefined : { background: couleur }}>
                   {t(c.i18n)}
+                  {!app && groupe && groupeDef(groupe.id)?.planning === definition.key && roleDeColonne(groupe, c.cle) && (
+                    <Link2
+                      role="img"
+                      aria-label={t("groupes.choisir.reliee", { role: (i18n.language === "zh-CN" && roleDeColonne(groupe, c.cle)!.nomZh) || roleDeColonne(groupe, c.cle)!.nom })}
+                      className="ml-1 inline h-3 w-3 align-[-1px] opacity-80"
+                    />
+                  )}
                 </th>
               ))}
             </tr>
@@ -412,7 +907,7 @@ export function PlanningGrille({
             {affichees.length === 0 && (
               <tr>
                 <td colSpan={colonnes.length + 1} className="px-4 py-8 text-center text-sm text-muted-foreground">
-                  {t("planning.grille.aVenir")}
+                  {vide ?? t("planning.grille.aVenir")}
                 </td>
               </tr>
             )}
@@ -425,7 +920,7 @@ export function PlanningGrille({
               return (
                 <Fragment key={date}>
                   {sep && (
-                    <tr style={{ background: `${couleur}15` }}>
+                    <tr className={app ? "bg-secondary/50" : undefined} style={app ? undefined : { background: `${couleur}15` }}>
                       <td colSpan={colonnes.length + 1} className="px-3 py-1.5">
                         <span className="sticky left-3 inline-block text-xs font-bold uppercase tracking-wider" style={{ color: couleur }}>
                           {sep}
@@ -433,19 +928,19 @@ export function PlanningGrille({
                       </td>
                     </tr>
                   )}
-                  <tr className="border-t border-border" style={{ background: fond }}>
+                  <tr className="group/ligne border-t border-border" style={{ background: fond }}>
                     <td
                       data-date-cell={date}
                       className="sticky left-0 z-10 w-[112px] px-3 py-2 font-semibold whitespace-nowrap bg-card"
                       style={{ color: couleur, backgroundImage: fond ? `linear-gradient(${fond}, ${fond})` : undefined }}
                     >
-                      <div>
-                        {cetteSemaine ? (
-                          <span className="inline-block text-xs font-bold px-1.5 py-0.5 rounded text-white" style={{ background: couleur }}>
-                            {t("planning.table.thisWeek")}
-                          </span>
-                        ) : fdShort(date)}
-                      </div>
+                      {/* La date, puis « Cette semaine » dessous (planches `v18-app-planning-grille-a`, `v18-bo-planning-a`). */}
+                      <div>{fdShort(date)}</div>
+                      {cetteSemaine && (
+                        <span className={`mt-0.5 mr-1 inline-block text-xs font-bold px-1.5 py-0.5 rounded ${app ? "bg-foreground text-background" : "text-white"}`} style={app ? undefined : { background: couleur }}>
+                          {t("planning.table.thisWeek")}
+                        </span>
+                      )}
                       {l.nonPublie && (
                         <span
                           data-non-publie={date}
@@ -457,10 +952,25 @@ export function PlanningGrille({
                         </span>
                       )}
                       {dateBadge?.(l.row, toutes)}
+                      {peutRetirer(date) && <div className="-ml-1.5 mt-0.5">{boutonRetirer(date, false)}</div>}
+                      {survol ? pastilleCopie(date) : <div className="mt-1">{menuCopie(date)}</div>}
                     </td>
-                    {colonnes.map((c) => (
-                      <td key={c.cle} data-case={`${date}|${c.cle}`} className="px-3 py-2 text-foreground">
-                        {laCase(l, c)}
+                    {colonnes.map((c, j) => (
+                      <td
+                        key={c.cle}
+                        data-case={`${date}|${c.cle}`}
+                        data-geste={dansGeste(date, c.cle) || undefined}
+                        data-apercu={marqueApercu(date, c.cle)}
+                        data-selection={marqueSelection(rangDate(date), j, date, c.cle)}
+                        data-sans-compte={dansSansCompte(date, c.cle) || undefined}
+                        data-changement={aChange(date, c.cle)}
+                        onMouseDownCapture={(e) => { if (actifClavier && e.shiftKey) e.preventDefault() }}
+                        onClickCapture={(e) => surCase(e, date, c.cle)}
+                        className={`relative px-3 py-2 text-foreground ${aChange(date, c.cle) ? "bg-amber-100/70 dark:bg-amber-500/15" : ""} ${dansSansCompte(date, c.cle) ? "[&_button]:underline [&_button]:decoration-dotted [&_button]:underline-offset-4" : ""}`}
+                        style={styleCase(rangDate(date), j, date, c.cle)}
+                      >
+                        {caseOuApercu(l, c)}
+                        {pointChange(date, c.cle)}
                       </td>
                     ))}
                   </tr>
@@ -470,12 +980,22 @@ export function PlanningGrille({
           </tbody>
         </table>
       </div>
+      {actifClavier && plage && posBarre && !collage && (
+        <BarreSelection
+          count={datesPlage.length * clesPlage.length}
+          dimanches={datesPlage.length}
+          colonnes={clesPlage.length}
+          style={posBarre}
+          onFermer={effacer}
+        />
+      )}
+      </div>
 
       {/* ── Une carte par dimanche (téléphone) ── */}
-      <div className="sm:hidden space-y-2.5">
+      <div inert={enCours ? true : undefined} data-cartes-en-cours={enCours || undefined} className="sm:hidden space-y-2.5">
         {affichees.length === 0 && (
           <p className="px-4 py-8 text-center text-sm text-muted-foreground border border-dashed border-border rounded-xl">
-            {t("planning.grille.aVenir")}
+            {vide ?? t("planning.grille.aVenir")}
           </p>
         )}
         {affichees.map((l) => {
@@ -485,6 +1005,7 @@ export function PlanningGrille({
             <div
               key={date}
               data-testid="grille-carte"
+              data-date-carte={date}
               className="rounded-xl border border-transparent bg-card shadow-soft overflow-hidden"
               style={{ borderColor: cetteSemaine ? couleur : undefined }}
             >
@@ -505,16 +1026,24 @@ export function PlanningGrille({
                   </span>
                 )}
                 {dateBadge?.(l.row, toutes)}
+                {(peutRetirer(date) || mode === "edition") && (
+                  <span className="ml-auto flex items-center gap-1">
+                    {peutRetirer(date) && boutonRetirer(date, true)}
+                    {menuCopie(date)}
+                  </span>
+                )}
               </div>
               <div className="px-3.5 py-2.5 space-y-1">
                 {colonnes
                   // En lecture, une case vide ne prend pas de place ; en
-                  // modification, toutes s'affichent pour pouvoir les remplir.
-                  .filter((c) => mode === "edition" || valeur(date, c, l.row).trim())
+                  // modification, toutes s'affichent pour pouvoir les remplir
+                  // (sauf celles en lecture seule, qui ne se remplissent pas ici). Une case vidée depuis
+                  // la publication reste, pour porter son point.
+                  .filter((c) => (mode === "edition" && !c.lectureSeule) || valeur(date, c, l.row).trim() || aChange(date, c.cle))
                   .map((c) => (
                     <div key={c.cle} className="flex items-baseline gap-2 text-[13px]">
                       <span className="w-24 shrink-0 text-[11px] text-muted-foreground">{t(c.i18n)}</span>
-                      <span data-case={`${date}|${c.cle}`} className="min-w-0 flex-1">{laCase(l, c)}</span>
+                      <span data-case={`${date}|${c.cle}`} data-geste={dansGeste(date, c.cle) || undefined} data-apercu={marqueApercu(date, c.cle)} data-changement={aChange(date, c.cle)} className={`relative min-w-0 flex-1 rounded-md ${aChange(date, c.cle) ? "bg-amber-100/70 pr-4 dark:bg-amber-500/15" : ""}`} style={dansGeste(date, c.cle) ? { background: `${couleur}22` } : undefined}>{caseOuApercu(l, c)}{pointChange(date, c.cle)}</span>
                     </div>
                   ))}
               </div>
@@ -523,6 +1052,8 @@ export function PlanningGrille({
         })}
       </div>
 
+
+      {actifClavier && <p className="hidden sm:block text-xs text-muted-foreground">{t("planning.gestes.clavier")}</p>}
 
       {/* ── Pied de grille : on prévient, on ne se retire pas (T3) ── */}
       <p className="text-xs text-muted-foreground">{t("planning.grille.pasDispo")}</p>

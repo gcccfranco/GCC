@@ -4,22 +4,27 @@ import { useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { PlanningGrille } from "@/components/planning/PlanningGrille"
 import { StaleBanner } from "@/components/planning/StaleBanner"
-import { getCurrentTri, getTri, isFirstSundayOfMonth } from "@/lib/planning/utils"
+import { AnneeSelecteur } from "@/components/planning/AnneeSelecteur"
+import { BandeauAnnee } from "@/components/planning/BandeauAnnee"
+import { BoutonPublication } from "@/components/planning/BoutonPublication"
+import { getCurrentTri, isFirstSundayOfMonth } from "@/lib/planning/utils"
 import { useSheet } from "@/lib/planning/useSheet"
 import { fetchCulte } from "@/lib/planning/sheets"
-import { GRILLE_CULTE, lignesPubliees } from "@/lib/planning/grilles"
+import { GRILLE_CULTE, dimanchesDe, vueTrimestrielle } from "@/lib/planning/grilles"
 import { useGrilleApp } from "@/lib/planning/useGrilleApp"
 import { useProfile } from "@/lib/firebase/users"
 import { canEditPlanning, isAdminUser } from "@/lib/access"
 import {
   PUBLISHABLE_PLANNINGS,
-  TRI_ORDER,
-  canPublishPlanning,
+  droitsDePublication,
   getPublishedQuarters,
-  triVisibilities,
+  droitsDePrevenir,
+  triVisibilitiesAnnee,
 } from "@/lib/planning/releases"
-import { FilterButtons } from "@/components/planning/FilterButtons"
+import { OngletsRail } from "@/components/layout/Onglets"
+import { BarreDeGrille, FiltreDeNom, compterCasesVides, ongletsDePeriode, useFiltreNom, useTrimestreEnLettres } from "@/components/planning/BarreDeGrille"
 import { BACK_OFFICE } from "@/lib/backOffice"
+import { useGestionPlanning } from "@/lib/planning/gestion"
 import { AncienTableau } from "./AncienTableau"
 
 // Lot 17 / G1 : la grille s'affiche **trimestre par trimestre** (Timothée,
@@ -31,6 +36,9 @@ import { AncienTableau } from "./AncienTableau"
 //
 // G5 (D4, 19/09/2026) : plus de données de secours de 2026 — grille vide =
 // « Planning à venir » et la bannière d'indisponibilité, pas des noms périmés.
+//
+// Lot U2 : sélecteur d'année ; l'année suivante est un brouillon, trimestre par
+// trimestre, jusqu'à « Publier le T… » (vueTrimestrielle).
 
 const CULTE = PUBLISHABLE_PLANNINGS.find(p => p.key === "culte")!
 
@@ -39,51 +47,91 @@ function CultePage() {
   const { user, profile } = useProfile()
   const { rows, status } = useSheet<string[]>(fetchCulte, [])
   const [tri, setTri] = useState(getCurrentTri())
-  const [published, setPublished] = useState<string[]>([])
+  const anneeCourante = new Date().getFullYear()
+  const [annee, setAnnee] = useState(anneeCourante)
+  const [published, setPublished] = useState<Record<number, string[]>>({})
 
-  const peutModifier = canEditPlanning(user, profile, "culte")
-  const { datesDansLApp, nomsDesComptes } = useGrilleApp("culte", peutModifier)
+  const gestion = useGestionPlanning()
+  const filtre = useFiltreNom()
+  const trimestre = useTrimestreEnLettres()
+  const peutModifier = gestion && canEditPlanning(user, profile, "culte")
+  // Lot 3 (PG35) : qui publie ou notifie ce planning prévient des changements, même sans remplir la grille.
+  const peutPrev = gestion && droitsDePrevenir(CULTE, isAdminUser(user), profile)
+  const { datesDansLApp, comptes, ecrites, absenceDe } = useGrilleApp("culte", peutModifier || peutPrev)
+  const [publications, setPublications] = useState(0)
 
   useEffect(() => {
-    getPublishedQuarters("culte", new Date().getFullYear()).then(setPublished)
+    const year = new Date().getFullYear()
+    Promise.all([year, year + 1].map(y => getPublishedQuarters("culte", y).then(q => [y, q] as const)))
+      .then(entries => setPublished(Object.fromEntries(entries)))
   }, [])
 
-  const canPublish = canPublishPlanning(CULTE, isAdminUser(user), profile?.notify ?? [])
-  // Pilules visibles : un trimestre futur non publié est masqué aux membres,
-  // marqué d'un cadenas pour les publieurs.
-  const vis = triVisibilities(TRI_ORDER, published, getCurrentTri(), canPublish)
-  const visibleTris = vis.filter(v => v.visible).map(v => v.tri)
-  const unpublishedTris = vis.filter(v => v.unpublished).map(v => v.tri)
-  const effTri = visibleTris.includes(tri) ? tri : getCurrentTri()
-  // `lignesPubliees` rend des LigneGrille (ligne + marque « non publié ») :
-  // on filtre sur leur date, pas avec `filterByTri` qui attend des tableaux.
-  const lignes = lignesPubliees(rows, published, getCurrentTri(), new Date().getFullYear(), canPublish)
-    .filter((l) => getTri(l.row[0]) === effTri)
+  const canPublish = gestion && droitsDePublication(CULTE, isAdminUser(user), profile)
+  // Q4 (lot U2) : le brouillon se montre à qui remplit ou publie ce planning, et aux admins.
+  const voitBrouillon = canPublish || peutModifier
+  const {
+    annees, annee: effAnnee, visibles: visibleTris, nonPublies: unpublishedTris, tri: effTri, lignes, aVenir, brouillon,
+  } = vueTrimestrielle({
+    definition: GRILLE_CULTE, rows, anneeCourante, triCourant: getCurrentTri(), annee, tri,
+    publies: (y) => published[y] ?? [], voitBrouillon,
+  })
+
+  function changerAnnee(a: number) {
+    setAnnee(a)
+    setTri(a === anneeCourante ? getCurrentTri() : "T1")
+  }
 
   return (
     <div className="max-w-full space-y-4 mx-auto">
-      <div className="flex flex-wrap gap-3 items-center justify-between">
-        <h2 className="text-base font-bold text-foreground">{t("planning.pages.culte")}</h2>
-        {status === "loading" && <span className="text-xs text-muted-foreground">{t("common.loading")}</span>}
-      </div>
+      {/* Agencement v18 (A2, B6, B7) : la rangée de la grille, puis la grille. */}
+      <BarreDeGrille
+        titre={t("planning.pages.culte")}
+        couleur={GRILLE_CULTE.couleur}
+        detail={[t("planning.horaires.culte"), effTri && trimestre(effTri, effAnnee)].filter(Boolean).join(" · ")}
+        sousTitreBO={[t("planning.pages.culte"), t("planning.horaires.culte"),
+          t("planning.barre.casesVidesTrimestre", { count: compterCasesVides(GRILLE_CULTE, lignes) })].join(" · ")}
+        chargement={status === "loading"}
+      >
+        <AnneeSelecteur annees={annees} annee={effAnnee} onChange={changerAnnee} />
+        {visibleTris.length > 0 && (
+          <OngletsRail etiquette={t("planning.barre.trimestre")} onglets={ongletsDePeriode(visibleTris, unpublishedTris)} actif={effTri} choisir={setTri} />
+        )}
+        {canPublish && effTri && aVenir && (
+          <BoutonPublication
+            planningKey={CULTE.key}
+            planningLabel={CULTE.label}
+            annee={effAnnee}
+            tri={effTri}
+            publie={!unpublishedTris.includes(effTri)}
+            onChange={(p) => {
+              setPublished((prev) => ({ ...prev, [effAnnee]: p }))
+              if (p.includes(effTri)) setPublications((n) => n + 1)
+            }}
+          />
+        )}
+        <FiltreDeNom filtre={filtre} couleur={GRILLE_CULTE.couleur} />
+      </BarreDeGrille>
 
       <StaleBanner show={status === "stale"} />
-
-      <FilterButtons
-        options={visibleTris}
-        active={effTri}
-        onChange={setTri}
-        color={GRILLE_CULTE.couleur}
-        unpublished={unpublishedTris}
-      />
+      <BandeauAnnee annee={effAnnee} brouillon={brouillon} dimanches={brouillon ? dimanchesDe(effAnnee).length : null} />
 
       <PlanningGrille
         definition={GRILLE_CULTE}
-        periode={`${effTri} ${new Date().getFullYear()}`}
+        lignesDuPlanning={rows}
+        periode={`${effTri} ${effAnnee}`}
+        filtre={filtre}
         lignes={lignes}
         peutModifier={peutModifier}
         datesDansLApp={datesDansLApp}
-        nomsDesComptes={nomsDesComptes}
+        comptes={comptes}
+        absenceDe={absenceDe}
+        casesEcrites={ecrites}
+        // PG34 : un trimestre que les membres voient (publié, en cours ou passé) ; jamais un brouillon.
+        prevenir={peutPrev && status !== "loading" && effTri && triVisibilitiesAnnee(effAnnee, anneeCourante, published[effAnnee] ?? [], getCurrentTri(), false).some((v) => v.tri === effTri && v.visible)
+          ? { planning: CULTE, annee: effAnnee, tri: effTri, trimestre: trimestre(effTri, effAnnee), publications }
+          : undefined}
+        // P7 : les responsables du planning et les admins exportent (Q13).
+        exporter={voitBrouillon ? { annee: effAnnee, rang: Number(effTri.slice(1)) || 1, tout: isAdminUser(user) } : undefined}
         dateBadge={(row, all) =>
           isFirstSundayOfMonth(row[0], all) ? (
             <span className="inline-block text-xs font-bold px-1.5 py-0.5 rounded bg-red-50 text-red-700 border border-red-200 mt-0.5">

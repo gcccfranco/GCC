@@ -1,14 +1,17 @@
 import type { CampusSeance, EddDataStructure } from "./utils"
-import { EDD_CLASSES, EDD_PERIODES } from "./utils"
+import { EDD_CLASSES, EDD_PERIODES, getAnnee, getCurrentTri, getTri } from "./utils"
 import {
   DEJEUNER_FALLBACK, PAIX_FALLBACK, FIDELITE_FALLBACK,
   FIDELITE_MUSIC_FALLBACK, BONTE_FALLBACK, EDD_FALLBACK, CAMP_LOUANGE_FALLBACK,
 } from "./data"
 import {
   fetchCulte, fetchDejeuner, fetchPaix, fetchFidelite,
-  fetchFideliteMusic, fetchBonte, fetchEDD, fetchCampus, inferYear,
+  fetchBonte, fetchEDD, fetchCampus,
   fetchIntergroupe, fetchInterfranco, fetchPetitDej,
 } from "./sheets"
+import { PREMIERE_ANNEE_APP, completerMusiciensFidelite, marquerDimanchesSpeciaux } from "./grilles"
+import { PUBLISHABLE_PLANNINGS, getPublishedQuarters, triRank } from "./releases"
+import { BACK_OFFICE } from "@/lib/backOffice"
 import type { ServiceRole } from "@/types/user"
 
 export interface PlanningData {
@@ -17,8 +20,8 @@ export interface PlanningData {
   /** Petit déj (lot 1b) : [date ISO, noms] ; vide tant que la case ne l'est pas. */
   petitDej: string[][]
   paix: string[][]
+  /** Fidélité, un seul planning (lot F) : guitariste (index 5) et batterie (6) compris. */
   fidelite: string[][]
-  fideliteMusic: string[][]
   bonte: string[][]
   edd: EddDataStructure
   campus: CampusSeance[]
@@ -27,27 +30,91 @@ export interface PlanningData {
 }
 
 export async function loadPlanningData(): Promise<PlanningData> {
-  const [culte, dejeuner, petitDej, paix, fidelite, fideliteMusic, bonte, edd, campus, intergroupe, interfranco] =
+  const [culte, dejeuner, petitDej, paix, fidelite, bonte, edd, campus, intergroupe, interfranco] =
     await Promise.all([
       fetchCulte(), fetchDejeuner(), fetchPetitDej(), fetchPaix(), fetchFidelite(),
-      fetchFideliteMusic(), fetchBonte(), fetchEDD(),
+      fetchBonte(), fetchEDD(),
       fetchCampus().then(c => c.louange).catch(() => [] as CampusSeance[]),
       fetchIntergroupe(), fetchInterfranco(),
     ])
-  return {
+  const data: PlanningData = {
     // G5 (19/09/2026) : plus de repli sur CULTE_FALLBACK (données de 2026, D4).
     culte,
     dejeuner: dejeuner.length ? dejeuner : DEJEUNER_FALLBACK,
     // Pas de données de secours : le petit déj n'apparaît que s'il est lu.
     petitDej,
     paix: paix.length ? paix : PAIX_FALLBACK,
-    fidelite: fidelite.length ? fidelite : FIDELITE_FALLBACK,
-    fideliteMusic: fideliteMusic.length ? fideliteMusic : FIDELITE_MUSIC_FALLBACK,
+    fidelite: fidelite.length ? fidelite : completerMusiciensFidelite(FIDELITE_FALLBACK, FIDELITE_MUSIC_FALLBACK),
     bonte: bonte.length ? bonte : BONTE_FALLBACK,
     edd: Object.values(edd).some(p => Object.values(p.classes).some(r => r.length)) ? edd : EDD_FALLBACK,
     campus: campus.length ? campus : CAMP_LOUANGE_FALLBACK,
     intergroupe,
     interfranco,
+  }
+  // Lot U2 (Q14) : derrière l'interrupteur ; en ligne, le Sheet est lu tel quel.
+  if (!BACK_OFFICE) return data
+  const an = new Date().getFullYear()
+  const [courante, suivante] = await Promise.all([trimestresPublies(an), trimestresPublies(an + 1)])
+  return avecDimanchesSpeciaux(sansBrouillon(data, an, getCurrentTri(), { [an]: courante, [an + 1]: suivante }))
+}
+
+/** Lot U2 (Q4) : dès 2027, un trimestre à venir non publié est un brouillon,
+ *  qui reste aux responsables du planning — ni « Mes services », ni la carte
+ *  « Prochain service », ni les rappels, ni les notifications avant sa
+ *  publication. Même règle que les pages pour un membre (`triVisibilitiesAnnee`) :
+ *  le trimestre en cours et les passés se lisent toujours. L'année du Sheet
+ *  (2026) se lit comme avant. Pur. Seuls les plannings publiés par trimestre
+ *  (Culte, groupes) ont un
+ *  brouillon. `publies` : trimestres publiés, par année puis par planning. */
+export function sansBrouillon(
+  data: PlanningData,
+  anneeCourante: number,
+  triCourant: string,
+  publies: Readonly<Record<number, Readonly<Record<string, readonly string[]>>>>
+): PlanningData {
+  const garder = (rows: string[][], key: string) => rows.filter((r) => {
+    const annee = getAnnee(r[0])
+    const tri = getTri(r[0])
+    return annee < PREMIERE_ANNEE_APP || annee < anneeCourante
+      || (annee === anneeCourante && triRank(tri) <= triRank(triCourant))
+      || (publies[annee]?.[key] ?? []).includes(tri)
+  })
+  return {
+    ...data,
+    culte: garder(data.culte, "culte"),
+    paix: garder(data.paix, "paix"),
+    fidelite: garder(data.fidelite, "fidelite"),
+    bonte: garder(data.bonte, "bonte"),
+  }
+}
+
+// Trimestres publiés d'une année, par planning, lus une fois toutes les cinq
+// minutes (même délai que le cache du Sheet) : `loadPlanningData` sert dix appelants.
+const TTL_PUBLIES_MS = 5 * 60_000
+const publiesEnCache = new Map<number, { at: number; val: Promise<Record<string, string[]>> }>()
+
+export function trimestresPublies(annee: number): Promise<Record<string, string[]>> {
+  const enCache = publiesEnCache.get(annee)
+  if (enCache && Date.now() - enCache.at < TTL_PUBLIES_MS) return enCache.val
+  const val = Promise.all(
+    PUBLISHABLE_PLANNINGS.map(async ({ key }) => [key, await getPublishedQuarters(key, annee)] as const),
+  ).then((paires) => Object.fromEntries(paires))
+  publiesEnCache.set(annee, { at: Date.now(), val })
+  return val
+}
+
+/** Lot U2 (Q5) : un dimanche d'Interfranco ou d'Intergroupe, la présidence des
+ *  groupes est le nom du service (`marquerDimanchesSpeciaux`) — pas de président
+ *  fantôme dans « Mes services », les rappels ni les notifications. Pur : les
+ *  appelants qui assemblent eux-mêmes un `PlanningData` l'appliquent derrière
+ *  `BACK_OFFICE`, comme `loadPlanningData`. */
+export function avecDimanchesSpeciaux(data: PlanningData): PlanningData {
+  const marquer = (rows: string[][]) => marquerDimanchesSpeciaux(rows, data.interfranco, data.intergroupe)
+  return {
+    ...data,
+    paix: marquer(data.paix),
+    fidelite: marquer(data.fidelite),
+    bonte: marquer(data.bonte),
   }
 }
 
@@ -106,10 +173,13 @@ export const CULTE_ROLES: [number, string][] = [
   [9, "Orateur"], [10, "Traduction"], [11, "Sainte cène"],
 ]
 
-const GROUPE_ROLES: [number, string][] = [[1, "Présidence"], [2, "Musicien"], [3, "Orateur"]]
-const FIDELITE_ROLES: [number, string][] = [[1, "Présidence"], [2, "Orateur"], [4, "Piano"]]
-const FIDELITE_MUSIC_ROLES: [number, string][] = [[1, "Présidence"], [2, "Piano"], [3, "Guitare"], [4, "Batterie"]]
-const EDD_ROLES_COLS: [number, string][] = [[1, "Présidence"], [2, "Suppléant"], [3, "Piano"], [4, "Cajon"], [5, "Guitare"]]
+// Lot U2, P5 : Percussion (groupes, index 5) et Cours (EDD, index 6), colonnes
+// du Sheet de 2026 que l'app ignorait. Les lecteurs ne les rendent que derrière
+// l'interrupteur (`sheets.ts`) : en ligne, ces index restent vides.
+const GROUPE_ROLES: [number, string][] = [[1, "Présidence"], [2, "Musicien"], [3, "Orateur"], [5, "Percussion"]]
+// Lot F (D24, D26) : un seul planning ; le pianiste est celui du groupe.
+const FIDELITE_ROLES: [number, string][] = [[1, "Présidence"], [2, "Orateur"], [4, "Piano"], [5, "Guitare"], [6, "Batterie"]]
+const EDD_ROLES_COLS: [number, string][] = [[1, "Présidence"], [2, "Suppléant"], [3, "Piano"], [4, "Cajon"], [5, "Guitare"], [6, "Cours"]]
 const INTERGROUPE_ROLES: [number, string][] = [
   [1, "Présidence"], [2, "Choriste"], [3, "Choriste"], [4, "Choriste"],
   [5, "Piano"], [6, "Guitare"], [7, "Cajon/Batterie"], [8, "Sono"], [9, "PPT"],
@@ -137,7 +207,6 @@ export function collectPlanningNames(data: PlanningData): string[] {
   for (const r of data.paix) for (const [i] of GROUPE_ROLES) add(r[i])
   for (const r of data.bonte) for (const [i] of GROUPE_ROLES) add(r[i])
   for (const r of data.fidelite) for (const [i] of FIDELITE_ROLES) add(r[i])
-  for (const r of data.fideliteMusic) for (const [i] of FIDELITE_MUSIC_ROLES) add(r[i])
   for (const pk of EDD_PERIODES) {
     const classes = data.edd[pk]?.classes ?? {}
     for (const cls of EDD_CLASSES) {
@@ -160,10 +229,10 @@ const CULTE_ROLE_MAP: [number, ServiceRole | null][] = [
   [1, "presidence"], [2, "chanteur"], [3, "chanteur"], [4, "musicien"],
   [5, "musicien"], [6, "musicien"], [7, "regie"], [8, "regie"],
 ]
-const GROUPE_ROLE_MAP: [number, ServiceRole | null][] = [[1, "presidence"], [2, "musicien"], [3, null]]
-const FIDELITE_ROLE_MAP: [number, ServiceRole | null][] = [[1, "presidence"], [2, null], [4, "musicien"]]
-const FIDELITE_MUSIC_ROLE_MAP: [number, ServiceRole | null][] = [[1, "presidence"], [2, "musicien"], [3, "musicien"], [4, "musicien"]]
-const EDD_ROLE_MAP: [number, ServiceRole | null][] = [[1, "presidence"], [2, null], [3, "musicien"], [4, "musicien"], [5, "musicien"]]
+const GROUPE_ROLE_MAP: [number, ServiceRole | null][] = [[1, "presidence"], [2, "musicien"], [3, null], [5, "musicien"]]
+const FIDELITE_ROLE_MAP: [number, ServiceRole | null][] = [[1, "presidence"], [2, null], [4, "musicien"], [5, "musicien"], [6, "musicien"]]
+// Cours (P5) : présence sans rôle de setlist, comme le suppléant.
+const EDD_ROLE_MAP: [number, ServiceRole | null][] = [[1, "presidence"], [2, null], [3, "musicien"], [4, "musicien"], [5, "musicien"], [6, null]]
 const INTERGROUPE_ROLE_MAP: [number, ServiceRole | null][] = [
   [1, "presidence"], [2, "chanteur"], [3, "chanteur"], [4, "chanteur"],
   [5, "musicien"], [6, "musicien"], [7, "musicien"], [8, "regie"], [9, "regie"],
@@ -196,7 +265,6 @@ export function deriveServiceRolesFromPlanning(
   scan(data.paix, "Groupe Paix", GROUPE_ROLE_MAP)
   scan(data.bonte, "Groupe Bonté", GROUPE_ROLE_MAP)
   scan(data.fidelite, "Groupe Fidélité", FIDELITE_ROLE_MAP)
-  scan(data.fideliteMusic, "Groupe Fidélité", FIDELITE_MUSIC_ROLE_MAP)
   scan(data.intergroupe, "Intergroupe", INTERGROUPE_ROLE_MAP)
   scan(data.interfranco, "Interfranco", INTERFRANCO_ROLE_MAP)
   for (const pk of EDD_PERIODES) {
@@ -236,13 +304,6 @@ export interface ServiceEntry {
   moment?: "matin" | "soir"
 }
 
-/** Date d'une séance campus ("12/3 Matin") → ISO, même convention d'année que parseDate. */
-function campusDate(label: string): string | null {
-  const m = label.match(/^(\d{1,2})\/(\d{1,2})/)
-  if (!m) return null
-  return `${inferYear(+m[1], +m[2])}-${m[2].padStart(2, "0")}-${m[1].padStart(2, "0")}`
-}
-
 /** Toutes les dates où `name` apparaît dans les plannings, triées chronologiquement. */
 export function findMyServices(data: PlanningData, name: string): ServiceEntry[] {
   if (!name.trim()) return []
@@ -265,7 +326,6 @@ export function findMyServices(data: PlanningData, name: string): ServiceEntry[]
   scan(data.paix, "Groupe Paix", GROUPE_ROLES)
   scan(data.bonte, "Groupe Bonté", GROUPE_ROLES)
   scan(data.fidelite, "Groupe Fidélité", FIDELITE_ROLES)
-  scan(data.fideliteMusic, "Groupe Fidélité", FIDELITE_MUSIC_ROLES)
   scan(data.intergroupe, "Intergroupe", INTERGROUPE_ROLES)
   scan(data.interfranco, "Interfranco", INTERFRANCO_ROLES)
   for (const pk of EDD_PERIODES) {
@@ -275,7 +335,7 @@ export function findMyServices(data: PlanningData, name: string): ServiceEntry[]
     }
   }
   for (const s of data.campus) {
-    const dt = campusDate(s.d)
+    const dt = s.date
     if (!dt) continue
     const moment = s.d.includes("Soir") ? "Campus (soir)" : "Campus (matin)"
     const seanceMoment: "matin" | "soir" = s.d.includes("Soir") ? "soir" : "matin"
@@ -350,7 +410,7 @@ export function setlistSeances(data: PlanningData): SetlistSeance[] {
     for (const cls of EDD_CLASSES) pushRows(classes[cls] ?? [], cls)
   }
   for (const s of data.campus) {
-    const date = campusDate(s.d)
+    const date = s.date
     if (!date) continue
     const moment: "matin" | "soir" = s.d.includes("Soir") ? "soir" : "matin"
     const leader = splitNames(s.pres)[0] ?? ""
@@ -404,7 +464,6 @@ export function servantsForDate(data: PlanningData, dateISO: string): Servant[] 
   scan(data.paix, "Groupe Paix", GROUPE_ROLE_MAP)
   scan(data.bonte, "Groupe Bonté", GROUPE_ROLE_MAP)
   scan(data.fidelite, "Groupe Fidélité", FIDELITE_ROLE_MAP)
-  scan(data.fideliteMusic, "Groupe Fidélité", FIDELITE_MUSIC_ROLE_MAP)
   scan(data.intergroupe, "Intergroupe", INTERGROUPE_NOTIFY_MAP)
   scan(data.interfranco, "Interfranco", INTERFRANCO_NOTIFY_MAP)
   for (const pk of EDD_PERIODES) {
@@ -420,7 +479,7 @@ export function servantsForDate(data: PlanningData, dateISO: string): Servant[] 
   }
   // Campus : date via le label ; matin/soir distingués par le leader (président).
   for (const s of data.campus) {
-    if (campusDate(s.d) !== dateISO) continue
+    if (s.date !== dateISO) continue
     const leader = splitNames(s.pres)[0] ?? ""
     const moment: "matin" | "soir" = s.d.includes("Soir") ? "soir" : "matin"
     for (const name of splitNames(s.pres)) out.push({ name, category: "Campus", serviceRole: "presidence", leader, moment })

@@ -3,7 +3,7 @@ import { adminDb, verifyIdToken } from "@/lib/push/admin";
 import { sendPushToUids } from "@/lib/push/send";
 import { recordNotification } from "@/lib/push/notifications";
 import { filterUidsByNotifPref, loadNotifLangs } from "@/lib/push/recipients";
-import { nouvelEvenementMessage } from "@/lib/evenements/rappel";
+import { pushNouvelEvenement } from "@/lib/evenements/rappel";
 import { canCreateEvenement, canEditEvenement } from "@/lib/access";
 import { destinatairesEvenement } from "@/lib/evenements/serveur";
 import type { Evenement } from "@/types/evenement";
@@ -40,7 +40,7 @@ export async function POST(req: NextRequest) {
   const snap = await db.collection("evenements").doc(evenementId).get();
   if (!snap.exists) return NextResponse.json({ error: "Évènement introuvable" }, { status: 404 });
   const e = { id: snap.id, ...snap.data() } as Evenement;
-  const profile = ((await db.collection("users").doc(user.uid).get()).data() ?? null) as { annonces?: string[]; poles?: string[] } | null;
+  const profile = ((await db.collection("users").doc(user.uid).get()).data() ?? null) as { annonces?: string[]; coordination?: boolean } | null;
   if (!canEditEvenement(user, profile, e) && !canCreateEvenement(user, profile, e.pour)) {
     return NextResponse.json({ error: "Non autorisé" }, { status: 403 });
   }
@@ -55,7 +55,7 @@ export async function POST(req: NextRequest) {
   for (const lang of ["fr", "zh-CN"] as const) {
     const groupe = uids.filter((u) => (langs.get(u) ?? "fr") === lang);
     if (!groupe.length) continue;
-    const payload = { ...nouvelEvenementMessage(e, lang), url: `/evenements/${evenementId}`, tag: `evenement-${evenementId}` };
+    const payload = pushNouvelEvenement(e, lang);
     result = await sendPushToUids(groupe, payload);
     await recordNotification({ ...payload, kind: "evenement", recipients: groupe });
   }

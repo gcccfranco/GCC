@@ -20,6 +20,11 @@ const ouvrir = async (page: Page, route: string) => {
   await page.getByRole("navigation").first().waitFor();
 };
 const bouton = (page: Page) => page.getByTestId("menu-plannings");
+/** Agencement v18 (R6) : en grand (barre latérale), les plannings sont des pilules dans l'en-tête ;
+ *  sur tablette portrait, la rangée collante reste. */
+const enGrand = () => test.info().project.name.startsWith("ordinateur") || test.info().project.name === "tablette-paysage";
+const rangeePlannings = (page: Page) =>
+  enGrand() ? page.locator("header[data-entete-page]").getByRole("navigation", { name: "Plannings" }) : page.getByTestId("onglets-section");
 const feuille = (page: Page) => page.getByTestId("feuille-plannings");
 
 /** Capture à regarder à l'œil (PW_CAPTURES=<dossier>), une par appareil. */
@@ -36,7 +41,7 @@ test.describe("plannings : la rangée dès que les huit y tiennent (tablette, or
   test("pas de pastille : les huit onglets sont là, et le courant est marqué", async ({ page }) => {
     await ouvrir(page, "/planning/campus");
     await expect(bouton(page)).toBeHidden();
-    const rangee = page.getByTestId("onglets-section");
+    const rangee = rangeePlannings(page);
     await expect(rangee).toBeVisible();
     await expect(rangee.getByRole("link")).toHaveText(PLANNINGS.map((n) => new RegExp(n.replace(".", "\\."))));
     await expect(rangee.getByRole("link", { name: "Campus" })).toHaveAttribute("aria-current", "page");
@@ -46,6 +51,7 @@ test.describe("plannings : la rangée dès que les huit y tiennent (tablette, or
   // Si les huit débordent un peu (tablette en portrait), la rangée s'estompe du côté
   // où il en reste, au lieu d'en trancher un en deux.
   test("elle s'estompe du côté où il reste des onglets, elle ne les coupe pas", async ({ page }) => {
+    test.skip(enGrand(), "en grand, les pilules de l'en-tête tiennent sur la rangée");
     await ouvrir(page, "/planning");
     const rangee = page.getByTestId("onglets-section");
     const deborde = await rangee.evaluate((el) => el.scrollWidth > el.clientWidth + 1);

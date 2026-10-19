@@ -63,23 +63,29 @@ async function ecrireEntree(key: string, entryId: string, author: HistoryAuthor,
 }
 
 /**
- * Note une case modifiée : elle rejoint l'entrée en cours si la même personne a
- * écrit il y a moins de 15 minutes, sinon elle en ouvre une. Ne lève jamais —
- * la case, elle, est écrite.
+ * Note des cases modifiées en UN passage (lot 3, PG5) : elles rejoignent l'entrée en cours si la
+ * même personne a écrit il y a moins de 15 minutes, sinon elles en ouvrent une. Une lecture, une
+ * écriture, quel que soit leur nombre. Ne lève jamais — les cases, elles, sont écrites.
  */
-export async function noterChangement(
+export async function noterChangements(
   key: string,
   author: HistoryAuthor,
-  changement: ChangementGrille
+  changements: ChangementGrille[]
 ): Promise<void> {
+  if (!changements.length) return;
   try {
     const [derniere] = await getHistoriqueGrille(key, 1);
     const memePassage =
       derniere && derniere.authorUid === author.uid && Date.now() - derniere.at.getTime() < SAME_PASS_MS;
     const entryId = memePassage ? derniere.id : newEntryId(author);
-    const changes = fusionnerChangements(memePassage ? derniere.changes : [], changement);
+    const changes = changements.reduce(fusionnerChangements, memePassage ? derniere.changes : []);
     await ecrireEntree(key, entryId, author, changes);
   } catch {
-    // Règles pas encore publiées, hors-ligne… : la case est enregistrée.
+    // Règles pas encore publiées, hors-ligne… : les cases sont enregistrées.
   }
+}
+
+/** Une seule case modifiée : un passage à un changement. */
+export function noterChangement(key: string, author: HistoryAuthor, changement: ChangementGrille): Promise<void> {
+  return noterChangements(key, author, [changement]);
 }

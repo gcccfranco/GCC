@@ -1105,10 +1105,21 @@ export function JianpuPDFPage({
   strip,
   stripHeight = 0,
   trailingTransition,
+  pageIndex = 0,
+  top = 0,
+  accordsOrigine,
 }: {
   src: string;
   page: JianpuPage;
   chords?: JianpuChords | null;
+  /** Rang de la page dans le scan (0 = la première, seule à porter un calque). */
+  pageIndex?: number;
+  /** Rangées de l'en-tête gravé coupées de `src` (`cadrage.json`) : l'image fait
+   *  `h − top` pixels de haut, le calque remonte d'autant. */
+  top?: number;
+  /** K4 (O11) : tonalité gravée, sur une page suivante dont la première page
+   *  transpose ses accords — ceux de cette page-ci ne suivent pas. */
+  accordsOrigine?: string | null;
   title: string;
   titlePinyin?: string | null;
   /** Tonalité choisie, si elle diffère de celle du .cho. */
@@ -1125,10 +1136,13 @@ export function JianpuPDFPage({
   /** Transition jouée après ce chant (compact, dernière page du scan). */
   trailingTransition?: string;
 }) {
-  const availH = SHEET_BOX_H - headerHeight - stripHeight - (trailingTransition ? 30 : 0);
-  const k = Math.min(SHEET_BOX_W / page.w, availH / page.h);
+  const availH = SHEET_BOX_H - headerHeight - stripHeight - (trailingTransition ? 30 : 0) - (accordsOrigine ? 24 : 0);
+  const k = Math.min(SHEET_BOX_W / page.w, availH / (page.h - top));
   const imgW = page.w * k;
-  const imgH = page.h * k;
+  const imgH = (page.h - top) * k;
+  // Le seul endroit où le recadrage devient un décalage de coordonnées : le
+  // calque est relevé sur la page entière.
+  const dy = top * k;
   // Le calque est relevé sur une image d'une autre définition que le scan
   // affiché : tout est ramené à l'échelle du rendu.
   const ck = chords ? imgW / chords.w : 0;
@@ -1168,6 +1182,11 @@ export function JianpuPDFPage({
         </View>
       )}
 
+      {accordsOrigine && (
+        <Text style={{ fontSize: 8, color: C.subtitle, fontFamily: "LiberationSans", marginBottom: 8 }}>
+          {`Page ${pageIndex + 1} : les accords imprimés sont ceux d'origine (${accordsOrigine}) et ne suivent pas la transposition ; les chiffres, eux, restent justes.`}
+        </Text>
+      )}
       <View style={{ alignItems: "center", marginTop: headerHeight > 0 && !strip ? 10 : 0 }}>
         <View style={{ width: imgW, height: imgH, position: "relative" }}>
           <Image src={src} style={{ width: imgW, height: imgH }} />
@@ -1177,7 +1196,7 @@ export function JianpuPDFPage({
           {overlayOn && chords && (
             <>
               {chords.keyLabel && (
-                <SheetLabel box={chords.keyLabel} k={ck} h={chords.labelH} color="#000">
+                <SheetLabel box={chords.keyLabel} k={ck} dy={dy} h={chords.labelH} color="#000">
                   {/* `c` : le texte gravé, quand la page n'écrit pas « 1=X »
                       (la lettre seule, l'ordre inverse, ou un « 1=F » posé
                       au-dessus d'accords en D). Transposé comme une étiquette,
@@ -1187,8 +1206,9 @@ export function JianpuPDFPage({
                     : `1=${playedKey}`}
                 </SheetLabel>
               )}
-              {chords.titleKey && (
-                <SheetLabel box={chords.titleKey} k={ck} h={chords.titleKey.h * 0.78} color="#000" font="SourceHanSansCN">
+              {/* « （X调） » du titre gravé : coupé avec lui, rien à réécrire. */}
+              {chords.titleKey && chords.titleKey.y >= top && (
+                <SheetLabel box={chords.titleKey} k={ck} dy={dy} h={chords.titleKey.h * 0.78} color="#000" font="SourceHanSansCN">
                   {`（${playedKey}调）`}
                 </SheetLabel>
               )}
@@ -1208,7 +1228,7 @@ export function JianpuPDFPage({
                   d'orthographe des rangées qui, elles, se suivent (une
                   modulation) : le décalage reste celui de la page. */}
               {chords.labels.map((l, i) => (
-                <SheetLabel key={i} box={l} k={ck} h={l.fh ?? chords.labelH} color={chordColor}>
+                <SheetLabel key={i} box={l} k={ck} dy={dy} h={l.fh ?? chords.labelH} color={chordColor}>
                   {l.opt
                     ? ""
                     : transposeLabel(
@@ -1227,7 +1247,7 @@ export function JianpuPDFPage({
             {`Jouer en ${playedKey} — seuls les accords en bleu ont été transposés ; les autres sont ceux d'origine (${chords?.printedKey}).`}
           </Text>
         )}
-        {playedKey && !chords && (
+        {playedKey && !chords && pageIndex === 0 && (
           <Text style={{ fontSize: 8, color: C.subtitle, fontFamily: "LiberationSans", marginTop: 6 }}>
             {`Jouer en ${playedKey} — les chiffres restent justes, mais les accords imprimés sur ce scan sont ceux d'origine.`}
           </Text>
@@ -1261,17 +1281,19 @@ export function JianpuPDFPage({
  *  largeur fixe, react-pdf tronque un libellé plus large que son cadre (le
  *  rendu web, lui, déborde grâce à `minWidth` + `nowrap`). */
 function SheetLabel({
-  box, k, h, color, font = "Times-Roman", children,
+  box, k, dy = 0, h, color, font = "Times-Roman", children,
 }: {
   box: { x: number; y: number; w: number; h: number };
   k: number;
+  /** Recadrage de l'image, en points : le calque remonte d'autant. */
+  dy?: number;
   h: number;
   color: string;
   font?: string;
   children: string;
 }) {
   const left = (box.x - 3) * k;
-  const top = (box.y - 6) * k;
+  const top = (box.y - 6) * k - dy;
   const boxH = (box.h + 8) * k;
   const fontSize = h * k;
   return (

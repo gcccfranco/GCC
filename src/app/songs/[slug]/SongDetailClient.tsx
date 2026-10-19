@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useLayoutEffect, useRef } from "react";
 import Link from "next/link";
-import { MoreHorizontal, Download, Play, X, TriangleAlert , Music, Music2, Settings, ChevronDown, Sparkles } from "lucide-react";
+import { MoreHorizontal, Play, X, TriangleAlert , Settings, ChevronDown, Sparkles, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -26,6 +26,7 @@ import { buildDefaultStructure } from "@/lib/chordpro/structure";
 import { parseChordPro } from "@/lib/chordpro/parser";
 import { transposeAST } from "@/lib/transposeAST";
 import { useScrollDirection } from "@/hooks/useScrollDirection";
+import { useDeuxVolets } from "@/hooks/useDeuxVolets";
 import { Halo } from "@/components/layout/Halo";
 import { FondDeBarre } from "@/components/layout/FondDeBarre";
 import { keyOptions, semitonesTo, getTransposedKey } from "@/lib/transpose";
@@ -88,9 +89,11 @@ function useVersionDeLaSetlist(slug: string, setlistId: string | null, position:
   export function SongDetailClient({ song }: SongDetailClientProps) {
     const { t, i18n } = useTranslation();
     const searchParams = useSearchParams();
+    // Ouvert depuis une setlist (`?setlist=`) : sa version, et le Retour y ramène.
+    const setlistDOrigine = safeParseParam<string | null>(searchParams.get("setlist"), null);
     const versionSetlist = useVersionDeLaSetlist(
       song.slug,
-      safeParseParam<string | null>(searchParams.get("setlist"), null),
+      setlistDOrigine,
       safeParseParam<number | null>(searchParams.get("item"), null),
     );
     const sourceAdaptee = versionSetlist?.source;
@@ -105,8 +108,8 @@ function useVersionDeLaSetlist(slug: string, setlistId: string | null, position:
     const [jianpuPref, setJianpuPrefState] = useState<JianpuPref>("auto");
     useEffect(() => setJianpuPrefState(getJianpuPref()), []);
     const showScore = sheetEnabled(jianpuPref, undefined);
-    const toggleScore = () => {
-      const next = prefDepuisInterrupteur(!showScore);
+    const choisirScore = (on: boolean) => {
+      const next = prefDepuisInterrupteur(on);
       setJianpuPrefState(next);
       setJianpuPref(next);
     };
@@ -116,6 +119,29 @@ function useVersionDeLaSetlist(slug: string, setlistId: string | null, position:
     const defaultKey = recommendedKey ?? originalKey;
     const youtubeId = song.youtubeUrl ? extractYouTubeId(song.youtubeUrl) : null;
     const scrollVisible = useScrollDirection();
+    // Deux volets (lot U5, docs/spec-deux-volets.md, Q16) : la barre colle en haut du volet
+    // de droite au lieu d'être fixe sur toute la largeur (globals.css, `.chants-volets`).
+    // Elle glisse au défilement, donc devient le repère de la copie fixe du halo de son
+    // fond : celle-ci se recale de la place de la barre à gauche, `--barre-left`.
+    const deuxVolets = useDeuxVolets();
+    const barreRef = useRef<HTMLDivElement>(null);
+    useEffect(() => {
+      const el = barreRef.current;
+      if (!el) return;
+      if (!deuxVolets) {
+        el.style.removeProperty("--barre-left");
+        return;
+      }
+      const update = () => el.style.setProperty("--barre-left", `${el.getBoundingClientRect().left}px`);
+      update();
+      const ro = new ResizeObserver(update);
+      ro.observe(el);
+      window.addEventListener("resize", update);
+      return () => {
+        ro.disconnect();
+        window.removeEventListener("resize", update);
+      };
+    }, [deuxVolets]);
     // Barre d'outils rappelée d'un tap sur la partition (tablette au pupitre :
     // éviter de devoir remonter la page pour transposer / zoomer)
     const [barPinned, setBarPinned] = useState(false);
@@ -150,6 +176,8 @@ function useVersionDeLaSetlist(slug: string, setlistId: string | null, position:
         const list: string[] = raw ? JSON.parse(raw) : [];
         const next = [song.slug, ...list.filter((s) => s !== song.slug)].slice(0, 8);
         localStorage.setItem("recentSongs", JSON.stringify(next));
+        // La liste des deux volets, restée montée, relit ses récents.
+        window.dispatchEvent(new Event("recentSongs"));
       } catch { /* stockage indisponible */ }
     }, [song.slug]);
 
@@ -300,23 +328,143 @@ function useVersionDeLaSetlist(slug: string, setlistId: string | null, position:
     (k === originalKey ? " " + t("customize.panel.keyOriginal") : "") +
     (k === recommendedKey ? " " + t("customize.panel.keyRecommended") : "");
 
+  // Libellés par priorité (spec-barre-chant.md, Q4) : tous, puis ceux des actions seuls, puis
+  // aucun — le premier niveau qui tient sur la ligne. Mesuré sur la rangée elle-même : ce qu'elle
+  // porte varie (Retour, ↺, suffixe de tonalité, Vidéo, Idées, Pinyin), un seuil fixe la ferait
+  // déborder ou cacherait des libellés qui tiennent (globals.css, `data-libelles`).
+  const rangeeRef = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    const el = rangeeRef.current;
+    if (!el) return;
+    // Le débordement dans la marge intérieure ne compte pas dans `scrollWidth` : on compare le
+    // bord droit du dernier élément à celui du contenu de la rangée.
+    const tient = () => {
+      const fin = el.getBoundingClientRect().right - parseFloat(getComputedStyle(el).paddingRight);
+      return [...el.children].every((c) => c.getBoundingClientRect().right <= fin + 0.5);
+    };
+    const ajuster = () => {
+      for (const niveau of ["2", "1", "0"]) {
+        el.dataset.libelles = niveau;
+        if (tient()) break;
+      }
+    };
+    ajuster();
+    const ro = new ResizeObserver(ajuster);
+    ro.observe(el);
+    document.fonts?.ready.then(ajuster);
+    return () => ro.disconnect();
+  }, [isZh, youtubeId, accesHarmonie.peut, customize.currentKey, setlistDOrigine, deuxVolets]);
+
+  // Menu ⋯ (spec-barre-chant.md, Q3, Q5) : Vidéo, PDF et Idées sont dans la barre partout ; plus
+  // de Spotify ni d'Apple Music (Timothée, 18/10/2026 : les chants n'ont que YouTube).
+  const menuChant = (
+                <DropdownMenuContent align="end" className="w-52">
+                  <DropdownMenuCheckboxItem
+                    checked={chartStyle}
+                    onCheckedChange={toggleChartStyle}
+                    onSelect={(e) => e.preventDefault()}
+                  >
+                    {t("performance.chartStyle")}
+                  </DropdownMenuCheckboxItem>
+                  <DropdownMenuItem onClick={() => setShowPanel(true)}>
+                    <Settings className="h-3.5 w-3.5 text-muted-foreground" />
+                    {t("songs.detail.customize")}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick= {() => setShowReport(true)}>
+                    <TriangleAlert className='h-3.5 w-3.5 text-muted-foreground'/>
+                    {t('songs.detail.report')}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+  );
+
+  // Les actions (Q2, Q5) : au bout de la rangée dès la tablette debout, sur la seconde rangée du
+  // téléphone, libellées. Idées et ⋯ en icône seule. Les deux sont rendues, une seule est visible.
+  const tel = (variante: "rangee" | "tel") => variante === "tel";
+  const actions = (variante: "rangee" | "tel") => {
+    const classe = tel(variante)
+      ? "raised h-9 shrink-0 gap-1.5 px-3.5 rounded-full text-xs font-semibold bg-card text-foreground hover:bg-card"
+      : "h-9 lg:h-8 min-w-9 lg:min-w-8 px-2.5 rounded-full text-xs font-semibold";
+    const libelle = tel(variante) ? undefined : "libelle-action";
+    const carre = tel(variante) ? `${classe} w-9 px-0` : "h-9 w-9 lg:h-8 lg:w-8 rounded-full";
+    return (
+      <>
+        {youtubeId && (
+          <Button
+            variant="secondary"
+            aria-label={t("songs.detail.video")}
+            title={t("songs.detail.video")}
+            aria-pressed={showVideo}
+            onClick={() => setShowVideo((v) => !v)}
+            className={`${classe} ${showVideo ? "!bg-foreground !text-background hover:!bg-foreground/90" : ""}`}
+          >
+            {!showVideo ? <Play className="h-4 w-4" /> : <X className="h-4 w-4" />}
+            <span className={libelle}>{t("songs.detail.video")}</span>
+          </Button>
+        )}
+        <Button
+          variant="secondary"
+          aria-label={t("songs.detail.downloadPdf") || "PDF"}
+          title={t("songs.detail.downloadPdf") || "PDF"}
+          disabled={downloading}
+          onClick={() => setShowPdfChoice(true)}
+          className={classe}
+        >
+          <FileText className="h-4 w-4" />
+          <span className={libelle}>{t("songs.detail.downloadPdf") || "PDF"}</span>
+        </Button>
+        {accesHarmonie.peut && (
+          <Button
+            variant="secondary"
+            aria-label={t("harmonie.idees")}
+            title={t("harmonie.idees")}
+            onClick={() => setShowIdees(true)}
+            className={carre}
+          >
+            <Sparkles className="h-4 w-4" />
+          </Button>
+        )}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="secondary"
+              size="icon-lg"
+              className={carre}
+              aria-label={t("common.moreActions")}
+            >
+              <MoreHorizontal className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          {menuChant}
+        </DropdownMenu>
+      </>
+    );
+  };
+
   return (
-      <div className="relative min-h-screen print:min-h-0 bg-background" style={{ width: `${100 / fontScale}%` }}>
+      <div className="relative min-h-screen print:min-h-0 bg-background" style={{ width: `${100 / fontScale}%`, "--zoom-chant": fontScale } as React.CSSProperties}>
         <Halo variant="chant" color="var(--sec-chorus)" />
         {/* Barre de contrôles */}
-        <div data-testid="barre-outils" className={`print:hidden fixed left-0 right-0 top-[var(--nav-h)] [--barre-top:var(--nav-h)] z-10 material-chrome transition-transform duration-300 ${ scrollVisible || barPinned ? "translate-y-0" : "-translate-y-[calc(100%+var(--nav-h))]"}`}>
+        <div ref={barreRef} data-testid="barre-outils" className={`barre-chant print:hidden fixed left-[var(--barre-laterale)] right-0 top-[var(--nav-h)] [--barre-top:var(--nav-h)] [--barre-left:var(--barre-laterale)] z-10 material-chrome transition-transform duration-300 ${ scrollVisible ? "translate-y-0" : barPinned ? "-translate-y-[calc(var(--nav-h)-var(--sat))]" : "-translate-y-[calc(100%+var(--nav-h))]"}`}>
           <FondDeBarre sousNavbar />
-          <div className = "max-w-3xl mx-auto w-full flex flex-nowrap gap-1 items-center py-2 px-1.5">
+          {/* `rangee-chant` : les libellés suivent la place de la rangée (`data-libelles`, plus haut),
+              donc celle du volet en deux volets. */}
+          <div ref={rangeeRef} className="rangee-chant max-w-2xl mx-auto w-full flex flex-nowrap gap-1 items-center py-2 px-1.5">
             <Button
               asChild
               variant="secondary"
-              className="h-9 lg:h-8 px-2.5 rounded-full text-xs font-semibold text-muted-foreground hover:text-foreground"
+              className="retour-chant h-9 lg:h-8 px-2.5 rounded-full text-xs font-semibold text-muted-foreground hover:text-foreground"
             >
-              <Link aria-label={t("songs.detail.backToAll")} href={backPath}>
+              {/* Deux volets : le Retour n'est montré que vers une setlist (`data-vers-setlist`,
+                  globals.css) ; la liste des chants est déjà à gauche. */}
+              <Link
+                aria-label={t("songs.detail.backToAll")}
+                href={setlistDOrigine ? `/setlists/${encodeURIComponent(setlistDOrigine)}` : backPath}
+                data-vers-setlist={setlistDOrigine ? "" : undefined}
+              >
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M19 12H5m6-7l-7 7 7 7" />
                 </svg>
-                <span className="hidden sm:inline">{t("songs.detail.backToAll")}</span>
+                <span className="libelle-chant">{t("songs.detail.backToAll")}</span>
               </Link>
             </Button>
             {/* Transposition rapide */}
@@ -375,27 +523,9 @@ function useVersionDeLaSetlist(slug: string, setlistId: string | null, position:
               >
                 +
               </Button>
-              {/* Retour à la tonalité par défaut (recommandée, sinon d'origine) d'un tap */}
-              {customize.currentKey !== defaultKey && (
-                <Button
-                  variant="ghost"
-                  size="icon-lg"
-                  className="h-9 w-9 lg:h-8 lg:w-8 rounded-full text-muted-foreground"
-                  aria-label={t(recommendedKey ? "customize.panel.keyBackToRecommended" : "customize.panel.keyOriginal")}
-                  title={t(recommendedKey ? "customize.panel.keyBackToRecommended" : "customize.panel.keyOriginal")}
-                  onClick={() =>
-                    setCustomize((c) => ({ ...c, semitones: semitonesTo(originalKey, defaultKey), currentKey: defaultKey }))
-                  }
-                >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
-                    <path d="M3 3v5h5" />
-                  </svg>
-                </Button>
-              )}
             </div>
 
-            <div className="raised ml-auto flex gap-0.5 items-center justify-end rounded-full p-0.5">
+            <div className="groupe-chant raised ml-auto flex gap-0.5 items-center justify-end rounded-full p-0.5">
               {/* Taille du texte */}
               <div className="flex items-center">
                 <Button
@@ -430,7 +560,7 @@ function useVersionDeLaSetlist(slug: string, setlistId: string | null, position:
                     }`}
               >
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/><path d="M9 18V5l12-2v13"/></svg>
-                    <span className="hidden sm:inline">{t("songs.detail.chords") || "Accords"}</span>
+                    <span className="libelle-chant">{t("songs.detail.chords") || "Accords"}</span>
               </button>
 
               {/* Pinyin (chants zh) */}
@@ -444,96 +574,31 @@ function useVersionDeLaSetlist(slug: string, setlistId: string | null, position:
                       }`}
                     >
                       <span className="font-bold">拼</span>
-                      <span className="hidden sm:inline">{t("songs.detail.pinyin") || "Pinyin"}</span>
+                      <span className="libelle-chant">{t("songs.detail.pinyin") || "Pinyin"}</span>
                     </button>
                   )}
 
-              {/* Partition 简谱 (chants zh qui en ont une) */}
-              {jianpuScore && (
-                <button aria-label={"简谱"}
-                  aria-pressed={showScore}
-                  onClick={toggleScore}
-                  className={`h-9 min-w-9 lg:h-8 lg:min-w-8 px-2.5 rounded-full text-xs font-semibold flex items-center justify-center gap-1.5 transition-all duration-150 ${
-                    showScore
-                      ? "bg-card text-foreground shadow-sm"
-                      : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  <span className="font-bold">谱</span>
-                  <span className="hidden sm:inline">简谱</span>
-                </button>
-              )}
-
-              {/* Menu ⋯ : médias / personnaliser / PDF */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon-lg"
-                    className="h-9 w-9 lg:h-8 lg:w-8 rounded-full text-muted-foreground"
-                    aria-label={t("common.moreActions")}
-                  >
-                    <MoreHorizontal className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-52">
-                  {youtubeId && (
-                    <DropdownMenuItem onClick={() => setShowVideo((v) => !v)}>
-                      {!showVideo ? <Play className="h-3.5 w-3.5 text-muted-foreground" /> : <X className="h-3.5 w-3.5 text-muted-foreground" />}
-                      {t("songs.detail.video")}
-                    </DropdownMenuItem>
-                  )}
-                  {song.spotifyUrl && (
-                    <DropdownMenuItem asChild>
-                      <a href={song.spotifyUrl} target="_blank" rel="noopener noreferrer">
-                        <Music className="h-3.5 w-3.5 text-muted-foreground" />
-                        Spotify
-                      </a>
-                    </DropdownMenuItem>
-                  )}
-                  {song.appleMusicUrl && (
-                    <DropdownMenuItem asChild>
-                      <a href={song.appleMusicUrl} target="_blank" rel="noopener noreferrer">
-                        <Music2 className="h-3.5 w-3.5 text-muted-foreground" />
-                        Apple Music
-                      </a>
-                    </DropdownMenuItem>
-                  )}
-                  <DropdownMenuCheckboxItem
-                    checked={chartStyle}
-                    onCheckedChange={toggleChartStyle}
-                    onSelect={(e) => e.preventDefault()}
-                  >
-                    {t("performance.chartStyle")}
-                  </DropdownMenuCheckboxItem>
-                  <DropdownMenuItem onClick={() => setShowPanel(true)}>
-                    <Settings className="h-3.5 w-3.5 text-muted-foreground" />
-                    {t("songs.detail.customize")}
-                  </DropdownMenuItem>
-                  <DropdownMenuItem disabled={downloading} onClick={() => setShowPdfChoice(true)}>
-                    <Download className="h-3.5 w-3.5 text-muted-foreground" />
-                    {downloading ? "…" : t("songs.detail.downloadPdf") || "PDF"}
-                  </DropdownMenuItem>
-                  {accesHarmonie.peut && (
-                    <DropdownMenuItem onClick={() => setShowIdees(true)}>
-                      <Sparkles className="h-3.5 w-3.5 text-muted-foreground" />
-                      {t("harmonie.idees")}
-                    </DropdownMenuItem>
-                  )}
-                  <DropdownMenuItem onClick= {() => setShowReport(true)}>
-                    <TriangleAlert className='h-3.5 w-3.5 text-muted-foreground'/>
-                    {t('songs.detail.report')}
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
             </div>
+
+            {/* Dès la tablette debout (spec-barre-chant.md, Q2, Q3) : « faire » à droite d'un filet,
+                Vidéo · PDF · Idées d'harmonie · ⋯ ; le menu ne garde que les couleurs,
+                Personnaliser et Signaler (globals.css, `.actions-chant`). */}
+            <div className="actions-chant ml-auto shrink-0 items-center gap-1">
+              <span aria-hidden className="mx-1 h-5 w-px bg-border" />
+              {actions("rangee")}
+            </div>
+          </div>
+          {/* Téléphone, couché compris (Q5) : les actions sur une seconde rangée, qui défile en
+              largeur, colle sous la première et s'escamote avec elle (globals.css, `.actions-tel`). */}
+          <div className="actions-tel max-w-2xl mx-auto w-full gap-2 overflow-x-auto px-1.5 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            {actions("tel")}
           </div>
 
           {/* Embed YouTube */}
           
         </div>
         {youtubeId && showVideo && (
-            <div className="relative print:hidden border-b border-border bg-black/5 px-4 py-3 flex justify-center mt-[82px]">
+            <div className="video-chant relative print:hidden border-b border-border bg-black/5 px-4 py-3 flex justify-center mt-[82px]">
               <div className="w-full max-w-xl aspect-video">
                 <iframe
                   src={`https://www.youtube.com/embed/${youtubeId}`}
@@ -557,17 +622,51 @@ function useVersionDeLaSetlist(slug: string, setlistId: string | null, position:
             setBarPinned(true);
           }}
         >
-          {showScore && jianpuScore ? (
-            <JianpuSheet
-              entry={jianpuScore}
-              title={song.title}
-              slug={song.slug}
-              playedKey={customize.currentKey !== originalKey ? customize.currentKey : null}
-              originalKey={originalKey}
-              chordEdits={versionSetlist?.retouches}
-            />
-          ) : (
+          {/* L'en-tête du site reste au-dessus du scan (K3) ; le segment « 简谱 · Paroles »
+              à droite des pastilles règle la préférence de l'appareil (D5). */}
             <SongView
+              bascule={
+                jianpuScore ? (
+                  <span role="radiogroup" aria-label={t("songs.detail.basculeJianpu")} className="inline-flex h-8 rounded-full bg-secondary p-0.5 print:hidden">
+                    {[
+                      { on: true, libelle: "简谱" },
+                      { on: false, libelle: t("songs.detail.paroles") },
+                    ].map(({ on, libelle }) => (
+                      <button
+                        key={libelle}
+                        type="button"
+                        role="radio"
+                        aria-checked={showScore === on}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          choisirScore(on);
+                        }}
+                        className={`h-7 rounded-full px-3 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+                          showScore === on ? "text-background" : "text-muted-foreground hover:text-foreground"
+                        }`}
+                        style={showScore === on ? { backgroundColor: "hsl(var(--jianpu-encre))" } : undefined}
+                      >
+                        {libelle}
+                      </button>
+                    ))}
+                  </span>
+                ) : undefined
+              }
+              corps={
+                showScore && jianpuScore ? (
+                  // Cale K2 (spec jianpu-integration, O14) : au téléphone, la fin de la feuille remonte au-dessus de la barre d'onglets.
+                  <div className="max-sm:pb-[calc(78px+var(--tabbar-bottom))]">
+                    <JianpuSheet
+                      entry={jianpuScore}
+                      title={song.title}
+                      slug={song.slug}
+                      playedKey={customize.currentKey !== originalKey ? customize.currentKey : null}
+                      originalKey={originalKey}
+                      chordEdits={versionSetlist?.retouches}
+                    />
+                  </div>
+                ) : undefined
+              }
               ast={displayedAST}
               showChords={customize.showChords}
               showPinyin={customize.showPinyin}
@@ -578,7 +677,6 @@ function useVersionDeLaSetlist(slug: string, setlistId: string | null, position:
               sectionKeys={sectionsKeys}
               chartStyle={chartStyle}
             />
-          )}
         </main>
 
         {/* Panneau de personnalisation */}

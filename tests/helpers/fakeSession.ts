@@ -1,9 +1,14 @@
 import type { Page, Route } from "@playwright/test";
+import { ADMIN_EMAILS } from "../../src/lib/access";
 
 // Connexion Firebase et Firestore **simulés** : les pages réservées aux membres
 // (setlists) se testent sans identifiants ni écriture en production. Le SDK
 // Auth ne vérifie pas la signature du jeton côté navigateur, il le décode
 // seulement ; Firestore est lu en REST, donc interceptable requête par requête.
+
+/** Adresse d'un compte admin simulé. Être admin passe par `ADMIN_EMAILS` (src/lib/access.ts) :
+ *  l'adresse est lue là, seul endroit où elle est écrite, jamais recopiée dans un test. */
+export const ADMIN_EMAIL = ADMIN_EMAILS[0];
 
 export type FakeProfile = {
   uid: string;
@@ -12,7 +17,8 @@ export type FakeProfile = {
   lastName?: string;
   planningName?: string;
   serviceRoles?: Record<string, string[]>;
-  poles?: string[];
+  /** Coordination (lot 1 du chantier « équipes et groupes », EQ24) — cochée par un admin. */
+  coordination?: boolean;
   /** Droit de tenir l'organigramme (lot 16) — attribué par un admin. */
   equipes?: boolean;
   /** Sections où la personne publie des annonces (droit de créer des évènements pour sa section). */
@@ -21,6 +27,17 @@ export type FakeProfile = {
   notify?: string[];
   /** Plannings que la personne peut remplir dans l'app (lot 17). */
   plannings?: string[];
+  /** Équipes de l'organigramme où la personne figure, et celles dont elle est
+   *  référente (lot U6, R4) — écrites par le serveur seul (`recalculerRattachement`). */
+  dansEquipes?: string[];
+  referentDe?: string[];
+  /** Lot 2 (organigrammes des groupes, OG2, OG19) — écrits par le serveur seul : le groupe (`""` =
+   *  sans groupe ; absent = déduit de `serviceRoles`) et les plannings / audiences que le profil
+   *  remplit, publie ou notifie par un rôle. */
+  groupe?: string;
+  remplitParRole?: string[];
+  publieParRole?: string[];
+  notifieParRole?: string[];
   /** Vrai = compte qui n'a pas encore vu l'accueil de première connexion (lot 8).
    *  Par défaut l'accueil est déjà vu, pour ne pas masquer les pages testées. */
   accueil?: boolean;
@@ -32,6 +49,8 @@ function fsValue(v: unknown): unknown {
   if (typeof v === "boolean") return { booleanValue: v };
   if (typeof v === "number") return Number.isInteger(v) ? { integerValue: String(v) } : { doubleValue: v };
   if (typeof v === "string") return { stringValue: v };
+  // Horodatage Firestore (`createdAt` des signalements : la page le lit en Date).
+  if (v instanceof Date) return { timestampValue: v.toISOString() };
   if (Array.isArray(v)) return { arrayValue: { values: v.map(fsValue) } };
   return {
     mapValue: {
@@ -111,6 +130,23 @@ export type FakeDb = {
   set(path: string, data: Record<string, unknown>): void;
 };
 
+/** État d'une base simulée : partagé quand deux sessions (deux contextes) écrivent dans la même
+ *  base (`fakeFirestore(…, partage)`). Chaque document porte un `updateTime`, nouveau à chaque
+ *  écriture, comme Firestore. */
+type EtatBase = {
+  store: Map<string, FsFields>;
+  versions: Map<string, string>;
+  writes: FakeDb["writes"];
+  compteur: { id: number; version: number };
+};
+const etats = new WeakMap<FakeDb, EtatBase>();
+
+/** Un `updateTime` nouveau, croissant (microsecondes, comme Firestore). */
+function nouvelleVersion(etat: EtatBase, path: string): void {
+  const n = ++etat.compteur.version;
+  etat.versions.set(path, `2026-01-01T00:00:00.${String(n).padStart(6, "0")}Z`);
+}
+
 function b64url(o: object): string {
   return Buffer.from(JSON.stringify(o)).toString("base64url");
 }
@@ -142,23 +178,39 @@ const json = (route: Route, body: unknown, status = 200) =>
  * mémoire (jamais envoyées) et relues par la page ; une requête sur une
  * collection (`programmes`, `setlists/abc/history`) renvoie ses documents (les
  * filtres `where` sont ignorés).
+ * `partage` : la base d'une autre session (autre contexte de navigateur), que celle-ci lit et
+ * écrit aussi ; seuls les documents qu'elle n'a pas encore s'y ajoutent.
+ * Un PATCH qui porte `currentDocument.updateTime` d'une autre version que celle du document est
+ * refusé (HTTP 400 `FAILED_PRECONDITION`), rien n'est écrit — comme Firestore.
  */
 export async function fakeFirestore(
   page: Page,
   docs: Record<string, Record<string, unknown>>,
+  partage?: FakeDb,
 ): Promise<FakeDb> {
-  const store = new Map<string, FsFields>(
-    Object.entries(docs).map(([path, data]) => [path, fsDoc(path, data).fields]),
-  );
-  const writes: FakeDb["writes"] = [];
-  let nextId = 1;
+  const etat: EtatBase = (partage && etats.get(partage)) ?? {
+    store: new Map(), versions: new Map(), writes: [], compteur: { id: 1, version: 0 },
+  };
+  const { store, writes, versions } = etat;
+  for (const [path, data] of Object.entries(docs)) {
+    if (partage && store.has(path)) continue;
+    store.set(path, fsDoc(path, data).fields);
+    nouvelleVersion(etat, path);
+  }
   const children = (collection: string) =>
     [...store.keys()].filter((p) => p.startsWith(`${collection}/`) && !p.slice(collection.length + 1).includes("/"));
   const docJson = (path: string) => ({
     name: `projects/gcclouange/databases/(default)/documents/${path}`,
     fields: store.get(path),
     createTime: "2026-01-01T00:00:00Z",
+    updateTime: versions.get(path),
   });
+
+  // Lot U9, B2 : l'agenda public lit le Sheet des évènements jusqu'au 31/12/2026. Par défaut, un
+  // Sheet vide, jamais le vrai ; au niveau du contexte, donc toute `page.route` d'un test l'emporte.
+  await page.context().route(/docs\.google\.com\/spreadsheets\/d\/12FxK1sMrk08bFrVnL7BjCTJd6FXTqvRXyZoyDYhgPU8\/export/, (route) =>
+    route.fulfill({ status: 200, contentType: "text/csv", body: "" }),
+  );
 
   await page.route(/firestore\.googleapis\.com/, (route) => {
     const request = route.request();
@@ -169,7 +221,7 @@ export async function fakeFirestore(
       const parent = tail.slice(0, -":runQuery".length);
       const q = (request.postDataJSON() as {
         structuredQuery: {
-          from: { collectionId: string }[];
+          from: { collectionId: string; allDescendants?: boolean }[];
           orderBy?: { field: { fieldPath: string }; direction?: string }[];
           limit?: number;
         };
@@ -179,7 +231,10 @@ export async function fakeFirestore(
       // une date donnée en texte par le test se trient ensemble.
       const sortKey = (p: string) =>
         String(Object.values(((store.get(p) ?? {})[order?.field.fieldPath ?? ""] ?? {}) as object)[0] ?? "");
-      let paths = children(parent ? `${parent}/${q.from[0].collectionId}` : q.from[0].collectionId);
+      // `allDescendants` (collection group) : tous les documents dont l'avant-dernier segment du chemin est la collection.
+      let paths = q.from[0].allDescendants
+        ? [...store.keys()].filter((p) => p.split("/").slice(-2, -1)[0] === q.from[0].collectionId)
+        : children(parent ? `${parent}/${q.from[0].collectionId}` : q.from[0].collectionId);
       if (order) {
         paths.sort((a, b) => sortKey(a).localeCompare(sortKey(b)));
         if (order.direction === "DESCENDING") paths.reverse();
@@ -194,19 +249,32 @@ export async function fakeFirestore(
     if (method === "DELETE") {
       writes.push({ method, path: tail, data: {} });
       store.delete(tail);
+      versions.delete(tail);
       return json(route, {});
     }
     const body = (request.postDataJSON() ?? {}) as { fields?: FsFields };
     const fields = body.fields ?? {};
     if (method === "POST") {
-      const path = `${tail}/fake-${nextId++}`;
+      // Identifiant choisi (`?documentId=`, Pâques · Noël Q6) : déjà pris → 409, rien n'est écrit.
+      const choisi = url.searchParams.get("documentId");
+      if (choisi && store.has(`${tail}/${choisi}`)) {
+        return json(route, { error: { code: 409, message: "Document already exists", status: "ALREADY_EXISTS" } }, 409);
+      }
+      const path = `${tail}/${choisi ?? `fake-${etat.compteur.id++}`}`;
       store.set(path, fields);
+      nouvelleVersion(etat, path);
       writes.push({ method, path, data: jsFields(fields) });
       return json(route, docJson(path));
     }
     // PATCH : champs du masque remplacés (ou retirés s'ils manquent au corps).
     // Un chemin peut descendre dans une map (« fini.`tous-les-accords` ») : on
     // n'y touche qu'à ce champ, comme Firestore. Le reste du corps s'ajoute.
+    const attendue = url.searchParams.get("currentDocument.updateTime");
+    if (attendue && attendue !== versions.get(tail)) {
+      return json(route, {
+        error: { code: 400, message: `the stored version (${versions.get(tail)}) does not match the required base version (${attendue})`, status: "FAILED_PRECONDITION" },
+      }, 400);
+    }
     const mask = url.searchParams.getAll("updateMask.fieldPaths");
     const next: FsFields = mask.length ? structuredClone(store.get(tail) ?? {}) : {};
     const premiers = new Set(mask.map((f) => cheminDeChamp(f)[0]));
@@ -216,29 +284,39 @@ export async function fakeFirestore(
     }
     for (const [k, v] of Object.entries(fields)) if (!premiers.has(k)) next[k] = v;
     store.set(tail, next);
+    nouvelleVersion(etat, tail);
     writes.push({ method, path: tail, data: jsFields(fields) });
     return json(route, docJson(tail));
   });
 
-  return {
+  if (partage) return partage;
+  const db: FakeDb = {
     writes,
     doc: (path) => (store.has(path) ? jsFields(store.get(path)!) : undefined),
     list: (collection) => children(collection),
-    set: (path, data) => { store.set(path, fsDoc(path, data).fields); },
+    set: (path, data) => { store.set(path, fsDoc(path, data).fields); nouvelleVersion(etat, path); },
   };
+  etats.set(db, etat);
+  return db;
 }
 
 /**
  * Simule le compte `profile` et les documents Firestore donnés (voir
- * `fakeFirestore`), puis se connecte et ouvre `to`.
+ * `fakeFirestore`), puis se connecte et ouvre `to`. `partage` : la base d'une autre session,
+ * pour deux contextes qui lisent et écrivent les mêmes documents.
  */
 export async function signInAs(
   page: Page,
   profile: FakeProfile,
   docs: Record<string, Record<string, unknown>>,
   to: string,
+  partage?: FakeDb,
 ): Promise<FakeDb> {
   const token = idToken(profile);
+  // Lot 3 (PG37) : la grille d'un trimestre publié envoie son état annoncé à la route serveur ; jamais la
+  // vraie route. Un test qui veut voir l'appel pose sa propre route (la dernière posée gagne).
+  await page.route("**/api/planning/changements", (route) =>
+    route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ok: true }) }));
   await page.route(/identitytoolkit\.googleapis\.com/, (route) => {
     const url = route.request().url();
     if (url.includes("accounts:signInWithPassword")) {
@@ -283,13 +361,19 @@ export async function signInAs(
       serviceRoles: profile.serviceRoles ?? {},
       annonces: profile.annonces ?? [],
       notify: profile.notify ?? [],
-      poles: profile.poles ?? [],
+      ...(profile.coordination !== undefined ? { coordination: profile.coordination } : {}),
       equipes: profile.equipes ?? false,
       plannings: profile.plannings ?? [],
+      ...(profile.dansEquipes ? { dansEquipes: profile.dansEquipes } : {}),
+      ...(profile.referentDe ? { referentDe: profile.referentDe } : {}),
+      ...(profile.groupe !== undefined ? { groupe: profile.groupe } : {}),
+      ...(profile.remplitParRole ? { remplitParRole: profile.remplitParRole } : {}),
+      ...(profile.publieParRole ? { publieParRole: profile.publieParRole } : {}),
+      ...(profile.notifieParRole ? { notifieParRole: profile.notifieParRole } : {}),
     },
     ...(profile.accueil ? {} : { [`onboarding/${profile.uid}`]: { vu: true, le: "2026-09-01T10:00:00Z" } }),
     ...docs,
-  });
+  }, partage);
 
   await page.goto(`/login?from=${encodeURIComponent(to)}`);
   // Attendre que React ait hydraté le formulaire : sur un navigateur lent,
@@ -306,4 +390,21 @@ export async function signInAs(
   await page.waitForURL((u) => u.pathname.replace(/\/$/, "") === to.split("?")[0]);
 
   return db;
+}
+
+/**
+ * Le navigateur se dit déjà abonné aux notifications : `PushToggle` (Mon profil)
+ * n'affiche ses bascules par type qu'alors. Aucun vrai abonnement ni service
+ * worker : `navigator.serviceWorker.ready` rend un enregistrement simulé. Sur
+ * l'iPad émulé, l'app passe pour installée (sinon : « ajoute d'abord le site à
+ * l'écran d'accueil »). À appeler avant `signInAs`.
+ */
+export async function abonneAuxNotifications(page: Page): Promise<void> {
+  await page.addInitScript(() => {
+    const abonnement = { endpoint: "https://push.example.invalid/abonnement", toJSON: () => ({}) };
+    const enregistrement = { pushManager: { getSubscription: async () => abonnement } };
+    Object.defineProperty(ServiceWorkerContainer.prototype, "ready", { configurable: true, get: () => Promise.resolve(enregistrement) });
+    Object.defineProperty(Notification, "permission", { configurable: true, get: () => "granted" });
+    Object.defineProperty(Navigator.prototype, "standalone", { configurable: true, get: () => true });
+  });
 }

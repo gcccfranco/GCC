@@ -1,6 +1,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import { parseChordPro } from "../src/lib/chordpro/parser";
+import { propositionsEnDouble, type ChantIndexe } from "../src/lib/setlist/propositions";
 
 const SONGS_DIR = path.join(process.cwd(), "content", "songs");
 const VALID_KEY = /^[A-G][#b]?m?$/;
@@ -12,12 +13,14 @@ function main() {
     .sort();
 
   const errors: string[] = [];
+  const propositions: ChantIndexe[] = [];
 
   for (const file of files) {
     const source = fs.readFileSync(path.join(SONGS_DIR, file), "utf-8");
     try {
       const ast = parseChordPro(source);
       const m = ast.metadata;
+      propositions.push({ slug: file, proposition: m.proposition });
       if (!m.title?.trim()) errors.push(`${file} : titre manquant ({title: …})`);
       if (!m.key) errors.push(`${file} : tonalité manquante ({key: …})`);
       else if (!VALID_KEY.test(m.key)) errors.push(`${file} : tonalité invalide « ${m.key} »`);
@@ -30,6 +33,8 @@ function main() {
       errors.push(`${file} : échec du parsing — ${(e as Error).message}`);
     }
   }
+
+  errors.push(...propositionsEnDouble(propositions));
 
   if (errors.length) {
     console.error(`✗ ${errors.length} problème(s) détecté(s) sur ${files.length} chant(s) :`);

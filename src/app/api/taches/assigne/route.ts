@@ -1,38 +1,42 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { adminDb } from "@/lib/push/admin";
 import { sendPushToUids } from "@/lib/push/send";
 import { recordNotification } from "@/lib/push/notifications";
 import { filterUidsByNotifPref, loadNotifLangs } from "@/lib/push/recipients";
 import { nouvelleTacheMessage } from "@/lib/taches/messages";
-import { ID, appelantDuPole, estPole, lireTache, premiereFois } from "@/lib/taches/serveur";
+import { ID, appelant, estEquipe, premiereFois, tacheDeLAppelant } from "@/lib/taches/serveur";
 import { BACK_OFFICE } from "@/lib/backOffice"
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-// Quelqu'un vient d'être nommé responsable d'une tâche par un autre membre du
-// pôle (lot 7) : « Nouvelle tâche : … », une fois par (tâche, responsable),
-// préférence « Tâches ». Rien pour les fois suivantes d'une tâche répétée.
+// Quelqu'un vient d'être nommé responsable d'une tâche par un référent de son
+// équipe (lot 7 ; lot 1 du chantier « équipes et groupes », EQ11) : « Nouvelle
+// tâche : … », une fois par (tâche, responsable), préférence « Tâches ». Rien
+// pour les fois suivantes d'une tâche répétée.
 
 export async function POST(req: NextRequest) {
   // Back-office coupé (lot 18, docs/spec-mise-en-ligne.md) : la route n'existe pas en ligne.
   if (!BACK_OFFICE) return new Response(null, { status: 404 })
-  const { pole, tacheId } = (await req.json().catch(() => ({}))) as { pole?: string; tacheId?: string };
-  if (!estPole(pole) || typeof tacheId !== "string" || !ID.test(tacheId)) {
+  const { equipe, tacheId } = (await req.json().catch(() => ({}))) as { equipe?: string; tacheId?: string };
+  if (!estEquipe(equipe) || typeof tacheId !== "string" || !ID.test(tacheId)) {
     return NextResponse.json({ error: "Requête incomplète" }, { status: 400 });
   }
-  const appelant = await appelantDuPole(req, pole);
-  if (appelant instanceof NextResponse) return appelant;
-
-  const tache = await lireTache(pole, tacheId);
-  if (!tache) return NextResponse.json({ error: "Tâche introuvable" }, { status: 404 });
+  const qui = await appelant(req);
+  if (qui instanceof NextResponse) return qui;
+  // Membre de l'équipe et référent (seul qui crée ou modifie nomme un responsable), tâche lue ici.
+  const tache = await tacheDeLAppelant(adminDb(), qui, equipe, tacheId, "assigne");
+  if ("status" in tache) return NextResponse.json({ error: tache.error }, { status: tache.status });
   const responsable = tache.responsableUid;
-  if (!responsable || responsable === appelant.uid) return NextResponse.json({ ok: true, notified: 0 });
+  if (!responsable || responsable === qui.uid) return NextResponse.json({ ok: true, notified: 0 });
 
-  const key = `tache-assigne-${pole}-${tacheId}`;
-  const fresh = await premiereFois(await filterUidsByNotifPref([responsable], "taches"), key, { pole, tacheId });
+  const key = `tache-assigne-${equipe}-${tacheId}`;
+  const fresh = await premiereFois(await filterUidsByNotifPref([responsable], "taches"), key, { equipe, tacheId });
   if (fresh.length) {
     const lang = (await loadNotifLangs(fresh)).get(responsable) ?? "fr";
-    const payload = { ...nouvelleTacheMessage(tache, lang), url: `/taches/${pole}`, tag: key };
+    // Lot U6, B3 : « À faire pour moi », ouvert à tout membre de l'équipe (la page de l'équipe est au
+    // Back-Office).
+    const payload = { ...nouvelleTacheMessage(tache, lang), url: "/taches", tag: key };
     await sendPushToUids(fresh, payload);
     await recordNotification({ ...payload, kind: "tache", recipients: fresh });
   }
