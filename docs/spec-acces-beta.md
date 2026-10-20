@@ -9,7 +9,12 @@ Demande de Timothée, 19/10/2026 :
 
 Choix entre A (Bêta ouvre la porte, chacun garde ses droits) et B (Bêta donne tout, comme un admin) : **B**.
 
-Statut : **spec écrite le 19/10/2026 ; Q1–Q4 tranchées le 19/10/2026 sur les recommandations (« OK aux
+Statut : **ABANDONNÉ le 19/10/2026.** Timothée a trouvé un autre moyen de donner ces permissions et ne veut plus de
+l'équipe Bêta. BT-A, codé et poussé (`83ca30c`), est annulé par `52fb85e` ; BT-B, codé mais jamais poussé, supprimé ;
+BT-C jamais commencé. Le code et `firestore.rules` sont revenus à l'état d'avant le lot ; rien à publier. La suite de
+cette spec est gardée pour mémoire.
+
+Historique : **spec écrite le 19/10/2026 ; Q1–Q4 tranchées le 19/10/2026 sur les recommandations (« OK aux
 recommandations ») ; **go le 19/10/2026** pour BT-A, BT-B, BT-C (« go pour l'accès bêta »), codé par une session
 orchestratrice. **Fusion dans `main` interdite tant que Timothée ne le dit pas.**
 

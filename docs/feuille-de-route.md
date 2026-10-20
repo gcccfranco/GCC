@@ -1147,13 +1147,17 @@ fêtes inchangées, absences vues et saisies par qui fait les plannings et les a
 poussés le 18/10/2026** (détail dans l'« Avancement » de la spec), **à valider par Timothée** ; `firestore.rules`
 **à publier à la main par Timothée** (droits des setlists, corbeille, absences) ; rien en ligne.
 
-### AA. Accès bêta au Back-Office (Timothée, 19/10/2026) → `spec-acces-beta.md`
+### AA. Accès bêta au Back-Office (Timothée, 19/10/2026) → `spec-acces-beta.md` — **abandonné le 19/10/2026**
 
 « J'ajoute les personnes dedans comme ça ils ont accès au back office en entier. » Une équipe **Bêta** dans
 l'organigramme ; ses membres ont les pouvoirs d'un admin (choix **B** du 19/10/2026), Back-Office compris, même en
 ligne où l'interrupteur est coupé. Seuls les trois admins fondateurs y ajoutent quelqu'un. **Spec écrite, Q1–Q4 tranchées le
 19/10/2026 sur les recommandations, go le 19/10/2026** (BT-A à BT-C, session orchestratrice ; pas de fusion dans
 `main` sans ordre) ; en ligne seulement après la bascule V19EQUIPES et la fusion de la branche dans `main`.
+
+**Abandonné le 19/10/2026** : Timothée a trouvé un autre moyen de donner ces permissions et ne veut plus de l'équipe
+Bêta. BT-A, codé et poussé (`83ca30c`), est annulé par `52fb85e` ; BT-B, jamais poussé, supprimé ; BT-C jamais commencé.
+Rien en ligne, rien à publier dans `firestore.rules`.
 
 ## 4. Carte des modules de l'app « GCC »
 
