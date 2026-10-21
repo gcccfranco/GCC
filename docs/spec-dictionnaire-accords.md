@@ -5,8 +5,10 @@ Demande de Timothée du 21/10/2026 ; cadrée le jour même par un entretien (ski
 l'inventaire de tout ce qui demande un accès particulier sur le site. Lot **DA**, après le lot IR
 (`spec-idees-regroupees.md`, Q20).
 
-**État : spec écrite le 21/10/2026. Avant le code : Q14, puis la planche (nouvel écran et nouveau panneau,
-règle « Design » du `CLAUDE.md`), puis le go.**
+**État : spec écrite le 21/10/2026, planche faite ; go le 21/10/2026 pour DA-1 à DA-3, sauf les portes d'entrée de la
+page (Q14 ouverte) : ni bouton « Accords » sur la page Chants, ni entrée au menu du compte ; la page `/accords` existe,
+joignable seulement par « Voir tout le dictionnaire » du panneau. Sur ordinateur, le panneau est une bulle ancrée sous
+l'accord (planche) ; sur téléphone et tablette, une feuille du bas.**
 
 ## Mots de Timothée
 

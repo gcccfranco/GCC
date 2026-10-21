@@ -4,7 +4,7 @@ Demande de Timothée du 21/10/2026 ; cadrée le jour même par un entretien (ski
 tranchées sur les recommandations. Lot **IR** (un seul lot, sans nouvel écran : pas de planche). Suite de
 `spec-harmonie.md` (lot 9) ; le dictionnaire d'accords est l'autre moitié de la demande (`spec-dictionnaire-accords.md`).
 
-**État : spec écrite le 21/10/2026, Q-IR1 tranchée le jour même ; code sur go.**
+**État : spec écrite le 21/10/2026, Q-IR1 tranchée le jour même ; go le 21/10/2026.**
 
 ## Mots de Timothée
 
