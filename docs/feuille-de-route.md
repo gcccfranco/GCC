@@ -1169,7 +1169,7 @@ d'accords sur le site pour aider les musiciens à savoir comment jouer l'accord 
   21/10/2026, à valider par Timothée** (détail : « Avancement » de la spec).
 - **DA** — `spec-dictionnaire-accords.md` : guitare et piano, ouvert à tous, toucher un accord en lecture ouvre son
   doigté. **Spec écrite ; Q14 (emplacement de la page) ouverte** : Timothée revoit d'abord l'inventaire des accès du
-  site (carte : https://claude.ai/artifact/RVnkQYaFbyyBgZ8ti4ET6s) ; planche https://claude.ai/artifact/TvcfEjNLGYC8QjJYBhnQND ; **go le 21/10/2026 pour DA-1 à DA-3 sauf les portes d'entrée de la page** (pas de bouton sur Chants ni d'entrée au menu tant que Q14 n'est pas tranchée ; `/accords` joignable par le panneau seulement), session orchestratrice. Refonte des accès : chantier à part, non lancé.
+  site (carte : https://claude.ai/artifact/RVnkQYaFbyyBgZ8ti4ET6s) ; planche https://claude.ai/artifact/TvcfEjNLGYC8QjJYBhnQND ; **go le 21/10/2026 pour DA-1 à DA-3 sauf les portes d'entrée de la page** (pas de bouton sur Chants ni d'entrée au menu tant que Q14 n'est pas tranchée ; `/accords` joignable par le panneau seulement), session orchestratrice. **DA-1 à DA-3 codés et poussés le 21/10/2026, à valider par Timothée** (détail : « Avancement » de la spec ; 26 accords sans doigté de guitare, tous dim9 et 7#11). Refonte des accès : chantier à part, non lancé.
 
 ### AC. Les accès viennent de l'organigramme (Timothée, 21/10/2026) → `spec-acces-organigramme.md`
 

@@ -105,4 +105,32 @@ d'harmonie avec ses accords touchables.
 
 ## Avancement
 
-*(rempli au codage)*
+**DA-1 à DA-3 codés et poussés le 21/10/2026, à valider par Timothée** (sans les portes d'entrée de `/accords`, Q14
+ouverte).
+
+- **DA-1** (`956ed5c`) : `src/lib/accords/` — `analyse.ts` (alias D2 = Dsus2, D4, D5, `C3` = retour à la tierce,
+  `sus7` = 7sus4), `notes.ts` (notes épelées par degré, piano main gauche = basse, main droite en position serrée ;
+  trois octaves si l'accord déborde), `table.ts` (formes ouvertes, barrés mobiles types E/A/D, accords avec basse :
+  tierce, quinte, seconde, septième, onzième à la basse, et une trentaine d'accords avec basse ouverts écrits à la
+  main), `guitare.ts` (recherche par classes de hauteur, ouvert d'abord, trois positions au plus). Diagrammes : grille
+  « grand » de **5 cases** (la planche en dessine 4 ; la forme mobile add9 en couvre 5), barré, doigts, « 5fr » ;
+  `ClavierMains`. Garde-fou (`tests/accords-garde-fou.spec.ts`) : chaque doigté sonne l'accord (658 formes mobiles
+  sur 12 fondamentales, toutes justes) ; 1 045 accords distincts des 383 chants × 12 tonalités : 701 avec vraie
+  forme, 318 en « basse à part » (doigté de l'accord + « basse X à jouer en plus »), **26 sans doigté de guitare**,
+  tous `dim9` et `7#11` (Adim9, F#dim9, Ab7#11 du répertoire et leurs transpositions) : « Pas encore de doigté ».
+- **DA-2** (`33a1de1`) : `PanneauAccord`, `AccordsProvider` (feuille du bas ; bulle ancrée sur ordinateur, souris
+  ≥ 1 024 px), page `/accords` publique (recherche, `A#` allume `Bb`, `?accord=`), FR et 中文. `useInstrument` prend
+  une préférence (guitare pour le dictionnaire, piano inchangé pour le catalogue Harmonie) ; `ReportDialog` accepte un
+  titre et une description pré-remplis (Signaler un doigté manquant ; réservé aux membres connectés, comme avant).
+- **DA-3** (`761f7b6`) : `AccordTouchable` dans `ChordLine`, `ZhLine`, `JianpuLine` et le calque 简谱 en lecture ;
+  montés sur la page chant et la partition de setlist hors édition ; inertes en édition et en mode louange (contexte
+  inactif par défaut). Bulle d'aide une fois par appareil (`accords-aide-vue`). Accords des cartes d'« Idées
+  d'harmonie » touchables (sur le code du lot IR).
+- **Écarts** : le capo n'existe qu'en mode louange, où le panneau ne s'ouvre pas ; la ligne « Capo N » du panneau est
+  donc prête mais ne se voit nulle part aujourd'hui. Grille de 5 cases au lieu de 4. Sur ordinateur à 720 px de haut,
+  la bulle d'un accord bas sur l'écran se cale sur l'accord sans flèche (place insuffisante dessous et dessus).
+- **Tests** : `accords-donnees`, `accords-garde-fou`, `accords-toucher` (trois appareils) ; `accords-page`,
+  `accords-toucher-agencement` (cinq projets, captures). Échecs antérieurs à DA, non liés : `harmonie-jianpu.spec.ts`
+  (4 tests « Adapter », lignes 105-157) et `jianpu-par-defaut.spec.ts:357` (page `/edit`).
+- **À regarder par Timothée** : la page `/accords` (téléphone, tablette, ordinateur) ; toucher un accord d'un chant FR
+  et d'un chant ZH ; la bulle d'aide ; le 中文 des libellés du panneau (écrit par l'agent).
