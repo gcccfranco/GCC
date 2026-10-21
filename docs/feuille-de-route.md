@@ -1171,6 +1171,16 @@ d'accords sur le site pour aider les musiciens à savoir comment jouer l'accord 
   doigté. **Spec écrite ; Q14 (emplacement de la page) ouverte** : Timothée revoit d'abord l'inventaire des accès du
   site (carte : https://claude.ai/artifact/RVnkQYaFbyyBgZ8ti4ET6s) ; planche https://claude.ai/artifact/TvcfEjNLGYC8QjJYBhnQND ; **go le 21/10/2026 pour DA-1 à DA-3 sauf les portes d'entrée de la page** (pas de bouton sur Chants ni d'entrée au menu tant que Q14 n'est pas tranchée ; `/accords` joignable par le panneau seulement), session orchestratrice. Refonte des accès : chantier à part, non lancé.
 
+### AC. Les accès viennent de l'organigramme (Timothée, 21/10/2026) → `spec-acces-organigramme.md`
+
+« Maintenant qu'il y a l'organigramme ça change tout. Il faut changer le mode. » Entretien (*grilling*) A à F le
+21/10/2026, tout tranché : l'organigramme seul donne les droits (plus de cases à la main, plus de rôles qu'on se donne),
+trois admins fondateurs en dur ; Louange en trois sous-équipes (Présidence, Musiciens, Chanteurs/Choristes) avec un
+référent chacune et un référent Louange ; Régie à part ; « Où il sert » et « Ce qu'il joue » cochés sur la ligne du
+membre ; être au planning d'une date ouvre la lecture de cette setlist ; coordination = référents Louange et EDD +
+Orga ; migration par script à blanc. **Spec écrite ; préalable : séance de bascule V19EQUIPES (pas faite) ; planche de
+l'organigramme à faire ; code sur go.**
+
 ## 4. Carte des modules de l'app « GCC »
 
 À valider par Timothée avant toute spec de module (les modules existants ne
