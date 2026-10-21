@@ -1175,7 +1175,7 @@ d'accords sur le site pour aider les musiciens à savoir comment jouer l'accord 
 
 « Maintenant qu'il y a l'organigramme ça change tout. Il faut changer le mode. » Entretien (*grilling*) A à F le
 21/10/2026, tout tranché : l'organigramme seul donne les droits (plus de cases à la main, plus de rôles qu'on se donne),
-trois admins fondateurs en dur ; Louange en trois sous-équipes (Présidence, Musiciens, Chanteurs/Choristes) avec un
+trois admins fondateurs en dur ; Louange en trois sous-équipes (Présidence, Musiciens, Choristes) avec un
 référent chacune et un référent Louange ; Régie à part ; « Où il sert » et « Ce qu'il joue » cochés sur la ligne du
 membre ; être au planning d'une date ouvre la lecture de cette setlist ; coordination = référents Louange et EDD +
 Orga ; migration par script à blanc. **Spec écrite ; préalable : séance de bascule V19EQUIPES (pas faite) ; planche de

@@ -63,7 +63,7 @@ Trois sources d'accès qui se recouvrent :
 | # | Décision |
 | --- | --- |
 | D1 | **Régie reste une équipe à part** (`regie`, « Sono Live & PPT »), avec son référent. |
-| D1, D2 | **Louange a trois sous-équipes, chacune avec son référent** : **Présidence**, **Musiciens**, **Chanteurs/Choristes**. |
+| D1, D2 | **Louange a trois sous-équipes, chacune avec son référent** : **Présidence**, **Musiciens**, **Choristes**. |
 | D4 | **Un référent Louange** au-dessus des trois. |
 | C1, D3 | **Deux listes à cocher sur la ligne du membre, dans l'organigramme** (pas de sous-équipe par lieu ni par instrument) : **« Où il sert »** (les 4 lieux du culte) pour tout membre de Louange et de Régie ; **« Ce qu'il joue »** (piano, guitare, basse, batterie, cajon…) pour les Musiciens seulement. |
 | E1 | **Une personne peut être dans plusieurs sous-équipes** et cumule ce qu'elles ouvrent. |
@@ -102,17 +102,18 @@ Trois sources d'accès qui se recouvrent :
 - **Rappel aux référents** (proposé avec F2, non tranché explicitement) : chaque semaine, au référent concerné,
   « N personnes au planning de ce mois ne sont dans aucune équipe », avec le lien vers l'organigramme.
   ➡️ Recommandé : oui, dans le rappel du matin existant (`/api/cron/reminders`), pas une notification de plus.
-- **Liste « Ce qu'il joue »** : piano, guitare, basse, batterie, cajon, autre. ➡️ À relire par Timothée.
 
-- **« Ce que tu peux faire » dans Moi** (proposé par la planche, non tranché) : la liste de ses accès avec leur raison
+- **« Ce que tu peux faire » dans Moi** : **oui** (Timothée, 21/10/2026) — la liste de ses accès avec leur raison
   (« Voir et créer les setlists du Campus — Louange, où tu sers ») et « Un accès te manque ? Demande à ton
-  référent ». ➡️ Recommandé : oui ; même liste sous « Ce que ça lui ouvre » dans la fiche d'un membre.
+  référent » ; la même liste sous « Ce que ça lui ouvre » dans la fiche d'un membre.
+- **Liste « Ce qu'il joue »** : piano, guitare, basse, batterie, cajon, autre — **validée** (21/10/2026).
+- La sous-équipe s'appelle **Choristes** (Timothée, 21/10/2026), pas « Chanteurs/Choristes ».
 
 ## Modèle
 
 - `equipes/louange` garde **un document** ; `MembreEquipe` gagne :
-  - `sousEquipes: ("presidence" | "musiciens" | "chanteurs")[]` (remplace l'intertitre `groupe` pour Louange) ;
-  - `referentDe: ("louange" | "presidence" | "musiciens" | "chanteurs")[]` pour la Louange (le booléen `referent`
+  - `sousEquipes: ("presidence" | "musiciens" | "choristes")[]` (remplace l'intertitre `groupe` pour Louange) ;
+  - `referentDe: ("louange" | "presidence" | "musiciens" | "choristes")[]` pour la Louange (le booléen `referent`
     reste pour les autres équipes ; « référent Louange » = `referentDe` contient `louange`) ;
   - `lieux: ServiceLieu[]` (Louange et Régie) ;
   - `joue: Instrument[]` (Musiciens).
