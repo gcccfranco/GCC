@@ -60,9 +60,10 @@ règle « Design » du `CLAUDE.md`), puis le go.**
 **Q14 — où mettre la page dictionnaire.** Proposition de l'entretien (non retenue pour l'instant) : une page
 `/accords`, sans compte, avec un bouton « Accords » en haut de la page Chants, une ligne dans le menu du compte, et
 « Voir tout le dictionnaire » dans le panneau. Timothée veut d'abord **l'inventaire des accès du site** (rôles,
-compte, équipes…) pour revoir l'ensemble ; la décision suit cet inventaire.
+compte, équipes…) pour revoir l'ensemble ; carte des accès et emplacement proposé :
+https://claude.ai/artifact/RVnkQYaFbyyBgZ8ti4ET6s. La refonte des accès (doublons de droits) sera un chantier à part.
 
-**Planche** (avant le go) : la page aux quatre dispositions + 1 440 px ; le panneau d'un accord (guitare avec
+**Planche** (21/10/2026, à regarder par Timothée) : https://claude.ai/artifact/TvcfEjNLGYC8QjJYBhnQND — la page aux quatre dispositions + 1 440 px ; le panneau d'un accord (guitare avec
 « Autre position », piano à deux mains) au téléphone et à l'ordinateur ; la bulle d'aide ; la carte d'idée
 d'harmonie avec ses accords touchables.
 

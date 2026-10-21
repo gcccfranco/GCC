@@ -4,7 +4,7 @@ Demande de Timothée du 21/10/2026 ; cadrée le jour même par un entretien (ski
 tranchées sur les recommandations. Lot **IR** (un seul lot, sans nouvel écran : pas de planche). Suite de
 `spec-harmonie.md` (lot 9) ; le dictionnaire d'accords est l'autre moitié de la demande (`spec-dictionnaire-accords.md`).
 
-**État : spec écrite le 21/10/2026, Q-IR1 à trancher, code sur go.**
+**État : spec écrite le 21/10/2026, Q-IR1 tranchée le jour même ; code sur go.**
 
 ## Mots de Timothée
 
@@ -37,15 +37,14 @@ tranchées sur les recommandations. Lot **IR** (un seul lot, sans nouvel écran 
 | Q13 | **Toucher un accord proposé** (`Em7` dans `G → Em7`) ouvrira son doigté : **pas dans ce lot**, il arrive avec le dictionnaire (`spec-dictionnaire-accords.md`, DA-3). |
 | — | Inchangé : 5 cartes puis « Voir plus », choisies par sûreté puis niveau, affichées dans l'ordre du chant (le dédoublonnage par fiche de `cinqPremieres` reste) ; la carte se place à son **premier** endroit. |
 
-## À trancher avant le go
+## Tranché le 21/10/2026
 
-**Q-IR1 — « Essayer dans Ma version » sur une carte regroupée.** Aujourd'hui l'essai ne touche que le premier endroit.
-- **A.** L'essai applique le changement à **tous les endroits** de la carte (« faire ce changement dans les couplets »).
-- **B.** Comme aujourd'hui : le premier endroit seulement.
-
-➡️ **A** : la carte dit maintenant « Couplets 1 et 2 » ; n'en changer qu'un surprendrait. Ma version garde
-l'historique et se défait comme avant. Pour un chant affiché en scan 简谱, le message « à reporter à la main »
-liste toutes les sections.
+**Q-IR1 — « Essayer dans Ma version » sur une carte regroupée : la personne choisit l'endroit** (Timothée :
+« la personne choisit l'endroit qu'elle veut changer »). Sur une carte à plusieurs sections, « Essayer… » déplie
+sous la carte « Essayer dans Ma version, où ? » et une puce par section (« Couplet 1 », « Couplet 2 »,
+« Refrain ») ; toucher une puce applique le changement à cette section (à tous ses endroits, comme une retouche de
+Ma version dans une section). Une carte à une seule section garde « Essayer » direct. Ma version se défait comme
+avant. Planche : https://claude.ai/artifact/TvcfEjNLGYC8QjJYBhnQND (écran « Idées d'harmonie regroupées »).
 
 ## Tranches
 
@@ -58,7 +57,8 @@ liste toutes les sections.
    (`regrouper(suggestions, tonalite)`) appelée par `IdeesSheet`, testable seule.
 2. `IdeesSheet.tsx` : ligne des sections (Q2), « Montrer i/n » (Q3), « Ne marche pas » écrit un refus par `ids`
    (Q8), liste « écartées » regroupée par carte.
-3. `SetlistDetailClient.tsx` (`onEssayer`) : selon Q-IR1.
+3. `IdeesSheet.tsx` + `SetlistDetailClient.tsx` (`onEssayer`) : choix de la section (Q-IR1) ; `onEssayer` reçoit
+   les endroits de la section choisie ; le message « à reporter à la main » (scan 简谱) nomme la section.
 4. Libellés FR et 中文 (`harmonie.*`) : « Montrer {{i}}/{{n}} », contraction « {{type}} {{a}} et {{b}} »,
    « {{type}} {{a}} à {{b}} » ; en 中文, « 主歌 1、2 », « 主歌 1–3 ».
 5. `docs/spec-harmonie.md` : renvoi vers cette spec sous « Suggestions par chant ».
