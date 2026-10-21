@@ -122,7 +122,7 @@ ouverte).
   ≥ 1 024 px), page `/accords` publique (recherche, `A#` allume `Bb`, `?accord=`), FR et 中文. `useInstrument` prend
   une préférence (guitare pour le dictionnaire, piano inchangé pour le catalogue Harmonie) ; `ReportDialog` accepte un
   titre et une description pré-remplis (Signaler un doigté manquant ; réservé aux membres connectés, comme avant).
-- **DA-3** (`761f7b6`) : `AccordTouchable` dans `ChordLine`, `ZhLine`, `JianpuLine` et le calque 简谱 en lecture ;
+- **DA-3** (`caf2aa9`) : `AccordTouchable` dans `ChordLine`, `ZhLine`, `JianpuLine` et le calque 简谱 en lecture ;
   montés sur la page chant et la partition de setlist hors édition ; inertes en édition et en mode louange (contexte
   inactif par défaut). Bulle d'aide une fois par appareil (`accords-aide-vue`). Accords des cartes d'« Idées
   d'harmonie » touchables (sur le code du lot IR).
