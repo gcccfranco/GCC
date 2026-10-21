@@ -106,7 +106,8 @@ test("« Montrer » met en avant la section annoncée par l'idée, dans le bon c
  *  le chant (data-chant-slug) et la position de la section mise en avant. */
 async function montrerDepuis(page: Page, bouton: ReturnType<Page["getByRole"]>, section: RegExp) {
   await bouton.click();
-  // Une idée sur une section que la setlist joue (pas une intro retirée).
+  // Une idée sur une section que la setlist joue (pas une intro retirée) : dont la
+  // première section — celle que « Montrer » vise d'abord, lot IR — est jouée.
   const idee = page.locator("[data-idees-harmonie] [data-suggestion]").filter({ has: page.locator("p", { hasText: section }) }).first();
   await expect(idee).toBeVisible();
   await idee.getByRole("button", { name: "Montrer" }).click();
@@ -140,7 +141,7 @@ for (const [nom, melange] of [
 ] as const) {
   test(`fusion (${nom}) : « Montrer » sur une idée du 2e chant de la fusion reste dans ce chant`, async ({ page }) => {
     await ouvrir(page, { ...SETLIST, items: [item({ songSlug: "gloire-a-son-nom", position: 1 }), fusion(melange)] });
-    const r = await montrerDepuis(page, page.getByRole("button", { name: /Idées d'harmonie · 一生爱你/ }), /主歌|副歌/);
+    const r = await montrerDepuis(page, page.getByRole("button", { name: /Idées d'harmonie · 一生爱你/ }), /^(主歌|副歌|Couplet|Refrain)/);
     expect(r.position).toBe("2");
     expect(r.chant).toBe("一生爱你");
   });

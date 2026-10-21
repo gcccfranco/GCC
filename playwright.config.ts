@@ -37,6 +37,8 @@ const SPECS_GRAND_ECRAN = [
   /deux-volets-finitions\.spec\.ts/,
   // Lot U4 bis (docs/spec-pages-en-grand.md, Q16) : toutes les pages en grand.
   /pages-en-grand-.*\.spec\.ts/,
+  // Lot IR (docs/spec-idees-regroupees.md) : la feuille « Idées d'harmonie » regroupée, aux quatre dispositions.
+  /harmonie-regroupees\.spec\.ts/,
   // Lot U6 (spec-back-office.md, Tests) : l'espace Back-Office, B1.
   /back-office-espace\.spec\.ts/,
   // Lot U8 (spec-calendrier.md, Tests) : la page du calendrier, Mois sur la tablette couchée.

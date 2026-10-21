@@ -4,7 +4,7 @@ Demande de Timothée du 21/10/2026 ; cadrée le jour même par un entretien (ski
 tranchées sur les recommandations. Lot **IR** (un seul lot, sans nouvel écran : pas de planche). Suite de
 `spec-harmonie.md` (lot 9) ; le dictionnaire d'accords est l'autre moitié de la demande (`spec-dictionnaire-accords.md`).
 
-**État : spec écrite le 21/10/2026, Q-IR1 tranchée le jour même ; go le 21/10/2026.**
+**État : spec écrite le 21/10/2026, Q-IR1 tranchée le jour même ; go le 21/10/2026 ; codée le 21/10/2026, à valider.**
 
 ## Mots de Timothée
 
@@ -74,4 +74,23 @@ avant. Planche : https://claude.ai/artifact/TvcfEjNLGYC8QjJYBhnQND (écran « Id
 
 ## Avancement
 
-*(rempli au codage)*
+**IR-A codée le 21/10/2026, à valider par Timothée.**
+
+- `regrouper(suggestions, tonalite)` (`src/lib/harmonie/suggestions.ts`) : *Au nom de Jésus* en D passe de 42
+  suggestions à 19 cartes (C6 : une carte sur 7 sections), *永活盼望* de 58 à 25 (C4 : 主歌 1 à 4).
+- `IdeesSheet.tsx` : ligne des sections contractée, « Montrer i/n », un refus par section, écartées une ligne par
+  carte, « Essayer dans Ma version… » avec une puce par section. `SetlistDetailClient.tsx` applique le changement à
+  tous les endroits de la section choisie (du dernier au premier) ; le rappel 简谱 nomme la section.
+- **Écarts et précisions** :
+  - « Montrer i/n » compte les **sections**, pas les endroits : le surlignage se fait par section, deux endroits
+    d'une même section surligneraient deux fois la même chose. Une carte à une section garde « Montrer ».
+  - Une section absente de la partition lue (structure retouchée dans une setlist) est **sautée** par « Montrer ».
+  - « Essayer » direct (carte à une section) applique désormais le changement à **tous** les endroits de la section,
+    comme la puce ; avant, au premier seulement.
+  - Un nom de section avec suffixe ne se contracte pas : « 主歌 1–3 · 主歌 4 (To Chorus) ».
+  - La ligne des sections suit l'affichage du chant (`formatSectionName`) : « Couplet 1 » en français, « 主歌 1 » en
+    中文, au lieu du nom brut « 主歌 1/Couplet 1 ».
+- Tests : `tests/harmonie-suggestions.spec.ts` (regroupement, refus ancien d'une section), nouveau
+  `tests/harmonie-regroupees.spec.ts` (cinq projets, captures FR, ZH et « où ? ») ; `harmonie-setlist` et
+  `harmonie-montrer` adaptés (carte à une section pour « Essayer » direct ; libellés de section en français).
+  `tests/fusions-dp.spec.ts` « éditeur, fusion … » : deux échecs **déjà présents avant le lot**, hors de son champ.

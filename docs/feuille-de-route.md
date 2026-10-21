@@ -1165,7 +1165,8 @@ Rien en ligne, rien à publier dans `firestore.rules`.
 d'accords sur le site pour aider les musiciens à savoir comment jouer l'accord ». Entretien (*grilling*) Q1 à Q20, le
 21/10/2026. Deux lots (Q20) :
 - **IR** — `spec-idees-regroupees.md` : une carte par fiche × même changement d'accords, sections listées, « Montrer
-  1/3 », refus par carte. **Spec écrite ; Q-IR1 tranchée (la personne choisit la section) ; go le 21/10/2026**, session orchestratrice.
+  1/3 », refus par carte. Spec écrite ; Q-IR1 tranchée (la personne choisit la section) ; go le 21/10/2026. **Codé et poussé le
+  21/10/2026, à valider par Timothée** (détail : « Avancement » de la spec).
 - **DA** — `spec-dictionnaire-accords.md` : guitare et piano, ouvert à tous, toucher un accord en lecture ouvre son
   doigté. **Spec écrite ; Q14 (emplacement de la page) ouverte** : Timothée revoit d'abord l'inventaire des accès du
   site (carte : https://claude.ai/artifact/RVnkQYaFbyyBgZ8ti4ET6s) ; planche https://claude.ai/artifact/TvcfEjNLGYC8QjJYBhnQND ; **go le 21/10/2026 pour DA-1 à DA-3 sauf les portes d'entrée de la page** (pas de bouton sur Chants ni d'entrée au menu tant que Q14 n'est pas tranchée ; `/accords` joignable par le panneau seulement), session orchestratrice. Refonte des accès : chantier à part, non lancé.

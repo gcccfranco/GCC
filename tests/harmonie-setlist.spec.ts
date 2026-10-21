@@ -67,6 +67,12 @@ const ouvrirLesIdees = async (page: Page) => {
   await expect(page.locator("[data-idees-harmonie]")).toBeVisible();
 };
 
+/** Une idée qui ne touche qu'une section : « Essayer dans Ma version » s'applique
+ *  d'un clic (une carte regroupée sur plusieurs sections demande d'abord « où ? »,
+ *  lot IR — voir harmonie-regroupees.spec.ts). */
+const uneSection = (page: Page) =>
+  page.locator("[data-suggestion]").filter({ has: page.getByRole("button", { name: "Essayer dans Ma version", exact: true }) }).first();
+
 test("un pianiste ouvre les idées d'un chant de la setlist, avec la transition vers le suivant", async ({ page }) => {
   await openPartitions(page);
   await ouvrirLesIdees(page);
@@ -87,7 +93,7 @@ test("« Essayer dans Ma version » écrit dans mon document, jamais dans la set
   const db = await openPartitions(page);
   await page.getByRole("button", { name: "Ma version" }).click();
   await ouvrirLesIdees(page);
-  const premiere = page.locator("[data-suggestion]").first();
+  const premiere = uneSection(page);
   // Les accords proposés sont les seconds de la ligne « avant → après ».
   const apres = await premiere.locator(".font-chord").nth(1).innerText();
   await premiere.getByRole("button", { name: "Essayer dans Ma version" }).click();
@@ -139,7 +145,7 @@ test("chant sans scan 简谱 : pas de rappel « À reporter sur la partition 简
   await page.getByRole("button", { name: "Ma version" }).click();
   await page.locator('[data-outline-item="1"]').getByRole("button", { name: "Idées d'harmonie" }).click();
   await expect(page.locator("[data-idees-harmonie]")).toBeVisible();
-  const premiere = page.locator("[data-suggestion]").first();
+  const premiere = uneSection(page);
   await premiere.getByRole("button", { name: "Essayer dans Ma version" }).click();
   await expect(page.locator("[data-idees-harmonie]")).toBeHidden();
   await expect.poll(() => db.writes.some((w) => w.path === VERSION_DOC), "la retouche est bien écrite").toBe(true);

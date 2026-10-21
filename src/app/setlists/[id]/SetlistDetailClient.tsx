@@ -2034,20 +2034,27 @@ export function SetlistDetailClient() {
             }
             onEssayer={
               editMine && !chantFusion
-                ? (s, apres) => {
+                ? (s, changements, sectionNom) => {
                     const source = sourceForItem(item);
-                    if (!source) return;
+                    if (!source || !changements.length) return;
                     const demiTons = semitonesTo(ast.metadata.key, tonalite);
+                    // Du dernier au premier : les accords en trop d'un
+                    // remplacement décalent les index des suivants d'une ligne.
                     void applyNewSource(
                       ideesTarget,
-                      appliquerDansLaSource(source, s.endroits[0], apres, demiTons, ast.metadata.key),
+                      changements.slice().reverse().reduce(
+                        (src, c) => appliquerDansLaSource(src, c.endroit, c.apres, demiTons, ast.metadata.key),
+                        source,
+                      ),
                     );
                     // Chant affiché en scan 简谱 : la retouche va bien dans la
                     // version texte, mais elle ne se verra pas sur l'image —
                     // on le dit, avec le changement à reporter à la main.
                     if (jianpuManifest?.[item.songSlug] && sheetEnabled(jianpuPref, item.jianpuSheet)) {
                       flashFeedback(
-                        t("harmonie.reporterJianpu", { quoi: `${s.endroits[0].accords.join(" – ")} → ${apres.join(" – ")}` }),
+                        t("harmonie.reporterJianpu", {
+                          quoi: `${sectionNom} : ${changements[0].endroit.accords.join(" – ")} → ${changements[0].apres.join(" – ")}`,
+                        }),
                       );
                     }
                     setIdeesTarget(null);
