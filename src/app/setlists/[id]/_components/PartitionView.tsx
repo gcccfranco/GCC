@@ -5,6 +5,7 @@ import type { JianpuChords, SetlistItem } from "@/types/setList";
 import type { SongContent } from "@/lib/api/songs";
 import { SongView, SectionView, StructureStrip, TransitionNote } from "@/components/song/SongView";
 import { JianpuSheet } from "@/components/jianpu/JianpuSheet";
+import { AccordsProvider, ChantDesAccords } from "@/components/accords/AccordsProvider";
 import { resolveSectionOccurrences, type SectionOccurrence } from "@/lib/setlist/sectionSteps";
 import type { PartitionLayout } from "@/lib/partitionLayoutPref";
 import { resolveStructureOverride } from "@/lib/chordpro/structure";
@@ -127,6 +128,8 @@ export function PartitionsView({
     );
   }
   return (
+    // Les accords s'ouvrent au toucher hors édition (DA-3) ; « Ma version » et « Adapter » gardent leurs lignes tappables.
+    <AccordsProvider actif={!editMode} aide>
     <div className="space-y-10 print:space-y-6">
       {items
         .map((item, origIndex) => ({ item, origIndex }))
@@ -245,6 +248,7 @@ export function PartitionsView({
                       : section;
                     return (
                       <div key={`${ms.songSlug}-${ms.sectionId}-${msIdx}`} data-chant-slug={ms.songSlug}>
+                        <ChantDesAccords chant={{ slug: ms.songSlug, titre: ast.metadata.title }}>
                         <SectionView
                           section={shownSection}
                           language={ast.metadata.language}
@@ -258,6 +262,7 @@ export function PartitionsView({
                           chartStyle={chartStyle}
                           occurrenceUids={[section.uid]}
                         />
+                        </ChantDesAccords>
                         {withDetails && ms.transition && <TransitionNote text={ms.transition} />}
                       </div>
                     );
@@ -287,6 +292,7 @@ export function PartitionsView({
                   if (!ast) return null;
                   return (
                     <div key={fs.songSlug} data-chant-slug={fs.songSlug}>
+                      <ChantDesAccords chant={{ slug: fs.songSlug, titre: ast.metadata.title }}>
                       {fsIdx > 0 && (
                         <div className="flex items-center gap-2 my-6 print:my-3">
                           <div className="flex-1 border-t border-dashed border-primary/30" />
@@ -307,6 +313,7 @@ export function PartitionsView({
                         layout={layout}
                         titleHref={songHref(fs.songSlug, fs, setlistId, item.position)}
                       />
+                      </ChantDesAccords>
                     </div>
                   );
                 })}
@@ -342,6 +349,7 @@ export function PartitionsView({
         );
       })}
     </div>
+    </AccordsProvider>
   );
 }
 
@@ -514,6 +522,7 @@ function NormalSongItem({
   );
   return (
     <div data-outline-item={item.position} className="print:break-before-page first:print:break-before-auto">
+      <ChantDesAccords chant={{ slug: item.songSlug, titre: ast.metadata.title }}>
       <div className="flex items-center gap-2 mb-3 print:mb-2 flex-wrap">
         <span className="w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center shrink-0">
           {item.position}
@@ -571,6 +580,7 @@ function NormalSongItem({
           ) : undefined
         }
       />
+      </ChantDesAccords>
     </div>
   );
 }

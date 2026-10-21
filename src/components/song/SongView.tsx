@@ -3,6 +3,8 @@ import localFont from "next/font/local";
 import Link, { type LinkProps } from "next/link";
 import { ChordLine } from "@/components/song/ChordLine";
 import { JianpuLine } from "@/components/song/JianpuLine";
+import { AccordsInactifs } from "@/components/accords/AccordsProvider";
+import { AccordTouchable } from "@/components/accords/AccordTouchable";
 import { pinyin_font } from "@/components/song/pinyinFont";
 import type { ChordProAST, ChordProLine, ChordProSection, Token } from "@/types/chordPro";
 import { useTranslation } from "react-i18next";
@@ -324,7 +326,7 @@ function ZhLine({ tokens, pinyin, showChords, showPinyin, hideLyrics = false, ch
                     }}
                     className={chord_font.className}
                   >
-                    {col.chord ?? "x"}
+                    {col.chord ? <AccordTouchable etiquette={col.chord} /> : "x"}
                   </span>
                 )}
                 <span
@@ -690,7 +692,8 @@ export function SectionView({ section, language, showChords, showPinyin, useJian
                   onKeyDown={(e) => e.key === "Enter" && onLineSelect(line, section.uid)}
                   className="cursor-pointer rounded-md -mx-1.5 px-1.5 border border-dashed border-primary/25 hover:border-primary/60 hover:bg-primary/5 active:bg-primary/10 transition-colors my-0.5 print:border-transparent print:bg-transparent print:mx-0 print:px-0 print:my-0"
                 >
-                  {rendered}
+                  {/* Édition : toucher la ligne ouvre la feuille d'édition, jamais le panneau d'un accord. */}
+                  <AccordsInactifs>{rendered}</AccordsInactifs>
                 </div>
               );
             }

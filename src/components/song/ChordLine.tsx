@@ -1,6 +1,7 @@
 "use client";
 
 import type { Token } from "@/types/chordPro";
+import { AccordTouchable } from "@/components/accords/AccordTouchable";
 import localFont from "next/font/local";
 type Segment = { chord: string | null; lyric: string };
 
@@ -155,7 +156,7 @@ export function ChordLine({ tokens, showChords = true, hideLyrics = false, fontS
                 // sinon deux accords consécutifs se touchent
                 style={{ fontSize: `${chordEm}em`, paddingRight: "0.5em" }}
               >
-                {seg.chord}
+                <AccordTouchable etiquette={seg.chord} />
               </span>
             ) : 
               (showChords && hasAnyChord && <span data-copy-ignore className="leading-[0.7]" style={{ fontSize: `${chordEm}em` }}>&nbsp;</span>)

@@ -31,6 +31,7 @@ import { formatSectionName } from "@/lib/chordpro/parser";
 import type { ChordProSection } from "@/types/chordPro";
 import type { Fiche, Instrument } from "@/types/harmonie";
 import { ParagrapheFiche, TON_DES_FICHES } from "@/components/harmonie/TexteFiche";
+import { AccordTouchable } from "@/components/accords/AccordTouchable";
 
 export type Props = {
   open: boolean;
@@ -256,9 +257,9 @@ function Contenu({ slug, titre, sections, tonalite, tonaliteOrigine, instrument,
                 </p>
                 {apercu ? (
                   <p className="mt-1.5 text-[15px]">
-                    <span className="font-chord font-semibold">{apercu.avant}</span>
+                    <span className="font-chord font-semibold"><AccordTouchable etiquette={apercu.avant} visible /></span>
                     <span className="mx-1.5 text-muted-foreground">→</span>
-                    <span className="font-chord font-semibold">{apercu.apres}</span>
+                    <span className="font-chord font-semibold"><AccordTouchable etiquette={apercu.apres} visible /></span>
                     {/* Le degré en petit à côté : la même idée se relit dans
                         n'importe quelle tonalité. */}
                     <span className="ml-2 text-[13px] text-muted-foreground">
@@ -409,7 +410,7 @@ function Contenu({ slug, titre, sections, tonalite, tonaliteOrigine, instrument,
                     {prop.approche.length > 0 && (
                       <>
                         {" · "}
-                        <span className="font-chord font-semibold">{prop.approche.join(" – ")}</span>
+                        <span className="font-chord font-semibold"><AccordTouchable etiquette={prop.approche.join(" – ")} visible /></span>
                       </>
                     )}
                   </p>
@@ -441,7 +442,7 @@ function Contenu({ slug, titre, sections, tonalite, tonaliteOrigine, instrument,
               {transition.approche && (
                 <>
                   {" · "}
-                  <span className="font-chord font-semibold">{transition.approche}</span>
+                  <span className="font-chord font-semibold"><AccordTouchable etiquette={transition.approche} visible /></span>
                 </>
               )}
             </p>
@@ -530,9 +531,9 @@ function IdeesEquipe({
             <p className="text-[15px]">{i.texte}</p>
             {(i.avant || i.apres) && (
               <p className="mt-1 text-[15px]">
-                <span className="font-chord font-semibold">{lire(i.avant)}</span>
+                <span className="font-chord font-semibold"><AccordTouchable etiquette={lire(i.avant)} visible /></span>
                 <span className="mx-1.5 text-muted-foreground">→</span>
-                <span className="font-chord font-semibold">{lire(i.apres)}</span>
+                <span className="font-chord font-semibold"><AccordTouchable etiquette={lire(i.apres)} visible /></span>
               </p>
             )}
             {i.ficheId && fiches.some((f) => f.id === i.ficheId) && (

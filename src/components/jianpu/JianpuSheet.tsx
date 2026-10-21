@@ -7,6 +7,8 @@ import type { JianpuEntry } from "@/lib/jianpu/images";
 import { cleJouee, jianpuImageUrl, useJianpuCadrage, useJianpuChords } from "@/lib/jianpu/images";
 import { aDesRetouches, cibleRetouche, type CibleRetouche } from "@/lib/jianpu/retouches";
 import { JianpuChordSheet } from "@/components/jianpu/JianpuChordSheet";
+import { AccordTouchable } from "@/components/accords/AccordTouchable";
+import { useOuvrirAccord } from "@/components/accords/AccordsProvider";
 import type { JianpuChords } from "@/types/setList";
 import { altSpellingKey, getTransposedKey, semitonesTo, transposeLabel } from "@/lib/transpose";
 
@@ -257,6 +259,9 @@ export function JianpuSheet({ entry, title, slug, layout = "flow", playedKey: de
   // dessinent, pour ne pas redessiner par-dessus une gravure intacte.
   const retouchesOn = Boolean(chords && aDesRetouches(chordEdits));
   const retouchable = Boolean(chords && onEditChords);
+  // Lecture sous un fournisseur d'accords actif : les accords écrits s'ouvrent au toucher (DA-3).
+  // Jamais en retouche, ni en mode louange (pas de fournisseur actif).
+  const accordsTouchables = useOuvrirAccord().actif && !retouchable;
   const staleChords = Boolean(playedKey && !chords);
   // Calque partiel : une partie des accords n'a pas été relevée et reste
   // donc dans la tonalité imprimée. On le dit, et on met en évidence ceux
@@ -517,12 +522,15 @@ export function JianpuSheet({ entry, title, slug, layout = "flow", playedKey: de
     return out;
   }
 
-  const rendreBoite = (b: Boite, ecriture: boolean) => (
+  const rendreBoite = (b: Boite, ecriture: boolean) => {
+    const touchable = ecriture && accordsTouchables && b.texte.trim() !== "" && (b.key.startsWith("etiquette-") || b.key.startsWith("ajout-"));
+    return (
     <span
       key={b.key}
       {...(ecriture ? b.attrs : { "data-jianpu-gomme": b.texte, "aria-hidden": true })}
       className={
         "absolute flex items-end whitespace-nowrap " +
+        (touchable ? "pointer-events-auto " : "") +
         (b.classe ? b.classe + " " : "") +
         (ecriture
           ? b.bleu
@@ -536,9 +544,10 @@ export function JianpuSheet({ entry, title, slug, layout = "flow", playedKey: de
         color: ecriture ? (b.bleu ? undefined : "hsl(var(--jianpu-encre))") : "transparent",
       }}
     >
-      {ecriture ? b.texte : null}
+      {ecriture ? (touchable ? <AccordTouchable etiquette={b.texte} capo={capo || undefined} /> : b.texte) : null}
     </span>
-  );
+    );
+  };
 
   return (
     <div className={fit ? "flex h-full w-full flex-col items-center justify-center gap-2" : "flex flex-col items-center gap-6"}>
@@ -668,7 +677,7 @@ export function JianpuSheet({ entry, title, slug, layout = "flow", playedKey: de
               échelle). */}
           {calque && (
             <>
-            <div data-jianpu-calque className="pointer-events-none absolute inset-0" aria-hidden>
+            <div data-jianpu-calque className="pointer-events-none absolute inset-0" aria-hidden={accordsTouchables ? undefined : true}>
               {cal.map((b) => rendreBoite(b, true))}
             </div>
 

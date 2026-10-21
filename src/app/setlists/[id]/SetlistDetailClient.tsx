@@ -72,6 +72,7 @@ import { PdfChoiceSheet } from "@/components/pdf/PdfChoiceSheet";
 import { pdfFileName, type PdfStyle } from "@/lib/pdfStylePref";
 import { itemAst } from "@/lib/chordpro/itemContent";
 import { IdeesSheet } from "@/components/harmonie/IdeesSheet";
+import { AccordsProvider } from "@/components/accords/AccordsProvider";
 import { appliquerDansLaSource } from "@/lib/harmonie/appliquer";
 import { useAccesHarmonie, useInstrument } from "@/lib/harmonie/useHarmonie";
 import { semitonesTo } from "@/lib/transpose";
@@ -1997,6 +1998,8 @@ export function SetlistDetailClient() {
               }
             : undefined;
         return (
+          // Les accords proposés s'ouvrent au toucher, même en « Ma version » (DA-3, Q13).
+          <AccordsProvider chant={{ slug, titre: songsMap[slug]?.title ?? slug }}>
           <IdeesSheet
             open
             onClose={() => { setIdeesTarget(null); setIdeesChant(null); }}
@@ -2062,6 +2065,7 @@ export function SetlistDetailClient() {
                 : undefined
             }
           />
+          </AccordsProvider>
         );
       })()}
 

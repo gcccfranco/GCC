@@ -6,8 +6,12 @@
 //   ouvrir({ accord: "D/F#", ancre: element, capo: 2, chant: { slug, titre } });
 //
 // Sur ordinateur (souris, 1 024 px et plus, comme `useDeuxVolets`) avec une ancre : une bulle sous l'accord.
-// Ailleurs (téléphone, tablette, tablette en paysage) : la feuille du bas. Le fournisseur n'est monté nulle
-// part encore : DA-3 le posera avec les surfaces de chant.
+// Ailleurs (téléphone, tablette, tablette en paysage) : la feuille du bas.
+//
+// DA-3 — l'interrupteur : seules les surfaces sous un fournisseur **actif** rendent des accords touchables
+// (`AccordTouchable`). Le contexte par défaut est inactif ; `AccordsInactifs` coupe un sous-arbre (lignes
+// d'édition, mode louange). Le fournisseur porte aussi le chant lu (pour « Signaler ») et, si `aide`, la
+// bulle d'aide qui s'affiche une seule fois par appareil (Q16).
 
 import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
@@ -31,13 +35,49 @@ export type DemandeAccord = {
   chant?: { slug: string; titre: string };
 };
 
-type Contexte = { ouvrir: (d: DemandeAccord) => void; fermer: () => void };
+type Chant = { slug: string; titre: string };
+type Contexte = {
+  ouvrir: (d: DemandeAccord) => void;
+  fermer: () => void;
+  /** Vrai sous un fournisseur actif : les accords y sont touchables. */
+  actif: boolean;
+  /** Le chant lu, joint à chaque demande qui n'en porte pas. */
+  chant?: Chant;
+  /** Un accord touchable s'annonce (pour la bulle d'aide) ; renvoie son retrait. */
+  enregistrer: (el: HTMLElement) => () => void;
+};
 
-const Rien: Contexte = { ouvrir: () => {}, fermer: () => {} };
+const Rien: Contexte = { ouvrir: () => {}, fermer: () => {}, actif: false, enregistrer: () => () => {} };
 const AccordsContext = createContext<Contexte>(Rien);
 
 export function useOuvrirAccord(): Contexte {
   return useContext(AccordsContext);
+}
+
+/** Coupe les accords touchables de tout ce qui est dessous (édition d'une ligne, mode louange). */
+export function AccordsInactifs({ children }: { children: React.ReactNode }) {
+  return <AccordsContext.Provider value={Rien}>{children}</AccordsContext.Provider>;
+}
+
+/** Dit de quel chant sont les accords dessous (une setlist en porte plusieurs). */
+export function ChantDesAccords({ chant, children }: { chant: Chant; children: React.ReactNode }) {
+  const parent = useContext(AccordsContext);
+  const valeur = useMemo(() => ({ ...parent, chant }), [parent, chant]);
+  return <AccordsContext.Provider value={valeur}>{children}</AccordsContext.Provider>;
+}
+
+const CLE_AIDE = "accords-aide-vue";
+function aideDejaVue(): boolean {
+  try {
+    return window.localStorage.getItem(CLE_AIDE) !== null;
+  } catch {
+    return false;
+  }
+}
+function noterAideVue() {
+  try {
+    window.localStorage.setItem(CLE_AIDE, "1");
+  } catch { /* stockage indisponible : l'aide reviendra */ }
 }
 
 type Ouvert = { accord: Accord; ancre: HTMLElement | null; capo?: number; chant?: { slug: string; titre: string } };
@@ -52,8 +92,23 @@ function useOrdinateur(): boolean {
   return useSyncExternalStore(suivreOrdinateur, () => window.matchMedia(ORDINATEUR).matches, () => false);
 }
 
-export function AccordsProvider({ children }: { children: React.ReactNode }) {
+export function AccordsProvider({
+  children,
+  actif = true,
+  chant,
+  aide = false,
+}: {
+  children: React.ReactNode;
+  /** Faux : le fournisseur reste monté mais les accords ne sont plus touchables (setlist en édition). */
+  actif?: boolean;
+  chant?: Chant;
+  /** Montre, une seule fois par appareil, la bulle « Touchez un accord… » sous le premier accord visible. */
+  aide?: boolean;
+}) {
   const [ouvert, setOuvert] = useState<Ouvert | null>(null);
+  const [aideAncre, setAideAncre] = useState<HTMLElement | null>(null);
+  const touchables = useRef(new Set<HTMLElement>());
+  const minuteur = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [signalement, setSignalement] = useState<{ accord: string; chant?: { slug: string; titre: string } } | null>(null);
   const derniereAncre = useRef<HTMLElement | null>(null);
   const { t } = useTranslation();
@@ -66,19 +121,76 @@ export function AccordsProvider({ children }: { children: React.ReactNode }) {
     if (ancre) setTimeout(() => ancre.isConnected && ancre.focus({ preventScroll: true }), 0);
   }, []);
 
+  const fermerAide = useCallback(() => {
+    setAideAncre(null);
+    noterAideVue();
+  }, []);
+
   const ouvrir = useCallback((d: DemandeAccord) => {
     const accord = analyserAccord(d.accord);
     if (!accord) return;
     derniereAncre.current = d.ancre ?? null;
-    setOuvert({ accord, ancre: d.ancre ?? null, capo: d.capo, chant: d.chant });
-  }, []);
+    // Toucher un accord vaut lecture de l'aide.
+    if (aideAncre) fermerAide();
+    setOuvert({ accord, ancre: d.ancre ?? null, capo: d.capo, chant: d.chant ?? chant });
+  }, [chant, aideAncre, fermerAide]);
 
-  const valeur = useMemo(() => ({ ouvrir, fermer }), [ouvrir, fermer]);
+  // La bulle d'aide : sous le premier accord visible, une fois les accords posés (les chants arrivent
+  // par le réseau) ; si aucun n'est à l'écran, on réessaie au défilement.
+  const chercherPremier = useCallback(() => {
+    if (!aide || !actif || aideDejaVue()) return;
+    const visibles = [...touchables.current].filter((el) => {
+      if (!el.isConnected) return false;
+      const r = el.getBoundingClientRect();
+      return r.width > 0 && r.height > 0 && r.top >= 96 && r.bottom <= window.innerHeight - 140;
+    });
+    visibles.sort((a, b) => (a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1));
+    if (visibles[0]) setAideAncre((courante) => courante ?? visibles[0]);
+  }, [aide, actif]);
+
+  const programmer = useCallback(() => {
+    if (minuteur.current) clearTimeout(minuteur.current);
+    minuteur.current = setTimeout(chercherPremier, 500);
+  }, [chercherPremier]);
+
+  const enregistrer = useCallback((el: HTMLElement) => {
+    touchables.current.add(el);
+    programmer();
+    return () => {
+      touchables.current.delete(el);
+    };
+  }, [programmer]);
+
+  useEffect(() => {
+    if (!aide || !actif || aideAncre || aideDejaVue()) return;
+    programmer();
+    window.addEventListener("scroll", programmer, { passive: true, capture: true });
+    return () => {
+      window.removeEventListener("scroll", programmer, true);
+      if (minuteur.current) clearTimeout(minuteur.current);
+    };
+  }, [aide, actif, aideAncre, programmer]);
+
+  // Passage en édition : tout se referme (ajustement pendant le rendu, pas dans un effet).
+  const [etaitActif, setEtaitActif] = useState(actif);
+  if (etaitActif !== actif) {
+    setEtaitActif(actif);
+    if (!actif) {
+      setOuvert(null);
+      setAideAncre(null);
+    }
+  }
+
+  const valeur = useMemo<Contexte>(
+    () => (actif ? { ouvrir, fermer, actif: true, chant, enregistrer } : Rien),
+    [actif, ouvrir, fermer, chant, enregistrer],
+  );
 
   return (
     <AccordsContext.Provider value={valeur}>
       {children}
-      {ouvert && (
+      {actif && aideAncre && <AideBulle ancre={aideAncre} onOk={fermerAide} />}
+      {actif && ouvert && (
         <PanneauOuvert
           ouvert={ouvert}
           fermer={fermer}
@@ -137,7 +249,7 @@ const LARGEUR_BULLE = 300;
 const MARGE = 8;
 const ECART = 12;
 
-type Place = { left: number; top: number; fleche: number; dessus: boolean };
+type Place = { left: number; top: number; fleche: number; dessus: boolean; sansFleche?: boolean };
 
 function Bulle(props: Omit<React.ComponentProps<typeof PanneauAccord>, "variante"> & { onFermer: () => void; ancre: HTMLElement }) {
   const { ancre, onFermer } = props;
@@ -155,9 +267,12 @@ function Bulle(props: Omit<React.ComponentProps<typeof PanneauAccord>, "variante
     const clamp = (v: number, min: number, max: number) => Math.max(min, Math.min(max, v));
     const centre = r.left + r.width / 2;
     const left = clamp(centre - w / 2, MARGE, Math.max(MARGE, window.innerWidth - w - MARGE));
-    const dessus = r.bottom + ECART + h > window.innerHeight - MARGE && r.top - ECART - h > MARGE;
-    const top = dessus ? r.top - ECART - h : r.bottom + ECART;
-    setPlace({ left, top, fleche: clamp(centre - left, 24, w - 24), dessus });
+    const tientDessous = r.bottom + ECART + h <= window.innerHeight - MARGE;
+    const dessus = !tientDessous && r.top - ECART - h > MARGE;
+    // Ni dessous ni dessus (écran bas, accord en haut de page) : la bulle se cale dans l'écran, sur l'accord, sans flèche.
+    const cale = !tientDessous && !dessus;
+    const top = dessus ? r.top - ECART - h : cale ? clamp(r.bottom + ECART, MARGE, Math.max(MARGE, window.innerHeight - h - MARGE)) : r.bottom + ECART;
+    setPlace({ left, top, fleche: clamp(centre - left, 24, w - 24), dessus, sansFleche: cale });
   }, [ancre, onFermer]);
 
   useLayoutEffect(() => {
@@ -176,17 +291,21 @@ function Bulle(props: Omit<React.ComponentProps<typeof PanneauAccord>, "variante
 
   useEffect(() => {
     ref.current?.focus({ preventScroll: true });
+    // Échap sur la fenêtre, en capture : par-dessus une feuille (Idées d'harmonie), il ferme la bulle
+    // seule — la feuille, qui écoute Échap sur le document, ne le reçoit pas.
     const surTouche = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onFermer();
+      if (e.key !== "Escape") return;
+      e.stopPropagation();
+      onFermer();
     };
     const surAppui = (e: PointerEvent) => {
       const cible = e.target as Node;
       if (!ref.current?.contains(cible) && !ancre.contains(cible)) onFermer();
     };
-    document.addEventListener("keydown", surTouche);
+    window.addEventListener("keydown", surTouche, true);
     document.addEventListener("pointerdown", surAppui, true);
     return () => {
-      document.removeEventListener("keydown", surTouche);
+      window.removeEventListener("keydown", surTouche, true);
       document.removeEventListener("pointerdown", surAppui, true);
     };
   }, [ancre, onFermer]);
@@ -198,17 +317,95 @@ function Bulle(props: Omit<React.ComponentProps<typeof PanneauAccord>, "variante
       aria-label={t("accords.titre") + " " + props.accord.texte}
       tabIndex={-1}
       data-accord-panneau="bulle"
-      style={{ position: "fixed", width: LARGEUR_BULLE, left: place?.left ?? 0, top: place?.top ?? 0, visibility: place ? "visible" : "hidden" }}
-      className="z-50 rounded-2xl border border-border bg-card text-foreground shadow-xl outline-none"
+      style={{
+        position: "fixed",
+        width: LARGEUR_BULLE,
+        left: place?.left ?? 0,
+        top: place?.top ?? 0,
+        visibility: place ? "visible" : "hidden",
+      }}
+      className="pointer-events-auto z-50 rounded-2xl border border-border bg-card text-foreground shadow-xl outline-none"
     >
-      {place && (
+      {place && !place.sansFleche && (
         <span
           aria-hidden
           style={{ left: place.fleche - 6 }}
           className={`absolute h-3 w-3 rotate-45 bg-card ${place.dessus ? "-bottom-1.5 border-b border-r" : "-top-1.5 border-l border-t"} border-border`}
         />
       )}
-      <PanneauAccord {...props} variante="bulle" />
+      {/* Plus haute que l'écran : le contenu défile sur lui-même plutôt que de sortir du cadre (la flèche reste dehors). */}
+      <div className="overflow-y-auto rounded-2xl" style={{ maxHeight: window.innerHeight - 2 * MARGE }}>
+        <PanneauAccord {...props} variante="bulle" />
+      </div>
+    </div>,
+    document.body,
+  );
+}
+
+/** La bulle d'aide de la première fois (Q16) : encre, flèche, un seul bouton. */
+function AideBulle({ ancre, onOk }: { ancre: HTMLElement; onOk: () => void }) {
+  const { t } = useTranslation();
+  const ordinateur = useOrdinateur();
+  const ref = useRef<HTMLDivElement>(null);
+  const [place, setPlace] = useState<Place | null>(null);
+
+  const placer = useCallback(() => {
+    const el = ref.current;
+    if (!el) return;
+    if (!ancre.isConnected) return onOk();
+    const r = ancre.getBoundingClientRect();
+    const w = el.offsetWidth;
+    const h = el.offsetHeight;
+    const clamp = (v: number, min: number, max: number) => Math.max(min, Math.min(max, v));
+    const centre = r.left + r.width / 2;
+    const left = clamp(centre - w / 2, MARGE, Math.max(MARGE, window.innerWidth - w - MARGE));
+    const dessus = r.bottom + ECART + h > window.innerHeight - MARGE && r.top - ECART - h > MARGE;
+    setPlace({ left, top: dessus ? r.top - ECART - h : r.bottom + ECART, fleche: clamp(centre - left, 24, w - 24), dessus });
+  }, [ancre, onOk]);
+
+  useLayoutEffect(() => {
+    placer();
+    window.addEventListener("resize", placer);
+    window.addEventListener("scroll", placer, true);
+    return () => {
+      window.removeEventListener("resize", placer);
+      window.removeEventListener("scroll", placer, true);
+    };
+  }, [placer]);
+
+  useEffect(() => {
+    const surTouche = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onOk();
+    };
+    document.addEventListener("keydown", surTouche);
+    return () => document.removeEventListener("keydown", surTouche);
+  }, [onOk]);
+
+  return createPortal(
+    <div
+      ref={ref}
+      role="status"
+      data-accords-aide
+      style={{ position: "fixed", width: 280, left: place?.left ?? 0, top: place?.top ?? 0, visibility: place ? "visible" : "hidden" }}
+      className="pointer-events-auto z-50 rounded-[12px] bg-foreground px-4 py-3 text-sm leading-snug text-background shadow-xl"
+    >
+      {place && (
+        <span
+          aria-hidden
+          style={{ left: place.fleche - 6 }}
+          className={`absolute h-3 w-3 rotate-45 bg-foreground ${place.dessus ? "-bottom-1.5" : "-top-1.5"}`}
+        />
+      )}
+      <p className="relative">{t(ordinateur ? "accords.aideCliquer" : "accords.aideToucher")}</p>
+      <div className="relative mt-2 flex justify-end">
+        <button
+          type="button"
+          onClick={onOk}
+          className="h-8 rounded-full bg-background/20 px-4 text-sm font-semibold outline-none hover:bg-background/30 focus-visible:ring-2 focus-visible:ring-background"
+        >
+          {t("accords.aideOk")}
+        </button>
+      </div>
     </div>,
     document.body,
   );

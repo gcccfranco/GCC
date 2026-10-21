@@ -36,6 +36,7 @@ import type { SectionNuance } from "@/types/setList";
 import { ReportDialog } from "@/components/report/ReportDialog";
 import { PdfChoiceSheet } from "@/components/pdf/PdfChoiceSheet";
 import { IdeesSheet } from "@/components/harmonie/IdeesSheet";
+import { AccordsProvider } from "@/components/accords/AccordsProvider";
 import { useAccesHarmonie, useInstrument } from "@/lib/harmonie/useHarmonie";
 import { pdfFileName, type PdfStyle } from "@/lib/pdfStylePref";
 import { getSetlist } from "@/lib/firebase/setlists";
@@ -441,6 +442,7 @@ function useVersionDeLaSetlist(slug: string, setlistId: string | null, position:
   };
 
   return (
+    <AccordsProvider aide chant={{ slug: song.slug, titre: song.title }}>
       <div className="relative min-h-screen print:min-h-0 bg-background" style={{ width: `${100 / fontScale}%`, "--zoom-chant": fontScale } as React.CSSProperties}>
         <Halo variant="chant" color="var(--sec-chorus)" />
         {/* Barre de contrôles */}
@@ -719,5 +721,6 @@ function useVersionDeLaSetlist(slug: string, setlistId: string | null, position:
         />
 
     </div>
+    </AccordsProvider>
     );
   }
