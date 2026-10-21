@@ -77,7 +77,7 @@ export function transposeChord(chord: string, semitones: number, targetKey: stri
  * « 或 », « 代替 », « 先 »/« 后 », les crochets pleine chasse 【 】), les
  * blancs, et la barre de mesure.
  */
-const LABEL_SPLIT = /([^\x00-\x7F]+|[\s|]+)/;
+export const LABEL_SPLIT = /([^\x00-\x7F]+|[\s|]+)/;
 
 /**
  * Ce qui a *la forme* d'un accord, testé sur le jeton entier.
@@ -104,7 +104,7 @@ export const CHORD_TOKEN =
   /^(?:\(?[A-G][#b]?(?:maj|min|sus|add|dim|aug|alt|M|m|Δ|ø|°|\+|-)*\d*(?:[b#]\d+)?(?:\((?:maj|min|add|sus|dim|aug)?[b#]?\d+\))?(?:sus\d?|add\d?)?(?:\/[A-G][#b]?)?|\/[A-G][#b]?)\)?$/;
 
 /** Parenthèses et crochets qui décorent un jeton sans en faire partie. */
-const EDGE_BRACKETS = /^([()[\]]*)(.*?)([()[\]]*)$/;
+export const EDGE_BRACKETS = /^([()[\]]*)(.*?)([()[\]]*)$/;
 
 /**
  * Une parenthèse ouvrante suivie d'une note ou d'une basse seule commence un
@@ -112,7 +112,7 @@ const EDGE_BRACKETS = /^([()[\]]*)(.*?)([()[\]]*)$/;
  * partie de l'accord s'ouvrent sur une minuscule, un chiffre ou une
  * altération (`Am(maj7)`, `Adim(9)`, `C7(#9)`) et n'y répondent pas.
  */
-const PAREN_CHORD = /(?=\(\/?[A-G])/;
+export const PAREN_CHORD = /(?=\(\/?[A-G])/;
 
 /**
  * « B/D#(G#) », gravé sans blanc : `transposeChord` lisait « /D#(G# » comme
