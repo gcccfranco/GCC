@@ -6,7 +6,8 @@ entretien (skill *grilling*), tours A à F, **toutes les questions tranchées**.
 https://claude.ai/artifact/RVnkQYaFbyyBgZ8ti4ET6s (privé, liste des points faibles des règles : il reste hors du
 dépôt public).
 
-Lot **AO**. **État : spec écrite le 21/10/2026 ; planche de l'organigramme à faire ; code sur go. Préalable :
+Lot **AO**. Planche : https://claude.ai/artifact/9vupGveKJDw5BnzGfHf1wV. **État : spec écrite et planche faite le
+21/10/2026, à valider par Timothée ; code sur go. Préalable :
 la séance de bascule V19EQUIPES (étape 0), pas encore faite.**
 
 ## Mots de Timothée
@@ -102,6 +103,10 @@ Trois sources d'accès qui se recouvrent :
   « N personnes au planning de ce mois ne sont dans aucune équipe », avec le lien vers l'organigramme.
   ➡️ Recommandé : oui, dans le rappel du matin existant (`/api/cron/reminders`), pas une notification de plus.
 - **Liste « Ce qu'il joue »** : piano, guitare, basse, batterie, cajon, autre. ➡️ À relire par Timothée.
+
+- **« Ce que tu peux faire » dans Moi** (proposé par la planche, non tranché) : la liste de ses accès avec leur raison
+  (« Voir et créer les setlists du Campus — Louange, où tu sers ») et « Un accès te manque ? Demande à ton
+  référent ». ➡️ Recommandé : oui ; même liste sous « Ce que ça lui ouvre » dans la fiche d'un membre.
 
 ## Modèle
 

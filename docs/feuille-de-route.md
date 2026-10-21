@@ -1179,7 +1179,7 @@ trois admins fondateurs en dur ; Louange en trois sous-équipes (Présidence, Mu
 référent chacune et un référent Louange ; Régie à part ; « Où il sert » et « Ce qu'il joue » cochés sur la ligne du
 membre ; être au planning d'une date ouvre la lecture de cette setlist ; coordination = référents Louange et EDD +
 Orga ; migration par script à blanc. **Spec écrite ; préalable : séance de bascule V19EQUIPES (pas faite) ; planche de
-l'organigramme à faire ; code sur go.**
+l'organigramme https://claude.ai/artifact/9vupGveKJDw5BnzGfHf1wV à valider ; code sur go.**
 
 ## 4. Carte des modules de l'app « GCC »
 
