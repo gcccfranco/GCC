@@ -22,6 +22,8 @@ const SPECS_GRAND_ECRAN = [
   /setlist-regie\.spec\.ts/,
   /setlist-partage\.spec\.ts/,
   /coup-d-oeil\.spec\.ts/,
+  // Lot DA, DA-2 (docs/spec-dictionnaire-accords.md) : la page /accords (carte + groupes d'accords).
+  /accords-page\.spec\.ts/,
   // Chantier 简谱, lot 3 (docs/spec-jianpu-integration.md) : la piste A sur toutes les surfaces.
   /jianpu-integration\.spec\.ts/,
   // Lot 1 du chantier « équipes et groupes » (docs/spec-equipes-sans-poles.md, EQ-D) : l'organigramme sans pôles.

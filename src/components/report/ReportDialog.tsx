@@ -16,13 +16,16 @@ interface ReportDialogProps {
   /** kind === "song" : chant concerné */
   songSlug?: string;
   songTitle?: string;
+  /** Résumé et détails pré-remplis (ex. un doigté manquant du dictionnaire d'accords). */
+  titreInitial?: string;
+  descriptionInitiale?: string;
 }
 
 /**
  * Modal de signalement partagé (problème chant ou site). Réservé aux membres
  * connectés : enregistre le signalement (→ inbox /admin) et notifie les admins.
  */
-export function ReportDialog({ open, onClose, kind, songSlug, songTitle }: ReportDialogProps) {
+export function ReportDialog({ open, onClose, kind, songSlug, songTitle, titreInitial, descriptionInitiale }: ReportDialogProps) {
   const { t } = useTranslation();
   const { user } = useAuth();
   const [status, setStatus] = useState<"idle" | "loading" | "done" | "error">("idle");
@@ -100,7 +103,7 @@ export function ReportDialog({ open, onClose, kind, songSlug, songTitle }: Repor
               <label className="text-xs font-medium text-muted-foreground">{t("signalement.resume")}</label>
               <input
                 name="title"
-                defaultValue={kind === "song" && songTitle ? t("signalement.resumeChant", { titre: songTitle }) : ""}
+                defaultValue={titreInitial ?? (kind === "song" && songTitle ? t("signalement.resumeChant", { titre: songTitle }) : "")}
                 placeholder={kind === "site" ? t("signalement.resumePlaceholder") : undefined}
                 required
                 minLength={3}
@@ -115,6 +118,7 @@ export function ReportDialog({ open, onClose, kind, songSlug, songTitle }: Repor
               </label>
               <textarea
                 name="description"
+                defaultValue={descriptionInitiale}
                 placeholder={t("signalement.detailsPlaceholder")}
                 rows={3}
                 maxLength={REPORT_LIMITS.description}
