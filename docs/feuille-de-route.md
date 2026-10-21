@@ -1159,6 +1159,17 @@ ligne où l'interrupteur est coupé. Seuls les trois admins fondateurs y ajouten
 Bêta. BT-A, codé et poussé (`83ca30c`), est annulé par `52fb85e` ; BT-B, jamais poussé, supprimé ; BT-C jamais commencé.
 Rien en ligne, rien à publier dans `firestore.rules`.
 
+### AB. Idées d'harmonie répétées, dictionnaire d'accords (Timothée, 21/10/2026) → deux specs
+
+« Quand on clique dessus pour un chant il y a beaucoup de choses qui se répètent » ; « une espèce de dictionnaire
+d'accords sur le site pour aider les musiciens à savoir comment jouer l'accord ». Entretien (*grilling*) Q1 à Q20, le
+21/10/2026. Deux lots (Q20) :
+- **IR** — `spec-idees-regroupees.md` : une carte par fiche × même changement d'accords, sections listées, « Montrer
+  1/3 », refus par carte. **Spec écrite ; Q-IR1 (« Essayer » sur tous les endroits) à trancher ; code sur go.**
+- **DA** — `spec-dictionnaire-accords.md` : guitare et piano, ouvert à tous, toucher un accord en lecture ouvre son
+  doigté. **Spec écrite ; Q14 (emplacement de la page) ouverte** : Timothée revoit d'abord l'inventaire des accès du
+  site ; **planche avant le go.**
+
 ## 4. Carte des modules de l'app « GCC »
 
 À valider par Timothée avant toute spec de module (les modules existants ne
