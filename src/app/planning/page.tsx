@@ -13,7 +13,7 @@ import { StaleBanner } from "@/components/planning/StaleBanner"
 import type { EddDataStructure, CampusSeance } from "@/lib/planning/utils"
 import { useProfile } from "@/lib/firebase/users"
 import { completerMusiciensFidelite } from "@/lib/planning/grilles"
-import { avecDimanchesSpeciaux, sansBrouillon, trimestresPublies, type PlanningData } from "@/lib/planning/names"
+import { avecDimanchesSpeciaux, datesServies, sansBrouillon, trimestresPublies, type PlanningData } from "@/lib/planning/names"
 import { lirePetitDej } from "@/lib/petitdej/lignes"
 import { servicesDuCompte } from "@/lib/petitdej/services"
 import type { LignePetitDej } from "@/types/petitDej"
@@ -96,14 +96,17 @@ export default function PlanningAccueil() {
   // « Pour moi » : le prochain service de la personne connectée (d'après son nom de
   // planning, et ses petits déj par son compte, U3) et les suivants — deux en grand, trois sur
   // tablette, aucun sur téléphone.
-  const mesServices = useMemo(() => {
+  const planningDuCompte = useMemo((): PlanningData | null => {
     if (!user || !profile) return null
     const lu: PlanningData = { culte, dejeuner: dej, petitDej, paix, fidelite: fid, bonte, edd, campus, intergroupe, interfranco }
     // Lot U2 (Q4, Q5) : comme `loadPlanningData`, ni trimestre à venir non
     // publié, ni président de groupe fantôme un dimanche d'Interfranco ou d'Intergroupe.
-    const data = BACK_OFFICE ? avecDimanchesSpeciaux(sansBrouillon(lu, new Date().getFullYear(), getCurrentTri(), publies)) : lu
-    return pourMoi(servicesDuCompte(data, lignesPetitDej, user.uid, profile.planningName ?? ""), aujourdhui, disposition === "tablette" ? 3 : 2)
-  }, [user, profile, culte, dej, petitDej, lignesPetitDej, paix, fid, bonte, edd, campus, intergroupe, interfranco, publies, aujourdhui, disposition])
+    return BACK_OFFICE ? avecDimanchesSpeciaux(sansBrouillon(lu, new Date().getFullYear(), getCurrentTri(), publies)) : lu
+  }, [user, profile, culte, dej, petitDej, paix, fid, bonte, edd, campus, intergroupe, interfranco, publies])
+  const mesServices = useMemo(() => {
+    if (!user || !profile || !planningDuCompte) return null
+    return pourMoi(servicesDuCompte(planningDuCompte, lignesPetitDej, user.uid, profile.planningName ?? ""), aujourdhui, disposition === "tablette" ? 3 : 2)
+  }, [user, profile, planningDuCompte, lignesPetitDej, aujourdhui, disposition])
 
   // La setlist de ce service (règle de Mes services), puis les titres et tonalités de ses chants.
   // L'accueil est la page la plus visitée : jamais toute la collection, seulement les setlists
@@ -118,9 +121,11 @@ export default function PlanningAccueil() {
   // Seulement une setlist que la personne peut ouvrir (même règle que sa page) : jamais un lien vers « pas d'accès ».
   const setlist = useMemo(() => {
     if (!user || !mesServices) return null
-    const lisibles = setlists.filter(s => canSeeSetlist(user, profile, s))
+    // Lot AO (F1) : la setlist d'une date où l'on sert se lit même sans équipe.
+    const dates = planningDuCompte ? datesServies(planningDuCompte, profile?.planningName ?? "") : undefined
+    const lisibles = setlists.filter(s => canSeeSetlist(user, profile, s, dates))
     return mesServices.prochain.map(s => setlistDuService(lisibles, s)).find(Boolean) ?? null
-  }, [user, profile, mesServices, setlists])
+  }, [user, profile, mesServices, setlists, planningDuCompte])
   const setlistId = setlist?.id
   const [songs, setSongs] = useState<Record<string, SongIndexEntry>>({})
   useEffect(() => {

@@ -77,6 +77,15 @@ export interface UserProfile {
   remplitParRole?: string[];
   publieParRole?: string[];
   notifieParRole?: string[];
+  /** Lot AO (docs/spec-acces-organigramme.md) — recopiés depuis l'organigramme par le serveur seul
+   *  (`recalculerRattachement`), jamais écrits par la personne : ses sous-équipes de Louange et celles
+   *  dont elle est référente, les lieux où elle sert (Louange, Régie), ce qu'elle joue (Musiciens).
+   *  Absents = aucun. Cf. src/lib/acces/organigramme.ts. */
+  sousEquipes?: string[];
+  referentSous?: string[];
+  lieuxLouange?: string[];
+  lieuxRegie?: string[];
+  joue?: string[];
   /** Date d'inscription = createTime du document Firestore users/{uid}, en lecture
    *  seule (jamais persisté comme champ). Renseigné pour tous les profils existants. */
   createdAt?: Date;

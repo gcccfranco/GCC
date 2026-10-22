@@ -6,6 +6,8 @@ import { SERVICE_LIEUX, GROUPES } from "@/types/user";
 import { EDD_CLASSES } from "@/lib/planning/utils";
 import { categoryLabel } from "@/lib/serviceColors";
 import { BACK_OFFICE } from "@/lib/backOffice";
+import { EQUIPES } from "@/lib/equipes/table";
+import { audienceOrganigrammeValide, audiencesOrganigramme, type ProfilOrganigramme } from "@/lib/acces/organigramme";
 
 /** Sentinelle « tout le monde » (tous les abonnés). */
 export const NOTIFY_ALL = "*";
@@ -29,19 +31,26 @@ export const NOTIFY_GROUPS = notifyGroups();
 /** Toutes les catégories ciblables (hors « tout le monde »). */
 export const NOTIFY_CATEGORIES: string[] = NOTIFY_GROUPS.flatMap((g) => g.audiences);
 
-/** Audience valide ? (« tout le monde » ou une catégorie connue) */
+/** Audience valide ? (« tout le monde » ou une catégorie connue). Lot AO (`backOffice`) : aussi `equipe:<id>`
+ *  (une des 13 équipes) et `louange:<sous-équipe>`. */
 export function isValidAudience(a: string, backOffice: boolean = BACK_OFFICE): boolean {
-  return a === NOTIFY_ALL || notifyGroups(backOffice).some((g) => g.audiences.includes(a));
+  return a === NOTIFY_ALL || notifyGroups(backOffice).some((g) => g.audiences.includes(a))
+    || (backOffice && audienceOrganigrammeValide(a));
 }
 
 /** Ce que lit une personne qui notifie : `notify`, coché par un admin, et `notifieParRole`, recopié
- *  depuis les organigrammes des groupes (OG19). */
-type ProfilNotifie = { notify?: string[]; notifieParRole?: string[] };
+ *  depuis les organigrammes des groupes (OG19) ; lot AO : l'organigramme de l'église (`referentDe`,
+ *  `referentSous`, `dansEquipes`). */
+type ProfilNotifie = { notify?: string[]; notifieParRole?: string[] } & ProfilOrganigramme;
 
 /** Les audiences qu'une personne notifie (OG24) : `notify` ∪ `notifieParRole`. Les rôles ne comptent
- *  que si `backOffice` (OG27 : local et en ligne partagent Firestore). Exporté aussi par access.ts. */
+ *  que si `backOffice` (OG27 : local et en ligne partagent Firestore). Exporté aussi par access.ts.
+ *  Lot AO (`backOffice`, A2) : le droit coché `notify` n'est plus lu — Orga, toute l'Église (`*`) ; un
+ *  référent, son équipe (`equipe:<id>`) ; le référent Louange, aussi chaque sous-équipe ; un référent de
+ *  sous-équipe, la sienne (`louange:<sous>`) ; plus `notifieParRole` (groupes). */
 export function audiencesNotifiables(profil: ProfilNotifie | null, backOffice: boolean = BACK_OFFICE): string[] {
-  return [...new Set([...(profil?.notify ?? []), ...(backOffice ? profil?.notifieParRole ?? [] : [])])];
+  if (backOffice) return audiencesOrganigramme(profil);
+  return [...new Set(profil?.notify ?? [])];
 }
 
 /** Notifier une audience (route notify-audience, OG24) : admin, « tout le monde », ou l'audience
@@ -54,7 +63,15 @@ export function peutNotifierAudience(
   return isAdmin || droits.includes(NOTIFY_ALL) || droits.includes(audience);
 }
 
-/** Libellé lisible d'une audience (« tout le monde » ou une catégorie). */
+const SOUS_EQUIPES_LIBELLES: Record<string, string> = { presidence: "Présidence", musiciens: "Musiciens", choristes: "Choristes" };
+
+/** Libellé lisible d'une audience (« tout le monde », une catégorie, ou, lot AO, une équipe ou une sous-équipe de Louange). */
 export function audienceLabel(a: string): string {
-  return a === NOTIFY_ALL ? "Tout le monde" : categoryLabel(a);
+  if (a === NOTIFY_ALL) return "Tout le monde";
+  if (a.startsWith("equipe:")) {
+    const id = a.slice("equipe:".length);
+    return id === "louange" ? "Toute la Louange" : EQUIPES.find((e) => e.id === id)?.nom ?? a;
+  }
+  if (a.startsWith("louange:")) return `Louange · ${SOUS_EQUIPES_LIBELLES[a.slice("louange:".length)] ?? a}`;
+  return categoryLabel(a);
 }

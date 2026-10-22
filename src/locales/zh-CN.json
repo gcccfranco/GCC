@@ -3532,5 +3532,61 @@
       "rienM": "本周没有其他安排。",
       "sheetInjoignable": "无法读取活动表格（Sheet），其中的活动暂不显示。"
     }
+  },
+  "acces": {
+    "ouvre": {
+      "setlistsCreer": "查看并创建{{lieux}}的歌单",
+      "setlistsGroupe": "查看并创建{{groupe}}的歌单",
+      "setlistsEdd": "查看并创建主日学（三个班）的歌单",
+      "setlistsVoir": "查看{{lieux}}的歌单",
+      "harmonie": "和声灵感与课程",
+      "coordination": "协调：舞台、节日和全教会的活动",
+      "planningCulte": "填写、发布并通知敬拜聚会的排班",
+      "planningCulteRegie": "填写敬拜聚会排班中的音响和投影，并发布、通知",
+      "planningEdd": "填写、发布并通知主日学的排班",
+      "planningTable": "填写圣餐桌（Table）的排班",
+      "planningGroupe": "填写、发布或通知{{plannings}}的排班",
+      "notifierTous": "向全教会发送通知",
+      "notifierEquipe": "向{{equipe}}团队发送通知",
+      "notifierPresidence": "向主领发送通知",
+      "notifierMusiciens": "向乐手发送通知",
+      "notifierChoristes": "向和声发送通知",
+      "notifierGroupe": "向{{groupes}}发送通知",
+      "evenementSection": "为{{sections}}创建活动",
+      "organigrammeTout": "管理整个组织架构",
+      "organigrammeEquipe": "在组织架构中管理{{equipe}}团队",
+      "organigrammePresidence": "在组织架构中安排主领",
+      "organigrammeMusiciens": "在组织架构中安排乐手",
+      "organigrammeChoristes": "在组织架构中安排和声"
+    },
+    "pourquoi": {
+      "louangeLieu": "敬拜组，在你服事的地方",
+      "regieLieu": "音控组，在你服事的地方",
+      "groupe": "小组成员",
+      "edd": "主日学成员",
+      "musiciensJoue": "乐手，{{instruments}}",
+      "referentLouange": "敬拜组负责人",
+      "referentEdd": "主日学负责人",
+      "referentRegie": "音控组负责人",
+      "orga": "统筹组成员",
+      "roleGroupe": "小组组织架构中的职务",
+      "referentEquipe": "{{equipe}}团队负责人",
+      "referentSous": "{{sous}}负责人",
+      "presidenceGroupe": "小组主席或副主席"
+    },
+    "sousEquipe": {
+      "presidence": "主领",
+      "musiciens": "乐手",
+      "choristes": "和声"
+    },
+    "instrument": {
+      "piano": "钢琴",
+      "guitare": "吉他",
+      "basse": "贝斯",
+      "batterie": "架子鼓",
+      "cajon": "箱鼓",
+      "autre": "其他"
+    },
+    "manque": "缺少某项权限？请让你的负责人把你安排进组织架构。"
   }
 }

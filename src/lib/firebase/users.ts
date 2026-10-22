@@ -42,6 +42,12 @@ function fromFsProfile(raw: RawDoc): UserProfile {
     dansEquipes: (data.dansEquipes as string[]) ?? [],
     referentDe: (data.referentDe as string[]) ?? [],
     ...lireChampsGroupe(data),
+    // Lot AO : recopiés par le serveur seul.
+    sousEquipes: (data.sousEquipes as string[]) ?? [],
+    referentSous: (data.referentSous as string[]) ?? [],
+    lieuxLouange: (data.lieuxLouange as string[]) ?? [],
+    lieuxRegie: (data.lieuxRegie as string[]) ?? [],
+    joue: (data.joue as string[]) ?? [],
     // Date d'inscription = createTime du document (créé à l'inscription) ; disponible
     // rétroactivement pour tous les profils, contrairement à un champ écrit à la main.
     createdAt: raw.createTime ? new Date(raw.createTime) : undefined,

@@ -84,6 +84,11 @@ const SPECS_GRAND_ECRAN = [
   /barre-chant\.spec\.ts/,
 ];
 
+// Lot AO : les tests sans page importent src/lib/access.ts, dont le mode par défaut suit
+// `NEXT_PUBLIC_BACK_OFFICE`. Le lanceur ne la voit jamais (une session cloud l'exporte, un Mac
+// non) : chaque test passe le mode lui-même, les serveurs reçoivent la leur plus bas.
+delete process.env.NEXT_PUBLIC_BACK_OFFICE;
+
 export default defineConfig({
   testDir: "./tests",
   fullyParallel: true,

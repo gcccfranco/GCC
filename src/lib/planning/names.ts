@@ -13,6 +13,7 @@ import { PREMIERE_ANNEE_APP, completerMusiciensFidelite, marquerDimanchesSpeciau
 import { PUBLISHABLE_PLANNINGS, getPublishedQuarters, triRank } from "./releases"
 import { BACK_OFFICE } from "@/lib/backOffice"
 import type { ServiceRole } from "@/types/user"
+import type { DateServie } from "@/lib/access"
 
 export interface PlanningData {
   culte: string[][]
@@ -368,6 +369,25 @@ export function serviceCategory(service: string): string | null {
   if (service === "Intergroupe") return "Intergroupe"
   if (service === "Interfranco") return "Interfranco"
   return null
+}
+
+/** Les dates où la personne sert, avec la catégorie de setlist de chacune (lot AO, F1) : de quoi lire la setlist
+ *  de ce jour-là, et elle seule (`canSeeSetlist`, src/lib/access.ts). Mêmes lignes que « Mes services »
+ *  (`findMyServices`) ; une répétition du Campus compte pour la date de sa séance (`setlistDate`) ; les services sans
+ *  setlist (Prépa. Table, petit déj) n'y sont pas. Sans doublon. */
+export function datesServies(planning: PlanningData, planningName: string): DateServie[] {
+  const vus = new Set<string>()
+  const out: DateServie[] = []
+  for (const e of findMyServices(planning, planningName)) {
+    const categorie = serviceCategory(e.service)
+    if (!categorie) continue
+    const date = e.setlistDate ?? e.date
+    const cle = `${date}|${categorie}|${e.moment ?? ""}`
+    if (vus.has(cle)) continue
+    vus.add(cle)
+    out.push(e.moment ? { date, categorie, moment: e.moment } : { date, categorie })
+  }
+  return out
 }
 
 // ─── Séances du planning par catégorie (sélecteur de setlist) ──────────────────

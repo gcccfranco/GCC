@@ -16,7 +16,7 @@ import { EnTetePage } from "@/components/layout/EnTetePage";
 import { useDeuxVolets } from "@/hooks/useDeuxVolets";
 import { useProfile } from "@/lib/firebase/users";
 import { getSetlists, type FSSetlist } from "@/lib/firebase/setlists";
-import { loadPlanningData, type PlanningData } from "@/lib/planning/names";
+import { datesServies, loadPlanningData, type PlanningData } from "@/lib/planning/names";
 import { setlistDuService } from "@/lib/planning/accueil";
 import { grouperServices, serviceDeLAdresse, cleDuService, type ServiceGroupe } from "@/lib/planning/mesServices";
 import { canSeeSetlist } from "@/lib/access";
@@ -105,7 +105,9 @@ export function SectionMesServices({ children }: { children: React.ReactNode }) 
 
   const valeur = useMemo<Valeur | null>(() => {
     if (!data || !user) return null;
-    const lisibles = setlists.filter((s) => canSeeSetlist(user, profile, s));
+    // Lot AO (F1) : la setlist d'une date où l'on sert se lit même sans équipe.
+    const dates = datesServies(data, profile?.planningName ?? "");
+    const lisibles = setlists.filter((s) => canSeeSetlist(user, profile, s, dates));
     return {
       services,
       aujourdhui,

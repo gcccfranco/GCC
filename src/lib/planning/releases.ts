@@ -13,6 +13,7 @@
 
 import { NOTIFY_ALL } from "@/lib/push/audiences"
 import { BACK_OFFICE } from "@/lib/backOffice"
+import { publiePlanning, type ProfilOrganigramme } from "@/lib/acces/organigramme"
 import type { EtatAnnonce } from "./prevenir"
 
 export interface PublishablePlanning {
@@ -73,20 +74,25 @@ export function peutPrevenir(
 }
 
 /** Les listes d'un profil que lisent la publication et « Prévenir » ; celles des rôles ne comptent
- *  que si `backOffice` (OG27 : local et en ligne partagent Firestore). */
-type ProfilPublie = { notify?: string[]; publieParRole?: string[]; notifieParRole?: string[] }
+ *  que si `backOffice` (OG27 : local et en ligne partagent Firestore). Lot AO : l'organigramme aussi. */
+type ProfilPublie = { notify?: string[]; publieParRole?: string[]; notifieParRole?: string[] } & ProfilOrganigramme
 
-/** Publier ce planning, profil relu (route /api/planning/release, pages du planning). */
+/** Publier ce planning, profil relu (route /api/planning/release, pages du planning). Lot AO (`backOffice`) :
+ *  plus de droit `notify` — le référent Louange ou le référent Régie publie le culte, un rôle de groupe son
+ *  groupe (`publiePlanning`, src/lib/acces/organigramme.ts). */
 export function droitsDePublication(
   planning: PublishablePlanning, isAdmin: boolean, profil: ProfilPublie | null, backOffice: boolean = BACK_OFFICE
 ): boolean {
+  if (backOffice) return isAdmin || publiePlanning(profil, planning.key)
   return canPublishPlanning(planning, isAdmin, profil?.notify ?? [], backOffice ? profil?.publieParRole ?? [] : [])
 }
 
-/** Prévenir des changements de ce planning, profil relu (route /api/planning/changements, pages). */
+/** Prévenir des changements de ce planning, profil relu (route /api/planning/changements, pages). Lot AO
+ *  (`backOffice`) : ceux qui le publient, plus un rôle « Notifier » du groupe (`notifieParRole`). */
 export function droitsDePrevenir(
   planning: PublishablePlanning, isAdmin: boolean, profil: ProfilPublie | null, backOffice: boolean = BACK_OFFICE
 ): boolean {
+  if (backOffice) return isAdmin || publiePlanning(profil, planning.key) || (profil?.notifieParRole ?? []).includes(planning.notifyAudience)
   return peutPrevenir(planning, isAdmin, profil?.notify ?? [],
     backOffice ? profil?.publieParRole ?? [] : [], backOffice ? profil?.notifieParRole ?? [] : [])
 }

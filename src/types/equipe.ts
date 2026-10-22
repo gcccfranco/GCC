@@ -2,6 +2,16 @@
 // equipes/{id} par équipe de la table EQUIPES (src/lib/equipes/organigramme.ts),
 // qui garde les noms, sous-titres et l'ordre — eux ne bougent pas.
 
+import type { ServiceLieu } from "./user";
+
+/** Les trois sous-équipes de Louange (lot AO, docs/spec-acces-organigramme.md, D1, D2) : chacune a son
+ *  référent ; une personne peut être de plusieurs (E1) et cumule ce qu'elles ouvrent. */
+export const SOUS_EQUIPES = ["presidence", "musiciens", "choristes"] as const;
+export type SousEquipe = (typeof SOUS_EQUIPES)[number];
+
+/** « Ce qu'il joue » (lot AO, D3), pour les Musiciens seulement — liste validée le 21/10/2026. */
+export const INSTRUMENTS = ["piano", "guitare", "basse", "batterie", "cajon", "autre"] as const;
+export type Instrument = (typeof INSTRUMENTS)[number];
 
 /** Une personne dans une équipe. `uid` vide = nom du Sheet sans compte : elle
  *  apparaît dans l'organigramme mais ne reçoit rien. */
@@ -16,6 +26,15 @@ export interface MembreEquipe {
   essai: boolean;
   /** Sous-colonne de LOUANGE et EDD (« Pianistes ») ; "" ailleurs. */
   groupe: string;
+  // Lot AO (« les accès viennent de l'organigramme »), tous optionnels, cochés par un référent :
+  /** Louange : ses sous-équipes (E1 : plusieurs possibles). */
+  sousEquipes?: SousEquipe[];
+  /** Louange : les sous-équipes dont elle est référente. Le booléen `referent` = référent de Louange (D4). */
+  referentSous?: SousEquipe[];
+  /** Louange et Régie : « Où il sert » (C1), les lieux du culte. */
+  lieux?: ServiceLieu[];
+  /** Musiciens : « Ce qu'il joue » (D3). */
+  joue?: Instrument[];
 }
 
 export interface Equipe {

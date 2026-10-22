@@ -3574,5 +3574,61 @@
       "rienM": "Rien d'autre cette semaine.",
       "sheetInjoignable": "Sheet des évènements injoignable : ses évènements n'y sont pas."
     }
+  },
+  "acces": {
+    "ouvre": {
+      "setlistsCreer": "Voir et créer les setlists de {{lieux}}",
+      "setlistsGroupe": "Voir et créer les setlists de {{groupe}}",
+      "setlistsEdd": "Voir et créer les setlists de l'EDD (les trois classes)",
+      "setlistsVoir": "Voir les setlists de {{lieux}}",
+      "harmonie": "Idées d'harmonie et cours",
+      "coordination": "Coordination : scène, fêtes et évènements de toute l'Église",
+      "planningCulte": "Remplir, publier et prévenir le planning du culte",
+      "planningCulteRegie": "Remplir Sono et PPT du planning du culte, le publier et prévenir",
+      "planningEdd": "Remplir, publier et prévenir le planning de l'EDD",
+      "planningTable": "Remplir le planning de la Table",
+      "planningGroupe": "Remplir, publier ou prévenir le planning de {{plannings}}",
+      "notifierTous": "Envoyer une notification à toute l'Église",
+      "notifierEquipe": "Envoyer une notification à l'équipe {{equipe}}",
+      "notifierPresidence": "Envoyer une notification à la présidence",
+      "notifierMusiciens": "Envoyer une notification aux musiciens",
+      "notifierChoristes": "Envoyer une notification aux choristes",
+      "notifierGroupe": "Envoyer une notification à {{groupes}}",
+      "evenementSection": "Créer un évènement pour {{sections}}",
+      "organigrammeTout": "Tenir tout l'organigramme",
+      "organigrammeEquipe": "Tenir l'équipe {{equipe}} dans l'organigramme",
+      "organigrammePresidence": "Placer la présidence dans l'organigramme",
+      "organigrammeMusiciens": "Placer les musiciens dans l'organigramme",
+      "organigrammeChoristes": "Placer les choristes dans l'organigramme"
+    },
+    "pourquoi": {
+      "louangeLieu": "Louange, là où tu sers",
+      "regieLieu": "Régie, là où tu sers",
+      "groupe": "Membre du groupe",
+      "edd": "Membre de l'EDD",
+      "musiciensJoue": "Musiciens, {{instruments}}",
+      "referentLouange": "Référent Louange",
+      "referentEdd": "Référent EDD",
+      "referentRegie": "Référent Régie",
+      "orga": "Membre d'Orga",
+      "roleGroupe": "Rôle dans l'organigramme du groupe",
+      "referentEquipe": "Référent de l'équipe {{equipe}}",
+      "referentSous": "Référent {{sous}}",
+      "presidenceGroupe": "Président ou VP du groupe"
+    },
+    "sousEquipe": {
+      "presidence": "Présidence",
+      "musiciens": "Musiciens",
+      "choristes": "Choristes"
+    },
+    "instrument": {
+      "piano": "piano",
+      "guitare": "guitare",
+      "basse": "basse",
+      "batterie": "batterie",
+      "cajon": "cajon",
+      "autre": "autre"
+    },
+    "manque": "Un accès te manque ? Demande à ton référent de te placer dans l'organigramme."
   }
 }

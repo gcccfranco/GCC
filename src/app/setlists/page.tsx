@@ -7,6 +7,7 @@ import { useProfile } from "@/lib/firebase/users";
 import { visibleCategories, canCreateSetlist, canDeleteSetlist, canSeeSetlist, isAdminUser } from "@/lib/access";
 import {
   loadPlanningData,
+  datesServies,
   findMyServices,
   serviceCategory,
   normalizeName,
@@ -107,6 +108,12 @@ export default function SetlistsPage() {
     }
     return set;
   }, [planning, profile]);
+
+  // Lot AO (F1) : les dates où l'on sert — leur setlist se lit même sans équipe (`canSeeSetlist`).
+  const datesDuCompte = useMemo(
+    () => (planning && profile?.planningName ? datesServies(planning, profile.planningName) : undefined),
+    [planning, profile]
+  );
 
   // Catégories accessibles selon le profil (services + EDD + groupe) — admins : toutes
   const admin = isAdminUser(user);
@@ -216,7 +223,7 @@ export default function SetlistsPage() {
     // « Mes services » restreint en plus aux dates où l'on sert réellement (accès conservé).
     const list = toutes.filter(
       (s) =>
-        !!user && canSeeSetlist(user, profile, s) &&
+        !!user && canSeeSetlist(user, profile, s, datesDuCompte) &&
         listee(s) &&
         matches(s) &&
         (!useMine ||
@@ -236,7 +243,7 @@ export default function SetlistsPage() {
       ? list.filter((s) => s.date >= todayStr).sort((a, b) => a.date.localeCompare(b.date) || memeJour(a, b))
       : list.filter((s) => s.date < todayStr).sort((a, b) => b.date.localeCompare(a.date) || memeJour(a, b));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tab, toutes, mySetlists, matches, todayStr, user, profile, onlyMine, myServiceKeys, programmes, feteFiltree]);
+  }, [tab, toutes, mySetlists, matches, todayStr, user, profile, onlyMine, myServiceKeys, programmes, feteFiltree, datesDuCompte]);
 
   // L'aperçu (en grand) : celui de l'adresse, sinon la première setlist de la liste filtrée (Q3).
   // Une adresse peut viser une setlist d'un autre onglet (lien partagé) : seulement si la page
@@ -244,7 +251,7 @@ export default function SetlistsPage() {
   const choisie =
     (apercu &&
       (displayed.find((s) => s.id === apercu) ??
-        [...toutes, ...mySetlists].find((s) => s.id === apercu && !!user && canSeeSetlist(user, profile, s)))) ||
+        [...toutes, ...mySetlists].find((s) => s.id === apercu && !!user && canSeeSetlist(user, profile, s, datesDuCompte)))) ||
     displayed[0] ||
     null;
 

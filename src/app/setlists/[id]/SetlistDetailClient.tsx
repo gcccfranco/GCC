@@ -36,6 +36,9 @@ import {
 } from "@/components/ui/alert-dialog";
 import { getSetlist, deleteSetlist, mettreALaCorbeille, duplicateSetlist, updateSetlist, authHeader, type FSSetlist } from "@/lib/firebase/setlists";
 import { useProfile } from "@/lib/firebase/users";
+import { BACK_OFFICE } from "@/lib/backOffice";
+import { datesServies, loadPlanningData } from "@/lib/planning/names";
+import type { DateServie } from "@/lib/access";
 import { canSeeSetlist, canEditSetlist, canDeleteSetlist, canDuplicateSetlist, canSetPresentationLink, canHaveSetlistVersion, estRegieDeFete } from "@/lib/access";
 import { useTranslation } from "react-i18next";
 import type { SongIndexEntry } from "@/types/song";
@@ -170,6 +173,19 @@ export function SetlistDetailClient() {
 
   const [setlist, setSetlist] = useState<FSSetlist | null>(null);
   const [backPath, setBackPath] = useState("/setlists");
+  // Lot AO (F1) : les dates où l'on sert, tirées du planning — la setlist de cette date se lit même sans équipe.
+  // Chargées sans bloquer la page (qui voit déjà la setlist ne les attend pas) ; `undefined` = pas encore lues.
+  const [datesDuCompte, setDatesDuCompte] = useState<DateServie[] | undefined>(undefined);
+  const planningName = profile?.planningName ?? "";
+  useEffect(() => {
+    if (!BACK_OFFICE || !planningName) return;
+    let annule = false;
+    loadPlanningData().then(
+      (d) => { if (!annule) setDatesDuCompte(datesServies(d, planningName)); },
+      () => { if (!annule) setDatesDuCompte([]); },
+    );
+    return () => { annule = true; };
+  }, [planningName]);
 
   const scrollVisible = useScrollDirection();
   // ── Deux volets (docs/spec-deux-volets.md, T4) : ordinateur et tablette couchée,
@@ -1308,8 +1324,16 @@ export function SetlistDetailClient() {
     );
   }
 
-  // Accès : uniquement les setlists de ses services/groupe (ou créées par soi)
-  if (!canSeeSetlist(user, profile, setlist)) {
+  // Accès : uniquement les setlists de ses services/groupe (ou créées par soi) ; lot AO (F1) : et celle d'une date
+  // où l'on sert. Tant que le planning se lit, une personne qui n'a pas d'autre accès attend au lieu de voir « pas d'accès ».
+  if (!canSeeSetlist(user, profile, setlist, datesDuCompte)) {
+    if (BACK_OFFICE && planningName && datesDuCompte === undefined) {
+      return (
+        <div className="min-h-screen bg-background flex items-center justify-center">
+          <p className="text-sm text-muted-foreground">{t("common.loading")}</p>
+        </div>
+      );
+    }
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-3 px-4">
         <p className="text-sm text-muted-foreground">{t("setlists.detail.noAccess")}</p>
