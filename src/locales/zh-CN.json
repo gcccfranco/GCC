@@ -2517,7 +2517,7 @@
     "voirGuide": "在指南中查看",
     "revoir": "重看导览",
     "revoirSous": "你在教会的位置可以做什么",
-    "pourToi": "为你准备的 {{n}} 张卡片",
+    "pourToi_other": "为你准备的 {{count}} 张卡片",
     "membre": "成员",
     "referent": "负责人",
     "toutLEglise": "全教会",

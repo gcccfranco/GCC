@@ -12,7 +12,7 @@ import { useMemo, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { useTranslation } from "react-i18next";
 import { useTheme } from "next-themes";
-import { BookOpen, ChevronRight, Globe, LogOut, Megaphone, MessageSquareHeart, Moon, ShieldCheck, TriangleAlert } from "lucide-react";
+import { BookOpen, ChevronRight, Globe, LogOut, Megaphone, MessageSquareHeart, Moon, RotateCcw, ShieldCheck, TriangleAlert } from "lucide-react";
 import { useDisposition } from "@/hooks/useDisposition";
 import { CarteCompte } from "@/components/moi/CarteCompte";
 import { CarteCeQueTuPeuxFaire, CarteMesEquipes } from "@/components/moi/CartesAcces";
@@ -23,6 +23,7 @@ import { RequireAuth } from "@/components/auth/RequireAuth";
 import { EnTetePage } from "@/components/layout/EnTetePage";
 import { Halo } from "@/components/layout/Halo";
 import { Group, GroupRow } from "@/components/ui/group";
+import { ouvrirVisite } from "@/components/onboarding/Accueil";
 import { ReportDialog } from "@/components/report/ReportDialog";
 import { useSetLanguage } from "@/lib/I18nProvider";
 import { useAuth, logOut } from "@/lib/firebase/auth";
@@ -123,6 +124,7 @@ function MoiClient() {
   const aide = (
     <div key="aide" className="grid gap-4 md:[grid-template-columns:repeat(auto-fit,minmax(170px,1fr))]">
       <CarteAide href="/guide" icone={<BookOpen />} titre={t("common.header.guide")} sous={t("moi.apercus.guideSous")} />
+      <CarteAide onClick={ouvrirVisite} icone={<RotateCcw />} titre={t("accueil.revoir")} sous={t("accueil.revoirSous")} />
       <CarteAide href="/questionnaire" icone={<MessageSquareHeart />} titre={t("survey.title")} sous={t("moi.apercus.avisSous")} />
       <CarteAide onClick={() => setReportOpen(true)} icone={<TriangleAlert />} titre={t("common.report")} sous={t("moi.apercus.signalerSous")} />
     </div>

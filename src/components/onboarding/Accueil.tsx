@@ -85,11 +85,26 @@ function Geste({ Icon, children }: { Icon: LucideIcon; children: ReactNode }) {
   );
 }
 
+const EVENEMENT_VISITE = "gcc:visite";
+
+/** Rouvre la visite à la demande (Moi, Guide) : le mode « revoir », qui n'écrit rien. */
+export function ouvrirVisite() {
+  window.dispatchEvent(new Event(EVENEMENT_VISITE));
+}
+
+async function notifsAProposer(): Promise<Notifs> {
+  if (isIOS() && !isStandalone()) return "iphone";
+  if (isPushSupported() && !(await isSubscribed().catch(() => true))) return "proposer";
+  return "masquer";
+}
+
 export function Accueil() {
   const { user, loading } = useProfile();
   const [ouvert, setOuvert] = useState(false);
   const [mode, setMode] = useState<Mode>("premiere");
   const [notifs, setNotifs] = useState<Notifs>("masquer");
+  // Change à chaque ouverture : `Ecrans` repart de l'écran 1.
+  const [ouverture, setOuverture] = useState(0);
 
   useEffect(() => {
     if (loading || !user) return;
@@ -102,9 +117,7 @@ export function Accueil() {
       // Jamais vue : on l'ouvre ; vue au lot 8 : seulement back-office ouvert (VR8).
       const version = await getAccueilVu(user.uid);
       if (!(version === 0 || (BACK_OFFICE && version < VERSION_VISITE))) return;
-      let n: Notifs = "masquer";
-      if (isIOS() && !isStandalone()) n = "iphone";
-      else if (isPushSupported() && !(await isSubscribed().catch(() => true))) n = "proposer";
+      const n = await notifsAProposer();
       if (!alive) return;
       setNotifs(n);
       setMode(version === 0 ? "premiere" : "retour");
@@ -112,6 +125,25 @@ export function Accueil() {
     })();
     return () => {
       alive = false;
+    };
+  }, [loading, user]);
+
+  // Revoir la visite : Moi et le Guide envoient « gcc:visite ».
+  useEffect(() => {
+    if (loading || !user) return;
+    let alive = true;
+    const revoir = async () => {
+      const n = await notifsAProposer();
+      if (!alive) return;
+      setNotifs(n);
+      setMode("revoir");
+      setOuverture((o) => o + 1);
+      setOuvert(true);
+    };
+    window.addEventListener(EVENEMENT_VISITE, revoir);
+    return () => {
+      alive = false;
+      window.removeEventListener(EVENEMENT_VISITE, revoir);
     };
   }, [loading, user]);
 
@@ -126,7 +158,7 @@ export function Accueil() {
     }
   }
 
-  return <Ecrans mode={mode} notifs={notifs} uid={user.uid} onFermer={fermer} />;
+  return <Ecrans key={ouverture} mode={mode} notifs={notifs} uid={user.uid} onFermer={fermer} />;
 }
 
 function Ecrans({ mode, notifs, uid, onFermer }: {

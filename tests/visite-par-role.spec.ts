@@ -188,3 +188,52 @@ test("rien ne déborde horizontalement sur les cartes service et responsabilité
     await expect.poll(() => d.evaluate((el) => el.scrollWidth - el.clientWidth), { message: titre }).toBeLessThanOrEqual(0);
   }
 });
+
+// ── 5. Revoir la visite ─────────────────────────────────────────────────────
+
+const DEJA_VU: FakeProfile = { ...MUSICIENNE, accueil: false };
+const ecritsOnboarding = (db: Awaited<ReturnType<typeof signInAs>>) => db.writes.filter((w) => w.path.startsWith("onboarding/"));
+
+test("Moi › « Revoir la visite » rouvre la visite, et la fermer n'écrit rien", async ({ page }) => {
+  const db = await signInAs(page, DEJA_VU, {}, "/moi");
+  await expect(page.getByRole("heading", { name: "Moi", level: 1 })).toBeVisible();
+  await expect(visite(page)).toHaveCount(0);
+  await page.getByRole("button", { name: /Revoir la visite/ }).click();
+  await expect(visite(page)).toBeVisible();
+  // Revoir : pas la pastille « La visite a changé », et la visite repart de Bienvenue.
+  await expect(visite(page).getByRole("heading", { name: "Bienvenue dans GCC" })).toBeVisible();
+  await expect(visite(page).getByText("La visite a changé")).toHaveCount(0);
+  await visite(page).getByRole("button", { name: "Passer" }).click();
+  await expect(visite(page)).toHaveCount(0);
+  expect(ecritsOnboarding(db)).toEqual([]);
+  expect(db.doc(`onboarding/${DEJA_VU.uid}`)?.le).toBe("2026-09-01T10:00:00Z");
+  // Une seconde ouverture repart de l'écran 1.
+  await page.getByRole("button", { name: /Revoir la visite/ }).click();
+  await expect(visite(page).getByText(/^Étape 1 sur/)).toBeAttached();
+});
+
+test("Guide › encart « Pour toi, en 2 cartes » : « Revoir la visite » rouvre sans rien écrire", async ({ page }) => {
+  const db = await signInAs(page, DEJA_VU, {}, "/guide");
+  await expect(page.getByText("Pour toi, en 2 cartes")).toBeVisible();
+  await page.getByRole("button", { name: "Revoir la visite" }).click();
+  await expect(visite(page)).toBeVisible();
+  await visite(page).getByRole("button", { name: "Passer" }).click();
+  await expect(visite(page)).toHaveCount(0);
+  expect(ecritsOnboarding(db)).toEqual([]);
+});
+
+test("Guide › un compte sans rôle ni équipe : « Pour toi, en 1 carte », au singulier", async ({ page }) => {
+  await signInAs(page, { ...NEUF, accueil: false }, {}, "/guide");
+  await expect(page.getByText("Pour toi, en 1 carte", { exact: true })).toBeVisible();
+});
+
+test("revoir : « Voir dans le guide » ferme la visite sans rien écrire", async ({ page }) => {
+  await sansNotifications(page);
+  const db = await signInAs(page, DEJA_VU, {}, "/moi");
+  await page.getByRole("button", { name: /Revoir la visite/ }).click();
+  await allerA(page, "Tu joues le dimanche");
+  await visite(page).getByRole("link", { name: "Voir dans le guide" }).click();
+  await expect(page).toHaveURL(/\/guide\/?#performance$/);
+  await expect(visite(page)).toHaveCount(0);
+  expect(ecritsOnboarding(db)).toEqual([]);
+});

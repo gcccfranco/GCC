@@ -1222,7 +1222,13 @@ porte le nom « GCC » et le menu par sections dont ces modules ont besoin.
 l'organigramme. » L'accueil du lot 8 devient une **visite** composée de cartes tirées du profil (service, équipes,
 responsabilités), remontrée une fois à tous **avec l'interrupteur du back-office**, et qu'on revoit depuis Moi et le
 Guide. Planche https://claude.ai/artifact/LCyntv9xNiqDHymUsBA14T ; **décisions VR1–VR12 prises le 22/10/2026 sur les
-recommandations, spec écrite** ; tranches VR-A à VR-C ; **code : attend le go**. Aucune règle Firestore à publier.
+recommandations, spec écrite** ; tranches VR-A à VR-C ; **go le 22/10/2026, codé le 22/10/2026** (VR-A, VR-B, VR-C sur `ui/apple-design`, rien
+sur `main`). Aucune règle Firestore à publier. Écart retenu par Timothée (22/10/2026) : back-office ouvert, la carte
+service et les responsabilités lisent l'organigramme (lot AO), pas `serviceRoles` / `plannings` / `annonces`.
+Tests : `tests/visite-par-role.spec.ts` (cinq projets), `nouveaux-membres` et `back-office-coupe` à jour. **Reste à
+valider par Timothée** : relecture des textes 中文, regard sur les cartes (référent, responsabilités), la carte
+« Revoir la visite » de Moi sur ordinateur (sous-ligne tronquée, comme ses voisines). Part en ligne avec
+`NEXT_PUBLIC_BACK_OFFICE=1`.
 
 ### Écarté le 17/09/2026
 

@@ -204,4 +204,22 @@ responsabilités.
 
 ## Avancement
 
-- 22/10/2026 — planche, décisions VR1–VR12 sur recommandations, spec écrite. **Code : attend le go de Timothée.**
+- 22/10/2026 — planche, décisions VR1–VR12 sur recommandations, spec écrite.
+- 22/10/2026 — go de Timothée pour VR-A, VR-B, VR-C ; codé par une session orchestratrice.
+  - **VR-A** : `src/lib/onboarding/visite.ts` (`cartesDeLaVisite`) ; `ongletDeLaGrille` exporté de `access.ts`.
+  - **VR-B** : `Accueil.tsx` réécrit (modes première, retour, revoir), `onboarding/{uid}.version = 2`, textes FR et
+    中文, `fakeSession` (version 2 par défaut, option `accueilLot8`), `nouveaux-membres.spec.ts` à jour.
+  - **VR-C** : `ouvrirVisite()` (« gcc:visite »), carte « Revoir la visite » dans Moi (après Guide), encart du Guide
+    (« Pour toi, en N carte(s) », pluriel par `count`).
+  - **Écart retenu par Timothée** : back-office ouvert, le rôle de service vient de l'organigramme (sous-équipes de
+    Louange, `lieuxLouange`, `lieuxRegie`) et les responsabilités des droits du lot AO (`colonnesRemplies`,
+    `audiencesNotifiables(…, true)`, `sectionsCreables`) — `serviceRoles`, `plannings`, `annonces` n'y sont plus lus
+    (A4). Back-office coupé : `serviceRoles`, comme l'ancien accueil.
+  - Choix d'exécution : clés ajoutées `accueil.role.*`, `accueil.membre`, `accueil.referent`, `accueil.toutLEglise`,
+    `accueil.carte.equipe.titres`, `accueil.carte.membre.peutSetlists`, `accueil.pourToi_one` ; carte responsabilités
+    sans pastille ni ligne « c'est … » ; Bienvenue « retour » garde le logo, la pastille dessous.
+  - Tests : `tests/visite-par-role.spec.ts` (composition pure, parcours, lot 8, revoir, ancre, agencement ; cinq
+    projets), `nouveaux-membres`, `back-office-coupe` (visite non remontrée serveur coupé) — verts sur les trois
+    appareils et les deux grands formats. Captures regardées sur les quatre dispositions + 1 440 px.
+  - **Reste à valider par Timothée** : textes 中文 ; cartes référent et responsabilités à l'œil ; sous-ligne de
+    « Revoir la visite » tronquée sur ordinateur dans Moi (grille existante, comme Guide, Ton avis, Signaler).

@@ -27,6 +27,9 @@ import { RequireAuth } from "@/components/auth/RequireAuth";
 import { Halo } from "@/components/layout/Halo";
 import { EnTetePage } from "@/components/layout/EnTetePage";
 import { useDisposition } from "@/hooks/useDisposition";
+import { ouvrirVisite } from "@/components/onboarding/Accueil";
+import { useProfile } from "@/lib/firebase/users";
+import { cartesDeLaVisite } from "@/lib/onboarding/visite";
 import { GuideFigure } from "@/components/guide/GuideFigure";
 import { FIGURES } from "@/lib/guide/figures";
 import { dernierJourDuSheet } from "@/lib/evenements/bascule";
@@ -108,6 +111,9 @@ const CLES = SECTIONS.map((s) => s.key);
 
 export default function GuidePage() {
   const { t } = useTranslation();
+  const { user, profile, loading } = useProfile();
+  // Visite par rôle (docs/spec-visite-par-role.md, VR9) : « Pour toi, en N cartes ».
+  const nCartes = cartesDeLaVisite(user, profile, BACK_OFFICE).length;
   // Lot U4 bis, B6 (docs/spec-pages-en-grand.md, Q11 ; planches `guide-*`) : en grand, le
   // sommaire collant à gauche (260 px depuis la v18, R14) et la lecture à 720 px ; tablette portrait, le sommaire
   // sur deux colonnes en tête ; téléphone, une ligne par partie, en tête.
@@ -170,6 +176,20 @@ export default function GuidePage() {
             sommaire de 260 px collant à gauche, colonne de 720 px, calés sur le titre. */}
         <div className="relative pb-16">
           <EnTetePage retour={{ href: "/moi", label: t("moi.title") }} titre={t("guide.title")} sousTitre={t("guide.subtitle")} />
+          {user && !loading && (
+            <div className="mb-5 px-[var(--marge-page)]">
+              <div className="flex max-w-[calc(720px+2*var(--marge-page))] items-center justify-between gap-3 rounded-2xl bg-secondary px-4 py-3">
+                <p className="min-w-0 text-[15px] font-semibold text-foreground">{t("accueil.pourToi", { count: nCartes })}</p>
+                <button
+                  type="button"
+                  onClick={ouvrirVisite}
+                  className="shrink-0 rounded-full bg-foreground px-4 py-2 text-sm font-semibold text-background transition-transform duration-150 active:scale-[.98]"
+                >
+                  {t("accueil.revoir")}
+                </button>
+              </div>
+            </div>
+          )}
           <div
             className={
               grand
