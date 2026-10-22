@@ -46,8 +46,11 @@ export type FakeProfile = {
   lieuxRegie?: string[];
   joue?: string[];
   /** Vrai = compte qui n'a pas encore vu l'accueil de première connexion (lot 8).
-   *  Par défaut l'accueil est déjà vu, pour ne pas masquer les pages testées. */
+   *  Par défaut la visite est déjà vue (`version: 2`), pour ne pas masquer les pages testées. */
   accueil?: boolean;
+  /** Vrai = compte qui avait vu l'accueil du lot 8 : `onboarding/{uid}` sans `version` (docs/spec-visite-par-role.md).
+   *  Avec le back-office ouvert, la visite s'ouvre de nouveau ; sans, elle reste fermée. */
+  accueilLot8?: boolean;
 };
 
 /** Document Firestore REST à partir d'un objet JS (miroir de toFsFields). */
@@ -383,7 +386,11 @@ export async function signInAs(
       ...(profile.lieuxRegie ? { lieuxRegie: profile.lieuxRegie } : {}),
       ...(profile.joue ? { joue: profile.joue } : {}),
     },
-    ...(profile.accueil ? {} : { [`onboarding/${profile.uid}`]: { vu: true, le: "2026-09-01T10:00:00Z" } }),
+    ...(profile.accueil ? {} : {
+      [`onboarding/${profile.uid}`]: profile.accueilLot8
+        ? { vu: true, le: "2026-09-01T10:00:00Z" }
+        : { vu: true, version: 2, le: "2026-09-01T10:00:00Z" },
+    }),
     ...docs,
   }, partage);
 

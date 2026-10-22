@@ -21,6 +21,15 @@ const ADMIN: FakeProfile = {
 const barreDuBas = (page: Page) => page.getByRole("navigation", { name: "Navigation principale" });
 const phone = { viewport: { width: 390, height: 664 }, isMobile: true, hasTouch: true, deviceScaleFactor: 2 };
 
+// Visite par rôle (docs/spec-visite-par-role.md, VR8) : la version 2 ne s'impose pas aux comptes du lot 8 tant que
+// le back-office n'est pas ouvert.
+test("un compte qui avait vu l'accueil du lot 8 ne revoit pas la visite", async ({ page }) => {
+  await signInAs(page, { ...ADMIN, uid: "uid-visite-lot8", email: "lot8.visite@example.com", accueilLot8: true }, {}, "/moi");
+  await expect(page.getByRole("heading", { name: "Moi", level: 1 })).toBeVisible();
+  await page.waitForTimeout(800);
+  await expect(page.getByRole("dialog", { name: "Bienvenue dans GCC" })).toHaveCount(0);
+});
+
 test.describe("back-office coupé : les entrées disparaissent", () => {
   test("barre du bas à quatre onglets pour un membre, Chants seul pour un visiteur (téléphone)", async ({ browser }) => {
     const contexte = await browser.newContext({ ...phone, baseURL: BASE_URL_COUPE });

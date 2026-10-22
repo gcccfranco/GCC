@@ -2543,9 +2543,27 @@
     "retour": "Retour",
     "commencer": "Commencer",
     "etape": "Étape {{n}} sur {{total}}",
+    "change": "La visite a changé",
+    "bonjour": "Bonjour {{prenom}}",
+    "tuPeux": "Tu peux",
+    "aussi": "aussi {{roles}}",
+    "voirGuide": "Voir dans le guide",
+    "revoir": "Revoir la visite",
+    "revoirSous": "Ce que ta place dans l'église te permet de faire",
+    "pourToi": "Pour toi, en {{n}} cartes",
+    "membre": "membre",
+    "referent": "référent",
+    "toutLEglise": "toute l'Église",
+    "role": {
+      "presidence": "Présidence",
+      "musicien": "Musicien",
+      "chanteur": "Choriste",
+      "regie": "Régie"
+    },
     "bienvenue": {
       "titre": "Bienvenue dans GCC",
-      "texte": "L'app de l'église : les chants et les setlists, le planning des services et les évènements."
+      "texte": "L'app de l'église : les chants et les setlists, le planning des services et les évènements.",
+      "retour": "L'app de l'église : chants, setlists, planning et évènements. En quelques cartes, ce que tu peux y faire, selon ta place dans l'église."
     },
     "ou": {
       "titre": "Où trouver quoi",
@@ -2553,19 +2571,83 @@
       "setlists": "Les chants prévus pour chaque culte, dans l'ordre.",
       "planning": "Qui sert quel dimanche.",
       "evenements": "Le calendrier de l'église et les inscriptions.",
-      "moi": "Tes services, ton profil et les réglages."
+      "moi": "Tes services, ton profil et les réglages.",
+      "backOffice": "Le travail de ton équipe : tâches et réunions. On y passe par le sélecteur App ↔ Back-Office."
     },
-    "presidence": {
-      "titre": "Préparer une setlist",
-      "texte": "Dans Setlists, crée la setlist de ton culte : les chants, l'ordre et les tonalités. L'équipe la retrouve aussitôt."
-    },
-    "musicien": {
-      "titre": "Répéter avant le dimanche",
-      "texte": "Ouvre la setlist de ton service. Le Mode Louange l'affiche en grand, chant après chant, pour jouer sans rien toucher."
-    },
-    "autre": {
-      "titre": "La vie de l'église",
-      "texte": "Le planning montre qui sert chaque dimanche. Dans Évènements, inscris-toi aux sorties et aux temps forts de l'église."
+    "carte": {
+      "presidence": {
+        "titre": "Tu présides le culte",
+        "peut": {
+          "1": "Créer la <b>setlist</b> de ton culte : les chants et leur ordre.",
+          "2": "Choisir la <b>tonalité</b> de chaque chant ; la tonalité recommandée est déjà mise.",
+          "3": "<b>Prévenir</b> l'équipe quand elle est prête ; la régie y dépose la présentation."
+        },
+        "role": "Les setlists des autres cultes : c'est leur créateur ; tu les lis et peux les dupliquer."
+      },
+      "musicien": {
+        "titre": "Tu joues le dimanche",
+        "peut": {
+          "1": "Ouvrir la setlist de ton service et la jouer en <b>Mode Louange</b>.",
+          "2": "Transposer, mettre un capo, garder <b>ta version</b> d'un chant avec tes notes.",
+          "3": "Progresser avec <b>Harmonie</b> : le catalogue d'accords et les cours."
+        },
+        "role": "Modifier la setlist : c'est la personne qui l'a créée."
+      },
+      "chanteur": {
+        "titre": "Tu chantes le dimanche",
+        "peut": {
+          "1": "Ouvrir la setlist de ton service et suivre les paroles en grand en <b>Mode Louange</b>.",
+          "2": "Lire les chants chinois en caractères, en <b>pinyin</b> ou en <b>简谱</b>.",
+          "3": "Garder <b>ta version</b> d'un chant avec tes notes."
+        },
+        "role": "Modifier la setlist : c'est la personne qui l'a créée."
+      },
+      "regie": {
+        "titre": "Tu es à la régie",
+        "peut": {
+          "1": "Lire la <b>setlist</b> de chaque culte où tu sers, dès qu'elle est prête.",
+          "2": "Y déposer le lien de la <b>présentation</b> : la présidence est prévenue.",
+          "3": "Voir dans le <b>planning</b> les dimanches où tu es à la régie."
+        },
+        "role": "Choisir les chants : c'est la présidence du culte."
+      },
+      "equipe": {
+        "titre": "Ton équipe : {{equipe}}",
+        "titres": "Tes équipes : {{equipes}}",
+        "peut": {
+          "1": "Voir les <b>tâches</b> de l'équipe et cocher celles dont tu es responsable.",
+          "2": "Ajouter un <b>sujet</b> à la prochaine réunion, puis lire son compte rendu.",
+          "3": "Retrouver qui fait quoi dans l'<b>organigramme</b>."
+        },
+        "role": "Créer les tâches et les réunions : c'est le rôle des référents de {{equipe}}."
+      },
+      "referent": {
+        "titre": "Tu mènes {{equipe}}",
+        "peut": {
+          "1": "Créer les <b>tâches</b> de l'équipe, les confier à quelqu'un et les cocher.",
+          "2": "Organiser une <b>réunion</b> : ordre des sujets, compte rendu.",
+          "3": "Créer un <b>évènement</b> pour ton équipe, avec inscriptions."
+        },
+        "role": "Changer qui est dans l'équipe : c'est l'administration, dans l'organigramme."
+      },
+      "membre": {
+        "titre": "La vie de l'église",
+        "peut": {
+          "1": "Voir dans le <b>planning</b> qui sert chaque dimanche.",
+          "2": "T'inscrire aux <b>évènements</b> et aux temps forts de l'église.",
+          "3": "Chercher un <b>chant</b> et le lire dans ta tonalité."
+        },
+        "peutSetlists": "Lire les <b>setlists</b> de chaque culte.",
+        "role": "Servir le dimanche : parles-en à la présidence de ton culte."
+      },
+      "resp": {
+        "titre": "Tes responsabilités",
+        "coordination": "<b>Coordination</b> : régler la scène, créer pour toute l'église, modifier tout évènement.",
+        "groupe": "<b>{{groupe}}</b> : son organigramme, son planning, ses notifications.",
+        "planning": "<b>Planning {{plannings}}</b> : remplir les cases, voir les absences, publier.",
+        "messages": "<b>Messages</b> : prévenir {{audiences}} par notification.",
+        "evenements": "<b>Évènements de {{sections}}</b> : les créer et les gérer."
+      }
     },
     "notifs": {
       "titre": "Ne rate pas ton service",
@@ -2577,7 +2659,7 @@
     },
     "fin": {
       "titre": "C'est parti",
-      "texte": "Le guide explique chaque écran en détail. Tu le retrouves à tout moment dans Moi.",
+      "texte": "Le guide explique chaque écran en détail. Cette visite se revoit à tout moment : Moi › Revoir la visite.",
       "guide": "Ouvrir le guide"
     }
   },
