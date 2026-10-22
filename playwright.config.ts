@@ -30,6 +30,8 @@ const SPECS_GRAND_ECRAN = [
   /jianpu-integration\.spec\.ts/,
   // Lot 1 du chantier « équipes et groupes » (docs/spec-equipes-sans-poles.md, EQ-D) : l'organigramme sans pôles.
   /equipes-agencement\.spec\.ts/,
+  // Lot AO, AO-B (docs/spec-acces-organigramme.md) : les écrans de l'organigramme (Louange en trois sous-équipes, panneau, Personnes).
+  /acces-organigramme-ecrans\.spec\.ts/,
   // Lot « chants des fêtes » (docs/spec-chants-fetes.md, CF-C) : la page de la fête, chants et musiques dans l'ordre de passage.
   /chants-fetes-agencement\.spec\.ts/,
   // Lot U5 (docs/spec-deux-volets.md) : la setlist en deux volets.
@@ -43,6 +45,8 @@ const SPECS_GRAND_ECRAN = [
   /pages-en-grand-.*\.spec\.ts/,
   // Lot IR (docs/spec-idees-regroupees.md) : la feuille « Idées d'harmonie » regroupée, aux quatre dispositions.
   /harmonie-regroupees\.spec\.ts/,
+  // Lot AO, AO-B et AO-F (docs/spec-acces-organigramme.md) : Moi (Mes équipes, Ce que tu peux faire), la grille du référent Régie.
+  /acces-moi\.spec\.ts/,
   // Lot U6 (spec-back-office.md, Tests) : l'espace Back-Office, B1.
   /back-office-espace\.spec\.ts/,
   // Lot U8 (spec-calendrier.md, Tests) : la page du calendrier, Mois sur la tablette couchée.

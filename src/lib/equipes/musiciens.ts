@@ -11,7 +11,9 @@
 
 import { EDD_CLASSES } from "@/lib/planning/utils";
 import { findMyServices, type PlanningData } from "@/lib/planning/names";
-import type { ServiceRole } from "@/types/user";
+import { joueDe, lieuxDe, sousEquipesDe } from "@/lib/equipes/louange";
+import { INSTRUMENTS as LISTE_INSTRUMENTS, type Instrument, type MembreEquipe } from "@/types/equipe";
+import { SERVICE_LIEUX, type ServiceLieu, type ServiceRole } from "@/types/user";
 
 /** Les 8 colonnes, dans l'ordre du Sheet. */
 export const COLONNES_MUSICIENS = [
@@ -101,4 +103,35 @@ export function matriceMusiciens(profils: ProfilMusicien[], data: PlanningData):
     return rangs.length ? Math.min(...rangs) : ORDRE.length;
   };
   return lignes.sort((a, b) => rang(a) - rang(b) || a.nom.localeCompare(b.nom, "fr"));
+}
+
+// ─── Nouveau mode (lot AO-B) : la matrice vient de l'organigramme ────────────────────────────
+
+export type LigneMusicienOrganigramme = {
+  /** uid, ou le nom d'un membre sans compte. */
+  cle: string;
+  uid: string;
+  nom: string;
+  joue: Instrument[];
+  lieux: ServiceLieu[];
+};
+
+/** Les membres de la sous-équipe Musiciens de Louange, avec ce qu'ils jouent et où ils servent (union si la
+ *  personne figure plusieurs fois). Ni `serviceRoles` ni le planning. Piano, guitare… d'abord, puis par nom. */
+export function matriceMusiciensOrganigramme(equipes: { id: string; membres: MembreEquipe[] }[]): LigneMusicienOrganigramme[] {
+  const parCle = new Map<string, LigneMusicienOrganigramme>();
+  for (const m of equipes.find((e) => e.id === "louange")?.membres ?? []) {
+    if (!sousEquipesDe(m).includes("musiciens")) continue;
+    const cle = m.uid || m.nom;
+    const vu = parCle.get(cle);
+    const joue = new Set([...(vu?.joue ?? []), ...joueDe(m)]);
+    const lieux = new Set([...(vu?.lieux ?? []), ...lieuxDe(m)]);
+    parCle.set(cle, {
+      cle, uid: m.uid, nom: m.nom,
+      joue: LISTE_INSTRUMENTS.filter((i) => joue.has(i)),
+      lieux: SERVICE_LIEUX.filter((l) => lieux.has(l)),
+    });
+  }
+  const rang = (l: LigneMusicienOrganigramme) => (l.joue.length ? LISTE_INSTRUMENTS.indexOf(l.joue[0]) : LISTE_INSTRUMENTS.length);
+  return [...parCle.values()].sort((a, b) => rang(a) - rang(b) || a.nom.localeCompare(b.nom, "fr"));
 }

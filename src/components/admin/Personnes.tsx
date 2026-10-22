@@ -12,7 +12,7 @@ import { listProfiles, saveProfile } from "@/lib/firebase/users";
 import { listGroupes } from "@/lib/firebase/groupes";
 import { groupeDe } from "@/lib/groupes/organigramme";
 import { FILTRE_SANS_GROUPE, correspondAuFiltreGroupe, filtresPersonnes, libellePoste, postesDeCompte } from "@/lib/groupes/personnes";
-import { TABLE_GROUPES, groupeDef } from "@/lib/groupes/table";
+import { groupeDef } from "@/lib/groupes/table";
 import type { OrganigrammeGroupe } from "@/types/groupe";
 import { isAdminUser } from "@/lib/access";
 import {
@@ -22,12 +22,13 @@ import {
   type PlanningData,
   normalizeName,
 } from "@/lib/planning/names";
-import { ProfileFields, type ProfileFormValue } from "@/components/auth/ProfileFields";
+import { IdentityFields, PlanningNameField, ProfileFields, type ProfileFormValue } from "@/components/auth/ProfileFields";
+import Link from "next/link";
+import { CeQueCaOuvre } from "@/components/equipes/OrganigrammeLouange";
+import { SERVICE_LIEUX } from "@/types/user";
 import { SERVICE_ROLE_LABELS, type ServiceRole, type UserProfile } from "@/types/user";
 import { EDD_CLASSES } from "@/lib/planning/utils";
-import { ANNONCE_SECTIONS } from "@/types/annonce";
 import { NOTIFY_ALL, NOTIFY_GROUPS, audienceLabel } from "@/lib/push/audiences";
-import { GRILLES } from "@/lib/planning/grilles";
 import { categoryColor, categoryLabel } from "@/lib/serviceColors";
 import { BACK_OFFICE } from "@/lib/backOffice";
 import { Button } from "@/components/ui/button";
@@ -50,7 +51,6 @@ export const FILTERS = filtresPersonnes();
 
 // Une inscription est « nouvelle » pendant ses 7 premiers jours.
 const NEW_DAYS = 7;
-const GROUPES_CATEGORIES = new Set(TABLE_GROUPES.map((x) => x.categorie));
 export function isRecent(d?: Date): boolean {
   return !!d && Date.now() - d.getTime() < NEW_DAYS * 86_400_000;
 }
@@ -108,6 +108,12 @@ export function useFiltresPersonnes(profiles: UserProfile[]) {
           if (!hay.includes(q)) return false;
         }
         if (filter === "Tous") return true;
+        // Lot AO-B : les filtres lisent l'organigramme (équipes recopiées, lieux), plus `serviceRoles`.
+        if (BACK_OFFICE && filter === "EDD") return (p.dansEquipes ?? []).includes("edd");
+        if (BACK_OFFICE && filter === "Ne sert pas") return (p.dansEquipes ?? []).length === 0;
+        if (BACK_OFFICE && (SERVICE_LIEUX as readonly string[]).includes(filter)) {
+          return [...(p.lieuxLouange ?? []), ...(p.lieuxRegie ?? [])].includes(filter);
+        }
         if (filter === "EDD") return (EDD_CLASSES as readonly string[]).some((c) => c in p.serviceRoles);
         if (filter === "Ne sert pas") return Object.keys(p.serviceRoles).length === 0;
         // Groupes : `groupeDe` interrupteur ouvert, la clé de serviceRoles sinon (OG-D).
@@ -157,7 +163,7 @@ export function FiltresPersonnes({ f }: { f: ReturnType<typeof useFiltresPersonn
         etiquette="Filtrer les membres"
         options={FILTERS.map((x) => ({
           cle: x,
-          nom: x === FILTRE_SANS_GROUPE ? t("groupes.personnes.sansGroupe") : x === "Tous" || x === "EDD" || x === "Ne sert pas" ? x : categoryLabel(x),
+          nom: x === FILTRE_SANS_GROUPE ? t("groupes.personnes.sansGroupe") : BACK_OFFICE && x === "Ne sert pas" ? t("equipes.organigramme.personnes.sansEquipe") : x === "Tous" || x === "EDD" || x === "Ne sert pas" ? x : categoryLabel(x),
           couleur: x === "EDD" ? "#3b6d11" : x !== "Tous" && x !== "Ne sert pas" && x !== FILTRE_SANS_GROUPE ? categoryColor(x) : undefined,
         }))}
         valeur={f.filter}
@@ -205,7 +211,9 @@ export function ServicesDuMembre({ p, groupes }: { p: UserProfile; groupes?: Org
   const g = avecGroupes ? groupeDe(p) : null;
   const def = g ? groupeDef(g) : undefined;
   const postes = def ? postesDeCompte(groupes?.find((x) => x.id === def.id), p.uid) : [];
-  const roles = Object.entries(p.serviceRoles).filter(([cat]) => !(avecGroupes && GROUPES_CATEGORIES.has(cat)));
+  // Lot AO-B : en nouveau mode, ni `serviceRoles` ni rôles déclarés — les sous-équipes et les lieux de l'organigramme.
+  const roles = avecGroupes ? [] : Object.entries(p.serviceRoles);
+  const lieux = SERVICE_LIEUX.filter((l) => [...(p.lieuxLouange ?? []), ...(p.lieuxRegie ?? [])].includes(l));
   return (
     <div className="flex flex-wrap gap-1">
       {isRecent(p.createdAt) && <Pill label="Nouveau" color="#16a34a" />}
@@ -215,6 +223,8 @@ export function ServicesDuMembre({ p, groupes }: { p: UserProfile; groupes?: Org
             color={categoryColor(def.categorie)}
           />
         : <Pill label={t("groupes.personnes.sansGroupe")} />)}
+      {avecGroupes && (p.sousEquipes ?? []).map((x) => <Pill key={x} label={`${t("equipes.public.louange")} · ${t(`acces.sousEquipe.${x}`)}`} />)}
+      {avecGroupes && lieux.map((l) => <Pill key={l} label={categoryLabel(l)} color={categoryColor(l)} />)}
       {roles.map(([cat, roles]) => (
         <Pill
           key={cat}
@@ -284,11 +294,7 @@ export function FormulairePersonne({
 }) {
   const { t } = useTranslation();
   const [form, setForm] = useState<ProfileFormValue>(() => profileToForm(p));
-  const [annonceRights, setAnnonceRights] = useState<string[]>(p.annonces ?? []);
   const [notifyRights, setNotifyRights] = useState<string[]>(p.notify ?? []);
-  const [equipesRight, setEquipesRight] = useState(p.equipes ?? false);
-  const [coordination, setCoordination] = useState(p.coordination ?? false);
-  const [planningRights, setPlanningRights] = useState<string[]>(p.plannings ?? []);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
@@ -300,10 +306,17 @@ export function FormulairePersonne({
     setSaving(true);
     setError("");
     try {
+      // Lot AO-B : en nouveau mode, l'identité seule — aucun droit ni rôle de service ne s'écrit d'ici.
+      if (BACK_OFFICE) {
+        const identite = { uid: p.uid, firstName: form.firstName, lastName: form.lastName, planningName: form.planningName };
+        await saveProfile(identite);
+        onEnregistre({ ...p, ...identite });
+        return;
+      }
       // Seuls les champs tenus ici sont écrits (saveProfile n’envoie que le
       // masque) : `dansEquipes` et `referentDe` viennent des équipes (lot 16, D9) et ne sont
       // jamais renvoyés, même périmés. Jusqu’au 19/09/2026 le document entier était remplacé.
-      const patch = { uid: p.uid, ...form, annonces: annonceRights, notify: notifyRights, equipes: equipesRight, coordination, plannings: planningRights };
+      const patch = { uid: p.uid, ...form, annonces: p.annonces ?? [], notify: notifyRights, equipes: p.equipes ?? false, coordination: p.coordination ?? false, plannings: p.plannings ?? [] };
       await saveProfile(patch);
       onEnregistre({ ...p, ...patch });
     } catch {
@@ -320,118 +333,32 @@ export function FormulairePersonne({
           <AlertDescription>{error}</AlertDescription>
         </Alert>
       )}
+      {BACK_OFFICE ? (
+        <div className="space-y-6">
+          <IdentityFields value={form} onChange={setForm} />
+          <PlanningNameField value={form} onChange={setForm} planningNames={planningNames} />
+          <CeQueCaOuvre profil={p} />
+          <p className="text-sm text-muted-foreground">
+            {t("equipes.organigramme.personnes.aide")}{" "}
+            <Link href="/back-office/equipes" className="font-semibold text-foreground underline underline-offset-2">
+              {t("equipes.organigramme.voir")}
+            </Link>
+          </p>
+        </div>
+      ) : (
       <ProfileFields
         value={form}
         onChange={setForm}
         planningNames={planningNames}
         deriveFromPlanning={deriveFromPlanning}
       />
+      )}
 
-      {/* Back-office coupé (lot 18) : ces trois droits n'ont pas d'objet en ligne. */}
-      {BACK_OFFICE && (<>
-      {/* Droit de tenir l'organigramme (lot 16, D4) — réservé aux admins */}
-      <div className="rounded-lg border border-dashed border-border p-3">
-        <p className="text-sm font-semibold text-muted-foreground mb-2">
-          Peut modifier l&apos;organigramme :
-        </p>
-        <button
-          type="button"
-          onClick={() => setEquipesRight((v) => !v)}
-          className={`px-3 py-1.5 rounded-lg border text-xs font-semibold transition-colors ${
-            equipesRight
-              ? "bg-secondary border-foreground/30 text-foreground"
-              : "bg-background border-border text-muted-foreground hover:text-foreground"
-          }`}
-        >
-          {equipesRight ? "✓ " : ""}Équipes (tout l&apos;organigramme)
-        </button>
-      </div>
-
-      {/* Coordination (lot 1 du chantier « équipes et groupes », EQ24 à EQ26) — cochée par un
-          admin seul : aucune équipe ne la donne plus. */}
-      <div className="rounded-lg border border-dashed border-border p-3">
-        <p className="text-sm font-semibold text-muted-foreground mb-2">
-          {t("personnes.coordinationAide")} :
-        </p>
-        <button
-          type="button"
-          aria-pressed={coordination}
-          onClick={() => setCoordination((v) => !v)}
-          className={`px-3 py-1.5 rounded-lg border text-xs font-semibold transition-colors ${
-            coordination
-              ? "bg-secondary border-foreground/30 text-foreground"
-              : "bg-background border-border text-muted-foreground hover:text-foreground"
-          }`}
-        >
-          {coordination && <span aria-hidden>✓ </span>}{t("personnes.coordination")}
-        </button>
-      </div>
-
-      {/* Qui remplit les plannings dans l'app (lot 17) — réservé aux admins.
-          Ne donne pas le droit de PUBLIER un trimestre (droits de notification). */}
-      <div className="rounded-lg border border-dashed border-border p-3">
-        <p className="text-sm font-semibold text-muted-foreground mb-2">
-          Peut remplir les plannings :
-        </p>
-        <div className="flex flex-wrap gap-2">
-          {GRILLES.map((pl) => {
-            const checked = planningRights.includes(pl.key);
-            const color = pl.couleur;
-            return (
-              <button
-                key={pl.key}
-                type="button"
-                onClick={() =>
-                  setPlanningRights((prev) =>
-                    checked ? prev.filter((x) => x !== pl.key) : [...prev, pl.key]
-                  )
-                }
-                className={`px-3 py-1.5 rounded-lg border text-xs font-semibold transition-colors ${
-                  checked ? "" : "bg-background border-border text-muted-foreground hover:text-foreground"
-                }`}
-                style={checked ? { background: `${color}15`, borderColor: color, color } : undefined}
-              >
-                {checked ? "✓ " : ""}{pl.label}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-      </>)}
-
-      {BACK_OFFICE && (<>
-      {/* Droits de publication d'annonces — réservé aux admins */}
-      <div className="rounded-lg border border-dashed border-border p-3">
-        <p className="text-sm font-semibold text-muted-foreground mb-2">
-          Peut créer des évènements et des infos pour :
-        </p>
-        <div className="flex flex-wrap gap-2">
-          {ANNONCE_SECTIONS.map((s) => {
-            const checked = annonceRights.includes(s);
-            const color = categoryColor(s);
-            return (
-              <button
-                key={s}
-                type="button"
-                onClick={() =>
-                  setAnnonceRights((prev) =>
-                    checked ? prev.filter((x) => x !== s) : [...prev, s]
-                  )
-                }
-                className={`px-3 py-1.5 rounded-lg border text-xs font-semibold transition-colors ${
-                  checked ? "" : "bg-background border-border text-muted-foreground hover:text-foreground"
-                }`}
-                style={checked ? { background: `${color}15`, borderColor: color, color } : undefined}
-              >
-                {checked ? "✓ " : ""}{categoryLabel(s)}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-      </>)}
+      {/* Lot AO-B (A2) : plus de case de droit (Équipes, Coordination, plannings, évènements) — les droits viennent de
+          l'organigramme ; hors du nouveau mode, ces cases n'existaient pas non plus (lot 18). */}
 
       {/* Droits d'envoi de notifications manuelles — réservé aux admins */}
+      {!BACK_OFFICE && (
       <div className="rounded-lg border border-dashed border-border p-3">
         <p className="text-sm font-semibold text-muted-foreground mb-2">
           Peut envoyer des notifications à :
@@ -464,6 +391,7 @@ export function FormulairePersonne({
           })}
         </div>
       </div>
+      )}
 
       <div className="flex items-center gap-2 justify-end">
         <Button variant="outline" onClick={onAnnule} className="h-11">

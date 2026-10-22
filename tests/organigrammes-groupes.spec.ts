@@ -655,8 +655,9 @@ test.describe("OG-B · miroirs client (OG22 à OG27)", () => {
     expect(peutPrevenir(paix, false, [], [], [])).toBe(false);
   });
 
-  test("audiencesNotifiables = notify ∪ notifieParRole ; interrupteur coupé → notify seul", () => {
-    expect(audiencesNotifiables({ notify: ["Campus"], notifieParRole: ["Groupe Joie"] }, true)).toEqual(["Campus", "Groupe Joie"]);
+  // Lot AO (docs/spec-acces-organigramme.md, A2) : interrupteur ouvert, le droit coché `notify` ne compte plus.
+  test("audiencesNotifiables = notifieParRole (lot AO) ; interrupteur coupé → notify seul", () => {
+    expect(audiencesNotifiables({ notify: ["Campus"], notifieParRole: ["Groupe Joie"] }, true)).toEqual(["Groupe Joie"]);
     expect(audiencesNotifiables({ notify: ["Campus"], notifieParRole: ["Groupe Joie"] }, false)).toEqual(["Campus"]);
     expect(audiencesNotifiables(null, true)).toEqual([]);
   });
@@ -1291,7 +1292,8 @@ test.describe("OG-D · navigateur (Personnes, Sans compte)", () => {
     await expect(droitsCarte).toContainText("Par ses rôles");
     await expect(droitsCarte).toContainText("Remplit et publie le planning");
     await expect(droitsCarte).toContainText("Celles du Groupe Paix");
-    await expect(droitsCarte).toContainText("Coordination : cochée par un admin. Admin : liste des adresses, ne se coche pas.");
+    // Lot AO-B : plus de case de coordination, la note qui la disait cochée par un admin a disparu.
+    await expect(droitsCarte).not.toContainText("cochée par un admin");
     await expect(f.getByRole("region", { name: "Services et équipes" })).toContainText("pendant la transition");
     await expect(f).not.toContainText("Services et rôles");
   });

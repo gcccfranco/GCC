@@ -86,19 +86,13 @@ test("panneau d'édition : ni sélecteur de pôle ni liste de pôles", async ({ 
   await capture(page, "panneau-edition");
 });
 
-test("fiche de Personnes : ligne « Coordination » dans Droits, plus de carte Pôles", async ({ page }, info) => {
+test("fiche de Personnes : « Ce que ça lui ouvre » à la place des droits cochés, plus de carte Pôles", async ({ page }) => {
   await ouvrir(page, ADMIN, "/back-office/equipes/personnes?uid=u-hugo");
-  if (estGrandEcran(info)) {
-    const fiche = page.locator('[data-volet="detail"]');
-    await expect(fiche.getByRole("heading", { name: "Droits", exact: true })).toBeVisible();
-    await expect(fiche).toContainText(/Coordination\s*Non/);
-    await expect(fiche.getByRole("heading", { name: "Pôles" })).toHaveCount(0);
-  } else {
-    // Un volet : la personne s'ouvre en page entière : la ligne « Coordination » de Droits, puis « Modifier » pour la case.
-    await expect(page.locator("article")).toContainText(/Coordination\s*Non/);
-    await page.getByRole("button", { name: "Modifier", exact: true }).click();
-    await expect(page.getByRole("button", { name: "Coordination", exact: true })).toBeVisible();
-  }
+  // Nouveau mode (lot AO-B) : plus de ligne « Coordination » ni de case ; les droits viennent de l'organigramme.
+  const fiche = page.locator('[data-volet="detail"], article').first();
+  await expect(fiche.getByTestId("ce-que-ca-ouvre")).toBeVisible();
+  await expect(fiche).not.toContainText(/Coordination\s*(Oui|Non)/);
+  await expect(fiche.getByRole("heading", { name: "Pôles" })).toHaveCount(0);
   await expect(page.getByText("Coché hors organigramme")).toHaveCount(0);
   await expect(page.getByRole("heading", { name: "Pôles" })).toHaveCount(0);
   await capture(page, "fiche-personne");

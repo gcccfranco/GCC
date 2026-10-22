@@ -764,6 +764,7 @@
       "account": "账号",
       "identity": "身份",
       "services": "服事",
+      "planning": "排班",
       "groupe": "小组"
     },
     "email": "邮箱",
@@ -2383,6 +2384,14 @@
       "guideSous": "一步步了解整个网站",
       "avisSous": "问卷",
       "signalerSous": "错误或故障"
+    },
+    "carteEquipes": {
+      "sers": "你服事的地点：{{lieux}}"
+    },
+    "carteFaire": {
+      "titre": "你可以做什么",
+      "admin": "你拥有全部权限：你是管理员。",
+      "aucun": "你可以使用诗歌、和弦、排班表、我的服事和你的歌单。"
     }
   },
   "pdf": {
@@ -3169,6 +3178,25 @@
       "musiciens_other": "{{count}} 位乐手",
       "presidences_one": "{{count}} 位主领",
       "presidences_other": "{{count}} 位主领"
+    },
+    "organigramme": {
+      "referentLouange": "敬拜组负责人",
+      "referentSous": "负责人",
+      "sansSousEquipe": "未分小组",
+      "sousEquipes": "小组",
+      "referentDe": "负责",
+      "ouIlSert": "服事地点",
+      "ceQuIlJoue": "演奏乐器",
+      "ceQueCaOuvre": "这会开放什么权限",
+      "rienDePlus": "除了所有账号都有的权限，没有更多。",
+      "sansCompte": "还没有账号：注册之前不会开放任何权限。",
+      "sertLa": "在此服事",
+      "voir": "查看组织架构",
+      "personnes": {
+        "aide": "权限来自组织架构：要更改，请把这个人安排到某个团队。",
+        "sansEquipe": "没有团队",
+        "identite": "身份信息"
+      }
     }
   },
   "personnes": {

@@ -767,6 +767,7 @@
       "account": "Compte",
       "identity": "Identité",
       "services": "Services",
+      "planning": "Planning",
       "groupe": "Groupe"
     },
     "email": "Email",
@@ -2416,6 +2417,14 @@
       "guideSous": "Tout le site, pas à pas",
       "avisSous": "Le questionnaire",
       "signalerSous": "Une erreur, un bug"
+    },
+    "carteEquipes": {
+      "sers": "Tu sers : {{lieux}}"
+    },
+    "carteFaire": {
+      "titre": "Ce que tu peux faire",
+      "admin": "Tu as tous les accès : tu es admin.",
+      "aucun": "Tu as les chants, les accords, le planning, Mes services et tes setlists."
     }
   },
   "pdf": {
@@ -3205,6 +3214,25 @@
       "musiciens_other": "{{count}} musiciens",
       "presidences_one": "{{count}} présidence",
       "presidences_other": "{{count}} présidences"
+    },
+    "organigramme": {
+      "referentLouange": "Référent Louange",
+      "referentSous": "Référent·e",
+      "sansSousEquipe": "Sans sous-équipe",
+      "sousEquipes": "Sous-équipes",
+      "referentDe": "Référent de",
+      "ouIlSert": "Où il sert",
+      "ceQuIlJoue": "Ce qu'il joue",
+      "ceQueCaOuvre": "Ce que ça lui ouvre",
+      "rienDePlus": "Rien de plus que ce qu'ouvre tout compte.",
+      "sansCompte": "Pas encore de compte : rien ne s'ouvre avant son inscription.",
+      "sertLa": "Sert ici",
+      "voir": "Voir l'organigramme",
+      "personnes": {
+        "aide": "Les accès viennent de l'organigramme : pour en changer, place la personne dans une équipe.",
+        "sansEquipe": "Sans équipe",
+        "identite": "Identité"
+      }
     }
   },
   "personnes": {

@@ -32,6 +32,7 @@ import { todayIso } from "@/lib/scene/dimanches";
 import { SERVICE_ROLE_LABELS, type UserProfile } from "@/types/user";
 import { BACK_OFFICE } from "@/lib/backOffice";
 import { RailEquipes } from "@/app/back-office/equipes/RailEquipes";
+import { CeQueCaOuvre } from "@/components/equipes/OrganigrammeLouange";
 import { InscriptionsComptes } from "./InscriptionsComptes";
 import {
   Avatar, FiltresPersonnes, FormulairePersonne, LignePersonne, ListePersonnes, isRecent,
@@ -354,8 +355,11 @@ function FicheDuMembre({
           titre={BACK_OFFICE ? t("groupes.personnes.servicesEquipes") : "Services et rôles"}
           note={BACK_OFFICE ? t("groupes.personnes.transition") : undefined}
         >
-          {Object.keys(p.serviceRoles).length === 0 ? (
-            !(BACK_OFFICE && (p.dansEquipes ?? []).length > 0) && <p className="text-sm text-muted-foreground">Ne sert pas.</p>
+          {/* Lot AO-B : en nouveau mode, ni `serviceRoles` ni rôles déclarés — seulement l'organigramme. */}
+          {BACK_OFFICE ? (
+            (p.dansEquipes ?? []).length === 0 && <p className="text-sm text-muted-foreground">{t("equipes.organigramme.personnes.sansEquipe")}</p>
+          ) : Object.keys(p.serviceRoles).length === 0 ? (
+            <p className="text-sm text-muted-foreground">Ne sert pas.</p>
           ) : (
             Object.entries(p.serviceRoles).map(([cat, roles]) => (
               <div key={cat} className={ligne}>
@@ -373,7 +377,12 @@ function FicheDuMembre({
                 <Users className="h-3.5 w-3.5 text-muted-foreground" aria-hidden />
                 {t(`equipes.team.${id}`, { defaultValue: id })}
               </span>
-              <span className="text-muted-foreground">{(p.referentDe ?? []).includes(id) ? t("groupes.personnes.referent") : t("groupes.personnes.membre")}</span>
+              <span className="text-right text-muted-foreground">
+                {[
+                  (p.referentDe ?? []).includes(id) ? t("groupes.personnes.referent") : t("groupes.personnes.membre"),
+                  ...(id === "louange" ? (p.sousEquipes ?? []).map((x) => t(`acces.sousEquipe.${x}`)) : []),
+                ].join(" · ")}
+              </span>
             </div>
           ))}
         </Carte>
@@ -383,15 +392,18 @@ function FicheDuMembre({
               <span className="flex items-center gap-2 text-muted-foreground"><ShieldCheck className="h-4 w-4" aria-hidden />Admin</span>
               <span className="text-foreground">{isAdminUser(p) ? "Oui" : "Non"}</span>
             </div>
-            {/* Lot 1 du chantier « équipes et groupes » (EQ26) : la case cochée par un admin. */}
-            <div className={ligne}>
-              <span className="flex items-center gap-2 text-muted-foreground"><Users className="h-4 w-4" aria-hidden />{t("personnes.coordination")}</span>
-              <span className="text-foreground">{p.coordination ? "Oui" : "Non"}</span>
-            </div>
-            <div className={ligne}>
-              <span className="flex items-center gap-2 text-muted-foreground"><CalendarDays className="h-4 w-4" aria-hidden />Écrit dans</span>
-              <span className="text-right text-foreground">{plannings.length ? plannings.join(", ") : "—"}</span>
-            </div>
+            {/* Lot 1 du chantier « équipes et groupes » (EQ26) : la case cochée par un admin. Lot AO-B : plus de case
+                en nouveau mode, les droits viennent de l'organigramme (« Ce que ça lui ouvre », plus bas). */}
+            {!BACK_OFFICE && (<>
+              <div className={ligne}>
+                <span className="flex items-center gap-2 text-muted-foreground"><Users className="h-4 w-4" aria-hidden />{t("personnes.coordination")}</span>
+                <span className="text-foreground">{p.coordination ? "Oui" : "Non"}</span>
+              </div>
+              <div className={ligne}>
+                <span className="flex items-center gap-2 text-muted-foreground"><CalendarDays className="h-4 w-4" aria-hidden />Écrit dans</span>
+                <span className="text-right text-foreground">{plannings.length ? plannings.join(", ") : "—"}</span>
+              </div>
+            </>)}
             {BACK_OFFICE && (<>
               <div className={ligne}>
                 <span className="flex items-center gap-2 text-muted-foreground"><PenLine className="h-4 w-4" aria-hidden />{t("groupes.personnes.parRoles")}</span>
@@ -405,7 +417,6 @@ function FicheDuMembre({
                   {notifie.length ? notifie.map((n) => t("groupes.personnes.celles", { groupe: n })).join(", ") : "—"}
                 </span>
               </div>
-              <p className="pt-2 text-[12px] text-muted-foreground">{t("groupes.personnes.noteDroits")}</p>
             </>)}
             <div className={ligne}>
               <span className="flex items-center gap-2 text-muted-foreground"><UserRound className="h-4 w-4" aria-hidden />Nom au planning</span>
@@ -414,6 +425,15 @@ function FicheDuMembre({
           </Carte>
         </div>
       </div>
+
+      {BACK_OFFICE && (
+        <section aria-label={t("equipes.organigramme.ceQueCaOuvre")} className="raised space-y-3 rounded-2xl px-5 py-4">
+          <CeQueCaOuvre profil={p} />
+          <p className="text-[12px] text-muted-foreground">
+            <Link href="/back-office/equipes" className="font-semibold text-foreground underline underline-offset-2">{t("equipes.organigramme.voir")}</Link>
+          </p>
+        </section>
+      )}
 
       <Carte titre="Ses prochains services" note={<Link href="/planning" className="font-semibold text-foreground underline underline-offset-2">Planning</Link>}>
         {services.length === 0 ? (

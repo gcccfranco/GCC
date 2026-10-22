@@ -162,7 +162,8 @@ test("Équipes › Organigramme : le droit « Équipes » ajoute un membre et fa
   });
   const db = await signInAs(
     page,
-    { uid: "u-ref", email: "referent@example.com", firstName: "Lydia", lastName: "H.", equipes: true },
+    // Nouveau mode (lot AO) : plus de case « Équipes » — la référente de TEAM DA tient son équipe.
+    { uid: "u-ref", email: "referent@example.com", firstName: "Lydia", lastName: "H.", dansEquipes: ["da"], referentDe: ["da"] },
     DOCS,
     "/back-office/equipes",
   );
@@ -205,16 +206,14 @@ test("Moi : une ligne « Équipes » mène à l'organigramme", async ({ page }) 
 });
 
 test("matrice : tableau sur grand écran, cartes sur téléphone, sans défilement horizontal", async ({ page }, info) => {
-  await simulerSheets(page, {
-    Franco_Louange: '"12/10","","","","Ruth K.","","","","","","",""',
-  });
+  // Nouveau mode (lot AO-B) : la matrice vient de la sous-équipe Musiciens de l'organigramme, plus du planning.
+  await simulerSheets(page);
   await signInAs(
     page,
-    {
-      uid: "u1", email: "membre@example.com", firstName: "Ruth", lastName: "K.",
-      planningName: "Ruth K.", serviceRoles: { "Culte Francophone": ["musicien"] },
-    },
-    DOCS,
+    { uid: "u1", email: "membre@example.com", firstName: "Ruth", lastName: "K." },
+    { ...DOCS, "equipes/louange": { membres: [
+        { nom: "Ruth K.", uid: "u1", mention: "", referent: false, essai: false, groupe: "", sousEquipes: ["musiciens"], joue: ["piano"], lieux: ["Culte Francophone"] },
+      ], updatedAt: "2026-10-01T10:00:00Z", parUid: "", parNom: "" }, },
     "/equipes",
   );
   await page.getByRole("button", { name: "Musiciens" }).click();
@@ -230,14 +229,17 @@ test("matrice : tableau sur grand écran, cartes sur téléphone, sans défileme
 });
 
 test("onglet Musiciens : un président ou une choriste n'y figure pas (retours du 06/10/2026)", async ({ page }, info) => {
-  await simulerSheets(page, {
-    Franco_Louange: '"12/10","Paul W.","Daniela W.","","Ruth K.","","","","","","",""',
-  });
+  await simulerSheets(page);
   await signInAs(
     page,
-    { uid: "u-ruth", email: "ruth@example.com", firstName: "Ruth", lastName: "K.", planningName: "Ruth K.", serviceRoles: { "Culte Francophone": ["musicien"] } },
+    { uid: "u-ruth", email: "ruth@example.com", firstName: "Ruth", lastName: "K." },
     {
       ...DOCS,
+      "equipes/louange": { membres: [
+        { nom: "Ruth K.", uid: "u-ruth", mention: "", referent: false, essai: false, groupe: "", sousEquipes: ["musiciens"], joue: ["piano"], lieux: ["Culte Francophone"] },
+        { nom: "Paul W.", uid: "u-paul", mention: "", referent: false, essai: false, groupe: "", sousEquipes: ["presidence"] },
+        { nom: "Daniela W.", uid: "u-daniela", mention: "", referent: false, essai: false, groupe: "", sousEquipes: ["choristes"] },
+      ], updatedAt: "2026-10-01T10:00:00Z", parUid: "", parNom: "" },
       "users/u-ruth": { ...DOCS["users/u-ruth"], serviceRoles: { "Culte Francophone": ["musicien"] } },
       "users/u-paul": {
         email: "paul@example.com", firstName: "Paul", lastName: "W.", planningName: "Paul W.",
