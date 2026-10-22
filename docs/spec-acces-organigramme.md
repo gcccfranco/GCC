@@ -7,8 +7,8 @@ https://claude.ai/artifact/RVnkQYaFbyyBgZ8ti4ET6s (privé, liste des points faib
 dépôt public).
 
 Lot **AO**. Planche : https://claude.ai/artifact/9vupGveKJDw5BnzGfHf1wV. **État : spec écrite et planche faite le
-21/10/2026, à valider par Timothée ; code sur go. Préalable :
-la séance de bascule V19EQUIPES (étape 0), pas encore faite.**
+21/10/2026, à valider par Timothée ; code sur go. Préalable levé le 22/10/2026** :
+règles publiées par Timothée, relevé V19EQUIPES à « 0 opération » (rien à migrer).
 
 ## Mots de Timothée
 
@@ -126,7 +126,8 @@ Trois sources d'accès qui se recouvrent :
 
 ## Tranches
 
-- **AO-0 — Séance V19EQUIPES** (Timothée, sur son Mac) : relevé, publication de `firestore.rules`, migration
+- **AO-0 — Séance V19EQUIPES** — **faite le 22/10/2026** : règles publiées, relevé à « 0 opération » (lancé avec
+  `--env-file=.env`, la clé de service est dans `.env` et non `.env.local`). (Timothée, sur son Mac) : relevé, publication de `firestore.rules`, migration
   `--ecrire`, « 0 opération », coordination cochée (`spec-equipes-sans-poles.md`). Préalable à tout le reste.
 - **AO-A — Modèle et fonctions pures** : champs ci-dessus ; `src/lib/access.ts` réécrit sur l'organigramme
   (`visibleCategories`, `creatableCategories`, `canSeeSetlist` + F1, `canUseHarmonie`, `isCoordination`,

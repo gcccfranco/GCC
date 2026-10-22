@@ -1178,7 +1178,7 @@ d'accords sur le site pour aider les musiciens à savoir comment jouer l'accord 
 trois admins fondateurs en dur ; Louange en trois sous-équipes (Présidence, Musiciens, Choristes) avec un
 référent chacune et un référent Louange ; Régie à part ; « Où il sert » et « Ce qu'il joue » cochés sur la ligne du
 membre ; être au planning d'une date ouvre la lecture de cette setlist ; coordination = référents Louange et EDD +
-Orga ; migration par script à blanc. **Spec écrite ; préalable : séance de bascule V19EQUIPES (pas faite) ; planche de
+Orga ; migration par script à blanc. **Spec écrite ; préalable levé le 22/10/2026 : `firestore.rules` publié par Timothée, relevé de `poles-vers-equipes.ts` à « 0 opération » (rien à migrer, personne n'avait la coordination par un pôle) ; planche de
 l'organigramme https://claude.ai/artifact/9vupGveKJDw5BnzGfHf1wV à valider ; code sur go.**
 
 ## 4. Carte des modules de l'app « GCC »
