@@ -38,6 +38,8 @@ const SPECS_GRAND_ECRAN = [
   /setlist-deux-volets\.spec\.ts/,
   // … et Chants en deux volets.
   /chants-deux-volets\.spec\.ts/,
+  // Visite de première connexion selon le rôle (docs/spec-visite-par-role.md) : la fenêtre sur les quatre dispositions.
+  /visite-par-role\.spec\.ts/,
   // … le mode louange en deux colonnes, et le parcours de T6 (captures, FR et ZH, clair et sombre).
   /mode-louange-colonnes\.spec\.ts/,
   /deux-volets-finitions\.spec\.ts/,

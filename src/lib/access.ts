@@ -822,7 +822,7 @@ export const ONGLETS_PLANNING = ["culte", "table", "groupes", "edd", "campus", "
 export type OngletPlanning = (typeof ONGLETS_PLANNING)[number];
 
 /** L'onglet qui porte une grille (clé de `GRILLES` ou de `PUBLISHABLE_PLANNINGS`). */
-function ongletDeLaGrille(key: string): OngletPlanning | null {
+export function ongletDeLaGrille(key: string): OngletPlanning | null {
   if (key === "paix" || key === "bonte" || key.startsWith("fidelite")) return "groupes";
   if (key.startsWith("edd")) return "edd";
   if (key.startsWith("campus")) return "campus";
