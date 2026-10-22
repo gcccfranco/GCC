@@ -153,6 +153,58 @@ Trois sources d'accès qui se recouvrent :
   setlist seulement ; un compte sans équipe ne voit pas les setlists d'un lieu ; le planning ne donne plus Harmonie.
 - Règles : émulateur ou tests REST simulés de `firestore.rules` pour la création de setlist et la création de profil.
 
+## Choix d'exécution (session orchestratrice, 22/10/2026)
+
+Pris au codage, dans le cadre des décisions ci-dessus ; les écarts sont repris dans « Avancement ».
+
+**Deux modes, un interrupteur.** Chaque fonction de `src/lib/access.ts` dont la réponse change prend un dernier
+paramètre `backOffice: boolean = BACK_OFFICE` (patron déjà suivi par `audiencesNotifiables`, `droitsDePublication`) :
+`false` = l'ancien mode, **code d'aujourd'hui inchangé** ; `true` = le nouveau, qui ne lit plus `serviceRoles` ni les
+droits cochés (`coordination`, `annonces`, `notify`, `plannings`, `equipes`). Un test pur passe le mode lui-même. Le
+nouveau mode est écrit dans un module pur, `src/lib/acces/organigramme.ts`, que `access.ts` appelle.
+
+**Modèle retenu (alternative simple de la spec).**
+- `MembreEquipe` (`src/types/equipe.ts`) gagne, optionnels : `sousEquipes?: SousEquipe[]` et `referentSous?:
+  SousEquipe[]` (Louange), `lieux?: ServiceLieu[]` (Louange, Régie), `joue?: Instrument[]` (Musiciens).
+  `SOUS_EQUIPES = ["presidence", "musiciens", "choristes"]`, `INSTRUMENTS = ["piano", "guitare", "basse",
+  "batterie", "cajon", "autre"]`. Sur `equipes/louange`, le booléen `referent` existant = **référent Louange** (D4) ;
+  ailleurs il garde son sens. `groupe` (intertitre) reste lu pour l'ancien affichage et par la migration.
+- Le profil reçoit, **recopiés par le serveur seul** (`recalculerRattachement`, comme `dansEquipes`) : `sousEquipes`,
+  `referentSous`, `lieuxLouange`, `lieuxRegie`, `joue` (seulement si `musiciens` ∈ `sousEquipes`). `referentDe`
+  garde son sens (ids d'équipes) : un id composé (`louange/musiciens`) aurait fui dans les tâches et les réunions.
+- Rien n'est jamais écrit par la personne : `users` create refuse ces champs comme les autres.
+
+**Ce que le nouveau mode calcule** (`src/lib/acces/organigramme.ts`, une fonction par ligne du tableau) :
+- Setlists : créer = `lieuxLouange` (membre de `louange`) ∪ catégorie du `groupe` ∪ les trois classes EDD (membre
+  d'`edd`) ; voir = créer ∪ `lieuxRegie` (membre de `regie`). F1 : `canSeeSetlist` reçoit en option les dates
+  servies (`{ date, categorie }[]`, tirées du planning par `findMyServices`) et ouvre la lecture de la setlist de
+  cette date et de cette catégorie seulement.
+- Harmonie : `musiciens` ∈ `sousEquipes` et `joue` ∋ piano / guitare (RD-2000 : piano).
+- Coordination (D5) : `referentDe` ∋ `louange` ou `edd`, ou `dansEquipes` ∋ `orga`.
+- Plannings « du culte » = les plannings des quatre lieux : `culte`, `intergroupe`, `interfranco`, `campusMatin`,
+  `campusSoir`. Référent Louange : remplir (toutes colonnes), publier, prévenir. Référent Régie : remplir les seules
+  colonnes `sono`, `sonoLive`, `ppt`, publier et prévenir (lecture littérale du tableau). Référent EDD : les trois
+  plannings EDD. Groupes : `remplitParRole`, `publieParRole`, `notifieParRole` (inchangé). Planning **Table** :
+  aucune ligne du tableau ne le nomme — membres d'Orga (« coordination générale »), à confirmer par Timothée.
+- Notifier : nouvelles audiences `equipe:<id>` (membres de l'équipe) et `louange:<sous-équipe>` ; un référent notifie
+  son équipe (`equipe:<id>`), un référent de sous-équipe la sienne, le référent Louange `equipe:louange`, Orga `*` ;
+  plus `notifieParRole` (groupes).
+- Évènements de section (sections = `ANNONCE_SECTIONS`) : référent Louange → Culte Francophone ; président et VP
+  (`referentDe` ∋ `comite-<g>`) → la catégorie de leur groupe. Il n'existe pas de section EDD : rien pour le
+  référent EDD tant qu'il n'y en a pas (écart signalé).
+- Tenir l'organigramme : Orga, tout ; un référent, son équipe ; le référent Louange, toute la Louange ; un référent
+  de sous-équipe, les membres de sa sous-équipe (ajouter, retirer de la sienne, cocher lieux et instruments) ; seuls
+  Orga, le référent Louange et les admins changent les référents. Président et VP : leur groupe (inchangé).
+- « Ce que tu peux faire » / « Ce que ça lui ouvre » : une fonction pure rend la liste (quoi, pourquoi) en clés i18n.
+
+**Règles (`firestore.rules`) : ancien ∪ nouveau.** Local et en ligne partagent Firestore et `main` tourne encore
+dans l'ancien mode : chaque règle touchée accepte l'ancien droit **ou** le nouveau, jamais l'un sans l'autre. Elles
+restent donc compatibles avec `main` et se publient quand Timothée veut ; le jour de la mise en ligne de la refonte,
+une dernière passe retirera l'ancien côté (AO-F, « après une saison »). Effet en ligne dès la publication, à
+connaître : les référents Louange et EDD et les membres d'Orga reçoivent dans Firestore les écritures de la
+coordination, et la création d'une setlist **publique** n'est plus permise que dans une catégorie ouverte (ancien
+ou nouveau mode) — ce que l'écran en ligne fait déjà ; une setlist privée (copie) reste libre.
+
 ## Avancement
 
 *(rempli au codage)*
