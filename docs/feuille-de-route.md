@@ -1216,6 +1216,14 @@ porte le nom « GCC » et le menu par sections dont ces modules ont besoin.
 - Maquettes du coup d'œil avant de coder : Timothée préfère tester le résultat
   en local et le montrer à Christelle.
 
+### AB. Visite de première connexion selon le rôle (Timothée, 22/10/2026) → `spec-visite-par-role.md`
+
+« Je voudrais remettre [le guide de première connexion] et surtout en fonction du rôle de chacun dans
+l'organigramme. » L'accueil du lot 8 devient une **visite** composée de cartes tirées du profil (service, équipes,
+responsabilités), remontrée une fois à tous **avec l'interrupteur du back-office**, et qu'on revoit depuis Moi et le
+Guide. Planche https://claude.ai/artifact/LCyntv9xNiqDHymUsBA14T ; **décisions VR1–VR12 prises le 22/10/2026 sur les
+recommandations, spec écrite** ; tranches VR-A à VR-C ; **code : attend le go**. Aucune règle Firestore à publier.
+
 ### Écarté le 17/09/2026
 
 - **Capo conseillé** (page du chant, setlist, mode louange) : **retiré**, plus
