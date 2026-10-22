@@ -22,6 +22,7 @@ import { limiteDePurge } from "@/lib/setlists/corbeille";
 import { ajouterPetitDejAuxRappels, lirePetitDej } from "@/lib/petitdej/lignes";
 import { lignesMercredi, petitDejTitre, prochainDimanche } from "@/lib/petitdej/rappel";
 import type { LignePetitDej } from "@/types/petitDej";
+import { lignesSansEquipe, sansEquipeParReferent, titreSansEquipe, URL_ORGANIGRAMME, type EquipeRappel } from "@/lib/acces/rappelSansEquipe";
 import {
   loadPlanningData,
   servantsForDate,
@@ -42,6 +43,8 @@ export const maxDuration = 60;
 // Le mercredi, si le dimanche qui vient n'a personne pour le petit déj (lot U3,
 // PD4) : une ligne de plus pour chaque compte, dans sa première notification du
 // jour, seule sinon.
+// Le lundi (lot AO, AO-E), même principe, au référent Louange, Régie ou EDD : « N personnes au
+// planning de ce mois ne sont dans aucune équipe » (derrière l'interrupteur du back-office).
 // Idempotent : un document notifLog par (échéance, date, uid) évite tout doublon.
 
 const REMINDERS: { tag: "J7" | "J3" | "J1"; days: number }[] = [
@@ -230,6 +233,26 @@ async function petitDejDuMercredi(
   return { cle, uids: new Set(await freshUids(db, await filterUidsByNotifPref(comptes, "petitDej"), cle)) };
 }
 
+/** Le lundi (AO-E) : pour chaque référent concerné, les noms du planning de ce mois qui ne sont dans aucune
+ *  équipe, préférence « Rappels », pas encore prévenu cette semaine (clé `cle`, datée du lundi). Personne un
+ *  autre jour. */
+async function sansEquipeDuLundi(
+  db: FirebaseFirestore.Firestore,
+  planning: Awaited<ReturnType<typeof loadPlanningData>>,
+  today: string,
+  cle: string,
+): Promise<Map<string, string[]>> {
+  const [equipes, profils] = await Promise.all([db.collection("equipes").get(), db.collection("users").get()]);
+  const parReferent = sansEquipeParReferent(
+    planning,
+    equipes.docs.map((d) => ({ id: d.id, membres: (d.data().membres ?? []) as EquipeRappel["membres"] })),
+    profils.docs.map((d) => ({ uid: d.id, planningName: d.data().planningName as string | undefined })),
+    today,
+  );
+  const fresh = new Set(await freshUids(db, await filterUidsByNotifPref([...parReferent.keys()], "reminders"), cle));
+  return new Map([...parReferent].filter(([u]) => fresh.has(u)));
+}
+
 /** Corbeille des setlists (SC2.5) : supprime pour de bon, avec leurs sous-collections (history, versions),
  *  celles mises à la corbeille il y a plus de 30 jours. */
 async function purgerCorbeille(db: FirebaseFirestore.Firestore): Promise<number> {
@@ -268,6 +291,9 @@ export async function GET(req: NextRequest) {
   // Ligne du mercredi (PD4) : fondue dans la première notification de la
   // personne aujourd'hui (services, tâches ou évènements), envoyée seule sinon.
   const petitDej = BACK_OFFICE ? await petitDejDuMercredi(db, today, lusPetitDej) : { cle: "", uids: new Set<string>() };
+  // Ligne du lundi (AO-E) : fondue dans la première notification du référent aujourd'hui, seule sinon.
+  const cleSansEquipe = `sans-equipe-${today}`;
+  const sansEquipe = BACK_OFFICE ? await sansEquipeDuLundi(db, planning, today, cleSansEquipe) : new Map<string, string[]>();
 
   // Services de chacun, échéance par échéance (pas encore prévenus).
   const servicesDe = new Map<string, ServiceDuJour[]>();
@@ -322,12 +348,14 @@ export async function GET(req: NextRequest) {
       const lang = langs.get(u) ?? "fr";
       const mesServices = servicesDe.get(u) ?? [];
       const avecPetitDej = petitDej.uids.delete(u);
+      const mesSansEquipe = sansEquipe.get(u);
+      sansEquipe.delete(u);
       const notifications = notificationsDuMatin(
         {
           services: mesServices,
           taches: taches.get(u)?.rappels ?? [],
           lignes: lignes.get(u)?.lignes ?? [],
-          autres: avecPetitDej ? lignesMercredi(today, lusPetitDej, lang) : [],
+          autres: [...(avecPetitDej ? lignesMercredi(today, lusPetitDej, lang) : []), ...lignesSansEquipe(mesSansEquipe ?? [], lang)],
         },
         lang,
         today,
@@ -341,8 +369,23 @@ export async function GET(req: NextRequest) {
       for (const key of taches.get(u)?.keys ?? []) await markNotified(db, [u], key, { kind: "tache" });
       for (const key of lignes.get(u)?.keys ?? []) await markNotified(db, [u], key, { kind: "evenement" });
       if (avecPetitDej) await markNotified(db, [u], petitDej.cle, { kind: "petitDej" });
+      if (mesSansEquipe) await markNotified(db, [u], cleSansEquipe, { kind: "sansEquipe" });
     })
   );
+
+  // Ligne du lundi des référents sans autre notification aujourd'hui : une notification par personne
+  // (les noms sont les siens), ouverte sur l'organigramme (AO-E).
+  const sansEquipeSeuls = [...sansEquipe.keys()];
+  if (sansEquipeSeuls.length) {
+    const langsSeuls = await loadNotifLangs(sansEquipeSeuls);
+    for (const [u, noms] of sansEquipe) {
+      const lang = langsSeuls.get(u) ?? "fr";
+      const payload = { title: titreSansEquipe(lang), body: lignesSansEquipe(noms, lang).join("\n"), url: URL_ORGANIGRAMME, tag: cleSansEquipe };
+      await sendPushToUids([u], payload);
+      await recordNotification({ ...payload, kind: "reminder", recipients: [u] });
+      await markNotified(db, [u], cleSansEquipe, { kind: "sansEquipe" });
+    }
+  }
 
   // Ligne du mercredi des comptes sans autre notification aujourd'hui : une
   // notification par langue, ouverte sur Planning › Table (lot U3, Q5).
@@ -364,5 +407,5 @@ export async function GET(req: NextRequest) {
     await markNotified(db, petitDejSeuls, petitDej.cle, { kind: "petitDej" });
   }
 
-  return NextResponse.json({ ok: true, summary, personnes: uids.length, petitDej: petitDejSeuls.length });
+  return NextResponse.json({ ok: true, summary, personnes: uids.length, petitDej: petitDejSeuls.length, sansEquipe: sansEquipeSeuls.length });
 }

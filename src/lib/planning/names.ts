@@ -180,13 +180,13 @@ export const CULTE_ROLES: [number, string][] = [
 const GROUPE_ROLES: [number, string][] = [[1, "Présidence"], [2, "Musicien"], [3, "Orateur"], [5, "Percussion"]]
 // Lot F (D24, D26) : un seul planning ; le pianiste est celui du groupe.
 const FIDELITE_ROLES: [number, string][] = [[1, "Présidence"], [2, "Orateur"], [4, "Piano"], [5, "Guitare"], [6, "Batterie"]]
-const EDD_ROLES_COLS: [number, string][] = [[1, "Présidence"], [2, "Suppléant"], [3, "Piano"], [4, "Cajon"], [5, "Guitare"], [6, "Cours"]]
-const INTERGROUPE_ROLES: [number, string][] = [
+export const EDD_ROLES_COLS: [number, string][] = [[1, "Présidence"], [2, "Suppléant"], [3, "Piano"], [4, "Cajon"], [5, "Guitare"], [6, "Cours"]]
+export const INTERGROUPE_ROLES: [number, string][] = [
   [1, "Présidence"], [2, "Choriste"], [3, "Choriste"], [4, "Choriste"],
   [5, "Piano"], [6, "Guitare"], [7, "Cajon/Batterie"], [8, "Sono"], [9, "PPT"],
   [10, "Orateur"], [11, "Traduction"],
 ]
-const INTERFRANCO_ROLES: [number, string][] = [
+export const INTERFRANCO_ROLES: [number, string][] = [
   [1, "Présidence"], [2, "Choriste"], [3, "Choriste"], [4, "Piano"],
   [5, "Guitare"], [6, "Cajon/Batterie"], [7, "Sono"], [8, "PPT"],
   [9, "Orateur"], [10, "Traduction"],
