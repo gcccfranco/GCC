@@ -63,8 +63,12 @@ export function Accueil() {
 
   if (!ouvert || !user) return null;
 
+  // Lot AO (AO-F) : au Back-Office, le rôle vient des sous-équipes de Louange (organigramme), plus de `serviceRoles`.
   const roles = Object.values(profile?.serviceRoles ?? {}).flat();
-  const role = roles.includes("presidence") ? "presidence" : roles.some((r) => r === "musicien" || r === "chanteur") ? "musicien" : "autre";
+  const sous = profile?.sousEquipes ?? [];
+  const role = BACK_OFFICE
+    ? sous.includes("presidence") ? "presidence" : sous.includes("musiciens") || sous.includes("choristes") ? "musicien" : "autre"
+    : roles.includes("presidence") ? "presidence" : roles.some((r) => r === "musicien" || r === "chanteur") ? "musicien" : "autre";
 
   async function fermer() {
     setOuvert(false);

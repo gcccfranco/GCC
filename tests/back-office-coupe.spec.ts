@@ -42,6 +42,39 @@ test.describe("back-office coupé : les entrées disparaissent", () => {
     await expect(moi.getByRole("link", { name: /tâches/i })).toHaveCount(0);
   });
 
+  // Lot AO, AO-B et AO-F : en ligne, rien ne change — Moi garde sa carte des services et rôles déclarés,
+  // l'inscription propose encore les rôles de service.
+  test("« Moi » montre encore la carte des services et rôles, sans Mes équipes ni Ce que tu peux faire", async ({ page }) => {
+    await signInAs(page, ADMIN, {}, "/moi");
+    const compte = page.getByRole("region", { name: "Mon compte" });
+    await expect(compte.getByTestId("service-role")).toHaveText(["Culte Franco · Musicien"]);
+    await expect(page.getByRole("region", { name: "Ce que tu peux faire" })).toHaveCount(0);
+    await expect(page.getByRole("region", { name: "Mes équipes" })).toHaveCount(0);
+  });
+
+  test("l'inscription propose encore les rôles de service (étape « Services »)", async ({ page }) => {
+    await page.route(/docs\.google\.com\/spreadsheets/, (route) => route.fulfill({ status: 200, contentType: "text/csv", body: "" }));
+    // Inscriptions ouvertes : le document de réglage est absent (aucune lecture de la vraie base).
+    await page.route(/firestore\.googleapis\.com/, (route) => route.fulfill({ status: 404, contentType: "application/json", body: "{}" }));
+    await page.goto("/signup");
+    const etapes = page.getByTestId("panneau-marque").getByTestId("etape");
+    await expect(etapes).toHaveText(["1Compte", "2Identité", "3Services"]);
+    await page.getByLabel(/^Email/).fill("nouveau@example.com");
+    await page.getByLabel(/^Mot de passe/).fill("secret1");
+    await page.getByLabel(/^Confirmer/).fill("secret1");
+    await page.getByRole("button", { name: "Suivant" }).click();
+    await page.getByLabel("Prénom").fill("Nadia");
+    await page.locator("#profile-lastname").fill("Perrin");
+    await page.getByRole("button", { name: "Suivant" }).click();
+    await expect(page.locator(".grille-services")).toHaveCount(1);
+    await expect(page.locator(".grille-services").getByRole("button", { name: "Culte Franco" })).toBeVisible();
+  });
+
+  test("le profil propose encore « Tes services et rôles »", async ({ page }) => {
+    await signInAs(page, ADMIN, {}, "/profil");
+    await expect(page.getByRole("group", { name: "Tes services et rôles" })).toBeVisible();
+  });
+
   // Lot U6 (B1) : le sélecteur « App · Back-Office » n'apparaît pour personne, même un admin.
   test("aucun sélecteur App · Back-Office, même pour un admin", async ({ page }) => {
     await signInAs(page, ADMIN, {}, "/songs");

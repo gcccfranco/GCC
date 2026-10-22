@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { signInAs, type FakeProfile } from "./helpers/fakeSession";
+import { signInAs, type FakeProfile, remplit } from "./helpers/fakeSession";
 import { canEditPlanning } from "../src/lib/access";
 import { COLONNES_CULTE, GRILLE_CULTE, fusionnerLignes, lignesPubliees } from "../src/lib/planning/grilles";
 import { fusionnerChangements } from "../src/lib/planning/historique";
@@ -25,11 +25,11 @@ const CULTE = csv([
 ]);
 
 const MEMBRE: FakeProfile = { uid: "uid-membre", email: "membre@example.com", planningName: "Inès L." };
-const PUBLIEUR: FakeProfile = { uid: "uid-pub", email: "pub@example.com", planningName: "Paul W.", notify: ["*"] };
+const PUBLIEUR: FakeProfile = { uid: "uid-pub", email: "pub@example.com", planningName: "Paul W.", ...remplit("culte") };
 const CHRISTELLE: FakeProfile = {
   uid: "uid-christelle", email: "christelle@example.com",
   firstName: "Christelle", lastName: "Zhang", planningName: "Christelle Z.",
-  plannings: ["culte"],
+  ...remplit("culte"),
 };
 
 /** Un autre compte, pour l'autocomplétion : son nom de planning n'est nulle part dans la grille. */

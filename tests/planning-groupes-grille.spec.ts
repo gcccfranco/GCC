@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { readFileSync } from "node:fs";
-import { signInAs, type FakeProfile } from "./helpers/fakeSession";
+import { signInAs, type FakeProfile, remplit } from "./helpers/fakeSession";
 import { lirePdf } from "./helpers/pdf";
 import { GRILLES, grilleDe } from "../src/lib/planning/grilles";
 import { PLANNINGS_APP } from "../src/lib/planning/grille";
@@ -34,7 +34,7 @@ const SHEETS: Record<string, string> = {
 
 const MEMBRE: FakeProfile = { uid: "uid-membre", email: "membre@example.com", planningName: "Inès L." };
 const profil = (plannings: string[]): FakeProfile => ({
-  uid: "uid-resp", email: "resp@example.com", firstName: "Christelle", lastName: "Zhang", planningName: "Christelle Z.", plannings,
+  uid: "uid-resp", email: "resp@example.com", firstName: "Christelle", lastName: "Zhang", planningName: "Christelle Z.", ...remplit(...plannings),
 });
 
 async function open(page: Page, who: FakeProfile, to: string) {

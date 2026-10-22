@@ -1,18 +1,18 @@
 import { expect, test, type Page } from "@playwright/test";
-import { signInAs, type FakeDb, type FakeProfile } from "./helpers/fakeSession";
+import { signInAs, type FakeDb, type FakeProfile, remplit, publie } from "./helpers/fakeSession";
 import { repondreDansLeSite } from "./helpers/agencement";
 
 // Lot 3 (docs/spec-planning-gestes.md), tranche PG-E : « Prévenir des changements » (PG33 à PG47).
 // Paix T4 2026 publié, horloge au 15/11/2026 ; la route /api/planning/changements est simulée
 // (aucun vrai push) ; aucune vraie base. Noms fictifs seulement.
 
-const PUBLIEUR: FakeProfile = { uid: "uid-publieur", email: "publieur@example.com", planningName: "Publieur P.", notify: ["Groupe Paix"], plannings: ["paix"] };
-const SANS_ECRITURE: FakeProfile = { ...PUBLIEUR, uid: "uid-lecteur", email: "lecteur@example.com", plannings: [] };
-const ECRIVAIN: FakeProfile = { uid: "uid-ecrivain", email: "ecrivain@example.com", planningName: "Écrivain E.", plannings: ["paix"] };
+const PUBLIEUR: FakeProfile = { uid: "uid-publieur", email: "publieur@example.com", planningName: "Publieur P.", ...publie("paix"), ...remplit("paix") };
+const SANS_ECRITURE: FakeProfile = { ...PUBLIEUR, uid: "uid-lecteur", email: "lecteur@example.com", ...remplit() };
+const ECRIVAIN: FakeProfile = { uid: "uid-ecrivain", email: "ecrivain@example.com", planningName: "Écrivain E.", ...remplit("paix") };
 
 const compte = (id: string, prenom: string, nom: string) => [`users/u-${id}`, {
   email: `${id}@example.com`, firstName: prenom, lastName: nom, planningName: `${prenom} ${nom}`,
-  serviceRoles: {}, annonces: [], notify: [], equipes: false, plannings: [],
+  serviceRoles: {}, annonces: [], notify: [], equipes: false, ...remplit(),
 }] as const
 const COMPTES = Object.fromEntries([
   compte("anais", "Anaïs", "P."), compte("ruth", "Ruth", "K."), compte("hugo", "Hugo", "L."), compte("joel", "Joël", "F."), compte("lea", "Léa", "M."),

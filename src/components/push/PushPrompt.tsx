@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { BellRing, X } from "lucide-react";
 import { useProfile } from "@/lib/firebase/users";
+import { visibleCategories } from "@/lib/access";
+import { BACK_OFFICE } from "@/lib/backOffice";
 import {
   isPushSupported,
   isStandalone,
@@ -25,7 +27,9 @@ export function PushPrompt() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
-  const hasServices = !!profile && Object.keys(profile.serviceRoles).length > 0;
+  // Lot AO (AO-F) : au Back-Office, « sert » = voit une catégorie par l'organigramme, ou figure au planning
+  // (nom de planning). Interrupteur coupé : `visibleCategories` rend les clés de `serviceRoles`, comme avant.
+  const hasServices = !!profile && (visibleCategories(profile).length > 0 || (BACK_OFFICE && profile.planningName.trim() !== ""));
 
   useEffect(() => {
     if (!user || !hasServices || !isPushSupported()) return;

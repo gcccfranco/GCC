@@ -19,7 +19,7 @@ import { groupeDef } from "@/lib/groupes/table"
 import type { OrganigrammeGroupe } from "@/types/groupe"
 import { Link2 } from "lucide-react"
 import { normalizeName, splitNames } from "@/lib/planning/names"
-import { canRetirerDate } from "@/lib/access"
+import { canRetirerDate, colonnesModifiables } from "@/lib/access"
 import { ExportModele, type ExportPlanning } from "./ExportModele"
 import { ChoisirNom, useOrdinateur } from "./ChoisirNom"
 import { DansLEnTete, type FiltreNom } from "./BarreDeGrille"
@@ -204,10 +204,21 @@ export function PlanningGrille({
     const c = definition.colonnes.find((x) => x.cle === cle)
     return c ? valeur(date, c, lignesParDate.get(date) ?? []) : ""
   }
+  /** Lot AO (B) : le référent Régie ne remplit que Sono, Sono Live et PPT (`colonnesModifiables` rend alors
+   *  une liste). Ses autres colonnes restent en lecture. Et une date encore au Sheet n'est pas la sienne : la
+   *  première écriture recopierait toutes les colonnes (« semer »), la règle la refuserait. */
+  const seulesColonnes = (() => {
+    const m = colonnesModifiables(user, profile, definition.key)
+    return Array.isArray(m) ? (m as readonly string[]) : null
+  })()
+  const caseOuverte = (date: string, c: ColonneGrille) =>
+    !c.lectureSeule &&
+    (!seulesColonnes ||
+      (seulesColonnes.includes(c.cle) && (getAnnee(date) >= PREMIERE_ANNEE_APP || datesDansLApp.includes(date))))
   /** Une case qu'un geste n'écrit jamais : présidence imposée, colonne en lecture seule (PG2). */
   const verrou = (date: string, cle: string) => {
     const c = definition.colonnes.find((x) => x.cle === cle)
-    return !c || !!c.lectureSeule || !!imposee(date, c)
+    return !c || !caseOuverte(date, c) || !!imposee(date, c)
   }
 
   // La page donne les lignes du trimestre choisi (demande de Timothée du
@@ -298,7 +309,7 @@ export function PlanningGrille({
   /** « Remplir vers le bas » pour la case dont « Choisir » est ouvert (PG18, PG19) : null si la case
    *  ne porte pas un seul nom. Les dimanches sont les lignes données à la grille, « Mes dates » ignoré. */
   const remplirPour = () => {
-    if (!choix || mode !== "edition" || choix.c.lectureSeule) return null
+    if (!choix || mode !== "edition" || !caseOuverte(choix.l.row[0], choix.c)) return null
     const date = choix.l.row[0]
     const nom = valeur(date, choix.c, choix.l.row).trim()
     if (!nom || !colonneDePersonnes(choix.c.cle) || splitNames(nom).length > 1 || imposee(date, choix.c)) return null
@@ -709,7 +720,7 @@ export function PlanningGrille({
     const val = valeur(l.row[0], c, l.row)
     if (edition?.date === l.row[0] && edition.cle === c.cle) return champ(l, c)
     // Une colonne en lecture seule (le petit déj, géré dans sa carte) reste du texte.
-    const modifiable = mode === "edition" && !c.lectureSeule
+    const modifiable = mode === "edition" && caseOuverte(l.row[0], c)
     const service = imposee(l.row[0], c)
     if (service && modifiable) {
       // Tirée de la grille du service : rien à modifier ici (planche bo-planning-2027).
@@ -1039,7 +1050,7 @@ export function PlanningGrille({
                   // modification, toutes s'affichent pour pouvoir les remplir
                   // (sauf celles en lecture seule, qui ne se remplissent pas ici). Une case vidée depuis
                   // la publication reste, pour porter son point.
-                  .filter((c) => (mode === "edition" && !c.lectureSeule) || valeur(date, c, l.row).trim() || aChange(date, c.cle))
+                  .filter((c) => (mode === "edition" && caseOuverte(date, c)) || valeur(date, c, l.row).trim() || aChange(date, c.cle))
                   .map((c) => (
                     <div key={c.cle} className="flex items-baseline gap-2 text-[13px]">
                       <span className="w-24 shrink-0 text-[11px] text-muted-foreground">{t(c.i18n)}</span>

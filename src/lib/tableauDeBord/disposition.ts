@@ -1,7 +1,8 @@
 // Tableau de bord du Back-Office (lot U6, B4, docs/spec-back-office.md § Widgets, Q5, Q10, Q11).
 // Module pur : la disposition par défaut selon le rôle, et celle qu'on affiche à partir du
 // document `backOffice/{uid}`.
-import { isAdminUser, isCoordination, widgetsPermis } from "@/lib/access";
+import { faitDesPlannings, isAdminUser, isCoordination, visibleCategories, widgetsPermis } from "@/lib/access";
+import { BACK_OFFICE } from "@/lib/backOffice";
 import type { UserProfile } from "@/types/user";
 import { WIDGETS, type PreferencesBackOffice, type Reglages, type Taille, type Widget, type WidgetId } from "@/types/backOffice";
 
@@ -34,7 +35,12 @@ export function dispositionParDefaut(user: AuthUser | null, profile: UserProfile
   if (!isAdminUser(user)) {
     voulus = ["dimanche", "afaire"];
     if (isCoordination(user, profile) || nonVide(profile?.annonces)) voulus.push("evenements", "scene");
-    if (Object.keys(profile?.serviceRoles ?? {}).length > 0 || nonVide(profile?.plannings) || nonVide(profile?.remplitParRole)) voulus.push("planning", "setlists");
+    // Lot AO (AO-F) : au Back-Office, « louange » = voit une catégorie par l'organigramme, ou remplit un planning
+    // (`faitDesPlannings`) ; interrupteur coupé, comme avant (rôle de service, `plannings`, rôle de groupe).
+    const louange = BACK_OFFICE
+      ? !!profile && visibleCategories(profile).length > 0 || faitDesPlannings(user, profile)
+      : Object.keys(profile?.serviceRoles ?? {}).length > 0 || nonVide(profile?.plannings) || nonVide(profile?.remplitParRole);
+    if (louange) voulus.push("planning", "setlists");
   }
   return ORDRE_DU_CATALOGUE
     .filter((id) => voulus.includes(id) && permis.includes(id))

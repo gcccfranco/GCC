@@ -6,6 +6,7 @@ import { useTranslation } from "react-i18next";
 import { Check } from "lucide-react";
 import { useProfile, saveProfile } from "@/lib/firebase/users";
 import { canEditProfile } from "@/lib/access";
+import { BACK_OFFICE } from "@/lib/backOffice";
 import {
   loadPlanningData,
   collectPlanningNames,
@@ -24,6 +25,7 @@ import {
 import { EnTetePage } from "@/components/layout/EnTetePage";
 import { PushToggle } from "@/components/push/PushToggle";
 import { MesAbsences } from "@/components/profil/MesAbsences";
+import { CarteMesEquipes } from "@/components/moi/CartesAcces";
 import { cn } from "@/lib/utils";
 
 const FORMULAIRE = "formulaire-profil";
@@ -85,10 +87,12 @@ export default function ProfilPage() {
 
     setSaving(true);
     try {
+      // Lot AO (AO-F) : au Back-Office, les rôles de service ne s'écrivent plus (ni ici, ni à l'inscription).
+      const { serviceRoles, ...sansRoles } = form;
       await saveProfile({
         uid: user.uid,
         email: user.email ?? "",
-        ...form,
+        ...(BACK_OFFICE ? sansRoles : { ...sansRoles, serviceRoles }),
         firstName: form.firstName.trim(),
         lastName: form.lastName.trim(),
         planningName: form.planningName.trim(),
@@ -105,7 +109,7 @@ export default function ProfilPage() {
   }
 
   const canEdit = canEditProfile(user, profile);
-  const deriveFromPlanning = planningData
+  const deriveFromPlanning = !BACK_OFFICE && planningData
     ? (name: string) => deriveServiceRolesFromPlanning(planningData, name)
     : undefined;
 
@@ -172,13 +176,21 @@ export default function ProfilPage() {
             </section>
           </div>
 
-          <fieldset
-            disabled={!canEdit}
-            aria-label={t("profile.fields.accessTitle")}
-            className={cn("raised order-3 min-w-0 rounded-2xl p-5 md:col-start-2 md:row-span-2 md:row-start-1", !canEdit && "opacity-60")}
-          >
-            <ServiceGrid value={form} onChange={setForm} deriveFromPlanning={deriveFromPlanning} />
-          </fieldset>
+          {BACK_OFFICE ? (
+            // Lot AO (AO-F) : plus de services ni de rôles à déclarer ; à leur place, les équipes où l'organigramme
+            // place la personne (lecture seule — c'est son référent qui la place).
+            <div className="order-3 min-w-0 md:col-start-2 md:row-span-2 md:row-start-1">
+              <CarteMesEquipes profile={profile} />
+            </div>
+          ) : (
+            <fieldset
+              disabled={!canEdit}
+              aria-label={t("profile.fields.accessTitle")}
+              className={cn("raised order-3 min-w-0 rounded-2xl p-5 md:col-start-2 md:row-span-2 md:row-start-1", !canEdit && "opacity-60")}
+            >
+              <ServiceGrid value={form} onChange={setForm} deriveFromPlanning={deriveFromPlanning} />
+            </fieldset>
+          )}
 
           {canEdit && (
             <Button type="submit" disabled={saving} className="order-4 h-11 w-full md:hidden">

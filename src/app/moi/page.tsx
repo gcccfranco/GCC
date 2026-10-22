@@ -15,8 +15,9 @@ import { useTheme } from "next-themes";
 import { BookOpen, ChevronRight, Globe, LogOut, Megaphone, MessageSquareHeart, Moon, ShieldCheck, TriangleAlert } from "lucide-react";
 import { useDisposition } from "@/hooks/useDisposition";
 import { CarteCompte } from "@/components/moi/CarteCompte";
+import { CarteCeQueTuPeuxFaire, CarteMesEquipes } from "@/components/moi/CartesAcces";
 import { ReglagesNotifications } from "@/components/moi/ReglagesNotifications";
-import { ApercuEquipes, ApercuHarmonie, ApercuServices, ApercuTaches } from "@/components/moi/Apercus";
+import { ApercuHarmonie, ApercuServices, ApercuTaches } from "@/components/moi/Apercus";
 import { useAccesHarmonie } from "@/lib/harmonie/useHarmonie";
 import { RequireAuth } from "@/components/auth/RequireAuth";
 import { EnTetePage } from "@/components/layout/EnTetePage";
@@ -60,7 +61,8 @@ function MoiClient() {
         email={user?.email ?? ""}
         admin={admin}
         planningName={profile?.planningName ?? ""}
-        serviceRoles={profile?.serviceRoles ?? {}}
+        // Lot AO (AO-B) : au Back-Office, les services et rôles déclarés laissent la place à « Mes équipes ».
+        serviceRoles={BACK_OFFICE ? {} : profile?.serviceRoles ?? {}}
       />
     ),
     // Lot U6, B2 : Notifier et l'administration sont au Back-Office (Messages, Équipes…) ;
@@ -114,7 +116,8 @@ function MoiClient() {
       <ApercuServices />
       {BACK_OFFICE && equipes.length > 0 && user && <ApercuTaches equipes={equipes} />}
       {!harmonie.chargement && harmonie.peut && <ApercuHarmonie piano={harmonie.piano} />}
-      {BACK_OFFICE && user && <ApercuEquipes uid={user.uid} />}
+      {BACK_OFFICE && <CarteMesEquipes profile={profile} />}
+      {BACK_OFFICE && <CarteCeQueTuPeuxFaire profile={profile} admin={admin} />}
     </div>
   );
   const aide = (

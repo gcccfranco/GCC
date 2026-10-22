@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { readFileSync } from "node:fs";
-import { signInAs, type FakeProfile } from "./helpers/fakeSession";
+import { signInAs, type FakeProfile, remplit } from "./helpers/fakeSession";
 import { lirePdf } from "./helpers/pdf";
 
 // Lot 17, tranche G6 « Campus » (Timothée, 19/09/2026 : « pouvoir modifier
@@ -22,7 +22,7 @@ const CAMPUS = csv([
 const MEMBRE: FakeProfile = { uid: "uid-membre", email: "membre@example.com", planningName: "Inès L." };
 const RESPONSABLE: FakeProfile = {
   uid: "uid-resp", email: "resp@example.com", firstName: "Christelle", lastName: "Zhang", planningName: "Christelle Z.",
-  plannings: ["campusMatin"],
+  ...remplit("campusMatin"),
 };
 
 async function open(page: Page, who: FakeProfile, to: string) {
@@ -49,12 +49,13 @@ test("le volet Grille : matin puis soir, treize colonnes, la répétition en tex
   await expect(page.getByRole("button", { name: "Modifier" })).toHaveCount(0);
 });
 
-test("avec le droit sur le matin : une case s'écrit, le soir reste en lecture, et les cartes suivent", async ({ page }) => {
+test("le référent Louange remplit le matin et le soir (lot AO : plus de droit par séance) : une case s'écrit, et les cartes suivent", async ({ page }) => {
   const db = await open(page, RESPONSABLE, "/back-office/planning/campus");
   await page.getByRole("tab", { name: "Grille", exact: true }).click();
-  // Lot U6, B2 : au Back-Office, la grille du matin s'ouvre en modification ; le soir, en lecture.
+  // Lot U6, B2 : au Back-Office, la grille s'ouvre en modification. Lot AO : le référent Louange remplit les
+  // deux séances du Campus (l'organigramme ne distingue plus matin et soir).
   await expect(grille(page, "campusMatin").locator("[data-case]").getByRole("button").first()).toBeVisible();
-  await expect(grille(page, "campusSoir").locator("[data-case]").getByRole("button")).toHaveCount(0);
+  await expect(grille(page, "campusSoir").locator("[data-case]").getByRole("button").first()).toBeVisible();
   await laCase(page, "campusMatin", "2026-09-20", "piano").getByRole("button").click();
   // P9 (lot U2) : « Choisir », puis un nom écrit à la main.
   await page.getByRole("button", { name: "Écrire un nom sans compte…" }).click();

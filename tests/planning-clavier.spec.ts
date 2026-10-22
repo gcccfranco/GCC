@@ -1,12 +1,12 @@
 import { expect, test, type Page } from "@playwright/test";
-import { signInAs, type FakeDb, type FakeProfile } from "./helpers/fakeSession";
+import { signInAs, type FakeDb, type FakeProfile, remplit } from "./helpers/fakeSession";
 
 // Lot 3 (docs/spec-planning-gestes.md), tranche PG-D : copier-coller au clavier (PG22 à PG32).
 // Ordinateur seulement (pointeur fin) ; Culte T1 2027 et Paix T1 2027 simulés. Noms fictifs.
 
 test.use({ permissions: ["clipboard-read", "clipboard-write"] })
 
-const ECRIVAIN: FakeProfile = { uid: "uid-ecrivain", email: "ecrivain@example.com", planningName: "Écrivain E.", plannings: ["culte", "paix"] }
+const ECRIVAIN: FakeProfile = { uid: "uid-ecrivain", email: "ecrivain@example.com", planningName: "Écrivain E.", ...remplit("culte", "paix") }
 
 const DOCS: Record<string, Record<string, unknown>> = {
   "plannings/culte/dimanches/2027-01-24": { date: "2027-01-24", piano: "Yann M.", guitare: "Éloïse M." },
@@ -334,7 +334,7 @@ test("ordinateur — le petit déj (colonne en lecture seule) est refusé au col
   ordinateurSeul()
   await page.clock.setFixedTime(new Date("2026-11-15T10:00:00"))
   await page.route(/docs\.google\.com\/spreadsheets/, (route) => route.fulfill({ status: 200, contentType: "text/csv", body: "" }))
-  const db = await signInAs(page, { ...ECRIVAIN, plannings: ["table"] }, {}, "/back-office/planning/table")
+  const db = await signInAs(page, { ...ECRIVAIN, ...remplit("table") }, {}, "/back-office/planning/table")
   await page.getByRole("tab", { name: "2027", exact: true }).click()
   await expect(page.locator("[data-date-cell='2027-01-10']").filter({ visible: true })).toHaveCount(1)
   await poserPresse(page, "Équipe E.\tFamille X")

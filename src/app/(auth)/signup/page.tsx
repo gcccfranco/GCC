@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useTranslation } from "react-i18next";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import { getRegistrationOpen, signUp, saveProfile } from "@/lib/firebase/users";
+import { BACK_OFFICE } from "@/lib/backOffice";
 import {
   loadPlanningData,
   collectPlanningNames,
@@ -50,7 +51,9 @@ export default function SignupPage() {
     getRegistrationOpen().then(setRegOpen);
   }, []);
 
-  const deriveFromPlanning = planningData
+  // Lot AO (AO-F) : au Back-Office, les accès viennent de l'organigramme — plus de rôles de service à déclarer
+  // ni à pré-remplir depuis le planning. Le nom du planning reste : il relie le compte au planning.
+  const deriveFromPlanning = !BACK_OFFICE && planningData
     ? (name: string) => deriveServiceRolesFromPlanning(planningData, name)
     : undefined;
 
@@ -108,10 +111,11 @@ export default function SignupPage() {
     setLoading(true);
     try {
       const user = await signUp(email.trim(), password);
+      const { serviceRoles, ...sansRoles } = form;
       await saveProfile({
         uid: user.uid,
         email: email.trim(),
-        ...form,
+        ...(BACK_OFFICE ? sansRoles : { ...sansRoles, serviceRoles }),
         firstName: form.firstName.trim(),
         lastName: form.lastName.trim(),
         planningName: form.planningName.trim(),
@@ -139,7 +143,7 @@ export default function SignupPage() {
   // Lot U4 bis, B5 (Q13) : les trois étapes dans le panneau de marque (à gauche en grand, en haut
   // ailleurs) ; sous le titre, la barre de progression seule.
   const etapes = STEP_KEYS.map((key, i) => ({
-    libelle: t(`signup.steps.${key}`),
+    libelle: t(`signup.steps.${BACK_OFFICE && key === "services" ? "planning" : key}`),
     etat: i < step ? "fait" : i === step ? "courant" : "avenir",
   }) as const);
 
@@ -216,7 +220,7 @@ export default function SignupPage() {
               planningNames={planningNames}
               deriveFromPlanning={deriveFromPlanning}
             />
-            <ServiceGrid value={form} onChange={setForm} deriveFromPlanning={deriveFromPlanning} />
+            {!BACK_OFFICE && <ServiceGrid value={form} onChange={setForm} deriveFromPlanning={deriveFromPlanning} />}
           </div>
         )}
       </div>

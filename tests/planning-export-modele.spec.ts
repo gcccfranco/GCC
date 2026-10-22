@@ -1,7 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import { execFileSync } from "node:child_process";
 import { readFileSync, writeFileSync } from "node:fs";
-import { signInAs, type FakeProfile } from "./helpers/fakeSession";
+import { signInAs, type FakeProfile, remplit, publie } from "./helpers/fakeSession";
 import { lirePdf } from "./helpers/pdf";
 import { MODELES, modeleDe, nomFichierExport, pagesExport, porteesExport, type PageExport } from "../src/lib/planning/modeles";
 import { dimanchesDe } from "../src/lib/planning/grilles";
@@ -209,8 +209,8 @@ test("P6 · 2026 : les lignes du Sheet telles quelles, pas de dimanches calculé
 // ─── P7 · Le menu « Exporter (modèle du Sheet) » et le PDF ──────────────────
 
 const MEMBRE: FakeProfile = { uid: "uid-membre", email: "membre@example.com", planningName: "Membre M." };
-const ECRIVAIN: FakeProfile = { uid: "uid-ecrivain", email: "ecrivain@example.com", planningName: "Écrivain E.", plannings: ["paix"] };
-const PUBLIEUR: FakeProfile = { uid: "uid-publieur", email: "publieur@example.com", planningName: "Publieur P.", notify: ["Groupe Paix"] };
+const ECRIVAIN: FakeProfile = { uid: "uid-ecrivain", email: "ecrivain@example.com", planningName: "Écrivain E.", ...remplit("paix") };
+const PUBLIEUR: FakeProfile = { uid: "uid-publieur", email: "publieur@example.com", planningName: "Publieur P.", ...publie("paix") };
 // Compte de l'église (liste ADMIN_EMAILS de src/lib/access.ts), pas une personne.
 const ADMIN: FakeProfile = { uid: "uid-admin", email: "gcccfranco@gmail.com", planningName: "Admin A." };
 
@@ -325,7 +325,7 @@ test("P7 · PDF « Toute l'année » de Paix 2027 : 4 pages A4, Lora et Carlito,
 });
 
 test("P7 · PDF de Fidélité : l'église en chinois (Ma Shan Zheng), une case en chinois (Source Han Sans)", async ({ page }) => {
-  await ouvrir(page, { ...ECRIVAIN, plannings: ["fidelite"] });
+  await ouvrir(page, { ...ECRIVAIN, ...remplit("fidelite") });
   await page.getByRole("tab", { name: "Fidélité", exact: true }).click();
   await page.getByRole("tab", { name: "2027", exact: true }).click();
   const { nom, pdf } = await exporterPdf(page, "T1 2027 · Groupe Fidélité");

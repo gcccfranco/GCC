@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { signInAs, type FakeProfile } from "./helpers/fakeSession";
+import { signInAs, type FakeProfile, remplit } from "./helpers/fakeSession";
 import { estTelephone, verifierAgencement } from "./helpers/agencement";
 import {
   GRILLES, GRILLE_FIDELITE, completerMusiciensFidelite, grilleDe, pianistesQuiDifferent,
@@ -167,7 +167,7 @@ const DOCS = {
 
 const MEMBRE: FakeProfile = { uid: "uid-membre", email: "membre@example.com", planningName: "Membre M." };
 const RESPONSABLE: FakeProfile = {
-  uid: "uid-resp", email: "resp@example.com", firstName: "Responsable", lastName: "F.", planningName: "Responsable F.", plannings: ["fidelite"],
+  uid: "uid-resp", email: "resp@example.com", firstName: "Responsable", lastName: "F.", planningName: "Responsable F.", ...remplit("fidelite"),
 };
 
 async function ouvrir(page: Page, who: FakeProfile, to: string) {

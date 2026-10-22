@@ -43,18 +43,15 @@ const compte = (page: Page) => page.getByRole("region", { name: "Mon compte" });
 const reglages = (page: Page) => page.getByRole("region", { name: "Réglages" });
 
 test.describe("Moi (Q9)", () => {
-  test("la carte du compte : nom, e-mail, rôle, nom dans les plannings, services et rôles, « Mon profil »", async ({ page }) => {
+  test("la carte du compte : nom, e-mail, rôle, nom dans les plannings, « Mon profil » ; plus de services et rôles déclarés", async ({ page }) => {
     await ouvrir(page, ADMIN, "/moi");
     const c = compte(page);
     await expect(c.getByRole("heading", { name: "Noé T." })).toBeVisible();
     await expect(c.getByText("Admin", { exact: true })).toBeVisible();
     await expect(c.getByText("Ton nom dans les plannings")).toBeVisible();
     await expect(c.getByText("Noé T.", { exact: true }).last()).toBeVisible();
-    await expect(c.getByTestId("service-role")).toHaveText([
-      "Culte Franco · Musicien",
-      "Campus · Présidence, Musicien",
-      "Groupe Fidélité · Musicien",
-    ]);
+    // Lot AO (AO-B) : au Back-Office, « Mes équipes » (acces-moi.spec.ts) remplace les services et rôles déclarés.
+    await expect(c.getByTestId("service-role")).toHaveCount(0);
     await expect(c.getByRole("link", { name: "Mon profil" })).toHaveAttribute("href", /^\/profil\/?$/);
     await capture(page, "b5-moi");
   });
@@ -64,7 +61,7 @@ test.describe("Moi (Q9)", () => {
     await expect(compte(page).getByRole("heading", { name: "Léa M." })).toBeVisible();
     await expect(compte(page).getByText("lea@example.com"), "l'e-mail du compte").toBeVisible();
     await expect(compte(page).getByText("Admin", { exact: true })).toHaveCount(0);
-    await expect(compte(page).getByTestId("service-role")).toHaveText(["Culte Franco · Choriste"]);
+    await expect(compte(page).getByTestId("service-role")).toHaveCount(0);
   });
 
   // Agencement v18, A12 : les colonnes de Q9 deviennent le compte et les réglages à gauche, les aperçus
@@ -149,7 +146,8 @@ test.describe("Profil (Q10, revu par A13)", () => {
   test("disposition : deux colonnes dès la tablette portrait (identité · services), « Enregistrer » dans l'en-tête ; une sur téléphone, « Enregistrer » en bas", async ({ page }, info) => {
     await ouvrir(page, ADMIN, "/profil");
     const identite = await boite(page.getByRole("group", { name: "Identité" }));
-    const services = await boite(page.getByRole("group", { name: "Tes services et rôles" }));
+    // Lot AO (AO-F) : plus de services et rôles à déclarer ; à leur place, « Mes équipes » (lecture seule).
+    const services = await boite(page.getByRole("region", { name: "Mes équipes" }));
     if (disposition(info) === "telephone") {
       const enregistrer = await boite(page.locator("form").getByRole("button", { name: "Enregistrer mon profil" }));
       expect(services.y, "les services sous l'identité").toBeGreaterThan(identite.y + identite.height - 1);
@@ -202,7 +200,7 @@ test.describe("Connexion et inscription (Q13)", () => {
     await expect(page.getByRole("heading", { level: 1, name: "Créer un compte" })).toBeVisible();
     const marque = page.getByTestId("panneau-marque");
     const etapes = marque.getByTestId("etape");
-    await expect(etapes).toHaveText(["1Compte", "2Identité", "3Services"]);
+    await expect(etapes).toHaveText(["1Compte", "2Identité", "3Planning"]);
     await expect(etapes.nth(0)).toHaveAttribute("aria-current", "step");
     await page.getByLabel(/^Email/).fill("nouveau@example.com");
     await page.getByLabel(/^Mot de passe/).fill("secret1");

@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { readFileSync } from "node:fs";
-import { signInAs, type FakeProfile } from "./helpers/fakeSession";
+import { signInAs, type FakeProfile, remplit } from "./helpers/fakeSession";
 import { lirePdf } from "./helpers/pdf";
 
 // Lot 17, tranche G6 « EDD » (Timothée, 19/09/2026 : « pouvoir modifier tous
@@ -22,7 +22,7 @@ const EDD = csv([
 const MEMBRE: FakeProfile = { uid: "uid-membre", email: "membre@example.com", planningName: "Inès L." };
 const PROF: FakeProfile = {
   uid: "uid-prof", email: "prof@example.com", firstName: "Lydie", lastName: "Wang", planningName: "Lydie W.",
-  plannings: ["eddZhongban"],
+  ...remplit("eddZhongban"),
 };
 
 /** Ouvre `to` le vendredi 18/09/2026 : dimanche courant = 20/09, période Sep–Oct. */
@@ -51,7 +51,7 @@ test("la grille EDD : la classe 中班 de la période courante, cinq colonnes, b
   await expect(laCase(page, "2026-09-20", "presidence")).toContainText("Paul W.");
 });
 
-test("avec le droit sur 中班 : une case s'écrit dans la grille de la classe, 大班 reste en lecture", async ({ page }) => {
+test("le référent EDD remplit les trois classes (lot AO : plus de droit par classe) : une case s'écrit dans la grille de la classe", async ({ page }) => {
   const db = await open(page, PROF, "/back-office/planning/edd");
   await laCase(page, "2026-09-27", "piano").getByRole("button").click();
   // P9 (lot U2) : « Choisir », puis un nom écrit à la main.
@@ -70,7 +70,7 @@ test("avec le droit sur 中班 : une case s'écrit dans la grille de la classe, 
   await page.reload();
   await expect(laCase(page, "2026-09-27", "piano")).toContainText("Esther C.");
   await page.getByRole("tab", { name: "大班", exact: true }).click();
-  await expect(laCase(page, "2026-09-27", "piano").getByRole("button"), "大班 : en lecture").toHaveCount(0);
+  await expect(laCase(page, "2026-09-27", "piano").getByRole("button"), "大班 : remplie aussi par le référent EDD").toHaveCount(1);
   await expect(laCase(page, "2026-09-27", "piano")).toContainText("Eva C.");
 });
 

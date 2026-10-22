@@ -2,7 +2,7 @@
 // Module pur : les widgets (src/components/backOffice/widgets/) lisent la base, puis
 // passent ici ce qu'ils ont lu. Dates ISO « AAAA-MM-JJ », comparées comme du texte.
 import {
-  canCreateSetlist, canSeeEvenement, creatableCategories, entreesBackOffice, equipesDesTaches, estReunion, isAdminUser,
+  canCreateSetlist, canSeeEvenement, creatableCategories, entreesBackOffice, equipesDesTaches, estReunion, isAdminUser, visibleCategories,
 } from "@/lib/access";
 import { byDate, isExpired, isInfo, isPast, refusInscription } from "@/lib/evenements/agenda";
 import type { EntreeSheet } from "@/lib/evenements/sheet";
@@ -62,7 +62,9 @@ const ligneA = (def: DefinitionGrille, rows: string[][], date: string) =>
 /** Réglage « services » (défaut : ceux où l'on sert, sinon le Culte Franco), dans l'ordre de la table. */
 export function servicesDuDimanche(r: Reglages, _user: AuthUser | null, profile: UserProfile | null): string[] {
   if (r.services) return SERVICES.filter((s) => r.services!.includes(s));
-  const siens = SERVICES.filter((s) => s in (profile?.serviceRoles ?? {}));
+  // Lot AO (AO-F) : `visibleCategories` = les clés de `serviceRoles` (interrupteur coupé) ou ce que l'organigramme ouvre.
+  const mesCategories = profile ? visibleCategories(profile) : [];
+  const siens = SERVICES.filter((s) => mesCategories.includes(s));
   return siens.length ? siens : [CULTE];
 }
 

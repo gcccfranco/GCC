@@ -11,6 +11,7 @@ import { TABLE_GROUPES } from "@/lib/groupes/table"
 import { BACK_OFFICE } from "@/lib/backOffice"
 import { listerToutesAbsences } from "@/lib/firebase/absences"
 import { canVoirAbsencesDeTous } from "@/lib/access"
+import { rolesDeService } from "@/lib/acces/rolesDeService"
 import { normalizeName } from "./names"
 import type { Absence } from "@/types/absence"
 import type { OrganigrammeGroupe } from "@/types/groupe"
@@ -51,7 +52,7 @@ export function useGrilleApp(key: string, avecComptes: boolean, avecGroupe = fal
     listProfiles()
       .then((ps) => {
         if (vivant) setComptesLus(true)
-        if (vivant) setComptes(ps.map((p) => ({ nom: p.planningName, prenom: p.firstName, nomDeFamille: p.lastName, serviceRoles: p.serviceRoles, uid: p.uid, groupe: groupeDe(p) })))
+        if (vivant) setComptes(ps.map((p) => ({ nom: p.planningName, prenom: p.firstName, nomDeFamille: p.lastName, serviceRoles: rolesDeService(p), uid: p.uid, groupe: groupeDe(p) })))
       })
       .catch(() => { /* comptes en moins, nom écrit à la main inchangé */ })
     return () => { vivant = false }

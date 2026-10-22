@@ -268,7 +268,7 @@ test.describe("partage : l'éditeur", () => {
     await volet(page).getByRole("button", { name: "Voir tous les comptes" }).click();
     await volet(page).getByRole("button", { name: "Hugo L.", exact: true }).click();
     await expect.poll(() => db.doc(CHEMIN)?.editeurs, { timeout: 10_000 }).toEqual(["joel", "hugo"]);
-    expect((db.doc(CHEMIN)?.rolesPartage as Record<string, string>).hugo).toBe("chanteur"); // Groupe Bonté : choriste
+    expect((db.doc(CHEMIN)?.rolesPartage as Record<string, string>).hugo).toBe("musicien"); // lot AO (AO-F) : plus de rôle de groupe déclaré (`serviceRoles`) → « musicien » par défaut
     await fermerFeuille(page);
     await expect(puceEquipe(page)).toHaveText(/Équipe · 2/);
   });

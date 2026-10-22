@@ -7,8 +7,9 @@ import { auditKey, certifiedSlugs, halfStepUp, loadChords, openSheet, slugsWitho
 // Lot 8 « Nouveaux membres et 中文 » (docs/spec-nouveaux-membres.md).
 
 const NOUVEAU: FakeProfile = { uid: "uid-neuf", email: "neuf@example.com", firstName: "Léa", lastName: "Martin", accueil: true };
-const PRESIDENCE: FakeProfile = { ...NOUVEAU, serviceRoles: { "Culte Francophone": ["presidence", "chanteur"] } };
-const MUSICIEN: FakeProfile = { ...NOUVEAU, serviceRoles: { "Groupe Paix": ["musicien"] } };
+// Lot AO (AO-F) : le rôle de l'écran d'accueil vient des sous-équipes de Louange (organigramme), plus de `serviceRoles`.
+const PRESIDENCE: FakeProfile = { ...NOUVEAU, dansEquipes: ["louange"], sousEquipes: ["presidence", "choristes"], lieuxLouange: ["Culte Francophone"] };
+const MUSICIEN: FakeProfile = { ...NOUVEAU, dansEquipes: ["louange"], sousEquipes: ["musiciens"], lieuxLouange: ["Culte Francophone"], joue: ["guitare"] };
 
 const accueil = (page: Page) => page.getByRole("dialog", { name: /Bienvenue dans GCC|欢迎使用 GCC/ });
 

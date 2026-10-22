@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { readFileSync } from "node:fs";
-import { signInAs, type FakeProfile } from "./helpers/fakeSession";
+import { signInAs, type FakeProfile, remplit } from "./helpers/fakeSession";
 import { lirePdf } from "./helpers/pdf";
 
 // Lot 17, tranche G6 « Table » (Timothée, 19/09/2026 : « pouvoir modifier tous
@@ -29,7 +29,7 @@ const TABLE = csv([
 const MEMBRE: FakeProfile = { uid: "uid-membre", email: "membre@example.com", planningName: "Inès L." };
 const RESPONSABLE: FakeProfile = {
   uid: "uid-resp", email: "resp@example.com", firstName: "Christelle", lastName: "Zhang", planningName: "Christelle Z.",
-  plannings: ["table"],
+  ...remplit("table"),
 };
 
 /** Deux inscriptions au petit déj du 27/09, la plus récente d'abord dans la base. */

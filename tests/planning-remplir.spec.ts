@@ -1,10 +1,10 @@
 import { expect, test, type Page } from "@playwright/test";
-import { signInAs, type FakeDb, type FakeProfile } from "./helpers/fakeSession";
+import { signInAs, type FakeDb, type FakeProfile, remplit } from "./helpers/fakeSession";
 
 // Lot 3 (docs/spec-planning-gestes.md), tranche PG-C : « Remplir vers le bas » (PG18 à PG21).
 // Culte T1 2027 simulé ; aucune vraie base. Noms fictifs seulement.
 
-const ECRIVAIN: FakeProfile = { uid: "uid-ecrivain", email: "ecrivain@example.com", planningName: "Écrivain E.", plannings: ["culte"] };
+const ECRIVAIN: FakeProfile = { uid: "uid-ecrivain", email: "ecrivain@example.com", planningName: "Écrivain E.", ...remplit("culte") };
 
 // Le piano du 24/1 porte « Yann M. » ; les 9 dimanches suivants du trimestre (31/1 au 28/3) sont vides.
 const DOCS = { "plannings/culte/dimanches/2027-01-24": { date: "2027-01-24", piano: "Yann M." } }
@@ -110,7 +110,7 @@ test("une colonne Thème (texte libre) : pas d'entrée « Remplir vers le bas »
     status: 200, contentType: "text/csv",
     body: '"DATE","Présidence","Musiciens","Orateur","Thème"\n"20/09","Delphine Z.","Gr Louange","Hewei","Paraboles"',
   }))
-  const paix: FakeProfile = { ...ECRIVAIN, plannings: ["paix"] }
+  const paix: FakeProfile = { ...ECRIVAIN, ...remplit("paix") }
   await signInAs(page, paix, {}, "/back-office/planning/groupes")
   await laCase(page, "2026-09-20", "theme").getByRole("button").click()
   await expect(laCase(page, "2026-09-20", "theme").getByLabel("Thème", { exact: true })).toBeVisible()

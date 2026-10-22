@@ -38,6 +38,13 @@ export type FakeProfile = {
   remplitParRole?: string[];
   publieParRole?: string[];
   notifieParRole?: string[];
+  /** Lot AO — recopiés de l'organigramme par le serveur seul : sous-équipes de Louange (et celles dont la personne est
+   *  référente), lieux où elle sert (Louange, Régie), ce qu'elle joue (Musiciens). */
+  sousEquipes?: string[];
+  referentSous?: string[];
+  lieuxLouange?: string[];
+  lieuxRegie?: string[];
+  joue?: string[];
   /** Vrai = compte qui n'a pas encore vu l'accueil de première connexion (lot 8).
    *  Par défaut l'accueil est déjà vu, pour ne pas masquer les pages testées. */
   accueil?: boolean;
@@ -370,6 +377,11 @@ export async function signInAs(
       ...(profile.remplitParRole ? { remplitParRole: profile.remplitParRole } : {}),
       ...(profile.publieParRole ? { publieParRole: profile.publieParRole } : {}),
       ...(profile.notifieParRole ? { notifieParRole: profile.notifieParRole } : {}),
+      ...(profile.sousEquipes ? { sousEquipes: profile.sousEquipes } : {}),
+      ...(profile.referentSous ? { referentSous: profile.referentSous } : {}),
+      ...(profile.lieuxLouange ? { lieuxLouange: profile.lieuxLouange } : {}),
+      ...(profile.lieuxRegie ? { lieuxRegie: profile.lieuxRegie } : {}),
+      ...(profile.joue ? { joue: profile.joue } : {}),
     },
     ...(profile.accueil ? {} : { [`onboarding/${profile.uid}`]: { vu: true, le: "2026-09-01T10:00:00Z" } }),
     ...docs,
@@ -408,3 +420,24 @@ export async function abonneAuxNotifications(page: Page): Promise<void> {
     Object.defineProperty(Navigator.prototype, "standalone", { configurable: true, get: () => true });
   });
 }
+
+/**
+ * Lot AO : ce que le serveur recopie sur le profil d'une personne qui remplit ces plannings — l'équivalent, dans
+ * l'organigramme, de l'ancien droit `plannings` coché par un admin. Le culte et ses variantes (Intergroupe,
+ * Interfranco, Campus) : référent Louange ; l'EDD : référent EDD ; la Table : membre d'Orga ; un groupe (Paix,
+ * Bonté, Fidélité) : le rôle « remplit » de son organigramme. Les trois listes sont toujours rendues (vides
+ * comprises) : `{ ...ECRIVAIN, ...remplit("table") }` remplace tout ce qu'`ECRIVAIN` donnait.
+ */
+export function remplit(...cles: string[]): Pick<FakeProfile, "dansEquipes" | "referentDe" | "remplitParRole"> {
+  const groupes = ["paix", "bonte", "fidelite", "fideliteMusiciens"];
+  const equipes = (id: string) => (cles.some((k) => (id === "louange" ? !groupes.includes(k) && k !== "table" && !k.startsWith("edd") : id === "edd" ? k.startsWith("edd") : k === "table")) ? [id] : []);
+  const referentDe = [...equipes("louange"), ...equipes("edd")];
+  return {
+    dansEquipes: [...referentDe, ...equipes("orga")],
+    referentDe,
+    remplitParRole: cles.filter((k) => groupes.includes(k)),
+  };
+}
+
+/** Lot AO : qui publie (et prévient) ces plannings de groupe — le rôle « publie » de l'organigramme du groupe (ancien droit `notify`). */
+export const publie = (...cles: string[]): Pick<FakeProfile, "publieParRole"> => ({ publieParRole: cles });

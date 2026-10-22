@@ -37,19 +37,21 @@ const SOUS = "block truncate text-[13px] text-muted-foreground";
 
 /** Le cadre d'un aperçu : titre, « Tout voir » à droite (son libellé dit combien), puis les lignes.
  *  `chargement` : une lecture est en cours (`aria-busy`). */
-function Apercu({ titre, lien, chargement = false, children }: { titre: string; lien: { href: string; label: string }; chargement?: boolean; children: ReactNode }) {
+export function Apercu({ titre, lien, chargement = false, children }: { titre: string; lien?: { href: string; label: string }; chargement?: boolean; children: ReactNode }) {
   return (
     <section aria-label={titre} aria-busy={chargement || undefined} className="raised min-w-0 rounded-2xl px-4 pb-1.5 pt-3.5">
       <div className="flex items-center gap-2 pb-2.5">
         <h2 className="min-w-0 flex-1 truncate text-[16px] font-bold text-foreground">{titre}</h2>
-        <Link
-          href={lien.href}
-          aria-label={`${titre} · ${lien.label}`}
-          className="-mr-1 inline-flex shrink-0 items-center gap-0.5 rounded-md px-1 text-[13px] font-semibold text-foreground transition-colors hover:text-muted-foreground"
-        >
-          {lien.label}
-          <ChevronRight className="h-3.5 w-3.5" strokeWidth={2.4} aria-hidden />
-        </Link>
+        {lien && (
+          <Link
+            href={lien.href}
+            aria-label={`${titre} · ${lien.label}`}
+            className="-mr-1 inline-flex shrink-0 items-center gap-0.5 rounded-md px-1 text-[13px] font-semibold text-foreground transition-colors hover:text-muted-foreground"
+          >
+            {lien.label}
+            <ChevronRight className="h-3.5 w-3.5" strokeWidth={2.4} aria-hidden />
+          </Link>
+        )}
       </div>
       <div className="divide-y divide-border border-t border-border">{children}</div>
     </section>
@@ -57,7 +59,7 @@ function Apercu({ titre, lien, chargement = false, children }: { titre: string; 
 }
 
 /** Une ligne vide : ce que l'aperçu n'a pas (rien à faire, aucune équipe), ou une lecture en échec. */
-const Vide = ({ children }: { children: ReactNode }) => <p className="py-3 text-[14px] text-muted-foreground">{children}</p>;
+export const Vide = ({ children }: { children: ReactNode }) => <p className="py-3 text-[14px] text-muted-foreground">{children}</p>;
 
 /** Une ligne grisée tant que la lecture n'est pas finie. */
 const Squelette = ({ className = "h-9" }: { className?: string }) => (

@@ -16,6 +16,7 @@ import {
   estReferentDe,
   estReunion,
   isAdminUser,
+  visibleCategories,
 } from "@/lib/access";
 import { lienOngletSheet, type EntreeSheet } from "@/lib/evenements/sheet";
 import type { FSSetlist } from "@/lib/firebase/setlists";
@@ -391,7 +392,8 @@ function evenements(d: DonneesCalendrier, c: ContexteCalendrier, debut: string, 
 
 function scene(d: DonneesCalendrier, c: ContexteCalendrier, debut: string, fin: string): EntreeCalendrier[] {
   const m = MOTS[c.lang];
-  const mesCategories = Object.keys(c.profile?.serviceRoles ?? {});
+  // Lot AO (AO-F) : `visibleCategories` rend les clés de `serviceRoles` (interrupteur coupé) ou ce que l'organigramme ouvre.
+  const mesCategories = c.profile ? visibleCategories(c.profile) : [];
   // Un brouillon n'est jamais affiché (U1) ; chaque créneau mène à l'onglet de sa fête.
   return d.scene.filter(({ programme }) => programme.ouvert !== false).flatMap(({ programme, creneaux }) => creneaux
     .filter((x) => dans(x.dimanche, debut, fin))
