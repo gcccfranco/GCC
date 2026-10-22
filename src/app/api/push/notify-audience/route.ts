@@ -2,9 +2,10 @@ import { NextResponse, type NextRequest } from "next/server";
 import { adminDb, verifyIdToken } from "@/lib/push/admin";
 import { sendPushToUids, sendPushToAll } from "@/lib/push/send";
 import { recordNotification } from "@/lib/push/notifications";
-import { uidsDesAudiences, uidsDuGroupe } from "@/lib/push/recipients";
+import { uidsDeLAudienceOrganigramme, uidsDesAudiences, uidsDuGroupe } from "@/lib/push/recipients";
 import { isAdminEmail } from "@/lib/access";
 import { NOTIFY_ALL, audiencesNotifiables, isValidAudience, peutNotifierAudience } from "@/lib/push/audiences";
+import type { ProfilOrganigramme } from "@/lib/acces/organigramme";
 import { createHash } from "node:crypto";
 
 export const runtime = "nodejs";
@@ -16,6 +17,9 @@ export const maxDuration = 60;
 // et aux comptes dont `notify` couvre la cible — ou `notifieParRole`, recopié depuis les
 // organigrammes des groupes (lot 2, OG24), interrupteur ouvert seulement (OG27). Sert aux annonces de changement de
 // planning et de planning du trimestre.
+// Lot AO (interrupteur ouvert seulement) : le droit vient de l'organigramme (`audiencesNotifiables`), et deux
+// audiences s'ajoutent — `equipe:<id>` (comptes dont `dansEquipes` contient l'id) et `louange:<sous-équipe>`
+// (`sousEquipes`), résolues dans recipients.ts. En ligne (interrupteur coupé), `isValidAudience` les refuse : rien ne change.
 
 export async function POST(req: NextRequest) {
   // 1. Authentification
@@ -73,7 +77,7 @@ export async function POST(req: NextRequest) {
   const isAdmin = isAdminEmail(email);
   const me = isAdmin
     ? null
-    : ((await adminDb().collection("users").doc(uid).get()).data() as { notify?: string[]; notifieParRole?: string[] } | undefined) ?? null;
+    : ((await adminDb().collection("users").doc(uid).get()).data() as ({ notify?: string[]; notifieParRole?: string[] } & ProfilOrganigramme) | undefined) ?? null;
   const rights = audiencesNotifiables(me);
   const canAll = isAdmin || rights.includes(NOTIFY_ALL);
 
@@ -107,7 +111,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Action non autorisée" }, { status: 403 });
   }
   const isAll = audience === NOTIFY_ALL;
-  const catUids = isAll ? [] : await uidsDuGroupe(audience);
+  const catUids = isAll ? [] : audience.startsWith("equipe:") || audience.startsWith("louange:")
+    ? await uidsDeLAudienceOrganigramme(audience)
+    : await uidsDuGroupe(audience);
   const result = isAll ? await sendPushToAll(payload) : await sendPushToUids(catUids, payload);
   await recordNotification({
     title: payload.title,

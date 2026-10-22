@@ -7,6 +7,7 @@ import { planningReleaseMessage } from "@/lib/push/messages";
 import { isAdminEmail } from "@/lib/access";
 import { NOTIFY_ALL } from "@/lib/push/audiences";
 import { getPlanning, droitsDePublication, TRI_ORDER } from "@/lib/planning/releases";
+import type { ProfilOrganigramme } from "@/lib/acces/organigramme";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -18,7 +19,8 @@ export const maxDuration = 60;
 // (Culte → tout le monde ; groupe → membres du groupe, clé de `serviceRoles` ou groupe de la
 // personne, lot 2, OG28). Réservé aux admins, aux comptes dont le droit `notify` couvre ce
 // planning, et à qui le publie par un rôle de son groupe (`publieParRole`, OG23, interrupteur
-// ouvert seulement, OG27). `publish:false` re-masque le
+// ouvert seulement, OG27). Lot AO (interrupteur ouvert seulement) : plus de droit `notify` — le profil relu porte
+// `referentDe` (référent Louange ou Régie pour le culte) en plus de `publieParRole`. `publish:false` re-masque le
 // trimestre (sans notification, sans re-notif à une republication).
 
 export async function POST(req: NextRequest) {
@@ -56,7 +58,7 @@ export async function POST(req: NextRequest) {
   const isAdmin = isAdminEmail(email);
   const me = isAdmin
     ? null
-    : ((await adminDb().collection("users").doc(uid).get()).data() as { notify?: string[]; publieParRole?: string[] } | undefined) ?? null;
+    : ((await adminDb().collection("users").doc(uid).get()).data() as ({ notify?: string[]; publieParRole?: string[] } & ProfilOrganigramme) | undefined) ?? null;
   if (!droitsDePublication(planning, isAdmin, me)) {
     return NextResponse.json({ error: "Action non autorisée" }, { status: 403 });
   }

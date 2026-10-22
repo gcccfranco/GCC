@@ -1371,7 +1371,12 @@ export function SetlistDetailClient() {
     user,
     profile,
     setlist,
-    setlist.fete ? estRegieDeFete(profile, setlist) : !!profile?.serviceRoles[setlist.category]?.includes("regie"),
+    // Lot AO (interrupteur ouvert seulement) : « Où il sert » à la Régie (`lieuxRegie`) au lieu du rôle `regie` du profil.
+    setlist.fete
+      ? estRegieDeFete(profile, setlist)
+      : BACK_OFFICE
+        ? !!profile?.lieuxRegie?.includes(setlist.category)
+        : !!profile?.serviceRoles[setlist.category]?.includes("regie"),
   );
   const presentationHref = setlist.presentationUrl ? parsePresentationUrl(setlist.presentationUrl) : null;
   // « Copier toutes les paroles » (question 6) : seulement si chaque chant suit la

@@ -3,6 +3,13 @@ rules_version = '2';
 // Règles de sécurité Firestore — à publier dans la console Firebase :
 // https://console.firebase.google.com/project/gcclouange/firestore/rules
 //
+// Lot AO : ancien ∪ nouveau, compatible avec le code en ligne ; à publier à la main par Timothée.
+// (« Les accès viennent de l'organigramme », docs/spec-acces-organigramme.md, « Règles : ancien ∪ nouveau ».)
+// Chaque règle touchée accepte l'ancien droit (rôles du profil, cases cochées par un admin) OU le nouveau (ce que le
+// serveur recopie de l'organigramme sur le profil : `dansEquipes`, `referentDe`, `sousEquipes`, `referentSous`,
+// `lieuxLouange`, `lieuxRegie`, `joue`) : jamais l'un sans l'autre, pour que `main`, qui tourne en ligne dans
+// l'ancien mode, garde tous ses gestes. Une dernière passe retirera l'ancien côté le jour où il disparaît (AO-F).
+//
 // Modèle d'accès :
 // - Setlists : lecture réservée aux connectés (le filtrage par service se fait côté client) ;
 //   création : le créateur doit se déclarer propriétaire (ownerId = uid, figé ensuite) ;
@@ -16,8 +23,14 @@ rules_version = '2';
 //   (Firebase Admin, qui lit le planning), jamais par le client. Aucune règle ici.
 //   Historique (setlists/{id}/history) : lu par les connectés, écrit par qui peut
 //   modifier la setlist, chacun sur ses propres entrées.
+//   Lot AO : une setlist PUBLIQUE ne se crée que dans une catégorie ouverte à son auteur (peutCreerSetlistDans :
+//   rôle de `serviceRoles`, ou lieu de Louange / groupe / classe de l'EDD de l'organigramme) ; une setlist privée
+//   (copie, brouillon perso) reste libre ; un admin crée partout. Elle ne devient pas publique, ni ne change de
+//   catégorie, vers une catégorie fermée à son propriétaire (« privée puis publique »).
 // - Profils (users/{uid}) : chacun crée le sien à l'inscription ; une fois créé,
-//   seuls les admins peuvent le modifier.
+//   seuls les admins peuvent le modifier. Lot AO : les champs que le serveur recopie de l'organigramme
+//   (sous-équipes, lieux, instruments) sont refusés à la création, comme `dansEquipes` ; `serviceRoles` reste permis
+//   (l'inscription en ligne l'écrit encore).
 // - Évènements (evenements/{id}, lot 6) : « pour = eglise » public, le reste
 //   pour les connectés ; inscriptions lues par les connectés, écrites par le
 //   serveur seulement.
@@ -28,19 +41,23 @@ rules_version = '2';
 //   ajoutés par les personnes de la réunion ; ordre et « traité » par
 //   l'organisateur et les admins ; retirés par l'auteur, l'organisateur, un admin.
 // - Programmes de scène (programmes/{id}, lot 3 bis) : lus par les connectés ;
-//   écrits par la coordination (droit `coordination` du profil + admins). Créneaux
+//   écrits par la coordination (droit `coordination` du profil + admins ; lot AO : aussi le référent Louange, le
+//   référent EDD et les membres d'Orga). Créneaux
 //   (programmes/{id}/creneaux) : tout connecté en pose un à son nom — depuis le
 //   lot U1, dans une saison ouverte et pour les groupes permis (reservable()) ;
 //   auteur + coordination le modifient ou le retirent.
 // - Organigramme (equipes/{id}, lot 16) : lu par les connectés ; écrit par les
-//   admins et par les comptes portant le droit `equipes`. Le rattachement qui en
+//   admins et par les comptes portant le droit `equipes` (lot AO : aussi les membres d'Orga, le référent de l'équipe,
+//   et, pour Louange, un référent de sous-équipe). Le rattachement qui en
 //   découle (users/{uid}.dansEquipes et referentDe) reste écrit par le serveur seul.
 // - config/app : état des inscriptions (registrationOpen), lisible publiquement,
 //   modifiable par les admins depuis la page /admin.
 // - Plannings remplis dans l'app (plannings/{key}/dimanches, lot 17) : lus
 //   publiquement (pages planning consultées sans compte) ; écrits par les
 //   admins et par les profils dont `plannings` porte la clé du planning, ou `remplitParRole`
-//   (rôle d'un groupe, recopié par le serveur, lot 2, docs/spec-organigrammes-groupes.md).
+//   (rôle d'un groupe, recopié par le serveur, lot 2, docs/spec-organigrammes-groupes.md). Lot AO : aussi, par
+//   l'organigramme, le référent Louange (les plannings du culte), le référent EDD (les trois classes), Orga (la Table) ;
+//   le référent Régie ne change que les colonnes Sono, Sono Live, PPT du culte.
 // - Organigrammes des groupes (groupes/{g}, lot 2) : lus par les connectés ; tenus par les admins
 //   et par le président et les VP du groupe ; président, VP et plafond des VP : admins seuls.
 //
@@ -105,7 +122,14 @@ service cloud.firestore {
             && request.resource.data.get('groupe', null) == null
             && request.resource.data.get('remplitParRole', []) == []
             && request.resource.data.get('publieParRole', []) == []
-            && request.resource.data.get('notifieParRole', []) == [])
+            && request.resource.data.get('notifieParRole', []) == []
+            // Lot AO : sous-équipes, lieux et instruments de l'organigramme, recopiés par le serveur seul.
+            // `serviceRoles` n'est PAS refusé : l'inscription en ligne l'écrit encore (ancien ∪ nouveau).
+            && request.resource.data.get('sousEquipes', []) == []
+            && request.resource.data.get('referentSous', []) == []
+            && request.resource.data.get('lieuxLouange', []) == []
+            && request.resource.data.get('lieuxRegie', []) == []
+            && request.resource.data.get('joue', []) == [])
       );
       // Une fois le profil créé, seuls les admins peuvent le modifier.
       allow update: if isAdmin();
@@ -116,8 +140,16 @@ service cloud.firestore {
     // les siennes ; ceux qui font les plannings (admins, ou `plannings` non vide) en saisissent pour
     // quelqu'un et lisent celles de tous. Le motif n'est masqué que côté navigateur (canVoirMotifAbsence).
     // Miroir client : faitDesPlannings, canSaisirAbsence (src/lib/access.ts). Règle à publier à la main.
+    // Lot AO : ancien ∪ nouveau — aussi qui remplit au moins un planning par l'organigramme (rôle de groupe,
+    // référent Louange, EDD ou Régie, Orga) : mêmes conditions que peutEcrirePlanning / peutEcrireLaRegie.
     function faitDesPlannings() {
-      return isAdmin() || (hasProfile() && profile().get('plannings', []).size() > 0);
+      return isAdmin() || (hasProfile() && (
+        profile().get('plannings', []).size() > 0
+        || profile().get('remplitParRole', []).size() > 0
+        || 'louange' in profile().get('referentDe', [])
+        || 'edd' in profile().get('referentDe', [])
+        || 'regie' in profile().get('referentDe', [])
+        || 'orga' in profile().get('dansEquipes', [])));
     }
 
     function absenceValide() {
@@ -164,13 +196,24 @@ service cloud.firestore {
     // une équipe passe par /api/equipes/rattachement (Admin SDK, qui revérifie ce même
     // droit) — `allow update` sur users/{uid} reste aux admins.
     // Miroir client : canVoirEquipes / canEditerEquipes (src/lib/access.ts).
+    // Lot AO : ancien ∪ nouveau — aussi les membres d'Orga (« coordination générale », `dansEquipes` recopié par le serveur).
     function isEquipier() {
-      return isAdmin() || (hasProfile() && profile().get('equipes', false) == true);
+      return isAdmin() || (hasProfile() && (profile().get('equipes', false) == true
+                                            || 'orga' in profile().get('dansEquipes', [])));
+    }
+
+    // Lot AO : le référent d'une équipe tient son équipe (`referentDe` ∋ id) ; pour Louange, un référent de
+    // sous-équipe (`referentSous` non vide) écrit aussi le document. Choix de confiance du projet : la règle ne voit
+    // pas QUELLE ligne change — la limite « sa sous-équipe seulement » est côté navigateur (peutPlacerMembre,
+    // src/lib/access.ts), comme le reste du filtrage du site.
+    function peutEcrireEquipe(id) {
+      return hasProfile() && (id in profile().get('referentDe', [])
+                              || (id == 'louange' && profile().get('referentSous', []).size() > 0));
     }
 
     match /equipes/{id} {
       allow read: if signedIn();
-      allow create, update, delete: if signedIn() && isEquipier();
+      allow create, update, delete: if signedIn() && (isEquipier() || peutEcrireEquipe(id));
     }
 
     // Équipes (lot 1 du chantier « équipes et groupes », docs/spec-equipes-sans-poles.md) : est d'une
@@ -221,8 +264,14 @@ service cloud.firestore {
     // le droit `coordination` du profil, coché par un admin (lot 1 du chantier
     // « équipes et groupes », docs/spec-equipes-sans-poles.md, EQ24) : aucune équipe
     // ne la donne.
+    // Lot AO : ancien ∪ nouveau (D5) — aussi le référent Louange, le référent EDD et les membres d'Orga (champs recopiés
+    // par le serveur) ; ni le référent d'une sous-équipe, ni le référent Régie. Miroir : coordination
+    // (src/lib/acces/organigramme.ts).
     function isCoordination() {
-      return isAdmin() || (hasProfile() && profile().get('coordination', false) == true);
+      return isAdmin() || (hasProfile() && (profile().get('coordination', false) == true
+                                            || 'louange' in profile().get('referentDe', [])
+                                            || 'edd' in profile().get('referentDe', [])
+                                            || 'orga' in profile().get('dansEquipes', [])));
     }
 
     // Tâches par équipe (lot 7, docs/spec-taches.md ; lot 1 du chantier « équipes et groupes »,
@@ -296,6 +345,18 @@ service cloud.firestore {
     // au compteur. Le compteur `inscrits` et les inscriptions ne s'écrivent
     // que par le serveur (Admin SDK, /api/evenements/*). Miroir : canSeeEvenement,
     // canCreateEvenement, canEditEvenement (src/lib/access.ts).
+    // Lot AO : ancien ∪ nouveau — la section se crée aussi par l'organigramme : le référent Louange pour le Culte
+    // Francophone ; le président et les VP d'un groupe (leur `referentDe` porte « comite-<g> ») pour la catégorie de
+    // leur groupe. Table en dur (les rules ne savent pas dériver « Groupe Paix » de « paix »). Il n'existe pas de
+    // section EDD. Miroir : sectionsCreables (src/lib/acces/organigramme.ts).
+    function sectionCreeeParOrganigramme(pour) {
+      return hasProfile() && (
+        (pour == 'Culte Francophone' && 'louange' in profile().get('referentDe', []))
+        || (pour == 'Groupe Paix' && 'comite-paix' in profile().get('referentDe', []))
+        || (pour == 'Groupe Fidélité' && 'comite-fidelite' in profile().get('referentDe', []))
+        || (pour == 'Groupe Bonté' && 'comite-bonte' in profile().get('referentDe', [])));
+    }
+
     match /evenements/{id} {
       allow read: if resource.data.pour == 'eglise' || signedIn();
       // Réunion ou évènement d'équipe (lot U6, R4 ; décisions 3 et 43) :
@@ -311,7 +372,8 @@ service cloud.firestore {
                 && estReferentDe(request.resource.data.pour.split(':')[1]))
             || (!request.resource.data.pour.matches('(pole|equipe):.*')
                 && (isCoordination()
-                    || (hasProfile() && request.resource.data.pour in profile().get('annonces', [])))));
+                    || (hasProfile() && request.resource.data.pour in profile().get('annonces', []))
+                    || sectionCreeeParOrganigramme(request.resource.data.pour))));
       // Compte rendu d'une réunion (lot U6, R3) : toute personne de la réunion
       // colle (à son nom, un lien https://) ou retire le lien, et ne change que
       // lui. Miroir : estDeLaReunion et lienCompteRendu (src/lib/access.ts,
@@ -392,7 +454,14 @@ service cloud.firestore {
         // Une setlist de fête naît de /api/fetes/saisir (Admin SDK), jamais d'un navigateur
         // (docs/spec-chants-fetes.md, « Droits en double »).
         && !('fete' in request.resource.data)
-        && !(request.resource.data.get('category', '') in ['Noël', 'Pâques']);
+        && !(request.resource.data.get('category', '') in ['Noël', 'Pâques'])
+        // Lot AO : une setlist publique se crée dans une catégorie ouverte à son auteur ; une privée (copie, brouillon
+        // perso) et un admin : libres. Miroir : creatableCategories (src/lib/access.ts).
+        && (
+          request.resource.data.get('isPrivate', false) == true
+          || isAdmin()
+          || peutCreerSetlistDans(request.resource.data.get('category', ''))
+        );
       // Modification : ownerId ne change jamais ; qui peut modifier =
       // canEditSetlistDoc (le propriétaire, son équipe ; sur une setlist non
       // privée, un admin — SC1, docs/spec-createur-corbeille-absences.md).
@@ -405,6 +474,15 @@ service cloud.firestore {
           resource.data.get('ownerId', '') == request.auth.uid
           || isAdmin()
           || request.resource.data.category == resource.data.category
+        )
+        // Lot AO : le document résultant, s'il est public, change de catégorie ou de visibilité vers une catégorie
+        // ouverte à l'auteur seulement — le propriétaire ne contourne pas la création par « privée puis publique ».
+        && (
+          request.resource.data.get('isPrivate', false) == true
+          || isAdmin()
+          || (request.resource.data.get('category', '') == resource.data.get('category', '')
+              && request.resource.data.get('isPrivate', false) == resource.data.get('isPrivate', false))
+          || peutCreerSetlistDans(request.resource.data.get('category', ''))
         )
         // L'équipe : seuls le propriétaire et les admins la changent.
         && (
@@ -469,6 +547,24 @@ service cloud.firestore {
           && request.resource.data.authorUid == uid;
         allow delete: if signedIn() && request.auth.uid == uid;
       }
+    }
+
+    // Lot AO : où l'on crée une setlist publique, ancien ∪ nouveau. Ancien (miroir de categoryLevel ≥ create) : la
+    // clé de `serviceRoles` avec un rôle chanteur / musicien / présidence, ou, pour un groupe (Paix, Fidélité,
+    // Bonté) ou une classe de l'EDD, la seule présence de la clé. Nouveau (miroir de categoriesCreables,
+    // src/lib/acces/organigramme.ts) : membre de Louange et la catégorie est dans `lieuxLouange` ; la catégorie du
+    // `groupe` (id « paix », « fidelite », « bonte ») ; membre d'`edd` et une des trois classes. La Régie (lieuxRegie)
+    // n'y crée pas : lecture seule.
+    function peutCreerSetlistDans(category) {
+      return hasProfile() && (
+        profile().get('serviceRoles', {}).get(category, []).hasAny(['chanteur', 'musicien', 'presidence'])
+        || (category in ['Groupe Paix', 'Groupe Fidélité', 'Groupe Bonté', '中班', '大班', '高班']
+            && category in profile().get('serviceRoles', {}))
+        || ('louange' in profile().get('dansEquipes', []) && category in profile().get('lieuxLouange', []))
+        || (category == 'Groupe Paix' && profile().get('groupe', '') == 'paix')
+        || (category == 'Groupe Fidélité' && profile().get('groupe', '') == 'fidelite')
+        || (category == 'Groupe Bonté' && profile().get('groupe', '') == 'bonte')
+        || ('edd' in profile().get('dansEquipes', []) && category in ['中班', '大班', '高班']));
     }
 
     // Miroir de canDeleteSetlist (src/lib/access.ts) : une setlist privée ne se
@@ -599,9 +695,32 @@ service cloud.firestore {
     // Écriture : les admins, et les profils dont `plannings` porte la clé — ou `remplitParRole`,
     // recopié par le serveur depuis l'organigramme du groupe (lot 2, OG22).
     // Miroir client : canEditPlanning (src/lib/access.ts).
+    // Lot AO : ancien ∪ nouveau — aussi, par l'organigramme (miroir de colonnesRemplies, src/lib/acces/organigramme.ts) :
+    // le référent Louange sur les cinq plannings du culte, le référent EDD sur les trois classes, Orga sur la Table.
+    // Pas le référent Musiciens (E2) : `referentSous` n'ouvre aucun planning.
     function peutEcrirePlanning(key) {
       return isAdmin() || (hasProfile() && (key in profile().get('plannings', [])
-                                            || key in profile().get('remplitParRole', [])));
+                                            || key in profile().get('remplitParRole', [])
+                                            || ('louange' in profile().get('referentDe', [])
+                                                && key in ['culte', 'intergroupe', 'interfranco', 'campusMatin', 'campusSoir'])
+                                            || ('edd' in profile().get('referentDe', [])
+                                                && key in ['eddZhongban', 'eddDaban', 'eddGaoban'])
+                                            || (key == 'table' && 'orga' in profile().get('dansEquipes', []))));
+    }
+
+    // Lot AO : le référent Régie remplit les cinq plannings du culte, mais seulement ses colonnes (Sono, Sono Live,
+    // PPT) et les champs que l'écriture d'une case pose toujours (`date`, `modifieLe`, `modifiePar`, planningGrille.ts).
+    // Condition à part : elle ne donne PAS peutEcrirePlanning, donc ni le retrait d'une date (qui efface toutes les
+    // colonnes) ni les autres plannings. Les champs changés se lisent par diff avec le document d'avant (vide à la
+    // création).
+    function peutEcrireLaRegie(key) {
+      return hasProfile() && 'regie' in profile().get('referentDe', [])
+        && key in ['culte', 'intergroupe', 'interfranco', 'campusMatin', 'campusSoir'];
+    }
+
+    function seulementColonnesRegie() {
+      return request.resource.data.diff(resource == null ? {} : resource.data).affectedKeys()
+        .hasOnly(['date', 'modifieLe', 'modifiePar', 'sono', 'sonoLive', 'ppt']);
     }
 
     match /plannings/{key} {
@@ -610,7 +729,7 @@ service cloud.firestore {
 
       match /dimanches/{date} {
         allow read: if true;
-        allow create, update: if peutEcrirePlanning(key)
+        allow create, update: if (peutEcrirePlanning(key) || (peutEcrireLaRegie(key) && seulementColonnesRegie()))
           && request.resource.data.date == date;
         // On vide les cases, on ne supprime pas un dimanche — sauf une date
         // posée par erreur, là seulement où les dates se choisissent (lot U2,
@@ -624,9 +743,10 @@ service cloud.firestore {
       // setlists/{id}/history).
       match /history/{entryId} {
         allow read: if signedIn();
-        allow create: if peutEcrirePlanning(key)
+        // Lot AO : le référent Régie écrit l'historique des plannings du culte, comme ses cases.
+        allow create: if (peutEcrirePlanning(key) || peutEcrireLaRegie(key))
           && request.resource.data.authorUid == request.auth.uid;
-        allow update: if peutEcrirePlanning(key)
+        allow update: if (peutEcrirePlanning(key) || peutEcrireLaRegie(key))
           && resource.data.authorUid == request.auth.uid
           && request.resource.data.authorUid == request.auth.uid;
         allow delete: if false;

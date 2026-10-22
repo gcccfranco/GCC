@@ -8,6 +8,7 @@ import { isAdminEmail } from "@/lib/access";
 import { BACK_OFFICE } from "@/lib/backOffice";
 import { getPlanning, droitsDePrevenir, triVisibilitiesAnnee, TRI_ORDER } from "@/lib/planning/releases";
 import { getTri } from "@/lib/planning/utils";
+import type { ProfilOrganigramme } from "@/lib/acces/organigramme";
 import { grilleDe } from "@/lib/planning/grilles";
 import { colonneDePersonnes } from "@/lib/planning/choisir";
 import { normalizeName, splitNames } from "@/lib/planning/names";
@@ -75,11 +76,12 @@ export async function POST(req: NextRequest) {
 
   // Droits de l'appelant, relus ici (jamais crus sur parole).
   const isAdmin = isAdminEmail(email);
-  // Lot 2 (OG23) : aussi `publieParRole` et `notifieParRole`, relus (interrupteur ouvert seulement).
+  // Lot 2 (OG23) : aussi `publieParRole` et `notifieParRole`, relus (interrupteur ouvert seulement). Lot AO : et l'organigramme
+  // (`referentDe`…), que `droitsDePrevenir` lit à la place de `notify`.
   const me = isAdmin
     ? null
     : ((await adminDb().collection("users").doc(uid).get()).data() as
-      { notify?: string[]; publieParRole?: string[]; notifieParRole?: string[] } | undefined) ?? null;
+      ({ notify?: string[]; publieParRole?: string[]; notifieParRole?: string[] } & ProfilOrganigramme) | undefined) ?? null;
   if (!droitsDePrevenir(planning, isAdmin, me)) return NextResponse.json({ error: "Action non autorisée" }, { status: 403 });
 
   const db = adminDb();

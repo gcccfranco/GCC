@@ -522,7 +522,7 @@ const docGroupe = ({ id: _id, ...g }: OrganigrammeGroupe) => g as unknown as Rec
 test.describe("OG-B · recopie partagée en base simulée (OG3, OG19, OG20)", () => {
   test("un document equipes/comite-paix écrit à la main n'ajoute ni membre ni référent au comité", async () => {
     const equipes = [{ id: "comite-paix", membres: [{ nom: "Pirate", uid: "pirate", referent: true }] }];
-    expect(rattachementDe("pirate", equipes)).toEqual({ dansEquipes: [], referentDe: [] });
+    expect(rattachementDe("pirate", equipes)).toMatchObject({ dansEquipes: [], referentDe: [] });
     const { db } = fausseBaseGroupes({ pirate: { equipes: true } }, {}, { "comite-paix": { membres: equipes[0].membres } });
     await recalculerRattachement(db, ["pirate"], await lireEquipes(db), await lireGroupes(db));
     const lu = (await db.collection("users").doc("pirate").get()).data() as Record<string, unknown>;

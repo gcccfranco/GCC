@@ -838,10 +838,10 @@ test("équipe d'une réunion : « equipe:<id> » ; une réunion = une équipe, p
 });
 
 test("rattachement : équipes et équipes dont on est référent, dans l'ordre de l'organigramme", () => {
-  expect(rattachementDe("uid-hugo", ORGANIGRAMME)).toEqual({ dansEquipes: ["da", "regie"], referentDe: [] });
-  expect(rattachementDe("uid-rose", ORGANIGRAMME)).toEqual({ dansEquipes: ["regie"], referentDe: ["regie"] });
-  expect(rattachementDe("uid-personne", ORGANIGRAMME)).toEqual({ dansEquipes: [], referentDe: [] });
-  expect(rattachementDe("", ORGANIGRAMME), "un nom sans compte n'a rien").toEqual({ dansEquipes: [], referentDe: [] });
+  expect(rattachementDe("uid-hugo", ORGANIGRAMME)).toMatchObject({ dansEquipes: ["da", "regie"], referentDe: [] });
+  expect(rattachementDe("uid-rose", ORGANIGRAMME)).toMatchObject({ dansEquipes: ["regie"], referentDe: ["regie"] });
+  expect(rattachementDe("uid-personne", ORGANIGRAMME)).toMatchObject({ dansEquipes: [], referentDe: [] });
+  expect(rattachementDe("", ORGANIGRAMME), "un nom sans compte n'a rien").toMatchObject({ dansEquipes: [], referentDe: [] });
 });
 
 /** Base Admin simulée : les profils et les équipes, et les mises à jour reçues. */

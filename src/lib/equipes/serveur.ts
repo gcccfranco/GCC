@@ -1,7 +1,9 @@
 // Outils des routes /api/equipes/* (serveur seulement, Admin SDK).
 
 import { adminDb } from "@/lib/push/admin";
-import { isAdminEmail } from "@/lib/access";
+import { canEditerEquipes, isAdminEmail } from "@/lib/access";
+import { BACK_OFFICE } from "@/lib/backOffice";
+import type { ProfilOrganigramme } from "@/lib/acces/organigramme";
 import { HttpError } from "@/lib/evenements/serveur";
 import { rattachementDe } from "./organigramme";
 import { comptesCites, groupeDe, lireGroupe, recopieDeGroupe } from "@/lib/groupes/organigramme";
@@ -11,12 +13,19 @@ import type { OrganigrammeGroupe } from "@/types/groupe";
 
 /** Droit de tenir l'organigramme, revérifié ici : admin, ou profil portant le
  *  droit `equipes` (miroir de canEditerEquipes et de isEquipier). C'est ce
- *  contrôle qui remplace `allow update` sur users/{uid}, resté aux admins. */
-export async function exigerDroitEquipes(user: { uid: string; email: string } | null): Promise<void> {
+ *  contrôle qui remplace `allow update` sur users/{uid}, resté aux admins.
+ *  Lot AO (`backOffice`, A2) : plus de case — quiconque tient quelque chose (`tientOrganigramme` : Orga, un
+ *  référent d'équipe, un référent de sous-équipe). La route ne fait que recalculer depuis l'organigramme, sur des
+ *  comptes qu'on lui désigne : l'ouvrir à tous ces profils est sans risque. */
+export async function exigerDroitEquipes(
+  user: { uid: string; email: string } | null,
+  db: FirebaseFirestore.Firestore = adminDb(),
+  backOffice: boolean = BACK_OFFICE,
+): Promise<void> {
   if (!user) throw new HttpError(401, "Non authentifié");
   if (isAdminEmail(user.email)) return;
-  const snap = await adminDb().collection("users").doc(user.uid).get();
-  if (snap.data()?.equipes !== true) throw new HttpError(403, "Réservé à qui tient l'organigramme");
+  const data = (await db.collection("users").doc(user.uid).get()).data() as ({ equipes?: boolean } & ProfilOrganigramme) | undefined;
+  if (!canEditerEquipes(user, data ?? null, backOffice)) throw new HttpError(403, "Réservé à qui tient l'organigramme");
 }
 
 export type EquipeServeur = { id: string; membres: MembreEquipe[] };
@@ -31,7 +40,11 @@ export async function lireEquipes(db: FirebaseFirestore.Firestore): Promise<Equi
 
 /** Les champs du profil que la recopie pose (lot U6, R4 ; lot 2, OG19-OG20). `groupe` à part : il
  *  ne s'écrit que lorsqu'une personne sans groupe entre dans un groupe (OG3). */
-const LISTES = ["dansEquipes", "referentDe", "remplitParRole", "publieParRole", "notifieParRole"] as const;
+const LISTES = [
+  "dansEquipes", "referentDe", "remplitParRole", "publieParRole", "notifieParRole",
+  // Lot AO : ce que l'organigramme de l'église dit de Louange et de Régie (sous-équipes, lieux, instruments).
+  "sousEquipes", "referentSous", "lieuxLouange", "lieuxRegie", "joue",
+] as const;
 type Listes = Record<(typeof LISTES)[number], string[]>;
 
 /** Ce que l'organigramme de l'église et ceux des groupes disent d'un compte, pour son profil : les
@@ -48,6 +61,11 @@ export function recopieDuCompte(uid: string, data: Record<string, unknown>, equi
     remplitParRole: groupe.remplitParRole,
     publieParRole: groupe.publieParRole,
     notifieParRole: groupe.notifieParRole,
+    sousEquipes: eglise.sousEquipes,
+    referentSous: eglise.referentSous,
+    lieuxLouange: eglise.lieuxLouange,
+    lieuxRegie: eglise.lieuxRegie,
+    joue: eglise.joue,
   };
   return { listes, groupe };
 }
@@ -97,7 +115,7 @@ export async function recalculerDepuisOrganigramme(db: FirebaseFirestore.Firesto
     const x = d.data();
     const liste = (k: string) => (Array.isArray(x[k]) ? (x[k] as string[]) : []);
     return [...liste("dansEquipes"), ...liste("referentDe")].some((id) => COMITES.includes(id))
-      || ["remplitParRole", "publieParRole", "notifieParRole"].some((k) => liste(k).length > 0);
+      || ["remplitParRole", "publieParRole", "notifieParRole", "sousEquipes", "referentSous", "lieuxLouange", "lieuxRegie", "joue"].some((k) => liste(k).length > 0);
   }).map((d) => d.id);
   const uids = [...equipes.flatMap((e) => e.membres.map((m) => m.uid)), ...groupes.flatMap(comptesCites), ...restes];
   return (await recalculerRattachement(db, uids, equipes, groupes)).maj;

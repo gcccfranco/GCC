@@ -96,11 +96,15 @@ export async function POST(req: NextRequest) {
 
   // Le planning n'est lu que si l'édition ne suffit pas déjà. Une setlist de fête n'a pas de planning
   // de catégorie : la régie y est TEAM RÉGIE (CF27, décision 45, Q7).
+  // Lot AO (interrupteur ouvert seulement) : la Régie qui sert à ce lieu (`lieuxRegie`, cochée dans l'organigramme)
+  // compte aussi, sans être inscrite au planning du jour.
+  const regieDuLieu = BACK_OFFICE && !setlist.isPrivate && (profile?.lieuxRegie ?? []).includes(setlist.category);
   const regie = setlist.fete
     ? estRegieDeFete(profile, setlist)
     : !canEditSetlist(user, safeProfile, setlist) &&
       !setlist.isPrivate &&
-      isOnDutyRegie(servantsForDate(await loadPlanningData(), (setlist.date ?? "").slice(0, 10)), setlist, profile?.planningName ?? "");
+      (regieDuLieu ||
+        isOnDutyRegie(servantsForDate(await loadPlanningData(), (setlist.date ?? "").slice(0, 10)), setlist, profile?.planningName ?? ""));
   if (!canSetPresentationLink(user, safeProfile, setlist, regie)) {
     return NextResponse.json(
       { error: "Seule la régie inscrite au planning ce jour-là (ou qui peut modifier la setlist) peut changer ce lien." },

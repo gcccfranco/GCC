@@ -543,7 +543,8 @@ export function canEditPetitDej(
 export const PLANNINGS_DATES_CHOISIES = ["interfranco", "intergroupe", "campusMatin", "campusSoir"] as const;
 
 /** Retirer une date (supprimer son document) : qui peut remplir ce planning,
- *  sur un planning à dates choisies seulement.
+ *  sur un planning à dates choisies seulement. Lot AO (`backOffice`) : il faut pouvoir remplir TOUTES les colonnes —
+ *  le retrait efface toutes les cases, le référent Régie (Sono, Sono Live, PPT) ne retire donc pas une date.
  *  Miroir serveur : `allow delete` de plannings/{key}/dimanches dans firestore.rules. */
 export function canRetirerDate(
   user: { email?: string | null } | null,
@@ -551,7 +552,8 @@ export function canRetirerDate(
   key: string,
   backOffice: boolean = BACK_OFFICE
 ): boolean {
-  return (PLANNINGS_DATES_CHOISIES as readonly string[]).includes(key) && canEditPlanning(user, profile, key, backOffice);
+  return (PLANNINGS_DATES_CHOISIES as readonly string[]).includes(key)
+    && colonnesModifiables(user, profile, key, backOffice) === "toutes";
 }
 
 /** Harmonie (lot 9, docs/spec-harmonie.md) : le catalogue et les « Idées

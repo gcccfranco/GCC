@@ -5,9 +5,10 @@ import { loadPlanningNameIndex, resolveNamesToUids, filterUidsByNotifPref, loadN
 import { setlistReadyMessage } from "@/lib/push/messages";
 import { loadPlanningData, servantsForDate, normalizeName } from "@/lib/planning/names";
 import { FieldValue } from "firebase-admin/firestore";
-import { isAdminEmail, categoryLevel } from "@/lib/access";
+import { isAdminEmail, categoryLevel, creatableCategories } from "@/lib/access";
 import { aPrevenir, horodatageEnvoi, peutPrevenirEquipe } from "@/lib/setlist/partage";
-import type { ServiceRole } from "@/types/user";
+import type { ServiceRole, UserProfile } from "@/types/user";
+import type { ProfilOrganigramme } from "@/lib/acces/organigramme";
 import { BACK_OFFICE } from "@/lib/backOffice";
 
 export const runtime = "nodejs";
@@ -106,12 +107,18 @@ export async function POST(req: NextRequest) {
   let isPerformer = false;
   if (!sl.isPrivate && !isAdmin && !isOwner && !equipeChoisie.includes(uid)) {
     const me = (await db.collection("users").doc(uid).get()).data() as
-      | { serviceRoles?: Record<string, ServiceRole[]> }
+      | ({ serviceRoles?: Record<string, ServiceRole[]> } & ProfilOrganigramme)
       | undefined;
-    const serviceRoles = me?.serviceRoles ?? {};
-    const rolesAtCat = serviceRoles[sl.category];
-    // Exécutant = niveau create/edit sur la catégorie (la régie seule en lecture est exclue).
-    isPerformer = !!rolesAtCat && categoryLevel(sl.category, rolesAtCat) !== "view";
+    if (BACK_OFFICE) {
+      // Lot AO (A4) : exécutant = la catégorie fait partie de celles où l'organigramme lui laisse CRÉER (lieux de
+      // Louange, groupe, classes de l'EDD) ; la régie seule en lecture reste exclue. Plus de `serviceRoles`.
+      isPerformer = creatableCategories((me ?? {}) as UserProfile, true).includes(sl.category);
+    } else {
+      const serviceRoles = me?.serviceRoles ?? {};
+      const rolesAtCat = serviceRoles[sl.category];
+      // Exécutant = niveau create/edit sur la catégorie (la régie seule en lecture est exclue).
+      isPerformer = !!rolesAtCat && categoryLevel(sl.category, rolesAtCat) !== "view";
+    }
   }
   if (!peutPrevenirEquipe({ ownerId: sl.ownerId, isPrivate: sl.isPrivate, editeurs: equipeChoisie }, { uid, estAdmin: isAdmin, estExecutant: isPerformer })) {
     return NextResponse.json({ error: "Action non autorisée" }, { status: 403 });
