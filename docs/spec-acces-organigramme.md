@@ -7,7 +7,7 @@ https://claude.ai/artifact/RVnkQYaFbyyBgZ8ti4ET6s (privé, liste des points faib
 dépôt public).
 
 Lot **AO**. Planche : https://claude.ai/artifact/9vupGveKJDw5BnzGfHf1wV. **État : spec écrite et planche faite le
-21/10/2026, à valider par Timothée ; code sur go. Préalable levé le 22/10/2026** :
+21/10/2026, refaite dans le style du site le 22/10/2026 ; go le 22/10/2026 (AO-A à AO-F), session orchestratrice. Préalable levé le 22/10/2026** :
 règles publiées par Timothée, relevé V19EQUIPES à « 0 opération » (rien à migrer).
 
 ## Mots de Timothée
@@ -97,11 +97,11 @@ Trois sources d'accès qui se recouvrent :
 | B4 | **Un script remplit l'organigramme depuis l'existant** (rôles des profils, sous-colonnes Louange, matrice des musiciens, colonnes du planning, droits cochés) : **relevé à blanc** relu par Timothée, puis écriture. Personne ne perd un accès le jour de la bascule. |
 | B5 | Quelqu'un au planning mais dans **aucune équipe** garde Mes services et ses rappels, et la lecture de ses dates (F1), sans autre accès. Le relevé les liste pour qu'on les place avant la bascule. |
 
-## À confirmer
+## Tranché le 21 et le 22/10/2026
 
-- **Rappel aux référents** (proposé avec F2, non tranché explicitement) : chaque semaine, au référent concerné,
-  « N personnes au planning de ce mois ne sont dans aucune équipe », avec le lien vers l'organigramme.
-  ➡️ Recommandé : oui, dans le rappel du matin existant (`/api/cron/reminders`), pas une notification de plus.
+- **Rappel aux référents** : **gardé** (Timothée, 22/10/2026) — chaque semaine, au référent concerné, dans le rappel
+  du matin existant (`/api/cron/reminders`), « N personnes au planning de ce mois ne sont dans aucune équipe », avec
+  leurs noms et le lien vers l'organigramme. Pas de notification de plus.
 
 - **« Ce que tu peux faire » dans Moi** : **oui** (Timothée, 21/10/2026) — la liste de ses accès avec leur raison
   (« Voir et créer les setlists du Campus — Louange, où tu sers ») et « Un accès te manque ? Demande à ton
@@ -140,7 +140,7 @@ Trois sources d'accès qui se recouvrent :
   notifier, présentation). **Règles à publier à la main par Timothée.**
 - **AO-D — Script de migration** `scripts/acces-vers-organigramme.ts`, à blanc par défaut : listes « garde son
   accès », « perd un accès », « au planning sans équipe », « droit coché sans équivalent ».
-- **AO-E — Rappel aux référents** (si confirmé).
+- **AO-E — Rappel aux référents** (gardé le 22/10/2026).
 - **AO-F — Nettoyage** : profil et inscription sans rôles, plus de `deriveServiceRolesFromPlanning` pour les droits,
   champs morts retirés après une saison.
 
