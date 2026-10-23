@@ -1186,6 +1186,19 @@ l'organigramme https://claude.ai/artifact/9vupGveKJDw5BnzGfHf1wV (style du site)
 à publier à la main quand il veut. Script `scripts/acces-vers-organigramme.ts` à lancer par lui, à blanc puis
 `--ecrire`, avant la mise en ligne de la refonte. Écarts à confirmer : spec, « Avancement ».
 
+### AD. Le rôle du Back-Office (Timothée, 23/10/2026) → planche, puis spec
+
+« J'aime pas l'apparence du Dashboard […] j'ai l'impression que les données qu'on met servent à rien. » Planche du
+tableau de bord (https://claude.ai/artifact/6SUhvx1m9gfUrYK1m6D39d : diagnostic, liste des données, pistes A, B,
+C), puis « Peut-être revoir le rôle du backoffice ». Entretien (*grilling*) en quatre tours le 23/10/2026 ; définition
+et décisions dans `intent/vision-site.md` § « Le rôle du Back-Office ». En bref : le Back-Office devient **les
+coulisses de la préparation** du Culte Franco et des évènements publics (fiche par évènement, modèles qui se cochent
+seuls, une partie par équipe, référent qui relance sur WeChat, aucune notification, souhait de services par
+trimestre, accueil fixe à la place des widgets). La planche du tableau de bord est dépassée. **Go pour la vision et
+la planche « Back-Office, les coulisses » le 23/10/2026** ; spec et lots ensuite ; aucun code sans go.
+Planche publiée le 23/10/2026 : https://claude.ai/artifact/QBui5Mk4Ue84wjufRBEJ3R (accueil A/B, fiche du Culte Franco A/B,
+fiche Noël, planning et souhaits, réunion d'équipe, jour J dans l'App ; cinq questions à trancher).
+
 ## 4. Carte des modules de l'app « GCC »
 
 À valider par Timothée avant toute spec de module (les modules existants ne
@@ -1528,6 +1541,8 @@ valider par Timothée** : relecture des textes 中文, regard sur les cartes (r�
   Opus ; L3-T7 partie cloud (18/10/2026) : `PW_SLUGS=all` 955 / 955 sur trois appareils, `jianpu-integration` vert sur
   cinq projets, planches clair et sombre et captures aux cinq projets regardées ; trois défauts du calque gelé, d'avant le
   lot, à trancher. Reste en local (Timothée) : mesure iOS, suite complète. Questions ouvertes : « Avancement » de la spec.
+- 23/10/2026 : **rôle du Back-Office** redéfini (§ 3.AD) : planche du tableau de bord, entretien en quatre tours,
+  vision écrite ; planche « Back-Office, les coulisses » publiée. Rien de codé.
 
 ## 7. Relecture adversariale (14/09/2026)
 

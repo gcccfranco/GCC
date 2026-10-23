@@ -585,6 +585,52 @@ designs avant tout code** (`feuille-de-route.md` § 3.U).
   l'organigramme ne dépasse jamais la hauteur de l'écran : il défile de gauche à droite (05/10/2026). Planche
   version 17 validée : le design du chantier est fini, place au code (05/10/2026).
 
+### Le rôle du Back-Office (23/10/2026)
+
+Timothée n'aime pas le tableau de bord : « j'ai l'impression que les données qu'on met servent à rien ». Une
+planche (https://claude.ai/artifact/6SUhvx1m9gfUrYK1m6D39d) montre pourquoi : onze widgets de même poids, des
+listes brutes, rien qui dise quoi faire. La cause est plus haut : le Back-Office n'avait pas de mission. Sa
+vision : « C'est tout le travail qu'on fait en amont d'un événement, voir si tout se passe bien, faire toutes les
+tâches que les autres ne voient pas (réunions, planning, événements et tout). Ça doit être un espace pour aider
+les gens qui ont accès au backoffice à faire au mieux les tâches qu'ils ont à faire. » Il servira à une dizaine de
+responsables, plusieurs fois par semaine, sur les quatre dispositions, dans une église de 150 à 200 personnes.
+Entretien (*grilling*) en quatre tours, les questions restantes tranchées sur les recommandations à sa demande.
+
+**Définition** : *les coulisses de GCC — tout ce qui se prépare avant un culte ou un évènement, pour que les
+responsables sachent ce qui est prêt, ce qui manque et qui relancer, et fassent leur part au mieux.*
+
+- **Ce qu'on prépare** : le **Culte Franco** et les **évènements publics** (sorties, repas, Pâques, Noël…). Le
+  Culte 中文 et l'EDD ne sont pas préparés dans le Back-Office (leurs grilles de planning et leurs setlists restent
+  comme aujourd'hui). Réunions et répétitions sont des outils, pas des évènements.
+- **Une fiche de préparation par évènement**, de l'avant au jour J ; un **bilan après** seulement pour le Culte
+  Franco, facultatif.
+- **Modèles par type d'évènement** : l'app coche seule ce qu'elle peut vérifier (setlist publiée, postes remplis,
+  présentation prête…), le reste se coche à la main ; modèles modifiés par les admins, « Garder pour la prochaine
+  fois » depuis une fiche.
+- **Une partie par équipe** dans chaque fiche (Louange, Médias, Orga, DA…) : les membres de l'équipe modifient la
+  leur, les admins tout, les autres responsables lisent tout. Chaque ligne non faite dit **qui en est chargé**.
+- **Un référent par culte qui ne prépare pas** : il surveille et relance, en privé sur **WeChat** (pas de
+  WhatsApp) ; personne fixe désignée par les admins, sinon tout responsable peut relancer. « Copier le rappel »
+  prépare le message dans la langue de la personne ; « Copier tous les rappels ».
+- **Aucune notification** du Back-Office. Les rappels de l'App pour ceux qui servent restent, comme « Notifier »
+  dans la partie Communication (prévenir l'église).
+- **Communication** dans la fiche : un plan d'échéances tiré du modèle ; la fiche du culte reçoit les annonces à
+  faire ce dimanche-là.
+- **Le Back-Office fait foi** pour ce qui est structuré (planning, tâches, inscriptions, déroulés) ; WeChat reste
+  pour discuter.
+- **Pas de suivi pastoral** ; une seule donnée nouvelle sur les personnes : le **souhait de services par trimestre
+  et par équipe** (saisi par la personne, ajustable par son responsable) ; le planning montre « prévu 6, souhaite
+  4 » et propose d'abord ceux qui sont en dessous.
+- **Tâches** rattachées à une équipe, et à un évènement si besoin. **Réunions d'équipe** ouvertes sur un état des
+  lieux tout fait (prochains évènements de l'équipe, ce qui manque, tâches en retard, souhaits et planning).
+- **Jour J** : la fiche complète pour les responsables ; dans l'App, ceux qui servent voient le déroulé et leur rôle.
+- **Menu** (8) : Accueil · Évènements (fiches, modèles) · Planning · Tâches · Équipes (réunions comprises) ·
+  Calendrier · Messages · Statistiques. **Accueil fixe**, le même pour tous : prochains évènements (Culte Franco en
+  tête : « 4 sur 6 », ce qui manque, qui, « Copier le rappel »), Pour toi, Tes équipes. Le tableau de bord à
+  widgets disparaît ; barre du bas personnalisable, calendrier et statistiques restent.
+- **Réussite** : moins d'oublis le dimanche matin ; Noël et Pâques sans tout réinventer ; une charge mieux
+  répartie ; des réunions plus courtes.
+
 ## Historique des changements d'avis
 
 | Date | Avant | Après |
@@ -611,3 +657,4 @@ designs avant tout code** (`feuille-de-route.md` § 3.U).
 | 20/09/2026 → 03/10/2026 | Section Évènements coupée en ligne, sans date de bascule. | Le Sheet « Calendrier des événements » fait foi jusqu'en décembre 2026 (le calendrier de l'app le lit) ; évènements sur le site à partir de janvier 2027, sans import. |
 | 18/09/2026 → 03/10/2026 | Plannings ouverts dans l'app un par un, le Sheet en archive. | Le planning 2027 se fait entièrement dans le Back-Office (colonnes et horaires de 2026, tous les dimanches posés d'office) ; export au modèle du Sheet. |
 | 03/10/2026 → 04/10/2026 | iPad paysage : exactement l'apparence de l'ordinateur, barre latérale dépliée et réductible. | Tablette en paysage : barre latérale toujours réduite (icônes) ; l'ordinateur garde le choix. |
+| 03/10/2026 → 23/10/2026 | Tableau de bord du Back-Office personnalisable, à widgets (ajouter, glisser, tailles, réglages). | Back-Office = les coulisses de la préparation des évènements ; accueil fixe, le même pour tous (prochains évènements prêts ou non, Pour toi, Tes équipes) ; plus de widgets. |
