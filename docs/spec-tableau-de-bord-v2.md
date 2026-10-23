@@ -82,7 +82,7 @@ revoir après l'essai par 2 ou 3 responsables). `access.ts` ne change que dans `
 - Captures : `test-results/tableau-de-bord-captures/` (`*-admin.png` = nouveau défaut, `*-v2.png`, `*-personnaliser.png`),
   regardées sur les quatre dispositions et à 1 440 px.
 
-### Écarts à confirmer par Timothée
+### Écarts — acceptés par Timothée le 23/10/2026 (« Ok pour les huit choix »)
 1. **Qui relancer** : aucune table colonne → équipe n'existait ; reprise de l'organigramme (`colonnesParEquipe`) :
    cultes — Sono, Sono Live, PPT → référent Régie ; présidence, suppléant → Présidence ; choristes → Choristes ;
    instruments → Musiciens ; le reste (orateur, traduction…) → référent Louange ; EDD → référent EDD ; Table →
