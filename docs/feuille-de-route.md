@@ -1205,7 +1205,9 @@ trimestre : défaut par équipe, exceptions seulement, raison facultative, rien 
 lot **TB2** (`spec-tableau-de-bord-v2.md`, planche https://claude.ai/artifact/34HGM6n5LSXC14MkSWiuTK) : on garde les widgets
 (choix B), on change leur contenu et la disposition par défaut, sans donnée nouvelle. **Corrigé le soir** : le Culte
 Franco n'est pas un évènement ; planche version 3 (Ce dimanche, Plannings, Évènements, Tâches, Réunions, Comptes),
-validée ; spec réécrite. Ensuite : essai par 2 ou 3 responsables avant toute autre refonte. **Le code attend un go.**
+validée ; spec réécrite. Ensuite : essai par 2 ou 3 responsables avant toute autre refonte. **Go le 23/10/2026 ; TB2-a,
+TB2-b, TB2-c codées et poussées sur `ui/apple-design` (24/10/2026), à valider par Timothée** (écarts et libellés 中文
+à relire : « Avancement » de la spec).
 
 ## 4. Carte des modules de l'app « GCC »
 

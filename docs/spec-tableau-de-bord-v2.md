@@ -70,4 +70,42 @@ revoir après l'essai par 2 ou 3 responsables). `access.ts` ne change que dans `
 
 ## Avancement
 
-- 23/10/2026 : planche version 3 et spec. Le code attend un go.
+- 23/10/2026 : planche version 3 et spec. Go de Timothée le même jour pour le lot entier.
+- TB2-a (183aa66) : règles pures dans `donnees.ts` (section « Lot TB2 »), 16 tests rouges sur fonctions vides puis verts.
+- TB2-b (ed69077) : widgets Ce dimanche, Plannings, Évènements, Tâches, Comptes ; lectures partagées des évènements et
+  des profils (`lecture.ts`) ; FR et 中文.
+- TB2-c : widget Réunions, défaut T9, `versionTableau: 2` (écrit à chaque geste, `barreDuBas` hors du masque) ; les
+  specs qui supposaient l'ancien défaut ouvrent une disposition enregistrée en version 2.
+- Tests : `tableau-de-bord.spec.ts` vert sur les cinq projets ; specs voisines adaptées et vertes. Échecs déjà
+  présents avant le lot, sans lien : `barre-back-office` (4, téléphone et tablette, vérifié sur l'arbre d'avant),
+  `back-office-espace:244`, `equipes-acces:130/184`.
+- Captures : `test-results/tableau-de-bord-captures/` (`*-admin.png` = nouveau défaut, `*-v2.png`, `*-personnaliser.png`),
+  regardées sur les quatre dispositions et à 1 440 px.
+
+### Écarts à confirmer par Timothée
+1. **Qui relancer** : aucune table colonne → équipe n'existait ; reprise de l'organigramme (`colonnesParEquipe`) :
+   cultes — Sono, Sono Live, PPT → référent Régie ; présidence, suppléant → Présidence ; choristes → Choristes ;
+   instruments → Musiciens ; le reste (orateur, traduction…) → référent Louange ; EDD → référent EDD ; Table →
+   référent Orga ; plannings des groupes (remplis par un rôle de groupe) → pas de bouton.
+2. **Ce dimanche** : la ligne « Table » (petit déj) ne s'affiche que pour qui remplit la Table ou l'admin ; la
+   setlist et la présentation ne comptent que pour les plannings du culte (pas les groupes) ; sans setlist, on dit
+   « setlist » seul (pas aussi « présentation »).
+3. **Plannings** : absences en conflit sur le prochain dimanche et les suivants ; une personne sur deux postes donne
+   deux lignes. Le réglage « Sur » (2 / 4 / 8) est gardé et devient le nombre de dimanches suivants (défaut 4). La
+   ligne « d'ici le … » reste affichée en vert quand tout est rempli.
+4. **Évènements** : « ferme bientôt » = fin des inscriptions dans les 7 jours ; « créneaux de scène vides » = créneaux
+   sans personne des programmes affichés, un dimanche entre le début et la fin de l'évènement (aucun lien programme ↔
+   évènement n'existe). Les entrées du Sheet restent avec « les autres ».
+5. **Tâches** : « les siennes » = celles dont on est responsable (`responsableUid`) ; les tâches « pour toute
+   l'équipe » vont avec celles des équipes.
+6. **Réunions** : la mention « compte rendu de la dernière : pas de lien » ne s'attache qu'à une réunion à venir du
+   même public (pas de ligne seule s'il n'y en a pas) ; le nombre = sujets non traités.
+7. **Comptes** : le réglage « Liste » n'a plus de sens et disparaît.
+8. **Disposition par défaut** : la même pour tous (admin compris), filtrée par les droits ; en grand écran les colonnes
+   du lot v18 placent Plannings (L) dans la colonne large, à gauche de Ce dimanche.
+
+### Libellés 中文 à relire
+排班表 · 活动 · 任务 · 会议 (noms, repris du menu) ; 一览 ; 已就绪 ; 歌单 · 演示文稿 · 早餐 ; 你负责的 ; 需提醒：{prénom}（{rôle}负责人） · 没有可提醒的负责人 ; 复制提醒 ·
+已复制 · 请复制下面的文字。 ; 已请假 · 排在 {poste} ; 替换 ; 截至{date}的空缺 · 截至{date}无空缺 ; 报名即将截止 ;
+{n} 个舞台时段空缺 ; 舞台 ; {n} 人报名 ; 你的 · 自 {date} 起逾期 · 截止 {date} ; 无账号的名字 · 本周新账号 ; 查看 ; {n} 个议题 ; 上次会议：未附纪要链接 ;
+暂无即将举行的会议。 Le texte du rappel copié reste en français.
