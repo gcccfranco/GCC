@@ -1,24 +1,25 @@
 "use client";
 
-// Widget 3 « Prochains évènements » (lot U6, B4) : 3, 5 ou 10 évènements à venir, avec leurs
-// inscriptions ; « Tout voir » mène aux Évènements du Back-Office (à Réunions pour qui n'a que cette
-// entrée, agencement v18, B15). Lot U8, C8 : les entrées du
-// Sheet des évènements (toute l'église, jusqu'au 31/12/2026) s'y mêlent ; elles ouvrent
-// l'onglet de leur mois, dans un nouvel onglet.
+// Widget 3 « Évènements » (lot U6, B4 ; réécrit au lot TB2-b, docs/spec-tableau-de-bord-v2.md T5) : d'abord ceux
+// qu'on organise ou que porte une de ses équipes (inscriptions en puce, « ferme bientôt », créneaux de scène
+// vides), puis les autres. « Tout voir » mène aux Évènements du Back-Office (à Réunions pour qui n'a que cette
+// entrée, agencement v18, B15). Lot U8, C8 : les entrées du Sheet des évènements (toute l'église, jusqu'au
+// 31/12/2026) s'y mêlent ; elles ouvrent l'onglet de leur mois, dans un nouvel onglet.
 import { useTranslation } from "react-i18next";
 import { entreesBackOffice } from "@/lib/access";
 import { Ticket } from "lucide-react";
 import { nowIsoParis } from "@/lib/evenements/agenda";
 import { lienOngletSheet, lireSheetEvenements } from "@/lib/evenements/sheet";
-import { listEvenements } from "@/lib/firebase/evenements";
+import { listCreneaux, listProgrammes } from "@/lib/firebase/programmes";
 import { useProfile } from "@/lib/firebase/users";
 import { baseBackOffice } from "@/lib/navigation";
 import { todayIso } from "@/lib/scene/dimanches";
+import { editionsAffichees } from "@/lib/scene/fetes";
 import { addDays } from "@/lib/taches/echeances";
-import { avecLeSheet, etatInscriptions, evenementsAVenir, type EtatInscriptions } from "@/lib/tableauDeBord/donnees";
-import { useLecture } from "@/lib/tableauDeBord/lecture";
+import { creneauxVides, etatInscriptions, evenementsDuTableau, fermeBientot, type EtatInscriptions } from "@/lib/tableauDeBord/donnees";
+import { lireEvenements, useLecture } from "@/lib/tableauDeBord/lecture";
 import type { Widget } from "@/types/backOffice";
-import { CadreWidget, LienTete, Message, Rangee, jourSemaine } from "./Cadre";
+import { CadreWidget, LienTete, Message, Puce, Rangee, jourSemaine } from "./Cadre";
 
 /** Le Sheet se lit sur un an : seuls les mois qui ont un onglet sont demandés. */
 const HORIZON_SHEET = 365;
@@ -27,13 +28,17 @@ export function WidgetEvenements({ widget }: { widget: Widget }) {
   const { t, i18n } = useTranslation();
   const { user, profile } = useProfile();
   const today = todayIso();
-  const { valeur: evenements, erreur } = useLecture(() => listEvenements(false), today);
+  const { valeur: evenements, erreur } = useLecture(() => lireEvenements(today), today);
   // Le Sheet à part : lent ou injoignable, il ne retient pas les évènements de l'app (relecture U8).
   const { valeur: sheet } = useLecture(() => lireSheetEvenements(today, addDays(today, HORIZON_SHEET)), today);
-  // Dix au plus de chaque côté suffisent à en garder 3, 5 ou 10 une fois mêlés.
-  const lignes = evenements && avecLeSheet(
-    evenementsAVenir(evenements, user, profile, today, { ...widget.reglages, nombre: 10 }), sheet?.entrees ?? [], today, widget.reglages,
-  );
+  const lignes = evenements && evenementsDuTableau(evenements, sheet?.entrees ?? [], user, profile, today, widget.reglages);
+  // Les créneaux de scène ne se lisent que s'il y a des évènements « à soi » : ceux des éditions affichées.
+  const sansCle = (lignes?.siens ?? []).map((e) => e.id).join();
+  const { valeur: creneaux } = useLecture(async () => {
+    if (!sansCle) return [];
+    const editions = editionsAffichees(await listProgrammes(), today).flatMap((e) => (e.programme ? [e.programme] : []));
+    return (await Promise.all(editions.map((p) => listCreneaux(p.id)))).flat();
+  }, `${today}|${sansCle}`);
   const maintenant = nowIsoParis();
   // Le widget est permis avec Évènements ou Réunions (B15) : « Tout voir » mène à l'entrée qu'on a.
   const toutVoir = entreesBackOffice(user, profile).includes("evenements") ? "/back-office/evenements" : "/back-office/reunions";
@@ -49,10 +54,34 @@ export function WidgetEvenements({ widget }: { widget: Widget }) {
     >
       {erreur ? <Message erreur>{t("tableauDeBord.lectureImpossible")}</Message>
         : !lignes ? <Message>{t("common.loading")}</Message>
-        : lignes.length === 0 ? <Message>{t("tableauDeBord.evenements.rien")}</Message>
+        : lignes.siens.length + lignes.autres.length === 0 ? <Message>{t("tableauDeBord.evenements.rien")}</Message>
         : (
           <div>
-            {lignes.map((l) => l.du === "app" ? (
+            {lignes.siens.map((e) => {
+              const bientot = fermeBientot(e, maintenant);
+              const etatE = etatInscriptions(e, maintenant);
+              const vides = creneaux ? creneauxVides(e, creneaux).length : 0;
+              return (
+                <Rangee
+                  key={e.id} testId="ligne-evenement" data={{ "data-sien": "true" }} href={`${baseBackOffice(e)}/${e.id}`}
+                  detail={(
+                    <span className="flex items-center gap-1.5">
+                      {etatE.cas === "places" && <Puce ton={bientot ? "warn" : "neutre"}>{etatE.inscrits} / {etatE.max}</Puce>}
+                      {etatE.cas === "sansLimite" && <Puce>{t("tableauDeBord.evenements.inscrits", { count: etatE.inscrits })}</Puce>}
+                      {vides > 0 && <Puce ton="bad">{t("tableauDeBord.evenements.scene")}</Puce>}
+                    </span>
+                  )}
+                >
+                  <b className="block break-words font-semibold">{e.titre} · {jourSemaine(e.date, i18n.language)}</b>
+                  <span className="block text-xs text-muted-foreground">
+                    {bientot ? t("tableauDeBord.evenements.fermeBientot")
+                      : vides > 0 ? t("tableauDeBord.evenements.creneauxVides", { count: vides })
+                      : etat(etatE)}
+                  </span>
+                </Rangee>
+              );
+            })}
+            {lignes.autres.map((l) => l.du === "app" ? (
               <Rangee
                 key={l.evenement.id} testId="ligne-evenement" href={`${baseBackOffice(l.evenement)}/${l.evenement.id}`}
                 detail={`${jourSemaine(l.date, i18n.language)} · ${etat(etatInscriptions(l.evenement, maintenant))}`}

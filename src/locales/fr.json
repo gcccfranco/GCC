@@ -3326,10 +3326,10 @@
     "widgets": {
       "dimanche": "Ce dimanche",
       "calendrier": "Calendrier",
-      "afaire": "À faire",
+      "afaire": "Tâches",
       "setlists": "Setlists à préparer",
-      "planning": "Cases vides du planning",
-      "evenements": "Prochains évènements",
+      "planning": "Plannings",
+      "evenements": "Évènements",
       "chants": "Chants les plus joués",
       "petitdej": "Petit déj",
       "scene": "Scène",
@@ -3339,18 +3339,23 @@
     "aucunWidget": "Aucun widget sur ton tableau de bord.",
     "lectureImpossible": "Lecture impossible pour l'instant.",
     "toutVoir": "Tout voir",
+    "voir": "Voir",
     "dimanche": {
       "titre": "Ce dimanche · {{date}}",
       "rien": "Rien au planning ce dimanche.",
-      "setlistPubliee": "Setlist publiée",
-      "pasDeSetlist": "Pas de setlist",
-      "presentationPrete": "Présentation prête",
-      "casesVides_one": "{{count}} case vide",
-      "casesVides_other": "{{count}} cases vides",
-      "personne": "Personne"
+      "coupDOeil": "coup d'œil",
+      "pret": "prêt",
+      "manque": {
+        "setlist": "setlist",
+        "presentation": "présentation",
+        "petitDej": "petit déj"
+      }
     },
     "afaire": {
       "enRetard": "{{count}} en retard",
+      "aToi": "à toi",
+      "enRetardDepuis": "en retard depuis le {{date}}",
+      "pour": "pour le {{date}}",
       "rien": "Rien à faire cette semaine."
     },
     "setlists": {
@@ -3358,9 +3363,19 @@
       "rien": "Toutes les setlists sont prêtes."
     },
     "planning": {
-      "titre": "Cases vides",
+      "complement": "ceux que tu remplis",
       "rien": "Aucune case vide.",
-      "aucun": "Aucun planning choisi."
+      "aucun": "Aucun planning choisi.",
+      "relancer": "à relancer : {{prenom}}, référent {{role}}",
+      "aucunReferent": "aucun référent à relancer",
+      "copier": "Copier le rappel",
+      "copie": "Copié",
+      "copieLeTexte": "Copie le texte ci-dessous.",
+      "absence": "absence déclarée · prévu au poste {{poste}}",
+      "remplacer": "Remplacer",
+      "plusTard": "Cases vides d'ici le {{date}}",
+      "plusTardRien": "Rien à remplir d'ici le {{date}}",
+      "planning": "Planning"
     },
     "evenements": {
       "places": "{{inscrits}} inscrits sur {{max}}",
@@ -3368,7 +3383,13 @@
       "fermees": "inscriptions fermées",
       "externe": "formulaire externe",
       "rien": "Aucun évènement à venir.",
-      "duSheet": "Sheet"
+      "duSheet": "Sheet",
+      "fermeBientot": "les inscriptions ferment bientôt",
+      "creneauxVides_one": "{{count}} créneau de scène vide",
+      "creneauxVides_other": "{{count}} créneaux de scène vides",
+      "inscrits_one": "{{count}} inscrit",
+      "inscrits_other": "{{count}} inscrits",
+      "scene": "scène"
     },
     "petitdej": {
       "libre": "Libre"
@@ -3384,13 +3405,8 @@
       "rien": "Aucun créneau à venir."
     },
     "comptes": {
-      "sansCompte": "Noms du planning sans compte",
-      "nouveaux": "Nouveaux comptes cette semaine",
-      "voirListe": "Voir la liste",
-      "aucunSansCompte": "Tous les noms ont un compte.",
-      "aucunNouveau": "Aucun nouveau compte cette semaine.",
-      "autres_one": "et {{count}} autre",
-      "autres_other": "et {{count}} autres"
+      "sansCompte": "noms sans compte",
+      "nouveaux": "nouveaux cette semaine"
     },
     "raccourcis": {
       "tache": "Tâche",
@@ -3426,14 +3442,12 @@
       "equipes": "Équipes",
       "plannings": "Plannings",
       "sur": "Sur",
+      "dimanchesSuivants": "Dimanches suivants",
       "afficher": "Afficher",
       "section": "Section",
       "toutes": "Toutes",
       "programme": "Programme",
       "programmeAffiche": "Celui qui est affiché",
-      "liste": "Liste",
-      "sansCompte": "Sans compte",
-      "nouveaux": "Nouveaux comptes",
       "raccourcis": "Raccourcis",
       "semaines_one": "{{count}} semaine",
       "semaines_other": "{{count}} semaines",

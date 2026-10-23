@@ -6,7 +6,11 @@ import { useEffect, useState } from "react";
 import { fusionnerLignes } from "@/lib/planning/grilles";
 import { fetchGrille } from "@/lib/planning/grille";
 import { fetchFidelite, lireSheetDe } from "@/lib/planning/sheets";
+import { listEvenements } from "@/lib/firebase/evenements";
 import { getSetlistsDepuis, type FSSetlist } from "@/lib/firebase/setlists";
+import { listProfiles } from "@/lib/firebase/users";
+import type { Evenement } from "@/types/evenement";
+import type { UserProfile } from "@/types/user";
 
 /**
  * Les lignes de plannings par clé : la grille de l'app et le Google Sheet réunis dimanche
@@ -35,6 +39,27 @@ export function lireSetlists(depuis: string): Promise<FSSetlist[]> {
   promesse.catch(() => { if (setlists === entree) setlists = null; });
   return promesse;
 }
+
+// Lot TB2 : « Évènements » (et bientôt « Réunions ») lisent les mêmes évènements, « Plannings » et
+// « Comptes » les mêmes profils : une lecture chacun, gardée une minute, rejetée non gardée.
+const TTL_PARTAGE_MS = 60_000;
+function lectureGardee<T>(lire: (cle: string) => Promise<T>): (cle: string) => Promise<T> {
+  let garde: { cle: string; at: number; promesse: Promise<T> } | null = null;
+  return (cle) => {
+    if (garde && garde.cle === cle && Date.now() - garde.at < TTL_PARTAGE_MS) return garde.promesse;
+    const promesse = lire(cle);
+    const entree = { cle, at: Date.now(), promesse };
+    garde = entree;
+    promesse.catch(() => { if (garde === entree) garde = null; });
+    return promesse;
+  };
+}
+
+/** Les évènements lisibles (`listEvenements(false)`), lus une fois pour tous les widgets ; `today` borne la garde au jour. */
+export const lireEvenements: (today: string) => Promise<Evenement[]> = lectureGardee(() => listEvenements(false));
+
+/** Tous les profils (`listProfiles`), lus une fois pour tous les widgets. */
+export const lireProfils: () => Promise<UserProfile[]> = (() => { const l = lectureGardee(() => listProfiles()); return () => l(""); })();
 
 /** Une lecture relancée quand `cle` change ; `erreur` si elle échoue (jamais « vide »). */
 export function useLecture<T>(lire: () => Promise<T>, cle: string): { valeur: T | null; erreur: boolean } {

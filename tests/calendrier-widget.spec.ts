@@ -348,7 +348,7 @@ test.describe("relecture du lot : le widget ne dépend ni du Sheet ni de l'histo
     }, "/back-office");
     await expect(lignes(page).nth(0)).toContainText("Fond du culte");
     await expect(lignes(page).nth(1)).toContainText(/Sam\. 3.*Réunion DA/);
-    const evenements = page.getByTestId("grille-widgets").getByRole("region", { name: "Prochains évènements", exact: true });
+    const evenements = page.getByTestId("grille-widgets").getByRole("region", { name: "Évènements", exact: true });
     await expect(evenements.getByTestId("ligne-evenement")).toHaveText([/Tournoi de ping/]);
   });
 
@@ -391,7 +391,7 @@ test.describe("C8 : « Prochains évènements » reçoit le Sheet", () => {
       ...DOCS,
       "backOffice/u-evt": { tableauDeBord: [{ id: "evenements", taille: "m", reglages: { nombre: 10 } }], majLe: "2026-10-01" },
     }, "/back-office");
-    const w = page.getByTestId("grille-widgets").getByRole("region", { name: "Prochains évènements", exact: true });
+    const w = page.getByTestId("grille-widgets").getByRole("region", { name: "Évènements", exact: true });
     const ls = w.getByTestId("ligne-evenement");
     await expect(ls).toHaveText([
       /Repas partagé.*dim\. 04\/10.*12:30.*Sheet/,
@@ -427,7 +427,7 @@ test.describe("C8 : captures à regarder", () => {
       await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" });
       const contenu = { s: widgetCal(page).getByTestId("ligne-calendrier").first(), m: widgetCal(page).getByTestId("semaine"), l: widgetCal(page).getByTestId("grille-points") };
       await expect(contenu[taille]).toBeVisible();
-      await expect(page.getByTestId("grille-widgets").getByRole("region", { name: "Prochains évènements" }).getByTestId("ligne-evenement").first()).toBeVisible();
+      await expect(page.getByTestId("grille-widgets").getByRole("region", { name: "Évènements" }).getByTestId("ligne-evenement").first()).toBeVisible();
       await page.screenshot({ path: `test-results/calendrier-widget-captures/${info.project.name}-${taille}.png`, fullPage: true });
     }
   });

@@ -288,7 +288,7 @@ test.describe("T2a, relecture : là où mènent le widget et le guide", () => {
     ...DOCS,
     [`backOffice/${p.uid}`]: { tableauDeBord: [{ id: "evenements", taille: "m", reglages: {} }], majLe: "2026-10-01T09:00:00Z" },
   });
-  const widget = (page: Page) => page.getByTestId("grille-widgets").getByRole("region", { name: "Prochains évènements", exact: true });
+  const widget = (page: Page) => page.getByTestId("grille-widgets").getByRole("region", { name: "Évènements", exact: true });
 
   test("membre d'équipe responsable (Réunions sans Évènements) : « Tout voir » du widget mène à ses réunions", async ({ page }) => {
     await ouvrir(page, NOTIFY_EQUIPE, "/back-office", avecLeWidget(NOTIFY_EQUIPE));

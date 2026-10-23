@@ -342,16 +342,20 @@ test.describe("Tableau de bord (B4) : écrans", () => {
     expect(await widgetsAffiches(page)).toEqual(["dimanche", "calendrier", "afaire", "setlists", "planning", "evenements", "chants", "petitdej", "raccourcis", "scene", "comptes"]);
   });
 
-  test("Ce dimanche : le Culte du 4 octobre, setlist, présentation, case vide", async ({ page }) => {
+  test("Ce dimanche : le Culte du 4 octobre manque une case (Batterie), setlist et présentation sont là", async ({ page }) => {
     await ouvrir(page, ADMIN);
     const w = widget(page, "Ce dimanche");
     await expect(w.getByRole("heading", { name: "Ce dimanche · 4 octobre" })).toBeVisible();
-    await expect(w.getByText("Culte Franco", { exact: true })).toBeVisible();
-    await expect(w.getByText("Setlist publiée")).toBeVisible();
-    await expect(w.getByText("Présentation prête")).toBeVisible();
-    await expect(w.getByText("1 case vide")).toBeVisible();
-    await expect(w.getByTestId("ligne-dimanche").filter({ hasText: "Présidence" })).toContainText("Pers. A");
-    await expect(w.getByTestId("ligne-dimanche").filter({ hasText: "Batterie" })).toContainText("Personne");
+    await expect(w).toContainText("coup d'œil");
+    const culte = w.getByTestId("ligne-dimanche").filter({ hasText: "Culte Franco" });
+    await expect(culte).toHaveCount(1);
+    await expect(culte).toContainText("1");
+    await expect(culte).toContainText("Batterie");
+    await expect(culte).not.toContainText("setlist");
+    await expect(culte).not.toContainText("présentation");
+    // Plus aucun nom de personne.
+    await expect(w.getByText("Pers. A")).toHaveCount(0);
+    await expect(w.getByRole("link", { name: "Voir" })).toHaveAttribute("href", /^\/back-office\/planning\/culte\/?$/);
   });
 
   test("Ce dimanche : un réglage de services change le contenu", async ({ page }) => {
@@ -368,13 +372,13 @@ test.describe("Tableau de bord (B4) : écrans", () => {
     await expect(widget(page, "Scène")).toBeVisible();
     expect(await widgetsAffiches(page)).toEqual(ALICE_ORGA_DEFAUT);
 
-    const aFaire = widget(page, "À faire");
+    const aFaire = widget(page, "Tâches");
     await expect(aFaire.getByText("1 en retard")).toBeVisible();
     await expect(aFaire.getByText("Affiche de Noël")).toBeVisible();
     await expect(aFaire.getByText("Réserver la salle")).toBeVisible();
     await expect(aFaire.getByText("Fond du culte")).toHaveCount(0);
 
-    const evts = widget(page, "Prochains évènements");
+    const evts = widget(page, "Évènements");
     await expect(evts.getByTestId("ligne-evenement")).toHaveText([/Foot au parc.*4 inscrits sur 10/, /Repas de section.*sans limite/, /Sortie d'automne/]);
     await expect(evts.getByRole("link", { name: "Tout voir" })).toHaveAttribute("href", /\/back-office\/evenements\/?$/);
 
@@ -390,8 +394,10 @@ test.describe("Tableau de bord (B4) : écrans", () => {
     await expect(setlists.getByRole("link", { name: /Culte Franco · 11 oct\./ }))
       .toHaveAttribute("href", /^\/setlists\/new\/?\?cat=Culte\+Francophone&date=2026-10-11$/);
 
-    const vides = widget(page, "Cases vides du planning");
-    await expect(vides.getByTestId("ligne-case-vide")).toHaveText([/4 oct\.\s*Batterie/, /11 oct\.\s*Guitare, Batterie/, /18 oct\.\s*PPT/]);
+    // TB2-b : la case vide du 4 octobre seule, puis une ligne pour les dimanches suivants (11 : guitare + batterie ; 18 : PPT).
+    const vides = widget(page, "Plannings");
+    await expect(vides.getByTestId("ligne-case-vide")).toHaveText([/Culte Franco · 4 oct\. · Batterie/]);
+    await expect(vides.getByTestId("ligne-plus-tard")).toContainText("Cases vides d'ici le 1 nov.");
   });
 
   test("admin : petit déj, raccourcis, comptes", async ({ page }) => {
@@ -405,10 +411,12 @@ test.describe("Tableau de bord (B4) : écrans", () => {
     await expect(raccourcis.getByRole("link", { name: "Notifier" })).toHaveAttribute("href", /^\/back-office\/messages\/notifier\/?$/);
     await expect(raccourcis.getByRole("link", { name: "Setlist" })).toHaveAttribute("href", /^\/setlists\/new\/?$/);
 
+    // TB2-b : deux nombres (les huit autres noms du planning n'ont pas de compte), plus de liste de noms.
     const comptes = widget(page, "Comptes");
-    await expect(comptes.getByText("Noms du planning sans compte")).toBeVisible();
+    await expect(comptes.getByTestId("compte-sans-compte")).toContainText("noms sans compte");
+    await expect(comptes.getByTestId("compte-nouveaux")).toContainText("nouveaux cette semaine");
     await expect(comptes.getByText("Pers. A", { exact: true })).toHaveCount(0);
-    await expect(comptes.getByRole("link", { name: "Voir la liste" })).toHaveAttribute("href", /^\/back-office\/planning\/sans-compte\/?$/);
+    await expect(comptes.getByRole("link", { name: "Voir" })).toHaveAttribute("href", /^\/back-office\/planning\/sans-compte\/?$/);
   });
 
   test("disposition enregistrée : son ordre, ses tailles selon l'appareil (Q10), ses réglages", async ({ page }, info) => {
@@ -423,11 +431,12 @@ test.describe("Tableau de bord (B4) : écrans", () => {
         majLe: "2026-10-01T09:00:00Z",
       },
     });
-    await expect(widget(page, "Prochains évènements").getByTestId("ligne-evenement")).toHaveCount(5);
+    await expect(widget(page, "Évènements").getByTestId("ligne-evenement")).toHaveCount(5);
     // « chants » (U7, S5) : permis à un admin, donc affiché.
     expect(await widgetsAffiches(page)).toEqual(["evenements", "planning", "dimanche", "chants"]);
-    // Réglage « 2 dimanches » : le 4 et le 11 seulement.
-    await expect(widget(page, "Cases vides du planning").getByTestId("ligne-case-vide")).toHaveCount(2);
+    // Réglage « 2 dimanches » (les suivants, TB2-b) : la ligne « plus tard » va jusqu'au 18 octobre (11 et 18).
+    await expect(widget(page, "Plannings").getByTestId("ligne-case-vide")).toHaveCount(1);
+    await expect(widget(page, "Plannings").getByTestId("ligne-plus-tard")).toContainText("Cases vides d'ici le 18 oct.");
 
     const n = colonnes(info);
     if (n === 4) {
@@ -436,8 +445,8 @@ test.describe("Tableau de bord (B4) : écrans", () => {
       // dans l'étroite, vide jusque-là. Un widget prend la largeur de sa colonne : L ≈ 1,55 × S ;
       // M (« Ce dimanche »), celle de la colonne où le place sa hauteur.
       await expect(grille(page)).toHaveAttribute("data-disposition", "colonnes");
-      const L = widget(page, "Prochains évènements");
-      const S = widget(page, "Cases vides du planning");
+      const L = widget(page, "Évènements");
+      const S = widget(page, "Plannings");
       const M = widget(page, "Ce dimanche");
       await expect(L).toHaveAttribute("data-colonne", "0");
       await expect(S).toHaveAttribute("data-colonne", "1");
@@ -448,8 +457,8 @@ test.describe("Tableau de bord (B4) : écrans", () => {
       expect(Math.min(Math.abs(m - large), Math.abs(m - etroite)), "M a la largeur d'une des deux colonnes").toBeLessThanOrEqual(1);
       return;
     }
-    const L = await part(grille(page), widget(page, "Prochains évènements"));
-    const S = await part(grille(page), widget(page, "Cases vides du planning"));
+    const L = await part(grille(page), widget(page, "Évènements"));
+    const S = await part(grille(page), widget(page, "Plannings"));
     const M = await part(grille(page), widget(page, "Ce dimanche"));
     expect(L).toBeCloseTo(1, 1);
     expect(M).toBeCloseTo(n === 2 ? 0.5 : 1, 1);
@@ -475,7 +484,7 @@ test.describe("Tableau de bord (B4) : écrans", () => {
         majLe: "2026-10-01",
       },
     });
-    await expect(widget(page, "Ce dimanche").getByText("Setlist publiée")).toBeVisible();
+    await expect(widget(page, "Ce dimanche").getByTestId("ligne-dimanche")).toHaveCount(1);
     await expect(widget(page, "Setlists à préparer").getByTestId("ligne-setlist").first()).toBeVisible();
     expect(lectures).toEqual([expect.objectContaining({
       where: { fieldFilter: { field: { fieldPath: "date" }, op: "GREATER_THAN_OR_EQUAL", value: { stringValue: "2026-10-01" } } },
@@ -484,7 +493,7 @@ test.describe("Tableau de bord (B4) : écrans", () => {
 
   test("setlists illisibles : « Lecture impossible » dans les deux widgets, jamais « Pas de setlist »", async ({ page }) => {
     await ouvrir(page, ADMIN);
-    await expect(widget(page, "Ce dimanche").getByText("Setlist publiée")).toBeVisible();
+    await expect(widget(page, "Ce dimanche").getByTestId("ligne-dimanche")).toHaveCount(1);
     // Posée après la base simulée, cette route passe avant elle ; le rechargement relit tout.
     await page.route(/documents:runQuery/, (route) => {
       const q = (route.request().postDataJSON() as { structuredQuery?: { from?: { collectionId: string }[]; limit?: number } }).structuredQuery;
@@ -496,7 +505,8 @@ test.describe("Tableau de bord (B4) : écrans", () => {
     await page.reload();
     await expect(widget(page, "Ce dimanche").getByText("Lecture impossible pour l'instant.")).toBeVisible();
     await expect(widget(page, "Setlists à préparer").getByText("Lecture impossible pour l'instant.")).toBeVisible();
-    await expect(widget(page, "Ce dimanche").getByText("Pas de setlist")).toHaveCount(0);
+    // Une lecture en échec n'est jamais « prêt » ni « setlist » manquante : aucune rangée.
+    await expect(widget(page, "Ce dimanche").getByTestId("ligne-dimanche")).toHaveCount(0);
     await expect(widget(page, "Setlists à préparer").getByTestId("ligne-setlist")).toHaveCount(0);
   });
 
@@ -511,7 +521,7 @@ test.describe("Tableau de bord (B4) : écrans", () => {
   test("captures du tableau de bord (à regarder)", async ({ page }, info) => {
     await ouvrir(page, ADMIN);
     await expect(widget(page, "Comptes")).toBeVisible();
-    await expect(widget(page, "Ce dimanche").getByText("Setlist publiée")).toBeVisible();
+    await expect(widget(page, "Ce dimanche").getByTestId("ligne-dimanche")).toHaveCount(1);
     await page.screenshot({ path: `test-results/tableau-de-bord-captures/${info.project.name}-admin.png`, fullPage: true });
   });
 
@@ -519,7 +529,7 @@ test.describe("Tableau de bord (B4) : écrans", () => {
     await page.addInitScript(() => { try { localStorage.setItem("i18nextLng", "zh-CN"); } catch {} });
     await ouvrir(page, ALICE_ORGA);
     await expect(grille(page).getByRole("region", { name: "本主日" })).toBeVisible();
-    await expect(grille(page).getByRole("region", { name: "待办" })).toBeVisible();
+    await expect(grille(page).getByRole("region", { name: "任务" })).toBeVisible();
   });
 });
 
@@ -571,7 +581,7 @@ test.describe("Personnaliser (B5) : règles pures", () => {
     expect(ids(d)).toEqual(ALICE_DEFAUT);
   });
 
-  test("réglages de Prochains évènements : nombre 3 / 5 / 10, section (toutes)", () => {
+  test("réglages d'Évènements : nombre 3 / 5 / 10, section (toutes)", () => {
     const [nombre, section] = groupesDeReglages("evenements", {}, user(ALICE), profil(ALICE));
     expect([nombre.cle, nombre.plusieurs, nombre.choix.map((c) => c.valeur), nombre.actifs]).toEqual(["nombre", false, ["3", "5", "10"], ["3"]]);
     expect([section.cle, section.choix.map((c) => c.valeur), section.actifs])
@@ -597,12 +607,13 @@ test.describe("Personnaliser (B5) : règles pures", () => {
         .map((x) => [x.cle, x.choix.map((c) => c.valeur), x.actifs]);
     expect(g("dimanche", DA)[0][2]).toEqual(["Culte Francophone"]);
     expect(g("planning", null)).toEqual([
-      ["plannings", expect.arrayContaining(["culte", "campusMatin"]), ["culte"]], ["horizon", ["2", "4", "8"], ["4"]],
+      ["plannings", expect.arrayContaining(["culte", "campusMatin"]), ["culte"]], ["horizon", ["2", "4", "8"], ["4"]],  // dimanches suivants (TB2-b)
     ]);
     expect(g("setlists", LOUANGE)).toEqual([["services", ["Culte Francophone"], ["Culte Francophone"]], ["horizon", ["2", "4"], ["4"]]]);
     expect(g("petitdej", ALICE)).toEqual([["horizon", ["4", "8"], ["4"]]]);
     expect(g("scene", ALICE, [{ id: "p1", nom: "Noël" }])).toEqual([["programme", ["", "p1"], [""]]]);
-    expect(g("comptes", null)).toEqual([["liste", ["sansCompte", "nouveaux"], ["sansCompte"]]]);
+    // Lot TB2-b : Comptes montre deux nombres, plus de liste : aucun réglage.
+    expect(g("comptes", null)).toEqual([]);
     expect(g("raccourcis", ALICE)).toEqual([["raccourcis", ["tache", "evenement"], ["tache", "evenement"]]]);
   });
 
@@ -622,7 +633,7 @@ test.describe("Personnaliser (B5) : écrans", () => {
     // Les outils de chaque widget ; Monter grisé en tête, Descendre en queue.
     await expect(widget(page, "Ce dimanche").getByRole("button", { name: "Monter" })).toBeDisabled();
     await expect(widget(page, "Scène").getByRole("button", { name: "Descendre" })).toBeDisabled();
-    await expect(widget(page, "Prochains évènements").getByRole("button", { name: "M", exact: true })).toHaveAttribute("aria-pressed", "true");
+    await expect(widget(page, "Évènements").getByRole("button", { name: "M", exact: true })).toHaveAttribute("aria-pressed", "true");
     await page.getByRole("button", { name: "Terminé" }).click();
     await expect(page.getByRole("button", { name: "Personnaliser" })).toBeVisible();
     await expect(catalogueDe(page)).toHaveCount(0);
@@ -639,9 +650,9 @@ test.describe("Personnaliser (B5) : écrans", () => {
     await expect.poll(() => idsEcrits(db, "uid-alice")).toEqual([...ALICE_ORGA_DEFAUT, "petitdej"]);
     expect(ecrituresBO(db, "uid-alice").at(-1)!.data.majLe).toEqual(expect.stringMatching(/^2026-10-01T/));
 
-    await widget(page, "À faire").getByRole("button", { name: "Retirer le widget" }).click();
-    await expect(widget(page, "À faire")).toHaveCount(0);
-    await expect(catalogueDe(page).getByRole("button")).toHaveText(["Calendrier", "À faire", "Raccourcis"]);
+    await widget(page, "Tâches").getByRole("button", { name: "Retirer le widget" }).click();
+    await expect(widget(page, "Tâches")).toHaveCount(0);
+    await expect(catalogueDe(page).getByRole("button")).toHaveText(["Calendrier", "Tâches", "Raccourcis"]);
     await expect.poll(() => idsEcrits(db, "uid-alice")).toEqual(["dimanche", "setlists", "planning", "evenements", "scene", "petitdej"]);
   });
 
@@ -666,7 +677,7 @@ test.describe("Personnaliser (B5) : écrans", () => {
     const db = await ouvrir(page, ALICE_ORGA);
     await personnaliser(page);
     const poignee = widget(page, "Scène").getByRole("button", { name: "Déplacer « Scène »" });
-    const cible = widget(page, "Prochains évènements");
+    const cible = widget(page, "Évènements");
     await cible.evaluate((e) => e.scrollIntoView({ block: "center" }));
     const from = (await poignee.boundingBox())!;
     const to = (await cible.boundingBox())!;
@@ -684,7 +695,7 @@ test.describe("Personnaliser (B5) : écrans", () => {
   test("tailles S / M / L : la place change selon l'appareil (Q10), et s'écrit", async ({ page }, info) => {
     const db = await ouvrir(page, ALICE_ORGA);
     await personnaliser(page);
-    const evts = widget(page, "Prochains évènements");
+    const evts = widget(page, "Évènements");
     await evts.getByRole("button", { name: "L", exact: true }).click();
     await expect(evts.getByRole("button", { name: "L", exact: true })).toHaveAttribute("aria-pressed", "true");
     await expect.poll(() => part(grille(page), evts)).toBeCloseTo(1, 1);
@@ -697,7 +708,7 @@ test.describe("Personnaliser (B5) : écrans", () => {
 
   test("un réglage change le contenu et s'écrit", async ({ page }) => {
     const db = await ouvrir(page, ALICE_ORGA);
-    const evts = widget(page, "Prochains évènements");
+    const evts = widget(page, "Évènements");
     await expect(evts.getByTestId("ligne-evenement")).toHaveCount(3);
     await personnaliser(page);
     const reglages = evts.getByRole("button", { name: "Réglages du widget" });
@@ -711,12 +722,12 @@ test.describe("Personnaliser (B5) : écrans", () => {
       ?.find((w) => w.id === "evenements")?.reglages).toEqual({ nombre: 5 });
   });
 
-  test("Réussite 2 : Alice ajoute Petit déj, monte Scène en tête, passe Prochains évènements en L ; relue sur un autre appareil, la même", async ({ page, browser }, info) => {
+  test("Réussite 2 : Alice ajoute Petit déj, monte Scène en tête, passe Évènements en L ; relue sur un autre appareil, la même", async ({ page, browser }, info) => {
     const db = await ouvrir(page, ALICE_ORGA);
     await personnaliser(page);
     await catalogueDe(page).getByRole("button", { name: "Petit déj" }).click();
     for (let i = 0; i < 5; i++) await widget(page, "Scène").getByRole("button", { name: "Monter" }).click();
-    await widget(page, "Prochains évènements").getByRole("button", { name: "L", exact: true }).click();
+    await widget(page, "Évènements").getByRole("button", { name: "L", exact: true }).click();
     const voulu = ["scene", "dimanche", "afaire", "setlists", "planning", "evenements", "petitdej"];
     await expect.poll(() => widgetsAffiches(page)).toEqual(voulu);
     await expect.poll(() => (db.doc("backOffice/uid-alice")?.tableauDeBord as { taille: string }[] | undefined)?.[5]?.taille).toBe("l");
@@ -730,8 +741,8 @@ test.describe("Personnaliser (B5) : écrans", () => {
       await expect(widget(page2, "Petit déj")).toBeVisible();
       expect(await widgetsAffiches(page2)).toEqual(voulu);
       // Agencement v18 (B14) : en grand, hors personnalisation, le « Grand » va dans la colonne large.
-      if (colonnes(info) === 4) await expect(widget(page2, "Prochains évènements")).toHaveAttribute("data-colonne", "0");
-      else expect(await part(grille(page2), widget(page2, "Prochains évènements"))).toBeCloseTo(1, 1);
+      if (colonnes(info) === 4) await expect(widget(page2, "Évènements")).toHaveAttribute("data-colonne", "0");
+      else expect(await part(grille(page2), widget(page2, "Évènements"))).toBeCloseTo(1, 1);
     } finally {
       await autre.close();
     }
@@ -764,7 +775,7 @@ test.describe("Personnaliser (B5) : écrans", () => {
         ? route.fulfill({ status: 403, contentType: "application/json", body: "{}" })
         : route.fallback());
     await personnaliser(page);
-    await widget(page, "À faire").getByRole("button", { name: "Retirer le widget" }).click();
+    await widget(page, "Tâches").getByRole("button", { name: "Retirer le widget" }).click();
     await expect(page.getByRole("alert").filter({ hasText: "Disposition non enregistrée" })).toBeVisible();
     expect(await widgetsAffiches(page)).toEqual(["dimanche", "setlists", "planning", "evenements", "scene"]);
   });
@@ -772,7 +783,7 @@ test.describe("Personnaliser (B5) : écrans", () => {
   test("captures en personnalisation (à regarder)", async ({ page }, info) => {
     await ouvrir(page, ALICE_ORGA);
     await personnaliser(page);
-    await widget(page, "Prochains évènements").getByRole("button", { name: "Réglages du widget" }).click();
+    await widget(page, "Évènements").getByRole("button", { name: "Réglages du widget" }).click();
     await page.screenshot({ path: `test-results/tableau-de-bord-captures/${info.project.name}-personnaliser.png`, fullPage: true });
   });
 
@@ -1014,5 +1025,207 @@ test.describe("Tableau de bord v2 (TB2-a) : règles pures", () => {
     const avec = [re("passeAvec2", "2026-10-15", "equipe:da", { compteRendu: cr }), re("a", "2026-10-29", "equipe:da")];
     expect(reunionsDuTableau(avec, moi, p, "2026-10-22T10:00")[0].precedenteSansCompteRendu).toBeNull();
     expect(sujetsOuverts([{ traite: false }, { traite: true }, { traite: false }])).toBe(2);
+  });
+});
+
+// ─── Lot TB2, tranche TB2-b : les écrans (Ce dimanche, Plannings, Évènements, Tâches, Comptes) ─────────────────
+// Jeu d'essai : jeudi 1er octobre 2026 10:00 (`ouvrir`) → prochain dimanche = 4 octobre. Personnes inventées pour ces tests.
+
+test.describe("Tableau de bord v2 (TB2-b) : écrans", () => {
+  const CORENTIN: Record<string, unknown> = {
+    email: "corentin@example.com", firstName: "Corentin", lastName: "R.", planningName: "", serviceRoles: {}, annonces: [], notify: [],
+    dansEquipes: ["louange"], sousEquipes: ["musiciens"], referentSous: ["musiciens"],
+  };
+  const JEU: Record<string, Record<string, unknown>> = {
+    "users/uid-corentin": CORENTIN,
+    // Pers. B joue le 11 octobre (choriste 1 et traduction) et s'est déclarée absente ce jour-là.
+    "users/uid-pers-b": { email: "b@example.com", firstName: "Pers", lastName: "B", planningName: "Pers. B", serviceRoles: {}, annonces: [], notify: [] },
+    "users/uid-pers-b/absences/a1": { du: "2026-10-11", au: "2026-10-11", motif: "Motif secret" },
+  };
+  const RAPPEL = (origin: string) =>
+    "Salut Corentin, pour le culte de dimanche 4 octobre, il manque encore quelqu'un à la batterie. "
+    + `Tu peux t'en occuper d'ici samedi ? Merci ! ${origin}/back-office/planning/culte`;
+  const caseBatterie = (page: Page) => widget(page, "Plannings").getByTestId("ligne-case-vide").filter({ hasText: "Batterie" });
+
+  test("Plannings : la batterie du 4 octobre dit qui relancer, et le texte du rappel part dans le presse-papier", async ({ page, context }) => {
+    await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+    await ouvrir(page, LOUANGE_ORGA, JEU);
+    const ligne = caseBatterie(page);
+    await expect(ligne).toContainText("Culte Franco · 4 oct. · Batterie");
+    await expect(ligne).toContainText("à relancer : Corentin, référent Musiciens");
+    // Les cases vides d'autres colonnes (ici aucune) n'ont pas de bouton sans référent : le PPT du 18 est « plus tard ».
+    await expect(widget(page, "Plannings").getByTestId("ligne-case-vide")).toHaveCount(1);
+    await ligne.getByRole("button", { name: "Copier le rappel" }).click();
+    await expect(ligne.getByRole("button", { name: "Copié" })).toBeVisible();
+    const origine = new URL(page.url()).origin;
+    expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(RAPPEL(origine));
+  });
+
+  test("Plannings : sans accès au presse-papier, le texte s'affiche sélectionné", async ({ page }) => {
+    await page.addInitScript(() => {
+      Object.defineProperty(navigator, "clipboard", { configurable: true, value: { writeText: () => Promise.reject(new Error("refusé")) } });
+    });
+    await ouvrir(page, LOUANGE_ORGA, JEU);
+    const ligne = caseBatterie(page);
+    await ligne.getByRole("button", { name: "Copier le rappel" }).click();
+    await expect(ligne.getByText("Copie le texte ci-dessous.")).toBeVisible();
+    const zone = ligne.getByRole("textbox");
+    await expect(zone).toHaveValue(RAPPEL(new URL(page.url()).origin));
+    await expect(zone).toBeFocused();
+    expect(await zone.evaluate((z: HTMLTextAreaElement) => [z.selectionStart, z.selectionEnd, z.value.length])).toEqual([0, RAPPEL(new URL(page.url()).origin).length, RAPPEL(new URL(page.url()).origin).length]);
+    await expect(ligne.getByRole("button", { name: "Copié" })).toHaveCount(0);
+  });
+
+  test("Plannings : sans référent, « aucun référent à relancer » et pas de bouton", async ({ page }) => {
+    await ouvrir(page, LOUANGE_ORGA, {
+      "plannings/culte/dimanches/2026-10-04": { date: "2026-10-04", ...CULTE_PLEIN, batterie: "", ppt: "" },
+    });
+    const w = widget(page, "Plannings");
+    await expect(w.getByTestId("ligne-case-vide")).toHaveCount(2);
+    const ppt = w.getByTestId("ligne-case-vide").filter({ hasText: "PPT" });
+    await expect(ppt).toContainText("aucun référent à relancer");
+    await expect(ppt.getByRole("button")).toHaveCount(0);
+  });
+
+  test("Plannings : une absence en conflit se remplace, sans jamais montrer le motif", async ({ page }) => {
+    await ouvrir(page, LOUANGE_ORGA, JEU);
+    const absences = widget(page, "Plannings").getByTestId("ligne-absence");
+    // Pers. B tient deux postes ce jour-là (choriste 1 et traduction) : une rangée par poste.
+    await expect(absences).toHaveCount(2);
+    await expect(absences.first()).toContainText("Culte Franco · 11 oct. · Pers. B");
+    await expect(absences.first()).toContainText("absence déclarée · prévu au poste");
+    await expect(absences.first().getByRole("link", { name: "Remplacer" })).toHaveAttribute("href", /^\/back-office\/planning\/culte\/?$/);
+    await expect(page.getByText("Motif secret")).toHaveCount(0);
+    expect(await page.content()).not.toContain("Motif secret");
+  });
+
+  test("Plannings : « d'ici le 1er novembre », les cases vides des quatre dimanches suivants", async ({ page }) => {
+    await ouvrir(page, LOUANGE_ORGA, JEU);
+    const plusTard = widget(page, "Plannings").getByTestId("ligne-plus-tard");
+    await expect(plusTard).toContainText("Cases vides d'ici le 1 nov.");
+    await expect(plusTard).toContainText(/^3/);
+    await expect(plusTard).toContainText(/Culte Franco : .*Guitare.*Batterie.*PPT/);
+    await expect(plusTard.getByRole("link", { name: "Planning" })).toHaveAttribute("href", /^\/back-office\/planning\/culte\/?$/);
+  });
+
+  test("Plannings : tout est rempli, une ligne verte le dit", async ({ page }) => {
+    await ouvrir(page, LOUANGE_ORGA, {
+      "plannings/culte/dimanches/2026-10-04": { date: "2026-10-04", ...CULTE_PLEIN },
+      "plannings/culte/dimanches/2026-10-11": { date: "2026-10-11", ...CULTE_PLEIN },
+      "plannings/culte/dimanches/2026-10-18": { date: "2026-10-18", ...CULTE_PLEIN },
+    });
+    const w = widget(page, "Plannings");
+    await expect(w.getByTestId("ligne-plus-tard")).toContainText("Rien à remplir d'ici le 1 nov.");
+    await expect(w.getByTestId("ligne-case-vide")).toHaveCount(0);
+    await expect(w.getByTestId("ligne-absence")).toHaveCount(0);
+  });
+
+  test("Ce dimanche : le Culte plein et publié est prêt (✓), un manque se compte", async ({ page }) => {
+    await ouvrir(page, ADMIN, { "plannings/culte/dimanches/2026-10-04": { date: "2026-10-04", ...CULTE_PLEIN } });
+    const culte = widget(page, "Ce dimanche").getByTestId("ligne-dimanche").filter({ hasText: "Culte Franco" });
+    await expect(culte).toContainText("prêt");
+    await expect(culte).not.toContainText("Batterie");
+  });
+
+  test("Ce dimanche : sans setlist publiée, « setlist » manque", async ({ page }) => {
+    await ouvrir(page, ADMIN, { "setlists/s-04": { ...DOCS["setlists/s-04"], isDraft: true } });
+    const culte = widget(page, "Ce dimanche").getByTestId("ligne-dimanche").filter({ hasText: "Culte Franco" });
+    await expect(culte).toContainText("Batterie · setlist");
+    await expect(culte).toContainText("2");
+  });
+
+  test("Évènements : celui que j'organise passe avant un plus proche, et dit qu'il ferme bientôt", async ({ page }) => {
+    await ouvrir(page, ALICE_ORGA, {
+      // Le sien : le 18 octobre, inscriptions automatiques qui finissent le 4 (dans 3 jours), un créneau de scène sans personne ce jour-là.
+      "evenements/e8": {
+        titre: "Atelier cuisine", type: "loisir", pour: "eglise", date: "2026-10-18", heure: "15:00", placesMax: 12, inscrits: 5,
+        inscriptions: "auto", inscriptionFin: "2026-10-04", organisateurUid: "uid-alice",
+      },
+      "programmes/p1/creneaux/c3": { dimanche: "2026-10-18", debut: "16:00", fin: "17:00", quoi: "Danse", qui: [], note: "" },
+    });
+    const lignes = widget(page, "Évènements").getByTestId("ligne-evenement");
+    await expect(lignes).toHaveText([/Atelier cuisine · dim\. 18\/10/, /Foot au parc/, /Repas de section/]);
+    await expect(lignes.first()).toHaveAttribute("data-sien", "true");
+    await expect(lignes.nth(1)).not.toHaveAttribute("data-sien", "true");
+    await expect(lignes.first()).toContainText("les inscriptions ferment bientôt");
+    await expect(lignes.first()).toContainText("5 / 12");
+    await expect(lignes.first()).toContainText("scène");
+    // Sans « ferme bientôt », les créneaux vides prennent la place du petit texte.
+    await expect(lignes.nth(1)).toContainText("4 inscrits sur 10");
+  });
+
+  test("Évènements : les créneaux de scène vides, quand les inscriptions ne ferment pas bientôt", async ({ page }) => {
+    await ouvrir(page, ALICE_ORGA, {
+      "evenements/e8": {
+        titre: "Atelier cuisine", type: "loisir", pour: "eglise", date: "2026-10-18", heure: "15:00", placesMax: null, inscrits: 3,
+        inscriptions: "ouvertes", organisateurUid: "uid-alice",
+      },
+      "programmes/p1/creneaux/c3": { dimanche: "2026-10-18", debut: "16:00", fin: "17:00", quoi: "Danse", qui: [], note: "" },
+    });
+    const sien = widget(page, "Évènements").getByTestId("ligne-evenement").first();
+    await expect(sien).toContainText("Atelier cuisine");
+    await expect(sien).toContainText("1 créneau de scène vide");
+    await expect(sien).toContainText("3 inscrits");
+    await expect(sien).toContainText("scène");
+  });
+
+  test("Tâches : la mienne passe avant celle de l'équipe à la même échéance, le retard reste en tête", async ({ page }) => {
+    await ouvrir(page, ALICE_ORGA, {
+      "equipes/evenementiel/taches/t4": { titre: "Brief des bénévoles", responsableUid: "uid-alice", responsableNom: "Alice", echeance: "2026-10-05", repetition: null },
+    });
+    const lignes = widget(page, "Tâches").getByTestId("ligne-tache");
+    await expect(lignes).toHaveText([/Affiche de Noël/, /Brief des bénévoles/, /Réserver la salle/]);
+    await expect(lignes.nth(0)).toHaveAttribute("data-a-moi", "false");
+    await expect(lignes.nth(0)).toContainText("en retard depuis le 28/09");
+    await expect(lignes.nth(1)).toHaveAttribute("data-a-moi", "true");
+    await expect(lignes.nth(1)).toContainText("à toi");
+    await expect(lignes.nth(1)).toContainText("pour le 05/10");
+    await expect(lignes.nth(2)).toHaveAttribute("data-a-moi", "false");
+    await expect(lignes.nth(2)).not.toContainText("à toi");
+    await expect(widget(page, "Tâches").getByText("1 en retard")).toBeVisible();
+  });
+
+  test("Comptes : deux nombres côte à côte, et « Voir » mène aux noms sans compte", async ({ page }) => {
+    await ouvrir(page, ADMIN, JEU);
+    const comptes = widget(page, "Comptes");
+    // Les noms du planning (grilles simulées et données statiques) sans compte : un nombre ; les comptes de la base simulée
+    // datent de janvier : aucun nouveau cette semaine.
+    await expect(comptes.getByTestId("compte-sans-compte")).toHaveText(/^[1-9]\d*\s*noms sans compte$/);
+    await expect(comptes.getByTestId("compte-nouveaux")).toHaveText(/^0\s*nouveaux cette semaine$/);
+    const a = (await comptes.getByTestId("compte-sans-compte").boundingBox())!;
+    const b = (await comptes.getByTestId("compte-nouveaux").boundingBox())!;
+    expect(Math.abs(a.y - b.y), "côte à côte").toBeLessThan(2);
+    await expect(comptes.getByTestId("ligne-compte")).toHaveCount(0);
+    await expect(comptes.getByRole("link", { name: "Voir" })).toHaveAttribute("href", /^\/back-office\/planning\/sans-compte\/?$/);
+  });
+
+  test("中文 : Plannings, Évènements, Tâches, « 复制提醒 », Ce dimanche", async ({ page }) => {
+    await page.addInitScript(() => { try { localStorage.setItem("i18nextLng", "zh-CN"); } catch {} });
+    await ouvrir(page, ADMIN, JEU);
+    for (const nom of ["排班表", "活动", "任务", "本主日"]) await expect(grille(page).getByRole("region", { name: nom, exact: true })).toBeVisible();
+    const plannings = grille(page).getByRole("region", { name: "排班表", exact: true });
+    await expect(plannings.getByRole("button", { name: "复制提醒" })).toBeVisible();
+    await expect(plannings).toContainText("你负责的");
+    await expect(plannings.getByTestId("ligne-absence").first().getByRole("link", { name: "替换" })).toBeVisible();
+    await expect(plannings.getByTestId("ligne-plus-tard")).toContainText("截至");
+    const dimanche = grille(page).getByRole("region", { name: "本主日", exact: true });
+    await expect(dimanche).toContainText("一览");
+    await expect(dimanche.getByRole("link", { name: "查看" }).first()).toBeVisible();
+  });
+
+  test("captures de la version 2 (à regarder)", async ({ page }, info) => {
+    await ouvrir(page, ADMIN, {
+      ...JEU,
+      "equipes/evenementiel/taches/t4": { titre: "Brief des bénévoles", responsableUid: "uid-admin", responsableNom: "Admin", echeance: "2026-10-05", repetition: null },
+      "evenements/e8": {
+        titre: "Atelier cuisine", type: "loisir", pour: "eglise", date: "2026-10-18", heure: "15:00", placesMax: 12, inscrits: 5,
+        inscriptions: "auto", inscriptionFin: "2026-10-04", organisateurUid: "uid-admin",
+      },
+    });
+    await expect(widget(page, "Plannings").getByTestId("ligne-plus-tard")).toBeVisible();
+    await expect(widget(page, "Tâches").getByTestId("ligne-tache").first()).toBeVisible();
+    await expect(widget(page, "Évènements").getByTestId("ligne-evenement").first()).toBeVisible();
+    await expect(widget(page, "Comptes").getByTestId("compte-nouveaux")).toBeVisible();
+    await page.screenshot({ path: `test-results/tableau-de-bord-captures/${info.project.name}-v2.png`, fullPage: true });
   });
 });

@@ -1,32 +1,38 @@
 "use client";
 
-// Widget 1 « Ce dimanche » (lot U6, B4) : par service choisi, les cases du planning, la
-// setlist publiée, la présentation et les cases vides (planche `bo-telephone-accueil`).
+// Widget 1 « Ce dimanche » (lot U6, B4 ; réécrit au lot TB2-b, docs/spec-tableau-de-bord-v2.md T3) : un coup d'œil.
+// Une rangée par service ou planning du prochain dimanche : « prêt » (✓) ou ce qui manque (le nombre, puis les
+// manques en court : cases vides, setlist, présentation, petit déj), et « Voir » vers le planning. Plus de noms.
 import { useTranslation } from "react-i18next";
-import { CalendarDays, Check, CircleAlert } from "lucide-react";
+import Link from "next/link";
+import { CalendarDays, Check } from "lucide-react";
+import { nowIsoParis } from "@/lib/evenements/agenda";
+import { lirePetitDej } from "@/lib/petitdej/lignes";
+import { GRILLES } from "@/lib/planning/grilles";
 import { useProfile } from "@/lib/firebase/users";
 import { todayIso } from "@/lib/scene/dimanches";
-import { GRILLES_DU_SERVICE, ceDimanche, prochainsDimanches, servicesDuDimanche, type ServiceDuDimanche } from "@/lib/tableauDeBord/donnees";
+import { GRILLES_DU_SERVICE, etatsDuDimanche, planningsCasesVides, prochainDimanche, servicesDuDimanche } from "@/lib/tableauDeBord/donnees";
 import { lireGrilles, lireSetlists, useLecture } from "@/lib/tableauDeBord/lecture";
 import type { Widget } from "@/types/backOffice";
-import { CadreWidget, Message, Pastille, jourLong } from "./Cadre";
+import { CadreWidget, Message, Rond, jourLong } from "./Cadre";
 
 export function WidgetDimanche({ widget }: { widget: Widget }) {
   const { t, i18n } = useTranslation();
   const { user, profile } = useProfile();
   const today = todayIso();
-  const dimanche = prochainsDimanches(today, 1)[0];
+  const dimanche = prochainDimanche(nowIsoParis());
   const services = servicesDuDimanche(widget.reglages, user, profile);
+  // Le petit déj ne se lit que pour qui remplit la Table (ou l'administre).
+  const avecTable = planningsCasesVides({ plannings: GRILLES.map((g) => g.key) }, user, profile).includes("table");
   const { valeur, erreur } = useLecture(async () => {
-    const cles = services.flatMap((s) => GRILLES_DU_SERVICE[s].map((g) => g.key));
-    const [rows, setlists] = await Promise.all([lireGrilles(cles), lireSetlists(today)]);
-    return ceDimanche(rows, setlists, services, dimanche);
-  }, `${dimanche}|${services.join()}`);
-  const seul = valeur?.length === 1 ? valeur[0] : null;
+    const cles = [...services.flatMap((s) => GRILLES_DU_SERVICE[s].map((g) => g.key)), ...(avecTable ? ["table"] : [])];
+    const [rows, setlists, petitDej] = await Promise.all([lireGrilles(cles), lireSetlists(today), avecTable ? lirePetitDej() : null]);
+    return etatsDuDimanche(rows, setlists, services, dimanche, petitDej);
+  }, `${dimanche}|${services.join()}|${avecTable}`);
 
   return (
     <CadreWidget
-      id="dimanche" taille={widget.taille} Icone={CalendarDays} complement={seul?.libelle}
+      id="dimanche" taille={widget.taille} Icone={CalendarDays} complement={t("tableauDeBord.dimanche.coupDOeil")}
       nom={t("tableauDeBord.widgets.dimanche")}
       titre={t("tableauDeBord.dimanche.titre", { date: jourLong(dimanche, i18n.language) })}
     >
@@ -34,38 +40,28 @@ export function WidgetDimanche({ widget }: { widget: Widget }) {
         : !valeur ? <Message>{t("common.loading")}</Message>
         : valeur.length === 0 ? <Message>{t("tableauDeBord.dimanche.rien")}</Message>
         : (
-          <div className="space-y-4">
-            {valeur.map((s) => <BlocService key={`${s.categorie}-${s.libelle}`} service={s} avecNom={!seul} />)}
+          <div>
+            {valeur.map((e) => (
+              <div
+                key={e.planning} data-testid="ligne-dimanche"
+                className="flex min-w-0 items-center gap-2.5 border-t border-border/60 py-[7px] text-sm text-foreground first:border-t-0"
+              >
+                <Rond ton={e.manques.length === 0 ? "ok" : "warn"}>
+                  {e.manques.length === 0 ? <Check className="h-3 w-3" strokeWidth={3} /> : e.manques.length}
+                </Rond>
+                <span className="min-w-0 flex-1">
+                  <b className="block break-words font-semibold">{e.libelle}</b>
+                  <span className="block text-xs text-muted-foreground">
+                    {e.manques.length === 0 ? t("tableauDeBord.dimanche.pret") : e.manques.map((m) => t(m.i18n)).join(" · ")}
+                  </span>
+                </span>
+                <Link href={`/back-office/planning/${e.planning}`} className="shrink-0 text-xs font-semibold text-muted-foreground hover:text-foreground">
+                  {t("tableauDeBord.voir")}
+                </Link>
+              </div>
+            ))}
           </div>
         )}
     </CadreWidget>
-  );
-}
-
-function BlocService({ service, avecNom }: { service: ServiceDuDimanche; avecNom: boolean }) {
-  const { t } = useTranslation();
-  return (
-    <div>
-      {avecNom && <p className="mb-1 text-[13px] font-semibold text-muted-foreground">{service.libelle}</p>}
-      <div className="mb-2 flex flex-wrap gap-2">
-        {service.setlist
-          ? <Pastille ton="ok" Icone={Check}>{t("tableauDeBord.dimanche.setlistPubliee")}</Pastille>
-          : <Pastille ton="warn" Icone={CircleAlert}>{t("tableauDeBord.dimanche.pasDeSetlist")}</Pastille>}
-        {service.presentation && <Pastille ton="ok" Icone={Check}>{t("tableauDeBord.dimanche.presentationPrete")}</Pastille>}
-        {service.vides > 0 && (
-          <Pastille ton="warn" Icone={CircleAlert}>{t("tableauDeBord.dimanche.casesVides", { count: service.vides })}</Pastille>
-        )}
-      </div>
-      <div>
-        {service.lignes.map((l) => (
-          <div key={l.cle} data-testid="ligne-dimanche" className="flex items-baseline gap-2.5 border-t border-border/60 py-[7px] text-sm first:border-t-0">
-            <span className="w-[84px] shrink-0 text-muted-foreground">{t(l.i18n)}</span>
-            {l.valeur
-              ? <b className="min-w-0 font-semibold text-foreground">{l.valeur}</b>
-              : <span className="font-semibold text-amber-700 dark:text-amber-400">{t("tableauDeBord.dimanche.personne")}</span>}
-          </div>
-        ))}
-      </div>
-    </div>
   );
 }

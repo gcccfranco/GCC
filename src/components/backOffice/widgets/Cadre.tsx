@@ -72,9 +72,11 @@ export function CadreWidget({
 
 /** Une rangée : texte à gauche, détail en petit à droite. */
 export function Rangee({
-  testId, href, externe, detail, detailLong, ton, children,
+  testId, data, href, externe, detail, detailLong, ton, children,
 }: {
   testId?: string;
+  /** Attributs `data-*` de la rangée (`data-sien`, `data-a-moi`) : ce que les tests lisent. */
+  data?: Record<`data-${string}`, string | undefined>;
   href?: string;
   /** Lien hors du site (l'onglet du Sheet des évènements) : un nouvel onglet. */
   externe?: boolean;
@@ -96,12 +98,12 @@ export function Rangee({
     </>
   );
   if (href && externe) {
-    return <a href={href} target="_blank" rel="noopener noreferrer" data-testid={testId} className={cn(classes, "hover:text-muted-foreground")}>{contenu}</a>;
+    return <a href={href} target="_blank" rel="noopener noreferrer" data-testid={testId} {...data} className={cn(classes, "hover:text-muted-foreground")}>{contenu}</a>;
   }
   if (href) {
-    return <Link href={href} data-testid={testId} className={cn(classes, "hover:text-muted-foreground")}>{contenu}</Link>;
+    return <Link href={href} data-testid={testId} {...data} className={cn(classes, "hover:text-muted-foreground")}>{contenu}</Link>;
   }
-  return <div data-testid={testId} className={classes}>{contenu}</div>;
+  return <div data-testid={testId} {...data} className={classes}>{contenu}</div>;
 }
 
 const TON = {
@@ -109,14 +111,29 @@ const TON = {
   bad: "font-semibold text-red-700 dark:text-red-400",
 };
 
-/** Pastille d'état (« Setlist publiée », « 1 case vide »). */
-export function Pastille({ ton, Icone, children }: { ton: "ok" | "warn"; Icone: LucideIcon; children: React.ReactNode }) {
+/** Pastille ronde de 20 px (lot TB2) : ✓ ou un nombre à gauche d'une rangée (vert = rien à faire, orange = à regarder, rouge = à remplir). */
+export function Rond({ ton, children }: { ton: "ok" | "warn" | "bad"; children: React.ReactNode }) {
+  return (
+    <span aria-hidden className={cn(
+      "inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[11px] font-bold leading-none tabular-nums",
+      ton === "ok" && "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300",
+      ton === "warn" && "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300",
+      ton === "bad" && "bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300",
+    )}>
+      {children}
+    </span>
+  );
+}
+
+/** Petite puce à droite d'une rangée (« 4 / 10 », « scène ») : neutre, à surveiller (orange) ou en défaut (rouge). */
+export function Puce({ ton = "neutre", children }: { ton?: "neutre" | "warn" | "bad"; children: React.ReactNode }) {
   return (
     <span className={cn(
-      "inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] font-bold",
-      ton === "ok" ? "bg-emerald-50 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300" : "bg-amber-50 text-amber-800 dark:bg-amber-950 dark:text-amber-300",
+      "inline-flex shrink-0 items-center whitespace-nowrap rounded-full px-2 py-0.5 text-[11px] font-semibold",
+      ton === "neutre" && "bg-muted text-muted-foreground",
+      ton === "warn" && "bg-amber-50 text-amber-800 dark:bg-amber-950 dark:text-amber-300",
+      ton === "bad" && "bg-red-50 text-red-800 dark:bg-red-950 dark:text-red-300",
     )}>
-      <Icone className="h-3 w-3" aria-hidden />
       {children}
     </span>
   );
