@@ -1201,6 +1201,9 @@ fiche Noël, planning et souhaits, réunion d'équipe, jour J dans l'App ; cinq 
 Questions de la planche tranchées sur les recommandations (« Prends tes recommandations », 23/10/2026) ; nombre par
 trimestre : défaut par équipe, exceptions seulement, raison facultative, rien de bloqué. **Spec : `spec-coulisses.md`**
 (lots CO1 à CO9, trois questions ouvertes) ; **aucun go**.
+**Recadré le même jour** : « tout ce que je veux modifier c'est juste le Dashboard ». `spec-coulisses.md` **en pause** ;
+lot **TB2** (`spec-tableau-de-bord-v2.md`, planche https://claude.ai/artifact/34HGM6n5LSXC14MkSWiuTK) : on garde les widgets
+(choix B), on change leur contenu et la disposition par défaut (piste A), sans donnée nouvelle. **Aucun go.**
 
 ## 4. Carte des modules de l'app « GCC »
 
@@ -1545,7 +1548,7 @@ valider par Timothée** : relecture des textes 中文, regard sur les cartes (r�
   cinq projets, planches clair et sombre et captures aux cinq projets regardées ; trois défauts du calque gelé, d'avant le
   lot, à trancher. Reste en local (Timothée) : mesure iOS, suite complète. Questions ouvertes : « Avancement » de la spec.
 - 23/10/2026 : **rôle du Back-Office** redéfini (§ 3.AD) : planche du tableau de bord, entretien en quatre tours,
-  vision écrite ; planche « Back-Office, les coulisses » publiée ; spec `spec-coulisses.md` (CO1 à CO9). Rien de codé.
+  vision écrite ; planche « Back-Office, les coulisses » publiée ; spec `spec-coulisses.md` (CO1 à CO9), mise en pause ; lot TB2 du tableau de bord seul. Rien de codé.
 
 ## 7. Relecture adversariale (14/09/2026)
 

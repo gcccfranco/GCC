@@ -1,6 +1,8 @@
 # Spec : chantier CO — Back-Office, les coulisses
 
-**Statut** : spec écrite le 23/10/2026, décisions de la planche prises sur les recommandations (Timothée : « Prends tes
+**Statut** : **en pause depuis le 23/10/2026** (Timothée : « pour le moment on améliore le Dashboard sans toucher à
+trop de choses ») ; seul le lot TB2 (`spec-tableau-de-bord-v2.md`) en est tiré. À revalider avant tout go (la partie
+« Ce que le code montre » vieillira). Spec écrite le 23/10/2026, décisions de la planche prises sur les recommandations (Timothée : « Prends tes
 recommandations »). **Aucun lot n'a de go.** Un lot se code sur un mot explicite de Timothée, donné après cette spec.
 
 Vision : `intent/vision-site.md` § « Le rôle du Back-Office (23/10/2026) » ; feuille de route § 3.AD.
