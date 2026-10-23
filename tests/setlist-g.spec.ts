@@ -1,5 +1,5 @@
 import { readFileSync } from "node:fs";
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Locator, type Page } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { compterLesRendus, defilerImageParImage } from "./helpers/rendus";
 import { issueDuGeste, lireIntention, projection } from "../src/hooks/useSwipeViews";
@@ -115,6 +115,38 @@ test.describe("setlist G, téléphone et tablette portrait", () => {
     await expect(ligne(page, 1)).toBeVisible();
     await expect(chant(page, 1)).toHaveCount(0);
     expect(params(page)).toEqual({});
+  });
+
+  test("au défilement, la bascule suit la page tant qu'elle ne colle pas, s'escamote plus bas et revient sous la barre", async ({ page }) => {
+    // Vue Partitions : la page est assez longue pour défiler loin.
+    await ouvrir(page, `/setlists/${SETLIST_ID}?vue=partitions`);
+    await expect(bascule(page)).toBeVisible();
+    const haut = async (el: Locator) => (await el.boundingBox())!;
+    const defiler = async (de: number, a: number) => {
+      const pas = a > de ? 10 : -10;
+      for (let y = de; pas > 0 ? y <= a : y >= a; y += pas) {
+        await page.evaluate((v) => window.scrollTo(0, v), y);
+        await page.waitForTimeout(30);
+      }
+    };
+    const y0 = (await haut(bascule(page))).y;
+    const barreBas = await barre(page).evaluate((el) => el.getBoundingClientRect().bottom);
+    // 90 px plus bas, la bascule n'est pas encore à l'endroit où elle collerait.
+    expect(y0 - 90, "assez bas pour ne pas coller").toBeGreaterThan(barreBas);
+    await page.evaluate(() => window.dispatchEvent(new Event("touchstart")));
+    await defiler(0, 90);
+    await page.waitForTimeout(400);
+    expect(Math.abs((await haut(bascule(page))).y - (y0 - 90)), "pas de saut : elle suit la page").toBeLessThanOrEqual(2);
+    // Plus bas, elle est escamotée hors de l'écran.
+    await defiler(100, 1500);
+    await page.waitForTimeout(400);
+    const b = await haut(bascule(page));
+    expect(b.y + b.height, "escamotée hors écran").toBeLessThanOrEqual(1);
+    // Remonter un peu ramène les barres, la bascule sous la barre.
+    await defiler(1490, 1430);
+    await page.waitForTimeout(400);
+    const [bb, br] = await Promise.all([haut(bascule(page)), haut(barre(page))]);
+    expect(Math.abs(bb.y - (br.y + br.height)), "revenue sous la barre").toBeLessThanOrEqual(2);
   });
 
   test("bascule : pleine largeur sur téléphone, 360 px au plus sur tablette", async ({ page }, info) => {

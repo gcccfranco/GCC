@@ -1942,15 +1942,16 @@ export function SetlistDetailClient() {
             </div>
 
             {/* Bascule « Liste | Partitions » (setlist G, Q11) : sous l'en-tête, elle colle
-                sous la barre et s'escamote avec elle. Pleine largeur sur téléphone. */}
+                sous la barre et s'escamote avec elle. Pleine largeur sur téléphone. Elle s'escamote par
+                son `top` collant et non par un transform, qui la faisait remonter sur l'en-tête avant
+                qu'elle ne colle ; 3.5rem = sa hauteur (py-2 + p-0.5 + h-9). */}
             {setlist.items.length > 0 && (
               <div
                 ref={basculeRef}
                 data-testid="bascule-vues"
-                className="print:hidden sticky z-10 -mx-4 px-4 py-2 mb-1 transition-transform duration-300"
+                className="print:hidden sticky z-10 -mx-4 px-4 py-2 mb-1 transition-[top] duration-300"
                 style={{
-                  top: `calc(var(--nav-h) + ${toolbarH}px)`,
-                  transform: scrollVisible ? undefined : `translateY(calc(-100% - var(--nav-h) - ${toolbarH}px))`,
+                  top: scrollVisible ? `calc(var(--nav-h) + ${toolbarH}px)` : "-3.5rem",
                 }}
               >
                 <FondDeBarre sousNavbar />
