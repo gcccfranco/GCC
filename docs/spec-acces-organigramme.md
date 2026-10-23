@@ -207,4 +207,42 @@ ou nouveau mode) — ce que l'écran en ligne fait déjà ; une setlist privée 
 
 ## Avancement
 
-*(rempli au codage)*
+**AO-A à AO-F codés et poussés sur `ui/apple-design` les 22 et 23/10/2026 (session orchestratrice), à valider par
+Timothée.** Tout passe derrière `BACK_OFFICE` : interrupteur coupé (en ligne), le comportement d'aujourd'hui est
+intact (`tests/back-office-coupe.spec.ts`).
+
+| Tranche | Commit | Ce qui est fait |
+| --- | --- | --- |
+| AO-A | `994226c` | `src/lib/acces/organigramme.ts` ; `access.ts`, `audiences.ts`, `releases.ts` bimodes ; F1 ; `tests/acces-organigramme.spec.ts` |
+| AO-C | `3cd3407` | recopie des cinq champs ; `firestore.rules` ancien ∪ nouveau ; routes (audiences `equipe:`/`louange:`, setlist prête, présentation par la Régie du lieu, droit de tenir l'organigramme) ; `tests/acces-regles.spec.ts` |
+| AO-D | `40b0559` | `scripts/acces-vers-organigramme.ts` (logique `src/lib/acces/migration.ts`), à blanc par défaut ; `tests/acces-migration.spec.ts` |
+| AO-E | `aedd73b` | le lundi, dans le rappel du matin, liste des noms du planning sans équipe au référent Louange, Régie ou EDD ; `tests/acces-rappel.spec.ts` |
+| AO-B | `2e24e4f`, `909b7a9` | carte Louange en trois sous-équipes, panneau (Sous-équipes, Référent de, Où il sert, Ce qu'il joue, Ce que ça lui ouvre), fiche, Personnes sans cases, vue Musiciens ; Moi (Mes équipes, Ce que tu peux faire) ; grille : la Régie n'édite que Sono, Sono Live, PPT |
+| AO-F | `909b7a9`, `3fcdfca` | inscription et profil sans rôles ; lectures de `serviceRoles` remplacées (accueil, rappel push, calendrier, tableau de bord, partage, « Choisir ») ; tests d'écran repris (`fakeSession` traduit un profil fictif à l'ancienne comme la migration). Aucun champ supprimé. |
+
+**Écarts et lectures à confirmer par Timothée**
+- Planning **Table** : confié aux membres d'Orga (aucune ligne du tableau ne le nomme).
+- **Référent Régie** : remplit Sono / Sono Live / PPT des cinq plannings du culte, et publie / prévient le culte
+  (lecture littérale) ; il ne retire pas de date.
+- **Pas de section EDD** pour les évènements : le référent EDD n'en crée pas (il a la coordination).
+- La migration fait entrer aux **Musiciens** ceux que le planning montre au piano ou à la guitare (groupes compris),
+  pour qu'ils gardent Harmonie ; le relevé les liste à part.
+- `canSeeEvenement` : une section se voit par les catégories qu'on voit en setlists (la spec ne disait rien).
+- Fêtes (`src/lib/fetes/droits.ts`) : la règle « rôle musicien du groupe » lit encore `serviceRoles` (transition D17) ;
+  laissée, la règle par les colonnes du planning couvre le cas.
+- Libellés 中文 des lieux repris de l'existant (Intergroupe 联合, Interfranco 法语联合, Campus 夏令营) : à relire.
+
+**Ce que Timothée fait lui-même**
+1. Publier `firestore.rules` (console Firebase) quand il veut : ancien ∪ nouveau, compatible avec le code en ligne.
+   Effet dès la publication : référents Louange et EDD et membres d'Orga ont les écritures de la coordination ; une
+   setlist **publique** ne naît que dans une catégorie ouverte (ce que l'écran en ligne fait déjà).
+2. Avant la mise en ligne de la refonte : `npx tsx --env-file=.env scripts/acces-vers-organigramme.ts` (à blanc), lire
+   le relevé (garde / perd un accès, au planning sans équipe, droit coché sans équivalent), placer à la main ce qui
+   manque, puis `… --ecrire`, puis de nouveau à blanc (« 0 opération »).
+3. Mise en ligne (push sur `main`) : sur son ordre ; ensuite, après une saison, retirer l'ancien côté des règles et
+   les champs morts (`serviceRoles`, cases cochées).
+
+**Tests** : tests sans page de chaque ligne du tableau (a / n'a pas) ; écrans de l'organigramme et Moi sur les cinq
+projets ; suite reprise sur le projet ordinateur (139 fichiers : 128 entièrement verts ; les rouges restants sont
+antérieurs au lot — comités dans la liste de l'admin, empreinte `chords.json`, libellé « Intro (x2) », bulle d'aide
+des accords sur « Quel PDF ? », fuseau UTC de la machine — ou instables sous charge et verts seuls).

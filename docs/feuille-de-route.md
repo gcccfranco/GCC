@@ -1180,6 +1180,10 @@ référent chacune et un référent Louange ; Régie à part ; « Où il sert »
 membre ; être au planning d'une date ouvre la lecture de cette setlist ; coordination = référents Louange et EDD +
 Orga ; migration par script à blanc. **Spec écrite ; préalable levé le 22/10/2026 : `firestore.rules` publié par Timothée, relevé de `poles-vers-equipes.ts` à « 0 opération » (rien à migrer, personne n'avait la coordination par un pôle) ; planche de
 l'organigramme https://claude.ai/artifact/9vupGveKJDw5BnzGfHf1wV (style du site) ; rappel aux référents gardé ; go le 22/10/2026**, session orchestratrice ; `firestore.rules` à publier à la main.
+**Codé et poussé les 22 et 23/10/2026 (AO-A à AO-F, `ui/apple-design`), à valider par Timothée** — derrière
+`BACK_OFFICE`, le site en ligne garde l'ancien mode. Règles « ancien ∪ nouveau », compatibles avec le code en ligne :
+à publier à la main quand il veut. Script `scripts/acces-vers-organigramme.ts` à lancer par lui, à blanc puis
+`--ecrire`, avant la mise en ligne de la refonte. Écarts à confirmer : spec, « Avancement ».
 
 ## 4. Carte des modules de l'app « GCC »
 
