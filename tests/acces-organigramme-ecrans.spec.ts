@@ -342,7 +342,7 @@ test("Personnes : les filtres par lieu viennent de l'organigramme", async ({ pag
     ...DOCS,
     ...compte("u-lena", "Léna", "Voss", { dansEquipes: ["louange"], sousEquipes: ["choristes"], lieuxLouange: ["Campus"] }),
     // Un ancien rôle de service ne compte plus.
-    ...compte("u-vieux", "Victor", "Ancien", { serviceRoles: { Campus: ["musicien"] } }),
+    ...compte("u-vieux", "Victor", "Ancien", { serviceRoles: { Campus: ["musicien"] }, organigramme: false }),
   });
   if (!estGrandEcran(info)) await expect(page.getByText("Voss").first()).toBeVisible();
   await page.getByRole("button", { name: "Campus", exact: true }).click();

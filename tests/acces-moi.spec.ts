@@ -23,6 +23,8 @@ const REFERENT_MUSICIENS: FakeProfile = {
 const SANS_EQUIPE: FakeProfile = {
   uid: "uid-lise", email: "lise@example.com", firstName: "Lise", lastName: "Garnier", planningName: "Lise G.",
   serviceRoles: { "Culte Francophone": ["chanteur"] },
+  // L'ancien rôle déclaré, tel quel : il ne doit plus rien ouvrir (pas de traduction comme la migration).
+  organigramme: false,
 };
 /** Référent de la Régie : remplit Sono, Sono Live et PPT des plannings du culte, rien d'autre. */
 const REFERENT_REGIE: FakeProfile = {

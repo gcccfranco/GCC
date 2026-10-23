@@ -414,9 +414,15 @@ export async function signInAs(
     }),
   );
 
+  // Un autre document users/* garde son ancien rôle sans traduction avec `organigramme: false` (champ retiré du document).
+  const autreProfil = (d: Record<string, unknown>) => {
+    if (d.organigramme !== false) return traduitCommeMigration(d);
+    const { organigramme: _non, ...reste } = d;
+    return reste;
+  };
   const serviParLeProfil = (d: Record<string, unknown>) => (profile.organigramme === false ? d : traduitCommeMigration(d));
   const traduits = Object.fromEntries(Object.entries(docs).map(([chemin, d]) =>
-    [chemin, /^users\/[^/]+$/.test(chemin) ? (chemin === `users/${profile.uid}` ? serviParLeProfil(d) : traduitCommeMigration(d)) : d]));
+    [chemin, /^users\/[^/]+$/.test(chemin) ? (chemin === `users/${profile.uid}` ? serviParLeProfil(d) : autreProfil(d)) : d]));
   const db = await fakeFirestore(page, {
     [`users/${profile.uid}`]: serviParLeProfil({
       email: profile.email,
