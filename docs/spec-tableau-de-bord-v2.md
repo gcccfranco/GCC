@@ -1,83 +1,73 @@
-# Spec : lot TB2 — le tableau de bord, version 2
+# Spec : lot TB2 — le tableau de bord, version 3 de la planche
 
-**Statut** : spec écrite le 23/10/2026 ; **aucun go**. Planche : https://claude.ai/artifact/34HGM6n5LSXC14MkSWiuTK.
-Feuille de route § 3.AD. Ce lot est la seule partie retenue pour l'instant du chantier « coulisses »
-(`spec-coulisses.md`, **en pause**) : il en reprend l'esprit (piste A) sans aucune donnée nouvelle.
+**Statut** : spec réécrite le 23/10/2026 (soir) sur la version 3 de la planche, validée par Timothée (« Vas y go on
+fait ça ») ; **le code attend un go donné après cette spec**. Planche : https://claude.ai/artifact/34HGM6n5LSXC14MkSWiuTK.
+Feuille de route § 3.AD. Le chantier des fiches (`spec-coulisses.md`) est **en pause** ; le Culte Franco n'est pas un
+évènement mais un planning parmi d'autres (`intent/vision-site.md`, correction du 23/10/2026).
 
 ## Mots de Timothée
 
 > « J'aime pas l'apparence du Dashboard […] j'ai l'impression que les données qu'on mets servent à rien. »
-> « Tout ce que je veux modifier c'est juste le Dashboard […] juste pour le moment on améliore le Dashboard sans
-> toucher à trop de choses. » — « Piste A et choix B » (23/10/2026).
+> « Tout ce que je veux modifier c'est juste le Dashboard […] sans toucher à trop de choses. » — « Piste A et choix B. »
+> « Le culte franco le prend pas comme un événement […] c'est là pour travailler sur les événements mais aussi tous
+> les plannings, les réunions et tout. »
 
 ## Objectif
 
-Le tableau de bord répond d'abord à « le prochain Culte Franco est-il prêt, et qui relancer ? », puis à « qu'est-ce
-que je dois faire ? ». On change **le contenu des widgets et la disposition par défaut** ; le système de widgets
-(personnaliser, glisser, Monter / Descendre, S M L, réglages, retirer, barre du bas) **ne change pas**.
+Le tableau de bord ressemble au Back-Office : **Plannings, Évènements, Tâches, Réunions**, chaque widget ne montrant
+que **ce qui demande une action**, plus un petit **« Ce dimanche »** en coup d'œil. On change le contenu des widgets et
+la disposition par défaut ; le système de widgets (personnaliser, glisser, Monter / Descendre, S M L, réglages,
+retirer, barre du bas) **ne change pas**. Ensuite, 2 ou 3 responsables l'essaient avant toute autre refonte.
 
 ## Décisions
 
 | # | Décision |
 | --- | --- |
-| T1 | **Choix B** : on garde le système de widgets (`TableauDeBord.tsx`, `OutilsWidget.tsx`, `src/lib/tableauDeBord/disposition.ts`). |
-| T2 | **Aucune donnée nouvelle**, aucune collection, **aucune règle Firestore** : tout se lit avec ce qui existe. |
-| T3 | **Ce dimanche → Prochain culte** (id `dimanche` gardé, libellé changé, L par défaut) : le prochain Culte Franco ; état « n sur 6 » calculé (setlist publiée, présentation prête, postes de la grille remplis, orateur et traduction, petit déj, absences en conflit) ; **seulement ce qui manque**, avec **qui relancer** et « Copier le rappel » ; « Copier tous les rappels » ; une ligne « Prêt : … ». Plus la liste des noms. Le réglage « services » reste (défaut : Culte Franco). |
-| T4 | **Setlists à préparer → Prochains cultes** (id `setlists` gardé, M) : les 3 dimanches suivants du même service, chacun avec son anneau et ce qui manque. Plus de « aucune » répété. |
-| T5 | **Nouveau widget Pour toi** (`pourtoi`, S) : tes tâches (dont tu es responsable, en retard en rouge) et tes 2 prochains services. Permis à tout responsable. |
-| T6 | **Nouveau widget Tes équipes** (`equipes`, S) : par équipe dont on est membre, la prochaine réunion et son nombre de sujets, le nombre de tâches en retard. Permis à tout responsable. |
-| T7 | **Comptes** : deux nombres (« noms sans compte », « nouveaux cette semaine ») et « Voir ». Plus la liste des noms. |
-| T8 | **Prochains évènements** : inchangé, l'état des inscriptions passe en pastille. |
-| T9 | **Défaut pour tous** (filtré par les droits, comme aujourd'hui) : Prochain culte (L), Pour toi (S), Prochains cultes (M), Prochains évènements (M), Tes équipes (S), Comptes (S, admins). Les autres (À faire, Cases vides, Petit déj, Scène, Calendrier, Chants les plus joués, Raccourcis) **restent dans « Ajouter un widget »**, inchangés. |
+| T1 | **On garde le système de widgets** (`TableauDeBord.tsx`, `OutilsWidget.tsx`, `src/lib/tableauDeBord/disposition.ts`). |
+| T2 | **Aucune donnée nouvelle**, aucune collection, **aucune règle Firestore**. |
+| T3 | **Ce dimanche** (`dimanche`, S) : une ligne par service ou planning du dimanche qui nous concerne (réglage « services » gardé) : « prêt » ou « n choses manquent » (lesquelles, en court), lien « Voir ». Plus la liste des noms. |
+| T4 | **Cases vides → Plannings** (`planning`, L) : dans les plannings qu'on remplit (règle actuelle `planningsCasesVides`) : les cases vides du prochain dimanche, chacune avec **qui relancer** et « Copier le rappel » ; les **absences en conflit** (une personne planifiée qui s'est déclarée absente) avec « Remplacer » ; une ligne « n cases vides d'ici le {date} » pour les 4 dimanches suivants. |
+| T5 | **Prochains évènements → Évènements** (`evenements`, M) : d'abord ceux qu'on organise ou que porte une de ses équipes, puis les autres ; inscriptions en pastille, « ferme bientôt », créneaux de scène vides ; **les réunions en sortent**. |
+| T6 | **À faire → Tâches** (`afaire`, M) : les siennes d'abord, puis celles de ses équipes ; en retard en premier. |
+| T7 | **Nouveau widget Réunions** (`reunions`, S) : ses réunions à venir (celles dont on est, `estDeLaReunion`) avec leur nombre de sujets ; une réunion passée sans lien de compte rendu. Permis comme l'entrée Réunions. |
+| T8 | **Comptes** (`comptes`, S, admins) : deux nombres (« noms sans compte », « nouveaux cette semaine ») et « Voir ». |
+| T9 | **Disposition par défaut**, filtrée par les droits comme aujourd'hui : Ce dimanche (S), Plannings (L), Évènements (M), Tâches (M), Réunions (S), Comptes (S). Setlists à préparer, Petit déj, Scène, Calendrier, Chants les plus joués, Raccourcis **sortent du défaut** et restent dans « Ajouter un widget », inchangés. |
+| T10 | **Dispositions déjà enregistrées** : remplacées une fois par le nouveau défaut (`versionTableau: 2` dans `backOffice/{uid}` ; absente = défaut). `barreDuBas` n'est pas touché. |
 
-## Règles de calcul (pures, `src/lib/tableauDeBord/donnees.ts`)
+## Règles (pures, `src/lib/tableauDeBord/donnees.ts`)
 
-- **Prochain culte** = le prochain dimanche (aujourd'hui compris jusqu'à midi) de la grille `culte`
-  (`src/lib/planning/grilles.ts:108`).
-- **Les 6 points** : (1) setlist publiée pour ce service et cette date (`!isPrivate && !isDraft`) ; (2) présentation
-  prête (`presentationUrl`) ; (3) postes remplis = colonnes non optionnelles de la grille hors orateur et traduction
-  (une ligne par poste vide) ; (4) orateur et traduction remplis ; (5) petit déj (`lirePetitDej`) ; (6) aucune absence
-  en conflit (un nom de la ligne dont le profil, par `planningName`, a une absence ce jour-là). Une lecture en échec
-  n'est jamais « prêt » : la ligne dit « Lecture impossible ».
-- **Qui relancer** : poste de Louange → référent de la sous-équipe (Présidence, Musiciens, Choristes : `referentSous`),
-  sinon référent Louange ; autre colonne → référent de l'équipe qui la remplit ; setlist → la présidence du jour ;
-  présentation → la personne de la colonne PPT ; sans référent : rien (pas de bouton).
-- **Absences en conflit** : visibles seulement de qui voit les absences de tous (`canVoirAbsencesDeTous`) ; pour les
-  autres, la ligne dit « {poste} : à confirmer », sans nom. Le motif n'apparaît jamais.
-- **Rappel copié** (français seulement dans ce lot) : « Salut {prénom}, pour le Culte Franco de dimanche {date}, il
-  manque encore : {postes}. Tu peux t'en occuper d'ici samedi ? Merci ! {lien} », lien vers la page de l'App où l'on
-  agit (planning du culte ou setlist). Copie par `navigator.clipboard.writeText` dans le geste, repli sur sélection
-  du texte ; confirmation « Copié ».
-
-## Dispositions déjà enregistrées
-
-`backOffice/{uid}.tableauDeBord` est **remplacé une fois** par le nouveau défaut : une clé `versionTableau: 2` écrite
-au premier affichage ; absente ou inférieure à 2 = on prend le défaut. Le Back-Office n'est pas en ligne : seuls des
-testeurs ont une disposition. La barre du bas (`barreDuBas`) n'est pas touchée.
+- **Prochain dimanche** : aujourd'hui compris jusqu'à midi.
+- **Ce qui manque, par service** : postes non optionnels vides de la grille ; pour un culte, aussi la setlist publiée
+  (`!isPrivate && !isDraft`) et la présentation (`presentationUrl`) ; pour la table, le petit déj. Une lecture en
+  échec n'est jamais « prêt » : « Lecture impossible ».
+- **Qui relancer** pour une case vide : poste de Louange → référent de la sous-équipe (Présidence, Musiciens,
+  Choristes : `referentSous`), sinon référent Louange ; autre colonne → référent de l'équipe qui la remplit ; sans
+  référent → pas de bouton.
+- **Absence en conflit** : un nom de la ligne dont le profil (`planningName`) a une absence couvrant la date ; le
+  widget Plannings n'est vu que de qui remplit un planning, donc de qui voit déjà les absences de tous
+  (`canVoirAbsencesDeTous`) ; le motif n'apparaît jamais.
+- **Rappel copié** (français) : « Salut {prénom}, pour le {service} de dimanche {date}, il manque encore quelqu'un
+  {au poste}. Tu peux t'en occuper d'ici samedi ? Merci ! {lien du planning} ». `navigator.clipboard.writeText` dans
+  le geste, repli sur sélection du texte ; « Copié ».
 
 ## Ce qui sera construit
 
 | Tranche | Contenu | Vérifié par |
 | --- | --- | --- |
-| TB2-a | Règles pures (6 points, qui relancer, texte du rappel, prochains cultes) + tests unitaires Playwright sur jeu d'essai. | Tests rouges sur fonctions vides puis verts. |
-| TB2-b | Widgets Prochain culte, Prochains cultes, Comptes, Prochains évènements (pastille) ; « Copier le rappel ». | Écrans sur jeu d'essai, 4 dispositions + 1 440 px ; presse-papier. |
-| TB2-c | Widgets Pour toi et Tes équipes ; défauts ; `versionTableau` ; libellés FR et 中文. | Défauts de chaque rôle ; disposition v1 remplacée une fois ; 中文. |
+| TB2-a | Règles pures (ce qui manque, qui relancer, absences en conflit, texte du rappel, tri des évènements et des tâches). | Tests rouges sur fonctions vides puis verts. |
+| TB2-b | Widgets Ce dimanche, Plannings (« Copier le rappel », « Remplacer »), Évènements, Tâches, Comptes. | Écrans sur jeu d'essai, 4 dispositions + 1 440 px ; presse-papier. |
+| TB2-c | Widget Réunions ; nouveau défaut ; `versionTableau` ; libellés FR et 中文. | Défauts de chaque rôle ; disposition ancienne remplacée une fois ; 中文. |
 
 ## Tests
 
-`tests/tableau-de-bord.spec.ts` mis à jour (défauts, données des widgets, captures), trois appareils, déjà dans
-`SPECS_GRAND_ECRAN` ; noms fictifs inventés ; Firestore et Sheet simulés.
+`tests/tableau-de-bord.spec.ts` mis à jour (déjà dans `SPECS_GRAND_ECRAN`) : trois appareils, cinq projets ; Firestore
+et Sheet simulés ; noms fictifs inventés ; captures regardées.
 
 ## Hors périmètre
 
-Fiches de préparation, modèles, coches manuelles, nombre par trimestre, jour J, communication, menu, rappel du matin :
-tout le reste de `spec-coulisses.md`. Pas de changement de `firestore.rules` ni de `access.ts` au-delà de
-`widgetsPermis` (deux widgets ajoutés, permis à tout responsable).
-
-## Questions ouvertes
-
-Aucune : les trois questions de la planche sont prises sur les recommandations ci-dessus, sauf avis contraire.
+Fiches, modèles, nombre par trimestre, jour J, communication, menu, rappel du matin, liste « À régler » unifiée (à
+revoir après l'essai par 2 ou 3 responsables). `access.ts` ne change que dans `widgetsPermis` (widget Réunions).
 
 ## Avancement
 
-- 23/10/2026 : planche et spec. Aucun go.
+- 23/10/2026 : planche version 3 et spec. Le code attend un go.

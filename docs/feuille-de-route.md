@@ -1203,7 +1203,9 @@ trimestre : défaut par équipe, exceptions seulement, raison facultative, rien 
 (lots CO1 à CO9, trois questions ouvertes) ; **aucun go**.
 **Recadré le même jour** : « tout ce que je veux modifier c'est juste le Dashboard ». `spec-coulisses.md` **en pause** ;
 lot **TB2** (`spec-tableau-de-bord-v2.md`, planche https://claude.ai/artifact/34HGM6n5LSXC14MkSWiuTK) : on garde les widgets
-(choix B), on change leur contenu et la disposition par défaut (piste A), sans donnée nouvelle. **Aucun go.**
+(choix B), on change leur contenu et la disposition par défaut, sans donnée nouvelle. **Corrigé le soir** : le Culte
+Franco n'est pas un évènement ; planche version 3 (Ce dimanche, Plannings, Évènements, Tâches, Réunions, Comptes),
+validée ; spec réécrite. Ensuite : essai par 2 ou 3 responsables avant toute autre refonte. **Le code attend un go.**
 
 ## 4. Carte des modules de l'app « GCC »
 
