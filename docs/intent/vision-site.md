@@ -620,7 +620,7 @@ responsables sachent ce qui est prêt, ce qui manque et qui relancer, et fassent
   pour discuter.
 - **Pas de suivi pastoral** ; une seule donnée nouvelle sur les personnes : le **nombre de services par trimestre
   et par équipe**. Chaque équipe a un **nombre par défaut** ; on ne signale que **les trimestres où l'on veut faire
-  moins**, avec sa raison (précision de Timothée, 23/10/2026). Le planning montre « prévu 4 sur 3 » et propose
+  moins**, avec une raison si l'on veut (facultative ; précisions de Timothée, 23/10/2026). Le planning montre « prévu 4 sur 3 » et propose
   d'abord ceux qui sont en dessous ; placer quelqu'un au-delà **ne bloque rien**, c'est seulement signalé à l'œil.
 - **Tâches** rattachées à une équipe, et à un évènement si besoin. **Réunions d'équipe** ouvertes sur un état des
   lieux tout fait (prochains évènements de l'équipe, ce qui manque, tâches en retard, souhaits et planning).
