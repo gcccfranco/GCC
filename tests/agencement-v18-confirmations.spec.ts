@@ -288,7 +288,7 @@ test("retirer un sujet : la fenêtre du site ; Annuler le garde ; Retirer le sup
 test("revenir à la disposition par défaut : la fenêtre du site ; Annuler garde la disposition ; Remettre la remplace", async ({ page }) => {
   const coord: FakeProfile = { uid: "uid-alice", email: "alice@example.com", firstName: "Alice", lastName: "Q.", dansEquipes: ["evenementiel", "edd"], referentDe: ["evenementiel", "edd"] };
   const db = await ouvrir(page, coord, "/back-office", {
-    "backOffice/uid-alice": { tableauDeBord: [{ id: "scene", taille: "l", reglages: {} }], majLe: "2026-09-30T10:00:00Z" },
+    "backOffice/uid-alice": { tableauDeBord: [{ id: "scene", taille: "l", reglages: {} }], versionTableau: 2, majLe: "2026-09-30T10:00:00Z" },
   });
   const grille = page.getByTestId("grille-widgets");
   const affiches = () => grille.locator("[data-widget]").evaluateAll((els) => els.map((e) => e.getAttribute("data-widget")));

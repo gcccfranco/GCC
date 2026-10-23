@@ -36,6 +36,7 @@ import { WidgetDimanche } from "./widgets/WidgetDimanche";
 import { WidgetEvenements } from "./widgets/WidgetEvenements";
 import { WidgetPetitDej } from "./widgets/WidgetPetitDej";
 import { WidgetRaccourcis } from "./widgets/WidgetRaccourcis";
+import { WidgetReunions } from "./widgets/WidgetReunions";
 import { WidgetScene } from "./widgets/WidgetScene";
 import { WidgetSetlists } from "./widgets/WidgetSetlists";
 
@@ -47,6 +48,7 @@ const COMPOSANTS: Record<WidgetId, ((p: { widget: Widget }) => React.ReactNode) 
   setlists: WidgetSetlists,
   planning: WidgetCasesVides,
   evenements: WidgetEvenements,
+  reunions: WidgetReunions,
   chants: WidgetChants,
   petitdej: WidgetPetitDej,
   scene: WidgetScene,

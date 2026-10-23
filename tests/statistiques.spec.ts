@@ -1,7 +1,7 @@
 import { expect, test, type Page, type TestInfo } from "@playwright/test";
 import { remplit, signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { canVoirStatistiques, entreesBackOffice, widgetsPermis } from "../src/lib/access";
-import { dispositionParDefaut } from "../src/lib/tableauDeBord/disposition";
+import { ajouterWidget, dispositionParDefaut } from "../src/lib/tableauDeBord/disposition";
 import { choisirReglage, groupesDeReglages } from "../src/lib/tableauDeBord/reglages";
 import type { UserProfile } from "../src/types/user";
 
@@ -626,7 +626,7 @@ const SETLISTS_WIDGET: Record<string, Record<string, unknown>> = {
   "setlists/s7": setlist("2026-09-27", CULTE, "Marc L.", [chant("a-la-croix")]),
 };
 const SEUL_LE_WIDGET = (reglages: Record<string, unknown> = {}) => ({
-  "backOffice/uid-admin": { tableauDeBord: [{ id: "chants", taille: "m", reglages }], majLe: "2026-10-01T09:00:00Z" },
+  "backOffice/uid-admin": { tableauDeBord: [{ id: "chants", taille: "m", reglages }], versionTableau: 2, majLe: "2026-10-01T09:00:00Z" },
 });
 
 async function ouvrirTableauDeBord(page: Page, qui: FakeProfile, docs: Record<string, Record<string, unknown>>) {
@@ -645,12 +645,12 @@ const lignesWidget = (page: Page) =>
     [el.querySelector("[data-champ=titre]")?.textContent?.trim(), el.querySelector("[data-champ=setlists]")?.textContent?.trim()]));
 
 test.describe("Statistiques (S5) : le widget, règles pures", () => {
-  test("permis aux admins seuls ; dans le défaut d'un admin, après Prochains évènements, en M", () => {
+  test("permis aux admins seuls ; au catalogue d'un admin (plus au défaut depuis T9), en M", () => {
     expect(widgetsPermis(user(ADMIN), profil(ADMIN))).toContain("chants");
     expect(widgetsPermis(user(RESPONSABLE), profil(RESPONSABLE))).not.toContain("chants");
     const d = dispositionParDefaut(user(ADMIN), null);
-    expect(d.map((w) => w.id)).toEqual(["dimanche", "calendrier", "afaire", "setlists", "planning", "evenements", "chants", "petitdej", "raccourcis", "scene", "comptes"]);
-    expect(d.find((w) => w.id === "chants")).toEqual({ id: "chants", taille: "m", reglages: {} });
+    expect(d.map((w) => w.id)).toEqual(["dimanche", "planning", "evenements", "afaire", "reunions", "comptes"]);
+    expect(ajouterWidget(d, "chants").at(-1)).toEqual({ id: "chants", taille: "m", reglages: {} });
     expect(dispositionParDefaut(user(RESPONSABLE), profil(RESPONSABLE)).map((w) => w.id)).not.toContain("chants");
   });
 
@@ -727,7 +727,7 @@ test.describe("Statistiques (S5) : le widget, écrans", () => {
   test("un responsable non admin : absent du catalogue, ignoré s'il est enregistré", async ({ page }) => {
     await ouvrirTableauDeBord(page, RESPONSABLE, {
       ...SETLISTS_WIDGET,
-      "backOffice/uid-pl": { tableauDeBord: [{ id: "chants", taille: "m", reglages: {} }, { id: "dimanche", taille: "m", reglages: {} }], majLe: "2026-10-01" },
+      "backOffice/uid-pl": { tableauDeBord: [{ id: "chants", taille: "m", reglages: {} }, { id: "dimanche", taille: "m", reglages: {} }], versionTableau: 2, majLe: "2026-10-01" },
     });
     await expect(page.getByTestId("grille-widgets").getByRole("region", { name: "Ce dimanche" })).toBeVisible();
     await expect(widgetChants(page)).toHaveCount(0);

@@ -195,7 +195,13 @@ async function ouvrirTableau(page: Page, barre?: "depliee" | "reduite") {
   if (barre) await ouvrirAvecBarre(page, barre);
   await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
   await sansSheet(page);
-  await signInAs(page, ADMIN, {}, "/back-office");
+  // Lot TB2-c (T9) : le défaut n'a plus que six widgets ; l'agencement en colonnes se regarde sur les onze d'avant,
+  // enregistrés (version 2) aux tailles d'avant.
+  await signInAs(page, ADMIN, {
+    "backOffice/uid-admin": {
+      tableauDeBord: DEFAUT_ADMIN.map((id) => ({ id, taille: TAILLES_ANCIENNES[id] ?? "s", reglages: {} })), versionTableau: 2, majLe: "2026-09-30T10:00:00Z",
+    },
+  }, "/back-office");
   await expect(page.getByTestId("grille-widgets").locator('[data-widget="dimanche"]')).toBeVisible();
 }
 
@@ -214,8 +220,9 @@ const colonnesAffichees = (page: Page) =>
     return cols;
   });
 
-/** L'ordre du défaut d'un admin (tests/tableau-de-bord.spec.ts). */
+/** Les onze widgets d'un admin, dans l'ordre du défaut d'avant TB2-c, aux tailles d'avant (les autres : S). */
 const DEFAUT_ADMIN = ["dimanche", "calendrier", "afaire", "setlists", "planning", "evenements", "chants", "petitdej", "raccourcis", "scene", "comptes"];
+const TAILLES_ANCIENNES: Record<string, string> = { dimanche: "m", calendrier: "m", afaire: "m", evenements: "m", chants: "m" };
 
 async function verifierColonnes(page: Page, nombre: number) {
   await expect.poll(async () => (await colonnesAffichees(page)).length, { message: `${nombre} colonnes` }).toBe(nombre);

@@ -407,7 +407,7 @@ test("`currentProgramme` a disparu ; le cron des rappels lit les éditions affic
 
 // Le widget « Scène » du tableau de bord (Alice, pôle Événement, seul widget affiché).
 const DOCS_WIDGET: Record<string, Record<string, unknown>> = {
-  "backOffice/uid-alice": { tableauDeBord: [{ id: "scene", taille: "m", reglages: {} }], majLe: "2026-10-01" },
+  "backOffice/uid-alice": { tableauDeBord: [{ id: "scene", taille: "m", reglages: {} }], versionTableau: 2, majLe: "2026-10-01" },
   "programmes/x7Kq2": { nom: "Noël", jourJ: "2026-12-24", debut: "2026-10-01", visible: false, passages: [], createdBy: "uid-alice", updatedAt: "" },
   "programmes/x7Kq2/creneaux/n1": { ...resaDe("n1", "2026-10-11", "14:00", "15:00"), quoi: "Sketch", qui: ["Franco"] },
   "programmes/paques-2027": { nom: "Pâques 2027", fete: "paques", annee: 2027, jourJ: "2027-03-28", debut: "2027-02-01", ouvert: true, passages: [], createdBy: "uid-alice", updatedAt: "" },

@@ -1,8 +1,8 @@
 // Lot U6 (docs/spec-back-office.md, § Modèle) — l'espace Back-Office : ses 9 entrées, dans
-// l'ordre du menu (Réunions à part depuis l'agencement v18, B15), et les 11 widgets du tableau de bord. Document `backOffice/{uid}`, écrit
+// l'ordre du menu (Réunions à part depuis l'agencement v18, B15), et les 12 widgets du tableau de bord. Document `backOffice/{uid}`, écrit
 // par l'intéressé seul (B5).
 export const ENTREES = ["tableau", "calendrier", "planning", "taches", "evenements", "reunions", "equipes", "messages", "statistiques"] as const;
-export const WIDGETS = ["dimanche", "calendrier", "afaire", "setlists", "planning", "evenements", "chants", "petitdej", "scene", "comptes", "raccourcis"] as const;
+export const WIDGETS = ["dimanche", "calendrier", "afaire", "setlists", "planning", "evenements", "reunions", "chants", "petitdej", "scene", "comptes", "raccourcis"] as const;
 export type Entree = (typeof ENTREES)[number];
 export type WidgetId = (typeof WIDGETS)[number];
 export type Taille = "s" | "m" | "l";
@@ -18,6 +18,8 @@ export interface PreferencesBackOffice {
   tableauDeBord?: Widget[];
   /** 4 au plus, dans l'ordre ; absent = défaut (Q13). */
   barreDuBas?: Entree[];
+  /** Absente ou plus ancienne que `VERSION_TABLEAU` = la disposition enregistrée est remplacée une fois par le défaut (lot TB2, T10). */
+  versionTableau?: number;
   /** ISO. */
   majLe: string;
 }

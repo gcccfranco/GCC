@@ -3293,6 +3293,7 @@
       "setlists": "待准备的歌单",
       "planning": "排班表",
       "evenements": "活动",
+      "reunions": "会议",
       "chants": "最常唱的诗歌",
       "petitdej": "早餐",
       "scene": "舞台",
@@ -3351,6 +3352,11 @@
       "creneauxVides_other": "{{count}} 个舞台时段空缺",
       "inscrits_other": "{{count}} 人报名",
       "scene": "舞台"
+    },
+    "reunions": {
+      "rien": "暂无即将举行的会议。",
+      "sujets_other": "{{count}} 个议题",
+      "sansCompteRendu": "上次会议：未附纪要链接"
     },
     "petitdej": {
       "libre": "空缺"

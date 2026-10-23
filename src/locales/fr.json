@@ -3330,6 +3330,7 @@
       "setlists": "Setlists à préparer",
       "planning": "Plannings",
       "evenements": "Évènements",
+      "reunions": "Réunions",
       "chants": "Chants les plus joués",
       "petitdej": "Petit déj",
       "scene": "Scène",
@@ -3390,6 +3391,12 @@
       "inscrits_one": "{{count}} inscrit",
       "inscrits_other": "{{count}} inscrits",
       "scene": "scène"
+    },
+    "reunions": {
+      "rien": "Aucune réunion à venir.",
+      "sujets_one": "{{count}} sujet",
+      "sujets_other": "{{count}} sujets",
+      "sansCompteRendu": "compte rendu de la dernière : pas de lien"
     },
     "petitdej": {
       "libre": "Libre"

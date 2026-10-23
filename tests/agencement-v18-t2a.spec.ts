@@ -286,7 +286,7 @@ test.describe("T2a, relecture : là où mènent le widget et le guide", () => {
   /** Le widget « Prochains évènements » seul au tableau de bord. */
   const avecLeWidget = (p: FakeProfile) => ({
     ...DOCS,
-    [`backOffice/${p.uid}`]: { tableauDeBord: [{ id: "evenements", taille: "m", reglages: {} }], majLe: "2026-10-01T09:00:00Z" },
+    [`backOffice/${p.uid}`]: { tableauDeBord: [{ id: "evenements", taille: "m", reglages: {} }], versionTableau: 2, majLe: "2026-10-01T09:00:00Z" },
   });
   const widget = (page: Page) => page.getByTestId("grille-widgets").getByRole("region", { name: "Évènements", exact: true });
 

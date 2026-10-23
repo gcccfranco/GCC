@@ -254,7 +254,7 @@ test.describe("Barre du bas (B6) : la feuille « Ta barre du bas »", () => {
 
   test("entrées permises à cocher, 4 au plus, aperçu, Terminé enregistre la barre seule", async ({ page }) => {
     const disposition = [{ id: "scene", taille: "s", reglages: {} }];
-    const db = await ouvrir(page, ADMIN, { "backOffice/uid-admin": { tableauDeBord: disposition, majLe: "2026-09-30T10:00:00Z" } });
+    const db = await ouvrir(page, ADMIN, { "backOffice/uid-admin": { tableauDeBord: disposition, versionTableau: 2, majLe: "2026-09-30T10:00:00Z" } });
     await ouvrirFeuille(page);
     await expect(feuille(page).getByRole("checkbox")).toHaveCount(9);
     for (const nom of ["Accueil", "Calendrier", "Tâches", "Planning"]) await expect(caseDe(page, nom)).toHaveAttribute("aria-checked", "true");

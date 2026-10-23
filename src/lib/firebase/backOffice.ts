@@ -5,19 +5,20 @@
 // écrit lui-même (B5) — le profil `users/{uid}` est verrouillé. Patron d'`onboarding/{uid}`. REST.
 
 import { FS_BASE, authHeader, fromFsValue, toFsFields, type RawDoc } from "@/lib/firebase/setlists";
+import { VERSION_TABLEAU } from "@/lib/tableauDeBord/disposition";
 import type { Entree, PreferencesBackOffice, Widget } from "@/types/backOffice";
 
 /**
  * Enregistre la disposition du tableau de bord (B5, à chaque geste, Q12) ; `null` la retire
  * (« Disposition par défaut » : absente = défaut du rôle, recalculé, jamais recopié). Seuls
- * `tableauDeBord` et `majLe` sont touchés : la barre du bas (B6) reste. Lève si refusé.
+ * `tableauDeBord`, `versionTableau` (T10, toujours écrite) et `majLe` sont touchés : la barre du bas (B6) reste. Lève si refusé.
  */
 export async function ecrireTableauDeBord(uid: string, widgets: Widget[] | null): Promise<void> {
-  const masque = new URLSearchParams([["updateMask.fieldPaths", "tableauDeBord"], ["updateMask.fieldPaths", "majLe"]]);
+  const masque = new URLSearchParams([["updateMask.fieldPaths", "tableauDeBord"], ["updateMask.fieldPaths", "versionTableau"], ["updateMask.fieldPaths", "majLe"]]);
   const res = await fetch(`${FS_BASE}/backOffice/${uid}?${masque}`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json", ...(await authHeader()) },
-    body: JSON.stringify({ fields: toFsFields({ ...(widgets ? { tableauDeBord: widgets } : {}), majLe: new Date().toISOString() }) }),
+    body: JSON.stringify({ fields: toFsFields({ ...(widgets ? { tableauDeBord: widgets } : {}), versionTableau: VERSION_TABLEAU, majLe: new Date().toISOString() }) }),
   });
   if (!res.ok) throw new Error(`backOffice/${uid} : ${res.status}`);
 }

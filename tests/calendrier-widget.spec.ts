@@ -3,7 +3,7 @@ import { join } from "node:path";
 import { expect, test, type Page, type TestInfo } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { ADMIN_EMAILS, widgetsPermis } from "../src/lib/access";
-import { dispositionParDefaut } from "../src/lib/tableauDeBord/disposition";
+import { ajouterWidget, dispositionParDefaut } from "../src/lib/tableauDeBord/disposition";
 import { avecLeSheet } from "../src/lib/tableauDeBord/donnees";
 import { choisirReglage, groupesDeReglages } from "../src/lib/tableauDeBord/reglages";
 import {
@@ -91,14 +91,16 @@ test.describe("widget Calendrier (pur)", () => {
     expect(lienDuJour("2026-10-03")).toBe("/back-office/calendrier?jour=2026-10-03");
   });
 
-  test("le widget est permis à tout responsable, et d'office au tableau de bord d'un admin (taille M)", () => {
+  test("le widget est permis à tout responsable, au catalogue d'un admin (taille M)", () => {
     const admin = { uid: "u-admin", email: ADMIN_EMAILS[0] };
     expect(widgetsPermis(admin, null)).toContain("calendrier");
     const da = { uid: "u-da", email: "da@example.org" };
     // Référent de TEAM DA (lot 1 du chantier « équipes et groupes » : un pôle ne fait plus un responsable).
     const profilDa = { uid: "u-da", email: "da@example.org", dansEquipes: ["da"], referentDe: ["da"], serviceRoles: {}, annonces: [], notify: [] } as unknown as UserProfile;
     expect(widgetsPermis(da, profilDa)).toContain("calendrier");
-    expect(dispositionParDefaut(admin, null).find((w) => w.id === "calendrier")).toEqual({ id: "calendrier", taille: "m", reglages: {} });
+    // Lot TB2-c (T9) : plus au défaut, il reste au catalogue (« Ajouter un widget »), à la taille M.
+    expect(dispositionParDefaut(admin, null).find((w) => w.id === "calendrier")).toBeUndefined();
+    expect(ajouterWidget([], "calendrier")).toEqual([{ id: "calendrier", taille: "m", reglages: {} }]);
   });
 
   test("réglages : Sources (sans Setlists) et « Seulement moi » dans le même groupe ; le dernier ne s'éteint pas", () => {
@@ -198,7 +200,7 @@ async function ouvrir(page: Page, taille: "s" | "m" | "l", reglages: Record<stri
   await sheets(page);
   const db = await signInAs(page, qui, {
     ...DOCS,
-    [`backOffice/${qui.uid}`]: { tableauDeBord: [{ id: "calendrier", taille, reglages }], majLe: "2026-10-01" },
+    [`backOffice/${qui.uid}`]: { tableauDeBord: [{ id: "calendrier", taille, reglages }], versionTableau: 2, majLe: "2026-10-01" },
   }, "/back-office");
   await expect(widgetCal(page)).toBeVisible();
   return db;
@@ -307,10 +309,14 @@ test.describe("C8 : le widget Calendrier", () => {
     await expect(page.getByTestId("jour-choisi")).toContainText("Réunion DA");
   });
 
-  test("un admin sans disposition enregistrée a le widget Calendrier, en M", async ({ page }) => {
+  test("un admin sans disposition enregistrée n'a plus le widget Calendrier (T9) : il l'ajoute depuis le catalogue, en M", async ({ page }) => {
     await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
     await sheets(page);
     await signInAs(page, P_ADMIN, DOCS, "/back-office");
+    await expect(page.getByTestId("grille-widgets").getByRole("region", { name: "Ce dimanche", exact: true })).toBeVisible();
+    await expect(widgetCal(page)).toHaveCount(0);
+    await page.getByRole("button", { name: "Personnaliser" }).click();
+    await page.getByRole("region", { name: "Ajouter un widget" }).getByRole("button", { name: "Calendrier" }).click();
     await expect(widgetCal(page)).toBeVisible();
     await expect(widgetCal(page).getByTestId("semaine")).toBeVisible();
   });
@@ -321,7 +327,7 @@ test.describe("C8 : le widget Calendrier", () => {
     await sheets(page);
     await signInAs(page, P_ADMIN, {
       ...DOCS,
-      "backOffice/u-admin": { tableauDeBord: [{ id: "calendrier", taille: "s", reglages: {} }], majLe: "2026-10-01" },
+      "backOffice/u-admin": { tableauDeBord: [{ id: "calendrier", taille: "s", reglages: {} }], versionTableau: 2, majLe: "2026-10-01" },
     }, "/back-office");
     const w = page.getByTestId("grille-widgets").getByRole("region", { name: "日历", exact: true });
     await expect(w.getByRole("link", { name: "近几天" })).toBeVisible();
@@ -343,7 +349,7 @@ test.describe("relecture du lot : le widget ne dépend ni du Sheet ni de l'histo
       ...DOCS,
       "backOffice/u-admin": {
         tableauDeBord: [{ id: "calendrier", taille: "s", reglages: {} }, { id: "evenements", taille: "m", reglages: { nombre: 5 } }],
-        majLe: "2026-10-01",
+        versionTableau: 2, majLe: "2026-10-01",
       },
     }, "/back-office");
     await expect(lignes(page).nth(0)).toContainText("Fond du culte");
@@ -370,7 +376,7 @@ test.describe("relecture du lot : le widget ne dépend ni du Sheet ni de l'histo
         titre: "Affiche de 2024", responsableUid: null, responsableNom: "", echeance: "2024-10-15", repetition: null,
         lien: "", note: "", prevenir: null, evenement: null, auteurUid: "u-autre", createdAt: MAINTENANT, updatedAt: MAINTENANT,
       },
-      "backOffice/u-admin": { tableauDeBord: [{ id: "calendrier", taille: "s", reglages: {} }], majLe: "2026-10-01" },
+      "backOffice/u-admin": { tableauDeBord: [{ id: "calendrier", taille: "s", reglages: {} }], versionTableau: 2, majLe: "2026-10-01" },
     }, "/back-office");
     await expect(lignes(page).nth(0)).toContainText("Fond du culte");
     expect(inscriptions).toEqual([]);
@@ -389,7 +395,7 @@ test.describe("C8 : « Prochains évènements » reçoit le Sheet", () => {
     await sheets(page);
     await signInAs(page, P_EVENEMENT, {
       ...DOCS,
-      "backOffice/u-evt": { tableauDeBord: [{ id: "evenements", taille: "m", reglages: { nombre: 10 } }], majLe: "2026-10-01" },
+      "backOffice/u-evt": { tableauDeBord: [{ id: "evenements", taille: "m", reglages: { nombre: 10 } }], versionTableau: 2, majLe: "2026-10-01" },
     }, "/back-office");
     const w = page.getByTestId("grille-widgets").getByRole("region", { name: "Évènements", exact: true });
     const ls = w.getByTestId("ligne-evenement");
@@ -421,7 +427,7 @@ test.describe("C8 : captures à regarder", () => {
         ...DOCS,
         "backOffice/u-admin": {
           tableauDeBord: [{ id: "calendrier", taille, reglages: {} }, { id: "evenements", taille: "m", reglages: { nombre: 5 } }],
-          majLe: "2026-10-01",
+          versionTableau: 2, majLe: "2026-10-01",
         },
       }, "/back-office");
       await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" });

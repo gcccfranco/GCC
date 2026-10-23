@@ -558,7 +558,7 @@ test.describe("Q6 : le widget Calendrier (U8, C8) suit la bascule", () => {
     const lus = await sheets(page);
     await signInAs(page, ADMIN, {
       ...DOCS,
-      "backOffice/u-admin": { tableauDeBord: [{ id: "calendrier", taille, reglages: {} }], majLe: "2026-12-01" },
+      "backOffice/u-admin": { tableauDeBord: [{ id: "calendrier", taille, reglages: {} }], versionTableau: 2, majLe: "2026-12-01" },
     }, "/back-office");
     await expect(widgetCal(page)).toBeVisible();
     return lus;
@@ -672,7 +672,7 @@ test.describe("Un appareil à Shanghai, le 31/12/2026 à 18:30 de Paris (01:30 l
     const lus = await sheets(page);
     await signInAs(page, ADMIN, {
       ...DOCS,
-      "backOffice/u-admin": { tableauDeBord: [{ id: "calendrier", taille: "l", reglages: {} }], majLe: "2026-12-01" },
+      "backOffice/u-admin": { tableauDeBord: [{ id: "calendrier", taille: "l", reglages: {} }], versionTableau: 2, majLe: "2026-12-01" },
     }, "/back-office");
     await expect(page.getByTestId("grille-widgets").getByRole("region", { name: "Calendrier", exact: true })).toBeVisible();
     await expect.poll(() => lus.includes(GID_DECEMBRE)).toBe(true);

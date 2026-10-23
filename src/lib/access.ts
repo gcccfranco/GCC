@@ -867,6 +867,7 @@ export function widgetsPermis(user: AuthUser | null, profile: UserProfile | null
     planning: entrees.includes("planning"),
     // Une seule entrée couvrait les deux avant v18 : le widget reste permis avec l'une ou l'autre.
     evenements: entrees.includes("evenements") || entrees.includes("reunions"),
+    reunions: entrees.includes("reunions"),
     chants: canVoirStatistiques(user),
     petitdej: true,
     scene: true,
