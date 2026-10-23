@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { signInAs, type FakeProfile } from "./helpers/fakeSession";
+import { musicien, signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { attendreMiseEnPage, onStage } from "./helpers/louange";
 import { ouvrirPartitions } from "./helpers/setlist";
 import { openSheet } from "./helpers/jianpu";
@@ -260,6 +260,7 @@ test.describe("idées d'harmonie", () => {
     lastName: "Velin",
     planningName: "Ambroise V.",
     serviceRoles: { "Culte Francophone": ["musicien"] },
+    ...musicien("piano"),
   };
 
   async function ouvrirLaFeuille(page: Page) {

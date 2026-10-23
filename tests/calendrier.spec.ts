@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { expect, test, type Locator, type Page, type TestInfo } from "@playwright/test";
-import { signInAs, type FakeProfile } from "./helpers/fakeSession";
+import { presidentGroupe, remplit, signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { ADMIN_EMAILS, entreesBackOffice } from "../src/lib/access";
 import { joursDeLaGrille, libelleCourt } from "../src/lib/calendrier/grille";
 import {
@@ -727,7 +727,7 @@ const CULTE = csv([
 
 const P_ADMIN: FakeProfile = { uid: "u-admin", email: ADMIN_EMAILS[0], firstName: "Admin", lastName: "T.", planningName: "Lou M." };
 /** Responsable des plannings, sans équipe : ni Tâches ni Réunions (Q2). */
-const P_PLANNINGS: FakeProfile = { uid: "u-pl", email: "pl@example.org", firstName: "Noa", lastName: "V.", plannings: ["culte"] };
+const P_PLANNINGS: FakeProfile = { uid: "u-pl", email: "pl@example.org", firstName: "Noa", lastName: "V.", ...remplit("paix") };
 
 const MAINTENANT = "2026-09-01T10:00:00Z";
 const DOCS: Record<string, Record<string, unknown>> = {
@@ -1385,8 +1385,8 @@ test.describe("C4 : captures à regarder", () => {
 /** Référent de TEAM DA et de TEAM MÉDIAS, sans section : une réunion ou un évènement de ses équipes
  *  (décision 43), des tâches de ses équipes (Q4, EQ14). */
 const P_POLES: FakeProfile = { uid: "u-da", email: "da@example.org", firstName: "Alix", lastName: "P.", dansEquipes: ["da", "medias"], referentDe: ["da", "medias"] };
-/** Publie pour une section, sans équipe : un évènement, pas de tâche. */
-const P_SECTION: FakeProfile = { uid: "u-sec", email: "sec@example.org", firstName: "Noa", lastName: "R.", annonces: ["Groupe Paix"] };
+/** Lot AO : président du Groupe Paix (ancien droit d'annonces de la section) — référent de son comité. */
+const P_SECTION: FakeProfile = { uid: "u-sec", email: "sec@example.org", firstName: "Noa", lastName: "R.", ...presidentGroupe("paix") };
 
 /** Le jour touché : sur grand écran, le menu « Ajouter ce jour-là » du volet du jour (agencement v18,
  *  B5) ; la feuille du jour sur tablette debout ; sur téléphone, la feuille du « + » (question 5),
@@ -1468,12 +1468,14 @@ test.describe("C5 : créer depuis un jour", () => {
     }
   });
 
-  test("une section sans équipe : « Nouvel évènement » seul", async ({ page }, info) => {
+  test("président d'un groupe : « Nouvel évènement » de sa section, et la tâche et la réunion de son comité", async ({ page }, info) => {
+    // Lot AO : l'ancien droit d'annonces d'une section n'existe plus seul. Le président d'un groupe est référent de son comité
+    // (une équipe calculée) : il crée l'évènement de sa section, et aussi les tâches et réunions de ce comité.
     await ouvrir(page, P_SECTION);
     const ou = await creerDepuis(page, info, "2026-10-11", "Dimanche 11 octobre");
     await expect(ou.lien("Nouvel évènement le 11/10")).toBeVisible();
-    await expect(ou.bouton(/Nouvelle tâche/)).toHaveCount(0);
-    await expect(ou.lien(/Nouvelle réunion/)).toHaveCount(0);
+    await expect(ou.bouton(/Nouvelle tâche/)).toHaveCount(1);
+    await expect(ou.lien(/Nouvelle réunion/)).toHaveCount(1);
   });
 
   test("téléphone : en Agenda, le « + » propose aujourd'hui", async ({ page }, info) => {

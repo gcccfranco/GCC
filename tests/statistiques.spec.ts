@@ -1,5 +1,5 @@
 import { expect, test, type Page, type TestInfo } from "@playwright/test";
-import { signInAs, type FakeProfile } from "./helpers/fakeSession";
+import { remplit, signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { canVoirStatistiques, entreesBackOffice, widgetsPermis } from "../src/lib/access";
 import { dispositionParDefaut } from "../src/lib/tableauDeBord/disposition";
 import { choisirReglage, groupesDeReglages } from "../src/lib/tableauDeBord/reglages";
@@ -14,7 +14,7 @@ import type { UserProfile } from "../src/types/user";
 
 const ADMIN: FakeProfile = { uid: "uid-admin", email: "tc328829@gmail.com", firstName: "Admin", lastName: "T." };
 /** Un responsable non admin : il remplit un planning (Spec, « Tests »). */
-const RESPONSABLE: FakeProfile = { uid: "uid-pl", email: "pl@example.com", firstName: "Paul", lastName: "L.", plannings: ["culte"] };
+const RESPONSABLE: FakeProfile = { uid: "uid-pl", email: "pl@example.com", firstName: "Paul", lastName: "L.", ...remplit("culte") };
 
 const user = (p: FakeProfile) => ({ uid: p.uid, email: p.email });
 const profil = (p: FakeProfile) =>

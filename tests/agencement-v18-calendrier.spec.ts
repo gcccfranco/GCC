@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { signInAs, type FakeProfile } from "./helpers/fakeSession";
+import { remplit, signInAs, type FakeProfile } from "./helpers/fakeSession";
 import {
   estGrandEcran, estTelephone, interdireDialoguesNatifs, margeAttendue, ongletsRail, ouvrirAvecBarre, verifierAgencement,
   verifierPleineLargeur, zoneDeContenu,
@@ -16,7 +16,7 @@ import { ADMIN_EMAILS } from "../src/lib/access";
 
 const ADMIN: FakeProfile = { uid: "u-admin", email: ADMIN_EMAILS[0], firstName: "Admin", lastName: "T.", planningName: "Lou M." };
 /** Responsable des plannings, sans pôle ni section : ne crée rien depuis le calendrier. */
-const PLANNINGS: FakeProfile = { uid: "u-pl", email: "pl@example.org", firstName: "Noa", lastName: "V.", plannings: ["culte"] };
+const PLANNINGS: FakeProfile = { uid: "u-pl", email: "pl@example.org", firstName: "Noa", lastName: "V.", ...remplit("paix") };
 
 const MAINTENANT = "2026-09-01T10:00:00Z";
 const DOCS: Record<string, Record<string, unknown>> = {

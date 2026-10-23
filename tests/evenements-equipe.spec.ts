@@ -1,6 +1,6 @@
 import { expect, test, type Page, type TestInfo } from "@playwright/test";
 import path from "node:path";
-import { signInAs, type FakeProfile } from "./helpers/fakeSession";
+import { coordination, signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { canInscrireEvenement, canSeeEvenement, entreesBackOffice, estReunion, publicDeReunion } from "../src/lib/access";
 import { destinatairesEvenement, inscrire } from "../src/lib/evenements/serveur";
 import { baseBackOffice } from "../src/lib/navigation";
@@ -35,7 +35,7 @@ const ev = (x: Record<string, unknown>) => ({ ...x, id: "x" }) as unknown as Eve
 
 // Alice : référente de TEAM DA et droit d'annonces du Groupe Paix (Évènements et Réunions au Back-Office).
 const ALICE: FakeProfile = {
-  uid: "uid-alice", email: "alice@example.com", firstName: "Alice", lastName: "Q.", dansEquipes: ["da"], referentDe: ["da"], annonces: ["Groupe Paix"],
+  uid: "uid-alice", email: "alice@example.com", firstName: "Alice", lastName: "Q.", dansEquipes: ["da", "comite-paix"], referentDe: ["da", "comite-paix"], groupe: "paix", annonces: ["Groupe Paix"],
 };
 /** Bruno : simple membre de TEAM DA. */
 const BRUNO: FakeProfile = { uid: "uid-bruno", email: "bruno@example.com", firstName: "Bruno", lastName: "M.", dansEquipes: ["da"] };
@@ -155,7 +155,7 @@ test("fiche de l'App : un membre de l'équipe voit l'évènement d'équipe avec 
 
 // Clara : référente de TEAM MÉDIAS (pas DA). Chloé : coordination (cochée), sans équipe.
 const CLARA: FakeProfile = { uid: "uid-clara", email: "clara@example.com", firstName: "Clara", lastName: "V.", dansEquipes: ["medias"], referentDe: ["medias"] };
-const CHLOE: FakeProfile = { uid: "uid-chloe", email: "chloe@example.com", firstName: "Chloé", lastName: "R.", coordination: true };
+const CHLOE: FakeProfile = { uid: "uid-chloe", email: "chloe@example.com", firstName: "Chloé", lastName: "R.", coordination: true, ...coordination() };
 const ADMIN = { uid: "uid-admin", email: "tc328829@gmail.com" };
 const qui = (p: FakeProfile) => ({ uid: p.uid, email: p.email });
 
@@ -286,7 +286,7 @@ test("relecture : depuis l'en-tête de BO › Évènements, « Nouvel évènemen
   await signInAs(page, ALICE, {}, "/back-office/evenements");
   await page.getByRole("link", { name: "Nouvel évènement" }).click();
   await page.waitForURL(/\/back-office\/evenements\/nouveau\/?$/);
-  await expect(page.getByLabel("Public").locator("option")).toHaveText(["Groupe Paix", "TEAM DA"]);
+  await expect(page.getByLabel("Public").locator("option")).toHaveText(["Groupe Paix", "TEAM DA", "COMITÉ PAIX"]); // lot AO : la présidence du Groupe Paix crée aussi pour son comité
 });
 
 test("relecture : un évènement d'équipe n'a pas « sans compte » — la case disparaît et rien n'est écrit", async ({ page }) => {

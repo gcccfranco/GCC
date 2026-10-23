@@ -1,5 +1,5 @@
 import { expect, test, type BrowserContextOptions, type Page } from "@playwright/test";
-import { signInAs, type FakeDb, type FakeProfile } from "./helpers/fakeSession";
+import { presidentGroupe, publie, remplit, signInAs, type FakeDb, type FakeProfile } from "./helpers/fakeSession";
 import { fenetreDuSite, interdireDialoguesNatifs, repondreDansLeSite } from "./helpers/agencement";
 
 // Agencement v18, tranche F2 (docs/spec-agencement-v18.md, R9) : les dix `window.confirm` hors
@@ -41,9 +41,9 @@ const FOOT = {
   inscrits: 2, createdAt: "2026-09-20T10:00:00Z", updatedAt: "2026-09-20T10:00:00Z",
 };
 const CULTE = { ...FOOT, titre: "Culte de Noël", type: "eglise", date: "2026-12-24", placesMax: null, inscriptionOuverte: false, inscrits: 0, organisateurUid: "uid-alice" };
-const STEPH: FakeProfile = { uid: "uid-steph", email: "steph@example.com", firstName: "Steph", lastName: "R.", annonces: ["Groupe Bonté"] };
-/** Coordination des évènements : elle duplique. */
-const ALICE: FakeProfile = { uid: "uid-alice", email: "alice@example.com", firstName: "Alice", lastName: "Q.", dansEquipes: ["evenementiel", "da"], referentDe: ["evenementiel", "da"], coordination: true };
+const STEPH: FakeProfile = { uid: "uid-steph", email: "steph@example.com", firstName: "Steph", lastName: "R.", ...presidentGroupe("bonte") };
+/** Coordination des évènements : elle duplique. Lot AO : la Coordination vient de l'organigramme (référent EDD, avec ses équipes). */
+const ALICE: FakeProfile = { uid: "uid-alice", email: "alice@example.com", firstName: "Alice", lastName: "Q.", dansEquipes: ["evenementiel", "da", "edd"], referentDe: ["evenementiel", "da", "edd"] };
 
 const tacheLiee = (over: Record<string, unknown>) => ({
   equipe: "evenementiel", titre: "Réserver la salle", responsableUid: null, responsableNom: "", echeance: "2026-12-10",
@@ -160,7 +160,7 @@ test("supprimer une tâche : la fenêtre du site ; Annuler la garde ; Supprimer 
 // ─── Planning ────────────────────────────────────────────────────────────────
 
 test("retirer une date de la grille : la fenêtre du site ; Annuler la garde ; Retirer l'efface", async ({ page }) => {
-  const qui: FakeProfile = { uid: "uid-ecrivain", email: "ecrivain@example.com", planningName: "Écrivain E.", plannings: ["interfranco"] };
+  const qui: FakeProfile = { uid: "uid-ecrivain", email: "ecrivain@example.com", planningName: "Écrivain E.", ...remplit("interfranco") };
   const db = await ouvrir(page, qui, "/back-office/planning/interfranco", {
     "plannings/interfranco/dimanches/2027-01-17": { date: "2027-01-17", presidence: "Président I." },
   }, "2026-11-15T10:00:00");
@@ -204,7 +204,7 @@ test("retirer un petit déj : la fenêtre du site ; Annuler le garde ; Retirer r
 });
 
 test("publier un trimestre : la fenêtre du site ; Annuler n'appelle rien ; Publier appelle la route", async ({ page }) => {
-  const publieur: FakeProfile = { uid: "uid-publieur", email: "publieur@example.com", planningName: "Publieur P.", notify: ["Groupe Paix"] };
+  const publieur: FakeProfile = { uid: "uid-publieur", email: "publieur@example.com", planningName: "Publieur P.", ...publie("paix") };
   const db = await ouvrir(page, publieur, "/back-office/planning/groupes", {
     "plannings/paix/dimanches/2027-01-10": { date: "2027-01-10", presidence: "Invité A." },
   }, "2026-11-15T10:00:00");
@@ -286,7 +286,7 @@ test("retirer un sujet : la fenêtre du site ; Annuler le garde ; Retirer le sup
 // ─── Tableau de bord ─────────────────────────────────────────────────────────
 
 test("revenir à la disposition par défaut : la fenêtre du site ; Annuler garde la disposition ; Remettre la remplace", async ({ page }) => {
-  const coord: FakeProfile = { uid: "uid-alice", email: "alice@example.com", firstName: "Alice", lastName: "Q.", dansEquipes: ["evenementiel"], referentDe: ["evenementiel"], coordination: true };
+  const coord: FakeProfile = { uid: "uid-alice", email: "alice@example.com", firstName: "Alice", lastName: "Q.", dansEquipes: ["evenementiel", "edd"], referentDe: ["evenementiel", "edd"] };
   const db = await ouvrir(page, coord, "/back-office", {
     "backOffice/uid-alice": { tableauDeBord: [{ id: "scene", taille: "l", reglages: {} }], majLe: "2026-09-30T10:00:00Z" },
   });

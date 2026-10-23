@@ -107,10 +107,11 @@ test.describe("louange : barre d'outils de la setlist, une seule ligne sur tél�
     keyOverride: null, showChords: true, showPinyin: true, useJianpu: false,
     structureOverride: null, sectionNotes: {}, notes: "", ...over,
   });
-  // Le pire cas : on peut modifier (Adapter) et avoir sa version (Pinyin est passé dans « Affichage »).
+  // Le pire cas : on peut modifier (Adapter) et avoir sa version (Pinyin est passé dans « Affichage »). Depuis SC1
+  // (18/10/2026), seul le créateur modifie une setlist : la musicienne est la créatrice de la sienne.
   const setlist = {
     title: "高班", leader: "David C.", category: "Culte Francophone", date: "2026-09-20",
-    language: "mixed", notes: "", ownerId: "uid-owner", isPrivate: false,
+    language: "mixed", notes: "", ownerId: "uid-musicien", isPrivate: false,
     items: [item({ songSlug: "abba-pere", position: 1 }), item({ songSlug: "爱的约定", position: 2 })],
   };
   const AIDE_ADAPTER = /Mode adaptation/;

@@ -1,5 +1,5 @@
 import { expect, test, type Page, type TestInfo } from "@playwright/test";
-import { signInAs, type FakeProfile } from "./helpers/fakeSession";
+import { notifie, signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { entreesBackOffice, estResponsable, widgetsPermis } from "../src/lib/access";
 import { entreesBarre } from "../src/lib/navigation";
 import type { UserProfile } from "../src/types/user";
@@ -17,6 +17,10 @@ const ADMIN: FakeProfile = { uid: "uid-admin", email: "tc328829@gmail.com", firs
 const ALICE: FakeProfile = {
   uid: "uid-alice", email: "alice@example.com", firstName: "Alice", lastName: "Q.", dansEquipes: ["evenementiel"], coordination: true,
 };
+/** Lot AO : Alice dans l'organigramme. La Coordination n'est plus une case : elle vient d'une place (ici référent EDD, la moins
+ *  chargée), qui ouvre aussi le planning EDD, Équipes (tenir l'EDD) et Messages (notifier l'EDD). Pour les tests d'écran
+ *  (interrupteur ouvert) ; les tests purs ci-dessus lisent l'ancien mode avec `ALICE`. */
+const ALICE_ORGA: FakeProfile = { ...ALICE, dansEquipes: ["evenementiel", "edd"], referentDe: ["edd"] };
 /** Bruno, simple membre de TEAM DA. */
 const DA: FakeProfile = { uid: "uid-da", email: "da@example.com", firstName: "Bruno", lastName: "M.", dansEquipes: ["da"] };
 const PLANNINGS: FakeProfile = { uid: "uid-pl", email: "pl@example.com", plannings: ["culte"] };
@@ -204,19 +208,19 @@ test.describe("Back-Office (B1) : le sélecteur et le menu", () => {
     await expect(menu(page, info).getByRole("link", { name: tableau })).toHaveAttribute("aria-current", "page");
   });
 
-  test("Alice voit Tableau de bord, Calendrier, Tâches, Évènements, Réunions", async ({ page }, info) => {
-    await signInAs(page, ALICE, {}, "/back-office");
+  test("Alice (référent EDD, lot AO) voit tout sauf Statistiques : sa Coordination vient d'une place qui ouvre aussi Planning, Équipes, Messages", async ({ page }, info) => {
+    await signInAs(page, ALICE_ORGA, {}, "/back-office");
     await expect(page.getByRole("heading", { name: "Tableau de bord" })).toBeVisible();
     await deplierSiTablettePaysage(page, info);
     await expect(menu(page, info).getByRole("link")).toHaveText(
       estOrdinateur(info) || estTablettePaysage(info)
-        ? ["Tableau de bord", "Calendrier", "Tâches", "Évènements", "Réunions"]
-        : ["Accueil", "Calendrier", "Tâches", "Évènements", "Plus"],
+        ? ["Tableau de bord", "Calendrier", "Planning", "Tâches", "Évènements", "Réunions", "Équipes", "Messages"]
+        : ["Accueil", "Calendrier", "Tâches", "Planning", "Plus"],
     );
   });
 
   test("une entrée du menu mène à sa page du Back-Office (Tâches : l'équipe de la personne, B3)", async ({ page }, info) => {
-    await signInAs(page, ALICE, {
+    await signInAs(page, ALICE_ORGA, {
       "equipes/evenementiel/taches/t1": { equipe: "evenementiel", titre: "Salle", responsableUid: "uid-alice", responsableNom: "Alice Q.", echeance: "2026-10-05", repetition: null },
     }, "/back-office");
     await expect(page.getByRole("heading", { name: "Tableau de bord" })).toBeVisible();
@@ -232,14 +236,14 @@ test.describe("Back-Office (B1) : le sélecteur et le menu", () => {
   });
 
   test("une entrée inconnue répond 404 (Calendrier, U8, et Statistiques, U7, sont arrivés)", async ({ page }) => {
-    await signInAs(page, ALICE, {}, "/back-office");
+    await signInAs(page, ALICE_ORGA, {}, "/back-office");
     await expect(page.getByRole("heading", { name: "Tableau de bord" })).toBeVisible();
     expect((await page.goto("/back-office/nimporte-quoi"))?.status()).toBe(404);
   });
 
   test("le sélecteur rouvre la dernière page de chaque espace (mémoire de session)", async ({ page }, info) => {
     await sansSheet(page);
-    await signInAs(page, ALICE, {}, "/setlists");
+    await signInAs(page, ALICE_ORGA, {}, "/setlists");
     await page.getByRole("heading", { name: "Setlists" }).first().waitFor();
     await deplierSiTablettePaysage(page, info);
     // Rien encore en mémoire côté Back-Office : le tableau de bord.
@@ -314,7 +318,7 @@ test.describe("Back-Office (B1) : le sélecteur et le menu", () => {
 
   test("en 中文 : 应用 · 后台, et le menu traduit", async ({ page }, info) => {
     await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
-    await signInAs(page, ALICE, {}, "/back-office");
+    await signInAs(page, ALICE_ORGA, {}, "/back-office");
     await expect(page.getByRole("heading", { name: "仪表盘" })).toBeVisible();
     await deplierSiTablettePaysage(page, info);
     await expect(page.getByRole("group", { name: "选择空间" }).filter({ visible: true }).getByRole("link")).toHaveText(["应用", "后台"]);
@@ -357,7 +361,7 @@ test.describe("Back-Office : pastilles de la barre latérale (Q15)", () => {
     const lus: string[] = [];
     page.on("request", (r) => { if (r.url().includes(":runQuery")) lus.push(r.postData() ?? ""); });
     await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
-    await signInAs(page, { ...DA, notify: ["Groupe Paix"] }, PASTILLES, "/back-office");
+    await signInAs(page, { ...DA, ...notifie("Groupe Paix") }, PASTILLES, "/back-office");
     await expect(page.getByRole("heading", { name: "Tableau de bord" })).toBeVisible();
     await expect(menu(page, info).getByRole("link", { name: "Tâches", exact: true }).getByTestId("pastille")).toHaveText("1");
     await expect(menu(page, info).getByRole("link", { name: "Messages", exact: true }).getByTestId("pastille")).toHaveCount(0);

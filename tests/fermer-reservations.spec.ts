@@ -1,6 +1,6 @@
 import "./helpers/cleFirebase";
 import { expect, test, type Page } from "@playwright/test";
-import { signInAs, type FakeDb, type FakeProfile } from "./helpers/fakeSession";
+import { coordination, signInAs, type FakeDb, type FakeProfile } from "./helpers/fakeSession";
 import { estGrandEcran, interdireDialoguesNatifs, verifierAgencement } from "./helpers/agencement";
 import { etatEdition } from "../src/lib/scene/fetes";
 import type { Programme } from "../src/types/programme";
@@ -8,7 +8,7 @@ import type { Programme } from "../src/types/programme";
 // Fermer les réservations d'une fête avant la date de fin (docs/spec-fermer-reservations.md, FR-A).
 // Comptes et programmes simulés ; noms fictifs.
 
-const NINA_COORD: FakeProfile = { uid: "uid-nina", email: "nina@example.com", firstName: "Nina", lastName: "V.", coordination: true };
+const NINA_COORD: FakeProfile = { uid: "uid-nina", email: "nina@example.com", firstName: "Nina", lastName: "V.", ...coordination() };
 const ELIO_MEMBRE: FakeProfile = { uid: "uid-elio", email: "elio@example.com", firstName: "Elio", lastName: "B." };
 
 /** Noël 2026 lancé, ouverture le lundi 02/11, fermeture par défaut le dimanche 20/12. */

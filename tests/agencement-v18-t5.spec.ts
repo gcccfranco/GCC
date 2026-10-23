@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { signInAs, ADMIN_EMAIL, type FakeProfile } from "./helpers/fakeSession";
+import { notifie, signInAs, ADMIN_EMAIL, type FakeProfile } from "./helpers/fakeSession";
 import {
   enTete, estGrandEcran, fenetreDuSite, interdireDialoguesNatifs, ongletsRail, pilules,
   repondreDansLeSite, verifierAgencement,
@@ -107,7 +107,8 @@ test.describe("T5 : Équipes › Organigramme", () => {
   });
 
   test("droit Équipes sans être admin : ni rail ni sa marge dans l'en-tête", async ({ page }) => {
-    const equipier: FakeProfile = { uid: "u-equipier", email: "equipier@example.com", firstName: "Elsa", lastName: "N.", equipes: true };
+    // Lot AO : tenir l'organigramme vient d'une place (ici référente de TEAM DA : elle tient son équipe), plus de la case « Équipes ».
+    const equipier: FakeProfile = { uid: "u-equipier", email: "equipier@example.com", firstName: "Elsa", lastName: "N.", dansEquipes: ["da"], referentDe: ["da"] };
     await ouvrir(page, "/back-office/equipes", DOCS, equipier);
     await expect(page.getByTestId("equipe-da").getByRole("button", { name: "Modifier TEAM DA" })).toBeVisible();
     await expect(ongletsRail(page)).toHaveCount(0);
@@ -168,7 +169,14 @@ test.describe("T5 : Équipes › Organigramme", () => {
   });
 
   test("Musiciens : la matrice sous le même en-tête", async ({ page }) => {
-    await ouvrir(page, "/back-office/equipes");
+    // Lot AO : les Musiciens viennent de l'équipe Louange de l'organigramme (plus du planning ni des rôles déclarés).
+    await ouvrir(page, "/back-office/equipes", {
+      ...DOCS,
+      "equipes/louange": {
+        membres: [M("Bérénice A.", { uid: "u-berenice", sousEquipes: ["musiciens"], joue: ["piano"], lieux: ["Culte Francophone"] })],
+        updatedAt: "2026-09-18T10:00:00Z", parUid: "", parNom: "",
+      },
+    });
     await pilules(page).getByRole("button", { name: "Musiciens" }).click();
     await expect(pilules(page).getByRole("button", { name: "Musiciens" })).toHaveAttribute("aria-pressed", "true");
     await expect(page.getByTestId("bandeau-equipes")).toHaveCount(0);
@@ -230,9 +238,11 @@ test.describe("T5 : Équipes › Personnes", () => {
     // Tri « Récents » : le compte le plus récent d'abord.
     await expect(fiche.getByRole("heading", { level: 2 })).toHaveText("Bérénice A.");
     await expect(fiche).toContainText("Services et équipes");
-    // Lot 1 du chantier « équipes et groupes » (EQ26) : la carte « Pôles » cède la place à la ligne
-    // « Coordination » de la carte Droits.
-    await expect(fiche).toContainText("Coordination");
+    // Lot 1 du chantier « équipes et groupes » (EQ26) : la carte « Pôles » cède la place à la carte Droits ;
+    // lot AO : plus de ligne « Coordination » cochée, mais « Ce que ça lui ouvre », calculé depuis l'organigramme.
+    await expect(fiche).not.toContainText("Coordination");
+    await expect(fiche).toContainText("Ce que ça lui ouvre");
+    await expect(fiche).toContainText("Tenir l'équipe DA dans l'organigramme");
     await expect(fiche).not.toContainText("Pôles");
     await expect(fiche).toContainText("Droits");
     await expect(fiche).toContainText("Ses prochains services");
@@ -261,11 +271,14 @@ test.describe("T5 : Équipes › Personnes", () => {
     const db = await ouvrir(page, "/back-office/equipes/personnes?uid=u-ysee");
     const fiche = page.locator('[data-volet="detail"]');
     await fiche.getByRole("button", { name: "Modifier" }).click();
-    await fiche.getByRole("button", { name: /Équipes \(tout l'organigramme\)/ }).click();
+    // Lot AO : le formulaire n'a plus de case de droit (Équipes…) — l'identité seule, et « Ce que ça lui ouvre ».
+    await expect(fiche.getByRole("button", { name: /Équipes \(tout l'organigramme\)/ })).toHaveCount(0);
+    await expect(fiche.getByRole("button", { name: "Enregistrer" })).toBeVisible();
     await fiche.getByRole("button", { name: "Enregistrer" }).click();
     await expect(fiche.getByRole("heading", { level: 2 })).toHaveText("Ysée R.");
     await expect(fiche.getByRole("button", { name: "Modifier" })).toBeVisible();
-    await expect.poll(() => db.doc("users/u-ysee")?.equipes).toBe(true);
+    await expect.poll(() => db.writes.some((w) => w.path === "users/u-ysee")).toBe(true);
+    expect(Object.keys(db.writes.find((w) => w.path === "users/u-ysee")!.data).sort()).toEqual(["firstName", "lastName", "planningName"]);
   });
 
   test("en grand : « Modifier » garde la personne quand la liste change (recherche, tri)", async ({ page }, info) => {
@@ -305,7 +318,7 @@ test.describe("T5 : Équipes › Personnes", () => {
     await ouvrir(page, "/back-office/equipes/personnes");
     const liste = page.locator('[data-volet="liste"]');
     const filtres = liste.getByRole("group", { name: "Filtrer les membres" });
-    await expect(filtres.getByRole("button", { name: "Ne sert pas" })).toBeVisible();
+    await expect(filtres.getByRole("button", { name: "Sans équipe" })).toBeVisible();
     const { defile, lignes } = await filtres.evaluate((e) => ({
       defile: e.scrollWidth > e.clientWidth + 1,
       lignes: new Set([...e.children].map((b) => Math.round(b.getBoundingClientRect().top))).size,
@@ -313,7 +326,7 @@ test.describe("T5 : Équipes › Personnes", () => {
     expect(defile, "aucun défilement en largeur").toBe(false);
     expect(lignes, "plusieurs lignes de pilules").toBeGreaterThan(1);
     const boite = (await liste.boundingBox())!;
-    const derniere = (await filtres.getByRole("button", { name: "Ne sert pas" }).boundingBox())!;
+    const derniere = (await filtres.getByRole("button", { name: "Sans équipe" }).boundingBox())!;
     expect(derniere.x + derniere.width, "la dernière pilule entière dans la colonne").toBeLessThanOrEqual(boite.x + boite.width);
   });
 });
@@ -461,7 +474,7 @@ test.describe("T5 : Messages", () => {
   });
 
   test("Notifier seul (le droit de notifier, sans être admin) : pas le sous-titre de Réception", async ({ page }) => {
-    const notifieur: FakeProfile = { uid: "u-notifieur", email: "notifieur@example.com", firstName: "Noé", lastName: "T.", notify: ["Groupe Paix"] };
+    const notifieur: FakeProfile = { uid: "u-notifieur", email: "notifieur@example.com", firstName: "Noé", lastName: "T.", ...notifie("Groupe Paix") };
     await ouvrir(page, "/back-office/messages/notifier", DOCS, notifieur);
     await expect(page.getByRole("region", { name: "Aperçu" })).toBeVisible();
     await expect(titre(page)).toHaveText("Messages");

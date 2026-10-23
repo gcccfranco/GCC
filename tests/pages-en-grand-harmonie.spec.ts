@@ -1,6 +1,6 @@
 import { expect, test, type Page, type TestInfo } from "@playwright/test";
 import { readFileSync } from "fs";
-import { signInAs, type FakeProfile } from "./helpers/fakeSession";
+import { musicien, signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { couperEnDeuxColonnes } from "../src/lib/harmonie/rd2000";
 
 // Lot U4 bis, tranche B3 — Harmonie en grand (docs/spec-pages-en-grand.md, Q6 ; planches
@@ -16,7 +16,7 @@ const CULTE = csv([
   ["2026 DATE", "Présidence", "Choristes", "", "Pianiste", "Guitariste", "Batterie", "Sono", "PPT", "Orateur", "Traducteur", "Sainte cène"],
   ["04/10", "Léa M.", "", "", "Ruth K.", "Samuel K.", "Paul D.", "", "", "Orateur Z.", "", ""],
 ]);
-const RUTH: FakeProfile = { uid: "uid-ruth", email: "ruth@example.com", firstName: "Ruth", lastName: "K.", planningName: "Ruth K." };
+const RUTH: FakeProfile = { uid: "uid-ruth", email: "ruth@example.com", firstName: "Ruth", lastName: "K.", planningName: "Ruth K.", ...musicien("piano") };
 
 const CATALOGUE = JSON.parse(readFileSync("public/harmonie-index.json", "utf8")) as {
   fiches: { id: string; nom: string; familleNom: string; instrument?: string; niveau: Record<string, string> }[];

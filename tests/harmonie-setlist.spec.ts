@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { signInAs, type FakeProfile } from "./helpers/fakeSession";
+import { musicien, signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { ouvrirPartitions } from "./helpers/setlist";
 
 // Lot 9 / H2 et H4 dans une setlist : le bouton « Idées d'harmonie » sur un
@@ -20,6 +20,7 @@ const MUSICIEN: FakeProfile = {
   lastName: "Kouassi",
   planningName: "Ruth K.",
   serviceRoles: { "Culte Francophone": ["musicien"] },
+  ...musicien("piano", "guitare"),
 };
 
 const SETLIST_ID = "setlist-harmonie";
@@ -177,7 +178,7 @@ test("un chanteur ne voit pas le bouton", async ({ page }) => {
   await page.route(/docs\.google\.com\/spreadsheets/, (route) =>
     route.fulfill({ status: 200, contentType: "text/csv", body: "" }),
   );
-  await signInAs(page, { ...MUSICIEN, planningName: "Personne" }, { [SETLIST_DOC]: SETLIST }, `/setlists/${SETLIST_ID}`);
+  await signInAs(page, { ...MUSICIEN, ...musicien("batterie") }, { [SETLIST_DOC]: SETLIST }, `/setlists/${SETLIST_ID}`);
   await ouvrirPartitions(page);
   await expect(page.getByRole("heading", { name: "Abba Père" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Idées d'harmonie" })).toHaveCount(0);

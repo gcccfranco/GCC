@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { signInAs, type FakeProfile } from "./helpers/fakeSession";
+import { musicien, signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { ouvrirPartitions } from "./helpers/setlist";
 
 // « Montrer » dans les idées d'harmonie d'un chant de la setlist (retour de
@@ -21,6 +21,7 @@ const MUSICIEN: FakeProfile = {
   lastName: "Kouassi",
   planningName: "Ruth K.",
   serviceRoles: { "Culte Francophone": ["musicien"] },
+  ...musicien("piano", "guitare"),
 };
 
 const SETLIST_ID = "setlist-harmonie-montrer";

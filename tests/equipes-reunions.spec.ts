@@ -1,7 +1,7 @@
 import { expect, test, type Locator, type Page, type TestInfo } from "@playwright/test";
 import { readFileSync } from "node:fs";
 import path from "node:path";
-import { ADMIN_EMAIL, signInAs, type FakeProfile } from "./helpers/fakeSession";
+import { ADMIN_EMAIL, coordination, signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { canCreateEvenement, canSeeEvenement, estDeLaReunion, estReunion, publicDeReunion } from "../src/lib/access";
 import { destinatairesEvenement, inscrire } from "../src/lib/evenements/serveur";
 
@@ -47,7 +47,7 @@ const LEA: FakeProfile = { uid: "u-lea", email: "lea@example.com", firstName: "L
 /** Simple membre de TEAM MÉDIAS. */
 const JOEL: FakeProfile = { uid: "u-joel", email: "joel@example.com", firstName: "Joël", lastName: "F.", dansEquipes: ["medias"] };
 /** Coordination cochée, sans équipe. */
-const IRIS: FakeProfile = { uid: "u-iris", email: "iris@example.com", firstName: "Iris", lastName: "D.", coordination: true };
+const IRIS: FakeProfile = { uid: "u-iris", email: "iris@example.com", firstName: "Iris", lastName: "D.", coordination: true, ...coordination() };
 
 const qui = (p: FakeProfile) => ({ uid: p.uid, email: p.email });
 

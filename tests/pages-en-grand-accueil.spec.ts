@@ -65,13 +65,13 @@ const EVENEMENT = {
 const DOCS = { "setlists/sl-1": SETLIST, "evenements/ev-1": EVENEMENT };
 
 /** Jeudi 1er octobre 2026 : « Ce dimanche » est le 4 octobre. */
-async function ouvrir(page: Page, profil: FakeProfile = RUTH, feuilles: Record<string, string> = FEUILLES) {
+async function ouvrir(page: Page, profil: FakeProfile = RUTH, feuilles: Record<string, string> = FEUILLES, docs: Record<string, Record<string, unknown>> = DOCS) {
   await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
   await page.route(/docs\.google\.com\/spreadsheets/, (route) => {
     const feuille = new URL(route.request().url()).searchParams.get("sheet") ?? "";
     return route.fulfill({ status: 200, contentType: "text/csv", body: feuilles[feuille] ?? "" });
   });
-  await signInAs(page, profil, DOCS, "/planning");
+  await signInAs(page, profil, docs, "/planning");
 }
 
 /** Les requêtes sur la collection des setlists (`runQuery`), relevées pendant le test : leur
@@ -167,7 +167,9 @@ test.describe("Accueil A : les quatre dispositions", () => {
   });
 
   test("une setlist que la personne ne peut pas ouvrir n'est pas proposée", async ({ page }) => {
-    await ouvrir(page, { ...RUTH, serviceRoles: {} });
+    // Lot AO (F1) : qui sert à une date lit la setlist de cette date, même sans rôle déclaré. Ce qu'on ne peut pas ouvrir,
+    // c'est une setlist privée d'un autre.
+    await ouvrir(page, { ...RUTH, serviceRoles: {} }, FEUILLES, { ...DOCS, "setlists/sl-1": { ...SETLIST, isPrivate: true } });
     await expect(cePourMoi(page).getByText("Culte Franco").first()).toBeVisible();
     await expect(ceDimanche(page).getByTestId("ligne-edd").first()).toBeVisible();
     await expect(cePourMoi(page).getByRole("link", { name: "Ouvrir" })).toHaveCount(0);

@@ -1,5 +1,5 @@
 import { expect, test, type Page, type TestInfo } from "@playwright/test";
-import { ADMIN_EMAIL, signInAs, type FakeProfile } from "./helpers/fakeSession";
+import { ADMIN_EMAIL, orga, signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { estGrandEcran, ongletsRail } from "./helpers/agencement";
 import { entreesBackOffice, estResponsable, isCoordination, sousPartiesEvenements } from "../src/lib/access";
 import type { Evenement } from "../src/types/evenement";
@@ -27,7 +27,10 @@ const HUGO_COORD: FakeProfile = { ...HUGO, coordination: true };
 /** La case seule, sans équipe ni autre droit. */
 const IRIS: FakeProfile = { uid: "u-iris", email: "iris@example.com", firstName: "Iris", lastName: "D.", coordination: true };
 /** Droit Équipes (tenir l'organigramme) sans être admin. */
-const ELSA: FakeProfile = { uid: "u-elsa", email: "elsa@example.com", firstName: "Elsa", lastName: "N.", equipes: true };
+const ELSA: FakeProfile = { uid: "u-elsa", email: "elsa@example.com", firstName: "Elsa", lastName: "N.", equipes: true, ...orga() };
+/** Lot AO : Coordination = une place d'organigramme. Hugo, référent de TEAM ÉVÉNEMENTIEL, aussi référent EDD ; Iris, membre d'Orga, sans autre équipe. */
+const HUGO_ORGA: FakeProfile = { ...HUGO, dansEquipes: ["evenementiel", "edd"], referentDe: ["evenementiel", "edd"] };
+const IRIS_ORGA: FakeProfile = { uid: "u-iris", email: "iris@example.com", firstName: "Iris", lastName: "D.", ...orga() };
 
 const PROFIL = (p: FakeProfile, over: Record<string, unknown> = {}) => ({
   email: p.email, firstName: p.firstName, lastName: p.lastName, planningName: "",
@@ -82,55 +85,42 @@ test.describe("pur : la coordination est un droit coché, plus un pôle", () => 
   });
 });
 
-// ─── Personnes : la case et la ligne ─────────────────────────────────────────
+// ─── Personnes : la fiche et le formulaire (lot AO) ──────────────────────────
 
-test("Personnes : un admin coche « Coordination » ; le masque porte `coordination`, la fiche dit Oui", async ({ page }, info: TestInfo) => {
-  const masques: string[][] = [];
-  page.on("request", (r) => {
-    if (r.method() === "PATCH" && /\/documents\/users\/u-hugo/.test(r.url())) {
-      masques.push(new URL(r.url()).searchParams.getAll("updateMask.fieldPaths"));
-    }
-  });
-  const db = await ouvrir(page, ADMIN, "/back-office/equipes/personnes?uid=u-hugo", { "users/u-hugo": PROFIL(HUGO) });
+// Lot AO : la case « Coordination » n'existe plus dans Personnes (interrupteur ouvert) : la Coordination vient d'une place de
+// l'organigramme (référent Louange, référent EDD, membre d'Orga) et la fiche la dit dans « Ce que ça lui ouvre ». L'ancienne
+// case n'a plus d'écran : le back-office est en 404 interrupteur coupé. Les tests d'avant la cochaient ; les voici dans le
+// nouveau mode.
+test("Personnes : la fiche d'un référent EDD dit « Coordination » dans « Ce que ça lui ouvre » ; le formulaire n'a plus de case", async ({ page }, info: TestInfo) => {
+  const db = await ouvrir(page, ADMIN, "/back-office/equipes/personnes?uid=u-hugo", { "users/u-hugo": PROFIL(HUGO_ORGA) });
   if (estGrandEcran(info)) {
-    await expect(carteDroits(page)).toContainText(/Admin\s*Non\s*Coordination\s*Non/);
+    await expect(carteDroits(page)).toContainText(/Admin\s*Non/);
+    await expect(carteDroits(page)).not.toContainText("Coordination");
+    await expect(fiche(page).getByRole("region", { name: "Ce que ça lui ouvre" })).toContainText("Coordination : scène, fêtes et évènements de toute l'Église");
+    await capture(page, "coordination-fiche");
   }
   // Un volet : la fiche est une page entière, « Modifier » ouvre le formulaire.
   await page.getByRole("button", { name: "Modifier", exact: true }).click();
-  const coche = page.getByRole("button", { name: "Coordination", exact: true });
-  await expect(coche).toHaveAttribute("aria-pressed", "false");
-  await expect(page.getByText("Régler la scène, créer pour toute l'église, modifier tout évènement")).toBeVisible();
-  await coche.click();
-  await expect(coche).toHaveAttribute("aria-pressed", "true");
+  await expect(page.getByRole("button", { name: "Coordination", exact: true })).toHaveCount(0);
+  await expect(page.getByText("Régler la scène, créer pour toute l'église, modifier tout évènement")).toHaveCount(0);
+  await expect(page.getByText("Coordination : scène, fêtes et évènements de toute l'Église")).toBeVisible();
   await capture(page, "coordination-formulaire");
   await page.getByRole("button", { name: "Enregistrer", exact: true }).click();
-
-  await expect.poll(() => masques.length).toBe(1);
-  expect(masques[0]).toContain("coordination");
-  expect(masques[0], "les pôles ne sont jamais renvoyés").not.toContain("poles");
-  expect(db.writes.find((w) => w.method === "PATCH" && w.path === "users/u-hugo")?.data.coordination).toBe(true);
-  expect(db.doc("users/u-hugo")?.coordination).toBe(true);
-
-  if (estGrandEcran(info)) {
-    await expect(carteDroits(page)).toContainText(/Admin\s*Non\s*Coordination\s*Oui/);
-    await capture(page, "coordination-fiche");
-  } else {
-    // Un volet : la page revient à la fiche à l'enregistrement ; « Modifier » rouvre le formulaire, la case est cochée.
-    await page.getByRole("button", { name: "Modifier", exact: true }).click();
-    await expect(page.getByRole("button", { name: "Coordination", exact: true })).toHaveAttribute("aria-pressed", "true");
-  }
+  // L'identité seule s'écrit : aucun droit (ni `coordination`, ni `equipes`…) ne part d'ici.
+  await expect.poll(() => db.writes.some((w) => w.method === "PATCH" && w.path === "users/u-hugo")).toBe(true);
+  expect(Object.keys(db.writes.find((w) => w.method === "PATCH" && w.path === "users/u-hugo")!.data).sort()).toEqual(["firstName", "lastName", "planningName"]);
 });
 
-test("Personnes en 中文 : « 协调 », cochée", async ({ page }, info: TestInfo) => {
+test("Personnes en 中文 : « 协调 » dans « 这会开放什么权限 »", async ({ page }, info: TestInfo) => {
   await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
-  await ouvrir(page, ADMIN, "/back-office/equipes/personnes?uid=u-hugo", { "users/u-hugo": PROFIL(HUGO, { coordination: true }) });
+  await ouvrir(page, ADMIN, "/back-office/equipes/personnes?uid=u-hugo", { "users/u-hugo": PROFIL(HUGO_ORGA) });
   if (estGrandEcran(info)) {
-    await expect(carteDroits(page)).toContainText(/Admin\s*Non\s*协调\s*Oui/);
+    await expect(fiche(page).getByRole("region", { name: "这会开放什么权限" })).toContainText("协调：舞台、节日和全教会的活动");
     await capture(page, "coordination-fiche-zh");
   }
   await page.getByRole("button", { name: /^(Modifier|修改)$/ }).click();
-  await expect(page.getByRole("button", { name: "协调", exact: true })).toHaveAttribute("aria-pressed", "true");
-  await expect(page.getByText("管理舞台、为全教会创建、修改所有活动")).toBeVisible();
+  await expect(page.getByRole("button", { name: "协调", exact: true })).toHaveCount(0);
+  await expect(page.getByText("协调：舞台、节日和全教会的活动")).toBeVisible();
   await capture(page, "coordination-formulaire-zh");
 });
 
@@ -142,21 +132,23 @@ test("Personnes : plus de carte « Pôles » ni de « Coché hors organigramme �
   if (estGrandEcran(info)) {
     await expect(carteDroits(page)).toBeVisible();
     await expect(fiche(page).getByRole("heading", { name: "Pôles" })).toHaveCount(0);
+    // Le pôle écrit ne donne rien : pas de Coordination dans « Ce que ça lui ouvre ».
+    await expect(fiche(page)).not.toContainText("Coordination : scène");
   }
   await page.getByRole("button", { name: "Modifier", exact: true }).click();
-  await expect(page.getByRole("button", { name: "Coordination", exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Coordination", exact: true })).toHaveCount(0);
   await expect(page.getByText(/Pôles \(donnés par les équipes/)).toHaveCount(0);
   await expect(page.getByText(/Coché hors organigramme/)).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Décocher" })).toHaveCount(0);
 });
 
-test("Personnes : le droit Équipes sans être admin ne montre pas la case", async ({ page }) => {
+test("Personnes : qui tient l'organigramme sans être admin n'a pas Personnes, donc pas de case", async ({ page }) => {
   await ouvrir(page, ELSA, "/back-office/equipes/personnes?uid=u-hugo", { "users/u-hugo": PROFIL(HUGO) });
   await expect(page.getByText("Page réservée aux administrateurs.")).toBeVisible();
   await expect(page.getByRole("button", { name: "Coordination", exact: true })).toHaveCount(0);
 });
 
-// ─── Ce qu'ouvre la case ─────────────────────────────────────────────────────
+// ─── Ce qu'ouvre la Coordination ─────────────────────────────────────────────────────
 
 // Depuis EQ-B, un simple membre d'équipe n'a que Tâches et Réunions (EQ17) : sans la case, ACCUEIL J1
 // n'atteint même plus Évènements ; seul le référent (responsable) a l'entrée à vérifier ici.
@@ -186,8 +178,8 @@ for (const [qui, profil] of [["un référent de TEAM ÉVÉNEMENTIEL", HUGO]] as 
   });
 }
 
-for (const [qui, profil] of [["le même référent", HUGO_COORD], ["une personne d'aucune équipe", IRIS]] as const) {
-  test(`avec la case, ${qui} a Pâques et Noël, « Toute l'église » et « Modifier »`, async ({ page }) => {
+for (const [qui, profil] of [["le même référent, aussi référent EDD", HUGO_ORGA], ["un membre d'Orga sans autre équipe", IRIS_ORGA]] as const) {
+  test(`avec la Coordination (organigramme), ${qui} a Pâques et Noël, « Toute l'église » et « Modifier »`, async ({ page }) => {
     await ouvrir(page, profil, "/back-office/evenements/scene/noel", { "evenements/foot": FOOT });
     await expect(ongletsRail(page).getByRole("link")).toHaveText(["Évènements", "Pâques", "Noël"]);
     await expect(page.getByText("Réservé à la coordination.")).toHaveCount(0);

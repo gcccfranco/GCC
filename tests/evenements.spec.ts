@@ -1,5 +1,5 @@
 import { expect, test, type Page, type TestInfo } from "@playwright/test";
-import { fakeFirestore, signInAs, type FakeProfile } from "./helpers/fakeSession";
+import { fakeFirestore, presidentGroupe, signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { fenetreDuSite, repondreDansLeSite } from "./helpers/agencement";
 import { groupByMonth, isPast, modeInscriptions, placesRestantes, refusInscription } from "../src/lib/evenements/agenda";
 import type { Evenement } from "../src/types/evenement";
@@ -137,11 +137,11 @@ test("onglets : un connecté voit le programme de scène à côté du calendrier
 
 // ─── Tranche E2 : créer, modifier, dupliquer, supprimer, push à la création ──
 
-const ALICE: FakeProfile = { uid: "uid-alice", email: "alice@example.com", firstName: "Alice", lastName: "Q.", dansEquipes: ["evenementiel"], referentDe: ["evenementiel"], coordination: true };
+const ALICE: FakeProfile = { uid: "uid-alice", email: "alice@example.com", firstName: "Alice", lastName: "Q.", dansEquipes: ["evenementiel", "edd"], referentDe: ["evenementiel", "edd"] };
 // Lot U6, B3 : la gestion d'un évènement est au Back-Office, ouvert aux responsables ; Steph
 // organise avec le droit d'annonces de sa section.
-const STEPH: FakeProfile = { uid: "uid-steph", email: "steph@example.com", firstName: "Steph", lastName: "R.", annonces: ["Groupe Bonté"] };
-const RESP_PAIX: FakeProfile = { uid: "uid-resp", email: "resp@example.com", firstName: "Ruth", lastName: "K.", serviceRoles: { "Groupe Paix": ["presidence"] }, annonces: ["Groupe Paix"] };
+const STEPH: FakeProfile = { uid: "uid-steph", email: "steph@example.com", firstName: "Steph", lastName: "R.", ...presidentGroupe("bonte") };
+const RESP_PAIX: FakeProfile = { uid: "uid-resp", email: "resp@example.com", firstName: "Ruth", lastName: "K.", serviceRoles: { "Groupe Paix": ["presidence"] }, ...presidentGroupe("paix") };
 
 /** Agencement v18 (B3) : au Back-Office, Dupliquer et Supprimer sont dans le menu « ⋯ » de la fiche de gestion. */
 async function dansLeMenu(page: Page, action: string) {
@@ -184,14 +184,14 @@ test("créer : la coordination remplit la fiche ; écriture à son nom, compteur
   expect(pushed!.evenementId).toBe(created!.path.split("/").pop());
 });
 
-test("créer : un responsable avec le droit d'annonces ne crée que pour sa section, sans push si décoché", async ({ page }) => {
+test("créer : le président d'un groupe ne crée que pour sa section et son comité, sans push si décoché", async ({ page }) => {
   const db = await member(page, RESP_PAIX, "/evenements");
   let pushed = false;
   await page.route("**/api/push/notify-evenement", (route) => { pushed = true; return route.fulfill({ json: { ok: true } }); });
   await page.getByRole("link", { name: "Nouvel évènement" }).click();
-  // Sa section seule : un rôle de service le met dans le public Louange, mais seuls les référents de
-  // TEAM LOUANGE créent pour lui (lot 1 du chantier « équipes et groupes », décision 5).
-  await expect(page.getByLabel("Public").locator("option")).toHaveText(["Groupe Paix"]);
+  // Sa section, et le comité de son groupe (lot AO : le président d'un groupe est référent de son comité). Un rôle de
+  // service le met dans le public Louange, mais seuls les référents de TEAM LOUANGE créent pour lui (décision 5).
+  await expect(page.getByLabel("Public").locator("option")).toHaveText(["Groupe Paix", "COMITÉ PAIX"]);
   await expect(page.getByLabel("Public")).toHaveValue("Groupe Paix");
   await page.getByLabel("Nom de l'évènement").fill("Prière du groupe");
   await page.getByLabel("Date", { exact: true }).fill("2026-10-20");

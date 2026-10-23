@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { signInAs, type FakeProfile } from "./helpers/fakeSession";
+import { notifie, orga, presidentGroupe, publie, remplit, signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { estGrandEcran, ongletsRail, repondreDansLeSite } from "./helpers/agencement";
 import { readFileSync } from "node:fs";
 import { planningsDuBackOffice, sousPartiesEvenements } from "../src/lib/access";
@@ -28,12 +28,12 @@ const TABLE = csv([
 ]);
 
 const ADMIN: FakeProfile = { uid: "uid-admin", email: "tc328829@gmail.com", firstName: "Admin", lastName: "T." };
-/** Remplit le Culte Franco, rien d'autre. */
-const ECRIVAIN: FakeProfile = { uid: "uid-ecr", email: "ecr@example.com", firstName: "Choriste", lastName: "B.", planningName: "Choriste B.", plannings: ["culte"] };
-/** Notifie le Groupe Paix (et publie donc son planning). */
-const NOTIFY: FakeProfile = { uid: "uid-no", email: "no@example.com", firstName: "Noé", lastName: "T.", notify: ["Groupe Paix"] };
+/** Lot AO : référent Louange (remplit les plannings du culte) — plus la case « plannings ». */
+const ECRIVAIN: FakeProfile = { uid: "uid-ecr", email: "ecr@example.com", firstName: "Choriste", lastName: "B.", planningName: "Choriste B.", ...remplit("culte") };
+/** Notifie le Groupe Paix et publie son planning (rôles « Notifier » et « Publie » de l'organigramme du groupe, lot AO). */
+const NOTIFY: FakeProfile = { uid: "uid-no", email: "no@example.com", firstName: "Noé", lastName: "T.", ...notifie("Groupe Paix"), ...publie("paix") };
 /** Tient l'organigramme, sans être admin. */
-const EQUIPIER: FakeProfile = { uid: "uid-eq", email: "eq@example.com", firstName: "Elsa", lastName: "N.", equipes: true };
+const EQUIPIER: FakeProfile = { uid: "uid-eq", email: "eq@example.com", firstName: "Elsa", lastName: "N.", ...orga() };
 
 /** Ouvre `to` le vendredi 18/09/2026 (dimanche courant = 20/09, T3), Sheet simulé. */
 async function ouvrir(page: Page, qui: FakeProfile, to: string, docs: Record<string, Record<string, unknown>> = {}) {
@@ -186,10 +186,12 @@ test.describe("B2 : Planning (plannings, Sans compte)", () => {
     }
   });
 
-  test("qui remplit le Culte : son planning seul, la grille ouverte en modification, l'export", async ({ page }) => {
+  test("référent Louange : les plannings du culte seuls, la grille ouverte en modification, l'export", async ({ page }) => {
     await ouvrir(page, ECRIVAIN, "/back-office/planning");
     await expect(page).toHaveURL(/\/back-office\/planning\/culte\/?$/);
-    await expect(plannings(page).getByRole("link")).toHaveText(["Culte Franco"]);
+    // Lot AO : le référent Louange remplit les cinq plannings du culte (Campus, Intergroupe, Interfranco avec le Culte Franco), pas
+    // seulement le Culte : l'ancien droit « plannings: culte » n'a pas d'équivalent plus étroit dans l'organigramme.
+    await expect(plannings(page).getByRole("link")).toHaveText(["Culte Franco", "Campus", "Intergroupe", "Interfranco"]);
     await expect(page.getByRole("link", { name: "Import" })).toHaveCount(0);
     // Pas de « Modifier » à toucher d'abord : les cases sont déjà des boutons.
     await expect(laCase(page, "2026-09-27", "presidence").getByRole("button")).toHaveText("Président J.");
@@ -302,10 +304,10 @@ test("captures : Planning, Équipes, Messages au Back-Office ; la Table dans l'A
 // Scène (écran de U1) ; Réunions, entrée à part depuis l'agencement v18 (B15) ; nouveau, fiche de gestion, modifier ;
 // redirections ; « Gérer dans le Back-Office » sur la fiche de l'App (Q14).
 
-const COORD: FakeProfile = { uid: "uid-alice", email: "alice@example.com", firstName: "Alice", lastName: "Q.", dansEquipes: ["evenementiel"], referentDe: ["evenementiel"], coordination: true };
+const COORD: FakeProfile = { uid: "uid-alice", email: "alice@example.com", firstName: "Alice", lastName: "Q.", dansEquipes: ["evenementiel", "edd"], referentDe: ["evenementiel", "edd"] };
 const DA_ORG: FakeProfile = { uid: "uid-bruno", email: "bruno@example.com", firstName: "Bruno", lastName: "M.", dansEquipes: ["da"], referentDe: ["da"] };
 const DA_MEMBRE: FakeProfile = { uid: "uid-dora", email: "dora@example.com", firstName: "Dora", lastName: "P.", dansEquipes: ["da"], referentDe: ["da"] };
-const ANNONCEUR: FakeProfile = { uid: "uid-hugo", email: "hugo@example.com", firstName: "Hugo", lastName: "B.", annonces: ["Culte Francophone"] };
+const ANNONCEUR: FakeProfile = { uid: "uid-hugo", email: "hugo@example.com", firstName: "Hugo", lastName: "B.", ...presidentGroupe("bonte") };
 /** Musicien : le public Louange (décision 5), sans être responsable (question 2). */
 const MUSICIEN: FakeProfile = { uid: "uid-mu", email: "mu@example.com", firstName: "Léo", lastName: "V.", serviceRoles: { "Culte Francophone": ["musicien"] } };
 const REFERENTE: FakeProfile = { uid: "uid-ref", email: "ref@example.com", dansEquipes: ["regie"], referentDe: ["regie"] };
@@ -344,7 +346,8 @@ async function ouvrirB3(page: Page, qui: FakeProfile, to: string, docs: Record<s
 test("sousPartiesEvenements : Évènements, Scène selon les droits (table Q2)", () => {
   const u = (p: FakeProfile) => ({ uid: p.uid, email: p.email });
   expect(sousPartiesEvenements(u(ADMIN), null)).toEqual(["evenements", "scene"]);
-  expect(sousPartiesEvenements(u(COORD), COORD)).toEqual(["evenements", "scene"]);
+  // Ancien mode (la fonction pure lit la case cochée) : la Coordination de COORD y est cochée.
+  expect(sousPartiesEvenements(u(COORD), { ...COORD, coordination: true })).toEqual(["evenements", "scene"]);
   expect(sousPartiesEvenements(u(ANNONCEUR), ANNONCEUR)).toEqual(["evenements"]);
   // Lot 1 du chantier « équipes et groupes » (décision 43) : un référent a la sous-partie Évènements.
   expect(sousPartiesEvenements(u(DA_ORG), DA_ORG)).toEqual(["evenements"]);
@@ -423,9 +426,12 @@ test.describe("B3 : Évènements", () => {
     await expect(page.getByRole("link", { name: "Nouvel évènement" })).toHaveAttribute("href", /^\/back-office\/evenements\/nouveau\/?$/);
   });
 
-  test("droit d'annonces : seulement les évènements qu'il organise, sans sous-parties", async ({ page }) => {
-    await ouvrirB3(page, ANNONCEUR, "/back-office/evenements");
-    await expect(page.getByRole("link", { name: /Repas du culte/ })).toBeVisible();
+  test("président d'un groupe (lot AO, ancien droit d'annonces) : seulement les évènements qu'il organise, sans sous-parties", async ({ page }) => {
+    await ouvrirB3(page, ANNONCEUR, "/back-office/evenements", {
+      ...DOCS_EV,
+      "evenements/bonte": { ...EV, titre: "Sortie Bonté", pour: "Groupe Bonté", date: "2026-10-25", organisateurUid: "uid-hugo", organisateurNom: "Hugo B." },
+    });
+    await expect(page.getByRole("link", { name: /Sortie Bonté/ })).toBeVisible();
     await expect(page.getByRole("link", { name: /Fête de rentrée/ })).toHaveCount(0);
     await expect(sousParties(page)).toHaveCount(0);
   });

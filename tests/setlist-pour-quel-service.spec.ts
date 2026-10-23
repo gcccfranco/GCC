@@ -450,6 +450,7 @@ test("(page) « Modifier » : changer de présidence ne déplace pas la date de 
     title: "Culte Francophone 18/10",
     date: "2026-10-18",
     leader: "Présidence C",
+    ownerId: MUSICIENNE.uid, // depuis SC1 (18/10/2026), seul le créateur modifie une setlist
     items: [{ songSlug: "abba-pere", position: 1, keyOverride: null, showChords: true, showPinyin: false, useJianpu: false, structureOverride: null, sectionNotes: {}, notes: "" }],
   };
   const db = await ouvrir(page, "/setlists/sl-1018/edit", { docs: { "setlists/sl-1018": doc } });

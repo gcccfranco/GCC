@@ -1,6 +1,6 @@
 import { mkdirSync } from "node:fs";
 import { expect, test, type Page } from "@playwright/test";
-import { signInAs, type FakeProfile } from "./helpers/fakeSession";
+import { musicien, signInAs, type FakeProfile } from "./helpers/fakeSession";
 
 // Lot DA / DA-3 (docs/spec-dictionnaire-accords.md, Q13, Q16) : l'agencement du panneau d'un accord et de la
 // bulle d'aide, sur les cinq projets (SPECS_GRAND_ECRAN). Ne fait que les captures — rangées dans
@@ -24,6 +24,7 @@ const AMBROISE: FakeProfile = {
   lastName: "Velin",
   planningName: "Ambroise V.",
   serviceRoles: { "Culte Francophone": ["musicien"] },
+  ...musicien("piano"),
 };
 const csv = (rows: string[][]) => rows.map((r) => r.map((c) => `"${c}"`).join(",")).join("\n");
 const CULTE = csv([

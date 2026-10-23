@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { expect, test, type Locator, type Page, type TestInfo } from "@playwright/test";
-import { signInAs, type FakeProfile } from "./helpers/fakeSession";
+import { remplit, signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { ADMIN_EMAILS } from "../src/lib/access";
 import type { DonneesCalendrier, EntreeCalendrier } from "../src/lib/calendrier/entrees";
 import { champsDecales, decaler, ecartJours, planDeplacement, questionDeplacement } from "../src/lib/calendrier/deplacer";
@@ -341,7 +341,7 @@ const P_ORGA: FakeProfile = { uid: "u-orga", email: "orga@example.org", firstNam
 /** Référent de TEAM DA qui n'organise rien. */
 const P_MEMBRE: FakeProfile = { uid: "u-membre", email: "membre@example.org", firstName: "Mael", lastName: "B.", dansEquipes: ["da"], referentDe: ["da"] };
 /** Auteur de créneaux, responsable des plannings, sans équipe (pas la coordination). */
-const P_AUTEUR: FakeProfile = { uid: "u-auteur", email: "auteur@example.org", firstName: "Ines", lastName: "R.", plannings: ["culte"] };
+const P_AUTEUR: FakeProfile = { uid: "u-auteur", email: "auteur@example.org", firstName: "Ines", lastName: "R.", ...remplit("paix") };
 
 const DOCS: Record<string, Record<string, unknown>> = {
   "evenements/ping": {

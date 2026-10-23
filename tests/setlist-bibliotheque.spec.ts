@@ -156,7 +156,8 @@ const SETLIST = {
   date: "2026-10-18",
   language: "fr",
   notes: "",
-  ownerId: "uid-owner",
+  // Depuis SC1 (18/10/2026), seul le créateur modifie une setlist : la musicienne est la créatrice de la sienne.
+  ownerId: "uid-musicienne",
   isPrivate: false,
   items: [
     { songSlug: "abba-pere", position: 1, keyOverride: null, showChords: true, showPinyin: false, useJianpu: false, structureOverride: null, sectionNotes: {}, notes: "" },

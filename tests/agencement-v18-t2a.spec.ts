@@ -1,5 +1,5 @@
 import { expect, test, type Page, type TestInfo } from "@playwright/test";
-import { signInAs, type FakeProfile } from "./helpers/fakeSession";
+import { notifie, presidentGroupe, signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { estGrandEcran, interdireDialoguesNatifs, repondreDansLeSite } from "./helpers/agencement";
 import { entreesBackOffice, sousPartiesEvenements, widgetsPermis } from "../src/lib/access";
 import { entreesBarre } from "../src/lib/navigation";
@@ -20,14 +20,14 @@ import type { UserProfile } from "../src/types/user";
 const ADMIN: FakeProfile = { uid: "uid-admin", email: "tc328829@gmail.com", firstName: "Admin", lastName: "T." };
 /** TEAM ÉVÉNEMENTIEL et la coordination (cochée) ; son pôle sert encore aux tâches jusqu'à EQ-C. */
 const COORD: FakeProfile = {
-  uid: "uid-alice", email: "alice@example.com", firstName: "Alice", lastName: "Q.", dansEquipes: ["evenementiel"], coordination: true,
+  uid: "uid-alice", email: "alice@example.com", firstName: "Alice", lastName: "Q.", dansEquipes: ["evenementiel", "edd"], referentDe: ["edd"], coordination: true,
 };
 /** Référent de TEAM DA, sans droit d'annonces ; son pôle sert encore aux tâches jusqu'à EQ-C. */
 const DA: FakeProfile = { uid: "uid-bruno", email: "bruno@example.com", firstName: "Bruno", lastName: "M.", dansEquipes: ["da"], referentDe: ["da"] };
 const ANNONCEUR: FakeProfile = { uid: "uid-hugo", email: "hugo@example.com", firstName: "Hugo", lastName: "B.", annonces: ["Culte Francophone"] };
 const REFERENTE: FakeProfile = { uid: "uid-ref", email: "ref@example.com", dansEquipes: ["regie"], referentDe: ["regie"] };
 /** Responsable (notifier) et membre d'une équipe, sans en être référent. */
-const NOTIFY_EQUIPE: FakeProfile = { uid: "uid-ne", email: "ne@example.com", notify: ["Campus"], dansEquipes: ["regie"] };
+const NOTIFY_EQUIPE: FakeProfile = { uid: "uid-ne", email: "ne@example.com", notify: ["Campus"], ...notifie("Campus"), dansEquipes: ["regie"] };
 
 const user = (p: FakeProfile) => ({ uid: p.uid, email: p.email });
 const profil = (p: FakeProfile) =>
@@ -296,7 +296,9 @@ test.describe("T2a, relecture : là où mènent le widget et le guide", () => {
   });
 
   test("droit d'annonces (Évènements) : « Tout voir » du widget mène aux Évènements", async ({ page }) => {
-    await ouvrir(page, ANNONCEUR, "/back-office", avecLeWidget(ANNONCEUR));
+    // Lot AO : le droit d'annonces d'une section vient de l'organigramme (ici : président du Groupe Bonté).
+    const president: FakeProfile = { uid: "uid-hugo", email: "hugo@example.com", firstName: "Hugo", lastName: "B.", ...presidentGroupe("bonte") };
+    await ouvrir(page, president, "/back-office", avecLeWidget(president));
     await expect(widget(page).getByRole("link", { name: "Tout voir" })).toHaveAttribute("href", /^\/back-office\/evenements\/?$/);
   });
 

@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { readFileSync } from "fs";
-import { signInAs, type FakeProfile } from "./helpers/fakeSession";
+import { musicien, signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { attendreEditeur, reglerElement } from "./helpers/editeurSetlist";
 import { enDeuxVolets, ouvrirPartitions } from "./helpers/setlist";
 import { withoutLastPhrases } from "../src/lib/setlist/lastPhrase";
@@ -23,6 +23,7 @@ const MUSICIEN: FakeProfile = {
   lastName: "Kouassi",
   planningName: "Ruth K.",
   serviceRoles: { "Culte Francophone": ["musicien"] },
+  ...musicien("piano"),
 };
 
 const SETLIST_ID = "setlist-fusions-dp";
@@ -54,7 +55,8 @@ const setlist = (items: Record<string, unknown>[]) => ({
   date: "2026-10-04",
   language: "mixed",
   notes: "",
-  ownerId: "uid-owner",
+  // Depuis SC1 (18/10/2026), seul le créateur modifie une setlist : la musicienne est la créatrice de la sienne.
+  ownerId: "uid-musicien",
   isPrivate: false,
   items,
 });

@@ -258,10 +258,11 @@ test("11 Adapter : toucher une écriture ouvre le pavé sur la bonne étiquette,
     structureOverride: null, sectionNotes: {}, notes: "", ...over,
   });
   await page.route(/docs\.google\.com\/spreadsheets/, (route) => route.fulfill({ status: 200, contentType: "text/csv", body: "" }));
+  // Depuis SC1 (18/10/2026), seul le créateur adapte une setlist : la musicienne est la créatrice de la sienne.
   const db = await signInAs(page, MUSICIEN, {
     [ADAPTER_DOC]: {
       title: "Culte du 21 septembre", leader: "Jonathan Z.", category: "Culte Francophone", date: "2026-09-21",
-      language: "mixed", notes: "", ownerId: "uid-owner", isPrivate: false,
+      language: "mixed", notes: "", ownerId: "uid-musicien", isPrivate: false,
       items: [item({ songSlug: ADAPTER_SLUG, position: 1, jianpuSheet: true })],
     },
   }, "/setlists/setlist-jianpu");

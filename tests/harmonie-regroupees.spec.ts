@@ -1,7 +1,7 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import * as fs from "fs";
 import * as path from "path";
-import { signInAs, type FakeProfile } from "./helpers/fakeSession";
+import { musicien, signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { ouvrirPartitions } from "./helpers/setlist";
 import { parseChordPro } from "../src/lib/chordpro/parser";
 
@@ -22,6 +22,7 @@ const AMBROISE: FakeProfile = {
   lastName: "Velin",
   planningName: "Ambroise V.",
   serviceRoles: { "Culte Francophone": ["musicien"] },
+  ...musicien("piano", "guitare"),
 };
 
 const SLUG = "au-nom-de-jesus";

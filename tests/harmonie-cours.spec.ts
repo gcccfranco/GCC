@@ -1,20 +1,20 @@
 import { expect, test, type Page } from "@playwright/test";
 import { readFileSync } from "fs";
-import { signInAs, type FakeProfile } from "./helpers/fakeSession";
+import { musicien, signInAs, type FakeProfile } from "./helpers/fakeSession";
 
 // Cours d'Harmonie (docs/spec-cours-harmonie.md, décisions du 02/10/2026) :
 // C1 lire le cours, C2 « J'ai fini » et la progression, C4 la progression de
 // l'équipe pour les admins. Accès : celui d'Harmonie (pianistes, guitaristes, admins).
 
 const csv = (rows: string[][]) => rows.map((r) => r.map((c) => `"${c}"`).join(",")).join("\n");
-// Ruth tient le piano, Yiyi la batterie : c'est le planning qui le dit.
+// Ruth tient le piano, Yiyi la batterie (lot AO : c'est « Ce qu'il joue » de leur profil qui le dit).
 const CULTE = csv([
   ["2026 DATE", "Présidence", "Choristes", "", "Pianiste", "Guitariste", "Batterie", "Sono", "PPT", "Orateur", "Traducteur", "Sainte cène"],
   ["04/10", "Jonathan Z.", "", "", "Ruth K.", "Éloïse M.", "Yiyi C.", "", "", "Hewei", "", ""],
 ]);
 
-const RUTH: FakeProfile = { uid: "uid-ruth", email: "ruth@example.com", firstName: "Ruth", lastName: "Kouassi", planningName: "Ruth K." };
-const YIYI: FakeProfile = { uid: "uid-yiyi", email: "yiyi@example.com", firstName: "Yiyi", lastName: "C.", planningName: "Yiyi C." };
+const RUTH: FakeProfile = { uid: "uid-ruth", email: "ruth@example.com", firstName: "Ruth", lastName: "Kouassi", planningName: "Ruth K.", ...musicien("piano") };
+const YIYI: FakeProfile = { uid: "uid-yiyi", email: "yiyi@example.com", firstName: "Yiyi", lastName: "C.", planningName: "Yiyi C.", ...musicien("batterie") };
 const ADMIN: FakeProfile = { uid: "uid-admin", email: "tc328829@gmail.com", firstName: "Timothée", lastName: "C." };
 
 const INDEX = JSON.parse(readFileSync("public/harmonie-cours/index.json", "utf8")) as {
@@ -162,7 +162,7 @@ test("le niveau 1 fini : « Niveau terminé », et le prochain chapitre est le 6
 test("un admin voit la progression de l'équipe ; un pianiste ne voit que la sienne", async ({ page }) => {
   const docs = {
     [`coursProgres/${RUTH.uid}`]: { fini: { [CH(1).id]: "2026-10-01T10:00:00.000Z", [CH(6).id]: "2026-10-02T10:00:00.000Z" } },
-    [`users/${RUTH.uid}`]: { uid: RUTH.uid, email: RUTH.email, firstName: "Ruth", lastName: "Kouassi", planningName: "Ruth K." },
+    [`users/${RUTH.uid}`]: { uid: RUTH.uid, email: RUTH.email, firstName: "Ruth", lastName: "Kouassi", planningName: "Ruth K.", ...musicien("piano") },
   };
   await entrer(page, ADMIN, "/harmonie/cours", docs);
   const equipe = page.locator("[data-cours-equipe]");

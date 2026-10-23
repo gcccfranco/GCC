@@ -1,6 +1,6 @@
 import { expect, test, type Page, type TestInfo } from "@playwright/test";
 import { readFileSync } from "fs";
-import { signInAs, type FakeProfile } from "./helpers/fakeSession";
+import { musicien, signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { enTete, estGrandEcran, estTelephone, interdireDialoguesNatifs, verifierAgencement } from "./helpers/agencement";
 
 // Agencement v18, tranche T11 (docs/spec-agencement-v18.md, A16 ; planche `v18-app-harmonie`, v17 sur
@@ -16,8 +16,8 @@ const CULTE = csv([
   ["2026 DATE", "Présidence", "Choristes", "", "Pianiste", "Guitariste", "Batterie", "Sono", "PPT", "Orateur", "Traducteur", "Sainte cène"],
   ["04/10", "Léa M.", "", "", "Ruth K.", "Samuel K.", "Paul D.", "", "", "Orateur Z.", "", ""],
 ]);
-const PIANISTE: FakeProfile = { uid: "uid-ruth", email: "ruth@example.com", firstName: "Ruth", lastName: "K.", planningName: "Ruth K." };
-const GUITARISTE: FakeProfile = { uid: "uid-samuel", email: "samuel@example.com", firstName: "Samuel", lastName: "K.", planningName: "Samuel K." };
+const PIANISTE: FakeProfile = { uid: "uid-ruth", email: "ruth@example.com", firstName: "Ruth", lastName: "K.", planningName: "Ruth K.", ...musicien("piano") };
+const GUITARISTE: FakeProfile = { uid: "uid-samuel", email: "samuel@example.com", firstName: "Samuel", lastName: "K.", planningName: "Samuel K.", ...musicien("guitare") };
 
 const CATALOGUE = JSON.parse(readFileSync("public/harmonie-index.json", "utf8")) as { fiches: { id: string; instrument?: string }[] };
 const COURS = JSON.parse(readFileSync("public/harmonie-cours/index.json", "utf8")) as { chapitres: { id: string; numero: number | null }[] };
@@ -104,23 +104,24 @@ test.describe("Harmonie en onglets (T11)", () => {
     await expect(rail(page).getByRole("link")).toHaveText(["Fiches", "Cours"]);
   });
 
-  test("pendant la lecture des plannings, le rail est déjà là (Fiches · Cours) : l'en-tête ne bouge pas quand l'accès arrive", async ({ page }) => {
+  test("pendant la lecture des plannings, le rail est déjà complet : l'accès vient du profil, l'en-tête ne bouge pas", async ({ page }) => {
+    // Lot AO : Harmonie se lit dans « Ce qu'il joue » du profil (plus dans les colonnes du planning) — l'accès est connu dès
+    // le profil lu, sans attendre les plannings : les trois onglets sont là tout de suite.
     let lacher!: () => void;
     const tenue = new Promise<void>((r) => (lacher = r));
     await entrer(page, "/harmonie", PIANISTE, tenue);
     const entete = enTete(page);
     await expect(entete.getByRole("heading", { level: 1, name: "Harmonie", exact: true })).toBeVisible();
-    await expect(rail(page).getByRole("link"), "Fiches et Cours, ouverts à tout l'accès").toHaveText(["Fiches", "Cours"]);
+    await expect(rail(page).getByRole("link"), "Fiches, Cours et les sons du piano, sans attendre les plannings").toHaveText(["Fiches", "Cours", "Sons du RD-2000"]);
     const avant = (await entete.boundingBox())!.height;
     lacher();
-    await expect(rail(page).getByRole("link"), "les sons, une fois le piano lu").toHaveText(["Fiches", "Cours", "Sons du RD-2000"]);
     await expect(page.locator("[data-harmonie]")).toBeVisible();
     expect(Math.abs((await entete.boundingBox())!.height - avant), "même hauteur d'en-tête").toBeLessThanOrEqual(1);
   });
 
   test("sans accès à Harmonie (ni piano ni guitare) : pas d'en-tête de section, seulement « réservée aux musiciens »", async ({ page }) => {
-    // Au planning, mais à la présidence : ni pianiste ni guitariste.
-    const PRESIDENTE: FakeProfile = { uid: "uid-lea", email: "lea@example.com", firstName: "Léa", lastName: "M.", planningName: "Léa M." };
+    // De Louange, mais à la présidence : ni pianiste ni guitariste.
+    const PRESIDENTE: FakeProfile = { uid: "uid-lea", email: "lea@example.com", firstName: "Léa", lastName: "M.", planningName: "Léa M.", dansEquipes: ["louange"], sousEquipes: ["presidence"], lieuxLouange: ["Culte Francophone"] };
     await entrer(page, "/harmonie", PRESIDENTE);
     await expect(page.getByText("Cette page est réservée aux musiciens de l'équipe.")).toBeVisible();
     await expect(page.getByRole("heading", { level: 1, name: "Harmonie", exact: true })).toHaveCount(0);
@@ -149,7 +150,7 @@ test.describe("Harmonie en onglets (T11)", () => {
   });
 
   test("Piano · Guitare en rail pour qui joue des deux", async ({ page }) => {
-    const LES_DEUX: FakeProfile = { uid: "uid-eve", email: "eve@example.com", firstName: "Ève", lastName: "N.", planningName: "Ève N." };
+    const LES_DEUX: FakeProfile = { uid: "uid-eve", email: "eve@example.com", firstName: "Ève", lastName: "N.", planningName: "Ève N.", ...musicien("piano", "guitare") };
     await page.route(/docs\.google\.com\/spreadsheets/, (route) => {
       const sheet = new URL(route.request().url()).searchParams.get("sheet");
       const deux = csv([

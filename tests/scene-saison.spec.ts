@@ -219,7 +219,7 @@ test("règles Firestore : les créneaux passent par reservable(), miroir de canR
 // ─── S3 : l'écran de la coordination ────────────────────────────────────────
 
 const NOE: FakeProfile = { uid: "uid-noe", email: "noe@example.com", firstName: "Noé", lastName: "L." };
-const ALICE: FakeProfile = { uid: "uid-alice", email: "alice@example.com", firstName: "Alice", lastName: "Q.", dansEquipes: ["evenementiel"], referentDe: ["evenementiel"], coordination: true };
+const ALICE: FakeProfile = { uid: "uid-alice", email: "alice@example.com", firstName: "Alice", lastName: "Q.", dansEquipes: ["evenementiel", "edd"], referentDe: ["evenementiel", "edd"], coordination: true }; // lot AO : la Coordination vient du référent EDD ; `coordination` ne sert plus qu'à `ouvrir` (choix de l'adresse)
 
 /** « Noël 2026 » de la Réussite, en brouillon. */
 const NOEL26 = {

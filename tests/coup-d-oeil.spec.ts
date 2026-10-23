@@ -244,7 +244,8 @@ test.describe("modes d'affichage de la vue partitions", () => {
 
   test("mode Adapter : ordre joué forcé, le bandeau reste", async ({ page }) => {
     await page.addInitScript(() => localStorage.setItem("partition-layout", "unique"));
-    await openPartitions(page);
+    // Depuis SC1 (18/10/2026), seul le créateur adapte et modifie une setlist : la musicienne est la créatrice de la sienne.
+    await openPartitions(page, setlist({ ownerId: MUSICIEN.uid }));
     await expect(song1Sections(page)).toHaveCount(2);
     await page.getByRole("button", { name: "Adapter" }).click();
     await expect(song1Sections(page)).toHaveCount(3);
@@ -317,7 +318,8 @@ test("badge « Version modifiée » : rien à dire quand seul un Dp a été ajou
 
 test("éditeur : la Dernière phrase du refrain s'enregistre, puis s'affiche « Dp » avec ses accords, sans badge", async ({ page }) => {
   await page.route(/docs\.google\.com\/spreadsheets/, (route) => route.fulfill({ status: 200, contentType: "text/csv", body: "" }));
-  const db = await signInAs(page, MUSICIEN, { [`setlists/${SETLIST_ID}`]: setlist() }, `/setlists/${SETLIST_ID}/edit`);
+  // Depuis SC1 (18/10/2026), seul le créateur modifie une setlist : la musicienne est la créatrice de la sienne.
+  const db = await signInAs(page, MUSICIEN, { [`setlists/${SETLIST_ID}`]: setlist({ ownerId: MUSICIEN.uid }) }, `/setlists/${SETLIST_ID}/edit`);
   await attendreEditeur(page, "Abba Père");
   await reglerElement(page, "Abba Père");
   await page.getByRole("button", { name: "Dernière phrase", exact: true }).click();

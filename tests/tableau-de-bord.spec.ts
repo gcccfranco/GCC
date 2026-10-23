@@ -1,7 +1,7 @@
 import { expect, test, type BrowserContextOptions, type Locator, type Page, type TestInfo } from "@playwright/test";
 import { readFileSync } from "node:fs";
 import path from "node:path";
-import { signInAs, type FakeDb, type FakeProfile } from "./helpers/fakeSession";
+import { referentLouange, signInAs, type FakeDb, type FakeProfile } from "./helpers/fakeSession";
 import { repondreDansLeSite } from "./helpers/agencement";
 import {
   ajouterWidget, catalogue, changerReglages, changerTaille, deplacerWidget, dispositionAffichee, dispositionParDefaut, retirerWidget,
@@ -42,6 +42,11 @@ const LES_DEUX: FakeProfile = {
   uid: "uid-deux", email: "deux@example.com", dansEquipes: ["evenementiel"], referentDe: ["evenementiel"], coordination: true,
   serviceRoles: { "Culte Francophone": ["musicien"] }, plannings: ["culte"],
 };
+// Lot AO : pour les tests d'écran (interrupteur ouvert), la Coordination et le droit de remplir le Culte viennent de places
+// d'organigramme, plus de cases : Alice est aussi référente EDD, Lou référente Louange. Les tests purs ci-dessous (ancien
+// mode, `profil(p)`) gardent ALICE et LOUANGE.
+const ALICE_ORGA: FakeProfile = { ...ALICE, dansEquipes: ["evenementiel", "edd"], referentDe: ["evenementiel", "edd"] };
+const LOUANGE_ORGA: FakeProfile = { ...LOUANGE, ...referentLouange() };
 const ANNONCES: FakeProfile = { uid: "uid-an", email: "an@example.com", annonces: ["Culte Francophone"] };
 
 const user = (p: FakeProfile) => ({ uid: p.uid, email: p.email });
@@ -356,10 +361,10 @@ test.describe("Tableau de bord (B4) : écrans", () => {
     await expect(w.getByText("Culte Franco", { exact: true })).toHaveCount(0);
   });
 
-  test("Alice (pôle Événement) : ses quatre widgets et leurs données", async ({ page }) => {
-    await ouvrir(page, ALICE);
+  test("Alice (pôle Événement, référente EDD) : ses six widgets et leurs données", async ({ page }) => {
+    await ouvrir(page, ALICE_ORGA);
     await expect(widget(page, "Scène")).toBeVisible();
-    expect(await widgetsAffiches(page)).toEqual(["dimanche", "afaire", "evenements", "scene"]);
+    expect(await widgetsAffiches(page)).toEqual(ALICE_ORGA_DEFAUT);
 
     const aFaire = widget(page, "À faire");
     await expect(aFaire.getByText("1 en retard")).toBeVisible();
@@ -377,7 +382,7 @@ test.describe("Tableau de bord (B4) : écrans", () => {
   });
 
   test("louange : setlists à préparer et cases vides du Culte", async ({ page }) => {
-    await ouvrir(page, LOUANGE);
+    await ouvrir(page, LOUANGE_ORGA);
     const setlists = widget(page, "Setlists à préparer");
     await expect(setlists.getByTestId("ligne-setlist")).toHaveText([/Culte Franco · 11 oct\./, /Culte Franco · 18 oct\./, /Culte Franco · 25 oct\./]);
     await expect(setlists.getByRole("link", { name: /Culte Franco · 11 oct\./ }))
@@ -494,7 +499,7 @@ test.describe("Tableau de bord (B4) : écrans", () => {
   });
 
   test("un widget réservé aux admins enregistré par Alice ne s'affiche pas", async ({ page }) => {
-    await ouvrir(page, ALICE, {
+    await ouvrir(page, ALICE_ORGA, {
       "backOffice/uid-alice": { tableauDeBord: [{ id: "comptes", taille: "s", reglages: {} }, { id: "scene", taille: "s", reglages: {} }], majLe: "2026-10-01" },
     });
     await expect(widget(page, "Scène")).toBeVisible();
@@ -510,7 +515,7 @@ test.describe("Tableau de bord (B4) : écrans", () => {
 
   test("中文 : titres des widgets traduits", async ({ page }) => {
     await page.addInitScript(() => { try { localStorage.setItem("i18nextLng", "zh-CN"); } catch {} });
-    await ouvrir(page, ALICE);
+    await ouvrir(page, ALICE_ORGA);
     await expect(grille(page).getByRole("region", { name: "本主日" })).toBeVisible();
     await expect(grille(page).getByRole("region", { name: "待办" })).toBeVisible();
   });
@@ -525,6 +530,8 @@ test.describe("Tableau de bord (B4) : écrans", () => {
 
 const ROOT = path.resolve(__dirname, "..");
 const ALICE_DEFAUT = ["dimanche", "afaire", "evenements", "scene"];
+/** Lot AO : la disposition par défaut d'Alice quand elle est référente EDD (`ALICE_ORGA`) : s'y ajoutent Setlists (setlists de l'EDD) et Planning. */
+const ALICE_ORGA_DEFAUT = ["dimanche", "afaire", "setlists", "planning", "evenements", "scene"];
 
 /** La dernière écriture de `backOffice/{uid}`. */
 const ecrituresBO = (db: FakeDb, uid: string) => db.writes.filter((w) => w.path === `backOffice/${uid}`);
@@ -605,7 +612,7 @@ test.describe("Personnaliser (B5) : règles pures", () => {
 
 test.describe("Personnaliser (B5) : écrans", () => {
   test("Personnaliser : Terminé, Disposition par défaut, catalogue des widgets permis (pas Comptes)", async ({ page }) => {
-    await ouvrir(page, ALICE);
+    await ouvrir(page, ALICE_ORGA);
     await expect(page.getByRole("button", { name: "Monter" })).toHaveCount(0);
     await personnaliser(page);
     await expect(page.getByRole("button", { name: "Disposition par défaut" })).toBeVisible();
@@ -621,19 +628,19 @@ test.describe("Personnaliser (B5) : écrans", () => {
   });
 
   test("ajouter puis retirer un widget : écrit à chaque geste", async ({ page }) => {
-    const db = await ouvrir(page, ALICE);
+    const db = await ouvrir(page, ALICE_ORGA);
     await personnaliser(page);
     await catalogueDe(page).getByRole("button", { name: "Petit déj" }).click();
     await expect(widget(page, "Petit déj").getByTestId("ligne-petitdej").first()).toBeVisible();
-    expect(await widgetsAffiches(page)).toEqual([...ALICE_DEFAUT, "petitdej"]);
+    expect(await widgetsAffiches(page)).toEqual([...ALICE_ORGA_DEFAUT, "petitdej"]);
     await expect(catalogueDe(page).getByRole("button")).toHaveText(["Calendrier", "Raccourcis"]);
-    await expect.poll(() => idsEcrits(db, "uid-alice")).toEqual([...ALICE_DEFAUT, "petitdej"]);
+    await expect.poll(() => idsEcrits(db, "uid-alice")).toEqual([...ALICE_ORGA_DEFAUT, "petitdej"]);
     expect(ecrituresBO(db, "uid-alice").at(-1)!.data.majLe).toEqual(expect.stringMatching(/^2026-10-01T/));
 
     await widget(page, "À faire").getByRole("button", { name: "Retirer le widget" }).click();
     await expect(widget(page, "À faire")).toHaveCount(0);
     await expect(catalogueDe(page).getByRole("button")).toHaveText(["Calendrier", "À faire", "Raccourcis"]);
-    await expect.poll(() => idsEcrits(db, "uid-alice")).toEqual(["dimanche", "evenements", "scene", "petitdej"]);
+    await expect.poll(() => idsEcrits(db, "uid-alice")).toEqual(["dimanche", "setlists", "planning", "evenements", "scene", "petitdej"]);
   });
 
   test("tous affichés : « Tous les widgets sont déjà affichés. »", async ({ page }) => {
@@ -644,17 +651,17 @@ test.describe("Personnaliser (B5) : écrans", () => {
   });
 
   test("Monter et Descendre", async ({ page }) => {
-    const db = await ouvrir(page, ALICE);
+    const db = await ouvrir(page, ALICE_ORGA);
     await personnaliser(page);
     await widget(page, "Scène").getByRole("button", { name: "Monter" }).click();
-    await expect.poll(() => widgetsAffiches(page)).toEqual(["dimanche", "afaire", "scene", "evenements"]);
+    await expect.poll(() => widgetsAffiches(page)).toEqual(["dimanche", "afaire", "setlists", "planning", "scene", "evenements"]);
     await widget(page, "Ce dimanche").getByRole("button", { name: "Descendre" }).click();
-    await expect.poll(() => widgetsAffiches(page)).toEqual(["afaire", "dimanche", "scene", "evenements"]);
-    await expect.poll(() => idsEcrits(db, "uid-alice")).toEqual(["afaire", "dimanche", "scene", "evenements"]);
+    await expect.poll(() => widgetsAffiches(page)).toEqual(["afaire", "dimanche", "setlists", "planning", "scene", "evenements"]);
+    await expect.poll(() => idsEcrits(db, "uid-alice")).toEqual(["afaire", "dimanche", "setlists", "planning", "scene", "evenements"]);
   });
 
   test("glisser un widget par sa poignée", async ({ page }) => {
-    const db = await ouvrir(page, ALICE);
+    const db = await ouvrir(page, ALICE_ORGA);
     await personnaliser(page);
     const poignee = widget(page, "Scène").getByRole("button", { name: "Déplacer « Scène »" });
     const cible = widget(page, "Prochains évènements");
@@ -666,14 +673,14 @@ test.describe("Personnaliser (B5) : écrans", () => {
     await page.mouse.move(from.x + from.width / 2, from.y + from.height / 2 - 12, { steps: 4 });
     await expect(poignee).toHaveAttribute("aria-pressed", "true");
     await page.mouse.move(to.x + to.width / 2, to.y + to.height / 2, { steps: 12 });
-    await expect(page.getByText("« Scène » en position 3 sur 4.")).toBeAttached();
+    await expect(page.getByText("« Scène » en position 5 sur 6.")).toBeAttached();
     await page.mouse.up();
-    await expect.poll(() => widgetsAffiches(page)).toEqual(["dimanche", "afaire", "scene", "evenements"]);
-    await expect.poll(() => idsEcrits(db, "uid-alice")).toEqual(["dimanche", "afaire", "scene", "evenements"]);
+    await expect.poll(() => widgetsAffiches(page)).toEqual(["dimanche", "afaire", "setlists", "planning", "scene", "evenements"]);
+    await expect.poll(() => idsEcrits(db, "uid-alice")).toEqual(["dimanche", "afaire", "setlists", "planning", "scene", "evenements"]);
   });
 
   test("tailles S / M / L : la place change selon l'appareil (Q10), et s'écrit", async ({ page }, info) => {
-    const db = await ouvrir(page, ALICE);
+    const db = await ouvrir(page, ALICE_ORGA);
     await personnaliser(page);
     const evts = widget(page, "Prochains évènements");
     await evts.getByRole("button", { name: "L", exact: true }).click();
@@ -687,7 +694,7 @@ test.describe("Personnaliser (B5) : écrans", () => {
   });
 
   test("un réglage change le contenu et s'écrit", async ({ page }) => {
-    const db = await ouvrir(page, ALICE);
+    const db = await ouvrir(page, ALICE_ORGA);
     const evts = widget(page, "Prochains évènements");
     await expect(evts.getByTestId("ligne-evenement")).toHaveCount(3);
     await personnaliser(page);
@@ -703,21 +710,21 @@ test.describe("Personnaliser (B5) : écrans", () => {
   });
 
   test("Réussite 2 : Alice ajoute Petit déj, monte Scène en tête, passe Prochains évènements en L ; relue sur un autre appareil, la même", async ({ page, browser }, info) => {
-    const db = await ouvrir(page, ALICE);
+    const db = await ouvrir(page, ALICE_ORGA);
     await personnaliser(page);
     await catalogueDe(page).getByRole("button", { name: "Petit déj" }).click();
-    for (let i = 0; i < 3; i++) await widget(page, "Scène").getByRole("button", { name: "Monter" }).click();
+    for (let i = 0; i < 5; i++) await widget(page, "Scène").getByRole("button", { name: "Monter" }).click();
     await widget(page, "Prochains évènements").getByRole("button", { name: "L", exact: true }).click();
-    const voulu = ["scene", "dimanche", "afaire", "evenements", "petitdej"];
+    const voulu = ["scene", "dimanche", "afaire", "setlists", "planning", "evenements", "petitdej"];
     await expect.poll(() => widgetsAffiches(page)).toEqual(voulu);
-    await expect.poll(() => (db.doc("backOffice/uid-alice")?.tableauDeBord as { taille: string }[] | undefined)?.[3]?.taille).toBe("l");
+    await expect.poll(() => (db.doc("backOffice/uid-alice")?.tableauDeBord as { taille: string }[] | undefined)?.[5]?.taille).toBe("l");
 
     // Un autre appareil, une autre session : il ne lit que la base.
     const { defaultBrowserType: _ignore, ...use } = info.project.use as Record<string, unknown>;
     const autre = await browser.newContext({ ...(use as BrowserContextOptions), baseURL: new URL(page.url()).origin });
     try {
       const page2 = await autre.newPage();
-      await ouvrir(page2, ALICE, { "backOffice/uid-alice": db.doc("backOffice/uid-alice")! });
+      await ouvrir(page2, ALICE_ORGA, { "backOffice/uid-alice": db.doc("backOffice/uid-alice")! });
       await expect(widget(page2, "Petit déj")).toBeVisible();
       expect(await widgetsAffiches(page2)).toEqual(voulu);
       // Agencement v18 (B14) : en grand, hors personnalisation, le « Grand » va dans la colonne large.
@@ -729,7 +736,7 @@ test.describe("Personnaliser (B5) : écrans", () => {
   });
 
   test("Disposition par défaut : confirmation, puis le défaut du rôle, retiré du document", async ({ page }) => {
-    const db = await ouvrir(page, ALICE, {
+    const db = await ouvrir(page, ALICE_ORGA, {
       "backOffice/uid-alice": { tableauDeBord: [{ id: "scene", taille: "l", reglages: {} }], majLe: "2026-09-30T10:00:00Z" },
     });
     await expect(widget(page, "Scène")).toBeVisible();
@@ -742,14 +749,14 @@ test.describe("Personnaliser (B5) : écrans", () => {
     // Acceptée : le défaut d'Alice, et plus de disposition enregistrée.
     await page.getByRole("button", { name: "Disposition par défaut" }).click();
     await repondreDansLeSite(page, "Remettre par défaut");
-    await expect.poll(() => widgetsAffiches(page)).toEqual(ALICE_DEFAUT);
+    await expect.poll(() => widgetsAffiches(page)).toEqual(ALICE_ORGA_DEFAUT);
     await expect.poll(() => ecrituresBO(db, "uid-alice").length).toBe(1);
     expect(db.doc("backOffice/uid-alice")!.tableauDeBord).toBeUndefined();
     expect(db.doc("backOffice/uid-alice")!.majLe).toEqual(expect.stringMatching(/^2026-10-01T/));
   });
 
   test("écriture refusée : la disposition reste à l'écran et un message le dit", async ({ page }) => {
-    await ouvrir(page, ALICE);
+    await ouvrir(page, ALICE_ORGA);
     await page.route(/firestore\.googleapis\.com.*backOffice/, (route) =>
       route.request().method() === "PATCH"
         ? route.fulfill({ status: 403, contentType: "application/json", body: "{}" })
@@ -757,11 +764,11 @@ test.describe("Personnaliser (B5) : écrans", () => {
     await personnaliser(page);
     await widget(page, "À faire").getByRole("button", { name: "Retirer le widget" }).click();
     await expect(page.getByRole("alert").filter({ hasText: "Disposition non enregistrée" })).toBeVisible();
-    expect(await widgetsAffiches(page)).toEqual(["dimanche", "evenements", "scene"]);
+    expect(await widgetsAffiches(page)).toEqual(["dimanche", "setlists", "planning", "evenements", "scene"]);
   });
 
   test("captures en personnalisation (à regarder)", async ({ page }, info) => {
-    await ouvrir(page, ALICE);
+    await ouvrir(page, ALICE_ORGA);
     await personnaliser(page);
     await widget(page, "Prochains évènements").getByRole("button", { name: "Réglages du widget" }).click();
     await page.screenshot({ path: `test-results/tableau-de-bord-captures/${info.project.name}-personnaliser.png`, fullPage: true });
@@ -769,7 +776,7 @@ test.describe("Personnaliser (B5) : écrans", () => {
 
   test("中文 : Personnaliser traduit", async ({ page }) => {
     await page.addInitScript(() => { try { localStorage.setItem("i18nextLng", "zh-CN"); } catch {} });
-    await ouvrir(page, ALICE);
+    await ouvrir(page, ALICE_ORGA);
     await page.getByRole("button", { name: "自定义" }).click();
     await expect(page.getByRole("button", { name: "完成" })).toBeVisible();
     await expect(page.getByRole("region", { name: "添加小组件" })).toBeVisible();

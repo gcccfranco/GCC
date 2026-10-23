@@ -730,9 +730,9 @@ test("la ligne du petit déj du mercredi (lot U3) suit les autres lignes ; seule
 test("le cron fond la veille et le compte rendu dans le rappel du matin : un seul envoi", () => {
   const route = lire("src/app/api/cron/reminders/route.ts");
   expect(route).toContain("notificationsDuMatin(");
-  // Deux envois : le passage par personne, et la ligne du petit déj du mercredi
-  // pour les comptes qui n'ont rien d'autre ce jour-là (lot U3, PD4).
-  expect(route.match(/sendPushToUids\(/g), "le passage par personne, puis le petit déj seul").toHaveLength(2);
+  // Trois envois : le passage par personne, la ligne du petit déj du mercredi pour les comptes qui n'ont rien d'autre
+  // ce jour-là (lot U3, PD4), et le lundi, le rappel aux référents des noms du planning sans équipe (lot AO-E).
+  expect(route.match(/sendPushToUids\(/g), "le passage par personne, le petit déj seul, puis les noms sans équipe").toHaveLength(3);
   expect(route).toContain("petitDejSeuls = [...petitDej.uids]");
   expect(route, "la veille ne part plus à part").not.toContain("evenementReminder");
   expect(route).toContain('"compteRendu.le"');

@@ -160,7 +160,8 @@ const setlist = (items: Record<string, unknown>[]) => ({
   date: "2026-10-11",
   language: "mixed",
   notes: "",
-  ownerId: "uid-owner",
+  // Depuis SC1 (18/10/2026), seul le créateur adapte et modifie une setlist : la musicienne est la créatrice de la sienne.
+  ownerId: "uid-musicien",
   isPrivate: false,
   items,
 });

@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { readFileSync } from "fs";
-import { signInAs, type FakeProfile } from "./helpers/fakeSession";
+import { musicien, signInAs, type FakeProfile } from "./helpers/fakeSession";
 
 // Sons du RD-2000 (docs/spec-sons-rd2000.md, tranches S1 à S4) : le catalogue
 // du clavier de l'église, pour les pianistes et les admins. Rien n'est joué.
@@ -11,8 +11,8 @@ const CULTE = csv([
   ["04/10", "Jonathan Z.", "", "", "Jo L.", "Éloïse M.", "Yiyi C.", "", "", "Hewei", "", ""],
 ]);
 
-const JO: FakeProfile = { uid: "uid-jo", email: "jo@example.com", firstName: "Jo", lastName: "L.", planningName: "Jo L." };
-const ELOISE: FakeProfile = { uid: "uid-eloise", email: "eloise@example.com", firstName: "Éloïse", lastName: "M.", planningName: "Éloïse M." };
+const JO: FakeProfile = { uid: "uid-jo", email: "jo@example.com", firstName: "Jo", lastName: "L.", planningName: "Jo L.", ...musicien("piano") };
+const ELOISE: FakeProfile = { uid: "uid-eloise", email: "eloise@example.com", firstName: "Éloïse", lastName: "M.", planningName: "Éloïse M.", ...musicien("guitare") };
 
 const DONNEES = JSON.parse(readFileSync("public/rd2000.json", "utf8")) as {
   sons: { n: string; nom: string; louange: number }[];
