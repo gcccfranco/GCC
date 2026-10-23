@@ -294,15 +294,15 @@ test.describe("pur : remplir, publier, prévenir les plannings", () => {
     expect(canRetirerDate(user(NOEMIE), NOEMIE, "interfranco", NEW)).toBe(false);
   });
 
-  test("publier et prévenir : référents Louange et Régie le culte, un rôle de groupe son groupe, pas le référent Musiciens", () => {
+  test("publier et prévenir : le référent Louange publie le culte, le référent Régie prévient sans publier (23/10/2026), un rôle de groupe son groupe, pas le référent Musiciens", () => {
     const culte = getPlanning("culte")!;
     const paix = getPlanning("paix")!;
     const publie = (pl: typeof culte, p: UserProfile) => droitsDePublication(pl, false, p, NEW);
     const previent = (pl: typeof culte, p: UserProfile) => droitsDePrevenir(pl, false, p, NEW);
-    for (const p of [KEVIN, OSMANE]) {
-      expect(publie(culte, p), p.uid).toBe(true);
-      expect(previent(culte, p), p.uid).toBe(true);
-    }
+    expect(publie(culte, KEVIN)).toBe(true);
+    expect(previent(culte, KEVIN)).toBe(true);
+    expect(publie(culte, OSMANE), "la Régie ne publie pas le trimestre").toBe(false);
+    expect(previent(culte, OSMANE), "elle prévient des changements").toBe(true);
     for (const p of [NOEMIE, LUCIE, MATHIS, ALINE, DORIAN]) {
       expect(publie(culte, p), p.uid).toBe(false);
       expect(previent(culte, p), p.uid).toBe(false);

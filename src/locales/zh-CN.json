@@ -605,7 +605,7 @@
   "categories": {
     "Culte Francophone": "法语崇拜",
     "Intergroupe": "联合聚会",
-    "Interfranco": "法语团契聚会",
+    "Interfranco": "法语联合聚会",
     "Campus": "夏令营",
     "Groupe Paix": "和平团契",
     "Groupe Fidélité": "信实团契",
@@ -1234,7 +1234,7 @@
       "edd": "主日学",
       "campus": "夏令营",
       "intergroupe": "联合聚会",
-      "interfranco": "法语团契聚会",
+      "interfranco": "法语联合聚会",
       "scene": "舞台"
     },
     "choisirPlanning": "选择计划表",
@@ -1345,7 +1345,7 @@
       "edd": "主日学",
       "campus": "夏令营",
       "intergroupe": "联合聚会",
-      "interfranco": "法语团契聚会"
+      "interfranco": "法语联合聚会"
     },
     "groupes": {
       "paix": "和平",
@@ -3232,8 +3232,8 @@
       "campus": "夏令营",
       "edd": "主日学",
       "franco": "法语堂",
-      "intergroupe": "联合",
-      "interfranco": "法语联合"
+      "intergroupe": "联合聚会",
+      "interfranco": "法语联合聚会"
     },
     "role": {
       "presidence": "主领",
@@ -3652,7 +3652,7 @@
       "harmonie": "和声灵感与课程",
       "coordination": "协调：舞台、节日和全教会的活动",
       "planningCulte": "填写、发布并通知敬拜聚会的排班",
-      "planningCulteRegie": "填写敬拜聚会排班中的音响和投影，并发布、通知",
+      "planningCulteRegie": "填写敬拜聚会排班中的音响和投影，并通知变动",
       "planningEdd": "填写、发布并通知主日学的排班",
       "planningTable": "填写圣餐桌（Table）的排班",
       "planningGroupe": "填写、发布或通知{{plannings}}的排班",

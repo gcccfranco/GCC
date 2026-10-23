@@ -220,17 +220,19 @@ intact (`tests/back-office-coupe.spec.ts`).
 | AO-B | `2e24e4f`, `909b7a9` | carte Louange en trois sous-équipes, panneau (Sous-équipes, Référent de, Où il sert, Ce qu'il joue, Ce que ça lui ouvre), fiche, Personnes sans cases, vue Musiciens ; Moi (Mes équipes, Ce que tu peux faire) ; grille : la Régie n'édite que Sono, Sono Live, PPT |
 | AO-F | `909b7a9`, `3fcdfca` | inscription et profil sans rôles ; lectures de `serviceRoles` remplacées (accueil, rappel push, calendrier, tableau de bord, partage, « Choisir ») ; tests d'écran repris (`fakeSession` traduit un profil fictif à l'ancienne comme la migration). Aucun champ supprimé. |
 
-**Écarts et lectures à confirmer par Timothée**
-- Planning **Table** : confié aux membres d'Orga (aucune ligne du tableau ne le nomme).
-- **Référent Régie** : remplit Sono / Sono Live / PPT des cinq plannings du culte, et publie / prévient le culte
-  (lecture littérale) ; il ne retire pas de date.
-- **Pas de section EDD** pour les évènements : le référent EDD n'en crée pas (il a la coordination).
-- La migration fait entrer aux **Musiciens** ceux que le planning montre au piano ou à la guitare (groupes compris),
-  pour qu'ils gardent Harmonie ; le relevé les liste à part.
-- `canSeeEvenement` : une section se voit par les catégories qu'on voit en setlists (la spec ne disait rien).
-- Fêtes (`src/lib/fetes/droits.ts`) : la règle « rôle musicien du groupe » lit encore `serviceRoles` (transition D17) ;
-  laissée, la règle par les colonnes du planning couvre le cas.
-- Libellés 中文 des lieux repris de l'existant (Intergroupe 联合, Interfranco 法语联合, Campus 夏令营) : à relire.
+**Tranché par Timothée le 23/10/2026** (questions ouvertes au codage)
+1. Planning **Table** : les membres d'Orga — **oui**.
+2. **Référent Régie** : remplit Sono / Sono Live / PPT des cinq plannings du culte et prévient des changements ; il
+   **ne publie pas** le trimestre (`publiePlanning` exige toutes les colonnes ; `previentPlanning` à part). Il ne
+   retire pas de date.
+3. **Section EDD** pour les évènements : **non** — le référent EDD crée pour toute l'Église par la coordination.
+4. Noms 中文 : Intergroupe = **联合聚会**, Interfranco = **法语联合聚会** (catégories, organigramme, rappels).
+5. La migration fait entrer aux **Musiciens** ceux que le planning montre au piano ou à la guitare (groupes compris),
+   pour qu'ils gardent Harmonie — **oui**.
+
+**Autres lectures, sans question ouverte** : `canSeeEvenement` voit une section par les catégories qu'on voit en
+setlists ; dans les fêtes (`src/lib/fetes/droits.ts`), la règle « rôle musicien du groupe » lit encore `serviceRoles`
+(transition D17), la règle par les colonnes du planning couvre le cas.
 
 **Ce que Timothée fait lui-même**
 1. Publier `firestore.rules` (console Firebase) quand il veut : ancien ∪ nouveau, compatible avec le code en ligne.

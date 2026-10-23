@@ -126,11 +126,16 @@ export function remplitUnPlanning(p: P): boolean {
   return liste(p?.remplitParRole).length > 0 || TOUS_LES_PLANNINGS.some((k) => colonnesParEquipe(p, k) !== null);
 }
 
-/** Publier un planning, et prévenir des changements (les deux vont ensemble pour l'organigramme) : qui le
- *  remplit par son équipe, ou son rôle de groupe (`publieParRole`). La Table ne se publie pas. Un rôle
- *  « Notifier » seul (`notifieParRole`) prévient sans publier : releases.ts l'ajoute. */
+/** Publier un trimestre d'un planning : qui en remplit toutes les colonnes par son équipe (référent Louange, référent
+ *  EDD), ou son rôle de groupe (`publieParRole`). Pas le référent Régie (Timothée, 23/10/2026). La Table ne se publie pas. */
 export function publiePlanning(p: P, key: string): boolean {
-  return liste(p?.publieParRole).includes(key) || (key !== "table" && colonnesParEquipe(p, key) !== null);
+  return liste(p?.publieParRole).includes(key) || (key !== "table" && colonnesParEquipe(p, key) === "toutes");
+}
+
+/** Prévenir des changements d'un planning : qui le publie, et le référent Régie sur le culte — il remplit Sono et
+ *  PPT mais ne publie pas le trimestre (Timothée, 23/10/2026). Un rôle « Notifier » seul : releases.ts l'ajoute. */
+export function previentPlanning(p: P, key: string): boolean {
+  return publiePlanning(p, key) || (key !== "table" && colonnesParEquipe(p, key) !== null);
 }
 
 // ─── Notifier ───────────────────────────────────────────────────────────────

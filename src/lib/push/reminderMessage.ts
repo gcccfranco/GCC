@@ -52,7 +52,7 @@ const SERVICES_ZH: Record<string, string> = {
   "Groupe Fidélité": "信实团契",
   "Groupe Bonté": "良善团契",
   Intergroupe: "联合聚会",
-  Interfranco: "法语团契聚会",
+  Interfranco: "法语联合聚会",
   "Campus (répét.)": "夏令营排练",
   "Entraînement sur scène": "舞台排练",
 };

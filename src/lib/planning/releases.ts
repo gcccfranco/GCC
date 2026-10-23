@@ -13,7 +13,7 @@
 
 import { NOTIFY_ALL } from "@/lib/push/audiences"
 import { BACK_OFFICE } from "@/lib/backOffice"
-import { publiePlanning, type ProfilOrganigramme } from "@/lib/acces/organigramme"
+import { previentPlanning, publiePlanning, type ProfilOrganigramme } from "@/lib/acces/organigramme"
 import type { EtatAnnonce } from "./prevenir"
 
 export interface PublishablePlanning {
@@ -92,7 +92,7 @@ export function droitsDePublication(
 export function droitsDePrevenir(
   planning: PublishablePlanning, isAdmin: boolean, profil: ProfilPublie | null, backOffice: boolean = BACK_OFFICE
 ): boolean {
-  if (backOffice) return isAdmin || publiePlanning(profil, planning.key) || (profil?.notifieParRole ?? []).includes(planning.notifyAudience)
+  if (backOffice) return isAdmin || previentPlanning(profil, planning.key) || (profil?.notifieParRole ?? []).includes(planning.notifyAudience)
   return peutPrevenir(planning, isAdmin, profil?.notify ?? [],
     backOffice ? profil?.publieParRole ?? [] : [], backOffice ? profil?.notifieParRole ?? [] : [])
 }
