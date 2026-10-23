@@ -632,6 +632,12 @@ responsables sachent ce qui est prêt, ce qui manque et qui relancer, et fassent
 - **Réussite** : moins d'oublis le dimanche matin ; Noël et Pâques sans tout réinventer ; une charge mieux
   répartie ; des réunions plus courtes.
 
+**Corrigé le même jour, et mis en pause** : « il faut que le culte franco ne soit plus vu comme un événement »
+(Timothée). Le culte reste **un planning parmi d'autres** ; pas de fiche de préparation pour lui. Le chantier des fiches
+(`spec-coulisses.md`) est en pause ; pour l'instant, **seul le tableau de bord est revu** (`spec-tableau-de-bord-v2.md`),
+et le Back-Office garde son rôle : le travail d'organisation que les autres ne voient pas (plannings, évènements,
+réunions, tâches).
+
 ## Historique des changements d'avis
 
 | Date | Avant | Après |
@@ -659,3 +665,4 @@ responsables sachent ce qui est prêt, ce qui manque et qui relancer, et fassent
 | 18/09/2026 → 03/10/2026 | Plannings ouverts dans l'app un par un, le Sheet en archive. | Le planning 2027 se fait entièrement dans le Back-Office (colonnes et horaires de 2026, tous les dimanches posés d'office) ; export au modèle du Sheet. |
 | 03/10/2026 → 04/10/2026 | iPad paysage : exactement l'apparence de l'ordinateur, barre latérale dépliée et réductible. | Tablette en paysage : barre latérale toujours réduite (icônes) ; l'ordinateur garde le choix. |
 | 03/10/2026 → 23/10/2026 | Tableau de bord du Back-Office personnalisable, à widgets (ajouter, glisser, tailles, réglages). | Back-Office = les coulisses de la préparation des évènements ; accueil fixe, le même pour tous (prochains évènements prêts ou non, Pour toi, Tes équipes) ; plus de widgets. |
+| 23/10/2026 (entretien) → 23/10/2026 (soir) | Le Culte Franco a sa fiche de préparation, comme un évènement. | Le culte n'est pas un évènement : c'est un planning parmi d'autres. Fiches en pause, seul le tableau de bord est revu. |
