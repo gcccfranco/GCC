@@ -2,22 +2,27 @@
 // Module pur : les widgets (src/components/backOffice/widgets/) lisent la base, puis
 // passent ici ce qu'ils ont lu. Dates ISO « AAAA-MM-JJ », comparées comme du texte.
 import {
-  canCreateSetlist, canSeeEvenement, creatableCategories, entreesBackOffice, equipesDesTaches, estReunion, isAdminUser, visibleCategories,
+  canCreateSetlist, canSeeEvenement, creatableCategories, entreesBackOffice, equipesDesTaches, estDeLaReunion, estReunion, isAdminUser,
+  visibleCategories,
 } from "@/lib/access";
-import { byDate, isExpired, isInfo, isPast, refusInscription } from "@/lib/evenements/agenda";
+import { COLONNES_REGIE, PLANNINGS_DU_CULTE, PLANNINGS_EDD } from "@/lib/acces/organigramme";
+import { borneInscription, byDate, isExpired, isInfo, isPast, modeInscriptions, refusInscription } from "@/lib/evenements/agenda";
 import type { EntreeSheet } from "@/lib/evenements/sheet";
 import type { FSSetlist } from "@/lib/firebase/setlists";
-import { colonnesVides } from "@/lib/planning/casesVides";
+import { casesVides, colonnesVides } from "@/lib/planning/casesVides";
+import { absenceLe } from "@/lib/planning/choisir";
 import {
   CLES_EDD, GRILLES, GRILLES_EDD, GRILLE_BONTE, GRILLE_CAMPUS_MATIN, GRILLE_CAMPUS_SOIR, GRILLE_CULTE, GRILLE_FIDELITE,
-  GRILLE_INTERFRANCO, GRILLE_INTERGROUPE, GRILLE_PAIX, lignesDeLAnnee, type DefinitionGrille,
+  GRILLE_INTERFRANCO, GRILLE_INTERGROUPE, GRILLE_PAIX, GRILLE_TABLE, grilleDe, lignesDeLAnnee, type DefinitionGrille,
 } from "@/lib/planning/grilles";
 import { normalizeName, splitNames, type SetlistSeance } from "@/lib/planning/names";
 import { PUBLISHABLE_PLANNINGS, canPublishPlanning } from "@/lib/planning/releases";
 import { getAnnee } from "@/lib/planning/utils";
 import { todayIso } from "@/lib/scene/dimanches";
 import { addDays, resteAFaire, type Ligne } from "@/lib/taches/echeances";
+import type { Absence } from "@/types/absence";
 import type { Reglages } from "@/types/backOffice";
+import type { SousEquipe } from "@/types/equipe";
 import type { Evenement } from "@/types/evenement";
 import type { LignePetitDej } from "@/types/petitDej";
 import type { Creneau } from "@/types/programme";
@@ -261,4 +266,252 @@ export function raccourcisPermis(user: AuthUser | null, profile: UserProfile | n
   return RACCOURCIS
     .filter((id) => permis[id] && (!r.raccourcis || r.raccourcis.includes(id)))
     .map((id) => ({ id, href: HREF_RACCOURCI[id] }));
+}
+
+// ─── Lot TB2 (docs/spec-tableau-de-bord-v2.md) ───────────────────────────────
+
+/** Le prochain dimanche, aujourd'hui compris jusqu'à midi ; `nowIso` = « AAAA-MM-JJTHH:MM » (heure de Paris). */
+export function prochainDimanche(nowIso: string): string {
+  const jour = nowIso.slice(0, 10);
+  const [y, m, d] = jour.split("-").map(Number);
+  const dow = new Date(Date.UTC(y, m - 1, d)).getUTCDay();
+  if (dow === 0 && nowIso.slice(11, 16) < "12:00") return jour;
+  return addDays(jour, 7 - dow);
+}
+
+// ─── Ce dimanche ─────────────────────────────────────────────────────────────
+
+export type Manque = { cle: string; i18n: string };
+export type EtatDuDimanche = { categorie: string; planning: string; libelle: string; manques: Manque[] };
+
+const estPlanningDuCulte = (key: string) => (PLANNINGS_DU_CULTE as readonly string[]).includes(key);
+const estPlanningEdd = (key: string) => (PLANNINGS_EDD as readonly string[]).includes(key);
+
+/**
+ * Par grille des services qui a une ligne ce dimanche, ce qui manque : cases vides, puis (cultes) la setlist publiée,
+ * sinon sa présentation ; puis la Table (si le petit déj est lu) avec son petit déj. `manques` vide = prêt.
+ */
+export function etatsDuDimanche(
+  rows: Record<string, string[][]>, setlists: SetlistDuDimanche[], services: string[], dimanche: string,
+  petitDej: LignePetitDej[] | null,
+): EtatDuDimanche[] {
+  const etats = services.flatMap((categorie) => (GRILLES_DU_SERVICE[categorie] ?? []).flatMap((def): EtatDuDimanche[] => {
+    const row = ligneA(def, rows[def.key] ?? [], dimanche);
+    if (!row) return [];
+    const manques: Manque[] = colonnesVides(def, row).map((c) => ({ cle: c.cle, i18n: c.i18n }));
+    if (estPlanningDuCulte(def.key)) {
+      const moment = momentDe(def);
+      const setlist = setlists.find((s) => s.category === categorie && s.date === dimanche && !s.isDraft && !s.isPrivate
+        && (!moment || !s.moment || s.moment === moment));
+      if (!setlist) manques.push({ cle: "setlist", i18n: "tableauDeBord.dimanche.manque.setlist" });
+      else if (!setlist.presentationUrl) manques.push({ cle: "presentation", i18n: "tableauDeBord.dimanche.manque.presentation" });
+    }
+    return [{ categorie, planning: def.key, libelle: def.label, manques }];
+  }));
+  const rowTable = petitDej !== null ? ligneA(GRILLE_TABLE, rows.table ?? [], dimanche) : undefined;
+  if (petitDej !== null && rowTable) {
+    const manques: Manque[] = colonnesVides(GRILLE_TABLE, rowTable).map((c) => ({ cle: c.cle, i18n: c.i18n }));
+    if (!petitDej.some((l) => l.dimanche === dimanche)) manques.push({ cle: "petitDej", i18n: "tableauDeBord.dimanche.manque.petitDej" });
+    etats.push({ categorie: "table", planning: "table", libelle: GRILLE_TABLE.label, manques });
+  }
+  return etats;
+}
+
+// ─── Qui relancer ────────────────────────────────────────────────────────────
+
+export type ProfilReferent = { uid: string; firstName: string; lastName: string; referentDe?: string[]; referentSous?: string[] };
+export type EquipeDeColonne = { equipe: string; sous?: SousEquipe };
+
+/** L'équipe (et la sous-équipe de Louange) qui remplit une colonne d'un planning ; `null` pour un planning de groupe. */
+export function equipeDeLaColonne(planning: string, colonne: string): EquipeDeColonne | null {
+  if (estPlanningDuCulte(planning)) {
+    if ((COLONNES_REGIE as readonly string[]).includes(colonne)) return { equipe: "regie" };
+    if (colonne === "presidence" || colonne === "suppleant") return { equipe: "louange", sous: "presidence" };
+    if (["choriste1", "choriste2", "choriste3"].includes(colonne)) return { equipe: "louange", sous: "choristes" };
+    if (["piano", "guitare", "batterie", "cajon", "cajonBatterie", "musiciens", "percussion", "pianiste", "guitariste"].includes(colonne)) {
+      return { equipe: "louange", sous: "musiciens" };
+    }
+    return { equipe: "louange" };
+  }
+  if (estPlanningEdd(planning)) return { equipe: "edd" };
+  if (planning === "table") return { equipe: "orga" };
+  return null;
+}
+
+export type Referent = { uid: string; prenom: string; nom: string; equipe: string; sous?: SousEquipe };
+
+/** Le référent à relancer pour une case vide : celui de la sous-équipe, sinon celui de l'équipe ; le premier par prénom puis nom. */
+export function quiRelancer(planning: string, colonne: string, profils: ProfilReferent[]): Referent | null {
+  const cible = equipeDeLaColonne(planning, colonne);
+  if (!cible) return null;
+  const premier = (l: ProfilReferent[]) =>
+    [...l].sort((a, b) => a.firstName.localeCompare(b.firstName, "fr") || a.lastName.localeCompare(b.lastName, "fr"))[0];
+  const deEquipe = profils.filter((p) => (p.referentDe ?? []).includes(cible.equipe));
+  const deSous = cible.sous ? profils.filter((p) => (p.referentSous ?? []).includes(cible.sous!)) : [];
+  const p = deSous.length ? premier(deSous) : premier(deEquipe);
+  if (!p) return null;
+  return {
+    uid: p.uid, prenom: p.firstName.trim() || p.lastName, nom: `${p.firstName} ${p.lastName}`.trim(), equipe: cible.equipe,
+    ...(deSous.length ? { sous: cible.sous } : {}),
+  };
+}
+
+// ─── Absences en conflit ─────────────────────────────────────────────────────
+
+export type AbsenceEnConflit = { planning: string; date: string; nom: string; colonne: { cle: string; i18n: string } };
+
+/** Les personnes planifiées (cases non en lecture seule) qui se sont déclarées absentes ce jour-là. Jamais le motif. */
+export function absencesEnConflit(
+  def: DefinitionGrille, rows: string[][], dates: string[], profils: { uid: string; planningName: string }[], absences: Absence[],
+): AbsenceEnConflit[] {
+  const profilDe = (nom: string) => {
+    const n = normalizeName(nom);
+    return n ? profils.find((p) => p.planningName && normalizeName(p.planningName) === n) : undefined;
+  };
+  return dates.flatMap((date) => {
+    const row = ligneA(def, rows, date);
+    if (!row) return [];
+    return def.colonnes.filter((c) => !c.lectureSeule).flatMap((c) => splitNames(row[c.index] ?? "").flatMap((nom) => {
+      const p = profilDe(nom);
+      if (!p || !absenceLe(absences.filter((a) => a.uid === p.uid), date)) return [];
+      return [{ planning: def.key, date, nom, colonne: { cle: c.cle, i18n: c.i18n } }];
+    }));
+  });
+}
+
+// ─── Plannings (widget L) ────────────────────────────────────────────────────
+
+export type CaseVideARelancer = { planning: string; date: string; colonne: { cle: string; i18n: string }; relancer: Referent | null };
+export type PlanningsDuTableau = {
+  vides: CaseVideARelancer[]; conflits: AbsenceEnConflit[];
+  plusTard: { jusquau: string; nombre: number; parPlanning: { planning: string; colonnes: { cle: string; i18n: string; n: number }[] }[] };
+};
+
+/** Les cases vides du prochain dimanche (avec qui relancer), les absences en conflit des 5 dimanches, et le décompte des 4 suivants. */
+export function planningsDuTableau(
+  rows: Record<string, string[][]>, plannings: string[], dimanche: string, suivants: string[],
+  profils: (ProfilReferent & { planningName: string })[], absences: Absence[],
+): PlanningsDuTableau {
+  const defs = plannings.flatMap((k) => { const d = grilleDe(k); return d ? [d] : []; });
+  const vides = defs.flatMap((def) => casesVides(def, rows[def.key] ?? [], [dimanche]).flatMap((c) =>
+    c.colonnes.map((col) => ({
+      planning: def.key, date: c.date, colonne: { cle: col.cle, i18n: col.i18n }, relancer: quiRelancer(def.key, col.cle, profils),
+    }))));
+  const conflits = defs.flatMap((def) => absencesEnConflit(def, rows[def.key] ?? [], [dimanche, ...suivants], profils, absences));
+  const parPlanning = defs.flatMap((def) => {
+    const n = new Map<string, number>();
+    for (const c of casesVides(def, rows[def.key] ?? [], suivants)) for (const col of c.colonnes) n.set(col.cle, (n.get(col.cle) ?? 0) + 1);
+    const colonnes = def.colonnes.filter((c) => n.has(c.cle)).map((c) => ({ cle: c.cle, i18n: c.i18n, n: n.get(c.cle)! }));
+    return colonnes.length ? [{ planning: def.key, colonnes }] : [];
+  });
+  return {
+    vides, conflits,
+    plusTard: {
+      jusquau: suivants[suivants.length - 1] ?? "",
+      nombre: parPlanning.reduce((t, p) => t + p.colonnes.reduce((s, c) => s + c.n, 0), 0),
+      parPlanning,
+    },
+  };
+}
+
+// ─── Texte du rappel (français) ──────────────────────────────────────────────
+
+const MOIS = ["janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre"];
+/** « 2026-10-25 » → « 25 octobre » ; « 2026-11-01 » → « 1er novembre ». */
+const dateCourte = (iso: string) => {
+  const [, m, d] = iso.split("-").map(Number);
+  return `${d === 1 ? "1er" : d} ${MOIS[m - 1]}`;
+};
+const SERVICE_RAPPEL: Record<string, string> = {
+  culte: "le culte", intergroupe: "le culte Intergroupe", interfranco: "le culte Interfranco",
+  campusMatin: "le culte du Campus (matin)", campusSoir: "le culte du Campus (soir)", table: "la Table du Seigneur",
+};
+const POSTE_RAPPEL: Record<string, string> = {
+  presidence: "à la présidence", suppleant: "à la suppléance", choriste1: "au chant (choriste 1)", choriste2: "au chant (choriste 2)",
+  choriste3: "au chant (choriste 3)", piano: "au piano", guitare: "à la guitare", batterie: "à la batterie", cajon: "au cajón",
+  cajonBatterie: "au cajón", sono: "à la sono", sonoLive: "à la sono live", ppt: "au PPT", orateur: "pour la prédication",
+  traduction: "à la traduction", musiciens: "aux instruments", percussion: "aux percussions", pianiste: "au piano",
+  guitariste: "à la guitare", theme: "pour le thème", cours: "pour le cours", equipe: "pour l'équipe", sainteCene: "pour la sainte cène",
+};
+
+/** Le message à copier pour relancer quelqu'un sur une case vide. */
+export function texteDuRappel(p: { prenom: string; planning: string; colonne: string; date: string; lien: string }): string {
+  const label = grilleDe(p.planning)?.label ?? p.planning;
+  const service = SERVICE_RAPPEL[p.planning] ?? (estPlanningEdd(p.planning) ? `le cours de l'EDD (${label})` : `le ${label}`);
+  const poste = POSTE_RAPPEL[p.colonne] ?? `au poste « ${p.colonne} »`;
+  return `Salut ${p.prenom}, pour ${service} de dimanche ${dateCourte(p.date)}, il manque encore quelqu'un ${poste}. `
+    + `Tu peux t'en occuper d'ici samedi ? Merci ! ${p.lien}`;
+}
+
+// ─── Évènements ──────────────────────────────────────────────────────────────
+
+/** Organisé par soi, ou porté par une de ses équipes (`pour` = `equipe:<id>`). */
+export function estSienEvenement(e: Pick<Evenement, "organisateurUid" | "pour">, uid: string, equipes: string[]): boolean {
+  return e.organisateurUid === uid || (e.pour.startsWith("equipe:") && equipes.includes(e.pour.slice("equipe:".length)));
+}
+
+/** Les inscriptions sont encore possibles et leur fin tombe dans les `jours` jours (fin posée en automatique, sinon début). */
+export function fermeBientot(e: Evenement, nowIso: string, jours = 7): boolean {
+  if (refusInscription(e, 0, nowIso) !== null) return false;
+  const fin = modeInscriptions(e) === "auto" && e.inscriptionFin
+    ? borneInscription(e.inscriptionFin, "23:59")
+    : `${e.date}T${e.heure || "00:00"}`;
+  return fin <= `${addDays(nowIso.slice(0, 10), jours)}T${nowIso.slice(11, 16)}`;
+}
+
+/** Les créneaux de scène sans personne, un dimanche de l'évènement (de `date` à `dateFin`, bornes comprises). */
+export function creneauxVides(e: Pick<Evenement, "date" | "dateFin">, creneaux: Creneau[]): Creneau[] {
+  const fin = e.dateFin || e.date;
+  return creneaux.filter((c) => c.dimanche >= e.date && c.dimanche <= fin && c.qui.every((q) => !q.trim()));
+}
+
+/** Les siens d'abord (tels quels), puis les autres (avec le Sheet) ; `nombre` au plus en tout, réunions exclues. */
+export function evenementsDuTableau(
+  app: Evenement[], sheet: EntreeSheet[], user: AuthUser | null, profile: UserProfile | null, today: string, r: Reglages,
+): { siens: Evenement[]; autres: ProchainEvenement[] } {
+  const nombre = r.nombre ?? 3;
+  const venir = evenementsAVenir(app, user, profile, today, { ...r, nombre: 50 });
+  const equipes = profile?.dansEquipes ?? [];
+  const estSien = (e: Evenement) => !!user && estSienEvenement(e, user.uid, equipes);
+  const siens = venir.filter(estSien).slice(0, nombre);
+  const autres = avecLeSheet(venir.filter((e) => !estSien(e)), sheet, today, { ...r, nombre: Math.max(0, nombre - siens.length) });
+  return { siens, autres };
+}
+
+// ─── Tâches ──────────────────────────────────────────────────────────────────
+
+/** Comme `aFaireDuTableau`, trié : en retard d'abord, puis les siennes, puis par date ; le retard compté en entier. */
+export function tachesDuTableau(lignes: Ligne[], uid: string, today: string, max = 5): { enRetard: number; lignes: (Ligne & { aMoi: boolean })[] } {
+  const horizon = addDays(today, 7);
+  const aFaire = lignes
+    .filter((l) => resteAFaire(l) && l.date <= horizon)
+    .map((l) => ({ ...l, aMoi: l.tache.responsableUid === uid }))
+    .sort((a, b) => Number(b.date < today) - Number(a.date < today) || Number(b.aMoi) - Number(a.aMoi) || a.date.localeCompare(b.date));
+  return { enRetard: aFaire.filter((l) => l.date < today).length, lignes: aFaire.slice(0, max) };
+}
+
+// ─── Réunions ────────────────────────────────────────────────────────────────
+
+export type ReunionDuTableau = { reunion: Evenement; precedenteSansCompteRendu: Evenement | null };
+
+/** Ses réunions à venir (celles dont on est), par date puis heure, `n` au plus, avec la précédente restée sans compte rendu. */
+export function reunionsDuTableau(
+  evenements: Evenement[], user: AuthUser | null, profile: UserProfile | null, nowIso: string, n = 3,
+): ReunionDuTableau[] {
+  const miennes = evenements.filter((e) => estReunion(e) && !!e.date && estDeLaReunion(user, profile, e));
+  const debut = (e: Evenement) => `${e.date}T${e.heure || "00:00"}`;
+  const aVenir = (e: Evenement) => `${e.date}T${e.heure || "23:59"}` >= nowIso;
+  return miennes
+    .filter(aVenir)
+    .sort((a, b) => debut(a).localeCompare(debut(b)))
+    .slice(0, n)
+    .map((reunion) => {
+      const derniere = miennes.filter((e) => !aVenir(e) && e.pour === reunion.pour).sort((a, b) => debut(b).localeCompare(debut(a)))[0];
+      return { reunion, precedenteSansCompteRendu: derniere && !derniere.compteRendu?.url ? derniere : null };
+    });
+}
+
+/** Le nombre de sujets pas encore traités. */
+export function sujetsOuverts(sujets: { traite: boolean }[]): number {
+  return sujets.filter((s) => !s.traite).length;
 }

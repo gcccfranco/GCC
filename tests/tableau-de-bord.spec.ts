@@ -12,6 +12,8 @@ import { COMITES } from "../src/lib/groupes/table";
 import {
   aFaireDuTableau, ceDimanche, creneauxAVenir, etatInscriptions, evenementsAVenir, nomsSansCompte, nouveauxComptes,
   petitDejAVenir, equipesAFaire, prochainsDimanches, raccourcisPermis, seancesDesServices, servicesDuDimanche, servicesSetlists,
+  absencesEnConflit, creneauxVides, equipeDeLaColonne, etatsDuDimanche, evenementsDuTableau, fermeBientot, planningsDuTableau,
+  prochainDimanche, quiRelancer, reunionsDuTableau, estSienEvenement, sujetsOuverts, tachesDuTableau, texteDuRappel,
 } from "../src/lib/tableauDeBord/donnees";
 import { casesVides } from "../src/lib/planning/casesVides";
 import { GRILLE_CULTE, GRILLE_INTERFRANCO } from "../src/lib/planning/grilles";
@@ -780,5 +782,237 @@ test.describe("Personnaliser (B5) : écrans", () => {
     await page.getByRole("button", { name: "自定义" }).click();
     await expect(page.getByRole("button", { name: "完成" })).toBeVisible();
     await expect(page.getByRole("region", { name: "添加小组件" })).toBeVisible();
+  });
+});
+
+// ─── Lot TB2, tranche TB2-a : les règles pures du tableau de bord v2 ──────────
+// Aucun nom réel : « Ysaline », « Corentin », « Maëlys »… inventés pour ces tests.
+
+test.describe("Tableau de bord v2 (TB2-a) : règles pures", () => {
+  const PLEIN = ["Pers. A", "Pers. B", "Pers. C", "Pers. D", "Pers. E", "Pers. F", "Pers. G", "Pers. H", "Pers. I", "Pers. B", ""];
+  const ligneCulte = (date: string, trous: Record<number, string> = {}) =>
+    [date, ...PLEIN.map((v, i) => trous[i] ?? v)];
+  const setlist = (x: Record<string, unknown> = {}) =>
+    ({ category: "Culte Francophone", date: "2026-10-25", leader: "Pers. A", presentationUrl: "https://exemple.test/ppt", ...x });
+  const nos = (m: { cle: string }[]) => m.map((x) => x.cle);
+  const i18nCulte = (cle: string) => GRILLE_CULTE.colonnes.find((c) => c.cle === cle)!.i18n;
+
+  test("prochain dimanche : jeudi, dimanche avant midi, dimanche à midi", () => {
+    expect(prochainDimanche("2026-10-22T10:00")).toBe("2026-10-25");
+    expect(prochainDimanche("2026-10-25T09:30")).toBe("2026-10-25");
+    expect(prochainDimanche("2026-10-25T12:00")).toBe("2026-11-01");
+    expect(prochainDimanche("2026-10-26T08:00")).toBe("2026-11-01");
+  });
+
+  test("Ce dimanche : batterie vide et pas de setlist, puis présentation, puis prêt", () => {
+    const rows = { culte: [ligneCulte("2026-10-25", { 5: "" })] };
+    const [vide] = etatsDuDimanche(rows, [], ["Culte Francophone"], "2026-10-25", null);
+    expect(vide).toMatchObject({ categorie: "Culte Francophone", planning: "culte", libelle: "Culte Franco" });
+    expect(nos(vide.manques)).toEqual(["batterie", "setlist"]);
+    expect(vide.manques[1].i18n).toBe("tableauDeBord.dimanche.manque.setlist");
+    const plein = { culte: [ligneCulte("2026-10-25")] };
+    const [sansPpt] = etatsDuDimanche(plein, [setlist({ presentationUrl: "" })], ["Culte Francophone"], "2026-10-25", null);
+    expect(sansPpt.manques).toEqual([{ cle: "presentation", i18n: "tableauDeBord.dimanche.manque.presentation" }]);
+    const [pret] = etatsDuDimanche(plein, [setlist()], ["Culte Francophone"], "2026-10-25", null);
+    expect(pret.manques).toEqual([]);
+  });
+
+  test("Ce dimanche : Sainte cène vide non comptée ; brouillon ou privée ne sont pas publiées ; autre date ignorée", () => {
+    const plein = { culte: [ligneCulte("2026-10-25")] };
+    const manques = (s: Record<string, unknown>) => nos(etatsDuDimanche(plein, [setlist(s)], ["Culte Francophone"], "2026-10-25", null)[0].manques);
+    expect(manques({})).toEqual([]);
+    expect(manques({ isDraft: true })).toEqual(["setlist"]);
+    expect(manques({ isPrivate: true })).toEqual(["setlist"]);
+    expect(manques({ date: "2026-10-18" })).toEqual(["setlist"]);
+  });
+
+  test("Ce dimanche : un planning de groupe n'a ni setlist ni présentation à compter", () => {
+    const rows = { paix: [["2026-10-25", "Pers. A", "Pers. B", "Pers. C", "Pers. D", ""]] };
+    const [paix] = etatsDuDimanche(rows, [], ["Groupe Paix"], "2026-10-25", null);
+    expect(paix.planning).toBe("paix");
+    expect(nos(paix.manques)).not.toContain("setlist");
+  });
+
+  test("Ce dimanche : la Table ajoute le petit déj seulement s'il est lu", () => {
+    const rows = { culte: [ligneCulte("2026-10-25")], table: [["2026-10-25", "Pers. A", ""]] };
+    const avec = etatsDuDimanche(rows, [setlist()], ["Culte Francophone"], "2026-10-25", []);
+    expect(avec.map((e) => e.planning)).toEqual(["culte", "table"]);
+    expect(avec[1]).toMatchObject({ categorie: "table", libelle: "Prépa. Table" });
+    expect(avec[1].manques).toEqual([{ cle: "petitDej", i18n: "tableauDeBord.dimanche.manque.petitDej" }]);
+    const l = { id: "x", dimanche: "2026-10-25", nom: "Famille Test", uid: "", auteurUid: "", creeLe: "", modifieLe: "" };
+    expect(etatsDuDimanche(rows, [setlist()], ["Culte Francophone"], "2026-10-25", [l])[1].manques).toEqual([]);
+    expect(etatsDuDimanche(rows, [setlist()], ["Culte Francophone"], "2026-10-25", null).map((e) => e.planning)).toEqual(["culte"]);
+  });
+
+  const REFERENTS = {
+    musiciens: { uid: "u-mus", firstName: "Ysaline", lastName: "V.", referentSous: ["musiciens"] },
+    louange: { uid: "u-lou", firstName: "Corentin", lastName: "R.", referentDe: ["louange"] },
+    regie: { uid: "u-reg", firstName: "Maëlys", lastName: "T.", referentDe: ["regie"] },
+    edd: { uid: "u-edd", firstName: "Anselme", lastName: "K.", referentDe: ["edd"] },
+  };
+  const tous = Object.values(REFERENTS);
+
+  test("qui relancer : la sous-équipe d'abord, sinon Louange, la Régie, l'EDD", () => {
+    expect(quiRelancer("culte", "batterie", tous)).toEqual({ uid: "u-mus", prenom: "Ysaline", nom: "Ysaline V.", equipe: "louange", sous: "musiciens" });
+    // Pas de référent Présidence : repli sur le référent Louange, sans sous-équipe.
+    expect(quiRelancer("culte", "presidence", tous)).toEqual({ uid: "u-lou", prenom: "Corentin", nom: "Corentin R.", equipe: "louange" });
+    expect(quiRelancer("culte", "ppt", tous)).toMatchObject({ uid: "u-reg", equipe: "regie" });
+    expect(quiRelancer("eddDaban", "cours", tous)).toMatchObject({ uid: "u-edd", equipe: "edd" });
+    expect(quiRelancer("culte", "orateur", tous)).toMatchObject({ uid: "u-lou" });
+  });
+
+  test("qui relancer : planning de groupe, aucun référent, deux référents", () => {
+    expect(equipeDeLaColonne("paix", "presidence")).toBeNull();
+    expect(quiRelancer("paix", "presidence", tous)).toBeNull();
+    expect(quiRelancer("culte", "ppt", [REFERENTS.louange])).toBeNull();
+    const deux = [
+      { uid: "u2", firstName: "Zélie", lastName: "A.", referentSous: ["musiciens"] },
+      { uid: "u1", firstName: "Étienne", lastName: "Z.", referentSous: ["musiciens"] },
+    ];
+    expect(quiRelancer("culte", "piano", deux)!.uid).toBe("u1");
+    expect(equipeDeLaColonne("culte", "choriste2")).toEqual({ equipe: "louange", sous: "choristes" });
+    expect(equipeDeLaColonne("table", "equipe")).toEqual({ equipe: "orga" });
+  });
+
+  const profilsAbs = [{ uid: "u-ysa", planningName: "Ysaline V." }, { uid: "u-vide", planningName: "" }];
+  const abs = (uid: string, du: string, au: string) => ({ id: uid + du, uid, du, au, motif: "Voyage privé" });
+
+  test("absences en conflit : une entrée sans motif, hors date rien, casse et accents ignorés, sans profil rien", () => {
+    const rows = [ligneCulte("2026-10-25", { 5: "Ysaline V." })];
+    const r = absencesEnConflit(GRILLE_CULTE, rows, ["2026-10-25"], profilsAbs, [abs("u-ysa", "2026-10-20", "2026-10-27")]);
+    expect(r).toHaveLength(1);
+    expect(r[0]).toEqual({ planning: "culte", date: "2026-10-25", nom: "Ysaline V.", colonne: { cle: "batterie", i18n: i18nCulte("batterie") } });
+    expect(Object.keys(r[0]).sort()).toEqual(["colonne", "date", "nom", "planning"]);
+    expect(JSON.stringify(r)).not.toContain("Voyage");
+    expect(absencesEnConflit(GRILLE_CULTE, rows, ["2026-10-25"], profilsAbs, [abs("u-ysa", "2026-11-01", "2026-11-02")])).toEqual([]);
+    const accents = [ligneCulte("2026-10-25", { 5: "YSALINE v" })];
+    expect(absencesEnConflit(GRILLE_CULTE, accents, ["2026-10-25"], profilsAbs, [abs("u-ysa", "2026-10-25", "2026-10-25")])).toHaveLength(1);
+    // Nom sans profil, et profil à planningName vide : rien.
+    expect(absencesEnConflit(GRILLE_CULTE, rows, ["2026-10-25"], [{ uid: "u-vide", planningName: "" }], [abs("u-vide", "2026-10-25", "2026-10-25")])).toEqual([]);
+  });
+
+  test("plannings du tableau : vides du prochain dimanche avec qui relancer, conflits sur 5 dimanches, plus tard", () => {
+    const rows = {
+      culte: [
+        ligneCulte("2026-10-25", { 5: "" }),
+        ligneCulte("2026-11-01", { 5: "Ysaline V." }),
+        ligneCulte("2026-11-08", { 5: "", 7: "" }),
+        ligneCulte("2026-11-15", { 5: "" }),
+        ligneCulte("2026-11-22"),
+      ],
+    };
+    const suivants = ["2026-11-01", "2026-11-08", "2026-11-15", "2026-11-22"];
+    const profils = [...tous.map((p) => ({ ...p, planningName: "" })), { uid: "u-ysa", firstName: "Ysaline", lastName: "V.", planningName: "Ysaline V.", referentSous: ["musiciens"] }];
+    const r = planningsDuTableau(rows, ["culte", "inconnu"], "2026-10-25", suivants, profils, [abs("u-ysa", "2026-11-01", "2026-11-01")]);
+    expect(r.vides).toHaveLength(1);
+    expect(r.vides[0]).toMatchObject({ planning: "culte", date: "2026-10-25", colonne: { cle: "batterie" }, relancer: { uid: "u-mus" } });
+    expect(r.conflits.map((c) => [c.date, c.nom])).toEqual([["2026-11-01", "Ysaline V."]]);
+    expect(r.plusTard.jusquau).toBe("2026-11-22");
+    expect(r.plusTard.nombre).toBe(3);
+    expect(r.plusTard.parPlanning).toEqual([{ planning: "culte", colonnes: [{ cle: "batterie", i18n: i18nCulte("batterie"), n: 2 }, { cle: "ppt", i18n: i18nCulte("ppt"), n: 1 }] }]);
+    expect(planningsDuTableau({}, [], "2026-10-25", [], [], []).plusTard).toEqual({ jusquau: "", nombre: 0, parPlanning: [] });
+  });
+
+  test("texte du rappel : l'exemple, 1er novembre, colonne inconnue, Table, EDD", () => {
+    const lien = "https://exemple.test/back-office/planning/culte";
+    expect(texteDuRappel({ prenom: "Corentin", planning: "culte", colonne: "batterie", date: "2026-10-25", lien }))
+      .toBe("Salut Corentin, pour le culte de dimanche 25 octobre, il manque encore quelqu'un à la batterie. Tu peux t'en occuper d'ici samedi ? Merci ! " + lien);
+    expect(texteDuRappel({ prenom: "Maëlys", planning: "intergroupe", colonne: "sonoLive", date: "2026-11-01", lien }))
+      .toContain("pour le culte Intergroupe de dimanche 1er novembre, il manque encore quelqu'un à la sono live.");
+    expect(texteDuRappel({ prenom: "Maëlys", planning: "culte", colonne: "lumiere", date: "2026-11-01", lien })).toContain("au poste « lumiere »");
+    expect(texteDuRappel({ prenom: "Maëlys", planning: "table", colonne: "equipe", date: "2026-11-01", lien }))
+      .toContain("pour la Table du Seigneur de dimanche 1er novembre, il manque encore quelqu'un pour l'équipe.");
+    expect(texteDuRappel({ prenom: "Maëlys", planning: "eddDaban", colonne: "cours", date: "2026-11-01", lien })).toMatch(/pour le cours de l'EDD \(.+\) de dimanche/);
+  });
+
+  const evt = (x: Partial<Evenement>) => ({
+    id: "e", titre: "E", type: "loisir", pour: "eglise", date: "2026-11-07", heure: "", heureFin: "", dateFin: "", lienExterne: "",
+    inscriptions: "ouvertes", inscriptionDebut: "", inscriptionFin: "", placesMax: null, inscrits: 0, expiresAt: null, organisateurUid: "autre", ...x,
+  }) as Evenement;
+
+  test("évènements : le sien (organisé, porté par mon équipe) et les autres", () => {
+    expect(estSienEvenement({ organisateurUid: "moi", pour: "eglise" }, "moi", [])).toBe(true);
+    expect(estSienEvenement({ organisateurUid: "x", pour: "equipe:da" }, "moi", ["da"])).toBe(true);
+    expect(estSienEvenement({ organisateurUid: "x", pour: "equipe:da" }, "moi", ["louange"])).toBe(false);
+    expect(estSienEvenement({ organisateurUid: "x", pour: "eglise" }, "moi", ["da"])).toBe(false);
+  });
+
+  test("évènements : ferme bientôt", () => {
+    const maintenant = "2026-10-22T10:00";
+    expect(fermeBientot(evt({ inscriptions: "auto", inscriptionFin: "2026-10-25" }), maintenant)).toBe(true);
+    expect(fermeBientot(evt({ inscriptions: "auto", inscriptionFin: "2026-11-01" }), maintenant)).toBe(false);
+    expect(fermeBientot(evt({ inscriptions: "fermees", date: "2026-10-23" }), maintenant)).toBe(false);
+    expect(fermeBientot(evt({ lienExterne: "https://exemple.test/form", date: "2026-10-23" }), maintenant)).toBe(false);
+    // « Ouvertes » forcées : la fin est le début de l'évènement.
+    expect(fermeBientot(evt({ date: "2026-10-26", heure: "19:00" }), maintenant)).toBe(true);
+    expect(fermeBientot(evt({ date: "2026-11-07" }), maintenant)).toBe(false);
+    // Déjà terminée : plus d'inscription possible.
+    expect(fermeBientot(evt({ inscriptions: "auto", inscriptionFin: "2026-10-20" }), maintenant)).toBe(false);
+  });
+
+  test("évènements : créneaux vides par date", () => {
+    const c = (id: string, dimanche: string, qui: string[]) => ({ id, dimanche, qui }) as Creneau;
+    const cr = [c("a", "2026-11-01", []), c("b", "2026-11-01", ["  "]), c("c", "2026-11-01", ["Gp Paix"]), c("d", "2026-11-08", []), c("e", "2026-10-25", [])];
+    expect(creneauxVides({ date: "2026-11-01", dateFin: "" }, cr).map((x) => x.id)).toEqual(["a", "b"]);
+    expect(creneauxVides({ date: "2026-11-01", dateFin: "2026-11-08" }, cr).map((x) => x.id)).toEqual(["a", "b", "d"]);
+  });
+
+  test("évènements du tableau : les siens d'abord, puis les autres, bornés, réunions exclues", () => {
+    const moi = { uid: "uid-moi", email: "moi@example.com" };
+    const p = { uid: "uid-moi", firstName: "Moi", lastName: "X", dansEquipes: ["da"] } as unknown as UserProfile;
+    const tousEv = [
+      evt({ id: "autre1", date: "2026-10-26" }),
+      evt({ id: "sien", date: "2026-10-30", organisateurUid: "uid-moi" }),
+      evt({ id: "equipe", date: "2026-11-02", pour: "equipe:da", reunion: false }),
+      evt({ id: "reunion", date: "2026-10-27", pour: "equipe:da" }),
+      evt({ id: "autre2", date: "2026-11-03" }),
+    ];
+    const r = evenementsDuTableau(tousEv, [], moi, p, "2026-10-22", {});
+    expect(r.siens.map((x) => x.id)).toEqual(["sien", "equipe"]);
+    expect(r.autres.map((x) => x.date)).toEqual(["2026-10-26"]);
+    const grand = evenementsDuTableau(tousEv, [], moi, p, "2026-10-22", { nombre: 5 });
+    expect(grand.siens).toHaveLength(2);
+    expect(grand.autres).toHaveLength(2);
+    expect(evenementsDuTableau(tousEv, [], moi, p, "2026-10-22", { nombre: 1 })).toMatchObject({ siens: [{ id: "sien" }], autres: [] });
+  });
+
+  test("tâches : en retard d'abord, puis les miennes, puis la date ; J+8 exclu ; retard compté en entier", () => {
+    const t = (id: string, echeance: string, resp: string | null) =>
+      ({ tache: { id, echeance, responsableUid: resp } as Tache, date: echeance, fois: null });
+    const lignes = [
+      t("futurAutre", "2026-10-23", "x"), t("futurMoi", "2026-10-25", "moi"), t("retardAutre", "2026-10-15", "x"),
+      t("retardMoi", "2026-10-18", "moi"), t("futurMoiTot", "2026-10-22", "moi"), t("loin", "2026-10-30", "moi"),
+    ];
+    const r = tachesDuTableau(lignes, "moi", "2026-10-22");
+    expect(r.lignes.map((l) => l.tache.id)).toEqual(["retardMoi", "retardAutre", "futurMoiTot", "futurMoi", "futurAutre"]);
+    expect(r.lignes.map((l) => l.aMoi)).toEqual([true, false, true, true, false]);
+    expect(r.enRetard).toBe(2);
+    const bornes = tachesDuTableau(lignes, "moi", "2026-10-22", 2);
+    expect(bornes.lignes).toHaveLength(2);
+    expect(bornes.enRetard).toBe(2);
+  });
+
+  test("réunions : celles dont on est, à venir, triées, bornées ; précédente sans compte rendu", () => {
+    const moi = { uid: "uid-moi", email: "moi@example.com" };
+    const p = { uid: "uid-moi", firstName: "Moi", lastName: "X", dansEquipes: ["da"] } as unknown as UserProfile;
+    const cr = { url: "https://exemple.test/cr", parUid: "x", parNom: "X", le: "2026-10-01T10:00:00Z" };
+    const re = (id: string, date: string, pour: Evenement["pour"], x: Partial<Evenement> = {}) => evt({ id, date, pour, reunion: true, ...x });
+    const tousEv = [
+      re("passeSans", "2026-10-15", "equipe:da"),
+      re("passeAvec", "2026-10-08", "equipe:evenementiel", { compteRendu: cr }),
+      re("b", "2026-11-05", "equipe:da", { heure: "20:00" }),
+      re("a", "2026-10-29", "equipe:da"),
+      re("pasLaMienne", "2026-10-30", "equipe:louange"),
+      re("evenementOrdinaire", "2026-10-31", "eglise"),
+      re("c", "2026-11-12", "equipe:da"),
+      re("d", "2026-11-19", "equipe:da"),
+    ];
+    const r = reunionsDuTableau(tousEv, moi, p, "2026-10-22T10:00");
+    expect(r.map((x) => x.reunion.id)).toEqual(["a", "b", "c"]);
+    expect(r[0].precedenteSansCompteRendu?.id).toBe("passeSans");
+    expect(reunionsDuTableau(tousEv, moi, p, "2026-10-22T10:00", 1)).toHaveLength(1);
+    const avec = [re("passeAvec2", "2026-10-15", "equipe:da", { compteRendu: cr }), re("a", "2026-10-29", "equipe:da")];
+    expect(reunionsDuTableau(avec, moi, p, "2026-10-22T10:00")[0].precedenteSansCompteRendu).toBeNull();
+    expect(sujetsOuverts([{ traite: false }, { traite: true }, { traite: false }])).toBe(2);
   });
 });
