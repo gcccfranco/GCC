@@ -88,6 +88,16 @@ Fichiers : `src/components/**` (sauf `song/`, `performance/`), `src/app/**` (sau
 | B5 | Bilingue : B1 (erreurs de notification, « Aucune donnée » sur téléphone), B2 (back-office : Notifier, Statistiques, Questionnaire, Planning sans compte, Personnes, Réception, Inscriptions), B3 (dates selon la langue), B4 (rôles et services du profil traduits comme dans Moi). Recherche M4 (pinyin collé et sans tons, `ignoreLocation`). | parcours en 中文 : plus de français hors contenu des chants |
 | B6 | Le guide (G11) : captures refaites par un script Playwright (profils fictifs, base simulée) aux bonnes tailles, texte relu (« Chants » au lieu de « Louange », nombre de chants lu dans l'index). Les P3 restants de l'audit du code qui sont dans ses fichiers. | relecture à l'œil de chaque chapitre |
 
+## 4 bis. Hors des deux flux : l'organisation du back-office
+
+Timothée, 24/10/2026 : « avec le back-office qu'on a actuellement, comment veux-tu le modifier ? » La proposition
+(regroupement des entrées, un « À faire » à la place des widgets, plus de volets vides) passe par une **planche** avant
+tout code (CLAUDE.md, « Design »). En attendant, le flux B **ne retouche pas la mise en page** des pages
+`src/app/back-office/**` et `src/components/backOffice/**` (tableau de bord, volets liste / détail, largeurs de
+Messages, Tâches, Évènements) ; il y corrige seulement les défauts qui survivront à toute réorganisation : textes en
+dur et traductions (B5), contrastes (B2), noms accessibles (B1), formulaire de réunion (G12), organigramme sur
+téléphone (B3).
+
 ## 5. Avancement
 
 | Tranche | État | Commit |
