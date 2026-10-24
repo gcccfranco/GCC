@@ -72,6 +72,7 @@ test.beforeEach(async ({ page }, info) => {
 });
 
 async function ouvrir(page: Page, to = `/setlists/${SETLIST_ID}`, extra: Record<string, Record<string, unknown>> = {}) {
+  await page.addInitScript(() => localStorage.setItem("accords-aide-vue", "1"));
   const db = await signInAs(page, MUSICIEN, { [`setlists/${SETLIST_ID}`]: SETLIST, ...extra }, to);
   await chant(page, 1).waitFor();
   return db;
@@ -148,7 +149,7 @@ test.describe("setlist en deux volets (ordinateur, tablette couchée)", () => {
     await expect(e.getByRole("link", { name: "Présentation" })).toHaveAttribute("href", CANVA);
     await expect(e.getByRole("link", { name: "Modifier", exact: true })).toHaveAttribute("href", new RegExp(`/setlists/${SETLIST_ID}/edit/?$`));
     // Ce que garde la question 4 : sous le titre, pas dans le menu.
-    await expect(page.getByText("Vous pouvez modifier")).toBeVisible();
+    await expect(page.getByText("Tu peux modifier")).toBeVisible();
     await expect(page.getByText("Thème : la grâce.")).toBeVisible();
   });
 

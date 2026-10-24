@@ -35,6 +35,9 @@ demande des dérivés avec plus de relief (5C1, 5C2, 5C3 publiés, choix attendu
 Règles Firestore : publiées le 19/09/2026 (tout jusqu’au lot 17) ; la règle des
 setlists privées du lot cohérence reste à republier.
 
+**État au 24/10/2026** : les corrections issues de l'audit du 24/10/2026 se suivent dans
+`spec-corrections-audit.md` ; les paragraphes datés ci-dessous restent l'historique.
+
 **EN LIGNE le 20/09/2026** : `main` fusionné et poussé (`e5497cd`), look 5C1 et lot 18
 codés le jour même, back-office coupé en ligne (`spec-mise-en-ligne.md`, « Mise en
 ligne »). Ce qui suit est l'état du matin.
@@ -1262,7 +1265,7 @@ porte le nom « GCC » et le menu par sections dont ces modules ont besoin.
 - Maquettes du coup d'œil avant de coder : Timothée préfère tester le résultat
   en local et le montrer à Christelle.
 
-### AB. Visite de première connexion selon le rôle (Timothée, 22/10/2026) → `spec-visite-par-role.md`
+### AF. Visite de première connexion selon le rôle (Timothée, 22/10/2026) → `spec-visite-par-role.md`
 
 « Je voudrais remettre [le guide de première connexion] et surtout en fonction du rôle de chacun dans
 l'organigramme. » L'accueil du lot 8 devient une **visite** composée de cartes tirées du profil (service, équipes,

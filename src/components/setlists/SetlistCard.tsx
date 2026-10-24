@@ -72,7 +72,7 @@ export function SetlistCard({
           ) : (
             <>
               {setlist.leader && <span className="shrink-0">{setlist.leader}&nbsp;·&nbsp;</span>}
-              <span className="truncate capitalize">{formatDate(setlist.date, i18n.language)}</span>
+              <span className="inline-block max-w-full truncate align-bottom first-letter:uppercase">{formatDate(setlist.date, i18n.language)}</span>
             </>
           )}
         </span>

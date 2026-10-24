@@ -194,10 +194,11 @@ export function Notifier({ backOffice = false, titre }: { backOffice?: boolean; 
   const selectAudience = (
     <>
       <div className="space-y-1.5">
-        <label className="text-sm font-medium text-foreground">
+        <label htmlFor="notif-audience" className="text-sm font-medium text-foreground">
           Audience
         </label>
         <select
+          id="notif-audience"
           value={audience}
           onChange={(e) => setAudience(e.target.value)}
           className="w-full h-11 px-3 rounded-lg border border-transparent bg-secondary text-foreground text-[16px] sm:text-sm focus:outline-none focus:ring-2 focus:ring-ring/30"

@@ -209,7 +209,7 @@ test.describe("bulle d'aide", () => {
     await expect(aide(page)).toBeVisible();
     await expect(aide(page)).toHaveAttribute("role", "status");
     const ordinateur = info.project.name === "ordinateur";
-    await expect(aide(page)).toContainText(ordinateur ? "Cliquez sur un accord" : "Touchez un accord pour voir comment le jouer");
+    await expect(aide(page)).toContainText(ordinateur ? "Clique sur un accord" : "Touche un accord pour voir comment le jouer");
     await aide(page).getByRole("button", { name: "OK" }).click();
     await expect(aide(page)).toHaveCount(0);
     await page.reload();

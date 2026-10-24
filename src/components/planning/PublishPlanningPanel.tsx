@@ -101,10 +101,11 @@ export function PublishPlanningPanel({
   return (
     <div className="rounded-xl bg-card shadow-soft p-5 space-y-4">
       <div className="space-y-1.5">
-        <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+        <label htmlFor="publier-planning" className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
           Planning
         </label>
         <select
+          id="publier-planning"
           value={key}
           onChange={(e) => setKey(e.target.value)}
           className="w-full h-11 px-3 rounded-lg border border-transparent bg-secondary text-foreground text-[16px] sm:text-sm focus:outline-none focus:ring-2 focus:ring-ring/30"

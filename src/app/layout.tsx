@@ -59,8 +59,8 @@ export default function RootLayout({
             jusqu'au 19/09/2026). */}
         <link rel="icon" href="/icon.png" type="image/png" />
         <meta name="mobile-web-app-capable" content="yes" />
-        {/* Service worker push-only (public/sw.js) — requis pour les notifications
-            Web Push sur PWA iOS/Android. Il ne fait plus de cache hors-ligne. */}
+        {/* Service worker (public/sw.js) : notifications Web Push (requis sur PWA iOS/Android)
+            et cache hors ligne ; rien n'est mis en cache sur un serveur local. */}
         <script dangerouslySetInnerHTML={{ __html: `if('serviceWorker'in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('/sw.js').catch(function(){})})}` }} />
         {/* Barre latérale réduite sur cet appareil (lot U4, N3) : `data-barre` posé avant le
             premier affichage, sinon la page sauterait de 180 px à chaque chargement. */}

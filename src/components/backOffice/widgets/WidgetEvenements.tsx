@@ -42,7 +42,9 @@ export function WidgetEvenements({ widget }: { widget: Widget }) {
   const maintenant = nowIsoParis();
   const pastille = (e: EtatInscriptions, bientot: boolean) => (
     <Puce testId="pastille-inscriptions" ton={bientot ? "warn" : "neutre"}>
-      {e.cas === "places" ? `${e.inscrits} / ${e.max}`
+      {e.cas === "places" ? (
+        <span role="img" aria-label={t("tableauDeBord.evenements.placesLabel", { count: e.inscrits, max: e.max })}>{`${e.inscrits} / ${e.max}`}</span>
+      )
         : e.cas === "sansLimite" ? t("tableauDeBord.evenements.inscrits", { count: e.inscrits })
         : e.cas === "fermees" ? t("tableauDeBord.evenements.fermees")
         : t("tableauDeBord.evenements.externe")}

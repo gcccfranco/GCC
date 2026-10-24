@@ -259,6 +259,7 @@ export function SongListClient({ songs, themes, actif = null, erreur = false, on
           type="search"
           enterKeyHint="search"
           placeholder={t("songs.list.searchPlaceholder")}
+          aria-label={t("songs.list.searchLabel")}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           className="raised w-full h-[46px] pl-[42px] pr-10 border border-transparent rounded-full text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-ring/50 focus:ring-[3px] focus:ring-ring/10 text-[16px] transition-all duration-150 [&::-webkit-search-cancel-button]:hidden"
@@ -290,6 +291,7 @@ export function SongListClient({ songs, themes, actif = null, erreur = false, on
 
         {/* Thème */}
         <select
+          aria-label={t("songs.list.filterThemeLabel")}
           value={themeFilter}
           onChange={(e) => setThemeFilter(e.target.value)}
           className="h-8 pl-3 pr-7 rounded-sm text-[16px] sm:text-sm font-semibold bg-secondary text-foreground border border-transparent focus:outline-none focus:ring-2 focus:ring-ring/20 cursor-pointer appearance-none"

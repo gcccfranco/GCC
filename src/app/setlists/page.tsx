@@ -557,6 +557,7 @@ export default function SetlistsPage() {
               </button>
             )}
             <select
+              aria-label={t("setlists.list.filterCategoryLabel")}
               value={categoryFilter}
               onChange={(e) => setCategoryFilter(e.target.value)}
               className="min-w-0 flex-1 h-9 px-3 rounded-lg border border-transparent bg-secondary text-foreground text-[16px] sm:text-sm focus:outline-none focus:ring-2 focus:ring-ring/30"
@@ -703,7 +704,7 @@ export default function SetlistsPage() {
                   <li key={s.id} className="border-t border-border/70 py-3">
                     <p className="text-[15px] font-semibold text-foreground">{titreAffiche(s, i18n.language === "zh-CN" ? "zh" : "fr")}</p>
                     <p className="text-[13px] text-muted-foreground">
-                      <span className="capitalize">{formatDate(s.date, i18n.language)}</span>
+                      <span className="inline-block first-letter:uppercase">{formatDate(s.date, i18n.language)}</span>
                       {" · "}
                       {t("setlists.corbeille.supprimeeLe", { date: dateCourte(s.supprimeeLe!) })}
                     </p>
@@ -766,7 +767,7 @@ export default function SetlistsPage() {
                       <li key={s.id}>
                         {titreAffiche(s, i18n.language === "zh-CN" ? "zh" : "fr")}
                         {" · "}
-                        <span className="capitalize">{formatDate(s.date, i18n.language)}</span>
+                        <span className="inline-block first-letter:uppercase">{formatDate(s.date, i18n.language)}</span>
                       </li>
                     ))}
                   </ul>

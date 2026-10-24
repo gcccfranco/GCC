@@ -34,7 +34,7 @@ Version interactive, lisible hors ligne (zoom, thème sombre) : [diagrammes/inde
 
 ### Architecture
 
-Les chants sont des fichiers du dépôt, transformés en pages statiques au build. Tout ce qui change (setlists, profils, abonnements push) vit dans Firestore, que le navigateur lit en REST avec le jeton Firebase Auth. Les 17 routes API font ce que le client ne doit pas faire seul : envoyer des push, écrire avec des droits élevés, servir le contenu d'un chant. Le service worker ne met en cache que ce qui vient du site lui-même.
+Les chants sont des fichiers du dépôt, transformés en pages statiques au build. Tout ce qui change (setlists, profils, abonnements push) vit dans Firestore, que le navigateur lit en REST avec le jeton Firebase Auth. Les 20 routes API font ce que le client ne doit pas faire seul : envoyer des push, écrire avec des droits élevés, servir le contenu d'un chant. Le service worker ne met en cache que ce qui vient du site lui-même.
 
 **Fichiers clés** : `next.config.ts`, `vercel.json`, `src/app/layout.tsx`, `public/sw.js`, `src/lib/firebase/config.ts`, `src/lib/firebase/setlists.ts`, `src/lib/push/admin.ts`, `src/lib/planning/sheets.ts`, `.github/workflows/deploy.yml`
 
@@ -49,7 +49,7 @@ flowchart LR
 
   subgraph VERCEL["Vercel"]
     STATIC["Pages pré-rendues<br/>+ fichiers de public/"]
-    API["17 routes API<br/>/api/* (Node.js)"]
+    API["20 routes API<br/>/api/* (Node.js)"]
     CRON["Cron quotidien<br/>08:00 UTC"]
   end
 
@@ -1365,12 +1365,12 @@ flowchart LR
 
 - **Un jeton Google suivi par git** (sécurité) : token.pickle contient des identifiants OAuth Google (portée drive.readonly) et est commité depuis 5129cfa. Si le dépôt est public ou partagé, révoquer ce jeton dans le compte Google, puis le retirer du suivi, et de l'historique si besoin.
 - **Resend : dans la doc, pas dans le code** (doc périmée) : CLAUDE.md annonce des signalements par email via Resend. Aucun code n'envoie d'email et Resend n'est pas dans package.json : /api/report écrit dans Firestore et envoie un push aux admins.
-- **17 routes API, pas 18** (doc périmée) : CLAUDE.md cite /api/admin/migrer-annonces, qui n'existe plus.
+- **20 routes API** (recompte du 24/10/2026, `find src/app/api -name route.ts`) : /api/admin n'existe plus ; /api/fetes (droits, saisir, musiques) et les deux routes de /api/planning (release, changements) en font partie. Le diagramme ci-dessus est généré et n'a pas été régénéré.
 - **songs-index.json ne sert pas à la liste** (doc périmée) : La doc dit que la liste et la recherche lisent songs-index.json ; en réalité /songs reçoit les chants au build. L'index sert à l'éditeur et à la page d'une setlist, et à Harmonie.
 - **Un détour par chant dans une setlist** (performance) : Avec trailingSlash: true, /api/song/slug redirige vers /api/song/slug/ (308, vérifié en ligne). fetchSongAST appelle l'adresse sans barre finale : un aller-retour de plus pour chaque chant de la vue Partitions.
 - **Le client REST de Firestore s'appelle setlists.ts** (structure) : FS_BASE, authHeader et toFsFields vivent dans src/lib/firebase/setlists.ts et sont importés par 30 fichiers, push et évènements compris ; annotations.ts en garde sa propre copie. L'identifiant du projet Firebase est écrit en dur dans 7 fichiers, alors que la config Firebase le reçoit d'ailleurs.
 - **Firebase Admin rangé dans push/** (structure) : src/lib/push/admin.ts initialise l'Admin SDK pour 14 routes API, dont beaucoup n'envoient aucun push. Le même dossier mélange modules serveur (admin.ts, send.ts) et module navigateur (client.ts) : seul un commentaire empêche d'importer les premiers côté client.
-- **Hors ligne, le live n'est pas garanti** (hors-ligne) : Le service worker n'écrit jamais en cache les setlists (Firestore) ni les scans 简谱 (/jianpu/*). Une setlist qui n'était pas ouverte avant la coupure ne s'affiche pas, ses scans non plus.
+- **Hors ligne, le live n'est pas garanti** (hors-ligne) : Le service worker n'écrit jamais en cache les setlists (Firestore). Les scans 简谱 (/jianpu/*) sont gardés en stale-while-revalidate. Une setlist qui n'était pas ouverte avant la coupure ne s'affiche pas ; ses scans, s'ils avaient déjà été vus, restent disponibles.
 - **L'app installée démarre là où rien n'est préchargé** (hors-ligne) : start_url vaut /planning, mais l'installation ne précharge que /songs/ et l'index des chants : un premier lancement hors ligne retombe sur /songs/.
 - **Du code mort visible** (code mort) : hasJianpu vaut faux pour les 370 chants (le format {jianpu:} en ligne n'est plus utilisé) et n'est lu nulle part ; le type Setlist de src/types/setList.ts n'est importé nulle part, c'est FSSetlist qui sert.
 - **Des fichiers générés aussi commités** (structure) : songs-index.json, harmonie-index.json et glyphWidths.json sont recréés à chaque build mais suivis par git : ils divergent dès qu'un .cho est poussé sans les régénérer.

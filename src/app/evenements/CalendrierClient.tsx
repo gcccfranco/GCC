@@ -127,7 +127,7 @@ export function CalendrierClient({ enTete, peutCreer, children }: {
       {upcoming.length === 0 && vide}
       {upcoming.map((g) => (
         <section key={g.key} className={grand ? "space-y-1" : "space-y-3"}>
-          <h2 className="text-sm font-semibold text-muted-foreground px-1 capitalize">{g.label}</h2>
+          <h2 className="text-sm font-semibold text-muted-foreground px-1 first-letter:uppercase">{g.label}</h2>
           {grand ? (
             g.elements.map((x, i) => x.source === "app"
               ? <EvenementCard key={x.evenement.id} evenement={x.evenement} actif={x.evenement.id === idActif} inscrit={!!user && inscrits.has(x.evenement.id)} />

@@ -500,7 +500,7 @@ test.describe("partage : la page d'une setlist (PS14, PS15)", () => {
   test("Joël (équipe) sur la privée : peut modifier, ne supprime pas, droits en toutes lettres", async ({ page }) => {
     await planningVide(page);
     await signInAs(page, fp(JOEL), { ...ANNUAIRE, ...LISTE }, "/setlists/sl-priv");
-    await expect(page.getByText("Vous pouvez modifier")).toBeVisible();
+    await expect(page.getByText("Tu peux modifier")).toBeVisible();
     await expect(page.getByText("Privée — visible et modifiable par son créateur et son équipe")).toBeVisible();
     await menu(page).click();
     await expect(page.getByRole("menuitem", { name: "Prévenir l'équipe" })).toBeVisible();

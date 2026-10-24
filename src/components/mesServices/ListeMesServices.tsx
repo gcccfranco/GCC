@@ -90,7 +90,7 @@ export function ListeMesServices({
         <div className="space-y-5">
           {mois.map((m) => (
             <div key={m.label}>
-              <p className={cn("text-sm font-semibold text-muted-foreground mb-1.5 capitalize", disposition !== "tablette" && "px-1")}>{m.label}</p>
+              <p className={cn("text-sm font-semibold text-muted-foreground mb-1.5 first-letter:uppercase", disposition !== "tablette" && "px-1")}>{m.label}</p>
               <ul className={cn(
                 disposition === "tablette" && "grid grid-cols-2 gap-3",
                 disposition === "telephone" && "raised rounded-2xl",

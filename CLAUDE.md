@@ -1,18 +1,19 @@
 # CLAUDE.md — GCC Louange
 
-Site de partitions de louange pour l'église GCC. Spec complète dans `cahier-des-charges-site-louange.md`.
+Site de partitions de louange pour l'église GCC. Spec complète dans `cahier-des-charges-site-louange.md` (hors dépôt).
 Specs de fonctionnalités en attente : `docs/` (ex. `docs/spec-ajouter-un-chant.md`).
 Feuille de route (fait / à venir / demandes à trancher, avec l'historique) :
 `docs/feuille-de-route.md` ; vision produit : `docs/intent/vision-site.md`.
 
 ## Stack
-Next.js 16 (App Router) · TypeScript · Tailwind CSS + shadcn/ui · Firebase Auth + Firestore · Resend (emails) · Vercel
+Next.js 16 (App Router) · TypeScript · Tailwind CSS + shadcn/ui · Firebase Auth + Firestore · Vercel
 
 ## Commandes
 ```bash
 npm run dev          # Serveur de développement
 npm run build        # build:index + next build
-npm run build:index  # Parse content/songs/*.cho → public/songs-index.json
+npm run build:index  # build-glyph-widths (largeurs de glyphes → glyphWidths.json) + build-index (content/songs/*.cho → public/songs-index.json)
+                     # + build-harmonie (docs/harmonie/*.md → public/harmonie-index.json) + build-cours (docs/harmonie/cours/*.md → public/harmonie-cours/)
 npm run validate     # Valide les fichiers .cho (métadonnées, parsing)
 npm run lint         # ESLint (flat config, eslint.config.mjs)
 npx tsc --noEmit     # Vérification TypeScript (c'est ce que fait la CI)
@@ -64,7 +65,7 @@ ils ne voient pas le composant réel. Détail du protocole dans
 - **Comptes & rôles** : profils dans `users/{uid}` (rôles, lieux de service, EDD, groupe). Permissions client dans `src/lib/access.ts`, miroir serveur dans `firestore.rules`.
 - **`firestore.rules`** : versionné ici mais doit être **publié manuellement dans la console Firebase** pour prendre effet. La liste des admins doit rester synchronisée avec `ADMIN_EMAILS` dans `src/lib/access.ts`.
 - **Confidentialité (choix assumé)** : les rules autorisent `read: if signedIn()` sur **toutes** les setlists et tous les profils. Le filtrage `isPrivate` / visibilité par service (`canSeeSetlist`, `src/lib/access.ts`) est **côté client uniquement** — un membre connecté peut techniquement lire en REST une setlist privée ou un profil. Acceptable pour un outil interne de confiance ; ne pas re-signaler comme faille sans nouvelle demande de durcissement.
-- **Routes API** (20, toutes sous `src/app/api/`) : `/api/song/[slug]` (contenu d'un chant), `/api/report` (signalement par email via Resend — env `RESEND_API_KEY`, `MAIL_TO`, `EMAIL_FROM` sur Vercel), `/api/cron/reminders` (seul cron), `/api/push/*` (notify-setlist, notify-evenement, notify-audience, broadcast), `/api/setlist/presentation`, `/api/evenements/{inscription,desinscription}`, `/api/scene/conflit`, `/api/taches/{assigne,fait}`, `/api/equipes/{rattachement,groupes}`, `/api/planning/{release,changements}`, `/api/fetes/{droits,saisir,musiques}`
+- **Routes API** (20, toutes sous `src/app/api/`) : `/api/song/[slug]` (contenu d'un chant), `/api/report` (signalement : écrit dans Firestore `reports` puis push aux admins ; aucun e-mail), `/api/cron/reminders` (seul cron), `/api/push/*` (notify-setlist, notify-evenement, notify-audience, broadcast), `/api/setlist/presentation`, `/api/evenements/{inscription,desinscription}`, `/api/scene/conflit`, `/api/taches/{assigne,fait}`, `/api/equipes/{rattachement,groupes}`, `/api/planning/{release,changements}`, `/api/fetes/{droits,saisir,musiques}`
 - **Planning** : Google Sheet public lu en CSV (`src/lib/planning/sheets.ts`) + données statiques (`data.ts`)
 - **PWA** : service worker `public/sw.js` — push + cache hors-ligne. Cache versionné (`gcc-louange-vN`, purgé à l'activation). **Rien n'est mis en cache sur un serveur local** (`localhost`, `127.0.0.1`, réseau local) : en développement les fichiers de Next n'ont pas de nom hashé, et le cache servait l'ancien code après chaque modification (16/09/2026). Stratégies : HTML **network-first** (le déploiement en ligne gagne toujours → pas de page périmée), `/_next/static/*` **cache-first** (content-hashé, immuable), polices + `songs-index.json` + `/api/song/*` + scans 简谱 (`/jianpu/*`, gardés hors ligne depuis qu'ils s'affichent par défaut) **stale-while-revalidate**, reste réseau-seul. Firestore/Sheets/YouTube (autres origines) jamais mis en cache.
 - **Hébergement** : Vercel. La CI GitHub (`.github/workflows/deploy.yml`) fait typecheck + validate.
@@ -83,8 +84,9 @@ ils ne voient pas le composant réel. Détail du protocole dans
 
 ## Couleurs spec
 - Accords : `#3f63cf` (bleu, `--chord-color` dans `globals.css` ; le `#2563EB` du cahier des charges n'est plus utilisé)
-- Sections : `#EA580C` (orange)
-- Jianpu : `#B91C1C` (rouge foncé)
+- Sections : variables `--sec-*` de `globals.css` (le CSS fait foi), p. ex. refrain `--sec-chorus` `#e0560a` (orange) en clair, `#fb923c` en sombre ; le `#EA580C` du cahier des charges n'est plus utilisé
+- Jianpu : `--jianpu-color` `#b3261d` (rouge foncé) en clair, `#ff7d72` en sombre ; le `#B91C1C` du cahier des charges n'est plus utilisé
+- Accords en sombre : `--chord-color` `#8fb0ff`
 
 ## Règles
 - Un commit par étape ou par lot, pas un commit par fichier (consigne de Timothée du 13/09/2026)

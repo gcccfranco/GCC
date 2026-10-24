@@ -72,10 +72,12 @@
   },
   "songs": {
     "list": {
-      "searchPlaceholder": "搜索诗歌或歌手…",
+      "searchPlaceholder": "诗歌或歌手…",
+      "searchLabel": "搜索诗歌或歌手",
       "clearSearch": "清除搜索",
       "filterLanguage": "语言",
       "filterTheme": "所有主题",
+      "filterThemeLabel": "按主题筛选",
       "noSongsFound": "未找到相关诗歌。",
       "counter_one": "{{count}} 首诗歌",
       "counter_other": "{{count}} 首诗歌",
@@ -185,6 +187,7 @@
       "draft": "草稿",
       "private": "私密",
       "allCategories": "全部类型",
+      "filterCategoryLabel": "按类别筛选",
       "empty": "目前没有歌单。",
       "emptyCategory": "此类型下没有歌单。",
       "emptyPrivate": "目前没有私密歌单。",
@@ -3354,6 +3357,7 @@
       "fermeBientot": "报名即将截止",
       "creneauxVides_other": "{{count}} 个舞台时段空缺",
       "inscrits_other": "{{count}} 人报名",
+      "placesLabel_other": "已报名 {{count}} 人，共 {{max}} 个名额",
       "scene": "舞台"
     },
     "reunions": {
