@@ -1207,7 +1207,9 @@ lot **TB2** (`spec-tableau-de-bord-v2.md`, planche https://claude.ai/artifact/34
 Franco n'est pas un évènement ; planche version 3 (Ce dimanche, Plannings, Évènements, Tâches, Réunions, Comptes),
 validée ; spec réécrite. Ensuite : essai par 2 ou 3 responsables avant toute autre refonte. **Go le 23/10/2026 ; TB2-a,
 TB2-b, TB2-c codées et poussées sur `ui/apple-design` (24/10/2026), à valider par Timothée** (écarts et libellés 中文
-à relire : « Avancement » de la spec).
+à relire : « Avancement » de la spec) ; **TB2-corrections** (go le 24/10/2026) poussées le même jour : widget Évènements permis par
+Évènements seul, inscriptions en pastille sur chaque ligne, captures stables, tests périmés après AO et OG-B repris, deux
+tests instables expliqués (barre d'Alice sans Évènements ; compilation de `next dev` à la première demande).
 
 ## 4. Carte des modules de l'app « GCC »
 

@@ -82,6 +82,36 @@ revoir après l'essai par 2 ou 3 responsables). `access.ts` ne change que dans `
 - Captures : `test-results/tableau-de-bord-captures/` (`*-admin.png` = nouveau défaut, `*-v2.png`, `*-personnaliser.png`),
   regardées sur les quatre dispositions et à 1 440 px.
 
+### TB2-corrections (24/10/2026, go de Timothée le même jour)
+1. **`widgetsPermis`** : le widget Évènements ne dépend plus que de l'entrée Évènements (il l'était aussi avec Réunions,
+   reste d'avant TB2). Son « Tout voir » mène toujours à `/back-office/evenements`. Un membre d'équipe responsable sans
+   Évènements a le widget Réunions seul (test pur dans `back-office-espace`, test d'écran repris dans `agencement-v18-t2a`).
+2. **Évènements, T5 « inscriptions en pastille »** : chaque ligne de l'app porte une pastille neutre (`4 / 10`, `3 inscrits`,
+   « inscriptions fermées », « formulaire externe »), orange si « ferme bientôt », pour les siens comme pour les autres ; le
+   sous-titre gris ne reste que pour « ferme bientôt » et les créneaux de scène vides. Les lignes du Sheet n'ont pas de
+   pastille (pas d'inscriptions). Clés `places` et `sansLimite` retirées (FR, 中文).
+3. **Barre latérale pâle sur `ordinateur-v2.png`** : pas un défaut du site. La capture pleine page agrandit la fenêtre
+   (la page v2 dépasse 720 px, pas celle de `ordinateur-admin.png`) et relance le fondu des libellés (`barre-fondu`,
+   150 ms) : opacité mesurée 0,84 juste après la capture ; la capture de la seule fenêtre est normale. Les trois captures
+   du fichier prennent `animations: "disabled"`.
+4. **`barre-back-office`, 4 tests** : comportement voulu par le lot AO. Les cases à la main (`plannings`, `equipes`,
+   `notify`, `coordination`) n'ouvrent plus rien au Back-Office et `fakeSession` ne les traduit pas (son en-tête le dit).
+   Profils rattachés à l'organigramme, attentes gardées : repli → `remplit("paix")` ; carte Messages/Équipes → référente
+   des Choristes + membre de TEAM DA + rôle Notifier du Groupe Paix (sept entrées, trois dans « Plus ») ; pastille de
+   Tâches → Alice + `remplitParRole: ["paix"]`. Seul changement d'attente : depuis AO, une référente tient son équipe et la
+   notifie, donc Alice a sept entrées et « Plus » montre Réunions, Équipes et Messages (test renommé, trois cartes vérifiées).
+5. **`equipes-acces`, comités** : voulu. OG17 et l'avancement d'OG-B de `spec-organigrammes-groupes.md` (le lot des
+   organigrammes de groupe, pas V19FETES) : un admin voit les équipes puis les cinq comités. Attentes mises à jour
+   (`equipesDesTaches`, `equipesOuCreer`, `creatableEvenementPours`).
+6. **Deux tests instables** : `back-office-espace` « le sélecteur rouvre la dernière page… » n'était pas instable mais
+   rouge à chaque passe sur téléphone et tablette : depuis AO, la barre du bas d'Alice (référente EDD) n'a plus
+   Évènements ; le test lui enregistre une barre qui l'a. `barre-back-office` « une page hors de la barre marque
+   « Plus » » (et `back-office-espace` « une entrée du menu mène à sa page », même mécanisme, vu rouge cache froid) : la
+   page Tâches redirige vers l'équipe par `router.replace`, et l'URL ne change qu'à la réponse de la route `[equipe]`,
+   que `next dev` compile à la première demande. Trace : requête RSC encore en attente 5 s après son départ. Rien à
+   corriger dans le site (compilé au build en ligne) ; l'attente de ces deux URL passe à 20 s, commentée.
+7. **`CLAUDE.md`** : 20 routes API, sans `/api/admin/*` (dossier disparu).
+
 ### Écarts — acceptés par Timothée le 23/10/2026 (« Ok pour les huit choix »)
 1. **Qui relancer** : aucune table colonne → équipe n'existait ; reprise de l'organigramme (`colonnesParEquipe`) :
    cultes — Sono, Sono Live, PPT → référent Régie ; présidence, suppléant → Présidence ; choristes → Choristes ;
