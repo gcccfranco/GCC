@@ -1211,6 +1211,15 @@ TB2-b, TB2-c codées et poussées sur `ui/apple-design` (24/10/2026), à valider
 Évènements seul, inscriptions en pastille sur chaque ligne, captures stables, tests périmés après AO et OG-B repris, deux
 tests instables expliqués (barre d'Alice sans Évènements ; compilation de `next dev` à la première demande).
 
+### AE. Audit « à rude épreuve » et orchestration (Timothée, 24/10/2026) → `audit-2026-10-24.md`, `orchestration.md`
+
+« Fais un audit du site, fais des tests comme un fou […] puis mets en place un plan pour déléguer certaines tâches à des
+modèles moins coûteux. » Audit sans code du site : banc Playwright sur builds de production (513 pages, 382 chants,
+fuzzing, hors ligne réel, réseau lent), audit du code en 11 dimensions avec contre-vérification, revue des captures.
+Rapport : `audit-2026-10-24.md` (lots L0 à L9 proposés, questions à trancher) ; la partie sécurité, exploitable, est
+remise **hors dépôt**. Orchestration : `orchestration.md`, agents `relecteur` et `regard`, workflows `/tranche`,
+`/verifier-constats`, `/audit-code`. **Urgence** : un secret à révoquer (L0, détail hors dépôt). **Aucun go.**
+
 ## 4. Carte des modules de l'app « GCC »
 
 À valider par Timothée avant toute spec de module (les modules existants ne

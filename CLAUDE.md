@@ -127,8 +127,13 @@ s'écrit ici, pas seulement en mémoire.
   04/10/2026) ; un agent coupé se reprend par SendMessage, contexte intact.
 - **Déléguer** aux agents de `.claude/agents/` : `chercheur` (Haiku) pour une recherche qui parcourt plusieurs
   fichiers, `testeur` (Haiku) pour lancer une suite de tests et en rapporter les échecs, `executant` (Sonnet) pour
-  appliquer une modification déjà décidée et décrite. La conversation principale garde le jugement : specs, planches,
+  appliquer une modification déjà décidée et décrite, `relecteur` (Sonnet) pour contre-vérifier un diff ou un constat,
+  `regard` (Sonnet) pour trier des captures. La conversation principale garde le jugement : specs, planches,
   débogage, relecture du diff, regard sur les captures et les 简谱.
+- **Workflows** de `.claude/workflows/` (24/10/2026, `docs/orchestration.md`) : `/tranche` code une tranche décidée
+  (executant → testeur → corrections → conseil Opus si ça résiste → relecteur, sans commit) ; `/verifier-constats`
+  contre-vérifie des constats avant un rapport ; `/audit-code` refait l'audit en 11 dimensions (≈ 60 agents, sur
+  demande seulement). Un fichier ajouté sous `.claude/` s'indexe avec `git add -f` (le dossier est ignoré).
 
 ## Comportement (guidelines Karpathy)
 
