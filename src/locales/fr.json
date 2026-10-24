@@ -680,6 +680,7 @@
     "light": "Clair",
     "dark": "Sombre",
     "annotate": "Annoter",
+    "annotationsIndisponibles": "Annotations indisponibles pour l'instant",
     "exit": "Quitter",
     "prevPage": "Page précédente",
     "nextPage": "Page suivante",

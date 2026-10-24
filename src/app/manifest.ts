@@ -8,7 +8,7 @@ export default function manifest(): MetadataRoute.Manifest {
     name: "GCC",
     short_name: "GCC",
     description: "L'app de l'église GCC : chants, setlists, planning, évènements",
-    start_url: "/planning",
+    start_url: "/planning/",
     display: "standalone",
     background_color: "#ffffff",
     theme_color: "#ffffff",

@@ -1,6 +1,7 @@
 import { test } from "@playwright/test";
 import path from "node:path";
 import { OUT, ecouter, ecrire, isoler } from "./lib";
+import { signInAs } from "../../tests/helpers/fakeSession";
 
 // Hors ligne pour de vrai : le service worker ne met rien en cache sur localhost
 // (public/sw.js, LOCAL). On sert donc le build de production sous un faux nom,
@@ -52,6 +53,45 @@ test("hors ligne : chants déjà ouverts, liste, chant jamais ouvert", async ({ 
   await essai("aller au planning (jamais ouvert)", () => page.goto("/planning/"));
   await context.setOffline(false);
   ecrire("horsligne.jsonl", { projet: info.project.name, sw, contenuCache, resultats, pageerrors: j.pageerrors });
+});
+
+// A3 bis : le parcours réel d'un dimanche. On ouvre la liste, on touche la setlist (navigation par lien, pas un
+// chargement complet), puis le réseau tombe : la page rechargée montre la copie, et le chant chinois son scan.
+const item = (slug: string, position: number) => ({ type: "song", songSlug: slug, position, keyOverride: null, showChords: true,
+  showPinyin: true, useJianpu: false, structureOverride: null, sectionNotes: {}, notes: "" });
+test("hors ligne : setlist ouverte par un lien, rechargée sans réseau", async ({ page, context }, info) => {
+  if (!["telephone", "ordinateur", "tablette"].includes(info.project.name)) test.skip();
+  test.setTimeout(4 * 60_000);
+  await signInAs(page, { uid: "uid-maelys", email: "maelys@example.com", serviceRoles: { "Culte Francophone": ["musicien"] } },
+    { "setlists/sl-banc": { title: "Culte du banc", leader: "Présidence", category: "Culte Francophone", date: "2026-11-01",
+      language: "mixed", notes: "", ownerId: "uid-autre", isPrivate: false, items: [item("abba-pere", 1), item("一生爱你", 2)] } },
+    "/setlists");
+  await page.evaluate(() => navigator.serviceWorker?.ready);
+  await page.reload();
+  await page.locator("a[href*='/setlists/sl-banc']").first().click();
+  await page.getByText("Culte du banc").first().waitFor();
+  await page.waitForTimeout(10_000); // préchargement par le service worker
+  const cache = await page.evaluate(async () => {
+    const c = await caches.open((await caches.keys()).find((k) => k.startsWith("gcc-louange")) ?? "");
+    const cles = (await c.keys()).map((r) => decodeURIComponent(new URL(r.url).pathname));
+    return { page: cles.some((k) => k.startsWith("/setlists/sl-banc")), scans: cles.filter((k) => k.startsWith("/jianpu/一生爱你")).length };
+  });
+  await context.setOffline(true);
+  await page.route(/firestore\.googleapis\.com/, (r) => r.abort());
+  await page.reload();
+  await page.waitForTimeout(5000);
+  const apres = await page.evaluate(() => ({
+    copie: !!document.querySelector("[data-copie-hors-ligne]"),
+    titre: document.body.innerText.includes("Culte du banc"),
+    pasOuverte: document.body.innerText.includes("pas encore été ouverte"),
+  }));
+  await page.screenshot({ path: path.join(OUT, `horsligne-setlist-${info.project.name}-1.png`) });
+  await page.goto("/songs/一生爱你/");
+  await page.waitForTimeout(3000);
+  const scan = await page.evaluate(() => Array.from(document.querySelectorAll("img")).filter((i) => /jianpu/.test(i.src)).map((i) => i.complete && i.naturalWidth > 0));
+  await page.screenshot({ path: path.join(OUT, `horsligne-setlist-${info.project.name}-2.png`) });
+  await context.setOffline(false);
+  ecrire("horsligne-setlist.jsonl", { projet: info.project.name, cache, apres, scan });
 });
 
 // Réseau d'église : lent et chargé (400 ms, 400 kb/s), processeur de téléphone (×4).

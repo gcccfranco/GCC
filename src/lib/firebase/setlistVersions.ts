@@ -41,6 +41,8 @@ export async function getSetlistVersions(setlistId: string): Promise<Record<stri
     method: "POST",
     headers: { "Content-Type": "application/json", ...(await authHeader()) },
     body: JSON.stringify({ structuredQuery: { from: [{ collectionId: "versions" }] } }),
+    // Réseau qui traîne : une erreur au bout de 10 s plutôt qu'une page qui attend (la présidence seule s'affiche).
+    signal: AbortSignal.timeout(10_000),
   });
   await checkRest(res);
   const rows = (await res.json()) as Array<{ document?: RawDoc }>;

@@ -24,8 +24,11 @@
 //  3. Dimanche hors ligne (audit du 24/10/2026, D2 et D3) : une page jamais
 //     ouverte sur l'appareil, hors ligne, affiche /hors-ligne.html (jamais une
 //     autre page à sa place) ; la page d'une setlist demande, en ligne, de garder
-//     les pages et le contenu de ses chants (message « precache ») ; une page en
-//     cache est servie après 3 s si le réseau ne répond pas, ou s'il répond 5xx.
+//     sa propre adresse, la liste, les pages et le contenu de ses chants et leurs
+//     scans 简谱 (message « precache ») ; une page en cache est servie après 3 s si
+//     le réseau ne répond pas, ou s'il répond 5xx ; une adresse sans barre finale
+//     (/planning) se retrouve avec sa barre (/planning/) ; les plafonds suivent un
+//     LRU : une entrée relue passe en fin d'ordre (delete + put, sans réseau).
 
 const CACHE = "gcc-louange-v5";
 
@@ -97,9 +100,27 @@ function enCache(event, request, res, prefixe, max) {
   );
 }
 
-/** La copie d'une page : son adresse exacte, sinon la même sans paramètres (?key=…, ?_rsc=…). */
+/** La même adresse avec la barre finale (le site sert ses pages ainsi : /planning répond 308 vers /planning/,
+ *  redirection que le service worker ne rejoue pas hors ligne). Sans barre ni extension seulement ; les
+ *  paramètres restent derrière la barre. */
+function copieAvecBarre(request) {
+  let url;
+  try {
+    url = new URL(request.url);
+  } catch {
+    return Promise.resolve(undefined);
+  }
+  if (url.pathname.endsWith("/") || (url.pathname.split("/").pop() || "").includes(".")) return Promise.resolve(undefined);
+  url.pathname += "/";
+  return caches.match(url.href).then((c) => c || caches.match(url.href, { ignoreSearch: true }));
+}
+
+/** La copie d'une page : son adresse exacte, sinon la même sans paramètres (?key=…, ?_rsc=…), sinon avec la barre finale. */
 function trouverCopie(request) {
-  return caches.match(request).then((c) => c || caches.match(request, { ignoreSearch: true }));
+  return caches
+    .match(request)
+    .then((c) => c || caches.match(request, { ignoreSearch: true }))
+    .then((c) => c || copieAvecBarre(request));
 }
 
 /** Page « pas de réseau » (D2) : jamais une autre page à la place de celle qu'on demande. */
@@ -142,28 +163,48 @@ function networkFirst(event) {
   });
 }
 
+/** LRU : une entrée servie depuis le cache est retirée puis remise (même réponse, sans réseau) : Cache Storage
+ *  liste ses clés dans l'ordre d'insertion, elle passe donc en fin d'ordre et `plafonner` retire d'abord les
+ *  entrées qu'on n'a pas relues depuis le plus longtemps. */
+function remonter(event, request, copy) {
+  event.waitUntil(
+    caches
+      .open(CACHE)
+      .then((c) => c.delete(request).then(() => c.put(request, copy)))
+      .catch(() => {})
+  );
+}
+
 function cacheFirst(event, prefixe, max) {
   const request = event.request;
-  return caches.match(request).then(
-    (cached) =>
-      cached ||
-      fetch(request).then((res) => {
-        enCache(event, request, res, prefixe, max);
-        return res;
-      })
-  );
+  return caches.match(request).then((cached) => {
+    if (cached) {
+      remonter(event, request, cached.clone());
+      return cached;
+    }
+    return fetch(request).then((res) => {
+      enCache(event, request, res, prefixe, max);
+      return res;
+    });
+  });
 }
 
 function staleWhileRevalidate(event, prefixe, max) {
   const request = event.request;
   return caches.open(CACHE).then((cache) =>
     cache.match(request).then((cached) => {
+      // Clonée tout de suite : la page lira `cached` avant que le réseau n'ait échoué.
+      const copieLRU = cached && prefixe ? cached.clone() : null;
       const network = fetch(request)
         .then((res) => {
           enCache(event, request, res, prefixe, max);
           return res;
         })
-        .catch(() => cached);
+        .catch(() => {
+          // Sans réseau, une entrée relue passe en fin d'ordre (LRU) : avec réseau, l'écriture s'en charge.
+          if (copieLRU) remonter(event, request, copieLRU);
+          return cached;
+        });
       event.waitUntil(network.catch(() => {}));
       return cached || network;
     })
@@ -171,19 +212,26 @@ function staleWhileRevalidate(event, prefixe, max) {
 }
 
 // ─── Préchargement demandé par la page d'une setlist (D2) ───────────────────
-// Message { type: "precache", urls: ["/songs/<slug>/", "/api/song/<slug>", …] } : chaque chemin absent du
-// cache est téléchargé en arrière-plan, sans bloquer la page. Pour une page HTML, ses fichiers
-// /_next/static sont gardés aussi (sinon la page revient sans son JavaScript).
+// Message { type: "precache", urls: ["/songs/<slug>/", "/api/song/<slug>", "/setlists/<id>/", "/jianpu/…", …] } :
+// chaque chemin absent du cache est téléchargé en arrière-plan, sans bloquer la page. Pour une page HTML, ses
+// fichiers /_next/static sont gardés aussi (sinon la page revient sans son JavaScript). Une page ouverte par un
+// lien n'est jamais une requête `navigate` : c'est la page elle-même qui demande à garder son adresse.
 
-const CHEMINS_PRECACHE = ["/songs/", "/api/song/"];
+const CHEMINS_PRECACHE = ["/songs/", "/api/song/", "/setlists/", "/jianpu/"];
+const MAX_PRECACHE = 200;
 
 async function garder(cache, chemin) {
-  if (await cache.match(chemin)) return;
+  // La page de la setlist et la liste sont relues à chaque ouverture (en ligne) : leur HTML suit le dernier
+  // déploiement et cite ses fichiers /_next/static. Le reste (chants, scans) n'est pris qu'une fois.
+  if (!chemin.startsWith("/setlists/") && (await cache.match(chemin))) return;
   const res = await fetch(chemin);
   if (!res || !res.ok) return;
   await cache.put(chemin, res.clone());
   const type = res.headers.get("Content-Type") || "";
-  if (!type.includes("text/html")) return;
+  if (!type.includes("text/html")) {
+    if (chemin.startsWith("/jianpu/")) await plafonner(cache, "/jianpu/", PLAFOND_JIANPU);
+    return;
+  }
   const html = await res.text();
   const statiques = new Set(html.match(/\/_next\/static\/[^"'\\\s)<>]+\.(?:js|css)/g) || []);
   for (const f of statiques) {
@@ -200,7 +248,7 @@ self.addEventListener("message", (event) => {
   if (!data || data.type !== "precache" || !Array.isArray(data.urls)) return;
   const chemins = data.urls
     .filter((u) => typeof u === "string" && CHEMINS_PRECACHE.some((p) => u.startsWith(p)) && !u.includes(".."))
-    .slice(0, 80);
+    .slice(0, MAX_PRECACHE);
   event.waitUntil(
     caches
       .open(CACHE)

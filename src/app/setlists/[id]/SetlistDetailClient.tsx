@@ -34,7 +34,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { getSetlist, getSetlistOuCopie, deleteSetlist, mettreALaCorbeille, duplicateSetlist, updateSetlist, authHeader, type FSSetlist } from "@/lib/firebase/setlists";
+import { getSetlist, getSetlistOuCopie, lireCopieDuCompte, deleteSetlist, mettreALaCorbeille, duplicateSetlist, updateSetlist, authHeader, type FSSetlist } from "@/lib/firebase/setlists";
 import { useProfile } from "@/lib/firebase/users";
 import { ecrireCopie } from "@/lib/setlist/copieHorsLigne";
 import { BACK_OFFICE } from "@/lib/backOffice";
@@ -66,7 +66,7 @@ import { songVersionView, type SongVersionView } from "@/lib/setlist/versionChoi
 import { getChartStylePref, setChartStylePref } from "@/lib/chartStylePref";
 import { getPartitionLayoutPref, setPartitionLayoutPref, type PartitionLayout } from "@/lib/partitionLayoutPref";
 import { getPinyinPref, setPinyinPref } from "@/lib/pinyinPref";
-import { jianpuPngDataUrl, loadJianpuCadrage, loadJianpuChords, loadJianpuManifest, useJianpuManifest } from "@/lib/jianpu/images";
+import { jianpuPngDataUrl, loadJianpuCadrage, loadJianpuChords, loadJianpuManifest, scansAbsentsDuCache, urlsJianpuAGarder, useJianpuManifest } from "@/lib/jianpu/images";
 import { getJianpuPref, setJianpuPref, sheetEnabled, interrupteurAllume, prefDepuisInterrupteur, type JianpuPref } from "@/lib/jianpu/preference";
 import { aDesRetouches } from "@/lib/jianpu/retouches";
 import { fetchSongAST, type SongContent} from "@/lib/api/songs";
@@ -112,6 +112,9 @@ type Cible = { type: "chant"; n: number; decalage?: number; uid?: string } | { t
 
 /** Le chant amené commence 12 px sous la bascule : la hauteur de son fondu. */
 const SOUS_LA_BASCULE = 12;
+
+/** Réseau qui traîne : la copie hors ligne du même compte s'affiche après ce délai si la lecture n'a pas abouti. */
+const COPIE_APRES_MS = 3000;
 
 /** Adresse de la vue : `/setlists/[id]` (Liste) ou `?vue=partitions&chant=N` (Q9). */
 function adresseVue(chant: number | null): string {
@@ -312,6 +315,8 @@ export function SetlistDetailClient() {
   // paroles de la présidence dans la vue partitions, le sommaire et le mode
   // louange — jamais dans la liste, le PDF ni l'historique.
   const [versions, setVersions] = useState<Record<string, SetlistVersions>>({});
+  // Vrai quand `versions` vient d'être lu en ligne (faux : lecture échouée, ou versions de la copie hors ligne).
+  const [versionsLues, setVersionsLues] = useState(false);
   // Mode « Ma version » : mêmes gestes qu'Adapter, écrits dans mon document.
   const [editMine, setEditMine] = useState(false);
   // Retouche d'une section répétée en « Ma version » : toutes les répétitions
@@ -417,35 +422,77 @@ export function SetlistDetailClient() {
       return !v;
     });
   }
-  // Load setlist + songs index (wait for auth so private setlists get auth headers)
+  // Lecture de la setlist + index des chants. Sans copie hors ligne, on attend le profil (authLoading) pour que
+  // les setlists privées partent avec leur jeton. Avec la copie du MÊME compte, la lecture part dès que Firebase Auth
+  // a restauré la session, sans attendre le profil, et la copie s'affiche au bout de 3 s si la lecture n'a pas
+  // abouti (réseau qui traîne) ; la réponse la remplace ensuite, bandeau retiré.
+  const lectureLancee = useRef<string | null>(null);
   useEffect(() => {
-    if (!id || authLoading) return;
-    setLoadError(false);
-    setLoadingSetlist(true);
-    Promise.all([
-      getSetlistOuCopie(id),
-      fetch("/songs-index.json").then((r) => r.json()),
-      // Règles pas publiées, hors-ligne… : la présidence seule, sans erreur.
-      getSetlistVersions(id).catch(() => ({})),
-    ]).then(([{ setlist: sl, copieLueLe: copie }, index, v]) => {
-      setCopieLueLe(copie);
-      // Une proposition dont le `.cho` est arrivé devient le chant (CF21).
-      setSetlist(sl && { ...sl, items: resoudrePropositions(sl.items, index.songs ?? []) });
-      setVersions(v);
-      const map: Record<string, SongIndexEntry> = {};
-      for (const s of index.songs ?? []) map[s.slug] = s;
-      setSongsMap(map);
-    }).catch(() => {
-      setLoadError(true);
-    }).finally(() => setLoadingSetlist(false));
+    if (!id) return;
+    const cle = `${id}:${retryKey}`;
+    if (lectureLancee.current === cle) return;
+    let abandon = false;
+    void (async () => {
+      const copie = await lireCopieDuCompte(id);
+      // Passage de l'effet remplacé avant le lancement, ou lecture déjà lancée par un autre passage.
+      if (abandon || lectureLancee.current === cle) return;
+      if (!copie && authLoading) return;
+      lectureLancee.current = cle;
+      const courante = () => lectureLancee.current === cle;
+      setLoadError(false);
+      setLoadingSetlist(true);
+      type Index = { songs?: SongIndexEntry[] };
+      const indexP: Promise<Index> = fetch("/songs-index.json").then((r) => r.json());
+      let terminee = false;
+      const appliquer = (sl: FSSetlist | null, index: Index, lueLe: number | null, v: Record<string, SetlistVersions>) => {
+        setCopieLueLe(lueLe);
+        // Une proposition dont le `.cho` est arrivé devient le chant (CF21).
+        setSetlist(sl && { ...sl, items: resoudrePropositions(sl.items, index.songs ?? []) });
+        setVersions(v);
+        const map: Record<string, SongIndexEntry> = {};
+        for (const s of index.songs ?? []) map[s.slug] = s;
+        setSongsMap(map);
+      };
+      if (copie) {
+        void Promise.all([indexP, new Promise((r) => setTimeout(r, COPIE_APRES_MS))])
+          .then(([index]) => {
+            if (terminee || !courante()) return;
+            appliquer(copie.setlist, index, copie.lueLe, copie.versions);
+            setVersionsLues(false);
+            setLoadingSetlist(false);
+          })
+          .catch(() => {});
+      }
+      Promise.all([
+        getSetlistOuCopie(id),
+        indexP,
+        // Règles pas publiées, hors-ligne… : la présidence seule, sans erreur (null = lecture échouée).
+        getSetlistVersions(id).catch(() => null),
+      ]).then(([res, index, v]) => {
+        terminee = true;
+        if (!courante()) return;
+        // Hors ligne, « Ma version » vient de la copie (celles de la copie ou, à défaut, celles lues en ligne).
+        appliquer(res.setlist, index, res.copieLueLe, res.copieVersions ?? v ?? {});
+        setVersionsLues(!res.copieVersions && v !== null);
+      }).catch(() => {
+        terminee = true;
+        if (courante()) setLoadError(true);
+      }).finally(() => {
+        if (courante()) setLoadingSetlist(false);
+      });
+    })();
+    return () => { abandon = true; };
   }, [id, authLoading, retryKey]);
 
   // Hors ligne (D1) : la copie ne s'écrit qu'une fois établi que la personne peut voir la setlist,
-  // pour qu'une copie n'existe que pour une setlist qu'elle avait le droit de lire.
+  // pour qu'une copie n'existe que pour une setlist qu'elle avait le droit de lire. Elle porte le compte
+  // et les versions perso lues en ligne (« Ma version » hors ligne).
   useEffect(() => {
     if (!setlist || !user || copieLueLe !== null) return;
-    if (canSeeSetlist(user, profile, setlist, datesDuCompte)) void ecrireCopie(setlist);
-  }, [setlist, user, profile, datesDuCompte, copieLueLe]);
+    if (canSeeSetlist(user, profile, setlist, datesDuCompte)) {
+      void ecrireCopie(setlist, user.uid, versionsLues ? versions : undefined);
+    }
+  }, [setlist, user, profile, datesDuCompte, copieLueLe, versions, versionsLues]);
 
   // Load full song content when switching to Partitions view
   const loadContents = useCallback(async (items: SetlistItem[]) => {
@@ -472,21 +519,26 @@ export function SetlistDetailClient() {
     return manquants;
   }, [contents]);
 
-  // Hors ligne (D2) : la page d'une setlist lue en ligne demande au service worker de garder la page
-  // et le contenu de chacun de ses chants, pour qu'ils s'ouvrent sans réseau.
+  // Hors ligne (D2) : la page d'une setlist lue en ligne demande au service worker de garder sa propre page (une
+  // page ouverte par un lien n'est pas une navigation que le service worker voit), celle de la liste, le contenu
+  // et la page de chacun de ses chants, et les scans 简谱 de ceux qui en ont un (/jianpu/index.json donne leurs pages).
   useEffect(() => {
-    if (!setlist || copieLueLe !== null) return;
+    if (!setlist || copieLueLe !== null || !jianpuManifest) return;
     try {
       const slugs = new Set<string>();
       for (const it of setlist.items) {
         if (it.songSlug) slugs.add(it.songSlug);
         for (const fs of it.fusionSongs ?? []) slugs.add(fs.songSlug);
       }
-      if (!slugs.size) return;
-      const urls = [...slugs].flatMap((s) => [`/songs/${encodeURIComponent(s)}/`, `/api/song/${s}`]);
+      const urls = [
+        `/setlists/${encodeURIComponent(id)}/`,
+        "/setlists/",
+        ...[...slugs].flatMap((s) => [`/songs/${encodeURIComponent(s)}/`, `/api/song/${s}`]),
+        ...(slugs.size ? urlsJianpuAGarder(jianpuManifest, slugs) : []),
+      ];
       navigator.serviceWorker?.controller?.postMessage({ type: "precache", urls });
     } catch { /* pas de service worker : rien à garder */ }
-  }, [setlist, copieLueLe]);
+  }, [id, setlist, copieLueLe, jianpuManifest]);
 
   // Partitions préchargées juste après l'affichage de la liste (Q14) : la
   // bascule les trouve prêtes.
@@ -1451,6 +1503,14 @@ export function SetlistDetailClient() {
    *  ou de continuer quand même (D4). */
   async function entrerEnLouange(pleinEcran: boolean) {
     const manquants = setlist ? await loadContents(setlist.items) : [];
+    // Hors ligne, un chant dont le scan 简谱 n'est pas dans le cache du navigateur est « non chargé » aussi
+    // (image cassée sinon). On ne sait que ce que le cache dit : en ligne, rien n'est vérifié.
+    if (setlist && jianpuManifest && (copieLueLe !== null || !navigator.onLine)) {
+      const aScan = setlist.items.filter((it) => it.songSlug && sheetEnabled(jianpuPref, it.jianpuSheet)).map((it) => it.songSlug);
+      for (const slug of await scansAbsentsDuCache(jianpuManifest, aScan)) {
+        if (!manquants.includes(slug)) manquants.push(slug);
+      }
+    }
     if (manquants.length) {
       setChantsManquants(manquants);
       if (pleinEcran && document.fullscreenElement) document.exitFullscreen().catch(() => {});
@@ -2284,6 +2344,7 @@ export function SetlistDetailClient() {
           onAffichageChange={changeLayout}
           jianpuPref={jianpuPref}
           onJianpuPrefChange={changeJianpuPref}
+          horsLigne={horsLigne}
           onClose={() => {
             if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
             setPerformanceMode(false);

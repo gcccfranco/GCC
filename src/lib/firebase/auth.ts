@@ -9,7 +9,16 @@ import {
   type User,
 } from "firebase/auth";
 import { auth } from "./config";
-import { effacerToutesLesCopies } from "@/lib/setlist/copieHorsLigne";
+import { balayerLesCopies, effacerToutesLesCopies, suivreLeCompte } from "@/lib/setlist/copieHorsLigne";
+
+// Copies hors ligne liées au compte : un seul écouteur pour tout le site, installé une fois côté navigateur.
+// Le premier événement est le compte restauré par le SDK (rien n'est effacé) ; un autre identifiant ensuite,
+// ou aucun, efface les copies. Au démarrage, les copies de plus de 14 jours sont aussi balayées.
+if (typeof window !== "undefined") {
+  const suivre = suivreLeCompte(() => void effacerToutesLesCopies());
+  onAuthStateChanged(auth, (u) => suivre(u?.uid ?? null));
+  void balayerLesCopies();
+}
 
 export function useAuth() {
   const [user, setUser] = useState<User | null>(null);

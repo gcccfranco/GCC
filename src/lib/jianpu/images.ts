@@ -160,6 +160,32 @@ export function jianpuImageUrl(file: string): string {
   return `/jianpu/${encodeURIComponent(file)}`;
 }
 
+/** Adresses à garder hors ligne pour les chants donnés : les manifestes (`index`, `chords`, `cadrage`) et chaque page
+ *  de scan de ceux qui en ont un. Le service worker les garde (message « precache », chemins `/jianpu/`). */
+export function urlsJianpuAGarder(manifest: JianpuManifest, slugs: Iterable<string>): string[] {
+  const urls = ["/jianpu/index.json", "/jianpu/chords.json", "/jianpu/cadrage.json"];
+  for (const slug of slugs) for (const page of manifest[slug]?.pages ?? []) urls.push(jianpuImageUrl(page.file));
+  return urls;
+}
+
+/** Parmi ces chants, ceux dont un scan n'est pas dans le cache du navigateur. Ne dit que ce qui se sait sans réseau :
+ *  un scan absent du cache est « non chargé » seulement quand on est hors ligne (en ligne, il se charge à l'affichage).
+ *  Sans Cache Storage, rien n'est annoncé. */
+export async function scansAbsentsDuCache(manifest: JianpuManifest, slugs: Iterable<string>): Promise<string[]> {
+  if (typeof caches === "undefined") return [];
+  const absents: string[] = [];
+  for (const slug of new Set(slugs)) {
+    for (const page of manifest[slug]?.pages ?? []) {
+      const trouve = await caches.match(jianpuImageUrl(page.file)).catch(() => undefined);
+      if (!trouve) {
+        absents.push(slug);
+        break;
+      }
+    }
+  }
+  return absents;
+}
+
 /** Partition 简谱 d'un chant, ou null s'il n'en a pas. `undefined` tant que
  *  le manifeste n'est pas chargé (permet de ne pas faire clignoter le bouton). */
 export function useJianpuManifest(): JianpuManifest | undefined {

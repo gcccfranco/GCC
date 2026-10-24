@@ -1,13 +1,23 @@
 // Copie hors ligne des setlists ouvertes (audit du 24/10/2026, D1, décision C2).
 //
-// À chaque lecture réussie d'une setlist, une copie { setlist, lueLe } est gardée sur l'appareil
+// À chaque lecture réussie d'une setlist, une copie { uid, setlist, versions, lueLe } est gardée sur l'appareil
 // (IndexedDB, sinon localStorage). Si la lecture échoue ensuite par le réseau, la page sert cette
-// copie. Privées comprises : la personne y avait accès. Gardée 14 jours, effacée à la déconnexion.
+// copie. Privées comprises : la personne y avait accès. Copie liée au compte : elle ne sert que pour le
+// `uid` qui l'a lue, sinon elle est effacée ; elle l'est aussi à la déconnexion et au changement de compte
+// (`suivreLeCompte`). Gardée 14 jours, les plus vieilles sont balayées à chaque écriture et au démarrage.
 // Le site marche sans stockage : toute erreur est avalée.
 
 import type { FSSetlist } from "@/lib/firebase/setlists";
+import type { SetlistVersions } from "@/lib/firebase/setlistVersions";
 
-export type CopieSetlist = { setlist: FSSetlist; lueLe: number };
+export type CopieSetlist = {
+  /** Compte qui a lu la setlist. */
+  uid: string;
+  setlist: FSSetlist;
+  /** Versions perso lues avec la setlist : la mienne et celles qu'elle a choisies (« Ma version » hors ligne). */
+  versions: Record<string, SetlistVersions>;
+  lueLe: number;
+};
 
 /** Durée de garde d'une copie. */
 export const GARDE_COPIE_MS = 14 * 24 * 60 * 60 * 1000;
@@ -29,8 +39,24 @@ function lire(json: string): CopieSetlist | null {
     valeur && typeof valeur === "object" && typeof (valeur as { __date?: unknown }).__date === "string"
       ? new Date((valeur as { __date: string }).__date)
       : valeur,
-  ) as CopieSetlist;
-  return copie && typeof copie.lueLe === "number" && copie.setlist ? copie : null;
+  ) as Partial<CopieSetlist> | null;
+  // Une copie sans compte (ancien format) n'est pas servable : elle est effacée à la lecture.
+  if (!copie || typeof copie.uid !== "string" || typeof copie.lueLe !== "number" || !copie.setlist) return null;
+  return { uid: copie.uid, setlist: copie.setlist, versions: copie.versions ?? {}, lueLe: copie.lueLe };
+}
+
+/** Versions à garder avec la copie : la mienne, et celles que j'ai choisies (`choices` : uid d'un auteur). */
+export function versionsAGarder(
+  versions: Record<string, SetlistVersions>,
+  uid: string,
+): Record<string, SetlistVersions> {
+  const gardees: Record<string, SetlistVersions> = {};
+  const miennes = versions[uid];
+  if (miennes) gardees[uid] = miennes;
+  for (const choix of Object.values(miennes?.choices ?? {})) {
+    if (choix !== "presidence" && versions[choix]) gardees[choix] = versions[choix];
+  }
+  return gardees;
 }
 
 // ─── IndexedDB (clé = id de la setlist, valeur = texte JSON) ────────────────
@@ -80,22 +106,51 @@ async function retirer(id: string): Promise<void> {
   try { localStorage.removeItem(PREFIXE_LS + id); } catch { /* rien */ }
 }
 
+/** Copie brute gardée pour cette setlist (sans contrôle de compte ni de date), ou null. */
+async function copieBrute(id: string): Promise<CopieSetlist | null> {
+  try {
+    const json = await retrouver(id);
+    return json ? lire(json) : null;
+  } catch {
+    return null;
+  }
+}
+
 // ─── API ────────────────────────────────────────────────────────────────────
 
-/** Garde la copie d'une setlist qui vient d'être lue. Ne lève jamais. */
-export async function ecrireCopie(setlist: FSSetlist, maintenant = Date.now()): Promise<void> {
+/** Garde la copie d'une setlist qui vient d'être lue, pour le compte `uid`. `versions` : celles qui viennent d'être
+ *  lues ; `undefined` (lecture échouée) garde celles de la copie précédente du même compte. Balaye les copies
+ *  périmées. Ne lève jamais. */
+export async function ecrireCopie(
+  setlist: FSSetlist,
+  uid: string,
+  versions?: Record<string, SetlistVersions>,
+  maintenant = Date.now(),
+): Promise<void> {
   try {
-    await stocker(setlist.id, texte({ setlist, lueLe: maintenant }));
+    let gardees: Record<string, SetlistVersions>;
+    if (versions) gardees = versionsAGarder(versions, uid);
+    else {
+      const avant = await copieBrute(setlist.id);
+      gardees = avant && avant.uid === uid ? avant.versions : {};
+    }
+    await stocker(setlist.id, texte({ uid, setlist, versions: gardees, lueLe: maintenant }));
+    await balayerLesCopies(maintenant);
   } catch { /* la copie est un confort */ }
 }
 
-/** La copie de cette setlist, ou null : absente, illisible ou plus vieille que 14 jours (alors effacée). */
-export async function lireCopie(id: string, maintenant = Date.now()): Promise<CopieSetlist | null> {
+/** La copie de cette setlist pour ce compte, ou null : absente, illisible, plus vieille que 14 jours, ou lue par un
+ *  autre compte (dans ces trois derniers cas elle est effacée). */
+export async function lireCopie(
+  id: string,
+  uid: string | null | undefined,
+  maintenant = Date.now(),
+): Promise<CopieSetlist | null> {
   try {
     const json = await retrouver(id);
     if (!json) return null;
     const copie = lire(json);
-    if (!copie || maintenant - copie.lueLe > GARDE_COPIE_MS) {
+    if (!copie || copie.uid !== uid || maintenant - copie.lueLe > GARDE_COPIE_MS) {
       await retirer(id);
       return null;
     }
@@ -110,10 +165,59 @@ export async function effacerCopie(id: string): Promise<void> {
   try { await retirer(id); } catch { /* rien */ }
 }
 
-/** Efface toutes les copies : à la déconnexion. N'efface que ce que ce module a écrit. */
+/** Efface toutes les copies : à la déconnexion et au changement de compte. N'efface que ce que ce module a écrit. */
 export async function effacerToutesLesCopies(): Promise<void> {
   try { await idb("readwrite", (s) => s.clear()); } catch { /* rien */ }
   try {
     for (const cle of Object.keys(localStorage)) if (cle.startsWith(PREFIXE_LS)) localStorage.removeItem(cle);
   } catch { /* rien */ }
+}
+
+/** Efface les copies de plus de 14 jours (ou illisibles), IndexedDB et localStorage. */
+export async function balayerLesCopies(maintenant = Date.now()): Promise<void> {
+  const perimee = (json: unknown): boolean => {
+    try {
+      const copie = typeof json === "string" ? lire(json) : null;
+      return !copie || maintenant - copie.lueLe > GARDE_COPIE_MS;
+    } catch {
+      return true;
+    }
+  };
+  try {
+    const base = await ouvrir();
+    try {
+      await new Promise<void>((resolve, reject) => {
+        const tx = base.transaction(STORE, "readwrite");
+        tx.objectStore(STORE).openCursor().onsuccess = (e) => {
+          const curseur = (e.target as IDBRequest<IDBCursorWithValue | null>).result;
+          if (!curseur) return;
+          if (perimee(curseur.value)) curseur.delete();
+          curseur.continue();
+        };
+        tx.oncomplete = () => resolve();
+        tx.onerror = () => reject(tx.error);
+        tx.onabort = () => reject(tx.error);
+      });
+    } finally {
+      base.close();
+    }
+  } catch { /* IndexedDB absente ou refusée */ }
+  try {
+    for (const cle of Object.keys(localStorage)) {
+      if (cle.startsWith(PREFIXE_LS) && perimee(localStorage.getItem(cle))) localStorage.removeItem(cle);
+    }
+  } catch { /* rien */ }
+}
+
+/** Suivi du compte connecté, à nourrir de chaque événement d'authentification (un seul écouteur, dans auth.ts).
+ *  Le premier événement est le compte que le SDK a restauré (au démarrage, hors ligne aussi) : il est noté, rien
+ *  n'est effacé. Tout événement suivant qui change d'identifiant (autre compte, déconnexion, jeton révoqué)
+ *  efface toutes les copies. */
+export function suivreLeCompte(effacer: () => void): (uid: string | null) => void {
+  let vu: string | null | undefined;
+  return (uid) => {
+    const avant = vu;
+    vu = uid;
+    if (avant !== undefined && avant !== uid) effacer();
+  };
 }

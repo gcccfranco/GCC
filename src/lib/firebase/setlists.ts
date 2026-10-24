@@ -3,6 +3,7 @@ import { SERVICE_LIEUX } from "@/types/user";
 import { BACK_OFFICE } from "@/lib/backOffice";
 import type { SetlistItem } from "@/types/setList";
 import { effacerCopie, lireCopie } from "@/lib/setlist/copieHorsLigne";
+import type { SetlistVersions } from "@/lib/firebase/setlistVersions";
 
 // ─── Categories ───────────────────────────────────────────────────────────────
 
@@ -360,14 +361,17 @@ export async function getMySetlists(uid: string): Promise<FSSetlist[]> {
     });
 }
 
-/** Échec de lecture dû au réseau (fetch qui lève, réponse 5xx) : le seul cas où la copie hors ligne sert. */
+/** Échec de lecture dû au réseau (fetch qui lève, réponse 5xx, délai dépassé) : le seul cas où la copie hors ligne sert. */
 export class ErreurReseau extends Error {}
+
+/** Délai d'une lecture de setlist : au-delà, c'est une ErreurReseau (un réseau qui traîne ne bloque plus la page). */
+const DELAI_LECTURE_MS = 10_000;
 
 export async function getSetlist(id: string): Promise<FSSetlist | null> {
   let res: Response;
   try {
-    const headers = await authHeader();
-    res = await fetch(`${FS_BASE}/setlists/${id}`, { headers });
+    const headers = await withTimeout(authHeader(), DELAI_LECTURE_MS, "Délai dépassé (jeton)");
+    res = await fetch(`${FS_BASE}/setlists/${id}`, { headers, signal: AbortSignal.timeout(DELAI_LECTURE_MS) });
   } catch (e) {
     throw new ErreurReseau(e instanceof Error ? e.message : "réseau");
   }
@@ -385,20 +389,30 @@ export async function getSetlist(id: string): Promise<FSSetlist | null> {
 /** Lecture de la page d'une setlist (D1, décision C2) : si la lecture échoue par le réseau, sert la copie
  *  locale (`copieLueLe` = date de sa lecture). Setlist introuvable ou refusée : la copie est effacée, jamais
  *  servie. La copie ne s'écrit pas ici : c'est la page qui la garde, une fois l'accès établi (canSeeSetlist). */
-export async function getSetlistOuCopie(
-  id: string,
-): Promise<{ setlist: FSSetlist | null; copieLueLe: number | null }> {
+export async function getSetlistOuCopie(id: string): Promise<{
+  setlist: FSSetlist | null;
+  copieLueLe: number | null;
+  /** Versions perso gardées avec la copie (null quand la setlist vient d'être lue en ligne). */
+  copieVersions: Record<string, SetlistVersions> | null;
+}> {
   try {
     const setlist = await getSetlist(id);
     if (!setlist) void effacerCopie(id);
-    return { setlist, copieLueLe: null };
+    return { setlist, copieLueLe: null, copieVersions: null };
   } catch (e) {
     if (e instanceof ErreurReseau) {
-      const copie = await lireCopie(id);
-      if (copie) return { setlist: copie.setlist, copieLueLe: copie.lueLe };
+      const copie = await lireCopieDuCompte(id);
+      if (copie) return { setlist: copie.setlist, copieLueLe: copie.lueLe, copieVersions: copie.versions };
     }
     throw e;
   }
+}
+
+/** La copie de cette setlist si elle a été lue par le compte connecté (le SDK a déjà restauré la session, le profil
+ *  n'est pas attendu) ; la copie d'un autre compte est effacée. */
+export async function lireCopieDuCompte(id: string) {
+  await auth.authStateReady().catch(() => {});
+  return lireCopie(id, auth.currentUser?.uid);
 }
 
 export async function createSetlist(

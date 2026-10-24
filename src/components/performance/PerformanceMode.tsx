@@ -345,6 +345,8 @@ export interface PerformanceModeProps {
    *  pour que son menu soit à jour en sortant du mode louange. */
   jianpuPref: JianpuPref;
   onJianpuPrefChange: (v: JianpuPref) => void;
+  /** La setlist vient de la copie hors ligne : « Annoter » est masqué et rien ne s'enregistre. */
+  horsLigne?: boolean;
   onClose: () => void;
 }
 
@@ -358,6 +360,7 @@ export function PerformanceMode({
   onAffichageChange,
   jianpuPref,
   onJianpuPrefChange,
+  horsLigne = false,
   onClose,
 }: PerformanceModeProps) {
   const { t } = useTranslation();
@@ -418,6 +421,8 @@ export function PerformanceMode({
     }
   });
   const [annotateMode, setAnnotateMode] = useState(false);
+  // Les traits de la page n'ont pas pu être lus (réseau, 5xx) : page non initialisée, rien n'est enregistré.
+  const [annotationsIndispo, setAnnotationsIndispo] = useState(false);
   // Loupe du mode annotation : grossissement (≠ taille du texte, ne re-pagine pas)
   // + déplacement. Possédée ici car elle agrandit aussi le texte (transform CSS).
   const [annotZoom, setAnnotZoom] = useState(1);
@@ -943,6 +948,7 @@ export function PerformanceMode({
 
   // Charger les traits de la page courante (toujours — affichage permanent)
   useEffect(() => {
+    setAnnotationsIndispo(false);
     if (!user || !currentPageKey) { setPageAnnotations(null); return; }
     let stale = false;
     setPageAnnotations(null);
@@ -952,6 +958,9 @@ export function PerformanceMode({
       setPageAnnotations(
         parsed ?? { w: window.innerWidth, h: window.innerHeight, strokes: [] },
       );
+    }).catch(() => {
+      // Lecture impossible ≠ page vide : sans calque, ni canvas ni enregistrement.
+      if (!stale) setAnnotationsIndispo(true);
     });
     return () => { stale = true; };
   }, [user, setlistId, currentPageKey]);
@@ -960,11 +969,11 @@ export function PerformanceMode({
   const handleAnnotationsChange = useCallback(
     (data: AnnotationData) => {
       setPageAnnotations(data);
-      if (user && currentPageKey) {
+      if (user && currentPageKey && !horsLigne) {
         saveAnnotation(user.uid, setlistId, currentPageKey, serializeAnnotations(data));
       }
     },
-    [user, setlistId, currentPageKey],
+    [user, setlistId, currentPageKey, horsLigne],
   );
 
   // ── Navigation ──────────────────────────────────────────────────────────────
@@ -1388,6 +1397,19 @@ export function PerformanceMode({
         })()}
       </div>
 
+      {annotationsIndispo && (
+        <div
+          data-annotations-indisponibles
+          role="status"
+          className="absolute left-0 right-0 flex justify-center pointer-events-none"
+          style={{ zIndex: 5, top: "calc(0.5rem + env(safe-area-inset-top, 0px))" }}
+        >
+          <span className="text-xs text-muted-foreground bg-background/85 backdrop-blur px-3 py-1 rounded-full border border-border/60">
+            {t("performance.annotationsIndisponibles")}
+          </span>
+        </div>
+      )}
+
       {/* ── « Suivant : … » sur la dernière page d'un chant ── */}
       {isLastPageOfSong && nextEntry && !colonneScan && (
         <div
@@ -1555,7 +1577,7 @@ export function PerformanceMode({
           </IconBtn>
 
           {/* Annoter (connecté uniquement) */}
-          {user && (
+          {user && !horsLigne && (
             <IconBtn
               label={t("performance.annotate")}
               active={annotateMode}
