@@ -1,11 +1,11 @@
 import { expect, test } from "@playwright/test";
-import { contraste, couleurSombre, styleTexteService } from "../src/lib/couleurSombre";
+import { contraste, couleurSombre, fondTeinte, styleTexteService } from "../src/lib/couleurSombre";
 import { CATEGORY_COLORS, PLANNING_COLORS, categoryColor } from "../src/lib/serviceColors";
 import { BASE_URL_COUPE } from "../playwright.config";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
 
 // Tranche B2 de docs/spec-corrections-audit.md (C4) : les couleurs de service, éclaircies en sombre jusqu'à 4,5:1
-// sur #2c2c2e (le fond le plus clair des cartes et pastilles sombres, donc aussi sur #1c1c1e).
+// sur leur propre pastille teintée (14 % sur #2c2c2e), donc aussi sur #2c2c2e et #1c1c1e unis.
 
 const CARTE = "#1c1c1e";
 const CARTE_CLAIRE = "#2c2c2e";
@@ -13,9 +13,12 @@ const CARTE_CLAIRE = "#2c2c2e";
 test.describe("couleurSombre (sans navigateur)", () => {
   const couleurs = [...new Set([...Object.values(PLANNING_COLORS), ...Object.values(CATEGORY_COLORS)])];
 
-  test("chaque couleur de service atteint 4,5:1 sur les deux fonds sombres", () => {
+  test("chaque couleur de service atteint 4,5:1 sur les deux fonds sombres et sur sa pastille teintée", () => {
     for (const c of couleurs) {
       const s = couleurSombre(c);
+      // Pastille posée avec la couleur d'origine (`${c}1f`, 12 %) ou éclaircie, jusqu'à 14 % sur #2c2c2e.
+      expect(contraste(s, fondTeinte(c)), `${c} → ${s} sur sa pastille`).toBeGreaterThanOrEqual(4.5);
+      expect(contraste(s, fondTeinte(s)), `${c} → ${s} sur sa pastille éclaircie`).toBeGreaterThanOrEqual(4.5);
       expect(contraste(s, CARTE_CLAIRE), `${c} → ${s} sur ${CARTE_CLAIRE}`).toBeGreaterThanOrEqual(4.5);
       expect(contraste(s, CARTE), `${c} → ${s} sur ${CARTE}`).toBeGreaterThanOrEqual(4.5);
     }

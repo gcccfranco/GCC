@@ -1,10 +1,12 @@
 import type React from "react";
 
 // Variante sombre des couleurs de service (serviceColors.ts reste gelé) : la couleur est mélangée vers le blanc,
-// par pas de 2 %, jusqu'à 4,5:1 sur #2c2c2e (le fond le plus clair des cartes et pastilles sombres, donc aussi
-// sur #1c1c1e). Une couleur qui passe déjà est rendue telle quelle.
+// par pas de 2 %, jusqu'à 4,5:1 sur une pastille teintée par elle-même : la couleur à 14 % sur #2c2c2e (les
+// pastilles posent `${c}18`, `${c}1f` ou `color-mix(… 12-14 %)` sur les cartes sombres ; ce fond est le plus clair,
+// donc le seuil tient aussi sur #2c2c2e et #1c1c1e unis). Une couleur qui passe déjà est rendue telle quelle.
 
 const FOND_SOMBRE = "#2c2c2e";
+const TEINTE = 0.14;
 const SEUIL = 4.5;
 
 function rgb(hex: string): [number, number, number] {
@@ -28,19 +30,29 @@ export function contraste(a: string, b: string): number {
   return (x + 0.05) / (y + 0.05);
 }
 
+const hexa = (c: number[]) => "#" + c.map((v) => Math.round(v).toString(16).padStart(2, "0")).join("");
+
+/** Fond d'une pastille teintée par `hex` (14 %) sur #2c2c2e. */
+export function fondTeinte(hex: string): string {
+  const [c, f] = [rgb(hex), rgb(FOND_SOMBRE)];
+  return hexa(c.map((v, i) => f[i] + (v - f[i]) * TEINTE));
+}
+
+const passe = (hex: string) => contraste(hex, fondTeinte(hex)) >= SEUIL;
+
 const cache = new Map<string, string>();
 
-/** Éclaircit `hex` (vers le blanc, pas de 2 %) jusqu'à 4,5:1 sur #2c2c2e. */
+/** Éclaircit `hex` (vers le blanc, pas de 2 %) jusqu'à 4,5:1 sur sa propre pastille teintée (14 % sur #2c2c2e). */
 export function couleurSombre(hex: string): string {
   const memo = cache.get(hex);
   if (memo) return memo;
   let sortie = hex;
-  if (/^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(hex) && contraste(hex, FOND_SOMBRE) < SEUIL) {
+  if (/^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(hex) && !passe(hex)) {
     const [r, g, b] = rgb(hex);
     for (let p = 2; p <= 100; p += 2) {
       const m = (v: number) => Math.round(v + (255 - v) * (p / 100));
-      sortie = "#" + [m(r), m(g), m(b)].map((v) => v.toString(16).padStart(2, "0")).join("");
-      if (contraste(sortie, FOND_SOMBRE) >= SEUIL) break;
+      sortie = hexa([m(r), m(g), m(b)]);
+      if (passe(sortie)) break;
     }
   }
   cache.set(hex, sortie);
