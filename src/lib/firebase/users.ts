@@ -176,6 +176,8 @@ export function useProfile() {
     setProfileLoading(true);
     lireProfil(user.uid)
       .then(setProfile)
+      // Hors ligne (A3) : pas de profil, rien en cache ; la prochaine lecture réessaie.
+      .catch(() => setProfile(null))
       .finally(() => setProfileLoading(false));
   }, [user, authLoading]);
 

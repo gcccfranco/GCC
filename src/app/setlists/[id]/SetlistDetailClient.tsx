@@ -34,8 +34,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { getSetlist, deleteSetlist, mettreALaCorbeille, duplicateSetlist, updateSetlist, authHeader, type FSSetlist } from "@/lib/firebase/setlists";
+import { getSetlist, getSetlistOuCopie, deleteSetlist, mettreALaCorbeille, duplicateSetlist, updateSetlist, authHeader, type FSSetlist } from "@/lib/firebase/setlists";
 import { useProfile } from "@/lib/firebase/users";
+import { ecrireCopie } from "@/lib/setlist/copieHorsLigne";
 import { BACK_OFFICE } from "@/lib/backOffice";
 import { datesServies, loadPlanningData } from "@/lib/planning/names";
 import type { DateServie } from "@/lib/access";
@@ -296,6 +297,10 @@ export function SetlistDetailClient() {
   const [shareFeedback, setShareFeedback] = useState<string | null>(null);
   const [notifying, setNotifying] = useState(false);
   const [loadError, setLoadError] = useState(false);
+  // Hors ligne (D1, décision C2) : date de lecture de la copie locale servie à la place de la setlist, sinon null.
+  const [copieLueLe, setCopieLueLe] = useState<number | null>(null);
+  // Mode louange (D4) : chants qui n'ont pas pu être chargés ; null = pas de bandeau.
+  const [chantsManquants, setChantsManquants] = useState<string[] | null>(null);
   const [retryKey, setRetryKey] = useState(0);
   // Mode « adapter le chant » (accords/paroles par setlist)
   const [editPartitions, setEditPartitions] = useState(false);
@@ -418,11 +423,12 @@ export function SetlistDetailClient() {
     setLoadError(false);
     setLoadingSetlist(true);
     Promise.all([
-      getSetlist(id),
+      getSetlistOuCopie(id),
       fetch("/songs-index.json").then((r) => r.json()),
       // Règles pas publiées, hors-ligne… : la présidence seule, sans erreur.
       getSetlistVersions(id).catch(() => ({})),
-    ]).then(([sl, index, v]) => {
+    ]).then(([{ setlist: sl, copieLueLe: copie }, index, v]) => {
+      setCopieLueLe(copie);
       // Une proposition dont le `.cho` est arrivé devient le chant (CF21).
       setSetlist(sl && { ...sl, items: resoudrePropositions(sl.items, index.songs ?? []) });
       setVersions(v);
@@ -433,6 +439,13 @@ export function SetlistDetailClient() {
       setLoadError(true);
     }).finally(() => setLoadingSetlist(false));
   }, [id, authLoading, retryKey]);
+
+  // Hors ligne (D1) : la copie ne s'écrit qu'une fois établi que la personne peut voir la setlist,
+  // pour qu'une copie n'existe que pour une setlist qu'elle avait le droit de lire.
+  useEffect(() => {
+    if (!setlist || !user || copieLueLe !== null) return;
+    if (canSeeSetlist(user, profile, setlist, datesDuCompte)) void ecrireCopie(setlist);
+  }, [setlist, user, profile, datesDuCompte, copieLueLe]);
 
   // Load full song content when switching to Partitions view
   const loadContents = useCallback(async (items: SetlistItem[]) => {
@@ -447,14 +460,33 @@ export function SetlistDetailClient() {
         slugsToLoad.push(item.songSlug);
       }
     }
+    const manquants: string[] = [];
     await Promise.all(
       slugsToLoad.map(async (slug) => {
         const res = await fetchSongAST(slug);
         if (res) setContents((prev) => ({ ...prev, [slug]: res }));
+        else manquants.push(slug);
       })
     );
     setLoadingContent(false);
+    return manquants;
   }, [contents]);
+
+  // Hors ligne (D2) : la page d'une setlist lue en ligne demande au service worker de garder la page
+  // et le contenu de chacun de ses chants, pour qu'ils s'ouvrent sans réseau.
+  useEffect(() => {
+    if (!setlist || copieLueLe !== null) return;
+    try {
+      const slugs = new Set<string>();
+      for (const it of setlist.items) {
+        if (it.songSlug) slugs.add(it.songSlug);
+        for (const fs of it.fusionSongs ?? []) slugs.add(fs.songSlug);
+      }
+      if (!slugs.size) return;
+      const urls = [...slugs].flatMap((s) => [`/songs/${encodeURIComponent(s)}/`, `/api/song/${s}`]);
+      navigator.serviceWorker?.controller?.postMessage({ type: "precache", urls });
+    } catch { /* pas de service worker : rien à garder */ }
+  }, [setlist, copieLueLe]);
 
   // Partitions préchargées juste après l'affichage de la liste (Q14) : la
   // bascule les trouve prêtes.
@@ -476,7 +508,9 @@ export function SetlistDetailClient() {
     louangeDemandee.current = true;
     window.history.replaceState(window.history.state, "", window.location.pathname);
     const items = setlist.items;
-    requestAnimationFrame(() => { loadContents(items).then(() => setPerformanceMode(true)); });
+    requestAnimationFrame(() => {
+      loadContents(items).then((manquants) => (manquants.length ? setChantsManquants(manquants) : setPerformanceMode(true)));
+    });
   }, [setlist, loadContents]);
 
   // Vue lue dans l'adresse à l'ouverture (lien, rechargement) et au retour du
@@ -1326,7 +1360,8 @@ export function SetlistDetailClient() {
 
   // Accès : uniquement les setlists de ses services/groupe (ou créées par soi) ; lot AO (F1) : et celle d'une date
   // où l'on sert. Tant que le planning se lit, une personne qui n'a pas d'autre accès attend au lieu de voir « pas d'accès ».
-  if (!canSeeSetlist(user, profile, setlist, datesDuCompte)) {
+  // Copie hors ligne : son existence vaut accès (le profil peut être introuvable sans réseau).
+  if (copieLueLe === null && !canSeeSetlist(user, profile, setlist, datesDuCompte)) {
     if (BACK_OFFICE && planningName && datesDuCompte === undefined) {
       return (
         <div className="min-h-screen bg-background flex items-center justify-center">
@@ -1343,9 +1378,11 @@ export function SetlistDetailClient() {
   }
 
   // Modification : le créateur, son équipe, les admins (SC1, docs/spec-createur-corbeille-absences.md)
-  const canEdit = canEditSetlist(user, profile, setlist);
+  // Copie hors ligne : rien ne s'écrit en base pendant ce temps (modifier, supprimer, dupliquer, versions…).
+  const horsLigne = copieLueLe !== null;
+  const canEdit = !horsLigne && canEditSetlist(user, profile, setlist);
   // Suppression : le même droit, sous son nom — la liste (lot 10) s'en sert aussi
-  const canDelete = canDeleteSetlist(user, profile, setlist);
+  const canDelete = !horsLigne && canDeleteSetlist(user, profile, setlist);
   // Items affichés : la version choisie (en mode « Ma version » : la mienne)
   // remplace celle de la présidence — accords et paroles pour la vue
   // partitions (qui applique ma structure au corps seul), ma structure
@@ -1356,7 +1393,7 @@ export function SetlistDetailClient() {
   const versionViews = editPartitions
     ? undefined
     : Object.fromEntries(setlist.items.filter((it) => it.songSlug).map((it) => [it.songSlug, viewOf(it)!]));
-  const canDuplicate = canDuplicateSetlist(user, profile, setlist);
+  const canDuplicate = !horsLigne && canDuplicateSetlist(user, profile, setlist);
   // Notif « setlist prête » : pour toute setlist modifiable par l'utilisateur,
   // contenant au moins 4 vrais chants (hors transitions). Toutes catégories.
   const realSongCount = setlist.items.filter((i) => i.type !== "transition").length;
@@ -1367,7 +1404,7 @@ export function SetlistDetailClient() {
       songsMap[i.songSlug]?.language === "zh" ||
       i.fusionSongs?.some((fs) => songsMap[fs.songSlug]?.language === "zh")
   );
-  const peutChangerPresentation = canSetPresentationLink(
+  const peutChangerPresentation = !horsLigne && canSetPresentationLink(
     user,
     profile,
     setlist,
@@ -1403,9 +1440,26 @@ export function SetlistDetailClient() {
     try {
       document.documentElement.requestFullscreen({ navigationUI: "hide" }).catch(() => {});
     } catch { /* non supporté */ }
-    // Toujours (re)charger : loadContents ne fetch que les chants manquants. Sans
-    // ça, un chargement partiel faisait entrer en mode Louange avec des chants absents.
-    if (setlist) await loadContents(setlist.items);
+    await entrerEnLouange(true);
+  }
+  /** Toujours (re)charger : loadContents ne fetch que les chants manquants. Si certains manquent encore,
+   *  le mode Louange ne s'ouvre pas en silence : le bandeau « N chants non chargés » propose de réessayer
+   *  ou de continuer quand même (D4). */
+  async function entrerEnLouange(pleinEcran: boolean) {
+    const manquants = setlist ? await loadContents(setlist.items) : [];
+    if (manquants.length) {
+      setChantsManquants(manquants);
+      if (pleinEcran && document.fullscreenElement) document.exitFullscreen().catch(() => {});
+      return;
+    }
+    setChantsManquants(null);
+    setPerformanceMode(true);
+  }
+  function continuerSansLesChants() {
+    try {
+      document.documentElement.requestFullscreen({ navigationUI: "hide" }).catch(() => {});
+    } catch { /* non supporté */ }
+    setChantsManquants(null);
     setPerformanceMode(true);
   }
   // Qui peut modifier — rend visible la logique de access.ts.
@@ -1567,9 +1621,19 @@ export function SetlistDetailClient() {
       />
     </>
   );
+  // Bandeau de la copie hors ligne (A3, décision C2) : en haut sur grand écran, sous la barre d'outils sur
+  // téléphone et tablette (la barre flottante le couvrirait).
+  const texteCopie = copieLueLe === null ? null : t("setlists.detail.copieHorsLigne", {
+    date: new Intl.DateTimeFormat(i18n.language === "zh-CN" ? "zh-CN" : "fr-FR", { dateStyle: "long", timeStyle: "short" }).format(copieLueLe),
+  });
   return (
     <div className="relative min-h-screen bg-background">
       <Halo variant="fiche" color={categoryColor(setlist?.category ?? "")} />
+      {deuxVolets && copieLueLe !== null && (
+        <p role="status" data-copie-hors-ligne className="relative z-10 border-b border-border bg-muted px-4 py-1.5 text-center text-xs text-muted-foreground print:hidden">
+          {texteCopie}
+        </p>
+      )}
       {deuxVolets ? (
         // ── Deux volets (docs/spec-deux-volets.md, T4, planche `setlist-deux-volets`) :
         // l'en-tête pleine largeur colle en haut et s'escamote au défilement (Q7) ; à
@@ -1621,7 +1685,7 @@ export function SetlistDetailClient() {
                     {t("setlists.contentEdit.toggle", { defaultValue: "Adapter" })}
                   </button>
                 )}
-                {canHaveSetlistVersion(user, profile, setlist) && (
+                {(!horsLigne && canHaveSetlistVersion(user, profile, setlist)) && (
                   <button type="button" aria-pressed={editMine} onClick={toggleMaVersion} className={editMine ? PILULE_ACTIVE : PILULE}>
                     <UserRound className="h-4 w-4" aria-hidden />
                     {t("setlists.myVersion.toggle")}
@@ -1823,7 +1887,7 @@ export function SetlistDetailClient() {
                 </button>
 
                 {/* Ma version (accords/paroles pour soi) — tout connecté */}
-                {canHaveSetlistVersion(user, profile, setlist) && (
+                {(!horsLigne && canHaveSetlistVersion(user, profile, setlist)) && (
                   <button aria-label={t("setlists.myVersion.toggle")}
                     aria-pressed={editMine}
                     onClick={toggleMaVersion}
@@ -1872,12 +1936,12 @@ export function SetlistDetailClient() {
                           {t("setlists.contentEdit.toggle", { defaultValue: "Adapter" })}
                         </DropdownMenuCheckboxItem>
                       )}
-                      {canHaveSetlistVersion(user, profile, setlist) && (
+                      {(!horsLigne && canHaveSetlistVersion(user, profile, setlist)) && (
                         <DropdownMenuCheckboxItem className="min-[390px]:hidden" checked={editMine} onCheckedChange={toggleMaVersion}>
                           {t("setlists.myVersion.toggle")}
                         </DropdownMenuCheckboxItem>
                       )}
-                      {(canEdit || canHaveSetlistVersion(user, profile, setlist)) && <DropdownMenuSeparator className="min-[390px]:hidden" />}
+                      {(canEdit || (!horsLigne && canHaveSetlistVersion(user, profile, setlist))) && <DropdownMenuSeparator className="min-[390px]:hidden" />}
                       {canEdit && (
                         <DropdownMenuItem asChild>
                           <Link href={`/setlists/${id}/edit`}>
@@ -1904,6 +1968,11 @@ export function SetlistDetailClient() {
           </div>
 
           <div ref={zoneRef} className="relative max-w-2xl mx-auto px-4 py-8 print:px-0 print:py-4" style={{ marginTop: toolbarH }}>
+            {copieLueLe !== null && (
+              <p role="status" data-copie-hors-ligne className="mb-4 rounded-lg bg-muted px-3 py-1.5 text-center text-xs text-muted-foreground print:hidden">
+                {texteCopie}
+              </p>
+            )}
             {/* Header setlist */}
             <div className="mb-3 pb-5 print:mb-4">
               <div className="flex items-start gap-3">
@@ -2187,6 +2256,19 @@ export function SetlistDetailClient() {
       </AlertDialog>
 
       {/* Mode Louange */}
+      {chantsManquants && !performanceMode && (
+        <div
+          role="alert"
+          data-chants-manquants
+          className="fixed inset-x-4 bottom-4 z-50 mx-auto flex max-w-md flex-wrap items-center justify-between gap-x-4 gap-y-2 rounded-2xl border border-border bg-background px-4 py-3 text-sm shadow-lg"
+        >
+          <span className="font-medium text-foreground">{t("setlists.detail.chantsNonCharges", { count: chantsManquants.length })}</span>
+          <span className="flex items-center gap-2">
+            <Button size="sm" variant="outline" onClick={() => entrerEnLouange(false)}>{t("common.retry")}</Button>
+            <Button size="sm" onClick={continuerSansLesChants}>{t("setlists.detail.continuerQuandMeme")}</Button>
+          </span>
+        </div>
+      )}
       {performanceMode && (
         <PerformanceMode
           items={stageItems}

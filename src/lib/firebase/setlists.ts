@@ -2,6 +2,7 @@ import { auth } from "@/lib/firebase/config";
 import { SERVICE_LIEUX } from "@/types/user";
 import { BACK_OFFICE } from "@/lib/backOffice";
 import type { SetlistItem } from "@/types/setList";
+import { effacerCopie, lireCopie } from "@/lib/setlist/copieHorsLigne";
 
 // ─── Categories ───────────────────────────────────────────────────────────────
 
@@ -359,17 +360,45 @@ export async function getMySetlists(uid: string): Promise<FSSetlist[]> {
     });
 }
 
+/** Échec de lecture dû au réseau (fetch qui lève, réponse 5xx) : le seul cas où la copie hors ligne sert. */
+export class ErreurReseau extends Error {}
+
 export async function getSetlist(id: string): Promise<FSSetlist | null> {
-  const headers = await authHeader();
-  const res = await fetch(`${FS_BASE}/setlists/${id}`, { headers });
+  let res: Response;
+  try {
+    const headers = await authHeader();
+    res = await fetch(`${FS_BASE}/setlists/${id}`, { headers });
+  } catch (e) {
+    throw new ErreurReseau(e instanceof Error ? e.message : "réseau");
+  }
   // 404 = inexistante, 403 = accès refusé par les rules (setlist privée d'un
   // autre) → null. Toute autre erreur (réseau, 5xx) est levée pour que
   // l'appelant puisse proposer de réessayer au lieu d'afficher « introuvable ».
   if (res.status === 404 || res.status === 403) return null;
+  if (res.status >= 500) throw new ErreurReseau(`Erreur Firestore (HTTP ${res.status})`);
   await checkRest(res);
   const raw = await res.json() as RawDoc;
   const setlist = fromFsDoc(raw);
   return sansFetes(setlist) && horsCorbeille(setlist) ? setlist : null;
+}
+
+/** Lecture de la page d'une setlist (D1, décision C2) : si la lecture échoue par le réseau, sert la copie
+ *  locale (`copieLueLe` = date de sa lecture). Setlist introuvable ou refusée : la copie est effacée, jamais
+ *  servie. La copie ne s'écrit pas ici : c'est la page qui la garde, une fois l'accès établi (canSeeSetlist). */
+export async function getSetlistOuCopie(
+  id: string,
+): Promise<{ setlist: FSSetlist | null; copieLueLe: number | null }> {
+  try {
+    const setlist = await getSetlist(id);
+    if (!setlist) void effacerCopie(id);
+    return { setlist, copieLueLe: null };
+  } catch (e) {
+    if (e instanceof ErreurReseau) {
+      const copie = await lireCopie(id);
+      if (copie) return { setlist: copie.setlist, copieLueLe: copie.lueLe };
+    }
+    throw e;
+  }
 }
 
 export async function createSetlist(
