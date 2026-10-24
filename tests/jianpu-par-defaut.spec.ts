@@ -306,6 +306,7 @@ test("service worker : les scans et leurs manifestes sont gardés pour le hors-l
     match: async () => undefined,
     put: async (req: { url: string }) => { misEnCache.push(req.url); },
     addAll: async () => {},
+    keys: async () => [],
   };
   const origin = "https://louange.example.org";
   vm.runInNewContext(readFileSync("public/sw.js", "utf8"), {
@@ -320,11 +321,15 @@ test("service worker : les scans et leurs manifestes sont gardés pour le hors-l
   });
   const charger = async (chemin: string) => {
     let reponse: Promise<unknown> | undefined;
+    // A3 : les écritures du cache passent par event.waitUntil.
+    const attentes: Promise<unknown>[] = [];
     handlers.fetch({
       request: { method: "GET", url: origin + chemin, mode: "no-cors" },
       respondWith: (p: Promise<unknown>) => { reponse = p; },
+      waitUntil: (p: Promise<unknown>) => { attentes.push(p); },
     });
     await reponse;
+    await Promise.all(attentes);
     await new Promise((r) => setTimeout(r, 0));
   };
   // Forme réelle : images non optimisées, le navigateur demande le nom encodé.
