@@ -117,7 +117,7 @@ function tonalitesLesPlusJouees(passages: Passage[]): string[] {
   for (const { jour, tonalite } of passages) {
     if (!tonalite) continue;
     const hauteur = noteToIndex(tonalite);
-    const cle = hauteur === -1 ? `nom:${tonalite}` : `hauteur:${hauteur}`;
+    const cle = hauteur === -1 ? `nom:${tonalite}` : `hauteur:${hauteur}${/m$/.test(tonalite) ? "m" : ""}`;
     const g = groupes.get(cle) ?? { n: 0, dernier: "", graphies: new Map<string, Compte>() };
     const graphie = g.graphies.get(tonalite) ?? { n: 0, dernier: "" };
     g.n++; graphie.n++;

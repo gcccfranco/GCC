@@ -29,7 +29,7 @@ import { useScrollDirection } from "@/hooks/useScrollDirection";
 import { useDeuxVolets } from "@/hooks/useDeuxVolets";
 import { Halo } from "@/components/layout/Halo";
 import { FondDeBarre } from "@/components/layout/FondDeBarre";
-import { keyOptions, semitonesTo, getTransposedKey } from "@/lib/transpose";
+import { keyLike, keyOptions, semitonesTo, getTransposedKey } from "@/lib/transpose";
 import { useSearchParams } from "next/navigation";
 import type { SectionItem } from "@/types/song";
 import type { SectionNuance } from "@/types/setList";
@@ -49,14 +49,23 @@ interface SongDetailClientProps {
 
 /** Parse un paramètre d'URL JSON sans jamais lever : les liens partagés
  *  peuvent arriver tronqués (WhatsApp/WeChat) — on retombe sur le défaut. */
-function safeParseParam<T>(raw: string | null, fallback: T): T {
+function safeParseParam<T>(raw: string | null, fallback: T, valide: (v: unknown) => boolean): T {
   if (!raw) return fallback;
   try {
-    return JSON.parse(raw) as T;
+    const v: unknown = JSON.parse(raw);
+    return valide(v) ? (v as T) : fallback;
   } catch {
     return fallback;
   }
 }
+
+// Gardes de type des paramètres : un JSON valide mais du mauvais type
+// (`?structure=null`, `?key=5`) retombe sur le défaut.
+const estTexte = (v: unknown) => typeof v === "string";
+const estTexteOuNul = (v: unknown) => v === null || typeof v === "string";
+const estNombreOuNul = (v: unknown) => v === null || typeof v === "number";
+const estListeDeTextes = (v: unknown) => Array.isArray(v) && v.every(estTexte);
+const estObjet = (v: unknown) => typeof v === "object" && v !== null && !Array.isArray(v);
 
 
 
@@ -91,11 +100,11 @@ function useVersionDeLaSetlist(slug: string, setlistId: string | null, position:
     const { t, i18n } = useTranslation();
     const searchParams = useSearchParams();
     // Ouvert depuis une setlist (`?setlist=`) : sa version, et le Retour y ramène.
-    const setlistDOrigine = safeParseParam<string | null>(searchParams.get("setlist"), null);
+    const setlistDOrigine = safeParseParam<string | null>(searchParams.get("setlist"), null, estTexteOuNul);
     const versionSetlist = useVersionDeLaSetlist(
       song.slug,
       setlistDOrigine,
-      safeParseParam<number | null>(searchParams.get("item"), null),
+      safeParseParam<number | null>(searchParams.get("item"), null, estNombreOuNul),
     );
     const sourceAdaptee = versionSetlist?.source;
     const ast = useMemo(() => parseChordPro(sourceAdaptee ?? song.chordProSource), [sourceAdaptee, song.chordProSource]);
@@ -201,7 +210,7 @@ function useVersionDeLaSetlist(slug: string, setlistId: string | null, position:
     );
 
     const structureOverride = useMemo(
-      () => safeParseParam<string[]>(searchParams.get("structure"), defaultStructure),
+      () => safeParseParam<string[]>(searchParams.get("structure"), defaultStructure, estListeDeTextes),
       [searchParams, defaultStructure]
     );
 
@@ -209,17 +218,17 @@ function useVersionDeLaSetlist(slug: string, setlistId: string | null, position:
       const defaultSectionsNote = Object.fromEntries(
         customize.structure.map((s) => [s.uid, s.note]).filter(([, n]) => n)
       );
-      return safeParseParam<Record<string, string>>(searchParams.get("sectionNotes"), defaultSectionsNote);
+      return safeParseParam<Record<string, string>>(searchParams.get("sectionNotes"), defaultSectionsNote, estObjet);
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [searchParams, customize.structure]);
 
     const sectionsNuance = useMemo(
-      () => safeParseParam<Record<string, SectionNuance>>(searchParams.get("sectionNuances"), {}),
+      () => safeParseParam<Record<string, SectionNuance>>(searchParams.get("sectionNuances"), {}, estObjet),
       [searchParams]
     );
 
     const sectionsKeys = useMemo(
-      () => safeParseParam<Record<string, string>>(searchParams.get('sectionKeys'), {}),
+      () => safeParseParam<Record<string, string>>(searchParams.get('sectionKeys'), {}, estObjet),
       [searchParams]
     )
     useEffect(() => {
@@ -241,10 +250,10 @@ function useVersionDeLaSetlist(slug: string, setlistId: string | null, position:
 
     // Ouverte depuis une setlist : la tonalité choisie ici est retenue pour ce
     // chant dans cette setlist, sur cet appareil (reprise en mode louange).
-    const fromSetlist = useMemo(() => safeParseParam<string | null>(searchParams.get("setlist"), null), [searchParams]);
+    const fromSetlist = useMemo(() => safeParseParam<string | null>(searchParams.get("setlist"), null, estTexteOuNul), [searchParams]);
     // Depuis une setlist, l'absence de `key` veut dire la tonalité originale.
     const setlistKey = useMemo(
-      () => safeParseParam<string>(searchParams.get("key"), fromSetlist ? originalKey : defaultKey),
+      () => safeParseParam<string>(searchParams.get("key"), fromSetlist ? originalKey : defaultKey, estTexte),
       [searchParams, fromSetlist, originalKey, defaultKey]
     );
 
@@ -253,7 +262,8 @@ function useVersionDeLaSetlist(slug: string, setlistId: string | null, position:
     const [keyReady, setKeyReady] = useState(false);
 
     useEffect(() => {
-      const songKey = (fromSetlist && getPersonalKeys(fromSetlist)[song.slug]) || setlistKey;
+      // Un majeur sur un chant mineur se lit comme son relatif mineur (et inversement).
+      const songKey = keyLike(originalKey, (fromSetlist && getPersonalKeys(fromSetlist)[song.slug]) || setlistKey);
       const diff = semitonesTo(originalKey, songKey);
       setCustomize(prev => ({ ...prev, currentKey: songKey, semitones: diff }));
       setKeyReady(true);

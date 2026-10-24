@@ -9,9 +9,30 @@ const EXTRAS: Record<string, number> = { "E#": 5, "Fb": 4, "B#": 0, "Cb": 11 };
 const FLAT_KEYS = new Set(["F", "Bb", "Eb", "Ab", "Db", "Gb", "Cb", "Fb"]);
 
 // Degrés chromatiques épelés en bémol même dans une tonalité « à dièses » :
-// b3 (ex. Bb en Sol) et b6 (ex. Eb en Sol) — accords empruntés au mineur
-// parallèle, jamais écrits A#/D# en pratique.
-const FLAT_DEGREES = new Set([3, 8]);
+// b3 (ex. Bb en Sol), b6 (ex. Eb en Sol) et b7 (ex. Bb en Do) — accords
+// empruntés au mineur parallèle ou mixolydien, jamais écrits A#/D# en pratique.
+// Le b7 est le seul des trois dont la tonique blanche (E→D, A→G, D→C…) n'a
+// pas de note blanche : Do donnait « A# » (audit M2, décision C3).
+const FLAT_DEGREES = new Set([3, 8, 10]);
+
+// Les douze tonalités mineures, dans l'orthographe usuelle (celle du relatif
+// majeur) ; index = demi-tons de C à la fondamentale.
+export const MINOR_KEYS = ["Cm", "C#m", "Dm", "Ebm", "Em", "Fm", "F#m", "Gm", "G#m", "Am", "Bbm", "Bm"];
+// Relatif majeur de chacune : il décide de l'orthographe des accords.
+const RELATIVE_MAJOR = ["Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B", "C", "Db", "D"];
+
+/** Vrai pour « Am », « F#m »… (une tonalité mineure s'écrit avec un « m »). */
+export function isMinorKey(key: string): boolean {
+  return /^[A-G][#b]?m$/.test(key);
+}
+
+/** Tonalité qui décide de l'orthographe des accords : une tonalité mineure
+ *  prend celle de son relatif majeur (Am → C, Ebm → Gb), les autres la leur. */
+export function spellingKey(key: string): string {
+  if (!isMinorKey(key)) return key;
+  const i = noteToIndex(key);
+  return i === -1 ? key : RELATIVE_MAJOR[i];
+}
 
 /** Demi-tons de C à cette note (-1 si ce n'est pas une note) — l'harmonie
  *  s'en sert pour situer un accord dans la tonalité (`lib/harmonie/degres.ts`). */
@@ -21,6 +42,8 @@ export function noteToIndex(note: string): number {
   const j = FLATS.indexOf(note);
   if (j !== -1) return j;
   if (note in EXTRAS) return EXTRAS[note];
+  // Tonalité mineure (« Am ») : la fondamentale.
+  if (isMinorKey(note)) return noteToIndex(note.slice(0, -1));
   return -1;
 }
 
@@ -39,6 +62,7 @@ function indexToNote(index: number, useFlatKey: boolean, tonicIdx = -1): string 
 export function transposeChord(chord: string, semitones: number, targetKey: string): string {
   if (semitones === 0) return chord;
 
+  targetKey = spellingKey(targetKey);
   const useFlatKey = FLAT_KEYS.has(targetKey);
   const tonicIdx = noteToIndex(targetKey);
 
@@ -65,8 +89,15 @@ export function transposeChord(chord: string, semitones: number, targetKey: stri
   // La basse suit l'orthographe de la fondamentale si celle-ci est bémolisée
   // (Eb7/Bb, pas Eb7/A#) ; sinon préférence de la tonalité, sans la règle des
   // degrés — B/D# doit rester D#, pas Eb.
+  // Exception : le b7 de la tonalité (Gm/Bb en Do, pas Gm/A#), sauf s'il est la
+  // tierce majeure de l'accord (F#/A#, pas F#/Bb).
+  const bassIdx = bass ? (((noteToIndex(bass) + semitones) % 12) + 12) % 12 : -1;
+  const rootNew = (((rootIdx + semitones) % 12) + 12) % 12;
+  const flatSeventh =
+    bass !== undefined && tonicIdx !== -1 &&
+    (bassIdx - tonicIdx + 12) % 12 === 10 && (bassIdx - rootNew + 12) % 12 !== 4;
   const newBass = bass
-    ? "/" + indexToNote(noteToIndex(bass) + semitones, useFlatKey || newRoot.endsWith("b"))
+    ? "/" + indexToNote(noteToIndex(bass) + semitones, useFlatKey || newRoot.endsWith("b") || flatSeventh)
     : "";
 
   return leftSlash + newRoot + quality + newBass + rightSlash;
@@ -226,6 +257,7 @@ export function transposeLabel(text: string, semitones: number, targetKey: strin
 export function altSpellingKey(pageKey: string, alt: number): string {
   if (!alt) return pageKey;
   const key = getTransposedKey(pageKey, alt);
+  if (isMinorKey(key)) return key;
   // Le triton depuis do : le seul degré où F# et Gb se valent.
   if (noteToIndex(key) !== 6) return key;
   return FLAT_KEYS.has(pageKey) || pageKey.includes("b") ? "Gb" : "F#";
@@ -237,7 +269,13 @@ export function altSpellingKey(pageKey: string, alt: number): string {
 export function getTransposedKey(originalKey: string, semitones: number): string {
   const idx = noteToIndex(originalKey);
   if (idx === -1) return originalKey;
-  const newIdx = ((idx + semitones) % 12 + 12) % 12;
+  const shift = ((semitones % 12) + 12) % 12;
+  // Décalage nul : la tonalité telle qu'elle est écrite (G# reste G#, pas Ab),
+  // pour que la pilule et les accords gardent la même orthographe.
+  if (shift === 0) return originalKey;
+  const newIdx = (idx + shift) % 12;
+  // Une tonalité mineure garde son « m » et prend l'orthographe de son relatif majeur.
+  if (isMinorKey(originalKey)) return MINOR_KEYS[newIdx];
   // Au triton, le compte des altérations ne tranche pas — F# et Gb en font six
   // chacune — et l'usage des grilles dit F#. La réponse était Gb, seul nom que
   // `ALL_KEYS` ne porte plus : les boutons − / + rendaient alors une valeur
@@ -247,6 +285,18 @@ export function getTransposedKey(originalKey: string, semitones: number): string
   const flatVersion  = FLATS[newIdx];
   const key = FLAT_KEYS.has(flatVersion) ? flatVersion : sharpVersion;
   return key;
+}
+
+/**
+ * `key` lue dans le mode de `originalKey` : un majeur sur un chant mineur se lit
+ * comme son relatif mineur (C sur un chant en Am → Am), et inversement. Sans
+ * effet quand les deux ont le même mode.
+ */
+export function keyLike(originalKey: string, key: string): string {
+  const o = noteToIndex(originalKey);
+  const k = noteToIndex(key);
+  if (o === -1 || k === -1 || isMinorKey(originalKey) === isMinorKey(key)) return key;
+  return isMinorKey(originalKey) ? MINOR_KEYS[(k + 9) % 12] : RELATIVE_MAJOR[k];
 }
 
 /**
@@ -284,10 +334,19 @@ export const ALL_KEYS = [
  * la hauteur est inconnue (`Am`) va en fin de liste.
  */
 export function keyOptions(...names: (string | null | undefined)[]): string[] {
-  let options = ALL_KEYS;
+  // Un chant mineur propose les douze tonalités mineures, et elles seules.
+  const minor = names.some((n) => !!n && isMinorKey(n));
+  let options = minor ? MINOR_KEYS : ALL_KEYS;
+  // Hauteur dans le mode de la liste : un majeur reçu dans une liste mineure
+  // (keyOverride majeur d'une setlist) se range à côté de son relatif mineur.
+  const pitch = (name: string) => {
+    const i = noteToIndex(name);
+    if (i === -1 || isMinorKey(name) === minor) return i;
+    return minor ? (i + 9) % 12 : (i + 3) % 12;
+  };
   for (const name of names) {
     if (!name || options.includes(name)) continue;
-    const i = options.findIndex((k) => noteToIndex(k) === noteToIndex(name));
+    const i = options.findIndex((k) => pitch(k) === pitch(name));
     options = i === -1 ? [...options, name] : [...options.slice(0, i), name, ...options.slice(i)];
   }
   return options;
@@ -298,8 +357,12 @@ export function keyOptions(...names: (string | null | undefined)[]): string[] {
  */
 export function semitonesTo(fromKey: string, toKey: string): number {
   const from = noteToIndex(fromKey);
-  const to   = noteToIndex(toKey);
+  let to     = noteToIndex(toKey);
   if (from === -1 || to === -1) return 0;
+  // Entre un mineur et un majeur, la distance des fondamentales n'a pas de
+  // sens : la cible se lit dans le mode de la source (C sur un chant en Am →
+  // Am, aucun décalage).
+  to = noteToIndex(keyLike(fromKey, toKey));
   let diff = ((to - from) % 12 + 12) % 12;
   if (diff > 6) diff -= 12; // prefer shorter route
   return diff;

@@ -1,4 +1,4 @@
-import { transposeLabel } from "@/lib/transpose";
+import { keyLike, spellingKey, transposeLabel } from "@/lib/transpose";
 import type { ChordProAST, ChordProSection, Token } from "@/types/chordPro";
 
 function transposeTokens(tokens: Token[], semitones: number, targetKey: string): Token[] {
@@ -33,7 +33,15 @@ export function transposeSection<T extends ChordProSection>(
  * The metadata.key is updated to reflect the new key.
  */
 export function transposeAST(ast: ChordProAST, semitones: number, targetKey: string): ChordProAST {
-  if (semitones === 0) return ast;
+  // Une tonalité majeure demandée pour un chant mineur (keyOverride d'une setlist : C sur un chant en Am) se lit
+  // comme son relatif mineur, comme le fait semitonesTo : la page, le mode Louange et le PDF affichent « Am ».
+  targetKey = keyLike(ast.metadata.key, targetKey);
+  if (semitones === 0) {
+    // Même hauteur, autre orthographe choisie (Ab pour un chant en G#) : on
+    // ré-épelle les accords vers la tonalité cible (+12 = même hauteur).
+    if (spellingKey(targetKey) === spellingKey(ast.metadata.key)) return ast;
+    semitones = 12;
+  }
 
   return {
     metadata: { ...ast.metadata, key: targetKey },
