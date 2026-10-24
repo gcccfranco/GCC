@@ -43,4 +43,6 @@ export interface Equipe {
   updatedAt: string;
   parUid: string;
   parNom: string;
+  /** `updateTime` du document tel que lu ou écrit : précondition de l'écriture suivante (absent = document pas encore créé). */
+  version?: string;
 }

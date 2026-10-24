@@ -2,6 +2,7 @@
 
 // Messages › Réception (lot U6, B2 ; bloc sorti de `admin/page.tsx`, l. 475 et 621) :
 // signalements et propositions de chants, admins seuls (règles : reports, songProposals).
+import { lienDeLaPage, origineDuSite } from "@/lib/report/lienPage";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { CheckCircle2, ChevronDown, ChevronUp, ExternalLink, FileText, Play, Trash2 } from "lucide-react";
@@ -196,7 +197,7 @@ export function Reception({ onEnAttente }: { onEnAttente?: (n: number) => void }
                               {r.songTitle || "Voir le chant"}
                             </Link>
                           )}
-                          {r.pageUrl && (
+                          {r.pageUrl && (lienDeLaPage(r.pageUrl, origineDuSite()) ? (
                             <a
                               href={r.pageUrl}
                               target="_blank"
@@ -206,7 +207,9 @@ export function Reception({ onEnAttente }: { onEnAttente?: (n: number) => void }
                               <ExternalLink className="h-3 w-3" />
                               Page
                             </a>
-                          )}
+                          ) : (
+                            <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">Page : {r.pageUrl}</span>
+                          ))}
                         </div>
                       )}
 

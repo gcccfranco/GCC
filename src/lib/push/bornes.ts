@@ -6,6 +6,7 @@ import { HttpError } from "@/lib/evenements/serveur";
 import { validateReport } from "@/lib/report/reportValidator";
 import { REPORT_KINDS, type ReportKind } from "@/types/report";
 import { TRI_ORDER } from "@/lib/planning/releases";
+import { EQUIPES } from "@/lib/equipes/table";
 
 export const TITRE_MAX = 80;
 export const MESSAGE_MAX = 300;
@@ -18,8 +19,9 @@ export function cheminInterne(url: unknown, defaut: string): string {
   return typeof url === "string" && /^\/[a-zA-Z0-9/_-]*$/.test(url) ? url : defaut;
 }
 
-/** Page d'où part un signalement (en-tête Referer) : le chemin seulement, s'il est de la même origine que le site,
- *  borné à PAGE_URL_MAX caractères ; sinon chaîne vide. */
+/** Page d'où part un signalement (en-tête Referer) : chemin et paramètres (pas le fragment), s'il est de la même
+ *  origine que le site, bornés à PAGE_URL_MAX caractères ; sinon chaîne vide. Le chemin d'un chant au nom non ASCII
+ *  porte des « % » : il est gardé tel quel. L'affichage ne fait un lien que d'un chemin du site (`lienDeLaPage`). */
 export const PAGE_URL_MAX = 500;
 export function cheminDeLaPage(referer: string | null | undefined, origine: string): string {
   if (!referer) return "";
@@ -30,7 +32,7 @@ export function cheminDeLaPage(referer: string | null | undefined, origine: stri
     return "";
   }
   if (url.origin !== origine) return "";
-  return cheminInterne(url.pathname, "").slice(0, PAGE_URL_MAX);
+  return `${url.pathname}${url.search}`.slice(0, PAGE_URL_MAX);
 }
 
 /** Titre et message d'une notification manuelle trop longs ? */
@@ -107,6 +109,13 @@ export function lireUidsRattachement(b: unknown): string[] {
   const liste = uids.filter((u): u is string => typeof u === "string");
   if (liste.length > UIDS_MAX) throw new HttpError(400, "Trop de comptes");
   return liste;
+}
+
+/** equipes/rattachement : l'id de l'équipe éditée (une équipe de la table EQUIPES) ; absent ou inconnu : 400. */
+export function lireEquipeRattachement(b: unknown): string {
+  const { equipe } = corps(b);
+  if (typeof equipe !== "string" || !EQUIPES.some((e) => e.id === equipe)) throw new HttpError(400, "Équipe inconnue");
+  return equipe;
 }
 
 /** planning/release : clé, trimestre, publier (par défaut oui), année (entier 2026-2100 ; absente = année en cours). */

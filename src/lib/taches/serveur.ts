@@ -5,7 +5,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { adminDb, verifyIdToken } from "@/lib/push/admin";
 import { equipesDe, estDeLEquipe, estReferentDe, peutCocher } from "@/lib/access";
-import { reserverPourUids, rendrePourUids } from "@/lib/push/reserver";
 import type { Tache } from "@/types/tache";
 
 export const ID = /^[\w-]+$/;
@@ -83,14 +82,4 @@ export async function ciblesDuRappel(
   db: FirebaseFirestore.Firestore = adminDb(),
 ): Promise<string[]> {
   return tache.responsableUid ? [tache.responsableUid] : referentsDeLEquipe(tache.equipe, db);
-}
-
-/** Garde les uid pas encore prévenus pour cette clé, et les réserve (create) avant l'envoi. */
-export async function premiereFois(uids: string[], key: string, meta: Record<string, unknown>): Promise<string[]> {
-  return reserverPourUids(adminDb(), uids, key, meta);
-}
-
-/** Rend les réservations de `premiereFois` quand l'envoi a échoué. */
-export async function rendrePremiereFois(uids: string[], key: string): Promise<void> {
-  await rendrePourUids(adminDb(), uids, key);
 }

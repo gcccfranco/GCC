@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { readFileSync } from "node:fs";
 import { BASE_URL_COUPE } from "../playwright.config";
 import { abonneAuxNotifications, signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { interdireDialoguesNatifs, ongletsRail, verifierAgencement, verifierSansDebordement } from "./helpers/agencement";
@@ -578,5 +579,29 @@ test.describe("back-office coupé : les setlists de fête n'existent pas", () =>
     const ordinaire = { ...fete, title: "Culte du 18", category: "Groupe Paix", date: "2026-10-18", fete: undefined, editeurs: [] };
     await signInAs(page, MO, { ...docs, "setlists/culte-18": ordinaire }, "/setlists?cat=No%C3%ABl");
     await expect(page.getByRole("link", { name: /Culte du 18/ })).toBeVisible();
+  });
+});
+
+// A2 ter : en ligne, « Prévenir des changements » n'existe pas — le texte « déjà annoncé » ne renvoie pas vers lui,
+// et le « Trimestre … publié » du panneau passe par la traduction.
+test.describe("back-office coupé : textes de publication d'un trimestre", () => {
+  const fr = JSON.parse(readFileSync("src/locales/fr.json", "utf8")).planning;
+  const zh = JSON.parse(readFileSync("src/locales/zh-CN.json", "utf8")).planning;
+
+  test("la variante en ligne de « déjà annoncé » ne parle pas de « Prévenir des changements », en français et en 中文", () => {
+    expect(fr.dejaAnnonce).toContain("Prévenir des changements");
+    expect(fr.dejaAnnonceEnLigne).not.toContain("Prévenir des changements");
+    expect(zh.dejaAnnonce).toContain("通知改动");
+    expect(zh.dejaAnnonceEnLigne).not.toContain("通知改动");
+    expect(fr.trimestrePublie).toContain("{{tri}}");
+    expect(zh.trimestrePublie).toContain("{{tri}}");
+  });
+
+  test("BoutonPublication et PublishPlanningPanel choisissent la variante selon BACK_OFFICE", () => {
+    for (const f of ["src/components/planning/BoutonPublication.tsx", "src/components/planning/PublishPlanningPanel.tsx"]) {
+      const source = readFileSync(f, "utf8");
+      expect(source, f).toContain('BACK_OFFICE ? "planning.dejaAnnonce" : "planning.dejaAnnonceEnLigne"');
+    }
+    expect(readFileSync("src/components/planning/PublishPlanningPanel.tsx", "utf8")).not.toMatch(/`Trimestre \$\{tri\} publié/);
   });
 });

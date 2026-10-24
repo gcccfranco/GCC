@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Send, Check, EyeOff } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { authHeader } from "@/lib/firebase/setlists";
+import { BACK_OFFICE } from "@/lib/backOffice";
 import { getCurrentTri } from "@/lib/planning/utils";
 import { audienceLabel } from "@/lib/push/audiences";
 import {
@@ -72,11 +73,11 @@ export function PublishPlanningPanel({
         setFeedback(
           publish
             ? data.notified
-              ? `Trimestre ${tri} publié — notification envoyée (${data.sent ?? 0}).`
+              ? t("planning.trimestrePublieNotifie", { tri, count: data.sent ?? 0 })
               : data.dejaAnnonce
-                ? `Trimestre ${tri} publié. ${t("planning.dejaAnnonce")}`
-                : `Trimestre ${tri} publié.`
-            : `Trimestre ${tri} masqué de nouveau.`
+                ? `${t("planning.trimestrePublie", { tri })} ${t(BACK_OFFICE ? "planning.dejaAnnonce" : "planning.dejaAnnonceEnLigne")}`
+                : t("planning.trimestrePublie", { tri })
+            : t("planning.trimestreMasque", { tri })
         );
       } else {
         setFeedback(data.error || "Échec.");

@@ -83,9 +83,10 @@ export function usePrevenir({ prevenir, definition, rows, speciaux, ecrites, com
   const publis = prevenir?.publications ?? 0
   const dejaVu = useRef(publis)
   useEffect(() => {
-    if (publis === dejaVu.current) return
+    // Un trimestre masqué (brouillon) n'a pas de `prevenir` : le compteur lu y vaut 0 sans que rien n'ait changé,
+    // `dejaVu` ne le suit pas — une republication déjà annoncée n'envoie donc aucune référence.
+    if (!prevenir || publis === dejaVu.current) return
     dejaVu.current = publis
-    if (!prevenir) return
     void appeler({ action: "reference", key: prevenir.planning.key, annee: prevenir.annee, tri: prevenir.tri, cases: casesRef.current, apresPublication: true })
       .then((r) => { if (r.ok) void relire() })
   }, [publis, prevenir, relire])

@@ -13,40 +13,84 @@ function dejaLa(e: unknown): boolean {
   return code === 6 || code === "already-exists" || code === "ALREADY_EXISTS";
 }
 
-/** Réserve la clé. Rend `false` si elle l'est déjà (l'envoi a eu lieu, ou est en cours). Avec `delaiMs`,
- *  une réservation plus vieille que ce délai (champ `at`) est reprise, dans une transaction.
- *  Le document porte un jeton (`jetonCreation`) : si le SDK rejoue un commit déjà passé, `create()` répond
- *  ALREADY_EXISTS pour notre propre document ; la relecture reconnaît le jeton et la réservation est à nous. */
+/** Délai après lequel une réservation du cron sans `envoyeLe` est reprise. */
+export const REPRISE_CRON_MS = 5 * 60_000;
+
+/** Relit le document après un ALREADY_EXISTS : un réessai, puis l'erreur. */
+async function relire(ref: FirebaseFirestore.DocumentReference): Promise<FirebaseFirestore.DocumentSnapshot> {
+  try {
+    return await ref.get();
+  } catch {
+    return ref.get();
+  }
+}
+
+/** Réserve la clé. Rend le jeton de la réservation, ou `null` si elle l'est déjà (l'envoi a eu lieu, ou est en
+ *  cours). Avec `delaiMs`, une réservation plus vieille que ce délai (champ `at`) et sans `envoyeLe` est reprise,
+ *  dans une transaction. Le document porte le jeton (`jetonCreation`) : si le SDK rejoue un commit déjà passé,
+ *  `create()` répond ALREADY_EXISTS pour notre propre document ; la relecture (réessayée une fois) reconnaît le
+ *  jeton et la réservation est à nous. Le jeton sert aussi à ne rendre que sa propre réservation. */
+export async function reserverEnvoiJeton(
+  db: FirebaseFirestore.Firestore,
+  cle: string,
+  donnees: Record<string, unknown>,
+  options: { delaiMs?: number } = {},
+): Promise<string | null> {
+  const ref = db.collection(COLLECTION).doc(cle);
+  const jetonCreation = randomUUID();
+  const document = { ...donnees, jetonCreation };
+  try {
+    await ref.create(document);
+    return jetonCreation;
+  } catch (e) {
+    if (!dejaLa(e)) throw e;
+  }
+  try {
+    if ((await relire(ref)).data()?.jetonCreation === jetonCreation) return jetonCreation;
+  } catch (e) {
+    // Relecture impossible : la réservation a peut-être été créée par nous ; on la rend si elle porte notre jeton.
+    await rendreEnvoi(db, cle, jetonCreation).catch(() => undefined);
+    throw e;
+  }
+  const { delaiMs } = options;
+  if (!delaiMs) return null;
+  const reprise = await db.runTransaction(async (tx) => {
+    const snap = await tx.get(ref);
+    const at = snap.exists ? ((snap.data()?.at as number | undefined) ?? 0) : 0;
+    if (snap.exists && (snap.data()?.envoyeLe || Date.now() - at < delaiMs)) return false;
+    tx.set(ref, document);
+    return true;
+  });
+  return reprise ? jetonCreation : null;
+}
+
+/** Comme `reserverEnvoiJeton`, rend seulement si la clé est à nous. */
 export async function reserverEnvoi(
   db: FirebaseFirestore.Firestore,
   cle: string,
   donnees: Record<string, unknown>,
   options: { delaiMs?: number } = {},
 ): Promise<boolean> {
+  return (await reserverEnvoiJeton(db, cle, donnees, options)) !== null;
+}
+
+/** Rend la réservation (l'envoi a échoué), dans une transaction, seulement si elle porte encore ce jeton (sinon
+ *  elle a été reprise : rien à faire). Le prochain appel pourra envoyer. */
+export async function rendreEnvoi(db: FirebaseFirestore.Firestore, cle: string, jeton: string): Promise<void> {
   const ref = db.collection(COLLECTION).doc(cle);
-  const jetonCreation = randomUUID();
-  const document = { ...donnees, jetonCreation };
-  try {
-    await ref.create(document);
-    return true;
-  } catch (e) {
-    if (!dejaLa(e)) throw e;
-  }
-  if ((await ref.get()).data()?.jetonCreation === jetonCreation) return true;
-  const { delaiMs } = options;
-  if (!delaiMs) return false;
-  return db.runTransaction(async (tx) => {
+  await db.runTransaction(async (tx) => {
     const snap = await tx.get(ref);
-    const at = snap.exists ? ((snap.data()?.at as number | undefined) ?? 0) : 0;
-    if (snap.exists && Date.now() - at < delaiMs) return false;
-    tx.set(ref, document);
-    return true;
+    if (snap.exists && snap.data()?.jetonCreation === jeton) tx.delete(ref);
   });
 }
 
-/** Rend la réservation (l'envoi a échoué) : le prochain appel pourra envoyer. */
-export async function rendreEnvoi(db: FirebaseFirestore.Firestore, cle: string): Promise<void> {
-  await db.collection(COLLECTION).doc(cle).delete();
+/** Note que l'envoi est parti (`envoyeLe`), si la réservation porte encore ce jeton : elle n'est plus reprise. */
+export async function marquerEnvoye(db: FirebaseFirestore.Firestore, cle: string, jeton: string): Promise<void> {
+  const ref = db.collection(COLLECTION).doc(cle);
+  await db.runTransaction(async (tx) => {
+    const snap = await tx.get(ref);
+    if (snap.exists && snap.data()?.jetonCreation === jeton) tx.set(ref, { ...snap.data(), envoyeLe: Date.now() });
+  });
 }
 
 /** Prend un verrou : comme `reserverEnvoi` avec reprise après `delaiMs`, en y écrivant un jeton aléatoire.
@@ -70,18 +114,20 @@ export async function rendreVerrou(db: FirebaseFirestore.Firestore, cle: string,
   });
 }
 
-/** Réserve `${prefixe}-${uid}` pour chaque uid ; rend ceux dont la réservation a réussi. Si l'une des
- *  réservations lève, celles déjà créées sont rendues, puis l'erreur est relancée. */
-export async function reserverPourUids(
+/** Réserve `${prefixe}-${uid}` pour chaque uid ; rend, pour ceux dont la réservation a réussi, leur jeton. Si l'une
+ *  des réservations lève, celles déjà créées sont rendues, puis l'erreur est relancée. */
+export async function reserverPourUidsJetons(
   db: FirebaseFirestore.Firestore,
   uids: string[],
   prefixe: string,
   meta: Record<string, unknown>,
-): Promise<string[]> {
+  options: { delaiMs?: number } = {},
+): Promise<Map<string, string>> {
   const resultats = await Promise.allSettled(
-    uids.map(async (u) => ((await reserverEnvoi(db, `${prefixe}-${u}`, { ...meta, uid: u, at: Date.now() })) ? u : null)),
+    uids.map(async (u) => [u, await reserverEnvoiJeton(db, `${prefixe}-${u}`, { ...meta, uid: u, at: Date.now() }, options)] as const),
   );
-  const prises = resultats.flatMap((r) => (r.status === "fulfilled" && r.value !== null ? [r.value] : []));
+  const prises = new Map<string, string>();
+  for (const r of resultats) if (r.status === "fulfilled" && r.value[1] !== null) prises.set(r.value[0], r.value[1]);
   const echec = resultats.find((r): r is PromiseRejectedResult => r.status === "rejected");
   if (echec) {
     await rendrePourUids(db, prises, prefixe);
@@ -90,31 +136,38 @@ export async function reserverPourUids(
   return prises;
 }
 
-/** Rend les réservations de `reserverPourUids`. */
-export async function rendrePourUids(db: FirebaseFirestore.Firestore, uids: string[], prefixe: string): Promise<void> {
-  await Promise.all(uids.map((u) => rendreEnvoi(db, `${prefixe}-${u}`).catch(() => undefined)));
+/** Les uid réservés (voir `reserverPourUidsJetons`). */
+export async function reserverPourUids(
+  db: FirebaseFirestore.Firestore,
+  uids: string[],
+  prefixe: string,
+  meta: Record<string, unknown>,
+  options: { delaiMs?: number } = {},
+): Promise<string[]> {
+  return [...(await reserverPourUidsJetons(db, uids, prefixe, meta, options)).keys()];
 }
 
-/** Première publication d'un trimestre de planning : `true` une seule fois par (planning, année, trimestre),
- *  même si le trimestre est masqué puis republié. */
-export function reserverPublication(db: FirebaseFirestore.Firestore, planning: string, annee: number, tri: string, uid: string): Promise<boolean> {
-  return reserverEnvoi(db, cleRelease(planning, annee, tri), { at: Date.now(), planning, year: annee, tri, uid });
+/** Rend les réservations de `reserverPourUidsJetons` (uid → jeton) : chacune seulement si elle est encore à nous. */
+export async function rendrePourUids(db: FirebaseFirestore.Firestore, jetons: Map<string, string>, prefixe: string): Promise<void> {
+  await Promise.all([...jetons].map(([u, jeton]) => rendreEnvoi(db, `${prefixe}-${u}`, jeton).catch(() => undefined)));
 }
 
 export const cleRelease = (planning: string, annee: number, tri: string) => `release_${planning}_${annee}_${tri}`;
 
-/** Faut-il notifier la publication d'un trimestre ? Oui si on publie ET si la réservation de première
- *  publication réussit : une seule fois par planning, année et trimestre. Un envoi raté rend la clé, donc le
- *  réessai notifie ; un masquage suivi d'une republication ne renotifie pas, la clé étant là. */
-export async function doitNotifierPublication(
+/** Publication d'un trimestre de planning : que faire de la notification ? Masquer : rien. Publier : la
+ *  première publication d'un (planning, année, trimestre) réserve la clé `release_…` et envoie ; le masquage
+ *  suivi d'une republication ne renotifie pas (`dejaAnnonce`). `envoi` reçoit `parti` (voir `envoyerReserve`) :
+ *  un envoi qui lève avant tout envoi rend la clé (le réessai notifie) ; levé après un premier envoi, la clé reste
+ *  et la publication est tout de même notifiée (`notified: true`, `partiel: true`). */
+export async function notifierPublication(
   db: FirebaseFirestore.Firestore,
-  planning: string,
-  annee: number,
-  tri: string,
-  uid: string,
-  { publier }: { publier: boolean },
-): Promise<boolean> {
-  return publier && (await reserverPublication(db, planning, annee, tri, uid));
+  { planning, annee, tri, uid, publier }: { planning: string; annee: number; tri: string; uid: string; publier: boolean },
+  envoi: (parti: () => void) => Promise<void>,
+): Promise<{ notified: boolean; dejaAnnonce: boolean; partiel: boolean }> {
+  if (!publier) return { notified: false, dejaAnnonce: false, partiel: false };
+  const r = await envoyerReserve(db, cleRelease(planning, annee, tri), { at: Date.now(), planning, year: annee, tri, uid }, {}, envoi);
+  if (!r.pris) return { notified: false, dejaAnnonce: true, partiel: false };
+  return { notified: true, dejaAnnonce: false, partiel: r.partiel === true };
 }
 
 /** Réponse d'un appel qui trouve le verrou d'envoi d'une setlist tenu par un autre : en automatique, rien à
@@ -135,7 +188,9 @@ export async function apresEnvoi(travail: () => Promise<unknown>, contexte: stri
   }
 }
 
-/** Réserve la clé de `cle`, exécute `envoi`, rend la clé si `envoi` lève (rien n'est parti). `apres` (cloche,
+/** Réserve la clé de `cle`, exécute `envoi`, rend la clé si `envoi` lève AVANT qu'une notification soit partie.
+ *  `envoi` reçoit `parti` : à appeler dès le premier envoi réussi. Si `envoi` lève après cela, la clé reste (des
+ *  notifications sont parties), l'erreur est journalisée et le résultat porte `partiel: true`. `apres` (cloche,
  *  journal) s'exécute une fois l'envoi fait : son échec se journalise et ne rend pas la clé.
  *  Rend `{ pris: false }` si la clé était déjà réservée. */
 export async function envoyerReserve<T>(
@@ -143,16 +198,22 @@ export async function envoyerReserve<T>(
   cle: string,
   donnees: Record<string, unknown>,
   options: { delaiMs?: number },
-  envoi: () => Promise<T>,
+  envoi: (parti: () => void) => Promise<T>,
   apres?: (valeur: T) => Promise<unknown>,
-): Promise<{ pris: false } | { pris: true; valeur: T }> {
-  if (!(await reserverEnvoi(db, cle, donnees, options))) return { pris: false };
+): Promise<{ pris: false } | { pris: true; valeur: T; partiel?: undefined } | { pris: true; valeur?: undefined; partiel: true }> {
+  const jeton = await reserverEnvoiJeton(db, cle, donnees, options);
+  if (jeton === null) return { pris: false };
   let valeur: T;
+  let envoye = false;
   try {
-    valeur = await envoi();
+    valeur = await envoi(() => { envoye = true; });
   } catch (e) {
-    await rendreEnvoi(db, cle).catch(() => undefined);
-    throw e;
+    if (!envoye) {
+      await rendreEnvoi(db, cle, jeton).catch(() => undefined);
+      throw e;
+    }
+    console.error(`[envoi ${cle}] envoi interrompu après un premier envoi réussi`, e);
+    return { pris: true, partiel: true };
   }
   if (apres) await apresEnvoi(() => apres(valeur), `envoi ${cle}`);
   return { pris: true, valeur };
@@ -168,39 +229,53 @@ export async function reserverPuisEnvoyer(
   meta: Record<string, unknown>,
   travail: (fresh: string[], envoyes: Set<string>) => Promise<void>,
 ): Promise<string[]> {
-  let fresh: string[] = [];
+  let jetons = new Map<string, string>();
   const envoyes = new Set<string>();
   try {
-    fresh = await reserverPourUids(db, uids, prefixe, meta);
+    jetons = await reserverPourUidsJetons(db, uids, prefixe, meta);
+    const fresh = [...jetons.keys()];
     if (fresh.length) await travail(fresh, envoyes);
   } catch (e) {
-    await rendrePourUids(db, fresh.filter((u) => !envoyes.has(u)), prefixe);
+    await rendrePourUids(db, new Map([...jetons].filter(([u]) => !envoyes.has(u))), prefixe);
     throw e;
   }
-  return fresh;
+  return [...jetons.keys()];
 }
 
 /** Suivi des réservations d'un passage du cron : chaque clé prise est notée ; celles dont la notification n'est pas
- *  partie se rendent d'un coup si le passage échoue. */
+ *  partie se rendent d'un coup si le passage échoue. Une réservation porte `at` ; une fois la notification partie,
+ *  `envoyeLe` : sans lui, un passage interrompu laisse une clé reprise par le suivant après `REPRISE_CRON_MS`. */
 export function suivreReservations(db: FirebaseFirestore.Firestore) {
-  const prises = new Map<string, Set<string>>();
+  const prises = new Map<string, Map<string, string>>();
   const envoyees = new Map<string, Set<string>>();
-  const dans = (m: Map<string, Set<string>>, prefixe: string) => m.get(prefixe) ?? m.set(prefixe, new Set()).get(prefixe)!;
+  const marques: Promise<unknown>[] = [];
+  const dans = <V>(m: Map<string, V>, prefixe: string, vide: () => V) => m.get(prefixe) ?? m.set(prefixe, vide()).get(prefixe)!;
   return {
     /** Réserve (clé `${prefixe}-${uid}`) et rend les uid réservés. */
     async reserver(uids: string[], prefixe: string, meta: Record<string, unknown>): Promise<string[]> {
-      const fresh = await reserverPourUids(db, uids, prefixe, meta);
-      for (const u of fresh) dans(prises, prefixe).add(u);
-      return fresh;
+      const jetons = await reserverPourUidsJetons(db, uids, prefixe, meta, { delaiMs: REPRISE_CRON_MS });
+      for (const [u, j] of jetons) dans(prises, prefixe, () => new Map()).set(u, j);
+      return [...jetons.keys()];
     },
-    /** La notification de ce compte est partie pour ces préfixes. */
+    /** La notification de ce compte est partie pour ces préfixes : `envoyeLe` s'écrit sur chaque réservation. */
     envoye(uid: string, prefixes: string[]) {
-      for (const p of prefixes) dans(envoyees, p).add(uid);
+      for (const p of prefixes) {
+        dans(envoyees, p, () => new Set()).add(uid);
+        const jeton = prises.get(p)?.get(uid);
+        if (jeton) {
+          marques.push(marquerEnvoye(db, `${p}-${uid}`, jeton).catch((e) => console.error(`[cron] envoyeLe non écrit pour ${p}-${uid}`, e)));
+        }
+      }
+    },
+    /** Attend les écritures d'`envoyeLe`. */
+    async terminer(): Promise<void> {
+      await Promise.allSettled(marques);
     },
     /** Rend toute réservation dont la notification n'est pas partie. */
     async rendreRestantes(): Promise<void> {
-      await Promise.all([...prises].map(([prefixe, uids]) =>
-        rendrePourUids(db, [...uids].filter((u) => !envoyees.get(prefixe)?.has(u)), prefixe)));
+      await Promise.allSettled(marques);
+      await Promise.all([...prises].map(([prefixe, jetons]) =>
+        rendrePourUids(db, new Map([...jetons].filter(([u]) => !envoyees.get(prefixe)?.has(u))), prefixe)));
     },
   };
 }

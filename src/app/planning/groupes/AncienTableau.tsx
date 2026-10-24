@@ -12,7 +12,7 @@ import { PlanningTable } from "@/components/planning/PlanningTable"
 import { StaleBanner } from "@/components/planning/StaleBanner"
 import { filterByTri, getCurrentTri } from "@/lib/planning/utils"
 import { PAIX_FALLBACK, FIDELITE_FALLBACK, FIDELITE_MUSIC_FALLBACK, BONTE_FALLBACK } from "@/lib/planning/data"
-import { fetchPaix, fetchFidelite, fetchBonte } from "@/lib/planning/sheets"
+import { fetchPaix, fetchFidelite, fetchBonte, copiesServiesSheet } from "@/lib/planning/sheets"
 import { completerMusiciensFidelite } from "@/lib/planning/grilles"
 import { useProfile } from "@/lib/firebase/users"
 import { isAdminUser } from "@/lib/access"
@@ -49,12 +49,13 @@ export function AncienTableau() {
   const [pubByGrp, setPubByGrp] = useState<Record<string, string[]>>({})
 
   useEffect(() => {
+    const copiesAvant = copiesServiesSheet()
     Promise.allSettled([
       fetchPaix().then(d => { if (d.length) setPaix(d) }),
       fetchFidelite().then(d => { if (d.length) setFid(d) }),
       fetchBonte().then(d => { if (d.length) setBonte(d) }),
     ]).then(results => {
-      setStale(results.some(r => r.status === "rejected"))
+      setStale(results.some(r => r.status === "rejected") || copiesServiesSheet() > copiesAvant)
       setLoading(false)
     })
   }, [])

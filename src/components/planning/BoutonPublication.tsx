@@ -5,6 +5,7 @@ import { Send, EyeOff } from "lucide-react"
 import { useTranslation } from "react-i18next"
 import { useConfirmer } from "@/components/layout/Confirmer"
 import { authHeader } from "@/lib/firebase/setlists"
+import { BACK_OFFICE } from "@/lib/backOffice"
 
 // « Publier le T1 » / « Masquer le T1 » sur la page du planning (lot U2, Q4) :
 // la route existante (/api/planning/release) avec l'année de la page. La
@@ -17,7 +18,8 @@ export function BoutonPublication({ planningKey, planningLabel, annee, tri, publ
   tri: string
   /** Le trimestre est-il déjà publié ? Oui : « Masquer » ; non : « Publier ». */
   publie: boolean
-  onChange: (published: string[]) => void
+  /** `notified` : la publication vient d'être notifiée (première publication du trimestre). */
+  onChange: (published: string[], notified: boolean) => void
 }) {
   const { t } = useTranslation()
   const confirmer = useConfirmer()
@@ -38,10 +40,11 @@ export function BoutonPublication({ planningKey, planningLabel, annee, tri, publ
         headers: { "Content-Type": "application/json", ...(await authHeader()) },
         body: JSON.stringify({ key: planningKey, tri, publish, year: annee }),
       })
-      const data = (await res.json().catch(() => ({}))) as { published?: string[]; error?: string; dejaAnnonce?: boolean }
+      const data = (await res.json().catch(() => ({}))) as { published?: string[]; error?: string; dejaAnnonce?: boolean; notified?: boolean }
       if (res.ok) {
-        onChange(data.published ?? [])
-        if (data.dejaAnnonce) setInfo(t("planning.dejaAnnonce"))
+        onChange(data.published ?? [], data.notified === true)
+        // « Prévenir des changements » n'existe pas en ligne (back-office coupé) : le texte n'y renvoie pas.
+        if (data.dejaAnnonce) setInfo(t(BACK_OFFICE ? "planning.dejaAnnonce" : "planning.dejaAnnonceEnLigne"))
       }
       else setErreur(data.error || t("planning.publierEchec"))
     } catch {

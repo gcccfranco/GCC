@@ -4,7 +4,8 @@ import { sendPushToUids } from "@/lib/push/send";
 import { recordNotification } from "@/lib/push/notifications";
 import { filterUidsByNotifPref, loadNotifLangs } from "@/lib/push/recipients";
 import { nouvelleTacheMessage } from "@/lib/taches/messages";
-import { ID, appelant, estEquipe, premiereFois, rendrePremiereFois, tacheDeLAppelant } from "@/lib/taches/serveur";
+import { ID, appelant, estEquipe, tacheDeLAppelant } from "@/lib/taches/serveur";
+import { apresEnvoi, envoyerReserve } from "@/lib/push/reserver";
 import { BACK_OFFICE } from "@/lib/backOffice"
 
 export const runtime = "nodejs";
@@ -31,19 +32,19 @@ export async function POST(req: NextRequest) {
   if (!responsable || responsable === qui.uid) return NextResponse.json({ ok: true, notified: 0 });
 
   const key = `tache-assigne-${equipe}-${tacheId}`;
-  const fresh = await premiereFois(await filterUidsByNotifPref([responsable], "taches"), key, { equipe, tacheId });
-  if (fresh.length) {
-    try {
-      const lang = (await loadNotifLangs(fresh)).get(responsable) ?? "fr";
-      // Lot U6, B3 : « À faire pour moi », ouvert à tout membre de l'équipe (la page de l'équipe est au
-      // Back-Office).
-      const payload = { ...nouvelleTacheMessage(tache, lang), url: "/taches", tag: key };
-      await sendPushToUids(fresh, payload);
-      await recordNotification({ ...payload, kind: "tache", recipients: fresh });
-    } catch (e) {
-      await rendrePremiereFois(fresh, key);
-      throw e;
-    }
-  }
-  return NextResponse.json({ ok: true, notified: fresh.length });
+  const [destinataire] = await filterUidsByNotifPref([responsable], "taches");
+  if (!destinataire) return NextResponse.json({ ok: true, notified: 0 });
+  // La clé `${key}-${uid}` est réservée AVANT l'envoi (une fois par tâche et responsable), rendue si rien n'est
+  // parti ; la cloche s'écrit après l'envoi (envoyerReserve, src/lib/push/reserver.ts).
+  const db = adminDb();
+  const r = await envoyerReserve(db, `${key}-${destinataire}`, { equipe, tacheId, uid: destinataire, at: Date.now() }, {}, async (parti) => {
+    const lang = (await loadNotifLangs([destinataire])).get(destinataire) ?? "fr";
+    // Lot U6, B3 : « À faire pour moi », ouvert à tout membre de l'équipe (la page de l'équipe est au
+    // Back-Office).
+    const payload = { ...nouvelleTacheMessage(tache, lang), url: "/taches", tag: key };
+    await sendPushToUids([destinataire], payload);
+    parti();
+    await apresEnvoi(() => recordNotification({ ...payload, kind: "tache", recipients: [destinataire] }), "taches/assigne");
+  });
+  return NextResponse.json({ ok: true, notified: r.pris ? 1 : 0 });
 }

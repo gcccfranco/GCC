@@ -221,7 +221,7 @@ test("publier un trimestre : la fenêtre du site ; Annuler n'appelle rien ; Publ
   const publier = page.getByRole("button", { name: "Publier le T1" });
   await publier.click();
   await expect(fenetreDuSite(page).getByRole("heading", { name: /^Publier le T1 2027 de .+ \?$/ })).toBeVisible();
-  await expect(fenetreDuSite(page)).toContainText("Tous ses membres le verront et recevront une notification.");
+  await expect(fenetreDuSite(page)).toContainText("Tous ses membres le verront. Ils sont prévenus à la première publication du trimestre.");
   await capture(page, "confirmer-publier");
   await repondreDansLeSite(page, "Annuler");
   await expect(publier).toBeVisible();

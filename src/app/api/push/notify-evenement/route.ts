@@ -7,7 +7,7 @@ import { pushNouvelEvenement } from "@/lib/evenements/rappel";
 import { canCreateEvenement, canEditEvenement } from "@/lib/access";
 import { destinatairesEvenement } from "@/lib/evenements/serveur";
 import type { Evenement } from "@/types/evenement";
-import { reserverEnvoi, rendreEnvoi } from "@/lib/push/reserver";
+import { apresEnvoi, envoyerReserve } from "@/lib/push/reserver";
 import { BACK_OFFICE } from "@/lib/backOffice"
 
 export const runtime = "nodejs";
@@ -48,11 +48,9 @@ export async function POST(req: NextRequest) {
 
   const cle = `evenement-${evenementId}`;
   const uids = (await filterUidsByNotifPref(await destinatairesEvenement(db, e), "evenements")).filter((u) => u !== user.uid);
-  // La clé est réservée AVANT l'envoi (deux appels simultanés : un seul envoi) et rendue si l'envoi échoue.
-  if (!(await reserverEnvoi(db, cle, { at: Date.now(), evenementId, pour: e.pour, recipients: uids.length }))) {
-    return NextResponse.json({ ok: true, sent: 0, already: true });
-  }
-  try {
+  // La clé est réservée AVANT l'envoi (deux appels simultanés : un seul envoi) et rendue si rien n'est parti ;
+  // la cloche s'écrit après l'envoi (envoyerReserve, src/lib/push/reserver.ts).
+  const r = await envoyerReserve(db, cle, { at: Date.now(), evenementId, pour: e.pour, recipients: uids.length }, {}, async (parti) => {
     // Une fournée par langue (lot 8) : chacun reçoit le message dans la sienne.
     const langs = await loadNotifLangs(uids);
     let result: Awaited<ReturnType<typeof sendPushToUids>> | undefined;
@@ -61,11 +59,11 @@ export async function POST(req: NextRequest) {
       if (!groupe.length) continue;
       const payload = pushNouvelEvenement(e, lang);
       result = await sendPushToUids(groupe, payload);
-      await recordNotification({ ...payload, kind: "evenement", recipients: groupe });
+      parti();
+      await apresEnvoi(() => recordNotification({ ...payload, kind: "evenement", recipients: groupe }), "notify-evenement");
     }
-    return NextResponse.json({ ok: true, ...result, sent: uids.length });
-  } catch (err) {
-    await rendreEnvoi(db, cle).catch(() => undefined);
-    throw err;
-  }
+    return result;
+  });
+  if (!r.pris) return NextResponse.json({ ok: true, sent: 0, already: true });
+  return NextResponse.json({ ok: true, ...r.valeur, sent: uids.length, ...(r.partiel ? { notified: true } : {}) });
 }

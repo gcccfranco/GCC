@@ -10,6 +10,7 @@
 // grand, `DeuxVolets` (la liste en carte) sous l'en-tête commun de Messages ; « Supprimer » passe
 // dans « ⋯ » (confirmé dans le site) ; sous le message, « Le chant signalé » (titre, tonalité,
 // sections, lus dans l'index) et « Du même membre » (lus dans la liste déjà chargée).
+import { lienDeLaPage, origineDuSite } from "@/lib/report/lienPage";
 import { Fragment, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { useTranslation } from "react-i18next";
@@ -82,11 +83,15 @@ export function ReceptionVolets() {
               <Music className="h-3.5 w-3.5" aria-hidden />{m.r.songTitle || t("backOffice.reception.voirChant")}
             </Link>
           ),
-          m.r.pageUrl && (
+          m.r.pageUrl && (lienDeLaPage(m.r.pageUrl, origineDuSite()) ? (
             <a key="page" href={m.r.pageUrl} target="_blank" rel="noopener noreferrer" className={lien}>
               <Link2 className="h-3.5 w-3.5" aria-hidden />{t("backOffice.reception.page")}
             </a>
-          ),
+          ) : (
+            <span key="page" className={lien}>
+              <Link2 className="h-3.5 w-3.5" aria-hidden />{t("backOffice.reception.page")} : {m.r.pageUrl}
+            </span>
+          )),
         ]
       : [
           <a key="yt" href={m.p.youtubeUrl} target="_blank" rel="noopener noreferrer" className={lien}>

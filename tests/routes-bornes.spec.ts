@@ -5,12 +5,13 @@ import { appelantPeut, recalculerRattachement, lireEquipes, lireGroupes, referen
 import { uidsAChanger } from "../src/lib/equipes/organigramme";
 import {
   MESSAGE_MAX, PAGE_URL_MAX, SLUG_MAX, TITRE_MAX, UIDS_MAX, cheminDeLaPage, lireCorpsAudience, lireCorpsBroadcast, lireCorpsNotifySetlist,
-  lireCorpsRelease, lireCorpsReport, lireUidsRattachement,
+  lireCorpsRelease, lireCorpsReport, lireEquipeRattachement, lireUidsRattachement,
 } from "../src/lib/push/bornes";
+import { lienDeLaPage } from "../src/lib/report/lienPage";
 import { HttpError } from "../src/lib/evenements/serveur";
 import {
-  apresEnvoi, doitNotifierPublication, envoyerReserve, prendreVerrou, rendreEnvoi, rendrePourUids, rendreVerrou, reponseEnvoiEnCours,
-  reserverEnvoi, reserverPourUids, reserverPuisEnvoyer, reserverPublication, suivreReservations,
+  REPRISE_CRON_MS, apresEnvoi, envoyerReserve, marquerEnvoye, notifierPublication, prendreVerrou, rendreEnvoi, rendrePourUids, rendreVerrou,
+  reponseEnvoiEnCours, reserverEnvoi, reserverEnvoiJeton, reserverPourUids, reserverPourUidsJetons, reserverPuisEnvoyer, suivreReservations,
 } from "../src/lib/push/reserver";
 import { baseSimulee } from "./helpers/baseSimulee";
 
@@ -41,10 +42,12 @@ test.describe("rattachement : qui peut nommer un référent (C7)", () => {
     cible: string,
     appelant: string,
     admin = false,
+    /** L'équipe éditée (`null` : la route des groupes). */
+    equipe: string | null = "louange",
   ) {
     const { db, collections } = baseSimulee({ users: profils, equipes });
-    const peut = appelantPeut(admin, profils[appelant] ?? null);
-    await recalculerRattachement(db, [cible], await lireEquipes(db), await lireGroupes(db), { peut });
+    const peut = appelantPeut(admin, profils[appelant] ?? null, equipe);
+    await recalculerRattachement(db, [cible], await lireEquipes(db), await lireGroupes(db), { peut, equipe });
     return collections.users[cible];
   }
 
@@ -80,14 +83,14 @@ test.describe("rattachement : qui peut nommer un référent (C7)", () => {
   test("Orga nomme le référent d'une autre équipe : recopié", async () => {
     const profils = { "u-fanny": { dansEquipes: ["orga"] }, "u-gilles": {} };
     const equipes = { regie: { membres: [membre("u-gilles", true)] } };
-    const profil = await recopie(profils, equipes, "u-gilles", "u-fanny");
+    const profil = await recopie(profils, equipes, "u-gilles", "u-fanny", false, "regie");
     expect(profil.referentDe).toEqual(["regie"]);
   });
 
   test("un admin nomme un référent : recopié", async () => {
     const profils = { "u-hugo": {} };
     const equipes = { regie: { membres: [membre("u-hugo", true)] } };
-    const profil = await recopie(profils, equipes, "u-hugo", "u-admin", true);
+    const profil = await recopie(profils, equipes, "u-hugo", "u-admin", true, "regie");
     expect(profil.referentDe).toEqual(["regie"]);
   });
 
@@ -121,7 +124,7 @@ test.describe("rattachement : qui peut nommer un référent (C7)", () => {
 
   test("un comité : ajout et retrait libres, tirés des groupes", async () => {
     const profils = { "u-ophelie": { dansEquipes: ["comite-paix"], referentDe: ["comite-paix"] } };
-    const profil = await recopie(profils, {}, "u-ophelie", "u-ivan");
+    const profil = await recopie(profils, {}, "u-ophelie", "u-ivan", false, null);
     expect(profil.referentDe ?? []).toEqual([]);
   });
 
@@ -132,6 +135,50 @@ test.describe("rattachement : qui peut nommer un référent (C7)", () => {
     expect(referentsPermis(["regie"], [], (e) => e === "regie")).toEqual([]);
     expect(referentsPermis(["regie", "louange"], ["louange"], (e) => e === "louange")).toEqual(["louange", "regie"]);
     expect(referentsPermis(["musiciens"], [], () => false, true)).toEqual([]);
+  });
+
+  test("referentsPermis : un retrait refusé ne tient que si le compte figure encore dans l'équipe", () => {
+    const encore = (e: string) => e === "regie";
+    expect(referentsPermis(["regie", "medias"], [], () => false, false, encore)).toEqual(["regie"]);
+    expect(referentsPermis(["medias"], [], () => false, false, () => false)).toEqual([]);
+  });
+
+  test("un référent Médias (non Orga) retire un co-référent de Médias : la ligne disparaît, le profil sort de l'équipe", async () => {
+    const profils = {
+      "u-noelle": { dansEquipes: ["medias"], referentDe: ["medias"] },
+      "u-oscar": { dansEquipes: ["medias"], referentDe: ["medias"] },
+    };
+    // La ligne d'Oscar a été retirée de equipes/medias ; Noëlle (référente Médias) enregistre.
+    const equipes = { medias: { membres: [membre("u-noelle", true)] } };
+    const profil = await recopie(profils, equipes, "u-oscar", "u-noelle", false, "medias");
+    expect(profil.referentDe ?? []).not.toContain("medias");
+    expect(profil.dansEquipes ?? []).not.toContain("medias");
+  });
+
+  test("Orga modifie la ligne d'un compte dans Médias : la coche posée sur sa ligne Louange ne passe pas au profil", async () => {
+    const profils = { "u-fanny": { dansEquipes: ["orga"] }, "u-pierre": { dansEquipes: ["medias"] } };
+    const equipes = {
+      medias: { membres: [membre("u-pierre", false)] },
+      louange: { membres: [membre("u-pierre", true, { sousEquipes: ["choristes"], referentSous: ["choristes"] })] },
+    };
+    const profil = await recopie(profils, equipes, "u-pierre", "u-fanny", false, "medias");
+    expect(profil.referentDe ?? []).not.toContain("louange");
+    expect(profil.referentSous ?? []).toEqual([]);
+  });
+
+  test("un admin qui enregistre un groupe où le compte est cité : la coche référent d'une équipe ne passe pas non plus", async () => {
+    const profils = { "u-pierre": { dansEquipes: ["louange"] } };
+    const equipes = { louange: { membres: [membre("u-pierre", true, { referentSous: ["choristes"] })] } };
+    const profil = await recopie(profils, equipes, "u-pierre", "u-admin", true, null);
+    expect(profil.referentDe ?? []).not.toContain("louange");
+    expect(profil.referentSous ?? []).toEqual([]);
+  });
+
+  test("rattachement : l'équipe éditée est requise et connue", () => {
+    expect(lireEquipeRattachement({ uids: [], equipe: "medias" })).toBe("medias");
+    refus400(() => lireEquipeRattachement({ uids: [] }), "Équipe inconnue");
+    refus400(() => lireEquipeRattachement({ equipe: "pirates" }), "Équipe inconnue");
+    refus400(() => lireEquipeRattachement({ equipe: 3 }), "Équipe inconnue");
   });
 
   test("uidsAChanger : seules les lignes ajoutées, retirées ou modifiées", () => {
@@ -148,7 +195,7 @@ test.describe("rattachement : qui peut nommer un référent (C7)", () => {
       "u-karim": { dansEquipes: ["louange"] },
     };
     const equipes = { louange: { membres: [membre("u-karim", true, { sousEquipes: ["choristes"], referentSous: ["choristes"] })] } };
-    const profil = await recopie(profils, equipes, "u-karim", "u-jade");
+    const profil = await recopie(profils, equipes, "u-karim", "u-jade", false, null);
     expect(profil.referentDe ?? []).not.toContain("louange");
     expect(profil.referentSous ?? []).toEqual([]);
   });
@@ -271,8 +318,10 @@ test.describe("envois en double : la clé est réservée avant l'envoi (S8)", ()
     expect([...a, ...b].sort()).toEqual(["u1", "u2", "u3"]);
     expect(Object.keys(collections.notifLog).sort()).toEqual(["conflit-p-c1-c2-u1", "conflit-p-c1-c2-u2", "conflit-p-c1-c2-u3"]);
     expect(collections.notifLog["conflit-p-c1-c2-u1"]).toMatchObject({ programmeId: "p", uid: "u1" });
-    await rendrePourUids(db, ["u1"], "conflit-p-c1-c2");
-    expect(collections.notifLog["conflit-p-c1-c2-u1"]).toBeUndefined();
+    const jetons = await reserverPourUidsJetons(db, ["u9"], "conflit-p-c1-c2", {});
+    await rendrePourUids(db, jetons, "conflit-p-c1-c2");
+    expect(collections.notifLog["conflit-p-c1-c2-u9"]).toBeUndefined();
+    expect(collections.notifLog["conflit-p-c1-c2-u1"]).toBeDefined();
   });
 
   test("anti-doublon de notify-audience : repris passé la minute, bloqué avant", async () => {
@@ -304,53 +353,66 @@ test.describe("envois en double : la clé est réservée avant l'envoi (S8)", ()
 });
 
 test.describe("planning/release : une seule notification par trimestre (D7)", () => {
-  test("publier, masquer, republier : une seule notification", async () => {
+  /** La route : demande à la fonction de src/lib (notifierPublication) quoi faire, et lui passe l'envoi. */
+  function publication(db: FirebaseFirestore.Firestore, notifications: string[], tri = "T1") {
+    return async (publier: boolean, envoi: (parti: () => void) => Promise<void> = async (parti) => { parti(); notifications.push(tri); }) =>
+      notifierPublication(db, { planning: "culte", annee: 2027, tri, uid: "u1", publier }, envoi);
+  }
+
+  test("publier, masquer, republier : une seule notification, la republication est « déjà annoncée »", async () => {
     const { db, collections } = baseSimulee();
     const notifications: string[] = [];
-    // La route : demande à la fonction de src/lib si elle doit notifier.
-    async function bascule(publier: boolean) {
-      if (await doitNotifierPublication(db, "culte", 2027, "T1", "u1", { publier })) notifications.push("T1");
-    }
-    await bascule(true);
-    await bascule(false);
-    await bascule(true);
+    const bascule = publication(db, notifications);
+    expect(await bascule(true)).toEqual({ notified: true, dejaAnnonce: false, partiel: false });
+    expect(await bascule(false)).toEqual({ notified: false, dejaAnnonce: false, partiel: false });
+    expect(await bascule(true)).toEqual({ notified: false, dejaAnnonce: true, partiel: false });
     expect(notifications).toEqual(["T1"]);
     expect(collections.notifLog["release_culte_2027_T1"]).toMatchObject({ planning: "culte", year: 2027, tri: "T1" });
   });
 
-  test("un envoi qui lève rend la clé : republier notifie (le réessai)", async () => {
+  test("un envoi qui lève avant tout envoi rend la clé : republier notifie (le réessai)", async () => {
     const { db, collections } = baseSimulee();
     const notifications: string[] = [];
-    /** La route : réserve par `doitNotifierPublication`, envoie, rend la clé si l'envoi lève. */
-    async function publier(envoiEnPanne: boolean) {
-      if (!(await doitNotifierPublication(db, "culte", 2027, "T2", "u1", { publier: true }))) return "pas-notifie";
-      try {
-        if (envoiEnPanne) throw new Error("push en panne");
-        notifications.push("T2");
-        return "notifie";
-      } catch {
-        await rendreEnvoi(db, "release_culte_2027_T2");
-        return "echec";
-      }
-    }
-    expect(await publier(true)).toBe("echec");
+    const bascule = publication(db, notifications, "T2");
+    await expect(bascule(true, async () => { throw new Error("push en panne"); })).rejects.toThrow("push en panne");
     expect(collections.notifLog["release_culte_2027_T2"]).toBeUndefined();
-    expect(await publier(false)).toBe("notifie");
-    expect(await publier(false)).toBe("pas-notifie");
+    expect((await bascule(true)).notified).toBe(true);
+    expect((await bascule(true)).notified).toBe(false);
     expect(notifications).toEqual(["T2"]);
+  });
+
+  test("un envoi qui lève après un premier envoi réussi : la clé reste, la route répond notified (journal)", async () => {
+    const { db, collections } = baseSimulee();
+    const erreurs: unknown[][] = [];
+    const avant = console.error;
+    console.error = (...a: unknown[]) => { erreurs.push(a); };
+    try {
+      const bascule = publication(db, []);
+      const r = await bascule(true, async (parti) => { parti(); throw new Error("2e fournée en panne"); });
+      expect(r).toEqual({ notified: true, dejaAnnonce: false, partiel: true });
+      // Republier ne renotifie pas : la première fournée est partie.
+      expect((await bascule(true)).dejaAnnonce).toBe(true);
+    } finally {
+      console.error = avant;
+    }
+    expect(erreurs).toHaveLength(1);
+    expect(collections.notifLog["release_culte_2027_T1"]).toBeDefined();
   });
 
   test("masquer ne notifie jamais, et ne réserve rien", async () => {
     const { db, collections } = baseSimulee();
-    expect(await doitNotifierPublication(db, "culte", 2027, "T3", "u1", { publier: false })).toBe(false);
+    const r = await publication(db, [], "T3")(false);
+    expect(r.notified).toBe(false);
     expect(collections.notifLog["release_culte_2027_T3"]).toBeUndefined();
   });
 
   test("un autre trimestre ou une autre année notifie à nouveau", async () => {
     const { db } = baseSimulee();
-    expect(await reserverPublication(db, "culte", 2027, "T1", "u1")).toBe(true);
-    expect(await reserverPublication(db, "culte", 2027, "T2", "u1")).toBe(true);
-    expect(await reserverPublication(db, "culte", 2028, "T1", "u1")).toBe(true);
+    const envoi = async (parti: () => void) => { parti(); };
+    const tri = (annee: number, t: string) => notifierPublication(db, { planning: "culte", annee, tri: t, uid: "u1", publier: true }, envoi);
+    expect((await tri(2027, "T1")).notified).toBe(true);
+    expect((await tri(2027, "T2")).notified).toBe(true);
+    expect((await tri(2028, "T1")).notified).toBe(true);
   });
 });
 
@@ -443,6 +505,81 @@ test.describe("réservation : reprises, jeton, échecs partiels (A2 bis)", () =>
     expect(collections.notifLog["conflit-u1"]).toBeDefined();
   });
 
+  test("relecture après ALREADY_EXISTS : un réessai si le get échoue une fois ; deux échecs rendent la clé et lèvent", async () => {
+    const montage = (echecsGet: number) => {
+      const base = baseSimulee();
+      let reste = echecsGet;
+      const db = {
+        collection: (nom: string) => ({
+          doc: (id: string) => ({
+            ...base.db.collection(nom).doc(id),
+            // Le commit passe, la réponse se perd (ALREADY_EXISTS), puis la relecture échoue `echecsGet` fois.
+            create: async (d: Record<string, unknown>) => { await base.db.collection(nom).doc(id).create(d); throw alreadyExists(); },
+            get: async () => { if (reste-- > 0) throw new Error("réseau"); return base.db.collection(nom).doc(id).get(); },
+          }),
+        }),
+        runTransaction: base.db.runTransaction.bind(base.db),
+      } as unknown as FirebaseFirestore.Firestore;
+      return { db, base };
+    };
+    const un = montage(1);
+    expect(await reserverEnvoi(un.db, "audience-r", { at: 1 })).toBe(true);
+    const deux = montage(2);
+    await expect(reserverEnvoi(deux.db, "audience-r", { at: 1 })).rejects.toThrow("réseau");
+    expect(deux.base.collections.notifLog["audience-r"]).toBeUndefined();
+  });
+
+  test("rendreEnvoi : seulement si la réservation porte le jeton de l'appelant", async () => {
+    const { db, collections } = baseSimulee();
+    const jetonA = await reserverEnvoiJeton(db, "audience-j", { at: 1 });
+    expect(jetonA).toBeTruthy();
+    // La réservation de A est reprise par B (délai passé) : le retour tardif de A ne la supprime pas.
+    collections.notifLog["audience-j"].at = Date.now() - 61_000;
+    const jetonB = await reserverEnvoiJeton(db, "audience-j", { at: Date.now() }, { delaiMs: 60_000 });
+    expect(jetonB).toBeTruthy();
+    await rendreEnvoi(db, "audience-j", jetonA!);
+    expect(collections.notifLog["audience-j"]?.jetonCreation).toBe(jetonB);
+    await rendreEnvoi(db, "audience-j", jetonB!);
+    expect(collections.notifLog["audience-j"]).toBeUndefined();
+  });
+
+  test("rendrePourUids : ne supprime que les réservations qui sont encore les siennes", async () => {
+    const { db, collections } = baseSimulee();
+    const jetons = await reserverPourUidsJetons(db, ["u1", "u2"], "tache-x", {});
+    // La réservation de u2 a été reprise par un autre appel.
+    collections.notifLog["tache-x-u2"] = { at: 1, jetonCreation: "autre" };
+    await rendrePourUids(db, jetons, "tache-x");
+    expect(collections.notifLog["tache-x-u1"]).toBeUndefined();
+    expect(collections.notifLog["tache-x-u2"]).toBeDefined();
+  });
+
+  test("cron : `at` à la réservation, `envoyeLe` après l'envoi ; sans `envoyeLe` la clé est reprise après 5 minutes", async () => {
+    const { db, collections } = baseSimulee();
+    const premier = suivreReservations(db);
+    expect(await premier.reserver(["u1", "u2"], "rappel-J1-2027-02-07", { kind: "service" })).toEqual(["u1", "u2"]);
+    expect(collections.notifLog["rappel-J1-2027-02-07-u1"].at).toBeGreaterThan(Date.now() - 5_000);
+    expect(collections.notifLog["rappel-J1-2027-02-07-u1"].envoyeLe).toBeUndefined();
+    // u1 est prévenu, le passage meurt avant u2.
+    premier.envoye("u1", ["rappel-J1-2027-02-07"]);
+    await premier.terminer();
+    expect(collections.notifLog["rappel-J1-2027-02-07-u1"].envoyeLe).toBeGreaterThan(Date.now() - 5_000);
+    expect(collections.notifLog["rappel-J1-2027-02-07-u2"].envoyeLe).toBeUndefined();
+    // Un passage plus tôt que 5 minutes ne reprend rien.
+    expect(await suivreReservations(db).reserver(["u1", "u2"], "rappel-J1-2027-02-07", { kind: "service" })).toEqual([]);
+    // Passé 5 minutes : u2 (sans envoyeLe) est repris, u1 (envoyeLe) ne l'est jamais.
+    for (const u of ["u1", "u2"]) collections.notifLog[`rappel-J1-2027-02-07-${u}`].at = Date.now() - REPRISE_CRON_MS - 1_000;
+    expect(await suivreReservations(db).reserver(["u1", "u2"], "rappel-J1-2027-02-07", { kind: "service" })).toEqual(["u2"]);
+  });
+
+  test("marquerEnvoye : ne marque que sa propre réservation", async () => {
+    const { db, collections } = baseSimulee();
+    const jeton = await reserverEnvoiJeton(db, "cle-m", { at: 1 });
+    await marquerEnvoye(db, "cle-m", "pas-le-notre");
+    expect(collections.notifLog["cle-m"].envoyeLe).toBeUndefined();
+    await marquerEnvoye(db, "cle-m", jeton!);
+    expect(collections.notifLog["cle-m"].envoyeLe).toBeGreaterThan(0);
+  });
+
   test("cron : les clés sont réservées à la lecture, un second passage ne retrouve personne, un envoi levé rend", async () => {
     const { db, collections } = baseSimulee();
     const passage = async () => {
@@ -474,7 +611,9 @@ test.describe("décisions de routes (A2 bis)", () => {
 
   test("report : pageUrl = chemin de la même origine, borné, sinon vide", () => {
     const origine = "https://louange.exemple.org";
-    expect(cheminDeLaPage(`${origine}/chants/abc-1?x=1#haut`, origine)).toBe("/chants/abc-1");
+    expect(cheminDeLaPage(`${origine}/chants/abc-1?x=1#haut`, origine)).toBe("/chants/abc-1?x=1");
+    // Un chant au nom non ASCII : les « % » sont gardés.
+    expect(cheminDeLaPage(`${origine}/songs/caf%C3%A9-noel`, origine)).toBe("/songs/caf%C3%A9-noel");
     expect(cheminDeLaPage(`${origine}/`, origine)).toBe("/");
     expect(cheminDeLaPage("https://autre.exemple.org/chants/abc", origine)).toBe("");
     expect(cheminDeLaPage("javascript:alert(1)", origine)).toBe("");
@@ -483,18 +622,29 @@ test.describe("décisions de routes (A2 bis)", () => {
     expect(cheminDeLaPage(`${origine}/${"a".repeat(PAGE_URL_MAX + 100)}`, origine)).toHaveLength(PAGE_URL_MAX);
   });
 
+  test("report : le lien « Page » n'est rendu que pour un chemin du site ou son origine", () => {
+    const origine = "https://louange.exemple.org";
+    expect(lienDeLaPage("/songs/caf%C3%A9?x=1", origine)).toBe("/songs/caf%C3%A9?x=1");
+    expect(lienDeLaPage(`${origine}/chants/abc`, origine)).toBe(`${origine}/chants/abc`);
+    for (const v of ["//autre.exemple.org/x", "https://autre.exemple.org/x", "javascript:alert(1)", `${origine}.autre.org/x`, "texte"]) {
+      expect(lienDeLaPage(v, origine), v).toBeNull();
+    }
+  });
+
   /** Chaque route appelle la fonction de src/lib que les tests ci-dessus exercent : retirer la garde la fait rougir. */
   const routes: [string, string[]][] = [
-    ["src/app/api/equipes/rattachement/route.ts", ["appelantPeut(", "recalculerRattachement("]],
+    ["src/app/api/equipes/rattachement/route.ts", ["appelantPeut(", "recalculerRattachement(", "lireEquipeRattachement("]],
     ["src/app/api/equipes/groupes/route.ts", ["appelantPeut(", "recalculerRattachement("]],
     ["src/app/api/push/notify-audience/route.ts", ["envoyerReserve("]],
     ["src/app/api/scene/conflit/route.ts", ["reserverPuisEnvoyer("]],
     ["src/app/api/taches/fait/route.ts", ["reserverPuisEnvoyer("]],
     ["src/app/api/setlist/presentation/route.ts", ["reserverPuisEnvoyer("]],
-    ["src/app/api/planning/release/route.ts", ["doitNotifierPublication("]],
+    ["src/app/api/planning/release/route.ts", ["notifierPublication(", "apresEnvoi("]],
+    ["src/app/api/push/notify-evenement/route.ts", ["envoyerReserve(", "apresEnvoi("]],
+    ["src/app/api/taches/assigne/route.ts", ["envoyerReserve(", "apresEnvoi("]],
     ["src/app/api/push/notify-setlist/route.ts", ["prendreVerrou(", "reponseEnvoiEnCours(", "maxDuration = 60"]],
     ["src/app/api/report/route.ts", ["cheminDeLaPage("]],
-    ["src/app/api/cron/reminders/route.ts", ["suivreReservations(", "reservations.reserver(", "rendreRestantes("]],
+    ["src/app/api/cron/reminders/route.ts", ["suivreReservations(", "reservations.reserver(", "rendreRestantes(", "reservations.terminer(", "lireAvecRelecture("]],
   ];
   for (const [fichier, appels] of routes) {
     test(`${fichier} appelle ${appels.join(", ")}`, () => {
@@ -508,21 +658,34 @@ test.describe("décisions de routes (A2 bis)", () => {
   });
 });
 
-// A2 bis : « Prévenir des changements » après un masquage puis une republication (src/lib/planning/prevenir.ts).
-test.describe("planning/changements : la référence d'un trimestre déjà publié reste", () => {
+// A2 ter : « Prévenir des changements » — la référence suit la notification (src/lib/planning/prevenir.ts).
+test.describe("planning/changements : la référence d'une publication notifiée remplace toujours l'état", () => {
   const etat = (publieLe?: string) => ({ cases: { "2026-10-04|orateur": "Pasteur Ilan" }, ...(publieLe ? { publieLe } : {}) });
-  test("première publication : la référence repart des cases du moment", () => {
+  test("apresPublication (envoyé seulement si la publication a notifié) : remplace, avec ou sans état, avec ou sans publieLe", () => {
     expect(referenceRemplace({ apresPublication: true }, undefined)).toBe(true);
     expect(referenceRemplace({ apresPublication: true }, etat())).toBe(true);
-  });
-  test("republication après masquage : la référence annoncée reste", () => {
-    expect(referenceRemplace({ apresPublication: true }, etat("2026-09-28"))).toBe(false);
+    expect(referenceRemplace({ apresPublication: true }, etat("2026-09-28"))).toBe(true);
   });
   test("siAbsent : seulement sans état", () => {
     expect(referenceRemplace({ siAbsent: true }, undefined)).toBe(true);
     expect(referenceRemplace({ siAbsent: true }, etat("2026-09-28"))).toBe(false);
+    expect(referenceRemplace({ siAbsent: true }, etat())).toBe(false);
+  });
+  test("cas A : 1re publication depuis le panneau (sans référence), amorce siAbsent, puis republication déjà annoncée : les corrections restent", () => {
+    // Le panneau « Publier un planning » n'envoie jamais de référence ; l'amorce écrit l'état sans publieLe.
+    const amorce = referenceRemplace({ siAbsent: true }, undefined);
+    expect(amorce).toBe(true);
+    const apresAmorce = etat();
+    // Masquer, corriger, republier : la route répond dejaAnnonce, la grille n'envoie rien ; une nouvelle amorce ne remplace pas non plus.
+    expect(referenceRemplace({ siAbsent: true }, apresAmorce)).toBe(false);
   });
   test("la route passe par referenceRemplace", () => {
     expect(readFileSync("src/app/api/planning/changements/route.ts", "utf8")).toContain("referenceRemplace(body, existant)");
+  });
+  test("la grille n'envoie la référence que si la publication a notifié", () => {
+    for (const page of ["src/app/planning/culte/page.tsx", "src/app/planning/groupes/page.tsx"]) {
+      expect(readFileSync(page, "utf8"), page).toContain("&& notified) setPublications");
+    }
+    expect(readFileSync("src/components/planning/BoutonPublication.tsx", "utf8")).toContain("data.notified === true");
   });
 });

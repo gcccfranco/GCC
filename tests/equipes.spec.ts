@@ -154,10 +154,10 @@ test("page Équipes : « en essai », un nom rattaché ouvre la fiche, un nom li
 test("Équipes › Organigramme : le droit « Équipes » ajoute un membre et fait recalculer le rattachement", async ({ page }) => {
   await simulerSheets(page);
   let appels = 0;
-  let envoye: { uids?: string[] } = {};
+  let envoye: { uids?: string[]; equipe?: string } = {};
   await page.route("**/api/equipes/rattachement", (route) => {
     appels++;
-    envoye = route.request().postDataJSON() as { uids?: string[] };
+    envoye = route.request().postDataJSON() as { uids?: string[]; equipe?: string };
     return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ok: true, maj: 1 }) });
   });
   const db = await signInAs(
@@ -195,6 +195,39 @@ test("Équipes › Organigramme : le droit « Équipes » ajoute un membre et fa
   expect(appels).toBe(1);
   // Seules les lignes changées pendant l'édition (ici une ajoutée) partent au rattachement.
   expect(envoye.uids).toEqual(["u-ruth"]);
+  // L'équipe éditée part avec les comptes : seuls ses référents peuvent changer.
+  expect(envoye.equipe).toBe("da");
+});
+
+test("Équipes › Organigramme : la recopie échoue après l'écriture — « Réessayer » renvoie les mêmes comptes", async ({ page }) => {
+  await simulerSheets(page);
+  const corps: { uids?: string[]; equipe?: string }[] = [];
+  await page.route("**/api/equipes/rattachement", (route) => {
+    corps.push(route.request().postDataJSON() as { uids?: string[]; equipe?: string });
+    return corps.length === 1
+      ? route.fulfill({ status: 500, contentType: "application/json", body: JSON.stringify({ error: "panne" }) })
+      : route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ok: true, maj: 1 }) });
+  });
+  const db = await signInAs(
+    page,
+    { uid: "u-ref", email: "referent@example.com", firstName: "Lydia", lastName: "H.", dansEquipes: ["da"], referentDe: ["da"] },
+    DOCS,
+    "/back-office/equipes",
+  );
+  const carte = page.getByTestId("equipe-da");
+  await carte.getByRole("button", { name: "Modifier TEAM DA" }).click();
+  const panneau = page.getByRole("dialog", { name: "TEAM DA" });
+  await panneau.getByPlaceholder("Ajouter un membre").fill("Ruth");
+  await panneau.getByRole("button", { name: /Ruth K\./ }).click();
+  await panneau.getByRole("button", { name: "Enregistrer" }).click();
+  // Le document est écrit, le panneau reste ouvert avec le message et « Réessayer ».
+  await expect(panneau.getByRole("alert")).toContainText("Les droits n'ont pas été recopiés");
+  await expect(panneau.getByRole("button", { name: "Réessayer" })).toBeVisible();
+  expect((db.doc("equipes/da") as { membres: MembreEquipe[] }).membres.map((m) => m.uid)).toContain("u-ruth");
+  await panneau.getByRole("button", { name: "Réessayer" }).click();
+  await expect(panneau).toBeHidden();
+  await expect(carte.getByRole("button", { name: /Ruth K\./ })).toBeVisible();
+  expect(corps).toEqual([{ uids: ["u-ruth"], equipe: "da" }, { uids: ["u-ruth"], equipe: "da" }]);
 });
 
 test("Moi : une ligne « Équipes » mène à l'organigramme", async ({ page }) => {

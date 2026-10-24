@@ -69,6 +69,9 @@ const sheetCache = new Map<string, { at: number; rows: string[][] }>()
 // (une panne du Sheet n'y doit pas passer pour un planning vide).
 let tentativesSheet = 0
 let echecsSheet: string[] = []
+// Lectures ratées dont la dernière copie en mémoire a été resservie : le navigateur (useSheet) compare ce
+// compteur avant et après une lecture pour savoir que les lignes reçues peuvent être périmées.
+let copiesServies = 0
 
 /** Remet à zéro le décompte des lectures (début du cron). */
 export function reinitialiserLecturesSheet(): void {
@@ -79,6 +82,37 @@ export function reinitialiserLecturesSheet(): void {
 /** Lectures réseau tentées et onglets dont la lecture a échoué (copie en mémoire resservie ou non). */
 export function lecturesSheet(): { tentatives: number; echecs: string[] } {
   return { tentatives: tentativesSheet, echecs: [...echecsSheet] }
+}
+
+/** Nombre de fois où une lecture ratée a été remplacée par la copie en mémoire (jamais remis à zéro). */
+export function copiesServiesSheet(): number {
+  return copiesServies
+}
+
+/** Cellule comparable : sans accents ni casse, sans espaces de bord. */
+const reperer = (c: string) => c.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim()
+
+/** Un mot qui se lit dans la ligne d'en-tête de l'onglet (une cellule le contient, parmi les 15 premières lignes).
+ *  Un onglet renommé ou supprimé fait rendre à gviz le PREMIER onglet du classeur en 200 text/csv : sans ce
+ *  repère, ses lignes passeraient pour celles de l'onglet demandé. Les onglets sans repère connu ne sont pas vérifiés
+ *  (Franco_Table_PtD, Franco_Louange, Fidélité, Intergroupe, Interfranco) : pour eux, seul le repère commun du premier
+ *  onglet joue. */
+const REPERES_ENTETE: { onglet: RegExp; repere: string }[] = [
+  { onglet: /^EDD$/, repere: "suppleant" },
+  { onglet: /^Campus_Louange$/, repere: "moment" },
+  { onglet: /^Paix[ _]*_T\d$/, repere: "musiciens" },
+]
+
+/** La ligne d'en-tête attendue de l'onglet se retrouve-t-elle dans ce CSV ? Un CSV vide : oui ; le calendrier des réunions
+ *  (premier onglet) : non ; un onglet sans repère connu : oui. Repères relus sur le Sheet le 24/10/2026. */
+export function enTeteAttendu(sheet: string, rows: string[][]): boolean {
+  if (!rows.length) return true
+  // Repère commun : le premier onglet du classeur (rendu pour un nom introuvable) est le calendrier des réunions,
+  // qu'aucun planning lu ici n'est (vérifié sur le Sheet le 24/10/2026).
+  if (reperer(rows[0]?.[0] ?? "").startsWith("calendrier des reunions")) return false
+  const attendu = REPERES_ENTETE.find((r) => r.onglet.test(sheet))
+  if (!attendu) return true
+  return rows.slice(0, 15).some((r) => r.some((c) => reperer(c).includes(attendu.repere)))
 }
 
 export async function fetchSheet(sheet: string): Promise<string[][]> {
@@ -95,14 +129,24 @@ export async function fetchSheet(sheet: string): Promise<string[][]> {
       throw new Error(`Sheet « ${sheet} » : réponse HTML au lieu du CSV`)
     }
     const rows = parseCSV(texte)
+    if (!enTeteAttendu(sheet, rows)) throw new Error(`Sheet « ${sheet} » : en-tête inattendu (onglet d'un autre nom ?)`)
     sheetCache.set(sheet, { at: Date.now(), rows })
     return rows
   } catch {
     // Un échec ne remplace JAMAIS la copie en mémoire : on réutilise la dernière si on en a une,
     // sinon vide (loadPlanningData basculera alors sur les données de secours statiques).
     echecsSheet.push(sheet)
+    if (hit) copiesServies++
     return hit?.rows ?? []
   }
+}
+
+/** Relit une fois les onglets dont la lecture a échoué. Rend ceux qui échouent encore (chacun une fois). */
+export async function relireOnglets(noms: readonly string[]): Promise<string[]> {
+  const uniques = [...new Set(noms)]
+  echecsSheet = echecsSheet.filter((n) => !uniques.includes(n))
+  await Promise.all(uniques.map((n) => fetchSheet(n)))
+  return uniques.filter((n) => echecsSheet.includes(n))
 }
 
 // ─── Lecture brute du Sheet, grille par grille ────────────────────────────────

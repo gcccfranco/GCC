@@ -10,7 +10,7 @@
 // sous l'en-tête commun (`enTete`) ; une carte s'édite dans un panneau (420 px à droite en
 // grand, feuille sinon), pour garder des cartes de hauteur fixe.
 
-import { useEffect, useMemo, useState, type ComponentProps, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ComponentProps, type ReactNode } from "react";
 import Link from "next/link";
 import { useTranslation } from "react-i18next";
 import { Pencil, X } from "lucide-react";
@@ -24,6 +24,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useProfile, listProfiles } from "@/lib/firebase/users";
 import { listEquipes, majRattachement, saveEquipe } from "@/lib/firebase/equipes";
+import { ModifieEntreTemps } from "@/lib/firebase/programmes";
 import {
   canEditerEquipes, isAdminUser, peutChangerReferents, peutModifierEquipe, peutPlacerMembre, peutPlacerSousEquipe,
 } from "@/lib/access";
@@ -259,6 +260,7 @@ function PanneauEquipe({
                 key={def.id}
                 def={def}
                 membres={equipe?.membres ?? []}
+                version={equipe?.version ?? null}
                 profils={profils}
                 onClose={onClose}
                 onEnregistre={onEnregistre}
@@ -407,10 +409,12 @@ function LigneMembre({
 const cleMembre = (m: MembreEquipe) => `${m.uid}|${m.nom}`;
 
 function EditionEquipe({
-  def, membres, profils, onClose, onEnregistre,
+  def, membres, version: versionLue, profils, onClose, onEnregistre,
 }: {
   def: EquipeDef;
   membres: MembreEquipe[];
+  /** `updateTime` du document lu : précondition de l'écriture (`saveEquipe`). */
+  version: string | null;
   profils: UserProfile[];
   onClose: () => void;
   onEnregistre: (e: Equipe) => void;
@@ -421,6 +425,12 @@ function EditionEquipe({
   const [recherche, setRecherche] = useState("");
   const [erreur, setErreur] = useState("");
   const [enCours, setEnCours] = useState(false);
+  // Le document est écrit mais la recopie des profils a échoué : les comptes à recopier, que « Réessayer » renvoie
+  // (comme `aRecopier` d'OrganigrammeGroupe). Le panneau reste ouvert tant que la recopie n'a pas passé.
+  const [aRecopier, setARecopier] = useState<string[] | null>(null);
+  const [enregistree, setEnregistree] = useState<Equipe | null>(null);
+  // Version du document : celle de la lecture, puis celle de la dernière écriture de ce panneau.
+  const version = useRef<string | null>(versionLue);
 
   // Lot AO-B (B3, F2) : en nouveau mode, Louange et Régie s'éditent par pastilles, et les droits se lisent
   // dans access.ts. Orga, admin, référent de l'équipe : tout ; un référent de sous-équipe : les membres de la
@@ -473,24 +483,47 @@ function EditionEquipe({
     setBrouillon((prev) => prev.filter((_, j) => j !== i));
   }
 
+  async function recopier(uids: string[], ecrite: Equipe) {
+    try {
+      await majRattachement(uids, def.id);
+    } catch {
+      setARecopier(uids);
+      setEnregistree(ecrite);
+      setErreur(t("groupes.droitsNonRecopies"));
+      return;
+    }
+    setARecopier(null);
+    onEnregistre(ecrite);
+  }
+
   async function enregistrer() {
     if (!user) return;
     setEnCours(true);
     setErreur("");
     try {
       const nom = profile ? nomComplet(profile) : (user.email ?? "");
-      await saveEquipe(def.id, brouillon, { uid: user.uid, nom });
+      let ecrite: Equipe;
+      try {
+        const nouvelle = await saveEquipe(def.id, brouillon, { uid: user.uid, nom }, version.current);
+        version.current = nouvelle ?? version.current;
+        ecrite = {
+          id: def.id, membres: brouillon,
+          updatedAt: new Date().toISOString(), parUid: user.uid, parNom: nom,
+          ...(version.current ? { version: version.current } : {}),
+        };
+      } catch (e) {
+        setErreur(e instanceof ModifieEntreTemps
+          ? (e.prenom ? t("planning.programme.modifieEntreTemps", { prenom: e.prenom }) : t("planning.programme.modifieEntreTempsSansNom"))
+          : t("equipes.erreur"));
+        return;
+      }
       // Le rattachement se repose côté serveur : le navigateur n'écrit pas un profil.
       // Seuls les comptes aux lignes changées (ajoutées, retirées, modifiées) : la recopie d'un compte ne lit que ses
-      // lignes et l'id de l'équipe, qui ne s'édite pas ici.
-      const touches = uidsAChanger(membres, brouillon);
-      if (touches.length) await majRattachement(touches);
-      onEnregistre({
-        id: def.id, membres: brouillon,
-        updatedAt: new Date().toISOString(), parUid: user.uid, parNom: nom,
-      });
-    } catch {
-      setErreur(t("equipes.erreur"));
+      // lignes et l'id de l'équipe, qui ne s'édite pas ici. Le document est déjà écrit : si la recopie échoue, les
+      // comptes restent à recopier (« Réessayer »).
+      const touches = [...new Set([...uidsAChanger(membres, brouillon), ...(aRecopier ?? [])])];
+      if (touches.length) await recopier(touches, ecrite);
+      else onEnregistre(ecrite);
     } finally {
       setEnCours(false);
     }
@@ -575,7 +608,16 @@ function EditionEquipe({
         </div>
       )}
 
-      {erreur && <p className="text-sm text-destructive">{erreur}</p>}
+      {erreur && (
+        <p role="alert" className="flex items-center gap-2 text-sm text-destructive">
+          {erreur}
+          {aRecopier && enregistree && (
+            <button type="button" disabled={enCours} onClick={() => { setErreur(""); void recopier(aRecopier, enregistree); }} className="font-semibold underline">
+              {t("groupes.reessayer")}
+            </button>
+          )}
+        </p>
+      )}
       <div className="flex justify-end gap-2">
         <Button variant="outline" onClick={onClose} className="h-10">{t("equipes.annuler")}</Button>
         <Button onClick={enregistrer} disabled={enCours} className="h-10">{t("equipes.enregistrer")}</Button>

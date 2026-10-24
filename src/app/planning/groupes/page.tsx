@@ -8,7 +8,7 @@ import { PlanningGrille } from "@/components/planning/PlanningGrille"
 import { StaleBanner } from "@/components/planning/StaleBanner"
 import { getCurrentTri } from "@/lib/planning/utils"
 import { PAIX_FALLBACK, FIDELITE_FALLBACK, FIDELITE_MUSIC_FALLBACK, BONTE_FALLBACK } from "@/lib/planning/data"
-import { fetchPaix, fetchFidelite, fetchBonte, fetchInterfranco, fetchIntergroupe } from "@/lib/planning/sheets"
+import { fetchPaix, fetchFidelite, fetchBonte, fetchInterfranco, fetchIntergroupe, copiesServiesSheet } from "@/lib/planning/sheets"
 import { GRILLE_BONTE, GRILLE_FIDELITE, GRILLE_PAIX, completerMusiciensFidelite, dimanchesDe, dimanchesSpeciaux, vueTrimestrielle } from "@/lib/planning/grilles"
 import { AnneeSelecteur } from "@/components/planning/AnneeSelecteur"
 import { BandeauAnnee } from "@/components/planning/BandeauAnnee"
@@ -64,6 +64,7 @@ function GroupesPage() {
   const [pubByGrp, setPubByGrp] = useState<Record<string, string[]>>({})
 
   useEffect(() => {
+    const copiesAvant = copiesServiesSheet()
     Promise.allSettled([
       fetchPaix().then(d => { if (d.length) setPaix(d) }),
       fetchFidelite().then(d => { if (d.length) setFid(d) }),
@@ -71,7 +72,7 @@ function GroupesPage() {
       fetchInterfranco().then(setInterfranco),
       fetchIntergroupe().then(setIntergroupe),
     ]).then(results => {
-      setStale(results.some(r => r.status === "rejected"))
+      setStale(results.some(r => r.status === "rejected") || copiesServiesSheet() > copiesAvant)
       setLoading(false)
     })
   }, [])
@@ -137,14 +138,15 @@ function GroupesPage() {
         )}
         {canPublish && effTri && aVenir && (
           <BoutonPublication
+            key={`${planning.key}_${effAnnee}_${effTri}`}
             planningKey={planning.key}
             planningLabel={planning.label}
             annee={effAnnee}
             tri={effTri}
             publie={!unpublishedTris.includes(effTri)}
-            onChange={(published) => {
+            onChange={(published, notified) => {
               setPubByGrp((prev) => ({ ...prev, [`${grp}_${effAnnee}`]: published }))
-              if (published.includes(effTri)) setPublications((n) => n + 1)
+              if (published.includes(effTri) && notified) setPublications((n) => n + 1)
             }}
           />
         )}

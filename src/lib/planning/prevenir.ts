@@ -28,11 +28,12 @@ export const MAX_VALEUR = 200
 export const borne = (v: string) => v.slice(0, MAX_VALEUR)
 
 /** Une référence envoyée par la grille remplace-t-elle l'état annoncé ? `siAbsent` : seulement s'il n'y en a pas.
- *  `apresPublication` : oui à la première publication (elle annonce tout), non pour un trimestre déjà publié une fois
- *  (`publieLe`) puis masqué et republié — les cases corrigées pendant le masquage restent à annoncer. */
+ *  `apresPublication` : toujours — la grille ne l'envoie que si la publication vient d'être notifiée (`notified`), et
+ *  alors tout est annoncé. Une republication déjà annoncée (`dejaAnnonce`) n'envoie rien : les cases corrigées pendant
+ *  le masquage restent à annoncer. */
 export function referenceRemplace(demande: { siAbsent?: boolean; apresPublication?: boolean }, existant: EtatAnnonce | undefined): boolean {
   if (!existant) return true
-  if (demande.apresPublication) return !existant.publieLe
+  if (demande.apresPublication) return true
   return !demande.siAbsent
 }
 

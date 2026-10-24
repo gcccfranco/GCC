@@ -225,6 +225,37 @@ test("« Publier le T1 » réussi : la grille envoie l'état du trimestre (refer
   expect(ref.cases).toMatchObject({ "2027-01-10|presidence": "Invité A." })
 })
 
+test("republier un trimestre déjà annoncé (dejaAnnonce) : aucune référence n'est envoyée, la première publication en envoie une", async ({ page }) => {
+  const db = await ouvrir(page, PUBLIEUR, { ...DOCS, "plannings/paix/dimanches/2027-01-10": { date: "2027-01-10", presidence: "Invité A." } })
+  const corps = await simulerRoute(page, db)
+  let publications = 0
+  await page.route("**/api/planning/release", async (route) => {
+    const { publish } = route.request().postDataJSON() as { publish: boolean }
+    if (publish) publications++
+    const notified = publish && publications === 1
+    await route.fulfill({
+      status: 200, contentType: "application/json",
+      body: JSON.stringify({ ok: true, published: publish ? ["T1"] : [], notified, sent: 0, dejaAnnonce: publish && !notified }),
+    })
+  })
+  await page.getByRole("tab", { name: "2027", exact: true }).click()
+  await page.getByRole("tab", { name: "T1", exact: true }).click()
+  await page.getByRole("button", { name: "Publier le T1" }).click()
+  await repondreDansLeSite(page, "Publier le T1")
+  await expect.poll(() => corps.filter((c) => c.apresPublication).length).toBe(1)
+  await page.getByRole("button", { name: "Masquer le T1" }).click()
+  await expect(page.getByRole("button", { name: "Publier le T1" })).toBeVisible()
+  await page.getByRole("button", { name: "Publier le T1" }).click()
+  await repondreDansLeSite(page, "Publier le T1")
+  // Le trimestre a déjà été annoncé : le texte le dit et la grille n'envoie aucune nouvelle référence.
+  await expect(page.getByRole("status").filter({ hasText: "Ce trimestre avait déjà été annoncé" })).toBeVisible()
+  expect(publications).toBe(2)
+  expect(corps.filter((c) => c.apresPublication)).toHaveLength(1)
+  // Changer de trimestre efface le texte « déjà annoncé » (le bouton est remonté, clé planning_année_trimestre).
+  await page.getByRole("tab", { name: "T4", exact: true }).click()
+  await expect(page.getByRole("status").filter({ hasText: "Ce trimestre avait déjà été annoncé" })).toHaveCount(0)
+})
+
 test("telephone — la bannière se met en pile et la feuille tient dans l'écran", async ({ page }) => {
   test.skip(test.info().project.name !== "telephone", "propre au téléphone")
   await ouvrir(page, PUBLIEUR)

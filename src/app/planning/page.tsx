@@ -8,7 +8,7 @@ import {
   FIDELITE_FALLBACK, FIDELITE_MUSIC_FALLBACK,
   PAIX_FALLBACK, BONTE_FALLBACK, DEJEUNER_FALLBACK, EDD_FALLBACK, CAMP_LOUANGE_FALLBACK
 } from "@/lib/planning/data"
-import { fetchCulte, fetchDejeuner, fetchPetitDej, fetchPaix, fetchFidelite, fetchBonte, fetchEDD, fetchCampus, fetchIntergroupe, fetchInterfranco } from "@/lib/planning/sheets"
+import { fetchCulte, fetchDejeuner, fetchPetitDej, fetchPaix, fetchFidelite, fetchBonte, fetchEDD, fetchCampus, fetchIntergroupe, fetchInterfranco, copiesServiesSheet } from "@/lib/planning/sheets"
 import { StaleBanner } from "@/components/planning/StaleBanner"
 import type { EddDataStructure, CampusSeance } from "@/lib/planning/utils"
 import { useProfile } from "@/lib/firebase/users"
@@ -74,6 +74,7 @@ export default function PlanningAccueil() {
   }, [])
 
   useEffect(() => {
+    const copiesAvant = copiesServiesSheet()
     Promise.allSettled([
       fetchCulte().then(d => setCulte(d)),
       fetchDejeuner().then(d => { if (d.length) setDej(d) }),
@@ -85,7 +86,7 @@ export default function PlanningAccueil() {
       fetchCampus().then(({ louange }) => { if (louange.length) setCampus(louange) }),
       fetchIntergroupe().then(d => { if (d.length) setIntergroupe(d) }),
       fetchInterfranco().then(d => { if (d.length) setInterfranco(d) }),
-    ]).then(results => setStale(results.some(r => r.status === "rejected")))
+    ]).then(results => setStale(results.some(r => r.status === "rejected") || copiesServiesSheet() > copiesAvant))
     // Même lecture que fetchPetitDej (cache partagé) ; en échec, rien de plus.
     if (BACK_OFFICE) lirePetitDej().then(l => { setLignesPetitDej(l); setPetitDejLu(true) }, () => {})
   }, [])

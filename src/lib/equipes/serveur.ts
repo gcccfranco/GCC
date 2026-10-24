@@ -74,16 +74,26 @@ export type Ignore = { uid: string; groupe: GroupeId };
 
 /** Ce que l'appelant peut poser comme référents (docs/spec-corrections-audit.md, A2, C7) : un référent NOUVEAU
  *  (absent de `actuel`) n'est gardé que si `peut(équipe)`. Un retrait (id présent dans `actuel`, absent de `voulu`) ne
- *  s'applique que si `peut(équipe)` : sinon l'id reste. Avec `retraitLibre`, tout retrait s'applique. L'ordre de
- *  `voulu` est conservé ; les ids gardés s'ajoutent à la suite. */
-export function referentsPermis(actuel: string[], voulu: string[], peut: (equipe: string) => boolean, retraitLibre = false): string[] {
-  const gardes = retraitLibre ? [] : actuel.filter((id) => !voulu.includes(id) && !peut(id));
+ *  s'applique que si `peut(équipe)` : sinon l'id reste, tant que le compte figure encore dans l'équipe
+ *  (`encoreDans(équipe)`) ; une ligne retirée de l'équipe retire le référent. Avec `retraitLibre`, tout retrait
+ *  s'applique. L'ordre de `voulu` est conservé ; les ids gardés s'ajoutent à la suite. `peut` ne vaut que pour
+ *  l'équipe éditée (`appelantPeut`) : pour les autres équipes, le profil garde ce qu'il avait. */
+export function referentsPermis(
+  actuel: string[],
+  voulu: string[],
+  peut: (equipe: string) => boolean,
+  retraitLibre = false,
+  encoreDans: (equipe: string) => boolean = () => true,
+): string[] {
+  const gardes = retraitLibre ? [] : actuel.filter((id) => !voulu.includes(id) && !peut(id) && encoreDans(id));
   return [...voulu.filter((id) => actuel.includes(id) || peut(id)), ...gardes];
 }
 
-/** `peut(équipe)` d'un appelant de la recopie : admin, ou profil relu qui peut changer les référents de l'équipe. */
-export function appelantPeut(admin: boolean, profil: ProfilOrganigramme | null): (equipe: string) => boolean {
-  return (equipe) => admin || peutChangerReferents(profil, equipe);
+/** `peut(équipe)` d'un appelant de la recopie : admin, ou profil relu qui peut changer les référents de l'équipe, et
+ *  seulement pour l'équipe éditée (`equipe`). Sans équipe éditée (`null`, route des groupes) : faux partout, seuls
+ *  les comités suivent le groupe. */
+export function appelantPeut(admin: boolean, profil: ProfilOrganigramme | null, equipe: string | null): (equipe: string) => boolean {
+  return (id) => id === equipe && (admin || peutChangerReferents(profil, id));
 }
 
 /** Repose, pour les comptes donnés, ce que les équipes et les groupes disent : `dansEquipes`,
@@ -97,8 +107,9 @@ export async function recalculerRattachement(
   uids: string[],
   equipes: EquipeServeur[],
   groupes: OrganigrammeGroupe[],
-  /** Appelant d'une route (pas du chemin `tous`) : `peut(équipe)` = il peut changer les référents de cette équipe. */
-  appelant?: { peut: (equipe: string) => boolean },
+  /** Appelant d'une route (pas du chemin `tous`) : `equipe` = l'équipe éditée (`null` : aucune, route des groupes) ;
+   *  `peut(équipe)` = il peut changer les référents de cette équipe (voir `appelantPeut`). */
+  appelant?: { peut: (equipe: string) => boolean; equipe: string | null },
 ): Promise<{ maj: number; ignores: Ignore[] }> {
   let maj = 0;
   const ignores: Ignore[] = [];
@@ -111,11 +122,15 @@ export async function recalculerRattachement(
     ignores.push(...groupe.ignores.map((g) => ({ uid, groupe: g })));
     if (appelant) {
       // `referentDe` : ids d'équipes, et de comités (tirés de groupes/{id}, dont président et VP ne s'écrivent que par
-      // un admin : ajout et retrait libres) ; `referentSous` : sous-équipes de Louange, donc l'équipe 'louange' (on sort
-      // librement d'une sous-équipe).
+      // un admin : ajout et retrait libres) ; un id d'une autre équipe que l'équipe éditée reste tel que le profil
+      // l'avait, tant que le compte figure dans l'équipe. `referentSous` : sous-équipes de Louange, qui ne changent
+      // que si l'équipe éditée est Louange (on sort librement d'une sous-équipe).
       listes.referentDe = referentsPermis((data.referentDe as string[] | undefined) ?? [], listes.referentDe,
-        (id) => COMITES.includes(id) || appelant.peut(id));
-      listes.referentSous = referentsPermis((data.referentSous as string[] | undefined) ?? [], listes.referentSous, () => appelant.peut("louange"), true);
+        (id) => COMITES.includes(id) || appelant.peut(id), false, (id) => listes.dansEquipes.includes(id));
+      const referentSousActuel = (data.referentSous as string[] | undefined) ?? [];
+      listes.referentSous = appelant.equipe === "louange"
+        ? referentsPermis(referentSousActuel, listes.referentSous, () => appelant.peut("louange"), true)
+        : referentSousActuel;
     }
     const changes: Record<string, unknown> = {};
     for (const k of LISTES) {

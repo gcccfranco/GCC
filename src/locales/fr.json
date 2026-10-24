@@ -1591,6 +1591,10 @@
     "publierConfirmTexte": "Tous ses membres le verront. Ils sont prévenus à la première publication du trimestre.",
     "publierEchec": "La publication a échoué. Réessaie.",
     "dejaAnnonce": "Ce trimestre avait déjà été annoncé : personne n'est prévenu de nouveau. Pour signaler des corrections, utilise « Prévenir des changements ».",
+    "dejaAnnonceEnLigne": "Ce trimestre avait déjà été annoncé : personne n'est prévenu de nouveau.",
+    "trimestrePublie": "Trimestre {{tri}} publié.",
+    "trimestrePublieNotifie": "Trimestre {{tri}} publié — notification envoyée ({{count}}).",
+    "trimestreMasque": "Trimestre {{tri}} masqué de nouveau.",
     "export": {
       "bouton": "Exporter (modèle du Sheet)",
       "titre": "Exporter",
