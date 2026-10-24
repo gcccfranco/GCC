@@ -11,6 +11,7 @@ import { barreParDefaut } from "../src/lib/tableauDeBord/barre";
 import { raccourcisPermis } from "../src/lib/tableauDeBord/donnees";
 import { ANNONCE_SECTIONS } from "../src/types/annonce";
 import { EQUIPES } from "../src/lib/equipes/table";
+import { COMITES } from "../src/lib/groupes/table";
 import type { UserProfile } from "../src/types/user";
 
 // Lot 1 du chantier « équipes et groupes » (docs/spec-equipes-sans-poles.md), tranche EQ-B :
@@ -130,12 +131,13 @@ test.describe("pur : cocher une tâche et « à moi » (EQ8, EQ9, EQ15, décisio
   test("equipesDesTaches : ses équipes (toutes pour un admin) ; equipesOuCreer : celles dont on est référent", () => {
     expect(equipesDesTaches(user(JOEL), profil(JOEL))).toEqual(["medias"]);
     expect(equipesDesTaches(user(MAELLE), profil(MAELLE))).toEqual(["louange"]);
-    expect(equipesDesTaches(user(ADMIN), null)).toEqual(EQUIPES.map((e) => e.id));
+    // Les cinq comités de groupe suivent les équipes (OG-B, OG17).
+    expect(equipesDesTaches(user(ADMIN), null)).toEqual([...EQUIPES.map((e) => e.id), ...COMITES]);
     expect(equipesDesTaches(null, profil(JOEL))).toEqual([]);
     expect(equipesOuCreer(user(JOEL), profil(JOEL))).toEqual([]);
     expect(equipesOuCreer(user(LEA), profil(LEA))).toEqual(["medias"]);
     expect(equipesOuCreer(user(MAELLE), profil(MAELLE)), "un choriste ne crée rien").toEqual([]);
-    expect(equipesOuCreer(user(ADMIN), null)).toEqual(EQUIPES.map((e) => e.id));
+    expect(equipesOuCreer(user(ADMIN), null)).toEqual([...EQUIPES.map((e) => e.id), ...COMITES]);
   });
 });
 
@@ -188,7 +190,8 @@ test.describe("pur : plus de public de pôle (EQ19, EQ21)", () => {
     expect(creatableEvenementPours(user(ANCIEN), profil(ANCIEN), ANNONCE_SECTIONS)).toEqual([]);
     const admin = creatableEvenementPours(user(ADMIN), null, ANNONCE_SECTIONS);
     expect(admin.filter((p) => p.startsWith("pole:"))).toEqual([]);
-    expect(admin).toEqual(["eglise", ...ANNONCE_SECTIONS, ...EQUIPES.map((e) => `equipe:${e.id}`)]);
+    // Les cinq comités de groupe suivent les équipes (OG-B, OG17).
+    expect(admin).toEqual(["eglise", ...ANNONCE_SECTIONS, ...EQUIPES.map((e) => `equipe:${e.id}`), ...COMITES.map((c) => `equipe:${c}`)]);
     expect(creatableEvenementPours(user(IRIS), profil(IRIS), ANNONCE_SECTIONS)).toEqual(["eglise", ...ANNONCE_SECTIONS]);
   });
 

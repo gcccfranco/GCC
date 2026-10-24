@@ -1,5 +1,5 @@
 import { devices, expect, test, type Page, type TestInfo } from "@playwright/test";
-import { signInAs, type FakeDb, type FakeProfile } from "./helpers/fakeSession";
+import { notifie, remplit, signInAs, type FakeDb, type FakeProfile } from "./helpers/fakeSession";
 import { entreesBackOffice } from "../src/lib/access";
 import { barreAffichee, barreDeLaFeuille, barreParDefaut, basculer, listeDeLaFeuille } from "../src/lib/tableauDeBord/barre";
 import type { Entree } from "../src/types/backOffice";
@@ -136,7 +136,9 @@ test.describe("Barre du bas (B6) : la barre", () => {
   });
 
   test("repli : une entrée enregistrée sans droit n'y figure pas", async ({ page }) => {
-    await ouvrir(page, PLANNINGS, { "backOffice/uid-pl": { barreDuBas: ["messages", "planning", "equipes", "tableau"], majLe: "2026-09-30T10:00:00Z" } });
+    // Lot AO : la case « plannings » n'ouvre plus rien au Back-Office ; on remplit le planning de Paix par son rôle
+    // (Accueil, Calendrier, Planning).
+    await ouvrir(page, { ...PLANNINGS, ...remplit("paix") }, { "backOffice/uid-pl": { barreDuBas: ["messages", "planning", "equipes", "tableau"], majLe: "2026-09-30T10:00:00Z" } });
     await expect(onglets(page)).toHaveText(["Planning", "Accueil", "Calendrier", "Plus"]);
   });
 
@@ -164,7 +166,10 @@ test.describe("Barre du bas (B6) : la barre", () => {
     await expect(barre(page).getByRole("link", { name: "Plus" })).toHaveAttribute("aria-current", "page");
     await barre(page).getByRole("link", { name: "Tâches" }).click();
     // L'entrée Tâches mène à la première équipe du rail (B3, EQ9 : celles qui ont une tâche).
-    await expect(page).toHaveURL(/\/back-office\/taches\/da\/?$/);
+    // La page Tâches redirige vers l'équipe (router.replace) : l'URL ne change qu'à la réponse de la route `[equipe]`,
+    // que `next dev` compile à la première demande — plus de 5 s sous charge, cache froid (trace du 24/10/2026 :
+    // requête RSC encore en attente à l'échec).
+    await expect(page).toHaveURL(/\/back-office\/taches\/da\/?$/, { timeout: 20_000 });
     await expect(barre(page).getByRole("link", { name: "Tâches" })).toHaveAttribute("aria-current", "page");
     await expect(barre(page).getByRole("link", { name: "Plus" })).not.toHaveAttribute("aria-current", "page");
   });
@@ -207,8 +212,13 @@ test.describe("Barre du bas (B6) : « Plus »", () => {
   });
 
   test("le contenu d'une carte suit les droits : Messages = Notifier seul, sans pastille ; Équipes = Organigramme", async ({ page }) => {
-    // Notifier un groupe, le droit Équipes et membre de TEAM DA : sept entrées, trois dans « Plus ».
-    await ouvrir(page, { ...NOTIFY, equipes: true, dansEquipes: ["da"] });
+    // Lot AO : les cases à la main n'ouvrent plus rien, on rattache le profil à l'organigramme. Référente des Choristes
+    // (elle tient sa sous-équipe : Équipes = Organigramme), membre de TEAM DA, rôle Notifier du Groupe Paix : sept
+    // entrées, trois dans « Plus ».
+    await ouvrir(page, {
+      ...NOTIFY, ...notifie("Groupe Paix"), dansEquipes: ["da", "louange"], sousEquipes: ["choristes"], referentSous: ["choristes"],
+      lieuxLouange: ["Culte Francophone"],
+    });
     await expect(onglets(page)).toHaveText(["Accueil", "Calendrier", "Tâches", "Planning", "Plus"]);
     await barre(page).getByRole("link", { name: "Plus" }).click();
     const cartes = page.getByTestId("plus-entree");
@@ -222,19 +232,24 @@ test.describe("Barre du bas (B6) : « Plus »", () => {
     await expect(equipes).not.toContainText("personnes");
   });
 
-  test("Alice, quatre de ses cinq entrées dans la barre : « Plus » n'a que la carte de Réunions", async ({ page }) => {
+  test("Alice, quatre de ses sept entrées dans la barre : « Plus » a Réunions, Équipes et Messages", async ({ page }) => {
     // Barre enregistrée à deux onglets : complétée dans l'ordre du menu (Q13). Depuis v18 (B15),
-    // Alice a aussi Réunions (son équipe), la cinquième entrée, qui reste dans « Plus ».
+    // Alice a aussi Réunions (son équipe) ; depuis le lot AO, la référente d'une équipe la tient (Équipes) et la
+    // notifie (Messages) : sept entrées, dont trois restent dans « Plus ».
     await ouvrir(page, ALICE, { "backOffice/uid-alice": { barreDuBas: ["tableau", "evenements"], majLe: "2026-09-30T10:00:00Z" } });
     await expect(onglets(page)).toHaveText(["Accueil", "Évènements", "Calendrier", "Tâches", "Plus"]);
     await barre(page).getByRole("link", { name: "Plus" }).click();
     await expect(page.getByRole("button", { name: "Personnaliser la barre" })).toBeVisible();
-    await expect(page.getByTestId("plus-entree")).toHaveCount(1);
-    await expect(page.getByTestId("plus-entree")).toHaveAttribute("href", /^\/back-office\/reunions\/?$/);
+    const cartes = page.getByTestId("plus-entree");
+    await expect(cartes).toHaveCount(3);
+    await expect(cartes.filter({ hasText: "Réunions" })).toHaveAttribute("href", /^\/back-office\/reunions\/?$/);
+    await expect(cartes.filter({ hasText: "Équipes" })).toHaveAttribute("href", /^\/back-office\/equipes\/?$/);
+    await expect(cartes.filter({ hasText: "Messages" })).toHaveAttribute("href", /^\/back-office\/messages/);
   });
 
   test("la pastille de Tâches compte ce qui est à faire pour soi (Q15)", async ({ page }) => {
-    const qui: FakeProfile = { ...ALICE, plannings: ["culte"], equipes: true };
+    // Lot AO : Planning par le rôle « remplit » de Paix ; Équipes vient de sa place de référente.
+    const qui: FakeProfile = { ...ALICE, remplitParRole: ["paix"] };
     await ouvrir(page, qui, {
       "backOffice/uid-alice": { barreDuBas: ["tableau", "planning", "evenements", "equipes"], majLe: "2026-09-30T10:00:00Z" },
       "equipes/evenementiel/taches/t1": { titre: "Affiche", responsableUid: "uid-alice", responsableNom: "Alice Q.", echeance: "2026-09-28", repetition: null },
