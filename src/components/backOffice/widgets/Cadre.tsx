@@ -126,9 +126,9 @@ export function Rond({ ton, children }: { ton: "ok" | "warn" | "bad"; children: 
 }
 
 /** Petite puce à droite d'une rangée (« 4 / 10 », « scène ») : neutre, à surveiller (orange) ou en défaut (rouge). */
-export function Puce({ ton = "neutre", children }: { ton?: "neutre" | "warn" | "bad"; children: React.ReactNode }) {
+export function Puce({ ton = "neutre", children, testId }: { ton?: "neutre" | "warn" | "bad"; children: React.ReactNode; testId?: string }) {
   return (
-    <span className={cn(
+    <span data-testid={testId} className={cn(
       "inline-flex shrink-0 items-center whitespace-nowrap rounded-full px-2 py-0.5 text-[11px] font-semibold",
       ton === "neutre" && "bg-muted text-muted-foreground",
       ton === "warn" && "bg-amber-50 text-amber-800 dark:bg-amber-950 dark:text-amber-300",

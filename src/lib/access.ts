@@ -865,8 +865,8 @@ export function widgetsPermis(user: AuthUser | null, profile: UserProfile | null
     afaire: entrees.includes("taches"),
     setlists: canCreateSetlist(user, profile, backOffice),
     planning: entrees.includes("planning"),
-    // Une seule entrée couvrait les deux avant v18 : le widget reste permis avec l'une ou l'autre.
-    evenements: entrees.includes("evenements") || entrees.includes("reunions"),
+    // Depuis TB2 les réunions ont leur widget et sortent d'Évènements : seule l'entrée Évènements le permet (TB2-corrections).
+    evenements: entrees.includes("evenements"),
     reunions: entrees.includes("reunions"),
     chants: canVoirStatistiques(user),
     petitdej: true,

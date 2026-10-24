@@ -141,13 +141,20 @@ test.describe("Back-Office (B1) : les widgets permis (table des widgets)", () =>
     expect(widgetsPermis(user(ADMIN), profil(ADMIN))).toEqual(["dimanche", "calendrier", "afaire", "setlists", "planning", "evenements", "reunions", "chants", "petitdej", "scene", "comptes", "raccourcis"]);
   });
 
+  test("membre d'une équipe qui notifie un groupe : Réunions sans Évènements, donc le widget Réunions sans celui des Évènements (TB2-corrections)", () => {
+    const p: FakeProfile = { uid: "uid-nr", email: "nr@example.com", notify: ["Groupe Paix"], dansEquipes: ["regie"] };
+    expect(entreesBackOffice(user(p), profil(p))).not.toContain("evenements");
+    expect(widgetsPermis(user(p), profil(p))).toEqual(["dimanche", "calendrier", "afaire", "planning", "reunions", "petitdej", "scene", "raccourcis"]);
+  });
+
   test("Alice : ni Setlists à préparer (elle ne crée pas de setlist), ni Cases vides, ni Comptes", () => {
     expect(widgetsPermis(user(ALICE), profil(ALICE))).toEqual(["dimanche", "calendrier", "afaire", "evenements", "reunions", "petitdej", "scene", "raccourcis"]);
   });
 
   test("un responsable musicien des plannings : Setlists à préparer et Cases vides ; un non-responsable : rien", () => {
     const p = { ...PLANNINGS, serviceRoles: { "Culte Francophone": ["musicien"] } };
-    expect(widgetsPermis(user(p), profil(p))).toEqual(["dimanche", "calendrier", "afaire", "setlists", "planning", "evenements", "reunions", "petitdej", "scene", "raccourcis"]);
+    // Réunions (public Louange) sans Évènements : plus le widget des évènements (TB2-corrections).
+    expect(widgetsPermis(user(p), profil(p))).toEqual(["dimanche", "calendrier", "afaire", "setlists", "planning", "reunions", "petitdej", "scene", "raccourcis"]);
     expect(widgetsPermis(user(CHORISTE), profil(CHORISTE))).toEqual([]);
   });
 });
@@ -226,7 +233,10 @@ test.describe("Back-Office (B1) : le sélecteur et le menu", () => {
     await expect(page.getByRole("heading", { name: "Tableau de bord" })).toBeVisible();
     await deplierSiTablettePaysage(page, info);
     await menu(page, info).getByRole("link", { name: "Tâches" }).click();
-    await expect(page).toHaveURL(/\/back-office\/taches\/evenementiel\/?$/);
+    // La page Tâches redirige vers l'équipe (router.replace) : l'URL ne change qu'à la réponse de la route `[equipe]`,
+    // que `next dev` compile à la première demande — plus de 5 s sous charge, cache froid (trace du 24/10/2026 :
+    // requête RSC encore en attente à l'échec).
+    await expect(page).toHaveURL(/\/back-office\/taches\/evenementiel\/?$/, { timeout: 20_000 });
     await expect(page.getByRole("heading", { level: 1, name: "Tâches" })).toBeVisible();
     // Agencement v18 (T1, B1) : l'équipe est l'onglet actif du rail.
     await expect(page.locator('[data-onglets="rail"]').getByRole("link", { name: /^Événementiel/ })).toHaveAttribute("aria-current", "page");
@@ -243,7 +253,9 @@ test.describe("Back-Office (B1) : le sélecteur et le menu", () => {
 
   test("le sélecteur rouvre la dernière page de chaque espace (mémoire de session)", async ({ page }, info) => {
     await sansSheet(page);
-    await signInAs(page, ALICE_ORGA, {}, "/setlists");
+    // Référente EDD depuis le lot AO, la barre du bas d'Alice (téléphone, tablette) est Accueil · Calendrier · Tâches ·
+    // Planning · Plus, sans Évènements : le clic attendait jusqu'au délai. On lui enregistre une barre qui l'a.
+    await signInAs(page, ALICE_ORGA, { "backOffice/uid-alice": { barreDuBas: ["tableau", "evenements"], majLe: "2026-09-30T10:00:00Z" } }, "/setlists");
     await page.getByRole("heading", { name: "Setlists" }).first().waitFor();
     await deplierSiTablettePaysage(page, info);
     // Rien encore en mémoire côté Back-Office : le tableau de bord.

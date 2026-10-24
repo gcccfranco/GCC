@@ -3379,8 +3379,6 @@
       "planning": "Planning"
     },
     "evenements": {
-      "places": "{{inscrits}} inscrits sur {{max}}",
-      "sansLimite": "sans limite",
       "fermees": "inscriptions fermées",
       "externe": "formulaire externe",
       "rien": "Aucun évènement à venir.",

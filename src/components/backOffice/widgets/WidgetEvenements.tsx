@@ -2,11 +2,11 @@
 
 // Widget 3 « Évènements » (lot U6, B4 ; réécrit au lot TB2-b, docs/spec-tableau-de-bord-v2.md T5) : d'abord ceux
 // qu'on organise ou que porte une de ses équipes (inscriptions en puce, « ferme bientôt », créneaux de scène
-// vides), puis les autres. « Tout voir » mène aux Évènements du Back-Office (à Réunions pour qui n'a que cette
-// entrée, agencement v18, B15). Lot U8, C8 : les entrées du Sheet des évènements (toute l'église, jusqu'au
-// 31/12/2026) s'y mêlent ; elles ouvrent l'onglet de leur mois, dans un nouvel onglet.
+// vides), puis les autres. « Tout voir » mène aux Évènements du Back-Office. Depuis TB2-corrections, chaque ligne
+// de l'app porte l'état des inscriptions en pastille (neutre ; orange si « ferme bientôt »). Lot U8, C8 : les
+// entrées du Sheet des évènements (toute l'église, jusqu'au 31/12/2026) s'y mêlent ; elles ouvrent l'onglet de
+// leur mois, dans un nouvel onglet.
 import { useTranslation } from "react-i18next";
-import { entreesBackOffice } from "@/lib/access";
 import { Ticket } from "lucide-react";
 import { nowIsoParis } from "@/lib/evenements/agenda";
 import { lienOngletSheet, lireSheetEvenements } from "@/lib/evenements/sheet";
@@ -40,17 +40,19 @@ export function WidgetEvenements({ widget }: { widget: Widget }) {
     return (await Promise.all(editions.map((p) => listCreneaux(p.id)))).flat();
   }, `${today}|${sansCle}`);
   const maintenant = nowIsoParis();
-  // Le widget est permis avec Évènements ou Réunions (B15) : « Tout voir » mène à l'entrée qu'on a.
-  const toutVoir = entreesBackOffice(user, profile).includes("evenements") ? "/back-office/evenements" : "/back-office/reunions";
-  const etat = (e: EtatInscriptions) =>
-    e.cas === "places" ? t("tableauDeBord.evenements.places", { inscrits: e.inscrits, max: e.max })
-      : e.cas === "sansLimite" ? t("tableauDeBord.evenements.sansLimite")
-      : t(`tableauDeBord.evenements.${e.cas}`);
+  const pastille = (e: EtatInscriptions, bientot: boolean) => (
+    <Puce testId="pastille-inscriptions" ton={bientot ? "warn" : "neutre"}>
+      {e.cas === "places" ? `${e.inscrits} / ${e.max}`
+        : e.cas === "sansLimite" ? t("tableauDeBord.evenements.inscrits", { count: e.inscrits })
+        : e.cas === "fermees" ? t("tableauDeBord.evenements.fermees")
+        : t("tableauDeBord.evenements.externe")}
+    </Puce>
+  );
 
   return (
     <CadreWidget
       id="evenements" taille={widget.taille} Icone={Ticket} nom={t("tableauDeBord.widgets.evenements")}
-      complement={<LienTete href={toutVoir}>{t("tableauDeBord.toutVoir")}</LienTete>}
+      complement={<LienTete href="/back-office/evenements">{t("tableauDeBord.toutVoir")}</LienTete>}
     >
       {erreur ? <Message erreur>{t("tableauDeBord.lectureImpossible")}</Message>
         : !lignes ? <Message>{t("common.loading")}</Message>
@@ -66,25 +68,29 @@ export function WidgetEvenements({ widget }: { widget: Widget }) {
                   key={e.id} testId="ligne-evenement" data={{ "data-sien": "true" }} href={`${baseBackOffice(e)}/${e.id}`}
                   detail={(
                     <span className="flex items-center gap-1.5">
-                      {etatE.cas === "places" && <Puce ton={bientot ? "warn" : "neutre"}>{etatE.inscrits} / {etatE.max}</Puce>}
-                      {etatE.cas === "sansLimite" && <Puce>{t("tableauDeBord.evenements.inscrits", { count: etatE.inscrits })}</Puce>}
+                      {pastille(etatE, bientot)}
                       {vides > 0 && <Puce ton="bad">{t("tableauDeBord.evenements.scene")}</Puce>}
                     </span>
                   )}
                 >
                   <b className="block break-words font-semibold">{e.titre} · {jourSemaine(e.date, i18n.language)}</b>
-                  <span className="block text-xs text-muted-foreground">
-                    {bientot ? t("tableauDeBord.evenements.fermeBientot")
-                      : vides > 0 ? t("tableauDeBord.evenements.creneauxVides", { count: vides })
-                      : etat(etatE)}
-                  </span>
+                  {(bientot || vides > 0) && (
+                    <span className="block text-xs text-muted-foreground">
+                      {bientot ? t("tableauDeBord.evenements.fermeBientot") : t("tableauDeBord.evenements.creneauxVides", { count: vides })}
+                    </span>
+                  )}
                 </Rangee>
               );
             })}
             {lignes.autres.map((l) => l.du === "app" ? (
               <Rangee
                 key={l.evenement.id} testId="ligne-evenement" href={`${baseBackOffice(l.evenement)}/${l.evenement.id}`}
-                detail={`${jourSemaine(l.date, i18n.language)} · ${etat(etatInscriptions(l.evenement, maintenant))}`}
+                detail={(
+                  <span className="flex items-center gap-1.5">
+                    {jourSemaine(l.date, i18n.language)}
+                    {pastille(etatInscriptions(l.evenement, maintenant), fermeBientot(l.evenement, maintenant))}
+                  </span>
+                )}
               >
                 <b className="font-semibold">{l.evenement.titre}</b>
               </Rangee>

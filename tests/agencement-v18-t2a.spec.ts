@@ -103,8 +103,10 @@ test.describe("T2a : les droits d'affichage (B15)", () => {
     expect(sousPartiesEvenements(user(DA), profil(DA)), "référent (décision 43)").toEqual(["evenements"]);
   });
 
-  test("« Prochains évènements » permis avec l'une ou l'autre entrée ; le raccourci « Nouvel évènement » suit Évènements seul", () => {
-    expect(widgetsPermis(user(NOTIFY_EQUIPE), profil(NOTIFY_EQUIPE))).toContain("evenements");
+  test("« Prochains évènements » et le raccourci « Nouvel évènement » suivent Évènements seul (TB2-corrections)", () => {
+    // Depuis TB2, les réunions ont leur widget : Réunions seul ne permet plus celui des évènements.
+    expect(widgetsPermis(user(NOTIFY_EQUIPE), profil(NOTIFY_EQUIPE))).not.toContain("evenements");
+    expect(widgetsPermis(user(NOTIFY_EQUIPE), profil(NOTIFY_EQUIPE))).toContain("reunions");
     expect(widgetsPermis(user(ANNONCEUR), profil(ANNONCEUR))).toContain("evenements");
     expect(raccourcisPermis(user(NOTIFY_EQUIPE), profil(NOTIFY_EQUIPE), {}).map((r) => r.id)).not.toContain("evenement");
     expect(raccourcisPermis(user(DA), profil(DA), {}).map((r) => r.id), "référent (décision 43)").toContain("evenement");
@@ -283,16 +285,18 @@ test.describe("T2a : les adresses /back-office/reunions/*", () => {
 // ─── Relecture du lot (07/10/2026) ───────────────────────────────────────────────
 
 test.describe("T2a, relecture : là où mènent le widget et le guide", () => {
-  /** Le widget « Prochains évènements » seul au tableau de bord. */
-  const avecLeWidget = (p: FakeProfile) => ({
+  /** Les widgets demandés au tableau de bord (par défaut, « Prochains évènements » seul). */
+  const avecLeWidget = (p: FakeProfile, ids: string[] = ["evenements"]) => ({
     ...DOCS,
-    [`backOffice/${p.uid}`]: { tableauDeBord: [{ id: "evenements", taille: "m", reglages: {} }], versionTableau: 2, majLe: "2026-10-01T09:00:00Z" },
+    [`backOffice/${p.uid}`]: { tableauDeBord: ids.map((id) => ({ id, taille: "m", reglages: {} })), versionTableau: 2, majLe: "2026-10-01T09:00:00Z" },
   });
-  const widget = (page: Page) => page.getByTestId("grille-widgets").getByRole("region", { name: "Évènements", exact: true });
+  const widget = (page: Page, nom = "Évènements") => page.getByTestId("grille-widgets").getByRole("region", { name: nom, exact: true });
 
-  test("membre d'équipe responsable (Réunions sans Évènements) : « Tout voir » du widget mène à ses réunions", async ({ page }) => {
-    await ouvrir(page, NOTIFY_EQUIPE, "/back-office", avecLeWidget(NOTIFY_EQUIPE));
-    await expect(widget(page).getByRole("link", { name: "Tout voir" })).toHaveAttribute("href", /^\/back-office\/reunions\/?$/);
+  test("membre d'équipe responsable (Réunions sans Évènements) : pas de widget Évènements, celui des Réunions mène à ses réunions (TB2-corrections)", async ({ page }) => {
+    await ouvrir(page, NOTIFY_EQUIPE, "/back-office", avecLeWidget(NOTIFY_EQUIPE, ["evenements", "reunions"]));
+    await expect(widget(page, "Réunions")).toBeVisible();
+    await expect(widget(page, "Réunions").getByRole("link", { name: "Tout voir" })).toHaveAttribute("href", /^\/back-office\/reunions\/?$/);
+    await expect(widget(page)).toHaveCount(0);
   });
 
   test("droit d'annonces (Évènements) : « Tout voir » du widget mène aux Évènements", async ({ page }) => {

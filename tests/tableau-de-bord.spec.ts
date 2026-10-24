@@ -173,7 +173,8 @@ test.describe("Tableau de bord (TB2-c) : disposition par défaut (T9)", () => {
   });
 
   test("louange (rôle de service, plannings) : s'y ajoute Plannings, en deuxième", () => {
-    expect(ids(dispositionParDefaut(user(LOUANGE), profil(LOUANGE)))).toEqual(["dimanche", "planning", "evenements", "afaire", "reunions"]);
+    // Sans l'entrée Évènements, plus le widget des évènements (TB2-corrections : Réunions ne le permet plus).
+    expect(ids(dispositionParDefaut(user(LOUANGE), profil(LOUANGE)))).toEqual(["dimanche", "planning", "afaire", "reunions"]);
   });
 
   test("droit d'annonces seul : Ce dimanche et Évènements ; pôle DA seul : sans Plannings ; un non-responsable : rien", () => {
@@ -413,7 +414,7 @@ test.describe("Tableau de bord (B4) : écrans", () => {
     await expect(aFaire.getByText("Fond du culte")).toHaveCount(0);
 
     const evts = widget(page, "Évènements");
-    await expect(evts.getByTestId("ligne-evenement")).toHaveText([/Foot au parc.*4 inscrits sur 10/, /Repas de section.*sans limite/, /Sortie d'automne/]);
+    await expect(evts.getByTestId("ligne-evenement")).toHaveText([/Foot au parc.*4 \/ 10/, /Repas de section.*inscrit/, /Sortie d'automne/]);
     await expect(evts.getByRole("link", { name: "Tout voir" })).toHaveAttribute("href", /\/back-office\/evenements\/?$/);
 
     const scene = widget(page, "Scène");
@@ -558,7 +559,7 @@ test.describe("Tableau de bord (B4) : écrans", () => {
     await ouvrir(page, ADMIN);
     await expect(widget(page, "Comptes")).toBeVisible();
     await expect(widget(page, "Ce dimanche").getByTestId("ligne-dimanche")).toHaveCount(1);
-    await page.screenshot({ path: `test-results/tableau-de-bord-captures/${info.project.name}-admin.png`, fullPage: true });
+    await page.screenshot({ path: `test-results/tableau-de-bord-captures/${info.project.name}-admin.png`, fullPage: true, animations: "disabled" });
   });
 
   test("中文 : titres des widgets traduits", async ({ page }) => {
@@ -824,7 +825,7 @@ test.describe("Personnaliser (B5) : écrans", () => {
     await ouvrirAvec(page, ALICE_ORGA, ALICE_ORGA_DEFAUT);
     await personnaliser(page);
     await widget(page, "Évènements").getByRole("button", { name: "Réglages du widget" }).click();
-    await page.screenshot({ path: `test-results/tableau-de-bord-captures/${info.project.name}-personnaliser.png`, fullPage: true });
+    await page.screenshot({ path: `test-results/tableau-de-bord-captures/${info.project.name}-personnaliser.png`, fullPage: true, animations: "disabled" });
   });
 
   test("中文 : Personnaliser traduit", async ({ page }) => {
@@ -1190,8 +1191,8 @@ test.describe("Tableau de bord v2 (TB2-b) : écrans", () => {
     await expect(lignes.first()).toContainText("les inscriptions ferment bientôt");
     await expect(lignes.first()).toContainText("5 / 12");
     await expect(lignes.first()).toContainText("scène");
-    // Sans « ferme bientôt », les créneaux vides prennent la place du petit texte.
-    await expect(lignes.nth(1)).toContainText("4 inscrits sur 10");
+    // Une ligne sans « ferme bientôt » ni créneau vide n'a plus de sous-titre : la pastille dit les inscriptions.
+    await expect(lignes.nth(1)).toContainText("4 / 10");
   });
 
   test("Évènements : les créneaux de scène vides, quand les inscriptions ne ferment pas bientôt", async ({ page }) => {
@@ -1264,9 +1265,16 @@ test.describe("Tableau de bord v2 (TB2-b) : écrans", () => {
     });
     await expect(widget(page, "Plannings").getByTestId("ligne-plus-tard")).toBeVisible();
     await expect(widget(page, "Tâches").getByTestId("ligne-tache").first()).toBeVisible();
-    await expect(widget(page, "Évènements").getByTestId("ligne-evenement").first()).toBeVisible();
+    const evts = widget(page, "Évènements").getByTestId("ligne-evenement");
+    await expect(evts.first()).toBeVisible();
+    // Chaque ligne de l'app porte l'état des inscriptions en pastille (TB2-corrections).
+    await expect(evts.filter({ hasText: "Atelier cuisine" }).getByTestId("pastille-inscriptions")).toHaveText("5 / 12");
+    await expect(evts.filter({ hasText: "Foot au parc" }).getByTestId("pastille-inscriptions")).toHaveText("4 / 10");
+    await expect(evts.filter({ hasText: "Repas de section" }).getByTestId("pastille-inscriptions")).toHaveText(/inscrit/);
     await expect(widget(page, "Comptes").getByTestId("compte-nouveaux")).toBeVisible();
-    await page.screenshot({ path: `test-results/tableau-de-bord-captures/${info.project.name}-v2.png`, fullPage: true });
+    // La capture pleine page agrandit la fenêtre et relance le fondu des libellés de la barre latérale (`barre-fondu`,
+    // 150 ms) : sans `animations: "disabled"`, la barre sortait pâle (TB2-corrections).
+    await page.screenshot({ path: `test-results/tableau-de-bord-captures/${info.project.name}-v2.png`, fullPage: true, animations: "disabled" });
   });
 });
 

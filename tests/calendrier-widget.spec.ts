@@ -405,7 +405,8 @@ test.describe("C8 : « Prochains évènements » reçoit le Sheet", () => {
       /Prière.*mar\. 06\/10.*19:30.*Sheet/,
       /Foot au parc.*sam\. 10\/10.*20:00.*Sheet/,
       /Chants de Noël.*jeu\. 15\/10.*Sheet/,
-      /Tournoi de ping.*jeu\. 22\/10.*4 inscrits sur 10/,
+      // Inscriptions en pastille depuis TB2-corrections.
+      /Tournoi de ping.*jeu\. 22\/10.*4 \/ 10/,
       /Veillée.*sam\. 31\/10.*Sheet/,
     ]);
     const repas = ls.nth(0);

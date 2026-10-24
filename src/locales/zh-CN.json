@@ -3342,8 +3342,6 @@
       "planning": "排班表"
     },
     "evenements": {
-      "places": "{{inscrits}}/{{max}} 人报名",
-      "sansLimite": "不限人数",
       "fermees": "报名已截止",
       "externe": "外部表单",
       "rien": "近期没有活动。",
