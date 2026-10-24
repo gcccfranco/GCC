@@ -172,3 +172,8 @@ scripts/figma/sheets/
 scripts/figma/test-results/
 scripts/planche/root/
 scripts/planche/apercu/
+
+# Banc « à rude épreuve » : mesures et captures
+scripts/rude-epreuve/out/
+scripts/rude-epreuve/results/
+scripts/rude-epreuve/results.json

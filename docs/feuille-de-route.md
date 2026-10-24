@@ -1218,7 +1218,10 @@ modèles moins coûteux. » Audit sans code du site : banc Playwright sur builds
 fuzzing, hors ligne réel, réseau lent), audit du code en 11 dimensions avec contre-vérification, revue des captures.
 Rapport : `audit-2026-10-24.md` (lots L0 à L9 proposés, questions à trancher) ; la partie sécurité, exploitable, est
 remise **hors dépôt**. Orchestration : `orchestration.md`, agents `relecteur` et `regard`, workflows `/tranche`,
-`/verifier-constats`, `/audit-code`. **Urgence** : un secret à révoquer (L0, détail hors dépôt). **Aucun go.**
+`/verifier-constats`, `/audit-code`. **Urgence** : un secret à révoquer (L0, détail hors dépôt).
+**Go le 24/10/2026** (« Tranche par toi même », « corrige tout ce qui est à corriger ») : décisions C1 à C15 prises par
+Claude sur délégation, **`spec-corrections-audit.md`** ; deux sessions orchestratrices, flux A « fond » et flux B
+« surface », sur `ui/apple-design`. Banc d'essai versé dans `scripts/rude-epreuve/`.
 
 ## 4. Carte des modules de l'app « GCC »
 
