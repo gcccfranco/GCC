@@ -139,10 +139,35 @@ Deux conséquences :
 | --- | --- | --- | --- |
 | Audit du code, 11 dimensions | 11 chercheurs + 47 contre-vérifications | Opus (sécurité, permissions), Sonnet, Haiku (docs) ; contre-vérification Sonnet | 76 constats, 72 confirmés, 2 incertains, 2 réfutés ; ≈ 5 M de jetons, 26 min |
 | Revue design des captures | 17 lots + 2 transverses | Sonnet | 450 captures, 270 constats bruts dont 39 évidents ; ≈ 2,8 M de jetons, 19 min ; Opus a ensuite regardé à l'œil une quinzaine de constats ; quelques-uns étaient des comportements normaux (barre flottante qui passe sur le contenu pendant le défilement, texte indicatif « •••••••• » pris pour un mot de passe saisi) |
-| Suite complète du dépôt | 1 | Haiku (`testeur`) | ⟨résultat⟩ |
+| Suite complète du dépôt | 1 | Haiku (`testeur`) | interrompue à 1 570 tests sur 13 199 (conteneur partagé avec le banc) ; à refaire en fin de lot |
 | Banc d'essai (513 pages, 382 chants, fuzzing, hors ligne réel, réseau lent, « singe » sur 516 boutons) | aucun agent : scripts Playwright écrits par Opus | — | aucune erreur JS sur 513 pages ; les mesures du rapport |
 | Synthèse, vérification à l'œil des constats graves, rapport | conversation principale | Opus | ce document et le rapport |
 
 La part d'Opus s'est limitée à la découpe, aux deux chercheurs « à risque » (sécurité, permissions) et au
 jugement final ; tout le reste est passé par Sonnet et Haiku. Sur les 74 constats gardés, les chercheurs ont
 estimé que 23 se corrigent sur Haiku, 25 sur Sonnet, 11 demandent Opus et 15 une décision de Timothée.
+
+## 8. Ce que la journée du 24/10/2026 a coûté, et ce qui change
+
+Coût de la journée, d'après les sessions : session principale ≈ 206 $, flux A ≈ 40 $, flux B ≈ 23 $. La limite de
+dépense a été atteinte à 18 h 53 UTC et a arrêté le flux B. Deux causes :
+
+- **La lecture du contexte.** Chaque appel d'outil relit tout le contexte de la session. Dans une session à 350 000 ou
+  420 000 jetons, la lecture en cache fait la plus grosse part de la facture : 455 M de jetons lus pour la session
+  principale, 129 M pour le flux A.
+- **Les relectures en panel.** Cinq angles et cinq contre-vérifications, tous sur Opus, après chaque tranche, avec
+  builds et suites relancés dans un conteneur à quatre cœurs : de 2 à 3 h et de 2 à 4 M de jetons par relecture. Elles
+  ont trouvé de vrais défauts (dont une setlist ouverte par un lien jamais gardée hors ligne), que le `relecteur` de
+  `/tranche` n'avait pas vus.
+
+Règles à partir du 24/10/2026, 20 h :
+
+- **Une session orchestratrice neuve toutes les deux ou trois tranches.** Sa consigne tient en une page : la spec, le §
+  « Avancement », ce qui reste. La spec et l'Avancement portent l'état, pas le fil de la session.
+- **La qualité se garde dans `/tranche`, pas après.** Le `relecteur` a la liste des cas manqués le 24/10. Le `testeur`
+  relance les specs voisines (celles qui citent un fichier modifié). L'argument `preuve` impose un essai réel sur build
+  de production pour le service worker, le hors ligne, les notifications et les droits.
+- **La session principale ne relit plus en panel.** Elle lit le verdict de `/tranche` et le diff. Elle fait, une fois
+  par lot, une relecture de fin à trois angles sur Sonnet (sans contre-vérification Opus), qui s'appuie sur les
+  journaux de tests du flux au lieu de relancer les mêmes suites.
+- **Moins de réveils.** Une ligne par tranche du flux vers la session principale, et un point d'étape toutes les 3 h.

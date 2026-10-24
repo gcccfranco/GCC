@@ -11,7 +11,10 @@ export const meta = {
   ],
 }
 
-// args : { spec: "docs/spec-x.md", tranche: "T2", consigne: "quoi, où, critères", tests: ["tests/x.spec.ts"], base: "<commit avant la tranche>" }
+// args : { spec: "docs/spec-x.md", tranche: "T2", consigne: "quoi, où, critères", tests: ["tests/x.spec.ts"], base: "<commit avant la tranche>",
+//          preuve?: "essai réel à faire par le testeur, p. ex. banc horsligne sur build de production (scripts/rude-epreuve/README.md)" }
+// `preuve` : obligatoire dès qu'une tranche touche le service worker, le hors ligne, les notifications ou les droits — les tests
+// simulés n'ont pas vu, le 24/10/2026, une setlist ouverte par un lien jamais gardée hors ligne.
 // Patron « orchestrateur-ouvriers » : la conversation principale (Opus) a décidé ; Sonnet code, Haiku lance
 // les tests, Opus n'est rappelé qu'en conseiller quand ça résiste (stratégie « advisor »).
 const A = args || {}
@@ -53,6 +56,8 @@ const VERDICT = {
 const tester = (n) => agent(
   `Tranche ${A.tranche} (${A.spec}). Lance, dans l'ordre : \`npx tsc --noEmit\`, \`npm run lint\` (les avertissements ne comptent pas), puis ` +
   (tests ? `\`npx playwright test ${tests} --reporter=line\` (les projets de playwright.config.ts : trois appareils, cinq pour une spec d'agencement).` : 'aucune spec Playwright (rien de nommé).') +
+  ` Ajoute à la passe Playwright les **specs voisines** : pour chaque fichier de \`git diff --name-only ${A.base}\`, les specs de tests/ qui citent son chemin ou son nom (\`grep -rlF\`), car une spec qui lit le code par texte casse au moindre changement de forme. Au tour 1, liste-les dans \`commande\`.` +
+  (A.preuve ? ` Puis fais la preuve réelle demandée, et compte chaque écart comme un échec : ${A.preuve}` : '') +
   ` Rends chaque échec ; une erreur tsc ou lint compte comme un échec.`,
   { agentType: 'testeur', schema: ECHECS, label: `tester:${A.tranche}:${n}`, phase: 'Tester' })
 
