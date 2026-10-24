@@ -4,7 +4,7 @@ import { adminDb } from "@/lib/push/admin";
 import { sendPushToUids } from "@/lib/push/send";
 import { recordNotification } from "@/lib/push/notifications";
 import { loadPlanningNameIndex, filterUidsByNotifPref, loadNotifLangs, uidsForCategories } from "@/lib/push/recipients";
-import { reminderServicesFor, type ReminderService } from "@/lib/push/reminderMessage";
+import { ajouterAuxRappels, reminderServicesFor, type ReminderService } from "@/lib/push/reminderMessage";
 import { quiCategories, sceneReminder } from "@/lib/scene/rappels";
 import { avecLignes, ouvertureDuJour } from "@/lib/evenements/rappel";
 import { destinatairesEvenement } from "@/lib/evenements/serveur";
@@ -29,6 +29,7 @@ import {
   rehearsalsForDate,
   normalizeName,
 } from "@/lib/planning/names";
+import { lecturesSheet, reinitialiserLecturesSheet } from "@/lib/planning/sheets";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -277,6 +278,7 @@ export async function GET(req: NextRequest) {
     console.error("[cron] purge de la corbeille des setlists", e);
   }
   const today = isoInDays(0);
+  reinitialiserLecturesSheet();
   const [planning, index] = await Promise.all([loadPlanningData(), loadPlanningNameIndex()]);
   // Back-office coupé (lot 18, docs/spec-mise-en-ligne.md) : le rappel du matin ne
   // parle que des services — ni scène, ni tâches, ni évènements.
@@ -327,8 +329,7 @@ export async function GET(req: NextRequest) {
       const uids = new Set([c.auteurUid, ...(await uidsForCategories(quiCategories(c.qui)))]);
       for (const u of uids) {
         if (!u) continue;
-        const mine = byUid.get(u);
-        if (mine) mine.push(entry); else byUid.set(u, [entry]);
+        ajouterAuxRappels(byUid, u, entry);
       }
     }
 
@@ -407,5 +408,13 @@ export async function GET(req: NextRequest) {
     await markNotified(db, petitDejSeuls, petitDej.cle, { kind: "petitDej" });
   }
 
-  return NextResponse.json({ ok: true, summary, personnes: uids.length, petitDej: petitDejSeuls.length, sansEquipe: sansEquipeSeuls.length });
+  // Lectures du Sheet ratées pendant ce calcul : journalisées et rendues, sans changer le statut (200 :
+  // Vercel ne relance pas) — sauf si TOUTES ont échoué, où le 500 fait voir l'échec dans Vercel.
+  const { tentatives, echecs } = lecturesSheet();
+  if (echecs.length) console.error(`[cron] ${echecs.length} lecture(s) du Sheet du planning ratée(s) sur ${tentatives} : ${echecs.join(", ")}`);
+  const toutesRatees = tentatives > 0 && echecs.length >= tentatives;
+  return NextResponse.json(
+    { ok: !toutesRatees, summary, personnes: uids.length, petitDej: petitDejSeuls.length, sansEquipe: sansEquipeSeuls.length, lecturesRatees: echecs.length },
+    { status: toutesRatees ? 500 : 200 },
+  );
 }

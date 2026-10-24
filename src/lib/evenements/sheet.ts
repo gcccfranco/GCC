@@ -58,30 +58,10 @@ export function lienOngletSheet(date: string): string {
 
 // ─── CSV ──────────────────────────────────────────────────────────────────────
 
-/** CSV de l'export : virgules et retours à la ligne entre guillemets gardés, lignes vides comprises
- *  (les rangs comptent dans la grille). */
-export function lireCSV(texte: string): string[][] {
-  const lignes: string[][] = []
-  let ligne: string[] = []
-  let cellule = ""
-  let entreGuillemets = false
-  for (let i = 0; i < texte.length; i++) {
-    const c = texte[i]
-    if (entreGuillemets) {
-      if (c !== '"') cellule += c
-      else if (texte[i + 1] === '"') { cellule += '"'; i++ }
-      else entreGuillemets = false
-    } else if (c === '"') entreGuillemets = true
-    else if (c === ",") { ligne.push(cellule); cellule = "" }
-    else if (c === "\n" || c === "\r") {
-      if (c === "\r" && texte[i + 1] === "\n") i++
-      ligne.push(cellule); lignes.push(ligne)
-      ligne = []; cellule = ""
-    } else cellule += c
-  }
-  if (cellule || ligne.length) { ligne.push(cellule); lignes.push(ligne) }
-  return lignes
-}
+import { lireCSV } from "@/lib/csv"
+
+/** Lecteur CSV partagé avec le planning (src/lib/csv.ts) ; ré-exporté pour les tests. */
+export { lireCSV }
 
 // ─── Heures ───────────────────────────────────────────────────────────────────
 

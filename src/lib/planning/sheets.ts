@@ -2,6 +2,7 @@ import type { EddDataStructure, EddPeriode, CampusSeance } from "./utils"
 import { EDD_CLASSES, EDD_PERIODES, getMois } from "./utils"
 import { fetchCasesEcrites, fetchGrille } from "./grille"
 import { BACK_OFFICE } from "@/lib/backOffice"
+import { lireCSV } from "@/lib/csv"
 import { CLES_EDD, completerMusiciensFidelite, fusionnerLignes } from "./grilles"
 import { avecPetitDej, lirePetitDej, rangeesPetitDej } from "@/lib/petitdej/lignes"
 
@@ -18,25 +19,16 @@ function csvUrl(sheet: string) {
   return BASE_URL + encodeURIComponent(sheet)
 }
 
+/** CSV du planning : l'automate commun (`lireCSV`, src/lib/csv.ts) garde virgules, guillemets doublés
+ *  et retours à la ligne entre guillemets. Cellules sans espaces de bord ; un retour à la ligne DANS
+ *  une cellule devient une espace (« Pasteur X⏎(à confirmer) » → « Pasteur X (à confirmer) ») : les
+ *  noms se découpent sur , ; / (`splitNames`), pas sur la fin de ligne, et un saut brut resterait
+ *  dans le nom affiché. Les lignes blanches sont ignorées. */
 export function parseCSV(txt: string): string[][] {
   const rows: string[][] = []
-  for (const line of txt.split("\n")) {
-    if (!line.trim()) continue
-    const row: string[] = []
-    let cur = ""
-    let inQ = false
-    for (let i = 0; i < line.length; i++) {
-      const c = line[i]
-      if (c === '"') {
-        if (inQ && line[i+1] === '"') { cur += '"'; i++ } else inQ = !inQ
-      } else if (c === ',' && !inQ) {
-        row.push(cur.trim()); cur = ""
-      } else {
-        cur += c
-      }
-    }
-    row.push(cur.trim())
-    rows.push(row)
+  for (const brute of lireCSV(txt)) {
+    if (brute.length === 1 && !brute[0].trim()) continue
+    rows.push(brute.map(c => c.replace(/\s*[\r\n]+\s*/g, " ").trim()))
   }
   return rows
 }
@@ -69,19 +61,46 @@ export function parseDate(s: string): string | null {
 // client : sans ça, chaque montage / navigation entre onglets re-télécharge les
 // ~10 feuilles. Vidé au rechargement complet de la page (et par instance serveur).
 const SHEET_TTL_MS = 5 * 60_000
+/** Une requête qui pend est abandonnée au bout de 8 secondes (comme le lecteur des évènements). */
+const SHEET_DELAI_MS = 8_000
 const sheetCache = new Map<string, { at: number; rows: string[][] }>()
+
+// Lectures réseau tentées et ratées depuis la dernière remise à zéro : le cron du matin les compte
+// (une panne du Sheet n'y doit pas passer pour un planning vide).
+let tentativesSheet = 0
+let echecsSheet: string[] = []
+
+/** Remet à zéro le décompte des lectures (début du cron). */
+export function reinitialiserLecturesSheet(): void {
+  tentativesSheet = 0
+  echecsSheet = []
+}
+
+/** Lectures réseau tentées et onglets dont la lecture a échoué (copie en mémoire resservie ou non). */
+export function lecturesSheet(): { tentatives: number; echecs: string[] } {
+  return { tentatives: tentativesSheet, echecs: [...echecsSheet] }
+}
 
 export async function fetchSheet(sheet: string): Promise<string[][]> {
   const hit = sheetCache.get(sheet)
   if (hit && Date.now() - hit.at < SHEET_TTL_MS) return hit.rows
+  tentativesSheet++
   try {
-    const res = await fetch(csvUrl(sheet), { cache: "no-store" })
-    const rows = parseCSV(await res.text())
+    // `AbortSignal.timeout` manque aux vieux Safari (avant 16) : sans lui, pas de délai.
+    const res = await fetch(csvUrl(sheet), { cache: "no-store", signal: AbortSignal.timeout?.(SHEET_DELAI_MS) })
+    if (!res.ok) throw new Error(`Sheet « ${sheet} » : réponse ${res.status}`)
+    const texte = await res.text()
+    // Google rend parfois une page HTML (connexion, erreur) avec un statut 200 : pas un CSV.
+    if (/text\/html/i.test(res.headers?.get("content-type") ?? "") || texte.trimStart().startsWith("<")) {
+      throw new Error(`Sheet « ${sheet} » : réponse HTML au lieu du CSV`)
+    }
+    const rows = parseCSV(texte)
     sheetCache.set(sheet, { at: Date.now(), rows })
     return rows
   } catch {
-    // Échec réseau : on réutilise le dernier cache si on en a un, sinon vide
-    // (loadPlanningData basculera alors sur les données de secours statiques).
+    // Un échec ne remplace JAMAIS la copie en mémoire : on réutilise la dernière si on en a une,
+    // sinon vide (loadPlanningData basculera alors sur les données de secours statiques).
+    echecsSheet.push(sheet)
     return hit?.rows ?? []
   }
 }

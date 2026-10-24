@@ -104,3 +104,9 @@ export function reminderBody(dateISO: string, tag: ReminderTag, services: Remind
     ? `${formatReminderDate(dateISO, "fr")} (${WHEN.fr[tag]}) : ${list}`
     : `${formatReminderDate(dateISO, "zh-CN")}（${WHEN["zh-CN"][tag]}）：${list}`;
 }
+
+/** Ajoute une entrée (entraînement sur scène…) aux services d'un compte SANS modifier sa liste : le cron
+ *  partage une même liste entre les comptes d'un même nom de planning, un `push` la changerait pour tous. */
+export function ajouterAuxRappels(parUid: Map<string, ReminderService[]>, uid: string, entree: ReminderService): void {
+  parUid.set(uid, [...(parUid.get(uid) ?? []), entree]);
+}
