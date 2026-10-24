@@ -7,6 +7,7 @@ import { pushNouvelEvenement } from "@/lib/evenements/rappel";
 import { canCreateEvenement, canEditEvenement } from "@/lib/access";
 import { destinatairesEvenement } from "@/lib/evenements/serveur";
 import type { Evenement } from "@/types/evenement";
+import { reserverEnvoi, rendreEnvoi } from "@/lib/push/reserver";
 import { BACK_OFFICE } from "@/lib/backOffice"
 
 export const runtime = "nodejs";
@@ -45,20 +46,26 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Non autorisé" }, { status: 403 });
   }
 
-  const logRef = db.collection("notifLog").doc(`evenement-${evenementId}`);
-  if ((await logRef.get()).exists) return NextResponse.json({ ok: true, sent: 0, already: true });
-
+  const cle = `evenement-${evenementId}`;
   const uids = (await filterUidsByNotifPref(await destinatairesEvenement(db, e), "evenements")).filter((u) => u !== user.uid);
-  // Une fournée par langue (lot 8) : chacun reçoit le message dans la sienne.
-  const langs = await loadNotifLangs(uids);
-  let result: Awaited<ReturnType<typeof sendPushToUids>> | undefined;
-  for (const lang of ["fr", "zh-CN"] as const) {
-    const groupe = uids.filter((u) => (langs.get(u) ?? "fr") === lang);
-    if (!groupe.length) continue;
-    const payload = pushNouvelEvenement(e, lang);
-    result = await sendPushToUids(groupe, payload);
-    await recordNotification({ ...payload, kind: "evenement", recipients: groupe });
+  // La clé est réservée AVANT l'envoi (deux appels simultanés : un seul envoi) et rendue si l'envoi échoue.
+  if (!(await reserverEnvoi(db, cle, { at: Date.now(), evenementId, pour: e.pour, recipients: uids.length }))) {
+    return NextResponse.json({ ok: true, sent: 0, already: true });
   }
-  await logRef.set({ at: Date.now(), evenementId, pour: e.pour, recipients: uids.length });
-  return NextResponse.json({ ok: true, ...result, sent: uids.length });
+  try {
+    // Une fournée par langue (lot 8) : chacun reçoit le message dans la sienne.
+    const langs = await loadNotifLangs(uids);
+    let result: Awaited<ReturnType<typeof sendPushToUids>> | undefined;
+    for (const lang of ["fr", "zh-CN"] as const) {
+      const groupe = uids.filter((u) => (langs.get(u) ?? "fr") === lang);
+      if (!groupe.length) continue;
+      const payload = pushNouvelEvenement(e, lang);
+      result = await sendPushToUids(groupe, payload);
+      await recordNotification({ ...payload, kind: "evenement", recipients: groupe });
+    }
+    return NextResponse.json({ ok: true, ...result, sent: uids.length });
+  } catch (err) {
+    await rendreEnvoi(db, cle).catch(() => undefined);
+    throw err;
+  }
 }

@@ -72,6 +72,13 @@ export function recopieDuCompte(uid: string, data: Record<string, unknown>, equi
 
 export type Ignore = { uid: string; groupe: GroupeId };
 
+/** Ce que l'appelant peut poser comme référents (docs/spec-corrections-audit.md, A2, C7) : un référent NOUVEAU
+ *  (absent de `actuel`) n'est gardé que si `peut(équipe)` ; un référent déjà là reste, un retrait s'applique. L'ordre
+ *  de `voulu` est conservé. */
+export function referentsPermis(actuel: string[], voulu: string[], peut: (equipe: string) => boolean): string[] {
+  return voulu.filter((id) => actuel.includes(id) || peut(id));
+}
+
 /** Repose, pour les comptes donnés, ce que les équipes et les groupes disent : `dansEquipes`,
  *  `referentDe` (réunions et tâches d'équipe, lot U6, R4 ; comités, lot 2), les trois listes par
  *  rôle et `groupe` (OG3, OG19, OG20). Seule écriture de profil des organigrammes ; seuls les champs
@@ -83,6 +90,8 @@ export async function recalculerRattachement(
   uids: string[],
   equipes: EquipeServeur[],
   groupes: OrganigrammeGroupe[],
+  /** Appelant d'une route (pas du chemin `tous`) : `peut(équipe)` = il peut changer les référents de cette équipe. */
+  appelant?: { peut: (equipe: string) => boolean },
 ): Promise<{ maj: number; ignores: Ignore[] }> {
   let maj = 0;
   const ignores: Ignore[] = [];
@@ -93,6 +102,13 @@ export async function recalculerRattachement(
     const data = snap.data() ?? {};
     const { listes, groupe } = recopieDuCompte(uid, data, equipes, groupes);
     ignores.push(...groupe.ignores.map((g) => ({ uid, groupe: g })));
+    if (appelant) {
+      // `referentDe` : ids d'équipes, et de comités (tirés de groupes/{id}, dont président et VP ne s'écrivent que par
+      // un admin : gardés tels quels) ; `referentSous` : sous-équipes de Louange, donc l'équipe 'louange'.
+      listes.referentDe = referentsPermis((data.referentDe as string[] | undefined) ?? [], listes.referentDe,
+        (id) => COMITES.includes(id) || appelant.peut(id));
+      listes.referentSous = referentsPermis((data.referentSous as string[] | undefined) ?? [], listes.referentSous, () => appelant.peut("louange"));
+    }
     const changes: Record<string, unknown> = {};
     for (const k of LISTES) {
       if (((data[k] as string[] | undefined) ?? []).join(",") !== listes[k].join(",")) changes[k] = listes[k];

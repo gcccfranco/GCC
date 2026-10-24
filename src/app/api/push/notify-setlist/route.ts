@@ -10,6 +10,9 @@ import { aPrevenir, horodatageEnvoi, peutPrevenirEquipe } from "@/lib/setlist/pa
 import type { ServiceRole, UserProfile } from "@/types/user";
 import type { ProfilOrganigramme } from "@/lib/acces/organigramme";
 import { BACK_OFFICE } from "@/lib/backOffice";
+import { prendreVerrou, rendreVerrou } from "@/lib/push/reserver";
+import { lireCorpsNotifySetlist } from "@/lib/push/bornes";
+import { errorResponse } from "@/lib/evenements/serveur";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -24,6 +27,7 @@ export const dynamic = "force-dynamic";
 
 const MIN_SONGS = 4;
 const RESEND_COOLDOWN_MS = 24 * 60 * 60 * 1000;
+const VERROU_MS = 2 * 60 * 1000;
 // Rôles destinataires : exécutants hors présidence (auteur/leader) et hors
 // orateur/traduction (serviceRole null dans servantsForDate).
 const TEAM_ROLES: ServiceRole[] = ["chanteur", "musicien", "regie"];
@@ -44,11 +48,13 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Token invalide" }, { status: 401 });
   }
 
-  const { setlistId, auto } = (await req.json().catch(() => ({}))) as {
-    setlistId?: string;
-    auto?: boolean;
-  };
-  if (!setlistId) return NextResponse.json({ error: "setlistId manquant" }, { status: 400 });
+  let corps: ReturnType<typeof lireCorpsNotifySetlist>;
+  try {
+    corps = lireCorpsNotifySetlist(await req.json().catch(() => ({})));
+  } catch (e) {
+    return errorResponse(e);
+  }
+  const { setlistId, auto } = corps;
 
   const db = adminDb();
 
@@ -124,89 +130,106 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Action non autorisée" }, { status: 403 });
   }
 
-  // 5. Anti-spam selon le déclencheur.
-  const logRef = db.collection("notifLog").doc(`setlist-${setlistId}`);
-  const logSnap = await logRef.get();
-  const lastSentAt = logSnap.exists ? (logSnap.data()?.lastSentAt as number | undefined) : undefined;
-  const lastRecipients = logSnap.exists ? (logSnap.data()?.recipients as number | undefined) : undefined;
-  const prevenus = logSnap.exists ? ((logSnap.data()?.partagePrevenus as string[] | undefined) ?? []) : [];
-  const planningDejaPrevenu = !!lastSentAt && (lastRecipients ?? 0) > 0;
-  if (auto) {
-    // Auto : le planning une seule fois, dès qu'il a été touché ; chaque personne de
-    // l'équipe choisie une seule fois. Rien de nouveau : déjà envoyé.
-    const planningFait = !!sl.isPrivate || planningDejaPrevenu;
-    const equipeNouvelle = aPrevenir({ isPrivate: true, editeurs: equipeChoisie }, { planning: [], prevenus, planningDejaPrevenu, auto: true });
-    if (planningFait && equipeNouvelle.length === 0) {
-      return NextResponse.json({ ok: true, skipped: "already-sent" });
-    }
-  } else if (lastSentAt && Date.now() - lastSentAt < RESEND_COOLDOWN_MS) {
-    // Manuel : 1 envoi / 24 h.
+  // 5. Verrou d'envoi : un seul appel à la fois lit l'état (notifLog `setlist-<id>`), envoie, puis l'écrit.
+  // Réservé par create() avant la lecture, rendu à la fin (envoi réussi ou non) si son jeton est encore celui de cet appel ; un verrou resté
+  // (processus coupé) est repris après deux minutes. L'état lui-même (`setlist-<id>`, dates, équipe prévenue) ne change pas.
+  const cleVerrou = `verrou-setlist-${setlistId}`;
+  const jeton = await prendreVerrou(db, cleVerrou, { at: Date.now(), setlistId }, VERROU_MS);
+  if (!jeton) {
+    if (auto) return NextResponse.json({ ok: true, skipped: "already-sent" });
     return NextResponse.json(
       { error: "Une notification a déjà été envoyée pour cette setlist aujourd'hui." },
       { status: 429 }
     );
   }
+  try {
+    // Anti-spam selon le déclencheur.
+    const logRef = db.collection("notifLog").doc(`setlist-${setlistId}`);
+    const logSnap = await logRef.get();
+    const lastSentAt = logSnap.exists ? (logSnap.data()?.lastSentAt as number | undefined) : undefined;
+    const lastRecipients = logSnap.exists ? (logSnap.data()?.recipients as number | undefined) : undefined;
+    const prevenus = logSnap.exists ? ((logSnap.data()?.partagePrevenus as string[] | undefined) ?? []) : [];
+    const planningDejaPrevenu = !!lastSentAt && (lastRecipients ?? 0) > 0;
+    if (auto) {
+      // Auto : le planning une seule fois, dès qu'il a été touché ; chaque personne de
+      // l'équipe choisie une seule fois. Rien de nouveau : déjà envoyé.
+      const planningFait = !!sl.isPrivate || planningDejaPrevenu;
+      const equipeNouvelle = aPrevenir({ isPrivate: true, editeurs: equipeChoisie }, { planning: [], prevenus, planningDejaPrevenu, auto: true });
+      if (planningFait && equipeNouvelle.length === 0) {
+        return NextResponse.json({ ok: true, skipped: "already-sent" });
+      }
+    } else if (lastSentAt && Date.now() - lastSentAt < RESEND_COOLDOWN_MS) {
+      // Manuel : 1 envoi / 24 h.
+      return NextResponse.json(
+        { error: "Une notification a déjà été envoyée pour cette setlist aujourd'hui." },
+        { status: 429 }
+      );
+    }
 
-  // 6. Destinataires : équipe (musiciens, régie, choristes) de service à cette date
-  //    dans la catégorie de la setlist. Campus : départage matin/soir par moment
-  //    (setlists récentes liées à la séance), sinon par président (anciennes setlists).
-  const dateISO = (sl.date ?? "").slice(0, 10);
-  const planning = await loadPlanningData();
-  const wantLeader = normalizeName(sl.leader ?? "");
-  const team = sl.isPrivate ? [] : servantsForDate(planning, dateISO).filter(
-    (s) =>
-      s.category === sl.category &&
-      !!s.serviceRole &&
-      TEAM_ROLES.includes(s.serviceRole) &&
-      (sl.category !== "Campus" ||
-        (sl.moment ? s.moment === sl.moment : normalizeName(s.leader) === wantLeader))
-  );
-  const names = [...new Set(team.map((s) => s.name))];
-  const index = await loadPlanningNameIndex();
-  const { uids, unresolved } = resolveNamesToUids(names, index);
-  if (unresolved.length) {
-    console.warn(`[notify-setlist] noms non appariés (${dateISO}):`, unresolved);
-  }
-  const destinataires = aPrevenir(
-    { isPrivate: sl.isPrivate, editeurs: equipeChoisie },
-    { planning: uids, prevenus, planningDejaPrevenu, auto: !!auto },
-  );
-  const prefUids = await filterUidsByNotifPref(destinataires, "setlists");
-
-  // 7. Envoi, une fournée par langue (lot 8) : chacun lit le message dans la
-  // sienne. Resté en français seul jusqu'au 19/09/2026.
-  const langs = await loadNotifLangs(prefUids);
-  const result = { sent: 0, failed: 0, recipients: 0 };
-  for (const lang of ["fr", "zh-CN"] as const) {
-    const groupe = prefUids.filter((u) => (langs.get(u) ?? "fr") === lang);
-    if (!groupe.length) continue;
-    const r = await sendPushToUids(groupe, {
-      ...setlistReadyMessage({ title: sl.title ?? "", leader: sl.leader ?? "", songCount, category: sl.category }, lang),
-      url: `/setlists/${setlistId}`,
-      tag: `setlist-${setlistId}`,
-    });
-    result.sent += r.sent;
-    result.failed += r.failed;
-    result.recipients += r.recipients;
-  }
-
-  // En auto sans destinataire joignable, on ne mémorise rien : la prochaine
-  // sauvegarde réessaiera et le bouton manuel reste utilisable.
-  if (!auto || result.recipients > 0) {
-    // `recipients` ne compte que le planning ; l'équipe choisie a sa liste d'uids prévenus.
-    const planningTouche = prefUids.filter((u) => uids.includes(u)).length;
-    const equipePrevenue = equipeChoisie.filter((u) => prefUids.includes(u));
-    const envoyeLe = horodatageEnvoi({ auto: !!auto, planningTouche, maintenant: Date.now() });
-    await logRef.set(
-      {
-        ...(envoyeLe !== undefined ? { lastSentAt: envoyeLe } : {}),
-        setlistId,
-        ...(planningTouche > 0 || lastRecipients === undefined ? { recipients: planningTouche } : {}),
-        ...(equipePrevenue.length ? { partagePrevenus: FieldValue.arrayUnion(...equipePrevenue) } : {}),
-      },
-      { merge: true }
+    // 6. Destinataires : équipe (musiciens, régie, choristes) de service à cette date
+    //    dans la catégorie de la setlist. Campus : départage matin/soir par moment
+    //    (setlists récentes liées à la séance), sinon par président (anciennes setlists).
+    const dateISO = (sl.date ?? "").slice(0, 10);
+    const planning = await loadPlanningData();
+    const wantLeader = normalizeName(sl.leader ?? "");
+    const team = sl.isPrivate ? [] : servantsForDate(planning, dateISO).filter(
+      (s) =>
+        s.category === sl.category &&
+        !!s.serviceRole &&
+        TEAM_ROLES.includes(s.serviceRole) &&
+        (sl.category !== "Campus" ||
+          (sl.moment ? s.moment === sl.moment : normalizeName(s.leader) === wantLeader))
     );
-  }
+    const names = [...new Set(team.map((s) => s.name))];
+    const index = await loadPlanningNameIndex();
+    const { uids, unresolved } = resolveNamesToUids(names, index);
+    if (unresolved.length) {
+      console.warn(`[notify-setlist] noms non appariés (${dateISO}):`, unresolved);
+    }
+    const destinataires = aPrevenir(
+      { isPrivate: sl.isPrivate, editeurs: equipeChoisie },
+      { planning: uids, prevenus, planningDejaPrevenu, auto: !!auto },
+    );
+    const prefUids = await filterUidsByNotifPref(destinataires, "setlists");
 
-  return NextResponse.json({ ok: true, ...result });
+    // 7. Envoi, une fournée par langue (lot 8) : chacun lit le message dans la
+    // sienne. Resté en français seul jusqu'au 19/09/2026.
+    const langs = await loadNotifLangs(prefUids);
+    const result = { sent: 0, failed: 0, recipients: 0 };
+    for (const lang of ["fr", "zh-CN"] as const) {
+      const groupe = prefUids.filter((u) => (langs.get(u) ?? "fr") === lang);
+      if (!groupe.length) continue;
+      const r = await sendPushToUids(groupe, {
+        ...setlistReadyMessage({ title: sl.title ?? "", leader: sl.leader ?? "", songCount, category: sl.category }, lang),
+        url: `/setlists/${setlistId}`,
+        tag: `setlist-${setlistId}`,
+      });
+      result.sent += r.sent;
+      result.failed += r.failed;
+      result.recipients += r.recipients;
+    }
+
+    // En auto sans destinataire joignable, on ne mémorise rien : la prochaine
+    // sauvegarde réessaiera et le bouton manuel reste utilisable.
+    if (!auto || result.recipients > 0) {
+      // `recipients` ne compte que le planning ; l'équipe choisie a sa liste d'uids prévenus.
+      const planningTouche = prefUids.filter((u) => uids.includes(u)).length;
+      const equipePrevenue = equipeChoisie.filter((u) => prefUids.includes(u));
+      const envoyeLe = horodatageEnvoi({ auto: !!auto, planningTouche, maintenant: Date.now() });
+      await logRef.set(
+        {
+          ...(envoyeLe !== undefined ? { lastSentAt: envoyeLe } : {}),
+          setlistId,
+          ...(planningTouche > 0 || lastRecipients === undefined ? { recipients: planningTouche } : {}),
+          ...(equipePrevenue.length ? { partagePrevenus: FieldValue.arrayUnion(...equipePrevenue) } : {}),
+        },
+        { merge: true }
+      );
+    }
+
+    return NextResponse.json({ ok: true, ...result });
+  } finally {
+    // Le verrou n'est rendu que s'il porte encore le jeton de cet appel.
+    await rendreVerrou(db, cleVerrou, jeton).catch(() => undefined);
+  }
 }

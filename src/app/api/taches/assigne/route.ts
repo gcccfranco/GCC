@@ -4,7 +4,7 @@ import { sendPushToUids } from "@/lib/push/send";
 import { recordNotification } from "@/lib/push/notifications";
 import { filterUidsByNotifPref, loadNotifLangs } from "@/lib/push/recipients";
 import { nouvelleTacheMessage } from "@/lib/taches/messages";
-import { ID, appelant, estEquipe, premiereFois, tacheDeLAppelant } from "@/lib/taches/serveur";
+import { ID, appelant, estEquipe, premiereFois, rendrePremiereFois, tacheDeLAppelant } from "@/lib/taches/serveur";
 import { BACK_OFFICE } from "@/lib/backOffice"
 
 export const runtime = "nodejs";
@@ -33,12 +33,17 @@ export async function POST(req: NextRequest) {
   const key = `tache-assigne-${equipe}-${tacheId}`;
   const fresh = await premiereFois(await filterUidsByNotifPref([responsable], "taches"), key, { equipe, tacheId });
   if (fresh.length) {
-    const lang = (await loadNotifLangs(fresh)).get(responsable) ?? "fr";
-    // Lot U6, B3 : « À faire pour moi », ouvert à tout membre de l'équipe (la page de l'équipe est au
-    // Back-Office).
-    const payload = { ...nouvelleTacheMessage(tache, lang), url: "/taches", tag: key };
-    await sendPushToUids(fresh, payload);
-    await recordNotification({ ...payload, kind: "tache", recipients: fresh });
+    try {
+      const lang = (await loadNotifLangs(fresh)).get(responsable) ?? "fr";
+      // Lot U6, B3 : « À faire pour moi », ouvert à tout membre de l'équipe (la page de l'équipe est au
+      // Back-Office).
+      const payload = { ...nouvelleTacheMessage(tache, lang), url: "/taches", tag: key };
+      await sendPushToUids(fresh, payload);
+      await recordNotification({ ...payload, kind: "tache", recipients: fresh });
+    } catch (e) {
+      await rendrePremiereFois(fresh, key);
+      throw e;
+    }
   }
   return NextResponse.json({ ok: true, notified: fresh.length });
 }

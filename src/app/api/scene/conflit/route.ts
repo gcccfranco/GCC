@@ -6,6 +6,7 @@ import { loadNotifLangs } from "@/lib/push/recipients";
 import { conflictKey, conflictMessage } from "@/lib/scene/conflit";
 import { overlaps } from "@/lib/scene/dimanches";
 import type { Creneau } from "@/types/programme";
+import { reserverPourUids, rendrePourUids } from "@/lib/push/reserver";
 import { BACK_OFFICE } from "@/lib/backOffice"
 
 export const runtime = "nodejs";
@@ -48,22 +49,22 @@ export async function POST(req: NextRequest) {
 
   const key = conflictKey(programmeId, creneauIds);
   const uids = [...new Set([a.auteurUid, b.auteurUid].filter(Boolean))];
-  const fresh: string[] = [];
-  for (const u of uids) {
-    if (!(await db.collection("notifLog").doc(`${key}-${u}`).get()).exists) fresh.push(u);
-  }
+  // Chaque uid est réservé AVANT l'envoi (create) ; rendu si son envoi échoue.
+  const fresh = await reserverPourUids(db, uids, key, { programmeId });
   if (!fresh.length) return NextResponse.json({ ok: true, notified: 0 });
 
-  const langs = await loadNotifLangs(fresh);
-  await Promise.all(
-    fresh.map(async (u) => {
-      const payload = { ...conflictMessage(a, b, langs.get(u) ?? "fr"), url: "/evenements", tag: key };
-      await sendPushToUids([u], payload);
-      await recordNotification({ ...payload, kind: "scene", recipients: [u] });
-    }),
-  );
-  const batch = db.batch();
-  for (const u of fresh) batch.set(db.collection("notifLog").doc(`${key}-${u}`), { programmeId, uid: u, at: Date.now() });
-  await batch.commit();
+  try {
+    const langs = await loadNotifLangs(fresh);
+    await Promise.all(
+      fresh.map(async (u) => {
+        const payload = { ...conflictMessage(a, b, langs.get(u) ?? "fr"), url: "/evenements", tag: key };
+        await sendPushToUids([u], payload);
+        await recordNotification({ ...payload, kind: "scene", recipients: [u] });
+      }),
+    );
+  } catch (e) {
+    await rendrePourUids(db, fresh, key);
+    throw e;
+  }
   return NextResponse.json({ ok: true, notified: fresh.length });
 }

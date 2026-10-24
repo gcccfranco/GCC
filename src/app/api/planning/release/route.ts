@@ -8,6 +8,9 @@ import { isAdminEmail } from "@/lib/access";
 import { NOTIFY_ALL } from "@/lib/push/audiences";
 import { getPlanning, droitsDePublication, TRI_ORDER } from "@/lib/planning/releases";
 import type { ProfilOrganigramme } from "@/lib/acces/organigramme";
+import { lireCorpsRelease } from "@/lib/push/bornes";
+import { errorResponse } from "@/lib/evenements/serveur";
+import { doitNotifierPublication, cleRelease, rendreEnvoi } from "@/lib/push/reserver";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -40,19 +43,15 @@ export async function POST(req: NextRequest) {
   }
 
   // 2. Requête
-  const { key, tri, publish, year } = (await req.json().catch(() => ({}))) as {
-    key?: string;
-    tri?: string;
-    publish?: boolean;
-    year?: number;
-  };
+  let corps: ReturnType<typeof lireCorpsRelease>;
+  try {
+    corps = lireCorpsRelease(await req.json().catch(() => ({})));
+  } catch (e) {
+    return errorResponse(e);
+  }
+  const { key, tri, year: yr, publish: doPublish } = corps;
   const planning = key ? getPlanning(key) : undefined;
   if (!planning) return NextResponse.json({ error: "Planning inconnu" }, { status: 400 });
-  if (!tri || !(TRI_ORDER as readonly string[]).includes(tri)) {
-    return NextResponse.json({ error: "Trimestre invalide" }, { status: 400 });
-  }
-  const yr = Number.isInteger(year) ? (year as number) : new Date().getFullYear();
-  const doPublish = publish !== false;
 
   // 3. Droits de l'expéditeur
   const isAdmin = isAdminEmail(email);
@@ -78,32 +77,38 @@ export async function POST(req: NextRequest) {
   }
 
   // 5. Notification — uniquement à la première publication (jamais au masquage,
-  // jamais à une republication d'un trimestre déjà publié).
+  // jamais à une republication, y compris après un masquage : la première publication est
+  // retenue par une réservation notifLog `release_<planning>_<année>_<trimestre>`, créée avant l'envoi).
   let notified = false;
   let sent = 0;
-  if (doPublish && !already) {
-    // Une fournée par langue (lot 8) : resté en français seul jusqu'au 19/09/2026.
-    const tous = planning.notifyAudience === NOTIFY_ALL;
-    const cible = tous ? await allSubscriberUids() : await uidsDuGroupe(planning.notifyAudience);
-    const langs = await loadNotifLangs(cible);
-    const tag = `release-${planning.key}-${yr}-${tri}`;
-    // Lot U2 : l'année dans le message dès qu'elle n'est pas l'année en cours.
-    const release = { label: planning.label, tri, ...(yr !== new Date().getFullYear() ? { annee: yr } : {}) };
-    for (const lang of ["fr", "zh-CN"] as const) {
-      const groupe = cible.filter((u) => (langs.get(u) ?? "fr") === lang);
-      if (!groupe.length) continue;
-      const message = planningReleaseMessage(release, lang);
-      const result = await sendPushToUids(groupe, { ...message, url: "/planning", tag });
-      sent += result.sent;
-      // Cloche : une entrée par fournée pour une catégorie ; « tout le monde »
-      // garde son entrée unique (visible aussi de qui n'a pas d'abonnement push).
-      if (!tous) await recordNotification({ ...message, url: "/planning", kind: "broadcast", recipients: groupe });
+  if (await doitNotifierPublication(adminDb(), planning.key, yr, tri, uid, { publier: doPublish, dejaPublie: already })) {
+    try {
+      // Une fournée par langue (lot 8) : resté en français seul jusqu'au 19/09/2026.
+      const tous = planning.notifyAudience === NOTIFY_ALL;
+      const cible = tous ? await allSubscriberUids() : await uidsDuGroupe(planning.notifyAudience);
+      const langs = await loadNotifLangs(cible);
+      const tag = `release-${planning.key}-${yr}-${tri}`;
+      // Lot U2 : l'année dans le message dès qu'elle n'est pas l'année en cours.
+      const release = { label: planning.label, tri, ...(yr !== new Date().getFullYear() ? { annee: yr } : {}) };
+      for (const lang of ["fr", "zh-CN"] as const) {
+        const groupe = cible.filter((u) => (langs.get(u) ?? "fr") === lang);
+        if (!groupe.length) continue;
+        const message = planningReleaseMessage(release, lang);
+        const result = await sendPushToUids(groupe, { ...message, url: "/planning", tag });
+        sent += result.sent;
+        // Cloche : une entrée par fournée pour une catégorie ; « tout le monde »
+        // garde son entrée unique (visible aussi de qui n'a pas d'abonnement push).
+        if (!tous) await recordNotification({ ...message, url: "/planning", kind: "broadcast", recipients: groupe });
+      }
+      if (tous) {
+        const fr = planningReleaseMessage(release, "fr");
+        await recordNotification({ ...fr, url: "/planning", kind: "broadcast", everyone: true });
+      }
+      notified = true;
+    } catch (e) {
+      await rendreEnvoi(adminDb(), cleRelease(planning.key, yr, tri)).catch(() => undefined);
+      throw e;
     }
-    if (tous) {
-      const fr = planningReleaseMessage(release, "fr");
-      await recordNotification({ ...fr, url: "/planning", kind: "broadcast", everyone: true });
-    }
-    notified = true;
   }
 
   return NextResponse.json({ ok: true, published: next, notified, sent });

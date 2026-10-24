@@ -6,7 +6,7 @@ import { filterUidsByNotifPref, loadNotifLangs, loadPlanningNameIndex, resolveNa
 import { loadPlanningData, servantsForDate } from "@/lib/planning/names";
 import { dimancheApres } from "@/lib/taches/echeances";
 import { tacheFaiteMessage } from "@/lib/taches/messages";
-import { ID, appelant, estEquipe, membresDeLEquipe, premiereFois, tacheDeLAppelant } from "@/lib/taches/serveur";
+import { ID, appelant, estEquipe, membresDeLEquipe, premiereFois, rendrePremiereFois, tacheDeLAppelant } from "@/lib/taches/serveur";
 import { BACK_OFFICE } from "@/lib/backOffice"
 
 export const runtime = "nodejs";
@@ -64,17 +64,22 @@ export async function POST(req: NextRequest) {
   const key = `tache-fait-${equipe}-${tacheId}-${date}`;
   const fresh = await premiereFois(await filterUidsByNotifPref(uids, "taches"), key, { equipe, tacheId, date });
   if (fresh.length) {
-    const parNom = (fois.data()?.parNom as string) ?? "";
-    const langs = await loadNotifLangs(fresh);
-    await Promise.all(
-      fresh.map(async (u) => {
-        const msg = tacheFaiteMessage(tache, parNom, langs.get(u) ?? "fr");
-        // Le lien de la tâche (fond Canva…) voyage en texte, pas en image.
-        const payload = { ...msg, body: tache.lien ? `${msg.body}\n${tache.lien}` : msg.body, url, tag: key };
-        await sendPushToUids([u], payload);
-        await recordNotification({ ...payload, kind: "tache", recipients: [u] });
-      }),
-    );
+    try {
+      const parNom = (fois.data()?.parNom as string) ?? "";
+      const langs = await loadNotifLangs(fresh);
+      await Promise.all(
+        fresh.map(async (u) => {
+          const msg = tacheFaiteMessage(tache, parNom, langs.get(u) ?? "fr");
+          // Le lien de la tâche (fond Canva…) voyage en texte, pas en image.
+          const payload = { ...msg, body: tache.lien ? `${msg.body}\n${tache.lien}` : msg.body, url, tag: key };
+          await sendPushToUids([u], payload);
+          await recordNotification({ ...payload, kind: "tache", recipients: [u] });
+        }),
+      );
+    } catch (e) {
+      await rendrePremiereFois(fresh, key);
+      throw e;
+    }
   }
   return NextResponse.json({ ok: true, notified: fresh.length, linked, cible });
 }
