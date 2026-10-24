@@ -925,7 +925,11 @@ export function SetlistDetailClient() {
           })
         );
       } else {
-        flashFeedback(data.error || t("setlists.detail.notifyError", { defaultValue: "Échec de l'envoi." }));
+        flashFeedback(
+          data.code === "busy"
+            ? t("setlists.detail.notifyBusy")
+            : data.error || t("setlists.detail.notifyError", { defaultValue: "Échec de l'envoi." })
+        );
       }
     } catch {
       flashFeedback(t("setlists.detail.notifyError", { defaultValue: "Échec de l'envoi." }));

@@ -10,12 +10,13 @@ import { aPrevenir, horodatageEnvoi, peutPrevenirEquipe } from "@/lib/setlist/pa
 import type { ServiceRole, UserProfile } from "@/types/user";
 import type { ProfilOrganigramme } from "@/lib/acces/organigramme";
 import { BACK_OFFICE } from "@/lib/backOffice";
-import { prendreVerrou, rendreVerrou } from "@/lib/push/reserver";
+import { prendreVerrou, rendreVerrou, reponseEnvoiEnCours } from "@/lib/push/reserver";
 import { lireCorpsNotifySetlist } from "@/lib/push/bornes";
 import { errorResponse } from "@/lib/evenements/serveur";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+export const maxDuration = 60;
 
 // Notif « setlist prête » : sur une setlist (toute catégorie) contenant ≥ 4
 // chants. Prévient les musiciens, la régie et les choristes de service à cette
@@ -136,11 +137,9 @@ export async function POST(req: NextRequest) {
   const cleVerrou = `verrou-setlist-${setlistId}`;
   const jeton = await prendreVerrou(db, cleVerrou, { at: Date.now(), setlistId }, VERROU_MS);
   if (!jeton) {
-    if (auto) return NextResponse.json({ ok: true, skipped: "already-sent" });
-    return NextResponse.json(
-      { error: "Une notification a déjà été envoyée pour cette setlist aujourd'hui." },
-      { status: 429 }
-    );
+    // Un autre appel tient le verrou : l'envoi est en cours, pas fait.
+    const { status, corps: reponse } = reponseEnvoiEnCours(auto);
+    return NextResponse.json(reponse, { status });
   }
   try {
     // Anti-spam selon le déclencheur.

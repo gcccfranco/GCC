@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { Send, Check, EyeOff } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { authHeader } from "@/lib/firebase/setlists";
 import { getCurrentTri } from "@/lib/planning/utils";
 import { audienceLabel } from "@/lib/push/audiences";
@@ -27,6 +28,7 @@ export function PublishPlanningPanel({
   isAdmin: boolean;
   notifyRights: string[];
 }) {
+  const { t } = useTranslation();
   const year = new Date().getFullYear();
   const current = getCurrentTri();
 
@@ -71,7 +73,9 @@ export function PublishPlanningPanel({
           publish
             ? data.notified
               ? `Trimestre ${tri} publié — notification envoyée (${data.sent ?? 0}).`
-              : `Trimestre ${tri} publié.`
+              : data.dejaAnnonce
+                ? `Trimestre ${tri} publié. ${t("planning.dejaAnnonce")}`
+                : `Trimestre ${tri} publié.`
             : `Trimestre ${tri} masqué de nouveau.`
         );
       } else {
@@ -114,12 +118,12 @@ export function PublishPlanningPanel({
       </div>
 
       <p className="text-sm text-muted-foreground">
-        Publier un trimestre le rend visible par tous les membres et envoie une
-        notification à{" "}
+        Publier un trimestre le rend visible par tous les membres. À la première
+        publication du trimestre,{" "}
         <span className="font-semibold text-foreground">
           {audienceLabel(planning.notifyAudience)}
-        </span>
-        . Le trimestre courant et les passés sont déjà visibles automatiquement.
+        </span>{" "}
+        reçoit une notification. Le trimestre courant et les passés sont déjà visibles automatiquement.
       </p>
 
       <div className="space-y-2">
@@ -197,8 +201,8 @@ export function PublishPlanningPanel({
           <span className="font-semibold text-foreground">
             {confirmTri} {year}
           </span>{" "}
-          de {planning.label} → visible par tous + notification à{" "}
-          {audienceLabel(planning.notifyAudience)}.
+          de {planning.label} → visible par tous ; {audienceLabel(planning.notifyAudience)} est
+          prévenu à la première publication du trimestre.
         </p>
       )}
 

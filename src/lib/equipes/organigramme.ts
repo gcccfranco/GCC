@@ -59,3 +59,17 @@ export function rattachementDe(
     joue: sousEquipes.includes("musiciens") ? union("louange", "joue", INSTRUMENTS) : [],
   };
 }
+
+/** Les comptes dont les lignes d'une équipe ont changé pendant l'édition (ajoutées, retirées, modifiées), comparées à
+ *  l'état chargé. La recopie d'un compte (`rattachementDe`) ne lit que ses propres lignes et l'id de l'équipe, qui
+ *  ne change pas : un compte aux lignes inchangées n'a rien à recalculer. Les lignes sans compte sont écartées. */
+export function uidsAChanger(avant: { uid: string }[], apres: { uid: string }[]): string[] {
+  const lignes = (membres: { uid: string }[]) => {
+    const parUid = new Map<string, string[]>();
+    for (const m of membres) if (m.uid) parUid.set(m.uid, [...(parUid.get(m.uid) ?? []), JSON.stringify(m)]);
+    return parUid;
+  };
+  const a = lignes(avant);
+  const b = lignes(apres);
+  return [...new Set([...a.keys(), ...b.keys()])].filter((u) => (a.get(u) ?? []).join("\n") !== (b.get(u) ?? []).join("\n"));
+}

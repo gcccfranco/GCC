@@ -3,7 +3,7 @@
 import { adminDb } from "@/lib/push/admin";
 import { canEditerEquipes, isAdminEmail } from "@/lib/access";
 import { BACK_OFFICE } from "@/lib/backOffice";
-import type { ProfilOrganigramme } from "@/lib/acces/organigramme";
+import { peutChangerReferents, type ProfilOrganigramme } from "@/lib/acces/organigramme";
 import { HttpError } from "@/lib/evenements/serveur";
 import { rattachementDe } from "./organigramme";
 import { comptesCites, groupeDe, lireGroupe, recopieDeGroupe } from "@/lib/groupes/organigramme";
@@ -73,10 +73,17 @@ export function recopieDuCompte(uid: string, data: Record<string, unknown>, equi
 export type Ignore = { uid: string; groupe: GroupeId };
 
 /** Ce que l'appelant peut poser comme référents (docs/spec-corrections-audit.md, A2, C7) : un référent NOUVEAU
- *  (absent de `actuel`) n'est gardé que si `peut(équipe)` ; un référent déjà là reste, un retrait s'applique. L'ordre
- *  de `voulu` est conservé. */
-export function referentsPermis(actuel: string[], voulu: string[], peut: (equipe: string) => boolean): string[] {
-  return voulu.filter((id) => actuel.includes(id) || peut(id));
+ *  (absent de `actuel`) n'est gardé que si `peut(équipe)`. Un retrait (id présent dans `actuel`, absent de `voulu`) ne
+ *  s'applique que si `peut(équipe)` : sinon l'id reste. Avec `retraitLibre`, tout retrait s'applique. L'ordre de
+ *  `voulu` est conservé ; les ids gardés s'ajoutent à la suite. */
+export function referentsPermis(actuel: string[], voulu: string[], peut: (equipe: string) => boolean, retraitLibre = false): string[] {
+  const gardes = retraitLibre ? [] : actuel.filter((id) => !voulu.includes(id) && !peut(id));
+  return [...voulu.filter((id) => actuel.includes(id) || peut(id)), ...gardes];
+}
+
+/** `peut(équipe)` d'un appelant de la recopie : admin, ou profil relu qui peut changer les référents de l'équipe. */
+export function appelantPeut(admin: boolean, profil: ProfilOrganigramme | null): (equipe: string) => boolean {
+  return (equipe) => admin || peutChangerReferents(profil, equipe);
 }
 
 /** Repose, pour les comptes donnés, ce que les équipes et les groupes disent : `dansEquipes`,
@@ -104,10 +111,11 @@ export async function recalculerRattachement(
     ignores.push(...groupe.ignores.map((g) => ({ uid, groupe: g })));
     if (appelant) {
       // `referentDe` : ids d'équipes, et de comités (tirés de groupes/{id}, dont président et VP ne s'écrivent que par
-      // un admin : gardés tels quels) ; `referentSous` : sous-équipes de Louange, donc l'équipe 'louange'.
+      // un admin : ajout et retrait libres) ; `referentSous` : sous-équipes de Louange, donc l'équipe 'louange' (on sort
+      // librement d'une sous-équipe).
       listes.referentDe = referentsPermis((data.referentDe as string[] | undefined) ?? [], listes.referentDe,
         (id) => COMITES.includes(id) || appelant.peut(id));
-      listes.referentSous = referentsPermis((data.referentSous as string[] | undefined) ?? [], listes.referentSous, () => appelant.peut("louange"));
+      listes.referentSous = referentsPermis((data.referentSous as string[] | undefined) ?? [], listes.referentSous, () => appelant.peut("louange"), true);
     }
     const changes: Record<string, unknown> = {};
     for (const k of LISTES) {

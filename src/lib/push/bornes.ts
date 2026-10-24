@@ -18,6 +18,21 @@ export function cheminInterne(url: unknown, defaut: string): string {
   return typeof url === "string" && /^\/[a-zA-Z0-9/_-]*$/.test(url) ? url : defaut;
 }
 
+/** Page d'où part un signalement (en-tête Referer) : le chemin seulement, s'il est de la même origine que le site,
+ *  borné à PAGE_URL_MAX caractères ; sinon chaîne vide. */
+export const PAGE_URL_MAX = 500;
+export function cheminDeLaPage(referer: string | null | undefined, origine: string): string {
+  if (!referer) return "";
+  let url: URL;
+  try {
+    url = new URL(referer);
+  } catch {
+    return "";
+  }
+  if (url.origin !== origine) return "";
+  return cheminInterne(url.pathname, "").slice(0, PAGE_URL_MAX);
+}
+
 /** Titre et message d'une notification manuelle trop longs ? */
 export function texteTropLong(title: string, body: string): boolean {
   return title.trim().length > TITRE_MAX || body.trim().length > MESSAGE_MAX;

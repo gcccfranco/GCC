@@ -4,7 +4,7 @@ import { adminDb, verifyIdToken } from "@/lib/push/admin";
 import { adminUids } from "@/lib/push/recipients";
 import { sendPushToUids } from "@/lib/push/send";
 import { BACK_OFFICE } from "@/lib/backOffice";
-import { lireCorpsReport } from "@/lib/push/bornes";
+import { cheminDeLaPage, lireCorpsReport } from "@/lib/push/bornes";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -49,7 +49,7 @@ export async function POST(req: NextRequest) {
 
     // 2. Validation du contenu (titre / description, limites partagées avec le form).
     const { report, kind, songSlug, songTitle } = lireCorpsReport(await req.json().catch(() => ({})));
-    const pageUrl = req.headers.get("referer") ?? "";
+    const pageUrl = cheminDeLaPage(req.headers.get("referer"), req.nextUrl.origin);
 
     const db = adminDb();
 

@@ -23,6 +23,7 @@ export function BoutonPublication({ planningKey, planningLabel, annee, tri, publ
   const confirmer = useConfirmer()
   const [enCours, setEnCours] = useState(false)
   const [erreur, setErreur] = useState("")
+  const [info, setInfo] = useState("")
 
   async function agir() {
     const publish = !publie
@@ -30,14 +31,18 @@ export function BoutonPublication({ planningKey, planningLabel, annee, tri, publ
       texte: t("planning.publierConfirmTexte"), action: t("planning.publier", { tri }) }))) return
     setEnCours(true)
     setErreur("")
+    setInfo("")
     try {
       const res = await fetch("/api/planning/release", {
         method: "POST",
         headers: { "Content-Type": "application/json", ...(await authHeader()) },
         body: JSON.stringify({ key: planningKey, tri, publish, year: annee }),
       })
-      const data = (await res.json().catch(() => ({}))) as { published?: string[]; error?: string }
-      if (res.ok) onChange(data.published ?? [])
+      const data = (await res.json().catch(() => ({}))) as { published?: string[]; error?: string; dejaAnnonce?: boolean }
+      if (res.ok) {
+        onChange(data.published ?? [])
+        if (data.dejaAnnonce) setInfo(t("planning.dejaAnnonce"))
+      }
       else setErreur(data.error || t("planning.publierEchec"))
     } catch {
       setErreur(t("planning.publierEchec"))
@@ -59,6 +64,7 @@ export function BoutonPublication({ planningKey, planningLabel, annee, tri, publ
         {publie ? <EyeOff className="h-4 w-4" aria-hidden /> : <Send className="h-4 w-4" aria-hidden />}
         {t(publie ? "planning.masquer" : "planning.publier", { tri })}
       </button>
+      {info && <span role="status" className="text-xs text-muted-foreground">{info}</span>}
       {erreur && <span role="alert" className="text-xs text-destructive">{erreur}</span>}
     </span>
   )

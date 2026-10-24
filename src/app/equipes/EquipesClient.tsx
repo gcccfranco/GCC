@@ -30,7 +30,7 @@ import {
 import { BACK_OFFICE } from "@/lib/backOffice";
 import { CeQueCaOuvre, CorpsLouange, MembreOrganigramme, ligneGrise, majuscule, resume } from "@/components/equipes/OrganigrammeLouange";
 import { COLONNE_LIEU, porteDesLieux, referentSousDe, sousEquipesDe } from "@/lib/equipes/louange";
-import { EQUIPES, type EquipeDef } from "@/lib/equipes/organigramme";
+import { EQUIPES, uidsAChanger, type EquipeDef } from "@/lib/equipes/organigramme";
 import {
   COLONNES_MUSICIENS, matriceMusiciens, matriceMusiciensOrganigramme, type LigneMusicien,
 } from "@/lib/equipes/musiciens";
@@ -481,8 +481,10 @@ function EditionEquipe({
       const nom = profile ? nomComplet(profile) : (user.email ?? "");
       await saveEquipe(def.id, brouillon, { uid: user.uid, nom });
       // Le rattachement se repose côté serveur : le navigateur n'écrit pas un profil.
-      const touches = [...membres, ...brouillon].map((m) => m.uid).filter(Boolean);
-      await majRattachement([...new Set(touches)]);
+      // Seuls les comptes aux lignes changées (ajoutées, retirées, modifiées) : la recopie d'un compte ne lit que ses
+      // lignes et l'id de l'équipe, qui ne s'édite pas ici.
+      const touches = uidsAChanger(membres, brouillon);
+      if (touches.length) await majRattachement(touches);
       onEnregistre({
         id: def.id, membres: brouillon,
         updatedAt: new Date().toISOString(), parUid: user.uid, parNom: nom,

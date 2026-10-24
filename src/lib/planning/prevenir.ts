@@ -27,6 +27,15 @@ export type ChangementAnnonce = { date: string; cle: string; avant: string; apre
 export const MAX_VALEUR = 200
 export const borne = (v: string) => v.slice(0, MAX_VALEUR)
 
+/** Une référence envoyée par la grille remplace-t-elle l'état annoncé ? `siAbsent` : seulement s'il n'y en a pas.
+ *  `apresPublication` : oui à la première publication (elle annonce tout), non pour un trimestre déjà publié une fois
+ *  (`publieLe`) puis masqué et republié — les cases corrigées pendant le masquage restent à annoncer. */
+export function referenceRemplace(demande: { siAbsent?: boolean; apresPublication?: boolean }, existant: EtatAnnonce | undefined): boolean {
+  if (!existant) return true
+  if (demande.apresPublication) return !existant.publieLe
+  return !demande.siAbsent
+}
+
 export const cleDeCase = (date: string, cle: string) => `${date}|${cle}`
 
 const MS_JOUR = 86_400_000

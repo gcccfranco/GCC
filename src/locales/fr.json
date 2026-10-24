@@ -299,6 +299,7 @@
       "notifyTeam": "Prévenir l'équipe",
       "notifySent": "Équipe prévenue ({{count}} notifications envoyées).",
       "notifyError": "Échec de l'envoi.",
+      "notifyBusy": "Envoi en cours, réessaie dans un instant.",
       "notifyNeedSongs": "Ajoute au moins 4 chants pour prévenir l'équipe.",
       "emptyItems": "Aucun chant dans cette setlist pour l'instant.",
       "sectionKeyChange": "Modulation ({{key}})"
@@ -1579,8 +1580,9 @@
     "publier": "Publier le {{tri}}",
     "masquer": "Masquer le {{tri}}",
     "publierConfirm": "Publier le {{tri}} {{annee}} de {{planning}} ?",
-    "publierConfirmTexte": "Tous ses membres le verront et recevront une notification.",
+    "publierConfirmTexte": "Tous ses membres le verront. Ils sont prévenus à la première publication du trimestre.",
     "publierEchec": "La publication a échoué. Réessaie.",
+    "dejaAnnonce": "Ce trimestre avait déjà été annoncé : personne n'est prévenu de nouveau. Pour signaler des corrections, utilise « Prévenir des changements ».",
     "export": {
       "bouton": "Exporter (modèle du Sheet)",
       "titre": "Exporter",

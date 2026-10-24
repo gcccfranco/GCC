@@ -1,11 +1,11 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { adminDb } from "@/lib/push/admin";
 import { HttpError, errorResponse, optionalUser } from "@/lib/evenements/serveur";
-import { lireEquipes, lireGroupes, recalculerRattachement } from "@/lib/equipes/serveur";
+import { lireEquipes, lireGroupes, appelantPeut, recalculerRattachement } from "@/lib/equipes/serveur";
 import { changerGroupe, exigerTenirGroupe } from "@/lib/groupes/serveur";
 import { BACK_OFFICE } from "@/lib/backOffice";
 import { isAdminEmail } from "@/lib/access";
-import { peutChangerReferents, type ProfilOrganigramme } from "@/lib/acces/organigramme";
+import type { ProfilOrganigramme } from "@/lib/acces/organigramme";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
     // Les référents que la recopie ajoute ne passent que si l'appelant peut changer ceux de l'équipe (profil relu ici).
     const profilAppelant = ((await db.collection("users").doc(user!.uid).get()).data() ?? null) as ProfilOrganigramme | null;
     const admin = isAdminEmail(user!.email);
-    const peut = (equipe: string) => admin || peutChangerReferents(profilAppelant, equipe);
+    const peut = appelantPeut(admin, profilAppelant);
     const { maj, ignores } = await recalculerRattachement(db, uids, equipes, groupes, { peut });
     return NextResponse.json({ ok: true, maj, ignores });
   } catch (e) {

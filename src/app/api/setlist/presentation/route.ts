@@ -7,7 +7,7 @@ import { loadPlanningNameIndex, filterUidsByNotifPref, loadNotifLangs } from "@/
 import { loadPlanningData, servantsForDate } from "@/lib/planning/names";
 import { canEditSetlist, canSetPresentationLink, estRegieDeFete } from "@/lib/access";
 import { BACK_OFFICE } from "@/lib/backOffice";
-import { reserverPourUids, rendrePourUids } from "@/lib/push/reserver";
+import { apresEnvoi, reserverPuisEnvoyer } from "@/lib/push/reserver";
 import {
   isOnDutyRegie,
   parsePresentationUrl,
@@ -38,25 +38,23 @@ async function notifyPresident(
 ): Promise<{ notified: number; linked: boolean }> {
   const { uids, linked } = presidentRecipients(setlist.leader ?? "", await loadPlanningNameIndex(), author.uid);
   const key = presentationNotifKey(setlist.id, url);
-  // Chaque uid est réservé AVANT l'envoi (create) : un appel simultané ne le prévient pas une seconde fois.
-  const fresh = await reserverPourUids(db, await filterUidsByNotifPref(uids, "setlists"), key, { setlistId: setlist.id });
-  if (!fresh.length) return { notified: 0, linked };
   const p = author.profile;
   const who = p?.planningName || [p?.firstName, p?.lastName].filter(Boolean).join(" ");
-  // Une fournée par langue (lot 8) : le président lit le message dans la sienne.
-  try {
-    const langs = await loadNotifLangs(fresh);
+  // Chaque uid est réservé AVANT l'envoi (create), dans le try : un appel simultané ne le prévient pas une seconde
+  // fois. Une fournée par langue (lot 8) : le président lit le message dans la sienne. Une cloche ratée après l'envoi
+  // se journalise, la clé reste.
+  const fresh = await reserverPuisEnvoyer(db, await filterUidsByNotifPref(uids, "setlists"), key, { setlistId: setlist.id }, async (reserves, envoyes) => {
+    const langs = await loadNotifLangs(reserves);
     for (const lang of ["fr", "zh-CN"] as const) {
-      const groupe = fresh.filter((u) => (langs.get(u) ?? "fr") === lang);
+      const groupe = reserves.filter((u) => (langs.get(u) ?? "fr") === lang);
       if (!groupe.length) continue;
       const payload = { ...presentationMessage(setlist.title || setlist.category, who, lang), url: `/setlists/${setlist.id}`, tag: key };
       await sendPushToUids(groupe, payload);
-      await recordNotification({ ...payload, kind: "presentation", recipients: groupe });
+      for (const u of groupe) envoyes.add(u);
+      await apresEnvoi(() => recordNotification({ ...payload, kind: "presentation", recipients: groupe }), "setlist/presentation");
     }
-  } catch (e) {
-    await rendrePourUids(db, fresh, key);
-    throw e;
-  }
+  });
+  if (!fresh.length) return { notified: 0, linked };
   return { notified: fresh.length, linked };
 }
 

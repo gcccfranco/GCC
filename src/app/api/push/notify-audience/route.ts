@@ -8,7 +8,7 @@ import { NOTIFY_ALL, audiencesNotifiables, isValidAudience, peutNotifierAudience
 import type { ProfilOrganigramme } from "@/lib/acces/organigramme";
 import { lireCorpsAudience } from "@/lib/push/bornes";
 import { errorResponse } from "@/lib/evenements/serveur";
-import { reserverEnvoi, rendreEnvoi } from "@/lib/push/reserver";
+import { envoyerReserve } from "@/lib/push/reserver";
 import { createHash } from "node:crypto";
 
 export const runtime = "nodejs";
@@ -64,7 +64,9 @@ export async function POST(req: NextRequest) {
     .digest("hex")
     .slice(0, 24);
   const cle = `audience-${dupKey}`;
-  const reserver = () => reserverEnvoi(db, cle, { at: Date.now(), uid }, { delaiMs: 60_000 });
+  /** Réserve la clé, envoie, puis écrit la cloche : la clé n'est rendue que si l'envoi lui-même échoue. */
+  const envoyer = <T>(envoi: () => Promise<T>, apres: (valeur: T) => Promise<unknown>) =>
+    envoyerReserve(db, cle, { at: Date.now(), uid }, { delaiMs: 60_000 }, envoi, apres);
   const dejaEnvoye = () =>
     NextResponse.json(
       { error: "Notification identique déjà envoyée il y a moins d'une minute." },
@@ -89,21 +91,15 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: "Action non autorisée" }, { status: 403 });
       }
     }
-    if (!(await reserver())) return dejaEnvoye();
-    try {
-      const result = await sendPushToUids(wanted, payload);
-      await recordNotification({
-        title: payload.title,
-        body: payload.body,
-        url: payload.url,
-        kind: "manual",
-        recipients: wanted,
-      });
-      return NextResponse.json({ ok: true, ...result });
-    } catch (e) {
-      await rendreEnvoi(db, cle).catch(() => undefined);
-      throw e;
-    }
+    const envoi = await envoyer(() => sendPushToUids(wanted, payload), () => recordNotification({
+      title: payload.title,
+      body: payload.body,
+      url: payload.url,
+      kind: "manual",
+      recipients: wanted,
+    }));
+    if (!envoi.pris) return dejaEnvoye();
+    return NextResponse.json({ ok: true, ...envoi.valeur });
   }
 
   // 4b. Mode « audience »
@@ -117,19 +113,13 @@ export async function POST(req: NextRequest) {
   const catUids = isAll ? [] : audience.startsWith("equipe:") || audience.startsWith("louange:")
     ? await uidsDeLAudienceOrganigramme(audience)
     : await uidsDuGroupe(audience);
-  if (!(await reserver())) return dejaEnvoye();
-  try {
-    const result = isAll ? await sendPushToAll(payload) : await sendPushToUids(catUids, payload);
-    await recordNotification({
-      title: payload.title,
-      body: payload.body,
-      url: payload.url,
-      kind: "manual",
-      ...(isAll ? { everyone: true } : { recipients: catUids }),
-    });
-    return NextResponse.json({ ok: true, ...result });
-  } catch (e) {
-    await rendreEnvoi(db, cle).catch(() => undefined);
-    throw e;
-  }
+  const envoi = await envoyer(async () => (isAll ? await sendPushToAll(payload) : await sendPushToUids(catUids, payload)), () => recordNotification({
+    title: payload.title,
+    body: payload.body,
+    url: payload.url,
+    kind: "manual",
+    ...(isAll ? { everyone: true } : { recipients: catUids }),
+  }));
+  if (!envoi.pris) return dejaEnvoye();
+  return NextResponse.json({ ok: true, ...envoi.valeur });
 }

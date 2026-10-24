@@ -6,7 +6,7 @@ import { loadNotifLangs } from "@/lib/push/recipients";
 import { conflictKey, conflictMessage } from "@/lib/scene/conflit";
 import { overlaps } from "@/lib/scene/dimanches";
 import type { Creneau } from "@/types/programme";
-import { reserverPourUids, rendrePourUids } from "@/lib/push/reserver";
+import { apresEnvoi, reserverPuisEnvoyer } from "@/lib/push/reserver";
 import { BACK_OFFICE } from "@/lib/backOffice"
 
 export const runtime = "nodejs";
@@ -49,22 +49,20 @@ export async function POST(req: NextRequest) {
 
   const key = conflictKey(programmeId, creneauIds);
   const uids = [...new Set([a.auteurUid, b.auteurUid].filter(Boolean))];
-  // Chaque uid est réservé AVANT l'envoi (create) ; rendu si son envoi échoue.
-  const fresh = await reserverPourUids(db, uids, key, { programmeId });
-  if (!fresh.length) return NextResponse.json({ ok: true, notified: 0 });
-
-  try {
-    const langs = await loadNotifLangs(fresh);
-    await Promise.all(
-      fresh.map(async (u) => {
+  // Chaque uid est réservé AVANT l'envoi (create), dans le try ; rendu si son envoi échoue. Une cloche ratée après
+  // l'envoi se journalise : la notification est partie, la clé reste.
+  const fresh = await reserverPuisEnvoyer(db, uids, key, { programmeId }, async (reserves, envoyes) => {
+    const langs = await loadNotifLangs(reserves);
+    const resultats = await Promise.allSettled(
+      reserves.map(async (u) => {
         const payload = { ...conflictMessage(a, b, langs.get(u) ?? "fr"), url: "/evenements", tag: key };
         await sendPushToUids([u], payload);
-        await recordNotification({ ...payload, kind: "scene", recipients: [u] });
+        envoyes.add(u);
+        await apresEnvoi(() => recordNotification({ ...payload, kind: "scene", recipients: [u] }), "scene/conflit");
       }),
     );
-  } catch (e) {
-    await rendrePourUids(db, fresh, key);
-    throw e;
-  }
+    const echec = resultats.find((r): r is PromiseRejectedResult => r.status === "rejected");
+    if (echec) throw echec.reason;
+  });
   return NextResponse.json({ ok: true, notified: fresh.length });
 }

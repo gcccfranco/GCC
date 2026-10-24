@@ -17,16 +17,23 @@ export function baseSimulee(initial: Record<string, Record<string, Doc>> = {}) {
       col(nom)[id] = { ...data };
     },
   });
+  let file: Promise<void> = Promise.resolve();
   const db = {
     collection: (nom: string) => ({
       get: async () => ({ docs: Object.entries(col(nom)).map(([id, d]) => ({ id, data: () => d })) }),
       doc: (id: string) => ref(nom, id),
     }),
-    runTransaction: async <T>(fn: (tx: { get: (r: ReturnType<typeof ref>) => ReturnType<ReturnType<typeof ref>["get"]>; set: (r: ReturnType<typeof ref>, d: Doc) => void; delete: (r: ReturnType<typeof ref>) => void }) => Promise<T>) => {
-      const ecritures: (() => Promise<void>)[] = [];
-      const resultat = await fn({ get: (r) => r.get(), set: (r, d) => { ecritures.push(() => r.set(d)); }, delete: (r) => { ecritures.push(() => r.delete()); } });
-      for (const e of ecritures) await e();
-      return resultat;
+    // Une transaction à la fois (file d'attente) : deux reprises simultanées d'un verrou périmé ne lisent pas le même état.
+    runTransaction: (fn: (tx: { get: (r: ReturnType<typeof ref>) => ReturnType<ReturnType<typeof ref>["get"]>; set: (r: ReturnType<typeof ref>, d: Doc) => void; delete: (r: ReturnType<typeof ref>) => void }) => Promise<unknown>) => {
+      const executer = async () => {
+        const ecritures: (() => Promise<void>)[] = [];
+        const resultat = await fn({ get: (r) => r.get(), set: (r, d) => { ecritures.push(() => r.set(d)); }, delete: (r) => { ecritures.push(() => r.delete()); } });
+        for (const e of ecritures) await e();
+        return resultat;
+      };
+      const suite = file.then(executer);
+      file = suite.then(() => undefined, () => undefined);
+      return suite;
     },
   } as unknown as FirebaseFirestore.Firestore;
   return { db, collections };

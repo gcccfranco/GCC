@@ -298,6 +298,7 @@
       "notifyTeam": "通知团队",
       "notifySent": "已通知团队（发送了 {{count}} 条通知）。",
       "notifyError": "发送失败。",
+      "notifyBusy": "正在发送，请稍后再试。",
       "notifyNeedSongs": "歌单至少需要 4 首诗歌才能通知团队。",
       "emptyItems": "这份歌单暂时还没有诗歌。",
       "sectionKeyChange": "升调（{{key}}）"
@@ -1547,8 +1548,9 @@
     "publier": "发布 {{tri}}",
     "masquer": "隐藏 {{tri}}",
     "publierConfirm": "发布{{planning}} {{annee}} 年 {{tri}}？",
-    "publierConfirmTexte": "所有成员都将看到并收到通知。",
+    "publierConfirmTexte": "所有成员都将看到。首次发布该季度时会通知他们。",
     "publierEchec": "发布失败，请重试。",
+    "dejaAnnonce": "该季度此前已通知过，不会再次通知。如需告知修改内容，请使用“通知改动”。",
     "export": {
       "bouton": "导出（表格样式）",
       "titre": "导出",

@@ -3,6 +3,7 @@ import { BACK_OFFICE } from "@/lib/backOffice";
 import { adminDb } from "@/lib/push/admin";
 import { sendPushToUids } from "@/lib/push/send";
 import { recordNotification } from "@/lib/push/notifications";
+import { apresEnvoi, suivreReservations } from "@/lib/push/reserver";
 import { loadPlanningNameIndex, filterUidsByNotifPref, loadNotifLangs, uidsForCategories } from "@/lib/push/recipients";
 import { ajouterAuxRappels, reminderServicesFor, type ReminderService } from "@/lib/push/reminderMessage";
 import { quiCategories, sceneReminder } from "@/lib/scene/rappels";
@@ -60,37 +61,11 @@ function isoInDays(days: number): string {
   return new Date(Date.now() + days * 86_400_000).toISOString().slice(0, 10);
 }
 
-/** Retient les uid pas encore notifiés pour cette clé notifLog `${prefix}-${uid}`. */
-async function freshUids(
-  db: FirebaseFirestore.Firestore,
-  uids: string[],
-  prefix: string
-): Promise<string[]> {
-  const fresh: string[] = [];
-  await Promise.all(
-    uids.map(async (u) => {
-      if (!(await db.collection("notifLog").doc(`${prefix}-${u}`).get()).exists) fresh.push(u);
-    })
-  );
-  return fresh;
-}
-
-/** Marque ces uid comme notifiés (clé `${prefix}-${uid}`). */
-async function markNotified(
-  db: FirebaseFirestore.Firestore,
-  uids: string[],
-  prefix: string,
-  meta: Record<string, unknown>
-): Promise<void> {
-  // Par lots de 500, la limite de Firestore : la ligne du mercredi (PD4) marque tous les comptes.
-  for (let i = 0; i < uids.length; i += 500) {
-    const batch = db.batch();
-    for (const u of uids.slice(i, i + 500)) {
-      batch.set(db.collection("notifLog").doc(`${prefix}-${u}`), { ...meta, uid: u, at: Date.now() });
-    }
-    await batch.commit();
-  }
-}
+/** Le suivi des réservations du passage (voir `suivreReservations`) : chaque clé `${prefix}-${uid}` du journal
+ *  notifLog est RÉSERVÉE (create) en même temps qu'elle est lue, avant l'envoi. Vercel peut livrer un même passage
+ *  deux fois : le second ne retrouve aucun compte à prévenir. Un envoi qui lève rend les réservations des comptes
+ *  concernés. Les documents gardent les champs et les clés d'avant (`meta`, `uid`, `at`). */
+type Reservations = ReturnType<typeof suivreReservations>
 
 /** Créneaux sur scène des éditions affichées aujourd'hui (Pâques et Noël, Q10 de
  *  docs/spec-scene-paques-noel.md), pour ces dates (ISO) : la même règle que l'onglet, le
@@ -117,6 +92,7 @@ async function sceneCreneaux(db: FirebaseFirestore.Firestore, dates: string[], t
  *  et les clés notifLog à marquer. */
 async function rappelsTaches(
   db: FirebaseFirestore.Firestore,
+  reservations: Reservations,
   today: string,
 ): Promise<Map<string, { rappels: RappelTache[]; keys: string[] }>> {
   const snap = await db.collectionGroup("taches").get();
@@ -141,7 +117,7 @@ async function rappelsTaches(
   for (const r of rappels) {
     const key = cleRappelTache(r, today);
     const cibles = await ciblesDuRappel(r.tache, db);
-    for (const u of await freshUids(db, await filterUidsByNotifPref(cibles, "taches"), key)) {
+    for (const u of await reservations.reserver(await filterUidsByNotifPref(cibles, "taches"), key, { kind: "tache" })) {
       const entry = out.get(u) ?? { rappels: [], keys: [] };
       entry.rappels.push(r);
       entry.keys.push(key);
@@ -159,11 +135,12 @@ async function rappelsTaches(
  *  déplacés depuis le calendrier, case « Prévenir » cochée (lot U8, C7). */
 async function lignesEvenements(
   db: FirebaseFirestore.Firestore,
+  reservations: Reservations,
   today: string
 ): Promise<Map<string, { lignes: LigneEvenement[]; keys: string[] }>> {
   const out = new Map<string, { lignes: LigneEvenement[]; keys: string[] }>();
   const ajouter = async (uids: string[], ligne: LigneEvenement, key: string) => {
-    for (const u of await freshUids(db, await filterUidsByNotifPref(uids, "evenements"), key)) {
+    for (const u of await reservations.reserver(await filterUidsByNotifPref(uids, "evenements"), key, { kind: "evenement" })) {
       const entry = out.get(u) ?? { lignes: [], keys: [] };
       entry.lignes.push(ligne);
       entry.keys.push(key);
@@ -225,13 +202,14 @@ async function lignesEvenements(
  *  (`lignes` à `null`, Q10). */
 async function petitDejDuMercredi(
   db: FirebaseFirestore.Firestore,
+  reservations: Reservations,
   today: string,
   lignes: LignePetitDej[] | null,
 ): Promise<{ cle: string; uids: Set<string> }> {
   const cle = `petit-dej-libre-${prochainDimanche(today)}`;
   if (!lignesMercredi(today, lignes, "fr").length) return { cle, uids: new Set() };
   const comptes = (await db.collection("users").get()).docs.map((d) => d.id);
-  return { cle, uids: new Set(await freshUids(db, await filterUidsByNotifPref(comptes, "petitDej"), cle)) };
+  return { cle, uids: new Set(await reservations.reserver(await filterUidsByNotifPref(comptes, "petitDej"), cle, { kind: "petitDej" })) };
 }
 
 /** Le lundi (AO-E) : pour chaque référent concerné, les noms du planning de ce mois qui ne sont dans aucune
@@ -239,6 +217,7 @@ async function petitDejDuMercredi(
  *  autre jour. */
 async function sansEquipeDuLundi(
   db: FirebaseFirestore.Firestore,
+  reservations: Reservations,
   planning: Awaited<ReturnType<typeof loadPlanningData>>,
   today: string,
   cle: string,
@@ -250,7 +229,7 @@ async function sansEquipeDuLundi(
     profils.docs.map((d) => ({ uid: d.id, planningName: d.data().planningName as string | undefined })),
     today,
   );
-  const fresh = new Set(await freshUids(db, await filterUidsByNotifPref([...parReferent.keys()], "reminders"), cle));
+  const fresh = new Set(await reservations.reserver(await filterUidsByNotifPref([...parReferent.keys()], "reminders"), cle, { kind: "sansEquipe" }));
   return new Map([...parReferent].filter(([u]) => fresh.has(u)));
 }
 
@@ -277,14 +256,26 @@ export async function GET(req: NextRequest) {
   } catch (e) {
     console.error("[cron] purge de la corbeille des setlists", e);
   }
+  const reservations = suivreReservations(db);
+  try {
+    return await passage(db, reservations);
+  } catch (e) {
+    // Une erreur avant ou pendant l'envoi : les comptes dont la notification n'est pas partie sont de nouveau à prévenir.
+    await reservations.rendreRestantes().catch((err) => console.error("[cron] réservations non rendues", err));
+    throw e;
+  }
+}
+
+/** Un passage du cron : lit ce qui est à envoyer (en réservant les clés), envoie, rend le statut. */
+async function passage(db: FirebaseFirestore.Firestore, reservations: Reservations) {
   const today = isoInDays(0);
   reinitialiserLecturesSheet();
   const [planning, index] = await Promise.all([loadPlanningData(), loadPlanningNameIndex()]);
   // Back-office coupé (lot 18, docs/spec-mise-en-ligne.md) : le rappel du matin ne
   // parle que des services — ni scène, ni tâches, ni évènements.
   const creneaux = BACK_OFFICE ? await sceneCreneaux(db, REMINDERS.map((r) => isoInDays(r.days)), today) : [];
-  const taches: Awaited<ReturnType<typeof rappelsTaches>> = BACK_OFFICE ? await rappelsTaches(db, today) : new Map();
-  const lignes: Awaited<ReturnType<typeof lignesEvenements>> = BACK_OFFICE ? await lignesEvenements(db, today) : new Map();
+  const taches: Awaited<ReturnType<typeof rappelsTaches>> = BACK_OFFICE ? await rappelsTaches(db, reservations, today) : new Map();
+  const lignes: Awaited<ReturnType<typeof lignesEvenements>> = BACK_OFFICE ? await lignesEvenements(db, reservations, today) : new Map();
   // Petit déj (lot U3, Q9) : les inscriptions, déjà lues par loadPlanningData
   // (même cache) ; en échec, rien de plus que ce que les noms ont trouvé, et
   // pas de ligne du mercredi (`null`, Q10).
@@ -292,10 +283,10 @@ export async function GET(req: NextRequest) {
   const lignesPetitDej = lusPetitDej ?? [];
   // Ligne du mercredi (PD4) : fondue dans la première notification de la
   // personne aujourd'hui (services, tâches ou évènements), envoyée seule sinon.
-  const petitDej = BACK_OFFICE ? await petitDejDuMercredi(db, today, lusPetitDej) : { cle: "", uids: new Set<string>() };
+  const petitDej = BACK_OFFICE ? await petitDejDuMercredi(db, reservations, today, lusPetitDej) : { cle: "", uids: new Set<string>() };
   // Ligne du lundi (AO-E) : fondue dans la première notification du référent aujourd'hui, seule sinon.
   const cleSansEquipe = `sans-equipe-${today}`;
-  const sansEquipe = BACK_OFFICE ? await sansEquipeDuLundi(db, planning, today, cleSansEquipe) : new Map<string, string[]>();
+  const sansEquipe = BACK_OFFICE ? await sansEquipeDuLundi(db, reservations, planning, today, cleSansEquipe) : new Map<string, string[]>();
 
   // Services de chacun, échéance par échéance (pas encore prévenus).
   const servicesDe = new Map<string, ServiceDuJour[]>();
@@ -334,17 +325,17 @@ export async function GET(req: NextRequest) {
     }
 
     const prefUids = await filterUidsByNotifPref([...byUid.keys()], "reminders");
-    const fresh = await freshUids(db, prefUids, `rappel-${tag}-${date}`);
+    const fresh = await reservations.reserver(prefUids, `rappel-${tag}-${date}`, { tag, date, kind: "service" });
     for (const u of fresh) servicesDe.set(u, [...(servicesDe.get(u) ?? []), { tag, date, services: byUid.get(u)! }]);
     summary[tag] = { date, sent: fresh.length };
   }
 
   // Un seul passage par personne : services, tâches, lignes d'évènements et
-  // ligne du petit déj dans le même message (notificationsDuMatin), puis tout
-  // est marqué comme envoyé.
+  // ligne du petit déj dans le même message (notificationsDuMatin). Les clés
+  // sont déjà réservées (lecture ci-dessus) : elles restent, sauf pour un envoi qui lève.
   const uids = [...new Set([...servicesDe.keys(), ...taches.keys(), ...lignes.keys()])];
   const langs = await loadNotifLangs(uids);
-  await Promise.all(
+  const resultats = await Promise.allSettled(
     uids.map(async (u) => {
       const lang = langs.get(u) ?? "fr";
       const mesServices = servicesDe.get(u) ?? [];
@@ -363,16 +354,22 @@ export async function GET(req: NextRequest) {
       );
       for (const { kind, ...payload } of notifications) {
         await sendPushToUids([u], payload);
-        // Une entrée de cloche par destinataire : le corps est personnel.
-        await recordNotification({ ...payload, kind, recipients: [u] });
+        // Une entrée de cloche par destinataire : le corps est personnel. Ratée après l'envoi, elle se journalise.
+        await apresEnvoi(() => recordNotification({ ...payload, kind, recipients: [u] }), "cron rappels");
       }
-      for (const s of mesServices) await markNotified(db, [u], `rappel-${s.tag}-${s.date}`, { tag: s.tag, date: s.date, kind: "service" });
-      for (const key of taches.get(u)?.keys ?? []) await markNotified(db, [u], key, { kind: "tache" });
-      for (const key of lignes.get(u)?.keys ?? []) await markNotified(db, [u], key, { kind: "evenement" });
-      if (avecPetitDej) await markNotified(db, [u], petitDej.cle, { kind: "petitDej" });
-      if (mesSansEquipe) await markNotified(db, [u], cleSansEquipe, { kind: "sansEquipe" });
+      // Les clés de ce compte étaient réservées avant l'envoi : elles restent, la notification est partie.
+      reservations.envoye(u, [
+        ...mesServices.map((s) => `rappel-${s.tag}-${s.date}`),
+        ...(taches.get(u)?.keys ?? []),
+        ...(lignes.get(u)?.keys ?? []),
+        ...(avecPetitDej ? [petitDej.cle] : []),
+        ...(mesSansEquipe ? [cleSansEquipe] : []),
+      ]);
     })
   );
+  // Tous les envois sont terminés avant de rendre quoi que ce soit : un compte déjà prévenu garde sa clé.
+  const echec = resultats.find((r): r is PromiseRejectedResult => r.status === "rejected");
+  if (echec) throw echec.reason;
 
   // Ligne du lundi des référents sans autre notification aujourd'hui : une notification par personne
   // (les noms sont les siens), ouverte sur l'organigramme (AO-E).
@@ -383,8 +380,8 @@ export async function GET(req: NextRequest) {
       const lang = langsSeuls.get(u) ?? "fr";
       const payload = { title: titreSansEquipe(lang), body: lignesSansEquipe(noms, lang).join("\n"), url: URL_ORGANIGRAMME, tag: cleSansEquipe };
       await sendPushToUids([u], payload);
-      await recordNotification({ ...payload, kind: "reminder", recipients: [u] });
-      await markNotified(db, [u], cleSansEquipe, { kind: "sansEquipe" });
+      reservations.envoye(u, [cleSansEquipe]);
+      await apresEnvoi(() => recordNotification({ ...payload, kind: "reminder", recipients: [u] }), "cron sans équipe");
     }
   }
 
@@ -403,9 +400,9 @@ export async function GET(req: NextRequest) {
         tag: petitDej.cle,
       };
       await sendPushToUids(dest, payload);
-      await recordNotification({ ...payload, kind: "reminder", recipients: dest });
+      for (const u of dest) reservations.envoye(u, [petitDej.cle]);
+      await apresEnvoi(() => recordNotification({ ...payload, kind: "reminder", recipients: dest }), "cron petit déj");
     }
-    await markNotified(db, petitDejSeuls, petitDej.cle, { kind: "petitDej" });
   }
 
   // Lectures du Sheet ratées pendant ce calcul : journalisées et rendues, sans changer le statut (200 :

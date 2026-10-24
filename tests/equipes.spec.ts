@@ -193,7 +193,8 @@ test("Équipes › Organigramme : le droit « Équipes » ajoute un membre et fa
   // Les anciens membres restent.
   expect(ecrit?.membres.map((m) => m.nom)).toEqual(["Charlie L.", "Justine C.", "Ruth K."]);
   expect(appels).toBe(1);
-  expect(envoye.uids).toEqual(expect.arrayContaining(["u-charlie", "u-ruth"]));
+  // Seules les lignes changées pendant l'édition (ici une ajoutée) partent au rattachement.
+  expect(envoye.uids).toEqual(["u-ruth"]);
 });
 
 test("Moi : une ligne « Équipes » mène à l'organigramme", async ({ page }) => {

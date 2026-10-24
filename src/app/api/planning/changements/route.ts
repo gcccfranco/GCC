@@ -13,7 +13,7 @@ import { grilleDe } from "@/lib/planning/grilles";
 import { colonneDePersonnes } from "@/lib/planning/choisir";
 import { normalizeName, splitNames } from "@/lib/planning/names";
 import {
-  borne, datesDesChangements, etatApres, personnesTouchees, premierDimancheDepuis, verifierChangements, verifierReference,
+  borne, datesDesChangements, etatApres, personnesTouchees, premierDimancheDepuis, referenceRemplace, verifierChangements, verifierReference,
   type ChangementAnnonce, type EtatAnnonce,
 } from "@/lib/planning/prevenir";
 import { jourDeParis } from "@/lib/evenements/bascule";
@@ -118,7 +118,8 @@ export async function POST(req: NextRequest) {
       const publies = (snap.data()?.published as string[] | undefined) ?? [];
       const visible = triVisibilitiesAnnee(annee, Number(jour.slice(0, 4)), publies, getTri(jour), false).some((v) => v.tri === tri && v.visible);
       if (!visible || (body.apresPublication && !publies.includes(tri))) throw new Conflit("trimestre non publié");
-      if (body.siAbsent && existant) return false;
+      // Trimestre publié une fois, masqué puis republié : la référence reste (referenceRemplace).
+      if (!referenceRemplace(body, existant)) return false;
       const publieLe = body.apresPublication ? jour : existant?.publieLe;
       tx.set(ref, { annonces: { [tri]: { cases: tronquees, le: maintenant, par: uid, ...(publieLe ? { publieLe } : {}) } } }, { mergeFields: [`annonces.${tri}`] });
       return true;

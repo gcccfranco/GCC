@@ -76,12 +76,14 @@ export async function POST(req: NextRequest) {
     await ref.set({ published: next, updatedAt: new Date(), updatedBy: uid }, { merge: true });
   }
 
-  // 5. Notification — uniquement à la première publication (jamais au masquage,
-  // jamais à une republication, y compris après un masquage : la première publication est
-  // retenue par une réservation notifLog `release_<planning>_<année>_<trimestre>`, créée avant l'envoi).
+  // 5. Notification — uniquement à la première publication (jamais au masquage, jamais à une republication
+  // après un envoi réussi, masquage compris : la première publication est retenue par une réservation notifLog
+  // `release_<planning>_<année>_<trimestre>`, créée avant l'envoi et rendue si l'envoi échoue, ce qui fait notifier
+  // le réessai).
   let notified = false;
   let sent = 0;
-  if (await doitNotifierPublication(adminDb(), planning.key, yr, tri, uid, { publier: doPublish, dejaPublie: already })) {
+  const notifier = await doitNotifierPublication(adminDb(), planning.key, yr, tri, uid, { publier: doPublish });
+  if (notifier) {
     try {
       // Une fournée par langue (lot 8) : resté en français seul jusqu'au 19/09/2026.
       const tous = planning.notifyAudience === NOTIFY_ALL;
@@ -111,5 +113,7 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  return NextResponse.json({ ok: true, published: next, notified, sent });
+  // `dejaAnnonce` : publication sans notification parce que le trimestre a déjà été annoncé (le suivi des
+  // corrections passe par « Prévenir des changements »).
+  return NextResponse.json({ ok: true, published: next, notified, sent, dejaAnnonce: doPublish && !notifier });
 }

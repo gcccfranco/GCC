@@ -6,7 +6,8 @@ import { filterUidsByNotifPref, loadNotifLangs, loadPlanningNameIndex, resolveNa
 import { loadPlanningData, servantsForDate } from "@/lib/planning/names";
 import { dimancheApres } from "@/lib/taches/echeances";
 import { tacheFaiteMessage } from "@/lib/taches/messages";
-import { ID, appelant, estEquipe, membresDeLEquipe, premiereFois, rendrePremiereFois, tacheDeLAppelant } from "@/lib/taches/serveur";
+import { ID, appelant, estEquipe, membresDeLEquipe, tacheDeLAppelant } from "@/lib/taches/serveur";
+import { apresEnvoi, reserverPuisEnvoyer } from "@/lib/push/reserver";
 import { BACK_OFFICE } from "@/lib/backOffice"
 
 export const runtime = "nodejs";
@@ -62,24 +63,23 @@ export async function POST(req: NextRequest) {
   uids = uids.filter((u) => u !== qui.uid);
 
   const key = `tache-fait-${equipe}-${tacheId}-${date}`;
-  const fresh = await premiereFois(await filterUidsByNotifPref(uids, "taches"), key, { equipe, tacheId, date });
-  if (fresh.length) {
-    try {
-      const parNom = (fois.data()?.parNom as string) ?? "";
-      const langs = await loadNotifLangs(fresh);
-      await Promise.all(
-        fresh.map(async (u) => {
-          const msg = tacheFaiteMessage(tache, parNom, langs.get(u) ?? "fr");
-          // Le lien de la tâche (fond Canva…) voyage en texte, pas en image.
-          const payload = { ...msg, body: tache.lien ? `${msg.body}\n${tache.lien}` : msg.body, url, tag: key };
-          await sendPushToUids([u], payload);
-          await recordNotification({ ...payload, kind: "tache", recipients: [u] });
-        }),
-      );
-    } catch (e) {
-      await rendrePremiereFois(fresh, key);
-      throw e;
-    }
-  }
+  // Réservé dans le try (une clé par destinataire) ; rendue seulement si l'envoi échoue. Une cloche ratée après
+  // l'envoi se journalise.
+  const fresh = await reserverPuisEnvoyer(adminDb(), await filterUidsByNotifPref(uids, "taches"), key, { equipe, tacheId, date }, async (reserves, envoyes) => {
+    const parNom = (fois.data()?.parNom as string) ?? "";
+    const langs = await loadNotifLangs(reserves);
+    const resultats = await Promise.allSettled(
+      reserves.map(async (u) => {
+        const msg = tacheFaiteMessage(tache, parNom, langs.get(u) ?? "fr");
+        // Le lien de la tâche (fond Canva…) voyage en texte, pas en image.
+        const payload = { ...msg, body: tache.lien ? `${msg.body}\n${tache.lien}` : msg.body, url, tag: key };
+        await sendPushToUids([u], payload);
+        envoyes.add(u);
+        await apresEnvoi(() => recordNotification({ ...payload, kind: "tache", recipients: [u] }), "taches/fait");
+      }),
+    );
+    const echec = resultats.find((r): r is PromiseRejectedResult => r.status === "rejected");
+    if (echec) throw echec.reason;
+  });
   return NextResponse.json({ ok: true, notified: fresh.length, linked, cible });
 }

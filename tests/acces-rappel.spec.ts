@@ -121,5 +121,6 @@ test("la route n'appelle cette logique que sous BACK_OFFICE, et marque une clé 
   expect(route).toMatch(/BACK_OFFICE \? await sansEquipeDuLundi\(/);
   expect(route.match(/sansEquipeDuLundi\(/g)).toHaveLength(2); // la définition et l'unique appel
   expect(route).toContain("const cleSansEquipe = `sans-equipe-${today}`");
-  expect(route).toMatch(/markNotified\(db, \[u\], cleSansEquipe/);
+  // La clé est réservée à la lecture (create), avant l'envoi : un même passage livré deux fois ne la prend qu'une fois.
+  expect(route).toMatch(/reservations\.reserver\([^\n]*, cle, \{ kind: "sansEquipe" \}/);
 });

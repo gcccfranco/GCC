@@ -2,9 +2,9 @@ import { NextResponse, type NextRequest } from "next/server";
 import { adminDb } from "@/lib/push/admin";
 import { HttpError, errorResponse, optionalUser } from "@/lib/evenements/serveur";
 import { isAdminEmail } from "@/lib/access";
-import { exigerDroitEquipes, lireEquipes, lireGroupes, recalculerDepuisOrganigramme, recalculerRattachement } from "@/lib/equipes/serveur";
+import { exigerDroitEquipes, lireEquipes, lireGroupes, appelantPeut, recalculerDepuisOrganigramme, recalculerRattachement } from "@/lib/equipes/serveur";
 import { BACK_OFFICE } from "@/lib/backOffice"
-import { peutChangerReferents, type ProfilOrganigramme } from "@/lib/acces/organigramme";
+import type { ProfilOrganigramme } from "@/lib/acces/organigramme";
 import { lireUidsRattachement } from "@/lib/push/bornes";
 
 export const runtime = "nodejs";
@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
     // Les référents que la recopie ajoute ne passent que si l'appelant peut changer ceux de l'équipe (profil relu ici).
     const profilAppelant = ((await db.collection("users").doc(user!.uid).get()).data() ?? null) as ProfilOrganigramme | null;
     const admin = isAdminEmail(user!.email);
-    const peut = (equipe: string) => admin || peutChangerReferents(profilAppelant, equipe);
+    const peut = appelantPeut(admin, profilAppelant);
     // Les groupes aussi (lot 2, OG20) : la recopie n'efface ni les ids de comité ni les listes par rôle.
     const [equipes, groupes] = await Promise.all([lireEquipes(db), lireGroupes(db)]);
     const { maj } = await recalculerRattachement(db, uids, equipes, groupes, { peut });
