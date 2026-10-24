@@ -22,6 +22,7 @@ import { canEditPlanning, isAdminUser } from "@/lib/access"
 import { BACK_OFFICE } from "@/lib/backOffice"
 import { useGestionPlanning } from "@/lib/planning/gestion"
 import { AncienTableau } from "./AncienTableau"
+import { styleTexteService } from "@/lib/couleurSombre"
 
 // Campus : les cartes Louange / Répétition restent la lecture ; le volet
 // « Grille » (19/09/2026, lot 17 G6) montre les deux grilles, matin puis soir,
@@ -212,7 +213,7 @@ function CampusPage() {
                   <div className="px-4 py-3 border-r border-border">
                     <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">{t("planning.campus.presChoristes")}</p>
                     {s.pres && (
-                      <p className="text-sm font-semibold mb-1" style={{ color: COLOR }}>{s.pres}</p>
+                      <p className="text-sm font-semibold mb-1 texte-service" style={styleTexteService(COLOR)}>{s.pres}</p>
                     )}
                     {choristes.map(c => <Chip key={c} label={c} />)}
                   </div>

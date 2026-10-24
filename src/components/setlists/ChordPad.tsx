@@ -80,7 +80,7 @@ export function ChordPad({
     <div className="space-y-2.5">
       {/* Aperçu */}
       <div className="flex items-center justify-center">
-        <span className="text-2xl font-bold" style={{ color: "var(--chord-color, #2563EB)" }}>
+        <span className="text-2xl font-bold" style={{ color: "var(--chord-color, #3f63cf)" }}>
           {isSpacer ? "␣" : chord}
         </span>
       </div>

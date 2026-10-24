@@ -6,14 +6,15 @@
 import Link from "next/link";
 import { useTranslation } from "react-i18next";
 import { ShieldCheck } from "lucide-react";
+import { styleTexteService } from "@/lib/couleurSombre";
 
 export function Pill({ label, color }: { label: string; color?: string }) {
   return (
     <span
       className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
-        color ? "" : "bg-muted text-muted-foreground"
+        color ? "texte-service" : "bg-muted text-muted-foreground"
       }`}
-      style={color ? { background: `${color}15`, color, border: `1px solid ${color}4d` } : undefined}
+      style={color ? { ...styleTexteService(color), background: `${color}15`, border: `1px solid ${color}4d` } : undefined}
     >
       {label}
     </span>

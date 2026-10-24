@@ -21,6 +21,7 @@ import { Input } from "@/components/ui/input"
 import { useConfirmer } from "@/components/layout/Confirmer"
 import { QuiChecklist } from "./CreneauForm"
 import { PassageBoutons, PassageContenu, type DetailFete } from "./PassageDetail"
+import { styleTexteService } from "@/lib/couleurSombre"
 
 const COLOR = PLANNING_COLORS.scene
 
@@ -75,11 +76,11 @@ function Row({ id, index, passage, canEdit, detail, mien, onEdit, onRemove }: {
     <li ref={setNodeRef} data-mien={mien ? "oui" : undefined}
       className={`px-4 py-3 grid grid-cols-[2rem_1fr_auto] gap-x-3 gap-y-2 ${canEdit ? "items-center" : "items-start"} bg-card ${isDragging ? "shadow-lg relative z-10" : ""} ${mien ? "border-l-4 shadow-md relative z-[1]" : ""}`}
       style={{ transform: CSS.Transform.toString(transform), transition, ...(mien ? { borderLeftColor: COLOR } : {}) }}>
-      <span className="text-lg font-extrabold tabular-nums text-center" style={{ color: COLOR }}>{index + 1}</span>
+      <span className="text-lg font-extrabold tabular-nums text-center texte-service" style={styleTexteService(COLOR)}>{index + 1}</span>
       <div className="min-w-0">
         <p className="font-semibold">{passage.titre}</p>
         <div className="flex flex-wrap gap-1 mt-1">
-          <span className="inline-block text-xs px-2 py-0.5 rounded-full font-medium" style={{ background: `${COLOR}18`, color: COLOR }}>{passage.quoi}</span>
+          <span className="inline-block text-xs px-2 py-0.5 rounded-full font-medium texte-service" style={{ background: `${COLOR}18`, ...styleTexteService(COLOR) }}>{passage.quoi}</span>
           {passage.qui.map((q) => <span key={q} className="inline-block text-xs px-2 py-0.5 rounded-full bg-secondary">{libelleQui(q, langue)}</span>)}
           {mien && <span className="inline-block text-xs px-2 py-0.5 rounded-full font-semibold text-white" style={{ background: COLOR }}>{t("planning.fete.leMien")}</span>}
         </div>

@@ -69,7 +69,7 @@ export function GrillePoints({
               <span
                 className={cn(
                   "text-xs font-bold tabular-nums",
-                  horsMois && !estChoisi && "text-muted-foreground/50",
+                  horsMois && !estChoisi && "text-muted-foreground",
                   date === aujourdhui && !estChoisi && "text-brand",
                 )}
               >

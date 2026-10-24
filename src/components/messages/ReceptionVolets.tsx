@@ -24,6 +24,7 @@ import { Pilules } from "@/components/layout/Onglets";
 import { useDisposition } from "@/hooks/useDisposition";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { cn } from "@/lib/utils";
+import { styleTexteService } from "@/lib/couleurSombre"
 
 type Filtre = "tout" | "signalements" | "propositions";
 /** Un message de la Réception : un signalement ou une proposition de chant. */
@@ -364,8 +365,8 @@ export function ReceptionVolets() {
 
 function Etiquette({ couleur, plein, children }: { couleur: string; plein?: boolean; children: ReactNode }) {
   return (
-    <span className="rounded-full px-1.5 py-px text-[11px] font-bold"
-      style={{ color: couleur, background: plein ? "#fff" : `${couleur}17`, boxShadow: `inset 0 0 0 1px ${couleur}4d` }}>
+    <span className={`rounded-full px-1.5 py-px text-[11px] font-bold${plein ? "" : " texte-service"}`}
+      style={{ ...(plein ? { color: couleur } : styleTexteService(couleur)), background: plein ? "#fff" : `${couleur}17`, boxShadow: `inset 0 0 0 1px ${couleur}4d` }}>
       {children}
     </span>
   );

@@ -35,6 +35,7 @@ import { Entrainements } from "./Entrainements"
 import { OrdrePassage } from "./OrdrePassage"
 import { OrdreAvecChants } from "./OrdreAvecChants"
 import { joursDeLaSemaine, jourEnLettres } from "./libelles"
+import { styleTexteService } from "@/lib/couleurSombre"
 
 const COLOR = PLANNING_COLORS.scene
 
@@ -162,7 +163,7 @@ export function FeteClient({ fete }: { fete: Fete }) {
     if (etat === "passee") {
       return (
         <section className="raised rounded-2xl p-4 space-y-1.5" aria-labelledby="scene-passee-titre">
-          <h3 id="scene-passee-titre" className="text-[15px] font-bold" style={{ color: COLOR }}>{t("planning.scene.passed", { nom: titre })}</h3>
+          <h3 id="scene-passee-titre" className="text-[15px] font-bold texte-service" style={styleTexteService(COLOR)}>{t("planning.scene.passed", { nom: titre })}</h3>
           <p className="text-sm text-muted-foreground">{t("planning.scene.passedHint")}</p>
         </section>
       )
@@ -206,7 +207,7 @@ export function FeteClient({ fete }: { fete: Fete }) {
       onClick={() => changer({ vue: "ordre", annee: null })}
       className={`flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left transition-colors ${deuxVolets && vueOrdre ? "bg-secondary" : "hover:bg-secondary"}`}
     >
-      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg" style={{ background: `color-mix(in srgb, ${COLOR} 12%, transparent)`, color: COLOR }}>
+      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg texte-service" style={{ background: `color-mix(in srgb, ${COLOR} 12%, transparent)`, ...styleTexteService(COLOR) }}>
         <ListOrdered className="h-[18px] w-[18px]" aria-hidden />
       </span>
       <span className="min-w-0 flex-1">
@@ -330,7 +331,7 @@ export function FeteClient({ fete }: { fete: Fete }) {
 function CarteInfo({ titre, texte }: { titre: string; texte?: string }) {
   return (
     <div className="raised rounded-2xl flex items-start gap-3 p-4">
-      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl" style={{ background: `color-mix(in srgb, ${COLOR} 12%, transparent)`, color: COLOR }}>
+      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl texte-service" style={{ background: `color-mix(in srgb, ${COLOR} 12%, transparent)`, ...styleTexteService(COLOR) }}>
         <CalendarClock className="h-5 w-5" aria-hidden />
       </span>
       <div className="min-w-0">

@@ -29,6 +29,7 @@ import { BanniereGeste, BarreCollage, BarreSelection } from "./BanniereGeste"
 import { useClavier, useSelectionGrille, type Poignees } from "./useSelectionGrille"
 import { FenetreCopie, type DemandeCopie } from "./FenetreCopie"
 import { PrevenirChangements, usePrevenir, type PrevenirProp } from "./PrevenirChangements"
+import { styleTexteService } from "@/lib/couleurSombre"
 
 // Grille d'un planning rempli dans l'app (lot 17, docs/spec-planning-grille.md).
 // Table sur ordinateur et tablette — colonne des dates FIGÉE au défilement
@@ -933,7 +934,7 @@ export function PlanningGrille({
                   {sep && (
                     <tr className={app ? "bg-secondary/50" : undefined} style={app ? undefined : { background: `${couleur}15` }}>
                       <td colSpan={colonnes.length + 1} className="px-3 py-1.5">
-                        <span className="sticky left-3 inline-block text-xs font-bold uppercase tracking-wider" style={{ color: couleur }}>
+                        <span className="sticky left-3 inline-block text-xs font-bold uppercase tracking-wider texte-service" style={styleTexteService(couleur)}>
                           {sep}
                         </span>
                       </td>
@@ -942,8 +943,8 @@ export function PlanningGrille({
                   <tr className="group/ligne border-t border-border" style={{ background: fond }}>
                     <td
                       data-date-cell={date}
-                      className="sticky left-0 z-10 w-[112px] px-3 py-2 font-semibold whitespace-nowrap bg-card"
-                      style={{ color: couleur, backgroundImage: fond ? `linear-gradient(${fond}, ${fond})` : undefined }}
+                      className="sticky left-0 z-10 w-[112px] px-3 py-2 font-semibold whitespace-nowrap bg-card texte-service"
+                      style={{ ...styleTexteService(couleur), backgroundImage: fond ? `linear-gradient(${fond}, ${fond})` : undefined }}
                     >
                       {/* La date, puis « Cette semaine » dessous (planches `v18-app-planning-grille-a`, `v18-bo-planning-a`). */}
                       <div>{fdShort(date)}</div>
@@ -1024,7 +1025,7 @@ export function PlanningGrille({
                 className="px-3.5 py-2 flex items-center gap-2 flex-wrap"
                 style={{ background: cetteSemaine ? `${couleur}1a` : `${couleur}0d` }}
               >
-                <span className="text-sm font-bold" style={{ color: couleur }}>{fdShort(date)}</span>
+                <span className="text-sm font-bold texte-service" style={styleTexteService(couleur)}>{fdShort(date)}</span>
                 {cetteSemaine && (
                   <span className="text-xs font-bold px-1.5 py-0.5 rounded text-white" style={{ background: couleur }}>
                     {t("planning.table.thisWeek")}

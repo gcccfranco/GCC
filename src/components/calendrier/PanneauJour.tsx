@@ -27,6 +27,7 @@ import type { EntreeCalendrier } from "@/lib/calendrier/entrees";
 import { COULEURS_CALENDRIER } from "@/lib/calendrier/entrees";
 import { couleurSource } from "./apparence";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { styleTexteService } from "@/lib/couleurSombre"
 
 const POINT: Partial<Record<EntreeCalendrier["source"], string>> = {
   evenements: COULEURS_CALENDRIER.evenements.point,
@@ -43,7 +44,7 @@ function Carte({ e, onDeplacer }: { e: EntreeCalendrier; onDeplacer?: (e: Entree
   const detail = parTitre ? "" : e.detail;
   const contenu = (
     <>
-      <span className="flex items-center gap-1.5 text-xs font-bold" style={{ color: couleurSource(e) }}>
+      <span className={`flex items-center gap-1.5 text-xs font-bold${couleurSource(e) ? " texte-service" : ""}`} style={couleurSource(e) ? styleTexteService(couleurSource(e)!) : undefined}>
         {POINT[e.source] && <span aria-hidden className="h-2 w-2 shrink-0 rounded-full" style={{ background: POINT[e.source] }} />}
         {source}
       </span>

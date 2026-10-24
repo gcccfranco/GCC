@@ -160,7 +160,7 @@ function LigneElement({
             {bouton(
               <span className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
                 <span className="text-[15px] font-semibold leading-snug">{titre}</span>
-                <span className="rounded-full px-2 py-0.5 text-xs font-semibold" style={{ background: "#ea580c1f", color: "#c2410c" }}>
+                <span className="rounded-full px-2 py-0.5 text-xs font-semibold text-orange-700 dark:text-orange-300" style={{ background: "#ea580c1f" }}>
                   {t("planning.fete.propositionEnAttente")}
                 </span>
               </span>,

@@ -23,6 +23,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { titreDuJour } from "./libelles"
 import { libelleQui } from "@/lib/fetes/qui"
+import { styleTexteService } from "@/lib/couleurSombre"
 
 const COLOR = PLANNING_COLORS.scene
 
@@ -50,8 +51,8 @@ export function QuiChecklist({ value, onChange }: { value: string[]; onChange: (
           const checked = value.includes(q)
           const retire = retires.includes(q)
           return (
-            <label key={q} className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-semibold cursor-pointer ${checked ? "" : "bg-background border-border text-muted-foreground"} ${retire ? "opacity-60" : ""}`}
-              style={checked ? { background: `${PLANNING_COLORS.scene}15`, borderColor: PLANNING_COLORS.scene, color: PLANNING_COLORS.scene } : undefined}>
+            <label key={q} className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-semibold cursor-pointer ${checked ? "texte-service" : "bg-background border-border text-muted-foreground"} ${retire ? "opacity-60" : ""}`}
+              style={checked ? { background: `${PLANNING_COLORS.scene}15`, borderColor: PLANNING_COLORS.scene, ...styleTexteService(PLANNING_COLORS.scene) } : undefined}>
               <input type="checkbox" className="h-3.5 w-3.5" checked={checked}
                 onChange={() => onChange(checked ? value.filter((x) => x !== q) : [...value, q])} />
               {libelleQui(q, langue)}

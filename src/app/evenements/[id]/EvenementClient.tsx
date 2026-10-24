@@ -53,6 +53,7 @@ import { EnTeteReunion } from "@/components/reunions/EnTeteReunion"
 import { useDeuxVolets } from "@/hooks/useDeuxVolets"
 import { FicheGestion } from "@/app/back-office/evenements/FicheGestion"
 import styles from "@/app/back-office/evenements/gestion.module.css"
+import { styleTexteService } from "@/lib/couleurSombre"
 
 const COLOR = PLANNING_COLORS.scene
 const URL_RE = /(https?:\/\/[^\s]+)/g
@@ -63,7 +64,7 @@ function Linkified({ text }: { text: string }) {
     <p className="text-sm whitespace-pre-wrap break-words">
       {text.split(URL_RE).map((part, i) =>
         URL_RE.test(part)
-          ? <a key={i} href={part} target="_blank" rel="noopener noreferrer" className="underline" style={{ color: COLOR }}>{part}</a>
+          ? <a key={i} href={part} target="_blank" rel="noopener noreferrer" className="underline texte-service" style={styleTexteService(COLOR)}>{part}</a>
           : <span key={i}>{part}</span>,
       )}
     </p>
@@ -237,7 +238,7 @@ export function EvenementClient({ espace = "app", id: idDonne }: { espace?: "app
       {e.liens.length > 0 && (
         <ul className="space-y-1 text-sm">
           {e.liens.map((l, i) => (
-            <li key={i}><a href={l.url} target="_blank" rel="noopener noreferrer" className="underline" style={{ color: COLOR }}>{l.label || l.url}</a></li>
+            <li key={i}><a href={l.url} target="_blank" rel="noopener noreferrer" className="underline texte-service" style={styleTexteService(COLOR)}>{l.label || l.url}</a></li>
           ))}
         </ul>
       )}

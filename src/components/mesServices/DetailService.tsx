@@ -28,6 +28,7 @@ import type { FSSetlist } from "@/lib/firebase/setlists";
 import type { SongIndexEntry } from "@/types/song";
 import { cn } from "@/lib/utils";
 import { useMesServices } from "./SectionMesServices";
+import { styleTexteService } from "@/lib/couleurSombre"
 
 const locale = (lang: string) => (lang === "zh-CN" ? "zh-CN" : "fr-FR");
 const majuscule = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
@@ -39,7 +40,7 @@ function Roles({ s }: { s: ServiceGroupe }) {
   return (
     <span className="flex flex-wrap gap-1">
       {s.roles.map((r) => (
-        <span key={r} className="rounded-full px-2 py-0.5 text-xs font-semibold" style={{ background: `color-mix(in srgb, ${couleur} 13%, transparent)`, color: couleur }}>
+        <span key={r} className="rounded-full px-2 py-0.5 text-xs font-semibold texte-service" style={{ background: `color-mix(in srgb, ${couleur} 13%, transparent)`, ...styleTexteService(couleur) }}>
           {r}
         </span>
       ))}

@@ -15,6 +15,7 @@ import { upcomingSetlists } from "@/lib/setlist/upcoming";
 import { categoryColor } from "@/lib/serviceColors";
 import { debutPlusChantes, plusChantes } from "@/lib/stats/plusChantes";
 import type { SongIndexEntry } from "@/types/song";
+import { styleTexteService } from "@/lib/couleurSombre"
 
 /** « 30 sept. » / « 9月30日 » : la date d'ajout d'un chant (« Nouveaux au répertoire »). */
 function jourCourt(iso: string, langue: string): string {
@@ -248,7 +249,7 @@ function CarteSetlist({ setlist, langue }: { setlist: FSSetlist; langue: string 
 
   return (
     <article data-carte-setlist className="raised rounded-2xl px-[18px] pb-3 pt-4">
-      <p className="flex items-center gap-1.5 text-[13px] font-semibold" style={{ color: couleur }}>
+      <p className="flex items-center gap-1.5 text-[13px] font-semibold texte-service" style={styleTexteService(couleur)}>
         <span aria-hidden className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ backgroundColor: couleur }} />
         {t("categories." + setlist.category, { defaultValue: setlist.category })}
       </p>

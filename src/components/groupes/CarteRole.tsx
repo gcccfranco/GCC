@@ -11,6 +11,7 @@ import { colonnesReliables } from "@/lib/groupes/organigramme";
 import { etatPlaces } from "@/lib/groupes/edition";
 import type { RoleGroupe, Titulaire } from "@/types/groupe";
 import { Initiales } from "./Initiales";
+import { styleTexteService } from "@/lib/couleurSombre"
 
 export function Pastille({ icone, children }: { icone?: ReactNode; children: ReactNode }) {
   return (
@@ -90,7 +91,7 @@ export function CarteRole({
           <div className="mt-1 flex flex-wrap items-center gap-1.5">
             <LignePlaces role={role} couleur={couleur} />
             {role.comite && (
-              <span className="rounded-full px-1.5 py-0.5 text-[11px] font-semibold" style={{ background: `${couleur}1f`, color: couleur }}>
+              <span className="rounded-full px-1.5 py-0.5 text-[11px] font-semibold texte-service" style={{ background: `${couleur}1f`, ...styleTexteService(couleur) }}>
                 {t("groupes.auComite")}
               </span>
             )}

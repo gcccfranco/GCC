@@ -19,6 +19,7 @@ import type { OrganigrammeGroupe, RoleGroupe, Titulaire } from "@/types/groupe";
 import { Initiales } from "./Initiales";
 import { LignePlaces, Pastille } from "./CarteRole";
 import { Panneau } from "./Panneau";
+import { styleTexteService } from "@/lib/couleurSombre"
 
 /** Les trois prochains dimanches écrits dans la grille du groupe, avec la case de la colonne. */
 function useProchains(groupeId: string, colonne: string | null): { date: string; nom: string }[] {
@@ -155,7 +156,7 @@ export function FicheRole({
               <ul>
                 {prochains.map((p) => (
                   <li key={p.date} className="flex items-center gap-3 border-t border-border py-2 text-sm">
-                    <span className="w-14 shrink-0 text-xs font-semibold" style={{ color: couleur }}>{date(p.date)}</span>
+                    <span className="w-14 shrink-0 text-xs font-semibold texte-service" style={styleTexteService(couleur)}>{date(p.date)}</span>
                     {p.nom ? <span className="text-foreground">{p.nom}</span>
                       : <span className="font-semibold text-orange-700 dark:text-orange-400">{t("groupes.places.personne")}</span>}
                   </li>

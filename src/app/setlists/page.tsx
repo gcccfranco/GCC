@@ -530,7 +530,7 @@ export default function SetlistsPage() {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder={t("setlists.list.searchPlaceholder")}
-              className={`w-full pl-9 pr-9 py-2.5 rounded-xl border border-transparent ${grand ? "bg-secondary" : "bg-card"} text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-ring/50 focus:ring-[3px] focus:ring-ring/10 text-[16px] sm:text-sm [&::-webkit-search-cancel-button]:hidden`}
+              className={`w-full pl-9 pr-9 py-2.5 rounded-xl border border-transparent ${grand ? "bg-secondary" : "bg-card"} text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-ring/50 focus:ring-[3px] focus:ring-ring/10 text-[16px] sm:text-sm [&::-webkit-search-cancel-button]:hidden`}
             />
             {query && (
               <button

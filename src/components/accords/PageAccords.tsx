@@ -84,7 +84,7 @@ export function PageAccords() {
             autoCapitalize="off"
             autoCorrect="off"
             spellCheck={false}
-            className="h-11 w-full rounded-full border border-border bg-card pl-11 pr-4 text-[16px] text-foreground placeholder:text-muted-foreground/70 focus:outline-none focus:ring-2 focus:ring-ring/40"
+            className="h-11 w-full rounded-full border border-border bg-card pl-11 pr-4 text-[16px] text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/40"
           />
         </div>
         <ChoixInstrument instrument={instrument} onChange={setInstrument} />

@@ -11,6 +11,7 @@ import { fetchCampus } from "@/lib/planning/sheets"
 import type { CampusSeance } from "@/lib/planning/utils"
 import { fdLongL } from "@/lib/planning/utils"
 import { PLANNING_COLORS } from "@/lib/serviceColors"
+import { styleTexteService } from "@/lib/couleurSombre"
 
 const COLOR = PLANNING_COLORS.campus
 
@@ -102,7 +103,7 @@ export function AncienTableau() {
                   <div className="px-4 py-3 border-r border-border">
                     <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">{t("planning.campus.presChoristes")}</p>
                     {s.pres && (
-                      <p className="text-sm font-semibold mb-1" style={{ color: COLOR }}>{s.pres}</p>
+                      <p className="text-sm font-semibold mb-1 texte-service" style={styleTexteService(COLOR)}>{s.pres}</p>
                     )}
                     {choristes.map(c => <Chip key={c} label={c} />)}
                   </div>

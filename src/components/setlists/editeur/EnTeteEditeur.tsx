@@ -174,7 +174,7 @@ export function EnTeteEditeur({
             onChange={(e) => c.setTitle(e.target.value)}
             aria-label={t("setlists.form.titleLabel")}
             placeholder={t("setlists.form.titlePlaceholder")}
-            className="min-w-0 max-w-full rounded-lg bg-transparent text-[24px] sm:text-[28px] [field-sizing:content] font-bold leading-tight tracking-tight text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+            className="min-w-0 max-w-full rounded-lg bg-transparent text-[24px] sm:text-[28px] [field-sizing:content] font-bold leading-tight tracking-tight text-foreground placeholder:text-muted-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
           />
           <button
             type="button"
@@ -348,7 +348,7 @@ export function EnTeteEditeur({
           value={c.notes}
           onChange={(e) => c.setNotes(e.target.value)}
           placeholder={t("setlists.form.notesPlaceholder")}
-          className="min-w-0 flex-1 bg-transparent text-foreground placeholder:text-muted-foreground/70 focus:outline-none"
+          className="min-w-0 flex-1 bg-transparent text-foreground placeholder:text-muted-foreground focus:outline-none"
         />
       </label>
     </div>

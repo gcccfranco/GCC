@@ -14,6 +14,7 @@ import { useSheet } from "@/lib/planning/useSheet"
 import { DEJEUNER_FALLBACK } from "@/lib/planning/data"
 import { fetchDejeuner } from "@/lib/planning/sheets"
 import { PLANNING_COLORS } from "@/lib/serviceColors"
+import { styleTexteService } from "@/lib/couleurSombre"
 
 const COLOR = PLANNING_COLORS.table
 
@@ -60,7 +61,7 @@ export function AncienTableau() {
                 <Fragment key={row[0]}>
                   {showSep && (
                     <tr style={{ background: `${COLOR}15` }}>
-                      <td colSpan={2} className="px-3 py-1.5 text-xs font-bold uppercase tracking-wider" style={{ color: COLOR }}>
+                      <td colSpan={2} className="px-3 py-1.5 text-xs font-bold uppercase tracking-wider texte-service" style={styleTexteService(COLOR)}>
                         {month}
                       </td>
                     </tr>
@@ -69,7 +70,7 @@ export function AncienTableau() {
                     className={`border-t border-border transition-colors ${!isThis ? "hover:bg-secondary/50" : ""}`}
                     style={isThis ? { background: `${COLOR}1a` } : undefined}
                   >
-                    <td className="px-3 py-2.5 font-semibold w-16 align-top pt-3" style={{ color: COLOR }}>
+                    <td className="px-3 py-2.5 font-semibold w-16 align-top pt-3 texte-service" style={styleTexteService(COLOR)}>
                       {isThis ? (
                         <span className="inline-block text-xs font-bold px-1.5 py-0.5 rounded text-white mt-0.5" style={{ background: COLOR }}>{t("planning.table.thisWeek")}</span>
                       ) : fdShort(row[0])}

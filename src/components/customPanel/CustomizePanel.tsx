@@ -86,7 +86,7 @@ function SortableRow({
           placeholder={t("setlists.form.songNotePlaceholder")}
           value={item.note}
           onChange={(e) => onNoteChange(e.target.value)}
-          className="mt-1 w-full text-xs px-2 py-1 border border-border rounded bg-muted/50 text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-1 focus:ring-primary/30"
+          className="mt-1 w-full text-xs px-2 py-1 border border-border rounded bg-muted/50 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/30"
         />
       </div>
 

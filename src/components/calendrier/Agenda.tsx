@@ -18,6 +18,7 @@ import { cn } from "@/lib/utils";
 import type { NotifLang } from "@/types/user";
 import { Drawer, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { ICONES, couleurSource, couleurTrait, styleCase } from "./apparence";
+import { styleTexteService } from "@/lib/couleurSombre"
 
 /** « Aujourd'hui · jeudi 1er octobre », sinon « Vendredi 2 octobre ». */
 export function useTitreDuJour(lang: NotifLang, aujourdhui: string) {
@@ -122,8 +123,8 @@ function LigneAgenda({ e, ouverte, onChoisir }: { e: EntreeCalendrier; ouverte: 
       </span>
       <span
         data-etiquette
-        className="shrink-0 rounded-full px-2.5 py-0.5 text-xs font-semibold"
-        style={{ background: `color-mix(in srgb, ${couleur} 12%, transparent)`, color: couleurSource(e) }}
+        className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-semibold${couleurSource(e) ? " texte-service" : ""}`}
+        style={{ background: `color-mix(in srgb, ${couleur} 12%, transparent)`, ...(couleurSource(e) ? styleTexteService(couleurSource(e)!) : {}) }}
       >
         {t(`calendrier.carte.${e.source}`)}
       </span>
@@ -232,7 +233,7 @@ export function FeuilleEntree({
         {entree && (
           <>
             <DrawerHeader className="pb-2 text-left">
-              <span className="text-xs font-bold" style={{ color: couleurSource(entree) }}>
+              <span className={`text-xs font-bold${couleurSource(entree) ? " texte-service" : ""}`} style={couleurSource(entree) ? styleTexteService(couleurSource(entree)!) : undefined}>
                 {t(`calendrier.carte.${entree.source}`)}
               </span>
               <DrawerTitle>{entree.titre}</DrawerTitle>

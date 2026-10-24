@@ -81,7 +81,7 @@ function Labels({ items, figureId }: { items: Annotation[]; figureId: string }) 
         return (
           <span
             key={i}
-            className="absolute inline-block max-w-[45%] rounded bg-primary text-primary-foreground px-1 py-px text-xs font-medium leading-snug text-white shadow-sm"
+            className="absolute inline-block max-w-[45%] rounded bg-primary text-primary-foreground px-1 py-px text-xs font-medium leading-snug shadow-sm"
             style={{
               left: `${a.x}%`,
               top: `${a.y}%`,
@@ -124,7 +124,7 @@ export function GuideFigure({ figure }: { figure: Figure }) {
         )}
       </div>
       {figure.caption && (
-        <figcaption className="text-xs text-muted-foreground/80 text-center">
+        <figcaption className="text-xs text-muted-foreground text-center">
           {t(`guide.captures.${figure.id}.caption`)}
         </figcaption>
       )}

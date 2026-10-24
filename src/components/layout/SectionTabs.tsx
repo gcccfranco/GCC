@@ -17,12 +17,13 @@ import { FondDeBarre } from "@/components/layout/FondDeBarre"
 import { useFonduLateral } from "@/hooks/useFonduLateral"
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer"
 import { useStandaloneScrollLock } from "@/hooks/useStandaloneScrollLock"
+import { styleTexteService } from "@/lib/couleurSombre"
 
 export type SectionTab = { href: string; label: string; color?: string }
 
 /** Pilule teintée : fond à 14 % de la couleur du service, texte à sa couleur. */
 const teinte = (color?: string) =>
-  color ? { background: `color-mix(in srgb, ${color} 14%, transparent)`, color } : undefined
+  color ? { background: `color-mix(in srgb, ${color} 14%, transparent)`, ...styleTexteService(color) } : undefined
 
 /** `pleineLargeur` : la section prend toute la zone de contenu (Planning, retours du 06/10/2026) ;
  *  la rangée part alors du même bord que la page, au lieu d'être centrée sur 1 080 px. */
@@ -106,7 +107,7 @@ export function SectionTabs({ tabs, rootHref, menuLabel, pleineLargeur = false, 
               aria-label={menuLabel}
               aria-haspopup="dialog"
               onClick={() => setFeuilleOuverte(true)}
-              className={`inline-flex min-h-10 items-center gap-2 rounded-full px-3.5 text-sm font-semibold transition-colors duration-150 cursor-pointer ${courant?.color ? "" : "bg-secondary text-foreground"}`}
+              className={`inline-flex min-h-10 items-center gap-2 rounded-full px-3.5 text-sm font-semibold transition-colors duration-150 cursor-pointer ${courant?.color ? "texte-service" : "bg-secondary text-foreground"}`}
               style={teinte(courant?.color)}
             >
               {courant?.label}
@@ -156,7 +157,7 @@ export function SectionTabs({ tabs, rootHref, menuLabel, pleineLargeur = false, 
                 aria-current={active ? "page" : undefined}
                 className={`inline-flex min-h-10 flex-shrink-0 items-center rounded-full px-3.5 text-sm font-semibold whitespace-nowrap transition-colors duration-150 ${
                   active
-                    ? tab.color ? "" : "bg-secondary text-foreground"
+                    ? tab.color ? "texte-service" : "bg-secondary text-foreground"
                     : "text-muted-foreground hover:text-foreground"
                 }`}
                 style={active ? teinte(tab.color) : undefined}

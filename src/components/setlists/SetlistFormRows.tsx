@@ -182,7 +182,7 @@ export function AnnotationFieldInput({
         }}
         className={
           isNote
-            ? "w-full text-[11px] px-1.5 py-1 border border-border rounded bg-muted/50 text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-1 focus:ring-primary/30"
+            ? "w-full text-[11px] px-1.5 py-1 border border-border rounded bg-muted/50 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/30"
             : "w-full text-[11px] px-1.5 py-1 border border-dashed border-amber-300/80 dark:border-amber-700/60 rounded bg-amber-50/50 dark:bg-amber-950/10 text-foreground placeholder:text-amber-400/70 dark:placeholder:text-amber-600/60 focus:outline-none focus:ring-1 focus:ring-amber-400/40"
         }
       />

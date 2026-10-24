@@ -9,6 +9,7 @@ import { UserRound } from "lucide-react";
 import { categoryColor, categoryLabel } from "@/lib/serviceColors";
 import { GROUPES, SERVICE_LIEUX, SERVICE_ROLE_LABELS, type ServiceRole } from "@/types/user";
 import { EDD_CLASSES } from "@/lib/planning/utils";
+import { styleTexteService } from "@/lib/couleurSombre"
 
 // Même ordre que le formulaire du profil (ProfileFields) : cultes, groupes, EDD ; rôles idem.
 const ORDRE_SERVICES: readonly string[] = [...SERVICE_LIEUX, ...GROUPES, ...EDD_CLASSES];
@@ -76,8 +77,8 @@ export function CarteCompte({
                 <li
                   key={service}
                   data-testid="service-role"
-                  className="rounded-md px-2 py-0.5 text-[13px] font-semibold"
-                  style={{ color: couleur, background: `${couleur}1f` }}
+                  className="rounded-md px-2 py-0.5 text-[13px] font-semibold texte-service"
+                  style={{ ...styleTexteService(couleur), background: `${couleur}1f` }}
                 >
                   {zh ? t(`categories.${service}`, { defaultValue: service }) : categoryLabel(service)}
                   {roles.length > 0 &&

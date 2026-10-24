@@ -160,7 +160,7 @@ export function PushToggle() {
         )}
 
         {supported && needsInstall && (
-          <p className="text-xs text-amber-600 dark:text-amber-400 mt-3">
+          <p className="text-xs text-amber-700 dark:text-amber-400 mt-3">
             {t("push.iosInstall", {
               defaultValue:
                 "Sur iPhone/iPad : ajoute d'abord le site à l'écran d'accueil (Partager → « Sur l'écran d'accueil »), puis ouvre-le depuis l'icône pour activer les notifications.",
@@ -169,7 +169,7 @@ export function PushToggle() {
         )}
 
         {supported && !needsInstall && denied && (
-          <p className="text-xs text-amber-600 dark:text-amber-400 mt-3">
+          <p className="text-xs text-amber-700 dark:text-amber-400 mt-3">
             {t("push.blocked", {
               defaultValue:
                 "Les notifications sont bloquées pour ce site dans ton navigateur. Pour les réactiver : clique sur l'icône à gauche de l'adresse (🔒) → Notifications → Autoriser, puis recharge la page.",

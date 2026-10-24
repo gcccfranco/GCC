@@ -89,7 +89,7 @@ export function SetlistsPassees() {
             onChange={(e) => setRecherche(e.target.value)}
             placeholder={t("setlists.entree.passeesRecherche")}
             aria-label={t("setlists.entree.passeesRecherche")}
-            className="raised w-full rounded-full border border-transparent py-2.5 pl-9 pr-9 text-[16px] text-foreground placeholder:text-muted-foreground/60 focus:border-ring/50 focus:outline-none focus:ring-[3px] focus:ring-ring/10 sm:text-sm [&::-webkit-search-cancel-button]:hidden"
+            className="raised w-full rounded-full border border-transparent py-2.5 pl-9 pr-9 text-[16px] text-foreground placeholder:text-muted-foreground focus:border-ring/50 focus:outline-none focus:ring-[3px] focus:ring-ring/10 sm:text-sm [&::-webkit-search-cancel-button]:hidden"
           />
           {recherche && (
             <button

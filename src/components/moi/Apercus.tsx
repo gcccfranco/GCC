@@ -31,6 +31,7 @@ import { useTaches } from "@/lib/taches/useTaches";
 import { serviceColor } from "@/lib/serviceColors";
 import type { Equipe } from "@/types/equipe";
 import type { LignePetitDej } from "@/types/petitDej";
+import { styleTexteService } from "@/lib/couleurSombre"
 
 const LIGNE = "flex items-center gap-3 py-2.5";
 const SOUS = "block truncate text-[13px] text-muted-foreground";
@@ -123,8 +124,8 @@ export function ApercuServices() {
                 <span className={SOUS}>{quand}</span>
               </span>
               <span
-                className="max-w-[40%] shrink-0 truncate rounded-full px-2 py-0.5 text-xs font-semibold"
-                style={{ background: `color-mix(in srgb, ${couleur} 13%, transparent)`, color: couleur }}
+                className="max-w-[40%] shrink-0 truncate rounded-full px-2 py-0.5 text-xs font-semibold texte-service"
+                style={{ background: `color-mix(in srgb, ${couleur} 13%, transparent)`, ...styleTexteService(couleur) }}
               >
                 {s.roles.join(", ")}
               </span>

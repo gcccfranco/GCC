@@ -14,6 +14,7 @@ import { normalizeName } from "@/lib/planning/names";
 import { categoryColor, categoryLabel } from "@/lib/serviceColors";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { styleTexteService } from "@/lib/couleurSombre";
 
 export interface ProfileFormValue {
   firstName: string;
@@ -181,8 +182,8 @@ export function ServiceGrid({
                   <button
                     type="button"
                     onClick={() => toggleCat(cat)}
-                    className="w-full flex items-center justify-between gap-2 px-3 py-2.5 text-left text-sm font-medium"
-                    style={active ? { color } : undefined}
+                    className={`w-full flex items-center justify-between gap-2 px-3 py-2.5 text-left text-sm font-medium${active ? " texte-service" : ""}`}
+                    style={active ? styleTexteService(color) : undefined}
                   >
                     <span className={active ? "" : "text-muted-foreground"}>
                       {active ? "✓ " : ""}{categoryLabel(cat)}

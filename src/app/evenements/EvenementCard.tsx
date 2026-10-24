@@ -19,6 +19,7 @@ import { cleNomEquipe } from "@/lib/equipes/table"
 import type { Evenement } from "@/types/evenement"
 import { buttonVariants } from "@/components/ui/button"
 import { Tile } from "@/components/ui/tile"
+import { styleTexteService } from "@/lib/couleurSombre"
 
 const COLOR = PLANNING_COLORS.scene
 
@@ -32,8 +33,8 @@ function monthLabel(iso: string, lang: string): string {
 function PastillePublic({ pour, className }: { pour: string; className: string }) {
   const { t } = useTranslation()
   return (
-    <span className={`inline-block rounded-full font-semibold bg-secondary text-foreground ${className}`}
-      style={pour === "eglise" ? undefined : { background: `${categoryColor(pour)}18`, color: categoryColor(pour) }}>
+    <span className={`inline-block rounded-full font-semibold bg-secondary text-foreground ${pour === "eglise" ? "" : "texte-service"} ${className}`}
+      style={pour === "eglise" ? undefined : { background: `${categoryColor(pour)}18`, ...styleTexteService(categoryColor(pour)) }}>
       {pour === "eglise"
         ? t("evenements.pourEglise")
         : equipeDuPour(pour)
@@ -47,7 +48,7 @@ export function TypePour({ e }: { e: Pick<Evenement, "type" | "pour"> }) {
   const { t } = useTranslation()
   return (
     <>
-      <span className="inline-block text-xs px-2 py-0.5 rounded-full font-semibold" style={{ background: `${COLOR}18`, color: COLOR }}>
+      <span className="inline-block text-xs px-2 py-0.5 rounded-full font-semibold texte-service" style={{ background: `${COLOR}18`, ...styleTexteService(COLOR) }}>
         {t(`evenements.types.${e.type}`)}
       </span>
       <PastillePublic pour={e.pour} className="text-xs px-2 py-0.5" />

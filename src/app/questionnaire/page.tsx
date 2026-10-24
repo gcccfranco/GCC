@@ -46,10 +46,10 @@ function QuestionField({
         {q.required ? (
           <span className="text-destructive"> *</span>
         ) : (
-          <span className="text-muted-foreground/70 font-normal"> {t("survey.optional")}</span>
+          <span className="text-muted-foreground font-normal"> {t("survey.optional")}</span>
         )}
         {q.type === "multi" && (
-          <span className="text-muted-foreground/70 font-normal">
+          <span className="text-muted-foreground font-normal">
             {" · "}
             {t("survey.multiHint")}
           </span>

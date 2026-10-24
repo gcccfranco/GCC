@@ -108,8 +108,8 @@ function Case({
       <span
         className={cn(
           "self-start rounded-full px-1 py-0.5 text-xs font-bold tabular-nums",
-          horsMois ? "text-muted-foreground/50" : "text-foreground/85",
-          estAujourdhui && "min-w-[22px] bg-brand text-center text-white",
+          horsMois ? "text-muted-foreground" : "text-foreground/85",
+          estAujourdhui && "min-w-[22px] bg-brand text-center text-white dark:text-black",
         )}
       >
         {Number(date.slice(8))}

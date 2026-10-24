@@ -179,7 +179,7 @@ export function SongProposalDrawer({ enTete = false, controle }: { enTete?: bool
               <div>
                 <label className="block text-xs font-medium text-muted-foreground mb-1.5">
                   {t("proposition.partition")}{" "}
-                  <span className="text-muted-foreground/70">{t("signalement.optionnel")}</span>
+                  <span className="text-muted-foreground">{t("signalement.optionnel")}</span>
                 </label>
                 <Input
                   type="url"

@@ -201,7 +201,7 @@
     --muted-foreground: 240 2.7% 43.5%; /* #6c6c72 */
     --accent: 240 8.3% 95.3%;        /* survol des menus */
     --accent-foreground: 240 3.4% 11.4%;
-    --destructive: 0 84% 60%;
+    --destructive: 0 72% 51%;        /* #dc2828 : 4,8 sur blanc, 4,6 pour le texte #fafafa du bouton */
     --destructive-foreground: 0 0% 98%;
     --border: 240 2% 89.5%;          /* filet, #e4e4e5 = rgba(60,60,67,.14) sur blanc */
     --input: 240 2% 89.5%;
@@ -263,8 +263,8 @@
     --muted-foreground: 240 3.5% 61%; /* #98989f */
     --accent: 240 2.2% 17.6%;
     --accent-foreground: 240 23.8% 95.9%;
-    --destructive: 0 63% 31%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 84% 68%;        /* #f26969 : 5,7 sur #1c1c1e, 4,65 sur #2c2c2e */
+    --destructive-foreground: 240 3.4% 11.4%; /* #1c1c1e : encre sur le rouge clair, 5,7 (le blanc ne donne que 3,0) */
     --border: 240 1.8% 22%;          /* #373739 — filet des groupes ; le mode louange s'en sert aussi */
     --input: 240 1.8% 22%;
     --ring: 240 23.8% 95.9%;         /* focus blanc cassé */
@@ -329,6 +329,10 @@
      pour 4,5 exigé), on les éclaircit à l'affichage, sans toucher au fichier. */
   .svc-ink { color: var(--svc); }
   .dark .svc-ink { color: color-mix(in srgb, var(--svc) 55%, white); }
+  /* Texte dans une couleur de service passée en style inline (`styleTexteService`, src/lib/couleurSombre.ts) :
+     --svc-sombre est la couleur éclaircie jusqu'à 4,5:1 sur #2c2c2e. */
+  .texte-service { color: var(--svc-clair); }
+  .dark .texte-service { color: var(--svc-sombre); }
   .svc-line { border-left-color: var(--svc); }
   .dark .svc-line { border-left-color: color-mix(in srgb, var(--svc) 55%, white); }
   /* Tuile d'un service (V7 ter) : le fond porte la couleur, le libellé la reprend

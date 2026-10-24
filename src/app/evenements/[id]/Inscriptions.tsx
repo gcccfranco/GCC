@@ -26,6 +26,7 @@ import type { Evenement, Inscription, ModeInscriptions } from "@/types/evenement
 import { Button, buttonVariants } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { ChoixInscriptions, useRaisonInscription } from "@/components/evenements/ChoixInscriptions"
+import { styleTexteService } from "@/lib/couleurSombre"
 
 const COLOR = PLANNING_COLORS.scene
 const INVITES = [0, 1, 2, 3, 4, 5]
@@ -163,7 +164,7 @@ export function Inscriptions({ evenement: e, user, organisateur, onInscrits }: {
       ) : (
         <p className="text-sm">
           {t("evenements.loginToRegister")}{" "}
-          <Link href={`/login?from=${encodeURIComponent(`/evenements/${e.id}`)}`} className="font-semibold underline" style={{ color: COLOR }}>
+          <Link href={`/login?from=${encodeURIComponent(`/evenements/${e.id}`)}`} className="font-semibold underline texte-service" style={styleTexteService(COLOR)}>
             {t("evenements.login")}
           </Link>
         </p>
