@@ -134,6 +134,7 @@ test.describe("setlist G, téléphone et tablette portrait", () => {
     const barreBas = await barre(page).evaluate((el) => el.getBoundingClientRect().bottom);
     // 90 px plus bas, la bascule n'est pas encore à l'endroit où elle collerait.
     expect(y0 - 90, "assez bas pour ne pas coller").toBeGreaterThan(barreBas);
+    await page.evaluate(() => window.dispatchEvent(new Event("touchstart")));
     await defiler(0, 90);
     await page.waitForTimeout(400);
     expect(Math.abs((await haut(bascule(page))).y - (y0 - 90)), "pas de saut : elle suit la page").toBeLessThanOrEqual(2);
@@ -215,6 +216,7 @@ test.describe("setlist G, téléphone et tablette portrait", () => {
     // Un vrai défilement commence par un doigt posé, qui lâche le chant amené ; sans
     // lui, un scan arrivé pendant la tenue (2 s) ramènerait le chant 2 sous la barre
     // et le « −20 » qui suit ferait lire le chant 1 (T6 : 2 échecs sur 5 sous charge).
+    await page.evaluate(() => window.dispatchEvent(new Event("touchstart")));
     await page.evaluate(() => window.scrollBy(0, 150));
     await image();
     await page.evaluate(() => window.scrollBy(0, -20));
@@ -646,6 +648,7 @@ test.describe("relecture : défilement, toucher après un glissement (setlist G)
     await lienLigne(page, 1).click();
     await expect(chant(page, 1)).toBeVisible();
     // Un doigt posé lâche le chant amené ; puis on descend dans le premier chant.
+    await page.evaluate(() => window.dispatchEvent(new Event("touchstart")));
     await defilerImageParImage(page, 30, 5);
     await rendus.attendreLeCalme();
     const avant = (await rendus.lire()).length;
