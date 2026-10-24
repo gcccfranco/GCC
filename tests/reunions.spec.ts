@@ -934,7 +934,10 @@ test("règles R4 : membres (dansEquipes) de la réunion d'équipe, création par
   expect(rules).toMatch(/function estDeLEquipe\(equipe\) \{[\s\S]*?equipe in profile\(\)\.get\('dansEquipes', \[\]\)/);
   expect(rules).toMatch(/function estReferentDe\(equipe\) \{[\s\S]*?equipe in profile\(\)\.get\('referentDe', \[\]\)/);
   const create = rules.slice(rules.indexOf("match /evenements/{id}"), rules.indexOf("allow update", rules.indexOf("match /evenements/{id}")));
-  expect(create).toMatch(/request\.resource\.data\.pour\.matches\('equipe:\[a-z0-9-\]\+'\)\s*&& estReferentDe\(request\.resource\.data\.pour\.split\(':'\)\[1\]\)/);
+  // A1 : la garde du public est sortie dans pourCreable(pour), que la création appelle.
+  expect(create).toContain("pourCreable(request.resource.data.pour)");
+  const pourCreable = rules.slice(rules.indexOf("function pourCreable(pour)"), rules.indexOf("match /evenements/{id}"));
+  expect(pourCreable).toMatch(/pour\.matches\('equipe:\[a-z0-9-\]\+'\) && estReferentDe\(pour\.split\(':'\)\[1\]\)/);
   const profil = rules.slice(rules.indexOf("match /users/{uid}"), rules.indexOf("allow update", rules.indexOf("match /users/{uid}")));
   expect(profil).toMatch(/request\.resource\.data\.get\('dansEquipes', \[\]\) == \[\]/);
   expect(profil).toMatch(/request\.resource\.data\.get\('referentDe', \[\]\) == \[\]/);
@@ -946,11 +949,14 @@ test("règles R4 : membres (dansEquipes) de la réunion d'équipe, création par
 test("règles : réunions d'équipe créées par leurs seuls ayants droit, même pour la coordination", () => {
   const rules = lire("firestore.rules");
   const create = rules.slice(rules.indexOf("match /evenements/{id}"), rules.indexOf("allow update", rules.indexOf("match /evenements/{id}")));
-  expect(create).not.toMatch(/pour\.matches\('pole:/);
-  expect(create).toMatch(/request\.resource\.data\.pour\.matches\('equipe:\[a-z0-9-\]\+'\)\s*&& estReferentDe\(/);
-  expect(create).toMatch(/!request\.resource\.data\.pour\.matches\('\(pole\|equipe\):\.\*'\)\s*&& \(isCoordination\(\)/);
-  // Plus de « isCoordination() || … » qui couvrirait tous les publics.
-  expect(create).not.toMatch(/&& \(isCoordination\(\)\s*\|\|\s*\(hasProfile\(\) && request\.resource\.data\.pour in profile\(\)\.get\('annonces', \[\]\)\)\s*\|\|\s*\(request/);
+  // A1 : la garde du public est dans pourCreable(pour), appelée par la création (et la modification).
+  expect(create).toContain("pourCreable(request.resource.data.pour)");
+  const garde = rules.slice(rules.indexOf("function pourCreable(pour)"), rules.indexOf("match /evenements/{id}"));
+  expect(garde).not.toMatch(/pour\.matches\('pole:/);
+  expect(garde).toMatch(/\(pour\.matches\('equipe:\[a-z0-9-\]\+'\) && estReferentDe\(/);
+  expect(garde).toMatch(/!pour\.matches\('\(pole\|equipe\):\.\*'\)\s*&& \(isCoordination\(\)/);
+  // Plus de « isCoordination() || … » qui couvrirait tous les publics : la coordination est sous la garde « ni pôle ni équipe ».
+  expect(garde).not.toMatch(/^\s*return isCoordination\(\)/m);
 });
 
 test("le cron : la veille d'une réunion d'équipe va à ses membres, comme celle d'une réunion de pôle", () => {

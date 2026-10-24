@@ -153,9 +153,13 @@ test.describe("partage : fonctions pures", () => {
     expect(route).toContain("editeurs?: string[]");
     expect(route).toContain("horodatageEnvoi(");
     // jamais lu dans la requête : la déstructuration du corps sans `editeurs`, et chaque accès `.editeurs` sur le document `sl`
-    const corps = route.match(/const \{([^}]*)\} = \(await req\.json/);
-    expect(corps).not.toBeNull();
-    expect(corps![1]).not.toContain("editeurs");
+    // Le corps passe par lireCorpsNotifySetlist (A2, bornes) : elle n'en garde que `setlistId` et `auto`.
+    expect(route).toContain("lireCorpsNotifySetlist(await req.json()");
+    const bornes = lire("src/lib/push/bornes.ts");
+    const lecture = bornes.match(/export function lireCorpsNotifySetlist\(b: unknown\) \{([\s\S]*?)\n\}/);
+    expect(lecture).not.toBeNull();
+    expect(lecture![1]).toMatch(/const \{ setlistId, auto \} = corps\(b\)/);
+    expect(lecture![1]).not.toContain("editeurs");
     expect(route).not.toMatch(/\b(?:body|data|payload|req)\.editeurs/);
     for (const m of route.matchAll(/(\w+)\??\.editeurs/g)) expect(m[1]).toBe("sl");
   });
