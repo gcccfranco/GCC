@@ -111,6 +111,9 @@ revoir après l'essai par 2 ou 3 responsables). `access.ts` ne change que dans `
    que `next dev` compile à la première demande. Trace : requête RSC encore en attente 5 s après son départ. Rien à
    corriger dans le site (compilé au build en ligne) ; l'attente de ces deux URL passe à 20 s, commentée.
 7. **`CLAUDE.md`** : 20 routes API, sans `/api/admin/*` (dossier disparu).
+8. **Passage complet** (24/10/2026, après les commits) : `tableau-de-bord`, `back-office-espace`, `barre-back-office`,
+   `equipes-acces`, `agencement-v18-t2a`, `calendrier-widget` — 953 verts, 0 rouge, 60 ignorés (appareil non concerné) ;
+   `tsc` sans erreur.
 
 ### Écarts — acceptés par Timothée le 23/10/2026 (« Ok pour les huit choix »)
 1. **Qui relancer** : aucune table colonne → équipe n'existait ; reprise de l'organigramme (`colonnesParEquipe`) :
