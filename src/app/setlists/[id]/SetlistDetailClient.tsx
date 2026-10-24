@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { Trash2, List, Music, Pencil, SlidersHorizontal, PenLine, UserRound, Play, MoreHorizontal, Download, Copy, Share2, BellRing, FileText, Presentation } from "lucide-react";
+import { Trash2, List, Music, Pencil, SlidersHorizontal, PenLine, UserRound, Play, MoreHorizontal, Download, Copy, Share2, BellRing, FileText, Presentation, X } from "lucide-react";
 import { categoryColor } from "@/lib/serviceColors";
 import { Halo } from "@/components/layout/Halo";
 import { FondDeBarre } from "@/components/layout/FondDeBarre";
@@ -35,7 +35,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { getSetlist, getSetlistOuCopie, lireCopieDuCompte, deleteSetlist, mettreALaCorbeille, duplicateSetlist, updateSetlist, authHeader, type FSSetlist } from "@/lib/firebase/setlists";
-import { useProfile } from "@/lib/firebase/users";
+import { RELIRE_PROFIL, useProfile } from "@/lib/firebase/users";
 import { ecrireCopie } from "@/lib/setlist/copieHorsLigne";
 import { BACK_OFFICE } from "@/lib/backOffice";
 import { datesServies, loadPlanningData } from "@/lib/planning/names";
@@ -305,6 +305,13 @@ export function SetlistDetailClient() {
   // Mode louange (D4) : chants qui n'ont pas pu être chargés ; null = pas de bandeau.
   const [chantsManquants, setChantsManquants] = useState<string[] | null>(null);
   const [retryKey, setRetryKey] = useState(0);
+  // Copie à l'écran : un nouvel essai de lecture ne remplace pas la page par le chargement.
+  const copieAffichee = useRef(false);
+  useEffect(() => { copieAffichee.current = copieLueLe !== null; }, [copieLueLe]);
+  // « Réessayer » du bandeau D4 : essai en cours, et essai qui échoue encore.
+  const [essaiEnCours, setEssaiEnCours] = useState(false);
+  const [essaiEchoue, setEssaiEchoue] = useState(false);
+  const boutonReessayerRef = useRef<HTMLButtonElement>(null);
   // Mode « adapter le chant » (accords/paroles par setlist)
   const [editPartitions, setEditPartitions] = useState(false);
   const [editTarget, setEditTarget] = useState<LineEditState | null>(null);
@@ -440,7 +447,7 @@ export function SetlistDetailClient() {
       lectureLancee.current = cle;
       const courante = () => lectureLancee.current === cle;
       setLoadError(false);
-      setLoadingSetlist(true);
+      if (!copieAffichee.current) setLoadingSetlist(true);
       type Index = { songs?: SongIndexEntry[] };
       const indexP: Promise<Index> = fetch("/songs-index.json").then((r) => r.json());
       let terminee = false;
@@ -484,6 +491,33 @@ export function SetlistDetailClient() {
     return () => { abandon = true; };
   }, [id, authLoading, retryKey]);
 
+  // Retour du réseau (A3 bis, 10) : la setlist affichée vient de la copie, on relit la vraie.
+  useEffect(() => {
+    if (copieLueLe === null) return;
+    const relire = () => setRetryKey((k) => k + 1);
+    const siVisible = () => { if (document.visibilityState === "visible") relire(); };
+    window.addEventListener("online", relire);
+    document.addEventListener("visibilitychange", siVisible);
+    return () => {
+      window.removeEventListener("online", relire);
+      document.removeEventListener("visibilitychange", siVisible);
+    };
+  }, [copieLueLe]);
+
+  // Bandeau D4 : le focus y arrive (« Réessayer »), Échap le ferme.
+  const bandeauChantsOuvert = !!chantsManquants && !performanceMode;
+  useEffect(() => {
+    if (!bandeauChantsOuvert) return;
+    boutonReessayerRef.current?.focus();
+    const surTouche = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      setChantsManquants(null);
+      setEssaiEchoue(false);
+      if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+    };
+    document.addEventListener("keydown", surTouche);
+    return () => document.removeEventListener("keydown", surTouche);
+  }, [bandeauChantsOuvert]);
   // Hors ligne (D1) : la copie ne s'écrit qu'une fois établi que la personne peut voir la setlist,
   // pour qu'une copie n'existe que pour une setlist qu'elle avait le droit de lire. Elle porte le compte
   // et les versions perso lues en ligne (« Ma version » hors ligne).
@@ -524,20 +558,28 @@ export function SetlistDetailClient() {
   // et la page de chacun de ses chants, et les scans 简谱 de ceux qui en ont un (/jianpu/index.json donne leurs pages).
   useEffect(() => {
     if (!setlist || copieLueLe !== null || !jianpuManifest) return;
-    try {
-      const slugs = new Set<string>();
-      for (const it of setlist.items) {
-        if (it.songSlug) slugs.add(it.songSlug);
-        for (const fs of it.fusionSongs ?? []) slugs.add(fs.songSlug);
-      }
-      const urls = [
-        `/setlists/${encodeURIComponent(id)}/`,
-        "/setlists/",
-        ...[...slugs].flatMap((s) => [`/songs/${encodeURIComponent(s)}/`, `/api/song/${s}`]),
-        ...(slugs.size ? urlsJianpuAGarder(jianpuManifest, slugs) : []),
-      ];
-      navigator.serviceWorker?.controller?.postMessage({ type: "precache", urls });
-    } catch { /* pas de service worker : rien à garder */ }
+    const slugs = new Set<string>();
+    for (const it of setlist.items) {
+      if (it.songSlug) slugs.add(it.songSlug);
+      for (const fs of it.fusionSongs ?? []) slugs.add(fs.songSlug);
+    }
+    const urls = [
+      `/setlists/${encodeURIComponent(id)}/`,
+      "/setlists/",
+      ...[...slugs].flatMap((s) => [`/songs/${encodeURIComponent(s)}/`, `/api/song/${s}`]),
+      ...(slugs.size ? urlsJianpuAGarder(jianpuManifest, slugs) : []),
+    ];
+    const envoyer = () => {
+      try {
+        navigator.serviceWorker?.controller?.postMessage({ type: "precache", urls });
+      } catch { /* pas de service worker : rien à garder */ }
+    };
+    envoyer();
+    // Un nouveau service worker qui prend la main (mise à jour, premier contrôle) : il n'a pas reçu le message.
+    let sw: ServiceWorkerContainer | undefined;
+    try { sw = navigator.serviceWorker; } catch { /* pas de service worker */ }
+    sw?.addEventListener("controllerchange", envoyer);
+    return () => sw?.removeEventListener("controllerchange", envoyer);
   }, [id, setlist, copieLueLe, jianpuManifest]);
 
   // Partitions préchargées juste après l'affichage de la liste (Q14) : la
@@ -1418,7 +1460,8 @@ export function SetlistDetailClient() {
   // où l'on sert. Tant que le planning se lit, une personne qui n'a pas d'autre accès attend au lieu de voir « pas d'accès ».
   // Copie hors ligne : son existence vaut accès (le profil peut être introuvable sans réseau).
   if (copieLueLe === null && !canSeeSetlist(user, profile, setlist, datesDuCompte)) {
-    if (BACK_OFFICE && planningName && datesDuCompte === undefined) {
+    // Profil en cours de relecture (retour du réseau après une copie) : attendre, ne pas conclure à « pas d'accès ».
+    if (authLoading || (BACK_OFFICE && planningName && datesDuCompte === undefined)) {
       return (
         <div className="min-h-screen bg-background flex items-center justify-center">
           <p className="text-sm text-muted-foreground">{t("common.loading")}</p>
@@ -1498,10 +1541,21 @@ export function SetlistDetailClient() {
     } catch { /* non supporté */ }
     await entrerEnLouange(true);
   }
+  /** Aucun chant de la setlist n'a son contenu : « Continuer quand même » n'a rien à montrer (le mode Louange
+   *  resterait sur « Mise en page… »). */
+  const slugsDeLaSetlist = (setlist?.items ?? []).flatMap((it) =>
+    it.type === "fusion" && it.fusionSongs ? it.fusionSongs.map((fs) => fs.songSlug) : it.songSlug ? [it.songSlug] : [],
+  );
+  const aucunChantCharge = !slugsDeLaSetlist.some((slug) => !!contents[slug]);
+  /** Un chant de la vue Partitions qui n'a pas chargé : on relit le sien seul. */
+  async function rechargerUnChant(slug: string) {
+    const res = await fetchSongAST(slug);
+    if (res) setContents((prev) => ({ ...prev, [slug]: res }));
+  }
   /** Toujours (re)charger : loadContents ne fetch que les chants manquants. Si certains manquent encore,
    *  le mode Louange ne s'ouvre pas en silence : le bandeau « N chants non chargés » propose de réessayer
    *  ou de continuer quand même (D4). */
-  async function entrerEnLouange(pleinEcran: boolean) {
+  async function entrerEnLouange(pleinEcran: boolean): Promise<boolean> {
     const manquants = setlist ? await loadContents(setlist.items) : [];
     // Hors ligne, un chant dont le scan 简谱 n'est pas dans le cache du navigateur est « non chargé » aussi
     // (image cassée sinon). On ne sait que ce que le cache dit : en ligne, rien n'est vérifié.
@@ -1514,10 +1568,31 @@ export function SetlistDetailClient() {
     if (manquants.length) {
       setChantsManquants(manquants);
       if (pleinEcran && document.fullscreenElement) document.exitFullscreen().catch(() => {});
-      return;
+      return false;
     }
     setChantsManquants(null);
     setPerformanceMode(true);
+    return true;
+  }
+  /** « Réessayer » du bandeau D4 : le plein écran se demande tout de suite, dans le clic (comme
+   *  ouvrirModeLouange), puis l'essai ; un essai qui échoue encore le dit dans le bandeau. */
+  async function reessayerLesChants() {
+    try {
+      document.documentElement.requestFullscreen({ navigationUI: "hide" }).catch(() => {});
+    } catch { /* non supporté */ }
+    setEssaiEnCours(true);
+    setEssaiEchoue(false);
+    try {
+      const ouvert = await entrerEnLouange(true);
+      if (!ouvert) setEssaiEchoue(true);
+    } finally {
+      setEssaiEnCours(false);
+    }
+  }
+  function fermerLeBandeauDesChants() {
+    setChantsManquants(null);
+    setEssaiEchoue(false);
+    if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
   }
   function continuerSansLesChants() {
     try {
@@ -1681,23 +1756,26 @@ export function SetlistDetailClient() {
         onChooseVersion={(itemIndex, value) => persistChoice(setlist.items[itemIndex].songSlug, value)}
         onShare={(itemIndex, shared) => persistMine(setlist.items[itemIndex].songSlug, { shared })}
         onEditJianpu={handleEditJianpu}
+        onRetryChant={rechargerUnChant}
+        titres={Object.fromEntries(Object.entries(songsMap).map(([slug, e]) => [slug, e.title]))}
         onIdees={accesHarmonie.peut ? (itemIndex, slug) => { setIdeesTarget(itemIndex); setIdeesChant(slug ?? null); } : undefined}
       />
     </>
   );
-  // Bandeau de la copie hors ligne (A3, décision C2) : en haut sur grand écran, sous la barre d'outils sur
-  // téléphone et tablette (la barre flottante le couvrirait).
+  // Bandeau de la copie hors ligne (A3, décision C2) : dans l'en-tête collant sur grand écran (il compte dans
+  // `enTeteH`), sous la barre d'outils sur téléphone et tablette (la barre flottante le couvrirait). « Réessayer »
+  // relit la setlist ; elle se relit aussi seule au retour du réseau.
   const texteCopie = copieLueLe === null ? null : t("setlists.detail.copieHorsLigne", {
     date: new Intl.DateTimeFormat(i18n.language === "zh-CN" ? "zh-CN" : "fr-FR", { dateStyle: "long", timeStyle: "short" }).format(copieLueLe),
   });
+  const reessayerCopie = (
+    <Button type="button" size="sm" variant="ghost" className={`${deuxVolets ? "ml-2 h-6" : "h-11 shrink-0"} px-2 text-xs`} onClick={() => { window.dispatchEvent(new Event(RELIRE_PROFIL)); setRetryKey((k) => k + 1); }}>
+      {t("common.retry")}
+    </Button>
+  );
   return (
     <div className="relative min-h-screen bg-background">
       <Halo variant="fiche" color={categoryColor(setlist?.category ?? "")} />
-      {deuxVolets && copieLueLe !== null && (
-        <p role="status" data-copie-hors-ligne className="relative z-10 border-b border-border bg-muted px-4 py-1.5 text-center text-xs text-muted-foreground print:hidden">
-          {texteCopie}
-        </p>
-      )}
       {deuxVolets ? (
         // ── Deux volets (docs/spec-deux-volets.md, T4, planche `setlist-deux-volets`) :
         // l'en-tête pleine largeur colle en haut et s'escamote au défilement (Q7) ; à
@@ -1819,6 +1897,12 @@ export function SetlistDetailClient() {
                 </button>
               </div>
             </div>
+            {copieLueLe !== null && (
+              <p role="status" data-copie-hors-ligne className="border-t border-border bg-muted px-7 py-1.5 text-center text-xs text-muted-foreground">
+                {texteCopie}
+                {reessayerCopie}
+              </p>
+            )}
           </header>
 
           <div className="grid grid-cols-[380px_minmax(0,1fr)]">
@@ -2033,9 +2117,10 @@ export function SetlistDetailClient() {
 
           <div ref={zoneRef} className="relative max-w-2xl mx-auto px-4 py-8 print:px-0 print:py-4" style={{ marginTop: toolbarH }}>
             {copieLueLe !== null && (
-              <p role="status" data-copie-hors-ligne className="mb-4 rounded-lg bg-muted px-3 py-1.5 text-center text-xs text-muted-foreground print:hidden">
-                {texteCopie}
-              </p>
+              <div role="status" data-copie-hors-ligne className="mb-4 flex items-center justify-between gap-2 rounded-lg bg-muted py-1 pl-3 pr-1 text-xs text-muted-foreground print:hidden">
+                <span>{texteCopie}</span>
+                {reessayerCopie}
+              </div>
             )}
             {/* Header setlist */}
             <div className="mb-3 pb-5 print:mb-4">
@@ -2324,12 +2409,28 @@ export function SetlistDetailClient() {
         <div
           role="alert"
           data-chants-manquants
-          className="fixed inset-x-4 bottom-4 z-50 mx-auto flex max-w-md flex-wrap items-center justify-between gap-x-4 gap-y-2 rounded-2xl border border-border bg-background px-4 py-3 text-sm shadow-lg"
+          // Au-dessus de la barre du bas sur téléphone et tablette portrait (même calcul que BoutonNouveau).
+          className={`fixed z-50 flex max-w-md flex-wrap items-center justify-between gap-x-4 gap-y-2 rounded-2xl border border-border bg-card px-4 py-3 text-sm shadow-lg ${
+            // Deux volets : en bas à droite, sur le volet de lecture, sans couvrir le pied du sommaire.
+            deuxVolets ? "bottom-4 right-6" : "inset-x-4 mx-auto bottom-[calc(var(--tabbar-bottom)+78px+8px)]"
+          }`}
         >
-          <span className="font-medium text-foreground">{t("setlists.detail.chantsNonCharges", { count: chantsManquants.length })}</span>
+          <span className="font-medium text-foreground">
+            {t("setlists.detail.chantsNonCharges", { count: chantsManquants.length })}
+            {essaiEchoue && !essaiEnCours && (
+              <span className="mt-0.5 block text-xs font-normal text-muted-foreground">{t("setlists.detail.chantsToujoursAbsents")}</span>
+            )}
+          </span>
           <span className="flex items-center gap-2">
-            <Button size="sm" variant="outline" onClick={() => entrerEnLouange(false)}>{t("common.retry")}</Button>
-            <Button size="sm" onClick={continuerSansLesChants}>{t("setlists.detail.continuerQuandMeme")}</Button>
+            <Button ref={boutonReessayerRef} size="sm" variant="outline" disabled={essaiEnCours} onClick={reessayerLesChants}>
+              {essaiEnCours ? t("setlists.detail.essaiEnCours") : t("common.retry")}
+            </Button>
+            {aucunChantCharge ? null : (
+              <Button size="sm" onClick={continuerSansLesChants}>{t("setlists.detail.continuerQuandMeme")}</Button>
+            )}
+            <Button size="icon" variant="ghost" className="h-9 w-9" aria-label={t("common.buttons.close")} onClick={fermerLeBandeauDesChants}>
+              <X className="h-4 w-4" aria-hidden />
+            </Button>
           </span>
         </div>
       )}

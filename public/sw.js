@@ -5,9 +5,10 @@
 //  2. Cache hors-ligne — réintroduit après avoir été retiré (il provoquait
 //     l'affichage de déploiements périmés). La stratégie est choisie pour NE
 //     PLUS reproduire ce bug :
-//       • les documents HTML sont servis en NETWORK-FIRST → en ligne, on a
-//         toujours le dernier déploiement ; hors-ligne seulement, on sert la
-//         copie en cache ;
+//       • les documents HTML sont servis en NETWORK-FIRST, avec une course de
+//         3 s : en ligne et réseau correct, la page vient du réseau (dernier
+//         déploiement) ; réseau qui traîne (ou 5xx, ou hors ligne), la copie
+//         en cache est servie au bout de 3 s et mise à jour en arrière-plan ;
 //       • les assets Next.js (/_next/static) sont content-hashés donc
 //         immuables → cache-first sans risque de péremption ;
 //       • le contenu quasi-figé (polices, index des chants, API chant,

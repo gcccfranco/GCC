@@ -156,10 +156,30 @@ function lireProfil(uid: string): Promise<UserProfile | null> {
   return lecture;
 }
 
+/** Évènement de la fenêtre : « relis le profil » (le bouton Réessayer du bandeau de copie hors ligne). */
+export const RELIRE_PROFIL = "gcc:relire-profil";
+
 export function useProfile() {
   const { user, loading: authLoading } = useAuth();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [profileLoading, setProfileLoading] = useState(true);
+  // Profil introuvable faute de réseau (A3 bis) : on le relit au retour du réseau, sinon une page rouverte
+  // sur sa copie hors ligne jugerait ensuite la vraie setlist avec un profil vide.
+  const [tentative, setTentative] = useState(0);
+  const manque = !!user && !profile && !profileLoading;
+  useEffect(() => {
+    if (!manque) return;
+    const relire = () => setTentative((n) => n + 1);
+    const siVisible = () => { if (document.visibilityState === "visible") relire(); };
+    window.addEventListener("online", relire);
+    window.addEventListener(RELIRE_PROFIL, relire);
+    document.addEventListener("visibilitychange", siVisible);
+    return () => {
+      window.removeEventListener("online", relire);
+      window.removeEventListener(RELIRE_PROFIL, relire);
+      document.removeEventListener("visibilitychange", siVisible);
+    };
+  }, [manque]);
 
   useEffect(() => {
     if (authLoading) return;
@@ -179,7 +199,7 @@ export function useProfile() {
       // Hors ligne (A3) : pas de profil, rien en cache ; la prochaine lecture réessaie.
       .catch(() => setProfile(null))
       .finally(() => setProfileLoading(false));
-  }, [user, authLoading]);
+  }, [user, authLoading, tentative]);
 
   return { user, profile, loading: authLoading || profileLoading };
 }

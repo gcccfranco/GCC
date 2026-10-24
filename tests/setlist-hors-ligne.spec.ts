@@ -89,7 +89,14 @@ const vieillir = (page: Page, jours: number) =>
 
 test.describe("copie hors ligne d'une setlist", () => {
   test("réseau en échec : la copie est servie avec son bandeau, sans écriture possible", async ({ page }) => {
-    const db = await signInAsPuisCopie(page);
+    // Le PROPRIÉTAIRE de la setlist : en ligne il peut tout, hors ligne (copie) plus rien n'est offert.
+    const db = await signInAsPuisCopie(page, { setlist: { ...SETLIST, ownerId: MUSICIEN.uid } });
+    // « Adapter » est dans la barre ; « Modifier » dans la barre (grand écran) ou dans le menu ⋯ (téléphone, tablette).
+    await expect(page.getByRole("button", { name: "Adapter" })).toBeVisible();
+    const modifier = page.getByRole("link", { name: "Modifier" }).or(page.getByRole("menuitem", { name: "Modifier" }));
+    if (!(await modifier.first().isVisible())) await page.getByRole("button", { name: "Plus d'actions" }).first().click();
+    await expect(modifier.first()).toBeVisible();
+    await page.keyboard.press("Escape");
     // Tout Firestore injoignable, profil (users/{uid}) compris : l'existence de la copie vaut accès.
     await page.route(/firestore\.googleapis\.com/, (route) => route.abort("internetdisconnected"));
     await page.reload();
@@ -99,8 +106,13 @@ test.describe("copie hors ligne d'une setlist", () => {
     // L'ordre des chants de la copie s'affiche.
     await expect(page.getByText(/Abba/i).first()).toBeVisible();
     // Pas de bouton d'édition ni de suppression pendant que la copie est affichée.
-    await expect(page.getByRole("button", { name: "Modifier" })).toHaveCount(0);
-    await expect(page.getByRole("button", { name: "Supprimer" })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Adapter" })).toHaveCount(0);
+    await page.getByRole("button", { name: "Plus d'actions" }).first().click();
+    await expect(page.getByRole("menu")).toBeVisible();
+    await expect(page.getByRole("link", { name: "Modifier" }).or(page.getByRole("menuitem", { name: "Modifier" }))).toHaveCount(0);
+    await expect(page.getByRole("menuitemcheckbox", { name: "Adapter" })).toHaveCount(0);
+    await expect(page.getByRole("menuitem", { name: "Supprimer" })).toHaveCount(0);
+    await expect(page.getByRole("menuitem", { name: /Dupliquer/ })).toHaveCount(0);
     expect(db.writes.filter((w) => w.path.startsWith("setlists/"))).toEqual([]);
   });
 
@@ -131,6 +143,7 @@ test.describe("copie hors ligne d'une setlist", () => {
     await page.reload();
     await expect(page.getByText("Setlist introuvable.")).toBeVisible();
     await expect(page.getByText(COPIE)).toHaveCount(0);
+    await expect.poll(() => nbCopies(page)).toBe(0);
   });
 
   test("copie de plus de 14 jours : pas servie", async ({ page }) => {
@@ -422,4 +435,92 @@ test("scans 简谱 : hors ligne, un scan absent du cache compte comme chant non 
   await expect(page.getByText(COPIE)).toBeVisible();
   await page.getByRole("button", { name: /Mode Louange/ }).click();
   await expect(page.locator("[data-chants-manquants]")).toContainText("1 chant non chargé");
+});
+
+// ─── A3 bis, points 10 à 14 ─────────────────────────────────────────────────────
+
+test("retour du réseau (événement online) : la vraie setlist remplace la copie, le bandeau part", async ({ page }) => {
+  const db = await signInAsPuisCopie(page);
+  const coupure = (route: Route) => route.abort("internetdisconnected");
+  await page.route(/firestore\.googleapis\.com/, coupure);
+  await page.reload();
+  const bandeau = page.locator("[data-copie-hors-ligne]");
+  await expect(bandeau).toContainText("lecture seule");
+  await expect(bandeau.getByRole("button", { name: "Réessayer" })).toBeVisible();
+  db.set(`setlists/${SETLIST_ID}`, { ...SETLIST, title: "Culte revenu" });
+  await page.unroute(/firestore\.googleapis\.com/, coupure);
+  await page.evaluate(() => window.dispatchEvent(new Event("online")));
+  await expect(page.getByRole("heading", { name: "Culte revenu" }).first()).toBeVisible();
+  await expect(bandeau).toHaveCount(0);
+});
+
+test("copie affichée : « Réessayer » du bandeau relit la vraie setlist", async ({ page }) => {
+  const db = await signInAsPuisCopie(page);
+  const coupure = (route: Route) => route.abort("internetdisconnected");
+  await page.route(/firestore\.googleapis\.com/, coupure);
+  await page.reload();
+  const bandeau = page.locator("[data-copie-hors-ligne]");
+  await expect(bandeau).toBeVisible();
+  db.set(`setlists/${SETLIST_ID}`, { ...SETLIST, title: "Culte relu" });
+  await page.unroute(/firestore\.googleapis\.com/, coupure);
+  await bandeau.getByRole("button", { name: "Réessayer" }).click();
+  await expect(page.getByRole("heading", { name: "Culte relu" }).first()).toBeVisible();
+  await expect(bandeau).toHaveCount(0);
+});
+
+test("bandeau D4 : fermer (×), Échap, focus sur Réessayer, « Continuer » absent quand rien n'est chargé", async ({ page }) => {
+  await page.route("**/api/song/*", (route) => route.fulfill({ status: 500, body: "{}" }));
+  await signInAsPuisCopie(page);
+  const bandeau = page.locator("[data-chants-manquants]");
+  await page.getByRole("button", { name: /Mode Louange/ }).click();
+  await expect(bandeau).toContainText("2 chants non chargés");
+  await expect(bandeau.getByRole("button", { name: "Continuer quand même" })).toHaveCount(0);
+  await expect(bandeau.getByRole("button", { name: "Réessayer" })).toBeFocused();
+  await page.keyboard.press("Escape");
+  await expect(bandeau).toHaveCount(0);
+  await page.getByRole("button", { name: /Mode Louange/ }).click();
+  await expect(bandeau).toBeVisible();
+  await bandeau.getByRole("button", { name: "Fermer" }).click();
+  await expect(bandeau).toHaveCount(0);
+  // Un essai qui échoue encore le dit.
+  await page.getByRole("button", { name: /Mode Louange/ }).click();
+  await bandeau.getByRole("button", { name: "Réessayer" }).click();
+  await expect(bandeau).toContainText("Toujours pas chargés");
+});
+
+test("bandeau D4 : « Continuer quand même » reste offert quand une partie des chants est chargée", async ({ page }) => {
+  await page.route("**/api/song/a-la-croix", (route) => route.fulfill({ status: 500, body: "{}" }));
+  await signInAsPuisCopie(page);
+  await page.getByRole("button", { name: /Mode Louange/ }).click();
+  await expect(page.locator("[data-chants-manquants]").getByRole("button", { name: "Continuer quand même" })).toBeVisible();
+});
+
+test("vue Partitions : un chant 500 garde son titre, « Chant non chargé » et un Réessayer qui le charge", async ({ page }) => {
+  let panne = true;
+  await page.route("**/api/song/a-la-croix", (route) => (panne ? route.fulfill({ status: 500, body: "{}" }) : route.continue()));
+  await signInAsPuisCopie(page);
+  await ouvrirPartitions(page);
+  const trou = page.locator("[data-chant-non-charge]");
+  await expect(trou).toHaveCount(1);
+  await expect(trou).toContainText("Chant non chargé");
+  await expect(trou.getByRole("heading")).not.toHaveText("");
+  panne = false;
+  await trou.getByRole("button", { name: "Réessayer" }).click();
+  await expect(trou).toHaveCount(0);
+});
+
+test("nouveau service worker (controllerchange) : le message precache est renvoyé", async ({ page }) => {
+  await page.addInitScript(() => {
+    const w = window as unknown as { __messages: { type: string }[] };
+    w.__messages = [];
+    Object.defineProperty(navigator.serviceWorker, "controller", {
+      get: () => ({ postMessage: (m: { type: string }) => w.__messages.push(m) }),
+    });
+  });
+  await signInAsPuisCopie(page);
+  const nb = () => page.evaluate(() => (window as unknown as { __messages: { type: string }[] }).__messages.filter((m) => m.type === "precache").length);
+  await expect.poll(nb).toBeGreaterThan(0);
+  const avant = await nb();
+  await page.evaluate(() => navigator.serviceWorker.dispatchEvent(new Event("controllerchange")));
+  await expect.poll(nb).toBe(avant + 1);
 });

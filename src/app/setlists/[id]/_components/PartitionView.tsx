@@ -19,6 +19,7 @@ import { itemAst } from "@/lib/chordpro/itemContent";
 import { lyricsText } from "@/components/song/copyLyrics";
 import { playedSections } from "@/lib/setlist/playedSections";
 import { isLastPhraseOnly } from "@/lib/setlist/lastPhrase";
+import { Button } from "@/components/ui/button";
 import { Check, Copy, Link2, MessageSquare } from "lucide-react";
 import type { ChordProAST, ChordProLine, ChordProSection } from "@/types/chordPro";
 import type { SongVersionView } from "@/lib/setlist/versionChoice";
@@ -83,6 +84,8 @@ export function PartitionsView({
   onShare,
   onEditJianpu,
   onIdees,
+  onRetryChant,
+  titres,
 }: {
   /** Le titre de chaque chant mène à sa page, dans les réglages de la setlist. */
   setlistId: string;
@@ -118,6 +121,10 @@ export function PartitionsView({
   /** Idées d'harmonie du chant (lot 9) — absent si la personne n'y a pas droit.
    *  Fusion : `slug` dit lequel de ses chants. */
   onIdees?: (itemIndex: number, slug?: string) => void;
+  /** « Chant non chargé — Réessayer » : relit le contenu de ce seul chant. */
+  onRetryChant?: (slug: string) => void | Promise<void>;
+  /** Titre de chaque chant par slug (l'index) : un chant sans contenu garde son titre. */
+  titres?: Record<string, string>;
 }) {
   const { t } = useTranslation();
   if (loading) {
@@ -345,6 +352,8 @@ export function PartitionsView({
             onShare={onShare}
             onEditJianpu={onEditJianpu}
             onIdees={onIdees}
+            onRetryChant={onRetryChant}
+            titre={titres?.[item.songSlug]}
           />
         );
       })}
@@ -373,6 +382,8 @@ function NormalSongItem({
   onShare,
   onEditJianpu,
   onIdees,
+  onRetryChant,
+  titre,
 }: {
   setlistId: string;
   item: SetlistItem;
@@ -393,8 +404,11 @@ function NormalSongItem({
   onShare?: (itemIndex: number, shared: boolean) => void;
   onEditJianpu?: (itemIndex: number, next: JianpuChords) => void;
   onIdees?: (itemIndex: number) => void;
+  onRetryChant?: (slug: string) => void | Promise<void>;
+  titre?: string;
 }) {
   const { t } = useTranslation();
+  const [reprise, setReprise] = useState(false);
   const mine = version?.mine;
   // En mode « Ma version », c'est la mienne qui s'affiche, quel que soit le choix.
   const shown = editMine ? (mine?.content ? "mine" : "presidence") : (version?.shown ?? "presidence");
@@ -422,7 +436,29 @@ function NormalSongItem({
   // Retouches d'accords sur le scan qui sont les miennes : elles ouvrent
   // « Revenir à la présidence » même sans accords ni paroles retouchés.
   const mesRetouches = aDesRetouches(mine?.jianpuChords);
-  if (!ast) return null;
+  if (!ast) {
+    // Chant sans contenu (lecture ratée) : son titre et de quoi le relire, plutôt qu'un trou dans la setlist.
+    return (
+      <div data-chant-non-charge className="rounded-xl border border-dashed border-border px-4 py-5 text-center">
+        <h2 className="text-base font-semibold text-foreground">{titre ?? item.songSlug}</h2>
+        <p className="mt-1 text-sm text-muted-foreground">{t("setlists.detail.chantNonCharge")}</p>
+        {onRetryChant && item.songSlug && (
+          <Button
+            size="sm"
+            variant="outline"
+            className="mt-3"
+            disabled={reprise}
+            onClick={async () => {
+              setReprise(true);
+              try { await onRetryChant(item.songSlug); } finally { setReprise(false); }
+            }}
+          >
+            {reprise ? t("setlists.detail.essaiEnCours") : t("common.retry")}
+          </Button>
+        )}
+      </div>
+    );
+  }
   const titleHref = songHref(item.songSlug, item, setlistId, item.position);
 
   // Mode Adapter : on tape une occurrence précise → ordre joué forcé.
