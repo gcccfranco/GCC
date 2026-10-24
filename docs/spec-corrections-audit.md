@@ -103,6 +103,10 @@ remplace les widgets, 5 entrées : À faire, Calendrier, Planning, Équipes, Mes
 d'écran d'accueil, pastilles sur les entrées), piste C (plus de back-office, les outils dans l'app) ; chacune aux
 trois tailles ; cinq questions à trancher. Timothée, le même jour : « est-ce qu'un dashboard est utile ? » — réponse :
 pas sous forme de widgets ; seuls servent le rassemblement des échéances et « qui sert ce dimanche ».
+**Go le 24/10/2026** (« Piste A, tranche les questions toi-même et code-la ») : décisions BO1 à BO12 et tranches
+BO-A à BO-F dans **`spec-back-office-piste-a.md`**, confiées au flux B après B6. Pour ce lot, la réserve ci-dessus est
+levée ; le flux B prend aussi `src/types/backOffice.ts`, `src/lib/tableauDeBord/**` et, dans `src/lib/access.ts`, les
+fonctions de menu du back-office (`entreesBackOffice`, `widgetsPermis`) : le flux A n'y touche pas.
 
 ## 5. Avancement
 

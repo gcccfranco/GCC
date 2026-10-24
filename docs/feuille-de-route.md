@@ -1222,6 +1222,10 @@ remise **hors dépôt**. Orchestration : `orchestration.md`, agents `relecteur` 
 **Go le 24/10/2026** (« Tranche par toi même », « corrige tout ce qui est à corriger ») : décisions C1 à C15 prises par
 Claude sur délégation, **`spec-corrections-audit.md`** ; deux sessions orchestratrices, flux A « fond » et flux B
 « surface », sur `ui/apple-design`. Banc d'essai versé dans `scripts/rude-epreuve/`.
+Back-office : planche à trois pistes le même jour ; **go pour la piste A** (« tranche les questions toi-même et
+code-la ») → **`spec-back-office-piste-a.md`** (cinq entrées, un écran « À faire » à la place des widgets, page par
+équipe, Calendrier qui absorbe Évènements et Réunions), codée par le flux B après ses corrections ; essai par 2 ou 3
+responsables sur un aperçu avant toute ouverture en ligne.
 
 ## 4. Carte des modules de l'app « GCC »
 
