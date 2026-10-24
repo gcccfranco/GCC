@@ -152,11 +152,14 @@ test.describe("les règles : lot AO, ancien ∪ nouveau", () => {
   test("les règles : evenements create = coordination ∪ annonces ∪ section par l'organigramme (Louange, président et VP)", () => {
     const evenements = sansEspaces(bloc("match /evenements/{id}"));
     const create = evenements.slice(evenements.indexOf("allow create"), evenements.indexOf("allow update"));
-    expect(create).toContain("isCoordination()");
-    expect(create).toContain("request.resource.data.pour in profile().get('annonces', [])");
-    expect(create).toContain("sectionCreeeParOrganigramme(request.resource.data.pour)");
+    // Le public se juge par pourCreable (partagée avec la modification).
+    expect(create).toContain("pourCreable(request.resource.data.pour)");
+    const creable = sansEspaces(fonction("pourCreable"));
+    expect(creable).toContain("isCoordination()");
+    expect(creable).toContain("pour in profile().get('annonces', [])");
+    expect(creable).toContain("sectionCreeeParOrganigramme(pour)");
     // Les réunions d'équipe d'avant sont toujours là.
-    expect(create).toContain("estReferentDe(request.resource.data.pour.split(':')[1])");
+    expect(creable).toContain("estReferentDe(pour.split(':')[1])");
     const section = sansEspaces(fonction("sectionCreeeParOrganigramme"));
     expect(section).toContain("pour == 'Culte Francophone' && 'louange' in profile().get('referentDe', [])");
     expect(section).toContain("pour == 'Groupe Paix' && 'comite-paix' in profile().get('referentDe', [])");
@@ -413,5 +416,31 @@ test.describe("canRetirerDate : toutes les colonnes", () => {
     expect(canRetirerDate(user, { plannings: ["campusMatin"] }, "campusMatin", false)).toBe(true);
     expect(canRetirerDate(user, { plannings: ["campusMatin"] }, "campusSoir", false)).toBe(false);
     expect(canRetirerDate(user, {}, "campusMatin", false)).toBe(false);
+  });
+});
+
+// ─── Règles durcies (tranche A1 de docs/spec-corrections-audit.md) ───────────
+
+test.describe("les règles : création de profil, évènements", () => {
+  test("users create : suit config/app.registrationOpen (absent = ouvert) et compare l'e-mail du profil à celui du jeton", () => {
+    const create = sansEspaces(bloc("match /users/{uid}"));
+    expect(create).toContain("exists(/databases/$(database)/documents/config/app)");
+    expect(create).toContain("get(/databases/$(database)/documents/config/app).data.get('registrationOpen', true) != false");
+    expect(create).toContain("request.resource.data.get('email', '').lower() == request.auth.token.email.lower()");
+    // Ces conditions sont dans la branche de l'intéressé, pas dans celle des admins.
+    expect(create.indexOf("request.auth.uid == uid")).toBeLessThan(create.indexOf("registrationOpen"));
+  });
+
+  test("isEditorOf n'existe plus", () => {
+    expect(regles).not.toContain("isEditorOf");
+  });
+
+  test("evenements update : l'organisateur et le public ne changent pas hors des droits de création", () => {
+    const update = sansEspaces(bloc("match /evenements/{id}").slice(bloc("match /evenements/{id}").indexOf("allow update")));
+    const premiere = update.slice(0, update.indexOf("estDeLaReunion"));
+    expect(premiere).toContain("request.resource.data.organisateurUid == resource.data.organisateurUid");
+    expect(premiere).toContain("request.resource.data.pour == resource.data.pour || pourCreable(request.resource.data.pour)");
+    expect(sansEspaces(bloc("match /evenements/{id}"))).toContain("&& pourCreable(request.resource.data.pour);");
+    expect(sansEspaces(fonction("pourCreable"))).toContain("estReferentDe(pour.split(':')[1])");
   });
 });

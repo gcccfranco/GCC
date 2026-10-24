@@ -3,7 +3,8 @@
 // « aujourd'hui » en paramètres.
 
 import { FieldValue } from "firebase-admin/firestore";
-import { isAdminEmail } from "@/lib/access";
+import { isCoordination } from "@/lib/access";
+import { BACK_OFFICE } from "@/lib/backOffice";
 import { HttpError } from "@/lib/evenements/serveur";
 import { lireGroupes } from "@/lib/equipes/serveur";
 import { groupeDe } from "@/lib/groupes/organigramme";
@@ -35,13 +36,15 @@ function lireEdition(id: string, data: Record<string, unknown> | undefined): Edi
   return { fete, annee, jourJ, passages: Array.isArray(data.passages) ? (data.passages as Passage[]) : [] };
 }
 
-/** Les comptes et les groupes, tels que `ayantsDroitDuQui` les lit. La coordination de l'appelant vient
- *  de son jeton (un admin sans profil, ou dont l'e-mail du profil manque, reste coordination). */
+/** Les comptes et les groupes, tels que `ayantsDroitDuQui` les lit. La coordination se calcule comme au
+ *  back-office (`isCoordination`) ; l'adresse d'admin est celle du jeton de l'appelant (un admin sans profil reste
+ *  coordination), jamais l'e-mail d'un profil. Seule celle de l'appelant sert aux droits. */
 export async function lireContexteFetes(
   db: FirebaseFirestore.Firestore,
   jourJ: string,
   edd: PlanningEddFete,
   appelant: Appelant,
+  backOffice: boolean = BACK_OFFICE,
 ): Promise<ContexteFetes> {
   const [users, groupes] = await Promise.all([db.collection("users").get(), lireGroupes(db)]);
   const liste = (v: unknown): string[] => (Array.isArray(v) ? v.filter((x): x is string => typeof x === "string") : []);
@@ -54,12 +57,11 @@ export async function lireContexteFetes(
       serviceRoles,
       dansEquipes: liste(x.dansEquipes),
       planningName: typeof x.planningName === "string" ? x.planningName : "",
-      coordination: isAdminEmail(x.email as string | undefined) || x.coordination === true,
+      coordination: isCoordination(d.id === appelant.uid ? { email: appelant.email } : null, x, backOffice),
     };
   });
   const moi = profils.find((p) => p.uid === appelant.uid);
-  if (!moi) profils.push({ uid: appelant.uid, groupe: null, serviceRoles: {}, dansEquipes: [], planningName: "", coordination: isAdminEmail(appelant.email) });
-  else if (isAdminEmail(appelant.email)) moi.coordination = true;
+  if (!moi) profils.push({ uid: appelant.uid, groupe: null, serviceRoles: {}, dansEquipes: [], planningName: "", coordination: isCoordination({ email: appelant.email }, null, backOffice) });
   return { profils, groupes: Object.fromEntries(groupes.map((g) => [g.id, g])), edd, jourJ };
 }
 

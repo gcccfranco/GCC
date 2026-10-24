@@ -56,8 +56,8 @@ type ProfilEquipes = { dansEquipes?: string[]; referentDe?: string[]; serviceRol
 // `backOffice` (patron d'audiencesNotifiables, droitsDePublication). `false` = l'ancien mode, code d'avant le
 // lot inchangé ; `true` = le nouveau, calculé par src/lib/acces/organigramme.ts, qui ne lit ni `serviceRoles` ni
 // les droits cochés (`coordination`, `annonces`, `notify`, `plannings`, `equipes`). Les admins (`ADMIN_EMAILS`)
-// ont tout dans les deux modes (A3). Miroir des règles (firestore.rules) : « ancien ∪ nouveau », écrit par la
-// tranche AO-C ; d'ici là elles ne suivent que l'ancien mode.
+// ont tout dans les deux modes (A3). Miroir des règles (firestore.rules) : « ancien ∪ nouveau » (tranche AO-C),
+// elles suivent les deux modes.
 /** Les équipes de l'église, puis les comités des cinq groupes (lot 2, OG17, OG20) : un comité est une
  *  équipe calculée depuis groupes/{id}, sans document equipes/comite-*. */
 const ORDRE_EQUIPES = [...EQUIPES.map((e) => e.id), ...COMITES];

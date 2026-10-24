@@ -86,14 +86,6 @@ service cloud.firestore {
       return exists(/databases/$(database)/documents/users/$(request.auth.uid));
     }
 
-    // Musicien ou présidence du service correspondant à la catégorie de la setlist
-    // (niveau « edit » — miroir de categoryLevel dans src/lib/access.ts).
-    // serviceRoles : map catégorie → liste de rôles ({} par défaut si absent).
-    function isEditorOf(category) {
-      let roles = profile().get('serviceRoles', {}).get(category, []);
-      return "musicien" in roles || "presidence" in roles;
-    }
-
     // Cours d'Harmonie (docs/spec-cours-harmonie.md, C2 et C4) : ce que chacun a
     // fini, champ par champ. Écrit par l'intéressé seul ; lu par lui et par les
     // admins (tableau de l'équipe). Miroir client : canSeeTeamCoursProgres (access.ts).
@@ -111,6 +103,12 @@ service cloud.firestore {
       allow create: if signedIn() && (
         isAdmin()
         || (request.auth.uid == uid
+            // La création d'un profil suit l'ouverture des inscriptions (config/app.registrationOpen ;
+            // absent = ouvert, comme getRegistrationOpen dans src/lib/firebase/users.ts).
+            && (!exists(/databases/$(database)/documents/config/app)
+                || get(/databases/$(database)/documents/config/app).data.get('registrationOpen', true) != false)
+            // L'adresse du profil est celle du compte (Firebase Auth peut normaliser la casse).
+            && request.resource.data.get('email', '').lower() == request.auth.token.email.lower()
             && request.resource.data.get('annonces', []) == []
             && request.resource.data.get('notify', []) == []
             && request.resource.data.get('coordination', false) == false
@@ -357,6 +355,16 @@ service cloud.firestore {
         || (pour == 'Groupe Bonté' && 'comite-bonte' in profile().get('referentDe', [])));
     }
 
+    // Public d'un évènement qu'on peut créer : réunion d'une équipe dont on est référent, ou église et
+    // sections pour la coordination, les droits d'annonces et l'organigramme.
+    function pourCreable(pour) {
+      return (pour.matches('equipe:[a-z0-9-]+') && estReferentDe(pour.split(':')[1]))
+        || (!pour.matches('(pole|equipe):.*')
+            && (isCoordination()
+                || (hasProfile() && pour in profile().get('annonces', []))
+                || sectionCreeeParOrganigramme(pour)));
+    }
+
     match /evenements/{id} {
       allow read: if resource.data.pour == 'eglise' || signedIn();
       // Réunion ou évènement d'équipe (lot U6, R4 ; décisions 3 et 43) :
@@ -368,18 +376,15 @@ service cloud.firestore {
       allow create: if signedIn()
         && request.resource.data.organisateurUid == request.auth.uid
         && request.resource.data.inscrits == 0
-        && ((request.resource.data.pour.matches('equipe:[a-z0-9-]+')
-                && estReferentDe(request.resource.data.pour.split(':')[1]))
-            || (!request.resource.data.pour.matches('(pole|equipe):.*')
-                && (isCoordination()
-                    || (hasProfile() && request.resource.data.pour in profile().get('annonces', []))
-                    || sectionCreeeParOrganigramme(request.resource.data.pour))));
+        && pourCreable(request.resource.data.pour);
       // Compte rendu d'une réunion (lot U6, R3) : toute personne de la réunion
       // colle (à son nom, un lien https://) ou retire le lien, et ne change que
       // lui. Miroir : estDeLaReunion et lienCompteRendu (src/lib/access.ts,
       // src/lib/reunions/compteRendu.ts).
       allow update: if signedIn()
         && ((request.resource.data.inscrits == resource.data.inscrits
+             && request.resource.data.organisateurUid == resource.data.organisateurUid
+             && (request.resource.data.pour == resource.data.pour || pourCreable(request.resource.data.pour))
              && (isCoordination() || resource.data.organisateurUid == request.auth.uid))
           || (estDeLaReunion(resource.data) && changeSeulement(['compteRendu'])
              && (request.resource.data.compteRendu == null

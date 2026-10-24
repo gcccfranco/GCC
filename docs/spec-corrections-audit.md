@@ -103,3 +103,5 @@ téléphone (B3).
 | Tranche | État | Commit |
 | --- | --- | --- |
 | — | spec écrite le 24/10/2026, flux A et B lancés le même jour | — |
+| A0 | fait : fichier local retiré du suivi, `*.pickle` ignoré | `8b24557` |
+| A1 | fait : création d'un profil liée à l'ouverture des inscriptions (document ou champ absent = ouvert, comme l'écran d'inscription) et à l'adresse du compte ; admins du serveur résolus par Firebase Auth ; coordination des fêtes calculée par `isCoordination` ; modification d'un évènement : organisateur fixe, public inchangé ou créable ; `isEditorOf` retirée. **`firestore.rules` à publier par Timothée.** Signalé : l'écran d'inscription (flux B) affiche l'erreur générique si la création du profil est refusée (cas d'une fermeture pendant la saisie) ; `adminUids` sans test (pas d'Auth simulée) | voir A1 |

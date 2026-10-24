@@ -1,7 +1,7 @@
 // Résolution « noms du planning Google Sheet » → comptes (uid).
 // Serveur uniquement.
 
-import { adminDb } from "./admin";
+import { adminAuth, adminDb } from "./admin";
 import { normalizeName } from "@/lib/planning/names";
 import { ADMIN_EMAILS } from "@/lib/access";
 import { BACK_OFFICE } from "@/lib/backOffice";
@@ -20,17 +20,11 @@ function sertDans(data: FirebaseFirestore.DocumentData, categorie: string, backO
   return avecGroupe && !!groupeDeLaCategorie(categorie) && groupeDeLaCategorie(categorie)?.id === data.groupe;
 }
 
-/** uid des comptes administrateurs (ADMIN_EMAILS). Cible des notifications de
- *  signalement. Serveur uniquement (Admin, lit tous les profils). */
+/** uid des comptes administrateurs (ADMIN_EMAILS), résolus par Firebase Auth. Cible des notifications de
+ *  signalement. Une adresse sans compte est ignorée. Serveur uniquement. */
 export async function adminUids(): Promise<string[]> {
-  const wanted = new Set(ADMIN_EMAILS.map((e) => e.toLowerCase()));
-  const snap = await adminDb().collection("users").get();
-  const out: string[] = [];
-  for (const doc of snap.docs) {
-    const email = (doc.data().email as string | undefined)?.toLowerCase();
-    if (email && wanted.has(email)) out.push(doc.id);
-  }
-  return out;
+  const { users } = await adminAuth().getUsers(ADMIN_EMAILS.map((email) => ({ email })));
+  return users.map((u) => u.uid);
 }
 
 /** Index normalize(planningName) → uid(s). Plusieurs comptes peuvent partager
