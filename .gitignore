@@ -177,3 +177,7 @@ scripts/planche/apercu/
 scripts/rude-epreuve/out/
 scripts/rude-epreuve/results/
 scripts/rude-epreuve/results.json
+
+# Identifiants locaux
+token.pickle
+*.pickle
