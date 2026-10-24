@@ -98,6 +98,12 @@ Messages, Tâches, Évènements) ; il y corrige seulement les défauts qui survi
 dur et traductions (B5), contrastes (B2), noms accessibles (B1), formulaire de réunion (G12), organigramme sur
 téléphone (B3).
 
+Planche publiée le 24/10/2026 : https://claude.ai/artifact/TJ3c31CvYE9bMb9fWXZbTL — piste A (un écran « À faire » qui
+remplace les widgets, 5 entrées : À faire, Calendrier, Planning, Équipes, Messages ; **recommandée**), piste B (pas
+d'écran d'accueil, pastilles sur les entrées), piste C (plus de back-office, les outils dans l'app) ; chacune aux
+trois tailles ; cinq questions à trancher. Timothée, le même jour : « est-ce qu'un dashboard est utile ? » — réponse :
+pas sous forme de widgets ; seuls servent le rassemblement des échéances et « qui sert ce dimanche ».
+
 ## 5. Avancement
 
 | Tranche | État | Commit |
