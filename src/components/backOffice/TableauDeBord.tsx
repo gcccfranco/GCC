@@ -132,7 +132,7 @@ export function TableauDeBord({ titre, sousTitre }: { titre: string; sousTitre: 
 
   return (
     <>
-      <EnTetePage titre={titre} sousTitre={sousTitre} outils={enTete} />
+      <EnTetePage titre={titre} sousTitre={sousTitre} sousTitrePlie outils={enTete} />
       <div className="space-y-6 px-[var(--marge-page)] pb-10">
         {erreur && <p role="alert" className="text-sm text-destructive">{t("tableauDeBord.perso.erreurEcriture")}</p>}
         {/* Sur téléphone, « Disposition par défaut » passe sous le titre, hors du catalogue. */}

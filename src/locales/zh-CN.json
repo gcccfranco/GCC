@@ -1289,6 +1289,7 @@
       "dimancheSainteCene": "圣餐主日"
     },
     "grille": {
+      "region": "排班表",
       "enregistre": "已保存",
       "plusTot": "查看更早",
       "plusTard": "查看更晚",
@@ -3271,6 +3272,7 @@
       "presidences_other": "{{count}} 位主领"
     },
     "organigramme": {
+      "region": "组织架构图",
       "referentLouange": "敬拜组负责人",
       "referentSous": "负责人",
       "sansSousEquipe": "未分小组",

@@ -18,6 +18,7 @@ import type { ChordProSection } from "@/types/chordPro";
 import { useTranslation } from "react-i18next";
 import { formatSectionName } from "@/lib/chordpro/parser";
 import type { SectionItem } from "@/types/song";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 
 // --- Types ---
 
@@ -165,16 +166,19 @@ export function CustomizePanel({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-end">
-      {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/35" onClick={onClose} />
-
-      {/* Panel */}
-      <div className="relative w-full max-w-sm h-full bg-background border-l border-border flex flex-col shadow-xl overflow-hidden">
+    <Dialog open onOpenChange={(o) => { if (!o) onClose(); }}>
+      <DialogContent
+        aria-describedby={undefined}
+        className="inset-y-0 right-0 w-full max-w-sm bg-background border-l border-border flex flex-col shadow-xl overflow-hidden"
+      >
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-border shrink-0">
-          <h2 className="font-semibold text-foreground">{t("customize.panel.title")}</h2>
-          <button onClick={onClose} className="text-muted-foreground hover:text-foreground">
+        <div className="flex items-center justify-between pl-4 pr-1 border-b border-border shrink-0">
+          <DialogTitle className="font-semibold text-foreground">{t("customize.panel.title")}</DialogTitle>
+          <button
+            onClick={onClose}
+            className="flex h-11 w-11 items-center justify-center text-muted-foreground hover:text-foreground"
+            aria-label={t("common.buttons.close")}
+          >
             <X className="h-5 w-5" />
           </button>
         </div>
@@ -254,7 +258,7 @@ export function CustomizePanel({
             {t("common.buttons.close")}
           </button>
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }

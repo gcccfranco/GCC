@@ -891,7 +891,7 @@ export function PlanningGrille({
 
       {/* ── Grille (ordinateur, tablette) ── */}
       <div ref={enveloppe} data-en-cours={enCours || undefined} inert={enCours ? true : undefined} className="relative">
-      <div data-testid="grille-defilement" inert={collage ? true : undefined} className={`hidden sm:block overflow-x-auto ${app ? "raised rounded-2xl" : "rounded-xl border border-border"}`}>
+      <div data-testid="grille-defilement" role="region" tabIndex={0} aria-label={t("planning.grille.region")} inert={collage ? true : undefined} className={`hidden sm:block overflow-x-auto focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${app ? "raised rounded-2xl" : "rounded-xl border border-border"}`}>
         <table className="w-full text-sm border-collapse" style={{ minWidth: largeurMin }}>
           <thead>
             <tr data-testid="grille-colonnes" className={app ? "bg-secondary text-muted-foreground" : "text-white"}>

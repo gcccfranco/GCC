@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { ThemeProvider } from "next-themes";
 import { I18nProvider } from "@/lib/I18nProvider";
 import { Navbar } from "@/components/layout/Navbar";
+import { ViewportLecture } from "@/components/layout/ViewportLecture";
 import { MobileTabBar } from "@/components/layout/MobileTabBar";
 import { BarreLaterale } from "@/components/layout/BarreLaterale";
 import { HaloParDefaut } from "@/components/layout/HaloParDefaut";
@@ -38,11 +39,6 @@ export const viewport: Viewport = {
   ],
   width: "device-width",
   initialScale: 1,
-  // Pinch-zoom désactivé : sur iOS, un zoom pincé décroche les éléments
-  // position:fixed (la barre d'onglets se retrouve au milieu de l'écran).
-  // L'app a ses propres contrôles A−/A+ pour la taille du texte.
-  maximumScale: 1,
-  userScalable: false,
   viewportFit: "cover",
 };
 
@@ -85,6 +81,7 @@ export default function RootLayout({
                 <PageTransition>{children}</PageTransition>
               </main>
               <MobileTabBar />
+              <ViewportLecture />
             </NotificationsProvider>
             <LyricsCopyListener />
             <Accueil />

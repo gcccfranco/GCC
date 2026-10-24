@@ -29,6 +29,10 @@ type Vue = { premiere: number; debut: boolean; bout: boolean };
 
 const memes = (a: number[], b: number[]) => a.length === b.length && a.every((x, i) => x === b[i]);
 
+/** Sous 640 px : une seule colonne, les cartes pleine largeur l'une sous l'autre ; la page défile, pas le bandeau. */
+const TELEPHONE = "(max-width: 639px)";
+const surTelephone = () => window.matchMedia(TELEPHONE).matches;
+
 /** Défilement doux, sauf si l'appareil demande moins d'animations. */
 const comportement = (): ScrollBehavior =>
   window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth";
@@ -60,7 +64,7 @@ export function BandeauEquipes({ cartes }: { cartes: CarteDuBandeau[] }) {
       const b = bandeau.current;
       if (!b) return;
       const style = getComputedStyle(b);
-      const max = b.clientHeight - parseFloat(style.paddingTop) - parseFloat(style.paddingBottom);
+      const max = surTelephone() ? Infinity : b.clientHeight - parseFloat(style.paddingTop) - parseFloat(style.paddingBottom);
       const hauteurs = cleIds.split("|").map((id) => elements.current.get(id)?.offsetHeight ?? 0);
       setMesures((prev) => (prev && prev.max === max && memes(prev.hauteurs, hauteurs) ? prev : { hauteurs, max }));
     };
@@ -136,7 +140,8 @@ export function BandeauEquipes({ cartes }: { cartes: CarteDuBandeau[] }) {
 
   const allerA = (k: number) => {
     const col = colonnesDOM()[k];
-    if (col) bandeau.current?.scrollTo({ left: col.offsetLeft - marge(), behavior: comportement() });
+    if (col && surTelephone()) col.scrollIntoView({ behavior: comportement(), block: "start" });
+    else if (col) bandeau.current?.scrollTo({ left: col.offsetLeft - marge(), behavior: comportement() });
   };
 
   const amener = (id: string) => {
@@ -188,20 +193,23 @@ export function BandeauEquipes({ cartes }: { cartes: CarteDuBandeau[] }) {
       <div className="relative min-h-0 flex-1">
         <div
           ref={bandeau}
+          role="region"
+          tabIndex={0}
+          aria-label={t("equipes.organigramme.region")}
           data-testid="bandeau-equipes"
           data-range={pret ? "1" : "0"}
-          className="relative h-full overflow-x-auto overflow-y-hidden pb-3 pt-1 [container-type:inline-size] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden [@media(pointer:coarse)]:snap-x [@media(pointer:coarse)]:snap-mandatory"
+          className="relative h-full overflow-x-auto overflow-y-hidden pb-3 pt-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring max-sm:h-auto max-sm:overflow-visible [container-type:inline-size] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden [@media(pointer:coarse)]:snap-x [@media(pointer:coarse)]:snap-mandatory"
         >
-          <div ref={rangee} className={`flex h-full w-max items-start gap-4 ${px}`}>
+          <div ref={rangee} className={`flex h-full w-max items-start gap-4 max-sm:h-auto max-sm:w-full max-sm:flex-col ${px}`}>
             {colonnes.map((col) => (
               <div
                 key={ids[col.cartes[0]]}
                 data-colonne=""
                 data-large={col.large ? "1" : undefined}
-                className={`flex max-h-full shrink-0 snap-start flex-col gap-3 ${scrollMl} ${
+                className={`flex max-h-full shrink-0 snap-start flex-col gap-3 max-sm:w-full max-sm:scroll-mt-[calc(var(--nav-h)+12px)] ${scrollMl} ${
                   col.large
-                    ? "w-[340px] md:w-[560px] lg:w-[calc((100cqw-64px)/2)] xl:w-[calc((100cqw-96px)/2)]"
-                    : "w-[300px] lg:w-[290px]"
+                    ? "w-[340px] max-sm:w-full md:w-[560px] lg:w-[calc((100cqw-64px)/2)] xl:w-[calc((100cqw-96px)/2)]"
+                    : "w-[300px] max-sm:w-full lg:w-[290px]"
                 } ${
                   // Une carte plus haute que le bandeau défile dans sa colonne : jamais plus haut que l'écran.
                   // Seulement alors : le défilement couperait l'ombre des cartes.

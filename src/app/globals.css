@@ -764,6 +764,9 @@
    sans barre du bas (ordinateur, tablette en paysage : mêmes requêtes que le bloc « Lot U4 »),
    jusqu'au bas de l'écran. */
 .equipes-ecran { height: calc(100dvh - var(--nav-h) - 78px - var(--tabbar-bottom)); }
+@media screen and (max-width: 639px) {
+  .equipes-ecran { height: auto; }
+}
 @media screen and (pointer: fine) and (min-width: 1024px) {
   .equipes-ecran { height: calc(100dvh - var(--nav-h)); }
 }

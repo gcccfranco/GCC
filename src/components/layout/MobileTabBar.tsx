@@ -52,6 +52,8 @@ export function MobileTabBar() {
   const tabs = permises.length > 0
     ? ongletsBackOffice(barreAffichee(barre.enregistree, permises))
     : entreesBarre("app", { connecte: !!user, backOffice: BACK_OFFICE });
+  // Une seule destination (visiteur : « Chants ») : pas de barre, ni sa cale de 110 px (C8, audit 24/10/2026).
+  if (tabs.length <= 1) return null;
   // « Plus » couvre les pages du Back-Office qui ne sont pas dans la barre.
   const horsBarre = permises.length > 0 && !tabs.some((e) => estEntreeActive(e, pathname));
 

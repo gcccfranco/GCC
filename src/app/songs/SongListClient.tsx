@@ -384,8 +384,15 @@ export function SongListClient({ songs, themes, actif = null, erreur = false, on
               >
                 <span className="min-w-0 flex-1">
                   <span className={`block truncate text-base font-semibold ${ouvert ? "text-background" : "text-foreground"}`}>{song.title}</span>
-                  <span className={`block truncate text-sm ${ouvert ? "text-background/70" : "text-muted-foreground"}`}>
-                    {song.titlePinyin ? `${song.titlePinyin} · ${song.artist}` : song.artist}
+                  {/* G16 : c'est le pinyin qui se tronque, jamais l'artiste. */}
+                  <span className={`flex text-sm ${ouvert ? "text-background/70" : "text-muted-foreground"}`}>
+                    {song.titlePinyin ? (
+                      <>
+                        <span className="min-w-0 truncate">{song.titlePinyin}</span>
+                        <span className="shrink-0 whitespace-pre"> · </span>
+                      </>
+                    ) : null}
+                    <span className={`truncate ${song.titlePinyin ? "shrink-0 max-w-[65%]" : "min-w-0"}`}>{song.artist}</span>
                   </span>
                 </span>
                 {/* Tonalité recommandée (sinon d'origine), à droite, teinte de la langue ; sur

@@ -172,7 +172,8 @@ export function BarreLaterale() {
             kind="site"
             onClose={() => {
               setSignaler(false);
-              deplierRef.current?.focus();
+              // Après le démontage : tant que la fenêtre est là, son piège à focus le reprendrait.
+              setTimeout(() => deplierRef.current?.focus(), 0);
             }}
           />,
           document.body,

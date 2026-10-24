@@ -31,12 +31,13 @@ test("un compte qui avait vu l'accueil du lot 8 ne revoit pas la visite", async 
 });
 
 test.describe("back-office coupé : les entrées disparaissent", () => {
-  test("barre du bas à quatre onglets pour un membre, Chants seul pour un visiteur (téléphone)", async ({ browser }) => {
+  test("barre du bas à quatre onglets pour un membre, aucune barre pour un visiteur (téléphone)", async ({ browser }) => {
     const contexte = await browser.newContext({ ...phone, baseURL: BASE_URL_COUPE });
     const page = await contexte.newPage();
     await page.goto("/songs");
     await page.getByRole("searchbox").waitFor();
-    await expect(barreDuBas(page).getByRole("link")).toHaveText(["Chants"]);
+    // Une seule destination : pas de barre du tout (C8, audit du 24/10/2026).
+    await expect(page.getByTestId("barre-du-bas")).toHaveCount(0);
     await signInAs(page, ADMIN, {}, "/songs");
     await page.getByRole("searchbox").waitFor();
     await expect(barreDuBas(page).getByRole("link")).toHaveText(["Chants", "Setlists", "Planning", "Moi"]);

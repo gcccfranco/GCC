@@ -1317,6 +1317,7 @@
       "dimancheSainteCene": "Dimanche de sainte cène"
     },
     "grille": {
+      "region": "Grille du planning",
       "enregistre": "Enregistré",
       "plusTot": "Voir plus tôt",
       "plusTard": "Voir plus tard",
@@ -3309,6 +3310,7 @@
       "presidences_other": "{{count}} présidences"
     },
     "organigramme": {
+      "region": "Organigramme",
       "referentLouange": "Référent Louange",
       "referentSous": "Référent·e",
       "sansSousEquipe": "Sans sous-équipe",

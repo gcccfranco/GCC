@@ -122,7 +122,7 @@ function MoiClient() {
     </div>
   );
   const aide = (
-    <div key="aide" className="grid gap-4 md:[grid-template-columns:repeat(auto-fit,minmax(170px,1fr))]">
+    <div key="aide" className="grid gap-4">
       <CarteAide href="/guide" icone={<BookOpen />} titre={t("common.header.guide")} sous={t("moi.apercus.guideSous")} />
       <CarteAide onClick={ouvrirVisite} icone={<RotateCcw />} titre={t("accueil.revoir")} sous={t("accueil.revoirSous")} />
       <CarteAide href="/questionnaire" icone={<MessageSquareHeart />} titre={t("survey.title")} sous={t("moi.apercus.avisSous")} />
@@ -160,14 +160,14 @@ function MoiClient() {
   );
 }
 
-/** Une carte d'aide (Guide, Ton avis, Signaler un problème) : icône, titre, une ligne, chevron. */
+/** Une carte d'aide (Guide, Ton avis, Signaler un problème) : icône, titre, description entière, chevron (lignes pleine largeur, G14). */
 function CarteAide({ href, onClick, icone, titre, sous }: { href?: string; onClick?: () => void; icone: ReactNode; titre: string; sous: string }) {
   const inner = (
     <>
       <span aria-hidden className="flex h-[34px] w-[34px] shrink-0 items-center justify-center rounded-[10px] bg-secondary [&_svg]:h-4 [&_svg]:w-4">{icone}</span>
       <span className="min-w-0 flex-1">
         <span className="block text-[15px] font-semibold leading-5">{titre}</span>
-        <span className="block truncate text-[13px] text-muted-foreground">{sous}</span>
+        <span className="block text-[13px] text-muted-foreground">{sous}</span>
       </span>
       <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground/60" aria-hidden />
     </>

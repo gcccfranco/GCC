@@ -7,6 +7,7 @@ import { AlertCircle, X, Send } from "lucide-react";
 import { useAuth } from "@/lib/firebase/auth";
 import { authHeader } from "@/lib/firebase/setlists";
 import { REPORT_LIMITS } from "@/lib/report/reportValidator";
+import { Dialog, DialogClose, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import type { ReportKind } from "@/types/report";
 
 interface ReportDialogProps {
@@ -35,8 +36,6 @@ export function ReportDialog({ open, onClose, kind, songSlug, songTitle, titreIn
     if (open) setStatus("idle");
   }, [open]);
 
-  if (!open) return null;
-
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setStatus("loading");
@@ -61,23 +60,23 @@ export function ReportDialog({ open, onClose, kind, songSlug, songTitle, titreIn
   }
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/35" onClick={onClose} />
-
-      <div className="relative w-full max-w-sm bg-card rounded-xl shadow-xl flex flex-col">
+    <Dialog open={open} onOpenChange={(o) => { if (!o) onClose(); }}>
+      <DialogContent
+        aria-describedby={undefined}
+        className="left-1/2 top-1/2 w-[calc(100%-2rem)] max-w-sm -translate-x-1/2 -translate-y-1/2 bg-card rounded-xl shadow-xl flex flex-col"
+      >
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+        <div className="flex items-center justify-between pl-4 pr-1 py-1 border-b border-border">
           <div className="flex items-center gap-2">
             <AlertCircle className="h-4 w-4 text-muted-foreground" />
-            <h3 className="text-sm font-semibold text-foreground">{t("signalement.titre")}</h3>
+            <DialogTitle className="text-sm font-semibold text-foreground">{t("signalement.titre")}</DialogTitle>
           </div>
-          <button
-            onClick={onClose}
-            className="text-muted-foreground hover:text-foreground transition-colors"
+          <DialogClose
+            className="flex h-11 w-11 items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
             aria-label={t("signalement.fermer")}
           >
             <X className="h-4 w-4" />
-          </button>
+          </DialogClose>
         </div>
 
         {/* Corps */}
@@ -149,7 +148,7 @@ export function ReportDialog({ open, onClose, kind, songSlug, songTitle, titreIn
             </div>
           </form>
         )}
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }

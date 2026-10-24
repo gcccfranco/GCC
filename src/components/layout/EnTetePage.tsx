@@ -35,6 +35,7 @@ export function Retour({ href, children }: { href: string; children: ReactNode }
 export function EnTetePage({
   titre,
   sousTitre,
+  sousTitrePlie,
   retour,
   outils,
   action,
@@ -45,6 +46,8 @@ export function EnTetePage({
   titre: ReactNode;
   /** Une ligne, coupée par « … » si elle ne tient pas. */
   sousTitre?: ReactNode;
+  /** Le sous-titre passe à la ligne au lieu d'être coupé (« Lundi · bonjour Adèle… », G16). */
+  sousTitrePlie?: boolean;
   /** « ‹ Section » : une page qui dépend d'une autre (Mon profil › Moi, une fiche sur téléphone). */
   retour?: { href: string; label: ReactNode };
   /** Boutons secondaires (contour) et « ⋯ » (`MenuActions`), avant l'action principale. */
@@ -62,7 +65,7 @@ export function EnTetePage({
       <div className="flex items-start gap-3">
         <div className="min-w-0 flex-1">
           <h1 className="titre-page text-foreground">{titre}</h1>
-          {sousTitre && <p className="mt-1 truncate text-[14px] leading-5 text-muted-foreground">{sousTitre}</p>}
+          {sousTitre && <p className={`mt-1 ${sousTitrePlie ? "" : "truncate "}text-[14px] leading-5 text-muted-foreground`}>{sousTitre}</p>}
         </div>
         {(outils || action) && (
           <div className="flex shrink-0 items-center gap-2 pt-0.5">
