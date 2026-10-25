@@ -4,6 +4,7 @@ import { SERVICE_LIEUX } from "@/types/user";
 import { BACK_OFFICE } from "@/lib/backOffice";
 import type { SetlistItem } from "@/types/setList";
 import { effacerCopie, lireCopie } from "@/lib/setlist/copieHorsLigne";
+import { repairCopyIds } from "@/lib/setlist/sectionOrigins";
 import type { SetlistVersions } from "@/lib/firebase/setlistVersions";
 
 // ─── Categories ───────────────────────────────────────────────────────────────
@@ -135,7 +136,18 @@ function fromFsDoc(raw: RawDoc): FSSetlist {
   const data = Object.fromEntries(
     Object.entries(raw.fields).map(([k, v]) => [k, fromFsValue(v)])
   );
-  return { id, ...data } as FSSetlist;
+  const setlist = { id, ...data } as FSSetlist;
+  if (!Array.isArray(setlist.items)) return setlist;
+  // Copies d'Adapter enregistrées avec l'id de leur original (11-25/10/2026) :
+  // réparées à la lecture, jamais réécrites ici.
+  return {
+    ...setlist,
+    items: setlist.items.map((item) =>
+      item.contentOverride && item.sectionOrigins
+        ? { ...item, contentOverride: repairCopyIds(item.contentOverride, item.sectionOrigins) }
+        : item
+    ),
+  };
 }
 
 export async function checkRest(res: Response): Promise<void> {

@@ -1,6 +1,7 @@
 import { delaiMax } from "@/lib/delaiMax";
 import { FS_BASE, authHeader, checkRest, fromFsValue, toFsFields, type RawDoc } from "@/lib/firebase/setlists";
 import type { JianpuChords } from "@/types/setList";
+import { repairCopyIds } from "@/lib/setlist/sectionOrigins";
 
 // Versions perso d'un chant dans une setlist (docs/spec-version-perso.md) :
 // sous-collection setlists/{id}/versions, un document par personne. Lu par
@@ -55,7 +56,13 @@ export async function getSetlistVersions(setlistId: string): Promise<Record<stri
     out[uid] = {
       authorUid: String(data.authorUid ?? uid),
       authorName: String(data.authorName ?? ""),
-      items: (data.items as Record<string, VersionItem> | null) ?? {},
+      // « Seulement ce passage » : même réparation à la lecture que les setlists.
+      items: Object.fromEntries(
+        Object.entries((data.items as Record<string, VersionItem> | null) ?? {}).map(([slug, v]) => [
+          slug,
+          v.content && v.sectionOrigins ? { ...v, content: repairCopyIds(v.content, v.sectionOrigins) } : v,
+        ])
+      ),
       choices: (data.choices as Record<string, string> | null) ?? {},
     };
   }
