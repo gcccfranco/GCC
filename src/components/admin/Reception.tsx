@@ -5,6 +5,7 @@
 import { lienDeLaPage, origineDuSite } from "@/lib/report/lienPage";
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useTranslation } from "react-i18next";
 import { CheckCircle2, ChevronDown, ChevronUp, ExternalLink, FileText, Play, Trash2 } from "lucide-react";
 import { getSongProposals, setProposalStatus, deleteSongProposal } from "@/lib/firebase/songProposals";
 import type { SongProposal } from "@/types/songProposal";
@@ -19,6 +20,7 @@ import { EtatVide } from "@/components/layout/EtatVide"
  *  place après chaque écriture (règles : reports, songProposals, admins). Partagé par l'ancien
  *  bloc (interrupteur coupé) et la Réception du Back-Office (U4 bis, B7). */
 export function useReception() {
+  const { t } = useTranslation();
   const [proposals, setProposals] = useState<SongProposal[]>([]);
   const [loadingProposals, setLoadingProposals] = useState(true);
   const [proposalBusy, setProposalBusy] = useState<string | null>(null);
@@ -39,7 +41,7 @@ export function useReception() {
       await setProposalStatus(p.id, status);
       setProposals((prev) => prev.map((x) => (x.id === p.id ? { ...x, status } : x)));
     } catch {
-      setError("Impossible de mettre à jour la proposition. Règles Firestore publiées ?");
+      setError(t("admin.reception.erreurMajProposition"));
     } finally {
       setProposalBusy(null);
     }
@@ -52,7 +54,7 @@ export function useReception() {
       await deleteSongProposal(p.id);
       setProposals((prev) => prev.filter((x) => x.id !== p.id));
     } catch {
-      setError("Impossible de supprimer la proposition. Règles Firestore publiées ?");
+      setError(t("admin.reception.erreurSupprProposition"));
     } finally {
       setProposalBusy(null);
     }
@@ -65,7 +67,7 @@ export function useReception() {
       await setReportStatus(r.id, status);
       setReports((prev) => prev.map((x) => (x.id === r.id ? { ...x, status } : x)));
     } catch {
-      setError("Impossible de mettre à jour le signalement. Règles Firestore publiées ?");
+      setError(t("admin.reception.erreurMajSignalement"));
     } finally {
       setReportBusy(null);
     }
@@ -78,7 +80,7 @@ export function useReception() {
       await deleteReport(r.id);
       setReports((prev) => prev.filter((x) => x.id !== r.id));
     } catch {
-      setError("Impossible de supprimer le signalement. Règles Firestore publiées ?");
+      setError(t("admin.reception.erreurSupprSignalement"));
     } finally {
       setReportBusy(null);
     }
@@ -92,6 +94,8 @@ export function useReception() {
 
 /** `onEnAttente` : signalements et propositions en attente (pastille de l'onglet). */
 export function Reception({ onEnAttente }: { onEnAttente?: (n: number) => void }) {
+  const { t, i18n } = useTranslation();
+  const lieu = i18n.language === "zh-CN" ? "zh-CN" : "fr-FR";
   const {
     proposals, loadingProposals, proposalBusy, reports, loadingReports, reportBusy, error,
     handleProposalStatus, handleProposalDelete, handleReportStatus, handleReportDelete,
@@ -124,23 +128,22 @@ export function Reception({ onEnAttente }: { onEnAttente?: (n: number) => void }
       <div className="rounded-xl bg-card shadow-soft p-5 space-y-3">
         <div className="flex items-center justify-between">
           <h2 className="text-sm font-semibold text-muted-foreground">
-            Signalements
+            {t("backOffice.reception.titreSignalements")}
           </h2>
           {pendingReports.length > 0 && (
             <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-secondary text-foreground">
-              {pendingReports.length} en attente
+              {t("backOffice.reception.enAttente", { n: pendingReports.length })}
             </span>
           )}
         </div>
         <p className="text-xs text-muted-foreground">
-          Problèmes signalés par les membres (chant ou site). Déplie un signalement
-          pour le détailler, et marque-le comme traité une fois résolu.
+          {t("backOffice.reception.aideSignalements")}
         </p>
 
         {loadingReports ? (
-          <p className="text-sm text-muted-foreground py-4 text-center">Chargement…</p>
+          <p className="text-sm text-muted-foreground py-4 text-center">{t("common.loading")}</p>
         ) : reports.length === 0 ? (
-          <EtatVide compact>Aucun signalement pour l&apos;instant.</EtatVide>
+          <EtatVide compact>{t("backOffice.reception.aucunSignalement")}</EtatVide>
         ) : (
           <div className="space-y-2">
             {visibleReports.map((r) => {
@@ -162,15 +165,15 @@ export function Reception({ onEnAttente }: { onEnAttente?: (n: number) => void }
                       <p className="text-sm font-semibold text-foreground truncate">{r.title}</p>
                       <p className="text-xs text-muted-foreground truncate">
                         {r.authorName}
-                        {r.createdAt ? ` · ${r.createdAt.toLocaleDateString("fr-FR")}` : ""}
+                        {r.createdAt ? ` · ${r.createdAt.toLocaleDateString(lieu)}` : ""}
                       </p>
                     </div>
                     <div className="flex items-center gap-1.5 shrink-0">
                       <Pill
-                        label={r.kind === "song" ? "Chant" : "Site"}
+                        label={t(r.kind === "song" ? "backOffice.reception.chant" : "backOffice.reception.site")}
                         color={r.kind === "song" ? "#2563eb" : "#9333ea"}
                       />
-                      {r.status === "resolved" && <Pill label="Traité" color="#16a34a" />}
+                      {r.status === "resolved" && <Pill label={t("backOffice.reception.traite")} color="#16a34a" />}
                       {expanded ? (
                         <ChevronUp className="h-4 w-4 text-muted-foreground" />
                       ) : (
@@ -193,7 +196,7 @@ export function Reception({ onEnAttente }: { onEnAttente?: (n: number) => void }
                               className="inline-flex items-center gap-1.5 text-xs font-semibold text-foreground underline underline-offset-2 hover:text-muted-foreground"
                             >
                               <ExternalLink className="h-3 w-3" />
-                              {r.songTitle || "Voir le chant"}
+                              {r.songTitle || t("backOffice.reception.voirChant")}
                             </Link>
                           )}
                           {r.pageUrl && (lienDeLaPage(r.pageUrl, origineDuSite()) ? (
@@ -204,10 +207,10 @@ export function Reception({ onEnAttente }: { onEnAttente?: (n: number) => void }
                               className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground"
                             >
                               <ExternalLink className="h-3 w-3" />
-                              Page
+                              {t("backOffice.reception.page")}
                             </a>
                           ) : (
-                            <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">Page : {r.pageUrl}</span>
+                            <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">{t("backOffice.reception.page")} : {r.pageUrl}</span>
                           ))}
                         </div>
                       )}
@@ -221,7 +224,7 @@ export function Reception({ onEnAttente }: { onEnAttente?: (n: number) => void }
                             className="h-9 text-xs"
                           >
                             <CheckCircle2 className="h-3.5 w-3.5 mr-1.5" />
-                            Marquer traité
+                            {t("backOffice.reception.marquerTraite")}
                           </Button>
                         ) : (
                           <Button
@@ -230,7 +233,7 @@ export function Reception({ onEnAttente }: { onEnAttente?: (n: number) => void }
                             disabled={busy}
                             className="h-9 text-xs"
                           >
-                            Rouvrir
+                            {t("backOffice.reception.rouvrir")}
                           </Button>
                         )}
                         <button
@@ -238,7 +241,7 @@ export function Reception({ onEnAttente }: { onEnAttente?: (n: number) => void }
                           onClick={() => handleReportDelete(r)}
                           disabled={busy}
                           className="h-9 w-9 rounded-full bg-secondary text-muted-foreground hover:text-destructive flex items-center justify-center disabled:opacity-50"
-                          aria-label="Supprimer le signalement"
+                          aria-label={t("backOffice.reception.supprimerSignalement")}
                         >
                           <Trash2 className="h-3.5 w-3.5" />
                         </button>
@@ -256,8 +259,8 @@ export function Reception({ onEnAttente }: { onEnAttente?: (n: number) => void }
                 className="w-full text-xs font-semibold text-muted-foreground hover:text-foreground py-1.5"
               >
                 {showResolvedReports
-                  ? "Masquer les traités"
-                  : `Voir les traités (${resolvedReports.length})`}
+                  ? t("backOffice.reception.masquerTraites")
+                  : t("backOffice.reception.voirTraites", { n: resolvedReports.length })}
               </button>
             )}
           </div>
@@ -268,23 +271,22 @@ export function Reception({ onEnAttente }: { onEnAttente?: (n: number) => void }
       <div className="rounded-xl bg-card shadow-soft p-5 space-y-3">
         <div className="flex items-center justify-between">
           <h2 className="text-sm font-semibold text-muted-foreground">
-            Propositions de chants
+            {t("backOffice.reception.titrePropositions")}
           </h2>
           {pendingProposals.length > 0 && (
             <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-secondary text-foreground">
-              {pendingProposals.length} en attente
+              {t("backOffice.reception.enAttente", { n: pendingProposals.length })}
             </span>
           )}
         </div>
         <p className="text-xs text-muted-foreground">
-          Chants proposés par les membres. Déplie une proposition pour ses liens,
-          et marque-la comme traitée après ajout au répertoire.
+          {t("backOffice.reception.aidePropositions")}
         </p>
 
         {loadingProposals ? (
-          <p className="text-sm text-muted-foreground py-4 text-center">Chargement…</p>
+          <p className="text-sm text-muted-foreground py-4 text-center">{t("common.loading")}</p>
         ) : proposals.length === 0 ? (
-          <EtatVide compact>Aucune proposition pour l&apos;instant.</EtatVide>
+          <EtatVide compact>{t("backOffice.reception.aucuneProposition")}</EtatVide>
         ) : (
           <div className="space-y-2">
             {visibleProposals.map((p) => {
@@ -305,14 +307,14 @@ export function Reception({ onEnAttente }: { onEnAttente?: (n: number) => void }
                     <div className="min-w-0">
                       <p className="text-sm font-semibold text-foreground truncate">{p.title}</p>
                       <p className="text-xs text-muted-foreground truncate">
-                        Proposé par {p.authorName}
-                        {p.createdAt ? ` · ${p.createdAt.toLocaleDateString("fr-FR")}` : ""}
+                        {t("backOffice.reception.proposePar", { nom: p.authorName })}
+                        {p.createdAt ? ` · ${p.createdAt.toLocaleDateString(lieu)}` : ""}
                       </p>
-                      {p.setlistId && <p className="text-xs text-muted-foreground truncate">Pour {p.setlistTitre} · identifiant à recopier dans le .cho : {p.id}</p>}
+                      {p.setlistId && <p className="text-xs text-muted-foreground truncate">{t("backOffice.reception.pourSetlist", { setlist: p.setlistTitre, id: p.id })}</p>}
                     </div>
                     <div className="flex items-center gap-1.5 shrink-0">
-                      {p.status === "accepted" && <Pill label="Traité" color="#16a34a" />}
-                      {p.status === "rejected" && <Pill label="Refusé" color="#dc2626" />}
+                      {p.status === "accepted" && <Pill label={t("backOffice.reception.traite")} color="#16a34a" />}
+                      {p.status === "rejected" && <Pill label={t("backOffice.reception.refuse")} color="#dc2626" />}
                       {expanded ? (
                         <ChevronUp className="h-4 w-4 text-muted-foreground" />
                       ) : (
@@ -342,7 +344,7 @@ export function Reception({ onEnAttente }: { onEnAttente?: (n: number) => void }
                             className="inline-flex items-center gap-1.5 text-xs font-semibold text-foreground underline underline-offset-2 hover:text-muted-foreground"
                           >
                             <FileText className="h-3.5 w-3.5" />
-                            Partition PDF
+                            {t("backOffice.reception.partition")}
                             <ExternalLink className="h-3 w-3" />
                           </a>
                         )}
@@ -357,7 +359,7 @@ export function Reception({ onEnAttente }: { onEnAttente?: (n: number) => void }
                             className="h-9 text-xs"
                           >
                             <CheckCircle2 className="h-3.5 w-3.5 mr-1.5" />
-                            Marquer traité
+                            {t("backOffice.reception.marquerTraite")}
                           </Button>
                         )}
                         {p.status === "pending" && (
@@ -367,7 +369,7 @@ export function Reception({ onEnAttente }: { onEnAttente?: (n: number) => void }
                             disabled={busy}
                             className="h-9 text-xs"
                           >
-                            Refuser
+                            {t("backOffice.reception.refuser")}
                           </Button>
                         )}
                         <button
@@ -375,7 +377,7 @@ export function Reception({ onEnAttente }: { onEnAttente?: (n: number) => void }
                           onClick={() => handleProposalDelete(p)}
                           disabled={busy}
                           className="h-9 w-9 rounded-full bg-secondary text-muted-foreground hover:text-destructive flex items-center justify-center disabled:opacity-50"
-                          aria-label="Supprimer la proposition"
+                          aria-label={t("backOffice.reception.supprimerProposition")}
                         >
                           <Trash2 className="h-3.5 w-3.5" />
                         </button>
@@ -393,8 +395,8 @@ export function Reception({ onEnAttente }: { onEnAttente?: (n: number) => void }
                 className="w-full text-xs font-semibold text-muted-foreground hover:text-foreground py-1.5"
               >
                 {showResolvedProposals
-                  ? "Masquer les traités"
-                  : `Voir les traités (${resolvedProposals.length})`}
+                  ? t("backOffice.reception.masquerTraites")
+                  : t("backOffice.reception.voirTraites", { n: resolvedProposals.length })}
               </button>
             )}
           </div>

@@ -2,7 +2,7 @@
 
 // Briques des blocs d'administration (sortis de `admin/page.tsx` au lot U6, B2 : chaque
 // bloc vit désormais à sa place du Back-Office, et l'ancienne page les assemble encore
-// tant que l'interrupteur est coupé). Anciens blocs : en français seulement (Q16).
+// tant que l'interrupteur est coupé). Anciens blocs : en deux langues depuis B5.
 import { useTranslation } from "react-i18next";
 import { ShieldCheck } from "lucide-react";
 import { styleTexteService } from "@/lib/couleurSombre";

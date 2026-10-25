@@ -6,6 +6,7 @@
 // Personnes, la version courte (`court`) : un interrupteur, l'état, les comptes de la semaine et
 // « Voir les n » ; l'ancienne administration garde la carte d'avant.
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { getRegistrationOpen, setRegistrationOpen } from "@/lib/firebase/users";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -22,6 +23,7 @@ export function InscriptionsComptes({
   /** « Voir les n » : montre les nouveaux comptes dans la liste. */
   onVoir?: () => void;
 }) {
+  const { t } = useTranslation();
   const [regOpen, setRegOpen] = useState<boolean | null>(null);
   const [togglingReg, setTogglingReg] = useState(false);
   const [error, setError] = useState("");
@@ -38,7 +40,7 @@ export function InscriptionsComptes({
       await setRegistrationOpen(!regOpen);
       setRegOpen(!regOpen);
     } catch {
-      setError("Impossible de modifier l'état des inscriptions. Vérifie que les règles Firestore sont publiées.");
+      setError(t("admin.inscr.erreur"));
     } finally {
       setTogglingReg(false);
     }
@@ -46,29 +48,27 @@ export function InscriptionsComptes({
 
   if (court) {
     return (
-      <section aria-label="Inscriptions" className="raised rounded-2xl px-4 py-3 sm:px-5">
+      <section aria-label={t("admin.inscriptions")} className="raised rounded-2xl px-4 py-3 sm:px-5">
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
           <Switch
             checked={!!regOpen}
             disabled={regOpen === null || togglingReg}
             onCheckedChange={() => void toggleRegistration()}
             // Un nom fixe : l'interrupteur annonce lui-même son état (activé, désactivé).
-            aria-label="Inscriptions ouvertes"
+            aria-label={t("admin.inscr.ouvertes")}
           />
           <div className="min-w-0 flex-1">
             <p className="text-[15px] font-semibold text-foreground">
-              {regOpen === null ? "Chargement…" : regOpen ? "Inscriptions ouvertes" : "Inscriptions fermées"}
+              {regOpen === null ? t("common.loading") : regOpen ? t("admin.inscr.ouvertes") : t("admin.inscr.fermees")}
             </p>
             <p className="text-[13px] text-muted-foreground">
-              {regOpen
-                ? "Un nouveau membre peut créer son compte. Ferme-les une fois l'équipe au complet."
-                : "Personne ne peut créer de compte."}
+              {regOpen ? t("admin.inscr.aideOuvertes") : t("admin.inscr.aideFermees")}
             </p>
           </div>
           {nouveaux > 0 && (
             <div className="flex items-center gap-2">
               <span className="rounded-full bg-amber-100 px-2.5 py-1 text-[12px] font-bold text-amber-700 dark:bg-amber-950/60 dark:text-amber-300">
-                {nouveaux > 1 ? `${nouveaux} nouveaux comptes` : "1 nouveau compte"}
+                {t("admin.inscr.nouveaux", { count: nouveaux })}
               </span>
               {onVoir && (
                 <button
@@ -76,7 +76,7 @@ export function InscriptionsComptes({
                   onClick={onVoir}
                   className="h-9 rounded-full bg-background px-3.5 text-[13px] font-semibold text-foreground shadow-[inset_0_0_0_1px_hsl(var(--border))] hover:bg-secondary"
                 >
-                  Voir {nouveaux > 1 ? `les ${nouveaux}` : "le compte"}
+                  {t("admin.inscr.voir", { count: nouveaux })}
                 </button>
               )}
             </div>
@@ -96,7 +96,7 @@ export function InscriptionsComptes({
       )}
     <div className="rounded-xl bg-card shadow-soft p-5 space-y-3">
       <h2 className="text-sm font-semibold text-muted-foreground">
-        Inscriptions
+        {t("admin.inscriptions")}
       </h2>
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2">
@@ -107,10 +107,10 @@ export function InscriptionsComptes({
           />
           <p className="text-sm text-foreground">
             {regOpen === null
-              ? "Chargement…"
+              ? t("common.loading")
               : regOpen
-              ? "Les inscriptions sont ouvertes."
-              : "Les inscriptions sont fermées."}
+              ? t("admin.inscr.phraseOuvertes")
+              : t("admin.inscr.phraseFermees")}
           </p>
         </div>
         <Button
@@ -119,7 +119,7 @@ export function InscriptionsComptes({
           variant={regOpen ? "outline" : "default"}
           className={`shrink-0 h-11 ${regOpen ? "border-destructive/30 bg-destructive/5 text-destructive hover:bg-destructive/10 hover:text-destructive" : ""}`}
         >
-          {togglingReg ? "…" : regOpen ? "Fermer les inscriptions" : "Ouvrir les inscriptions"}
+          {togglingReg ? "…" : regOpen ? t("admin.inscr.fermer") : t("admin.inscr.ouvrir")}
         </Button>
       </div>
     </div>

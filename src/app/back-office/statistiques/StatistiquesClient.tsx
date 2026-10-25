@@ -5,7 +5,7 @@
 // « Setlists comptées » et « Les 10 premiers », tableau trié (Q9) ou liste sur téléphone.
 // S4 : le sélecteur « Les plus joués · Jamais joués · À redécouvrir » (Q11), mêmes filtres et
 // même carte « Setlists comptées » dans les trois vues.
-// Calcul : `statsChants` (src/lib/stats/chantsJoues.ts). Rien n'est écrit. Français seul (Q14).
+// Calcul : `statsChants` (src/lib/stats/chantsJoues.ts). Rien n'est écrit. Bilingue depuis B5b (Q14 levée).
 // Agencement v18 (B13) : en-tête commun « Statistiques » (le compte des setlists dans le sous-titre),
 // rail des vues sous le titre, filtres dessous (périodes en pilules, listes) ; « Jamais joués » en
 // deux cartes, « En français » sur deux colonnes et « En chinois » sur une, puis « Tout afficher ».
@@ -29,27 +29,16 @@ type Vue = "plus" | "jamais" | "redecouvrir";
 type ChoixPeriode = "3" | "6" | "12" | "debut" | "libre";
 
 /** Les trois vues et leur nom dans l'adresse (« Les plus joués » : pas de paramètre). */
-const VUES: { vue: Vue; libelle: string; adresse: string | null }[] = [
-  { vue: "plus", libelle: "Les plus joués", adresse: null },
-  { vue: "jamais", libelle: "Jamais joués", adresse: "jamais-joues" },
-  { vue: "redecouvrir", libelle: "À redécouvrir", adresse: "a-redecouvrir" },
+const VUES: { vue: Vue; adresse: string | null }[] = [
+  { vue: "plus", adresse: null },
+  { vue: "jamais", adresse: "jamais-joues" },
+  { vue: "redecouvrir", adresse: "a-redecouvrir" },
 ];
 type CleTri = "chant" | "setlists" | "derniere" | "tendance";
 type Sens = "asc" | "desc";
 
-const PERIODES: { cle: ChoixPeriode; nom: string }[] = [
-  { cle: "3", nom: "3 mois" },
-  { cle: "6", nom: "6 mois" },
-  { cle: "12", nom: "12 mois" },
-  { cle: "debut", nom: "Depuis le début" },
-  { cle: "libre", nom: "Dates libres" },
-];
-const COLONNES_TRI: { cle: CleTri; libelle: string }[] = [
-  { cle: "chant", libelle: "Chant" },
-  { cle: "setlists", libelle: "Setlists" },
-  { cle: "derniere", libelle: "Dernière fois" },
-  { cle: "tendance", libelle: "Tendance" },
-];
+const PERIODES: ChoixPeriode[] = ["3", "6", "12", "debut", "libre"];
+const COLONNES_TRI: CleTri[] = ["chant", "setlists", "derniere", "tendance"];
 /** Le titre se lit A→Z ; les nombres et les dates, du plus grand au plus petit. */
 const SENS_PAR_DEFAUT: Record<CleTri, Sens> = { chant: "asc", setlists: "desc", derniere: "desc", tendance: "desc" };
 
@@ -118,8 +107,8 @@ function jourCourt(jour: string, aujourdhui: string): string {
 }
 
 /** « 5 octobre 2025 » (sous-titre de la page). */
-const jourEnLettres = (jour: string) =>
-  new Intl.DateTimeFormat("fr-FR", { day: "numeric", month: "long", year: "numeric" }).format(new Date(`${jour}T12:00:00`));
+const jourEnLettres = (jour: string, zh: boolean) =>
+  new Intl.DateTimeFormat(zh ? "zh-CN" : "fr-FR", { day: "numeric", month: "long", year: "numeric" }).format(new Date(`${jour}T12:00:00`));
 
 /** « 24/05/2026 ». */
 function jourLong(jour: string): string {
@@ -133,7 +122,8 @@ type Lecture =
   | { etat: "pret"; setlists: FSSetlist[]; recueil: SongIndexEntry[]; choix: { services: string[]; presidences: string[] } };
 
 export function StatistiquesClient() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const zh = i18n.language === "zh-CN";
   // Même « aujourd'hui » que les Archives de l'onglet Setlists (Q3).
   const aujourdhui = useMemo(() => new Date().toISOString().split("T")[0], []);
   // L'adresse d'abord (le retour depuis un chant retrouve l'écran), puis on la tient à jour.
@@ -151,8 +141,8 @@ export function StatistiquesClient() {
     ])
       .then(([setlists, index]) => {
         // La base compte plus de cent setlists : zéro veut dire que la lecture a échoué.
-        if (setlists.length === 0) setLecture({ etat: "echec", message: "Impossible de lire les setlists." });
-        else if (!index) setLecture({ etat: "echec", message: "Impossible de lire le recueil." });
+        if (setlists.length === 0) setLecture({ etat: "echec", message: t("stats.lireSetlists") });
+        else if (!index) setLecture({ etat: "echec", message: t("stats.lireRecueil") });
         else {
           const choix = choixDesFiltres(setlists, aujourdhui, ALL_CATEGORIES);
           setLecture({ etat: "pret", setlists, recueil: index.songs, choix });
@@ -165,8 +155,8 @@ export function StatistiquesClient() {
           });
         }
       })
-      .catch(() => setLecture({ etat: "echec", message: "Impossible de lire les setlists." }));
-  }, [aujourdhui]);
+      .catch(() => setLecture({ etat: "echec", message: t("stats.lireSetlists") }));
+  }, [aujourdhui, t]);
   useEffect(() => { lire(); }, [lire]);
 
   const donnees = lecture.etat === "pret" ? lecture : null;
@@ -183,9 +173,9 @@ export function StatistiquesClient() {
 
   const donneesPretes = stats && donnees ? { stats, donnees } : null;
   const comptees = stats?.comptees;
-  const sousTitre = "Visible par les admins seulement" + (!comptees ? ""
-    : comptees.nombre === 0 ? " · aucune setlist comptée"
-    : ` · ${comptees.nombre} ${comptees.nombre > 1 ? "setlists comptées" : "setlist comptée"}, du ${jourEnLettres(comptees.du!)} au ${jourEnLettres(comptees.au!)}`);
+  const sousTitre = t("stats.visible") + (!comptees ? ""
+    : comptees.nombre === 0 ? ` · ${t("stats.aucuneSetlist")}`
+    : ` · ${t("stats.comptees", { count: comptees.nombre, du: jourEnLettres(comptees.du!, zh), au: jourEnLettres(comptees.au!, zh) })}`);
   const choisirPeriode = (periode: ChoixPeriode) => {
     if (periode !== "libre" || !stats) return changer({ periode });
     // « Dates libres » part de ce qu'on regarde : les bornes de la période ou des setlists comptées.
@@ -195,13 +185,13 @@ export function StatistiquesClient() {
   };
   const enTete = (
     <EnTetePage
-      titre="Statistiques"
+      titre={t("backOffice.entrees.statistiques")}
       sousTitre={sousTitre}
-      onglets={<OngletsRail etiquette="Vue" onglets={VUES.map((v) => ({ id: v.vue, label: v.libelle }))} actif={etat.vue} choisir={(vue) => changer({ vue: vue as Vue })} />}
+      onglets={<OngletsRail etiquette={t("stats.vue")} onglets={VUES.map((v) => ({ id: v.vue, label: t(`stats.vues.${v.vue}`) }))} actif={etat.vue} choisir={(vue) => changer({ vue: vue as Vue })} />}
       apres={donneesPretes && (
         <Filtres
           etat={etat} aujourdhui={aujourdhui} services={donneesPretes.donnees.choix.services} presidences={donneesPretes.donnees.choix.presidences}
-          nomService={(c) => t("categories." + c, { lng: "fr", defaultValue: c })}
+          nomService={(c) => t("categories." + c, { defaultValue: c })}
           choisirPeriode={choisirPeriode} changer={changer}
         />
       )}
@@ -217,7 +207,7 @@ export function StatistiquesClient() {
         <div role="alert" className="raised rounded-2xl px-5 py-8 flex flex-col items-center gap-3 text-center">
           <p className="text-sm text-muted-foreground">{lecture.message}</p>
           <button type="button" onClick={() => { setLecture({ etat: "calcul" }); lire(); }} className="h-9 px-4 rounded-full bg-foreground text-background text-sm font-semibold transition-transform active:scale-[.97]">
-            Réessayer
+            {t("common.retry")}
           </button>
         </div>
         </div>
@@ -225,7 +215,7 @@ export function StatistiquesClient() {
     );
   }
   if (!stats || !donnees) {
-    return <>{enTete}<p role="status" className={cn(CORPS, "text-sm text-muted-foreground")}>Calcul…</p></>;
+    return <>{enTete}<p role="status" className={cn(CORPS, "text-sm text-muted-foreground")}>{t("stats.calcul")}</p></>;
   }
 
   const trier = (cle: CleTri) =>
@@ -241,13 +231,13 @@ export function StatistiquesClient() {
     <section data-testid="setlists-comptees"
       className="raised rounded-2xl px-5 py-4 grid grid-cols-[auto_minmax(0,1fr)] items-center gap-x-4 sm:grid-cols-1 sm:items-start sm:content-start">
       <h2 className="col-start-2 row-start-1 self-end text-sm font-semibold text-muted-foreground sm:col-start-1 sm:self-auto">
-        Setlists comptées
+        {t("stats.setlistsComptees")}
       </h2>
       <p data-testid="nombre" className="col-start-1 row-start-1 row-span-2 text-3xl font-bold tabular-nums sm:row-start-2 sm:row-span-1 sm:mt-1">
         {nombre}
       </p>
       <p className="col-start-2 row-start-2 self-start text-sm text-muted-foreground sm:col-start-1 sm:row-start-3 sm:self-auto">
-        publiées, du {jourCourt(stats.comptees.du!, aujourdhui)} au {jourCourt(stats.comptees.au!, aujourdhui)}
+        {t("stats.publiees", { du: jourCourt(stats.comptees.du!, aujourdhui), au: jourCourt(stats.comptees.au!, aujourdhui) })}
       </p>
     </section>
   );
@@ -259,7 +249,7 @@ export function StatistiquesClient() {
       <div className={cn(CORPS, "[container-type:inline-size]")}>
         {nombre === 0 ? (
           <p role="status" className="raised rounded-2xl px-5 py-8 text-center text-sm text-muted-foreground">
-            Aucune setlist publiée sur cette période.
+            {t("stats.aucuneSetlistPeriode")}
           </p>
         ) : etat.vue === "plus" ? (
           // Dès 1 100 px de conteneur (planche v18-bo-statistiques) : les chiffres à gauche, le classement
@@ -270,23 +260,23 @@ export function StatistiquesClient() {
             <div className="grid gap-4 lg:grid-cols-3 [@container(min-width:1100px)]:grid-cols-1">
               {carteComptees}
               <section className="raised hidden rounded-2xl px-5 py-4 lg:block">
-                <h2 className="text-sm font-semibold text-muted-foreground">Chants différents</h2>
+                <h2 className="text-sm font-semibold text-muted-foreground">{t("stats.chantsDifferents")}</h2>
                 {/* Les chants du recueil seuls : un absent du recueil ferait dire « 6 sur 5 ». */}
                 <p className="mt-1 text-3xl font-bold tabular-nums">{stats.plusJoues.filter((l) => l.langue).length}</p>
-                <p className="text-sm text-muted-foreground">sur {auRepertoire} au répertoire</p>
+                <p className="text-sm text-muted-foreground">{t("stats.surRepertoire", { n: auRepertoire })}</p>
               </section>
               <button type="button" onClick={() => changer({ vue: "jamais" })}
                 className="raised hidden rounded-2xl px-5 py-4 text-left transition-transform active:scale-[.99] lg:block">
-                <span className="block text-sm font-semibold text-muted-foreground">Jamais joués</span>
+                <span className="block text-sm font-semibold text-muted-foreground">{t("stats.vues.jamais")}</span>
                 <span className="mt-1 block text-3xl font-bold tabular-nums">{stats.jamaisJoues.length}</span>
-                <span className="block text-sm text-muted-foreground">voir l&apos;onglet</span>
+                <span className="block text-sm text-muted-foreground">{t("stats.voirOnglet")}</span>
               </button>
             </div>
             <div className="min-w-0 space-y-4">
               {lignes.length > 0 && <DixPremiers lignes={stats.plusJoues.slice(0, 10)} />}
               {stats.plusJoues.length === 0 ? (
                 <p role="status" className="raised rounded-2xl px-5 py-8 text-center text-sm text-muted-foreground">
-                  Aucun chant dans cette langue sur cette période.
+                  {t("stats.aucunChantLangue")}
                 </p>
               ) : (
                 <>
@@ -327,6 +317,7 @@ function Filtres({ etat, aujourdhui, services, presidences, nomService, choisirP
   choisirPeriode: (p: ChoixPeriode) => void;
   changer: (modif: Partial<Etat>) => void;
 }) {
+  const { t } = useTranslation();
   const principales = ALL_CATEGORIES.slice(0, 4) as string[];
   const groupes = ALL_CATEGORIES.slice(4) as string[];
   const autres = services.slice(ALL_CATEGORIES.length);
@@ -335,42 +326,42 @@ function Filtres({ etat, aujourdhui, services, presidences, nomService, choisirP
     <div className="space-y-3">
       <div className="flex flex-wrap items-center gap-2">
         <div className="min-w-0 max-w-full">
-          <Pilules etiquette="Période" options={PERIODES} valeur={etat.periode} choisir={(p) => p && choisirPeriode(p)} obligatoire />
+          <Pilules etiquette={t("stats.periode.label")} options={PERIODES.map((cle) => ({ cle, nom: t(`stats.periode.${cle}`) }))} valeur={etat.periode} choisir={(p) => p && choisirPeriode(p)} obligatoire />
         </div>
         <span className="mx-1 hidden h-6 w-px bg-border sm:block" aria-hidden />
-        <Choix libelle="Service" valeur={etat.service ?? ""} onChange={(v) => changer({ service: v || null })}>
-          <option value="">Tous les services</option>
-          <optgroup label="Réunions principales">
+        <Choix libelle={t("stats.service")} valeur={etat.service ?? ""} onChange={(v) => changer({ service: v || null })}>
+          <option value="">{t("stats.tousServices")}</option>
+          <optgroup label={t("stats.reunionsPrincipales")}>
             {principales.map((c) => <option key={c} value={c}>{nomService(c)}</option>)}
           </optgroup>
-          <optgroup label="Groupes">
+          <optgroup label={t("stats.groupes")}>
             {groupes.map((c) => <option key={c} value={c}>{nomService(c)}</option>)}
           </optgroup>
           {autres.length > 0 && (
-            <optgroup label="Autres">
+            <optgroup label={t("stats.autres")}>
               {autres.map((c) => <option key={c} value={c}>{c}</option>)}
             </optgroup>
           )}
         </Choix>
-        <Choix libelle="Langue" valeur={etat.langue ?? ""} onChange={(v) => changer({ langue: v === "fr" || v === "zh" ? v : null })}>
-          <option value="">FR et 中文</option>
+        <Choix libelle={t("stats.langue")} valeur={etat.langue ?? ""} onChange={(v) => changer({ langue: v === "fr" || v === "zh" ? v : null })}>
+          <option value="">{t("stats.frEtZh")}</option>
           <option value="fr">FR</option>
           <option value="zh">中文</option>
         </Choix>
-        <Choix libelle="Présidence" valeur={etat.presidence ?? ""} onChange={(v) => changer({ presidence: v || null })}>
-          <option value="">Toutes les présidences</option>
+        <Choix libelle={t("stats.presidence")} valeur={etat.presidence ?? ""} onChange={(v) => changer({ presidence: v || null })}>
+          <option value="">{t("stats.toutesPresidences")}</option>
           {presidences.map((p) => <option key={p} value={p}>{p}</option>)}
         </Choix>
       </div>
       {etat.periode === "libre" && (
         <div className="flex flex-wrap items-center gap-3 text-sm">
           <label className="inline-flex items-center gap-2">
-            <span className="font-semibold">Du</span>
+            <span className="font-semibold">{t("stats.du")}</span>
             <input type="date" value={etat.du} max={etat.au || hier} onChange={(e) => changer({ du: e.target.value })}
               className="h-9 rounded-lg bg-secondary px-3 focus:outline-none focus:ring-2 focus:ring-ring/30" />
           </label>
           <label className="inline-flex items-center gap-2">
-            <span className="font-semibold">Au</span>
+            <span className="font-semibold">{t("stats.au")}</span>
             <input type="date" value={etat.au} min={etat.du || undefined} max={hier} onChange={(e) => changer({ au: e.target.value })}
               className="h-9 rounded-lg bg-secondary px-3 focus:outline-none focus:ring-2 focus:ring-ring/30" />
           </label>
@@ -411,6 +402,7 @@ function Langue({ langue }: { langue: "fr" | "zh" }) {
 
 /** Le titre (lien vers le chant) et son étiquette ; un chant absent du recueil garde son slug (Q12). */
 function TitreChant({ ligne }: { ligne: Pick<LigneChant, "slug" | "titre" | "langue"> }) {
+  const { t } = useTranslation();
   return (
     <span className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-0.5">
       {ligne.langue ? (
@@ -418,7 +410,7 @@ function TitreChant({ ligne }: { ligne: Pick<LigneChant, "slug" | "titre" | "lan
       ) : (
         <span data-champ="titre" className="font-semibold">{ligne.titre}</span>
       )}
-      {ligne.langue ? <Langue langue={ligne.langue} /> : <span className="text-xs text-muted-foreground">absent du recueil</span>}
+      {ligne.langue ? <Langue langue={ligne.langue} /> : <span className="text-xs text-muted-foreground">{t("stats.absentRecueil")}</span>}
     </span>
   );
 }
@@ -436,10 +428,11 @@ function Tendance({ tendance }: { tendance: number | null }) {
 }
 
 function DixPremiers({ lignes }: { lignes: LigneChant[] }) {
+  const { t } = useTranslation();
   const max = lignes[0]?.setlists ?? 1;
   return (
     <section data-testid="dix-premiers" className="raised rounded-2xl px-5 py-4">
-      <h2 className="text-sm font-semibold text-muted-foreground">Les 10 premiers</h2>
+      <h2 className="text-sm font-semibold text-muted-foreground">{t("stats.dixPremiers")}</h2>
       <ol className="mt-2 space-y-1">
         {lignes.map((l) => (
           <li key={l.slug} data-testid="barre-chant" className="grid grid-cols-[minmax(0,8rem)_minmax(0,1fr)] items-center gap-3 text-sm sm:grid-cols-[minmax(0,12rem)_minmax(0,1fr)]">
@@ -462,14 +455,15 @@ function DixPremiers({ lignes }: { lignes: LigneChant[] }) {
 function ListeTelephone({ lignes, aujourdhui, tri, trier }: {
   lignes: LigneChant[]; aujourdhui: string; tri: CleTri; trier: (cle: CleTri) => void;
 }) {
+  const { t } = useTranslation();
   return (
     <div className="space-y-3 sm:hidden">
       <label className={cn(PASTILLE, "raised relative pr-8")}>
         <ArrowDownWideNarrow className="h-4 w-4" aria-hidden />
-        <span aria-hidden>Trier par :</span>
-        <select aria-label="Trier par" value={tri} onChange={(e) => trier(e.target.value as CleTri)}
+        <span aria-hidden>{t("stats.trierPar")}</span>
+        <select aria-label={t("stats.trierParAria")} value={tri} onChange={(e) => trier(e.target.value as CleTri)}
           className="appearance-none bg-transparent font-semibold focus:outline-none">
-          {COLONNES_TRI.map(({ cle, libelle }) => <option key={cle} value={cle}>{libelle}</option>)}
+          {COLONNES_TRI.map((cle) => <option key={cle} value={cle}>{t(`stats.col.${cle}`)}</option>)}
         </select>
         <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2" aria-hidden />
       </label>
@@ -480,7 +474,7 @@ function ListeTelephone({ lignes, aujourdhui, tri, trier }: {
             <div className="min-w-0 flex-1 space-y-0.5">
               <TitreChant ligne={l} />
               <p className="text-sm text-muted-foreground">
-                <b data-champ="setlists" className="font-bold text-foreground tabular-nums">{l.setlists}</b> {l.setlists > 1 ? "setlists" : "setlist"}
+                <b data-champ="setlists" className="font-bold text-foreground tabular-nums">{l.setlists}</b> {t("stats.setlistMot", { count: l.setlists })}
                 {" · "}<span data-champ="part" className="tabular-nums">{libellePart(l.part)}</span>
                 {" · "}<span data-champ="derniere" className="tabular-nums">{jourCourt(l.derniereFois, aujourdhui)}</span>
                 {" · "}<span data-champ="tonalite">{l.tonalites.join(" / ")}</span>
@@ -498,7 +492,9 @@ function ListeTelephone({ lignes, aujourdhui, tri, trier }: {
 function Tableau({ lignes, aujourdhui, tri, sens, trier }: {
   lignes: LigneChant[]; aujourdhui: string; tri: CleTri; sens: Sens; trier: (cle: CleTri) => void;
 }) {
-  const enTete = (cle: CleTri, libelle: string, className?: string) => {
+  const { t } = useTranslation();
+  const enTete = (cle: CleTri, className?: string) => {
+    const libelle = t(`stats.col.${cle}`);
     const actif = tri === cle;
     const Fleche = sens === "asc" ? ChevronUp : ChevronDown;
     return (
@@ -518,12 +514,12 @@ function Tableau({ lignes, aujourdhui, tri, sens, trier }: {
         <thead className="text-left text-xs text-muted-foreground">
           <tr className="border-b border-border">
             <th scope="col" className="w-10 px-3 py-3 text-right font-semibold">#</th>
-            {enTete("chant", "Chant")}
-            {enTete("setlists", "Setlists", "text-right")}
-            <th scope="col" className="px-3 py-3 text-right font-semibold">% des setlists</th>
-            {enTete("derniere", "Dernière fois")}
-            <th scope="col" className="px-3 py-3 font-semibold">Tonalité la plus jouée</th>
-            {enTete("tendance", "Tendance", "text-right")}
+            {enTete("chant")}
+            {enTete("setlists", "text-right")}
+            <th scope="col" className="px-3 py-3 text-right font-semibold">{t("stats.col.part")}</th>
+            {enTete("derniere")}
+            <th scope="col" className="px-3 py-3 font-semibold">{t("stats.col.tonalite")}</th>
+            {enTete("tendance", "text-right")}
           </tr>
         </thead>
         <tbody className="divide-y divide-border">
@@ -555,7 +551,8 @@ const MESSAGE = "raised rounded-2xl px-5 py-8 text-center text-sm text-muted-for
 function JamaisJoues({ chants, tonalites, aujourdhui }: {
   chants: StatsChants["jamaisJoues"]; tonalites: Map<string, string>; aujourdhui: string;
 }) {
-  if (chants.length === 0) return <p role="status" className={MESSAGE}>Tous les chants ont été joués sur cette période.</p>;
+  const { t } = useTranslation();
+  if (chants.length === 0) return <p role="status" className={MESSAGE}>{t("stats.tousJoues")}</p>;
   const fr = chants.filter((c) => c.langue === "fr");
   const zh = chants.filter((c) => c.langue === "zh");
   const deux = fr.length > 0 && zh.length > 0;
@@ -564,8 +561,8 @@ function JamaisJoues({ chants, tonalites, aujourdhui }: {
   );
   return (
     <div className={cn("grid items-start gap-4", deux && "lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]")}>
-      {fr.length > 0 && carte("jamais-fr", "En français", fr, 40, "sm:columns-2")}
-      {zh.length > 0 && carte("jamais-zh", "En chinois", zh, 20, deux ? "sm:columns-2 lg:columns-1" : "sm:columns-2")}
+      {fr.length > 0 && carte("jamais-fr", t("stats.enFrancais"), fr, 40, "sm:columns-2")}
+      {zh.length > 0 && carte("jamais-zh", t("stats.enChinois"), zh, 20, deux ? "sm:columns-2 lg:columns-1" : "sm:columns-2")}
     </div>
   );
 }
@@ -577,6 +574,7 @@ function CarteJamais({ testId, titre, chants, limite, colonnes, tonalites, aujou
   testId: string; titre: string; chants: StatsChants["jamaisJoues"]; limite: number; colonnes: string;
   tonalites: Map<string, string>; aujourdhui: string;
 }) {
+  const { t } = useTranslation();
   const [tout, setTout] = useState(false);
   const montres = tout ? chants : chants.slice(0, limite);
   return (
@@ -586,7 +584,7 @@ function CarteJamais({ testId, titre, chants, limite, colonnes, tonalites, aujou
         {!tout && chants.length > LIMITE_TELEPHONE && (
           <Button type="button" variant="outline" size="sm" onClick={() => setTout(true)}
             className={cn("ml-auto h-8", chants.length <= limite && "sm:hidden")}>
-            Tout afficher
+            {t("stats.toutAfficher")}
           </Button>
         )}
       </div>
@@ -602,7 +600,7 @@ function CarteJamais({ testId, titre, chants, limite, colonnes, tonalites, aujou
                 <span className="text-xs text-muted-foreground"> · <span data-champ="artiste">{c.artiste}</span></span>
               </span>
               <span data-champ="derniere" className="shrink-0 text-xs text-muted-foreground tabular-nums">
-                {c.derniereFois ? jourCourt(c.derniereFois, aujourdhui) : "jamais"}
+                {c.derniereFois ? jourCourt(c.derniereFois, aujourdhui) : t("stats.jamais")}
               </span>
               {tonalite && <span data-champ="tonalite"><KeyPill tonalite={tonalite} langue={c.langue} /></span>}
             </li>
@@ -620,23 +618,25 @@ function ARedecouvrir({ chants, aujourdhui, debutPeriode, finPeriode, debutHisto
   chants: StatsChants["aRedecouvrir"]; aujourdhui: string;
   debutPeriode: string | null; finPeriode: string | null; debutHistorique: string | null;
 }) {
+  const { t } = useTranslation();
   // Dates libres, « Du » vidé : la période n'a pas de début, donc pas d'avant.
   if (debutPeriode === "") {
-    return <p role="status" className={MESSAGE}>Choisis une date de début (« Du ») pour voir les chants à redécouvrir.</p>;
+    return <p role="status" className={MESSAGE}>{t("stats.choisirDebut")}</p>;
   }
   if (!debutPeriode || !debutHistorique || debutHistorique >= debutPeriode) {
     return (
       <p role="status" className={MESSAGE}>
-        L&apos;historique commence le {debutHistorique ? jourLong(debutHistorique) : "?"} : choisis une période plus courte.
+        {t("stats.historique", { date: debutHistorique ? jourLong(debutHistorique) : "?" })}
       </p>
     );
   }
-  if (chants.length === 0) return <p role="status" className={MESSAGE}>Aucun chant à redécouvrir sur cette période.</p>;
+  if (chants.length === 0) return <p role="status" className={MESSAGE}>{t("stats.aucunARedecouvrir")}</p>;
   return (
     <section className="raised rounded-2xl px-2">
       <h2 className="px-3 pt-4 pb-1 text-sm font-semibold text-muted-foreground">
-        Joués au moins {SEUIL_A_REDECOUVRIR} fois avant le {jourCourt(debutPeriode, aujourdhui)}, aucune fois{" "}
-        {finPeriode ? `du ${jourCourt(debutPeriode, aujourdhui)} au ${jourCourt(finPeriode, aujourdhui)}` : "depuis"}
+        {finPeriode
+          ? t("stats.joues", { n: SEUIL_A_REDECOUVRIR, debut: jourCourt(debutPeriode, aujourdhui), fin: jourCourt(finPeriode, aujourdhui) })
+          : t("stats.jouesDepuis", { n: SEUIL_A_REDECOUVRIR, debut: jourCourt(debutPeriode, aujourdhui) })}
       </h2>
       <ol className="divide-y divide-border sm:hidden">
         {chants.map((c, i) => (
@@ -645,7 +645,7 @@ function ARedecouvrir({ chants, aujourdhui, debutPeriode, finPeriode, debutHisto
             <div className="min-w-0 flex-1 space-y-0.5">
               <TitreChant ligne={c} />
               <p className="text-sm text-muted-foreground">
-                <b data-champ="avant" className="font-bold text-foreground tabular-nums">{c.avant}</b> avant la période
+                <b data-champ="avant" className="font-bold text-foreground tabular-nums">{c.avant}</b> {t("stats.avantLaPeriode")}
                 {" · "}<span data-champ="derniere" className="tabular-nums">{jourCourt(c.derniereFois, aujourdhui)}</span>
                 {" · "}<span data-champ="tonalite">{c.tonalites.join(" / ")}</span>
               </p>
@@ -657,10 +657,10 @@ function ARedecouvrir({ chants, aujourdhui, debutPeriode, finPeriode, debutHisto
         <thead className="text-left text-xs text-muted-foreground">
           <tr className="border-b border-border">
             <th scope="col" className="w-10 px-3 py-3 text-right font-semibold">#</th>
-            <th scope="col" className="px-3 py-3 font-semibold">Chant</th>
-            <th scope="col" className="px-3 py-3 text-right font-semibold">Avant la période</th>
-            <th scope="col" className="px-3 py-3 font-semibold">Dernière fois</th>
-            <th scope="col" className="px-3 py-3 font-semibold">Tonalité la plus jouée</th>
+            <th scope="col" className="px-3 py-3 font-semibold">{t("stats.col.chant")}</th>
+            <th scope="col" className="px-3 py-3 text-right font-semibold">{t("stats.col.avant")}</th>
+            <th scope="col" className="px-3 py-3 font-semibold">{t("stats.col.derniere")}</th>
+            <th scope="col" className="px-3 py-3 font-semibold">{t("stats.col.tonalite")}</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-border">

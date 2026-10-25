@@ -16,6 +16,7 @@ import type { UserProfile } from "@/types/user";
 
 /** `onCompte` : nombre de noms sans compte (pastille de l'onglet). */
 export function SansCompte({ onCompte }: { onCompte?: (n: number) => void }) {
+  const { t } = useTranslation();
   const [profiles, setProfiles] = useState<UserProfile[]>([]);
   const [planningNames, setPlanningNames] = useState<string[]>([]);
   const [planningData, setPlanningData] = useState<PlanningData | null>(null);
@@ -51,17 +52,16 @@ export function SansCompte({ onCompte }: { onCompte?: (n: number) => void }) {
     <div className="space-y-4">
     <div className="rounded-xl bg-card shadow-soft p-5 space-y-3">
       <h2 className="text-sm font-semibold text-muted-foreground">
-        Planning sans compte ({unlinkedNames.length})
+        {t("admin.sansCompte.titre", { count: unlinkedNames.length })}
       </h2>
       <p className="text-xs text-muted-foreground">
-        Ces noms apparaissent dans les plannings mais ne sont liés à aucun compte —
-        ces personnes ne reçoivent ni rappels ni notification « setlist prête ».
+        {t("admin.sansCompte.aide")}
       </p>
       {planningData == null ? (
-        <p className="text-sm text-muted-foreground">Chargement…</p>
+        <p className="text-sm text-muted-foreground">{t("common.loading")}</p>
       ) : unlinkedNames.length === 0 ? (
         <p className="text-sm text-foreground">
-          ✅ Tous les noms du planning sont liés à un compte.
+          {t("admin.sansCompte.tous")}
         </p>
       ) : (
         <div className="flex flex-wrap gap-1.5">

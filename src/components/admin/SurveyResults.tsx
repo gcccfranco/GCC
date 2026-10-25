@@ -6,10 +6,10 @@
 // (`DeuxVolets`) — à gauche le nombre de réponses et le sommaire des parties (avec la moyenne
 // quand la partie a des notes), à droite la partie choisie (la première d'office, en état local),
 // une carte par question ; « Par personne » et « Voir la page du questionnaire » en pied de liste.
-// Un volet : les parties dépliables d'avant, la première ouverte. En français seulement (Q16 de U6).
+// Un volet : les parties dépliables d'avant, la première ouverte. Bilingue depuis B5b.
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { useTranslation } from "react-i18next";
+import { Trans, useTranslation } from "react-i18next";
 import { ChevronDown, ChevronRight, ChevronUp, Star, Trash2 } from "lucide-react";
 import { DeuxVolets } from "@/components/layout/DeuxVolets";
 import { useConfirmer } from "@/components/layout/Confirmer";
@@ -129,7 +129,7 @@ function QuestionBlock({
         <span className="text-xs text-muted-foreground shrink-0 tabular-nums">{texts.length}</span>
       </div>
       {texts.length === 0 ? (
-        <p className="text-xs text-muted-foreground">Aucune réponse.</p>
+        <p className="text-xs text-muted-foreground">{t("admin.questionnaire.aucuneReponse")}</p>
       ) : (
         <>
           {(showTexts ? texts : texts.slice(0, 3)).map((x, i) => (
@@ -144,7 +144,7 @@ function QuestionBlock({
               onClick={() => setShowTexts((v) => !v)}
               className="text-xs font-semibold text-muted-foreground hover:text-foreground"
             >
-              {showTexts ? "Réduire" : `Voir les ${texts.length} réponses`}
+              {showTexts ? t("admin.questionnaire.reduire") : t("admin.questionnaire.voirReponses", { count: texts.length })}
             </button>
           )}
         </>
@@ -176,7 +176,8 @@ const virgule = (n: number) => n.toFixed(1).replace(".", ",");
 
 /** Dépouillement du questionnaire de satisfaction (onglet /admin ; Back-Office si `backOffice`). */
 export function SurveyResults({ backOffice = false }: { backOffice?: boolean }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const lieu = i18n.language === "zh-CN" ? "zh-CN" : "fr-FR";
   const confirmer = useConfirmer();
   const grand = useDisposition() === "grand" && backOffice;
   /** Back-Office en grand : la partie ouverte à droite, ou « personnes » (détail par personne). */
@@ -210,9 +211,9 @@ export function SurveyResults({ backOffice = false }: { backOffice?: boolean }) 
   async function handleDelete(r: SurveyResponse) {
     // Irréversible : la fenêtre du site d'abord (R9).
     if (!(await confirmer({
-      titre: `Supprimer la réponse de ${r.authorName} ?`,
-      texte: "Elle disparaît des résultats, définitivement.",
-      action: "Supprimer",
+      titre: t("admin.questionnaire.supprimerTitre", { nom: r.authorName }),
+      texte: t("admin.questionnaire.supprimerTexte"),
+      action: t("common.buttons.delete"),
       destructif: true,
     }))) return;
     setBusy(r.uid);
@@ -240,8 +241,8 @@ export function SurveyResults({ backOffice = false }: { backOffice?: boolean }) 
                           {r.authorName}
                         </p>
                         <p className="text-xs text-muted-foreground truncate">
-                          {r.updatedAt ? r.updatedAt.toLocaleDateString("fr-FR") : ""}
-                          {r.submitted ? "" : " · en cours"}
+                          {r.updatedAt ? r.updatedAt.toLocaleDateString(lieu) : ""}
+                          {r.submitted ? "" : ` · ${t("admin.questionnaire.enCours")}`}
                         </p>
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
@@ -277,7 +278,7 @@ export function SurveyResults({ backOffice = false }: { backOffice?: boolean }) 
                             onClick={() => handleDelete(r)}
                             disabled={busy === r.uid}
                             className="h-9 w-9 rounded-lg border border-border text-muted-foreground hover:text-destructive flex items-center justify-center disabled:opacity-50"
-                            aria-label="Supprimer la réponse"
+                            aria-label={t("admin.questionnaire.supprimerAria")}
                           >
                             <Trash2 className="h-3.5 w-3.5" />
                           </button>
@@ -320,9 +321,9 @@ export function SurveyResults({ backOffice = false }: { backOffice?: boolean }) 
       <div className="px-2.5 pb-4 pt-4">
         <p className="px-2.5 pb-3 text-[13px] text-muted-foreground">
           <span className="mr-1.5 text-[28px] font-bold leading-none text-foreground tabular-nums">{all.length}</span>{" "}
-          {all.length > 1 ? "réponses" : "réponse"}
-          {derniere ? ` · la dernière le ${derniere.toLocaleDateString("fr-FR", { day: "numeric", month: "short" })}` : ""}
-          {drafts > 0 ? ` · ${drafts} en cours` : ""}
+          {t("admin.questionnaire.reponses", { count: all.length })}
+          {derniere ? ` · ${t("admin.questionnaire.derniere", { date: derniere.toLocaleDateString(lieu, { day: "numeric", month: "short" }) })}` : ""}
+          {drafts > 0 ? ` · ${t("admin.questionnaire.nEnCours", { count: drafts })}` : ""}
         </p>
         {drafts > 0 && (
           <button
@@ -330,37 +331,37 @@ export function SurveyResults({ backOffice = false }: { backOffice?: boolean }) 
             onClick={() => setIncludeDrafts((v) => !v)}
             className="mx-2.5 mb-2 rounded-lg border border-border px-3 py-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground"
           >
-            {includeDrafts ? `Écarter les ${drafts} questionnaire(s) en cours` : `Réintégrer les ${drafts} questionnaire(s) en cours`}
+            {includeDrafts ? t("admin.questionnaire.ecarter", { count: drafts }) : t("admin.questionnaire.reintegrer", { count: drafts })}
           </button>
         )}
         <div className="space-y-0.5">
           {SURVEY_SECTIONS.map((x) => {
             const n = SURVEY_QUESTIONS.filter((q) => q.section === x.id).length;
             const m = moyenneDeLaPartie(x.id, responses);
-            return ligne(x.id, t(`survey.s.${x.id}.title`), `${n} question${n > 1 ? "s" : ""}`, m === null ? null : `${virgule(m)}/${RATING_MAX}`);
+            return ligne(x.id, t(`survey.s.${x.id}.title`), t("admin.questionnaire.questions", { count: n }), m === null ? null : `${virgule(m)}/${RATING_MAX}`);
           })}
-          {ligne("personnes", "Par personne", `${byName.length} répondant${byName.length > 1 ? "s" : ""}`, null)}
+          {ligne("personnes", t("admin.questionnaire.parPersonne"), t("admin.questionnaire.repondants", { count: byName.length }), null)}
         </div>
         <Link href="/questionnaire" className="mt-3 block px-2.5 text-[13px] font-semibold text-muted-foreground underline underline-offset-2 hover:text-foreground">
-          Voir la page du questionnaire
+          {t("admin.questionnaire.voirPage")}
         </Link>
       </div>
     );
     const droite = loading ? (
-      <p className="py-10 text-sm text-muted-foreground">Chargement…</p>
+      <p className="py-10 text-sm text-muted-foreground">{t("common.loading")}</p>
     ) : responses.length === 0 ? (
-      <p className="py-10 text-sm text-muted-foreground">Aucune réponse pour l&apos;instant.</p>
+      <p className="py-10 text-sm text-muted-foreground">{t("admin.questionnaire.aucuneReponsePourLInstant")}</p>
     ) : partie === "personnes" ? (
       <div className="space-y-2">
-        <h2 className="text-[24px] font-bold leading-tight tracking-tight text-foreground">Par personne</h2>
+        <h2 className="text-[24px] font-bold leading-tight tracking-tight text-foreground">{t("admin.questionnaire.parPersonne")}</h2>
         {parPersonne}
       </div>
     ) : (
       <div>
         <h2 className="text-[24px] font-bold leading-tight tracking-tight text-foreground">{t(`survey.s.${partie}.title`)}</h2>
         <p className="mb-4 mt-0.5 text-sm text-muted-foreground">
-          {questions.length} question{questions.length > 1 ? "s" : ""}
-          {moyenne !== null ? ` · moyenne ${virgule(moyenne)} sur ${RATING_MAX}` : ""}
+          {t("admin.questionnaire.questions", { count: questions.length })}
+          {moyenne !== null ? ` · ${t("admin.questionnaire.moyenne", { moyenne: virgule(moyenne), max: RATING_MAX })}` : ""}
         </p>
         <div className="grid grid-cols-[repeat(auto-fit,minmax(300px,1fr))] items-start gap-4">
           {questions.map((q) => (
@@ -382,17 +383,14 @@ export function SurveyResults({ backOffice = false }: { backOffice?: boolean }) 
     <div className="rounded-xl bg-card shadow-soft p-5 space-y-4">
       <div className="flex items-center justify-between">
         <h2 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
-          Questionnaire
+          {t("admin.questionnaire.titre")}
         </h2>
         <span className="text-xs text-muted-foreground">
-          {all.length} réponse(s){drafts > 0 ? ` · ${drafts} en cours` : ""}
+          {t("admin.questionnaire.reponsesN", { count: all.length })}{drafts > 0 ? ` · ${t("admin.questionnaire.nEnCours", { count: drafts })}` : ""}
         </span>
       </div>
       <p className="text-xs text-muted-foreground">
-        Avis des membres sur le site (page <span className="font-mono">/questionnaire</span>).
-        Chacun n&apos;a qu&apos;une réponse, qu&apos;il peut modifier à tout moment. Les
-        questions hors sujet n&apos;étant pas posées à tout le monde, le compte affiché à
-        droite de chaque question est son nombre de répondants.
+        <Trans i18nKey="admin.questionnaire.aide" components={{ code: <span className="font-mono" /> }} />
       </p>
 
       {drafts > 0 && (
@@ -406,15 +404,15 @@ export function SurveyResults({ backOffice = false }: { backOffice?: boolean }) 
           }`}
         >
           {includeDrafts
-            ? `Écarter les ${drafts} questionnaire(s) en cours`
-            : `Réintégrer les ${drafts} questionnaire(s) en cours`}
+            ? t("admin.questionnaire.ecarter", { count: drafts })
+            : t("admin.questionnaire.reintegrer", { count: drafts })}
         </button>
       )}
 
       {loading ? (
-        <p className="text-sm text-muted-foreground py-4 text-center">Chargement…</p>
+        <p className="text-sm text-muted-foreground py-4 text-center">{t("common.loading")}</p>
       ) : responses.length === 0 ? (
-        <EtatVide compact>Aucune réponse pour l&apos;instant.</EtatVide>
+        <EtatVide compact>{t("admin.questionnaire.aucuneReponsePourLInstant")}</EtatVide>
       ) : (
         <>
           {/* Résultats section par section (dépliables) */}
@@ -458,7 +456,7 @@ export function SurveyResults({ backOffice = false }: { backOffice?: boolean }) 
               onClick={() => setShowPeople((v) => !v)}
               className="w-full text-xs font-semibold text-muted-foreground hover:text-foreground py-1.5"
             >
-              {showPeople ? "Masquer le détail par personne" : "Détail par personne"}
+              {showPeople ? t("admin.questionnaire.masquerDetail") : t("admin.questionnaire.detail")}
             </button>
 
             {showPeople && parPersonne}

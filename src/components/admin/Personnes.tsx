@@ -26,16 +26,17 @@ import { IdentityFields, PlanningNameField, ProfileFields, type ProfileFormValue
 import Link from "next/link";
 import { CeQueCaOuvre } from "@/components/equipes/OrganigrammeLouange";
 import { SERVICE_LIEUX } from "@/types/user";
-import { SERVICE_ROLE_LABELS, type ServiceRole, type UserProfile } from "@/types/user";
+import { type ServiceRole, type UserProfile } from "@/types/user";
 import { EDD_CLASSES } from "@/lib/planning/utils";
-import { NOTIFY_ALL, NOTIFY_GROUPS, audienceLabel } from "@/lib/push/audiences";
-import { categoryColor, categoryLabel } from "@/lib/serviceColors";
+import { NOTIFY_ALL, NOTIFY_GROUPS } from "@/lib/push/audiences";
+import { categoryColor } from "@/lib/serviceColors";
 import { BACK_OFFICE } from "@/lib/backOffice";
 import { Button } from "@/components/ui/button";
 import { ChampRecherche } from "@/components/layout/ChampRecherche";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Pilules } from "@/components/layout/Onglets";
 import { Pill } from "./commun";
+import { libelleAudience, libelleRole, libelleService } from "./libelles";
 import { EtatVide } from "@/components/layout/EtatVide"
 
 export function profileToForm(p: UserProfile): ProfileFormValue {
@@ -138,20 +139,21 @@ export function useFiltresPersonnes(profiles: UserProfile[]) {
 
 /** Recherche, filtres en pilules (R4), tri Récents · A–Z. */
 export function FiltresPersonnes({ f }: { f: ReturnType<typeof useFiltresPersonnes> }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const zh = i18n.language === "zh-CN";
   return (
     <div className="space-y-2">
       <ChampRecherche
         value={f.query}
         onChange={f.setQuery}
-        placeholder="Rechercher un membre (nom, email, nom de planning)…"
-        label="Rechercher un membre (nom, email, nom de planning)"
+        placeholder={t("admin.membre.rechercherPlaceholder")}
+        label={t("admin.membre.rechercher")}
       />
       <Pilules
-        etiquette="Filtrer les membres"
+        etiquette={t("admin.membre.filtrer")}
         options={FILTERS.map((x) => ({
           cle: x,
-          nom: x === FILTRE_SANS_GROUPE ? t("groupes.personnes.sansGroupe") : BACK_OFFICE && x === "Ne sert pas" ? t("equipes.organigramme.personnes.sansEquipe") : x === "Tous" || x === "EDD" || x === "Ne sert pas" ? x : categoryLabel(x),
+          nom: x === FILTRE_SANS_GROUPE ? t("groupes.personnes.sansGroupe") : BACK_OFFICE && x === "Ne sert pas" ? t("equipes.organigramme.personnes.sansEquipe") : x === "Tous" ? t("admin.membre.tous") : x === "EDD" ? t("notifier.groupe.EDD") : x === "Ne sert pas" ? t("admin.membre.neSertPas") : libelleService(t, zh, x),
           couleur: x === "EDD" ? "#3b6d11" : x !== "Tous" && x !== "Ne sert pas" && x !== FILTRE_SANS_GROUPE ? categoryColor(x) : undefined,
         }))}
         valeur={f.filter}
@@ -159,7 +161,7 @@ export function FiltresPersonnes({ f }: { f: ReturnType<typeof useFiltresPersonn
         obligatoire
       />
       <div className="flex items-center gap-1.5 text-[11px]">
-        <span className="font-semibold text-muted-foreground">Trier :</span>
+        <span className="font-semibold text-muted-foreground">{t("admin.membre.trier")}</span>
         {(["recent", "name"] as const).map((x) => (
           <button
             key={x}
@@ -171,7 +173,7 @@ export function FiltresPersonnes({ f }: { f: ReturnType<typeof useFiltresPersonn
                 : "bg-background border-border text-muted-foreground hover:text-foreground"
             }`}
           >
-            {x === "recent" ? "Récents" : "A–Z"}
+            {x === "recent" ? t("admin.membre.recents") : t("admin.membre.az")}
           </button>
         ))}
       </div>
@@ -195,6 +197,7 @@ export function Avatar({ p, grand }: { p: UserProfile; grand?: boolean }) {
  *  étiquettes de clé de groupe de `serviceRoles` (OG-D). */
 export function ServicesDuMembre({ p, groupes }: { p: UserProfile; groupes?: OrganigrammeGroupe[] | null }) {
   const { t, i18n } = useTranslation();
+  const zh = i18n.language === "zh-CN";
   const avecGroupes = BACK_OFFICE;
   const g = avecGroupes ? groupeDe(p) : null;
   const def = g ? groupeDef(g) : undefined;
@@ -204,7 +207,7 @@ export function ServicesDuMembre({ p, groupes }: { p: UserProfile; groupes?: Org
   const lieux = SERVICE_LIEUX.filter((l) => [...(p.lieuxLouange ?? []), ...(p.lieuxRegie ?? [])].includes(l));
   return (
     <div className="flex flex-wrap gap-1">
-      {isRecent(p.createdAt) && <Pill label="Nouveau" color="#16a34a" />}
+      {isRecent(p.createdAt) && <Pill label={t("admin.membre.nouveau")} color="#16a34a" />}
       {avecGroupes && (def
         ? <Pill
             label={[t(`categories.${def.categorie}`), ...(postes.length ? [postes.map((x) => libellePoste(t, i18n.language === "zh-CN", x)).join(", ")] : [])].join(" · ")}
@@ -212,15 +215,15 @@ export function ServicesDuMembre({ p, groupes }: { p: UserProfile; groupes?: Org
           />
         : <Pill label={t("groupes.personnes.sansGroupe")} />)}
       {avecGroupes && (p.sousEquipes ?? []).map((x) => <Pill key={x} label={`${t("equipes.public.louange")} · ${t(`acces.sousEquipe.${x}`)}`} />)}
-      {avecGroupes && lieux.map((l) => <Pill key={l} label={categoryLabel(l)} color={categoryColor(l)} />)}
+      {avecGroupes && lieux.map((l) => <Pill key={l} label={libelleService(t, zh, l)} color={categoryColor(l)} />)}
       {roles.map(([cat, roles]) => (
         <Pill
           key={cat}
-          label={`${categoryLabel(cat)}${roles.length ? " · " + roles.map((r) => SERVICE_ROLE_LABELS[r]).join("/") : ""}`}
+          label={`${libelleService(t, zh, cat)}${roles.length ? " · " + roles.map((r) => libelleRole(t, zh, r)).join("/") : ""}`}
           color={categoryColor(cat)}
         />
       ))}
-      {Object.keys(p.serviceRoles).length === 0 && !avecGroupes && <Pill label="Ne sert pas" />}
+      {Object.keys(p.serviceRoles).length === 0 && !avecGroupes && <Pill label={t("admin.membre.neSertPas")} />}
     </div>
   );
 }
@@ -240,6 +243,7 @@ export function LignePersonne({
   deplie?: boolean;
   fin?: ReactNode;
 }) {
+  const { t, i18n } = useTranslation();
   return (
     <button
       onClick={onClick}
@@ -252,14 +256,14 @@ export function LignePersonne({
         <p className="text-sm font-semibold text-foreground truncate">
           {p.firstName} {p.lastName}
           {isAdminUser(p) && (
-            <span className="ml-2 text-xs font-semibold text-muted-foreground">admin</span>
+            <span className="ml-2 text-xs font-semibold text-muted-foreground">{t("admin.membre.admin")}</span>
           )}
         </p>
         {!compact && (
           <p className="text-xs text-muted-foreground truncate">
             {p.email}
-            {p.planningName ? ` · planning : ${p.planningName}` : ""}
-            {p.createdAt ? ` · inscrit le ${p.createdAt.toLocaleDateString("fr-FR")}` : ""}
+            {p.planningName ? ` · ${t("admin.membre.planningNom", { nom: p.planningName })}` : ""}
+            {p.createdAt ? ` · ${t("admin.membre.inscritLe", { date: p.createdAt.toLocaleDateString(i18n.language === "zh-CN" ? "zh-CN" : "fr-FR") })}` : ""}
           </p>
         )}
         <ServicesDuMembre p={p} groupes={groupes} />
@@ -280,7 +284,8 @@ export function FormulairePersonne({
   onAnnule: () => void;
   onEnregistre: (maj: UserProfile) => void;
 }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const zh = i18n.language === "zh-CN";
   const [form, setForm] = useState<ProfileFormValue>(() => profileToForm(p));
   const [notifyRights, setNotifyRights] = useState<string[]>(p.notify ?? []);
   const [saving, setSaving] = useState(false);
@@ -308,7 +313,7 @@ export function FormulairePersonne({
       await saveProfile(patch);
       onEnregistre({ ...p, ...patch });
     } catch {
-      setError("Erreur lors de l'enregistrement du profil.");
+      setError(t("admin.membre.erreurEnregistrer"));
     } finally {
       setSaving(false);
     }
@@ -349,7 +354,7 @@ export function FormulairePersonne({
       {!BACK_OFFICE && (
       <div className="rounded-lg border border-dashed border-border p-3">
         <p className="text-sm font-semibold text-muted-foreground mb-2">
-          Peut envoyer des notifications à :
+          {t("admin.membre.peutNotifier")}
         </p>
         <div className="flex flex-wrap gap-2">
           {[NOTIFY_ALL, ...NOTIFY_GROUPS.flatMap((g) => g.audiences)].map((a) => {
@@ -373,7 +378,7 @@ export function FormulairePersonne({
                 }`}
                 style={checked && color ? { background: `${color}15`, borderColor: color, color } : undefined}
               >
-                {checked ? "✓ " : ""}{audienceLabel(a)}
+                {checked ? "✓ " : ""}{libelleAudience(t, zh, a)}
               </button>
             );
           })}
@@ -383,10 +388,10 @@ export function FormulairePersonne({
 
       <div className="flex items-center gap-2 justify-end">
         <Button variant="outline" onClick={onAnnule} className="h-11">
-          Annuler
+          {t("common.buttons.cancel")}
         </Button>
         <Button onClick={() => void saveEdit()} disabled={saving} className="h-11">
-          {saving ? "Enregistrement…" : "Enregistrer"}
+          {saving ? t("admin.membre.enregistrement") : t("common.buttons.save")}
         </Button>
       </div>
     </div>
@@ -396,6 +401,7 @@ export function FormulairePersonne({
 /** Ancienne administration (`/admin`, interrupteur coupé) : la carte « Membres », chaque
  *  membre se déplie sur place. `onCompte` : nombre d'inscrits (pastille de l'onglet). */
 export function Personnes({ onCompte }: { onCompte?: (n: number) => void }) {
+  const { t } = useTranslation();
   const d = useDonneesPersonnes();
   const f = useFiltresPersonnes(d.profiles);
   const [editingUid, setEditingUid] = useState<string | null>(null);
@@ -409,11 +415,10 @@ export function Personnes({ onCompte }: { onCompte?: (n: number) => void }) {
     <div className="rounded-xl bg-card shadow-soft p-5 space-y-4">
       <div className="flex items-center justify-between">
         <h2 className="text-sm font-semibold text-muted-foreground">
-          Membres
+          {t("admin.membres")}
         </h2>
         <span className="text-xs text-muted-foreground">
-          {profiles.length} inscrit(s) · {stats.musiciens} musicien(s) · {stats.chanteurs}{" "}
-          chanteur(s) · {stats.presidences} présidence(s)
+          {t("admin.membre.compte", { inscrits: profiles.length, musiciens: stats.musiciens, chanteurs: stats.chanteurs, presidences: stats.presidences })}
         </span>
       </div>
 
@@ -433,12 +438,13 @@ export function ListePersonnes({
   deplie: string | null;
   setDeplie: (uid: string | null) => void;
 }) {
+  const { t } = useTranslation();
   const { profiles, loadingProfiles } = d;
   const maj = (u: UserProfile) => d.setProfiles((prev) => prev.map((x) => (x.uid === u.uid ? u : x)));
-  if (loadingProfiles) return <p className="text-sm text-muted-foreground py-6 text-center">Chargement…</p>;
+  if (loadingProfiles) return <p className="text-sm text-muted-foreground py-6 text-center">{t("common.loading")}</p>;
   if (f.displayed.length === 0)
     return (
-      <EtatVide compact>{profiles.length === 0 ? "Aucun profil pour l'instant." : "Aucun membre ne correspond."}</EtatVide>
+      <EtatVide compact>{profiles.length === 0 ? t("admin.membre.aucunProfil") : t("admin.membre.aucunCorrespond")}</EtatVide>
     );
   return (
     <div className="space-y-2">
