@@ -31,10 +31,12 @@ export function ColonneDroite() {
     return ceDimanche(rows, setlists, services, dimanche);
   }, `${user?.uid ?? ""}|${dimanche}|${services.join()}`);
   const lireReunion = permis.includes("reunions");
-  const { valeur: reunion } = useLecture(async () => {
+  // BO-G, 9 : `{ reunion }` une fois lue (null tant qu'on lit ou si la lecture échoue) : sans réunion, la carte reste, vide.
+  const { valeur: lue } = useLecture(async () => {
     if (!lireReunion) return null;
-    return reunionsDuTableau(await lireEvenements(today), user, profile, nowIsoParis(), 1)[0]?.reunion ?? null;
+    return { reunion: reunionsDuTableau(await lireEvenements(today), user, profile, nowIsoParis(), 1)[0]?.reunion ?? null };
   }, `${user?.uid ?? ""}|${today}|${lireReunion}`);
+  const reunion = lue?.reunion ?? null;
 
   const quand = reunion && [
     jourComplet(reunion.date, i18n.language),
@@ -43,12 +45,14 @@ export function ColonneDroite() {
 
   return (
     <aside data-testid="colonne-droite" className="space-y-3">
-      {etats && etats.length > 0 && (
+      {/* BO-G, 9 : les deux cartes restent quand il n'y a rien, avec « Rien de prévu » (omises seulement si leur lecture échoue). */}
+      {etats && (
         <section aria-labelledby="a-faire-dimanche" className={CARTE}>
           <h2 id="a-faire-dimanche" className="text-[15px] font-semibold text-foreground">
             {t("backOffice.aFaire.dimanche.titre", { date: jourLong(dimanche, i18n.language) })}
           </h2>
-          <div className="mt-2 space-y-2.5">
+          {etats.length === 0 && <p className="mt-2 text-[13px] text-muted-foreground">{t("backOffice.aFaire.rienDePrevu")}</p>}
+          <div className={etats.length > 0 ? "mt-2 space-y-2.5" : "hidden"}>
             {etats.map((e) => {
               const postes = e.lignes.filter((l) => l.valeur).map((l) => `${t(l.i18n)} ${l.valeur}`);
               const heure = HEURE_DU_SERVICE(e.categorie);
@@ -72,13 +76,13 @@ export function ColonneDroite() {
           </Link>
         </section>
       )}
-      {reunion && (
+      {lue && (
         <section aria-labelledby="a-faire-reunion" className={CARTE}>
           <h2 id="a-faire-reunion" className="text-[15px] font-semibold text-foreground">{t("backOffice.aFaire.reunion.titre")}</h2>
-          <Link href={ficheEvenement(reunion)} className="mt-2 block rounded-md hover:underline">
+          {!reunion ? <p className="mt-2 text-[13px] text-muted-foreground">{t("backOffice.aFaire.rienDePrevu")}</p> : <Link href={ficheEvenement(reunion)} className="mt-2 block rounded-md hover:underline">
             <b className="block break-words text-sm font-semibold text-foreground">{reunion.titre}</b>
             <span className="block break-words text-[13px] text-muted-foreground">{quand}</span>
-          </Link>
+          </Link>}
         </section>
       )}
     </aside>

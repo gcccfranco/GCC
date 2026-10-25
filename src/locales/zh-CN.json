@@ -21,7 +21,8 @@
       "evenements": "活动",
       "moi": "我",
       "account": "账户",
-      "taches": "任务"
+      "taches": "任务",
+      "backOffice": "后台"
     },
     "buttons": {
       "reset": "重置",
@@ -3405,6 +3406,7 @@
       "ajouter": "添加",
       "ajouterEvenement": "活动",
       "ajouterReunion": "会议",
+      "ajouterTache": "任务",
       "sceneDesFetes": "节日舞台",
       "ouvrirScene": "在后台打开舞台",
       "etiquetteSheet": "Sheet"
@@ -3433,7 +3435,8 @@
       }
     },
     "equipe": {
-      "sansCompte": "排班表中尚无账号的名字"
+      "sansCompte": "排班表中尚无账号的名字",
+      "sansCompteAvecCompte": "排班表中尚无账号的名字（{{count}}）"
     },
     "aFaire": {
       "sousTitre": "{{jour}}，最紧急的在前",
@@ -3505,7 +3508,8 @@
       },
       "reunion": {
         "titre": "下一次会议"
-      }
+      },
+      "rienDePrevu": "暂无安排。"
     },
     "selecteur": {
       "aria": "选择空间",

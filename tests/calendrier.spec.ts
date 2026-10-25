@@ -1008,7 +1008,7 @@ test.describe("C3 : la page du calendrier en Mois", () => {
     await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
     await sheets(page);
     await signInAs(page, P_ADMIN, DOCS, "/back-office/calendrier");
-    await expect(page.getByTestId("mois-affiche")).toHaveText(estTelephone(info) ? "10月" : "2026年10月");
+    await expect(page.getByTestId("mois-affiche")).toHaveText("2026年10月");
     await expect(page.getByTestId("calendrier")).not.toHaveAttribute("aria-busy", "true");
     // BO-C : le filtre en pilules, et les pastilles des sources dans la feuille « 来源 », sur toutes les tailles.
     await expect(page.getByRole("group", { name: "筛选日历" }).getByRole("button")).toHaveText(["全部", "活动", "会议", "服事", "舞台"]);
@@ -1167,7 +1167,7 @@ test.describe("C4 : Agenda, feuille « Sources », Mois à points", () => {
     await expect(choix.getByRole("tab", { name: "Mois" })).toHaveAttribute("aria-selected", String(!estTelephone(info)));
     if (estTelephone(info)) {
       await expect(agenda(page)).toBeVisible();
-      await expect(page.getByTestId("mois-affiche")).toHaveText("Octobre");
+      await expect(page.getByTestId("mois-affiche")).toHaveText("Octobre 2026");
     } else {
       await expect(page.getByTestId("grille-mois")).toBeVisible();
       await expect(agenda(page)).toHaveCount(0);

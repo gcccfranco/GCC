@@ -14,8 +14,12 @@ import { BACK_OFFICE } from "@/lib/backOffice";
 import { loadPlanningData, collectPlanningNames, normalizeName, type PlanningData } from "@/lib/planning/names";
 import type { UserProfile } from "@/types/user";
 
-/** `onCompte` : nombre de noms sans compte (pastille de l'onglet). */
-export function SansCompte({ onCompte }: { onCompte?: (n: number) => void }) {
+/** BO-G, 7 : au Back-Office (Personnes › sans compte), le contour des cartes du back-office ; ailleurs (/admin, en ligne), l'ancienne carte. */
+const carte = (backOffice: boolean) => (backOffice ? "raised rounded-2xl" : "rounded-xl bg-card shadow-soft");
+
+/** `onCompte` : nombre de noms sans compte (pastille de l'onglet). `titreDePage` : la carte porte
+ *  le titre de la page (BO-G, 7 : un seul titre, avec le compte) ; sinon « Planning sans compte (N) ». */
+export function SansCompte({ onCompte, titreDePage = false }: { onCompte?: (n: number) => void; titreDePage?: boolean }) {
   const { t } = useTranslation();
   const [profiles, setProfiles] = useState<UserProfile[]>([]);
   const [planningNames, setPlanningNames] = useState<string[]>([]);
@@ -50,9 +54,9 @@ export function SansCompte({ onCompte }: { onCompte?: (n: number) => void }) {
 
   return (
     <div className="space-y-4">
-    <div className="rounded-xl bg-card shadow-soft p-5 space-y-3">
-      <h2 className="text-sm font-semibold text-muted-foreground">
-        {t("admin.sansCompte.titre", { count: unlinkedNames.length })}
+    <div className={`${carte(titreDePage)} p-5 space-y-3`}>
+      <h2 id={titreDePage ? "personnes-sans-compte" : undefined} className={titreDePage ? "text-[17px] font-semibold text-foreground" : "text-sm font-semibold text-muted-foreground"}>
+        {titreDePage ? t("backOffice.equipe.sansCompteAvecCompte", { count: unlinkedNames.length }) : t("admin.sansCompte.titre", { count: unlinkedNames.length })}
       </h2>
       <p className="text-xs text-muted-foreground">
         {t("admin.sansCompte.aide")}
@@ -87,7 +91,7 @@ function TitulairesSansCompte({ lignes }: { lignes: TitulaireSansCompte[] }) {
   if (lignes.length === 0) return null;
   const titre = `${t("groupes.personnes.sansCompteTitre")} (${lignes.length})`;
   return (
-    <section aria-label={titre} className="rounded-xl bg-card shadow-soft p-5 space-y-3">
+    <section aria-label={titre} className="raised rounded-2xl p-5 space-y-3">
       <h2 className="text-sm font-semibold text-muted-foreground">{titre}</h2>
       <p className="text-xs text-muted-foreground">{t("groupes.personnes.sansCompteAide")}</p>
       <ul className="divide-y divide-border">

@@ -48,8 +48,9 @@ test.describe("navigation par sections (T2), téléphone", () => {
       await expect(page.getByRole("link", { name: nom }).first()).toBeVisible();
     }
     await expect(page.getByRole("button", { name: "Signaler un problème" })).toBeVisible();
-    await expect(page.getByRole("button", { name: "Sombre" })).toBeVisible();
-    await expect(page.getByRole("button", { name: "中文", exact: true })).toBeVisible();
+    // BO-G, 12 : langue et thème sont des lignes d'état (libellé + valeur), plus des pilules d'action.
+    await expect(page.getByRole("button", { name: /^Thème\s*Clair$/ })).toBeVisible();
+    await expect(page.getByRole("button", { name: /^Langue\s*Français$/ })).toBeVisible();
     await expect(page.getByRole("button", { name: "Déconnexion" })).toBeVisible();
     await expect(page.getByRole("link", { name: "Admin" })).toHaveCount(0);
     // En sombre, une ligne-bouton est aussi lisible qu'une ligne-lien.

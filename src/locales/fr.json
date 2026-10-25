@@ -21,7 +21,8 @@
       "evenements": "Évènements",
       "moi": "Moi",
       "account": "Compte",
-      "taches": "Tâches"
+      "taches": "Tâches",
+      "backOffice": "Back-Office"
     },
     "buttons": {
       "reset": "Réinitialiser",
@@ -2467,7 +2468,7 @@
     "carteFaire": {
       "titre": "Ce que tu peux faire",
       "admin": "Tu as tous les accès : tu es admin.",
-      "aucun": "Tu as les chants, les accords, le planning, Mes services et tes setlists."
+      "aucun": "Tu as les chants, les accords, le planning, mes services et tes setlists."
     }
   },
   "pdf": {
@@ -3449,6 +3450,7 @@
       "ajouter": "Ajouter",
       "ajouterEvenement": "Évènement",
       "ajouterReunion": "Réunion",
+      "ajouterTache": "Tâche",
       "sceneDesFetes": "Scène des fêtes",
       "ouvrirScene": "Ouvrir la scène dans le back-office",
       "etiquetteSheet": "Sheet"
@@ -3477,7 +3479,8 @@
       }
     },
     "equipe": {
-      "sansCompte": "Noms du planning sans compte"
+      "sansCompte": "Noms du planning sans compte",
+      "sansCompteAvecCompte": "Noms du planning sans compte ({{count}})"
     },
     "aFaire": {
       "sousTitre": "{{jour}}, le plus urgent en premier",
@@ -3549,7 +3552,8 @@
       },
       "reunion": {
         "titre": "Prochaine réunion"
-      }
+      },
+      "rienDePrevu": "Rien de prévu pour l'instant."
     },
     "selecteur": {
       "aria": "Choisir l'espace",

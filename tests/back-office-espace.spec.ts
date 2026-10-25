@@ -333,7 +333,7 @@ test.describe("Back-Office (B1) : le sélecteur et le menu", () => {
     await expect(enTete.getByRole("button", { name: "切换为中文" })).toBeVisible();
   });
 
-  test("grand écran : le sélecteur sous le label de la barre dépliée, absent de la barre réduite", async ({ page }, info) => {
+  test("grand écran : le sélecteur sous le label de la barre dépliée ; réduite, l'interrupteur reste en deux icônes nommées (BO-G, 10)", async ({ page }, info) => {
     test.skip(!estOrdinateur(info) && !estTablettePaysage(info), "propre aux grands écrans");
     await signInAs(page, ADMIN, {}, "/songs");
     await page.getByRole("searchbox").waitFor();
@@ -341,13 +341,33 @@ test.describe("Back-Office (B1) : le sélecteur et le menu", () => {
     if (estOrdinateur(info)) {
       const place = barre.getByTestId("place-selecteur");
       await expect(place.getByRole("group", { name: "Choisir l'espace" })).toBeVisible();
+      await expect(barre.getByTestId("selecteur-icones"), "dépliée : pas les icônes").toBeHidden();
       await barre.getByRole("button", { name: "Réduire la barre latérale" }).click();
     }
-    // Réduite : ni label, ni sélecteur (U4, question 2) ; on change d'espace en dépliant.
-    await expect(barre.getByRole("group", { name: "Choisir l'espace" })).toBeHidden();
+    // Réduite : plus de sélecteur déplié, mais l'interrupteur reste, en icônes avec un nom accessible (toujours 44 px de cible).
+    await expect(barre.getByTestId("place-selecteur")).toBeHidden();
+    const icones = barre.getByTestId("selecteur-icones");
+    await expect(icones).toBeVisible();
+    await expect(icones).toHaveAttribute("aria-label", "Choisir l'espace");
+    const app = icones.getByRole("link", { name: "App", exact: true });
+    const backOffice = icones.getByRole("link", { name: "Back-Office", exact: true });
+    await expect(app).toHaveAttribute("href", /\/(planning|songs)/);
+    await expect(app).toHaveAttribute("aria-current", "true");
+    await expect(backOffice).toHaveAttribute("href", /\/back-office\/?$/);
+    for (const lien of [app, backOffice]) {
+      const b = (await lien.boundingBox())!;
+      expect(b.x + b.width, "dans la barre réduite").toBeLessThanOrEqual(68);
+      // La cible de toucher dépasse le dessin : 44 px (::after, comme BO-E2).
+      const centre = { x: b.x + b.width / 2, y: b.y + b.height / 2 };
+      for (const dy of [-21, 21]) {
+        const touche = await page.evaluate(({ x, y }) => document.elementFromPoint(x, y)?.closest("a")?.getAttribute("aria-label"), { x: centre.x, y: centre.y + dy });
+        expect(touche, `cible de 44 px autour de ${await lien.getAttribute("aria-label")}`).toBe(await lien.getAttribute("aria-label"));
+      }
+    }
     if (estOrdinateur(info)) {
       await barre.getByRole("button", { name: "Déplier la barre latérale" }).click();
-      await expect(barre.getByRole("group", { name: "Choisir l'espace" })).toBeVisible();
+      await expect(barre.getByRole("group", { name: "Choisir l'espace" }).filter({ visible: true })).toHaveCount(1);
+      await expect(barre.getByTestId("place-selecteur")).toBeVisible();
     } else {
       await deplierSiTablettePaysage(page, info);
       await page.getByTestId("barre-par-dessus").getByRole("link", { name: "Back-Office" }).tap();
@@ -355,6 +375,22 @@ test.describe("Back-Office (B1) : le sélecteur et le menu", () => {
       // Le choix d'un espace referme la barre posée par-dessus.
       await expect(page.getByTestId("barre-par-dessus")).toHaveCount(0);
     }
+  });
+
+  test("l'en-tête dit « GCC Back-Office » au Back-Office et « GCC Louange » dans l'app (BO-G, 13)", async ({ page }, info) => {
+    await sansSheet(page);
+    await signInAs(page, ADMIN, {}, "/back-office");
+    await expect(page.getByRole("heading", { level: 1, name: "À faire" })).toBeVisible();
+    const marque = estOrdinateur(info) || estTablettePaysage(info)
+      ? page.getByTestId("barre-laterale").getByRole("link").first()
+      : page.locator("header.barre-haut").getByRole("link").first();
+    await expect(marque).toContainText("GCC");
+    await expect(marque).toContainText("Back-Office");
+    await expect(marque).not.toContainText("Louange");
+    await page.goto("/songs");
+    await page.getByRole("searchbox").waitFor();
+    await expect(marque).toContainText("Louange");
+    await expect(marque).not.toContainText("Back-Office");
   });
 
   test("en 中文 : 应用 · 后台, et le menu traduit", async ({ page }, info) => {
@@ -398,6 +434,30 @@ test.describe("Back-Office : pastilles de la barre latérale (Q15)", () => {
     await page.goto("/songs");
     await page.getByRole("searchbox").waitFor();
     await expect(page.getByTestId("barre-laterale").getByTestId("pastille")).toHaveCount(0);
+  });
+
+  // BO-G, 10 : barre réduite (ordinateur replié, tablette couchée), la pastille de non-lus reste, en point sur l'icône.
+  test("barre réduite : les pastilles de non-lus restent, en points sur les icônes", async ({ page }, info) => {
+    test.skip(!estOrdinateur(info) && !estTablettePaysage(info), "propre aux grands écrans");
+    await sansSheet(page);
+    await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
+    await signInAs(page, ADMIN, PASTILLES, "/back-office");
+    await expect(page.getByRole("heading", { level: 1, name: "À faire" })).toBeVisible();
+    const barre = page.getByTestId("barre-laterale");
+    if (estOrdinateur(info)) await barre.getByRole("button", { name: "Réduire la barre latérale" }).click();
+    const lien = barre.getByRole("navigation", { name: "Navigation principale" }).getByRole("link", { name: "Messages", exact: true });
+    const point = lien.getByTestId("pastille");
+    await expect(point).toBeVisible();
+    await expect(point).toHaveText("2");
+    const p = (await point.boundingBox())!;
+    const l = (await lien.boundingBox())!;
+    expect(p.width, "un point").toBeLessThanOrEqual(12);
+    expect(p.height).toBeLessThanOrEqual(12);
+    expect(p.x, "dans l'icône").toBeGreaterThanOrEqual(l.x);
+    expect(p.x + p.width).toBeLessThanOrEqual(l.x + l.width + 1);
+    expect(p.y).toBeGreaterThanOrEqual(l.y - 1);
+    expect(p.y + p.height).toBeLessThanOrEqual(l.y + l.height);
+    await expect(lien, "le compte reste dit en description").toHaveAttribute("aria-describedby", /.+/);
   });
 
   test("un responsable qui n'est pas admin : Messages n'a pas de pastille et n'est pas lu", async ({ page }, info) => {

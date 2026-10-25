@@ -18,6 +18,7 @@ import {
   SEUIL_A_REDECOUVRIR, bornesDeLaPeriode, choixDesFiltres, debutDeLHistorique, libellePart, libelleTendance, statsChants,
   veille, type FiltresStats, type LigneChant, type Periode, type StatsChants,
 } from "@/lib/stats/chantsJoues";
+import { LargeurBO } from "@/components/backOffice/LargeurBO";
 import { EnTetePage } from "@/components/layout/EnTetePage";
 import { OngletsRail, Pilules } from "@/components/layout/Onglets";
 import { Button } from "@/components/ui/button";
@@ -122,7 +123,12 @@ type Lecture =
   | { etat: "echec"; message: string }
   | { etat: "pret"; setlists: FSSetlist[]; recueil: SongIndexEntry[]; choix: { services: string[]; presidences: string[] } };
 
+/** BO-G, 8 : la largeur de lecture commune du Back-Office (LargeurBO), comme À faire et la page d'une équipe. */
 export function StatistiquesClient() {
+  return <LargeurBO><StatistiquesContenu /></LargeurBO>;
+}
+
+function StatistiquesContenu() {
   const { t, i18n } = useTranslation();
   const zh = i18n.language === "zh-CN";
   // Même « aujourd'hui » que les Archives de l'onglet Setlists (Q3).

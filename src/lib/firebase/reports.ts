@@ -6,6 +6,7 @@ import {
   fromFsValue,
   type RawDoc,
 } from "./setlists";
+import { versDate } from "@/lib/utils/formatDate";
 import type { Report, ReportKind, ReportStatus } from "@/types/report";
 
 function fromFsReport(raw: RawDoc): Report {
@@ -25,7 +26,7 @@ function fromFsReport(raw: RawDoc): Report {
     authorId: (data.authorId as string) ?? "",
     authorName: (data.authorName as string) ?? "",
     authorEmail: (data.authorEmail as string) ?? "",
-    createdAt: (data.createdAt as Date | null) ?? null,
+    createdAt: versDate(data.createdAt),
   };
 }
 

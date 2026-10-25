@@ -816,6 +816,21 @@ export function PlanningGrille({
           <span aria-live="polite" className="text-xs text-muted-foreground">{t("planning.grille.enregistre")}</span>
         )}
         {exporter && <ExportModele definition={definition} periode={periode} exporter={exporter} />}
+        {actifClavier && (
+          <button
+            ref={boutonAide}
+            data-aide-clavier=""
+            type="button"
+            aria-label={t("backOffice.boE1.aideClavier")}
+            aria-expanded={aideOuverte}
+            aria-controls={idAide}
+            onClick={() => setAideOuverte((v) => !v)}
+            onKeyDown={(e) => { if (e.key === "Escape" && aideOuverte) { e.stopPropagation(); setAideOuverte(false); boutonAide.current?.focus() } }}
+            className="relative hidden h-7 w-7 items-center justify-center rounded-full text-xs font-semibold text-muted-foreground ring-1 ring-inset ring-border transition-colors after:absolute after:-inset-2 after:content-[''] hover:text-foreground sm:inline-flex"
+          >
+            ?
+          </button>
+        )}
       </DansLEnTete>
       {legende && <h3 className="text-[15px] font-bold text-foreground">{legende}</h3>}
 
@@ -1068,26 +1083,12 @@ export function PlanningGrille({
       </div>
 
 
+      {/* BO-G, 5 : le « ? » est dans la barre d'outils (en-tête) ; le texte de l'aide, lui, s'ouvre ici, dans sa zone vive. */}
       {actifClavier && (
-        <div
-          data-aide-clavier=""
-          className="hidden sm:block"
-          onKeyDown={(e) => { if (e.key === "Escape" && aideOuverte) { e.stopPropagation(); setAideOuverte(false); boutonAide.current?.focus() } }}
-        >
-          <button
-            ref={boutonAide}
-            type="button"
-            aria-label={t("backOffice.boE1.aideClavier")}
-            aria-expanded={aideOuverte}
-            aria-controls={idAide}
-            onClick={() => setAideOuverte((v) => !v)}
-            className="inline-flex h-7 w-7 items-center justify-center rounded-full text-xs font-semibold text-muted-foreground ring-1 ring-inset ring-border transition-colors hover:text-foreground"
-          >
-            ?
-          </button>
+        <div data-aide-clavier="" className="hidden sm:block">
           {/* Zone vive posée d'avance : l'aide qui s'y glisse est lue par les lecteurs d'écran (un ajout dans une zone absente ne l'est pas). */}
           <div aria-live="polite" role="status">
-            {aideOuverte && <p id={idAide} className="mt-1.5 text-xs text-muted-foreground">{t("planning.gestes.clavier")}</p>}
+            {aideOuverte && <p id={idAide} className="text-xs text-muted-foreground">{t("planning.gestes.clavier")}</p>}
           </div>
         </div>
       )}

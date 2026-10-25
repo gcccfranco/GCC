@@ -6,7 +6,7 @@
 import { useTranslation } from "react-i18next";
 import { useProfile } from "@/lib/firebase/users";
 import { isAdminUser } from "@/lib/access";
-import { EnTetePage } from "@/components/layout/EnTetePage";
+import { EnTetePage, Retour } from "@/components/layout/EnTetePage";
 import { SansCompte } from "@/components/admin/SansCompte";
 import { ReserveAuxAdmins } from "@/components/admin/commun";
 import { RailEquipes } from "../../RailEquipes";
@@ -17,15 +17,12 @@ export default function Page() {
   if (!isAdminUser(user)) return <ReserveAuxAdmins connecte={!!user} retour="/back-office/equipes/personnes/sans-compte" />;
   return (
     <>
-      <EnTetePage
-        retour={{ href: "/back-office/equipes/personnes", label: t("backOffice.parties.personnes") }}
-        titre={t("backOffice.entrees.equipes")}
-        onglets={<RailEquipes />}
-      />
+      <EnTetePage titre={t("backOffice.entrees.equipes")} onglets={<RailEquipes />} />
+      {/* BO-G, 7 : le retour sous le titre de la section (l'onglet Personnes est actif), puis un seul titre, avec le compte. */}
       <section aria-labelledby="personnes-sans-compte" className="px-[var(--marge-page)] pb-16">
-        <h2 id="personnes-sans-compte" className="mb-3 text-[17px] font-semibold text-foreground">{t("backOffice.equipe.sansCompte")}</h2>
+        <Retour href="/back-office/equipes/personnes">{t("backOffice.parties.personnes")}</Retour>
         <div className="max-w-[760px]">
-          <SansCompte />
+          <SansCompte titreDePage />
         </div>
       </section>
     </>

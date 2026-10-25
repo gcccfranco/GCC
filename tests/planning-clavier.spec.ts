@@ -377,6 +377,11 @@ test("ordinateur — le « ? » ouvre l'aide ; Échap la ferme, rend le focus au
   await choisir(page, "2027-01-24", "piano")
   const aide = page.getByRole("button", { name: "Raccourcis clavier" })
   await expect(aide).toHaveAttribute("aria-expanded", "false")
+  // BO-G, 5 : le « ? » est dans la barre d'outils de l'en-tête du planning, au-dessus de la grille, plus seul dessous.
+  await expect(page.locator("header[data-entete-page]").getByRole("button", { name: "Raccourcis clavier" })).toBeVisible()
+  const boutonAide = (await aide.boundingBox())!
+  const grille = (await page.getByTestId("grille-defilement").boundingBox())!
+  expect(boutonAide.y + boutonAide.height, "le « ? » est au-dessus de la grille").toBeLessThan(grille.y)
   await aide.click()
   await expect(aide).toHaveAttribute("aria-expanded", "true")
   await expect(page.getByText("Au clavier", { exact: false })).toBeVisible()

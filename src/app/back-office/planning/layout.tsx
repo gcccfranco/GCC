@@ -38,6 +38,7 @@ export default function PlanningLayout({ children }: { children: React.ReactNode
           isAdminUser(user) ? (
             <OngletsRail
               etiquette={t("backOffice.sousParties")}
+              cible44
               onglets={[
                 { id: "plannings", label: t("backOffice.parties.plannings"), href: "/back-office/planning" },
                 { id: "sans-compte", label: t("backOffice.parties.sansCompte"), href: SANS_COMPTE },

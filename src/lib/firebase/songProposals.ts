@@ -6,6 +6,7 @@ import {
   fromFsValue,
   type RawDoc,
 } from "./setlists";
+import { versDate } from "@/lib/utils/formatDate";
 import type { SongProposal, SongProposalStatus } from "@/types/songProposal";
 
 function fromFsProposal(raw: RawDoc): SongProposal {
@@ -21,7 +22,7 @@ function fromFsProposal(raw: RawDoc): SongProposal {
     status: (data.status as SongProposalStatus) ?? "pending",
     authorId: (data.authorId as string) ?? "",
     authorName: (data.authorName as string) ?? "",
-    createdAt: (data.createdAt as Date | null) ?? null,
+    createdAt: versDate(data.createdAt),
     ...(data.setlistId ? { setlistId: data.setlistId as string, setlistTitre: (data.setlistTitre as string) ?? "" } : {}),
   };
 }

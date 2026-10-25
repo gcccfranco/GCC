@@ -176,6 +176,35 @@ test.describe("Moi (A12)", () => {
     await expect(apercu(page, "Harmonie")).toHaveCount(0);
   });
 
+  // BO-G, 12 : un simple membre, la carte du compte sans grand vide dessous ; langue et thème en états ; « mes » en minuscule.
+  test("un simple membre : plus de grand vide sous « Mon profil » ; Langue et Thème se lisent comme un état", async ({ page }, info) => {
+    await ouvrir(page, MEMBRE, "/moi");
+    const compte = await boite(page.getByRole("region", { name: "Mon compte" }));
+    const profil = await boite(page.getByRole("region", { name: "Mon compte" }).getByRole("link", { name: "Mon profil" }));
+    const deconnexion = await boite(page.getByRole("button", { name: "Déconnexion" }));
+    const reglages = await boite(page.getByRole("region", { name: "Réglages" }));
+    if (info.project.name === "tablette") {
+      // Compte et réglages côte à côte ; « Déconnexion » sous le compte : la colonne du compte finit près de celle des réglages.
+      expect(Math.abs(reglages.y - compte.y), "compte et réglages côte à côte").toBeLessThan(2);
+      expect(deconnexion.y, "« Déconnexion » sous le compte").toBeGreaterThan(compte.y + compte.height - 1);
+      expect(deconnexion.x, "dans la colonne du compte").toBeLessThan(reglages.x);
+      expect(Math.abs((deconnexion.y + deconnexion.height) - (reglages.y + reglages.height)), "colonnes de même hauteur à 80 px près").toBeLessThanOrEqual(80);
+    }
+    expect(compte.y + compte.height - (profil.y + profil.height), "« Mon profil » finit au bas de sa carte").toBeLessThanOrEqual(24);
+    // Langue : libellé + valeur en texte secondaire dans une ligne ; plus de pilule de bouton.
+    const langue = page.getByRole("button", { name: /^Langue/ });
+    await expect(langue).toContainText("Français");
+    const valeur = langue.getByText("Français", { exact: true });
+    expect(await valeur.evaluate((el) => getComputedStyle(el).backgroundColor), "pas une pilule").toBe("rgba(0, 0, 0, 0)");
+    await expect(valeur).toHaveClass(/text-muted-foreground/);
+    const theme = page.getByRole("button", { name: /^Thème/ });
+    await expect(theme).toContainText("Clair");
+    await theme.click();
+    await expect(theme).toContainText("Sombre");
+    await langue.click();
+    await expect(page.getByRole("button", { name: /^语言|^Langue/ })).toContainText("中文");
+  });
+
   test("un guitariste : l'aperçu Harmonie mène aux fiches, pas aux sons du RD-2000 (réservés aux pianistes)", async ({ page }) => {
     await ouvrir(page, GUITARISTE, "/moi");
     const h = apercu(page, "Harmonie");

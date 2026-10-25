@@ -33,7 +33,7 @@ import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { useSearchParams } from "next/navigation";
 import { useTranslation } from "react-i18next";
 import Link from "next/link";
-import { Check, ChevronDown, ChevronLeft, ChevronRight, CloudOff, Plus, SlidersHorizontal, UserRound } from "lucide-react";
+import { CalendarDays, Check, ChevronDown, ChevronLeft, ChevronRight, CloudOff, ListChecks, Plus, SlidersHorizontal, UserRound, Users } from "lucide-react";
 import { creatableEvenementPours, equipesOuCreer, isCoordination, publicDeReunion } from "@/lib/access";
 import type { TacheValues } from "@/lib/firebase/taches";
 import { useProfile } from "@/lib/firebase/users";
@@ -70,7 +70,6 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { EnTetePage } from "@/components/layout/EnTetePage";
 import { OngletsRail, Pilules } from "@/components/layout/Onglets";
 import { BoutonNouveau } from "@/components/layout/BoutonNouveau";
-import { useFonduLateral } from "@/hooks/useFonduLateral";
 
 // Les dispositions de U4 (bloc « Lot U4 » de globals.css) : le panneau du jour se pose à
 // droite sur ordinateur et sur la tablette couchée ; ailleurs il s'ouvre en feuille.
@@ -273,14 +272,14 @@ export function CalendrierClient() {
   }
 
   // « ‹ Octobre 2026 › » et « Aujourd'hui » : dans la rangée de l'en-tête, en Mois comme en Agenda
-  // (sans l'année sur téléphone, planche bo-telephone-calendrier).
+  // (BO-G, 3 : l'année aussi sur téléphone).
   const navigation = (
     <div className="flex items-center gap-1.5">
       <button type="button" className={BOUTON_ROND} aria-label={t("calendrier.precedent")} onClick={() => allerA(moisVoisin(mois, -1))}>
         <ChevronLeft aria-hidden className="h-4 w-4" />
       </button>
-      <span data-testid="mois-affiche" aria-live="polite" className="min-w-[92px] text-center text-[17px] font-bold text-foreground md:min-w-[128px]">
-        {titreMois(mois, lang, telephone && mois.slice(0, 4) === aujourdhui.slice(0, 4))}
+      <span data-testid="mois-affiche" aria-live="polite" className="min-w-[92px] whitespace-nowrap text-center text-[17px] font-bold text-foreground md:min-w-[128px]">
+        {titreMois(mois, lang)}
       </span>
       <button type="button" className={BOUTON_ROND} aria-label={t("calendrier.suivant")} onClick={() => allerA(moisVoisin(mois, 1))}>
         <ChevronRight aria-hidden className="h-4 w-4" />
@@ -307,11 +306,6 @@ export function CalendrierClient() {
       </button>
     );
   });
-  // Retouches v18 (R4, D6) : en grand, les filtres restent sur une ligne et défilent de côté, avec un
-  // bord fondu du côté où il en reste (comme les plannings) ; l'iPad debout les passait sur trois rangées.
-  // La rangée naît à chaque sortie du téléphone (fenêtre élargie, téléphone tourné) et ses libellés
-  // changent de largeur avec la langue : le fondu se repose alors.
-  const rangeeFiltres = useFonduLateral<HTMLDivElement>(`${permises.length}|${telephone}|${lang}|${filtre}`);
   const seulementMoi = (
     <button
       type="button"
@@ -330,7 +324,10 @@ export function CalendrierClient() {
       {t("calendrier.sourcesFeuille")}
     </button>
   );
+  // BO-G, 3 : la rangée des filtres passe à la ligne au lieu de défiler (rien n'est coupé, plus de fondu latéral) ;
+  // `Pilules` défile de lui-même, on lui retire son défilement et ses marges négatives.
   const filtres = (
+    <div className="[&>div]:mx-0 [&>div]:flex-wrap [&>div]:overflow-x-visible [&>div]:px-0 [&>div]:pb-0">
     <Pilules
       etiquette={t("backOffice.calendrier.filtrer")}
       obligatoire
@@ -344,12 +341,12 @@ export function CalendrierClient() {
       valeur={filtre}
       choisir={(v) => setFiltre(v ?? "tout")}
     />
+    </div>
   );
 
   // La rangée sous le rail : la période, puis les filtres. Sur téléphone, trois lignes : la période, le filtre
-  // (`Pilules`), puis « Seulement moi » et « Sources ». Dès 768 px, une seule ligne qui défile de côté
-  // (R4, D6 ; le filet reste devant) : le filtre, « Seulement moi », « Sources ». `py-2 -my-2` : ni le contour
-  // du focus ni l'ombre des pastilles ne sont rognés par le défilement.
+  // (`Pilules`), puis « Seulement moi » et « Sources ». Dès 768 px, une ligne qui passe à la ligne si elle ne tient
+  // pas (BO-G, 3) : le filtre, « Seulement moi », « Sources ».
   const rangee = telephone ? (
     <div className="flex flex-col gap-3">
       {navigation}
@@ -360,45 +357,52 @@ export function CalendrierClient() {
       </div>
     </div>
   ) : (
-    <div className="flex items-center gap-1.5">
+    <div className="flex flex-wrap items-center gap-x-1.5 gap-y-2">
       <div className="shrink-0">{navigation}</div>
       <span aria-hidden className="mx-2 h-6 w-px shrink-0 bg-border" />
-      <div
-        ref={rangeeFiltres}
-        data-testid="filtres-calendrier"
-        className="fondu-lateral -my-2 flex min-w-0 flex-1 items-center gap-1.5 overflow-x-auto px-0.5 py-2"
-        style={{ scrollbarWidth: "none" }}
-      >
-        {/* Le filtre garde ses marges négatives et son défilement pour le téléphone : ici la rangée défile. */}
-        <div className="shrink-0 [&>div]:mx-0 [&>div]:overflow-x-visible [&>div]:px-0 [&>div]:pb-0">{filtres}</div>
+      <div data-testid="filtres-calendrier" className="flex min-w-[16rem] flex-1 flex-wrap items-center gap-1.5">
+        {filtres}
         {seulementMoi}
         {boutonSources}
       </div>
     </div>
   );
 
-  // L'action principale (R7, BO8) : dès 768 px « Ajouter » et son menu (Évènement | Réunion, chacun seulement
-  // pour qui en a le droit) ; sur téléphone, le rond « Ajouter », qui propose dans sa feuille l'évènement, la
-  // tâche et la réunion du jour choisi.
+  // L'action principale (R7, BO8, BO-G 4) : sur toutes les tailles les trois mêmes créations, chacune seulement pour qui
+  // en a le droit : Évènement, Réunion, Tâche, à la date choisie (le jour touché du Mois ; aujourd'hui en Agenda), avec
+  // les adresses de la feuille du jour. Dès 768 px un menu sous « Ajouter » ; sur téléphone, le rond « Ajouter » et sa feuille.
+  const ENTREE = "min-h-11 cursor-pointer gap-2.5 px-3 text-[15px]";
   const action = telephone ? (
     peutCreer && <BoutonNouveau label={t("backOffice.calendrier.ajouter")} onClick={() => setFeuilleCreer(true)} />
   ) : (
-    (droits.evenement || droits.reunion) && (
+    peutCreer && (
       <DropdownMenu>
         <DropdownMenuTrigger className={BOUTON_AJOUTER}>
           <Plus aria-hidden className="h-4 w-4 shrink-0" strokeWidth={2.4} />
           {t("backOffice.calendrier.ajouter")}
           <ChevronDown aria-hidden className="h-4 w-4 shrink-0" />
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="min-w-44">
+        <DropdownMenuContent align="end" className="min-w-48">
           {droits.evenement && (
-            <DropdownMenuItem asChild>
-              <Link href="/back-office/evenements/nouveau">{t("backOffice.calendrier.ajouterEvenement")}</Link>
+            <DropdownMenuItem asChild className={ENTREE}>
+              <Link href={`/back-office/evenements/nouveau?date=${jourCreer}`}>
+                <CalendarDays aria-hidden className="h-4 w-4 shrink-0 text-muted-foreground" />
+                {t("backOffice.calendrier.ajouterEvenement")}
+              </Link>
             </DropdownMenuItem>
           )}
           {droits.reunion && (
-            <DropdownMenuItem asChild>
-              <Link href="/back-office/reunions/nouvelle">{t("backOffice.calendrier.ajouterReunion")}</Link>
+            <DropdownMenuItem asChild className={ENTREE}>
+              <Link href={`/back-office/reunions/nouvelle?date=${jourCreer}`}>
+                <Users aria-hidden className="h-4 w-4 shrink-0 text-muted-foreground" />
+                {t("backOffice.calendrier.ajouterReunion")}
+              </Link>
+            </DropdownMenuItem>
+          )}
+          {droits.tache && (
+            <DropdownMenuItem onSelect={nouvelleTache(jourCreer)} className={ENTREE}>
+              <ListChecks aria-hidden className="h-4 w-4 shrink-0 text-muted-foreground" />
+              {t("backOffice.calendrier.ajouterTache")}
             </DropdownMenuItem>
           )}
         </DropdownMenuContent>
@@ -432,7 +436,8 @@ export function CalendrierClient() {
         apres={rangee}
       />
       <div className="flex flex-1 items-stretch">
-        <div className="min-w-0 flex-1 px-[var(--marge-page)] pb-10">
+        {/* BO-G, 3 : sur téléphone le « + » flottant (52 px, à `--tabbar-bottom` + 76 px) ne recouvre pas la dernière carte. */}
+        <div className={cn("min-w-0 flex-1 px-[var(--marge-page)] pb-10", telephone && peutCreer && "pb-[calc(var(--tabbar-bottom)+76px+52px+16px)]")}>
           {/* U9 (Q7 b), BO10 : la note du Sheet, ici seulement et jusqu'au 31/12/2026. */}
           <AnnonceBascule className="mb-3" />
 

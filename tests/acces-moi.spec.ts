@@ -88,7 +88,7 @@ test.describe("Moi : Mes équipes et Ce que tu peux faire", () => {
     await expect(equipes.getByText("Tu n'es dans aucune équipe.")).toBeVisible();
     await expect(equipes.getByTestId("equipe-ligne")).toHaveCount(0);
     const faire = carte(page, "Ce que tu peux faire");
-    await expect(faire.getByText("Tu as les chants, les accords, le planning, Mes services et tes setlists.")).toBeVisible();
+    await expect(faire.getByText("Tu as les chants, les accords, le planning, mes services et tes setlists.")).toBeVisible();
     await expect(faire.getByTestId("acces-ligne")).toHaveCount(0);
     await expect(faire.getByText("Un accès te manque ? Demande à ton référent de te placer dans l'organigramme.")).toBeVisible();
     await expect(page.getByTestId("service-role")).toHaveCount(0);

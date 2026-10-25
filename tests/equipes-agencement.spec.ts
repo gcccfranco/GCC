@@ -1,6 +1,6 @@
 import { expect, test, type Page, type TestInfo } from "@playwright/test";
 import { ADMIN_EMAIL, signInAs, type FakeProfile } from "./helpers/fakeSession";
-import { enTete, estGrandEcran, verifierAgencement } from "./helpers/agencement";
+import { enTete, estGrandEcran, estTelephone, margeAttendue, verifierAgencement, zoneDeContenu } from "./helpers/agencement";
 import type { MembreEquipe } from "../src/types/equipe";
 
 // Lot 1 du chantier « équipes et groupes » (docs/spec-equipes-sans-poles.md), tranche EQ-D :
@@ -74,6 +74,67 @@ for (const [langue, sousTitre] of [
     await capture(page, `organigramme-${langue}`);
   });
 }
+
+// BO-G, 6 : plus de mot coupé en pleine colonne, plus de flèche flottante sur une colonne, plus de puce au-delà de la marge.
+test("organigramme : aucun nom d'équipe ni de sous-groupe coupé, les flèches ‹ › hors des colonnes, les puces dans la marge", async ({ page }, info) => {
+  await ouvrir(page, ADMIN, "/back-office/equipes", {
+    ...DOCS,
+    "equipes/decoration": { pole: "decoration", membres: [M("Ilan P.", { referent: true }), M("Sacha T.")], updatedAt: "2026-09-18T10:00:00Z", parUid: "", parNom: "" },
+    "equipes/edd": {
+      pole: "edd", updatedAt: "2026-09-18T10:00:00Z", parUid: "", parNom: "",
+      membres: [M("Ilan P.", { groupe: "TEAM DÉCORATION ET MISE EN PLACE" }), M("Sacha T.", { groupe: "TEAM DÉCORATION ET MISE EN PLACE" }), M("Maé R.", { groupe: "MATERNELLE" })],
+    },
+  });
+  await expect(page.getByTestId("equipe-decoration")).toBeVisible();
+  const bandeau = page.getByTestId("bandeau-equipes");
+  await expect(bandeau).toHaveAttribute("data-range", "1");
+  // Un titre (h2) ou un nom de sous-groupe n'est jamais rogné : tout son texte tient dans sa boîte.
+  for (const titre of await bandeau.locator("h2, p.uppercase").all()) {
+    expect(await titre.evaluate((el) => el.scrollWidth - el.clientWidth), `« ${await titre.textContent()} » entier`).toBeLessThanOrEqual(1);
+  }
+  // Les flèches ne flottent plus sur les colonnes : dans la rangée de l'index, au-dessus du bandeau, hors flux absolu.
+  const suivantes = page.getByRole("button", { name: "Équipes suivantes" });
+  if (!estTelephone(info) && (await suivantes.count())) {
+    await expect(suivantes).toBeVisible();
+    expect(await suivantes.evaluate((el) => getComputedStyle(el).position), "plus de flèche flottante").not.toBe("absolute");
+    const f = (await suivantes.boundingBox())!;
+    const b = (await bandeau.boundingBox())!;
+    expect(f.y + f.height, "au-dessus des colonnes").toBeLessThanOrEqual(b.y + 1);
+  }
+  // Les puces de l'index (dernières comprises : EDD, TEAM LOUANGE) restent dans la marge de la zone, à la ligne s'il le faut.
+  if (!estTelephone(info)) {
+    const zone = await zoneDeContenu(page);
+    const marge = await margeAttendue(page);
+    for (const puce of await page.locator("[data-pilule]").all()) {
+      const p = (await puce.boundingBox())!;
+      expect(p.x, "puce à la marge gauche").toBeGreaterThanOrEqual(zone.gauche + marge - 1);
+      expect(p.x + p.width, `puce « ${await puce.textContent()} » avant la marge droite`).toBeLessThanOrEqual(zone.droite - marge + 1);
+    }
+  }
+});
+
+// BO-G, 16 : cibles de toucher de 44 px sans changer le dessin (::after) : rail Organigramme | Personnes, puces de l'index et des groupes.
+test("tablettes : le rail Organigramme | Personnes et les puces ont une cible de 44 px", async ({ page }, info) => {
+  test.skip(!info.project.name.startsWith("tablette"), "la cible de 44 px est celle du doigt : tablettes (portrait et paysage)");
+  await ouvrir(page, ADMIN, "/back-office/equipes");
+  await expect(page.getByTestId("equipe-da")).toBeVisible();
+  const cibles = [
+    ...(await page.locator('[data-onglets="rail"]').first().getByRole("link").all()),
+    ...(await page.locator('[data-onglets="pilules"]').first().getByRole("button").all()),
+    ...(await page.locator("[data-pilule]").all()),
+  ];
+  expect(cibles.length).toBeGreaterThan(6);
+  for (const cible of cibles) {
+    const b = (await cible.boundingBox())!;
+    const nom = (await cible.textContent())?.trim();
+    expect(b.height, `« ${nom} » : le dessin ne change pas`).toBeLessThan(44);
+    const x = b.x + b.width / 2;
+    for (const y of [b.y - (44 - b.height) / 2 + 1, b.y + b.height + (44 - b.height) / 2 - 1]) {
+      const touche = await page.evaluate(({ x, y }) => { const e = document.elementFromPoint(x, y); return e?.closest("a,button")?.textContent?.trim() ?? null; }, { x, y });
+      expect(touche, `« ${nom} » : cible de 44 px (y = ${Math.round(y)})`).toBe(nom);
+    }
+  }
+});
 
 test("panneau d'édition : ni sélecteur de pôle ni liste de pôles", async ({ page }) => {
   await ouvrir(page, ADMIN, "/back-office/equipes");

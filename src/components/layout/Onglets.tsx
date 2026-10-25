@@ -60,6 +60,7 @@ export function OngletsRail({
   actif,
   choisir,
   className,
+  cible44 = false,
 }: {
   /** Nom du groupe d'onglets, lu par les lecteurs d'écran. */
   etiquette: string;
@@ -69,6 +70,8 @@ export function OngletsRail({
   /** Pour des boutons : appelé avec l'`id` de l'onglet touché. */
   choisir?: (id: string) => void;
   className?: string;
+  /** BO-G, 16 : cible de toucher de 44 px sans changer le dessin ; pour un rail de deux onglets (le rail ne défile plus). */
+  cible44?: boolean;
 }) {
   const chemin = usePathname() ?? "";
   const boutons = useRef<(HTMLButtonElement | null)[]>([]);
@@ -76,7 +79,9 @@ export function OngletsRail({
   const courant = actif ?? (liens ? ongletDuChemin(onglets, chemin) : undefined);
   const classe = (on: boolean) =>
     cn(
-      "flex shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-full px-4 py-1.5 text-[13px] font-semibold transition-[background-color,color] duration-150",
+      "relative flex shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-full px-4 py-1.5 text-[13px] font-semibold transition-[background-color,color] duration-150",
+      // BO-G, 16 : la cible de toucher fait 44 px sans changer le dessin (`::after`, comme BO-E2).
+      cible44 && "after:absolute after:-inset-y-1.5 after:inset-x-0 after:content-['']",
       on ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground",
     );
   const contenu = (o: OngletRail) => (
@@ -86,7 +91,9 @@ export function OngletsRail({
       {o.compte !== undefined && <span className="tabular-nums opacity-70">· {o.compte}</span>}
     </>
   );
-  const rail = cn("inline-flex max-w-full gap-0.5 overflow-x-auto rounded-full bg-secondary p-[3px] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden", className);
+  // `cible44` : dès 640 px un rail de deux ou trois onglets (Équipes, Planning) tient et ne défile pas : un `overflow` rognerait la cible ;
+  // en dessous il défile encore (中文 à 320 px).
+  const rail = cn("inline-flex max-w-full gap-0.5 rounded-full bg-secondary p-[3px]", cible44 ? "overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:overflow-visible" : "overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden", className);
 
   if (liens) {
     return (
@@ -168,13 +175,13 @@ export function Pilules<T extends string>({
       role={liens ? undefined : "group"}
       aria-label={etiquette}
       data-onglets="pilules"
-      className="-mx-4 flex gap-1.5 overflow-x-auto px-4 pb-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      className="-mx-4 -mt-0.5 flex gap-1.5 overflow-x-auto px-4 py-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
     >
       {options.map((o) => {
         const actif = valeur === o.cle;
         const style = actif && o.couleur ? { backgroundColor: o.couleur, color: "#fff" } : undefined;
         const classe = cn(
-          "inline-flex shrink-0 items-center whitespace-nowrap rounded-full transition-colors duration-150",
+          "relative inline-flex shrink-0 items-center whitespace-nowrap rounded-full transition-colors duration-150 after:absolute after:-inset-y-0.5 after:inset-x-0 after:content-['']",
           "h-10 px-3.5 text-[15px] [@media(pointer:fine)_and_(min-width:1024px)]:h-7 [@media(pointer:fine)_and_(min-width:1024px)]:px-3 [@media(pointer:fine)_and_(min-width:1024px)]:text-[13px] [@media(pointer:fine)_and_(min-width:1024px)]:font-semibold",
           actif ? "bg-foreground text-background font-semibold" : "bg-secondary text-foreground/80 active:bg-secondary/70",
         );

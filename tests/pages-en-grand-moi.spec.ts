@@ -82,7 +82,9 @@ test.describe("Moi (Q9)", () => {
       expect(r.x, "les réglages à droite du compte").toBeGreaterThan(c.x + c.width - 1);
       expect(Math.abs(r.y - c.y)).toBeLessThan(2);
       expect(services.y, "les aperçus dessous").toBeGreaterThan(c.y + c.height - 1);
-      expect(deconnexion.x, "la déconnexion à droite").toBeGreaterThan(c.x + c.width - 1);
+      // BO-G, 12 : « Déconnexion » sous le compte (plus de grand vide sous « Mon profil »), les réglages à sa droite.
+      expect(deconnexion.y, "la déconnexion sous le compte").toBeGreaterThan(c.y + c.height - 1);
+      expect(deconnexion.x, "dans la colonne du compte").toBeLessThan(r.x);
     } else {
       expect(services.y, "une colonne : les aperçus sous le compte").toBeGreaterThan(c.y + c.height - 1);
       expect(r.y, "puis les réglages").toBeGreaterThan(services.y);

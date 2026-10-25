@@ -539,6 +539,8 @@
     :root[data-barre="reduite"] .barre-laterale .barre-si-depliee,
     :root[data-barre="reduite"] .barre-laterale .barre-texte { display: none; }
     :root[data-barre="reduite"] .barre-laterale .barre-si-reduite { display: flex; }
+    /* BO-G, 10 : la pastille de non-lus devient un point sur l'icône (le nombre reste dans le DOM, pour la description). */
+    :root[data-barre="reduite"] .barre-laterale .barre-pastille { position: absolute; top: 7px; right: 7px; width: 10px; height: 10px; padding: 0; font-size: 0; line-height: 0; overflow: hidden; margin: 0; }
     :root[data-barre="reduite"] .barre-laterale .barre-entree { width: 44px; height: 44px; padding: 0; justify-content: center; }
     :root[data-barre="reduite"] .barre-laterale .barre-pied { flex-direction: column; gap: 10px; border-top-width: 0; padding-left: 0; padding-right: 0; }
     /* L'initiale tout en bas, sous la cloche (planche) ; Tab garde l'ordre du document. */
@@ -551,6 +553,7 @@
     .barre-laterale .barre-si-depliee,
     .barre-laterale .barre-texte { display: none; }
     .barre-laterale .barre-si-reduite { display: flex; }
+    .barre-laterale .barre-pastille { position: absolute; top: 7px; right: 7px; width: 10px; height: 10px; padding: 0; font-size: 0; line-height: 0; overflow: hidden; margin: 0; }
     .barre-laterale .barre-entree { width: 44px; height: 44px; padding: 0; justify-content: center; }
     .barre-laterale .barre-pied { flex-direction: column; gap: 10px; border-top-width: 0; padding-left: 0; padding-right: 0; }
     .barre-laterale .barre-fin { order: 1; }

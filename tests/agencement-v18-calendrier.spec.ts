@@ -75,7 +75,7 @@ test("l'agencement commun : titre « Calendrier », rail Mois · Agenda, le mois
   await expect(ongletsRail(page).filter({ visible: true })).toHaveCount(1);
   await expect(rail(page).getByRole("tab")).toHaveText(["Mois", "Agenda"]);
   const entete = page.locator("header[data-entete-page]");
-  await expect(entete.getByTestId("mois-affiche")).toHaveText(estTelephone(test.info()) ? "Octobre" : "Octobre 2026");
+  await expect(entete.getByTestId("mois-affiche")).toHaveText("Octobre 2026");
   await expect(entete.getByRole("button", { name: "Mois suivant" })).toBeVisible();
   await expect(entete.getByRole("button", { name: "Aujourd'hui" })).toBeVisible();
   // Sous l'en-tête, le calendrier (et le volet du jour) prend toute la zone ; un rail (Mois · Agenda)
@@ -86,7 +86,7 @@ test("l'agencement commun : titre « Calendrier », rail Mois · Agenda, le mois
   };
   await verifierAgencement(page, communes);
   await vue(page, "Agenda");
-  await expect(entete.getByTestId("mois-affiche")).toHaveText(estTelephone(test.info()) ? "Octobre" : "Octobre 2026");
+  await expect(entete.getByTestId("mois-affiche")).toHaveText("Octobre 2026");
   await verifierAgencement(page, communes);
 });
 
@@ -111,7 +111,7 @@ test("téléphone : le filtre en pilules, puis « Seulement moi » et « Sources
   expect(Math.round((await moi.boundingBox())!.height)).toBe(hauteur);
 });
 
-test("« Ajouter » (menu Évènement | Réunion) dans l'en-tête dès 768 px ; sur téléphone, le rond « Ajouter » propose le jour affiché", async ({ page }) => {
+test("« Ajouter » (menu Évènement | Réunion | Tâche) dans l'en-tête dès 768 px ; sur téléphone, le rond « Ajouter » propose le jour affiché", async ({ page }) => {
   await ouvrir(page);
   if (estTelephone(test.info())) {
     await page.getByRole("button", { name: "Ajouter", exact: true }).click();
@@ -121,13 +121,55 @@ test("« Ajouter » (menu Évènement | Réunion) dans l'en-tête dès 768 px ; 
     await expect(feuille.getByRole("link", { name: "Nouvelle réunion le 01/10" })).toHaveAttribute("href", /^\/back-office\/reunions\/nouvelle\/?\?date=2026-10-01$/);
     return;
   }
+  // BO-G, 4 : les trois mêmes créations qu'en feuille, à la date choisie (ici aujourd'hui), chacune ≥ 44 px avec son icône.
   const action = page.locator("header[data-entete-page]").getByRole("button", { name: "Ajouter", exact: true });
   await expect(action).toBeVisible();
   await action.click();
   const menu = page.getByRole("menu");
-  await expect(menu.getByRole("menuitem")).toHaveText(["Évènement", "Réunion"]);
-  await expect(menu.getByRole("menuitem", { name: "Évènement" })).toHaveAttribute("href", /^\/back-office\/evenements\/nouveau\/?$/);
-  await expect(menu.getByRole("menuitem", { name: "Réunion" })).toHaveAttribute("href", /^\/back-office\/reunions\/nouvelle\/?$/);
+  await expect(menu.getByRole("menuitem")).toHaveText(["Évènement", "Réunion", "Tâche"]);
+  await expect(menu.getByRole("menuitem", { name: "Évènement" })).toHaveAttribute("href", /^\/back-office\/evenements\/nouveau\/?\?date=2026-10-01$/);
+  await expect(menu.getByRole("menuitem", { name: "Réunion" })).toHaveAttribute("href", /^\/back-office\/reunions\/nouvelle\/?\?date=2026-10-01$/);
+  for (const entree of await menu.getByRole("menuitem").all()) {
+    // Le menu s'ouvre en zoom : on attend la fin de l'animation.
+    await expect.poll(async () => (await entree.boundingBox())!.height, { message: "chaque entrée tient sous le doigt" }).toBeGreaterThanOrEqual(44);
+    await expect(entree.locator("svg"), "une icône").toHaveCount(1);
+  }
+  await menu.getByRole("menuitem", { name: "Tâche" }).click();
+  await expect(page.getByRole("dialog", { name: "Nouvelle tâche" }).getByLabel("Échéance")).toHaveValue("2026-10-01");
+});
+
+// BO-G, 3 : la rangée de filtres passe à la ligne au lieu de défiler ; rien n'est coupé, « Seulement moi » est toujours là.
+test("les filtres du calendrier passent à la ligne : rien de coupé, « Seulement moi » et « Sources » visibles", async ({ page }) => {
+  await ouvrir(page);
+  const largeur = page.viewportSize()!.width;
+  const groupe = page.getByRole("group", { name: "Filtrer le calendrier" });
+  const rangee = estTelephone(test.info()) ? groupe : page.getByTestId("filtres-calendrier");
+  const boutons = [...(await groupe.getByRole("button").all()), page.getByRole("button", { name: "Seulement moi" }), page.getByRole("button", { name: "Sources", exact: true })];
+  for (const bouton of boutons) {
+    await expect(bouton).toBeVisible();
+    const b = (await bouton.boundingBox())!;
+    expect(b.x, "dans l'écran, à gauche").toBeGreaterThanOrEqual(0);
+    expect(b.x + b.width, "dans l'écran, à droite").toBeLessThanOrEqual(largeur);
+  }
+  expect(await rangee.evaluate((el) => el.scrollWidth - el.clientWidth), "la rangée ne défile pas").toBeLessThanOrEqual(1);
+  expect(await groupe.evaluate((el) => getComputedStyle(el).overflowX), "le groupe de pilules non plus").not.toBe("auto");
+});
+
+// BO-G, 3 : sur téléphone, le « + » flottant ne recouvre pas la dernière carte de l'Agenda.
+test("téléphone : en Agenda, le « + » flottant ne recouvre pas la dernière carte", async ({ page }) => {
+  test.skip(!estTelephone(test.info()), "téléphone seulement");
+  await ouvrir(page);
+  const bouton = page.getByRole("button", { name: "Ajouter", exact: true });
+  await expect(bouton).toBeVisible();
+  await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+  await page.waitForTimeout(300);
+  const b = (await bouton.boundingBox())!;
+  const cartes = await page.getByTestId("agenda").locator("li").all();
+  expect(cartes.length).toBeGreaterThan(0);
+  const derniere = (await cartes[cartes.length - 1].boundingBox())!;
+  expect(derniere.y + derniere.height, "la dernière carte finit au-dessus du « + »").toBeLessThanOrEqual(b.y);
+  const suite = (await page.getByRole("button", { name: /^Afficher/ }).boundingBox())!;
+  expect(suite.y + suite.height, "« Afficher … » aussi").toBeLessThanOrEqual(b.y);
 });
 
 test("téléphone : en Agenda, « Ajouter » propose aujourd'hui, même après ‹ › (spec-calendrier, C5)", async ({ page }) => {
@@ -135,7 +177,7 @@ test("téléphone : en Agenda, « Ajouter » propose aujourd'hui, même après �
   await ouvrir(page);
   await expect(agenda(page)).toBeVisible();
   await page.getByRole("button", { name: "Mois suivant" }).click();
-  await expect(moisAffiche(page)).toHaveText("Novembre");
+  await expect(moisAffiche(page)).toHaveText("Novembre 2026");
   await page.getByRole("button", { name: "Ajouter", exact: true }).click();
   const feuille = page.getByRole("dialog", { name: "Ajouter" });
   await expect(feuille.getByRole("link", { name: "Nouvel évènement le 01/10" })).toHaveAttribute("href", /\?date=2026-10-01$/);
@@ -166,7 +208,7 @@ test("grand écran : en agenda, le volet du jour à droite (300 px), « Ajouter 
   expect(Math.round((await volet.boundingBox())!.width)).toBe(300);
   await volet.getByRole("button", { name: "Ajouter ce jour-là" }).click();
   const menu = page.getByRole("menu");
-  await expect(menu.getByRole("menuitem")).toHaveText(["Nouvel évènement le 01/10", "Nouvelle tâche pour le 01/10", "Nouvelle réunion le 01/10"]);
+  await expect(menu.getByRole("menuitem")).toHaveText(["Nouvel évènement le 01/10", "Nouvelle réunion le 01/10", "Nouvelle tâche pour le 01/10"]);
   await expect(menu.getByRole("menuitem", { name: "Nouvel évènement le 01/10" })).toHaveAttribute("href", /^\/back-office\/evenements\/nouveau\/?\?date=2026-10-01$/);
   await expect(menu.getByRole("menuitem", { name: "Nouvelle réunion le 01/10" })).toHaveAttribute("href", /^\/back-office\/reunions\/nouvelle\/?\?date=2026-10-01$/);
   await capture(page, "v18-bo-calendrier-menu");
@@ -250,11 +292,11 @@ test("‹ › changent le mois de l'agenda, « Aujourd'hui » y revient", async 
   await vue(page, "Agenda");
   await expect(agenda(page).locator('[data-jour="2026-10-03"]')).toHaveCount(1);
   await page.getByRole("button", { name: "Mois suivant" }).click();
-  await expect(moisAffiche(page)).toHaveText(estTelephone(test.info()) ? "Novembre" : "Novembre 2026");
+  await expect(moisAffiche(page)).toHaveText("Novembre 2026");
   await expect(agenda(page).locator('[data-jour="2026-11-07"]')).toContainText("Marche d'automne");
   await expect(agenda(page).locator('[data-jour="2026-10-03"]')).toHaveCount(0);
   await page.getByRole("button", { name: "Aujourd'hui" }).click();
-  await expect(moisAffiche(page)).toHaveText(estTelephone(test.info()) ? "Octobre" : "Octobre 2026");
+  await expect(moisAffiche(page)).toHaveText("Octobre 2026");
   await expect(agenda(page).locator('[data-jour="2026-10-03"]')).toHaveCount(1);
 });
 
@@ -286,11 +328,11 @@ test("中文 : titre, rail, semaine, « Ajouter ce jour-là » et son menu", asy
   const onglets = page.getByRole("tablist", { name: "视图" });
   await expect(onglets.getByRole("tab")).toHaveText(["月", "日程"]);
   await onglets.getByRole("tab", { name: "日程" }).click();
-  await expect(moisAffiche(page)).toHaveText(estTelephone(test.info()) ? "10月" : "2026年10月");
+  await expect(moisAffiche(page)).toHaveText("2026年10月");
   if (!estGrandEcran(test.info())) return;
   await expect(agenda(page).getByRole("heading", { level: 2, name: "9月28日那一周" })).toBeVisible();
   await page.getByRole("complementary").getByRole("button", { name: "在这天添加" }).click();
-  await expect(page.getByRole("menuitem")).toHaveText(["新建10月1日的活动", "新建10月1日截止的任务", "新建10月1日的会议"]);
+  await expect(page.getByRole("menuitem")).toHaveText(["新建10月1日的活动", "新建10月1日的会议", "新建10月1日截止的任务"]);
 });
 
 test("captures : l'agenda et le volet du jour, le Mois", async ({ page }) => {

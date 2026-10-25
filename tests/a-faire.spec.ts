@@ -1,5 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
+import { margeAttendue, zoneDeContenu } from "./helpers/agencement";
 import { aFaire, filtrer, type EntreesAFaire, type LigneAFaire } from "../src/lib/tableauDeBord/aFaire";
 import type { Evenement } from "../src/types/evenement";
 import type { Creneau } from "../src/types/programme";
@@ -323,7 +324,9 @@ test.describe("À faire (BO-B) : l'écran", () => {
     const vide = page.getByRole("status").filter({ hasText: "Rien à faire pour l'instant." });
     await expect(vide).toBeVisible();
     await expect(lignes(page)).toHaveCount(0);
-    await expect(page.getByRole("heading", { level: 2 })).toHaveCount(0);
+    // Aucun groupe dans la liste ; BO-G, 9 : la colonne de droite (barre affichée) reste, avec « Rien de prévu ».
+    await expect(page.locator('[data-testid^="groupe-"]')).toHaveCount(0);
+    await expect(page.getByRole("heading", { level: 2 }).filter({ hasNotText: /^(Ce dimanche|Prochaine réunion)/ })).toHaveCount(0);
     await expect(alerte(page)).toHaveCount(0);
   });
 
@@ -357,16 +360,84 @@ test.describe("À faire (BO-B) : l'écran", () => {
     const prochaine = colonne.getByRole("link", { name: /Point des bâtisseurs/ });
     await expect(prochaine).toContainText("Mardi 3 novembre, 20:00, salle 2");
     await expect(prochaine).toHaveAttribute("href", /\/back-office\/reunions\/r1\/?$/);
-    // Elle ne pousse pas la liste : celle-ci garde sa largeur.
-    expect((await lignes(page).first().boundingBox())!.width).toBeLessThanOrEqual(641);
+    // BO-G, 1 : elle ne chevauche pas la liste (qui prend le reste de la largeur) et finit sur le bord droit du filtre.
+    const liste = (await page.getByTestId("groupe-semaine").locator("ul").boundingBox())!;
+    const droite = (await colonne.boundingBox())!;
+    expect(liste.x + liste.width, "la liste finit avant la colonne").toBeLessThanOrEqual(droite.x);
   });
 
-  test("sans réunion à venir, le bloc « Prochaine réunion » est omis", async ({ page }) => {
+  // BO-G, 1 : un seul conteneur de largeur, la colonne de droite et le filtre « Tout | Mes équipes » ont le même bord droit.
+  test("BO-G 1 : le filtre et la colonne de droite finissent sur le même bord droit", async ({ page }) => {
+    await ouvrir(page, ADMIN);
+    await expect(lignes(page).first()).toBeVisible();
+    test.skip(!(await barreMontree(page)), "la colonne de droite n'existe qu'avec la barre latérale");
+    const colonne = (await page.getByTestId("colonne-droite").boundingBox())!;
+    const dernierePilule = (await page.getByRole("group", { name: "Afficher" }).getByRole("button", { name: "Mes équipes" }).boundingBox())!;
+    expect(Math.abs(colonne.x + colonne.width - (dernierePilule.x + dernierePilule.width)), "même bord droit").toBeLessThanOrEqual(2);
+    const zone = await zoneDeContenu(page);
+    const marge = await margeAttendue(page);
+    expect(Math.abs(colonne.x + colonne.width - (Math.min(zone.droite, zone.gauche + 1440) - marge)), "à la marge de la zone").toBeLessThanOrEqual(2);
+  });
+
+  // BO-G, 2 : sans la barre latérale (téléphone, tablette portrait), les cartes prennent toute la largeur utile.
+  test("BO-G 2 : les cartes prennent la largeur utile quand il n'y a pas de colonne de droite", async ({ page }) => {
+    await ouvrir(page, ADMIN);
+    await expect(lignes(page).first()).toBeVisible();
+    test.skip(await barreMontree(page), "sans barre latérale seulement");
+    const marge = await margeAttendue(page);
+    const vw = page.viewportSize()!.width;
+    for (const carte of await page.getByTestId("groupe-semaine").locator("ul").all()) {
+      const largeur = (await carte.boundingBox())!.width;
+      expect(Math.round(largeur), "toute la largeur utile").toBeGreaterThanOrEqual(vw - 2 * marge - 2);
+    }
+  });
+
+  // BO-G, 9 : liste vide (rien pour ses équipes), la colonne de droite reste affichée.
+  test("BO-G 9 : liste vide, la colonne de droite (Ce dimanche, Prochaine réunion) reste affichée", async ({ page }) => {
+    const docs = {
+      "plannings/culte/dimanches/2026-10-25": { date: "2026-10-25", ...CULTE_PLEIN },
+      "evenements/r1": reunion("Point des bâtisseurs", "2026-11-03", { lieu: "salle 2" }),
+    };
+    await ouvrir(page, { ...ADMIN, dansEquipes: [] }, docs);
+    await expect(lignes(page).first()).toBeVisible();
+    await page.getByRole("group", { name: "Afficher" }).getByRole("button", { name: "Mes équipes" }).click();
+    await expect(page.getByRole("status").filter({ hasText: "Rien pour tes équipes." })).toBeVisible();
+    await expect(lignes(page)).toHaveCount(0);
+    test.skip(!(await barreMontree(page)), "la colonne de droite n'existe qu'avec la barre latérale");
+    const colonne = page.getByTestId("colonne-droite");
+    await expect(colonne.getByRole("heading", { name: "Ce dimanche, 25 octobre" })).toBeVisible();
+    await expect(colonne.getByRole("heading", { name: "Prochaine réunion" })).toBeVisible();
+  });
+
+  // BO-G, 14 : téléphone, le verbe reste sur la ligne, en « Verbe › » à droite ; c'est le titre qui se coupe.
+  test("BO-G 14 : téléphone, « Écrire le compte rendu › » reste à droite sur la ligne du titre", async ({ page }, info) => {
+    test.skip(info.project.name !== "telephone", "téléphone seulement");
+    await ouvrir(page, ADMIN);
+    const rangee = ligne(page, "Point des bâtisseurs").first();
+    await expect(rangee).toBeVisible();
+    const verbe = (await rangee.getByRole("link").boundingBox())!;
+    const titre = (await rangee.locator("b").boundingBox())!;
+    const r = (await rangee.boundingBox())!;
+    expect(verbe.y, "le verbe n'est pas passé sous le titre").toBeLessThan(titre.y + titre.height);
+    expect(verbe.x, "…il est à droite du titre").toBeGreaterThanOrEqual(titre.x + titre.width - 1);
+    expect(verbe.x + verbe.width, "dans la ligne").toBeLessThanOrEqual(r.x + r.width);
+    expect(await rangee.evaluate((li) => li.scrollWidth - li.clientWidth), "rien ne déborde").toBeLessThanOrEqual(0);
+    await expect(rangee.getByRole("link").locator("svg")).toHaveCount(1);
+  });
+
+  // BO-G, 9 : la carte reste, vide, au lieu d'être omise (barre latérale affichée : la colonne de droite n'existe que là).
+  test("sans réunion à venir, le bloc « Prochaine réunion » dit « Rien de prévu »", async ({ page }) => {
     const { "evenements/r1": _r1, ...sans } = JEU;
     void _r1;
     await ouvrir(page, ADMIN, sans);
     await expect(lignes(page).first()).toBeVisible();
-    await expect(page.getByText("Prochaine réunion")).toHaveCount(0);
+    if (await barreMontree(page)) {
+      const bloc = page.getByRole("region", { name: "Prochaine réunion" });
+      await expect(bloc).toContainText("Rien de prévu pour l'instant.");
+      await expect(bloc.getByRole("link")).toHaveCount(0);
+    } else {
+      await expect(page.getByText("Prochaine réunion")).toHaveCount(0);
+    }
   });
 
   test("la pastille d'À faire dans la barre latérale compte les lignes (barre affichée seulement)", async ({ page }) => {
@@ -443,6 +514,10 @@ test.describe("À faire (BO-B) : l'écran", () => {
     await expect(page.getByRole("link", { name: /^查看报名/ })).toBeVisible();
     await expect(page.getByRole("group", { name: "显示" }).getByRole("button", { name: "我的团队" })).toBeVisible();
     await expect(page.getByText("Rien à faire")).toHaveCount(0);
+    // BO-G, 11 : les dates suivent la langue, plus de jj/mm codé en dur.
+    await expect(ligne(page, "Affiche de l'atelier")).toContainText("自 10月20日 起逾期");
+    await expect(ligne(page, "Clés de la salle")).toContainText("10月24日");
+    await expect(lignes(page).filter({ hasText: /\d\d\/\d\d/ })).toHaveCount(0);
     await page.getByRole("group", { name: "显示" }).getByRole("button", { name: "我的团队" }).click();
     await expect(lignes(page).first()).toBeVisible();
   });

@@ -332,13 +332,27 @@ test.describe("écrans : une référente crée, un simple membre coche la sienne
     await autre.context().close();
   });
 
-  test("ordinateur : la pastille Tâches de Joël F. ne compte pas « toute l'équipe » ; celle de Léa M., oui", async ({ page, browser }, info) => {
-    test.skip(!estOrdinateur(info), "la pastille est dans la barre latérale, sur ordinateur");
-    await ouvrir(page, JOEL, "/back-office/taches/medias");
-    await expect(page.locator(".barre-entree", { hasText: "Tâches" }).getByTestId("pastille")).toHaveText("1");
+  // Piste A (BO2, BO-B) : « Tâches » n'est plus une entrée de la barre ; son compte vit dans « À faire » (la pastille de
+  // l'entrée, pour qui a le Back-Office) et dans la page d'équipe (ce qu'un simple membre peut cocher). Même intention :
+  // « toute l'équipe » ne compte pas pour Joël F., elle compte pour Léa M. (deux à elle), chacun avec son nombre.
+  test("le compte de Joël F. ne prend pas « toute l'équipe » (page d'équipe) ; celui de Léa M., oui (À faire)", async ({ page, browser }, info) => {
+    await ouvrir(page, JOEL, "/equipes/medias");
+    const siennes = laListe(page).getByRole("checkbox");
+    await expect(laListe(page).getByRole("checkbox", { name: /Photos du culte/ })).toBeEnabled();
+    await expect(laListe(page).getByRole("checkbox", { name: /Ranger la régie/ })).toBeDisabled();
+    const actives = await siennes.evaluateAll((l) => l.filter((c) => !(c as HTMLButtonElement).disabled && c.getAttribute("aria-disabled") !== "true").length);
+    expect(actives, "Joël F. : une seule tâche à cocher").toBe(1);
+
     const autre = await (await browser.newContext()).newPage();
-    await ouvrir(autre, LEA, "/back-office/taches/medias");
-    await expect(autre.locator(".barre-entree", { hasText: "Tâches" }).getByTestId("pastille")).toHaveText("2");
+    await ouvrir(autre, LEA, "/back-office");
+    await expect(autre.getByRole("heading", { level: 1, name: "À faire" })).toBeVisible();
+    const lignes = autre.getByTestId("ligne-a-faire");
+    // Léa M. a le Back-Office : « toute l'équipe » y est, avec le bouton « Fait » ; ses trois tâches, pas une de moins.
+    await expect(lignes.filter({ hasText: "Ranger la régie" })).toHaveAttribute("data-verbe", "fait");
+    await expect(lignes, "Léa M. : les trois tâches de TEAM MÉDIAS, « toute l'équipe » comprise").toHaveCount(3);
+    if (estOrdinateur(info)) {
+      await expect(autre.getByTestId("barre-laterale").locator(".barre-entree", { hasText: "À faire" }).getByTestId("pastille")).toHaveText("3");
+    }
     await autre.context().close();
   });
 

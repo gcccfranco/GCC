@@ -10,6 +10,7 @@ import { useEffect, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTranslation } from "react-i18next";
+import { House, ShieldCheck } from "lucide-react";
 import { useProfile } from "@/lib/firebase/users";
 import { entreesBackOffice } from "@/lib/access";
 import { BACK_OFFICE } from "@/lib/backOffice";
@@ -54,7 +55,7 @@ export function useResponsable(): boolean {
   return BACK_OFFICE && entreesBackOffice(user, profile).length > 0;
 }
 
-export function SelecteurEspace({ pleineLargeur = false, onChoix }: { pleineLargeur?: boolean; onChoix?: () => void }) {
+export function SelecteurEspace({ pleineLargeur = false, compact = false, onChoix }: { pleineLargeur?: boolean; compact?: boolean; onChoix?: () => void }) {
   const { t } = useTranslation();
   const pathname = usePathname() || "";
   const responsable = useResponsable();
@@ -68,6 +69,37 @@ export function SelecteurEspace({ pleineLargeur = false, onChoix }: { pleineLarg
   }, [responsable, pathname, espace]);
 
   if (!responsable) return null;
+
+  // BO-G, 10 : barre latérale réduite (ordinateur replié, tablette en paysage) : deux icônes, le nom en `aria-label` et
+  // en infobulle. Le CSS ne la montre que dans la barre réduite (`barre-si-reduite`) ; le dessin tient dans 44 px de large,
+  // la cible de toucher à 44 px par un `::after`.
+  if (compact) {
+    const icone = (e: Espace, libelle: string, Icone: typeof House) => (
+      <Link
+        key={e}
+        href={cibles[e]}
+        aria-label={libelle}
+        title={libelle}
+        aria-current={e === espace ? "true" : undefined}
+        className={`relative flex h-9 w-9 items-center justify-center rounded-full after:absolute after:-inset-1 after:content-[''] transition-[background-color,color] duration-150 ${
+          e === espace ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+        }`}
+      >
+        <Icone className="h-[18px] w-[18px]" aria-hidden />
+      </Link>
+    );
+    return (
+      <div
+        role="group"
+        aria-label={t("backOffice.selecteur.aria")}
+        data-testid="selecteur-icones"
+        className="barre-si-reduite w-11 shrink-0 flex-col items-center gap-2 rounded-full bg-secondary p-1"
+      >
+        {icone("app", t("backOffice.selecteur.app"), House)}
+        {icone("back-office", t("backOffice.selecteur.backOffice"), ShieldCheck)}
+      </div>
+    );
+  }
 
   const lien = (e: Espace, libelle: string) => {
     const courant = e === espace;

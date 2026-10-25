@@ -275,8 +275,9 @@ test.describe("B5b : back-office en 中文", () => {
 
   test("Planning sans compte (sous-page de Équipes › Personnes, piste A BO7)", async ({ page }) => {
     await ouvrirAdmin(page, "/back-office/equipes/personnes/sans-compte", "zh-CN");
-    await expect(page.getByRole("heading", { level: 2, name: "排班表中尚无账号的名字" })).toBeVisible();
-    await expect(page.getByRole("heading", { name: /^排班表中无账号的人（\d+）$/ })).toBeVisible();
+    // BO-G, 7 : un seul titre, avec le compte.
+    await expect(page.getByRole("heading", { level: 2, name: /^排班表中尚无账号的名字（\d+）$/ })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /^排班表中无账号的人（\d+）$/ })).toHaveCount(0);
     await sansLesNomsDuPlanning(page);
     await sansFrancais(page, "Planning sans compte");
   });

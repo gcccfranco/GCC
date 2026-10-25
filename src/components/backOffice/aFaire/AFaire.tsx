@@ -5,6 +5,7 @@
 // Sur grand écran (barre latérale affichée), « Ce dimanche » et « Prochaine réunion » à droite.
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { LargeurBO } from "@/components/backOffice/LargeurBO";
 import { EnTetePage } from "@/components/layout/EnTetePage";
 import { EtatVide } from "@/components/layout/EtatVide";
 import { useBarreMontree } from "@/components/layout/BarreLaterale";
@@ -45,14 +46,14 @@ export function AFaire({ titre }: { titre: string }) {
   const incomplet = erreur || !!valeur?.incomplet;
 
   return (
-    <>
+    <LargeurBO>
       <EnTetePage
         titre={titre}
         sousTitre={t("backOffice.aFaire.sousTitre", { jour: jourComplet(today, i18n.language) })}
         outils={<div className="hidden sm:block">{choix}</div>}
         apres={<div className="sm:hidden">{choix}</div>}
       />
-      <div className={`px-[var(--marge-page)] pb-10 ${montree ? "grid grid-cols-[minmax(0,640px)_300px] items-start gap-8" : "max-w-[720px]"}`}>
+      <div className={`px-[var(--marge-page)] pb-10 ${montree ? "grid grid-cols-[minmax(0,1fr)_300px] items-start gap-8" : ""}`}>
         <div>
           {incomplet && <p role="alert" className="mb-3 text-[13px] text-muted-foreground">{t("backOffice.aFaire.incomplet")}</p>}
           {!resultat ? (
@@ -78,6 +79,6 @@ export function AFaire({ titre }: { titre: string }) {
         </div>
         {montree && <ColonneDroite />}
       </div>
-    </>
+    </LargeurBO>
   );
 }

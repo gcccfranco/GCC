@@ -4,6 +4,7 @@ import type { TFunction } from "i18next";
 import { cleNomEquipe } from "@/lib/equipes/table";
 import { GRILLES, grilleDe } from "@/lib/planning/grilles";
 import type { LigneAFaire } from "@/lib/tableauDeBord/aFaire";
+import { formatJourMois } from "@/lib/utils/formatDate";
 
 const locale = (lang: string) => (lang === "zh-CN" ? "zh-CN" : "fr-FR");
 const date = (iso: string) => new Date(`${iso}T12:00:00`);
@@ -18,8 +19,8 @@ export const jourComplet = (iso: string, lang: string) => {
   const s = premier(new Intl.DateTimeFormat(locale(lang), { weekday: "long", day: "numeric", month: "long" }).format(date(iso)), lang);
   return s.charAt(0).toUpperCase() + s.slice(1);
 };
-/** « 28/10 » */
-export const jourMois = (iso: string) => `${iso.slice(8, 10)}/${iso.slice(5, 7)}`;
+/** « 28/10 » en français, « 10月28日 » en 中文 (formatDate.ts : la date suit la langue). */
+export const jourMois = (iso: string, lang: string) => formatJourMois(iso, lang);
 
 /** Le nom court d'un planning : son libellé, ou (en 中文, quand il est seul à le porter) le titre traduit de sa page. */
 export function nomPlanning(cle: string, t: TFunction, lang: string): string {
@@ -57,7 +58,7 @@ export function texteLigne(l: LigneAFaire, t: TFunction, lang: string, today: st
       return {
         titre: l.titre ?? "", verbe,
         contexte: `${qui} · `,
-        retard: t(`${p}tache.${enRetard ? "enRetard" : "pour"}`, { date: jourMois(l.date ?? today) }),
+        retard: t(`${p}tache.${enRetard ? "enRetard" : "pour"}`, { date: jourMois(l.date ?? today, lang) }),
       };
     }
     case "inscriptions": {

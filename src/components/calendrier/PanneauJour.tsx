@@ -6,7 +6,7 @@
 // sert le panneau de droite (ordinateur, tablette couchée) et la feuille (ailleurs).
 // C5 : en bas, les deux boutons de création (`BoutonsCreation`), selon les droits.
 // Agencement v18 (B5) : dans le volet du jour à droite, « Ajouter ce jour-là » et son menu
-// (`AjouterCeJour` : évènement, tâche, réunion) en tête ; la feuille du jour et la feuille
+// (`AjouterCeJour` : évènement, réunion, tâche) en tête ; la feuille du jour et la feuille
 // « Créer » du téléphone gardent les boutons, réunion comprise.
 // Retouches v18 (R4, D7) : comme sur la planche, le bouton « Ajouter ce jour-là » puis une flèche ronde
 // (« Évènement, tâche ou réunion ») ; l'un et l'autre ouvrent le même menu.
@@ -21,7 +21,7 @@
 import Link from "next/link";
 import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ChevronDown, Plus } from "lucide-react";
+import { CalendarDays, ChevronDown, ListChecks, Plus, Users } from "lucide-react";
 import { jourCourt } from "@/lib/calendrier/grille";
 import { cn } from "@/lib/utils";
 import type { NotifLang } from "@/types/user";
@@ -116,11 +116,13 @@ export function ListeDuJour({ entrees, onDeplacer }: { entrees: EntreeCalendrier
 }
 
 const BOUTON =
-  "inline-flex h-10 w-full items-center justify-center gap-2 rounded-full px-4 text-sm font-semibold transition-opacity duration-150 hover:opacity-85 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground";
+  "inline-flex h-11 w-full items-center justify-center gap-2 rounded-full px-4 text-sm font-semibold transition-opacity duration-150 hover:opacity-85 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground";
 
 /** Qui peut créer quoi depuis un jour : un évènement (un public hors réunions lui est ouvert), une
  *  réunion (une équipe), une tâche (une de ses équipes). */
 export type DroitsCreation = { evenement: boolean; reunion: boolean; tache: boolean };
+
+const ENTREE_MENU = "min-h-11 cursor-pointer gap-2.5 px-3 text-[15px]";
 
 const lienEvenement = (date: string) => `/back-office/evenements/nouveau?date=${date}`;
 const lienReunion = (date: string) => `/back-office/reunions/nouvelle?date=${date}`;
@@ -141,21 +143,21 @@ export function BoutonsCreation({ date, lang, droits, onNouvelleTache }: {
     <div className="flex flex-col gap-2">
       {droits.evenement && (
         <Link href={lienEvenement(date)} className={cn(BOUTON, "bg-foreground text-background")}>
-          <Plus aria-hidden className="h-4 w-4 shrink-0" />
+          <CalendarDays aria-hidden className="h-4 w-4 shrink-0" />
           {t("calendrier.nouvelEvenement", { date: jour })}
+        </Link>
+      )}
+      {droits.reunion && (
+        <Link href={lienReunion(date)} className={cn(BOUTON, "bg-secondary text-foreground")}>
+          <Users aria-hidden className="h-4 w-4 shrink-0" />
+          {t("calendrier.nouvelleReunion", { date: jour })}
         </Link>
       )}
       {droits.tache && (
         <button type="button" onClick={onNouvelleTache} className={cn(BOUTON, "bg-secondary text-foreground")}>
-          <Plus aria-hidden className="h-4 w-4 shrink-0" />
+          <ListChecks aria-hidden className="h-4 w-4 shrink-0" />
           {t("calendrier.nouvelleTache", { date: jour })}
         </button>
-      )}
-      {droits.reunion && (
-        <Link href={lienReunion(date)} className={cn(BOUTON, "bg-secondary text-foreground")}>
-          <Plus aria-hidden className="h-4 w-4 shrink-0" />
-          {t("calendrier.nouvelleReunion", { date: jour })}
-        </Link>
       )}
     </div>
   );
@@ -220,17 +222,20 @@ export function AjouterCeJour({ date, lang, droits, onNouvelleTache }: {
           bouton.current?.focus();
         }}
       >
+        {/* BO-G, 4 : les trois mêmes entrées que la feuille du téléphone, dans le même ordre, 44 px et une icône. */}
         {droits.evenement && (
-          <DropdownMenuItem asChild>
-            <Link href={lienEvenement(date)}>{t("calendrier.nouvelEvenement", { date: jour })}</Link>
+          <DropdownMenuItem asChild className={ENTREE_MENU}>
+            <Link href={lienEvenement(date)}><CalendarDays aria-hidden className="h-4 w-4 shrink-0 text-muted-foreground" />{t("calendrier.nouvelEvenement", { date: jour })}</Link>
+          </DropdownMenuItem>
+        )}
+        {droits.reunion && (
+          <DropdownMenuItem asChild className={ENTREE_MENU}>
+            <Link href={lienReunion(date)}><Users aria-hidden className="h-4 w-4 shrink-0 text-muted-foreground" />{t("calendrier.nouvelleReunion", { date: jour })}</Link>
           </DropdownMenuItem>
         )}
         {droits.tache && (
-          <DropdownMenuItem onSelect={onNouvelleTache}>{t("calendrier.nouvelleTache", { date: jour })}</DropdownMenuItem>
-        )}
-        {droits.reunion && (
-          <DropdownMenuItem asChild>
-            <Link href={lienReunion(date)}>{t("calendrier.nouvelleReunion", { date: jour })}</Link>
+          <DropdownMenuItem onSelect={onNouvelleTache} className={ENTREE_MENU}>
+            <ListChecks aria-hidden className="h-4 w-4 shrink-0 text-muted-foreground" />{t("calendrier.nouvelleTache", { date: jour })}
           </DropdownMenuItem>
         )}
       </DropdownMenuContent>

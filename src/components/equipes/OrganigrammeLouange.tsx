@@ -80,7 +80,7 @@ export function CorpsLouange({
   const { parSous, sans, referents } = colonnesLouange(membres);
   const colonne = (id: string, titre: string, liste: MembreEquipe[], sous: SousEquipe | null) => (
     <div key={id} data-testid={`louange-${id}`} className="break-inside-avoid space-y-0.5">
-      <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{titre}</p>
+      <p className="break-words hyphens-auto text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{titre}</p>
       {liste.map((m, i) => (
         <div key={`${m.uid || m.nom}-${i}`}>
           {ligne(m, {

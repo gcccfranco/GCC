@@ -272,6 +272,8 @@ function ContenuBarre({
       <div data-testid="place-selecteur" className="barre-si-depliee empty:hidden">
         <SelecteurEspace pleineLargeur onChoix={onChoix} />
       </div>
+      {/* BO-G, 10 : barre réduite, le même interrupteur en deux icônes (le CSS ne le montre que réduite). */}
+      <SelecteurEspace compact />
 
       <nav aria-label={t("common.aria.navigationPrincipale")} className="flex flex-col gap-0.5">
         {entrees.map((entree) => {
@@ -287,7 +289,7 @@ function ContenuBarre({
               aria-describedby={n > 0 ? `${idPastille}-${cle}` : undefined}
               title={enIcones ? t(cle) : undefined}
               onClick={onChoix}
-              className={`barre-entree flex items-center gap-3 rounded-xl px-3 py-[9px] text-[15px] font-semibold transition-colors duration-150 ${
+              className={`barre-entree relative flex items-center gap-3 rounded-xl px-3 py-[9px] text-[15px] font-semibold transition-colors duration-150 ${
                 active ? "bg-primary text-primary-foreground" : "text-foreground/85 hover:bg-foreground/5"
               }`}
             >
@@ -298,7 +300,7 @@ function ContenuBarre({
                 <span
                   data-testid="pastille"
                   id={`${idPastille}-${cle}`}
-                  className={`barre-texte ml-auto rounded-full px-[7px] py-px text-xs font-bold ${
+                  className={`barre-pastille ml-auto rounded-full px-[7px] py-px text-xs font-bold ${
                     active ? "bg-primary-foreground text-primary" : "bg-destructive text-destructive-foreground"
                   }`}
                 >

@@ -61,8 +61,9 @@ const liste = (page: Page) => page.getByRole("region", { name: "Tâches", exact:
 const detail = (page: Page) => page.locator("article");
 const formulaire = (page: Page, nom: string) => page.getByRole("form", { name: nom });
 const ligne = (page: Page, titre: string) => liste(page).getByRole("button", { name: new RegExp(`^${titre}`) });
-/** La page de l'équipe : la section « Tâches » dans une lecture de 720 px au plus ; ni rail ni pilules. */
-const surLaListe = (page: Page) => ({ contenu: liste(page), lecture: true, onglets: { rail: 0, pilules: 0 } });
+/** La page de l'équipe : la section « Tâches » prend toute la zone moins deux marges (BO-G, 2 : la largeur d'« À faire », plus de
+ *  plafond à 720 px) ; ni rail ni pilules. */
+const surLaListe = (page: Page) => ({ contenu: liste(page), onglets: { rail: 0, pilules: 0 } });
 const nouvelleTache = (page: Page) => page.getByRole("link", { name: "Nouvelle tâche" });
 
 /** Chemin Firestore d'une requête (`equipes/da:runQuery`, `equipes/da/taches/t3`), sans le préfixe du projet. */

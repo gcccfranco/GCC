@@ -173,7 +173,7 @@ test.describe("T2a : les adresses /back-office/reunions/*", () => {
     await expect(page.getByRole("button", { name: /Fête de rentrée/ })).toHaveCount(0);
     if (info.project.name !== "telephone") {
       await page.getByRole("button", { name: "Ajouter", exact: true }).click();
-      await expect(page.getByRole("menuitem", { name: "Réunion" })).toHaveAttribute("href", /^\/back-office\/reunions\/nouvelle\/?$/);
+      await expect(page.getByRole("menuitem", { name: "Réunion" })).toHaveAttribute("href", /^\/back-office\/reunions\/nouvelle\/?(\?date=\d{4}-\d{2}-\d{2})?$/);
     }
   });
 

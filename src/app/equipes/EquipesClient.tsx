@@ -306,7 +306,7 @@ function CarteEquipe({
   const groupe = (g: string) => (
     <div key={g} className="break-inside-avoid space-y-0.5">
       {g && (
-        <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{g}</p>
+        <p className="break-words hyphens-auto text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{g}</p>
       )}
       {membres.filter((m) => m.groupe === g).sort(referentsDabord).map((m, i) => (
         <LigneMembre key={`${m.nom}-${i}`} membre={m} onFiche={onFiche} detail={nouveauRegie ? ligneGrise(t, m, false) : undefined} />
@@ -323,7 +323,7 @@ function CarteEquipe({
     >
       <header className="space-y-1">
         <div className="flex items-start justify-between gap-2">
-          <h2 className="text-base font-bold text-foreground">
+          <h2 className="min-w-0 break-words hyphens-auto text-base font-bold text-foreground">
             {href ? <Link href={href} className="rounded-sm hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">{nom}</Link> : nom}
           </h2>
           {peutEditer && (

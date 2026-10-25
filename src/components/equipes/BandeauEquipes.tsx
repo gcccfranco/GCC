@@ -163,15 +163,15 @@ export function BandeauEquipes({ cartes }: { cartes: CarteDuBandeau[] }) {
   // La marge des côtés : celle de la zone au Back-Office, celle de la page de l'App sinon.
   const px = "px-[var(--marge-page)]";
   const scrollMl = "scroll-ml-[var(--marge-page)]";
-  const gaucheFleche = "left-[var(--marge-page)]";
-  const droiteFleche = "right-[var(--marge-page)]";
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-3">
-      <nav aria-label={t("equipes.index")}>
+      {/* BO-G, 6 : dès 640 px l'index passe à la ligne (aucune pilule au-delà de la marge) et les flèches ‹ › vivent
+          au bout de sa rangée, plus flottantes sur les colonnes ; sur téléphone il défile, comme avant. */}
+      <nav aria-label={t("equipes.index")} className="flex items-start gap-2 sm:px-[var(--marge-page)]">
         <div
           ref={index}
-          className={`relative flex gap-1.5 overflow-x-auto py-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden ${px}`}
+          className="relative flex min-w-0 flex-1 gap-1.5 overflow-x-auto px-[var(--marge-page)] py-1 [scrollbar-width:none] sm:flex-wrap sm:gap-y-3.5 sm:overflow-x-visible sm:px-0 [&::-webkit-scrollbar]:hidden"
         >
           {cartes.map(({ id }) => (
             <button
@@ -180,13 +180,35 @@ export function BandeauEquipes({ cartes }: { cartes: CarteDuBandeau[] }) {
               data-pilule={id}
               aria-current={actif === id ? "true" : undefined}
               onClick={() => amener(id)}
-              className={`shrink-0 whitespace-nowrap rounded-full px-3 py-1.5 text-sm font-semibold transition-[background-color,color,transform] duration-150 active:scale-[.96] ${
+              className={`relative shrink-0 whitespace-nowrap rounded-full px-3 py-1.5 text-sm font-semibold after:absolute after:-inset-y-[7px] after:inset-x-0 after:content-[''] transition-[background-color,color,transform] duration-150 active:scale-[.96] ${
                 actif === id ? "bg-foreground text-background" : "bg-secondary text-muted-foreground hover:text-foreground"
               }`}
             >
               {t(`equipes.court.${id}`)}
             </button>
           ))}
+        </div>
+        <div className="hidden shrink-0 gap-1.5 [@media(pointer:fine)]:flex">
+          {!vue.debut && (
+            <button
+              type="button"
+              aria-label={t("equipes.precedentes")}
+              onClick={() => fleche(-1)}
+              className="raised flex h-11 w-11 items-center justify-center rounded-full text-foreground"
+            >
+              <ChevronLeft className="h-5 w-5" />
+            </button>
+          )}
+          {!vue.bout && (
+            <button
+              type="button"
+              aria-label={t("equipes.suivantes")}
+              onClick={() => fleche(1)}
+              className="raised flex h-11 w-11 items-center justify-center rounded-full text-foreground"
+            >
+              <ChevronRight className="h-5 w-5" />
+            </button>
+          )}
         </div>
       </nav>
 
@@ -207,9 +229,11 @@ export function BandeauEquipes({ cartes }: { cartes: CarteDuBandeau[] }) {
                 data-colonne=""
                 data-large={col.large ? "1" : undefined}
                 className={`flex max-h-full shrink-0 snap-start flex-col gap-3 max-sm:w-full max-sm:scroll-mt-[calc(var(--nav-h)+12px)] ${scrollMl} ${
+                  // BO-G, 6 : tablette debout (768 à 1 023 px), deux colonnes entières dans la largeur : la suivante
+                  // commence hors champ au lieu de dépasser à moitié (plus de « TEAM DÉCORATIO » coupé au bord).
                   col.large
-                    ? "w-[340px] max-sm:w-full md:w-[560px] lg:w-[calc((100cqw-64px)/2)] xl:w-[calc((100cqw-96px)/2)]"
-                    : "w-[300px] max-sm:w-full lg:w-[290px]"
+                    ? "w-[340px] max-sm:w-full md:w-[calc(100cqw_-_2*var(--marge-page))] lg:w-[calc((100cqw-64px)/2)] xl:w-[calc((100cqw-96px)/2)]"
+                    : "w-[300px] max-sm:w-full md:w-[calc((100cqw_-_2*var(--marge-page)_-_16px)/2)] lg:w-[290px]"
                 } ${
                   // Une carte plus haute que le bandeau défile dans sa colonne : jamais plus haut que l'écran.
                   // Seulement alors : le défilement couperait l'ombre des cartes.
@@ -232,26 +256,6 @@ export function BandeauEquipes({ cartes }: { cartes: CarteDuBandeau[] }) {
             aria-hidden
             className="pointer-events-none absolute inset-y-0 right-0 w-5 bg-gradient-to-l from-background to-transparent md:w-16"
           />
-        )}
-        {!vue.debut && (
-          <button
-            type="button"
-            aria-label={t("equipes.precedentes")}
-            onClick={() => fleche(-1)}
-            className={`raised absolute ${gaucheFleche} top-1/2 z-10 hidden h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full text-foreground [@media(pointer:fine)]:flex`}
-          >
-            <ChevronLeft className="h-5 w-5" />
-          </button>
-        )}
-        {!vue.bout && (
-          <button
-            type="button"
-            aria-label={t("equipes.suivantes")}
-            onClick={() => fleche(1)}
-            className={`raised absolute ${droiteFleche} top-1/2 z-10 hidden h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full text-foreground [@media(pointer:fine)]:flex`}
-          >
-            <ChevronRight className="h-5 w-5" />
-          </button>
         )}
       </div>
     </div>

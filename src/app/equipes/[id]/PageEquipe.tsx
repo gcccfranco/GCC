@@ -12,6 +12,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTranslation } from "react-i18next";
 import { ChevronRight, Plus } from "lucide-react";
+import { LargeurBO } from "@/components/backOffice/LargeurBO";
 import { EnTetePage } from "@/components/layout/EnTetePage";
 import { buttonVariants } from "@/components/ui/button";
 import { TacheLigne, dateCourte } from "@/components/taches/TacheLigne";
@@ -87,12 +88,15 @@ function CorpsEquipe({ id, nom, retour, backOffice }: { id: string; nom: string;
 
   return (
     <div className="pb-16">
-      <EnTetePage retour={retour} titre={nom} sousTitre={sousTitre} />
-      <div className="max-w-[720px] space-y-8 px-[var(--marge-page)]">
-        <SectionTachesEquipe id={id} backOffice={backOffice} />
-        <SectionReunions id={id} backOffice={backOffice} />
-        <SectionMembres id={id} membres={membres} lue={lue} backOffice={backOffice} />
-      </div>
+      {/* BO-G, 2 : la largeur d'À faire (LargeurBO), plus de plafond à 720 px. */}
+      <LargeurBO>
+        <EnTetePage retour={retour} titre={nom} sousTitre={sousTitre} />
+        <div className="space-y-8 px-[var(--marge-page)]">
+          <SectionTachesEquipe id={id} backOffice={backOffice} />
+          <SectionReunions id={id} backOffice={backOffice} />
+          <SectionMembres id={id} membres={membres} lue={lue} backOffice={backOffice} />
+        </div>
+      </LargeurBO>
     </div>
   );
 }

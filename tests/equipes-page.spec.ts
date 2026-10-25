@@ -1,7 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import { mkdirSync } from "node:fs";
 import { ADMIN_EMAIL, signInAs, type FakeProfile } from "./helpers/fakeSession";
-import { estGrandEcran, verifierSansDebordement } from "./helpers/agencement";
+import { estGrandEcran, margeAttendue, verifierSansDebordement, zoneDeContenu } from "./helpers/agencement";
 
 // Piste A du back-office (docs/spec-back-office-piste-a.md), tranche BO-D (BO4, BO7) : la page d'une équipe,
 // `/equipes/<id>` dans l'app pour un simple membre, `/back-office/equipes/<id>` pour un responsable ;
@@ -134,14 +134,14 @@ test.describe("la page d'une équipe au Back-Office (BO7)", () => {
   test("/back-office/planning/sans-compte redirige vers la sous-page de Personnes « Noms du planning sans compte » (admin)", async ({ page }) => {
     await ouvrir(page, ADMIN, "/back-office/planning/sans-compte");
     await expect(page).toHaveURL(/\/back-office\/equipes\/personnes\/sans-compte\/?$/);
-    await expect(page.getByRole("heading", { level: 2, name: "Noms du planning sans compte" })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 2, name: /^Noms du planning sans compte \(\d+\)$/ })).toBeVisible();
   });
 
   test("Personnes : le lien « Noms du planning sans compte » de l'en-tête mène à la sous-page (admin)", async ({ page }) => {
     await ouvrir(page, ADMIN, "/back-office/equipes/personnes");
     await page.locator("header[data-entete-page]").getByRole("link", { name: "Noms du planning sans compte" }).click();
     await expect(page).toHaveURL(/\/back-office\/equipes\/personnes\/sans-compte\/?$/);
-    await expect(page.getByRole("heading", { level: 2, name: "Noms du planning sans compte" })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 2, name: /^Noms du planning sans compte \(\d+\)$/ })).toBeVisible();
   });
 
   test("/back-office/equipes/nimporte et /equipes/nimporte répondent 404", async ({ page }) => {
@@ -183,4 +183,39 @@ test.describe("agencement et captures", () => {
       });
     }
   }
+});
+
+// BO-G, 2 : la page d'une équipe prend la largeur utile de la zone (la règle d'« À faire »), plus de plafond à 720 px.
+test.describe("BO-G : largeur de la page d'une équipe, « sans compte »", () => {
+  for (const [nom, adresse] of [["Back-Office", "/back-office/equipes/da"], ["app", "/equipes/da"]] as const) {
+    test(`${nom} : les cartes prennent la largeur utile de la zone`, async ({ page }) => {
+      await ouvrir(page, ADMIN, adresse);
+      await expect(page.getByRole("heading", { name: "Tâches", level: 2 })).toBeVisible();
+      const zone = await zoneDeContenu(page);
+      const marge = await margeAttendue(page);
+      const utile = Math.min(1440, zone.droite - zone.gauche) - 2 * marge;
+      for (const titre of ["Tâches", "Réunions", "Membres"]) {
+        const carte = section(page, titre).locator("div").first();
+        const largeur = (await carte.boundingBox())!.width;
+        expect(Math.round(largeur), `${titre} : toute la largeur utile (${utile})`).toBeGreaterThanOrEqual(Math.round(utile) - 2);
+        expect(largeur, `${titre} : plus de plafond à 720 px`).toBeGreaterThan(utile > 760 ? 720 : 0);
+      }
+    });
+  }
+
+  test("sans compte : « ‹ Personnes » sous le titre, un seul titre avec le compte, la carte comme les autres", async ({ page }) => {
+    await ouvrir(page, ADMIN, "/back-office/equipes/personnes/sans-compte");
+    const titre = page.getByRole("heading", { level: 2, name: /^Noms du planning sans compte \(\d+\)$/ });
+    await expect(titre).toBeVisible();
+    await expect(page.getByRole("heading", { level: 2 }), "un seul titre de section").toHaveCount(1);
+    const h1 = (await page.getByRole("heading", { level: 1, name: "Équipes" }).boundingBox())!;
+    const retour = page.locator("section[aria-labelledby=\"personnes-sans-compte\"]").getByRole("link", { name: "Personnes", exact: true });
+    const r = (await retour.boundingBox())!;
+    expect(r.y, "le retour est sous le titre « Équipes »").toBeGreaterThan(h1.y + h1.height);
+    const rail = (await page.locator('[data-onglets="rail"]').boundingBox())!;
+    expect(r.y, "…et sous le rail").toBeGreaterThan(rail.y + rail.height - 1);
+    const carte = titre.locator("xpath=..");
+    await expect(carte).toHaveClass(/raised/);
+    expect(await carte.evaluate((el) => getComputedStyle(el).borderRadius), "coins des autres cartes").toBe("16px");
+  });
 });

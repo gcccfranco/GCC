@@ -103,12 +103,29 @@ test.describe("BO Planning, piste A", () => {
     expect(await page.getByTestId("halo").evaluate((el) => (el as HTMLElement).style.getPropertyValue("--halo"))).toBe(PLANNING_COLORS.culte);
   });
 
+  // BO-G, 16 : sur tablette, le rail Plannings | Sans compte a une cible de toucher de 44 px sans que le dessin change.
+  test("tablettes : le rail Plannings | Sans compte a une cible de 44 px", async ({ page }, info) => {
+    test.skip(!info.project.name.startsWith("tablette"), "la cible de 44 px est celle du doigt : tablettes (portrait et paysage)");
+    await ouvrir(page, ADMIN, "/back-office/planning/culte");
+    const rail = enTete(page).locator('[data-onglets="rail"]');
+    await expect(rail.getByRole("link")).toHaveText(["Plannings", "Sans compte"]);
+    for (const lien of await rail.getByRole("link").all()) {
+      const b = (await lien.boundingBox())!;
+      const nom = (await lien.textContent())?.trim();
+      expect(b.height, `« ${nom} » : le dessin ne change pas`).toBeLessThan(44);
+      for (const y of [b.y - (44 - b.height) / 2 + 1, b.y + b.height + (44 - b.height) / 2 - 1]) {
+        const touche = await page.evaluate(({ x, y }) => document.elementFromPoint(x, y)?.closest("a")?.textContent?.trim() ?? null, { x: b.x + b.width / 2, y });
+        expect(touche, `« ${nom} » : cible de 44 px (y = ${Math.round(y)})`).toBe(nom);
+      }
+    }
+  });
+
   test("Sans compte : l'adresse redirige vers la sous-page Équipes › Personnes › Noms du planning sans compte, sans rangée de grille", async ({ page }) => {
     await ouvrir(page, ADMIN, "/back-office/planning/sans-compte");
     // Piste A (BO7) : plus d'en-tête « Planning » ni d'onglet actif ; sous-page de Personnes, en-tête « Équipes ».
     await expect(page).toHaveURL(/\/back-office\/equipes\/personnes\/sans-compte\/?$/);
     await expect(enTete(page).getByRole("heading", { level: 1 })).toHaveText("Équipes");
-    await expect(page.getByRole("heading", { level: 2, name: "Noms du planning sans compte" })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 2, name: /^Noms du planning sans compte \(\d+\)$/ })).toBeVisible();
     await expect(page.getByTestId("barre-grille")).toHaveCount(0);
   });
 

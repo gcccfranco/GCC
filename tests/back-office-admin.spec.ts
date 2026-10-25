@@ -91,6 +91,24 @@ test.describe("B2 : Messages (Réception, Notifier, Questionnaire)", () => {
     await expect(page.getByRole("button", { name: /^Membres/ })).toHaveCount(0);
   });
 
+  // BO-G, 15 : une date écrite en chaîne ISO (ou en nombre) au lieu d'un horodatage ne fait plus tomber la page.
+  test("admin : un signalement dont la date est une chaîne ISO, une proposition dont la date est un nombre : la page reste, avec leurs dates", async ({ page }) => {
+    const docs = {
+      "reports/r1": { ...RECEPTION["reports/r1"], createdAt: "2026-09-17T10:00:00Z" },
+      "reports/r2": { ...RECEPTION["reports/r1"], title: "Date illisible", createdAt: "pas une date" },
+      "songProposals/p1": { ...RECEPTION["songProposals/p1"], createdAt: Date.parse("2026-09-16T10:00:00Z") },
+    };
+    await ouvrir(page, ADMIN, "/back-office/messages", docs);
+    await expect(page.getByRole("heading", { level: 1, name: "Messages" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Signalements" })).toBeVisible();
+    await expect(page.getByText("Une erreur est survenue")).toHaveCount(0);
+    await expect(page.getByText("Le planning ne s'affiche pas").first()).toBeVisible();
+    await expect(page.getByText("Date illisible").first()).toBeVisible();
+    await expect(page.getByText("Tu es fidèle").first()).toBeVisible();
+    await expect(page.getByText(/17\/09\/2026/).first()).toBeVisible();
+    await expect(page.getByText(/16\/09\/2026/).first()).toBeVisible();
+  });
+
   test("admin : Notifier compose une notification, sans « Publier un planning » ni la destination « Annonces »", async ({ page }) => {
     await ouvrir(page, ADMIN, "/back-office/messages");
     await ongletsRail(page).getByRole("link", { name: "Notifier" }).click();
@@ -185,7 +203,7 @@ test.describe("B2 : Planning (plannings, Sans compte)", () => {
     // Piste A (BO7) : « Sans compte » est la sous-page d'Équipes › Personnes.
     await sousParties(page).getByRole("link", { name: "Sans compte" }).click();
     await expect(page).toHaveURL(/\/back-office\/equipes\/personnes\/sans-compte\/?$/);
-    await expect(page.getByRole("heading", { level: 2, name: "Noms du planning sans compte" })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 2, name: /^Noms du planning sans compte \(\d+\)$/ })).toBeVisible();
     await expect(page.getByRole("button", { name: /Importer|Reprendre les noms/ })).toHaveCount(0);
   });
 
@@ -437,6 +455,21 @@ test.describe("B3 : Évènements", () => {
     await expect(page).toHaveURL(/\/back-office\/calendrier\/?\?vue=agenda&filtre=evenements$/);
     await page.getByRole("button", { name: /Sortie Bonté/ }).click();
     await expect(page.locator('a[href^="/evenements/bonte"]').first()).toBeVisible();
+  });
+
+  // BO-G, 18 : l'ancienne liste « ceux qu'il organise » (avant BO-C) passe par « Seulement moi » : le Calendrier
+  // montre tout ce qu'il peut voir (BO8), le filtre ne garde que ce qu'il organise.
+  test("président d'un groupe : « Seulement moi » garde l'évènement qu'il organise, pas celui de toute l'église", async ({ page }) => {
+    await ouvrirB3(page, ANNONCEUR, "/back-office/evenements", {
+      ...DOCS_EV,
+      "evenements/bonte": { ...EV, titre: "Sortie Bonté", pour: "Groupe Bonté", date: "2026-10-25", organisateurUid: "uid-hugo", organisateurNom: "Hugo B." },
+    });
+    await expect(page.getByRole("button", { name: /Fête de rentrée/ })).toBeVisible();
+    const moi = page.getByRole("button", { name: "Seulement moi", exact: true });
+    await moi.click();
+    await expect(moi).toHaveAttribute("aria-pressed", "true");
+    await expect(page.getByRole("button", { name: /Sortie Bonté/ })).toBeVisible();
+    await expect(page.getByRole("button", { name: /Fête de rentrée/ })).toHaveCount(0);
   });
 
   test("membre du pôle DA : le Calendrier filtré sur Réunions montre les réunions de son pôle", async ({ page }) => {

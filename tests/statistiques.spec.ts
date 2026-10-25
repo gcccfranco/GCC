@@ -186,6 +186,21 @@ async function trierPar(page: Page, info: TestInfo, colonneNom: "Chant" | "Setli
   else await page.getByRole("columnheader", { name: colonneNom, exact: true }).getByRole("button").click();
 }
 
+// BO-G, 8 : la page Statistiques a la même largeur de lecture que À faire et que la page d'une équipe (LargeurBO).
+test("Statistiques : la même largeur de lecture que À faire", async ({ page }) => {
+  await page.route(/docs\.google\.com\/spreadsheets/, (route) => route.fulfill({ status: 200, contentType: "text/csv", body: "" }));
+  await ouvrirStatistiques(page);
+  const stats = page.locator("[data-largeur-bo]");
+  await expect(stats).toHaveCount(1);
+  const largeurStats = (await stats.boundingBox())!;
+  await page.goto("/back-office");
+  await expect(page.getByRole("heading", { level: 1, name: "À faire" })).toBeVisible();
+  const afaire = (await page.locator("[data-largeur-bo]").boundingBox())!;
+  expect(Math.round(largeurStats.x), "même bord gauche").toBe(Math.round(afaire.x));
+  expect(Math.round(largeurStats.width), "même largeur").toBe(Math.round(afaire.width));
+  expect(largeurStats.width, "plafonnée à la lecture du site").toBeLessThanOrEqual(1440);
+});
+
 test.describe("Statistiques (S3) : les plus joués", () => {
   // Le service worker ne doit pas servir le recueil à la place de la simulation.
   test.use({ serviceWorkers: "block" });

@@ -1345,7 +1345,8 @@ test.describe("OG-D · navigateur (Personnes, Sans compte)", () => {
     await page.route("**/api/equipes/groupes", (route) => route.fulfill({ json: { ok: true, maj: 0, ignores: [] } }));
     await signInAs(page, ADMIN, docs(), "/back-office/equipes/personnes/sans-compte");
     await expect(page.getByRole("region", { name: /^Titulaires sans compte/ })).toContainText("Ma Lin");
-    const planning = page.locator("div.rounded-xl", { hasText: /^Planning sans compte/ }).first();
+    // BO-G, 7 : un seul titre, « Noms du planning sans compte (N) », sur la carte même.
+    const planning = page.locator("div", { has: page.getByRole("heading", { level: 2, name: /^Noms du planning sans compte/ }) }).last();
     await expect(planning).toContainText("Zoé Q.");
     await expect(planning).not.toContainText("Ma Lin");
   });

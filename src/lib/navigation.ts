@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import type { Entree } from "@/types/backOffice";
 import { estReunion } from "@/lib/access";
+import { BACK_OFFICE } from "@/lib/backOffice";
 
 /** Vocabulaire commun du chantier U ; choisie par le CSS (globals.css, bloc « Lot U4 »),
  *  jamais par l'agent utilisateur. */
@@ -136,6 +137,7 @@ export function estEntreeActive(entree: EntreeBarre, pathname: string): boolean 
 
 /** Clé i18n du label contextuel « GCC <label> » (décisions du 15/09/2026, gelées). */
 export function labelDeSection(pathname: string): string {
+  if (BACK_OFFICE && pathname.startsWith("/back-office")) return "common.header.backOffice";
   if (pathname.startsWith("/planning")) return "common.header.planning";
   if (pathname.startsWith("/mes-services")) return "common.header.service";
   if (pathname.startsWith("/evenements")) return "common.header.evenements";

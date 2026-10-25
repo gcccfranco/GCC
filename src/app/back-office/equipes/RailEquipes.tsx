@@ -16,6 +16,7 @@ export function RailEquipes() {
   return (
     <OngletsRail
       etiquette={t("backOffice.entrees.equipes")}
+      cible44
       onglets={[
         { id: "organigramme", label: t("backOffice.parties.organigramme"), href: "/back-office/equipes" },
         { id: "personnes", label: t("backOffice.parties.personnes"), href: "/back-office/equipes/personnes" },

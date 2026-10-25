@@ -79,26 +79,41 @@ function MoiClient() {
       <section key="reglages" aria-label={t("moi.settings")} className="raised rounded-2xl px-4 pb-1.5 pt-3">
         <Group title={t("moi.settings")}>
           {profile && <ReglagesNotifications feuille={disposition === "telephone"} />}
-          <GroupRow
-            leading={<Globe />}
-            trailing={
-              <button type="button" onClick={() => setLanguage(isZh ? "fr" : "zh-CN")} className={TOGGLE}>
-                {isZh ? t("moi.french") : "中文"}
-              </button>
-            }
-          >
-            {t("moi.language")}
-          </GroupRow>
-          <GroupRow
-            leading={<Moon />}
-            trailing={
-              <button type="button" onClick={() => setTheme(dark ? "light" : "dark")} className={TOGGLE}>
-                {dark ? t("moi.light") : t("moi.dark")}
-              </button>
-            }
-          >
-            {t("moi.theme")}
-          </GroupRow>
+          {/* BO-G, 12 : au Back-Office, un état (« Langue  Français »), pas un bouton d'action ; toucher la ligne bascule.
+              En ligne (interrupteur coupé), les boutons d'avant. */}
+          {BACK_OFFICE ? (
+            <>
+              <GroupRow leading={<Globe />} onClick={() => setLanguage(isZh ? "fr" : "zh-CN")} trailing={isZh ? "中文" : t("moi.french")}>
+                {t("moi.language")}
+              </GroupRow>
+              <GroupRow leading={<Moon />} onClick={() => setTheme(dark ? "light" : "dark")} trailing={dark ? t("moi.dark") : t("moi.light")}>
+                {t("moi.theme")}
+              </GroupRow>
+            </>
+          ) : (
+            <>
+              <GroupRow
+                leading={<Globe />}
+                trailing={
+                  <button type="button" onClick={() => setLanguage(isZh ? "fr" : "zh-CN")} className={TOGGLE}>
+                    {isZh ? t("moi.french") : "中文"}
+                  </button>
+                }
+              >
+                {t("moi.language")}
+              </GroupRow>
+              <GroupRow
+                leading={<Moon />}
+                trailing={
+                  <button type="button" onClick={() => setTheme(dark ? "light" : "dark")} className={TOGGLE}>
+                    {dark ? t("moi.light") : t("moi.dark")}
+                  </button>
+                }
+              >
+                {t("moi.theme")}
+              </GroupRow>
+            </>
+          )}
         </Group>
       </section>
     ),
@@ -137,11 +152,13 @@ function MoiClient() {
   // Une rotation ou la barre pliée ne les démonte donc pas (sinon toutes leurs lectures repartiraient).
   const grand = disposition === "grand";
   const telephone = disposition === "telephone";
+  const sousLeCompte = BACK_OFFICE && !grand && !telephone;
   const contenu = (
     <div className={grand ? "grid grid-cols-[340px_minmax(0,1fr)] items-start gap-5" : "space-y-4"}>
       <div className={grand ? "space-y-4" : telephone ? undefined : "grid grid-cols-2 items-start gap-4"}>
-        {compte}
-        {!telephone && <div className="space-y-4">{reglages}{notifierAdmin}{deconnexion}</div>}
+        {/* BO-G, 12 : au Back-Office, tablette portrait, « Déconnexion » sous le compte : plus de grand vide sous « Mon profil ». */}
+        {sousLeCompte ? <div className="space-y-4">{compte}{deconnexion}</div> : compte}
+        {!telephone && <div className="space-y-4">{reglages}{notifierAdmin}{!sousLeCompte && deconnexion}</div>}
       </div>
       <div className="min-w-0 space-y-4">{apercus}{aide}</div>
       {telephone && <div className="space-y-4">{notifierAdmin}{reglages}{deconnexion}</div>}
