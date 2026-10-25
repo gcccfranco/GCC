@@ -150,9 +150,16 @@ export function useJianpuCadrage(slug: string | null | undefined): number[] | un
 let manifestPromise: Promise<JianpuManifest> | null = null;
 
 export function loadJianpuManifest(): Promise<JianpuManifest> {
+  // Un échec n'est pas gardé : le prochain appel réessaie.
   manifestPromise ??= fetch("/jianpu/index.json")
-    .then((r) => (r.ok ? (r.json() as Promise<JianpuManifest>) : {}))
-    .catch(() => ({}));
+    .then((r) => {
+      if (!r.ok) throw new Error(`jianpu/index.json : HTTP ${r.status}`);
+      return r.json() as Promise<JianpuManifest>;
+    })
+    .catch(() => {
+      manifestPromise = null;
+      return {} as JianpuManifest;
+    });
   return manifestPromise;
 }
 

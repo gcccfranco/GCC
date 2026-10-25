@@ -461,7 +461,10 @@ export function SetlistDetailClient() {
       setLoadError(false);
       if (!copieAffichee.current) setLoadingSetlist(true);
       type Index = { songs?: SongIndexEntry[] };
-      const indexP: Promise<Index> = chargerIndexChants().then((songs) => ({ songs }));
+      // L'index des chants ne conditionne rien : sans lui (hors ligne, pas en cache) la setlist s'affiche quand
+      // même, les titres manquants se complètent quand il arrive.
+      let indexLu: Index = {};
+      const indexP: Promise<Index> = chargerIndexChants().then((songs) => (indexLu = { songs })).catch(() => indexLu);
       let terminee = false;
       const appliquer = (sl: FSSetlist | null, index: Index, lueLe: number | null, v: Record<string, SetlistVersions>) => {
         setCopieLueLe(lueLe);
@@ -473,10 +476,10 @@ export function SetlistDetailClient() {
         setSongsMap(map);
       };
       if (copie) {
-        void Promise.all([indexP, new Promise((r) => setTimeout(r, COPIE_APRES_MS))])
-          .then(([index]) => {
+        void new Promise((r) => setTimeout(r, COPIE_APRES_MS))
+          .then(() => {
             if (terminee || !courante()) return;
-            appliquer(copie.setlist, index, copie.lueLe, copie.versions);
+            appliquer(copie.setlist, indexLu, copie.lueLe, copie.versions);
             setVersionsLues(false);
             setLoadingSetlist(false);
           })
@@ -499,6 +502,13 @@ export function SetlistDetailClient() {
       }).finally(() => {
         if (courante()) setLoadingSetlist(false);
       });
+      // Index arrivé après l'affichage : on complète les titres.
+      void chargerIndexChants().then((songs) => {
+        if (!courante()) return;
+        const map: Record<string, SongIndexEntry> = {};
+        for (const sv of songs) map[sv.slug] = sv;
+        setSongsMap(map);
+      }).catch(() => {});
     })();
     return () => { abandon = true; };
   }, [id, authLoading, retryKey]);
@@ -613,10 +623,9 @@ export function SetlistDetailClient() {
     if (new URLSearchParams(window.location.search).get("louange") !== "1") return;
     louangeDemandee.current = true;
     window.history.replaceState(window.history.state, "", window.location.pathname);
-    const items = setlist.items;
-    requestAnimationFrame(() => {
-      loadContents(items).then((manquants) => (manquants.length ? setChantsManquants(manquants) : setPerformanceMode(true)));
-    });
+    // Même contrôle que le bouton : chants non chargés, scans 简谱 absents du cache hors ligne.
+    requestAnimationFrame(() => { void entrerEnLouange(false); });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- lancé une fois (louangeDemandee), sur la setlist lue
   }, [setlist, loadContents]);
 
   // Vue lue dans l'adresse à l'ouverture (lien, rechargement) et au retour du

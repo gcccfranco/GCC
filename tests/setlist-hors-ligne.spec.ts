@@ -404,6 +404,27 @@ test("réseau qui traîne : la copie paraît vers 3 s, la vraie setlist la rempl
   await expect(page.getByText(COPIE)).toHaveCount(0);
 });
 
+// ─── A10 : la copie ne dépend ni de l'index des chants ni d'`AbortSignal.timeout` ─────────────────
+
+test("songs-index.json injoignable : la copie paraît quand même vers 3 s", async ({ page }) => {
+  await signInAsPuisCopie(page);
+  await page.route(/firestore\.googleapis\.com/, (route) => route.abort("internetdisconnected"));
+  await page.route(/songs-index\.json/, (route) => route.abort("internetdisconnected"));
+  await page.reload();
+  await expect(page.getByText(COPIE)).toBeVisible({ timeout: 9_000 });
+  await expect(page.getByRole("heading", { name: "Culte de la copie" }).first()).toBeVisible();
+});
+
+test("Safari d'avant 16 (sans AbortSignal.timeout) : la setlist se lit", async ({ page }) => {
+  await page.addInitScript(() => {
+    delete (AbortSignal as unknown as { timeout?: unknown }).timeout;
+  });
+  await signInAsPuisCopie(page);
+  await page.reload();
+  await expect(page.getByRole("heading", { name: "Culte de la copie" }).first()).toBeVisible();
+  await expect(page.getByText(/Réessayer|Impossible de charger/)).toHaveCount(0);
+});
+
 // ─── A3 bis, point 8 : scans 简谱 ───────────────────────────────────────────────
 
 const AVEC_SCAN = { ...SETLIST, items: [item("abba-pere", 1), item("一生爱你", 2)] };

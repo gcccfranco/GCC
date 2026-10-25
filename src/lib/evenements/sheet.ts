@@ -58,6 +58,7 @@ export function lienOngletSheet(date: string): string {
 
 // ─── CSV ──────────────────────────────────────────────────────────────────────
 
+import { delaiMax } from "@/lib/delaiMax";
 import { lireCSV } from "@/lib/csv"
 
 /** Lecteur CSV partagé avec le planning (src/lib/csv.ts) ; ré-exporté pour les tests. */
@@ -149,8 +150,7 @@ export function lireMoisSheet(rows: string[][], mois: string): EntreeSheet[] {
 const TTL_MS = 5 * 60_000
 const DELAI_MS = 8_000
 const ENV: EnvSheet = {
-  // `AbortSignal.timeout` manque aux vieux Safari (avant 16) : sans lui, pas de délai.
-  fetch: (url) => fetch(url, { cache: "no-store", signal: AbortSignal.timeout?.(DELAI_MS) }),
+  fetch: (url) => fetch(url, { cache: "no-store", signal: delaiMax(DELAI_MS) }),
   maintenant: () => Date.now(),
   cache: new Map(),
 }

@@ -1,3 +1,4 @@
+import { delaiMax } from "@/lib/delaiMax";
 import type { EddDataStructure, EddPeriode, CampusSeance } from "./utils"
 import { EDD_CLASSES, EDD_PERIODES, getMois } from "./utils"
 import { fetchCasesEcrites, fetchGrille } from "./grille"
@@ -120,8 +121,7 @@ export async function fetchSheet(sheet: string): Promise<string[][]> {
   if (hit && Date.now() - hit.at < SHEET_TTL_MS) return hit.rows
   tentativesSheet++
   try {
-    // `AbortSignal.timeout` manque aux vieux Safari (avant 16) : sans lui, pas de délai.
-    const res = await fetch(csvUrl(sheet), { cache: "no-store", signal: AbortSignal.timeout?.(SHEET_DELAI_MS) })
+    const res = await fetch(csvUrl(sheet), { cache: "no-store", signal: delaiMax(SHEET_DELAI_MS) })
     if (!res.ok) throw new Error(`Sheet « ${sheet} » : réponse ${res.status}`)
     const texte = await res.text()
     // Google rend parfois une page HTML (connexion, erreur) avec un statut 200 : pas un CSV.

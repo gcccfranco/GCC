@@ -1,3 +1,4 @@
+import { delaiMax } from "@/lib/delaiMax";
 import { auth } from "@/lib/firebase/config";
 
 const FS_BASE =
@@ -28,7 +29,7 @@ export async function loadAnnotation(
   const id = docId(userId, setlistId, pageKey);
   const res = await fetch(`${FS_BASE}/annotations/${encodeURIComponent(id)}`, {
     headers,
-    signal: AbortSignal.timeout(10_000),
+    signal: delaiMax(10_000),
   });
   if (res.status === 404) return null;
   if (!res.ok) throw new Error(`Annotations illisibles (HTTP ${res.status})`);

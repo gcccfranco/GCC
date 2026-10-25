@@ -10,10 +10,10 @@ import type { ReminderService } from "../src/lib/push/reminderMessage";
 
 test.describe("parseCSV", () => {
   test("une cellule sur deux lignes garde la ligne entière et ses colonnes de droite", () => {
-    const csv = '"04/10/2026","Viviane","Pasteur Alba\n(à confirmer)","Hewei","Karémy"\n"11/10/2026","Odon","Lise","Noé","Ana"';
+    const csv = '"04/10/2026","Zéphyrine","Pasteur Alba\n(à confirmer)","Gaspard","Ismène"\n"11/10/2026","Odon","Lise","Noé","Ana"';
     const rows = parseCSV(csv);
     expect(rows).toHaveLength(2);
-    expect(rows[0]).toEqual(["04/10/2026", "Viviane", "Pasteur Alba (à confirmer)", "Hewei", "Karémy"]);
+    expect(rows[0]).toEqual(["04/10/2026", "Zéphyrine", "Pasteur Alba (à confirmer)", "Gaspard", "Ismène"]);
     expect(rows[1][4]).toBe("Ana");
   });
 

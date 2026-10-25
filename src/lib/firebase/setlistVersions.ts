@@ -1,3 +1,4 @@
+import { delaiMax } from "@/lib/delaiMax";
 import { FS_BASE, authHeader, checkRest, fromFsValue, toFsFields, type RawDoc } from "@/lib/firebase/setlists";
 import type { JianpuChords } from "@/types/setList";
 
@@ -42,7 +43,7 @@ export async function getSetlistVersions(setlistId: string): Promise<Record<stri
     headers: { "Content-Type": "application/json", ...(await authHeader()) },
     body: JSON.stringify({ structuredQuery: { from: [{ collectionId: "versions" }] } }),
     // Réseau qui traîne : une erreur au bout de 10 s plutôt qu'une page qui attend (la présidence seule s'affiche).
-    signal: AbortSignal.timeout(10_000),
+    signal: delaiMax(10_000),
   });
   await checkRest(res);
   const rows = (await res.json()) as Array<{ document?: RawDoc }>;

@@ -1,3 +1,4 @@
+import { delaiMax } from "@/lib/delaiMax";
 import { auth } from "@/lib/firebase/config";
 import { SERVICE_LIEUX } from "@/types/user";
 import { BACK_OFFICE } from "@/lib/backOffice";
@@ -401,7 +402,7 @@ export async function getSetlist(id: string): Promise<FSSetlist | null> {
   let res: Response;
   try {
     const headers = await withTimeout(authHeader(), DELAI_LECTURE_MS, "Délai dépassé (jeton)");
-    res = await fetch(`${FS_BASE}/setlists/${id}`, { headers, signal: AbortSignal.timeout(DELAI_LECTURE_MS) });
+    res = await fetch(`${FS_BASE}/setlists/${id}`, { headers, signal: delaiMax(DELAI_LECTURE_MS) });
   } catch (e) {
     throw new ErreurReseau(e instanceof Error ? e.message : "réseau");
   }

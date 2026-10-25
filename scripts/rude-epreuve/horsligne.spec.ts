@@ -68,7 +68,9 @@ test("hors ligne : setlist ouverte par un lien, rechargée sans réseau", async 
     "/setlists");
   await page.evaluate(() => navigator.serviceWorker?.ready);
   await page.reload();
-  await page.locator("a[href*='/setlists/sl-banc']").first().click();
+  await page.locator("a[href*='sl-banc']").first().click();
+  // Sur grand écran le lien ouvre l'aperçu (`?apercu=`), pas la page : on ouvre la page elle-même.
+  if (!/\/setlists\/sl-banc/.test(new URL(page.url()).pathname)) await page.goto("/setlists/sl-banc/");
   await page.getByText("Culte du banc").first().waitFor();
   await page.waitForTimeout(10_000); // préchargement par le service worker
   const cache = await page.evaluate(async () => {
@@ -86,12 +88,23 @@ test("hors ligne : setlist ouverte par un lien, rechargée sans réseau", async 
     pasOuverte: document.body.innerText.includes("pas encore été ouverte"),
   }));
   await page.screenshot({ path: path.join(OUT, `horsligne-setlist-${info.project.name}-1.png`) });
+  // A10 : `songs-index.json` absent du cache, la copie doit paraître quand même.
+  await page.evaluate(async () => {
+    const c = await caches.open((await caches.keys()).find((k) => k.startsWith("gcc-louange")) ?? "");
+    for (const r of await c.keys()) if (/songs-index\.json/.test(r.url)) await c.delete(r);
+  });
+  await page.reload();
+  await page.waitForTimeout(6000);
+  const sansIndex = await page.evaluate(() => ({
+    copie: !!document.querySelector("[data-copie-hors-ligne]"),
+    titre: document.body.innerText.includes("Culte du banc"),
+  }));
   await page.goto("/songs/一生爱你/");
   await page.waitForTimeout(3000);
   const scan = await page.evaluate(() => Array.from(document.querySelectorAll("img")).filter((i) => /jianpu/.test(i.src)).map((i) => i.complete && i.naturalWidth > 0));
   await page.screenshot({ path: path.join(OUT, `horsligne-setlist-${info.project.name}-2.png`) });
   await context.setOffline(false);
-  ecrire("horsligne-setlist.jsonl", { projet: info.project.name, cache, apres, scan });
+  ecrire("horsligne-setlist.jsonl", { projet: info.project.name, cache, apres, sansIndex, scan });
 });
 
 // Réseau d'église : lent et chargé (400 ms, 400 kb/s), processeur de téléphone (×4).

@@ -4,6 +4,7 @@
 // `backOffice/{uid}` (disposition du tableau de bord, barre du bas), que l'intéressé
 // écrit lui-même (B5) — le profil `users/{uid}` est verrouillé. Patron d'`onboarding/{uid}`. REST.
 
+import { delaiMax } from "@/lib/delaiMax";
 import { FS_BASE, authHeader, fromFsValue, toFsFields, type RawDoc } from "@/lib/firebase/setlists";
 import { VERSION_TABLEAU } from "@/lib/tableauDeBord/disposition";
 import type { Entree, PreferencesBackOffice, Widget } from "@/types/backOffice";
@@ -44,7 +45,7 @@ export async function ecrireBarreDuBas(uid: string, barre: Entree[] | null): Pro
  *  rôle. Le contenu est vérifié par `dispositionAffichee`, pas ici. */
 export async function lirePreferencesBackOffice(uid: string): Promise<Partial<PreferencesBackOffice> | null> {
   try {
-    const res = await fetch(`${FS_BASE}/backOffice/${uid}`, { headers: await authHeader(), signal: AbortSignal.timeout(4000) });
+    const res = await fetch(`${FS_BASE}/backOffice/${uid}`, { headers: await authHeader(), signal: delaiMax(4000) });
     if (!res.ok) return null;
     const raw = (await res.json()) as RawDoc;
     return Object.fromEntries(Object.entries(raw.fields ?? {}).map(([k, v]) => [k, fromFsValue(v)])) as Partial<PreferencesBackOffice>;
