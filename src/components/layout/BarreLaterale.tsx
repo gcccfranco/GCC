@@ -10,7 +10,7 @@
 // PAR-DESSUS la page (feuille `vaul` par la gauche, sans mise à l'échelle), sur un voile ; elle
 // se referme au choix d'une entrée, sur un toucher du voile, par Échap, « Réduire » ou à la
 // déconnexion, et ne retient rien.
-// Au Back-Office (U6, Q15), les entrées Tâches et Messages portent leur pastille (planche
+// Au Back-Office (U6, Q15), l'entrée Messages porte sa pastille (planche
 // bo-tableau-de-bord), lue seulement quand la barre est montrée ; réduite, la barre n'en a pas.
 import { useEffect, useId, useRef, useState, useSyncExternalStore, type Ref } from "react";
 import { createPortal } from "react-dom";
@@ -73,7 +73,7 @@ const suivreBarreMontree = (changement: () => void) => {
   m.addEventListener("change", changement);
   return () => m.removeEventListener("change", changement);
 };
-function useBarreMontree() {
+export function useBarreMontree() {
   return useSyncExternalStore(suivreBarreMontree, () => window.matchMedia(BARRE_MONTREE).matches, () => false);
 }
 const rienASuivre = () => () => {};
@@ -90,7 +90,6 @@ export function BarreLaterale() {
   const auBackOffice = BACK_OFFICE && !!user && espaceDe(pathname) === "back-office";
   const comptes = usePastilles(montree && auBackOffice ? entreesBackOffice(user, profile) : []);
   const pastilles: Record<string, number> = {
-    [entreeBackOffice("taches").href]: comptes.taches ?? 0,
     [entreeBackOffice("messages").href]: comptes.messages ?? 0,
   };
   // Lus hors de React, sans effet : monté (le thème ne se lit que dans le navigateur) et

@@ -35,7 +35,7 @@ import { ArrowRight, Check, Share2 } from "lucide-react"
 import { Retour } from "@/components/layout/EnTetePage"
 import { useAuth } from "@/lib/firebase/auth"
 import { useProfile } from "@/lib/firebase/users"
-import { canEditEvenement, canSeeEvenement, entreesBackOffice, estDeLaReunion, estResponsable, estReunion } from "@/lib/access"
+import { canEditEvenement, canSeeEvenement, droitsDesPages, estDeLaReunion, estResponsable, estReunion } from "@/lib/access"
 import { deleteEvenement, getEvenement, listReunionsDu } from "@/lib/firebase/evenements"
 import { listSujets, retirerSujet } from "@/lib/firebase/sujets"
 import { isInfo } from "@/lib/evenements/agenda"
@@ -157,7 +157,7 @@ export function EvenementClient({ espace = "app", id: idDonne }: { espace?: "app
   // Retouches v18, lot G (G2, D28) : une réunion n'est plus dans l'App ; son adresse mène à sa
   // fiche de Back-Office › Réunions pour qui la voit et a cette entrée.
   const versReunions = espace === "app" && !!evenement && estReunion(evenement) && canSeeEvenement(user, profile, evenement)
-    && entreesBackOffice(user, profile).includes("reunions")
+    && droitsDesPages(user, profile).reunions
   useEffect(() => { if (versReunions) router.replace(`/back-office/reunions/${id}`) }, [versReunions, id, router])
 
   if (authLoading || (user && profileLoading) || evenement === undefined) {

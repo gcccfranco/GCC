@@ -1,11 +1,11 @@
 "use client";
 
 // Sélecteur « App · Back-Office » (lot U6, docs/spec-back-office.md, Q6) : réservé à qui a le
-// Back-Office (`entreesBackOffice` : responsables et, lot G, membres d'équipe), le même pour
+// Back-Office (`entreesBackOffice` : les responsables seuls depuis la piste A, BO4), le même pour
 // tous, posé dans les places de U4 — barre latérale dépliée (sous le label), barre du haut
 // (après le label sur tablette en portrait, à sa place sur téléphone, question 5). Deux liens,
 // l'espace courant marqué ; chacun rouvre la dernière page vue dans son espace pendant la
-// session, sinon le tableau de bord, ou `/planning` côté App (cible du logo).
+// session, sinon À faire (`/back-office`), ou `/planning` côté App (cible du logo).
 import { useEffect, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -42,13 +42,13 @@ function retenir(espace: Espace, chemin: string) {
 }
 
 /** La page que rouvre le lien d'un espace : la dernière vue pendant la session, sinon celle
- *  par défaut (« Revenir à l'app » de la page « Plus », B6, la suit aussi). */
+ *  par défaut (l'onglet « App » de la barre du bas du Back-Office, BO2, la suit aussi). */
 export function useDernierePage(espace: Espace): string {
   return useSyncExternalStore(suivre, () => derniere(espace), () => PAR_DEFAUT[espace]);
 }
 
-/** Vrai pour qui a le Back-Office (un responsable, ou un membre d'équipe pour la seule entrée
- *  Réunions — retouches v18, lot G, D29), interrupteur du back-office ouvert. */
+/** Vrai pour qui a le Back-Office (un responsable ; un simple membre d'équipe n'en a plus, BO4),
+ *  interrupteur du back-office ouvert. */
 export function useResponsable(): boolean {
   const { user, profile } = useProfile();
   return BACK_OFFICE && entreesBackOffice(user, profile).length > 0;

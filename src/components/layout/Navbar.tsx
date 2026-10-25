@@ -10,13 +10,15 @@ import { Sun, Moon, Globe, LogIn, ChevronDown } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useAuth } from "@/lib/firebase/auth";
 import { useProfile } from "@/lib/firebase/users";
-import { equipesDe, isAdminUser } from "@/lib/access";
+import { entreesBackOffice, equipesDe, isAdminUser } from "@/lib/access";
 import { useScrollDirection } from "@/hooks/useScrollDirection";
 import { BACK_OFFICE } from "@/lib/backOffice";
 import { saveNotifLang } from "@/lib/firebase/notifPrefs";
 import { FondDeBarre } from "@/components/layout/FondDeBarre";
-import { labelDeSection } from "@/lib/navigation";
+import { espaceDe, labelDeSection } from "@/lib/navigation";
 import { Cloche } from "@/components/layout/Cloche";
+import { IconeMessages } from "@/components/layout/IconeMessages";
+import { useBarreMontree } from "@/components/layout/BarreLaterale";
 import { MenuCompte, useNomDuMembre } from "@/components/layout/MenuCompte";
 import { SelecteurEspace, useResponsable } from "@/components/layout/SelecteurEspace";
 
@@ -105,6 +107,10 @@ export function Navbar() {
   // « App · Back-Office » suit le label ; sur téléphone il en prend la place, et la
   // langue passe par « Moi » (à 390 px, les quatre ne tiennent pas ensemble).
   const responsable = useResponsable();
+  // Piste A, BO2 : Messages n'est pas un onglet de la barre du bas, c'est une icône ici, à côté de la cloche.
+  // Là où la barre latérale est montrée, c'est elle qui porte Messages et lit ses comptes : pas deux fois.
+  const barreMontree = useBarreMontree();
+  const avecMessages = !barreMontree && responsable && !!user && espaceDe(pathname) === "back-office" && entreesBackOffice(user, profile).includes("messages");
 
   return (
     <>
@@ -219,6 +225,7 @@ export function Navbar() {
 
           {/* Actions — pushed to far right */}
           <div className="ml-auto flex items-center gap-2">
+            {avecMessages && <IconeMessages boutonClassName={ICON_BUTTON} />}
             {/* Notifications */}
             {!authLoading && user && <Cloche boutonClassName={ICON_BUTTON} />}
 

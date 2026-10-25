@@ -789,32 +789,47 @@ export function canVoirStatistiques(user: { email?: string | null } | null): boo
 const ENTREES_A_VENIR: readonly Entree[] = [];
 const WIDGETS_A_VENIR: readonly WidgetId[] = [];
 
-/** Les entrées du Back-Office d'une personne (table Q2), dans l'ordre du menu. Pour qui n'est
- *  pas responsable mais a une équipe (`equipesDe` : membre d'une équipe, ou public Louange par un
- *  rôle de service) : Tâches et Réunions, rien d'autre (décisions 4 et 5, EQ17) ; rien sinon. */
+/** Les entrées du Back-Office d'une personne, dans l'ordre du menu (piste A, BO1 et BO4,
+ *  docs/spec-back-office-piste-a.md) : À faire et Calendrier pour tout responsable, puis Planning,
+ *  Équipes et Messages selon les droits. Qui n'est pas responsable n'a aucune entrée, même membre
+ *  d'une équipe (BO4) ; rien sans compte. Tâches, Réunions, Évènements et Statistiques ne sont plus des
+ *  entrées : leurs pages gardent leur adresse (`droitsDesPages` dit qui les ouvre). */
 export function entreesBackOffice(user: AuthUser | null, profile: ProfilResponsable | null, backOffice: boolean = BACK_OFFICE): Entree[] {
   if (!user) return [];
-  const equipes = equipesDe(profile, backOffice).length > 0;
-  if (!estResponsable(user, profile, backOffice)) return equipes ? ["taches", "reunions"] : [];
+  if (!estResponsable(user, profile, backOffice)) return [];
   const admin = isAdminUser(user);
   const visible: Record<Entree, boolean> = {
-    tableau: true,
+    afaire: true,
     calendrier: true,
     planning: admin || (!backOffice && nonVide(profile?.plannings)) || planningsDuBackOffice(user, profile, backOffice).length > 0,
+    equipes: canEditerEquipes(user, profile, backOffice) || tientUnGroupe(user, profile),
+    // Le Back-Office n'existe qu'interrupteur ouvert (OG27) : les rôles comptent ici, sans dépendre de
+    // la variable du processus (un test pur ne la voit pas).
+    // Ancien mode : `notify` ∪ rôles de groupe (les rôles comptent ici sans dépendre de la variable du processus).
+    messages: admin || (backOffice ? audiencesNotifiables(profile, true).length > 0 : nonVide(profile?.notify) || nonVide(profile?.notifieParRole)),
+  };
+  return ENTREES.filter((e) => visible[e] && !ENTREES_A_VENIR.includes(e));
+}
+
+/** Les pages du Back-Office qui ne sont plus des entrées du menu (BO1) mais gardent leur adresse
+ *  (`/back-office/taches`, `/evenements`, `/reunions`) : qui les ouvre, d'après les mêmes droits que
+ *  les anciennes entrées. Tout faux pour qui n'est pas responsable (BO4). Affichage seulement. */
+export function droitsDesPages(
+  user: AuthUser | null,
+  profile: ProfilResponsable | null,
+  backOffice: boolean = BACK_OFFICE
+): { taches: boolean; evenements: boolean; reunions: boolean } {
+  if (!user || !estResponsable(user, profile, backOffice)) return { taches: false, evenements: false, reunions: false };
+  const admin = isAdminUser(user);
+  const equipes = equipesDe(profile, backOffice).length > 0;
+  return {
     taches: admin || equipes,
     // Agencement v18 (B15) : Évènements = ceux qu'on gère ou crée (un référent crée pour son
     // équipe, décision 43) ; Réunions = ses équipes (Louange élargi). Affichage seulement :
     // evenements/{id} garde ses règles.
     evenements: admin || isCoordination(user, profile, backOffice) || (!backOffice && nonVide(profile?.annonces)) || nonVide(profile?.referentDe),
     reunions: admin || equipes || nonVide(profile?.referentDe),
-    equipes: canEditerEquipes(user, profile, backOffice) || tientUnGroupe(user, profile),
-    // Le Back-Office n'existe qu'interrupteur ouvert (OG27) : les rôles comptent ici, sans dépendre de
-    // la variable du processus (un test pur ne la voit pas).
-    // Ancien mode : `notify` ∪ rôles de groupe (les rôles comptent ici sans dépendre de la variable du processus).
-    messages: admin || (backOffice ? audiencesNotifiables(profile, true).length > 0 : nonVide(profile?.notify) || nonVide(profile?.notifieParRole)),
-    statistiques: canVoirStatistiques(user),
   };
-  return ENTREES.filter((e) => visible[e] && !ENTREES_A_VENIR.includes(e));
 }
 
 /** Les onglets du planning (`/planning/<onglet>`), dans leur ordre. */
@@ -858,16 +873,17 @@ export function planningsDuBackOffice(
 export function widgetsPermis(user: AuthUser | null, profile: UserProfile | null, backOffice: boolean = BACK_OFFICE): WidgetId[] {
   if (!estResponsable(user, profile, backOffice)) return [];
   const entrees = entreesBackOffice(user, profile, backOffice);
+  const pages = droitsDesPages(user, profile, backOffice);
   const admin = isAdminUser(user);
   const permis: Record<WidgetId, boolean> = {
     dimanche: true,
     calendrier: true,
-    afaire: entrees.includes("taches"),
+    afaire: pages.taches,
     setlists: canCreateSetlist(user, profile, backOffice),
     planning: entrees.includes("planning"),
     // Depuis TB2 les réunions ont leur widget et sortent d'Évènements : seule l'entrée Évènements le permet (TB2-corrections).
-    evenements: entrees.includes("evenements"),
-    reunions: entrees.includes("reunions"),
+    evenements: pages.evenements,
+    reunions: pages.reunions,
     chants: canVoirStatistiques(user),
     petitdej: true,
     scene: true,

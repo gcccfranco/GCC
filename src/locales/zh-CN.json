@@ -3469,6 +3469,7 @@
       "backOffice": "后台"
     },
     "entrees": {
+      "afaire": "待办",
       "tableau": "仪表盘",
       "calendrier": "日历",
       "planning": "排班表",
@@ -3532,6 +3533,9 @@
     },
     "barre": {
       "accueil": "首页",
+      "app": "应用",
+      "appAria": "返回应用",
+      "messagesNonLus": "消息，{{count}} 条未读",
       "plus": "更多",
       "personnaliser": "自定义底部栏",
       "personnaliserAide": "选择底部的 4 个标签及其顺序",

@@ -20,7 +20,7 @@ import { FicheTache } from "@/components/taches/FicheTache";
 import { texteRetour } from "@/components/taches/retour";
 import { useDisposition } from "@/hooks/useDisposition";
 import { useProfile } from "@/lib/firebase/users";
-import { entreesBackOffice, equipesDesTaches } from "@/lib/access";
+import { droitsDesPages, equipesDesTaches } from "@/lib/access";
 import { cleNomEquipe } from "@/lib/equipes/table";
 import { estSurLaListe } from "@/lib/deuxVolets";
 import { aFairePour, lignesDeTache, type Ligne } from "@/lib/taches/echeances";
@@ -103,7 +103,7 @@ export function SectionTaches({ children }: { children: React.ReactNode }) {
     disposition === "grand" && !!ouverte && l.tache.equipe === ouverte.equipe && l.tache.id === ouverte.id
     && (!ouverte.date || !l.tache.repetition || ouverte.date === l.date);
 
-  const versBackOffice = entreesBackOffice(user, profile).includes("taches");
+  const versBackOffice = droitsDesPages(user, profile).taches;
   const liste = (
     <div className={cn("space-y-6", disposition === "grand" ? "px-4 py-4" : "px-[var(--marge-page)] pb-10")}>
       {retour && <p role="status" className="text-sm text-muted-foreground">{retour}</p>}

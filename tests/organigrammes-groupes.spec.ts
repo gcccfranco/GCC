@@ -15,7 +15,7 @@ import { datesCourtes, propositions, propositionsReliees, type CompteDuPlanning 
 import { GRILLE_BONTE, GRILLE_CULTE, GRILLE_PAIX } from "../src/lib/planning/grilles";
 import { readFileSync } from "node:fs";
 import {
-  ADMIN_EMAILS, audiencesNotifiables, canEditPlanning, canTenirGroupe, creatableEvenementPours, entreesBackOffice,
+  ADMIN_EMAILS, audiencesNotifiables, canEditPlanning, canTenirGroupe, creatableEvenementPours, droitsDesPages, entreesBackOffice,
   equipesDe, equipesDesTaches, equipesOuCreer, estDeLEquipe, estResponsable, planningsDuBackOffice, tientUnGroupe,
 } from "../src/lib/access";
 import { canPublishPlanning, droitsDePublication, getPlanning, peutPrevenir } from "../src/lib/planning/releases";
@@ -675,9 +675,10 @@ test.describe("OG-B · miroirs client (OG22 à OG27)", () => {
     expect(tientUnGroupe(null, PRESIDENT)).toBe(false);
   });
 
-  test("entreesBackOffice d'un président sans droit Équipes : Équipes et Planning en plus de Tâches, Réunions, Évènements", () => {
+  test("entreesBackOffice d'un président sans droit Équipes : Équipes, Planning et Messages ; ses pages Tâches, Réunions, Évènements restent", () => {
     const entrees = entreesBackOffice(u("ruth"), PRESIDENT);
-    for (const e of ["equipes", "planning", "taches", "reunions", "evenements", "messages"] as const) expect(entrees, e).toContain(e);
+    for (const e of ["equipes", "planning", "messages"] as const) expect(entrees, e).toContain(e);
+    expect(droitsDesPages(u("ruth"), PRESIDENT)).toEqual({ taches: true, evenements: true, reunions: true });
     expect(estResponsable(u("ruth"), PRESIDENT)).toBe(true);
     expect(estResponsable(u("x"), { remplitParRole: ["paix"] })).toBe(true);
     expect(estResponsable(u("x"), { publieParRole: ["paix"] })).toBe(true);
@@ -1111,9 +1112,9 @@ test.describe("OG-C · Back-Office › Équipes › Organigramme", () => {
     expect((ecrit.data.vp as { uid: string }[]).map((v) => v.uid)).toEqual(["lea", "clara", "joel"]);
   });
 
-  test("simple membre : /back-office/equipes refusé (renvoyé à ses tâches)", async ({ page }) => {
+  test("simple membre : /back-office/equipes refusé (garde « Réservé aux responsables », piste A BO4)", async ({ page }) => {
     await ouvrir(page, LUC, "/back-office/equipes");
-    await expect(page.getByRole("heading", { level: 1, name: "Tâches" })).toBeVisible();
+    await expect(page.getByText("Réservé aux responsables.")).toBeVisible();
     await expect(page.getByRole("navigation", { name: "Navigation principale" }).getByRole("link", { name: "Équipes" })).toHaveCount(0);
     await expect(selecteur(page)).toHaveCount(0);
   });

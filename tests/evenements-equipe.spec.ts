@@ -1,7 +1,7 @@
 import { expect, test, type Page, type TestInfo } from "@playwright/test";
 import path from "node:path";
 import { coordination, signInAs, type FakeProfile } from "./helpers/fakeSession";
-import { canInscrireEvenement, canSeeEvenement, entreesBackOffice, estReunion, publicDeReunion } from "../src/lib/access";
+import { canInscrireEvenement, canSeeEvenement, droitsDesPages, entreesBackOffice, estReunion, publicDeReunion } from "../src/lib/access";
 import { HttpError, PLAFOND_SANS_COMPTE, destinatairesEvenement, errorResponse, inscrire } from "../src/lib/evenements/serveur";
 import { limiteAtteinte, limiteSansCompte } from "../src/lib/evenements/limiteAdresse";
 import i18n from "i18next";
@@ -281,9 +281,10 @@ test("relecture, retournée par la décision 43 : un référent a l'entrée Év�
   // un référent sans droit d'annonces crée les évènements de son équipe.
   const profil = (p: FakeProfile) => p as unknown as UserProfile;
   const referent = { ...BRUNO, referentDe: ["da"] };
-  expect(entreesBackOffice(qui(referent), profil(referent))).toEqual(["tableau", "calendrier", "taches", "evenements", "reunions"]);
-  expect(entreesBackOffice(qui(BRUNO), profil(BRUNO))).toEqual(["taches", "reunions"]);
-  expect(entreesBackOffice(qui(ALICE), profil(ALICE))).toContain("evenements");
+  expect(droitsDesPages(qui(referent), profil(referent))).toEqual({ taches: true, evenements: true, reunions: true });
+  // Piste A (BO4) : un simple membre n'a plus de Back-Office.
+  expect(entreesBackOffice(qui(BRUNO), profil(BRUNO))).toEqual([]);
+  expect(droitsDesPages(qui(ALICE), profil(ALICE)).evenements).toBe(true);
 });
 
 test("relecture : depuis l'en-tête de BO › Évènements, « Nouvel évènement » propose l'équipe de la personne", async ({ page }) => {

@@ -3,7 +3,7 @@ import { ADMIN_EMAIL } from "./helpers/fakeSession";
 import {
   audiencesNotifiables, canCreateEvenement, canCreateSetlist, canDeleteSetlist, canEditPlanning, canEditSetlist, canEditerEquipes,
   canGererPetitDej, canRetirerDate, canSaisirAbsence, canSeeEvenement, canSeeSetlist, canUseHarmonie, canVoirAbsencesDeTous,
-  colonnesModifiables, creatableCategories, creatableEvenementPours, entreesBackOffice, equipesDe, estResponsable, faitDesPlannings,
+  colonnesModifiables, creatableCategories, creatableEvenementPours, droitsDesPages, entreesBackOffice, equipesDe, estResponsable, faitDesPlannings,
   isCoordination, peutChangerReferents, peutModifierEquipe, peutPlacerMembre, peutPlacerSousEquipe, planningsDuBackOffice,
   sousPartiesEvenements, visibleCategories, widgetsPermis, type DateServie,
 } from "../src/lib/access";
@@ -479,10 +479,12 @@ test.describe("pur : équipes, responsables et entrées du Back-Office", () => {
 
   test("entrées : un compte sans équipe n'en a aucune, la case Messages vient de l'organigramme", () => {
     expect(entreesBackOffice(user(DORIAN), DORIAN, NEW)).toEqual([]);
-    expect(entreesBackOffice(user(ALINE), ALINE, NEW)).toEqual(["taches", "reunions"]);
+    // Piste A (BO4) : un simple membre d'équipe n'a plus de Back-Office.
+    expect(entreesBackOffice(user(ALINE), ALINE, NEW)).toEqual([]);
     expect(entreesBackOffice(user(SERGE), SERGE, NEW)).toEqual([]);
     const kevin = entreesBackOffice(user(KEVIN), KEVIN, NEW);
-    for (const e of ["planning", "evenements", "taches", "reunions", "equipes", "messages"] as const) expect(kevin, e).toContain(e);
+    for (const e of ["planning", "equipes", "messages"] as const) expect(kevin, e).toContain(e);
+    expect(droitsDesPages(user(KEVIN), KEVIN, NEW)).toEqual({ taches: true, evenements: true, reunions: true });
     expect(entreesBackOffice(user(NOEMIE), NOEMIE, NEW)).toEqual(expect.arrayContaining(["equipes", "messages"]));
     expect(entreesBackOffice(user(NOEMIE), NOEMIE, NEW)).not.toContain("planning");
     expect(widgetsPermis(user(DORIAN), DORIAN, NEW)).toEqual([]);
@@ -567,7 +569,7 @@ test.describe("pur : l'ancien mode garde les accès d'aujourd'hui", () => {
     expect(canCreateEvenement(u, s, "Culte Francophone", OLD)).toBe(true);
     expect(equipesDe(s, OLD)).toEqual(["louange"]);
     expect(estResponsable(u, s, OLD)).toBe(true);
-    expect(entreesBackOffice(u, s, OLD)).toEqual(expect.arrayContaining(["planning", "evenements", "equipes", "messages", "taches"]));
+    expect(entreesBackOffice(u, s, OLD)).toEqual(expect.arrayContaining(["planning", "equipes", "messages"]));
     expect(planningsDuBackOffice(u, s, OLD), "notify « * » publie aussi les groupes").toEqual(["culte", "groupes"]);
   });
 

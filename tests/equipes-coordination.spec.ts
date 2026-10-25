@@ -1,7 +1,7 @@
 import { expect, test, type Page, type TestInfo } from "@playwright/test";
 import { ADMIN_EMAIL, orga, signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { estGrandEcran, ongletsRail } from "./helpers/agencement";
-import { entreesBackOffice, estResponsable, isCoordination, sousPartiesEvenements } from "../src/lib/access";
+import { droitsDesPages, estResponsable, isCoordination, sousPartiesEvenements } from "../src/lib/access";
 import type { Evenement } from "../src/types/evenement";
 
 // Lot 1 du chantier « équipes et groupes » (docs/spec-equipes-sans-poles.md), tranche EQ-A :
@@ -79,7 +79,7 @@ test.describe("pur : la coordination est un droit coché, plus un pôle", () => 
 
   test("la case seule fait une responsable : Évènements, avec Pâques et Noël", () => {
     expect(estResponsable(user(IRIS), IRIS)).toBe(true);
-    expect(entreesBackOffice(user(IRIS), IRIS)).toContain("evenements");
+    expect(droitsDesPages(user(IRIS), IRIS).evenements).toBe(true);
     expect(sousPartiesEvenements(user(IRIS), IRIS)).toEqual(["evenements", "scene"]);
     expect(sousPartiesEvenements(user(NINA), NINA), "le pôle Événement n'ouvre plus la scène").toEqual([]);
   });

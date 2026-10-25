@@ -1,7 +1,7 @@
-import { PagePlus } from "@/components/backOffice/PagePlus";
+import { redirect } from "next/navigation";
 
-// Lot U6, B6 : « Plus », dernier onglet de la barre du bas du Back-Office (planche
-// bo-telephone-plus). Interrupteur coupé ou non-responsable : le gabarit de l'espace s'en charge.
+// Piste A, BO2 : la page « Plus » n'existe plus (la barre du bas a cinq onglets fixes) ; son adresse
+// ramène au Back-Office. Interrupteur coupé : le gabarit de l'espace répond 404 avant.
 export default function PlusPage() {
-  return <PagePlus />;
+  redirect("/back-office");
 }

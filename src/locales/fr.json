@@ -3515,6 +3515,7 @@
       "backOffice": "Back-Office"
     },
     "entrees": {
+      "afaire": "À faire",
       "tableau": "Tableau de bord",
       "calendrier": "Calendrier",
       "planning": "Planning",
@@ -3578,6 +3579,9 @@
     },
     "barre": {
       "accueil": "Accueil",
+      "app": "App",
+      "appAria": "Revenir à l'app",
+      "messagesNonLus": "Messages, {{count}} non lus",
       "plus": "Plus",
       "personnaliser": "Personnaliser la barre",
       "personnaliserAide": "Choisis les 4 onglets du bas et leur ordre",

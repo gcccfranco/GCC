@@ -9,9 +9,8 @@ import { useAuth } from "@/lib/firebase/auth";
 import { useProfile } from "@/lib/firebase/users";
 import { entreesBackOffice } from "@/lib/access";
 import { useScrollDirection } from "@/hooks/useScrollDirection";
-import { entreesBarre, espaceDe, estEntreeActive, ongletsBackOffice, ONGLET_PLUS } from "@/lib/navigation";
-import { barreAffichee } from "@/lib/tableauDeBord/barre";
-import { useBarreDuBas } from "@/lib/tableauDeBord/useBarreDuBas";
+import { entreesBarre, espaceDe, estEntreeActive, ongletsBackOffice, ONGLET_APP } from "@/lib/navigation";
+import { useDernierePage } from "@/components/layout/SelecteurEspace";
 
 /**
  * Barre d'onglets fixée en bas d'écran, sur téléphone et tablette en portrait ;
@@ -19,8 +18,9 @@ import { useBarreDuBas } from "@/lib/tableauDeBord/useBarreDuBas";
  * et sur la tablette en paysage, qui ont la barre latérale (lot U4). Masquée en
  * plein écran (vue partition / pupitre) pour ne jamais recouvrir une
  * partition ; le mode louange (z-9999) passe par-dessus de toute façon.
- * Au Back-Office (lot U6, B6), un responsable a la sienne : 4 onglets choisis + « Plus »,
- * « Plus » marqué sur toute page qui n'est pas dans la barre ; celle de l'App ne change pas.
+ * Au Back-Office (piste A, BO2), un responsable a la sienne : cinq onglets fixes, À faire ·
+ * Calendrier · Planning · Équipes · App (ceux qu'il a le droit de voir) ; Messages est une icône
+ * de l'en-tête. Celle de l'App ne change pas.
  */
 export function MobileTabBar() {
   const { t } = useTranslation();
@@ -29,7 +29,7 @@ export function MobileTabBar() {
   const { profile, loading: profilEnCours } = useProfile();
   const auBackOffice = BACK_OFFICE && espaceDe(pathname) === "back-office";
   const permises = auBackOffice ? entreesBackOffice(user, profile) : [];
-  const barre = useBarreDuBas(permises.length > 0 && user ? user.uid : null);
+  const app = useDernierePage("app");
   const [mounted, setMounted] = useState(false);
   const [fullscreen, setFullscreen] = useState(false);
   // Comme la navbar du haut : masquée au scroll vers le bas, réaffichée dès
@@ -45,17 +45,15 @@ export function MobileTabBar() {
   }, []);
 
   if (!mounted || loading || fullscreen) return null;
-  // Au Back-Office, on attend le profil et la barre enregistrée : jamais une barre qui change sous le doigt.
-  if (auBackOffice && (profilEnCours || (permises.length > 0 && !barre.charge))) return null;
+  // Au Back-Office, on attend le profil : jamais une barre qui change sous le doigt.
+  if (auBackOffice && profilEnCours) return null;
   // Mêmes entrées que la barre latérale (lot U4) ; back-office coupé (lot 18) :
   // la section Évènements n'est pas en ligne.
   const tabs = permises.length > 0
-    ? ongletsBackOffice(barreAffichee(barre.enregistree, permises))
+    ? ongletsBackOffice(permises, app)
     : entreesBarre("app", { connecte: !!user, backOffice: BACK_OFFICE });
   // Une seule destination (visiteur : « Chants ») : pas de barre, ni sa cale de 110 px (C8, audit 24/10/2026).
   if (tabs.length <= 1) return null;
-  // « Plus » couvre les pages du Back-Office qui ne sont pas dans la barre.
-  const horsBarre = permises.length > 0 && !tabs.some((e) => estEntreeActive(e, pathname));
 
   return (
     <>
@@ -72,12 +70,13 @@ export function MobileTabBar() {
         <div className="flex h-16 gap-0.5 p-1.5">
           {tabs.map((entree) => {
             const { href, cle, Icone } = entree;
-            const active = estEntreeActive(entree, pathname) || (horsBarre && entree === ONGLET_PLUS);
+            const active = estEntreeActive(entree, pathname);
             return (
               <Link
                 key={href}
                 href={href}
                 aria-current={active ? "page" : undefined}
+                aria-label={entree.cle === ONGLET_APP.cle ? t("backOffice.barre.appAria") : t(cle)}
                 // `flex-auto` : un libellé long (« Évènements ») prend la place qu'il lui faut, même à 320 px.
                 className={`flex flex-auto flex-col items-center justify-center gap-0.5 whitespace-nowrap rounded-[26px] px-1.5 text-xs font-semibold transition-[background-color,color,transform] duration-150 active:scale-[.97] ${
                   active ? "bg-primary text-primary-foreground" : "text-muted-foreground"

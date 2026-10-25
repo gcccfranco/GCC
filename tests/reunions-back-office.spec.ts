@@ -1,7 +1,7 @@
 import { expect, test, type Page, type TestInfo } from "@playwright/test";
 import path from "node:path";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
-import { entreesBackOffice } from "../src/lib/access";
+import { droitsDesPages, entreesBackOffice } from "../src/lib/access";
 import { ficheEvenement } from "../src/lib/navigation";
 import { notificationsDuMatin } from "../src/lib/reunions/rappels";
 import { pushNouvelEvenement } from "../src/lib/evenements/rappel";
@@ -71,12 +71,13 @@ function menu(page: Page, info: TestInfo) {
 
 // ─── Purs ───────────────────────────────────────────────────────────────────
 
-test("G3 : un membre d'équipe sans autre rôle, comme un choriste, a Tâches et Réunions (EQ17, décisions 4 et 5)", () => {
-  expect(entreesBackOffice(qui(HUGO), profil(HUGO))).toEqual(["taches", "reunions"]);
-  expect(entreesBackOffice(qui(CHORISTE), profil(CHORISTE))).toEqual(["taches", "reunions"]);
+test("G3 (piste A, BO4) : un membre d'équipe sans autre rôle, comme un choriste, n'a plus de Back-Office ; un référent a ses pages", () => {
+  expect(entreesBackOffice(qui(HUGO), profil(HUGO))).toEqual([]);
+  expect(entreesBackOffice(qui(CHORISTE), profil(CHORISTE))).toEqual([]);
   // Un référent est responsable : Tâches de son équipe, et Évènements (décision 43).
   const rose = { uid: "uid-rose", email: "rose@example.com", dansEquipes: ["regie"], referentDe: ["regie"] };
-  expect(entreesBackOffice(qui(rose), profil(rose))).toEqual(["tableau", "calendrier", "taches", "evenements", "reunions"]);
+  expect(entreesBackOffice(qui(rose), profil(rose))).toEqual(["afaire", "calendrier"]);
+  expect(droitsDesPages(qui(rose), profil(rose))).toEqual({ taches: true, evenements: true, reunions: true });
 });
 
 test("G2 : la fiche d'une réunion est au Back-Office, celle d'un évènement (d'équipe compris) dans l'App", () => {

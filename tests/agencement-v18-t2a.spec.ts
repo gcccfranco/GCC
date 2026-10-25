@@ -1,14 +1,14 @@
 import { expect, test, type Page, type TestInfo } from "@playwright/test";
 import { notifie, presidentGroupe, signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { estGrandEcran, interdireDialoguesNatifs, repondreDansLeSite } from "./helpers/agencement";
-import { entreesBackOffice, sousPartiesEvenements, widgetsPermis } from "../src/lib/access";
+import { droitsDesPages, entreesBackOffice, sousPartiesEvenements, widgetsPermis } from "../src/lib/access";
 import { entreesBarre } from "../src/lib/navigation";
-import { barreAffichee } from "../src/lib/tableauDeBord/barre";
 import { raccourcisPermis } from "../src/lib/tableauDeBord/donnees";
 import type { UserProfile } from "../src/types/user";
 
 // Agencement v18 (docs/spec-agencement-v18.md), tranche T2a — l'entrée Réunions (B15) :
-// neuf entrées au menu du Back-Office, Réunions juste après Évènements ; Évènements = admin,
+// (neuf entrées au menu du Back-Office jusqu'à la piste A, BO1 : Réunions et Évènements n'en sont plus, leurs
+// pages gardent leur adresse et leurs droits, `droitsDesPages`) ; Évènements = admin,
 // coordination ou droit d'annonces ; Réunions = admin, un pôle (Louange compris), référent
 // ou membre d'une équipe ; adresses `/back-office/reunions/*` qui montent les composants
 // d'aujourd'hui ; les trois anciennes adresses redirigent ; « Plus », la barre du bas et sa
@@ -72,27 +72,28 @@ async function menuLateral(page: Page, info: TestInfo) {
 }
 const barreDuBas = (page: Page) => page.getByTestId("barre-du-bas");
 const sousParties = (page: Page) => page.getByRole("navigation", { name: "Sous-parties" });
-const feuille = (page: Page) => page.getByRole("dialog", { name: "Ta barre du bas" });
 
 // ─── Règles pures ────────────────────────────────────────────────────────────────
 
 test.describe("T2a : les droits d'affichage (B15)", () => {
-  test("un admin a neuf entrées, Réunions juste après Évènements", () => {
-    expect(permises(ADMIN)).toEqual(["tableau", "calendrier", "planning", "taches", "evenements", "reunions", "equipes", "messages", "statistiques"]);
+  test("un admin a les cinq entrées de la piste A et ouvre les pages Réunions, Évènements, Tâches", () => {
+    expect(permises(ADMIN)).toEqual(["afaire", "calendrier", "planning", "equipes", "messages"]);
+    expect(droitsDesPages(user(ADMIN), profil(ADMIN))).toEqual({ taches: true, evenements: true, reunions: true });
   });
 
   test("membre d'équipe responsable sans droit d'annonces : Réunions, pas Évènements ; droit d'annonces seul : l'inverse ; coordination, référent : les deux", () => {
-    expect(permises(NOTIFY_EQUIPE)).toEqual(["tableau", "calendrier", "taches", "reunions", "messages"]);
-    expect(permises(DA), "référent (décision 43)").toEqual(["tableau", "calendrier", "taches", "evenements", "reunions"]);
-    expect(permises(ANNONCEUR)).toEqual(["tableau", "calendrier", "evenements"]);
-    expect(permises(COORD)).toEqual(["tableau", "calendrier", "taches", "evenements", "reunions"]);
+    const pages = (p: FakeProfile) => droitsDesPages(user(p), profil(p));
+    expect(pages(NOTIFY_EQUIPE)).toEqual({ taches: true, evenements: false, reunions: true });
+    expect(permises(NOTIFY_EQUIPE)).toEqual(["afaire", "calendrier", "messages"]);
+    expect(pages(DA), "référent (décision 43)").toEqual({ taches: true, evenements: true, reunions: true });
+    expect(pages(ANNONCEUR)).toEqual({ taches: false, evenements: true, reunions: false });
+    expect(pages(COORD)).toEqual({ taches: true, evenements: true, reunions: true });
   });
 
   test("un référent, ou un responsable membre d'une équipe, a Réunions ; le référent, Tâches et Évènements aussi (décision 43)", () => {
-    expect(permises(REFERENTE)).toEqual(["tableau", "calendrier", "taches", "evenements", "reunions"]);
-    expect(permises(NOTIFY_EQUIPE)).toEqual(["tableau", "calendrier", "taches", "reunions", "messages"]);
-    // Sa barre du bas par défaut : Évènements prend la place de Réunions, qui va dans « Plus » (EQ18).
-    expect(barreAffichee(null, permises(REFERENTE))).toEqual(["tableau", "calendrier", "taches", "evenements"]);
+    expect(droitsDesPages(user(REFERENTE), profil(REFERENTE))).toEqual({ taches: true, evenements: true, reunions: true });
+    expect(droitsDesPages(user(NOTIFY_EQUIPE), profil(NOTIFY_EQUIPE)).reunions).toBe(true);
+    expect(permises(REFERENTE)).toEqual(["afaire", "calendrier"]);
   });
 
   test("les sous-parties d'Évènements n'ont plus « Réunions »", () => {
@@ -113,80 +114,45 @@ test.describe("T2a : les droits d'affichage (B15)", () => {
     expect(raccourcisPermis(user(ANNONCEUR), profil(ANNONCEUR), {}).map((r) => r.id)).toContain("evenement");
   });
 
-  test("la barre latérale mène à /back-office/reunions, juste après Évènements", () => {
+  test("la barre latérale n'a plus d'entrée Évènements ni Réunions (piste A, BO1) : leurs adresses restent", () => {
     const hrefs = entreesBarre("back-office", { connecte: true, backOffice: true, permises: permises(ADMIN) }).map((e) => e.href);
-    expect(hrefs.slice(4, 6)).toEqual(["/back-office/evenements", "/back-office/reunions"]);
-  });
-
-  test("une barre enregistrée avec Évènements, relue pour qui n'a que Réunions, se complète dans l'ordre du menu", () => {
-    expect(barreAffichee(["tableau", "evenements", "calendrier", "taches"], permises(NOTIFY_EQUIPE))).toEqual(["tableau", "calendrier", "taches", "reunions"]);
+    expect(hrefs).not.toContain("/back-office/evenements");
+    expect(hrefs).not.toContain("/back-office/reunions");
   });
 });
 
 // ─── Menu ────────────────────────────────────────────────────────────────────────
 
 test.describe("T2a : le menu", () => {
-  test("un admin : neuf entrées, Réunions après Évènements, active sur /back-office/reunions/*", async ({ page }, info) => {
+  test("un admin : cinq entrées ; sur une page Réunions, aucune n'est la page courante (Réunions n'est plus une entrée)", async ({ page }, info) => {
     test.skip(!estGrandEcran(info), "la barre latérale : grand écran");
     await ouvrir(page, ADMIN, "/back-office/reunions/reu-da");
     await expect(page.getByRole("heading", { name: "Réunion DA", exact: true })).toBeVisible();
     const menu = await menuLateral(page, info);
-    await expect(menu.getByRole("link")).toHaveText(
-      ["Tableau de bord", "Calendrier", "Planning", "Tâches", "Évènements", "Réunions", "Équipes", "Messages", "Statistiques"]);
-    await expect(menu.getByRole("link", { name: "Réunions" })).toHaveAttribute("aria-current", "page");
-    await expect(menu.getByRole("link", { name: "Évènements" })).not.toHaveAttribute("aria-current", "page");
+    await expect(menu.getByRole("link")).toHaveText(["À faire", "Calendrier", "Planning", "Équipes", "Messages"]);
+    await expect(menu.locator("[aria-current]")).toHaveCount(0);
   });
 
-  test("membre d'équipe responsable : Réunions dans la barre du bas par défaut (téléphone, tablette portrait), marqué sur sa page", async ({ page }, info) => {
+  test("membre d'équipe responsable : sa barre du bas (téléphone, tablette portrait) n'a plus Réunions, la page reste joignable", async ({ page }, info) => {
     test.skip(estGrandEcran(info), "la barre du bas : téléphone et tablette en portrait");
     await ouvrir(page, NOTIFY_EQUIPE, "/back-office/reunions");
-    await expect(barreDuBas(page).getByRole("link")).toHaveText(["Accueil", "Calendrier", "Tâches", "Réunions", "Plus"]);
-    await expect(barreDuBas(page).getByRole("link", { name: "Réunions" })).toHaveAttribute("aria-current", "page");
+    await expect(barreDuBas(page).getByRole("link")).toHaveText(["À faire", "Calendrier", "App"]);
+    await expect(barreDuBas(page).locator("[aria-current]")).toHaveCount(0);
+    await expect(page.getByRole("heading", { level: 1, name: "Réunions" })).toBeVisible();
   });
 
-  test("une barre enregistrée avec Évènements, pour qui n'a que Réunions : elle se complète sans erreur", async ({ page }, info) => {
+  test("une barre enregistrée avec Évènements est ignorée : la barre est fixe", async ({ page }, info) => {
     test.skip(estGrandEcran(info), "la barre du bas : téléphone et tablette en portrait");
     await ouvrir(page, NOTIFY_EQUIPE, "/back-office", {
       ...DOCS, "backOffice/uid-ne": { barreDuBas: ["tableau", "evenements", "calendrier", "taches"], majLe: "2026-09-30T10:00:00Z" },
     });
-    await expect(barreDuBas(page).getByRole("link")).toHaveText(["Accueil", "Calendrier", "Tâches", "Réunions", "Plus"]);
+    await expect(barreDuBas(page).getByRole("link")).toHaveText(["À faire", "Calendrier", "App"]);
   });
 
-  test("« Plus » montre Réunions après Évènements, avec son contenu", async ({ page }, info) => {
-    test.skip(estGrandEcran(info), "la page « Plus » : téléphone et tablette en portrait");
-    await ouvrir(page, ADMIN, "/back-office/plus");
-    const cartes = page.getByTestId("plus-entree");
-    await expect(cartes).toHaveText([/Évènements/, /Réunions.*Sujets, comptes rendus/, /Équipes/, /Messages/, /Statistiques/]);
-    await expect(cartes.filter({ hasText: "Réunions" })).toHaveAttribute("href", /^\/back-office\/reunions\/?$/);
-  });
-
-  test("la feuille « Ta barre du bas » propose neuf cases ; Réunions peut y être cochée", async ({ page }, info) => {
-    test.skip(estGrandEcran(info), "la feuille : téléphone et tablette en portrait");
-    const db = await ouvrir(page, ADMIN, "/back-office/plus");
-    await page.getByRole("button", { name: "Personnaliser la barre" }).click();
-    await expect(feuille(page)).toBeVisible();
-    await expect(feuille(page).getByRole("checkbox")).toHaveCount(9);
-    await feuille(page).getByRole("checkbox", { name: "Planning", exact: true }).click();
-    await feuille(page).getByRole("checkbox", { name: "Réunions", exact: true }).click();
-    await feuille(page).getByRole("button", { name: "Terminé" }).click();
-    await expect(feuille(page)).toBeHidden();
-    await expect(barreDuBas(page).getByRole("link")).toHaveText(["Accueil", "Calendrier", "Tâches", "Réunions", "Plus"]);
-    await expect.poll(() => db.doc("backOffice/uid-admin")?.barreDuBas).toEqual(["tableau", "calendrier", "taches", "reunions"]);
-  });
-
-  test("en 中文 : « 会议 » au menu, et son contenu dans « Plus »", async ({ page }, info) => {
+  test("en 中文 : « 会议 » titre sa page (plus d'entrée de menu)", async ({ page }) => {
     await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
-    if (estGrandEcran(info)) {
-      await ouvrir(page, ADMIN, "/back-office/reunions");
-      // Le titre avant d'ouvrir le menu : sur l'iPad en paysage, la barre dépliée par-dessus est modale
-      // et cache le reste de la page aux lecteurs d'écran (aria-hidden), h1 compris.
-      await expect(page.getByRole("heading", { level: 1, name: "会议" })).toBeVisible();
-      const menu = await menuLateral(page, info);
-      await expect(menu.getByRole("link", { name: "会议" })).toHaveAttribute("aria-current", "page");
-    } else {
-      await ouvrir(page, ADMIN, "/back-office/plus");
-      await expect(page.getByTestId("plus-entree").filter({ hasText: "会议" })).toContainText("议题、会议记录");
-    }
+    await ouvrir(page, ADMIN, "/back-office/reunions");
+    await expect(page.getByRole("heading", { level: 1, name: "会议" })).toBeVisible();
   });
 });
 

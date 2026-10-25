@@ -57,9 +57,8 @@ test.describe("Statistiques (S2) : le droit (Q2)", () => {
     expect(canVoirStatistiques(null)).toBe(false);
   });
 
-  test("l'entrée « statistiques » est la 8e du menu d'un admin, absente de celui d'un responsable", () => {
-    const admin = entreesBackOffice(user(ADMIN), profil(ADMIN));
-    expect(admin.at(-1)).toBe("statistiques");
+  test("« statistiques » n'est plus une entrée du menu (piste A, BO1) : la page garde ses droits, `canVoirStatistiques`", () => {
+    expect(entreesBackOffice(user(ADMIN), profil(ADMIN))).not.toContain("statistiques");
     expect(entreesBackOffice(user(RESPONSABLE), profil(RESPONSABLE))).not.toContain("statistiques");
   });
 });

@@ -394,14 +394,15 @@ test.describe("B3 : Tâches", () => {
     await expect(page.getByRole("link", { name: /Les tâches des équipes/ })).toHaveAttribute("href", /^\/back-office\/taches\/?$/);
   });
 
-  test("App : un musicien (public Louange) coche ses tâches, et une ligne mène à Tâches au Back-Office (EQ17)", async ({ page }) => {
+  test("App : un musicien (public Louange) coche ses tâches ; sans Back-Office (piste A, BO4), aucun lien n'y mène", async ({ page }) => {
     // Lot 1 du chantier « équipes et groupes » (décision 5) : un rôle de service ouvre Tâches et Réunions.
     // Une tâche qui lui est confiée : « toute l'équipe », elle n'est qu'aux référents (décision 41).
     await ouvrirB3(page, MUSICIEN, "/taches", {
       "equipes/louange/taches/t1": { ...TACHE, equipe: "louange", titre: "Envoyer la setlist", responsableUid: "uid-mu", responsableNom: "Léo V." },
     });
     await expect(page.getByRole("checkbox", { name: /Envoyer la setlist/ })).toBeVisible();
-    await expect(page.getByRole("link", { name: /Les tâches des/ })).toHaveAttribute("href", /^\/back-office\/taches\/?$/);
+    // Un simple membre n'a plus de Back-Office : pas de lien vers lui (sa page d'équipe dans l'app arrive en BO-D).
+    await expect(page.getByRole("link", { name: /Les tâches des/ })).toHaveCount(0);
   });
 
   test("liens de la cloche : une tâche confiée ou terminée ouvre « À faire pour moi »", () => {

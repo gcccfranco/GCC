@@ -603,8 +603,8 @@ test("réunions précédentes : celles de l'équipe avant celle-ci, la plus réc
   await expect(rangs.nth(2).getByRole("link", { name: "Compte rendu" })).toHaveCount(0);
   await page.screenshot({ path: path.join(ROOT, "test-results", "reunions-captures", `${info.project.name}-precedentes.png`), fullPage: true });
   await rangs.nth(0).getByRole("link", { name: "5 sept.", exact: true }).click();
-  // Retouches v18, lot G (G2) : la fiche d'une réunion est au Back-Office.
-  await page.waitForURL(/\/back-office\/reunions\/reunion-sept\/?$/);
+  // Piste A (BO4) : un simple membre n'a plus de Back-Office, la fiche s'ouvre dans l'App.
+  await page.waitForURL(/\/evenements\/reunion-sept\/?$/);
   await expect(page.getByRole("heading", { name: "Réunion DA du 2026-09-05" })).toBeVisible();
 });
 
@@ -993,15 +993,15 @@ test("référente : elle crée la réunion de son équipe, sans inscriptions, et
 test("membre de l'équipe, non référent : pas de réunion d'équipe à créer", async ({ page }) => {
   // Lot U6, B3 : créer est au Back-Office, réservé aux responsables (un référent l'est).
   // Retouches v18, lot G (D29) ; lot 1 du chantier « équipes et groupes » (EQ17) : le membre a
-  // Tâches et Réunions, sans « + Nouvelle réunion » ; ailleurs, ramené à Tâches.
+  // Piste A (BO4) : le membre n'a plus de Back-Office, il reçoit la garde de l'espace partout.
   await ouvrirRegie(page, HUGO, "/back-office/evenements/nouveau");
-  await page.waitForURL(/\/back-office\/taches(\/[\w-]+)?\/?$/);
+  await expect(page.getByText("Réservé aux responsables.")).toBeVisible();
   await page.goto("/back-office/reunions");
-  await expect(page.getByRole("link", { name: /Réunion Régie/ }).first()).toBeVisible();
+  await expect(page.getByText("Réservé aux responsables.")).toBeVisible();
   await expect(page.getByRole("link", { name: /Nouvelle réunion/ })).toHaveCount(0);
 });
 
-test("membre de l'équipe : il retrouve la réunion au Back-Office › Réunions, et y ajoute un sujet à son nom", async ({ page }) => {
+test("membre de l'équipe : il ajoute un sujet à son nom sur la fiche, et n'a plus Réunions au Back-Office", async ({ page }) => {
   const db = await ouvrirRegie(page, HUGO);
   await expect(lignes(page)).toHaveCount(1);
   await champ(page).fill("Retour de la console");
@@ -1009,9 +1009,10 @@ test("membre de l'équipe : il retrouve la réunion au Back-Office › Réunions
   await expect(lignes(page)).toHaveCount(2);
   const [post] = db.writes.filter((w) => w.method === "POST" && w.path.startsWith("evenements/reunion-regie/sujets/"));
   expect(post.data).toMatchObject({ texte: "Retour de la console", auteurUid: "uid-hugo", auteurNom: "Hugo B.", ordre: 1, traite: false });
-  // Retouches v18, lot G (D28, D29) : plus dans l'agenda de l'App, mais dans Réunions du Back-Office.
+  // Piste A (BO4) : plus de Réunions au Back-Office pour un simple membre (sa page d'équipe arrive en BO-D) ;
+  // sa fiche reste dans l'App, et l'adresse du Back-Office lui répond par la garde.
   await page.goto("/back-office/reunions");
-  await expect(page.getByRole("link", { name: /Réunion Régie/ }).first()).toBeVisible();
+  await expect(page.getByText("Réservé aux responsables.")).toBeVisible();
 });
 
 for (const [qui, nom] of [[NOE, "une autre équipe"], [COORD, "la coordination"]] as const) {

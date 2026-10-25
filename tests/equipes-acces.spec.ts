@@ -2,12 +2,11 @@ import { expect, test, type Page, type TestInfo } from "@playwright/test";
 import { ADMIN_EMAIL, signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { ongletsRail } from "./helpers/agencement";
 import {
-  canCreateEvenement, creatableEvenementPours, entreesBackOffice, equipesDe, equipesDesTaches, equipesOuCreer, estDeLEquipe,
+  canCreateEvenement, creatableEvenementPours, droitsDesPages, entreesBackOffice, equipesDe, equipesDesTaches, equipesOuCreer, estDeLEquipe,
   estReferentDe, estResponsable, isCoordination, peutCocher, sousPartiesEvenements, widgetsPermis,
 } from "../src/lib/access";
 import { aFairePour, type Ligne } from "../src/lib/taches/echeances";
 import type { Tache } from "../src/types/tache";
-import { barreParDefaut } from "../src/lib/tableauDeBord/barre";
 import { raccourcisPermis } from "../src/lib/tableauDeBord/donnees";
 import { ANNONCE_SECTIONS } from "../src/types/annonce";
 import { EQUIPES } from "../src/lib/equipes/table";
@@ -150,26 +149,20 @@ test.describe("pur : qui est responsable, ses entrées (EQ17, EQ18, décision 43
     for (const p of [JOEL, HUGO, MAELLE, PAUL, SACHA, ANCIEN]) expect(estResponsable(user(p), profil(p)), p.uid).toBe(false);
   });
 
-  test("un simple membre ou un choriste : Tâches et Réunions, rien d'autre ; un ancien pôle seul : rien", () => {
-    for (const p of [JOEL, HUGO, MAELLE, PAUL, SACHA]) expect(entreesBackOffice(user(p), profil(p)), p.uid).toEqual(["taches", "reunions"]);
-    expect(entreesBackOffice(user(ANCIEN), profil(ANCIEN))).toEqual([]);
+  test("un simple membre ou un choriste : aucune entrée de Back-Office (piste A, BO4) ; un ancien pôle seul non plus", () => {
+    for (const p of [JOEL, HUGO, MAELLE, PAUL, SACHA, ANCIEN]) expect(entreesBackOffice(user(p), profil(p)), p.uid).toEqual([]);
   });
 
-  test("une référente sans autre droit : tableau, calendrier, tâches, évènements, réunions (décision 43)", () => {
-    expect(entreesBackOffice(user(LEA), profil(LEA))).toEqual(["tableau", "calendrier", "taches", "evenements", "reunions"]);
+  test("une référente sans autre droit : À faire, Calendrier ; ses pages Tâches, Évènements, Réunions restent (décision 43)", () => {
+    expect(entreesBackOffice(user(LEA), profil(LEA))).toEqual(["afaire", "calendrier"]);
+    expect(droitsDesPages(user(LEA), profil(LEA))).toEqual({ taches: true, evenements: true, reunions: true });
     expect(sousPartiesEvenements(user(LEA), profil(LEA))).toEqual(["evenements"]);
     expect(sousPartiesEvenements(user(JOEL), profil(JOEL))).toEqual([]);
   });
 
-  test("la coordination seule : Évènements, ni Tâches ni Réunions (elle n'ouvre aucune équipe, EQ25)", () => {
-    expect(entreesBackOffice(user(IRIS), profil(IRIS))).toEqual(["tableau", "calendrier", "evenements"]);
-  });
-
-  test("barre du bas par défaut d'une référente : Évènements prend la place de Réunions sans Planning", () => {
-    expect(barreParDefaut(entreesBackOffice(user(LEA), profil(LEA)))).toEqual(["tableau", "calendrier", "taches", "evenements"]);
-    const avecPlanning = { ...LEA, plannings: ["culte"] };
-    expect(barreParDefaut(entreesBackOffice(user(avecPlanning), profil(avecPlanning)))).toEqual(["tableau", "calendrier", "taches", "planning"]);
-    expect(barreParDefaut(entreesBackOffice(user(JOEL), profil(JOEL)))).toEqual(["taches", "reunions"]);
+  test("la coordination seule : la page Évènements, ni Tâches ni Réunions (elle n'ouvre aucune équipe, EQ25)", () => {
+    expect(entreesBackOffice(user(IRIS), profil(IRIS))).toEqual(["afaire", "calendrier"]);
+    expect(droitsDesPages(user(IRIS), profil(IRIS))).toEqual({ taches: false, evenements: true, reunions: false });
   });
 
   test("raccourcis d'une référente : « Nouvel évènement » compris", () => {

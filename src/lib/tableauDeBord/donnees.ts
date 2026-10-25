@@ -2,7 +2,7 @@
 // Module pur : les widgets (src/components/backOffice/widgets/) lisent la base, puis
 // passent ici ce qu'ils ont lu. Dates ISO « AAAA-MM-JJ », comparées comme du texte.
 import {
-  canCreateSetlist, canSeeEvenement, creatableCategories, entreesBackOffice, equipesDesTaches, estDeLaReunion, estReunion, isAdminUser,
+  canCreateSetlist, canSeeEvenement, creatableCategories, droitsDesPages, entreesBackOffice, equipesDesTaches, estDeLaReunion, estReunion, isAdminUser,
   visibleCategories,
 } from "@/lib/access";
 import { COLONNES_REGIE, PLANNINGS_DU_CULTE, PLANNINGS_EDD } from "@/lib/acces/organigramme";
@@ -257,9 +257,10 @@ const HREF_RACCOURCI: Record<Raccourci, string> = {
 /** Les raccourcis permis (réglage : ceux choisis parmi eux). */
 export function raccourcisPermis(user: AuthUser | null, profile: UserProfile | null, r: Reglages): { id: Raccourci; href: string }[] {
   const entrees = entreesBackOffice(user, profile);
+  const pages = droitsDesPages(user, profile);
   const permis: Record<Raccourci, boolean> = {
-    tache: entrees.includes("taches"),
-    evenement: entrees.includes("evenements"),
+    tache: pages.taches,
+    evenement: pages.evenements,
     notifier: entrees.includes("messages"),
     setlist: canCreateSetlist(user, profile),
   };
