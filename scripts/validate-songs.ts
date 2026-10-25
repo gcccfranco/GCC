@@ -1,5 +1,7 @@
 import * as fs from "fs";
 import * as path from "path";
+// @ts-expect-error fontkit ne fournit pas de déclarations de types
+import fontkit from "fontkit";
 import { parseChordPro } from "../src/lib/chordpro/parser";
 import { slugifyTheme } from "../src/lib/content/loadSongs";
 import { propositionsEnDouble, type ChantIndexe } from "../src/lib/setlist/propositions";
@@ -13,6 +15,46 @@ const THEMES = new Set(
 // Le parseur met « C » quand {key} manque : on teste le texte du .cho.
 const KEY_DIRECTIVE = /^\s*\{\s*key\s*:\s*\S/im;
 
+const FONTS_DIR = path.join(process.cwd(), "public", "fonts");
+
+// Les sous-ensembles woff2 des polices chinoises (scripts/build-fonts.py) ne portent que les
+// caractères des chants et des traductions : un caractère ajouté sans les refaire s'afficherait
+// dans une police de secours. Un caractère que la police d'origine n'a pas non plus n'est pas compté.
+function lireTitre(source: string): string {
+  return [...source.matchAll(/^\s*\{\s*(?:title|subtitle)\s*:\s*(.*?)\s*\}\s*$/gm)].map((m) => m[1]).join("");
+}
+
+function controleSousEnsembles(sources: Map<string, string>): string[] {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const ouvrir = (nom: string): any => fontkit.openSync(path.join(FONTS_DIR, nom));
+  const manquants = (nom: string, origine: string, textes: Map<string, string>, garde: RegExp): string[] => {
+    const sub = ouvrir(nom);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let orig: any = null;
+    const erreurs: string[] = [];
+    for (const [fichier, texte] of textes) {
+      const vus = new Set<string>();
+      for (const c of texte) {
+        if (vus.has(c) || !garde.test(c)) continue;
+        vus.add(c);
+        const cp = c.codePointAt(0)!;
+        if (sub.hasGlyphForCodePoint(cp)) continue;
+        orig ??= ouvrir(origine);
+        if (orig.hasGlyphForCodePoint(cp)) {
+          erreurs.push(`${fichier} : « ${c} » (U+${cp.toString(16).toUpperCase()}) manque à ${nom} — relancer python3 scripts/build-fonts.py`);
+        }
+      }
+    }
+    return erreurs;
+  };
+  const cjk = /[\u2e80-\u9fff\uf900-\ufaff\uff00-\uffef]/;
+  const titres = new Map([...sources].map(([f, s]) => [f, lireTitre(s)]));
+  return [
+    ...manquants("SourceHanSansCN-Medium-sub.woff2", "SourceHanSansCN-Medium.otf", sources, cjk),
+    ...manquants("KaiTi-titres.woff2", "KaiTi.ttf", titres, /\S/),
+  ];
+}
+
 function main() {
   const files = fs
     .readdirSync(SONGS_DIR)
@@ -21,9 +63,11 @@ function main() {
 
   const errors: string[] = [];
   const propositions: ChantIndexe[] = [];
+  const sources = new Map<string, string>();
 
   for (const file of files) {
     const source = fs.readFileSync(path.join(SONGS_DIR, file), "utf-8");
+    sources.set(file, source);
     try {
       const ast = parseChordPro(source);
       const m = ast.metadata;
@@ -45,6 +89,8 @@ function main() {
   }
 
   errors.push(...propositionsEnDouble(propositions));
+  const zh = path.join(process.cwd(), "src", "locales", "zh-CN.json");
+  errors.push(...controleSousEnsembles(new Map([...sources, ["src/locales/zh-CN.json", fs.readFileSync(zh, "utf-8")]])));
 
   if (errors.length) {
     console.error(`✗ ${errors.length} problème(s) détecté(s) sur ${files.length} chant(s) :`);

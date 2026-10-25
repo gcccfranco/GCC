@@ -95,11 +95,11 @@ function getChartSectionStyle(type: string): React.CSSProperties {
   } as React.CSSProperties;
 }
 
-// Polices CJK volumineuses (KaiTi ~11 Mo, Source Han Sans ~8 Mo) : preload désactivé
+// Polices CJK : sous-ensembles woff2 (scripts/build-fonts.py ; originaux KaiTi ~11 Mo, Source Han Sans ~8 Mo) : preload désactivé
 // pour ne pas les précharger sur toute page rendant une partition (y compris
 // les chants FR). Elles se chargent à la demande quand un chant zh s'affiche.
 const KaiTiFont = localFont({
-  src: [{ path: "../../../public/fonts/KaiTi.ttf", weight: "400", style: "normal" }],
+  src: [{ path: "../../../public/fonts/KaiTi-titres.woff2", weight: "400", style: "normal" }],
   preload: false,
 });
 // Paroles FR, accords et libellés : Atkinson Hyperlegible Next (OFL), dessinée
@@ -109,7 +109,7 @@ const KaiTiFont = localFont({
 const fr_lyric_font = localFont({ src: "../../../public/fonts/AtkinsonHyperlegibleNext-Regular.woff2" });
 // Caractères chinois : Source Han Sans CN Medium (auparavant Light, trop fine
 // de loin) — choisie par Timothée le 13/09/2026 sur captures.
-const zh_lyric_font = localFont({ src: "../../../public/fonts/SourceHanSansCN-Medium.otf", preload: false });
+const zh_lyric_font = localFont({ src: "../../../public/fonts/SourceHanSansCN-Medium-sub.woff2", preload: false });
 const chord_font = localFont({
   src: [
     { path: "../../../public/fonts/AtkinsonHyperlegibleNext-Regular.woff2", weight: "400" },
@@ -122,6 +122,7 @@ const liberation_font = localFont({
     { path: "../../../public/fonts/LiberationSans-Regular.ttf", weight: "400" },
     { path: "../../../public/fonts/LiberationSans-Bold.ttf", weight: "700" },
   ],
+  preload: false,
 });
 
 

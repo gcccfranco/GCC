@@ -49,6 +49,7 @@ import { formatDate } from "@/lib/utils/formatDate";
 import { useScrollDirection } from "@/hooks/useScrollDirection";
 import { useSwipeViews } from "@/hooks/useSwipeViews";
 import { useDeuxVolets } from "@/hooks/useDeuxVolets";
+import { chargerIndexChants } from "@/hooks/useSongsIndex";
 import { ListView } from "./_components/ListView";
 import { PartitionsView } from "./_components/PartitionView";
 import { Sommaire } from "./_components/Sommaire";
@@ -459,7 +460,7 @@ export function SetlistDetailClient() {
       setLoadError(false);
       if (!copieAffichee.current) setLoadingSetlist(true);
       type Index = { songs?: SongIndexEntry[] };
-      const indexP: Promise<Index> = fetch("/songs-index.json").then((r) => r.json());
+      const indexP: Promise<Index> = chargerIndexChants().then((songs) => ({ songs }));
       let terminee = false;
       const appliquer = (sl: FSSetlist | null, index: Index, lueLe: number | null, v: Record<string, SetlistVersions>) => {
         setCopieLueLe(lueLe);

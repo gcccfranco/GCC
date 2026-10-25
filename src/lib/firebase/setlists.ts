@@ -163,7 +163,17 @@ const horsCorbeille = (s: FSSetlist): boolean => !s.supprimeeLe;
 
 // ─── CRUD ─────────────────────────────────────────────────────────────────────
 
-export async function getSetlists(): Promise<FSSetlist[]> {
+// Cache de session de `getSetlists` : la promesse, 30 s, propre au compte (uid courant), jamais pour un
+// échec (refus ou exception) ; vidé par toute écriture de ce module. Les appelants (historique,
+// statistiques, catalogue) lisent toute la collection : pas de borne par date ici.
+const CACHE_SETLISTS_MS = 30_000;
+let cacheSetlists: { uid: string | null; at: number; promesse: Promise<FSSetlist[] | null> } | null = null;
+
+function viderCacheSetlists(): void {
+  cacheSetlists = null;
+}
+
+async function lireSetlists(): Promise<FSSetlist[] | null> {
   const headers = await authHeader();
   const res = await fetch(`${FS_BASE}:runQuery`, {
     method: "POST",
@@ -175,12 +185,32 @@ export async function getSetlists(): Promise<FSSetlist[]> {
       },
     }),
   });
-  if (!res.ok) return [];
+  if (!res.ok) return null;
   const rows = await res.json() as Array<{ document?: RawDoc }>;
   return rows
     .filter((r) => r.document)
     .map((r) => fromFsDoc(r.document!))
     .filter((s) => !s.isPrivate && !s.isDraft && sansFetes(s) && horsCorbeille(s));
+}
+
+export async function getSetlists(): Promise<FSSetlist[]> {
+  const uid = auth.currentUser?.uid ?? null;
+  const c = cacheSetlists;
+  if (c && c.uid === uid && Date.now() - c.at < CACHE_SETLISTS_MS) {
+    const memoire = await c.promesse;
+    return memoire ? [...memoire] : [];
+  }
+  const entree = { uid, at: Date.now(), promesse: lireSetlists() };
+  cacheSetlists = entree;
+  const clear = () => { if (cacheSetlists === entree) cacheSetlists = null; };
+  try {
+    const liste = await entree.promesse;
+    if (!liste) { clear(); return []; }
+    return [...liste]; // une copie par appelant : un tri sur place ne touche pas les autres
+  } catch (e) {
+    clear();
+    throw e;
+  }
 }
 
 /** Setlists datées de `today` (AAAA-MM-JJ) ou après, par date, `max` au plus : la lecture
@@ -434,6 +464,7 @@ export async function createSetlist(
     "Délai dépassé — vérifie ta connexion internet et réessaie."
   );
 
+  viderCacheSetlists(); // même en cas d'échec : l'écriture a pu passer
   await checkRest(res);
   const doc = await res.json() as RawDoc;
   return doc.name.split("/").pop()!;
@@ -462,6 +493,7 @@ export async function updateSetlist(
     "Délai dépassé — vérifie ta connexion internet et réessaie."
   );
 
+  viderCacheSetlists(); // même en cas d'échec : l'écriture a pu passer
   await checkRest(res);
 }
 
@@ -486,6 +518,7 @@ export async function mettreALaCorbeille(id: string, uid: string): Promise<void>
     20_000,
     "Délai dépassé — vérifie ta connexion internet et réessaie."
   );
+  viderCacheSetlists(); // même en cas d'échec : l'écriture a pu passer
   await checkRest(res);
 }
 
@@ -518,6 +551,7 @@ export async function restaurerSetlist(id: string): Promise<void> {
     20_000,
     "Délai dépassé — vérifie ta connexion internet et réessaie."
   );
+  viderCacheSetlists(); // même en cas d'échec : l'écriture a pu passer
   await checkRest(res);
 }
 
@@ -550,6 +584,7 @@ export async function deleteSetlist(id: string): Promise<void> {
   // Sans ce contrôle, un refus des règles (403) se résolvait comme une
   // réussite : la fiche redirigeait vers une liste où la setlist était encore
   // là (docs/spec-suppression-groupee.md, R2).
+  viderCacheSetlists(); // même en cas d'échec : l'écriture a pu passer
   await checkRest(res);
 }
 

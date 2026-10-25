@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter, useParams, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { getSetlist, type FSSetlist } from "@/lib/firebase/setlists";
+import { chargerIndexChants } from "@/hooks/useSongsIndex";
 import { getProgramme } from "@/lib/firebase/programmes";
 import { anneeDe, feteDe, libelleEdition } from "@/lib/scene/fetes";
 import { resoudrePropositions } from "@/lib/setlist/propositions";
@@ -34,7 +35,7 @@ export function EditSetlistClient() {
     if (authLoading || !user) return;
     Promise.all([
       getSetlist(id),
-      fetch("/songs-index.json").then((r) => r.json()),
+      chargerIndexChants().then((songs) => ({ songs })),
     ]).then(async ([sl, indexData]) => {
       if (!sl) { router.push("/setlists"); return; }
       const songsMap: Record<string, SongIndexEntry> = {};
