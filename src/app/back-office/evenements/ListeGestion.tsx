@@ -25,7 +25,6 @@ import type { Evenement } from "@/types/evenement";
 import type { UserProfile } from "@/types/user";
 import { EvenementCard } from "@/app/evenements/EvenementCard";
 import { EvenementClient } from "@/app/evenements/[id]/EvenementClient";
-import { AnnonceBascule } from "@/components/evenements/AnnonceBascule";
 import { DeuxVolets } from "@/components/layout/DeuxVolets";
 import { cn } from "@/lib/utils";
 
@@ -148,8 +147,6 @@ function ListeGestion({ reunions, gestion, idActif }: { reunions: boolean; gesti
   const mois = groupByMonth(aVenir, i18n.language);
   return (
     <div className={cadre}>
-      {/* U9 (Q7 b) : où se créent les évènements, jusqu'au 31/01/2027 ; pas pour les réunions. */}
-      <AnnonceBascule />
       {aVenir.length === 0 && <p className="px-1 text-sm text-muted-foreground">{t("backOffice.aucunEvenement")}</p>}
       {infos.length > 0 && <section className="space-y-1" aria-label={t("evenements.infos")}>{infos.map((e) => ligne(e))}</section>}
       {mois.map((g) => <section key={g.key} className="space-y-1">{titre(g.label)}{g.evenements.map((e) => ligne(e))}</section>)}

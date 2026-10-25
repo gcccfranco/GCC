@@ -810,13 +810,10 @@ const panneauADroite = (info: TestInfo) => info.project.name.startsWith("ordinat
 const estTelephone = (info: TestInfo) => info.project.name === "telephone";
 const SANS_TELEPHONE = "grille étiquetée : ordinateur et tablettes ; le téléphone a l'agenda et le Mois à points (C4)";
 
-/** Les pastilles des sources : en rangée, ou dans la feuille « Sources » sur téléphone. */
-async function sourcesAffichees(page: Page, info: TestInfo) {
-  if (estTelephone(info)) {
-    await page.getByRole("button", { name: "Sources", exact: true }).click();
-    return page.getByRole("dialog", { name: "Sources" }).getByRole("group", { name: "Sources affichées" });
-  }
-  return pastilles(page);
+/** Les pastilles des sources : dans la feuille « Sources », sur toutes les tailles (BO-C). */
+async function sourcesAffichees(page: Page, _info: TestInfo) {
+  await page.getByRole("button", { name: "Sources", exact: true }).click();
+  return page.getByRole("dialog", { name: "Sources" }).getByRole("group", { name: "Sources affichées" });
 }
 /** Rail « Mois · Agenda » (agencement v18) : choisit la vue (sans effet si elle l'est déjà). */
 async function vue(page: Page, nom: "Mois" | "Agenda") {
@@ -824,8 +821,7 @@ async function vue(page: Page, nom: "Mois" | "Agenda") {
   if ((await bouton.getAttribute("aria-selected")) !== "true") await bouton.click();
   await expect(bouton).toHaveAttribute("aria-selected", "true");
 }
-async function fermerSources(page: Page, info: TestInfo) {
-  if (!estTelephone(info)) return;
+async function fermerSources(page: Page, _info: TestInfo) {
   await page.keyboard.press("Escape");
   await expect(page.getByRole("dialog", { name: "Sources" })).toHaveCount(0);
 }
@@ -954,8 +950,11 @@ test.describe("C3 : la page du calendrier en Mois", () => {
     const panneau = panneauADroite(info)
       ? page.getByRole("complementary", { name: "Dimanche 4 octobre" })
       : page.getByRole("dialog", { name: "Dimanche 4 octobre" });
-    // Les cartes du jour (les boutons de création, C5, sont sous la liste).
-    await expect(panneau.getByRole("list").getByRole("link")).toHaveCount(3 + n);
+    // Les cartes du jour (les boutons de création, C5, sont sous la liste) ; BO-C : la scène offre, sous sa
+    // carte, « Ouvrir la scène dans le back-office » (coordination), qui n'est pas une carte de plus.
+    const ouvrirScene = panneau.getByRole("link", { name: "Ouvrir la scène dans le back-office" });
+    await expect(ouvrirScene).toHaveCount(1);
+    await expect(panneau.getByRole("list").getByRole("link").filter({ hasNotText: "Ouvrir la scène dans le back-office" })).toHaveCount(3 + n);
   });
 
   test("une entrée du Sheet : lecture seule, ni « Déplacer… », elle ouvre l'onglet du mois (ordinateur et tablettes)", async ({ page }, info) => {
@@ -966,7 +965,9 @@ test.describe("C3 : la page du calendrier en Mois", () => {
       ? page.getByRole("complementary", { name: "Mardi 6 octobre" })
       : page.getByRole("dialog", { name: "Mardi 6 octobre" });
     const carte = panneau.getByRole("link", { name: /Soirée louange/ });
-    await expect(carte).toContainText("Lu dans le Sheet des évènements");
+    // BO10 : l'étiquette « Sheet » à côté du titre remplace la ligne « Lu dans le Sheet des évènements ».
+    await expect(carte.getByText("Sheet", { exact: true })).toBeVisible();
+    await expect(carte).not.toContainText("Lu dans le Sheet des évènements");
     await expect(carte).toContainText("19:00 – 21:00");
     await expect(carte).toHaveAttribute("href", /docs\.google\.com\/spreadsheets\/d\/[^/]+\/edit#gid=439766955$/);
     await expect(carte).toHaveAttribute("target", "_blank");
@@ -1009,10 +1010,12 @@ test.describe("C3 : la page du calendrier en Mois", () => {
     await signInAs(page, P_ADMIN, DOCS, "/back-office/calendrier");
     await expect(page.getByTestId("mois-affiche")).toHaveText(estTelephone(info) ? "10月" : "2026年10月");
     await expect(page.getByTestId("calendrier")).not.toHaveAttribute("aria-busy", "true");
-    if (estTelephone(info)) await page.getByRole("button", { name: "来源", exact: true }).click();
-    const groupe = page.getByRole("group", { name: "显示的来源" });
+    // BO-C : le filtre en pilules, et les pastilles des sources dans la feuille « 来源 », sur toutes les tailles.
+    await expect(page.getByRole("group", { name: "筛选日历" }).getByRole("button")).toHaveText(["全部", "活动", "会议", "服事", "舞台"]);
+    await page.getByRole("button", { name: "来源", exact: true }).click();
+    const groupe = page.getByRole("dialog", { name: "来源" }).getByRole("group", { name: "显示的来源" });
     await expect(groupe.getByRole("button", { name: "任务" })).toBeVisible();
-    if (estTelephone(info)) await page.keyboard.press("Escape");
+    await page.keyboard.press("Escape");
     await expect(page.getByRole("button", { name: "只看我的" })).toBeVisible();
     // La case de la grille dit « 早餐：空闲 » ; la carte de l'agenda, « 早餐 » puis « 空闲 ».
     await expect(jour(page, "2026-10-11").locator('[data-source="petitDej"]')).toContainText(estTelephone(info) ? "空闲" : "早餐：空闲");
@@ -1055,7 +1058,7 @@ test.describe("relecture du lot : setlist du culte, ordre des pastilles, lecture
     await ouvrir(page);
     const groupe = await sourcesAffichees(page, info);
     await expect(groupe.getByRole("button")).toHaveText([
-      "Services", "Évènements (Sheet)", "Tâches", "Réunions", "Scène", "Petit déj", "Setlists",
+      "Services", "Évènements", "Tâches", "Réunions", "Scène", "Petit déj", "Setlists",
     ]);
   });
 
@@ -1220,8 +1223,10 @@ test.describe("C4 : Agenda, feuille « Sources », Mois à points", () => {
     test.skip(!estTelephone(info), "téléphone : dès 768 px, la carte du Sheet est dans le volet ou la feuille du jour (test suivant)");
     await ouvrir(page);
     await vue(page, "Agenda");
-    await jour(page, "2026-10-06").getByRole("button", { name: /Soirée louange/ }).click();
-    const feuille = page.getByRole("dialog", { name: "Soirée louange" });
+    const ligne = jour(page, "2026-10-06").getByRole("button", { name: /Soirée louange/ });
+    await expect(ligne.getByText("Sheet", { exact: true })).toBeVisible();
+    await ligne.click();
+    const feuille = page.getByRole("dialog", { name: /Soirée louange/ });
     await expect(feuille).toContainText("Lu dans le Sheet des évènements");
     await expect(feuille).toContainText("19:00 – 21:00");
     const ouvrirLien = feuille.getByRole("link", { name: "Ouvrir" });
@@ -1238,7 +1243,8 @@ test.describe("C4 : Agenda, feuille « Sources », Mois à points", () => {
     const ou = panneauADroite(info)
       ? page.getByRole("complementary", { name: "Mardi 6 octobre" })
       : page.getByRole("dialog", { name: "Mardi 6 octobre" });
-    await expect(ou).toContainText("Lu dans le Sheet des évènements");
+    await expect(ou.getByRole("link", { name: /Soirée louange/ }).getByText("Sheet", { exact: true })).toBeVisible();
+    await expect(ou).not.toContainText("Lu dans le Sheet des évènements");
     const lien = ou.getByRole("link", { name: /Soirée louange/ });
     await expect(lien).toHaveAttribute("href", /docs\.google\.com\/spreadsheets\/d\/[^/]+\/edit#gid=439766955$/);
     await expect(lien).toHaveAttribute("target", "_blank");
@@ -1269,18 +1275,18 @@ test.describe("C4 : Agenda, feuille « Sources », Mois à points", () => {
   });
 
   test("téléphone : « Tout » · « Seulement moi » · « Sources », la feuille des sources (retenue au rechargement)", async ({ page }, info) => {
-    test.skip(!estTelephone(info), "propre au téléphone : ailleurs, les pastilles sont en rangée");
+    test.skip(!estTelephone(info), "propre au téléphone : trois lignes (navigation, filtre, « Seulement moi » et « Sources »)");
     await ouvrir(page);
     // Pas de rangée de pastilles sur la page : elles sont dans la feuille.
     await expect(pastilles(page)).toHaveCount(0);
-    const tout = page.getByRole("button", { name: "Tout", exact: true });
+    // BO-C : « Tout » est le filtre (choix unique) ; « Seulement moi » est une pastille à part, qui ne le touche pas.
+    const tout = page.getByRole("group", { name: "Filtrer le calendrier" }).getByRole("button", { name: "Tout", exact: true });
     const moi = page.getByRole("button", { name: "Seulement moi" });
     await expect(tout).toHaveAttribute("aria-pressed", "true");
     await moi.click();
     await expect(moi).toHaveAttribute("aria-pressed", "true");
-    await expect(tout).toHaveAttribute("aria-pressed", "false");
-    await tout.click();
     await expect(tout).toHaveAttribute("aria-pressed", "true");
+    await moi.click();
     await expect(moi).toHaveAttribute("aria-pressed", "false");
 
     await page.getByRole("button", { name: "Sources", exact: true }).click();
@@ -1334,8 +1340,11 @@ test.describe("C4 : Agenda, feuille « Sources », Mois à points", () => {
     await expect(agenda(page)).toBeVisible();
     await expect(page.getByTestId("grille-mois")).toHaveCount(0);
     await expect(page.getByRole("button", { name: "Mois suivant" })).toBeVisible();
-    // Les pastilles restent en rangée.
-    await expect(pastilles(page).getByRole("button", { name: "Tâches" })).toBeVisible();
+    // Les pastilles des sources sont dans la feuille « Sources » ; la rangée porte le filtre.
+    await expect(pastilles(page)).toHaveCount(0);
+    await expect(page.getByTestId("filtres-calendrier").getByRole("group", { name: "Filtrer le calendrier" })).toBeVisible();
+    await expect((await sourcesAffichees(page, info)).getByRole("button", { name: "Tâches" })).toBeVisible();
+    await fermerSources(page, info);
     await vue(page, "Mois");
     await expect(page.getByTestId("grille-mois")).toBeVisible();
   });
@@ -1395,8 +1404,8 @@ async function creerDepuis(page: Page, info: TestInfo, date: string, titre: stri
   if (estTelephone(info)) {
     await vue(page, "Mois");
     await jour(page, date).click();
-    await page.getByRole("button", { name: "Créer", exact: true }).click();
-    return creations(page.getByRole("dialog", { name: "Créer" }), false);
+    await page.getByRole("button", { name: "Ajouter", exact: true }).click();
+    return creations(page.getByRole("dialog", { name: "Ajouter" }), false);
   }
   await jour(page, date).click();
   if (!panneauADroite(info)) return creations(page.getByRole("dialog", { name: titre }), false);
@@ -1459,7 +1468,7 @@ test.describe("C5 : créer depuis un jour", () => {
   test("sans droit, pas de bouton : ni tâche sans équipe référente, ni évènement sans section ni équipe", async ({ page }, info) => {
     await ouvrir(page, P_PLANNINGS);
     if (estTelephone(info)) {
-      await expect(page.getByRole("button", { name: "Créer", exact: true })).toHaveCount(0);
+      await expect(page.getByRole("button", { name: "Ajouter", exact: true })).toHaveCount(0);
     } else {
       await jour(page, "2026-10-11").click();
       await expect(page.getByRole("link", { name: /Nouvel évènement/ })).toHaveCount(0);
@@ -1482,13 +1491,13 @@ test.describe("C5 : créer depuis un jour", () => {
     test.skip(!estTelephone(info), "propre au téléphone : ailleurs, les boutons du panneau du jour");
     await ouvrir(page, P_POLES);
     await expect(agenda(page)).toBeVisible();
-    await page.getByRole("button", { name: "Créer", exact: true }).click();
-    const feuille = page.getByRole("dialog", { name: "Créer" });
+    await page.getByRole("button", { name: "Ajouter", exact: true }).click();
+    const feuille = page.getByRole("dialog", { name: "Ajouter" });
     // Référente sans section : une réunion de ses équipes (agencement v18 : « Nouvelle réunion ») et,
     // depuis la décision 43, un évènement de ses équipes (« Nouvel évènement »).
     await expect(feuille.getByRole("link", { name: "Nouvelle réunion le 01/10" })).toHaveAttribute(
       "href",
-      /^\/back-office\/evenements\/nouveau\/?\?reunion=1&date=2026-10-01$/,
+      /^\/back-office\/reunions\/nouvelle\/?\?date=2026-10-01$/,
     );
     await expect(feuille.getByRole("link", { name: "Nouvel évènement le 01/10" })).toHaveAttribute(
       "href",
@@ -1505,7 +1514,7 @@ test.describe("C5 : créer depuis un jour", () => {
     await expect(page.getByTestId("calendrier")).not.toHaveAttribute("aria-busy", "true");
     let menu = false;
     if (estTelephone(info)) {
-      await page.getByRole("button", { name: "新建", exact: true }).click();
+      await page.getByRole("button", { name: "添加", exact: true }).click();
     } else {
       await jour(page, "2026-10-11").click();
       if (panneauADroite(info)) {
@@ -1530,5 +1539,141 @@ test.describe("C5 : captures à regarder", () => {
     await ou.bouton("Nouvelle tâche pour le 11/10").click();
     await page.waitForTimeout(400);
     await page.screenshot({ path: `${dossier}-creer-tache.png` });
+  });
+});
+
+// ─── BO-C (docs/spec-back-office-piste-a.md, BO8, BO10) : filtres, « Scène des fêtes », étiquette « Sheet » ───
+
+/** Ouvre une adresse du calendrier (avec `?filtre=` / `?vue=`), au jeudi 1er octobre 2026. */
+async function ouvrirAdresse(page: Page, adresse: string, profil: FakeProfile = P_ADMIN) {
+  await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
+  await sheets(page);
+  await signInAs(page, profil, DOCS, adresse);
+  await expect(page.getByTestId("mois-affiche")).toHaveText(/^Octobre( 2026)?$/);
+  await expect(page.getByTestId("calendrier")).not.toHaveAttribute("aria-busy", "true");
+}
+const filtreCalendrier = (page: Page) => page.getByRole("group", { name: "Filtrer le calendrier" });
+const sources = (page: Page) => page.locator("[data-source]");
+
+test.describe("BO-C : le filtre du Calendrier", () => {
+  test("Tout · Évènements · Réunions · Services · Scène, « Tout » d'office, retenu dans l'état et pas dans l'adresse", async ({ page }) => {
+    await ouvrirAdresse(page, "/back-office/calendrier?vue=agenda");
+    const filtre = filtreCalendrier(page);
+    await expect(filtre.getByRole("button")).toHaveText(["Tout", "Évènements", "Réunions", "Services", "Scène"]);
+    await expect(filtre.getByRole("button", { name: "Tout", exact: true })).toHaveAttribute("aria-pressed", "true");
+    await filtre.getByRole("button", { name: "Services", exact: true }).click();
+    await expect(filtre.getByRole("button", { name: "Services", exact: true })).toHaveAttribute("aria-pressed", "true");
+    await expect(filtre.getByRole("button", { name: "Tout", exact: true })).toHaveAttribute("aria-pressed", "false");
+    // Choix unique et obligatoire : retoucher la pilule active ne la retire pas.
+    await filtre.getByRole("button", { name: "Services", exact: true }).click();
+    await expect(filtre.getByRole("button", { name: "Services", exact: true })).toHaveAttribute("aria-pressed", "true");
+    await expect(page).toHaveURL(/\/back-office\/calendrier\/?\?vue=agenda$/);
+  });
+
+  test("?filtre=reunions : l'Agenda ne montre que des réunions, et plus de bouton « Sources »", async ({ page }) => {
+    await ouvrirAdresse(page, "/back-office/calendrier?vue=agenda&filtre=reunions");
+    await expect(agenda(page)).toBeVisible();
+    await expect(filtreCalendrier(page).getByRole("button", { name: "Réunions", exact: true })).toHaveAttribute("aria-pressed", "true");
+    await expect(sources(page).first()).toBeVisible();
+    await expect(page.locator('[data-source]:not([data-source="reunions"])')).toHaveCount(0);
+    await expect(page.locator('[data-source="reunions"]')).toHaveCount(1);
+    await expect(page.getByRole("button", { name: "Sources", exact: true })).toHaveCount(0);
+  });
+
+  test("?filtre=evenements : les évènements du site et ceux du Sheet (étiquetés « Sheet »), rien d'autre", async ({ page }) => {
+    await ouvrirAdresse(page, "/back-office/calendrier?vue=agenda&filtre=evenements");
+    await expect(page.locator('[data-source="evenements"]').first()).toBeVisible();
+    await expect(page.locator('[data-source]:not([data-source="evenements"])')).toHaveCount(0);
+    const ping = page.getByRole("button", { name: /Tournoi de ping/ });
+    const soiree = page.getByRole("button", { name: /Soirée louange/ });
+    await expect(ping).toHaveCount(1);
+    await expect(ping.getByText("Sheet", { exact: true })).toHaveCount(0);
+    await expect(soiree.getByText("Sheet", { exact: true })).toHaveCount(1);
+  });
+
+  test("le filtre ignore les préférences : « Scène » éteinte dans les sources, le filtre « Scène » la montre quand même", async ({ page }, info) => {
+    await ouvrirAdresse(page, "/back-office/calendrier?vue=agenda");
+    const groupe = await sourcesAffichees(page, info);
+    await groupe.getByRole("button", { name: "Scène" }).click();
+    await fermerSources(page, info);
+    await expect(page.locator('[data-source="scene"]')).toHaveCount(0);
+    await filtreCalendrier(page).getByRole("button", { name: "Scène", exact: true }).click();
+    await expect(page.locator('[data-source="scene"]').first()).toBeVisible();
+    await expect(page.locator('[data-source]:not([data-source="scene"])')).toHaveCount(0);
+    // « Tout » rend les préférences : la scène est éteinte.
+    await filtreCalendrier(page).getByRole("button", { name: "Tout", exact: true }).click();
+    await expect(page.locator('[data-source="scene"]')).toHaveCount(0);
+    await expect(page.locator('[data-source="services"]').first()).toBeVisible();
+  });
+
+  test("« Seulement moi » s'applique par-dessus le filtre", async ({ page }) => {
+    await ouvrirAdresse(page, "/back-office/calendrier?vue=agenda&filtre=services");
+    // Le 4 : mon service (présidence « Lou M. ») ; le 11 : celui de quelqu'un d'autre.
+    await expect(jour(page, "2026-10-04").locator('[data-source="services"]')).toHaveCount(1);
+    await expect(jour(page, "2026-10-11").locator('[data-source="services"]')).toHaveCount(1);
+    await page.getByRole("button", { name: "Seulement moi" }).click();
+    await expect(jour(page, "2026-10-04").locator('[data-source="services"]')).toHaveCount(1);
+    await expect(jour(page, "2026-10-11").locator('[data-source="services"]')).toHaveCount(0);
+    await expect(page.locator('[data-source]:not([data-source="services"])')).toHaveCount(0);
+  });
+
+  test("une valeur inconnue, ou « reunions » sans le droit, vaut « Tout » ; la pilule « Réunions » manque alors", async ({ page }) => {
+    await ouvrirAdresse(page, "/back-office/calendrier?vue=agenda&filtre=n-importe-quoi");
+    await expect(filtreCalendrier(page).getByRole("button", { name: "Tout", exact: true })).toHaveAttribute("aria-pressed", "true");
+    await expect(page.locator('[data-source="services"]').first()).toBeVisible();
+  });
+
+  test("sans le droit aux réunions : « ?filtre=reunions » vaut « Tout » et la pilule « Réunions » n'est pas offerte", async ({ page }) => {
+    await ouvrirAdresse(page, "/back-office/calendrier?vue=agenda&filtre=reunions", P_PLANNINGS);
+    const filtre = filtreCalendrier(page);
+    await expect(filtre.getByRole("button", { name: "Réunions", exact: true })).toHaveCount(0);
+    await expect(filtre.getByRole("button", { name: "Tout", exact: true })).toHaveAttribute("aria-pressed", "true");
+  });
+
+  test("?vue= : « agenda » ouvre l'Agenda, « mois » le Mois, même sur téléphone ; sinon le défaut de l'appareil", async ({ page }, info) => {
+    await ouvrirAdresse(page, "/back-office/calendrier?vue=agenda");
+    await expect(agenda(page)).toBeVisible();
+    await page.goto("/back-office/calendrier?vue=mois");
+    await expect(page.getByTestId("calendrier")).not.toHaveAttribute("aria-busy", "true");
+    await expect(page.getByRole("tab", { name: "Mois" })).toHaveAttribute("aria-selected", "true");
+    await expect(agenda(page)).toHaveCount(0);
+    await page.goto("/back-office/calendrier?vue=nimporte");
+    await expect(page.getByRole("tab", { name: estTelephone(info) ? "Agenda" : "Mois" })).toHaveAttribute("aria-selected", "true");
+  });
+});
+
+test.describe("BO-C : « Scène des fêtes »", () => {
+  test("la coordination a le lien dans l'en-tête, vers la scène ; un référent d'équipe seul ne l'a pas", async ({ page }) => {
+    await ouvrirAdresse(page, "/back-office/calendrier");
+    const lien = page.locator("header[data-entete-page]").getByRole("link", { name: "Scène des fêtes" });
+    await expect(lien).toBeVisible();
+    await expect(lien).toHaveAttribute("href", /^\/back-office\/evenements\/scene\/?$/);
+    // Il tient dans l'en-tête, sans déborder de la largeur de l'écran.
+    const boite = (await lien.boundingBox())!;
+    expect(boite.x + boite.width).toBeLessThanOrEqual(page.viewportSize()!.width);
+  });
+
+  test("sans la coordination (référent d'équipe), pas de lien « Scène des fêtes »", async ({ page }) => {
+    await ouvrirAdresse(page, "/back-office/calendrier", P_POLES);
+    await expect(page.getByRole("heading", { level: 1, name: "Calendrier" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Scène des fêtes" })).toHaveCount(0);
+  });
+
+  test("中文 : « 节日舞台 »", async ({ page }) => {
+    await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
+    await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
+    await sheets(page);
+    await signInAs(page, P_ADMIN, DOCS, "/back-office/calendrier");
+    await expect(page.getByRole("link", { name: "节日舞台" })).toHaveAttribute("href", /^\/back-office\/evenements\/scene\/?$/);
+  });
+
+  test("une entrée de la scène garde son lien de l'app et offre, à la coordination, « Ouvrir la scène dans le back-office »", async ({ page }) => {
+    await ouvrirAdresse(page, "/back-office/calendrier?vue=agenda&filtre=scene");
+    await page.locator('[data-source="scene"]').first().click();
+    const ouvrirScene = page.getByRole("link", { name: "Ouvrir la scène dans le back-office" });
+    await expect(ouvrirScene).toBeVisible();
+    await expect(ouvrirScene).toHaveAttribute("href", /^\/back-office\/evenements\/scene\/noel\/?$/);
+    // Le lien de l'app reste : la carte du jour (volet, feuille du jour) ou « Ouvrir » de la feuille de l'entrée.
+    await expect(page.locator('a[href^="/evenements/scene/noel"]').first()).toBeVisible();
   });
 });

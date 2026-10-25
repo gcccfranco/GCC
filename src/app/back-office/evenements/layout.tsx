@@ -3,6 +3,9 @@
 // Back-Office › Évènements (lot U6, B3, table Q2) : Évènements (ceux qu'on gère) · Pâques · Noël
 // (la scène, coordination ; docs/spec-scene-paques-noel.md, P7 : un onglet par fête à la place de
 // « Scène ») ; les réunions ont leur entrée depuis l'agencement v18 (B15).
+// BO-C (docs/spec-back-office-piste-a.md, BO8) : la liste des évènements vit dans le Calendrier ; ici
+// ne restent la scène des fêtes (titre « Scène des fêtes », onglets Pâques · Noël) et les fiches
+// (sans onglets), chacune avec « ‹ Calendrier ».
 // Agencement v18 (B3, docs/spec-agencement-v18.md ; planche `v18-bo-evenements-a`) : l'en-tête est celui
 // de toute la section, onglets compris (même titre, même sous-titre : le rail ne saute pas d'un onglet à
 // l'autre) ; « + Nouvel évènement » sauf sur la scène. Sous l'en-tête, la liste et la fiche de gestion en
@@ -28,21 +31,26 @@ export default function EvenementsLayout({ children }: { children: React.ReactNo
   const { t } = useTranslation();
   const chemin = (usePathname() || "").replace(/\/$/, "");
   const { user, profile } = useProfile();
-  // La sous-partie « scene » donne les deux onglets des fêtes (P7), après « Évènements ».
-  const onglets = sousPartiesEvenements(user, profile).flatMap((p): OngletRail[] => p === "scene"
-    ? FETES.map((f) => ({ id: f, label: t(`evenements.tabs.${f}`), href: `${SCENE}/${f}` }))
-    : [{ id: p, label: t(`backOffice.parties.${p}`), href: BASE }]);
+  // Les anciennes listes (`page.tsx` redirige vers le Calendrier) : le layout ne les habille pas, sans quoi
+  // les volets n'afficheraient pas la page et sa redirection ne se déclencherait jamais.
+  const ancienneListe = chemin === BASE || chemin === `${BASE}/reunions`;
   const scene = chemin === SCENE || chemin.startsWith(`${SCENE}/`);
+  // La sous-partie « scene » donne les deux onglets des fêtes (P7), sur la scène seulement.
+  const onglets = scene && sousPartiesEvenements(user, profile).includes("scene")
+    ? FETES.map((f): OngletRail => ({ id: f, label: t(`evenements.tabs.${f}`), href: `${SCENE}/${f}` }))
+    : [];
 
   const enTete = (
     <EnTetePage
-      titre={t("backOffice.entrees.evenements")}
+      retour={{ href: "/back-office/calendrier", label: t("backOffice.entrees.calendrier") }}
+      titre={scene ? t("backOffice.calendrier.sceneDesFetes") : t("backOffice.entrees.evenements")}
       sousTitre={t("backOffice.gestion.sousTitreEvenements")}
       action={!scene && peutCreerDans(user, profile, false) && <BoutonNouveau label={t("evenements.nouveau")} href={`${BASE}/nouveau`} />}
-      onglets={onglets.length > 1 && <OngletsRail etiquette={t("backOffice.sousParties")} onglets={onglets} />}
+      onglets={onglets.length > 0 && <OngletsRail etiquette={t("backOffice.sousParties")} onglets={onglets} />}
     />
   );
 
+  if (ancienneListe) return <>{children}</>;
   if (scene) {
     return (
       <>

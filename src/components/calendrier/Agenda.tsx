@@ -8,10 +8,15 @@
 // les semaines, une ligne par jour (jour de la semaine et numéro, le jour choisi en encre), une ligne
 // par entrée (trait de couleur, heure, titre, détail, étiquette du type) ; toucher un jour ou une de
 // ses lignes le choisit (volet du jour à droite, ou sa feuille). Le téléphone garde `ListeAgenda`.
+// BO-C (docs/spec-back-office-piste-a.md, BO8, BO10) : une entrée du Sheet porte l'étiquette « Sheet »
+// (`EtiquetteSheet`) ; une entrée de la scène, pour la coordination, offre « Ouvrir la scène dans le
+// back-office » (`LienOuvrirScene`, aussi dans le volet du jour).
 // Retouches v18 (R4, D7) : la ligne de l'entrée ouverte (touchée) est surlignée, comme sur la planche.
 
 import Link from "next/link";
 import { useTranslation } from "react-i18next";
+import { isCoordination } from "@/lib/access";
+import { useProfile } from "@/lib/firebase/users";
 import type { EntreeCalendrier } from "@/lib/calendrier/entrees";
 import { jourDeLaSemaine, jourEtMois, lundiDe, titreJour } from "@/lib/calendrier/grille";
 import { cn } from "@/lib/utils";
@@ -30,6 +35,28 @@ export function useTitreDuJour(lang: NotifLang, aujourdhui: string) {
   };
 }
 
+/** La petite étiquette des entrées lues dans le Sheet (BO10). */
+export function EtiquetteSheet() {
+  const { t } = useTranslation();
+  return (
+    <span className="ml-1.5 inline-flex shrink-0 items-center rounded-md bg-secondary px-1.5 py-px text-[11px] font-semibold text-foreground/70 align-middle">
+      {t("backOffice.calendrier.etiquetteSheet")}
+    </span>
+  );
+}
+
+/** « Ouvrir la scène dans le back-office » : pour la coordination, sous une entrée de la scène. */
+export function LienOuvrirScene({ e, className }: { e: EntreeCalendrier; className?: string }) {
+  const { t } = useTranslation();
+  const { user, profile } = useProfile();
+  if (e.source !== "scene" || !isCoordination(user, profile)) return null;
+  return (
+    <Link href={e.lien.replace(/^\/evenements\/scene/, "/back-office/evenements/scene")} className={className}>
+      {t("backOffice.calendrier.ouvrirScene")}
+    </Link>
+  );
+}
+
 function CarteAgenda({ e, onOuvrir }: { e: EntreeCalendrier; onOuvrir: (e: EntreeCalendrier) => void }) {
   const Icone = ICONES[e.source];
   return (
@@ -43,7 +70,7 @@ function CarteAgenda({ e, onOuvrir }: { e: EntreeCalendrier; onOuvrir: (e: Entre
         <Icone className="h-[18px] w-[18px]" />
       </span>
       <span className="min-w-0">
-        <span className="block truncate text-[15px] font-semibold leading-snug text-foreground">{e.titre}</span>
+        <span className="block truncate text-[15px] font-semibold leading-snug text-foreground">{e.titre}{e.duSheet && <EtiquetteSheet />}</span>
         {e.detail && <span className="block truncate text-[13px] text-muted-foreground">{e.detail}</span>}
       </span>
     </button>
@@ -118,7 +145,7 @@ function LigneAgenda({ e, ouverte, onChoisir }: { e: EntreeCalendrier; ouverte: 
         {e.heureFin && <span className="block text-xs text-muted-foreground">{e.heureFin}</span>}
       </span>
       <span className="min-w-0 flex-1">
-        <span className="block truncate text-[15px] font-semibold leading-snug text-foreground">{e.titre}</span>
+        <span className="block truncate text-[15px] font-semibold leading-snug text-foreground">{e.titre}{e.duSheet && <EtiquetteSheet />}</span>
         {detail && <span className="block truncate text-[13px] text-muted-foreground">{detail}</span>}
       </span>
       <span
@@ -253,6 +280,7 @@ export function FeuilleEntree({
                     {t("calendrier.ouvrir")}
                   </Link>
                 )}
+                <LienOuvrirScene e={entree} className={BOUTON_SECOND} />
                 {entree.deplacable && (
                   <button type="button" onClick={() => onDeplacer(entree)} className={BOUTON_SECOND}>
                     {t("calendrier.deplacer.bouton")}

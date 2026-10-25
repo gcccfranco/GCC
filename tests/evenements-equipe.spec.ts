@@ -111,14 +111,16 @@ test("« Nouvel évènement » pour une équipe : avec inscriptions, écrit « r
   // Ouverte sous Réunions, elle repart sous Évènements.
   await page.goto(`/back-office/reunions/${id}`);
   await page.waitForURL(new RegExp(`/back-office/evenements/${id}/?$`));
-  // Listée dans Évènements…
+  // Listée dans Évènements (BO-C : l'Agenda du Calendrier filtré sur les évènements)…
   await page.goto("/back-office/evenements");
-  await expect(page.getByRole("link", { name: /Soirée DA/ }).first()).toBeVisible();
+  await expect(page).toHaveURL(/\/back-office\/calendrier\/?\?vue=agenda&filtre=evenements$/);
+  await expect(page.getByRole("button", { name: /Soirée DA/ }).first()).toBeVisible();
   await capture(page, info, "liste-evenements");
-  // … et pas dans Réunions.
+  // … et pas dans Réunions (le même Agenda, filtré sur les réunions : rien).
   await page.goto("/back-office/reunions");
-  await expect(page.getByText("Aucune réunion").first()).toBeVisible();
-  await expect(page.getByRole("link", { name: /Soirée DA/ })).toHaveCount(0);
+  await expect(page).toHaveURL(/\/back-office\/calendrier\/?\?vue=agenda&filtre=reunions$/);
+  await expect(page.getByText(/Rien de prévu/).first()).toBeVisible();
+  await expect(page.getByRole("button", { name: /Soirée DA/ })).toHaveCount(0);
 });
 
 test("« + Nouvelle réunion » : sans inscriptions, écrit « reunion: true », rangée sous Réunions", async ({ page }) => {
@@ -287,11 +289,14 @@ test("relecture, retournée par la décision 43 : un référent a l'entrée Év�
   expect(droitsDesPages(qui(ALICE), profil(ALICE)).evenements).toBe(true);
 });
 
-test("relecture : depuis l'en-tête de BO › Évènements, « Nouvel évènement » propose l'équipe de la personne", async ({ page }) => {
+test("relecture : depuis « Ajouter » du Calendrier, « Évènement » propose l'équipe de la personne", async ({ page }, info) => {
   await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
-  await signInAs(page, ALICE, {}, "/back-office/evenements");
-  await page.getByRole("link", { name: "Nouvel évènement" }).click();
-  await page.waitForURL(/\/back-office\/evenements\/nouveau\/?$/);
+  await signInAs(page, ALICE, {}, "/back-office/calendrier");
+  await page.getByRole("button", { name: "Ajouter", exact: true }).click();
+  // Téléphone : la feuille du jour (« Nouvel évènement le … ») ; ailleurs, le menu « Évènement | Réunion ».
+  if (info.project.name === "telephone") await page.getByRole("link", { name: /^Nouvel évènement le / }).click();
+  else await page.getByRole("menuitem", { name: "Évènement", exact: true }).click();
+  await page.waitForURL(/\/back-office\/evenements\/nouveau\/?(\?date=\d{4}-\d{2}-\d{2})?$/);
   await expect(page.getByLabel("Public").locator("option")).toHaveText(["Groupe Paix", "TEAM DA", "COMITÉ PAIX"]); // lot AO : la présidence du Groupe Paix crée aussi pour son comité
 });
 

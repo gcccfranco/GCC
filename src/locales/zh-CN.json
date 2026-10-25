@@ -3463,6 +3463,15 @@
     }
   },
   "backOffice": {
+    "calendrier": {
+      "filtrer": "筛选日历",
+      "ajouter": "添加",
+      "ajouterEvenement": "活动",
+      "ajouterReunion": "会议",
+      "sceneDesFetes": "节日舞台",
+      "ouvrirScene": "在后台打开舞台",
+      "etiquetteSheet": "Sheet"
+    },
     "selecteur": {
       "aria": "选择空间",
       "app": "应用",
@@ -3507,8 +3516,7 @@
     "nouvelleReunion": "新建会议",
     "annonceBascule": {
       "aria": "公告",
-      "avant": "2026 年的活动仍记在活动表（Sheet）中；2027 年的活动请在这里创建。",
-      "apres": "活动请在这里创建；系统不再读取活动表（Sheet）。"
+      "avant": "2026 年的活动仍记在活动表（Sheet）中；2027 年的活动请在这里创建。"
     },
     "aVenir": "即将举行",
     "reunionDEquipe": "团队会议 · {{equipe}}",
@@ -3627,7 +3635,6 @@
     "sources": {
       "services": "服事",
       "evenements": "活动",
-      "evenementsSheet": "活动（Sheet）",
       "reunions": "会议",
       "scene": "舞台",
       "taches": "任务",

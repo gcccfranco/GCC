@@ -1,12 +1,9 @@
-"use client";
-
-// Ancienne adresse de Back-Office › Évènements › Réunions : les réunions ont leur entrée
-// depuis l'agencement v18 (B15).
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
+// Ancienne adresse de Back-Office › Évènements › Réunions : mène à l'Agenda filtré sur les réunions
+// (BO-C, BO8, docs/spec-back-office-piste-a.md).
+import { notFound, redirect } from "next/navigation";
+import { BACK_OFFICE } from "@/lib/backOffice";
 
 export default function AncienneListeReunions() {
-  const router = useRouter();
-  useEffect(() => { router.replace("/back-office/reunions"); }, [router]);
-  return null;
+  if (!BACK_OFFICE) notFound();
+  redirect("/back-office/calendrier?vue=agenda&filtre=reunions");
 }

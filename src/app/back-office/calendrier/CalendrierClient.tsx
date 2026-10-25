@@ -23,12 +23,18 @@
 // sources en pilules, « Seulement moi ». L'agenda suit le mois de la rangée (d'aujourd'hui pour le mois
 // en cours) ; dès 768 px, une colonne de jours par semaine, sur toute la largeur moins le volet du jour,
 // à droite en agenda comme en Mois, avec « Ajouter ce jour-là » et son menu ; toucher un jour le choisit.
+// BO-C (docs/spec-back-office-piste-a.md, BO8, BO10) : le Calendrier absorbe Évènements et Réunions. Un filtre
+// à choix unique (Tout · Évènements · Réunions · Services · Scène, `?filtre=`, `?vue=` lue aussi) ; les
+// pastilles des sources vivent dans la feuille « Sources », sur toutes les tailles ; « Ajouter » (menu
+// Évènement | Réunion dès 768 px, feuille des créations du jour sur téléphone) ; « Scène des fêtes » pour la
+// coordination ; une entrée du Sheet porte l'étiquette « Sheet » et la note du Sheet n'est que d'ici.
 
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { useSearchParams } from "next/navigation";
 import { useTranslation } from "react-i18next";
-import { Check, ChevronLeft, ChevronRight, CloudOff, SlidersHorizontal, UserRound } from "lucide-react";
-import { creatableEvenementPours, equipesOuCreer, publicDeReunion } from "@/lib/access";
+import Link from "next/link";
+import { Check, ChevronDown, ChevronLeft, ChevronRight, CloudOff, Plus, SlidersHorizontal, UserRound } from "lucide-react";
+import { creatableEvenementPours, equipesOuCreer, isCoordination, publicDeReunion } from "@/lib/access";
 import type { TacheValues } from "@/lib/firebase/taches";
 import { useProfile } from "@/lib/firebase/users";
 import { chargerCalendrier, chargerPeriode, enOrdre, type LectureCalendrier } from "@/lib/calendrier/charger";
@@ -58,7 +64,9 @@ import { TacheForm } from "@/components/taches/TacheForm";
 import { creerTache, useMembres } from "@/components/taches/creerTache";
 import { ICONES } from "@/components/calendrier/apparence";
 import { AnnonceBascule } from "@/components/evenements/AnnonceBascule";
+import { Button } from "@/components/ui/button";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { EnTetePage } from "@/components/layout/EnTetePage";
 import { OngletsRail, Pilules } from "@/components/layout/Onglets";
 import { BoutonNouveau } from "@/components/layout/BoutonNouveau";
@@ -88,14 +96,23 @@ const useHydrate = () => useSyncExternalStore(() => () => {}, () => true, () => 
 const jourDeLAdresse = (v: string | null) => (v && /^\d{4}-\d{2}-\d{2}$/.test(v) ? v : null);
 
 type Vue = "mois" | "agenda";
+/** BO-C : le filtre à choix unique ; « tout » = les sources allumées des préférences. */
+type Filtre = "tout" | "evenements" | "reunions" | "services" | "scene";
+const FILTRES: readonly Filtre[] = ["tout", "evenements", "reunions", "services", "scene"];
+/** `?filtre=` : l'un des filtres, sinon « tout ». */
+const filtreDeLAdresse = (v: string | null): Filtre => FILTRES.find((f) => f === v) ?? "tout";
+/** `?vue=` : « agenda » ou « mois », sinon rien. */
+const vueDeLAdresse = (v: string | null): Vue | null => (v === "agenda" || v === "mois" ? v : null);
 
 const BOUTON_ROND =
   "raised inline-flex h-8 min-w-8 items-center justify-center rounded-full px-2 text-[13px] font-bold text-foreground transition-opacity duration-150 hover:opacity-80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground";
 const PASTILLE =
   "inline-flex h-8 shrink-0 items-center whitespace-nowrap gap-1.5 rounded-full px-3 text-[13px] font-semibold transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground";
-/** « Sources » sur téléphone : à la taille des pilules qu'il suit (`Pilules`, grise). */
-const BOUTON_SOURCES_TEL =
-  "inline-flex h-10 shrink-0 items-center gap-1.5 rounded-full bg-secondary px-3.5 text-[15px] text-foreground/80 transition-colors duration-150 active:bg-secondary/70 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground";
+/** Sur téléphone, « Seulement moi » et « Sources » (rangée 3) ont la taille des pilules du filtre (`Pilules`, 40 px, 15 px). */
+const PASTILLE_TEL = "!h-10 !px-3.5 !text-[15px]";
+/** « Ajouter » (BO8) : la pilule md de `BoutonNouveau`, avec son menu. */
+const BOUTON_AJOUTER =
+  "inline-flex h-10 items-center gap-2 rounded-full bg-primary px-[18px] text-[14.5px] font-semibold text-primary-foreground transition-transform duration-150 active:scale-[.97] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground";
 
 export function CalendrierClient() {
   const { t, i18n } = useTranslation();
@@ -109,9 +126,13 @@ export function CalendrierClient() {
   const telephone = useTelephone();
   const titreDuJour = useTitreDuJour(lang, aujourdhui);
   // Ouverte sur un jour (C8) : en Mois, ce jour choisi.
-  const jourDemande = jourDeLAdresse(useSearchParams().get("jour"));
+  const adresse = useSearchParams();
+  const jourDemande = jourDeLAdresse(adresse.get("jour"));
 
-  const [vueChoisie, setVue] = useState<Vue | null>(jourDemande ? "mois" : null);
+  // `?vue=` (prioritaire sur le défaut du téléphone ; `?jour=` ouvre toujours en Mois) et `?filtre=` ne se
+  // lisent qu'au premier rendu : ensuite l'état est local, l'adresse n'est pas réécrite.
+  const [vueChoisie, setVue] = useState<Vue | null>(jourDemande ? "mois" : vueDeLAdresse(adresse.get("vue")));
+  const [filtreChoisi, setFiltre] = useState<Filtre>(() => filtreDeLAdresse(adresse.get("filtre")));
   const vue: Vue = vueChoisie ?? (telephone ? "agenda" : "mois");
   const [mois, setMois] = useState((jourDemande ?? aujourdhui).slice(0, 7));
   const [choisi, setChoisi] = useState(jourDemande ?? aujourdhui);
@@ -190,17 +211,19 @@ export function CalendrierClient() {
   }, [debut, fin, lireLeSheet]);
 
   const permises = useMemo(() => (user ? sourcesPermises(user, profil) : []), [user, profil]);
+  // « Réunions » n'est offert qu'à qui voit cette source ; sinon (lien reçu) le filtre est « Tout ».
+  const filtre: Filtre = filtreChoisi === "reunions" && !permises.includes("reunions") ? "tout" : filtreChoisi;
   const parJour = useMemo(() => {
     const m = new Map<string, EntreeCalendrier[]>();
     if (!user || !base) return m;
     const donnees: DonneesCalendrier = { ...base, sheet: sheet?.lecture.entrees ?? [] };
     const toutes = entreesCalendrier(debut, fin, donnees, { user, profile: profil, lang, today: aujourdhui });
-    const sources = prefs.sources.filter((s) => permises.includes(s));
+    const sources = filtre === "tout" ? prefs.sources.filter((s) => permises.includes(s)) : [filtre];
     for (const e of filtrerEntrees(toutes, { sources, seulementMoi: prefs.seulementMoi })) {
       m.set(e.date, [...(m.get(e.date) ?? []), e]);
     }
     return m;
-  }, [user, profil, base, sheet, debut, fin, lang, aujourdhui, prefs, permises]);
+  }, [user, profil, base, sheet, debut, fin, lang, aujourdhui, prefs, permises, filtre]);
 
   const chargement = !periode || periode.de !== lu || periode.cle !== clePeriode || sheet?.fenetre !== `${debut}|${fin}`;
   const changer = (p: PreferencesCalendrier) => { setPrefs(p); ecrirePreferences(p); };
@@ -280,9 +303,7 @@ export function CalendrierClient() {
         className={cn(PASTILLE, allumee ? "raised text-foreground" : "text-muted-foreground line-through hover:bg-muted/60")}
       >
         <Icone aria-hidden className="h-3.5 w-3.5 shrink-0" />
-        {/* U9 (Q6) : « Évènements (Sheet) » jusqu'au 31/12/2026, « Évènements » ensuite — selon
-            l'horloge (de Paris), pas selon le mois affiché. */}
-        {t(s === "evenements" && avantBascule(jourParis) ? "calendrier.sources.evenementsSheet" : `calendrier.sources.${s}`)}
+        {t(`calendrier.sources.${s}`)}
       </button>
     );
   });
@@ -290,41 +311,55 @@ export function CalendrierClient() {
   // bord fondu du côté où il en reste (comme les plannings) ; l'iPad debout les passait sur trois rangées.
   // La rangée naît à chaque sortie du téléphone (fenêtre élargie, téléphone tourné) et ses libellés
   // changent de largeur avec la langue : le fondu se repose alors.
-  const rangeeFiltres = useFonduLateral<HTMLDivElement>(`${permises.length}|${telephone}|${lang}`);
+  const rangeeFiltres = useFonduLateral<HTMLDivElement>(`${permises.length}|${telephone}|${lang}|${filtre}`);
   const seulementMoi = (
     <button
       type="button"
       aria-pressed={prefs.seulementMoi}
       onClick={() => changer({ ...prefs, seulementMoi: !prefs.seulementMoi })}
-      className={cn(PASTILLE, prefs.seulementMoi ? "bg-foreground text-background" : "raised text-foreground")}
+      className={cn(PASTILLE, telephone && PASTILLE_TEL, prefs.seulementMoi ? "bg-foreground text-background" : "raised text-foreground")}
     >
       <UserRound aria-hidden className="h-3.5 w-3.5 shrink-0" />
       {t("calendrier.seulementMoi")}
     </button>
   );
+  // BO-C : « Sources » ouvre la feuille des pastilles ; seulement en « Tout » (un autre filtre ignore les préférences).
+  const boutonSources = filtre === "tout" && (
+    <button type="button" onClick={() => setFeuilleSources(true)} className={cn(PASTILLE, telephone && PASTILLE_TEL, "raised text-foreground")}>
+      <SlidersHorizontal aria-hidden className="h-3.5 w-3.5 shrink-0" />
+      {t("calendrier.sourcesFeuille")}
+    </button>
+  );
+  const filtres = (
+    <Pilules
+      etiquette={t("backOffice.calendrier.filtrer")}
+      obligatoire
+      options={[
+        { cle: "tout", nom: t("calendrier.tout") },
+        { cle: "evenements", nom: t("calendrier.sources.evenements") },
+        ...(permises.includes("reunions") ? [{ cle: "reunions" as const, nom: t("calendrier.sources.reunions") }] : []),
+        { cle: "services", nom: t("calendrier.sources.services") },
+        { cle: "scene", nom: t("calendrier.sources.scene") },
+      ]}
+      valeur={filtre}
+      choisir={(v) => setFiltre(v ?? "tout")}
+    />
+  );
 
-  // La rangée sous le rail : la période, puis les filtres (sur téléphone, « Tout » · « Seulement moi »
-  // en pilules (R5), retoucher « Seulement moi » revient à « Tout » ; puis « Sources », la feuille des sources).
+  // La rangée sous le rail : la période, puis les filtres. Sur téléphone, trois lignes : la période, le filtre
+  // (`Pilules`), puis « Seulement moi » et « Sources ». Dès 768 px, une seule ligne qui défile de côté
+  // (R4, D6 ; le filet reste devant) : le filtre, « Seulement moi », « Sources ». `py-2 -my-2` : ni le contour
+  // du focus ni l'ombre des pastilles ne sont rognés par le défilement.
   const rangee = telephone ? (
     <div className="flex flex-col gap-3">
       {navigation}
+      {filtres}
       <div className="flex items-center gap-1.5">
-        <Pilules
-          etiquette={t("calendrier.filtreAria")}
-          options={[{ cle: "tout", nom: t("calendrier.tout") }, { cle: "moi", nom: t("calendrier.seulementMoi") }]}
-          valeur={prefs.seulementMoi ? "moi" : "tout"}
-          choisir={(v) => changer({ ...prefs, seulementMoi: v === "moi" })}
-        />
-        <button type="button" onClick={() => setFeuilleSources(true)} className={BOUTON_SOURCES_TEL}>
-          <SlidersHorizontal aria-hidden className="h-3.5 w-3.5 shrink-0" />
-          {t("calendrier.sourcesFeuille")}
-        </button>
+        {seulementMoi}
+        {boutonSources}
       </div>
     </div>
   ) : (
-    // Les filtres restent sur une ligne à droite de la période et défilent de côté (R4, D6 ; le filet reste
-    // devant eux) ; le groupe des sources s'efface de la mise en page (`contents`) pour que « Seulement moi »
-    // les suive. `py-2 -my-2` : ni le contour du focus ni l'ombre des pastilles ne sont rognés par le défilement.
     <div className="flex items-center gap-1.5">
       <div className="shrink-0">{navigation}</div>
       <span aria-hidden className="mx-2 h-6 w-px shrink-0 bg-border" />
@@ -334,24 +369,57 @@ export function CalendrierClient() {
         className="fondu-lateral -my-2 flex min-w-0 flex-1 items-center gap-1.5 overflow-x-auto px-0.5 py-2"
         style={{ scrollbarWidth: "none" }}
       >
-        <div role="group" aria-label={t("calendrier.sourcesAria")} data-onglets="pilules" className="contents">
-          {boutonsSources}
-        </div>
+        {/* Le filtre garde ses marges négatives et son défilement pour le téléphone : ici la rangée défile. */}
+        <div className="shrink-0 [&>div]:mx-0 [&>div]:overflow-x-visible [&>div]:px-0 [&>div]:pb-0">{filtres}</div>
         {seulementMoi}
+        {boutonSources}
       </div>
     </div>
   );
 
-  // L'action principale (R7) : « + Nouvel évènement » dès 768 px ; sur téléphone, le rond « Créer »,
-  // qui propose dans sa feuille l'évènement, la tâche et la réunion du jour choisi.
-  const action = telephone
-    ? peutCreer && <BoutonNouveau label={t("calendrier.creer")} onClick={() => setFeuilleCreer(true)} />
-    : droits.evenement && <BoutonNouveau label={t("evenements.nouveau")} href="/back-office/evenements/nouveau" />;
+  // L'action principale (R7, BO8) : dès 768 px « Ajouter » et son menu (Évènement | Réunion, chacun seulement
+  // pour qui en a le droit) ; sur téléphone, le rond « Ajouter », qui propose dans sa feuille l'évènement, la
+  // tâche et la réunion du jour choisi.
+  const action = telephone ? (
+    peutCreer && <BoutonNouveau label={t("backOffice.calendrier.ajouter")} onClick={() => setFeuilleCreer(true)} />
+  ) : (
+    (droits.evenement || droits.reunion) && (
+      <DropdownMenu>
+        <DropdownMenuTrigger className={BOUTON_AJOUTER}>
+          <Plus aria-hidden className="h-4 w-4 shrink-0" strokeWidth={2.4} />
+          {t("backOffice.calendrier.ajouter")}
+          <ChevronDown aria-hidden className="h-4 w-4 shrink-0" />
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="min-w-44">
+          {droits.evenement && (
+            <DropdownMenuItem asChild>
+              <Link href="/back-office/evenements/nouveau">{t("backOffice.calendrier.ajouterEvenement")}</Link>
+            </DropdownMenuItem>
+          )}
+          {droits.reunion && (
+            <DropdownMenuItem asChild>
+              <Link href="/back-office/reunions/nouvelle">{t("backOffice.calendrier.ajouterReunion")}</Link>
+            </DropdownMenuItem>
+          )}
+        </DropdownMenuContent>
+      </DropdownMenu>
+    )
+  );
+  // « Scène des fêtes » (BO8) : la coordination y va d'ici ; sur un petit écran, l'icône seule.
+  const sceneDesFetes = isCoordination(user, profile) && (
+    <Button asChild size="sm" variant="outline" className="rounded-full">
+      <Link href="/back-office/evenements/scene" aria-label={t("backOffice.calendrier.sceneDesFetes")}>
+        <ICONES.scene aria-hidden />
+        <span className="max-[479px]:hidden">{t("backOffice.calendrier.sceneDesFetes")}</span>
+      </Link>
+    </Button>
+  );
 
   return (
     <div data-testid="calendrier" aria-busy={chargement} className="flex min-h-dvh flex-col">
       <EnTetePage
         titre={t("backOffice.entrees.calendrier")}
+        outils={sceneDesFetes || undefined}
         action={action || undefined}
         onglets={
           <OngletsRail
@@ -365,7 +433,7 @@ export function CalendrierClient() {
       />
       <div className="flex flex-1 items-stretch">
         <div className="min-w-0 flex-1 px-[var(--marge-page)] pb-10">
-          {/* U9 (Q7 b) : où se créent les évènements, jusqu'au 31/01/2027. */}
+          {/* U9 (Q7 b), BO10 : la note du Sheet, ici seulement et jusqu'au 31/12/2026. */}
           <AnnonceBascule className="mb-3" />
 
           {echecs.length > 0 && (
@@ -451,23 +519,21 @@ export function CalendrierClient() {
         )}
       </div>
 
-      {telephone && (
-        <Drawer open={feuilleSources} onOpenChange={setFeuilleSources}>
-          <DrawerContent aria-describedby={undefined}>
-            <DrawerHeader className="pb-2 text-left">
-              <DrawerTitle>{t("calendrier.sourcesFeuille")}</DrawerTitle>
-            </DrawerHeader>
-            <div role="group" aria-label={t("calendrier.sourcesAria")} data-onglets="pilules" className="flex flex-wrap gap-2 px-4 pb-8">
-              {boutonsSources}
-            </div>
-          </DrawerContent>
-        </Drawer>
-      )}
+      <Drawer open={feuilleSources} onOpenChange={setFeuilleSources}>
+        <DrawerContent aria-describedby={undefined} className="md:mx-auto md:max-w-xl">
+          <DrawerHeader className="pb-2 text-left">
+            <DrawerTitle>{t("calendrier.sourcesFeuille")}</DrawerTitle>
+          </DrawerHeader>
+          <div role="group" aria-label={t("calendrier.sourcesAria")} data-onglets="pilules" className="flex flex-wrap gap-2 px-4 pb-8">
+            {boutonsSources}
+          </div>
+        </DrawerContent>
+      </Drawer>
       {telephone && (
         <Drawer open={feuilleCreer} onOpenChange={setFeuilleCreer}>
           <DrawerContent aria-describedby={undefined}>
             <DrawerHeader className="pb-2 text-left">
-              <DrawerTitle>{t("calendrier.creer")}</DrawerTitle>
+              <DrawerTitle>{t("backOffice.calendrier.ajouter")}</DrawerTitle>
             </DrawerHeader>
             <div className="px-4 pb-8">{boutonsCreation(jourCreer)}</div>
           </DrawerContent>

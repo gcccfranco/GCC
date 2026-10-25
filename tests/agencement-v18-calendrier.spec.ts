@@ -8,7 +8,8 @@ import { ADMIN_EMAILS } from "../src/lib/access";
 
 // Agencement v18, tranche T3 (docs/spec-agencement-v18.md, B5 ; planche `v18-bo-calendrier-agenda-a`) :
 // Back-Office › Calendrier. En-tête « Calendrier », « + Nouvel évènement », rail Mois · Agenda ; dans la
-// rangée dessous, « ‹ Octobre 2026 › », « Aujourd'hui », filet, sources en pilules, « Seulement moi ».
+// rangée dessous, « ‹ Octobre 2026 › », « Aujourd'hui », filet, filtre en pilules, « Seulement moi », « Sources »
+// (BO-C : les pastilles des sources sont dans la feuille « Sources »).
 // Agenda (piste A) : semaines, une ligne par jour, une ligne par entrée (trait, heure, titre, détail,
 // étiquette), sur toute la largeur moins le volet du jour (300 px à droite, en agenda comme en Mois) ;
 // le volet : titre du jour, « Ajouter ce jour-là » et son menu (évènement, tâche, réunion), une carte par
@@ -78,7 +79,7 @@ test("l'agencement commun : titre « Calendrier », rail Mois · Agenda, le mois
   await expect(entete.getByRole("button", { name: "Mois suivant" })).toBeVisible();
   await expect(entete.getByRole("button", { name: "Aujourd'hui" })).toBeVisible();
   // Sous l'en-tête, le calendrier (et le volet du jour) prend toute la zone ; un rail (Mois · Agenda)
-  // et une rangée de pilules (les sources ; sur téléphone, « Tout · Seulement moi »).
+  // et une rangée de pilules (le filtre Tout · Évènements · Réunions · Services · Scène).
   const communes = {
     contenu: page.locator('[data-testid="calendrier"] > header[data-entete-page] + div'),
     onglets: { rail: 1, pilules: 1 },
@@ -89,47 +90,54 @@ test("l'agencement commun : titre « Calendrier », rail Mois · Agenda, le mois
   await verifierAgencement(page, communes);
 });
 
-test("téléphone : « Tout · Seulement moi » en pilules ; retoucher « Seulement moi » revient à « Tout »", async ({ page }) => {
+test("téléphone : le filtre en pilules, puis « Seulement moi » et « Sources » (BO-C) ; « Seulement moi » ne touche pas le filtre", async ({ page }) => {
   test.skip(!estTelephone(test.info()), "téléphone seulement");
   await ouvrir(page);
-  const groupe = page.getByRole("group", { name: "Entrées affichées" });
+  const groupe = page.getByRole("group", { name: "Filtrer le calendrier" });
   await expect(groupe).toHaveAttribute("data-onglets", "pilules");
-  const tout = groupe.getByRole("button", { name: "Tout" });
-  const moi = groupe.getByRole("button", { name: "Seulement moi" });
+  await expect(groupe.getByRole("button")).toHaveText(["Tout", "Évènements", "Réunions", "Services", "Scène"]);
+  const tout = groupe.getByRole("button", { name: "Tout", exact: true });
+  const moi = page.getByRole("button", { name: "Seulement moi" });
   await expect(tout).toHaveAttribute("aria-pressed", "true");
   await moi.click();
   await expect(moi).toHaveAttribute("aria-pressed", "true");
-  await expect(tout).toHaveAttribute("aria-pressed", "false");
-  await moi.click();
   await expect(tout).toHaveAttribute("aria-pressed", "true");
-  // « Sources » suit les pilules, à leur hauteur.
-  const sources = page.getByRole("button", { name: "Sources" });
-  expect(Math.round((await sources.boundingBox())!.height)).toBe(Math.round((await tout.boundingBox())!.height));
+  await moi.click();
+  await expect(moi).toHaveAttribute("aria-pressed", "false");
+  // « Seulement moi » et « Sources » suivent les pilules, à leur hauteur.
+  const sources = page.getByRole("button", { name: "Sources", exact: true });
+  const hauteur = Math.round((await tout.boundingBox())!.height);
+  expect(Math.round((await sources.boundingBox())!.height)).toBe(hauteur);
+  expect(Math.round((await moi.boundingBox())!.height)).toBe(hauteur);
 });
 
-test("« + Nouvel évènement » dans l'en-tête dès 768 px ; sur téléphone, le rond « Créer » propose le jour affiché", async ({ page }) => {
+test("« Ajouter » (menu Évènement | Réunion) dans l'en-tête dès 768 px ; sur téléphone, le rond « Ajouter » propose le jour affiché", async ({ page }) => {
   await ouvrir(page);
   if (estTelephone(test.info())) {
-    await page.getByRole("button", { name: "Créer", exact: true }).click();
-    const feuille = page.getByRole("dialog", { name: "Créer" });
+    await page.getByRole("button", { name: "Ajouter", exact: true }).click();
+    const feuille = page.getByRole("dialog", { name: "Ajouter" });
     await expect(feuille.getByRole("link", { name: "Nouvel évènement le 01/10" })).toHaveAttribute("href", /\?date=2026-10-01$/);
     await expect(feuille.getByRole("button", { name: "Nouvelle tâche pour le 01/10" })).toBeVisible();
-    await expect(feuille.getByRole("link", { name: "Nouvelle réunion le 01/10" })).toHaveAttribute("href", /\?reunion=1&date=2026-10-01$/);
+    await expect(feuille.getByRole("link", { name: "Nouvelle réunion le 01/10" })).toHaveAttribute("href", /^\/back-office\/reunions\/nouvelle\/?\?date=2026-10-01$/);
     return;
   }
-  const action = page.locator("header[data-entete-page]").getByRole("link", { name: "Nouvel évènement" });
+  const action = page.locator("header[data-entete-page]").getByRole("button", { name: "Ajouter", exact: true });
   await expect(action).toBeVisible();
-  await expect(action).toHaveAttribute("href", /^\/back-office\/evenements\/nouveau\/?$/);
+  await action.click();
+  const menu = page.getByRole("menu");
+  await expect(menu.getByRole("menuitem")).toHaveText(["Évènement", "Réunion"]);
+  await expect(menu.getByRole("menuitem", { name: "Évènement" })).toHaveAttribute("href", /^\/back-office\/evenements\/nouveau\/?$/);
+  await expect(menu.getByRole("menuitem", { name: "Réunion" })).toHaveAttribute("href", /^\/back-office\/reunions\/nouvelle\/?$/);
 });
 
-test("téléphone : en Agenda, « Créer » propose aujourd'hui, même après ‹ › (spec-calendrier, C5)", async ({ page }) => {
+test("téléphone : en Agenda, « Ajouter » propose aujourd'hui, même après ‹ › (spec-calendrier, C5)", async ({ page }) => {
   test.skip(!estTelephone(test.info()), "téléphone seulement");
   await ouvrir(page);
   await expect(agenda(page)).toBeVisible();
   await page.getByRole("button", { name: "Mois suivant" }).click();
   await expect(moisAffiche(page)).toHaveText("Novembre");
-  await page.getByRole("button", { name: "Créer", exact: true }).click();
-  const feuille = page.getByRole("dialog", { name: "Créer" });
+  await page.getByRole("button", { name: "Ajouter", exact: true }).click();
+  const feuille = page.getByRole("dialog", { name: "Ajouter" });
   await expect(feuille.getByRole("link", { name: "Nouvel évènement le 01/10" })).toHaveAttribute("href", /\?date=2026-10-01$/);
   await expect(feuille.getByRole("button", { name: "Nouvelle tâche pour le 01/10" })).toBeVisible();
 });
@@ -160,7 +168,7 @@ test("grand écran : en agenda, le volet du jour à droite (300 px), « Ajouter 
   const menu = page.getByRole("menu");
   await expect(menu.getByRole("menuitem")).toHaveText(["Nouvel évènement le 01/10", "Nouvelle tâche pour le 01/10", "Nouvelle réunion le 01/10"]);
   await expect(menu.getByRole("menuitem", { name: "Nouvel évènement le 01/10" })).toHaveAttribute("href", /^\/back-office\/evenements\/nouveau\/?\?date=2026-10-01$/);
-  await expect(menu.getByRole("menuitem", { name: "Nouvelle réunion le 01/10" })).toHaveAttribute("href", /^\/back-office\/evenements\/nouveau\/?\?reunion=1&date=2026-10-01$/);
+  await expect(menu.getByRole("menuitem", { name: "Nouvelle réunion le 01/10" })).toHaveAttribute("href", /^\/back-office\/reunions\/nouvelle\/?\?date=2026-10-01$/);
   await capture(page, "v18-bo-calendrier-menu");
   await menu.getByRole("menuitem", { name: "Nouvelle tâche pour le 01/10" }).click();
   const form = page.getByRole("dialog", { name: "Nouvelle tâche" });
@@ -261,10 +269,10 @@ test("grand écran : en Mois aussi, le volet du jour a « Ajouter ce jour-là »
   await capture(page, "v18-bo-calendrier-mois");
 });
 
-test("sans droit de créer : ni « Nouvel évènement », ni « Ajouter ce jour-là », ni « Créer »", async ({ page }) => {
+test("sans droit de créer : ni « Ajouter » (en-tête ni rond), ni « Ajouter ce jour-là »", async ({ page }) => {
   await ouvrir(page, PLANNINGS);
   await expect(page.getByRole("link", { name: "Nouvel évènement" })).toHaveCount(0);
-  await expect(page.getByRole("button", { name: "Créer", exact: true })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Ajouter", exact: true })).toHaveCount(0);
   if (estGrandEcran(test.info())) {
     await vue(page, "Agenda");
     await expect(voletDuJour(page, "Jeudi 1er octobre")).toBeVisible();

@@ -471,7 +471,11 @@ test.describe("C6 : glisser en vue Mois", () => {
   test("rien ne se soulève : tâche répétée, entrée du Sheet, service, setlist, petit déj, évènement passé (ordinateur et tablettes)", async ({ page }, info) => {
     test.skip(estTelephone(info), GLISSER);
     const db = await ouvrir(page);
-    await page.getByRole("group", { name: "Sources affichées" }).getByRole("button", { name: "Setlists" }).click();
+    // BO-C : les pastilles des sources sont dans la feuille « Sources ».
+    await page.getByRole("button", { name: "Sources", exact: true }).click();
+    await page.getByRole("dialog", { name: "Sources" }).getByRole("group", { name: "Sources affichées" }).getByRole("button", { name: "Setlists" }).click();
+    await page.keyboard.press("Escape");
+    await expect(page.getByRole("dialog", { name: "Sources" })).toHaveCount(0);
     const immobiles = [
       jour(page, "2026-10-02").locator('[data-source="taches"]'), // tâche répétée
       jour(page, "2026-10-06").locator('[data-source="evenements"]').first(), // Sheet

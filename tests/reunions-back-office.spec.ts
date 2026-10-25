@@ -212,8 +212,10 @@ test("G3 : un membre d'équipe sans autre rôle — sélecteur, Tâches et Réun
   await selecteur.getByRole("link", { name: "Back-Office" }).click();
   // Pas de tableau de bord : le Back-Office s'ouvre sur sa première entrée, Tâches (EQ17).
   await page.waitForURL(/\/back-office\/taches(\/[\w-]+)?\/?$/);
+  // BO-C : la liste des réunions est l'Agenda du Calendrier, filtré sur les réunions.
   await page.goto("/back-office/reunions");
-  await expect(page.getByRole("link", { name: /Réunion Régie/ }).first()).toBeVisible();
+  await expect(page).toHaveURL(/\/back-office\/calendrier\/?\?vue=agenda&filtre=reunions$/);
+  await expect(page.getByRole("button", { name: /Réunion Régie/ }).first()).toBeVisible();
   if (estTablettePaysage(info)) await page.getByTestId("barre-laterale").getByRole("button", { name: /Déplier la barre latérale/ }).tap();
   await expect(menu(page, info).getByRole("link")).toHaveText(estOrdinateur(info) || estTablettePaysage(info) ? ["Tâches", "Réunions"] : ["Tâches", "Réunions", "Plus"]);
   await capture(page, info, "membre-equipe");
@@ -234,5 +236,6 @@ test("G3 : un choriste a le sélecteur et le Back-Office, Tâches et Réunions (
   await page.waitForURL(/\/back-office\/taches(\/[\w-]+)?\/?$/);
   await expect(page.getByText("Réservé aux responsables.")).toHaveCount(0);
   await page.goto("/back-office/reunions");
-  await expect(page.getByRole("link", { name: /Réunion Louange/ }).first()).toBeVisible();
+  await expect(page).toHaveURL(/\/back-office\/calendrier\/?\?vue=agenda&filtre=reunions$/);
+  await expect(page.getByRole("button", { name: /Réunion Louange/ }).first()).toBeVisible();
 });

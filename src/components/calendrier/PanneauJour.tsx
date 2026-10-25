@@ -10,6 +10,8 @@
 // « Créer » du téléphone gardent les boutons, réunion comprise.
 // Retouches v18 (R4, D7) : comme sur la planche, le bouton « Ajouter ce jour-là » puis une flèche ronde
 // (« Évènement, tâche ou réunion ») ; l'un et l'autre ouvrent le même menu.
+// BO-C (docs/spec-back-office-piste-a.md, BO10) : une entrée du Sheet porte l'étiquette « Sheet » à côté
+// de son titre ; une entrée de la scène offre, pour la coordination, « Ouvrir la scène dans le back-office ».
 // C6 : « Déplacer… » sous une carte déplaçable.
 // Un service dit sa setlist publiée (« Setlist « Culte du 11 octobre » · 4 chants », planche
 // bo-calendrier, pastille Setlists éteinte ou non) ; à venir, ses cases vides en orange
@@ -26,6 +28,7 @@ import type { NotifLang } from "@/types/user";
 import type { EntreeCalendrier } from "@/lib/calendrier/entrees";
 import { COULEURS_CALENDRIER } from "@/lib/calendrier/entrees";
 import { couleurSource } from "./apparence";
+import { EtiquetteSheet, LienOuvrirScene } from "./Agenda";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { styleTexteService } from "@/lib/couleurSombre"
 
@@ -48,7 +51,7 @@ function Carte({ e, onDeplacer }: { e: EntreeCalendrier; onDeplacer?: (e: Entree
         {POINT[e.source] && <span aria-hidden className="h-2 w-2 shrink-0 rounded-full" style={{ background: POINT[e.source] }} />}
         {source}
       </span>
-      <span className="mt-0.5 block font-bold leading-snug text-foreground">{titre}</span>
+      <span className="mt-0.5 block font-bold leading-snug text-foreground">{titre}{e.duSheet && <EtiquetteSheet />}</span>
       {detail && <span className="mt-0.5 block text-sm text-muted-foreground">{detail}</span>}
       {e.setlist && (
         <span className="mt-0.5 block text-sm text-muted-foreground">
@@ -60,7 +63,6 @@ function Carte({ e, onDeplacer }: { e: EntreeCalendrier; onDeplacer?: (e: Entree
           {t("calendrier.casesVides", { liste: e.vides.map((cle) => t(cle)).join(", ") })}
         </span>
       )}
-      {e.duSheet && <span className="mt-1 block text-xs text-muted-foreground">{t("calendrier.duSheet")}</span>}
     </>
   );
   const classe =
@@ -76,6 +78,10 @@ function Carte({ e, onDeplacer }: { e: EntreeCalendrier; onDeplacer?: (e: Entree
           {contenu}
         </Link>
       )}
+      <LienOuvrirScene
+        e={e}
+        className="block px-3.5 pb-2.5 text-[13px] font-semibold text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
+      />
       {/* C6 : « Déplacer… » sur les entrées déplaçables (la voie sans glisser, Q5). */}
       {e.repetee && onDeplacer && (
         <p className="-mt-1.5 px-3.5 pb-2.5 text-right text-[13px] text-muted-foreground">{t("calendrier.deplacer.repetee")}</p>
@@ -117,7 +123,7 @@ const BOUTON =
 export type DroitsCreation = { evenement: boolean; reunion: boolean; tache: boolean };
 
 const lienEvenement = (date: string) => `/back-office/evenements/nouveau?date=${date}`;
-const lienReunion = (date: string) => `/back-office/evenements/nouveau?reunion=1&date=${date}`;
+const lienReunion = (date: string) => `/back-office/reunions/nouvelle?date=${date}`;
 
 /** « Nouvel évènement le 11/10 » (plein, encre), « Nouvelle tâche pour le 11/10 » et « Nouvelle
  *  réunion le 11/10 » (planche bo-calendrier, Q4) : chacun seulement pour qui a le droit. Les liens

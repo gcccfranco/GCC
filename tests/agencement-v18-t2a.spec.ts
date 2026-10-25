@@ -133,12 +133,14 @@ test.describe("T2a : le menu", () => {
     await expect(menu.locator("[aria-current]")).toHaveCount(0);
   });
 
-  test("membre d'équipe responsable : sa barre du bas (téléphone, tablette portrait) n'a plus Réunions, la page reste joignable", async ({ page }, info) => {
+  test("membre d'équipe responsable : sa barre du bas (téléphone, tablette portrait) n'a plus Réunions, l'adresse mène au Calendrier filtré (BO-C)", async ({ page }, info) => {
     test.skip(estGrandEcran(info), "la barre du bas : téléphone et tablette en portrait");
     await ouvrir(page, NOTIFY_EQUIPE, "/back-office/reunions");
+    await expect(page).toHaveURL(/\/back-office\/calendrier\/?\?vue=agenda&filtre=reunions$/);
     await expect(barreDuBas(page).getByRole("link")).toHaveText(["À faire", "Calendrier", "App"]);
-    await expect(barreDuBas(page).locator("[aria-current]")).toHaveCount(0);
-    await expect(page.getByRole("heading", { level: 1, name: "Réunions" })).toBeVisible();
+    await expect(barreDuBas(page).locator("[aria-current]")).toHaveCount(1);
+    await expect(barreDuBas(page).getByRole("link", { name: "Calendrier" })).toHaveAttribute("aria-current", /.+/);
+    await expect(page.getByRole("heading", { level: 1, name: "Calendrier" })).toBeVisible();
   });
 
   test("une barre enregistrée avec Évènements est ignorée : la barre est fixe", async ({ page }, info) => {
@@ -149,29 +151,37 @@ test.describe("T2a : le menu", () => {
     await expect(barreDuBas(page).getByRole("link")).toHaveText(["À faire", "Calendrier", "App"]);
   });
 
-  test("en 中文 : « 会议 » titre sa page (plus d'entrée de menu)", async ({ page }) => {
+  test("en 中文 : « 会议 » est le filtre où mène l'adresse des réunions (BO-C)", async ({ page }) => {
     await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
     await ouvrir(page, ADMIN, "/back-office/reunions");
-    await expect(page.getByRole("heading", { level: 1, name: "会议" })).toBeVisible();
+    await expect(page).toHaveURL(/\/back-office\/calendrier\/?\?vue=agenda&filtre=reunions$/);
+    await expect(page.getByRole("heading", { level: 1, name: "日历" })).toBeVisible();
+    await expect(page.getByRole("group", { name: "筛选日历" }).getByRole("button", { name: "会议" })).toHaveAttribute("aria-pressed", "true");
   });
 });
 
 // ─── Pages et redirections ───────────────────────────────────────────────────────
 
 test.describe("T2a : les adresses /back-office/reunions/*", () => {
-  test("la liste : titre « Réunions », sans sous-parties ; ses lignes et « Nouvelle réunion » restent sous Réunions", async ({ page }) => {
+  test("la liste : l'adresse mène au Calendrier en Agenda filtré sur les réunions ; « Réunion » dans le menu « Ajouter »", async ({ page }, info) => {
     await ouvrir(page, DA, "/back-office/reunions");
-    await expect(page.getByRole("heading", { level: 1, name: "Réunions" })).toBeVisible();
-    await expect(sousParties(page)).toHaveCount(0);
-    await expect(page.getByRole("link", { name: /Réunion DA/ }).first()).toHaveAttribute("href", /^\/back-office\/reunions\/reu-da\/?$/);
-    await expect(page.getByRole("link", { name: "Nouvelle réunion" })).toHaveAttribute("href", /^\/back-office\/reunions\/nouvelle\/?$/);
-    await expect(page.getByRole("link", { name: /Fête de rentrée/ })).toHaveCount(0);
+    await expect(page).toHaveURL(/\/back-office\/calendrier\/?\?vue=agenda&filtre=reunions$/);
+    await expect(page.getByRole("heading", { level: 1, name: "Calendrier" })).toBeVisible();
+    await expect(page.getByRole("group", { name: "Filtrer le calendrier" }).getByRole("button", { name: "Réunions" })).toHaveAttribute("aria-pressed", "true");
+    await expect(page.getByTestId("agenda")).toBeVisible();
+    await expect(page.getByRole("button", { name: /Réunion DA/ }).first()).toBeVisible();
+    await expect(page.getByRole("button", { name: /Fête de rentrée/ })).toHaveCount(0);
+    if (info.project.name !== "telephone") {
+      await page.getByRole("button", { name: "Ajouter", exact: true }).click();
+      await expect(page.getByRole("menuitem", { name: "Réunion" })).toHaveAttribute("href", /^\/back-office\/reunions\/nouvelle\/?$/);
+    }
   });
 
-  test("le rail d'Évènements n'a plus « Réunions »", async ({ page }) => {
-    await ouvrir(page, COORD, "/back-office/evenements");
-    await expect(page.getByRole("heading", { level: 1, name: "Évènements" })).toBeVisible();
-    await expect(sousParties(page).getByRole("link")).toHaveText(["Évènements", "Pâques", "Noël"]);
+  test("la scène : titre « Scène des fêtes », rail Pâques · Noël (plus « Évènements »), retour « Calendrier »", async ({ page }) => {
+    await ouvrir(page, COORD, "/back-office/evenements/scene");
+    await expect(page.getByRole("heading", { level: 1, name: "Scène des fêtes" })).toBeVisible();
+    await expect(sousParties(page).getByRole("link")).toHaveText(["Pâques", "Noël"]);
+    await expect(page.getByRole("main").getByRole("link", { name: "Calendrier", exact: true })).toHaveAttribute("href", /^\/back-office\/calendrier\/?$/);
   });
 
   test("la fiche : Modifier, Dupliquer pour la prochaine et les réunions précédentes restent sous Réunions", async ({ page }, info) => {
@@ -187,12 +197,13 @@ test.describe("T2a : les adresses /back-office/reunions/*", () => {
     }
   });
 
-  test("supprimer une réunion ramène à la liste des réunions", async ({ page }) => {
+  test("supprimer une réunion ramène à la liste des réunions (l'Agenda du Calendrier, filtré sur les réunions)", async ({ page }) => {
     await ouvrir(page, DA, "/back-office/reunions/reu-da");
     await page.getByRole("button", { name: "Plus d'actions" }).click();
     await page.getByRole("menuitem", { name: "Supprimer" }).click();
     await repondreDansLeSite(page, "Supprimer");
-    await expect(page).toHaveURL(/\/back-office\/reunions\/?$/);
+    await expect(page).toHaveURL(/\/back-office\/calendrier\/?\?vue=agenda&filtre=reunions$/);
+    await expect(page.getByRole("group", { name: "Filtrer le calendrier" }).getByRole("button", { name: "Réunions", exact: true })).toHaveAttribute("aria-pressed", "true");
   });
 
   test("créer une réunion : seulement les réunions au choix, puis sa fiche sous Réunions", async ({ page }) => {
@@ -225,8 +236,8 @@ test.describe("T2a : les adresses /back-office/reunions/*", () => {
 
   test("anciennes adresses : la liste, la fiche d'une réunion et « nouveau?reunion=1 » redirigent", async ({ page }) => {
     await ouvrir(page, DA, "/back-office/evenements/reunions");
-    await expect(page).toHaveURL(/\/back-office\/reunions\/?$/);
-    await expect(page.getByRole("heading", { level: 1, name: "Réunions" })).toBeVisible();
+    await expect(page).toHaveURL(/\/back-office\/calendrier\/?\?vue=agenda&filtre=reunions$/);
+    await expect(page.getByRole("heading", { level: 1, name: "Calendrier" })).toBeVisible();
     await page.goto("/back-office/evenements/reu-da");
     await expect(page).toHaveURL(/\/back-office\/reunions\/reu-da\/?$/);
     await expect(page.getByRole("heading", { name: "Réunion DA", exact: true })).toBeVisible();

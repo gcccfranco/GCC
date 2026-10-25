@@ -3509,6 +3509,15 @@
     }
   },
   "backOffice": {
+    "calendrier": {
+      "filtrer": "Filtrer le calendrier",
+      "ajouter": "Ajouter",
+      "ajouterEvenement": "Évènement",
+      "ajouterReunion": "Réunion",
+      "sceneDesFetes": "Scène des fêtes",
+      "ouvrirScene": "Ouvrir la scène dans le back-office",
+      "etiquetteSheet": "Sheet"
+    },
     "selecteur": {
       "aria": "Choisir l'espace",
       "app": "App",
@@ -3553,8 +3562,7 @@
     "nouvelleReunion": "Nouvelle réunion",
     "annonceBascule": {
       "aria": "Annonce",
-      "avant": "Les évènements de 2026 restent dans le Sheet ; ceux de 2027 se créent ici.",
-      "apres": "Les évènements se créent ici ; le Sheet n'est plus lu."
+      "avant": "Les évènements de 2026 restent dans le Sheet ; ceux de 2027 se créent ici."
     },
     "aVenir": "À venir",
     "reunionDEquipe": "Réunion d'équipe · {{equipe}}",
@@ -3673,7 +3681,6 @@
     "sources": {
       "services": "Services",
       "evenements": "Évènements",
-      "evenementsSheet": "Évènements (Sheet)",
       "reunions": "Réunions",
       "scene": "Scène",
       "taches": "Tâches",
