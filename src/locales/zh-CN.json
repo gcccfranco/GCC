@@ -281,6 +281,7 @@
         "structure": "仅显示结构"
       },
       "performanceMode": "敬拜模式",
+      "performanceModeCourt": "敬拜",
       "duplicate": "复制",
       "duplicateForNotes": "复制一份以加笔记",
       "duplicateCopySuffix": "（副本）",
@@ -289,6 +290,7 @@
       "sharePrivateWarning": "私人歌单——仅你自己可见",
       "canEdit": "可编辑",
       "readOnly": "只读",
+      "qui": "谁可以编辑",
       "editableBy": "仅创建者可编辑（及管理员）",
       "editableByOwnerEquipe": "私人——仅创建者及其服事团队可见和编辑",
       "editableByEquipe": "仅创建者及其服事团队可编辑（及管理员）",

@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { Trash2, List, Music, Pencil, SlidersHorizontal, PenLine, UserRound, Play, MoreHorizontal, Download, Copy, Share2, BellRing, FileText, Presentation, X } from "lucide-react";
+import { Trash2, List, Music, Pencil, SlidersHorizontal, PenLine, UserRound, Play, MoreHorizontal, Download, Copy, Share2, BellRing, FileText, Presentation, X, Info } from "lucide-react";
 import { categoryColor } from "@/lib/serviceColors";
 import { Halo } from "@/components/layout/Halo";
 import { FondDeBarre } from "@/components/layout/FondDeBarre";
@@ -87,6 +87,14 @@ import {
   materializeSectionCopy,
 } from "@/lib/chordpro/editSource";
 import { structUidAt, revertSectionOrigins } from "@/lib/setlist/sectionOrigins";
+
+/** Téléphone : zone de toucher de 44 px autour d'un bouton plus petit, sans changer son dessin (G6, audit 24/10/2026). */
+const TOUCHER_44 =
+  "max-sm:relative max-sm:before:absolute max-sm:before:left-1/2 max-sm:before:top-1/2 max-sm:before:h-11 max-sm:before:min-h-full " +
+  "max-sm:before:w-full max-sm:before:min-w-11 max-sm:before:-translate-x-1/2 max-sm:before:-translate-y-1/2 max-sm:before:content-['']";
+// Sous 1024 px, où `.libelle-outil` est masqué : l'icône et un libellé court dessous (G15, audit 24/10/2026).
+const PILULE_EMPILEE = "max-lg:h-auto max-lg:min-h-8 max-lg:flex-col max-lg:justify-center max-lg:gap-0.5 max-lg:px-1 max-lg:py-1 max-lg:rounded-2xl";
+const LIBELLE_COURT = "hidden max-lg:block max-w-[64px] truncate text-[10px] font-medium leading-tight";
 
 /** Cible d'édition de ligne + indices source nécessaires à la sauvegarde. */
 type LineEditState = EditLineTarget & {
@@ -326,6 +334,8 @@ export function SetlistDetailClient() {
   const [versionsLues, setVersionsLues] = useState(false);
   // Mode « Ma version » : mêmes gestes qu'Adapter, écrits dans mon document.
   const [editMine, setEditMine] = useState(false);
+  // Téléphone : la phrase des droits est repliée derrière un « i » (G15, audit 24/10/2026).
+  const [droitsDeplies, setDroitsDeplies] = useState(false);
   // Retouche d'une section répétée en « Ma version » : toutes les répétitions
   // (défaut, comme avant le lot 9) ou ce seul passage (docs/spec-harmonie.md).
   const [repeatScope, setRepeatScope] = useState<"all" | "one">("all");
@@ -1607,7 +1617,16 @@ export function SetlistDetailClient() {
       <Badge variant="secondary">
         {canEdit ? t("setlists.detail.canEdit") : t("setlists.detail.readOnly")}
       </Badge>
-      <span className="text-xs text-muted-foreground">
+      <button
+        type="button"
+        aria-label={t("setlists.detail.qui")}
+        aria-expanded={droitsDeplies}
+        onClick={() => setDroitsDeplies((o) => !o)}
+        className="sm:hidden relative flex h-6 w-6 items-center justify-center rounded-full text-muted-foreground before:absolute before:left-1/2 before:top-1/2 before:h-11 before:w-11 before:-translate-x-1/2 before:-translate-y-1/2 before:content-['']"
+      >
+        <Info className="h-4 w-4" aria-hidden />
+      </button>
+      <span className={`text-xs text-muted-foreground ${droitsDeplies ? "" : "max-sm:hidden"}`}>
         {setlist.isPrivate
           ? t(setlist.editeurs?.length ? "setlists.detail.editableByOwnerEquipe" : "setlists.detail.editableByOwner")
           : t(setlist.editeurs?.length ? "setlists.detail.editableByEquipe" : "setlists.detail.editableBy", {
@@ -1969,12 +1988,12 @@ export function SetlistDetailClient() {
                   de tenir à côté de la barre latérale (lot U4 : `.libelle-outil`, requête de
                   conteneur sur `.rangee-outils`, globals.css). `flex-wrap` reste le filet de
                   sécurité. */}
-              <div className="rangee-outils flex items-center gap-1.5 sm:gap-2 py-[9px] flex-wrap">
+              <div className="rangee-outils flex items-center gap-1 min-[400px]:gap-1.5 sm:gap-2 py-[9px] flex-wrap">
 
                 {/* ← Retour */}
                 <Link aria-label={t("songs.detail.backToAll")}
                   href={backPath}
-                  className="h-8 px-2.5 sm:mr-1 rounded-full bg-secondary text-muted-foreground hover:text-foreground text-sm font-semibold flex items-center gap-0.5 transition-[background-color,color,transform] duration-150 active:scale-[.96]"
+                  className={`${TOUCHER_44} h-8 px-2.5 max-sm:w-8 max-sm:justify-center max-sm:px-0 sm:mr-1 rounded-full bg-secondary text-muted-foreground hover:text-foreground text-sm font-semibold flex items-center gap-0.5 transition-[background-color,color,transform] duration-150 active:scale-[.96]`}
                 >
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M19 12H5m6-7l-7 7 7 7" />
@@ -1988,10 +2007,11 @@ export function SetlistDetailClient() {
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <button aria-label={t("setlists.detail.layout.label")}
-                      className="h-8 px-2.5 rounded-full text-sm font-semibold flex items-center gap-1.5 transition-[background-color,color,transform] duration-150 active:scale-[.96] bg-secondary text-muted-foreground hover:text-foreground"
+                      className={`${TOUCHER_44} ${PILULE_EMPILEE} h-8 px-2.5 rounded-full text-sm font-semibold flex items-center gap-1.5 transition-[background-color,color,transform] duration-150 active:scale-[.96] bg-secondary text-muted-foreground hover:text-foreground`}
                     >
                       <SlidersHorizontal className="h-3.5 w-3.5" />
                       <span className="libelle-outil">{t("setlists.detail.layout.label")}</span>
+                      <span aria-hidden className={LIBELLE_COURT}>{t("setlists.detail.layout.label")}</span>
                     </button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="start" className="w-56">
@@ -2004,7 +2024,7 @@ export function SetlistDetailClient() {
                   <button aria-label={t("setlists.contentEdit.toggle", { defaultValue: "Adapter" })}
                     aria-pressed={editPartitions}
                     onClick={toggleAdapter}
-                    className={`max-[389px]:hidden h-8 px-2.5 rounded-full text-sm font-semibold flex items-center gap-1.5 transition-[background-color,color,transform] duration-150 active:scale-[.96] ${
+                    className={`${TOUCHER_44} ${PILULE_EMPILEE} max-[389px]:hidden h-8 px-2.5 rounded-full text-sm font-semibold flex items-center gap-1.5 transition-[background-color,color,transform] duration-150 active:scale-[.96] ${
                       editPartitions
                         ? "bg-foreground text-background"
                         : "bg-secondary text-muted-foreground hover:text-foreground"
@@ -2014,6 +2034,7 @@ export function SetlistDetailClient() {
                     <span className="libelle-outil">
                       {t("setlists.contentEdit.toggle", { defaultValue: "Adapter" })}
                     </span>
+                    <span aria-hidden className={LIBELLE_COURT}>{t("setlists.contentEdit.toggle", { defaultValue: "Adapter" })}</span>
                   </button>
                 )}
 
@@ -2024,7 +2045,7 @@ export function SetlistDetailClient() {
                     setShowChords((s) => !s);
                     setChordsTouched(true);
                   }}
-                  className={`h-8 px-2.5 rounded-full text-sm font-semibold flex items-center gap-1.5 transition-[background-color,color,transform] duration-150 active:scale-[.96] ${
+                  className={`${TOUCHER_44} ${PILULE_EMPILEE} h-8 px-2.5 rounded-full text-sm font-semibold flex items-center gap-1.5 transition-[background-color,color,transform] duration-150 active:scale-[.96] ${
                     showChords
                       ? "bg-foreground text-background"
                       : "bg-secondary text-muted-foreground hover:text-foreground"
@@ -2032,6 +2053,7 @@ export function SetlistDetailClient() {
                 >
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/><path d="M9 18V5l12-2v13"/></svg>
                   <span className="libelle-outil">{t("songs.detail.chords")}</span>
+                  <span aria-hidden className={LIBELLE_COURT}>{t("songs.detail.chords")}</span>
                 </button>
 
                 {/* Ma version (accords/paroles pour soi) — tout connecté */}
@@ -2039,7 +2061,7 @@ export function SetlistDetailClient() {
                   <button aria-label={t("setlists.myVersion.toggle")}
                     aria-pressed={editMine}
                     onClick={toggleMaVersion}
-                    className={`max-[389px]:hidden h-8 px-2.5 rounded-full text-sm font-semibold flex items-center gap-1.5 transition-[background-color,color,transform] duration-150 active:scale-[.96] ${
+                    className={`${TOUCHER_44} ${PILULE_EMPILEE} max-[389px]:hidden h-8 px-2.5 rounded-full text-sm font-semibold flex items-center gap-1.5 transition-[background-color,color,transform] duration-150 active:scale-[.96] ${
                       editMine
                         ? "bg-foreground text-background"
                         : "bg-secondary text-muted-foreground hover:text-foreground"
@@ -2047,6 +2069,7 @@ export function SetlistDetailClient() {
                   >
                     <UserRound className="h-3.5 w-3.5" />
                     <span className="libelle-outil">{t("setlists.myVersion.toggle")}</span>
+                    <span aria-hidden className={LIBELLE_COURT}>{t("setlists.myVersion.toggle")}</span>
                   </button>
                 )}
 
@@ -2059,10 +2082,11 @@ export function SetlistDetailClient() {
                     aria-label={t("setlists.detail.performanceMode")}
                     // 5C1 : un bouton plein est en encre, sauf sur l'écran d'un culte, où il en prend la couleur.
                     style={{ backgroundColor: serviceButtonFill(categoryColor(setlist?.category ?? "")) }}
-                    className="h-8 px-2.5 sm:px-3 rounded-full text-white text-[12.5px] font-semibold flex items-center gap-1.5 hover:brightness-95 dark:ring-1 dark:ring-white/15 transition-all duration-150"
+                    className={`${TOUCHER_44} ${PILULE_EMPILEE} h-8 px-2.5 sm:px-3 rounded-full text-white text-[12.5px] font-semibold flex items-center gap-1.5 hover:brightness-95 dark:ring-1 dark:ring-white/15 transition-all duration-150`}
                   >
                     <Play className="h-3.5 w-3.5" />
                     <span className="libelle-outil">{t("setlists.detail.performanceMode")}</span>
+                    <span aria-hidden className={LIBELLE_COURT}>{t("setlists.detail.performanceModeCourt")}</span>
                   </button>
 
                   {/* Menu ⋯ : Modifier / Prévenir l'équipe / Dupliquer / Partager / PDF / Supprimer */}
@@ -2071,7 +2095,7 @@ export function SetlistDetailClient() {
                       <Button
                         variant="outline"
                         size="icon-lg"
-                        className="h-8 w-8 rounded-md text-muted-foreground"
+                        className={`${TOUCHER_44} h-8 w-8 rounded-md text-muted-foreground`}
                         aria-label={t("common.moreActions")}
                       >
                         <MoreHorizontal className="h-4 w-4" />
@@ -2130,7 +2154,7 @@ export function SetlistDetailClient() {
                     <h1 className="text-2xl font-bold text-foreground">{titreAffiche(setlist, i18n.language === "zh-CN" ? "zh" : "fr")}</h1>
                   </div>
                   {setlist.fete ? <div className="mt-1"><RepereFete setlist={setlist} passage={passageFete} /><SousTitreFete setlist={setlist} passage={passageFete} /></div> : (
-                  <p className="text-muted-foreground capitalize mt-1 text-sm">
+                  <p className="text-muted-foreground first-letter:uppercase mt-1 text-sm">
                     {formatDate(setlist.date, i18n.language)}
                   </p>)}
                   <SetlistHistory key={historyVersion} setlistId={id} songsMap={songsMap} />

@@ -281,6 +281,7 @@
         "structure": "Structure seule"
       },
       "performanceMode": "Mode Louange",
+      "performanceModeCourt": "Louange",
       "duplicate": "Dupliquer",
       "duplicateForNotes": "Dupliquer pour mes notes",
       "duplicateCopySuffix": "(copie)",
@@ -289,6 +290,7 @@
       "sharePrivateWarning": "Setlist privée — visible uniquement par toi",
       "canEdit": "Tu peux modifier",
       "readOnly": "Lecture seule",
+      "qui": "Qui peut modifier",
       "editableBy": "Modifiable par son créateur seulement (et les admins)",
       "editableByOwnerEquipe": "Privée — visible et modifiable par son créateur et son équipe",
       "editableByEquipe": "Modifiable par son créateur et son équipe seulement (et les admins)",

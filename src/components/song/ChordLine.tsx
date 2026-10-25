@@ -3,6 +3,7 @@
 import type { Token } from "@/types/chordPro";
 import { AccordTouchable } from "@/components/accords/AccordTouchable";
 import localFont from "next/font/local";
+import { useLayoutEffect, useRef, useState } from "react";
 type Segment = { chord: string | null; lyric: string };
 
 // function toSegments(tokens: Token[]): Segment[] {
@@ -102,6 +103,33 @@ function toWords(segments: Segment[]): { seg: Segment; i: number }[][] {
   return words;
 }
 
+const LETTRE_LATINE = /^\p{Script=Latin}$/u;
+
+/** Tiret de liaison dans un mot coupé par un accord, là où l'accord laisse un espace (« re – culé », C10, audit 24/10/2026) :
+ *  centré dans l'espace laissé, visible seulement s'il y tient en entier. Hors copie et hors lecture d'écran. */
+function TiretLiaison() {
+  const cadre = useRef<HTMLSpanElement>(null);
+  const tiret = useRef<HTMLSpanElement>(null);
+  const [tient, setTient] = useState(false);
+  useLayoutEffect(() => {
+    const c = cadre.current;
+    const t = tiret.current;
+    if (!c || !t) return;
+    const mesurer = () => setTient(c.clientWidth >= t.offsetWidth);
+    mesurer();
+    const obs = new ResizeObserver(mesurer);
+    obs.observe(c);
+    return () => obs.disconnect();
+  }, []);
+  return (
+    <span ref={cadre} data-copy-ignore aria-hidden className="flex min-w-0 flex-1 justify-center overflow-hidden">
+      <span ref={tiret} className="shrink-0 px-[0.2em] text-foreground" style={{ visibility: tient ? "visible" : "hidden" }}>
+        –
+      </span>
+    </span>
+  );
+}
+
 interface ChordLineProps {
   tokens: Token[];
   showChords?: boolean;
@@ -131,13 +159,17 @@ export function ChordLine({ tokens, showChords = true, hideLyrics = false, fontS
     >
       {toWords(segments).map((word) => (
       <span key={word[0].i} className="inline-flex items-end">
-      {word.map(({ seg, i }) => {
+      {word.map(({ seg, i }, k) => {
         const chordLen = seg.chord?.length ?? 0;
         const lyricLen = [...(seg.lyric)].length;
         const minWidth =
           hasAnyChord && chordLen > lyricLen
             ? `${chordLen + 0.5}ch`
             : undefined;
+        const suivant = word[k + 1]?.seg.lyric;
+        const tiret =
+          showChords && !hideLyrics && seg.chord !== null && suivant !== undefined &&
+          LETTRE_LATINE.test([...seg.lyric].at(-1) ?? "") && LETTRE_LATINE.test([...suivant][0] ?? "");
         const lyric = seg.lyric?.replace(/\s?-\s/g,'').trimStart()
         // console.log(seg.lyric,lyric)
         if (!showChords && !lyric){return null} else
@@ -164,12 +196,24 @@ export function ChordLine({ tokens, showChords = true, hideLyrics = false, fontS
             {/* `whitespace-pre` toujours : un accord de fin de ligne n'a qu'une espace
                 sous lui ; effacée, sa colonne perd sa hauteur et l'accord tombe au
                 niveau des paroles (27/09/2026). */}
-            <span
-              className={`text-foreground whitespace-pre ${fr_lyric_font?.className}`}
-              style={hideLyrics ? { visibility: "hidden" } : undefined}
-            >
-              {(showChords ? seg.lyric : lyric) || (seg.chord && showChords ? " " : "")}
-            </span>
+            {(() => {
+              const paroles = (
+                <span
+                  className={`text-foreground whitespace-pre ${fr_lyric_font?.className}`}
+                  style={hideLyrics ? { visibility: "hidden" } : undefined}
+                >
+                  {(showChords ? seg.lyric : lyric) || (seg.chord && showChords ? " " : "")}
+                </span>
+              );
+              return tiret ? (
+                <span className="flex">
+                  {paroles}
+                  <TiretLiaison />
+                </span>
+              ) : (
+                paroles
+              );
+            })()}
           </span>
         );
       })}

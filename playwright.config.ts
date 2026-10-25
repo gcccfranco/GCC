@@ -26,6 +26,8 @@ const SPECS_GRAND_ECRAN = [
   /accords-page\.spec\.ts/,
   // … DA-3 : le panneau d'un accord touché (bulle sur ordinateur, feuille ailleurs) et la bulle d'aide.
   /accords-toucher-agencement\.spec\.ts/,
+  // Corrections de l'audit, A6 : captures de la page chant et de la setlist.
+  /captures-a6\.spec\.ts/,
   // Chantier 简谱, lot 3 (docs/spec-jianpu-integration.md) : la piste A sur toutes les surfaces.
   /jianpu-integration\.spec\.ts/,
   // Lot 1 du chantier « équipes et groupes » (docs/spec-equipes-sans-poles.md, EQ-D) : l'organigramme sans pôles.

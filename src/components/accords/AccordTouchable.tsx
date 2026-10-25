@@ -31,7 +31,7 @@ function decouper(etiquette: string): Morceau[] {
 
 const REPOS =
   "relative cursor-pointer rounded-[3px] px-[2px] -mx-[2px] outline-none [-webkit-tap-highlight-color:transparent] " +
-  "before:absolute before:-inset-x-[3px] before:-inset-y-[6px] before:content-[''] " +
+  "before:absolute before:left-1/2 before:top-1/2 before:h-10 before:min-h-full before:w-full before:min-w-8 before:-translate-x-1/2 before:-translate-y-1/2 before:content-[''] " +
   "focus-visible:ring-2 focus-visible:ring-ring [@media(hover:hover)]:hover:underline " +
   "active:bg-[color-mix(in_srgb,currentColor_16%,transparent)]";
 

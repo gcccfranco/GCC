@@ -43,6 +43,11 @@ import { getSetlist } from "@/lib/firebase/setlists";
 import { useAuth } from "@/lib/firebase/auth";
 import type { JianpuChords } from "@/types/setList";
 
+/** Téléphone : zone de toucher de 44 px autour d'un bouton plus petit, sans changer son dessin (G6, audit 24/10/2026). */
+const TOUCHER_44 =
+  "max-sm:relative max-sm:before:absolute max-sm:before:left-1/2 max-sm:before:top-1/2 max-sm:before:h-11 max-sm:before:min-h-full " +
+  "max-sm:before:w-full max-sm:before:min-w-11 max-sm:before:-translate-x-1/2 max-sm:before:-translate-y-1/2 max-sm:before:content-['']";
+
 interface SongDetailClientProps {
   song: Song;
 }
@@ -393,10 +398,10 @@ function useVersionDeLaSetlist(slug: string, setlistId: string | null, position:
   const tel = (variante: "rangee" | "tel") => variante === "tel";
   const actions = (variante: "rangee" | "tel") => {
     const classe = tel(variante)
-      ? "raised h-9 shrink-0 gap-1.5 px-3.5 rounded-full text-xs font-semibold bg-card text-foreground hover:bg-card"
-      : "h-9 lg:h-8 min-w-9 lg:min-w-8 px-2.5 rounded-full text-xs font-semibold";
+      ? `raised ${TOUCHER_44} h-9 shrink-0 gap-1.5 px-3.5 rounded-full text-xs font-semibold bg-card text-foreground hover:bg-card`
+      : `${TOUCHER_44} h-9 lg:h-8 min-w-9 lg:min-w-8 px-2.5 rounded-full text-xs font-semibold`;
     const libelle = tel(variante) ? undefined : "libelle-action";
-    const carre = tel(variante) ? `${classe} w-9 px-0` : "h-9 w-9 lg:h-8 lg:w-8 rounded-full";
+    const carre = tel(variante) ? `${classe} w-9 px-0` : `${TOUCHER_44} h-9 w-9 lg:h-8 lg:w-8 rounded-full`;
     return (
       <>
         {youtubeId && (
@@ -464,7 +469,7 @@ function useVersionDeLaSetlist(slug: string, setlistId: string | null, position:
             <Button
               asChild
               variant="secondary"
-              className="retour-chant h-9 lg:h-8 px-2.5 rounded-full text-xs font-semibold text-muted-foreground hover:text-foreground"
+              className={`retour-chant ${TOUCHER_44} h-9 lg:h-8 px-2.5 rounded-full text-xs font-semibold text-muted-foreground hover:text-foreground`}
             >
               {/* Deux volets : le Retour n'est montré que vers une setlist (`data-vers-setlist`,
                   globals.css) ; la liste des chants est déjà à gauche. */}
@@ -484,7 +489,7 @@ function useVersionDeLaSetlist(slug: string, setlistId: string | null, position:
               <Button
                 variant="ghost"
                 size="icon-lg"
-                className="h-9 w-9 lg:h-8 lg:w-8 rounded-full text-sm font-bold"
+                className={`${TOUCHER_44} h-9 w-9 lg:h-8 lg:w-8 rounded-full text-sm font-bold`}
                 onClick={() =>
                   setCustomize((c) => {
                     const s = c.semitones - 1;
@@ -525,7 +530,7 @@ function useVersionDeLaSetlist(slug: string, setlistId: string | null, position:
               <Button
                 variant="ghost"
                 size="icon-lg"
-                className="h-9 w-9 lg:h-8 lg:w-8 rounded-full text-sm font-bold"
+                className={`${TOUCHER_44} h-9 w-9 lg:h-8 lg:w-8 rounded-full text-sm font-bold`}
                 onClick={() =>
                   setCustomize((c) => {
                     const s = c.semitones + 1;
@@ -543,7 +548,7 @@ function useVersionDeLaSetlist(slug: string, setlistId: string | null, position:
                 <Button
                   variant="ghost"
                   size="icon-lg"
-                  className="h-9 w-9 lg:h-8 lg:w-8 rounded-full text-xs font-bold"
+                  className={`${TOUCHER_44} h-9 w-9 lg:h-8 lg:w-8 rounded-full text-xs font-bold`}
                   onClick={() => changeFontScale(-0.1)}
                   disabled={fontScale <= 0.8}
                   aria-label={t("performance.textSmaller")}
@@ -553,7 +558,7 @@ function useVersionDeLaSetlist(slug: string, setlistId: string | null, position:
                 <Button
                   variant="ghost"
                   size="icon-lg"
-                  className="h-9 w-9 lg:h-8 lg:w-8 rounded-full text-sm font-bold"
+                  className={`${TOUCHER_44} h-9 w-9 lg:h-8 lg:w-8 rounded-full text-sm font-bold`}
                   onClick={() => changeFontScale(0.1)}
                   disabled={fontScale >= 1.5}
                   aria-label={t("performance.textLarger")}
@@ -565,7 +570,7 @@ function useVersionDeLaSetlist(slug: string, setlistId: string | null, position:
               {/* Accords */}
               <button aria-label={t("songs.detail.chords") || "Accords"}
                 onClick={() => setCustomize((c) => ({ ...c, showChords: !c.showChords }))}
-                className={`h-9 min-w-9 lg:h-8 lg:min-w-8 px-2.5 rounded-full text-xs font-semibold flex items-center justify-center gap-1.5 transition-all duration-150 ${
+                className={`${TOUCHER_44} h-9 min-w-9 lg:h-8 lg:min-w-8 px-2.5 rounded-full text-xs font-semibold flex items-center justify-center gap-1.5 transition-all duration-150 ${
                       customize.showChords
                         ? "bg-card text-foreground shadow-sm"
                         : "text-muted-foreground hover:text-foreground"
@@ -579,7 +584,7 @@ function useVersionDeLaSetlist(slug: string, setlistId: string | null, position:
               {isZh && (
                     <button aria-label={t("songs.detail.pinyin") || "Pinyin"}
                       onClick={() => setCustomize((c) => ({ ...c, showPinyin: !c.showPinyin }))}
-                      className={`h-9 min-w-9 lg:h-8 lg:min-w-8 px-2.5 rounded-full text-xs font-semibold flex items-center justify-center gap-1.5 transition-all duration-150 ${
+                      className={`${TOUCHER_44} h-9 min-w-9 lg:h-8 lg:min-w-8 px-2.5 rounded-full text-xs font-semibold flex items-center justify-center gap-1.5 transition-all duration-150 ${
                         customize.showPinyin
                           ? "bg-card text-foreground shadow-sm"
                           : "text-muted-foreground hover:text-foreground"
@@ -667,7 +672,7 @@ function useVersionDeLaSetlist(slug: string, setlistId: string | null, position:
               corps={
                 showScore && jianpuScore ? (
                   // Cale K2 (spec jianpu-integration, O14) : au téléphone, la fin de la feuille remonte au-dessus de la barre d'onglets.
-                  <div className="max-sm:pb-[calc(78px+var(--tabbar-bottom))]">
+                  <div data-testid="marge-barre" className="max-sm:[body:has([data-testid=barre-du-bas])_&]:pb-[calc(78px+var(--tabbar-bottom))]">
                     <JianpuSheet
                       entry={jianpuScore}
                       title={song.title}

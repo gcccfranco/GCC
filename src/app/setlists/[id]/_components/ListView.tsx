@@ -176,7 +176,7 @@ export function ListView({
                               <p key={i} className="text-[11px] leading-tight">
                                 <span className="font-medium text-muted-foreground/90">{run.title}</span>
                                 <span className="text-muted-foreground/40"> · </span>
-                                <span className="text-muted-foreground/60">
+                                <span className="text-muted-foreground">
                                   {run.names.map((n, j) => (
                                     <span key={j}>
                                       {j > 0 && " · "}
@@ -197,7 +197,7 @@ export function ListView({
                           {transitions.length > 0 && (
                             <ul className="space-y-0.5">
                               {transitions.map((tr, i) => (
-                                <li key={i} className="text-[11px] text-muted-foreground/60 italic leading-tight flex gap-1">
+                                <li key={i} className="text-[11px] text-muted-foreground italic leading-tight flex gap-1">
                                   <span className={`shrink-0 ${tr.color}`}>↳ {tr.name} :</span>
                                   <span className="whitespace-pre-wrap">{tr.text}</span>
                                 </li>
@@ -229,7 +229,7 @@ export function ListView({
                             </span>
                           </div>
                           {names.length > 0 && (
-                            <p className="text-[11px] text-muted-foreground/60 leading-tight pl-1 mt-0.5">
+                            <p className="text-[11px] text-muted-foreground leading-tight pl-1 mt-0.5">
                               {names.map((n, i) => (
                                 <span key={i}>
                                   {i > 0 && " · "}
@@ -333,7 +333,7 @@ export function ListView({
                     {transitions.length > 0 && (
                       <ul className="mt-1 space-y-0.5">
                         {transitions.map((e, i) => (
-                          <li key={i} className="text-[11px] text-muted-foreground/60 italic leading-tight flex gap-1">
+                          <li key={i} className="text-[11px] text-muted-foreground italic leading-tight flex gap-1">
                             <span className={`shrink-0 ${e.color}`}>↳ {e.name} :</span>
                             <span className="whitespace-pre-wrap">{e.transition}</span>
                           </li>

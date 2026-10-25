@@ -218,6 +218,24 @@ test.describe("bulle d'aide", () => {
     await expect(aide(page)).toHaveCount(0);
   });
 
+  test("en bas de l'écran, centrée sur la colonne de lecture, sans recouvrir la première ligne de paroles (C9)", async ({ page }) => {
+    await page.goto("/songs/abba-pere");
+    await expect(aide(page)).toBeVisible();
+    const vue = page.viewportSize()!;
+    const bulle = (await aide(page).boundingBox())!;
+    expect(bulle.width).toBeLessThanOrEqual(280.5);
+    // Centrée sur la colonne des paroles (en deux volets, la fenêtre entière déborderait sur la liste).
+    const colonne = (await page.locator("[data-copy-line]").first().evaluate((el) => {
+      const r = el.parentElement!.getBoundingClientRect();
+      return r.left + r.width / 2;
+    }));
+    expect(Math.abs(bulle.x + bulle.width / 2 - colonne)).toBeLessThan(2);
+    expect(bulle.y + bulle.height).toBeGreaterThan(vue.height / 2);
+    expect(bulle.y + bulle.height).toBeLessThanOrEqual(vue.height);
+    const ligne = (await page.locator("[data-copy-line]").first().boundingBox())!;
+    expect(ligne.y + ligne.height).toBeLessThanOrEqual(bulle.y);
+  });
+
   test("toucher un accord la ferme et la mémorise ; Échap aussi", async ({ page }) => {
     await page.goto("/songs/abba-pere");
     await expect(aide(page)).toBeVisible();

@@ -342,36 +342,33 @@ function Bulle(props: Omit<React.ComponentProps<typeof PanneauAccord>, "variante
   );
 }
 
-/** La bulle d'aide de la première fois (Q16) : encre, flèche, un seul bouton. */
+/** La bulle d'aide de la première fois (Q16) : encre, en bas de l'écran, centrée, au-dessus de la barre du bas
+ *  quand elle est rendue (C9, audit 24/10/2026). L'accord annoncé ne sert que de déclencheur, plus à placer. */
 function AideBulle({ ancre, onOk }: { ancre: HTMLElement; onOk: () => void }) {
   const { t } = useTranslation();
   const ordinateur = useOrdinateur();
-  const ref = useRef<HTMLDivElement>(null);
-  const [place, setPlace] = useState<Place | null>(null);
-
-  const placer = useCallback(() => {
-    const el = ref.current;
-    if (!el) return;
-    if (!ancre.isConnected) return onOk();
-    const r = ancre.getBoundingClientRect();
-    const w = el.offsetWidth;
-    const h = el.offsetHeight;
-    const clamp = (v: number, min: number, max: number) => Math.max(min, Math.min(max, v));
-    const centre = r.left + r.width / 2;
-    const left = clamp(centre - w / 2, MARGE, Math.max(MARGE, window.innerWidth - w - MARGE));
-    const dessus = r.bottom + ECART + h > window.innerHeight - MARGE && r.top - ECART - h > MARGE;
-    setPlace({ left, top: dessus ? r.top - ECART - h : r.bottom + ECART, fleche: clamp(centre - left, 24, w - 24), dessus });
-  }, [ancre, onOk]);
+  const [surBarre, setSurBarre] = useState(false);
+  // Centre de la colonne de lecture (en deux volets, la fenêtre entière déborderait sur la liste).
+  const [centre, setCentre] = useState<number | null>(null);
 
   useLayoutEffect(() => {
-    placer();
-    window.addEventListener("resize", placer);
-    window.addEventListener("scroll", placer, true);
-    return () => {
-      window.removeEventListener("resize", placer);
-      window.removeEventListener("scroll", placer, true);
+    if (!ancre.isConnected) return onOk();
+    const mesurer = () => {
+      const barre = document.querySelector<HTMLElement>("[data-testid=barre-du-bas]");
+      setSurBarre(!!barre && barre.offsetHeight > 0);
+      const colonne = (ancre.closest("[data-copy-line]")?.parentElement ?? null)?.getBoundingClientRect();
+      setCentre(colonne && colonne.width > 0 ? colonne.left + colonne.width / 2 : null);
     };
-  }, [placer]);
+    mesurer();
+    // La barre peut se rendre après la bulle (session qui arrive) : on la guette tant que la bulle est là.
+    const obs = new MutationObserver(mesurer);
+    obs.observe(document.body, { childList: true, subtree: true });
+    window.addEventListener("resize", mesurer);
+    return () => {
+      obs.disconnect();
+      window.removeEventListener("resize", mesurer);
+    };
+  }, [ancre, onOk]);
 
   useEffect(() => {
     const surTouche = (e: KeyboardEvent) => {
@@ -383,19 +380,19 @@ function AideBulle({ ancre, onOk }: { ancre: HTMLElement; onOk: () => void }) {
 
   return createPortal(
     <div
-      ref={ref}
       role="status"
       data-accords-aide
-      style={{ position: "fixed", width: 280, left: place?.left ?? 0, top: place?.top ?? 0, visibility: place ? "visible" : "hidden" }}
+      style={{
+        position: "fixed",
+        width: `min(280px, 100vw - ${2 * MARGE}px)`,
+        left: centre === null ? "50%" : `clamp(min(140px, 50vw), ${centre}px, max(100vw - 140px, 50vw))`,
+        transform: "translateX(-50%)",
+        bottom: surBarre
+          ? "calc(var(--tabbar-bottom) + 78px + 8px)"
+          : `calc(${3 * MARGE}px + env(safe-area-inset-bottom))`,
+      }}
       className="pointer-events-auto z-50 rounded-[12px] bg-foreground px-4 py-3 text-sm leading-snug text-background shadow-xl"
     >
-      {place && (
-        <span
-          aria-hidden
-          style={{ left: place.fleche - 6 }}
-          className={`absolute h-3 w-3 rotate-45 bg-foreground ${place.dessus ? "-bottom-1.5" : "-top-1.5"}`}
-        />
-      )}
       <p className="relative">{t(ordinateur ? "accords.aideCliquer" : "accords.aideToucher")}</p>
       <div className="relative mt-2 flex justify-end">
         <button

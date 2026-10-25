@@ -80,7 +80,7 @@ const ORDRE = ["Affiche de Noël", "Fond PPT du culte", "Photos du culte", "Budg
 
 /** La veille de la réunion, 18:00 (heure de Paris), sauf mention contraire. */
 async function ouvrir(page: Page, qui: FakeProfile, quand = "2026-10-02T18:00:00", docs: Record<string, Record<string, unknown>> = SUJETS) {
-  await page.clock.setFixedTime(new Date(quand));
+  await page.clock.setFixedTime(new Date(`${quand}+02:00`));
   return signInAs(page, qui, { "evenements/reunion-da": REUNION, ...docs }, "/evenements/reunion-da");
 }
 
@@ -214,7 +214,7 @@ test("un sujet vide ne s'ajoute pas", async ({ page }) => {
 test("borne du début (horloge simulée) : à 19:59 le champ est là ; à 20:00 le jour J il disparaît", async ({ page }) => {
   await ouvrir(page, BRUNO, "2026-10-03T19:59:00");
   await expect(champ(page)).toBeVisible();
-  await page.clock.setFixedTime(new Date("2026-10-03T20:00:00"));
+  await page.clock.setFixedTime(new Date("2026-10-03T20:00:00+02:00"));
   await page.reload();
   await expect(lignes(page)).toHaveCount(4);
   await expect(champ(page)).toHaveCount(0);
@@ -223,7 +223,7 @@ test("borne du début (horloge simulée) : à 19:59 le champ est là ; à 20:00 
 test("borne du début : un ajout tapé avant 20:00 et envoyé après est refusé", async ({ page }) => {
   const db = await ouvrir(page, BRUNO, "2026-10-03T19:59:00");
   await champ(page).fill("Trop tard");
-  await page.clock.setFixedTime(new Date("2026-10-03T20:00:30"));
+  await page.clock.setFixedTime(new Date("2026-10-03T20:00:30+02:00"));
   await carte(page).getByRole("button", { name: "Ajouter", exact: true }).click();
   await expect(carte(page)).toContainText("La réunion a commencé : on n'ajoute plus de sujet.");
   await expect(champ(page)).toHaveCount(0);
@@ -257,7 +257,7 @@ test("non-membre du pôle : ni la réunion ni ses sujets", async ({ page }) => {
 });
 
 test("un évènement qui n'est pas une réunion n'a pas de sujets", async ({ page }) => {
-  await page.clock.setFixedTime(new Date("2026-10-02T18:00:00"));
+  await page.clock.setFixedTime(new Date("2026-10-02T18:00:00+02:00"));
   await signInAs(page, ADMIN, { "evenements/foot": { ...REUNION, titre: "Foot au parc", pour: "eglise" } }, "/evenements/foot");
   await expect(page.getByRole("heading", { name: "Foot au parc" })).toBeVisible();
   await expect(carte(page)).toHaveCount(0);
@@ -371,7 +371,7 @@ test("captures : la carte avant (organisatrice) et après le début (membre)", a
   await ouvrir(page, ALICE);
   await expect(lignes(page)).toHaveCount(4);
   await carte(page).screenshot({ path: path.join(ROOT, "test-results", "reunions-captures", `${info.project.name}-avant.png`) });
-  await page.clock.setFixedTime(new Date("2026-10-03T21:30:00"));
+  await page.clock.setFixedTime(new Date("2026-10-03T21:30:00+02:00"));
   await page.reload();
   await expect(lignes(page)).toHaveCount(4);
   await carte(page).getByRole("checkbox", { name: /^Traité : Affiche/ }).click();
@@ -730,9 +730,9 @@ test("la ligne du petit déj du mercredi (lot U3) suit les autres lignes ; seule
 test("le cron fond la veille et le compte rendu dans le rappel du matin : un seul envoi", () => {
   const route = lire("src/app/api/cron/reminders/route.ts");
   expect(route).toContain("notificationsDuMatin(");
-  // Trois envois : le passage par personne, la ligne du petit déj du mercredi pour les comptes qui n'ont rien d'autre
-  // ce jour-là (lot U3, PD4), et le lundi, le rappel aux référents des noms du planning sans équipe (lot AO-E).
-  expect(route.match(/sendPushToUids\(/g), "le passage par personne, le petit déj seul, puis les noms sans équipe").toHaveLength(3);
+  // Quatre envois : le passage par personne, la ligne du petit déj du mercredi pour les comptes qui n'ont rien d'autre
+  // ce jour-là (lot U3, PD4), et le lundi, le rappel aux référents des noms du planning sans équipe (lot AO-E), puis l'alerte aux admins d'un onglet du Sheet illisible (A2 ter).
+  expect(route.match(/sendPushToUids\(/g), "le passage par personne, le petit déj seul, puis les noms sans équipe, puis l'alerte aux admins d'un onglet illisible (A2 ter)").toHaveLength(4);
   expect(route).toContain("petitDejSeuls = [...petitDej.uids]");
   expect(route, "la veille ne part plus à part").not.toContain("evenementReminder");
   expect(route).toContain('"compteRendu.le"');
@@ -790,7 +790,7 @@ test("compte rendu : un admin hors du pôle le colle aussi, tout lien https:// a
 });
 
 test("compte rendu : pas de carte pour un évènement qui n'est pas une réunion", async ({ page }) => {
-  await page.clock.setFixedTime(new Date("2026-10-04T10:00:00"));
+  await page.clock.setFixedTime(new Date("2026-10-04T10:00:00+02:00"));
   await signInAs(page, ADMIN, { "evenements/foot": { ...REUNION, titre: "Foot au parc", pour: "eglise", compteRendu: CR } }, "/evenements/foot");
   await expect(page.getByRole("heading", { name: "Foot au parc" })).toBeVisible();
   await expect(compteRendu(page)).toHaveCount(0);
@@ -966,7 +966,7 @@ test("le cron : la veille d'une réunion d'équipe va à ses membres, comme cell
 
 /** La veille de la réunion de la Régie, 18:00, sur sa fiche. */
 async function ouvrirRegie(page: Page, qui: FakeProfile, vers = "/evenements/reunion-regie") {
-  await page.clock.setFixedTime(new Date("2026-10-02T18:00:00"));
+  await page.clock.setFixedTime(new Date("2026-10-02T18:00:00+02:00"));
   return signInAs(page, qui, {
     "evenements/reunion-regie": REUNION_REGIE,
     "evenements/reunion-regie/sujets/r1": sujet("Micros HF : piles neuves", ROSE, "2026-09-29T09:00:00Z", 0),
