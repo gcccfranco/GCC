@@ -161,11 +161,9 @@ export function PersonnesVolets() {
     </div>
   );
 
-  const droite = !choisi ? (
-    <p className="py-10 text-sm text-muted-foreground">
-      {d.loadingProfiles ? t("common.loading") : t("admin.membre.aucunProfil")}
-    </p>
-  ) : modif ? (
+  // BO9 : sans personne choisie (liste vide ou sans correspondance), la liste prend seule la colonne et dit
+  // elle-même pourquoi : un seul message.
+  const droite = !choisi ? null : modif ? (
     <div className="max-w-[760px] space-y-4">
       <div className="flex items-center gap-4">
         <Avatar p={choisi} grand />
@@ -199,7 +197,7 @@ export function PersonnesVolets() {
   return (
     <>
       {entete}
-      <DeuxVolets racine={RACINE} liste={liste} premier={droite} largeurListe={400}>
+      <DeuxVolets racine={RACINE} liste={liste} premier={droite} largeurListe={400} colonneSeule={!choisi}>
         {null}
       </DeuxVolets>
     </>

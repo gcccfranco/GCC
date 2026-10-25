@@ -76,7 +76,7 @@ export function SelecteurEspace({ pleineLargeur = false, onChoix }: { pleineLarg
         href={cibles[e]}
         aria-current={courant ? "true" : undefined}
         onClick={onChoix}
-        className={`flex items-center justify-center whitespace-nowrap rounded-full px-3.5 py-1.5 text-[13px] font-semibold transition-[background-color,color] duration-150 ${
+        className={`relative flex items-center justify-center whitespace-nowrap rounded-full px-3.5 py-1.5 after:absolute after:-inset-y-2 after:inset-x-0 after:content-[''] text-[13px] font-semibold transition-[background-color,color] duration-150 ${
           pleineLargeur ? "flex-1" : ""
         } ${courant ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
       >

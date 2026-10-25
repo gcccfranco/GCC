@@ -69,9 +69,17 @@ test("planningsDuBackOffice : ceux qu'on remplit ou publie ; tous pour un admin"
 
 // ─── Messages ────────────────────────────────────────────────────────────────
 
+/** Depuis BO-E1, une Réception vide n'a qu'un message vide : les deux titres supposent un signalement et une proposition. */
+const RECEPTION = {
+  "reports/r1": { kind: "site", title: "Le planning ne s'affiche pas", status: "pending", createdAt: new Date("2026-09-17T10:00:00Z"),
+    description: "Page blanche.", songSlug: "", songTitle: "", pageUrl: "", authorName: "Inès V.", authorId: "uid-ines", authorEmail: "" },
+  "songProposals/p1": { title: "Tu es fidèle", youtubeUrl: "https://example.com/video", pdfUrl: "", status: "pending",
+    createdAt: new Date("2026-09-16T10:00:00Z"), authorName: "Noé T.", authorId: "uid-noe" },
+};
+
 test.describe("B2 : Messages (Réception, Notifier, Questionnaire)", () => {
   test("admin : Réception par défaut, avec les signalements et les propositions de chants", async ({ page }) => {
-    await ouvrir(page, ADMIN, "/back-office/messages");
+    await ouvrir(page, ADMIN, "/back-office/messages", RECEPTION);
     await expect(page.getByRole("heading", { level: 1, name: "Messages" })).toBeVisible();
     const onglets = ongletsRail(page);
     await expect(onglets.getByRole("link")).toHaveText(["Réception", "Notifier", "Questionnaire"]);
@@ -287,7 +295,7 @@ test.describe("B2 : anciennes adresses et menus", () => {
 test("captures : Planning, Équipes, Messages au Back-Office ; la Table dans l'App", async ({ page }, info) => {
   const dossier = "test-results/back-office-captures";
   const capture = (nom: string) => page.screenshot({ path: `${dossier}/b2-${nom}-${info.project.name}.png` });
-  await ouvrir(page, ADMIN, "/back-office/planning/culte");
+  await ouvrir(page, ADMIN, "/back-office/planning/culte", RECEPTION);
   await expect(laCase(page, "2026-09-27", "presidence").getByRole("button")).toBeVisible();
   await capture("planning-culte");
   await page.goto("/back-office/equipes");
@@ -407,33 +415,37 @@ test.describe("B3 : Tâches", () => {
 });
 
 test.describe("B3 : Évènements", () => {
-  test("coordination : Évènements · Pâques · Noël ; ses évènements, sans les réunions", async ({ page }) => {
+  // BO-C : la liste des évènements est le Calendrier (Agenda, filtre « Évènements ») ; les fiches gardent leurs adresses.
+  test("coordination : le Calendrier filtré sur Évènements liste ses évènements, sans les réunions", async ({ page }) => {
     await ouvrirB3(page, COORD, "/back-office/evenements");
-    await expect(page.getByRole("heading", { level: 1, name: "Évènements" })).toBeVisible();
-    await expect(sousParties(page).getByRole("link")).toHaveText(["Évènements", "Pâques", "Noël"]);
-    await expect(sousParties(page).getByRole("link", { name: "Évènements" })).toHaveAttribute("aria-current", "page");
-    await expect(page.getByRole("link", { name: /Fête de rentrée/ })).toHaveAttribute("href", /^\/back-office\/evenements\/fete\/?$/);
-    await expect(page.getByRole("link", { name: /Repas du culte/ })).toBeVisible();
-    await expect(page.getByRole("link", { name: /Réunion (DA|Média)/ })).toHaveCount(0);
-    await expect(page.getByRole("link", { name: "Nouvel évènement" })).toHaveAttribute("href", /^\/back-office\/evenements\/nouveau\/?$/);
+    await expect(page).toHaveURL(/\/back-office\/calendrier\/?\?vue=agenda&filtre=evenements$/);
+    await expect(page.getByRole("heading", { level: 1, name: "Calendrier" })).toBeVisible();
+    // Les entrées de l'Agenda sont des boutons : l'un ouvre le jour, dont le volet mène à la fiche de gestion.
+    await expect(page.getByRole("button", { name: /Repas du culte/ })).toBeVisible();
+    await expect(page.getByRole("button", { name: /Réunion (DA|Média)/ })).toHaveCount(0);
+    await page.getByRole("button", { name: /Fête de rentrée/ }).click();
+    await expect(page.locator('a[href^="/evenements/fete"]').first()).toHaveAttribute("href", /^\/evenements\/fete\/?$/);
   });
 
-  test("président d'un groupe (lot AO, ancien droit d'annonces) : seulement les évènements qu'il organise, sans sous-parties", async ({ page }) => {
+  // BO-C : la liste « seulement les évènements qu'il organise » est retirée ; le Calendrier montre tous les évènements
+  // (la gestion reste réservée à l'organisateur, sur la fiche). Le président retrouve le sien et son Calendrier filtré.
+  test("président d'un groupe (lot AO, ancien droit d'annonces) : retrouve l'évènement qu'il organise dans le Calendrier", async ({ page }) => {
     await ouvrirB3(page, ANNONCEUR, "/back-office/evenements", {
       ...DOCS_EV,
       "evenements/bonte": { ...EV, titre: "Sortie Bonté", pour: "Groupe Bonté", date: "2026-10-25", organisateurUid: "uid-hugo", organisateurNom: "Hugo B." },
     });
-    await expect(page.getByRole("link", { name: /Sortie Bonté/ })).toBeVisible();
-    await expect(page.getByRole("link", { name: /Fête de rentrée/ })).toHaveCount(0);
-    await expect(sousParties(page)).toHaveCount(0);
+    await expect(page).toHaveURL(/\/back-office\/calendrier\/?\?vue=agenda&filtre=evenements$/);
+    await page.getByRole("button", { name: /Sortie Bonté/ }).click();
+    await expect(page.locator('a[href^="/evenements/bonte"]').first()).toBeVisible();
   });
 
-  test("membre du pôle DA : Réunions montre les réunions de son pôle", async ({ page }) => {
+  test("membre du pôle DA : le Calendrier filtré sur Réunions montre les réunions de son pôle", async ({ page }) => {
     await ouvrirB3(page, DA_ORG, "/back-office/reunions");
-    await expect(page.getByRole("link", { name: /Réunion DA/ }).first()).toHaveAttribute("href", /^\/back-office\/reunions\/reu-da\/?$/);
-    await expect(page.getByRole("link", { name: /Réunion Média/ })).toHaveCount(0);
-    await expect(page.getByRole("link", { name: /Fête de rentrée/ })).toHaveCount(0);
-    await expect(page.getByRole("link", { name: "Nouvelle réunion" })).toHaveAttribute("href", /^\/back-office\/reunions\/nouvelle\/?$/);
+    await expect(page).toHaveURL(/\/back-office\/calendrier\/?\?vue=agenda&filtre=reunions$/);
+    await page.getByRole("button", { name: /Réunion DA/ }).first().click();
+    await expect(page.locator('a[href^="/back-office/reunions/reu-da"]').first()).toBeVisible();
+    await expect(page.getByRole("button", { name: /Réunion Média/ })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: /Fête de rentrée/ })).toHaveCount(0);
   });
 
   test("fiche d'une réunion au Back-Office : en-tête de la planche, Modifier, Dupliquer pour la prochaine, cartes", async ({ page }) => {
@@ -628,10 +640,10 @@ test("captures B3 : Tâches, Évènements, Réunions, fiche d'une réunion, Scè
   await expect(page.getByRole("checkbox", { name: /Fond PPT/ })).toBeVisible();
   await capture("taches");
   await page.goto("/back-office/evenements");
-  await expect(page.getByRole("link", { name: /Fête de rentrée/ })).toBeVisible();
+  await expect(page.getByRole("button", { name: /Fête de rentrée/ })).toBeVisible();
   await capture("evenements");
   await page.goto("/back-office/reunions");
-  await expect(page.getByRole("link", { name: /Réunion Média/ })).toBeVisible();
+  await expect(page.getByRole("button", { name: /Réunion Média/ })).toBeVisible();
   await capture("reunions");
   await page.goto("/back-office/reunions/reu-da");
   await expect(page.getByRole("region", { name: "Réunions précédentes" })).toBeVisible();

@@ -165,22 +165,22 @@
   },
   "setlists": {
     "fete": {
-        "propositionAide": "Pas encore au répertoire. Le passage garde la proposition en attente ; elle devient le chant dès qu'il est au répertoire.",
-        "proposerDescription": "Ta proposition est envoyée aux administrateurs. Le passage la garde en attente jusqu'à ce que le chant soit au répertoire.",
-        "proposerEtAjouter": "Proposer et ajouter",
-        "proposer": "Proposer « {{titre}} »",
-        "sansChant": "Sans chant : {{liste}}",
-        "passageN": "passage {{n}}",
-        "musiquesSur": "Musiques et danses : sur la page de {{fete}}",
-        "pageDe": "Page de {{fete}}",
-        "saisiePar": "saisie par {{nom}}",
-        "musiquesEtDanses": "Musiques et danses",
-        "pourLaRegie": "pour la régie",
-        "aucune": "Aucune pour ce passage.",
-        "ordre": "L'ordre de passage",
-        "iSurN": "{{i}} sur {{n}}",
-        "dansLOrdre": "Dans l'ordre de passage",
-        "passageVoisin": "Passage {{i}} · {{qui}}"
+      "propositionAide": "Pas encore au répertoire. Le passage garde la proposition en attente ; elle devient le chant dès qu'il est au répertoire.",
+      "proposerDescription": "Ta proposition est envoyée aux administrateurs. Le passage la garde en attente jusqu'à ce que le chant soit au répertoire.",
+      "proposerEtAjouter": "Proposer et ajouter",
+      "proposer": "Proposer « {{titre}} »",
+      "sansChant": "Sans chant : {{liste}}",
+      "passageN": "passage {{n}}",
+      "musiquesSur": "Musiques et danses : sur la page de {{fete}}",
+      "pageDe": "Page de {{fete}}",
+      "saisiePar": "saisie par {{nom}}",
+      "musiquesEtDanses": "Musiques et danses",
+      "pourLaRegie": "pour la régie",
+      "aucune": "Aucune pour ce passage.",
+      "ordre": "L'ordre de passage",
+      "iSurN": "{{i}} sur {{n}}",
+      "dansLOrdre": "Dans l'ordre de passage",
+      "passageVoisin": "Passage {{i}} · {{qui}}"
     },
     "list": {
       "title": "GCC Louange",
@@ -1373,7 +1373,12 @@
       "periode": "Période",
       "classe": "Classe",
       "vue": "Vue",
-      "trimestres": { "T1": "1er trimestre {{annee}}", "T2": "2e trimestre {{annee}}", "T3": "3e trimestre {{annee}}", "T4": "4e trimestre {{annee}}" },
+      "trimestres": {
+        "T1": "1er trimestre {{annee}}",
+        "T2": "2e trimestre {{annee}}",
+        "T3": "3e trimestre {{annee}}",
+        "T4": "4e trimestre {{annee}}"
+      },
       "casesVidesTrimestre_one": "{{count}} case vide ce trimestre",
       "casesVidesTrimestre_other": "{{count}} cases vides ce trimestre",
       "casesVidesPeriode_one": "{{count}} case vide sur la période",
@@ -2817,7 +2822,15 @@
     "description": "{{note}} {{qualite}}",
     "diese": " dièse",
     "bemol": " bémol",
-    "solfege": { "C": "do", "D": "ré", "E": "mi", "F": "fa", "G": "sol", "A": "la", "B": "si" },
+    "solfege": {
+      "C": "do",
+      "D": "ré",
+      "E": "mi",
+      "F": "fa",
+      "G": "sol",
+      "A": "la",
+      "B": "si"
+    },
     "qualites": {
       "": "majeur",
       "m": "mineur",
@@ -2856,9 +2869,18 @@
       "titre": "Sons du RD-2000",
       "premierChoix": "Premier choix",
       "resume": "{{essentiels}} essentiels sur {{total}}",
-      "vues": { "moment": "Par moment", "sons": "Tous les sons", "parametres": "Paramètres" },
+      "vues": {
+        "moment": "Par moment",
+        "sons": "Tous les sons",
+        "parametres": "Paramètres"
+      },
       "filtre": "Louange",
-      "filtres": { "3": "★★★", "2": "★★ et plus", "1": "★ et plus", "0": "Tous" },
+      "filtres": {
+        "3": "★★★",
+        "2": "★★ et plus",
+        "1": "★ et plus",
+        "0": "Tous"
+      },
       "categorie": "Catégorie",
       "chercher": "Nom ou numéro",
       "aucun": "Aucun son ne correspond.",
@@ -3385,126 +3407,18 @@
     "coordinationAide": "Régler la scène, créer pour toute l'église, modifier tout évènement"
   },
   "tableauDeBord": {
-    "widgets": {
-      "dimanche": "Ce dimanche",
-      "calendrier": "Calendrier",
-      "afaire": "Tâches",
-      "setlists": "Setlists à préparer",
-      "planning": "Plannings",
-      "evenements": "Évènements",
-      "reunions": "Réunions",
-      "chants": "Chants les plus joués",
-      "petitdej": "Petit déj",
-      "scene": "Scène",
-      "comptes": "Comptes",
-      "raccourcis": "Raccourcis"
-    },
-    "aucunWidget": "Aucun widget sur ton tableau de bord.",
-    "lectureImpossible": "Lecture impossible pour l'instant.",
-    "toutVoir": "Tout voir",
-    "voir": "Voir",
     "dimanche": {
-      "titre": "Ce dimanche · {{date}}",
-      "rien": "Rien au planning ce dimanche.",
-      "coupDOeil": "coup d'œil",
-      "pret": "prêt",
       "manque": {
         "setlist": "setlist",
         "presentation": "présentation",
         "petitDej": "petit déj"
       }
     },
-    "afaire": {
-      "enRetard": "{{count}} en retard",
-      "aToi": "à toi",
-      "enRetardDepuis": "en retard depuis le {{date}}",
-      "pour": "pour le {{date}}",
-      "rien": "Rien à faire cette semaine."
-    },
-    "setlists": {
-      "aucune": "aucune",
-      "rien": "Toutes les setlists sont prêtes."
-    },
-    "planning": {
-      "complement": "ceux que tu remplis",
-      "rien": "Aucune case vide.",
-      "aucun": "Aucun planning choisi.",
-      "relancer": "à relancer : {{prenom}}, référent {{role}}",
-      "aucunReferent": "aucun référent à relancer",
-      "copier": "Copier le rappel",
-      "copie": "Copié",
-      "copieLeTexte": "Copie le texte ci-dessous.",
-      "absence": "absence déclarée · prévu au poste {{poste}}",
-      "remplacer": "Remplacer",
-      "plusTard": "Cases vides d'ici le {{date}}",
-      "plusTardRien": "Rien à remplir d'ici le {{date}}",
-      "planning": "Planning"
-    },
-    "evenements": {
-      "fermees": "inscriptions fermées",
-      "externe": "formulaire externe",
-      "rien": "Aucun évènement à venir.",
-      "duSheet": "Sheet",
-      "fermeBientot": "les inscriptions ferment bientôt",
-      "creneauxVides_one": "{{count}} créneau de scène vide",
-      "creneauxVides_other": "{{count}} créneaux de scène vides",
-      "inscrits_one": "{{count}} inscrit",
-      "inscrits_other": "{{count}} inscrits",
-      "placesLabel_one": "{{count}} inscrit sur {{max}}",
-      "placesLabel_other": "{{count}} inscrits sur {{max}}",
-      "scene": "scène"
-    },
-    "reunions": {
-      "rien": "Aucune réunion à venir.",
-      "sujets_one": "{{count}} sujet",
-      "sujets_other": "{{count}} sujets",
-      "sansCompteRendu": "compte rendu de la dernière : pas de lien"
-    },
-    "petitdej": {
-      "libre": "Libre"
-    },
-    "chants": {
-      "setlists_one": "{{count}} setlist",
-      "setlists_other": "{{count}} setlists",
-      "rien": "Aucune setlist publiée sur cette période."
-    },
-    "scene": {
-      "titre": "Scène · {{nom}}",
-      "aucunProgramme": "Aucun programme affiché.",
-      "rien": "Aucun créneau à venir."
-    },
-    "comptes": {
-      "sansCompte": "noms sans compte",
-      "nouveaux": "nouveaux cette semaine"
-    },
     "raccourcis": {
       "tache": "Tâche",
       "evenement": "Évènement",
       "notifier": "Notifier",
       "setlist": "Setlist"
-    },
-    "perso": {
-      "personnaliser": "Personnaliser",
-      "termine": "Terminé",
-      "parDefaut": "Disposition par défaut",
-      "confirmParDefaut": "Remettre la disposition par défaut de ton rôle ?",
-      "confirmParDefautTexte": "Tes widgets, leurs tailles et leurs réglages seront remplacés.",
-      "remettre": "Remettre par défaut",
-      "ajouter": "Ajouter un widget",
-      "tousAffiches": "Tous les widgets sont déjà affichés.",
-      "outils": "Outils de « {{nom}} »",
-      "deplacer": "Déplacer « {{nom}} »",
-      "monter": "Monter",
-      "descendre": "Descendre",
-      "taille": "Taille",
-      "reglages": "Réglages du widget",
-      "retirer": "Retirer le widget",
-      "erreurEcriture": "Disposition non enregistrée : vérifie ta connexion, puis refais le geste.",
-      "instructions": "Pour déplacer un widget : Espace ou Entrée pour le saisir, les flèches pour le déplacer, Espace ou Entrée pour le poser, Échap pour annuler.",
-      "annonceSaisi": "« {{nom}} » saisi, en position {{position}} sur {{total}}.",
-      "annonceDeplace": "« {{nom}} » en position {{position}} sur {{total}}.",
-      "annoncePose": "« {{nom}} » posé en position {{position}} sur {{total}}.",
-      "annonceAnnule": "Déplacement de « {{nom}} » annulé."
     },
     "reglages": {
       "services": "Services",
@@ -3644,7 +3558,6 @@
     },
     "entrees": {
       "afaire": "À faire",
-      "tableau": "Tableau de bord",
       "calendrier": "Calendrier",
       "planning": "Planning",
       "taches": "Tâches",
@@ -3705,47 +3618,9 @@
       }
     },
     "barre": {
-      "accueil": "Accueil",
       "app": "App",
       "appAria": "Revenir à l'app",
-      "messagesNonLus": "Messages, {{count}} non lus",
-      "plus": "Plus",
-      "personnaliser": "Personnaliser la barre",
-      "personnaliserAide": "Choisis les 4 onglets du bas et leur ordre",
-      "titre": "Ta barre du bas",
-      "aide": "Choisis 4 onglets et leur ordre (glisse les poignées). « Plus » reste à droite et donne accès au reste.",
-      "termine": "Terminé",
-      "apercu": "Aperçu",
-      "parDefaut": "Remettre la barre par défaut",
-      "deplacer": "Déplacer {{nom}}",
-      "instructions": "Pour déplacer un onglet : Espace ou Entrée pour le saisir, les flèches pour le déplacer, Espace ou Entrée pour le poser, Échap pour annuler.",
-      "erreur": "Barre non enregistrée : vérifie ta connexion, puis recommence.",
-      "indice": {
-        "tableau": "tableau de bord",
-        "scene": "+ scène",
-        "admins": "admins"
-      }
-    },
-    "plus": {
-      "revenir": "Revenir à l'app",
-      "revenirAide": "Chants, setlists, planning, moi",
-      "contenu": {
-        "tableau": "tes widgets",
-        "calendrier": "services, réunions, évènements",
-        "plannings": "plannings",
-        "sansCompte": "sans compte",
-        "tesEquipes": "tâches de tes équipes",
-        "toutesLesEquipes": "tâches de toutes les équipes",
-        "fiches": "fiches, inscrits, période",
-        "reunions": "sujets, comptes rendus",
-        "scene": "programmes de scène",
-        "organigramme": "organigramme",
-        "personnes": "personnes et droits",
-        "reception": "signalements, propositions de chants",
-        "notifier": "notifier",
-        "questionnaire": "questionnaire",
-        "statistiques": "chants les plus joués"
-      }
+      "messagesNonLus": "Messages, {{count}} non lus"
     },
     "reception": {
       "pourSetlist": "Pour {{setlist}} · identifiant à recopier dans le .cho : {{id}}",
@@ -3825,7 +3700,11 @@
     "duSheet": "Lu dans le Sheet des évènements",
     "sheetInjoignable": "Sheet des évènements injoignable : ses évènements n'apparaissent pas pour l'instant.",
     "fermer": "Fermer",
-    "vue": { "aria": "Affichage", "mois": "Mois", "agenda": "Agenda" },
+    "vue": {
+      "aria": "Affichage",
+      "mois": "Mois",
+      "agenda": "Agenda"
+    },
     "creer": "Créer",
     "nouvelEvenement": "Nouvel évènement le {{date}}",
     "nouvelleTache": "Nouvelle tâche pour le {{date}}",

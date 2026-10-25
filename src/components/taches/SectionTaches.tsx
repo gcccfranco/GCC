@@ -149,6 +149,7 @@ export function SectionTaches({ children }: { children: React.ReactNode }) {
         <DeuxVolets
           racine="/taches"
           largeurListe={400}
+          colonneSeule={!premiere}
           liste={liste}
           premier={premiere ? <FicheTache equipe={premiere.tache.equipe} id={premiere.tache.id} date={premiere.date} /> : null}
         >

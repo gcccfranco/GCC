@@ -246,7 +246,7 @@ function ContenuBarre({
       {/* Logo et label contextuel (comportement gelé : contextuel, rouge du logo, en fondu),
           puis « Réduire » ; barre réduite : le logo seul. */}
       <div className="flex items-center gap-1">
-        <Link href={user ? "/planning" : "/songs"} onClick={onChoix} className="flex min-w-0 items-center gap-2.5 rounded-xl px-1.5 py-0.5">
+        <Link href={user ? "/planning" : "/songs"} onClick={onChoix} className="relative flex min-w-0 items-center gap-2.5 rounded-xl px-1.5 py-0.5 after:absolute after:-inset-y-2 after:inset-x-0 after:content-['']">
           <span className="relative h-[30px] w-[30px] shrink-0 overflow-hidden rounded-full">
             <Image src="/logo.png" alt="GCC Logo" fill sizes="30px" className="object-contain" priority />
           </span>
@@ -332,7 +332,7 @@ function ContenuBarre({
                   <button
                     aria-label={t("common.header.account")}
                     title={displayName}
-                    className="barre-fin h-8 w-8 shrink-0 rounded-full bg-foreground text-background text-[13px] font-bold flex items-center justify-center transition-transform duration-150 active:scale-[.94] cursor-pointer"
+                    className="barre-fin relative h-8 w-8 shrink-0 rounded-full after:absolute after:-inset-1.5 after:content-[''] bg-foreground text-background text-[13px] font-bold flex items-center justify-center transition-transform duration-150 active:scale-[.94] cursor-pointer"
                   >
                     {initial}
                   </button>

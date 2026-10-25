@@ -15,9 +15,7 @@ import { Tile } from "@/components/ui/tile";
 import { adresseDeLaLigne } from "@/components/taches/SectionTaches";
 import { dateCourte } from "@/components/taches/TacheLigne";
 import { BACK_OFFICE } from "@/lib/backOffice";
-import { listEquipes } from "@/lib/firebase/equipes";
 import { useProfile } from "@/lib/firebase/users";
-import { EQUIPES } from "@/lib/equipes/organigramme";
 import { cleNomEquipe } from "@/lib/equipes/table";
 import { leconsDansLOrdre, useCoursIndex, useCoursProgres } from "@/lib/harmonie/useCours";
 import { joursAvant, reunirServices, type ServiceDuJour } from "@/lib/planning/accueil";
@@ -29,7 +27,6 @@ import { todayIso } from "@/lib/scene/dimanches";
 import { aFairePour, lignesDeTache } from "@/lib/taches/echeances";
 import { useTaches } from "@/lib/taches/useTaches";
 import { serviceColor } from "@/lib/serviceColors";
-import type { Equipe } from "@/types/equipe";
 import type { LignePetitDej } from "@/types/petitDej";
 import { styleTexteService } from "@/lib/couleurSombre"
 
@@ -221,50 +218,6 @@ export function ApercuHarmonie({ piano }: { piano: boolean }) {
       )}
       {lien("/harmonie", <Sparkles />, t("moi.apercus.fiches"))}
       {piano && lien("/harmonie/rd2000", <Piano />, t("moi.apercus.sons"))}
-    </Apercu>
-  );
-}
-
-// ── Mes équipes ─────────────────────────────────────────────────────────────────────────────
-
-export function ApercuEquipes({ uid }: { uid: string }) {
-  const { t } = useTranslation();
-  const [equipes, setEquipes] = useState<Equipe[] | null>(null);
-  const [erreur, setErreur] = useState(false);
-  useEffect(() => {
-    let vivant = true;
-    // `strict` : une lecture en échec n'est pas « aucune équipe ».
-    listEquipes({ strict: true }).then((e) => { if (vivant) setEquipes(e); }, () => { if (vivant) setErreur(true); });
-    return () => { vivant = false; };
-  }, []);
-  const chargement = !equipes && !erreur;
-  // Dans l'ordre de l'organigramme ; une équipe hors de la table n'existe pas (EQUIPES).
-  const miennes = EQUIPES.flatMap((def) => {
-    const e = equipes?.find((x) => x.id === def.id);
-    const moi = e?.membres.find((m) => m.uid === uid);
-    return e && moi ? [{ id: def.id, moi, nombre: e.membres.length }] : [];
-  });
-  return (
-    <Apercu titre={t("moi.apercus.mesEquipes")} lien={{ href: "/equipes", label: t("moi.apercus.organigramme") }} chargement={chargement}>
-      {chargement && <Squelette />}
-      {erreur && <Vide>{t("moi.apercus.illisible")}</Vide>}
-      {equipes && miennes.length === 0 && <Vide>{t("moi.apercus.aucuneEquipe")}</Vide>}
-      {miennes.slice(0, 3).map(({ id, moi, nombre }) => {
-        const nom = t(`equipes.court.${id}`);
-        const role = moi.referent ? t("equipes.referent") : moi.groupe || moi.mention || t("moi.apercus.membre");
-        return (
-          <Link key={id} href={`/equipes/${id}`} data-testid="apercu-ligne" className={`${LIGNE} min-h-[44px]`}>
-            <span aria-hidden className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-secondary text-[12px] font-semibold text-foreground">
-              {nom.charAt(0).toUpperCase()}
-            </span>
-            <span className="min-w-0 flex-1">
-              <span className="block truncate text-[15px] font-semibold text-foreground">{nom}</span>
-              <span className={SOUS}>{`${role} · ${t("moi.apercus.membres", { count: nombre })}`}</span>
-            </span>
-            <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground/60" aria-hidden />
-          </Link>
-        );
-      })}
     </Apercu>
   );
 }

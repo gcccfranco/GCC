@@ -130,7 +130,7 @@ test.describe("Barre du bas (BO2) : la barre", () => {
   test("la page « Plus » n'existe plus : son adresse ramène à /back-office", async ({ page }) => {
     await ouvrir(page, ADMIN, {}, "/back-office/plus");
     await expect(page).toHaveURL(/\/back-office\/?$/);
-    await expect(page.getByRole("heading", { name: "Tableau de bord" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "À faire" })).toBeVisible();
     await expect(page.getByTestId("plus-entree")).toHaveCount(0);
   });
 
@@ -209,5 +209,38 @@ test.describe("Barre du bas (BO4) : un simple membre d'équipe", () => {
     await expect(page.getByTestId("icone-messages")).toHaveCount(0);
     await expect(page.getByRole("group", { name: "Choisir l'espace" })).toHaveCount(0);
     await expect(barre(page).getByRole("link", { name: "À faire" })).toHaveCount(0);
+  });
+});
+
+// ─── Cibles de l'en-tête (BO-E2) ─────────────────────────────────────────────────
+
+test.describe("En-tête du back-office (BO-E2) : cibles de toucher de 44 × 44 px", () => {
+  test("sélecteur App / Back-Office, logo et Compte : la zone qui répond fait 44 px, sans changer le dessin", async ({ page }) => {
+    await sansSheet(page);
+    await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
+    await signInAs(page, ADMIN, {}, "/back-office");
+    await expect(page.getByRole("group", { name: "Choisir l'espace" }).filter({ visible: true }).first()).toBeVisible();
+    const cibles = [
+      page.getByRole("group", { name: "Choisir l'espace" }).filter({ visible: true }).first().getByRole("link", { name: "App" }),
+      page.getByRole("group", { name: "Choisir l'espace" }).filter({ visible: true }).first().getByRole("link", { name: "Back-Office" }),
+      page.getByRole("link", { name: /GCC Logo/ }).filter({ visible: true }).first(),
+      page.getByRole("button", { name: "Compte" }).filter({ visible: true }).first(),
+    ];
+    for (const cible of cibles) {
+      // Le bouton Compte n'est pas dans l'en-tête du téléphone : seules les cibles posées sont mesurées.
+      if (!(await cible.count())) continue;
+      await expect(cible).toBeVisible();
+      // La zone de toucher est le ::after posé sur la cible, hors dessin (`elementFromPoint` serait gêné par le
+      // voyant de Next en développement) : sa taille mesurée, et elle doit contenir la cible.
+      const zone = await cible.evaluate((el) => {
+        const r = el.getBoundingClientRect();
+        const z = getComputedStyle(el, "::after");
+        const w = parseFloat(z.width), h = parseFloat(z.height);
+        return { position: z.position, w: Math.max(w || 0, r.width), h: Math.max(h || 0, r.height), dessinW: r.width, dessinH: r.height };
+      });
+      const nom = await cible.evaluate((el) => el.outerHTML.slice(0, 60));
+      expect(zone.w, nom).toBeGreaterThanOrEqual(44);
+      expect(zone.h, nom).toBeGreaterThanOrEqual(44);
+    }
   });
 });

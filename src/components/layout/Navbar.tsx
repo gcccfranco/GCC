@@ -122,7 +122,7 @@ export function Navbar() {
         <FondDeBarre />
         <div className="max-w-[1080px] mx-auto px-4 h-full flex items-center gap-3">
           {/* Brand */}
-          <Link href={user ? "/planning" : "/songs"} className="flex items-center gap-2.5 shrink-0">
+          <Link href={user ? "/planning" : "/songs"} className="relative flex items-center gap-2.5 shrink-0 after:absolute after:-inset-1 after:content-['']">
             <div className="relative h-9 w-9 rounded-full overflow-hidden shadow-sm">
               <Image
                 src="/logo.png"
@@ -255,7 +255,7 @@ export function Navbar() {
                   <button
                     aria-label={t("common.header.account")}
                     title={displayName}
-                    className="hidden lg:flex h-9 w-9 shrink-0 rounded-full bg-foreground text-background text-sm font-bold items-center justify-center transition-transform duration-150 active:scale-[.94] cursor-pointer"
+                    className="relative hidden lg:flex h-9 w-9 shrink-0 rounded-full after:absolute after:-inset-1 after:content-[''] bg-foreground text-background text-sm font-bold items-center justify-center transition-transform duration-150 active:scale-[.94] cursor-pointer"
                   >
                     {initial}
                   </button>

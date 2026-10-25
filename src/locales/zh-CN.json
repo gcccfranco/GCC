@@ -165,22 +165,22 @@
   },
   "setlists": {
     "fete": {
-        "propositionAide": "还不在诗歌库中。本节目会保留这份推荐；诗歌一进入诗歌库，它就变成该诗歌。",
-        "proposerDescription": "你的推荐会发给管理员。诗歌进入诗歌库之前，本节目会保留这份推荐。",
-        "proposerEtAjouter": "推荐并加入",
-        "proposer": "推荐《{{titre}}》",
-        "sansChant": "没有诗歌：{{liste}}",
-        "passageN": "第 {{n}} 个节目",
-        "musiquesSur": "音乐和舞蹈：见{{fete}}页面",
-        "pageDe": "{{fete}}页面",
-        "saisiePar": "由 {{nom}} 填写",
-        "musiquesEtDanses": "音乐和舞蹈",
-        "pourLaRegie": "供音控使用",
-        "aucune": "本节目没有。",
-        "ordre": "上场顺序",
-        "iSurN": "第 {{i}} / {{n}} 个",
-        "dansLOrdre": "在上场顺序中",
-        "passageVoisin": "第 {{i}} 个节目 · {{qui}}"
+      "propositionAide": "还不在诗歌库中。本节目会保留这份推荐；诗歌一进入诗歌库，它就变成该诗歌。",
+      "proposerDescription": "你的推荐会发给管理员。诗歌进入诗歌库之前，本节目会保留这份推荐。",
+      "proposerEtAjouter": "推荐并加入",
+      "proposer": "推荐《{{titre}}》",
+      "sansChant": "没有诗歌：{{liste}}",
+      "passageN": "第 {{n}} 个节目",
+      "musiquesSur": "音乐和舞蹈：见{{fete}}页面",
+      "pageDe": "{{fete}}页面",
+      "saisiePar": "由 {{nom}} 填写",
+      "musiquesEtDanses": "音乐和舞蹈",
+      "pourLaRegie": "供音控使用",
+      "aucune": "本节目没有。",
+      "ordre": "上场顺序",
+      "iSurN": "第 {{i}} / {{n}} 个",
+      "dansLOrdre": "在上场顺序中",
+      "passageVoisin": "第 {{i}} 个节目 · {{qui}}"
     },
     "list": {
       "title": "GCC 敬拜诗歌",
@@ -1344,7 +1344,12 @@
       "periode": "时段",
       "classe": "班级",
       "vue": "视图",
-      "trimestres": { "T1": "{{annee}}年第一季度", "T2": "{{annee}}年第二季度", "T3": "{{annee}}年第三季度", "T4": "{{annee}}年第四季度" },
+      "trimestres": {
+        "T1": "{{annee}}年第一季度",
+        "T2": "{{annee}}年第二季度",
+        "T3": "{{annee}}年第三季度",
+        "T4": "{{annee}}年第四季度"
+      },
       "casesVidesTrimestre_other": "本季度 {{count}} 个空缺",
       "casesVidesPeriode_other": "本时段 {{count}} 个空缺",
       "casesVidesAnnee_other": "今年 {{count}} 个空缺"
@@ -2782,7 +2787,15 @@
     "description": "{{note}} {{qualite}}",
     "diese": "#",
     "bemol": "b",
-    "solfege": { "C": "C", "D": "D", "E": "E", "F": "F", "G": "G", "A": "A", "B": "B" },
+    "solfege": {
+      "C": "C",
+      "D": "D",
+      "E": "E",
+      "F": "F",
+      "G": "G",
+      "A": "A",
+      "B": "B"
+    },
     "qualites": {
       "": "大三和弦",
       "m": "小三和弦",
@@ -2821,9 +2834,18 @@
       "titre": "RD-2000 音色",
       "premierChoix": "首选",
       "resume": "精选 {{essentiels}} 个（共 {{total}} 个）",
-      "vues": { "moment": "按环节", "sons": "全部音色", "parametres": "参数" },
+      "vues": {
+        "moment": "按环节",
+        "sons": "全部音色",
+        "parametres": "参数"
+      },
       "filtre": "敬拜",
-      "filtres": { "3": "★★★", "2": "★★ 以上", "1": "★ 以上", "0": "全部" },
+      "filtres": {
+        "3": "★★★",
+        "2": "★★ 以上",
+        "1": "★ 以上",
+        "0": "全部"
+      },
       "categorie": "类别",
       "chercher": "名称或编号",
       "aucun": "没有符合的音色。",
@@ -3344,121 +3366,18 @@
     "coordinationAide": "管理舞台、为全教会创建、修改所有活动"
   },
   "tableauDeBord": {
-    "widgets": {
-      "dimanche": "本主日",
-      "calendrier": "日历",
-      "afaire": "任务",
-      "setlists": "待准备的歌单",
-      "planning": "排班表",
-      "evenements": "活动",
-      "reunions": "会议",
-      "chants": "最常唱的诗歌",
-      "petitdej": "早餐",
-      "scene": "舞台",
-      "comptes": "账号",
-      "raccourcis": "快捷方式"
-    },
-    "aucunWidget": "仪表盘上没有小组件。",
-    "lectureImpossible": "暂时无法读取。",
-    "toutVoir": "查看全部",
-    "voir": "查看",
     "dimanche": {
-      "titre": "本主日 · {{date}}",
-      "rien": "本主日排班表上没有安排。",
-      "coupDOeil": "一览",
-      "pret": "已就绪",
       "manque": {
         "setlist": "歌单",
         "presentation": "演示文稿",
         "petitDej": "早餐"
       }
     },
-    "afaire": {
-      "enRetard": "{{count}} 项逾期",
-      "aToi": "你的",
-      "enRetardDepuis": "自 {{date}} 起逾期",
-      "pour": "截止 {{date}}",
-      "rien": "本周没有待办。"
-    },
-    "setlists": {
-      "aucune": "未准备",
-      "rien": "所有歌单都已准备好。"
-    },
-    "planning": {
-      "complement": "你负责的",
-      "rien": "没有空缺。",
-      "aucun": "未选择排班表。",
-      "relancer": "需提醒：{{prenom}}（{{role}}负责人）",
-      "aucunReferent": "没有可提醒的负责人",
-      "copier": "复制提醒",
-      "copie": "已复制",
-      "copieLeTexte": "请复制下面的文字。",
-      "absence": "已请假 · 排在 {{poste}}",
-      "remplacer": "替换",
-      "plusTard": "截至{{date}}的空缺",
-      "plusTardRien": "截至{{date}}无空缺",
-      "planning": "排班表"
-    },
-    "evenements": {
-      "fermees": "报名已截止",
-      "externe": "外部表单",
-      "rien": "近期没有活动。",
-      "duSheet": "活动表",
-      "fermeBientot": "报名即将截止",
-      "creneauxVides_other": "{{count}} 个舞台时段空缺",
-      "inscrits_other": "{{count}} 人报名",
-      "placesLabel_other": "已报名 {{count}} 人，共 {{max}} 个名额",
-      "scene": "舞台"
-    },
-    "reunions": {
-      "rien": "暂无即将举行的会议。",
-      "sujets_other": "{{count}} 个议题",
-      "sansCompteRendu": "上次会议：未附纪要链接"
-    },
-    "petitdej": {
-      "libre": "空缺"
-    },
-    "chants": {
-      "setlists_other": "{{count}} 份歌单",
-      "rien": "该时段没有已发布的歌单。"
-    },
-    "scene": {
-      "titre": "舞台 · {{nom}}",
-      "aucunProgramme": "没有显示中的节目。",
-      "rien": "近期没有排练时段。"
-    },
-    "comptes": {
-      "sansCompte": "无账号的名字",
-      "nouveaux": "本周新账号"
-    },
     "raccourcis": {
       "tache": "任务",
       "evenement": "活动",
       "notifier": "通知",
       "setlist": "歌单"
-    },
-    "perso": {
-      "personnaliser": "自定义",
-      "termine": "完成",
-      "parDefaut": "恢复默认布局",
-      "confirmParDefaut": "恢复你角色的默认布局？",
-      "confirmParDefautTexte": "你的小组件、大小和设置都将被替换。",
-      "remettre": "恢复默认",
-      "ajouter": "添加小组件",
-      "tousAffiches": "所有小组件都已显示。",
-      "outils": "“{{nom}}”工具",
-      "deplacer": "移动“{{nom}}”",
-      "monter": "上移",
-      "descendre": "下移",
-      "taille": "大小",
-      "reglages": "小组件设置",
-      "retirer": "移除小组件",
-      "erreurEcriture": "布局未保存：请检查网络连接后再试一次。",
-      "instructions": "移动小组件：按空格或回车拿起，用方向键移动，再按空格或回车放下，按 Esc 取消。",
-      "annonceSaisi": "已拿起“{{nom}}”，位置 {{position}} / {{total}}。",
-      "annonceDeplace": "“{{nom}}”位于 {{position}} / {{total}}。",
-      "annoncePose": "“{{nom}}”已放在 {{position}} / {{total}}。",
-      "annonceAnnule": "已取消移动“{{nom}}”。"
     },
     "reglages": {
       "services": "服事",
@@ -3595,7 +3514,6 @@
     },
     "entrees": {
       "afaire": "待办",
-      "tableau": "仪表盘",
       "calendrier": "日历",
       "planning": "排班表",
       "taches": "任务",
@@ -3656,47 +3574,9 @@
       }
     },
     "barre": {
-      "accueil": "首页",
       "app": "应用",
       "appAria": "返回应用",
-      "messagesNonLus": "消息，{{count}} 条未读",
-      "plus": "更多",
-      "personnaliser": "自定义底部栏",
-      "personnaliserAide": "选择底部的 4 个标签及其顺序",
-      "titre": "你的底部栏",
-      "aide": "选择 4 个标签并排好顺序（拖动手柄）。「更多」固定在最右边，可进入其余部分。",
-      "termine": "完成",
-      "apercu": "预览",
-      "parDefaut": "恢复默认底部栏",
-      "deplacer": "移动{{nom}}",
-      "instructions": "移动标签：按空格或回车拿起，用方向键移动，再按空格或回车放下，按 Esc 取消。",
-      "erreur": "底部栏未保存：请检查网络后重试。",
-      "indice": {
-        "tableau": "仪表盘",
-        "scene": "+ 舞台",
-        "admins": "管理员"
-      }
-    },
-    "plus": {
-      "revenir": "返回应用",
-      "revenirAide": "诗歌、歌单、排班表、我",
-      "contenu": {
-        "tableau": "你的小组件",
-        "calendrier": "服事、会议、活动",
-        "plannings": "排班表",
-        "sansCompte": "无账号",
-        "tesEquipes": "你所在团队的任务",
-        "toutesLesEquipes": "所有团队的任务",
-        "fiches": "活动、报名、报名时间",
-        "reunions": "议题、会议记录",
-        "scene": "舞台节目",
-        "organigramme": "组织架构",
-        "personnes": "人员与权限",
-        "reception": "问题反馈、诗歌推荐",
-        "notifier": "发送通知",
-        "questionnaire": "问卷",
-        "statistiques": "最常唱的诗歌"
-      }
+      "messagesNonLus": "消息，{{count}} 条未读"
     },
     "reception": {
       "pourSetlist": "用于 {{setlist}} · 请抄入 .cho 的标识：{{id}}",
@@ -3774,7 +3654,11 @@
     "duSheet": "读取自活动表格（Sheet）",
     "sheetInjoignable": "无法读取活动表格（Sheet）：其中的活动暂时不显示。",
     "fermer": "关闭",
-    "vue": { "aria": "视图", "mois": "月", "agenda": "日程" },
+    "vue": {
+      "aria": "视图",
+      "mois": "月",
+      "agenda": "日程"
+    },
     "creer": "新建",
     "nouvelEvenement": "新建{{date}}的活动",
     "nouvelleTache": "新建{{date}}截止的任务",

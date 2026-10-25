@@ -380,6 +380,8 @@ test("ordinateur — le « ? » ouvre l'aide ; Échap la ferme, rend le focus au
   await aide.click()
   await expect(aide).toHaveAttribute("aria-expanded", "true")
   await expect(page.getByText("Au clavier", { exact: false })).toBeVisible()
+  // BO-E2 : l'aide s'ouvre dans une zone vive posée d'avance, donc annoncée aux lecteurs d'écran.
+  await expect(page.getByRole("status").filter({ hasText: "Au clavier" })).toHaveAttribute("aria-live", "polite")
   await page.keyboard.press("Escape")
   await expect(page.getByText("Au clavier", { exact: false })).toHaveCount(0)
   await expect(aide).toBeFocused()

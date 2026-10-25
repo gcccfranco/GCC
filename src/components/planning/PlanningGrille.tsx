@@ -1085,7 +1085,10 @@ export function PlanningGrille({
           >
             ?
           </button>
-          {aideOuverte && <p id={idAide} className="mt-1.5 text-xs text-muted-foreground">{t("planning.gestes.clavier")}</p>}
+          {/* Zone vive posée d'avance : l'aide qui s'y glisse est lue par les lecteurs d'écran (un ajout dans une zone absente ne l'est pas). */}
+          <div aria-live="polite" role="status">
+            {aideOuverte && <p id={idAide} className="mt-1.5 text-xs text-muted-foreground">{t("planning.gestes.clavier")}</p>}
+          </div>
         </div>
       )}
 

@@ -834,7 +834,7 @@ test.describe("C3 : la page du calendrier en Mois", () => {
     await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
     await sheets(page);
     await signInAs(page, P_ADMIN, DOCS, "/back-office");
-    await expect(page.getByRole("heading", { name: "Tableau de bord" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "À faire" })).toBeVisible();
     const lien = page.getByRole("link", { name: "Calendrier" }).filter({ visible: true }).first();
     await expect(lien).toHaveAttribute("href", /^\/back-office\/calendrier\/?$/);
     await lien.click();

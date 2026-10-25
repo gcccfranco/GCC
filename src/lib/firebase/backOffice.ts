@@ -1,43 +1,12 @@
 "use client";
 
 // Réglages du Back-Office de chacun (lot U6, docs/spec-back-office.md, Q5) : document
-// `backOffice/{uid}` (disposition du tableau de bord, barre du bas), que l'intéressé
+// `backOffice/{uid}`, que l'intéressé
 // écrit lui-même (B5) — le profil `users/{uid}` est verrouillé. Patron d'`onboarding/{uid}`. REST.
 
 import { delaiMax } from "@/lib/delaiMax";
-import { FS_BASE, authHeader, fromFsValue, toFsFields, type RawDoc } from "@/lib/firebase/setlists";
-import { VERSION_TABLEAU } from "@/lib/tableauDeBord/disposition";
-import type { Entree, PreferencesBackOffice, Widget } from "@/types/backOffice";
-
-/**
- * Enregistre la disposition du tableau de bord (B5, à chaque geste, Q12) ; `null` la retire
- * (« Disposition par défaut » : absente = défaut du rôle, recalculé, jamais recopié). Seuls
- * `tableauDeBord`, `versionTableau` (T10, toujours écrite) et `majLe` sont touchés : la barre du bas (B6) reste. Lève si refusé.
- */
-export async function ecrireTableauDeBord(uid: string, widgets: Widget[] | null): Promise<void> {
-  const masque = new URLSearchParams([["updateMask.fieldPaths", "tableauDeBord"], ["updateMask.fieldPaths", "versionTableau"], ["updateMask.fieldPaths", "majLe"]]);
-  const res = await fetch(`${FS_BASE}/backOffice/${uid}?${masque}`, {
-    method: "PATCH",
-    headers: { "Content-Type": "application/json", ...(await authHeader()) },
-    body: JSON.stringify({ fields: toFsFields({ ...(widgets ? { tableauDeBord: widgets } : {}), versionTableau: VERSION_TABLEAU, majLe: new Date().toISOString() }) }),
-  });
-  if (!res.ok) throw new Error(`backOffice/${uid} : ${res.status}`);
-}
-
-/**
- * Enregistre la barre du bas (B6, à « Terminé ») ; `null` la retire (« Remettre la barre par
- * défaut » : absente = défaut, recalculé). Seuls `barreDuBas` et `majLe` sont touchés : la
- * disposition du tableau de bord reste. Lève si refusé.
- */
-export async function ecrireBarreDuBas(uid: string, barre: Entree[] | null): Promise<void> {
-  const masque = new URLSearchParams([["updateMask.fieldPaths", "barreDuBas"], ["updateMask.fieldPaths", "majLe"]]);
-  const res = await fetch(`${FS_BASE}/backOffice/${uid}?${masque}`, {
-    method: "PATCH",
-    headers: { "Content-Type": "application/json", ...(await authHeader()) },
-    body: JSON.stringify({ fields: toFsFields({ ...(barre ? { barreDuBas: barre } : {}), majLe: new Date().toISOString() }) }),
-  });
-  if (!res.ok) throw new Error(`backOffice/${uid} : ${res.status}`);
-}
+import { FS_BASE, authHeader, fromFsValue, type RawDoc } from "@/lib/firebase/setlists";
+import type { PreferencesBackOffice } from "@/types/backOffice";
 
 /** Le document tel qu'enregistré, ou `null` : absent (404), illisible, refusé (règle pas
  *  encore publiée) ou sans réponse au bout de 4 s (la barre du bas l'attend : jamais sans
