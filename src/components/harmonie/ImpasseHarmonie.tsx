@@ -14,5 +14,5 @@ export function ImpasseHarmonie() {
   const sortie = user
     ? { href: "/songs", label: t("common.notFound.cta") }
     : { href: `/login?from=${chemin}`, label: t("mesServices.login") };
-  return <Impasse icone={Lock} titre={t("common.noAccess")} sortie={sortie} />;
+  return <Impasse icone={Lock} titre={t("common.noAccess")} aide={user ? t("common.noAccessAide") : undefined} sortie={sortie} />;
 }

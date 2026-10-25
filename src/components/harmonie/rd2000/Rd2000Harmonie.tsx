@@ -14,6 +14,7 @@ import { useMemo, useState } from "react";
 import { usePathname } from "next/navigation";
 import { useTranslation } from "react-i18next";
 import { DeuxVolets } from "@/components/layout/DeuxVolets";
+import { ChampRecherche } from "@/components/layout/ChampRecherche";
 import { OngletsRail, Pilules } from "@/components/layout/Onglets";
 import { Group, GroupRow } from "@/components/ui/group";
 import { SonRd2000 } from "@/components/harmonie/rd2000/SonRd2000";
@@ -154,13 +155,11 @@ function TousLesSons({ filtres, setFiltres, parCategorie, ouvert }: {
 
   return (
     <div className="space-y-4" data-vue="sons">
-      <input
-        type="search"
+      <ChampRecherche
         value={filtres.recherche}
-        onChange={(e) => setFiltres({ ...filtres, recherche: e.target.value })}
+        onChange={(v) => setFiltres({ ...filtres, recherche: v })}
         placeholder={t("harmonie.rd2000.chercher")}
-        aria-label={t("harmonie.rd2000.chercher")}
-        className="h-11 w-full rounded-xl bg-card px-4 text-[17px] outline-none placeholder:text-muted-foreground focus:ring-2 focus:ring-ring/30"
+        label={t("harmonie.rd2000.chercher")}
       />
       {!q && (
         <div className="space-y-2">

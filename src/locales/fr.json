@@ -1,6 +1,7 @@
 {
   "common": {
     "noAccess": "Cette page est réservée aux musiciens de l'équipe.",
+    "noAccessAide": "Demande à un responsable de Louange de t'ajouter.",
     "header": {
       "title": "GCC Louange",
       "songs": "Chants",
@@ -32,7 +33,8 @@
       "save": "Enregistrer",
       "edit": "Modifier",
       "add": "Ajouter",
-      "back": "Retour"
+      "back": "Retour",
+      "clearSearch": "Effacer la recherche"
     },
     "loading": "Chargement…",
     "languages": {

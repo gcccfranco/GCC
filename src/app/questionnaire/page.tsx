@@ -191,7 +191,7 @@ export default function QuestionnairePage() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-background flex items-center">
+      <div className="min-h-screen bg-background">
         <Impasse
           icone={MessageSquareHeart}
           titre={t("survey.loginRequired")}

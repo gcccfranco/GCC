@@ -29,7 +29,7 @@ export function AncienTableau() {
   let lastMonth = ""
 
   return (
-    <div className="max-w-lg space-y-4">
+    <div className="space-y-4">
       <div className="flex flex-wrap gap-3 items-center justify-between">
         <h2 className="text-base font-bold text-foreground">{t("planning.pages.table")}</h2>
         {status === "loading" && <span className="text-xs text-muted-foreground">{t("common.loading")}</span>}

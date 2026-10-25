@@ -94,3 +94,62 @@ test("un chant FR et un chant ZH s'ouvrent toujours", async ({ page }) => {
   await page.goto("/songs/" + encodeURIComponent("一切歌颂赞美"));
   await expect(page.getByRole("heading", { level: 1 }).first()).toBeVisible();
 });
+
+// ─── Tranche B4b : ChampRecherche, Impasse de Mes services ──────────────────────────────────────
+
+const SANS_NOM: FakeProfile = { uid: "u-lou", email: "lou.test@example.com", firstName: "Lou", lastName: "V." };
+const item = (songSlug: string, position: number) => ({
+  songSlug, position, keyOverride: null, showChords: true, showPinyin: true, useJianpu: false,
+  structureOverride: null, sectionNotes: {}, notes: "",
+});
+const SETLISTS = {
+  "setlists/sl-b4": {
+    title: "Culte test", leader: "Noé T.", category: "Culte Francophone", date: "2026-10-18", language: "mixed",
+    notes: "", ownerId: "uid-owner", isPrivate: false, items: [item("hosanna", 1)],
+  },
+};
+
+/** Le champ est un `.raised` : fond opaque (il se voit en clair comme en sombre), et son × vide la saisie. */
+async function verifierChamp(page: Page, nom: string, theme: "light" | "dark") {
+  const champ = page.getByRole("searchbox", { name: nom }).filter({ visible: true }).first();
+  await expect(champ).toBeVisible();
+  const fond = await champ.evaluate((el) => getComputedStyle(el).backgroundColor);
+  expect(fond, `fond du champ (${theme})`).not.toMatch(/^(transparent|rgba\(0, 0, 0, 0\))$/);
+  await champ.fill("abba");
+  const effacer = page.getByRole("button", { name: "Effacer la recherche" }).filter({ visible: true });
+  await expect(effacer).toHaveCount(1);
+  const zone = (await effacer.boundingBox())!;
+  expect(zone.width, "zone de toucher du ×").toBeGreaterThanOrEqual(44);
+  expect(zone.height).toBeGreaterThanOrEqual(44);
+  await effacer.click();
+  await expect(champ).toHaveValue("");
+  await expect(effacer).toHaveCount(0);
+}
+
+for (const theme of ["light", "dark"] as const) {
+  test(`ChampRecherche sur /songs (${theme}) : fond visible, × qui vide le champ`, async ({ page }) => {
+    await page.emulateMedia({ colorScheme: theme });
+    await page.goto("/songs");
+    await verifierChamp(page, "Rechercher un chant ou un artiste", theme);
+  });
+
+  test(`ChampRecherche sur /setlists (${theme}) : fond visible, × qui vide le champ`, async ({ page }) => {
+    await page.emulateMedia({ colorScheme: theme });
+    await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
+    await page.route(/docs\.google\.com\/spreadsheets/, (route) => route.fulfill({ status: 200, contentType: "text/csv", body: "" }));
+    await signInAs(page, MEMBRE, SETLISTS, "/setlists");
+    await verifierChamp(page, "Rechercher par titre, leader, date…", theme);
+  });
+}
+
+test("Mes services sans nom de planning : une Impasse avec le bouton plein « Mon profil »", async ({ page }) => {
+  await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
+  await page.route(/docs\.google\.com\/spreadsheets/, (route) => route.fulfill({ status: 200, contentType: "text/csv", body: "" }));
+  await signInAs(page, SANS_NOM, {}, "/mes-services");
+  const phrase = page.getByText("Choisis ton nom de planning dans ton profil pour voir tes services ici.");
+  await expect(phrase).toBeVisible();
+  const bouton = page.getByRole("link", { name: "Mon profil" });
+  await expect(bouton).toHaveAttribute("href", /^\/profil\/?$/);
+  expect(await bouton.evaluate((el) => getComputedStyle(el).backgroundColor), "bouton plein").not.toMatch(/^(transparent|rgba\(0, 0, 0, 0\))$/);
+  expect(await bouton.evaluate((el) => getComputedStyle(el).textDecorationLine), "plus souligné").toBe("none");
+});

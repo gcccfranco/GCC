@@ -7,7 +7,7 @@ import { useState, useMemo, useEffect, useLayoutEffect, useRef } from "react";
 import { useFonduLateral } from "@/hooks/useFonduLateral";
 import Link from "next/link";
 import Fuse from "fuse.js";
-import { Search, X } from "lucide-react";
+import { ChampRecherche } from "@/components/layout/ChampRecherche";
 import { Button } from "@/components/ui/button";
 import { KeyPill } from "@/components/ui/key-pill";
 import { useTranslation } from "react-i18next";
@@ -253,27 +253,14 @@ export function SongListClient({ songs, themes, actif = null, erreur = false, on
     // pour que le champ ne change pas de largeur pendant la frappe.
     <div className="relative pr-7" onClickCapture={saveScrollPos}>
       {/* Barre de recherche */}
-      <div className="relative mb-3.5">
-        <Search className="absolute left-[14px] top-1/2 -translate-y-1/2 h-[18px] w-[18px] text-muted-foreground/70 pointer-events-none" />
-        <input
-          type="search"
-          enterKeyHint="search"
-          placeholder={t("songs.list.searchPlaceholder")}
-          aria-label={t("songs.list.searchLabel")}
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          className="raised w-full h-[46px] pl-[42px] pr-10 border border-transparent rounded-full text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-ring/50 focus:ring-[3px] focus:ring-ring/10 text-[16px] transition-all duration-150 [&::-webkit-search-cancel-button]:hidden"
-        />
-        {query && (
-          <button
-            onClick={() => setQuery("")}
-            aria-label={t("songs.list.clearSearch")}
-            className="absolute right-1.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-2.5 rounded-md hover:bg-secondary active:bg-secondary transition-colors"
-          >
-            <X className="h-4 w-4" />
-          </button>
-        )}
-      </div>
+      <ChampRecherche
+        className="mb-3.5"
+        value={query}
+        onChange={setQuery}
+        placeholder={t("songs.list.searchPlaceholder")}
+        label={t("songs.list.searchLabel")}
+        labelEffacer={t("songs.list.clearSearch")}
+      />
 
       {/* Filtres */}
       <div className="flex flex-wrap gap-2 mb-4 items-center">

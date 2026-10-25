@@ -86,7 +86,8 @@ test.describe("Setlists (A9)", () => {
     await expect(ligneSetlist(page, "Culte du 4 octobre")).toBeVisible();
     await expect(enTete(page).getByRole("heading", { level: 1, name: "Setlists", exact: true })).toBeVisible();
     await expect(enTete(page).getByText("Les chants prévus pour chaque service", { exact: true })).toBeVisible();
-    await verifierAgencement(page, { contenu: blocSetlists(page, info), onglets: { rail: 1, pilules: 0 } });
+    // Règle de largeur du 25/10/2026 : sans setlist choisie, la liste seule tient dans la colonne de 960 px.
+    await verifierAgencement(page, { contenu: blocSetlists(page, info), colonne: estGrandEcran(info) ? 960 : undefined, onglets: { rail: 1, pilules: 0 } });
     // Plus de titre dans la liste ; les vues dans le rail.
     await expect(page.getByRole("heading", { name: "Setlists" })).toHaveCount(1);
     const rail = ongletsRail(page).filter({ visible: true });
@@ -100,7 +101,8 @@ test.describe("Setlists (A9)", () => {
 
   test("deux volets : la liste en carte, l'en-tête au-dessus des deux, l'aperçu en h2 de 24 px (grands écrans)", async ({ page }, info) => {
     test.skip(!estGrandEcran(info), "deux volets : ordinateur et tablette couchée");
-    await ouvrir(page, "/setlists");
+    // Une setlist choisie (`?apercu=`) : les deux volets ; sans elle, la liste seule dans la colonne (largeurs-b4).
+    await ouvrir(page, "/setlists?apercu=sl-1");
     await expect(detail(page).getByRole("heading", { level: 2, name: "Culte du 4 octobre" })).toBeVisible();
     await verifierDeuxVolets(page);
     // Le rail et la recherche dans la carte, « Comment ça marche ? » en bas de la carte.

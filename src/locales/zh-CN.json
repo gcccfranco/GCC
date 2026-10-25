@@ -1,6 +1,7 @@
 {
   "common": {
     "noAccess": "此页面仅限乐手查看。",
+    "noAccessAide": "请联系敬拜负责人把你加入。",
     "header": {
       "title": "GCC 敬拜",
       "songs": "诗歌",
@@ -32,7 +33,8 @@
       "save": "保存",
       "edit": "编辑",
       "add": "添加",
-      "back": "返回"
+      "back": "返回",
+      "clearSearch": "清除搜索"
     },
     "loading": "加载中…",
     "languages": {

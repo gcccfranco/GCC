@@ -331,7 +331,8 @@ const mesurerListe = (page: Page) => page.evaluate(() => {
 });
 
 const PAGES_R3 = [
-  { nom: "Setlists", adresse: "/setlists" },
+  // Une setlist choisie : sans elle, la liste seule dans la colonne de 960 px (B4b), sans volet collant.
+  { nom: "Setlists", adresse: "/setlists?apercu=s0" },
   { nom: "Mes services", adresse: "/mes-services" },
   { nom: "Tâches", adresse: "/taches" },
   { nom: "Back-Office › Tâches", adresse: "/back-office/taches/da" },
@@ -382,7 +383,7 @@ test.describe("R3 : la liste-carte des deux volets tient dans la fenêtre", () =
 
   test("l'en-tête change de hauteur après le chargement, page courte : le bas de la carte suit (grands écrans)", async ({ page }, info) => {
     test.skip(!estGrandEcran(info), "deux volets : grands écrans");
-    await ouvrirR3(page, "/setlists");
+    await ouvrirR3(page, "/setlists?apercu=s0");
     const liste = page.locator('[data-volet="liste"]');
     await expect.poll(() => liste.evaluate((el) => el.scrollHeight - el.clientHeight)).toBeGreaterThan(40);
     // Une page plus courte que la fenêtre : `html` garde la hauteur de la fenêtre quoi que fasse l'en-tête.

@@ -21,7 +21,8 @@ import { anneeDe, editionsDe, feteDe, libelleEdition } from "@/lib/scene/fetes";
 import { jourEnLettres } from "@/app/evenements/scene/libelles";
 import { titreAffiche } from "@/lib/fetes/droits";
 import type { Programme } from "@/types/programme";
-import { Search, X, Lock, LogIn, UserPen, ChevronDown } from "lucide-react";
+import { ChampRecherche } from "@/components/layout/ChampRecherche";
+import { Lock, LogIn, UserPen, ChevronDown } from "lucide-react";
 import Link from "next/link";
 import { EnTetePage } from "@/components/layout/EnTetePage";
 import { BoutonNouveau } from "@/components/layout/BoutonNouveau";
@@ -523,26 +524,12 @@ export default function SetlistsPage() {
 
         {/* ── Barre de filtres partagée ── */}
         <div className="space-y-3 mb-5">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-            <input
-              type="search"
-              enterKeyHint="search"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder={t("setlists.list.searchPlaceholder")}
-              className={`w-full pl-9 pr-9 py-2.5 rounded-xl border border-transparent ${grand ? "bg-secondary" : "bg-card"} text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-ring/50 focus:ring-[3px] focus:ring-ring/10 text-[16px] sm:text-sm [&::-webkit-search-cancel-button]:hidden`}
-            />
-            {query && (
-              <button
-                onClick={() => setQuery("")}
-                aria-label={t("common.buttons.reset")}
-                className="absolute right-1 top-1/2 -translate-y-1/2 p-2 text-muted-foreground hover:text-foreground active:text-foreground"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            )}
-          </div>
+          <ChampRecherche
+            value={query}
+            onChange={setQuery}
+            placeholder={t("setlists.list.searchPlaceholder")}
+            label={t("setlists.list.searchPlaceholder")}
+          />
 
           {disposition === "telephone" && mesServices}
 
@@ -676,7 +663,7 @@ export default function SetlistsPage() {
                   selected={coches.has(s.id)}
                   onToggle={() => basculer(s.id)}
                   onApercu={grand ? () => setApercu(s.id) : undefined}
-                  actif={grand && !selectionMode && s.id === choisie?.id}
+                  actif={grand && !selectionMode && !!apercu && s.id === choisie?.id}
                   dansLEquipe={dansLEquipe(s)}
                   fete={s.fete ? infosFete(s) : undefined}
                 />
@@ -747,6 +734,7 @@ export default function SetlistsPage() {
         <DeuxVolets
           racine="/setlists"
           largeurListe={400}
+          colonneSeule={!apercu}
           liste={<div className="relative px-4 pb-4 pt-4">{contenuListe}</div>}
           premier={choisie && (
             <ApercuSetlist setlist={choisie} songsMap={songsMap} planning={planning} monNom={profile ? nomCourt(profile) : ""} />

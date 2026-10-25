@@ -90,6 +90,8 @@ const SPECS_GRAND_ECRAN = [
   /organigrammes-groupes-agencement\.spec\.ts/,
   // Barre de la page d'un chant, piste A (docs/spec-barre-chant.md) : la rangée sur les quatre dispositions et 1 440 px.
   /barre-chant\.spec\.ts/,
+  // Tranche B4b de docs/spec-corrections-audit.md : la règle de largeur (colonne de 960 px, pleine largeur des grilles).
+  /largeurs-b4\.spec\.ts/,
 ];
 
 // Lot AO : les tests sans page importent src/lib/access.ts, dont le mode par défaut suit

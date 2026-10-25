@@ -2,7 +2,8 @@
 
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import Link from "next/link";
-import { Send, Lock, Search, X } from "lucide-react";
+import { Send, Lock } from "lucide-react";
+import { ChampRecherche } from "@/components/layout/ChampRecherche";
 import { useProfile, listProfiles } from "@/lib/firebase/users";
 import { isAdminUser } from "@/lib/access";
 import { normalizeName } from "@/lib/planning/names";
@@ -242,24 +243,12 @@ export function Notifier({ backOffice = false, titre }: { backOffice?: boolean; 
               </button>
             </div>
           </div>
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-            <input
-              type="search"
-              value={peopleQuery}
-              onChange={(e) => setPeopleQuery(e.target.value)}
-              placeholder="Filtrer la liste…"
-              className="w-full h-10 pl-9 pr-9 rounded-lg border border-transparent bg-secondary text-foreground placeholder:text-muted-foreground text-[16px] sm:text-sm focus:outline-none focus:ring-2 focus:ring-ring/30 [&::-webkit-search-cancel-button]:hidden"
-            />
-            {peopleQuery && (
-              <button
-                onClick={() => setPeopleQuery("")}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            )}
-          </div>
+          <ChampRecherche
+            value={peopleQuery}
+            onChange={setPeopleQuery}
+            placeholder="Filtrer la liste…"
+            label="Filtrer la liste"
+          />
           <div className="max-h-64 overflow-y-auto rounded-xl bg-card divide-y divide-border">
             {profiles === null ? (
               <p className="text-sm text-muted-foreground text-center py-6">Chargement…</p>

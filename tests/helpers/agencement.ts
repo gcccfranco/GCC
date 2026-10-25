@@ -67,9 +67,11 @@ export const pilules = (page: Page) => page.locator('[data-onglets="pilules"]');
 /**
  * Un seul `header[data-entete-page]` visible, un seul h1 dedans, à la bonne taille ; le h1 part de
  * la zone + la marge (au pixel près) ; `premierBloc` (le premier bloc de contenu sous l'en-tête,
- * par défaut l'élément qui suit l'en-tête) commence au même x.
+ * par défaut l'élément qui suit l'en-tête) commence au même x. Avec `colonne` (règle de largeur du
+ * 25/10/2026 : une lecture ou une liste seule tient dans une colonne de 960 px, centrée), le bloc est
+ * centré dans la zone dès qu'elle est plus large que la colonne et ses deux marges ; sinon, au x du titre.
  */
-export async function verifierEnTete(page: Page, options: { premierBloc?: Locator } = {}) {
+export async function verifierEnTete(page: Page, options: { premierBloc?: Locator; colonne?: number } = {}) {
   const entete = enTete(page).filter({ visible: true });
   await expect(entete, "un seul en-tête de page").toHaveCount(1);
   const h1 = entete.locator("h1");
@@ -103,8 +105,10 @@ export async function verifierEnTete(page: Page, options: { premierBloc?: Locato
       const r = e.getBoundingClientRect();
       return { x: r.x, contenu: r.x };
     }, zone.gauche);
-    expect(Math.abs(contenu - zone.gauche - marge) <= 1 || Math.abs(x - zone.gauche - marge) <= 1,
-      `le premier bloc commence au x du titre (bloc ${Math.round(x)}, contenu ${Math.round(contenu)}, attendu ${zone.gauche + marge})`).toBe(true);
+    const centre = options.colonne !== undefined && zone.droite - zone.gauche - 2 * marge > options.colonne;
+    const attendu = centre ? zone.gauche + (zone.droite - zone.gauche - options.colonne!) / 2 : zone.gauche + marge;
+    expect(Math.abs(contenu - attendu) <= 1 || (!centre && Math.abs(x - attendu) <= 1),
+      `le premier bloc commence au x ${centre ? "de la colonne centrée" : "du titre"} (bloc ${Math.round(x)}, contenu ${Math.round(contenu)}, attendu ${attendu})`).toBe(true);
   }
 }
 
@@ -132,11 +136,16 @@ export async function verifierHalo(page: Page) {
 }
 
 /** Un bloc de contenu prend toute la zone moins deux marges (une lecture : 720 px). */
-export async function verifierPleineLargeur(page: Page, bloc: Locator, options: { lecture?: boolean } = {}) {
+export async function verifierPleineLargeur(page: Page, bloc: Locator, options: { lecture?: boolean; colonne?: number } = {}) {
   const zone = await zoneDeContenu(page);
   const marge = await margeAttendue(page);
   const largeur = (await bloc.boundingBox())!.width;
-  if (options.lecture) expect(largeur, "une lecture : 720 px au plus").toBeLessThanOrEqual(721);
+  if (options.colonne !== undefined) {
+    const attendue = Math.min(options.colonne, zone.droite - zone.gauche - 2 * marge);
+    // Le bloc peut porter les marges en dedans (la colonne et ses deux marges) ou en dehors.
+    const ecart = Math.min(Math.abs(largeur - attendue), Math.abs(largeur - attendue - 2 * marge));
+    expect(ecart, `une colonne : ${options.colonne} px au plus, la zone sinon`).toBeLessThanOrEqual(2);
+  } else if (options.lecture) expect(largeur, "une lecture : 720 px au plus").toBeLessThanOrEqual(721);
   else expect(largeur, "toute la zone moins deux marges").toBeGreaterThanOrEqual(zone.droite - zone.gauche - 2 * marge - 1);
 }
 
@@ -174,11 +183,11 @@ export async function repondreDansLeSite(page: Page, bouton: string) {
  */
 export async function verifierAgencement(
   page: Page,
-  options: { premierBloc?: Locator; contenu?: Locator; lecture?: boolean; onglets?: { rail?: number; pilules?: number } } = {},
+  options: { premierBloc?: Locator; contenu?: Locator; lecture?: boolean; colonne?: number; onglets?: { rail?: number; pilules?: number } } = {},
 ) {
   await verifierEnTete(page, options);
   await verifierSansDebordement(page);
   await verifierHalo(page);
-  if (options.contenu) await verifierPleineLargeur(page, options.contenu, { lecture: options.lecture });
+  if (options.contenu) await verifierPleineLargeur(page, options.contenu, { lecture: options.lecture, colonne: options.colonne });
   if (options.onglets) await verifierOnglets(page, options.onglets);
 }

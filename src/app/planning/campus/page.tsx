@@ -123,7 +123,7 @@ function CampusPage() {
 
   return (
     // Agencement v18 : la rangée sur toute la largeur, la vue (Louange · Répétition · Grille) en rail ;
-    // le volet Grille porte treize colonnes, toute la largeur ; les cartes gardent leur colonne.
+    // le volet Grille porte treize colonnes, toute la largeur ; les cartes des jours, en grille de deux dès 1 024 px.
     <div className="max-w-full space-y-4">
       <BarreDeGrille
         titre={t("planning.pages.campus")}
@@ -183,11 +183,13 @@ function CampusPage() {
       )}
 
       {sub !== "grille" && order.length === 0 && (
-        <EtatVide className="max-w-2xl">{t("planning.campus.noSeance")}</EtatVide>
+        <EtatVide>{t("planning.campus.noSeance")}</EtatVide>
       )}
 
-      {sub !== "grille" && order.map(day => (
-        <div key={day} className="max-w-2xl bg-card shadow-soft rounded-xl overflow-hidden">
+      {sub !== "grille" && order.length > 0 && (
+      <div data-testid="campus-cartes" className="grid items-start gap-4 lg:grid-cols-2">
+      {order.map(day => (
+        <div key={day} className="bg-card shadow-soft rounded-xl overflow-hidden">
           <div className="px-4 py-2.5 text-sm font-semibold text-white" style={{ background: COLOR }}>{day}</div>
           {days[day].map((s, i) => {
             const isSoir = !s.d.includes("Matin")
@@ -251,6 +253,8 @@ function CampusPage() {
           })}
         </div>
       ))}
+      </div>
+      )}
     </div>
   )
 }

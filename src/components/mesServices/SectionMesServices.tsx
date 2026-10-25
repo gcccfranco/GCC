@@ -3,7 +3,8 @@
 // Mes services (lot U4 bis, B4, docs/spec-pages-en-grand.md, Q7 ; planches `mes-services-*`) :
 // la section lit tout une fois (plannings, petits déj, setlists, index des chants) et la liste
 // vit ici, dans le layout de `/mes-services` (Q2). En grand, la liste à gauche, le service à
-// droite (la page `/mes-services/[date]`), ou le premier de la liste sur son adresse (Q3).
+// droite (la page `/mes-services/[date]`), ou le premier de la liste sur son adresse (Q3) ; sans
+// aucun service, la liste seule dans la colonne de lecture de 960 px (règle de largeur du 25/10/2026, B4b).
 // Un volet : la liste, puis le service en page.
 
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
@@ -11,6 +12,7 @@ import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useTranslation } from "react-i18next";
 import { Lock, UserPen } from "lucide-react";
+import { Impasse } from "@/components/layout/Impasse";
 import { DeuxVolets } from "@/components/layout/DeuxVolets";
 import { EnTetePage } from "@/components/layout/EnTetePage";
 import { useDeuxVolets } from "@/hooks/useDeuxVolets";
@@ -143,14 +145,12 @@ export function SectionMesServices({ children }: { children: React.ReactNode }) 
 
   if (!profile || (!profile.planningName && !aDesPetitsDej)) {
     return (
-      <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-3 px-4 text-center">
-        <UserPen className="h-8 w-8 text-muted-foreground" />
-        <p className="text-sm text-muted-foreground max-w-sm">
-          {profile ? t("mesServices.chooseName") : t("mesServices.completeProfile")}
-        </p>
-        <Link href="/profil" className="text-sm text-foreground underline underline-offset-2 hover:text-muted-foreground">
-          {t("mesServices.myProfile")}
-        </Link>
+      <div className="min-h-screen bg-background">
+        <Impasse
+          icone={UserPen}
+          titre={profile ? t("mesServices.chooseName") : t("mesServices.completeProfile")}
+          sortie={{ href: "/profil", label: t("mesServices.myProfile") }}
+        />
       </div>
     );
   }
@@ -195,6 +195,7 @@ export function SectionMesServices({ children }: { children: React.ReactNode }) 
         <DeuxVolets
           racine="/mes-services"
           largeurListe={400}
+          colonneSeule={!affiches[0]}
           liste={liste}
           premier={valeur && affiches[0] ? <DetailService s={affiches[0]} /> : null}
         >

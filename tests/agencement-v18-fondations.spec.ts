@@ -100,7 +100,8 @@ test.describe("EnTetePage (R1, R2, R3, R8)", () => {
     const jeton = await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue("--marge-page").trim());
     expect(jeton).toBe(`${await margeAttendue(page)}px`);
     // En grand, les deux volets prennent toute la zone (un volet : la liste de la page elle-même).
-    await verifierAgencement(page, { contenu: estGrandEcran(info) ? page.locator("[data-deux-volets]") : undefined });
+    // (Règle de largeur du 25/10/2026 : sans setlist choisie, la liste seule tient dans la colonne de 960 px.)
+    await verifierAgencement(page, { contenu: estGrandEcran(info) ? page.locator("[data-deux-volets]") : undefined, colonne: estGrandEcran(info) ? 960 : undefined });
     // La vérification de pleine largeur mord : le titre n'occupe pas la zone.
     await expect(verifierPleineLargeur(page, enTete(page).locator("h1"))).rejects.toThrow();
   });
@@ -110,7 +111,7 @@ test.describe("EnTetePage (R1, R2, R3, R8)", () => {
     await ouvrirAvecBarre(page, "reduite");
     await ouvrir(page, "/setlists");
     expect(await margeAttendue(page)).toBe(28);
-    await verifierAgencement(page);
+    await verifierAgencement(page, { colonne: 960 });
   });
 });
 
@@ -220,7 +221,8 @@ test.describe("DeuxVolets en liste-carte (R10)", () => {
       test.skip(!estGrandEcran(info), "deux volets : grands écrans");
       test.skip(etat === "depliee" && info.project.name === "tablette-paysage", "la tablette couchée a toujours la barre réduite");
       await ouvrirAvecBarre(page, etat);
-      await ouvrir(page, "/setlists");
+      // Une setlist choisie : sans elle, la liste seule dans la colonne de 960 px (largeurs-b4).
+      await ouvrir(page, "/setlists?apercu=s1");
       const liste = page.locator('[data-volet="liste"]');
       const detail = page.locator('[data-volet="detail"]');
       await expect(detail.getByRole("heading", { level: 2, name: "Culte du 11 octobre" })).toBeVisible();

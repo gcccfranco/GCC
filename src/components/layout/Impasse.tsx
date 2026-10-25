@@ -2,7 +2,7 @@ import Link from "next/link";
 import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-/** Page sans issue : icône, une phrase, une aide facultative et un bouton de sortie. */
+/** Page sans issue : icône, une phrase, une aide facultative et un bouton de sortie. Centrée dans la zone de contenu (pleine fenêtre avec `pleinEcran`). */
 export function Impasse({
   icone: Icone,
   titre,
@@ -20,7 +20,7 @@ export function Impasse({
     <div
       className={cn(
         "mx-auto flex max-w-md flex-col items-center gap-4 px-4 text-center",
-        pleinEcran ? "min-h-screen justify-center" : "py-16",
+        pleinEcran ? "min-h-screen justify-center" : "min-h-[50dvh] justify-center py-10",
       )}
     >
       <span className="flex h-14 w-14 items-center justify-center rounded-full bg-secondary text-muted-foreground">

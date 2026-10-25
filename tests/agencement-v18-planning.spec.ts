@@ -131,8 +131,8 @@ const CHAQUE_PLANNING: { cle: string; onglet: string; service: string; sousTitre
   { cle: "groupes", onglet: "Groupes", service: "Groupes", sousTitreBO: /^Paix · .*\d+ cases? vides? ce trimestre$/ },
   { cle: "edd", onglet: "EDD", service: "EDD — École du Dimanche", sousTitreBO: /^EDD — École du Dimanche · .*\d+ cases? vides? sur la période$/ },
   { cle: "campus", onglet: "Campus", service: "Campus", sousTitreBO: /^Campus · \d+ cases? vides? cette année$/ },
-  { cle: "intergroupe", onglet: "Intergroupe", service: "Intergroupe", sousTitreBO: /^Intergroupe · \d+ cases? vides? cette année$/ },
-  { cle: "interfranco", onglet: "Interfranco", service: "Interfranco", sousTitreBO: /^Interfranco · \d+ cases? vides? cette année$/ },
+  { cle: "intergroupe", onglet: "Intergroupe", service: "Intergroupe", sousTitreBO: /^\d+ cases? vides? cette année$/ },
+  { cle: "interfranco", onglet: "Interfranco", service: "Interfranco", sousTitreBO: /^\d+ cases? vides? cette année$/ },
 ];
 
 test.describe("Relecture : chaque planning a l'en-tête « Planning » et sa rangée", () => {

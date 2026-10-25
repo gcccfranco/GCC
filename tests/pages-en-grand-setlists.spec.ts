@@ -113,9 +113,10 @@ test.describe("L'équipe du service, sans navigateur", () => {
 });
 
 test.describe("Setlists : les dispositions", () => {
-  test("en grand : la liste à gauche, l'aperçu de la première setlist à droite, l'adresse inchangée", async ({ page }, info) => {
+  test("en grand : la liste à gauche, l'aperçu de la setlist choisie à droite ; sans choix, la liste seule", async ({ page }, info) => {
     test.skip(disposition(info) !== "grand", "deux volets : ordinateur et iPad paysage");
-    await ouvrir(page);
+    // Règle de largeur du 25/10/2026 : sur /setlists, aucun aperçu tant qu'aucune setlist n'est choisie (voir largeurs-b4 et le test suivant).
+    await ouvrir(page, "/setlists?apercu=sl-1");
     const a = apercu(page);
     await expect(a.getByRole("heading", { name: "Culte du 4 octobre" })).toBeVisible();
     await expect(page.locator('[data-volet="liste"]')).toBeVisible();
@@ -133,13 +134,15 @@ test.describe("Setlists : les dispositions", () => {
     await expect(equipe.getByText("Hélène W.")).toBeVisible();
     await expect(equipe.getByTestId("moi")).toHaveText("Ruth K.");
     await expect(ligne(page, "Culte du 4 octobre")).toHaveAttribute("aria-current", "true");
-    expect(new URL(page.url()).search, "l'adresse ne change qu'au premier toucher").toBe("");
+    expect(new URL(page.url()).searchParams.get("apercu")).toBe("sl-1");
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
   });
 
   test("en grand : toucher une setlist ouvre son aperçu, l'adresse est remplacée, « Ouvrir » mène à la setlist", async ({ page }, info) => {
     test.skip(disposition(info) !== "grand", "deux volets : ordinateur et iPad paysage");
     await ouvrir(page);
+    await expect(apercu(page)).toHaveCount(0);
+    await ligne(page, "Culte du 4 octobre").click();
     await expect(apercu(page).getByRole("heading", { name: "Culte du 4 octobre" })).toBeVisible();
     const historique = await page.evaluate(() => history.length);
     await ligne(page, "Culte du 18 octobre").click();
@@ -178,7 +181,7 @@ test.describe("Setlists : les dispositions", () => {
       const date = `2026-10-${String(i + 2).padStart(2, "0")}`;
       return [`setlists/sl-r${i}`, { ...SL2, title: `Répétition ${i + 1}`, date, ownerId: "uid-ruth" }];
     }));
-    await ouvrir(page, "/setlists", miennes);
+    await ouvrir(page, "/setlists?apercu=sl-r0", miennes);
     const volet = page.locator('[data-volet="liste"]');
     await expect(ligne(page, "Répétition 30")).toBeAttached();
     await volet.evaluate((el) => { el.scrollTop = el.scrollHeight; });
@@ -224,7 +227,7 @@ test.describe("Setlists : les dispositions", () => {
   test("en 中文 : l'aperçu et l'équipe traduits", async ({ page }, info) => {
     test.skip(disposition(info) !== "grand", "deux volets : ordinateur et iPad paysage");
     await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
-    await ouvrir(page);
+    await ouvrir(page, "/setlists?apercu=sl-1");
     await expect(page.getByRole("region", { name: "歌单预览" }).getByRole("region", { name: "本次服事团队" })).toBeVisible();
   });
 });

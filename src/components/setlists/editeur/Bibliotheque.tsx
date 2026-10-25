@@ -2,7 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Check, ChevronDown, ChevronUp, Plus, Search, X } from "lucide-react";
+import { Check, ChevronDown, ChevronUp, Plus } from "lucide-react";
+import { ChampRecherche } from "@/components/layout/ChampRecherche";
 import { chantsDeLaBibliotheque, premieresLignes, type FiltresBibliotheque, type Tempo } from "@/lib/setlist/bibliotheque";
 import { fetchSongAST } from "@/lib/api/songs";
 import type { Token } from "@/types/chordPro";
@@ -159,28 +160,14 @@ export function Bibliotheque({
         )}
       </div>
 
-      <div className="relative mt-5">
-        <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
-        <input
-          type="search"
-          autoFocus
-          value={filtres.recherche}
-          onChange={(e) => changer({ recherche: e.target.value })}
-          aria-label={t("setlists.form.searchSongsPlaceholder")}
-          placeholder={t("setlists.form.searchSongsPlaceholder")}
-          className="h-11 w-full rounded-full bg-secondary pl-11 pr-10 text-[15px] text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/30 [&::-webkit-search-cancel-button]:hidden"
-        />
-        {filtres.recherche && (
-          <button
-            type="button"
-            onClick={() => changer({ recherche: "" })}
-            aria-label={t("common.buttons.reset")}
-            className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-1 text-muted-foreground hover:text-foreground"
-          >
-            <X className="h-4 w-4" />
-          </button>
-        )}
-      </div>
+      <ChampRecherche
+        className="mt-5"
+        value={filtres.recherche}
+        onChange={(v) => changer({ recherche: v })}
+        placeholder={t("setlists.form.searchSongsPlaceholder")}
+        label={t("setlists.form.searchSongsPlaceholder")}
+        inputProps={{ autoFocus: true }}
+      />
 
       {/* Pilules Tous · FR · 中文 · Thèmes ▾ · Tempo ▾ ; elles défilent si la place manque. */}
       <div className="-mx-1 mt-3 flex shrink-0 gap-2 overflow-x-auto px-1 py-0.5" style={{ scrollbarWidth: "none" }}>

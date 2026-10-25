@@ -7,7 +7,7 @@
 // volets) ; `Personnes` les assemble comme avant pour l'ancienne administration.
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { ChevronDown, ChevronUp, Search, UserRound, X } from "lucide-react";
+import { ChevronDown, ChevronUp, UserRound } from "lucide-react";
 import { listProfiles, saveProfile } from "@/lib/firebase/users";
 import { listGroupes } from "@/lib/firebase/groupes";
 import { groupeDe } from "@/lib/groupes/organigramme";
@@ -32,7 +32,7 @@ import { NOTIFY_ALL, NOTIFY_GROUPS, audienceLabel } from "@/lib/push/audiences";
 import { categoryColor, categoryLabel } from "@/lib/serviceColors";
 import { BACK_OFFICE } from "@/lib/backOffice";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { ChampRecherche } from "@/components/layout/ChampRecherche";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Pilules } from "@/components/layout/Onglets";
 import { Pill } from "./commun";
@@ -141,25 +141,12 @@ export function FiltresPersonnes({ f }: { f: ReturnType<typeof useFiltresPersonn
   const { t } = useTranslation();
   return (
     <div className="space-y-2">
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-        <Input
-          type="search"
-          value={f.query}
-          onChange={(e) => f.setQuery(e.target.value)}
-          placeholder="Rechercher un membre (nom, email, nom de planning)…"
-          className="h-11 pl-9 pr-9 [&::-webkit-search-cancel-button]:hidden"
-        />
-        {f.query && (
-          <button
-            onClick={() => f.setQuery("")}
-            aria-label="Effacer la recherche"
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-          >
-            <X className="h-4 w-4" />
-          </button>
-        )}
-      </div>
+      <ChampRecherche
+        value={f.query}
+        onChange={f.setQuery}
+        placeholder="Rechercher un membre (nom, email, nom de planning)…"
+        label="Rechercher un membre (nom, email, nom de planning)"
+      />
       <Pilules
         etiquette="Filtrer les membres"
         options={FILTERS.map((x) => ({

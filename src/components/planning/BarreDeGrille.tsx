@@ -179,6 +179,11 @@ function PlanningsDuBackOffice() {
   )
 }
 
+/** Hors grand (téléphone, tablette debout), le sélecteur « Intergroupe ⌄ » dit déjà le planning : le h2
+ *  ne reste que pour les lecteurs d'écran. En grand, les pilules de l'en-tête et le h2 de la rangée coexistent. */
+const SR_HORS_GRAND =
+  "sr-only [@media(pointer:fine)_and_(min-width:1024px)]:not-sr-only [@media(pointer:coarse)_and_(orientation:landscape)_and_(min-width:1024px)]:not-sr-only"
+
 export function BarreDeGrille({
   titre,
   couleur,
@@ -216,7 +221,7 @@ export function BarreDeGrille({
       ) : (
         <div className="flex min-w-0 flex-wrap items-baseline gap-x-2.5 gap-y-0.5">
           <span aria-hidden className="h-2.5 w-2.5 shrink-0 self-center rounded-full" style={{ background: couleur }} />
-          <h2 className="text-[22px] font-bold leading-7 text-foreground">{titre}</h2>
+          <h2 className={`text-[22px] font-bold leading-7 text-foreground ${SR_HORS_GRAND}`}>{titre}</h2>
           {detail && <span className="text-[14px] text-muted-foreground">{detail}</span>}
           {enCours}
         </div>

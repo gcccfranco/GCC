@@ -6,7 +6,7 @@
 import { useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslation } from "react-i18next";
-import { Search } from "lucide-react";
+import { ChampRecherche } from "@/components/layout/ChampRecherche";
 import { Retour } from "@/components/layout/EnTetePage";
 import { ReportDialog } from "@/components/report/ReportDialog";
 import { analyserAccord, type Accord } from "@/lib/accords/analyse";
@@ -69,24 +69,18 @@ export function PageAccords() {
       <p className="mt-1 text-[15px] leading-6 text-muted-foreground">{t("accords.sousTitre")}</p>
 
       <div className="mt-5 flex flex-wrap items-center gap-3">
-        <div className="relative min-w-0 flex-1 basis-[260px]">
-          <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
-          <input
-            type="search"
-            value={saisie}
-            onChange={(e) => {
-              setSaisie(e.target.value);
-              const lu = lire(e.target.value);
-              if (lu) choisir(lu.texte, true);
-            }}
-            placeholder={t("accords.chercher")}
-            aria-label={t("accords.chercherLabel")}
-            autoCapitalize="off"
-            autoCorrect="off"
-            spellCheck={false}
-            className="h-11 w-full rounded-full border border-border bg-card pl-11 pr-4 text-[16px] text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/40"
-          />
-        </div>
+        <ChampRecherche
+          className="min-w-0 flex-1 basis-[260px]"
+          value={saisie}
+          onChange={(v) => {
+            setSaisie(v);
+            const lu = lire(v);
+            if (lu) choisir(lu.texte, true);
+          }}
+          placeholder={t("accords.chercher")}
+          label={t("accords.chercherLabel")}
+          inputProps={{ autoCapitalize: "off", autoCorrect: "off", spellCheck: false }}
+        />
         <ChoixInstrument instrument={instrument} onChange={setInstrument} />
       </div>
       {inconnu && <p role="status" className="mt-2 pl-4 text-sm text-muted-foreground">{t("accords.inconnu")}</p>}
