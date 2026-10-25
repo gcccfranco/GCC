@@ -405,50 +405,61 @@ test("`currentProgramme` a disparu ; le cron des rappels lit les éditions affic
   expect(cron).not.toMatch(/currentProgramme/);
 });
 
-// Le widget « Scène » du tableau de bord (Alice, pôle Événement, seul widget affiché).
-const DOCS_WIDGET: Record<string, Record<string, unknown>> = {
+// Le widget « Scène » du tableau de bord a disparu (piste A, BO-B) : la scène d'Alice (pôle Événement) se lit dans À faire,
+// où un évènement à elle dont un passage n'a personne donne une ligne « Attribuer » qui mène à la page Scène.
+const DOCS_SCENE: Record<string, Record<string, unknown>> = {
+  // Une ancienne disposition « Scène » enregistrée : elle n'a plus d'effet.
   "backOffice/uid-alice": { tableauDeBord: [{ id: "scene", taille: "m", reglages: {} }], versionTableau: 2, majLe: "2026-10-01" },
   "programmes/x7Kq2": { nom: "Noël", jourJ: "2026-12-24", debut: "2026-10-01", visible: false, passages: [], createdBy: "uid-alice", updatedAt: "" },
   "programmes/x7Kq2/creneaux/n1": { ...resaDe("n1", "2026-10-11", "14:00", "15:00"), quoi: "Sketch", qui: ["Franco"] },
+  // Le dimanche 11 octobre : un passage sans personne, pour l'évènement qu'Alice organise.
+  "programmes/x7Kq2/creneaux/n2": { ...resaDe("n2", "2026-10-11", "16:00", "17:00"), quoi: "Danse", qui: [] },
   "programmes/paques-2027": { nom: "Pâques 2027", fete: "paques", annee: 2027, jourJ: "2027-03-28", debut: "2027-02-01", ouvert: true, passages: [], createdBy: "uid-alice", updatedAt: "" },
-  "programmes/paques-2027/creneaux/p1": { ...resaDe("p1", "2027-02-07", "15:00", "16:00"), quoi: "Danse", qui: ["Gp Paix"] },
+  "programmes/paques-2027/creneaux/p1": { ...resaDe("p1", "2027-02-07", "15:00", "16:00"), quoi: "Danse", qui: [] },
   "programmes/noel-2027": { nom: "Noël 2027", fete: "noel", annee: 2027, jourJ: "2027-12-24", debut: "2027-10-01", ouvert: false, passages: [], createdBy: "uid-alice", updatedAt: "" },
+  "evenements/soiree": {
+    titre: "Veillée d'automne", type: "loisir", pour: "eglise", date: "2026-10-11", heure: "14:00", placesMax: null, inscrits: 0,
+    inscriptions: "fermees", organisateurUid: "uid-alice",
+  },
 };
 const ALICE_EVT: FakeProfile = { uid: "uid-alice", email: "alice@example.com", firstName: "Alice", lastName: "Q.", dansEquipes: ["evenementiel", "edd"], referentDe: ["evenementiel", "edd"] }; // lot AO : Coordination = référent EDD
 
-async function tableauDeBord(page: Page, docs: Record<string, Record<string, unknown>>) {
+async function aFaire(page: Page, docs: Record<string, Record<string, unknown>>) {
   await page.clock.setFixedTime(new Date("2026-10-09T10:00:00"));
   await page.route(/docs\.google\.com\/spreadsheets/, (route) => route.fulfill({ status: 200, contentType: "text/csv", body: "" }));
   await signInAs(page, ALICE_EVT, docs, "/back-office");
-  return page.getByTestId("grille-widgets").getByRole("region", { name: "Scène", exact: true });
+  await expect(page.getByRole("heading", { level: 1, name: "À faire" })).toBeVisible();
+  return page.getByTestId("ligne-a-faire").filter({ hasText: "Scène :" });
 }
 
-test("widget Scène : sans réglage, l'édition au jour J le plus proche — « Scène · Noël 2026 » et ses créneaux", async ({ page }) => {
-  const w = await tableauDeBord(page, DOCS_WIDGET);
-  await expect(w.getByRole("heading", { name: "Scène · Noël 2026" })).toBeVisible();
-  await expect(w.getByTestId("ligne-creneau")).toHaveText([/11 oct\. 14:00.*Sketch · Culte Francophone/]);
+test("À faire (ex-widget Scène) : un passage sans personne d'un évènement d'Alice donne « Attribuer », vers la page Scène", async ({ page }) => {
+  const scene = await aFaire(page, DOCS_SCENE);
+  await expect(scene).toHaveCount(1);
+  await expect(scene).toContainText("Scène : Veillée d'automne");
+  await expect(scene).toContainText("1 passage sans personne, dès le 11 octobre");
+  await expect(scene.getByRole("link", { name: /^Attribuer/ })).toHaveAttribute("href", /\/back-office\/evenements\/scene\/?$/);
+  // Le widget et sa grille ne sont plus là.
+  await expect(page.getByTestId("grille-widgets")).toHaveCount(0);
+  await expect(page.getByRole("region", { name: "Scène", exact: true })).toHaveCount(0);
 });
 
-test("widget Scène : ses réglages proposent les éditions affichées (Pâques 2027, Noël 2026), jamais un brouillon", async ({ page }) => {
-  const w = await tableauDeBord(page, DOCS_WIDGET);
-  await expect(w.getByRole("heading", { name: "Scène · Noël 2026" })).toBeVisible();
-  await page.getByRole("button", { name: "Personnaliser" }).click();
-  await w.getByRole("button", { name: "Réglages du widget" }).click();
-  const groupe = w.getByRole("group", { name: "Programme" });
-  await expect(groupe.getByRole("button")).toHaveText(["Celui qui est affiché", "Pâques 2027", "Noël 2026"]);
-  await groupe.getByRole("button", { name: "Pâques 2027" }).click();
-  await expect(w.getByRole("heading", { name: "Scène · Pâques 2027" })).toBeVisible();
-  await expect(w.getByTestId("ligne-creneau")).toHaveText([/7 févr\. 15:00.*Danse · Gp Paix/]);
+test("À faire (ex-widget Scène) : plus de réglages de programme ; seules les éditions affichées comptent, la Pâques 2027 n'ayant rien à voir avec un évènement d'octobre", async ({ page }) => {
+  const scene = await aFaire(page, DOCS_SCENE);
+  await expect(scene).toHaveCount(1);
+  await expect(page.getByRole("button", { name: "Personnaliser" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Réglages du widget" })).toHaveCount(0);
+  await expect(page.getByText("Pâques 2027")).toHaveCount(0);
 });
 
-test("widget Scène : un brouillon seul n'est pas montré", async ({ page }) => {
-  const w = await tableauDeBord(page, {
-    "backOffice/uid-alice": DOCS_WIDGET["backOffice/uid-alice"],
+test("À faire (ex-widget Scène) : un brouillon seul n'est pas lu, donc aucune ligne « Scène »", async ({ page }) => {
+  const scene = await aFaire(page, {
+    "backOffice/uid-alice": DOCS_SCENE["backOffice/uid-alice"],
+    "evenements/soiree": DOCS_SCENE["evenements/soiree"],
     "programmes/noel-2026": { nom: "Noël 2026", fete: "noel", annee: 2026, jourJ: "2026-12-24", debut: "2026-10-01", ouvert: false, passages: [], createdBy: "uid-alice", updatedAt: "" },
-    "programmes/noel-2026/creneaux/b1": { ...resaDe("b1", "2026-10-11", "14:00", "15:00") },
+    "programmes/noel-2026/creneaux/b1": { ...resaDe("b1", "2026-10-11", "14:00", "15:00"), qui: [] },
   });
-  await expect(w.getByText("Aucun programme affiché.")).toBeVisible();
-  await expect(w.getByRole("heading", { name: /Noël 2026/ })).toHaveCount(0);
+  await expect(scene).toHaveCount(0);
+  await expect(page.getByRole("status").filter({ hasText: "Rien à faire pour l'instant." })).toBeVisible();
 });
 
 // ─── P4 : App — onglets de fête, en-tête, états sans grille ─────────────────

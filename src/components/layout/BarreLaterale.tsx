@@ -91,6 +91,7 @@ export function BarreLaterale() {
   const comptes = usePastilles(montree && auBackOffice ? entreesBackOffice(user, profile) : []);
   const pastilles: Record<string, number> = {
     [entreeBackOffice("messages").href]: comptes.messages ?? 0,
+    [entreeBackOffice("afaire").href]: comptes.afaire ?? 0,
   };
   // Lus hors de React, sans effet : monté (le thème ne se lit que dans le navigateur) et
   // réduite (pour les infobulles seulement ; la mise en page, elle, suit le CSS dès l'en-tête).

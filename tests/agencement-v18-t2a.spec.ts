@@ -129,7 +129,7 @@ test.describe("T2a : le menu", () => {
     await ouvrir(page, ADMIN, "/back-office/reunions/reu-da");
     await expect(page.getByRole("heading", { name: "Réunion DA", exact: true })).toBeVisible();
     const menu = await menuLateral(page, info);
-    await expect(menu.getByRole("link")).toHaveText(["À faire", "Calendrier", "Planning", "Équipes", "Messages"]);
+    await expect(menu.getByRole("link")).toHaveText([/^À faire\d*$/, "Calendrier", "Planning", "Équipes", "Messages"]);
     await expect(menu.locator("[aria-current]")).toHaveCount(0);
   });
 
@@ -261,26 +261,31 @@ test.describe("T2a : les adresses /back-office/reunions/*", () => {
 
 // ─── Relecture du lot (07/10/2026) ───────────────────────────────────────────────
 
-test.describe("T2a, relecture : là où mènent le widget et le guide", () => {
-  /** Les widgets demandés au tableau de bord (par défaut, « Prochains évènements » seul). */
-  const avecLeWidget = (p: FakeProfile, ids: string[] = ["evenements"]) => ({
-    ...DOCS,
-    [`backOffice/${p.uid}`]: { tableauDeBord: ids.map((id) => ({ id, taille: "m", reglages: {} })), versionTableau: 2, majLe: "2026-10-01T09:00:00Z" },
-  });
-  const widget = (page: Page, nom = "Évènements") => page.getByTestId("grille-widgets").getByRole("region", { name: nom, exact: true });
+test.describe("T2a, relecture : là où mènent À faire et le guide", () => {
+  // BO-B : le tableau de bord et ses widgets ont laissé place à « À faire » ; les droits des sources restent ceux des widgets.
+  const ligne = (page: Page, texte: string) => page.getByTestId("ligne-a-faire").filter({ hasText: texte });
 
-  test("membre d'équipe responsable (Réunions sans Évènements) : pas de widget Évènements, celui des Réunions mène à ses réunions (TB2-corrections)", async ({ page }) => {
-    await ouvrir(page, NOTIFY_EQUIPE, "/back-office", avecLeWidget(NOTIFY_EQUIPE, ["evenements", "reunions"]));
-    await expect(widget(page, "Réunions")).toBeVisible();
-    await expect(widget(page, "Réunions").getByRole("link", { name: "Tout voir" })).toHaveAttribute("href", /^\/back-office\/reunions\/?$/);
-    await expect(widget(page)).toHaveCount(0);
+  test("membre d'équipe responsable (Réunions sans Évènements) : le compte rendu de sa réunion mène à la réunion, pas d'inscriptions à voir (TB2-corrections)", async ({ page }) => {
+    const docs = {
+      ...DOCS,
+      "evenements/reu-regie-sept": { ...REU, pour: "equipe:regie", titre: "Réunion Régie", date: "2026-09-28" },
+      "evenements/reu-regie": { ...REU, pour: "equipe:regie", titre: "Réunion Régie", date: "2026-10-12" },
+      "evenements/kermesse": { ...EV, titre: "Kermesse", pour: "equipe:regie", organisateurUid: "uid-ne", inscriptionFin: "2026-10-08" },
+    };
+    await ouvrir(page, NOTIFY_EQUIPE, "/back-office", docs);
+    await expect(ligne(page, "Réunion Régie").getByRole("link", { name: /^Écrire le compte rendu/ }))
+      .toHaveAttribute("href", /^\/back-office\/reunions\/reu-regie-sept\/?$/);
+    await expect(page.getByRole("link", { name: /^Voir les inscrits/ })).toHaveCount(0);
+    await expect(page.getByTestId("grille-widgets")).toHaveCount(0);
   });
 
-  test("droit d'annonces (Évènements) : « Tout voir » du widget mène aux Évènements", async ({ page }) => {
+  test("droit d'annonces (Évènements) : « Voir les inscrits » de son évènement mène à sa fiche dans les Évènements", async ({ page }) => {
     // Lot AO : le droit d'annonces d'une section vient de l'organigramme (ici : président du Groupe Bonté).
     const president: FakeProfile = { uid: "uid-hugo", email: "hugo@example.com", firstName: "Hugo", lastName: "B.", ...presidentGroupe("bonte") };
-    await ouvrir(page, president, "/back-office", avecLeWidget(president));
-    await expect(widget(page).getByRole("link", { name: "Tout voir" })).toHaveAttribute("href", /^\/back-office\/evenements\/?$/);
+    const docs = { ...DOCS, "evenements/kermesse": { ...EV, titre: "Kermesse", organisateurUid: "uid-hugo", inscriptionFin: "2026-10-08" } };
+    await ouvrir(page, president, "/back-office", docs);
+    await expect(ligne(page, "Kermesse").getByRole("link", { name: /^Voir les inscrits/ }))
+      .toHaveAttribute("href", /^\/back-office\/evenements\/kermesse\/?$/);
   });
 
   test("le guide dit que les réunions d'équipe se créent dans Réunions", async ({ page }) => {

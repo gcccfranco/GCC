@@ -206,7 +206,7 @@ test.describe("Back-Office (B1) : rien de neuf pour l'assemblée", () => {
   test("« /back-office » répond « Réservé aux responsables » à un membre sans équipe ni rôle", async ({ page }) => {
     await signInAs(page, MEMBRE, {}, "/back-office");
     await expect(page.getByText("Réservé aux responsables.")).toBeVisible();
-    await expect(page.getByRole("heading", { name: "Tableau de bord" })).toHaveCount(0);
+    await expect(page.getByRole("heading", { level: 1, name: "À faire" })).toHaveCount(0);
   });
 
   test("un visiteur sans compte : « Réservé aux responsables » et « Se connecter »", async ({ page }) => {
@@ -226,12 +226,13 @@ test.describe("Back-Office (B1) : le sélecteur et le menu", () => {
     await expect(selecteur(page).getByRole("link", { name: "Back-Office" })).not.toHaveAttribute("aria-current", "true");
     await selecteur(page).getByRole("link", { name: "Back-Office" }).click();
     await expect(page).toHaveURL(/\/back-office\/?$/);
-    await expect(page.getByRole("heading", { name: "Tableau de bord" })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1, name: "À faire" })).toBeVisible();
     await deplierSiTablettePaysage(page, info);
     await expect(selecteur(page).getByRole("link", { name: "Back-Office" })).toHaveAttribute("aria-current", "true");
     await expect(menu(page, info).getByRole("link")).toHaveText(
       estOrdinateur(info) || estTablettePaysage(info)
-        ? ["À faire", "Calendrier", "Planning", "Équipes", "Messages"]
+        // « À faire » porte la pastille du nombre de ses lignes quand il y en a (BO-B).
+        ? [/^À faire\d*$/, "Calendrier", "Planning", "Équipes", "Messages"]
         // Barre du bas (BO2) : cinq onglets fixes ; Messages est l'icône de l'en-tête.
         : ["À faire", "Calendrier", "Planning", "Équipes", "App"],
     );
@@ -240,18 +241,19 @@ test.describe("Back-Office (B1) : le sélecteur et le menu", () => {
 
   test("Alice (référent EDD, lot AO) voit les cinq entrées : sa Coordination vient d'une place qui ouvre aussi Planning, Équipes, Messages", async ({ page }, info) => {
     await signInAs(page, ALICE_ORGA, {}, "/back-office");
-    await expect(page.getByRole("heading", { name: "Tableau de bord" })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1, name: "À faire" })).toBeVisible();
     await deplierSiTablettePaysage(page, info);
     await expect(menu(page, info).getByRole("link")).toHaveText(
       estOrdinateur(info) || estTablettePaysage(info)
-        ? ["À faire", "Calendrier", "Planning", "Équipes", "Messages"]
+        // « À faire » porte la pastille du nombre de ses lignes quand il y en a (BO-B).
+        ? [/^À faire\d*$/, "Calendrier", "Planning", "Équipes", "Messages"]
         : ["À faire", "Calendrier", "Planning", "Équipes", "App"],
     );
   });
 
   test("une entrée du menu mène à sa page du Back-Office (Équipes)", async ({ page }, info) => {
     await signInAs(page, ALICE_ORGA, {}, "/back-office");
-    await expect(page.getByRole("heading", { name: "Tableau de bord" })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1, name: "À faire" })).toBeVisible();
     await deplierSiTablettePaysage(page, info);
     await menu(page, info).getByRole("link", { name: "Équipes" }).click();
     await expect(page).toHaveURL(/\/back-office\/equipes\/?$/, { timeout: 20_000 });
@@ -276,7 +278,7 @@ test.describe("Back-Office (B1) : le sélecteur et le menu", () => {
 
   test("une entrée inconnue répond 404 (Calendrier, U8, et Statistiques, U7, sont arrivés)", async ({ page }) => {
     await signInAs(page, ALICE_ORGA, {}, "/back-office");
-    await expect(page.getByRole("heading", { name: "Tableau de bord" })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1, name: "À faire" })).toBeVisible();
     expect((await page.goto("/back-office/nimporte-quoi"))?.status()).toBe(404);
   });
 
@@ -288,7 +290,7 @@ test.describe("Back-Office (B1) : le sélecteur et le menu", () => {
     // Rien encore en mémoire côté Back-Office : le tableau de bord.
     await expect(selecteur(page).getByRole("link", { name: "Back-Office" })).toHaveAttribute("href", /^\/back-office\/?$/);
     await selecteur(page).getByRole("link", { name: "Back-Office" }).click();
-    await expect(page.getByRole("heading", { name: "Tableau de bord" })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1, name: "À faire" })).toBeVisible();
     await deplierSiTablettePaysage(page, info);
     await menu(page, info).getByRole("link", { name: "Calendrier" }).click();
     await expect(page).toHaveURL(/\/back-office\/calendrier\/?$/);
@@ -301,7 +303,7 @@ test.describe("Back-Office (B1) : le sélecteur et le menu", () => {
     // Une nouvelle session (mémoire vidée) repart des défauts : le tableau de bord, et /planning côté App.
     await page.evaluate(() => sessionStorage.clear());
     await page.goto("/back-office");
-    await expect(page.getByRole("heading", { name: "Tableau de bord" })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1, name: "À faire" })).toBeVisible();
     await deplierSiTablettePaysage(page, info);
     await expect(selecteur(page).getByRole("link", { name: "App" })).toHaveAttribute("href", /^\/planning\/?$/);
   });
@@ -358,7 +360,7 @@ test.describe("Back-Office (B1) : le sélecteur et le menu", () => {
   test("en 中文 : 应用 · 后台, et le menu traduit", async ({ page }, info) => {
     await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
     await signInAs(page, ALICE_ORGA, {}, "/back-office");
-    await expect(page.getByRole("heading", { name: "仪表盘" })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1, name: "待办" })).toBeVisible();
     await deplierSiTablettePaysage(page, info);
     await expect(page.getByRole("group", { name: "选择空间" }).filter({ visible: true }).getByRole("link")).toHaveText(["应用", "后台"]);
   });
@@ -378,16 +380,18 @@ test.describe("Back-Office : pastilles de la barre latérale (Q15)", () => {
     "equipes/da/taches/t4": { titre: "Fond du culte", responsableUid: "uid-da", responsableNom: "Bruno M.", echeance: "2026-10-03", repetition: null },
   };
 
-  test("grand écran : Messages (en attente) porte son compte, les autres entrées aucun", async ({ page }, info) => {
+  test("grand écran : Messages (en attente) porte son compte, À faire le nombre de ses lignes, les autres entrées aucun", async ({ page }, info) => {
     test.skip(!estOrdinateur(info) && !estTablettePaysage(info), "propre aux grands écrans");
     await sansSheet(page);
     await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
     await signInAs(page, ADMIN, PASTILLES, "/back-office");
-    await expect(page.getByRole("heading", { name: "Tableau de bord" })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1, name: "À faire" })).toBeVisible();
     await deplierSiTablettePaysage(page, info);
     const entree = (nom: string) => menu(page, info).getByRole("link", { name: nom, exact: true });
     await expect(menu(page, info).getByRole("link", { name: "Tâches" })).toHaveCount(0);
-    await expect(entree("À faire").getByTestId("pastille")).toHaveCount(0);
+    // BO-B : À faire porte le nombre de ses lignes (une lecture, la même que la page).
+    await expect(page.getByTestId("ligne-a-faire").first()).toBeVisible();
+    await expect(entree("À faire").getByTestId("pastille")).toHaveText(String(await page.getByTestId("ligne-a-faire").count()));
     await expect(entree("Messages").getByTestId("pastille")).toHaveText("2");
     await expect(entree("Planning").getByTestId("pastille")).toHaveCount(0);
     // Dans l'App, la barre latérale n'a pas de pastille.
@@ -402,7 +406,7 @@ test.describe("Back-Office : pastilles de la barre latérale (Q15)", () => {
     page.on("request", (r) => { if (r.url().includes(":runQuery")) lus.push(r.postData() ?? ""); });
     await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
     await signInAs(page, { ...DA, ...notifie("Groupe Paix") }, PASTILLES, "/back-office");
-    await expect(page.getByRole("heading", { name: "Tableau de bord" })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1, name: "À faire" })).toBeVisible();
     await expect(menu(page, info).getByRole("link", { name: "Messages", exact: true }).getByTestId("pastille")).toHaveCount(0);
     expect(lus.filter((b) => b.includes("\"reports\"") || b.includes("\"songProposals\""))).toEqual([]);
   });
@@ -414,7 +418,7 @@ test.describe("Back-Office : pastilles de la barre latérale (Q15)", () => {
     await sansSheet(page);
     await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
     await signInAs(page, ADMIN, PASTILLES, "/back-office");
-    await expect(page.getByRole("heading", { name: "Tableau de bord" })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1, name: "À faire" })).toBeVisible();
     await expect(page.getByTestId("barre-du-bas").getByRole("link").first()).toBeVisible();
     await expect(page.getByTestId("icone-messages").getByTestId("pastille")).toHaveText("2");
     await page.waitForTimeout(500);
@@ -466,7 +470,7 @@ test.describe("Back-Office (B1) : captures à regarder", () => {
     await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" });
     await page.screenshot({ path: `test-results/back-office-captures/${info.project.name}-app.png` });
     await page.goto("/back-office");
-    await expect(page.getByRole("heading", { name: "Tableau de bord" })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1, name: "À faire" })).toBeVisible();
     await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" });
     await page.screenshot({ path: `test-results/back-office-captures/${info.project.name}-tableau.png` });
     if (estTablettePaysage(info)) {
@@ -489,7 +493,7 @@ test.describe("Back-Office (BO-A) : navigation", () => {
     test.skip(!estOrdinateur(info) && !estTablettePaysage(info), "propre aux grands écrans");
     await sansSheet(page);
     await signInAs(page, ADMIN, SIGNALEMENTS, "/back-office");
-    await expect(page.getByRole("heading", { name: "Tableau de bord" })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1, name: "À faire" })).toBeVisible();
     await expect(page.getByTestId("barre-du-bas")).toBeHidden();
     await deplierSiTablettePaysage(page, info);
     await expect(menu(page, info).getByRole("link", { name: "Messages", exact: true }).getByTestId("pastille")).toHaveText("2");
@@ -500,7 +504,7 @@ test.describe("Back-Office (BO-A) : navigation", () => {
     await sansSheet(page);
     await signInAs(page, ADMIN, {}, "/back-office/plus");
     await expect(page).toHaveURL(/\/back-office\/?$/);
-    await expect(page.getByRole("heading", { name: "Tableau de bord" })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1, name: "À faire" })).toBeVisible();
   });
 
   // Captures à regarder (planche de la piste A) : la navigation aux cinq dispositions, FR clair et 中文 sombre.
@@ -515,7 +519,7 @@ test.describe("Back-Office (BO-A) : navigation", () => {
       await sansSheet(page);
       await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
       await signInAs(page, ADMIN, SIGNALEMENTS, "/back-office");
-      await expect(page.getByRole("heading", { name: langue === "fr" ? "Tableau de bord" : "仪表盘" })).toBeVisible();
+      await expect(page.getByRole("heading", { level: 1, name: langue === "fr" ? "À faire" : "待办" })).toBeVisible();
       if (!estOrdinateur(info) && !estTablettePaysage(info)) {
         await expect(page.getByTestId("icone-messages").getByTestId("pastille")).toHaveText("2");
       }

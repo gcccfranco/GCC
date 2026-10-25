@@ -3565,6 +3565,78 @@
     "equipe": {
       "sansCompte": "Noms du planning sans compte"
     },
+    "aFaire": {
+      "sousTitre": "{{jour}}, le plus urgent en premier",
+      "filtreAria": "Afficher",
+      "filtre": {
+        "tout": "Tout",
+        "mesEquipes": "Mes équipes"
+      },
+      "groupe": {
+        "enRetard": "En retard",
+        "semaine": "Cette semaine",
+        "plusTard": "Plus tard",
+        "aLire": "À lire ou à relier"
+      },
+      "verbe": {
+        "remplir": "Remplir",
+        "fait": "Fait",
+        "voirInscrits": "Voir les inscrits",
+        "attribuer": "Attribuer",
+        "compteRendu": "Écrire le compte rendu",
+        "lire": "Lire",
+        "relier": "Relier"
+      },
+      "verbeAria": "{{verbe}} : {{titre}}",
+      "cases": {
+        "titre": "{{planning}} : {{colonnes}}",
+        "semaine": "Dimanche {{date}}, à relancer : {{noms}}",
+        "semaineSansReferent": "Dimanche {{date}}, aucun référent à relancer",
+        "plusTard": "Jusqu'au {{date}}"
+      },
+      "tache": {
+        "aToi": "À toi",
+        "pour": "pour le {{date}}",
+        "enRetard": "en retard depuis le {{date}}"
+      },
+      "inscriptions": {
+        "titre": "{{titre}} : les inscriptions ferment bientôt",
+        "places": "{{inscrits}} inscrits sur {{max}} places",
+        "sansLimite_one": "{{count}} inscrit",
+        "sansLimite_other": "{{count}} inscrits"
+      },
+      "scene": {
+        "titre": "Scène : {{titre}}",
+        "contexte_one": "{{count}} passage sans personne, dès le {{date}}",
+        "contexte_other": "{{count}} passages sans personne, dès le {{date}}"
+      },
+      "compteRendu": {
+        "titre": "Compte rendu : {{titre}}",
+        "contexte": "Réunion du {{date}}, sans lien de compte rendu"
+      },
+      "messages": {
+        "titre": "Messages à lire",
+        "signalements_one": "{{count}} signalement",
+        "signalements_other": "{{count}} signalements",
+        "propositions_one": "{{count}} proposition de chant",
+        "propositions_other": "{{count}} propositions de chant"
+      },
+      "comptes": {
+        "titre": "Noms du planning sans compte",
+        "contexte_one": "{{count}} nom à relier à un compte",
+        "contexte_other": "{{count}} noms à relier à un compte"
+      },
+      "vide": "Rien à faire pour l'instant.",
+      "videEquipes": "Rien pour tes équipes.",
+      "incomplet": "Une partie de la liste n'a pas pu être lue : elle peut être incomplète.",
+      "dimanche": {
+        "titre": "Ce dimanche, {{date}}",
+        "ouvrir": "Ouvrir le planning"
+      },
+      "reunion": {
+        "titre": "Prochaine réunion"
+      }
+    },
     "selecteur": {
       "aria": "Choisir l'espace",
       "app": "App",

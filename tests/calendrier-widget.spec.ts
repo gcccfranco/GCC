@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { expect, test, type Page, type TestInfo } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { ADMIN_EMAILS, widgetsPermis } from "../src/lib/access";
 import { ajouterWidget, dispositionParDefaut } from "../src/lib/tableauDeBord/disposition";
@@ -194,7 +194,7 @@ async function sheets(page: Page) {
   });
 }
 
-/** Le tableau de bord avec le seul widget Calendrier, à la taille et aux réglages donnés. */
+/** /back-office (À faire depuis la piste A, BO-B) avec, enregistrée, l'ancienne disposition d'un seul widget : elle n'a plus d'effet. */
 async function ouvrir(page: Page, taille: "s" | "m" | "l", reglages: Record<string, unknown> = {}, qui: FakeProfile = P_ADMIN) {
   await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
   await sheets(page);
@@ -202,141 +202,45 @@ async function ouvrir(page: Page, taille: "s" | "m" | "l", reglages: Record<stri
     ...DOCS,
     [`backOffice/${qui.uid}`]: { tableauDeBord: [{ id: "calendrier", taille, reglages }], versionTableau: 2, majLe: "2026-10-01" },
   }, "/back-office");
-  await expect(widgetCal(page)).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: /^(À faire|待办.*)$/ })).toBeVisible();
   return db;
 }
-const widgetCal = (page: Page) => page.getByTestId("grille-widgets").getByRole("region", { name: "Calendrier", exact: true });
-const lignes = (page: Page) => widgetCal(page).getByTestId("ligne-calendrier");
-const estTelephone = (info: TestInfo) => info.project.name === "telephone";
+const widgetCal = (page: Page) => page.getByRole("region", { name: /^(Calendrier|日历)$/ });
 
-test.describe("C8 : le widget Calendrier", () => {
-  test("S : « Prochains jours », trois jours à venir, une ligne par jour", async ({ page }) => {
-    await ouvrir(page, "s");
-    await expect(widgetCal(page).getByRole("link", { name: "Prochains jours" })).toHaveAttribute("href", /^\/back-office\/calendrier\/?$/);
-    await expect(lignes(page)).toHaveCount(3);
-    await expect(lignes(page).nth(0)).toContainText("Ven. 2");
-    await expect(lignes(page).nth(0)).toContainText("Fond du culte");
-    await expect(lignes(page).nth(1)).toContainText(/Sam\. 3.*Réunion DA.*20:00/);
-    await expect(lignes(page).nth(2)).toContainText(/Dim\. 4.*Culte Franco.*Repas partagé.*12:30/);
-  });
+// Le widget Calendrier a disparu avec le tableau de bord (piste A, BO-B) : ce qui s'en vérifie à l'écran, c'est qu'À faire
+// ne le montre plus, ni sur une ancienne disposition, ni en 中文, et qu'il garde la page Calendrier à une entrée de là.
+test.describe("C8 : le widget Calendrier n'est plus sur /back-office", () => {
+  for (const taille of ["s", "m", "l"] as const) {
+    test(`${taille.toUpperCase()} enregistré : À faire ne montre ni le widget, ni ses lignes, ni « Personnaliser »`, async ({ page }) => {
+      await ouvrir(page, taille);
+      await expect(widgetCal(page)).toHaveCount(0);
+      await expect(page.getByTestId("grille-widgets")).toHaveCount(0);
+      await expect(page.getByTestId("ligne-calendrier")).toHaveCount(0);
+      await expect(page.getByRole("link", { name: "Prochains jours" })).toHaveCount(0);
+      await expect(page.getByRole("button", { name: "Personnaliser" })).toHaveCount(0);
+    });
+  }
 
-  test("M : « Cette semaine », sept jours à points, puis les lignes des jours qui restent", async ({ page }) => {
-    await ouvrir(page, "m");
-    await expect(widgetCal(page).getByRole("link", { name: "Cette semaine" })).toBeVisible();
-    const jours = widgetCal(page).getByTestId("semaine").locator("[data-jour]");
-    await expect(jours).toHaveCount(7);
-    await expect(jours.nth(0)).toHaveAttribute("data-jour", "2026-09-28");
-    await expect(widgetCal(page).locator('[data-jour="2026-10-01"]')).toHaveAttribute("aria-current", "date");
-    await expect(widgetCal(page).locator('[data-jour="2026-10-03"] [data-source="reunions"]')).toHaveCount(1);
-    // Le 4 : culte, repas du Sheet, petit déj libre — quatre points au plus.
-    const points4 = await widgetCal(page).locator('[data-jour="2026-10-04"] [data-source]').count();
-    expect(points4).toBeGreaterThanOrEqual(3);
-    expect(points4).toBeLessThanOrEqual(4);
-    await expect(lignes(page)).toHaveCount(3);
-    await expect(lignes(page).nth(1)).toContainText(/Sam\. 3.*Réunion DA/);
-  });
-
-  test("L : le mois à points (« Octobre »), et sa légende", async ({ page }) => {
-    await ouvrir(page, "l");
-    await expect(widgetCal(page).getByRole("link", { name: "Octobre" })).toBeVisible();
-    await expect(widgetCal(page).getByTestId("grille-points").locator("[data-jour]")).toHaveCount(42);
-    await expect(widgetCal(page).locator('[data-jour="2026-10-15"] [data-source="evenements"]')).toHaveCount(1);
-    await expect(widgetCal(page).locator('[data-jour="2026-10-22"] [data-source="evenements"]')).toHaveCount(1);
-    await expect(widgetCal(page).getByTestId("legende")).toContainText("Réunions");
-    await expect(lignes(page)).toHaveCount(0);
-  });
-
-  test("une source éteinte dans les réglages disparaît du widget", async ({ page }) => {
-    await ouvrir(page, "s", { sources: ["services", "evenements", "reunions", "scene", "petitDej"] });
-    await expect(lignes(page)).toHaveCount(3);
-    await expect(lignes(page).nth(0)).toContainText("Sam. 3");
-    await expect(widgetCal(page)).not.toContainText("Fond du culte");
-    await expect(lignes(page).nth(2)).toContainText(/Mar\. 6.*Soirée louange/);
-  });
-
-  test("« Seulement moi » dans les réglages : ne restent que mes entrées (mon service du 4 ; admin : la tâche « toute l'équipe », EQ15)", async ({ page }) => {
-    await ouvrir(page, "s", { seulementMoi: true });
-    // Un admin est référent de toutes les équipes : une tâche sans responsable est à lui (aFairePour, décision 41).
-    await expect(lignes(page)).toHaveCount(2);
-    await expect(lignes(page).nth(0)).toContainText("Fond du culte");
-    await expect(lignes(page).nth(1)).toContainText(/Dim\. 4.*Culte Franco/);
-    await expect(widgetCal(page)).not.toContainText("Repas partagé");
-  });
-
-  test("les réglages du widget, en personnalisation : Sources et « Seulement moi » ; éteindre Tâches s'écrit", async ({ page }) => {
-    const db = await ouvrir(page, "s");
-    await expect(lignes(page).nth(0)).toContainText("Fond du culte");
-    await page.getByRole("button", { name: "Personnaliser" }).click();
-    await widgetCal(page).getByRole("button", { name: "Réglages du widget" }).click();
-    const groupe = widgetCal(page).getByRole("group", { name: "Sources" });
-    await expect(groupe.getByRole("button")).toHaveText(["Services", "Évènements", "Tâches", "Réunions", "Scène", "Petit déj", "Seulement moi"]);
-    await expect(groupe.getByRole("button", { name: "Seulement moi" })).toHaveAttribute("aria-pressed", "false");
-    await groupe.getByRole("button", { name: "Tâches" }).click();
-    await expect(widgetCal(page)).not.toContainText("Fond du culte");
-    await expect.poll(() => (db.writes.filter((w) => w.path === "backOffice/u-admin").at(-1)?.data.tableauDeBord as { reglages: object }[] | undefined)?.[0]?.reglages)
-      .toEqual({ sources: ["services", "evenements", "reunions", "scene", "petitDej"] });
-  });
-
-  test("toucher un jour (S) ouvre la page du calendrier sur ce jour", async ({ page }) => {
-    await ouvrir(page, "s");
-    await lignes(page).nth(1).click();
-    await expect(page).toHaveURL(/\/back-office\/calendrier\/?\?jour=2026-10-03$/);
-    await expect(page.getByRole("heading", { name: "Samedi 3 octobre" }).filter({ visible: true })).toBeVisible();
-    await expect(page.getByText("Réunion DA").filter({ visible: true }).first()).toBeVisible();
-  });
-
-  test("toucher un jour (M, L) ouvre la page sur ce jour", async ({ page }) => {
-    await ouvrir(page, "m");
-    await widgetCal(page).locator('[data-jour="2026-10-04"]').click();
-    await expect(page).toHaveURL(/\/back-office\/calendrier\/?\?jour=2026-10-04$/);
-    await expect(page.getByRole("heading", { name: "Dimanche 4 octobre" }).filter({ visible: true })).toBeVisible();
-  });
-
-  test("L : toucher un jour d'un autre mois ouvre ce mois-là", async ({ page }) => {
-    await ouvrir(page, "l");
-    await widgetCal(page).locator('[data-jour="2026-11-02"]').click();
-    await expect(page).toHaveURL(/\/back-office\/calendrier\/?\?jour=2026-11-02$/);
-    // Sur tablette debout, la feuille du jour, modale, cache l'en-tête aux lecteurs d'écran : il reste à l'écran.
-    await expect(page.getByTestId("mois-affiche")).toHaveText(/^Novembre( 2026)?$/);
-    await expect(page.getByRole("heading", { name: "Lundi 2 novembre" }).filter({ visible: true })).toBeVisible();
-  });
-
-  test("téléphone : la page ouverte sur un jour montre le Mois à points et la liste du jour", async ({ page }, info) => {
-    test.skip(!estTelephone(info), "téléphone seulement : ailleurs, le panneau ou la feuille du jour");
-    await ouvrir(page, "s");
-    await lignes(page).nth(1).click();
-    await expect(page.getByRole("tablist", { name: "Affichage" }).getByRole("tab", { name: "Mois" })).toHaveAttribute("aria-selected", "true");
-    await expect(page.getByTestId("jour-choisi")).toContainText("Réunion DA");
-  });
-
-  test("un admin sans disposition enregistrée n'a plus le widget Calendrier (T9) : il l'ajoute depuis le catalogue, en M", async ({ page }) => {
+  test("un admin sans disposition : À faire, et le Calendrier reste une entrée du Back-Office", async ({ page }) => {
     await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
     await sheets(page);
     await signInAs(page, P_ADMIN, DOCS, "/back-office");
-    await expect(page.getByTestId("grille-widgets").getByRole("region", { name: "Ce dimanche", exact: true })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1, name: "À faire" })).toBeVisible();
     await expect(widgetCal(page)).toHaveCount(0);
-    await page.getByRole("button", { name: "Personnaliser" }).click();
-    await page.getByRole("region", { name: "Ajouter un widget" }).getByRole("button", { name: "Calendrier" }).click();
-    await expect(widgetCal(page)).toBeVisible();
-    await expect(widgetCal(page).getByTestId("semaine")).toBeVisible();
+    const entree = page.getByRole("navigation", { name: "Navigation principale" }).getByRole("link", { name: "Calendrier" }).filter({ visible: true });
+    await expect(entree).toHaveAttribute("href", /\/back-office\/calendrier\/?$/);
   });
 
-  test("中文 : 日历, 近几天, 今天", async ({ page }) => {
+  test("中文 : pas de 日历 sur la page, l'entrée du calendrier est traduite", async ({ page }) => {
     await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
-    await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
-    await sheets(page);
-    await signInAs(page, P_ADMIN, {
-      ...DOCS,
-      "backOffice/u-admin": { tableauDeBord: [{ id: "calendrier", taille: "s", reglages: {} }], versionTableau: 2, majLe: "2026-10-01" },
-    }, "/back-office");
-    const w = page.getByTestId("grille-widgets").getByRole("region", { name: "日历", exact: true });
-    await expect(w.getByRole("link", { name: "近几天" })).toBeVisible();
-    await expect(w.getByTestId("ligne-calendrier").nth(1)).toContainText("周六 3日");
+    await ouvrir(page, "s");
+    await expect(widgetCal(page)).toHaveCount(0);
+    await expect(page.getByRole("navigation", { name: /./ }).getByRole("link", { name: "日历" }).filter({ visible: true }).first()).toBeVisible();
   });
 });
 
-test.describe("relecture du lot : le widget ne dépend ni du Sheet ni de l'histoire", () => {
-  test("un Sheet qui ne répond pas ne bloque ni le widget Calendrier ni « Prochains évènements »", async ({ page }) => {
+test.describe("relecture du lot : À faire ne dépend ni du Sheet des évènements ni de l'histoire", () => {
+  test("un Sheet qui ne répond pas ne bloque pas À faire", async ({ page }) => {
     await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
     // Le planning répond ; l'export du Sheet des évènements reste pendu.
     await page.route(/docs\.google\.com\/spreadsheets/, (route) => {
@@ -345,28 +249,17 @@ test.describe("relecture du lot : le widget ne dépend ni du Sheet ni de l'histo
       const corps = url.searchParams.get("sheet") === "Franco_Louange" ? CULTE : "";
       return route.fulfill({ status: 200, contentType: "text/csv", body: corps });
     });
-    await signInAs(page, P_ADMIN, {
-      ...DOCS,
-      "backOffice/u-admin": {
-        tableauDeBord: [{ id: "calendrier", taille: "s", reglages: {} }, { id: "evenements", taille: "m", reglages: { nombre: 5 } }],
-        versionTableau: 2, majLe: "2026-10-01",
-      },
-    }, "/back-office");
-    await expect(lignes(page).nth(0)).toContainText("Fond du culte");
-    await expect(lignes(page).nth(1)).toContainText(/Sam\. 3.*Réunion DA/);
-    const evenements = page.getByTestId("grille-widgets").getByRole("region", { name: "Évènements", exact: true });
-    await expect(evenements.getByTestId("ligne-evenement")).toHaveText([/Tournoi de ping/]);
+    await signInAs(page, P_ADMIN, DOCS, "/back-office");
+    await expect(page.getByRole("heading", { level: 1, name: "À faire" })).toBeVisible();
+    await expect(page.getByTestId("ligne-a-faire").first().or(page.getByRole("status"))).toBeVisible();
+    await expect(page.getByTestId("grille-widgets")).toHaveCount(0);
   });
 
-  test("ni inscriptions sans « Seulement moi », ni fois d'une tâche hors de la période du widget", async ({ page }, info) => {
+  test("À faire ne lit aucune inscription, et jamais les fois d'une tâche très ancienne", async ({ page }) => {
     const inscriptions: string[] = [];
-    const fois: string[] = [];
     page.on("request", (r) => {
-      const url = decodeURIComponent(r.url());
-      const i = /\/evenements\/([^/]+)\/inscriptions\//.exec(url);
+      const i = /\/evenements\/([^/]+)\/inscriptions\//.exec(decodeURIComponent(r.url()));
       if (i && r.method() === "GET") inscriptions.push(i[1]);
-      const f = /\/taches\/([^/:]+):runQuery/.exec(url);
-      if (f) fois.push(f[1]);
     });
     await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
     await sheets(page);
@@ -376,66 +269,34 @@ test.describe("relecture du lot : le widget ne dépend ni du Sheet ni de l'histo
         titre: "Affiche de 2024", responsableUid: null, responsableNom: "", echeance: "2024-10-15", repetition: null,
         lien: "", note: "", prevenir: null, evenement: null, auteurUid: "u-autre", createdAt: MAINTENANT, updatedAt: MAINTENANT,
       },
-      "backOffice/u-admin": { tableauDeBord: [{ id: "calendrier", taille: "s", reglages: {} }], versionTableau: 2, majLe: "2026-10-01" },
     }, "/back-office");
-    await expect(lignes(page).nth(0)).toContainText("Fond du culte");
+    await expect(page.getByTestId("ligne-a-faire").filter({ hasText: "Fond du culte" })).toBeVisible();
     expect(inscriptions).toEqual([]);
-    // Les fois : sur téléphone seulement, où la barre latérale (qui relit toutes les tâches pour
-    // sa pastille, lot U6) n'est pas montée.
-    if (estTelephone(info)) {
-      expect(fois).toContain("fond");
-      expect(fois).not.toContain("ancienne");
-    }
+    // Une tâche unique reste en retard tant qu'on ne la coche pas : celle de 2024 est la première de la liste.
+    await expect(page.getByTestId("ligne-a-faire").first()).toContainText("Affiche de 2024");
   });
 });
 
-test.describe("C8 : « Prochains évènements » reçoit le Sheet", () => {
-  test("les entrées du Sheet à venir s'y mêlent aux évènements de l'app ; elles ouvrent l'onglet du mois", async ({ page }) => {
+test.describe("C8 : le Sheet des évènements n'est plus lu par la page d'accueil du Back-Office", () => {
+  test("les entrées du Sheet n'y sont pas : ni « Repas partagé », ni lien vers un onglet du Sheet", async ({ page }) => {
     await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
     await sheets(page);
     await signInAs(page, P_EVENEMENT, {
       ...DOCS,
       "backOffice/u-evt": { tableauDeBord: [{ id: "evenements", taille: "m", reglages: { nombre: 10 } }], versionTableau: 2, majLe: "2026-10-01" },
     }, "/back-office");
-    const w = page.getByTestId("grille-widgets").getByRole("region", { name: "Évènements", exact: true });
-    const ls = w.getByTestId("ligne-evenement");
-    await expect(ls).toHaveText([
-      /Repas partagé.*dim\. 04\/10.*12:30.*Sheet/,
-      /Soirée louange.*mar\. 06\/10.*19:00.*Sheet/,
-      /Prière.*mar\. 06\/10.*19:30.*Sheet/,
-      /Foot au parc.*sam\. 10\/10.*20:00.*Sheet/,
-      /Chants de Noël.*jeu\. 15\/10.*Sheet/,
-      // Inscriptions en pastille depuis TB2-corrections.
-      /Tournoi de ping.*jeu\. 22\/10.*4 \/ 10/,
-      /Veillée.*sam\. 31\/10.*Sheet/,
-    ]);
-    const repas = ls.nth(0);
-    await expect(repas).toHaveAttribute("href", /docs\.google\.com\/spreadsheets\/d\/.+\/edit#gid=439766955$/);
-    await expect(repas).toHaveAttribute("target", "_blank");
-    // Le téléphone du bloc « Inscriptions » n'apparaît jamais.
-    await expect(w).not.toContainText("06 99");
+    await expect(page.getByRole("heading", { level: 1, name: "À faire" })).toBeVisible();
+    await expect(page.getByRole("region", { name: "Évènements", exact: true })).toHaveCount(0);
+    await expect(page.getByText("Repas partagé")).toHaveCount(0);
+    await expect(page.locator('a[href*="docs.google.com/spreadsheets"]')).toHaveCount(0);
+    await expect(page.getByText("06 99")).toHaveCount(0);
   });
 });
 
 test.describe("C8 : captures à regarder", () => {
-  // Comparées à la planche bo-tableau-de-bord (W_CAL : S, M, L) et bo-telephone-accueil.
-  test("le widget en S, M et L, avec Prochains évènements et le Sheet", async ({ page }, info) => {
-    await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
-    for (const taille of ["s", "m", "l"] as const) {
-      await page.unrouteAll({ behavior: "ignoreErrors" });
-      await sheets(page);
-      await signInAs(page, P_ADMIN, {
-        ...DOCS,
-        "backOffice/u-admin": {
-          tableauDeBord: [{ id: "calendrier", taille, reglages: {} }, { id: "evenements", taille: "m", reglages: { nombre: 5 } }],
-          versionTableau: 2, majLe: "2026-10-01",
-        },
-      }, "/back-office");
-      await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" });
-      const contenu = { s: widgetCal(page).getByTestId("ligne-calendrier").first(), m: widgetCal(page).getByTestId("semaine"), l: widgetCal(page).getByTestId("grille-points") };
-      await expect(contenu[taille]).toBeVisible();
-      await expect(page.getByTestId("grille-widgets").getByRole("region", { name: "Évènements" }).getByTestId("ligne-evenement").first()).toBeVisible();
-      await page.screenshot({ path: `test-results/calendrier-widget-captures/${info.project.name}-${taille}.png`, fullPage: true });
-    }
+  test("À faire, à la place du tableau de bord et de son widget Calendrier", async ({ page }, info) => {
+    await ouvrir(page, "m");
+    await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" });
+    await page.screenshot({ path: `test-results/calendrier-widget-captures/${info.project.name}-a-faire.png`, fullPage: true });
   });
 });

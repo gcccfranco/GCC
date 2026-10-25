@@ -64,6 +64,8 @@ const SPECS_GRAND_ECRAN = [
   /back-office-admin\.spec\.ts/,
   // B4 : le tableau de bord (grille de 4 en paysage et à 1 440 px).
   /tableau-de-bord\.spec\.ts/,
+  // Piste A, BO-B (docs/spec-back-office-piste-a.md, BO6) : l'écran « À faire » et sa colonne de droite.
+  /a-faire\.spec\.ts/,
   // Lot U5 bis (docs/spec-editeur-setlist.md) : l'éditeur de setlist en deux colonnes.
   /setlist-editeur-piste2\.spec\.ts/,
   // … et sa bibliothèque (T5 : « + » entre deux éléments sur ordinateur, pas sur tablette couchée).

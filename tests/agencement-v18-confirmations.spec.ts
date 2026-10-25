@@ -285,26 +285,16 @@ test("retirer un sujet : la fenêtre du site ; Annuler le garde ; Retirer le sup
 
 // ─── Tableau de bord ─────────────────────────────────────────────────────────
 
-test("revenir à la disposition par défaut : la fenêtre du site ; Annuler garde la disposition ; Remettre la remplace", async ({ page }) => {
+test("tableau de bord : plus de « Personnaliser » ni de « Disposition par défaut » (donc plus de fenêtre) ; À faire ne touche pas à backOffice/{uid}", async ({ page }) => {
   const coord: FakeProfile = { uid: "uid-alice", email: "alice@example.com", firstName: "Alice", lastName: "Q.", dansEquipes: ["evenementiel", "edd"], referentDe: ["evenementiel", "edd"] };
   const db = await ouvrir(page, coord, "/back-office", {
     "backOffice/uid-alice": { tableauDeBord: [{ id: "scene", taille: "l", reglages: {} }], versionTableau: 2, majLe: "2026-09-30T10:00:00Z" },
   });
-  const grille = page.getByTestId("grille-widgets");
-  const affiches = () => grille.locator("[data-widget]").evaluateAll((els) => els.map((e) => e.getAttribute("data-widget")));
-  await expect(grille.getByRole("region", { name: "Scène", exact: true })).toBeVisible();
-  await page.getByRole("button", { name: "Personnaliser" }).click();
-  const parDefaut = page.getByRole("button", { name: "Disposition par défaut" });
-  await parDefaut.click();
-  await expect(fenetreDuSite(page).getByRole("heading", { name: "Remettre la disposition par défaut de ton rôle ?" })).toBeVisible();
-  await expect(fenetreDuSite(page)).toContainText("Tes widgets, leurs tailles et leurs réglages seront remplacés.");
-  await repondreDansLeSite(page, "Annuler");
-  expect(await affiches()).toEqual(["scene"]);
+  await expect(page.getByRole("heading", { level: 1, name: "À faire" })).toBeVisible();
+  await expect(page.getByTestId("grille-widgets")).toHaveCount(0);
+  await expect(page.getByRole("region", { name: "Scène", exact: true })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Personnaliser" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Disposition par défaut" })).toHaveCount(0);
   expect(db.writes.filter((w) => w.path === "backOffice/uid-alice")).toEqual([]);
-
-  await parDefaut.click();
-  await repondreDansLeSite(page, "Remettre par défaut");
-  await expect.poll(affiches).not.toEqual(["scene"]);
-  await expect.poll(() => db.writes.filter((w) => w.path === "backOffice/uid-alice").length).toBe(1);
-  expect(db.doc("backOffice/uid-alice")!.tableauDeBord).toBeUndefined();
+  expect(db.doc("backOffice/uid-alice")!.tableauDeBord).toBeDefined();
 });

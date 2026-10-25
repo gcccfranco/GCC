@@ -3516,6 +3516,78 @@
     "equipe": {
       "sansCompte": "排班表中尚无账号的名字"
     },
+    "aFaire": {
+      "sousTitre": "{{jour}}，最紧急的在前",
+      "filtreAria": "显示",
+      "filtre": {
+        "tout": "全部",
+        "mesEquipes": "我的团队"
+      },
+      "groupe": {
+        "enRetard": "已逾期",
+        "semaine": "本周",
+        "plusTard": "稍后",
+        "aLire": "待阅读或关联"
+      },
+      "verbe": {
+        "remplir": "填写",
+        "fait": "完成",
+        "voirInscrits": "查看报名",
+        "attribuer": "安排",
+        "compteRendu": "写会议记录",
+        "lire": "阅读",
+        "relier": "关联"
+      },
+      "verbeAria": "{{verbe}}：{{titre}}",
+      "cases": {
+        "titre": "{{planning}}：{{colonnes}}",
+        "semaine": "{{date}}主日，需联系：{{noms}}",
+        "semaineSansReferent": "{{date}}主日，没有可联系的负责人",
+        "plusTard": "截至{{date}}"
+      },
+      "tache": {
+        "aToi": "交给你",
+        "pour": "截止 {{date}}",
+        "enRetard": "自 {{date}} 起逾期"
+      },
+      "inscriptions": {
+        "titre": "{{titre}}：报名即将截止",
+        "places": "已报名 {{inscrits}} 人，共 {{max}} 个名额",
+        "sansLimite_one": "已报名 {{count}} 人",
+        "sansLimite_other": "已报名 {{count}} 人"
+      },
+      "scene": {
+        "titre": "舞台：{{titre}}",
+        "contexte_one": "{{count}} 个节目还没有人，从 {{date}} 起",
+        "contexte_other": "{{count}} 个节目还没有人，从 {{date}} 起"
+      },
+      "compteRendu": {
+        "titre": "会议记录：{{titre}}",
+        "contexte": "{{date}} 的会议，还没有会议记录链接"
+      },
+      "messages": {
+        "titre": "待阅读的消息",
+        "signalements_one": "{{count}} 条问题反馈",
+        "signalements_other": "{{count}} 条问题反馈",
+        "propositions_one": "{{count}} 首推荐诗歌",
+        "propositions_other": "{{count}} 首推荐诗歌"
+      },
+      "comptes": {
+        "titre": "排班表中没有账号的名字",
+        "contexte_one": "{{count}} 个名字需要关联账号",
+        "contexte_other": "{{count}} 个名字需要关联账号"
+      },
+      "vide": "目前没有待办事项。",
+      "videEquipes": "你的团队没有待办事项。",
+      "incomplet": "部分内容未能读取，列表可能不完整。",
+      "dimanche": {
+        "titre": "本主日，{{date}}",
+        "ouvrir": "打开排班表"
+      },
+      "reunion": {
+        "titre": "下一次会议"
+      }
+    },
     "selecteur": {
       "aria": "选择空间",
       "app": "应用",

@@ -1,4 +1,4 @@
-import { expect, test, type Page, type TestInfo } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
 import {
   enTete, estGrandEcran, estTelephone, interdireDialoguesNatifs, ouvrirAvecBarre, verifierAgencement, verifierSansDebordement,
@@ -188,108 +188,57 @@ test.describe("T6 — Statistiques (B13)", () => {
   });
 });
 
-// ─── Tableau de bord (B14) ──────────────────────────────────────────────────
+// ─── Tableau de bord (B14), devenu « À faire » (piste A, BO-B) ───────────────
+// Les widgets, leur grille et leurs colonnes sont partis avec le tableau de bord : l'agencement qui reste à voir est
+// celui d'À faire (en-tête commun, liste, colonne de droite quand la barre latérale est là). `repartirWidgets` et
+// `fractionsPour` restent des modules purs, testés plus bas.
 
-async function ouvrirTableau(page: Page, barre?: "depliee" | "reduite") {
+async function ouvrirAFaire(page: Page, barre?: "depliee" | "reduite") {
   interdireDialoguesNatifs(page);
   if (barre) await ouvrirAvecBarre(page, barre);
   await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
   await sansSheet(page);
-  // Lot TB2-c (T9) : le défaut n'a plus que six widgets ; l'agencement en colonnes se regarde sur les onze d'avant,
-  // enregistrés (version 2) aux tailles d'avant.
   await signInAs(page, ADMIN, {
+    // Une ancienne disposition enregistrée n'a plus d'effet.
     "backOffice/uid-admin": {
-      tableauDeBord: DEFAUT_ADMIN.map((id) => ({ id, taille: TAILLES_ANCIENNES[id] ?? "s", reglages: {} })), versionTableau: 2, majLe: "2026-09-30T10:00:00Z",
+      tableauDeBord: [{ id: "dimanche", taille: "m", reglages: {} }], versionTableau: 2, majLe: "2026-09-30T10:00:00Z",
     },
+    // De quoi remplir « Ce dimanche » : sans lui, la colonne de droite est vide.
+    "plannings/culte/dimanches/2026-10-04": { date: "2026-10-04", presidence: "Pers. A", choriste1: "Pers. B", piano: "Pers. D", sono: "Pers. G" },
+    "equipes/da/taches/t1": { titre: "Fond du culte", responsableUid: null, responsableNom: "", echeance: "2026-09-28", repetition: null },
   }, "/back-office");
-  await expect(page.getByTestId("grille-widgets").locator('[data-widget="dimanche"]')).toBeVisible();
+  await expect(page.getByTestId("ligne-a-faire").first()).toBeVisible();
 }
 
-const zoneWidgets = (page: Page) => page.getByTestId("grille-widgets");
-/** Les colonnes : chaque widget dit la sienne (`data-colonne`, 0 = la large) ; de haut en bas. */
-const colonnesAffichees = (page: Page) =>
-  zoneWidgets(page).locator("[data-widget][data-colonne]").evaluateAll((els) => {
-    const cols: { largeur: number; ids: string[]; ys: number[] }[] = [];
-    for (const e of els) {
-      const c = Number(e.getAttribute("data-colonne"));
-      const r = e.getBoundingClientRect();
-      cols[c] ??= { largeur: r.width, ids: [], ys: [] };
-      cols[c].ids.push(e.getAttribute("data-widget")!);
-      cols[c].ys.push(r.y);
-    }
-    return cols;
-  });
-
-/** Les onze widgets d'un admin, dans l'ordre du défaut d'avant TB2-c, aux tailles d'avant (les autres : S). */
-const DEFAUT_ADMIN = ["dimanche", "calendrier", "afaire", "setlists", "planning", "evenements", "chants", "petitdej", "raccourcis", "scene", "comptes"];
-const TAILLES_ANCIENNES: Record<string, string> = { dimanche: "m", calendrier: "m", afaire: "m", evenements: "m", chants: "m" };
-
-async function verifierColonnes(page: Page, nombre: number) {
-  await expect.poll(async () => (await colonnesAffichees(page)).length, { message: `${nombre} colonnes` }).toBe(nombre);
-  await expect(zoneWidgets(page)).toHaveAttribute("data-disposition", "colonnes");
-  const cols = await colonnesAffichees(page);
-  const fractions = nombre === 3 ? COLONNES_TROIS : COLONNES_DEUX;
-  expect(cols[0].largeur / cols[1].largeur, "la colonne large").toBeCloseTo(fractions[0], 1);
-  expect(cols[0].ids[0], "la colonne large commence par le premier widget").toBe("dimanche");
-  // Chaque widget une fois, chaque colonne remplie, l'ordre du tableau gardé dans chaque colonne.
-  expect(cols.flatMap((c) => c.ids).sort()).toEqual([...DEFAUT_ADMIN].sort());
-  for (const c of cols) {
-    expect(c.ids.length, "aucune colonne vide").toBeGreaterThan(0);
-    const rangs = c.ids.map((id) => DEFAUT_ADMIN.indexOf(id));
-    expect(rangs).toEqual([...rangs].sort((a, b) => a - b));
-    expect(c.ys, "de haut en bas, dans l'ordre du tableau").toEqual([...c.ys].sort((a, b) => a - b));
-  }
-}
-
-const nombreDeColonnes = (info: TestInfo, barre: "depliee" | "reduite") =>
-  barre === "reduite" && info.project.name === "ordinateur-1440" ? 3 : 2;
-
-test.describe("T6 — Tableau de bord (B14)", () => {
-  test("l'agencement commun ; « Personnaliser » en contour dans l'en-tête", async ({ page }) => {
-    await ouvrirTableau(page);
-    // Les widgets sur toute la zone ; ni rail ni pilules.
-    await verifierAgencement(page, { contenu: page.getByTestId("grille-widgets"), onglets: { rail: 0, pilules: 0 } });
-    await expect(enTete(page).getByRole("heading", { level: 1 })).toHaveText("Tableau de bord");
-    await expect(enTete(page).getByRole("button", { name: "Personnaliser" })).toHaveCSS("border-top-width", "1px"); // en contour
+test.describe("T6 — Tableau de bord (B14) : devenu À faire", () => {
+  test("l'agencement commun : « À faire » en h1 et son sélecteur dans l'en-tête ; plus de « Personnaliser » ni de grille", async ({ page }) => {
+    await ouvrirAFaire(page);
+    await expect(enTete(page).getByRole("heading", { level: 1 })).toHaveText("À faire");
+    await expect(enTete(page).getByRole("group", { name: "Afficher" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Personnaliser" })).toHaveCount(0);
+    await expect(page.getByTestId("grille-widgets")).toHaveCount(0);
   });
 
   for (const barre of ["depliee", "reduite"] as const) {
-    test(`en grand, barre ${barre === "depliee" ? "dépliée" : "réduite"} : les widgets en colonnes, une large et ${barre === "depliee" ? "une étroite" : "deux étroites dès 1 440 px"}`, async ({ page }, info) => {
+    test(`en grand, barre ${barre === "depliee" ? "dépliée" : "réduite"} : la liste à gauche, la colonne de droite à côté, sans débordement`, async ({ page }, info) => {
       test.skip(!estGrandEcran(info), "en grand seulement (ordinateur, tablette couchée)");
-      await ouvrirTableau(page, barre);
-      await verifierColonnes(page, nombreDeColonnes(info, barre));
-      await capture(page, `t6-tableau-${barre}`);
+      await ouvrirAFaire(page, barre);
+      const colonne = page.getByTestId("colonne-droite");
+      await expect(colonne).toBeVisible();
+      const liste = (await page.getByTestId("ligne-a-faire").first().boundingBox())!;
+      const droite = (await colonne.boundingBox())!;
+      expect(liste.x + liste.width, "la liste est à gauche de la colonne").toBeLessThanOrEqual(droite.x);
+      await verifierSansDebordement(page);
+      await capture(page, `t6-a-faire-${barre}`);
     });
   }
 
-  test("en grand, « Personnaliser » rend la grille ; « Terminé » rend les colonnes", async ({ page }, info) => {
-    test.skip(!estGrandEcran(info), "en grand seulement (ordinateur, tablette couchée)");
-    await ouvrirTableau(page);
-    await verifierColonnes(page, 2);
-    await page.getByRole("button", { name: "Personnaliser" }).click();
-    await expect(zoneWidgets(page)).toHaveAttribute("data-disposition", "grille");
-    await expect(zoneWidgets(page).locator("[data-colonne]")).toHaveCount(0);
-    await capture(page, "t6-tableau-personnaliser");
-    await page.getByRole("button", { name: "Terminé" }).click();
-    await verifierColonnes(page, 2);
-  });
-
-  // Relecture de T6 : trois colonnes dès 1 200 px de zone, c'était trois colonnes barre dépliée dès
-  // une fenêtre de 1 528 px. B14 : deux colonnes barre dépliée, trois barre réduite dès 1 440 px.
-  test("barre dépliée sur un écran de 1 600 px : toujours deux colonnes (ordinateur)", async ({ page }, info) => {
-    test.skip(!info.project.name.startsWith("ordinateur"), "ordinateur seulement : la fenêtre passe à 1 600 px");
-    await page.setViewportSize({ width: 1600, height: 900 });
-    await ouvrirTableau(page, "depliee");
-    await verifierColonnes(page, 2);
-    await capture(page, "t6-tableau-1600-depliee");
-  });
-
-  test("téléphone et tablette en portrait : la grille d'aujourd'hui", async ({ page }, info) => {
+  test("téléphone et tablette en portrait : la liste seule, pas de colonne de droite", async ({ page }, info) => {
     test.skip(estGrandEcran(info), "téléphone et tablette en portrait seulement");
-    await ouvrirTableau(page);
-    await expect(zoneWidgets(page)).toHaveAttribute("data-disposition", "grille");
-    await expect(zoneWidgets(page).locator("[data-colonne]")).toHaveCount(0);
-    await capture(page, "t6-tableau");
+    await ouvrirAFaire(page);
+    await expect(page.getByTestId("colonne-droite")).toHaveCount(0);
+    await verifierSansDebordement(page);
+    await capture(page, "t6-a-faire");
   });
 });
 

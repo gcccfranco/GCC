@@ -552,34 +552,39 @@ test("captures B3 : la ligne d'annonce du calendrier", async ({ page }, info) =>
 });
 
 
-// ─── Fusion de U8 : le widget Calendrier du tableau de bord suit Q6 ─────────────
+// ─── Fusion de U8 : le widget Calendrier a disparu avec le tableau de bord (piste A, BO-B) ─────────────
+// À faire ne montre pas le Calendrier et ne lit pas le Sheet des évènements : ni la bascule du 01/01/2027, ni un
+// Sheet qui ne répond pas ne le concernent. Le Calendrier garde sa page (testée plus haut).
 
-test.describe("Q6 : le widget Calendrier (U8, C8) suit la bascule", () => {
-  const widgetCal = (page: Page) => page.getByTestId("grille-widgets").getByRole("region", { name: "Calendrier", exact: true });
-  async function tableauDeBord(page: Page, taille: "m" | "l", maintenant: string) {
+test.describe("Q6 : À faire ne montre plus le widget Calendrier et ne lit pas le Sheet des évènements", () => {
+  const widgetCal = (page: Page) => page.getByRole("region", { name: "Calendrier", exact: true });
+  async function aFaire(page: Page, maintenant: string) {
     await page.clock.setFixedTime(new Date(maintenant));
     const lus = await sheets(page);
     await signInAs(page, ADMIN, {
       ...DOCS,
-      "backOffice/u-admin": { tableauDeBord: [{ id: "calendrier", taille, reglages: {} }], versionTableau: 2, majLe: "2026-12-01" },
+      "backOffice/u-admin": { tableauDeBord: [{ id: "calendrier", taille: "l", reglages: {} }], versionTableau: 2, majLe: "2026-12-01" },
     }, "/back-office");
-    await expect(widgetCal(page)).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1, name: "À faire" })).toBeVisible();
     return lus;
   }
 
-  for (const taille of ["m", "l"] as const) {
-    test(`02/01/2027, ${taille.toUpperCase()} : la période commence le 28/12/2026, aucune requête au Sheet`, async ({ page }) => {
-      const lus = await tableauDeBord(page, taille, "2027-01-02T10:00:00");
-      await expect(widgetCal(page).locator('[data-jour="2026-12-28"]')).toBeVisible();
+  for (const maintenant of ["2027-01-02T10:00:00", "2026-12-15T10:00:00"]) {
+    test(`${maintenant.slice(0, 10)} : pas de widget Calendrier, même enregistré ; le Sheet des évènements n'est pas lu`, async ({ page }) => {
+      const lus = await aFaire(page, maintenant);
+      await expect(page.getByTestId("grille-widgets")).toHaveCount(0);
+      await expect(widgetCal(page)).toHaveCount(0);
       await page.waitForTimeout(300);
-      expect(lus).toEqual([]);
+      expect(lus.includes(GID_DECEMBRE)).toBe(false);
     });
   }
 
-  test("15/12/2026, L : décembre lit encore le Sheet", async ({ page }) => {
-    const lus = await tableauDeBord(page, "l", "2026-12-15T10:00:00");
-    await expect.poll(() => lus.includes(GID_DECEMBRE)).toBe(true);
-    await expect(widgetCal(page).locator('[data-jour="2026-12-06"] [data-source="evenements"]').first()).toBeVisible();
+  test("un Sheet qui ne répond pas ne bloque pas À faire", async ({ page }) => {
+    await page.clock.setFixedTime(new Date("2026-12-15T10:00:00"));
+    await page.route(/docs\.google\.com\/spreadsheets/, (route) => route.abort());
+    await signInAs(page, ADMIN, DOCS, "/back-office");
+    await expect(page.getByRole("heading", { level: 1, name: "À faire" })).toBeVisible();
+    await expect(page.getByRole("status").or(page.getByTestId("ligne-a-faire").first())).toBeVisible();
   });
 });
 
@@ -672,14 +677,13 @@ test.describe("Un appareil à Shanghai, le 31/12/2026 à 18:30 de Paris (01:30 l
     await expect(annonce(page)).toHaveText(ANNONCE_AVANT);
   });
 
-  test("le widget Calendrier (L) lit encore décembre", async ({ page }) => {
+  test("À faire ne lit pas le Sheet des évènements, quel que soit le fuseau", async ({ page }) => {
     await page.clock.setFixedTime(new Date(INSTANT));
     const lus = await sheets(page);
-    await signInAs(page, ADMIN, {
-      ...DOCS,
-      "backOffice/u-admin": { tableauDeBord: [{ id: "calendrier", taille: "l", reglages: {} }], versionTableau: 2, majLe: "2026-12-01" },
-    }, "/back-office");
-    await expect(page.getByTestId("grille-widgets").getByRole("region", { name: "Calendrier", exact: true })).toBeVisible();
-    await expect.poll(() => lus.includes(GID_DECEMBRE)).toBe(true);
+    await signInAs(page, ADMIN, DOCS, "/back-office");
+    await expect(page.getByRole("heading", { level: 1, name: "À faire" })).toBeVisible();
+    await expect(page.getByRole("region", { name: "Calendrier", exact: true })).toHaveCount(0);
+    await page.waitForTimeout(300);
+    expect(lus.includes(GID_DECEMBRE)).toBe(false);
   });
 });
