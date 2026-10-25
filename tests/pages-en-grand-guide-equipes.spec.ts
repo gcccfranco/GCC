@@ -97,7 +97,8 @@ const pilule = (page: Page, nomCourt: string) => index(page).getByRole("button",
 // ── Équipes ─────────────────────────────────────────────────────────────────────────────────
 
 test.describe("Équipes en bandeau", () => {
-  test("la page tient dans la hauteur de la fenêtre ; seul le bandeau défile en largeur", async ({ page }) => {
+  test("la page tient dans la hauteur de la fenêtre ; seul le bandeau défile en largeur", async ({ page }, info) => {
+    test.skip(info.project.name === "telephone", "sous 640 px, une colonne : la page défile en hauteur (B3)");
     await ouvrirEquipes(page);
     const mesure = await page.evaluate(() => ({
       haut: document.documentElement.scrollHeight,
@@ -151,7 +152,8 @@ test.describe("Équipes en bandeau", () => {
     await capture(page, "b6-equipes-louange");
   });
 
-  test("la pilule allumée suit le défilement du bandeau", async ({ page }) => {
+  test("la pilule allumée suit le défilement du bandeau", async ({ page }, info) => {
+    test.skip(info.project.name === "telephone", "sous 640 px, le bandeau ne défile plus en largeur (B3)");
     await ouvrirEquipes(page);
     await expect(pilule(page, "Orga")).toHaveAttribute("aria-current", "true");
     // Défilement à la main jusqu'à la colonne de Régie.

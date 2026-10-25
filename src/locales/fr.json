@@ -832,22 +832,22 @@
     "sections": {
       "songs": {
         "title": "Trouver et lire un chant",
-        "body": "L'onglet **Louange** ouvre la liste des chants. Cherche par titre, par pinyin (chants chinois) ou par artiste, puis ouvre un chant pour voir la partition, ses liens (YouTube, Spotify…) et les outils.",
+        "body": "L'onglet **Chants** ouvre la liste des chants. Cherche par titre, par pinyin (chants chinois) ou par artiste, puis ouvre un chant pour voir la partition, ses liens (YouTube, Spotify…) et les outils.",
         "points": [
           "Les filtres limitent l'affichage à une langue ou à un thème précis.",
-          "La pastille de couleur à gauche indique la langue : bleu = français, rouge = chinois.",
+          "La pastille de couleur à droite donne la tonalité du chant ; sa couleur indique la langue : bleu = français, rouge = chinois.",
           "Tes derniers chants ouverts apparaissent en haut, sous « Récemment consultés ».",
-          "Un chant manque ? Le bouton **Proposer un nouveau chant** l'envoie aux responsables."
+          "Un chant manque ? Le bouton **Proposer un chant** l'envoie aux responsables."
         ]
       },
       "customize": {
         "title": "Transposer et personnaliser",
-        "body": "Sur un chant, le bouton **Personnaliser** adapte la partition à tes besoins. Tes réglages servent aussi au PDF et au Mode Louange.",
+        "body": "Sur un chant, la barre du haut adapte la partition à tes besoins : tonalité, taille du texte, accords. Tes réglages servent aussi au PDF et au Mode Louange.",
         "points": [
-          "Transpose dans une autre tonalité (boutons − / + ou choix direct).",
-          "Affiche ou masque les accords, et le pinyin pour les chants chinois.",
+          "**Tonalité** : les boutons − / + ou la liste du milieu choisissent une autre tonalité.",
+          "**A− / A+** règlent la taille du texte ; **Accords** les affiche ou les masque, et **Pinyin** aussi pour les chants chinois.",
           "Bascule en notation Jianpu (简谱) quand elle existe.",
-          "Réorganise, ajoute ou masque des sections, et règle la taille du texte.",
+          "**Personnaliser** (menu ⋯) : réorganise, ajoute ou retire des sections, et ajoute une note à chacune.",
           "**Réinitialiser** revient à la version d'origine."
         ],
         "tip": "En mode Jianpu, la structure n'est pas modifiable : le chant s'exporte tel quel, dans l'ordre original."
@@ -890,22 +890,22 @@
           "**Nuances par section** : pose une dynamique ou une indication (pp, mf, crescendo, a cappella…) sur une section.",
           "**Transitions** : ajoute un texte « transition après cette section » pour noter une modulation, un enchaînement, un silence…",
           "**Fusion de chants (medley)** : sélectionne plusieurs chants puis **Fusionner** pour les enchaîner d'un bloc ; **Mélanger les sections** entrelace leurs couplets/refrains, et **Défusionner** les sépare à nouveau.",
-          "**Brouillon** : enregistre en brouillon pour finir plus tard — invisible des autres tant qu'il n'est pas publié."
+          "**Brouillon** : tant que tu n'as pas touché **Publier**, la setlist reste un brouillon, invisible des autres — tu peux la finir plus tard."
         ],
         "tip": "Tous ces réglages (tonalité, structure, notes, transitions, fusion) se retrouvent à l'identique dans le PDF de la setlist et dans le Mode Louange."
       },
       "planning": {
-        "title": "Planning et Mes Services",
-        "body": "L'onglet **Planning** montre les plannings de service de l'église (cultes, Campus, Intergroupe, Interfranco). L'onglet **Mes Services** ne garde que les dates où tu es prévu.",
+        "title": "Planning et Mes services",
+        "body": "L'onglet **Planning** montre les plannings de service de l'église (cultes, Campus, Intergroupe, Interfranco). La page **Mes services**, dans **Moi**, ne garde que les dates où tu es prévu.",
         "points": [
-          "Pour que Mes Services fonctionne, choisis ton **nom de planning** dans ton profil.",
+          "Pour que Mes services fonctionne, choisis ton **nom de planning** dans ton profil.",
           "Quand une setlist existe pour un de tes services, un lien direct y mène.",
           "Les couleurs distinguent les types de service."
         ]
       },
       "notifications": {
         "title": "Notifications et rappels",
-        "body": "La **cloche** en haut affiche les nouveautés. Sur mobile, tu peux aussi recevoir des **notifications push**, même site fermé.",
+        "body": "La **cloche** affiche les nouveautés. Sur mobile, tu peux aussi recevoir des **notifications push**, même site fermé.",
         "points": [
           "Active-les depuis **Moi › Réglages**, avec la ligne Notifications.",
           "Quatre types, activables séparément : **Rappels de service** (à J-7, J-3 et J-1, plus les répétitions Campus), **Setlist prête**, **Évènements** et **Tâches**.",
@@ -917,8 +917,8 @@
         "title": "Signaler un problème",
         "body": "Une erreur dans un chant (parole, accord, tonalité…) ou un souci sur le site ? Signale-le : ça part directement aux responsables.",
         "points": [
-          "Sur un chant : le bouton **Signaler** ouvre un court formulaire (résumé + détails).",
-          "Pour le site en général : l'icône de signalement dans la barre du haut.",
+          "Sur un chant : **Signalement**, dans le menu ⋯, ouvre un court formulaire (résumé + détails).",
+          "Pour le site en général : **Moi › Signaler un problème**.",
           "Donne un résumé clair et, si possible, ce qu'il faudrait corriger."
         ]
       },
@@ -940,8 +940,8 @@
         "body": "Complète ton **profil** pour débloquer Mes Services et les setlists de tes services.",
         "points": [
           "Renseigne prénom, nom, lieux et rôles de service, et ton nom de planning.",
-          "Le bouton **中文 / FR** change la langue de toute l'interface.",
-          "Le bouton **lune / soleil** bascule entre thème clair et sombre.",
+          "Dans **Moi › Réglages**, **Langue** passe toute l'interface du français au 中文 (et inversement).",
+          "**Thème** bascule entre clair et sombre.",
           "Une fois complété, le profil n'est modifiable que par un responsable : signale-lui toute erreur."
         ]
       },
@@ -1020,7 +1020,7 @@
       "moi": {
         "title": "Moi et réglages",
         "for": "Tous les membres",
-        "body": "L'onglet **Moi** rassemble ce qui te concerne : tes services, tes tâches, ton profil, ce guide et les réglages.",
+        "body": "L'onglet **Moi** rassemble ce qui te concerne : tes services, ton profil, ce guide et les réglages.",
         "points": [
           "**Langue** : français ou 中文 ; les rappels arrivent dans la langue choisie.",
           "**Thème** : clair ou sombre.",
@@ -1031,7 +1031,7 @@
     "captures": {
       "songs": {
         "labels": {
-          "tab": "Onglet Louange",
+          "tab": "Onglet Chants",
           "search": "Recherche",
           "dot": "Langue du chant"
         }
@@ -1080,7 +1080,7 @@
       },
       "services": {
         "labels": {
-          "tab": "Onglet Mes Services"
+          "tab": "Moi › Mes services"
         }
       },
       "notifications": {

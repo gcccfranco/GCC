@@ -32,6 +32,8 @@ function Shapes({ items }: { items: Annotation[] }) {
   const draw = (a: Annotation, key: number) =>
     a.kind === "circle" ? (
       <ellipse key={key} cx={a.x} cy={a.y} rx={a.rx ?? 8} ry={a.ry ?? 8} />
+    ) : a.kind === "rect" ? (
+      <rect key={key} x={a.x - a.rx} y={a.y - a.ry} width={2 * a.rx} height={2 * a.ry} rx={0.8} ry={1.3} />
     ) : a.kind === "arrow" ? (
       <Arrow key={key} a={a} />
     ) : null;
@@ -81,7 +83,7 @@ function Labels({ items, figureId }: { items: Annotation[]; figureId: string }) 
         return (
           <span
             key={i}
-            className="absolute inline-block max-w-[45%] rounded bg-primary text-primary-foreground px-1 py-px text-xs font-medium leading-snug shadow-sm"
+            className="absolute inline-block w-max max-w-[45%] rounded bg-primary text-primary-foreground px-1 py-px text-xs font-medium leading-snug shadow-sm"
             style={{
               left: `${a.x}%`,
               top: `${a.y}%`,
