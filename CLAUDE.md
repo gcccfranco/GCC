@@ -15,6 +15,8 @@ npm run build        # build:index + next build
 npm run build:index  # build-glyph-widths (largeurs de glyphes → glyphWidths.json) + build-index (content/songs/*.cho → public/songs-index.json)
                      # + build-harmonie (docs/harmonie/*.md → public/harmonie-index.json) + build-cours (docs/harmonie/cours/*.md → public/harmonie-cours/)
 npm run validate     # Valide les fichiers .cho (métadonnées, parsing)
+python3 scripts/build-fonts.py  # sous-ensembles woff2 des polices chinoises (lot A7) : à relancer après tout ajout de texte chinois
+                     # (chant, traduction) ; npm run validate signale un caractère manquant ; Vercel ne peut pas le lancer
 npm run lint         # ESLint (flat config, eslint.config.mjs)
 npx tsc --noEmit     # Vérification TypeScript (c'est ce que fait la CI)
 ```
