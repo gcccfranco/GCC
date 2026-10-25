@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation";
 import { useTranslation } from "react-i18next";
 import { EnTetePage } from "@/components/layout/EnTetePage";
 import { Halo } from "@/components/layout/Halo";
+import { BoutonStatistiques } from "@/components/songs/BoutonStatistiques";
 import { SongProposalDrawer } from "@/components/songs/SongProposalDrawer";
 import { useDeuxVolets } from "@/hooks/useDeuxVolets";
 import { useSongsIndex } from "@/hooks/useSongsIndex";
@@ -41,6 +42,7 @@ export function ChantsVolets({ themes, nombre, children }: { themes: Theme[]; no
         <EnTetePage
           titre={t("common.header.songs")}
           sousTitre={t("songs.list.sousTitre", { count: nombre })}
+          outils={<span className="max-md:hidden"><BoutonStatistiques /></span>}
           action={<SongProposalDrawer enTete />}
         />
       </div>

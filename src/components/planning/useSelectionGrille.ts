@@ -86,6 +86,8 @@ export function useSelectionGrille(
       const p = poignees.current
       const { ancre, deplacer: aller, effacer: fermer } = etat.current
       if (e.key === "Escape") {
+        // Échap sur l'aide clavier ne ferme que l'aide (BO11), la sélection reste.
+        if (e.target instanceof HTMLElement && e.target.closest("[data-aide-clavier]")) return
         if (p.occupe || dansUnChamp(e.target) || document.querySelector("[role=dialog],[role=alertdialog],[role=menu]")) return
         if (p.apercu) p.annulerApercu()
         else fermer()

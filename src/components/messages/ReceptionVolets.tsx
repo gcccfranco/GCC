@@ -21,6 +21,7 @@ import { useSongsIndex } from "@/hooks/useSongsIndex";
 import type { Report } from "@/types/report";
 import type { SongProposal } from "@/types/songProposal";
 import { useReception } from "@/components/admin/Reception";
+import { EtatVide } from "@/components/layout/EtatVide";
 import { Pilules } from "@/components/layout/Onglets";
 import { useDisposition } from "@/hooks/useDisposition";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -55,6 +56,10 @@ export function ReceptionVolets() {
   const propositions = rec.proposals.map(proposition);
   const tous = [...(voirS ? signalements : []), ...(voirP ? propositions : [])];
   const choisi = tous.find((m) => m.cle === choix) ?? tous.find(enAttente) ?? null;
+  // Rien à montrer (après filtre) : un seul message vide à la place des sections.
+  const vide = !rec.loadingReports && !rec.loadingProposals && tous.length === 0;
+  const cleVide = disposition === "tablette" || filtre === "tout" ? "backOffice.boE1.aucunMessage"
+    : filtre === "signalements" ? "backOffice.reception.aucunSignalement" : "backOffice.reception.aucuneProposition";
 
   const date = (d: Date | null) => (d ? ` · ${d.toLocaleDateString(i18n.language === "zh-CN" ? "zh-CN" : "fr-FR")}` : "");
   const auteur = (m: Message) => (m.r ? m.r.authorName : t("backOffice.reception.proposePar", { nom: m.p.authorName })) + date((m.r ?? m.p).createdAt);
@@ -312,7 +317,9 @@ export function ReceptionVolets() {
       obligatoire
     />
   );
-  const sections = (
+  const sections = vide ? (
+    <EtatVide compact className={disposition === "tablette" ? "col-span-2" : undefined}>{t(cleVide)}</EtatVide>
+  ) : (
     <>
       {voirS && section("s")}
       {voirP && section("p")}
@@ -336,15 +343,18 @@ export function ReceptionVolets() {
       <DeuxVolets
         racine="/back-office/messages"
         largeurListe={380}
+        colonneSeule={!choisi}
         liste={
           <div className="px-2.5 pb-4 pt-3">
+            {/* Volet de droite caché : l'alerte d'erreur reste visible, en tête de la liste. */}
+            {!choisi && erreur}
             <div className="px-2.5 pb-1">{pilules}</div>
             {sections}
           </div>
         }
         premier={
           <section aria-label={t("backOffice.reception.message")} className="min-w-0">
-            {erreur}
+            {choisi && erreur}
             {choisi ? detail(choisi) : <p className="text-sm text-muted-foreground">{t("backOffice.reception.aucunEnAttente")}</p>}
           </section>
         }

@@ -67,6 +67,9 @@ test("ordinateur — Maj + clic fait une plage ; la barre dit « 8 cases · 4 di
   await laCase(page, "2027-02-14", "guitare").click({ modifiers: ["Shift"] })
   await expect(page.getByTestId("barre-selection")).toContainText("8 cases · 4 dimanches × 2 colonnes")
   await expect(page.locator("[data-selection]").filter({ visible: true })).toHaveCount(8)
+  // L'aide est derrière le « ? » (BO11) : fermée d'office, un clic l'ouvre.
+  await expect(page.getByText("Au clavier", { exact: false })).toHaveCount(0)
+  await page.getByRole("button", { name: "Raccourcis clavier" }).click()
   await expect(page.getByText("Au clavier", { exact: false })).toBeVisible()
   // Maj + clic n'ouvre rien.
   await expect(page.getByRole("button", { name: /Écrire un nom sans compte/ })).toHaveCount(0)
@@ -213,6 +216,7 @@ test("telephone, tablette — ni légende « Au clavier » ni barre de sélectio
   await ouvrirCulte2027(page)
   await laCase(page, "2027-01-24", "piano").click()
   await expect(page.getByText("Au clavier", { exact: false })).toHaveCount(0)
+  await expect(page.getByRole("button", { name: "Raccourcis clavier" })).toHaveCount(0)
   await expect(page.getByTestId("barre-selection")).toHaveCount(0)
   await expect(page.locator("[data-selection]")).toHaveCount(0)
 })
@@ -326,6 +330,7 @@ test("ordinateur — sous 640 px (cartes), ni légende, ni barre, ni ⌫ qui éc
   await page.keyboard.press("Escape")
   await page.keyboard.press("Backspace")
   await expect(page.getByText("Au clavier", { exact: false })).toHaveCount(0)
+  await expect(page.getByRole("button", { name: "Raccourcis clavier" })).toHaveCount(0)
   await expect(page.getByTestId("barre-selection")).toHaveCount(0)
   expect(ecritures(db, "2027-01-24")).toHaveLength(0)
 })
@@ -360,7 +365,25 @@ test("tablette — avec un trackpad ou une souris, la sélection et la légende 
   await choisir(page, "2027-01-24", "piano")
   await laCase(page, "2027-01-31", "guitare").click({ modifiers: ["Shift"] })
   await expect(page.getByTestId("barre-selection")).toContainText("4 cases · 2 dimanches × 2 colonnes")
+  // L'aide est derrière le « ? » (BO11) : fermée d'office, un clic l'ouvre.
+  await expect(page.getByText("Au clavier", { exact: false })).toHaveCount(0)
+  await page.getByRole("button", { name: "Raccourcis clavier" }).click()
   await expect(page.getByText("Au clavier", { exact: false })).toBeVisible()
+})
+
+test("ordinateur — le « ? » ouvre l'aide ; Échap la ferme, rend le focus au bouton et garde la sélection", async ({ page }) => {
+  ordinateurSeul()
+  await ouvrirCulte2027(page)
+  await choisir(page, "2027-01-24", "piano")
+  const aide = page.getByRole("button", { name: "Raccourcis clavier" })
+  await expect(aide).toHaveAttribute("aria-expanded", "false")
+  await aide.click()
+  await expect(aide).toHaveAttribute("aria-expanded", "true")
+  await expect(page.getByText("Au clavier", { exact: false })).toBeVisible()
+  await page.keyboard.press("Escape")
+  await expect(page.getByText("Au clavier", { exact: false })).toHaveCount(0)
+  await expect(aide).toBeFocused()
+  await expect(laCase(page, "2027-01-24", "piano")).toHaveAttribute("data-selection", "ancre")
 })
 
 test("ordinateur — Ctrl+C et Ctrl+V (Windows, Linux) copient et collent", async ({ page }) => {

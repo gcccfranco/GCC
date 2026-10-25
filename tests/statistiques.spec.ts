@@ -23,31 +23,6 @@ const profil = (p: FakeProfile) =>
     serviceRoles: {}, annonces: [], notify: [], equipes: false, plannings: p.plannings ?? [],
   }) as unknown as UserProfile;
 
-const estOrdinateur = (info: TestInfo) => info.project.name.startsWith("ordinateur");
-const estTablettePaysage = (info: TestInfo) => info.project.name === "tablette-paysage";
-
-/** Sur la tablette en paysage, la barre est réduite : on la déplie pour atteindre le menu. */
-async function deplierSiTablettePaysage(page: Page, info: TestInfo) {
-  if (!estTablettePaysage(info)) return;
-  await page.getByTestId("barre-laterale").getByRole("button", { name: /Déplier la barre latérale|展开侧边栏/ }).tap();
-  await expect(page.getByTestId("barre-par-dessus")).toBeVisible();
-}
-
-/** Le menu du Back-Office : la barre latérale sur grand écran ; sur téléphone et tablette en
- *  portrait, la barre du bas (U6, B6 : 4 onglets + « Plus »). */
-function menu(page: Page, info: TestInfo) {
-  if (estOrdinateur(info)) return page.getByTestId("barre-laterale").getByRole("navigation", { name: "Navigation principale" });
-  if (estTablettePaysage(info)) return page.getByTestId("barre-par-dessus").getByRole("navigation", { name: "Navigation principale" });
-  return page.getByTestId("barre-du-bas");
-}
-
-/** Sur téléphone et tablette en portrait, Statistiques n'est pas dans la barre par défaut :
- *  on l'atteint par « Plus » (planche bo-telephone-plus). */
-async function ouvrirPlusSiPetitEcran(page: Page, info: TestInfo) {
-  if (estOrdinateur(info) || estTablettePaysage(info)) return;
-  await menu(page, info).getByRole("link", { name: "Plus" }).click();
-  await expect(page.getByRole("heading", { name: "Plus", level: 1 })).toBeVisible();
-}
 
 test.describe("Statistiques (S2) : le droit (Q2)", () => {
   test("canVoirStatistiques : un admin oui ; un responsable non admin, un membre, un visiteur non", () => {
@@ -64,37 +39,16 @@ test.describe("Statistiques (S2) : le droit (Q2)", () => {
 });
 
 test.describe("Statistiques (S2) : l'entrée et l'adresse", () => {
-  test("un admin ouvre Back-Office › Statistiques depuis le menu", async ({ page }, info) => {
-    await signInAs(page, ADMIN, {}, "/back-office");
-    await expect(page.getByRole("heading", { name: "Tableau de bord" })).toBeVisible();
-    await deplierSiTablettePaysage(page, info);
-    await ouvrirPlusSiPetitEcran(page, info);
-    const entree = estOrdinateur(info) || estTablettePaysage(info)
-      ? menu(page, info).getByRole("link", { name: "Statistiques" })
-      : page.getByTestId("plus-entree").filter({ hasText: "Statistiques" });
-    await expect(entree).toHaveAttribute("href", /^\/back-office\/statistiques\/?$/);
-    await entree.click();
-    await expect(page).toHaveURL(/\/back-office\/statistiques\/?$/);
+  // Piste A (BO1, BO3) : Statistiques sort du menu ; on l'ouvre depuis Chants (describe BO3 plus bas).
+  test("un admin : l'adresse ouvre la page, et aucun menu n'y mène plus", async ({ page }) => {
+    await signInAs(page, ADMIN, {}, "/back-office/statistiques");
     await expect(page.getByRole("heading", { level: 1, name: "Statistiques" })).toBeVisible();
     await expect(page.getByText("Visible par les admins seulement")).toBeVisible();
-    if (estOrdinateur(info) || estTablettePaysage(info)) {
-      await deplierSiTablettePaysage(page, info);
-      await expect(menu(page, info).getByRole("link", { name: "Statistiques" })).toHaveAttribute("aria-current", "page");
-    } else {
-      // Une page hors de la barre marque « Plus » (B6).
-      await expect(menu(page, info).getByRole("link", { name: "Plus" })).toHaveAttribute("aria-current", "page");
-    }
+    await expect(page.locator('nav a[href^="/back-office/statistiques"]')).toHaveCount(0);
   });
 
-  test("un responsable non admin : aucune entrée, l'adresse répond « Page réservée aux administrateurs. »", async ({ page }, info) => {
-    await signInAs(page, RESPONSABLE, {}, "/back-office");
-    await expect(page.getByRole("heading", { name: "Tableau de bord" })).toBeVisible();
-    await deplierSiTablettePaysage(page, info);
-    await expect(menu(page, info).getByRole("link", { name: "Planning" })).toBeVisible();
-    await expect(page.getByRole("link", { name: "Statistiques" })).toHaveCount(0);
-    await ouvrirPlusSiPetitEcran(page, info);
-    await expect(page.getByRole("link", { name: "Statistiques" })).toHaveCount(0);
-    await page.goto("/back-office/statistiques");
+  test("un responsable non admin : l'adresse répond « Page réservée aux administrateurs. »", async ({ page }) => {
+    await signInAs(page, RESPONSABLE, {}, "/back-office/statistiques");
     await expect(page.getByText("Page réservée aux administrateurs.")).toBeVisible();
     await expect(page.getByRole("heading", { level: 1, name: "Statistiques" })).toHaveCount(0);
   });
@@ -105,6 +59,30 @@ test.describe("Statistiques (S2) : l'entrée et l'adresse", () => {
       "href", /^\/login\/?\?from=%2Fback-office%2Fstatistiques$/,
     );
     await expect(page.getByRole("heading", { level: 1, name: "Statistiques" })).toHaveCount(0);
+  });
+});
+
+test.describe("Statistiques (BO3) : le lien depuis Chants", () => {
+  test("un admin voit « Statistiques » dans l'en-tête de Chants, l'ouvre et revient par « ‹ Chants »", async ({ page }) => {
+    await signInAs(page, ADMIN, {}, "/songs");
+    // L'en-tête dès 768 px, la ligne du compteur (icône seule) en dessous : le lien visible.
+    const lien = page.getByRole("link", { name: "Statistiques" }).filter({ visible: true });
+    await expect(lien).toHaveCount(1);
+    await expect(lien).toHaveAttribute("href", /^\/back-office\/statistiques\/?$/);
+    await lien.click();
+    await expect(page).toHaveURL(/\/back-office\/statistiques\/?$/);
+    await expect(page.getByRole("heading", { level: 1, name: "Statistiques" })).toBeVisible();
+    const retour = page.locator("[data-entete-page]").first().getByRole("link", { name: "Chants" });
+    await expect(retour).toHaveAttribute("href", /^\/songs\/?$/);
+    await retour.click();
+    await expect(page).toHaveURL(/\/songs\/?$/);
+    await expect(page.getByRole("heading", { level: 1, name: "Chants" })).toBeVisible();
+  });
+
+  test("un membre ne voit pas « Statistiques » dans l'en-tête de Chants", async ({ page }) => {
+    await signInAs(page, RESPONSABLE, {}, "/songs");
+    await expect(page.getByRole("heading", { level: 1, name: "Chants" })).toBeVisible();
+    await expect(page.locator('a[href^="/back-office/statistiques"]')).toHaveCount(0);
   });
 });
 

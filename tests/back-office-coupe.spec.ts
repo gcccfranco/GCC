@@ -95,6 +95,14 @@ test.describe("back-office coupé : les entrées disparaissent", () => {
     await expect(page.getByRole("link", { name: "Back-Office" })).toHaveCount(0);
   });
 
+  // BO3 : le lien « Statistiques » de Chants (en-tête ou ligne du compteur) n'existe pas en ligne, même pour un admin.
+  test("Chants n'a pas de bouton Statistiques, même pour un admin", async ({ page }) => {
+    await signInAs(page, ADMIN, {}, "/songs");
+    await page.getByRole("searchbox").waitFor();
+    await expect(page.getByRole("heading", { level: 1, name: "Chants" })).toBeVisible();
+    await expect(page.locator('a[href^="/back-office/statistiques"]')).toHaveCount(0);
+  });
+
   // Lot U4 : sur ordinateur, la barre latérale remplace la navbar.
   test("la barre latérale d'ordinateur n'a ni Évènements ni Tâches", async ({ page }) => {
     test.skip(!test.info().project.name.startsWith("ordinateur"), "propre à l'ordinateur");

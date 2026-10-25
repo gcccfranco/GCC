@@ -1,6 +1,6 @@
 "use client"
 
-import { Fragment, useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore, type CSSProperties, type MouseEvent, type ReactNode } from "react"
+import { Fragment, useEffect, useId, useLayoutEffect, useRef, useState, useSyncExternalStore, type CSSProperties, type MouseEvent, type ReactNode } from "react"
 import { ChevronDown, Copy, History, Lock, Trash2 } from "lucide-react"
 import { useTranslation } from "react-i18next"
 import { useConfirmer } from "@/components/layout/Confirmer"
@@ -164,6 +164,10 @@ export function PlanningGrille({
   // Un refus qui n'a rien écrit (collage ou ⌫ sans case à écrire) : il se dit, sans toucher à l'« Annuler » du dernier geste.
   const [avis, setAvis] = useState<string[]>([])
   const enveloppe = useRef<HTMLDivElement>(null)
+  // Aide clavier derrière un « ? » (BO11) : fermée au départ, Échap la ferme et rend le focus au bouton.
+  const [aideOuverte, setAideOuverte] = useState(false)
+  const boutonAide = useRef<HTMLButtonElement>(null)
+  const idAide = useId()
   const poignees = useRef<Poignees>(null as unknown as Poignees)
   const [posBarre, setPosBarre] = useState<CSSProperties | null>(null)
   const clavier = useClavier()
@@ -1064,7 +1068,26 @@ export function PlanningGrille({
       </div>
 
 
-      {actifClavier && <p className="hidden sm:block text-xs text-muted-foreground">{t("planning.gestes.clavier")}</p>}
+      {actifClavier && (
+        <div
+          data-aide-clavier=""
+          className="hidden sm:block"
+          onKeyDown={(e) => { if (e.key === "Escape" && aideOuverte) { e.stopPropagation(); setAideOuverte(false); boutonAide.current?.focus() } }}
+        >
+          <button
+            ref={boutonAide}
+            type="button"
+            aria-label={t("backOffice.boE1.aideClavier")}
+            aria-expanded={aideOuverte}
+            aria-controls={idAide}
+            onClick={() => setAideOuverte((v) => !v)}
+            className="inline-flex h-7 w-7 items-center justify-center rounded-full text-xs font-semibold text-muted-foreground ring-1 ring-inset ring-border transition-colors hover:text-foreground"
+          >
+            ?
+          </button>
+          {aideOuverte && <p id={idAide} className="mt-1.5 text-xs text-muted-foreground">{t("planning.gestes.clavier")}</p>}
+        </div>
+      )}
 
       {/* ── Pied de grille : on prévient, on ne se retire pas (T3) ── */}
       <p className="text-xs text-muted-foreground">{t("planning.grille.pasDispo")}</p>

@@ -3518,6 +3518,10 @@
       "ouvrirScene": "Ouvrir la scène dans le back-office",
       "etiquetteSheet": "Sheet"
     },
+    "boE1": {
+      "aucunMessage": "Aucun message pour l'instant.",
+      "aideClavier": "Raccourcis clavier"
+    },
     "selecteur": {
       "aria": "Choisir l'espace",
       "app": "App",

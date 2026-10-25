@@ -16,7 +16,7 @@ const DOCS = {
   "reports/r1": {
     kind: "song", title: "Problème avec : Hosanna", status: "pending", createdAt: new Date("2026-10-02T10:00:00Z"),
     description: "Au refrain, la partition met Bm7 à la fin de la 2e ligne, mais à l'église on joue A.",
-    songSlug: "hosanna", songTitle: "Hosanna", pageUrl: "https://example.com/songs/hosanna",
+    songSlug: "hosanna", songTitle: "Hosanna", pageUrl: "/songs/hosanna",
     authorName: "Léa M.", authorId: "uid-lea", authorEmail: "lea@example.com",
   },
   "reports/r2": {
@@ -153,10 +153,37 @@ test.describe("Réception en grand (ordinateur, iPad paysage)", () => {
     await expect(message(page).getByRole("heading", { level: 2 })).toHaveText("Problème avec : Hosanna");
   });
 
-  test("rien en attente : le volet de droite le dit", async ({ page }) => {
+  test("rien en attente : la liste prend seule la colonne (BO9), pas de volet vide", async ({ page }) => {
     await ouvrir(page, { "reports/r3": DOCS["reports/r3"] });
-    await expect(message(page)).toContainText("Aucun message en attente.");
+    await expect(page.locator('[data-volet="detail"]')).toHaveCount(0);
+    await expect(page.getByText("Aucun message en attente.")).toHaveCount(0);
+    await expect(liste(page).getByRole("button", { name: "Voir les traités (1)" })).toBeVisible();
   });
+});
+
+// ─── Rien en attente : pas de volet vide (BO9) ───────────────────────────────
+
+test("aucun message : un seul état vide, pas de volet de droite", async ({ page }, info) => {
+  await page.clock.setFixedTime(new Date("2026-10-03T10:00:00"));
+  await page.route(/docs\.google\.com\/spreadsheets/, (route) => route.fulfill({ status: 200, contentType: "text/csv", body: "" }));
+  await signInAs(page, ADMIN, {}, "/back-office/messages");
+  await expect(page.getByText("Aucun message pour l'instant.")).toHaveCount(1);
+  await expect(page.getByText("Aucun signalement")).toHaveCount(0);
+  await expect(page.getByText("Aucune proposition")).toHaveCount(0);
+  await expect(page.locator('[data-volet="detail"]')).toHaveCount(0);
+  if (disposition(info) === "grand") await expect(liste(page)).toBeVisible();
+  await pasDeDefilementHorizontal(page);
+});
+
+test("grand — que des messages traités : la liste seule, un clic ramène les deux volets", async ({ page }, info) => {
+  test.skip(disposition(info) !== "grand", "propre aux grands écrans");
+  const traites = Object.fromEntries(Object.entries(DOCS).map(([k, v]) => [k, { ...v, status: k.startsWith("songProposals") ? "accepted" : "resolved" }]));
+  await ouvrir(page, traites);
+  await expect(page.locator('[data-volet="detail"]')).toHaveCount(0);
+  await expect(page.getByText("Aucun message pour l'instant.")).toHaveCount(0);
+  await liste(page).getByRole("button", { name: "Voir les traités (3)" }).first().click();
+  await ligne(page, "Problème avec : Hosanna").click();
+  await expect(page.locator('[data-volet="detail"]')).toBeVisible();
 });
 
 // ─── Tablette portrait : deux cartes côte à côte ─────────────────────────────

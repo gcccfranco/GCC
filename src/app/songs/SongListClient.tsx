@@ -14,6 +14,7 @@ import { KeyPill } from "@/components/ui/key-pill";
 import { useTranslation } from "react-i18next";
 import type { SongIndexEntry, Theme } from "@/types/song";
 import { SongProposalDrawer } from "@/components/songs/SongProposalDrawer";
+import { BoutonStatistiques } from "@/components/songs/BoutonStatistiques";
 import { deuxVoletsMaintenant } from "@/hooks/useDeuxVolets";
 
 interface SongListClientProps {
@@ -333,7 +334,8 @@ export function SongListClient({ songs, themes, actif = null, erreur = false, on
             : t("songs.list.counterFiltered", { count: filtered.length, filteredCount: filtered.length, totalCount: songs.length })}
         </p>
         {/* Dès 768 px, « Proposer un chant » est dans l'en-tête (ChantsVolets, agencement v18 R7). */}
-        <span className="md:hidden">
+        <span className="flex items-center gap-3 md:hidden">
+          <BoutonStatistiques icone />
           <SongProposalDrawer />
         </span>
       </div>

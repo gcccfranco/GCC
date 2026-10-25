@@ -186,6 +186,7 @@ export function StatistiquesClient() {
   };
   const enTete = (
     <EnTetePage
+      retour={{ href: "/songs", label: t("common.header.songs") }}
       titre={t("backOffice.entrees.statistiques")}
       sousTitre={sousTitre}
       onglets={<OngletsRail etiquette={t("stats.vue")} onglets={VUES.map((v) => ({ id: v.vue, label: t(`stats.vues.${v.vue}`) }))} actif={etat.vue} choisir={(vue) => changer({ vue: vue as Vue })} />}

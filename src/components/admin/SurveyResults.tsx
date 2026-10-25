@@ -317,6 +317,8 @@ export function SurveyResults({ backOffice = false }: { backOffice?: boolean }) 
         </button>
       );
     };
+    // Aucune réponse : la liste prend seule la colonne, avec un seul message vide (BO9).
+    const vide = !loading && responses.length === 0;
     const liste = (
       <div className="px-2.5 pb-4 pt-4">
         <p className="px-2.5 pb-3 text-[13px] text-muted-foreground">
@@ -334,6 +336,9 @@ export function SurveyResults({ backOffice = false }: { backOffice?: boolean }) 
             {includeDrafts ? t("admin.questionnaire.ecarter", { count: drafts }) : t("admin.questionnaire.reintegrer", { count: drafts })}
           </button>
         )}
+        {vide ? (
+          <EtatVide compact className="mx-2.5">{t("admin.questionnaire.aucuneReponsePourLInstant")}</EtatVide>
+        ) : (
         <div className="space-y-0.5">
           {SURVEY_SECTIONS.map((x) => {
             const n = SURVEY_QUESTIONS.filter((q) => q.section === x.id).length;
@@ -342,6 +347,7 @@ export function SurveyResults({ backOffice = false }: { backOffice?: boolean }) 
           })}
           {ligne("personnes", t("admin.questionnaire.parPersonne"), t("admin.questionnaire.repondants", { count: byName.length }), null)}
         </div>
+        )}
         <Link href="/questionnaire" className="mt-3 block px-2.5 text-[13px] font-semibold text-muted-foreground underline underline-offset-2 hover:text-foreground">
           {t("admin.questionnaire.voirPage")}
         </Link>
@@ -373,7 +379,7 @@ export function SurveyResults({ backOffice = false }: { backOffice?: boolean }) 
       </div>
     );
     return (
-      <DeuxVolets racine="/back-office/messages/questionnaire" liste={liste} premier={droite} largeurListe={340}>
+      <DeuxVolets racine="/back-office/messages/questionnaire" liste={liste} premier={droite} largeurListe={340} colonneSeule={vide}>
         {null}
       </DeuxVolets>
     );

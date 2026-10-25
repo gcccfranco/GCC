@@ -3472,6 +3472,10 @@
       "ouvrirScene": "在后台打开舞台",
       "etiquetteSheet": "Sheet"
     },
+    "boE1": {
+      "aucunMessage": "暂时没有消息。",
+      "aideClavier": "键盘快捷键"
+    },
     "selecteur": {
       "aria": "选择空间",
       "app": "应用",
