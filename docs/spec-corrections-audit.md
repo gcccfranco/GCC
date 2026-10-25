@@ -153,4 +153,11 @@ A8 (P3 restants) :
 
 A9 : Next 16.2.6 → 16.4.x, Firebase et firebase-admin à jour, `npm audit` relu, suite complète et build de production.
 
+Ajouts après A6 (25/10/2026, seconde session du flux A) :
+- A6 fait (`a0160b4`). Restent A7, A8, A9.
+- A8 : en plus de la liste ci-dessus, `tests/coherence.spec.ts:105` attend `start_url` `/planning` ; mettre `/planning/` (voulu depuis A3 bis), avec C15 qui touche ce fichier ; le dire dans le commit. `reunions.spec.ts:214/223` sont réparés (heures à Paris).
+- S9 : écrire seulement « limite et plafond des inscriptions sans compte » dans le commit.
+- Le clone peut démarrer en tête détachée, avec une branche locale `ui/apple-design` en retard : `git checkout -B ui/apple-design` sur le bon commit avant de pousser.
+- `/tranche` sur A6 : ≈ 2 h 45 et 1,4 M de jetons ; le `testeur` relance alors des specs voisines lourdes (reunions, organigrammes) : borner la liste.
+
 Signalé au flux B (fichiers à lui) : la fiche d'harmonie d'un chant en Am se lit maintenant en Do (`IdeesSheet.tsx`) ; l'éditeur de setlist range une tonalité majeure à côté de son relatif mineur (`Reglages.tsx`) ; la ligne PWA du `CLAUDE.md` (cache v5, page hors ligne, course de 3 s, préchargement, LRU).
