@@ -3520,7 +3520,26 @@
     },
     "boE1": {
       "aucunMessage": "Aucun message pour l'instant.",
-      "aideClavier": "Raccourcis clavier"
+      "aideClavier": "Raccourcis clavier",
+      "publier": {
+        "echec": "Échec.",
+        "echecConnexion": "Échec — vérifie ta connexion.",
+        "pasAutorise": "Tu n'as pas l'autorisation de publier un planning.",
+        "planning": "Planning",
+        "explicationDebut": "Publier un trimestre le rend visible par tous les membres. À la première publication du trimestre,",
+        "explicationFin": "reçoit une notification. Le trimestre courant et les passés sont déjà visibles automatiquement.",
+        "chargement": "Chargement…",
+        "publie": "Publié",
+        "visibleAuto": "Visible (auto)",
+        "masque": "Masqué",
+        "masquer": "Masquer",
+        "annuler": "Annuler",
+        "publication": "Publication…",
+        "confirmer": "Confirmer",
+        "publierBouton": "Publier",
+        "confirmDebut": "Publier",
+        "confirmFin": "de {{label}} → visible par tous ; {{audience}} est prévenu à la première publication du trimestre."
+      }
     },
     "selecteur": {
       "aria": "Choisir l'espace",

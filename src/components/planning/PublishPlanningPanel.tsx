@@ -80,10 +80,10 @@ export function PublishPlanningPanel({
             : t("planning.trimestreMasque", { tri })
         );
       } else {
-        setFeedback(data.error || "Échec.");
+        setFeedback(data.error || t("backOffice.boE1.publier.echec"));
       }
     } catch {
-      setFeedback("Échec — vérifie ta connexion.");
+      setFeedback(t("backOffice.boE1.publier.echecConnexion"));
     } finally {
       setBusyTri("");
     }
@@ -93,7 +93,7 @@ export function PublishPlanningPanel({
     return (
       <div className="rounded-xl bg-card shadow-soft p-5">
         <p className="text-sm text-muted-foreground">
-          Tu n&apos;as pas l&apos;autorisation de publier un planning.
+          {t("backOffice.boE1.publier.pasAutorise")}
         </p>
       </div>
     );
@@ -103,7 +103,7 @@ export function PublishPlanningPanel({
     <div className="rounded-xl bg-card shadow-soft p-5 space-y-4">
       <div className="space-y-1.5">
         <label htmlFor="publier-planning" className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
-          Planning
+          {t("backOffice.boE1.publier.planning")}
         </label>
         <select
           id="publier-planning"
@@ -120,17 +120,16 @@ export function PublishPlanningPanel({
       </div>
 
       <p className="text-sm text-muted-foreground">
-        Publier un trimestre le rend visible par tous les membres. À la première
-        publication du trimestre,{" "}
+        {t("backOffice.boE1.publier.explicationDebut")}{" "}
         <span className="font-semibold text-foreground">
           {audienceLabel(planning.notifyAudience)}
         </span>{" "}
-        reçoit une notification. Le trimestre courant et les passés sont déjà visibles automatiquement.
+        {t("backOffice.boE1.publier.explicationFin")}
       </p>
 
       <div className="space-y-2">
         {loading ? (
-          <p className="text-sm text-muted-foreground text-center py-4">Chargement…</p>
+          <p className="text-sm text-muted-foreground text-center py-4">{t("backOffice.boE1.publier.chargement")}</p>
         ) : (
           TRI_ORDER.map((tri) => {
             const isPublished = published.includes(tri);
@@ -147,13 +146,13 @@ export function PublishPlanningPanel({
                   </span>
                   {isPublished ? (
                     <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-green-700">
-                      <Check className="h-3.5 w-3.5" /> Publié
+                      <Check className="h-3.5 w-3.5" /> {t("backOffice.boE1.publier.publie")}
                     </span>
                   ) : isPastOrCurrent ? (
-                    <span className="text-[11px] text-muted-foreground">Visible (auto)</span>
+                    <span className="text-[11px] text-muted-foreground">{t("backOffice.boE1.publier.visibleAuto")}</span>
                   ) : (
                     <span className="inline-flex items-center gap-1 text-[11px] text-muted-foreground">
-                      <EyeOff className="h-3.5 w-3.5" /> Masqué
+                      <EyeOff className="h-3.5 w-3.5" /> {t("backOffice.boE1.publier.masque")}
                     </span>
                   )}
                 </div>
@@ -164,7 +163,7 @@ export function PublishPlanningPanel({
                     disabled={busy}
                     className="h-8 px-3 rounded-lg border border-transparent bg-secondary text-xs font-semibold text-muted-foreground hover:text-foreground disabled:opacity-50"
                   >
-                    {busy ? "…" : "Masquer"}
+                    {busy ? "…" : t("backOffice.boE1.publier.masquer")}
                   </button>
                 ) : isPastOrCurrent ? null : confirmTri === tri ? (
                   <div className="flex items-center gap-2">
@@ -172,7 +171,7 @@ export function PublishPlanningPanel({
                       onClick={() => setConfirmTri("")}
                       className="h-8 px-3 rounded-lg border border-transparent bg-secondary text-xs font-semibold text-muted-foreground"
                     >
-                      Annuler
+                      {t("backOffice.boE1.publier.annuler")}
                     </button>
                     <button
                       onClick={() => act(tri, true)}
@@ -180,7 +179,7 @@ export function PublishPlanningPanel({
                       className="inline-flex items-center gap-1.5 h-8 px-3 rounded-full bg-primary text-primary-foreground text-xs font-semibold hover:bg-primary/90 disabled:opacity-50"
                     >
                       <Send className="h-3.5 w-3.5" />
-                      {busy ? "Publication…" : "Confirmer"}
+                      {busy ? t("backOffice.boE1.publier.publication") : t("backOffice.boE1.publier.confirmer")}
                     </button>
                   </div>
                 ) : (
@@ -188,7 +187,7 @@ export function PublishPlanningPanel({
                     onClick={() => setConfirmTri(tri)}
                     className="inline-flex items-center gap-1.5 h-8 px-3 rounded-full bg-primary text-primary-foreground text-xs font-semibold hover:bg-primary/90"
                   >
-                    Publier
+                    {t("backOffice.boE1.publier.publierBouton")}
                   </button>
                 )}
               </div>
@@ -199,12 +198,14 @@ export function PublishPlanningPanel({
 
       {confirmTri && (
         <p className="text-xs text-muted-foreground">
-          Publier{" "}
+          {t("backOffice.boE1.publier.confirmDebut")}{" "}
           <span className="font-semibold text-foreground">
             {confirmTri} {year}
           </span>{" "}
-          de {planning.label} → visible par tous ; {audienceLabel(planning.notifyAudience)} est
-          prévenu à la première publication du trimestre.
+          {t("backOffice.boE1.publier.confirmFin", {
+            label: planning.label,
+            audience: audienceLabel(planning.notifyAudience),
+          })}
         </p>
       )}
 

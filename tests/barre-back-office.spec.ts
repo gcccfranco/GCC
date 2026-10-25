@@ -10,7 +10,8 @@ import type { UserProfile } from "../src/types/user";
 // « App » = retour à l'espace app), Messages en icône à pastille dans l'en-tête, plus de « Personnaliser la
 // barre » ni de page « Plus » (son adresse redirige). Le réglage `barreDuBas` du profil est ignoré, pas effacé.
 // Les cas qui valent sur les cinq dispositions (ordre des entrées, captures) sont dans back-office-espace.spec.ts,
-// qui tourne sur les cinq projets. Aucun nom réel.
+// qui tourne sur les cinq projets ; celui-ci n'est pas dans `SPECS_GRAND_ECRAN` (trois projets : ordinateur,
+// téléphone, tablette) et `estGrandEcran` n'y écarte en pratique que l'ordinateur. Aucun nom réel.
 
 const ADMIN: FakeProfile = { uid: "uid-admin", email: "tc328829@gmail.com", firstName: "Admin", lastName: "T." };
 /** Pôle Événement (Réussite 2) et coordination (cochée). */

@@ -98,18 +98,21 @@ test("fiche de Personnes : « Ce que ça lui ouvre » à la place des droits coc
   await capture(page, "fiche-personne");
 });
 
-test("Back-Office d'un simple membre : deux entrées en grand, la barre du bas au doigt", async ({ page }, info) => {
-  await ouvrir(page, JOEL, "/back-office/taches");
-  await expect(menu(page, info).getByRole("link")).toHaveText(estOrdinateur(info) ? [/^Tâches/, "Réunions"] : [/^Tâches/, "Réunions", "Plus"]);
-  await capture(page, "membre-taches");
+// Piste A (docs/spec-back-office-piste-a.md, BO1, BO4) : un simple membre n'a plus de Back-Office ;
+// une référente a les entrées de la piste A que ses droits ouvrent.
+test("Back-Office d'un simple membre (BO4) : « Réservé aux responsables », aucun lien vers le Back-Office", async ({ page }) => {
+  await ouvrir(page, JOEL, "/back-office");
+  await expect(page.getByText("Réservé aux responsables.")).toBeVisible();
+  await expect(page.locator('a[href^="/back-office"]').filter({ visible: true })).toHaveCount(0);
+  await capture(page, "membre-back-office");
 });
 
-test("Back-Office d'une référente sans Planning : Évènements en grand ; au doigt, la barre par défaut", async ({ page }, info) => {
-  await ouvrir(page, LEA, "/back-office/taches");
+test("Back-Office d'une référente sans Planning : À faire, Calendrier, Équipes ; Messages en grand, App au doigt", async ({ page }, info) => {
+  await ouvrir(page, LEA, "/back-office");
   const liens = menu(page, info).getByRole("link");
-  if (estOrdinateur(info)) await expect(liens.filter({ hasText: "Évènements" })).toHaveCount(1);
-  else await expect(liens).toHaveText(["Accueil", "Calendrier", /^Tâches/, "Évènements", "Plus"]);
-  await capture(page, "referente-taches");
+  if (estOrdinateur(info)) await expect(liens).toHaveText([/^À faire/, /^Calendrier/, /^Équipes/, /^Messages/]);
+  else await expect(liens).toHaveText([/^À faire/, /^Calendrier/, /^Équipes/, /^App/]);
+  await capture(page, "referente-back-office");
 });
 
 test("Tâches : le rail ne montre que les équipes qui ont une tâche", async ({ page }) => {

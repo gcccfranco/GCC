@@ -3474,7 +3474,26 @@
     },
     "boE1": {
       "aucunMessage": "暂时没有消息。",
-      "aideClavier": "键盘快捷键"
+      "aideClavier": "键盘快捷键",
+      "publier": {
+        "echec": "失败。",
+        "echecConnexion": "失败——请检查网络连接。",
+        "pasAutorise": "你没有发布排班表的权限。",
+        "planning": "排班表",
+        "explicationDebut": "发布某个季度后，所有成员都能看到。该季度首次发布时，",
+        "explicationFin": "会收到通知。当前季度和过去的季度会自动显示。",
+        "chargement": "加载中…",
+        "publie": "已发布",
+        "visibleAuto": "可见（自动）",
+        "masque": "已隐藏",
+        "masquer": "隐藏",
+        "annuler": "取消",
+        "publication": "发布中…",
+        "confirmer": "确认",
+        "publierBouton": "发布",
+        "confirmDebut": "发布",
+        "confirmFin": "{{label}}的排班表 → 所有成员可见；该季度首次发布时将通知{{audience}}。"
+      }
     },
     "selecteur": {
       "aria": "选择空间",
