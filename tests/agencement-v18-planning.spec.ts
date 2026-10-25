@@ -103,10 +103,12 @@ test.describe("BO Planning, piste A", () => {
     expect(await page.getByTestId("halo").evaluate((el) => (el as HTMLElement).style.getPropertyValue("--halo"))).toBe(PLANNING_COLORS.culte);
   });
 
-  test("Sans compte : même en-tête, sans rangée de grille", async ({ page }) => {
+  test("Sans compte : l'adresse redirige vers la sous-page Équipes › Personnes › Noms du planning sans compte, sans rangée de grille", async ({ page }) => {
     await ouvrir(page, ADMIN, "/back-office/planning/sans-compte");
-    await expect(enTete(page).getByRole("heading", { level: 1 })).toHaveText("Planning");
-    await expect(enTete(page).locator('[data-onglets="rail"]').getByRole("link", { name: "Sans compte" })).toHaveAttribute("aria-current", "page");
+    // Piste A (BO7) : plus d'en-tête « Planning » ni d'onglet actif ; sous-page de Personnes, en-tête « Équipes ».
+    await expect(page).toHaveURL(/\/back-office\/equipes\/personnes\/sans-compte\/?$/);
+    await expect(enTete(page).getByRole("heading", { level: 1 })).toHaveText("Équipes");
+    await expect(page.getByRole("heading", { level: 2, name: "Noms du planning sans compte" })).toBeVisible();
     await expect(page.getByTestId("barre-grille")).toHaveCount(0);
   });
 

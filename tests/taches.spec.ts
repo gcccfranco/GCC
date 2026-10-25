@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
-import { estGrandEcran, ongletsRail } from "./helpers/agencement";
+import { estGrandEcran } from "./helpers/agencement";
 import { echeancesDe, lignesDeTache, grouperLignes, dimancheApres, aFairePour } from "../src/lib/taches/echeances";
 import { equipesDesTaches, peutCocher, canSeeEvenement, canCreateEvenement, creatableEvenementPours } from "../src/lib/access";
 import type { Tache, Fois } from "../src/types/tache";
@@ -154,35 +154,36 @@ function tacheDoc(over: Record<string, unknown> = {}) {
   };
 }
 
-const groupe = (page: Page, titre: string) =>
-  page.locator("section", { has: page.getByRole("heading", { name: titre, exact: true }) });
+// Piste A, BO-D : la liste des tâches d'une équipe est la section « Tâches » de sa page ; ses groupes
+// (En retard · Cette semaine · Plus tard, Terminées) sont des `role="group"`.
+const groupe = (page: Page, titre: string) => page.getByRole("group", { name: titre, exact: true });
 
 // Agencement v18 (T1, B1) : les tâches terminées sont repliées sous « Terminées (n) », qu'on déplie.
 async function terminees(page: Page) {
   const nom = /^Terminées \(\d+\)$/;
-  const bouton = page.locator('[data-volet="liste"]').getByRole("button", { name: nom });
+  const bouton = laListe(page).getByRole("button", { name: nom });
   if ((await bouton.getAttribute("aria-expanded")) === "false") await bouton.click();
-  return page.locator('[data-volet="liste"] section', { has: page.getByRole("button", { name: nom }) });
+  return page.getByRole("group", { name: nom });
 }
 
 // Agencement v18 (T1, B2) : en grand, « + Nouvelle tâche » (lien) ouvre le formulaire dans le volet
-// de droite (« Créer la tâche ») ; sur un volet, le rond ouvre la feuille d'aujourd'hui (« Enregistrer »).
+// de droite (« Créer la tâche ») ; sur un volet, le lien ouvre la feuille d'aujourd'hui (« Enregistrer »).
+// Piste A, BO-D : « Nouvelle tâche » est un lien de la page de l'équipe, sur tous les appareils.
 async function nouvelleTache(page: Page) {
+  await page.getByRole("link", { name: "Nouvelle tâche" }).click();
   if (estGrandEcran(test.info())) {
-    await page.getByRole("link", { name: "Nouvelle tâche" }).click();
     return { form: page.getByRole("form", { name: "Nouvelle tâche" }), creer: "Créer la tâche" };
   }
-  await page.getByRole("button", { name: "Nouvelle tâche" }).click();
   return { form: page.getByRole("dialog", { name: "Nouvelle tâche" }), creer: "Enregistrer" };
 }
-const laListe = (page: Page) => page.locator('[data-volet="liste"]');
+const laListe = (page: Page) => page.getByRole("region", { name: "Tâches", exact: true });
 
 test("une référente de l'équipe voit ses tâches rangées et en coche une, qui passe dans « Faites »", async ({ page }) => {
   const db = await signInAs(page, MEMBRE_DA, {
     "equipes/da/taches/t1": tacheDoc(),
     "equipes/da/taches/t2": tacheDoc({ titre: "Affiche Noël", echeance: jour(-3) }),
-  }, "/back-office/taches/da");
-  await expect(ongletsRail(page).getByRole("link", { name: /^DA/ })).toHaveAttribute("aria-current", "page");
+  }, "/back-office/equipes/da");
+  await expect(page.getByRole("heading", { name: "DA", level: 1 })).toBeVisible();
   await expect(groupe(page, "En retard").getByText("Affiche Noël")).toBeVisible();
   await expect(groupe(page, "Cette semaine").getByText("Fond PPT")).toBeVisible();
 
@@ -197,7 +198,7 @@ test("une référente de l'équipe voit ses tâches rangées et en coche une, qu
 });
 
 test("créer une tâche pour toute l'équipe", async ({ page }) => {
-  const db = await signInAs(page, MEMBRE_DA, {}, "/back-office/taches/da");
+  const db = await signInAs(page, MEMBRE_DA, {}, "/back-office/equipes/da");
   const { form, creer } = await nouvelleTache(page);
   await form.getByLabel("Titre").fill("Vidéo d'annonce");
   await form.getByLabel("Échéance").fill(jour(1));
@@ -205,6 +206,9 @@ test("créer une tâche pour toute l'équipe", async ({ page }) => {
   await expect(form).toHaveCount(0);
   const cree = db.writes.find((w) => w.method === "POST" && w.path.startsWith("equipes/da/taches/"));
   expect(cree?.data).toMatchObject({ titre: "Vidéo d'annonce", equipe: "da", echeance: jour(1), responsableUid: null, repetition: null, auteurUid: "uid-da" });
+  // Créer ouvre la fiche de la tâche ; la page de l'équipe la liste (piste A, BO7).
+  await expect(page).toHaveURL(/\/back-office\/taches\/da\/[^/]+\/?$/);
+  await page.goto("/back-office/equipes/da");
   await expect(laListe(page).getByText("Vidéo d'annonce")).toBeVisible();
 });
 
@@ -212,7 +216,7 @@ test("une tâche répétée chaque semaine : cochée, la fois suivante apparaît
   await signInAs(page, MEMBRE_DA, {
     "equipes/da/taches/t1": tacheDoc({ echeance: jour(-7), repetition: { rythme: "semaine" } }),
     [`equipes/da/taches/t1/fois/${jour(-7)}`]: { date: jour(-7), parUid: "uid-da", parNom: "Ruth Kouassi", le: new Date().toISOString() },
-  }, "/back-office/taches/da");
+  }, "/back-office/equipes/da");
   const cercle = groupe(page, "Cette semaine").getByRole("checkbox", { name: /Fond PPT/ });
   await expect(cercle).toHaveAttribute("aria-checked", "false");
   await cercle.click();
@@ -224,18 +228,21 @@ test("une tâche répétée chaque semaine : cochée, la fois suivante apparaît
 });
 
 test("un membre d'une autre équipe ne voit pas les tâches de l'équipe", async ({ page }) => {
-  await signInAs(page, MEMBRE_MEDIA, { "equipes/da/taches/t1": tacheDoc() }, "/back-office/taches/da");
-  await expect(page.getByText("Tu ne fais pas partie de cette équipe.")).toBeVisible();
+  await signInAs(page, MEMBRE_MEDIA, { "equipes/da/taches/t1": tacheDoc() }, "/back-office/equipes/da");
+  await expect(page.getByText("Réservé aux membres de l'équipe")).toBeVisible();
   await expect(page.getByText("Fond PPT")).toHaveCount(0);
 });
 
-test("Tâches : chacun voit ses équipes (Back-Office › Tâches, lot U6), et rien hors de ses équipes", async ({ page }) => {
-  await signInAs(page, { ...MEMBRE_DA, serviceRoles: { "Culte Francophone": ["musicien"] } }, {
+test("Tâches : chacun voit ses équipes (page d'une équipe, lot U6), et rien hors de ses équipes", async ({ page }) => {
+  await signInAs(page, { ...MEMBRE_DA, dansEquipes: ["da", "louange"] }, {
     "equipes/louange/taches/l1": tacheDoc({ equipe: "louange", titre: "Envoyer la setlist" }),
-  }, "/back-office/taches/da");
-  // Agencement v18 (T1, B1) : le rail des équipes, chacune avec son compte ; une équipe sans tâche
-  // n'a d'onglet que pour ses référents (EQ9).
-  await expect(ongletsRail(page).getByRole("link")).toHaveText([/^DA/, /^Louange/]);
+    "equipes/medias/taches/m1": tacheDoc({ equipe: "medias", titre: "Cadrer la scène" }),
+  }, "/back-office/equipes/louange");
+  // Piste A (BO7) : le rail des équipes a laissé place à la page de chaque équipe.
+  await expect(laListe(page).getByText("Envoyer la setlist")).toBeVisible();
+  await page.goto("/back-office/equipes/medias");
+  await expect(page.getByText("Réservé aux membres de l'équipe")).toBeVisible();
+  await expect(page.getByText("Cadrer la scène")).toHaveCount(0);
 });
 
 test("Moi : « Mes tâches » compte mes tâches et, référente, celles de mon équipe sans responsable", async ({ page }) => {
@@ -296,7 +303,7 @@ test("cocher une tâche qui prévient la régie : la route part, la régie est d
   });
   await signInAs(page, MEMBRE_DA, {
     "equipes/da/taches/t1": tacheDoc({ prevenir: { regie: "Culte Francophone" } }),
-  }, "/back-office/taches/da");
+  }, "/back-office/equipes/da");
   const cercle = groupe(page, "Cette semaine").getByRole("checkbox", { name: /Fond PPT/ });
   await cercle.click();
   await expect(cercle).toHaveAttribute("aria-checked", "mixed");
@@ -312,7 +319,7 @@ test("cocher : sans régie reliée à un compte, on le dit ; une équipe préven
   await signInAs(page, MEMBRE_DA, {
     "equipes/da/taches/t1": tacheDoc({ prevenir: { regie: "Culte Francophone" } }),
     "equipes/da/taches/t2": tacheDoc({ titre: "Visuel", prevenir: { equipe: "medias" } }),
-  }, "/back-office/taches/da");
+  }, "/back-office/equipes/da");
   const terminer = async (titre: RegExp) => {
     const cercle = groupe(page, "Cette semaine").getByRole("checkbox", { name: titre });
     await cercle.click();
@@ -334,7 +341,7 @@ test("nommer quelqu'un d'autre responsable le prévient", async ({ page }) => {
   });
   const db = await signInAs(page, MEMBRE_DA, {
     "users/uid-paul": { email: "paul@example.com", firstName: "Paul", lastName: "Dupont", planningName: "", serviceRoles: {}, annonces: [], notify: [], dansEquipes: ["da"], referentDe: ["da"] },
-  }, "/back-office/taches/da");
+  }, "/back-office/equipes/da");
   const { form, creer } = await nouvelleTache(page);
   await form.getByLabel("Titre").fill("Affiche");
   await form.getByLabel("Échéance").fill(jour(2));
@@ -498,7 +505,7 @@ test("le cercle cycle À faire → En cours → Terminé → À faire", async ({
   });
   const db = await signInAs(page, MEMBRE_DA, {
     "equipes/da/taches/t1": tacheDoc({ prevenir: { regie: "Culte Francophone" } }),
-  }, "/back-office/taches/da");
+  }, "/back-office/equipes/da");
   const chemin = `equipes/da/taches/t1/fois/${jour(0)}`;
   const cercle = page.getByRole("checkbox", { name: /Fond PPT/ });
   await expect(cercle).toHaveAttribute("aria-checked", "false");
@@ -530,7 +537,7 @@ test("la ligne d'une fois en cours dit depuis quand et par qui", async ({ page }
       date: jour(-3), parUid: "uid-da", parNom: "Ruth Kouassi", le: `${jour(-2)}T09:00:00Z`,
       etat: "encours", debutLe: `${jour(-2)}T09:00:00Z`,
     },
-  }, "/back-office/taches/da");
+  }, "/back-office/equipes/da");
   const retard = groupe(page, "En retard");
   await expect(retard.getByText("En cours depuis 2 jours")).toBeVisible();
   await expect(retard.getByText("Commencée par Ruth Kouassi")).toBeVisible();
@@ -538,7 +545,7 @@ test("la ligne d'une fois en cours dit depuis quand et par qui", async ({ page }
 });
 
 test("le formulaire propose « Chaque année », sans semaine du mois", async ({ page }) => {
-  const db = await signInAs(page, MEMBRE_DA, {}, "/back-office/taches/da");
+  const db = await signInAs(page, MEMBRE_DA, {}, "/back-office/equipes/da");
   const { form, creer } = await nouvelleTache(page);
   await form.getByLabel("Titre").fill("Fond PPT de Noël");
   await form.getByLabel("Échéance").fill(jour(2));
@@ -549,6 +556,9 @@ test("le formulaire propose « Chaque année », sans semaine du mois", async ({
   await expect(form.getByLabel("Quelle semaine du mois")).toHaveCount(0);
   await form.getByRole("button", { name: creer }).click();
   await expect(form).toHaveCount(0);
+  // Créer ouvre la fiche de la tâche ; la page de l'équipe la liste (piste A, BO7).
+  await expect(page).toHaveURL(/\/back-office\/taches\/da\/[^/]+\/?$/);
+  await page.goto("/back-office/equipes/da");
   await expect(laListe(page).getByText("Fond PPT de Noël")).toBeVisible();
   const cree = db.writes.find((w) => w.method === "POST" && w.path.startsWith("equipes/da/taches/"));
   expect(cree?.data).toMatchObject({ titre: "Fond PPT de Noël", echeance: jour(2), repetition: { rythme: "an" } });
@@ -573,7 +583,7 @@ test("capture : les trois états sur la page d'une équipe", async ({ page }) =>
       date: jour(-2), parUid: "uid-da", parNom: "Ruth Kouassi", le: `${jour(-1)}T18:00:00Z`,
       etat: "terminee", debutLe: `${jour(-2)}T09:00:00Z`,
     },
-  }, "/back-office/taches/da");
+  }, "/back-office/equipes/da");
   await expect(groupe(page, "En retard").getByText("En cours depuis 1 jour")).toBeVisible();
   await expect((await terminees(page)).getByText("Vidéo d'annonce")).toBeVisible();
   await capture(page, "taches-trois-etats");

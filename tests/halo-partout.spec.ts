@@ -27,9 +27,9 @@ const DOCS = { "evenements/fete": EV, "equipes/da/taches/t1": TACHE };
 
 /** Les pages qui n'avaient pas de halo (relevé du 06/10/2026), App puis Back-Office. */
 const PAGES = [
-  "/mes-services", "/evenements", "/evenements/fete", "/taches", "/taches/da", "/harmonie", "/harmonie/cours",
+  "/mes-services", "/evenements", "/evenements/fete", "/taches", "/taches/da", "/equipes/da", "/harmonie", "/harmonie/cours",
   "/harmonie/rd2000", "/profil", "/setlists/new",
-  "/back-office", "/back-office/calendrier", "/back-office/taches", "/back-office/taches/da", "/back-office/evenements",
+  "/back-office", "/back-office/calendrier", "/back-office/equipes/da", "/back-office/taches/da/t1", "/back-office/evenements",
   "/back-office/evenements/fete", "/back-office/reunions", "/back-office/equipes", "/back-office/equipes/personnes",
   "/back-office/messages", "/back-office/messages/notifier", "/back-office/statistiques", "/back-office/planning",
   "/back-office/planning/culte", "/back-office/plus",

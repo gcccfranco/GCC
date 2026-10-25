@@ -175,7 +175,7 @@ test("en 中文, aucun texte français sur les écrans membres principaux", asyn
   await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
   const francais = textesFrancais();
   await signInAs(page, { ...MEMBRE, dansEquipes: ["da"], referentDe: ["da"] }, {}, "/moi");
-  for (const chemin of ["/moi", "/songs", "/taches", "/back-office/taches/da", "/setlists", "/evenements"]) {
+  for (const chemin of ["/moi", "/songs", "/taches", "/back-office/equipes/da", "/setlists", "/evenements"]) {
     if (chemin !== "/moi") await page.goto(chemin);
     await expect(page.locator("html")).toHaveAttribute("lang", "zh-CN");
     await page.waitForTimeout(800);
@@ -206,10 +206,10 @@ test("en 中文, la proposition de chant n'a plus de français", async ({ page }
 
 test("en 中文, le formulaire de nouvelle tâche n'a plus de français", async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
-  await signInAs(page, { ...MEMBRE, dansEquipes: ["da"], referentDe: ["da"] }, {}, "/back-office/taches/da");
-  // Agencement v18 (T1, B2) : en grand, le formulaire dans le volet ; sur un volet, la feuille.
+  await signInAs(page, { ...MEMBRE, dansEquipes: ["da"], referentDe: ["da"] }, {}, "/back-office/equipes/da");
+  // Piste A (BO7) : « 新任务 » est un lien de la section Tâches de la page de l'équipe ; il ouvre en grand le formulaire dans la page, sur un volet la feuille.
   const enGrand = ["ordinateur", "ordinateur-1440", "tablette-paysage"].includes(test.info().project.name);
-  await page.getByRole(enGrand ? "link" : "button", { name: "新任务" }).click();
+  await page.getByRole("link", { name: "新任务" }).click();
   await expect(page.getByRole(enGrand ? "form" : "dialog", { name: "新任务" })).toBeVisible();
   expect(await francaisAffiche(page, textesFrancais())).toEqual([]);
 });

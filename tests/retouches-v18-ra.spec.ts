@@ -335,7 +335,7 @@ const PAGES_R3 = [
   { nom: "Setlists", adresse: "/setlists?apercu=s0" },
   { nom: "Mes services", adresse: "/mes-services" },
   { nom: "Tâches", adresse: "/taches" },
-  { nom: "Back-Office › Tâches", adresse: "/back-office/taches/da" },
+  // Retiré (piste A, BO-D) : « Back-Office › Tâches » n'a plus deux volets, la liste est la section « Tâches » de la page de l'équipe.
   { nom: "Réunions", adresse: "/back-office/reunions" },
   { nom: "Évènements", adresse: "/evenements" },
   { nom: "Back-Office › Évènements", adresse: "/back-office/evenements" },
@@ -407,10 +407,10 @@ test.describe("R3 : la liste-carte des deux volets tient dans la fenêtre", () =
     await expect.poll(basAttendu, { message: "marge de l'en-tête rendue" }).toBeLessThanOrEqual(2);
   });
 
-  test("un volet (téléphone, tablette debout), Back-Office › Tâches : la liste suit la page, sans défilement propre", async ({ page }, info) => {
+  test("un volet (téléphone, tablette debout), Back-Office › Équipe › Tâches : la liste suit la page, sans défilement propre", async ({ page }, info) => {
     test.skip(estGrandEcran(info), "un volet : petits écrans");
-    await ouvrirR3(page, "/back-office/taches/da");
-    const liste = page.locator('[data-volet="liste"]');
+    await ouvrirR3(page, "/back-office/equipes/da");
+    const liste = page.getByRole("region", { name: "Tâches", exact: true });
     await expect(liste.getByText("Tâche d'essai 1", { exact: true }).first()).toBeVisible();
     expect(await liste.evaluate((el) => [getComputedStyle(el).overflowY, getComputedStyle(el).position])).toEqual(["visible", "static"]);
   });

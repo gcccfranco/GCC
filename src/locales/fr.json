@@ -3204,6 +3204,27 @@
     }
   },
   "equipes": {
+    "page": {
+      "taches": "Tâches",
+      "reunions": "Réunions",
+      "membres": "Membres",
+      "sousTitre_one": "{{count}} membre · {{referents}}",
+      "sousTitre_other": "{{count}} membres · {{referents}}",
+      "sousTitreSeul_one": "{{count}} membre",
+      "sousTitreSeul_other": "{{count}} membres",
+      "referents_one": "référent : {{noms}}",
+      "referents_other": "référents : {{noms}}",
+      "prochaine": "Prochaine",
+      "aVenir": "À venir",
+      "passees": "Passées",
+      "compteRendu": "Compte rendu écrit",
+      "sansCompteRendu": "Pas encore de compte rendu",
+      "aucuneReunion": "Aucune réunion pour cette équipe.",
+      "reserve": "Réservé aux membres de l'équipe",
+      "introuvable": "Équipe introuvable",
+      "organigrammeGroupe": "Voir l'organigramme du groupe",
+      "comiteAide": "Les membres d'un comité se lisent dans l'organigramme de son groupe."
+    },
     "title": "Équipes",
     "sousTitre": "Organigramme GCC Franco 2026",
     "onglet": {
@@ -3540,6 +3561,9 @@
         "confirmDebut": "Publier",
         "confirmFin": "de {{label}} → visible par tous ; {{audience}} est prévenu à la première publication du trimestre."
       }
+    },
+    "equipe": {
+      "sansCompte": "Noms du planning sans compte"
     },
     "selecteur": {
       "aria": "Choisir l'espace",

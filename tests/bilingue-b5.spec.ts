@@ -273,8 +273,9 @@ test.describe("B5b : back-office en 中文", () => {
     await sansFrancais(page, "Personnes, fiche");
   });
 
-  test("Planning sans compte", async ({ page }) => {
-    await ouvrirAdmin(page, "/back-office/planning/sans-compte", "zh-CN");
+  test("Planning sans compte (sous-page de Équipes › Personnes, piste A BO7)", async ({ page }) => {
+    await ouvrirAdmin(page, "/back-office/equipes/personnes/sans-compte", "zh-CN");
+    await expect(page.getByRole("heading", { level: 2, name: "排班表中尚无账号的名字" })).toBeVisible();
     await expect(page.getByRole("heading", { name: /^排班表中无账号的人（\d+）$/ })).toBeVisible();
     await sansLesNomsDuPlanning(page);
     await sansFrancais(page, "Planning sans compte");

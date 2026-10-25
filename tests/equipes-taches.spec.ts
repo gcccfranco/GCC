@@ -2,7 +2,7 @@ import { expect, test, type Page, type TestInfo } from "@playwright/test";
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { ADMIN_EMAIL, signInAs, type FakeProfile } from "./helpers/fakeSession";
-import { estGrandEcran, fenetreDuSite, ongletsRail, repondreDansLeSite } from "./helpers/agencement";
+import { estGrandEcran, fenetreDuSite, repondreDansLeSite } from "./helpers/agencement";
 import { entreesCalendrier, peutDeplacer, sourcesPermises, type DonneesCalendrier, type ProfilCalendrier } from "../src/lib/calendrier/entrees";
 import { equipesAFaire } from "../src/lib/tableauDeBord/donnees";
 import { groupesDeReglages } from "../src/lib/tableauDeBord/reglages";
@@ -243,16 +243,17 @@ async function ouvrir(page: Page, qui: FakeProfile, vers: string, docs: Record<s
   return signInAs(page, qui, docs, vers);
 }
 
-const laListe = (page: Page) => page.locator('[data-volet="liste"]');
+// Piste A, BO-D : la liste d'une équipe est la section « Tâches » de sa page (`/equipes/<id>` ou `/back-office/equipes/<id>`).
+const laListe = (page: Page) => page.getByRole("region", { name: "Tâches", exact: true });
+const titreEquipe = (page: Page, nom: string) => expect(page.getByRole("heading", { name: nom, level: 1 })).toBeVisible();
 const estOrdinateur = (info: TestInfo) => info.project.name.startsWith("ordinateur");
 
-/** « + Nouvelle tâche » : en grand, le formulaire dans le volet ; sur un volet, la feuille. */
+/** « + Nouvelle tâche » (un lien vers le formulaire) : en grand, le formulaire dans la page ; sur un volet, la feuille. */
 async function nouvelleTache(page: Page) {
+  await page.getByRole("link", { name: "Nouvelle tâche" }).click();
   if (estGrandEcran(test.info())) {
-    await page.getByRole("link", { name: "Nouvelle tâche" }).click();
     return { form: page.getByRole("form", { name: "Nouvelle tâche" }), creer: "Créer la tâche" };
   }
-  await page.getByRole("button", { name: "Nouvelle tâche" }).click();
   return { form: page.getByRole("dialog", { name: "Nouvelle tâche" }), creer: "Enregistrer" };
 }
 const sansNouvelleTache = async (page: Page) => {
@@ -263,12 +264,12 @@ const sansNouvelleTache = async (page: Page) => {
 test.describe("écrans : une référente crée, un simple membre coche la sienne (Réussite 1 et 2)", () => {
   test("Léa M. crée « Photos du culte » pour Joël F. : rangée sous TEAM MÉDIAS, Joël F. prévenu", async ({ page }) => {
     let assigne: unknown = null;
-    const db = await ouvrir(page, LEA, "/back-office/taches/medias", { "users/u-joel": docProfil(JOEL) });
+    const db = await ouvrir(page, LEA, "/back-office/equipes/medias", { "users/u-joel": docProfil(JOEL) });
     await page.route("**/api/taches/assigne", async (route) => {
       assigne = route.request().postDataJSON();
       await route.fulfill({ json: { ok: true, notified: 1 } });
     });
-    await expect(ongletsRail(page).getByRole("link")).toHaveText([/^Médias/]);
+    await titreEquipe(page, "Médias");
     const { form, creer } = await nouvelleTache(page);
     await form.getByLabel("Titre").fill("Photos du culte");
     await form.getByLabel("Échéance").fill("2026-10-16");
@@ -283,8 +284,8 @@ test.describe("écrans : une référente crée, un simple membre coche la sienne
   });
 
   test("Joël F. coche sa tâche ; celle d'un autre et « toute l'équipe » restent inertes ; ni « Nouvelle tâche », ni « Modifier », ni « Supprimer »", async ({ page }) => {
-    const db = await ouvrir(page, JOEL, "/back-office/taches/medias");
-    await expect(ongletsRail(page).getByRole("link")).toHaveText([/^Médias/]);
+    const db = await ouvrir(page, JOEL, "/equipes/medias");
+    await titreEquipe(page, "Médias");
     await expect(laListe(page).getByText("Ranger la régie")).toBeVisible();
     await sansNouvelleTache(page);
     await expect(laListe(page).getByRole("checkbox", { name: /Ranger la régie/ })).toBeDisabled();
@@ -297,13 +298,13 @@ test.describe("écrans : une référente crée, un simple membre coche la sienne
 
     // Sa fiche : l'état se choisit, mais ni « Modifier » ni « ⋯ › Supprimer ».
     await laListe(page).getByRole("button", { name: /^Photos du culte/ }).click();
-    await expect(page).toHaveURL(/\/back-office\/taches\/medias\/photos/);
+    await expect(page).toHaveURL(/\/taches\/medias\/photos/);
     await expect(page.getByRole("heading", { name: "Photos du culte" })).toBeVisible();
     await expect(page.getByRole("radio", { name: "Terminée" })).toBeEnabled();
     await expect(page.getByRole("button", { name: "Modifier", exact: true })).toHaveCount(0);
     await expect(page.getByRole("button", { name: "Plus d'actions" })).toHaveCount(0);
     // « Toute l'équipe » : la fiche se lit, l'état ne se change pas.
-    await page.goto("/back-office/taches/medias/regie");
+    await page.goto("/taches/medias/regie");
     await expect(page.getByRole("heading", { name: "Ranger la régie" })).toBeVisible();
     await expect(page.getByText("Toute l'équipe").first()).toBeVisible();
     await expect(page.getByRole("radio", { name: "Terminée" })).toBeDisabled();
@@ -312,7 +313,7 @@ test.describe("écrans : une référente crée, un simple membre coche la sienne
   });
 
   test("Léa M., référente : coche « Ranger la régie » (toute l'équipe), à faire pour elle ; pas pour Joël F.", async ({ page, browser }) => {
-    const db = await ouvrir(page, LEA, "/back-office/taches/medias");
+    const db = await ouvrir(page, LEA, "/back-office/equipes/medias");
     const regie = laListe(page).getByRole("checkbox", { name: /Ranger la régie/ });
     await expect(regie).toBeEnabled();
     await expect(laListe(page).getByRole("checkbox", { name: /Photos du culte/ })).toBeEnabled();
@@ -358,38 +359,35 @@ test.describe("écrans : une référente crée, un simple membre coche la sienne
 });
 
 test.describe("écrans : chacun ses équipes (Réussite 3 et 4, EQ9)", () => {
-  test("Hugo L. (TEAM DA) ne lit rien de TEAM MÉDIAS, et l'adresse de TEAM MÉDIAS le lui dit", async ({ page }) => {
+  test("Hugo L. (TEAM DA) ne lit rien de TEAM MÉDIAS, et la page de TEAM MÉDIAS le lui dit", async ({ page }) => {
     const lues: string[] = [];
     page.on("request", (r) => {
       // La liste d'une équipe : `equipes/<id>:runQuery` ; les fois d'une tâche : `equipes/<id>/taches/<t>:runQuery`.
       const m = /documents\/equipes\/([^/:]+)[^:]*:runQuery/.exec(decodeURIComponent(r.url()));
       if (m) lues.push(m[1]);
     });
-    await ouvrir(page, HUGO, "/back-office/taches");
-    await page.waitForURL(/\/back-office\/taches\/da\/?$/);
-    await expect(ongletsRail(page).getByRole("link")).toHaveText([/^DA/]);
+    await ouvrir(page, HUGO, "/equipes/da");
+    await titreEquipe(page, "DA");
     await expect(laListe(page).getByText("Affiche de Noël")).toBeVisible();
-    await page.goto("/back-office/taches/medias");
-    await expect(page.getByText("Tu ne fais pas partie de cette équipe.")).toBeVisible();
+    await page.goto("/equipes/medias");
+    await expect(page.getByText("Réservé aux membres de l'équipe")).toBeVisible();
     await expect(page.getByText("Photos du culte")).toHaveCount(0);
     expect(lues).toContain("da");
     expect(lues).not.toContain("medias");
   });
 
   test("un musicien sans équipe voit les tâches de Louange, case inerte pour « toute l'équipe », et rien d'autre", async ({ page }) => {
-    await ouvrir(page, MAELLE, "/back-office/taches");
-    await page.waitForURL(/\/back-office\/taches\/louange\/?$/);
-    await expect(ongletsRail(page).getByRole("link")).toHaveText([/^Louange/]);
+    await ouvrir(page, MAELLE, "/equipes/louange");
+    await titreEquipe(page, "Louange");
     await expect(laListe(page).getByRole("checkbox", { name: /Choisir les chants de Noël/ })).toBeDisabled();
     await expect(page.getByText("Photos du culte")).toHaveCount(0);
     await sansNouvelleTache(page);
   });
 
-  test("liste vide : le rail n'a que les équipes qui ont une tâche, plus celles dont on est référent", async ({ page }) => {
+  test("un admin crée dans les 13 équipes et les 5 comités (le rail des équipes a disparu, BO7)", async ({ page }) => {
     // Un admin : les équipes qui ont des tâches, pas 13 onglets vides ; il crée dans les 13 et dans
     // les 5 comités des groupes (lot 2, OG17).
-    await ouvrir(page, ADMIN, "/back-office/taches/medias");
-    await expect(ongletsRail(page).getByRole("link")).toHaveText([/^DA/, /^Médias/, /^Louange/]);
+    await ouvrir(page, ADMIN, "/back-office/equipes/medias");
     const { form } = await nouvelleTache(page);
     const choix = estGrandEcran(test.info())
       ? form.getByRole("group", { name: "Équipe" }).getByRole("button")
@@ -399,30 +397,29 @@ test.describe("écrans : chacun ses équipes (Réussite 3 et 4, EQ9)", () => {
   });
 
   test("sans aucune tâche : « Pas encore de tâche pour tes équipes. », « + Nouvelle tâche » à qui crée quelque part", async ({ page, browser }) => {
-    await ouvrir(page, JOEL, "/back-office/taches", {});
-    await expect(page.getByText("Pas encore de tâche pour tes équipes.")).toBeVisible();
+    await ouvrir(page, JOEL, "/equipes/medias", {});
+    await expect(page.getByText(/Aucune tâche pour l'instant/)).toBeVisible();
     await sansNouvelleTache(page);
     await capture(page, "taches-vide-membre");
 
     const admin = await (await browser.newContext()).newPage();
-    await ouvrir(admin, ADMIN, "/back-office/taches", {});
-    await expect(admin.getByText("Pas encore de tâche pour tes équipes.")).toBeVisible();
-    // Sans liste, le bouton mène au formulaire de la première équipe où l'on crée.
+    await ouvrir(admin, ADMIN, "/back-office/equipes/orga", {});
+    await expect(admin.getByText(/Aucune tâche pour l'instant/)).toBeVisible();
+    // Le bouton mène au formulaire de l'équipe.
     await expect(admin.getByRole("link", { name: "Nouvelle tâche" })).toHaveAttribute("href", /^\/back-office\/taches\/orga\/nouvelle\/?$/);
     await admin.context().close();
 
-    // Une référente garde l'onglet de son équipe, vide, pour y créer la première.
+    // Une référente garde « Nouvelle tâche » dans son équipe, vide, pour y créer la première.
     const lea = await (await browser.newContext()).newPage();
-    await ouvrir(lea, LEA, "/back-office/taches", {});
-    await lea.waitForURL(/\/back-office\/taches\/medias\/?$/);
-    await expect(ongletsRail(lea).getByRole("link")).toHaveText([/^Médias/]);
+    await ouvrir(lea, LEA, "/back-office/equipes/medias", {});
+    await expect(lea.getByRole("link", { name: "Nouvelle tâche" })).toHaveAttribute("href", /^\/back-office\/taches\/medias\/nouvelle\/?$/);
     await lea.context().close();
   });
 });
 
 test.describe("écrans : prévenir une autre équipe (EQ10, EQ11)", () => {
   test("« Quand c'est fait, prévenir » propose les autres équipes sous leur nom, puis les régies", async ({ page }) => {
-    await ouvrir(page, LEA, "/back-office/taches/medias");
+    await ouvrir(page, LEA, "/back-office/equipes/medias");
     const { form } = await nouvelleTache(page);
     const options = form.getByLabel("Quand c'est fait, prévenir").locator("option");
     await expect(options.filter({ hasText: "TEAM DA" })).toHaveCount(1);
@@ -441,7 +438,7 @@ test.describe("écrans : prévenir une autre équipe (EQ10, EQ11)", () => {
       recu = route.request().postDataJSON();
       await route.fulfill({ json: { ok: true, notified: 2, linked: true, cible: "equipe" } });
     });
-    await ouvrir(page, JOEL, "/back-office/taches/medias", { ...DOCS, "equipes/medias/taches/photos": tacheDoc({ prevenir: { equipe: "da" } }) });
+    await ouvrir(page, JOEL, "/equipes/medias", { ...DOCS, "equipes/medias/taches/photos": tacheDoc({ prevenir: { equipe: "da" } }) });
     const sienne = laListe(page).getByRole("checkbox", { name: /Photos du culte/ });
     await sienne.click();
     await expect(sienne).toHaveAttribute("aria-checked", "mixed");
@@ -507,12 +504,12 @@ test.describe("écrans : les tâches d'un évènement (EQ16)", () => {
 });
 
 test.describe("écrans : en 中文", () => {
-  test("le rail, la fiche et « toute l'équipe » en chinois", async ({ page }) => {
+  test("la page de l'équipe, la fiche et « toute l'équipe » en chinois", async ({ page }) => {
     await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
-    await ouvrir(page, JOEL, "/back-office/taches/medias");
-    await expect(ongletsRail(page).getByRole("link")).toHaveText([/^媒体组/]);
+    await ouvrir(page, JOEL, "/equipes/medias");
+    await titreEquipe(page, "媒体组");
     await expect(page.getByText("整个团队").first()).toBeVisible();
-    await page.goto("/back-office/taches/medias/regie");
+    await page.goto("/taches/medias/regie");
     await expect(page.getByRole("radio", { name: "已完成" })).toBeDisabled();
     await expect(page.getByText(/部门/)).toHaveCount(0);
     await capture(page, "taches-zh");

@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { notifie, orga, presidentGroupe, publie, remplit, signInAs, type FakeProfile } from "./helpers/fakeSession";
-import { estGrandEcran, ongletsRail, repondreDansLeSite } from "./helpers/agencement";
+import { ongletsRail, repondreDansLeSite } from "./helpers/agencement";
 import { readFileSync } from "node:fs";
 import { planningsDuBackOffice, sousPartiesEvenements } from "../src/lib/access";
 
@@ -174,8 +174,10 @@ test.describe("B2 : Planning (plannings, Sans compte)", () => {
     await expect(sousParties(page).getByRole("link")).toHaveText(["Plannings", "Sans compte"]);
     await expect(plannings(page).getByRole("link")).toHaveText(["Culte Franco", "Prépa. Table", "Groupes", "EDD", "Campus", "Intergroupe", "Interfranco"]);
 
+    // Piste A (BO7) : « Sans compte » est la sous-page d'Équipes › Personnes.
     await sousParties(page).getByRole("link", { name: "Sans compte" }).click();
-    await expect(page.getByRole("heading", { name: /Planning sans compte/ })).toBeVisible();
+    await expect(page).toHaveURL(/\/back-office\/equipes\/personnes\/sans-compte\/?$/);
+    await expect(page.getByRole("heading", { level: 2, name: "Noms du planning sans compte" })).toBeVisible();
     await expect(page.getByRole("button", { name: /Importer|Reprendre les noms/ })).toHaveCount(0);
   });
 
@@ -357,32 +359,21 @@ test("sousPartiesEvenements : Évènements, Scène selon les droits (table Q2)",
 });
 
 test.describe("B3 : Tâches", () => {
-  test("un référent de TEAM DA : Tâches mène à son équipe, où les tâches se gèrent", async ({ page }) => {
-    await ouvrirB3(page, DA_ORG, "/back-office/taches", { "equipes/da/taches/t1": TACHE });
-    await expect(page).toHaveURL(/\/back-office\/taches\/da\/?$/);
-    await expect(page.getByRole("heading", { level: 1, name: "Tâches" })).toBeVisible();
-    // Agencement v18 (T1, B1) : le rail des équipes, même pour une seule (il porte le nom et le compte) ;
-    // « + Nouvelle tâche » en pilule (lien) en grand, en rond (bouton) sur un volet.
-    await expect(ongletsRail(page).getByRole("link")).toHaveText([/^DA\s*·\s*1$/]);
-    await expect(page.getByRole(estGrandEcran(test.info()) ? "link" : "button", { name: "Nouvelle tâche" })).toBeVisible();
+  test("un référent de TEAM DA : /back-office/taches/da mène à la page de son équipe, où les tâches se gèrent", async ({ page }) => {
+    await ouvrirB3(page, DA_ORG, "/back-office/taches/da", { "equipes/da/taches/t1": TACHE });
+    await expect(page).toHaveURL(/\/back-office\/equipes\/da\/?$/);
+    // Piste A (BO7) : l'en-tête est le nom de l'équipe (plus de rail avec le compte) ; « Nouvelle tâche » est un lien de la section Tâches.
+    await expect(page.getByRole("heading", { level: 1, name: "DA" })).toBeVisible();
+    await expect(page.getByRole("region", { name: "Tâches", exact: true }).getByRole("link", { name: "Nouvelle tâche" })).toBeVisible();
     await expect(page.getByRole("checkbox", { name: /Fond PPT/ })).toBeVisible();
   });
 
-  test("admin : un onglet par équipe qui a des tâches, dans l'ordre de la table (EQ9)", async ({ page }) => {
-    await ouvrirB3(page, ADMIN, "/back-office/taches/medias", {
-      "equipes/louange/taches/l1": { ...TACHE, equipe: "louange", titre: "Envoyer la setlist" },
-      "equipes/medias/taches/m1": { ...TACHE, equipe: "medias", titre: "Photos du culte" },
-      "equipes/da/taches/t1": TACHE,
-    });
-    // Agencement v18 (T1, B1) : le rail des équipes, avec le compte de chacune ; pas treize onglets vides.
-    await expect(ongletsRail(page).getByRole("link")).toHaveText([/^DA/, /^Médias/, /^Louange/]);
-    await expect(ongletsRail(page).getByRole("link", { name: /^Médias/ })).toHaveAttribute("aria-current", "page");
-  });
+  // Supprimé (piste A, BO-D) : « admin : un onglet par équipe qui a des tâches, dans l'ordre de la table (EQ9) » : le rail des équipes n'existe plus.
 
-  test("ancienne adresse : /taches/da mène à Back-Office › Tâches › DA", async ({ page }) => {
+  test("ancienne adresse : /taches/da mène à la page de l'équipe au Back-Office", async ({ page }) => {
     await ouvrirB3(page, DA_ORG, "/taches/da");
-    await expect(page).toHaveURL(/\/back-office\/taches\/da\/?$/);
-    await expect(ongletsRail(page).getByRole("link", { name: /^DA/ })).toHaveAttribute("aria-current", "page");
+    await expect(page).toHaveURL(/\/back-office\/equipes\/da\/?$/);
+    await expect(page.getByRole("heading", { level: 1, name: "DA" })).toBeVisible();
   });
 
   test("App : /taches = « À faire pour moi », et une ligne vers les tâches des équipes pour un responsable", async ({ page }) => {
@@ -633,7 +624,7 @@ test.describe("B3 : Évènements", () => {
 test("captures B3 : Tâches, Évènements, Réunions, fiche d'une réunion, Scène", async ({ page }, info) => {
   const dossier = "test-results/back-office-captures";
   const capture = (nom: string) => page.screenshot({ path: `${dossier}/b3-${nom}-${info.project.name}.png`, fullPage: true });
-  await ouvrirB3(page, ADMIN, "/back-office/taches/da", { ...DOCS_EV, "equipes/da/taches/t1": TACHE });
+  await ouvrirB3(page, ADMIN, "/back-office/equipes/da", { ...DOCS_EV, "equipes/da/taches/t1": TACHE });
   await expect(page.getByRole("checkbox", { name: /Fond PPT/ })).toBeVisible();
   await capture("taches");
   await page.goto("/back-office/evenements");

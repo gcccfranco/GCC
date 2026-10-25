@@ -1,6 +1,6 @@
 import { expect, test, type Page, type TestInfo } from "@playwright/test";
 import { ADMIN_EMAIL, signInAs, type FakeProfile } from "./helpers/fakeSession";
-import { enTete, estGrandEcran, ongletsRail, verifierAgencement } from "./helpers/agencement";
+import { enTete, estGrandEcran, verifierAgencement } from "./helpers/agencement";
 import type { MembreEquipe } from "../src/types/equipe";
 
 // Lot 1 du chantier « équipes et groupes » (docs/spec-equipes-sans-poles.md), tranche EQ-D :
@@ -115,11 +115,4 @@ test("Back-Office d'une référente sans Planning : À faire, Calendrier, Équip
   await capture(page, "referente-back-office");
 });
 
-test("Tâches : le rail ne montre que les équipes qui ont une tâche", async ({ page }) => {
-  await ouvrir(page, ADMIN, "/back-office/taches", {
-    ...DOCS,
-    "equipes/medias/taches/t1": { equipe: "medias", titre: "Photos du culte", responsableUid: "u-joel", responsableNom: "Joël F.", echeance: "2026-10-15", repetition: null },
-  });
-  await expect(ongletsRail(page).getByRole("link")).toHaveText([/^Médias/]);
-  await capture(page, "taches-rail");
-});
+// Supprimé (piste A, BO-D) : « Tâches : le rail ne montre que les équipes qui ont une tâche » (EQ9) : le rail des équipes n'existe plus.

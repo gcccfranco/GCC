@@ -3166,6 +3166,24 @@
     }
   },
   "equipes": {
+    "page": {
+      "taches": "任务",
+      "reunions": "会议",
+      "membres": "成员",
+      "sousTitre_other": "{{count}} 位成员 · {{referents}}",
+      "sousTitreSeul_other": "{{count}} 位成员",
+      "referents_other": "负责人：{{noms}}",
+      "prochaine": "下一次",
+      "aVenir": "即将举行",
+      "passees": "已举行",
+      "compteRendu": "已写会议纪要",
+      "sansCompteRendu": "还没有会议纪要",
+      "aucuneReunion": "这个团队还没有会议。",
+      "reserve": "仅限团队成员查看",
+      "introuvable": "找不到该团队",
+      "organigrammeGroupe": "查看小组的组织架构",
+      "comiteAide": "委员会的成员请在所属小组的组织架构中查看。"
+    },
     "title": "团队",
     "sousTitre": "GCC 法语堂 2026 组织架构",
     "onglet": {
@@ -3494,6 +3512,9 @@
         "confirmDebut": "发布",
         "confirmFin": "{{label}}的排班表 → 所有成员可见；该季度首次发布时将通知{{audience}}。"
       }
+    },
+    "equipe": {
+      "sansCompte": "排班表中尚无账号的名字"
     },
     "selecteur": {
       "aria": "选择空间",

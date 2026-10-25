@@ -7,6 +7,8 @@
 // ses équipes viennent à lui dans l'app (BO-D).
 // G2 : un connecté qui suit le lien d'une réunion (cloche, notification, rappel) sans pouvoir
 // ouvrir les réunions du Back-Office est mené à sa fiche de l'App.
+// BO4, BO7 : un connecté sans entrée de Back-Office qui suit le lien d'une équipe ou de ses tâches
+// (`/back-office/equipes/<id>`, `/back-office/taches/<id>`) est mené à la page de l'équipe de l'App.
 import { useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -23,7 +25,14 @@ export function EspaceBackOffice({ children }: { children: React.ReactNode }) {
   const entrees = entreesBackOffice(user, profile);
   const reunionId = !loading && user && !droitsDesPages(user, profile).reunions
     ? /^\/back-office\/reunions\/([\w-]+)\/?$/.exec(pathname)?.[1] : undefined;
-  const versApp = reunionId && reunionId !== "nouvelle" ? `/evenements/${reunionId}` : null;
+  const equipe = !loading && user && entrees.length === 0
+    ? /^\/back-office\/(equipes|taches)\/([\w-]+)(?:\/([\w-]+))?\/?$/.exec(pathname) : null;
+  // La fiche d'une tâche a sa page dans l'App (`/taches/<équipe>/<id>`) ; le reste mène à l'équipe.
+  const tacheId = equipe?.[1] === "taches" && equipe[3] && equipe[3] !== "nouvelle" ? equipe[3] : null;
+  const versEquipe = equipe && equipe[2] !== "personnes"
+    ? tacheId ? `/taches/${equipe[2]}/${tacheId}${typeof window === "undefined" ? "" : window.location.search}` : `/equipes/${equipe[2]}`
+    : null;
+  const versApp = reunionId && reunionId !== "nouvelle" ? `/evenements/${reunionId}` : versEquipe;
   useEffect(() => { if (versApp) router.replace(versApp); }, [versApp, router]);
 
   if (loading) {

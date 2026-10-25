@@ -1338,20 +1338,20 @@ test.describe("OG-D · navigateur (Personnes, Sans compte)", () => {
     await expect(page.getByRole("button", { name: /Yann M\./ })).toBeVisible();
   });
 
-  test("Planning › Sans compte : un nom écrit aussi dans un planning n'est compté qu'une fois (OG32)", async ({ page }) => {
+  test("Personnes › Sans compte (ex-Planning › Sans compte) : un nom écrit aussi dans un planning n'est compté qu'une fois (OG32)", async ({ page }) => {
     const csv = [["2026 DATE", "Présidence", "Choristes", "", "Pianiste", "Guitariste", "Batterie", "Sono + Live", "PPT", "Orateur", "Traducteur", "Sainte cène", "Notes"],
       ["11/10", "Ma Lin", "", "", "Zoé Q.", "", "", "", "", "", "", "", ""]].map((r) => r.map((c) => `"${c}"`).join(",")).join("\n");
     await page.route(/docs\.google\.com\/spreadsheets/, (route) => route.fulfill({ status: 200, contentType: "text/csv", body: new URL(route.request().url()).searchParams.get("sheet") === "Franco_Louange" ? csv : "" }));
     await page.route("**/api/equipes/groupes", (route) => route.fulfill({ json: { ok: true, maj: 0, ignores: [] } }));
-    await signInAs(page, ADMIN, docs(), "/back-office/planning/sans-compte");
+    await signInAs(page, ADMIN, docs(), "/back-office/equipes/personnes/sans-compte");
     await expect(page.getByRole("region", { name: /^Titulaires sans compte/ })).toContainText("Ma Lin");
     const planning = page.locator("div.rounded-xl", { hasText: /^Planning sans compte/ }).first();
     await expect(planning).toContainText("Zoé Q.");
     await expect(planning).not.toContainText("Ma Lin");
   });
 
-  test("Planning › Sans compte : le bloc « Titulaires sans compte » mène à l'organigramme du groupe", async ({ page }) => {
-    await ouvrir(page, "/back-office/planning/sans-compte");
+  test("Personnes › Sans compte (ex-Planning › Sans compte) : le bloc « Titulaires sans compte » mène à l'organigramme du groupe", async ({ page }) => {
+    await ouvrir(page, "/back-office/equipes/personnes/sans-compte");
     const bloc = page.getByRole("region", { name: /^Titulaires sans compte/ });
     await expect(bloc).toContainText("Titulaires sans compte (1)");
     const ligne = bloc.getByRole("link", { name: /Ma Lin/ });

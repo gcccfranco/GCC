@@ -26,7 +26,7 @@ import { useProfile, listProfiles } from "@/lib/firebase/users";
 import { listEquipes, majRattachement, saveEquipe } from "@/lib/firebase/equipes";
 import { ModifieEntreTemps } from "@/lib/firebase/programmes";
 import {
-  canEditerEquipes, isAdminUser, peutChangerReferents, peutModifierEquipe, peutPlacerMembre, peutPlacerSousEquipe,
+  canEditerEquipes, isAdminUser, peutChangerReferents, peutModifierEquipe, peutPlacerMembre, peutPlacerSousEquipe, peutVoirEquipe,
 } from "@/lib/access";
 import { BACK_OFFICE } from "@/lib/backOffice";
 import { CeQueCaOuvre, CorpsLouange, MembreOrganigramme, ligneGrise, majuscule, resume } from "@/components/equipes/OrganigrammeLouange";
@@ -97,6 +97,8 @@ export function EquipesClient({
       def={def}
       equipe={equipeDe(def.id)}
       peutEditer={modifiable(def.id)}
+      // Piste A (BO7, BO4) : le nom de l'équipe ouvre sa page à qui peut la voir (coupée en ligne).
+      href={BACK_OFFICE && peutVoirEquipe(user, profile, def.id) ? `${gestion ? "/back-office" : ""}/equipes/${def.id}` : undefined}
       enBandeau={bandeau}
       onFiche={setFiche}
       onModifier={() => setEditee(def.id)}
@@ -276,11 +278,13 @@ function PanneauEquipe({
 // ── Une équipe ──────────────────────────────────────────────────────────────
 
 function CarteEquipe({
-  def, equipe, peutEditer, enBandeau, onFiche, onModifier,
+  def, equipe, peutEditer, href, enBandeau, onFiche, onModifier,
 }: {
   def: EquipeDef;
   equipe: Equipe | null;
   peutEditer: boolean;
+  /** La page de l'équipe, pour qui peut la voir. */
+  href?: string;
   /** Dans le bandeau (U4 bis, B6 ; Back-Office depuis la v18) : carte en relief ; Louange et
    *  EDD rangent leurs sous-groupes sur trois colonnes, sous le référent. */
   enBandeau: boolean;
@@ -319,7 +323,9 @@ function CarteEquipe({
     >
       <header className="space-y-1">
         <div className="flex items-start justify-between gap-2">
-          <h2 className="text-base font-bold text-foreground">{nom}</h2>
+          <h2 className="text-base font-bold text-foreground">
+            {href ? <Link href={href} className="rounded-sm hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">{nom}</Link> : nom}
+          </h2>
           {peutEditer && (
             <button
               type="button"

@@ -253,7 +253,7 @@ export function ApercuEquipes({ uid }: { uid: string }) {
         const nom = t(`equipes.court.${id}`);
         const role = moi.referent ? t("equipes.referent") : moi.groupe || moi.mention || t("moi.apercus.membre");
         return (
-          <div key={id} data-testid="apercu-ligne" className={LIGNE}>
+          <Link key={id} href={`/equipes/${id}`} data-testid="apercu-ligne" className={`${LIGNE} min-h-[44px]`}>
             <span aria-hidden className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-secondary text-[12px] font-semibold text-foreground">
               {nom.charAt(0).toUpperCase()}
             </span>
@@ -261,7 +261,8 @@ export function ApercuEquipes({ uid }: { uid: string }) {
               <span className="block truncate text-[15px] font-semibold text-foreground">{nom}</span>
               <span className={SOUS}>{`${role} · ${t("moi.apercus.membres", { count: nombre })}`}</span>
             </span>
-          </div>
+            <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground/60" aria-hidden />
+          </Link>
         );
       })}
     </Apercu>

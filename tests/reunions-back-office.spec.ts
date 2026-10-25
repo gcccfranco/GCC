@@ -48,7 +48,6 @@ const qui = (p: FakeProfile) => ({ uid: p.uid, email: p.email });
 const profil = (p: FakeProfile) => ({ serviceRoles: {}, annonces: [], notify: [], plannings: [], ...p }) as unknown as UserProfile;
 const ev = (x: Record<string, unknown>, id: string) => ({ ...x, id }) as unknown as Evenement;
 
-const estOrdinateur = (info: TestInfo) => info.project.name.startsWith("ordinateur");
 const estTablettePaysage = (info: TestInfo) => info.project.name === "tablette-paysage";
 const capture = (page: Page, info: TestInfo, nom: string) =>
   page.screenshot({ animations: "disabled", path: path.join(__dirname, "..", "test-results", "reunions-back-office-captures", `${info.project.name}-${nom}.png`) });
@@ -60,13 +59,6 @@ async function ouvrir(page: Page, p: FakeProfile, vers: string, docs: Record<str
   await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
   await sansSheet(page);
   return signInAs(page, p, docs, vers);
-}
-
-/** Le menu du Back-Office : la barre latérale en grand, la barre du bas sinon. */
-function menu(page: Page, info: TestInfo) {
-  if (estOrdinateur(info)) return page.getByTestId("barre-laterale").getByRole("navigation", { name: "Navigation principale" });
-  if (estTablettePaysage(info)) return page.getByTestId("barre-par-dessus").getByRole("navigation", { name: "Navigation principale" });
-  return page.getByTestId("barre-du-bas");
 }
 
 // ─── Purs ───────────────────────────────────────────────────────────────────
@@ -147,9 +139,9 @@ test("G1 : l'accueil ne montre pas la réunion dans « Prochains évènements »
   await expect(carte.getByText("Point DA")).toHaveCount(0);
 });
 
-test("G2 : l'adresse d'une réunion dans l'App mène à sa fiche de Back-Office › Réunions", async ({ page }, info) => {
+test("G2 : l'adresse d'une réunion dans l'App reste sa fiche de l'App pour un simple membre (BO-A : pas de Back-Office)", async ({ page }, info) => {
   await ouvrir(page, BRUNO, "/evenements/reunion-da");
-  await page.waitForURL(/\/back-office\/reunions\/reunion-da\/?$/);
+  await expect(page).toHaveURL(/\/evenements\/reunion-da\/?$/);
   await expect(page.getByRole("region", { name: /^Sujets/ })).toBeVisible();
   await capture(page, info, "fiche-reunion");
   // L'évènement d'équipe garde sa fiche de l'App.
@@ -201,41 +193,29 @@ test("G2 : sans compte, l'adresse d'une réunion au Back-Office propose de se co
   await expect(page.getByRole("link", { name: "Se connecter" })).toHaveAttribute("href", /^\/login\/?\?from=%2Fback-office%2Freunions%2Freunion-louange$/);
 });
 
-test("G3 : un membre d'équipe sans autre rôle — sélecteur, Tâches et Réunions, ses réunions", async ({ page }, info) => {
+test("G3 : un membre d'équipe sans autre rôle n'a plus de Back-Office (BO-A) : sa réunion est dans l'App, via sa page d'équipe", async ({ page }, info) => {
   await ouvrir(page, HUGO, "/evenements", { "evenements/reunion-regie": REUNION_REGIE });
   await expect(page.getByRole("heading", { name: "Évènements" }).first()).toBeVisible();
   await expect(page.getByText("Réunion Régie")).toHaveCount(0);
-  // Le sélecteur App · Back-Office (en paysage, dans la barre latérale dépliée).
+  // Plus de sélecteur App · Back-Office (en paysage, dans la barre latérale dépliée).
   if (estTablettePaysage(info)) await page.getByTestId("barre-laterale").getByRole("button", { name: /Déplier la barre latérale/ }).tap();
-  const selecteur = page.getByRole("group", { name: "Choisir l'espace" }).filter({ visible: true });
-  await expect(selecteur.getByRole("link", { name: "Back-Office" })).toBeVisible();
-  await selecteur.getByRole("link", { name: "Back-Office" }).click();
-  // Pas de tableau de bord : le Back-Office s'ouvre sur sa première entrée, Tâches (EQ17).
-  await page.waitForURL(/\/back-office\/taches(\/[\w-]+)?\/?$/);
-  // BO-C : la liste des réunions est l'Agenda du Calendrier, filtré sur les réunions.
-  await page.goto("/back-office/reunions");
-  await expect(page).toHaveURL(/\/back-office\/calendrier\/?\?vue=agenda&filtre=reunions$/);
-  await expect(page.getByRole("button", { name: /Réunion Régie/ }).first()).toBeVisible();
-  if (estTablettePaysage(info)) await page.getByTestId("barre-laterale").getByRole("button", { name: /Déplier la barre latérale/ }).tap();
-  await expect(menu(page, info).getByRole("link")).toHaveText(estOrdinateur(info) || estTablettePaysage(info) ? ["Tâches", "Réunions"] : ["Tâches", "Réunions", "Plus"]);
-  await capture(page, info, "membre-equipe");
-  // Ni tableau de bord, ni calendrier, ni autre entrée : retour à Tâches.
-  for (const ailleurs of ["/back-office", "/back-office/calendrier", "/back-office/evenements"]) {
-    await page.goto(ailleurs);
-    await page.waitForURL(/\/back-office\/taches(\/[\w-]+)?\/?$/);
-  }
-  await expect(page.getByRole("heading", { name: "Tableau de bord" })).toHaveCount(0);
-  // L'adresse de sa réunion dans l'App mène au Back-Office, avec les sujets.
-  await page.goto("/evenements/reunion-regie");
-  await page.waitForURL(/\/back-office\/reunions\/reunion-regie\/?$/);
+  await expect(page.getByRole("group", { name: "Choisir l'espace" }).getByRole("link", { name: "Back-Office" })).toHaveCount(0);
+  // Le lien d'une réunion du Back-Office le mène à sa fiche de l'App, avec les sujets (règle G2 d'EspaceBackOffice).
+  await page.goto("/back-office/reunions/reunion-regie");
+  await page.waitForURL(/\/evenements\/reunion-regie\/?$/);
   await expect(page.getByRole("region", { name: /^Sujets/ })).toBeVisible();
+  // Sa page d'équipe liste la réunion, vers sa fiche de l'App.
+  await page.goto("/equipes/regie");
+  const reunions = page.getByRole("region", { name: "Réunions" });
+  await expect(reunions.getByRole("link", { name: /Réunion Régie/ })).toHaveAttribute("href", /\/evenements\/reunion-regie\/?$/);
+  await capture(page, info, "membre-equipe");
 });
 
-test("G3 : un choriste a le sélecteur et le Back-Office, Tâches et Réunions (EQ17, décision 5)", async ({ page }) => {
-  await ouvrir(page, CHORISTE, "/back-office", { "evenements/reunion-louange": REUNION_LOUANGE });
-  await page.waitForURL(/\/back-office\/taches(\/[\w-]+)?\/?$/);
-  await expect(page.getByText("Réservé aux responsables.")).toHaveCount(0);
-  await page.goto("/back-office/reunions");
-  await expect(page).toHaveURL(/\/back-office\/calendrier\/?\?vue=agenda&filtre=reunions$/);
-  await expect(page.getByRole("button", { name: /Réunion Louange/ }).first()).toBeVisible();
+test("G3 : un choriste n'a plus de Back-Office (BO-A) : sa réunion de Louange est dans l'App (EQ17, décision 5)", async ({ page }) => {
+  await ouvrir(page, CHORISTE, "/songs", { "evenements/reunion-louange": REUNION_LOUANGE });
+  await page.goto("/back-office/reunions/reunion-louange");
+  await page.waitForURL(/\/evenements\/reunion-louange\/?$/);
+  await expect(page.getByRole("region", { name: /^Sujets/ })).toBeVisible();
+  await page.goto("/equipes/louange");
+  await expect(page.getByRole("region", { name: "Réunions" }).getByRole("link", { name: /Réunion Louange/ })).toHaveAttribute("href", /\/evenements\/reunion-louange\/?$/);
 });

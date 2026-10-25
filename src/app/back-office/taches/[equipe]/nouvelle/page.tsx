@@ -3,8 +3,8 @@
 // Nouvelle tâche au Back-Office (agencement v18, B2 ; planche `v18-bo-tache-nouvelle`) : en grand,
 // le formulaire est une carte dans le volet de droite (équipe en pilules parmi celles où la personne
 // crée, `equipesOuCreer`, EQ8, EQ10) ; créer ouvre la fiche de la tâche, « Annuler » revient à
-// l'équipe. En un volet (lien direct), la feuille d'aujourd'hui. Qui ne crée nulle part est ramené à
-// la liste de l'équipe.
+// l'équipe (sa page, piste A BO7). En un volet (lien direct), la feuille d'aujourd'hui. Qui ne crée nulle part est ramené à
+// la page de l'équipe.
 
 import { useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
@@ -22,13 +22,14 @@ export default function NouvelleTachePage() {
   const deuxVolets = useDeuxVolets();
   const { user, profile, loading } = useProfile();
   const { reload, racine } = useMesTaches();
+  const pageEquipe = `/back-office/equipes/${equipe}`;
   const membres = useMembres(true);
   const ouCreer = equipesOuCreer(user, profile);
   const depart = ouCreer.includes(equipe) ? equipe : ouCreer[0];
 
   useEffect(() => {
-    if (!loading && !depart) router.replace(`${racine}/${equipe}`);
-  }, [loading, depart, racine, equipe, router]);
+    if (!loading && !depart) router.replace(pageEquipe);
+  }, [loading, depart, pageEquipe, router]);
 
   async function creer(values: TacheValues, e: string) {
     if (!user) return;
@@ -47,7 +48,7 @@ export default function NouvelleTachePage() {
       initial={null}
       membres={membres}
       onSubmit={creer}
-      onClose={() => router.push(`${racine}/${equipe}`)}
+      onClose={() => router.push(pageEquipe)}
     />
   );
 }

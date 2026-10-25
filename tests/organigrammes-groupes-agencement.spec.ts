@@ -171,8 +171,8 @@ test("Personnes en 中文 : la fiche et le panneau se lisent sans débordement",
   await capture(page, "personne-fiche-zh");
 });
 
-test("Planning › Sans compte : le bloc des titulaires sans compte sans débordement", async ({ page }) => {
-  await ouvrirPersonnes(page, "/back-office/planning/sans-compte");
+test("Personnes › Sans compte (ex-Planning › Sans compte) : le bloc des titulaires sans compte sans débordement", async ({ page }) => {
+  await ouvrirPersonnes(page, "/back-office/equipes/personnes/sans-compte");
   await expect(page.getByRole("region", { name: /^Titulaires sans compte/ })).toContainText("Inès V.");
   await verifierSansDebordement(page);
   await capture(page, "sans-compte");

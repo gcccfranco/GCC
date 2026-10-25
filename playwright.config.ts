@@ -22,6 +22,7 @@ const SPECS_GRAND_ECRAN = [
   /setlist-regie\.spec\.ts/,
   /setlist-partage\.spec\.ts/,
   /coup-d-oeil\.spec\.ts/,
+  /equipes-page\.spec\.ts/,
   // Lot DA, DA-2 (docs/spec-dictionnaire-accords.md) : la page /accords (carte + groupes d'accords).
   /accords-page\.spec\.ts/,
   // … DA-3 : le panneau d'un accord touché (bulle sur ordinateur, feuille ailleurs) et la bulle d'aide.

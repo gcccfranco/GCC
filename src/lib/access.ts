@@ -95,6 +95,15 @@ export function estReferentDe(user: AuthUser | { email?: string | null } | null,
   return isAdminUser(user) || (profile?.referentDe ?? []).includes(equipe);
 }
 
+/** Voir la page d'une équipe, `/equipes/<id>` ou `/back-office/equipes/<id>` (piste A, BO4, BO7) : un
+ *  membre de l'équipe (estDeLEquipe), un référent ou un admin. Affichage seulement : equipes/{id}/taches
+ *  et evenements/{id} gardent leurs règles. Ids valides : EQUIPES et COMITES (ORDRE_EQUIPES). */
+export function peutVoirEquipe(
+  user: AuthUser | { email?: string | null } | null, profile: ProfilEquipes | null, equipe: string, backOffice: boolean = BACK_OFFICE,
+): boolean {
+  return estDeLEquipe(user, profile, equipe, backOffice) || estReferentDe(user, profile, equipe);
+}
+
 /** Changer l'état d'une fois d'une tâche, « cocher » (EQ8, décisions 3 et 41) : les référents de son
  *  équipe et les admins, toute tâche ; un membre, celles dont il est le responsable. Une tâche « toute
  *  l'équipe » (sans responsable) ne se coche donc que par les référents et les admins. Miroir :

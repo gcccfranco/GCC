@@ -15,6 +15,7 @@ import { useProfile } from "@/lib/firebase/users";
 import { useTranslation } from "react-i18next";
 import { Bell, CalendarDays, ChevronLeft, ChevronRight, Link2, Pencil, PenLine, ShieldCheck, UserRound, Users } from "lucide-react";
 import { EnTetePage } from "@/components/layout/EnTetePage";
+import { buttonVariants } from "@/components/ui/button";
 import { DeuxVolets } from "@/components/layout/DeuxVolets";
 import { useDisposition } from "@/hooks/useDisposition";
 import { isAdminUser } from "@/lib/access";
@@ -76,6 +77,8 @@ export function PersonnesVolets() {
         t("equipes.compte.inscrits", { count: d.profiles.length }),
         t("groupes.personnes.groupesSansGroupe", { count: nombreSansGroupe(d.profiles) }),
       ].join(" · ")}
+      // Piste A (BO7) : l'ancienne page Planning › Sans compte, dans Personnes.
+      outils={<Link href="/back-office/equipes/personnes/sans-compte" className={buttonVariants({ variant: "outline", size: "sm" })}>{t("backOffice.equipe.sansCompte")}</Link>}
       onglets={<RailEquipes />}
       apres={<InscriptionsComptes court nouveaux={stats.nouveaux} onVoir={voirNouveaux} />}
     />

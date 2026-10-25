@@ -451,7 +451,8 @@ test.describe("Tableau de bord (B4) : écrans", () => {
     await expect(comptes.getByTestId("compte-sans-compte")).toContainText("noms sans compte");
     await expect(comptes.getByTestId("compte-nouveaux")).toContainText("nouveaux cette semaine");
     await expect(comptes.getByText("Pers. A", { exact: true })).toHaveCount(0);
-    await expect(comptes.getByRole("link", { name: "Voir" })).toHaveAttribute("href", /^\/back-office\/planning\/sans-compte\/?$/);
+    // Piste A (BO7) : « sans compte » est une sous-page de Équipes › Personnes ; l'ancienne adresse y redirige.
+    await expect(comptes.getByRole("link", { name: "Voir" })).toHaveAttribute("href", /^\/back-office\/(planning|equipes\/personnes)\/sans-compte\/?$/);
   });
 
   test("disposition enregistrée : son ordre, ses tailles selon l'appareil (Q10), ses réglages", async ({ page }, info) => {
@@ -1237,7 +1238,11 @@ test.describe("Tableau de bord v2 (TB2-b) : écrans", () => {
     const b = (await comptes.getByTestId("compte-nouveaux").boundingBox())!;
     expect(Math.abs(a.y - b.y), "côte à côte").toBeLessThan(2);
     await expect(comptes.getByTestId("ligne-compte")).toHaveCount(0);
-    await expect(comptes.getByRole("link", { name: "Voir" })).toHaveAttribute("href", /^\/back-office\/planning\/sans-compte\/?$/);
+    await expect(comptes.getByRole("link", { name: "Voir" })).toHaveAttribute("href", /^\/back-office\/(planning|equipes\/personnes)\/sans-compte\/?$/);
+    // Piste A (BO7) : « Voir » arrive sur la sous-page « Noms du planning sans compte » de Équipes › Personnes.
+    await comptes.getByRole("link", { name: "Voir" }).click();
+    await expect(page).toHaveURL(/\/back-office\/equipes\/personnes\/sans-compte\/?$/);
+    await expect(page.getByRole("heading", { level: 2, name: "Noms du planning sans compte" })).toBeVisible();
   });
 
   test("中文 : Plannings, Évènements, Tâches, « 复制提醒 », Ce dimanche", async ({ page }) => {

@@ -187,10 +187,18 @@ test.describe("Back-Office (B1) : rien de neuf pour l'assemblée", () => {
     }
   });
 
-  test("un simple membre d'équipe qui ouvre « /back-office/… » reçoit « Réservé aux responsables »", async ({ page }) => {
+  test("un simple membre d'équipe qui ouvre « /back-office/… » reçoit « Réservé aux responsables », ou est mené à la page de son équipe dans l'App (BO4, BO7)", async ({ page }) => {
     await signInAs(page, MEMBRE_EQUIPE, {}, "/back-office/taches");
     await expect(page.getByText("Réservé aux responsables.")).toBeVisible();
+    // La barre de responsable ne laisse pas passer la redirection de la page : l'adresse reste celle demandée.
     expect(page.url()).toMatch(/\/back-office\/taches\/?$/);
+    // Les tâches d'une équipe : sa page dans l'App, et sa fiche de tâche dans l'App.
+    await page.goto("/back-office/taches/regie");
+    await expect(page).toHaveURL(/\/equipes\/regie\/?$/);
+    await expect(page).not.toHaveURL(/back-office/);
+    await page.goto("/back-office/equipes/regie");
+    await expect(page).toHaveURL(/\/equipes\/regie\/?$/);
+    await expect(page).not.toHaveURL(/back-office/);
     // Pas de barre du Back-Office : si une barre est là, c'est celle de l'App.
     await expect(page.getByTestId("barre-du-bas").getByRole("link", { name: "À faire" })).toHaveCount(0);
   });
@@ -257,10 +265,10 @@ test.describe("Back-Office (B1) : le sélecteur et le menu", () => {
   test("la page d'une équipe, sortie du menu (BO1), reste joignable par son adresse (Tâches : l'équipe de la personne, B3)", async ({ page }, info) => {
     await signInAs(page, ALICE_ORGA, {
       "equipes/evenementiel/taches/t1": { equipe: "evenementiel", titre: "Salle", responsableUid: "uid-alice", responsableNom: "Alice Q.", echeance: "2026-10-05", repetition: null },
-    }, "/back-office/taches/evenementiel");
-    await expect(page.getByRole("heading", { level: 1, name: "Tâches" })).toBeVisible({ timeout: 20_000 });
-    // Agencement v18 (T1, B1) : l'équipe est l'onglet actif du rail.
-    await expect(page.locator('[data-onglets="rail"]').getByRole("link", { name: /^Événementiel/ })).toHaveAttribute("aria-current", "page");
+    }, "/back-office/equipes/evenementiel");
+    // Piste A (BO7) : l'en-tête de la page est le nom de l'équipe ; ses tâches sont la section « Tâches ».
+    await expect(page.getByRole("heading", { level: 1, name: /Événementiel/ })).toBeVisible({ timeout: 20_000 });
+    await expect(page.getByRole("region", { name: "Tâches", exact: true }).getByText("Salle")).toBeVisible();
     // Le sélecteur reste dans l'espace Back-Office.
     await deplierSiTablettePaysage(page, info);
     await expect(selecteur(page).getByRole("link", { name: "Back-Office" })).toHaveAttribute("aria-current", "true");
@@ -421,8 +429,8 @@ test.describe("Back-Office : pastilles de la barre latérale (Q15)", () => {
     await sansSheet(page);
     await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
     await signInAs(page, ADMIN, PASTILLES, "/back-office");
-    await page.goto("/back-office/taches/da");
-    await expect(page.getByRole("heading", { level: 1, name: "Tâches" })).toBeVisible();
+    await page.goto("/back-office/equipes/da");
+    await expect(page.getByRole("heading", { level: 1, name: "DA" })).toBeVisible();
     await deplierSiTablettePaysage(page, info);
     await expect(menu(page, info).getByRole("link", { name: "Messages", exact: true }).getByTestId("pastille")).toHaveText("2");
     await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" });

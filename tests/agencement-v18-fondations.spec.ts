@@ -129,9 +129,9 @@ test.describe("ConfirmerProvider, useConfirmer (R9)", () => {
   });
 
   test("la page change pendant que la fenêtre est ouverte (Précédent) : la fenêtre se ferme", async ({ page }) => {
-    await ouvrir(page, "/back-office/taches/da");
-    // Une navigation dans le site (un clic dans la liste), puis la fenêtre sur la fiche ouverte.
-    await page.locator('[data-volet="liste"], main').getByText("Fond PPT du culte").first().click();
+    await ouvrir(page, "/back-office/equipes/da");
+    // Une navigation dans le site (un clic dans la liste de la page de l'équipe), puis la fenêtre sur la fiche ouverte.
+    await page.getByRole("region", { name: "Tâches", exact: true }).getByText("Fond PPT du culte").first().click();
     await page.waitForURL(/\/back-office\/taches\/da\/t2/);
     await page.getByRole("button", { name: "Plus d'actions" }).filter({ visible: true }).click();
     await page.getByRole("menuitem", { name: "Supprimer" }).click();
@@ -140,7 +140,7 @@ test.describe("ConfirmerProvider, useConfirmer (R9)", () => {
     // Précédent, fenêtre ouverte : sa demande ne doit pas survivre sur la page d'avant (un clic sur
     // « Supprimer » agirait pour une fiche quittée).
     await page.goBack();
-    await page.waitForURL(/\/back-office\/taches\/da\/?$/);
+    await page.waitForURL(/\/back-office\/equipes\/da\/?$/);
     await expect(fenetre).toBeHidden();
   });
 });
@@ -248,10 +248,10 @@ test.describe("DeuxVolets en liste-carte (R10)", () => {
     });
   }
 
-  test("un volet (téléphone, tablette portrait), Back-Office › Tâches : la liste seule", async ({ page }, info) => {
+  test("un volet (téléphone, tablette portrait), Back-Office › Équipe › Tâches : la liste seule", async ({ page }, info) => {
     test.skip(estGrandEcran(info), "un volet : petits écrans");
-    await ouvrir(page, "/back-office/taches/da");
-    await expect(page.locator('[data-volet="liste"]').getByText("Fond PPT du culte")).toBeVisible();
+    await ouvrir(page, "/back-office/equipes/da");
+    await expect(page.getByRole("region", { name: "Tâches", exact: true }).getByText("Fond PPT du culte").first()).toBeVisible();
     await expect(page.locator('[data-volet="detail"]')).toHaveCount(0);
   });
 });
