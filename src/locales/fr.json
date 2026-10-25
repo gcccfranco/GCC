@@ -2705,6 +2705,7 @@
   },
   "push": {
     "error": "Une erreur est survenue",
+    "refuse": "Permission refusée sur cet appareil. Autorise les notifications pour ce site.",
     "title": "Notifications",
     "description": "Rappels avant un service (1 semaine puis 3 jours) et alerte quand une setlist est prête.",
     "unsupported": "Cet appareil ou ce navigateur ne supporte pas les notifications.",

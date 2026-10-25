@@ -6,7 +6,7 @@ import { DndContext, closestCenter, type DragEndEvent } from "@dnd-kit/core";
 import { SortableContext, arrayMove, rectSortingStrategy, useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Plus, X } from "lucide-react";
-import { keyOptions } from "@/lib/transpose";
+import { keyLike, keyOptions } from "@/lib/transpose";
 import { useDefaultSensors } from "@/lib/dnd/sensors";
 import { abbreviateSection } from "@/lib/chordpro/abbreviations";
 import { sectionKindOfName } from "@/lib/chordpro/parser";
@@ -63,8 +63,10 @@ export function Tonalites({
   onChange: (key: string | null) => void;
 }) {
   const { t } = useTranslation();
-  const choisie = keyOverride ?? song.originalKey;
-  const options = keyOptions(keyOverride, song.originalKey);
+  // Une tonalité majeure d'une ancienne setlist sur un chant mineur se lit comme son relatif mineur.
+  const surcharge = keyOverride ? keyLike(song.originalKey, keyOverride) : null;
+  const choisie = surcharge ?? song.originalKey;
+  const options = keyOptions(surcharge, song.originalKey);
   const couleur = song.language === "zh" ? "var(--zh-accent)" : "var(--fr-accent)";
   const refs = useRef<(HTMLButtonElement | null)[]>([]);
   const choisir = (k: string) => onChange(k === song.originalKey ? null : k);

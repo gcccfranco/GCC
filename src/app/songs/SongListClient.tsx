@@ -7,6 +7,7 @@ import { useState, useMemo, useEffect, useLayoutEffect, useRef } from "react";
 import { useFonduLateral } from "@/hooks/useFonduLateral";
 import Link from "next/link";
 import Fuse from "fuse.js";
+import { OPTIONS_RECHERCHE_CHANTS } from "@/lib/setlist/bibliotheque";
 import { ChampRecherche } from "@/components/layout/ChampRecherche";
 import { Button } from "@/components/ui/button";
 import { KeyPill } from "@/components/ui/key-pill";
@@ -122,11 +123,7 @@ export function SongListClient({ songs, themes, actif = null, erreur = false, on
 
   const fuse = useMemo(
     () =>
-      new Fuse(songs, {
-        keys: ["title", "titlePinyin", "artist"],
-        threshold: 0.4,
-        includeScore: true,
-      }),
+      new Fuse(songs, { ...OPTIONS_RECHERCHE_CHANTS, includeScore: true }),
     [songs]
   );
 

@@ -82,7 +82,8 @@ export function PushToggle() {
       const isDenied = permissionState() === "denied";
       setDenied(isDenied);
       if (!isDenied) {
-        setError(e instanceof Error ? e.message : t("push.error", { defaultValue: "Une erreur est survenue" }));
+        console.warn(e);
+        setError(t("push.error"));
       }
     } finally {
       setBusy(false);

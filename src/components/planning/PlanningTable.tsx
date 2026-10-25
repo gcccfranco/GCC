@@ -169,7 +169,7 @@ export function PlanningTable({ cols, rows, color, dateBadge, minWidth = 480, gr
           </div>
         )}
         {mobileRows.length === 0 && (
-          <EtatVide compact>Aucune donnée</EtatVide>
+          <EtatVide compact>{t("planning.table.noData")}</EtatVide>
         )}
         {mobileRows.map((row) => {
           const isThis = row[0] === sun

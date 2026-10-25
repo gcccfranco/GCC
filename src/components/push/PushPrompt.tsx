@@ -65,7 +65,8 @@ export function PushPrompt() {
       await subscribeToPush(user.uid);
       setShow(false);
     } catch (e) {
-      setError(e instanceof Error ? e.message : t("push.error"));
+      console.warn(e);
+      setError(t(e instanceof Error && e.message === "Permission refusée" ? "push.refuse" : "push.error"));
     } finally {
       setBusy(false);
     }

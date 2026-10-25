@@ -23,6 +23,7 @@ import { BACK_OFFICE } from "@/lib/backOffice"
 import { useGestionPlanning } from "@/lib/planning/gestion"
 import { AncienTableau } from "./AncienTableau"
 import { styleTexteService } from "@/lib/couleurSombre"
+import { cellulePoste, poste, seanceLibelle } from "./postes"
 import { EtatVide } from "@/components/layout/EtatVide"
 
 // Campus : les cartes Louange / Répétition restent la lecture ; le volet
@@ -54,6 +55,7 @@ function Chip({ label }: { label: string }) {
 
 function CampusPage() {
   const { t, i18n } = useTranslation()
+  const zh = i18n.language === "zh-CN"
   const { user, profile } = useProfile()
   const [louange, setLouange] = useState<CampusSeance[]>(CAMP_LOUANGE_FALLBACK)
   const [entrainement, setEntrainement] = useState<CampusSeance[]>(CAMP_ENT_FALLBACK)
@@ -210,7 +212,7 @@ function CampusPage() {
                   </div>
                 )}
                 <div className={`px-4 py-2 text-[11px] font-semibold uppercase tracking-wide ${isSoir ? "bg-muted/60 text-muted-foreground" : "bg-secondary text-secondary-foreground"}`}>
-                  {sub === "entrainement" ? s.d : moment}
+                  {sub === "entrainement" ? seanceLibelle(t, zh, s.d) : moment}
                 </div>
                 <div className="grid grid-cols-2 border-b border-border">
                   <div className="px-4 py-3 border-r border-border">
@@ -222,7 +224,7 @@ function CampusPage() {
                   </div>
                   <div className="px-4 py-3">
                     <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">{t("planning.campus.musiciens")}</p>
-                    {musiciens.map(m => <Chip key={m} label={m} />)}
+                    {musiciens.map(m => <Chip key={m} label={cellulePoste(t, zh, m)} />)}
                   </div>
                 </div>
                 {regie.length > 0 && (
@@ -231,7 +233,7 @@ function CampusPage() {
                       const [role, name] = r.split(":").map(x => x.trim())
                       return (
                         <span key={r}>
-                          <span className="text-muted-foreground">{role}</span>
+                          <span className="text-muted-foreground">{zh ? poste(t, role) : role}</span>
                           {name && <span className="font-semibold text-foreground ml-1">{name}</span>}
                         </span>
                       )

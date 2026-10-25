@@ -132,7 +132,8 @@ export function ServiceGrid({
   onChange,
   deriveFromPlanning,
 }: SectionProps & { deriveFromPlanning?: DeriveFromPlanning }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const zh = i18n.language === "zh-CN";
   const sr = value.serviceRoles;
   const setSr = (next: Record<string, ServiceRole[]>) => onChange({ ...value, serviceRoles: next });
 
@@ -186,7 +187,7 @@ export function ServiceGrid({
                     style={active ? styleTexteService(color) : undefined}
                   >
                     <span className={active ? "" : "text-muted-foreground"}>
-                      {active ? "✓ " : ""}{categoryLabel(cat)}
+                      {active ? "✓ " : ""}{zh ? t(`categories.${cat}`, { defaultValue: cat }) : categoryLabel(cat)}
                     </span>
                   </button>
                   {active && (
@@ -195,7 +196,7 @@ export function ServiceGrid({
                         <CheckPill
                           key={role}
                           checked={(sr[cat] ?? []).includes(role)}
-                          label={SERVICE_ROLE_LABELS[role]}
+                          label={zh ? t(`equipes.role.${role === "chanteur" ? "choriste" : role}`) : SERVICE_ROLE_LABELS[role]}
                           color={color}
                           onToggle={() => toggleRole(cat, role)}
                         />

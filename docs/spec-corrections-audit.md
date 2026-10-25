@@ -163,6 +163,7 @@ Ajouts après A6 (25/10/2026, seconde session du flux A) :
 - `/tranche` sur A6 : ≈ 2 h 45 et 1,4 M de jetons ; le `testeur` relance alors des specs voisines lourdes (reunions, organigrammes) : borner la liste.
 
 Signalé au flux B (fichiers à lui) : la fiche d'harmonie d'un chant en Am se lit maintenant en Do (`IdeesSheet.tsx`) ; l'éditeur de setlist range une tonalité majeure à côté de son relatif mineur (`Reglages.tsx`) ; la ligne PWA du `CLAUDE.md` (cache v5, page hors ligne, course de 3 s, préchargement, LRU).
+| B5a | fait : erreurs d'activation des notifications en `t()` (« permission refusée » à part, détail en console) ; « Aucune donnée » du planning ; Campus : postes (Piano, Guitare, Batterie, Cajon, Sono, PPT) et Matin / Soir traduits à l'affichage, noms intacts ; profil : services et rôles traduits comme Moi ; recherche M4 : clé « pinyin collé » sans tons et `ignoreLocation` (liste des chants et bibliothèque de l'éditeur) ; éditeur : un `keyOverride` majeur sur un chant mineur se lit comme son relatif (`keyLike`). Dates de `PetitDejCarte` et `/setlists` : déjà en 中文, rien à changer. Fiche d'harmonie d'un chant en Am lue en Do : gardée (le relatif majeur porte les mêmes accords que la mineure). Tests `bilingue-b5`, `recherche-m4` ; 1160 verts avec les specs voisines | voir B5a |
 
 ### Relais du flux B (25/10/2026, après B4b) — pour la session neuve qui fait B5 et B6
 
