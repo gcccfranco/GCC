@@ -758,7 +758,7 @@
       "none": "无",
       "groupeMusicien": "我是小组里的乐手",
       "planningName": "你在排班表中的名字",
-      "planningNameHint": "选择排班表中代表你的名字——用于填充「我的服事」页面。",
+      "planningNameHint": "选择排班表中代表你的名字——用于填充「我的」中的「我的服事」。",
       "notInPlannings": "——我还不在排班表中——",
       "otherName": "其他（输入我的名字）…",
       "customNamePlaceholder": "与排班表中完全一致的名字",

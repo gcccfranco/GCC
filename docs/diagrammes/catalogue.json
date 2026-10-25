@@ -99,7 +99,7 @@
         {
           "id": "01-architecture",
           "titre": "Architecture",
-          "resume": "Les chants sont des fichiers du dépôt, transformés en pages statiques au build. Tout ce qui change (setlists, profils, abonnements push) vit dans Firestore, que le navigateur lit en REST avec le jeton Firebase Auth. Les 17 routes API font ce que le client ne doit pas faire seul : envoyer des push, écrire avec des droits élevés, servir le contenu d'un chant. Le service worker ne met en cache que ce qui vient du site lui-même.",
+          "resume": "Les chants sont des fichiers du dépôt, transformés en pages statiques au build. Tout ce qui change (setlists, profils, abonnements push) vit dans Firestore, que le navigateur lit en REST avec le jeton Firebase Auth. Les 20 routes API font ce que le client ne doit pas faire seul : envoyer des push, écrire avec des droits élevés, servir le contenu d'un chant. Le service worker ne met en cache que ce qui vient du site lui-même.",
           "fichiers": [
             "next.config.ts",
             "vercel.json",
@@ -278,7 +278,7 @@
             "src/components/pdf/SongPDF.tsx",
             "src/components/pdf/SetlistFullPDF.tsx",
             "src/components/pdf/SetlistOverviewPDF.tsx",
-            "src/components/pdf/PlanningPDF.tsx",
+            "src/components/pdf/PlanningModelePDF.tsx",
             "src/components/pdf/PdfChoiceSheet.tsx",
             "src/lib/pdfStylePref.ts",
             "src/lib/pdf/colors.ts",
@@ -308,15 +308,17 @@
         {
           "id": "21-pwa-cache",
           "titre": "Service worker, cache et hors-ligne",
-          "resume": "Le service worker est enregistré par un script en ligne dans layout.tsx. Les pages passent d'abord par le réseau pour ne jamais servir un déploiement périmé ; les fichiers hashés de Next.js viennent d'abord du cache ; l'index des chants, les polices et le contenu des chants sont servis tout de suite puis rafraîchis en fond. Sur un serveur local, rien n'est mis en cache.",
+          "resume": "Le service worker est enregistré par un script en ligne dans layout.tsx. Les pages passent d'abord par le réseau, avec une course de 3 s : réseau lent, hors ligne ou erreur 5xx, la copie en cache est servie et rafraîchie en fond ; une page jamais ouverte affiche /hors-ligne.html. Les fichiers hashés de Next.js viennent d'abord du cache ; l'index des chants, les polices, le contenu des chants et les scans 简谱 sont servis tout de suite puis rafraîchis en fond. La page d'une setlist demande au service worker de garder sa propre adresse, ses chants et leurs scans ; la setlist elle-même (Firestore) est gardée par la page, 14 jours, liée au compte. Cache gcc-louange-v5, plafonné (/_next/static et /jianpu/, les moins utilisés partent d'abord). Sur un serveur local, rien n'est mis en cache.",
           "fichiers": [
             "public/sw.js",
+            "public/hors-ligne.html",
+            "src/lib/setlist/copieHorsLigne.ts",
             "src/app/layout.tsx",
             "src/app/manifest.ts",
             "vercel.json"
           ],
           "incertain": [
-            "Ce qui marche hors ligne dépend des pages déjà visitées : seules /songs/ et songs-index.json sont préchargées à l'installation."
+            "Ce qui marche hors ligne dépend des pages déjà visitées : seules /songs/, songs-index.json et /hors-ligne.html sont préchargées à l'installation ; une setlist jamais ouverte sur l'appareil ne s'affiche pas."
           ]
         },
         {
@@ -515,16 +517,6 @@
       "detail": "token.pickle contient des identifiants OAuth Google (portée drive.readonly) et est commité depuis 5129cfa. Si le dépôt est public ou partagé, révoquer ce jeton dans le compte Google, puis le retirer du suivi, et de l'historique si besoin."
     },
     {
-      "titre": "Resend : dans la doc, pas dans le code",
-      "genre": "doc périmée",
-      "detail": "CLAUDE.md annonce des signalements par email via Resend. Aucun code n'envoie d'email et Resend n'est pas dans package.json : /api/report écrit dans Firestore et envoie un push aux admins."
-    },
-    {
-      "titre": "17 routes API, pas 18",
-      "genre": "doc périmée",
-      "detail": "CLAUDE.md cite /api/admin/migrer-annonces, qui n'existe plus."
-    },
-    {
       "titre": "songs-index.json ne sert pas à la liste",
       "genre": "doc périmée",
       "detail": "La doc dit que la liste et la recherche lisent songs-index.json ; en réalité /songs reçoit les chants au build. L'index sert à l'éditeur et à la page d'une setlist, et à Harmonie."
@@ -547,17 +539,17 @@
     {
       "titre": "Hors ligne, le live n'est pas garanti",
       "genre": "hors-ligne",
-      "detail": "Le service worker n'écrit jamais en cache les setlists (Firestore) ni les scans 简谱 (/jianpu/*). Une setlist qui n'était pas ouverte avant la coupure ne s'affiche pas, ses scans non plus."
+      "detail": "Une setlist n'est gardée hors ligne (copie de la page, 14 jours, liée au compte, avec ses chants et leurs scans 简谱) que si elle a été ouverte en ligne sur l'appareil. Une setlist jamais ouverte avant la coupure ne s'affiche pas."
     },
     {
       "titre": "L'app installée démarre là où rien n'est préchargé",
       "genre": "hors-ligne",
-      "detail": "start_url vaut /planning, mais l'installation ne précharge que /songs/ et l'index des chants : un premier lancement hors ligne retombe sur /songs/."
+      "detail": "start_url vaut /planning/, qui n'est pas préchargée : un premier lancement hors ligne, avant toute visite du planning, affiche /hors-ligne.html."
     },
     {
       "titre": "Du code mort visible",
       "genre": "code mort",
-      "detail": "hasJianpu vaut faux pour les 370 chants (le format {jianpu:} en ligne n'est plus utilisé) et n'est lu nulle part ; le type Setlist de src/types/setList.ts n'est importé nulle part, c'est FSSetlist qui sert."
+      "detail": "hasJianpu vaut faux pour tous les chants (le format {jianpu:} en ligne n'est plus utilisé) et n'est lu nulle part ; le type Setlist de src/types/setList.ts n'est importé nulle part, c'est FSSetlist qui sert."
     },
     {
       "titre": "Des fichiers générés aussi commités",

@@ -762,7 +762,7 @@
       "none": "Aucun",
       "groupeMusicien": "Je suis musicien dans mon groupe",
       "planningName": "Ton nom dans les plannings",
-      "planningNameHint": "Choisis le nom qui te désigne dans les plannings — il sert à remplir l'onglet « Mes Services ».",
+      "planningNameHint": "Choisis le nom qui te désigne dans les plannings — il sert à remplir « Mes services », dans Moi.",
       "notInPlannings": "— Je ne suis pas encore dans les plannings —",
       "otherName": "Autre (saisir mon nom)…",
       "customNamePlaceholder": "Nom exact tel qu'écrit dans les plannings",

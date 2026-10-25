@@ -6,7 +6,7 @@ Site de partitions de louange bilingue (français et chinois) devenu l'app de l'
 
 Chaque diagramme décrit le code tel qu'il est aujourd'hui, avec les fichiers qui le portent. Ce qui n'a pas pu être vérifié est signalé comme incertain plutôt que deviné.
 
-Version interactive, lisible hors ligne (zoom, thème sombre) : [diagrammes/index.html](diagrammes/index.html). Généré le 23 septembre 2026.
+Version interactive, lisible hors ligne (zoom, thème sombre) : [diagrammes/index.html](diagrammes/index.html). Généré le 25 octobre 2026.
 
 ## Ce qui existe
 
@@ -151,7 +151,7 @@ sequenceDiagram
   participant NX as next build
   participant WEB as Site en ligne
   Auteur->>Auteur: écrit ou corrige content/songs/slug.cho (ChordPro)
-  Note right of Auteur: à la main (guide docs/chants/00-nouveau-chant.md)
+  Note right of Auteur: à la main (guide CHORDPRO_GUIDELINES.md)
   Auteur->>Git: git push sur main
   par Contrôles
     Git->>CI: déclenche le workflow CI
@@ -475,7 +475,7 @@ sequenceDiagram
 
 Le PDF est fabriqué dans le navigateur par @react-pdf/renderer, chargé seulement au clic. En style classique, la couleur suit la langue du chant : bleu pour le français, rouge pour le chinois ; le style « couleurs par section » reprend les couleurs de l'écran. Pour une setlist, les scans 简谱, servis en WebP que react-pdf ne sait pas lire, sont ré-encodés en PNG.
 
-**Fichiers clés** : `src/components/pdf/SongPDF.tsx`, `src/components/pdf/SetlistFullPDF.tsx`, `src/components/pdf/SetlistOverviewPDF.tsx`, `src/components/pdf/PlanningPDF.tsx`, `src/components/pdf/PdfChoiceSheet.tsx`, `src/lib/pdfStylePref.ts`, `src/lib/pdf/colors.ts`, `public/fonts/`
+**Fichiers clés** : `src/components/pdf/SongPDF.tsx`, `src/components/pdf/SetlistFullPDF.tsx`, `src/components/pdf/SetlistOverviewPDF.tsx`, `src/components/pdf/PlanningModelePDF.tsx`, `src/components/pdf/PdfChoiceSheet.tsx`, `src/lib/pdfStylePref.ts`, `src/lib/pdf/colors.ts`, `public/fonts/`
 
 ```mermaid
 sequenceDiagram
@@ -545,11 +545,11 @@ sequenceDiagram
 
 ### Service worker, cache et hors-ligne
 
-Le service worker est enregistré par un script en ligne dans layout.tsx. Les pages passent d'abord par le réseau pour ne jamais servir un déploiement périmé ; les fichiers hashés de Next.js viennent d'abord du cache ; l'index des chants, les polices et le contenu des chants sont servis tout de suite puis rafraîchis en fond. Sur un serveur local, rien n'est mis en cache.
+Le service worker est enregistré par un script en ligne dans layout.tsx. Les pages passent d'abord par le réseau, avec une course de 3 s : réseau lent, hors ligne ou erreur 5xx, la copie en cache est servie et rafraîchie en fond ; une page jamais ouverte affiche /hors-ligne.html. Les fichiers hashés de Next.js viennent d'abord du cache ; l'index des chants, les polices, le contenu des chants et les scans 简谱 sont servis tout de suite puis rafraîchis en fond. La page d'une setlist demande au service worker de garder sa propre adresse, ses chants et leurs scans ; la setlist elle-même (Firestore) est gardée par la page, 14 jours, liée au compte. Cache gcc-louange-v5, plafonné (/_next/static et /jianpu/, les moins utilisés partent d'abord). Sur un serveur local, rien n'est mis en cache.
 
-**Fichiers clés** : `public/sw.js`, `src/app/layout.tsx`, `src/app/manifest.ts`, `vercel.json`
+**Fichiers clés** : `public/sw.js`, `public/hors-ligne.html`, `src/lib/setlist/copieHorsLigne.ts`, `src/app/layout.tsx`, `src/app/manifest.ts`, `vercel.json`
 
-> **Incertain** : Ce qui marche hors ligne dépend des pages déjà visitées : seules /songs/ et songs-index.json sont préchargées à l'installation.
+> **Incertain** : Ce qui marche hors ligne dépend des pages déjà visitées : seules /songs/, songs-index.json et /hors-ligne.html sont préchargées à l'installation ; une setlist jamais ouverte sur l'appareil ne s'affiche pas.
 
 ```mermaid
 sequenceDiagram
@@ -562,24 +562,26 @@ sequenceDiagram
   N->>SW: register('/sw.js') au chargement (layout.tsx)
   SW->>SW: install
   alt hors serveur local
-    SW->>C: précharge /songs/ et /songs-index.json
+    SW->>C: précharge /songs/, /songs-index.json et /hors-ligne.html
   end
   SW->>SW: skipWaiting puis activate
   SW->>C: supprime les anciens caches (tous, en local)
   SW->>N: clients.claim
   N->>SW: requête GET de même origine
   alt navigation HTML
-    SW->>V: network-first
+    SW->>V: network-first, course de 3 s
     SW->>C: garde une copie
-    Note right of SW: hors ligne : la copie, sinon /songs/
+    Note right of SW: lent, hors ligne ou 5xx : la copie, sinon /hors-ligne.html
   else /_next/static/*
     SW->>C: cache-first (fichiers hashés)
-  else polices, songs-index.json, /api/song/*, icônes
+  else polices, songs-index.json, /api/song/*, /jianpu/*, icônes
     SW->>C: stale-while-revalidate
-  else tout le reste, dont /jianpu/*
+  else tout le reste
     SW->>V: réseau, repli sur le cache s'il existe
   end
-  Note over N,V: Firestore, Google Sheets, YouTube : autre origine, jamais interceptés. Installation : /manifest.webmanifest (start_url /planning) + texte d'aide sur iPhone, pas de beforeinstallprompt.
+  N->>SW: message « precache » (page d'une setlist ouverte)
+  SW->>C: garde la page, ses chants et leurs scans 简谱
+  Note over N,V: Firestore, Google Sheets, YouTube : autre origine, jamais interceptés. Installation : /manifest.webmanifest (start_url /planning/) + texte d'aide sur iPhone, pas de beforeinstallprompt.
 ```
 
 [SVG](diagrammes/21-pwa-cache.svg)
@@ -588,7 +590,7 @@ sequenceDiagram
 
 Il n'y a ni import ni transcription automatique dans le code. Un membre peut proposer un chant (titre, lien YouTube, lien vers le PDF), et la proposition arrive dans /admin. La conversion en .cho se fait ensuite à la main, hors du site : la spec qui l'automatiserait est « en attente » depuis le 10 juin 2026.
 
-**Fichiers clés** : `src/components/songs/SongProposalDrawer.tsx`, `src/lib/firebase/songProposals.ts`, `src/app/admin/page.tsx`, `docs/spec-ajouter-un-chant.md`, `CHORDPRO_GUIDELINES.md`
+**Fichiers clés** : `src/components/songs/SongProposalDrawer.tsx`, `src/lib/firebase/songProposals.ts`, `src/app/admin/page.tsx`, `docs/spec-ajouter-un-chant.md`, `docs/chants/01-format-cho.md`
 
 > **Incertain** : L'étape « l'admin fait convertir le chant » n'existe dans aucun code : elle décrit la pratique (session Claude Code, runbook docs/chants/00-nouveau-chant.md), pas un mécanisme.
 
@@ -1090,33 +1092,40 @@ Qui importe qui, par grandes zones du dépôt, imports de type compris. Chaque n
 ```mermaid
 %% Généré par scripts/diagrammes/generer.ts (dependency-cruiser). Ne pas modifier à la main.
 flowchart LR
-  n0["scripts (build)<br/>7 fichiers"]
+  n0["scripts (build)<br/>20 fichiers"]
   n1["scripts/jianpu<br/>4 fichiers"]
-  n2["src/app (pages)<br/>75 fichiers"]
-  n3["src/app/api<br/>17 fichiers"]
-  n4["src/components<br/>76 fichiers"]
-  n5["src/hooks<br/>5 fichiers"]
-  n6["src/lib<br/>117 fichiers"]
+  n2["src/app (pages)<br/>154 fichiers"]
+  n3["src/app/api<br/>20 fichiers"]
+  n4["src/components<br/>200 fichiers"]
+  n5["src/hooks<br/>10 fichiers"]
+  n6["src/lib<br/>204 fichiers"]
   n7["src/locales<br/>2 fichiers"]
-  n8["src/types<br/>14 fichiers"]
-  n9["tests<br/>2 fichiers"]
-  n0 -->|14| n6
-  n0 -->|5| n8
+  n8["src/types<br/>20 fichiers"]
+  n9["tests<br/>3 fichiers"]
+  n0 -->|25| n6
+  n0 -->|6| n8
+  n0 -->|3| n9
   n1 -->|1| n6
   n1 -->|7| n9
-  n2 ==>|174| n4
-  n2 -->|5| n5
-  n2 ==>|312| n6
-  n2 -->|47| n8
-  n3 ==>|108| n6
-  n3 -->|13| n8
-  n4 -->|15| n5
-  n4 ==>|179| n6
+  n2 ==>|354| n4
+  n2 -->|42| n5
+  n2 ==>|491| n6
+  n2 ==>|65| n8
+  n3 ==>|166| n6
+  n3 -->|2| n7
+  n3 -->|10| n8
+  n4 -->|6| n2
+  n4 -->|47| n5
+  n4 ==>|656| n6
   n4 -->|4| n7
-  n4 -->|31| n8
-  n5 -->|6| n6
-  n6 -->|2| n7
-  n6 ==>|71| n8
+  n4 ==>|116| n8
+  n5 -->|10| n6
+  n5 -->|1| n8
+  n6 -->|1| n4
+  n6 -->|7| n7
+  n6 ==>|163| n8
+  n9 -->|3| n6
+  n9 -->|1| n8
 ```
 
 [SVG](diagrammes/40-dependances-couches.svg)
@@ -1130,62 +1139,149 @@ Les dossiers de src/lib entre eux, imports de type exclus. firebase/setlists.ts 
 ```mermaid
 %% Généré par scripts/diagrammes/generer.ts (dependency-cruiser). Ne pas modifier à la main.
 flowchart LR
-  n0["lib/(racine)<br/>15 fichiers"]
-  n1["lib/api<br/>1 fichier"]
-  n2["lib/chordpro<br/>7 fichiers"]
-  n3["lib/content<br/>1 fichier"]
-  n4["lib/equipes<br/>3 fichiers"]
-  n5["lib/evenements<br/>5 fichiers"]
-  n6["lib/firebase<br/>20 fichiers"]
-  n7["lib/harmonie<br/>9 fichiers"]
-  n8["lib/jianpu<br/>4 fichiers"]
-  n9["lib/pdf<br/>2 fichiers"]
-  n10["lib/performance<br/>1 fichier"]
-  n11["lib/planning<br/>12 fichiers"]
-  n12["lib/push<br/>8 fichiers"]
-  n13["lib/scene<br/>4 fichiers"]
-  n14["lib/setlist<br/>12 fichiers"]
-  n15["lib/taches<br/>5 fichiers"]
+  n0["lib/(racine)<br/>20 fichiers"]
+  n1["lib/acces<br/>4 fichiers"]
+  n2["lib/accords<br/>4 fichiers"]
+  n3["lib/api<br/>1 fichier"]
+  n4["lib/calendrier<br/>7 fichiers"]
+  n5["lib/chordpro<br/>7 fichiers"]
+  n6["lib/content<br/>1 fichier"]
+  n7["lib/equipes<br/>7 fichiers"]
+  n8["lib/evenements<br/>7 fichiers"]
+  n9["lib/fetes<br/>5 fichiers"]
+  n10["lib/firebase<br/>26 fichiers"]
+  n11["lib/groupes<br/>5 fichiers"]
+  n12["lib/harmonie<br/>12 fichiers"]
+  n13["lib/jianpu<br/>4 fichiers"]
+  n14["lib/onboarding<br/>1 fichier"]
+  n15["lib/pdf<br/>2 fichiers"]
+  n16["lib/performance<br/>2 fichiers"]
+  n17["lib/petitdej<br/>3 fichiers"]
+  n18["lib/planning<br/>22 fichiers"]
+  n19["lib/push<br/>10 fichiers"]
+  n20["lib/report<br/>3 fichiers"]
+  n21["lib/reunions<br/>3 fichiers"]
+  n22["lib/scene<br/>6 fichiers"]
+  n23["lib/setlist<br/>20 fichiers"]
+  n24["lib/stats<br/>2 fichiers"]
+  n25["lib/tableauDeBord<br/>8 fichiers"]
+  n26["lib/taches<br/>5 fichiers"]
+  n0 -->|1| n1
+  n0 -->|1| n7
+  n0 -->|1| n8
   n0 -->|1| n11
-  n1 -->|1| n2
-  n2 -->|1| n0
-  n3 -->|1| n2
-  n4 -->|1| n0
-  n4 -->|1| n5
-  n4 -->|3| n11
-  n4 -->|1| n12
-  n5 -->|2| n0
-  n5 -->|2| n6
-  n5 -->|3| n12
-  n5 -->|1| n15
+  n0 -->|2| n18
+  n0 -->|1| n19
+  n1 -->|2| n0
+  n1 -->|3| n7
+  n1 -->|3| n11
+  n1 -->|6| n18
+  n1 -->|1| n19
+  n2 -->|3| n0
+  n3 -->|1| n5
+  n4 -->|4| n0
+  n4 -->|3| n8
+  n4 -->|1| n9
+  n4 -->|4| n10
+  n4 -->|2| n17
+  n4 -->|4| n18
+  n4 -->|1| n21
+  n4 -->|4| n22
+  n4 -->|3| n25
+  n4 -->|7| n26
+  n5 -->|1| n0
   n6 -->|1| n5
-  n6 -->|2| n11
-  n6 -->|1| n14
-  n7 -->|6| n0
-  n7 -->|1| n2
-  n7 -->|1| n6
-  n7 -->|1| n11
-  n8 -->|1| n0
-  n9 -->|1| n2
-  n9 -->|3| n14
+  n7 -->|3| n0
+  n7 -->|1| n1
+  n7 -->|1| n8
+  n7 -->|2| n11
+  n7 -->|2| n18
+  n7 -->|1| n19
+  n8 -->|4| n0
+  n8 -->|2| n10
+  n8 -->|3| n19
+  n8 -->|1| n26
+  n9 -->|2| n0
+  n9 -->|1| n7
+  n9 -->|1| n8
+  n9 -->|1| n10
+  n9 -->|1| n11
+  n9 -->|2| n18
+  n9 -->|2| n22
   n10 -->|2| n0
-  n10 -->|2| n2
   n10 -->|1| n8
-  n10 -->|1| n14
-  n11 -->|2| n0
-  n11 -->|1| n6
-  n11 -->|1| n12
-  n12 -->|2| n0
-  n12 -->|1| n6
-  n12 -->|3| n11
-  n13 -->|1| n6
-  n13 -->|1| n12
+  n10 -->|3| n11
+  n10 -->|1| n17
+  n10 -->|2| n18
+  n10 -->|1| n21
+  n10 -->|1| n22
+  n10 -->|3| n23
+  n10 -->|1| n25
+  n11 -->|3| n0
+  n11 -->|1| n7
+  n11 -->|1| n8
+  n11 -->|5| n18
+  n11 -->|1| n19
+  n12 -->|6| n0
+  n12 -->|1| n5
+  n12 -->|3| n10
+  n12 -->|1| n18
+  n13 -->|1| n0
   n14 -->|1| n0
-  n14 -->|8| n2
+  n14 -->|1| n1
+  n14 -->|1| n7
   n14 -->|1| n11
-  n15 -->|1| n0
-  n15 -->|2| n6
-  n15 -->|2| n12
+  n14 -->|1| n19
+  n15 -->|1| n5
+  n15 -->|4| n23
+  n16 -->|2| n0
+  n16 -->|2| n5
+  n16 -->|1| n13
+  n16 -->|2| n23
+  n17 -->|1| n18
+  n17 -->|1| n19
+  n18 -->|7| n0
+  n18 -->|2| n1
+  n18 -->|3| n10
+  n18 -->|3| n11
+  n18 -->|1| n17
+  n18 -->|1| n19
+  n19 -->|4| n0
+  n19 -->|2| n1
+  n19 -->|2| n7
+  n19 -->|1| n8
+  n19 -->|1| n10
+  n19 -->|2| n11
+  n19 -->|4| n18
+  n19 -->|1| n20
+  n21 -->|2| n0
+  n21 -->|1| n4
+  n21 -->|2| n8
+  n21 -->|1| n19
+  n21 -->|1| n26
+  n22 -->|2| n9
+  n22 -->|1| n10
+  n22 -->|1| n19
+  n23 -->|4| n0
+  n23 -->|1| n1
+  n23 -->|8| n5
+  n23 -->|1| n10
+  n23 -->|4| n18
+  n24 -->|1| n0
+  n24 -->|1| n18
+  n25 -->|4| n0
+  n25 -->|1| n1
+  n25 -->|2| n4
+  n25 -->|1| n7
+  n25 -->|1| n8
+  n25 -->|6| n10
+  n25 ==>|10| n18
+  n25 -->|2| n22
+  n25 -->|3| n26
+  n26 -->|2| n0
+  n26 -->|1| n7
+  n26 -->|2| n10
+  n26 -->|2| n19
 ```
 
 [SVG](diagrammes/41-dependances-lib.svg)
@@ -1200,77 +1296,148 @@ Les dossiers de src/components entre eux, et vers src/lib et src/hooks regroupé
 %% Généré par scripts/diagrammes/generer.ts (dependency-cruiser). Ne pas modifier à la main.
 flowchart LR
   subgraph C0["src/components"]
-    n0["components/admin<br/>1 fichier"]
-    n1["components/auth<br/>2 fichiers"]
-    n2["components/customPanel<br/>1 fichier"]
-    n3["components/evenements<br/>4 fichiers"]
-    n4["components/guide<br/>2 fichiers"]
-    n5["components/harmonie<br/>5 fichiers"]
-    n6["components/jianpu<br/>3 fichiers"]
-    n7["components/layout<br/>7 fichiers"]
-    n8["components/onboarding<br/>1 fichier"]
-    n9["components/pdf<br/>6 fichiers"]
-    n10["components/performance<br/>2 fichiers"]
-    n11["components/planning<br/>7 fichiers"]
-    n12["components/push<br/>2 fichiers"]
-    n13["components/report<br/>1 fichier"]
-    n14["components/setlists<br/>7 fichiers"]
-    n15["components/song<br/>6 fichiers"]
-    n16["components/songs<br/>1 fichier"]
-    n17["components/taches<br/>3 fichiers"]
-    n18["components/ui<br/>15 fichiers"]
+    n0["components/accords<br/>5 fichiers"]
+    n1["components/accueil<br/>2 fichiers"]
+    n2["components/admin<br/>8 fichiers"]
+    n3["components/auth<br/>3 fichiers"]
+    n4["components/backOffice<br/>17 fichiers"]
+    n5["components/calendrier<br/>6 fichiers"]
+    n6["components/customPanel<br/>1 fichier"]
+    n7["components/equipes<br/>3 fichiers"]
+    n8["components/evenements<br/>5 fichiers"]
+    n9["components/groupes<br/>9 fichiers"]
+    n10["components/guide<br/>2 fichiers"]
+    n11["components/harmonie<br/>17 fichiers"]
+    n12["components/jianpu<br/>2 fichiers"]
+    n13["components/layout<br/>24 fichiers"]
+    n14["components/mesServices<br/>3 fichiers"]
+    n15["components/messages<br/>3 fichiers"]
+    n16["components/moi<br/>4 fichiers"]
+    n17["components/onboarding<br/>1 fichier"]
+    n18["components/pdf<br/>6 fichiers"]
+    n19["components/performance<br/>2 fichiers"]
+    n20["components/planning<br/>19 fichiers"]
+    n21["components/profil<br/>1 fichier"]
+    n22["components/push<br/>2 fichiers"]
+    n23["components/report<br/>1 fichier"]
+    n24["components/reunions<br/>5 fichiers"]
+    n25["components/setlists<br/>20 fichiers"]
+    n26["components/song<br/>6 fichiers"]
+    n27["components/songs<br/>1 fichier"]
+    n28["components/taches<br/>6 fichiers"]
+    n29["components/ui<br/>16 fichiers"]
   end
   subgraph C1["Modules partagés"]
-    n19["src/hooks<br/>5 fichiers"]
-    n20["src/lib<br/>117 fichiers"]
+    n30["src/hooks<br/>10 fichiers"]
+    n31["src/lib<br/>204 fichiers"]
   end
-  n0 -->|1| n20
-  n1 -->|2| n18
-  n1 -->|5| n20
-  n2 -->|2| n20
-  n3 -->|1| n7
-  n3 -->|4| n18
-  n3 -->|11| n20
-  n4 -->|1| n20
-  n5 -->|2| n18
-  n5 -->|1| n19
-  n5 -->|13| n20
-  n6 -->|1| n14
-  n6 -->|1| n15
-  n6 -->|1| n18
-  n6 -->|1| n19
-  n6 -->|5| n20
+  n0 -->|1| n11
+  n0 -->|2| n13
+  n0 -->|2| n23
+  n0 -->|1| n29
+  n0 -->|1| n30
+  n0 -->|11| n31
+  n1 -->|3| n29
+  n1 -->|7| n31
+  n2 -->|1| n3
+  n2 -->|2| n7
+  n2 -->|1| n9
+  n2 -->|11| n13
+  n2 -->|7| n29
+  n2 -->|2| n30
+  n2 -->|38| n31
+  n3 -->|2| n29
+  n3 -->|7| n31
+  n4 -->|1| n5
+  n4 -->|4| n13
+  n4 -->|3| n29
+  n4 -->|2| n30
+  n4 ==>|101| n31
+  n5 -->|3| n29
+  n5 -->|22| n31
+  n6 -->|1| n29
+  n6 -->|2| n31
   n7 -->|1| n13
-  n7 -->|2| n18
-  n7 -->|6| n19
-  n7 -->|9| n20
-  n8 -->|1| n18
-  n8 -->|4| n20
-  n9 -->|2| n18
-  n9 -->|1| n19
-  n9 -->|19| n20
-  n10 -->|2| n6
-  n10 -->|2| n15
-  n10 -->|3| n18
-  n10 -->|13| n20
-  n11 -->|2| n7
-  n11 -->|1| n9
-  n11 -->|15| n20
-  n12 -->|2| n18
-  n12 -->|5| n20
-  n13 -->|3| n20
-  n14 -->|1| n15
-  n14 -->|10| n18
-  n14 -->|4| n19
-  n14 -->|25| n20
-  n16 -->|3| n18
-  n15 -->|8| n20
-  n16 -->|1| n19
-  n16 -->|2| n20
-  n17 -->|3| n18
-  n17 -->|1| n19
-  n17 -->|3| n20
-  n18 -->|15| n20
+  n7 -->|1| n29
+  n7 -->|4| n31
+  n8 -->|4| n29
+  n8 -->|12| n31
+  n9 -->|5| n13
+  n9 -->|1| n20
+  n9 -->|7| n29
+  n9 -->|2| n30
+  n9 -->|25| n31
+  n10 -->|1| n31
+  n11 -->|1| n0
+  n11 -->|13| n13
+  n11 -->|9| n29
+  n11 -->|9| n30
+  n11 -->|39| n31
+  n12 -->|2| n0
+  n12 -->|1| n25
+  n12 -->|1| n29
+  n12 -->|1| n30
+  n12 -->|3| n31
+  n13 -->|2| n23
+  n13 -->|7| n29
+  n13 -->|8| n30
+  n13 ==>|41| n31
+  n15 -->|2| n2
+  n15 -->|5| n13
+  n15 -->|1| n20
+  n15 -->|1| n29
+  n15 -->|2| n30
+  n15 -->|12| n31
+  n14 -->|6| n13
+  n14 -->|1| n22
+  n14 -->|1| n25
+  n14 -->|3| n29
+  n14 -->|4| n30
+  n14 -->|22| n31
+  n16 -->|1| n22
+  n16 -->|2| n28
+  n16 -->|3| n29
+  n16 -->|23| n31
+  n17 -->|1| n29
+  n17 -->|8| n31
+  n18 -->|2| n29
+  n18 -->|1| n30
+  n18 -->|23| n31
+  n19 -->|1| n12
+  n19 -->|2| n26
+  n19 -->|3| n29
+  n19 -->|14| n31
+  n20 -->|17| n13
+  n20 -->|12| n29
+  n20 -->|2| n30
+  n20 ==>|63| n31
+  n21 -->|3| n29
+  n21 -->|4| n31
+  n22 -->|2| n29
+  n22 -->|8| n31
+  n23 -->|1| n29
+  n23 -->|3| n31
+  n24 -->|4| n13
+  n24 -->|4| n29
+  n24 -->|1| n30
+  n24 -->|12| n31
+  n25 -->|3| n13
+  n25 -->|3| n26
+  n25 -->|1| n27
+  n25 -->|15| n29
+  n25 -->|6| n30
+  n25 ==>|54| n31
+  n26 -->|4| n0
+  n27 -->|1| n13
+  n27 -->|3| n29
+  n26 -->|10| n31
+  n27 -->|1| n30
+  n27 -->|2| n31
+  n28 -->|7| n13
+  n28 -->|4| n29
+  n28 -->|3| n30
+  n28 -->|25| n31
+  n29 -->|16| n31
 ```
 
 [SVG](diagrammes/42-dependances-composants.svg)
@@ -1285,11 +1452,11 @@ Ce que chaque groupe de routes API importe dans src/lib : la partie serveur du s
 %% Généré par scripts/diagrammes/generer.ts (dependency-cruiser). Ne pas modifier à la main.
 flowchart LR
   subgraph C0["Routes API"]
-    n0["/api/admin<br/>1 fichier"]
-    n1["/api/cron<br/>1 fichier"]
-    n2["/api/equipes<br/>2 fichiers"]
-    n3["/api/evenements<br/>2 fichiers"]
-    n4["/api/planning<br/>1 fichier"]
+    n0["/api/cron<br/>1 fichier"]
+    n1["/api/equipes<br/>2 fichiers"]
+    n2["/api/evenements<br/>2 fichiers"]
+    n3["/api/fetes<br/>3 fichiers"]
+    n4["/api/planning<br/>2 fichiers"]
     n5["/api/push<br/>4 fichiers"]
     n6["/api/report<br/>1 fichier"]
     n7["/api/scene<br/>1 fichier"]
@@ -1298,56 +1465,72 @@ flowchart LR
     n10["/api/taches<br/>2 fichiers"]
   end
   subgraph C1["src/lib"]
-    n11["lib/(racine)<br/>15 fichiers"]
-    n12["lib/content<br/>1 fichier"]
-    n13["lib/equipes<br/>3 fichiers"]
-    n14["lib/evenements<br/>5 fichiers"]
-    n15["lib/planning<br/>12 fichiers"]
-    n16["lib/push<br/>8 fichiers"]
-    n17["lib/report<br/>2 fichiers"]
-    n18["lib/scene<br/>4 fichiers"]
-    n19["lib/setlist<br/>12 fichiers"]
-    n20["lib/taches<br/>5 fichiers"]
+    n11["lib/(racine)<br/>20 fichiers"]
+    n12["lib/acces<br/>4 fichiers"]
+    n13["lib/calendrier<br/>7 fichiers"]
+    n14["lib/content<br/>1 fichier"]
+    n15["lib/equipes<br/>7 fichiers"]
+    n16["lib/evenements<br/>7 fichiers"]
+    n17["lib/fetes<br/>5 fichiers"]
+    n18["lib/groupes<br/>5 fichiers"]
+    n19["lib/petitdej<br/>3 fichiers"]
+    n20["lib/planning<br/>22 fichiers"]
+    n21["lib/push<br/>10 fichiers"]
+    n22["lib/report<br/>3 fichiers"]
+    n23["lib/reunions<br/>3 fichiers"]
+    n24["lib/scene<br/>6 fichiers"]
+    n25["lib/setlist<br/>20 fichiers"]
+    n26["lib/setlists<br/>1 fichier"]
+    n27["lib/taches<br/>5 fichiers"]
   end
   n0 -->|2| n11
-  n0 -->|1| n14
-  n0 -->|5| n15
+  n0 -->|1| n12
+  n0 -->|1| n13
   n0 -->|2| n16
-  n1 -->|2| n11
-  n1 -->|2| n14
-  n1 -->|1| n15
-  n1 -->|5| n16
-  n1 -->|2| n18
-  n1 -->|2| n20
-  n2 -->|2| n11
-  n2 -->|3| n13
-  n2 -->|2| n14
-  n2 -->|1| n15
-  n2 -->|2| n16
+  n0 -->|2| n19
+  n0 -->|3| n20
+  n0 -->|6| n21
+  n0 -->|1| n23
+  n0 -->|2| n24
+  n0 -->|1| n26
+  n0 -->|2| n27
+  n1 -->|3| n11
+  n1 -->|2| n15
+  n1 -->|2| n16
+  n1 -->|1| n18
+  n1 -->|3| n21
+  n2 -->|3| n11
+  n2 -->|3| n16
+  n2 -->|2| n21
   n3 -->|3| n11
-  n3 -->|4| n14
-  n3 -->|2| n16
-  n4 -->|1| n11
-  n4 -->|1| n15
-  n4 -->|6| n16
-  n5 -->|4| n11
-  n5 -->|2| n14
-  n5 -->|1| n15
-  n5 ==>|15| n16
-  n6 -->|3| n16
-  n6 -->|1| n17
+  n3 -->|6| n16
+  n3 -->|3| n17
+  n3 -->|3| n20
+  n3 -->|3| n21
+  n4 -->|3| n11
+  n4 -->|2| n16
+  n4 -->|7| n20
+  n4 ==>|13| n21
+  n5 -->|5| n11
+  n5 -->|5| n16
+  n5 -->|1| n20
+  n5 ==>|21| n21
+  n5 -->|1| n25
+  n6 -->|1| n11
+  n6 -->|4| n21
+  n6 -->|1| n22
   n7 -->|1| n11
-  n7 -->|4| n16
-  n7 -->|2| n18
-  n8 -->|1| n11
-  n8 -->|1| n15
-  n8 -->|4| n16
-  n8 -->|1| n19
-  n9 -->|1| n12
+  n7 -->|5| n21
+  n7 -->|2| n24
+  n8 -->|2| n11
+  n8 -->|1| n20
+  n8 -->|5| n21
+  n8 -->|1| n25
+  n9 -->|1| n14
   n10 -->|2| n11
-  n10 -->|1| n15
-  n10 -->|7| n16
-  n10 -->|5| n20
+  n10 -->|1| n20
+  n10 -->|10| n21
+  n10 -->|5| n27
 ```
 
 [SVG](diagrammes/43-dependances-api.svg)
@@ -1364,15 +1547,13 @@ flowchart LR
 ## Bizarreries repérées
 
 - **Un jeton Google suivi par git** (sécurité) : token.pickle contient des identifiants OAuth Google (portée drive.readonly) et est commité depuis 5129cfa. Si le dépôt est public ou partagé, révoquer ce jeton dans le compte Google, puis le retirer du suivi, et de l'historique si besoin.
-- **Resend : dans la doc, pas dans le code** (doc périmée) : CLAUDE.md annonce des signalements par email via Resend. Aucun code n'envoie d'email et Resend n'est pas dans package.json : /api/report écrit dans Firestore et envoie un push aux admins.
-- **20 routes API** (recompte du 24/10/2026, `find src/app/api -name route.ts`) : /api/admin n'existe plus ; /api/fetes (droits, saisir, musiques) et les deux routes de /api/planning (release, changements) en font partie. Le diagramme ci-dessus est généré et n'a pas été régénéré.
 - **songs-index.json ne sert pas à la liste** (doc périmée) : La doc dit que la liste et la recherche lisent songs-index.json ; en réalité /songs reçoit les chants au build. L'index sert à l'éditeur et à la page d'une setlist, et à Harmonie.
 - **Un détour par chant dans une setlist** (performance) : Avec trailingSlash: true, /api/song/slug redirige vers /api/song/slug/ (308, vérifié en ligne). fetchSongAST appelle l'adresse sans barre finale : un aller-retour de plus pour chaque chant de la vue Partitions.
 - **Le client REST de Firestore s'appelle setlists.ts** (structure) : FS_BASE, authHeader et toFsFields vivent dans src/lib/firebase/setlists.ts et sont importés par 30 fichiers, push et évènements compris ; annotations.ts en garde sa propre copie. L'identifiant du projet Firebase est écrit en dur dans 7 fichiers, alors que la config Firebase le reçoit d'ailleurs.
 - **Firebase Admin rangé dans push/** (structure) : src/lib/push/admin.ts initialise l'Admin SDK pour 14 routes API, dont beaucoup n'envoient aucun push. Le même dossier mélange modules serveur (admin.ts, send.ts) et module navigateur (client.ts) : seul un commentaire empêche d'importer les premiers côté client.
-- **Hors ligne, le live n'est pas garanti** (hors-ligne) : Le service worker n'écrit jamais en cache les setlists (Firestore). Les scans 简谱 (/jianpu/*) sont gardés en stale-while-revalidate. Une setlist qui n'était pas ouverte avant la coupure ne s'affiche pas ; ses scans, s'ils avaient déjà été vus, restent disponibles.
-- **L'app installée démarre là où rien n'est préchargé** (hors-ligne) : start_url vaut /planning, mais l'installation ne précharge que /songs/ et l'index des chants : un premier lancement hors ligne retombe sur /songs/.
-- **Du code mort visible** (code mort) : hasJianpu vaut faux pour les 370 chants (le format {jianpu:} en ligne n'est plus utilisé) et n'est lu nulle part ; le type Setlist de src/types/setList.ts n'est importé nulle part, c'est FSSetlist qui sert.
+- **Hors ligne, le live n'est pas garanti** (hors-ligne) : Une setlist n'est gardée hors ligne (copie de la page, 14 jours, liée au compte, avec ses chants et leurs scans 简谱) que si elle a été ouverte en ligne sur l'appareil. Une setlist jamais ouverte avant la coupure ne s'affiche pas.
+- **L'app installée démarre là où rien n'est préchargé** (hors-ligne) : start_url vaut /planning/, qui n'est pas préchargée : un premier lancement hors ligne, avant toute visite du planning, affiche /hors-ligne.html.
+- **Du code mort visible** (code mort) : hasJianpu vaut faux pour tous les chants (le format {jianpu:} en ligne n'est plus utilisé) et n'est lu nulle part ; le type Setlist de src/types/setList.ts n'est importé nulle part, c'est FSSetlist qui sert.
 - **Des fichiers générés aussi commités** (structure) : songs-index.json, harmonie-index.json et glyphWidths.json sont recréés à chaque build mais suivis par git : ils divergent dès qu'un .cho est poussé sans les régénérer.
 - **Pipeline 简谱 sans liste de dépendances** (outillage) : Les scripts Python s'appuient sur Pillow et NumPy, sans requirements.txt pour les installer.
 - **Un nom de fichier à part** (contenu) : content/songs/Ta parole.cho est le seul fichier avec une espace et une majuscule ; son slug les garde dans l'URL.

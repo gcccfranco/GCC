@@ -286,7 +286,9 @@ function ecrireConfigs(): { mermaid: Record<Theme, string>; puppeteer: string } 
     throw new Error(`Chromium de Playwright introuvable (${executablePath}) : lancer « npx playwright install chromium ».`);
   }
   const puppeteer = path.join(TMP, "puppeteer.json");
-  fs.writeFileSync(puppeteer, JSON.stringify({ executablePath, headless: true }));
+  // En root (conteneur des sessions cloud), Chromium refuse de démarrer sans --no-sandbox.
+  const args = process.getuid?.() === 0 ? ["--no-sandbox"] : [];
+  fs.writeFileSync(puppeteer, JSON.stringify({ executablePath, headless: true, args }));
   const mermaid = {} as Record<Theme, string>;
   for (const theme of Object.keys(THEMES) as Theme[]) {
     mermaid[theme] = path.join(TMP, `mermaid-${theme}.json`);
