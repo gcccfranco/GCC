@@ -321,7 +321,7 @@ test.describe("prévenir (pur)", () => {
     expect(route).not.toContain("`rappel-evenement-${e.id}`");
     expect(route.match(/cleVeille\(e\)/g)).toHaveLength(2);
     // Derrière l'interrupteur, comme les autres lignes d'évènements (lot 18).
-    expect(route).toContain("BACK_OFFICE ? await lignesEvenements(db, today)");
+    expect(route).toContain("BACK_OFFICE ? await lignesEvenements(db, reservations, today)");
   });
 });
 

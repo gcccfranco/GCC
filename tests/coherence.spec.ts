@@ -2,7 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
-import { isAdminEmail, canChangeSetlistCategory, canDeleteSetlist, canEditSetlist, canDuplicateSetlist } from "../src/lib/access";
+import { ADMIN_EMAILS, isAdminEmail, canChangeSetlistCategory, canDeleteSetlist, canEditSetlist, canDuplicateSetlist } from "../src/lib/access";
 type AuthUser = { uid: string; email?: string | null };
 import type { UserProfile } from "../src/types/user";
 import type { FSSetlist } from "../src/lib/firebase/setlists";
@@ -17,9 +17,10 @@ import { planningReleaseMessage, setlistReadyMessage } from "../src/lib/push/mes
 const ROOT = path.resolve(__dirname, "..");
 const lire = (rel: string) => readFileSync(path.join(ROOT, rel), "utf8");
 
+const ADMIN_EMAIL = ADMIN_EMAILS[0];
 const ADMIN: FakeProfile = {
-  uid: "admin1", email: "tc328829@gmail.com", firstName: "Timothée", lastName: "C.",
-  planningName: "Timothée C.", dansEquipes: ["da"], referentDe: ["da"], equipes: true, plannings: ["culte"], coordination: true,
+  uid: "admin1", email: ADMIN_EMAIL, firstName: "Aurèle", lastName: "V.",
+  planningName: "Aurèle V.", dansEquipes: ["da"], referentDe: ["da"], equipes: true, plannings: ["culte"], coordination: true,
 };
 const MEMBRE_DA: FakeProfile = { uid: "uid-da", email: "da@example.com", firstName: "Denis", lastName: "F.", dansEquipes: ["da"], referentDe: ["da"] };
 const MEMBRE: FakeProfile = { uid: "uid-jo", email: "jo@example.com", firstName: "Jo", lastName: "L.", serviceRoles: { "Groupe Paix": ["chanteur"] } };
@@ -44,11 +45,11 @@ async function open(page: Page, who: FakeProfile, to: string, docs: Record<strin
 
 test("profil : un admin qui enregistre son profil garde ses équipes et ses plannings", async ({ page }) => {
   const db = await open(page, ADMIN, "/profil");
-  await page.getByLabel("Prénom").fill("Timo");
+  await page.getByLabel("Prénom").fill("Aurel");
   await page.getByRole("button", { name: "Enregistrer mon profil" }).click();
   await page.waitForURL(/\/setlists\/?$/);
   const doc = db.doc("users/admin1");
-  expect(doc?.firstName).toBe("Timo");
+  expect(doc?.firstName).toBe("Aurel");
   expect(doc?.dansEquipes).toEqual(["da"]);
   expect(doc?.equipes).toBe(true);
   expect(doc?.plannings).toEqual(["culte"]);
@@ -153,7 +154,7 @@ test("SC1 : créateur, admin, équipe, musicien de la catégorie — modifier, s
   const musicien = { uid: "u-musicien", email: "musicien@exemple.test" } as AuthUser;
   const choriste = { uid: "u-choriste", email: "choriste@exemple.test" } as AuthUser;
   const equipier = { uid: "u-equipier", email: "equipier@exemple.test" } as AuthUser;
-  const admin = { uid: "u-admin", email: "tc328829@gmail.com" } as AuthUser;
+  const admin = { uid: "u-admin", email: ADMIN_EMAIL } as AuthUser;
   const profil = (roles: string[]) => ({ serviceRoles: { "Culte Francophone": roles } }) as unknown as UserProfile;
   const s = { ownerId: createur.uid, category: "Culte Francophone", isPrivate: false, editeurs: [equipier.uid], items: [] } as unknown as FSSetlist;
 
@@ -220,8 +221,8 @@ test("push : « Setlist prête » et « Planning en ligne » existent en frança
 // ─── I11 : la casse d'un e-mail admin ne compte pas, côté serveur non plus ─
 
 test("admin : l'adresse est reconnue quelle que soit sa casse, partout", () => {
-  expect(isAdminEmail("TC328829@GMAIL.COM")).toBe(true);
-  expect(isAdminEmail("tc328829@gmail.com")).toBe(true);
+  expect(isAdminEmail(ADMIN_EMAIL.toUpperCase())).toBe(true);
+  expect(isAdminEmail(ADMIN_EMAIL)).toBe(true);
   expect(isAdminEmail("jo@example.com")).toBe(false);
   expect(isAdminEmail(null)).toBe(false);
   for (const rel of [

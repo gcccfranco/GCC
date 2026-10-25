@@ -381,6 +381,9 @@ test.describe("partage : l'éditeur", () => {
     await expect(page.locator("[data-liste-courte]")).toHaveCount(0);
     await page.goto(`/setlists/${ID}`);
     await expect(page.getByText("Lecture seule")).toBeVisible();
+    // Téléphone : les droits sont repliés derrière le bouton « i » (G15).
+    const qui = page.getByRole("button", { name: "Qui peut modifier" }).filter({ visible: true });
+    if (await qui.count()) await qui.first().click();
     await expect(page.getByText("Modifiable par son créateur seulement (et les admins)")).toBeVisible();
     await page.getByRole("button", { name: "Plus d'actions" }).filter({ visible: true }).first().click();
     await expect(page.getByRole("menuitem", { name: "Dupliquer pour mes notes" })).toBeVisible();

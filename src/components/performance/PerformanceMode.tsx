@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useLayoutEffect, useRef, useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
+import { useTheme } from "next-themes";
 import { X, ChevronLeft, ChevronRight, Columns2, Link2, MessageSquare, ListMusic, Settings, PenLine, Sun, Moon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -131,7 +132,7 @@ function BlockRenderer({
 }
 
 const langAccent = (language?: "fr" | "zh") =>
-  language === "zh" ? "var(--jianpu-color, #b91c1c)" : "var(--chord-color, #2563eb)";
+  language === "zh" ? "var(--jianpu-color, #b3261d)" : "var(--chord-color, #3f63cf)";
 
 /** Bandeau de pastilles en tête de chant : sans détails en Ordre joué (D12),
  *  avec notes et transitions en Sections uniques (D11), aucun en Structure
@@ -446,7 +447,13 @@ export function PerformanceMode({
       ? "dark"
       : "light";
   });
+  const { resolvedTheme } = useTheme();
+  // Thème courant du site (next-themes), relu à la sortie ; repli : la classe vue à l'ouverture.
+  const siteTheme = useRef<string | undefined>(resolvedTheme);
   const siteWasDark = useRef<boolean | null>(null);
+  const stageThemeRef = useRef(stageTheme);
+  useEffect(() => { siteTheme.current = resolvedTheme; }, [resolvedTheme]);
+  useEffect(() => { stageThemeRef.current = stageTheme; }, [stageTheme]);
 
   useEffect(() => {
     const root = document.documentElement;
@@ -454,11 +461,21 @@ export function PerformanceMode({
     root.classList.toggle("dark", stageTheme === "dark");
   }, [stageTheme]);
 
-  // Restaurer le thème du site à la fermeture du mode
+  // Pendant le mode, si next-themes réécrit la classe (bascule du thème système), la scène reprend la main.
+  useEffect(() => {
+    const root = document.documentElement;
+    const obs = new MutationObserver(() => {
+      const voulu = stageThemeRef.current === "dark";
+      if (root.classList.contains("dark") !== voulu) root.classList.toggle("dark", voulu);
+    });
+    obs.observe(root, { attributes: true, attributeFilter: ["class"] });
+    return () => obs.disconnect();
+  }, []);
+
+  // Fermeture : le thème courant du site, pas celui d'avant l'ouverture
   useEffect(() => () => {
-    if (siteWasDark.current !== null) {
-      document.documentElement.classList.toggle("dark", siteWasDark.current);
-    }
+    const dark = siteTheme.current ? siteTheme.current === "dark" : siteWasDark.current;
+    if (dark !== null) document.documentElement.classList.toggle("dark", dark);
   }, []);
 
   const setTheme = useCallback((t: "light" | "dark") => {

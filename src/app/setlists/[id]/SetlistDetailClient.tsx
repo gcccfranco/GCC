@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { Trash2, List, Music, Pencil, SlidersHorizontal, PenLine, UserRound, Play, MoreHorizontal, Download, Copy, Share2, BellRing, FileText, Presentation, X, Info } from "lucide-react";
 import { categoryColor } from "@/lib/serviceColors";
+import { styleTexteService } from "@/lib/couleurSombre";
 import { Halo } from "@/components/layout/Halo";
 import { FondDeBarre } from "@/components/layout/FondDeBarre";
 import { serviceButtonFill } from "@/lib/serviceButton";
@@ -1818,7 +1819,7 @@ export function SetlistDetailClient() {
               {/* Le titre garde 18rem au moins : sinon les boutons passent dessous. */}
               <div className="min-w-0 flex-[1_1_18rem]">
                 {setlist.fete ? <RepereFete setlist={setlist} passage={passageFete} /> : (
-                <p className="flex items-center gap-1.5 text-[13px] font-semibold" style={{ color: categoryColor(setlist.category) }}>
+                <p className="flex items-center gap-1.5 text-[13px] font-semibold texte-service" style={styleTexteService(categoryColor(setlist.category))}>
                   <span aria-hidden className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ backgroundColor: categoryColor(setlist.category) }} />
                   {t("categories." + setlist.category, { defaultValue: setlist.category })} · {formatDate(setlist.date, i18n.language)}
                 </p>)}

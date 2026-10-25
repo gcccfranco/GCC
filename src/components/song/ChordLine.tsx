@@ -171,7 +171,6 @@ export function ChordLine({ tokens, showChords = true, hideLyrics = false, fontS
           showChords && !hideLyrics && seg.chord !== null && suivant !== undefined &&
           LETTRE_LATINE.test([...seg.lyric].at(-1) ?? "") && LETTRE_LATINE.test([...suivant][0] ?? "");
         const lyric = seg.lyric?.replace(/\s?-\s/g,'').trimStart()
-        // console.log(seg.lyric,lyric)
         if (!showChords && !lyric){return null} else
         return (
           <span

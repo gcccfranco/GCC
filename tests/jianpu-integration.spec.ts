@@ -20,8 +20,9 @@ type Calques = Record<string, { keyLabel: { y: number }; labels: { y: number }[]
 
 test.describe("recadrage (données)", () => {
   test("chords.json est intact : les calques certifiés ne bougent pas", () => {
+    // 25/10/2026 : seul ajout depuis 1b488bdf, le calque de 仰望神儿子 ; aucun calque certifié modifié ni retiré.
     const empreinte = createHash("sha256").update(readFileSync("public/jianpu/chords.json")).digest("hex");
-    expect(empreinte).toBe("ecf3ea0d5c91baf7ae82890c2d77f2fc1766ea722474ade20271e89267b85fbb");
+    expect(empreinte).toBe("a02eec72e78981342434a70b291ba46981f8cb077b640d82a16b24c913960550");
   });
 
   test("cadrage.json : une valeur par page, dans la page, au-dessus de « 1=X » et des accords ; pages suivantes à 0", () => {

@@ -90,6 +90,8 @@ export interface Evenement {
   reunion?: boolean;
   /** Inscrits + invités — tenu par le serveur seulement. */
   inscrits: number;
+  /** Places (personnes + invités) prises sans compte — tenu par le serveur, plafonné (PLAFOND_SANS_COMPTE). */
+  inscritsSansCompte?: number;
   createdAt: string;
   updatedAt: string;
 }

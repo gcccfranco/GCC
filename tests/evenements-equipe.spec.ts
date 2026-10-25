@@ -2,7 +2,12 @@ import { expect, test, type Page, type TestInfo } from "@playwright/test";
 import path from "node:path";
 import { coordination, signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { canInscrireEvenement, canSeeEvenement, entreesBackOffice, estReunion, publicDeReunion } from "../src/lib/access";
-import { destinatairesEvenement, inscrire } from "../src/lib/evenements/serveur";
+import { HttpError, PLAFOND_SANS_COMPTE, destinatairesEvenement, errorResponse, inscrire } from "../src/lib/evenements/serveur";
+import { limiteAtteinte, limiteSansCompte } from "../src/lib/evenements/limiteAdresse";
+import i18n from "i18next";
+import frTranslations from "../src/locales/fr.json";
+import zhTranslations from "../src/locales/zh-CN.json";
+import { messageTraduit } from "../src/lib/messageTraduit";
 import { baseBackOffice } from "../src/lib/navigation";
 import { ouvertureDuJour } from "../src/lib/evenements/rappel";
 import { evenementsAVenir } from "../src/lib/tableauDeBord/donnees";
@@ -372,4 +377,97 @@ test("E6 : la route d'inscription lit le profil en base — un membre de l'équi
   await expect(inscrire(db, { uid: "uid-rose", email: "rose@example.com" }, { evenementId: "regie", invites: 0, nomLibre: "" }))
     .resolves.toMatchObject({ inscrits: 1 });
   await expect(inscrire(db, qui(CLARA), { evenementId: "regie", invites: 0, nomLibre: "" })).rejects.toMatchObject({ status: 403 });
+});
+
+// ─── S9 : inscriptions sans compte, limite par adresse et plafond par évènement ───
+
+test("S9 : 5 inscriptions sans compte par adresse et par 10 minutes, la sixième est refusée", () => {
+  const hits = new Map<string, number[]>();
+  const t0 = Date.parse("2099-01-01T10:00:00Z");
+  for (let i = 0; i < 5; i++) expect(limiteAtteinte(hits, "203.0.113.7", t0 + i * 1000)).toBe(false);
+  expect(limiteAtteinte(hits, "203.0.113.7", t0 + 6000)).toBe(true);
+  // Une autre adresse n'est pas touchée ; la même, dix minutes plus tard, repart à zéro.
+  expect(limiteAtteinte(hits, "203.0.113.8", t0 + 6000)).toBe(false);
+  expect(limiteAtteinte(hits, "203.0.113.7", t0 + 11 * 60 * 1000)).toBe(false);
+});
+
+test("S9 : au plus 60 places sans compte par évènement, invités compris ; avec compte, rien ne change", async () => {
+  const ouvert = { ...BASE, pour: "eglise", date: "2099-10-10", sansCompte: true, organisateurUid: "uid-autre" };
+  const { db, ecrits } = baseSimulee({
+    "evenements/presque": { ...ouvert, inscrits: 58, inscritsSansCompte: PLAFOND_SANS_COMPTE - 2 },
+    "evenements/plein": { ...ouvert, inscrits: 70, inscritsSansCompte: PLAFOND_SANS_COMPTE },
+    "users/uid-bruno": { firstName: "Bruno", lastName: "M.", dansEquipes: ["da"] },
+  });
+  // 58 + 1 + 1 invité = 60 : accepté, compteur tenu dans la même écriture.
+  await expect(inscrire(db, null, { evenementId: "presque", invites: 1, nomLibre: "Visiteur" })).resolves.toMatchObject({ inscrits: 60 });
+  expect(ecrits["evenements/presque"]).toMatchObject({ inscrits: 60, inscritsSansCompte: PLAFOND_SANS_COMPTE });
+  // 58 + 1 + 2 invités = 61 : refusé, avec son code.
+  await expect(inscrire(db, null, { evenementId: "presque", invites: 2, nomLibre: "Visiteur" })).rejects.toMatchObject({ status: 409, code: "limiteSansCompte" });
+  await expect(inscrire(db, null, { evenementId: "plein", invites: 0, nomLibre: "Visiteur" })).rejects.toMatchObject({ status: 409, code: "limiteSansCompte" });
+  // Un membre connecté passe, et le compteur sans compte n'est pas touché.
+  await expect(inscrire(db, qui(BRUNO), { evenementId: "plein", invites: 0, nomLibre: "" })).resolves.toMatchObject({ inscrits: 71 });
+  expect(ecrits["evenements/plein"]).not.toHaveProperty("inscritsSansCompte", 61);
+});
+
+// Routes et messages : la route tourne sur le serveur de test (interrupteur ouvert), sans base.
+
+test("S9 : la route refuse (429) la sixième inscription sans compte d'une même adresse en 10 minutes", async ({ request }) => {
+  // Adresse tirée au hasard : le compteur vit dans le serveur de test, un second passage ne doit pas en hériter.
+  const adresse = `198.51.${Math.floor(Math.random() * 256)}.${Math.floor(Math.random() * 254) + 1}, 10.0.0.1`;
+  const poster = (headers: Record<string, string>) =>
+    request.post("/api/evenements/inscription", { headers: { "x-forwarded-for": adresse, ...headers }, data: { evenementId: "x", invites: 0, nom: "Visiteur" } });
+  // Les cinq premières passent la limite (sans base elles échouent plus loin, jamais en 429).
+  for (let i = 0; i < 5; i++) expect((await poster({})).status()).not.toBe(429);
+  expect((await poster({})).status()).toBe(429);
+  expect(await (await poster({})).json()).toMatchObject({ code: "tropDeDemandes" });
+});
+
+test("S9 : la limite par adresse ne vise que les inscriptions sans compte", () => {
+  const hits = new Map<string, number[]>();
+  const t0 = Date.parse("2099-01-01T10:00:00Z");
+  for (let i = 0; i < 8; i++) expect(limiteSansCompte({ uid: "uid-bruno", email: "bruno@example.com" }, hits, "203.0.113.9", t0 + i)).toBe(false);
+  expect(hits.size).toBe(0);
+  for (let i = 0; i < 5; i++) expect(limiteSansCompte(null, hits, "203.0.113.9", t0 + i)).toBe(false);
+  expect(limiteSansCompte(null, hits, "203.0.113.9", t0 + 6)).toBe(true);
+});
+
+test("S9 : le plafond atteint, refusé par inscrire, sort de la route en 409 avec son code", async () => {
+  const { db } = baseSimulee({
+    "evenements/plein": { ...BASE, pour: "eglise", date: "2099-10-10", sansCompte: true, organisateurUid: "uid-autre", inscrits: 70, inscritsSansCompte: PLAFOND_SANS_COMPTE },
+  });
+  const erreur = await inscrire(db, null, { evenementId: "plein", invites: 0, nomLibre: "Visiteur" }).then(() => null, (e: unknown) => e);
+  expect(erreur).toBeInstanceOf(HttpError);
+  const res = errorResponse(erreur);
+  expect(res.status).toBe(409);
+  expect(await res.json()).toMatchObject({ code: "limiteSansCompte" });
+});
+
+test("un refus d'inscription s'affiche en 中文 dans la fiche quand la page est en 中文", async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
+  await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
+  await signInAs(page, BRUNO, { "evenements/soiree": SOIREE }, "/evenements/soiree");
+  await page.route("**/api/evenements/inscription", (route) =>
+    route.fulfill({ status: 409, json: { error: "Il n'y a plus assez de places.", code: "complet" } }));
+  await page.getByRole("button", { name: zhTranslations.evenements.sinscrire, exact: true }).click();
+  await page.getByRole("button", { name: zhTranslations.evenements.confirmer, exact: true }).click();
+  await expect(page.getByText(zhTranslations.evenements.refus.complet)).toBeVisible();
+  await expect(page.getByText(frTranslations.evenements.refus.complet)).toHaveCount(0);
+});
+
+test("refus d'inscription : en 中文 quand <html lang> est zh-CN", () => {
+  if (!i18n.isInitialized) {
+    void i18n.init({ resources: { fr: { translation: frTranslations }, "zh-CN": { translation: zhTranslations } }, lng: "fr", fallbackLng: "fr", interpolation: { escapeValue: false } });
+  }
+  const g = globalThis as unknown as { document?: unknown };
+  const avant = g.document;
+  try {
+    g.document = { documentElement: { lang: "zh-CN" } };
+    for (const cle of ["evenements.refus.limiteSansCompte", "evenements.refus.complet", "evenements.inscriptionError"]) {
+      expect(messageTraduit(cle)).toMatch(/[\u4e00-\u9fff]/);
+    }
+    g.document = { documentElement: { lang: "fr" } };
+    expect(messageTraduit("evenements.refus.limiteSansCompte")).toBe("La limite des inscriptions sans compte est atteinte.");
+  } finally {
+    g.document = avant;
+  }
 });
