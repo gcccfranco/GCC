@@ -16,6 +16,7 @@ import { Impasse } from "@/components/layout/Impasse";
 import { DeuxVolets } from "@/components/layout/DeuxVolets";
 import { EnTetePage } from "@/components/layout/EnTetePage";
 import { useDeuxVolets } from "@/hooks/useDeuxVolets";
+import { chargerIndexChants } from "@/hooks/useSongsIndex";
 import { useProfile } from "@/lib/firebase/users";
 import { getSetlists, type FSSetlist } from "@/lib/firebase/setlists";
 import { datesServies, loadPlanningData, type PlanningData } from "@/lib/planning/names";
@@ -81,8 +82,8 @@ export function SectionMesServices({ children }: { children: React.ReactNode }) 
     loadPlanningData().then(setData);
     // Même lecture que loadPlanningData (cache partagé) ; en échec, aucune ligne.
     if (BACK_OFFICE) lirePetitDej().then(setLignesPetitDej, () => setLignesPetitDej([]));
-    fetch("/songs-index.json").then((r) => r.json())
-      .then((index: { songs?: SongIndexEntry[] }) => setSongs(Object.fromEntries((index.songs ?? []).map((s) => [s.slug, s]))))
+    chargerIndexChants()
+      .then((index) => setSongs(Object.fromEntries(index.map((s) => [s.slug, s]))))
       .catch(() => {});
   }, []);
 

@@ -650,7 +650,7 @@ function MatriceOrganigramme({ equipes, onFiche }: { equipes: Equipe[]; onFiche:
   if (lignes.length === 0) return <p className="text-sm text-muted-foreground">{t("equipes.matriceVide")}</p>;
   return (
     <>
-      <div data-testid="matrice-table" className="hidden sm:block overflow-x-auto rounded-xl bg-card">
+      <div data-testid="matrice-table" role="region" tabIndex={0} aria-label={t("equipes.matriceRegion")} className="hidden sm:block overflow-x-auto rounded-xl bg-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
         <table className="w-full text-sm">
           <thead>
             <tr className="sticky top-0 bg-card">
@@ -711,7 +711,7 @@ function MatriceAncienne({
 
   return (
     <>
-      <div data-testid="matrice-table" className="hidden sm:block overflow-x-auto rounded-xl bg-card">
+      <div data-testid="matrice-table" role="region" tabIndex={0} aria-label={t("equipes.matriceRegion")} className="hidden sm:block overflow-x-auto rounded-xl bg-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
         <table className="w-full text-sm">
           <thead>
             <tr className="sticky top-0 bg-card">

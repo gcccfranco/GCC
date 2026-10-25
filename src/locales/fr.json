@@ -3309,6 +3309,7 @@
       "regie": "Régie"
     },
     "matriceVide": "Personne ne sert au planning pour l'instant.",
+    "matriceRegion": "Tableau des musiciens",
     "nom": "Nom",
     "sousTitreGestion": "Organigramme GCC Franco {{annee}}",
     "vue": "Vue",

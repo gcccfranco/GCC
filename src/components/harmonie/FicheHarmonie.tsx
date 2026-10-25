@@ -19,6 +19,7 @@ import { Clavier, DiagrammeGuitare, doigtesDe, notesDe } from "@/components/harm
 import { ParagrapheFiche, TexteFiche, TON_DES_FICHES } from "@/components/harmonie/TexteFiche";
 import { useCatalogueHarmonie } from "@/components/harmonie/catalogueContexte";
 import { useDeuxVolets } from "@/hooks/useDeuxVolets";
+import { chargerIndexChants } from "@/hooks/useSongsIndex";
 import { ALL_KEYS, getTransposedKey, semitonesTo } from "@/lib/transpose";
 import { cn } from "@/lib/utils";
 import type { Instrument } from "@/types/harmonie";
@@ -47,9 +48,8 @@ export function FicheHarmonie({ id }: { id: string }) {
   useEffect(() => {
     if (!fiche?.exemples.length) return;
     let vivant = true;
-    fetch("/songs-index.json")
-      .then((r) => r.json())
-      .then((d: { songs: Entree[] }) => { if (vivant) setChants(d.songs); })
+    chargerIndexChants()
+      .then((songs) => { if (vivant) setChants(songs); })
       .catch(() => { /* la liste s'affichera par slug */ });
     comptesDesChants().then((n) => { if (vivant) setComptes(n); });
     return () => { vivant = false; };

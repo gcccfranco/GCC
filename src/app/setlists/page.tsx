@@ -32,6 +32,7 @@ import { BandeauCorbeille } from "@/components/setlists/BandeauCorbeille";
 import { ApercuSetlist } from "@/components/setlists/ApercuSetlist";
 import { DeuxVolets } from "@/components/layout/DeuxVolets";
 import { useDisposition } from "@/hooks/useDisposition";
+import { chargerIndexChants } from "@/hooks/useSongsIndex";
 import type { SongIndexEntry } from "@/types/song";
 import { PullToRefresh } from "@/components/layout/PullToRefresh";
 import { Halo } from "@/components/layout/Halo";
@@ -80,8 +81,8 @@ export default function SetlistsPage() {
   const avecChants = disposition !== "telephone";
   useEffect(() => {
     if (!avecChants) return;
-    fetch("/songs-index.json").then((r) => r.json())
-      .then((index: { songs?: SongIndexEntry[] }) => setSongsMap(Object.fromEntries((index.songs ?? []).map((x) => [x.slug, x]))))
+    chargerIndexChants()
+      .then((index) => setSongsMap(Object.fromEntries(index.map((x) => [x.slug, x]))))
       .catch(() => {});
   }, [avecChants]);
 

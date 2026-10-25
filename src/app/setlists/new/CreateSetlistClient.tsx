@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useTranslation } from "react-i18next";
 import type { SongIndexEntry } from "@/types/song";
+import { chargerIndexChants } from "@/hooks/useSongsIndex";
 import { SetlistForm } from "@/components/setlists/SetlistForm";
 import { useProfile } from "@/lib/firebase/users";
 import { creatableCategories, isAdminUser } from "@/lib/access";
@@ -32,9 +33,7 @@ export function CreateSetlistClient() {
   const categoriesDuProfil = useMemo(() => (profile ? creatableCategories(profile) : []), [profile]);
 
   useEffect(() => {
-    fetch("/songs-index.json")
-      .then((r) => r.json())
-      .then((data) => setSongs(data.songs ?? []));
+    chargerIndexChants().then(setSongs).catch(() => {}); // hors ligne : bibliothèque vide, comme avant
   }, []);
 
   if (loading) {

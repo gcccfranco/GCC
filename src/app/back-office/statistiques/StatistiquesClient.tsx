@@ -23,6 +23,7 @@ import { OngletsRail, Pilules } from "@/components/layout/Onglets";
 import { Button } from "@/components/ui/button";
 import { KeyPill } from "@/components/ui/key-pill";
 import type { SongIndexEntry } from "@/types/song";
+import { chargerIndexChants } from "@/hooks/useSongsIndex";
 import { cn } from "@/lib/utils";
 
 type Vue = "plus" | "jamais" | "redecouvrir";
@@ -137,7 +138,7 @@ export function StatistiquesClient() {
   const lire = useCallback(() => {
     Promise.all([
       getSetlists(),
-      fetch("/songs-index.json").then((r) => (r.ok ? (r.json() as Promise<{ songs: SongIndexEntry[] }>) : null)),
+      chargerIndexChants().catch(() => null),
     ])
       .then(([setlists, index]) => {
         // La base compte plus de cent setlists : zéro veut dire que la lecture a échoué.
@@ -145,7 +146,7 @@ export function StatistiquesClient() {
         else if (!index) setLecture({ etat: "echec", message: t("stats.lireRecueil") });
         else {
           const choix = choixDesFiltres(setlists, aujourdhui, ALL_CATEGORIES);
-          setLecture({ etat: "pret", setlists, recueil: index.songs, choix });
+          setLecture({ etat: "pret", setlists, recueil: index, choix });
           // Un service ou une présidence de l'adresse absents des menus (lien retouché) : ignorés,
           // pour que le menu dise toujours le filtre appliqué.
           setEtat((e) => {

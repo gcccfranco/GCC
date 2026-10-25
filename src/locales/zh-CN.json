@@ -3271,6 +3271,7 @@
       "regie": "音控"
     },
     "matriceVide": "目前没有人在排班中。",
+    "matriceRegion": "乐手表格",
     "nom": "姓名",
     "sousTitreGestion": "GCC 法语堂 {{annee}} 组织架构",
     "vue": "视图",

@@ -13,7 +13,7 @@ import { getSetlists } from "@/lib/firebase/setlists";
 import { statsChants, type Periode } from "@/lib/stats/chantsJoues";
 import { useLecture } from "@/lib/tableauDeBord/lecture";
 import type { Reglages, Widget } from "@/types/backOffice";
-import type { SongIndexEntry } from "@/types/song";
+import { chargerIndexChants } from "@/hooks/useSongsIndex";
 import { CadreWidget, LienTete, Message } from "./Cadre";
 
 type PeriodeWidget = NonNullable<Reglages["periode"]>;
@@ -27,11 +27,10 @@ const PERIODES: Record<PeriodeWidget, { periode: Periode; adresse: string }> = {
 };
 
 async function lire() {
-  const [setlists, reponse] = await Promise.all([getSetlists(), fetch("/songs-index.json")]);
+  const [setlists, recueil] = await Promise.all([getSetlists(), chargerIndexChants()]);
   // La base compte plus de cent setlists : zéro veut dire que la lecture a échoué (comme la page).
-  if (setlists.length === 0 || !reponse.ok) throw new Error("lecture");
-  const index = (await reponse.json()) as { songs: SongIndexEntry[] };
-  return { setlists, recueil: index.songs };
+  if (setlists.length === 0) throw new Error("lecture");
+  return { setlists, recueil };
 }
 
 export function WidgetChants({ widget }: { widget: Widget }) {

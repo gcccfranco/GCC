@@ -24,6 +24,7 @@ import { isExpired, isInfo, isPast } from "@/lib/evenements/agenda"
 import { canSeeEvenement, canSeeSetlist, estReunion } from "@/lib/access"
 import { BACK_OFFICE } from "@/lib/backOffice"
 import { useDisposition } from "@/hooks/useDisposition"
+import { chargerIndexChants } from "@/hooks/useSongsIndex"
 import type { Evenement } from "@/types/evenement"
 import type { SongIndexEntry } from "@/types/song"
 import { PourMoi } from "@/components/accueil/PourMoi"
@@ -131,8 +132,8 @@ export default function PlanningAccueil() {
   const [songs, setSongs] = useState<Record<string, SongIndexEntry>>({})
   useEffect(() => {
     if (!setlistId) return
-    fetch("/songs-index.json").then(r => r.json())
-      .then((index: { songs?: SongIndexEntry[] }) => setSongs(Object.fromEntries((index.songs ?? []).map(s => [s.slug, s]))))
+    chargerIndexChants()
+      .then((index) => setSongs(Object.fromEntries(index.map(s => [s.slug, s]))))
       .catch(() => {})
   }, [setlistId])
 
