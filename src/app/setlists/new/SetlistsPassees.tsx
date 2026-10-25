@@ -10,6 +10,7 @@ import { duplicateSetlist, getMySetlists, getSetlists, type FSSetlist } from "@/
 import { useProfile } from "@/lib/firebase/users";
 import { canDuplicateSetlist, canSeeSetlist } from "@/lib/access";
 import { todayIso } from "@/lib/scene/dimanches";
+import { EtatVide } from "@/components/layout/EtatVide";
 
 // « Repartir d'une setlist passée » (lot U5 bis, Q14) : les setlists passées
 // que la personne voit et peut dupliquer, la plus récente d'abord. « Reprendre »
@@ -112,9 +113,9 @@ export function SetlistsPassees() {
         {setlists === null ? (
           <p className="py-8 text-center text-sm text-muted-foreground">{t("common.loading")}</p>
         ) : affichees.length === 0 ? (
-          <p role="status" className="rounded-xl border border-dashed border-border py-12 text-center text-sm text-muted-foreground">
+          <EtatVide role="status">
             {t(recherche.trim() ? "setlists.entree.aucunePasseeRecherche" : "setlists.entree.aucunePassee")}
-          </p>
+          </EtatVide>
         ) : (
           <ul aria-label={t("setlists.entree.passee")}>
             {affichees.map((s) => (

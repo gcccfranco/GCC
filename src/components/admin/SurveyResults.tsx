@@ -22,6 +22,7 @@ import {
   type SurveyQuestion,
   type SurveyResponse,
 } from "@/types/survey";
+import { EtatVide } from "@/components/layout/EtatVide"
 
 /** Barre horizontale « n sur total » avec libellé et compte. */
 function CountBar({ label, count, total }: { label: string; count: number; total: number }) {
@@ -413,9 +414,7 @@ export function SurveyResults({ backOffice = false }: { backOffice?: boolean }) 
       {loading ? (
         <p className="text-sm text-muted-foreground py-4 text-center">Chargement…</p>
       ) : responses.length === 0 ? (
-        <p className="text-sm text-muted-foreground py-4 text-center border border-dashed border-border rounded-xl">
-          Aucune réponse pour l&apos;instant.
-        </p>
+        <EtatVide compact>Aucune réponse pour l&apos;instant.</EtatVide>
       ) : (
         <>
           {/* Résultats section par section (dépliables) */}

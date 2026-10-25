@@ -36,6 +36,7 @@ import { Input } from "@/components/ui/input";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Pilules } from "@/components/layout/Onglets";
 import { Pill } from "./commun";
+import { EtatVide } from "@/components/layout/EtatVide"
 
 export function profileToForm(p: UserProfile): ProfileFormValue {
   return {
@@ -450,9 +451,7 @@ export function ListePersonnes({
   if (loadingProfiles) return <p className="text-sm text-muted-foreground py-6 text-center">Chargement…</p>;
   if (f.displayed.length === 0)
     return (
-      <p className="text-sm text-muted-foreground py-6 text-center border border-dashed border-border rounded-xl">
-        {profiles.length === 0 ? "Aucun profil pour l'instant." : "Aucun membre ne correspond."}
-      </p>
+      <EtatVide compact>{profiles.length === 0 ? "Aucun profil pour l'instant." : "Aucun membre ne correspond."}</EtatVide>
     );
   return (
     <div className="space-y-2">

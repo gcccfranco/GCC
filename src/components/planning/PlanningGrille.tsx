@@ -30,6 +30,7 @@ import { useClavier, useSelectionGrille, type Poignees } from "./useSelectionGri
 import { FenetreCopie, type DemandeCopie } from "./FenetreCopie"
 import { PrevenirChangements, usePrevenir, type PrevenirProp } from "./PrevenirChangements"
 import { styleTexteService } from "@/lib/couleurSombre"
+import { EtatVide } from "@/components/layout/EtatVide"
 
 // Grille d'un planning rempli dans l'app (lot 17, docs/spec-planning-grille.md).
 // Table sur ordinateur et tablette — colonne des dates FIGÉE au défilement
@@ -1006,9 +1007,7 @@ export function PlanningGrille({
       {/* ── Une carte par dimanche (téléphone) ── */}
       <div inert={enCours ? true : undefined} data-cartes-en-cours={enCours || undefined} className="sm:hidden space-y-2.5">
         {affichees.length === 0 && (
-          <p className="px-4 py-8 text-center text-sm text-muted-foreground border border-dashed border-border rounded-xl">
-            {vide ?? t("planning.grille.aVenir")}
-          </p>
+          <EtatVide compact>{vide ?? t("planning.grille.aVenir")}</EtatVide>
         )}
         {affichees.map((l) => {
           const date = l.row[0]

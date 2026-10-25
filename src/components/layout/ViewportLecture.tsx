@@ -25,6 +25,6 @@ export function ViewportLecture() {
   useEffect(() => {
     const meta = document.querySelector('meta[name="viewport"]');
     if (meta) meta.setAttribute("content", fige ? FIGE : BASE);
-  }, [fige]);
+  }, [fige, chemin]);
   return null;
 }

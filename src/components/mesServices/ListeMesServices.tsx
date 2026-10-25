@@ -20,6 +20,7 @@ import { joursAvant } from "@/lib/planning/accueil";
 import { adresseDuService, cleDuService, type ServiceGroupe } from "@/lib/planning/mesServices";
 import { serviceColor } from "@/lib/serviceColors";
 import { cn } from "@/lib/utils";
+import { EtatVide } from "@/components/layout/EtatVide";
 
 export type Onglet = "upcoming" | "past";
 
@@ -81,11 +82,7 @@ export function ListeMesServices({
       {!charge ? (
         <p className="text-sm text-muted-foreground text-center py-16">{t("mesServices.loading")}</p>
       ) : affiches.length === 0 ? (
-        <div className="text-center py-16 border border-dashed border-border rounded-xl space-y-1">
-          <p className="text-sm text-muted-foreground">
-            {onglet === "upcoming" ? t("mesServices.emptyUpcoming") : t("mesServices.emptyPast")}
-          </p>
-        </div>
+        <EtatVide>{onglet === "upcoming" ? t("mesServices.emptyUpcoming") : t("mesServices.emptyPast")}</EtatVide>
       ) : (
         <div className="space-y-5">
           {mois.map((m) => (

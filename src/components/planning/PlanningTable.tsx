@@ -5,6 +5,7 @@ import { User, X } from "lucide-react"
 import { useTranslation } from "react-i18next"
 import { currentSundayStr, fdShort, getAnnee, getMois, moisName } from "@/lib/planning/utils"
 import { useFiltreNom } from "./BarreDeGrille"
+import { EtatVide } from "@/components/layout/EtatVide"
 
 export interface PlanningTableProps {
   /** cols[0] est la colonne date */
@@ -168,9 +169,7 @@ export function PlanningTable({ cols, rows, color, dateBadge, minWidth = 480, gr
           </div>
         )}
         {mobileRows.length === 0 && (
-          <p className="px-4 py-8 text-center text-sm text-muted-foreground border border-dashed border-border rounded-xl">
-            Aucune donnée
-          </p>
+          <EtatVide compact>Aucune donnée</EtatVide>
         )}
         {mobileRows.map((row) => {
           const isThis = row[0] === sun

@@ -3,6 +3,7 @@
 import type { CSSProperties } from "react"
 import { X } from "lucide-react"
 import { useTranslation } from "react-i18next"
+import { Bandeau } from "@/components/layout/Bandeau"
 
 // Bannière d'un geste de la grille (lot 3, PG6) : ce que le dernier geste a fait, avec « Annuler »
 // (qui réécrit les valeurs d'avant) et ✕. Elle a la largeur de la grille.
@@ -17,24 +18,19 @@ export function BanniereGeste({ texte, notes, onAnnuler, onFermer }: {
 }) {
   const { t } = useTranslation()
   return (
-    <div
-      role="status"
-      data-testid="banniere-geste"
-      className="flex items-start gap-3 rounded-lg border border-border bg-secondary px-3 py-2 text-sm text-foreground"
-    >
-      <div className="min-w-0 flex-1">
-        <p>{texte}</p>
-        {notes?.map((n) => <p key={n} className="text-xs text-muted-foreground">{n}</p>)}
+    <Bandeau ton="info" testId="banniere-geste" onFermer={onFermer}>
+      <div className="flex items-start gap-3">
+        <div className="min-w-0 flex-1">
+          <p>{texte}</p>
+          {notes?.map((n) => <p key={n} className="text-xs text-muted-foreground">{n}</p>)}
+        </div>
+        {onAnnuler && (
+          <button type="button" onClick={onAnnuler} className="shrink-0 font-semibold underline underline-offset-2">
+            {t("planning.gestes.annuler")}
+          </button>
+        )}
       </div>
-      {onAnnuler && (
-        <button type="button" onClick={onAnnuler} className="shrink-0 font-semibold underline underline-offset-2">
-          {t("planning.gestes.annuler")}
-        </button>
-      )}
-      <button type="button" onClick={onFermer} aria-label={t("common.buttons.close")} className="shrink-0 rounded p-0.5 text-muted-foreground hover:text-foreground">
-        <X className="h-4 w-4" aria-hidden />
-      </button>
-    </div>
+    </Bandeau>
   )
 }
 
@@ -50,11 +46,8 @@ export function BarreCollage({ count, remplace, videsSeulement, onAnnuler, onVid
 }) {
   const { t } = useTranslation()
   return (
-    <div
-      role="status"
-      data-testid="apercu-collage"
-      className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-lg border border-orange-300 bg-orange-50 px-3 py-2 text-sm text-orange-950 dark:border-orange-800/60 dark:bg-orange-950/30 dark:text-orange-100"
-    >
+    <Bandeau ton="alerte" testId="apercu-collage">
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
       <p className="min-w-0 flex-1 basis-64">{t("planning.gestes.apercu", { count, remplace })}</p>
       <button type="button" onClick={onAnnuler} className="shrink-0 font-semibold underline underline-offset-2">
         {t("common.buttons.cancel")}
@@ -63,14 +56,15 @@ export function BarreCollage({ count, remplace, videsSeulement, onAnnuler, onVid
         type="button"
         onClick={onVides}
         disabled={!videsSeulement}
-        className="shrink-0 rounded-md border border-orange-400 px-2.5 py-1 font-semibold disabled:opacity-40"
+        className="shrink-0 rounded-md border border-amber-500 px-2.5 py-1 font-semibold disabled:opacity-40"
       >
         {t("planning.gestes.casesVidesSeulement")}
       </button>
-      <button type="button" onClick={onColler} className="shrink-0 rounded-md bg-orange-600 px-2.5 py-1 font-semibold text-white">
+      <button type="button" onClick={onColler} className="shrink-0 rounded-md bg-amber-700 px-2.5 py-1 font-semibold text-white">
         {t("planning.gestes.coller")}
       </button>
-    </div>
+      </div>
+    </Bandeau>
   )
 }
 

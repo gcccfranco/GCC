@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useState, type ReactNode } from "react";
-import Link from "next/link";
 import { useTranslation } from "react-i18next";
 import { ArrowLeft, ArrowRight, Check, CheckCircle2, MessageSquareHeart, Star } from "lucide-react";
 import { useProfile } from "@/lib/firebase/users";
@@ -20,6 +19,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { EnTetePage } from "@/components/layout/EnTetePage";
 import { Halo } from "@/components/layout/Halo";
 import { useDisposition } from "@/hooks/useDisposition";
+import { Impasse } from "@/components/layout/Impasse";
 
 function isAnswered(a: SurveyAnswer | undefined): boolean {
   if (a === undefined) return false;
@@ -191,15 +191,12 @@ export default function QuestionnairePage() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-3 px-4 text-center">
-        <MessageSquareHeart className="h-8 w-8 text-muted-foreground" />
-        <p className="text-sm text-muted-foreground">{t("survey.loginRequired")}</p>
-        <Link
-          href="/login?from=/questionnaire"
-          className="text-sm text-foreground underline underline-offset-2 hover:text-muted-foreground"
-        >
-          {t("common.header.login")}
-        </Link>
+      <div className="min-h-screen bg-background flex items-center">
+        <Impasse
+          icone={MessageSquareHeart}
+          titre={t("survey.loginRequired")}
+          sortie={{ href: "/login?from=/questionnaire", label: t("mesServices.login") }}
+        />
       </div>
     );
   }

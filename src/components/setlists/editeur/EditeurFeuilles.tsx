@@ -10,6 +10,7 @@ import { ListeCourte } from "@/components/setlists/editeur/ListeCourte";
 import { BoutonFinal, type ProprietesEditeur } from "@/components/setlists/editeur/EditeurDeuxColonnes";
 import { FeuilleContexte } from "@/components/setlists/editeur/feuille";
 import { useVolet } from "@/components/setlists/editeur/useVolet";
+import { EtatVide } from "@/components/layout/EtatVide"
 
 // Éditeur de setlist « piste 2 » sur téléphone et tablette en portrait (lot U5 bis, T4,
 // docs/spec-editeur-setlist.md ; planches `creer-piste2-telephone-setlist`,
@@ -62,9 +63,7 @@ export function EditeurFeuilles({
               onDragEnd={actions.onDragEnd}
             />
           ) : (
-            <p className="rounded-xl border border-dashed border-border py-6 text-center text-sm text-muted-foreground">
-              {t("setlists.editeur.listeVide")}
-            </p>
+            <EtatVide compact>{t("setlists.editeur.listeVide")}</EtatVide>
           )}
         </div>
         <button

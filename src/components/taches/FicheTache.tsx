@@ -15,9 +15,9 @@
 
 import { useEffect, useId, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useTranslation } from "react-i18next";
-import { Bell, CalendarDays, Check, Link2, Minus, Pencil, Repeat, Ticket, Trash2, UserRound } from "lucide-react";
+import { Bell, CalendarDays, Check, Link2, ListChecks, Minus, Pencil, Repeat, Ticket, Trash2, UserRound } from "lucide-react";
 import { EnTetePage } from "@/components/layout/EnTetePage";
 import { MenuActions } from "@/components/layout/MenuActions";
 import { TacheForm } from "@/components/taches/TacheForm";
@@ -34,6 +34,7 @@ import { lignesDeTache, type Ligne } from "@/lib/taches/echeances";
 import { prevenirFait, prevenirResponsable } from "@/lib/taches/prevenir";
 import { cn } from "@/lib/utils";
 import type { EtatFois, Fois, Tache } from "@/types/tache";
+import { Impasse } from "@/components/layout/Impasse";
 
 const locale = (lang: string) => (lang === "zh-CN" ? "zh-CN" : "fr-FR");
 const majuscule = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
@@ -56,10 +57,11 @@ export function FicheTache({ equipe, id, date }: { equipe: string; id: string; d
   const deuxVolets = useDeuxVolets();
   const { equipes, items, chargement, aujourdhui } = useMesTaches();
   const item = items.find((x) => x.tache.equipe === equipe && x.tache.id === id);
+  const enBackOffice = (usePathname() ?? "").startsWith("/back-office");
 
   let contenu: React.ReactNode;
   if (!equipes.includes(equipe)) contenu = <p className="text-sm text-muted-foreground">{t("taches.pasMembre")}</p>;
-  else if (!item) contenu = chargement ? null : <p className="text-sm text-muted-foreground">{t("taches.introuvable")}</p>;
+  else if (!item) contenu = chargement ? null : <Impasse icone={ListChecks} titre={t("taches.introuvable")} sortie={{ href: `${enBackOffice ? "/back-office" : ""}/taches/${equipe}`, label: t("taches.title") }} />;
   else contenu = <Fiche key={`${equipe}/${id}/${date ?? ""}`} ligne={laLigne(item.tache, lignesDeTache(item.tache, item.fois, aujourdhui), date)} toutesLesFois={item.fois} />;
 
   return (

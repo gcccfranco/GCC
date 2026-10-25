@@ -13,6 +13,7 @@ import type { Report } from "@/types/report";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Pill } from "./commun";
+import { EtatVide } from "@/components/layout/EtatVide"
 
 /** Signalements et propositions de chants, avec leurs actions : lus une fois, mis à jour sur
  *  place après chaque écriture (règles : reports, songProposals, admins). Partagé par l'ancien
@@ -139,9 +140,7 @@ export function Reception({ onEnAttente }: { onEnAttente?: (n: number) => void }
         {loadingReports ? (
           <p className="text-sm text-muted-foreground py-4 text-center">Chargement…</p>
         ) : reports.length === 0 ? (
-          <p className="text-sm text-muted-foreground py-4 text-center border border-dashed border-border rounded-xl">
-            Aucun signalement pour l&apos;instant.
-          </p>
+          <EtatVide compact>Aucun signalement pour l&apos;instant.</EtatVide>
         ) : (
           <div className="space-y-2">
             {visibleReports.map((r) => {
@@ -285,9 +284,7 @@ export function Reception({ onEnAttente }: { onEnAttente?: (n: number) => void }
         {loadingProposals ? (
           <p className="text-sm text-muted-foreground py-4 text-center">Chargement…</p>
         ) : proposals.length === 0 ? (
-          <p className="text-sm text-muted-foreground py-4 text-center border border-dashed border-border rounded-xl">
-            Aucune proposition pour l&apos;instant.
-          </p>
+          <EtatVide compact>Aucune proposition pour l&apos;instant.</EtatVide>
         ) : (
           <div className="space-y-2">
             {visibleProposals.map((p) => {

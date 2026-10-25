@@ -59,6 +59,21 @@ test.describe("zoom pincé (C5)", () => {
     await page.goto("/songs");
     await expect.poll(() => viewport(page)).not.toContain("user-scalable=no");
   });
+
+  test("navigation côté client : liste → chant interdit le zoom, retour arrière le permet", async ({ page }) => {
+    await page.goto("/songs/abba-pere");
+    await expect.poll(() => viewport(page)).toContain("user-scalable=no");
+    const apresGoto = await viewport(page);
+    await page.goto("/songs");
+    await page.getByRole("searchbox").waitFor();
+    await expect.poll(() => viewport(page)).not.toContain("user-scalable=no");
+    await page.locator('a[href^="/songs/"]:not([href="/songs/"])').first().click();
+    await expect(page).toHaveURL(/\/songs\/[^/]+\/?$/);
+    await expect.poll(() => viewport(page)).toBe(apresGoto);
+    await page.goBack();
+    await expect(page).toHaveURL(/\/songs\/?$/);
+    await expect.poll(() => viewport(page)).not.toContain("user-scalable=no");
+  });
 });
 
 test("« Signaler » : une vraie fenêtre (rôle dialog), Échap la ferme, le focus revient au déclencheur", async ({ page }) => {

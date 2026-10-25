@@ -22,6 +22,7 @@ import { useDeuxVolets } from "@/hooks/useDeuxVolets";
 import { useAccesHarmonie } from "@/lib/harmonie/useHarmonie";
 import { etoiles, pourChercher, useRd2000, type Rd2000, type Son } from "@/lib/harmonie/rd2000";
 import { cn } from "@/lib/utils";
+import { ImpasseHarmonie } from "@/components/harmonie/ImpasseHarmonie";
 
 type Vue = "moment" | "sons" | "parametres" | "legende";
 
@@ -59,7 +60,7 @@ export function Rd2000Harmonie({ children }: { children: React.ReactNode }) {
 
   if (acces.chargement || chargement) return null;
   if (!acces.piano) {
-    return <p className="mx-auto max-w-2xl px-4 py-10 text-center text-muted-foreground">{t("common.noAccess")}</p>;
+    return <ImpasseHarmonie />;
   }
   if (!donnees || !valeur) return null;
 

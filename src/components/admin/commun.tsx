@@ -3,10 +3,10 @@
 // Briques des blocs d'administration (sortis de `admin/page.tsx` au lot U6, B2 : chaque
 // bloc vit désormais à sa place du Back-Office, et l'ancienne page les assemble encore
 // tant que l'interrupteur est coupé). Anciens blocs : en français seulement (Q16).
-import Link from "next/link";
 import { useTranslation } from "react-i18next";
 import { ShieldCheck } from "lucide-react";
 import { styleTexteService } from "@/lib/couleurSombre";
+import { Impasse } from "@/components/layout/Impasse";
 
 export function Pill({ label, color }: { label: string; color?: string }) {
   return (
@@ -46,14 +46,14 @@ export function ListePuces({ titre, aide, items }: { titre: string; aide: string
 export function ReserveAuxAdmins({ connecte, retour }: { connecte: boolean; retour: string }) {
   const { t } = useTranslation();
   return (
-    <div className="min-h-[50vh] flex flex-col items-center justify-center gap-3 px-4 text-center">
-      <ShieldCheck className="h-8 w-8 text-muted-foreground" aria-hidden />
-      <p className="text-sm text-muted-foreground">{t("backOffice.adminReserve")}</p>
-      {!connecte && (
-        <Link href={`/login?from=${retour}`} className="text-sm text-foreground underline underline-offset-2 hover:text-muted-foreground">
-          {t("backOffice.seConnecter")}
-        </Link>
-      )}
-    </div>
+    <Impasse
+      icone={ShieldCheck}
+      titre={t("backOffice.adminReserve")}
+      sortie={
+        connecte
+          ? { href: "/songs", label: t("common.notFound.cta") }
+          : { href: `/login?from=${retour}`, label: t("backOffice.seConnecter") }
+      }
+    />
   );
 }

@@ -23,6 +23,7 @@ import { BACK_OFFICE } from "@/lib/backOffice"
 import { useGestionPlanning } from "@/lib/planning/gestion"
 import { AncienTableau } from "./AncienTableau"
 import { styleTexteService } from "@/lib/couleurSombre"
+import { EtatVide } from "@/components/layout/EtatVide"
 
 // Campus : les cartes Louange / Répétition restent la lecture ; le volet
 // « Grille » (19/09/2026, lot 17 G6) montre les deux grilles, matin puis soir,
@@ -182,7 +183,7 @@ function CampusPage() {
       )}
 
       {sub !== "grille" && order.length === 0 && (
-        <div className="max-w-2xl text-center py-12 text-sm text-muted-foreground">{t("planning.campus.noSeance")}</div>
+        <EtatVide className="max-w-2xl">{t("planning.campus.noSeance")}</EtatVide>
       )}
 
       {sub !== "grille" && order.map(day => (

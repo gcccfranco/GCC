@@ -10,6 +10,7 @@ import { loadPlanningData, setlistSeances, type SetlistSeance } from "@/lib/plan
 import { lienPreparer, prochainsServicesSansSetlist } from "@/lib/setlist/prochainsServices";
 import { categoryColor } from "@/lib/serviceColors";
 import { todayIso } from "@/lib/scene/dimanches";
+import { EtatVide } from "@/components/layout/EtatVide";
 
 // Entrée de « Nouvelle setlist » (lot U5 bis, docs/spec-editeur-setlist.md,
 // Q3) : les prochains services sans setlist d'après le planning, « Préparer »
@@ -71,13 +72,13 @@ export function PourQuelService({ categories }: { categories: string[] }) {
           {etat === "chargement" ? (
             <p className="py-8 text-sm text-muted-foreground">{t("common.loading")}</p>
           ) : etat === "erreur" ? (
-            <p role="status" className="mt-3 rounded-xl border border-dashed border-border px-4 py-6 text-sm text-muted-foreground">
+            <EtatVide role="status" compact className="mt-3">
               {t("setlists.entree.planningIllisible")}
-            </p>
+            </EtatVide>
           ) : etat.length === 0 ? (
-            <p role="status" className="mt-3 rounded-xl border border-dashed border-border px-4 py-6 text-sm text-muted-foreground">
+            <EtatVide role="status" compact className="mt-3">
               {t("setlists.entree.aucunService")}
-            </p>
+            </EtatVide>
           ) : (
             <ul aria-labelledby="pour-quel-service" className="mt-3 grid gap-2.5 md:grid-cols-2 md:gap-4 lg:grid-cols-3">
               {etat.map((s) => {

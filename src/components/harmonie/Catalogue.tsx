@@ -27,6 +27,7 @@ import { getSetlists } from "@/lib/firebase/setlists";
 import { useRd2000 } from "@/lib/harmonie/rd2000";
 import { cn } from "@/lib/utils";
 import { MOMENTS, SENSATIONS, type Fiche, type HarmonieIndex, type Instrument, type Niveau } from "@/types/harmonie";
+import { ImpasseHarmonie } from "@/components/harmonie/ImpasseHarmonie";
 
 const NIVEAUX: Niveau[] = ["facile", "intermediaire", "avance"];
 
@@ -79,7 +80,7 @@ export function HarmonieCatalogue({ children }: { children: React.ReactNode }) {
   if (acces.chargement || chargement) return null;
   // Sans droit, une phrase, une seule fois : ni liste ni fiche.
   if (!acces.peut) {
-    return <p className="mx-auto max-w-2xl px-4 py-10 text-center text-muted-foreground">{t("common.noAccess")}</p>;
+    return <ImpasseHarmonie />;
   }
 
   return (

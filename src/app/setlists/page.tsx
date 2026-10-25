@@ -47,6 +47,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useSetlistsNavState, type Tab } from "@/hooks/useSetlistsNavState";
+import { EtatVide } from "@/components/layout/EtatVide";
 
 // Lot U4 bis, B2 (docs/spec-pages-en-grand.md, Q4) : en grand, la liste à gauche et l'aperçu
 // de la setlist choisie à droite (`?apercu=<id>`, sans aperçu choisi la première de la liste,
@@ -638,13 +639,16 @@ export default function SetlistsPage() {
             {t("common.loading")}
           </div>
         ) : displayed.length === 0 ? (
-          <div className="text-center py-16 border border-dashed border-border rounded-xl space-y-3">
-            <p className="text-sm text-muted-foreground">{emptyMessage}</p>
-            {/* Qui peut créer a « + Nouvelle setlist » dans l'en-tête : pas de seconde action ici (R7). */}
-            {tab === "upcoming" && !query && !canCreate && (
-              <p className="text-sm text-muted-foreground">{t("setlists.list.emptyUpcomingHint")}</p>
-            )}
-          </div>
+          <EtatVide
+            action={
+              /* Qui peut créer a « + Nouvelle setlist » dans l'en-tête : pas de seconde action ici (R7). */
+              tab === "upcoming" && !query && !canCreate ? (
+                <p className="text-sm text-muted-foreground">{t("setlists.list.emptyUpcomingHint")}</p>
+              ) : undefined
+            }
+          >
+            {emptyMessage}
+          </EtatVide>
         ) : (
           disposition === "tablette" ? (
             <ul className="grid grid-cols-2 items-start gap-4">
