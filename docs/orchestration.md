@@ -171,3 +171,9 @@ Règles à partir du 24/10/2026, 20 h :
   par lot, une relecture de fin à trois angles sur Sonnet (sans contre-vérification Opus), qui s'appuie sur les
   journaux de tests du flux au lieu de relancer les mêmes suites.
 - **Moins de réveils.** Une ligne par tranche du flux vers la session principale, et un point d'étape toutes les 3 h.
+- **En parallèle quand les tranches sont indépendantes** (25/10/2026) : une session par tranche, chacune avec ses
+  fichiers, sur la même branche. Les traductions vont chacune dans leur propre espace de clés, et l'Avancement de la
+  spec est tenu par la session principale, ce qui évite les conflits de `git pull --rebase` sur les mêmes lignes.
+- **Specs voisines bornées à huit** dans `/tranche` (A6 : 2 h 45, dont une bonne part en specs voisines lourdes). La
+  suite complète, en fin de lot, se découpe en trois (`--shard=1/3`…), dans trois sessions de test légères en
+  parallèle.

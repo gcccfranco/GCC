@@ -56,7 +56,7 @@ const VERDICT = {
 const tester = (n) => agent(
   `Tranche ${A.tranche} (${A.spec}). Lance, dans l'ordre : \`npx tsc --noEmit\`, \`npm run lint\` (les avertissements ne comptent pas), puis ` +
   (tests ? `\`npx playwright test ${tests} --reporter=line\` (les projets de playwright.config.ts : trois appareils, cinq pour une spec d'agencement).` : 'aucune spec Playwright (rien de nommé).') +
-  ` Ajoute à la passe Playwright les **specs voisines** : pour chaque fichier de \`git diff --name-only ${A.base}\`, les specs de tests/ qui citent son chemin ou son nom (\`grep -rlF\`), car une spec qui lit le code par texte casse au moindre changement de forme. Au tour 1, liste-les dans \`commande\`.` +
+  ` Ajoute à la passe Playwright les **specs voisines** : pour chaque fichier de \`git diff --name-only ${A.base}\`, les specs de tests/ qui citent son chemin ou son nom (\`grep -rlF\`), car une spec qui lit le code par texte casse au moindre changement de forme. **Huit au plus** : d'abord celles qui lisent le fichier par texte (readFileSync, fs), puis celles qui l'importent ; laisse celles qui ne font que naviguer vers une page (la suite complète de fin de lot les couvre). Au tour 1, liste-les dans \`commande\`, et dis celles que tu as laissées.` +
   (A.preuve ? ` Puis fais la preuve réelle demandée, et compte chaque écart comme un échec : ${A.preuve}` : '') +
   ` Rends chaque échec ; une erreur tsc ou lint compte comme un échec.`,
   { agentType: 'testeur', schema: ECHECS, label: `tester:${A.tranche}:${n}`, phase: 'Tester' })
