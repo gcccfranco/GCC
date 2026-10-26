@@ -123,8 +123,10 @@ Les huit questions de la planche, tranchées : piste A, et les recommandations r
 | Lot | État |
 | --- | --- |
 | L0 | **Fait (26/10/2026).** `src/lib/performance/lecturePref.ts` (clé `perf-style-lecture`, défaut « classique »), ligne « Style de lecture » dans Réglages après « Thème », attribut `data-style-lecture` sur la racine du mode ; aucun effet sur la lecture pour l'instant. `tests/mode-louange-forscore.spec.ts` (ajouté à `SPECS_GRAND_ECRAN`). Suite mode louange : 187 passés, 1 course sans rapport (`performance-mode.spec.ts:375`, sélecteur ambigu, vert à la relance). |
-| L1 à L7 | Go de Timothée le 26/10/2026. Codés par une session orchestratrice sur `ui/apple-design`, un commit par lot. |
+| L1 | **Fait (26/10/2026).** Correction des deux styles : barres masquées en `pointer-events-none` (plus de bande invisible qui capte). Style forScore : plus de minuterie de 3 s, la barre reste jusqu'au toucher au centre. Tests ajoutés dans `tests/mode-louange-forscore.spec.ts` (35/35 sur cinq projets) ; `performance-mode.spec.ts` inchangé, une course sous charge (`:243`, tablette) verte à la relance. |
+| L2 à L7 | Go de Timothée le 26/10/2026. Codés par une session orchestratrice sur `ui/apple-design`, un commit par lot. |
 
 ### Choix faits en codant
 
 - L0 : le test « localStorage bloqué » ne fait lever que les clés `perf-*` (le formulaire de connexion simulé a besoin du reste du stockage).
+- L1 : à l'ouverture du mode (et à la sortie de l'annotation), en style forScore la barre est visible et y reste jusqu'au premier toucher au centre ; option la plus prudente (découvrable). Les tests ignorent les « Failed to load resource » (404 sans rapport) dans les erreurs console.

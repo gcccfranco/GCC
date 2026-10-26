@@ -886,11 +886,16 @@ export function PerformanceMode({
   const annotateModeRef = useRef(annotateMode);
   annotateModeRef.current = annotateMode;
 
+  // Style forScore : pas de minuterie, la barre reste jusqu'au toucher au centre (lot L1).
+  const styleLectureRef = useRef(styleLecture);
+  styleLectureRef.current = styleLecture;
+
   const showChromeWithTimer = useCallback(() => {
     setShowChrome(true);
     clearTimeout(chromeTimer.current);
+    if (styleLectureRef.current === "forscore") return;
     chromeTimer.current = setTimeout(() => {
-      if (!annotateModeRef.current) setShowChrome(false);
+      if (!annotateModeRef.current && styleLectureRef.current !== "forscore") setShowChrome(false);
     }, 3000);
   }, []);
 
@@ -1517,7 +1522,7 @@ export function PerformanceMode({
         {/* Top bar */}
         <div
           ref={barreHautRef}
-          className="absolute top-0 left-0 right-0 pointer-events-auto material-chrome material-steady shadow-[0_1px_0_hsl(var(--border))] px-4 py-3 flex items-center gap-3"
+          className={`absolute top-0 left-0 right-0 ${showChrome ? "pointer-events-auto" : "pointer-events-none"} material-chrome material-steady shadow-[0_1px_0_hsl(var(--border))] px-4 py-3 flex items-center gap-3`}
           style={{
             paddingTop: "calc(0.75rem + var(--sat, 0px))",
             paddingLeft: "calc(1rem + var(--sal, 0px))",
@@ -1579,7 +1584,7 @@ export function PerformanceMode({
         {/* Bottom bar */}
         <div
           ref={barreBasRef}
-          className="absolute bottom-0 left-0 right-0 pointer-events-auto material-chrome material-steady shadow-[0_-1px_0_hsl(var(--border))] px-3 py-2.5 flex items-center gap-1.5 flex-wrap"
+          className={`absolute bottom-0 left-0 right-0 ${showChrome ? "pointer-events-auto" : "pointer-events-none"} material-chrome material-steady shadow-[0_-1px_0_hsl(var(--border))] px-3 py-2.5 flex items-center gap-1.5 flex-wrap`}
           style={{
             paddingBottom: "calc(0.625rem + var(--sab, 0px))",
             paddingLeft: "calc(0.75rem + var(--sal, 0px))",
