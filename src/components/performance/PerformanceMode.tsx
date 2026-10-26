@@ -32,6 +32,7 @@ import type { PartitionLayout } from "@/lib/partitionLayoutPref";
 import { getPinyinPref, setPinyinPref } from "@/lib/pinyinPref";
 import { classerGeste, estTabletteVerticale, largeurZoneLaterale } from "@/lib/performance/gestes";
 import { LiseretTempo } from "@/components/performance/LiseretTempo";
+import { CurseurPage } from "@/components/performance/CurseurPage";
 import { getTailleAnnotee, setTailleAnnotee } from "@/lib/performance/tailleAnnotee";
 import { clampTempo, getMetronomePref, getTempoChant, setMetronomePref, setTempoChant, TEMPO_DEPART, TEMPO_MAX, TEMPO_MIN } from "@/lib/performance/tempo";
 import { getStyleLecturePref, setStyleLecturePref, type StyleLecture } from "@/lib/performance/lecturePref";
@@ -1187,6 +1188,10 @@ export function PerformanceMode({
   const songPageCount = songStartPage >= 0 ? songEndPage - songStartPage + 1 : 0;
   const songPageIdx = currentPage - songStartPage;
   const isLastPageOfSong = pages.length > 0 && currentPage === songEndPage;
+  // Repères du curseur de page (L7) : première page de chaque chant à en-tête.
+  const reperesChants = songEntries
+    .map(({ block, index }) => ({ page: pages.findIndex((p) => p.includes(index)), titre: block.title }))
+    .filter((r) => r.page >= 0);
 
   // Padding interne des conteneurs mis à l'échelle : px-6 py-4 + safe areas.
   // Les insets sont divisés par le facteur d'échelle pour rester exacts en
@@ -1766,6 +1771,18 @@ export function PerformanceMode({
           onPointerDown={(e) => e.stopPropagation()}
           onPointerUp={(e) => e.stopPropagation()}
         >
+          {/* Curseur de page sur toute la setlist (L7, forScore seulement) */}
+          {styleLecture === "forscore" && pages.length > 1 && (
+            <CurseurPage
+              total={pages.length}
+              courante={currentPage}
+              reperes={reperesChants}
+              libelle={t("performance.pageSlider")}
+              texteValeur={t("performance.pageSliderValue", { n: currentPage + 1, total: pages.length })}
+              onAller={(p) => goToPage(p, pages.length)}
+            />
+          )}
+
           {/* Sommaire des chants */}
           <IconBtn label={t("performance.songList")} onClick={() => { setSettingsOpen(false); setSongListOpen(true); }}>
             <ListMusic className="h-5 w-5" />

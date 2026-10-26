@@ -699,6 +699,8 @@
     "prevPage": "上一页",
     "nextPage": "下一页",
     "pageOfSong": "本首第 {{current}} / {{total}} 页",
+    "pageSlider": "跳转到页面",
+    "pageSliderValue": "第 {{n}} 页，共 {{total}} 页",
     "tools": {
       "pen": "画笔",
       "highlighter": "荧光笔",

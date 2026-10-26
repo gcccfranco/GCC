@@ -720,3 +720,173 @@ test("forScore : aucun aperçu hors tablette en portrait (téléphone, paysage, 
   await expect(compteur(page)).toHaveText(/^1 \/ ([2-9]|\d\d+)$/);
   await expect(page.locator(APERCU)).toHaveCount(0);
 });
+
+// Lot L7 : curseur de page (style forScore) sur toute la setlist, repères au début de chaque chant.
+
+const TROIS_CHANTS = ["abba-pere", "a-l-agneau", "avec-nous"];
+const CURSEUR = "[data-performance-mode] [data-curseur-page] input[type=range]";
+const REPERES = "[data-performance-mode] [data-repere-chant]";
+
+async function ouvrirTroisChants(page: Page, style: "forscore" | null = "forscore", slugs = TROIS_CHANTS) {
+  await page.addInitScript((s) => {
+    localStorage.setItem("perf-role-preset", "pianiste");
+    if (s) localStorage.setItem("perf-style-lecture", s);
+  }, style);
+  const doc = {
+    ...setlist,
+    items: slugs.map((songSlug, i) => ({ ...setlist.items[0], songSlug, position: i + 1 })),
+  };
+  await signInAs(page, MUSICIEN, { [`setlists/${SETLIST_ID}`]: doc }, `/setlists/${SETLIST_ID}`);
+  await page.getByRole("button", { name: /Mode Louange/ }).click();
+  await attendreMiseEnPage(page);
+}
+
+/** Rappelle la barre (geste au centre) si elle est masquée. */
+async function barreVisible(page: Page) {
+  const curseur = page.locator(CURSEUR);
+  await expect(async () => {
+    if (!(await curseur.isVisible())) await toucherCentre(page);
+    await expect(curseur).toBeVisible({ timeout: 1_000 });
+  }).toPass({ timeout: 15_000 });
+}
+
+const titreBarreHaute = (page: Page) => page.locator("[data-performance-mode] .material-chrome").first().locator("p").first();
+
+test("forScore, L7 : le curseur couvre toute la setlist, 3 repères = débuts de chant, un clic amène au 1er page du chant", async ({ page }) => {
+  const erreurs = surveillerErreurs(page);
+  await ouvrirTroisChants(page);
+  const total = Number((await lirePage(page)).split("/")[1]);
+  expect(total).toBeGreaterThanOrEqual(3);
+  const curseur = page.locator(CURSEUR);
+  await expect(curseur).toBeVisible();
+  await expect(page.locator("[data-performance-mode]").getByRole("slider", { name: "Aller à la page" })).toHaveCount(1);
+  await expect(curseur).toHaveAttribute("max", String(total - 1));
+  await expect(curseur).toHaveAttribute("min", "0");
+  await expect(curseur).toHaveAttribute("aria-valuetext", `Page 1 sur ${total}`);
+
+  const reperes = page.locator(REPERES);
+  await expect(reperes).toHaveCount(3);
+  const debuts = await reperes.evaluateAll((els) => els.map((e) => ({ page: Number(e.getAttribute("data-page")), titre: e.getAttribute("data-titre")! })));
+  expect(debuts[0].page).toBe(0);
+  expect(debuts[1].page).toBeGreaterThan(debuts[0].page);
+  expect(debuts[2].page).toBeGreaterThan(debuts[1].page);
+  expect(debuts[2].page).toBeLessThanOrEqual(total - 1);
+
+  // On visite les repères du dernier au premier : chaque clic amène au 1er page du chant, titre en barre haute.
+  for (const i of [2, 1, 0]) {
+    await barreVisible(page);
+    await reperes.nth(i).click();
+    await expect.poll(() => numero(page)).toBe(debuts[i].page + 1);
+    await expect(curseur).toHaveValue(String(debuts[i].page));
+    await expect(titreBarreHaute(page)).toHaveText(debuts[i].titre);
+  }
+  expect(erreurs).toEqual([]);
+});
+
+test("forScore, L7 : le curseur au clavier (Fin, Début, flèche) change de page et le compteur suit", async ({ page }) => {
+  const erreurs = surveillerErreurs(page);
+  await ouvrirTroisChants(page);
+  const total = Number((await lirePage(page)).split("/")[1]);
+  const curseur = page.locator(CURSEUR);
+  await barreVisible(page);
+  await curseur.focus();
+  await page.keyboard.press("End");
+  await expect.poll(() => numero(page)).toBe(total);
+  await page.keyboard.press("Home");
+  await expect.poll(() => numero(page)).toBe(1);
+  await page.keyboard.press("ArrowRight");
+  await expect.poll(() => numero(page)).toBe(2);
+  await expect(curseur).toHaveAttribute("aria-valuetext", `Page 2 sur ${total}`);
+  await page.keyboard.press("PageDown");
+  await expect.poll(() => numero(page)).toBe(3);
+  expect(erreurs).toEqual([]);
+});
+
+test("forScore, L7 : la barre basse tient dans l'écran, fine, sans défilement horizontal", async ({ page }) => {
+  await ouvrirTroisChants(page);
+  await barreVisible(page);
+  const hauteurAvec = await page.evaluate(() => (document.querySelectorAll("[data-performance-mode] .material-chrome")[1] as HTMLElement).offsetHeight);
+  const m = await page.evaluate(() => {
+    const barre = document.querySelectorAll("[data-performance-mode] .material-chrome")[1] as HTMLElement;
+    const r = barre.getBoundingClientRect();
+    const racine = document.querySelector("[data-performance-mode]") as HTMLElement;
+    return {
+      bas: r.bottom, gauche: r.left, droite: r.right, h: window.innerHeight, w: window.innerWidth,
+      debordPage: document.documentElement.scrollWidth - window.innerWidth,
+      debordRacine: racine.scrollWidth - racine.clientWidth,
+      debordBarre: barre.scrollWidth - barre.clientWidth,
+      piste: (document.querySelector("[data-curseur-page] input") as HTMLElement).getBoundingClientRect().height,
+    };
+  });
+  expect(m.bas).toBeLessThanOrEqual(m.h + 0.5);
+  expect(m.gauche).toBeGreaterThanOrEqual(-0.5);
+  expect(m.droite).toBeLessThanOrEqual(m.w + 0.5);
+  expect(m.debordPage).toBeLessThanOrEqual(0);
+  expect(m.debordRacine).toBeLessThanOrEqual(0);
+  expect(m.debordBarre).toBeLessThanOrEqual(0);
+  expect(m.piste).toBeGreaterThanOrEqual(44);
+  expect(hauteurAvec).toBeLessThan(150);
+});
+
+test("forScore, L7 : la ligne du curseur pèse au plus 36 px de mise en page", async ({ page }) => {
+  await ouvrirTroisChants(page);
+  await barreVisible(page);
+  const avec = await page.evaluate(() => (document.querySelectorAll("[data-performance-mode] .material-chrome")[1] as HTMLElement).offsetHeight);
+  const ligne = await page.evaluate(() => {
+    const c = document.querySelector("[data-curseur-page]") as HTMLElement;
+    const cs = getComputedStyle(c);
+    return c.offsetHeight + parseFloat(cs.marginBottom);
+  });
+  expect(ligne).toBeLessThanOrEqual(36);
+  expect(avec).toBeGreaterThan(0);
+});
+
+test("Classique, L7 : aucun curseur de page", async ({ page }) => {
+  await ouvrirTroisChants(page, null);
+  await expect(compteur(page)).toHaveText(/^1 \/ ([2-9]|\d\d+)$/);
+  await expect(page.locator("[data-curseur-page]")).toHaveCount(0);
+  await expect(page.locator(REPERES)).toHaveCount(0);
+});
+
+test("forScore, L7 : une seule page, pas de curseur", async ({ page }) => {
+  // Un chant court (13 lignes) tient sur une page.
+  await ouvrirTroisChants(page, "forscore", ["benediction"]);
+  const total = Number((await lirePage(page)).split("/")[1]);
+  test.skip(total !== 1, "ce chant n'est pas sur une seule page à cette taille d'écran");
+  await expect(page.locator("[data-curseur-page]")).toHaveCount(0);
+});
+
+test("forScore, L7 : un clic sur la piste va à la page visée, sans décalage de la racine", async ({ page }) => {
+  const erreurs = surveillerErreurs(page);
+  await ouvrirTroisChants(page);
+  const total = Number((await lirePage(page)).split("/")[1]);
+  const curseur = page.locator(CURSEUR);
+  await barreVisible(page);
+  const b = (await curseur.boundingBox())!;
+  // Au milieu de la piste (hors repères, qui sont en haut de la ligne).
+  await page.mouse.click(b.x + b.width / 2, b.y + b.height / 2 + 4);
+  const cible = Number(await curseur.inputValue());
+  expect(cible).toBeGreaterThan(0);
+  expect(Math.abs(cible - (total - 1) / 2)).toBeLessThanOrEqual(1.5);
+  await expect.poll(() => numero(page)).toBe(cible + 1);
+  await page.waitForTimeout(400);
+  expect(await numero(page)).toBe(cible + 1);
+  expect(erreurs).toEqual([]);
+});
+
+test("forScore, L7 : glisser le curseur montre le titre du chant visé en bulle", async ({ page }) => {
+  await ouvrirTroisChants(page);
+  const curseur = page.locator(CURSEUR);
+  await barreVisible(page);
+  const b = (await curseur.boundingBox())!;
+  const y = b.y + b.height / 2 + 4;
+  await page.mouse.move(b.x + 12, y);
+  await page.mouse.down();
+  await page.mouse.move(b.x + b.width - 12, y, { steps: 8 });
+  const bulle = page.locator("[data-performance-mode] [data-bulle-curseur]");
+  await expect(bulle).toBeVisible();
+  await expect(bulle).toHaveAttribute("aria-hidden", "true");
+  await expect(bulle).toHaveText("Avec nous (Emmanuel)");
+  await page.mouse.up();
+  await expect(bulle).toHaveCount(0);
+});

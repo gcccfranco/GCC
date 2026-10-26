@@ -703,6 +703,8 @@
     "prevPage": "Page précédente",
     "nextPage": "Page suivante",
     "pageOfSong": "Page {{current}} sur {{total}} du chant",
+    "pageSlider": "Aller à la page",
+    "pageSliderValue": "Page {{n}} sur {{total}}",
     "tools": {
       "pen": "Crayon",
       "highlighter": "Surligneur",
