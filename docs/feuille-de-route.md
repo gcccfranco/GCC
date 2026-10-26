@@ -1229,6 +1229,10 @@ Back-office : planche à trois pistes le même jour ; **go pour la piste A** («
 code-la ») → **`spec-back-office-piste-a.md`** (cinq entrées, un écran « À faire » à la place des widgets, page par
 équipe, Calendrier qui absorbe Évènements et Réunions), codée par le flux B après ses corrections ; essai par 2 ou 3
 responsables sur un aperçu avant toute ouverture en ligne.
+**Piste A codée le 25-26/10/2026** sur `ui/apple-design`, rien sur `main` : BO-A à BO-G puis vérification d'ensemble
+(BO-F2), détail et « laissés » au § 4 de la spec ; aucune règle Firestore à publier pour ce lot. Avant la fusion,
+Timothée : révoquer le secret (L0), publier `firestore.rules` (corrections de l'audit), vérifier les comptes admin, `VERCEL_DEEP_CLONE=true`,
+fusionner `main` dans la branche ; puis l'essai BO5.
 
 ## 4. Carte des modules de l'app « GCC »
 
