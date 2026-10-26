@@ -1,3 +1,5 @@
+import { existsSync, readFileSync } from "node:fs";
+import path from "node:path";
 import { expect, test, type Page } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { margeAttendue, zoneDeContenu } from "./helpers/agencement";
@@ -77,8 +79,39 @@ test.describe("À faire (BO-B) : la fonction pure", () => {
     expect(ids(lignesDe(r, "semaine"))).toEqual(["tache:da:aujourdhui:2026-10-24", "tache:louange:lundi:2026-10-26"]);
     expect(r.total).toBe(3);
     const [m, l] = lignesDe(r, "semaine");
-    expect(m).toMatchObject({ sorte: "tache", verbe: "fait", href: "/back-office/equipes/da", aMoi: true, equipes: ["da"], titre: "T-aujourdhui" });
-    expect(l).toMatchObject({ href: "/back-office/equipes/louange", aMoi: false, equipes: ["louange"] });
+    // BO16 (c) : « Fait » mène à la tâche elle-même.
+    expect(m).toMatchObject({ sorte: "tache", verbe: "fait", href: "/back-office/taches/da/aujourdhui", aMoi: true, equipes: ["da"], titre: "T-aujourdhui" });
+    expect(l).toMatchObject({ href: "/back-office/taches/louange/lundi", aMoi: false, equipes: ["louange"] });
+  });
+
+  test("BO16 (c) : une tâche répétée mène à celle de ses fois qui est à faire (`?date=`)", () => {
+    const repetee = { tache: { id: "hebdo", titre: "Salle", equipe: "da", echeance: "2026-10-26", responsableUid: null, repetition: { tous: 7 } }, date: "2026-10-26", fois: null } as never;
+    expect(lignesDe(aFaire(entrees({ taches: [repetee] })), "semaine")[0].href).toBe("/back-office/taches/da/hebdo?date=2026-10-26");
+  });
+
+  // BO13 : une personne planifiée qui s'est déclarée absente, une ligne par absence sur les cinq dimanches, jamais le motif.
+  test("BO13 : absences en conflit, « Remplacer » vers la grille ; cette semaine ou plus tard selon la date ; sans le motif", () => {
+    // Pers. F tient la batterie (colonne 5) ; elle est absente le 25 octobre et le 8 novembre, pas le 15.
+    const rows = { culte: [ligneCulte("2026-10-25"), ligneCulte("2026-11-08"), ligneCulte("2026-11-15")] };
+    const persF = { uid: "u-persf", firstName: "Pers.", lastName: "F", planningName: "Pers. F", referentSous: [] };
+    const absences = [
+      { id: "a1", uid: "u-persf", du: "2026-10-24", au: "2026-10-26", motif: "Rendez-vous privé" },
+      { id: "a2", uid: "u-persf", du: "2026-11-08", au: "2026-11-08" },
+      { id: "a3", uid: "u-autre", du: "2026-10-25", au: "2026-10-25" },
+    ];
+    const r = aFaire(entrees({ planning: { rows, plannings: ["culte"], profils: [persF], absences } }));
+    expect(lignesDe(r, "semaine")).toMatchObject([{
+      id: "absence:culte:2026-10-25:batterie:Pers. F", sorte: "absence", verbe: "remplacer", href: "/back-office/planning/culte",
+      date: "2026-10-25", equipes: ["louange"], aMoi: false, planning: "culte", nom: "Pers. F", colonnes: [{ cle: "batterie" }],
+    }]);
+    expect(lignesDe(r, "plusTard")).toMatchObject([{ id: "absence:culte:2026-11-08:batterie:Pers. F", sorte: "absence", date: "2026-11-08" }]);
+    expect(r.total).toBe(2);
+    expect(JSON.stringify(r)).not.toContain("Rendez-vous");
+    // Sans les absences (pas le droit de les voir) : aucune ligne d'absence.
+    expect(aFaire(entrees({ planning: { rows, plannings: ["culte"], profils: [persF] } })).total).toBe(0);
+    // « Mes équipes » : l'absence est à Louange.
+    expect(filtrer(r, "mesEquipes", ["louange"]).total).toBe(2);
+    expect(filtrer(r, "mesEquipes", ["da"]).total).toBe(0);
   });
 
   test("inscriptions : celles de ses évènements qui ferment bientôt, avec inscrits et places", () => {
@@ -259,8 +292,9 @@ test.describe("À faire (BO-B) : l'écran", () => {
 
     const bouton = (texte: string | RegExp, verbe: string) => ligne(page, texte).getByRole("link", { name: new RegExp(`^${verbe}`) });
     await expect(bouton("Point des bâtisseurs", "Écrire le compte rendu")).toHaveAttribute("href", /\/back-office\/reunions\/r0\/?$/);
-    await expect(bouton("Affiche de l'atelier", "Fait")).toHaveAttribute("href", /\/back-office\/equipes\/evenementiel\/?$/);
-    await expect(bouton("Fond du culte", "Fait")).toHaveAttribute("href", /\/back-office\/equipes\/da\/?$/);
+    // BO16 (c) : « Fait » mène à la tâche.
+    await expect(bouton("Affiche de l'atelier", "Fait")).toHaveAttribute("href", /\/back-office\/taches\/evenementiel\/t1\/?$/);
+    await expect(bouton("Fond du culte", "Fait")).toHaveAttribute("href", /\/back-office\/taches\/da\/t2\/?$/);
     await expect(bouton("Culte Franco : Batterie", "Remplir")).toHaveAttribute("href", /\/back-office\/planning\/culte\/?$/);
     await expect(bouton("Culte Franco : PPT", "Remplir")).toHaveAttribute("href", /\/back-office\/planning\/culte\/?$/);
     await expect(bouton("les inscriptions ferment bientôt", "Voir les inscrits")).toHaveAttribute("href", /\/back-office\/evenements\/e1\/?$/);
@@ -423,6 +457,9 @@ test.describe("À faire (BO-B) : l'écran", () => {
     expect(verbe.x + verbe.width, "dans la ligne").toBeLessThanOrEqual(r.x + r.width);
     expect(await rangee.evaluate((li) => li.scrollWidth - li.clientWidth), "rien ne déborde").toBeLessThanOrEqual(0);
     await expect(rangee.getByRole("link").locator("svg")).toHaveCount(1);
+    // BO16 (b) : le verbe passe sur deux lignes plutôt que de couper tôt le titre, qui tient en entier sur deux lignes.
+    expect(await rangee.locator("b").evaluate((b) => b.scrollHeight - b.clientHeight), "le titre n'est pas coupé").toBeLessThanOrEqual(1);
+    expect(titre.width, "le titre a au moins la moitié de la ligne").toBeGreaterThanOrEqual(r.width / 2 - 60);
   });
 
   // BO-G, 9 : la carte reste, vide, au lieu d'être omise (barre latérale affichée : la colonne de droite n'existe que là).
@@ -528,13 +565,91 @@ test.describe("À faire (BO-B) : l'écran", () => {
     await expect(page.getByRole("status").filter({ hasText: "目前没有待办事项。" })).toBeVisible();
   });
 
+  // BO13 : Pers. F, à la batterie le 1er novembre (le 25, la batterie est vide), s'est déclarée absente ce jour-là.
+  const AVEC_ABSENCE = {
+    ...JEU,
+    "users/uid-persf": {
+      email: "persf@example.com", firstName: "Pers.", lastName: "F", planningName: "Pers. F", serviceRoles: {}, annonces: [], notify: [], dansEquipes: ["louange"],
+    },
+    "users/uid-persf/absences/a1": { du: "2026-11-01", au: "2026-11-01", motif: "Voyage en famille" },
+  };
+
+  test("BO13 : l'absence en conflit, « Remplacer » vers la grille du planning, sans le motif", async ({ page }) => {
+    await ouvrir(page, ADMIN, AVEC_ABSENCE);
+    await expect(lignes(page)).toHaveCount(11);
+    const absence = ligne(page, "Pers. F est absent·e");
+    await expect(absence).toHaveAttribute("data-sorte", "absence");
+    await expect(absence).toContainText("Batterie, Culte Franco, dimanche 1er novembre");
+    await expect(page.getByTestId("groupe-plusTard").getByTestId("ligne-a-faire").filter({ hasText: "Pers. F" })).toHaveCount(1);
+    const bouton = page.getByRole("link", { name: "Remplacer : Pers. F est absent·e, Batterie, Culte Franco, dimanche 1er novembre" });
+    await expect(bouton).toHaveAttribute("href", /\/back-office\/planning\/culte\/?$/);
+    await expect(page.getByText("Voyage en famille")).toHaveCount(0);
+    expect((await bouton.boundingBox())!.height).toBeGreaterThanOrEqual(40);
+  });
+
+  test("BO13 : les absences illisibles ne retirent pas les cases vides ; la liste se dit incomplète", async ({ page }) => {
+    await ouvrir(page, ADMIN, AVEC_ABSENCE);
+    await expect(lignes(page)).toHaveCount(11);
+    await page.route(/:runQuery$/, (route) =>
+      // Une coupure réseau (un refus 403 rend une liste vide, `listerToutesAbsences`).
+      route.request().postData()?.includes('"absences"') ? route.abort() : route.fallback());
+    await page.reload();
+    await expect(alerte(page)).toBeVisible();
+    await expect(ligne(page, "Culte Franco : Batterie")).toBeVisible();
+    await expect(page.getByTestId("ligne-a-faire").filter({ hasText: "Pers. F" })).toHaveCount(0);
+  });
+
+  test("BO13 : qui ne remplit aucun planning ne voit aucune absence", async ({ page }) => {
+    await ouvrir(page, ALICE, AVEC_ABSENCE);
+    await expect(lignes(page).first()).toBeVisible();
+    await expect(page.getByTestId("ligne-a-faire").filter({ hasText: "Pers. F" })).toHaveCount(0);
+  });
+
+  test("BO13 · 中文 : 已请假, 找人顶替", async ({ page }) => {
+    await page.addInitScript(() => { try { localStorage.setItem("i18nextLng", "zh-CN"); } catch {} });
+    await ouvrir(page, ADMIN, AVEC_ABSENCE);
+    const absence = ligne(page, "Pers. F 已请假");
+    await expect(absence).toContainText("11月1日主日");
+    await expect(absence.getByRole("link", { name: /^找人顶替：Pers\. F 已请假，/ })).toHaveAttribute("href", /\/back-office\/planning\/culte\/?$/);
+    await expect(page.getByText("Voyage en famille")).toHaveCount(0);
+  });
+
   for (const variante of ["clair", "sombre", "zh"] as const) {
     test(`captures d'À faire, ${variante} (à regarder)`, async ({ page }, info) => {
       if (variante === "sombre") await page.emulateMedia({ colorScheme: "dark" });
       if (variante === "zh") await page.addInitScript(() => { try { localStorage.setItem("i18nextLng", "zh-CN"); } catch {} });
-      await ouvrir(page, ADMIN);
-      await expect(lignes(page)).toHaveCount(10);
+      await ouvrir(page, ADMIN, AVEC_ABSENCE);
+      await expect(lignes(page)).toHaveCount(11);
       await page.screenshot({ path: `test-results/a-faire-captures/${info.project.name}-${variante}.png`, fullPage: true, animations: "disabled" });
     });
   }
+});
+
+// ─── BO16 (e, f) : finitions sans écran ──────────────────────────────────────
+
+test.describe("BO16 : traductions et code mort", () => {
+  const racine = path.resolve(__dirname, "..");
+  const json = (langue: string) => JSON.parse(readFileSync(path.join(racine, `src/locales/${langue}.json`), "utf8"));
+  const cle = (o: Record<string, unknown>, c: string) => c.split(".").reduce<unknown>((x, k) => (x as Record<string, unknown> | undefined)?.[k], o);
+
+  test("(e) 会议记录 partout, plus aucun 会议纪要", () => {
+    const zh = readFileSync(path.join(racine, "src/locales/zh-CN.json"), "utf8");
+    expect(zh).not.toContain("会议纪要");
+    expect(zh).toContain("之后阅读会议记录");
+  });
+
+  test("(f) le module des réglages du tableau de bord et les clés orphelines du lot sont retirés (fr et 中文)", () => {
+    expect(existsSync(path.join(racine, "src/lib/firebase/backOffice.ts"))).toBe(false);
+    // Gardés exprès : cinq specs les importent encore.
+    for (const f of ["disposition", "colonnes", "reglages"]) expect(existsSync(path.join(racine, `src/lib/tableauDeBord/${f}.ts`))).toBe(true);
+    for (const langue of ["fr", "zh-CN"]) {
+      const d = json(langue);
+      for (const c of ["backOffice.bonjour", "backOffice.parties.plannings", "backOffice.parties.sansCompte", "backOffice.parties.scene",
+        "calendrier.creer", "calendrier.filtreAria", "calendrier.widget", "moi.apercus.membre", "taches.aucuneTache", "taches.sousTitreBackOffice"]) {
+        expect(cle(d, c), `${langue} : ${c}`).toBeUndefined();
+      }
+      // Les voisines encore lues restent.
+      expect(cle(d, "backOffice.parties.reunions"), langue).toBeTruthy();
+    }
+  });
 });

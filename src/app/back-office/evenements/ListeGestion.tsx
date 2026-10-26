@@ -17,14 +17,12 @@ import { canEditEvenement, creatableEvenementPours, estDeLaReunion, estReunion, 
 import { EVENEMENTS_CHANGED, listEvenements } from "@/lib/firebase/evenements";
 import { baseBackOffice } from "@/lib/navigation";
 import { byDate, groupByMonth, isInfo, isPast } from "@/lib/evenements/agenda";
-import { estSurLaListe } from "@/lib/deuxVolets";
 import { todayIso } from "@/lib/scene/dimanches";
 import { useDeuxVolets } from "@/hooks/useDeuxVolets";
 import { ANNONCE_SECTIONS } from "@/types/annonce";
 import type { Evenement } from "@/types/evenement";
 import type { UserProfile } from "@/types/user";
 import { EvenementCard } from "@/app/evenements/EvenementCard";
-import { EvenementClient } from "@/app/evenements/[id]/EvenementClient";
 import { DeuxVolets } from "@/components/layout/DeuxVolets";
 import { cn } from "@/lib/utils";
 
@@ -76,42 +74,27 @@ function useGestion(reunions: boolean): Gestion {
   }, [evenements, reunions, user, profile, loading]);
 }
 
-/** La fiche ouverte d'office (R11) : le prochain évènement (une info faute d'évènement daté) ;
- *  pour les réunions, la prochaine, sinon la dernière tenue. */
-function premierDe({ aVenir, passes }: Gestion, reunions: boolean): Evenement | null {
-  if (reunions) return aVenir[0] ?? passes[0] ?? null;
-  return aVenir.find((e) => !isInfo(e)) ?? aVenir[0] ?? null;
-}
-
 /**
- * L'entrée Évènements ou Réunions sous son en-tête : en grand, la liste en carte à gauche et la fiche
- * à droite (celle de l'adresse, ou la prochaine) ; en un volet, la liste sous l'en-tête, puis la fiche
- * en page, qui pose alors son propre en-tête (« ‹ Évènements »).
+ * L'entrée Évènements ou Réunions sous son en-tête, pour une fiche, « nouveau » ou « modifier » : en grand,
+ * la liste en carte à gauche et la page à droite ; en un volet, la page seule, qui pose alors son propre
+ * en-tête (« ‹ Évènements »). BO16 (f) : les listes seules redirigent vers le Calendrier (BO-C) et ne
+ * passent plus par ici, d'où ni fiche ouverte d'office ni état vide à droite.
  */
 export function VoletsGestion({ reunions, enTete, children }: { reunions: boolean; enTete: React.ReactNode; children: React.ReactNode }) {
-  const { t } = useTranslation();
   const chemin = usePathname() ?? "";
   const deuxVolets = useDeuxVolets();
   const racine = reunions ? "/back-office/reunions" : "/back-office/evenements";
-  const surLaListe = estSurLaListe(chemin, racine);
   const gestion = useGestion(reunions);
-  const premier = premierDe(gestion, reunions);
   const segment = decodeURIComponent(chemin.replace(/\/+$/, "").split("/")[3] ?? "");
-  const idActif = surLaListe ? premier?.id : segment === "nouveau" || segment === "nouvelle" ? undefined : segment;
-  const vide = t(reunions ? "backOffice.aucuneReunion" : "backOffice.aucunEvenement");
+  const idActif = segment === "nouveau" || segment === "nouvelle" ? undefined : segment;
 
   return (
     <div className="pb-16">
-      {(deuxVolets || surLaListe) && enTete}
+      {deuxVolets && enTete}
       <DeuxVolets
         racine={racine}
         largeurListe={reunions ? 360 : 380}
         liste={<ListeGestion reunions={reunions} gestion={gestion} idActif={deuxVolets ? idActif : undefined} />}
-        premier={gestion.chargement ? null
-          // `key` : une autre fiche d'office (suppression, date changée) repart de zéro, sans
-          // garder l'ancienne à l'écran ni laisser sa lecture tardive l'écraser.
-          : premier ? <EvenementClient key={premier.id} espace="back-office" id={premier.id} />
-          : <p className="raised rounded-2xl px-5 py-4 text-sm text-muted-foreground">{vide}</p>}
       >
         {children}
       </DeuxVolets>

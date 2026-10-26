@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { expect, test, type Locator, type Page, type TestInfo } from "@playwright/test";
 import { presidentGroupe, remplit, signInAs, type FakeProfile } from "./helpers/fakeSession";
+import { margeAttendue, zoneDeContenu } from "./helpers/agencement";
 import { ADMIN_EMAILS, entreesBackOffice } from "../src/lib/access";
 import { joursDeLaGrille, libelleCourt } from "../src/lib/calendrier/grille";
 import {
@@ -1676,4 +1677,35 @@ test.describe("BO-C : « Scène des fêtes »", () => {
     // Le lien de l'app reste : la carte du jour (volet, feuille du jour) ou « Ouvrir » de la feuille de l'entrée.
     await expect(page.locator('a[href^="/evenements/scene/noel"]').first()).toBeVisible();
   });
+});
+
+// BO16 (a) (docs/spec-back-office-piste-a.md) : en 中文 à 1 440 px, la carte du volet du jour dépassait la marge
+// d'environ 20 px. Chacune de ses cartes reste dans la zone, marge comprise, en français et en 中文.
+test.describe("BO16 (a) : le volet du jour tient dans la marge", () => {
+  for (const langue of ["fr", "zh-CN"] as const) {
+    test(`${langue} : le volet du jour et ses cartes finissent avant la marge droite (ordinateur et tablette couchée)`, async ({ page }, info) => {
+      test.skip(!panneauADroite(info), "le volet du jour n'est à droite que sur ordinateur et tablette couchée");
+      if (langue === "zh-CN") await page.addInitScript(() => { try { localStorage.setItem("i18nextLng", "zh-CN"); } catch {} });
+      await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
+      await sheets(page);
+      await signInAs(page, P_ADMIN, DOCS, "/back-office/calendrier");
+      await expect(page.getByTestId("calendrier")).not.toHaveAttribute("aria-busy", "true");
+      await jour(page, "2026-10-11").click();
+      const panneau = page.getByRole("complementary").filter({ has: page.getByRole("link", { name: /Culte Franco/ }) });
+      await expect(panneau).toBeVisible();
+      const zone = await zoneDeContenu(page);
+      const bord = Math.min(zone.droite, zone.gauche + 1440) - (await margeAttendue(page));
+      // Le volet lui-même va jusqu'au bord (agencement v18, agencement-v18-calendrier) ; ses cartes, non.
+      const p = (await panneau.boundingBox())!;
+      expect(Math.abs(p.x + p.width - zone.droite), "le volet va jusqu'au bord").toBeLessThanOrEqual(1);
+      const cartes = await panneau.getByRole("link").all();
+      expect(cartes.length).toBeGreaterThan(0);
+      for (const el of cartes) {
+        const b = (await el.boundingBox())!;
+        expect(b.x + b.width, "la carte finit sur la marge droite").toBeLessThanOrEqual(bord + 1);
+      }
+      expect(await panneau.evaluate((p) => p.scrollWidth - p.clientWidth), "rien ne déborde du volet").toBeLessThanOrEqual(0);
+      await page.screenshot({ path: `test-results/bo16-volet-jour/${info.project.name}-${langue}.png`, animations: "disabled" });
+    });
+  }
 });

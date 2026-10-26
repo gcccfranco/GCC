@@ -115,7 +115,8 @@ test.describe("la page d'une équipe au Back-Office (BO7)", () => {
     await ouvrir(page, OTTO, "/back-office/equipes/da");
     await expect(page.getByRole("heading", { name: "DA", level: 1 })).toBeVisible();
     await expect(page.getByRole("link", { name: "Nouvelle tâche" })).toHaveAttribute("href", /\/back-office\/taches\/da\/nouvelle\/?$/);
-    await expect(page.getByRole("link", { name: "Nouvelle réunion" })).toHaveAttribute("href", /\/back-office\/reunions\/nouvelle\/?$/);
+    // BO16 (d) (docs/spec-back-office-piste-a.md) : le formulaire s'ouvre avec cette équipe choisie.
+    await expect(page.getByRole("link", { name: "Nouvelle réunion" })).toHaveAttribute("href", /\/back-office\/reunions\/nouvelle\/?\?equipe=da$/);
     await expect(section(page, "Réunions").getByRole("link", { name: /Point DA d'octobre/ })).toHaveAttribute("href", /\/back-office\/reunions\/prochaine\/?$/);
     await section(page, "Tâches").getByText("Affiche de Noël").click();
     await expect(page).toHaveURL(/\/back-office\/taches\/da\/affiche\/?$/);

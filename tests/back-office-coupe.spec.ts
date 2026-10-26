@@ -186,7 +186,9 @@ test.describe("back-office coupé : l'administration et Notifier restent où ils
     await expect(moi.getByRole("link", { name: "Admin" })).toBeVisible();
   });
 
-  for (const chemin of ["/back-office/planning", "/back-office/planning/culte", "/back-office/equipes", "/back-office/equipes/personnes", "/back-office/equipes/da", "/back-office/messages", "/back-office/messages/notifier"]) {
+  for (const chemin of ["/back-office/planning", "/back-office/planning/culte", "/back-office/equipes", "/back-office/equipes/personnes", "/back-office/equipes/da", "/back-office/messages", "/back-office/messages/notifier",
+    // BO16 (g) : les adresses ajoutées par la piste A (BO15, BO7) et l'ancienne page Plus (redirigée par BO-A).
+    "/back-office/equipes/personnes/sans-compte", "/back-office/planning/sans-compte", "/back-office/plus", "/equipes/louange"]) {
     test(`${chemin} répond 404`, async ({ page }) => {
       const reponse = await page.goto(chemin);
       expect(reponse?.status()).toBe(404);

@@ -2455,9 +2455,6 @@
       "organigramme": "Organigramme",
       "aucuneEquipe": "Tu n'es dans aucune équipe.",
       "illisible": "Lecture impossible pour l'instant. Réessaie plus tard.",
-      "membre": "Membre",
-      "membres_one": "{{count}} membre",
-      "membres_other": "{{count}} membres",
       "guideSous": "Tout le site, pas à pas",
       "avisSous": "Le questionnaire",
       "signalerSous": "Une erreur, un bug"
@@ -2493,7 +2490,6 @@
     "subtitle": "Tâches de l'équipe",
     "aucuneEquipe": "Tu ne fais partie d'aucune équipe : les tâches sont réservées aux membres des équipes.",
     "pasMembre": "Tu ne fais pas partie de cette équipe.",
-    "aucuneTache": "Pas encore de tâche pour tes équipes.",
     "rienAFaire": "Rien à faire pour l'instant.",
     "vide": "Aucune tâche pour l'instant. Ajoute la première avec « Nouvelle tâche ».",
     "nouvelle": "Nouvelle tâche",
@@ -2555,7 +2551,6 @@
     "pourEvenement": "pour {{titre}}",
     "detacherEvenement": "Détacher de l'évènement",
     "introuvable": "Cette tâche n'existe plus.",
-    "sousTitreBackOffice": "Les tâches de tes équipes : ce qui est en retard d'abord",
     "equipes": "Équipes",
     "terminees": "Terminées ({{count}})",
     "creer": "Créer la tâche",
@@ -3497,6 +3492,7 @@
       },
       "verbe": {
         "remplir": "Remplir",
+        "remplacer": "Remplacer",
         "fait": "Fait",
         "voirInscrits": "Voir les inscrits",
         "attribuer": "Attribuer",
@@ -3510,6 +3506,10 @@
         "semaine": "Dimanche {{date}}, à relancer : {{noms}}",
         "semaineSansReferent": "Dimanche {{date}}, aucun référent à relancer",
         "plusTard": "Jusqu'au {{date}}"
+      },
+      "absence": {
+        "titre": "{{nom}} est absent·e",
+        "contexte": "{{poste}}, {{planning}}, dimanche {{date}}"
       },
       "tache": {
         "aToi": "À toi",
@@ -3573,7 +3573,6 @@
     },
     "reserve": "Réservé aux responsables.",
     "seConnecter": "Se connecter",
-    "bonjour": "{{jour}} · bonjour {{prenom}}",
     "sousParties": "Sous-parties",
     "plannings": "Plannings",
     "planningReserve": "Page réservée aux responsables de ce planning.",
@@ -3584,11 +3583,8 @@
       "questionnaire": "Questionnaire",
       "organigramme": "Organigramme",
       "personnes": "Personnes",
-      "plannings": "Plannings",
-      "sansCompte": "Sans compte",
       "evenements": "Évènements",
-      "reunions": "Réunions",
-      "scene": "Scène"
+      "reunions": "Réunions"
     },
     "gerer": "Gérer dans le Back-Office",
     "tachesDesEquipes": "Les tâches des équipes",
@@ -3709,12 +3705,10 @@
       "mois": "Mois",
       "agenda": "Agenda"
     },
-    "creer": "Créer",
     "nouvelEvenement": "Nouvel évènement le {{date}}",
     "nouvelleTache": "Nouvelle tâche pour le {{date}}",
     "tout": "Tout",
     "sourcesFeuille": "Sources",
-    "filtreAria": "Entrées affichées",
     "ouvrir": "Ouvrir",
     "agendaVide": "Rien de prévu jusqu'à fin {{mois}}.",
     "afficherMois": "Afficher {{mois}}",
@@ -3752,13 +3746,6 @@
       "taches": "Tâches",
       "petitDej": "Petit déj",
       "setlists": "Setlists"
-    },
-    "widget": {
-      "prochainsJours": "Prochains jours",
-      "cetteSemaine": "Cette semaine",
-      "rienS": "Rien dans les quatorze prochains jours.",
-      "rienM": "Rien d'autre cette semaine.",
-      "sheetInjoignable": "Sheet des évènements injoignable : ses évènements n'y sont pas."
     }
   },
   "acces": {

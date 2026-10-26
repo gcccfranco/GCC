@@ -6,6 +6,7 @@ import { estReunion } from "@/lib/access";
 import { isExpired, isInfo, isPast } from "@/lib/evenements/agenda";
 import { baseBackOffice, ficheEvenement } from "@/lib/navigation";
 import { addDays, type Ligne } from "@/lib/taches/echeances";
+import type { Absence } from "@/types/absence";
 import type { Evenement } from "@/types/evenement";
 import type { Creneau } from "@/types/programme";
 import {
@@ -15,8 +16,8 @@ import {
 } from "./donnees";
 
 export type GroupeAFaire = "enRetard" | "semaine" | "plusTard" | "aLire";
-export type SorteAFaire = "cases" | "tache" | "inscriptions" | "scene" | "compteRendu" | "messages" | "comptes";
-export type VerbeAFaire = "remplir" | "fait" | "voirInscrits" | "attribuer" | "compteRendu" | "lire" | "relier";
+export type SorteAFaire = "cases" | "absence" | "tache" | "inscriptions" | "scene" | "compteRendu" | "messages" | "comptes";
+export type VerbeAFaire = "remplir" | "remplacer" | "fait" | "voirInscrits" | "attribuer" | "compteRendu" | "lire" | "relier";
 export type Filtre = "tout" | "mesEquipes";
 
 /** Une ligne : des données (le texte se compose à l'affichage), les champs sont ceux utiles à sa `sorte`. */
@@ -30,10 +31,12 @@ export type LigneAFaire = {
   /** Les équipes concernées (pour le filtre « Mes équipes »). */
   equipes: string[];
   aMoi: boolean;
-  /** Cases : le planning (clé), ses colonnes vides (`n` = nombre de dimanches, cases « plus tard »), les prénoms à relancer. */
+  /** Cases : le planning (clé), ses colonnes vides (`n` = nombre de dimanches, cases « plus tard »), les prénoms à relancer.
+   *  Absence : le planning, le poste (une colonne) et `nom`, la personne absente (jamais le motif). */
   planning?: string;
   colonnes?: { cle: string; i18n: string; n?: number }[];
   relancer?: string[];
+  nom?: string;
   /** Tâche, évènement ou réunion. */
   titre?: string;
   /** Tâche : son équipe. */
@@ -50,8 +53,11 @@ export type ResultatAFaire = { groupes: { id: GroupeAFaire; lignes: LigneAFaire[
 
 /** Ce qui a été lu ; une source absente = non permise ou en échec. */
 export type SourcesAFaire = {
-  /** Plannings qu'on remplit : leurs lignes (clé → lignes), leurs clés, les profils (qui relancer). */
-  planning?: { rows: Record<string, string[][]>; plannings: string[]; profils: (ProfilReferent & { planningName: string })[] };
+  /** Plannings qu'on remplit : leurs lignes (clé → lignes), leurs clés, les profils (qui relancer), les absences de tous
+   *  (BO13 ; vide si on n'a pas le droit de les voir). */
+  planning?: {
+    rows: Record<string, string[][]>; plannings: string[]; profils: (ProfilReferent & { planningName: string })[]; absences?: Absence[];
+  };
   taches?: Ligne[];
   evenements?: Evenement[];
   /** Créneaux de scène des éditions affichées. */
@@ -98,10 +104,10 @@ export function aFaire({ sources, today, nowIso, uid, mesEquipes }: EntreesAFair
 
   // Cases vides des plannings qu'on remplit.
   if (sources.planning) {
-    const { rows, plannings, profils } = sources.planning;
+    const { rows, plannings, profils, absences } = sources.planning;
     const dimanche = prochainDimanche(nowIso);
     const suivants = prochainsDimanches(addDays(dimanche, 7), HORIZON_PLUS_TARD);
-    const p = planningsDuTableau(rows, plannings, dimanche, suivants, profils, []);
+    const p = planningsDuTableau(rows, plannings, dimanche, suivants, profils, absences ?? []);
     for (const planning of distincts(p.vides.map((v) => v.planning))) {
       const vides = p.vides.filter((v) => v.planning === planning);
       g.semaine.push({
@@ -109,6 +115,16 @@ export function aFaire({ sources, today, nowIso, uid, mesEquipes }: EntreesAFair
         equipes: distincts(vides.flatMap((v) => equipeDeLaColonne(planning, v.colonne.cle)?.equipe ?? [])), aMoi: false,
         planning, colonnes: vides.map((v) => v.colonne), nombre: vides.length,
         relancer: distincts(vides.flatMap((v) => v.relancer?.prenom ?? [])),
+      });
+    }
+    // BO13 : une personne planifiée qui s'est déclarée absente, une ligne par absence (cinq dimanches).
+    for (const c of p.conflits) {
+      const equipe = equipeDeLaColonne(c.planning, c.colonne.cle)?.equipe;
+      g[c.date <= semaineFin ? "semaine" : "plusTard"].push({
+        id: `absence:${c.planning}:${c.date}:${c.colonne.cle}:${c.nom}`, sorte: "absence", verbe: "remplacer",
+        href: `/back-office/planning/${c.planning}`, date: c.date,
+        equipes: equipe ? [equipe] : [], aMoi: false,
+        planning: c.planning, colonnes: [c.colonne], nom: c.nom,
       });
     }
     for (const pp of p.plusTard.parPlanning) {
@@ -125,7 +141,9 @@ export function aFaire({ sources, today, nowIso, uid, mesEquipes }: EntreesAFair
   if (sources.taches) {
     for (const l of tachesDuTableau(sources.taches, uid, today, Number.MAX_SAFE_INTEGER).lignes) {
       g[l.date < today ? "enRetard" : "semaine"].push({
-        id: `tache:${l.tache.equipe}:${l.tache.id}:${l.date}`, sorte: "tache", verbe: "fait", href: `/back-office/equipes/${l.tache.equipe}`,
+        // BO16 (c) : « Fait » mène à la tâche, et à celle de ses fois s'il s'agit d'une tâche répétée (comme `adresseDeLaLigne`).
+        id: `tache:${l.tache.equipe}:${l.tache.id}:${l.date}`, sorte: "tache", verbe: "fait",
+        href: `/back-office/taches/${l.tache.equipe}/${l.tache.id}${l.tache.repetition ? `?date=${l.date}` : ""}`,
         date: l.date, equipes: [l.tache.equipe], aMoi: l.aMoi, titre: l.tache.titre, equipe: l.tache.equipe,
       });
     }

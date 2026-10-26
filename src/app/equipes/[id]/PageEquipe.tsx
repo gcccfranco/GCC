@@ -236,7 +236,7 @@ function SectionReunions({ id, backOffice }: { id: string; backOffice: boolean }
 
   return (
     <section aria-labelledby="equipe-reunions">
-      <TitreSection id="equipe-reunions" titre={t("equipes.page.reunions")} action={peutCreer && <BoutonSection href="/back-office/reunions/nouvelle" label={t("backOffice.nouvelleReunion")} />} />
+      <TitreSection id="equipe-reunions" titre={t("equipes.page.reunions")} action={peutCreer && <BoutonSection href={`/back-office/reunions/nouvelle?equipe=${encodeURIComponent(id)}`} label={t("backOffice.nouvelleReunion")} />} />
       <div className={cn(CARTE, "space-y-3")}>
         {reunions === null && <p className="py-1 text-sm text-muted-foreground">{t("common.loading")}</p>}
         {reunions !== null && reunions.length === 0 && <p className="py-1 text-sm text-muted-foreground">{t("equipes.page.aucuneReunion")}</p>}

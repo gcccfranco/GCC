@@ -2422,8 +2422,6 @@
       "organigramme": "组织架构",
       "aucuneEquipe": "你还不在任何团队中。",
       "illisible": "暂时无法读取，请稍后再试。",
-      "membre": "成员",
-      "membres_other": "{{count}} 名成员",
       "guideSous": "一步步了解整个网站",
       "avisSous": "问卷",
       "signalerSous": "错误或故障"
@@ -2459,7 +2457,6 @@
     "subtitle": "团队任务",
     "aucuneEquipe": "你不属于任何团队：任务只对团队成员开放。",
     "pasMembre": "你不属于这个团队。",
-    "aucuneTache": "你的团队暂时还没有任务。",
     "rienAFaire": "目前没有要做的事。",
     "vide": "还没有任务。点击「新任务」添加第一个。",
     "nouvelle": "新任务",
@@ -2521,7 +2518,6 @@
     "pourEvenement": "用于 {{titre}}",
     "detacherEvenement": "取消关联活动",
     "introuvable": "该任务已不存在。",
-    "sousTitreBackOffice": "你所在团队的任务：逾期的排在前面",
     "equipes": "团队",
     "terminees": "已完成（{{count}}）",
     "creer": "创建任务",
@@ -2626,7 +2622,7 @@
         "titres": "你的团队：{{equipes}}",
         "peut": {
           "1": "查看团队的<b>任务</b>，勾选你负责的任务。",
-          "2": "为下次会议添加<b>议题</b>，之后阅读会议纪要。",
+          "2": "为下次会议添加<b>议题</b>，之后阅读会议记录。",
           "3": "在<b>组织架构</b>中查看谁负责什么。"
         },
         "role": "创建任务和会议：由{{equipe}}的负责人负责。"
@@ -2635,7 +2631,7 @@
         "titre": "你带领{{equipe}}",
         "peut": {
           "1": "创建团队<b>任务</b>，分配给成员并勾选完成。",
-          "2": "组织<b>会议</b>：议题顺序、会议纪要。",
+          "2": "组织<b>会议</b>：议题顺序、会议记录。",
           "3": "为团队创建<b>活动</b>，可报名。"
         },
         "role": "调整团队成员：由管理员在组织架构中负责。"
@@ -3453,6 +3449,7 @@
       },
       "verbe": {
         "remplir": "填写",
+        "remplacer": "找人顶替",
         "fait": "完成",
         "voirInscrits": "查看报名",
         "attribuer": "安排",
@@ -3466,6 +3463,10 @@
         "semaine": "{{date}}主日，需联系：{{noms}}",
         "semaineSansReferent": "{{date}}主日，没有可联系的负责人",
         "plusTard": "截至{{date}}"
+      },
+      "absence": {
+        "titre": "{{nom}} 已请假",
+        "contexte": "{{poste}}，{{planning}}，{{date}}主日"
       },
       "tache": {
         "aToi": "交给你",
@@ -3529,7 +3530,6 @@
     },
     "reserve": "仅限负责人。",
     "seConnecter": "登录",
-    "bonjour": "{{jour}} · {{prenom}}，你好",
     "sousParties": "子栏目",
     "plannings": "排班表",
     "planningReserve": "仅限该排班表的负责人。",
@@ -3540,11 +3540,8 @@
       "questionnaire": "问卷",
       "organigramme": "组织架构",
       "personnes": "成员",
-      "plannings": "排班表",
-      "sansCompte": "无账号",
       "evenements": "活动",
-      "reunions": "会议",
-      "scene": "舞台"
+      "reunions": "会议"
     },
     "gerer": "在后台管理",
     "tachesDesEquipes": "各团队的任务",
@@ -3663,12 +3660,10 @@
       "mois": "月",
       "agenda": "日程"
     },
-    "creer": "新建",
     "nouvelEvenement": "新建{{date}}的活动",
     "nouvelleTache": "新建{{date}}截止的任务",
     "tout": "全部",
     "sourcesFeuille": "来源",
-    "filtreAria": "显示的条目",
     "ouvrir": "打开",
     "agendaVide": "到{{mois}}底都没有安排。",
     "afficherMois": "显示{{mois}}",
@@ -3706,13 +3701,6 @@
       "taches": "任务",
       "petitDej": "早餐",
       "setlists": "歌单"
-    },
-    "widget": {
-      "prochainsJours": "近几天",
-      "cetteSemaine": "本周",
-      "rienS": "未来十四天没有安排。",
-      "rienM": "本周没有其他安排。",
-      "sheetInjoignable": "无法读取活动表格（Sheet），其中的活动暂不显示。"
     }
   },
   "acces": {

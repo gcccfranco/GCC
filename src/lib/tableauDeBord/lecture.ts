@@ -3,7 +3,8 @@
 // Lectures des widgets du tableau de bord (lot U6, B4) : chaque widget lit ce qu'il montre,
 // à son montage, puis passe le résultat aux règles pures de `./donnees`.
 import { useEffect, useState } from "react";
-import { equipesDe, isAdminUser, widgetsPermis } from "@/lib/access";
+import { canVoirAbsencesDeTous, equipesDe, isAdminUser, widgetsPermis } from "@/lib/access";
+import { listerToutesAbsences } from "@/lib/firebase/absences";
 import { compterEnAttente } from "@/lib/firebase/reports";
 import { listCreneaux, listProgrammes } from "@/lib/firebase/programmes";
 import { listTaches } from "@/lib/firebase/taches";
@@ -105,9 +106,14 @@ async function lireSansGarde(user: { uid: string; email?: string | null }, profi
   if (permis.includes("planning")) {
     const plannings = planningsCasesVides({}, user, profile);
     if (plannings.length > 0) {
+      // BO13 : les absences comme l'ancien widget Plannings, seulement pour qui peut voir celles de tous.
+      const voitLesAbsences = canVoirAbsencesDeTous(user, profile);
       taches.push(async () => {
-        const [rows, profils] = await Promise.all([lireGrilles(plannings), lireProfils()]);
-        return { planning: { rows, plannings, profils } };
+        // Les absences en échec ne retiennent pas les cases vides : la liste se dit seulement incomplète.
+        const [rows, profils, absences] = await Promise.all([
+          lireGrilles(plannings), lireProfils(), voitLesAbsences ? listerToutesAbsences().catch(() => null) : [],
+        ]);
+        return absences ? { planning: { rows, plannings, profils, absences } } : { planning: { rows, plannings, profils }, __echec: true };
       });
     }
   }

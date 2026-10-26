@@ -36,6 +36,8 @@ export type TexteLigne = {
   contexte: string;
   retard?: string;
   verbe: string;
+  /** Ce que le bouton nomme après le verbe, si le titre seul ne distingue pas la ligne (par défaut : le titre). */
+  objet?: string;
 };
 
 export function texteLigne(l: LigneAFaire, t: TFunction, lang: string, today: string): TexteLigne {
@@ -51,6 +53,14 @@ export function texteLigne(l: LigneAFaire, t: TFunction, lang: string, today: st
         : l.relancer.length > 0 ? t(`${p}cases.semaine`, { date: d, noms: l.relancer.join(", ") })
         : t(`${p}cases.semaineSansReferent`, { date: d });
       return { titre, contexte, verbe };
+    }
+    case "absence": {
+      // BO13 : jamais le motif, seulement qui, à quel poste, où et quand.
+      const titre = t(`${p}absence.titre`, { nom: l.nom });
+      const contexte = t(`${p}absence.contexte`, {
+        poste: t(l.colonnes?.[0]?.i18n ?? ""), planning: nomPlanning(l.planning ?? "", t, lang), date: jourLong(l.date ?? "", lang),
+      });
+      return { titre, contexte, verbe, objet: `${titre}${lang === "zh-CN" ? "，" : ", "}${contexte}` };
     }
     case "tache": {
       const qui = l.aMoi ? t(`${p}tache.aToi`) : t(cleNomEquipe(l.equipe ?? "", true));

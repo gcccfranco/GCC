@@ -249,6 +249,25 @@ test.describe("écrans : Louange, public élargi (décision 5)", () => {
   });
 });
 
+// BO16 (d) (docs/spec-back-office-piste-a.md) : « Nouvelle réunion » depuis la page d'une équipe choisit cette équipe.
+test.describe("écrans : « Nouvelle réunion » depuis la page d'une équipe (BO16 d)", () => {
+  test("depuis TEAM DA, le formulaire s'ouvre avec le public « equipe:da » ; sans équipe dans l'adresse, rien n'est imposé", async ({ page }) => {
+    await ouvrir(page, ADMIN, "/back-office/equipes/da");
+    const lien = page.getByRole("link", { name: "Nouvelle réunion" }).first();
+    await expect(lien).toHaveAttribute("href", /^\/back-office\/reunions\/nouvelle\/?\?equipe=da$/);
+    await lien.click();
+    await page.waitForURL(/\/back-office\/reunions\/nouvelle\/?\?equipe=da$/);
+    await expect(page.getByLabel("Public")).toHaveValue("equipe:da");
+    await page.goto("/back-office/reunions/nouvelle");
+    await expect(page.getByLabel("Public")).not.toHaveValue("equipe:da");
+  });
+
+  test("une équipe où l'on ne peut pas créer n'est pas imposée : la référente de Louange garde Louange", async ({ page }) => {
+    await ouvrir(page, INES, "/back-office/reunions/nouvelle?equipe=da");
+    await expect(page.getByLabel("Public")).toHaveValue("equipe:louange");
+  });
+});
+
 test.describe("écrans : un simple membre ne crée pas (décision 3)", () => {
   test("Hugo L. (TEAM DA) voit la réunion de son équipe sur la page de l'équipe, sans « Nouvelle réunion » (BO4, BO7)", async ({ page }) => {
     await ouvrir(page, HUGO, "/equipes/da");

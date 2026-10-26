@@ -4,19 +4,19 @@
 // au verbe précis qui mène à l'endroit exact.
 import Link from "next/link";
 import { useTranslation } from "react-i18next";
-import { CalendarDays, ChevronRight, Drama, FileText, ListChecks, MessageSquare, Ticket, UserPlus, type LucideIcon } from "lucide-react";
+import { CalendarDays, ChevronRight, Drama, FileText, ListChecks, MessageSquare, Ticket, UserPlus, UserX, type LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { LigneAFaire, SorteAFaire } from "@/lib/tableauDeBord/aFaire";
 import { texteLigne } from "./texte";
 
 const ICONES: Record<SorteAFaire, LucideIcon> = {
-  cases: CalendarDays, tache: ListChecks, inscriptions: Ticket, scene: Drama, compteRendu: FileText, messages: MessageSquare, comptes: UserPlus,
+  cases: CalendarDays, absence: UserX, tache: ListChecks, inscriptions: Ticket, scene: Drama, compteRendu: FileText, messages: MessageSquare, comptes: UserPlus,
 };
 
 export function RangeeAFaire({ ligne, today }: { ligne: LigneAFaire; today: string }) {
   const { t, i18n } = useTranslation();
   const Icone = ICONES[ligne.sorte];
-  const { titre, contexte, retard, verbe } = texteLigne(ligne, t, i18n.language, today);
+  const { titre, contexte, retard, verbe, objet } = texteLigne(ligne, t, i18n.language, today);
   const enRetard = ligne.sorte === "tache" && (ligne.date ?? today) < today;
   return (
     <li
@@ -34,8 +34,12 @@ export function RangeeAFaire({ ligne, today }: { ligne: LigneAFaire; today: stri
           {retard && <span className={enRetard ? "font-semibold text-red-700 dark:text-red-400" : undefined}>{retard}</span>}
         </span>
       </span>
-      <Button asChild variant="outline" className="h-10 shrink-0 gap-0.5 whitespace-nowrap pl-3 pr-2 text-sm sm:pl-4 sm:pr-3">
-        <Link href={ligne.href} aria-label={t("backOffice.aFaire.verbeAria", { verbe, titre })}>
+      {/* BO16 (b) : au téléphone, un verbe long passe sur deux lignes, et le titre garde sa place (deux lignes). */}
+      <Button
+        asChild variant="outline"
+        className="h-auto min-h-10 max-w-[8.5rem] shrink-0 gap-0.5 whitespace-normal py-1.5 pl-3 pr-2 text-left text-sm leading-tight sm:h-10 sm:max-w-none sm:whitespace-nowrap sm:pl-4 sm:pr-3"
+      >
+        <Link href={ligne.href} aria-label={t("backOffice.aFaire.verbeAria", { verbe, titre: objet ?? titre })}>
           <span>{verbe}</span>
           <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
         </Link>
