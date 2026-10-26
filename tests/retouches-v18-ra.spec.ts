@@ -336,9 +336,10 @@ const PAGES_R3 = [
   { nom: "Mes services", adresse: "/mes-services" },
   { nom: "Tâches", adresse: "/taches" },
   // Retiré (piste A, BO-D) : « Back-Office › Tâches » n'a plus deux volets, la liste est la section « Tâches » de la page de l'équipe.
-  { nom: "Réunions", adresse: "/back-office/reunions" },
+  // BO8 : les adresses de liste mènent au Calendrier ; la liste-carte des deux volets (À venir · Passées) est celle d'une fiche.
+  { nom: "Réunions", adresse: "/back-office/reunions/r0" },
   { nom: "Évènements", adresse: "/evenements" },
-  { nom: "Back-Office › Évènements", adresse: "/back-office/evenements" },
+  { nom: "Back-Office › Évènements", adresse: "/back-office/evenements/e0" },
   { nom: "Personnes", adresse: "/back-office/equipes/personnes" },
   { nom: "Réception", adresse: "/back-office/messages" },
   { nom: "Harmonie", adresse: "/harmonie" },

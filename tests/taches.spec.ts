@@ -381,16 +381,17 @@ const REUNION = {
 // Retouches v18, lot G : une réunion n'est plus dans Évènements de l'App, mais au Back-Office › Réunions
 // (d'où l'échec relevé le 08/10/2026 sur ce test, qui la cherchait dans /evenements) ; lot 1 du chantier
 // « équipes et groupes » (EQ-B) : la réunion d'équipe devient celle de TEAM DA.
-test("calendrier : la réunion de TEAM DA se voit de TEAM DA (Back-Office › Réunions), pas de TEAM MÉDIAS", async ({ page }) => {
+// Piste A (BO7) : les réunions d'une équipe sont dans sa page, `/back-office/equipes/<id>` (section « Réunions »).
+test("calendrier : la réunion de TEAM DA se voit de TEAM DA (page de l'équipe, section Réunions), pas de TEAM MÉDIAS", async ({ page }) => {
   await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
-  await signInAs(page, MEMBRE_DA, { "evenements/reunion": { ...REUNION, type: "eglise" } }, "/back-office/reunions");
-  await expect(page.getByRole("link", { name: /Réunion DA/ }).first()).toBeVisible();
+  await signInAs(page, MEMBRE_DA, { "evenements/reunion": { ...REUNION, type: "eglise" } }, "/back-office/equipes/da");
+  await expect(page.getByRole("region", { name: "Réunions" }).getByRole("link", { name: /Réunion DA/ }).first()).toBeVisible();
 });
 
 test("calendrier : un membre d'une autre équipe ne voit pas la réunion", async ({ page }) => {
   await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
-  await signInAs(page, MEMBRE_MEDIA, { "evenements/reunion": { ...REUNION, type: "eglise" } }, "/back-office/reunions");
-  await expect(page.getByRole("heading", { level: 1, name: "Réunions" })).toBeVisible();
+  await signInAs(page, MEMBRE_MEDIA, { "evenements/reunion": { ...REUNION, type: "eglise" } }, "/back-office/equipes/medias");
+  await expect(page.getByRole("heading", { level: 2, name: "Réunions" })).toBeVisible();
   await expect(page.getByText("Aucune réunion").first()).toBeVisible();
   await expect(page.getByRole("link", { name: /Réunion DA/ })).toHaveCount(0);
 });

@@ -152,12 +152,13 @@ test("Personnes : qui tient l'organigramme sans être admin n'a pas Personnes, d
 
 // Depuis EQ-B, un simple membre d'équipe n'a que Tâches et Réunions (EQ17) : sans la case, ACCUEIL J1
 // n'atteint même plus Évènements ; seul le référent (responsable) a l'entrée à vérifier ici.
-test("sans la case, un membre de TEAM ACCUEIL J1 n'a pas Évènements : ses adresses le ramènent à Tâches (EQ17)", async ({ page }) => {
+// Piste A (BO4) : un simple membre n'a plus de Back-Office du tout ; ses adresses lui répondent « Réservé aux responsables ».
+test("sans la case, un membre de TEAM ACCUEIL J1 n'a pas Évènements : ses adresses lui répondent « réservé » (EQ17, BO4)", async ({ page }) => {
   await ouvrir(page, NINA, "/moi", { "evenements/foot": FOOT });
   await page.goto("/back-office/evenements/scene/noel");
-  await page.waitForURL(/\/back-office\/taches(\/[\w-]+)?\/?$/);
+  await expect(page.getByText("Réservé aux responsables.")).toBeVisible();
   await page.goto("/back-office/evenements/foot");
-  await page.waitForURL(/\/back-office\/taches(\/[\w-]+)?\/?$/);
+  await expect(page.getByText("Réservé aux responsables.")).toBeVisible();
   await expect(page.getByRole("link", { name: "Modifier" })).toHaveCount(0);
 });
 
@@ -181,7 +182,8 @@ for (const [qui, profil] of [["un référent de TEAM ÉVÉNEMENTIEL", HUGO]] as 
 for (const [qui, profil] of [["le même référent, aussi référent EDD", HUGO_ORGA], ["un membre d'Orga sans autre équipe", IRIS_ORGA]] as const) {
   test(`avec la Coordination (organigramme), ${qui} a Pâques et Noël, « Toute l'église » et « Modifier »`, async ({ page }) => {
     await ouvrir(page, profil, "/back-office/evenements/scene/noel", { "evenements/foot": FOOT });
-    await expect(ongletsRail(page).getByRole("link")).toHaveText(["Évènements", "Pâques", "Noël"]);
+    // Piste A (BO8) : la liste des évènements est dans le Calendrier ; la scène des fêtes garde Pâques · Noël.
+    await expect(ongletsRail(page).getByRole("link")).toHaveText(["Pâques", "Noël"]);
     await expect(page.getByText("Réservé à la coordination.")).toHaveCount(0);
 
     await page.goto("/back-office/evenements/nouveau");

@@ -1034,18 +1034,20 @@ const colonneFete = (page: Page) => page.getByRole("region", { name: "Cette fêt
 const ecrituresProgrammes = (db: { writes: { method: string; path: string; data: Record<string, unknown> }[] }) =>
   db.writes.filter((w) => w.path.startsWith("programmes"));
 
-test("P7 — coordination : rail « Évènements · Pâques · Noël » au Back-Office, sans « Scène » ni Réunions", async ({ page }) => {
+test("P7 — coordination : rail « Pâques · Noël » au Back-Office, sans « Scène » ni Réunions", async ({ page }) => {
   await ouvrirFete(page, `${BO}/paques`, {}, "2026-10-09", ALICE_EVT);
-  await expect(ongletsRail(page).getByRole("link")).toHaveText(["Évènements", "Pâques", "Noël"]);
+  // Piste A (BO8) : la liste des évènements est dans le Calendrier ; la scène des fêtes garde son rail Pâques · Noël.
+  await expect(ongletsRail(page).getByRole("link")).toHaveText(["Pâques", "Noël"]);
   await expect(ongletsRail(page).getByRole("link", { name: "Pâques" })).toHaveAttribute("aria-current", "page");
-  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Évènements");
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Scène des fêtes");
   await expect(page.getByRole("link", { name: /Nouvel évènement/ })).toHaveCount(0);
   await verifierAgencement(page);
 });
 
 test("P7 — un membre qui publie des annonces, hors coordination, n'a ni Pâques ni Noël au Back-Office", async ({ page }) => {
   await ouvrirFete(page, "/back-office/evenements", {}, "2026-10-09", MO_ANNONCES);
-  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Évènements");
+  // Piste A (BO8) : /back-office/evenements mène à l'Agenda du Calendrier.
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Calendrier");
   await expect(page.getByRole("link", { name: "Pâques", exact: true })).toHaveCount(0);
   await expect(page.getByRole("link", { name: "Noël", exact: true })).toHaveCount(0);
   await page.goto(`${BO}/noel`);
@@ -1255,7 +1257,8 @@ test("P7 — l'ordre de passage d'une fête sans document : ajouter un numéro c
 test("P7 — Back-Office en chinois : 复活节 et 圣诞节 dans le rail, « 启动预约 »", async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
   await ouvrirFete(page, `${BO}/paques`, {}, "2026-10-09", ALICE_EVT);
-  await expect(ongletsRail(page).getByRole("link")).toHaveText(["活动", "复活节", "圣诞节"]);
+  // Piste A (BO8) : plus d'onglet « 活动 », la liste des évènements est dans le Calendrier.
+  await expect(ongletsRail(page).getByRole("link")).toHaveText(["复活节", "圣诞节"]);
   await expect(page.getByRole("region", { name: "本次节日" }).getByRole("heading", { level: 2 })).toHaveText("复活节 2027");
   await expect(page.getByRole("button", { name: "启动预约", exact: true })).toBeVisible();
 });

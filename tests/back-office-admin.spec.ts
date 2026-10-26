@@ -197,11 +197,12 @@ test.describe("B2 : Planning (plannings, Sans compte)", () => {
     await ouvrir(page, ADMIN, "/back-office/planning");
     await expect(page).toHaveURL(/\/back-office\/planning\/culte\/?$/);
     await expect(page.getByRole("heading", { level: 1, name: "Planning" })).toBeVisible();
-    await expect(sousParties(page).getByRole("link")).toHaveText(["Plannings", "Sans compte"]);
+    // Piste A (BO7) : plus de sous-parties dans le Planning.
+    await expect(sousParties(page)).toHaveCount(0);
     await expect(plannings(page).getByRole("link")).toHaveText(["Culte Franco", "Prépa. Table", "Groupes", "EDD", "Campus", "Intergroupe", "Interfranco"]);
 
-    // Piste A (BO7) : « Sans compte » est la sous-page d'Équipes › Personnes.
-    await sousParties(page).getByRole("link", { name: "Sans compte" }).click();
+    // Piste A (BO7) : « Sans compte » est la sous-page d'Équipes › Personnes ; l'ancienne adresse y mène.
+    await page.goto("/back-office/planning/sans-compte");
     await expect(page).toHaveURL(/\/back-office\/equipes\/personnes\/sans-compte\/?$/);
     await expect(page.getByRole("heading", { level: 2, name: /^Noms du planning sans compte \(\d+\)$/ })).toBeVisible();
     await expect(page.getByRole("button", { name: /Importer|Reprendre les noms/ })).toHaveCount(0);

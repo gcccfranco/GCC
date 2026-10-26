@@ -1,6 +1,5 @@
-import { expect, test, type Page, type TestInfo } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 import { ADMIN_EMAIL, signInAs, type FakeProfile } from "./helpers/fakeSession";
-import { ongletsRail } from "./helpers/agencement";
 import {
   canCreateEvenement, creatableEvenementPours, droitsDesPages, entreesBackOffice, equipesDe, equipesDesTaches, equipesOuCreer, estDeLEquipe,
   estReferentDe, estResponsable, isCoordination, peutCocher, sousPartiesEvenements, widgetsPermis,
@@ -199,13 +198,7 @@ test.describe("pur : plus de public de pôle (EQ19, EQ21)", () => {
 
 // ─── Écrans ──────────────────────────────────────────────────────────────────
 
-const estOrdinateur = (info: TestInfo) => info.project.name.startsWith("ordinateur");
 const selecteur = (page: Page) => page.getByRole("group", { name: "Choisir l'espace" }).filter({ visible: true });
-/** Le menu du Back-Office : la barre latérale sur ordinateur ; la barre du bas ailleurs. */
-const menu = (page: Page, info: TestInfo) => estOrdinateur(info)
-  ? page.getByTestId("barre-laterale").getByRole("navigation", { name: "Navigation principale" })
-  : page.getByTestId("barre-du-bas");
-
 /** Capture à regarder à l'œil (PW_CAPTURES=<dossier>), une par appareil. */
 async function capture(page: Page, nom: string) {
   const dir = process.env.PW_CAPTURES;
@@ -219,39 +212,43 @@ async function ouvrir(page: Page, qui: FakeProfile, to: string, docs: Record<str
 }
 
 test.describe("écrans : le Back-Office d'un simple membre (EQ17)", () => {
-  test("Joël F. voit App · Back-Office ; le menu n'a que Tâches et Réunions", async ({ page }, info) => {
+  // Piste A (BO4) : un simple membre n'a plus de Back-Office ni d'interrupteur App · Back-Office ; ses
+  // équipes sont dans l'app (Moi › Mes équipes, `/equipes/<id>`), mêmes sections que le Back-Office
+  // (BO7) sans les actions de responsable.
+  test("Joël F. n'a ni interrupteur App · Back-Office ni entrée ; sa page d'équipe est dans l'app (BO4)", async ({ page }) => {
     await ouvrir(page, JOEL, "/songs");
     await page.getByRole("searchbox").waitFor();
-    await expect(selecteur(page).getByRole("link", { name: "Back-Office" })).toBeVisible();
-    await selecteur(page).getByRole("link", { name: "Back-Office" }).click();
-    // Pas de tableau de bord : sa première entrée, Tâches.
-    await page.waitForURL(/\/back-office\/taches(\/[\w-]+)?\/?$/);
-    await expect(page.getByRole("heading", { name: "Tableau de bord" })).toHaveCount(0);
-    await expect(menu(page, info).getByRole("link")).toHaveText(estOrdinateur(info) ? ["Tâches", "Réunions"] : ["Tâches", "Réunions", "Plus"]);
-    await page.goto("/back-office/reunions");
-    await expect(page.getByRole("heading", { level: 1, name: "Réunions" })).toBeVisible();
+    await expect(selecteur(page)).toHaveCount(0);
+    await page.goto("/back-office");
+    await expect(page.getByText("Réservé aux responsables.")).toBeVisible();
+    await page.goto("/equipes/medias");
+    await expect(page.getByRole("heading", { level: 1, name: "Médias" })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 2, name: "Tâches" })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 2, name: "Réunions" })).toBeVisible();
+    await expect(page.getByRole("link", { name: /Nouvelle tâche|Nouvelle réunion/ })).toHaveCount(0);
     await capture(page, "membre-reunions");
   });
 
-  test("/back-office, le calendrier et Évènements le ramènent à Tâches ; Réunions et Plus restent", async ({ page }) => {
-    await ouvrir(page, JOEL, "/back-office/reunions");
-    await expect(page.getByRole("heading", { level: 1, name: "Réunions" })).toBeVisible();
-    for (const ailleurs of ["/back-office", "/back-office/calendrier", "/back-office/evenements"]) {
+  test("/back-office, le calendrier et Évènements lui répondent « réservé » ; les adresses de son équipe le mènent à sa page dans l'app (BO4, BO7)", async ({ page }) => {
+    await ouvrir(page, JOEL, "/back-office/equipes/medias");
+    await page.waitForURL(/\/equipes\/medias\/?$/);
+    await expect(page).not.toHaveURL(/back-office/);
+    await page.goto("/back-office/taches/medias");
+    await page.waitForURL(/\/equipes\/medias\/?$/);
+    for (const ailleurs of ["/back-office", "/back-office/calendrier", "/back-office/evenements", "/back-office/plus"]) {
       await page.goto(ailleurs);
-      await page.waitForURL(/\/back-office\/taches(\/[\w-]+)?\/?$/);
+      await expect(page.getByText("Réservé aux responsables."), ailleurs).toBeVisible();
     }
-    await page.goto("/back-office/plus");
-    await expect(page).toHaveURL(/\/back-office\/plus\/?$/);
   });
 
-  test("un choriste sans équipe : le Back-Office s'ouvre, Tâches ne montre que Louange", async ({ page }, info) => {
+  test("un choriste sans équipe : pas de Back-Office, ses tâches sont sur la page de l'équipe Louange dans l'app (BO4)", async ({ page }) => {
     await ouvrir(page, MAELLE, "/back-office", {
       "equipes/louange/taches/t1": { equipe: "louange", titre: "Choisir les chants de Noël", responsableUid: null, responsableNom: "", echeance: "2026-10-15", repetition: null },
     });
-    await page.waitForURL(/\/back-office\/taches(\/[\w-]+)?\/?$/);
-    await expect(ongletsRail(page).getByRole("link")).toHaveText([/^Louange/]);
-    // « Tâches » peut porter sa pastille (le compte de ce qui est à faire).
-    await expect(menu(page, info).getByRole("link")).toHaveText(estOrdinateur(info) ? [/^Tâches/, "Réunions"] : [/^Tâches/, "Réunions", "Plus"]);
+    await expect(page.getByText("Réservé aux responsables.")).toBeVisible();
+    await page.goto("/equipes/louange");
+    await expect(page.getByRole("heading", { level: 1, name: "Louange" })).toBeVisible();
+    await expect(page.getByRole("region", { name: "Tâches" }).getByRole("button", { name: /Choisir les chants de Noël/ })).toBeVisible();
     await capture(page, "choriste-taches");
   });
 

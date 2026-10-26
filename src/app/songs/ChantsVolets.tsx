@@ -2,6 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import { useTranslation } from "react-i18next";
+import { BACK_OFFICE } from "@/lib/backOffice";
 import { EnTetePage } from "@/components/layout/EnTetePage";
 import { Halo } from "@/components/layout/Halo";
 import { BoutonStatistiques } from "@/components/songs/BoutonStatistiques";
@@ -42,7 +43,7 @@ export function ChantsVolets({ themes, nombre, children }: { themes: Theme[]; no
         <EnTetePage
           titre={t("common.header.songs")}
           sousTitre={t("songs.list.sousTitre", { count: nombre })}
-          outils={<span className="max-md:hidden"><BoutonStatistiques /></span>}
+          outils={BACK_OFFICE ? <span className="max-md:hidden"><BoutonStatistiques /></span> : undefined}
           action={<SongProposalDrawer enTete />}
         />
       </div>

@@ -48,19 +48,19 @@ test.describe("BO Planning, piste A", () => {
   test("l'agencement commun ; le titre « Planning », le planning et ses cases vides en sous-titre, « Exporter » dans l'en-tête", async ({ page }) => {
     await ouvrir(page, ADMIN, "/back-office/planning/culte");
     await expect(page.locator('[data-grille="culte"]')).toBeVisible();
-    // La grille pleine zone ; les sous-parties, l'année et le trimestre en rail, les plannings en pilules.
-    await verifierAgencement(page, { premierBloc: barre(page), contenu: page.locator('[data-grille="culte"]'), onglets: { rail: 3, pilules: 1 } });
+    // La grille pleine zone ; l'année et le trimestre en rail (plus de rail de sous-parties, BO7), les plannings en pilules.
+    await verifierAgencement(page, { premierBloc: barre(page), contenu: page.locator('[data-grille="culte"]'), onglets: { rail: 2, pilules: 1 } });
     await expect(enTete(page).getByRole("heading", { level: 1 })).toHaveText("Planning");
     const sousTitre = enTete(page).locator("p").first();
     await expect(sousTitre).toContainText("Culte Franco");
     await expect(sousTitre).toContainText("Dimanche 10:30");
     await expect(sousTitre).toContainText(/\d+ cases? vides? ce trimestre/);
     await expect(enTete(page).getByRole("button", { name: /Exporter/ })).toBeVisible();
-    // Le rail des sous-parties (admins) dans l'en-tête.
-    await expect(enTete(page).locator('[data-onglets="rail"]').getByRole("link")).toHaveText(["Plannings", "Sans compte"]);
+    // Piste A (BO7) : « Sans compte » est passé dans Équipes › Personnes ; plus de rail de sous-parties dans l'en-tête.
+    await expect(enTete(page).locator('[data-onglets="rail"]')).toHaveCount(0);
   });
 
-  test("deux rangées de commandes : le rail, puis les plannings en pilules, la période et « Mes dates »", async ({ page }, info) => {
+  test("une rangée de commandes sous l'en-tête : les plannings en pilules, la période et « Mes dates »", async ({ page }, info) => {
     await ouvrir(page, ADMIN, "/back-office/planning/culte");
     const plannings = barre(page).getByRole("navigation", { name: "Plannings" });
     await expect(plannings).toHaveAttribute("data-onglets", "pilules");
@@ -77,10 +77,9 @@ test.describe("BO Planning, piste A", () => {
     await expect(page.locator('[data-grille="culte"]').getByRole("button", { name: /Exporter/ })).toHaveCount(0);
 
     if (estGrandEcran(info)) {
-      // Plannings et période sur la même rangée, sous le rail ; la grille juste dessous.
+      // Plannings et période sur la même rangée, sous le titre (BO7 : plus de rail de sous-parties) ; la grille juste dessous.
       expect(Math.abs((await milieuY(plannings)) - (await milieuY(periode)))).toBeLessThan(12);
-      const rail = enTete(page).locator('[data-onglets="rail"]');
-      expect(await milieuY(rail)).toBeLessThan(await milieuY(plannings));
+      expect(await milieuY(enTete(page).getByRole("heading", { level: 1 }))).toBeLessThan(await milieuY(plannings));
       const finBarre = (await barre(page).boundingBox())!;
       const grille = (await page.getByTestId("grille-defilement").boundingBox())!;
       expect(grille.y - (finBarre.y + finBarre.height), "rien entre la rangée et la grille").toBeLessThan(32);
@@ -103,21 +102,13 @@ test.describe("BO Planning, piste A", () => {
     expect(await page.getByTestId("halo").evaluate((el) => (el as HTMLElement).style.getPropertyValue("--halo"))).toBe(PLANNING_COLORS.culte);
   });
 
-  // BO-G, 16 : sur tablette, le rail Plannings | Sans compte a une cible de toucher de 44 px sans que le dessin change.
-  test("tablettes : le rail Plannings | Sans compte a une cible de 44 px", async ({ page }, info) => {
-    test.skip(!info.project.name.startsWith("tablette"), "la cible de 44 px est celle du doigt : tablettes (portrait et paysage)");
+  // BO-G, 16 devenu BO7 : « Sans compte » a quitté le Planning, le rail Plannings | Sans compte n'existe plus, sur aucun appareil.
+  test("plus de rail de sous-parties dans l'en-tête, même pour un admin (BO7)", async ({ page }) => {
     await ouvrir(page, ADMIN, "/back-office/planning/culte");
-    const rail = enTete(page).locator('[data-onglets="rail"]');
-    await expect(rail.getByRole("link")).toHaveText(["Plannings", "Sans compte"]);
-    for (const lien of await rail.getByRole("link").all()) {
-      const b = (await lien.boundingBox())!;
-      const nom = (await lien.textContent())?.trim();
-      expect(b.height, `« ${nom} » : le dessin ne change pas`).toBeLessThan(44);
-      for (const y of [b.y - (44 - b.height) / 2 + 1, b.y + b.height + (44 - b.height) / 2 - 1]) {
-        const touche = await page.evaluate(({ x, y }) => document.elementFromPoint(x, y)?.closest("a")?.textContent?.trim() ?? null, { x: b.x + b.width / 2, y });
-        expect(touche, `« ${nom} » : cible de 44 px (y = ${Math.round(y)})`).toBe(nom);
-      }
-    }
+    await expect(enTete(page).getByRole("heading", { level: 1 })).toHaveText("Planning");
+    await expect(enTete(page).locator('[data-onglets="rail"]')).toHaveCount(0);
+    await expect(page.getByRole("navigation", { name: "Sous-parties" })).toHaveCount(0);
+    await expect(page.getByRole("link", { name: "Sans compte", exact: true })).toHaveCount(0);
   });
 
   test("Sans compte : l'adresse redirige vers la sous-page Équipes › Personnes › Noms du planning sans compte, sans rangée de grille", async ({ page }) => {

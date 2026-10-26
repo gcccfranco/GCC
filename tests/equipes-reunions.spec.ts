@@ -166,13 +166,19 @@ async function ouvrir(page: Page, p: FakeProfile, vers: string, docs: Record<str
 }
 
 test.describe("écrans : Louange, public élargi (décision 5)", () => {
-  test("un choriste sans équipe trouve la réunion de Louange au Back-Office › Réunions et y propose un sujet", async ({ page }) => {
-    const db = await ouvrir(page, MAELLE, "/back-office/reunions");
-    await expect(page.getByRole("link", { name: /Réunion Louange/ }).first()).toBeVisible();
+  // Piste A (BO4, BO7) : un choriste n'a plus de Back-Office ; la réunion de Louange est dans la page de
+  // l'équipe, `/equipes/louange`, et sa fiche dans l'App (`/evenements/<id>`).
+  test("un choriste sans équipe trouve la réunion de Louange sur la page de l'équipe Louange et y propose un sujet", async ({ page }) => {
+    const db = await ouvrir(page, MAELLE, "/equipes/louange");
+    const reunions = page.getByRole("region", { name: "Réunions" });
+    await expect(reunions.getByRole("link", { name: /Réunion Louange/ }).first()).toBeVisible();
     await expect(page.getByRole("link", { name: /Réunion DA/ })).toHaveCount(0);
     await expect(page.getByRole("link", { name: /Nouvelle réunion/ })).toHaveCount(0);
-    await page.goto("/back-office/reunions/reunion-louange");
-    await expect(page.getByText("Réunion d'équipe · Louange", { exact: true })).toBeVisible();
+    await reunions.getByRole("link", { name: /Réunion Louange/ }).first().click();
+    await page.waitForURL(/\/evenements\/reunion-louange\/?$/);
+    // L'en-tête « Réunion d'équipe · Louange » est celui du Back-Office (vérifié en 中文 plus bas) : dans l'App, le titre et la pastille.
+    await expect(page.getByRole("heading", { level: 2, name: "Réunion Louange" })).toBeVisible();
+    await expect(page.locator("main").getByText("Louange", { exact: true }).first()).toBeVisible();
     await capture(page, "reunion-louange-choriste");
     await carteSujets(page).getByRole("textbox", { name: "Nouveau sujet" }).fill("Chants de Noël : la liste");
     await carteSujets(page).getByRole("button", { name: "Ajouter", exact: true }).click();
@@ -181,15 +187,20 @@ test.describe("écrans : Louange, public élargi (décision 5)", () => {
     expect(post.data).toMatchObject({ texte: "Chants de Noël : la liste", auteurUid: "u-maelle", auteurNom: "Maëlle T." });
   });
 
-  test("le choriste ne crée rien : « Nouvelle réunion » lui répond « réservée »", async ({ page }) => {
+  test("le choriste ne crée rien : « Nouvelle réunion » lui répond « réservé aux responsables » (BO4)", async ({ page }) => {
     await ouvrir(page, MAELLE, "/back-office/reunions/nouvelle");
-    await expect(page.getByText("Cette page est réservée à la coordination et aux responsables de section.")).toBeVisible();
+    await expect(page.getByText("Réservé aux responsables.")).toBeVisible();
     await expect(page.getByLabel("Nom de l'évènement")).toHaveCount(0);
   });
 
-  test("l'adresse de la réunion de Louange dans l'App mène le choriste au Back-Office (G2)", async ({ page }) => {
+  // G2 (une réunion s'ouvre dans le Back-Office pour qui l'a), inversé par la piste A (BO4) : qui n'a pas de
+  // Back-Office reste dans l'App, et l'adresse du Back-Office le ramène à la fiche de l'App.
+  test("l'adresse de la réunion de Louange : le choriste reste dans l'App, et l'adresse du Back-Office l'y ramène (G2, BO4)", async ({ page }) => {
     await ouvrir(page, MAELLE, "/evenements/reunion-louange");
-    await page.waitForURL(/\/back-office\/reunions\/reunion-louange\/?$/);
+    await expect(carteSujets(page)).toBeVisible();
+    await expect(page).toHaveURL(/\/evenements\/reunion-louange\/?$/);
+    await page.goto("/back-office/reunions/reunion-louange");
+    await page.waitForURL(/\/evenements\/reunion-louange\/?$/);
     await expect(carteSujets(page)).toBeVisible();
   });
 
@@ -218,9 +229,10 @@ test.describe("écrans : Louange, public élargi (décision 5)", () => {
     await expect(page.locator("main").getByText(/Pôle/)).toHaveCount(0);
   });
 
+  // Piste A (BO4) : l'en-tête de réunion d'équipe est celui du Back-Office, donc de la référente (un choriste lit la fiche dans l'App).
   test("en 中文 : « 团队会议 · 敬拜 » en tête de la réunion de Louange, 敬拜 en pastille", async ({ page }) => {
     await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
-    await ouvrir(page, MAELLE, "/back-office/reunions/reunion-louange", { "evenements/soiree-louange": SOIREE_LOUANGE });
+    await ouvrir(page, INES, "/back-office/reunions/reunion-louange", { "evenements/soiree-louange": SOIREE_LOUANGE });
     await expect(page.getByText("团队会议 · 敬拜", { exact: true })).toBeVisible();
     await capture(page, "reunion-louange-zh");
     await page.goto("/evenements");
@@ -238,18 +250,18 @@ test.describe("écrans : Louange, public élargi (décision 5)", () => {
 });
 
 test.describe("écrans : un simple membre ne crée pas (décision 3)", () => {
-  test("Hugo L. (TEAM DA) voit la réunion de son équipe, sans « Nouvelle réunion »", async ({ page }) => {
-    await ouvrir(page, HUGO, "/back-office/reunions");
+  test("Hugo L. (TEAM DA) voit la réunion de son équipe sur la page de l'équipe, sans « Nouvelle réunion » (BO4, BO7)", async ({ page }) => {
+    await ouvrir(page, HUGO, "/equipes/da");
     await expect(page.getByRole("link", { name: /Réunion DA/ }).first()).toBeVisible();
     await expect(page.getByRole("link", { name: /Réunion Louange/ })).toHaveCount(0);
     await expect(page.getByRole("link", { name: /Nouvelle réunion/ })).toHaveCount(0);
   });
 
-  test("Joël F. n'a ni « Nouvel évènement » ni l'entrée : « …/evenements/nouveau » le ramène à Tâches", async ({ page }) => {
+  test("Joël F. n'a ni « Nouvel évènement » ni l'entrée : « …/evenements/nouveau » lui répond « réservé » ; sa page d'équipe n'offre rien à créer (BO4)", async ({ page }) => {
     await ouvrir(page, JOEL, "/back-office/evenements/nouveau");
-    await page.waitForURL(/\/back-office\/taches(\/[\w-]+)?\/?$/);
-    await page.goto("/back-office/reunions");
-    await expect(page.getByRole("heading", { level: 1, name: "Réunions" })).toBeVisible();
+    await expect(page.getByText("Réservé aux responsables.")).toBeVisible();
+    await page.goto("/equipes/medias");
+    await expect(page.getByRole("heading", { level: 2, name: "Réunions" })).toBeVisible();
     await expect(page.getByRole("link", { name: /Nouvel évènement|Nouvelle réunion/ })).toHaveCount(0);
   });
 });
@@ -296,8 +308,9 @@ test.describe("écrans : réunions précédentes et reprise, au public migré", 
  *  tablette debout, la feuille du jour ; sur téléphone, la feuille du « + » (aujourd'hui, en Agenda). */
 async function creationsDuCalendrier(page: Page, info: TestInfo): Promise<{ lien: (nom: RegExp) => Locator }> {
   if (estTelephone(info)) {
-    await page.getByRole("button", { name: "Créer", exact: true }).click();
-    const feuille = page.getByRole("dialog", { name: "Créer" });
+    // BO8 : le rond « Créer » du téléphone s'appelle « Ajouter », sa feuille aussi.
+    await page.getByRole("button", { name: "Ajouter", exact: true }).click();
+    const feuille = page.getByRole("dialog", { name: "Ajouter" });
     return { lien: (nom) => feuille.getByRole("link", { name: nom }) };
   }
   await page.locator('[data-jour="2026-10-11"]').click();
@@ -310,11 +323,15 @@ async function creationsDuCalendrier(page: Page, info: TestInfo): Promise<{ lien
 }
 
 test.describe("écrans : une référente crée un évènement d'équipe (décision 43)", () => {
-  test("Léa M. : « Nouvel évènement » en tête de BO › Évènements ; le formulaire ne propose que TEAM MÉDIAS", async ({ page }) => {
-    const db = await ouvrir(page, LEA, "/back-office/evenements");
+  // BO8 : « Nouvel évènement » n'est plus en tête de BO › Évènements, mais dans « Ajouter › Évènement » du Calendrier.
+  test("Léa M. : « Ajouter › Évènement » en tête du Calendrier ; le formulaire ne propose que TEAM MÉDIAS", async ({ page }, info) => {
+    const db = await ouvrir(page, LEA, "/back-office/calendrier");
     await sansPush(page);
-    await page.getByRole("link", { name: "Nouvel évènement" }).click();
-    await page.waitForURL(/\/back-office\/evenements\/nouveau\/?$/);
+    await page.getByRole("button", { name: "Ajouter", exact: true }).click();
+    await (estTelephone(info)
+      ? page.getByRole("dialog", { name: "Ajouter" }).getByRole("link", { name: /^(Nouvel )?évènement/i })
+      : page.getByRole("menuitem", { name: /^Évènement/ })).click();
+    await page.waitForURL(/\/back-office\/evenements\/nouveau\/?(\?.*)?$/);
     await expect(page.getByLabel("Public").locator("option")).toHaveText(["TEAM MÉDIAS"]);
     await expect(page.getByRole("radiogroup", { name: "Inscriptions" })).toBeVisible();
     await capture(page, "nouvel-evenement-referente");
@@ -323,8 +340,9 @@ test.describe("écrans : une référente crée un évènement d'équipe (décisi
     await page.getByRole("button", { name: "Créer l'évènement" }).click();
     await page.waitForURL(/\/back-office\/evenements\/fake-\d+\/?$/);
     expect(creee(db).data).toMatchObject({ pour: "equipe:medias", reunion: false, organisateurUid: "u-lea" });
+    // BO8 : l'ancienne adresse mène à l'Agenda filtré sur les évènements, où le nouvel évènement s'ouvre.
     await page.goto("/back-office/evenements");
-    await expect(page.getByRole("link", { name: /Atelier photo/ }).first()).toBeVisible();
+    await expect(page.getByRole("button", { name: /Atelier photo/ }).first()).toBeVisible();
   });
 
   test("Léa M. : « Nouvel évènement » aussi au Calendrier (panneau du jour, « + » du téléphone)", async ({ page }, info) => {
