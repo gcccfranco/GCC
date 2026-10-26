@@ -732,6 +732,16 @@
    au lieu de glisser depuis le bas. `!important` : le glissé est posé par la feuille de style de
    vaul, et la règle générale du mouvement réduit ramène toute animation à 0,01 ms (ce sélecteur,
    plus précis, garde sa durée). */
+/* Liseré du métronome visuel (mode louange, L4) : se remplit en une pulsation (`--battement`).
+   Mouvement réduit : plus d'animation, la bande reste pleine, à opacité réduite. */
+@keyframes liseret-battement { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+.liseret-tempo-barre {
+  transform-origin: left;
+  animation: liseret-battement var(--battement, 1s) linear infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .liseret-tempo-barre { animation: none !important; transform: none; opacity: 0.35; }
+}
 @keyframes volet-fondu { from { opacity: 0; } }
 @keyframes volet-fondu-sortie { to { opacity: 0; } }
 @media (prefers-reduced-motion: reduce) {

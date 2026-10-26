@@ -48,6 +48,8 @@ export type SectionBlock = {
   songTitle: string;
   songKey: string;
   songSourceLabel?: string;
+  /** Tempo du `.cho` (♩), repris par la barre haute. */
+  tempo?: number;
   /** Occurrences de la structure jouée que ce bloc représente (une en ordre
    *  joué, toutes les reprises en sections uniques). */
   occurrenceUids?: string[];
@@ -378,6 +380,7 @@ export function buildPerformanceBlocks(
         keyChange,
         songTitle: ast.metadata.title,
         songKey: playedKey,
+        tempo: ast.metadata.tempo ?? undefined,
         occurrenceUids: uids,
       });
       if (transition) blocks.push({ kind: "transition-intra", uid: uid(), text: transition });

@@ -31,6 +31,8 @@ import { getPersonalKeys, setPersonalKey } from "@/lib/setlist/personalKeys";
 import type { PartitionLayout } from "@/lib/partitionLayoutPref";
 import { getPinyinPref, setPinyinPref } from "@/lib/pinyinPref";
 import { classerGeste, largeurZoneLaterale } from "@/lib/performance/gestes";
+import { LiseretTempo } from "@/components/performance/LiseretTempo";
+import { clampTempo, getMetronomePref, getTempoChant, setMetronomePref, setTempoChant, TEMPO_DEPART, TEMPO_MAX, TEMPO_MIN } from "@/lib/performance/tempo";
 import { getStyleLecturePref, setStyleLecturePref, type StyleLecture } from "@/lib/performance/lecturePref";
 import { getFontScalePref, setFontScalePref, MIN_FONT_SCALE, MAX_FONT_SCALE } from "@/lib/fontScalePref";
 import { useAuth } from "@/lib/firebase/auth";
@@ -441,6 +443,11 @@ export function PerformanceMode({
   // Style de lecture (docs/spec-mode-louange-forscore.md, L0) : réglage de repli, sans effet pour l'instant.
   const [styleLecture, setStyleLectureState] = useState<StyleLecture>(() => getStyleLecturePref());
   const setStyleLecture = (v: StyleLecture) => { setStyleLectureState(v); setStyleLecturePref(v); };
+  // Métronome visuel (L4) : réglage par appareil, inactif par défaut ; tempo réglé par chant
+  // relu du stockage à chaque rendu (`tempoTick` relance le rendu après une écriture).
+  const [metronome, setMetronomeState] = useState(() => getMetronomePref());
+  const setMetronome = (v: boolean) => { setMetronomeState(v); setMetronomePref(v); };
+  const [, setTempoTick] = useState(0);
 
   // ── Thème scène (indépendant du thème du site, mémorisé) ──
   const [stageTheme, setStageTheme] = useState<"light" | "dark">(() => {
@@ -1112,6 +1119,22 @@ export function PerformanceMode({
         b?.kind === "section" || b?.kind === "jianpu-sheet",
     );
 
+  // Métronome visuel : tempo réglé sur l'appareil pour ce chant, sinon celui du fichier.
+  const tempoChantId = currentEntry?.block.songSlug;
+  const tempoAppareil = tempoChantId ? getTempoChant(tempoChantId) : null;
+  const tempoFichier = currentSong?.tempo;
+  const tempoLiseret = tempoAppareil ?? tempoFichier;
+  const changerTempo = (delta: number) => {
+    if (!tempoChantId) return;
+    setTempoChant(tempoChantId, clampTempo((tempoLiseret ?? TEMPO_DEPART) + delta));
+    setTempoTick((n) => n + 1);
+  };
+  const effacerTempo = () => {
+    if (!tempoChantId) return;
+    setTempoChant(tempoChantId, null);
+    setTempoTick((n) => n + 1);
+  };
+
   // Progression dans le chant courant + chant suivant
   const songStartPage = currentEntry ? pages.findIndex((p) => p.includes(currentEntry.index)) : -1;
   const nextSongPage = nextEntry ? pages.findIndex((p) => p.includes(nextEntry.index)) : -1;
@@ -1563,6 +1586,9 @@ export function PerformanceMode({
         </div>
       )}
 
+      {/* ── Métronome visuel : liseré silencieux, sous le chrome ── */}
+      {metronome && tempoLiseret ? <LiseretTempo tempo={tempoLiseret} /> : null}
+
       {/* ── Chrome (auto-hide overlay) ── */}
       <div
         className="absolute inset-0 pointer-events-none transition-opacity duration-300"
@@ -1594,6 +1620,11 @@ export function PerformanceMode({
                     <span className="font-sans">{t("performance.personalKey", { key: currentEntry.block.setlistKey })}</span>
                   </>
                 )}
+                {currentSong.tempo ? (
+                  <span data-tempo-barre className="font-sans text-muted-foreground tabular-nums">
+                    {" · "}♩ {currentSong.tempo}
+                  </span>
+                ) : null}
               </p>
             )}
           </div>
@@ -1955,6 +1986,68 @@ export function PerformanceMode({
                 </button>
               </div>
             </SettingRow>
+            <SettingRow label={t("performance.metronome")}>
+              <div className="flex rounded-lg border border-border overflow-hidden">
+                <button
+                  data-metronome-on
+                  onClick={() => setMetronome(true)}
+                  className={`h-11 px-4 flex items-center gap-1.5 text-xs font-semibold transition-colors ${
+                    metronome ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {t("performance.metronomeOn")}
+                </button>
+                <button
+                  data-metronome-off
+                  onClick={() => setMetronome(false)}
+                  className={`h-11 px-4 flex items-center gap-1.5 text-xs font-semibold border-l border-border transition-colors ${
+                    !metronome ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {t("performance.metronomeOff")}
+                </button>
+              </div>
+            </SettingRow>
+            {metronome && tempoChantId && (
+              <SettingRow label={t("performance.tempoSong")}>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="icon-lg"
+                    onClick={() => changerTempo(-1)}
+                    disabled={(tempoLiseret ?? TEMPO_DEPART) <= TEMPO_MIN}
+                    aria-label="−"
+                    data-tempo-moins
+                    className="text-sm font-bold"
+                  >
+                    −
+                  </Button>
+                  <span data-tempo-valeur className="text-xs text-muted-foreground tabular-nums w-14 text-center">
+                    ♩ {tempoLiseret ?? TEMPO_DEPART}
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="icon-lg"
+                    onClick={() => changerTempo(1)}
+                    disabled={(tempoLiseret ?? TEMPO_DEPART) >= TEMPO_MAX}
+                    aria-label="+"
+                    data-tempo-plus
+                    className="text-sm font-bold"
+                  >
+                    +
+                  </Button>
+                  {tempoAppareil !== null && (
+                    <button
+                      data-tempo-fichier
+                      onClick={effacerTempo}
+                      className="h-11 px-3 rounded-lg border border-border text-xs font-semibold text-muted-foreground hover:text-foreground"
+                    >
+                      {t("performance.tempoFile")}
+                    </button>
+                  )}
+                </div>
+              </SettingRow>
+            )}
           </div>
         </DrawerContent>
       </Drawer>

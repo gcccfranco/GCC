@@ -84,7 +84,7 @@ test("stockage inaccessible : mode ouvert en Classique, sans erreur", async ({ p
 // Lot L1 : barre à la demande (forScore) et bandes invisibles qui ne captent plus.
 
 const BARRES = "[data-performance-mode] .material-chrome";
-const compteur = (page: Page) => page.locator("[data-performance-mode] span.tabular-nums").first();
+const compteur = (page: Page) => page.locator("[data-performance-mode] span.tabular-nums:not([data-tempo-barre])").first();
 
 async function toucherCentre(page: Page) {
   const ecran = page.viewportSize()!;
@@ -375,5 +375,107 @@ test("L3 colonne scan 简谱 (paysage grand écran seulement) : « Ensuite » de
   await suivant.click();
   await expect.poll(() => numero(page)).toBeGreaterThan(avant);
   await expect(onStage(page, "[data-colonne-scan]")).toHaveCount(0);
+  expect(erreurs).toEqual([]);
+});
+
+// Lot L4 : tempo sur toutes les pages, métronome visuel (liseré silencieux).
+
+async function ouvrirChantL4(
+  page: Page,
+  slug: string,
+  opts: { style?: "forscore"; metronome?: boolean } = {},
+) {
+  await page.addInitScript(({ style, metronome }) => {
+    if (!localStorage.getItem("perf-role-preset")) localStorage.setItem("perf-role-preset", "pianiste");
+    if (style) localStorage.setItem("perf-style-lecture", style);
+    if (metronome && localStorage.getItem("perf-metronome") === null) localStorage.setItem("perf-metronome", "1");
+  }, { style: opts.style, metronome: opts.metronome });
+  await signInAs(page, MUSICIEN, {
+    [`setlists/${SETLIST_ID}`]: { ...setlist, items: [itemChant(slug, 1)] },
+  }, `/setlists/${SETLIST_ID}`);
+  await page.getByRole("button", { name: /Mode Louange/ }).click();
+  await attendreMiseEnPage(page);
+}
+
+const largeurs = async (page: Page) => {
+  const vus: number[] = [];
+  for (let i = 0; i < 8; i++) {
+    vus.push(await page.locator("[data-liseret-barre]").evaluate((el) => el.getBoundingClientRect().width));
+    await page.waitForTimeout(250);
+  }
+  return vus;
+};
+
+for (const style of [undefined, "forscore"] as const) {
+  const nom = style ? "forScore" : "Classique";
+
+  test(`${nom} : un chant avec {tempo} affiche ♩ N dans la barre, sur une page texte`, async ({ page }) => {
+    const erreurs = surveillerErreurs(page);
+    await ouvrirChantL4(page, "avec-nous", { style });
+    await expect(page.locator("[data-jianpu-page]:not([aria-hidden=true] *)")).toHaveCount(0);
+    await expect(page.locator("[data-tempo-barre]")).toHaveText(/♩\s*94/);
+    expect(erreurs).toEqual([]);
+  });
+
+  test(`${nom} : un chant sans tempo n'affiche ni ♩ ni liseré, même métronome actif`, async ({ page }) => {
+    const erreurs = surveillerErreurs(page);
+    await ouvrirChantL4(page, "abba-pere", { style, metronome: true });
+    await expect(page.locator("[data-tempo-barre]")).toHaveCount(0);
+    await expect(page.locator("[data-performance-mode] .material-chrome").first()).not.toContainText("♩");
+    await expect(page.locator("[data-liseret]")).toHaveCount(0);
+    expect(erreurs).toEqual([]);
+  });
+}
+
+test("métronome inactif par défaut : pas de liseré, même avec un tempo", async ({ page }) => {
+  await ouvrirChantL4(page, "avec-nous");
+  await expect(page.locator("[data-tempo-barre]")).toHaveCount(1);
+  await expect(page.locator("[data-liseret]")).toHaveCount(0);
+});
+
+test("métronome actif : le liseré se remplit au fil des pulsations", async ({ page }) => {
+  const erreurs = surveillerErreurs(page);
+  await ouvrirChantL4(page, "avec-nous", { metronome: true });
+  const liseret = page.locator("[data-liseret]");
+  await expect(liseret).toHaveCount(1);
+  await expect(liseret).toHaveAttribute("aria-hidden", "true");
+  await expect(liseret).toHaveCSS("pointer-events", "none");
+  await expect(liseret).toHaveCSS("height", "3px");
+  const vus = await largeurs(page);
+  expect(new Set(vus.map((w) => Math.round(w))).size).toBeGreaterThanOrEqual(2);
+  expect(erreurs).toEqual([]);
+});
+
+test("mouvement réduit : le liseré ne bouge pas", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await ouvrirChantL4(page, "avec-nous", { metronome: true });
+  await expect(page.locator("[data-liseret]")).toHaveCount(1);
+  const vus = await largeurs(page);
+  expect(new Set(vus.map((w) => Math.round(w))).size).toBe(1);
+});
+
+test("tempo réglé par chant : gardé après rechargement, « Tempo du fichier » l'efface", async ({ page }) => {
+  const erreurs = surveillerErreurs(page);
+  await ouvrirChantL4(page, "avec-nous");
+  let reglages = await ouvrirReglages(page);
+  await expect(reglages.locator("[data-tempo-valeur]")).toHaveCount(0);
+  await reglages.locator("[data-metronome-on]").click();
+  const valeur = reglages.locator("[data-tempo-valeur]");
+  await expect(valeur).toHaveText(/♩\s*94/);
+  await expect(reglages.locator("[data-tempo-fichier]")).toHaveCount(0);
+  await reglages.locator("[data-tempo-plus]").click();
+  await reglages.locator("[data-tempo-plus]").click();
+  await expect(valeur).toHaveText(/♩\s*96/);
+  await expect(reglages.locator("[data-tempo-fichier]")).toHaveCount(1);
+
+  await page.reload();
+  await page.getByRole("button", { name: /Mode Louange/ }).click();
+  await attendreMiseEnPage(page);
+  reglages = await ouvrirReglages(page);
+  await expect(reglages.locator("[data-tempo-valeur]")).toHaveText(/♩\s*96/);
+  await reglages.locator("[data-tempo-fichier]").click();
+  await expect(reglages.locator("[data-tempo-valeur]")).toHaveText(/♩\s*94/);
+  await expect(reglages.locator("[data-tempo-fichier]")).toHaveCount(0);
+  expect(await page.evaluate(() => localStorage.getItem("perf-tempo-avec-nous"))).toBeNull();
   expect(erreurs).toEqual([]);
 });
