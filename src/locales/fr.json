@@ -697,6 +697,8 @@
     "tempoFile": "Tempo du fichier",
     "annotate": "Annoter",
     "annotationsIndisponibles": "Annotations indisponibles pour l'instant",
+    "annotAutreTaille": "Des annotations existent à une autre taille ({{taille}} %)",
+    "annotRevenir": "Revenir à cette taille",
     "exit": "Quitter",
     "prevPage": "Page précédente",
     "nextPage": "Page suivante",

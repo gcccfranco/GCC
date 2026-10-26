@@ -479,3 +479,136 @@ test("tempo réglé par chant : gardé après rechargement, « Tempo du fichier 
   expect(await page.evaluate(() => localStorage.getItem("perf-tempo-avec-nous"))).toBeNull();
   expect(erreurs).toEqual([]);
 });
+
+// Lot L5 : annotations stables. Taille du texte mémorisée par chant (`perf-annot-scale-<slug>`),
+// figée en annotation ; bannière « Revenir à cette taille » quand on lit à une autre taille.
+// Les traits sont dessinés à la souris sur le canevas ; le Firestore est simulé (`db.writes`).
+
+const CLE_TAILLE = "perf-annot-scale-abba-pere";
+const calqueLecture = (page: Page) => page.locator("[data-performance-mode] > canvas");
+const ecritesAnnot = (db: { writes: { path: string }[] }) => db.writes.filter((w) => w.path.startsWith("annotations/"));
+
+async function ouvrirL5(page: Page, style: "forscore" | null = "forscore") {
+  const erreurs = surveillerErreurs(page);
+  await page.addInitScript(() => localStorage.setItem("perf-role-preset", "pianiste"));
+  if (style) await page.addInitScript((s) => localStorage.setItem("perf-style-lecture", s), style);
+  const db = await signInAs(page, MUSICIEN, { [`setlists/${SETLIST_ID}`]: setlist }, `/setlists/${SETLIST_ID}`);
+  await page.getByRole("button", { name: /Mode Louange/ }).click();
+  await attendreMiseEnPage(page);
+  return { db, erreurs };
+}
+
+/** Ouvre Annoter, trace un trait à la souris au centre, attend l'enregistrement, ressort. */
+async function tracerTrait(page: Page, db: { writes: { path: string }[] }) {
+  await page.getByRole("button", { name: "Annoter" }).click();
+  await expect(calqueLecture(page)).toHaveCount(1);
+  const ecran = page.viewportSize()!;
+  const x = ecran.width * 0.4;
+  const y = ecran.height * 0.5;
+  await page.mouse.move(x, y);
+  await page.mouse.down();
+  await page.mouse.move(x + 40, y + 15, { steps: 4 });
+  await page.mouse.move(x + 90, y + 30, { steps: 4 });
+  await page.mouse.up();
+  await expect.poll(() => ecritesAnnot(db).length).toBeGreaterThan(0);
+  await page.getByRole("button", { name: "Annoter" }).click();
+  await expect(calqueLecture(page)).toHaveCount(1);
+}
+
+async function changerTaille(page: Page, bouton: "Agrandir le texte" | "Réduire le texte", fois = 1) {
+  const reglages = await ouvrirReglages(page);
+  for (let i = 0; i < fois; i++) await reglages.getByRole("button", { name: bouton }).click();
+  const pct = (await reglages.getByText(/^\d+%$/).textContent())!;
+  await page.keyboard.press("Escape");
+  await expect(reglages).toBeHidden();
+  return pct;
+}
+
+const pourcentage = async (page: Page) => {
+  const reglages = await ouvrirReglages(page);
+  const pct = (await reglages.getByText(/^\d+%$/).textContent())!;
+  await page.keyboard.press("Escape");
+  await expect(reglages).toBeHidden();
+  return pct;
+};
+
+test("forScore, L5 : trait tracé, taille changée puis rétablie : le trait est relu ; bannière et « Revenir à cette taille »", async ({ page }) => {
+  const { db, erreurs } = await ouvrirL5(page);
+  await tracerTrait(page, db);
+  expect(await page.evaluate((c) => localStorage.getItem(c), CLE_TAILLE)).toBe("1");
+  await expect(page.locator("[data-alerte-annotations]")).toHaveCount(0);
+
+  // (b) autre taille : le trait n'est plus lu, la bannière prévient
+  expect(await changerTaille(page, "Agrandir le texte")).toBe("110%");
+  await expect(calqueLecture(page)).toHaveCount(0);
+  const bandeau = page.locator("[data-alerte-annotations]");
+  await expect(bandeau).toBeVisible();
+  // La bannière (z 6) est sous la barre haute (z 20) : on masque la barre pour la toucher.
+  await toucherCentre(page);
+  await expect(page.getByRole("button", { name: "Réglages" })).toBeHidden();
+  await expect(bandeau).toContainText("Des annotations existent à une autre taille (100");
+  await expect(bandeau).toHaveCSS("pointer-events", "none");
+  const bouton = bandeau.getByRole("button", { name: "Revenir à cette taille" });
+  expect((await bouton.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+  const numeroPage = async () => (await lirePage(page)).split("/")[0].trim();
+  const p = await numeroPage();
+  await bouton.click();
+  await expect(bandeau).toHaveCount(0);
+  // la page n'a pas tourné sous le toucher du bouton
+  expect(await numeroPage()).toBe(p);
+  expect(await pourcentage(page)).toBe("100%");
+
+  // (a) la taille d'origine est revenue : le trait est de nouveau lu
+  await expect(calqueLecture(page)).toHaveCount(1);
+  expect(erreurs).toEqual([]);
+});
+
+test("forScore, L5 : en annotation A− / A+ sont désactivés, et rouvrir l'annotation rend la taille mémorisée", async ({ page }) => {
+  const { db, erreurs } = await ouvrirL5(page);
+  await tracerTrait(page, db);
+  expect(await changerTaille(page, "Agrandir le texte", 2)).toBe("120%");
+
+  await page.getByRole("button", { name: "Annoter" }).click();
+  await expect(calqueLecture(page)).toHaveCount(1);
+  const reglages = await ouvrirReglages(page);
+  await expect(reglages.getByRole("button", { name: "Réduire le texte" })).toBeDisabled();
+  await expect(reglages.getByRole("button", { name: "Agrandir le texte" })).toBeDisabled();
+  await expect(reglages.getByText(/^\d+%$/)).toHaveText("100%");
+  await page.keyboard.press("Escape");
+  await expect(reglages).toBeHidden();
+  expect(erreurs).toEqual([]);
+});
+
+test("forScore, L5 : un trait ancien (sans taille mémorisée sur l'appareil) se lit encore, sans bannière", async ({ page }) => {
+  // Le trait est posé en Classique (qui ne retient aucune taille) : sa clé est celle de toujours.
+  const { db } = await ouvrirL5(page, null);
+  await tracerTrait(page, db);
+  expect(await page.evaluate((c) => localStorage.getItem(c), CLE_TAILLE)).toBeNull();
+
+  await page.evaluate(() => localStorage.setItem("perf-style-lecture", "forscore"));
+  await page.reload();
+  await page.getByRole("button", { name: /Mode Louange/ }).click();
+  await attendreMiseEnPage(page);
+  await expect(page.locator("[data-performance-mode]")).toHaveAttribute("data-style-lecture", "forscore");
+  await expect(calqueLecture(page)).toHaveCount(1);
+  await expect(page.locator("[data-alerte-annotations]")).toHaveCount(0);
+});
+
+test("Classique, L5 : aucune bannière, aucune taille retenue, A− / A+ actifs en annotation", async ({ page }) => {
+  const { db, erreurs } = await ouvrirL5(page, null);
+  await tracerTrait(page, db);
+  expect(await changerTaille(page, "Agrandir le texte")).toBe("110%");
+  await expect(page.locator("[data-alerte-annotations]")).toHaveCount(0);
+  // En Classique la barre s'efface après 3 s : on la rappelle avant de toucher « Annoter ».
+  const annoter = page.getByRole("button", { name: "Annoter" });
+  await expect(async () => {
+    if (!(await annoter.isVisible())) await toucherCentre(page);
+    await annoter.click({ timeout: 2_000 });
+  }).toPass({ timeout: 15_000 });
+  await expect(calqueLecture(page)).toHaveCount(1);
+  const reglages = await ouvrirReglages(page);
+  await expect(reglages.getByRole("button", { name: "Réduire le texte" })).toBeEnabled();
+  await expect(reglages.getByRole("button", { name: "Agrandir le texte" })).toBeEnabled();
+  await page.keyboard.press("Escape");
+  expect(erreurs).toEqual([]);
+});

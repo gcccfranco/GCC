@@ -32,6 +32,7 @@ import type { PartitionLayout } from "@/lib/partitionLayoutPref";
 import { getPinyinPref, setPinyinPref } from "@/lib/pinyinPref";
 import { classerGeste, largeurZoneLaterale } from "@/lib/performance/gestes";
 import { LiseretTempo } from "@/components/performance/LiseretTempo";
+import { getTailleAnnotee, setTailleAnnotee } from "@/lib/performance/tailleAnnotee";
 import { clampTempo, getMetronomePref, getTempoChant, setMetronomePref, setTempoChant, TEMPO_DEPART, TEMPO_MAX, TEMPO_MIN } from "@/lib/performance/tempo";
 import { getStyleLecturePref, setStyleLecturePref, type StyleLecture } from "@/lib/performance/lecturePref";
 import { getFontScalePref, setFontScalePref, MIN_FONT_SCALE, MAX_FONT_SCALE } from "@/lib/fontScalePref";
@@ -870,6 +871,12 @@ export function PerformanceMode({
     });
   }, []);
 
+  // L5 : applique une taille de texte précise (retour à la taille d'annotation d'un chant).
+  const appliquerTaille = useCallback((v: number) => {
+    setFontScale(v);
+    setFontScalePref(v);
+  }, []);
+
   // Wake lock
   useEffect(() => {
     type WakeLock = { request: (t: string) => Promise<{ release: () => Promise<void> }> };
@@ -980,6 +987,13 @@ export function PerformanceMode({
   const cleScan = layout[currentPage]?.fit ? (ecran.grand ? "j3" : "j2") : "";
   const currentPageKey = computePageKey(blocks, currentPageIndices, `${layoutSig}${layout[currentPage]?.twoColumns ? "x2" : ""}${cleScan}`);
 
+  // L5 : chant de la page courante, et taille à laquelle il a été annoté sur cet appareil.
+  const slugAnnote = currentEntry?.block.songSlug;
+  const tailleAnnotee = styleLecture === "forscore" && slugAnnote ? getTailleAnnotee(slugAnnote) : null;
+  const alerteAnnotations =
+    !!user && !annotateMode && showAnnotations && tailleAnnotee !== null &&
+    Math.round(tailleAnnotee * 100) !== Math.round(fontScale * 100);
+
   // Charger les traits de la page courante (toujours — affichage permanent)
   useEffect(() => {
     setAnnotationsIndispo(false);
@@ -1003,12 +1017,26 @@ export function PerformanceMode({
   const handleAnnotationsChange = useCallback(
     (data: AnnotationData) => {
       setPageAnnotations(data);
+      // L5 (forScore) : au premier trait d'un chant, on retient la taille du texte à laquelle on annote.
+      if (styleLectureRef.current === "forscore" && slugAnnote && data.strokes.length > 0 && getTailleAnnotee(slugAnnote) === null) {
+        setTailleAnnotee(slugAnnote, fontScale);
+      }
       if (user && currentPageKey && !horsLigne) {
         saveAnnotation(user.uid, setlistId, currentPageKey, serializeAnnotations(data));
       }
     },
-    [user, setlistId, currentPageKey, horsLigne],
+    [user, setlistId, currentPageKey, horsLigne, slugAnnote, fontScale],
   );
+
+  // L5 : à l'entrée en annotation, la taille mémorisée du chant revient avant qu'on dessine.
+  const basculerAnnotation = () => {
+    setSettingsOpen(false);
+    if (!annotateMode && styleLecture === "forscore" && slugAnnote) {
+      const memo = getTailleAnnotee(slugAnnote);
+      if (memo !== null && Math.round(memo * 100) !== Math.round(fontScale * 100)) appliquerTaille(memo);
+    }
+    setAnnotateMode((v) => !v);
+  };
 
   // ── Navigation ──────────────────────────────────────────────────────────────
 
@@ -1503,6 +1531,28 @@ export function PerformanceMode({
         </div>
       )}
 
+      {/* ── L5 : des annotations existent à une autre taille de texte ── */}
+      {alerteAnnotations && tailleAnnotee !== null && (
+        <div
+          data-alerte-annotations
+          className="absolute left-0 right-0 flex justify-center pointer-events-none"
+          style={{ zIndex: 6, top: "calc(var(--sat, 0px) + 0.5rem)" }}
+        >
+          <div className="flex max-w-[92%] flex-wrap items-center justify-center gap-x-3 gap-y-1 rounded-2xl border border-border/60 bg-background/90 px-4 py-1 text-sm text-muted-foreground backdrop-blur">
+            <span>{t("performance.annotAutreTaille", { taille: Math.round(tailleAnnotee * 100) })}</span>
+            <button
+              type="button"
+              onClick={() => appliquerTaille(tailleAnnotee)}
+              onPointerDown={(e) => e.stopPropagation()}
+              onPointerUp={(e) => e.stopPropagation()}
+              className="pointer-events-auto min-h-11 px-2 font-semibold text-foreground underline underline-offset-2"
+            >
+              {t("performance.annotRevenir")}
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* ── « Ensuite : … » sur la dernière page d'un chant : touchable, sans confirmation ── */}
       {isLastPageOfSong && nextEntry && !colonneScan && (
         <div
@@ -1690,7 +1740,7 @@ export function PerformanceMode({
               label={t("performance.annotate")}
               active={annotateMode}
               accent="amber"
-              onClick={() => { setSettingsOpen(false); setAnnotateMode((v) => !v); }}
+              onClick={basculerAnnotation}
             >
               <PenLine className="h-5 w-5" />
             </IconBtn>
@@ -1925,7 +1975,7 @@ export function PerformanceMode({
                   variant="outline"
                   size="icon-lg"
                   onClick={() => changeFontScale(-0.1)}
-                  disabled={fontScale <= MIN_SCALE}
+                  disabled={fontScale <= MIN_SCALE || (annotateMode && styleLecture === "forscore")}
                   aria-label={t("performance.textSmaller")}
                   className="text-xs font-bold"
                 >
@@ -1938,7 +1988,7 @@ export function PerformanceMode({
                   variant="outline"
                   size="icon-lg"
                   onClick={() => changeFontScale(0.1)}
-                  disabled={fontScale >= MAX_SCALE}
+                  disabled={fontScale >= MAX_SCALE || (annotateMode && styleLecture === "forscore")}
                   aria-label={t("performance.textLarger")}
                   className="text-sm font-bold"
                 >
