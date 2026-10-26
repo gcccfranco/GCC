@@ -111,7 +111,9 @@ test("équipes des tâches : celles de l'organigramme, Louange = avoir un rôle 
   expect(equipesDesTaches(membre, { dansEquipes: ["da"], serviceRoles: {} })).toEqual(["da"]);
   expect(equipesDesTaches(membre, { dansEquipes: ["medias"], serviceRoles: { "Culte Francophone": ["musicien"] } })).toEqual(["medias", "louange"]);
   expect(equipesDesTaches(membre, null)).toEqual([]);
-  expect(equipesDesTaches({ email: "tc328829@gmail.com" }, null)).toHaveLength(13);
+  // Un admin voit toutes les équipes : les 13 de l'église, puis les 5 comités de groupe, devenus des
+  // équipes au lot 2 (docs/spec-organigrammes-groupes.md, OG17 et OG20 ; commit 1f340abc).
+  expect(equipesDesTaches({ email: "tc328829@gmail.com" }, null)).toHaveLength(18);
   expect(equipesDesTaches(null, { dansEquipes: ["da"] })).toEqual([]);
 });
 

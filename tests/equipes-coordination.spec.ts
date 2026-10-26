@@ -118,7 +118,9 @@ test("Personnes en 中文 : « 协调 » dans « 这会开放什么权限 »", a
     await expect(fiche(page).getByRole("region", { name: "这会开放什么权限" })).toContainText("协调：舞台、节日和全教会的活动");
     await capture(page, "coordination-fiche-zh");
   }
-  await page.getByRole("button", { name: /^(Modifier|修改)$/ }).click();
+  // Tranche B5b de docs/spec-corrections-audit.md (§ 5, commit f9cfd5a1) : la fiche passe sous `t()`,
+  // le bouton dit `common.buttons.edit`, 编辑 en 中文.
+  await page.getByRole("button", { name: "编辑", exact: true }).click();
   await expect(page.getByRole("button", { name: "协调", exact: true })).toHaveCount(0);
   await expect(page.getByText("协调：舞台、节日和全教会的活动")).toBeVisible();
   await capture(page, "coordination-formulaire-zh");

@@ -116,11 +116,15 @@ test.describe("page chant", () => {
     await expect(page.locator("[data-jianpu-page]")).toHaveCount(2);
     await page.locator("[data-jianpu-page]").last().scrollIntoViewIfNeeded();
     await scanCharge(page);
+    const barre = page.getByRole("navigation", { name: "Navigation principale" });
+    // Depuis A6 (docs/spec-corrections-audit.md, commit a0160b48), la cale K2 n'est posée que si la barre
+    // est rendue (`body:has([data-testid=barre-du-bas])`) ; la barre arrive avec la session : on l'attend
+    // avant d'aller en bas, sinon la page s'allonge après le défilement.
+    await expect(barre).toBeAttached();
     await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
     // Un léger retour vers le haut fait revenir la barre, comme au doigt.
     await page.waitForTimeout(300);
     await page.evaluate(() => window.scrollBy(0, -1));
-    const barre = page.getByRole("navigation", { name: "Navigation principale" });
     await expect(barre).toBeInViewport();
     await page.waitForTimeout(400); // fin de la transition de la barre
     const basDeLaFeuille = await page.locator("[data-jianpu-page]").last().evaluate((el) => el.getBoundingClientRect().bottom);

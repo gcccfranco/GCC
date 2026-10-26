@@ -431,19 +431,21 @@ test("clavier (Q13) : la poignée d'un chant le déplace — espace, flèche bas
 test("clavier (Q13) : flèches gauche et droite déplacent une pastille de structure, le focus la suit ; Entrée la choisit", async ({ page }) => {
   const db = await ouvrirT3(page);
   await reglerElement(page, "Abba Père");
-  await volet(page).getByRole("button", { name: "Intro, étape 1", exact: true }).focus();
+  // L'intro d'Abba Père s'appelle « Intro (x2) » depuis la reprise du corpus (commit 1b488bdf, 11/10/2026,
+  // content/songs/abba-pere.cho:9) : la pastille porte le nom de la section.
+  await volet(page).getByRole("button", { name: "Intro (x2), étape 1", exact: true }).focus();
   await page.keyboard.press("ArrowRight");
-  await expect(volet(page).getByRole("button", { name: "Intro, étape 2", exact: true })).toBeFocused();
+  await expect(volet(page).getByRole("button", { name: "Intro (x2), étape 2", exact: true })).toBeFocused();
   await expect
     .poll(() => etapes(itemsEnBase(db)[0] ?? ({} as SetlistItem)).slice(0, 3), { timeout: 10_000 })
     .toEqual(["verse-2", "intro-1", "chorus-3"]);
   await page.keyboard.press("ArrowLeft");
-  await expect(volet(page).getByRole("button", { name: "Intro, étape 1", exact: true })).toBeFocused();
+  await expect(volet(page).getByRole("button", { name: "Intro (x2), étape 1", exact: true })).toBeFocused();
   // Revenue à l'ordre du chant : plus de structure propre (`structureOverride: null`).
   await expect.poll(() => itemsEnBase(db)[0]?.structureOverride, { timeout: 10_000 }).toBeNull();
   await page.keyboard.press("Enter");
-  await expect(volet(page).getByRole("button", { name: "Intro, étape 1", exact: true })).toHaveAttribute("aria-pressed", "true");
-  await expect(volet(page).getByRole("button", { name: "Retirer l'étape Intro", exact: true })).toBeVisible();
+  await expect(volet(page).getByRole("button", { name: "Intro (x2), étape 1", exact: true })).toHaveAttribute("aria-pressed", "true");
+  await expect(volet(page).getByRole("button", { name: "Retirer l'étape Intro (x2)", exact: true })).toBeVisible();
 });
 
 test("ordinateur, barre dépliée (Q6) : feuilles sous 1 054 px de fenêtre (moins de 806 px d'éditeur), deux colonnes au-delà ; barre réduite, deux colonnes", async ({ page }, testInfo) => {

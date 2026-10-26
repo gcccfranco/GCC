@@ -134,11 +134,15 @@ test.describe("pur : réunions et évènements d'équipe (EQ19 à EQ22)", () => 
     const reunion = rules.match(/function estDeLaReunion\(e\) \{[\s\S]*?\n {4}\}/)![0];
     expect(reunion).toMatch(/e\.pour\.matches\('equipe:\[a-z0-9-\]\+'\) && estDeLEquipe\(e\.pour\.split\(':'\)\[1\]\)/);
     expect(reunion).not.toMatch(/pole/);
-    const create = rules.match(/match \/evenements\/\{id\} \{[\s\S]*?allow update/)![0];
-    expect(create).toMatch(/request\.resource\.data\.pour\.matches\('equipe:\[a-z0-9-\]\+'\)\s*&& estReferentDe\(request\.resource\.data\.pour\.split\(':'\)\[1\]\)/);
+    // Tranche A1 de docs/spec-corrections-audit.md (§ 3 et § 5, commit 77adc0d0) : la condition de
+    // création est sortie dans `pourCreable(pour)`, que `allow create` (et `allow update`) appellent.
+    const evenements = rules.match(/match \/evenements\/\{id\} \{[\s\S]*?allow update/)![0];
+    expect(evenements).toMatch(/allow create: if[\s\S]*?&& pourCreable\(request\.resource\.data\.pour\);/);
+    const create = rules.match(/function pourCreable\(pour\) \{[\s\S]*?\n {4}\}/)![0];
+    expect(create).toMatch(/pour\.matches\('equipe:\[a-z0-9-\]\+'\) && estReferentDe\(pour\.split\(':'\)\[1\]\)/);
     expect(create).not.toMatch(/pour\.matches\('pole:/);
     // La garde reste : plus personne ne crée de public « pole: » (EQ21).
-    expect(create).toMatch(/!request\.resource\.data\.pour\.matches\('\(pole\|equipe\):\.\*'\)/);
+    expect(create).toMatch(/!pour\.matches\('\(pole\|equipe\):\.\*'\)/);
   });
 });
 

@@ -49,31 +49,51 @@ async function remplitLaZone(page: Page, volets: Locator, quoi: string) {
   expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth), `${quoi} : rien ne déborde`).toBe(0);
 }
 
-const sansSheet = (page: Page) =>
-  page.route(/docs\.google\.com\/spreadsheets/, (route) => route.fulfill({ status: 200, contentType: "text/csv", body: "" }));
+const sansSheet = (page: Page, feuilles: Record<string, string> = {}) =>
+  page.route(/docs\.google\.com\/spreadsheets/, (route) => {
+    const feuille = new URL(route.request().url()).searchParams.get("sheet") ?? "";
+    return route.fulfill({ status: 200, contentType: "text/csv", body: feuilles[feuille] ?? "" });
+  });
+
+/** Un service de Ruth K. le dimanche 4 octobre 2026 (personnes fictives), vu le jeudi 1er : Mes services a
+ *  un service à montrer à droite, donc deux volets (règle de largeur du 25/10/2026, B4b). */
+const UN_SERVICE = {
+  maintenant: "2026-10-01T10:00:00",
+  feuilles: {
+    Franco_Louange: [
+      ["2026 DATE", "Présidence", "Choristes", "", "Pianiste"],
+      ["04/10", "Ombeline R.", "", "", "Ruth K."],
+    ].map((r) => r.map((c) => `"${c}"`).join(",")).join("\n"),
+  },
+};
 
 /** Ouvre `to` connecté, la barre de l'ordinateur dans l'état voulu (la tablette couchée l'a toujours réduite). */
-async function ouvrir(page: Page, etat: "reduite" | "depliee", to: string) {
+async function ouvrir(page: Page, etat: "reduite" | "depliee", to: string, donnees?: typeof UN_SERVICE) {
   await page.addInitScript((e) => localStorage.setItem("barre-laterale", e), etat);
-  await sansSheet(page);
+  if (donnees) await page.clock.setFixedTime(new Date(donnees.maintenant));
+  await sansSheet(page, donnees?.feuilles);
   await signInAs(page, MUSICIEN, { [`setlists/${SETLIST_ID}`]: SETLIST }, to);
 }
 
-const PAGES_EN_DEUX_VOLETS: { nom: string; to: string; volets: (page: Page) => Locator }[] = [
+// Règle de largeur du 25/10/2026 (tranche B4b de docs/spec-corrections-audit.md, § 5 ; commit bc613d14) : une
+// liste sans rien à montrer à droite prend seule une colonne de 960 px (`DeuxVolets colonneSeule` : /setlists
+// sans aperçu, Mes services sans service ; mesuré par largeurs-b4.spec.ts). Ici, les deux volets : une setlist
+// choisie (`?apercu=`, comme agencement-v18-setlists) et un service à venir.
+const PAGES_EN_DEUX_VOLETS: { nom: string; to: string; volets: (page: Page) => Locator; donnees?: typeof UN_SERVICE }[] = [
   { nom: "Chants", to: "/songs", volets: (page) => page.locator(".chants-volets") },
-  { nom: "Setlists", to: "/setlists", volets: (page) => page.locator("[data-deux-volets]") },
-  { nom: "Mes services", to: "/mes-services", volets: (page) => page.locator("[data-deux-volets]") },
+  { nom: "Setlists", to: `/setlists?apercu=${SETLIST_ID}`, volets: (page) => page.locator("[data-deux-volets]") },
+  { nom: "Mes services", to: "/mes-services", volets: (page) => page.locator("[data-deux-volets]"), donnees: UN_SERVICE },
   { nom: "Harmonie", to: "/harmonie", volets: (page) => page.locator("[data-deux-volets]") },
   { nom: "une setlist (sommaire et partitions)", to: `/setlists/${SETLIST_ID}`, volets: (page) => page.locator("[data-en-tete]") },
 ];
 
 for (const etat of ["reduite", "depliee"] as const) {
   test.describe(`barre ${etat === "reduite" ? "réduite" : "dépliée"} : aucune bande vide entre la barre et la page`, () => {
-    for (const { nom, to, volets } of PAGES_EN_DEUX_VOLETS) {
+    for (const { nom, to, volets, donnees } of PAGES_EN_DEUX_VOLETS) {
       test(`${nom} : les deux volets prennent toute la largeur, de 1 280 à 1 920 px (grands écrans)`, async ({ page }, info) => {
         test.skip(!aBarreLaterale(info), "deux volets : propre aux grands écrans (ordinateur, tablette couchée)");
         test.skip(etat === "depliee" && info.project.name === "tablette-paysage", "la tablette couchée a toujours la barre réduite");
-        await ouvrir(page, etat, to);
+        await ouvrir(page, etat, to, donnees);
         for (const largeur of largeurs(info)) {
           if (largeur) await page.setViewportSize({ width: largeur, height: 900 });
           // Barre dépliée sous 1 148 px de fenêtre : un volet (U5, Q1) ; ici 1 280 au moins.

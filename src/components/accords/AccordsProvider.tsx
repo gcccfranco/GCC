@@ -391,7 +391,9 @@ function AideBulle({ ancre, onOk }: { ancre: HTMLElement; onOk: () => void }) {
           ? "calc(var(--tabbar-bottom) + 78px + 8px)"
           : `calc(${3 * MARGE}px + env(safe-area-inset-bottom))`,
       }}
-      className="pointer-events-auto z-50 rounded-[12px] bg-foreground px-4 py-3 text-sm leading-snug text-background shadow-xl"
+      // z-40, sous le voile des fenêtres et feuilles (z-50, src/components/ui/dialog.tsx) : en bas de l'écran
+      // depuis C9, elle couvrait « Télécharger » de « Quel PDF ? », ouvert par-dessus.
+      className="pointer-events-auto z-40 rounded-[12px] bg-foreground px-4 py-3 text-sm leading-snug text-background shadow-xl"
     >
       <p className="relative">{t(ordinateur ? "accords.aideCliquer" : "accords.aideToucher")}</p>
       <div className="relative mt-2 flex justify-end">
