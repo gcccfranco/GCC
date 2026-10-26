@@ -30,7 +30,7 @@ import { getChartStylePref, setChartStylePref } from "@/lib/chartStylePref";
 import { getPersonalKeys, setPersonalKey } from "@/lib/setlist/personalKeys";
 import type { PartitionLayout } from "@/lib/partitionLayoutPref";
 import { getPinyinPref, setPinyinPref } from "@/lib/pinyinPref";
-import { classerGeste, largeurZoneLaterale } from "@/lib/performance/gestes";
+import { classerGeste, estTabletteVerticale, largeurZoneLaterale } from "@/lib/performance/gestes";
 import { LiseretTempo } from "@/components/performance/LiseretTempo";
 import { getTailleAnnotee, setTailleAnnotee } from "@/lib/performance/tailleAnnotee";
 import { clampTempo, getMetronomePref, getTempoChant, setMetronomePref, setTempoChant, TEMPO_DEPART, TEMPO_MAX, TEMPO_MIN } from "@/lib/performance/tempo";
@@ -264,6 +264,12 @@ const NEXT_PILL_RESERVE = 40;
 // Sections uniques : place du rappel de structure (24 px et 8 px dessous) en
 // haut des pages 2 et suivantes d'un chant (D11).
 const RAPPEL_RESERVE = 32;
+// Style forScore, tablette en portrait (lot L6) : bande fixe en bas, début de la page suivante
+// (≈ trois lignes de paroles), sous une ligne bleue de 2 px. Hauteur en px de mise en page :
+// la pagination la retranche de son budget, le rendu la met à l'échelle comme le texte.
+const APERCU_H = 96;
+// Repli : au-delà de cette part de la hauteur de l'écran, la bande ne s'affiche pas.
+const APERCU_PART_MAX = 0.25;
 
 // Mode ossature : UN CHANT PAR PAGE. L'en-tête occupe la pleine largeur ; les
 // sections (libellés + notes/transitions) sont disposées en 1 colonne si elles
@@ -313,9 +319,15 @@ function layoutSong(
 }
 
 /** Disposition et largeur de la fenêtre : le mode louange est plein écran. */
-function lireEcran(): { grand: boolean; largeur: number } {
-  if (typeof window === "undefined") return { grand: false, largeur: 0 };
-  return { grand: window.matchMedia(GRAND_ECRAN).matches, largeur: window.innerWidth };
+function lireEcran(): { grand: boolean; largeur: number; hauteur: number; tabletteVerticale: boolean } {
+  if (typeof window === "undefined") return { grand: false, largeur: 0, hauteur: 0, tabletteVerticale: false };
+  const grossier = typeof window.matchMedia === "function" && window.matchMedia("(pointer: coarse)").matches;
+  return {
+    grand: window.matchMedia(GRAND_ECRAN).matches,
+    largeur: window.innerWidth,
+    hauteur: window.innerHeight,
+    tabletteVerticale: estTabletteVerticale(window.innerWidth, window.innerHeight, grossier),
+  };
 }
 
 // ─── Main component ───────────────────────────────────────────────────────────
@@ -601,6 +613,11 @@ export function PerformanceMode({
   });
   const twoColumnsAvailable = twoColumnsPossible(ecran.grand, ecran.largeur, fontScale) && !structureMode;
   const twoColumns = twoColumnsAvailable && twoColumnsPref !== "0";
+  // Aperçu de la page suivante (L6) : style forScore, tablette portrait, hors vue structure, et
+  // seulement si la bande tient (≤ 25 % de la hauteur) ; sinon la pagination garde son budget.
+  const apercuActif =
+    styleLecture === "forscore" && ecran.tabletteVerticale && !structureMode &&
+    APERCU_H * fontScale <= ecran.hauteur * APERCU_PART_MAX;
   const toggleTwoColumns = useCallback(() => {
     const next = twoColumns ? "0" : "1";
     setTwoColumnsPref(next);
@@ -734,7 +751,7 @@ export function PerformanceMode({
       const mcs = measureInnerRef.current ? getComputedStyle(measureInnerRef.current) : null;
       const padTop = mcs ? parseFloat(mcs.paddingTop) || 0 : 16;
       const padBottom = mcs ? parseFloat(mcs.paddingBottom) || 0 : 16;
-      const viewportH = window.innerHeight / fontScale - padTop - padBottom - safety;
+      const viewportH = window.innerHeight / fontScale - padTop - padBottom - safety - (apercuActif ? APERCU_H : 0);
       const contentW = mcs && measureInnerRef.current
         ? measureInnerRef.current.clientWidth - parseFloat(mcs.paddingLeft) - parseFloat(mcs.paddingRight)
         : window.innerWidth / fontScale;
@@ -839,7 +856,7 @@ export function PerformanceMode({
       });
     };
     run();
-  }, [blocks, remeasureKey, fontScale, structureMode, twoColumns, affichageVu]);
+  }, [blocks, remeasureKey, fontScale, structureMode, twoColumns, affichageVu, apercuActif]);
 
   // Vue structure agrandie : la mesure se fait à l'échelle 1, mais à l'écran
   // le corps agrandi dispose d'une largeur réduite d'autant, et un libellé
@@ -985,7 +1002,7 @@ export function PerformanceMode({
   // en colonne et le scan glisse à droite en grandissant (L3-T5b). À incrémenter si le scan
   // bouge encore.
   const cleScan = layout[currentPage]?.fit ? (ecran.grand ? "j3" : "j2") : "";
-  const currentPageKey = computePageKey(blocks, currentPageIndices, `${layoutSig}${layout[currentPage]?.twoColumns ? "x2" : ""}${cleScan}`);
+  const currentPageKey = computePageKey(blocks, currentPageIndices, `${layoutSig}${layout[currentPage]?.twoColumns ? "x2" : ""}${cleScan}${apercuActif && !layout[currentPage]?.fit ? "ap" : ""}`);
 
   // L5 : chant de la page courante, et taille à laquelle il a été annoté sur cet appareil.
   const slugAnnote = currentEntry?.block.songSlug;
@@ -1213,6 +1230,13 @@ export function PerformanceMode({
         paddingRight: `calc(0.25rem + var(--sar, 0px) / ${fontScale})`,
       }
     : contentPadding;
+
+  // L6 : début de la page suivante, sous la bande réservée par la pagination. Ni dernière page,
+  // ni page de scan 简谱 (courante ou suivante) ; rien non plus sous la loupe d'annotation.
+  const pageSuivante = layout[currentPage + 1];
+  const apercu = apercuActif && !fitPage && annotZoom === 1 && pageSuivante && !pageSuivante.fit ? pageSuivante : null;
+  // Les calques d'annotation ne couvrent pas la bande (bas de page + 16 px de marge + sab).
+  const rogneBas = apercu ? `calc(${(APERCU_H + 16) * fontScale}px + var(--sab, 0px))` : undefined;
 
   return (
     <div
@@ -1479,6 +1503,7 @@ export function PerformanceMode({
             );
           }
           return (
+            <>
             <div>
               {rappel && (
                 <div data-rappel className="mb-2">
@@ -1514,6 +1539,22 @@ export function PerformanceMode({
                 </div>
               </div>
             </div>
+            {apercu && (
+              <div
+                data-apercu-suivant
+                aria-hidden="true"
+                className="pointer-events-none absolute left-0 right-0"
+                style={{ bottom: contentPadding.paddingBottom, paddingLeft: contentPadding.paddingLeft, paddingRight: contentPadding.paddingRight }}
+              >
+                <div className="relative overflow-hidden" style={{ height: APERCU_H }}>
+                  <div className="h-0.5 bg-primary/70" />
+                  {apercu.header != null && renderBlock(apercu.header)}
+                  {apercu.cols.flat().map((i) => renderBlock(i))}
+                  <div className="absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-background to-transparent" />
+                </div>
+              </div>
+            )}
+            </>
           );
         })()}
       </div>
@@ -1577,11 +1618,12 @@ export function PerformanceMode({
 
       {/* ── Annotations : calque de lecture permanent + canvas d'édition ── */}
       {showAnnotations && !annotateMode && pageAnnotations && pageAnnotations.strokes.length > 0 && (
-        <StrokesLayer data={pageAnnotations} />
+        <StrokesLayer data={pageAnnotations} rogneBas={rogneBas} />
       )}
       {annotateMode && pageAnnotations && (
         <AnnotationCanvas
           data={pageAnnotations}
+          rogneBas={rogneBas}
           onChange={handleAnnotationsChange}
           zoom={annotZoom}
           pan={annotPan}

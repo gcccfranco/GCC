@@ -579,7 +579,9 @@ test("forScore, L5 : en annotation A− / A+ sont désactivés, et rouvrir l'ann
   expect(erreurs).toEqual([]);
 });
 
-test("forScore, L5 : un trait ancien (sans taille mémorisée sur l'appareil) se lit encore, sans bannière", async ({ page }) => {
+test("forScore, L5 : un trait ancien (sans taille mémorisée sur l'appareil) se lit encore, sans bannière", async ({ page }, testInfo) => {
+  // L6 : sur tablette en portrait, forScore a sa propre clé de page (« ap ») : les traits Classique n'y sont pas relus (principe 6).
+  test.skip(testInfo.project.name === "tablette", "tablette portrait : clé de page propre à forScore (L6)");
   // Le trait est posé en Classique (qui ne retient aucune taille) : sa clé est celle de toujours.
   const { db } = await ouvrirL5(page, null);
   await tracerTrait(page, db);
@@ -611,4 +613,110 @@ test("Classique, L5 : aucune bannière, aucune taille retenue, A− / A+ actifs 
   await expect(reglages.getByRole("button", { name: "Agrandir le texte" })).toBeEnabled();
   await page.keyboard.press("Escape");
   expect(erreurs).toEqual([]);
+});
+
+// Lot L6 : aperçu de la page suivante (style forScore, tablette en portrait seulement).
+// `chants: 4` répète Abba Père : plusieurs pages, et des pages suivantes qui ouvrent un autre chant.
+
+const APERCU = "[data-apercu-suivant]";
+const BLOCS = "[data-section], [data-entete-chant]";
+const blocsPage = (page: Page) => page.locator(`[data-performance-mode] :is(${BLOCS}):not([aria-hidden=true] *)`);
+const normaliser = (t: string | null) => (t ?? "").replace(/\s+/g, " ").trim();
+
+const nombrePages = async (page: Page) => Number((await lirePage(page)).split("/")[1]);
+async function allerPremierePage(page: Page) {
+  for (let i = 0; i < 40 && (await numero(page)) > 1; i++) {
+    await page.keyboard.press("ArrowLeft");
+    await page.waitForTimeout(60);
+  }
+  expect(await numero(page)).toBe(1);
+}
+async function pageSuivante(page: Page) {
+  const n = await numero(page);
+  await page.keyboard.press("ArrowRight");
+  await expect.poll(() => numero(page)).toBe(n + 1);
+}
+const premierBlocApercu = (page: Page) => page.locator(`[data-performance-mode] ${APERCU} :is(${BLOCS})`).first();
+const textePremierBlocPage = async (page: Page) => normaliser(await blocsPage(page).first().textContent());
+
+test("forScore, tablette portrait : l'aperçu montre le début de la page suivante, mis à jour par un tour de page et le retour", async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== "tablette", "propre à la tablette en portrait");
+  const erreurs = surveillerErreurs(page);
+  await ouvrir(page, { style: "forscore", chants: 4 });
+  await expect(compteur(page)).toHaveText(/^1 \/ \d+$/);
+  expect(await nombrePages(page)).toBeGreaterThan(2);
+  const apercu = page.locator(`[data-performance-mode] ${APERCU}`);
+  await expect(apercu).toBeVisible();
+  await expect(apercu).toHaveAttribute("aria-hidden", "true");
+  await expect(apercu).toHaveCSS("pointer-events", "none");
+  const un = normaliser(await premierBlocApercu(page).textContent());
+  expect(un.length).toBeGreaterThan(5);
+
+  await pageSuivante(page);
+  // Le tour de page montre ce que l'aperçu annonçait.
+  expect(await textePremierBlocPage(page)).toBe(un);
+  await expect(apercu).toBeVisible();
+  const deux = normaliser(await premierBlocApercu(page).textContent());
+  expect(deux).not.toBe(un);
+
+  await page.keyboard.press("ArrowLeft");
+  await expect.poll(() => numero(page)).toBe(1);
+  expect(normaliser(await premierBlocApercu(page).textContent())).toBe(un);
+
+  // Pas de défilement horizontal, pas d'erreur.
+  const debord = await page.evaluate(() => {
+    const racine = document.querySelector("[data-performance-mode]") as HTMLElement;
+    return { page: document.documentElement.scrollWidth - window.innerWidth, racine: racine.scrollWidth - racine.clientWidth };
+  });
+  expect(debord.page).toBeLessThanOrEqual(0);
+  expect(debord.racine).toBeLessThanOrEqual(0);
+  expect(erreurs).toEqual([]);
+});
+
+for (const taille of [100, 120]) {
+  test(`forScore, tablette portrait, texte à ${taille} % : l'aperçu ne chevauche jamais la dernière ligne, rien n'est rogné, aucun aperçu sur la dernière page`, async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== "tablette", "propre à la tablette en portrait");
+    test.setTimeout(120_000);
+    await ouvrir(page, { style: "forscore", chants: 4 });
+    await expect(compteur(page)).toHaveText(/^1 \/ \d+$/);
+    if (taille === 120) {
+      expect(await changerTaille(page, "Agrandir le texte", 2)).toBe("120%");
+      await attendreMiseEnPage(page);
+      await allerPremierePage(page);
+    }
+    const apercu = page.locator(`[data-performance-mode] ${APERCU}`);
+    const total = await nombrePages(page);
+    expect(total).toBeGreaterThan(2);
+    for (let p = 1; p <= total; p++) {
+      expect(await numero(page)).toBe(p);
+      const dernier = blocsPage(page).last();
+      await expect(dernier).toBeVisible();
+      if (p < total) {
+        await expect(apercu).toBeVisible();
+        const haut = (await apercu.boundingBox())!.y;
+        const bas = (await dernier.boundingBox())!.y + (await dernier.boundingBox())!.height;
+        expect(bas, `page ${p} : dernier bloc sous le haut de l'aperçu`).toBeLessThanOrEqual(haut + 0.5);
+        // Le haut de l'aperçu est sous le dernier bloc, et la bande tient dans la fenêtre.
+        expect((await apercu.boundingBox())!.y + (await apercu.boundingBox())!.height).toBeLessThanOrEqual(page.viewportSize()!.height + 0.5);
+        await pageSuivante(page);
+      } else {
+        // Dernière page de la setlist : aucun aperçu.
+        await expect(apercu).toHaveCount(0);
+      }
+      await expect(dernier).toBeInViewport({ ratio: 1 });
+    }
+  });
+}
+
+test("Classique : aucun aperçu de la page suivante (tous les appareils)", async ({ page }) => {
+  await ouvrir(page, { chants: 4 });
+  await expect(compteur(page)).toHaveText(/^1 \/ ([2-9]|\d\d+)$/);
+  await expect(page.locator(APERCU)).toHaveCount(0);
+});
+
+test("forScore : aucun aperçu hors tablette en portrait (téléphone, paysage, ordinateur)", async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name === "tablette", "la tablette en portrait a l'aperçu");
+  await ouvrir(page, { style: "forscore", chants: 4 });
+  await expect(compteur(page)).toHaveText(/^1 \/ ([2-9]|\d\d+)$/);
+  await expect(page.locator(APERCU)).toHaveCount(0);
 });

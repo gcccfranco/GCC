@@ -7,6 +7,12 @@ export function largeurZoneLaterale(largeur: number, hauteur: number, tactileGro
   return tactileGrossier && Math.min(largeur, hauteur) >= 600 ? 0.3 : 1 / 3;
 }
 
+/** Tablette tenue en portrait (lot L6) : plus haute que large, tactile grossier, petit côté ≥ 600 px.
+ *  Même définition de « tablette » que `largeurZoneLaterale`. */
+export function estTabletteVerticale(largeur: number, hauteur: number, tactileGrossier: boolean): boolean {
+  return hauteur > largeur && tactileGrossier && Math.min(largeur, hauteur) >= 600;
+}
+
 export type Geste = "toucher" | "balayage-gauche" | "balayage-droite" | null;
 
 /** Classe un geste à un doigt. Balayage vers la gauche (dx < 0) = page suivante,
