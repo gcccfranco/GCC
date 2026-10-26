@@ -30,6 +30,7 @@ import { getChartStylePref, setChartStylePref } from "@/lib/chartStylePref";
 import { getPersonalKeys, setPersonalKey } from "@/lib/setlist/personalKeys";
 import type { PartitionLayout } from "@/lib/partitionLayoutPref";
 import { getPinyinPref, setPinyinPref } from "@/lib/pinyinPref";
+import { getStyleLecturePref, setStyleLecturePref, type StyleLecture } from "@/lib/performance/lecturePref";
 import { getFontScalePref, setFontScalePref, MIN_FONT_SCALE, MAX_FONT_SCALE } from "@/lib/fontScalePref";
 import { useAuth } from "@/lib/firebase/auth";
 import type { SetlistItem } from "@/types/setList";
@@ -436,6 +437,9 @@ export function PerformanceMode({
   const [remeasureKey, setRemeasureKey] = useState(0);
   // Même taille que la page du chant (fontScalePref).
   const [fontScale, setFontScale] = useState(() => getFontScalePref());
+  // Style de lecture (docs/spec-mode-louange-forscore.md, L0) : réglage de repli, sans effet pour l'instant.
+  const [styleLecture, setStyleLectureState] = useState<StyleLecture>(() => getStyleLecturePref());
+  const setStyleLecture = (v: StyleLecture) => { setStyleLectureState(v); setStyleLecturePref(v); };
 
   // ── Thème scène (indépendant du thème du site, mémorisé) ──
   const [stageTheme, setStageTheme] = useState<"light" | "dark">(() => {
@@ -1124,6 +1128,7 @@ export function PerformanceMode({
     <div
       ref={rootRef}
       data-performance-mode
+      data-style-lecture={styleLecture}
       className="fixed inset-0 z-[9999] bg-background overflow-hidden select-none"
       style={{
         "--sat": "env(safe-area-inset-top, 0px)",
@@ -1872,6 +1877,26 @@ export function PerformanceMode({
                   }`}
                 >
                   <Moon className="h-3.5 w-3.5" /> {t("performance.dark")}
+                </button>
+              </div>
+            </SettingRow>
+            <SettingRow label={t("performance.readingStyle")}>
+              <div className="flex rounded-lg border border-border overflow-hidden">
+                <button
+                  onClick={() => setStyleLecture("classique")}
+                  className={`h-11 px-4 flex items-center gap-1.5 text-xs font-semibold transition-colors ${
+                    styleLecture === "classique" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {t("performance.readingClassic")}
+                </button>
+                <button
+                  onClick={() => setStyleLecture("forscore")}
+                  className={`h-11 px-4 flex items-center gap-1.5 text-xs font-semibold border-l border-border transition-colors ${
+                    styleLecture === "forscore" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {t("performance.readingForscore")}
                 </button>
               </div>
             </SettingRow>

@@ -19,6 +19,7 @@ const SPECS_GRAND_ECRAN = [
   /look-halo(-defilement)?\.spec\.ts/,
   /look-louange\.spec\.ts/,
   /performance-mode\.spec\.ts/,
+  /mode-louange-forscore\.spec\.ts/,
   /setlist-regie\.spec\.ts/,
   /setlist-partage\.spec\.ts/,
   /coup-d-oeil\.spec\.ts/,
