@@ -892,7 +892,7 @@ test("L3-T5b hors paysage grand écran (mode louange) : pas de colonne, le bande
   await ouvrirLouangeT5b(page);
   test.skip(await grandEcran(page), "téléphone et tablette en portrait");
   await expect(page.locator("[data-performance-mode] [data-colonne-scan]")).toHaveCount(0);
-  await expect(page.locator("[data-performance-mode]").getByText(/Suivant/).first()).toBeVisible();
+  await expect(page.locator("[data-performance-mode]").getByText(/Ensuite/).first()).toBeVisible();
 });
 
 // ─── L3-T6 : PDF de setlist — le scan coupé sous l'en-tête gravé, le calque décalé de −top ─

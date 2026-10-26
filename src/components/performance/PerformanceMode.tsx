@@ -1360,7 +1360,7 @@ export function PerformanceMode({
               />
             );
             // Paysage sur grand écran : l'en-tête et le bandeau passent dans une
-            // colonne de la marge gauche, « Suivant » en bas ; le scan, seul à
+            // colonne de la marge gauche, « Ensuite » en bas ; le scan, seul à
             // droite, prend toute la hauteur entre les barres.
             if (colonneScan) {
               return (
@@ -1380,17 +1380,25 @@ export function PerformanceMode({
                             {tonalite}
                           </div>
                         </div>
-                        {/* Une structure longue défile seule : « Suivant » reste en bas. */}
+                        {/* Une structure longue défile seule : « Ensuite » reste en bas. */}
                         <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden">{bandeauScan}</div>
                       </>
                     )}
                     {isLastPageOfSong && nextEntry && (
-                      <div data-suivant className="mt-auto shrink-0 pt-4 pb-1">
-                        <p className="text-xs text-muted-foreground">→ {t("performance.next")}</p>
-                        <p className="text-sm">
+                      <div className="mt-auto shrink-0 pt-4 pb-1">
+                        <button
+                          type="button"
+                          data-suivant
+                          onClick={() => goToPage(nextSongPage, pages.length)}
+                          onPointerDown={(e) => e.stopPropagation()}
+                          onPointerUp={(e) => e.stopPropagation()}
+                          className="pointer-events-auto min-h-11 w-full rounded-xl border border-border/60 bg-background/85 px-3 py-2 text-left text-sm text-muted-foreground backdrop-blur"
+                        >
+                          {t("performance.next")}{" "}
                           <span className="font-semibold text-foreground">{nextEntry.block.title}</span>
-                          <span className="ml-1.5 font-mono text-muted-foreground">{nextEntry.block.songKey}</span>
-                        </p>
+                          {" · "}
+                          <span className="font-mono">{nextEntry.block.songKey}</span>
+                        </button>
                       </div>
                     )}
                   </div>
@@ -1472,18 +1480,25 @@ export function PerformanceMode({
         </div>
       )}
 
-      {/* ── « Suivant : … » sur la dernière page d'un chant ── */}
+      {/* ── « Ensuite : … » sur la dernière page d'un chant : touchable, sans confirmation ── */}
       {isLastPageOfSong && nextEntry && !colonneScan && (
         <div
-          data-suivant
           className="absolute left-0 right-0 flex justify-center pointer-events-none"
           style={{ zIndex: 5, bottom: "calc(0.625rem + var(--sab, 0px))" }}
         >
-          <span className="flex items-center gap-1.5 text-xs text-muted-foreground bg-background/85 backdrop-blur px-3 py-1 rounded-full border border-border/60">
-            → {t("performance.next")}
-            <span className="font-semibold text-foreground">{nextEntry.block.title}</span>
+          <button
+            type="button"
+            data-suivant
+            onClick={() => goToPage(nextSongPage, pages.length)}
+            onPointerDown={(e) => e.stopPropagation()}
+            onPointerUp={(e) => e.stopPropagation()}
+            className="pointer-events-auto flex min-h-11 max-w-[92%] items-center gap-1.5 rounded-full border border-border/60 bg-background/85 px-4 py-2 text-sm text-muted-foreground backdrop-blur"
+          >
+            <span>{t("performance.next")}</span>{" "}
+            <span className="min-w-0 truncate font-semibold text-foreground">{nextEntry.block.title}</span>{" "}
+            <span>·</span>{" "}
             <span className="font-mono">{nextEntry.block.songKey}</span>
-          </span>
+          </button>
         </div>
       )}
 

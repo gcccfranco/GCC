@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
-import { attendreMiseEnPage, ouvrirReglages } from "./helpers/louange";
+import { attendreMiseEnPage, onStage, ouvrirReglages } from "./helpers/louange";
 
 // Lot L0 (docs/spec-mode-louange-forscore.md) : réglage « Style de lecture »,
 // par appareil. Setlist et compte simulés : aucun accès au Firestore réel.
@@ -285,4 +285,95 @@ test("Classique : un glissé de 80 px ne tourne pas la page", async ({ page }) =
   await glisser(page, 80, 0);
   await page.waitForTimeout(500);
   expect(await numero(page)).toBe(2);
+});
+
+// Lot L3 : « Ensuite : titre · tonalité », touchable, sans confirmation.
+
+const itemChant = (songSlug: string, position: number, keyOverride: string | null = null) => ({
+  songSlug, position, keyOverride, showChords: true, showPinyin: true,
+  useJianpu: false, structureOverride: null, sectionNotes: {}, notes: "",
+});
+
+/** Setlist de deux chants (Abba Père puis À l'agneau en G) ; se place sur la dernière page du premier. */
+async function ouvrirDernierePage(page: Page, style: "forscore" | undefined) {
+  await page.addInitScript((st) => {
+    localStorage.setItem("perf-role-preset", "pianiste");
+    if (st) localStorage.setItem("perf-style-lecture", st);
+  }, style);
+  await signInAs(page, MUSICIEN, {
+    [`setlists/${SETLIST_ID}`]: { ...setlist, items: [itemChant("abba-pere", 1), itemChant("a-l-agneau", 2, "G")] },
+  }, `/setlists/${SETLIST_ID}`);
+  await page.getByRole("button", { name: /Mode Louange/ }).click();
+  await attendreMiseEnPage(page);
+  await expect(compteur(page)).toHaveText(/^\d+ \/ \d+$/);
+}
+
+for (const style of [undefined, "forscore"] as const) {
+  const nom = style ? "forScore" : "Classique";
+
+  test(`${nom} : « Ensuite » sur la dernière page du chant, un toucher amène à la 1re page du suivant`, async ({ page }) => {
+    const erreurs = surveillerErreurs(page);
+    await ouvrirDernierePage(page, style);
+    const suivant = onStage(page, "[data-suivant]");
+    await expect(async () => {
+      if (await suivant.count()) return;
+      await page.keyboard.press("ArrowRight");
+      await expect(suivant).toHaveCount(1, { timeout: 1_000 });
+    }).toPass({ timeout: 20_000 });
+    await expect(suivant).toBeVisible();
+    await expect(suivant).toContainText("Ensuite");
+    await expect(suivant).toContainText("À l'agneau");
+    await expect(suivant).toContainText("G");
+    expect((await suivant.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+    const avant = await numero(page);
+    // La barre du bas (z 20) recouvre le bandeau tant qu'elle est visible : on la masque.
+    // forScore la garde jusqu'à un toucher au centre ; Classique la retire seule après 3 s.
+    if (style) await toucherCentre(page);
+    await expect(page.locator(BARRES).first()).toHaveCSS("pointer-events", "none", { timeout: 10_000 });
+    await suivant.click();
+    // Une page de plus, pas deux : le toucher n'a pas aussi tourné la page.
+    await expect.poll(() => numero(page)).toBe(avant + 1);
+    await page.waitForTimeout(500);
+    expect(await numero(page)).toBe(avant + 1);
+    // Le chant suivant est le dernier : plus de bandeau.
+    await expect(onStage(page, "[data-suivant]")).toHaveCount(0);
+    expect(erreurs).toEqual([]);
+  });
+
+  test(`${nom} : dernier chant de la setlist, aucun bandeau « Ensuite »`, async ({ page }) => {
+    const erreurs = surveillerErreurs(page);
+    await ouvrir(page, { style });
+    await expect(page.locator("[data-suivant]")).toHaveCount(0);
+    expect(erreurs).toEqual([]);
+  });
+}
+
+test("L3 colonne scan 简谱 (paysage grand écran seulement) : « Ensuite » de la colonne change de chant", async ({ page }) => {
+  test.setTimeout(90_000);
+  const erreurs = surveillerErreurs(page);
+  await page.route(/docs\.google\.com\/spreadsheets/, (route) => route.fulfill({ status: 200, contentType: "text/csv", body: "" }));
+  await page.addInitScript(() => localStorage.setItem("perf-role-preset", "pianiste"));
+  await signInAs(page, MUSICIEN, {
+    [`setlists/${SETLIST_ID}`]: {
+      ...setlist,
+      items: [{ ...itemChant("一生爱你", 1, "D"), jianpuSheet: true }, itemChant("abba-pere", 2)],
+    },
+  }, `/setlists/${SETLIST_ID}`);
+  await page.getByRole("button", { name: /Mode Louange/ }).click();
+  await attendreMiseEnPage(page);
+  const grand = await page.evaluate(() =>
+    matchMedia("(pointer: fine) and (min-width: 1024px), (pointer: coarse) and (orientation: landscape) and (min-width: 1024px)").matches);
+  test.skip(!grand, "paysage sur grand écran seulement");
+  const colonne = onStage(page, "[data-colonne-scan]");
+  await expect(colonne).toBeVisible({ timeout: 30_000 });
+  const suivant = colonne.locator("[data-suivant]");
+  await expect(suivant).toContainText("Ensuite");
+  await expect(suivant).toContainText("Abba Père");
+  await expect(onStage(page, "[data-suivant]")).toHaveCount(1);
+  expect((await suivant.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+  const avant = await numero(page);
+  await suivant.click();
+  await expect.poll(() => numero(page)).toBeGreaterThan(avant);
+  await expect(onStage(page, "[data-colonne-scan]")).toHaveCount(0);
+  expect(erreurs).toEqual([]);
 });
