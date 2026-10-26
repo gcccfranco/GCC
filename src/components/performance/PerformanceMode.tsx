@@ -30,6 +30,7 @@ import { getChartStylePref, setChartStylePref } from "@/lib/chartStylePref";
 import { getPersonalKeys, setPersonalKey } from "@/lib/setlist/personalKeys";
 import type { PartitionLayout } from "@/lib/partitionLayoutPref";
 import { getPinyinPref, setPinyinPref } from "@/lib/pinyinPref";
+import { classerGeste, largeurZoneLaterale } from "@/lib/performance/gestes";
 import { getStyleLecturePref, setStyleLecturePref, type StyleLecture } from "@/lib/performance/lecturePref";
 import { getFontScalePref, setFontScalePref, MIN_FONT_SCALE, MAX_FONT_SCALE } from "@/lib/fontScalePref";
 import { useAuth } from "@/lib/firebase/auth";
@@ -1037,26 +1038,59 @@ export function PerformanceMode({
   }, [currentPage, pages.length, goToPage, onClose, settingsOpen, songListOpen, askRole]);
 
   // Touch/pointer tap handling
+  // forScore : pointeurs actifs. Un second doigt qui descend annule le geste en cours (zoom à deux doigts).
+  const pointeursActifs = useRef<Set<number>>(new Set());
   const handlePointerDown = useCallback((e: React.PointerEvent) => {
     if (e.pointerType === "pen") return;
+    if (styleLectureRef.current === "forscore") {
+      if (e.pointerType === "mouse") pointeursActifs.current.clear();
+      pointeursActifs.current.add(e.pointerId);
+      if (pointeursActifs.current.size > 1) {
+        tapStart.current = null;
+        return;
+      }
+    }
     // Clic sur une barre de défilement (colonne du scan, barres toujours affichées) : pas un toucher.
     const el = e.target as HTMLElement;
     if (el.clientWidth > 0 && el.scrollHeight > el.clientHeight && e.nativeEvent.offsetX >= el.clientWidth) return;
     tapStart.current = { x: e.clientX, y: e.clientY, time: Date.now() };
   }, []);
 
+  const handlePointerCancel = useCallback((e: React.PointerEvent) => {
+    pointeursActifs.current.delete(e.pointerId);
+    tapStart.current = null;
+  }, []);
+
   const handlePointerUp = useCallback((e: React.PointerEvent) => {
-    if (e.pointerType === "pen" || !tapStart.current) return;
+    if (e.pointerType === "pen") return;
+    pointeursActifs.current.delete(e.pointerId);
+    if (!tapStart.current) return;
     const dx = e.clientX - tapStart.current.x;
     const dy = e.clientY - tapStart.current.y;
     const dt = Date.now() - tapStart.current.time;
     tapStart.current = null;
-    if (Math.abs(dx) > 40 || Math.abs(dy) > 40 || dt > 500) return;
 
-    const third = window.innerWidth / 3;
-    if (e.clientX < third) {
+    const forscore = styleLectureRef.current === "forscore";
+    let zone = 1 / 3;
+    if (forscore) {
+      const geste = classerGeste(dx, dy, dt);
+      if (geste === null) return;
+      if (geste !== "toucher") {
+        // Un balayage tourne la page, ne bascule jamais la barre, et se tait pendant l'annotation.
+        if (annotateModeRef.current) return;
+        goToPage(currentPage + (geste === "balayage-gauche" ? 1 : -1), pages.length);
+        return;
+      }
+      let grossier = false;
+      try { grossier = window.matchMedia("(pointer: coarse)").matches; } catch { /* sans matchMedia : zones par défaut */ }
+      zone = largeurZoneLaterale(window.innerWidth, window.innerHeight, grossier);
+    } else if (Math.abs(dx) > 40 || Math.abs(dy) > 40 || dt > 500) {
+      return;
+    }
+
+    if (e.clientX < window.innerWidth * zone) {
       goToPage(currentPage - 1, pages.length);
-    } else if (e.clientX > 2 * third) {
+    } else if (e.clientX > window.innerWidth * (1 - zone)) {
       goToPage(currentPage + 1, pages.length);
     } else {
       if (showChrome) {
@@ -1143,6 +1177,7 @@ export function PerformanceMode({
       } as React.CSSProperties}
       onPointerDown={handlePointerDown}
       onPointerUp={handlePointerUp}
+      onPointerCancel={handlePointerCancel}
     >
       {/* ── Hidden measurement container ── */}
       <div

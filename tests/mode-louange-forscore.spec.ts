@@ -163,3 +163,126 @@ test("forScore, barre masquée : un toucher à la hauteur de la bande basse, cô
   await expect(page.getByRole("button", { name: "Réglages" })).toBeHidden();
   expect(erreurs).toEqual([]);
 });
+
+// Lot L2 : zones de toucher et balayage.
+
+function surveillerErreurs(page: Page) {
+  const erreurs: string[] = [];
+  page.on("pageerror", (e) => erreurs.push(e.message));
+  page.on("console", (m) => { if (m.type() === "error" && !/Failed to load resource/.test(m.text())) erreurs.push(m.text()); });
+  return erreurs;
+}
+
+const lirePage = async (page: Page) => (await compteur(page).textContent())!.trim();
+const numero = async (page: Page) => Number((await lirePage(page)).split("/")[0]);
+
+/** Style forScore, barre masquée, positionné sur la page 2 (au moins). */
+async function ouvrirMasquee(page: Page, style: "forscore" | undefined = "forscore") {
+  await ouvrir(page, { style, chants: 4 });
+  if (style) {
+    await toucherCentre(page);
+    await expect(page.getByRole("button", { name: "Réglages" })).toBeHidden();
+  }
+  const ecran = page.viewportSize()!;
+  return { ecran, y: ecran.height / 2 };
+}
+
+async function cliquerA(page: Page, part: number) {
+  const ecran = page.viewportSize()!;
+  await page.mouse.click(ecran.width * part, ecran.height / 2);
+}
+
+async function glisser(page: Page, dx: number, dy: number) {
+  const ecran = page.viewportSize()!;
+  const x = ecran.width / 2;
+  const y = ecran.height / 2;
+  await page.mouse.move(x, y);
+  await page.mouse.down();
+  await page.mouse.move(x + dx / 2, y + dy / 2, { steps: 3 });
+  await page.mouse.move(x + dx, y + dy, { steps: 3 });
+  await page.mouse.up();
+}
+
+test("forScore : toucher à 15 % = page précédente, à 85 % = suivante, à 50 % = ouvre la barre", async ({ page }) => {
+  const erreurs = surveillerErreurs(page);
+  await ouvrirMasquee(page);
+  const total = Number((await lirePage(page)).split("/")[1]);
+  expect(total).toBeGreaterThan(2);
+
+  await cliquerA(page, 0.85);
+  await expect.poll(() => numero(page)).toBe(2);
+  const reglages = page.getByRole("button", { name: "Réglages" });
+  await expect(reglages).toBeHidden();
+
+  await cliquerA(page, 0.15);
+  await expect.poll(() => numero(page)).toBe(1);
+  await expect(reglages).toBeHidden();
+
+  await cliquerA(page, 0.5);
+  await expect(reglages).toBeVisible();
+  expect(await numero(page)).toBe(1);
+  expect(erreurs).toEqual([]);
+});
+
+test("forScore, téléphone et ordinateur : un toucher à 32 % tourne la page", async ({ page }, testInfo) => {
+  test.skip(/^tablette/.test(testInfo.project.name), "propre au téléphone et à l'ordinateur");
+  await ouvrirMasquee(page);
+  await cliquerA(page, 0.85);
+  await expect.poll(() => numero(page)).toBe(2);
+  await cliquerA(page, 0.32);
+  await expect.poll(() => numero(page)).toBe(1);
+  await expect(page.getByRole("button", { name: "Réglages" })).toBeHidden();
+});
+
+test("forScore, tablette : un toucher à 32 % ouvre la barre sans tourner, à 29 % il tourne", async ({ page }, testInfo) => {
+  test.skip(!/^tablette/.test(testInfo.project.name), "propre aux tablettes");
+  await ouvrirMasquee(page);
+  await cliquerA(page, 0.85);
+  await expect.poll(() => numero(page)).toBe(2);
+
+  await cliquerA(page, 0.32);
+  await expect(page.getByRole("button", { name: "Réglages" })).toBeVisible();
+  expect(await numero(page)).toBe(2);
+
+  await cliquerA(page, 0.5);
+  await expect(page.getByRole("button", { name: "Réglages" })).toBeHidden();
+  await cliquerA(page, 0.29);
+  await expect.poll(() => numero(page)).toBe(1);
+});
+
+test("forScore : glissé de 80 px vers la gauche = page suivante, vers la droite = précédente, barre inchangée", async ({ page }) => {
+  const erreurs = surveillerErreurs(page);
+  await ouvrirMasquee(page);
+  const reglages = page.getByRole("button", { name: "Réglages" });
+
+  await glisser(page, -80, 0);
+  await expect.poll(() => numero(page)).toBe(2);
+  await expect(reglages).toBeHidden();
+
+  await glisser(page, 80, 0);
+  await expect.poll(() => numero(page)).toBe(1);
+  await expect(reglages).toBeHidden();
+  expect(erreurs).toEqual([]);
+});
+
+test("forScore : glissé vertical de 80 px et glissé de 30 px sans effet de page", async ({ page }) => {
+  await ouvrirMasquee(page);
+  await cliquerA(page, 0.85);
+  await expect.poll(() => numero(page)).toBe(2);
+
+  await glisser(page, 0, 80);
+  await glisser(page, -30, 0);
+  await page.waitForTimeout(500);
+  expect(await numero(page)).toBe(2);
+});
+
+test("Classique : un glissé de 80 px ne tourne pas la page", async ({ page }) => {
+  await ouvrirMasquee(page, undefined);
+  await cliquerA(page, 0.85);
+  await expect.poll(() => numero(page)).toBe(2);
+
+  await glisser(page, -80, 0);
+  await glisser(page, 80, 0);
+  await page.waitForTimeout(500);
+  expect(await numero(page)).toBe(2);
+});
