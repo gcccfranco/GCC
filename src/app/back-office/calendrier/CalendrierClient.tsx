@@ -512,9 +512,9 @@ export function CalendrierClient() {
 
         {/* Le volet du jour (B5) : à droite sur ordinateur et tablette couchée, en Mois comme en Agenda. */}
         {aDroite && !telephone && (
-          // BO16 (a) : le volet va jusqu'au bord (v18), mais ses cartes finissent sur la marge de la page, comme « Ajouter »
-          // au-dessus (elles la dépassaient de 20 px) ; il s'élargit d'autant, les cartes gardent leurs 260 px.
-          <aside aria-labelledby="calendrier-jour" className="w-[calc(280px+var(--marge-page))] shrink-0 border-l border-border">
+          // BO16 (a) : le volet garde ses 300 px et va jusqu'au bord (v18), mais ses cartes finissent sur la marge de la
+          // page, comme « Ajouter » au-dessus (elles la dépassaient de 20 px).
+          <aside aria-labelledby="calendrier-jour" className="w-[300px] shrink-0 border-l border-border">
             <div className="sticky top-[var(--nav-h)] flex max-h-[calc(100dvh-var(--nav-h))] flex-col gap-3 overflow-y-auto pb-6 pl-5 pr-[var(--marge-page)] pt-1">
               <h2 id="calendrier-jour" className="text-[17px] font-bold text-foreground">
                 {titreJour(choisi, lang)}

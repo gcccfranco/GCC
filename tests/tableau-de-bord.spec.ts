@@ -702,7 +702,8 @@ test.describe("À faire (BO-B) : équivalents des écrans du tableau de bord (B4
     await expect(lignes(page).first()).toBeVisible();
     await expect(page.getByTestId("groupe-enRetard").getByTestId("ligne-a-faire")).toHaveText([/Affiche de Noël/]);
     await expect(page.getByTestId("groupe-semaine").getByTestId("ligne-a-faire")).toHaveText([/Réserver la salle/]);
-    await expect(verbe(ligne(page, "Affiche de Noël"), "Fait")).toHaveAttribute("href", /\/back-office\/equipes\/evenementiel\/?$/);
+    // BO16 (c) (docs/spec-back-office-piste-a.md) : « Fait » mène à la tâche.
+    await expect(verbe(ligne(page, "Affiche de Noël"), "Fait")).toHaveAttribute("href", /\/back-office\/taches\/evenementiel\/[^/]+\/?$/);
     await expect(page.getByText("Fond du culte")).toHaveCount(0);
     await expect(page.getByText("Noms du planning sans compte")).toHaveCount(0);
     await expect(page.getByText("Messages à lire")).toHaveCount(0);
@@ -829,11 +830,15 @@ test.describe("À faire (BO-B) : équivalents de Tableau de bord v2 (TB2-b)", ()
     await expect(ligne(page, "Dimanche 4 octobre")).toContainText("aucun référent à relancer");
   });
 
-  test("Plannings : une absence déclarée ne fait pas de ligne, et le motif n'apparaît jamais", async ({ page }) => {
+  // BO13 (docs/spec-back-office-piste-a.md, 26/10/2026) : l'absence en conflit revient dans « À faire », une ligne
+  // par poste tenu (Pers. B chante et traduit), « Remplacer » vers le planning ; le motif, jamais.
+  test("Plannings : une absence déclarée fait une ligne « Remplacer » par poste, et le motif n'apparaît jamais", async ({ page }) => {
     await ouvrir(page, LOUANGE_ORGA, JEU);
     await expect(lignes(page).first()).toBeVisible();
+    const absences = lignes(page).filter({ hasText: "Pers. B est absent·e" });
+    await expect(absences).toHaveCount(2);
+    for (const l of await absences.all()) await expect(verbe(l, "Remplacer")).toHaveAttribute("href", /\/back-office\/planning\/culte\/?$/);
     await expect(page.getByText("Motif secret")).toHaveCount(0);
-    await expect(page.getByText("Remplacer", { exact: true })).toHaveCount(0);
   });
 
   test("Plannings : « jusqu'au 1er novembre », les cases vides des quatre dimanches suivants en une ligne « plus tard »", async ({ page }) => {
