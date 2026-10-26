@@ -1233,6 +1233,9 @@ responsables sur un aperçu avant toute ouverture en ligne.
 (BO-F2), détail et « laissés » au § 4 de la spec ; aucune règle Firestore à publier pour ce lot. Avant la fusion,
 Timothée : révoquer le secret (L0), publier `firestore.rules` (corrections de l'audit), vérifier les comptes admin, `VERCEL_DEEP_CLONE=true`,
 fusionner `main` dans la branche ; puis l'essai BO5.
+**26/10/2026** : « Prends la décision toi-même » sur les points restés ouverts → BO13 à BO18 dans la spec (absences en
+conflit dans « À faire », « Tâche » et « sans compte » gardés, finitions, rouges antérieurs corrigés avant la fusion,
+modalités de l'essai au § 5) ; tranche BO-H.
 
 ## 4. Carte des modules de l'app « GCC »
 

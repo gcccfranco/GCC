@@ -23,6 +23,19 @@ Les décisions ci-dessous sont donc prises par Claude sur délégation, datées,
 | BO11 | Planning : l'aide clavier passe derrière un bouton « ? » (ordinateur) au lieu d'être toujours affichée ; le reste de la grille ne change pas. |
 | BO12 | Textes : français tutoyé et 中文 pour chaque libellé neuf ; noms accessibles ; contrastes de l'audit ; aucune donnée nouvelle dans Firestore ; si une règle doit changer, `access.ts` et `firestore.rules` en double, et Timothée la publie. |
 
+### Décisions du 26/10/2026 (Timothée : « Prends la décision toi-même »)
+
+Prises par Claude sur délégation, sur les points laissés ouverts par la fin du lot ; rouvrables par Timothée.
+
+| # | Décision |
+| --- | --- |
+| BO13 | **Absences en conflit dans « À faire »** : oui. Une personne planifiée qui s'est déclarée absente ce dimanche-là est une case vide cachée, la plus urgente de toutes ; l'ancien widget Plannings la montrait, la piste A ne doit pas la perdre. Une ligne par absence, sur les cinq prochains dimanches (`absencesEnConflit`, `src/lib/tableauDeBord/donnees.ts`, déjà calculée par `planningsDuTableau` mais appelée avec `[]` par `aFaire`) : « <Nom> est absent·e — <poste>, <planning>, <date> », verbe **« Remplacer »** vers la grille de ce planning ; groupe selon la date (« Cette semaine », « Plus tard ») ; même garde que les cases vides (qui remplit ce planning) ; **jamais le motif**. Les absences se lisent comme dans l'ancien widget (`WidgetCasesVides`, retiré par BO-B ; voir `047f620^`) : `listerToutesAbsences()` seulement si `canVoirAbsencesDeTous(user, profile)`, sinon aucune ligne d'absence. Aucune donnée nouvelle, aucune règle. |
+| BO14 | **« Tâche » dans « Ajouter »** du Calendrier : gardée. Une tâche a une échéance, donc une date ; le menu reprend les trois créations de la feuille du jour, et ne la montre qu'à qui crée des tâches. BO8 est complété en ce sens. |
+| BO15 | **« Sans compte » en page à part** sous Équipes › Personnes (`/back-office/equipes/personnes/sans-compte`, ouverte depuis l'en-tête de Personnes) : gardée. En grand, Personnes tient dans la fenêtre en deux volets ; une section dessous la ferait défiler. BO7 est complété en ce sens. |
+| BO16 | **Finitions** : corriger (a) la carte du volet du jour du Calendrier qui dépasse la marge en 中文 à 1 440 px ; (b) au téléphone, dans « À faire », un titre long passe sur deux lignes au lieu d'être coupé tôt à côté du verbe ; (c) la ligne « tâche » d'« À faire » mène **à la tâche** (`/back-office/taches/<équipe>/<id>`), le verbe « Fait » la promet ; (d) « Nouvelle réunion » depuis la page d'une équipe ouvre le formulaire avec cette équipe déjà choisie ; (e) 会议纪要 → 会议记录 dans les deux textes d'aide restants ; (f) code mort : `src/lib/firebase/backOffice.ts`, branches de `VoletsGestion` rendues inatteignables par les redirections, clés de traduction orphelines (fr et 中文) — `src/lib/tableauDeBord/{disposition,colonnes,reglages}.ts` restent ; (g) `back-office-coupe` couvre aussi `/back-office/equipes/personnes/sans-compte`, `/back-office/plus`, `/back-office/planning/sans-compte` et `/equipes/louange`. **Gardés tels quels** : la 4e colonne d'Équipes en fondu à 1 440 px (défilement voulu du bandeau) ; Statistiques sans entrée de menu active (ce n'est plus une entrée, BO1 ; « ‹ Chants » suffit) ; les réunions de la page d'équipe en lignes à chevron (une ligne mène à une fiche, comme partout dans le site). |
+| BO17 | **Rouges antérieurs au lot** (dix tests, rouges aussi sur `20d09a3`) : corrigés avant la fusion, dans une tranche à part, parce qu'ils partiront en ligne avec la branche. Chacun est remonté à sa cause : code fautif corrigé, ou test remis à l'intention de sa spec ; aucun test affaibli. |
+| BO18 | **Essai réel (BO5), modalités** : voir § 5. |
+
 ## 2. Tranches
 
 | Tranche | Contenu | Tests |
@@ -33,6 +46,7 @@ Les décisions ci-dessous sont donc prises par Claude sur délégation, datées,
 | BO-D | Équipes (BO7, BO4) : page d'une équipe dans le back-office et dans l'app, Moi › Mes équipes qui y mène, « sans compte » dans Personnes. | `equipes*.spec`, `equipes-taches`, `equipes-reunions`, `acces-moi`, `taches` |
 | BO-E | BO9 (volets), BO11 (aide clavier), BO3 (Statistiques côté Chants), nettoyage du code mort laissé par BO-A à BO-D, traductions. | `statistiques`, `planning-clavier`, `pages-en-grand-*` concernées |
 | BO-F | Vérification d'ensemble : suite complète, banc `scripts/rude-epreuve` (crawl sur le serveur du back-office, captures aux cinq dispositions, FR / 中文, clair / sombre), `regard` puis la session sur les captures, comparaison avec la planche. | suite complète verte |
+| BO-H | Décisions du 26/10/2026 : BO13 (absences dans À faire), BO16 (finitions), puis BO17 (rouges antérieurs) dans un commit à part. | `a-faire.spec.ts` (BO13, cinq projets), specs des finitions, `back-office-coupe`, les dix rouges antérieurs ; suite complète par projet à la fin |
 
 ## 3. Qui code
 
@@ -61,14 +75,14 @@ ce lot, le flux B prend aussi `src/types/backOffice.ts`, `src/lib/tableauDeBord/
 
 - **Antérieurs au lot** : colonnes de la grille du planning ; CLS du planning ; les dix rouges antérieurs listés à la ligne BO-F (BO-F2), à reprendre dans un lot de tests.
 - **中文** : deux textes d'aide (`zh-CN.json`, vers l. 2629 et 2638) écrivent encore 会议纪要, le reste du site 会议记录.
-- **À trancher par Timothée** : les absences en conflit de l'ancien widget Plannings ne sont pas reprises dans « À faire » (hors BO6).
+- ~~À trancher~~ : les absences en conflit de l'ancien widget Plannings → reprises dans « À faire » (BO13).
 - **Gardés exprès** : `src/lib/tableauDeBord/{disposition,colonnes,reglages}.ts`, que cinq specs importent encore.
 - **Écart de forme** : les réunions de la page d'équipe sont des lignes à chevron, pas les boutons de la planche.
-- **Écarts voulus, absents des décisions** : « Ajouter » propose aussi « Tâche » (BO8 n'en citait que deux) ; « sans compte » est une sous-page de Personnes, pas une section (BO7), pour ne pas faire défiler Personnes.
-- **Vus par BO-G, hors consigne** : à 1 440 px, la 4e colonne d'Équipes déborde en fondu ; en 中文 à 1 440 px, la carte du volet du jour du Calendrier dépasse la marge d'environ 20 px ; Statistiques : retour « ‹ Chants » sans entrée de menu active ; téléphone, À faire : un titre long se coupe tôt à côté de « Écrire le compte rendu ».
-- **Relecture de fin, mineurs** : dans « À faire », une tâche mène à la page de l'équipe, pas à la tâche ; « Nouvelle réunion » depuis la page d'une équipe ne transmet pas l'équipe ; code mort restant (`src/lib/firebase/backOffice.ts` plus importé, branches de `VoletsGestion` que les redirections rendent inatteignables, une trentaine de clés de traduction orphelines) ; `back-office-coupe` ne liste pas `/back-office/equipes/personnes/sans-compte`, `/back-office/plus` ni `/equipes/louange` (code bien gardé).
+- **Écarts voulus** : « Ajouter » propose aussi « Tâche » (BO14) ; « sans compte » est une sous-page de Personnes (BO15).
+- **Vus par BO-G, hors consigne** (tranchés par BO16) : à 1 440 px, la 4e colonne d'Équipes déborde en fondu ; en 中文 à 1 440 px, la carte du volet du jour du Calendrier dépasse la marge d'environ 20 px ; Statistiques : retour « ‹ Chants » sans entrée de menu active ; téléphone, À faire : un titre long se coupe tôt à côté de « Écrire le compte rendu ».
+- **Relecture de fin, mineurs** (tranchés par BO16) : dans « À faire », une tâche mène à la page de l'équipe, pas à la tâche ; « Nouvelle réunion » depuis la page d'une équipe ne transmet pas l'équipe ; code mort restant (`src/lib/firebase/backOffice.ts` plus importé, branches de `VoletsGestion` que les redirections rendent inatteignables, une trentaine de clés de traduction orphelines) ; `back-office-coupe` ne liste pas `/back-office/equipes/personnes/sans-compte`, `/back-office/plus` ni `/equipes/louange` (code bien gardé).
 - **Seul changement visible en ligne**, voulu : « Publier un trimestre » (/notifier) s'affiche en 中文 pour un visiteur en chinois.
-- **Essai réel (BO5)** : à faire par Timothée, avec 2 ou 3 responsables, sur un aperçu Vercel interrupteur ouvert, avant toute ouverture en ligne.
+- **Essai réel (BO5)** : modalités au § 5 (BO18) ; à mener par Timothée avant toute ouverture en ligne.
 
 ### Relais (25/10/2026, après BO-A) — pour la session neuve qui fait BO-B à BO-F (historique : tout est repris par les tranches ci-dessus)
 
@@ -80,3 +94,23 @@ ce lot, le flux B prend aussi `src/types/backOffice.ts`, `src/lib/tableauDeBord/
 - **Deux points de la relecture de fin, pas encore faits** (fichiers du flux B) : (1) `public/guide/planning.png` et `services.png` montrent un vrai nom tiré du repli de `src/lib/planning/data.ts` (`CULTE_FALLBACK`) : simuler le planning avec des noms inventés dans `tests/guide-captures.spec.ts`, refaire ces captures (`GUIDE_CAPTURES=1 npx playwright test tests/guide-captures.spec.ts --project=ordinateur`), puis regarder les 13 PNG du guide (aucun nom de `data.ts`) ; (2) `src/components/planning/PublishPlanningPanel.tsx` en français en dur (libellés, « Échec. », « Échec — vérifie ta connexion. », vers l. 161 et 165), alors que /notifier est en ligne : sous `t()`, FR et 中文.
 - Un run de toute la suite sur cinq projets sature le conteneur : lancer par projet, trois workers au plus.
 
+## 5. Essai réel (BO5, modalités décidées le 26/10/2026, BO18)
+
+- **Quand** : après BO-H, la fusion de `main` dans la branche et une suite verte ; avant d'ouvrir le back-office en ligne.
+- **Où** : l'aperçu Vercel de `ui/apple-design`, avec `NEXT_PUBLIC_BACK_OFFICE=1` posé pour l'environnement **Preview
+  seulement** (Production reste sans). ⚠ L'aperçu partage le Firestore du site : ce qu'on y fait est réel (tâches,
+  réunions, cases du planning). On fait donc du vrai travail, jamais des essais factices.
+- **Qui** : trois responsables aux rôles différents, choisis par Timothée : un référent de planning (remplit une grille),
+  un référent d'équipe (tâches, réunions), quelqu'un de la coordination (Calendrier, évènements, scène). Au moins un
+  sur téléphone, un sur ordinateur.
+- **Durée** : une semaine, dimanche compris (« Ce dimanche », cases vides, absences).
+- **Consigne** : faire son travail habituel depuis le back-office seulement, et noter sur le moment ce qu'on cherche sans
+  le trouver.
+- **Cinq questions à la fin** :
+  1. Qu'as-tu cherché sans le trouver ?
+  2. « À faire » t'a-t-il dit quoi faire en premier ? Une ligne t'a-t-elle paru inutile ?
+  3. La page de ton équipe suffit-elle pour tes tâches et tes réunions ?
+  4. As-tu retrouvé les évènements et les réunions dans le Calendrier ?
+  5. Au téléphone, la barre du bas te convient-elle ?
+- **Critère** : si aucun des trois ne bute sur un geste essentiel, le back-office peut s'ouvrir en ligne (poser
+  `NEXT_PUBLIC_BACK_OFFICE=1` en Production, **sur ordre de Timothée**) ; sinon, une tranche de corrections d'abord.
