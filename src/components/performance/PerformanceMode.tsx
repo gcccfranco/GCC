@@ -33,7 +33,8 @@ import { getPinyinPref, setPinyinPref } from "@/lib/pinyinPref";
 import { classerGeste, estTabletteVerticale, largeurZoneLaterale } from "@/lib/performance/gestes";
 import { LiseretTempo } from "@/components/performance/LiseretTempo";
 import { CurseurPage } from "@/components/performance/CurseurPage";
-import { effacerTailleAnnotee, getTailleAnnotee, setTailleAnnotee } from "@/lib/performance/tailleAnnotee";
+import { getTailleAnnotee, setTailleAnnotee } from "@/lib/performance/tailleAnnotee";
+import { barreDejaVue, marquerBarreVue } from "@/lib/performance/barreVue";
 import { clampTempo, getMetronomePref, getTempoChant, setMetronomePref, setTempoChant, TEMPO_DEPART, TEMPO_MAX, TEMPO_MIN } from "@/lib/performance/tempo";
 import { getFontScalePref, setFontScalePref, MIN_FONT_SCALE, MAX_FONT_SCALE } from "@/lib/fontScalePref";
 import { useAuth } from "@/lib/firebase/auth";
@@ -445,7 +446,8 @@ export function PerformanceMode({
   // + déplacement. Possédée ici car elle agrandit aussi le texte (transform CSS).
   const [annotZoom, setAnnotZoom] = useState(1);
   const [annotPan, setAnnotPan] = useState({ x: 0, y: 0 });
-  const [showChrome, setShowChrome] = useState(true);
+  // Barre visible à la toute première ouverture du mode sur l'appareil, masquée ensuite (drapeau posé par l'effet ci-dessous).
+  const [showChrome, setShowChrome] = useState(() => !barreDejaVue());
   const [songListOpen, setSongListOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [layout, setLayout] = useState<PerfPage[]>([]);
@@ -914,8 +916,13 @@ export function PerformanceMode({
   const annotateModeRef = useRef(annotateMode);
   annotateModeRef.current = annotateMode;
 
-  // À l'ouverture du mode et à la sortie de l'annotation, la barre est visible.
+  useEffect(() => { marquerBarreVue(); }, []);
+
+  // Entrée et sortie du mode annotation : la barre est visible. Rien au montage (barre masquée dès la 2ᵉ ouverture).
+  const annotatePrec = useRef(annotateMode);
   useEffect(() => {
+    if (annotatePrec.current === annotateMode) return;
+    annotatePrec.current = annotateMode;
     setShowChrome(true);
   }, [annotateMode]);
 
@@ -1015,9 +1022,6 @@ export function PerformanceMode({
       if (slugAnnote && data.strokes.length > 0 && getTailleAnnotee(setlistId, slugAnnote) === null) {
         setTailleAnnotee(setlistId, slugAnnote, fontScale);
       }
-      // Plus aucun trait sur la page : la taille mémorisée n'a plus de raison d'être (les autres
-      // pages du chant ne sont pas chargées, on ne peut pas les consulter ici).
-      if (slugAnnote && data.strokes.length === 0) effacerTailleAnnotee(setlistId, slugAnnote);
       if (user && currentPageKey && !horsLigne) {
         saveAnnotation(user.uid, setlistId, currentPageKey, serializeAnnotations(data));
       }

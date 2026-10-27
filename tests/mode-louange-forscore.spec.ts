@@ -896,7 +896,7 @@ test("forScore, L5 : la taille annotée est propre à la setlist (pas de banniè
   expect(erreurs).toEqual([]);
 });
 
-test("forScore, L5 : en annulant le dernier trait, la taille mémorisée est effacée", async ({ page }) => {
+test("forScore, L5 : en annulant le dernier trait, la taille reste mémorisée (jamais supprimée automatiquement)", async ({ page }) => {
   const { db, erreurs } = await ouvrirL5(page);
   await page.getByRole("button", { name: "Annoter" }).click();
   await expect(calqueLecture(page)).toHaveCount(1);
@@ -911,7 +911,159 @@ test("forScore, L5 : en annulant le dernier trait, la taille mémorisée est eff
   await expect.poll(() => ecritesAnnot(db).length).toBeGreaterThan(0);
   expect(await page.evaluate((c) => localStorage.getItem(c), CLE_TAILLE)).toBe("1");
   await page.getByRole("button", { name: "Annuler", exact: true }).click();
-  await expect.poll(() => page.evaluate((c) => localStorage.getItem(c), CLE_TAILLE)).toBeNull();
+  // Plus aucun trait, mais la taille reste : on attend l'écriture de la page vide avant de regarder la clé.
+  await expect.poll(() => ecritesAnnot(db).length).toBeGreaterThan(1);
+  expect(await page.evaluate((c) => localStorage.getItem(c), CLE_TAILLE)).toBe("1");
+  // Sortie d'annotation, puis autre taille : la bannière apparaît ; « Revenir à cette taille » la retire.
+  await page.getByRole("button", { name: "Annoter" }).click();
+  expect(await changerTaille(page, "Agrandir le texte")).toBe("110%");
+  const bandeau = page.locator("[data-alerte-annotations]");
+  await expect(bandeau).toBeVisible();
+  await bandeau.getByRole("button", { name: "Revenir à cette taille" }).click();
+  await expect(bandeau).toHaveCount(0);
+  expect(await pourcentage(page)).toBe("100%");
+  expect(await page.evaluate((c) => localStorage.getItem(c), CLE_TAILLE)).toBe("1");
+  expect(erreurs).toEqual([]);
+});
+
+// Barre du mode : visible à la toute première ouverture sur l'appareil (drapeau `perf-barre-vue`), masquée ensuite.
+
+async function rouvrirApresRechargement(page: Page) {
+  await page.reload();
+  await page.getByRole("button", { name: /Mode Louange/ }).click();
+  await attendreMiseEnPage(page);
+}
+
+test("barre : toute première ouverture sur un appareil vierge, la barre est visible", async ({ page }) => {
+  const erreurs = surveillerErreurs(page);
+  await ouvrir(page);
+  const barre = page.locator(BARRES).first();
+  await expect(barre).not.toHaveCSS("pointer-events", "none");
+  await expect(page.locator("[data-performance-mode] [inert]")).toHaveCount(0);
+  await expect(barre.locator("xpath=..")).not.toHaveAttribute("aria-hidden", "true");
+  await expect(page.getByRole("button", { name: "Réglages" })).toBeVisible();
+  expect(await page.evaluate(() => localStorage.getItem("perf-barre-vue"))).toBe("1");
+  expect(erreurs).toEqual([]);
+});
+
+test("barre : après rechargement et réouverture, masquée (aria-hidden, inert) ; un toucher au centre la montre", async ({ page }) => {
+  const erreurs = surveillerErreurs(page);
+  await ouvrir(page);
+  await rouvrirApresRechargement(page);
+  await expect(page.locator(BARRES).first()).toHaveCSS("pointer-events", "none");
+  await expect(page.locator("[data-performance-mode] [inert][aria-hidden='true']")).toHaveCount(1);
+  await expect(page.getByRole("button", { name: "Réglages" })).toBeHidden();
+  await toucherCentre(page);
+  await expect(page.locator("[data-performance-mode] [inert]")).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Réglages" })).toBeVisible();
+  await toucherCentre(page);
+  await expect(page.getByRole("button", { name: "Réglages" })).toBeHidden();
+  expect(erreurs).toEqual([]);
+});
+
+test("barre : fermer le mode puis le rouvrir sans recharger la page, elle reste masquée", async ({ page }) => {
+  const erreurs = surveillerErreurs(page);
+  await ouvrir(page);
+  await page.getByRole("button", { name: "Quitter" }).click();
+  await expect(page.locator("[data-performance-mode]")).toHaveCount(0);
+  await page.getByRole("button", { name: /Mode Louange/ }).click();
+  await attendreMiseEnPage(page);
+  await expect(page.locator(BARRES).first()).toHaveCSS("pointer-events", "none");
+  await expect(page.locator("[data-performance-mode] [inert][aria-hidden='true']")).toHaveCount(1);
+  expect(erreurs).toEqual([]);
+});
+
+test("barre masquée à l'ouverture : la pastille « Ensuite » se pose au bas de l'écran, remonte avec la barre", async ({ page }) => {
+  const erreurs = surveillerErreurs(page);
+  await ouvrirDernierePage(page);
+  await rouvrirApresRechargement(page);
+  await expect(page.locator(BARRES).first()).toHaveCSS("pointer-events", "none");
+  const suivant = onStage(page, "[data-suivant]");
+  await expect(async () => {
+    if (await suivant.count()) return;
+    await page.keyboard.press("ArrowRight");
+    await expect(suivant).toHaveCount(1, { timeout: 1_000 });
+  }).toPass({ timeout: 20_000 });
+  const hauteurEcran = page.viewportSize()!.height;
+  const bas = (await suivant.boundingBox())!;
+  const barreBasse = (await page.locator(BARRES).nth(1).boundingBox())!;
+  // Barre masquée : la pastille est sous le haut de la barre basse (elle ne la contourne plus).
+  expect(bas.y + bas.height).toBeGreaterThan(barreBasse.y + 0.5);
+  expect(bas.y + bas.height).toBeLessThanOrEqual(hauteurEcran + 0.5);
+  await toucherCentre(page);
+  await expect(page.locator(BARRES).first()).not.toHaveCSS("pointer-events", "none");
+  await expect.poll(async () => (await suivant.boundingBox())!.y + (await suivant.boundingBox())!.height).toBeLessThanOrEqual(barreBasse.y + 0.5);
+  expect(erreurs).toEqual([]);
+});
+
+test("barre masquée à l'ouverture : le liseré du métronome se pose sous la zone de sécurité, sous la barre une fois ouverte", async ({ page }) => {
+  const erreurs = surveillerErreurs(page);
+  await ouvrirChantL4(page, "avec-nous", { metronome: true });
+  await rouvrirApresRechargement(page);
+  await expect(page.locator(BARRES).first()).toHaveCSS("pointer-events", "none");
+  const liseret = page.locator("[data-liseret]");
+  await expect(liseret).toHaveCount(1);
+  const haute = (await page.locator(BARRES).first().boundingBox())!;
+  await expect.poll(async () => (await liseret.boundingBox())!.y).toBeLessThan(haute.y + haute.height - 1);
+  await toucherCentre(page);
+  await expect(page.locator(BARRES).first()).not.toHaveCSS("pointer-events", "none");
+  await expect.poll(async () => (await liseret.boundingBox())!.y).toBeGreaterThanOrEqual(haute.y + haute.height - 1);
+  expect(erreurs).toEqual([]);
+});
+
+test("barre masquée à l'ouverture : la bannière « autre taille » est en haut de l'écran et touchable", async ({ page }) => {
+  const { db, erreurs } = await ouvrirL5(page);
+  await tracerTrait(page, db);
+  expect(await changerTaille(page, "Agrandir le texte")).toBe("110%");
+  await rouvrirApresRechargement(page);
+  await expect(page.locator(BARRES).first()).toHaveCSS("pointer-events", "none");
+  const bandeau = page.locator("[data-alerte-annotations]");
+  await expect(bandeau).toBeVisible();
+  const haute = (await page.locator(BARRES).first().boundingBox())!;
+  const bouton = bandeau.getByRole("button", { name: "Revenir à cette taille" });
+  // Barre masquée : la bannière remonte dans la bande de la barre, sans attendre qu'on l'ouvre.
+  expect((await bouton.boundingBox())!.y).toBeLessThan(haute.y + haute.height - 0.5);
+  await bouton.click();
+  await expect(bandeau).toHaveCount(0);
+  expect(await pourcentage(page)).toBe("100%");
+  expect(erreurs).toEqual([]);
+});
+
+test("barre : stockage perf-* qui lève, le mode s'ouvre sans erreur et la barre est visible", async ({ page }) => {
+  const erreurs = surveillerErreurs(page);
+  await page.addInitScript(() => {
+    const getItem = Storage.prototype.getItem;
+    const setItem = Storage.prototype.setItem;
+    const lever = () => { throw new Error("stockage indisponible"); };
+    Storage.prototype.getItem = function (k: string) { return k.startsWith("perf-") ? lever() : getItem.call(this, k); };
+    Storage.prototype.setItem = function (k: string, v: string) { return k.startsWith("perf-") ? lever() : setItem.call(this, k, v); };
+  });
+  await signInAs(page, MUSICIEN, { [`setlists/${SETLIST_ID}`]: setlist }, `/setlists/${SETLIST_ID}`);
+  await page.getByRole("button", { name: /Mode Louange/ }).click();
+  await attendreMiseEnPage(page);
+  await expect(page.locator(BARRES).first()).not.toHaveCSS("pointer-events", "none");
+  await expect(page.getByRole("button", { name: "Réglages" })).toBeVisible();
+  expect(erreurs).toEqual([]);
+});
+
+test("barre : la sortie du mode annotation la laisse visible, et la réouverture suivante ne la montre pas", async ({ page }) => {
+  const erreurs = surveillerErreurs(page);
+  await ouvrir(page);
+  await toucherCentre(page);
+  await expect(page.getByRole("button", { name: "Réglages" })).toBeHidden();
+  await toucherCentre(page);
+  await page.getByRole("button", { name: "Annoter" }).click();
+  await expect(calqueLecture(page)).toHaveCount(1);
+  await expect(page.locator(BARRES).first()).not.toHaveCSS("pointer-events", "none");
+  await page.getByRole("button", { name: "Annoter" }).click();
+  await expect(page.getByRole("button", { name: "Réglages" })).toBeVisible();
+  await expect(page.locator(BARRES).first()).not.toHaveCSS("pointer-events", "none");
+  await page.getByRole("button", { name: "Quitter" }).click();
+  await expect(page.locator("[data-performance-mode]")).toHaveCount(0);
+  await page.getByRole("button", { name: /Mode Louange/ }).click();
+  await attendreMiseEnPage(page);
+  await expect(page.locator(BARRES).first()).toHaveCSS("pointer-events", "none");
+  await expect(page.locator("[data-performance-mode] [inert][aria-hidden='true']")).toHaveCount(1);
   expect(erreurs).toEqual([]);
 });
 

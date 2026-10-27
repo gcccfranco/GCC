@@ -22,7 +22,3 @@ export function setTailleAnnotee(setlistId: string, slug: string, v: number) {
   if (!(v >= MIN_FONT_SCALE && v <= MAX_FONT_SCALE)) return;
   try { localStorage.setItem(cle(setlistId, slug), String(v)); } catch { /* stockage indisponible */ }
 }
-
-export function effacerTailleAnnotee(setlistId: string, slug: string) {
-  try { localStorage.removeItem(cle(setlistId, slug)); } catch { /* stockage indisponible */ }
-}
