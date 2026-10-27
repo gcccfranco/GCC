@@ -655,9 +655,13 @@ test("forScore, tablette portrait : l'aperçu montre le début de la page suivan
   await pageSuivante(page);
   // Le tour de page montre ce que l'aperçu annonçait.
   expect(await textePremierBlocPage(page)).toBe(un);
-  await expect(apercu).toBeVisible();
-  const deux = normaliser(await premierBlocApercu(page).textContent());
-  expect(deux).not.toBe(un);
+  // Page qui clôt un chant : « Ensuite » prend la bande, sans aperçu dessous ; sinon l'aperçu se met à jour.
+  if (await onStage(page, "[data-suivant]").count()) {
+    await expect(apercu).toHaveCount(0);
+  } else {
+    await expect(apercu).toBeVisible();
+    expect(normaliser(await premierBlocApercu(page).textContent())).not.toBe(un);
+  }
 
   await page.keyboard.press("ArrowLeft");
   await expect.poll(() => numero(page)).toBe(1);
@@ -691,7 +695,11 @@ for (const taille of [100, 120]) {
       expect(await numero(page)).toBe(p);
       const dernier = blocsPage(page).last();
       await expect(dernier).toBeVisible();
-      if (p < total) {
+      if (p < total && (await onStage(page, "[data-suivant]").count())) {
+        // Dernière page d'un chant : la pastille « Ensuite » occupe la bande, pas d'aperçu.
+        await expect(apercu).toHaveCount(0);
+        await pageSuivante(page);
+      } else if (p < total) {
         await expect(apercu).toBeVisible();
         const haut = (await apercu.boundingBox())!.y;
         const bas = (await dernier.boundingBox())!.y + (await dernier.boundingBox())!.height;
@@ -707,6 +715,18 @@ for (const taille of [100, 120]) {
     }
   });
 }
+
+test("forScore, tablette portrait : sur la dernière page d'un chant, « Ensuite » seul, sans aperçu dessous", async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== "tablette", "l'aperçu n'existe qu'en tablette portrait");
+  await ouvrirDernierePage(page, "forscore");
+  const suivant = onStage(page, "[data-suivant]");
+  await expect(async () => {
+    if (await suivant.count()) return;
+    await page.keyboard.press("ArrowRight");
+    await expect(suivant).toHaveCount(1, { timeout: 1_000 });
+  }).toPass({ timeout: 20_000 });
+  await expect(onStage(page, "[data-apercu-suivant]")).toHaveCount(0);
+});
 
 test("Classique : aucun aperçu de la page suivante (tous les appareils)", async ({ page }) => {
   await ouvrir(page, { chants: 4 });

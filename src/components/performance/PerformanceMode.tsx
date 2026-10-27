@@ -1239,9 +1239,11 @@ export function PerformanceMode({
   // L6 : début de la page suivante, sous la bande réservée par la pagination. Ni dernière page,
   // ni page de scan 简谱 (courante ou suivante) ; rien non plus sous la loupe d'annotation.
   const pageSuivante = layout[currentPage + 1];
-  const apercu = apercuActif && !fitPage && annotZoom === 1 && pageSuivante && !pageSuivante.fit ? pageSuivante : null;
+  const apercuPossible = apercuActif && !fitPage && annotZoom === 1 && pageSuivante && !pageSuivante.fit ? pageSuivante : null;
+  // Sur la dernière page d'un chant, la pastille « Ensuite » occupe déjà la bande : pas d'aperçu par-dessous.
+  const apercu = isLastPageOfSong && nextEntry ? null : apercuPossible;
   // Les calques d'annotation ne couvrent pas la bande (bas de page + 16 px de marge + sab).
-  const rogneBas = apercu ? `calc(${(APERCU_H + 16) * fontScale}px + var(--sab, 0px))` : undefined;
+  const rogneBas = apercuPossible ? `calc(${(APERCU_H + 16) * fontScale}px + var(--sab, 0px))` : undefined;
 
   return (
     <div
