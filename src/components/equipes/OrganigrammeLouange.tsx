@@ -110,7 +110,7 @@ export function CorpsLouange({
 
 // ── Pastilles à bascule ─────────────────────────────────────────────────────
 
-function Pastille({ actif, disabled, onClick, children }: { actif: boolean; disabled?: boolean; onClick: () => void; children: ReactNode }) {
+export function Pastille({ actif, disabled, onClick, children }: { actif: boolean; disabled?: boolean; onClick: () => void; children: ReactNode }) {
   return (
     <button
       type="button"
@@ -127,7 +127,7 @@ function Pastille({ actif, disabled, onClick, children }: { actif: boolean; disa
   );
 }
 
-function Groupe({ titre, children }: { titre: string; children: ReactNode }) {
+export function Groupe({ titre, children }: { titre: string; children: ReactNode }) {
   return (
     <div role="group" aria-label={titre} className="space-y-1">
       <p className="text-xs font-semibold text-muted-foreground">{titre}</p>

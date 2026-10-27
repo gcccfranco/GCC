@@ -18,6 +18,7 @@ const SPECS_GRAND_ECRAN = [
   /look-navigation\.spec\.ts/,
   /look-halo(-defilement)?\.spec\.ts/,
   /look-louange\.spec\.ts/,
+  /edd-sous-equipes\.spec\.ts/,
   /performance-mode\.spec\.ts/,
   /mode-louange-forscore\.spec\.ts/,
   /setlist-regie\.spec\.ts/,

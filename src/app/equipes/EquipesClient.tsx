@@ -38,7 +38,9 @@ import {
 import { findMyServices, loadPlanningData, type PlanningData } from "@/lib/planning/names";
 import { categoryLabel } from "@/lib/serviceColors";
 import { SERVICE_LIEUX, SERVICE_ROLE_LABELS, type UserProfile } from "@/types/user";
-import { SOUS_EQUIPES, type Equipe, type MembreEquipe } from "@/types/equipe";
+import { SOUS_EQUIPES, SOUS_EQUIPES_EDD, type Equipe, type MembreEquipe } from "@/types/equipe";
+import { colonnesEdd } from "@/lib/equipes/edd";
+import { PastillesEdd } from "@/components/equipes/OrganigrammeEdd";
 
 const nomComplet = (p: UserProfile) =>
   `${p.firstName} ${p.lastName}`.trim() || p.planningName || p.email;
@@ -302,6 +304,8 @@ function CarteEquipe({
   // Lot AO-B : Louange en trois sous-équipes, lignes grises des lieux pour Louange et Régie.
   const nouveauLouange = BACK_OFFICE && def.id === "louange";
   const nouveauRegie = BACK_OFFICE && def.id === "regie";
+  // Sous-équipes de l'EDD (docs/spec-edd-sous-equipes.md) : à la place du regroupement par `groupe`.
+  const nouveauEdd = BACK_OFFICE && def.id === "edd";
 
   const groupe = (g: string) => (
     <div key={g} className="break-inside-avoid space-y-0.5">
@@ -313,6 +317,24 @@ function CarteEquipe({
       ))}
     </div>
   );
+
+  const colonneEdd = (id: string, titre: string | null, liste: MembreEquipe[]) => (
+    <div key={id} data-testid={`edd-${id}`} className="break-inside-avoid space-y-0.5">
+      {titre && (
+        <p className="break-words hyphens-auto text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{titre}</p>
+      )}
+      {liste.map((m, i) => (
+        <LigneMembre key={`${m.uid || m.nom}-${i}`} membre={m} onFiche={onFiche} />
+      ))}
+    </div>
+  );
+  const corpsEdd = () => {
+    const { parSous, sans } = colonnesEdd(membres);
+    const blocs = SOUS_EQUIPES_EDD.filter((s) => parSous[s].length > 0).map((s) => colonneEdd(`sous-${s}`, t(`equipes.sousEquipeEdd.${s}`), parSous[s]));
+    // « Sans sous-équipe » en dernier, sans intertitre si personne n'a de sous-équipe.
+    if (sans.length > 0) blocs.push(colonneEdd("sans", blocs.length > 0 ? t("equipes.sousEquipeEdd.sans") : null, sans));
+    return enColonnes ? <div className="columns-3 gap-4 [&>div]:pb-2">{blocs}</div> : <div className="space-y-2">{blocs}</div>;
+  };
 
   return (
     <section
@@ -355,6 +377,8 @@ function CarteEquipe({
           membres={membres}
           ligne={(m, { referent, detail }) => <LigneMembre membre={m} onFiche={onFiche} referentTexte={referent} detail={detail} />}
         />
+      ) : nouveauEdd ? (
+        corpsEdd()
       ) : enColonnes ? (
         <div>
           {groupes.includes("") && <div className="pb-2">{groupe("")}</div>}
@@ -444,6 +468,7 @@ function EditionEquipe({
   const nouveau = BACK_OFFICE;
   const aLieux = nouveau && porteDesLieux(def.id);
   const louange = def.id === "louange";
+  const edd = nouveau && def.id === "edd";
   const droits = {
     equipe: !nouveau || peutModifierEquipe(user, profile, def.id),
     sous: (s: (typeof SOUS_EQUIPES)[number]) => peutPlacerSousEquipe(user, profile, s),
@@ -552,7 +577,7 @@ function EditionEquipe({
             onRetirer={() => retire(i)}
           />
         ) : (
-          <div key={`${m.nom}-${i}`} className="rounded-lg border border-border p-2 space-y-1.5">
+          <div key={`${m.nom}-${i}`} data-testid={`membre-${m.uid || m.nom}`} className="rounded-lg border border-border p-2 space-y-1.5">
             <div className="flex items-center justify-between gap-2">
               <span className="text-sm font-semibold text-foreground">{m.nom}</span>
               <button
@@ -570,6 +595,9 @@ function EditionEquipe({
               onChange={(e) => change(i, { mention: e.target.value })}
               className="h-9"
             />
+            {edd && droits.equipe && (
+              <PastillesEdd m={m} onChange={(champ) => change(i, champ)} />
+            )}
             <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
               <label className="inline-flex items-center gap-1.5">
                 <input type="checkbox" checked={m.referent} disabled={!droits.referents} onChange={(e) => change(i, { referent: e.target.checked })} />

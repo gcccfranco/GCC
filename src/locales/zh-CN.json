@@ -3311,6 +3311,14 @@
       "fermer": "关闭",
       "admin": "在管理后台打开"
     },
+    "sousEquipeEdd": {
+      "professeurs-louange": "敬拜老师",
+      "professeurs-cours": "课程老师",
+      "pianistes": "钢琴手",
+      "guitaristes": "吉他手",
+      "cajon": "箱鼓",
+      "sans": "未分组"
+    },
     "colonne": {
       "paix": "和平",
       "bonte": "恩慈",

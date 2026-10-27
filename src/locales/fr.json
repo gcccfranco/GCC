@@ -3351,6 +3351,14 @@
       "fermer": "Fermer",
       "admin": "Ouvrir dans l'administration"
     },
+    "sousEquipeEdd": {
+      "professeurs-louange": "Professeurs louange",
+      "professeurs-cours": "Professeurs cours",
+      "pianistes": "Pianistes",
+      "guitaristes": "Guitaristes",
+      "cajon": "Cajon",
+      "sans": "Sans sous-équipe"
+    },
     "colonne": {
       "paix": "Paix",
       "bonte": "Bonté",
