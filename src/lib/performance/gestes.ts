@@ -1,5 +1,5 @@
-// Lot L2 (docs/spec-mode-louange-forscore.md) : zones de toucher et balayage du style forScore.
-// Fonctions pures ; le mode louange Classique ne les utilise pas.
+// Lot L2 (docs/spec-mode-louange-forscore.md) : zones de toucher et balayage.
+// Fonctions pures.
 
 /** Largeur de chaque zone latérale, en part de la largeur de l'écran : 0,3 sur tablette
  *  (tactile grossier et petit côté ≥ 600 px), 1/3 sur téléphone et ordinateur. */

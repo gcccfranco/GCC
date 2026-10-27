@@ -35,7 +35,6 @@ import { LiseretTempo } from "@/components/performance/LiseretTempo";
 import { CurseurPage } from "@/components/performance/CurseurPage";
 import { getTailleAnnotee, setTailleAnnotee } from "@/lib/performance/tailleAnnotee";
 import { clampTempo, getMetronomePref, getTempoChant, setMetronomePref, setTempoChant, TEMPO_DEPART, TEMPO_MAX, TEMPO_MIN } from "@/lib/performance/tempo";
-import { getStyleLecturePref, setStyleLecturePref, type StyleLecture } from "@/lib/performance/lecturePref";
 import { getFontScalePref, setFontScalePref, MIN_FONT_SCALE, MAX_FONT_SCALE } from "@/lib/fontScalePref";
 import { useAuth } from "@/lib/firebase/auth";
 import type { SetlistItem } from "@/types/setList";
@@ -265,7 +264,7 @@ const NEXT_PILL_RESERVE = 40;
 // Sections uniques : place du rappel de structure (24 px et 8 px dessous) en
 // haut des pages 2 et suivantes d'un chant (D11).
 const RAPPEL_RESERVE = 32;
-// Style forScore, tablette en portrait (lot L6) : bande fixe en bas, début de la page suivante
+// Tablette en portrait (lot L6) : bande fixe en bas, début de la page suivante
 // (≈ trois lignes de paroles), sous une ligne bleue de 2 px. Hauteur en px de mise en page :
 // la pagination la retranche de son budget, le rendu la met à l'échelle comme le texte.
 const APERCU_H = 96;
@@ -454,9 +453,6 @@ export function PerformanceMode({
   const [remeasureKey, setRemeasureKey] = useState(0);
   // Même taille que la page du chant (fontScalePref).
   const [fontScale, setFontScale] = useState(() => getFontScalePref());
-  // Style de lecture (docs/spec-mode-louange-forscore.md, L0) : réglage de repli, sans effet pour l'instant.
-  const [styleLecture, setStyleLectureState] = useState<StyleLecture>(() => getStyleLecturePref());
-  const setStyleLecture = (v: StyleLecture) => { setStyleLectureState(v); setStyleLecturePref(v); };
   // Métronome visuel (L4) : réglage par appareil, inactif par défaut ; tempo réglé par chant
   // relu du stockage à chaque rendu (`tempoTick` relance le rendu après une écriture).
   const [metronome, setMetronomeState] = useState(() => getMetronomePref());
@@ -614,10 +610,10 @@ export function PerformanceMode({
   });
   const twoColumnsAvailable = twoColumnsPossible(ecran.grand, ecran.largeur, fontScale) && !structureMode;
   const twoColumns = twoColumnsAvailable && twoColumnsPref !== "0";
-  // Aperçu de la page suivante (L6) : style forScore, tablette portrait, hors vue structure, et
+  // Aperçu de la page suivante (L6) : tablette portrait, hors vue structure, et
   // seulement si la bande tient (≤ 25 % de la hauteur) ; sinon la pagination garde son budget.
   const apercuActif =
-    styleLecture === "forscore" && ecran.tabletteVerticale && !structureMode &&
+    ecran.tabletteVerticale && !structureMode &&
     APERCU_H * fontScale <= ecran.hauteur * APERCU_PART_MAX;
   const toggleTwoColumns = useCallback(() => {
     const next = twoColumns ? "0" : "1";
@@ -644,7 +640,6 @@ export function PerformanceMode({
   // Hauteur du rappel de chaque chant (Sections uniques), mesurée en copie.
   const rappelRefs = useRef<(HTMLDivElement | null)[]>([]);
   const measureInnerRef = useRef<HTMLDivElement | null>(null);
-  const chromeTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   // Hauteur des barres, pour qu'une page de scan tienne entre elles (K1).
   const barreHautRef = useRef<HTMLDivElement>(null);
   const barreBasRef = useRef<HTMLDivElement>(null);
@@ -915,36 +910,14 @@ export function PerformanceMode({
     };
   }, []);
 
-  // Chrome auto-hide (reste visible tant que le mode annotation est actif)
+  // Barre : pas de minuterie, elle reste jusqu'au toucher au centre (lot L1).
   const annotateModeRef = useRef(annotateMode);
   annotateModeRef.current = annotateMode;
 
-  // Style forScore : pas de minuterie, la barre reste jusqu'au toucher au centre (lot L1).
-  const styleLectureRef = useRef(styleLecture);
-  styleLectureRef.current = styleLecture;
-
-  const showChromeWithTimer = useCallback(() => {
+  // À l'ouverture du mode et à la sortie de l'annotation, la barre est visible.
+  useEffect(() => {
     setShowChrome(true);
-    clearTimeout(chromeTimer.current);
-    if (styleLectureRef.current === "forscore") return;
-    chromeTimer.current = setTimeout(() => {
-      if (!annotateModeRef.current && styleLectureRef.current !== "forscore") setShowChrome(false);
-    }, 3000);
-  }, []);
-
-  useEffect(() => {
-    showChromeWithTimer();
-    return () => clearTimeout(chromeTimer.current);
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
-  useEffect(() => {
-    if (annotateMode) {
-      setShowChrome(true);
-      clearTimeout(chromeTimer.current);
-    } else {
-      showChromeWithTimer();
-    }
-  }, [annotateMode, showChromeWithTimer]);
+  }, [annotateMode]);
 
   // Loupe : retour à 100 % à chaque changement de page et à l'entrée/sortie du
   // mode annotation (vue prévisible, on ne reste pas zoomé sur la page suivante).
@@ -1007,7 +980,7 @@ export function PerformanceMode({
 
   // L5 : chant de la page courante, et taille à laquelle il a été annoté sur cet appareil.
   const slugAnnote = currentEntry?.block.songSlug;
-  const tailleAnnotee = styleLecture === "forscore" && slugAnnote ? getTailleAnnotee(slugAnnote) : null;
+  const tailleAnnotee = slugAnnote ? getTailleAnnotee(slugAnnote) : null;
   const alerteAnnotations =
     !!user && !annotateMode && showAnnotations && tailleAnnotee !== null &&
     Math.round(tailleAnnotee * 100) !== Math.round(fontScale * 100);
@@ -1035,8 +1008,8 @@ export function PerformanceMode({
   const handleAnnotationsChange = useCallback(
     (data: AnnotationData) => {
       setPageAnnotations(data);
-      // L5 (forScore) : au premier trait d'un chant, on retient la taille du texte à laquelle on annote.
-      if (styleLectureRef.current === "forscore" && slugAnnote && data.strokes.length > 0 && getTailleAnnotee(slugAnnote) === null) {
+      // L5 : au premier trait d'un chant, on retient la taille du texte à laquelle on annote.
+      if (slugAnnote && data.strokes.length > 0 && getTailleAnnotee(slugAnnote) === null) {
         setTailleAnnotee(slugAnnote, fontScale);
       }
       if (user && currentPageKey && !horsLigne) {
@@ -1049,7 +1022,7 @@ export function PerformanceMode({
   // L5 : à l'entrée en annotation, la taille mémorisée du chant revient avant qu'on dessine.
   const basculerAnnotation = () => {
     setSettingsOpen(false);
-    if (!annotateMode && styleLecture === "forscore" && slugAnnote) {
+    if (!annotateMode && slugAnnote) {
       const memo = getTailleAnnotee(slugAnnote);
       if (memo !== null && Math.round(memo * 100) !== Math.round(fontScale * 100)) appliquerTaille(memo);
     }
@@ -1091,17 +1064,15 @@ export function PerformanceMode({
   }, [currentPage, pages.length, goToPage, onClose, settingsOpen, songListOpen, askRole]);
 
   // Touch/pointer tap handling
-  // forScore : pointeurs actifs. Un second doigt qui descend annule le geste en cours (zoom à deux doigts).
+  // Pointeurs actifs. Un second doigt qui descend annule le geste en cours (zoom à deux doigts).
   const pointeursActifs = useRef<Set<number>>(new Set());
   const handlePointerDown = useCallback((e: React.PointerEvent) => {
     if (e.pointerType === "pen") return;
-    if (styleLectureRef.current === "forscore") {
-      if (e.pointerType === "mouse") pointeursActifs.current.clear();
-      pointeursActifs.current.add(e.pointerId);
-      if (pointeursActifs.current.size > 1) {
-        tapStart.current = null;
-        return;
-      }
+    if (e.pointerType === "mouse") pointeursActifs.current.clear();
+    pointeursActifs.current.add(e.pointerId);
+    if (pointeursActifs.current.size > 1) {
+      tapStart.current = null;
+      return;
     }
     // Clic sur une barre de défilement (colonne du scan, barres toujours affichées) : pas un toucher.
     const el = e.target as HTMLElement;
@@ -1123,37 +1094,26 @@ export function PerformanceMode({
     const dt = Date.now() - tapStart.current.time;
     tapStart.current = null;
 
-    const forscore = styleLectureRef.current === "forscore";
-    let zone = 1 / 3;
-    if (forscore) {
-      const geste = classerGeste(dx, dy, dt);
-      if (geste === null) return;
-      if (geste !== "toucher") {
-        // Un balayage tourne la page, ne bascule jamais la barre, et se tait pendant l'annotation.
-        if (annotateModeRef.current) return;
-        goToPage(currentPage + (geste === "balayage-gauche" ? 1 : -1), pages.length);
-        return;
-      }
-      let grossier = false;
-      try { grossier = window.matchMedia("(pointer: coarse)").matches; } catch { /* sans matchMedia : zones par défaut */ }
-      zone = largeurZoneLaterale(window.innerWidth, window.innerHeight, grossier);
-    } else if (Math.abs(dx) > 40 || Math.abs(dy) > 40 || dt > 500) {
+    const geste = classerGeste(dx, dy, dt);
+    if (geste === null) return;
+    if (geste !== "toucher") {
+      // Un balayage tourne la page, ne bascule jamais la barre, et se tait pendant l'annotation.
+      if (annotateModeRef.current) return;
+      goToPage(currentPage + (geste === "balayage-gauche" ? 1 : -1), pages.length);
       return;
     }
+    let grossier = false;
+    try { grossier = window.matchMedia("(pointer: coarse)").matches; } catch { /* sans matchMedia : zones par défaut */ }
+    const zone = largeurZoneLaterale(window.innerWidth, window.innerHeight, grossier);
 
     if (e.clientX < window.innerWidth * zone) {
       goToPage(currentPage - 1, pages.length);
     } else if (e.clientX > window.innerWidth * (1 - zone)) {
       goToPage(currentPage + 1, pages.length);
     } else {
-      if (showChrome) {
-        setShowChrome(false);
-        clearTimeout(chromeTimer.current);
-      } else {
-        showChromeWithTimer();
-      }
+      setShowChrome(!showChrome);
     }
-  }, [currentPage, pages.length, showChrome, goToPage, showChromeWithTimer]);
+  }, [currentPage, pages.length, showChrome, goToPage]);
 
   // Current page song info for chrome
   // Un chant joué sur sa partition 简谱 n'a pas de bloc « section » : la barre
@@ -1249,7 +1209,6 @@ export function PerformanceMode({
     <div
       ref={rootRef}
       data-performance-mode
-      data-style-lecture={styleLecture}
       className="fixed inset-0 z-[9999] bg-background overflow-hidden select-none"
       style={{
         "--sat": "env(safe-area-inset-top, 0px)",
@@ -1773,8 +1732,8 @@ export function PerformanceMode({
           onPointerDown={(e) => e.stopPropagation()}
           onPointerUp={(e) => e.stopPropagation()}
         >
-          {/* Curseur de page sur toute la setlist (L7, forScore seulement) */}
-          {styleLecture === "forscore" && pages.length > 1 && (
+          {/* Curseur de page sur toute la setlist (L7) */}
+          {pages.length > 1 && (
             <CurseurPage
               total={pages.length}
               courante={currentPage}
@@ -2036,7 +1995,7 @@ export function PerformanceMode({
                   variant="outline"
                   size="icon-lg"
                   onClick={() => changeFontScale(-0.1)}
-                  disabled={fontScale <= MIN_SCALE || (annotateMode && styleLecture === "forscore")}
+                  disabled={fontScale <= MIN_SCALE || annotateMode}
                   aria-label={t("performance.textSmaller")}
                   className="text-xs font-bold"
                 >
@@ -2049,7 +2008,7 @@ export function PerformanceMode({
                   variant="outline"
                   size="icon-lg"
                   onClick={() => changeFontScale(0.1)}
-                  disabled={fontScale >= MAX_SCALE || (annotateMode && styleLecture === "forscore")}
+                  disabled={fontScale >= MAX_SCALE || annotateMode}
                   aria-label={t("performance.textLarger")}
                   className="text-sm font-bold"
                 >
@@ -2074,26 +2033,6 @@ export function PerformanceMode({
                   }`}
                 >
                   <Moon className="h-3.5 w-3.5" /> {t("performance.dark")}
-                </button>
-              </div>
-            </SettingRow>
-            <SettingRow label={t("performance.readingStyle")}>
-              <div className="flex rounded-lg border border-border overflow-hidden">
-                <button
-                  onClick={() => setStyleLecture("classique")}
-                  className={`h-11 px-4 flex items-center gap-1.5 text-xs font-semibold transition-colors ${
-                    styleLecture === "classique" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  {t("performance.readingClassic")}
-                </button>
-                <button
-                  onClick={() => setStyleLecture("forscore")}
-                  className={`h-11 px-4 flex items-center gap-1.5 text-xs font-semibold border-l border-border transition-colors ${
-                    styleLecture === "forscore" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  {t("performance.readingForscore")}
                 </button>
               </div>
             </SettingRow>

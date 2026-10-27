@@ -1,6 +1,6 @@
 # Spec : mode louange « façon forScore »
 
-**Statut : tranché par Timothée le 26/10/2026 (piste A, recommandations des questions 2 à 8 retenues), go pour les lots L0 à L7 le 26/10/2026.**
+**Statut : tranché par Timothée le 26/10/2026 (piste A, recommandations des questions 2 à 8 retenues), go pour les lots L0 à L7 le 26/10/2026. Remplacé le 27/10/2026 : forScore est le mode unique, l'ancien mode « Classique » et le réglage de repli sont supprimés (demande de Timothée).**
 Rédigé le 26/10/2026 (session cloud). Pièces du chantier : `chantier-forscore/01-releve-forscore.md` (ce que fait
 forScore, sourcé), `02-mode-louange-actuel.md` (inventaire du code), `03-comparaison.md` (écarts, tailles),
 `chantier-forscore/planche.html` (trois pistes maquettées, à ouvrir dans un navigateur).
@@ -25,7 +25,7 @@ polices tels quels. Les permissions n'ont aucune raison de changer.
 ## Principes
 
 1. **Le dimanche ne casse jamais** (`feuille-de-route.md`) : chaque lot laisse le mode actuel intact derrière un
-   réglage de repli, et se livre seul.
+   réglage de repli, et se livre seul. *(Remplacé le 27/10/2026 : plus de repli, forScore est le seul mode.)*
 2. **Un geste, un sens** : côtés = tourner ; centre = commandes. Rien d'ambigu, rien d'inactif qui avale un toucher.
 3. **L'écran de lecture est nu** : la musique d'abord ; les commandes à la demande.
 4. **Sur les quatre dispositions** (téléphone, tablette portrait, tablette paysage à barre latérale réduite, ordinateur,
@@ -94,7 +94,7 @@ portrait, tablette paysage, ordinateur). Test propre à un appareil : le dit dan
 
 | Risque | Parade |
 | --- | --- |
-| Le dimanche, un musicien est déstabilisé par un autre geste | L0 : repli par appareil, défaut « Classique » jusqu'à accord écrit de Timothée ; l'ancien code reste en place un mois après le défaut « forScore » ; essai un jeudi de répétition |
+| Le dimanche, un musicien est déstabilisé par un autre geste | L0 : repli par appareil, défaut « Classique » jusqu'à accord écrit de Timothée ; l'ancien code reste en place un mois après le défaut « forScore » ; essai un jeudi de répétition. *(Remplacé le 27/10/2026 : repli retiré, forScore seul ; reste l'essai un jeudi de répétition.)* |
 | Barre sans minuterie : un musicien oublie qu'elle est ouverte et recouvre la fin de page | Bandeaux fins (≈ 56 px) ; une page peut se tourner barre ouverte (les côtés restent actifs sauf sous les bandes) ; question 1 : B garde une ligne d'état |
 | Tourner par erreur en voulant annoter | Zone centrale plus large (question 2) ; l'annotation s'ouvre par bouton (question 4) |
 | Toucher avalé : arrêts de propagation oubliés sur un nouvel élément | Un test par nouvel élément touchable (« la page ne tourne pas ») ; règle du fichier : tout nouvel élément arrête la propagation |
@@ -114,11 +114,13 @@ Les huit questions de la planche, tranchées : piste A, et les recommandations r
 3. **Demi-tour de page** (portrait) : aperçu fixe des premières lignes de la page suivante (L6) ; le vrai demi-tour seulement si l'équipe le réclame après essai.
 4. **Annoter** : par le bouton de la barre (comme aujourd'hui) ; pas d'appui long pour l'instant.
 5. **Annotations et taille du texte** : taille mémorisée par chant sur l'appareil, figée dès qu'on annote, avec l'avertissement « Revenir à cette taille » (L5).
-6. **Repli** : réglage « Style de lecture : Classique / forScore » par appareil, **« Classique » par défaut** jusqu'à nouvel accord de Timothée.
+6. **Repli** : réglage « Style de lecture : Classique / forScore » par appareil, **« Classique » par défaut** jusqu'à nouvel accord de Timothée. *(Remplacé le 27/10/2026 : l'ancien mode et le réglage sont supprimés ; la clé `perf-style-lecture` déjà stockée est ignorée.)*
 7. **Métronome** : tempo affiché sur toutes les pages, puis liseré qui bat. Jamais de son.
 8. **Barre de recherche de page** : curseur sur toute la setlist, repères au début de chaque chant (L7).
 
 ## Avancement
+
+27/10/2026 : forScore devient le mode unique, l'ancien mode supprimé (demande de Timothée) ; le repli L0 est retiré.
 
 | Lot | État |
 | --- | --- |

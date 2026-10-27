@@ -2,8 +2,8 @@ import { expect, test, type Page } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { attendreMiseEnPage, onStage, ouvrirReglages } from "./helpers/louange";
 
-// Lot L0 (docs/spec-mode-louange-forscore.md) : réglage « Style de lecture »,
-// par appareil. Setlist et compte simulés : aucun accès au Firestore réel.
+// Mode louange « façon forScore » (docs/spec-mode-louange-forscore.md), seul mode depuis le 27/10/2026.
+// Setlist et compte simulés : aucun accès au Firestore réel.
 
 const SETLIST_ID = "setlist-forscore";
 const MUSICIEN: FakeProfile = {
@@ -29,11 +29,10 @@ const setlist = {
   ],
 };
 
-async function ouvrir(page: Page, opts: { style?: "forscore"; chants?: number } = {}) {
-  await page.addInitScript((style) => {
+async function ouvrir(page: Page, opts: { chants?: number } = {}) {
+  await page.addInitScript(() => {
     if (!localStorage.getItem("perf-role-preset")) localStorage.setItem("perf-role-preset", "pianiste");
-    if (style) localStorage.setItem("perf-style-lecture", style);
-  }, opts.style);
+  });
   const doc = opts.chants
     ? {
         ...setlist,
@@ -45,24 +44,7 @@ async function ouvrir(page: Page, opts: { style?: "forscore"; chants?: number } 
   await attendreMiseEnPage(page);
 }
 
-test("appareil vierge : style de lecture Classique", async ({ page }) => {
-  await ouvrir(page);
-  await expect(page.locator("[data-performance-mode]")).toHaveAttribute("data-style-lecture", "classique");
-});
-
-test("choisir forScore dans les Réglages : conservé après rechargement", async ({ page }) => {
-  await ouvrir(page);
-  const reglages = await ouvrirReglages(page);
-  await reglages.getByRole("button", { name: "forScore" }).click();
-  await expect(page.locator("[data-performance-mode]")).toHaveAttribute("data-style-lecture", "forscore");
-
-  await page.reload();
-  await page.getByRole("button", { name: /Mode Louange/ }).click();
-  await attendreMiseEnPage(page);
-  await expect(page.locator("[data-performance-mode]")).toHaveAttribute("data-style-lecture", "forscore");
-});
-
-test("stockage inaccessible : mode ouvert en Classique, sans erreur", async ({ page }) => {
+test("stockage inaccessible : mode ouvert, sans erreur", async ({ page }) => {
   const erreurs: string[] = [];
   page.on("pageerror", (e) => erreurs.push(e.message));
   await page.addInitScript(() => {
@@ -77,11 +59,11 @@ test("stockage inaccessible : mode ouvert en Classique, sans erreur", async ({ p
   await signInAs(page, MUSICIEN, { [`setlists/${SETLIST_ID}`]: setlist }, `/setlists/${SETLIST_ID}`);
   await page.getByRole("button", { name: /Mode Louange/ }).click();
   await attendreMiseEnPage(page);
-  await expect(page.locator("[data-performance-mode]")).toHaveAttribute("data-style-lecture", "classique");
+  await expect(page.locator("[data-performance-mode]")).toBeVisible();
   expect(erreurs).toEqual([]);
 });
 
-// Lot L1 : barre à la demande (forScore) et bandes invisibles qui ne captent plus.
+// Lot L1 : barre à la demande et bandes invisibles qui ne captent plus.
 
 const BARRES = "[data-performance-mode] .material-chrome";
 const compteur = (page: Page) => page.locator("[data-performance-mode] span.tabular-nums:not([data-tempo-barre])").first();
@@ -101,35 +83,27 @@ async function bandeCapte(page: Page, bande: "haut" | "bas") {
   }, [bande, BARRES] as const);
 }
 
-for (const style of [undefined, "forscore"] as const) {
-  const nom = style ? "forScore" : "Classique";
-
-  test(`${nom} : barre masquée, les bandes haute et basse ne captent plus`, async ({ page }) => {
-    const erreurs: string[] = [];
-    page.on("pageerror", (e) => erreurs.push(e.message));
-    page.on("console", (m) => { if (m.type() === "error" && !/Failed to load resource/.test(m.text())) erreurs.push(m.text()); });
-    await ouvrir(page, { style });
-    const barreHaute = page.locator(BARRES).first();
-    await expect(barreHaute).toBeVisible();
-    if (style) {
-      await toucherCentre(page);
-    } else {
-      await page.waitForTimeout(3_500);
-    }
-    await expect(page.locator("[data-performance-mode] .material-chrome").first()).toHaveCSS("pointer-events", "none");
-    await expect(async () => {
-      expect(await bandeCapte(page, "haut")).toBe(false);
-      expect(await bandeCapte(page, "bas")).toBe(false);
-    }).toPass({ timeout: 5_000 });
-    expect(erreurs).toEqual([]);
-  });
-}
+test("barre masquée : les bandes haute et basse ne captent plus", async ({ page }) => {
+  const erreurs: string[] = [];
+  page.on("pageerror", (e) => erreurs.push(e.message));
+  page.on("console", (m) => { if (m.type() === "error" && !/Failed to load resource/.test(m.text())) erreurs.push(m.text()); });
+  await ouvrir(page);
+  const barreHaute = page.locator(BARRES).first();
+  await expect(barreHaute).toBeVisible();
+  await toucherCentre(page);
+  await expect(page.locator("[data-performance-mode] .material-chrome").first()).toHaveCSS("pointer-events", "none");
+  await expect(async () => {
+    expect(await bandeCapte(page, "haut")).toBe(false);
+    expect(await bandeCapte(page, "bas")).toBe(false);
+  }).toPass({ timeout: 5_000 });
+  expect(erreurs).toEqual([]);
+});
 
 test("forScore : la barre visible le reste 5 s ; toucher centre la masque, un autre la remontre pour 5 s", async ({ page }) => {
   const erreurs: string[] = [];
   page.on("pageerror", (e) => erreurs.push(e.message));
   page.on("console", (m) => { if (m.type() === "error" && !/Failed to load resource/.test(m.text())) erreurs.push(m.text()); });
-  await ouvrir(page, { style: "forscore" });
+  await ouvrir(page);
   const reglages = page.getByRole("button", { name: "Réglages" });
   await expect(reglages).toBeVisible();
   await page.waitForTimeout(5_000);
@@ -149,7 +123,7 @@ test("forScore, barre masquée : un toucher à la hauteur de la bande basse, cô
   const erreurs: string[] = [];
   page.on("pageerror", (e) => erreurs.push(e.message));
   page.on("console", (m) => { if (m.type() === "error" && !/Failed to load resource/.test(m.text())) erreurs.push(m.text()); });
-  await ouvrir(page, { style: "forscore", chants: 4 });
+  await ouvrir(page, { chants: 4 });
   await toucherCentre(page);
   await expect(page.getByRole("button", { name: "Réglages" })).toBeHidden();
 
@@ -176,13 +150,11 @@ function surveillerErreurs(page: Page) {
 const lirePage = async (page: Page) => (await compteur(page).textContent())!.trim();
 const numero = async (page: Page) => Number((await lirePage(page)).split("/")[0]);
 
-/** Style forScore, barre masquée, positionné sur la page 2 (au moins). */
-async function ouvrirMasquee(page: Page, style: "forscore" | undefined = "forscore") {
-  await ouvrir(page, { style, chants: 4 });
-  if (style) {
-    await toucherCentre(page);
-    await expect(page.getByRole("button", { name: "Réglages" })).toBeHidden();
-  }
+/** Barre masquée, plusieurs pages. */
+async function ouvrirMasquee(page: Page) {
+  await ouvrir(page, { chants: 4 });
+  await toucherCentre(page);
+  await expect(page.getByRole("button", { name: "Réglages" })).toBeHidden();
   const ecran = page.viewportSize()!;
   return { ecran, y: ecran.height / 2 };
 }
@@ -276,17 +248,6 @@ test("forScore : glissé vertical de 80 px et glissé de 30 px sans effet de pag
   expect(await numero(page)).toBe(2);
 });
 
-test("Classique : un glissé de 80 px ne tourne pas la page", async ({ page }) => {
-  await ouvrirMasquee(page, undefined);
-  await cliquerA(page, 0.85);
-  await expect.poll(() => numero(page)).toBe(2);
-
-  await glisser(page, -80, 0);
-  await glisser(page, 80, 0);
-  await page.waitForTimeout(500);
-  expect(await numero(page)).toBe(2);
-});
-
 // Lot L3 : « Ensuite : titre · tonalité », touchable, sans confirmation.
 
 const itemChant = (songSlug: string, position: number, keyOverride: string | null = null) => ({
@@ -295,11 +256,10 @@ const itemChant = (songSlug: string, position: number, keyOverride: string | nul
 });
 
 /** Setlist de deux chants (Abba Père puis À l'agneau en G) ; se place sur la dernière page du premier. */
-async function ouvrirDernierePage(page: Page, style: "forscore" | undefined) {
-  await page.addInitScript((st) => {
+async function ouvrirDernierePage(page: Page) {
+  await page.addInitScript(() => {
     localStorage.setItem("perf-role-preset", "pianiste");
-    if (st) localStorage.setItem("perf-style-lecture", st);
-  }, style);
+  });
   await signInAs(page, MUSICIEN, {
     [`setlists/${SETLIST_ID}`]: { ...setlist, items: [itemChant("abba-pere", 1), itemChant("a-l-agneau", 2, "G")] },
   }, `/setlists/${SETLIST_ID}`);
@@ -308,45 +268,41 @@ async function ouvrirDernierePage(page: Page, style: "forscore" | undefined) {
   await expect(compteur(page)).toHaveText(/^\d+ \/ \d+$/);
 }
 
-for (const style of [undefined, "forscore"] as const) {
-  const nom = style ? "forScore" : "Classique";
+test("« Ensuite » sur la dernière page du chant, un toucher amène à la 1re page du suivant", async ({ page }) => {
+  const erreurs = surveillerErreurs(page);
+  await ouvrirDernierePage(page);
+  const suivant = onStage(page, "[data-suivant]");
+  await expect(async () => {
+    if (await suivant.count()) return;
+    await page.keyboard.press("ArrowRight");
+    await expect(suivant).toHaveCount(1, { timeout: 1_000 });
+  }).toPass({ timeout: 20_000 });
+  await expect(suivant).toBeVisible();
+  await expect(suivant).toContainText("Ensuite");
+  await expect(suivant).toContainText("À l'agneau");
+  await expect(suivant).toContainText("G");
+  expect((await suivant.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+  const avant = await numero(page);
+  // La barre du bas (z 20) recouvre le bandeau tant qu'elle est visible : on la masque.
+  // Elle reste jusqu'à un toucher au centre.
+  await toucherCentre(page);
+  await expect(page.locator(BARRES).first()).toHaveCSS("pointer-events", "none", { timeout: 10_000 });
+  await suivant.click();
+  // Une page de plus, pas deux : le toucher n'a pas aussi tourné la page.
+  await expect.poll(() => numero(page)).toBe(avant + 1);
+  await page.waitForTimeout(500);
+  expect(await numero(page)).toBe(avant + 1);
+  // Le chant suivant est le dernier : plus de bandeau.
+  await expect(onStage(page, "[data-suivant]")).toHaveCount(0);
+  expect(erreurs).toEqual([]);
+});
 
-  test(`${nom} : « Ensuite » sur la dernière page du chant, un toucher amène à la 1re page du suivant`, async ({ page }) => {
-    const erreurs = surveillerErreurs(page);
-    await ouvrirDernierePage(page, style);
-    const suivant = onStage(page, "[data-suivant]");
-    await expect(async () => {
-      if (await suivant.count()) return;
-      await page.keyboard.press("ArrowRight");
-      await expect(suivant).toHaveCount(1, { timeout: 1_000 });
-    }).toPass({ timeout: 20_000 });
-    await expect(suivant).toBeVisible();
-    await expect(suivant).toContainText("Ensuite");
-    await expect(suivant).toContainText("À l'agneau");
-    await expect(suivant).toContainText("G");
-    expect((await suivant.boundingBox())!.height).toBeGreaterThanOrEqual(44);
-    const avant = await numero(page);
-    // La barre du bas (z 20) recouvre le bandeau tant qu'elle est visible : on la masque.
-    // forScore la garde jusqu'à un toucher au centre ; Classique la retire seule après 3 s.
-    if (style) await toucherCentre(page);
-    await expect(page.locator(BARRES).first()).toHaveCSS("pointer-events", "none", { timeout: 10_000 });
-    await suivant.click();
-    // Une page de plus, pas deux : le toucher n'a pas aussi tourné la page.
-    await expect.poll(() => numero(page)).toBe(avant + 1);
-    await page.waitForTimeout(500);
-    expect(await numero(page)).toBe(avant + 1);
-    // Le chant suivant est le dernier : plus de bandeau.
-    await expect(onStage(page, "[data-suivant]")).toHaveCount(0);
-    expect(erreurs).toEqual([]);
-  });
-
-  test(`${nom} : dernier chant de la setlist, aucun bandeau « Ensuite »`, async ({ page }) => {
-    const erreurs = surveillerErreurs(page);
-    await ouvrir(page, { style });
-    await expect(page.locator("[data-suivant]")).toHaveCount(0);
-    expect(erreurs).toEqual([]);
-  });
-}
+test("dernier chant de la setlist, aucun bandeau « Ensuite »", async ({ page }) => {
+  const erreurs = surveillerErreurs(page);
+  await ouvrir(page);
+  await expect(page.locator("[data-suivant]")).toHaveCount(0);
+  expect(erreurs).toEqual([]);
+});
 
 test("L3 colonne scan 简谱 (paysage grand écran seulement) : « Ensuite » de la colonne change de chant", async ({ page }) => {
   test.setTimeout(90_000);
@@ -383,13 +339,12 @@ test("L3 colonne scan 简谱 (paysage grand écran seulement) : « Ensuite » de
 async function ouvrirChantL4(
   page: Page,
   slug: string,
-  opts: { style?: "forscore"; metronome?: boolean } = {},
+  opts: { metronome?: boolean } = {},
 ) {
-  await page.addInitScript(({ style, metronome }) => {
+  await page.addInitScript(({ metronome }) => {
     if (!localStorage.getItem("perf-role-preset")) localStorage.setItem("perf-role-preset", "pianiste");
-    if (style) localStorage.setItem("perf-style-lecture", style);
     if (metronome && localStorage.getItem("perf-metronome") === null) localStorage.setItem("perf-metronome", "1");
-  }, { style: opts.style, metronome: opts.metronome });
+  }, { metronome: opts.metronome });
   await signInAs(page, MUSICIEN, {
     [`setlists/${SETLIST_ID}`]: { ...setlist, items: [itemChant(slug, 1)] },
   }, `/setlists/${SETLIST_ID}`);
@@ -406,26 +361,22 @@ const largeurs = async (page: Page) => {
   return vus;
 };
 
-for (const style of [undefined, "forscore"] as const) {
-  const nom = style ? "forScore" : "Classique";
+test("un chant avec {tempo} affiche ♩ N dans la barre, sur une page texte", async ({ page }) => {
+  const erreurs = surveillerErreurs(page);
+  await ouvrirChantL4(page, "avec-nous");
+  await expect(page.locator("[data-jianpu-page]:not([aria-hidden=true] *)")).toHaveCount(0);
+  await expect(page.locator("[data-tempo-barre]")).toHaveText(/♩\s*94/);
+  expect(erreurs).toEqual([]);
+});
 
-  test(`${nom} : un chant avec {tempo} affiche ♩ N dans la barre, sur une page texte`, async ({ page }) => {
-    const erreurs = surveillerErreurs(page);
-    await ouvrirChantL4(page, "avec-nous", { style });
-    await expect(page.locator("[data-jianpu-page]:not([aria-hidden=true] *)")).toHaveCount(0);
-    await expect(page.locator("[data-tempo-barre]")).toHaveText(/♩\s*94/);
-    expect(erreurs).toEqual([]);
-  });
-
-  test(`${nom} : un chant sans tempo n'affiche ni ♩ ni liseré, même métronome actif`, async ({ page }) => {
-    const erreurs = surveillerErreurs(page);
-    await ouvrirChantL4(page, "abba-pere", { style, metronome: true });
-    await expect(page.locator("[data-tempo-barre]")).toHaveCount(0);
-    await expect(page.locator("[data-performance-mode] .material-chrome").first()).not.toContainText("♩");
-    await expect(page.locator("[data-liseret]")).toHaveCount(0);
-    expect(erreurs).toEqual([]);
-  });
-}
+test("un chant sans tempo n'affiche ni ♩ ni liseré, même métronome actif", async ({ page }) => {
+  const erreurs = surveillerErreurs(page);
+  await ouvrirChantL4(page, "abba-pere", { metronome: true });
+  await expect(page.locator("[data-tempo-barre]")).toHaveCount(0);
+  await expect(page.locator("[data-performance-mode] .material-chrome").first()).not.toContainText("♩");
+  await expect(page.locator("[data-liseret]")).toHaveCount(0);
+  expect(erreurs).toEqual([]);
+});
 
 test("métronome inactif par défaut : pas de liseré, même avec un tempo", async ({ page }) => {
   await ouvrirChantL4(page, "avec-nous");
@@ -488,10 +439,9 @@ const CLE_TAILLE = "perf-annot-scale-abba-pere";
 const calqueLecture = (page: Page) => page.locator("[data-performance-mode] > canvas");
 const ecritesAnnot = (db: { writes: { path: string }[] }) => db.writes.filter((w) => w.path.startsWith("annotations/"));
 
-async function ouvrirL5(page: Page, style: "forscore" | null = "forscore") {
+async function ouvrirL5(page: Page) {
   const erreurs = surveillerErreurs(page);
   await page.addInitScript(() => localStorage.setItem("perf-role-preset", "pianiste"));
-  if (style) await page.addInitScript((s) => localStorage.setItem("perf-style-lecture", s), style);
   const db = await signInAs(page, MUSICIEN, { [`setlists/${SETLIST_ID}`]: setlist }, `/setlists/${SETLIST_ID}`);
   await page.getByRole("button", { name: /Mode Louange/ }).click();
   await attendreMiseEnPage(page);
@@ -579,43 +529,21 @@ test("forScore, L5 : en annotation A− / A+ sont désactivés, et rouvrir l'ann
   expect(erreurs).toEqual([]);
 });
 
-test("forScore, L5 : un trait ancien (sans taille mémorisée sur l'appareil) se lit encore, sans bannière", async ({ page }, testInfo) => {
-  // L6 : sur tablette en portrait, forScore a sa propre clé de page (« ap ») : les traits Classique n'y sont pas relus (principe 6).
-  test.skip(testInfo.project.name === "tablette", "tablette portrait : clé de page propre à forScore (L6)");
-  // Le trait est posé en Classique (qui ne retient aucune taille) : sa clé est celle de toujours.
-  const { db } = await ouvrirL5(page, null);
+test("L5 : un trait ancien (sans taille mémorisée sur l'appareil) se lit encore, sans bannière", async ({ page }) => {
+  // Le trait est posé, puis la taille mémorisée est effacée : comme un trait fait avant le lot L5.
+  const { db } = await ouvrirL5(page);
   await tracerTrait(page, db);
-  expect(await page.evaluate((c) => localStorage.getItem(c), CLE_TAILLE)).toBeNull();
+  expect(await page.evaluate((c) => localStorage.getItem(c), CLE_TAILLE)).toBe("1");
 
-  await page.evaluate(() => localStorage.setItem("perf-style-lecture", "forscore"));
+  await page.evaluate((c) => localStorage.removeItem(c), CLE_TAILLE);
   await page.reload();
   await page.getByRole("button", { name: /Mode Louange/ }).click();
   await attendreMiseEnPage(page);
-  await expect(page.locator("[data-performance-mode]")).toHaveAttribute("data-style-lecture", "forscore");
   await expect(calqueLecture(page)).toHaveCount(1);
   await expect(page.locator("[data-alerte-annotations]")).toHaveCount(0);
 });
 
-test("Classique, L5 : aucune bannière, aucune taille retenue, A− / A+ actifs en annotation", async ({ page }) => {
-  const { db, erreurs } = await ouvrirL5(page, null);
-  await tracerTrait(page, db);
-  expect(await changerTaille(page, "Agrandir le texte")).toBe("110%");
-  await expect(page.locator("[data-alerte-annotations]")).toHaveCount(0);
-  // En Classique la barre s'efface après 3 s : on la rappelle avant de toucher « Annoter ».
-  const annoter = page.getByRole("button", { name: "Annoter" });
-  await expect(async () => {
-    if (!(await annoter.isVisible())) await toucherCentre(page);
-    await annoter.click({ timeout: 2_000 });
-  }).toPass({ timeout: 15_000 });
-  await expect(calqueLecture(page)).toHaveCount(1);
-  const reglages = await ouvrirReglages(page);
-  await expect(reglages.getByRole("button", { name: "Réduire le texte" })).toBeEnabled();
-  await expect(reglages.getByRole("button", { name: "Agrandir le texte" })).toBeEnabled();
-  await page.keyboard.press("Escape");
-  expect(erreurs).toEqual([]);
-});
-
-// Lot L6 : aperçu de la page suivante (style forScore, tablette en portrait seulement).
+// Lot L6 : aperçu de la page suivante (tablette en portrait seulement).
 // `chants: 4` répète Abba Père : plusieurs pages, et des pages suivantes qui ouvrent un autre chant.
 
 const APERCU = "[data-apercu-suivant]";
@@ -642,7 +570,7 @@ const textePremierBlocPage = async (page: Page) => normaliser(await blocsPage(pa
 test("forScore, tablette portrait : l'aperçu montre le début de la page suivante, mis à jour par un tour de page et le retour", async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== "tablette", "propre à la tablette en portrait");
   const erreurs = surveillerErreurs(page);
-  await ouvrir(page, { style: "forscore", chants: 4 });
+  await ouvrir(page, { chants: 4 });
   await expect(compteur(page)).toHaveText(/^1 \/ \d+$/);
   expect(await nombrePages(page)).toBeGreaterThan(2);
   const apercu = page.locator(`[data-performance-mode] ${APERCU}`);
@@ -681,7 +609,7 @@ for (const taille of [100, 120]) {
   test(`forScore, tablette portrait, texte à ${taille} % : l'aperçu ne chevauche jamais la dernière ligne, rien n'est rogné, aucun aperçu sur la dernière page`, async ({ page }, testInfo) => {
     test.skip(testInfo.project.name !== "tablette", "propre à la tablette en portrait");
     test.setTimeout(120_000);
-    await ouvrir(page, { style: "forscore", chants: 4 });
+    await ouvrir(page, { chants: 4 });
     await expect(compteur(page)).toHaveText(/^1 \/ \d+$/);
     if (taille === 120) {
       expect(await changerTaille(page, "Agrandir le texte", 2)).toBe("120%");
@@ -718,7 +646,7 @@ for (const taille of [100, 120]) {
 
 test("forScore, tablette portrait : sur la dernière page d'un chant, « Ensuite » seul, sans aperçu dessous", async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== "tablette", "l'aperçu n'existe qu'en tablette portrait");
-  await ouvrirDernierePage(page, "forscore");
+  await ouvrirDernierePage(page);
   const suivant = onStage(page, "[data-suivant]");
   await expect(async () => {
     if (await suivant.count()) return;
@@ -728,30 +656,23 @@ test("forScore, tablette portrait : sur la dernière page d'un chant, « Ensuite
   await expect(onStage(page, "[data-apercu-suivant]")).toHaveCount(0);
 });
 
-test("Classique : aucun aperçu de la page suivante (tous les appareils)", async ({ page }) => {
+test("forScore : aucun aperçu hors tablette en portrait (téléphone, paysage, ordinateur)", async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name === "tablette", "la tablette en portrait a l'aperçu");
   await ouvrir(page, { chants: 4 });
   await expect(compteur(page)).toHaveText(/^1 \/ ([2-9]|\d\d+)$/);
   await expect(page.locator(APERCU)).toHaveCount(0);
 });
 
-test("forScore : aucun aperçu hors tablette en portrait (téléphone, paysage, ordinateur)", async ({ page }, testInfo) => {
-  test.skip(testInfo.project.name === "tablette", "la tablette en portrait a l'aperçu");
-  await ouvrir(page, { style: "forscore", chants: 4 });
-  await expect(compteur(page)).toHaveText(/^1 \/ ([2-9]|\d\d+)$/);
-  await expect(page.locator(APERCU)).toHaveCount(0);
-});
-
-// Lot L7 : curseur de page (style forScore) sur toute la setlist, repères au début de chaque chant.
+// Lot L7 : curseur de page sur toute la setlist, repères au début de chaque chant.
 
 const TROIS_CHANTS = ["abba-pere", "a-l-agneau", "avec-nous"];
 const CURSEUR = "[data-performance-mode] [data-curseur-page] input[type=range]";
 const REPERES = "[data-performance-mode] [data-repere-chant]";
 
-async function ouvrirTroisChants(page: Page, style: "forscore" | null = "forscore", slugs = TROIS_CHANTS) {
-  await page.addInitScript((s) => {
+async function ouvrirTroisChants(page: Page, slugs = TROIS_CHANTS) {
+  await page.addInitScript(() => {
     localStorage.setItem("perf-role-preset", "pianiste");
-    if (s) localStorage.setItem("perf-style-lecture", s);
-  }, style);
+  });
   const doc = {
     ...setlist,
     items: slugs.map((songSlug, i) => ({ ...setlist.items[0], songSlug, position: i + 1 })),
@@ -861,16 +782,9 @@ test("forScore, L7 : la ligne du curseur pèse au plus 36 px de mise en page", a
   expect(avec).toBeGreaterThan(0);
 });
 
-test("Classique, L7 : aucun curseur de page", async ({ page }) => {
-  await ouvrirTroisChants(page, null);
-  await expect(compteur(page)).toHaveText(/^1 \/ ([2-9]|\d\d+)$/);
-  await expect(page.locator("[data-curseur-page]")).toHaveCount(0);
-  await expect(page.locator(REPERES)).toHaveCount(0);
-});
-
 test("forScore, L7 : une seule page, pas de curseur", async ({ page }) => {
   // Un chant court (13 lignes) tient sur une page.
-  await ouvrirTroisChants(page, "forscore", ["benediction"]);
+  await ouvrirTroisChants(page, ["benediction"]);
   const total = Number((await lirePage(page)).split("/")[1]);
   test.skip(total !== 1, "ce chant n'est pas sur une seule page à cette taille d'écran");
   await expect(page.locator("[data-curseur-page]")).toHaveCount(0);

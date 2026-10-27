@@ -167,9 +167,17 @@ export function ChordLine({ tokens, showChords = true, hideLyrics = false, fontS
             ? `${chordLen + 0.5}ch`
             : undefined;
         const suivant = word[k + 1]?.seg.lyric;
+        // Deux accords de suite dans un mot (« vi[C][G]vant ») : le premier n'a pas de paroles,
+        // le tiret se pose dans sa place, entre la dernière lettre d'avant et la première d'après.
+        const avant = word.slice(0, k + 1).map((w) => w.seg.lyric).findLast((l) => l !== "");
+        const apres = word.slice(k + 1).map((w) => w.seg.lyric).find((l) => l !== "");
         const tiret =
-          showChords && !hideLyrics && seg.chord !== null && suivant !== undefined &&
-          LETTRE_LATINE.test([...seg.lyric].at(-1) ?? "") && LETTRE_LATINE.test([...suivant][0] ?? "");
+          showChords && !hideLyrics && seg.chord !== null &&
+          (seg.lyric === ""
+            ? avant !== undefined && apres !== undefined &&
+              LETTRE_LATINE.test([...avant].at(-1) ?? "") && LETTRE_LATINE.test([...apres][0] ?? "")
+            : suivant !== undefined &&
+              LETTRE_LATINE.test([...seg.lyric].at(-1) ?? "") && LETTRE_LATINE.test([...suivant][0] ?? ""));
         const lyric = seg.lyric?.replace(/\s?-\s/g,'').trimStart()
         if (!showChords && !lyric){return null} else
         return (

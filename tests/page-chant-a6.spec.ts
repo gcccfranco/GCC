@@ -67,6 +67,25 @@ test.describe("tiret de liaison (C10)", () => {
     expect(texte).toContain("rayonne");
   });
 
+  test("« À l'agneau » : « vi – vant » porte un tiret même quand deux accords se suivent dans le mot", async ({ page }) => {
+    await page.goto("/songs/a-l-agneau");
+    await page.locator("[data-copy-line]").first().waitFor();
+    await page.evaluate(() => document.fonts.ready);
+    // « [G]Vi[C]vant, [F]vi[C][G]vant, » : un tiret à chaque coupe du mot, la seconde avec deux accords.
+    const ligne = page.locator("[data-copy-line]").filter({ hasText: /Vi.*vant,/ }).first();
+    const tirets = ligne.locator("span[aria-hidden=true][data-copy-ignore]", { hasText: "–" });
+    await expect
+      .poll(() => tirets.evaluateAll((els) => els.filter((e) => getComputedStyle(e.firstElementChild!).visibility === "visible").length))
+      .toBeGreaterThanOrEqual(2);
+    // La copie des paroles ne voit pas les tirets.
+    const texte = await ligne.evaluate((l) => {
+      const c = l.cloneNode(true) as HTMLElement;
+      c.querySelectorAll("[data-copy-ignore]").forEach((n) => n.remove());
+      return c.textContent;
+    });
+    expect(texte).toContain("vivant");
+  });
+
   test("chant ZH : aucun tiret", async ({ page }) => {
     await page.addInitScript(() => localStorage.setItem("jianpu-sheet-pref", "never"));
     await page.goto("/songs/" + encodeURIComponent("向主欢呼"));
