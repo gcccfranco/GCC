@@ -56,7 +56,7 @@ test.describe("les règles : lot AO, ancien ∪ nouveau", () => {
     expect(tete).toContain("Lot AO : ancien ∪ nouveau, compatible avec le code en ligne ; à publier à la main par Timothée");
   });
 
-  test("les règles : users create refuse les champs de l'organigramme, pas serviceRoles", () => {
+  test("les règles : users create refuse les champs de l'organigramme et serviceRoles", () => {
     const create = bloc("match /users/{uid}");
     const corps = create.slice(create.indexOf("allow create"), create.indexOf("allow update"));
     for (const champ of ["sousEquipes", "referentSous", "lieuxLouange", "lieuxRegie", "joue"]) {
@@ -69,8 +69,8 @@ test.describe("les règles : lot AO, ancien ∪ nouveau", () => {
     expect(corps).toContain("get('coordination', false) == false");
     expect(corps).toContain("get('equipes', false) == false");
     expect(corps).toContain("get('groupe', null) == null");
-    // L'inscription en ligne écrit encore serviceRoles.
-    expect(corps).not.toMatch(/get\('serviceRoles'/);
+    // Plus de rôles déclarés à l'inscription : l'organigramme seul les donne (27/10/2026).
+    expect(corps).toContain("request.resource.data.get('serviceRoles', {}) == {}");
   });
 
   test("les règles : isCoordination = case cochée ∪ référent Louange ou EDD ∪ Orga", () => {

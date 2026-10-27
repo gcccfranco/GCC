@@ -122,7 +122,10 @@ service cloud.firestore {
             && request.resource.data.get('publieParRole', []) == []
             && request.resource.data.get('notifieParRole', []) == []
             // Lot AO : sous-équipes, lieux et instruments de l'organigramme, recopiés par le serveur seul.
-            // `serviceRoles` n'est PAS refusé : l'inscription en ligne l'écrit encore (ancien ∪ nouveau).
+            // `serviceRoles` refusé aussi (27/10/2026) : sans l'interrupteur du back-office, l'inscription ne
+            // l'écrit plus. À publier seulement APRÈS la mise en ligne de `main` sans interrupteur : l'ancienne
+            // inscription (BACK_OFFICE coupé) l'écrit encore et serait refusée.
+            && request.resource.data.get('serviceRoles', {}) == {}
             && request.resource.data.get('sousEquipes', []) == []
             && request.resource.data.get('referentSous', []) == []
             && request.resource.data.get('lieuxLouange', []) == []
