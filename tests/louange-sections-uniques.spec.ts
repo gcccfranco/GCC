@@ -583,7 +583,9 @@ test.describe("rappel de structure (Sections uniques)", () => {
     expect(cerclees, "le 2e R et R ×2 sont des reprises").not.toContain(5);
     expect(cerclees).not.toContain(7);
 
-    // Barres escamotées : le rappel est dans la page, il reste.
+    // Barres escamotées (la barre ne s'efface plus seule : toucher au centre) : le rappel est dans la page, il reste.
+    const ecran = page.viewportSize()!;
+    await page.mouse.click(ecran.width / 2, ecran.height / 2);
     await expect(page.getByRole("button", { name: "Quitter" })).toBeHidden({ timeout: 6000 });
     await expect(rappel).toBeVisible();
   });

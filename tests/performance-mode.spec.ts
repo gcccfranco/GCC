@@ -376,7 +376,7 @@ test.describe("polices du chinois (ZH)", () => {
     await page.goto("/songs/一生爱你");
     await expect.poll(() => fonts(page, "main.song-zoom")).toMatchObject({ pinyin: expect.stringContaining("pinyin_font"), char: expect.stringContaining("zh_lyric_font") });
     // Titre en pinyin sous le titre chinois.
-    await expect(page.getByText("Yī shēng ài nǐ", { exact: true })).toHaveCSS("font-family", /pinyin_font/);
+    await expect(page.getByRole("paragraph").filter({ hasText: "Yī shēng ài nǐ" }).first()).toHaveCSS("font-family", /pinyin_font/);
 
     await openPerformance(page, [item({ songSlug: "一生爱你", position: 1, structureOverride: ["verse-2-0"] })]);
     await expect.poll(() => fonts(page, "[data-performance-mode]")).toMatchObject({ pinyin: expect.stringContaining("pinyin_font"), char: expect.stringContaining("zh_lyric_font") });
