@@ -9,7 +9,7 @@
 
 import Link from "next/link"
 import { useTranslation } from "react-i18next"
-import { CalendarDays, Check, Clock, ExternalLink, Image as ImageIcon, Info, MapPin } from "lucide-react"
+import { CalendarDays, Check, Clock, Image as ImageIcon, Info, MapPin } from "lucide-react"
 import { isInfo, nowIsoParis, placesRestantes, refusInscription, type EntreeSheetPublique } from "@/lib/evenements/agenda"
 import { useRaisonInscription } from "@/components/evenements/ChoixInscriptions"
 import { fdFullL } from "@/lib/planning/utils"
@@ -260,20 +260,13 @@ export function EntreeSheetCarte({ entree: s, past }: { entree: EntreeSheetPubli
           <p className="text-xs text-muted-foreground">{t("evenements.tableau")}</p>
         </div>
       </div>
-      {(s.responsable || s.lien) && (
+      {s.responsable && (
         <div className="mt-3 space-y-1 border-t border-border pt-2 text-sm text-muted-foreground">
           {s.responsable && (
             <p className="flex items-start gap-2.5">
               <Info className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
               <span>{t("evenements.plusInfos", { nom: s.responsable })}</span>
             </p>
-          )}
-          {s.lien && (
-            <a href={s.lien} target="_blank" rel="noopener noreferrer"
-              className="inline-flex min-h-10 items-center gap-2.5 font-semibold text-foreground underline-offset-4 hover:underline">
-              <ExternalLink className="h-4 w-4 shrink-0" aria-hidden />
-              {t("evenements.sinscrireTableau")}
-            </a>
           )}
         </div>
       )}

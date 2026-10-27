@@ -2341,7 +2341,6 @@
     "sinscrire": "S'inscrire",
     "plusInfos": "Pour plus d'infos : {{nom}}",
     "tableau": "Tableau des évènements",
-    "sinscrireTableau": "S'inscrire sur le tableau",
     "sheetInjoignable": "Le tableau des évènements n'a pas pu être lu. Réessaie plus tard.",
     "dejaInscrits_one": "{{count}} déjà inscrit",
     "dejaInscrits_other": "{{count}} déjà inscrits",
