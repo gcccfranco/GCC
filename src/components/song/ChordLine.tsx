@@ -209,7 +209,7 @@ export function ChordLine({ tokens, showChords = true, hideLyrics = false, fontS
                   className={`text-foreground whitespace-pre ${fr_lyric_font?.className}`}
                   style={hideLyrics ? { visibility: "hidden" } : undefined}
                 >
-                  {(showChords ? seg.lyric : lyric) || (seg.chord && showChords ? " " : "")}
+                  {(showChords ? seg.lyric : lyric) || (seg.chord && showChords ? <span data-copy-ignore>{" "}</span> : "")}
                 </span>
               );
               return tiret ? (

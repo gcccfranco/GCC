@@ -692,6 +692,8 @@
     "metronomeOff": "Désactivé",
     "tempoSong": "Tempo de ce chant",
     "tempoFile": "Tempo du fichier",
+    "tempoDown": "Ralentir de 1",
+    "tempoUp": "Accélérer de 1",
     "annotate": "Annoter",
     "annotationsIndisponibles": "Annotations indisponibles pour l'instant",
     "annotAutreTaille": "Des annotations existent à une autre taille ({{taille}} %)",

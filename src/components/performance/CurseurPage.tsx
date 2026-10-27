@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export interface RepereChant {
   /** Index de page (0-based) de la première page du chant. */
@@ -28,6 +28,17 @@ export function CurseurPage({ total, courante, reperes, libelle, texteValeur, on
   const [visee, setVisee] = useState<number | null>(null);
   const minuterie = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
+  useEffect(() => () => clearTimeout(minuterie.current), []);
+  const racine = useRef<HTMLDivElement>(null);
+  // Glissé commencé sur un repère : il déplace quand même le curseur (la zone du repère recouvre la piste).
+  const glisse = useRef<{ x: number; actif: boolean } | null>(null);
+  const pageA = (clientX: number) => {
+    const r = racine.current?.getBoundingClientRect();
+    if (!r) return courante;
+    const f = (clientX - r.left - MARGE_POUCE) / (r.width - 2 * MARGE_POUCE);
+    return Math.round(Math.min(1, Math.max(0, f)) * max);
+  };
+
   const viser = (p: number) => {
     setVisee(p);
     clearTimeout(minuterie.current);
@@ -44,8 +55,9 @@ export function CurseurPage({ total, courante, reperes, libelle, texteValeur, on
 
   return (
     <div
+      ref={racine}
       data-curseur-page
-      className="relative h-10 -mb-1.5 basis-full w-full"
+      className="relative h-10 -mb-1.5 basis-full w-full overflow-x-clip"
       onPointerDown={arreter}
       onPointerUp={arreter}
     >
@@ -101,10 +113,32 @@ export function CurseurPage({ total, courante, reperes, libelle, texteValeur, on
           data-page={r.page}
           data-titre={r.titre}
           aria-label={r.titre}
-          onClick={() => onAller(r.page)}
-          onPointerDown={arreter}
-          onPointerUp={arreter}
-          className="absolute top-0 flex h-3.5 w-8 -translate-x-1/2 items-start justify-center"
+          onClick={() => {
+            if (glisse.current?.actif) return;
+            onAller(r.page);
+          }}
+          onPointerDown={(e) => {
+            e.stopPropagation();
+            glisse.current = { x: e.clientX, actif: false };
+            e.currentTarget.setPointerCapture(e.pointerId);
+          }}
+          onPointerMove={(e) => {
+            const g = glisse.current;
+            if (!g || (!g.actif && Math.abs(e.clientX - g.x) < 6)) return;
+            g.actif = true;
+            const p = pageA(e.clientX);
+            viser(p);
+            onAller(p);
+          }}
+          onPointerUp={(e) => {
+            e.stopPropagation();
+            if (glisse.current?.actif) oublier(400);
+            // Le clic qui suit le relâchement lit encore `actif` : on libère après lui.
+            setTimeout(() => { glisse.current = null; }, 0);
+          }}
+          onPointerCancel={() => { glisse.current = null; }}
+          // Zone de 44 × 44 px centrée sur le trait, qui reste fin.
+          className="absolute -top-1.5 flex h-11 w-11 -translate-x-1/2 touch-none items-start justify-center pt-1.5"
           style={{ left: position(r.page) }}
         >
           <span className="block h-3 w-0.5 rounded-full bg-muted-foreground/70" />

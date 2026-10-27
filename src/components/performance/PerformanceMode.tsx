@@ -33,7 +33,7 @@ import { getPinyinPref, setPinyinPref } from "@/lib/pinyinPref";
 import { classerGeste, estTabletteVerticale, largeurZoneLaterale } from "@/lib/performance/gestes";
 import { LiseretTempo } from "@/components/performance/LiseretTempo";
 import { CurseurPage } from "@/components/performance/CurseurPage";
-import { getTailleAnnotee, setTailleAnnotee } from "@/lib/performance/tailleAnnotee";
+import { effacerTailleAnnotee, getTailleAnnotee, setTailleAnnotee } from "@/lib/performance/tailleAnnotee";
 import { clampTempo, getMetronomePref, getTempoChant, setMetronomePref, setTempoChant, TEMPO_DEPART, TEMPO_MAX, TEMPO_MIN } from "@/lib/performance/tempo";
 import { getFontScalePref, setFontScalePref, MIN_FONT_SCALE, MAX_FONT_SCALE } from "@/lib/fontScalePref";
 import { useAuth } from "@/lib/firebase/auth";
@@ -980,7 +980,7 @@ export function PerformanceMode({
 
   // L5 : chant de la page courante, et taille à laquelle il a été annoté sur cet appareil.
   const slugAnnote = currentEntry?.block.songSlug;
-  const tailleAnnotee = slugAnnote ? getTailleAnnotee(slugAnnote) : null;
+  const tailleAnnotee = slugAnnote ? getTailleAnnotee(setlistId, slugAnnote) : null;
   const alerteAnnotations =
     !!user && !annotateMode && showAnnotations && tailleAnnotee !== null &&
     Math.round(tailleAnnotee * 100) !== Math.round(fontScale * 100);
@@ -991,17 +991,20 @@ export function PerformanceMode({
     if (!user || !currentPageKey) { setPageAnnotations(null); return; }
     let stale = false;
     setPageAnnotations(null);
-    loadAnnotation(user.uid, setlistId, currentPageKey).then((raw) => {
-      if (stale) return;
-      const parsed = raw ? deserializeAnnotations(raw) : null;
-      setPageAnnotations(
-        parsed ?? { w: window.innerWidth, h: window.innerHeight, strokes: [] },
-      );
-    }).catch(() => {
-      // Lecture impossible ≠ page vide : sans calque, ni canvas ni enregistrement.
-      if (!stale) setAnnotationsIndispo(true);
-    });
-    return () => { stale = true; };
+    // Temporisé : glisser le curseur de page change la clé à chaque cran, une requête par page serait perdue.
+    const minuterie = setTimeout(() => {
+      loadAnnotation(user.uid, setlistId, currentPageKey).then((raw) => {
+        if (stale) return;
+        const parsed = raw ? deserializeAnnotations(raw) : null;
+        setPageAnnotations(
+          parsed ?? { w: window.innerWidth, h: window.innerHeight, strokes: [] },
+        );
+      }).catch(() => {
+        // Lecture impossible ≠ page vide : sans calque, ni canvas ni enregistrement.
+        if (!stale) setAnnotationsIndispo(true);
+      });
+    }, 150);
+    return () => { stale = true; clearTimeout(minuterie); };
   }, [user, setlistId, currentPageKey]);
 
   // Chaque modification (trait fini, gomme, annuler) est sauvegardée aussitôt
@@ -1009,9 +1012,12 @@ export function PerformanceMode({
     (data: AnnotationData) => {
       setPageAnnotations(data);
       // L5 : au premier trait d'un chant, on retient la taille du texte à laquelle on annote.
-      if (slugAnnote && data.strokes.length > 0 && getTailleAnnotee(slugAnnote) === null) {
-        setTailleAnnotee(slugAnnote, fontScale);
+      if (slugAnnote && data.strokes.length > 0 && getTailleAnnotee(setlistId, slugAnnote) === null) {
+        setTailleAnnotee(setlistId, slugAnnote, fontScale);
       }
+      // Plus aucun trait sur la page : la taille mémorisée n'a plus de raison d'être (les autres
+      // pages du chant ne sont pas chargées, on ne peut pas les consulter ici).
+      if (slugAnnote && data.strokes.length === 0) effacerTailleAnnotee(setlistId, slugAnnote);
       if (user && currentPageKey && !horsLigne) {
         saveAnnotation(user.uid, setlistId, currentPageKey, serializeAnnotations(data));
       }
@@ -1023,7 +1029,7 @@ export function PerformanceMode({
   const basculerAnnotation = () => {
     setSettingsOpen(false);
     if (!annotateMode && slugAnnote) {
-      const memo = getTailleAnnotee(slugAnnote);
+      const memo = getTailleAnnotee(setlistId, slugAnnote);
       if (memo !== null && Math.round(memo * 100) !== Math.round(fontScale * 100)) appliquerTaille(memo);
     }
     setAnnotateMode((v) => !v);
@@ -1039,7 +1045,15 @@ export function PerformanceMode({
   // Keyboard navigation (flèches, PageUp/Down — pédales Bluetooth, Échap pour quitter)
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+      const cible = e.target instanceof HTMLElement ? e.target : null;
+      // Champs de texte : toutes les touches leur reviennent. Le curseur de page (range) garde Échap.
+      if (cible instanceof HTMLTextAreaElement || (cible instanceof HTMLInputElement && cible.type !== "range")) return;
+      if (e.key !== "Escape") {
+        // Curseur de page, feuilles et sommaire ouverts : flèches, PageUp/Down et Espace leur appartiennent.
+        if (cible instanceof HTMLInputElement) return;
+        if (settingsOpen || songListOpen || askRole) return;
+        if (cible?.closest("[role=dialog]")) return;
+      }
       if (e.key === "ArrowLeft" || e.key === "PageUp") {
         e.preventDefault();
         goToPage(currentPage - 1, pages.length);
@@ -1068,6 +1082,10 @@ export function PerformanceMode({
   const pointeursActifs = useRef<Set<number>>(new Set());
   const handlePointerDown = useCallback((e: React.PointerEvent) => {
     if (e.pointerType === "pen") return;
+    if (e.pointerType === "mouse" && e.button !== 0) return;
+    // Fond d'une feuille : React fait remonter ses évènements jusqu'ici, ce n'est pas un toucher sur la page.
+    // (Pas de stopPropagation sur le fond : Radix y détecte le toucher extérieur qui ferme la feuille.)
+    if ((e.target as HTMLElement).closest("[data-vaul-overlay]")) return;
     if (e.pointerType === "mouse") pointeursActifs.current.clear();
     pointeursActifs.current.add(e.pointerId);
     if (pointeursActifs.current.size > 1) {
@@ -1088,6 +1106,7 @@ export function PerformanceMode({
   const handlePointerUp = useCallback((e: React.PointerEvent) => {
     if (e.pointerType === "pen") return;
     pointeursActifs.current.delete(e.pointerId);
+    if ((e.target as HTMLElement).closest("[data-vaul-overlay]")) { tapStart.current = null; return; }
     if (!tapStart.current) return;
     const dx = e.clientX - tapStart.current.x;
     const dy = e.clientY - tapStart.current.y;
@@ -1128,7 +1147,7 @@ export function PerformanceMode({
   // Métronome visuel : tempo réglé sur l'appareil pour ce chant, sinon celui du fichier.
   const tempoChantId = currentEntry?.block.songSlug;
   const tempoAppareil = tempoChantId ? getTempoChant(tempoChantId) : null;
-  const tempoFichier = currentSong?.tempo;
+  const tempoFichier = currentSong?.tempo != null ? clampTempo(currentSong.tempo) : undefined;
   const tempoLiseret = tempoAppareil ?? tempoFichier;
   const changerTempo = (delta: number) => {
     if (!tempoChantId) return;
@@ -1543,7 +1562,7 @@ export function PerformanceMode({
         <div
           data-alerte-annotations
           className="absolute left-0 right-0 flex justify-center pointer-events-none"
-          style={{ zIndex: 6, top: "calc(var(--sat, 0px) + 0.5rem)" }}
+          style={{ zIndex: 6, top: showChrome ? `${barres.haut + 8}px` : "calc(var(--sat, 0px) + 0.5rem)" }}
         >
           <div className="flex max-w-[92%] flex-wrap items-center justify-center gap-x-3 gap-y-1 rounded-2xl border border-border/60 bg-background/90 px-4 py-1 text-sm text-muted-foreground backdrop-blur">
             <span>{t("performance.annotAutreTaille", { taille: Math.round(tailleAnnotee * 100) })}</span>
@@ -1564,7 +1583,7 @@ export function PerformanceMode({
       {isLastPageOfSong && nextEntry && !colonneScan && (
         <div
           className="absolute left-0 right-0 flex justify-center pointer-events-none"
-          style={{ zIndex: 5, bottom: "calc(0.625rem + var(--sab, 0px))" }}
+          style={{ zIndex: 5, bottom: showChrome ? `${barres.bas + 8}px` : "calc(0.625rem + var(--sab, 0px))" }}
         >
           <button
             type="button"
@@ -1645,13 +1664,14 @@ export function PerformanceMode({
       )}
 
       {/* ── Métronome visuel : liseré silencieux, sous le chrome ── */}
-      {metronome && tempoLiseret ? <LiseretTempo tempo={tempoLiseret} /> : null}
+      {metronome && tempoLiseret ? <LiseretTempo tempo={tempoLiseret} top={showChrome ? `${barres.haut}px` : "var(--sat, 0px)"} /> : null}
 
       {/* ── Chrome (auto-hide overlay) ── */}
       <div
         className="absolute inset-0 pointer-events-none transition-opacity duration-300"
         style={{ opacity: showChrome ? 1 : 0, zIndex: 20 }}
         aria-hidden={!showChrome}
+        inert={!showChrome}
       >
         {/* Top bar */}
         <div
@@ -1710,7 +1730,7 @@ export function PerformanceMode({
               type="button"
               aria-pressed={twoColumns}
               onClick={toggleTwoColumns}
-              className={`h-9 px-3 shrink-0 flex items-center gap-1.5 rounded-full border text-xs font-semibold transition-colors active:bg-muted ${
+              className={`h-11 px-3 shrink-0 flex items-center gap-1.5 rounded-full border text-xs font-semibold transition-colors active:bg-muted ${
                 twoColumns ? "bg-secondary text-foreground border-transparent" : "border-border text-muted-foreground hover:text-foreground"
               }`}
             >
@@ -1853,7 +1873,7 @@ export function PerformanceMode({
                     type="button"
                     aria-pressed={rolePreset === id}
                     onClick={() => (rolePreset === id ? clearRolePreset() : applyRolePreset(id))}
-                    className={`h-9 px-3 rounded-lg border text-xs font-semibold transition-colors ${
+                    className={`h-11 px-3 rounded-lg border text-xs font-semibold transition-colors ${
                       rolePreset === id
                         ? "bg-primary text-primary-foreground border-transparent"
                         : "border-border text-muted-foreground hover:text-foreground"
@@ -1875,7 +1895,7 @@ export function PerformanceMode({
                     role="radio"
                     aria-checked={affichageVu === v}
                     onClick={() => changeAffichage(v)}
-                    className={`h-9 min-w-0 flex-1 rounded-md px-2 text-[13px] font-semibold whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+                    className={`h-11 min-w-0 flex-1 rounded-md px-2 text-[13px] font-semibold whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
                       affichageVu === v ? "bg-background text-foreground shadow-soft" : "text-muted-foreground hover:text-foreground"
                     }`}
                   >
@@ -2066,7 +2086,7 @@ export function PerformanceMode({
                     size="icon-lg"
                     onClick={() => changerTempo(-1)}
                     disabled={(tempoLiseret ?? TEMPO_DEPART) <= TEMPO_MIN}
-                    aria-label="−"
+                    aria-label={t("performance.tempoDown")}
                     data-tempo-moins
                     className="text-sm font-bold"
                   >
@@ -2080,7 +2100,7 @@ export function PerformanceMode({
                     size="icon-lg"
                     onClick={() => changerTempo(1)}
                     disabled={(tempoLiseret ?? TEMPO_DEPART) >= TEMPO_MAX}
-                    aria-label="+"
+                    aria-label={t("performance.tempoUp")}
                     data-tempo-plus
                     className="text-sm font-bold"
                   >

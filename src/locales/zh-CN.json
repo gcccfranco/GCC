@@ -688,6 +688,8 @@
     "metronomeOff": "关闭",
     "tempoSong": "本曲速度",
     "tempoFile": "文件速度",
+    "tempoDown": "减慢 1",
+    "tempoUp": "加快 1",
     "annotate": "批注",
     "annotationsIndisponibles": "批注暂时无法使用",
     "annotAutreTaille": "批注是在另一种字号下写的（{{taille}}%）",
