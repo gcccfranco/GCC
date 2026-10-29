@@ -1240,6 +1240,14 @@ fusionner `main` dans la branche ; puis l'essai BO5.
 conflit dans « À faire », « Tâche » et « sans compte » gardés, finitions, rouges antérieurs corrigés avant la fusion,
 modalités de l'essai au § 5) ; tranche BO-H.
 
+### AG. Droits simplifiés : la liste « Responsabilités » (Timothée, 29/10/2026) → `spec-responsabilites.md`
+
+« Je veux changer parce que là c'est trop compliqué. » Après l'entretien (Q1 à Q23), l'organigramme continue de dire
+qui sert où (setlists, Harmonie), et les droits de gestion passent dans une liste courte réglée par les admins :
+gestionnaire d'un planning (grille entière), Comité Orga, référent d'équipe. Plus de colonnes de la Régie ni de
+rôles de groupe qui publient. **Go le 29/10/2026**, lot **RS** (RS-A à RS-C) confié à une session orchestratrice ;
+`firestore.rules` et script de reprise à passer par Timothée.
+
 ## 4. Carte des modules de l'app « GCC »
 
 À valider par Timothée avant toute spec de module (les modules existants ne
