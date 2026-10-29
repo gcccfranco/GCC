@@ -8,12 +8,19 @@
 // (`dansEquipes`, `referentDe`, `sousEquipes`, `referentSous`, `lieuxLouange`, `lieuxRegie`, `joue`) et
 // de ceux des groupes (`groupe`, `remplitParRole`, `publieParRole`, `notifieParRole`). Les admins
 // (`ADMIN_EMAILS`) ne passent pas ici : access.ts les traite avant, dans les deux modes (A3).
+// Lot RS (docs/spec-responsabilites.md) : « l'organigramme dit qui sert où, la liste Responsabilités dit qui gère
+// quoi ». Les setlists, Harmonie et l'organigramme restent lus d'ici ; la coordination, les plannings, les
+// notifications et les sections d'évènement viennent de `responsabilites` (src/lib/acces/responsabilites.ts), et
+// les rôles de groupe (`remplitParRole`, `publieParRole`, `notifieParRole`) ne donnent plus aucun droit.
 // `referentDe` garde son sens d'ids d'équipes : `louange` = référent de Louange (D4) ; les référents
 // de sous-équipe sont dans `referentSous`.
 
 import { EQUIPES, cleNomEquipe } from "@/lib/equipes/table";
-import { TABLE_GROUPES, groupeDef } from "@/lib/groupes/table";
+import { groupeDef } from "@/lib/groupes/table";
 import { EDD_CLASSES } from "@/lib/planning/utils";
+import {
+  audiencesDesPlannings, categoriesDesPlannings, estComiteOrga, gerePlanning, gereUnPlanning, responsabilitesDe,
+} from "@/lib/acces/responsabilites";
 import { SOUS_EQUIPES, type SousEquipe } from "@/types/equipe";
 import { GROUPES, SERVICE_LIEUX } from "@/types/user";
 
@@ -30,6 +37,8 @@ export type ProfilOrganigramme = {
   remplitParRole?: string[];
   publieParRole?: string[];
   notifieParRole?: string[];
+  /** Lot RS : écrit par les admins seuls (src/lib/acces/responsabilites.ts). */
+  responsabilites?: string[];
 };
 type P = ProfilOrganigramme | null | undefined;
 
@@ -77,65 +86,49 @@ export function harmonie(p: P): { piano: boolean; guitare: boolean } {
 
 // ─── Coordination ───────────────────────────────────────────────────────────
 
-/** Coordination (D5) : scène, fêtes, évènements de toute l'Église — le référent Louange, le référent
- *  EDD, les membres d'Orga. Ni le référent d'une sous-équipe, ni le référent Régie. */
+/** Coordination (D5) : scène, fêtes, évènements de toute l'Église. Lot RS (Q11) : le Comité Orga seul
+ *  (responsabilité `orga`) — plus le référent Louange ni EDD, plus le placement dans l'équipe Orga. */
 export function coordination(p: P): boolean {
-  return estReferentLouange(p) || estReferentEdd(p) || estOrga(p);
+  return estComiteOrga(p);
 }
 
 // ─── Plannings ──────────────────────────────────────────────────────────────
 
-/** Les plannings « du culte » : ceux des quatre lieux (Culte, Intergroupe, Interfranco, Campus en deux moments). */
+/** Les plannings « du culte » (plus lu par les droits depuis le lot RS ; retiré par RS-D) : ceux des quatre lieux (Culte, Intergroupe, Interfranco, Campus en deux moments). */
 export const PLANNINGS_DU_CULTE = ["culte", "intergroupe", "interfranco", "campusMatin", "campusSoir"] as const;
-/** Les trois plannings de l'EDD (une grille par classe, `CLES_EDD` de grilles.ts — recopié ici : ce module
+/** Les trois plannings de l'EDD (plus lu par les droits depuis le lot RS ; une grille par classe, `CLES_EDD` de grilles.ts — recopié ici : ce module
  *  n'importe pas la table des grilles, qui tire releases.ts, qui l'importe). */
 export const PLANNINGS_EDD = ["eddZhongban", "eddDaban", "eddGaoban"] as const;
-/** Les colonnes que le référent Régie remplit (lecture littérale du tableau : Sono, Sono Live, PPT). */
+/** Les colonnes que le référent Régie remplissait (Sono, Sono Live, PPT) — plus lu par les droits depuis le lot RS
+ *  (Q5 : un gestionnaire remplit toute la grille) ; retiré par la tranche RS-D. */
 export const COLONNES_REGIE = ["sono", "sonoLive", "ppt"] as const;
-
-const dedans = (liste: readonly string[], key: string) => liste.includes(key);
 
 /** Les plannings des groupes (clés de PUBLISHABLE_PLANNINGS et la grille des musiciens de Fidélité). */
 export const PLANNINGS_DES_GROUPES = ["paix", "bonte", "fidelite", "fideliteMusiciens"] as const;
 /** Toutes les grilles, par clé (celles de GRILLES, src/lib/planning/grilles.ts). */
 export const TOUS_LES_PLANNINGS: readonly string[] = [...PLANNINGS_DU_CULTE, "table", ...PLANNINGS_EDD, ...PLANNINGS_DES_GROUPES];
 
-/** Ce que l'organigramme (hors rôles de groupe) donne sur un planning : toutes les colonnes, la liste de
- *  celles de la Régie, ou rien. Référent Louange : le culte, toutes colonnes ; référent Régie : Sono, Sono
- *  Live, PPT du culte ; PAS le référent Musiciens (E2) ; référent EDD : les classes de l'EDD ; Orga : la
- *  Table (aucune ligne du tableau ne la nomme, « coordination générale » — à confirmer par Timothée). */
-function colonnesParEquipe(p: P, key: string): "toutes" | readonly string[] | null {
-  if (dedans(PLANNINGS_DU_CULTE, key)) {
-    if (estReferentLouange(p)) return "toutes";
-    if (estReferentRegie(p)) return COLONNES_REGIE;
-  }
-  if (dedans(PLANNINGS_EDD, key) && estReferentEdd(p)) return "toutes";
-  if (key === "table" && estOrga(p)) return "toutes";
-  return null;
-}
-
-/** Les colonnes qu'on remplit sur un planning : `"toutes"`, une liste (la Régie), ou `null` (rien). Un rôle
- *  de groupe (`remplitParRole`, V19GROUPES, inchangé) donne toutes les colonnes de son planning. */
+/** Les colonnes qu'on remplit sur un planning : `"toutes"` pour un gestionnaire de ce planning (`planning:<x>`,
+ *  Q5 : toute la grille, sans découpage par colonne), `null` sinon. Lot RS : plus de rôle de groupe, de référent
+ *  Louange, Régie ou EDD, ni de Table pour Orga. */
 export function colonnesRemplies(p: P, key: string): "toutes" | readonly string[] | null {
-  if (liste(p?.remplitParRole).includes(key)) return "toutes";
-  return colonnesParEquipe(p, key);
+  return gerePlanning(p, key) ? "toutes" : null;
 }
 
-/** Remplit-on au moins un planning ? (« ceux qui font les plannings » : absences, petit déj.) */
+/** Remplit-on au moins un planning ? (« ceux qui font les plannings » : absences, petit déj.) Lot RS : au moins
+ *  une responsabilité `planning:`. */
 export function remplitUnPlanning(p: P): boolean {
-  return liste(p?.remplitParRole).length > 0 || TOUS_LES_PLANNINGS.some((k) => colonnesParEquipe(p, k) !== null);
+  return gereUnPlanning(p);
 }
 
-/** Publier un trimestre d'un planning : qui en remplit toutes les colonnes par son équipe (référent Louange, référent
- *  EDD), ou son rôle de groupe (`publieParRole`). Pas le référent Régie (Timothée, 23/10/2026). La Table ne se publie pas. */
+/** Publier un trimestre d'un planning : son gestionnaire (lot RS), sauf la Table, qui ne se publie pas. */
 export function publiePlanning(p: P, key: string): boolean {
-  return liste(p?.publieParRole).includes(key) || (key !== "table" && colonnesParEquipe(p, key) === "toutes");
+  return key !== "table" && gerePlanning(p, key);
 }
 
-/** Prévenir des changements d'un planning : qui le publie, et le référent Régie sur le culte — il remplit Sono et
- *  PPT mais ne publie pas le trimestre (Timothée, 23/10/2026). Un rôle « Notifier » seul : releases.ts l'ajoute. */
+/** Prévenir des changements d'un planning : ceux qui le publient (lot RS : plus de Régie ni de rôle « Notifier »). */
 export function previentPlanning(p: P, key: string): boolean {
-  return publiePlanning(p, key) || (key !== "table" && colonnesParEquipe(p, key) !== null);
+  return publiePlanning(p, key);
 }
 
 // ─── Notifier ───────────────────────────────────────────────────────────────
@@ -164,29 +157,20 @@ function equipesReferent(p: P): string[] {
   return IDS_EQUIPES.filter((id) => referent(p, id));
 }
 
-/** Les audiences qu'on notifie : Orga, toute l'Église (`*`) ; un référent, son équipe (`equipe:<id>`) ; le
- *  référent Louange, aussi chaque sous-équipe ; un référent de sous-équipe, la sienne (`louange:<s>`) ; plus
- *  les audiences des rôles de groupe (`notifieParRole`). Le droit coché `notify` n'est pas lu. */
+/** Les audiences qu'on notifie. Lot RS (Q11, Q12) : le Comité Orga, toute l'Église (`*`) ; un gestionnaire, l'audience
+ *  de son service (`audiencesDesPlannings`). Les référents ne notifient plus que par les réunions de leur équipe, et
+ *  les rôles de groupe (`notifieParRole`) ne donnent plus rien. Le droit coché `notify` n'est pas lu. */
 export function audiencesOrganigramme(p: P): string[] {
-  const parRole = liste(p?.notifieParRole);
-  if (estOrga(p)) return [...new Set([TOUS, ...parRole])];
-  return [...new Set([
-    ...equipesReferent(p).map((id) => `${PREFIXE_EQUIPE}${id}`),
-    ...sousEquipesReferent(p).map((s) => `${PREFIXE_LOUANGE}${s}`),
-    ...parRole,
-  ])];
+  if (estComiteOrga(p)) return [TOUS];
+  return audiencesDesPlannings(p);
 }
 
 // ─── Évènements ─────────────────────────────────────────────────────────────
 
-/** Sections d'évènement qu'on crée, parmi `sections` : le référent Louange, le Culte Francophone ; président
- *  et VP d'un groupe (leur `referentDe` porte le comité), la catégorie du groupe. Il n'existe pas de section
- *  EDD : rien pour le référent EDD (écart signalé dans la spec). */
+/** Sections d'évènement qu'on crée, parmi `sections`. Lot RS (Q11) : le Comité Orga les crée toutes ; ni le référent
+ *  Louange, ni le président ou les VP d'un groupe n'en créent plus (ils passent par le Comité Orga). */
 export function sectionsCreables(p: P, sections: readonly string[]): string[] {
-  const permis = new Set<string>();
-  if (estReferentLouange(p)) permis.add("Culte Francophone");
-  for (const g of TABLE_GROUPES) if (referent(p, g.comite)) permis.add(g.categorie);
-  return sections.filter((s) => permis.has(s));
+  return estComiteOrga(p) ? [...sections] : [];
 }
 
 // ─── Tenir l'organigramme ───────────────────────────────────────────────────
@@ -217,10 +201,10 @@ export function peutPlacerMembre(p: P, equipe: string, sousEquipes: readonly str
   return peutTenirEquipe(p, equipe) || (equipe === "louange" && sousEquipes.some((s) => peutTenirSousEquipe(p, s)));
 }
 
-/** Changer les référents d'une équipe : Orga ; le référent Louange, ceux de Louange et de ses sous-équipes
- *  (D4, B3). Ni un référent de sous-équipe, ni un référent d'une autre équipe. Les admins : access.ts. */
-export function peutChangerReferents(p: P, equipe: string): boolean {
-  return estOrga(p) || (equipe === "louange" && estReferentLouange(p));
+/** Changer les référents d'une équipe. Lot RS (Q16) : les admins seuls, que access.ts et serveur.ts traitent avant cet
+ *  appel ; jamais ici. La signature reste. */
+export function peutChangerReferents(_p: P, _equipe: string): boolean {
+  return false;
 }
 
 // ─── « Ce que tu peux faire » / « Ce que ça lui ouvre » ──────────────────────
@@ -247,44 +231,23 @@ export function ceQueCaOuvre(p: P, nommer: Nommer = (c) => c): Acces[] {
   const lieuxRegie = SERVICE_LIEUX.filter((l) => liste(p?.lieuxRegie).includes(l) && !lieuxLouange.includes(l));
   if (lieuxRegie.length) out.push({ cle: "acces.ouvre.setlistsVoir", params: { lieux: noms(lieuxRegie, "categories.") }, pourquoi: "acces.pourquoi.regieLieu" });
 
+  // Lot RS : un gestionnaire est traité comme quelqu'un qui sert dans le lieu de son planning.
+  const dejaCreables = categoriesCreables(p);
+  const apportees = categoriesDesPlannings(p).filter((c) => !dejaCreables.includes(c));
+  if (apportees.length) out.push({ cle: "acces.ouvre.setlistsCreer", params: { lieux: noms(apportees, "categories.") }, pourquoi: "acces.pourquoi.gestionnaireSetlists" });
+
   const h = harmonie(p);
   if (h.piano || h.guitare) {
     const instruments = (["piano", "guitare"] as const).filter((i) => h[i]);
     out.push({ cle: "acces.ouvre.harmonie", pourquoi: "acces.pourquoi.musiciensJoue", params: { instruments: noms(instruments, "acces.instrument.") } });
   }
 
-  if (coordination(p)) {
-    out.push({
-      cle: "acces.ouvre.coordination",
-      pourquoi: estReferentLouange(p) ? "acces.pourquoi.referentLouange" : estReferentEdd(p) ? "acces.pourquoi.referentEdd" : "acces.pourquoi.orga",
-    });
+  // Lot RS : une ligne par responsabilité de planning, puis le Comité Orga.
+  for (const cle of responsabilitesDe(p)) {
+    if (cle === "orga") continue;
+    out.push({ cle: "acces.ouvre.gestionnaire", params: { planning: nommer(`acces.responsabilite.${cle.slice("planning:".length)}`) }, pourquoi: "acces.pourquoi.gestionnaire" });
   }
-
-  if (estReferentLouange(p)) out.push({ cle: "acces.ouvre.planningCulte", pourquoi: "acces.pourquoi.referentLouange" });
-  else if (estReferentRegie(p)) out.push({ cle: "acces.ouvre.planningCulteRegie", pourquoi: "acces.pourquoi.referentRegie" });
-  if (estReferentEdd(p)) out.push({ cle: "acces.ouvre.planningEdd", pourquoi: "acces.pourquoi.referentEdd" });
-  if (estOrga(p)) out.push({ cle: "acces.ouvre.planningTable", pourquoi: "acces.pourquoi.orga" });
-  const parRole = [...new Set([...liste(p?.remplitParRole), ...liste(p?.publieParRole)])];
-  if (parRole.length) {
-    const nomPlanning = (k: string) => { const g = TABLE_GROUPES.find((x) => x.planning === k); return g ? nommer(`categories.${g.categorie}`) : k; };
-    out.push({ cle: "acces.ouvre.planningGroupe", params: { plannings: parRole.map(nomPlanning).join(", ") }, pourquoi: "acces.pourquoi.roleGroupe" });
-  }
-
-  if (estOrga(p)) out.push({ cle: "acces.ouvre.notifierTous", pourquoi: "acces.pourquoi.orga" });
-  else {
-    for (const id of equipesReferent(p)) {
-      out.push({ cle: "acces.ouvre.notifierEquipe", params: { equipe: nommer(cleNomEquipe(id, true)) }, pourquoi: "acces.pourquoi.referentEquipe" });
-    }
-    if (!estReferentLouange(p)) {
-      for (const s of sousEquipesReferent(p)) {
-        out.push({ cle: `acces.ouvre.notifier${s[0].toUpperCase()}${s.slice(1)}`, pourquoi: "acces.pourquoi.referentSous", params: { sous: nommer(`acces.sousEquipe.${s}`) } });
-      }
-    }
-  }
-  if (liste(p?.notifieParRole).length) out.push({ cle: "acces.ouvre.notifierGroupe", params: { groupes: liste(p?.notifieParRole).join(", ") }, pourquoi: "acces.pourquoi.roleGroupe" });
-
-  const sections = sectionsCreables(p, ["Culte Francophone", ...TABLE_GROUPES.map((g) => g.categorie)]);
-  if (sections.length) out.push({ cle: "acces.ouvre.evenementSection", params: { sections: noms(sections, "categories.") }, pourquoi: estReferentLouange(p) ? "acces.pourquoi.referentLouange" : "acces.pourquoi.presidenceGroupe" });
+  if (estComiteOrga(p)) out.push({ cle: "acces.ouvre.comiteOrga", pourquoi: "acces.pourquoi.comiteOrga" });
 
   const t = tientOrganigramme(p);
   if (t.tout) out.push({ cle: "acces.ouvre.organigrammeTout", pourquoi: "acces.pourquoi.orga" });

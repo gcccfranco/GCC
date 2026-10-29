@@ -9,6 +9,7 @@ import { PUBLISHABLE_PLANNINGS, droitsDePrevenir, peutPrevenir } from "@/lib/pla
 import { audiencesNotifiables } from "@/lib/push/audiences";
 import { BACK_OFFICE } from "@/lib/backOffice";
 import * as org from "@/lib/acces/organigramme";
+import { categoriesDesPlannings, gereUnPlanning, responsabilitesDe } from "@/lib/acces/responsabilites";
 import type { ProfilOrganigramme } from "@/lib/acces/organigramme";
 import type { SousEquipe } from "@/types/equipe";
 import { ENTREES, WIDGETS, type Entree, type WidgetId } from "@/types/backOffice";
@@ -143,8 +144,8 @@ type ProfilCoordination = { coordination?: boolean } & ProfilOrganigramme;
  *  droit `coordination` du profil, coché par un admin dans Personnes, + admins. Aucune
  *  équipe ne la donne. Règle la scène (programmes, ordre de
  *  passage, tout créneau), crée pour toute l'église, modifie tout évènement.
- *  Lot AO (`backOffice`, A2, D5) : plus de case — le référent Louange, le référent EDD et les membres d'Orga
- *  (`coordination`, src/lib/acces/organigramme.ts) ; ni le référent d'une sous-équipe, ni la case cochée.
+ *  Lot AO (`backOffice`, A2, D5) : plus de case. Lot RS (Q11) : le Comité Orga seul (responsabilité `orga`,
+ *  `coordination` de src/lib/acces/organigramme.ts) — plus le référent Louange ni EDD, ni le placement dans Orga.
  *  Miroir serveur : isCoordination() dans firestore.rules (ancien ∪ nouveau, tranche AO-C). */
 export function isCoordination(
   user: { email?: string | null } | null,
@@ -254,15 +255,19 @@ export function canEditCreneau(
 
 /** Réserver pour ces groupes : la coordination toujours ; un membre si la saison
  *  est ouverte et que chaque groupe est permis (liste vide = tous).
+ *  Lot RS (`backOffice`, Q12) : la scène est réservée au Comité Orga et aux gestionnaires de planning, qui réservent
+ *  toujours (`gereUnPlanning`).
  *  Miroir serveur : reservable() sous programmes/{id}/creneaux, firestore.rules. */
 export function canReserverPour(
   user: AuthUser | null,
   profile: ProfilCoordination | null,
   programme: { ouvert?: boolean; fermees?: boolean; quiAutorises?: string[] },
-  qui: string[]
+  qui: string[],
+  backOffice: boolean = BACK_OFFICE
 ): boolean {
   if (!user) return false;
-  if (isCoordination(user, profile)) return true;
+  if (isCoordination(user, profile, backOffice)) return true;
+  if (backOffice && gereUnPlanning(profile)) return true;
   if (programme.ouvert === false) return false;
   // Fermée à la main (docs/spec-fermer-reservations.md, FR10) : miroir de reservable().
   if (programme.fermees === true) return false;
@@ -338,8 +343,9 @@ export function canInscrireEvenement(
  *  admins (lot U6, R4 ; décisions 3 et 43) ; sinon la coordination pour tout, ou un membre dont
  *  le droit d'annonces couvre la section (le droit d'annonces devient un droit de création pour
  *  sa section, tranché le 15/09/2026). Un autre public préfixé (EQ19) ne se crée plus :
- *  miroir de la garde des règles. Lot AO (`backOffice`) : plus de droit d'annonces — le référent Louange crée
- *  pour le Culte Francophone, président et VP pour leur groupe (`sectionsCreables`). */
+ *  miroir de la garde des règles. Lot AO (`backOffice`) : plus de droit d'annonces. Lot RS (Q11) : seuls les admins et
+ *  le Comité Orga créent pour « eglise » ou une section (`isCoordination`, `sectionsCreables`) ; un référent crée
+ *  toujours pour l'équipe dont il est référent. */
 export function canCreateEvenement(
   user: AuthUser | null,
   profile: ProfilEvenement | null,
@@ -377,7 +383,8 @@ export function canSeeInscrits(user: AuthUser | null): boolean {
   return user !== null;
 }
 
-/** Modifier, dupliquer, supprimer, fermer les inscriptions, retirer un inscrit : organisateur + coordination. */
+/** Modifier, dupliquer, supprimer, fermer les inscriptions, retirer un inscrit : organisateur + coordination
+ *  (lot RS : le Comité Orga) + admins. */
 export function canEditEvenement(
   user: AuthUser | null,
   profile: ProfilCoordination | null,
@@ -444,9 +451,9 @@ export function peutOrdonnerSujets(user: AuthUser | null, e: EvenementDroits): b
  *  rôle, Publier inclut Remplir). Ne donne PAS le droit de publier un trimestre
  *  (canPublishPlanning, src/lib/planning/releases.ts, qui dépend de `notify`) :
  *  deux gestes différents, deux droits (D10).
- *  Lot AO (`backOffice`) : plus de case `plannings` — `colonnesRemplies` de l'organigramme (référent Louange :
- *  le culte ; référent Régie : le culte, Sono / Sono Live / PPT ; référent EDD : l'EDD ; Orga : la Table ; un
- *  rôle de groupe) ; `colonnesModifiables` dit lesquelles. PAS le référent Musiciens (E2).
+ *  Lot AO (`backOffice`) : plus de case `plannings`. Lot RS (Q5, Q10) : le gestionnaire du planning (`planning:<x>`,
+ *  `colonnesRemplies` de l'organigramme) remplit toute sa grille ; ni les référents, ni les rôles de groupe, ni Orga
+ *  ne remplissent plus ; un planning sans gestionnaire n'est rempli que par les admins.
  *  Miroir serveur : plannings/{key}/dimanches dans firestore.rules (ancien ∪ nouveau, tranche AO-C). */
 export function canEditPlanning(
   user: { email?: string | null } | null,
@@ -460,7 +467,7 @@ export function canEditPlanning(
   return (profile?.plannings ?? []).includes(key) || (profile?.remplitParRole ?? []).includes(key);
 }
 
-/** Les colonnes qu'on remplit sur un planning (lot AO) : `"toutes"`, la liste de celles de la Régie, ou `null`.
+/** Les colonnes qu'on remplit sur un planning (lot AO) : `"toutes"` ou `null` (lot RS : plus de liste partielle).
  *  Ancien mode : toutes ou rien (`canEditPlanning`). Les admins : toutes. */
 export function colonnesModifiables(
   user: { email?: string | null } | null,
@@ -477,7 +484,7 @@ export function colonnesModifiables(
 /** Congés et absences (SC3, docs/spec-createur-corbeille-absences.md ; Q8, Q9) : « ceux qui font les
  *  plannings », c'est-à-dire les admins et les profils dont `plannings` n'est pas vide. Ils saisissent une
  *  absence pour quelqu'un d'autre et lisent celles de tous.
- *  Lot AO (`backOffice`) : qui remplit au moins un planning par l'organigramme (`remplitUnPlanning`).
+ *  Lot AO (`backOffice`) : qui remplit au moins un planning (`remplitUnPlanning`). Lot RS : gestionnaire d'au moins un planning.
  *  Miroir serveur : faitDesPlannings() et users/{uid}/absences/{id} dans firestore.rules. */
 export function faitDesPlannings(
   user: { email?: string | null } | null,
@@ -553,7 +560,7 @@ export const PLANNINGS_DATES_CHOISIES = ["interfranco", "intergroupe", "campusMa
 
 /** Retirer une date (supprimer son document) : qui peut remplir ce planning,
  *  sur un planning à dates choisies seulement. Lot AO (`backOffice`) : il faut pouvoir remplir TOUTES les colonnes —
- *  le retrait efface toutes les cases, le référent Régie (Sono, Sono Live, PPT) ne retire donc pas une date.
+ *  le retrait efface toutes les cases (lot RS : le gestionnaire du planning).
  *  Miroir serveur : `allow delete` de plannings/{key}/dimanches dans firestore.rules. */
 export function canRetirerDate(
   user: { email?: string | null } | null,
@@ -618,13 +625,14 @@ export function categoryLevel(category: string, roles: ServiceRole[]): AccessLev
  *  groupe, l'EDD, plus les lieux de la Régie en lecture ; la lecture d'une date où l'on sert (F1) est à part
  *  (`canSeeSetlist`). Sans équipe : aucune catégorie de lieu. */
 export function visibleCategories(profile: UserProfile, backOffice: boolean = BACK_OFFICE): string[] {
-  return backOffice ? org.categoriesVisibles(profile) : Object.keys(profile.serviceRoles);
+  return backOffice ? [...new Set([...org.categoriesVisibles(profile), ...categoriesDesPlannings(profile)])] : Object.keys(profile.serviceRoles);
 }
 
 /** Catégories où la personne peut CRÉER une setlist (niveau ≥ create — la régie en est exclue).
  *  Lot AO (`backOffice`) : les lieux de Louange, le groupe, les trois classes de l'EDD. */
 export function creatableCategories(profile: UserProfile, backOffice: boolean = BACK_OFFICE): string[] {
-  if (backOffice) return org.categoriesCreables(profile);
+  // Lot RS (Q10) : un gestionnaire est traité comme quelqu'un qui sert dans le lieu de son planning.
+  if (backOffice) return [...new Set([...org.categoriesCreables(profile), ...categoriesDesPlannings(profile)])];
   return Object.keys(profile.serviceRoles).filter(
     (c) => LEVEL_RANK[categoryLevel(c, profile.serviceRoles[c])] >= LEVEL_RANK.create
   );
@@ -772,14 +780,14 @@ const nonVide = (l: string[] | undefined) => (l?.length ?? 0) > 0;
  *  droit Équipes, référent d'une équipe, un droit venu d'un rôle de groupe (lot 2, OG26). Être membre d'une équipe ou du public Louange (un rôle
  *  de service) ne fait pas un responsable (question 2). Lot AO (`backOffice`) : plus aucune case — la
  *  coordination (Orga, référents Louange et EDD), un référent d'équipe ou de sous-équipe, un droit venu
- *  d'un rôle de groupe. */
+ *  d'un rôle de groupe. Lot RS (`backOffice`, Q22) : admin, ou au moins une responsabilité, ou référent d'une équipe ou
+ *  d'une sous-équipe ; les rôles de groupe ne comptent plus. */
 export function estResponsable(user: AuthUser | null, profile: ProfilResponsable | null, backOffice: boolean = BACK_OFFICE): boolean {
   if (!user) return false;
   if (isAdminUser(user)) return true;
   if (!profile) return false;
   if (backOffice) {
-    return org.coordination(profile) || nonVide(profile.referentDe) || nonVide(profile.referentSous)
-      || nonVide(profile.remplitParRole) || nonVide(profile.publieParRole) || nonVide(profile.notifieParRole);
+    return responsabilitesDe(profile).length > 0 || nonVide(profile.referentDe) || nonVide(profile.referentSous);
   }
   return profile.coordination === true || nonVide(profile.plannings) || nonVide(profile.notify)
     || nonVide(profile.annonces) || profile.equipes === true || nonVide(profile.referentDe)
@@ -865,10 +873,10 @@ export function planningsDuBackOffice(
   if (!user) return [];
   if (isAdminUser(user)) return [...ONGLETS_PLANNING];
   if (backOffice) {
-    // Lot AO : les grilles remplies par l'organigramme ou un rôle de groupe, plus les publications ou prévenances.
+    // Lot AO : les grilles remplies, plus les publications ou prévenances. Lot RS : par un gestionnaire seulement.
     const publiees = PUBLISHABLE_PLANNINGS.filter((p) => droitsDePrevenir(p, false, profile, true)).map((p) => p.key);
     const remplies = org.TOUS_LES_PLANNINGS.filter((k) => org.colonnesRemplies(profile, k) !== null);
-    const siens = new Set([...remplies, ...(profile?.remplitParRole ?? []), ...(profile?.publieParRole ?? []), ...publiees].map(ongletDeLaGrille));
+    const siens = new Set([...remplies, ...publiees].map(ongletDeLaGrille));
     return ONGLETS_PLANNING.filter((o) => siens.has(o));
   }
   const publies = PUBLISHABLE_PLANNINGS.filter((p) =>

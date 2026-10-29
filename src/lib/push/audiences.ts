@@ -45,9 +45,9 @@ type ProfilNotifie = { notify?: string[]; notifieParRole?: string[] } & ProfilOr
 
 /** Les audiences qu'une personne notifie (OG24) : `notify` ∪ `notifieParRole`. Les rôles ne comptent
  *  que si `backOffice` (OG27 : local et en ligne partagent Firestore). Exporté aussi par access.ts.
- *  Lot AO (`backOffice`, A2) : le droit coché `notify` n'est plus lu — Orga, toute l'Église (`*`) ; un
- *  référent, son équipe (`equipe:<id>`) ; le référent Louange, aussi chaque sous-équipe ; un référent de
- *  sous-équipe, la sienne (`louange:<sous>`) ; plus `notifieParRole` (groupes). */
+ *  Lot AO (`backOffice`, A2) : le droit coché `notify` n'est plus lu. Lot RS (Q10, Q11) : le Comité Orga, toute
+ *  l'Église (`*`) ; un gestionnaire de planning, l'audience de son service ; ni les référents (leurs réunions
+ *  seulement) ni `notifieParRole` (groupes) ne notifient plus. */
 export function audiencesNotifiables(profil: ProfilNotifie | null, backOffice: boolean = BACK_OFFICE): string[] {
   if (backOffice) return audiencesOrganigramme(profil);
   return [...new Set(profil?.notify ?? [])];

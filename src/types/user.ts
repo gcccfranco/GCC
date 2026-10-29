@@ -86,6 +86,9 @@ export interface UserProfile {
   lieuxLouange?: string[];
   lieuxRegie?: string[];
   joue?: string[];
+  /** Lot RS (docs/spec-responsabilites.md) : les responsabilités de gestion (`planning:<x>`, `orga`), écrites par les
+   *  admins seuls — clés de RESPONSABILITES, src/lib/acces/responsabilites.ts. Absent = aucune. */
+  responsabilites?: string[];
   /** Date d'inscription = createTime du document Firestore users/{uid}, en lecture
    *  seule (jamais persisté comme champ). Renseigné pour tous les profils existants. */
   createdAt?: Date;

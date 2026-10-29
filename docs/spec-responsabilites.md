@@ -167,3 +167,19 @@ fois, puis l'admin corrige sur la page Responsabilités.
 ## Avancement
 
 - 29/10/2026 : spec écrite après l'entretien, go donné, code confié à une session orchestratrice (RS-A à RS-C).
+- 29/10/2026, **pause demandée par Timothée** (limite hebdomadaire ; reprise samedi 31/10 après 12:00). État exact :
+  - **RS-A à moitié** : code écrit par l'executant, **non testé et non relu** (le testeur venait de démarrer quand le
+    workflow a été arrêté). Fichiers : `src/lib/acces/responsabilites.ts` (nouveau), `organigramme.ts`, `access.ts`,
+    `releases.ts`, `audiences.ts`, `src/types/user.ts`, `src/lib/firebase/users.ts`, `tests/helpers/fakeSession.ts`,
+    locales fr / zh-CN, `tests/responsabilites.spec.ts` (nouveau), `tests/acces-organigramme.spec.ts`,
+    `tests/acces-moi.spec.ts`. Sauvé sur la branche `claude/rs-en-cours`, pas sur `claude/loving-planck-xg0rgz`.
+  - À la reprise : `npx tsc --noEmit`, `npm run lint`, puis `tests/responsabilites.spec.ts`, `acces-organigramme`,
+    `acces-moi`, `acces-migration` (trois appareils) ; relecture du diff contre la spec ; commit RS-A sur la branche
+    de la session.
+  - Choix pris au codage (à confirmer) : `canReserverPour` laisse aussi réserver les gestionnaires de planning (Q12),
+    sans leur ouvrir la sous-partie Scène du back-office (réservée à `orga`) ; `tientOrganigramme` garde Orga =
+    `dansEquipes` ∋ `orga` (« inchangé ») ; `peutChangerReferents` renvoie faux hors admins ; la Table n'a pas
+    d'audience de notification libre ; les téléphones des inscrits ne sont lus nulle part dans l'app (Sheet
+    seulement) : rien à changer.
+  - **Reste** : RS-B (règles ancien ∪ nouveau, routes, `scripts/responsabilites-reprise.ts`, tests) et RS-C (page
+    Équipes › Responsabilités en troisième onglet du rail Équipes, fiche, Moi, mention « Référent »), pas commencés.

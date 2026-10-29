@@ -3729,6 +3729,8 @@
       "setlistsEdd": "查看并创建主日学（三个班）的歌单",
       "setlistsVoir": "查看{{lieux}}的歌单",
       "harmonie": "和声灵感与课程",
+      "gestionnaire": "填写、发布并通知{{planning}}的排班，通知其对象",
+      "comiteOrga": "创建和修改活动与聚会，发布公告，通知全教会，预约舞台",
       "coordination": "协调：舞台、节日和全教会的活动",
       "planningCulte": "填写、发布并通知敬拜聚会的排班",
       "planningCulteRegie": "填写敬拜聚会排班中的音响和投影，并通知变动",
@@ -3749,6 +3751,9 @@
       "organigrammeChoristes": "在组织架构中安排和声"
     },
     "pourquoi": {
+      "gestionnaire": "负责人 · {{planning}}",
+      "gestionnaireSetlists": "该服事排班的负责人",
+      "comiteOrga": "统筹委员会",
       "louangeLieu": "敬拜组，在你服事的地方",
       "regieLieu": "音控组，在你服事的地方",
       "groupe": "小组成员",
@@ -3762,6 +3767,18 @@
       "referentEquipe": "{{equipe}}团队负责人",
       "referentSous": "{{sous}}负责人",
       "presidenceGroupe": "小组主席或副主席"
+    },
+    "responsabilite": {
+      "culte": "法语崇拜",
+      "intergroupe": "联合聚会",
+      "interfranco": "法语联合聚会",
+      "campus": "夏令营",
+      "table": "餐桌与早餐",
+      "edd": "主日学",
+      "paix": "和平团契",
+      "fidelite": "信实团契",
+      "bonte": "恩慈团契",
+      "orga": "统筹委员会"
     },
     "sousEquipe": {
       "presidence": "主领",

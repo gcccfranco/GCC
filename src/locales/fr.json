@@ -3774,6 +3774,8 @@
       "setlistsEdd": "Voir et créer les setlists de l'EDD (les trois classes)",
       "setlistsVoir": "Voir les setlists de {{lieux}}",
       "harmonie": "Idées d'harmonie et cours",
+      "gestionnaire": "Remplir, publier et prévenir le planning {{planning}}, notifier son audience",
+      "comiteOrga": "Créer et modifier les évènements et les réunions, publier des annonces, notifier toute l'Église, réserver la scène",
       "coordination": "Coordination : scène, fêtes et évènements de toute l'Église",
       "planningCulte": "Remplir, publier et prévenir le planning du culte",
       "planningCulteRegie": "Remplir Sono et PPT du planning du culte et prévenir des changements",
@@ -3794,6 +3796,9 @@
       "organigrammeChoristes": "Placer les choristes dans l'organigramme"
     },
     "pourquoi": {
+      "gestionnaire": "Gestionnaire · {{planning}}",
+      "gestionnaireSetlists": "Gestionnaire d'un planning de ce service",
+      "comiteOrga": "Comité Orga",
       "louangeLieu": "Louange, là où tu sers",
       "regieLieu": "Régie, là où tu sers",
       "groupe": "Membre du groupe",
@@ -3807,6 +3812,18 @@
       "referentEquipe": "Référent de l'équipe {{equipe}}",
       "referentSous": "Référent {{sous}}",
       "presidenceGroupe": "Président ou VP du groupe"
+    },
+    "responsabilite": {
+      "culte": "Culte Franco",
+      "intergroupe": "Intergroupe",
+      "interfranco": "Interfranco",
+      "campus": "Campus",
+      "table": "Table et petit déj",
+      "edd": "EDD",
+      "paix": "Paix",
+      "fidelite": "Fidélité",
+      "bonte": "Bonté",
+      "orga": "Comité Orga"
     },
     "sousEquipe": {
       "presidence": "Présidence",

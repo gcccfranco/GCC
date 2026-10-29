@@ -26,10 +26,15 @@ const SANS_EQUIPE: FakeProfile = {
   // L'ancien rôle déclaré, tel quel : il ne doit plus rien ouvrir (pas de traduction comme la migration).
   organigramme: false,
 };
-/** Référent de la Régie : remplit Sono, Sono Live et PPT des plannings du culte, rien d'autre. */
+/** Référent de la Régie : depuis le lot RS il ne remplit plus rien (la gestionnaire du culte saisit la régie). */
 const REFERENT_REGIE: FakeProfile = {
   uid: "uid-regis", email: "regis@example.com", firstName: "Régis", lastName: "Moulin", planningName: "Régis M.",
   dansEquipes: ["regie"], referentDe: ["regie"], lieuxRegie: ["Culte Francophone"],
+};
+/** Lot RS : gestionnaire du planning du culte (responsabilité `planning:culte`) : toute la grille, sans découpage par colonne. */
+const GESTIONNAIRE_CULTE: FakeProfile = {
+  uid: "uid-gaelle", email: "gaelle@example.com", firstName: "Gaëlle", lastName: "Perrin", planningName: "Gaëlle P.",
+  responsabilites: ["planning:culte"],
 };
 const ADMIN: FakeProfile = { uid: "uid-admin", email: "tc328829@gmail.com", firstName: "Noé", lastName: "T.", planningName: "Noé T." };
 
@@ -65,10 +70,10 @@ test.describe("Moi : Mes équipes et Ce que tu peux faire", () => {
 
     const faire = carte(page, "Ce que tu peux faire");
     const acces = faire.getByTestId("acces-ligne");
+    // lot RS : un référent ne notifie plus (que par ses réunions) ; il garde de placer ses musiciens.
     await expect(acces).toHaveText([
       "Voir et créer les setlists de Interfranco, CampusLouange, là où tu sers",
       "Idées d'harmonie et coursMusiciens, guitare",
-      "Envoyer une notification aux musiciensRéférent Musiciens",
       "Placer les musiciens dans l'organigrammeRéférent Musiciens",
     ]);
     await expect(faire.getByText("Un accès te manque ? Demande à ton référent de te placer dans l'organigramme.")).toBeVisible();
@@ -113,7 +118,7 @@ test.describe("Moi : Mes équipes et Ce que tu peux faire", () => {
 
 // ── La grille du planning : les colonnes du référent Régie ──────────────────────────────────
 
-test.describe("Grille du culte : le référent Régie", () => {
+test.describe("Grille du culte : la gestionnaire du culte, et le référent Régie (lot RS)", () => {
   const DOCS = {
     "plannings/culte/dimanches/2027-01-24": { date: "2027-01-24", piano: "Yann Lorin", sono: "Anyi Pelle", ppt: "" },
   };
@@ -122,45 +127,39 @@ test.describe("Grille du culte : le référent Régie", () => {
   async function ouvrirCulte2027(page: Page) {
     await page.clock.setFixedTime(new Date("2026-11-15T10:00:00"));
     await page.route(/docs\.google\.com\/spreadsheets/, (route) => route.fulfill({ status: 200, contentType: "text/csv", body: "" }));
-    const db = await signInAs(page, REFERENT_REGIE, DOCS, "/back-office/planning/culte");
+    const db = await signInAs(page, GESTIONNAIRE_CULTE, DOCS, "/back-office/planning/culte");
     await page.getByRole("tab", { name: "2027", exact: true }).click();
     await expect(page.locator("[data-date-cell='2027-01-24'], [data-date-carte='2027-01-24']").filter({ visible: true })).toHaveCount(1);
     return db;
   }
 
-  test("il édite Sono et PPT, pas Piano ; son écriture ne porte que sa colonne", async ({ page }) => {
+  test("elle édite toute la grille (Piano, Sono, PPT) ; son écriture ne porte que la colonne modifiée", async ({ page }) => {
     const db = await ouvrirCulte2027(page);
-    // Piano : du texte, ni bouton ni champ.
+    // Piano, Sono et PPT : des cases à remplir (lot RS, Q5 : toute la grille).
     await expect(laCase(page, "piano")).toContainText("Yann Lorin");
-    await expect(laCase(page, "piano").getByRole("button")).toHaveCount(0);
-    // Sono et PPT : des cases à remplir.
+    await expect(laCase(page, "piano").getByRole("button")).toHaveCount(1);
     await expect(laCase(page, "sono").getByRole("button")).toHaveCount(1);
     await expect(laCase(page, "ppt").getByRole("button")).toHaveCount(1);
     await capture(page, "regie-grille-culte");
 
     // Son nom, dans la case PPT.
     await laCase(page, "ppt").getByRole("button").click();
-    await page.getByRole("dialog").getByRole("option", { name: /^Régis M\./ }).click();
-    await expect(laCase(page, "ppt")).toContainText("Régis M.");
-    await expect.poll(() => db.doc("plannings/culte/dimanches/2027-01-24")?.ppt).toBe("Régis M.");
+    await page.getByRole("dialog").getByRole("option", { name: /^Gaëlle P\./ }).click();
+    await expect(laCase(page, "ppt")).toContainText("Gaëlle P.");
+    await expect.poll(() => db.doc("plannings/culte/dimanches/2027-01-24")?.ppt).toBe("Gaëlle P.");
     const ecritures = db.writes.filter((w) => w.method === "PATCH" && w.path === "plannings/culte/dimanches/2027-01-24");
     expect(ecritures).toHaveLength(1);
     expect(Object.keys(ecritures[0].data).sort()).toEqual(["date", "modifieLe", "modifiePar", "ppt"]);
     expect(db.doc("plannings/culte/dimanches/2027-01-24")?.piano).toBe("Yann Lorin");
   });
 
-  test("une date encore au Sheet, ou « retirer une date » : rien à éditer pour lui", async ({ page }) => {
-    // 2026 : les dates viennent du Sheet, une première écriture recopierait toutes les colonnes.
+  test("le référent Régie ne remplit plus rien : la page du planning lui est réservée (lot RS)", async ({ page }) => {
+    // lot RS : « Sono, Sono Live, PPT du culte » passent à la gestionnaire du culte ; l'ancienne grille partielle a disparu.
     await page.clock.setFixedTime(new Date("2026-09-18T10:00:00"));
-    const csv = '"2026 DATE","Présidence","Choristes","","Pianiste","Guitariste","Batterie","Sono + Live","PPT","Orateur","Traducteur","Sainte cène","Notes"\n"20/09","Marc A.","Zoé P.","","Yann L.","Ruth K.","Paul D.","Anyi P.","Denis F.","Hélène W.","","",""';
-    await page.route(/docs\.google\.com\/spreadsheets/, (route) => route.fulfill({
-      status: 200, contentType: "text/csv", body: new URL(route.request().url()).searchParams.get("sheet") === "Franco_Louange" ? csv : "",
-    }));
+    await page.route(/docs\.google\.com\/spreadsheets/, (route) => route.fulfill({ status: 200, contentType: "text/csv", body: "" }));
     await signInAs(page, REFERENT_REGIE, {}, "/back-office/planning/culte");
-    const sono = page.locator('[data-case="2026-09-20|sono"]').filter({ visible: true });
-    await expect(sono).toContainText("Anyi P.");
-    await expect(sono.getByRole("button")).toHaveCount(0);
-    await expect(page.locator('[data-case="2026-09-20|piano"]').filter({ visible: true }).getByRole("button")).toHaveCount(0);
+    await expect(page.getByText("Page réservée aux responsables de ce planning.")).toBeVisible();
+    await expect(page.locator("[data-case]")).toHaveCount(0);
   });
 });
 
