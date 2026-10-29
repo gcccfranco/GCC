@@ -9,6 +9,7 @@
 import { Fragment } from "react"
 import Link from "next/link"
 import { useTranslation } from "react-i18next"
+import { ChevronRight } from "lucide-react"
 import { PLANNING_COLORS } from "@/lib/serviceColors"
 import { serviceButtonFill } from "@/lib/serviceButton"
 import { porteLeNom } from "@/lib/planning/accueil"
@@ -24,6 +25,24 @@ const HEURES = { culte: "10:30", groupes: "13:00", edd: "13:00", table: "10:00" 
 
 function Point({ couleur, className = "" }: { couleur: string; className?: string }) {
   return <span aria-hidden className={`h-2 w-2 shrink-0 rounded-full ${className}`} style={{ background: couleur }} />
+}
+
+/** Le titre d'une carte mène à son planning, et toute la carte se touche (Timothée, 29/10/2026 : sur
+ *  téléphone, ouvrir un planning depuis l'aperçu sans passer par « Accueil » et sa liste). La carte
+ *  porte `relative` ; un lien posé dedans (« Je m'inscris ») passe au-dessus avec `relative z-10`. */
+function VersPlanning({ href, className = "", children }: { href: string; className?: string; children: React.ReactNode }) {
+  return (
+    <Link
+      href={href}
+      className={`after:absolute after:inset-0 after:rounded-2xl after:content-[''] focus-visible:outline-none focus-visible:after:ring-2 focus-visible:after:ring-ring ${className}`}
+    >
+      {children}
+    </Link>
+  )
+}
+
+function Chevron() {
+  return <ChevronRight aria-hidden className="ml-auto h-4 w-4 shrink-0 text-muted-foreground/70" />
 }
 
 /** Une case de planning, la personne connectée en évidence (pastille d'encre).
@@ -45,8 +64,9 @@ function Noms({ valeur, monNom }: { valeur: string; monNom: string }) {
 }
 
 /** Un service et ses rôles : deux colonnes en grand et sur tablette, une sur téléphone. */
-function CarteService({ titre, heure, couleur, roles, colonnes, monNom, testId, vide: messageVide }: {
+function CarteService({ titre, href, heure, couleur, roles, colonnes, monNom, testId, vide: messageVide }: {
   titre: string
+  href: string
   heure?: string
   couleur: string
   roles: [string, string][]
@@ -58,11 +78,14 @@ function CarteService({ titre, heure, couleur, roles, colonnes, monNom, testId, 
 }) {
   const remplis = roles.filter(([, v]) => !vide(v))
   return (
-    <article data-testid={testId} className="raised rounded-2xl px-4 py-3.5">
-      <h3 className="mb-1.5 flex items-center gap-2">
-        <Point couleur={couleur} />
-        <span className="svc-ink text-base font-bold" style={svc(couleur)}>{titre}</span>
-        {heure && <span className="text-[13px] text-muted-foreground tabular-nums">{heure}</span>}
+    <article data-testid={testId} className="raised relative rounded-2xl px-4 py-3.5">
+      <h3 className="mb-1.5">
+        <VersPlanning href={href} className="flex items-center gap-2">
+          <Point couleur={couleur} />
+          <span className="svc-ink text-base font-bold" style={svc(couleur)}>{titre}</span>
+          {heure && <span className="text-[13px] text-muted-foreground tabular-nums">{heure}</span>}
+          <Chevron />
+        </VersPlanning>
       </h3>
       {remplis.length ? (
         <dl className={colonnes === "large" ? "grid grid-cols-2 gap-x-6 [@container(min-width:720px)]:grid-cols-3" : colonnes === 2 ? "grid grid-cols-2 gap-x-6" : ""}>
@@ -119,6 +142,7 @@ export function CeDimanche({
     <CarteService
       testId="carte-culte"
       titre={t("planning.tabs.culte")}
+      href="/planning/culte"
       heure={HEURES.culte}
       couleur={PLANNING_COLORS.culte}
       colonnes={colonnes}
@@ -143,6 +167,7 @@ export function CeDimanche({
     <CarteService
       testId="carte-inter"
       titre={t(`planning.tabs.${inter.key}`)}
+      href={`/planning/${inter.key}`}
       couleur={PLANNING_COLORS[inter.key]}
       colonnes={colonnes === "large" ? 2 : colonnes}
       monNom={monNom}
@@ -159,8 +184,13 @@ export function CeDimanche({
       ]}
     />
   ) : (
-    <article className="raised rounded-2xl px-4 py-3.5">
-      <h3 className="mb-1 text-[13px] font-semibold text-muted-foreground">{t("planning.tabs.groupes")} · {HEURES.groupes}</h3>
+    <article data-testid="carte-groupes" className="raised relative rounded-2xl px-4 py-3.5">
+      <h3 className="mb-1 text-[13px] font-semibold text-muted-foreground">
+        <VersPlanning href="/planning/groupes" className="flex items-center gap-2">
+          {t("planning.tabs.groupes")} · {HEURES.groupes}
+          <Chevron />
+        </VersPlanning>
+      </h3>
       <ul>
         {groupes.map((g) => {
           const resume = ([["presidence", g.presidence], ["musiciens", g.musiciens]] as const).filter(([, v]) => !vide(v))
@@ -183,8 +213,13 @@ export function CeDimanche({
   )
 
   const carteEdd = (
-    <article className="raised rounded-2xl px-4 py-3.5">
-      <h3 className="svc-ink mb-1 text-[13px] font-semibold" style={svc(PLANNING_COLORS.edd)}>{t("planning.tabs.edd")} · {HEURES.edd}</h3>
+    <article data-testid="carte-edd" className="raised relative rounded-2xl px-4 py-3.5">
+      <h3 className="svc-ink mb-1 text-[13px] font-semibold" style={svc(PLANNING_COLORS.edd)}>
+        <VersPlanning href="/planning/edd" className="flex items-center gap-2">
+          {t("planning.tabs.edd")} · {HEURES.edd}
+          <Chevron />
+        </VersPlanning>
+      </h3>
       <ul>
         {edd.map((c) => (
           <li key={c.classe} data-testid="ligne-edd" className="flex gap-2.5 border-t border-border/70 py-2 text-sm">
@@ -212,8 +247,8 @@ export function CeDimanche({
     <article
       data-testid="carte-table"
       className={etages
-        ? "raised col-span-2 rounded-2xl px-4 py-2 [@container(min-width:720px)]:col-span-1 [@container(min-width:720px)]:py-3"
-        : "raised rounded-2xl px-4 py-2"}
+        ? "raised relative col-span-2 rounded-2xl px-4 py-2 [@container(min-width:720px)]:col-span-1 [@container(min-width:720px)]:py-3"
+        : "raised relative rounded-2xl px-4 py-2"}
     >
       {/* Sur deux étages, un en-tête comme Groupes et EDD (planche : `table_empilee`). */}
       {etages && (
@@ -223,7 +258,7 @@ export function CeDimanche({
       )}
       <div className={etages ? `${ligneTable} [@container(min-width:720px)]:border-t [@container(min-width:720px)]:border-border/70` : ligneTable}>
         <Point couleur={PLANNING_COLORS.table} className={pointTable} />
-        <b className={libelleTable}>{t("planning.tabs.table")}</b>
+        <b className={libelleTable}><VersPlanning href="/planning/table">{t("planning.tabs.table")}</VersPlanning></b>
         <span className="min-w-0">{vide(table) ? "—" : <Noms valeur={table} monNom={monNom} />}</span>
         {/* L'heure au bout de la ligne ; sur deux étages, elle est dans l'en-tête « Table · 10:00 ». */}
         <span className={`ml-auto shrink-0 text-[13px] text-muted-foreground tabular-nums ${pointTable}`}>{HEURES.table}</span>
@@ -237,7 +272,7 @@ export function CeDimanche({
               <span className="font-semibold text-amber-700 dark:text-amber-400">{t("planning.accueil.libre")}</span>
               <Link
                 href="/planning/table"
-                className="ml-auto inline-flex h-8 items-center rounded-full px-3.5 text-[13px] font-semibold text-white transition-transform duration-150 active:scale-[.97]"
+                className="relative z-10 ml-auto inline-flex h-8 items-center rounded-full px-3.5 text-[13px] font-semibold text-white transition-transform duration-150 active:scale-[.97]"
                 style={{ background: serviceButtonFill(PLANNING_COLORS.table) }}
               >
                 {t("planning.accueil.inscrire")}
