@@ -248,6 +248,7 @@ test("captures B1 : le refus sous la date, la pastille de janvier", async ({ pag
 
 /** Le jour de la fixture qui porte un responsable et dont les inscrits ont un téléphone. */
 const TELEPHONES = ["06 99 99 99 99", "07 11 22 33 44"];
+const LIEN_INSCRIPTION = `${SHEET}/edit?gid=1710170479#gid=1710170479`;
 
 const entree = (date: string, titre: string, responsable = ""): EntreeSheet =>
   ({ date, titre, heure: "20:00", heureFin: "", horaire: "20h", lieu: "Eglise", responsable });
@@ -265,27 +266,26 @@ test.describe("B2 : agendaPublic (pur)", () => {
     expect(titres(1)).toEqual(["Galette"]);
   });
 
-  test("connecté : responsable, sans lien vers le Sheet ; sans compte : pas de responsable", () => {
+  test("connecté : responsable et lien de l'onglet « Aperçu annuel » ; sans compte : ni l'un ni l'autre", () => {
     const veillee = (connecte: boolean) => {
       const x = agendaPublic([], sheet, connecte, "2026-12-15", "fr").aVenir[0].elements[0];
       if (x.source !== "sheet") throw new Error("entrée du Sheet attendue");
       return x.entree;
     };
-    expect(veillee(true)).toMatchObject({ titre: "Veillée", responsable: "Sacha Fictif" });
-    expect(veillee(true)).not.toHaveProperty("lien");
-    expect(veillee(false)).toMatchObject({ titre: "Veillée", responsable: "" });
+    expect(veillee(true)).toMatchObject({ titre: "Veillée", responsable: "Sacha Fictif", lien: LIEN_INSCRIPTION });
+    expect(veillee(false)).toMatchObject({ titre: "Veillée", responsable: "", lien: "" });
   });
 
-  test("connecté, une entrée sans responsable : pas de nom", () => {
+  test("connecté, une entrée sans responsable n'a pas de lien : le Sheet n'a de bloc d'inscription que sous un responsable", () => {
     const x = agendaPublic([], [entree("2026-12-24", "Crèche vivante")], true, "2026-12-15", "fr").aVenir[0].elements[0];
-    expect(x).toMatchObject({ source: "sheet", entree: { titre: "Crèche vivante", responsable: "" } });
+    expect(x).toMatchObject({ source: "sheet", entree: { titre: "Crèche vivante", responsable: "", lien: "" } });
   });
 
-  test("passés derrière le lien, plus récents d'abord ; une entrée passée du Sheet n'a pas de nom", () => {
+  test("passés derrière le lien, plus récents d'abord ; une entrée passée du Sheet n'a ni nom ni lien", () => {
     const { aVenir, passes } = agendaPublic(app, sheet, true, "2026-12-15", "fr");
     expect(aVenir.flatMap((g) => g.elements).some((x) => x.source === "sheet" && x.entree.titre === "Repas")).toBe(false);
     expect(passes).toHaveLength(1);
-    expect(passes[0]).toMatchObject({ source: "sheet", entree: { titre: "Repas", responsable: "" } });
+    expect(passes[0]).toMatchObject({ source: "sheet", entree: { titre: "Repas", responsable: "", lien: "" } });
   });
 });
 
@@ -325,22 +325,26 @@ test.describe("B2 : l'agenda public montre le Sheet jusqu'au 31/12/2026", () => 
     await sansTelephone(page);
   });
 
-  test("15/12/2026, connecté : « Pour plus d'infos », aucun lien vers le Sheet pour s'inscrire", async ({ page }) => {
+  test("15/12/2026, connecté : « Pour plus d'infos » et « S'inscrire sur le tableau » (onglet « Aperçu annuel », nouvel onglet)", async ({ page }) => {
     await ouvrir(page, COORD, "/evenements", "2026-12-15T10:00:00");
     await expect(page.getByText("Pour plus d'infos : Sacha Fictif")).toBeVisible();
-    await expect(page.locator('a[href*="docs.google.com"]')).toHaveCount(0);
+    // « Chants de Noël » (responsable) a le lien ; « Veillée » (sans responsable) ne l'a pas.
+    const liens = page.getByRole("link", { name: "S'inscrire sur le tableau" });
+    await expect(liens).toHaveCount(1);
+    await expect(liens.first()).toHaveAttribute("href", LIEN_INSCRIPTION);
+    await expect(liens.first()).toHaveAttribute("target", "_blank");
     await expect(page.getByRole("link", { name: /Chants de Noël/ })).toHaveCount(0);
     await page.getByRole("button", { name: /Évènements passés/ }).click();
     await expect(page.getByText("Soirée louange")).toBeVisible();
     await sansTelephone(page);
   });
 
-  test("15/12/2026, en chinois : « 活动表 », sans lien d'inscription vers le Sheet", async ({ page }) => {
+  test("15/12/2026, en chinois : « 活动表 » et « 在活动表上报名 »", async ({ page }) => {
     await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
     await ouvrir(page, COORD, "/evenements", "2026-12-15T10:00:00");
     await expect(page.getByText("Chants de Noël")).toBeVisible();
     await expect(page.getByText("活动表", { exact: true }).first()).toBeVisible();
-    await expect(page.locator('a[href*="docs.google.com"]')).toHaveCount(0);
+    await expect(page.getByRole("link", { name: "在活动表上报名" }).first()).toHaveAttribute("href", LIEN_INSCRIPTION);
     await expect(page.getByText("详情联系：Sacha Fictif")).toBeVisible();
   });
 
