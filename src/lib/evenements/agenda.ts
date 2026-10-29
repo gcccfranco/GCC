@@ -3,7 +3,7 @@
 
 import type { Evenement, ModeInscriptions } from "@/types/evenement";
 import { avantBascule } from "@/lib/evenements/bascule";
-import { LIEN_INSCRIPTION_SHEET, type EntreeSheet } from "@/lib/evenements/sheet";
+import { lienOngletSheet, type EntreeSheet } from "@/lib/evenements/sheet";
 
 export const isInfo = (e: Pick<Evenement, "type" | "date">) => e.type === "info" || !e.date;
 
@@ -66,7 +66,7 @@ export function daysAgo(today: string, days: number): string {
 }
 
 /** Une entrée du Sheet telle que l'agenda public la montre : `responsable` et `lien` (l'onglet
- *  « Aperçu annuel », pour s'inscrire sur le tableau) sont vides sans compte, et pour une entrée passée ;
+ *  du mois, pour s'inscrire sur le tableau) sont vides sans compte, et pour une entrée passée ;
  *  `lien` aussi sans responsable (le Sheet n'a de bloc « INSCRIPTIONS » que sous un responsable). */
 export type EntreeSheetPublique = EntreeSheet & { lien: string };
 
@@ -90,7 +90,7 @@ export function agendaPublic(app: Evenement[], sheet: EntreeSheet[], connecte: b
       const visible = connecte && s.date >= today;
       return {
         source: "sheet" as const, date: s.date, heure: s.heure, fin: s.date,
-        entree: { ...s, responsable: visible ? s.responsable : "", lien: visible && s.responsable ? LIEN_INSCRIPTION_SHEET : "" },
+        entree: { ...s, responsable: visible ? s.responsable : "", lien: visible && s.responsable ? lienOngletSheet(s.date) : "" },
       };
     }),
   ];

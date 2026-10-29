@@ -49,11 +49,6 @@ export interface EnvSheet {
 const urlExport = (gid: number) =>
   `https://docs.google.com/spreadsheets/d/${SHEET_EVENEMENTS_ID}/export?format=csv&gid=${gid}`
 
-/** L'onglet « Aperçu annuel », où l'on s'inscrit aux évènements de 2026 (agenda public ; Timothée,
- *  29/10/2026). */
-export const LIEN_INSCRIPTION_SHEET =
-  `https://docs.google.com/spreadsheets/d/${SHEET_EVENEMENTS_ID}/edit?gid=1710170479#gid=1710170479`
-
 /** L'onglet du mois d'une date, à ouvrir dans le navigateur (fiche du calendrier, widget 3 ; U9 :
  *  refus du formulaire, agenda public) ; le premier onglet pour un mois sans onglet. */
 export function lienOngletSheet(date: string): string {
