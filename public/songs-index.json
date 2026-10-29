@@ -9723,7 +9723,12 @@
       "sections": [
         {
           "id": "verse-1",
-          "name": "Couplet",
+          "name": "Couplet 1",
+          "type": "verse"
+        },
+                {
+          "id": "verse-2",
+          "name": "Couplet 2",
           "type": "verse"
         },
         {
