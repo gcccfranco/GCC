@@ -100,10 +100,10 @@ ils ne voient pas le composant réel. Détail du protocole dans
 Une session cloud n'a pas la mémoire des sessions locales : ces règles valent pour elle comme pour les autres
 (complétées le 13/10/2026 avec celles qui n'étaient qu'en mémoire locale). Une nouvelle consigne durable de Timothée
 s'écrit ici, pas seulement en mémoire.
-- **Branches** : `ui/apple-design` = le travail en cours. Tout s'y fait, directement : **aucune autre branche**, pas de
-  branche de lot à fusionner. `main` = le site en ligne (Vercel déploie chaque push) : n'y pousser **que sur un ordre
-  explicite de Timothée, donné au moment même** (un « oui » à une autre question n'en est pas un). Une correction faite
-  sur `main` est ensuite reportée sur `ui/apple-design` par une fusion (jamais de rebase de `main`).
+- **Branches** (Timothée, 29/10/2026) : la nouvelle version (`ui/apple-design`) est fusionnée dans `main` ; on ne
+  passe plus par `ui/apple-design`. `main` = le site en ligne (Vercel déploie chaque push) : n'y pousser **que sur un
+  ordre explicite de Timothée, donné au moment même** (un « oui » à une autre question n'en est pas un). En attendant
+  cet ordre, le travail reste sur la branche de la session.
 - **Pousser** : `git pull --rebase` sur la branche juste avant chaque push (d'autres sessions poussent aussi) ; jamais de
   `push --force`, jamais de suppression de branche. Indexer **par nom** (jamais `git add -A`) ; ne jamais commiter
   `next-env.d.ts` ni `tsconfig.json` réécrits par un serveur de test, `test-results/`, `.next*/`.
