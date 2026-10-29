@@ -147,6 +147,8 @@ for (const th of THEMES) {
     });
 
     test(`3 gomme invisible (${th.nom}) : au coin d'une gomme, le pixel est celui du fond`, async ({ page }) => {
+      // L'info-bulle des accords touchables flotte en bas de l'écran : hors sujet pour les pixels mesurés.
+      await page.addInitScript(() => localStorage.setItem("accords-aide-vue", "1"));
       await openSheet(page, SLUG, { key: "D", dark: th.dark });
       await page.locator('[data-jianpu-page="0"]').scrollIntoViewIfNeeded();
       const coins = await page.evaluate(() => {
