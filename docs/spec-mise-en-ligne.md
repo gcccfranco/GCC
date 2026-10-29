@@ -19,9 +19,10 @@ le calendrier des évènements et l'inscription partent aussi » :
 
 > « Je le compte comme back office aussi. »
 
-Statut : **cinq décisions de Timothée prises le 20/09/2026 ; go le 20/09/2026 ;
-interrupteur et retrait des annonces CODÉS le jour même (voir « Avancement »), à
-valider en local ; rien n'est fusionné dans `main`, qui attend un go explicite.**
+Statut : **EN LIGNE depuis le 20/09/2026.** Go de Timothée le 20/09/2026 ; codé le
+jour même (voir « Avancement ») ; fusionné dans `main` (`e5497cd`) et poussé sur
+son go explicite (« oui fusionne sur le main », puis « oui, pousse maintenant »).
+Première mise en ligne depuis le 13/09/2026.
 
 ## Décisions du 20/09/2026
 
@@ -230,4 +231,34 @@ interrupteur coupé : compilé et typé.
 **Remarqué sans y toucher** : l'ancien tableau « Table » réaffecte une variable
 pendant le rendu (avertissement ESLint d'origine) ; dans une fusion de chants, la
 tonalité de la liste reste l'ancienne pastille neutre.
+
+## Mise en ligne (20/09/2026)
+
+Trois commits sur la branche (`8696384` chant de Timothée, `ffe58da` look 5C1,
+`9542f4a` lot 18), fusion sans conflit dans `main` (`e5497cd`, arbre identique à
+la branche testée), poussée : `51fda97..e5497cd`, 55 commits. Vercel a servi le
+nouveau déploiement environ 90 secondes plus tard.
+
+Vérifié sur https://grace-church-chinese.vercel.app : manifeste « GCC » en
+`#ffffff` ; en 200 l'accueil, la liste des chants, un chant FR, un chant ZH, les
+setlists, le planning et sa page Culte, « Moi », le guide, la connexion, l'index
+(370 chants, « Mon secours est en Toi » en D) ; **en 404** `/taches`,
+`/taches/da`, `/equipes`, `/evenements`, `/evenements/nouveau`,
+`/evenements/scene`, `/annonces`, et en POST `/api/taches/fait`,
+`/api/equipes/poles`, `/api/evenements/inscription`,
+`/api/admin/importer-planning`, `/api/admin/migrer-annonces`.
+
+Retour arrière : « Promote » du déploiement précédent dans Vercel.
+
+Reste à faire par Timothée : republier `firestore.rules` (règle des setlists
+privées du lot cohérence). Pour ouvrir le back-office un jour : poser
+`NEXT_PUBLIC_BACK_OFFICE=1` sur Vercel et redéployer.
+
+**Sainte cène (question de Timothée à la mise en ligne).** La colonne est à
+l'index 11 de `Franco_Louange`, là où le code la lit ; le T4 en porte trois
+(04/10, 01/11, 06/12). Elle s'affiche dans l'onglet Culte (ancien tableau, si une
+case du trimestre est remplie), dans « Ce dimanche » et dans « Mes services », et
+entre dans le rappel groupé J-7, J-3, J-1 (« Culte Franco (Piano, Sainte cène) »,
+« 圣餐 » en 中文). Ajouté à `back-office-coupe.spec.ts` : 6 tests sur le serveur
+« comme en ligne ».
 

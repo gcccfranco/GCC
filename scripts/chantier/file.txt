@@ -1,0 +1,37 @@
+# File du chantier « équipes et groupes », dans l'ordre (décisions 45 et ligne 79 de decisions.md).
+# Une ligne par passage : ÉTIQUETTE|TRANCHE|SPEC|NOTE (la note est facultative).
+# TRANCHE = REVUE : relecture du lot par Opus, corrections et passage complet sur trois appareils.
+# Un passage est fait quand un commit dont le titre commence par « ÉTIQUETTE TRANCHE : » est sur la branche.
+
+V19EQUIPES|EQ-C|docs/spec-equipes-sans-poles.md|Commence par appliquer docs/chantier-equipes-groupes/en-cours/V19EQUIPES-EQ-C.patch (git apply --3way) en suivant le README de ce dossier : la tranche y est à mi-chemin (tests écrits, code en cours, specs voisines à remettre au vert). Retire le dossier en-cours/ dans le commit de la tranche.
+V19EQUIPES|EQ-D|docs/spec-equipes-sans-poles.md|
+V19EQUIPES|EQ-E|docs/spec-equipes-sans-poles.md|Le script de migration s'écrit et se teste sur une base simulée ; il n'est jamais lancé sur la vraie base (c'est Timothée qui le lance, à blanc puis avec --ecrire).
+V19EQUIPES|EQ-F|docs/spec-equipes-sans-poles.md|
+V19EQUIPES|REVUE|docs/spec-equipes-sans-poles.md|Le passage complet a été fait par EQ-F : ne relance que les specs touchées par tes corrections.
+V19PARTAGE|PS-B|docs/spec-partage-setlist.md|La tranche est commencée : commit 4227d9dc « V19PARTAGE PS-B (en cours, pause) » (tests 11/12 verts). Lis sa section « Avancement » et finis-la.
+V19PARTAGE|PS-C|docs/spec-partage-setlist.md|
+V19PARTAGE|PS-D|docs/spec-partage-setlist.md|
+V19PARTAGE|REVUE|docs/spec-partage-setlist.md|
+V19PLANNING|PG-B|docs/spec-planning-gestes.md|
+V19PLANNING|PG-C|docs/spec-planning-gestes.md|
+V19PLANNING|PG-D|docs/spec-planning-gestes.md|
+V19PLANNING|PG-E|docs/spec-planning-gestes.md|
+V19PLANNING|PG-F|docs/spec-planning-gestes.md|
+V19PLANNING|PG-Z|docs/spec-planning-gestes.md|
+V19PLANNING|REVUE|docs/spec-planning-gestes.md|Le passage complet a été fait par PG-Z : ne relance que les specs touchées par tes corrections.
+V19GROUPES|OG-A|docs/spec-organigrammes-groupes.md|
+V19GROUPES|OG-B|docs/spec-organigrammes-groupes.md|
+V19GROUPES|OG-C|docs/spec-organigrammes-groupes.md|
+V19GROUPES|OG-D|docs/spec-organigrammes-groupes.md|
+V19GROUPES|OG-E|docs/spec-organigrammes-groupes.md|
+V19GROUPES|OG-F|docs/spec-organigrammes-groupes.md|
+V19GROUPES|OG-G|docs/spec-organigrammes-groupes.md|
+V19GROUPES|REVUE|docs/spec-organigrammes-groupes.md|
+V19FETES|CF-A|docs/spec-chants-fetes.md|
+V19FETES|CF-B|docs/spec-chants-fetes.md|
+V19FETES|CF-C|docs/spec-chants-fetes.md|
+V19FETES|CF-D|docs/spec-chants-fetes.md|
+V19FETES|CF-E|docs/spec-chants-fetes.md|
+V19FETES|CF-F|docs/spec-chants-fetes.md|
+V19FETES|CF-G|docs/spec-chants-fetes.md|
+V19FETES|REVUE|docs/spec-chants-fetes.md|

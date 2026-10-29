@@ -9,8 +9,10 @@ export default function PlanningLayout({ children }: { children: React.ReactNode
       <div className="relative min-h-screen bg-background">
         <PullToRefresh />
         <PlanningHalo />
+        {/* Agencement v18 (A1, A2, R6) : l'en-tête « Planning » et les plannings, au-dessus de toute
+            page de la section ; puis toute la zone de contenu, à la marge de la zone. */}
         <PlanningTabs />
-        <main className="relative max-w-[1080px] mx-auto px-4 py-6 pb-16">
+        <main className="relative px-[var(--marge-page)] pb-16">
           {children}
         </main>
       </div>

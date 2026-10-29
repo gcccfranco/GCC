@@ -7,7 +7,8 @@ const ENCRE = "rgb(28, 28, 30)";
 
 const phone = { viewport: { width: 390, height: 664 }, isMobile: true, hasTouch: true, deviceScaleFactor: 2 };
 const barreDuBas = (page: Page) => page.getByRole("navigation", { name: "Navigation principale" });
-const header = (page: Page) => page.locator("header");
+// `.barre-haut` : l'en-tête de la page (EnTetePage, agencement v18) est aussi un <header>.
+const header = (page: Page) => page.locator("header.barre-haut");
 
 test.describe("navigation par sections (T2), téléphone", () => {
   test.use(phone);
@@ -43,11 +44,13 @@ test.describe("navigation par sections (T2), téléphone", () => {
     await signInAs(page, MEMBRE, {}, "/moi");
     await expect(page.getByRole("heading", { level: 1, name: "Moi" })).toBeVisible();
     for (const nom of ["Mes services", "Mon profil", "Guide d'utilisation", "Ton avis sur le site"]) {
-      await expect(page.getByRole("link", { name: nom })).toBeVisible();
+      // « Mon profil » est aussi dans la carte du compte (U4 bis, B5).
+      await expect(page.getByRole("link", { name: nom }).first()).toBeVisible();
     }
     await expect(page.getByRole("button", { name: "Signaler un problème" })).toBeVisible();
-    await expect(page.getByRole("button", { name: "Sombre" })).toBeVisible();
-    await expect(page.getByRole("button", { name: "中文", exact: true })).toBeVisible();
+    // BO-G, 12 : langue et thème sont des lignes d'état (libellé + valeur), plus des pilules d'action.
+    await expect(page.getByRole("button", { name: /^Thème\s*Clair$/ })).toBeVisible();
+    await expect(page.getByRole("button", { name: /^Langue\s*Français$/ })).toBeVisible();
     await expect(page.getByRole("button", { name: "Déconnexion" })).toBeVisible();
     await expect(page.getByRole("link", { name: "Admin" })).toHaveCount(0);
     // En sombre, une ligne-bouton est aussi lisible qu'une ligne-lien.
@@ -66,9 +69,10 @@ test.describe("navigation par sections (T2), téléphone", () => {
 });
 
 test.describe("navigation par sections (T2), barre du bas sur téléphone et tablette", () => {
-  // La barre du bas est masquée sur un poste desktop (`.hide-on-desktop`).
+  // La barre du bas est masquée sur un poste desktop et sur la tablette couchée, qui ont la
+  // barre latérale (lot U4, `.hide-on-desktop`).
   test.beforeEach(({}, info) => {
-    test.skip(info.project.name === "ordinateur", "téléphone et tablette seulement");
+    test.skip(info.project.name.startsWith("ordinateur") || info.project.name === "tablette-paysage", "téléphone et tablette en portrait seulement");
   });
 
   test("les setlists sont à un tap depuis n'importe quelle page", async ({ page }) => {
@@ -105,18 +109,24 @@ test.describe("navigation par sections (T2), barre du bas sur téléphone et tab
 test.describe("navigation par sections (T2), onglets de section", () => {
   // Cible tactile (16/09/2026) : les pilules faisaient 30 px de haut. Depuis V7
   // (21/09/2026), sous 1024 px c'est la pastille du menu qui se touche.
-  test("une pilule de section fait au moins 40 px de haut, sur chaque appareil", async ({ page }) => {
+  // Retouches v18 (R5, D9) : compacte (≈ 28 px) en grand avec un pointeur fin, 40 px au doigt.
+  test("une pilule de section fait au moins 40 px de haut au doigt, ≈ 28 px à la souris en grand", async ({ page }) => {
     await page.route(/docs\.google\.com\/spreadsheets/, (route) => route.fulfill({ status: 200, contentType: "text/csv", body: "" }));
     await signInAs(page, MEMBRE, {}, "/planning");
     // Le téléphone a la pastille qui ouvre la feuille ; dès la tablette, les huit
     // onglets tiennent sur la rangée (V7 ter).
-    const pilule = test.info().project.name === "telephone"
+    // Agencement v18 (R6) : en grand, les plannings sont des pilules dans l'en-tête de la section.
+    const projet = test.info().project.name;
+    const pilule = projet === "telephone"
       ? page.getByTestId("menu-plannings")
-      : page.getByTestId("onglets-section").getByRole("link", { name: "Culte Franco" });
+      : projet.startsWith("ordinateur") || projet === "tablette-paysage"
+        ? page.locator("header[data-entete-page]").getByRole("navigation", { name: "Plannings" }).getByRole("link", { name: "Culte Franco" })
+        : page.getByTestId("onglets-section").getByRole("link", { name: "Culte Franco" });
     await pilule.waitFor();
     await page.evaluate(() => Promise.all(document.getAnimations().map((a) => a.finished.catch(() => {}))));
     const box = await pilule.boundingBox();
-    expect(box!.height).toBeGreaterThanOrEqual(40);
+    if (projet.startsWith("ordinateur")) expect(Math.abs(box!.height - 28)).toBeLessThanOrEqual(2);
+    else expect(box!.height).toBeGreaterThanOrEqual(40);
   });
 });
 
@@ -162,23 +172,25 @@ test.describe("navigation par sections (T2), 320 px", () => {
   }
 });
 
-test.describe("navigation par sections (T2), ordinateur", () => {
+test.describe("navigation par sections (T2), ordinateur : la barre latérale (lot U4)", () => {
   test.use({ viewport: { width: 1280, height: 800 } });
-  // La barre du bas est masquée par `.hide-on-desktop` (pointeur fin + grand
-  // écran) : une tablette en paysage la garde, c'est voulu.
+  // Sur un poste desktop (pointeur fin + grand écran), la barre latérale remplace la barre
+  // du haut et celle du bas (docs/spec-navigation-grand-ecran.md, N2). La tablette en
+  // paysage aussi, toujours réduite (N4) : navigation-grand-ecran.spec.ts.
   test.beforeEach(({}, info) => {
-    test.skip(info.project.name !== "ordinateur", "poste desktop seulement");
+    test.skip(!info.project.name.startsWith("ordinateur"), "poste desktop seulement");
   });
+  const barreLaterale = (page: Page) => page.getByTestId("barre-laterale");
 
-  test("connecté : les sections dans la navbar, le reste dans un menu compte", async ({ page }) => {
+  test("connecté : les entrées dans la barre latérale, le reste dans un menu compte", async ({ page }) => {
     await signInAs(page, MEMBRE, {}, "/songs");
     await page.getByRole("searchbox").waitFor();
-    for (const nom of ["Planning", "Évènements", "Mes services"]) {
-      await expect(header(page).getByRole("link", { name: nom })).toBeVisible();
-    }
-    await expect(header(page).getByRole("button", { name: "Louange" })).toBeVisible();
-    await expect(header(page).getByRole("button", { name: "Déconnexion" })).toHaveCount(0);
-    await header(page).getByRole("button", { name: "Compte" }).click();
+    await expect(barreLaterale(page).getByRole("navigation", { name: "Navigation principale" }).getByRole("link")).toHaveText(["Chants", "Setlists", "Planning", "Évènements", "Moi"]);
+    await expect(header(page), "plus de barre du haut").toBeHidden();
+    await expect(page.getByRole("button", { name: "Déconnexion" })).toHaveCount(0);
+    // L'indicateur de Next (développement seulement) est posé en bas à gauche, sur l'initiale.
+    await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" });
+    await barreLaterale(page).getByRole("button", { name: "Compte" }).click();
     const menu = page.getByRole("menu");
     for (const nom of ["Mon profil", "Guide d'utilisation", "Ton avis sur le site", "Signaler un problème", "Déconnexion"]) {
       await expect(menu.getByRole("menuitem", { name: nom })).toBeVisible();
@@ -189,9 +201,9 @@ test.describe("navigation par sections (T2), ordinateur", () => {
   test("sans compte : Chants · Évènements et Connexion, pas de barre du bas", async ({ page }) => {
     await page.goto("/songs");
     await page.getByRole("searchbox").waitFor();
-    await expect(header(page).getByRole("link", { name: "Chants" })).toBeVisible();
-    await expect(header(page).getByRole("link", { name: "Évènements" })).toBeVisible();
-    await expect(header(page).getByRole("link", { name: "Connexion" })).toBeVisible();
-    await expect(barreDuBas(page)).toBeHidden();
+    await expect(barreLaterale(page).getByRole("link", { name: "Chants" })).toBeVisible();
+    await expect(barreLaterale(page).getByRole("link", { name: "Évènements" })).toBeVisible();
+    await expect(barreLaterale(page).getByRole("link", { name: "Connexion" })).toBeVisible();
+    await expect(page.getByTestId("barre-du-bas")).toBeHidden();
   });
 });

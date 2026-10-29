@@ -59,6 +59,12 @@ async function ouvrir(page: Page, slug: string) {
   await page.addInitScript(() => localStorage.setItem("jianpu-sheet-pref", "never"));
   await page.goto(`/songs/${encodeURIComponent(slug)}`);
   await page.locator("[data-copy-line]").first().waitFor();
+  // Les lignes arrivent avec le HTML du serveur : un clic sur la barre avant l'hydratation
+  // ne fait rien (vu sur tablette, 18/10/2026). On attend que React tienne le bouton Accords.
+  await page.waitForFunction(() => {
+    const b = document.querySelector("[data-testid='barre-outils'] button[aria-label='Accords']");
+    return !!b && Object.keys(b).some((k) => k.startsWith("__reactProps"));
+  });
   await page.evaluate(() => document.fonts.ready);
 }
 

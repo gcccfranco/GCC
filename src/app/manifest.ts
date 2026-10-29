@@ -8,11 +8,13 @@ export default function manifest(): MetadataRoute.Manifest {
     name: "GCC",
     short_name: "GCC",
     description: "L'app de l'église GCC : chants, setlists, planning, évènements",
-    start_url: "/planning",
+    start_url: "/planning/",
     display: "standalone",
     background_color: "#ffffff",
     theme_color: "#ffffff",
-    orientation: "portrait",
+    // Pas d'orientation imposée (lot U5, docs/spec-deux-volets.md, question 7) :
+    // « portrait » figeait l'app Android installée, sans deux volets ni deux
+    // colonnes sur une tablette couchée.
     icons: [
       {
         src: "/apple-icon.png",
@@ -21,13 +23,13 @@ export default function manifest(): MetadataRoute.Manifest {
       },
       {
         src: "/icon.png",
-        sizes: "any",
+        sizes: "256x256",
         type: "image/png",
         purpose: "any",
       },
       {
         src: "/icon.png",
-        sizes: "any",
+        sizes: "256x256",
         type: "image/png",
         purpose: "maskable",
       },

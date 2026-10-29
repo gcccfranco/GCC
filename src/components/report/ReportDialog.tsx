@@ -7,6 +7,7 @@ import { AlertCircle, X, Send } from "lucide-react";
 import { useAuth } from "@/lib/firebase/auth";
 import { authHeader } from "@/lib/firebase/setlists";
 import { REPORT_LIMITS } from "@/lib/report/reportValidator";
+import { Dialog, DialogClose, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import type { ReportKind } from "@/types/report";
 
 interface ReportDialogProps {
@@ -16,13 +17,16 @@ interface ReportDialogProps {
   /** kind === "song" : chant concerné */
   songSlug?: string;
   songTitle?: string;
+  /** Résumé et détails pré-remplis (ex. un doigté manquant du dictionnaire d'accords). */
+  titreInitial?: string;
+  descriptionInitiale?: string;
 }
 
 /**
  * Modal de signalement partagé (problème chant ou site). Réservé aux membres
  * connectés : enregistre le signalement (→ inbox /admin) et notifie les admins.
  */
-export function ReportDialog({ open, onClose, kind, songSlug, songTitle }: ReportDialogProps) {
+export function ReportDialog({ open, onClose, kind, songSlug, songTitle, titreInitial, descriptionInitiale }: ReportDialogProps) {
   const { t } = useTranslation();
   const { user } = useAuth();
   const [status, setStatus] = useState<"idle" | "loading" | "done" | "error">("idle");
@@ -31,8 +35,6 @@ export function ReportDialog({ open, onClose, kind, songSlug, songTitle }: Repor
   useEffect(() => {
     if (open) setStatus("idle");
   }, [open]);
-
-  if (!open) return null;
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -58,23 +60,23 @@ export function ReportDialog({ open, onClose, kind, songSlug, songTitle }: Repor
   }
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/35" onClick={onClose} />
-
-      <div className="relative w-full max-w-sm bg-card rounded-xl shadow-xl flex flex-col">
+    <Dialog open={open} onOpenChange={(o) => { if (!o) onClose(); }}>
+      <DialogContent
+        aria-describedby={undefined}
+        className="left-1/2 top-1/2 w-[calc(100%-2rem)] max-w-sm -translate-x-1/2 -translate-y-1/2 bg-card rounded-xl shadow-xl flex flex-col"
+      >
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+        <div className="flex items-center justify-between pl-4 pr-1 py-1 border-b border-border">
           <div className="flex items-center gap-2">
             <AlertCircle className="h-4 w-4 text-muted-foreground" />
-            <h3 className="text-sm font-semibold text-foreground">{t("signalement.titre")}</h3>
+            <DialogTitle className="text-sm font-semibold text-foreground">{t("signalement.titre")}</DialogTitle>
           </div>
-          <button
-            onClick={onClose}
-            className="text-muted-foreground hover:text-foreground transition-colors"
+          <DialogClose
+            className="flex h-11 w-11 items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
             aria-label={t("signalement.fermer")}
           >
             <X className="h-4 w-4" />
-          </button>
+          </DialogClose>
         </div>
 
         {/* Corps */}
@@ -100,12 +102,12 @@ export function ReportDialog({ open, onClose, kind, songSlug, songTitle }: Repor
               <label className="text-xs font-medium text-muted-foreground">{t("signalement.resume")}</label>
               <input
                 name="title"
-                defaultValue={kind === "song" && songTitle ? t("signalement.resumeChant", { titre: songTitle }) : ""}
+                defaultValue={titreInitial ?? (kind === "song" && songTitle ? t("signalement.resumeChant", { titre: songTitle }) : "")}
                 placeholder={kind === "site" ? t("signalement.resumePlaceholder") : undefined}
                 required
                 minLength={3}
                 maxLength={REPORT_LIMITS.title}
-                className="w-full px-3 py-2.5 text-[16px] sm:text-sm border border-border rounded-lg bg-background text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-ring/30"
+                className="w-full px-3 py-2.5 text-[16px] sm:text-sm border border-border rounded-lg bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/30"
               />
             </div>
 
@@ -115,10 +117,11 @@ export function ReportDialog({ open, onClose, kind, songSlug, songTitle }: Repor
               </label>
               <textarea
                 name="description"
+                defaultValue={descriptionInitiale}
                 placeholder={t("signalement.detailsPlaceholder")}
                 rows={3}
                 maxLength={REPORT_LIMITS.description}
-                className="w-full px-3 py-2.5 text-[16px] sm:text-sm border border-border rounded-lg bg-background text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-ring/30 resize-none"
+                className="w-full px-3 py-2.5 text-[16px] sm:text-sm border border-border rounded-lg bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/30 resize-none"
               />
             </div>
 
@@ -145,7 +148,7 @@ export function ReportDialog({ open, onClose, kind, songSlug, songTitle }: Repor
             </div>
           </form>
         )}
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }

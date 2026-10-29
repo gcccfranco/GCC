@@ -1,4 +1,5 @@
 import type { FusionMixedSection, SetlistItem } from "@/types/setList";
+import { estUnChant } from "@/lib/setlist/propositions";
 import type { SectionSummary } from "@/types/song";
 import { withoutLastPhrases } from "@/lib/setlist/lastPhrase";
 import { abbreviateSection } from "@/lib/chordpro/abbreviations";
@@ -156,6 +157,8 @@ function readItems(items: SetlistItem[], sectionsOf?: SectionsOf) {
   for (const item of [...items].sort((a, b) => a.position - b.position)) {
     if (item.type === "transition") {
       transitions.push(item.transitionText ?? "");
+    } else if (!estUnChant(item)) {
+      continue; // chant hors répertoire en attente : rien à comparer
     } else if (item.type === "fusion") {
       const slugs = (item.fusionSongs ?? []).map((f) => f.songSlug);
       const unit = `fusion:${slugs.join("+")}`;

@@ -33,11 +33,13 @@ type RowProps = {
   /** Chevron à droite : la ligne mène à une autre page. */
   chevron?: boolean;
   destructive?: boolean;
+  /** L'élément ouvert à côté, en deux volets (lot U4 bis) : la ligne s'allume en encre. */
+  actif?: boolean;
   className?: string;
   children: React.ReactNode;
 };
 
-export function GroupRow({ href, onClick, leading, trailing, chevron, destructive, className, children }: RowProps) {
+export function GroupRow({ href, onClick, leading, trailing, chevron, destructive, actif, className, children }: RowProps) {
   const interactive = Boolean(href || onClick);
   const classes = cn(
     // Le texte s'aligne sur le titre de la page ; la ligne déborde de 12 px de
@@ -45,6 +47,7 @@ export function GroupRow({ href, onClick, leading, trailing, chevron, destructiv
     "group-row relative -mx-3 flex w-[calc(100%+1.5rem)] min-h-[52px] items-center gap-3 rounded-xl px-3 py-2.5 text-left text-base [--row-inset:0.75rem]",
     interactive && "transition-colors duration-150 active:bg-secondary/70 cursor-pointer",
     destructive ? "text-destructive" : "text-foreground",
+    actif && "bg-foreground text-background active:bg-foreground [&_.text-muted-foreground]:text-background/70 [&>svg]:text-background/70",
     className,
   );
   const inner = (
@@ -55,7 +58,7 @@ export function GroupRow({ href, onClick, leading, trailing, chevron, destructiv
       {chevron && <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground/60" aria-hidden />}
     </>
   );
-  if (href) return <Link href={href} className={classes}>{inner}</Link>;
+  if (href) return <Link href={href} className={classes} aria-current={actif ? "page" : undefined}>{inner}</Link>;
   if (onClick) return <button type="button" onClick={onClick} className={classes}>{inner}</button>;
   return <div className={classes}>{inner}</div>;
 }

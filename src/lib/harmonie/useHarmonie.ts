@@ -56,18 +56,23 @@ export function useAccesHarmonie(): AccesHarmonie {
   }, [loading, nom]);
 
   return useMemo(() => {
-    const acces = canUseHarmonie(user, (nom ? services : []) ?? []);
+    const acces = canUseHarmonie(user, (nom ? services : []) ?? [], profile);
     return {
       ...acces,
       peut: acces.piano || acces.guitare,
       chargement: loading || (Boolean(nom) && services === null),
     };
-  }, [user, nom, services, loading]);
+  }, [user, profile, nom, services, loading]);
 }
 
-/** Instrument regardé en dernier sur cet appareil (`harmonie-instrument`). */
-export function useInstrument(acces: AccesHarmonie): [Instrument, (i: Instrument) => void] {
-  const [instrument, setInstrument] = useState<Instrument>("piano");
+/** Instrument regardé en dernier sur cet appareil (`harmonie-instrument`). `preference` dit l'instrument montré à
+ *  qui n'a rien choisi : « piano » (catalogue Harmonie, par défaut) ou « guitare » (dictionnaire d'accords : la
+ *  guitare, sauf pour qui joue du piano sans guitare). */
+export function useInstrument(
+  acces: AccesHarmonie,
+  preference: Instrument = "piano",
+): [Instrument, (i: Instrument) => void] {
+  const [instrument, setInstrument] = useState<Instrument>(preference);
   useEffect(() => {
     let retenu: Instrument | null = null;
     try {
@@ -75,8 +80,13 @@ export function useInstrument(acces: AccesHarmonie): [Instrument, (i: Instrument
       if (v === "piano" || v === "guitare") retenu = v;
     } catch { /* stockage refusé : on reste sur le défaut */ }
     // À défaut de choix retenu, on montre l'instrument de la personne.
-    setInstrument(retenu ?? (acces.guitare && !acces.piano ? "guitare" : "piano"));
-  }, [acces.guitare, acces.piano]);
+    setInstrument(
+      retenu ??
+        (preference === "guitare"
+          ? acces.piano && !acces.guitare ? "piano" : "guitare"
+          : acces.guitare && !acces.piano ? "guitare" : "piano"),
+    );
+  }, [acces.guitare, acces.piano, preference]);
 
   return [
     instrument,

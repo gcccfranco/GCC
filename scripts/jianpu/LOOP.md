@@ -303,6 +303,27 @@ classé et qu'une ligne d'intro entière était perdue, simplement parce que
 la vérité terrain ne couvrait pas ces rangées. Une métrique ne mesure que
 ce qu'on a déjà pensé à regarder.
 
+## Recadrage (chantier 简谱, L3-T1)
+
+Piste A : le scan s'affiche dans une fenêtre remontée de `top` pixels qui coupe l'en-tête gravé (titre, album, versets,
+« （C调） », « [共3张…] ») ; la ligne « 1=X 4/4 » et le pied restent. `top` est une **donnée certifiée à l'œil**, pas un calcul
+en direct (spec : `docs/spec-jianpu-integration.md`, D7, O9).
+
+1. **Proposer** : `python3 scripts/jianpu/cadrage.py propose [slug…]`. Règle : `top` = la dernière rangée entièrement blanche
+   (pixels ≥ 245) au-dessus de `min(keyLabel.y, 1re étiquette.y)` ; sans rangée blanche, repli
+   `min(…) − 0,6 × labelH` ; pages 2 et suivantes : 0. Écrit `scripts/jianpu/debug/cadrage-propose.json` (ignoré par git).
+   Un `top` de quelques pixels dit qu'aucune coupe propre n'existe : l'en-tête reste, à regarder de près.
+2. **Regarder** : `PW_PORT=<port> npm run jianpu:audit <slug> -- --cadrage [--page=1] [--dark]` →
+   `scripts/jianpu/debug/_pw-<slug>-cadrage-p<n>[-sombre].png` : le haut de la page entière, ligne de coupe rouge, partie
+   coupée voilée. **Lire le PNG** (Read), jamais sur parole.
+3. **Accepter** si la ligne passe juste au-dessus de « 1=X 4/4 » (et de tout accord placé au-dessus), sans trancher de
+   crédits, de titre ni le haut du « 4/4 », et si rien de l'en-tête gravé (titre, album, versets, « （C调） ») ne reste sous
+   elle quand une coupe propre existe. **Refuser** sinon : *une page refusée = valeur corrigée à la main*.
+4. **Certifier** : `python3 scripts/jianpu/cadrage.py certifier <slug>` (la proposition) ou
+   `certifier <slug> <top p.1> <top p.2>…` (valeurs corrigées ; une valeur par page, 0 dès la page 2). Écrit
+   `public/jianpu/cadrage.json` ; un chant absent n'est pas recadré. `chords.json` et `index.json` ne changent jamais.
+   `python3 scripts/jianpu/cadrage.py etat` liste les chants restants.
+
 ## Critère d'arrêt
 
 ≥ 95 % des 124 partitions résolues, **ou** deux itérations consécutives sans

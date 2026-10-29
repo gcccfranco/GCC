@@ -1,5 +1,5 @@
 {
-  "genereLe": "2026-10-23T19:45:48.628Z",
+  "genereLe": "2026-10-29T19:39:21.767Z",
   "fiches": [
     {
       "id": "substitutions/2m7-pour-4",
@@ -20,16 +20,16 @@
         "piano": "facile",
         "guitare": "facile"
       },
-      "avantApres": "`G → A` devient `Em7 → A` · degrés `4 → 5` devient\r\n`2m7 → 5`.",
-      "pourquoi": "Em7 (E G B D) contient les trois notes de G (G B D) :\r\nla mélodie ne peut pas frotter. Seule la basse change : elle descend sur E, et\r\nE → A est le mouvement de basse le plus naturel qui soit. La phrase « glisse »\r\nvers A au lieu d'y monter.",
+      "avantApres": "`G → A` devient `Em7 → A` · degrés `4 → 5` devient\n`2m7 → 5`.",
+      "pourquoi": "Em7 (E G B D) contient les trois notes de G (G B D) :\nla mélodie ne peut pas frotter. Seule la basse change : elle descend sur E, et\nE → A est le mouvement de basse le plus naturel qui soit. La phrase « glisse »\nvers A au lieu d'y monter.",
       "eviter": [
         "Quand le G ouvre un refrain ou un moment de joie : G est lumineux, Em7 plus feutré.",
         "Quand la basse suit une ligne écrite (G – A – B) : le E la casse."
       ],
-      "piano": "La main droite ne bouge pas : G-B-D, comme avant. La main gauche\r\njoue E au lieu de G. Un seul doigt change.",
-      "guitare": "Si tu joues G en `320033`, joue Em7 en `022033` : les deux\r\ncordes aiguës restent en 3e case, seules les basses changent. Sinon, Em7 en\r\n`020000`.",
-      "repertoire": "*Hosanna* (couplet :\r\n« Les nations tremblent », Em7 – A) · *Il m'aime* (refrain, en G : Am7 – D) ·\r\n*Le Fils de Dieu* (couplet : Em7 – A7) · 荣耀至高神 · 谢谢你成为我的家 ·\r\n我愿为你去.",
-      "regle": "Portée : dans une section · motif `4 → 5` (le 4 sans basse\r\ndifférente) · remplacement `2m7 → 5` · sûreté : **très sûre**.",
+      "piano": "La main droite ne bouge pas : G-B-D, comme avant. La main gauche\njoue E au lieu de G. Un seul doigt change.",
+      "guitare": "Si tu joues G en `320033`, joue Em7 en `022033` : les deux\ncordes aiguës restent en 3e case, seules les basses changent. Sinon, Em7 en\n`020000`.",
+      "repertoire": "*Hosanna* (couplet :\n« Les nations tremblent », Em7 – A) · *Il m'aime* (refrain, en G : Am7 – D) ·\n*Le Fils de Dieu* (couplet : Em7 – A7) · 荣耀至高神 · 谢谢你成为我的家 ·\n我愿为你去.",
+      "regle": "Portée : dans une section · motif `4 → 5` (le 4 sans basse\ndifférente) · remplacement `2m7 → 5` · sûreté : **très sûre**.",
       "exemples": [
         "a-jamais-tu-es-saint",
         "au-dessus-de-tout",
@@ -101,16 +101,16 @@
         "piano": "facile",
         "guitare": "facile"
       },
-      "avantApres": "`D … D` devient `D … Bm` · degrés `1 → 1` devient\r\n`1 → 6m`.",
-      "pourquoi": "Bm (B D F#) garde deux notes de D (D et F#). La basse\r\ndescend d'une tierce et l'accord devient mineur : même mélodie, lumière plus\r\ndouce. Le second D, qui ne faisait que répéter, fait maintenant avancer la\r\nphrase.",
+      "avantApres": "`D … D` devient `D … Bm` · degrés `1 → 1` devient\n`1 → 6m`.",
+      "pourquoi": "Bm (B D F#) garde deux notes de D (D et F#). La basse\ndescend d'une tierce et l'accord devient mineur : même mélodie, lumière plus\ndouce. Le second D, qui ne faisait que répéter, fait maintenant avancer la\nphrase.",
       "eviter": [
         "Quand la mélodie tient un G sur ce passage : G contre Bm frotte.",
         "Sur un accord où la phrase doit se reposer (fin de section, fin du chant) : l'oreille attend D."
       ],
       "piano": "Main droite : D et F# restent, le A monte sur B. Main gauche : B.",
-      "guitare": "Bm en barré 2e case (`x24432`) ; plus simple et presque\r\npareil : Bm7 en `x20202`.",
-      "repertoire": "*Quand Tu\r\nparles* (refrain : « Et quand Tu parles, cent milliards de galaxies », D –\r\nBm) · *Nous voici* (couplet, en Bb : Bb – Gm) · *Abba Père* (interlude, en A :\r\nA – F#m) · 握手 · 大声敬拜.",
-      "regle": "Portée : dans une section · motif `1 → 1` (deux 1 à la suite, le\r\nsecond n'étant pas le dernier accord de la section) · remplacement `1 → 6m` ·\r\nsûreté : **sûre**.",
+      "guitare": "Bm en barré 2e case (`x24432`) ; plus simple et presque\npareil : Bm7 en `x20202`.",
+      "repertoire": "*Quand Tu\nparles* (refrain : « Et quand Tu parles, cent milliards de galaxies », D –\nBm) · *Nous voici* (couplet, en Bb : Bb – Gm) · *Abba Père* (interlude, en A :\nA – F#m) · 握手 · 大声敬拜.",
+      "regle": "Portée : dans une section · motif `1 → 1` (deux 1 à la suite, le\nsecond n'étant pas le dernier accord de la section) · remplacement `1 → 6m` ·\nsûreté : **sûre**.",
       "exemples": [
         "Ta-parole-écriture",
         "a-jamais-tu-es-saint",
@@ -288,16 +288,16 @@
         "piano": "facile",
         "guitare": "facile"
       },
-      "avantApres": "`Em → A` devient `G → A` · degrés `2m → 5` devient\r\n`4 → 5`.",
-      "pourquoi": "G (G B D) garde deux notes de Em (G et B). L'accord\r\ndevient majeur, donc plus clair, et la basse **monte** d'un ton vers A au lieu\r\nde sauter : une montée franche. C'est l'inverse de S1 : S1 adoucit, S3 éclaire.",
+      "avantApres": "`Em → A` devient `G → A` · degrés `2m → 5` devient\n`4 → 5`.",
+      "pourquoi": "G (G B D) garde deux notes de Em (G et B). L'accord\ndevient majeur, donc plus clair, et la basse **monte** d'un ton vers A au lieu\nde sauter : une montée franche. C'est l'inverse de S1 : S1 adoucit, S3 éclaire.",
       "eviter": [
         "Quand le 2m installe une couleur voulue : couplet intime, texte de repentance.",
         "Quand la basse descend une ligne écrite (F# – E – D)."
       ],
-      "piano": "Main droite : de E-G-B à D-G-B (le E descend sur D). Main\r\ngauche : G au lieu de E.",
-      "guitare": "Si tu joues Em7 en `022033`, joue G en `320033` : seules les\r\nbasses changent.",
-      "repertoire": "*Ta\r\nparole* (couplet, en Bb : Eb – Fsus4 – F) · *À la croix* (couplet, en E :\r\nA2 – B) · *Roi des Rois* · 爱赢了 · 爱的彰显.",
-      "regle": "Portée : dans une section · motif `2m → 5` (2m ou 2m7) ·\r\nremplacement `4 → 5` · sûreté : **sûre**. Jamais proposée sur un passage où\r\nS1 vient d'être essayée (les deux fiches se renverraient la balle).",
+      "piano": "Main droite : de E-G-B à D-G-B (le E descend sur D). Main\ngauche : G au lieu de E.",
+      "guitare": "Si tu joues Em7 en `022033`, joue G en `320033` : seules les\nbasses changent.",
+      "repertoire": "*Ta\nparole* (couplet, en Bb : Eb – Fsus4 – F) · *À la croix* (couplet, en E :\nA2 – B) · *Roi des Rois* · 爱赢了 · 爱的彰显.",
+      "regle": "Portée : dans une section · motif `2m → 5` (2m ou 2m7) ·\nremplacement `4 → 5` · sûreté : **sûre**. Jamais proposée sur un passage où\nS1 vient d'être essayée (les deux fiches se renverraient la balle).",
       "exemples": [
         "Ta-parole-écriture",
         "a-la-croix",
@@ -593,16 +593,16 @@
         "guitare": "facile"
       },
       "niveauNote": "à préparer avec l'équipe",
-      "avantApres": "`A → D` devient `A → Bm` · degrés `5 → 1` devient\r\n`5 → 6m`.",
-      "pourquoi": "Après A, l'oreille attend D, le point final. Bm garde\r\ndeux notes de D (D et F#) : la mélodie tombe juste, mais le repos n'arrive pas.\r\nOn croit que c'est fini, et ça repart.\r\n\r\n**Comment s'en servir.** Le classique : **répéter la dernière phrase du\r\nrefrain**. La première fois A → Bm (ça relance), la seconde A → D (on\r\nconclut).",
+      "avantApres": "`A → D` devient `A → Bm` · degrés `5 → 1` devient\n`5 → 6m`.",
+      "pourquoi": "Après A, l'oreille attend D, le point final. Bm garde\ndeux notes de D (D et F#) : la mélodie tombe juste, mais le repos n'arrive pas.\nOn croit que c'est fini, et ça repart.\n\n**Comment s'en servir.** Le classique : **répéter la dernière phrase du\nrefrain**. La première fois A → Bm (ça relance), la seconde A → D (on\nconclut).",
       "eviter": [
         "Sans prévenir les chanteurs et l'autre musicien : répéter une phrase change la forme du chant, et quelqu'un s'arrêtera au mauvais endroit.",
         "Sur la toute dernière fin, sans rien derrière : le chant s'arrête sur une question."
       ],
-      "piano": "Main droite : de D-F#-A à D-F#-B (le A monte sur B). Main\r\ngauche : B au lieu de D.",
+      "piano": "Main droite : de D-F#-A à D-F#-B (le A monte sur B). Main\ngauche : B au lieu de D.",
       "guitare": "Bm en `x24432`, ou Bm7 en `x20202`.",
-      "repertoire": "*Amour sans fin* (refrain : « je viens à Tes pieds », A – Bm) · *Attaché à la\r\ncroix* (refrain : A – Bm) · *Bénis Dieu (10000 raisons)* (refrain : « ô mon\r\nâme », A – Bm) · *Abrite-moi* (refrain, en C : G – Am) · 永活盼望 (副歌 :\r\nA – Bm) · 打开天窗 (副歌 : A – Bm).",
-      "regle": "Portée : fin de section · motif `5 → 1` à la fin d'une occurrence\r\n**suivie d'une autre occurrence de la même section** · remplacement `5 → 6m`\r\nsur cette occurrence seulement (« Seulement ce passage »), `5 → 1` gardé la\r\ndernière fois · sûreté : **sûre**.",
+      "repertoire": "*Amour sans fin* (refrain : « je viens à Tes pieds », A – Bm) · *Attaché à la\ncroix* (refrain : A – Bm) · *Bénis Dieu (10000 raisons)* (refrain : « ô mon\nâme », A – Bm) · *Abrite-moi* (refrain, en C : G – Am) · 永活盼望 (副歌 :\nA – Bm) · 打开天窗 (副歌 : A – Bm).",
+      "regle": "Portée : fin de section · motif `5 → 1` à la fin d'une occurrence\n**suivie d'une autre occurrence de la même section** · remplacement `5 → 6m`\nsur cette occurrence seulement (« Seulement ce passage »), `5 → 1` gardé la\ndernière fois · sûreté : **sûre**.",
       "exemples": [
         "aucun-autre-nom",
         "chaine-d-amour",
@@ -643,16 +643,16 @@
         "piano": "intermediaire",
         "guitare": "intermediaire"
       },
-      "avantApres": "`D → Bm` devient `F#m → Bm` (ou `D → G` devient\r\n`F#m → G`) · degrés `1 → 6m` devient `3m → 6m` (ou `1 → 4` devient `3m → 4`).",
-      "pourquoi": "F#m (F# A C#) garde deux notes de D (F# et A). Il est\r\nmineur, et son C# n'est pas dans D : une couleur douce-amère. Vers Bm, la basse\r\nF# → B fait le même mouvement fort que E → A dans S1 ; vers G, elle monte d'un\r\ndemi-ton, très lié.",
+      "avantApres": "`D → Bm` devient `F#m → Bm` (ou `D → G` devient\n`F#m → G`) · degrés `1 → 6m` devient `3m → 6m` (ou `1 → 4` devient `3m → 4`).",
+      "pourquoi": "F#m (F# A C#) garde deux notes de D (F# et A). Il est\nmineur, et son C# n'est pas dans D : une couleur douce-amère. Vers Bm, la basse\nF# → B fait le même mouvement fort que E → A dans S1 ; vers G, elle monte d'un\ndemi-ton, très lié.",
       "eviter": [
         "**Quand la mélodie chante D** sur ce passage : D contre F#m frotte fort. Or D est la note la plus fréquente d'un chant en D : **à vérifier à chaque fois**.",
         "Sur le premier accord d'une section ou du chant : le 1 installe la tonalité."
       ],
-      "piano": "Main droite : de D-F#-A à C#-F#-A (le D descend sur C#). Main\r\ngauche : F#.",
-      "guitare": "F#m en barré 2e case (`244222`) ; plus léger : `xx4222`\r\n(petit barré sur trois cordes).",
-      "repertoire": "*Tu es la vie* (couplet, en C : « En Ton Nom », Em – Am) ·\r\n*Relever le faible* (refrain, en E : G#m – A) · *Éclipse* (couplet, en E :\r\nG#m7 – A) · 求充满这地 · 爱赢了.",
-      "regle": "Portée : dans une ligne · motif `1 → 6m` ou `1 → 4`, le 1 n'étant\r\nni le premier accord de la section ni le dernier de sa ligne · remplacement du\r\n1 par `3m` · sûreté : **à écouter**.",
+      "piano": "Main droite : de D-F#-A à C#-F#-A (le D descend sur C#). Main\ngauche : F#.",
+      "guitare": "F#m en barré 2e case (`244222`) ; plus léger : `xx4222`\n(petit barré sur trois cordes).",
+      "repertoire": "*Tu es la vie* (couplet, en C : « En Ton Nom », Em – Am) ·\n*Relever le faible* (refrain, en E : G#m – A) · *Éclipse* (couplet, en E :\nG#m7 – A) · 求充满这地 · 爱赢了.",
+      "regle": "Portée : dans une ligne · motif `1 → 6m` ou `1 → 4`, le 1 n'étant\nni le premier accord de la section ni le dernier de sa ligne · remplacement du\n1 par `3m` · sûreté : **à écouter**.",
       "exemples": [
         "aimez-vous-les-uns-les-autres",
         "benediction",
@@ -662,6 +662,7 @@
         "de-grace-en-grace",
         "eclipse",
         "eternel-notre-seigneur",
+        "gloire-a-dieu",
         "gloire-a-son-nom",
         "grace-en-grace",
         "heritiers",
@@ -797,16 +798,16 @@
         "piano": "facile",
         "guitare": "intermediaire"
       },
-      "avantApres": "`A → D` devient `G/A → D` · degrés `5 → 1` devient\r\n`4/5 → 1`.",
-      "pourquoi": "G/A, c'est la basse A (toujours le 5) sous un accord\r\nde G. Il manque C#, la note qui « tire » vers D : la tension devient suspendue,\r\nplus douce. C'est le son planant de beaucoup de chants de louange. Attention :\r\nG/A ne garde qu'**une** note de A (le A lui-même), d'où la sûreté « à\r\nécouter ».",
+      "avantApres": "`A → D` devient `G/A → D` · degrés `5 → 1` devient\n`4/5 → 1`.",
+      "pourquoi": "G/A, c'est la basse A (toujours le 5) sous un accord\nde G. Il manque C#, la note qui « tire » vers D : la tension devient suspendue,\nplus douce. C'est le son planant de beaucoup de chants de louange. Attention :\nG/A ne garde qu'**une** note de A (le A lui-même), d'où la sûreté « à\nécouter ».",
       "eviter": [
         "Quand la mélodie chante C# sur ce passage : il frotte contre le D de G/A.",
         "Quand on veut une montée énergique vers le refrain : A (ou A7) pousse plus fort. **Variante.** `G/A → A → D` : la tension se résout en deux temps."
       ],
-      "piano": "Main gauche : A, comme avant. Main droite : l'accord de G\r\n(G-B-D). Deux accords que tu connais déjà.",
-      "guitare": "G/A en `x00433` (basse A à vide) ; plus simple et très\r\nproche : A7sus4 en `x00233`.",
-      "repertoire": "*Le Fils de\r\nDieu* (couplet : « pour toujours », G/A – DM7) · *Toi et moi* (refrain, en G :\r\nC/D – D) · *Il m'aime* · *Que tous soient un* · 医治我 · 不停赞美你 ·\r\n日日夜夜 · 耶稣的名.",
-      "regle": "Portée : fin de ligne ou fin de section · motif `5 → 1` (le 5 sans\r\nseptième ni basse différente) · remplacement `4/5 → 1` · sûreté : **à\r\nécouter** (le C# de la mélodie, fréquent juste avant D).",
+      "piano": "Main gauche : A, comme avant. Main droite : l'accord de G\n(G-B-D). Deux accords que tu connais déjà.",
+      "guitare": "G/A en `x00433` (basse A à vide) ; plus simple et très\nproche : A7sus4 en `x00233`.",
+      "repertoire": "*Le Fils de\nDieu* (couplet : « pour toujours », G/A – DM7) · *Toi et moi* (refrain, en G :\nC/D – D) · *Il m'aime* · *Que tous soient un* · 医治我 · 不停赞美你 ·\n日日夜夜 · 耶稣的名.",
+      "regle": "Portée : fin de ligne ou fin de section · motif `5 → 1` (le 5 sans\nseptième ni basse différente) · remplacement `4/5 → 1` · sûreté : **à\nécouter** (le C# de la mélodie, fréquent juste avant D).",
       "exemples": [
         "aupres-de-dieu",
         "chantons",
@@ -892,16 +893,16 @@
         "piano": "facile",
         "guitare": "intermediaire"
       },
-      "avantApres": "`D` devient `D2` (Dadd9) · degrés `1` devient `1 2`\r\n(de même `4` devient `4 2` : G2).",
-      "pourquoi": "On ajoute E à D-F#-A. E est à un ton de D et de F# :\r\nun frottement doux, jamais dur. L'accord garde sa tierce (F#), donc reste\r\nclairement majeur, mais il sonne ouvert, « moderne ». C'est la couleur la plus\r\nutilisée en louange.",
+      "avantApres": "`D` devient `D2` (Dadd9) · degrés `1` devient `1 2`\n(de même `4` devient `4 2` : G2).",
+      "pourquoi": "On ajoute E à D-F#-A. E est à un ton de D et de F# :\nun frottement doux, jamais dur. L'accord garde sa tierce (F#), donc reste\nclairement majeur, mais il sonne ouvert, « moderne ». C'est la couleur la plus\nutilisée en louange.",
       "eviter": [
         "Sur le 5 qui doit pousser vers le 1 : A2 adoucit la tension.",
         "Quand l'autre instrument la joue déjà : si la guitare fait D2, le piano peut garder D simple, pour ne pas empiler les frottements."
       ],
-      "piano": "Main droite F#-A-E ou A-D-E : mets le E **en haut**, jamais collé\r\nau D tout en bas. Main gauche : D.",
-      "guitare": "Attention : le « D2 » des grilles se joue souvent `xx0230`,\r\nqui est en fait un **Dsus2** (sans F#, voir C3). Le vrai Dadd9 : `x54230`. Pour\r\nG2 : `320203` ; pour C2 : `x32033`.",
-      "repertoire": "*Ébloui*\r\n(couplet : D2) · *Nous tiendrons* (refrain, en F : F2 « Les yeux fixés sur\r\nToi ») · *Quand je contemple* (couplet, en C : C2) · *À la croix* (couplet, en\r\nE : A2) · 奇异恩典 (主歌, en E : E2) · 你是我的平安 (桥段 : Gadd9).",
-      "regle": "Portée : Intro, Refrain · motif `1` ou `4` sans couleur · remplacement\r\n`1 2` ou `4 2` · sûreté : **très sûre**.",
+      "piano": "Main droite F#-A-E ou A-D-E : mets le E **en haut**, jamais collé\nau D tout en bas. Main gauche : D.",
+      "guitare": "Attention : le « D2 » des grilles se joue souvent `xx0230`,\nqui est en fait un **Dsus2** (sans F#, voir C3). Le vrai Dadd9 : `x54230`. Pour\nG2 : `320203` ; pour C2 : `x32033`.",
+      "repertoire": "*Ébloui*\n(couplet : D2) · *Nous tiendrons* (refrain, en F : F2 « Les yeux fixés sur\nToi ») · *Quand je contemple* (couplet, en C : C2) · *À la croix* (couplet, en\nE : A2) · 奇异恩典 (主歌, en E : E2) · 你是我的平安 (桥段 : Gadd9).",
+      "regle": "Portée : Intro, Refrain · motif `1` ou `4` sans couleur · remplacement\n`1 2` ou `4 2` · sûreté : **très sûre**.",
       "exemples": [
         "abrite-moi",
         "au-dessus-de-tout",
@@ -952,16 +953,16 @@
         "piano": "facile",
         "guitare": "facile"
       },
-      "avantApres": "`A → D` devient `Asus4 – A → D` · degrés `5 → 1` devient\r\n`5sus4 – 5 → 1`.",
-      "pourquoi": "Asus4 remplace la tierce C# par D : l'accord n'est ni\r\nmajeur ni mineur, il attend. Quand D redescend sur C#, la tension se relâche :\r\nun petit soupir juste avant le repos.",
+      "avantApres": "`A → D` devient `Asus4 – A → D` · degrés `5 → 1` devient\n`5sus4 – 5 → 1`.",
+      "pourquoi": "Asus4 remplace la tierce C# par D : l'accord n'est ni\nmajeur ni mineur, il attend. Quand D redescend sur C#, la tension se relâche :\nun petit soupir juste avant le repos.",
       "eviter": [
         "Quand la mélodie chante C# pendant le sus4 : C# contre D frotte.",
         "Sur tous les 5 du chant : l'effet s'use vite. Une ou deux fois, aux fins de phrase importantes."
       ],
-      "piano": "Main droite A-D-E puis A-C#-E : un seul doigt descend. Main\r\ngauche : A, tenu.",
-      "guitare": "Asus4 `x02230` puis A `x02220` : un doigt descend d'une case\r\nsur la corde de si. En D : Dsus4 `xx0233` puis D `xx0232`.",
-      "repertoire": "*Bénis Dieu\r\n(10000 raisons)* (refrain : « Magnifie Son saint Nom », Asus4 – A) · *Ta\r\nparole* (couplet, en Bb : « pour te contempler », Fsus4 – F) · *À la croix*\r\n(couplet, en E : Bsus4 – B) · 一粒麦子 (副歌, en F : Csus4 – C) · 一生爱你\r\n(主歌, en E : Bsus4 – B).",
-      "regle": "Portée : fin de ligne · motif `5 → 1` · remplacement\r\n`5sus4 – 5 → 1` · sûreté : **sûre**.",
+      "piano": "Main droite A-D-E puis A-C#-E : un seul doigt descend. Main\ngauche : A, tenu.",
+      "guitare": "Asus4 `x02230` puis A `x02220` : un doigt descend d'une case\nsur la corde de si. En D : Dsus4 `xx0233` puis D `xx0232`.",
+      "repertoire": "*Bénis Dieu\n(10000 raisons)* (refrain : « Magnifie Son saint Nom », Asus4 – A) · *Ta\nparole* (couplet, en Bb : « pour te contempler », Fsus4 – F) · *À la croix*\n(couplet, en E : Bsus4 – B) · 一粒麦子 (副歌, en F : Csus4 – C) · 一生爱你\n(主歌, en E : Bsus4 – B).",
+      "regle": "Portée : fin de ligne · motif `5 → 1` · remplacement\n`5sus4 – 5 → 1` · sûreté : **sûre**.",
       "exemples": [
         "au-dessus-de-tout",
         "dieu-a-tant-aime",
@@ -992,15 +993,15 @@
         "guitare": "facile"
       },
       "avantApres": "`D` devient `Dsus2` · degrés `1` devient `1sus2`.",
-      "pourquoi": "Dsus2 remplace la tierce F# par E. Or c'est la tierce\r\nqui dit « majeur » ou « mineur » : sans elle, l'accord n'a plus de caractère,\r\nil flotte. Différence avec C1 : le « 2 » **garde** F# (lumineux), le sus2\r\n**l'enlève** (neutre, spacieux).",
+      "pourquoi": "Dsus2 remplace la tierce F# par E. Or c'est la tierce\nqui dit « majeur » ou « mineur » : sans elle, l'accord n'a plus de caractère,\nil flotte. Différence avec C1 : le « 2 » **garde** F# (lumineux), le sus2\n**l'enlève** (neutre, spacieux).",
       "eviter": [
         "Quand le passage doit sonner franchement joyeux ou franchement grave : le sus2 efface ce caractère.",
         "Trop longtemps : on finit par ne plus savoir dans quelle tonalité on est."
       ],
       "piano": "Main droite D-E-A (ou A-D-E). Main gauche : D, ou D-A.",
       "guitare": "Dsus2 `xx0230` ; Asus2 `x02200`.",
-      "repertoire": "*Lumière du monde* (couplet : « Tu m'ouvres les\r\nyeux », Gsus2) · *Viens toucher ma vie* (couplet, en A : Dsus2).",
-      "regle": "Portée : Intro, Pont · motif `1` tenu · remplacement `1sus2` ·\r\nsûreté : **sûre**.",
+      "repertoire": "*Lumière du monde* (couplet : « Tu m'ouvres les\nyeux », Gsus2) · *Viens toucher ma vie* (couplet, en A : Dsus2).",
+      "regle": "Portée : Intro, Pont · motif `1` tenu · remplacement `1sus2` ·\nsûreté : **sûre**.",
       "exemples": []
     },
     {
@@ -1023,17 +1024,17 @@
         "piano": "facile",
         "guitare": "facile"
       },
-      "avantApres": "`G` devient `Gmaj7`, `D` devient `Dmaj7` · degrés `4`\r\ndevient `4maj7`, `1` devient `1maj7`.",
-      "pourquoi": "On ajoute la septième majeure, un demi-ton sous la\r\nfondamentale (F# sous G, C# sous D). Ce frottement très doux donne un son\r\nfeutré, « velours ».",
+      "avantApres": "`G` devient `Gmaj7`, `D` devient `Dmaj7` · degrés `4`\ndevient `4maj7`, `1` devient `1maj7`.",
+      "pourquoi": "On ajoute la septième majeure, un demi-ton sous la\nfondamentale (F# sous G, C# sous D). Ce frottement très doux donne un son\nfeutré, « velours ».",
       "eviter": [
         "**Sur le 1 quand la mélodie chante D** en valeur longue : D contre C# frotte. C'est fréquent, d'où « à écouter » sur le 1.",
         "Sur un refrain triomphant : le maj7 adoucit trop.",
         "**Jamais sur le 5** : Amaj7 contient G#, hors de la gamme de D."
       ],
-      "piano": "Main droite F#-A-C# (pas de D en haut, collé au C#). Main\r\ngauche : D. Pour Gmaj7 : main droite B-D-F#, main gauche G.",
+      "piano": "Main droite F#-A-C# (pas de D en haut, collé au C#). Main\ngauche : D. Pour Gmaj7 : main droite B-D-F#, main gauche G.",
       "guitare": "Dmaj7 `xx0222` ; Gmaj7 `320002` ; Cmaj7 `x32000`.",
-      "repertoire": "*Il\r\nm'aime* (refrain, en G : CM7 « Il m'aime ») · *Le Fils de Dieu* (couplet :\r\nGM7, puis DM7 « pour toujours ») · *Quand je contemple* (refrain, en C : FM7\r\n« Oh ! Je T'adore ») · *Jireh* (intro : Gmaj7) · 一切都更新 (主歌, en C :\r\nCmaj7) · 你是我的平安 (前奏 : Dmaj7).",
-      "regle": "Portée : Couplet, Pont · motif `4` · remplacement `4maj7` · sûreté :\r\n**sûre** (sur le `1` : **à écouter**).",
+      "repertoire": "*Il\nm'aime* (refrain, en G : CM7 « Il m'aime ») · *Le Fils de Dieu* (couplet :\nGM7, puis DM7 « pour toujours ») · *Quand je contemple* (refrain, en C : FM7\n« Oh ! Je T'adore ») · *Jireh* (intro : Gmaj7) · 一切都更新 (主歌, en C :\nCmaj7) · 你是我的平安 (前奏 : Dmaj7).",
+      "regle": "Portée : Couplet, Pont · motif `4` · remplacement `4maj7` · sûreté :\n**sûre** (sur le `1` : **à écouter**).",
       "exemples": [
         "avec-nous",
         "il-m-aime",
@@ -1082,16 +1083,16 @@
         "piano": "intermediaire",
         "guitare": "intermediaire"
       },
-      "avantApres": "`D` devient `D6` ou `D6/9` · degrés `1` devient `1 6`\r\nou `1 6/9`.",
-      "pourquoi": "La sixte (B sur D) ajoute de la chaleur sans aucune\r\ntension. Avec la neuvième en plus (E), le 6/9 est très riche mais parfaitement\r\nstable : un accord de fin qui brille, qui ne demande rien.",
+      "avantApres": "`D` devient `D6` ou `D6/9` · degrés `1` devient `1 6`\nou `1 6/9`.",
+      "pourquoi": "La sixte (B sur D) ajoute de la chaleur sans aucune\ntension. Avec la neuvième en plus (E), le 6/9 est très riche mais parfaitement\nstable : un accord de fin qui brille, qui ne demande rien.",
       "eviter": [
         "Sur un moment grave (croix, repentance) : le 6 sonne léger, presque jazz.",
         "Si la basse joue B : D6 avec B en bas devient Bm7, un autre accord."
       ],
       "piano": "D6/9 : main gauche D-A, main droite F#-B-E (ou B-E-F#).",
       "guitare": "D6 `xx0202` ; D6/9 `x5445x` ; G6 `320000`.",
-      "repertoire": "*Jireh* (interlude : G6) · *Cherchez\r\nd'abord* (« Alléluia » : A6) · *De tout mon être* (intro, en E : B6) · 深深爱你\r\n(主歌, en E : A6) · 一生爱你 (前奏, en E : A6/E).",
-      "regle": "Portée : dernière occurrence, toute fin du chant · motif `1` final ·\r\nremplacement `1 6/9` · sûreté : **sûre**.",
+      "repertoire": "*Jireh* (interlude : G6) · *Cherchez\nd'abord* (« Alléluia » : A6) · *De tout mon être* (intro, en E : B6) · 深深爱你\n(主歌, en E : A6) · 一生爱你 (前奏, en E : A6/E).",
+      "regle": "Portée : dernière occurrence, toute fin du chant · motif `1` final ·\nremplacement `1 6/9` · sûreté : **sûre**.",
       "exemples": []
     },
     {
@@ -1113,15 +1114,15 @@
         "piano": "facile",
         "guitare": "facile"
       },
-      "avantApres": "`Bm` devient `Bm7`, `Em` devient `Em7` · degrés `6m`\r\ndevient `6m7`, `2m` devient `2m7`.",
-      "pourquoi": "La septième (A sur Bm, D sur Em) est une note de la\r\ngamme, déjà dans l'air : l'accord mineur perd sa dureté et devient souple. Bm7\r\n(B-D-F#-A) contient même **tout l'accord de D** : c'est pour ça qu'il sonne si\r\nnaturel dans un chant en D.",
+      "avantApres": "`Bm` devient `Bm7`, `Em` devient `Em7` · degrés `6m`\ndevient `6m7`, `2m` devient `2m7`.",
+      "pourquoi": "La septième (A sur Bm, D sur Em) est une note de la\ngamme, déjà dans l'air : l'accord mineur perd sa dureté et devient souple. Bm7\n(B-D-F#-A) contient même **tout l'accord de D** : c'est pour ça qu'il sonne si\nnaturel dans un chant en D.",
       "eviter": [
         "Quand le mineur doit rester sombre (texte de deuil, de lutte) : le m7 le rend presque doux."
       ],
-      "piano": "Astuce : Bm7 = **l'accord de D (main droite) avec B à la main\r\ngauche**. Em7 = accord de G avec E à la main gauche.",
+      "piano": "Astuce : Bm7 = **l'accord de D (main droite) avec B à la main\ngauche**. Em7 = accord de G avec E à la main gauche.",
       "guitare": "Bm7 `x20202` ; Em7 `022033` ou `020000` ; F#m7 `242222`.",
-      "repertoire": "*Ce Nom si\r\nmerveilleux* (couplet : Bm7 « Fils unique du Dieu très-haut ») · *Béni soit Ton\r\nNom* (couplet, en A : F#m7) · *Amour parfait* (refrain, en C : Am7) · *Au nom\r\nde Jésus* (couplet : Em7) · 一颗谦卑的心 (主歌 : Bm9) · 为爱而生 (预备, en E :\r\nC#m7).",
-      "regle": "Portée : dans une section · motif `6m` ou `2m` · remplacement `6m7`\r\nou `2m7` · sûreté : **très sûre**.",
+      "repertoire": "*Ce Nom si\nmerveilleux* (couplet : Bm7 « Fils unique du Dieu très-haut ») · *Béni soit Ton\nNom* (couplet, en A : F#m7) · *Amour parfait* (refrain, en C : Am7) · *Au nom\nde Jésus* (couplet : Em7) · 一颗谦卑的心 (主歌 : Bm9) · 为爱而生 (预备, en E :\nC#m7).",
+      "regle": "Portée : dans une section · motif `6m` ou `2m` · remplacement `6m7`\nou `2m7` · sûreté : **très sûre**.",
       "exemples": [
         "a-jamais-tu-es-saint",
         "abrite-moi",
@@ -1278,15 +1279,15 @@
         "piano": "intermediaire",
         "guitare": "intermediaire"
       },
-      "avantApres": "`G` (tenu) devient `A/G` · degrés `4` devient `5/4`\r\n(un 4 lydien).",
-      "pourquoi": "Sur G, on fait entendre C#, une note de la gamme de D\r\nqui sonne « au-delà » de l'accord de G : lumineux, céleste, suspendu. C'est le\r\nson des musiques de film pour l'émerveillement. A/G joue exactement ça : les\r\nnotes de A (A-C#-E) posées sur G.",
+      "avantApres": "`G` (tenu) devient `A/G` · degrés `4` devient `5/4`\n(un 4 lydien).",
+      "pourquoi": "Sur G, on fait entendre C#, une note de la gamme de D\nqui sonne « au-delà » de l'accord de G : lumineux, céleste, suspendu. C'est le\nson des musiques de film pour l'émerveillement. A/G joue exactement ça : les\nnotes de A (A-C#-E) posées sur G.",
       "eviter": [
         "Quand la mélodie chante C naturel (rare en D) : il frotte contre le C#.",
         "Sur un passage où l'on veut un 4 franc et simple. Pourquoi A/G plutôt que Gmaj7(#11) : A/G n'a pas de F#, donc ne frotte pas avec une mélodie qui tient G."
       ],
       "piano": "Main gauche : G (ou G-D). Main droite : l'accord de A (A-C#-E).",
       "guitare": "A/G `3x2220`.",
-      "repertoire": "même son que M3 (« Le 4 – 5/4 qui soulève »), dans 45\r\nchants, par exemple *Quand je contemple* (refrain, en C : FM7 – G/F).",
+      "repertoire": "même son que M3 (« Le 4 – 5/4 qui soulève »), dans 45\nchants, par exemple *Quand je contemple* (refrain, en C : FM7 – G/F).",
       "regle": "Aucune : c'est M3 qui propose ce son sur un chant, en mouvement.",
       "exemples": []
     },
@@ -1309,16 +1310,16 @@
         "piano": "facile",
         "guitare": "intermediaire"
       },
-      "avantApres": "`D → Bm → G` devient `D – A/C# – Bm – Bm/A – G` · degrés\r\n`1 → 6m → 4` devient `1 – 5/7 – 6m – 6m/5 – 4`.",
-      "pourquoi": "La basse descend note par note : D, C#, B, A, G. Les\r\naccords au-dessus changent à peine. L'oreille suit cette ligne comme une\r\ndeuxième mélodie, en dessous : le passage devient fluide, comme une pente\r\ndouce.",
+      "avantApres": "`D → Bm → G` devient `D – A/C# – Bm – Bm/A – G` · degrés\n`1 → 6m → 4` devient `1 – 5/7 – 6m – 6m/5 – 4`.",
+      "pourquoi": "La basse descend note par note : D, C#, B, A, G. Les\naccords au-dessus changent à peine. L'oreille suit cette ligne comme une\ndeuxième mélodie, en dessous : le passage devient fluide, comme une pente\ndouce.",
       "eviter": [
         "Si la mélodie tient D pendant A/C# : D contre C# frotte. Joue alors **D/C#** (l'accord de D sur C#).",
         "Si la basse doit rester sur D (pédale voulue, voir B5)."
       ],
-      "piano": "Main gauche : D – C# – B – A – G, une note par accord. Main\r\ndroite : des accords proches, qui bougent le moins possible.",
-      "guitare": "A/C# `x42220` ; D/C# `x4x232` ; Bm/A `x0x432`. Le pouce\r\nfait la descente.",
-      "repertoire": "*Bénis Dieu (10000 raisons)* (refrain : D – A/C# – Bm) · *À la croix* (refrain,\r\nen E : E – B/D# – C#m « À la croix je me prosterne ») · *Abrite-moi* (couplet,\r\nen C : C – G/B – Am) · *Au dessus de tout* (couplet, en A : A – A/G# – F#m) ·\r\n一粒麦子 (主歌, en F : F – C/E – Dm) · 一生跟随 (前奏, en F : F – C/E – Dm).",
-      "regle": "Portée : dans une section · motif `1 → 6m` · remplacement\r\n`1 – 5/7 → 6m` · sûreté : **sûre**.",
+      "piano": "Main gauche : D – C# – B – A – G, une note par accord. Main\ndroite : des accords proches, qui bougent le moins possible.",
+      "guitare": "A/C# `x42220` ; D/C# `x4x232` ; Bm/A `x0x432`. Le pouce\nfait la descente.",
+      "repertoire": "*Bénis Dieu (10000 raisons)* (refrain : D – A/C# – Bm) · *À la croix* (refrain,\nen E : E – B/D# – C#m « À la croix je me prosterne ») · *Abrite-moi* (couplet,\nen C : C – G/B – Am) · *Au dessus de tout* (couplet, en A : A – A/G# – F#m) ·\n一粒麦子 (主歌, en F : F – C/E – Dm) · 一生跟随 (前奏, en F : F – C/E – Dm).",
+      "regle": "Portée : dans une section · motif `1 → 6m` · remplacement\n`1 – 5/7 → 6m` · sûreté : **sûre**.",
       "exemples": [
         "a-la-croix",
         "abrite-moi",
@@ -1455,16 +1456,16 @@
         "piano": "facile",
         "guitare": "facile"
       },
-      "avantApres": "`G → Bm` devient `G – A – Bm` · degrés `4 → 6m` devient\r\n`4 – 5 – 6m`.",
-      "pourquoi": "Un saut de basse (G → B) devient une marche : G, A,\r\nB. Chaque accord pousse le suivant, l'énergie monte.",
+      "avantApres": "`G → Bm` devient `G – A – Bm` · degrés `4 → 6m` devient\n`4 – 5 – 6m`.",
+      "pourquoi": "Un saut de basse (G → B) devient une marche : G, A,\nB. Chaque accord pousse le suivant, l'énergie monte.",
       "eviter": [
         "Quand la mélodie tient D pendant le A ajouté : D frotte contre C#.",
         "Sur un tempo très rapide : l'accord ajouté n'a pas le temps d'exister."
       ],
-      "piano": "Main gauche : G – A – B. Main droite : place le A sur la\r\ndeuxième moitié de la mesure de G.",
-      "guitare": "G `320033` – A `x02220` – Bm7 `x20202` : garde une\r\nrythmique régulière, le A arrive sur les derniers temps.",
-      "repertoire": "*Amour sans\r\nfin* (pré-refrain : G – A – Bm) · *Ta parole* (refrain, en Bb : Eb – F – Gm) ·\r\n*Abba Père* (refrain, en A : D – E – F#m « Abba Père, je suis à Toi ») ·\r\n*Abrite-moi* (refrain, en C : F – G – Am) · 你坐着为王 (副歌, en F : Bb – C –\r\nDm) · 使命 (主歌, en A : D – E – F#m).",
-      "regle": "Portée : dans une section · motif `4 → 6m` · remplacement\r\n`4 – 5 → 6m` · sûreté : **à écouter**.",
+      "piano": "Main gauche : G – A – B. Main droite : place le A sur la\ndeuxième moitié de la mesure de G.",
+      "guitare": "G `320033` – A `x02220` – Bm7 `x20202` : garde une\nrythmique régulière, le A arrive sur les derniers temps.",
+      "repertoire": "*Amour sans\nfin* (pré-refrain : G – A – Bm) · *Ta parole* (refrain, en Bb : Eb – F – Gm) ·\n*Abba Père* (refrain, en A : D – E – F#m « Abba Père, je suis à Toi ») ·\n*Abrite-moi* (refrain, en C : F – G – Am) · 你坐着为王 (副歌, en F : Bb – C –\nDm) · 使命 (主歌, en A : D – E – F#m).",
+      "regle": "Portée : dans une section · motif `4 → 6m` · remplacement\n`4 – 5 → 6m` · sûreté : **à écouter**.",
       "exemples": [
         "Ta-parole-écriture",
         "a-la-croix",
@@ -1561,15 +1562,15 @@
         "piano": "facile",
         "guitare": "facile"
       },
-      "avantApres": "`D → G` devient `D – D/F# → G` · degrés `1 → 4` devient\r\n`1 – 1/3 → 4`.",
-      "pourquoi": "D/F# est **le même accord** que D, seule la basse\r\nchange : D → F# → G. Le saut de basse devient une montée, et F# → G, un\r\ndemi-ton, tire fort vers G. Aucun risque avec la mélodie.",
+      "avantApres": "`D → G` devient `D – D/F# → G` · degrés `1 → 4` devient\n`1 – 1/3 → 4`.",
+      "pourquoi": "D/F# est **le même accord** que D, seule la basse\nchange : D → F# → G. Le saut de basse devient une montée, et F# → G, un\ndemi-ton, tire fort vers G. Aucun risque avec la mélodie.",
       "eviter": [
         "Presque jamais. Seulement si la basse joue déjà une ligne écrite différente."
       ],
       "piano": "Main droite : D, tenu. Main gauche : D puis F#, puis G.",
       "guitare": "D/F# `2x0232` : le pouce sur la corde de mi grave, 2e case.",
-      "repertoire": "*Au nom de\r\nJésus* (instrumental : D/F# – G) · *Abrite-moi* (couplet, en C : C/E – F\r\n« Couvre-moi par Ta main puissante ») · *Au dessus de tout* (refrain, en A :\r\nA/C# – D2) · 一切歌颂赞美 (主歌, en E : E/G# – A) · 一生敬拜你 (导歌, en C :\r\nC/E – F).",
-      "regle": "Portée : dans une section · motif `1 → 4` · remplacement\r\n`1 – 1/3 → 4` · sûreté : **très sûre**.",
+      "repertoire": "*Au nom de\nJésus* (instrumental : D/F# – G) · *Abrite-moi* (couplet, en C : C/E – F\n« Couvre-moi par Ta main puissante ») · *Au dessus de tout* (refrain, en A :\nA/C# – D2) · 一切歌颂赞美 (主歌, en E : E/G# – A) · 一生敬拜你 (导歌, en C :\nC/E – F).",
+      "regle": "Portée : dans une section · motif `1 → 4` · remplacement\n`1 – 1/3 → 4` · sûreté : **très sûre**.",
       "exemples": [
         "abrite-moi",
         "fidele-loyal",
@@ -1635,16 +1636,16 @@
         "piano": "facile",
         "guitare": "intermediaire"
       },
-      "avantApres": "`A → D` devient `A/C# → D` · degrés `5 → 1` devient\r\n`5/7 → 1`.",
-      "pourquoi": "C#, la sensible, passe à la basse et monte d'un\r\ndemi-ton sur D. Le retour au 1 est plus lié, plus chantant qu'un saut A → D.",
+      "avantApres": "`A → D` devient `A/C# → D` · degrés `5 → 1` devient\n`5/7 → 1`.",
+      "pourquoi": "C#, la sensible, passe à la basse et monte d'un\ndemi-ton sur D. Le retour au 1 est plus lié, plus chantant qu'un saut A → D.",
       "eviter": [
         "Quand la mélodie tient D pendant A/C# (D contre C# à la basse, dur).",
         "Sur la toute dernière cadence, si l'on veut un final franc : A → D, basse qui saute, est plus affirmé."
       ],
       "piano": "Main gauche : C# puis D. Main droite : A-C#-E ou C#-E-A, puis D.",
       "guitare": "A/C# `x42220`, puis D `xx0232`.",
-      "repertoire": "*Ta parole*\r\n(refrain, en Bb : F/A – Bb « pour révéler le Christ ») · *Dieu est parmi nous*\r\n(refrain, en G : D/F# – G) · *Christ est la lumière* (couplet, en C : G/B – C) ·\r\n*Au dessus de tout* (couplet, en A : E/G# – A) · 医治我 (主歌, en A : E/G# – A)\r\n· 一生敬拜你 (主歌, en C : G/B – C).",
-      "regle": "Portée : dans une section · motif `5 → 1` · remplacement\r\n`5/7 → 1` · sûreté : **à écouter**.",
+      "repertoire": "*Ta parole*\n(refrain, en Bb : F/A – Bb « pour révéler le Christ ») · *Dieu est parmi nous*\n(refrain, en G : D/F# – G) · *Christ est la lumière* (couplet, en C : G/B – C) ·\n*Au dessus de tout* (couplet, en A : E/G# – A) · 医治我 (主歌, en A : E/G# – A)\n· 一生敬拜你 (主歌, en C : G/B – C).",
+      "regle": "Portée : dans une section · motif `5 → 1` · remplacement\n`5/7 → 1` · sûreté : **à écouter**.",
       "exemples": [
         "Ta-parole-écriture",
         "au-dessus-de-tout",
@@ -1711,16 +1712,16 @@
         "piano": "facile",
         "guitare": "facile"
       },
-      "avantApres": "`D → G → D` devient `D – G/D – D` · degrés `1 → 4 → 1`\r\ndevient `1 – 4/1 – 1` (aussi `5/1`).",
-      "pourquoi": "La basse reste sur D pendant que les accords bougent\r\nau-dessus : on sent le mouvement sans quitter la maison. C'est stable, ancré,\r\net ça laisse toute la place à la voix.",
+      "avantApres": "`D → G → D` devient `D – G/D – D` · degrés `1 → 4 → 1`\ndevient `1 – 4/1 – 1` (aussi `5/1`).",
+      "pourquoi": "La basse reste sur D pendant que les accords bougent\nau-dessus : on sent le mouvement sans quitter la maison. C'est stable, ancré,\net ça laisse toute la place à la voix.",
       "eviter": [
         "A/D trop longtemps : son C# frotte contre le D de la basse. En passage seulement ; G/D, lui, peut durer.",
         "Sur un passage qui doit avancer : la pédale immobilise."
       ],
-      "piano": "Main gauche : D (ou octave D-D), tenue. Main droite : D, puis\r\nG-B-D, puis D.",
-      "guitare": "La corde de ré à vide sonne sous tout : G/D `xx0433`, A/D\r\n`xx0220`, D `xx0232`.",
-      "repertoire": "*Bénis Dieu (10000 raisons)* (refrain : « Je louerai Ton saint Nom », D – G/D –\r\nD) · *Je fléchis le genou* (refrain, en G : G – C/G – G) · *Je célèbrerai*\r\n(couplet, en C : C – F/C – C) · *Hosanna (Ouvrons les portes)* (refrain : A/D)\r\n· 哦十字架 (主歌, en F : F – Bb/F – F) · 一同齐声宣扬 (前奏, en A : D/A).",
-      "regle": "Portée : Intro, Pont · motif `1 → 4 → 1` · remplacement\r\n`1 – 4/1 – 1` · sûreté : **sûre**.",
+      "piano": "Main gauche : D (ou octave D-D), tenue. Main droite : D, puis\nG-B-D, puis D.",
+      "guitare": "La corde de ré à vide sonne sous tout : G/D `xx0433`, A/D\n`xx0220`, D `xx0232`.",
+      "repertoire": "*Bénis Dieu (10000 raisons)* (refrain : « Je louerai Ton saint Nom », D – G/D –\nD) · *Je fléchis le genou* (refrain, en G : G – C/G – G) · *Je célèbrerai*\n(couplet, en C : C – F/C – C) · *Hosanna (Ouvrons les portes)* (refrain : A/D)\n· 哦十字架 (主歌, en F : F – Bb/F – F) · 一同齐声宣扬 (前奏, en A : D/A).",
+      "regle": "Portée : Intro, Pont · motif `1 → 4 → 1` · remplacement\n`1 – 4/1 – 1` · sûreté : **sûre**.",
       "exemples": [
         "从早晨到夜晚",
         "吹起复兴的火",
@@ -1751,16 +1752,16 @@
         "piano": "intermediaire",
         "guitare": "intermediaire"
       },
-      "avantApres": "`D → D → G` devient `D – D/C# – D/C – G/B` · degrés\r\n`1 → 1 → 4` devient `1 – 1/7 – 1/b7 – 4/6`.",
-      "pourquoi": "La basse descend **demi-ton par demi-ton** (D, C#, C,\r\nB) sous un accord qui ne bouge pas. D/C apporte une ombre (C naturel, hors\r\ngamme), puis G/B retombe dans la lumière. Une émotion qui passe, puis\r\ns'apaise.\r\n\r\n**Variante** (fréquente dans nos chants chinois) : `D – A/C# – Am/C – G/B`.",
+      "avantApres": "`D → D → G` devient `D – D/C# – D/C – G/B` · degrés\n`1 → 1 → 4` devient `1 – 1/7 – 1/b7 – 4/6`.",
+      "pourquoi": "La basse descend **demi-ton par demi-ton** (D, C#, C,\nB) sous un accord qui ne bouge pas. D/C apporte une ombre (C naturel, hors\ngamme), puis G/B retombe dans la lumière. Une émotion qui passe, puis\ns'apaise.\n\n**Variante** (fréquente dans nos chants chinois) : `D – A/C# – Am/C – G/B`.",
       "eviter": [
         "Quand la mélodie chante C# pendant D/C : frottement fort.",
         "Sur un tempo rapide : la descente ne s'entend plus."
       ],
       "piano": "Main droite : D-F#-A, tenu. Main gauche : D – C# – C – B.",
       "guitare": "D `xx0232` – D/C# `x4x232` – D/C `x3x232` – G/B `x2003x`.",
-      "repertoire": "奔跑不放弃 (主歌, en E : E – B/D# – D) · 我渴望看见 (主歌, en F : F – C/E –\r\nCm/Eb) · 握住幸福 (前奏, en G : G – D/F# – Dm/F).",
-      "regle": "Portée : Couplet, Pont · motif `1 → 1 → 4` · remplacement\r\n`1 – 1/7 – 1/b7 → 4/6` · sûreté : **à écouter**.",
+      "repertoire": "奔跑不放弃 (主歌, en E : E – B/D# – D) · 我渴望看见 (主歌, en F : F – C/E –\nCm/Eb) · 握住幸福 (前奏, en G : G – D/F# – Dm/F).",
+      "regle": "Portée : Couplet, Pont · motif `1 → 1 → 4` · remplacement\n`1 – 1/7 – 1/b7 → 4/6` · sûreté : **à écouter**.",
       "exemples": []
     },
     {
@@ -1784,15 +1785,15 @@
         "piano": "intermediaire",
         "guitare": "intermediaire"
       },
-      "avantApres": "`D/F# → Bm` devient `F#7 → Bm` (ou `D → Bm` devient\r\n`D – F#7 → Bm`) · degrés `1/3 → 6m` devient `3 7 → 6m`.",
-      "pourquoi": "F#7 contient A#, hors de la gamme de D, juste sous B :\r\nil tire vers Bm comme C# tire vers D. Pendant un instant, Bm devient « la\r\nmaison ». Avec D/F# avant, la basse ne bouge même pas : seul l'accord change\r\nau-dessus.",
+      "avantApres": "`D/F# → Bm` devient `F#7 → Bm` (ou `D → Bm` devient\n`D – F#7 → Bm`) · degrés `1/3 → 6m` devient `3 7 → 6m`.",
+      "pourquoi": "F#7 contient A#, hors de la gamme de D, juste sous B :\nil tire vers Bm comme C# tire vers D. Pendant un instant, Bm devient « la\nmaison ». Avec D/F# avant, la basse ne bouge même pas : seul l'accord change\nau-dessus.",
       "eviter": [
         "**Quand la mélodie chante A** pendant F#7 : A contre A# frotte. A est une note très fréquente en D, d'où « à écouter »."
       ],
       "piano": "Main gauche : F#. Main droite : A#-C#-E (ou E-A#-C#).",
       "guitare": "F#7 `242322`.",
-      "repertoire": "*Je louerai\r\nl'Éternel* (couplet : F# – Bm « Je raconterai toutes Tes merveilles ») ·\r\n*Auprès de Dieu* (refrain, en A : C#7 – F#m7 « Je viens, je viens devant le\r\ntrône ») · *Né pour nous donner la vie* (refrain, en A : C#7 – F#m7) ·\r\n住在你里面 (副歌 : F# – Bm) · 一生爱你 (副歌, en E : G# – C#m).",
-      "regle": "Portée : dans une section · motif `1/3 → 6m` ou `1 → 6m` ·\r\nremplacement `3 7 → 6m` · sûreté : **à écouter**.",
+      "repertoire": "*Je louerai\nl'Éternel* (couplet : F# – Bm « Je raconterai toutes Tes merveilles ») ·\n*Auprès de Dieu* (refrain, en A : C#7 – F#m7 « Je viens, je viens devant le\ntrône ») · *Né pour nous donner la vie* (refrain, en A : C#7 – F#m7) ·\n住在你里面 (副歌 : F# – Bm) · 一生爱你 (副歌, en E : G# – C#m).",
+      "regle": "Portée : dans une section · motif `1/3 → 6m` ou `1 → 6m` ·\nremplacement `3 7 → 6m` · sûreté : **à écouter**.",
       "exemples": [
         "aupres-de-dieu",
         "christ-est-la-lumiere",
@@ -1830,16 +1831,16 @@
         "piano": "facile",
         "guitare": "facile"
       },
-      "avantApres": "`D → G` devient `D – D7 → G` · degrés `1 → 4` devient\r\n`1 – 1 7 → 4`.",
-      "pourquoi": "D7 ajoute C naturel (hors gamme), qui descend d'un\r\ndemi-ton sur B, la tierce de G : on entend G arriver. Le son est chaleureux,\r\nun peu gospel. C'est l'accord de passage le plus facile : on ajoute une note au\r\n1.",
+      "avantApres": "`D → G` devient `D – D7 → G` · degrés `1 → 4` devient\n`1 – 1 7 → 4`.",
+      "pourquoi": "D7 ajoute C naturel (hors gamme), qui descend d'un\ndemi-ton sur B, la tierce de G : on entend G arriver. Le son est chaleureux,\nun peu gospel. C'est l'accord de passage le plus facile : on ajoute une note au\n1.",
       "eviter": [
         "Quand la mélodie chante C# pendant D7 : C# contre C frotte.",
         "Sur un moment intime : D7 donne de l'élan, pas du recueillement."
       ],
-      "piano": "Main droite : D-F#-A puis C-F#-A (le D d'en haut descend sur C).\r\nMain gauche : D.",
+      "piano": "Main droite : D-F#-A puis C-F#-A (le D d'en haut descend sur C).\nMain gauche : D.",
       "guitare": "D `xx0232` puis D7 `xx0212`.",
-      "repertoire": "*Le Fils de\r\nDieu* (refrain : « remplis-nous de Toi », D7 – GM7) · *Mon rédempteur vit*\r\n(couplet, en E : E7 – A) · *Une flamme en moi* (couplet, en G : G7 – C) ·\r\n一生爱你 (副歌, en E : E7 – A) · 何等恩典 (副歌, en G : G7 – C).",
-      "regle": "Portée : dans une section · motif `1 → 4` · remplacement\r\n`1 – 1 7 → 4` · sûreté : **sûre**.",
+      "repertoire": "*Le Fils de\nDieu* (refrain : « remplis-nous de Toi », D7 – GM7) · *Mon rédempteur vit*\n(couplet, en E : E7 – A) · *Une flamme en moi* (couplet, en G : G7 – C) ·\n一生爱你 (副歌, en E : E7 – A) · 何等恩典 (副歌, en G : G7 – C).",
+      "regle": "Portée : dans une section · motif `1 → 4` · remplacement\n`1 – 1 7 → 4` · sûreté : **sûre**.",
       "exemples": [
         "一生敬拜你",
         "何等恩典",
@@ -1870,15 +1871,15 @@
         "piano": "intermediaire",
         "guitare": "intermediaire"
       },
-      "avantApres": "`Bm → Em` devient `B7 → Em` · degrés `6m → 2m` devient\r\n`6 7 → 2m`.",
-      "pourquoi": "B7, c'est Bm dont le D monte d'un demi-ton : D# (hors\r\ngamme), qui tire vers E. On garde la basse B, on change une note, et Em arrive\r\ncomme une résolution.",
+      "avantApres": "`Bm → Em` devient `B7 → Em` · degrés `6m → 2m` devient\n`6 7 → 2m`.",
+      "pourquoi": "B7, c'est Bm dont le D monte d'un demi-ton : D# (hors\ngamme), qui tire vers E. On garde la basse B, on change une note, et Em arrive\ncomme une résolution.",
       "eviter": [
         "**Quand la mélodie chante D** pendant B7 : D contre D# frotte fort. D est la tonique, très fréquente."
       ],
       "piano": "Main gauche : B. Main droite : A-D#-F# (au lieu de A-D-F#).",
       "guitare": "B7 `x21202`.",
-      "repertoire": "*Grâce infinie*\r\n(refrain, en E : C# – F#m « Sa grâce coule comme la pluie ») · 一颗谦卑的心\r\n(副歌 : B7 – Em) · 你的同在 (主歌 : B7 – Em) · 一生敬拜你 (主歌, en C : A – Dm).",
-      "regle": "Portée : dans une section · motif `6m → 2m` · remplacement\r\n`6 7 → 2m` · sûreté : **à écouter**.",
+      "repertoire": "*Grâce infinie*\n(refrain, en E : C# – F#m « Sa grâce coule comme la pluie ») · 一颗谦卑的心\n(副歌 : B7 – Em) · 你的同在 (主歌 : B7 – Em) · 一生敬拜你 (主歌, en C : A – Dm).",
+      "regle": "Portée : dans une section · motif `6m → 2m` · remplacement\n`6 7 → 2m` · sûreté : **à écouter**.",
       "exemples": [
         "一颗谦卑的心",
         "你的同在",
@@ -1906,16 +1907,16 @@
         "piano": "facile",
         "guitare": "facile"
       },
-      "avantApres": "`Em → A` devient `E7 → A` · degrés `2m → 5` devient\r\n`2 7 → 5`.",
-      "pourquoi": "E7, c'est Em dont le G monte d'un demi-ton : G# (hors\r\ngamme), qui tire vers A. Le 5 arrive avec plus d'élan, puis le 1. Un son de\r\ncantique, joyeux.",
+      "avantApres": "`Em → A` devient `E7 → A` · degrés `2m → 5` devient\n`2 7 → 5`.",
+      "pourquoi": "E7, c'est Em dont le G monte d'un demi-ton : G# (hors\ngamme), qui tire vers A. Le 5 arrive avec plus d'élan, puis le 1. Un son de\ncantique, joyeux.",
       "eviter": [
         "Quand la mélodie chante G pendant E7 : G contre G# frotte.",
         "Juste après avoir essayé S1 ou S3 sur le même passage : choisir l'une des trois idées."
       ],
       "piano": "Main gauche : E. Main droite : D-G#-B.",
       "guitare": "E7 `020100`.",
-      "repertoire": "*Notre Père*\r\n(refrain, en F : G – C « Sur toute la terre ») · *Que Ton Nom résonne en ce\r\nlieu* (pont, en C : D – G) · *Noël est arrivé* (couplet, en Bb : C – F) ·\r\n充满在这里 (副歌, en A : B – E) · 你的爱不离不弃 (副歌, en A : B7 – E).",
-      "regle": "Portée : dans une section · motif `2m → 5` · remplacement\r\n`2 7 → 5` · sûreté : **à écouter**.",
+      "repertoire": "*Notre Père*\n(refrain, en F : G – C « Sur toute la terre ») · *Que Ton Nom résonne en ce\nlieu* (pont, en C : D – G) · *Noël est arrivé* (couplet, en Bb : C – F) ·\n充满在这里 (副歌, en A : B – E) · 你的爱不离不弃 (副歌, en A : B7 – E).",
+      "regle": "Portée : dans une section · motif `2m → 5` · remplacement\n`2 7 → 5` · sûreté : **à écouter**.",
       "exemples": [
         "你的同在",
         "你的爱不离不弃",
@@ -1947,16 +1948,16 @@
         "piano": "intermediaire",
         "guitare": "intermediaire"
       },
-      "avantApres": "`D → Em` devient `D – D#dim → Em` · degrés `1 → 2m`\r\ndevient `1 – #1dim → 2m`.",
-      "pourquoi": "La basse monte d'un demi-ton, D → D# → E. D#dim7\r\n(D#-F#-A-C) garde F# et A de l'accord de D : il glisse sans heurt, et D#\r\npousse vers E. Un son de cantique, élégant.",
+      "avantApres": "`D → Em` devient `D – D#dim → Em` · degrés `1 → 2m`\ndevient `1 – #1dim → 2m`.",
+      "pourquoi": "La basse monte d'un demi-ton, D → D# → E. D#dim7\n(D#-F#-A-C) garde F# et A de l'accord de D : il glisse sans heurt, et D#\npousse vers E. Un son de cantique, élégant.",
       "eviter": [
         "Quand la mélodie tient D pendant D#dim : frottement fort.",
         "Sur un tempo rapide : trop court pour s'entendre."
       ],
       "piano": "Main gauche : D# (entre D et E). Main droite : F#-A-C.",
       "guitare": "D#dim7 `xx1212`.",
-      "repertoire": "pas encore de `1 – #1dim – 2m` exact ; des accords\r\ndiminués apparaissent dans 19 chants chinois, par exemple 住在你里面 (副歌 :\r\nG#dim – Em), 何等恩典 (副歌, en G : G#dim), 吹起复兴的风 (桥段, en C : F#dim).",
-      "regle": "Portée : dans une section · motif `1 → 2m` · remplacement\r\n`1 – #1dim → 2m` · sûreté : **à écouter**.",
+      "repertoire": "pas encore de `1 – #1dim – 2m` exact ; des accords\ndiminués apparaissent dans 19 chants chinois, par exemple 住在你里面 (副歌 :\nG#dim – Em), 何等恩典 (副歌, en G : G#dim), 吹起复兴的风 (桥段, en C : F#dim).",
+      "regle": "Portée : dans une section · motif `1 → 2m` · remplacement\n`1 – #1dim → 2m` · sûreté : **à écouter**.",
       "exemples": []
     },
     {
@@ -1979,16 +1980,16 @@
         "piano": "avance",
         "guitare": "avance"
       },
-      "avantApres": "`A → Bm` devient `C#m7b5 – F#7 → Bm` · degrés `5 → 6m`\r\ndevient `7m7b5 – 3 7 → 6m`.",
-      "pourquoi": "C'est le « 2m7 – 5 – 1 » de S1, mais **vers Bm** et en\r\nmineur : C#m7b5 prépare, F#7 tend, Bm résout. Plus sombre, plus dramatique :\r\nune vraie parenthèse en mineur.",
+      "avantApres": "`A → Bm` devient `C#m7b5 – F#7 → Bm` · degrés `5 → 6m`\ndevient `7m7b5 – 3 7 → 6m`.",
+      "pourquoi": "C'est le « 2m7 – 5 – 1 » de S1, mais **vers Bm** et en\nmineur : C#m7b5 prépare, F#7 tend, Bm résout. Plus sombre, plus dramatique :\nune vraie parenthèse en mineur.",
       "eviter": [
         "Quand la mélodie chante D pendant C#m7b5, ou A pendant F#7.",
         "Sur un passage court : il faut au moins deux temps par accord."
       ],
-      "piano": "C#m7b5 : main gauche C#, main droite E-G-B. F#7 : main gauche F#,\r\nmain droite E-A#-C#. Les deux mains bougent peu.",
+      "piano": "C#m7b5 : main gauche C#, main droite E-G-B. F#7 : main gauche F#,\nmain droite E-A#-C#. Les deux mains bougent peu.",
       "guitare": "C#m7b5 `x4545x` ; F#7 `242322` ; Bm `x24432`.",
-      "repertoire": "你的同在 (前奏 :\r\nC#m7(b5)) · 我需要有你在我生命中 (主歌 2, en C : Bm7b5) · 敬拜的心 (主歌, en\r\nF : Em7b5).",
-      "regle": "Portée : Pont, Couplet · motif `5 → 6m` · remplacement\r\n`7m7b5 – 3 7 → 6m` · sûreté : **à écouter**.",
+      "repertoire": "你的同在 (前奏 :\nC#m7(b5)) · 我需要有你在我生命中 (主歌 2, en C : Bm7b5) · 敬拜的心 (主歌, en\nF : Em7b5).",
+      "regle": "Portée : Pont, Couplet · motif `5 → 6m` · remplacement\n`7m7b5 – 3 7 → 6m` · sûreté : **à écouter**.",
       "exemples": [
         "谢谢你"
       ]
@@ -2012,16 +2013,16 @@
         "piano": "facile",
         "guitare": "intermediaire"
       },
-      "avantApres": "`G → D` devient `G – Gm → D` · degrés `4 → 1` devient\r\n`4 – 4m → 1`.",
-      "pourquoi": "Gm, c'est G dont le B descend d'un demi-ton : Bb, qui\r\ndescend encore sur A, la quinte de D. Une ligne qui soupire (B, Bb, A), une\r\némotion qui passe, puis la maison.",
+      "avantApres": "`G → D` devient `G – Gm → D` · degrés `4 → 1` devient\n`4 – 4m → 1`.",
+      "pourquoi": "Gm, c'est G dont le B descend d'un demi-ton : Bb, qui\ndescend encore sur A, la quinte de D. Une ligne qui soupire (B, Bb, A), une\némotion qui passe, puis la maison.",
       "eviter": [
         "Quand la mélodie chante B pendant Gm : B contre Bb frotte.",
         "Dans un chant tout en joie : Gm peut sonner mélancolique à contretemps."
       ],
-      "piano": "Main droite : G-B-D, puis G-Bb-D (un doigt descend), puis\r\nF#-A-D. Main gauche : G, G, D.",
+      "piano": "Main droite : G-B-D, puis G-Bb-D (un doigt descend), puis\nF#-A-D. Main gauche : G, G, D.",
       "guitare": "G `320033` – Gm `xx5333` (ou barré `355333`) – D `xx0232`.",
-      "repertoire": "*Grâce infinie* (refrain, en E : A – Am – E « Sa grâce coule comme la pluie »)\r\n· 一切歌颂赞美 (副歌, en E : A – Am – E) · 唯独依靠你 (副歌, en E : A – Am – E)\r\n· 看见复兴 (副歌, en A : Dm – A).",
-      "regle": "Portée : fin de section · motif `4 → 1` · remplacement\r\n`4 – 4m → 1` · sûreté : **à écouter**.",
+      "repertoire": "*Grâce infinie* (refrain, en E : A – Am – E « Sa grâce coule comme la pluie »)\n· 一切歌颂赞美 (副歌, en E : A – Am – E) · 唯独依靠你 (副歌, en E : A – Am – E)\n· 看见复兴 (副歌, en A : Dm – A).",
+      "regle": "Portée : fin de section · motif `4 → 1` · remplacement\n`4 – 4m → 1` · sûreté : **à écouter**.",
       "exemples": [
         "唯独依靠你"
       ]
@@ -2047,16 +2048,16 @@
         "piano": "facile",
         "guitare": "intermediaire"
       },
-      "avantApres": "`A → D` (toute fin) devient `Bb – C → D` · degrés\r\n`5 → 1` devient `b6 – b7 → 1`.",
-      "pourquoi": "Bb et C viennent de D mineur. Leurs basses montent\r\nBb → C → D par tons entiers, comme une marche vers le sommet, et D majeur\r\narrive en pleine lumière après deux accords « d'ailleurs ». C'est le grand\r\nfinal des musiques de film.",
+      "avantApres": "`A → D` (toute fin) devient `Bb – C → D` · degrés\n`5 → 1` devient `b6 – b7 → 1`.",
+      "pourquoi": "Bb et C viennent de D mineur. Leurs basses montent\nBb → C → D par tons entiers, comme une marche vers le sommet, et D majeur\narrive en pleine lumière après deux accords « d'ailleurs ». C'est le grand\nfinal des musiques de film.",
       "eviter": [
         "Quand la mélodie chante F# ou B pendant Bb, ou C# pendant C : à placer quand la voix tient D ou se tait (fin instrumentale).",
         "Sur une fin douce : c'est un final de grandeur, pas de recueillement."
       ],
-      "piano": "Main gauche : Bb – C – D, en octaves si tu veux de la puissance.\r\nMain droite : Bb-D-F, C-E-G, D-F#-A.",
-      "guitare": "Bb `x1333x` – C `x32010` – D `xx0232`. En rythmique large,\r\nun accord par temps fort.",
-      "repertoire": "为我而来\r\n(桥段, en C : Ab – Bb – C) · 明亮晨星 (前奏, en F : Db – Eb – F).",
-      "regle": "Portée : dernière occurrence, toute fin du chant · motif `5 → 1`\r\nfinal · remplacement `b6 – b7 → 1` · sûreté : **à écouter**.",
+      "piano": "Main gauche : Bb – C – D, en octaves si tu veux de la puissance.\nMain droite : Bb-D-F, C-E-G, D-F#-A.",
+      "guitare": "Bb `x1333x` – C `x32010` – D `xx0232`. En rythmique large,\nun accord par temps fort.",
+      "repertoire": "为我而来\n(桥段, en C : Ab – Bb – C) · 明亮晨星 (前奏, en F : Db – Eb – F).",
+      "regle": "Portée : dernière occurrence, toute fin du chant · motif `5 → 1`\nfinal · remplacement `b6 – b7 → 1` · sûreté : **à écouter**.",
       "exemples": []
     },
     {
@@ -2080,15 +2081,15 @@
         "piano": "facile",
         "guitare": "facile"
       },
-      "avantApres": "`G → D` devient `C – G → D` · degrés `4 → 1` devient\r\n`b7 – 4 → 1`.",
-      "pourquoi": "C (hors gamme) descend vers G, qui descend vers D :\r\ndeux fois le même mouvement de « retour à la maison », large, sans la tension\r\nde A. Un son ouvert, un peu celtique ou rock.",
+      "avantApres": "`G → D` devient `C – G → D` · degrés `4 → 1` devient\n`b7 – 4 → 1`.",
+      "pourquoi": "C (hors gamme) descend vers G, qui descend vers D :\ndeux fois le même mouvement de « retour à la maison », large, sans la tension\nde A. Un son ouvert, un peu celtique ou rock.",
       "eviter": [
         "Quand la mélodie chante C# pendant C : C# est la note qui mène à D, souvent chantée juste avant la fin."
       ],
       "piano": "Main gauche : C – G – D. Main droite : C-E-G, B-D-G, A-D-F#.",
       "guitare": "C `x32010` – G `320033` – D `xx0232`.",
-      "repertoire": "*Au nom\r\nde Jésus* (refrain : « Christ ressuscité vit en moi », C – G ; intro : C – D)\r\n· *Fidèle Loyal* (refrain, en C : Bb – F) · 耶和华行了大事 (桥段, en Bb :\r\nAb – Eb).",
-      "regle": "Portée : fin de ligne · motif `4 → 1` · remplacement `b7 – 4 → 1`\r\n· sûreté : **à écouter**.",
+      "repertoire": "*Au nom\nde Jésus* (refrain : « Christ ressuscité vit en moi », C – G ; intro : C – D)\n· *Fidèle Loyal* (refrain, en C : Bb – F) · 耶和华行了大事 (桥段, en Bb :\nAb – Eb).",
+      "regle": "Portée : fin de ligne · motif `4 → 1` · remplacement `b7 – 4 → 1`\n· sûreté : **à écouter**.",
       "exemples": [
         "au-nom-de-jesus",
         "耶和华行了大事"
@@ -2113,15 +2114,15 @@
         "piano": "facile",
         "guitare": "intermediaire"
       },
-      "avantApres": "`D → G` devient `D – F → G` · degrés `1 → 4` devient\r\n`1 – b3 → 4`.",
-      "pourquoi": "F (hors gamme) glisse entre D et G : la basse monte\r\nD → F → G, avec un accord « bluesy » au milieu. Énergique, un peu rock.",
+      "avantApres": "`D → G` devient `D – F → G` · degrés `1 → 4` devient\n`1 – b3 → 4`.",
+      "pourquoi": "F (hors gamme) glisse entre D et G : la basse monte\nD → F → G, avec un accord « bluesy » au milieu. Énergique, un peu rock.",
       "eviter": [
         "**Quand la mélodie chante F#** pendant F : frottement fort, et F# est très fréquent en D. À réserver aux passages instrumentaux (intro, interlude)."
       ],
       "piano": "Main gauche : D – F – G. Main droite : D-F#-A, C-F-A, B-D-G.",
       "guitare": "D `xx0232` – F `xx3211` – G `320033`.",
       "repertoire": "aucun chant ne l'utilise encore.",
-      "regle": "Portée : Intro, Interlude · motif `1 → 4` · remplacement\r\n`1 – b3 → 4` · sûreté : **à écouter**.",
+      "regle": "Portée : Intro, Interlude · motif `1 → 4` · remplacement\n`1 – b3 → 4` · sûreté : **à écouter**.",
       "exemples": []
     },
     {
@@ -2143,8 +2144,8 @@
         "piano": "facile",
         "guitare": "intermediaire"
       },
-      "avantApres": "`G → D` (toute fin) devient `Bb → D` · degrés `4 → 1`\r\ndevient `b6 → 1`.",
-      "pourquoi": "Bb garde D, et ses deux autres notes montent ou\r\ndescendent d'un demi-ton pour arriver sur D : Bb → A, F → F#. La lumière\r\ns'ouvre, comme un rideau qui se lève sur l'accord final.",
+      "avantApres": "`G → D` (toute fin) devient `Bb → D` · degrés `4 → 1`\ndevient `b6 → 1`.",
+      "pourquoi": "Bb garde D, et ses deux autres notes montent ou\ndescendent d'un demi-ton pour arriver sur D : Bb → A, F → F#. La lumière\ns'ouvre, comme un rideau qui se lève sur l'accord final.",
       "eviter": [
         "Quand la mélodie chante B pendant Bb : frottement fort.",
         "Sur une fin intime : l'effet est grandiose."
@@ -2152,7 +2153,7 @@
       "piano": "Main gauche : Bb puis D. Main droite : Bb-D-F puis A-D-F#.",
       "guitare": "Bb `x1333x` puis D `xx0232`.",
       "repertoire": "aucun chant ne l'utilise encore.",
-      "regle": "Portée : dernière occurrence, toute fin du chant · motif `4 → 1`\r\nfinal · remplacement `b6 → 1` · sûreté : **à écouter**.",
+      "regle": "Portée : dernière occurrence, toute fin du chant · motif `4 → 1`\nfinal · remplacement `b6 → 1` · sûreté : **à écouter**.",
       "exemples": []
     },
     {
@@ -2173,16 +2174,16 @@
         "piano": "facile",
         "guitare": "intermediaire"
       },
-      "avantApres": "`G → A` (fin de pré-refrain) devient `Em7 → G/A` ·\r\ndegrés `4 → 5` devient `2m7 → 4/5`.",
-      "pourquoi": "C'est S1 et S6 réunies. Em7 adoucit, G/A laisse la\r\ntension en suspens sans la sensible (C#) : le refrain arrive comme une\r\nrespiration, pas comme un coup.",
+      "avantApres": "`G → A` (fin de pré-refrain) devient `Em7 → G/A` ·\ndegrés `4 → 5` devient `2m7 → 4/5`.",
+      "pourquoi": "C'est S1 et S6 réunies. Em7 adoucit, G/A laisse la\ntension en suspens sans la sensible (C#) : le refrain arrive comme une\nrespiration, pas comme un coup.",
       "eviter": [
         "Quand le refrain doit éclater : A (ou A7) pousse plus fort.",
         "Quand la mélodie chante C# sur la dernière syllabe avant le refrain."
       ],
-      "piano": "Main droite : G-B-D sur les deux accords. Main gauche : E, puis A.\r\nSeule la main gauche bouge.",
+      "piano": "Main droite : G-B-D sur les deux accords. Main gauche : E, puis A.\nSeule la main gauche bouge.",
       "guitare": "Em7 `022033` puis G/A `x00433`.",
-      "repertoire": "*Chantons*\r\n(refrain, en A : Bm7 – D/E « Chantons car Dieu est là ») · *Bénis l'Éternel*\r\n(refrain, en E : F#m7 – A/B) · *Auprès de Dieu* (couplet, en A : Bm7 – D/E) ·\r\n*Le Fils de Dieu* (couplet : Em7 – G6/A) · 不停赞美你 (前奏, en G : Am7 – C/D)\r\n· 为我而来 (桥段, en C : Dm7 – F/G).",
-      "regle": "Portée : fin de la section qui précède un refrain · motif `4 → 5`\r\nou `2m → 5` · remplacement `2m7 → 4/5` · sûreté : **à écouter**.",
+      "repertoire": "*Chantons*\n(refrain, en A : Bm7 – D/E « Chantons car Dieu est là ») · *Bénis l'Éternel*\n(refrain, en E : F#m7 – A/B) · *Auprès de Dieu* (couplet, en A : Bm7 – D/E) ·\n*Le Fils de Dieu* (couplet : Em7 – G6/A) · 不停赞美你 (前奏, en G : Am7 – C/D)\n· 为我而来 (桥段, en C : Dm7 – F/G).",
+      "regle": "Portée : fin de la section qui précède un refrain · motif `4 → 5`\nou `2m → 5` · remplacement `2m7 → 4/5` · sûreté : **à écouter**.",
       "exemples": [
         "吹起复兴的火",
         "握住幸福",
@@ -2208,16 +2209,16 @@
         "piano": "facile",
         "guitare": "facile"
       },
-      "avantApres": "`A` (dernier accord avant le refrain) devient\r\n`Asus4 (tenu) → A` · degrés `5` devient `5sus4 → 5`.",
-      "pourquoi": "Tenir Asus4 retarde la résolution : tout le monde\r\nattend. Passer à A au dernier moment, puis au refrain, libère d'un coup. Avec\r\nun crescendo, c'est la montée la plus simple et la plus efficace.\r\n\r\n**Différence avec C2** : C2 glisse le sus4 dans une phrase ; M2 le **tient**\r\nà la frontière entre deux sections.",
+      "avantApres": "`A` (dernier accord avant le refrain) devient\n`Asus4 (tenu) → A` · degrés `5` devient `5sus4 → 5`.",
+      "pourquoi": "Tenir Asus4 retarde la résolution : tout le monde\nattend. Passer à A au dernier moment, puis au refrain, libère d'un coup. Avec\nun crescendo, c'est la montée la plus simple et la plus efficace.\n\n**Différence avec C2** : C2 glisse le sus4 dans une phrase ; M2 le **tient**\nà la frontière entre deux sections.",
       "eviter": [
         "Quand la mélodie chante C# pendant le sus4.",
         "Sans le batteur : la tenue doit se sentir aussi dans le rythme."
       ],
-      "piano": "Main droite : A-D-E, tenu, puis A-C#-E. Main gauche : A, en\r\noctave pour la puissance.",
-      "guitare": "Asus4 `x02230`, en accords plaqués ou en trémolo, puis A\r\n`x02220`.",
-      "repertoire": "*Dieu est parmi nous* (refrain, en G : Dsus4 « Il est parmi nous ») · *Ouvre\r\nles yeux de mon cœur* (refrain, en E : Bsus) · *Libéré* (couplet, en G : Dsus4)\r\n· 你是我的平安 (副歌 : Asus4) · 你的同在 (副歌 : Asus4) · 一切都更新 (副歌 1, en\r\nC : Gsus4).",
-      "regle": "Portée : fin de la section qui précède un refrain · motif `5`\r\nfinal · remplacement `5sus4 → 5` · sûreté : **sûre**.",
+      "piano": "Main droite : A-D-E, tenu, puis A-C#-E. Main gauche : A, en\noctave pour la puissance.",
+      "guitare": "Asus4 `x02230`, en accords plaqués ou en trémolo, puis A\n`x02220`.",
+      "repertoire": "*Dieu est parmi nous* (refrain, en G : Dsus4 « Il est parmi nous ») · *Ouvre\nles yeux de mon cœur* (refrain, en E : Bsus) · *Libéré* (couplet, en G : Dsus4)\n· 你是我的平安 (副歌 : Asus4) · 你的同在 (副歌 : Asus4) · 一切都更新 (副歌 1, en\nC : Gsus4).",
+      "regle": "Portée : fin de la section qui précède un refrain · motif `5`\nfinal · remplacement `5sus4 → 5` · sûreté : **sûre**.",
       "exemples": [
         "Ta-parole-écriture",
         "a-la-croix",
@@ -2258,15 +2259,15 @@
         "piano": "facile",
         "guitare": "intermediaire"
       },
-      "avantApres": "`G → A` devient `G → A/G` · degrés `4 → 5` devient\r\n`4 → 5/4`.",
-      "pourquoi": "La basse reste sur G pendant que l'accord monte à A :\r\nla tension monte sans que le sol bouge. A/G sonne lumineux (le « 4 lydien » de\r\nC7), et le refrain qui suit libère.",
+      "avantApres": "`G → A` devient `G → A/G` · degrés `4 → 5` devient\n`4 → 5/4`.",
+      "pourquoi": "La basse reste sur G pendant que l'accord monte à A :\nla tension monte sans que le sol bouge. A/G sonne lumineux (le « 4 lydien » de\nC7), et le refrain qui suit libère.",
       "eviter": [
         "Quand la mélodie chante D en valeur longue pendant A/G : D contre C#."
       ],
       "piano": "Main gauche : G, tenu. Main droite : G-B-D, puis A-C#-E.",
       "guitare": "G `320033` puis A/G `3x2220`.",
-      "repertoire": "*Quand je\r\ncontemple* (refrain, en C : FM7 – G/F « Oh ! Je T'adore ») · *Que tous soient\r\nun* (couplet, en E : A – B/A) · *Seigneur, par la clarté* (couplet, en A : D –\r\nE/D) · *Cherchez d'abord* (instrumental : G – A/G) · 为我而来 (副歌, en C :\r\nFmaj7 – G/F) · 一生敬拜你 (导歌, en C : F – G/F).",
-      "regle": "Portée : fin de la section qui précède un refrain · motif `4 → 5` ·\r\nremplacement `4 → 5/4` · sûreté : **sûre**.",
+      "repertoire": "*Quand je\ncontemple* (refrain, en C : FM7 – G/F « Oh ! Je T'adore ») · *Que tous soient\nun* (couplet, en E : A – B/A) · *Seigneur, par la clarté* (couplet, en A : D –\nE/D) · *Cherchez d'abord* (instrumental : G – A/G) · 为我而来 (副歌, en C :\nFmaj7 – G/F) · 一生敬拜你 (导歌, en C : F – G/F).",
+      "regle": "Portée : fin de la section qui précède un refrain · motif `4 → 5` ·\nremplacement `4 → 5/4` · sûreté : **sûre**.",
       "exemples": []
     },
     {
@@ -2289,16 +2290,16 @@
         "piano": "intermediaire",
         "guitare": "avance"
       },
-      "avantApres": "`G → A → D` devient `G – G#dim → D/A – A → D` · degrés\r\n`4 → 5 → 1` devient `4 – #4dim → 1/5 – 5 → 1`.",
-      "pourquoi": "La basse monte demi-ton par demi-ton, G → G# → A.\r\nG#dim7 garde B et D de G, et G# pousse vers A. Puis D/A (l'accord final, mais\r\nsur A) retarde encore l'arrivée. Un son de grand cantique.",
+      "avantApres": "`G → A → D` devient `G – G#dim → D/A – A → D` · degrés\n`4 → 5 → 1` devient `4 – #4dim → 1/5 – 5 → 1`.",
+      "pourquoi": "La basse monte demi-ton par demi-ton, G → G# → A.\nG#dim7 garde B et D de G, et G# pousse vers A. Puis D/A (l'accord final, mais\nsur A) retarde encore l'arrivée. Un son de grand cantique.",
       "eviter": [
         "Quand la mélodie chante G ou A pendant G#dim.",
         "Sur un tempo rapide ou un chant simple : trop d'accords pour la phrase."
       ],
-      "piano": "Main gauche : G – G# – A – A – D. Main droite : B-D-G, B-D-F,\r\nA-D-F#, A-C#-E, A-D-F#.",
-      "guitare": "G `320033` – G#dim7 `4x343x` – D/A `x00232` – A `x02220` –\r\nD `xx0232`.",
-      "repertoire": "耶稣耶稣 (副歌,\r\nen C : F#dim – C/G) · 圣灵的江河 (前奏, en F : Bdim – F/C) · 好喜欢与你在一起\r\n(主歌 2, en Bb : Edim – Bb/F).",
-      "regle": "Portée : fin de section · motif `4 → 5 → 1` · remplacement\r\n`4 – #4dim → 1/5 – 5 → 1` · sûreté : **à écouter**.",
+      "piano": "Main gauche : G – G# – A – A – D. Main droite : B-D-G, B-D-F,\nA-D-F#, A-C#-E, A-D-F#.",
+      "guitare": "G `320033` – G#dim7 `4x343x` – D/A `x00232` – A `x02220` –\nD `xx0232`.",
+      "repertoire": "耶稣耶稣 (副歌,\nen C : F#dim – C/G) · 圣灵的江河 (前奏, en F : Bdim – F/C) · 好喜欢与你在一起\n(主歌 2, en Bb : Edim – Bb/F).",
+      "regle": "Portée : fin de section · motif `4 → 5 → 1` · remplacement\n`4 – #4dim → 1/5 – 5 → 1` · sûreté : **à écouter**.",
       "exemples": [
         "好喜欢与你在一起"
       ]
@@ -2324,14 +2325,14 @@
       },
       "niveauNote": "à préparer avec l'équipe",
       "avantApres": "`A → (refrain)` devient `A (un coup) – silence → (refrain)`.",
-      "pourquoi": "Tout le monde joue un seul coup sur A (ou Asus4), puis\r\nse tait une mesure. Le silence est la tension maximale : quand le refrain\r\nrepart, c'est une explosion.",
+      "pourquoi": "Tout le monde joue un seul coup sur A (ou Asus4), puis\nse tait une mesure. Le silence est la tension maximale : quand le refrain\nrepart, c'est une explosion.",
       "eviter": [
         "Sans l'avoir répété avec le batteur et les chanteurs : un break raté s'entend beaucoup.",
         "Plus d'une fois par chant."
       ],
-      "piano": "Un accord de A plaqué, les deux mains, puis les mains en l'air.\r\nDonne le départ du refrain d'un geste ou d'un regard.",
+      "piano": "Un accord de A plaqué, les deux mains, puis les mains en l'air.\nDonne le départ du refrain d'un geste ou d'un regard.",
       "guitare": "Un coup sur A, puis étouffer les cordes avec la paume.",
-      "repertoire": "ne se voit pas dans les partitions ; il se décide en\r\nrépétition.",
+      "repertoire": "ne se voit pas dans les partitions ; il se décide en\nrépétition.",
       "regle": "Aucune : catalogue seul.",
       "exemples": []
     },
@@ -2353,15 +2354,15 @@
         "piano": "facile",
         "guitare": "facile"
       },
-      "avantApres": "pas d'intro (ou une intro sans rapport) devient **les\r\naccords de la dernière ligne du refrain**, une ou deux fois.",
-      "pourquoi": "L'assemblée et les chanteurs reconnaissent le chant\r\ndès les premières secondes, et la dernière ligne du refrain finit sur le 1 :\r\nl'intro se termine exactement là où le premier couplet commence.",
+      "avantApres": "pas d'intro (ou une intro sans rapport) devient **les\naccords de la dernière ligne du refrain**, une ou deux fois.",
+      "pourquoi": "L'assemblée et les chanteurs reconnaissent le chant\ndès les premières secondes, et la dernière ligne du refrain finit sur le 1 :\nl'intro se termine exactement là où le premier couplet commence.",
       "eviter": [
         "Quand le chant a une intro connue de tous (une mélodie d'intro écrite)."
       ],
-      "piano": "Joue la mélodie de la dernière ligne à la main droite, les\r\naccords à la main gauche : les chanteurs ont leur note de départ.",
-      "guitare": "Les accords de la dernière ligne, en arpèges si le chant\r\ncommence doucement.",
+      "piano": "Joue la mélodie de la dernière ligne à la main droite, les\naccords à la main gauche : les chanteurs ont leur note de départ.",
+      "guitare": "Les accords de la dernière ligne, en arpèges si le chant\ncommence doucement.",
       "repertoire": "se choisit chant par chant.",
-      "regle": "Portée : Intro · si le chant n'a pas d'intro écrite, proposer les\r\naccords de la dernière ligne du refrain · sûreté : **très sûre**.",
+      "regle": "Portée : Intro · si le chant n'a pas d'intro écrite, proposer les\naccords de la dernière ligne du refrain · sûreté : **très sûre**.",
       "exemples": []
     },
     {
@@ -2382,15 +2383,15 @@
         "piano": "facile",
         "guitare": "facile"
       },
-      "avantApres": "intro `D – G – A – D` devient `D – G/D – A/D – D`, basse\r\ntenue (voir B5).",
-      "pourquoi": "La basse installe la tonalité et ne la quitte plus :\r\nl'assemblée entre dans le chant sans à-coup. Idéal après un temps de prière ou\r\nune prédication, quand il ne faut rien casser.",
+      "avantApres": "intro `D – G – A – D` devient `D – G/D – A/D – D`, basse\ntenue (voir B5).",
+      "pourquoi": "La basse installe la tonalité et ne la quitte plus :\nl'assemblée entre dans le chant sans à-coup. Idéal après un temps de prière ou\nune prédication, quand il ne faut rien casser.",
       "eviter": [
         "Pour un chant de célébration qui doit démarrer fort."
       ],
-      "piano": "Main gauche : D grave, tenu (pédale). Main droite : accords\r\ndans le médium, doux, sans marteler.",
-      "guitare": "Arpèges en laissant sonner la corde de ré : D `xx0232`, G/D\r\n`xx0433`, A/D `xx0220`.",
-      "repertoire": "一同齐声宣扬\r\n(前奏, en A : D/A) · 从早晨到夜晚 (前奏, en F : F – Bb/F – F) · 吹起复兴的风\r\n(Intro, en C : C – F/C – C) · 住在你里面 (前奏 : G/D – D).",
-      "regle": "Portée : Intro · motif `1 → 4 → 1` ou `1 → 5 → 1` · remplacement\r\n`1 – 4/1 – 1` ou `1 – 5/1 – 1` · sûreté : **sûre**.",
+      "piano": "Main gauche : D grave, tenu (pédale). Main droite : accords\ndans le médium, doux, sans marteler.",
+      "guitare": "Arpèges en laissant sonner la corde de ré : D `xx0232`, G/D\n`xx0433`, A/D `xx0220`.",
+      "repertoire": "一同齐声宣扬\n(前奏, en A : D/A) · 从早晨到夜晚 (前奏, en F : F – Bb/F – F) · 吹起复兴的风\n(Intro, en C : C – F/C – C) · 住在你里面 (前奏 : G/D – D).",
+      "regle": "Portée : Intro · motif `1 → 4 → 1` ou `1 → 5 → 1` · remplacement\n`1 – 4/1 – 1` ou `1 – 5/1 – 1` · sûreté : **sûre**.",
       "exemples": [
         "从早晨到夜晚",
         "吹起复兴的火",
@@ -2419,15 +2420,15 @@
         "piano": "facile",
         "guitare": "facile"
       },
-      "avantApres": "entre deux couplets, `D` tenu devient la boucle\r\n`D – G/D – D – G/D` (2 ou 4 fois).",
-      "pourquoi": "Deux accords sur la même basse : ça bouge sans aller\r\nnulle part. L'assemblée respire, la présidence peut dire un mot, et le couplet\r\nsuivant repart du 1.",
+      "avantApres": "entre deux couplets, `D` tenu devient la boucle\n`D – G/D – D – G/D` (2 ou 4 fois).",
+      "pourquoi": "Deux accords sur la même basse : ça bouge sans aller\nnulle part. L'assemblée respire, la présidence peut dire un mot, et le couplet\nsuivant repart du 1.",
       "eviter": [
         "Sur un chant rapide et joyeux où la pause casserait l'élan."
       ],
-      "piano": "Main gauche : D, tenu. Main droite : D-F#-A ↔ D-G-B (deux doigts\r\nbougent).",
+      "piano": "Main gauche : D, tenu. Main droite : D-F#-A ↔ D-G-B (deux doigts\nbougent).",
       "guitare": "D `xx0232` ↔ G/D `xx0433`.",
-      "repertoire": "*Bénis Dieu\r\n(10000 raisons)* (refrain : D – G/D – D) · *Je célèbrerai* (couplet, en C :\r\nC – F/C – C « Je me réjouis dans le Nom du Seigneur ») · *Je fléchis le\r\ngenou* (refrain, en G : G – C/G – G) · 哦十字架 (主歌, en F : F – Bb/F – F).",
-      "regle": "Portée : Interlude (sections instrumentales) · motif `1` tenu ·\r\nremplacement boucle `1 – 4/1` · sûreté : **sûre**.",
+      "repertoire": "*Bénis Dieu\n(10000 raisons)* (refrain : D – G/D – D) · *Je célèbrerai* (couplet, en C :\nC – F/C – C « Je me réjouis dans le Nom du Seigneur ») · *Je fléchis le\ngenou* (refrain, en G : G – C/G – G) · 哦十字架 (主歌, en F : F – Bb/F – F).",
+      "regle": "Portée : Interlude (sections instrumentales) · motif `1` tenu ·\nremplacement boucle `1 – 4/1` · sûreté : **sûre**.",
       "exemples": []
     },
     {
@@ -2450,16 +2451,16 @@
         "guitare": "facile"
       },
       "niveauNote": "à préparer avec l'équipe",
-      "avantApres": "dernier refrain puis fin devient dernier refrain,\r\n**dernière ligne répétée** 1 ou 2 fois, plus douce, puis fin.",
-      "pourquoi": "La phrase la plus forte du chant revient, et\r\nl'assemblée la chante sans lire. Avec la cadence rompue (S4) à la première\r\nrépétition, ou le 4 mineur (E1) à la dernière, la fin devient un moment en\r\nsoi.",
+      "avantApres": "dernier refrain puis fin devient dernier refrain,\n**dernière ligne répétée** 1 ou 2 fois, plus douce, puis fin.",
+      "pourquoi": "La phrase la plus forte du chant revient, et\nl'assemblée la chante sans lire. Avec la cadence rompue (S4) à la première\nrépétition, ou le 4 mineur (E1) à la dernière, la fin devient un moment en\nsoi.",
       "eviter": [
         "Sans signe convenu : la présidence ou le pianiste doit annoncer la répétition (geste, regard).",
         "Si la dernière ligne n'est pas une phrase qui se suffit à elle-même."
       ],
-      "piano": "Baisse le volume à chaque répétition. Laisse la dernière ligne\r\npresque a cappella.",
-      "guitare": "Passe en arpèges pour la répétition, puis un dernier accord\r\nplaqué.",
-      "repertoire": "ne se voit pas dans les partitions ; il se décide en\r\nrépétition ou sur le moment.",
-      "regle": "Portée : dernière occurrence du refrain · proposer « répéter la\r\ndernière ligne » · sûreté : **très sûre**.",
+      "piano": "Baisse le volume à chaque répétition. Laisse la dernière ligne\npresque a cappella.",
+      "guitare": "Passe en arpèges pour la répétition, puis un dernier accord\nplaqué.",
+      "repertoire": "ne se voit pas dans les partitions ; il se décide en\nrépétition ou sur le moment.",
+      "regle": "Portée : dernière occurrence du refrain · proposer « répéter la\ndernière ligne » · sûreté : **très sûre**.",
       "exemples": []
     },
     {
@@ -2481,16 +2482,16 @@
         "piano": "facile",
         "guitare": "facile"
       },
-      "avantApres": "dernier accord `D` devient `Bm7` · degrés `1` devient\r\n`6m7`.",
-      "pourquoi": "Bm7 contient **tout l'accord de D** (B-D-F#-A) : la\r\nmélodie finit juste. Mais la basse B dit « pas tout à fait fini » : la prière\r\ncontinue après la musique.",
+      "avantApres": "dernier accord `D` devient `Bm7` · degrés `1` devient\n`6m7`.",
+      "pourquoi": "Bm7 contient **tout l'accord de D** (B-D-F#-A) : la\nmélodie finit juste. Mais la basse B dit « pas tout à fait fini » : la prière\ncontinue après la musique.",
       "eviter": [
         "Quand un autre chant enchaîne tout de suite en D : mieux vaut finir sur D.",
         "Sur un chant de victoire."
       ],
-      "piano": "Main droite : D-F#-A (l'accord de D). Main gauche : B. Laisse\r\nsonner.",
+      "piano": "Main droite : D-F#-A (l'accord de D). Main gauche : B. Laisse\nsonner.",
       "guitare": "Bm7 `x20202`, en arpège lent.",
       "repertoire": "*Cherchez d'abord* (final : Bm « Alléluia ») · 使命 (副歌 3, en A : F#m).",
-      "regle": "Portée : dernière occurrence, toute fin du chant · motif `1` final\r\n· remplacement `6m7` · sûreté : **très sûre**.",
+      "regle": "Portée : dernière occurrence, toute fin du chant · motif `1` final\n· remplacement `6m7` · sûreté : **très sûre**.",
       "exemples": []
     },
     {
@@ -2512,15 +2513,15 @@
         "piano": "facile",
         "guitare": "intermediaire"
       },
-      "avantApres": "dernier accord `D` devient `D2` (ou `Dmaj7`) tenu ·\r\ndegrés `1` devient `1 2` (ou `1maj7`).",
-      "pourquoi": "Le chant finit bien sur D, mais le E (ou le C#) ajouté\r\nlaisse l'accord ouvert : ça résonne, ça ne ferme pas la porte.",
+      "avantApres": "dernier accord `D` devient `D2` (ou `Dmaj7`) tenu ·\ndegrés `1` devient `1 2` (ou `1maj7`).",
+      "pourquoi": "Le chant finit bien sur D, mais le E (ou le C#) ajouté\nlaisse l'accord ouvert : ça résonne, ça ne ferme pas la porte.",
       "eviter": [
         "Avec Dmaj7, quand la mélodie finit sur D : D contre C#. Prendre D2."
       ],
-      "piano": "Main gauche : D-A. Main droite : F#-A-E, en haut du clavier.\r\nPédale, et laisse mourir le son.",
-      "guitare": "Dadd9 `x54230`, ou plus simple Dsus2 `xx0230`. Une seule\r\nattaque, laisse sonner.",
-      "repertoire": "*Que nos\r\nchants soient comme un signe* (pont, en F : F2 « Tu es le bienvenu ») ·\r\n奇异恩典 (主歌 4, en E : E2 « 我永远属于你 ») · 爱的约定 (副歌 2, en C : CMaj9\r\n« 到永远 ») · 真实的悔改 (副歌, en F : Fmaj7).",
-      "regle": "Portée : dernière occurrence, toute fin du chant · motif `1` final\r\n· remplacement `1 2` · sûreté : **très sûre**.",
+      "piano": "Main gauche : D-A. Main droite : F#-A-E, en haut du clavier.\nPédale, et laisse mourir le son.",
+      "guitare": "Dadd9 `x54230`, ou plus simple Dsus2 `xx0230`. Une seule\nattaque, laisse sonner.",
+      "repertoire": "*Que nos\nchants soient comme un signe* (pont, en F : F2 « Tu es le bienvenu ») ·\n奇异恩典 (主歌 4, en E : E2 « 我永远属于你 ») · 爱的约定 (副歌 2, en C : CMaj9\n« 到永远 ») · 真实的悔改 (副歌, en F : Fmaj7).",
+      "regle": "Portée : dernière occurrence, toute fin du chant · motif `1` final\n· remplacement `1 2` · sûreté : **très sûre**.",
       "exemples": []
     },
     {
@@ -2542,15 +2543,15 @@
         "piano": "facile",
         "guitare": "facile"
       },
-      "avantApres": "fin `A → D` devient `A → D – G/D – D` · degrés `5 → 1`\r\ndevient `5 → 1 – 4/1 – 1`.",
-      "pourquoi": "Après le repos sur D, G/D revient une dernière fois\r\nsur la même basse : c'est le « A-men » des cantiques. La fin se pose deux\r\nfois, calmement.",
+      "avantApres": "fin `A → D` devient `A → D – G/D – D` · degrés `5 → 1`\ndevient `5 → 1 – 4/1 – 1`.",
+      "pourquoi": "Après le repos sur D, G/D revient une dernière fois\nsur la même basse : c'est le « A-men » des cantiques. La fin se pose deux\nfois, calmement.",
       "eviter": [
         "Sur un chant qui doit finir sec, avec énergie."
       ],
       "piano": "Main gauche : D, tenu. Main droite : D-F#-A, D-G-B, D-F#-A, lent.",
       "guitare": "D `xx0232` – G/D `xx0433` – D `xx0232`.",
-      "repertoire": "*Bénis Dieu (10000 raisons)* (refrain : « Je louerai Ton saint Nom », G/D – D)\r\n· *Je fléchis le genou* (refrain, en G : C/G – G) · *Bénis l'Éternel*\r\n(refrain, en E : A/E – E « Bénis l'Éternel, ô mon âme ») · 主我献上生命给你\r\n(结尾, en F : Bb/F – F) · 你是配的 (副歌 1, en F : Bb/F – F).",
-      "regle": "Portée : dernière occurrence, toute fin du chant · motif `5 → 1`\r\nfinal · remplacement `5 → 1 – 4/1 – 1` · sûreté : **sûre**.",
+      "repertoire": "*Bénis Dieu (10000 raisons)* (refrain : « Je louerai Ton saint Nom », G/D – D)\n· *Je fléchis le genou* (refrain, en G : C/G – G) · *Bénis l'Éternel*\n(refrain, en E : A/E – E « Bénis l'Éternel, ô mon âme ») · 主我献上生命给你\n(结尾, en F : Bb/F – F) · 你是配的 (副歌 1, en F : Bb/F – F).",
+      "regle": "Portée : dernière occurrence, toute fin du chant · motif `5 → 1`\nfinal · remplacement `5 → 1 – 4/1 – 1` · sûreté : **sûre**.",
       "exemples": []
     },
     {
@@ -2573,15 +2574,15 @@
         "piano": "facile",
         "guitare": "intermediaire"
       },
-      "avantApres": "`… A → D | refrain en D` devient `… A → B7 | refrain en\r\nE` · le dernier refrain monte d'un ton.",
-      "pourquoi": "B7 est le « 5 » de E : il annonce E exactement comme A\r\nannonçait D. L'oreille accepte le changement parce qu'on l'a préparé.",
+      "avantApres": "`… A → D | refrain en D` devient `… A → B7 | refrain en\nE` · le dernier refrain monte d'un ton.",
+      "pourquoi": "B7 est le « 5 » de E : il annonce E exactement comme A\nannonçait D. L'oreille accepte le changement parce qu'on l'a préparé.",
       "eviter": [
         "Quand le refrain est déjà haut pour les voix.",
         "Sur un chant intime : la modulation fait « monter » l'émotion, pas la recueillir."
       ],
-      "piano": "B7 : main gauche B, main droite A-D#-F#. Puis tout le refrain un\r\nton plus haut.",
-      "guitare": "B7 `x21202`, puis le refrain en E (`022100`) ; ou mettre\r\nle capo 2 pendant l'interlude et garder les formes de D.",
-      "regle": "« Appliquer à la setlist » : 升调 **+1 ton** sur le dernier refrain,\r\n`B7` (5 de la nouvelle tonalité) ajouté à la fin de la section précédente.",
+      "piano": "B7 : main gauche B, main droite A-D#-F#. Puis tout le refrain un\nton plus haut.",
+      "guitare": "B7 `x21202`, puis le refrain en E (`022100`) ; ou mettre\nle capo 2 pendant l'interlude et garder les formes de D.",
+      "regle": "« Appliquer à la setlist » : 升调 **+1 ton** sur le dernier refrain,\n`B7` (5 de la nouvelle tonalité) ajouté à la fin de la section précédente.",
       "exemples": []
     },
     {
@@ -2602,15 +2603,15 @@
         "piano": "intermediaire",
         "guitare": "intermediaire"
       },
-      "avantApres": "`… A → D | refrain en D` devient `… A → Bb7 | refrain en\r\nEb` · le dernier refrain monte d'un demi-ton.",
-      "pourquoi": "Même principe que D1, avec Bb7, le 5 de Eb. Le\r\ndemi-ton est plus facile pour les voix qu'un ton entier.",
+      "avantApres": "`… A → D | refrain en D` devient `… A → Bb7 | refrain en\nEb` · le dernier refrain monte d'un demi-ton.",
+      "pourquoi": "Même principe que D1, avec Bb7, le 5 de Eb. Le\ndemi-ton est plus facile pour les voix qu'un ton entier.",
       "eviter": [
         "Plus d'une fois par chant : l'effet est connu, il peut sonner facile.",
         "Pour les guitaristes sans capo : Eb est inconfortable."
       ],
       "piano": "Bb7 : main gauche Bb, main droite Ab-D-F.",
       "guitare": "Bb7 `x13131`, puis capo 1 et les formes de D.",
-      "regle": "« Appliquer à la setlist » : 升调 **+½ ton** sur le dernier refrain,\r\n`Bb7` ajouté à la fin de la section précédente.",
+      "regle": "« Appliquer à la setlist » : 升调 **+½ ton** sur le dernier refrain,\n`Bb7` ajouté à la fin de la section précédente.",
       "exemples": []
     },
     {
@@ -2632,14 +2633,14 @@
         "piano": "facile",
         "guitare": "facile"
       },
-      "avantApres": "`… A → D | refrain en D` devient `… C – D | refrain en\r\nE`.",
-      "pourquoi": "Dans la nouvelle tonalité (E), C et D sont le b6 et le\r\nb7 : c'est la montée épique de E2, qui arrive sur le nouveau 1. Et D, l'ancien\r\n1, sert de marche : l'oreille ne se perd jamais.",
+      "avantApres": "`… A → D | refrain en D` devient `… C – D | refrain en\nE`.",
+      "pourquoi": "Dans la nouvelle tonalité (E), C et D sont le b6 et le\nb7 : c'est la montée épique de E2, qui arrive sur le nouveau 1. Et D, l'ancien\n1, sert de marche : l'oreille ne se perd jamais.",
       "eviter": [
         "Quand la mélodie reprend tout de suite sur un temps faible, avant le premier accord du refrain : placer C – D dans un moment instrumental."
       ],
-      "piano": "Main gauche : C – D – E, en octaves. Main droite : C-E-G, D-F#-A,\r\nE-G#-B.",
+      "piano": "Main gauche : C – D – E, en octaves. Main droite : C-E-G, D-F#-A,\nE-G#-B.",
       "guitare": "C `x32010` – D `xx0232` – E `022100`.",
-      "regle": "« Appliquer à la setlist » : 升调 **+1 ton** sur le dernier refrain,\r\n`b6 – b7` de la nouvelle tonalité (C – D) à la fin de la section précédente.",
+      "regle": "« Appliquer à la setlist » : 升调 **+1 ton** sur le dernier refrain,\n`b6 – b7` de la nouvelle tonalité (C – D) à la fin de la section précédente.",
       "exemples": []
     },
     {
@@ -2662,13 +2663,13 @@
         "guitare": "intermediaire"
       },
       "avantApres": "`… A → D | refrain en D` devient `… A/B | refrain en E`.",
-      "pourquoi": "A/B est le « 4 sur 5 » de E (voir S6) : la montée est\r\ndouce, lumineuse, sans le côté très annoncé de B7.",
+      "pourquoi": "A/B est le « 4 sur 5 » de E (voir S6) : la montée est\ndouce, lumineuse, sans le côté très annoncé de B7.",
       "eviter": [
         "Quand on veut une modulation franche et puissante : prendre D1 ou D3."
       ],
       "piano": "Main gauche : B. Main droite : A-C#-E.",
       "guitare": "A/B `x22220`.",
-      "regle": "« Appliquer à la setlist » : 升调 **+1 ton** sur le dernier refrain,\r\n`A/B` (4/5 de la nouvelle tonalité) à la fin de la section précédente.",
+      "regle": "« Appliquer à la setlist » : 升调 **+1 ton** sur le dernier refrain,\n`A/B` (4/5 de la nouvelle tonalité) à la fin de la section précédente.",
       "exemples": []
     },
     {
@@ -2691,14 +2692,14 @@
         "guitare": "facile"
       },
       "niveauNote": "à préparer avec l'équipe",
-      "avantApres": "`… A → D | refrain en D` devient `… A → (break) |\r\nrefrain en E`, sans accord de préparation.",
-      "pourquoi": "Le silence d'un break (M5) efface la tonalité\r\nprécédente : le refrain repart un ton plus haut comme un nouveau départ.",
+      "avantApres": "`… A → D | refrain en D` devient `… A → (break) |\nrefrain en E`, sans accord de préparation.",
+      "pourquoi": "Le silence d'un break (M5) efface la tonalité\nprécédente : le refrain repart un ton plus haut comme un nouveau départ.",
       "eviter": [
         "Sans répétition : les chanteurs doivent trouver leur première note seuls."
       ],
-      "piano": "Pendant le break, rien. Au départ du refrain, joue la première\r\nnote de la mélodie en haut de la main droite : elle donne le ton aux voix.",
+      "piano": "Pendant le break, rien. Au départ du refrain, joue la première\nnote de la mélodie en haut de la main droite : elle donne le ton aux voix.",
       "guitare": "Capo 2 posé avant le chant, ou formes de E prêtes.",
-      "regle": "« Appliquer à la setlist » : 升调 **+1 ton** sur le dernier refrain,\r\nsans accord ajouté.",
+      "regle": "« Appliquer à la setlist » : 升调 **+1 ton** sur le dernier refrain,\nsans accord ajouté.",
       "exemples": []
     },
     {
@@ -2719,14 +2720,14 @@
         "piano": "facile",
         "guitare": "facile"
       },
-      "avantApres": "fin sur `D`, silence, intro du chant suivant devient fin\r\nsur `D`, **boucle `D – G/D`** (F3) pendant la transition, puis le chant\r\nsuivant démarre.",
-      "pourquoi": "La tonalité ne change pas : il suffit de ne pas\r\ns'arrêter. La boucle laisse le temps à la présidence de parler ou de prier,\r\net le chant suivant sort de la même couleur.",
+      "avantApres": "fin sur `D`, silence, intro du chant suivant devient fin\nsur `D`, **boucle `D – G/D`** (F3) pendant la transition, puis le chant\nsuivant démarre.",
+      "pourquoi": "La tonalité ne change pas : il suffit de ne pas\ns'arrêter. La boucle laisse le temps à la présidence de parler ou de prier,\net le chant suivant sort de la même couleur.",
       "eviter": [
         "Quand les deux chants ont des caractères opposés (célébration puis recueillement) : un vrai silence peut être juste."
       ],
-      "piano": "Baisse le volume pendant la boucle. Le chant suivant repart\r\nquand la présidence fait signe.",
+      "piano": "Baisse le volume pendant la boucle. Le chant suivant repart\nquand la présidence fait signe.",
       "guitare": "D `xx0232` ↔ G/D `xx0433`, en arpèges.",
-      "regle": "Calculée dans la setlist : proposée quand le chant suivant est dans\r\nla même tonalité.",
+      "regle": "Calculée dans la setlist : proposée quand le chant suivant est dans\nla même tonalité.",
       "exemples": []
     },
     {
@@ -2747,14 +2748,14 @@
         "piano": "facile",
         "guitare": "facile"
       },
-      "avantApres": "chant en D, puis chant en G : finir sur `D` (ou `D7`),\r\net le chant en G arrive tout seul.",
-      "pourquoi": "D est le « 5 » de G : un chant qui finit sur D\r\n**annonce** déjà G. D7 renforce l'appel (voir P2).",
+      "avantApres": "chant en D, puis chant en G : finir sur `D` (ou `D7`),\net le chant en G arrive tout seul.",
+      "pourquoi": "D est le « 5 » de G : un chant qui finit sur D\n**annonce** déjà G. D7 renforce l'appel (voir P2).",
       "eviter": [
         "Presque jamais : c'est la transition la plus naturelle."
       ],
       "piano": "Dernier accord : D7 (main droite C-F#-A), puis G.",
       "guitare": "D7 `xx0212`, puis G `320033`.",
-      "regle": "Calculée dans la setlist : proposée quand le chant suivant est une\r\nquarte plus haut (D → G).",
+      "regle": "Calculée dans la setlist : proposée quand le chant suivant est une\nquarte plus haut (D → G).",
       "exemples": []
     },
     {
@@ -2775,14 +2776,14 @@
         "piano": "facile",
         "guitare": "facile"
       },
-      "avantApres": "chant en D, puis chant en A : `D → E (ou Esus4 – E) →\r\nA`.",
-      "pourquoi": "D est le « 4 » de A. Il suffit d'ajouter E, le « 5 »\r\nde A : D – E – A est un enchaînement que tout le monde connaît.",
+      "avantApres": "chant en D, puis chant en A : `D → E (ou Esus4 – E) →\nA`.",
+      "pourquoi": "D est le « 4 » de A. Il suffit d'ajouter E, le « 5 »\nde A : D – E – A est un enchaînement que tout le monde connaît.",
       "eviter": [
         "Quand le chant suivant commence sur un autre accord que A : finir la transition sur E et laisser le chant démarrer."
       ],
       "piano": "Main gauche : D – E – A. Main droite : D-F#-A, E-G#-B, E-A-C#.",
       "guitare": "D `xx0232` – Esus4 `022200` – E `022100` – A `x02220`.",
-      "regle": "Calculée dans la setlist : proposée quand le chant suivant est une\r\nquinte plus haut (D → A).",
+      "regle": "Calculée dans la setlist : proposée quand le chant suivant est une\nquinte plus haut (D → A).",
       "exemples": []
     },
     {
@@ -2804,14 +2805,14 @@
         "piano": "facile",
         "guitare": "intermediaire"
       },
-      "avantApres": "chant en D, puis chant en E : `D → B7 → E` (ou\r\n`D → A/B → E`, plus doux).",
-      "pourquoi": "Comme D1 : B7 est le « 5 » de E. Entre deux chants,\r\ncette montée donne de l'élan au second.",
+      "avantApres": "chant en D, puis chant en E : `D → B7 → E` (ou\n`D → A/B → E`, plus doux).",
+      "pourquoi": "Comme D1 : B7 est le « 5 » de E. Entre deux chants,\ncette montée donne de l'élan au second.",
       "eviter": [
         "Si le second chant est plus calme que le premier : prendre `A/B` (D4), ou un vrai silence."
       ],
       "piano": "B7 : main gauche B, main droite A-D#-F#.",
       "guitare": "B7 `x21202` ou A/B `x22220`, puis E `022100`.",
-      "regle": "Calculée dans la setlist : proposée quand le chant suivant est un\r\nton plus haut (D → E).",
+      "regle": "Calculée dans la setlist : proposée quand le chant suivant est un\nton plus haut (D → E).",
       "exemples": []
     },
     {
@@ -2833,13 +2834,13 @@
         "guitare": "intermediaire"
       },
       "avantApres": "chant en D, puis chant en C : `D → Dm7 – G7 → C`.",
-      "pourquoi": "La basse reste sur D, mais l'accord devient mineur :\r\nDm7 est **déjà le 2m7 de C**. Puis G7 (5 de C) et C. On descend d'un ton en\r\ndouceur, sans que personne ne sente la marche.",
+      "pourquoi": "La basse reste sur D, mais l'accord devient mineur :\nDm7 est **déjà le 2m7 de C**. Puis G7 (5 de C) et C. On descend d'un ton en\ndouceur, sans que personne ne sente la marche.",
       "eviter": [
         "Sur une transition courte : il faut au moins deux mesures."
       ],
-      "piano": "Main gauche : D – G – C. Main droite : C-F-A (Dm7), B-D-F (G7),\r\nC-E-G.",
+      "piano": "Main gauche : D – G – C. Main droite : C-F-A (Dm7), B-D-F (G7),\nC-E-G.",
       "guitare": "Dm7 `xx0211` – G7 `320001` – C `x32010`.",
-      "regle": "Calculée dans la setlist : proposée quand le chant suivant est un\r\nton plus bas (D → C).",
+      "regle": "Calculée dans la setlist : proposée quand le chant suivant est un\nton plus bas (D → C).",
       "exemples": []
     },
     {
@@ -2860,14 +2861,14 @@
         "piano": "avance",
         "guitare": "avance"
       },
-      "avantApres": "chant en D, puis chant en Bb : fin sur `D`, **une seule\r\nnote tenue** (D), puis `F7 → Bb`.",
-      "pourquoi": "Entre deux tonalités éloignées, on cherche une note\r\nprésente dans les deux : ici D, fondamentale de D et tierce de Bb. Tenue seule,\r\nelle fait le pont. Puis le « 5 » de la nouvelle tonalité (F7) installe Bb.",
+      "avantApres": "chant en D, puis chant en Bb : fin sur `D`, **une seule\nnote tenue** (D), puis `F7 → Bb`.",
+      "pourquoi": "Entre deux tonalités éloignées, on cherche une note\nprésente dans les deux : ici D, fondamentale de D et tierce de Bb. Tenue seule,\nelle fait le pont. Puis le « 5 » de la nouvelle tonalité (F7) installe Bb.",
       "eviter": [
         "Quand aucune note commune ne sonne bien : un silence net vaut mieux qu'une transition hésitante."
       ],
-      "piano": "Laisse D seul en haut de la main droite, puis pose F7 (main\r\ngauche F, main droite Eb-A-C), puis Bb.",
-      "guitare": "Laisse sonner la corde de ré à vide, puis F7 `131211`, puis\r\nBb `x13331`.",
-      "regle": "Calculée dans la setlist : proposée quand aucune des fiches T1 à T5\r\nne correspond ; le site cherche la note commune et le 5 de la nouvelle\r\ntonalité.",
+      "piano": "Laisse D seul en haut de la main droite, puis pose F7 (main\ngauche F, main droite Eb-A-C), puis Bb.",
+      "guitare": "Laisse sonner la corde de ré à vide, puis F7 `131211`, puis\nBb `x13331`.",
+      "regle": "Calculée dans la setlist : proposée quand aucune des fiches T1 à T5\nne correspond ; le site cherche la note commune et le 5 de la nouvelle\ntonalité.",
       "exemples": []
     },
     {
@@ -2889,13 +2890,13 @@
       "niveau": {
         "piano": "facile"
       },
-      "avantApres": "main gauche D-F#-A serrée dans le grave, main droite D-F#-A\r\ndevient main gauche **D-A-D** (quinte et octave), main droite **F#-A-D** au\r\nmilieu du clavier.",
-      "pourquoi": "Dans le grave, la tierce (F#) sonne « boueuse » : les\r\nnotes proches se mélangent. Quinte et octave donnent un socle large et clair ;\r\nla main droite porte la couleur (la tierce) là où elle s'entend bien. Le même\r\naccord sonne deux fois plus grand.",
+      "avantApres": "main gauche D-F#-A serrée dans le grave, main droite D-F#-A\ndevient main gauche **D-A-D** (quinte et octave), main droite **F#-A-D** au\nmilieu du clavier.",
+      "pourquoi": "Dans le grave, la tierce (F#) sonne « boueuse » : les\nnotes proches se mélangent. Quinte et octave donnent un socle large et clair ;\nla main droite porte la couleur (la tierce) là où elle s'entend bien. Le même\naccord sonne deux fois plus grand.",
       "eviter": [
         "Sur un couplet intime : une seule note grave à la main gauche suffit. Garder la quinte-octave pour le refrain, c'est aussi créer une montée.",
         "Si un bassiste joue : lui laisser le grave, rester au-dessus."
       ],
-      "piano": "Couplet : main gauche D seule, main droite F#-A-D. Refrain : main\r\ngauche D-A-D, main droite F#-A-D une octave plus haut.",
+      "piano": "Couplet : main gauche D seule, main droite F#-A-D. Refrain : main\ngauche D-A-D, main droite F#-A-D une octave plus haut.",
       "regle": "Aucune : catalogue seul.",
       "exemples": []
     },
@@ -2918,12 +2919,12 @@
       "niveau": {
         "piano": "facile"
       },
-      "avantApres": "`D – A – Bm – G` joués tous en position fondamentale (la\r\nmain droite saute) devient, à la main droite :\r\n`F#-A-D → E-A-C# → F#-B-D → G-B-D`.",
-      "pourquoi": "Chaque accord garde les notes qu'il partage avec le\r\nprécédent, et les autres bougent **d'un ton au plus**. Le son devient lié,\r\ncomme un chœur qui chante les accords, et la voix des chanteurs ressort au\r\nlieu d'être couverte par des sauts.",
+      "avantApres": "`D – A – Bm – G` joués tous en position fondamentale (la\nmain droite saute) devient, à la main droite :\n`F#-A-D → E-A-C# → F#-B-D → G-B-D`.",
+      "pourquoi": "Chaque accord garde les notes qu'il partage avec le\nprécédent, et les autres bougent **d'un ton au plus**. Le son devient lié,\ncomme un chœur qui chante les accords, et la voix des chanteurs ressort au\nlieu d'être couverte par des sauts.",
       "eviter": [
         "Quand la main droite descend trop bas à force de glisser : remonter d'une octave au début d'une nouvelle section."
       ],
-      "piano": "Choisis la position du premier accord en fonction de la\r\nmélodie (reste sous la voix), puis ne bouge que les doigts nécessaires.",
+      "piano": "Choisis la position du premier accord en fonction de la\nmélodie (reste sous la voix), puis ne bouge que les doigts nécessaires.",
       "regle": "Aucune : catalogue seul.",
       "exemples": []
     },
@@ -2946,12 +2947,12 @@
       "niveau": {
         "piano": "intermediaire"
       },
-      "avantApres": "`Em7 – A7` joués avec toutes les notes devient main\r\ngauche **E**, main droite **G-D** ; puis main gauche **A**, main droite\r\n**G-C#**.",
-      "pourquoi": "Dans un accord de septième, la **tierce** dit majeur\r\nou mineur, la **septième** dit la couleur. La quinte n'apporte presque rien et\r\nencombre. Avec 3 et 7 seulement, l'accord est riche mais léger. Et d'un accord\r\nà l'autre, ces notes bougent à peine (D → C#, G reste).",
+      "avantApres": "`Em7 – A7` joués avec toutes les notes devient main\ngauche **E**, main droite **G-D** ; puis main gauche **A**, main droite\n**G-C#**.",
+      "pourquoi": "Dans un accord de septième, la **tierce** dit majeur\nou mineur, la **septième** dit la couleur. La quinte n'apporte presque rien et\nencombre. Avec 3 et 7 seulement, l'accord est riche mais léger. Et d'un accord\nà l'autre, ces notes bougent à peine (D → C#, G reste).",
       "eviter": [
         "Sur des accords sans septième (D, G) : garder la tierce et la quinte."
       ],
-      "piano": "Ajoute la neuvième si tu veux plus de couleur : F# sur Em7\r\n(G-D-F#), B sur A7 (G-B-C#).",
+      "piano": "Ajoute la neuvième si tu veux plus de couleur : F# sur Em7\n(G-D-F#), B sur A7 (G-B-C#).",
       "regle": "Aucune : catalogue seul.",
       "exemples": []
     },
@@ -2975,12 +2976,12 @@
       "niveau": {
         "guitare": "facile"
       },
-      "avantApres": "les formes barrées ou « de base » deviennent des formes\r\nouvertes qui laissent sonner les cordes à vide. En D : D `xx0232`, Dsus2\r\n`xx0230`, G `320033`, Em7 `022033`, Asus4 `x02230`, Bm7 `x20202`.",
-      "pourquoi": "Les cordes à vide résonnent plus longtemps que les\r\ncordes appuyées : le son est ample, brillant, et des notes communes continuent\r\nde sonner d'un accord à l'autre, surtout sur les cordes aiguës. G `320033` et\r\nEm7 `022033` gardent même deux doigts fixes en 3e case.",
+      "avantApres": "les formes barrées ou « de base » deviennent des formes\nouvertes qui laissent sonner les cordes à vide. En D : D `xx0232`, Dsus2\n`xx0230`, G `320033`, Em7 `022033`, Asus4 `x02230`, Bm7 `x20202`.",
+      "pourquoi": "Les cordes à vide résonnent plus longtemps que les\ncordes appuyées : le son est ample, brillant, et des notes communes continuent\nde sonner d'un accord à l'autre, surtout sur les cordes aiguës. G `320033` et\nEm7 `022033` gardent même deux doigts fixes en 3e case.",
       "eviter": [
         "Dans une tonalité où les cordes à vide ne sont pas dans la gamme (Eb, Ab) : mettre un capo (V6)."
       ],
-      "guitare": "Enchaîne G `320033` – Em7 `022033` – Asus4 `x02230` – D\r\n`xx0232` en gardant les doigts qui ne bougent pas.",
+      "guitare": "Enchaîne G `320033` – Em7 `022033` – Asus4 `x02230` – D\n`xx0232` en gardant les doigts qui ne bougent pas.",
       "regle": "Aucune : catalogue seul.",
       "exemples": []
     },
@@ -3003,12 +3004,12 @@
       "niveau": {
         "guitare": "intermediaire"
       },
-      "avantApres": "les accords sur six cordes deviennent **trois notes sur\r\nles cordes aiguës** (sol, si, mi) : D `xxx775`, G `xxx433`, A `xxx655`, Bm\r\n`xxx432`.",
-      "pourquoi": "Le piano occupe déjà le grave et le médium. En\r\njouant seulement dans l'aigu, la guitare brille au-dessus au lieu de doubler\r\nle piano : on entend mieux les deux.",
+      "avantApres": "les accords sur six cordes deviennent **trois notes sur\nles cordes aiguës** (sol, si, mi) : D `xxx775`, G `xxx433`, A `xxx655`, Bm\n`xxx432`.",
+      "pourquoi": "Le piano occupe déjà le grave et le médium. En\njouant seulement dans l'aigu, la guitare brille au-dessus au lieu de doubler\nle piano : on entend mieux les deux.",
       "eviter": [
         "Quand la guitare est seule : il lui faut alors le grave."
       ],
-      "guitare": "Rythmique légère ou arpèges ; les petites formes permettent\r\nde glisser d'un accord à l'autre le long du manche.",
+      "guitare": "Rythmique légère ou arpèges ; les petites formes permettent\nde glisser d'un accord à l'autre le long du manche.",
       "regle": "Aucune : catalogue seul.",
       "exemples": []
     },
@@ -3032,12 +3033,12 @@
       "niveau": {
         "guitare": "facile"
       },
-      "avantApres": "chant en D joué en formes de D sans capo devient, **dans\r\nla même tonalité** : capo 2 et formes de C, capo 5 et formes de A, ou capo 7\r\net formes de G.",
-      "pourquoi": "Les formes ouvertes ne sonnent pas pareil : formes de\r\nC plus rondes, formes de G plus brillantes, et capo haut plus cristallin. Même\r\ntonalité, autre timbre. Avec deux guitares, l'une sans capo et l'autre capo 7,\r\nle son s'élargit.",
+      "avantApres": "chant en D joué en formes de D sans capo devient, **dans\nla même tonalité** : capo 2 et formes de C, capo 5 et formes de A, ou capo 7\net formes de G.",
+      "pourquoi": "Les formes ouvertes ne sonnent pas pareil : formes de\nC plus rondes, formes de G plus brillantes, et capo haut plus cristallin. Même\ntonalité, autre timbre. Avec deux guitares, l'une sans capo et l'autre capo 7,\nle son s'élargit.",
       "eviter": [
         "Capo très haut (7 et plus) sur un chant qui a besoin de grave."
       ],
-      "guitare": "Dans l'app, le réglage capo transforme les accords et les\r\ndiagrammes en formes : choisis le capo, lis les formes.",
+      "guitare": "Dans l'app, le réglage capo transforme les accords et les\ndiagrammes en formes : choisis le capo, lis les formes.",
       "regle": "Aucune : catalogue seul.",
       "exemples": []
     },
@@ -3061,8 +3062,8 @@
         "piano": "facile",
         "guitare": "facile"
       },
-      "avantApres": "`| D | G | D | A |` devient `| D | D | D | A |` (on\r\ntient D là où la grille passait par G).",
-      "pourquoi": "Moins de changements, plus d'espace : le texte et la\r\nvoix passent devant. Un premier couplet dépouillé rend aussi le refrain plus\r\ngrand.",
+      "avantApres": "`| D | G | D | A |` devient `| D | D | D | A |` (on\ntient D là où la grille passait par G).",
+      "pourquoi": "Moins de changements, plus d'espace : le texte et la\nvoix passent devant. Un premier couplet dépouillé rend aussi le refrain plus\ngrand.",
       "eviter": [
         "Quand la mélodie tient G là où la grille avait G : sur D, ce G frotte contre F#. Écouter."
       ],
@@ -3090,14 +3091,14 @@
         "piano": "facile",
         "guitare": "facile"
       },
-      "avantApres": "`| D | Bm |` devient `| D  A/C# | Bm |` (D sur les\r\ntemps 1-2, A/C# sur les temps 3-4).",
-      "pourquoi": "Un accord de plus au milieu de la mesure fait\r\navancer la phrase : la basse bouge deux fois plus souvent. C'est souvent une\r\nidée des familles Basses (B1, B3) ou Accords de passage (P2) placée au 3e\r\ntemps.",
+      "avantApres": "`| D | Bm |` devient `| D  A/C# | Bm |` (D sur les\ntemps 1-2, A/C# sur les temps 3-4).",
+      "pourquoi": "Un accord de plus au milieu de la mesure fait\navancer la phrase : la basse bouge deux fois plus souvent. C'est souvent une\nidée des familles Basses (B1, B3) ou Accords de passage (P2) placée au 3e\ntemps.",
       "eviter": [
         "Quand la mélodie tient une note longue qui frotte avec l'accord ajouté.",
         "Sur un couplet intime."
       ],
-      "piano": "Main gauche : D (temps 1), C# (temps 3). Main droite : peu de\r\nmouvement.",
-      "guitare": "Change d'accord pile sur le 3e temps, en gardant la même\r\nrythmique.",
+      "piano": "Main gauche : D (temps 1), C# (temps 3). Main droite : peu de\nmouvement.",
+      "guitare": "Change d'accord pile sur le 3e temps, en gardant la même\nrythmique.",
       "regle": "Aucune : catalogue seul.",
       "exemples": []
     },
@@ -3121,14 +3122,14 @@
         "guitare": "intermediaire"
       },
       "niveauNote": "avec le batteur",
-      "avantApres": "le changement d'accord sur le temps 1 devient un\r\nchangement **une demi-pulsation avant** (sur le « et » du 4e temps).",
-      "pourquoi": "L'accord arrive en avance, comme une poussée :\r\nl'énergie tire vers l'avant. C'est le son de beaucoup de chants de\r\ncélébration.",
+      "avantApres": "le changement d'accord sur le temps 1 devient un\nchangement **une demi-pulsation avant** (sur le « et » du 4e temps).",
+      "pourquoi": "L'accord arrive en avance, comme une poussée :\nl'énergie tire vers l'avant. C'est le son de beaucoup de chants de\ncélébration.",
       "eviter": [
         "Sans le batteur : si la batterie marque le temps 1 et que les accords anticipent, ça sonne décalé. Se mettre d'accord.",
         "Sur un chant lent et posé."
       ],
       "piano": "Plaque l'accord suivant sur le « et » du 4, tiens-le sur le 1.",
-      "guitare": "Le coup vers le haut du « et » du 4 porte déjà l'accord\r\nsuivant.",
+      "guitare": "Le coup vers le haut du « et » du 4 porte déjà l'accord\nsuivant.",
       "regle": "Aucune : catalogue seul.",
       "exemples": []
     },
@@ -3150,12 +3151,12 @@
         "piano": "intermediaire",
         "guitare": "intermediaire"
       },
-      "avantApres": "dernier refrain `| G | A | Bm | D |` devient\r\n`| G  A/G | A  A/C# | Bm  Bm/A | G  A |` : un accord de plus dans chaque\r\nmesure.",
-      "pourquoi": "Les mêmes accords, mais la basse bouge deux fois plus\r\n(M3, B4, B1) : le dernier refrain gagne en intensité sans changer de mélodie.\r\nL'inverse marche aussi : un refrain calme avec **moitié moins** d'accords\r\n(R1).",
+      "avantApres": "dernier refrain `| G | A | Bm | D |` devient\n`| G  A/G | A  A/C# | Bm  Bm/A | G  A |` : un accord de plus dans chaque\nmesure.",
+      "pourquoi": "Les mêmes accords, mais la basse bouge deux fois plus\n(M3, B4, B1) : le dernier refrain gagne en intensité sans changer de mélodie.\nL'inverse marche aussi : un refrain calme avec **moitié moins** d'accords\n(R1).",
       "eviter": [
         "Quand les accords ajoutés frottent avec la mélodie : les essayer un par un."
       ],
-      "piano": "Main gauche : la ligne de basse G – G – A – C# – B – A – G – A.\r\nMain droite : peu de mouvement.",
+      "piano": "Main gauche : la ligne de basse G – G – A – C# – B – A – G – A.\nMain droite : peu de mouvement.",
       "guitare": "Garder la même rythmique, changer d'accord à chaque demi-mesure.",
       "regle": "Aucune : catalogue seul.",
       "exemples": []
@@ -3180,13 +3181,13 @@
         "piano": "facile",
         "guitare": "intermediaire"
       },
-      "pourquoi": "La basse descend (D, C#, B, G, voir B1), et G revient\r\nà D sans effort : la boucle n'a ni début ni fin. Très douce, elle laisse toute\r\nla place à la prière.",
+      "pourquoi": "La basse descend (D, C#, B, G, voir B1), et G revient\nà D sans effort : la boucle n'a ni début ni fin. Très douce, elle laisse toute\nla place à la prière.",
       "eviter": [
         "Quand la présidence chante une mélodie improvisée qui insiste sur une note qui frotte avec A/C# (D) : jouer D/C# à la place."
       ],
-      "piano": "Main gauche : D – C# – B – G, notes longues. Main droite :\r\naccords en nappe, très doux.",
-      "guitare": "D `xx0232` – A/C# `x42220` – Bm7 `x20202` – G `320033`, en\r\narpèges.",
-      "repertoire": "*Bénis Dieu (10000\r\nraisons)* (refrain : D – A/C# – Bm – G) · *Entends mon cœur* (refrain : D –\r\nA/C# – Bm – G2) · *Dieu a tant aimé* (couplet, en G : G – D/F# – Em – C « Je\r\nregarde à la croix ») · *Combien Dieu est grand* (refrain, en G : G – D/F# –\r\nEm7 – C2) · 住在你里面 (主歌 : D – A/C# – Bm – G) · 从这代到那代 (副歌, en E :\r\nE – B/D# – C#m – A).",
+      "piano": "Main gauche : D – C# – B – G, notes longues. Main droite :\naccords en nappe, très doux.",
+      "guitare": "D `xx0232` – A/C# `x42220` – Bm7 `x20202` – G `320033`, en\narpèges.",
+      "repertoire": "*Bénis Dieu (10000\nraisons)* (refrain : D – A/C# – Bm – G) · *Entends mon cœur* (refrain : D –\nA/C# – Bm – G2) · *Dieu a tant aimé* (couplet, en G : G – D/F# – Em – C « Je\nregarde à la croix ») · *Combien Dieu est grand* (refrain, en G : G – D/F# –\nEm7 – C2) · 住在你里面 (主歌 : D – A/C# – Bm – G) · 从这代到那代 (副歌, en E :\nE – B/D# – C#m – A).",
       "regle": "Aucune : catalogue seul.",
       "exemples": []
     },
@@ -3210,7 +3211,7 @@
         "piano": "facile",
         "guitare": "facile"
       },
-      "pourquoi": "La basse ne bouge pas (D) et les deux accords sont\r\ntrès proches : ça respire sans jamais avancer. Le maj7 ajoute de la douceur.\r\nC'est la boucle la plus contemplative.",
+      "pourquoi": "La basse ne bouge pas (D) et les deux accords sont\ntrès proches : ça respire sans jamais avancer. Le maj7 ajoute de la douceur.\nC'est la boucle la plus contemplative.",
       "eviter": [
         "Quand la voix chante D longtemps sur Dmaj7 : jouer D2 à la place (C1)."
       ],
@@ -3239,13 +3240,13 @@
         "piano": "facile",
         "guitare": "intermediaire"
       },
-      "pourquoi": "Elle commence en mineur et finit sur le 5 : une\r\nquestion qui relance toujours, jamais de point final. Plus lumineuse que L1,\r\nelle accompagne bien une louange qui monte.",
+      "pourquoi": "Elle commence en mineur et finit sur le 5 : une\nquestion qui relance toujours, jamais de point final. Plus lumineuse que L1,\nelle accompagne bien une louange qui monte.",
       "eviter": [
         "Sur un temps de recueillement : trop d'élan."
       ],
-      "piano": "Main gauche : B – G – D – A. Main droite : garder les notes\r\ncommunes (V2).",
+      "piano": "Main gauche : B – G – D – A. Main droite : garder les notes\ncommunes (V2).",
       "guitare": "Bm7 `x20202` – G `320033` – D `xx0232` – Asus4 `x02230`.",
-      "repertoire": "*Amour sans fin* (refrain :\r\nBm – G – D – A « Tel que je suis, je viens à Tes pieds ») · *Ta parole*\r\n(refrain, en Bb : Gm – Eb – Bb – F) · *Abba Père* (couplet, en A : F#m – D –\r\nA – E) · *Amour parfait* (refrain, en C : Am7 – F – C – G) · 你坐着为王 (主歌,\r\nen F : Dm – Bb – F – C) · 哦十字架 (桥段, en F : Dm – Bb – F – C).",
+      "repertoire": "*Amour sans fin* (refrain :\nBm – G – D – A « Tel que je suis, je viens à Tes pieds ») · *Ta parole*\n(refrain, en Bb : Gm – Eb – Bb – F) · *Abba Père* (couplet, en A : F#m – D –\nA – E) · *Amour parfait* (refrain, en C : Am7 – F – C – G) · 你坐着为王 (主歌,\nen F : Dm – Bb – F – C) · 哦十字架 (桥段, en F : Dm – Bb – F – C).",
       "regle": "Aucune : catalogue seul.",
       "exemples": []
     },
@@ -3269,13 +3270,13 @@
         "piano": "facile",
         "guitare": "facile"
       },
-      "pourquoi": "La basse monte (G, A, B) et ne se pose jamais sur le\r\n1 : chaque tour relance, l'intensité peut grandir. Idéal quand la prière\r\nmonte, avant de retomber sur D pour reprendre un chant.",
+      "pourquoi": "La basse monte (G, A, B) et ne se pose jamais sur le\n1 : chaque tour relance, l'intensité peut grandir. Idéal quand la prière\nmonte, avant de retomber sur D pour reprendre un chant.",
       "eviter": [
         "Trop longtemps sans nuance : monter puis redescendre en intensité."
       ],
-      "piano": "Main gauche : G – A – B, en octaves quand ça monte. Main droite :\r\naccords proches.",
+      "piano": "Main gauche : G – A – B, en octaves quand ça monte. Main droite :\naccords proches.",
       "guitare": "G `320033` – A `x02220` – Bm7 `x20202`.",
-      "repertoire": "*Amour sans fin*\r\n(pré-refrain : G – A – Bm) · *Abrite-moi* (refrain, en C : F – G – Am « Je les\r\ntraverserai avec Toi ») · *Abba Père* (refrain, en A : D – E – F#m) · 使命\r\n(主歌, en A : D – E – F#m).",
+      "repertoire": "*Amour sans fin*\n(pré-refrain : G – A – Bm) · *Abrite-moi* (refrain, en C : F – G – Am « Je les\ntraverserai avec Toi ») · *Abba Père* (refrain, en A : D – E – F#m) · 使命\n(主歌, en A : D – E – F#m).",
       "regle": "Aucune : catalogue seul.",
       "exemples": []
     },
@@ -3298,13 +3299,13 @@
         "piano": "facile",
         "guitare": "facile"
       },
-      "pourquoi": "Pas de 5, donc aucune tension à résoudre : la musique\r\npeut tourner indéfiniment sans rien demander. On peut parler, prier, lire un\r\ntexte par-dessus.",
+      "pourquoi": "Pas de 5, donc aucune tension à résoudre : la musique\npeut tourner indéfiniment sans rien demander. On peut parler, prier, lire un\ntexte par-dessus.",
       "eviter": [
         "Quand il faut relancer l'énergie : prendre L3 ou L4."
       ],
       "piano": "Main gauche : D ↔ E (ou D tenu). Main droite : F#-A-D ↔ G-B-D.",
       "guitare": "D `xx0232` ↔ Em7 `022033`.",
-      "repertoire": "*Crier à Toi* (couplet, en A : A – Bm7 – A)\r\n· *Solo Christo* (couplet, en C : C – Dm7 – C).",
+      "repertoire": "*Crier à Toi* (couplet, en A : A – Bm7 – A)\n· *Solo Christo* (couplet, en C : C – Dm7 – C).",
       "regle": "Aucune : catalogue seul.",
       "exemples": []
     },
@@ -3327,12 +3328,12 @@
         "piano": "intermediaire",
         "guitare": "intermediaire"
       },
-      "pourquoi": "L'oreille se lasse de ce qui ne bouge jamais, mais elle\r\nest dérangée par ce qui change trop. Une seule chose à la fois : la musique\r\nvit sans prendre la place de la prière.",
+      "pourquoi": "L'oreille se lasse de ce qui ne bouge jamais, mais elle\nest dérangée par ce qui change trop. Une seule chose à la fois : la musique\nvit sans prendre la place de la prière.",
       "eviter": [
         "Sans suivre la présidence : c'est elle qui donne l'intensité. Regarder, écouter, suivre."
       ],
-      "piano": "Garde la même main gauche le plus longtemps possible ; c'est la\r\nmain droite qui fait évoluer.",
-      "guitare": "Passe d'arpèges à une rythmique, ou de formes ouvertes (V4)\r\naux triades aiguës (V5).",
+      "piano": "Garde la même main gauche le plus longtemps possible ; c'est la\nmain droite qui fait évoluer.",
+      "guitare": "Passe d'arpèges à une rythmique, ou de formes ouvertes (V4)\naux triades aiguës (V5).",
       "regle": "Aucune : catalogue seul.",
       "exemples": []
     }

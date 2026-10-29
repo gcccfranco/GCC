@@ -3,6 +3,8 @@ import vm from "node:vm";
 import { expect, test, type Page } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { attendreMiseEnPage, onStage, ouvrirReglages } from "./helpers/louange";
+import { fermerMenus, ouvrirAffichage, ouvrirPartitions as afficherPartitions } from "./helpers/setlist";
+import { attendreEditeur, choisirTonalite, fermerFeuille, reglerElement, volet } from "./helpers/editeurSetlist";
 import { parseChordPro } from "../src/lib/chordpro/parser";
 import { SetlistFullPDF } from "../src/components/pdf/SetlistFullPDF";
 import { JianpuPDFPage, SongPDFPage } from "../src/components/pdf/SongPDF";
@@ -66,13 +68,17 @@ async function scanCharge(page: Page) {
 }
 
 test.describe("page chant", () => {
-  const bouton谱 = (page: Page) => page.getByRole("button", { name: "简谱", exact: true });
+  // Le segment « 简谱 · Paroles » sous l'en-tête (L3-T3) remplace le bouton 谱 de la barre.
+  const bouton谱 = (page: Page) =>
+    page.getByRole("radiogroup", { name: "简谱 · Paroles" }).getByRole("radio", { name: "简谱" });
+  const boutonParoles = (page: Page) =>
+    page.getByRole("radiogroup", { name: "简谱 · Paroles" }).getByRole("radio", { name: "Paroles" });
 
   test("un chant à scan s'ouvre sur son scan, sans action ; un chant FR reste en paroles", async ({ page }) => {
     await page.goto(`/songs/${encodeURIComponent("一生爱你")}`);
     await scanCharge(page);
     await expect(page.locator("[data-copy-line]"), "aucune ligne de paroles").toHaveCount(0);
-    await expect(bouton谱(page)).toHaveAttribute("aria-pressed", "true");
+    await expect(bouton谱(page)).toHaveAttribute("aria-checked", "true");
     expect(await lirePref(page), "rien n'est écrit au chargement").toBeNull();
 
     await page.goto("/songs/abba-pere");
@@ -81,37 +87,44 @@ test.describe("page chant", () => {
     await expect(bouton谱(page)).toHaveCount(0);
   });
 
-  test("le bouton 谱 règle la préférence de l'appareil : paroles, retenues au rechargement, puis scan", async ({ page }) => {
+  test("le segment « 简谱 · Paroles » règle la préférence de l'appareil : paroles, retenues au rechargement, puis scan", async ({ page }) => {
     await page.goto(`/songs/${encodeURIComponent("一生爱你")}`);
     await scanCharge(page);
 
-    await bouton谱(page).click();
+    await boutonParoles(page).click();
     await expect(page.locator("[data-copy-line]").first()).toBeVisible();
     await expect(page.locator("[data-jianpu-page]")).toHaveCount(0);
-    await expect(bouton谱(page)).toHaveAttribute("aria-pressed", "false");
+    await expect(bouton谱(page)).toHaveAttribute("aria-checked", "false");
     expect(await lirePref(page)).toBe("never");
 
     await page.reload();
     await expect(page.locator("[data-copy-line]").first()).toBeVisible();
-    await expect(bouton谱(page)).toHaveAttribute("aria-pressed", "false");
+    await expect(bouton谱(page)).toHaveAttribute("aria-checked", "false");
     await expect(page.locator("[data-jianpu-page]")).toHaveCount(0);
 
     await bouton谱(page).click();
     await scanCharge(page);
-    await expect(bouton谱(page)).toHaveAttribute("aria-pressed", "true");
+    await expect(bouton谱(page)).toHaveAttribute("aria-checked", "true");
     expect(await lirePref(page)).toBe("always");
   });
 
   test("téléphone : en fin de défilement, la fin de la feuille reste au-dessus de la barre d'onglets (K2)", async ({ page }) => {
     test.skip(test.info().project.name !== "telephone", "la barre d'onglets du téléphone");
     await page.goto(`/songs/${encodeURIComponent("为我而来")}`);
-    await scanCharge(page);
+    // La page 2 est chargée en différé (`next/image`) : depuis que l'en-tête du site est
+    // au-dessus du scan (L3-T3), elle est plus loin ; on va jusqu'à elle avant d'attendre.
     await expect(page.locator("[data-jianpu-page]")).toHaveCount(2);
+    await page.locator("[data-jianpu-page]").last().scrollIntoViewIfNeeded();
+    await scanCharge(page);
+    const barre = page.getByRole("navigation", { name: "Navigation principale" });
+    // Depuis A6 (docs/spec-corrections-audit.md, commit a0160b48), la cale K2 n'est posée que si la barre
+    // est rendue (`body:has([data-testid=barre-du-bas])`) ; la barre arrive avec la session : on l'attend
+    // avant d'aller en bas, sinon la page s'allonge après le défilement.
+    await expect(barre).toBeAttached();
     await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
     // Un léger retour vers le haut fait revenir la barre, comme au doigt.
     await page.waitForTimeout(300);
     await page.evaluate(() => window.scrollBy(0, -1));
-    const barre = page.getByRole("navigation", { name: "Navigation principale" });
     await expect(barre).toBeInViewport();
     await page.waitForTimeout(400); // fin de la transition de la barre
     const basDeLaFeuille = await page.locator("[data-jianpu-page]").last().evaluate((el) => el.getBoundingClientRect().bottom);
@@ -151,7 +164,8 @@ const setlist = (items: Record<string, unknown>[]) => ({
   date: "2026-10-11",
   language: "mixed",
   notes: "",
-  ownerId: "uid-owner",
+  // Depuis SC1 (18/10/2026), seul le créateur adapte et modifie une setlist : la musicienne est la créatrice de la sienne.
+  ownerId: "uid-musicien",
   isPrivate: false,
   items,
 });
@@ -169,7 +183,8 @@ async function ouvrirPartitions(page: Page, items: Record<string, unknown>[], pr
     route.fulfill({ status: 200, contentType: "text/csv", body: "" }),
   );
   const db = await signInAs(page, MUSICIEN, { [`setlists/${SETLIST_ID}`]: setlist(items) }, `/setlists/${SETLIST_ID}`);
-  await page.getByRole("button", { name: "Partitions" }).click();
+  // Bascule « Partitions » sur G, partitions toujours à droite en deux volets.
+  await afficherPartitions(page);
   return db;
 }
 
@@ -185,9 +200,11 @@ async function etat(page: Page, position: number): Promise<"scan" | "paroles" | 
 const rendus = (page: Page, positions: number[]) =>
   expect.poll(() => Promise.all(positions.map((n) => etat(page, n))), { timeout: 20_000 });
 
-const menu = async (page: Page) => {
-  await page.getByRole("button", { name: "Plus d'actions" }).click();
-  return page.getByRole("menu");
+/** Le menu des réglages d'affichage : le bouton « Affichage » de la barre sur G, le sous-menu
+ *  « Affichage » du ⋯ de l'en-tête en deux volets (tests/helpers/setlist.ts). */
+const interrupteurMenu = async (page: Page) => {
+  await ouvrirAffichage(page);
+  return page.getByRole("menuitemcheckbox", { name: "Partition 简谱" });
 };
 
 test.describe("setlist, vue Partitions", () => {
@@ -209,18 +226,17 @@ test.describe("setlist, vue Partitions", () => {
   test("menu : « Partition 简谱 » est un interrupteur coché, plus de choix à trois", async ({ page }) => {
     await ouvrirPartitions(page, TROIS);
     await rendus(page, [1]).toEqual(["scan"]);
-    const m = await menu(page);
-    const interrupteur = m.getByRole("menuitemcheckbox", { name: "Partition 简谱" });
+    const interrupteur = await interrupteurMenu(page);
     await expect(interrupteur).toHaveAttribute("aria-checked", "true");
     for (const ancien of ["Choix du responsable", "Toujours", "Jamais"]) {
-      await expect(m.getByRole("menuitemradio", { name: ancien })).toHaveCount(0);
+      await expect(page.getByRole("menuitemradio", { name: ancien })).toHaveCount(0);
     }
-    await expect(m.getByText(/reste en paroles tant que tu n'as pas choisi toi-même/)).toBeVisible();
+    await expect(page.getByText(/reste en paroles tant que tu n'as pas choisi toi-même/)).toBeVisible();
 
     await interrupteur.click();
     await expect(interrupteur).toHaveAttribute("aria-checked", "false");
     expect(await lirePref(page)).toBe("never");
-    await page.keyboard.press("Escape");
+    await fermerMenus(page);
     await rendus(page, [1, 2]).toEqual(["paroles", "paroles"]);
   });
 
@@ -229,11 +245,7 @@ test.describe("setlist, vue Partitions", () => {
       await ouvrirPartitions(page, TROIS, stocke);
       // L'ancien « Choix du responsable » suit encore le « Paroles » de l'item (O2).
       await rendus(page, [1, 3]).toEqual(stocke === "never" ? ["paroles", "paroles"] : stocke === "auto" ? ["scan", "paroles"] : ["scan", "scan"]);
-      const m = await menu(page);
-      await expect(m.getByRole("menuitemcheckbox", { name: "Partition 简谱" })).toHaveAttribute(
-        "aria-checked",
-        String(coche),
-      );
+      await expect(await interrupteurMenu(page)).toHaveAttribute("aria-checked", String(coche));
       expect(await lirePref(page), "rien n'est réécrit au chargement").toBe(stocke);
     });
   }
@@ -266,8 +278,7 @@ test("mode louange : le scan par défaut ; l'interrupteur des Réglages est celu
   }
   await quitter.click();
   await page.evaluate((to) => window.scrollTo(0, to), y);
-  const m = await menu(page);
-  await expect(m.getByRole("menuitemcheckbox", { name: "Partition 简谱" })).toHaveAttribute("aria-checked", "false");
+  await expect(await interrupteurMenu(page)).toHaveAttribute("aria-checked", "false");
 });
 
 test("PDF de setlist : le scan pour l'item sans choix, les paroles pour « Paroles »", () => {
@@ -299,6 +310,7 @@ test("service worker : les scans et leurs manifestes sont gardés pour le hors-l
     match: async () => undefined,
     put: async (req: { url: string }) => { misEnCache.push(req.url); },
     addAll: async () => {},
+    keys: async () => [],
   };
   const origin = "https://louange.example.org";
   vm.runInNewContext(readFileSync("public/sw.js", "utf8"), {
@@ -313,11 +325,15 @@ test("service worker : les scans et leurs manifestes sont gardés pour le hors-l
   });
   const charger = async (chemin: string) => {
     let reponse: Promise<unknown> | undefined;
+    // A3 : les écritures du cache passent par event.waitUntil.
+    const attentes: Promise<unknown>[] = [];
     handlers.fetch({
       request: { method: "GET", url: origin + chemin, mode: "no-cors" },
       respondWith: (p: Promise<unknown>) => { reponse = p; },
+      waitUntil: (p: Promise<unknown>) => { attentes.push(p); },
     });
     await reponse;
+    await Promise.all(attentes);
     await new Promise((r) => setTimeout(r, 0));
   };
   // Forme réelle : images non optimisées, le navigateur demande le nom encodé.
@@ -348,7 +364,7 @@ test("éditeur, données : un item sans choix reste sans clé, « Paroles » res
   expect(allerRetour({ jianpuSheet: true }).jianpuSheet).toBe(true);
 });
 
-test("éditeur : « 谱 简谱 » actif d'office ; le désactiver écrit « Paroles » et l'historique le dit", async ({ page }) => {
+test("éditeur : « Partition 简谱 » coché d'office ; « Paroles » s'écrit false et l'historique le dit", async ({ page }) => {
   await page.route(/docs\.google\.com\/spreadsheets/, (route) =>
     route.fulfill({ status: 200, contentType: "text/csv", body: "" }),
   );
@@ -359,28 +375,35 @@ test("éditeur : « 谱 简谱 » actif d'office ; le désactiver écrit « Paro
     { [doc]: setlist([item({ songSlug: "abba-pere", position: 1 }), item({ songSlug: "一生爱你", position: 2 })]) },
     `/setlists/${SETLIST_ID}/edit`,
   );
-  const dernierEnregistrement = async () => {
-    await expect.poll(() => db.writes.filter((w) => w.path === doc).length).toBeGreaterThan(0);
-    return db.writes.filter((w) => w.path === doc).pop()!.data.items as Record<string, unknown>[];
-  };
-  const bouton = page.getByRole("button", { name: /谱\s*简谱/ });
-  await expect(bouton).toHaveAttribute("aria-pressed", "true");
+  await attendreEditeur(page, "Abba Père");
+  /** Les items du dernier enregistrement de la setlist ([] tant qu'il n'y en a pas). */
+  const dernierEnregistrement = () =>
+    (db.writes.filter((w) => w.path === doc).pop()?.data.items ?? []) as Record<string, unknown>[];
+
+  // Le chant à scan se joue sur son scan : « Partition 简谱 » est coché d'office (éditeur « piste 2 »,
+  // radiogroupe « Jouer sur »).
+  await reglerElement(page, "一生爱你");
+  const choix = volet(page).getByRole("radiogroup", { name: "Jouer sur" });
+  await expect(choix.getByRole("radio", { name: "Partition 简谱" })).toHaveAttribute("aria-checked", "true");
+  await expect(choix.getByRole("radio", { name: "Paroles" })).toHaveAttribute("aria-checked", "false");
 
   // Une retouche ailleurs : l'enregistrement automatique n'écrit pas « Paroles ».
-  await page.getByLabel("Tonalité de Abba Père").selectOption("B");
-  await expect(page.getByText("Enregistré", { exact: true })).toBeVisible({ timeout: 8_000 });
-  let items = await dernierEnregistrement();
-  expect(items.every((i) => !("jianpuSheet" in i)), "aucune clé jianpuSheet écrite").toBe(true);
+  await choisirTonalite(page, "Abba Père", "B");
+  await expect.poll(() => dernierEnregistrement()[0]?.keyOverride, { timeout: 10_000 }).toBe("B");
+  expect(dernierEnregistrement().every((i) => !("jianpuSheet" in i)), "aucune clé jianpuSheet écrite").toBe(true);
 
   const avant = db.writes.length;
-  await bouton.click();
-  await expect(bouton).toHaveAttribute("aria-pressed", "false");
+  await reglerElement(page, "一生爱你");
+  await choix.getByRole("radio", { name: "Paroles" }).click();
+  await expect(choix.getByRole("radio", { name: "Paroles" })).toHaveAttribute("aria-checked", "true");
   await expect.poll(() => db.writes.slice(avant).some((w) => w.path === doc)).toBe(true);
-  items = await dernierEnregistrement();
-  expect(items.find((i) => i.songSlug === "一生爱你")!.jianpuSheet).toBe(false);
-  expect("jianpuSheet" in items.find((i) => i.songSlug === "abba-pere")!).toBe(false);
+  await expect
+    .poll(() => dernierEnregistrement().find((i) => i.songSlug === "一生爱你")?.jianpuSheet, { timeout: 10_000 })
+    .toBe(false);
+  expect("jianpuSheet" in dernierEnregistrement().find((i) => i.songSlug === "abba-pere")!).toBe(false);
 
   await expect(page.getByText("Enregistré", { exact: true })).toBeVisible({ timeout: 8_000 });
+  await fermerFeuille(page);
   await page.getByRole("button", { name: "Terminé" }).click();
   await page.waitForURL((u) => u.pathname.replace(/\/$/, "") === `/setlists/${SETLIST_ID}`);
   await page.getByRole("button", { name: /Modifiée par Léa M\./ }).click();

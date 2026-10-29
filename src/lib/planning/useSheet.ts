@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { copiesServiesSheet } from "./sheets";
 
 export type SheetStatus = "loading" | "fresh" | "stale";
 
@@ -9,7 +10,8 @@ export type SheetStatus = "loading" | "fresh" | "stale";
  * - `loading` : requête en cours (on affiche le fallback compilé) ;
  * - `fresh`   : données en ligne reçues ;
  * - `stale`   : requête échouée ou vide → on reste sur le fallback, qui peut
- *   être périmé. À signaler à l'utilisateur (cf. StaleBanner) pour qu'il ne
+ *   être périmé ; ou lignes reçues dont une lecture a échoué et a été remplacée
+ *   par une copie en mémoire (`copiesServiesSheet` a avancé pendant la lecture). À signaler à l'utilisateur (cf. StaleBanner) pour qu'il ne
  *   lise pas un planning faux sans le savoir.
  *
  * `fetcher` est supposé stable (fonction module-level) ; il n'est appelé
@@ -24,12 +26,13 @@ export function useSheet<T>(fetcher: () => Promise<T[]>, fallback: T[]): {
 
   useEffect(() => {
     let alive = true;
+    const copiesAvant = copiesServiesSheet();
     fetcher()
       .then((d) => {
         if (!alive) return;
         if (d.length) {
           setRows(d);
-          setStatus("fresh");
+          setStatus(copiesServiesSheet() > copiesAvant ? "stale" : "fresh");
         } else {
           setStatus("stale");
         }

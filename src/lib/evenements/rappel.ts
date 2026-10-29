@@ -4,9 +4,10 @@
 
 import type { Evenement } from "@/types/evenement";
 import { isInfo, isPast, modeInscriptions } from "@/lib/evenements/agenda";
-import { poleDuPour } from "@/lib/access";
+import { estReunion } from "@/lib/access";
 import type { NotifLang } from "@/types/user";
 import { formatReminderDate } from "@/lib/push/reminderMessage";
+import { ficheEvenement } from "@/lib/navigation";
 
 export function evenementReminder(e: Pick<Evenement, "titre" | "heure" | "lieu">, lang: NotifLang): { title: string; body: string } {
   if (lang === "zh-CN") {
@@ -39,15 +40,24 @@ export function nouvelEvenementMessage(
   };
 }
 
+/** L'envoi d'un nouvel évènement (route /api/push/notify-evenement) : message, lien et tag. Le
+ *  lien d'une réunion mène à sa fiche de Back-Office › Réunions (retouches v18, lot G, G2). */
+export function pushNouvelEvenement(
+  e: Pick<Evenement, "id" | "pour" | "reunion" | "titre" | "type" | "lieu" | "description" | "date" | "heure">,
+  lang: NotifLang,
+): { title: string; body: string; url: string; tag: string } {
+  return { ...nouvelEvenementMessage(e, lang), url: ficheEvenement(e), tag: `evenement-${e.id}` };
+}
+
 /** Les inscriptions s'ouvrent aujourd'hui : mode automatique, ouverture datée
- *  du jour, évènement à inscriptions (ni info ni réunion de pôle) pas passé.
+ *  du jour, évènement à inscriptions (ni info ni réunion) pas passé.
  *  Un formulaire externe (lot 11) n'ouvre rien : l'app n'inscrit plus personne,
  *  et la date d'ouverture restée dans la fiche n'a plus cours. */
 export function ouvertureDuJour(
-  e: Pick<Evenement, "type" | "date" | "dateFin" | "pour" | "lienExterne" | "inscriptions" | "inscriptionOuverte" | "inscriptionDebut">,
+  e: Pick<Evenement, "type" | "date" | "dateFin" | "pour" | "reunion" | "lienExterne" | "inscriptions" | "inscriptionOuverte" | "inscriptionDebut">,
   today: string,
 ): boolean {
-  return !e.lienExterne && modeInscriptions(e) === "auto" && !isInfo(e) && !poleDuPour(e.pour)
+  return !e.lienExterne && modeInscriptions(e) === "auto" && !isInfo(e) && !estReunion(e)
     && (e.inscriptionDebut ?? "").slice(0, 10) === today && !isPast(e, today);
 }
 

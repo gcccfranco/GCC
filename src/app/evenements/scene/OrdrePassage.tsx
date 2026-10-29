@@ -2,7 +2,8 @@
 
 // Volet « Programme {nom} » : l'ordre de passage du jour J, numéroté, sans
 // horaire ni durée (la brochure, digitalisée). La coordination ajoute,
-// modifie, retire et réordonne (glisser-déposer, comme les setlists).
+// modifie, retire et réordonne (glisser-déposer, comme les setlists). Retirer passe par la
+// confirmation du site (Pâques · Noël, P7 : plus de fenêtre du navigateur dans la scène).
 
 import { useState, type FormEvent } from "react"
 import { useTranslation } from "react-i18next"
@@ -13,9 +14,14 @@ import { GripVertical } from "lucide-react"
 import { useDefaultSensors } from "@/lib/dnd/sensors"
 import { PLANNING_COLORS } from "@/lib/serviceColors"
 import { QUOI, type Passage } from "@/types/programme"
+import { libelleQui } from "@/lib/fetes/qui"
+import { nouvelIdPassage } from "@/lib/fetes/passages"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { useConfirmer } from "@/components/layout/Confirmer"
 import { QuiChecklist } from "./CreneauForm"
+import { PassageBoutons, PassageContenu, type DetailFete } from "./PassageDetail"
+import { styleTexteService } from "@/lib/couleurSombre"
 
 const COLOR = PLANNING_COLORS.scene
 
@@ -60,22 +66,28 @@ function PassageForm({ title, initial, onSubmit, onCancel }: {
   )
 }
 
-function Row({ id, index, passage, canEdit, onEdit, onRemove }: {
-  id: string; index: number; passage: Passage; canEdit: boolean; onEdit: () => void; onRemove: () => void
+function Row({ id, index, passage, canEdit, detail, mien, onEdit, onRemove }: {
+  id: string; index: number; passage: Passage; canEdit: boolean; detail?: DetailFete; mien: boolean; onEdit: () => void; onRemove: () => void
 }) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
+  const langue = i18n.language === "zh-CN" ? "zh" : "fr"
   const { attributes, listeners, setNodeRef, setActivatorNodeRef, transform, transition, isDragging } = useSortable({ id, disabled: !canEdit })
   return (
-    <li ref={setNodeRef} style={{ transform: CSS.Transform.toString(transform), transition }}
-      className={`px-4 py-3 grid grid-cols-[2rem_1fr_auto] gap-3 items-center bg-card ${isDragging ? "shadow-lg relative z-10" : ""}`}>
-      <span className="text-lg font-extrabold tabular-nums text-center" style={{ color: COLOR }}>{index + 1}</span>
+    <li ref={setNodeRef} data-mien={mien ? "oui" : undefined}
+      className={`px-4 py-3 grid grid-cols-[2rem_1fr_auto] gap-x-3 gap-y-2 ${canEdit ? "items-center" : "items-start"} bg-card ${isDragging ? "shadow-lg relative z-10" : ""} ${mien ? "border-l-4 shadow-md relative z-[1]" : ""}`}
+      style={{ transform: CSS.Transform.toString(transform), transition, ...(mien ? { borderLeftColor: COLOR } : {}) }}>
+      <span className="text-lg font-extrabold tabular-nums text-center texte-service" style={styleTexteService(COLOR)}>{index + 1}</span>
       <div className="min-w-0">
         <p className="font-semibold">{passage.titre}</p>
         <div className="flex flex-wrap gap-1 mt-1">
-          <span className="inline-block text-xs px-2 py-0.5 rounded-full font-medium" style={{ background: `${COLOR}18`, color: COLOR }}>{passage.quoi}</span>
-          {passage.qui.map((q) => <span key={q} className="inline-block text-xs px-2 py-0.5 rounded-full bg-secondary">{q}</span>)}
+          <span className="inline-block text-xs px-2 py-0.5 rounded-full font-medium texte-service" style={{ background: `${COLOR}18`, ...styleTexteService(COLOR) }}>{passage.quoi}</span>
+          {passage.qui.map((q) => <span key={q} className="inline-block text-xs px-2 py-0.5 rounded-full bg-secondary">{libelleQui(q, langue)}</span>)}
+          {mien && <span className="inline-block text-xs px-2 py-0.5 rounded-full font-semibold text-white" style={{ background: COLOR }}>{t("planning.fete.leMien")}</span>}
         </div>
+        {detail && <PassageContenu passage={passage} d={detail} />}
+        {detail && !canEdit && <div className="mt-2 md:hidden print:hidden [&>div>*]:w-full"><PassageBoutons passage={passage} d={detail} /></div>}
       </div>
+      {detail && !canEdit && <div className="hidden md:block print:hidden"><PassageBoutons passage={passage} d={detail} /></div>}
       {canEdit && (
         <div className="flex items-center gap-1">
           <Button size="sm" variant="ghost" onClick={onEdit}>{t("planning.programme.edit")}</Button>
@@ -90,13 +102,19 @@ function Row({ id, index, passage, canEdit, onEdit, onRemove }: {
   )
 }
 
-export function OrdrePassage({ passages, canEdit, onSave }: {
+export function OrdrePassage({ passages, canEdit, onSave, detail, seulementMiens }: {
   passages: Passage[]
   canEdit: boolean
-  onSave: (passages: Passage[]) => Promise<void>
+  /** Les chants, musiques et danses de chaque passage, et les boutons de saisie (chants des fêtes, CF6, CF7). */
+  detail?: DetailFete
+  /** « Le mien » (CF8) : seuls les passages à moi, numéros d'origine conservés. */
+  seulementMiens?: boolean
+  /** `false` : rien n'a été écrit (ordre modifié entre-temps, D20) ; le formulaire reste ouvert, la saisie gardée. */
+  onSave: (passages: Passage[]) => Promise<boolean | void>
 }) {
   const { t } = useTranslation()
   const sensors = useDefaultSensors()
+  const confirmer = useConfirmer()
   const [editing, setEditing] = useState<number | "new" | null>(null)
   const ids = passages.map((_, i) => `passage-${i}`)
 
@@ -107,13 +125,20 @@ export function OrdrePassage({ passages, canEdit, onSave }: {
   }
 
   async function submit(p: Passage) {
-    const next = editing === "new" ? [...passages, p] : passages.map((x, i) => (i === editing ? p : x))
-    await onSave(next)
+    // Un passage reçoit son identifiant à sa création (CF1) ; modifier garde l'identifiant et les médias.
+    const next = editing === "new" ? [...passages, { ...p, id: p.id ?? nouvelIdPassage() }] : passages.map((x, i) => (i === editing ? p : x))
+    if ((await onSave(next)) === false) return
     setEditing(null)
   }
 
   async function remove(i: number) {
-    if (!window.confirm(t("planning.programme.confirmRemovePassage"))) return
+    const oui = await confirmer({
+      titre: t("planning.programme.confirmRemovePassage"),
+      texte: passages[i].titre,
+      action: t("planning.programme.remove"),
+      destructif: true,
+    })
+    if (!oui) return
     await onSave(passages.filter((_, j) => j !== i))
   }
 
@@ -140,10 +165,14 @@ export function OrdrePassage({ passages, canEdit, onSave }: {
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
           <SortableContext items={ids} strategy={verticalListSortingStrategy}>
             <ol className="divide-y divide-border" aria-label={t("planning.programme.ordreTitle")}>
-              {passages.map((p, i) => (
-                <Row key={ids[i]} id={ids[i]} index={i} passage={p} canEdit={canEdit}
-                  onEdit={() => setEditing(i)} onRemove={() => remove(i)} />
-              ))}
+              {passages.map((p, i) => {
+                const mien = !!detail?.droits?.find((d) => d.id === p.id)?.mien
+                if (seulementMiens && !mien) return null
+                return (
+                  <Row key={ids[i]} id={ids[i]} index={i} passage={p} canEdit={canEdit} detail={detail} mien={mien}
+                    onEdit={() => setEditing(i)} onRemove={() => remove(i)} />
+                )
+              })}
             </ol>
           </SortableContext>
         </DndContext>

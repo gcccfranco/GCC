@@ -14,6 +14,7 @@ import { normalizeName } from "@/lib/planning/names";
 import { categoryColor, categoryLabel } from "@/lib/serviceColors";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { styleTexteService } from "@/lib/couleurSombre";
 
 export interface ProfileFormValue {
   firstName: string;
@@ -131,7 +132,8 @@ export function ServiceGrid({
   onChange,
   deriveFromPlanning,
 }: SectionProps & { deriveFromPlanning?: DeriveFromPlanning }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const zh = i18n.language === "zh-CN";
   const sr = value.serviceRoles;
   const setSr = (next: Record<string, ServiceRole[]>) => onChange({ ...value, serviceRoles: next });
 
@@ -146,7 +148,7 @@ export function ServiceGrid({
   };
 
   return (
-    <div className="space-y-5">
+    <div className="grille-services space-y-5">
       <div className="flex items-start justify-between gap-3">
         <div>
           <Label className="block">{t("profile.fields.accessTitle")}</Label>
@@ -168,7 +170,8 @@ export function ServiceGrid({
           <p className="text-xs font-medium text-muted-foreground mb-2">
             {t(g.titleKey)}
           </p>
-          <div className="space-y-1.5">
+          {/* Deux colonnes quand la carte en a la place (lot U4 bis, B5 : profil et inscription en grand). */}
+          <div className="grille-services-cartes grid gap-1.5">
             {g.cats.map((cat) => {
               const active = cat in sr;
               const color = categoryColor(cat);
@@ -180,11 +183,11 @@ export function ServiceGrid({
                   <button
                     type="button"
                     onClick={() => toggleCat(cat)}
-                    className="w-full flex items-center justify-between gap-2 px-3 py-2.5 text-left text-sm font-medium"
-                    style={active ? { color } : undefined}
+                    className={`w-full flex items-center justify-between gap-2 px-3 py-2.5 text-left text-sm font-medium${active ? " texte-service" : ""}`}
+                    style={active ? styleTexteService(color) : undefined}
                   >
                     <span className={active ? "" : "text-muted-foreground"}>
-                      {active ? "✓ " : ""}{categoryLabel(cat)}
+                      {active ? "✓ " : ""}{zh ? t(`categories.${cat}`, { defaultValue: cat }) : categoryLabel(cat)}
                     </span>
                   </button>
                   {active && (
@@ -193,7 +196,7 @@ export function ServiceGrid({
                         <CheckPill
                           key={role}
                           checked={(sr[cat] ?? []).includes(role)}
-                          label={SERVICE_ROLE_LABELS[role]}
+                          label={zh ? t(`equipes.role.${role === "chanteur" ? "choriste" : role}`) : SERVICE_ROLE_LABELS[role]}
                           color={color}
                           onToggle={() => toggleRole(cat, role)}
                         />

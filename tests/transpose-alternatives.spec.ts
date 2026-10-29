@@ -11,7 +11,8 @@ async function ouvrir(page: Page, slug: string, tonalite: string) {
   await page.goto(`/songs/${encodeURIComponent(slug)}?key=${encodeURIComponent(JSON.stringify(tonalite))}`, {
     waitUntil: "domcontentloaded",
   });
-  await expect(page.locator("select").first()).toHaveValue(tonalite);
+  // Le sélecteur de la barre du chant : en deux volets, la liste a son choix de thème (lot U5).
+  await expect(page.getByTestId("barre-outils").locator("select").first()).toHaveValue(tonalite);
 }
 
 /** Les accords rendus dans les sections, dans l'ordre du document. */

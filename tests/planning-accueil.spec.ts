@@ -39,8 +39,10 @@ test("dimanche d'Interfranco : la section Groupes laisse la place à Interfranco
   await expect(dimanche.getByText("Jonathan Z.")).toBeVisible();
   await expect(dimanche.getByText("Christelle Z., Daniela W.")).toBeVisible();
   await expect(dimanche.getByText("Lorenzo S.")).toBeVisible();
-  await expect(dimanche.getByText("Groupes", { exact: true })).toHaveCount(0);
+  await expect(dimanche.getByText(/^Groupes\b/)).toHaveCount(0);
   await expect(dimanche.getByText("Paix", { exact: true })).toHaveCount(0);
+  // D14 ne cite que Culte Franco, Groupes, EDD et Table : pas d'heure sur Interfranco.
+  await expect(dimanche.getByTestId("carte-inter").getByRole("heading", { level: 3 })).toHaveText(/^Interfranco$/);
   await expect(dimanche.getByText("Culte Franco", { exact: true }), "le Culte Franco a lieu normalement").toBeVisible();
 });
 
@@ -50,13 +52,14 @@ test("dimanche d'Intergroupe : section Intergroupe avec ses trois choristes", as
   await expect(dimanche.getByText("Intergroupe", { exact: true })).toBeVisible();
   await expect(dimanche.getByText("徐欢乐")).toBeVisible();
   await expect(dimanche.getByText("Paul W., Christelle Z., David C.")).toBeVisible();
-  await expect(dimanche.getByText("Groupes", { exact: true })).toHaveCount(0);
+  await expect(dimanche.getByText(/^Groupes\b/)).toHaveCount(0);
+  await expect(dimanche.getByTestId("carte-inter").getByRole("heading", { level: 3 }), "pas d'heure sur Intergroupe").toHaveText(/^Intergroupe$/);
 });
 
 test("dimanche ordinaire : la section Groupes reste", async ({ page }) => {
   await openPlanning(page, "2026-06-21");
   const dimanche = page.getByRole("region", { name: /Ce dimanche/ });
-  await expect(dimanche.getByText("Groupes", { exact: true })).toBeVisible();
+  await expect(dimanche.getByText("Groupes · 13:00", { exact: true })).toBeVisible();
   await expect(dimanche.getByText("Paix", { exact: true })).toBeVisible();
   await expect(dimanche.getByText("Interfranco", { exact: true })).toHaveCount(0);
   await expect(dimanche.getByText("Intergroupe", { exact: true })).toHaveCount(0);
@@ -66,6 +69,6 @@ test("en 中文 : le service remplaçant porte son nom traduit", async ({ page }
   await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
   await openPlanning(page, "2026-06-14");
   const dimanche = page.getByRole("region", { name: /本主日/ });
-  await expect(dimanche.getByText("法语团契聚会", { exact: true })).toBeVisible();
+  await expect(dimanche.getByText("法语联合聚会", { exact: true })).toBeVisible();
   await expect(dimanche.getByText("团契", { exact: true })).toHaveCount(0);
 });

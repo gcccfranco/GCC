@@ -1,12 +1,14 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { Fragment, useMemo, useState, type CSSProperties } from "react";
 import { Trans, useTranslation } from "react-i18next";
 import Image from "next/image";
 import type { JianpuEntry } from "@/lib/jianpu/images";
-import { cleJouee, jianpuImageUrl, useJianpuChords } from "@/lib/jianpu/images";
+import { cleJouee, jianpuImageUrl, useJianpuCadrage, useJianpuChords } from "@/lib/jianpu/images";
 import { aDesRetouches, cibleRetouche, type CibleRetouche } from "@/lib/jianpu/retouches";
 import { JianpuChordSheet } from "@/components/jianpu/JianpuChordSheet";
+import { AccordTouchable } from "@/components/accords/AccordTouchable";
+import { useOuvrirAccord } from "@/components/accords/AccordsProvider";
 import type { JianpuChords } from "@/types/setList";
 import { altSpellingKey, getTransposedKey, semitonesTo, transposeLabel } from "@/lib/transpose";
 
@@ -110,6 +112,50 @@ function fitFont(
   return Math.max(fontPx * plancher, sp / unit);
 }
 
+/** Marge blanche laissée autour de l'encre quand le scan a été rogné
+ *  (`PAD` de `scripts/jianpu/build-images.py`, en pixels de l'image). La
+ *  fenêtre la fait déborder de la colonne, pour que le bord de l'encre tombe
+ *  sur celui des paroles (piste A, P5). */
+const MARGE_SOURCE = 14;
+
+/** Les messages au-dessus du scan (piste A, P7) : jetons du site, surface
+ *  `--secondary`, texte à l'encre du scan, rayon 12 px. */
+const MESSAGE = "w-full max-w-2xl rounded-[12px] bg-secondary px-3 py-2 text-xs";
+const ENCRE: CSSProperties = { color: "hsl(var(--jianpu-encre))" };
+
+/** Les deux filtres « luminance → alpha » du scan (piste A) : RVB = l'encre, A =
+ *  alpha − luminance (le papier blanc devient transparent, l'encre reste), puis un
+ *  seuil (`slope 2.33`, `intercept −0.28`) qui efface la trame et le gris clair.
+ *  Les deux encres sont codées en dur, comme `--jianpu-encre` dans `globals.css` :
+ *  #1c1c1e en clair, #e4e4e7 en sombre. `globals.css` choisit le filtre selon `.dark`. */
+const ENCRES = [
+  { id: "jianpu-encre-clair", rvb: "0.1098 0.1098 0.1176" },
+  { id: "jianpu-encre-sombre", rvb: "0.8941 0.8941 0.9059" },
+];
+
+function JianpuFiltres() {
+  return (
+    <svg width="0" height="0" className="absolute" aria-hidden focusable="false">
+      <defs>
+        {ENCRES.map(({ id, rvb }) => {
+          const [r, g, b] = rvb.split(" ");
+          return (
+            <filter key={id} id={id} colorInterpolationFilters="sRGB">
+              <feColorMatrix
+                type="matrix"
+                values={`0 0 0 0 ${r}  0 0 0 0 ${g}  0 0 0 0 ${b}  -0.2126 -0.7152 -0.0722 1 0`}
+              />
+              <feComponentTransfer>
+                <feFuncA type="linear" slope="2.33" intercept="-0.28" />
+              </feComponentTransfer>
+            </filter>
+          );
+        })}
+      </defs>
+    </svg>
+  );
+}
+
 type JianpuSheetProps = {
   entry: JianpuEntry;
   title: string;
@@ -153,6 +199,7 @@ export function JianpuSheet({ entry, title, slug, layout = "flow", playedKey: de
   const { t } = useTranslation();
   const fit = layout === "fit";
   const chords = useJianpuChords(slug);
+  const cadrage = useJianpuCadrage(slug);
   const playedKey = cleJouee(demandee, originalKey, chords?.printedKey);
   // Retouches (lot 9) : l'accord retouché remplace le gravé partout où le
   // calque parle de lui, y compris dans l'ordre de peinture.
@@ -212,12 +259,24 @@ export function JianpuSheet({ entry, title, slug, layout = "flow", playedKey: de
   // dessinent, pour ne pas redessiner par-dessus une gravure intacte.
   const retouchesOn = Boolean(chords && aDesRetouches(chordEdits));
   const retouchable = Boolean(chords && onEditChords);
+  // Lecture sous un fournisseur d'accords actif : les accords écrits s'ouvrent au toucher (DA-3).
+  // Jamais en retouche, ni en mode louange (pas de fournisseur actif).
+  const accordsTouchables = useOuvrirAccord().actif && !retouchable;
   const staleChords = Boolean(playedKey && !chords);
   // Calque partiel : une partie des accords n'a pas été relevée et reste
   // donc dans la tonalité imprimée. On le dit, et on met en évidence ceux
   // qui ont été réécrits — montrer où l'on est sûr vaut mieux que laisser
   // croire que toute la page est convertie.
   const partial = Boolean(overlayOn && chords?.complete === false);
+  // **K4.** Le calque ne couvre que la première page : une page suivante garde
+  // ses accords gravés. Quand le calque transpose (tonalité jouée ≠ gravée, ou
+  // capo), on le dit au-dessus d'elle.
+  const pageNonTransposee = (i: number) => Boolean(chords && i > 0 && chordSemitones !== 0);
+  const avertissementPage = (i: number) => (
+    <div key={`k4-${i}`} data-jianpu-accords-origine={i} className={MESSAGE} style={ENCRE}>
+      {t("jianpu.accordsOriginePage", { n: i + 1, key: chords?.printedKey ?? "" })}
+    </div>
+  );
   // **Le sélecteur de tonalité.** Certaines gravures portent deux jeux
   // d'accords pour la même musique : des positions de capo empilées
   // au-dessus des accords réels. Les publier tous les deux ferait une page
@@ -286,17 +345,223 @@ export function JianpuSheet({ entry, title, slug, layout = "flow", playedKey: de
     poser({ ...chordEdits, changed: { ...retouches, [cible.index]: "" } });
   }
 
+  /** Une boîte du calque, décrite une fois. Elle sort deux fois, des mêmes
+   *  coordonnées : en **gomme** (fond blanc dans le groupe filtré, que le filtre
+   *  rend transparent : elle efface l'accord gravé) et en **écriture** (au-dessus,
+   *  sans fond, à l'encre). La gomme n'a pas de texte dans le DOM : le même texte,
+   *  transparent, vient d'un pseudo-élément (`data-jianpu-gomme`) et donne à la boîte
+   *  la même largeur. */
+  type Boite = {
+    key: string;
+    /** Attributs de l'écriture seule : les gommes n'en portent aucun. */
+    attrs?: Record<string, string | number | undefined>;
+    classe?: string;
+    style: CSSProperties;
+    texte: string;
+    /** Écriture en bleu (calque partiel) plutôt qu'à l'encre. */
+    bleu?: boolean;
+    /** Accord ajouté sur une ligne : écriture seule, pas de gomme. */
+    ajout?: boolean;
+  };
+
+  function boitesCalque(i: number): Boite[] {
+    if (!chords) return [];
+    const out: Boite[] = [];
+    const kl = chords.keyLabel;
+    if (overlayOn && kl) {
+      const keyShown = kl.c
+        ? transposeLabel(kl.c, chordSemitones, chordKey)
+        : `1=${playedKey ?? chords.printedKey}`;
+      // `h` est la hauteur de **capitale** du libellé gravé, pas un
+      // corps : le prendre pour tel rendait le cadre 0,71× trop
+      // petit sur les 87 pages qui en portent un — la leçon de
+      // l'itération 38 (« le corps se mesure, il ne se devine
+      // pas ») que le cadre n'avait jamais reçue. Rendu au bon
+      // corps il heurte le chiffrage voisin sur 3 pages, d'où le
+      // même rétrécissement que les étiquettes, mesuré dans **sa**
+      // fonte : celle des accords, plus large, le réduirait pour
+      // rien.
+      // Sans plancher, contrairement aux accords : le cadre est
+      // seul en haut de page, et le rétrécir reste lisible, alors
+      // que le chiffrage « 4/4 » qu'il efface en débordant est une
+      // information perdue — c'est le défaut qu'on avait dû
+      // réparer sur 齐来赞美 (itération 35).
+      const keyFontPx = Math.min(
+        fitFont(keyShown, kl.h / CAP_HEIGHT, kl.sp, KEY_FONT, 0),
+        fitFont(keyShown, kl.h / CAP_HEIGHT, voisinCalque(boites, rangCadre), KEY_FONT, 0)
+      );
+      out.push({
+        key: "cadre",
+        // Le cadre de tonalité porte un fond opaque comme les
+        // étiquettes, mais il n'avait pas leur marqueur : ni le
+        // balayage géométrique ni les cadres rouges de la planche
+        // ne le voyaient (itération 41). Marqueur distinct, pour
+        // que le banc de transposition, lui, garde son périmètre.
+        attrs: { "data-jianpu-keylabel": kl.c ?? "" },
+        style: {
+          left: `${((kl.x - 3) / chords.w) * 100}%`,
+          top: `${((kl.y - 4) / chords.h) * 100}%`,
+          height: `${((kl.h + 6) / chords.h) * 100}%`,
+          minWidth: `${((kl.w + 7) / chords.w) * 100}%`,
+          fontSize: `${(keyFontPx / chords.w) * 100}cqw`,
+          lineHeight: 1,
+          fontFamily: KEY_FONT,
+          zIndex: 1,
+        },
+        texte: keyShown,
+      });
+    }
+    if (overlayOn && chords.titleKey) {
+      out.push({
+        key: "titre",
+        classe: "font-bold",
+        style: {
+          left: `${((chords.titleKey.x - 3) / chords.w) * 100}%`,
+          top: `${((chords.titleKey.y - 4) / chords.h) * 100}%`,
+          height: `${((chords.titleKey.h + 7) / chords.h) * 100}%`,
+          minWidth: `${((chords.titleKey.w + 7) / chords.w) * 100}%`,
+          fontSize: `${((chords.titleKey.h * 0.78) / chords.w) * 100}cqw`,
+          lineHeight: 1,
+        },
+        texte: `（${playedKey ?? chords.printedKey}调）`,
+      });
+    }
+    chords.labels.forEach((l, n) => {
+      // Calque éteint (pas de transposition) : seules les étiquettes
+      // retouchées se dessinent, les autres restent telles qu'elles
+      // sont gravées.
+      const retouche = retouches[n];
+      if (!overlayOn && retouche === undefined) return;
+      // L'accord retouché prend la place du gravé — « » l'efface et
+      // laisse un simple masque.
+      const grave = retouche ?? l.c;
+      // `fh` : le corps propre à l'étiquette, quand elle n'est pas
+      // gravée au corps de la page (ligne d'intro, mention entre
+      // parenthèses). Absent, c'est `labelH` — donc rien ne bouge
+      // pour les étiquettes déjà publiées.
+      // Une lecture alternative que l'on n'a pas demandée reste un
+      // masque : la boîte blanche couvre l'accord gravé, mais rien
+      // n'est réécrit. C'est exactement ce que `mask_rows` faisait
+      // avant que le calque sache porter les deux jeux.
+      const hidden = Boolean(l.opt) && !showAlt;
+      // `alt` ne change pas le décalage — les deux jeux montent
+      // ensemble — mais la tonalité d'orthographe : une rangée de
+      // capo en ré reste écrite en ré au-dessus d'accords en fa.
+      const shown = hidden
+        ? ""
+        : transposeLabel(grave, chordSemitones, altSpellingKey(chordKey, l.alt ?? 0));
+      const corps = l.fh ? l.fh / CAP_HEIGHT : chordFontPx;
+      const fontPx = Math.min(
+        fitFont(shown, corps, l.sp),
+        fitFont(shown, corps, voisinCalque(boites, rangDe[n]), CHORD_FONT, 0)
+      );
+      out.push({
+        key: `etiquette-${n}`,
+        attrs: {
+          "data-jianpu-label": l.c,
+          // Retouchée : l'accord affiché n'est plus celui de la
+          // gravure, et les contrôles de transposition ne peuvent
+          // plus le comparer au `c` du calque.
+          "data-jianpu-retouche": retouche !== undefined ? n : undefined,
+          // L'oracle de transposition tient une étiquette écrite qui
+          // sort vide pour un accord disparu. Une lecture alternative
+          // masquée par le sélecteur en est une, et légitimement :
+          // sans ce marqueur le banc ne peut pas les distinguer.
+          "data-jianpu-alt": l.alt ?? undefined,
+          "data-jianpu-opt": l.opt ? (showAlt ? "shown" : "hidden") : undefined,
+        },
+        bleu: partial,
+        style: {
+          // Le masque déborde de l'amas détecté : le crénage et
+          // l'anticrénelage du glyphe d'origine dépassent de deux
+          // ou trois pixels, et ce qui dépasse reste visible à
+          // côté de l'accord réécrit.
+          left: `${((l.x - 3) / chords.w) * 100}%`,
+          top: `${((l.y - 6) / chords.h) * 100}%`,
+          // Le fond blanc descend de la descendante entière ; la
+          // marge basse rend au texte les 0,09 em de trop, pour que
+          // la ligne de base retombe sur celle du texte gravé.
+          height: `${((l.h + 6 + DESCENDER * fontPx) / chords.h) * 100}%`,
+          paddingBottom: `${DESCENDER - LINE_BOX_DROP}em`,
+          minWidth: `${((l.w + 7) / chords.w) * 100}%`,
+          fontSize: `${(fontPx / chords.w) * 100}cqw`,
+          fontWeight: 700,
+          lineHeight: 1,
+          // Le rang de peinture : les masques dessous, tout ce qui
+          // porte un accord dessus (gardé dans chaque couche).
+          zIndex: grave.trim() ? 1 : 0,
+          fontFamily: CHORD_FONT,
+        },
+        texte: shown,
+      });
+    });
+    // Accords ajoutés sur une ligne : écrits après tout le reste, donc au-dessus.
+    // Pas de gomme — ils se posent dans la place libre de la ligne, pas sur une
+    // gravure à masquer.
+    ajouts.forEach((a, n) => {
+      if (a.page !== i) return;
+      const fontPx = corpsALaHauteur(a.y);
+      out.push({
+        key: `ajout-${n}`,
+        ajout: true,
+        attrs: { "data-jianpu-ajout": n },
+        style: {
+          left: `${((a.x - 3) / chords.w) * 100}%`,
+          top: `${((a.y - 6) / chords.h) * 100}%`,
+          height: `${((chords.labelH + 6 + DESCENDER * fontPx) / chords.h) * 100}%`,
+          paddingBottom: `${DESCENDER - LINE_BOX_DROP}em`,
+          fontSize: `${(fontPx / chords.w) * 100}cqw`,
+          fontWeight: 700,
+          lineHeight: 1,
+          zIndex: 1,
+          fontFamily: CHORD_FONT,
+        },
+        texte: transposeLabel(a.c, chordSemitones, chordKey),
+      });
+    });
+    return out;
+  }
+
+  const rendreBoite = (b: Boite, ecriture: boolean) => {
+    const touchable = ecriture && accordsTouchables && b.texte.trim() !== "" && (b.key.startsWith("etiquette-") || b.key.startsWith("ajout-"));
+    return (
+    <span
+      key={b.key}
+      {...(ecriture ? b.attrs : { "data-jianpu-gomme": b.texte, "aria-hidden": true })}
+      className={
+        "absolute flex items-end whitespace-nowrap " +
+        (touchable ? "pointer-events-auto " : "") +
+        (b.classe ? b.classe + " " : "") +
+        (ecriture
+          ? b.bleu
+            ? "text-blue-700 dark:text-blue-400"
+            : ""
+          : "bg-white after:content-[attr(data-jianpu-gomme)]")
+      }
+      style={{
+        ...b.style,
+        // L'encre du scan est un jeton (`--jianpu-encre`), pas un noir : clair #1c1c1e, sombre #e4e4e7.
+        color: ecriture ? (b.bleu ? undefined : "hsl(var(--jianpu-encre))") : "transparent",
+      }}
+    >
+      {ecriture ? (touchable ? <AccordTouchable etiquette={b.texte} capo={capo || undefined} /> : b.texte) : null}
+    </span>
+    );
+  };
+
   return (
     <div className={fit ? "flex h-full w-full flex-col items-center justify-center gap-2" : "flex flex-col items-center gap-6"}>
+      <JianpuFiltres />
+
       {staleChords && (
-        <div className="w-full max-w-2xl rounded-lg border border-amber-300/70 bg-amber-50/90 px-3 py-2 text-xs text-amber-900 dark:border-amber-700/50 dark:bg-amber-950/30 dark:text-amber-300">
+        <div className={MESSAGE} style={ENCRE}>
           <span className="font-semibold">{t("jianpu.jouerEn", { key: playedKey })}</span>{" "}
           {t("jianpu.accordsOrigine")}
         </div>
       )}
 
       {partial && (
-        <div className="w-full max-w-2xl rounded-lg border border-amber-300/70 bg-amber-50/90 px-3 py-2 text-xs text-amber-900 dark:border-amber-700/50 dark:bg-amber-950/30 dark:text-amber-300">
+        <div className={MESSAGE} style={ENCRE}>
           <span className="font-semibold">{t("jianpu.jouerEn", { key: playedKey })}</span>{" "}
           <Trans
             i18nKey={chords?.keyLabel ? "jianpu.partiel" : "jianpu.partielIndication"}
@@ -308,20 +573,19 @@ export function JianpuSheet({ entry, title, slug, layout = "flow", playedKey: de
 
       {selector && (
         <div className="flex w-full max-w-2xl items-center justify-center gap-2 text-xs">
-          <span className="text-neutral-500 dark:text-neutral-400">{t("jianpu.accords")}</span>
-          <div className="inline-flex overflow-hidden rounded-full border border-neutral-300 dark:border-neutral-700">
+          <span className="text-muted-foreground" aria-hidden>{t("jianpu.accords")}</span>
+          <div role="radiogroup" aria-label={t("jianpu.accords")} className="inline-flex rounded-full bg-secondary p-1">
             {[false, true].map((v) => (
               <button
                 key={String(v)}
                 type="button"
+                role="radio"
                 data-jianpu-altkey={v ? "on" : "off"}
-                aria-pressed={showAlt === v}
+                aria-checked={showAlt === v}
                 onClick={() => setShowAlt(v)}
                 className={
-                  "px-3 py-1 font-medium transition-colors " +
-                  (showAlt === v
-                    ? "bg-neutral-900 text-white dark:bg-neutral-100 dark:text-neutral-900"
-                    : "text-neutral-600 hover:bg-neutral-100 dark:text-neutral-400 dark:hover:bg-neutral-800")
+                  "h-8 rounded-full px-4 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring " +
+                  (showAlt === v ? "bg-background text-foreground shadow-soft" : "text-muted-foreground hover:text-foreground")
                 }
               >
                 {v
@@ -335,229 +599,86 @@ export function JianpuSheet({ entry, title, slug, layout = "flow", playedKey: de
         </div>
       )}
 
+      {fit && shownPages.map((_, n) => firstShown + n).filter(pageNonTransposee).map(avertissementPage)}
+
       {/* `fit` : la zone restante devient un conteneur de taille, ce qui permet
           de borner la page en hauteur (100cqh) autant qu'en largeur (100%).
           Borner la seule hauteur suffisait pour un scan portrait, mais un scan
-          large débordait alors des deux côtés. */}
+          large débordait alors des deux côtés. Calée en haut : bornée par la
+          largeur (téléphone), la page commence sous le bandeau (L3-T5a). */}
       <div
-        className={fit ? "flex min-h-0 w-full flex-1 items-center justify-center" : "contents"}
+        className={fit ? "flex min-h-0 w-full flex-1 items-start justify-center" : "contents"}
         style={fit ? { containerType: "size" } : undefined}
       >
       {shownPages.map((page, n) => {
         const i = firstShown + n;
+        const calque = (overlayOn || retouchesOn || retouchable) && i === 0 && chords;
+        const cal = calque ? boitesCalque(i) : [];
+        // La fenêtre (piste A, P3) : la page et son calque remontent ensemble de
+        // `top` pixels image, l'en-tête gravé passe au-dessus du bord et
+        // disparaît. Aucune coordonnée du calque ne change. Tant que le
+        // recadrage n'est pas chargé (premier scan de la visite), la page
+        // s'affiche entière : un fichier lent ne doit jamais cacher le scan.
+        const top = cadrage?.[i] ?? 0;
+        const visible = page.h - top;
         return (
+        <Fragment key={page.file}>
+        {!fit && pageNonTransposee(i) && avertissementPage(i)}
         <div
-          key={page.file}
+          data-jianpu-fenetre={top}
+          className={fit ? "relative mx-auto overflow-hidden" : "relative overflow-hidden"}
+          style={{
+            aspectRatio: `${page.w} / ${visible}`,
+            ...(fit
+              ? { width: `min(100%, calc(100cqh * ${page.w} / ${visible}))` }
+              : {
+                  // Page chant, vue Partitions : la marge blanche déborde de la colonne.
+                  width: `calc(100% * ${page.w} / ${page.w - 2 * MARGE_SOURCE})`,
+                  marginInline: `calc(-100% * ${MARGE_SOURCE} / ${page.w - 2 * MARGE_SOURCE})`,
+                }),
+          }}
+        >
+        <div
           data-jianpu-page={i}
-          className={fit ? "relative mx-auto" : "relative w-full"}
+          className="relative w-full"
           // `containerType: inline-size` permet d'exprimer la taille du texte du
           // calque en cqw : il suit l'échelle de l'image sans mesure JS.
           style={{
             containerType: "inline-size",
-            ...(fit
-              ? {
-                  aspectRatio: `${page.w} / ${page.h}`,
-                  width: `min(100%, calc(100cqh * ${page.w} / ${page.h}))`,
-                }
-              : {}),
+            transform: top ? `translateY(${(-top / page.h) * 100}%)` : undefined,
           }}
         >
-          <Image
-            src={jianpuImageUrl(page.file)}
-            alt={
-              entry.pages.length > 1
-                ? `${title} — 简谱 (page ${i + 1}/${entry.pages.length})`
-                : `${title} — 简谱`
-            }
-            width={page.w}
-            height={page.h}
-            priority={n === 0}
-            className={
-              fit
-                ? "h-full w-full object-contain dark:invert dark:hue-rotate-180"
-                : "h-auto w-full dark:invert dark:hue-rotate-180"
-            }
-            sizes={fit ? "100vw" : "(min-width: 1024px) 900px, 100vw"}
-          />
+          {/* Le groupe filtré (piste A) : l'image et les gommes. Le filtre « luminance
+              → alpha » rend le papier transparent ; une gomme, blanche, devient
+              transparente et efface l'accord gravé au lieu de le couvrir. */}
+          <div data-jianpu-filtre className="relative w-full">
+            <Image
+              src={jianpuImageUrl(page.file)}
+              alt={
+                entry.pages.length > 1
+                  ? `${title} — 简谱 (page ${i + 1}/${entry.pages.length})`
+                  : `${title} — 简谱`
+              }
+              width={page.w}
+              height={page.h}
+              priority={n === 0}
+              className="h-auto w-full"
+              sizes={fit ? "100vw" : "(min-width: 1024px) 900px, 100vw"}
+            />
+            {calque && (
+              <div data-jianpu-calque className="pointer-events-none absolute inset-0" aria-hidden>
+                {cal.filter((b) => !b.ajout).map((b) => rendreBoite(b, false))}
+              </div>
+            )}
+          </div>
 
-          {/* Calque : masque l'accord d'origine, réécrit le transposé au
-              même endroit. Tout est en % pour suivre l'échelle de l'image.
-
-              Le masque est `bg-black` en thème sombre, pas `bg-neutral-900` :
-              le scan est retourné par `dark:invert`, donc son papier blanc
-              devient du noir **pur**. Toute autre teinte fait apparaître un
-              pavé gris autour de chaque accord — invisible sur les rendus de
-              contrôle en Python, qui travaillent sur l'image d'origine. */}
-          {(overlayOn || retouchesOn || retouchable) && i === 0 && chords && (
+          {/* Écritures : au-dessus du groupe filtré, sans fond, à l'encre. Mêmes
+              coordonnées que les gommes (tout est en % de l'image pour suivre son
+              échelle). */}
+          {calque && (
             <>
-            <div data-jianpu-calque className="pointer-events-none absolute inset-0" aria-hidden>
-              {overlayOn && chords.keyLabel && (() => {
-                const kl = chords.keyLabel!;
-                const keyShown = kl.c
-                  ? transposeLabel(kl.c, chordSemitones, chordKey)
-                  : `1=${playedKey ?? chords.printedKey}`;
-                // `h` est la hauteur de **capitale** du libellé gravé, pas un
-                // corps : le prendre pour tel rendait le cadre 0,71× trop
-                // petit sur les 87 pages qui en portent un — la leçon de
-                // l'itération 38 (« le corps se mesure, il ne se devine
-                // pas ») que le cadre n'avait jamais reçue. Rendu au bon
-                // corps il heurte le chiffrage voisin sur 3 pages, d'où le
-                // même rétrécissement que les étiquettes, mesuré dans **sa**
-                // fonte : celle des accords, plus large, le réduirait pour
-                // rien.
-                // Sans plancher, contrairement aux accords : le cadre est
-                // seul en haut de page, et le rétrécir reste lisible, alors
-                // que le chiffrage « 4/4 » qu'il efface en débordant est une
-                // information perdue — c'est le défaut qu'on avait dû
-                // réparer sur 齐来赞美 (itération 35).
-                const keyFontPx = Math.min(
-                  fitFont(keyShown, kl.h / CAP_HEIGHT, kl.sp, KEY_FONT, 0),
-                  fitFont(keyShown, kl.h / CAP_HEIGHT, voisinCalque(boites, rangCadre), KEY_FONT, 0)
-                );
-                return (
-                <span
-                  // Le cadre de tonalité porte un fond opaque comme les
-                  // étiquettes, mais il n'avait pas leur marqueur : ni le
-                  // balayage géométrique ni les cadres rouges de la planche
-                  // ne le voyaient (itération 41). Marqueur distinct, pour
-                  // que le banc de transposition, lui, garde son périmètre.
-                  data-jianpu-keylabel={kl.c ?? ""}
-                  className="absolute flex items-end whitespace-nowrap bg-white text-black dark:bg-black dark:text-neutral-100"
-                  style={{
-                    left: `${((kl.x - 3) / chords.w) * 100}%`,
-                    top: `${((kl.y - 4) / chords.h) * 100}%`,
-                    height: `${((kl.h + 6) / chords.h) * 100}%`,
-                    minWidth: `${((kl.w + 7) / chords.w) * 100}%`,
-                    fontSize: `${(keyFontPx / chords.w) * 100}cqw`,
-                    lineHeight: 1,
-                    fontFamily: KEY_FONT,
-                    zIndex: 1,
-                  }}
-                >
-                  {keyShown}
-                </span>
-                );
-              })()}
-              {overlayOn && chords.titleKey && (
-                <span
-                  className="absolute flex items-end whitespace-nowrap bg-white font-bold text-black dark:bg-black dark:text-neutral-100"
-                  style={{
-                    left: `${((chords.titleKey.x - 3) / chords.w) * 100}%`,
-                    top: `${((chords.titleKey.y - 4) / chords.h) * 100}%`,
-                    height: `${((chords.titleKey.h + 7) / chords.h) * 100}%`,
-                    minWidth: `${((chords.titleKey.w + 7) / chords.w) * 100}%`,
-                    fontSize: `${((chords.titleKey.h * 0.78) / chords.w) * 100}cqw`,
-                    lineHeight: 1,
-                  }}
-                >
-                  （{playedKey ?? chords.printedKey}调）
-                </span>
-              )}
-              {chords.labels.map((l, n) => {
-                // Calque éteint (pas de transposition) : seules les étiquettes
-                // retouchées se dessinent, les autres restent telles qu'elles
-                // sont gravées.
-                const retouche = retouches[n];
-                if (!overlayOn && retouche === undefined) return null;
-                // L'accord retouché prend la place du gravé — « » l'efface et
-                // laisse un simple masque.
-                const grave = retouche ?? l.c;
-                // `fh` : le corps propre à l'étiquette, quand elle n'est pas
-                // gravée au corps de la page (ligne d'intro, mention entre
-                // parenthèses). Absent, c'est `labelH` — donc rien ne bouge
-                // pour les étiquettes déjà publiées.
-                // Une lecture alternative que l'on n'a pas demandée reste un
-                // masque : la boîte blanche couvre l'accord gravé, mais rien
-                // n'est réécrit. C'est exactement ce que `mask_rows` faisait
-                // avant que le calque sache porter les deux jeux.
-                const hidden = Boolean(l.opt) && !showAlt;
-                // `alt` ne change pas le décalage — les deux jeux montent
-                // ensemble — mais la tonalité d'orthographe : une rangée de
-                // capo en ré reste écrite en ré au-dessus d'accords en fa.
-                const shown = hidden
-                  ? ""
-                  : transposeLabel(grave, chordSemitones, altSpellingKey(chordKey, l.alt ?? 0));
-                const corps = l.fh ? l.fh / CAP_HEIGHT : chordFontPx;
-                const fontPx = Math.min(
-                  fitFont(shown, corps, l.sp),
-                  fitFont(shown, corps, voisinCalque(boites, rangDe[n]), CHORD_FONT, 0)
-                );
-                return (
-                <span
-                  key={n}
-                  data-jianpu-label={l.c}
-                  // Retouchée : l'accord affiché n'est plus celui de la
-                  // gravure, et les contrôles de transposition ne peuvent
-                  // plus le comparer au `c` du calque.
-                  data-jianpu-retouche={retouche !== undefined ? n : undefined}
-                  // L'oracle de transposition tient une étiquette écrite qui
-                  // sort vide pour un accord disparu. Une lecture alternative
-                  // masquée par le sélecteur en est une, et légitimement :
-                  // sans ce marqueur le banc ne peut pas les distinguer.
-                  data-jianpu-alt={l.alt ?? undefined}
-                  data-jianpu-opt={l.opt ? (showAlt ? "shown" : "hidden") : undefined}
-                  className={
-                    "absolute flex items-end whitespace-nowrap bg-white dark:bg-black " +
-                    (partial
-                      ? "text-blue-700 dark:text-blue-400"
-                      : "text-black dark:text-neutral-100")
-                  }
-                  style={{
-                    // Le masque déborde de l'amas détecté : le crénage et
-                    // l'anticrénelage du glyphe d'origine dépassent de deux
-                    // ou trois pixels, et ce qui dépasse reste visible à
-                    // côté de l'accord réécrit.
-                    left: `${((l.x - 3) / chords.w) * 100}%`,
-                    top: `${((l.y - 6) / chords.h) * 100}%`,
-                    // Le fond blanc descend de la descendante entière ; la
-                    // marge basse rend au texte les 0,09 em de trop, pour que
-                    // la ligne de base retombe sur celle du texte gravé.
-                    height: `${((l.h + 6 + DESCENDER * fontPx) / chords.h) * 100}%`,
-                    paddingBottom: `${DESCENDER - LINE_BOX_DROP}em`,
-                    minWidth: `${((l.w + 7) / chords.w) * 100}%`,
-                    fontSize: `${(fontPx / chords.w) * 100}cqw`,
-                    fontWeight: 700,
-                    lineHeight: 1,
-                    // Le rang de peinture : les masques dessous, tout ce qui
-                    // porte un accord dessus. L'ordre du DOM ne suffit pas —
-                    // le cadre « 1=X » est rendu avant la liste, et un masque
-                    // de la liste passait donc par-dessus lui.
-                    zIndex: grave.trim() ? 1 : 0,
-                    fontFamily: CHORD_FONT,
-                  }}
-                >
-                  {shown}
-                </span>
-                );
-              })}
-
-              {/* Accords ajoutés sur une ligne : dessinés après tout le reste,
-                  donc au-dessus. Sans fond opaque — ils se posent dans la
-                  place libre de la ligne, pas sur une gravure à masquer. */}
-              {ajouts.map((a, n) => {
-                if (a.page !== i) return null;
-                const fontPx = corpsALaHauteur(a.y);
-                return (
-                  <span
-                    key={`ajout-${n}`}
-                    data-jianpu-ajout={n}
-                    className="absolute flex items-end whitespace-nowrap text-black dark:text-neutral-100"
-                    style={{
-                      left: `${((a.x - 3) / chords.w) * 100}%`,
-                      top: `${((a.y - 6) / chords.h) * 100}%`,
-                      height: `${((chords.labelH + 6 + DESCENDER * fontPx) / chords.h) * 100}%`,
-                      paddingBottom: `${DESCENDER - LINE_BOX_DROP}em`,
-                      fontSize: `${(fontPx / chords.w) * 100}cqw`,
-                      fontWeight: 700,
-                      lineHeight: 1,
-                      zIndex: 1,
-                      fontFamily: CHORD_FONT,
-                    }}
-                  >
-                    {transposeLabel(a.c, chordSemitones, chordKey)}
-                  </span>
-                );
-              })}
+            <div data-jianpu-calque className="pointer-events-none absolute inset-0" aria-hidden={accordsTouchables ? undefined : true}>
+              {cal.map((b) => rendreBoite(b, true))}
             </div>
 
             {/* Retouche : toute la page est tactile. Un accord touché s'ouvre
@@ -586,6 +707,8 @@ export function JianpuSheet({ entry, title, slug, layout = "flow", playedKey: de
             </>
           )}
         </div>
+        </div>
+        </Fragment>
         );
       })}
       </div>

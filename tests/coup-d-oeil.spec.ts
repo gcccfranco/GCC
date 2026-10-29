@@ -1,5 +1,8 @@
 import { expect, test, type Page } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
+import { attendreEditeur, reglerElement } from "./helpers/editeurSetlist";
+import { fermerMenus, ouvrirAffichage, ouvrirPartitions } from "./helpers/setlist";
+import { ouvrirReglages } from "./helpers/louange";
 import { abbreviateSection } from "../src/lib/chordpro/abbreviations";
 import { uniqueSections } from "../src/lib/setlist/uniqueSections";
 import { isLastPhraseOnly, materializeLastPhrase } from "../src/lib/setlist/lastPhrase";
@@ -65,7 +68,7 @@ function setlist(over: Record<string, unknown> = {}) {
 
 async function openPartitions(page: Page, data = setlist()) {
   const db = await signInAs(page, MUSICIEN, { [`setlists/${SETLIST_ID}`]: data }, `/setlists/${SETLIST_ID}`);
-  await page.getByRole("button", { name: "Partitions" }).click();
+  await ouvrirPartitions(page);
   return db;
 }
 
@@ -156,10 +159,12 @@ test("sections uniques : une fois par section et par tonalité, occurrences repr
 
 test.describe("modes d'affichage de la vue partitions", () => {
   async function choose(page: Page, name: string) {
-    await page.getByRole("button", { name: "Plus d'actions" }).click();
+    // Bouton « Affichage » de la barre sur G, sous-menu du ⋯ en deux volets
+    // (docs/spec-deux-volets.md, Q3 et Q7).
+    await ouvrirAffichage(page);
     await page.getByRole("menuitemradio", { name }).click();
     // Le menu reste ouvert après un choix (Radix cache alors le reste de la page).
-    await page.keyboard.press("Escape");
+    await fermerMenus(page);
   }
   const song1Sections = (page: Page) => page.locator('[data-outline-item="1"] [data-section]');
 
@@ -207,9 +212,40 @@ test.describe("modes d'affichage de la vue partitions", () => {
     await expect(page.locator("[data-section]")).toHaveCount(0);
   });
 
+  test("choix fait dans le mode louange : retrouvé dans le menu Affichage de la setlist, sans recharger", async ({ page }) => {
+    await page.addInitScript(() => localStorage.setItem("perf-role-asked", "1"));
+    await signInAs(page, MUSICIEN, { [`setlists/${SETLIST_ID}`]: setlist() }, `/setlists/${SETLIST_ID}`);
+    await page.getByRole("button", { name: /Mode Louange/ }).click();
+    const reglages = await ouvrirReglages(page);
+    const affichage = reglages.getByRole("radiogroup", { name: "Affichage" });
+    await expect(affichage.getByRole("radio", { name: "Ordre joué" })).toHaveAttribute("aria-checked", "true");
+    await affichage.getByRole("radio", { name: "Sections uniques" }).click();
+    expect(await page.evaluate(() => localStorage.getItem("partition-layout"))).toBe("unique");
+
+    // Quitter le mode louange (Échap referme d'abord la feuille).
+    await page.keyboard.press("Escape");
+    await expect(page.getByRole("dialog")).toHaveCount(0);
+    const quitter = page.getByRole("button", { name: "Quitter" });
+    await expect(async () => {
+      if (!(await quitter.isVisible())) {
+        const ecran = page.viewportSize()!;
+        await page.mouse.click(ecran.width / 2, ecran.height / 2);
+      }
+      await quitter.click({ timeout: 2_000 });
+    }).toPass({ timeout: 20_000 });
+    await expect(page.locator("[data-performance-mode]")).toHaveCount(0);
+
+    await ouvrirPartitions(page);
+    await ouvrirAffichage(page);
+    await expect(page.getByRole("menuitemradio", { name: "Sections uniques" })).toHaveAttribute("aria-checked", "true");
+    await fermerMenus(page);
+    await expect(song1Sections(page)).toHaveCount(2);
+  });
+
   test("mode Adapter : ordre joué forcé, le bandeau reste", async ({ page }) => {
     await page.addInitScript(() => localStorage.setItem("partition-layout", "unique"));
-    await openPartitions(page);
+    // Depuis SC1 (18/10/2026), seul le créateur adapte et modifie une setlist : la musicienne est la créatrice de la sienne.
+    await openPartitions(page, setlist({ ownerId: MUSICIEN.uid }));
     await expect(song1Sections(page)).toHaveCount(2);
     await page.getByRole("button", { name: "Adapter" }).click();
     await expect(song1Sections(page)).toHaveCount(3);
@@ -217,15 +253,19 @@ test.describe("modes d'affichage de la vue partitions", () => {
   });
 
   test.describe("sommaire (ordinateur)", () => {
-    test.use({ viewport: { width: 1440, height: 900 } });
-    test("en sections uniques, « Refrain ×2 » mène à l'unique refrain imprimé et le marque", async ({ page }) => {
+    // Le Sommaire des deux volets (docs/spec-deux-volets.md, T4) : une pastille par étape
+    // jouée, « R » deux fois et plus « Refrain ×2 ».
+    test.use({ viewport: { width: 1600, height: 900 } });
+    test("ordinateur, en sections uniques : la pastille du second refrain mène à l'unique refrain imprimé et la marque", async ({ page }, info) => {
+      test.skip(info.project.name !== "ordinateur", "deux volets : une fois suffit (ordinateur)");
       await page.addInitScript(() => localStorage.setItem("partition-layout", "unique"));
       await openPartitions(page);
-      const outline = page.getByRole("navigation", { name: "Déroulé" });
-      await outline.getByRole("button", { name: "Refrain ×2" }).click();
+      const pastilles = page.getByRole("navigation", { name: "Sommaire" }).locator('[data-sommaire="1"] [data-pastille]');
+      await expect(pastilles).toHaveText(["C1", "R", "R"]);
+      await pastilles.nth(2).click();
       const refrain = page.locator('[data-outline-item="1"] [data-section-uids~="chorus-3-2"]');
       await expect.poll(async () => (await refrain.boundingBox())!.y).toBeLessThan(250);
-      await expect(outline.getByRole("button", { name: "Refrain ×2" })).toHaveClass(/font-semibold/);
+      await expect(pastilles.nth(2)).toHaveAttribute("aria-current", "true");
     });
   });
 });
@@ -278,12 +318,13 @@ test("badge « Version modifiée » : rien à dire quand seul un Dp a été ajou
 
 test("éditeur : la Dernière phrase du refrain s'enregistre, puis s'affiche « Dp » avec ses accords, sans badge", async ({ page }) => {
   await page.route(/docs\.google\.com\/spreadsheets/, (route) => route.fulfill({ status: 200, contentType: "text/csv", body: "" }));
-  const db = await signInAs(page, MUSICIEN, { [`setlists/${SETLIST_ID}`]: setlist() }, `/setlists/${SETLIST_ID}/edit`);
-  await expect(page.getByLabel("Tonalité de Abba Père")).toBeVisible();
-  await page.getByRole("button", { name: /^Structure/ }).first().click();
+  // Depuis SC1 (18/10/2026), seul le créateur modifie une setlist : la musicienne est la créatrice de la sienne.
+  const db = await signInAs(page, MUSICIEN, { [`setlists/${SETLIST_ID}`]: setlist({ ownerId: MUSICIEN.uid }) }, `/setlists/${SETLIST_ID}/edit`);
+  await attendreEditeur(page, "Abba Père");
+  await reglerElement(page, "Abba Père");
   await page.getByRole("button", { name: "Dernière phrase", exact: true }).click();
 
-  const sheet = page.getByRole("dialog");
+  const sheet = page.getByRole("dialog", { name: "Dernière phrase (Dp)" });
   // La dernière étape jouée (le refrain) est proposée d'office.
   await expect(sheet.getByLabel("Section")).toHaveValue("chorus-3");
   await expect(sheet.locator("[data-copy-line]")).toHaveCount(1);
@@ -305,7 +346,7 @@ test("éditeur : la Dernière phrase du refrain s'enregistre, puis s'affiche « 
     .toBe(true);
 
   await page.goto(`/setlists/${SETLIST_ID}`);
-  await page.getByRole("button", { name: "Partitions" }).click();
+  await ouvrirPartitions(page);
   await expect(page.getByRole("list", { name: "Structure" }).first().getByRole("listitem").last()).toHaveText("Dp");
   const dp = page.locator('[data-outline-item="1"] [data-section]').last();
   await expect(dp).toContainText(/Abba .*Père.*Toi\./);

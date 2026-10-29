@@ -12,7 +12,9 @@ test.beforeEach(({ page }) => page.addInitScript(() => localStorage.setItem("jia
 
 async function copyFromPageTopToSongEnd(page: Page, slug: string) {
   await page.goto(`/songs/${encodeURIComponent(slug)}`);
-  await page.locator("h1").first().waitFor();
+  // Le premier h1 visible : en un volet, la page d'un chant garde l'en-tête « Chants » de la liste, masqué
+  // (agencement v18, A5 et R3 de docs/spec-agencement-v18.md).
+  await page.locator("h1").filter({ visible: true }).first().waitFor();
   await page.locator("[data-copy-line]").first().waitFor();
   // Le copieur de paroles s'abonne à « copy » au montage : copier avant que
   // React ait hydraté la page donnerait la copie brute du navigateur.
@@ -82,6 +84,12 @@ test("chant ZH : le pinyin est copié même masqué à l'écran", async ({ page 
   await page.goto(`/songs/${encodeURIComponent("爱的约定")}`);
   const line = page.locator("[data-copy-line]", { hasText: "两" }).first();
   await line.waitFor();
+  // Comme copyFromPageTopToSongEnd : attendre l'hydratation. Un clic sur « Pinyin » avant elle est
+  // perdu (le pinyin reste affiché), et le copieur ne s'abonne à « copy » qu'au montage.
+  await page.waitForFunction(() => {
+    const button = document.querySelector("button");
+    return !!button && Object.keys(button).some((k) => k.startsWith("__reactProps"));
+  });
   // Masque le pinyin à l'écran : la régie en a quand même besoin.
   await page.getByRole("button", { name: "Pinyin" }).click();
   await expect(line).not.toContainText("liǎng");

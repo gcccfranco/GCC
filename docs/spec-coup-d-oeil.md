@@ -55,8 +55,10 @@ peut ajouter une **« Dernière phrase » (Dp)** dans l'éditeur.
    `{start_of_intro: Interlude}` donne Pm).
 2. **Bandeau** (`src/components/song/StructureStrip.tsx`) : remplace la ligne
    ORDRE de `SongView` (page du chant et vue partitions) et
-   `JianpuStructureStrip` dans la vue partitions (le mode louange garde le
-   sien). Une étape = abréviation dans la couleur de son type, « ×2 » (règle
+   `JianpuStructureStrip` dans la vue partitions. ~~Le mode louange garde le
+   sien.~~ *Revu le 08/10/2026 (D14, `spec-jianpu-integration.md`, lot 2) : le
+   mode louange prend aussi les pastilles, en tête de chaque chant et sur les
+   pages de scan ; `JianpuStructureStrip` est supprimé.* Une étape = abréviation dans la couleur de son type, « ×2 » (règle
    `isRepeatOf`), « → A » pour une modulation, **nuance dessous** ; notes et
    transitions sur une ligne fine sous le bandeau, préfixées par l'abréviation
    de leur étape. Grille qui passe à la ligne sur téléphone.
@@ -95,7 +97,10 @@ peut ajouter une **« Dernière phrase » (Dp)** dans l'éditeur.
    composant ; il n'y a de nuances que si la page en reçoit dans l'URL).
 2. Vue liste et sommaire gardent les **noms complets** (place disponible) ;
    seules les règles de reprise et de nuance sont partagées.
-3. Le **mode louange** ne change pas, y compris son bandeau 简谱.
+3. ~~Le **mode louange** ne change pas, y compris son bandeau 简谱.~~ *Remplacé le
+   08/10/2026 (`spec-jianpu-integration.md`, D14 et D15) : le mode louange a les
+   pastilles rondes (en tête de chaque chant, détails en Sections uniques, et
+   sur chaque page de scan) et le même réglage Affichage que la setlist.*
 4. Le **PDF** ne change pas (« compact » = lot 5).
 5. Dp = lignes entières du fichier (avec leur `{jianpu:}` et leur pinyin
    séparé) ; 1 à 3 lignes ; type `other`, nom **« Dernière phrase – R »**

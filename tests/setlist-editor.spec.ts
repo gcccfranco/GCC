@@ -1,5 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { signInAs, type FakeDb, type FakeProfile } from "./helpers/fakeSession";
+import { ajouterChant, attendreEditeur, champNotes, champPresidence, choisirTonalite, fermerFeuille } from "./helpers/editeurSetlist";
 import { buildFormItems } from "../src/lib/setlist/formItems";
 import { buildSetlistItems } from "../src/lib/setlist/buildSetlistItems";
 import type { SetlistItem } from "../src/types/setList";
@@ -38,7 +39,8 @@ const SETLIST = {
   date: "2026-09-21",
   language: "mixed",
   notes: "",
-  ownerId: "uid-owner",
+  // SC1 (docs/spec-createur-corbeille-absences.md) : seul le créateur modifie — la setlist est la sienne.
+  ownerId: "uid-musicien",
   isPrivate: false,
   items: [
     item({ songSlug: "abba-pere", position: 1 }),
@@ -59,24 +61,23 @@ const setlistWrites = (db: FakeDb, id?: string) =>
 async function openEditor(page: Page) {
   await emptyPlanning(page);
   const db = await signInAs(page, MUSICIEN, { [`setlists/${SETLIST_ID}`]: SETLIST }, `/setlists/${SETLIST_ID}/edit`);
-  await expect(page.getByLabel("Tonalité de Abba Père")).toBeVisible();
+  await attendreEditeur(page, "Abba Père");
   return db;
 }
 
 test("création : une seule page, brouillon enregistré tout seul, « Publier » la rend visible", async ({ page }) => {
   await emptyPlanning(page);
-  const db = await signInAs(page, MUSICIEN, {}, "/setlists/new");
+  const db = await signInAs(page, MUSICIEN, {}, "/setlists/new?autre=1");
 
   await expect(page.getByRole("button", { name: /Suivant/ })).toHaveCount(0);
   // Infos et chants sur la même page.
-  await expect(page.getByPlaceholder("Chercher un chant à ajouter…")).toBeVisible();
+  await expect(page.locator("[data-ouvrir-bibliotheque]")).toBeVisible();
 
   await page.getByLabel("Titre").fill("Culte du 28 septembre");
   await page.getByLabel("Catégorie").selectOption("Culte Francophone");
-  await page.getByLabel("Présidence *", { exact: true }).selectOption("__other__");
+  await champPresidence(page).selectOption("__other__");
   await page.getByPlaceholder("ex. Timothée").fill("Jonathan Z.");
-  await page.getByPlaceholder("Chercher un chant à ajouter…").fill("Abba Père");
-  await page.getByRole("button", { name: "Ajouter" }).first().click();
+  await ajouterChant(page, "Abba Père");
 
   await expect.poll(() => setlistWrites(db).at(-1)?.data.isDraft, { timeout: 10_000 }).toBe(true);
   const draft = setlistWrites(db).at(-1)!;
@@ -91,8 +92,9 @@ test("modification : un changement de tonalité est enregistré sans bouton (FR 
   const db = await openEditor(page);
   await expect(page.getByRole("button", { name: /Enregistrer les modifications/ })).toHaveCount(0);
 
-  await page.getByLabel("Tonalité de Abba Père").selectOption("B");
-  await page.getByLabel("Tonalité de 一生爱你").selectOption("F");
+  await choisirTonalite(page, "Abba Père", "B");
+  await choisirTonalite(page, "一生爱你", "F");
+  await fermerFeuille(page);
 
   await expect
     .poll(() => (db.doc(`setlists/${SETLIST_ID}`)?.items as { keyOverride: string | null }[]).map((i) => i.keyOverride))
@@ -110,7 +112,7 @@ test("modification : titre vidé, rien n'est enregistré et le repère le dit", 
 
 test("modification : « Terminé » envoie le changement en cours et ramène à la setlist", async ({ page }) => {
   const db = await openEditor(page);
-  await page.getByLabel("Notes (optionnel)").fill("Thème : la grâce");
+  await champNotes(page).fill("Thème : la grâce");
   await page.getByRole("button", { name: "Terminé" }).click();
   await page.waitForURL((u) => u.pathname.replace(/\/$/, "") === `/setlists/${SETLIST_ID}`);
   await expect.poll(() => db.doc(`setlists/${SETLIST_ID}`)?.notes).toBe("Thème : la grâce");
@@ -118,10 +120,10 @@ test("modification : « Terminé » envoie le changement en cours et ramène à 
 
 test("création : « Publier » juste après une retouche, sur réseau lent, ne repasse pas en brouillon", async ({ page }) => {
   await emptyPlanning(page);
-  const db = await signInAs(page, MUSICIEN, {}, "/setlists/new");
+  const db = await signInAs(page, MUSICIEN, {}, "/setlists/new?autre=1");
   await page.getByLabel("Titre").fill("Culte du 28 septembre");
   await page.getByLabel("Catégorie").selectOption("Culte Francophone");
-  await page.getByLabel("Présidence *", { exact: true }).selectOption("__other__");
+  await champPresidence(page).selectOption("__other__");
   await page.getByPlaceholder("ex. Timothée").fill("Jonathan Z.");
   await expect.poll(() => setlistWrites(db).length, { timeout: 10_000 }).toBeGreaterThan(0);
   // Réseau lent : chaque écriture de la setlist met 2,5 s à partir.
@@ -129,7 +131,7 @@ test("création : « Publier » juste après une retouche, sur réseau lent, ne 
     await new Promise((r) => setTimeout(r, 2_500));
     await route.fallback();
   });
-  await page.getByLabel("Notes (optionnel)").fill("Thème : la grâce");
+  await champNotes(page).fill("Thème : la grâce");
   await page.getByRole("button", { name: "Publier" }).click();
   const id = setlistWrites(db)[0].path;
   await page.waitForURL((u) => u.pathname.replace(/\/$/, "") === `/${id}`, { timeout: 15_000 });
@@ -144,7 +146,7 @@ test("modification : quitter l'éditeur sans « Terminé » envoie le changement
     notified.push(route.request().postData() ?? "");
     return route.fulfill({ status: 200, contentType: "application/json", body: '{"ok":true}' });
   });
-  await page.getByLabel("Notes (optionnel)").fill("Thème : la paix");
+  await champNotes(page).fill("Thème : la paix");
   await page.evaluate(() => history.back());
   await expect.poll(() => db.doc(`setlists/${SETLIST_ID}`)?.notes).toBe("Thème : la paix");
   await expect.poll(() => notified.length).toBe(1);
@@ -181,8 +183,8 @@ test("modification : un changement ailleurs garde les accords retouchés sur un 
     { [`setlists/${SETLIST_ID}`]: { ...SETLIST, items: AVEC_RETOUCHES } },
     `/setlists/${SETLIST_ID}/edit`,
   );
-  await expect(page.getByLabel("Tonalité de Abba Père")).toBeVisible();
-  await page.getByLabel("Tonalité de Abba Père").selectOption("B");
+  await attendreEditeur(page, "Abba Père");
+  await choisirTonalite(page, "Abba Père", "B");
   await expect.poll(() => setlistWrites(db, SETLIST_ID).length).toBeGreaterThan(0);
   const items = setlistWrites(db, SETLIST_ID).pop()!.data.items as Record<string, unknown>[];
   expect(items.find((i) => i.songSlug === "abba-pere")!.keyOverride).toBe("B");

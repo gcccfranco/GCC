@@ -1,29 +1,36 @@
 %% Généré par scripts/diagrammes/generer.ts (dependency-cruiser). Ne pas modifier à la main.
 flowchart LR
-  n0["scripts (build)<br/>7 fichiers"]
+  n0["scripts (build)<br/>20 fichiers"]
   n1["scripts/jianpu<br/>4 fichiers"]
-  n2["src/app (pages)<br/>75 fichiers"]
-  n3["src/app/api<br/>17 fichiers"]
-  n4["src/components<br/>76 fichiers"]
-  n5["src/hooks<br/>5 fichiers"]
-  n6["src/lib<br/>117 fichiers"]
+  n2["src/app (pages)<br/>154 fichiers"]
+  n3["src/app/api<br/>20 fichiers"]
+  n4["src/components<br/>200 fichiers"]
+  n5["src/hooks<br/>10 fichiers"]
+  n6["src/lib<br/>204 fichiers"]
   n7["src/locales<br/>2 fichiers"]
-  n8["src/types<br/>14 fichiers"]
-  n9["tests<br/>2 fichiers"]
-  n0 -->|14| n6
-  n0 -->|5| n8
+  n8["src/types<br/>20 fichiers"]
+  n9["tests<br/>3 fichiers"]
+  n0 -->|25| n6
+  n0 -->|6| n8
+  n0 -->|3| n9
   n1 -->|1| n6
   n1 -->|7| n9
-  n2 ==>|174| n4
-  n2 -->|5| n5
-  n2 ==>|312| n6
-  n2 -->|47| n8
-  n3 ==>|108| n6
-  n3 -->|13| n8
-  n4 -->|15| n5
-  n4 ==>|179| n6
+  n2 ==>|354| n4
+  n2 -->|42| n5
+  n2 ==>|491| n6
+  n2 ==>|65| n8
+  n3 ==>|166| n6
+  n3 -->|2| n7
+  n3 -->|10| n8
+  n4 -->|6| n2
+  n4 -->|47| n5
+  n4 ==>|656| n6
   n4 -->|4| n7
-  n4 -->|31| n8
-  n5 -->|6| n6
-  n6 -->|2| n7
-  n6 ==>|71| n8
+  n4 ==>|116| n8
+  n5 -->|10| n6
+  n5 -->|1| n8
+  n6 -->|1| n4
+  n6 -->|7| n7
+  n6 ==>|163| n8
+  n9 -->|3| n6
+  n9 -->|1| n8

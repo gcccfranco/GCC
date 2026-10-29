@@ -1,9 +1,10 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { validateReport, ValidationError } from "@/lib/report";
+import { ValidationError } from "@/lib/report";
 import { adminDb, verifyIdToken } from "@/lib/push/admin";
 import { adminUids } from "@/lib/push/recipients";
 import { sendPushToUids } from "@/lib/push/send";
-import { REPORT_KINDS, type ReportKind } from "@/types/report";
+import { BACK_OFFICE } from "@/lib/backOffice";
+import { cheminDeLaPage, lireCorpsReport } from "@/lib/push/bornes";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -47,14 +48,8 @@ export async function POST(req: NextRequest) {
     }
 
     // 2. Validation du contenu (titre / description, limites partagées avec le form).
-    const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
-    const report = validateReport(body);
-    const kind: ReportKind = REPORT_KINDS.includes(body.kind as ReportKind)
-      ? (body.kind as ReportKind)
-      : "site";
-    const songSlug = kind === "song" && typeof body.songSlug === "string" ? body.songSlug : "";
-    const songTitle = kind === "song" && typeof body.songTitle === "string" ? body.songTitle.slice(0, 200) : "";
-    const pageUrl = req.headers.get("referer") ?? "";
+    const { report, kind, songSlug, songTitle } = lireCorpsReport(await req.json().catch(() => ({})));
+    const pageUrl = cheminDeLaPage(req.headers.get("referer"), req.nextUrl.origin);
 
     const db = adminDb();
 
@@ -85,7 +80,8 @@ export async function POST(req: NextRequest) {
       await sendPushToUids(admins, {
         title: kind === "song" ? `Signalement chant — ${songTitle || report.title}` : "Signalement site",
         body: report.title,
-        url: "/admin",
+        // Lot U6, B2 : les signalements sont dans Messages › Réception (en ligne : /admin).
+        url: BACK_OFFICE ? "/back-office/messages" : "/admin",
         tag: `report-${docRef.id}`,
       });
     } catch (e) {

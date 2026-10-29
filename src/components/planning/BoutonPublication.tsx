@@ -1,0 +1,74 @@
+"use client"
+
+import { useState } from "react"
+import { Send, EyeOff } from "lucide-react"
+import { useTranslation } from "react-i18next"
+import { useConfirmer } from "@/components/layout/Confirmer"
+import { authHeader } from "@/lib/firebase/setlists"
+import { BACK_OFFICE } from "@/lib/backOffice"
+
+// « Publier le T1 » / « Masquer le T1 » sur la page du planning (lot U2, Q4) :
+// la route existante (/api/planning/release) avec l'année de la page. La
+// première publication envoie une VRAIE notification : confirmation d'abord.
+
+export function BoutonPublication({ planningKey, planningLabel, annee, tri, publie, onChange }: {
+  planningKey: string
+  planningLabel: string
+  annee: number
+  tri: string
+  /** Le trimestre est-il déjà publié ? Oui : « Masquer » ; non : « Publier ». */
+  publie: boolean
+  /** `notified` : la publication vient d'être notifiée (première publication du trimestre). */
+  onChange: (published: string[], notified: boolean) => void
+}) {
+  const { t } = useTranslation()
+  const confirmer = useConfirmer()
+  const [enCours, setEnCours] = useState(false)
+  const [erreur, setErreur] = useState("")
+  const [info, setInfo] = useState("")
+
+  async function agir() {
+    const publish = !publie
+    if (publish && !(await confirmer({ titre: t("planning.publierConfirm", { tri, annee, planning: planningLabel }),
+      texte: t("planning.publierConfirmTexte"), action: t("planning.publier", { tri }) }))) return
+    setEnCours(true)
+    setErreur("")
+    setInfo("")
+    try {
+      const res = await fetch("/api/planning/release", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...(await authHeader()) },
+        body: JSON.stringify({ key: planningKey, tri, publish, year: annee }),
+      })
+      const data = (await res.json().catch(() => ({}))) as { published?: string[]; error?: string; dejaAnnonce?: boolean; notified?: boolean }
+      if (res.ok) {
+        onChange(data.published ?? [], data.notified === true)
+        // « Prévenir des changements » n'existe pas en ligne (back-office coupé) : le texte n'y renvoie pas.
+        if (data.dejaAnnonce) setInfo(t(BACK_OFFICE ? "planning.dejaAnnonce" : "planning.dejaAnnonceEnLigne"))
+      }
+      else setErreur(data.error || t("planning.publierEchec"))
+    } catch {
+      setErreur(t("planning.publierEchec"))
+    } finally {
+      setEnCours(false)
+    }
+  }
+
+  return (
+    <span className="inline-flex flex-col gap-1 max-sm:w-full">
+      <button
+        type="button"
+        onClick={() => void agir()}
+        disabled={enCours}
+        className={`h-10 sm:h-9 px-4 rounded-full text-sm font-semibold inline-flex items-center justify-center gap-1.5 transition-[background-color,color,transform] duration-150 active:scale-[.96] cursor-pointer disabled:opacity-60 ${
+          publie ? "bg-secondary text-foreground hover:bg-secondary/80" : "bg-foreground text-background"
+        }`}
+      >
+        {publie ? <EyeOff className="h-4 w-4" aria-hidden /> : <Send className="h-4 w-4" aria-hidden />}
+        {t(publie ? "planning.masquer" : "planning.publier", { tri })}
+      </button>
+      {info && <span role="status" className="text-xs text-muted-foreground">{info}</span>}
+      {erreur && <span role="alert" className="text-xs text-destructive">{erreur}</span>}
+    </span>
+  )
+}

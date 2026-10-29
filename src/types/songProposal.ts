@@ -15,4 +15,7 @@ export interface SongProposal {
   /** Nom + prénom de l'auteur (affiché aux admins), email en repli */
   authorName: string;
   createdAt: Date | null;
+  /** Proposée depuis la setlist d'un passage de fête (docs/spec-chants-fetes.md, CF20) : `setlists/{id}` et son titre. */
+  setlistId?: string;
+  setlistTitre?: string;
 }

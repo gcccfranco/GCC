@@ -9,6 +9,9 @@ export type Song = {
   originalKey: string;
   /** Tonalité la plus chantée à GCC, affichée par défaut (docs/tonalites-recommandees.md). */
   recommendedKey: string | null;
+  /** `id` de la proposition de chant dont ce chant est né (`{proposition: <id>}`), absent sinon : une
+   *  setlist de fête qui l'attendait bascule alors sur ce chant (docs/spec-chants-fetes.md, CF21). */
+  proposition?: string;
   tempo: number | null;
   themes: string[];
   youtubeUrl: string | null;
@@ -31,6 +34,9 @@ export type SectionSummary = {
 
 export type SongIndexEntry = Omit<Song, "chordProSource"> & {
   sections?: SectionSummary[];
+  /** Date d'ajout au répertoire (AAAA-MM-JJ), lue dans git par `build:index` ; `null` sans
+   *  historique (clone superficiel). « Nouveaux au répertoire » (agencement v18, A7). */
+  ajouteLe?: string | null;
 };
 
 export type Theme = {

@@ -67,12 +67,12 @@ export function currentSundayStr() {
   return `${sun.getFullYear()}-${pad(sun.getMonth()+1)}-${pad(sun.getDate())}`
 }
 
-export function isFirstSundayOfMonth(dateStr: string, allRows: string[][]): boolean {
-  const m = getMois(dateStr)
-  for (const row of allRows) {
-    if (getMois(row[0]) === m) return row[0] === dateStr
-  }
-  return false
+/** Premier dimanche du mois : un dimanche tombant du 1 au 7. La date seule décide (ISO AAAA-MM-JJ,
+ *  comme `row[0]` des grilles) — ni les autres lignes, ni l'année. `_allRows` n'est plus lu : gardé
+ *  pour les appelants. */
+export function isFirstSundayOfMonth(dateStr: string, _allRows?: string[][]): boolean {
+  const jour = parseInt(dateStr.split("-")[2])
+  return jour >= 1 && jour <= 7
 }
 
 export function getCurrentEddPeriode(): EddPeriode {
@@ -82,6 +82,8 @@ export function getCurrentEddPeriode(): EddPeriode {
 
 export interface CampusSeance {
   d: string
+  /** Date de la séance (ISO YYYY-MM-DD), gardée telle que lue : le libellé « 27/7 » n'a pas d'année. */
+  date: string
   /** Président de la séance (colonne PRESIDENT du planning) */
   pres: string
   ch: string

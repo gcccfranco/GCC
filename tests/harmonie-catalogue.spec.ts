@@ -1,9 +1,9 @@
 import { expect, test, type Page } from "@playwright/test";
-import { signInAs, type FakeProfile } from "./helpers/fakeSession";
+import { musicien, signInAs, type FakeProfile } from "./helpers/fakeSession";
 
 // Lot 9 / H1 (docs/spec-harmonie.md) : le catalogue « Harmonie ». Réservé aux
-// pianistes et aux guitaristes — l'instrument se lit dans les colonnes Piano /
-// Guitare des plannings, pas dans le profil — et aux admins.
+// Musiciens de Louange qui jouent du piano ou de la guitare — lot AO : l'instrument se lit dans
+// « Ce qu'il joue » de l'organigramme (champ `joue` du profil), plus dans les colonnes du planning — et aux admins.
 
 const csv = (rows: string[][]) => rows.map((r) => r.map((c) => `"${c}"`).join(",")).join("\n");
 
@@ -14,9 +14,9 @@ const CULTE = csv([
   ["20/09", "Paul W.", "", "", "Jo L.", "Éloïse M.", "Yiyi C.", "", "", "Hewei", "", ""],
 ]);
 
-const JO: FakeProfile = { uid: "uid-jo", email: "jo@example.com", planningName: "Jo L." };
-const ELOISE: FakeProfile = { uid: "uid-eloise", email: "eloise@example.com", planningName: "Éloïse M." };
-const YIYI: FakeProfile = { uid: "uid-yiyi", email: "yiyi@example.com", planningName: "Yiyi C." };
+const JO: FakeProfile = { uid: "uid-jo", email: "jo@example.com", planningName: "Jo L.", ...musicien("piano") };
+const ELOISE: FakeProfile = { uid: "uid-eloise", email: "eloise@example.com", planningName: "Éloïse M.", ...musicien("guitare") };
+const YIYI: FakeProfile = { uid: "uid-yiyi", email: "yiyi@example.com", planningName: "Yiyi C.", ...musicien("batterie") };
 
 /** Capture à regarder à l'œil (PW_CAPTURES=<dossier>), une par appareil. */
 async function capture(page: Page, name: string, pleinePage = false) {

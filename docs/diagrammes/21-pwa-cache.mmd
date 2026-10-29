@@ -8,21 +8,23 @@ sequenceDiagram
   N->>SW: register('/sw.js') au chargement (layout.tsx)
   SW->>SW: install
   alt hors serveur local
-    SW->>C: précharge /songs/ et /songs-index.json
+    SW->>C: précharge /songs/, /songs-index.json et /hors-ligne.html
   end
   SW->>SW: skipWaiting puis activate
   SW->>C: supprime les anciens caches (tous, en local)
   SW->>N: clients.claim
   N->>SW: requête GET de même origine
   alt navigation HTML
-    SW->>V: network-first
+    SW->>V: network-first, course de 3 s
     SW->>C: garde une copie
-    Note right of SW: hors ligne : la copie, sinon /songs/
+    Note right of SW: lent, hors ligne ou 5xx : la copie, sinon /hors-ligne.html
   else /_next/static/*
     SW->>C: cache-first (fichiers hashés)
-  else polices, songs-index.json, /api/song/*, icônes
+  else polices, songs-index.json, /api/song/*, /jianpu/*, icônes
     SW->>C: stale-while-revalidate
-  else tout le reste, dont /jianpu/*
+  else tout le reste
     SW->>V: réseau, repli sur le cache s'il existe
   end
-  Note over N,V: Firestore, Google Sheets, YouTube : autre origine, jamais interceptés. Installation : /manifest.webmanifest (start_url /planning) + texte d'aide sur iPhone, pas de beforeinstallprompt.
+  N->>SW: message « precache » (page d'une setlist ouverte)
+  SW->>C: garde la page, ses chants et leurs scans 简谱
+  Note over N,V: Firestore, Google Sheets, YouTube : autre origine, jamais interceptés. Installation : /manifest.webmanifest (start_url /planning/) + texte d'aide sur iPhone, pas de beforeinstallprompt.

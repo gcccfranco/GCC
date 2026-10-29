@@ -1,10 +1,9 @@
 "use client";
 
-import { Fragment } from "react";
+import { Fragment, useCallback, useEffect, useState } from "react";
 import { BACK_OFFICE } from "@/lib/backOffice";
 import { useTranslation } from "react-i18next";
 import {
-  BookOpen,
   Music,
   SlidersHorizontal,
   Pencil,
@@ -25,8 +24,15 @@ import {
   Sparkles,
 } from "lucide-react";
 import { RequireAuth } from "@/components/auth/RequireAuth";
+import { Halo } from "@/components/layout/Halo";
+import { EnTetePage } from "@/components/layout/EnTetePage";
+import { useDisposition } from "@/hooks/useDisposition";
+import { ouvrirVisite } from "@/components/onboarding/Accueil";
+import { useProfile } from "@/lib/firebase/users";
+import { cartesDeLaVisite } from "@/lib/onboarding/visite";
 import { GuideFigure } from "@/components/guide/GuideFigure";
 import { FIGURES } from "@/lib/guide/figures";
+import { dernierJourDuSheet } from "@/lib/evenements/bascule";
 
 // Les ancres (#songs, #setlists, #planning, #evenements…) sont visées par les
 // liens « Comment ça marche ? » des pages (lot 8).
@@ -72,104 +78,193 @@ function RichText({ text }: { text: string }) {
   );
 }
 
+/** La partie lue : la dernière dont le haut est passé sous la barre (120 px du haut de l'écran) ;
+ *  au bas de la page, la dernière, que le défilement ne peut pas monter jusque-là. */
+function usePartieLue(cles: readonly string[], actif: boolean) {
+  const [lue, setLue] = useState<string>(cles[0]);
+  const lire = useCallback(() => {
+    const doc = document.documentElement;
+    if (window.scrollY + window.innerHeight >= doc.scrollHeight - 2 && window.scrollY > 0) {
+      setLue(cles[cles.length - 1]);
+      return;
+    }
+    let courante = cles[0];
+    for (const cle of cles) {
+      const el = document.getElementById(cle);
+      if (el && el.getBoundingClientRect().top <= 120) courante = cle;
+    }
+    setLue(courante);
+  }, [cles]);
+  useEffect(() => {
+    if (!actif) return;
+    const premier = requestAnimationFrame(lire);
+    window.addEventListener("scroll", lire, { passive: true });
+    return () => {
+      cancelAnimationFrame(premier);
+      window.removeEventListener("scroll", lire);
+    };
+  }, [actif, lire]);
+  return [lue, setLue] as const;
+}
+
+const CLES = SECTIONS.map((s) => s.key);
+
 export default function GuidePage() {
   const { t } = useTranslation();
+  const { user, profile, loading } = useProfile();
+  // Visite par rôle (docs/spec-visite-par-role.md, VR9) : « Pour toi, en N cartes ».
+  const nCartes = cartesDeLaVisite(user, profile, BACK_OFFICE).length;
+  // Lot U4 bis, B6 (docs/spec-pages-en-grand.md, Q11 ; planches `guide-*`) : en grand, le
+  // sommaire collant à gauche (260 px depuis la v18, R14) et la lecture à 720 px ; tablette portrait, le sommaire
+  // sur deux colonnes en tête ; téléphone, une ligne par partie, en tête.
+  const disposition = useDisposition();
+  const grand = disposition === "grand";
+  const [lue, setLue] = usePartieLue(CLES, disposition !== "telephone");
+
+  const sommaire = (
+    <nav
+      aria-label={t("guide.tocTitle")}
+      className={
+        grand
+          ? "sticky top-[calc(var(--nav-h)+24px)] max-h-[calc(100dvh-var(--nav-h)-48px)] self-start overflow-y-auto"
+          : "raised rounded-2xl p-3"
+      }
+    >
+      <p className={`text-sm font-semibold text-muted-foreground ${grand ? "mb-1.5 px-2.5" : "mb-1 px-2"}`}>
+        {t("guide.tocTitle")}
+      </p>
+      <ul
+        className={
+          disposition === "tablette"
+            ? "grid grid-cols-2 gap-x-4 gap-y-0.5"
+            : grand
+              ? "flex flex-col gap-0.5"
+              : "flex flex-col divide-y divide-border"
+        }
+      >
+        {SECTIONS.map(({ key, Icon }) => {
+          const allume = disposition !== "telephone" && lue === key;
+          return (
+            <li key={key}>
+              <a
+                href={`#${key}`}
+                aria-current={allume ? "location" : undefined}
+                onClick={() => setLue(key)}
+                className={`flex items-center gap-2.5 rounded-lg px-2.5 text-sm font-medium transition-colors ${
+                  disposition === "telephone" ? "min-h-11 py-2.5 text-[15px]" : "py-1.5"
+                } ${
+                  allume
+                    ? "bg-foreground text-background"
+                    : "text-foreground/80 hover:bg-secondary hover:text-foreground"
+                }`}
+              >
+                <Icon className={`h-4 w-4 shrink-0 ${allume ? "" : "text-muted-foreground"}`} />
+                {t(`guide.sections.${key}.title`)}
+              </a>
+            </li>
+          );
+        })}
+      </ul>
+    </nav>
+  );
 
   return (
     <RequireAuth>
-      <div className="min-h-screen bg-background">
-        <div className="max-w-2xl mx-auto px-4 pt-6 pb-16 space-y-6">
-          <header className="space-y-1.5">
-            <div className="flex items-center gap-2">
-              <BookOpen className="h-5 w-5 text-muted-foreground" />
-              <h1 className="text-lg font-bold text-foreground">{t("guide.title")}</h1>
-            </div>
-            <p className="text-sm text-muted-foreground">{t("guide.subtitle")}</p>
-          </header>
-
-          {/* Sommaire */}
-          <nav className="rounded-xl bg-card shadow-soft p-3">
-            <p className="text-sm font-semibold text-muted-foreground mb-2">
-              {t("guide.tocTitle")}
-            </p>
-            <ul className="flex flex-col gap-0.5">
-              {SECTIONS.map(({ key, Icon }) => (
-                <li key={key}>
-                  <a
-                    href={`#${key}`}
-                    className="flex items-center gap-2 px-2 py-1.5 rounded-lg text-sm font-medium text-foreground/80 hover:text-foreground hover:bg-secondary transition-colors"
-                  >
-                    <Icon className="h-4 w-4 text-muted-foreground shrink-0" />
-                    {t(`guide.sections.${key}.title`)}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </nav>
-
-          {/* Sections */}
-          <div className="space-y-5">
-            {SECTIONS.map(({ key, Icon }) => {
-              const points = t(`guide.sections.${key}.points`, {
-                returnObjects: true,
-                defaultValue: [],
-              }) as unknown as string[];
-              const tip = t(`guide.sections.${key}.tip`, { defaultValue: "" });
-              const forWhom = t(`guide.sections.${key}.for`, { defaultValue: "" });
-
-              return (
-                <section
-                  key={key}
-                  id={key}
-                  className="scroll-mt-[var(--nav-h)] rounded-xl bg-card shadow-soft p-4 space-y-3"
+      <div className="relative min-h-screen">
+        <Halo variant="moi" color="hsl(var(--foreground))" />
+        {/* A14 (agencement v18) : l'en-tête commun, « ‹ Moi », sans icône ; en grand, la lecture (R14) :
+            sommaire de 260 px collant à gauche, colonne de 720 px, calés sur le titre. */}
+        <div className="relative pb-16">
+          <EnTetePage retour={{ href: "/moi", label: t("moi.title") }} titre={t("guide.title")} sousTitre={t("guide.subtitle")} />
+          {user && !loading && (
+            <div className="mb-5 px-[var(--marge-page)]">
+              <div className="flex max-w-[calc(720px+2*var(--marge-page))] items-center justify-between gap-3 rounded-2xl bg-secondary px-4 py-3">
+                <p className="min-w-0 text-[15px] font-semibold text-foreground">{t("accueil.pourToi", { count: nCartes })}</p>
+                <button
+                  type="button"
+                  onClick={ouvrirVisite}
+                  className="shrink-0 rounded-full bg-foreground px-4 py-2 text-sm font-semibold text-background transition-transform duration-150 active:scale-[.98]"
                 >
-                  <div className="flex flex-wrap items-center gap-2">
-                    <h2 className="flex items-center gap-2 text-base font-bold text-foreground">
-                      <Icon className="h-[18px] w-[18px] text-muted-foreground shrink-0" />
-                      {t(`guide.sections.${key}.title`)}
-                    </h2>
-                    {forWhom && (
-                      <span className="inline-flex items-center rounded-full bg-secondary px-2 py-0.5 text-xs font-medium text-muted-foreground">
-                        {forWhom}
-                      </span>
-                    )}
-                  </div>
+                  {t("accueil.revoir")}
+                </button>
+              </div>
+            </div>
+          )}
+          <div
+            className={
+              grand
+                ? "grid grid-cols-[260px_minmax(0,720px)] gap-x-10 px-[var(--marge-page)]"
+                : "max-w-[calc(720px+2*var(--marge-page))] space-y-6 px-[var(--marge-page)]"
+            }
+          >
+            {sommaire}
 
-                  <p className="text-sm leading-relaxed text-muted-foreground">
-                    <RichText text={t(`guide.sections.${key}.body`)} />
-                  </p>
+            {/* Sections */}
+            <div className="min-w-0 space-y-5">
+              {SECTIONS.map(({ key, Icon }) => {
+                const points = t(`guide.sections.${key}.points`, {
+                  returnObjects: true,
+                  defaultValue: [],
+                  // U9 (Q7 c) : « Où créer un évènement » cite le dernier jour du Sheet.
+                  jour: dernierJourDuSheet(),
+                }) as unknown as string[];
+                const tip = t(`guide.sections.${key}.tip`, { defaultValue: "" });
+                const forWhom = t(`guide.sections.${key}.for`, { defaultValue: "" });
 
-                  {(FIGURES[key] ?? []).map((figure) => (
-                    <GuideFigure key={figure.id} figure={figure} />
-                  ))}
-
-                  {points.length > 0 && (
-                    <ul className="space-y-1.5">
-                      {points.map((point, i) => (
-                        <li
-                          key={i}
-                          className="flex gap-2 text-sm leading-relaxed text-muted-foreground"
-                        >
-                          <span className="mt-[7px] h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
-                          <span>
-                            <RichText text={point} />
-                          </span>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-
-                  {tip && (
-                    <div className="flex gap-2 rounded-lg bg-secondary/60 px-3 py-2 text-xs leading-relaxed text-muted-foreground">
-                      <Lightbulb className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                      <span>
-                        <RichText text={tip} />
-                      </span>
+                return (
+                  <section
+                    key={key}
+                    id={key}
+                    className="raised scroll-mt-[calc(var(--nav-h)+16px)] space-y-3 rounded-2xl p-4 md:p-5"
+                  >
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h2 className="flex items-center gap-2.5 text-lg font-bold text-foreground">
+                        <Icon className="h-5 w-5 shrink-0 text-foreground" />
+                        {t(`guide.sections.${key}.title`)}
+                      </h2>
+                      {forWhom && (
+                        <span className="inline-flex items-center rounded-full bg-secondary px-2 py-0.5 text-xs font-medium text-muted-foreground">
+                          {forWhom}
+                        </span>
+                      )}
                     </div>
-                  )}
-                </section>
-              );
-            })}
+
+                    <p className="text-[15px] leading-relaxed text-muted-foreground">
+                      <RichText text={t(`guide.sections.${key}.body`)} />
+                    </p>
+
+                    {(FIGURES[key] ?? []).map((figure) => (
+                      <GuideFigure key={figure.id} figure={figure} />
+                    ))}
+
+                    {points.length > 0 && (
+                      <ul className="space-y-1.5">
+                        {points.map((point, i) => (
+                          <li
+                            key={i}
+                            className="flex gap-2 text-[15px] leading-relaxed text-muted-foreground"
+                          >
+                            <span className="mt-[9px] h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
+                            <span>
+                              <RichText text={point} />
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+
+                    {tip && (
+                      <div className="flex gap-2 rounded-lg bg-secondary/60 px-3 py-2 text-xs leading-relaxed text-muted-foreground">
+                        <Lightbulb className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                        <span>
+                          <RichText text={tip} />
+                        </span>
+                      </div>
+                    )}
+                  </section>
+                );
+              })}
+            </div>
           </div>
         </div>
       </div>

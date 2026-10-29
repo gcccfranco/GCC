@@ -18,7 +18,7 @@ export async function POST(req: NextRequest) {
   if (!BACK_OFFICE) return new Response(null, { status: 404 })
   try {
     const user = await optionalUser(req);
-    if (!user) throw new HttpError(401, "Non authentifié");
+    if (!user) throw new HttpError(401, "Non authentifié", "nonAuthentifie");
     const body = (await req.json().catch(() => ({}))) as { evenementId?: unknown; inscriptionId?: unknown };
     const evenementId = typeof body.evenementId === "string" && ID.test(body.evenementId) ? body.evenementId : null;
     const inscriptionId = typeof body.inscriptionId === "string" && ID.test(body.inscriptionId) ? body.inscriptionId : null;
@@ -26,22 +26,24 @@ export async function POST(req: NextRequest) {
 
     const db = adminDb();
     const ref = db.collection("evenements").doc(evenementId);
-    const profile = ((await db.collection("users").doc(user.uid).get()).data() ?? null) as { poles?: string[] } | null;
+    const profile = ((await db.collection("users").doc(user.uid).get()).data() ?? null) as { coordination?: boolean } | null;
 
     const result = await db.runTransaction(async (tx) => {
       const snap = await tx.get(ref);
-      if (!snap.exists) throw new HttpError(404, "Évènement introuvable");
+      if (!snap.exists) throw new HttpError(404, "Évènement introuvable", "introuvable");
       const e = { id: snap.id, ...snap.data() } as Evenement;
       const gestion = canEditEvenement(user, profile, e);
       const iid = inscriptionId ?? user.uid;
-      if (iid !== user.uid && !gestion) throw new HttpError(403, "Non autorisé");
+      if (iid !== user.uid && !gestion) throw new HttpError(403, "Non autorisé", "nonAutorise");
       const iref = ref.collection("inscriptions").doc(iid);
       const ins = await tx.get(iref);
-      if (!ins.exists) throw new HttpError(404, "Inscription introuvable");
-      if (iid === user.uid && !gestion && aCommence(e, nowIsoParis())) throw new HttpError(409, "L'évènement a déjà commencé.");
+      if (!ins.exists) throw new HttpError(404, "Inscription introuvable", "inscriptionIntrouvable");
+      if (iid === user.uid && !gestion && aCommence(e, nowIsoParis())) throw new HttpError(409, "L'évènement a déjà commencé.", "commencee");
       const inscrits = Math.max(0, (e.inscrits ?? 0) - 1 - ((ins.data()?.invites as number) ?? 0));
       tx.delete(iref);
-      tx.update(ref, { inscrits });
+      // Une place sans compte rend aussi sa place au plafond des inscriptions sans compte.
+      const sansCompte = ins.data()?.uid ? null : Math.max(0, (e.inscritsSansCompte ?? 0) - 1 - ((ins.data()?.invites as number) ?? 0));
+      tx.update(ref, e.inscritsSansCompte !== undefined && sansCompte !== null ? { inscrits, inscritsSansCompte: sansCompte } : { inscrits });
       return { inscrits };
     });
     return NextResponse.json({ ok: true, ...result });

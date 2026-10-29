@@ -88,6 +88,14 @@
   /* « Moi » (V7) : l'écran n'appartient à aucune section, donc l'encre — plus discrète
      que les couleurs, un gris franc se lirait comme une salissure et non comme une lumière. */
   .halo-moi::before, :root:has(.halo-moi) .barre-halo::before { opacity: 0.08; }
+  /* Le halo par défaut (`HaloParDefaut`, retours du 06/10/2026) : l'encre de Moi, sur les pages
+     sans couleur à elles ; il s'efface dès qu'une page pose son propre halo. */
+  .halo-defaut::before, :root:not(:has(.halo:not(.halo-defaut, .barre-halo))) .barre-halo::before { opacity: 0.08; }
+  :root:has(.halo:not(.halo-defaut, .barre-halo)) .halo-defaut { display: none; }
+  /* Au Back-Office (agencement v18, R12) : le halo par défaut prend le bleu gris de la planche
+     (`--halo-back-office`), à l'opacité de la planche ; la copie des barres suit. */
+  .halo-defaut[data-back-office]::before,
+  :root:has(.halo-defaut[data-back-office]):not(:has(.halo:not(.halo-defaut, .barre-halo))) .barre-halo::before { opacity: 0.8; }
   .halo-chant::before, :root:has(.halo-chant) .barre-halo::before { left: auto; right: -80px; top: calc(-60px + var(--sat)); width: 300px; height: 220px; opacity: 0.12; filter: blur(44px); }
   /* Grand écran (ordinateur, tablette en paysage ; tranché le 20/09/2026 au soir) : la
      colonne de contenu est centrée, le halo des planches resterait coincé dans le coin.
@@ -193,7 +201,7 @@
     --muted-foreground: 240 2.7% 43.5%; /* #6c6c72 */
     --accent: 240 8.3% 95.3%;        /* survol des menus */
     --accent-foreground: 240 3.4% 11.4%;
-    --destructive: 0 84% 60%;
+    --destructive: 0 72% 51%;        /* #dc2828 : 4,8 sur blanc, 4,6 pour le texte #fafafa du bouton */
     --destructive-foreground: 0 0% 98%;
     --border: 240 2% 89.5%;          /* filet, #e4e4e5 = rgba(60,60,67,.14) sur blanc */
     --input: 240 2% 89.5%;
@@ -210,6 +218,8 @@
     /* Semantic music colors */
     --chord-color: #3f63cf;   /* bleu PDF FR */
     --jianpu-color: #b3261d;
+    /* Encre du scan 简谱 (piste A, docs/spec-jianpu-integration.md) : = --foreground en clair. */
+    --jianpu-encre: 240 3.4% 11.4%;  /* #1c1c1e */
     --pinyin-color: #8a8f98;
     --sheet-accent: #1c6e7c;
 
@@ -253,8 +263,8 @@
     --muted-foreground: 240 3.5% 61%; /* #98989f */
     --accent: 240 2.2% 17.6%;
     --accent-foreground: 240 23.8% 95.9%;
-    --destructive: 0 63% 31%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 84% 68%;        /* #f26969 : 5,7 sur #1c1c1e, 4,65 sur #2c2c2e */
+    --destructive-foreground: 240 3.4% 11.4%; /* #1c1c1e : encre sur le rouge clair, 5,7 (le blanc ne donne que 3,0) */
     --border: 240 1.8% 22%;          /* #373739 — filet des groupes ; le mode louange s'en sert aussi */
     --input: 240 1.8% 22%;
     --ring: 240 23.8% 95.9%;         /* focus blanc cassé */
@@ -265,6 +275,7 @@
 
     --chord-color: #8fb0ff;   /* bleu PDF FR dark */
     --jianpu-color: #ff7d72;
+    --jianpu-encre: 240 5.9% 90%;    /* #e4e4e7 : encre adoucie du scan (D10), distincte de --foreground */
     --pinyin-color: #888e98;
     --sheet-accent: #63c3cf;
 
@@ -318,6 +329,10 @@
      pour 4,5 exigé), on les éclaircit à l'affichage, sans toucher au fichier. */
   .svc-ink { color: var(--svc); }
   .dark .svc-ink { color: color-mix(in srgb, var(--svc) 55%, white); }
+  /* Texte dans une couleur de service passée en style inline (`styleTexteService`, src/lib/couleurSombre.ts) :
+     --svc-sombre est la couleur éclaircie jusqu'à 4,5:1 sur #2c2c2e. */
+  .texte-service { color: var(--svc-clair); }
+  .dark .texte-service { color: var(--svc-sombre); }
   .svc-line { border-left-color: var(--svc); }
   .dark .svc-line { border-left-color: color-mix(in srgb, var(--svc) 55%, white); }
   /* Tuile d'un service (V7 ter) : le fond porte la couleur, le libellé la reprend
@@ -356,6 +371,11 @@
     letter-spacing: 0.1em;
     color: var(--sec-c, #6b7080);
   }
+  /* Le scan 简谱 est de l'encre sur le fond du site : le groupe filtré (image + gommes)
+     passe par un filtre SVG « luminance → alpha » (JianpuSheet). Les valeurs RVB de
+     l'encre sont codées en dur dans les deux filtres, comme --jianpu-encre. */
+  [data-jianpu-filtre] { filter: url(#jianpu-encre-clair); }
+  .dark [data-jianpu-filtre] { filter: url(#jianpu-encre-sombre); }
   .font-jianpu {
     color: var(--jianpu-color);
     font-weight: 700;
@@ -398,6 +418,22 @@
   .song-zoom {
     zoom: 1 !important;
   }
+
+  /* Scène, ordre de passage au Back-Office (Pâques · Noël, P8) : la page imprimée ne garde que
+     la liste. */
+  body:has(.scene-imprimer) * {
+    visibility: hidden;
+  }
+  body:has(.scene-imprimer) .scene-imprimer,
+  body:has(.scene-imprimer) .scene-imprimer * {
+    visibility: visible;
+  }
+  body:has(.scene-imprimer) .scene-imprimer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+  }
 }
 
 /* Accueil de première connexion (lot 8) : l'écran suivant arrive d'un léger
@@ -405,4 +441,384 @@
 @keyframes accueil-in {
   from { opacity: 0; transform: translateX(12px); }
   to { opacity: 1; transform: translateX(0); }
+}
+
+/* ══ Lot U4 — navigation sur grand écran (docs/spec-navigation-grand-ecran.md) ══════════
+   Une seule barre, à gauche, sur ordinateur et tablette en paysage ; téléphone et tablette
+   en portrait inchangés. La disposition est décidée ICI, jamais par l'agent utilisateur :
+   ordinateur        = (pointer: fine) and (min-width: 1024px)
+   tablette paysage  = (pointer: coarse) and (orientation: landscape) and (min-width: 1024px)
+   sinon             = le modèle du téléphone (barre du haut + barre du bas).
+   Jetons lus par le reste du site :
+   --barre-laterale  place prise à gauche par la barre (0, 68 ou 248 px ; 0 à l'impression).
+                     `main` et chaque élément fixe calé sur la fenêtre s'en décalent.
+   --largeur-lecture borne d'une page de lecture, centrée dans la zone de contenu (U5…). */
+@layer base {
+  :root {
+    --barre-laterale: 0px;
+    --largeur-lecture: 1440px;
+    /* La barre de la planche (Q11) ; en sombre, la surface des groupes et le filet du thème. */
+    --barre-laterale-fond: #f7f7f8;
+    --barre-laterale-filet: #ececee;
+    /* La barre des onglets colle sous la navbar en la recouvrant d'1 px (densité
+       fractionnaire, voir `.barre-fond`) ; sans navbar, rien à recouvrir. */
+    --recouvrement-navbar: 1px;
+  }
+  .dark {
+    --barre-laterale-fond: hsl(var(--card));
+    --barre-laterale-filet: hsl(var(--border));
+  }
+  /* Ordinateur (N2) : la barre dépliée, 248 px ; plus de barre du haut, la page commence en
+     haut de l'écran (sous la zone sûre, gardée pour l'iPad installé le 21/09/2026). `screen` :
+     à l'impression, ni barre ni marge. */
+  @media screen and (pointer: fine) and (min-width: 1024px) {
+    :root {
+      --barre-laterale: 248px;
+      --nav-h: var(--sat);
+      --recouvrement-navbar: 0px;
+    }
+    /* N3 : réduite (68 px) si cet appareil l'a choisi. `data-barre` est posé par la ligne de
+       script de l'en-tête (layout.tsx), avant le premier affichage : rien ne saute. */
+    :root[data-barre="reduite"] { --barre-laterale: 68px; }
+  }
+  /* Tablette en paysage (N4) : la barre réduite, toujours (68 px) ; `data-barre` n'y compte pas.
+     Un iPad Pro 13 pouces debout (1 024 px, portrait) et un téléphone couché (< 1 024 px)
+     gardent le modèle du téléphone. */
+  @media screen and (pointer: coarse) and (orientation: landscape) and (min-width: 1024px) {
+    :root {
+      --barre-laterale: 68px;
+      --nav-h: var(--sat);
+      --recouvrement-navbar: 0px;
+    }
+  }
+  @media print {
+    :root { --barre-laterale: 0px; }
+  }
+}
+
+@layer utilities {
+  /* Le halo part du bord de la barre (jamais sous elle). Sa copie dans une barre transformée
+     (donc repère des fixes) se recale de la place où la barre est posée : `--barre-left`,
+     déclaré par la barre comme `--barre-top`. */
+  .halo { left: var(--barre-laterale); }
+  .barre-halo { left: calc(var(--barre-laterale) - var(--barre-left, 0px)); }
+
+  /* La barre latérale (`BarreLaterale`) : montée partout, montrée sur ordinateur seulement.
+     La barre du haut (`.barre-haut`) y est masquée mais reste montée : elle garde la langue
+     des rappels ; la barre du bas l'est déjà par `.hide-on-desktop`. */
+  .barre-laterale {
+    display: none;
+    background-color: var(--barre-laterale-fond);
+    border-right: 1px solid var(--barre-laterale-filet);
+  }
+  .barre-laterale-filet { border-color: var(--barre-laterale-filet); }
+  .barre-laterale :focus-visible { outline: 2px solid hsl(var(--ring)); outline-offset: 2px; }
+  @media screen and (pointer: fine) and (min-width: 1024px) {
+    .barre-laterale { display: flex; }
+    .barre-haut { display: none; }
+  }
+  /* Tablette en paysage (N4) : la barre latérale aussi, et plus de barre du bas ni de sa cale. */
+  @media screen and (pointer: coarse) and (orientation: landscape) and (min-width: 1024px) {
+    .barre-laterale { display: flex; }
+    .barre-haut { display: none; }
+    .hide-on-desktop { display: none !important; }
+  }
+
+  /* N3 — réduire, déplier (Q5, Q12, planche `ordinateur-barre-reduite`). Réduite : 68 px, logo,
+     entrées en icônes de 44 px (nom gardé en `aria-label`, infobulle en `title`), « Déplier »
+     sous les entrées, cloche puis initiale en bas ; ni label, ni langue, ni nom, ni sélecteur.
+     Visiteur : « Connexion », langue et thème en icônes. Pas d'animation de largeur : la barre
+     bascule d'un coup, les libellés reviennent en fondu court (opacité seule). */
+  .barre-si-reduite { display: none; }
+  .barre-laterale .barre-texte { animation: barre-fondu 150ms ease-out; }
+  @keyframes barre-fondu { from { opacity: 0; } }
+  /* Les règles valent pour la barre fixe seulement (`.barre-laterale`) : la barre dépliée
+     par-dessus la page de la tablette (N4, `.barre-par-dessus`) garde ses libellés. */
+  @media screen and (pointer: fine) and (min-width: 1024px) {
+    :root[data-barre="reduite"] .barre-laterale { padding-left: 10px; padding-right: 10px; align-items: center; }
+    :root[data-barre="reduite"] .barre-laterale .barre-si-depliee,
+    :root[data-barre="reduite"] .barre-laterale .barre-texte { display: none; }
+    :root[data-barre="reduite"] .barre-laterale .barre-si-reduite { display: flex; }
+    /* BO-G, 10 : la pastille de non-lus devient un point sur l'icône (le nombre reste dans le DOM, pour la description). */
+    :root[data-barre="reduite"] .barre-laterale .barre-pastille { position: absolute; top: 7px; right: 7px; width: 10px; height: 10px; padding: 0; font-size: 0; line-height: 0; overflow: hidden; margin: 0; }
+    :root[data-barre="reduite"] .barre-laterale .barre-entree { width: 44px; height: 44px; padding: 0; justify-content: center; }
+    :root[data-barre="reduite"] .barre-laterale .barre-pied { flex-direction: column; gap: 10px; border-top-width: 0; padding-left: 0; padding-right: 0; }
+    /* L'initiale tout en bas, sous la cloche (planche) ; Tab garde l'ordre du document. */
+    :root[data-barre="reduite"] .barre-laterale .barre-fin { order: 1; }
+    :root[data-barre="reduite"] .barre-laterale .barre-connexion { flex: none; width: 36px; padding: 0; }
+  }
+  /* Tablette en paysage (N4, planche `ipad-paysage-reduit`) : la même barre réduite, toujours. */
+  @media screen and (pointer: coarse) and (orientation: landscape) and (min-width: 1024px) {
+    :root .barre-laterale { padding-left: 10px; padding-right: 10px; align-items: center; }
+    .barre-laterale .barre-si-depliee,
+    .barre-laterale .barre-texte { display: none; }
+    .barre-laterale .barre-si-reduite { display: flex; }
+    .barre-laterale .barre-pastille { position: absolute; top: 7px; right: 7px; width: 10px; height: 10px; padding: 0; font-size: 0; line-height: 0; overflow: hidden; margin: 0; }
+    .barre-laterale .barre-entree { width: 44px; height: 44px; padding: 0; justify-content: center; }
+    .barre-laterale .barre-pied { flex-direction: column; gap: 10px; border-top-width: 0; padding-left: 0; padding-right: 0; }
+    .barre-laterale .barre-fin { order: 1; }
+    .barre-laterale .barre-connexion { flex: none; width: 36px; padding: 0; }
+  }
+
+  /* N4 — la barre dépliée par-dessus la page (tablette en paysage) : la barre de la planche
+     `Main`, en lignes de 44 px au moins (toucher). Elle glisse depuis la gauche (vaul) ; en
+     mouvement réduit, fondu. `!important` : le glissé est posé par la feuille de style de vaul. */
+  .barre-par-dessus {
+    background-color: var(--barre-laterale-fond);
+    border-right: 1px solid var(--barre-laterale-filet);
+  }
+  .barre-par-dessus .barre-entree { min-height: 44px; }
+  .barre-par-dessus :focus-visible { outline: 2px solid hsl(var(--ring)); outline-offset: 2px; }
+  @keyframes barre-fondu-sortie { to { opacity: 0; } }
+  @media (prefers-reduced-motion: reduce) {
+    .barre-par-dessus[data-state="open"] { animation-name: barre-fondu !important; }
+    .barre-par-dessus[data-state="closed"] { animation-name: barre-fondu-sortie !important; }
+  }
+}
+
+/* Libellés de la barre d'outils de la setlist : à partir de 1 024 px de fenêtre comme avant
+   (en dessous, téléphones même couchés et iPad en portrait : icônes), et seulement s'ils tiennent dans la
+   rangée, donc à côté de la barre latérale. Requête de conteneur sur la rangée, qui ne
+   contient aucun élément fixe (Q9 : jamais sur `main` ni ses ancêtres). Seuil mesuré le
+   05/10/2026 : la rangée avec ses libellés fait 852 px en français dans le pire cas (Adapter,
+   Ma version, Pinyin), 728 px en 中文 ; 880 px laisse de la marge aux polices système d'autres
+   machines. Ordinateur, barre dépliée : libellés dès 1 160 px de fenêtre. Le test « une seule
+   ligne » de look-louange.spec.ts le garde. Hors `@layer` : Tailwind ne touche pas à la
+   requête de conteneur. */
+.rangee-outils { container-type: inline-size; }
+.libelle-outil { display: none; }
+@media (min-width: 1024px) {
+  @container (min-width: 880px) {
+    .libelle-outil { display: inline; }
+  }
+}
+
+/* Aperçu d'une setlist (lot U4 bis, B2, Q4) : les chants et l'équipe côte à côte quand le volet
+   de droite en a la place (ordinateur à 1 440 px, barre réduite), l'un sous l'autre sinon. */
+.apercu-setlist { container-type: inline-size; }
+@container (min-width: 680px) {
+  .apercu-colonnes { grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); }
+}
+
+/* Un service de Mes services (lot U4 bis, B4, Q7) : la setlist et l'équipe côte à côte quand le
+   volet en a la place, l'une sous l'autre sinon. Agencement v18 (T9) : la liste en carte à la
+   marge laisse au volet ~530 px à 1 280 px et sur iPad couché, d'où le seuil à 520 px. */
+.service-detail { container-type: inline-size; }
+@container (min-width: 520px) {
+  .service-colonnes { grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); }
+}
+
+/* Fiche d'un évènement à droite de l'agenda (lot U4 bis, B2, Q5) : deux colonnes quand le volet
+   en a la place, une sinon. Agencement v18 (A10, R15 ; planches `v18-app-evenements*`) : une colonne
+   sous 760 px de volet — les deux colonnes s'effacent (`display: contents`) et leurs blocs se rangent
+   par leurs `order-*` : bannière, infos et inscription, texte, gestion, tâches —, deux au-delà, la
+   seconde de 300 px. */
+.fiche-grand { container-type: inline-size; }
+.fiche-colonnes { display: flex; flex-direction: column; gap: 1rem; }
+.fiche-colonnes > * { display: contents; }
+@container (min-width: 760px) {
+  .fiche-colonnes { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 1.5rem; align-items: start; }
+  .fiche-colonnes > * { display: flex; flex-direction: column; gap: 1rem; min-width: 0; }
+}
+/* Retouches v18 (docs/spec-retouches-v18.md, R2, D2) : Date · Heure · Lieu de la fiche en grand, en
+   trois colonnes quand la carte des infos a la place (fiche sur une colonne : ordinateur, iPad couché),
+   l'une sous l'autre dans la colonne de 300 px de la fiche en deux colonnes (planche `-reduite`). */
+.infos-fiche { container-type: inline-size; }
+.infos-fiche-liste { display: flex; flex-direction: column; gap: 0.75rem; }
+@container (min-width: 440px) {
+  .infos-fiche-liste { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 1rem; }
+}
+
+/* ══ Lot U5, T5 — Chants en deux volets (docs/spec-deux-volets.md, Q1, Q15, Q16) ══════════
+   `ChantsVolets` (songs/layout) porte la liste (`.chants-liste`) et la page (`.chants-chant` :
+   « Choisis un chant » sur /songs, sinon le chant). Hors `@layer`, pour passer devant les
+   classes de Tailwind que ces règles corrigent (barre fixe, marges sous la barre).
+   Un volet (téléphone, tablette debout, ordinateur trop étroit) : la liste sur /songs, la
+   page du chant ailleurs — comme avant. */
+/* `:where` : ces règles cèdent à celles des deux volets, plus bas, de même poids. */
+.chants-volets:where([data-sur-liste]) > .chants-chant,
+.chants-volets:where(:not([data-sur-liste])) > .chants-entete,
+.chants-volets:where(:not([data-sur-liste])) > .chants-liste { display: none; }
+
+/* Barre du chant, piste A (docs/spec-barre-chant.md, Q4) : libellés par priorité, jamais de
+   deuxième ligne — tous (2), ceux des actions Vidéo et PDF seuls (1), aucun (0) ; Idées et ⋯
+   restent des icônes. Le niveau est mesuré sur la rangée (`SongDetailClient`, `data-libelles`) : des seuils fixes, calés sur la
+   rangée la plus chargée (Retour, ↺, Pinyin), cachaient tout sur la tablette couchée. */
+.rangee-chant { container-type: inline-size; }
+.libelle-chant, .libelle-action { display: none; }
+/* Téléphone : comme avant, pas de libellé sous 620 px de rangée (la pilule de tonalité, qui
+   rétrécit, ne ferait jamais déborder la ligne : la mesure ne suffit pas). */
+@container (min-width: 620px) { .rangee-chant[data-libelles="2"] .libelle-chant { display: inline; } }
+/* Téléphone, même couché (moins de 500 px de haut) : la rangée d'avant, sans ⋯ ; dessous, la
+   seconde rangée d'actions (Q5, `.actions-tel`) — 44 px de plus sous la barre, d'où les marges
+   hautes de la partition et de la vidéo (48 et 82 px sans elle). Dès la tablette debout : la
+   rangée s'aligne sur la partition (mêmes bords que `main`), les actions sortent à droite d'un
+   filet (Q1 à Q3). */
+.actions-chant { display: none; }
+.actions-tel { display: flex; }
+@media screen and (max-width: 767.98px), screen and (max-height: 499.98px) {
+  .song-zoom { margin-top: 92px; }
+  .video-chant { margin-top: 126px; }
+  .video-chant ~ .song-zoom { margin-top: 48px; }
+}
+@media (min-width: 768px) and (min-height: 500px) {
+  .rangee-chant { padding-inline: 1rem; }
+  .rangee-chant[data-libelles="2"] .libelle-chant,
+  .rangee-chant:is([data-libelles="1"], [data-libelles="2"]) .libelle-action { display: inline; }
+  .actions-chant { display: flex; }
+  .actions-tel { display: none; }
+  .groupe-chant { margin-left: 0; }
+}
+
+/* Deux volets : mêmes conditions que `useDeuxVolets` (Q1), au moins 900 px utiles — tablette
+   couchée et ordinateur barre réduite toujours, barre dépliée dès 1 148 px. Trois copies du
+   même bloc : une condition de média ne s'écrit pas dans un sélecteur. Liste de 320 à 400 px,
+   qui défile seule dans son volet ; les volets prennent toute la zone de contenu (retours du
+   06/10/2026 : bornés à `--largeur-lecture` et centrés, ils laissaient une bande vide à côté de la barre).
+   Agencement v18 (R10, A5) : l'en-tête « Chants » sur toute la largeur, au-dessus des deux volets ;
+   la liste est une carte en relief (rayon 16 px, sans filet) à `--marge-page` du bord, collante
+   20 px sous la barre du haut ; la page à `--ecart-volets` de la carte (« Choisis un chant » pose
+   lui-même la marge de droite : la page d'un chant garde ses marges, hors du lot). Le chant
+   s'étire sur toute la rangée : un chant court sous une liste plus haute garde sa barre collée.
+   L'index A–Z se centre dans `--cadre-index`, la part de la carte toujours à l'écran : page en haut,
+   la carte part sous l'en-tête (104 px : 24 + titre 36 + 4 + sous-titre 20 + 20) et finit sous le
+   bas de la fenêtre ; page défilée, elle colle 20 px sous la barre. La molette sur la liste ne
+   défile que la liste : sans cela, Y et Z restaient sous le bord de la fenêtre (relecture T89).
+   Barre du chant, piste A (docs/spec-barre-chant.md, Q8) : la partition (`main`, la vue du chant
+   qu'il porte) et la rangée de la barre vont jusqu'à 900 px au lieu de 672 ; la 简谱 suit la
+   colonne, l'intérieur de `JianpuSheet` n'est pas touché. */
+@media screen and (pointer: coarse) and (orientation: landscape) and (min-width: 1024px) {
+  .chants-volets { display: grid; grid-template-columns: clamp(320px, 37%, 400px) minmax(0, 1fr); column-gap: var(--ecart-volets); align-items: start; padding-left: var(--marge-page); --halo-chants: var(--sec-verse); }
+  .chants-volets > .chants-entete { display: block; grid-column: 1 / -1; margin-left: calc(-1 * var(--marge-page)); }
+  .chants-volets > .chants-liste { --cadre-index: calc(100svh - var(--nav-h) - 104px); display: block; position: sticky; top: calc(var(--nav-h) + 20px); z-index: 1; max-height: calc(100svh - var(--nav-h) - 44px); margin-bottom: 24px; overflow-y: auto; overscroll-behavior: contain; border-radius: 16px; background-color: hsl(var(--raised)); box-shadow: var(--shadow-raised); }
+  .chants-liste .chants-liste-fond { min-height: 0; }
+  .chants-liste .chants-liste-corps { padding: 14px 16px 8px; }
+  .chants-volets > .chants-chant { display: block; min-width: 0; align-self: stretch; }
+  .halo-chants::before { left: auto; right: -140px; opacity: 0.12; }
+  .chants-chant .barre-chant { position: sticky; left: auto; right: auto; width: calc(100% * var(--zoom-chant, 1)); }
+  .chants-chant .retour-chant:not([data-vers-setlist]) { display: none; }
+  .chants-chant .song-zoom, .chants-chant .video-chant { margin-top: 0; }
+  .chants-chant :is(.song-zoom, .song-zoom > div, .rangee-chant) { max-width: 900px; }
+}
+@media screen and (pointer: fine) and (min-width: 1024px) {
+  :root[data-barre="reduite"] .chants-volets { display: grid; grid-template-columns: clamp(320px, 37%, 400px) minmax(0, 1fr); column-gap: var(--ecart-volets); align-items: start; padding-left: var(--marge-page); --halo-chants: var(--sec-verse); }
+  :root[data-barre="reduite"] .chants-volets > .chants-entete { display: block; grid-column: 1 / -1; margin-left: calc(-1 * var(--marge-page)); }
+  :root[data-barre="reduite"] .chants-volets > .chants-liste { --cadre-index: calc(100svh - var(--nav-h) - 104px); display: block; position: sticky; top: calc(var(--nav-h) + 20px); z-index: 1; max-height: calc(100svh - var(--nav-h) - 44px); margin-bottom: 24px; overflow-y: auto; overscroll-behavior: contain; border-radius: 16px; background-color: hsl(var(--raised)); box-shadow: var(--shadow-raised); }
+  :root[data-barre="reduite"] .chants-liste .chants-liste-fond { min-height: 0; }
+  :root[data-barre="reduite"] .chants-liste .chants-liste-corps { padding: 14px 16px 8px; }
+  :root[data-barre="reduite"] .chants-volets > .chants-chant { display: block; min-width: 0; align-self: stretch; }
+  :root[data-barre="reduite"] .halo-chants::before { left: auto; right: -140px; opacity: 0.12; }
+  :root[data-barre="reduite"] .chants-chant .barre-chant { position: sticky; left: auto; right: auto; width: calc(100% * var(--zoom-chant, 1)); }
+  :root[data-barre="reduite"] .chants-chant .retour-chant:not([data-vers-setlist]) { display: none; }
+  :root[data-barre="reduite"] .chants-chant .song-zoom, :root[data-barre="reduite"] .chants-chant .video-chant { margin-top: 0; }
+  :root[data-barre="reduite"] .chants-chant :is(.song-zoom, .song-zoom > div, .rangee-chant) { max-width: 900px; }
+}
+@media screen and (pointer: fine) and (min-width: 1148px) {
+  .chants-volets { display: grid; grid-template-columns: clamp(320px, 37%, 400px) minmax(0, 1fr); column-gap: var(--ecart-volets); align-items: start; padding-left: var(--marge-page); --halo-chants: var(--sec-verse); }
+  .chants-volets > .chants-entete { display: block; grid-column: 1 / -1; margin-left: calc(-1 * var(--marge-page)); }
+  .chants-volets > .chants-liste { --cadre-index: calc(100svh - var(--nav-h) - 104px); display: block; position: sticky; top: calc(var(--nav-h) + 20px); z-index: 1; max-height: calc(100svh - var(--nav-h) - 44px); margin-bottom: 24px; overflow-y: auto; overscroll-behavior: contain; border-radius: 16px; background-color: hsl(var(--raised)); box-shadow: var(--shadow-raised); }
+  .chants-liste .chants-liste-fond { min-height: 0; }
+  .chants-liste .chants-liste-corps { padding: 14px 16px 8px; }
+  .chants-volets > .chants-chant { display: block; min-width: 0; align-self: stretch; }
+  .halo-chants::before { left: auto; right: -140px; opacity: 0.12; }
+  .chants-chant .barre-chant { position: sticky; left: auto; right: auto; width: calc(100% * var(--zoom-chant, 1)); }
+  .chants-chant .retour-chant:not([data-vers-setlist]) { display: none; }
+  .chants-chant .song-zoom, .chants-chant .video-chant { margin-top: 0; }
+  .chants-chant :is(.song-zoom, .song-zoom > div, .rangee-chant) { max-width: 900px; }
+}
+
+/* ══ Lot U5 bis — feuilles de l'éditeur de setlist (docs/spec-editeur-setlist.md, « Partout ») ══
+   En mouvement réduit, la feuille (`data-volet`, vaul) arrive et part en fondu, opacité seule,
+   au lieu de glisser depuis le bas. `!important` : le glissé est posé par la feuille de style de
+   vaul, et la règle générale du mouvement réduit ramène toute animation à 0,01 ms (ce sélecteur,
+   plus précis, garde sa durée). */
+/* Liseré du métronome visuel (mode louange, L4) : se remplit en une pulsation (`--battement`).
+   Mouvement réduit : plus d'animation, la bande reste pleine, à opacité réduite. */
+@keyframes liseret-battement { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+.liseret-tempo-barre {
+  transform-origin: left;
+  animation: liseret-battement var(--battement, 1s) linear infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .liseret-tempo-barre { animation: none !important; transform: none; opacity: 0.35; }
+}
+@keyframes volet-fondu { from { opacity: 0; } }
+@keyframes volet-fondu-sortie { to { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) {
+  [data-volet][data-vaul-drawer][data-state="open"] { animation-name: volet-fondu !important; animation-duration: 200ms !important; }
+  [data-volet][data-vaul-drawer][data-state="closed"] { animation-name: volet-fondu-sortie !important; animation-duration: 200ms !important; }
+}
+
+/* Services et rôles du profil et de l'inscription (lot U4 bis, B5, Q10 et Q13) : les cartes des
+   services sur deux colonnes quand la carte en a la place (planches `profil-ordinateur`,
+   `inscription-*`), l'une sous l'autre sinon (téléphone, colonne du profil sur tablette). */
+.grille-services { container-type: inline-size; }
+@container (min-width: 540px) {
+  .grille-services-cartes { grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; }
+}
+
+/* Panneau de marque de la connexion et de l'inscription (lot U4 bis, B5, Q13) : le rouge du logo
+   et le bleu des accords en deux halos très pâles (planches `connexion-*`, `inscription-*`). */
+.panneau-marque {
+  background:
+    radial-gradient(ellipse 75% 55% at 15% 12%, rgb(207 42 32 / 0.13), transparent 70%),
+    radial-gradient(ellipse 75% 55% at 85% 88%, rgb(63 99 207 / 0.12), transparent 70%),
+    hsl(var(--secondary) / 0.5);
+}
+.dark .panneau-marque {
+  background:
+    radial-gradient(ellipse 75% 55% at 15% 12%, rgb(207 42 32 / 0.22), transparent 70%),
+    radial-gradient(ellipse 75% 55% at 85% 88%, rgb(63 99 207 / 0.2), transparent 70%),
+    hsl(var(--secondary) / 0.5);
+}
+
+/* Équipes en bandeau (lot U4 bis, B6, Q12) : la page tient dans la hauteur de l'écran, sous la
+   navbar et au-dessus de la cale de la barre du bas (`MobileTabBar`, 78 px + `--tabbar-bottom`) ;
+   sans barre du bas (ordinateur, tablette en paysage : mêmes requêtes que le bloc « Lot U4 »),
+   jusqu'au bas de l'écran. */
+.equipes-ecran { height: calc(100dvh - var(--nav-h) - 78px - var(--tabbar-bottom)); }
+@media screen and (max-width: 639px) {
+  .equipes-ecran { height: auto; }
+}
+@media screen and (pointer: fine) and (min-width: 1024px) {
+  .equipes-ecran { height: calc(100dvh - var(--nav-h)); }
+}
+@media screen and (pointer: coarse) and (orientation: landscape) and (min-width: 1024px) {
+  .equipes-ecran { height: calc(100dvh - var(--nav-h)); }
+}
+
+/* ══ Agencement v18, F1 (docs/spec-agencement-v18.md, R2, R10, R12) ══════════════════════════
+   Jetons lus par `EnTetePage`, `DeuxVolets` et les pages :
+   --marge-page        marge de la zone de contenu, des deux côtés : 16 px téléphone, 24 px dès
+                       768 px (tablette portrait), 40 px barre dépliée, 28 px barre réduite et
+                       tablette couchée. Rien n'est centré dans une borne : la place gagnée en
+                       réduisant la barre va au contenu.
+   --ecart-volets      entre la liste-carte et la fiche : 24 px, 20 px barre réduite.
+   --halo-back-office  le halo par défaut sous `/back-office` (bleu gris de la planche).
+   Mêmes requêtes que le bloc « Lot U4 » : la disposition se décide ici. */
+@layer base {
+  :root {
+    --marge-page: 16px;
+    --ecart-volets: 24px;
+    --halo-back-office: #e4e7f6;
+  }
+  .dark { --halo-back-office: #262b45; }
+  @media screen and (min-width: 768px) {
+    :root { --marge-page: 24px; }
+  }
+  @media screen and (pointer: fine) and (min-width: 1024px) {
+    :root { --marge-page: 40px; }
+    :root[data-barre="reduite"] { --marge-page: 28px; --ecart-volets: 20px; }
+  }
+  @media screen and (pointer: coarse) and (orientation: landscape) and (min-width: 1024px) {
+    :root { --marge-page: 28px; --ecart-volets: 20px; }
+  }
+}
+
+@layer components {
+  /* Le titre de la page, le h1 de `EnTetePage` (R2) : 24 px sur téléphone, 30 px dès 768 px. */
+  .titre-page { font-size: 24px; line-height: 30px; font-weight: 700; letter-spacing: -0.02em; }
+  @media (min-width: 768px) {
+    .titre-page { font-size: 30px; line-height: 36px; }
+  }
 }

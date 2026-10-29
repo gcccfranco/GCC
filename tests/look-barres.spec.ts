@@ -1,6 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { attendreMiseEnPage } from "./helpers/louange";
+import { enDeuxVolets } from "./helpers/setlist";
 
 // 5C1, tranche V8 (docs/spec-look.md § « V8 », 27/09/2026 ; remplace V7) : le texte ne
 // passe plus derrière les barres. Retour de Timothée sur iPhone : transparentes depuis
@@ -33,10 +34,11 @@ const FICHE = {
   ],
 };
 
-/** Chaque barre de la page (hors mode louange) et son fond, tels que le navigateur les pose. */
+/** Chaque barre affichée de la page (hors mode louange) et son fond, tels que le navigateur
+ *  les pose. Lot U4 : sur ordinateur, la navbar est masquée (barre latérale) mais reste montée. */
 const barres = (page: Page) =>
   page.locator(".material-chrome:not(.material-steady)").evaluateAll((els) =>
-    els.map((el) => {
+    els.filter((el) => el.getClientRects().length > 0).map((el) => {
       const b = el.getBoundingClientRect();
       const fond = el.querySelector<HTMLElement>(":scope > .barre-fond");
       const f = fond?.getBoundingClientRect();
@@ -50,6 +52,10 @@ const barres = (page: Page) =>
     })
   );
 
+/** Lot U4 : sur ordinateur, plus de navbar (la barre latérale n'est pas une barre `.material-chrome`). */
+const sansNavbar = () => test.info().project.name.startsWith("ordinateur");
+const avecNavbar = (combien: number) => combien - (sansNavbar() ? 1 : 0);
+
 const auRepos = (page: Page) => page.evaluate(() => Promise.all(document.getAnimations().map((a) => a.finished.catch(() => {}))));
 
 /** Capture à regarder à l'œil (PW_CAPTURES=<dossier>), une par appareil. */
@@ -62,12 +68,18 @@ async function capture(page: Page, name: string) {
 
 /** La zone des barres : du haut de l'écran au bas de la dernière barre visible. */
 async function zoneDesBarres(page: Page) {
-  const bas = await page.locator(".material-chrome:not(.material-steady)").evaluateAll((els) => Math.max(...els.map((el) => el.getBoundingClientRect().bottom)));
+  const { bas, gauche } = await page.locator(".material-chrome:not(.material-steady)").evaluateAll((els) => {
+    const r = els.filter((el) => el.getClientRects().length > 0).map((el) => el.getBoundingClientRect());
+    return { bas: Math.max(...r.map((b) => b.bottom)), gauche: Math.min(...r.map((b) => b.left)) };
+  });
   const largeur = await page.evaluate(() => document.documentElement.clientWidth);
+  // Depuis le bord gauche des barres : Chants en deux volets (lot U5) pose la barre du chant
+  // dans le volet de droite ; la liste, à gauche, n'est sous aucune barre et défile seule.
+  const x = Math.ceil(Math.max(0, gauche));
   // Sans la dernière colonne : à ×2,625, le bord droit de l'écran tombe au milieu d'un pixel.
   // Sans la dernière rangée : la barre des onglets colle à `nav-h − 1 px`, son bas remonte
   // d'1 px au défilement et cette rangée passe dans le fondu.
-  return { x: 0, y: 0, width: largeur - 1, height: Math.floor(bas) - 1 };
+  return { x, y: 0, width: largeur - 1 - x, height: Math.floor(bas) - 1 };
 }
 
 /** Écart entre deux captures de même taille, décodées dans la page : le plus grand écart
@@ -104,13 +116,30 @@ const MASQUE_CONTENU = ".material-chrome:not(.material-steady) > :not(.barre-fon
  *  quelques pixels s'écartent de 4 ou 5 niveaux sur 255, invisibles. */
 const TOLERANCE = 6;
 
+/** Agencement v18 (A5) : en deux volets, l'en-tête « Chants » est au-dessus du chant, et la barre
+ *  du chant (collante dans son volet) ne colle en haut de la fenêtre qu'une fois l'en-tête passé :
+ *  la zone mesurée en haut de page ne serait plus la sienne une fois la page défilée. Ce qui est
+ *  vérifié ici, c'est le fond des barres : on retire l'en-tête de la page, la barre part du haut. */
+async function sansEnTeteDeChants(page: Page) {
+  if (!(await page.locator(".chants-volets > .chants-entete").isVisible())) return;
+  await page.addStyleTag({ content: ".chants-volets > .chants-entete { display: none !important }" });
+  // La page a pu bouger avec l'en-tête retiré : on la remet en haut, barres affichées.
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await expect.poll(() => page.locator(".material-chrome:not(.material-steady)").evaluateAll((els) =>
+    els.filter((el) => el.getClientRects().length > 0).every((el) => getComputedStyle(el).transform === "matrix(1, 0, 0, 1, 0, 0)"))).toBe(true);
+}
+
 /**
  * Les deux promesses de la barre, vérifiées au pixel :
  * 1. en haut de page, son fond repeint exactement la page qu'il cache (fond + halo) ;
  * 2. défilée, rien ne transparaît dessous : la zone est la même qu'en haut de page.
+ * `sousLeTitre` (agencement v18, R6) : la dernière barre est posée sous le titre de la page et
+ * ne colle qu'une fois le titre passé ; en haut de page, la zone des barres contient donc le
+ * titre. Défilée, on compare alors la zone des barres collées à la même zone, page masquée.
  */
-async function barresOpaquesEtInvisibles(page: Page, combien: number, nom: string) {
+async function barresOpaquesEtInvisibles(page: Page, combien: number, nom: string, { sousLeTitre = false } = {}) {
   await expect.poll(async () => (await barres(page)).length).toBe(combien);
+  await sansEnTeteDeChants(page);
   for (const b of await barres(page)) {
     expect(b.couvre, "le fond couvre la barre").toBe(true);
     expect(b.fond, "le fond est opaque").toMatch(/^rgb\(/);
@@ -136,19 +165,31 @@ async function barresOpaquesEtInvisibles(page: Page, combien: number, nom: strin
   // 2. On défile, puis on remonte d'un cran : les barres reviennent, posées sur du contenu.
   // À la molette, comme on défile : deux `scrollTo` coup sur coup se confondent en un seul
   // événement, et les barres croient qu'on descend encore.
-  const transformations = () => page.locator(".material-chrome:not(.material-steady)").evaluateAll((els) => els.map((el) => getComputedStyle(el).transform));
+  const transformations = () => page.locator(".material-chrome:not(.material-steady)").evaluateAll((els) => els.filter((el) => el.getClientRects().length > 0).map((el) => getComputedStyle(el).transform));
   const enPlace = Array(combien).fill("matrix(1, 0, 0, 1, 0, 0)");
   await page.addStyleTag({ content: "body{min-height:3000px}" });
-  await page.mouse.move(zone.width / 2, 400);
+  await page.mouse.move(zone.x + zone.width / 2, 400);
   await page.mouse.wheel(0, 600);
   await expect.poll(transformations, "les barres se rangent quand on descend").not.toEqual(enPlace);
   await page.mouse.wheel(0, -40);
   await expect.poll(transformations, "elles reviennent quand on remonte").toEqual(enPlace);
   await auRepos(page);
-  // Attendu jusqu'à ce que le rendu se pose (1 fois sur 90, la capture tombait juste après
-  // le défilement) : du contenu visible sous une barre, lui, ne disparaîtrait jamais.
-  await expect.poll(async () => ecart(page, fondSeul, await page.screenshot({ clip: zone })), "rien ne transparaît sous les barres")
-    .toMatchObject({ trop: 0 });
+  if (sousLeTitre) {
+    const collees = await zoneDesBarres(page);
+    const pageMasquee = async () => {
+      const cache = await page.addStyleTag({ content: "main main, header[data-entete-page] { visibility: hidden !important }" });
+      const image = await page.screenshot({ clip: collees });
+      await cache.evaluate((el) => (el as ChildNode).remove());
+      return image;
+    };
+    await expect.poll(async () => ecart(page, await pageMasquee(), await page.screenshot({ clip: collees })), "rien ne transparaît sous les barres collées")
+      .toMatchObject({ trop: 0 });
+  } else {
+    // Attendu jusqu'à ce que le rendu se pose (1 fois sur 90, la capture tombait juste après
+    // le défilement) : du contenu visible sous une barre, lui, ne disparaîtrait jamais.
+    await expect.poll(async () => ecart(page, fondSeul, await page.screenshot({ clip: zone })), "rien ne transparaît sous les barres")
+      .toMatchObject({ trop: 0 });
+  }
 
   await masque.evaluate((el) => (el as ChildNode).remove());
   await capture(page, `barres-${nom}-defile`);
@@ -156,6 +197,7 @@ async function barresOpaquesEtInvisibles(page: Page, combien: number, nom: strin
 
 test.describe("barres (5C1, V8) : opaques, elles repeignent la page qu'elles cachent", () => {
   test("Chants : la navbar", async ({ page }) => {
+    test.skip(sansNavbar(), "ordinateur : pas de barre en haut de la liste des chants (lot U4)");
     await page.goto("/songs");
     await page.getByRole("searchbox").waitFor();
     await barresOpaquesEtInvisibles(page, 1, "chants");
@@ -167,7 +209,7 @@ test.describe("barres (5C1, V8) : opaques, elles repeignent la page qu'elles cac
       await page.goto(`/songs/${encodeURIComponent(slug)}`);
       await page.getByTestId("barre-outils").waitFor();
       await page.evaluate(() => document.fonts.ready);
-      await barresOpaquesEtInvisibles(page, 2, `chant-${nom}`);
+      await barresOpaquesEtInvisibles(page, avecNavbar(2), `chant-${nom}`);
     });
   }
 
@@ -175,35 +217,42 @@ test.describe("barres (5C1, V8) : opaques, elles repeignent la page qu'elles cac
     await sansSheet(page);
     await signInAs(page, MUSICIEN, { "setlists/culte": FICHE }, "/setlists/culte");
     await page.getByRole("button", { name: "Mode louange" }).waitFor();
-    await barresOpaquesEtInvisibles(page, 2, "setlist");
+    // Deux volets (docs/spec-deux-volets.md, T4) : la barre est l'en-tête collant, et les
+    // partitions sont là dès l'ouverture ; on attend qu'elles soient posées.
+    if (await enDeuxVolets(page)) await page.locator("[data-outline-item]").first().waitFor();
+    await barresOpaquesEtInvisibles(page, avecNavbar(2), "setlist");
   });
 
   test("Planning : la navbar et la barre des onglets", async ({ page }) => {
+    // Agencement v18 (R6) : en grand, les plannings sont des pilules dans l'en-tête, plus de barre collante.
+    test.skip(sansNavbar(), "en grand, le Planning n'a plus de barre d'onglets");
     await sansSheet(page);
     await signInAs(page, MUSICIEN, {}, "/planning");
     await page.getByRole("heading", { level: 1, name: "Planning" }).waitFor();
-    await barresOpaquesEtInvisibles(page, 2, "planning");
+    await barresOpaquesEtInvisibles(page, avecNavbar(2), "planning", { sousLeTitre: true });
   });
 
   test("en sombre aussi, le fond repeint la page", async ({ page }) => {
     await page.emulateMedia({ colorScheme: "dark" });
     await page.goto("/songs/tu-m-aimes");
     await page.getByTestId("barre-outils").waitFor();
-    await barresOpaquesEtInvisibles(page, 2, "chant-sombre");
+    await barresOpaquesEtInvisibles(page, avecNavbar(2), "chant-sombre");
   });
 
   // Le fondu vit sous la dernière barre : celui de la navbar mangerait le haut de la barre posée dessous.
   test("le contenu s'efface sous la dernière barre seulement", async ({ page }) => {
     await page.goto("/songs");
     await page.getByRole("searchbox").waitFor();
-    expect((await barres(page)).map((b) => b.deborde)).toEqual([FONDU]);
+    expect((await barres(page)).map((b) => b.deborde)).toEqual(sansNavbar() ? [] : [FONDU]);
     await page.goto("/songs/tu-m-aimes");
     await page.getByTestId("barre-outils").waitFor();
-    expect((await barres(page)).map((b) => b.deborde)).toEqual([1, FONDU]); // navbar (1 px de recouvrement), barre d'outils
+    // navbar (1 px de recouvrement), barre d'outils ; sur ordinateur, la barre d'outils seule (lot U4)
+    expect((await barres(page)).map((b) => b.deborde)).toEqual(sansNavbar() ? [FONDU] : [1, FONDU]);
   });
 
   // Rien ne dépend de React : ni bande blanche ni halo absent le temps qu'il démarre.
   test("dès le premier affichage, avant que React ne démarre, la navbar repeint déjà le halo", async ({ page }) => {
+    test.skip(sansNavbar(), "là où il y a une navbar : pas sur ordinateur (lot U4)");
     await page.route(/\/_next\/.*\.js(\?|$)/, (route) => route.abort());
     await page.goto("/songs");
     await page.locator("header").first().waitFor();

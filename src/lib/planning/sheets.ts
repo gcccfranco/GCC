@@ -1,8 +1,11 @@
+import { delaiMax } from "@/lib/delaiMax";
 import type { EddDataStructure, EddPeriode, CampusSeance } from "./utils"
 import { EDD_CLASSES, EDD_PERIODES, getMois } from "./utils"
-import { fetchGrille } from "./grille"
+import { fetchCasesEcrites, fetchGrille } from "./grille"
 import { BACK_OFFICE } from "@/lib/backOffice"
-import { CLES_EDD, fusionnerLignes } from "./grilles"
+import { lireCSV } from "@/lib/csv"
+import { CLES_EDD, completerMusiciensFidelite, fusionnerLignes } from "./grilles"
+import { avecPetitDej, lirePetitDej, rangeesPetitDej } from "@/lib/petitdej/lignes"
 
 /** Les dimanches écrits dans l'app. Back-office coupé (lot 18) : aucun — le site
  *  en ligne lit le Google Sheet seul. Local et en ligne partagent le même
@@ -17,42 +20,27 @@ function csvUrl(sheet: string) {
   return BASE_URL + encodeURIComponent(sheet)
 }
 
+/** CSV du planning : l'automate commun (`lireCSV`, src/lib/csv.ts) garde virgules, guillemets doublés
+ *  et retours à la ligne entre guillemets. Cellules sans espaces de bord ; un retour à la ligne DANS
+ *  une cellule devient une espace (« Pasteur X⏎(à confirmer) » → « Pasteur X (à confirmer) ») : les
+ *  noms se découpent sur , ; / (`splitNames`), pas sur la fin de ligne, et un saut brut resterait
+ *  dans le nom affiché. Les lignes blanches sont ignorées. */
 export function parseCSV(txt: string): string[][] {
   const rows: string[][] = []
-  for (const line of txt.split("\n")) {
-    if (!line.trim()) continue
-    const row: string[] = []
-    let cur = ""
-    let inQ = false
-    for (let i = 0; i < line.length; i++) {
-      const c = line[i]
-      if (c === '"') {
-        if (inQ && line[i+1] === '"') { cur += '"'; i++ } else inQ = !inQ
-      } else if (c === ',' && !inQ) {
-        row.push(cur.trim()); cur = ""
-      } else {
-        cur += c
-      }
-    }
-    row.push(cur.trim())
-    rows.push(row)
+  for (const brute of lireCSV(txt)) {
+    if (brute.length === 1 && !brute[0].trim()) continue
+    rows.push(brute.map(c => c.replace(/\s*[\r\n]+\s*/g, " ").trim()))
   }
   return rows
 }
 
-/** Année pour une date JJ/MM sans année. Les feuilles ne couvrent que l'année
- *  en cours : on retourne donc l'année civile actuelle par défaut, et on ne
- *  bascule sur une année adjacente qu'au voisinage du nouvel an — jamais en
- *  milieu d'année. (L'ancienne heuristique « année la plus proche » projetait
- *  à tort une date de janvier vue en juillet sur l'année suivante.) */
-export function inferYear(_day: number, month: number): number {
-  const now = new Date()
-  const year = now.getFullYear()
-  const cur = now.getMonth() + 1 // mois courant, 1–12
-  if (cur >= 11 && month <= 2) return year + 1 // fin d'année → dates de début d'année à venir
-  if (cur <= 2 && month >= 11) return year - 1 // début d'année → dates de fin d'année écoulée
-  return year
-}
+/** Année des dates JJ/MM du Google Sheet : c'est le fichier du planning 2026
+ *  (« [2026 QG] Planning »), qui le restera — le planning 2027 se fait dans
+ *  l'app (lot U2, docs/spec-planning-2027.md). Deviner l'année d'après la date
+ *  du jour rangeait, dès le 1er novembre, les dimanches de janvier-février du
+ *  Sheet dans l'année suivante : services fantômes dans « Mes services » et les
+ *  rappels. */
+export const ANNEE_DU_SHEET = 2026
 
 export function parseDate(s: string): string | null {
   if (!s) return null
@@ -66,7 +54,7 @@ export function parseDate(s: string): string | null {
   if (m3) return `20${m3[3]}-${m3[2].padStart(2,"0")}-${m3[1].padStart(2,"0")}`
   // DD/MM sans année — format utilisé par la plupart des feuilles (Culte, Groupes, Déjeuner…)
   const m4 = s.match(/^(\d{1,2})\/(\d{1,2})$/)
-  if (m4) return `${inferYear(+m4[1], +m4[2])}-${m4[2].padStart(2,"0")}-${m4[1].padStart(2,"0")}`
+  if (m4) return `${ANNEE_DU_SHEET}-${m4[2].padStart(2,"0")}-${m4[1].padStart(2,"0")}`
   return null
 }
 
@@ -74,21 +62,91 @@ export function parseDate(s: string): string | null {
 // client : sans ça, chaque montage / navigation entre onglets re-télécharge les
 // ~10 feuilles. Vidé au rechargement complet de la page (et par instance serveur).
 const SHEET_TTL_MS = 5 * 60_000
+/** Une requête qui pend est abandonnée au bout de 8 secondes (comme le lecteur des évènements). */
+const SHEET_DELAI_MS = 8_000
 const sheetCache = new Map<string, { at: number; rows: string[][] }>()
+
+// Lectures réseau tentées et ratées depuis la dernière remise à zéro : le cron du matin les compte
+// (une panne du Sheet n'y doit pas passer pour un planning vide).
+let tentativesSheet = 0
+let echecsSheet: string[] = []
+// Lectures ratées dont la dernière copie en mémoire a été resservie : le navigateur (useSheet) compare ce
+// compteur avant et après une lecture pour savoir que les lignes reçues peuvent être périmées.
+let copiesServies = 0
+
+/** Remet à zéro le décompte des lectures (début du cron). */
+export function reinitialiserLecturesSheet(): void {
+  tentativesSheet = 0
+  echecsSheet = []
+}
+
+/** Lectures réseau tentées et onglets dont la lecture a échoué (copie en mémoire resservie ou non). */
+export function lecturesSheet(): { tentatives: number; echecs: string[] } {
+  return { tentatives: tentativesSheet, echecs: [...echecsSheet] }
+}
+
+/** Nombre de fois où une lecture ratée a été remplacée par la copie en mémoire (jamais remis à zéro). */
+export function copiesServiesSheet(): number {
+  return copiesServies
+}
+
+/** Cellule comparable : sans accents ni casse, sans espaces de bord. */
+const reperer = (c: string) => c.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim()
+
+/** Un mot qui se lit dans la ligne d'en-tête de l'onglet (une cellule le contient, parmi les 15 premières lignes).
+ *  Un onglet renommé ou supprimé fait rendre à gviz le PREMIER onglet du classeur en 200 text/csv : sans ce
+ *  repère, ses lignes passeraient pour celles de l'onglet demandé. Les onglets sans repère connu ne sont pas vérifiés
+ *  (Franco_Table_PtD, Franco_Louange, Fidélité, Intergroupe, Interfranco) : pour eux, seul le repère commun du premier
+ *  onglet joue. */
+const REPERES_ENTETE: { onglet: RegExp; repere: string }[] = [
+  { onglet: /^EDD$/, repere: "suppleant" },
+  { onglet: /^Campus_Louange$/, repere: "moment" },
+  { onglet: /^Paix[ _]*_T\d$/, repere: "musiciens" },
+]
+
+/** La ligne d'en-tête attendue de l'onglet se retrouve-t-elle dans ce CSV ? Un CSV vide : oui ; le calendrier des réunions
+ *  (premier onglet) : non ; un onglet sans repère connu : oui. Repères relus sur le Sheet le 24/10/2026. */
+export function enTeteAttendu(sheet: string, rows: string[][]): boolean {
+  if (!rows.length) return true
+  // Repère commun : le premier onglet du classeur (rendu pour un nom introuvable) est le calendrier des réunions,
+  // qu'aucun planning lu ici n'est (vérifié sur le Sheet le 24/10/2026).
+  if (reperer(rows[0]?.[0] ?? "").startsWith("calendrier des reunions")) return false
+  const attendu = REPERES_ENTETE.find((r) => r.onglet.test(sheet))
+  if (!attendu) return true
+  return rows.slice(0, 15).some((r) => r.some((c) => reperer(c).includes(attendu.repere)))
+}
 
 export async function fetchSheet(sheet: string): Promise<string[][]> {
   const hit = sheetCache.get(sheet)
   if (hit && Date.now() - hit.at < SHEET_TTL_MS) return hit.rows
+  tentativesSheet++
   try {
-    const res = await fetch(csvUrl(sheet), { cache: "no-store" })
-    const rows = parseCSV(await res.text())
+    const res = await fetch(csvUrl(sheet), { cache: "no-store", signal: delaiMax(SHEET_DELAI_MS) })
+    if (!res.ok) throw new Error(`Sheet « ${sheet} » : réponse ${res.status}`)
+    const texte = await res.text()
+    // Google rend parfois une page HTML (connexion, erreur) avec un statut 200 : pas un CSV.
+    if (/text\/html/i.test(res.headers?.get("content-type") ?? "") || texte.trimStart().startsWith("<")) {
+      throw new Error(`Sheet « ${sheet} » : réponse HTML au lieu du CSV`)
+    }
+    const rows = parseCSV(texte)
+    if (!enTeteAttendu(sheet, rows)) throw new Error(`Sheet « ${sheet} » : en-tête inattendu (onglet d'un autre nom ?)`)
     sheetCache.set(sheet, { at: Date.now(), rows })
     return rows
   } catch {
-    // Échec réseau : on réutilise le dernier cache si on en a un, sinon vide
-    // (loadPlanningData basculera alors sur les données de secours statiques).
+    // Un échec ne remplace JAMAIS la copie en mémoire : on réutilise la dernière si on en a une,
+    // sinon vide (loadPlanningData basculera alors sur les données de secours statiques).
+    echecsSheet.push(sheet)
+    if (hit) copiesServies++
     return hit?.rows ?? []
   }
+}
+
+/** Relit une fois les onglets dont la lecture a échoué. Rend ceux qui échouent encore (chacun une fois). */
+export async function relireOnglets(noms: readonly string[]): Promise<string[]> {
+  const uniques = [...new Set(noms)]
+  echecsSheet = echecsSheet.filter((n) => !uniques.includes(n))
+  await Promise.all(uniques.map((n) => fetchSheet(n)))
+  return uniques.filter((n) => echecsSheet.includes(n))
 }
 
 // ─── Lecture brute du Sheet, grille par grille ────────────────────────────────
@@ -154,9 +212,18 @@ export async function lireTableSheet(): Promise<string[][]> {
   return [...parDate.values()].sort((a, b) => a[0] < b[0] ? -1 : 1)
 }
 
-/** [date, équipe, petit déj] : la grille « table » réunie au Sheet. */
+/** Petit déj, interrupteur ouvert (lot U3, docs/spec-petit-dej.md) : les
+ *  inscriptions sont la seule source (T8), le Sheet ne parle plus. Une lecture en
+ *  échec rend vide ici ; la carte de l'onglet Table, elle, le dit (Q10). Coupé :
+ *  jamais lues, Firestore étant partagé entre le local et le site en ligne (Q14). */
+const rangeesDesInscriptions = () => lirePetitDej().then(rangeesPetitDej, () => [] as string[][])
+
+/** [date, équipe, petit déj] : la grille « table » réunie au Sheet ; ouvert, la
+ *  colonne 2 porte les inscriptions (T9), même un dimanche que le Sheet ignore. */
 export async function fetchTable(): Promise<string[][]> {
-  return fusionnerLignes(await grilleDeLApp("table"), await lireTableSheet())
+  const inscriptions = BACK_OFFICE ? rangeesDesInscriptions() : null
+  const rows = fusionnerLignes(await grilleDeLApp("table"), await lireTableSheet())
+  return inscriptions ? avecPetitDej(rows, await inscriptions) : rows
 }
 
 /** [date, équipe] des dimanches où une équipe est inscrite. */
@@ -166,6 +233,7 @@ export async function fetchDejeuner(): Promise<string[][]> {
 
 /** [date, noms] des dimanches où un petit déj est inscrit. */
 export async function fetchPetitDej(): Promise<string[][]> {
+  if (BACK_OFFICE) return rangeesDesInscriptions()
   return (await fetchTable()).filter(r => r[2]).map(r => [r[0], r[2]])
 }
 
@@ -183,9 +251,14 @@ async function fetchMulti(sheets: string[], cols: number): Promise<string[][]> {
   return all.sort((a, b) => a[0] < b[0] ? -1 : 1)
 }
 
-export const lirePaixSheet = () => fetchMulti(["Paix_T1","Paix _T2","Paix _T3","Paix_T4"], 4)
+// Paix et Bonté : PERCUSSION en colonne 5 (lot U2, P5 ; Paix T4, Bonté T3 et
+// T4 en 2026), jamais MÉNAGES (colonne 6, vide). Lue derrière l'interrupteur
+// (Q14) : en ligne, l'ancien tableau, « Mes services » et les rappels lisent le
+// Sheet comme avant.
+const COLONNES_GROUPE = BACK_OFFICE ? 5 : 4
+export const lirePaixSheet = () => fetchMulti(["Paix_T1","Paix _T2","Paix _T3","Paix_T4"], COLONNES_GROUPE)
 export const lireFideliteSheet = () => fetchMulti(["Fidélité_T1","Fidélité_T2","Fidélité_T3","Fidélité_T4"], 4)
-export const lireBonteSheet = () => fetchMulti(["Bonté_T1","Bonté _T2","Bonté _T3","Bonté_T4"], 4)
+export const lireBonteSheet = () => fetchMulti(["Bonté_T1","Bonté _T2","Bonté _T3","Bonté_T4"], COLONNES_GROUPE)
 
 export async function lireFideliteMusiciensSheet(): Promise<string[][]> {
   const rows = await fetchSheet("Fidélité_Musicien")
@@ -200,8 +273,16 @@ export async function fetchPaix(): Promise<string[][]> {
   return fusionnerLignes(await grilleDeLApp("paix"), await lirePaixSheet())
 }
 
+/** Fidélité, sept cases (lot F, D25 et D27) : Présidence, Guitariste et Batterie vides sont repris
+ *  du planning des musiciens — sa grille de l'app, puis l'onglet `Fidélité_Musicien` du Sheet (seul
+ *  lu quand le back-office est coupé) — sauf une case vidée dans l'app, qui reste vide. */
 export async function fetchFidelite(): Promise<string[][]> {
-  return fusionnerLignes(await grilleDeLApp("fidelite"), await lireFideliteSheet())
+  const [groupe, musiciens, ecrites] = await Promise.all([
+    Promise.all([grilleDeLApp("fidelite"), lireFideliteSheet()]).then(([g, s]) => fusionnerLignes(g, s)),
+    fetchFideliteMusic(),
+    BACK_OFFICE ? fetchCasesEcrites("fidelite") : new Set<string>(),
+  ])
+  return completerMusiciensFidelite(groupe, musiciens, ecrites)
 }
 
 export async function fetchFideliteMusic(): Promise<string[][]> {
@@ -241,7 +322,8 @@ export async function fetchInterfranco(): Promise<string[][]> {
 }
 
 // EDD : l'onglet énumère les dimanches classe par classe (le nom de la classe
-// en colonne 7 ouvre un bloc) ; cinq colonnes par ligne.
+// en colonne 7 ouvre un bloc) ; cinq colonnes par ligne, plus COURS (colonne 6,
+// lot U2, P5) derrière l'interrupteur, comme la percussion des groupes.
 export async function lireEddSheet(classe: (typeof EDD_CLASSES)[number]): Promise<string[][]> {
   const rows = await fetchSheet("EDD")
   const out: string[][] = []
@@ -252,7 +334,8 @@ export async function lireEddSheet(classe: (typeof EDD_CLASSES)[number]): Promis
     if (!dt) continue
     if (r[7] && (EDD_CLASSES as readonly string[]).includes(r[7].trim())) cls = r[7].trim()
     if (cls !== classe) continue
-    out.push([dt, r[1]||"", r[2]||"", r[3]||"", r[4]||"", r[5]||""])
+    const ligne = [dt, r[1]||"", r[2]||"", r[3]||"", r[4]||"", r[5]||""]
+    out.push(BACK_OFFICE ? [...ligne, r[6]||""] : ligne)
   }
   return out
 }
@@ -307,7 +390,7 @@ export function seanceCampus(row: string[], moment: "Matin" | "Soir"): CampusSea
     }
     entLieu = rest.join(" ").trim()
   }
-  return { d: `${label} ${moment}`, pres, ch, mu, rg, ent, entTime, entLieu, chants: [row[9]||"", row[10]||"", row[11]||"", row[12]||""] }
+  return { d: `${label} ${moment}`, date: row[0], pres, ch, mu, rg, ent, entTime, entLieu, chants: [row[9]||"", row[10]||"", row[11]||"", row[12]||""] }
 }
 
 /** Les deux grilles du Campus (matin, soir) réunies au Sheet, dans la forme de leur définition. */

@@ -1,6 +1,7 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { attendreMiseEnPage, onStage, ouvrirReglages } from "./helpers/louange";
+import { basculerAccords, fermerMenus, ouvrirAffichage, ouvrirPartitions } from "./helpers/setlist";
 
 // Chantier Mode louange (docs/spec-mode-louange.md). Setlist et compte
 // simulés : aucune lecture ni écriture du Firestore de production.
@@ -59,8 +60,12 @@ async function quitter(page: Page) {
 }
 
 /** Badges de la page affichée — hors copie invisible qui sert à mesurer les hauteurs. */
+// Dans le mode louange : en deux volets, les partitions restent montées dessous
+// (docs/spec-deux-volets.md, T4) et portent les mêmes badges.
+// Badges du corps : le bandeau de structure en tête du chant porte aussi les
+// nuances, en texte (lot 2 du chantier 简谱, D12).
 const nuance = (page: Page, text: string | RegExp) =>
-  page.locator("[data-nuance]:not([aria-hidden=true] *)", { hasText: text });
+  page.locator("[data-performance-mode] [data-section] [data-nuance]:not([aria-hidden=true] *)", { hasText: text });
 
 const bg = (l: Locator) => l.evaluate((el) => getComputedStyle(el).backgroundColor);
 const fg = (l: Locator) => l.evaluate((el) => getComputedStyle(el).color);
@@ -224,8 +229,12 @@ test.describe("reprise des réglages", () => {
   test("pinyin masqué sur la page setlist → masqué en mode louange (ZH)", async ({ page }) => {
     await page.addInitScript(() => localStorage.setItem("perf-role-preset", "pianiste"));
     await signInAs(page, MUSICIEN, { [`setlists/${SETLIST_ID}`]: setlist(ZH) }, `/setlists/${SETLIST_ID}`);
-    await page.getByRole("button", { name: "Partitions" }).click();
-    await page.getByRole("button", { name: "Pinyin" }).click();
+    await ouvrirPartitions(page);
+    // Pinyin : dans « Affichage » (bouton sur G, sous-menu du ⋯ en deux volets,
+    // docs/spec-deux-volets.md, Q3 et Q7).
+    await ouvrirAffichage(page);
+    await page.getByRole("menuitemcheckbox", { name: "Pinyin" }).click();
+    await fermerMenus(page);
     await launch(page);
     await expect(lyricLines(page).first()).toBeVisible();
     await expect(pinyin(page)).toHaveCount(0);
@@ -253,9 +262,15 @@ test.describe("reprise des réglages", () => {
     await expect(lyricLines(page)).toHaveCount(0);
     await quitter(page);
 
-    await page.getByRole("button", { name: "Partitions" }).click();
-    await page.getByRole("button", { name: "Accords" }).click(); // masqués
-    await page.getByRole("button", { name: "Accords" }).click(); // de nouveau affichés
+    await ouvrirPartitions(page);
+    // Le batteur lit la setlist en Structure seule, même réglage que le mode
+    // louange (D15, docs/spec-jianpu-integration.md) : il revient à l'ordre joué.
+    await ouvrirAffichage(page);
+    await expect(page.getByRole("menuitemradio", { name: "Structure seule" })).toHaveAttribute("aria-checked", "true");
+    await page.getByRole("menuitemradio", { name: "Ordre joué" }).click();
+    await fermerMenus(page);
+    await basculerAccords(page); // masqués
+    await basculerAccords(page); // de nouveau affichés
     await launch(page);
     await expect(lyricLines(page).first()).toBeVisible();
     const settings = await settingsText(page);
@@ -299,10 +314,13 @@ test.describe("tonalité choisie sur la page du chant", () => {
         [`setlists/${SETLIST_ID}`]: setlist([item({ songSlug: c.slug, position: 1, structureOverride: ["verse-2-0"] })]),
       }, `/setlists/${SETLIST_ID}`);
 
-      // Vue liste → page du chant → autre tonalité → retour à la setlist.
-      await page.getByRole("link", { name: c.title }).click();
+      // Partitions → titre du chant → autre tonalité → retour à la setlist (la
+      // ligne de la liste ouvre désormais les partitions : setlist G, Q12).
+      await ouvrirPartitions(page);
+      await page.locator("[data-outline-item]").getByRole("link", { name: c.title }).click();
       await page.waitForURL(/\/songs\//);
-      await page.locator("select").first().selectOption(c.chosen);
+      // Le sélecteur de la barre du chant : en deux volets, la liste a son choix de thème (lot U5).
+      await page.getByTestId("barre-outils").locator("select").first().selectOption(c.chosen);
       await page.goBack();
       await page.getByRole("button", { name: /Mode Louange/ }).click();
       await attendreMiseEnPage(page);
@@ -358,7 +376,7 @@ test.describe("polices du chinois (ZH)", () => {
     await page.goto("/songs/一生爱你");
     await expect.poll(() => fonts(page, "main.song-zoom")).toMatchObject({ pinyin: expect.stringContaining("pinyin_font"), char: expect.stringContaining("zh_lyric_font") });
     // Titre en pinyin sous le titre chinois.
-    await expect(page.getByText("Yī shēng ài nǐ", { exact: true })).toHaveCSS("font-family", /pinyin_font/);
+    await expect(page.getByRole("paragraph").filter({ hasText: "Yī shēng ài nǐ" }).first()).toHaveCSS("font-family", /pinyin_font/);
 
     await openPerformance(page, [item({ songSlug: "一生爱你", position: 1, structureOverride: ["verse-2-0"] })]);
     await expect.poll(() => fonts(page, "[data-performance-mode]")).toMatchObject({ pinyin: expect.stringContaining("pinyin_font"), char: expect.stringContaining("zh_lyric_font") });

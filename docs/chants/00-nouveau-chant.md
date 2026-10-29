@@ -28,6 +28,14 @@ même chant sont fournies (sinon celle de la partition) ; un lien YouTube
 seulement s'il est donné. Le tempo vient de la partition (`♩=`), ou de
 Timothée, sinon il manque.
 
+**Chant né d'une proposition.** Si le chant répond à une proposition de chant
+(une setlist de Noël ou de Pâques l'attend, `docs/spec-chants-fetes.md`),
+Timothée donne l'**identifiant de la proposition** (Réception le montre). Il
+s'écrit dans l'en-tête, étape 3, `{proposition: <id>}`, recopié tel quel ;
+sans identifiant donné, la directive est omise (jamais inventée), et le
+rapport (étape 7) dit si le chant semble répondre à une proposition en
+attente, pour que Timothée tranche.
+
 La source : si le fichier est **déjà** dans `../Partitions/` (sous n'importe
 quel nom), il y reste tel quel et ce nom va dans `{source:}`. Sinon, le
 copier sous `<Titre> (<Tonalité>).<ext>` ; si ce nom est déjà pris par une
@@ -117,8 +125,9 @@ plan, et chaque renvoi est déplié (sauf reprise marquée d'un chant chinois, 0
   forme est antérieure aux règles (pinyin sur la ligne suivante, thèmes
   chinois, espaceurs). Seuls les gabarits de 01 font foi.
 - Chaque accord se pose d'après 02 (« Les sept positions ») ; les
-  métadonnées d'après 01 ; rien d'inventé, et chaque doute en
-  `{needs_review: …}`.
+  métadonnées d'après 01 (dont `{proposition: <id>}` quand Timothée a donné
+  l'identifiant d'une proposition, étape 0) ; rien d'inventé, et chaque doute
+  en `{needs_review: …}`.
 
 ```bash
 python3 scripts/cho/lint.py <slug>

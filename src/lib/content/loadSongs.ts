@@ -6,16 +6,18 @@ import type { ChordProSection, ChordProLine } from "@/types/chordPro";
 
 const SONGS_DIR = path.join(process.cwd(), "content", "songs");
 
-function slugifyTheme(name: string): string {
-  return name
+// Nom saisi dans un .cho → slug de content/themes.json quand les deux ne se
+// déduisent pas l'un de l'autre (« Groupe fidélité » est le thème `noel_fidelite`).
+const THEME_ALIAS: Record<string, string> = { "groupe-fidelite": "noel_fidelite" };
+
+export function slugifyTheme(name: string): string {
+  const slug = name
     .trim()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()
-    .replace(/\s+/g, "-")
-    .replace(/[éèê]/g, "e")
-    .replace(/[àâ]/g, "a")
-    .replace(/[ùû]/g, "u")
-    .replace(/[ôó]/g, "o")
-    .replace(/[îï]/g, "i");
+    .replace(/\s+/g, "-");
+  return THEME_ALIAS[slug] ?? slug;
 }
 
 export function getSongSlugs(): string[] {
@@ -52,6 +54,7 @@ export function loadSong(slug: string): Song {
     language: m.language,
     originalKey: m.key,
     recommendedKey: m.recommendedKey,
+    ...(m.proposition ? { proposition: m.proposition } : {}),
     tempo: m.tempo,
     themes: m.themes.map(slugifyTheme),
     youtubeUrl: m.youtubeUrl,

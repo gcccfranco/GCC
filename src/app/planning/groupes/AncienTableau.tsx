@@ -6,12 +6,14 @@
 
 import { useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
-import { FilterButtons } from "@/components/planning/FilterButtons"
+import { OngletsRail } from "@/components/layout/Onglets"
+import { ongletsDePeriode } from "@/components/planning/BarreDeGrille"
 import { PlanningTable } from "@/components/planning/PlanningTable"
 import { StaleBanner } from "@/components/planning/StaleBanner"
 import { filterByTri, getCurrentTri } from "@/lib/planning/utils"
 import { PAIX_FALLBACK, FIDELITE_FALLBACK, FIDELITE_MUSIC_FALLBACK, BONTE_FALLBACK } from "@/lib/planning/data"
-import { fetchPaix, fetchFidelite, fetchFideliteMusic, fetchBonte } from "@/lib/planning/sheets"
+import { fetchPaix, fetchFidelite, fetchBonte, copiesServiesSheet } from "@/lib/planning/sheets"
+import { completerMusiciensFidelite } from "@/lib/planning/grilles"
 import { useProfile } from "@/lib/firebase/users"
 import { isAdminUser } from "@/lib/access"
 import { PLANNING_COLORS } from "@/lib/serviceColors"
@@ -24,7 +26,6 @@ import {
 } from "@/lib/planning/releases"
 
 type Groupe = "paix" | "fidelite" | "bonte"
-type FidSub = "groupe" | "musiciens"
 
 const GRP_COLORS: Record<Groupe, string> = {
   paix:     PLANNING_COLORS.paix,
@@ -38,24 +39,23 @@ export function AncienTableau() {
   const { t } = useTranslation()
   const { user, profile } = useProfile()
   const [paix, setPaix] = useState(PAIX_FALLBACK)
-  const [fid, setFid] = useState(FIDELITE_FALLBACK)
-  const [fidM, setFidM] = useState(FIDELITE_MUSIC_FALLBACK)
+  // Lot F (D27) : Guitariste et Batterie lus dans l'onglet Fidélité_Musicien (`fetchFidelite`).
+  const [fid, setFid] = useState(() => completerMusiciensFidelite(FIDELITE_FALLBACK, FIDELITE_MUSIC_FALLBACK))
   const [bonte, setBonte] = useState(BONTE_FALLBACK)
   const [loading, setLoading] = useState(true)
   const [stale, setStale] = useState(false)
   const [grp, setGrp] = useState<Groupe>("paix")
-  const [fidSub, setFidSub] = useState<FidSub>("groupe")
   const [tri, setTri] = useState(getCurrentTri())
   const [pubByGrp, setPubByGrp] = useState<Record<string, string[]>>({})
 
   useEffect(() => {
+    const copiesAvant = copiesServiesSheet()
     Promise.allSettled([
       fetchPaix().then(d => { if (d.length) setPaix(d) }),
       fetchFidelite().then(d => { if (d.length) setFid(d) }),
-      fetchFideliteMusic().then(d => { if (d.length) setFidM(d) }),
       fetchBonte().then(d => { if (d.length) setBonte(d) }),
     ]).then(results => {
-      setStale(results.some(r => r.status === "rejected"))
+      setStale(results.some(r => r.status === "rejected") || copiesServiesSheet() > copiesAvant)
       setLoading(false)
     })
   }, [])
@@ -80,15 +80,13 @@ export function AncienTableau() {
   const effTri = visibleTris.includes(tri) ? tri : getCurrentTri()
 
   const data = (() => {
-    if (grp === "fidelite" && fidSub === "musiciens") return filterByTri(fidM, effTri)
     if (grp === "paix") return filterByTri(paix, effTri)
     if (grp === "fidelite") return filterByTri(fid, effTri)
     return filterByTri(bonte, effTri)
   })()
 
   const cols = (() => {
-    if (grp === "fidelite" && fidSub === "musiciens") return [t("planning.roles.date"), t("planning.roles.presidence"), t("planning.roles.piano"), t("planning.roles.guitare"), t("planning.roles.batterie")]
-    if (grp === "fidelite") return [t("planning.roles.date"), t("planning.roles.presidence"), t("planning.roles.orateur"), t("planning.roles.theme"), t("planning.roles.pianiste")]
+    if (grp === "fidelite") return [t("planning.roles.date"), t("planning.roles.presidence"), t("planning.roles.orateur"), t("planning.roles.theme"), t("planning.roles.pianiste"), t("planning.roles.guitariste"), t("planning.roles.batterie")]
     return [t("planning.roles.date"), t("planning.roles.presidence"), t("planning.roles.musiciens"), t("planning.roles.orateur"), t("planning.roles.theme")]
   })()
 
@@ -105,7 +103,7 @@ export function AncienTableau() {
         {(["paix","fidelite","bonte"] as Groupe[]).map(g => (
           <button
             key={g}
-            onClick={() => { setGrp(g); if (g !== "fidelite") setFidSub("groupe") }}
+            onClick={() => setGrp(g)}
             className={`flex-1 py-2 px-3 rounded-xl border text-xs font-semibold transition-all duration-150 cursor-pointer ${grp === g ? "text-white border-transparent" : GRP_INACTIVE}`}
             style={grp === g ? { background: GRP_COLORS[g], borderColor: GRP_COLORS[g] } : undefined}
           >
@@ -114,26 +112,8 @@ export function AncienTableau() {
         ))}
       </div>
 
-      {grp === "fidelite" && (
-        <div className="flex gap-2">
-          {(["groupe","musiciens"] as FidSub[]).map(sub => (
-            <button
-              key={sub}
-              onClick={() => setFidSub(sub)}
-              className={`flex-1 py-1.5 px-3 rounded-lg border text-xs font-semibold transition-all duration-150 cursor-pointer ${
-                fidSub === sub
-                  ? "border-transparent"
-                  : "bg-card border-border text-muted-foreground hover:text-foreground"
-              }`}
-              style={fidSub === sub ? { background: `${color}15`, borderColor: color, color } : undefined}
-            >
-              {sub === "groupe" ? t("planning.groupes.planningGroupe") : t("planning.groupes.planningMusiciens")}
-            </button>
-          ))}
-        </div>
-      )}
-
-      <FilterButtons options={visibleTris} active={effTri} onChange={setTri} color={color} unpublished={unpublishedTris} />
+      {/* Agencement v18 (R4, tranche Z) : les trimestres sont des vues, dans le rail. */}
+      <OngletsRail etiquette={t("planning.barre.trimestre")} onglets={ongletsDePeriode(visibleTris, unpublishedTris)} actif={effTri} choisir={setTri} />
 
       <div className="flex items-center gap-2 text-xs text-muted-foreground">
         <div className="w-3 h-3 rounded-sm" style={{ background: `${color}26`, border: `1px solid ${color}4d` }} />

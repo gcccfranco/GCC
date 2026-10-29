@@ -209,9 +209,12 @@ export function deleteSourceLines(source: string, indices: number[]): string {
 
 /** Duplique à la fin du source le bloc `{start_of_X…}` … `{end_of_X}` de la
  *  section `sectionId` (format `<type>-<n>`, n = rang du start_of_ dans le
- *  source — même convention que le parseur). Mode Adapter : quand une section
- *  est répétée par la structure d'une setlist, l'occurrence éditée doit
- *  devenir sa propre copie au lieu de modifier toutes les répétitions.
+ *  source — même convention que le parseur, bloc `{start_of_jianpu}` exclu).
+ *  Mode Adapter : quand une section est répétée par la structure d'une setlist,
+ *  l'occurrence éditée doit devenir sa propre copie au lieu de modifier toutes
+ *  les répétitions. La ligne `{section_id: …}` de la copie prend le nouvel id,
+ *  et une dernière section restée ouverte est d'abord fermée (le parseur
+ *  abandonne une section ouverte quand une autre commence).
  *  Les lignes de la copie sont aux index d'origine + `lineOffset`. */
 export function materializeSectionCopy(
   source: string,
@@ -225,25 +228,45 @@ export function materializeSectionCopy(
   let typeKey = "";
   let startIdx = -1;
   let endIdx = -1;
+  let openType: string | null = null;
+  let inJianpu = false;
   for (let i = 0; i < lines.length; i++) {
     const t = lines[i].trim();
+    if (inJianpu) {
+      if (t === "{end_of_jianpu}") inJianpu = false;
+      continue;
+    }
+    if (t === "{start_of_jianpu}") {
+      inJianpu = true;
+      continue;
+    }
     const start = t.match(/^\{start_of_([a-z0-9_]+)\s*(?::[^}]*)?\}$/i);
     if (start) {
+      if (startIdx !== -1 && endIdx === -1) endIdx = i - 1;
       total++;
+      openType = start[1];
       if (total === counter) {
         startIdx = i;
         typeKey = start[1];
       }
       continue;
     }
-    if (startIdx !== -1 && endIdx === -1 && /^\{end_of_/i.test(t)) endIdx = i;
+    if (/^\{end_of_/i.test(t)) {
+      openType = null;
+      if (startIdx !== -1 && endIdx === -1) endIdx = i;
+    }
   }
   if (startIdx === -1) return null;
-  if (endIdx === -1) endIdx = lines.length - 1;
-  const block = lines.slice(startIdx, endIdx + 1);
+  const closed = openType ? [...lines, `{end_of_${openType}}`] : lines;
+  if (endIdx === -1) endIdx = closed.length - 1;
+  const newSectionId = `${typeKey}-${total + 1}`;
+  const block = closed
+    .slice(startIdx, endIdx + 1)
+    .map((l) => (/^\s*\{section_id\s*:/i.test(l) ? `{section_id: ${newSectionId}}` : l));
+  if (!/^\s*\{end_of_/i.test(block[block.length - 1])) block.push(`{end_of_${typeKey}}`);
   return {
-    source: [...lines, "", ...block].join("\n"),
-    newSectionId: `${typeKey}-${total + 1}`,
-    lineOffset: lines.length + 1 - startIdx,
+    source: [...closed, "", ...block].join("\n"),
+    newSectionId,
+    lineOffset: closed.length + 1 - startIdx,
   };
 }

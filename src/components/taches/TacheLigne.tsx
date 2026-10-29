@@ -16,7 +16,7 @@ export function dateCourte(iso: string, lang: string): string {
 }
 
 /** « En cours depuis 3 jours », ou « En cours » faute de date de début. */
-function depuisQuand(t: TFunction, fois: Fois): string {
+export function depuisQuand(t: TFunction, fois: Fois): string {
   if (!fois.debutLe) return t("taches.enCoursSansDate");
   const jours = joursEntre(fois.debutLe, todayIso());
   return jours <= 0 ? t("taches.enCoursAujourdhui") : t("taches.enCoursDepuis", { count: jours });
@@ -24,15 +24,19 @@ function depuisQuand(t: TFunction, fois: Fois): string {
 
 /** Une fois de tâche : cercle à trois états (À faire → En cours → Terminé),
  *  titre, puis échéance · responsable · rythme · où ça en est. Toucher la
- *  ligne ouvre la tâche. */
-export function TacheLigne({ ligne, onToggle, onOpen, poleLabel, sansEvenement }: {
+ *  ligne ouvre la tâche. Sans `onToggle` (pas le droit de la cocher, EQ8 :
+ *  la tâche d'un autre, ou « toute l'équipe » pour un simple membre), le
+ *  cercle est inerte. */
+export function TacheLigne({ ligne, onToggle, onOpen, equipeLabel, sansEvenement, actif }: {
   ligne: Ligne;
-  onToggle: () => void;
+  onToggle?: () => void;
   onOpen?: () => void;
-  /** Nom du pôle, quand la liste mélange plusieurs pôles. */
-  poleLabel?: string;
+  /** Nom de l'équipe, quand la liste mélange plusieurs équipes. */
+  equipeLabel?: string;
   /** Sur la fiche de l'évènement lui-même : « pour Noël 2026 » n'apprend rien. */
   sansEvenement?: boolean;
+  /** La tâche ouverte à côté, en deux volets (lot U4 bis, B4) : la ligne s'allume en encre. */
+  actif?: boolean;
 }) {
   const { t, i18n } = useTranslation();
   const { tache, date, fois } = ligne;
@@ -41,7 +45,7 @@ export function TacheLigne({ ligne, onToggle, onOpen, poleLabel, sansEvenement }
   const terminee = fois?.etat === "terminee";
   const details = [
     date_,
-    poleLabel,
+    equipeLabel,
     tache.responsableUid ? tache.responsableNom : t("taches.pourTous"),
     tache.repetition ? t(`taches.rythme.${tache.repetition.rythme}`) : null,
     // Du texte, pas un lien : toute la zone est déjà le bouton qui ouvre la tâche.
@@ -52,14 +56,17 @@ export function TacheLigne({ ligne, onToggle, onOpen, poleLabel, sansEvenement }
   ].filter(Boolean).join(" · ");
 
   return (
-    <div className="group-row relative flex w-full min-h-[52px] items-center gap-1 pl-1.5 pr-3 py-1.5">
+    <div className={`group-row relative flex w-full min-h-[52px] items-center gap-1 pl-1.5 pr-3 py-1.5${actif
+      ? " rounded-xl bg-foreground text-background [&_*]:border-background [&_.text-foreground]:text-background [&_.text-muted-foreground]:text-background/70"
+      : ""}`}>
       <button
         type="button"
         role="checkbox"
         aria-checked={enCours ? "mixed" : terminee}
         aria-label={t("taches.cocher", { titre: tache.titre, date: date_ })}
         onClick={onToggle}
-        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full active:scale-[.94] transition-transform duration-150 cursor-pointer"
+        disabled={!onToggle}
+        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full active:scale-[.94] transition-transform duration-150 cursor-pointer disabled:cursor-default disabled:opacity-50 disabled:active:scale-100"
       >
         <span className={`flex h-[22px] w-[22px] items-center justify-center rounded-full border-2 ${
           terminee ? "border-foreground bg-foreground text-background"
@@ -69,7 +76,7 @@ export function TacheLigne({ ligne, onToggle, onOpen, poleLabel, sansEvenement }
           {enCours && <Minus className="h-3.5 w-3.5" strokeWidth={3} aria-hidden />}
         </span>
       </button>
-      <button type="button" onClick={onOpen} disabled={!onOpen} className="min-w-0 flex-1 text-left cursor-pointer disabled:cursor-default">
+      <button type="button" onClick={onOpen} disabled={!onOpen} aria-current={actif ? "page" : undefined} className="min-w-0 flex-1 text-left cursor-pointer disabled:cursor-default">
         <span className={`block text-base ${terminee ? "text-muted-foreground line-through" : "text-foreground"}`}>{tache.titre}</span>
         <span className="block text-sm text-muted-foreground">{details}</span>
       </button>

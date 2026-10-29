@@ -1,5 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
-import { signInAs, type FakeProfile } from "./helpers/fakeSession";
+import { musicien, signInAs, type FakeProfile } from "./helpers/fakeSession";
+import { ouvrirPartitions } from "./helpers/setlist";
 import { loadChords } from "./helpers/jianpu";
 
 // Lot 9, tranche « 简谱 » (docs/spec-harmonie.md) : retoucher un accord sur le
@@ -16,6 +17,7 @@ const MUSICIEN: FakeProfile = {
   lastName: "Kouassi",
   planningName: "Ruth K.",
   serviceRoles: { "Culte Francophone": ["musicien"] },
+  ...musicien("piano", "guitare"),
 };
 
 /** Chant chinois affiché en scan : calque certifié, gravé en G, une page.
@@ -46,7 +48,8 @@ const setlist = (over: Record<string, unknown> = {}) => ({
   date: "2026-09-21",
   language: "mixed",
   notes: "",
-  ownerId: "uid-owner",
+  // Depuis SC1 (18/10/2026), seul le créateur adapte une setlist : la musicienne est la créatrice de la sienne.
+  ownerId: "uid-musicien",
   isPrivate: false,
   items: [
     item({ songSlug: "abba-pere", position: 1 }),
@@ -65,7 +68,7 @@ async function openPartitions(page: Page, docs: Record<string, Record<string, un
     route.fulfill({ status: 200, contentType: "text/csv", body: "" }),
   );
   const db = await signInAs(page, MUSICIEN, { [SETLIST_DOC]: setlist(), ...docs }, `/setlists/${SETLIST_ID}`);
-  await page.getByRole("button", { name: "Partitions" }).click();
+  await ouvrirPartitions(page);
   // Le scan pèse 1 à 2 Mo et le calque vient d'un fetch à part : sans ces
   // attentes, on touche une image absente ou une géométrie pas encore lue.
   await page.locator('[data-jianpu-page="0"] img').waitFor();

@@ -50,7 +50,9 @@ function clampPan(zoom: number, p: Pan): Pan {
 }
 
 /** Calque de LECTURE : affiche les traits, sans interaction. */
-export function StrokesLayer({ data }: { data: AnnotationData }) {
+// `rogneBas` : hauteur (CSS) du bas de l'écran que le calque ne couvre pas (aperçu de page, lot L6).
+// clip-path garde les coordonnées intactes et retire aussi les touchers de la bande.
+export function StrokesLayer({ data, rogneBas }: { data: AnnotationData; rogneBas?: string }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -76,7 +78,7 @@ export function StrokesLayer({ data }: { data: AnnotationData }) {
     <canvas
       ref={canvasRef}
       className="absolute inset-0 pointer-events-none"
-      style={{ zIndex: 5 }}
+      style={{ zIndex: 5, clipPath: rogneBas ? `inset(0 0 ${rogneBas} 0)` : undefined }}
       aria-hidden="true"
     />
   );
@@ -91,9 +93,11 @@ interface Props {
   zoom: number;
   pan: Pan;
   onZoomPanChange: (zoom: number, pan: Pan) => void;
+  /** Bas de l'écran non couvert (aperçu de page, lot L6). */
+  rogneBas?: string;
 }
 
-export function AnnotationCanvas({ data, onChange, zoom, pan, onZoomPanChange }: Props) {
+export function AnnotationCanvas({ data, onChange, zoom, pan, onZoomPanChange, rogneBas }: Props) {
   const { t } = useTranslation();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [tool, setTool] = useState<Tool>("pen");
@@ -353,7 +357,11 @@ export function AnnotationCanvas({ data, onChange, zoom, pan, onZoomPanChange }:
       <canvas
         ref={canvasRef}
         className="absolute inset-0 touch-none"
-        style={{ zIndex: 10, cursor: tool === "eraser" ? "cell" : "crosshair" }}
+        style={{
+          zIndex: 10,
+          cursor: tool === "eraser" ? "cell" : "crosshair",
+          clipPath: rogneBas ? `inset(0 0 ${rogneBas} 0)` : undefined,
+        }}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
