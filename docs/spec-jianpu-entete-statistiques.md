@@ -211,6 +211,23 @@ connecté sans rôle voit sur 回家 « Joué N fois · dernière fois …, Fid�
 page Statistiques sans filtre présidence ; en préparant une setlist Groupe Fidélité, un chant joué à
 Fidélité 7 jours avant porte la pastille orange. Sans compte : aucune statistique nulle part.
 
+## Avancement
+
+- **30/10/2026 — lot ST fait** (go de Timothée le 30/10/2026, « Fait la partie ST »), sur `main` :
+  - **ST-A** : `canVoirStatistiques` = connecté, `canFiltrerPresidence` = admins ; `statsDuChant` ;
+    `setlistsPourStats` (5 min). Aucune règle Firestore, rien à publier.
+  - **ST-B** : page `/songs/statistiques` (connexion requise, hors interrupteur), `/back-office/statistiques`
+    y redirige (`next.config.ts`, même interrupteur coupé) ; présidence aux admins ; « Tout voir » sur
+    « Les plus chantés ».
+  - **ST-C** : ligne sous l'en-tête **actuel** de la page chant à toutes les tailles (JE-C pas encore faite :
+    elle la reprendra dans la colonne d'en-tête) ; détail en feuille (`Drawer`) ou panneau ancré (`Dialog`,
+    comme Personnaliser), choisi par `useDeuxVolets` : un ordinateur de 1 024 à 1 147 px, barre latérale
+    dépliée, reçoit la feuille.
+  - **ST-D** : `statsBibliotheque` (un passage pour tout le recueil), pastilles verte / orange, tri
+    « Moins joués ici » ; ordinateur : colonnes « {Service} » et « Total », la pastille orange et
+    « Jamais joué à GCC » restent sous le titre.
+- Reste : lot **JE** (pas de go).
+
 ## Hors périmètre
 
 Export des statistiques ; statistiques par personne ; modulations (`sectionKeys`) dans la tonalité jouée ;

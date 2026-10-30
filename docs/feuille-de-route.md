@@ -1254,8 +1254,10 @@ rôles de groupe qui publient. **Go le 29/10/2026**, lot **RS** (RS-A à RS-C) c
 groupe, sur la page du chant et à la création de setlist. Planche
 (https://claude.ai/artifact/SkYcXaBfGRG3EdHLyCXFvs) : **piste A** retenue (en-tête gravé coupé en entier,
 repris par le site ; deux colonnes sur grand écran) et toutes les recommandations validées le 30/10/2026.
-Lots **JE** (JE-A à JE-C) et **ST** (ST-A à ST-D). Code prévu le 31/10/2026 à 12 h 02, **sur go**. Aucune
-règle Firestore à publier. Travail directement sur `main` (consigne du 30/10/2026).
+Lots **JE** (JE-A à JE-C) et **ST** (ST-A à ST-D). Aucune règle Firestore à publier. Travail directement sur
+`main` (consigne du 30/10/2026). **ST fait le 30/10/2026** (go « Fait la partie ST ») : page
+`/songs/statistiques` ouverte à tout connecté, ligne et détail sur la page du chant, repères dans la
+Bibliothèque de l'éditeur (détail dans la section « Avancement » de la spec). **JE** : en attente de go.
 
 ## 4. Carte des modules de l'app « GCC »
 
