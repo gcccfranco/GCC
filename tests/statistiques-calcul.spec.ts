@@ -3,7 +3,7 @@ import type { FSSetlist } from "../src/lib/firebase/setlists";
 import type { SetlistItem } from "../src/types/setList";
 import {
   bornesDeLaPeriode, chantsDeLaSetlist, choixDesFiltres, debutDeLHistorique, libellePart, libelleTendance,
-  statsChants, veille, type FiltresStats,
+  statsChants, statsDuChant, veille, type FiltresStats,
 } from "../src/lib/stats/chantsJoues";
 
 // Lot U7, tranche S1 (docs/spec-statistiques.md) : le calcul des statistiques
@@ -375,4 +375,129 @@ test("slug absent du recueil : une ligne à son nom, sans langue, jamais dans «
     derniereFois: "2026-09-20", tonalites: ["G"], tendance: 0,
   }]);
   expect(r.jamaisJoues.map((c) => c.slug)).not.toContain("chant-renomme");
+});
+
+// ─── Lot ST, ST2 : un chant ───────────────────────────────────────────────────
+
+test.describe("statsDuChant (lot ST, ST2)", () => {
+  const PAIX = "Groupe Paix", FIDELITE = "Groupe Fidélité", BONTE = "Groupe Bonté";
+  const A = "a-toi-essai";
+  const calcul = (liste: FSSetlist[], periode: Parameters<typeof statsDuChant>[3] = "debut", sauf?: string) =>
+    statsDuChant(liste, INDEX, A, periode, AUJOURDHUI, sauf);
+
+  test("total et dernière : la plus récente avec son service", () => {
+    const r = calcul([
+      setlist("2026-09-06", [chant(A)], { category: PAIX }),
+      setlist("2026-09-20", [chant(A)], { category: FIDELITE }),
+      setlist("2026-09-13", [chant("zh-essai")], { category: BONTE }),
+    ]);
+    expect(r.total).toBe(2);
+    expect(r.derniere).toEqual({ jour: "2026-09-20", service: FIDELITE });
+  });
+
+  test("un chant deux fois dans une setlist (dont en fusion) compte une fois", () => {
+    const r = calcul([setlist("2026-09-20", [chant(A), fusion([A, "G"], ["zh-essai", null]), chant(A)], { category: PAIX })]);
+    expect(r.total).toBe(1);
+    expect(r.parService).toEqual([{ service: PAIX, fois: 1, derniere: "2026-09-20" }]);
+  });
+
+  test("brouillon, privée, du jour et à venir ne comptent pas ; une transition n'est pas un chant", () => {
+    const r = calcul([
+      setlist("2026-09-20", [chant(A)], { category: PAIX }),
+      setlist("2026-09-27", [chant(A)], { category: PAIX, isDraft: true }),
+      setlist("2026-09-13", [chant(A)], { category: PAIX, isPrivate: true }),
+      setlist("2026-10-04", [chant(A)], { category: PAIX }),
+      setlist("2026-10-11", [chant(A)], { category: PAIX }),
+      setlist("2026-09-06", [transition()], { category: PAIX }),
+    ]);
+    expect(r.total).toBe(1);
+  });
+
+  test("tonalités : celle de la setlist, sinon l'originale du recueil", () => {
+    const r = calcul([
+      setlist("2026-09-06", [chant(A, "G")]),
+      setlist("2026-09-13", [chant(A, "G")]),
+      setlist("2026-09-20", [chant(A)]),
+    ]);
+    expect(r.tonalites).toEqual(["G"]);
+  });
+
+  test("parService : fois décroissant, puis le plus récent d'abord", () => {
+    const r = calcul([
+      setlist("2026-08-02", [chant(A)], { category: BONTE }),
+      setlist("2026-09-06", [chant(A)], { category: PAIX }),
+      setlist("2026-09-13", [chant(A)], { category: FIDELITE }),
+      setlist("2026-09-20", [chant(A)], { category: FIDELITE }),
+      setlist("2026-09-27", [chant(A)], { category: PAIX }),
+      setlist("2026-09-01", [chant(A)], { category: "" }),
+    ]);
+    expect(r.parService).toEqual([
+      { service: PAIX, fois: 2, derniere: "2026-09-27" },
+      { service: FIDELITE, fois: 2, derniere: "2026-09-20" },
+      { service: BONTE, fois: 1, derniere: "2026-08-02" },
+    ].sort((a, b) => b.fois - a.fois || b.derniere.localeCompare(a.derniere)));
+    expect(r.parService.map((l) => l.service)).toEqual([PAIX, FIDELITE, BONTE]);
+  });
+
+  test("jamaisDans : les services comptés où le chant n'apparaît jamais, dans l'ordre des catégories", () => {
+    const r = calcul([
+      setlist("2026-09-06", [chant(A)], { category: PAIX }),
+      setlist("2026-09-13", [chant("zh-essai")], { category: BONTE }),
+      setlist("2026-09-20", [chant("zh-essai")], { category: FIDELITE }),
+      setlist("2026-09-27", [chant("zh-essai")], { category: PAIX }),
+      setlist("2026-10-11", [chant("zh-essai")], { category: "Groupe Inconnu" }),
+    ]);
+    expect(r.jamaisDans).toEqual([FIDELITE, BONTE]);
+  });
+
+  test("prochaine : la plus proche, publiée ; brouillon, privée et passée ignorés ; indépendante de la période", () => {
+    const r = calcul([
+      setlist("2026-10-25", [chant(A)], { category: BONTE, id: "loin" }),
+      setlist("2026-10-11", [chant(A)], { category: PAIX, id: "proche" }),
+      setlist("2026-10-06", [chant(A)], { category: PAIX, id: "brouillon", isDraft: true }),
+      setlist("2026-10-05", [chant(A)], { category: PAIX, id: "privee", isPrivate: true }),
+      setlist("2026-10-08", [chant("zh-essai")], { category: PAIX, id: "autre-chant" }),
+      setlist("2026-09-20", [chant(A)], { category: PAIX, id: "passee" }),
+    ], { mois: 3 });
+    expect(r.prochaine).toEqual({ jour: "2026-10-11", service: PAIX, setlistId: "proche" });
+    expect(calcul([setlist("2026-09-20", [chant(A)])]).prochaine).toBeNull();
+    // Le jour même compte comme prochaine (≥ aujourd'hui), sans être comptée.
+    const duJour = calcul([setlist("2026-10-04", [chant(A)], { id: "ajd" })]);
+    expect(duJour.total).toBe(0);
+    expect(duJour.prochaine?.setlistId).toBe("ajd");
+  });
+
+  test("sauf : la setlist ignorée n'entre ni dans les comptes ni dans la prochaine", () => {
+    const liste = [
+      setlist("2026-09-20", [chant(A)], { id: "edit-passee", category: PAIX }),
+      setlist("2026-09-13", [chant(A)], { id: "autre", category: FIDELITE }),
+      setlist("2026-10-11", [chant(A)], { id: "edit-future", category: PAIX }),
+    ];
+    const r = calcul(liste, "debut", "edit-passee");
+    expect(r.total).toBe(1);
+    expect(r.derniere?.service).toBe(FIDELITE);
+    expect(r.prochaine?.setlistId).toBe("edit-future");
+    expect(calcul(liste, "debut", "edit-future").prochaine).toBeNull();
+  });
+
+  test("période 3 mois : les comptes sont bornés, jamaisDans suit la période", () => {
+    const liste = [
+      setlist("2026-09-20", [chant(A)], { category: PAIX }),
+      setlist("2026-05-10", [chant(A)], { category: FIDELITE }),
+      setlist("2026-09-27", [chant("zh-essai")], { category: BONTE }),
+      setlist("2026-04-12", [chant("zh-essai")], { category: "Groupe Ancien" }),
+    ];
+    const court = calcul(liste, { mois: 3 });
+    expect(court.total).toBe(1);
+    expect(court.parService.map((l) => l.service)).toEqual([PAIX]);
+    expect(court.jamaisDans).toEqual([BONTE]);
+    const tout = calcul(liste);
+    expect(tout.total).toBe(2);
+    expect(tout.jamaisDans).toEqual([BONTE, "Groupe Ancien"]);
+  });
+
+  test("jamais joué : total 0, dernière null, tonalités vides", () => {
+    const r = calcul([setlist("2026-09-20", [chant("zh-essai")], { category: PAIX })]);
+    expect(r).toEqual({ total: 0, derniere: null, tonalites: [], parService: [], jamaisDans: [PAIX], prochaine: null });
+  });
 });

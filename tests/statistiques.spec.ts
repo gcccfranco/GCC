@@ -1,6 +1,6 @@
 import { expect, test, type Page, type TestInfo } from "@playwright/test";
 import { remplit, signInAs, type FakeProfile } from "./helpers/fakeSession";
-import { canVoirStatistiques, entreesBackOffice, widgetsPermis } from "../src/lib/access";
+import { canFiltrerPresidence, canVoirStatistiques, entreesBackOffice, widgetsPermis } from "../src/lib/access";
 import { ajouterWidget, dispositionParDefaut } from "../src/lib/tableauDeBord/disposition";
 import { choisirReglage, groupesDeReglages } from "../src/lib/tableauDeBord/reglages";
 import type { UserProfile } from "../src/types/user";
@@ -25,11 +25,17 @@ const profil = (p: FakeProfile) =>
 
 
 test.describe("Statistiques (S2) : le droit (Q2)", () => {
-  test("canVoirStatistiques : un admin oui ; un responsable non admin, un membre, un visiteur non", () => {
+  test("canVoirStatistiques : tout membre connecté (admin, responsable, membre) oui, un visiteur non", () => {
     expect(canVoirStatistiques(user(ADMIN))).toBe(true);
-    expect(canVoirStatistiques(user(RESPONSABLE))).toBe(false);
-    expect(canVoirStatistiques({ email: "membre@example.com" })).toBe(false);
+    expect(canVoirStatistiques(user(RESPONSABLE))).toBe(true);
+    expect(canVoirStatistiques({ email: "membre@example.com" })).toBe(true);
     expect(canVoirStatistiques(null)).toBe(false);
+  });
+
+  test("canFiltrerPresidence : un admin oui ; un membre, un visiteur non", () => {
+    expect(canFiltrerPresidence(user(ADMIN))).toBe(true);
+    expect(canFiltrerPresidence({ email: "membre@example.com" })).toBe(false);
+    expect(canFiltrerPresidence(null)).toBe(false);
   });
 
   test("« statistiques » n'est plus une entrée du menu (piste A, BO1) : la page garde ses droits, `canVoirStatistiques`", () => {
@@ -633,9 +639,9 @@ async function ouvrirTableauDeBord(page: Page, qui: FakeProfile, docs: Record<st
 const widgetChants = (page: Page) => page.getByRole("region", { name: /^(Chants les plus joués|最常唱的诗歌)$/ });
 
 test.describe("Statistiques (S5) : le widget, règles pures", () => {
-  test("permis aux admins seuls ; au catalogue d'un admin (plus au défaut depuis T9), en M", () => {
+  test("permis à tout connecté depuis le lot ST (D5) ; au catalogue d'un admin (plus au défaut depuis T9), en M", () => {
     expect(widgetsPermis(user(ADMIN), profil(ADMIN))).toContain("chants");
-    expect(widgetsPermis(user(RESPONSABLE), profil(RESPONSABLE))).not.toContain("chants");
+    expect(widgetsPermis(user(RESPONSABLE), profil(RESPONSABLE))).toContain("chants");
     const d = dispositionParDefaut(user(ADMIN), null);
     expect(d.map((w) => w.id)).toEqual(["dimanche", "planning", "evenements", "afaire", "reunions", "comptes"]);
     expect(ajouterWidget(d, "chants").at(-1)).toEqual({ id: "chants", taille: "m", reglages: {} });
