@@ -122,8 +122,12 @@ que ce soit identique à l'écran » → cadre fin, accords et 简谱 en noir.
   - chaque chant sur une nouvelle page (Q5) ;
   - élément « transition » : **imprimé en bas de la page du chant qui le
     précède**, pas sur une page à lui (hypothèse 2).
-- Le compact suit la version de la présidence (décision du lot 3 ter : le
-  PDF reste sur la présidence).
+- Version imprimée (Timothée, 29/10/2026, à la place de « le PDF reste sur la
+  présidence ») : Classique, Couleurs et Compact de la setlist proposent
+  « Ma version » (par défaut) ou « Version de la présidence » dès que j'ai
+  dans cette setlist une version différente de la présidence
+  (`docs/spec-version-perso.md`) ; sinon la fenêtre ne change pas. La Liste
+  et le PDF d'un chant restent sur la présidence.
 
 ## Hypothèses
 

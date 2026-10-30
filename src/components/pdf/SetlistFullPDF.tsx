@@ -162,6 +162,7 @@ export function SetlistFullPDF({
               page={page}
               // Le calque n'est relevé que sur la première page du scan.
               chords={pageIdx === 0 ? calque : null}
+              retouches={pageIdx === 0 ? item.jianpuChords : null}
               pageIndex={pageIdx}
               top={jianpuCadrage?.[item.songSlug]?.[pageIdx] ?? 0}
               accordsOrigine={pageIdx > 0 ? accordsOrigine : null}

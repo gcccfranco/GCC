@@ -2457,7 +2457,12 @@
       "liste": "曲目列表",
       "listeHelp": "歌曲、调性与结构，一页列出。",
       "download": "下载",
-      "preparing": "正在生成…"
+      "preparing": "正在生成…",
+      "version": "版本",
+      "mine": "我的版本",
+      "mineHelp": "与乐谱视图中看到的一致：你的结构、你的和弦。",
+      "presidence": "主领版本",
+      "presidenceHelp": "歌单中的版本，全队通用。"
     }
   },
   "taches": {

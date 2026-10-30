@@ -74,7 +74,7 @@ import { aDesRetouches } from "@/lib/jianpu/retouches";
 import { fetchSongAST, type SongContent} from "@/lib/api/songs";
 import { PerformanceMode } from "@/components/performance/PerformanceMode";
 import { EditLineSheet, type EditLineTarget } from "@/components/setlists/EditLineSheet";
-import { PdfChoiceSheet } from "@/components/pdf/PdfChoiceSheet";
+import { PdfChoiceSheet, type PdfVersion } from "@/components/pdf/PdfChoiceSheet";
 import { pdfFileName, type PdfStyle } from "@/lib/pdfStylePref";
 import { itemAst } from "@/lib/chordpro/itemContent";
 import { IdeesSheet } from "@/components/harmonie/IdeesSheet";
@@ -330,7 +330,8 @@ export function SetlistDetailClient() {
   // Versions perso des chants (docs/spec-version-perso.md) : un document par
   // personne, chargé avec la setlist. La mienne remplace les accords et
   // paroles de la présidence dans la vue partitions, le sommaire et le mode
-  // louange — jamais dans la liste, le PDF ni l'historique.
+  // louange — jamais dans la liste ni l'historique ; le PDF la suit si je la
+  // choisis dans « Quel PDF ? » (Timothée, 29/10/2026).
   const [versions, setVersions] = useState<Record<string, SetlistVersions>>({});
   // Vrai quand `versions` vient d'être lu en ligne (faux : lecture échouée, ou versions de la copie hors ligne).
   const [versionsLues, setVersionsLues] = useState(false);
@@ -868,7 +869,7 @@ export function SetlistDetailClient() {
   }
 
   /** `"liste"` : le PDF liste (la vue liste de G, « Liste » de « Quel PDF ? » en deux volets). */
-  async function handleDownload(style: PdfStyle | "liste" = "classic") {
+  async function handleDownload(style: PdfStyle | "liste" = "classic", version: PdfVersion = "presidence") {
     if (!setlist) return;
     setDownloading(true);
     try {
@@ -912,7 +913,9 @@ export function SetlistDetailClient() {
         const [sheets, sheetChords, cadrage] = await Promise.all([loadJianpuManifest(), loadJianpuChords(), loadJianpuCadrage()]);
         // Ré-encodage PNG des seules pages réellement imprimées, coupées sous
         // l'en-tête gravé.
-        const sheetFiles = setlist.items.flatMap((it) =>
+        // « Ma version » : exactement les items de la vue affichée (stageItems, hors mode Adapter).
+        const mesItems = version === "mine" ? setlist.items.map(editMine ? withMine : withChosen).map(withMineStructure) : setlist.items;
+        const sheetFiles = mesItems.flatMap((it) =>
           sheetEnabled(jianpuPref, it.jianpuSheet)
             ? (sheets[it.songSlug]?.pages ?? []).map((p, i) => ({ file: p.file, top: cadrage[it.songSlug]?.[i] ?? 0 }))
             : [],
@@ -926,7 +929,7 @@ export function SetlistDetailClient() {
         );
         const blob = await pdf(
           <SetlistFullPDF
-            setlist={setlist}
+            setlist={{ ...setlist, items: mesItems }}
             contents={allContents}
             showChords={showChords}
             jianpuSheets={sheets}
@@ -1510,6 +1513,8 @@ export function SetlistDetailClient() {
   // présidence seule.
   const displayItems = editPartitions ? setlist.items : setlist.items.map(editMine ? withMine : withChosen);
   const stageItems = editPartitions ? setlist.items : displayItems.map(withMineStructure);
+  // « Quel PDF ? » propose ma version quand elle diffère de la présidence (identité d'objet : les trois transformations rendent l'item lui-même quand rien ne change).
+  const aMaVersion = !editPartitions && !!user && stageItems.some((it, i) => it !== setlist.items[i]);
   const versionViews = editPartitions
     ? undefined
     : Object.fromEntries(setlist.items.filter((it) => it.songSlug).map((it) => [it.songSlug, viewOf(it)!]));
@@ -2358,6 +2363,7 @@ export function SetlistDetailClient() {
         onClose={() => setShowPdfChoice(false)}
         forSetlist
         onDownload={handleDownload}
+        versionChoice={aMaVersion}
         onListe={deuxVolets ? () => handleDownload("liste") : undefined}
       />
 

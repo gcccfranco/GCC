@@ -10,8 +10,8 @@ import { transposeSection } from "@/lib/transposeAST";
 import frTranslations from "@/locales/fr.json";
 import zhTranslations from "@/locales/zh-CN.json";
 import { measureLyric, measureChord } from "@/lib/chordpro/measureText";
-import type { SectionNuance } from "@/types/setList";
-import { cleJouee, type JianpuChords, type JianpuPage } from "@/lib/jianpu/images";
+import type { JianpuChords as JianpuRetouches, SectionNuance } from "@/types/setList";
+import { cleJouee, type JianpuChordLabel, type JianpuChords, type JianpuPage } from "@/lib/jianpu/images";
 import { nuanceLabel } from "@/lib/setlist/nuances";
 import { nuancePdfColors, sectionPdfPalette } from "@/lib/pdf/colors";
 import { compactPlan, stripGroups } from "@/lib/pdf/compact";
@@ -1108,10 +1108,15 @@ export function JianpuPDFPage({
   pageIndex = 0,
   top = 0,
   accordsOrigine,
+  retouches,
 }: {
   src: string;
   page: JianpuPage;
   chords?: JianpuChords | null;
+  /** Retouches d'accords de l'item (`item.jianpuChords`, lot 9) : comme à
+   *  l'écran, elles remplacent le gravé et se dessinent même calque éteint.
+   *  Comme à l'écran aussi, seule la première page du scan les porte. */
+  retouches?: JianpuRetouches | null;
   /** Rang de la page dans le scan (0 = la première, seule à porter un calque). */
   pageIndex?: number;
   /** Rangées de l'en-tête gravé coupées de `src` (`cadrage.json`) : l'image fait
@@ -1151,6 +1156,12 @@ export function JianpuPDFPage({
   const partial = Boolean(overlayOn && chords?.complete === false);
   const semitones = chords && playedKey ? semitonesTo(chords.printedKey, playedKey) : 0;
   const chordColor = partial ? "#2563eb" : "#000";
+  // Retouches : lues sur la page 0 seule (JianpuSheet ne dessine le calque que là).
+  const changed = pageIndex === 0 ? (retouches?.changed ?? {}) : {};
+  const ajouts = pageIndex === 0 ? (retouches?.added ?? []).filter((a) => a.page === 0) : [];
+  const calqueDessine = Boolean(chords && (overlayOn || Object.keys(changed).length > 0 || ajouts.length > 0));
+  // Tonalité d'orthographe : la jouée, sinon l'imprimée (calque éteint, rien ne se transpose).
+  const cleEcrite = playedKey ?? chords?.printedKey ?? "C";
   const centerLabel = footerCenter ?? title;
 
   return (
@@ -1192,54 +1203,77 @@ export function JianpuPDFPage({
           <Image src={src} style={{ width: imgW, height: imgH }} />
 
           {/* Calque : le pavé blanc masque l'accord d'origine, le texte le
-              réécrit au même endroit. Seule la 1re page du scan est relevée. */}
-          {overlayOn && chords && (
-            <>
-              {chords.keyLabel && (
-                <SheetLabel box={chords.keyLabel} k={ck} dy={dy} h={chords.labelH} color="#000">
-                  {/* `c` : le texte gravé, quand la page n'écrit pas « 1=X »
-                      (la lettre seule, l'ordre inverse, ou un « 1=F » posé
-                      au-dessus d'accords en D). Transposé comme une étiquette,
-                      pas remplacé par la tonalité jouée. */}
-                  {chords.keyLabel.c
-                    ? transposeLabel(chords.keyLabel.c, semitones, playedKey!)
-                    : `1=${playedKey}`}
-                </SheetLabel>
-              )}
-              {/* « （X调） » du titre gravé : coupé avec lui, rien à réécrire. */}
-              {chords.titleKey && chords.titleKey.y >= top && (
-                <SheetLabel box={chords.titleKey} k={ck} dy={dy} h={chords.titleKey.h * 0.78} color="#000" font="SourceHanSansCN">
-                  {`（${playedKey}调）`}
-                </SheetLabel>
-              )}
-              {/* `transposeLabel`, pas `transposeChord` : depuis l'itération 34
-                  une étiquette peut porter une ligne entière (`(Am G/B C D)`,
-                  `【前奏 | G D/F# | … | D】`). `transposeChord` la rendait
-                  verbatim — la page PDF gardait ces mentions dans l'ancienne
-                  tonalité. Une étiquette sans séparateur repasse par le même
-                  chemin qu'avant, donc rien d'autre ne bouge.
-                  `fh` : le corps propre à l'étiquette, quand il n'est pas
-                  celui de la page. */}
-              {/* `opt` : une **lecture alternative** de la même musique — les
-                  positions de capo que certaines gravures empilent au-dessus
-                  des accords réels. Le PDF n'a pas le sélecteur de la page
-                  web : il imprime la tonalité jouée seule, donc ces
-                  étiquettes-là restent des masques. `alt` donne la tonalité
-                  d'orthographe des rangées qui, elles, se suivent (une
-                  modulation) : le décalage reste celui de la page. */}
-              {chords.labels.map((l, i) => (
-                <SheetLabel key={i} box={l} k={ck} dy={dy} h={l.fh ?? chords.labelH} color={chordColor}>
-                  {l.opt
-                    ? ""
-                    : transposeLabel(
-                        l.c,
-                        semitones,
-                        altSpellingKey(playedKey!, l.alt ?? 0)
-                      )}
-                </SheetLabel>
-              ))}
-            </>
-          )}
+              réécrit au même endroit. Seule la 1re page du scan est relevée.
+              Calque éteint, seules les étiquettes retouchées se dessinent. */}
+          {calqueDessine && chords && (() => {
+            // Peinture comme à l'écran : les masques (étiquette vide) d'abord,
+            // pour qu'un pavé blanc n'efface pas un accord voisin.
+            const boites = chords.labels
+              .map((l, i) => {
+                const retouche = changed[i];
+                if (!overlayOn && retouche === undefined) return null;
+                const grave = retouche ?? l.c;
+                const texte = l.opt ? "" : transposeLabel(grave, semitones, altSpellingKey(cleEcrite, l.alt ?? 0));
+                return { l, i, texte };
+              })
+              .filter((b): b is { l: JianpuChordLabel; i: number; texte: string } => b !== null);
+            const rend = (b: { l: JianpuChordLabel; i: number; texte: string }) => (
+              <SheetLabel key={b.i} box={b.l} k={ck} dy={dy} h={b.l.fh ?? chords.labelH} color={chordColor}>
+                {b.texte}
+              </SheetLabel>
+            );
+            return (
+              <>
+                {boites.filter((b) => !b.texte.trim()).map(rend)}
+                {overlayOn && chords.keyLabel && (
+                  <SheetLabel box={chords.keyLabel} k={ck} dy={dy} h={chords.labelH} color="#000">
+                    {/* `c` : le texte gravé, quand la page n'écrit pas « 1=X »
+                        (la lettre seule, l'ordre inverse, ou un « 1=F » posé
+                        au-dessus d'accords en D). Transposé comme une étiquette,
+                        pas remplacé par la tonalité jouée. */}
+                    {chords.keyLabel.c
+                      ? transposeLabel(chords.keyLabel.c, semitones, playedKey!)
+                      : `1=${playedKey}`}
+                  </SheetLabel>
+                )}
+                {/* « （X调） » du titre gravé : coupé avec lui, rien à réécrire. */}
+                {overlayOn && chords.titleKey && chords.titleKey.y >= top && (
+                  <SheetLabel box={chords.titleKey} k={ck} dy={dy} h={chords.titleKey.h * 0.78} color="#000" font="SourceHanSansCN">
+                    {`（${playedKey}调）`}
+                  </SheetLabel>
+                )}
+                {/* `transposeLabel`, pas `transposeChord` : depuis l'itération 34
+                    une étiquette peut porter une ligne entière (`(Am G/B C D)`,
+                    `【前奏 | G D/F# | … | D】`). `fh` : le corps propre à
+                    l'étiquette, quand il n'est pas celui de la page.
+                    `opt` : une **lecture alternative** (positions de capo
+                    empilées au-dessus des accords réels). Le PDF n'a pas le
+                    sélecteur de la page web : ces étiquettes-là restent des
+                    masques. `alt` donne la tonalité d'orthographe des rangées
+                    qui se suivent (une modulation). */}
+                {boites.filter((b) => b.texte.trim()).map(rend)}
+                {/* Accords ajoutés : au-dessus de tout, sans pavé (ils se
+                    posent dans la place libre de la ligne), au corps de leur
+                    voisin d'étiquette. */}
+                {ajouts.map((a, n) => {
+                  const voisin = chords.labels.find((l) => a.y < l.y + l.h && l.y < a.y + chords.labelH);
+                  return (
+                    <SheetLabel
+                      key={`ajout-${n}`}
+                      box={{ x: a.x, y: a.y, w: 0, h: chords.labelH }}
+                      k={ck}
+                      dy={dy}
+                      h={voisin?.fh ?? chords.labelH}
+                      color={chordColor}
+                      masque={false}
+                    >
+                      {transposeLabel(a.c, semitones, cleEcrite)}
+                    </SheetLabel>
+                  );
+                })}
+              </>
+            );
+          })()}
         </View>
 
         {partial && (
@@ -1281,7 +1315,7 @@ export function JianpuPDFPage({
  *  largeur fixe, react-pdf tronque un libellé plus large que son cadre (le
  *  rendu web, lui, déborde grâce à `minWidth` + `nowrap`). */
 function SheetLabel({
-  box, k, dy = 0, h, color, font = "Times-Roman", children,
+  box, k, dy = 0, h, color, font = "Times-Roman", masque = true, children,
 }: {
   box: { x: number; y: number; w: number; h: number };
   k: number;
@@ -1290,6 +1324,8 @@ function SheetLabel({
   h: number;
   color: string;
   font?: string;
+  /** Faux : le texte seul, sans pavé blanc (accord ajouté). */
+  masque?: boolean;
   children: string;
 }) {
   const left = (box.x - 3) * k;
@@ -1298,16 +1334,18 @@ function SheetLabel({
   const fontSize = h * k;
   return (
     <>
-      <View
-        style={{
-          position: "absolute",
-          left,
-          top,
-          width: (box.w + 7) * k,
-          height: boxH,
-          backgroundColor: "#fff",
-        }}
-      />
+      {masque && (
+        <View
+          style={{
+            position: "absolute",
+            left,
+            top,
+            width: (box.w + 7) * k,
+            height: boxH,
+            backgroundColor: "#fff",
+          }}
+        />
+      )}
       <Text
         style={{
           position: "absolute",

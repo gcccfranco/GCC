@@ -2490,7 +2490,12 @@
       "liste": "Liste",
       "listeHelp": "Les chants, leurs tonalités et leur structure, sur une page.",
       "download": "Télécharger",
-      "preparing": "Préparation…"
+      "preparing": "Préparation…",
+      "version": "Version",
+      "mine": "Ma version",
+      "mineHelp": "Ce que tu vois dans la vue partitions : ta structure, tes accords.",
+      "presidence": "Version de la présidence",
+      "presidenceHelp": "Celle de la setlist, pour toute l'équipe."
     }
   },
   "taches": {
