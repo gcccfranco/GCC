@@ -77,7 +77,8 @@ export async function POST(req: NextRequest) {
   // Droits de l'appelant, relus ici (jamais crus sur parole).
   const isAdmin = isAdminEmail(email);
   // Lot 2 (OG23) : aussi `publieParRole` et `notifieParRole`, relus (interrupteur ouvert seulement). Lot AO : et l'organigramme
-  // (`referentDe`…), que `droitsDePrevenir` lit à la place de `notify`.
+  // (`referentDe`…), que `droitsDePrevenir` lit à la place de `notify`. Lot RS : `responsabilites` (le gestionnaire du
+  // planning prévient, la Régie et `notifieParRole` ne comptent plus), relu avec le reste du profil.
   const me = isAdmin
     ? null
     : ((await adminDb().collection("users").doc(uid).get()).data() as

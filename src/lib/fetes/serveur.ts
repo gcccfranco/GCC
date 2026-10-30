@@ -37,7 +37,7 @@ function lireEdition(id: string, data: Record<string, unknown> | undefined): Edi
 }
 
 /** Les comptes et les groupes, tels que `ayantsDroitDuQui` les lit. La coordination se calcule comme au
- *  back-office (`isCoordination`) ; l'adresse d'admin est celle du jeton de l'appelant (un admin sans profil reste
+ *  back-office (`isCoordination`, lot RS : le Comité Orga, `responsabilites` du profil entier passé tel quel) ; l'adresse d'admin est celle du jeton de l'appelant (un admin sans profil reste
  *  coordination), jamais l'e-mail d'un profil. Seule celle de l'appelant sert aux droits. */
 export async function lireContexteFetes(
   db: FirebaseFirestore.Firestore,

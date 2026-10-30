@@ -178,5 +178,13 @@ fois, puis l'admin corrige sur la page Responsabilités.
   - la Table n'a pas d'audience de notification libre (le petit déj garde la sienne) ;
   - les téléphones des inscrits ne sont lus nulle part dans l'app (Sheet seulement) : rien à changer ;
   - zh : 法语崇拜 pour Culte Franco, le nom déjà employé par `categories.*`.
+- **RS-B** (30/10/2026) : `firestore.rules` ancien ∪ nouveau (`responsabilites()`, `gerePlanning`, `gereUnPlanning` ;
+  coordination, absences, plannings, créneaux de scène, création de setlist ; `responsabilites` refusé à la création
+  d'un profil, écrit par les admins seuls) ; routes vérifiées (elles passent le profil entier ; deux types élargis) ;
+  la recopie de l'organigramme n'écrit jamais `responsabilites` ; reprise `scripts/responsabilites-reprise.ts`
+  (logique `src/lib/acces/repriseResponsabilites.ts`, à blanc par défaut, n'ajoute que des clés, n'efface rien) ;
+  `tests/responsabilites-reprise.spec.ts`, `tests/acces-regles.spec.ts` repris. 441 tests verts sur trois appareils.
+  Relevé de la reprise : clés brutes (`planning:culte`) ; « perd » : une ligne « notification libre à son équipe »
+  par référent, « créer les évènements du groupe » pour un comité, Régie « Sono, Sono Live, PPT du Culte ».
 - **Code mort signalé, non supprimé** : clés i18n `acces.ouvre.planning*`, `notifier*`, `coordination`,
   `evenementSection`, `acces.pourquoi.roleGroupe`, `presidenceGroupe` ; `estReferentLouange/Edd/Regie` hors droits.

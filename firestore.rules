@@ -10,6 +10,11 @@ rules_version = '2';
 // `lieuxLouange`, `lieuxRegie`, `joue`) : jamais l'un sans l'autre, pour que `main`, qui tourne en ligne dans
 // l'ancien mode, garde tous ses gestes. Une dernière passe retirera l'ancien côté le jour où il disparaît (AO-F).
 //
+// Lot RS (« les droits de gestion viennent d'une liste Responsabilités », docs/spec-responsabilites.md) : même principe,
+// ancien ∪ nouveau. Chaque condition d'avant reste ; on y AJOUTE, par `||`, la lecture de `users/{uid}.responsabilites`
+// (`planning:<x>`, `orga`), écrite par les admins seuls (refusée à la création d'un profil). Touchées : isCoordination,
+// faitDesPlannings, peutEcrirePlanning, créneaux de scène, peutCreerSetlistDans. RS-D retirera l'ancien côté.
+//
 // Modèle d'accès :
 // - Setlists : lecture réservée aux connectés (le filtrage par service se fait côté client) ;
 //   création : le créateur doit se déclarer propriétaire (ownerId = uid, figé ensuite) ;
@@ -86,6 +91,35 @@ service cloud.firestore {
       return exists(/databases/$(database)/documents/users/$(request.auth.uid));
     }
 
+    // Lot RS (docs/spec-responsabilites.md) : la liste « Responsabilités » du profil, écrite par les admins seuls.
+    // Clés fermées : `planning:<x>` (gestionnaire d'un planning) et `orga` (Comité Orga). Miroir :
+    // RESPONSABILITES_PLANNING (src/lib/acces/responsabilites.ts).
+    function responsabilites() {
+      return profile().get('responsabilites', []);
+    }
+
+    // Gère-t-on la grille `key` (clé de GRILLES) ? Toute la grille, sans découpage par colonne (Q5). Table en dur,
+    // comme RESPONSABILITES_PLANNING.
+    function gerePlanning(key) {
+      return hasProfile() && (
+        (key == 'culte' && 'planning:culte' in responsabilites())
+        || (key == 'intergroupe' && 'planning:intergroupe' in responsabilites())
+        || (key == 'interfranco' && 'planning:interfranco' in responsabilites())
+        || (key in ['campusMatin', 'campusSoir'] && 'planning:campus' in responsabilites())
+        || (key == 'table' && 'planning:table' in responsabilites())
+        || (key in ['eddZhongban', 'eddDaban', 'eddGaoban'] && 'planning:edd' in responsabilites())
+        || (key == 'paix' && 'planning:paix' in responsabilites())
+        || (key in ['fidelite', 'fideliteMusiciens'] && 'planning:fidelite' in responsabilites())
+        || (key == 'bonte' && 'planning:bonte' in responsabilites()));
+    }
+
+    // Gère-t-on au moins un planning ?
+    function gereUnPlanning() {
+      return hasProfile() && responsabilites().hasAny([
+        'planning:culte', 'planning:intergroupe', 'planning:interfranco', 'planning:campus', 'planning:table',
+        'planning:edd', 'planning:paix', 'planning:fidelite', 'planning:bonte']);
+    }
+
     // Cours d'Harmonie (docs/spec-cours-harmonie.md, C2 et C4) : ce que chacun a
     // fini, champ par champ. Écrit par l'intéressé seul ; lu par lui et par les
     // admins (tableau de l'équipe). Miroir client : canSeeTeamCoursProgres (access.ts).
@@ -130,9 +164,12 @@ service cloud.firestore {
             && request.resource.data.get('referentSous', []) == []
             && request.resource.data.get('lieuxLouange', []) == []
             && request.resource.data.get('lieuxRegie', []) == []
-            && request.resource.data.get('joue', []) == [])
+            && request.resource.data.get('joue', []) == []
+            // Lot RS : les responsabilités ne s'attribuent que par un admin (l'intéressé ne s'en donne pas).
+            && request.resource.data.get('responsabilites', []) == [])
       );
-      // Une fois le profil créé, seuls les admins peuvent le modifier.
+      // Une fois le profil créé, seuls les admins peuvent le modifier (Lot RS : donc seuls eux écrivent
+      // `responsabilites`).
       allow update: if isAdmin();
       allow delete: if isAdmin();
     }
@@ -143,8 +180,9 @@ service cloud.firestore {
     // Miroir client : faitDesPlannings, canSaisirAbsence (src/lib/access.ts). Règle à publier à la main.
     // Lot AO : ancien ∪ nouveau — aussi qui remplit au moins un planning par l'organigramme (rôle de groupe,
     // référent Louange, EDD ou Régie, Orga) : mêmes conditions que peutEcrirePlanning / peutEcrireLaRegie.
+    // Lot RS : ancien ∪ nouveau — aussi qui gère au moins un planning (`planning:<x>` dans `responsabilites`).
     function faitDesPlannings() {
-      return isAdmin() || (hasProfile() && (
+      return isAdmin() || gereUnPlanning() || (hasProfile() && (
         profile().get('plannings', []).size() > 0
         || profile().get('remplitParRole', []).size() > 0
         || 'louange' in profile().get('referentDe', [])
@@ -268,8 +306,10 @@ service cloud.firestore {
     // Lot AO : ancien ∪ nouveau (D5) — aussi le référent Louange, le référent EDD et les membres d'Orga (champs recopiés
     // par le serveur) ; ni le référent d'une sous-équipe, ni le référent Régie. Miroir : coordination
     // (src/lib/acces/organigramme.ts).
+    // Lot RS : ancien ∪ nouveau — aussi le Comité Orga (`orga` dans `responsabilites`, Q11).
     function isCoordination() {
-      return isAdmin() || (hasProfile() && (profile().get('coordination', false) == true
+      return isAdmin() || (hasProfile() && ('orga' in responsabilites()
+                                            || profile().get('coordination', false) == true
                                             || 'louange' in profile().get('referentDe', [])
                                             || 'edd' in profile().get('referentDe', [])
                                             || 'orga' in profile().get('dansEquipes', [])));
@@ -307,6 +347,8 @@ service cloud.firestore {
       // pour des groupes permis par « Qui peut réserver » (liste vide = tout membre
       // connecté) ; la coordination n'est pas limitée. Un get() par écriture.
       // Miroir : canReserverPour (src/lib/access.ts).
+      // Lot RS : ancien ∪ nouveau — les gestionnaires de planning réservent toujours, sans les limites de saison ni
+      // de groupes, comme la coordination (Q12) ; la modification de l'auteur suit la même règle.
       // Une édition fermée à la main (`fermees`, docs/spec-fermer-reservations.md, FR10) refuse création et modification ; la suppression reste permise.
       function reservable(programmeId, qui) {
         let p = get(/databases/$(database)/documents/programmes/$(programmeId)).data;
@@ -318,9 +360,10 @@ service cloud.firestore {
       match /creneaux/{cid} {
         allow read: if signedIn();
         allow create: if signedIn() && request.resource.data.auteurUid == request.auth.uid
-          && (isCoordination() || reservable(id, request.resource.data.qui));
+          && (isCoordination() || gereUnPlanning() || reservable(id, request.resource.data.qui));
         allow update: if signedIn() && (isCoordination()
-          || (resource.data.auteurUid == request.auth.uid && reservable(id, request.resource.data.qui)));
+          || (resource.data.auteurUid == request.auth.uid
+              && (gereUnPlanning() || reservable(id, request.resource.data.qui))));
         allow delete: if signedIn() && (isCoordination() || resource.data.auteurUid == request.auth.uid);
       }
     }
@@ -563,6 +606,8 @@ service cloud.firestore {
     // src/lib/acces/organigramme.ts) : membre de Louange et la catégorie est dans `lieuxLouange` ; la catégorie du
     // `groupe` (id « paix », « fidelite », « bonte ») ; membre d'`edd` et une des trois classes. La Régie (lieuxRegie)
     // n'y crée pas : lecture seule.
+    // Lot RS : ancien ∪ nouveau — le gestionnaire d'un planning crée dans les catégories de son service (miroir de
+    // categoriesDesPlannings, src/lib/acces/responsabilites.ts).
     function peutCreerSetlistDans(category) {
       return hasProfile() && (
         profile().get('serviceRoles', {}).get(category, []).hasAny(['chanteur', 'musicien', 'presidence'])
@@ -572,7 +617,15 @@ service cloud.firestore {
         || (category == 'Groupe Paix' && profile().get('groupe', '') == 'paix')
         || (category == 'Groupe Fidélité' && profile().get('groupe', '') == 'fidelite')
         || (category == 'Groupe Bonté' && profile().get('groupe', '') == 'bonte')
-        || ('edd' in profile().get('dansEquipes', []) && category in ['中班', '大班', '高班']));
+        || ('edd' in profile().get('dansEquipes', []) && category in ['中班', '大班', '高班'])
+        || (category == 'Culte Francophone' && 'planning:culte' in responsabilites())
+        || (category == 'Intergroupe' && 'planning:intergroupe' in responsabilites())
+        || (category == 'Interfranco' && 'planning:interfranco' in responsabilites())
+        || (category == 'Campus' && 'planning:campus' in responsabilites())
+        || (category in ['中班', '大班', '高班'] && 'planning:edd' in responsabilites())
+        || (category == 'Groupe Paix' && 'planning:paix' in responsabilites())
+        || (category == 'Groupe Fidélité' && 'planning:fidelite' in responsabilites())
+        || (category == 'Groupe Bonté' && 'planning:bonte' in responsabilites()));
     }
 
     // Miroir de canDeleteSetlist (src/lib/access.ts) : une setlist privée ne se
@@ -706,8 +759,10 @@ service cloud.firestore {
     // Lot AO : ancien ∪ nouveau — aussi, par l'organigramme (miroir de colonnesRemplies, src/lib/acces/organigramme.ts) :
     // le référent Louange sur les cinq plannings du culte, le référent EDD sur les trois classes, Orga sur la Table.
     // Pas le référent Musiciens (E2) : `referentSous` n'ouvre aucun planning.
+    // Lot RS : ancien ∪ nouveau — aussi le gestionnaire du planning (`planning:<x>`, gerePlanning), sur toute la
+    // grille (Q5). `peutEcrireLaRegie` reste jusqu'à RS-D.
     function peutEcrirePlanning(key) {
-      return isAdmin() || (hasProfile() && (key in profile().get('plannings', [])
+      return isAdmin() || gerePlanning(key) || (hasProfile() && (key in profile().get('plannings', [])
                                             || key in profile().get('remplitParRole', [])
                                             || ('louange' in profile().get('referentDe', [])
                                                 && key in ['culte', 'intergroupe', 'interfranco', 'campusMatin', 'campusSoir'])

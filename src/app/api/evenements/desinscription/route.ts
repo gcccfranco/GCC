@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { adminDb } from "@/lib/push/admin";
 import { aCommence, nowIsoParis } from "@/lib/evenements/agenda";
 import { canEditEvenement } from "@/lib/access";
+import type { ProfilOrganigramme } from "@/lib/acces/organigramme";
 import { HttpError, ID, errorResponse, optionalUser } from "@/lib/evenements/serveur";
 import type { Evenement } from "@/types/evenement";
 import { BACK_OFFICE } from "@/lib/backOffice"
@@ -26,7 +27,7 @@ export async function POST(req: NextRequest) {
 
     const db = adminDb();
     const ref = db.collection("evenements").doc(evenementId);
-    const profile = ((await db.collection("users").doc(user.uid).get()).data() ?? null) as { coordination?: boolean } | null;
+    const profile = ((await db.collection("users").doc(user.uid).get()).data() ?? null) as ({ coordination?: boolean } & ProfilOrganigramme) | null; // Lot RS : `responsabilites` (orga) y passe
 
     const result = await db.runTransaction(async (tx) => {
       const snap = await tx.get(ref);

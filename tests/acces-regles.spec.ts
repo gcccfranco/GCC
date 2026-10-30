@@ -386,12 +386,16 @@ test.describe("le serveur : recopie, droit de tenir l'organigramme, audiences (b
     expect(tri(await uidsDuGroupe("Campus", db, false))).toEqual(["u-fred"]);
   });
 
-  test("notifier : un référent de sous-équipe n'atteint que sa sous-équipe ; en ligne (ancien mode) les audiences d'équipe sont refusées", () => {
+  test("notifier : un référent de sous-équipe ne notifie plus librement ; en ligne (ancien mode) les audiences d'équipe sont refusées", () => {
+    // Lot RS (Q12) : les référents ne notifient que par les réunions de leur équipe, plus en notification libre.
     const sous = { dansEquipes: ["louange"], referentSous: ["choristes"] };
-    expect(audiencesNotifiables(sous, true)).toEqual(["louange:choristes"]);
-    expect(peutNotifierAudience("louange:choristes", false, sous, true)).toBe(true);
+    expect(audiencesNotifiables(sous, true)).toEqual([]);
+    expect(peutNotifierAudience("louange:choristes", false, sous, true)).toBe(false);
     expect(peutNotifierAudience("louange:musiciens", false, sous, true)).toBe(false);
     expect(peutNotifierAudience("equipe:louange", false, sous, true)).toBe(false);
+    // Lot RS : `orga` notifie « Tous », un gestionnaire l'audience de son service.
+    expect(audiencesNotifiables({ responsabilites: ["orga"] }, true)).toEqual(["*"]);
+    expect(peutNotifierAudience("Campus", false, { responsabilites: ["planning:campus"] }, true)).toBe(true);
     // Ancien mode : audience d'équipe invalide, quelles que soient les cases.
     expect(peutNotifierAudience("equipe:louange", false, { notify: ["*"] }, false)).toBe(false);
     expect(peutNotifierAudience("Campus", false, { notify: ["Campus"] }, false)).toBe(true);
@@ -402,14 +406,20 @@ test.describe("le serveur : recopie, droit de tenir l'organigramme, audiences (b
 
 test.describe("canRetirerDate : toutes les colonnes", () => {
   const user = { email: "regie@example.com" };
-  test("le référent Régie remplit ses colonnes mais ne retire pas une date ; le référent Louange, si", () => {
+  test("lot RS : plus de colonnes par rôle ; le gestionnaire du planning remplit toute la grille et retire une date", () => {
+    // Avant le lot RS, la Régie remplissait Sono, Sono Live et PPT, et le référent Louange le culte : ce n'est plus
+    // une affaire d'organigramme (Q5) — la liste Responsabilités donne toute la grille, ou rien.
     const regie = { referentDe: ["regie"], dansEquipes: ["regie"] };
     const louange = { referentDe: ["louange"], dansEquipes: ["louange"] };
-    expect(colonnesModifiables(user, regie, "interfranco", true)).toEqual(["sono", "sonoLive", "ppt"]);
+    const gestionnaire = { responsabilites: ["planning:interfranco"] };
+    expect(colonnesModifiables(user, regie, "interfranco", true)).toBeNull();
     expect(canRetirerDate(user, regie, "interfranco", true)).toBe(false);
-    expect(canRetirerDate(user, louange, "interfranco", true)).toBe(true);
+    expect(canRetirerDate(user, louange, "interfranco", true)).toBe(false);
+    expect(colonnesModifiables(user, gestionnaire, "interfranco", true)).toBe("toutes");
+    expect(canRetirerDate(user, gestionnaire, "interfranco", true)).toBe(true);
+    expect(canRetirerDate(user, gestionnaire, "intergroupe", true)).toBe(false);
     // Hors des plannings à dates choisies : jamais.
-    expect(canRetirerDate(user, louange, "culte", true)).toBe(false);
+    expect(canRetirerDate(user, { responsabilites: ["planning:culte"] }, "culte", true)).toBe(false);
   });
 
   test("ancien mode : qui remplit le planning retire, comme avant", () => {
@@ -442,5 +452,170 @@ test.describe("les règles : création de profil, évènements", () => {
     expect(premiere).toContain("request.resource.data.pour == resource.data.pour || pourCreable(request.resource.data.pour)");
     expect(sansEspaces(bloc("match /evenements/{id}"))).toContain("&& pourCreable(request.resource.data.pour);");
     expect(sansEspaces(fonction("pourCreable"))).toContain("estReferentDe(pour.split(':')[1])");
+  });
+});
+
+// ─── Lot RS, tranche RS-B (docs/spec-responsabilites.md) : ancien ∪ nouveau ──────────────────────────────
+
+test.describe("les règles : lot RS, la liste Responsabilités s'ajoute à l'ancien", () => {
+  const TABLE_PLANNINGS: [string, string[]][] = [
+    ["planning:culte", ["culte"]],
+    ["planning:intergroupe", ["intergroupe"]],
+    ["planning:interfranco", ["interfranco"]],
+    ["planning:campus", ["campusMatin", "campusSoir"]],
+    ["planning:table", ["table"]],
+    ["planning:edd", ["eddZhongban", "eddDaban", "eddGaoban"]],
+    ["planning:paix", ["paix"]],
+    ["planning:fidelite", ["fidelite", "fideliteMusiciens"]],
+    ["planning:bonte", ["bonte"]],
+  ];
+
+  test("la phrase du lot, en tête du fichier, à côté de celle du lot AO", () => {
+    const tete = regles.slice(0, regles.indexOf("service cloud.firestore"));
+    expect(tete).toContain("Lot RS");
+    expect(tete).toContain("Lot AO : ancien ∪ nouveau, compatible avec le code en ligne");
+  });
+
+  test("responsabilites() et gerePlanning(key) : la table en dur est celle de RESPONSABILITES_PLANNING", () => {
+    expect(sansEspaces(fonction("responsabilites"))).toContain("profile().get('responsabilites', [])");
+    const f = sansEspaces(fonction("gerePlanning"));
+    expect(f).toContain("hasProfile()");
+    expect(f).toContain("key == 'culte' && 'planning:culte' in responsabilites()");
+    expect(f).toContain("key == 'intergroupe' && 'planning:intergroupe' in responsabilites()");
+    expect(f).toContain("key == 'interfranco' && 'planning:interfranco' in responsabilites()");
+    expect(f).toContain("key in ['campusMatin', 'campusSoir'] && 'planning:campus' in responsabilites()");
+    expect(f).toContain("key == 'table' && 'planning:table' in responsabilites()");
+    expect(f).toContain("key in ['eddZhongban', 'eddDaban', 'eddGaoban'] && 'planning:edd' in responsabilites()");
+    expect(f).toContain("key == 'paix' && 'planning:paix' in responsabilites()");
+    expect(f).toContain("key in ['fidelite', 'fideliteMusiciens'] && 'planning:fidelite' in responsabilites()");
+    expect(f).toContain("key == 'bonte' && 'planning:bonte' in responsabilites()");
+  });
+
+  test("gereUnPlanning() : les neuf clés planning, et pas orga", () => {
+    const f = sansEspaces(fonction("gereUnPlanning"));
+    expect(f).toContain("responsabilites().hasAny([");
+    for (const [cle] of TABLE_PLANNINGS) expect(f, cle).toContain(`'${cle}'`);
+    expect(f).not.toContain("'orga'");
+  });
+
+  test("la table des règles = RESPONSABILITES_PLANNING (src/lib/acces/responsabilites.ts)", () => {
+    const source = readFileSync(path.join(ROOT, "src/lib/acces/responsabilites.ts"), "utf8");
+    const f = sansEspaces(fonction("gerePlanning"));
+    for (const [cle, grilles] of TABLE_PLANNINGS) {
+      expect(source, cle).toContain(`cle: "${cle}", plannings: [${grilles.map((g) => `"${g}"`).join(", ")}]`);
+      expect(f, cle).toContain(`'${cle}' in responsabilites()`);
+    }
+  });
+
+  test("users create refuse `responsabilites` (l'intéressé ne s'en donne pas), et les refus d'avant restent ; update reste aux admins", () => {
+    const users = bloc("match /users/{uid}");
+    const create = users.slice(users.indexOf("allow create"), users.indexOf("allow update"));
+    expect(create).toContain("request.resource.data.get('responsabilites', []) == []");
+    for (const champ of ["annonces", "notify", "plannings", "dansEquipes", "referentDe", "remplitParRole", "publieParRole", "notifieParRole", "sousEquipes", "referentSous"]) {
+      expect(create, champ).toContain(`request.resource.data.get('${champ}', []) == []`);
+    }
+    expect(create).toContain("get('coordination', false) == false");
+    expect(sansEspaces(users)).toContain("allow update: if isAdmin();");
+  });
+
+  test("isCoordination = Orga par les responsabilités ∪ tout l'ancien", () => {
+    const f = sansEspaces(fonction("isCoordination"));
+    expect(f).toContain("'orga' in responsabilites()");
+    expect(f).toContain("profile().get('coordination', false) == true");
+    expect(f).toContain("'louange' in profile().get('referentDe', [])");
+    expect(f).toContain("'edd' in profile().get('referentDe', [])");
+    expect(f).toContain("'orga' in profile().get('dansEquipes', [])");
+    expect(f).toContain("isAdmin()");
+  });
+
+  test("faitDesPlannings = gereUnPlanning() ∪ tout l'ancien", () => {
+    const f = sansEspaces(fonction("faitDesPlannings"));
+    expect(f).toContain("gereUnPlanning()");
+    expect(f).toContain("profile().get('plannings', []).size() > 0");
+    expect(f).toContain("profile().get('remplitParRole', []).size() > 0");
+    for (const e of ["louange", "edd", "regie"]) expect(f).toContain(`'${e}' in profile().get('referentDe', [])`);
+    expect(f).toContain("'orga' in profile().get('dansEquipes', [])");
+  });
+
+  test("peutEcrirePlanning = gerePlanning(key) ∪ tout l'ancien ; la Régie reste à part jusqu'à RS-D", () => {
+    const f = sansEspaces(fonction("peutEcrirePlanning"));
+    expect(f).toContain("gerePlanning(key)");
+    expect(f).toContain("key in profile().get('plannings', [])");
+    expect(f).toContain("key in profile().get('remplitParRole', [])");
+    expect(f).toContain("'louange' in profile().get('referentDe', []) && key in ['culte', 'intergroupe', 'interfranco', 'campusMatin', 'campusSoir']");
+    expect(f).toContain("'edd' in profile().get('referentDe', []) && key in ['eddZhongban', 'eddDaban', 'eddGaoban']");
+    expect(f).toContain("key == 'table' && 'orga' in profile().get('dansEquipes', [])");
+    expect(sansEspaces(fonction("peutEcrireLaRegie"))).toContain("'regie' in profile().get('referentDe', [])");
+    expect(sansEspaces(bloc("match /plannings/{key}"))).toContain("peutEcrireLaRegie(key) && seulementColonnesRegie()");
+  });
+
+  test("créneaux de scène : create = coordination ∪ gestionnaire ∪ reservable ; update de l'auteur idem", () => {
+    const creneaux = sansEspaces(bloc("match /creneaux/{cid}"));
+    const create = creneaux.slice(creneaux.indexOf("allow create"), creneaux.indexOf("allow update"));
+    expect(create).toContain("request.resource.data.auteurUid == request.auth.uid");
+    expect(create).toContain("isCoordination() || gereUnPlanning() || reservable(id, request.resource.data.qui)");
+    const update = creneaux.slice(creneaux.indexOf("allow update"), creneaux.indexOf("allow delete"));
+    expect(update).toContain("isCoordination()");
+    expect(update).toContain("resource.data.auteurUid == request.auth.uid && (gereUnPlanning() || reservable(id, request.resource.data.qui))");
+    // La suppression n'a pas bougé.
+    expect(creneaux).toContain("allow delete: if signedIn() && (isCoordination() || resource.data.auteurUid == request.auth.uid)");
+  });
+
+  test("peutCreerSetlistDans : une condition par service gestionnaire, et toutes les anciennes", () => {
+    const f = sansEspaces(fonction("peutCreerSetlistDans"));
+    for (const [cat, cle] of [
+      ["Culte Francophone", "planning:culte"], ["Intergroupe", "planning:intergroupe"], ["Interfranco", "planning:interfranco"],
+      ["Campus", "planning:campus"], ["Groupe Paix", "planning:paix"], ["Groupe Fidélité", "planning:fidelite"], ["Groupe Bonté", "planning:bonte"],
+    ]) {
+      expect(f, cat).toContain(`category == '${cat}' && '${cle}' in responsabilites()`);
+    }
+    expect(f).toContain("category in ['中班', '大班', '高班'] && 'planning:edd' in responsabilites()");
+    // Pas de catégorie pour la Table.
+    expect(f).not.toContain("planning:table");
+    // L'ancien reste.
+    expect(f).toContain("profile().get('serviceRoles', {}).get(category, []).hasAny(['chanteur', 'musicien', 'presidence'])");
+    expect(f).toContain("'louange' in profile().get('dansEquipes', []) && category in profile().get('lieuxLouange', [])");
+    expect(f).toContain("category == 'Groupe Paix' && profile().get('groupe', '') == 'paix'");
+    expect(f).toContain("'edd' in profile().get('dansEquipes', []) && category in ['中班', '大班', '高班']");
+    expect(f).not.toContain("lieuxRegie");
+  });
+
+  test("evenements : la création passe par isCoordination, donc par `orga` ; l'ancien reste", () => {
+    const creable = sansEspaces(fonction("pourCreable"));
+    expect(creable).toContain("isCoordination()");
+    expect(creable).toContain("pour in profile().get('annonces', [])");
+    expect(creable).toContain("sectionCreeeParOrganigramme(pour)");
+    expect(creable).toContain("estReferentDe(pour.split(':')[1])");
+  });
+
+  test("la recopie de l'organigramme ne pose jamais `responsabilites` et ne l'efface pas", async () => {
+    const source = readFileSync(path.join(ROOT, "src/lib/equipes/serveur.ts"), "utf8");
+    const listes = source.slice(source.indexOf("const LISTES = ["), source.indexOf("] as const;"));
+    expect(listes).not.toContain("responsabilites");
+    const { db, ecrits, users } = fausseBase(
+      {
+        "u-aline": { firstName: "Aline", responsabilites: ["planning:culte", "orga"] },
+        "u-bruno": { dansEquipes: ["louange"], referentDe: ["louange"], responsabilites: ["planning:edd"] },
+        "u-eva": {},
+      },
+      { louange: equipeLouange },
+    );
+    await recalculerRattachement(db, ["u-aline", "u-bruno", "u-eva"], await lireEquipes(db), await lireGroupes(db));
+    await recalculerDepuisOrganigramme(db);
+    expect(ecrits.length).toBeGreaterThan(0);
+    for (const e of ecrits) expect(Object.keys(e.data), e.chemin).not.toContain("responsabilites");
+    expect(users["u-aline"].responsabilites).toEqual(["planning:culte", "orga"]);
+    expect(users["u-bruno"].responsabilites).toEqual(["planning:edd"]);
+    expect(users["u-eva"].responsabilites).toBeUndefined();
+  });
+
+  test("changer les référents : admins seuls, même pour un Comité Orga ou un référent", async () => {
+    const { appelantPeut } = await import("../src/lib/equipes/serveur");
+    const orga = { responsabilites: ["orga"], dansEquipes: ["orga"], referentDe: ["louange"] };
+    expect(appelantPeut(false, orga, "louange")("louange")).toBe(false);
+    expect(appelantPeut(false, orga, "regie")("regie")).toBe(false);
+    expect(appelantPeut(true, null, "louange")("louange")).toBe(true);
+    // Le référent n'est pas l'équipe éditée : faux, même pour un admin.
+    expect(appelantPeut(true, null, "louange")("regie")).toBe(false);
   });
 });

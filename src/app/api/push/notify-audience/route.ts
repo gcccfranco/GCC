@@ -23,6 +23,9 @@ export const maxDuration = 60;
 // Lot AO (interrupteur ouvert seulement) : le droit vient de l'organigramme (`audiencesNotifiables`), et deux
 // audiences s'ajoutent — `equipe:<id>` (comptes dont `dansEquipes` contient l'id) et `louange:<sous-équipe>`
 // (`sousEquipes`), résolues dans recipients.ts. En ligne (interrupteur coupé), `isValidAudience` les refuse : rien ne change.
+// Lot RS (interrupteur ouvert seulement) : le droit vient de `responsabilites` (relu avec le profil) — `orga` notifie
+// « Tous », un gestionnaire de planning l'audience de son service ; `notifieParRole` et la notification libre d'un
+// référent à son équipe ne comptent plus (`audiencesNotifiables`).
 
 export async function POST(req: NextRequest) {
   // 1. Authentification

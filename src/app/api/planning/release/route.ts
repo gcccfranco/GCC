@@ -22,8 +22,9 @@ export const maxDuration = 60;
 // (Culte → tout le monde ; groupe → membres du groupe, clé de `serviceRoles` ou groupe de la
 // personne, lot 2, OG28). Réservé aux admins, aux comptes dont le droit `notify` couvre ce
 // planning, et à qui le publie par un rôle de son groupe (`publieParRole`, OG23, interrupteur
-// ouvert seulement, OG27). Lot AO (interrupteur ouvert seulement) : plus de droit `notify` — le profil relu porte
-// `referentDe` (référent Louange ou Régie pour le culte) en plus de `publieParRole`. `publish:false` re-masque le
+// ouvert seulement, OG27). Lot AO (interrupteur ouvert seulement) : plus de droit `notify`. Lot RS (interrupteur
+// ouvert seulement) : le profil relu porte `responsabilites` — le gestionnaire du planning (`planning:<x>`) le publie
+// (pas la Table), plus le référent Louange ni la Régie ; `droitsDePublication` lit ce champ. `publish:false` re-masque le
 // trimestre (sans notification, sans re-notif à une republication).
 
 export async function POST(req: NextRequest) {
