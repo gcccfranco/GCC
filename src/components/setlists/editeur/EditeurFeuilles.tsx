@@ -7,7 +7,7 @@ import { Drawer, DrawerContent } from "@/components/ui/drawer";
 import { useStandaloneScrollLock } from "@/hooks/useStandaloneScrollLock";
 import { EnTeteEditeur, LienMusiquesEtDanses } from "@/components/setlists/editeur/EnTeteEditeur";
 import { ListeCourte } from "@/components/setlists/editeur/ListeCourte";
-import { BoutonFinal, type ProprietesEditeur } from "@/components/setlists/editeur/EditeurDeuxColonnes";
+import { BoutonFinal, contexteBibliotheque, type ProprietesEditeur } from "@/components/setlists/editeur/EditeurDeuxColonnes";
 import { FeuilleContexte } from "@/components/setlists/editeur/feuille";
 import { useVolet } from "@/components/setlists/editeur/useVolet";
 import { EtatVide } from "@/components/layout/EtatVide"
@@ -23,6 +23,7 @@ import { EtatVide } from "@/components/layout/EtatVide"
 
 export function EditeurFeuilles({
   isEdit,
+  setlistId = null,
   items,
   setItems,
   songs,
@@ -37,7 +38,7 @@ export function EditeurFeuilles({
   const { t } = useTranslation();
   const [ouverte, setOuverte] = useState(false);
   const feuille = useMemo(() => ({ fermer: () => setOuverte(false) }), []);
-  const v = useVolet({ items, setItems, songs, actions, feuille, equipe: champs.equipe, proposer });
+  const v = useVolet({ items, setItems, songs, actions, feuille, equipe: champs.equipe, proposer, contexte: contexteBibliotheque(champs, setlistId) });
   useStandaloneScrollLock(ouverte);
 
   const ouvrir = (uid: string) => {

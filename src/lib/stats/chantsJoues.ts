@@ -270,6 +270,64 @@ export function statsDuChant(setlists: SetlistLue[], index: ChantDuRecueil[], sl
   };
 }
 
+// ─── La bibliothèque de l'éditeur (lot ST, ST5) ───────────────────────────────
+
+/** Ce que l'éditeur sait de la setlist en cours : son service, sa date (AAAA-MM-JJ) et son id (`null` = création). */
+export type ContexteBibliotheque = { service: string | null; date: string | null; setlistId: string | null };
+export type StatsBibliotheque = {
+  total: number;                                          // setlists publiées passées (toute période), hors celle qu'on édite
+  dansService: { fois: number; derniere: string } | null; // dans les setlists comptées du service choisi
+  jamaisNullePart: boolean;                               // total 0
+  jamaisDansService: boolean;                             // service choisi, aucune fois dedans
+  recent: { jour: string; avant: boolean; jours: number } | null; // D6 : même service, < 21 jours de la date
+};
+
+/** D6 : « joué récemment » = moins de 3 semaines, avant ou après. */
+export const JOURS_RECENT = 21;
+
+/** Un seul passage sur les setlists pour tous les `slugs` de la bibliothèque. Le repère « récent » (D6) voit
+ *  les setlists publiées du même service passées ou à venir ; les comptes, les seules passées (Q3). `sauf` =
+ *  `contexte.setlistId` est ignorée partout. */
+export function statsBibliotheque(
+  setlists: SetlistLue[], slugs: Iterable<string>, contexte: ContexteBibliotheque, aujourdhui: string,
+): Map<string, StatsBibliotheque> {
+  const { service } = contexte;
+  const date = (contexte.date ?? "").slice(0, 10);
+  const dateChoisie = JOUR.test(date) ? date : null;
+  const sorties = new Map<string, StatsBibliotheque>();
+  for (const slug of slugs) {
+    sorties.set(slug, { total: 0, dansService: null, jamaisNullePart: true, jamaisDansService: service !== null, recent: null });
+  }
+  for (const s of setlists) {
+    if (s.id === contexte.setlistId || s.isDraft || s.isPrivate) continue;
+    const jour = (s.date ?? "").slice(0, 10);
+    if (!JOUR.test(jour)) continue;
+    const passee = jour < aujourdhui;
+    const ecart = dateChoisie && service !== null && s.category === service ? Math.abs(enMs(jour) - enMs(dateChoisie)) / 86_400_000 : null;
+    const proche = ecart !== null && ecart < JOURS_RECENT;
+    if (!passee && !proche) continue;
+    for (const { slug } of chantsDeLaSetlist(s)) {
+      const e = sorties.get(slug);
+      if (!e) continue;
+      if (passee) {
+        e.total++;
+        e.jamaisNullePart = false;
+        if (service !== null && s.category === service) {
+          e.jamaisDansService = false;
+          e.dansService = { fois: (e.dansService?.fois ?? 0) + 1, derniere: e.dansService && e.dansService.derniere > jour ? e.dansService.derniere : jour };
+        }
+      }
+      if (proche && ecart !== null) {
+        const avant = jour < dateChoisie!;
+        const r = e.recent;
+        // La plus proche en écart absolu ; à égalité, celle d'avant.
+        if (!r || ecart < r.jours || (ecart === r.jours && avant && !r.avant)) e.recent = { jour, avant, jours: ecart };
+      }
+    }
+  }
+  return sorties;
+}
+
 // ─── Les choix des filtres (Q8) ───────────────────────────────────────────────
 
 /** Les services (`connus` d'abord, dans leur ordre, puis toute catégorie inconnue trouvée, A→Z) et

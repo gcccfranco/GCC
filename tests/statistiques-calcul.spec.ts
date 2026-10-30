@@ -3,8 +3,10 @@ import type { FSSetlist } from "../src/lib/firebase/setlists";
 import type { SetlistItem } from "../src/types/setList";
 import {
   bornesDeLaPeriode, chantsDeLaSetlist, choixDesFiltres, debutDeLHistorique, libellePart, libelleTendance,
-  statsChants, statsDuChant, veille, type FiltresStats,
+  statsBibliotheque, statsChants, type ContexteBibliotheque, statsDuChant, veille, type FiltresStats,
 } from "../src/lib/stats/chantsJoues";
+import { trierMoinsJouesIci } from "../src/lib/setlist/bibliotheque";
+import type { SongIndexEntry } from "../src/types/song";
 
 // Lot U7, tranche S1 (docs/spec-statistiques.md) : le calcul des statistiques
 // des chants, une fonction pure. Décisions Q3 à Q12 de la spec, une par bloc.
@@ -499,5 +501,105 @@ test.describe("statsDuChant (lot ST, ST2)", () => {
   test("jamais joué : total 0, dernière null, tonalités vides", () => {
     const r = calcul([setlist("2026-09-20", [chant("zh-essai")], { category: PAIX })]);
     expect(r).toEqual({ total: 0, derniere: null, tonalites: [], parService: [], jamaisDans: [PAIX], prochaine: null });
+  });
+});
+
+// ─── Lot ST, ST5 : la bibliothèque de l'éditeur ───────────────────────────────
+
+test.describe("statsBibliotheque", () => {
+  const FID = "Groupe Fidélité", PAIX = "Groupe Paix";
+  const A = "a-toi-essai", B = "beni-essai", Z = "zh-essai";
+  // La setlist en cours : Fidélité, le 01/11/2026 (aujourd'hui : 04/10, donc à venir).
+  const CTX = { service: FID, date: "2026-11-01", setlistId: "en-cours" };
+  const calcul = (liste: FSSetlist[], ctx: ContexteBibliotheque = CTX, slugs = [A, B, Z]) => statsBibliotheque(liste, slugs, ctx, AUJOURDHUI);
+
+  test("repère orange : 7 jours avant, 9 jours après, même jour ; 21 jours pile : rien", () => {
+    const liste = [
+      setlist("2026-10-25", [chant(A)], { category: FID }),   // 7 j avant
+      setlist("2026-11-10", [chant(B)], { category: FID }),   // 9 j après
+      setlist("2026-11-01", [chant(Z)], { category: FID }),   // même jour
+      setlist("2026-10-11", [chant(A)], { category: FID }),   // 21 j avant : hors repère pour A (déjà 7 j)
+    ];
+    const r = calcul(liste);
+    expect(r.get(A)?.recent).toEqual({ jour: "2026-10-25", avant: true, jours: 7 });
+    expect(r.get(B)?.recent).toEqual({ jour: "2026-11-10", avant: false, jours: 9 });
+    expect(r.get(Z)?.recent).toEqual({ jour: "2026-11-01", avant: false, jours: 0 });
+    const pile = calcul([setlist("2026-10-11", [chant(A)], { category: FID }), setlist("2026-11-22", [chant(B)], { category: FID })]);
+    expect(pile.get(A)?.recent).toBeNull();
+    expect(pile.get(B)?.recent).toBeNull();
+    // 20 jours : dans le repère.
+    expect(calcul([setlist("2026-10-12", [chant(A)], { category: FID })]).get(A)?.recent?.jours).toBe(20);
+  });
+
+  test("le plus proche gagne ; à égalité, celle d'avant", () => {
+    const r = calcul([
+      setlist("2026-10-20", [chant(A)], { category: FID }),   // 12 j avant
+      setlist("2026-11-05", [chant(A)], { category: FID }),   // 4 j après
+      setlist("2026-10-28", [chant(B)], { category: FID }),   // 4 j avant
+      setlist("2026-11-05", [chant(B)], { category: FID }),   // 4 j après
+    ]);
+    expect(r.get(A)?.recent).toEqual({ jour: "2026-11-05", avant: false, jours: 4 });
+    expect(r.get(B)?.recent).toEqual({ jour: "2026-10-28", avant: true, jours: 4 });
+  });
+
+  test("autre service, brouillon, privée, setlist éditée : pas de repère ; mais le total d'un autre service compte", () => {
+    const r = calcul([
+      setlist("2026-09-25", [chant(A)], { category: PAIX }),
+      setlist("2026-10-26", [chant(B)], { category: FID, isDraft: true }),
+      setlist("2026-10-27", [chant(Z)], { category: FID, isPrivate: true }),
+      setlist("2026-10-28", [chant(Z)], { category: FID, id: "en-cours" }),
+    ]);
+    expect([A, B, Z].map((s) => r.get(s)?.recent)).toEqual([null, null, null]);
+    expect(r.get(A)?.total).toBe(1);
+    expect(r.get(Z)?.total).toBe(0);
+  });
+
+  test("comptes : service choisi, vert, jamais nulle part, setlist éditée exclue, à venir non comptée", () => {
+    const r = calcul([
+      setlist("2026-09-06", [chant(A)], { category: FID }),
+      setlist("2026-09-13", [chant(A)], { category: FID }),
+      setlist("2026-09-20", [chant(A), chant(B)], { category: PAIX }),
+      setlist("2026-09-27", [chant(A)], { category: FID, id: "en-cours" }),
+      setlist("2026-10-18", [chant(Z)], { category: FID }),
+    ]);
+    expect(r.get(A)).toMatchObject({ total: 3, dansService: { fois: 2, derniere: "2026-09-13" }, jamaisNullePart: false, jamaisDansService: false });
+    expect(r.get(B)).toMatchObject({ total: 1, dansService: null, jamaisDansService: true, jamaisNullePart: false });
+    expect(r.get(Z)).toMatchObject({ total: 0, jamaisNullePart: true });
+    // Le chant prévu à venir (18/10) donne un repère, pas un compte.
+    expect(r.get(Z)?.recent).toEqual({ jour: "2026-10-18", avant: true, jours: 14 });
+  });
+
+  test("sans service ou sans date : le total seul, pas de repère", () => {
+    const liste = [setlist("2026-09-06", [chant(A)], { category: FID }), setlist("2026-10-25", [chant(B)], { category: FID })];
+    const sansService = calcul(liste, { service: null, date: "2026-11-01", setlistId: null });
+    expect(sansService.get(A)).toEqual({ total: 1, dansService: null, jamaisNullePart: false, jamaisDansService: false, recent: null });
+    expect(sansService.get(B)?.recent).toBeNull();
+    const sansDate = calcul(liste, { service: FID, date: null, setlistId: null });
+    expect(sansDate.get(A)).toMatchObject({ total: 1, dansService: { fois: 1, derniere: "2026-09-06" }, recent: null });
+    expect(sansDate.get(B)?.recent).toBeNull();
+  });
+
+  test("date avec heure : les 10 premiers caractères", () => {
+    const r = calcul([setlist("2026-10-25T09:30:00", [chant(A)], { category: FID })], { ...CTX, date: "2026-11-01T10:00:00" });
+    expect(r.get(A)?.recent?.jours).toBe(7);
+  });
+});
+
+test.describe("trierMoinsJouesIci", () => {
+  const song = (slug: string, title: string, over: Partial<SongIndexEntry> = {}) =>
+    ({ slug, title, titlePinyin: null, language: "fr", ...over }) as SongIndexEntry;
+  const songs = [
+    song("a", "Zèbre"), song("b", "Alpha"), song("c", "Béta"),
+    song("zh1", "回家", { language: "zh", titlePinyin: "Huí jiā" }), song("d", "Delta"),
+  ];
+  test("jamais d'abord (A→Z, pinyin pour le chinois), puis la dernière fois la plus ancienne", () => {
+    const stats = new Map([
+      ["a", { dansService: { derniere: "2026-09-01" } }],
+      ["b", { dansService: { derniere: "2026-03-01" } }],
+      ["c", { dansService: null }],
+      ["zh1", { dansService: null }],
+      ["d", { dansService: { derniere: "2026-09-01" } }],
+    ]);
+    expect(trierMoinsJouesIci(songs, stats).map((s) => s.slug)).toEqual(["c", "zh1", "b", "d", "a"]);
   });
 });

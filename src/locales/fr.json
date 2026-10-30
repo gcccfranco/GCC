@@ -4039,6 +4039,19 @@
     "joues": "Joués au moins {{n}} fois avant le {{debut}}, aucune fois du {{debut}} au {{fin}}",
     "jouesDepuis": "Joués au moins {{n}} fois avant le {{debut}}, aucune fois depuis",
     "avantLaPeriode": "avant la période",
+    "biblio": {
+      "total_fois_one": "{{count}} fois au total",
+      "total_fois_other": "{{count}} fois au total",
+      "total": "Total",
+      "dansService_one": "{{service}} : {{date}} · {{count}} fois au total",
+      "dansService_other": "{{service}} : {{date}} · {{count}} fois au total",
+      "jamaisA": "Jamais à {{service}}",
+      "jamaisCourt": "Jamais",
+      "ilYa": "{{service}} : il y a {{n}} j",
+      "prevu": "{{service}} : prévu le {{date}}",
+      "moinsJoues": "Moins joués ici",
+      "choisirService": "Choisis d'abord le service"
+    },
     "chant": {
       "joue_one": "Joué <n>{{count}} fois</n> · dernière fois {{date}}, {{service}}",
       "joue_other": "Joué <n>{{count}} fois</n> · dernière fois {{date}}, {{service}}",

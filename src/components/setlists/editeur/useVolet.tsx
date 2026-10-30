@@ -15,6 +15,7 @@ import {
 } from "@/lib/setlist/formItems";
 import type { SongIndexEntry } from "@/types/song";
 import { numerosDesElements } from "@/components/setlists/editeur/ListeCourte";
+import type { ContexteBibliotheque } from "@/lib/stats/chantsJoues";
 import { Bibliotheque } from "@/components/setlists/editeur/Bibliotheque";
 import { VoletEquipe, type EtatEquipe } from "@/components/setlists/editeur/VoletEquipe";
 import { ChoixFusion, VoletChant, VoletFusion, VoletProposition, VoletTransition } from "@/components/setlists/editeur/Volets";
@@ -47,6 +48,7 @@ export function useVolet({
   feuille,
   equipe,
   proposer,
+  contexte,
 }: {
   items: FormListItem[];
   setItems: (items: FormListItem[]) => void;
@@ -58,6 +60,8 @@ export function useVolet({
   equipe: EtatEquipe;
   /** Setlist de fête : la bibliothèque propose un chant absent du répertoire (CF20). */
   proposer?: (titre: string, index?: number) => void;
+  /** Service, date et id de la setlist : les statistiques de la bibliothèque (lot ST, ST5). */
+  contexte: ContexteBibliotheque;
 }) {
   const { t } = useTranslation();
   // Grand écran : le premier élément choisi à l'ouverture de « Modifier » (Q7), la
@@ -145,6 +149,7 @@ export function useVolet({
       return (
         <Bibliotheque
           songs={songs}
+          contexte={contexte}
           pris={pris}
           ajoutes={ajoutes}
           onAjouter={(song) => {

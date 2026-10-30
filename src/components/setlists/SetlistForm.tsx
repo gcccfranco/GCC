@@ -581,6 +581,7 @@ export function SetlistForm({ mode, setlistId, songs, initial, prefill, contexte
 
   const proprietes: ProprietesEditeur = {
     isEdit,
+    setlistId: isEdit ? setlistId ?? null : null,
     items,
     setItems,
     songs,

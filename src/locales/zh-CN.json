@@ -3994,6 +3994,19 @@
     "joues": "{{debut}} 之前至少唱过 {{n}} 次，{{debut}} 至 {{fin}} 一次都没唱",
     "jouesDepuis": "{{debut}} 之前至少唱过 {{n}} 次，此后一次都没唱",
     "avantLaPeriode": "在时间段之前",
+    "biblio": {
+      "total_fois_one": "共 {{count}} 次",
+      "total_fois_other": "共 {{count}} 次",
+      "total": "合计",
+      "dansService_one": "{{service}}：{{date}} · 共 {{count}} 次",
+      "dansService_other": "{{service}}：{{date}} · 共 {{count}} 次",
+      "jamaisA": "{{service}}从未唱过",
+      "jamaisCourt": "从未",
+      "ilYa": "{{service}}：{{n}} 天前",
+      "prevu": "{{service}}：预定 {{date}}",
+      "moinsJoues": "这里唱得最少",
+      "choisirService": "请先选择聚会"
+    },
     "chant": {
       "joue_one": "共唱 <n>{{count}} 次</n> · 最近一次 {{date}}，{{service}}",
       "joue_other": "共唱 <n>{{count}} 次</n> · 最近一次 {{date}}，{{service}}",

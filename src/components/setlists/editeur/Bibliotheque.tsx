@@ -1,10 +1,15 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { useTranslation } from "react-i18next";
 import { Check, ChevronDown, ChevronUp, Plus } from "lucide-react";
 import { ChampRecherche } from "@/components/layout/ChampRecherche";
-import { chantsDeLaBibliotheque, premieresLignes, type FiltresBibliotheque, type Tempo } from "@/lib/setlist/bibliotheque";
+import { chantsDeLaBibliotheque, premieresLignes, trierMoinsJouesIci, type FiltresBibliotheque, type Tempo } from "@/lib/setlist/bibliotheque";
+import { useAuth } from "@/lib/firebase/auth";
+import { canVoirStatistiques } from "@/lib/access";
+import { setlistsPourStats } from "@/lib/stats/setlistsPourStats";
+import { jourCourt, serviceCourt, statsBibliotheque, type ContexteBibliotheque, type StatsBibliotheque } from "@/lib/stats/chantsJoues";
+import type { FSSetlist } from "@/lib/firebase/setlists";
 import { fetchSongAST } from "@/lib/api/songs";
 import type { Token } from "@/types/chordPro";
 import { KeyPill } from "@/components/ui/key-pill";
@@ -57,6 +62,66 @@ function MenuPilule({ label, vide, valeur, options, onChange }: {
           <option key={o.value} value={o.value}>{o.label}</option>
         ))}
       </select>
+    </span>
+  );
+}
+
+const PASTILLE = "inline-flex h-5 items-center rounded-full px-2 text-[11.5px] font-semibold leading-none";
+const VERTE = `${PASTILLE} bg-emerald-500/10 text-emerald-700 dark:text-emerald-400`;
+const ORANGE = `${PASTILLE} bg-orange-500/10 text-orange-700 dark:text-orange-400`;
+
+/** Ordinateur à pointeur fin : la bibliothèque y montre des colonnes « {Service} » et « Total » (lot ST, ST5). */
+const REQUETE_COLONNES = "(pointer: fine) and (min-width: 1024px)";
+function suivreColonnes(changement: () => void) {
+  const liste = window.matchMedia(REQUETE_COLONNES);
+  liste.addEventListener("change", changement);
+  return () => liste.removeEventListener("change", changement);
+}
+const useColonnes = () =>
+  useSyncExternalStore(suivreColonnes, () => window.matchMedia(REQUETE_COLONNES).matches, () => false);
+
+/** Repère orange (D6) : « Fidélité : il y a 7 j » ou « Fidélité : prévu le 09/11 ». */
+function PastilleRecente({ recent, nom, jour }: { recent: NonNullable<StatsBibliotheque["recent"]>; nom: string; jour: (j: string) => string }) {
+  const { t } = useTranslation();
+  return (
+    <span data-stats-recent className={ORANGE}>
+      {recent.avant
+        ? t("stats.biblio.ilYa", { service: nom, n: recent.jours })
+        : t("stats.biblio.prevu", { service: nom, date: jour(recent.jour) })}
+    </span>
+  );
+}
+
+/** Sous le titre : ce que les setlists disent du chant (lot ST, ST5). Sur ordinateur à colonnes, les chiffres
+ *  vont dans les colonnes : ne restent ici « Jamais joué à GCC » et le repère orange. */
+function LigneStats({ st, colonnes, service, nomService, jour }: {
+  st: StatsBibliotheque;
+  colonnes: boolean;
+  service: string | null;
+  nomService: string;
+  jour: (j: string) => string;
+}) {
+  const { t } = useTranslation();
+  const total = t("stats.biblio.total_fois", { count: st.total });
+  const recent = st.recent && service !== null ? <PastilleRecente recent={st.recent} nom={nomService} jour={jour} /> : null;
+  let texte: React.ReactNode;
+  if (st.jamaisNullePart) texte = <span data-stats-jamais>{t("stats.chant.jamais")}</span>;
+  else if (colonnes) texte = null;
+  else if (service !== null && st.dansService) {
+    texte = <span>{t("stats.biblio.dansService", { service: nomService, date: jour(st.dansService.derniere), count: st.total })}</span>;
+  } else if (service !== null) {
+    texte = (
+      <>
+        <span data-stats-vert className={VERTE}>{t("stats.biblio.jamaisA", { service: nomService })}</span>
+        <span>{"· " + total}</span>
+      </>
+    );
+  } else texte = <span>{total}</span>;
+  if (!texte && !recent) return null;
+  return (
+    <span data-stats-ligne className="mt-0.5 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-[12.5px] leading-snug text-muted-foreground">
+      {texte}
+      {recent}
     </span>
   );
 }
@@ -115,6 +180,7 @@ function ApercuChant({ song }: { song: SongIndexEntry }) {
 
 export function Bibliotheque({
   songs,
+  contexte,
   pris,
   ajoutes,
   onAjouter,
@@ -122,6 +188,8 @@ export function Bibliotheque({
   proposer,
 }: {
   songs: SongIndexEntry[];
+  /** Service, date et id de la setlist en cours (lot ST, ST5) : les statistiques de chaque chant. */
+  contexte: ContexteBibliotheque;
   /** Slugs déjà dans la setlist (chants seuls et chants des fusions). */
   pris: Set<string>;
   /** Slugs ajoutés depuis l'ouverture de la bibliothèque. */
@@ -135,7 +203,37 @@ export function Bibliotheque({
   const feuille = useFeuille();
   const [filtres, setFiltres] = useState<FiltresBibliotheque>({ recherche: "", langue: "tous", theme: null, tempo: null });
   const [deplie, setDeplie] = useState<string | null>(null);
-  const resultats = useMemo(() => chantsDeLaBibliotheque(songs, filtres), [songs, filtres]);
+  const { user, loading } = useAuth();
+  const connecte = !loading && canVoirStatistiques(user);
+  const colonnes = useColonnes();
+  const zh = i18n.language === "zh-CN";
+  const [setlists, setSetlists] = useState<FSSetlist[] | null>(null);
+  const [moinsJoues, setMoinsJoues] = useState(false);
+  // « Aujourd'hui » comme la page Statistiques.
+  const aujourdhui = useMemo(() => new Date().toISOString().split("T")[0], []);
+
+  // Lecture partagée (5 min) ; hors ligne ou en erreur : liste vide, aucune statistique.
+  useEffect(() => {
+    if (!connecte) return;
+    let annule = false;
+    setlistsPourStats().then((liste) => { if (!annule && liste.length > 0) setSetlists(liste); }).catch(() => {});
+    return () => { annule = true; };
+  }, [connecte]);
+
+  const { service, date, setlistId } = contexte;
+  const stats = useMemo(
+    () => (connecte && setlists ? statsBibliotheque(setlists, songs.map((s) => s.slug), { service, date, setlistId }, aujourdhui) : null),
+    [connecte, setlists, songs, service, date, setlistId, aujourdhui],
+  );
+  const triActif = moinsJoues && service !== null && stats !== null;
+  const resultats = useMemo(() => {
+    const trouves = chantsDeLaBibliotheque(songs, filtres);
+    return triActif ? trierMoinsJouesIci(trouves, stats) : trouves;
+  }, [songs, filtres, triActif, stats]);
+  // 中文 : le nom du service traduit ; sinon le nom court.
+  const nom = (s: string) => (zh ? t("categories." + s, { defaultValue: serviceCourt(s) }) : serviceCourt(s));
+  const jour = (j: string) => jourCourt(j, aujourdhui);
+  const nomService = service !== null ? nom(service) : "";
   const changer = (f: Partial<FiltresBibliotheque>) => setFiltres((prev) => ({ ...prev, ...f }));
 
   // Thèmes portés par au moins un chant, comme la page Chants.
@@ -192,7 +290,24 @@ export function Bibliotheque({
           options={TEMPOS.map((tp) => ({ value: tp, label: t(`setlists.editeur.${CLE_TEMPO[tp]}`) }))}
           onChange={(v) => changer({ tempo: (v || null) as Tempo | null })}
         />
+        {stats && (
+          <button
+            type="button"
+            data-tri-moins-joues
+            aria-pressed={triActif}
+            aria-disabled={service === null}
+            aria-describedby={service === null ? "aide-moins-joues" : undefined}
+            disabled={service === null}
+            onClick={() => setMoinsJoues((v) => !v)}
+            className={`${pilule(triActif)} disabled:cursor-not-allowed disabled:opacity-50`}
+          >
+            {t("stats.biblio.moinsJoues")}
+          </button>
+        )}
       </div>
+      {stats && service === null && (
+        <p id="aide-moins-joues" className="mt-1.5 text-[12.5px] text-muted-foreground">{t("stats.biblio.choisirService")}</p>
+      )}
 
       <p role="status" className="mt-4 text-[13px] text-muted-foreground">
         {t("setlists.editeur.nChants", { count: resultats.length })}
@@ -216,6 +331,15 @@ export function Bibliotheque({
           )}
         </div>
       ) : (
+        <>
+        {stats && colonnes && (
+          <div aria-hidden data-stats-entete className="mt-2 flex items-center gap-3 pl-1 text-xs font-semibold text-muted-foreground">
+            <span className="min-w-0 flex-1" />
+            {service !== null && <span className="w-24 truncate text-right">{nomService}</span>}
+            <span className="w-12 text-right">{t("stats.biblio.total")}</span>
+            <span className="w-[11rem] shrink-0" />
+          </div>
+        )}
         <ul className="mt-2 flex-1 border-t border-border">
           {resultats.map((song) => {
             const dedans = pris.has(song.slug);
@@ -223,6 +347,7 @@ export function Bibliotheque({
             const ajoute = dedans && ajoutes.has(song.slug);
             const ouvert = deplie === song.slug;
             const cle = song.recommendedKey ?? song.originalKey;
+            const st = stats?.get(song.slug) ?? null;
             return (
               <li key={song.slug} data-resultat className="border-b border-border">
                 <div className="flex items-center gap-3 py-2.5 pl-1">
@@ -242,7 +367,26 @@ export function Bibliotheque({
                       )}
                     </span>
                     {song.artist && <span className="block truncate text-[13px] text-muted-foreground">{song.artist}</span>}
+                    {st && (
+                      <LigneStats
+                        st={st} colonnes={colonnes} service={service} nomService={nomService} jour={jour}
+                      />
+                    )}
                   </button>
+                  {st && colonnes && (
+                    <>
+                      {service !== null && (
+                        <span data-stats-col-service className="flex w-24 shrink-0 justify-end text-[13px] text-muted-foreground">
+                          {st.dansService ? jour(st.dansService.derniere)
+                            : st.jamaisDansService && !st.jamaisNullePart ? (
+                              <span className={VERTE}><span aria-hidden>{t("stats.biblio.jamaisCourt")}</span><span className="sr-only">{t("stats.biblio.jamaisA", { service: nomService })}</span></span>
+                            ) : "—"}
+                        </span>
+                      )}
+                      <span data-stats-col-total className="w-12 shrink-0 text-right text-[13px] tabular-nums text-muted-foreground">{st.total}</span>
+                    </>
+                  )}
+                  <span className={colonnes && stats ? "flex w-[11rem] shrink-0 items-center justify-end gap-3" : "contents"}>
                   <span className="flex flex-col items-center gap-0.5">
                     <KeyPill tonalite={cle} langue={song.language === "zh" ? "zh" : "fr"} />
                     {song.recommendedKey && <span className="text-[11px] leading-none text-muted-foreground">{t("setlists.editeur.reco")}</span>}
@@ -267,12 +411,14 @@ export function Bibliotheque({
                       <Plus className="h-4 w-4" aria-hidden />
                     </button>
                   )}
+                  </span>
                 </div>
                 {ouvert && <ApercuChant song={song} />}
               </li>
             );
           })}
         </ul>
+        </>
       )}
 
       {feuille ? (
