@@ -3564,7 +3564,8 @@
       "organigramme": "组织架构",
       "personnes": "成员",
       "evenements": "活动",
-      "reunions": "会议"
+      "reunions": "会议",
+      "responsabilites": "职责"
     },
     "gerer": "在后台管理",
     "tachesDesEquipes": "各团队的任务",
@@ -3943,6 +3944,27 @@
       "aide": "这些名字出现在排班表中，但没有关联任何账号——这些人收不到提醒，也收不到“歌单已就绪”的通知。",
       "tous": "✅ 排班表中的所有名字都已关联账号。"
     }
+  },
+  "responsabilites": {
+    "sousTitre": "谁负责什么：排班、统筹委员会和负责人。每次更改都会立即保存。",
+    "sansGestionnaire": "尚无负责人",
+    "sansGestionnaireAide": "没有人负责这些排班：只有管理员可以填写和发布。",
+    "plannings": "排班",
+    "referents": "负责人",
+    "gestionnaire": "负责人 · {{planning}}",
+    "referentEquipe": "负责人 · {{equipe}}",
+    "referentSous": "负责人 · {{sous}}",
+    "sousLouange": "敬拜 · {{sous}}",
+    "ajouter": "添加",
+    "personne": "无",
+    "retirer": "移除 {{nom}}",
+    "chercher": "按姓名搜索账号",
+    "aucunCompte": "没有匹配的账号。",
+    "erreur": "保存失败，请重试。",
+    "erreurLecture": "无法读取账号和团队，请刷新页面。",
+    "ligne": "职责",
+    "aucune": "无",
+    "gerer": "管理职责"
   },
   "stats": {
     "visible": "仅管理员可见",

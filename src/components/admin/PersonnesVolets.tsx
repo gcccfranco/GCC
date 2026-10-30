@@ -13,7 +13,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useProfile } from "@/lib/firebase/users";
 import { useTranslation } from "react-i18next";
-import { Bell, CalendarDays, ChevronLeft, ChevronRight, Link2, Pencil, PenLine, ShieldCheck, UserRound, Users } from "lucide-react";
+import { Bell, CalendarDays, ChevronLeft, ChevronRight, KeyRound, Link2, Pencil, PenLine, ShieldCheck, UserRound, Users } from "lucide-react";
 import { EnTetePage } from "@/components/layout/EnTetePage";
 import { buttonVariants } from "@/components/ui/button";
 import { DeuxVolets } from "@/components/layout/DeuxVolets";
@@ -34,6 +34,7 @@ import type { UserProfile } from "@/types/user";
 import { BACK_OFFICE } from "@/lib/backOffice";
 import { RailEquipes } from "@/app/back-office/equipes/RailEquipes";
 import { CeQueCaOuvre } from "@/components/equipes/OrganigrammeLouange";
+import { libellesResponsabilites } from "@/lib/equipes/responsabilites";
 import { InscriptionsComptes } from "./InscriptionsComptes";
 import { libelleRole, libelleRolePlanning, libelleService, libelleServicePlanning } from "./libelles";
 import {
@@ -420,6 +421,20 @@ function FicheDuMembre({
                 </span>
               </div>
             </>)}
+            {/* Lot RS : lecture seule ; l'admin les change sur la page Responsabilités. */}
+            {BACK_OFFICE && (
+              <div className={ligne} data-testid="fiche-responsabilites">
+                <span className="flex items-center gap-2 text-muted-foreground"><KeyRound className="h-4 w-4" aria-hidden />{t("responsabilites.ligne")}</span>
+                <span className="text-right text-foreground">
+                  {libellesResponsabilites(p, (c, o) => t(c, o)).join(" · ") || t("responsabilites.aucune")}
+                </span>
+              </div>
+            )}
+            {BACK_OFFICE && admin && (
+              <p className="pt-1 text-[12px]">
+                <Link href="/back-office/equipes/responsabilites" className="font-semibold text-foreground underline underline-offset-2">{t("responsabilites.gerer")}</Link>
+              </p>
+            )}
             <div className={ligne}>
               <span className="flex items-center gap-2 text-muted-foreground"><UserRound className="h-4 w-4" aria-hidden />{t("admin.membre.nomAuPlanning")}</span>
               <span className="text-foreground">{p.planningName || "—"}</span>

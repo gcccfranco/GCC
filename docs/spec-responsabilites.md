@@ -186,5 +186,14 @@ fois, puis l'admin corrige sur la page Responsabilités.
   `tests/responsabilites-reprise.spec.ts`, `tests/acces-regles.spec.ts` repris. 441 tests verts sur trois appareils.
   Relevé de la reprise : clés brutes (`planning:culte`) ; « perd » : une ligne « notification libre à son équipe »
   par référent, « créer les évènements du groupe » pour un comité, Régie « Sono, Sono Live, PPT du Culte ».
+- **RS-C** (30/10/2026) : page **Équipes › Responsabilités** (`/back-office/equipes/responsabilites`, troisième
+  onglet du rail, admins seuls) ; fiche (Personnes et organigramme) avec la ligne « Responsabilités » et le lien
+  « Gérer les responsabilités » ; dans l'organigramme, « Référent » n'est plus qu'une mention (toutes les équipes,
+  pour qu'un seul chemin change les référents ; l'ancien mode garde la case) ; Moi liste les responsabilités par
+  `ceQueCaOuvre`. `tests/responsabilites-ecrans.spec.ts` (14 tests × 5 projets, `SPECS_GRAND_ECRAN`, fr et zh) ;
+  627 tests verts sur les specs d'écran voisines (un échec de charge sur `equipes-acces.spec.ts:232`, vert seul).
+  Choix : ajouter un référent de sous-équipe de Louange l'y fait entrer ; retirer un référent le laisse membre ;
+  si la recopie serveur échoue, message « droits non recopiés » sans bouton « Réessayer ».
+- **Reste** : RS-D, après la bascule et sur ordre de Timothée.
 - **Code mort signalé, non supprimé** : clés i18n `acces.ouvre.planning*`, `notifier*`, `coordination`,
   `evenementSection`, `acces.pourquoi.roleGroupe`, `presidenceGroupe` ; `estReferentLouange/Edd/Regie` hors droits.

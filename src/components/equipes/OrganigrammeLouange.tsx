@@ -5,6 +5,7 @@
 // d'édition (pastilles à bascule) et l'encadré « Ce que ça lui ouvre », calculé par `ceQueCaOuvre`.
 
 import type { ReactNode } from "react";
+import Link from "next/link";
 import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
 import { ChevronDown, ChevronUp, X } from "lucide-react";
@@ -136,6 +137,30 @@ export function Groupe({ titre, children }: { titre: string; children: ReactNode
   );
 }
 
+/** Lot RS (docs/spec-responsabilites.md) : « Référent » ne se coche plus dans l'organigramme, il se lit ici ; les
+ *  référents se changent sur la page Équipes › Responsabilités (lien pour les admins). Rien si la personne n'est pas
+ *  référente et que le lien n'est pas offert. */
+export function MentionReferent({ m, louange, gerer }: { m: MembreEquipe; louange: boolean; gerer: boolean }) {
+  const { t } = useTranslation();
+  const mentions = louange
+    ? [
+        ...(m.referent ? [t("responsabilites.referentEquipe", { equipe: t("equipes.public.louange") })] : []),
+        ...referentSousDe(m).map((s) => t("responsabilites.referentSous", { sous: t(`acces.sousEquipe.${s}`) })),
+      ]
+    : m.referent ? [t("equipes.referent")] : [];
+  if (mentions.length === 0 && !gerer) return null;
+  return (
+    <div data-testid="mention-referent" className="space-y-1">
+      {mentions.length > 0 && <p className="text-sm font-semibold text-foreground">{mentions.join(" · ")}</p>}
+      {gerer && (
+        <Link href="/back-office/equipes/responsabilites" className="block text-sm font-semibold text-foreground underline underline-offset-2">
+          {t("responsabilites.gerer")}
+        </Link>
+      )}
+    </div>
+  );
+}
+
 export type DroitsMembre = {
   /** Tient toute l'équipe (Orga, admin, référent de l'équipe) : mention, essai, retrait. */
   equipe: boolean;
@@ -148,7 +173,7 @@ export type DroitsMembre = {
 /** Un membre de Louange ou de Régie dans le panneau d'édition : replié, sa ligne de résumé ; ouvert, la mention,
  *  « en essai » et les pastilles. `ouvrable` : le droit d'ouvrir (un référent de sous-équipe n'ouvre que les siens). */
 export function MembreOrganigramme({
-  equipe, m, profil, ouvert, ouvrable, onBascule, droits, onChange, onRetirer,
+  equipe, m, profil, ouvert, ouvrable, onBascule, droits, gerer = false, onChange, onRetirer,
 }: {
   equipe: EquipeALieux;
   m: MembreEquipe;
@@ -157,6 +182,8 @@ export function MembreOrganigramme({
   ouvrable: boolean;
   onBascule: () => void;
   droits: DroitsMembre;
+  /** Lot RS : lien « Gérer les responsabilités » (admins). */
+  gerer?: boolean;
   onChange: (champ: Partial<MembreEquipe>) => void;
   onRetirer: () => void;
 }) {
@@ -219,23 +246,10 @@ export function MembreOrganigramme({
                   </Pastille>
                 ))}
               </Groupe>
-              <Groupe titre={t("equipes.organigramme.referentDe")}>
-                <Pastille actif={m.referent} disabled={!droits.referents} onClick={() => onChange({ referent: !m.referent })}>
-                  {t("equipes.public.louange")}
-                </Pastille>
-                {SOUS_EQUIPES.map((s) => (
-                  <Pastille key={s} actif={refSous.includes(s)} disabled={!droits.referents} onClick={() => onChange({ referentSous: bascule(m.referentSous, s) })}>
-                    {t(`acces.sousEquipe.${s}`)}
-                  </Pastille>
-                ))}
-              </Groupe>
+              <MentionReferent m={m} louange gerer={gerer} />
             </>
           )}
-          {!louange && (
-            <Pastille actif={m.referent} disabled={!droits.referents} onClick={() => onChange({ referent: !m.referent })}>
-              {t("equipes.referent")}
-            </Pastille>
-          )}
+          {!louange && <MentionReferent m={m} louange={false} gerer={gerer} />}
 
           <Groupe titre={t("equipes.organigramme.ouIlSert")}>
             {SERVICE_LIEUX.map((l) => (

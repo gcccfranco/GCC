@@ -3607,7 +3607,8 @@
       "organigramme": "Organigramme",
       "personnes": "Personnes",
       "evenements": "Évènements",
-      "reunions": "Réunions"
+      "reunions": "Réunions",
+      "responsabilites": "Responsabilités"
     },
     "gerer": "Gérer dans le Back-Office",
     "tachesDesEquipes": "Les tâches des équipes",
@@ -3988,6 +3989,27 @@
       "aide": "Ces noms apparaissent dans les plannings mais ne sont liés à aucun compte — ces personnes ne reçoivent ni rappels ni notification « setlist prête ».",
       "tous": "✅ Tous les noms du planning sont liés à un compte."
     }
+  },
+  "responsabilites": {
+    "sousTitre": "Qui gère quoi : les plannings, le Comité Orga et les référents. Chaque changement est enregistré tout de suite.",
+    "sansGestionnaire": "Sans gestionnaire",
+    "sansGestionnaireAide": "Personne ne gère ces plannings : seuls les admins peuvent les remplir et les publier.",
+    "plannings": "Plannings",
+    "referents": "Référents",
+    "gestionnaire": "Gestionnaire · {{planning}}",
+    "referentEquipe": "Référent · {{equipe}}",
+    "referentSous": "Référent · {{sous}}",
+    "sousLouange": "Louange · {{sous}}",
+    "ajouter": "Ajouter",
+    "personne": "Personne",
+    "retirer": "Retirer {{nom}}",
+    "chercher": "Chercher un compte par nom",
+    "aucunCompte": "Aucun compte ne correspond.",
+    "erreur": "L'enregistrement a échoué. Réessaie.",
+    "erreurLecture": "Impossible de lire les comptes et les équipes. Recharge la page.",
+    "ligne": "Responsabilités",
+    "aucune": "Aucune",
+    "gerer": "Gérer les responsabilités"
   },
   "stats": {
     "visible": "Visible par les admins seulement",

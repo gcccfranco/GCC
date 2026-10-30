@@ -19,6 +19,8 @@ const SPECS_GRAND_ECRAN = [
   /look-halo(-defilement)?\.spec\.ts/,
   /look-louange\.spec\.ts/,
   /edd-sous-equipes\.spec\.ts/,
+  // Lot RS, RS-C : la page Équipes › Responsabilités et les fiches (docs/spec-responsabilites.md).
+  /responsabilites-ecrans\.spec\.ts/,
   /performance-mode\.spec\.ts/,
   /mode-louange-forscore\.spec\.ts/,
   /setlist-regie\.spec\.ts/,

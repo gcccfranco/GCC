@@ -212,9 +212,8 @@ test("un référent de Musiciens ouvre un musicien, coche Campus, enregistre : l
   await expect(pastille(ou, "Campus")).toHaveAttribute("aria-pressed", "true");
   await expect(ouvre).toContainText("Voir et créer les setlists de Campus");
 
-  // « Référent de » : toutes les pastilles sont désactivées ; Sous-équipes : seule la sienne se coche.
-  const refs = groupe(adele, "Référent de");
-  for (const b of await refs.getByRole("button").all()) await expect(b).toBeDisabled();
+  // Lot RS : « Référent de » n'existe plus (plus aucune pastille de référent) ; Sous-équipes : seule la sienne se coche.
+  await expect(groupe(adele, "Référent de")).toHaveCount(0);
   const sous = groupe(adele, "Sous-équipes");
   await expect(pastille(sous, "Musiciens")).toBeEnabled();
   await expect(pastille(sous, "Présidence")).toBeDisabled();
@@ -285,14 +284,15 @@ test("« Ce que ça lui ouvre » change quand l'administrateur coche Campus ; Mu
   await expect(ouvre).not.toContainText("Campus");
   await pastille(groupe(tom, "Où il sert"), "Campus").click();
   await expect(ouvre).toContainText("Voir et créer les setlists de Campus");
-  // L'administrateur change les référents et les sous-équipes.
-  await expect(pastille(groupe(tom, "Référent de"), "Louange")).toBeEnabled();
+  // Lot RS : l'administrateur change les sous-équipes ; les référents se changent sur la page Responsabilités (lien).
+  await expect(groupe(tom, "Référent de")).toHaveCount(0);
+  await expect(tom.getByRole("link", { name: "Gérer les responsabilités" })).toBeVisible();
   await expect(groupe(tom, "Ce qu'il joue")).toHaveCount(0);
   await pastille(groupe(tom, "Sous-équipes"), "Musiciens").click();
   await pastille(groupe(tom, "Ce qu'il joue"), "Piano").click();
   await expect(ouvre).toContainText("Idées d'harmonie et cours");
-  await pastille(groupe(tom, "Référent de"), "Louange").click();
-  await expect(ouvre).toContainText("Coordination");
+  // Lot RS : la pastille « Référent de Louange » est partie ; Tom n'est pas référent, la mention est absente.
+  await expect(tom.getByTestId("mention-referent")).not.toContainText("Référent");
   await capture(page, "panneau-administrateur");
 });
 
@@ -305,7 +305,9 @@ test("TEAM RÉGIE : « Où il sert » et le référent", async ({ page }) => {
   await expect(groupe(yanis, "Sous-équipes")).toHaveCount(0);
   await pastille(groupe(yanis, "Où il sert"), "Interfranco").click();
   await expect(yanis.getByTestId("ce-que-ca-ouvre")).toContainText("Voir les setlists de Interfranco");
-  await expect(yanis.getByRole("button", { name: "Référent", exact: true })).toBeEnabled();
+  // Lot RS : plus de pastille « Référent » cliquable, seulement le lien pour l'admin.
+  await expect(yanis.getByRole("button", { name: "Référent", exact: true })).toHaveCount(0);
+  await expect(yanis.getByRole("link", { name: "Gérer les responsabilités" })).toBeVisible();
 });
 
 test("le panneau replié montre la ligne de résumé", async ({ page }) => {

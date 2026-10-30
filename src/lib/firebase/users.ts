@@ -12,6 +12,7 @@ import {
   type RawDoc,
 } from "./setlists";
 import { useAuth } from "./auth";
+import { CLES_RESPONSABILITES } from "@/lib/acces/responsabilites";
 import { lireChampsGroupe } from "@/lib/groupes/organigramme";
 import type { ServiceRole, UserProfile } from "@/types/user";
 
@@ -89,6 +90,12 @@ export async function saveProfile(patch: ProfilePatch): Promise<void> {
   await checkRest(res);
   const avant = profileCache.get(uid) ?? profilVide(uid);
   profileCache.set(uid, { ...avant, ...data, uid } as UserProfile);
+}
+
+/** Lot RS : les responsabilités d'un compte, écrites par un admin (`allow update: if isAdmin()`), ce champ seul
+ *  (updateMask). La liste part triée dans l'ordre de CLES_RESPONSABILITES, sans doublon ni clé inconnue. */
+export async function changerResponsabilites(uid: string, cles: readonly string[]): Promise<void> {
+  await saveProfile({ uid, responsabilites: CLES_RESPONSABILITES.filter((c) => cles.includes(c)) });
 }
 
 /** Tous les profils, triés par nom — réservé à la page admin. */

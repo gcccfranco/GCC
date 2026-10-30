@@ -20,6 +20,8 @@ export function RailEquipes() {
       onglets={[
         { id: "organigramme", label: t("backOffice.parties.organigramme"), href: "/back-office/equipes" },
         { id: "personnes", label: t("backOffice.parties.personnes"), href: "/back-office/equipes/personnes" },
+        // Lot RS : qui gère quoi (plannings, Comité Orga, référents), réservé aux admins comme tout ce rail.
+        { id: "responsabilites", label: t("backOffice.parties.responsabilites"), href: "/back-office/equipes/responsabilites" },
       ]}
     />
   );

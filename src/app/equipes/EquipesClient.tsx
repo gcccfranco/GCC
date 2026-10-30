@@ -29,7 +29,7 @@ import {
   canEditerEquipes, isAdminUser, peutChangerReferents, peutModifierEquipe, peutPlacerMembre, peutPlacerSousEquipe, peutVoirEquipe,
 } from "@/lib/access";
 import { BACK_OFFICE } from "@/lib/backOffice";
-import { CeQueCaOuvre, CorpsLouange, MembreOrganigramme, ligneGrise, majuscule, resume } from "@/components/equipes/OrganigrammeLouange";
+import { CeQueCaOuvre, CorpsLouange, MembreOrganigramme, MentionReferent, ligneGrise, majuscule, resume } from "@/components/equipes/OrganigrammeLouange";
 import { COLONNE_LIEU, porteDesLieux, referentSousDe, sousEquipesDe } from "@/lib/equipes/louange";
 import { EQUIPES, uidsAChanger, type EquipeDef } from "@/lib/equipes/organigramme";
 import {
@@ -39,6 +39,7 @@ import { findMyServices, loadPlanningData, type PlanningData } from "@/lib/plann
 import { categoryLabel } from "@/lib/serviceColors";
 import { SERVICE_LIEUX, SERVICE_ROLE_LABELS, type UserProfile } from "@/types/user";
 import { SOUS_EQUIPES, SOUS_EQUIPES_EDD, type Equipe, type MembreEquipe } from "@/types/equipe";
+import { libellesResponsabilites } from "@/lib/equipes/responsabilites";
 import { colonnesEdd } from "@/lib/equipes/edd";
 import { PastillesEdd } from "@/components/equipes/OrganigrammeEdd";
 
@@ -573,6 +574,7 @@ function EditionEquipe({
             ouvrable={ouvrable(m)}
             onBascule={() => setOuvert((o) => (o === cleMembre(m) ? null : cleMembre(m)))}
             droits={droits}
+            gerer={isAdminUser(user)}
             onChange={(champ) => change(i, champ)}
             onRetirer={() => retire(i)}
           />
@@ -599,10 +601,15 @@ function EditionEquipe({
               <PastillesEdd m={m} onChange={(champ) => change(i, champ)} />
             )}
             <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
-              <label className="inline-flex items-center gap-1.5">
-                <input type="checkbox" checked={m.referent} disabled={!droits.referents} onChange={(e) => change(i, { referent: e.target.checked })} />
-                {t("equipes.referent")}
-              </label>
+              {/* Lot RS : en nouveau mode, le référent se lit ici et se change dans Équipes › Responsabilités. */}
+              {nouveau ? (
+                <MentionReferent m={m} louange={false} gerer={isAdminUser(user)} />
+              ) : (
+                <label className="inline-flex items-center gap-1.5">
+                  <input type="checkbox" checked={m.referent} disabled={!droits.referents} onChange={(e) => change(i, { referent: e.target.checked })} />
+                  {t("equipes.referent")}
+                </label>
+              )}
               <label className="inline-flex items-center gap-1.5">
                 <input type="checkbox" checked={m.essai} onChange={(e) => change(i, { essai: e.target.checked })} />
                 {t("equipes.essai")}
@@ -846,6 +853,17 @@ function FichePersonne({
                   </p>
                 );
               })}
+            </section>
+          )}
+          {BACK_OFFICE && p && (
+            <section className="space-y-1" data-testid="fiche-responsabilites">
+              <h3 className="text-xs font-semibold uppercase text-muted-foreground">{t("responsabilites.ligne")}</h3>
+              <p className="text-sm text-foreground">{libellesResponsabilites(p, (c, o) => t(c, o)).join(" · ") || t("responsabilites.aucune")}</p>
+              {admin && (
+                <Link href="/back-office/equipes/responsabilites" className="block text-sm font-semibold text-foreground underline underline-offset-2">
+                  {t("responsabilites.gerer")}
+                </Link>
+              )}
             </section>
           )}
           {BACK_OFFICE && p && <CeQueCaOuvre profil={p} />}
