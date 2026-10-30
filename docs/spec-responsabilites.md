@@ -194,6 +194,12 @@ fois, puis l'admin corrige sur la page Responsabilités.
   627 tests verts sur les specs d'écran voisines (un échec de charge sur `equipes-acces.spec.ts:232`, vert seul).
   Choix : ajouter un référent de sous-équipe de Louange l'y fait entrer ; retirer un référent le laisse membre ;
   si la recopie serveur échoue, message « droits non recopiés » sans bouton « Réessayer ».
-- **Reste** : RS-D, après la bascule et sur ordre de Timothée.
+- **Reste** :
+  - **avant la mise en ligne** : la suite complète (arrêtée le 30/10 à 5 362 tests sur 11 487, pour la limite
+    hebdomadaire) montrait environ 330 échecs, presque tous dans des specs qui donnent des droits de gestion à des
+    comptes fictifs à l'ancienne (scène, planning, évènements, `equipes-coordination`, `back-office-admin`). Cause
+    probable : `tests/helpers/fakeSession.ts` ne traduit pas encore ces profils en `responsabilites`. À corriger
+    avec les règles de la reprise, puis relancer ces specs sur trois appareils ;
+  - RS-D, après la bascule et sur ordre de Timothée.
 - **Code mort signalé, non supprimé** : clés i18n `acces.ouvre.planning*`, `notifier*`, `coordination`,
   `evenementSection`, `acces.pourquoi.roleGroupe`, `presidenceGroupe` ; `estReferentLouange/Edd/Regie` hors droits.
