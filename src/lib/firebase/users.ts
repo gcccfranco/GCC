@@ -48,6 +48,8 @@ function fromFsProfile(raw: RawDoc): UserProfile {
     lieuxLouange: (data.lieuxLouange as string[]) ?? [],
     lieuxRegie: (data.lieuxRegie as string[]) ?? [],
     joue: (data.joue as string[]) ?? [],
+    // Lot RS : écrit par les admins seuls.
+    responsabilites: (data.responsabilites as string[]) ?? [],
     // Date d'inscription = createTime du document (créé à l'inscription) ; disponible
     // rétroactivement pour tous les profils, contrairement à un champ écrit à la main.
     createdAt: raw.createTime ? new Date(raw.createTime) : undefined,

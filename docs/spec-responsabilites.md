@@ -167,3 +167,16 @@ fois, puis l'admin corrige sur la page Responsabilités.
 ## Avancement
 
 - 29/10/2026 : spec écrite après l'entretien, go donné, code confié à une session orchestratrice (RS-A à RS-C).
+- **RS-A** (30/10/2026) : `src/lib/acces/responsabilites.ts` (clés, plannings couverts, audiences, catégories) ;
+  `organigramme.ts`, `access.ts`, `releases.ts`, `audiences.ts` en nouveau mode selon le tableau ; ancien mode
+  intact. Tests purs `tests/responsabilites.spec.ts`, `acces-organigramme` et `acces-moi` mis à jour là où la spec
+  change le comportement ; 282 tests verts (ordinateur, téléphone, tablette).
+- **Choix pris au codage** (à confirmer par Timothée) :
+  - `canReserverPour` : les gestionnaires de planning réservent toujours, comme le Comité Orga (Q12) ; la
+    sous-partie Scène du back-office reste au Comité Orga ;
+  - `tientOrganigramme` garde Orga = placé dans l'équipe Orga (« inchangé ») ;
+  - la Table n'a pas d'audience de notification libre (le petit déj garde la sienne) ;
+  - les téléphones des inscrits ne sont lus nulle part dans l'app (Sheet seulement) : rien à changer ;
+  - zh : 法语崇拜 pour Culte Franco, le nom déjà employé par `categories.*`.
+- **Code mort signalé, non supprimé** : clés i18n `acces.ouvre.planning*`, `notifier*`, `coordination`,
+  `evenementSection`, `acces.pourquoi.roleGroupe`, `presidenceGroupe` ; `estReferentLouange/Edd/Regie` hors droits.

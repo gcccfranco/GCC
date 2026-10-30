@@ -48,6 +48,8 @@ export type FakeProfile = {
   lieuxLouange?: string[];
   lieuxRegie?: string[];
   joue?: string[];
+  /** Lot RS — les responsabilités de gestion (`planning:<x>`, `orga`), écrites par les admins seuls. */
+  responsabilites?: string[];
   /** Vrai = compte qui n'a pas encore vu l'accueil de première connexion (lot 8).
    *  Par défaut la visite est déjà vue (`version: 2`), pour ne pas masquer les pages testées. */
   accueil?: boolean;
@@ -446,6 +448,7 @@ export async function signInAs(
       ...(profile.lieuxLouange ? { lieuxLouange: profile.lieuxLouange } : {}),
       ...(profile.lieuxRegie ? { lieuxRegie: profile.lieuxRegie } : {}),
       ...(profile.joue ? { joue: profile.joue } : {}),
+      ...(profile.responsabilites ? { responsabilites: profile.responsabilites } : {}),
     }),
     ...(profile.accueil ? {} : {
       [`onboarding/${profile.uid}`]: profile.accueilLot8

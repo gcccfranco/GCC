@@ -78,8 +78,8 @@ export function peutPrevenir(
 type ProfilPublie = { notify?: string[]; publieParRole?: string[]; notifieParRole?: string[] } & ProfilOrganigramme
 
 /** Publier ce planning, profil relu (route /api/planning/release, pages du planning). Lot AO (`backOffice`) :
- *  plus de droit `notify` — le référent Louange ou le référent Régie publie le culte, un rôle de groupe son
- *  groupe (`publiePlanning`, src/lib/acces/organigramme.ts). */
+ *  plus de droit `notify`. Lot RS : le gestionnaire du planning le publie (`publiePlanning`,
+ *  src/lib/acces/organigramme.ts) ; ni les référents ni les rôles de groupe. */
 export function droitsDePublication(
   planning: PublishablePlanning, isAdmin: boolean, profil: ProfilPublie | null, backOffice: boolean = BACK_OFFICE
 ): boolean {
@@ -88,11 +88,12 @@ export function droitsDePublication(
 }
 
 /** Prévenir des changements de ce planning, profil relu (route /api/planning/changements, pages). Lot AO
- *  (`backOffice`) : ceux qui le publient, plus un rôle « Notifier » du groupe (`notifieParRole`). */
+ *  (`backOffice`) : ceux qui le publient. Lot RS : son gestionnaire (`previentPlanning`) ; un rôle « Notifier »
+ *  (`notifieParRole`) ne donne plus rien. */
 export function droitsDePrevenir(
   planning: PublishablePlanning, isAdmin: boolean, profil: ProfilPublie | null, backOffice: boolean = BACK_OFFICE
 ): boolean {
-  if (backOffice) return isAdmin || previentPlanning(profil, planning.key) || (profil?.notifieParRole ?? []).includes(planning.notifyAudience)
+  if (backOffice) return isAdmin || previentPlanning(profil, planning.key)
   return peutPrevenir(planning, isAdmin, profil?.notify ?? [],
     backOffice ? profil?.publieParRole ?? [] : [], backOffice ? profil?.notifieParRole ?? [] : [])
 }

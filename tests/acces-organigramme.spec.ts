@@ -76,6 +76,8 @@ const TIPHAINE = profil({
   uid: "u-tiphaine", dansEquipes: ["louange", "regie"], referentDe: ["louange"], sousEquipes: ["musiciens"], referentSous: ["musiciens"],
   lieuxLouange: ["Campus"], lieuxRegie: ["Culte Francophone"], joue: ["piano"],
 });
+/** Lot RS : membre du Comité Orga (responsabilité `orga`, écrite par les admins), sans équipe ni lieu. */
+const OLIVIA = profil({ uid: "u-olivia", responsabilites: ["orga"] });
 const ADMIN = profil({ uid: "uid-admin", email: ADMIN_EMAIL });
 
 const setlist = (over: Partial<FSSetlist>): FSSetlist => ({
@@ -227,10 +229,12 @@ test.describe("pur : Harmonie", () => {
 test.describe("pur : coordination (D5)", () => {
   const coord = (p: UserProfile) => isCoordination(user(p), p, NEW);
 
-  test("référent Louange, référent EDD, Orga ; pas le référent Musiciens ni la case cochée", () => {
-    expect(coord(KEVIN)).toBe(true);
-    expect(coord(LUCIE)).toBe(true);
-    expect(coord(MATHIS)).toBe(true);
+  test("Comité Orga seul ; pas le référent Louange ni EDD, pas le placement dans Orga, pas le référent Musiciens ni la case cochée", () => {
+    // lot RS : la coordination vient de la responsabilité `orga` et de rien d'autre.
+    expect(coord(OLIVIA)).toBe(true);
+    expect(coord(KEVIN)).toBe(false);
+    expect(coord(LUCIE)).toBe(false);
+    expect(coord(MATHIS), "dansEquipes ∋ orga sans la responsabilité").toBe(false);
     expect(coord(NOEMIE), "référent de sous-équipe").toBe(false);
     expect(coord(OSMANE), "référent Régie").toBe(false);
     expect(coord(ROMANE), "référent d'une autre équipe").toBe(false);
@@ -243,89 +247,83 @@ test.describe("pur : coordination (D5)", () => {
 // ─── Plannings ──────────────────────────────────────────────────────────────
 
 test.describe("pur : remplir, publier, prévenir les plannings", () => {
-  test("planning du culte : référent Louange toutes colonnes, référent Régie Sono / PPT seulement, référent Musiciens rien (E2)", () => {
+  test("planning du culte : ni le référent Louange, ni le référent Régie, ni le référent Musiciens ne le remplissent plus (lot RS)", () => {
+    // lot RS : seule la responsabilité `planning:<x>` remplit (tests/responsabilites.spec.ts).
     for (const key of PLANNINGS_DU_CULTE) {
-      expect(colonnesRemplies(KEVIN, key), key).toBe("toutes");
-      expect(colonnesRemplies(OSMANE, key), key).toEqual(COLONNES_REGIE);
+      expect(colonnesRemplies(KEVIN, key), key).toBeNull();
+      expect(colonnesRemplies(OSMANE, key), key).toBeNull();
       expect(colonnesRemplies(NOEMIE, key), key).toBeNull();
     }
     expect(COLONNES_REGIE).toEqual(["sono", "sonoLive", "ppt"]);
-    expect(colonnesModifiables(user(KEVIN), KEVIN, "culte", NEW)).toBe("toutes");
-    expect(colonnesModifiables(user(OSMANE), OSMANE, "culte", NEW)).toEqual(["sono", "sonoLive", "ppt"]);
+    expect(colonnesModifiables(user(KEVIN), KEVIN, "culte", NEW)).toBeNull();
+    expect(colonnesModifiables(user(OSMANE), OSMANE, "culte", NEW)).toBeNull();
     expect(colonnesModifiables(user(NOEMIE), NOEMIE, "culte", NEW)).toBeNull();
     expect(colonnesModifiables(user(ADMIN), ADMIN, "culte", NEW)).toBe("toutes");
-    expect(canEditPlanning(user(KEVIN), KEVIN, "campusSoir", NEW)).toBe(true);
-    expect(canEditPlanning(user(OSMANE), OSMANE, "culte", NEW)).toBe(true);
+    expect(canEditPlanning(user(KEVIN), KEVIN, "campusSoir", NEW)).toBe(false);
+    expect(canEditPlanning(user(OSMANE), OSMANE, "culte", NEW)).toBe(false);
     expect(canEditPlanning(user(NOEMIE), NOEMIE, "culte", NEW)).toBe(false);
     expect(canEditPlanning(user(ALINE), ALINE, "culte", NEW)).toBe(false);
   });
 
-  test("EDD : le référent EDD, ses trois classes, pas le culte ; le référent Louange pas l'EDD", () => {
+  test("EDD : le référent EDD ne remplit plus ses trois classes (lot RS) ; le référent Louange non plus", () => {
     for (const key of ["eddZhongban", "eddDaban", "eddGaoban"]) {
-      expect(colonnesRemplies(LUCIE, key), key).toBe("toutes");
+      expect(colonnesRemplies(LUCIE, key), key).toBeNull();
       expect(colonnesRemplies(KEVIN, key), key).toBeNull();
     }
     expect(colonnesRemplies(LUCIE, "culte")).toBeNull();
   });
 
-  test("groupes : par les rôles de l'organigramme du groupe (remplitParRole), pas par la case plannings", () => {
-    expect(colonnesRemplies(QUENTIN, "paix")).toBe("toutes");
+  test("groupes : les rôles de l'organigramme du groupe (remplitParRole) ne remplissent plus (lot RS), ni la case plannings", () => {
+    expect(colonnesRemplies(QUENTIN, "paix")).toBeNull();
     expect(colonnesRemplies(QUENTIN, "bonte")).toBeNull();
-    expect(canEditPlanning(user(QUENTIN), QUENTIN, "paix", NEW)).toBe(true);
+    expect(canEditPlanning(user(QUENTIN), QUENTIN, "paix", NEW)).toBe(false);
     expect(canEditPlanning(user(SERGE), SERGE, "culte", NEW), "la case plannings ne compte plus").toBe(false);
   });
 
-  test("Table : Orga (aucune ligne du tableau ne la nomme) ; petit déj, absences et dates suivent canEditPlanning", () => {
-    expect(colonnesRemplies(MATHIS, "table")).toBe("toutes");
+  test("Table : plus Orga (lot RS : il faut en être gestionnaire) ; petit déj, absences et dates suivent canEditPlanning", () => {
+    expect(colonnesRemplies(MATHIS, "table")).toBeNull();
+    expect(colonnesRemplies(OLIVIA, "table")).toBeNull();
     expect(colonnesRemplies(KEVIN, "table")).toBeNull();
-    expect(canGererPetitDej(user(MATHIS), MATHIS, NEW)).toBe(true);
+    expect(canGererPetitDej(user(MATHIS), MATHIS, NEW)).toBe(false);
     expect(canGererPetitDej(user(KEVIN), KEVIN, NEW)).toBe(false);
-    expect(faitDesPlannings(user(KEVIN), KEVIN, NEW)).toBe(true);
-    expect(faitDesPlannings(user(QUENTIN), QUENTIN, NEW)).toBe(true);
+    expect(faitDesPlannings(user(KEVIN), KEVIN, NEW)).toBe(false);
+    expect(faitDesPlannings(user(QUENTIN), QUENTIN, NEW)).toBe(false);
     expect(faitDesPlannings(user(NOEMIE), NOEMIE, NEW)).toBe(false);
     expect(faitDesPlannings(user(SERGE), SERGE, NEW)).toBe(false);
-    expect(canVoirAbsencesDeTous(user(OSMANE), OSMANE, NEW)).toBe(true);
+    expect(canVoirAbsencesDeTous(user(OSMANE), OSMANE, NEW)).toBe(false);
     expect(canVoirAbsencesDeTous(user(DORIAN), DORIAN, NEW)).toBe(false);
-    expect(canSaisirAbsence(user(KEVIN), KEVIN, "u-autre", NEW)).toBe(true);
+    expect(canSaisirAbsence(user(KEVIN), KEVIN, "u-autre", NEW)).toBe(false);
     expect(canSaisirAbsence(user(DORIAN), DORIAN, "u-autre", NEW)).toBe(false);
     expect(canSaisirAbsence(user(DORIAN), DORIAN, DORIAN.uid, NEW), "la sienne").toBe(true);
-    expect(canRetirerDate(user(KEVIN), KEVIN, "interfranco", NEW)).toBe(true);
+    expect(canRetirerDate(user(KEVIN), KEVIN, "interfranco", NEW), "lot RS : plus le référent Louange").toBe(false);
     expect(canRetirerDate(user(KEVIN), KEVIN, "culte", NEW), "le culte a tous ses dimanches").toBe(false);
     expect(canRetirerDate(user(NOEMIE), NOEMIE, "interfranco", NEW)).toBe(false);
   });
 
-  test("publier et prévenir : le référent Louange publie le culte, le référent Régie prévient sans publier (23/10/2026), un rôle de groupe son groupe, pas le référent Musiciens", () => {
+  test("publier et prévenir : ni le référent Louange, ni le référent Régie, ni un rôle de groupe (lot RS)", () => {
     const culte = getPlanning("culte")!;
     const paix = getPlanning("paix")!;
     const publie = (pl: typeof culte, p: UserProfile) => droitsDePublication(pl, false, p, NEW);
     const previent = (pl: typeof culte, p: UserProfile) => droitsDePrevenir(pl, false, p, NEW);
-    expect(publie(culte, KEVIN)).toBe(true);
-    expect(previent(culte, KEVIN)).toBe(true);
-    expect(publie(culte, OSMANE), "la Régie ne publie pas le trimestre").toBe(false);
-    expect(previent(culte, OSMANE), "elle prévient des changements").toBe(true);
-    for (const p of [NOEMIE, LUCIE, MATHIS, ALINE, DORIAN]) {
+    // lot RS : seul le gestionnaire du planning publie et prévient (tests/responsabilites.spec.ts).
+    for (const p of [KEVIN, OSMANE, NOEMIE, LUCIE, MATHIS, ALINE, DORIAN, QUENTIN]) {
       expect(publie(culte, p), p.uid).toBe(false);
       expect(previent(culte, p), p.uid).toBe(false);
     }
-    expect(publie(paix, QUENTIN)).toBe(true);
-    expect(publie(culte, QUENTIN)).toBe(false);
-    expect(publie(paix, KEVIN)).toBe(false);
-    // « Notifier » seul prévient sans publier.
+    expect(publie(paix, QUENTIN)).toBe(false);
+    expect(previent(paix, QUENTIN)).toBe(false);
+    // Un rôle « Notifier » seul ne prévient plus.
     const notifieur = profil({ uid: "u-nolwenn", notifieParRole: ["Groupe Paix"] });
     expect(publie(paix, notifieur)).toBe(false);
-    expect(previent(paix, notifieur)).toBe(true);
+    expect(previent(paix, notifieur)).toBe(false);
     expect(droitsDePublication(culte, true, null, NEW), "un admin").toBe(true);
     // Les droits cochés `notify` ne comptent plus.
     expect(publie(culte, SERGE)).toBe(false);
     expect(previent(culte, SERGE)).toBe(false);
   });
 
-  test("les onglets du Back-Office suivent : culte et ses lieux, EDD, Table, groupes", () => {
-    expect(planningsDuBackOffice(user(KEVIN), KEVIN, NEW)).toEqual(["culte", "campus", "intergroupe", "interfranco"]);
-    expect(planningsDuBackOffice(user(OSMANE), OSMANE, NEW)).toEqual(["culte", "campus", "intergroupe", "interfranco"]);
-    expect(planningsDuBackOffice(user(LUCIE), LUCIE, NEW)).toEqual(["edd"]);
-    expect(planningsDuBackOffice(user(MATHIS), MATHIS, NEW)).toEqual(["table"]);
-    expect(planningsDuBackOffice(user(QUENTIN), QUENTIN, NEW)).toEqual(["groupes"]);
+  test("les onglets du Back-Office : aucun pour les référents, Orga placé et rôles de groupe (lot RS)", () => {
+    for (const p of [KEVIN, OSMANE, LUCIE, MATHIS, QUENTIN]) expect(planningsDuBackOffice(user(p), p, NEW), p.uid).toEqual([]);
     expect(planningsDuBackOffice(user(NOEMIE), NOEMIE, NEW)).toEqual([]);
     expect(planningsDuBackOffice(user(SERGE), SERGE, NEW)).toEqual([]);
   });
@@ -336,27 +334,29 @@ test.describe("pur : remplir, publier, prévenir les plannings", () => {
 test.describe("pur : notifier", () => {
   const droits = (p: UserProfile) => audiencesNotifiables(p, NEW);
 
-  test("Orga : toute l'Église ; un référent : son équipe ; le référent Louange : toute la Louange ; un référent de sous-équipe : la sienne", () => {
-    expect(droits(MATHIS)).toEqual(["*"]);
-    expect(droits(OSMANE)).toEqual(["equipe:regie"]);
-    expect(droits(ROMANE)).toEqual(["equipe:medias"]);
-    expect(droits(KEVIN)).toEqual(["equipe:louange", "louange:presidence", "louange:musiciens", "louange:choristes"]);
-    expect(droits(NOEMIE)).toEqual(["louange:musiciens"]);
-    expect(droits(QUENTIN), "rôle de groupe").toEqual(["Groupe Paix"]);
+  test("Comité Orga : toute l'Église ; les référents et les rôles de groupe ne notifient plus (lot RS)", () => {
+    expect(droits(OLIVIA)).toEqual(["*"]);
+    expect(droits(MATHIS), "dansEquipes ∋ orga sans la responsabilité").toEqual([]);
+    expect(droits(OSMANE)).toEqual([]);
+    expect(droits(ROMANE)).toEqual([]);
+    expect(droits(KEVIN)).toEqual([]);
+    expect(droits(NOEMIE)).toEqual([]);
+    expect(droits(QUENTIN), "rôle de groupe").toEqual([]);
     expect(droits(ALINE)).toEqual([]);
     expect(droits(SERGE), "notify coché, nouveau mode").toEqual([]);
   });
 
-  test("peutNotifierAudience : l'équipe ou la sous-équipe de son référent, rien d'autre", () => {
+  test("peutNotifierAudience : le Comité Orga tout, les référents et les rôles de groupe rien (lot RS)", () => {
     const peut = (a: string, p: UserProfile) => peutNotifierAudience(a, false, p, NEW);
-    expect(peut("louange:musiciens", NOEMIE)).toBe(true);
+    expect(peut("louange:musiciens", NOEMIE)).toBe(false);
     expect(peut("louange:choristes", NOEMIE)).toBe(false);
     expect(peut("equipe:louange", NOEMIE)).toBe(false);
-    expect(peut("louange:choristes", KEVIN)).toBe(true);
-    expect(peut("equipe:regie", OSMANE)).toBe(true);
+    expect(peut("louange:choristes", KEVIN)).toBe(false);
+    expect(peut("equipe:regie", OSMANE)).toBe(false);
     expect(peut("equipe:medias", OSMANE)).toBe(false);
-    expect(peut("equipe:medias", MATHIS), "Orga : tout").toBe(true);
-    expect(peut("Groupe Paix", QUENTIN)).toBe(true);
+    expect(peut("equipe:medias", OLIVIA), "Comité Orga : tout").toBe(true);
+    expect(peut("equipe:medias", MATHIS), "dansEquipes ∋ orga sans la responsabilité").toBe(false);
+    expect(peut("Groupe Paix", QUENTIN)).toBe(false);
     expect(peut("Campus", SERGE)).toBe(false);
     expect(peutNotifierAudience("equipe:medias", true, null, NEW), "un admin").toBe(true);
   });
@@ -377,27 +377,32 @@ test.describe("pur : notifier", () => {
 // ─── Évènements ─────────────────────────────────────────────────────────────
 
 test.describe("pur : créer un évènement", () => {
-  test("de section : référent Louange pour le culte, président et VP pour leur groupe, personne d'autre", () => {
-    expect(sectionsCreables(KEVIN, ANNONCE_SECTIONS)).toEqual(["Culte Francophone"]);
-    expect(sectionsCreables(PAULINE, ANNONCE_SECTIONS)).toEqual(["Groupe Paix"]);
+  test("de section : le Comité Orga seul ; plus le référent Louange ni le président d'un groupe (lot RS)", () => {
+    expect(sectionsCreables(OLIVIA, ANNONCE_SECTIONS)).toEqual([...ANNONCE_SECTIONS]);
+    expect(sectionsCreables(KEVIN, ANNONCE_SECTIONS)).toEqual([]);
+    expect(sectionsCreables(PAULINE, ANNONCE_SECTIONS)).toEqual([]);
     expect(sectionsCreables(LUCIE, ANNONCE_SECTIONS), "pas de section EDD").toEqual([]);
     expect(sectionsCreables(NOEMIE, ANNONCE_SECTIONS)).toEqual([]);
-    expect(canCreateEvenement(user(PAULINE), PAULINE, "Groupe Paix", NEW)).toBe(true);
+    expect(canCreateEvenement(user(PAULINE), PAULINE, "Groupe Paix", NEW)).toBe(false);
     expect(canCreateEvenement(user(PAULINE), PAULINE, "Groupe Fidélité", NEW)).toBe(false);
     expect(canCreateEvenement(user(PAULINE), PAULINE, "eglise", NEW)).toBe(false);
     expect(canCreateEvenement(user(NOEMIE), NOEMIE, "Culte Francophone", NEW)).toBe(false);
     expect(canCreateEvenement(user(SERGE), SERGE, "Culte Francophone", NEW), "droit d'annonces coché").toBe(false);
-    expect(creatableEvenementPours(user(PAULINE), PAULINE, ANNONCE_SECTIONS, NEW)).toEqual(["Groupe Paix", "equipe:comite-paix"]);
+    expect(creatableEvenementPours(user(PAULINE), PAULINE, ANNONCE_SECTIONS, NEW)).toEqual(["equipe:comite-paix"]);
   });
 
-  test("pour toute l'Église : la coordination", () => {
-    expect(canCreateEvenement(user(KEVIN), KEVIN, "eglise", NEW)).toBe(true);
-    expect(canCreateEvenement(user(LUCIE), LUCIE, "eglise", NEW)).toBe(true);
-    expect(canCreateEvenement(user(MATHIS), MATHIS, "Groupe Bonté", NEW)).toBe(true);
+  test("pour toute l'Église : le Comité Orga (lot RS) ; un référent crée pour son équipe", () => {
+    expect(canCreateEvenement(user(OLIVIA), OLIVIA, "eglise", NEW)).toBe(true);
+    expect(canCreateEvenement(user(KEVIN), KEVIN, "eglise", NEW)).toBe(false);
+    expect(canCreateEvenement(user(LUCIE), LUCIE, "eglise", NEW)).toBe(false);
+    expect(canCreateEvenement(user(MATHIS), MATHIS, "Groupe Bonté", NEW)).toBe(false);
+    expect(canCreateEvenement(user(OLIVIA), OLIVIA, "Groupe Bonté", NEW)).toBe(true);
     expect(canCreateEvenement(user(NOEMIE), NOEMIE, "eglise", NEW)).toBe(false);
-    expect(creatableEvenementPours(user(KEVIN), KEVIN, ANNONCE_SECTIONS, NEW)).toEqual(["eglise", ...ANNONCE_SECTIONS, "equipe:louange"]);
+    expect(creatableEvenementPours(user(OLIVIA), OLIVIA, ANNONCE_SECTIONS, NEW)).toEqual(["eglise", ...ANNONCE_SECTIONS]);
+    expect(creatableEvenementPours(user(KEVIN), KEVIN, ANNONCE_SECTIONS, NEW)).toEqual(["equipe:louange"]);
     expect(creatableEvenementPours(user(ALINE), ALINE, ANNONCE_SECTIONS, NEW)).toEqual([]);
-    expect(sousPartiesEvenements(user(KEVIN), KEVIN, NEW)).toEqual(["evenements", "scene"]);
+    expect(sousPartiesEvenements(user(OLIVIA), OLIVIA, NEW)).toEqual(["evenements", "scene"]);
+    expect(sousPartiesEvenements(user(KEVIN), KEVIN, NEW), "un référent n'a plus la scène").toEqual(["evenements"]);
     expect(sousPartiesEvenements(user(PAULINE), PAULINE, NEW)).toEqual(["evenements"]);
     expect(sousPartiesEvenements(user(NOEMIE), NOEMIE, NEW), "un référent de sous-équipe ne crée pas d'évènement").toEqual([]);
     expect(sousPartiesEvenements(user(ALINE), ALINE, NEW)).toEqual([]);
@@ -408,7 +413,8 @@ test.describe("pur : créer un évènement", () => {
     expect(canSeeEvenement(user(ALINE), ALINE, e, NEW)).toBe(true);
     expect(canSeeEvenement(user(BRUNO), BRUNO, { ...e, pour: "Intergroupe" }, NEW)).toBe(false);
     expect(canSeeEvenement(user(DORIAN), DORIAN, e, NEW)).toBe(false);
-    expect(canSeeEvenement(user(KEVIN), KEVIN, e, NEW), "la coordination voit tout").toBe(true);
+    expect(canSeeEvenement(user(OLIVIA), OLIVIA, e, NEW), "la coordination (Comité Orga) voit tout").toBe(true);
+    expect(canSeeEvenement(user(KEVIN), KEVIN, e, NEW), "lot RS : plus le référent Louange").toBe(false);
   });
 });
 
@@ -427,24 +433,24 @@ test.describe("pur : tenir l'organigramme", () => {
     expect(peutChangerReferents(user(NOEMIE), NOEMIE, "louange", NEW)).toBe(false);
   });
 
-  test("le référent Louange tient toute la Louange et change ses référents, pas une autre équipe", () => {
+  test("le référent Louange tient toute la Louange, mais ne change plus ses référents (lot RS, Q16)", () => {
     expect(peutModifierEquipe(user(KEVIN), KEVIN, "louange", NEW)).toBe(true);
     for (const s of ["presidence", "musiciens", "choristes"] as const) expect(peutPlacerSousEquipe(user(KEVIN), KEVIN, s, NEW), s).toBe(true);
     expect(peutPlacerMembre(user(KEVIN), KEVIN, "louange", ["choristes"], NEW)).toBe(true);
-    expect(peutChangerReferents(user(KEVIN), KEVIN, "louange", NEW)).toBe(true);
+    expect(peutChangerReferents(user(KEVIN), KEVIN, "louange", NEW), "lot RS : les admins seuls").toBe(false);
     expect(peutModifierEquipe(user(KEVIN), KEVIN, "medias", NEW)).toBe(false);
     expect(peutChangerReferents(user(KEVIN), KEVIN, "medias", NEW)).toBe(false);
   });
 
-  test("un référent tient son équipe ; Orga tient tout et change tous les référents", () => {
+  test("un référent tient son équipe ; Orga (placé) tient tout mais ne change plus les référents (lot RS, Q16)", () => {
     expect(peutModifierEquipe(user(OSMANE), OSMANE, "regie", NEW)).toBe(true);
     expect(peutPlacerMembre(user(OSMANE), OSMANE, "regie", [], NEW)).toBe(true);
     expect(peutModifierEquipe(user(OSMANE), OSMANE, "louange", NEW)).toBe(false);
     expect(peutChangerReferents(user(OSMANE), OSMANE, "regie", NEW)).toBe(false);
     expect(peutModifierEquipe(user(MATHIS), MATHIS, "medias", NEW)).toBe(true);
     expect(peutPlacerSousEquipe(user(MATHIS), MATHIS, "choristes", NEW)).toBe(true);
-    expect(peutChangerReferents(user(MATHIS), MATHIS, "louange", NEW)).toBe(true);
-    expect(peutChangerReferents(user(MATHIS), MATHIS, "regie", NEW)).toBe(true);
+    expect(peutChangerReferents(user(MATHIS), MATHIS, "louange", NEW)).toBe(false);
+    expect(peutChangerReferents(user(MATHIS), MATHIS, "regie", NEW)).toBe(false);
   });
 
   test("ni un membre simple, ni la case Équipes ; les admins tiennent tout", () => {
@@ -471,22 +477,24 @@ test.describe("pur : équipes, responsables et entrées du Back-Office", () => {
     expect(equipesDe(DORIAN, NEW)).toEqual([]);
   });
 
-  test("responsable : la coordination, un référent, un rôle de groupe ; pas un membre, pas les cases cochées", () => {
-    for (const p of [KEVIN, LUCIE, MATHIS, NOEMIE, OSMANE, ROMANE, PAULINE, QUENTIN]) expect(estResponsable(user(p), p, NEW), p.uid).toBe(true);
-    for (const p of [ALINE, BRUNO, CAMILLE, DORIAN, ELSA, SERGE]) expect(estResponsable(user(p), p, NEW), p.uid).toBe(false);
+  test("responsable : une responsabilité, un référent ; pas un membre, ni Orga placé, ni un rôle de groupe, ni les cases cochées (lot RS)", () => {
+    for (const p of [OLIVIA, KEVIN, LUCIE, NOEMIE, OSMANE, ROMANE, PAULINE]) expect(estResponsable(user(p), p, NEW), p.uid).toBe(true);
+    for (const p of [MATHIS, QUENTIN, ALINE, BRUNO, CAMILLE, DORIAN, ELSA, SERGE]) expect(estResponsable(user(p), p, NEW), p.uid).toBe(false);
     expect(estResponsable(user(ADMIN), ADMIN, NEW)).toBe(true);
   });
 
-  test("entrées : un compte sans équipe n'en a aucune, la case Messages vient de l'organigramme", () => {
+  test("entrées : un compte sans équipe n'en a aucune ; Planning et Messages viennent des responsabilités (lot RS)", () => {
     expect(entreesBackOffice(user(DORIAN), DORIAN, NEW)).toEqual([]);
     // Piste A (BO4) : un simple membre d'équipe n'a plus de Back-Office.
     expect(entreesBackOffice(user(ALINE), ALINE, NEW)).toEqual([]);
     expect(entreesBackOffice(user(SERGE), SERGE, NEW)).toEqual([]);
     const kevin = entreesBackOffice(user(KEVIN), KEVIN, NEW);
-    for (const e of ["planning", "equipes", "messages"] as const) expect(kevin, e).toContain(e);
+    expect(kevin).toContain("equipes");
+    for (const e of ["planning", "messages"] as const) expect(kevin, e).not.toContain(e);
     expect(droitsDesPages(user(KEVIN), KEVIN, NEW)).toEqual({ taches: true, evenements: true, reunions: true });
-    expect(entreesBackOffice(user(NOEMIE), NOEMIE, NEW)).toEqual(expect.arrayContaining(["equipes", "messages"]));
+    expect(entreesBackOffice(user(NOEMIE), NOEMIE, NEW)).toContain("equipes");
     expect(entreesBackOffice(user(NOEMIE), NOEMIE, NEW)).not.toContain("planning");
+    expect(entreesBackOffice(user(NOEMIE), NOEMIE, NEW)).not.toContain("messages");
     expect(widgetsPermis(user(DORIAN), DORIAN, NEW)).toEqual([]);
     expect(widgetsPermis(user(KEVIN), KEVIN, NEW)).toContain("scene");
   });
@@ -509,32 +517,34 @@ test.describe("pur : ceQueCaOuvre", () => {
     expect(ceQueCaOuvre(BRUNO, nommer)[0].params).toEqual({ lieux: "Franco, Campus" });
   });
 
-  test("Régie : voir seulement ; référent de sous-équipe : notifier et placer ses musiciens", () => {
+  test("Régie : voir seulement ; référent de sous-équipe : placer ses musiciens, plus notifier (lot RS)", () => {
     expect(ceQueCaOuvre(CAMILLE)).toEqual([
       { cle: "acces.ouvre.setlistsVoir", params: { lieux: "categories.Campus" }, pourquoi: "acces.pourquoi.regieLieu" },
     ]);
     const noemie = ceQueCaOuvre(NOEMIE);
-    expect(noemie).toContainEqual({ cle: "acces.ouvre.notifierMusiciens", params: { sous: "acces.sousEquipe.musiciens" }, pourquoi: "acces.pourquoi.referentSous" });
+    expect(noemie.map((a) => a.cle)).not.toContain("acces.ouvre.notifierMusiciens");
     expect(noemie).toContainEqual({ cle: "acces.ouvre.organigrammeMusiciens", params: { sous: "acces.sousEquipe.musiciens" }, pourquoi: "acces.pourquoi.referentSous" });
     expect(noemie.map((a) => a.cle)).not.toContain("acces.ouvre.coordination");
   });
 
-  test("référent Louange : coordination, planning du culte, notifier la Louange, placer ses sous-équipes", () => {
-    const kevin = ceQueCaOuvre(KEVIN);
-    expect(kevin.find((a) => a.cle === "acces.ouvre.coordination")?.pourquoi).toBe("acces.pourquoi.referentLouange");
-    expect(kevin.map((a) => a.cle)).toEqual(expect.arrayContaining([
-      "acces.ouvre.planningCulte", "acces.ouvre.notifierEquipe", "acces.ouvre.evenementSection", "acces.ouvre.organigrammeEquipe",
-    ]));
-    expect(cles(OSMANE)).toEqual(expect.arrayContaining(["acces.ouvre.planningCulteRegie", "acces.ouvre.notifierEquipe"]));
-    expect(cles(LUCIE)).toEqual(expect.arrayContaining(["acces.ouvre.planningEdd", "acces.ouvre.coordination"]));
-    expect(cles(MATHIS)).toEqual(expect.arrayContaining(["acces.ouvre.notifierTous", "acces.ouvre.organigrammeTout", "acces.ouvre.planningTable"]));
+  test("référent Louange : placer ses sous-équipes, plus de coordination ni de planning ni de notification (lot RS)", () => {
+    const kevin = ceQueCaOuvre(KEVIN).map((a) => a.cle);
+    expect(kevin).toEqual(expect.arrayContaining(["acces.ouvre.organigrammeEquipe"]));
+    for (const c of ["acces.ouvre.coordination", "acces.ouvre.planningCulte", "acces.ouvre.notifierEquipe", "acces.ouvre.evenementSection"]) {
+      expect(kevin, c).not.toContain(c);
+    }
+    expect(cles(OSMANE)).toEqual(["acces.ouvre.organigrammeEquipe"]);
+    expect(cles(LUCIE)).toEqual(["acces.ouvre.setlistsEdd", "acces.ouvre.organigrammeEquipe"]);
+    expect(cles(MATHIS), "placé dans Orga sans la responsabilité").toEqual(["acces.ouvre.organigrammeTout"]);
+    expect(cles(OLIVIA)).toEqual(["acces.ouvre.comiteOrga"]);
   });
 
   test("groupe, EDD, présidence de groupe ; un compte sans équipe et les cases cochées : rien", () => {
     expect(cles(ELSA)).toEqual(["acces.ouvre.setlistsGroupe"]);
     expect(cles(GILLES)).toEqual(["acces.ouvre.setlistsEdd"]);
-    expect(cles(PAULINE)).toEqual(["acces.ouvre.setlistsGroupe", "acces.ouvre.evenementSection"]);
-    expect(cles(QUENTIN)).toEqual(expect.arrayContaining(["acces.ouvre.setlistsGroupe", "acces.ouvre.planningGroupe", "acces.ouvre.notifierGroupe"]));
+    // lot RS : plus d'évènement de section pour la présidence, plus de droit par un rôle de groupe.
+    expect(cles(PAULINE)).toEqual(["acces.ouvre.setlistsGroupe"]);
+    expect(cles(QUENTIN)).toEqual(["acces.ouvre.setlistsGroupe"]);
     expect(ceQueCaOuvre(DORIAN)).toEqual([]);
     expect(ceQueCaOuvre(SERGE)).toEqual([]);
     expect(ceQueCaOuvre(null)).toEqual([]);
