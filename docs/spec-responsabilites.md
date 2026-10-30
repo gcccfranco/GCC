@@ -194,6 +194,10 @@ fois, puis l'admin corrige sur la page Responsabilités.
   627 tests verts sur les specs d'écran voisines (un échec de charge sur `equipes-acces.spec.ts:232`, vert seul).
   Choix : ajouter un référent de sous-équipe de Louange l'y fait entrer ; retirer un référent le laisse membre ;
   si la recopie serveur échoue, message « droits non recopiés » sans bouton « Réessayer ».
+- **Reprise faite par Timothée le 30/10/2026** : à blanc relu, `--ecrire` (10 opérations), puis à blanc « 0 opération ».
+  La Table reste sans gestionnaire (Q11), le référent Régie n'a rien (Q21) : à régler sur la page si besoin. Défaut
+  d'affichage du relevé à corriger : un référent de l'équipe `comite-franco` y est lu comme un comité de groupe
+  (« créer les évènements du groupe (franco) ») ; rien de faux n'est écrit.
 - **Reste** :
   - **avant la mise en ligne** : la suite complète (arrêtée le 30/10 à 5 362 tests sur 11 487, pour la limite
     hebdomadaire) montrait environ 330 échecs, presque tous dans des specs qui donnent des droits de gestion à des
