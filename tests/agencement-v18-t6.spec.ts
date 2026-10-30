@@ -54,7 +54,7 @@ const SETLISTS = {
   "setlists/s2": setlist("2026-09-20", [chant("zh-001")]),
 };
 
-async function ouvrirStatistiques(page: Page, chemin = "/back-office/statistiques") {
+async function ouvrirStatistiques(page: Page, chemin = "/songs/statistiques") {
   interdireDialoguesNatifs(page);
   await page.clock.setFixedTime(new Date("2026-10-04T10:00:00"));
   await page.route(/\/songs-index\.json/, (route) =>
@@ -80,7 +80,7 @@ test.describe("T6 — Statistiques (B13)", () => {
       onglets: { rail: 1, pilules: 1 },
     });
     await expect(enTete(page).locator("p").first()).toHaveText(
-      "Visible par les admins seulement · 2 setlists comptées, du 31 mai 2026 au 20 septembre 2026");
+      "Setlists publiées, depuis le 31 mai 2026 · 2 setlists comptées, du 31 mai 2026 au 20 septembre 2026");
     for (const nom of ["Jamais joués", "À redécouvrir", "Les plus joués"]) {
       await vue(page, nom).click();
       await expect(vue(page, nom)).toHaveAttribute("aria-selected", "true");
@@ -111,7 +111,7 @@ test.describe("T6 — Statistiques (B13)", () => {
   });
 
   test("« Jamais joués » : deux cartes, « En français » puis « En chinois », ne dépassent pas deux écrans avant « Tout afficher »", async ({ page }, info) => {
-    await ouvrirStatistiques(page, "/back-office/statistiques?vue=jamais-joues");
+    await ouvrirStatistiques(page, "/songs/statistiques?vue=jamais-joues");
     await expect(carteFr(page).getByRole("heading", { name: "En français · 119" })).toBeVisible();
     await expect(carteZh(page).getByRole("heading", { name: "En chinois · 59" })).toBeVisible();
     const [fr, zh] = estTelephone(info) ? [10, 10] : [40, 20];
@@ -135,7 +135,7 @@ test.describe("T6 — Statistiques (B13)", () => {
 
   test("« Jamais joués » en grand : le français sur deux colonnes, le chinois sur une, côte à côte", async ({ page }, info) => {
     test.skip(!estGrandEcran(info), "en grand seulement (ordinateur, tablette couchée)");
-    await ouvrirStatistiques(page, "/back-office/statistiques?vue=jamais-joues");
+    await ouvrirStatistiques(page, "/songs/statistiques?vue=jamais-joues");
     await expect(lignesVisibles(carteFr(page))).toHaveCount(40);
     const xs = async (carte: ReturnType<typeof carteFr>) =>
       new Set(await lignesVisibles(carte).evaluateAll((els) => els.map((e) => Math.round(e.getBoundingClientRect().x))));
@@ -149,7 +149,7 @@ test.describe("T6 — Statistiques (B13)", () => {
   });
 
   test("« Jamais joués » avec la langue « FR » : la seule carte en français", async ({ page }) => {
-    await ouvrirStatistiques(page, "/back-office/statistiques?vue=jamais-joues&langue=fr");
+    await ouvrirStatistiques(page, "/songs/statistiques?vue=jamais-joues&langue=fr");
     await expect(carteFr(page)).toBeVisible();
     await expect(carteZh(page)).toHaveCount(0);
   });
@@ -157,7 +157,7 @@ test.describe("T6 — Statistiques (B13)", () => {
   // Relecture de T6 : « Tout afficher » restait ouvert après un changement de filtre, sans bouton
   // pour replier (sur téléphone, des centaines de lignes).
   test("« Jamais joués » : un filtre changé replie la carte dépliée par « Tout afficher »", async ({ page }, info) => {
-    await ouvrirStatistiques(page, "/back-office/statistiques?vue=jamais-joues");
+    await ouvrirStatistiques(page, "/songs/statistiques?vue=jamais-joues");
     await carteFr(page).getByRole("button", { name: "Tout afficher" }).click();
     await expect(lignesVisibles(carteFr(page))).toHaveCount(119);
     await enTete(page).locator('[data-onglets="pilules"]').getByRole("button", { name: "3 mois" }).click();

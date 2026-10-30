@@ -13,6 +13,8 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useTranslation } from "react-i18next";
 import { ArrowDownWideNarrow, ChevronDown, ChevronUp } from "lucide-react";
+import { useAuth } from "@/lib/firebase/auth";
+import { canFiltrerPresidence } from "@/lib/access";
 import { ALL_CATEGORIES, getSetlists, type FSSetlist } from "@/lib/firebase/setlists";
 import {
   SEUIL_A_REDECOUVRIR, bornesDeLaPeriode, choixDesFiltres, debutDeLHistorique, libellePart, libelleTendance, statsChants,
@@ -131,12 +133,17 @@ export function StatistiquesClient() {
 function StatistiquesContenu() {
   const { t, i18n } = useTranslation();
   const zh = i18n.language === "zh-CN";
+  // `useAuth` n'est pas partagé : sa première lecture rend `null`, ne rien décider avant `loading` faux.
+  const { user, loading } = useAuth();
+  const peutFiltrerPresidence = canFiltrerPresidence(user);
   // Même « aujourd'hui » que les Archives de l'onglet Setlists (Q3).
   const aujourdhui = useMemo(() => new Date().toISOString().split("T")[0], []);
   // L'adresse d'abord (le retour depuis un chant retrouve l'écran), puis on la tient à jour.
   // La page n'est rendue qu'au navigateur (elle attend le compte) : `window` est là.
   const [etat, setEtat] = useState<Etat>(() =>
     typeof window === "undefined" ? ETAT_PAR_DEFAUT : lireAdresse(window.location.search));
+  // Sans le droit, une présidence venue de l'adresse est ignorée (D5).
+  useEffect(() => { if (!loading && !peutFiltrerPresidence) setEtat((e) => (e.presidence === null ? e : { ...e, presidence: null })); }, [loading, peutFiltrerPresidence]);
   const [lecture, setLecture] = useState<Lecture>({ etat: "calcul" });
   useEffect(() => { window.history.replaceState(null, "", ecrireAdresse(etat)); }, [etat]);
   const changer = (modif: Partial<Etat>) => setEtat((e) => ({ ...e, ...modif }));
@@ -169,9 +176,9 @@ function StatistiquesContenu() {
   const donnees = lecture.etat === "pret" ? lecture : null;
   const stats = useMemo(() => {
     if (!donnees) return null;
-    const filtres: FiltresStats = { periode: enPeriode(etat), service: etat.service, langue: etat.langue, presidence: etat.presidence };
+    const filtres: FiltresStats = { periode: enPeriode(etat), service: etat.service, langue: etat.langue, presidence: peutFiltrerPresidence ? etat.presidence : null };
     return statsChants(donnees.setlists, donnees.recueil, filtres, aujourdhui);
-  }, [donnees, etat, aujourdhui]);
+  }, [donnees, etat, aujourdhui, peutFiltrerPresidence]);
   const lignes = useMemo(() => {
     if (!stats) return [];
     const triees = [...stats.plusJoues].sort(COMPARER[etat.tri]);
@@ -180,9 +187,12 @@ function StatistiquesContenu() {
 
   const donneesPretes = stats && donnees ? { stats, donnees } : null;
   const comptees = stats?.comptees;
-  const sousTitre = t("stats.visible") + (!comptees ? ""
-    : comptees.nombre === 0 ? ` · ${t("stats.aucuneSetlist")}`
-    : ` · ${t("stats.comptees", { count: comptees.nombre, du: jourEnLettres(comptees.du!, zh), au: jourEnLettres(comptees.au!, zh) })}`);
+  const debut = donnees ? debutDeLHistorique(donnees.setlists, aujourdhui) : null;
+  const depuis = debut ? t("stats.depuis", { date: jourEnLettres(debut, zh) }) : "";
+  const suite = !comptees ? ""
+    : comptees.nombre === 0 ? t("stats.aucuneSetlist")
+    : t("stats.comptees", { count: comptees.nombre, du: jourEnLettres(comptees.du!, zh), au: jourEnLettres(comptees.au!, zh) });
+  const sousTitre = [depuis, suite].filter(Boolean).join(" · ");
   const choisirPeriode = (periode: ChoixPeriode) => {
     if (periode !== "libre" || !stats) return changer({ periode });
     // « Dates libres » part de ce qu'on regarde : les bornes de la période ou des setlists comptées.
@@ -198,7 +208,7 @@ function StatistiquesContenu() {
       onglets={<OngletsRail etiquette={t("stats.vue")} onglets={VUES.map((v) => ({ id: v.vue, label: t(`stats.vues.${v.vue}`) }))} actif={etat.vue} choisir={(vue) => changer({ vue: vue as Vue })} />}
       apres={donneesPretes && (
         <Filtres
-          etat={etat} aujourdhui={aujourdhui} services={donneesPretes.donnees.choix.services} presidences={donneesPretes.donnees.choix.presidences}
+          etat={etat} aujourdhui={aujourdhui} services={donneesPretes.donnees.choix.services} presidences={peutFiltrerPresidence ? donneesPretes.donnees.choix.presidences : null}
           nomService={(c) => t("categories." + c, { defaultValue: c })}
           choisirPeriode={choisirPeriode} changer={changer}
         />
@@ -320,7 +330,7 @@ function StatistiquesContenu() {
 const PASTILLE = "inline-flex h-8 items-center gap-1.5 whitespace-nowrap rounded-full px-3 text-sm font-semibold transition-[background-color,color,transform] duration-150 active:scale-[.97]";
 
 function Filtres({ etat, aujourdhui, services, presidences, nomService, choisirPeriode, changer }: {
-  etat: Etat; aujourdhui: string; services: string[]; presidences: string[];
+  etat: Etat; aujourdhui: string; services: string[]; presidences: string[] | null;
   nomService: (categorie: string) => string;
   choisirPeriode: (p: ChoixPeriode) => void;
   changer: (modif: Partial<Etat>) => void;
@@ -356,10 +366,10 @@ function Filtres({ etat, aujourdhui, services, presidences, nomService, choisirP
           <option value="fr">FR</option>
           <option value="zh">中文</option>
         </Choix>
-        <Choix libelle={t("stats.presidence")} valeur={etat.presidence ?? ""} onChange={(v) => changer({ presidence: v || null })}>
+        {presidences && <Choix libelle={t("stats.presidence")} valeur={etat.presidence ?? ""} onChange={(v) => changer({ presidence: v || null })}>
           <option value="">{t("stats.toutesPresidences")}</option>
           {presidences.map((p) => <option key={p} value={p}>{p}</option>)}
-        </Choix>
+        </Choix>}
       </div>
       {etat.periode === "libre" && (
         <div className="flex flex-wrap items-center gap-3 text-sm">

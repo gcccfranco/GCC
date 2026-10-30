@@ -285,6 +285,11 @@ test.describe("le volet de droite avant d'avoir choisi (A5 à A8, grands écrans
     await listePrete(page);
     const plus = carte(page, "Les plus chantés à GCC");
     await expect(plus).toContainText("ces 3 derniers mois");
+    // Lot ST (ST3) : « Tout voir » mène à la page Statistiques, sous la grille, aligné à droite.
+    const toutVoir = plus.getByRole("link", { name: "Tout voir" });
+    await expect(toutVoir).toHaveAttribute("href", /^\/songs\/statistiques\/?$/);
+    const [bc, bl] = [await plus.boundingBox(), await toutVoir.boundingBox()];
+    expect(bl!.x + bl!.width, "à droite de la carte").toBeGreaterThan(bc!.x + bc!.width - 40);
     const lignes = lignesDe(page, "Les plus chantés à GCC");
     // abba-pere 3, 一生爱你 2, puis abrite-moi et tout-puissant 1 (le plus récent d'abord) ; a-l-agneau, trop vieux, non.
     await expect(lignes).toHaveCount(4);

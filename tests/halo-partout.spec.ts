@@ -31,7 +31,7 @@ const PAGES = [
   "/harmonie/rd2000", "/profil", "/setlists/new",
   "/back-office", "/back-office/calendrier", "/back-office/equipes/da", "/back-office/taches/da/t1", "/back-office/evenements",
   "/back-office/evenements/fete", "/back-office/reunions", "/back-office/equipes", "/back-office/equipes/personnes",
-  "/back-office/messages", "/back-office/messages/notifier", "/back-office/statistiques", "/back-office/planning",
+  "/back-office/messages", "/back-office/messages/notifier", "/songs/statistiques", "/back-office/planning",
   "/back-office/planning/culte", "/back-office/plus",
 ];
 

@@ -60,7 +60,7 @@ async function ouvrirStatistiques(page: Page) {
   await page.clock.setFixedTime(new Date("2026-10-04T10:00:00"));
   await page.route(/\/songs-index\.json/, (route) =>
     route.fulfill({ contentType: "application/json", body: JSON.stringify({ generatedAt: "2026-10-01", songs: RECUEIL }) }));
-  await signInAs(page, ADMIN, SETLISTS, "/back-office/statistiques");
+  await signInAs(page, ADMIN, SETLISTS, "/songs/statistiques");
   await expect(page.getByRole("heading", { level: 1, name: "Statistiques" })).toBeVisible();
   await expect(page.getByTestId("setlists-comptees")).toBeVisible();
 }

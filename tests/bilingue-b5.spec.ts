@@ -283,16 +283,16 @@ test.describe("B5b : back-office en 中文", () => {
   });
 
   test("Statistiques : les plus joués, jamais joués, à redécouvrir", async ({ page }) => {
-    await ouvrirAdmin(page, "/back-office/statistiques", "zh-CN");
+    await ouvrirAdmin(page, "/songs/statistiques", "zh-CN");
     await expect(page.getByTestId("setlists-comptees")).toBeVisible();
     await sansFrancais(page, "Statistiques, les plus joués");
-    await page.goto("/back-office/statistiques?vue=jamais-joues");
+    await page.goto("/songs/statistiques?vue=jamais-joues");
     await expect(page.getByTestId("jamais-fr")).toBeVisible();
     await sansFrancais(page, "Statistiques, jamais joués");
-    await page.goto("/back-office/statistiques?vue=a-redecouvrir&periode=3");
+    await page.goto("/songs/statistiques?vue=a-redecouvrir&periode=3");
     await expect(page.locator('[data-testid="ligne-redecouvrir"]:visible').first()).toBeVisible();
     await sansFrancais(page, "Statistiques, à redécouvrir");
-    await page.goto("/back-office/statistiques?periode=libre&du=2026-01-01&au=2026-09-30");
+    await page.goto("/songs/statistiques?periode=libre&du=2026-01-01&au=2026-09-30");
     await expect(page.getByTestId("setlists-comptees")).toBeVisible();
     await sansFrancais(page, "Statistiques, dates libres");
   });
@@ -327,7 +327,7 @@ test.describe("B5b : en français, les écrans gardent leurs libellés", () => {
     await expect(page.getByText("Derniers envois").first()).toBeVisible();
     await expect(page.getByText("Aperçu").first()).toBeVisible();
     expect((await lireEcran(page)).texte).not.toMatch(/\b(notifier|admin|stats)\.[a-zA-Z]+/);
-    await page.goto("/back-office/statistiques");
+    await page.goto("/songs/statistiques");
     await expect(page.getByRole("heading", { name: "Setlists comptées" })).toBeVisible();
     await expect(page.getByText(/setlists comptées, du /).first()).toBeVisible();
     expect((await lireEcran(page)).texte).not.toMatch(/\b(notifier|admin|stats)\.[a-zA-Z]+/);

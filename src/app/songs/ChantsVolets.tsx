@@ -2,7 +2,6 @@
 
 import { usePathname } from "next/navigation";
 import { useTranslation } from "react-i18next";
-import { BACK_OFFICE } from "@/lib/backOffice";
 import { EnTetePage } from "@/components/layout/EnTetePage";
 import { Halo } from "@/components/layout/Halo";
 import { BoutonStatistiques } from "@/components/songs/BoutonStatistiques";
@@ -26,10 +25,14 @@ export function ChantsVolets({ themes, nombre, children }: { themes: Theme[]; no
   const { t } = useTranslation();
   const pathname = usePathname();
   const surListe = /^\/songs\/?$/.test(pathname);
+  const surStatistiques = /^\/songs\/statistiques\/?$/.test(pathname);
   const actif = surListe ? null : decodeURIComponent(pathname.replace(/^\/songs\//, "").replace(/\/$/, ""));
   const deuxVolets = useDeuxVolets();
   // Lu seulement quand la liste est montée (sur /songs, ou en deux volets).
-  const { songs, erreur, reessayer } = useSongsIndex(surListe || deuxVolets);
+  const { songs, erreur, reessayer } = useSongsIndex(!surStatistiques && (surListe || deuxVolets));
+
+  // La page Statistiques (ST3) a toute la largeur : ni en-tête Chants ni liste.
+  if (surStatistiques) return <>{children}</>;
 
   return (
     <div className="chants-volets" data-sur-liste={surListe ? "" : undefined}>
@@ -43,7 +46,7 @@ export function ChantsVolets({ themes, nombre, children }: { themes: Theme[]; no
         <EnTetePage
           titre={t("common.header.songs")}
           sousTitre={t("songs.list.sousTitre", { count: nombre })}
-          outils={BACK_OFFICE ? <span className="max-md:hidden"><BoutonStatistiques /></span> : undefined}
+          outils={<span className="max-md:hidden"><BoutonStatistiques /></span>}
           action={<SongProposalDrawer enTete />}
         />
       </div>

@@ -107,6 +107,7 @@
       "ajouteLe": "{{date}}加入",
       "plusChantes": "GCC 最常唱的诗歌",
       "plusChantesAide": "最近 3 个月",
+      "toutVoir": "查看全部",
       "foisEnSetlist_one": "{{count}} 次出现在歌单中",
       "foisEnSetlist_other": "{{count}} 次出现在歌单中",
       "upcoming": "接下来的歌单",
@@ -3928,7 +3929,7 @@
     }
   },
   "stats": {
-    "visible": "仅管理员可见",
+    "depuis": "已发布的歌单，自 {{date}} 起",
     "aucuneSetlist": "没有计入的歌单",
     "comptees_one": "{{count}} 份歌单计入，{{du}} 至 {{au}}",
     "comptees_other": "{{count}} 份歌单计入，{{du}} 至 {{au}}",

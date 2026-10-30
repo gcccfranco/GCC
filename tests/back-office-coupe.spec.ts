@@ -95,12 +95,23 @@ test.describe("back-office coupé : les entrées disparaissent", () => {
     await expect(page.getByRole("link", { name: "Back-Office" })).toHaveCount(0);
   });
 
-  // BO3 : le lien « Statistiques » de Chants (en-tête ou ligne du compteur) n'existe pas en ligne, même pour un admin.
-  test("Chants n'a pas de bouton Statistiques, même pour un admin", async ({ page }) => {
+  // Lot ST (ST3, D5) : Statistiques est ouverte à tout connecté, hors de l'interrupteur du back-office.
+  test("Chants a le bouton Statistiques (lot ST), qui ouvre /songs/statistiques", async ({ page }) => {
     await signInAs(page, ADMIN, {}, "/songs");
     await page.getByRole("searchbox").waitFor();
     await expect(page.getByRole("heading", { level: 1, name: "Chants" })).toBeVisible();
-    await expect(page.locator('a[href^="/back-office/statistiques"]')).toHaveCount(0);
+    const lien = page.getByRole("link", { name: "Statistiques" }).filter({ visible: true });
+    await expect(lien).toHaveAttribute("href", /^\/songs\/statistiques\/?$/);
+    await lien.click();
+    await expect(page).toHaveURL(/\/songs\/statistiques\/?$/);
+    await expect(page.getByRole("heading", { level: 1, name: "Statistiques" })).toBeVisible();
+  });
+
+  test("/back-office/statistiques redirige vers /songs/statistiques/, même interrupteur coupé", async ({ page }) => {
+    await signInAs(page, ADMIN, {}, "/songs");
+    await page.goto("/back-office/statistiques?vue=jamais-joues");
+    await expect(page).toHaveURL(/\/songs\/statistiques\/\?vue=jamais-joues/);
+    await expect(page.getByRole("heading", { level: 1, name: "Statistiques" })).toBeVisible();
   });
 
   // Lot U4 : sur ordinateur, la barre latérale remplace la navbar.
@@ -116,7 +127,7 @@ test.describe("back-office coupé : les entrées disparaissent", () => {
 });
 
 test.describe("back-office coupé : une adresse tapée à la main tombe dans le vide", () => {
-  for (const chemin of ["/taches", "/taches/da", "/taches/medias", "/equipes", "/equipes/da", "/evenements", "/evenements/foot", "/evenements/foot/modifier", "/evenements/nouveau", "/evenements/scene", "/evenements/scene/noel", "/annonces", "/back-office", "/back-office/taches", "/back-office/taches/da", "/back-office/taches/medias", "/back-office/evenements", "/back-office/evenements/reunions", "/back-office/evenements/scene", "/back-office/evenements/scene/paques", "/back-office/evenements/nouveau", "/back-office/evenements/foot", "/back-office/evenements/foot/modifier", "/back-office/statistiques", "/back-office/calendrier", "/back-office/reunions", "/back-office/reunions/foot", "/back-office/reunions/nouvelle", "/back-office/reunions/foot/modifier"]) {
+  for (const chemin of ["/taches", "/taches/da", "/taches/medias", "/equipes", "/equipes/da", "/evenements", "/evenements/foot", "/evenements/foot/modifier", "/evenements/nouveau", "/evenements/scene", "/evenements/scene/noel", "/annonces", "/back-office", "/back-office/taches", "/back-office/taches/da", "/back-office/taches/medias", "/back-office/evenements", "/back-office/evenements/reunions", "/back-office/evenements/scene", "/back-office/evenements/scene/paques", "/back-office/evenements/nouveau", "/back-office/evenements/foot", "/back-office/evenements/foot/modifier", "/back-office/calendrier", "/back-office/reunions", "/back-office/reunions/foot", "/back-office/reunions/nouvelle", "/back-office/reunions/foot/modifier"]) {
     test(`${chemin} répond 404`, async ({ page }) => {
       const reponse = await page.goto(chemin);
       expect(reponse?.status()).toBe(404);
