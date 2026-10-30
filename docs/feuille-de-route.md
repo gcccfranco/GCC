@@ -1248,6 +1248,15 @@ gestionnaire d'un planning (grille entière), Comité Orga, référent d'équipe
 rôles de groupe qui publient. **Go le 29/10/2026**, lot **RS** (RS-A à RS-C) confié à une session orchestratrice ;
 `firestore.rules` et script de reprise à passer par Timothée.
 
+### AH. Page chant 简谱 et statistiques pour tous (Timothée, 30/10/2026) → `spec-jianpu-entete-statistiques.md`
+
+« Le fait que le titre soit coupé ça fait un peu bizarre » ; statistiques « vues par tout le monde », par
+groupe, sur la page du chant et à la création de setlist. Planche
+(https://claude.ai/artifact/SkYcXaBfGRG3EdHLyCXFvs) : **piste A** retenue (en-tête gravé coupé en entier,
+repris par le site ; deux colonnes sur grand écran) et toutes les recommandations validées le 30/10/2026.
+Lots **JE** (JE-A à JE-C) et **ST** (ST-A à ST-D). Code prévu le 31/10/2026 à 12 h 02, **sur go**. Aucune
+règle Firestore à publier. Travail directement sur `main` (consigne du 30/10/2026).
+
 ## 4. Carte des modules de l'app « GCC »
 
 À valider par Timothée avant toute spec de module (les modules existants ne
