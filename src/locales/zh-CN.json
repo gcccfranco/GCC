@@ -1338,17 +1338,16 @@
       "modifier": "修改",
       "retirer": "移除",
       "confirmerRetrait": "移除这一行？",
-      "inscrireQuelquun": "替别人报名",
-      "dimanche": "主日",
-      "nomPersonne": "个人或家庭的名字",
-      "dejaPris": "已有人报名的主日：会另加一行。",
-      "inscrireBouton": "报名",
-      "astuceAutres": "要替别人报名（即使该主日已有人报名）：点“替别人报名”。",
+      "astuceAutres": "要替别人报名：",
+      "astuceAutresLien": "后台 › 排班表 › 圣餐预备",
       "astuce": "可以写“某某家庭”代替你的名字。",
       "vientDeSInscrire": "{{nom}} 刚刚报名了。",
       "illisible": "暂时无法读取报名。",
       "echec": "保存失败，请重试。",
-      "tonNom": "你的名字"
+      "tonNom": "你的名字",
+      "retirerNom": "移除{{nom}}",
+      "ajouterNoms": "添加早餐人员",
+      "nomsSepares": "一个或多个名字，用逗号分隔"
     },
     "barre": {
       "sousTitre": "教会所有服侍表：谁在何时服侍",

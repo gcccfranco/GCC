@@ -1367,17 +1367,16 @@
       "modifier": "Modifier",
       "retirer": "Retirer",
       "confirmerRetrait": "Retirer cette ligne ?",
-      "inscrireQuelquun": "Inscrire quelqu'un",
-      "dimanche": "Dimanche",
-      "nomPersonne": "Nom de la personne ou de la famille",
-      "dejaPris": "Un dimanche déjà pris : la ligne s'ajoute à côté.",
-      "inscrireBouton": "Inscrire",
-      "astuceAutres": "Pour inscrire quelqu'un d'autre, même un dimanche déjà pris : « Inscrire quelqu'un ».",
+      "astuceAutres": "Pour inscrire quelqu'un d'autre :",
+      "astuceAutresLien": "Back-Office › Planning › Prépa. Table",
       "astuce": "Tu peux écrire « Famille … » à la place de ton nom.",
       "vientDeSInscrire": "{{nom}} vient de s'inscrire.",
       "illisible": "Inscriptions illisibles pour l'instant.",
       "echec": "Enregistrement impossible, réessaie.",
-      "tonNom": "Ton nom"
+      "tonNom": "Ton nom",
+      "retirerNom": "Retirer {{nom}}",
+      "ajouterNoms": "Ajouter au petit déj",
+      "nomsSepares": "Un ou plusieurs noms, séparés par des virgules"
     },
     "barre": {
       "sousTitre": "Qui sert quand, dans tous les plannings de l'église",

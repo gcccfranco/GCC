@@ -94,8 +94,8 @@ export function useSelectionGrille(
         return
       }
       if (p.occupe || dansUnChamp(e.target) || !surLaGrille(e.target)) return
-      // Un bouton hors des cases (une pastille, la barre) garde son Entrée.
-      const surBouton = e.target instanceof HTMLElement && !!e.target.closest("button,a") && !e.target.closest("[data-case]")
+      // Un bouton hors des cases (une pastille, la barre) garde son Entrée, comme ceux d'une case à part (le petit déj).
+      const surBouton = e.target instanceof HTMLElement && !!e.target.closest("button,a") && (!e.target.closest("[data-case]") || !!e.target.closest("[data-case-a-part]"))
       if (p.apercu) {
         if (e.key === "Enter" && !surBouton) { e.preventDefault(); p.validerApercu() }
         return

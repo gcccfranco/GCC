@@ -91,6 +91,8 @@ export interface PlanningGrilleProps {
   prevenir?: PrevenirProp
   /** Les cases écrites dans l'app (`date|clé`, `useGrilleApp`) : seules celles-ci peuvent être « changées » (PG38). */
   casesEcrites?: ReadonlySet<string>
+  /** Une case que la page gère elle-même (le petit déj : des lignes à part, `petitDej/{id}`). */
+  casesAPart?: { ouverte: (date: string, c: ColonneGrille) => boolean; rendre: (date: string, c: ColonneGrille) => ReactNode }
 }
 
 const AVEC_SURVOL = "(hover: hover)"
@@ -128,6 +130,7 @@ export function PlanningGrille({
   lignesDuPlanning,
   prevenir,
   casesEcrites,
+  casesAPart,
 }: PlanningGrilleProps) {
   const { t, i18n } = useTranslation()
   const confirmer = useConfirmer()
@@ -613,7 +616,9 @@ export function PlanningGrille({
     texte: texteCopie,
     coller,
     vider: viderPlage,
-    ouvrir: (c) => enveloppe.current?.querySelector<HTMLElement>(`[data-case="${c.date}|${c.cle}"] button`)?.click(),
+    // Une case à part (le petit déj) s'ouvre sur son « + », pas sur son premier bouton.
+    ouvrir: (c) => (enveloppe.current?.querySelector<HTMLElement>(`[data-case="${c.date}|${c.cle}"] [data-ouvrir]`)
+      ?? enveloppe.current?.querySelector<HTMLElement>(`[data-case="${c.date}|${c.cle}"] button`))?.click(),
     validerApercu: () => validerCollage(false),
     annulerApercu: () => setCollage(null),
   }
@@ -725,6 +730,7 @@ export function PlanningGrille({
   function laCase(l: LigneGrille, c: ColonneGrille): ReactNode {
     const val = valeur(l.row[0], c, l.row)
     if (edition?.date === l.row[0] && edition.cle === c.cle) return champ(l, c)
+    if (mode === "edition" && casesAPart?.ouverte(l.row[0], c)) return casesAPart.rendre(l.row[0], c)
     // Une colonne en lecture seule (le petit déj, géré dans sa carte) reste du texte.
     const modifiable = mode === "edition" && caseOuverte(l.row[0], c)
     const service = imposee(l.row[0], c)
@@ -1069,7 +1075,7 @@ export function PlanningGrille({
                   // modification, toutes s'affichent pour pouvoir les remplir
                   // (sauf celles en lecture seule, qui ne se remplissent pas ici). Une case vidée depuis
                   // la publication reste, pour porter son point.
-                  .filter((c) => (mode === "edition" && caseOuverte(date, c)) || valeur(date, c, l.row).trim() || aChange(date, c.cle))
+                  .filter((c) => (mode === "edition" && (caseOuverte(date, c) || casesAPart?.ouverte(date, c))) || valeur(date, c, l.row).trim() || aChange(date, c.cle))
                   .map((c) => (
                     <div key={c.cle} className="flex items-baseline gap-2 text-[13px]">
                       <span className="w-24 shrink-0 text-[11px] text-muted-foreground">{t(c.i18n)}</span>

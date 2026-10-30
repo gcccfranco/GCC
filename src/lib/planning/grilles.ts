@@ -29,7 +29,8 @@ export type ColonneGrille = {
   optionnelle?: boolean
   /** Colonne remplie ailleurs, affichée sans se modifier (lot U3, Q12 : le petit
    *  déj vient des inscriptions) : jamais un bouton en « Modifier », jamais semée,
-   *  importée ni comptée parmi les noms sans compte. */
+   *  importée ni comptée parmi les noms sans compte. La page peut lui donner sa propre
+   *  case en modification (`casesAPart` de PlanningGrille). */
   lectureSeule?: boolean
 }
 
@@ -199,7 +200,8 @@ export const GRILLE_FIDELITE_MUSICIENS: DefinitionGrille = {
 }
 
 // Prépa. Table du Seigneur + petit déjeuner : deux cases par dimanche. Le petit
-// déj affiche les inscriptions (lot U3, T9) et se gère dans sa carte, au-dessus.
+// déj affiche les inscriptions (lot U3, T9) ; au Back-Office, la page lui donne sa
+// propre case (`PetitDejCase.tsx`, 30/10/2026).
 export const GRILLE_TABLE: DefinitionGrille = {
   key: "table",
   label: "Prépa. Table",

@@ -2,14 +2,17 @@ import { expect, test, type Page } from "@playwright/test";
 import { readFileSync } from "node:fs";
 import { signInAs, type FakeProfile, remplit } from "./helpers/fakeSession";
 import { lirePdf } from "./helpers/pdf";
+import { repondreDansLeSite } from "./helpers/agencement";
+import { nomsAAjouter } from "../src/components/planning/PetitDejCase";
 
 // Lot 17, tranche G6 « Table » (Timothée, 19/09/2026 : « pouvoir modifier tous
 // les plannings sur le site ») : la Prépa. Table du Seigneur et le petit déj
 // deviennent une grille remplie dans l'app, deux cases par dimanche.
 // Lot U3, PD1 (docs/spec-petit-dej.md, T8 et T9) : la case Petit déj affiche les
 // inscriptions (`petitDej/{id}`), seule source ; le petit déj du Sheet ne parle plus.
-// PD2 (Q12) : cette case affiche sans se modifier — pas de bouton en « Modifier »,
-// jamais recopiée par `semer`.
+// PD2 (Q12) : jamais recopiée par `semer`. 30/10/2026 (Timothée) : l'App n'inscrit plus les
+// autres ; au Back-Office la case Petit déj se modifie (lignes à part, `casesAPart`), plusieurs
+// noms à la fois.
 
 const csv = (rows: string[][]) => rows.map((r) => r.map((c) => `"${c}"`).join(",")).join("\n");
 
@@ -63,8 +66,8 @@ test("la grille Table : l'équipe lue dans le Sheet, le petit déj dans les insc
   await expect(page.locator("header[data-entete-page]"), "le sous-titre de l'en-tête (agencement v18)").toContainText("Prépa. Table du Seigneur");
   await expect(laCase(page, "2026-09-20", "equipe")).toContainText("Charlie, Isabelle");
   await expect(laCase(page, "2026-09-27", "equipe")).toContainText("Lydie, Samuel");
-  await expect(laCase(page, "2026-09-27", "petitDej"), "les lignes jointes, dans l'ordre d'inscription").toContainText(
-    "Famille Martin, Les jeunes du Campus",
+  await expect(laCase(page, "2026-09-27", "petitDej"), "les lignes, dans l'ordre d'inscription").toContainText(
+    /Famille Martin\s*Les jeunes du Campus/,
   );
   await expect(laCase(page, "2026-09-27", "petitDej"), "le nom du Sheet ne parle plus (T8)").not.toContainText("Charlie");
 });
@@ -96,12 +99,194 @@ test("avec le droit « table » : une case s'écrit et tient au rechargement ; l
   await expect(page.getByText("Esther C.")).toBeVisible();
 });
 
-test("en modification, la case Petit déj montre les inscriptions sans être un bouton", async ({ page }) => {
+/** Les écritures `petitDej/…` d'une méthode. */
+const ecritures = (db: Awaited<ReturnType<typeof open>>, method: string) =>
+  db.writes.filter((w) => w.method === method && w.path.startsWith("petitDej/"));
+const LIGNE_13 = {
+  "petitDej/p": {
+    dimanche: "2026-09-13", nom: "Famille Passée", uid: "", auteurUid: "uid-resp",
+    creeLe: "2026-09-01T08:00:00.000Z", modifieLe: "2026-09-01T08:00:00.000Z",
+  },
+};
+
+test("nomsAAjouter : virgules et retours à la ligne, vides, doublons, 80 caractères", () => {
+  expect(nomsAAjouter("Léo Aubry, Maya Bellot\nNoé Cassin", [])).toEqual(["Léo Aubry", "Maya Bellot", "Noé Cassin"]);
+  expect(nomsAAjouter(" , ,\n  ,", []), "tout est vide").toEqual([]);
+  expect(nomsAAjouter("Léo, léo ,LÉO", []), "doublons entre eux, sans casse").toEqual(["Léo"]);
+  expect(nomsAAjouter("Famille Martin, Zoé", [" famille martin "]), "contre l'existant, sans casse ni espaces de bord").toEqual(["Zoé"]);
+  expect(nomsAAjouter("x".repeat(100), [])[0]).toHaveLength(80);
+});
+
+test("en modification, la case Petit déj : chaque ligne est un nom à réécrire avec son ✕, puis un « + » ; vide, le « + » seul", async ({ page }) => {
   await open(page, RESPONSABLE, "/back-office/planning/table", PETIT_DEJ);
+  const le27 = laCase(page, "2026-09-27", "petitDej");
+  await expect(le27.getByRole("button", { name: "Famille Martin", exact: true })).toBeVisible();
+  await expect(le27.getByRole("button", { name: "Retirer Famille Martin" })).toBeVisible();
+  await expect(le27.getByRole("button", { name: "Retirer Les jeunes du Campus" })).toBeVisible();
+  await expect(le27.getByRole("button", { name: "Ajouter au petit déj" })).toBeVisible();
   await expect(laCase(page, "2026-09-27", "equipe").getByRole("button"), "l'équipe reste une case à remplir").toHaveCount(1);
-  await expect(laCase(page, "2026-09-27", "petitDej")).toContainText("Famille Martin, Les jeunes du Campus");
+  const le20 = laCase(page, "2026-09-20", "petitDej");
+  await expect(le20.getByRole("button")).toHaveCount(1);
+  await expect(le20.getByRole("button", { name: "Ajouter au petit déj" })).toBeVisible();
+});
+
+test("petit déj : plusieurs noms en une fois — virgules, retour à la ligne, vide et doublon ignorés, une ligne par nom dans l'ordre", async ({ page }) => {
+  const db = await open(page, RESPONSABLE, "/back-office/planning/table", PETIT_DEJ);
+  const laCase27 = laCase(page, "2026-09-27", "petitDej");
+  await laCase27.getByRole("button", { name: "Ajouter au petit déj" }).click();
+  const champ = laCase27.getByRole("textbox", { name: "Ajouter au petit déj" });
+  await expect(champ).toHaveAttribute("placeholder", "Un ou plusieurs noms, séparés par des virgules");
+  await champ.fill("Léo Aubry, Maya Bellot, , famille martin");
+  await champ.press("Shift+Enter");
+  await expect(champ, "Maj+Entrée : un retour à la ligne, rien d'écrit").toHaveValue(/\n$/);
+  expect(ecritures(db, "POST")).toHaveLength(0);
+  await champ.pressSequentially("Noé Cassin");
+  await champ.press("Enter");
+  await expect(laCase27.getByRole("button", { name: "Noé Cassin", exact: true })).toBeVisible();
+  const posees = ecritures(db, "POST");
+  expect(posees.map((w) => w.data.nom), "dans l'ordre tapé, sans le vide ni le doublon").toEqual(["Léo Aubry", "Maya Bellot", "Noé Cassin"]);
+  for (const w of posees) expect(w.data).toMatchObject({ dimanche: "2026-09-27", uid: "", auteurUid: RESPONSABLE.uid });
+  await expect(laCase27.getByRole("button", { name: "Léo Aubry", exact: true })).toBeVisible();
+  await expect(laCase27.getByRole("button", { name: "Maya Bellot", exact: true })).toBeVisible();
+});
+
+test("petit déj : Échap n'écrit rien ; la sortie du champ valide ; une saisie toute ignorée n'écrit rien", async ({ page }) => {
+  const db = await open(page, RESPONSABLE, "/back-office/planning/table", PETIT_DEJ);
+  const le20 = laCase(page, "2026-09-20", "petitDej");
+  await le20.getByRole("button", { name: "Ajouter au petit déj" }).click();
+  await le20.getByRole("textbox").fill("Léo Aubry");
+  await le20.getByRole("textbox").press("Escape");
+  await expect(le20.getByRole("textbox")).toHaveCount(0);
+  await expect(le20.getByRole("button", { name: "Ajouter au petit déj" })).toBeVisible();
+  expect(ecritures(db, "POST")).toHaveLength(0);
+
+  await le20.getByRole("button", { name: "Ajouter au petit déj" }).click();
+  await le20.getByRole("textbox").fill(" , ,");
+  await le20.getByRole("textbox").press("Enter");
+  await expect(le20.getByRole("textbox")).toHaveCount(0);
+  expect(ecritures(db, "POST")).toHaveLength(0);
+
+  await le20.getByRole("button", { name: "Ajouter au petit déj" }).click();
+  await le20.getByRole("textbox").fill("Léo Aubry");
+  await laCase(page, "2026-09-27", "equipe").getByRole("button").click(); // le focus quitte le champ
+  await expect(le20.getByRole("button", { name: "Léo Aubry", exact: true })).toBeVisible();
+  expect(ecritures(db, "POST").map((w) => w.data.nom)).toEqual(["Léo Aubry"]);
+});
+
+test("petit déj : renommer une ligne ; Échap annule, un texte vide est refusé", async ({ page }) => {
+  const db = await open(page, RESPONSABLE, "/back-office/planning/table", PETIT_DEJ);
+  const le27 = laCase(page, "2026-09-27", "petitDej");
+  await le27.getByRole("button", { name: "Famille Martin", exact: true }).click();
+  const champ = le27.getByRole("textbox", { name: "Modifier" });
+  await expect(champ, "prérempli").toHaveValue("Famille Martin");
+  await champ.fill("Famille Martin-Roux");
+  await champ.press("Escape");
+  await expect(le27.getByRole("button", { name: "Famille Martin", exact: true })).toBeVisible();
+  await le27.getByRole("button", { name: "Famille Martin", exact: true }).click();
+  await le27.getByRole("textbox", { name: "Modifier" }).fill("   ");
+  await le27.getByRole("textbox", { name: "Modifier" }).press("Enter");
+  await expect(le27.getByRole("button", { name: "Famille Martin", exact: true })).toBeVisible();
+  expect(ecritures(db, "PATCH")).toHaveLength(0);
+
+  await le27.getByRole("button", { name: "Famille Martin", exact: true }).click();
+  await le27.getByRole("textbox", { name: "Modifier" }).fill("Famille Martin-Roux");
+  await le27.getByRole("textbox", { name: "Modifier" }).press("Enter");
+  await expect(le27.getByRole("button", { name: "Famille Martin-Roux", exact: true })).toBeVisible();
+  expect(ecritures(db, "PATCH")).toHaveLength(1);
+  expect(db.doc("petitDej/a")!.nom).toBe("Famille Martin-Roux");
+});
+
+test("petit déj : « Retirer {nom} » demande confirmation ; Annuler garde la ligne", async ({ page }) => {
+  const db = await open(page, RESPONSABLE, "/back-office/planning/table", PETIT_DEJ);
+  const le27 = laCase(page, "2026-09-27", "petitDej");
+  await le27.getByRole("button", { name: "Retirer Famille Martin" }).click();
+  await repondreDansLeSite(page, "Annuler");
+  await expect(le27.getByRole("button", { name: "Famille Martin", exact: true })).toBeVisible();
+  expect(db.doc("petitDej/a")).toBeDefined();
+  await le27.getByRole("button", { name: "Retirer Famille Martin" }).click();
+  await repondreDansLeSite(page, "Retirer");
+  await expect(le27.getByRole("button", { name: "Famille Martin", exact: true })).toHaveCount(0);
+  expect(db.doc("petitDej/a")).toBeUndefined();
+  expect(db.doc("petitDej/b"), "l'autre ligne reste").toBeDefined();
+});
+
+test("petit déj : case sélectionnée, Entrée sur ✕ ou « + » garde son action (pas le renommage de la première ligne)", async ({ page }) => {
+  await open(page, RESPONSABLE, "/back-office/planning/table", PETIT_DEJ);
+  const le27 = laCase(page, "2026-09-27", "petitDej");
+  await le27.getByRole("button", { name: "Famille Martin", exact: true }).click(); // sélectionne la case et ouvre le renommage
+  await le27.getByRole("textbox", { name: "Modifier" }).press("Escape");
+  await expect(le27.getByRole("textbox")).toHaveCount(0);
+
+  await le27.getByRole("button", { name: "Retirer Les jeunes du Campus" }).focus();
+  await page.keyboard.press("Enter");
+  await repondreDansLeSite(page, "Annuler");
+  await expect(le27.getByRole("textbox"), "pas de renommage de la première ligne").toHaveCount(0);
+
+  await le27.getByRole("button", { name: "Ajouter au petit déj" }).focus();
+  await page.keyboard.press("Enter");
+  await expect(le27.getByRole("textbox", { name: "Ajouter au petit déj" })).toBeVisible();
+  await expect(le27.getByRole("textbox", { name: "Modifier" })).toHaveCount(0);
+});
+
+test("petit déj : un dimanche passé n'a aucun bouton, il garde son texte", async ({ page }) => {
+  await open(page, RESPONSABLE, "/back-office/planning/table", { ...PETIT_DEJ, ...LIGNE_13 });
+  const le13 = laCase(page, "2026-09-13", "petitDej");
+  await expect(le13).toContainText("Famille Passée");
+  await expect(le13.getByRole("button")).toHaveCount(0);
+});
+
+test("petit déj : inscriptions illisibles — la case reste du texte, sans bouton", async ({ page }) => {
+  await open(page, RESPONSABLE, "/back-office/planning/table", PETIT_DEJ);
+  await page.route(/firestore\.googleapis\.com.*:runQuery/, (route) =>
+    (route.request().postData() ?? "").includes('"petitDej"')
+      ? route.fulfill({ status: 503, contentType: "application/json", body: "{}" })
+      : route.fallback(),
+  );
+  await page.reload();
+  await expect(laCase(page, "2026-09-27", "equipe")).toContainText("Lydie, Samuel");
   await expect(laCase(page, "2026-09-27", "petitDej").getByRole("button")).toHaveCount(0);
-  await expect(laCase(page, "2026-09-20", "petitDej").getByRole("button"), "vide, pas de « + » non plus").toHaveCount(0);
+  await expect(laCase(page, "2026-09-20", "petitDej").getByRole("button")).toHaveCount(0);
+});
+
+test("petit déj : un refus 403 dit les droits sous la case, une autre erreur son message", async ({ page }) => {
+  await open(page, RESPONSABLE, "/back-office/planning/table", PETIT_DEJ);
+  let statut = 403;
+  await page.route(/firestore\.googleapis\.com.*\/documents\/petitDej(\?|$)/, (route) =>
+    route.request().method() === "POST"
+      ? route.fulfill({ status: statut, contentType: "application/json", body: JSON.stringify({ error: { code: statut, message: "refus simulé" } }) })
+      : route.fallback(),
+  );
+  const le20 = laCase(page, "2026-09-20", "petitDej");
+  await le20.getByRole("button", { name: "Ajouter au petit déj" }).click();
+  await le20.getByRole("textbox").fill("Léo Aubry");
+  await le20.getByRole("textbox").press("Enter");
+  const message = le20.getByRole("status");
+  await expect(message).toContainText("tu n’as plus le droit de modifier ce planning");
+  await expect(le20.getByRole("button", { name: "Léo Aubry", exact: true })).toHaveCount(0);
+
+  statut = 500;
+  await le20.getByRole("button", { name: "Ajouter au petit déj" }).click();
+  await le20.getByRole("textbox").fill("Léo Aubry");
+  await le20.getByRole("textbox").press("Enter");
+  await expect(le20.getByRole("status")).toHaveText("Enregistrement impossible, réessaie.");
+});
+
+test("petit déj en 中文 : les libellés de la case sont traduits", async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
+  await open(page, RESPONSABLE, "/back-office/planning/table", PETIT_DEJ);
+  const le27 = laCase(page, "2026-09-27", "petitDej");
+  await expect(le27.getByRole("button", { name: "移除Famille Martin" })).toBeVisible();
+  await le27.getByRole("button", { name: "添加早餐人员" }).click();
+  await expect(le27.getByRole("textbox", { name: "添加早餐人员" })).toHaveAttribute("placeholder", "一个或多个名字，用逗号分隔");
+});
+
+test("petit déj : un compte qui ne gère pas la Table n'ouvre pas la grille — aucune case, aucun bouton", async ({ page }) => {
+  // Écrivain d'un autre planning : il ouvre le Back-Office, pas le droit « table ».
+  const AUTRE_PLANNING: FakeProfile = { uid: "uid-culte", email: "culte@example.com", planningName: "Gaëlle P.", ...remplit("culte") };
+  await open(page, AUTRE_PLANNING, "/back-office/planning/table", PETIT_DEJ);
+  await expect(page.getByText("Page réservée aux responsables de ce planning.")).toBeVisible();
+  await expect(page.locator('[data-case$="|petitDej"]')).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Ajouter au petit déj" })).toHaveCount(0);
 });
 
 // Fusion U2 × U3 : « Choisir » (U2, P9) propose les noms déjà écrits dans les

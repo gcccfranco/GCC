@@ -183,7 +183,7 @@ T1–T4, gardés, la carte **« Petit déj »** : icône tasse sur fond teinté 
 | Dimanche à venir sans ligne | « Libre » et **« Je m'inscris »** (bouton plein, Q15) |
 | Ma ligne, dimanche à venir | le texte, **✎** (réécrire sur place ; Entrée ou sortie du champ enregistre, Échap annule, vide refusé) et **« Retirer »** (« Retirer cette ligne ? ») |
 | La ligne d'un autre | le texte seul |
-| Écrivain du planning Table, admin | en plus, **＋ « Ajouter une ligne »** sur chaque dimanche à venir (champ libre, noms des comptes suggérés par `useGrilleApp`), ✎ et « Retirer » sur toutes les lignes à venir |
+| Écrivain du planning Table, admin | *(jusqu'au 30/10/2026, voir plus bas : ces gestes sont passés au Back-Office)* en plus, **＋ « Ajouter une ligne »** sur chaque dimanche à venir (champ libre, noms des comptes suggérés par `useGrilleApp`), ✎ et « Retirer » sur toutes les lignes à venir |
 | Plusieurs lignes | empilées sous la date, chacune avec ses boutons |
 | Dimanche passé | date en gris secondaire, texte, aucun bouton |
 | Lecture impossible | « Inscriptions illisibles pour l'instant. », ni « Libre » ni bouton |
@@ -522,3 +522,22 @@ manuellement ». La reprise des noms de la grille Table — bouton « Reprendre 
 Import), route `/api/admin/reprendre-petit-dej`, pures `grillePourReprise` et `planifierReprise`, leurs tests —
 est retirée avec les autres importations depuis le Sheet. Les inscriptions se posent à la main dans la carte Petit
 déj ; rien d'autre ne change (lecture, droits, rappels).
+
+**30/10/2026 — Les autres se gèrent au Back-Office** (Timothée, 30/10/2026, avec captures) : « Pour le planning du
+petit déjeuner, enlève la possibilité d'ajouter des personnes sur cette page, mais de pouvoir ajouter les personnes à
+partir du planning dans le back-office, c'est plus simple. » Précisé : garder « Je m'inscris » ; puis : on peut
+ajouter plusieurs personnes à la fois.
+
+- **App, Planning › Prépa. Table** : plus de bouton « Inscrire quelqu'un » ni de formulaire ; plus de « ⋯ » sur la
+  ligne d'un autre, même pour un admin ou un écrivain Table. On garde « Je m'inscris » (carte et « Ce dimanche »),
+  le « ⋯ » (Modifier, Retirer) sur **sa** ligne à venir et « Ton petit déj ». L'astuce dit, à qui gère le petit déj
+  seulement : « Pour inscrire quelqu'un d'autre : » et un lien vers Back-Office › Planning › Prépa. Table.
+- **Back-Office, Planning › Prépa. Table** : pour `canGererPetitDej`, en modification, la case « Petit déj » de la
+  grille se gère comme les autres cases (cadre pointillé) : chaque ligne se renomme en place et se retire (✕,
+  confirmé) ; un « + » ouvre **un seul champ** où l'on tape plusieurs noms séparés par des virgules ou des retours à
+  la ligne : une ligne par nom (`uid` vide, `ajouterLigne`), en une validation ; noms vides et doublons du même
+  dimanche ignorés. Un dimanche passé et une lecture en échec laissent la case en texte (Q2, Q10). La colonne garde
+  `lectureSeule` (ni `semer`, ni le clavier de la grille, ni l'import n'y touchent) : la page donne sa propre case
+  (`casesAPart` de `PlanningGrille`, `src/components/planning/PetitDejCase.tsx`). Q12 est ainsi rouverte pour le
+  Back-Office seulement.
+- Droits inchangés (`canGererPetitDej`, `canEditPetitDej`, `firestore.rules`) : rien à publier.

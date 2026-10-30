@@ -3,25 +3,27 @@
 // Carte « Petit déj » en tête de Planning › Table (lot U3, tranche PD2,
 // docs/spec-petit-dej.md ; planche `petit-dej-telephone`). Une rangée par
 // dimanche du trimestre choisi (Q11) : « Libre » et « Je m'inscris », ou les
-// lignes, une équipe chacune. Son inscrit réécrit (✎) et retire sa ligne ; les
-// écrivains du planning Table et les admins posent, réécrivent et retirent pour
-// d'autres (T10). Rien ne bouge un dimanche passé (Q2). Une lecture en échec
+// lignes, une équipe chacune. Son inscrit réécrit (✎) et retire sa ligne ; poser,
+// réécrire et retirer pour d'autres se fait au Back-Office (T10). Rien ne bouge un dimanche passé (Q2). Une lecture en échec
 // n'est pas « personne » : la carte le dit, sans « Libre » ni bouton (Q10).
-// Droits : canEditPetitDej / canGererPetitDej (access.ts), firestore.rules.
-// Agencement v18 (A4, docs/spec-agencement-v18.md) : une ligne qu'on peut toucher (la sienne,
-// en encre ; toutes pour qui gère) porte un « ⋯ » (Modifier, Retirer) au lieu de deux boutons ;
+// Droits : canGererPetitDej (access.ts), firestore.rules.
+// 30/10/2026 (Timothée) : plus d'« Inscrire quelqu'un » ni de ⋯ sur les lignes des autres dans
+// l'App ; on les gère dans la case Petit déj de la grille du Back-Office (`PetitDejCase.tsx`).
+// Agencement v18 (A4, docs/spec-agencement-v18.md) : la ligne de l'inscrit (en encre)
+// porte un « ⋯ » (Modifier, Retirer) au lieu de deux boutons ;
 // « Ton petit déj » (`TonPetitDej`) reprend son prochain dimanche à côté de la carte. Les deux
 // cartes partagent un même état (`usePetitDej`) : « ⋯ › Modifier » ouvre le champ dans la rangée,
 // ou dans « Ton petit déj » quand la carte ne montre pas ce dimanche (un autre trimestre, une autre année).
 
 import { useEffect, useId, useRef, useState, type ReactNode } from "react"
+import Link from "next/link"
 import { useTranslation } from "react-i18next"
 import { useConfirmer } from "@/components/layout/Confirmer"
-import { Coffee, Pencil, Trash2, UserPlus } from "lucide-react"
+import { Coffee, Pencil, Trash2 } from "lucide-react"
 import { MenuActions } from "@/components/layout/MenuActions"
 import { Tile } from "@/components/ui/tile"
-import { canEditPetitDej, canGererPetitDej } from "@/lib/access"
-import { RefusDesRegles, ajouterLigne, inscrire, renommerLigne, retirerLigne } from "@/lib/firebase/petitDej"
+import { canGererPetitDej } from "@/lib/access"
+import { RefusDesRegles, inscrire, renommerLigne, retirerLigne } from "@/lib/firebase/petitDej"
 import { historyAuthor } from "@/lib/firebase/setlistHistory"
 import { useProfile } from "@/lib/firebase/users"
 import { lirePetitDej } from "@/lib/petitdej/lignes"
@@ -58,7 +60,7 @@ export function usePetitDej(onLignes?: (lignes: LignePetitDej[]) => void) {
   const [lignes, setLignes] = useState<LignePetitDej[] | "illisible" | null>(null)
   const [saisie, setSaisie] = useState<Saisie | null>(null)
   // Un message sous un dimanche : « X vient de s'inscrire. », ou un refus.
-  const [annonce, setAnnonce] = useState<{ dimanche: string; texte: string; formulaire?: boolean } | null>(null)
+  const [annonce, setAnnonce] = useState<{ dimanche: string; texte: string } | null>(null)
   const [enCours, setEnCours] = useState(false)
   // Entrée puis la sortie du champ (démonté) : une seule fin de saisie.
   const fini = useRef(false)
@@ -83,7 +85,7 @@ export function usePetitDej(onLignes?: (lignes: LignePetitDej[]) => void) {
   }, [onLignes])
 
   /** Écrit, dit le refus éventuel sous le dimanche, puis relit (le cache est oublié par l'écriture). */
-  async function ecrire(dimanche: string, action: () => Promise<void>, formulaire = false): Promise<boolean> {
+  async function ecrire(dimanche: string, action: () => Promise<void>): Promise<boolean> {
     setAnnonce(null)
     setEnCours(true)
     let ok = true
@@ -94,18 +96,12 @@ export function usePetitDej(onLignes?: (lignes: LignePetitDej[]) => void) {
       // Hors ligne, refus des règles (403), ou tout autre échec : trois messages.
       const horsLigne = typeof navigator !== "undefined" && navigator.onLine === false
       const cle = horsLigne ? "planning.grille.horsLigne" : e instanceof RefusDesRegles ? "planning.grille.droitRetire" : "planning.petitDej.echec"
-      setAnnonce({ dimanche, texte: t(cle), formulaire })
+      setAnnonce({ dimanche, texte: t(cle) })
     } finally {
-      setEnCours(false)
       await lire()
+      setEnCours(false)
     }
     return ok
-  }
-
-  /** « Inscrire quelqu'un » (PG52) : une ligne pour quelqu'un d'autre, `uid` vide. Faux si refusée. */
-  function inscrireQuelqu(dimanche: string, nom: string): Promise<boolean> {
-    if (!user) return Promise.resolve(false)
-    return ecrire(dimanche, async () => { await ajouterLigne(dimanche, nom, user.uid) }, true)
   }
 
   function sInscrire(dimanche: string) {
@@ -152,7 +148,7 @@ export function usePetitDej(onLignes?: (lignes: LignePetitDej[]) => void) {
     }
   }
 
-  return { user, profile, lignes, saisie, setSaisie, annonce, enCours, sun, peutGerer, sInscrire, retirer, commencer, terminer, inscrireQuelqu, setAnnonce }
+  return { user, profile, lignes, saisie, setSaisie, annonce, enCours, sun, peutGerer, sInscrire, retirer, commencer, terminer }
 }
 
 export type EtatPetitDej = ReturnType<typeof usePetitDej>
@@ -168,7 +164,7 @@ function actionsDeLaLigne(etat: EtatPetitDej, l: LignePetitDej, t: (cle: string)
 /** Le champ d'une saisie (réécrire une ligne, en ajouter une, son nom) : Entrée ou sortie du champ
  *  enregistre, Échap annule. Composant du module, pas d'un rendu : défini dans la carte, il serait
  *  remonté à chaque frappe et le champ perdrait le focus (même raison que PlanningGrille). */
-function ChampDeSaisie({ etat, label, liste }: { etat: EtatPetitDej; label: string; liste?: string }) {
+function ChampDeSaisie({ etat, label }: { etat: EtatPetitDej; label: string }) {
   const { saisie, setSaisie, terminer } = etat
   return (
     <input
@@ -176,7 +172,6 @@ function ChampDeSaisie({ etat, label, liste }: { etat: EtatPetitDej; label: stri
       type="text"
       maxLength={NOM_MAX}
       aria-label={label}
-      list={liste}
       placeholder={saisie?.inscription ? label : undefined}
       value={saisie?.valeur ?? ""}
       onChange={(e) => setSaisie((s) => (s ? { ...s, valeur: e.target.value } : s))}
@@ -194,110 +189,25 @@ function ChampDeSaisie({ etat, label, liste }: { etat: EtatPetitDej; label: stri
 /** La carte « Petit déj » montre-t-elle ce dimanche (l'année et le trimestre choisis) ? */
 const dansLaPeriode = (dimanche: string, annee: number, tri: string) => dimanche.startsWith(`${annee}-`) && getTri(dimanche) === tri
 
-/** Les dimanches que « Inscrire quelqu'un » propose (PG51) : ceux du trimestre affiché, à partir du dimanche en cours. */
-const dimanchesProposes = (annee: number, tri: string, sun: string) =>
-  dimanchesDe(annee).filter((d) => dansLaPeriode(d, annee, tri) && d >= sun)
-
-/** « dim. 15 nov. » ; 中文 « 11月15日 ». */
-function dateMenu(iso: string, lang: string): string {
-  if (lang === "zh-CN") return dateCourte(iso, lang)
-  const [y, m, d] = iso.split("-").map(Number)
-  return new Date(y, m - 1, d).toLocaleDateString("fr-FR", { weekday: "short", day: "numeric", month: "short" })
-}
-
-/** Le formulaire « Inscrire quelqu'un » (PG50), sous l'en-tête de la carte. Composant du module : le
- *  champ garde son focus à chaque frappe. Reste ouvert sur un refus, qui s'affiche dessous. */
-function FormulaireInscrire({ etat, dimanches, listeId, onFerme }: {
-  etat: EtatPetitDej
-  dimanches: string[]
-  listeId: string
-  onFerme: () => void
-}) {
-  const { t, i18n } = useTranslation()
-  const { lignes, annonce, enCours, inscrireQuelqu } = etat
-  const titreId = useId()
-  const pris = (d: string) => Array.isArray(lignes) && lignes.some((l) => l.dimanche === d)
-  const [dimanche, setDimanche] = useState(() => dimanches.find((d) => !pris(d)) ?? dimanches[0])
-  const [nom, setNom] = useState("")
-
-  async function valider() {
-    const n = nom.trim()
-    if (!n || enCours) return
-    if (await inscrireQuelqu(dimanche, n)) onFerme()
-  }
-
-  return (
-    <div
-      role="group"
-      aria-labelledby={titreId}
-      className="mb-2 rounded-xl border border-border bg-secondary/40 p-3"
-      onKeyDown={(e) => { if (e.key === "Escape") { e.preventDefault(); onFerme() } }}
-    >
-      <p id={titreId} className="pb-2 text-sm font-bold text-foreground">{t("planning.petitDej.inscrireQuelquun")}</p>
-      <div className="flex flex-col gap-2 sm:flex-row">
-        <select
-          aria-label={t("planning.petitDej.dimanche")}
-          value={dimanche}
-          onChange={(e) => setDimanche(e.target.value)}
-          className="h-10 shrink-0 rounded-md border bg-background px-2 text-[16px] sm:text-sm text-foreground"
-        >
-          {dimanches.map((d) => <option key={d} value={d}>{dateMenu(d, i18n.language)}</option>)}
-        </select>
-        <input
-          autoFocus
-          type="text"
-          maxLength={NOM_MAX}
-          list={listeId}
-          aria-label={t("planning.petitDej.nomPersonne")}
-          placeholder={t("planning.petitDej.nomPersonne")}
-          value={nom}
-          onChange={(e) => setNom(e.target.value)}
-          onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); void valider() } }}
-          className="h-10 w-full min-w-0 rounded-md border bg-background px-2 text-[16px] sm:text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/20"
-          style={{ borderColor: COULEUR }}
-        />
-      </div>
-      {annonce?.formulaire && <p role="status" className="pt-2 text-[13px] text-muted-foreground">{annonce.texte}</p>}
-      <div className="flex flex-wrap items-center gap-2 pt-2">
-        <p className="min-w-0 flex-1 text-[13px] text-muted-foreground">{t("planning.petitDej.dejaPris")}</p>
-        <button type="button" onClick={onFerme} className="h-9 rounded-full bg-secondary px-3.5 text-sm font-semibold text-foreground hover:bg-secondary/70">
-          {t("common.buttons.cancel")}
-        </button>
-        <button type="button" disabled={enCours} onClick={() => void valider()} className="h-9 rounded-full px-3.5 text-sm font-semibold text-white disabled:opacity-60" style={{ background: FOND }}>
-          {t("planning.petitDej.inscrireBouton")}
-        </button>
-      </div>
-    </div>
-  )
-}
-
-export function PetitDejCarte({ etat, annee, tri, nomsDesComptes }: {
+export function PetitDejCarte({ etat, annee, tri }: {
   etat: EtatPetitDej
   annee: number
   /** « T1 » … « T4 », le trimestre choisi par la page. */
   tri: string
-  /** Noms de planning des comptes, suggérés à qui pose une ligne pour quelqu'un. */
-  nomsDesComptes: readonly string[]
 }) {
   const { t, i18n } = useTranslation()
-  const { user, profile, lignes, saisie, annonce, enCours, sun, peutGerer, sInscrire } = etat
-  const [formulaireOuvert, setFormulaireOuvert] = useState(false)
-  const boutonInscrire = useRef<HTMLButtonElement>(null)
+  const { user, lignes, saisie, annonce, enCours, sun, sInscrire } = etat
   const titreId = useId()
-  const listeId = useId()
   const dimanches = dimanchesDe(annee).filter((d) => dansLaPeriode(d, annee, tri))
   // « n libres sur N » : les dimanches à venir du trimestre sans aucune ligne.
   const libres = Array.isArray(lignes) ? dimanches.filter((d) => d >= sun && !lignes.some((l) => l.dimanche === d)).length : null
 
-  const champ = (label: string, suggestions: boolean) => <ChampDeSaisie etat={etat} label={label} liste={suggestions ? listeId : undefined} />
-
-  const proposes = dimanchesProposes(annee, tri, sun)
-  const peutInscrire = peutGerer && !!user && Array.isArray(lignes) && proposes.length > 0
+  const champ = (label: string) => <ChampDeSaisie etat={etat} label={label} />
 
   const bouton = "h-9 shrink-0 rounded-full px-3.5 text-sm font-semibold transition-[background-color,color,transform] duration-150 active:scale-[.96] disabled:opacity-60"
 
   function laLigne(l: LignePetitDej): ReactNode {
-    if (saisie?.id === l.id) return <div key={l.id} className="flex min-h-9 items-center">{champ(t("planning.petitDej.modifier"), false)}</div>
+    if (saisie?.id === l.id) return <div key={l.id} className="flex min-h-9 items-center">{champ(t("planning.petitDej.modifier"))}</div>
     return (
       <div key={l.id} className="flex min-h-9 items-center gap-2">
         <span className="min-w-0 flex-1 break-words font-semibold text-foreground">
@@ -305,7 +215,7 @@ export function PetitDejCarte({ etat, annee, tri, nomsDesComptes }: {
             ? <b data-testid="moi" className="inline-block rounded-md bg-foreground px-1.5 py-px font-semibold text-background">{l.nom}</b>
             : l.nom}
         </span>
-        {canEditPetitDej(user, profile, l, sun) && <MenuActions actions={actionsDeLaLigne(etat, l, t)} />}
+        {user && l.uid === user.uid && l.dimanche >= sun && <MenuActions actions={actionsDeLaLigne(etat, l, t)} />}
       </div>
     )
   }
@@ -321,7 +231,7 @@ export function PetitDejCarte({ etat, annee, tri, nomsDesComptes }: {
         </span>
         <div className="min-w-0 flex-1 space-y-1">
           {siennes.length === 0 && (saisie?.inscription && saisie.dimanche === d ? (
-            <div className="flex min-h-9 items-center">{champ(t("planning.petitDej.tonNom"), false)}</div>
+            <div className="flex min-h-9 items-center">{champ(t("planning.petitDej.tonNom"))}</div>
           ) : (
             <div className="flex min-h-9 items-center gap-2">
               {passe
@@ -335,7 +245,7 @@ export function PetitDejCarte({ etat, annee, tri, nomsDesComptes }: {
             </div>
           ))}
           {siennes.map(laLigne)}
-          {annonce?.dimanche === d && !annonce.formulaire && (
+          {annonce?.dimanche === d && (
             <p role="status" className="text-[13px] text-muted-foreground">{annonce.texte}</p>
           )}
         </div>
@@ -351,37 +261,15 @@ export function PetitDejCarte({ etat, annee, tri, nomsDesComptes }: {
         </span>
         <h3 id={titreId} className="text-[17px] font-bold text-foreground">{t("planning.tabs.petitDej")}</h3>
         {libres !== null && (
-          <span className={`ml-auto text-[13px] text-muted-foreground ${peutInscrire ? "max-sm:hidden" : ""}`}>{t("planning.petitDej.libresSur", { count: libres, total: dimanches.length })}</span>
-        )}
-        {peutInscrire && (
-          <button
-            ref={boutonInscrire}
-            type="button"
-            aria-expanded={formulaireOuvert}
-            disabled={enCours}
-            onClick={() => { etat.setAnnonce(null); setFormulaireOuvert(true) }}
-            className={`${bouton} ml-auto sm:ml-0 inline-flex items-center gap-1.5 text-white`}
-            style={{ background: FOND }}
-          >
-            <UserPlus className="h-4 w-4" aria-hidden />
-            {t("planning.petitDej.inscrireQuelquun")}
-          </button>
+          <span className="ml-auto text-[13px] text-muted-foreground">{t("planning.petitDej.libresSur", { count: libres, total: dimanches.length })}</span>
         )}
       </div>
-      {peutInscrire && formulaireOuvert && (
-        <FormulaireInscrire key={`${annee}-${tri}`} etat={etat} dimanches={proposes} listeId={listeId} onFerme={() => { setFormulaireOuvert(false); etat.setAnnonce((a) => (a?.formulaire ? null : a)); boutonInscrire.current?.focus() }} />
-      )}
       {lignes === "illisible" ? (
         <p className="border-t border-border pt-3 pb-1.5 text-sm text-muted-foreground">{t("planning.petitDej.illisible")}</p>
       ) : lignes === null ? (
         <p className="border-t border-border pt-3 pb-1.5 text-sm text-muted-foreground">{t("common.loading")}</p>
       ) : (
         <ul>{dimanches.map(laRangee)}</ul>
-      )}
-      {peutGerer && (
-        <datalist id={listeId}>
-          {nomsDesComptes.map((n) => <option key={n} value={n} />)}
-        </datalist>
       )}
     </section>
   )
@@ -395,12 +283,11 @@ const majuscule = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
  *  période (`annee`, `tri` : ceux de la page). */
 export function TonPetitDej({ etat, annee, tri }: { etat: EtatPetitDej; annee: number; tri: string }) {
   const { t, i18n } = useTranslation()
-  const { user, profile, lignes, saisie, sun } = etat
+  const { user, lignes, saisie, sun } = etat
   const titreId = useId()
   const prochaine = Array.isArray(lignes) && user
     ? lignes.filter((l) => l.uid === user.uid && l.dimanche >= sun).sort((a, b) => (a.dimanche < b.dimanche ? -1 : 1))[0]
     : undefined
-  const aLeBouton = etat.peutGerer && Array.isArray(lignes) && dimanchesProposes(annee, tri, sun).length > 0
   const langue = i18n.language === "zh-CN" ? "zh-CN" : "fr-FR"
 
   let corps: ReactNode
@@ -424,7 +311,7 @@ export function TonPetitDej({ etat, annee, tri }: { etat: EtatPetitDej; annee: n
               </p>
               <p className="text-[13px] text-muted-foreground">{quand}</p>
             </div>
-            {canEditPetitDej(user, profile, prochaine, sun) && <MenuActions actions={actionsDeLaLigne(etat, prochaine, t)} />}
+            {user && prochaine.uid === user.uid && prochaine.dimanche >= sun && <MenuActions actions={actionsDeLaLigne(etat, prochaine, t)} />}
           </>
         )}
       </div>
@@ -435,7 +322,16 @@ export function TonPetitDej({ etat, annee, tri }: { etat: EtatPetitDej; annee: n
     <section aria-labelledby={titreId} className="raised min-w-0 rounded-2xl px-4 pt-3 pb-3.5">
       <h3 id={titreId} className="pb-2 text-[17px] font-bold text-foreground">{t("planning.petitDej.ton")}</h3>
       {corps}
-      <p className="mt-3 border-t border-border pt-2.5 text-[13px] text-muted-foreground">{t("planning.petitDej.astuce")}{aLeBouton && ` ${t("planning.petitDej.astuceAutres")}`}</p>
+      <p className="mt-3 border-t border-border pt-2.5 text-[13px] text-muted-foreground">{t("planning.petitDej.astuce")}
+        {etat.peutGerer && (
+          <>
+            {" "}{t("planning.petitDej.astuceAutres")}{" "}
+            <Link href="/back-office/planning/table" className="inline-block py-2 font-medium text-foreground underline underline-offset-2">
+              {t("planning.petitDej.astuceAutresLien")}
+            </Link>
+          </>
+        )}
+      </p>
     </section>
   )
 }
