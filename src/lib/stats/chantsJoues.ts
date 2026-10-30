@@ -75,6 +75,21 @@ export function debutDeLHistorique(setlists: SetlistLue[], aujourdhui: string): 
   return publieesPassees(setlists, aujourdhui).reduce<string | null>((min, s) => (min === null || s.jour < min ? s.jour : min), null);
 }
 
+/** « 20/09 », l'année si ce n'est pas l'année en cours (« 20/09/2025 »). */
+export function jourCourt(jour: string, aujourdhui: string): string {
+  const [a, m, j] = jour.split("-");
+  return a === aujourdhui.slice(0, 4) ? `${j}/${m}` : `${j}/${m}/${a}`;
+}
+
+/** « 5 octobre 2025 » (sous-titre de la page, note du détail d'un chant). */
+export const jourEnLettres = (jour: string, zh: boolean) =>
+  new Intl.DateTimeFormat(zh ? "zh-CN" : "fr-FR", { day: "numeric", month: "long", year: "numeric" }).format(new Date(`${jour}T12:00:00`));
+
+/** Le service sans « Groupe » (« Groupe Fidélité » → « Fidélité ») ; les autres inchangés. */
+export function serviceCourt(service: string): string {
+  return service.replace(/^Groupe\s+/, "");
+}
+
 // ─── Les chants d'une setlist (Q4) ────────────────────────────────────────────
 
 /** Les chants d'une setlist, dans l'ordre : transitions ignorées, fusions dépliées, chaque

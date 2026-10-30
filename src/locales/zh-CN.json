@@ -3993,6 +3993,24 @@
     "aucunARedecouvrir": "这段时间内没有值得重温的诗歌。",
     "joues": "{{debut}} 之前至少唱过 {{n}} 次，{{debut}} 至 {{fin}} 一次都没唱",
     "jouesDepuis": "{{debut}} 之前至少唱过 {{n}} 次，此后一次都没唱",
-    "avantLaPeriode": "在时间段之前"
+    "avantLaPeriode": "在时间段之前",
+    "chant": {
+      "joue_one": "共唱 <n>{{count}} 次</n> · 最近一次 {{date}}，{{service}}",
+      "joue_other": "共唱 <n>{{count}} 次</n> · 最近一次 {{date}}，{{service}}",
+      "jamais": "尚未在 GCC 唱过",
+      "prevu": "计划于 {{date}}，{{service}}",
+      "titre": "诗歌统计",
+      "setlists": "歌单",
+      "derniere": "最近一次",
+      "tonalite": "最常用调",
+      "service": "聚会",
+      "fois": "次数",
+      "derniereCol": "最近",
+      "jamaisDans": "从未：{{services}}",
+      "prochaine": "计划于 {{date}}，{{service}}",
+      "aucune": "此期间未唱过",
+      "note": "已发布且已过去的歌单，自 {{date}} 起",
+      "toutes": "全部统计"
+    }
   }
 }

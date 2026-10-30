@@ -4038,6 +4038,24 @@
     "aucunARedecouvrir": "Aucun chant à redécouvrir sur cette période.",
     "joues": "Joués au moins {{n}} fois avant le {{debut}}, aucune fois du {{debut}} au {{fin}}",
     "jouesDepuis": "Joués au moins {{n}} fois avant le {{debut}}, aucune fois depuis",
-    "avantLaPeriode": "avant la période"
+    "avantLaPeriode": "avant la période",
+    "chant": {
+      "joue_one": "Joué <n>{{count}} fois</n> · dernière fois {{date}}, {{service}}",
+      "joue_other": "Joué <n>{{count}} fois</n> · dernière fois {{date}}, {{service}}",
+      "jamais": "Jamais joué à GCC",
+      "prevu": "prévu le {{date}}, {{service}}",
+      "titre": "Statistiques du chant",
+      "setlists": "Setlists",
+      "derniere": "Dernière fois",
+      "tonalite": "Tonalité la plus jouée",
+      "service": "Service",
+      "fois": "Fois",
+      "derniereCol": "Dernière",
+      "jamaisDans": "Jamais : {{services}}",
+      "prochaine": "Prévu le {{date}}, {{service}}",
+      "aucune": "Jamais joué sur cette période",
+      "note": "Setlists publiées et passées, depuis le {{date}}",
+      "toutes": "Toutes les statistiques"
+    }
   }
 }

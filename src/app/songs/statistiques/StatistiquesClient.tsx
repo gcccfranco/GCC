@@ -17,7 +17,7 @@ import { useAuth } from "@/lib/firebase/auth";
 import { canFiltrerPresidence } from "@/lib/access";
 import { ALL_CATEGORIES, getSetlists, type FSSetlist } from "@/lib/firebase/setlists";
 import {
-  SEUIL_A_REDECOUVRIR, bornesDeLaPeriode, choixDesFiltres, debutDeLHistorique, libellePart, libelleTendance, statsChants,
+  SEUIL_A_REDECOUVRIR, bornesDeLaPeriode, choixDesFiltres, debutDeLHistorique, jourCourt, jourEnLettres, libellePart, libelleTendance, statsChants,
   veille, type FiltresStats, type LigneChant, type Periode, type StatsChants,
 } from "@/lib/stats/chantsJoues";
 import { LargeurBO } from "@/components/backOffice/LargeurBO";
@@ -103,16 +103,6 @@ function enPeriode(e: Etat): Periode {
   if (e.periode === "libre") return { du: e.du, au: e.au || "9999-12-31" };
   return { mois: Number(e.periode) as 3 | 6 | 12 };
 }
-
-/** « 20/09 », l'année si ce n'est pas l'année en cours (« 20/09/2025 »). */
-function jourCourt(jour: string, aujourdhui: string): string {
-  const [a, m, j] = jour.split("-");
-  return a === aujourdhui.slice(0, 4) ? `${j}/${m}` : `${j}/${m}/${a}`;
-}
-
-/** « 5 octobre 2025 » (sous-titre de la page). */
-const jourEnLettres = (jour: string, zh: boolean) =>
-  new Intl.DateTimeFormat(zh ? "zh-CN" : "fr-FR", { day: "numeric", month: "long", year: "numeric" }).format(new Date(`${jour}T12:00:00`));
 
 /** « 24/05/2026 ». */
 function jourLong(jour: string): string {
