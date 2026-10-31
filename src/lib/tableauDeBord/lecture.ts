@@ -68,8 +68,8 @@ function lectureGardee<T>(lire: (cle: string) => Promise<T>): (cle: string) => P
 /** Les évènements lisibles (`listEvenements(false)`), lus une fois pour tous les widgets ; `today` borne la garde au jour. */
 export const lireEvenements: (today: string) => Promise<Evenement[]> = lectureGardee(() => listEvenements(false));
 
-/** Tous les profils (`listProfiles`), lus une fois pour tous les widgets. */
-export const lireProfils: () => Promise<UserProfile[]> = (() => { const l = lectureGardee(() => listProfiles()); return () => l(""); })();
+/** Tous les profils : `listProfiles` est gardée 10 min par elle-même (lot LF, docs/spec-lectures-firestore.md). */
+export const lireProfils = () => listProfiles();
 
 /** Signalements et propositions de chants en attente (admins), lus une fois pour la pastille de Messages et pour À faire. */
 export const lireEnAttente: (uid: string) => Promise<{ signalements: number; propositions: number }> = lectureGardee(async () => {

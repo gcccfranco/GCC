@@ -12,6 +12,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { RefreshCw } from "lucide-react";
 import { authHeader } from "@/lib/firebase/setlists";
+import { viderCacheProfils } from "@/lib/firebase/users";
 import { useConfirmer } from "@/components/layout/Confirmer";
 
 export function useRecalculOrganigramme() {
@@ -30,6 +31,7 @@ export function useRecalculOrganigramme() {
         headers: { "Content-Type": "application/json", ...(await authHeader()) },
         body: JSON.stringify({ tous: true }),
       });
+      viderCacheProfils(); // même en cas d'échec : le serveur a pu écrire (lot LF)
       const json = (await res.json().catch(() => ({}))) as { maj?: number; error?: string };
       if (!res.ok) throw new Error(json.error ?? `Erreur ${res.status}`);
       setEtat(json.maj ?? 0);
