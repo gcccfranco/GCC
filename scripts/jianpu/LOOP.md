@@ -324,6 +324,17 @@ en direct (spec : `docs/spec-jianpu-integration.md`, D7, O9).
    `public/jianpu/cadrage.json` ; un chant absent n'est pas recadré. `chords.json` et `index.json` ne changent jamais.
    `python3 scripts/jianpu/cadrage.py etat` liste les chants restants.
 
+**Lot JE (31/10/2026, `docs/spec-jianpu-entete-statistiques.md`, JE2) : la coupe descend sous tout l'en-tête gravé.**
+`propose --sous-entete` : `top` = la dernière rangée blanche au-dessus du **premier accord** du calque (une étiquette vide
+est une gomme, ignorée), « 1=X 4/4 » et la tonalité du titre compris dans la partie coupée ; garde-fou à 1,5 système.
+La planche lit alors la proposition avant la valeur certifiée : `npm run jianpu:audit <slug> -- --cadrage --propose`.
+Accepter si la ligne passe au-dessus de la **première ligne de musique** (un repère gravé comme « W » ou « 【Verse】 »
+reste avec elle) sans rien trancher ; refuser si une note, un point, une liaison, une étiquette ou un reste de crédit est
+tranché, ou si une ligne de musique sans accord passe sous la coupe. Sans coupe propre (crédits, prélude ou accords hauts
+sur la bande du « 1=X », filigrane), la valeur se règle à la main au mieux, ou garde l'ancienne. La mesure, le sous-titre
+et la référence biblique se relèvent sur la partie coupée et s'écrivent dans le `.cho` (`{time}`, `{subtitle}`, `{bible}`).
+Le PDF de setlist coupe son calque au cadre de l'image (`overflow: hidden`) : le « 1=X » réécrit n'y déborde plus.
+
 ## Critère d'arrêt
 
 ≥ 95 % des 124 partitions résolues, **ou** deux itérations consécutives sans

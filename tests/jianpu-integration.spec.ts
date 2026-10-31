@@ -329,7 +329,7 @@ async function fenetres(page: Page, racine = "") {
 
 const ratio = (r: { width: number; height: number }) => r.width / r.height;
 
-test("5 fenêtre (page chant) : ratio w / (h − top), « 1=D » dedans, titre gravé dehors, encre au bord de la colonne", async ({ page }) => {
+test("5 fenêtre (page chant) : ratio w / (h − top), « 1=D » et titre gravé dehors, encre au bord de la colonne", async ({ page }) => {
   await openSheet(page, SLUG, { key: "D" });
   const { w, h } = INDEX[SLUG].pages[0];
   const top = CADRAGE[SLUG][0];
@@ -342,10 +342,9 @@ test("5 fenêtre (page chant) : ratio w / (h − top), « 1=D » dedans, titre g
   // L'image remonte de `top` : son haut (titre, album, versets) est au-dessus du bord de la fenêtre.
   expect(Math.abs(f.img.top - (f.fenetre.top - top * k)), "image remontée de top × échelle").toBeLessThan(1);
   expect(Math.abs(f.img.bottom - f.fenetre.bottom), "le pied reste").toBeLessThan(1);
-  // « 1=D » entièrement dans la fenêtre.
+  // Lot JE (JE2) : « 1=D » tombe dans la partie coupée, au-dessus du bord de la fenêtre.
   expect(f.cadre).toHaveLength(1);
-  expect(f.cadre[0].top).toBeGreaterThanOrEqual(f.fenetre.top - 0.5);
-  expect(f.cadre[0].bottom).toBeLessThanOrEqual(f.fenetre.bottom + 0.5);
+  expect(f.cadre[0].bottom).toBeLessThanOrEqual(f.fenetre.top + 0.5);
   // Compensation (P5) : la marge blanche de 14 px rognée à la source déborde de la
   // colonne, le bord de l'encre tombe sur celui des paroles.
   expect(Math.abs(f.fenetre.left + 14 * k - f.colonne.left), "bord gauche de l'encre").toBeLessThan(1);
@@ -359,7 +358,8 @@ test("5 fenêtre (page chant, deux pages) : 为我而来 p. 1 recadrée, p. 2 en
   await openSheet(page, slug, { key: "D" });
   const pages = INDEX[slug].pages;
   const tops = CADRAGE[slug];
-  expect(tops).toEqual([131, 0]);
+  expect(tops[0]).toBeGreaterThan(0);
+  expect(tops[1]).toBe(0);
   await expect.poll(async () => (await fenetres(page)).length).toBe(2);
   await expect.poll(async () => ratio((await fenetres(page))[0].fenetre) / (pages[0].w / (pages[0].h - tops[0]))).toBeCloseTo(1, 2);
   const [, p2] = await fenetres(page);
@@ -933,7 +933,7 @@ function pagesPdf(slug: string, keyOverride: string | null) {
   return pages.map((p) => ({ props: p.props, elements: deplier((JianpuPDFPage as (x: unknown) => unknown)(p.props)) }));
 }
 
-test("10 PDF : 一生爱你 en D — l'image a la hauteur h − top à l'échelle, et « 1=D » est décalé de −top", () => {
+test("10 PDF : 一生爱你 en D — l'image a la hauteur h − top à l'échelle, « 1=D » décalé de −top, hors de l'image coupée", () => {
   const [p] = pagesPdf(SLUG, "D");
   const { w, h } = INDEX[SLUG].pages[0];
   const top = CADRAGE[SLUG][0];
@@ -949,7 +949,8 @@ test("10 PDF : 一生爱你 en D — l'image a la hauteur h − top à l'échell
   const cle = p.elements.find((e) => e.type === "TEXT" && texte(e) === "1=D")!;
   expect(cle, "« 1=D » réécrit").toBeTruthy();
   expect(cle.props.style!.top).toBeCloseTo(cadreTop + (c.keyLabel.h + 8) * ck - c.labelH * ck, 3);
-  expect(cle.props.style!.top, "dans l'image").toBeGreaterThan(0);
+  // Lot JE (JE2) : la coupe passe sous « 1=D » ; le cadre de l'image (`overflow: hidden`) le cache.
+  expect(cle.props.style!.top, "au-dessus de l'image").toBeLessThan(0);
 });
 
 test("10 PDF : l'image prend toute la largeur du cadre (échelle calculée sur h − top)", () => {
@@ -962,8 +963,9 @@ test("10 PDF : « （X调） » du titre gravé — pas réécrit quand il est c
   // 亲眼看见你 : « （D调） » gravé au-dessus de la coupe (y 10 < top 147).
   const [coupe] = pagesPdf("亲眼看见你", "E");
   expect(coupe.elements.filter((e) => e.type === "TEXT" && /调）$/.test(texte(e)))).toEqual([]);
-  // 有一位神 : coupe à 12 px, « （C调） » gravé dessous, réécrit dans la tonalité du .cho (D).
-  const [garde] = pagesPdf("有一位神", null);
+  // 陪我走过春夏秋冬 : coupe à 12 px (lot JE : aucune coupe propre sous l'en-tête), « （C调） » gravé
+  // dessous, réécrit dans la tonalité du .cho (D).
+  const [garde] = pagesPdf("陪我走过春夏秋冬", null);
   const titre = garde.elements.find((e) => e.type === "TEXT" && texte(e) === "（D调）");
   expect(titre, "« （D调） » réécrit").toBeTruthy();
   expect(titre!.props.style!.top, "dans l'image").toBeGreaterThan(-2);

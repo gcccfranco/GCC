@@ -1199,7 +1199,9 @@ export function JianpuPDFPage({
         </Text>
       )}
       <View style={{ alignItems: "center", marginTop: headerHeight > 0 && !strip ? 10 : 0 }}>
-        <View style={{ width: imgW, height: imgH, position: "relative" }}>
+        {/* `overflow: hidden` (lot JE) : la coupe passe sous « 1=X » ; son cadre et les gommes
+            au-dessus de `top` tomberaient sur l'en-tête de la page. */}
+        <View style={{ width: imgW, height: imgH, position: "relative", overflow: "hidden" }}>
           <Image src={src} style={{ width: imgW, height: imgH }} />
 
           {/* Calque : le pavé blanc masque l'accord d'origine, le texte le
