@@ -80,7 +80,7 @@ function InsertDot({ onTap, active, small = false }: { onTap: () => void; active
       className={`self-end mb-1 shrink-0 rounded-full border border-dashed flex items-center justify-center transition-colors ${
         small ? "mx-px h-5 w-5" : "mx-0.5 h-6 w-6"
       } ${
-        active ? "border-foreground bg-secondary text-foreground" : "border-border text-muted-foreground/60 hover:text-foreground hover:border-foreground"
+        active ? "border-foreground bg-secondary text-foreground" : "border-border text-muted-foreground hover:text-foreground hover:border-foreground"
       }`}
     >
       <Plus className={small ? "h-3 w-3" : "h-3.5 w-3.5"} />
@@ -96,7 +96,7 @@ function Chip({ chord, selected, onTap }: { chord: string; selected: boolean; on
       className={`h-8 px-2 mb-0.5 rounded-sm border text-[15px] font-bold whitespace-nowrap transition-colors ${
         selected
           ? "border-foreground bg-foreground text-background"
-          : "border-[color:var(--chord-color,#2563EB)]/40 bg-[color:var(--chord-color,#2563EB)]/10 text-[color:var(--chord-color,#2563EB)]"
+          : "border-[color:var(--chord-color,#3f63cf)]/40 bg-[color:var(--chord-color,#3f63cf)]/10 text-[color:var(--chord-color,#3f63cf)]"
       }`}
     >
       {/* Convention zh `[ ]` : accord « espace » (colonne vide) — rendu ␣ pour rester tappable */}
@@ -440,7 +440,7 @@ function SheetBody({
               </p>
             )}
             {pinyinMismatch && (
-              <p className="text-xs text-amber-600 dark:text-amber-400">
+              <p className="text-xs text-amber-700 dark:text-amber-400">
                 {t("setlists.contentEdit.pinyinMismatch", {
                   defaultValue:
                     "Attention : {{py}} mot(s) pinyin pour {{zh}} caractère(s) chinois — l'alignement sera décalé.",

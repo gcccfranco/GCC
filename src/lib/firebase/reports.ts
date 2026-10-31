@@ -6,6 +6,7 @@ import {
   fromFsValue,
   type RawDoc,
 } from "./setlists";
+import { versDate } from "@/lib/utils/formatDate";
 import { FIREBASE_PROJECT_ID } from "./config";
 import type { Report, ReportKind, ReportStatus } from "@/types/report";
 
@@ -26,7 +27,7 @@ function fromFsReport(raw: RawDoc): Report {
     authorId: (data.authorId as string) ?? "",
     authorName: (data.authorName as string) ?? "",
     authorEmail: (data.authorEmail as string) ?? "",
-    createdAt: (data.createdAt as Date | null) ?? null,
+    createdAt: versDate(data.createdAt),
   };
 }
 
@@ -46,6 +47,26 @@ export async function getReports(): Promise<Report[]> {
   if (!res.ok) return [];
   const rows = (await res.json()) as Array<{ document?: RawDoc }>;
   return rows.filter((r) => r.document).map((r) => fromFsReport(r.document!));
+}
+
+/** Signalements (ou propositions de chants) en attente, pour la pastille de Messages (lot U6,
+ *  Q15, admins) : la requête ne lit que ceux-là, et seulement leur statut. Lève si refusé. */
+export async function compterEnAttente(collectionId: "reports" | "songProposals"): Promise<number> {
+  const headers = await authHeader();
+  const res = await fetch(`${FS_BASE}:runQuery`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...headers },
+    body: JSON.stringify({
+      structuredQuery: {
+        from: [{ collectionId }],
+        select: { fields: [{ fieldPath: "status" }] },
+        where: { fieldFilter: { field: { fieldPath: "status" }, op: "EQUAL", value: { stringValue: "pending" } } },
+      },
+    }),
+  });
+  await checkRest(res);
+  const rows = (await res.json()) as Array<{ document?: RawDoc }>;
+  return rows.filter((r) => r.document && fromFsValue(r.document.fields?.status) === "pending").length;
 }
 
 export async function setReportStatus(id: string, status: ReportStatus): Promise<void> {

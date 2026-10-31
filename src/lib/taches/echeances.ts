@@ -1,8 +1,9 @@
-// Calculs purs des tâches par pôle (lot 7, docs/spec-taches.md) : échéances
+// Calculs purs des tâches par équipe (lot 7, docs/spec-taches.md ; EQ-C) : échéances
 // d'une tâche répétée, fois visibles, groupes de la page, dimanche de la régie.
 // Dates ISO « AAAA-MM-JJ », comparées comme du texte.
 
-import type { Fois, Tache, TachePole } from "@/types/tache";
+import { peutCocher } from "@/lib/access";
+import type { Fois, Tache } from "@/types/tache";
 import type { TacheValues } from "@/lib/firebase/taches";
 
 const DAY = 86_400_000;
@@ -123,10 +124,25 @@ export function dimancheApres(echeance: string): string {
   return addDays(echeance, wd === 0 ? 7 : 7 - wd);
 }
 
-/** « Mes tâches » : ce qui reste à faire pour moi — les tâches dont je suis
- *  responsable et celles de mes pôles sans responsable. */
-export function aFairePour(lignes: Ligne[], uid: string): Ligne[] {
-  return lignes.filter((l) => resteAFaire(l) && (l.tache.responsableUid === uid || l.tache.responsableUid === null));
+/** « Mes tâches », « à moi » (EQ15, décision 41) : ce qui reste à faire et dont je suis le
+ *  responsable, ou qui n'a pas de responsable dans une équipe dont je suis référent (toutes pour un
+ *  admin) — exactement ce que `peutCocher` me laisse cocher, hors des tâches nommées à un autre. */
+export function aFairePour(
+  lignes: Ligne[],
+  user: Parameters<typeof peutCocher>[0],
+  profile: Parameters<typeof peutCocher>[1],
+): Ligne[] {
+  if (!user) return [];
+  return lignes.filter((l) => resteAFaire(l)
+    && (l.tache.responsableUid === user.uid || l.tache.responsableUid === null)
+    && peutCocher(user, profile, l.tache));
+}
+
+/** Le rail de Back-Office › Tâches (EQ9, décision 2 : une liste vide ne s'affiche pas) : parmi ses
+ *  équipes, celles qui ont une tâche, plus celles dont on est référent (`referentDe` du profil, pour y
+ *  créer la première ; un admin n'a donc pas treize onglets vides). */
+export function equipesDuRail(equipes: string[], taches: Pick<Tache, "equipe">[], referentDe: string[] = []): string[] {
+  return equipes.filter((e) => referentDe.includes(e) || taches.some((t) => t.equipe === e));
 }
 
 /** Jours entiers entre deux dates ISO (`debutLe` peut porter une heure). */
@@ -143,10 +159,10 @@ export function tachesDupliquees(
   sourceDate: string,
   nouvelleDate: string,
   nouvelEvenement: { id: string; titre: string },
-): { pole: TachePole; values: TacheValues }[] {
+): { equipe: string; values: TacheValues }[] {
   const delta = joursEntre(sourceDate, nouvelleDate);
   return taches.map((t) => ({
-    pole: t.pole,
+    equipe: t.equipe,
     values: {
       titre: t.titre,
       responsableUid: t.responsableUid,

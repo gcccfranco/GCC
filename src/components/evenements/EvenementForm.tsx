@@ -13,19 +13,28 @@ import { useTranslation } from "react-i18next"
 import { ImagePlus, Trash2 } from "lucide-react"
 import { compressImage } from "@/lib/utils/compressImage"
 import { categoryLabel } from "@/lib/serviceColors"
-import { poleDuPour } from "@/lib/access"
+import { equipeDuPour, estReunion, publicDeReunion } from "@/lib/access"
+import { cleNomEquipe } from "@/lib/equipes/table"
 import { EVENEMENT_TYPES, type Evenement, type EvenementType } from "@/types/evenement"
 import { ChoixInscriptions } from "@/components/evenements/ChoixInscriptions"
 import { borneInscription, modeInscriptions } from "@/lib/evenements/agenda"
+import { dansLeSheet, dernierJourDuSheet } from "@/lib/evenements/bascule"
+import { lienOngletSheet } from "@/lib/evenements/sheet"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Switch } from "@/components/ui/switch"
 import { Textarea } from "@/components/ui/textarea"
 
 const MAX_IMAGES = 3
+// Une réunion (lot U6, relecture) a toujours une date : jamais « Info » (sujets jusqu'au début,
+// rappel de la veille, réunions précédentes). Elle prend « Église » si elle était une info.
+const TYPE_REUNION: EvenementType = "eglise"
 const MAX_TOTAL_CHARS = 750_000
+// Le champ date de Chrome laisse taper une année à cinq chiffres, que le calendrier (lot U8)
+// et le déplacement ne savent pas lire : on la borne.
+const DATE_MAX = "9999-12-31"
 
-export type EvenementValues = Omit<Evenement, "id" | "organisateurUid" | "organisateurNom" | "inscrits" | "createdAt" | "updatedAt">
+export type EvenementValues = Omit<Evenement, "id" | "organisateurUid" | "organisateurNom" | "inscrits" | "createdAt" | "updatedAt" | "compteRendu">
 
 export const EMPTY_EVENEMENT: EvenementValues = {
   titre: "", type: "loisir", pour: "eglise", date: "", heure: "", heureFin: "", dateFin: "", lieu: "", description: "",
@@ -44,7 +53,7 @@ function Periode({ id, label, heureLabel, aide, value, onChange }: {
     <div className="space-y-1">
       <label htmlFor={id} className="text-sm text-muted-foreground">{label}</label>
       <div className="grid grid-cols-2 gap-3">
-        <Input id={id} type="date" value={jour} onChange={(e) => onChange(joindre(e.target.value, heure))} />
+        <Input id={id} type="date" max={DATE_MAX} value={jour} onChange={(e) => onChange(joindre(e.target.value, heure))} />
         <Input type="time" aria-label={heureLabel} value={heure} disabled={!jour} onChange={(e) => onChange(joindre(jour, e.target.value))} />
       </div>
       <p className="text-xs text-muted-foreground">{aide}</p>
@@ -52,7 +61,7 @@ function Periode({ id, label, heureLabel, aide, value, onChange }: {
   )
 }
 
-export function EvenementForm({ initial, pours, creation, inscrits = 0, onSubmit, onCancel }: {
+export function EvenementForm({ initial, pours, creation, inscrits = 0, titreCache = false, onSubmit, onCancel }: {
   initial: EvenementValues
   /** Publics que la personne peut viser (« eglise » et/ou des sections). */
   pours: string[]
@@ -60,23 +69,35 @@ export function EvenementForm({ initial, pours, creation, inscrits = 0, onSubmit
   creation: boolean
   /** Inscrits déjà comptés par l'app : ils interdisent le lien externe (lot 11). */
   inscrits?: number
+  /** Le titre de la page le dit déjà (agencement v18 : en-tête commun d'une page de formulaire). */
+  titreCache?: boolean
   onSubmit: (values: EvenementValues, prevenir: boolean) => Promise<void>
   onCancel: () => void
 }) {
   const { t } = useTranslation()
-  const [v, setV] = useState<EvenementValues>({ ...initial, pour: pours.includes(initial.pour) ? initial.pour : (pours[0] as EvenementValues["pour"]) })
+  const [v, setV] = useState<EvenementValues>(() => {
+    const pour = pours.includes(initial.pour) ? initial.pour : (pours[0] as EvenementValues["pour"])
+    return { ...initial, pour, ...(estReunion({ ...initial, pour }) && initial.type === "info" ? { type: TYPE_REUNION } : {}) }
+  })
   const [prevenir, setPrevenir] = useState(initial.type !== "eglise")
   const [error, setError] = useState("")
   const [busy, setBusy] = useState(false)
   const [compressing, setCompressing] = useState(false)
   const info = v.type === "info"
-  // Réunion de pôle (lot 7) : pas d'inscriptions.
-  const reunion = poleDuPour(v.pour) !== null
+  // Réunion d'équipe (lot U6, R4) : pas d'inscriptions. Un évènement d'équipe (`reunion: false`,
+  // « Nouvel évènement », lot E) en a, comme un évènement de l'assemblée.
+  const reunion = estReunion(v)
+  // Un évènement d'équipe ne se voit que de ses membres : pas d'inscription sans compte
+  // (la route la refuse, retouches v18, E6).
+  const reserve = publicDeReunion(v.pour)
   const sansInscription = { inscriptions: "fermees" as const, inscriptionDebut: "", inscriptionFin: "", sansCompte: false, placesMax: null, lienExterne: "" }
   const mode = modeInscriptions(v)
   // Lien externe (lot 11) : l'inscription se passe ailleurs, le reste du bloc
   // ne s'applique plus (docs/spec-inscription-externe.md).
   const externe = v.lienExterne.trim() !== ""
+  // Pas de doublon avec le Sheet (U9, Q3). À la modification, seul le passage dans le Sheet est
+  // refusé : un évènement déjà dans l'app (créé avant la règle) se corrige toujours.
+  const refusSheet = dansLeSheet(v) && (creation || !dansLeSheet(initial))
   const set = (patch: Partial<EvenementValues>) => setV((x) => ({ ...x, ...patch }))
   // Listes au style des champs du site (fond gris, sans bord), libellés
   // discrets comme la maquette (retour du 17/09/2026).
@@ -112,6 +133,8 @@ export function EvenementForm({ initial, pours, creation, inscrits = 0, onSubmit
     if (!v.titre.trim()) { setError(t("evenements.form.errorTitre")); return }
     if (!info && !v.date) { setError(t("evenements.form.errorDate")); return }
     if (!info && v.dateFin && v.dateFin < v.date) { setError(t("evenements.form.errorDateFin")); return }
+    // La raison est déjà écrite sous la date : on y ramène.
+    if (refusSheet) { setError(""); document.getElementById("ev-date")?.focus(); return }
     if (mode === "auto" && v.inscriptionDebut && v.inscriptionFin
       && borneInscription(v.inscriptionFin, "23:59") < borneInscription(v.inscriptionDebut, "00:00")) {
       setError(t("evenements.form.errorInsFin")); return
@@ -136,6 +159,7 @@ export function EvenementForm({ initial, pours, creation, inscrits = 0, onSubmit
         inscriptionDebut: mode === "auto" ? v.inscriptionDebut ?? "" : "",
         inscriptionFin: mode === "auto" ? v.inscriptionFin ?? "" : "",
         epingle: info ? v.epingle : false,
+        sansCompte: !reserve && v.sansCompte,
         ...(reunion ? sansInscription : {}),
       }, creation && prevenir)
     } catch (err) {
@@ -146,7 +170,7 @@ export function EvenementForm({ initial, pours, creation, inscrits = 0, onSubmit
 
   return (
     <form onSubmit={submit} className="space-y-4" aria-labelledby="evenement-form-title">
-      <h2 id="evenement-form-title" className="text-base font-bold">{creation ? t("evenements.nouveau") : t("evenements.modifier")}</h2>
+      <h2 id="evenement-form-title" className={titreCache ? "sr-only" : "text-base font-bold"}>{creation ? t("evenements.nouveau") : t("evenements.modifier")}</h2>
       {error && <p className="text-sm text-destructive">{error}</p>}
 
       <div data-testid="form-carte" className="divide-y divide-border rounded-2xl bg-card">
@@ -160,16 +184,19 @@ export function EvenementForm({ initial, pours, creation, inscrits = 0, onSubmit
           <div className="space-y-1">
             <label htmlFor="ev-type" className={LABEL}>{t("evenements.form.type")}</label>
             <select id="ev-type" className={field} value={v.type} onChange={(e) => setType(e.target.value as EvenementType)}>
-              {EVENEMENT_TYPES.map((x) => <option key={x} value={x}>{t(`evenements.types.${x}`)}</option>)}
+              {EVENEMENT_TYPES.filter((x) => !reunion || x !== "info").map((x) => <option key={x} value={x}>{t(`evenements.types.${x}`)}</option>)}
             </select>
           </div>
           <div className="space-y-1">
             <label htmlFor="ev-pour" className={LABEL}>{t("evenements.form.pour")}</label>
             <select id="ev-pour" className={field} value={v.pour}
-              onChange={(e) => set({ pour: e.target.value as EvenementValues["pour"], ...(poleDuPour(e.target.value) ? sansInscription : {}) })}>
+              onChange={(e) => set({
+                pour: e.target.value as EvenementValues["pour"],
+                ...(estReunion({ ...v, pour: e.target.value }) ? { ...sansInscription, ...(info ? { type: TYPE_REUNION } : {}) } : {}),
+              })}>
               {pours.map((p) => {
-                const pole = poleDuPour(p)
-                return <option key={p} value={p}>{p === "eglise" ? t("evenements.pourEglise") : pole ? t("evenements.pourPole", { pole: t(`taches.pole.${pole}`) }) : categoryLabel(p)}</option>
+                const equipe = equipeDuPour(p)
+                return <option key={p} value={p}>{p === "eglise" ? t("evenements.pourEglise") : equipe ? t(cleNomEquipe(equipe)) : categoryLabel(p)}</option>
               })}
             </select>
           </div>
@@ -179,13 +206,23 @@ export function EvenementForm({ initial, pours, creation, inscrits = 0, onSubmit
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
               <label htmlFor="ev-date" className={LABEL}>{t("evenements.form.date")}</label>
-              <Input id="ev-date" type="date" value={v.date} onChange={(e) => set({ date: e.target.value })} required />
+              <Input id="ev-date" type="date" max={DATE_MAX} value={v.date} onChange={(e) => set({ date: e.target.value })} required
+                aria-invalid={refusSheet || undefined} aria-describedby={refusSheet ? "ev-date-sheet" : undefined} />
             </div>
             <div className="space-y-1">
               <label htmlFor="ev-heure" className={LABEL}>{t("evenements.form.heure")}</label>
               <Input id="ev-heure" type="time" value={v.heure} onChange={(e) => set({ heure: e.target.value })} />
             </div>
           </div>
+        )}
+        {refusSheet && (
+          <p id="ev-date-sheet" className="-mt-2 text-sm text-destructive">
+            {t("evenements.form.refusSheet", { jour: dernierJourDuSheet() })}{" "}
+            <a href={lienOngletSheet(v.date)} target="_blank" rel="noopener noreferrer"
+              className="font-semibold underline underline-offset-2">
+              {t("evenements.form.ouvrirSheet")}
+            </a>
+          </p>
         )}
 
         <div className="space-y-1">
@@ -286,7 +323,7 @@ export function EvenementForm({ initial, pours, creation, inscrits = 0, onSubmit
               </div>
               <div className="space-y-1">
                 <label htmlFor="ev-date-fin" className={LABEL}>{t("evenements.form.dateFin")}</label>
-                <Input id="ev-date-fin" type="date" value={v.dateFin} onChange={(e) => set({ dateFin: e.target.value })} />
+                <Input id="ev-date-fin" type="date" max={DATE_MAX} value={v.dateFin} onChange={(e) => set({ dateFin: e.target.value })} />
               </div>
             </div>
           )}
@@ -315,10 +352,12 @@ export function EvenementForm({ initial, pours, creation, inscrits = 0, onSubmit
                 <Input id="ev-places" type="number" min={1} max={999} value={v.placesMax ?? ""} placeholder={t("evenements.form.placesHint")} disabled={externe}
                   onChange={(e) => set({ placesMax: e.target.value ? Number(e.target.value) : null })} />
               </div>
-              <label className="flex items-center gap-2 text-sm">
-                <input type="checkbox" className="h-4 w-4" checked={v.sansCompte} disabled={externe} onChange={(e) => set({ sansCompte: e.target.checked })} />
-                {t("evenements.form.sansCompte")}
-              </label>
+              {!reserve && (
+                <label className="flex items-center gap-2 text-sm">
+                  <input type="checkbox" className="h-4 w-4" checked={v.sansCompte} disabled={externe} onChange={(e) => set({ sansCompte: e.target.checked })} />
+                  {t("evenements.form.sansCompte")}
+                </label>
+              )}
             </div>
           )}
         </div>

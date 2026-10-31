@@ -1,0 +1,299 @@
+<title>Page chant 简谱 et statistiques</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700&family=Noto+Serif+SC:wght@600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Planche : une bande par sujet, pistes côte à côte (téléphone · tablette · ordinateur), la recommandée marquée. */
+:root{
+  --bg:#f6f5f2; --surface:#ffffff; --ink:#1c1b19; --muted:#6d6a63; --line:#e3e0d9;
+  --chord:#3f63cf; --jianpu:#b3261d; --chorus:#e0560a; --verse:#2f7d6b; --intro:#5b6b8c;
+  --reco:#1f7a4d; --reco-bg:#e5f3ea; --warn:#a15c00; --warn-bg:#fdf0dc; --paper:#fffdf8;
+  --f-ui:"Inter Tight",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-zh:"Noto Serif SC","Songti SC","STSong",serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#141413; --surface:#1e1d1b; --ink:#f0eee9; --muted:#a29e95; --line:#34322e;
+  --chord:#8fb0ff; --jianpu:#ff7d72; --chorus:#fb923c; --verse:#6fc7b1; --intro:#a3b2d4;
+  --reco:#7fd4a4; --reco-bg:#16301f; --warn:#f2b45e; --warn-bg:#3a2a12; --paper:#22211e; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#141413; --surface:#1e1d1b; --ink:#f0eee9; --muted:#a29e95; --line:#34322e;
+  --chord:#8fb0ff; --jianpu:#ff7d72; --chorus:#fb923c; --verse:#6fc7b1; --intro:#a3b2d4;
+  --reco:#7fd4a4; --reco-bg:#16301f; --warn:#f2b45e; --warn-bg:#3a2a12; --paper:#22211e; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-ui);font-size:15px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:32px 64px}
+.wrap{max-width:1240px;margin:0 auto;display:flex;flex-direction:column;gap:56px}
+h1{font-size:30px;line-height:1.15;margin:0;text-wrap:balance;letter-spacing:-.01em}
+h2{font-size:22px;margin:0;text-wrap:balance}
+h3{font-size:16px;margin:0}
+p{margin:0;max-width:68ch}
+.eyebrow{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.intro{display:flex;flex-direction:column;gap:12px}
+section{display:flex;flex-direction:column;gap:20px}
+.constat{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
+.box{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.piste{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:20px;display:flex;flex-direction:column;gap:16px}
+.piste.reco{border:2px solid var(--reco)}
+.piste-head{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:baseline}
+.tag{font-size:12px;font-weight:700;padding:3px 10px;border-radius:999px;background:var(--reco-bg);color:var(--reco)}
+.tag.neutre{background:var(--bg);color:var(--muted)}
+.devices{display:flex;flex-wrap:wrap;gap:20px;align-items:flex-start}
+.dev{display:flex;flex-direction:column;gap:6px;min-width:0}
+.dev-label{font-size:12px;color:var(--muted);font-weight:600}
+.frame{border:1px solid var(--line);border-radius:22px;background:var(--paper);overflow:hidden;max-width:100%}
+.phone{width:280px}.tablet{width:420px}.desktop{width:520px;border-radius:12px}
+.pro-con{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;font-size:14px}
+.pro-con ul{margin:4px 0 0;padding-left:18px}
+.plus{color:var(--reco);font-weight:600}.moins{color:var(--warn);font-weight:600}
+
+/* — maquette de page chant — */
+.pg{padding:14px;display:flex;flex-direction:column;gap:10px}
+.hd{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}
+.t-zh{font-family:var(--f-zh);font-weight:700;font-size:26px;line-height:1.1}
+.t-py{color:var(--muted);font-size:13px}
+.t-ar{color:var(--muted);font-size:12px}
+.key{border:1.5px solid var(--jianpu);color:var(--jianpu);border-radius:999px;padding:1px 12px;font-weight:700;font-size:14px}
+.meta{font-family:var(--f-mono);font-size:11px;color:var(--muted);display:flex;gap:10px;flex-wrap:wrap}
+.meta b{color:var(--ink);font-weight:600}
+.secs{display:flex;gap:6px;flex-wrap:wrap}
+.sec{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-size:11px;font-weight:700;background:var(--bg)}
+.sec.i{color:var(--intro)}.sec.c{color:var(--verse)}.sec.r{color:var(--chorus)}
+.seg{margin-left:auto;display:flex;background:var(--bg);border-radius:999px;font-size:11px;font-weight:600}
+.seg span{padding:4px 9px;border-radius:999px}.seg span.on{background:var(--ink);color:var(--surface)}
+.score{font-family:var(--f-mono);font-size:10.5px;line-height:1.35;color:var(--ink);display:flex;flex-direction:column;gap:7px}
+.score .ch{color:var(--chord);font-weight:600}
+.score .ly{font-family:var(--f-zh);font-size:10.5px}
+.ghost{color:var(--muted);font-family:var(--f-zh);font-size:10px;display:flex;justify-content:space-between;gap:6px;border-bottom:1px dashed var(--jianpu);padding-bottom:5px;position:relative}
+.ghost .cut{position:absolute;right:0;bottom:-15px;font-family:var(--f-ui);font-size:9px;color:var(--jianpu);font-weight:600}
+.scanhead{text-align:center;font-family:var(--f-zh);display:flex;flex-direction:column;gap:2px}
+.scanhead .big{font-size:20px;font-weight:700}
+.scanhead .row{display:flex;justify-content:space-between;font-size:10px;color:var(--muted)}
+.slim{display:flex;align-items:center;gap:8px;padding:8px 12px;border-bottom:1px solid var(--line);font-size:12px;background:var(--surface)}
+.slim .t-zh{font-size:16px}
+.two{display:grid;grid-template-columns:150px 1fr;gap:14px}
+.side{display:flex;flex-direction:column;gap:8px;font-size:11px;border-right:1px solid var(--line);padding-right:12px}
+
+/* — statistiques — */
+.stat-line{display:flex;align-items:center;gap:8px;font-size:12px;background:var(--bg);border-radius:10px;padding:7px 10px}
+.stat-line b{font-variant-numeric:tabular-nums}
+.chev{margin-left:auto;color:var(--muted)}
+.sheet{background:var(--surface);border-top-left-radius:18px;border-top-right-radius:18px;border:1px solid var(--line);padding:12px 14px;display:flex;flex-direction:column;gap:10px;font-size:12px}
+.grab{width:36px;height:4px;border-radius:2px;background:var(--line);margin:0 auto}
+.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.kpi{background:var(--bg);border-radius:10px;padding:8px;display:flex;flex-direction:column;gap:2px}
+.kpi .n{font-size:18px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.1}
+.kpi .l{font-size:10px;color:var(--muted)}
+table{border-collapse:collapse;width:100%;font-size:11.5px;font-variant-numeric:tabular-nums}
+th{text-align:left;font-weight:600;color:var(--muted);font-size:10.5px;padding:4px 4px;border-bottom:1px solid var(--line)}
+td{padding:5px 4px;border-bottom:1px solid var(--line)}
+td.r,th.r{text-align:right}
+.bar{display:inline-block;height:6px;border-radius:3px;background:var(--chord);vertical-align:middle;opacity:.75}
+.hl td{background:var(--reco-bg)}
+.lib{display:flex;flex-direction:column;font-size:12px}
+.lib-row{display:grid;grid-template-columns:1fr auto;gap:2px 10px;padding:8px 0;border-bottom:1px solid var(--line);align-items:center}
+.lib-row .nm{font-weight:600}.lib-row .nm .zh{font-family:var(--f-zh)}
+.lib-row .sub{font-size:11px;color:var(--muted);grid-column:1}
+.plusbtn{grid-row:1/3;grid-column:2;width:26px;height:26px;border-radius:50%;background:var(--bg);display:grid;place-items:center;font-weight:700}
+.chip{display:inline-block;font-size:10.5px;font-weight:600;padding:1px 7px;border-radius:999px;background:var(--bg);color:var(--muted)}
+.chip.warn{background:var(--warn-bg);color:var(--warn)}
+.chip.ok{background:var(--reco-bg);color:var(--reco)}
+.filters{display:flex;gap:6px;flex-wrap:wrap}
+.filters span{font-size:11px;padding:3px 9px;border-radius:999px;background:var(--bg);font-weight:600}
+.filters span.on{background:var(--ink);color:var(--surface)}
+
+.questions{counter-reset:q;display:flex;flex-direction:column;gap:12px}
+.q{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:6px}
+.q h3::before{counter-increment:q;content:"Q" counter(q) " · ";color:var(--muted)}
+.q .rec{font-size:14px;color:var(--reco);font-weight:600}
+code{font-family:var(--f-mono);font-size:.9em;background:var(--bg);padding:1px 5px;border-radius:5px}
+@media (max-width:600px){.phone,.tablet,.desktop{width:100%}.two{grid-template-columns:1fr}.side{border-right:0;border-bottom:1px solid var(--line);padding:0 0 8px}}
+</style>
+
+<div class="wrap">
+
+<header class="intro">
+  <span class="eyebrow">Planche · 30/10/2026 · à trancher avant spec</span>
+  <h1>Page chant avec 简谱, et statistiques pour tous</h1>
+  <p>Deux sujets demandés par Timothée le 30/10/2026 : la disposition des chants qui ont une partition 简谱, et des statistiques de jeu visibles par tout membre connecté, détaillées par groupe, sur la page du chant et dans l'éditeur de setlist. Rien n'est codé : les pistes ci-dessous attendent un choix, puis une spec, puis un go.</p>
+</header>
+
+<!-- ───────────── SUJET 1 ───────────── -->
+<section>
+  <span class="eyebrow">Sujet 1</span>
+  <h2>Pourquoi le titre a l'air coupé</h2>
+  <div class="constat">
+    <div class="box"><h3>Ce que fait le site aujourd'hui</h3>
+      <p>Le scan est recadré juste au-dessus du « 1=D » (fichier <code>public/jianpu/cadrage.json</code>, 189 chants certifiés à l'œil). Le grand titre gravé disparaît, mais tout ce qui est à sa hauteur ou plus bas reste.</p></div>
+    <div class="box"><h3>Ce qui reste sous la coupe</h3>
+      <p>回家 garde « Coming Home » et « (路15:11-32) » sans titre au-dessus ; 爱的约定 garde « 赞美之泉《2021圣诞敬拜特辑》 » et la moitié des crédits ; 爱的彰显 garde une longue ligne de compositeurs. On lit des sous-titres orphelins : c'est ça, l'effet « coupé ».</p></div>
+    <div class="box"><h3>Ce qui fait doublon</h3>
+      <p>La tonalité (pastille D et « 1=D »), le tempo (♩=66 deux fois sur 回家), l'auteur (en-tête du site et crédits gravés). Le seul renseignement que le site n'a pas, c'est la mesure (4/4).</p></div>
+  </div>
+
+  <!-- Piste A -->
+  <div class="piste reco">
+    <div class="piste-head"><h3>Piste A · Couper tout l'en-tête gravé</h3><span class="tag">Recommandée</span></div>
+    <p>La fenêtre descend jusqu'à la première ligne d'accords : plus rien de l'en-tête du scan. L'en-tête du site reprend ce qui manquerait, sur une ligne de métadonnées : <b>1=D · 4/4 · ♩=66</b>. La partition commence propre, comme une page imprimée dont on a remplacé l'en-tête.</p>
+    <div class="devices">
+      <div class="dev"><span class="dev-label">Téléphone</span>
+        <div class="frame phone"><div class="pg">
+          <div class="hd"><div><div class="t-zh">回家</div><div class="t-py">Huí jiā</div><div class="t-ar">赞美之泉</div></div><span class="key">D</span></div>
+          <div class="meta"><span><b>1=D</b></span><span><b>4/4</b></span><span>♩=<b>66</b></span></div>
+          <div class="secs"><span class="sec i">I</span><span class="sec c">C</span><span class="sec r">R</span><span class="seg"><span class="on">简谱</span><span>Paroles</span></span></div>
+          <div class="score">
+            <div><span class="ch">D&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;E²/D&nbsp;&nbsp;&nbsp;Gm/D&nbsp;&nbsp;D</span><br>(3̇ - 2̇ i | 3̇ - 2̇ - | 3̇ - 2̇ i | 3̇ - 25 12</div>
+            <div><span class="ch">D&nbsp;&nbsp;&nbsp;D&nbsp;&nbsp;&nbsp;&nbsp;C#dim&nbsp;&nbsp;F#&nbsp;Bm</span><br>i - -) 5 4 | 3. 3 3 3 2 3 4 4 3<br><span class="ly">亲 爱 耶 稣，我 感 谢 祢 来 到</span></div>
+          </div>
+        </div></div></div>
+      <div class="dev"><span class="dev-label">Tablette / ordinateur : deux colonnes (variante A2)</span>
+        <div class="frame desktop"><div class="pg"><div class="two">
+          <div class="side">
+            <div class="t-zh">回家</div><div class="t-py">Huí jiā · 赞美之泉</div>
+            <span class="key" style="align-self:flex-start">D</span>
+            <div class="meta"><span><b>1=D</b></span><span><b>4/4</b></span><span>♩=<b>66</b></span></div>
+            <div class="secs"><span class="sec i">I</span><span class="sec c">C</span><span class="sec r">R</span></div>
+            <div class="stat-line">Joué <b>14</b> fois<span class="chev">›</span></div>
+          </div>
+          <div class="score">
+            <div><span class="ch">D&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;E²/D&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Gm/D&nbsp;&nbsp;&nbsp;&nbsp;D&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;D</span><br>(3̇ - 2̇ i | 3̇ - 2̇ - | 3̇ - 2̇ i | 3̇ - 25 12 | 3̇ - 2̇ i</div>
+            <div><span class="ch">D&nbsp;&nbsp;&nbsp;&nbsp;D&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;C#dim&nbsp;&nbsp;&nbsp;F#&nbsp;&nbsp;&nbsp;Bm&nbsp;&nbsp;&nbsp;&nbsp;D/A</span><br>i - -) 5 4 | 3. 3 3 3 2 3 4 4 3 | 2 1 1 7 1<br><span class="ly">亲 爱 耶 稣，我 感 谢 祢 来 到 这 世 界</span></div>
+            <div><span class="ch">G&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;D/F#&nbsp;&nbsp;&nbsp;&nbsp;E&nbsp;&nbsp;&nbsp;A&nbsp;&nbsp;&nbsp;&nbsp;D</span><br>6 7 1 1 5 4 3 2 2 1 | 1 3 2 2 5 4 | 3. 3<br><span class="ly">我 盼 望，给 我 一 个 永 恒 的 家。</span></div>
+          </div>
+        </div></div></div></div>
+    </div>
+    <div class="pro-con">
+      <div><span class="plus">Pour</span><ul><li>Plus de sous-titres orphelins ni de crédits tranchés, sur les 189 chants.</li><li>Un seul style d'en-tête, celui du site, quelle que soit la partition.</li><li>La partition gagne 2 à 3 lignes sur téléphone.</li></ul></div>
+      <div><span class="moins">Contre</span><ul><li>Le sous-titre anglais (« Coming Home ») et les crédits gravés (traducteur, album) ne se voient plus, sauf si on les ajoute au <code>.cho</code> (Q3).</li><li>La mesure (4/4) n'existe pas dans les données : nouvelle directive <code>{time: 4/4}</code> à remplir pour 189 chants (lisible sur le calque).</li><li>Les 189 cadrages se recalculent (depuis la 1re étiquette d'accord du calque) et se recertifient à l'œil.</li></ul></div>
+    </div>
+  </div>
+
+  <!-- Piste B -->
+  <div class="piste">
+    <div class="piste-head"><h3>Piste B · Le scan fait l'en-tête</h3><span class="tag neutre">Alternative</span></div>
+    <p>Plus aucune coupe : la partition s'affiche entière, son titre gravé compris. L'en-tête du site devient une barre fine (titre petit, pinyin, pastille, sections) pour ne pas répéter le grand titre.</p>
+    <div class="devices">
+      <div class="dev"><span class="dev-label">Téléphone</span>
+        <div class="frame phone">
+          <div class="slim"><span class="t-zh">回家</span><span class="t-py">Huí jiā</span><span class="key" style="margin-left:auto">D</span></div>
+          <div class="pg">
+            <div class="secs"><span class="sec i">I</span><span class="sec c">C</span><span class="sec r">R</span><span class="seg"><span class="on">简谱</span><span>Paroles</span></span></div>
+            <div class="scanhead"><span class="big">回 家</span><span style="font-size:11px">Coming Home</span><div class="row"><span>1=D 4/4</span><span>(路15:11-32)</span><span>游智婷 词曲</span></div></div>
+            <div class="score"><div><span class="ch">D&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;E²/D&nbsp;&nbsp;&nbsp;Gm/D</span><br>(3̇ - 2̇ i | 3̇ - 2̇ - | 3̇ - 2̇ i</div></div>
+          </div>
+        </div></div>
+    </div>
+    <div class="pro-con">
+      <div><span class="plus">Pour</span><ul><li>Rien à saisir : tout ce qu'a gravé l'éditeur reste lisible.</li><li>Le cadrage disparaît (une donnée de moins à maintenir).</li></ul></div>
+      <div><span class="moins">Contre</span><ul><li>189 en-têtes de 189 styles : la page n'a plus d'identité propre.</li><li>Sur 回家 le titre gravé est abîmé (« ◘ 家 ») : on afficherait le défaut.</li><li>Le « 1=D » gravé doit être recouvert par la tonalité jouée à chaque transposition (le calque sait le faire, mais c'est un point de plus en haut de page).</li><li>Revient sur le recadrage décidé et certifié le 12/10.</li></ul></div>
+    </div>
+  </div>
+
+  <!-- Piste C (statu quo amélioré) -->
+  <div class="piste">
+    <div class="piste-head"><h3>Piste C · Garder la coupe, effacer le reste de l'en-tête</h3><span class="tag neutre">Minimale</span></div>
+    <p>La coupe reste où elle est, mais une gomme (le mécanisme qui efface déjà les accords gravés) blanchit sous-titres et crédits ; seuls « 1=D 4/4 » et la musique restent. Même rendu que A, sans toucher aux cadrages, mais avec une zone à gommer par chant.</p>
+    <div class="pro-con">
+      <div><span class="plus">Pour</span><ul><li>Garde la mesure gravée (4/4) sans nouvelle donnée.</li></ul></div>
+      <div><span class="moins">Contre</span><ul><li>Une gomme par chant, dessinée et vérifiée à l'œil : plus long que A.</li><li>Laisse un blanc à l'endroit des crédits.</li></ul></div>
+    </div>
+  </div>
+</section>
+
+<!-- ───────────── SUJET 2 ───────────── -->
+<section>
+  <span class="eyebrow">Sujet 2</span>
+  <h2>Statistiques pour tous les membres connectés</h2>
+  <div class="constat">
+    <div class="box"><h3>Aujourd'hui</h3><p>Back-Office › Statistiques (lot U7) : admins seulement, une page tableau. Décision T7 du 04/10 : pas de « joué le … » dans l'éditeur de setlist. Ta demande revient sur T1 et T7.</p></div>
+    <div class="box"><h3>Ce qui est déjà possible</h3><p>Le calcul existe (<code>src/lib/stats/chantsJoues.ts</code>) et les setlists sont déjà lisibles par tout connecté : <b>aucune règle Firestore à publier</b>, seul le droit d'affichage change (<code>access.ts</code>).</p></div>
+    <div class="box"><h3>« Groupe »</h3><p>Je lis « groupe » comme le service de la setlist : Groupe Fidélité, Paix, Bonté, 中班, 大班, 高班 et les lieux de culte. Les 10 catégories existantes.</p></div>
+  </div>
+
+  <div class="piste reco">
+    <div class="piste-head"><h3>Sur la page du chant</h3><span class="tag">Recommandée</span></div>
+    <p>Une ligne sous l'en-tête, « Joué 14 fois · dernière fois dim. 26/10, Groupe Fidélité ». La toucher ouvre le détail : trois chiffres, puis un tableau par groupe. Sans compte, la ligne n'existe pas.</p>
+    <div class="devices">
+      <div class="dev"><span class="dev-label">Téléphone : la ligne</span>
+        <div class="frame phone"><div class="pg">
+          <div class="hd"><div><div class="t-zh">回家</div><div class="t-py">Huí jiā · 赞美之泉</div></div><span class="key">D</span></div>
+          <div class="stat-line">Joué <b>14</b> fois · dernière fois <b>26/10</b>, Fidélité<span class="chev">›</span></div>
+          <div class="secs"><span class="sec i">I</span><span class="sec c">C</span><span class="sec r">R</span><span class="seg"><span class="on">简谱</span><span>Paroles</span></span></div>
+          <div class="score"><div><span class="ch">D&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;E²/D&nbsp;&nbsp;&nbsp;Gm/D</span><br>(3̇ - 2̇ i | 3̇ - 2̇ - | 3̇ - 2̇ i</div></div>
+        </div></div></div>
+      <div class="dev"><span class="dev-label">Téléphone : le détail (feuille) · tablette et ordinateur : panneau</span>
+        <div class="frame phone" style="background:var(--bg)"><div style="padding-top:40px">
+          <div class="sheet">
+            <div class="grab"></div>
+            <h3>回家 à GCC</h3>
+            <div class="kpis">
+              <div class="kpi"><span class="n">14</span><span class="l">setlists</span></div>
+              <div class="kpi"><span class="n">26/10</span><span class="l">dernière fois</span></div>
+              <div class="kpi"><span class="n">D</span><span class="l">tonalité jouée</span></div>
+            </div>
+            <div class="filters"><span>3 mois</span><span>12 mois</span><span class="on">Depuis le début</span></div>
+            <table>
+              <thead><tr><th>Groupe</th><th class="r">Fois</th><th class="r">Dernière</th></tr></thead>
+              <tbody>
+                <tr><td>Groupe Fidélité</td><td class="r"><span class="bar" style="width:40px"></span> 5</td><td class="r">26/10</td></tr>
+                <tr><td>Culte 中文</td><td class="r"><span class="bar" style="width:32px"></span> 4</td><td class="r">19/10</td></tr>
+                <tr><td>Groupe Paix</td><td class="r"><span class="bar" style="width:24px"></span> 3</td><td class="r">28/09</td></tr>
+                <tr><td>高班</td><td class="r"><span class="bar" style="width:16px"></span> 2</td><td class="r">14/09</td></tr>
+                <tr><td>Groupe Bonté</td><td class="r">—</td><td class="r">jamais</td></tr>
+              </tbody>
+            </table>
+            <span class="t-ar">Setlists publiées et passées, depuis le 24/05/2026. Exemple fictif.</span>
+          </div>
+        </div></div></div>
+    </div>
+  </div>
+
+  <div class="piste reco">
+    <div class="piste-head"><h3>Dans l'éditeur de setlist (Bibliothèque)</h3><span class="tag">Recommandée</span></div>
+    <p>Chaque chant dit quand il a été joué <b>dans le groupe de la setlist qu'on prépare</b>, et combien de fois en tout. Un repère orange quand il a été joué dans ce groupe il y a moins de 3 semaines ; un repère vert « jamais ici ». Un tri « Moins joués ici » rejoint les filtres.</p>
+    <div class="devices">
+      <div class="dev"><span class="dev-label">Téléphone · setlist Groupe Fidélité du 02/11</span>
+        <div class="frame phone"><div class="pg">
+          <h3>Ajouter un chant</h3>
+          <div class="filters"><span>Langue</span><span>Thèmes</span><span class="on">Moins joués ici</span></div>
+          <div class="lib">
+            <div class="lib-row"><span class="nm"><span class="zh">回家</span> <span class="chip">D</span></span><span class="plusbtn">+</span><span class="sub"><span class="chip warn">Fidélité : il y a 7 j</span> · 14 fois au total</span></div>
+            <div class="lib-row"><span class="nm"><span class="zh">爱的约定</span> <span class="chip">C</span></span><span class="plusbtn">+</span><span class="sub">Fidélité : 21/09 · 6 fois au total</span></div>
+            <div class="lib-row"><span class="nm"><span class="zh">爱的彰显</span> <span class="chip">G</span></span><span class="plusbtn">+</span><span class="sub"><span class="chip ok">Jamais à Fidélité</span> · 3 fois au total</span></div>
+            <div class="lib-row"><span class="nm">Saint, Saint, Saint <span class="chip">E</span></span><span class="plusbtn">+</span><span class="sub">Jamais joué à GCC</span></div>
+          </div>
+        </div></div></div>
+      <div class="dev"><span class="dev-label">Ordinateur · même ligne, colonne de droite</span>
+        <div class="frame desktop"><div class="pg">
+          <table>
+            <thead><tr><th>Chant</th><th>Tonalité</th><th class="r">Fidélité</th><th class="r">Total</th><th></th></tr></thead>
+            <tbody>
+              <tr class="hl"><td style="font-family:var(--f-zh)">爱的彰显</td><td>G</td><td class="r"><span class="chip ok">jamais</span></td><td class="r">3</td><td class="r">+</td></tr>
+              <tr><td style="font-family:var(--f-zh)">爱的约定</td><td>C</td><td class="r">21/09</td><td class="r">6</td><td class="r">+</td></tr>
+              <tr><td style="font-family:var(--f-zh)">回家</td><td>D</td><td class="r"><span class="chip warn">il y a 7 j</span></td><td class="r">14</td><td class="r">+</td></tr>
+            </tbody>
+          </table>
+        </div></div></div>
+    </div>
+  </div>
+
+  <div class="piste">
+    <div class="piste-head"><h3>La page Statistiques</h3><span class="tag neutre">À trancher (Q5)</span></div>
+    <p>La page complète (classement, jamais joués, à redécouvrir, filtres service, langue, présidence) est dans le Back-Office. Pour « tout le monde », deux options : l'ouvrir à tout connecté depuis l'onglet Chants (« Les plus chantés » y existe déjà et y mènerait), ou la laisser aux admins et ne donner aux membres que la page chant et l'éditeur.</p>
+  </div>
+</section>
+
+<!-- ───────────── QUESTIONS ───────────── -->
+<section>
+  <span class="eyebrow">À trancher</span>
+  <h2>Questions</h2>
+  <div class="questions">
+    <div class="q"><h3>Le « titre coupé », c'est bien ça ?</h3><p>Les sous-titres et crédits gravés qui restent sans le grand titre au-dessus (« Coming Home », « 赞美之泉《2021…》 », les crédits à moitié). Ou bien autre chose, par exemple le titre du site lui-même ?</p></div>
+    <div class="q"><h3>Quelle piste pour la 简谱 ?</h3><p class="rec">Recommandation : A, avec deux colonnes (A2) en tablette paysage et ordinateur.</p></div>
+    <div class="q"><h3>Avec la piste A, que garder de l'en-tête gravé ?</h3><p>La mesure (4/4) me semble utile aux musiciens. Le sous-titre (« Coming Home »), la référence biblique et le traducteur : à reprendre dans le <code>.cho</code> et l'en-tête du site, ou à laisser tomber ?</p><p class="rec">Recommandation : mesure oui ; sous-titre et référence biblique oui s'ils existent ; crédits d'édition non.</p></div>
+    <div class="q"><h3>Quelles setlists comptent ?</h3><p>Aujourd'hui : publiées et passées, ni brouillons ni privées. Faut-il aussi montrer la prochaine prévue (« prévu le 02/11, Paix ») ?</p><p class="rec">Recommandation : compter les passées seulement, et montrer la prochaine prévue à part, sur la page chant et dans l'éditeur (ça évite de mettre le même chant deux dimanches de suite).</p></div>
+    <div class="q"><h3>La page Statistiques complète : ouverte à tout connecté ?</h3><p>Le filtre « présidence » montre qui a choisi quoi : c'est la seule partie un peu personnelle.</p><p class="rec">Recommandation : ouverte à tous depuis Chants, sans le filtre présidence pour les non-admins.</p></div>
+    <div class="q"><h3>Repère « joué récemment » dans l'éditeur : à partir de combien ?</h3><p class="rec">Recommandation : 3 semaines dans le même groupe. Juste un repère, jamais un blocage.</p></div>
+  </div>
+</section>
+
+</div>

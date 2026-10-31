@@ -5,10 +5,13 @@
 {themes: Adoration, Sainteté}
 {source: Quand je contemple.pdf}
 
-{start_of_verse: Couplet}
+{start_of_verse: Couplet 1}
 [Fmaj7/G]Quand je [C2]contemple Ta sainte[F]té
 Et quand [C]je contemple Ta beau[F]té,
 Et quand [C2]toutes les [Em7]choses pâ[F]lissent à Ta lu[F/G]mière.[G]
+{end_of_verse}
+
+{start_of_verse: Couplet 2}
 [Fmaj7/G]Quand j'ai [C2]trouvé la joie près de [F]Ton cœur,
 Quand je [C]m'enveloppe de Ton a[F]mour,
 Et quand [C2]toutes les [Em7]choses pâ[F]lissent à Ta lu[F/G]miè[G]re.

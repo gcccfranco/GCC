@@ -43,6 +43,8 @@ export type ChordProAST = {
     key: string;
     /** Tonalité la plus chantée à GCC, validée ({recommended_key}) — null si aucune. */
     recommendedKey: string | null;
+    /** `id` de la proposition (`songProposals/{id}`) dont ce chant est né ({proposition}) — null si aucune. */
+    proposition: string | null;
     jianpuKey: string | null;
     tempo: number | null;
     language: Language;

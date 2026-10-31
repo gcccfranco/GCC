@@ -1,10 +1,11 @@
 "use client"
 
-import { Fragment, useEffect, useState, type ReactNode } from "react"
+import { Fragment, useState, type ReactNode } from "react"
 import { User, X } from "lucide-react"
 import { useTranslation } from "react-i18next"
 import { currentSundayStr, fdShort, getAnnee, getMois, moisName } from "@/lib/planning/utils"
-import { useProfile } from "@/lib/firebase/users"
+import { useFiltreNom } from "./BarreDeGrille"
+import { EtatVide } from "@/components/layout/EtatVide"
 
 export interface PlanningTableProps {
   /** cols[0] est la colonne date */
@@ -26,37 +27,20 @@ export interface PlanningTableProps {
  */
 export function PlanningTable({ cols, rows, color, dateBadge, minWidth = 480, groupBy = "month" }: PlanningTableProps) {
   const { t, i18n } = useTranslation()
-  const { profile } = useProfile()
   const sun = currentSundayStr()
-  const [name, setName] = useState("")
-  const [onlyMine, setOnlyMine] = useState(false)
+  // Le prénom (mémorisé sur l'appareil, prérempli depuis le profil) et « Mes dates » : le même
+  // code que la rangée des grilles (`useFiltreNom`).
+  const filtre = useFiltreNom()
   const [mobileGroup, setMobileGroup] = useState<number | null>(null)
 
   // Clé de regroupement (mois ou année) + libellé associé (mois localisé)
   const groupKey = (dateStr: string) => (groupBy === "year" ? getAnnee(dateStr) : getMois(dateStr))
   const groupLabel = (key: number) => (groupBy === "year" ? String(key) : moisName(key, i18n.language))
 
-  // Prénom : mémorisé sur l'appareil, prérempli depuis le profil connecté
-  // (l'app connaît déjà le nom de planning — inutile de le redemander).
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem("planningName")
-      if (saved) { setName(saved); return }
-    } catch { /* stockage indisponible */ }
-    if (profile?.planningName) setName(profile.planningName)
-  }, [profile])
-
-  function updateName(v: string) {
-    setName(v)
-    try { localStorage.setItem("planningName", v) } catch { /* ignore */ }
-  }
-
-  const needle = name.trim().toLowerCase()
-  const hasName = needle.length >= 2
-  const matchCell = (cell: string) => hasName && cell.toLowerCase().includes(needle)
+  const matchCell = filtre.estMoi
   const matchRow = (row: string[]) => row.slice(1).some(matchCell)
 
-  const displayed = onlyMine && hasName ? rows.filter(matchRow) : rows
+  const displayed = filtre.mesDates && filtre.aUnNom ? rows.filter(matchRow) : rows
 
   // Séparateurs (table desktop) : par mois ou par année
   const withSep: { row: string[]; sep: string | null }[] = []
@@ -82,14 +66,14 @@ export function PlanningTable({ cols, rows, color, dateBadge, minWidth = 480, gr
           <User className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
           <input
             type="text"
-            value={name}
-            onChange={(e) => updateName(e.target.value)}
+            value={filtre.nom}
+            onChange={(e) => filtre.changerNom(e.target.value)}
             placeholder={t("planning.table.myName")}
             className="w-full h-10 sm:h-8 pl-8 pr-8 rounded-full border border-transparent bg-secondary text-foreground text-[16px] sm:text-sm focus:outline-none focus:ring-2 focus:ring-ring/20"
           />
-          {name && (
+          {filtre.nom && (
             <button
-              onClick={() => { updateName(""); setOnlyMine(false) }}
+              onClick={filtre.effacer}
               className="absolute right-0 top-1/2 -translate-y-1/2 p-2.5 text-muted-foreground hover:text-foreground active:text-foreground"
               aria-label={t("planning.table.clear")}
             >
@@ -97,13 +81,13 @@ export function PlanningTable({ cols, rows, color, dateBadge, minWidth = 480, gr
             </button>
           )}
         </div>
-        {hasName && (
+        {filtre.aUnNom && (
           <button
-            onClick={() => setOnlyMine((v) => !v)}
+            onClick={filtre.basculerMesDates}
             className={`h-10 sm:h-8 px-3 rounded-full text-sm font-semibold transition-[background-color,color,transform] duration-150 active:scale-[.96] cursor-pointer ${
-              onlyMine ? "text-white" : "bg-secondary text-muted-foreground hover:text-foreground"
+              filtre.mesDates ? "text-white" : "bg-secondary text-muted-foreground hover:text-foreground"
             }`}
-            style={onlyMine ? { background: color } : undefined}
+            style={filtre.mesDates ? { background: color } : undefined}
           >
             {t("planning.table.myDates")}
           </button>
@@ -185,9 +169,7 @@ export function PlanningTable({ cols, rows, color, dateBadge, minWidth = 480, gr
           </div>
         )}
         {mobileRows.length === 0 && (
-          <p className="px-4 py-8 text-center text-sm text-muted-foreground border border-dashed border-border rounded-xl">
-            Aucune donnée
-          </p>
+          <EtatVide compact>{t("planning.table.noData")}</EtatVide>
         )}
         {mobileRows.map((row) => {
           const isThis = row[0] === sun

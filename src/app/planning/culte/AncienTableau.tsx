@@ -6,7 +6,8 @@
 
 import { useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
-import { FilterButtons } from "@/components/planning/FilterButtons"
+import { OngletsRail } from "@/components/layout/Onglets"
+import { ongletsDePeriode } from "@/components/planning/BarreDeGrille"
 import { PlanningTable } from "@/components/planning/PlanningTable"
 import { StaleBanner } from "@/components/planning/StaleBanner"
 import { filterByTri, getCurrentTri, isFirstSundayOfMonth } from "@/lib/planning/utils"
@@ -62,7 +63,8 @@ export function AncienTableau() {
 
       <StaleBanner show={status === "stale"} />
 
-      <FilterButtons options={visibleTris} active={effTri} onChange={setTri} color={COLOR} unpublished={unpublishedTris} />
+      {/* Agencement v18 (R4, tranche Z) : les trimestres sont des vues, dans le rail. */}
+      <OngletsRail etiquette={t("planning.barre.trimestre")} onglets={ongletsDePeriode(visibleTris, unpublishedTris)} actif={effTri} choisir={setTri} />
 
       <div className="flex items-center gap-2 text-xs text-muted-foreground">
         <div className="w-3 h-3 rounded-sm" style={{ background: `${COLOR}26`, border: `1px solid ${COLOR}4d` }} />

@@ -19,10 +19,15 @@ async function recordFrames(page: Page) {
     const t0 = performance.now();
     let vue: number | null = null;
     const tick = () => {
-      const wrap = document.querySelector("main > div");
+      // Opacité de la liste à l'écran : celle de ses ancêtres multipliées. Le fondu
+      // d'entrée n'est plus celui de la page entière (`main > div`) mais celui de la
+      // liste, qui se remonte seule (lot U5, songs/ChantsVolets).
+      const search = document.querySelector('input[type="search"]');
+      let opacity = search ? 1 : 0;
+      for (let e = search; e; e = e.parentElement) opacity *= Number(getComputedStyle(e).opacity);
       const frame = {
-        list: !!document.querySelector('input[type="search"]'),
-        opacity: wrap ? Number(getComputedStyle(wrap).opacity) : 0,
+        list: !!search,
+        opacity,
         y: Math.round(window.scrollY),
       };
       frames.push(frame);

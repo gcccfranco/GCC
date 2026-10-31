@@ -16,10 +16,9 @@ export async function attendreMiseEnPage(page: Page) {
   await expect(page.getByText("Mise en page…")).toHaveCount(0, { timeout: 20_000 });
 }
 
-/** Ouvre les Réglages du mode louange. La barre s'escamote 3 s après
- *  l'ouverture, souvent avant la fin de la mise en page sous charge, et un
- *  toucher au centre la montre ou la cache : on la rappelle et on clique
- *  jusqu'à ce que la fenêtre s'ouvre. */
+/** Ouvre les Réglages du mode louange. La barre reste ouverte jusqu'à un
+ *  toucher au centre, qui la montre ou la cache : si le bouton n'est pas
+ *  visible on la rappelle, et on clique jusqu'à ce que la fenêtre s'ouvre. */
 export async function ouvrirReglages(page: Page) {
   const bouton = page.getByRole("button", { name: "Réglages" });
   const reglages = page.getByRole("dialog", { name: "Réglages" });

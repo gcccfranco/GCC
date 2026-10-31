@@ -11,6 +11,8 @@ import { fetchCampus } from "@/lib/planning/sheets"
 import type { CampusSeance } from "@/lib/planning/utils"
 import { fdLongL } from "@/lib/planning/utils"
 import { PLANNING_COLORS } from "@/lib/serviceColors"
+import { cellulePoste, poste, seanceLibelle } from "./postes"
+import { styleTexteService } from "@/lib/couleurSombre"
 
 const COLOR = PLANNING_COLORS.campus
 
@@ -33,6 +35,7 @@ function Chip({ label }: { label: string }) {
 
 export function AncienTableau() {
   const { t, i18n } = useTranslation()
+  const zh = i18n.language === "zh-CN"
   const [louange, setLouange] = useState<CampusSeance[]>(CAMP_LOUANGE_FALLBACK)
   const [entrainement, setEntrainement] = useState<CampusSeance[]>(CAMP_ENT_FALLBACK)
   const [sub, setSub] = useState<CampusSub>("louange")
@@ -49,7 +52,7 @@ export function AncienTableau() {
   const { days, order } = groupByDay(data)
 
   return (
-    <div className="max-w-2xl space-y-4 mx-auto">
+    <div className="max-w-2xl space-y-4">
       <div className="flex flex-wrap gap-3 items-center justify-between">
         <h2 className="text-base font-bold text-foreground">{t("planning.pages.campus")}</h2>
         {loading && <span className="text-xs text-muted-foreground">{t("common.loading")}</span>}
@@ -96,19 +99,19 @@ export function AncienTableau() {
                   </div>
                 )}
                 <div className={`px-4 py-2 text-[11px] font-semibold uppercase tracking-wide ${isSoir ? "bg-muted/60 text-muted-foreground" : "bg-secondary text-secondary-foreground"}`}>
-                  {sub === "entrainement" ? s.d : moment}
+                  {sub === "entrainement" ? seanceLibelle(t, zh, s.d) : moment}
                 </div>
                 <div className="grid grid-cols-2 border-b border-border">
                   <div className="px-4 py-3 border-r border-border">
                     <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">{t("planning.campus.presChoristes")}</p>
                     {s.pres && (
-                      <p className="text-sm font-semibold mb-1" style={{ color: COLOR }}>{s.pres}</p>
+                      <p className="text-sm font-semibold mb-1 texte-service" style={styleTexteService(COLOR)}>{s.pres}</p>
                     )}
                     {choristes.map(c => <Chip key={c} label={c} />)}
                   </div>
                   <div className="px-4 py-3">
                     <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">{t("planning.campus.musiciens")}</p>
-                    {musiciens.map(m => <Chip key={m} label={m} />)}
+                    {musiciens.map(m => <Chip key={m} label={cellulePoste(t, zh, m)} />)}
                   </div>
                 </div>
                 {regie.length > 0 && (
@@ -117,7 +120,7 @@ export function AncienTableau() {
                       const [role, name] = r.split(":").map(x => x.trim())
                       return (
                         <span key={r}>
-                          <span className="text-muted-foreground">{role}</span>
+                          <span className="text-muted-foreground">{zh ? poste(t, role) : role}</span>
                           {name && <span className="font-semibold text-foreground ml-1">{name}</span>}
                         </span>
                       )

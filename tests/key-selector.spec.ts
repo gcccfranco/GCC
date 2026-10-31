@@ -7,7 +7,8 @@ const DOUZE = ["C", "Db", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B"];
 
 async function ouvrir(page: import("@playwright/test").Page, slug: string) {
   await page.goto(`/songs/${encodeURIComponent(slug)}`, { waitUntil: "domcontentloaded" });
-  const select = page.locator("select").first();
+  // Dans la barre du chant : en deux volets, la liste (et son choix de thème) est à côté (lot U5).
+  const select = page.getByTestId("barre-outils").locator("select").first();
   await select.waitFor();
   return select;
 }
@@ -31,7 +32,6 @@ test.describe("sélecteur de tonalité", () => {
   for (const [slug, tonalité, départ] of [
     ["a-jamais-tu-es-saint", "C#", "A"],
     ["dieu-sauveur", "G#", "A"],
-    ["a-l-agneau", "Am", "Am"], // pas une des douze : ni majeure, ni enharmonique
   ] as const) {
     test(`${slug} garde sa tonalité « ${tonalité} » dans la liste`, async ({ page }) => {
       const select = await ouvrir(page, slug);
@@ -43,6 +43,15 @@ test.describe("sélecteur de tonalité", () => {
       expect([...noms].sort()).toEqual([...DOUZE, tonalité].sort());
     });
   }
+
+  // Un chant mineur propose les douze tonalités mineures, et elles seules.
+  test("a-l-agneau (Am) offre les douze mineures", async ({ page }) => {
+    const select = await ouvrir(page, "a-l-agneau");
+    await expect(select).toHaveValue("Am");
+    expect(await options(select)).toEqual(
+      ["Cm", "C#m", "Dm", "Ebm", "Em", "Fm", "F#m", "Gm", "G#m", "Am", "Bbm", "Bm"],
+    );
+  });
 
   // **Les deux moitiés doivent nommer pareil.** Les boutons − / + calculent la
   // tonalité avec `getTransposedKey`, le sélecteur la propose depuis

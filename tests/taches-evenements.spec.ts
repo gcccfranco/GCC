@@ -1,16 +1,18 @@
 import { expect, test, type Browser, type Page } from "@playwright/test";
 import { fakeFirestore, signInAs, type FakeProfile } from "./helpers/fakeSession";
+import { estGrandEcran, fenetreDuSite, repondreDansLeSite } from "./helpers/agencement";
 import { tachesDupliquees } from "../src/lib/taches/echeances";
 import type { Tache } from "../src/types/tache";
 
 // Lot 14 « Tâches ↔ évènements » (go du 19/09/2026) : une tâche peut être
 // rattachée à un évènement daté. La fiche de l'évènement montre les tâches de
-// mes pôles, et dupliquer l'évènement propose de les copier aux mêmes délais.
+// mes équipes (lot 1 du chantier « équipes et groupes », EQ16), et dupliquer l'évènement propose de
+// les copier aux mêmes délais.
 // La duplication elle-même est dans tests/evenements.spec.ts.
 
 function tache(over: Partial<Tache> = {}): Tache {
   return {
-    id: "t1", pole: "da", titre: "Fond PPT", responsableUid: null, responsableNom: "", echeance: "2026-12-10",
+    id: "t1", equipe: "da", titre: "Fond PPT", responsableUid: null, responsableNom: "", echeance: "2026-12-10",
     repetition: null, lien: "", note: "", prevenir: null, evenement: null, auteurUid: "uid-auteur",
     createdAt: "2026-09-01T10:00:00Z", updatedAt: "2026-09-01T10:00:00Z", ...over,
   };
@@ -21,19 +23,19 @@ test("tachesDupliquees glisse les échéances du même nombre de jours que l'év
   const noel2027 = { id: "noel-2027", titre: "Noël 2027" };
   const copies = tachesDupliquees([
     tache({
-      id: "a", pole: "da", titre: "Fond PPT", echeance: "2026-12-10", responsableUid: "uid-da", responsableNom: "Ruth Kouassi",
+      id: "a", equipe: "da", titre: "Fond PPT", echeance: "2026-12-10", responsableUid: "uid-da", responsableNom: "Ruth Kouassi",
       lien: "https://canva.com/fond", note: "Format 16:9", prevenir: { regie: "Culte Francophone" }, evenement: noel2026,
     }),
     // Une répétition (tâche d'avant la règle) ne suit jamais la copie.
-    tache({ id: "b", pole: "media", titre: "Montage vidéo", echeance: "2026-12-23", repetition: { rythme: "an" }, evenement: noel2026 }),
+    tache({ id: "b", equipe: "medias", titre: "Montage vidéo", echeance: "2026-12-23", repetition: { rythme: "an" }, evenement: noel2026 }),
   ], "2026-12-24", "2027-12-24", noel2027);
   // Égalité stricte : ni id, ni auteur, ni dates de création, ni fois.
   expect(copies).toEqual([
-    { pole: "da", values: {
+    { equipe: "da", values: {
       titre: "Fond PPT", responsableUid: "uid-da", responsableNom: "Ruth Kouassi", echeance: "2027-12-10", repetition: null,
       lien: "https://canva.com/fond", note: "Format 16:9", prevenir: { regie: "Culte Francophone" }, evenement: noel2027,
     } },
-    { pole: "media", values: {
+    { equipe: "medias", values: {
       titre: "Montage vidéo", responsableUid: null, responsableNom: "", echeance: "2027-12-23", repetition: null,
       lien: "", note: "", prevenir: null, evenement: noel2027,
     } },
@@ -59,7 +61,7 @@ const LIE_A_NOEL = { id: "noel", titre: "Noël 2026" };
 
 function tacheDoc(over: Record<string, unknown> = {}) {
   return {
-    pole: "da", titre: "Fond PPT de Noël", responsableUid: null, responsableNom: "", echeance: "2026-12-10",
+    equipe: "da", titre: "Fond PPT de Noël", responsableUid: null, responsableNom: "", echeance: "2026-12-10",
     repetition: null, lien: "", note: "", prevenir: null, evenement: LIE_A_NOEL, auteurUid: "uid-da",
     createdAt: "2026-09-01T10:00:00Z", updatedAt: "2026-09-01T10:00:00Z", ...over,
   };
@@ -68,18 +70,18 @@ function tacheDoc(over: Record<string, unknown> = {}) {
 const DOCS = {
   "evenements/noel": NOEL,
   "evenements/paques": PAQUES,
-  "poles/da/taches/t1": tacheDoc(),
-  "poles/da/taches/t2": tacheDoc({ titre: "Affiche de Pâques", echeance: "2027-03-14", evenement: { id: "paques", titre: "Pâques 2027" } }),
-  "poles/da/taches/t3": tacheDoc({ titre: "Vidéo d'annonce", evenement: null }),
-  "poles/media/taches/m1": tacheDoc({ pole: "media", titre: "Montage vidéo de Noël", echeance: "2026-12-20" }),
+  "equipes/da/taches/t1": tacheDoc(),
+  "equipes/da/taches/t2": tacheDoc({ titre: "Affiche de Pâques", echeance: "2027-03-14", evenement: { id: "paques", titre: "Pâques 2027" } }),
+  "equipes/da/taches/t3": tacheDoc({ titre: "Vidéo d'annonce", evenement: null }),
+  "equipes/medias/taches/m1": tacheDoc({ equipe: "medias", titre: "Montage vidéo de Noël", echeance: "2026-12-20" }),
 };
 
-const RUTH_DA: FakeProfile = { uid: "uid-da", email: "da@example.com", firstName: "Ruth", lastName: "Kouassi", poles: ["da"] };
-const PAUL_MEDIA: FakeProfile = { uid: "uid-media", email: "media@example.com", firstName: "Paul", lastName: "Media", poles: ["media"] };
+const RUTH_DA: FakeProfile = { uid: "uid-da", email: "da@example.com", firstName: "Ruth", lastName: "Kouassi", dansEquipes: ["da"], referentDe: ["da"] };
+const PAUL_MEDIA: FakeProfile = { uid: "uid-media", email: "media@example.com", firstName: "Paul", lastName: "Media", dansEquipes: ["medias"], referentDe: ["medias"] };
 const SANS_POLE: FakeProfile = { uid: "uid-rien", email: "rien@example.com", firstName: "Anne", lastName: "Nopole" };
-const DEUX_POLES: FakeProfile = { uid: "uid-dm", email: "dm@example.com", firstName: "Léa", lastName: "Deux", poles: ["da", "media"] };
+const DEUX_POLES: FakeProfile = { uid: "uid-dm", email: "dm@example.com", firstName: "Léa", lastName: "Deux", dansEquipes: ["da", "medias"], referentDe: ["da", "medias"] };
 /** Coordination des évènements (elle peut dupliquer et supprimer) et membre de DA. */
-const ALICE: FakeProfile = { uid: "uid-alice", email: "alice@example.com", firstName: "Alice", lastName: "Q.", poles: ["evenement", "da"] };
+const ALICE: FakeProfile = { uid: "uid-alice", email: "alice@example.com", firstName: "Alice", lastName: "Q.", dansEquipes: ["evenementiel", "da"], referentDe: ["evenementiel", "da"], coordination: true };
 
 type Docs = Record<string, Record<string, unknown>>;
 
@@ -95,25 +97,33 @@ async function autrePage(browser: Browser): Promise<Page> {
 
 const carte = (page: Page) => page.getByTestId("taches-carte");
 
+/** Back-Office › page de l'équipe, section « Tâches » (piste A, BO7) : la ligne ouvre la fiche, « Modifier » le
+ *  formulaire, dans la page en grand, en feuille sur un volet. */
+async function modifier(page: Page, ligne: RegExp) {
+  await page.getByRole("region", { name: "Tâches", exact: true }).getByRole("button", { name: ligne }).click();
+  await expect(page).toHaveURL(/\/back-office\/taches\/da\/t\d/);
+  await page.getByRole("button", { name: "Modifier", exact: true }).click();
+  return page.getByRole(estGrandEcran(test.info()) ? "form" : "dialog", { name: "Modifier la tâche" });
+}
+
 test("une tâche sans champ evenement se lit non liée", async ({ page }) => {
   // Document d'avant le lot 14 : aucun champ `evenement`, aucune migration.
   const { evenement, ...avant } = tacheDoc({ titre: "Fond PPT" });
   void evenement;
-  const db = await signInAs(page, RUTH_DA, { "poles/da/taches/t1": avant }, "/taches/da");
-  await expect(page.getByText("Fond PPT")).toBeVisible();
+  const db = await signInAs(page, RUTH_DA, { "equipes/da/taches/t1": avant }, "/back-office/equipes/da");
+  await expect(page.locator(".group-row", { hasText: "Fond PPT" })).toBeVisible();
   await expect(page.getByText(/^pour /)).toHaveCount(0);
-  await page.getByRole("button", { name: /^Fond PPT/ }).click();
-  const form = page.getByRole("dialog", { name: "Modifier la tâche" });
+  const form = await modifier(page, /^Fond PPT/);
   await expect(form.getByLabel("Répétition")).toBeVisible();
   await expect(form.getByRole("button", { name: "Détacher de l'évènement" })).toHaveCount(0);
   await form.getByRole("button", { name: "Enregistrer" }).click();
   await expect(form).toHaveCount(0);
   // Relue non liée, elle est réécrite non liée.
-  const ecrit = db.writes.find((w) => w.method === "PATCH" && w.path === "poles/da/taches/t1");
+  const ecrit = db.writes.find((w) => w.method === "PATCH" && w.path === "equipes/da/taches/t1");
   expect(ecrit?.data).toHaveProperty("evenement", null);
 });
 
-test("fiche : un membre du pôle DA voit le bloc Tâches avec les tâches DA de cet évènement, pas celles d'un autre évènement ni les non liées", async ({ page }) => {
+test("fiche : une référente de TEAM DA voit le bloc Tâches avec les tâches DA de cet évènement, pas celles d'un autre évènement ni les non liées", async ({ page }) => {
   await member(page, RUTH_DA, "/evenements/noel");
   await expect(carte(page).getByRole("heading", { name: "Tâches" })).toBeVisible();
   const ligne = carte(page).getByRole("checkbox", { name: /Fond PPT de Noël/ });
@@ -143,15 +153,15 @@ test("fiche : sans tâche, le bloc le dit ; une info sans date n'a pas de bloc",
   await expect(carte(page)).toHaveCount(0);
 });
 
-test("fiche : une réunion de pôle a aussi son bloc Tâches", async ({ page }) => {
+test("fiche : une réunion d'équipe a aussi son bloc Tâches", async ({ page }) => {
   await member(page, RUTH_DA, "/evenements/reunion", {
-    "evenements/reunion": { ...NOEL, titre: "Réunion DA", type: "info", pour: "pole:da", date: "2026-10-10", heure: "20:00" },
-    "poles/da/taches/t1": tacheDoc({ titre: "Ordre du jour", echeance: "2026-10-08", evenement: { id: "reunion", titre: "Réunion DA" } }),
+    "evenements/reunion": { ...NOEL, titre: "Réunion DA", type: "info", pour: "equipe:da", date: "2026-10-10", heure: "20:00" },
+    "equipes/da/taches/t1": tacheDoc({ titre: "Ordre du jour", echeance: "2026-10-08", evenement: { id: "reunion", titre: "Réunion DA" } }),
   });
   await expect(carte(page).getByRole("checkbox", { name: /Ordre du jour/ })).toBeVisible();
 });
 
-test("fiche : un membre Média ne voit que les tâches Média ; un connecté sans pôle ne voit pas le bloc ; sans compte non plus", async ({ page, browser }) => {
+test("fiche : un référent de TEAM MÉDIAS ne voit que les tâches de TEAM MÉDIAS ; un connecté sans équipe ne voit pas le bloc ; sans compte non plus", async ({ page, browser }) => {
   await member(page, PAUL_MEDIA, "/evenements/noel");
   await expect(carte(page).getByRole("checkbox", { name: /Montage vidéo de Noël/ })).toBeVisible();
   await expect(carte(page).getByRole("checkbox")).toHaveCount(1);
@@ -174,42 +184,42 @@ test("fiche : un membre Média ne voit que les tâches Média ; un connecté san
   await sansCompte.context().close();
 });
 
-test("fiche : Nouvelle tâche crée une tâche liée dans le pôle choisi, à mon nom, sans répétition (db.writes)", async ({ page }) => {
+test("fiche : Nouvelle tâche crée une tâche liée dans l'équipe choisie, à mon nom, sans répétition (db.writes)", async ({ page }) => {
   const db = await member(page, DEUX_POLES, "/evenements/noel");
   await carte(page).getByRole("button", { name: "Nouvelle tâche" }).click();
   const form = page.getByRole("dialog", { name: "Nouvelle tâche" });
   await expect(form).toContainText("Noël 2026");
   await expect(form.getByLabel("Répétition")).toHaveCount(0);
   await expect(form.getByLabel("Échéance")).toHaveValue("");
-  await form.getByLabel("Pôle").selectOption({ label: "Média" });
+  await form.getByLabel("Équipe").selectOption({ label: "Médias" });
   await form.getByLabel("Titre").fill("Diaporama des enfants");
   await form.getByLabel("Échéance").fill("2026-12-17");
   await capture(page, "evenement-tache-nouvelle");
   await form.getByRole("button", { name: "Enregistrer" }).click();
   await expect(form).toHaveCount(0);
-  const cree = db.writes.filter((w) => w.method === "POST" && w.path.startsWith("poles/"));
+  const cree = db.writes.filter((w) => w.method === "POST" && w.path.startsWith("equipes/"));
   expect(cree).toHaveLength(1);
-  expect(cree[0].path).toMatch(/^poles\/media\/taches\//);
+  expect(cree[0].path).toMatch(/^equipes\/medias\/taches\//);
   expect(cree[0].data).toMatchObject({
-    titre: "Diaporama des enfants", pole: "media", echeance: "2026-12-17", repetition: null,
+    titre: "Diaporama des enfants", equipe: "medias", echeance: "2026-12-17", repetition: null,
     evenement: LIE_A_NOEL, auteurUid: "uid-dm", responsableUid: null,
   });
   await expect(carte(page).getByRole("checkbox", { name: /Diaporama des enfants/ })).toBeVisible();
 });
 
-test("fiche : avec un seul pôle, le formulaire ne demande pas le pôle", async ({ page }) => {
+test("fiche : avec une seule équipe, le formulaire ne demande pas l'équipe", async ({ page }) => {
   const db = await member(page, RUTH_DA, "/evenements/noel");
   await carte(page).getByRole("button", { name: "Nouvelle tâche" }).click();
   const form = page.getByRole("dialog", { name: "Nouvelle tâche" });
   await expect(form.getByLabel("Titre")).toBeVisible();
-  await expect(form.getByLabel("Pôle")).toHaveCount(0);
+  await expect(form.getByLabel("Équipe")).toHaveCount(0);
   await form.getByLabel("Titre").fill("Carte de vœux");
   await form.getByLabel("Échéance").fill("2026-12-01");
   await form.getByRole("button", { name: "Enregistrer" }).click();
   await expect(form).toHaveCount(0);
-  const cree = db.writes.find((w) => w.method === "POST" && w.path.startsWith("poles/"));
-  expect(cree?.path).toMatch(/^poles\/da\/taches\//);
-  expect(cree?.data).toMatchObject({ pole: "da", evenement: LIE_A_NOEL, repetition: null });
+  const cree = db.writes.find((w) => w.method === "POST" && w.path.startsWith("equipes/"));
+  expect(cree?.path).toMatch(/^equipes\/da\/taches\//);
+  expect(cree?.data).toMatchObject({ equipe: "da", evenement: LIE_A_NOEL, repetition: null });
 });
 
 test("fiche : cocher depuis la fiche cycle À faire → En cours → Terminé et prévient à Terminé (route simulée)", async ({ page }) => {
@@ -219,9 +229,9 @@ test("fiche : cocher depuis la fiche cycle À faire → En cours → Terminé et
     return route.fulfill({ contentType: "application/json", body: JSON.stringify({ ok: true, notified: 1, linked: true, cible: "regie" }) });
   });
   const db = await member(page, RUTH_DA, "/evenements/noel", {
-    ...DOCS, "poles/da/taches/t1": tacheDoc({ prevenir: { regie: "Culte Francophone" } }),
+    ...DOCS, "equipes/da/taches/t1": tacheDoc({ prevenir: { regie: "Culte Francophone" } }),
   });
-  const chemin = "poles/da/taches/t1/fois/2026-12-10";
+  const chemin = "equipes/da/taches/t1/fois/2026-12-10";
   const cercle = carte(page).getByRole("checkbox", { name: /Fond PPT de Noël/ });
   await expect(cercle).toHaveAttribute("aria-checked", "false");
 
@@ -234,11 +244,11 @@ test("fiche : cocher depuis la fiche cycle À faire → En cours → Terminé et
   await expect(cercle).toHaveAttribute("aria-checked", "true");
   await expect(carte(page).getByRole("status")).toHaveText("Régie prévenue.");
   expect(db.doc(chemin)).toMatchObject({ etat: "terminee" });
-  expect(appels).toEqual([{ pole: "da", tacheId: "t1", date: "2026-12-10" }]);
+  expect(appels).toEqual([{ equipe: "da", tacheId: "t1", date: "2026-12-10" }]);
 });
 
-test("ligne : une tâche liée dit “pour Noël 2026” sur la page du pôle et dans Mes tâches", async ({ page }) => {
-  await signInAs(page, RUTH_DA, DOCS, "/taches/da");
+test("ligne : une tâche liée dit “pour Noël 2026” sur la page de l'équipe et dans Mes tâches", async ({ page }) => {
+  await signInAs(page, RUTH_DA, DOCS, "/back-office/equipes/da");
   const liee = page.locator(".group-row", { hasText: "Fond PPT de Noël" });
   await expect(liee).toContainText("pour Noël 2026");
   await expect(page.locator(".group-row", { hasText: "Vidéo d'annonce" })).not.toContainText("pour ");
@@ -247,9 +257,8 @@ test("ligne : une tâche liée dit “pour Noël 2026” sur la page du pôle et
 });
 
 test("formulaire : Détacher écrit evenement: null ; une tâche liée ne propose pas de répétition", async ({ page }) => {
-  const db = await signInAs(page, RUTH_DA, DOCS, "/taches/da");
-  await page.getByRole("button", { name: /^Fond PPT de Noël/ }).click();
-  const form = page.getByRole("dialog", { name: "Modifier la tâche" });
+  const db = await signInAs(page, RUTH_DA, DOCS, "/back-office/equipes/da");
+  const form = await modifier(page, /^Fond PPT de Noël/);
   await expect(form).toContainText("Noël 2026");
   await expect(form.getByLabel("Répétition")).toHaveCount(0);
   await capture(page, "tache-liee-formulaire");
@@ -259,22 +268,27 @@ test("formulaire : Détacher écrit evenement: null ; une tâche liée ne propos
   await expect(form.getByRole("button", { name: "Détacher de l'évènement" })).toHaveCount(0);
   await form.getByRole("button", { name: "Enregistrer" }).click();
   await expect(form).toHaveCount(0);
-  const ecrit = db.writes.find((w) => w.method === "PATCH" && w.path === "poles/da/taches/t1");
+  const ecrit = db.writes.find((w) => w.method === "PATCH" && w.path === "equipes/da/taches/t1");
   expect(ecrit?.data).toHaveProperty("evenement", null);
-  expect(db.doc("poles/da/taches/t1")?.evenement).toBeNull();
+  expect(db.doc("equipes/da/taches/t1")?.evenement).toBeNull();
+  // La fiche est une page : la ligne se relit sur la page de l'équipe.
+  await page.goto("/back-office/equipes/da");
   await expect(page.locator(".group-row", { hasText: "Fond PPT de Noël" })).not.toContainText("pour Noël 2026");
 });
 
 test("évènement supprimé : la tâche reste, avec le titre mémorisé", async ({ page }) => {
-  const db = await member(page, ALICE, "/evenements/noel");
-  page.on("dialog", (d) => d.accept());
-  await page.getByRole("button", { name: "Supprimer" }).click();
+  // Lot U6, B3 : supprimer est sur la fiche de gestion, au Back-Office.
+  const db = await member(page, ALICE, "/back-office/evenements/noel");
+  // Agencement v18 (B3) : dans le menu « ⋯ » de la fiche de gestion.
+  await page.getByRole("button", { name: "Plus d'actions" }).click();
+  await page.getByRole("menuitem", { name: "Supprimer" }).click();
+  await repondreDansLeSite(page, "Supprimer");
   await expect(page).toHaveURL(/\/evenements\/?$/);
   expect(db.doc("evenements/noel")).toBeUndefined();
   // Rien n'est écrit chez les tâches : ni suppression, ni détachement.
-  expect(db.writes.filter((w) => w.path.startsWith("poles/"))).toEqual([]);
-  expect(db.doc("poles/da/taches/t1")?.evenement).toEqual(LIE_A_NOEL);
-  await page.goto("/taches/da");
+  expect(db.writes.filter((w) => w.path.startsWith("equipes/"))).toEqual([]);
+  expect(db.doc("equipes/da/taches/t1")?.evenement).toEqual(LIE_A_NOEL);
+  await page.goto("/back-office/equipes/da");
   await expect(page.locator(".group-row", { hasText: "Fond PPT de Noël" })).toContainText("pour Noël 2026");
 });
 
@@ -284,24 +298,24 @@ test("中文 : bloc, ligne et confirmation en chinois", async ({ page }) => {
   await member(page, ALICE, "/evenements/noel", { ...DOCS, "evenements/pentecote": { ...NOEL, titre: "Pentecôte 2027", date: "2027-05-16" } });
   await expect(carte(page).getByRole("heading", { name: "任务" })).toBeVisible();
   await expect(carte(page).getByRole("button", { name: "新任务" })).toBeVisible();
-  await expect(carte(page).locator(".group-row", { hasText: "Fond PPT de Noël" })).toContainText("美工");
+  await expect(carte(page).locator(".group-row", { hasText: "Fond PPT de Noël" })).toContainText("美工组");
 
   // Un évènement sans tâche le dit en chinois.
   await page.goto("/evenements/pentecote");
   await expect(carte(page)).toContainText("此活动还没有任务。");
 
-  // La ligne, sur la page du pôle.
-  await page.goto("/taches/da");
+  // La ligne, sur la page de l'équipe.
+  await page.goto("/back-office/equipes/da");
   await expect(page.locator(".group-row", { hasText: "Fond PPT de Noël" })).toContainText("用于 Noël 2026");
 
   // Dupliquer Noël : la question est posée en chinois, avec le nombre de tâches.
-  const questions: string[] = [];
-  page.on("dialog", (d) => { questions.push(d.message()); return d.dismiss(); });
-  await page.goto("/evenements/noel");
-  await page.getByRole("link", { name: "复制" }).click();
+  await page.goto("/back-office/evenements/noel");
+  await page.getByRole("button", { name: "更多操作" }).click();
+  await page.getByRole("menuitem", { name: "复制" }).click();
   await page.getByLabel("日期", { exact: true }).fill("2027-12-24");
   await page.getByRole("button", { name: "创建活动" }).click();
-  await expect.poll(() => questions).toEqual(["是否同时复制它的 1 个任务（保持相同提前天数）？"]);
+  await expect(fenetreDuSite(page).getByRole("heading", { name: "是否同时复制它的 1 个任务（保持相同提前天数）？" })).toBeVisible();
+  await repondreDansLeSite(page, "取消");
 });
 
 /** Capture à regarder à l'œil (PW_CAPTURES=<dossier>), une par appareil. */
@@ -315,14 +329,14 @@ async function capture(page: Page, name: string) {
 test("capture : le bloc Tâches sous la fiche, avec les trois états", async ({ page }) => {
   await member(page, DEUX_POLES, "/evenements/noel", {
     "evenements/noel": NOEL,
-    "poles/da/taches/t1": tacheDoc({ responsableUid: "uid-dm", responsableNom: "Léa Deux" }),
-    "poles/da/taches/t1/fois/2026-12-10": {
+    "equipes/da/taches/t1": tacheDoc({ responsableUid: "uid-dm", responsableNom: "Léa Deux" }),
+    "equipes/da/taches/t1/fois/2026-12-10": {
       date: "2026-12-10", parUid: "uid-dm", parNom: "Léa Deux", le: "2026-09-28T09:00:00Z", etat: "encours", debutLe: "2026-09-28T09:00:00Z",
     },
-    "poles/da/taches/t2": tacheDoc({ titre: "Affiche de Noël", echeance: "2026-11-29", lien: "https://canva.com/affiche" }),
-    "poles/media/taches/m1": tacheDoc({ pole: "media", titre: "Montage vidéo de Noël", echeance: "2026-12-20" }),
-    "poles/media/taches/m2": tacheDoc({ pole: "media", titre: "Réserver la caméra", echeance: "2026-09-30" }),
-    "poles/media/taches/m2/fois/2026-09-30": {
+    "equipes/da/taches/t2": tacheDoc({ titre: "Affiche de Noël", echeance: "2026-11-29", lien: "https://canva.com/affiche" }),
+    "equipes/medias/taches/m1": tacheDoc({ equipe: "medias", titre: "Montage vidéo de Noël", echeance: "2026-12-20" }),
+    "equipes/medias/taches/m2": tacheDoc({ equipe: "medias", titre: "Réserver la caméra", echeance: "2026-09-30" }),
+    "equipes/medias/taches/m2/fois/2026-09-30": {
       date: "2026-09-30", parUid: "uid-dm", parNom: "Léa Deux", le: "2026-09-30T18:00:00Z", etat: "terminee", debutLe: "",
     },
   });

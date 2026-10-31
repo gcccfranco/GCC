@@ -41,7 +41,8 @@ test.describe("fondations du nouveau look (T1)", () => {
 
   test("le rouge du logo ne reste que sur le label de la navbar", async ({ page }) => {
     await page.goto("/songs");
-    const label = page.locator("header a span span").first();
+    // Lot U4 : sur ordinateur, le label est dans la barre latérale ; on prend celui qu'on voit.
+    const label = page.locator('header a span span, [data-testid="label-section"]').filter({ visible: true }).first();
     await label.waitFor();
     expect(await label.evaluate((e) => getComputedStyle(e).color)).toBe(ROUGE_DU_LOGO);
   });

@@ -123,7 +123,7 @@ test.describe("index A–Z : finitions (lot T0)", () => {
     await page.waitForTimeout(120);
 
     await expect(encart, "l'encart montre la lettre courante").toHaveText("M");
-    const headerTop = await page.locator("header").evaluate((h) => h.getBoundingClientRect().top);
+    const headerTop = await page.locator("header.barre-haut").evaluate((h) => h.getBoundingClientRect().top);
     expect(headerTop, "la barre du haut ne s'est pas cachée pendant le geste").toBe(0);
 
     await touch("touchEnd", cx, my);

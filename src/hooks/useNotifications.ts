@@ -3,6 +3,7 @@ import { BACK_OFFICE } from "@/lib/backOffice";
 import { getEvenementsSince } from "@/lib/firebase/evenements";
 import { getSetlistsSince } from "@/lib/firebase/setlists";
 import { getNotifsSince } from "@/lib/firebase/notifications";
+import { ficheEvenement } from "@/lib/navigation";
 import { useProfile } from "@/lib/firebase/users";
 import { visibleCategories, isAdminUser, canSeeEvenement } from "@/lib/access";
 
@@ -79,10 +80,10 @@ export function useNotifications() {
 
       for (const e of evenements) {
         if (e.organisateurUid === user.uid) continue;
-        // Même règle que la fiche : section du profil, réunion de son pôle
-        // (`pole:x`, lot 7), coordination, admins. Avant le 19/09/2026 le filtre
-        // ne connaissait que les catégories de service : aucune réunion de
-        // pôle n'atteignait la cloche.
+        // Même règle que la fiche : section du profil, réunion de son équipe
+        // (`equipe:x`, lot 7), coordination, admins. Avant le 19/09/2026 le filtre
+        // ne connaissait que les catégories de service : aucune réunion
+        // d'équipe n'atteignait la cloche.
         if (!canSeeEvenement(user, profile, e)) continue;
         const ts = Date.parse(e.createdAt) || 0;
         if (!ts) continue;
@@ -92,12 +93,15 @@ export function useNotifications() {
           title: e.titre,
           category: e.pour === "eglise" ? "" : e.pour,
           date: ts,
-          href: `/evenements/${e.id}`,
+          // Lot G (G2) : une réunion mène à sa fiche de Back-Office › Réunions.
+          href: ficheEvenement(e),
         });
       }
 
       for (const s of setlists) {
         if (s.ownerId === user.uid) continue;
+        // Une setlist de fête n'annonce rien : chaque saisie en ferait une ligne aux admins (CF15).
+        if (s.fete) continue;
         if (!admin && !cats.includes(s.category)) continue;
         const created = s.createdAt?.getTime() ?? 0;
         const updated = s.updatedAt?.getTime() ?? 0;

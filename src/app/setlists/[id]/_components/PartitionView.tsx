@@ -1,8 +1,11 @@
 import { useMemo, useState } from "react";
+import Link from "next/link";
+import { songHref } from "@/lib/setlist/songHref";
 import type { JianpuChords, SetlistItem } from "@/types/setList";
 import type { SongContent } from "@/lib/api/songs";
 import { SongView, SectionView, StructureStrip, TransitionNote } from "@/components/song/SongView";
 import { JianpuSheet } from "@/components/jianpu/JianpuSheet";
+import { AccordsProvider, ChantDesAccords } from "@/components/accords/AccordsProvider";
 import { resolveSectionOccurrences, type SectionOccurrence } from "@/lib/setlist/sectionSteps";
 import type { PartitionLayout } from "@/lib/partitionLayoutPref";
 import { resolveStructureOverride } from "@/lib/chordpro/structure";
@@ -16,6 +19,7 @@ import { itemAst } from "@/lib/chordpro/itemContent";
 import { lyricsText } from "@/components/song/copyLyrics";
 import { playedSections } from "@/lib/setlist/playedSections";
 import { isLastPhraseOnly } from "@/lib/setlist/lastPhrase";
+import { Button } from "@/components/ui/button";
 import { Check, Copy, Link2, MessageSquare } from "lucide-react";
 import type { ChordProAST, ChordProLine, ChordProSection } from "@/types/chordPro";
 import type { SongVersionView } from "@/lib/setlist/versionChoice";
@@ -61,6 +65,7 @@ function TransitionBanner({ text }: { text: string }) {
 }
 
 export function PartitionsView({
+  setlistId,
   items,
   contents,
   loading,
@@ -79,7 +84,11 @@ export function PartitionsView({
   onShare,
   onEditJianpu,
   onIdees,
+  onRetryChant,
+  titres,
 }: {
+  /** Le titre de chaque chant mène à sa page, dans les réglages de la setlist. */
+  setlistId: string;
   items: SetlistItem[];
   contents: Record<string, SongContent>;
   loading: boolean;
@@ -112,6 +121,10 @@ export function PartitionsView({
   /** Idées d'harmonie du chant (lot 9) — absent si la personne n'y a pas droit.
    *  Fusion : `slug` dit lequel de ses chants. */
   onIdees?: (itemIndex: number, slug?: string) => void;
+  /** « Chant non chargé — Réessayer » : relit le contenu de ce seul chant. */
+  onRetryChant?: (slug: string) => void | Promise<void>;
+  /** Titre de chaque chant par slug (l'index) : un chant sans contenu garde son titre. */
+  titres?: Record<string, string>;
 }) {
   const { t } = useTranslation();
   if (loading) {
@@ -122,6 +135,8 @@ export function PartitionsView({
     );
   }
   return (
+    // Les accords s'ouvrent au toucher hors édition (DA-3) ; « Ma version » et « Adapter » gardent leurs lignes tappables.
+    <AccordsProvider actif={!editMode} aide>
     <div className="space-y-10 print:space-y-6">
       {items
         .map((item, origIndex) => ({ item, origIndex }))
@@ -131,6 +146,11 @@ export function PartitionsView({
         if (item.type === "transition") {
           if (!item.transitionText) return null;
           return <TransitionBanner key={`transition-${idx}`} text={item.transitionText} />;
+        }
+
+        // ── Chant hors répertoire en attente (setlist de fête, CF21) ──
+        if (item.type === "proposition") {
+          return <p key={`proposition-${idx}`} className="text-sm text-muted-foreground">{item.proposition?.titre} — {t("planning.fete.propositionEnAttente")}</p>;
         }
 
         // ── Fusion item ──
@@ -200,7 +220,9 @@ export function PartitionsView({
                       if (!ast) return null;
                       return (
                         <span key={fs.songSlug} className="text-sm font-bold text-foreground">
-                          {ast.metadata.title}
+                          <Link href={songHref(fs.songSlug, fs, setlistId, item.position)} className="hover:underline underline-offset-2">
+                            {ast.metadata.title}
+                          </Link>
                           <span className="ml-1 font-mono text-xs font-normal text-muted-foreground">
                             {fs.keyOverride ?? ast.metadata.key}
                           </span>
@@ -232,7 +254,8 @@ export function PartitionsView({
                       ? transposeSection(section, semitonesTo(ast.metadata.key, keyChange), keyChange)
                       : section;
                     return (
-                      <div key={`${ms.songSlug}-${ms.sectionId}-${msIdx}`}>
+                      <div key={`${ms.songSlug}-${ms.sectionId}-${msIdx}`} data-chant-slug={ms.songSlug}>
+                        <ChantDesAccords chant={{ slug: ms.songSlug, titre: ast.metadata.title }}>
                         <SectionView
                           section={shownSection}
                           language={ast.metadata.language}
@@ -246,6 +269,7 @@ export function PartitionsView({
                           chartStyle={chartStyle}
                           occurrenceUids={[section.uid]}
                         />
+                        </ChantDesAccords>
                         {withDetails && ms.transition && <TransitionNote text={ms.transition} />}
                       </div>
                     );
@@ -274,7 +298,8 @@ export function PartitionsView({
                   const ast = transposedAsts[fs.songSlug];
                   if (!ast) return null;
                   return (
-                    <div key={fs.songSlug}>
+                    <div key={fs.songSlug} data-chant-slug={fs.songSlug}>
+                      <ChantDesAccords chant={{ slug: fs.songSlug, titre: ast.metadata.title }}>
                       {fsIdx > 0 && (
                         <div className="flex items-center gap-2 my-6 print:my-3">
                           <div className="flex-1 border-t border-dashed border-primary/30" />
@@ -293,7 +318,9 @@ export function PartitionsView({
                         sectionKeys={fs.sectionKeys ?? {}}
                         chartStyle={chartStyle}
                         layout={layout}
+                        titleHref={songHref(fs.songSlug, fs, setlistId, item.position)}
                       />
+                      </ChantDesAccords>
                     </div>
                   );
                 })}
@@ -306,6 +333,7 @@ export function PartitionsView({
         return (
           <NormalSongItem
             key={`${item.songSlug}-${idx}`}
+            setlistId={setlistId}
             item={item}
             origIndex={origIndex}
             content={contents[item.songSlug]}
@@ -324,14 +352,18 @@ export function PartitionsView({
             onShare={onShare}
             onEditJianpu={onEditJianpu}
             onIdees={onIdees}
+            onRetryChant={onRetryChant}
+            titre={titres?.[item.songSlug]}
           />
         );
       })}
     </div>
+    </AccordsProvider>
   );
 }
 
 function NormalSongItem({
+  setlistId,
   item,
   origIndex,
   content,
@@ -350,7 +382,10 @@ function NormalSongItem({
   onShare,
   onEditJianpu,
   onIdees,
+  onRetryChant,
+  titre,
 }: {
+  setlistId: string;
   item: SetlistItem;
   origIndex: number;
   content: SongContent | undefined;
@@ -369,8 +404,11 @@ function NormalSongItem({
   onShare?: (itemIndex: number, shared: boolean) => void;
   onEditJianpu?: (itemIndex: number, next: JianpuChords) => void;
   onIdees?: (itemIndex: number) => void;
+  onRetryChant?: (slug: string) => void | Promise<void>;
+  titre?: string;
 }) {
   const { t } = useTranslation();
+  const [reprise, setReprise] = useState(false);
   const mine = version?.mine;
   // En mode « Ma version », c'est la mienne qui s'affiche, quel que soit le choix.
   const shown = editMine ? (mine?.content ? "mine" : "presidence") : (version?.shown ?? "presidence");
@@ -398,15 +436,37 @@ function NormalSongItem({
   // Retouches d'accords sur le scan qui sont les miennes : elles ouvrent
   // « Revenir à la présidence » même sans accords ni paroles retouchés.
   const mesRetouches = aDesRetouches(mine?.jianpuChords);
-  if (!ast) return null;
+  if (!ast) {
+    // Chant sans contenu (lecture ratée) : son titre et de quoi le relire, plutôt qu'un trou dans la setlist.
+    return (
+      <div data-chant-non-charge className="rounded-xl border border-dashed border-border px-4 py-5 text-center">
+        <h2 className="text-base font-semibold text-foreground">{titre ?? item.songSlug}</h2>
+        <p className="mt-1 text-sm text-muted-foreground">{t("setlists.detail.chantNonCharge")}</p>
+        {onRetryChant && item.songSlug && (
+          <Button
+            size="sm"
+            variant="outline"
+            className="mt-3"
+            disabled={reprise}
+            onClick={async () => {
+              setReprise(true);
+              try { await onRetryChant(item.songSlug); } finally { setReprise(false); }
+            }}
+          >
+            {reprise ? t("setlists.detail.essaiEnCours") : t("common.retry")}
+          </Button>
+        )}
+      </div>
+    );
+  }
+  const titleHref = songHref(item.songSlug, item, setlistId, item.position);
 
   // Mode Adapter : on tape une occurrence précise → ordre joué forcé.
   const layout: PartitionLayout = editMode ? "played" : layoutPref;
   const playedSections = item.structureOverride?.length
     ? resolveStructureOverride(ast.sections, item.structureOverride)
     : ast.sections;
-  // Partition 简谱 : le scan porte déjà titre, auteur et tonalité. À la place,
-  // la structure jouée — qu'un scan ne peut pas connaître.
+  // Partition 简谱 : les 升调 de la structure jouée, qu'un scan ne peut pas montrer.
   const steps = jianpuScore ? resolveSectionOccurrences(playedSections, item) : [];
 
   // Badges d'état : ils ne sont pas dans le scan et suivent donc l'item, que
@@ -498,51 +558,13 @@ function NormalSongItem({
   );
   return (
     <div data-outline-item={item.position} className="print:break-before-page first:print:break-before-auto">
-      {jianpuScore ? (
-        <StructureStrip position={item.position} steps={steps} songKey={ast.metadata.key} details className="mb-3 pb-2 border-b border-border print:mb-2">
-          {badges}
-        </StructureStrip>
-      ) : (
-        <div className="flex items-center gap-2 mb-3 print:mb-2 flex-wrap">
-          <span className="w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center shrink-0">
-            {item.position}
-          </span>
-          {badges}
-        </div>
-      )}
-      {jianpuScore ? (
-        // Structure seule : le bandeau suffit, le scan ne s'affiche pas.
-        layout !== "structure" && (
-          <>
-            {/* Un 升调 ne se voit pas sur un scan : le dire au-dessus (lot 9). */}
-            {steps
-              .filter((st) => st.targetKey)
-              .map((st) => (
-                <p
-                  key={st.section.uid}
-                  data-bandeau-modulation
-                  className="mb-2 rounded-lg bg-secondary px-3 py-1.5 text-[13px] font-medium text-foreground"
-                >
-                  {t("harmonie.bandeauModulation", {
-                    section: st.section.name || st.section.type,
-                    ton: st.targetKey,
-                  })}
-                </p>
-              ))}
-          <JianpuSheet
-            entry={jianpuScore}
-            title={ast.metadata.title}
-            slug={item.songSlug}
-            playedKey={item.keyOverride && item.keyOverride !== songKey ? item.keyOverride : null}
-            originalKey={songKey}
-            chordEdits={item.jianpuChords}
-            onEditChords={
-              editMode && onEditJianpu ? (next) => onEditJianpu(origIndex, next) : undefined
-            }
-          />
-          </>
-        )
-      ) : (
+      <ChantDesAccords chant={{ slug: item.songSlug, titre: ast.metadata.title }}>
+      <div className="flex items-center gap-2 mb-3 print:mb-2 flex-wrap">
+        <span className="w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center shrink-0">
+          {item.position}
+        </span>
+        {badges}
+      </div>
       <SongView
         ast={ast}
         showChords={showChordsGlobal && item.showChords}
@@ -556,9 +578,45 @@ function NormalSongItem({
         chartStyle={chartStyle}
         layout={layout}
         bodyStructure={version?.bodyStructure}
+        titleHref={titleHref}
         onLineSelect={editMode ? (line, sectionUid) => onSelectLine?.(origIndex, line, sectionUid) : undefined}
+        corps={
+          // Partition 简谱 : le scan prend la place des paroles, sous le même
+          // en-tête (K3). Structure seule : ni l'un ni l'autre.
+          jianpuScore && layout !== "structure" ? (
+            <>
+              {/* Un 升调 ne se voit pas sur un scan : le dire au-dessus (lot 9). */}
+              {steps
+                .filter((st) => st.targetKey)
+                .map((st) => (
+                  <p
+                    key={st.section.uid}
+                    data-bandeau-modulation
+                    className="mb-2 rounded-[12px] bg-secondary px-3 py-2 text-xs"
+                    style={{ color: "hsl(var(--jianpu-encre))" }}
+                  >
+                    {t("harmonie.bandeauModulation", {
+                      section: st.section.name || st.section.type,
+                      ton: st.targetKey,
+                    })}
+                  </p>
+                ))}
+              <JianpuSheet
+                entry={jianpuScore}
+                title={ast.metadata.title}
+                slug={item.songSlug}
+                playedKey={item.keyOverride && item.keyOverride !== songKey ? item.keyOverride : null}
+                originalKey={songKey}
+                chordEdits={item.jianpuChords}
+                onEditChords={
+                  editMode && onEditJianpu ? (next) => onEditJianpu(origIndex, next) : undefined
+                }
+              />
+            </>
+          ) : undefined
+        }
       />
-      )}
+      </ChantDesAccords>
     </div>
   );
 }

@@ -30,10 +30,11 @@ export function lastSundayBefore(jourJ: string): string {
   return toIso(t);
 }
 
-/** Vrai à partir du lendemain du dernier dimanche réservable : le volet
+/** Vrai à partir du lendemain du dernier jour réservable — la fermeture de la
+ *  saison (`fin`, lot U1), sinon le dernier dimanche avant le jour J : le volet
  *  Entraînements disparaît, le programme seul reste. */
-export function reservationsClosed(today: string, jourJ: string): boolean {
-  return today > lastSundayBefore(jourJ);
+export function reservationsClosed(today: string, jourJ: string, fin?: string): boolean {
+  return today > (fin ?? lastSundayBefore(jourJ));
 }
 
 /** Date locale du jour en ISO (le navigateur, donc l'horloge simulée des tests). */
@@ -67,20 +68,4 @@ export function programmeState(p: { debut: string; jourJ: string }, today: strin
   if (today <= p.jourJ) return "open";
   if (today <= archiveDate(p.jourJ)) return "passed";
   return "archived";
-}
-
-/** Le programme affiché le jour `today`, ou `null` (pas d'onglet pour les
- *  membres). `programmes` est trié par jour J croissant (`listProgrammes`),
- *  donc le premier retenu est l'échéance la plus proche. Les archivés sont
- *  écartés ; un programme épinglé par la coordination (`visible`) gagne ; sinon
- *  la bascule prend le premier programme ouvert — ou passé, dont le message de
- *  remerciement a la priorité sur sa semaine. */
-export function currentProgramme<T extends { debut: string; jourJ: string; visible: boolean }>(
-  programmes: T[],
-  today: string,
-): T | null {
-  const vivants = programmes.filter((p) => programmeState(p, today) !== "archived");
-  return vivants.find((p) => p.visible)
-    ?? vivants.find((p) => programmeState(p, today) !== "soon")
-    ?? null;
 }

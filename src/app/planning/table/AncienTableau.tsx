@@ -6,13 +6,15 @@
 
 import { Fragment, useState } from "react"
 import { useTranslation } from "react-i18next"
-import { FilterButtons } from "@/components/planning/FilterButtons"
+import { OngletsRail } from "@/components/layout/Onglets"
+import { ongletsDePeriode } from "@/components/planning/BarreDeGrille"
 import { StaleBanner } from "@/components/planning/StaleBanner"
 import { currentSundayStr, fdShort, getMois, moisName, filterByTri, getCurrentTri } from "@/lib/planning/utils"
 import { useSheet } from "@/lib/planning/useSheet"
 import { DEJEUNER_FALLBACK } from "@/lib/planning/data"
 import { fetchDejeuner } from "@/lib/planning/sheets"
 import { PLANNING_COLORS } from "@/lib/serviceColors"
+import { styleTexteService } from "@/lib/couleurSombre"
 
 const COLOR = PLANNING_COLORS.table
 
@@ -27,7 +29,7 @@ export function AncienTableau() {
   let lastMonth = ""
 
   return (
-    <div className="max-w-lg space-y-4 mx-auto">
+    <div className="space-y-4">
       <div className="flex flex-wrap gap-3 items-center justify-between">
         <h2 className="text-base font-bold text-foreground">{t("planning.pages.table")}</h2>
         {status === "loading" && <span className="text-xs text-muted-foreground">{t("common.loading")}</span>}
@@ -35,7 +37,8 @@ export function AncienTableau() {
 
       <StaleBanner show={status === "stale"} />
 
-      <FilterButtons options={["T1","T2","T3","T4"]} active={tri} onChange={setTri} color={COLOR} />
+      {/* Agencement v18 (R4, tranche Z) : les trimestres sont des vues, dans le rail. */}
+      <OngletsRail etiquette={t("planning.barre.trimestre")} onglets={ongletsDePeriode(["T1", "T2", "T3", "T4"])} actif={tri} choisir={setTri} />
 
       <div className="flex items-center gap-2 text-xs text-muted-foreground">
         <div className="w-3 h-3 rounded-sm" style={{ background: `${COLOR}26`, border: `1px solid ${COLOR}4d` }} />
@@ -58,7 +61,7 @@ export function AncienTableau() {
                 <Fragment key={row[0]}>
                   {showSep && (
                     <tr style={{ background: `${COLOR}15` }}>
-                      <td colSpan={2} className="px-3 py-1.5 text-xs font-bold uppercase tracking-wider" style={{ color: COLOR }}>
+                      <td colSpan={2} className="px-3 py-1.5 text-xs font-bold uppercase tracking-wider texte-service" style={styleTexteService(COLOR)}>
                         {month}
                       </td>
                     </tr>
@@ -67,7 +70,7 @@ export function AncienTableau() {
                     className={`border-t border-border transition-colors ${!isThis ? "hover:bg-secondary/50" : ""}`}
                     style={isThis ? { background: `${COLOR}1a` } : undefined}
                   >
-                    <td className="px-3 py-2.5 font-semibold w-16 align-top pt-3" style={{ color: COLOR }}>
+                    <td className="px-3 py-2.5 font-semibold w-16 align-top pt-3 texte-service" style={styleTexteService(COLOR)}>
                       {isThis ? (
                         <span className="inline-block text-xs font-bold px-1.5 py-0.5 rounded text-white mt-0.5" style={{ background: COLOR }}>{t("planning.table.thisWeek")}</span>
                       ) : fdShort(row[0])}

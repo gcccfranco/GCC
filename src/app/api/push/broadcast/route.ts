@@ -1,6 +1,8 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { sendPushToAll } from "@/lib/push/send";
 import { recordNotification } from "@/lib/push/notifications";
+import { lireCorpsBroadcast } from "@/lib/push/bornes";
+import { errorResponse } from "@/lib/evenements/serveur";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -22,16 +24,13 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
   }
 
-  const { title, body, url } = (await req.json().catch(() => ({}))) as {
-    title?: string;
-    body?: string;
-    url?: string;
-  };
-  if (!title || !body) {
-    return NextResponse.json({ error: "title et body sont requis" }, { status: 400 });
+  let corps: ReturnType<typeof lireCorpsBroadcast>;
+  try {
+    corps = lireCorpsBroadcast(await req.json().catch(() => ({})));
+  } catch (e) {
+    return errorResponse(e);
   }
-
-  const safeUrl = url || "/";
+  const { title, body, url: safeUrl } = corps;
   const result = await sendPushToAll({ title, body, url: safeUrl });
   await recordNotification({ title, body, url: safeUrl, kind: "broadcast", everyone: true });
   return NextResponse.json({ ok: true, ...result });

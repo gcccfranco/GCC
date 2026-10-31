@@ -53,8 +53,9 @@ test("onglet Culte : la colonne Sainte cène n'existe que si une case du trimest
 
 test("Mes services : la Sainte cène est un service, avec son rôle", async ({ page }) => {
   await open(page, "2026-09-20", "/mes-services");
-  await expect(page.getByText("Culte Franco", { exact: true })).toBeVisible();
-  await expect(page.getByText("Sainte cène", { exact: true })).toBeVisible();
+  // En grand (U4 bis, B4), le service ouvert à droite redit nom et rôle.
+  await expect(page.getByRole("link", { name: /^Culte Franco,/ })).toBeVisible();
+  await expect(page.getByText("Sainte cène", { exact: true }).first()).toBeVisible();
 });
 
 test("en 中文 : libellé traduit", async ({ page }) => {

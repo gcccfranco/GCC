@@ -6,7 +6,8 @@ import {
   fromFsValue,
   type RawDoc,
 } from "./setlists";
-import type { Creneau, Passage, Programme } from "@/types/programme";
+import { idEdition, type Fete } from "@/lib/scene/fetes";
+import type { Creneau, Duree, Passage, Plage, Programme } from "@/types/programme";
 
 // Programmes de scène (lot 3 bis) : programmes/{id} et programmes/{id}/creneaux/{cid},
 // en REST comme le reste. Droits : firestore.rules (isCoordination) et
@@ -15,6 +16,14 @@ import type { Creneau, Passage, Programme } from "@/types/programme";
 /** Événement `window` émis après toute écriture : la barre d'onglets se recharge. */
 export const PROGRAMMES_CHANGED = "programmes-changed";
 
+/** Écriture refusée (retouches v18, D20) : le programme a changé depuis la version lue. `prenom` :
+ *  qui l'a modifié entre-temps (vide s'il n'est pas connu). Rien n'a été écrit. */
+export class ModifieEntreTemps extends Error {
+  constructor(readonly prenom: string) {
+    super("Programme modifié entre-temps");
+  }
+}
+
 function docData(raw: RawDoc): { id: string; data: Record<string, unknown> } {
   return {
     id: raw.name.split("/").pop()!,
@@ -22,17 +31,28 @@ function docData(raw: RawDoc): { id: string; data: Record<string, unknown> } {
   };
 }
 
-function fromFsProgramme(raw: RawDoc): Programme {
+function fromFsProgramme(raw: RawDoc & { updateTime?: string }): Programme {
   const { id, data } = docData(raw);
   return {
     id,
     nom: (data.nom as string) ?? "",
     jourJ: (data.jourJ as string) ?? "",
     debut: (data.debut as string) ?? "",
-    visible: (data.visible as boolean) ?? false,
     passages: (data.passages as Passage[]) ?? [],
     createdBy: (data.createdBy as string) ?? "",
     updatedAt: (data.updatedAt as string) ?? "",
+    // Saison (lot U1) : seulement si le champ existe — absent = défaut de saisonDe.
+    ...(data.fin != null && { fin: data.fin as string }),
+    ...(data.plages != null && { plages: data.plages as Plage[] }),
+    ...(data.duree != null && { duree: data.duree as Duree }),
+    ...(data.quiAutorises != null && { quiAutorises: data.quiAutorises as string[] }),
+    ...(data.ouvert != null && { ouvert: data.ouvert as boolean }),
+    ...(data.fermees != null && { fermees: data.fermees as boolean }),
+    // Pâques · Noël : seulement si le champ existe — absent = déduit du jour J (feteDe).
+    ...(data.fete != null && { fete: data.fete as Programme["fete"] }),
+    ...(data.annee != null && { annee: data.annee as number }),
+    ...(data.modifiePar != null && { modifiePar: data.modifiePar as string }),
+    ...(raw.updateTime && { version: raw.updateTime }),
   };
 }
 
@@ -81,16 +101,24 @@ async function post(path: string, data: Record<string, unknown>): Promise<string
   return ((await res.json()) as RawDoc).name.split("/").pop()!;
 }
 
-/** PATCH limité aux champs donnés (updateMask) : le reste du document est conservé. */
-async function patch(path: string, data: Record<string, unknown>): Promise<void> {
+/** PATCH limité aux champs donnés (updateMask) : le reste du document est conservé. `version` :
+ *  l'`updateTime` lu ; le document a changé depuis (HTTP 400 `FAILED_PRECONDITION`) → `false`,
+ *  rien n'est écrit. */
+async function patch(path: string, data: Record<string, unknown>, version?: string): Promise<boolean> {
   const headers = await authHeader();
   const mask = Object.keys(data).map((k) => `updateMask.fieldPaths=${k}`).join("&");
-  const res = await fetch(`${FS_BASE}/${path}?${mask}`, {
+  const precondition = version ? `&currentDocument.updateTime=${encodeURIComponent(version)}` : "";
+  const res = await fetch(`${FS_BASE}/${path}?${mask}${precondition}`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json", ...headers },
     body: JSON.stringify({ fields: toFsFields(data) }),
   });
+  if (version && res.status === 400) {
+    const json = (await res.clone().json().catch(() => ({}))) as { error?: { status?: string } };
+    if (json.error?.status === "FAILED_PRECONDITION") return false;
+  }
   await checkRest(res);
+  return true;
 }
 
 async function remove(path: string): Promise<void> {
@@ -117,21 +145,45 @@ export async function getProgramme(id: string): Promise<Programme | null> {
   return fromFsProgramme((await res.json()) as RawDoc);
 }
 
-export async function createProgramme(data: Omit<Programme, "id">): Promise<string> {
-  const id = await post("programmes", data as unknown as Record<string, unknown>);
+/** Crée l'édition `{fete}-{annee}` (Q6) à la première action de la coordination : `data`
+ *  (ses réglages, `reglagesRepris`) plus `changement` (ce que la
+ *  coordination vient de faire).
+ *  Une autre coordination l'a créée entre-temps (409) : seul `changement` s'écrit sur le
+ *  document existant — sauf `protege` (l'ordre de passage, D20) : `ModifieEntreTemps`, rien
+ *  n'est écrit, comme sur une édition modifiée depuis la lecture. Rend l'identifiant. */
+export async function creerEdition(
+  fete: Fete,
+  annee: number,
+  data: Omit<Programme, "id">,
+  changement: Partial<Omit<Programme, "id">> = {},
+  protege = false,
+): Promise<string> {
+  const id = idEdition(fete, annee);
+  const headers = await authHeader();
+  const res = await fetch(`${FS_BASE}/programmes?documentId=${id}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...headers },
+    body: JSON.stringify({ fields: toFsFields({ ...data, ...changement } as unknown as Record<string, unknown>) }),
+  });
+  if (res.status === 409) {
+    if (protege) throw new ModifieEntreTemps((await getProgramme(id))?.modifiePar ?? "");
+    if (Object.keys(changement).length) await updateProgramme(id, changement);
+    return id;
+  }
+  await checkRest(res);
   changed();
   return id;
 }
 
-export async function updateProgramme(id: string, data: Partial<Omit<Programme, "id">>): Promise<void> {
-  await patch(`programmes/${id}`, { ...data, updatedAt: new Date().toISOString() });
-  changed();
-}
-
-/** Supprime le programme et ses créneaux (Firestore ne supprime pas les sous-collections). */
-export async function deleteProgramme(id: string): Promise<void> {
-  for (const c of await listCreneaux(id)) await remove(`programmes/${id}/creneaux/${c.id}`);
-  await remove(`programmes/${id}`);
+/** `version` (l'`updateTime` lu, D20) : l'écriture n'a lieu que si personne n'a modifié le programme
+ *  depuis ; sinon `ModifieEntreTemps`, avec le prénom de qui l'a modifié. */
+export async function updateProgramme(
+  id: string,
+  data: Partial<Omit<Programme, "id" | "version">>,
+  version?: string,
+): Promise<void> {
+  const ecrit = await patch(`programmes/${id}`, { ...data, updatedAt: new Date().toISOString() }, version);
+  if (!ecrit) throw new ModifieEntreTemps((await getProgramme(id))?.modifiePar ?? "");
   changed();
 }
 

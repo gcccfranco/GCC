@@ -7,10 +7,48 @@
 
 const CORDES = 6;
 const CASES = 5;
+// La grille du dictionnaire montre cinq cases sous le sillet : la forme add9 mobile en couvre cinq (la planche en dessine quatre).
+const CASES_DICO = 5;
 
-/** « 320033 » ou « x24432 » : une case par corde, de la plus grave à la plus
- *  aiguë ; `x` = corde étouffée, `0` = corde à vide. */
-export function DiagrammeGuitare({ doigte, label }: { doigte: string; capo?: number; label?: string }) {
+type Doigt = number | "P" | null;
+type Barre = { case: number; de: number; a: number } | null;
+
+/** Lit « 320033 », « x24432 » ou « x,10,12,12,11,10 » (au-delà de la 9e case, des virgules) : null = étouffée. */
+function lireDoigte(doigte: string): (number | null)[] {
+  return (doigte.includes(",") ? doigte.split(",") : doigte.split("").slice(0, CORDES)).map((c) =>
+    /^x$/i.test(c.trim()) ? null : Number(c),
+  );
+}
+
+/** « 320033 » ou « x24432 » : une case par corde, de la plus grave à la plus aiguë ; `x` = corde étouffée,
+ *  `0` = corde à vide. Sans les props du dictionnaire (`cases`, `doigts`, `depart`, `barre`, `grand`), le dessin
+ *  des fiches Harmonie ; avec elles, la grille du dictionnaire d'accords (doigts, barré, « 5fr »). */
+export function DiagrammeGuitare({
+  doigte,
+  cases,
+  doigts,
+  depart,
+  barre,
+  grand,
+  label,
+}: {
+  doigte?: string;
+  capo?: number;
+  label?: string;
+  cases?: (number | null)[];
+  doigts?: Doigt[];
+  depart?: number;
+  barre?: Barre;
+  grand?: boolean;
+}) {
+  if (cases || doigts || depart !== undefined || barre || grand || doigte?.includes(",")) {
+    const lues = cases ?? lireDoigte(doigte ?? "");
+    return <GrilleGuitare cases={lues} doigts={doigts} depart={depart} barre={barre ?? null} grand={!!grand} label={label ?? (doigte ?? lues.map((c) => c ?? "x").join(" "))} />;
+  }
+  return <DiagrammeFiche doigte={doigte ?? ""} label={label} />;
+}
+
+function DiagrammeFiche({ doigte, label }: { doigte: string; label?: string }) {
   const cordes = doigte.split("").slice(0, CORDES);
   const frettes = cordes.map((c) => (/^[1-9]$/.test(c) ? Number(c) : null)).filter((n): n is number => n !== null);
   // La grille commence à la première case utilisée quand l'accord est haut sur
@@ -66,6 +104,79 @@ export function DiagrammeGuitare({ doigte, label }: { doigte: string; capo?: num
   );
 }
 
+/** La grille du dictionnaire : cordes de 24 px, cases de 30 px, points de 20 px portant le doigt (mode `grand`,
+ *  162 × 152 px comme la planche) ; en petit, la même grille en plus petit. */
+function GrilleGuitare({
+  cases,
+  doigts,
+  depart,
+  barre,
+  grand,
+  label,
+}: {
+  cases: (number | null)[];
+  doigts?: Doigt[];
+  depart?: number;
+  barre: Barre;
+  grand: boolean;
+  label: string;
+}) {
+  const pressees = cases.filter((c): c is number => c !== null && c > 0);
+  const premiere = depart ?? (pressees.length && Math.max(...pressees) > 4 ? Math.min(...pressees) : 1);
+  const S = grand ? 24 : 13; // pas entre deux cordes
+  const F = grand ? 30 : 15; // hauteur d'une case
+  const D = grand ? 20 : 9; // diamètre d'un point
+  const x0 = grand ? 26 : 16;
+  const y0 = grand ? 24 : 14;
+  const largeur = grand ? 162 : x0 + S * (CORDES - 1) + 8;
+  const hauteur = y0 + F * CASES_DICO + (grand ? 8 : 4);
+  const bas = y0 + F * CASES_DICO;
+  const x = (i: number) => x0 + S * i;
+  const yCase = (c: number) => y0 + (c - premiere + 0.5) * F;
+  const sillet = premiere === 1;
+
+  return (
+    <svg viewBox={`0 0 ${largeur} ${hauteur}`} width={largeur} height={hauteur} role="img" aria-label={label} className="shrink-0">
+      {Array.from({ length: CASES_DICO + 1 }, (_, j) => (
+        <line
+          key={`c${j}`} x1={x(0)} y1={y0 + F * j} x2={x(CORDES - 1)} y2={y0 + F * j}
+          stroke="currentColor" strokeWidth={j === 0 && sillet ? (grand ? 5 : 3) : 1.5} opacity={j === 0 && sillet ? 0.9 : 0.35}
+        />
+      ))}
+      {Array.from({ length: CORDES }, (_, i) => (
+        <line key={`s${i}`} x1={x(i)} y1={y0} x2={x(i)} y2={bas} stroke="currentColor" strokeWidth={1.5} opacity={0.4} />
+      ))}
+      {!sillet && (
+        <text x={0} y={y0 + F / 2 + 4} fontSize={grand ? 11 : 8} fontWeight={600} fill="currentColor">{premiere}fr</text>
+      )}
+      {cases.map((c, i) => {
+        if (c === null) return <text key={`m${i}`} x={x(i)} y={y0 - 8} fontSize={grand ? 14 : 10} textAnchor="middle" fill="currentColor" opacity={0.75}>×</text>;
+        if (c === 0) return <text key={`m${i}`} x={x(i)} y={y0 - 8} fontSize={grand ? 14 : 10} textAnchor="middle" fill="currentColor" opacity={0.75}>○</text>;
+        return null;
+      })}
+      {barre && (
+        <rect
+          x={x(Math.min(barre.de, barre.a)) - D / 2} y={yCase(barre.case) - D / 2}
+          width={Math.abs(barre.a - barre.de) * S + D} height={D} rx={D / 2} fill="currentColor"
+        />
+      )}
+      {cases.map((c, i) => {
+        if (!c || c < premiere) return null;
+        const d = doigts?.[i];
+        const dansLeBarre = barre && c === barre.case && i >= Math.min(barre.de, barre.a) && i <= Math.max(barre.de, barre.a);
+        return (
+          <g key={`p${i}`}>
+            {!dansLeBarre && <circle cx={x(i)} cy={yCase(c)} r={D / 2} fill="currentColor" />}
+            {grand && d ? (
+              <text x={x(i)} y={yCase(c) + 4} fontSize={11} fontWeight={700} textAnchor="middle" className="fill-background">{d}</text>
+            ) : null}
+          </g>
+        );
+      })}
+    </svg>
+  );
+}
+
 // Un clavier d'une octave et demie, assez pour montrer un voicing des deux mains.
 const TOUCHES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B", "C", "C#", "D", "D#", "E", "F", "F#", "G"];
 const BEMOLS: Record<string, string> = { Db: "C#", Eb: "D#", Gb: "F#", Ab: "G#", Bb: "A#" };
@@ -107,6 +218,79 @@ export function Clavier({ notes, label }: { notes: string[]; label?: string }) {
           />
         );
       })}
+    </svg>
+  );
+}
+
+const BLANCHE_DE: Record<number, number> = { 0: 0, 2: 1, 4: 2, 5: 3, 7: 4, 9: 5, 11: 6 };
+const NOIRE_DE: Record<number, number> = { 1: 0, 3: 1, 6: 3, 8: 4, 10: 5 };
+
+/** Piano à deux mains (dictionnaire d'accords) : deux octaves depuis do (trois si une note dépasse 23), notes en
+ *  demi-tons depuis le do grave. Main gauche en encre, main droite en couleur d'accord, chaque point porte le nom
+ *  de la note. */
+export function ClavierMains({
+  gauche,
+  droite,
+  nomsGauche,
+  nomsDroite,
+  label,
+}: {
+  gauche: number[];
+  droite: number[];
+  nomsGauche: string[];
+  nomsDroite: string[];
+  label?: string;
+}) {
+  const W = 24;
+  const octaves = Math.max(...gauche, ...droite) > 23 ? 3 : 2;
+  const largeur = octaves * 7 * W;
+  const hauteur = 96;
+  const blanches = Array.from({ length: octaves * 7 }, (_, k) => k);
+  const noires = blanches.filter((k) => [0, 1, 3, 4, 5].includes(k % 7));
+  // Centre d'une note : au milieu de sa blanche, ou à cheval sur la frontière pour une noire.
+  const place = (n: number) => {
+    const o = Math.floor(n / 12);
+    const s = n % 12;
+    return s in BLANCHE_DE
+      ? { cx: (o * 7 + BLANCHE_DE[s]) * W + W / 2, cy: 80 }
+      : { cx: (o * 7 + NOIRE_DE[s] + 1) * W, cy: 44 };
+  };
+  const points = [
+    ...gauche.map((n, i) => ({ ...place(n), nom: nomsGauche[i] ?? "", main: "gauche" })),
+    ...droite.map((n, i) => ({ ...place(n), nom: nomsDroite[i] ?? "", main: "droite" })),
+  ];
+
+  return (
+    <svg
+      viewBox={`0 0 ${largeur} ${hauteur}`}
+      width={largeur}
+      height={hauteur}
+      role="img"
+      aria-label={label ?? `${nomsGauche.join(" ")} ; ${nomsDroite.join(" ")}`}
+      className="shrink-0"
+    >
+      {blanches.map((k) => (
+        <path
+          key={`b${k}`}
+          d={`M${k * W + 0.5} 0.5 H${(k + 1) * W - 0.5} V${hauteur - 6} Q${(k + 1) * W - 0.5} ${hauteur - 0.5} ${(k + 1) * W - 6} ${hauteur - 0.5} H${k * W + 6.5} Q${k * W + 0.5} ${hauteur - 0.5} ${k * W + 0.5} ${hauteur - 6} Z`}
+          className="fill-card" stroke="currentColor" strokeWidth={1} opacity={0.85}
+        />
+      ))}
+      {noires.map((k) => (
+        <rect key={`n${k}`} x={(k + 1) * W - 7} y={0} width={14} height={58} rx={3} className="fill-foreground" />
+      ))}
+      {points.map((p, i) => (
+        <g key={i}>
+          <circle cx={p.cx} cy={p.cy} r={11} className="fill-background" />
+          <circle cx={p.cx} cy={p.cy} r={10} className={p.main === "gauche" ? "fill-foreground" : ""} fill={p.main === "gauche" ? undefined : "var(--chord-color)"} />
+          <text
+            x={p.cx} y={p.cy + 3.5} fontSize={9} fontWeight={700} textAnchor="middle"
+            className={p.main === "gauche" ? "fill-background" : ""} fill={p.main === "gauche" ? undefined : "#fff"}
+          >
+            {p.nom}
+          </text>
+        </g>
+      ))}
     </svg>
   );
 }

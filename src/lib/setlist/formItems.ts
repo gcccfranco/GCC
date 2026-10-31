@@ -64,7 +64,16 @@ export interface FormTransitionItem {
   text: string;
 }
 
-export type FormListItem = FormItem | FormFusionItem | FormTransitionItem;
+/** Chant hors répertoire d'une setlist de fête, en attente de son `.cho` (docs/spec-chants-fetes.md, CF20, CF21). */
+export interface FormPropositionItem {
+  uid: string;
+  kind: "proposition";
+  /** Identifiant de `songProposals/{id}`. */
+  id: string;
+  titre: string;
+}
+
+export type FormListItem = FormItem | FormFusionItem | FormTransitionItem | FormPropositionItem;
 
 export function isFormFusion(item: FormListItem): item is FormFusionItem {
   return (item as FormFusionItem).kind === "fusion";
@@ -72,6 +81,15 @@ export function isFormFusion(item: FormListItem): item is FormFusionItem {
 
 export function isFormTransition(item: FormListItem): item is FormTransitionItem {
   return (item as FormTransitionItem).kind === "transition";
+}
+
+export function isFormProposition(item: FormListItem): item is FormPropositionItem {
+  return (item as FormPropositionItem).kind === "proposition";
+}
+
+/** Un chant seul (ni fusion, ni transition, ni proposition). */
+export function isFormChant(item: FormListItem): item is FormItem {
+  return !isFormFusion(item) && !isFormTransition(item) && !isFormProposition(item);
 }
 
 export function makeDefaultSections(sections: SectionSummary[]): FormSectionItem[] {
@@ -170,6 +188,9 @@ export function buildFormItems(
       if (item.type === "transition") {
         return [{ uid: nextUid(), kind: "transition", text: item.transitionText ?? "" }];
       }
+      if (item.type === "proposition") {
+        return item.proposition ? [{ uid: nextUid(), kind: "proposition", id: item.proposition.id, titre: item.proposition.titre }] : [];
+      }
       if (item.type === "fusion" && item.fusionSongs) {
         const songs: FormItem[] = item.fusionSongs.flatMap((fs) => {
           const song = songsMap[fs.songSlug];
@@ -210,4 +231,24 @@ export function buildFormItems(
       if (!song) return [];
       return [toFormItem(song, item.keyOverride, item.notes, item.structureOverride, item.sectionNotes, item.sectionTransitions, item.sectionNuances, item.sectionKeys, item.jianpuSheet, { contentOverride: item.contentOverride, sectionOrigins: item.sectionOrigins, jianpuChords: item.jianpuChords })];
     });
+}
+
+/** Place un élément à `index` (0 = avant le premier, `items.length` = à la fin) :
+ *  le « + » entre deux éléments de la bibliothèque (docs/spec-editeur-setlist.md, Q8). */
+export function insererA(items: FormListItem[], index: number, nouveau: FormListItem): FormListItem[] {
+  return [...items.slice(0, index), nouveau, ...items.slice(index)];
+}
+
+/** Fusionne les chants seuls dont l'uid est donné, dans l'ordre de la setlist,
+ *  à la place du premier ; transitions et fusions ne se fusionnent pas. Moins
+ *  de deux chants seuls : la liste est rendue telle quelle. */
+export function fusionner(items: FormListItem[], uids: string[]): FormListItem[] {
+  const choisis = new Set(uids);
+  const songs = items.filter(
+    (i): i is FormItem => isFormChant(i) && choisis.has(i.uid)
+  );
+  if (songs.length < 2) return items;
+  const fusion: FormFusionItem = { uid: nextUid(), kind: "fusion", songs, mixedStructure: null };
+  const fusionnes = new Set(songs.map((s) => s.uid));
+  return items.flatMap((i) => (i.uid === songs[0].uid ? [fusion] : fusionnes.has(i.uid) ? [] : [i]));
 }

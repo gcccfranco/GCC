@@ -90,3 +90,59 @@ export function revertSectionOrigins(item: SetlistItem): Partial<SetlistItem> {
     sectionOrigins: {},
   };
 }
+
+/** Répare un source adapté entre le 11/10 et le 25/10/2026 : la copie d'une
+ *  section qui porte `{section_id: …}` gardait l'id de son original, et la
+ *  structure, qui pointe vers l'id de la copie, perdait ce passage. Chaque id
+ *  de copie qu'aucune section ne porte est rendu à la section dont c'est le
+ *  rang dans le source (les copies sont ajoutées en fin, le rang annoncé est le
+ *  leur) ; à défaut, à un doublon de son original. Pur : rien n'est réécrit en
+ *  base, la réparation se fait à chaque lecture. */
+export function repairCopyIds(source: string, origins: Record<string, string> | undefined): string {
+  if (!origins || Object.keys(origins).length === 0) return source;
+  const lines = source.split("\n");
+  // Sections telles que le parseur les numérote, avec leur ligne `section_id`.
+  const sections: { natural: string; id: string; idLine: number }[] = [];
+  let open: (typeof sections)[number] | null = null;
+  let inJianpu = false;
+  let counter = 0;
+  for (let i = 0; i < lines.length; i++) {
+    const t = lines[i].trim();
+    if (inJianpu) {
+      if (t === "{end_of_jianpu}") inJianpu = false;
+      continue;
+    }
+    if (t === "{start_of_jianpu}") {
+      inJianpu = true;
+      continue;
+    }
+    const start = t.match(/^\{start_of_([a-z0-9_]+)\s*(?::[^}]*)?\}$/i);
+    if (start) {
+      counter++;
+      open = { natural: `${start[1]}-${counter}`, id: `${start[1]}-${counter}`, idLine: -1 };
+      sections.push(open);
+      continue;
+    }
+    if (/^\{end_of_/i.test(t)) open = null;
+    const sid = t.match(/^\{section_id\s*:\s*([^}]*?)\s*\}$/i);
+    if (sid && open && sid[1]) {
+      open.id = sid[1];
+      open.idLine = i;
+    }
+  }
+  let changed = false;
+  for (const [copy, origin] of Object.entries(origins)) {
+    if (sections.some((s) => s.id === copy)) continue;
+    const root = originOf(origins, copy);
+    const isDuplicate = (s: (typeof sections)[number]) =>
+      (s.id === origin || s.id === root) && sections.find((o) => o.id === s.id) !== s;
+    const target =
+      sections.find((s) => s.natural === copy && s.idLine !== -1 && isDuplicate(s)) ??
+      sections.find((s) => s.idLine !== -1 && isDuplicate(s));
+    if (!target) continue;
+    target.id = copy;
+    lines[target.idLine] = `{section_id: ${copy}}`;
+    changed = true;
+  }
+  return changed ? lines.join("\n") : source;
+}

@@ -1,7 +1,10 @@
 "use client";
 import localFont from "next/font/local";
+import Link, { type LinkProps } from "next/link";
 import { ChordLine } from "@/components/song/ChordLine";
 import { JianpuLine } from "@/components/song/JianpuLine";
+import { AccordsInactifs } from "@/components/accords/AccordsProvider";
+import { AccordTouchable } from "@/components/accords/AccordTouchable";
 import { pinyin_font } from "@/components/song/pinyinFont";
 import type { ChordProAST, ChordProLine, ChordProSection, Token } from "@/types/chordPro";
 import { useTranslation } from "react-i18next";
@@ -92,11 +95,11 @@ function getChartSectionStyle(type: string): React.CSSProperties {
   } as React.CSSProperties;
 }
 
-// Polices CJK volumineuses (KaiTi ~11 Mo, Source Han Sans ~8 Mo) : preload désactivé
+// Polices CJK : sous-ensembles woff2 (scripts/build-fonts.py ; originaux KaiTi ~11 Mo, Source Han Sans ~8 Mo) : preload désactivé
 // pour ne pas les précharger sur toute page rendant une partition (y compris
 // les chants FR). Elles se chargent à la demande quand un chant zh s'affiche.
 const KaiTiFont = localFont({
-  src: [{ path: "../../../public/fonts/KaiTi.ttf", weight: "400", style: "normal" }],
+  src: [{ path: "../../../public/fonts/KaiTi-titres.woff2", weight: "400", style: "normal" }],
   preload: false,
 });
 // Paroles FR, accords et libellés : Atkinson Hyperlegible Next (OFL), dessinée
@@ -106,7 +109,7 @@ const KaiTiFont = localFont({
 const fr_lyric_font = localFont({ src: "../../../public/fonts/AtkinsonHyperlegibleNext-Regular.woff2" });
 // Caractères chinois : Source Han Sans CN Medium (auparavant Light, trop fine
 // de loin) — choisie par Timothée le 13/09/2026 sur captures.
-const zh_lyric_font = localFont({ src: "../../../public/fonts/SourceHanSansCN-Medium.otf", preload: false });
+const zh_lyric_font = localFont({ src: "../../../public/fonts/SourceHanSansCN-Medium-sub.woff2", preload: false });
 const chord_font = localFont({
   src: [
     { path: "../../../public/fonts/AtkinsonHyperlegibleNext-Regular.woff2", weight: "400" },
@@ -119,6 +122,7 @@ const liberation_font = localFont({
     { path: "../../../public/fonts/LiberationSans-Regular.ttf", weight: "400" },
     { path: "../../../public/fonts/LiberationSans-Bold.ttf", weight: "700" },
   ],
+  preload: false,
 });
 
 
@@ -323,7 +327,7 @@ function ZhLine({ tokens, pinyin, showChords, showPinyin, hideLyrics = false, ch
                     }}
                     className={chord_font.className}
                   >
-                    {col.chord ?? "x"}
+                    {col.chord ? <AccordTouchable etiquette={col.chord} /> : "x"}
                   </span>
                 )}
                 <span
@@ -452,35 +456,44 @@ export function NuanceBadge({ nuance, size = "sm", variant = "badge" }: { nuance
  *  peut pas les porter : scan 简谱, sections uniques, structure seule. */
 export function StructureStrip({
   steps,
-  position,
-  capo,
   songKey,
   details = false,
+  compacte = false,
+  colonne = false,
+  cerclees,
   className = "",
   children,
 }: {
   steps: SectionOccurrence[];
-  /** Numéro du chant dans la setlist, quand le bandeau tient lieu d'en-tête. */
-  position?: number;
-  capo?: number;
   /** Tonalité jouée : une « modulation » vers elle n'en est pas une. */
   songKey?: string;
   details?: boolean;
+  /** Rappel du mode louange (pages suivantes d'un chant en Sections uniques) :
+   *  pastilles de 24 px, sans nuance, modulation ni détails. */
+  compacte?: boolean;
+  /** Colonne de la marge du mode louange (page de scan en paysage) : pastilles
+   *  empilées, chacune suivie de son nom, de « → X » et de sa nuance. */
+  colonne?: boolean;
+  /** Occurrences imprimées sur la page : chacune cercle d'encre la première
+   *  étape qui la joue, ses reprises ne le sont pas. */
+  cerclees?: ReadonlySet<string>;
   className?: string;
   /** Badges d'état propres au contexte (copie des paroles, version modifiée…). */
   children?: React.ReactNode;
 }) {
   const { t } = useTranslation();
-  const groups: { step: SectionOccurrence; abbr: string; full: string; repeat: number }[] = [];
+  const groups: { step: SectionOccurrence; abbr: string; full: string; repeat: number; uids: string[] }[] = [];
   for (const step of steps) {
     const full = formatSectionName(step.section, t);
     const last = groups[groups.length - 1];
     if (last && isRepeatOf({ ...last.step, label: last.full }, { ...step, label: full })) {
       last.repeat++;
+      last.uids.push(step.section.uid);
       continue;
     }
-    groups.push({ step, abbr: abbreviateSection(step.section), full, repeat: 1 });
+    groups.push({ step, abbr: abbreviateSection(step.section), full, repeat: 1, uids: [step.section.uid] });
   }
+  const cerclee = new Set([...(cerclees ?? [])].map((uid) => groups.findIndex((g) => g.uids.includes(uid))));
   // Pastille aux couleurs de la section (palette --sec-* de globals.css) :
   // fond clair, lettre en couleur — les mêmes teintes que les cadres du corps.
   const secKey = (type: string) => SECTION_PALETTE_KEY[type] ?? "other";
@@ -494,35 +507,43 @@ export function StructureStrip({
   return (
     <div className={className}>
       <div className="flex flex-wrap items-start gap-x-3 gap-y-2">
-        {position !== undefined && (
-          <span className="w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center shrink-0">
-            {position}
-          </span>
-        )}
-        {capo ? (
-          <span className="text-[10px] font-bold font-mono border border-border rounded-full px-1.5 py-0.5 text-muted-foreground">
-            {t("performance.capoBadge", { n: capo })}
-          </span>
-        ) : null}
         {/* Pastilles rondes ; la taille suit l'écran : 32 px sous 640 px (neuf étapes
-            sur une rangée à 390 px), 44 px au-delà. Non cliquables : pas de plancher tactile. */}
-        <ol aria-label={t("songs.view.structure")} className="flex flex-wrap items-start gap-x-1.5 gap-y-2 sm:gap-x-3 sm:gap-y-3">
+            sur une rangée à 390 px), 44 px au-delà ; 24 px dans le rappel du mode
+            louange. Non cliquables : pas de plancher tactile. */}
+        <ol aria-label={t("songs.view.structure")} className={colonne ? "flex flex-col gap-2" : compacte ? "flex flex-wrap items-start gap-1.5" : "flex flex-wrap items-start gap-x-1.5 gap-y-2 sm:gap-x-3 sm:gap-y-3"}>
           {groups.map((g, i) => {
             const targetKey = g.step.targetKey && g.step.targetKey !== songKey ? g.step.targetKey : undefined;
             const n = noteNumber.get(g);
             return (
-              <li key={i} className="flex flex-col items-center gap-1.5">
-                <span className="relative inline-flex h-8 min-w-8 items-center justify-center rounded-full px-2 sm:h-11 sm:min-w-11 sm:px-2.5" style={{ background: tintOf(g.step.section.type), color: colorOf(g.step.section.type) }}>
-                  <span className="inline-flex items-baseline text-[14px] font-bold leading-none tracking-[0.02em] sm:text-[17px]">
+              <li key={i} className={colonne ? "flex items-center gap-3" : "flex flex-col items-center gap-1.5"}>
+                <span
+                  data-cerclee={cerclee.has(i) || undefined}
+                  className={`relative inline-flex items-center justify-center rounded-full ${
+                    compacte ? "h-6 min-w-6 px-1.5" : "h-8 min-w-8 px-2 sm:h-11 sm:min-w-11 sm:px-2.5"
+                  } ${cerclee.has(i) ? "border-2 border-foreground" : ""}`}
+                  style={{ background: tintOf(g.step.section.type), color: colorOf(g.step.section.type) }}
+                >
+                  <span className={`inline-flex items-baseline font-bold leading-none tracking-[0.02em] ${compacte ? "text-[11px]" : "text-[14px] sm:text-[17px]"}`}>
                     <abbr title={g.full} className="no-underline [text-decoration:none]">{g.abbr}</abbr>
-                    {g.repeat > 1 && <span className="ml-px text-[11px] font-semibold sm:text-[13px]">×{g.repeat}</span>}
+                    {g.repeat > 1 && <span className={`ml-px font-semibold ${compacte ? "text-[9px]" : "text-[11px] sm:text-[13px]"}`}>×{g.repeat}</span>}
                   </span>
                   {n !== undefined && (
                     <span aria-label={`${n}`} className={`absolute -right-1 -top-1 max-sm:h-4 max-sm:min-w-4 ${numberBadge}`}>{n}</span>
                   )}
                 </span>
-                {targetKey && <span className="font-mono text-[12px] leading-none text-muted-foreground">→ {targetKey}</span>}
-                <NuanceBadge nuance={g.step.nuance} variant="text" />
+                {colonne ? (
+                  // Nom, modulation et nuance passent à la ligne dans la largeur de la colonne.
+                  <span className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
+                    <span className="text-[15px] font-semibold leading-tight text-foreground">{g.full}</span>
+                    {targetKey && <span className="font-mono text-[12px] leading-none text-muted-foreground">→ {targetKey}</span>}
+                    <NuanceBadge nuance={g.step.nuance} variant="text" />
+                  </span>
+                ) : (
+                  <>
+                    {targetKey && !compacte && <span className="font-mono text-[12px] leading-none text-muted-foreground">→ {targetKey}</span>}
+                    {!compacte && <NuanceBadge nuance={g.step.nuance} variant="text" />}
+                  </>
+                )}
               </li>
             );
           })}
@@ -672,7 +693,8 @@ export function SectionView({ section, language, showChords, showPinyin, useJian
                   onKeyDown={(e) => e.key === "Enter" && onLineSelect(line, section.uid)}
                   className="cursor-pointer rounded-md -mx-1.5 px-1.5 border border-dashed border-primary/25 hover:border-primary/60 hover:bg-primary/5 active:bg-primary/10 transition-colors my-0.5 print:border-transparent print:bg-transparent print:mx-0 print:px-0 print:my-0"
                 >
-                  {rendered}
+                  {/* Édition : toucher la ligne ouvre la feuille d'édition, jamais le panneau d'un accord. */}
+                  <AccordsInactifs>{rendered}</AccordsInactifs>
                 </div>
               );
             }
@@ -709,6 +731,17 @@ export interface SongViewProps {
    *  quelle, sans notes ni transitions d'occurrence ; le bandeau garde la
    *  structure jouée. */
   bodyStructure?: string[] | null;
+  /** Dans une setlist : le titre mène à la page du chant, dans ses réglages
+   *  (docs/spec-deux-volets.md, Q12). */
+  titleHref?: LinkProps["href"];
+  /** Commande posée à droite des pastilles (page chant : le segment
+   *  « 简谱 · Paroles », chantier 简谱 L3-T3). */
+  bascule?: React.ReactNode;
+  /** Remplace le corps (sections) sous l'en-tête et le bandeau : le scan 简谱
+   *  garde ainsi l'en-tête du site au-dessus de lui (K3). */
+  corps?: React.ReactNode;
+  /** Sous la rangée titre / pastille de l'en-tête (page chant : la ligne de statistiques, lot ST4). */
+  statistiques?: React.ReactNode;
 }
 
 export function SongView({
@@ -725,6 +758,10 @@ export function SongView({
   onLineSelect,
   layout = "played",
   bodyStructure = null,
+  titleHref,
+  bascule,
+  corps,
+  statistiques,
 }: SongViewProps) {
   const { t } = useTranslation();
   const isZh = ast.metadata.language === "zh";
@@ -754,7 +791,13 @@ export function SongView({
         <div className="flex items-start justify-between gap-5">
           <div className="min-w-0">
             <h1 className={`text-[26px] font-bold text-foreground leading-[1.05] tracking-[-0.4px] uppercase ${isZh ? KaiTiFont.className : chord_font.className}`}>
-              {ast.metadata.title}
+              {titleHref ? (
+                <Link href={titleHref} className="hover:underline underline-offset-4 decoration-2">
+                  {ast.metadata.title}
+                </Link>
+              ) : (
+                ast.metadata.title
+              )}
             </h1>
             {ast.metadata.titlePinyin && (
               <p className={`text-muted-foreground text-[13px] mt-1 ${pinyin_font.className}`}>
@@ -784,6 +827,8 @@ export function SongView({
           </div>
         </div>
 
+        {statistiques && <div className="print:hidden">{statistiques}</div>}
+
         {canUseJianpu && structureOverride && (
           <p className="mt-2 text-xs text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950 px-2 py-1 rounded">
             {t("songs.view.jianpuWarning")}
@@ -794,11 +839,14 @@ export function SongView({
       {/* Bandeau de structure (coup d'œil) : notes et transitions y passent
           dès que le corps ne les porte plus (sections uniques, structure seule,
           structure perso — même en ordre joué, défaut depuis le 20/09/2026). */}
-      <StructureStrip steps={steps} songKey={ast.metadata.key} details={layout !== "played" || personalSteps !== null} className="pt-2 pb-3" />
+      {/* Sur le scan (`corps`), le bandeau porte seul notes, transitions et nuances. */}
+      <StructureStrip steps={steps} songKey={ast.metadata.key} details={corps !== undefined || layout !== "played" || personalSteps !== null} className="pt-2 pb-3">
+        {bascule}
+      </StructureStrip>
 
       {/* Corps : ordre joué, ou chaque section une fois (les réglages
-          d'occurrence restent dans le bandeau), ou rien du tout. */}
-      <div>
+          d'occurrence restent dans le bandeau), ou rien du tout — ou le scan. */}
+      {corps ?? <div>
         {shown.map(({ step, uids, withDetails }, i) => {
           const { section } = step;
           // Modulation (升调) : la section s'affiche transposée dans sa tonalité cible.
@@ -825,7 +873,7 @@ export function SongView({
             </div>
           );
         })}
-      </div>
+      </div>}
     </div>
   );
 }

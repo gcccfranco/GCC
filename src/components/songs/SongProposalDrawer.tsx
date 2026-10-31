@@ -14,21 +14,37 @@ import {
 } from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { BoutonNouveau } from "@/components/layout/BoutonNouveau";
 import { useStandaloneScrollLock } from "@/hooks/useStandaloneScrollLock";
 
 function isHttpUrl(s: string): boolean {
   return /^https?:\/\//i.test(s.trim());
 }
 
+/** Mode « setlist de fête » (docs/spec-chants-fetes.md, CF20) : le tiroir est ouvert par l'éditeur (pas de bouton),
+ *  le titre est prérempli, la proposition garde la setlist qui l'attend, et `onAjoutee` la reçoit une fois créée. */
+export interface ProposerPourUneFete {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  titreInitial: string;
+  setlistId: string;
+  setlistTitre: string;
+  onAjoutee: (proposition: { id: string; titre: string }) => void;
+}
+
 /** Bouton « Proposer un nouveau chant » + tiroir de saisie.
  *  Visible uniquement pour les utilisateurs connectés. La proposition est
- *  envoyée aux admins (inbox in-app), aucun fichier n'est stocké. */
-export function SongProposalDrawer() {
+ *  envoyée aux admins (inbox in-app), aucun fichier n'est stocké.
+ *  `enTete` (agencement v18, A5, R7) : l'action de l'en-tête de Chants, la pilule noire
+ *  « + Proposer un chant », dès 768 px seulement ; le téléphone garde le lien de la liste. */
+export function SongProposalDrawer({ enTete = false, controle }: { enTete?: boolean; controle?: ProposerPourUneFete } = {}) {
   const { t } = useTranslation();
   const { user, profile, loading } = useProfile();
-  const [open, setOpen] = useState(false);
+  const [ouvert, setOuvert] = useState(false);
+  const open = controle ? controle.open : ouvert;
+  const setOpen = controle ? controle.onOpenChange : setOuvert;
   useStandaloneScrollLock(open);
-  const [title, setTitle] = useState("");
+  const [title, setTitle] = useState(controle?.titreInitial ?? "");
   const [youtubeUrl, setYoutubeUrl] = useState("");
   const [pdfUrl, setPdfUrl] = useState("");
   const [error, setError] = useState("");
@@ -70,14 +86,20 @@ export function SongProposalDrawer() {
     }
     setSaving(true);
     try {
-      await createSongProposal({
+      const id = await createSongProposal({
         title: title.trim(),
         youtubeUrl: youtubeUrl.trim(),
         pdfUrl: pdfUrl.trim(),
         authorId: user!.uid,
         authorName,
+        ...(controle ? { setlistId: controle.setlistId, setlistTitre: controle.setlistTitre } : {}),
       });
-      setDone(true);
+      if (controle) {
+        controle.onAjoutee({ id, titre: title.trim() });
+        setOpen(false);
+      } else {
+        setDone(true);
+      }
     } catch {
       setError(t("proposition.erreurEnvoi"));
     } finally {
@@ -93,19 +115,25 @@ export function SongProposalDrawer() {
         if (!o) reset();
       }}
     >
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        className="inline-flex items-center gap-1.5 text-sm font-semibold text-foreground underline-offset-2 hover:underline"
-      >
-        <Music4 className="h-4 w-4" />
-        {t("proposition.titre")}
-      </button>
+      {controle ? null : enTete ? (
+        <span className="max-md:hidden">
+          <BoutonNouveau label={t("songs.list.proposer")} onClick={() => setOpen(true)} />
+        </span>
+      ) : (
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          className="inline-flex items-center gap-1.5 text-sm font-semibold text-foreground underline-offset-2 hover:underline"
+        >
+          <Music4 className="h-4 w-4" />
+          {t("proposition.titre")}
+        </button>
+      )}
 
       <DrawerContent className="max-h-[90vh]">
         <DrawerHeader>
           <DrawerTitle>{t("proposition.titre")}</DrawerTitle>
-          <DrawerDescription>{t("proposition.description")}</DrawerDescription>
+          <DrawerDescription>{t(controle ? "setlists.fete.proposerDescription" : "proposition.description")}</DrawerDescription>
         </DrawerHeader>
 
         <div className="px-4 pb-6 space-y-4 overflow-y-auto">
@@ -151,7 +179,7 @@ export function SongProposalDrawer() {
               <div>
                 <label className="block text-xs font-medium text-muted-foreground mb-1.5">
                   {t("proposition.partition")}{" "}
-                  <span className="text-muted-foreground/70">{t("signalement.optionnel")}</span>
+                  <span className="text-muted-foreground">{t("signalement.optionnel")}</span>
                 </label>
                 <Input
                   type="url"
@@ -184,7 +212,7 @@ export function SongProposalDrawer() {
                   disabled={saving}
                   className="h-11"
                 >
-                  {saving ? t("signalement.envoi") : t("proposition.envoyer")}
+                  {saving ? t("signalement.envoi") : t(controle ? "setlists.fete.proposerEtAjouter" : "proposition.envoyer")}
                 </Button>
               </div>
             </>

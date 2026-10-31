@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-11T16:14:11.620Z",
+  "generatedAt": "2026-10-29T19:39:20.858Z",
   "songs": [
     {
       "slug": "abba-pere",
@@ -18,6 +18,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -72,6 +73,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -107,7 +109,7 @@
       "recommendedKey": null,
       "tempo": 64,
       "themes": [
-        "noël",
+        "noel",
         "grace",
         "esperance"
       ],
@@ -116,6 +118,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -167,6 +170,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -221,6 +225,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -236,6 +241,45 @@
           "id": "chorus-3",
           "name": "副歌/Refrain",
           "type": "chorus"
+        }
+      ]
+    },
+    {
+      "slug": "aimez-vous-les-uns-les-autres",
+      "title": "Aimez-vous les uns les autres",
+      "titlePinyin": null,
+      "artist": "Glorious",
+      "language": "fr",
+      "originalKey": "F",
+      "recommendedKey": null,
+      "tempo": null,
+      "themes": [
+        "famille-de-dieu",
+        "engagement"
+      ],
+      "youtubeUrl": "https://www.youtube.com/watch?v=_wNTCx2stXM",
+      "spotifyUrl": null,
+      "appleMusicUrl": null,
+      "hasJianpu": false,
+      "jianpuKey": null,
+      "ajouteLe": "2026-10-18",
+      "sections": [
+        {
+          "id": "verse-1",
+          "name": "Couplet 1",
+          "type": "verse",
+          "number": "1"
+        },
+        {
+          "id": "chorus-2",
+          "name": "Refrain",
+          "type": "chorus"
+        },
+        {
+          "id": "verse-3",
+          "name": "Couplet 2",
+          "type": "verse",
+          "number": "2"
         }
       ]
     },
@@ -257,6 +301,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -288,6 +333,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -320,6 +366,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -371,6 +418,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -414,6 +462,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -469,6 +518,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -524,6 +574,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "chorus-1",
@@ -561,6 +612,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -611,6 +663,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -654,6 +707,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -703,6 +757,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -739,6 +794,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -783,6 +839,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -837,6 +894,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -880,6 +938,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -918,6 +977,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -987,6 +1047,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -1018,6 +1079,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-09-26",
       "sections": [
         {
           "id": "intro-1",
@@ -1066,6 +1128,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -1098,6 +1161,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -1133,6 +1197,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -1159,6 +1224,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -1208,6 +1274,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "chorus-1",
@@ -1239,6 +1306,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -1288,6 +1356,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -1331,7 +1400,7 @@
       "recommendedKey": null,
       "tempo": 147,
       "themes": [
-        "noël",
+        "noel",
         "salut"
       ],
       "youtubeUrl": null,
@@ -1339,6 +1408,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -1371,6 +1441,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "chorus-1",
@@ -1409,6 +1480,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -1440,6 +1512,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -1482,6 +1555,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -1545,6 +1619,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -1592,6 +1667,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -1623,6 +1699,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -1659,6 +1736,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -1702,6 +1780,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "chorus-1",
@@ -1740,6 +1819,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -1789,6 +1869,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -1838,6 +1919,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -1886,6 +1968,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -1933,6 +2016,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -1983,6 +2067,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -2036,6 +2121,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -2062,6 +2148,71 @@
       ]
     },
     {
+      "slug": "comment-ne-pas-te-louer",
+      "title": "Comment ne pas Te louer",
+      "titlePinyin": null,
+      "artist": "Glorious",
+      "language": "fr",
+      "originalKey": "F",
+      "recommendedKey": null,
+      "tempo": null,
+      "themes": [
+        "adoration",
+        "action-de-grace"
+      ],
+      "youtubeUrl": null,
+      "spotifyUrl": null,
+      "appleMusicUrl": null,
+      "hasJianpu": false,
+      "jianpuKey": null,
+      "ajouteLe": "2026-10-18",
+      "sections": [
+        {
+          "id": "chorus-1",
+          "name": "Refrain",
+          "type": "chorus"
+        },
+        {
+          "id": "verse-2",
+          "name": "Couplet 1",
+          "type": "verse",
+          "number": "1"
+        },
+        {
+          "id": "chorus-3",
+          "name": "Refrain",
+          "type": "chorus"
+        },
+        {
+          "id": "verse-4",
+          "name": "Couplet 2",
+          "type": "verse",
+          "number": "2"
+        },
+        {
+          "id": "chorus-5",
+          "name": "Refrain",
+          "type": "chorus"
+        },
+        {
+          "id": "verse-6",
+          "name": "Couplet 3",
+          "type": "verse",
+          "number": "3"
+        },
+        {
+          "id": "chorus-7",
+          "name": "Refrain",
+          "type": "chorus"
+        },
+        {
+          "id": "chorus-8",
+          "name": "Refrain",
+          "type": "chorus"
+        }
+      ]
+    },
+    {
       "slug": "compter-sur-toi",
       "title": "Compter sur Toi",
       "titlePinyin": null,
@@ -2079,6 +2230,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -2118,6 +2270,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -2155,6 +2308,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -2211,6 +2365,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -2252,6 +2407,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -2300,6 +2456,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -2349,6 +2506,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -2414,6 +2572,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -2461,6 +2620,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -2484,7 +2644,7 @@
       "recommendedKey": null,
       "tempo": 90,
       "themes": [
-        "noël",
+        "noel",
         "mission"
       ],
       "youtubeUrl": null,
@@ -2492,6 +2652,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "chorus-1",
@@ -2518,6 +2679,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -2560,6 +2722,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -2616,6 +2779,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -2676,6 +2840,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -2743,6 +2908,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -2797,6 +2963,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -2863,6 +3030,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -2922,6 +3090,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -2965,6 +3134,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -3025,6 +3195,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -3073,6 +3244,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -3121,6 +3293,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -3171,6 +3344,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -3216,6 +3390,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -3246,6 +3421,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -3295,6 +3471,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-09-27",
       "sections": [
         {
           "id": "intro-1",
@@ -3340,6 +3517,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -3377,6 +3555,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -3426,6 +3605,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -3482,6 +3662,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -3532,6 +3713,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -3568,6 +3750,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -3619,6 +3802,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -3669,6 +3853,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -3724,6 +3909,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "chorus-1",
@@ -3768,6 +3954,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -3828,6 +4015,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -3876,6 +4064,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -3908,6 +4097,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -3947,6 +4137,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -3996,6 +4187,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -4034,6 +4226,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -4044,6 +4237,54 @@
           "id": "chorus-2",
           "name": "副歌/Refrain",
           "type": "chorus"
+        }
+      ]
+    },
+    {
+      "slug": "gloire-a-dieu",
+      "title": "Gloire à Dieu",
+      "titlePinyin": null,
+      "artist": "Parfaitement Imparfait",
+      "language": "fr",
+      "originalKey": "A",
+      "recommendedKey": null,
+      "tempo": null,
+      "themes": [
+        "adoration"
+      ],
+      "youtubeUrl": "https://www.youtube.com/watch?v=-TAbUSI8koQ",
+      "spotifyUrl": null,
+      "appleMusicUrl": null,
+      "hasJianpu": false,
+      "jianpuKey": null,
+      "ajouteLe": null,
+      "sections": [
+        {
+          "id": "verse-1",
+          "name": "Couplet 1",
+          "type": "verse",
+          "number": "1"
+        },
+        {
+          "id": "prechorus-2",
+          "name": "Pré-refrain",
+          "type": "prechorus"
+        },
+        {
+          "id": "chorus-3",
+          "name": "Refrain",
+          "type": "chorus"
+        },
+        {
+          "id": "chorus-4",
+          "name": "Post-Refrain",
+          "type": "chorus"
+        },
+        {
+          "id": "verse-5",
+          "name": "Couplet 2",
+          "type": "verse",
+          "number": "2"
         }
       ]
     },
@@ -4066,6 +4307,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -4122,6 +4364,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -4182,6 +4425,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -4221,6 +4465,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -4269,6 +4514,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -4312,6 +4558,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -4362,6 +4609,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -4390,15 +4638,16 @@
       "recommendedKey": null,
       "tempo": 132,
       "themes": [
-        "noël",
+        "noel",
         "salut",
-        "groupe-fidelite"
+        "noel_fidelite"
       ],
       "youtubeUrl": null,
       "spotifyUrl": null,
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-09-27",
       "sections": [
         {
           "id": "verse-1",
@@ -4450,6 +4699,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -4492,13 +4742,14 @@
       "tempo": 68,
       "themes": [
         "adoration",
-        "noël"
+        "noel"
       ],
       "youtubeUrl": null,
       "spotifyUrl": null,
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -4537,6 +4788,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -4586,6 +4838,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -4634,6 +4887,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "chorus-1",
@@ -4678,6 +4932,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -4705,6 +4960,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -4742,6 +4998,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -4773,6 +5030,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -4816,6 +5074,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -4860,6 +5119,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -4910,6 +5170,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "chorus-1",
@@ -4953,6 +5214,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -5013,6 +5275,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -5063,6 +5326,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -5124,6 +5388,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -5174,6 +5439,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -5236,6 +5502,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -5278,6 +5545,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -5326,6 +5594,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -5359,6 +5628,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -5390,6 +5660,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -5438,6 +5709,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -5481,6 +5753,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -5536,6 +5809,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -5569,6 +5843,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -5618,6 +5893,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -5661,6 +5937,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -5697,6 +5974,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -5735,6 +6013,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -5766,6 +6045,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -5803,6 +6083,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -5841,6 +6122,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -5884,6 +6166,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -5978,13 +6261,14 @@
       "tempo": 96,
       "themes": [
         "adoration",
-        "noël"
+        "noel"
       ],
       "youtubeUrl": null,
       "spotifyUrl": null,
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -6041,6 +6325,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -6084,6 +6369,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -6132,6 +6418,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -6170,6 +6457,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -6219,6 +6507,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -6269,6 +6558,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -6320,6 +6610,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -6382,6 +6673,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -6430,6 +6722,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -6474,6 +6767,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -6518,6 +6812,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -6585,6 +6880,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-10-02",
       "sections": [
         {
           "id": "verse-1",
@@ -6624,6 +6920,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -6662,6 +6959,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -6705,6 +7003,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -6748,6 +7047,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -6788,7 +7088,7 @@
       "recommendedKey": null,
       "tempo": null,
       "themes": [
-        "noël",
+        "noel",
         "adoration"
       ],
       "youtubeUrl": null,
@@ -6796,6 +7096,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -6840,6 +7141,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -6889,6 +7191,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -6932,6 +7235,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -6976,6 +7280,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -7011,7 +7316,7 @@
       "recommendedKey": null,
       "tempo": null,
       "themes": [
-        "noël",
+        "noel",
         "adoration",
         "grace"
       ],
@@ -7020,6 +7325,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -7063,6 +7369,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -7093,6 +7400,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -7130,6 +7438,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -7168,7 +7477,7 @@
       "recommendedKey": null,
       "tempo": 160,
       "themes": [
-        "noël",
+        "noel",
         "adoration"
       ],
       "youtubeUrl": null,
@@ -7176,6 +7485,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -7217,6 +7527,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -7272,6 +7583,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -7317,6 +7629,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -7374,6 +7687,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -7412,6 +7726,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -7460,6 +7775,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -7498,6 +7814,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -7535,6 +7852,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -7558,7 +7876,7 @@
       "recommendedKey": null,
       "tempo": null,
       "themes": [
-        "noël",
+        "noel",
         "adoration"
       ],
       "youtubeUrl": null,
@@ -7566,6 +7884,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -7616,6 +7935,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -7654,6 +7974,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -7691,6 +8012,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -7721,6 +8043,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -7754,6 +8077,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -7803,6 +8127,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -7849,6 +8174,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -7899,6 +8225,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -7938,6 +8265,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -7974,6 +8302,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -7997,13 +8326,14 @@
       "recommendedKey": null,
       "tempo": null,
       "themes": [
-        "noël"
+        "noel"
       ],
       "youtubeUrl": null,
       "spotifyUrl": null,
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -8061,6 +8391,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -8104,6 +8435,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "chorus-1",
@@ -8159,6 +8491,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "chorus-1",
@@ -8197,6 +8530,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -8240,6 +8574,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -8278,6 +8613,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -8339,6 +8675,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -8382,6 +8719,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -8414,6 +8752,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -8456,6 +8795,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -8506,6 +8846,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -8547,6 +8888,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -8601,6 +8943,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -8650,6 +8993,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -8693,6 +9037,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -8725,6 +9070,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -8766,7 +9112,7 @@
       "recommendedKey": null,
       "tempo": null,
       "themes": [
-        "noël",
+        "noel",
         "adoration",
         "esperance"
       ],
@@ -8775,6 +9121,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -8823,6 +9170,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -8867,6 +9215,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -8917,6 +9266,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -8965,6 +9315,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -9018,6 +9369,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -9066,6 +9418,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -9107,6 +9460,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -9151,6 +9505,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -9192,6 +9547,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -9223,6 +9579,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -9282,6 +9639,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -9310,6 +9668,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -9360,10 +9719,16 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
-          "name": "Couplet",
+          "name": "Couplet 1",
+          "type": "verse"
+        },
+                {
+          "id": "verse-2",
+          "name": "Couplet 2",
           "type": "verse"
         },
         {
@@ -9397,6 +9762,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -9464,6 +9830,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -9501,6 +9868,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -9545,6 +9913,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -9589,6 +9958,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -9644,6 +10014,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-09-26",
       "sections": [
         {
           "id": "verse-1",
@@ -9694,6 +10065,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -9737,6 +10109,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -9783,6 +10156,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -9837,6 +10211,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -9882,6 +10257,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -9931,6 +10307,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -9967,6 +10344,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -10009,6 +10387,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -10045,6 +10424,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -10088,6 +10468,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "chorus-1",
@@ -10119,6 +10500,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -10173,6 +10555,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -10217,6 +10600,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -10279,6 +10663,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -10305,6 +10690,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -10336,6 +10722,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "chorus-1",
@@ -10379,6 +10766,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -10422,6 +10810,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -10472,6 +10861,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -10542,7 +10932,7 @@
       "tempo": null,
       "themes": [
         "adoration",
-        "noël",
+        "noel",
         "resurrection"
       ],
       "youtubeUrl": null,
@@ -10550,6 +10940,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -10602,6 +10993,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -10644,6 +11036,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -10693,6 +11086,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -10736,6 +11130,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -10779,6 +11174,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -10815,6 +11211,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -10866,6 +11263,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -10910,6 +11308,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -10958,6 +11357,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -10997,6 +11397,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -11041,6 +11442,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -11078,6 +11480,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -11120,7 +11523,7 @@
       "recommendedKey": null,
       "tempo": 134,
       "themes": [
-        "noël",
+        "noel",
         "adoration",
         "salut"
       ],
@@ -11129,6 +11532,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -11187,6 +11591,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -11223,6 +11628,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -11266,6 +11672,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -11298,6 +11705,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -11341,6 +11749,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -11389,6 +11798,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -11440,6 +11850,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -11475,7 +11886,7 @@
       "recommendedKey": null,
       "tempo": 68,
       "themes": [
-        "noël",
+        "noel",
         "salut",
         "adoration"
       ],
@@ -11484,6 +11895,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -11526,6 +11938,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -11567,6 +11980,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-09-27",
       "sections": [
         {
           "id": "verse-1",
@@ -11618,6 +12032,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -11661,6 +12076,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -11700,6 +12116,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -11751,6 +12168,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -11794,6 +12212,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -11831,6 +12250,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": null,
       "sections": [
         {
           "id": "intro-1",
@@ -11880,6 +12300,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -11934,6 +12355,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "chorus-1",
@@ -11967,6 +12389,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "chorus-1",
@@ -12004,6 +12427,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -12052,6 +12476,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -12096,6 +12521,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -12164,11 +12590,12 @@
         "adoration",
         "engagement"
       ],
-      "youtubeUrl": "http://youtube.com/watch?v=uCA2jOPLXPM",
+      "youtubeUrl": "https://www.youtube.com/watch?v=cxWy0MPm_-c",
       "spotifyUrl": null,
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -12225,6 +12652,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -12268,6 +12696,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -12315,6 +12744,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-09-27",
       "sections": [
         {
           "id": "intro-1",
@@ -12400,6 +12830,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -12453,6 +12884,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -12503,6 +12935,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -12550,6 +12983,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -12602,6 +13036,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -12645,6 +13080,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -12689,6 +13125,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -12754,6 +13191,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -12801,6 +13239,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "chorus-1",
@@ -12839,6 +13278,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -12880,6 +13320,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -12929,6 +13370,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -12961,6 +13403,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -13033,6 +13476,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -13082,6 +13526,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -13135,6 +13580,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -13182,6 +13628,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -13231,6 +13678,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -13259,7 +13707,7 @@
       "recommendedKey": null,
       "tempo": 74,
       "themes": [
-        "noël",
+        "noel",
         "salut"
       ],
       "youtubeUrl": null,
@@ -13267,6 +13715,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -13310,6 +13759,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -13352,6 +13802,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -13383,6 +13834,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -13428,6 +13880,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -13466,6 +13919,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -13509,6 +13963,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -13557,6 +14012,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -13588,6 +14044,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -13626,6 +14083,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -13682,6 +14140,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -13727,6 +14186,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -13765,6 +14225,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -13808,6 +14269,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -13851,6 +14313,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -13902,6 +14365,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -13951,6 +14415,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -13992,6 +14457,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -14026,6 +14492,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -14067,6 +14534,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -14103,6 +14571,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -14153,6 +14622,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -14192,6 +14662,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -14224,6 +14695,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -14265,6 +14737,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -14302,6 +14775,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -14338,6 +14812,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -14381,6 +14856,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -14432,6 +14908,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -14494,6 +14971,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -14545,6 +15023,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -14595,6 +15074,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -14640,6 +15120,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -14678,6 +15159,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -14714,6 +15196,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-09-27",
       "sections": [
         {
           "id": "verse-1",
@@ -14752,6 +15235,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -14789,6 +15273,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -14833,6 +15318,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -14883,6 +15369,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -14921,6 +15408,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -14958,6 +15446,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -14999,6 +15488,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -15031,6 +15521,56 @@
       ]
     },
     {
+      "slug": "仰望神儿子",
+      "title": "仰望神儿子",
+      "titlePinyin": "Yǎng wàng shén ér zǐ",
+      "artist": "约书亚乐团",
+      "language": "zh",
+      "originalKey": "A",
+      "recommendedKey": null,
+      "tempo": 124,
+      "themes": [
+        "adoration",
+        "royaume"
+      ],
+      "youtubeUrl": null,
+      "spotifyUrl": null,
+      "appleMusicUrl": null,
+      "hasJianpu": false,
+      "jianpuKey": null,
+      "ajouteLe": "2026-10-18",
+      "sections": [
+        {
+          "id": "verse-1",
+          "name": "主歌 1/Couplet 1",
+          "type": "verse",
+          "number": "1"
+        },
+        {
+          "id": "prechorus-2",
+          "name": "预备副歌/Pré-Refrain",
+          "type": "prechorus"
+        },
+        {
+          "id": "chorus-3",
+          "name": "副歌/Refrain",
+          "type": "chorus"
+        },
+        {
+          "id": "tag-4",
+          "name": "Tag (x2)",
+          "type": "other",
+          "suffix": "(x2)"
+        },
+        {
+          "id": "verse-5",
+          "name": "主歌 2/Couplet 2",
+          "type": "verse",
+          "number": "2"
+        }
+      ]
+    },
+    {
       "slug": "耶和华是应当称颂的",
       "title": "耶和华是应当称颂的",
       "titlePinyin": "Yē hé huá shì yīng dāng chēng sòng de",
@@ -15049,6 +15589,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -15081,6 +15622,59 @@
       ]
     },
     {
+      "slug": "耶和华所定的日子",
+      "title": "耶和华所定的日子",
+      "titlePinyin": "Yē hé huá suǒ dìng de rì zǐ",
+      "artist": "",
+      "language": "zh",
+      "originalKey": "F",
+      "recommendedKey": null,
+      "tempo": 124,
+      "themes": [],
+      "youtubeUrl": null,
+      "spotifyUrl": null,
+      "appleMusicUrl": null,
+      "hasJianpu": false,
+      "jianpuKey": null,
+      "ajouteLe": "2026-10-17",
+      "sections": [
+        {
+          "id": "intro-1",
+          "name": "前奏 Intro",
+          "type": "intro"
+        },
+        {
+          "id": "verse-2",
+          "name": "主歌1/Couplet1",
+          "type": "verse",
+          "number": "1"
+        },
+        {
+          "id": "verse-3",
+          "name": "主歌2/Couplet2",
+          "type": "verse",
+          "number": "2"
+        },
+        {
+          "id": "chorus-4",
+          "name": "副歌/Refrain",
+          "type": "chorus"
+        },
+        {
+          "id": "bridge-5",
+          "name": "桥段1/Pont 1",
+          "type": "bridge",
+          "number": "1"
+        },
+        {
+          "id": "bridge-6",
+          "name": "桥段2/Pont 2",
+          "type": "bridge",
+          "number": "2"
+        }
+      ]
+    },
+    {
       "slug": "耶和华行了大事",
       "title": "耶和华行了大事",
       "titlePinyin": "Yē hé huá xíng le dà shì",
@@ -15098,6 +15692,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -15146,6 +15741,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -15201,6 +15797,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -15239,6 +15836,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -15275,6 +15873,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -15306,6 +15905,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -15344,6 +15944,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -15389,6 +15990,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -15421,6 +16023,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -15475,6 +16078,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -15506,6 +16110,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": "1=E",
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -15542,6 +16147,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -15578,6 +16184,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -15606,7 +16213,7 @@
       "recommendedKey": null,
       "tempo": 126,
       "themes": [
-        "noël",
+        "noel",
         "adoration"
       ],
       "youtubeUrl": null,
@@ -15614,6 +16221,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -15666,6 +16274,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -15702,6 +16311,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -15740,6 +16350,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -15791,6 +16402,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -15837,6 +16449,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -15868,6 +16481,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -15906,6 +16520,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -15942,6 +16557,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -15980,6 +16596,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -16012,6 +16629,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -16050,6 +16668,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -16087,6 +16706,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -16124,6 +16744,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -16170,6 +16791,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -16215,6 +16837,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -16247,6 +16870,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -16283,6 +16907,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -16327,6 +16952,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -16359,6 +16985,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -16395,6 +17022,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -16427,6 +17055,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -16467,6 +17096,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -16498,6 +17128,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -16539,6 +17170,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -16581,6 +17213,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -16613,6 +17246,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",
@@ -16644,6 +17278,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-08-20",
       "sections": [
         {
           "id": "verse-1",
@@ -16687,6 +17322,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -16715,7 +17351,7 @@
       "recommendedKey": null,
       "tempo": 110,
       "themes": [
-        "noël",
+        "noel",
         "salut"
       ],
       "youtubeUrl": null,
@@ -16723,6 +17359,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "intro-1",
@@ -16759,6 +17396,7 @@
       "appleMusicUrl": null,
       "hasJianpu": false,
       "jianpuKey": null,
+      "ajouteLe": "2026-06-01",
       "sections": [
         {
           "id": "verse-1",

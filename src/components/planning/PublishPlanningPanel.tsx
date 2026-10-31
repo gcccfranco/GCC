@@ -2,7 +2,9 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { Send, Check, EyeOff } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { authHeader } from "@/lib/firebase/setlists";
+import { BACK_OFFICE } from "@/lib/backOffice";
 import { getCurrentTri } from "@/lib/planning/utils";
 import { audienceLabel } from "@/lib/push/audiences";
 import {
@@ -27,6 +29,7 @@ export function PublishPlanningPanel({
   isAdmin: boolean;
   notifyRights: string[];
 }) {
+  const { t } = useTranslation();
   const year = new Date().getFullYear();
   const current = getCurrentTri();
 
@@ -70,15 +73,17 @@ export function PublishPlanningPanel({
         setFeedback(
           publish
             ? data.notified
-              ? `Trimestre ${tri} publié — notification envoyée (${data.sent ?? 0}).`
-              : `Trimestre ${tri} publié.`
-            : `Trimestre ${tri} masqué de nouveau.`
+              ? t("planning.trimestrePublieNotifie", { tri, count: data.sent ?? 0 })
+              : data.dejaAnnonce
+                ? `${t("planning.trimestrePublie", { tri })} ${t(BACK_OFFICE ? "planning.dejaAnnonce" : "planning.dejaAnnonceEnLigne")}`
+                : t("planning.trimestrePublie", { tri })
+            : t("planning.trimestreMasque", { tri })
         );
       } else {
-        setFeedback(data.error || "Échec.");
+        setFeedback(data.error || t("backOffice.boE1.publier.echec"));
       }
     } catch {
-      setFeedback("Échec — vérifie ta connexion.");
+      setFeedback(t("backOffice.boE1.publier.echecConnexion"));
     } finally {
       setBusyTri("");
     }
@@ -88,7 +93,7 @@ export function PublishPlanningPanel({
     return (
       <div className="rounded-xl bg-card shadow-soft p-5">
         <p className="text-sm text-muted-foreground">
-          Tu n&apos;as pas l&apos;autorisation de publier un planning.
+          {t("backOffice.boE1.publier.pasAutorise")}
         </p>
       </div>
     );
@@ -97,10 +102,11 @@ export function PublishPlanningPanel({
   return (
     <div className="rounded-xl bg-card shadow-soft p-5 space-y-4">
       <div className="space-y-1.5">
-        <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
-          Planning
+        <label htmlFor="publier-planning" className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+          {t("backOffice.boE1.publier.planning")}
         </label>
         <select
+          id="publier-planning"
           value={key}
           onChange={(e) => setKey(e.target.value)}
           className="w-full h-11 px-3 rounded-lg border border-transparent bg-secondary text-foreground text-[16px] sm:text-sm focus:outline-none focus:ring-2 focus:ring-ring/30"
@@ -114,17 +120,16 @@ export function PublishPlanningPanel({
       </div>
 
       <p className="text-sm text-muted-foreground">
-        Publier un trimestre le rend visible par tous les membres et envoie une
-        notification à{" "}
+        {t("backOffice.boE1.publier.explicationDebut")}{" "}
         <span className="font-semibold text-foreground">
           {audienceLabel(planning.notifyAudience)}
-        </span>
-        . Le trimestre courant et les passés sont déjà visibles automatiquement.
+        </span>{" "}
+        {t("backOffice.boE1.publier.explicationFin")}
       </p>
 
       <div className="space-y-2">
         {loading ? (
-          <p className="text-sm text-muted-foreground text-center py-4">Chargement…</p>
+          <p className="text-sm text-muted-foreground text-center py-4">{t("backOffice.boE1.publier.chargement")}</p>
         ) : (
           TRI_ORDER.map((tri) => {
             const isPublished = published.includes(tri);
@@ -141,13 +146,13 @@ export function PublishPlanningPanel({
                   </span>
                   {isPublished ? (
                     <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-green-700">
-                      <Check className="h-3.5 w-3.5" /> Publié
+                      <Check className="h-3.5 w-3.5" /> {t("backOffice.boE1.publier.publie")}
                     </span>
                   ) : isPastOrCurrent ? (
-                    <span className="text-[11px] text-muted-foreground">Visible (auto)</span>
+                    <span className="text-[11px] text-muted-foreground">{t("backOffice.boE1.publier.visibleAuto")}</span>
                   ) : (
                     <span className="inline-flex items-center gap-1 text-[11px] text-muted-foreground">
-                      <EyeOff className="h-3.5 w-3.5" /> Masqué
+                      <EyeOff className="h-3.5 w-3.5" /> {t("backOffice.boE1.publier.masque")}
                     </span>
                   )}
                 </div>
@@ -158,7 +163,7 @@ export function PublishPlanningPanel({
                     disabled={busy}
                     className="h-8 px-3 rounded-lg border border-transparent bg-secondary text-xs font-semibold text-muted-foreground hover:text-foreground disabled:opacity-50"
                   >
-                    {busy ? "…" : "Masquer"}
+                    {busy ? "…" : t("backOffice.boE1.publier.masquer")}
                   </button>
                 ) : isPastOrCurrent ? null : confirmTri === tri ? (
                   <div className="flex items-center gap-2">
@@ -166,7 +171,7 @@ export function PublishPlanningPanel({
                       onClick={() => setConfirmTri("")}
                       className="h-8 px-3 rounded-lg border border-transparent bg-secondary text-xs font-semibold text-muted-foreground"
                     >
-                      Annuler
+                      {t("backOffice.boE1.publier.annuler")}
                     </button>
                     <button
                       onClick={() => act(tri, true)}
@@ -174,7 +179,7 @@ export function PublishPlanningPanel({
                       className="inline-flex items-center gap-1.5 h-8 px-3 rounded-full bg-primary text-primary-foreground text-xs font-semibold hover:bg-primary/90 disabled:opacity-50"
                     >
                       <Send className="h-3.5 w-3.5" />
-                      {busy ? "Publication…" : "Confirmer"}
+                      {busy ? t("backOffice.boE1.publier.publication") : t("backOffice.boE1.publier.confirmer")}
                     </button>
                   </div>
                 ) : (
@@ -182,7 +187,7 @@ export function PublishPlanningPanel({
                     onClick={() => setConfirmTri(tri)}
                     className="inline-flex items-center gap-1.5 h-8 px-3 rounded-full bg-primary text-primary-foreground text-xs font-semibold hover:bg-primary/90"
                   >
-                    Publier
+                    {t("backOffice.boE1.publier.publierBouton")}
                   </button>
                 )}
               </div>
@@ -193,12 +198,14 @@ export function PublishPlanningPanel({
 
       {confirmTri && (
         <p className="text-xs text-muted-foreground">
-          Publier{" "}
+          {t("backOffice.boE1.publier.confirmDebut")}{" "}
           <span className="font-semibold text-foreground">
             {confirmTri} {year}
           </span>{" "}
-          de {planning.label} → visible par tous + notification à{" "}
-          {audienceLabel(planning.notifyAudience)}.
+          {t("backOffice.boE1.publier.confirmFin", {
+            label: planning.label,
+            audience: audienceLabel(planning.notifyAudience),
+          })}
         </p>
       )}
 

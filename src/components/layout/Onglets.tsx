@@ -1,0 +1,213 @@
+"use client";
+
+// Les deux sortes d'onglets du site (agencement v18, R4 et R5 de docs/spec-agencement-v18.md).
+// Une exception se discute, elle ne s'invente pas (planche `v18-bo-regles-communes`) :
+// - `OngletsRail`, le rail gris à pastille blanche : CHOISIR UNE VUE. Les sous-parties d'une entrée
+//   (Organigramme · Personnes, Réception · Notifier · Questionnaire, Calendrier · Pâques · Noël…) et
+//   les vues d'une page (À venir · Passés, T1 à T4, Paix · Fidélité · Bonté…). Sous le titre.
+// - `Pilules` : sous-onglets (Équipes · Musiciens), filtres (catégories, périodes, audiences…) et
+//   les plannings, l'actif à la couleur de son service.
+// Ont remplacé `EnTeteEntree`, `FilterButtons`, `SectionTabs` en grand (il reste la barre collante des
+// plannings sur téléphone et tablette, R6) et les boutons de groupes (tranche Z).
+
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { useRef, type KeyboardEvent, type ReactNode } from "react";
+import { cn } from "@/lib/utils";
+
+export type OngletRail = {
+  /** Identifiant de l'onglet (rendu par `choisir`, comparé à `actif`). */
+  id: string;
+  label: ReactNode;
+  /** Un lien : le rail est une navigation (`aria-current="page"`) ; sinon un bouton (`role="tab"`).
+   *  Dans un rail de liens, chaque onglet a le sien (sans lui, l'onglet mènerait à `#`). */
+  href?: string;
+  /** Un nombre après le libellé (« DA · 4 »). */
+  compte?: number;
+  /** Une pastille de couleur devant le libellé (Paix · Fidélité · Bonté). */
+  couleur?: string;
+};
+
+/** L'onglet d'une adresse : celui dont le `href` est le plus long préfixe du chemin (par segments). */
+function ongletDuChemin(onglets: OngletRail[], chemin: string): string | undefined {
+  const c = chemin.replace(/\/$/, "") || "/";
+  let meilleur: { id: string; longueur: number } | undefined;
+  for (const o of onglets) {
+    if (!o.href) continue;
+    const h = o.href.split("?")[0].replace(/\/$/, "") || "/";
+    if ((c === h || c.startsWith(`${h}/`)) && (!meilleur || h.length > meilleur.longueur)) meilleur = { id: o.id, longueur: h.length };
+  }
+  return meilleur?.id;
+}
+
+/**
+ * Le rail gris. Liens (sous-parties, une adresse par onglet) :
+ *   <OngletsRail etiquette="Équipes" onglets={[{ id: "orga", label: "Organigramme", href: "/back-office/equipes" },
+ *                                              { id: "personnes", label: "Personnes", href: "/back-office/equipes/personnes" }]} />
+ * (l'onglet actif se lit dans le CHEMIN de l'adresse ; `actif` le force). Des liens qui ne diffèrent que
+ * par la query (`?vue=a`, `?vue=b`) ont le même chemin : `actif` est alors obligatoire, sans quoi le
+ * premier resterait choisi. Boutons (vues dans la page) :
+ *   <OngletsRail etiquette="Période" onglets={[{ id: "avenir", label: "À venir" }, { id: "passes", label: "Passés" }]}
+ *                actif={vue} choisir={setVue} />
+ * En boutons, le motif ARIA des onglets à activation manuelle : un seul arrêt de tabulation (l'onglet
+ * choisi), ← et → (en boucle), Début et Fin déplacent le focus, Entrée ou Espace choisit. Pas de
+ * `aria-controls` : la vue choisie est la page sous l'en-tête, pas un panneau à part.
+ * Il défile en largeur quand il ne tient pas (téléphone).
+ */
+export function OngletsRail({
+  etiquette,
+  onglets,
+  actif,
+  choisir,
+  className,
+  cible44 = false,
+}: {
+  /** Nom du groupe d'onglets, lu par les lecteurs d'écran. */
+  etiquette: string;
+  onglets: OngletRail[];
+  /** L'onglet choisi ; pour des liens, déduit de l'adresse s'il manque. */
+  actif?: string;
+  /** Pour des boutons : appelé avec l'`id` de l'onglet touché. */
+  choisir?: (id: string) => void;
+  className?: string;
+  /** BO-G, 16 : cible de toucher de 44 px sans changer le dessin ; pour un rail de deux onglets (le rail ne défile plus). */
+  cible44?: boolean;
+}) {
+  const chemin = usePathname() ?? "";
+  const boutons = useRef<(HTMLButtonElement | null)[]>([]);
+  const liens = onglets.some((o) => o.href);
+  const courant = actif ?? (liens ? ongletDuChemin(onglets, chemin) : undefined);
+  const classe = (on: boolean) =>
+    cn(
+      "relative flex shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-full px-4 py-1.5 text-[13px] font-semibold transition-[background-color,color] duration-150",
+      // BO-G, 16 : la cible de toucher fait 44 px sans changer le dessin (`::after`, comme BO-E2).
+      cible44 && "after:absolute after:-inset-y-1.5 after:inset-x-0 after:content-['']",
+      on ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground",
+    );
+  const contenu = (o: OngletRail) => (
+    <>
+      {o.couleur && <span aria-hidden className="h-2 w-2 shrink-0 rounded-full" style={{ backgroundColor: o.couleur }} />}
+      {o.label}
+      {o.compte !== undefined && <span className="tabular-nums opacity-70">· {o.compte}</span>}
+    </>
+  );
+  // `cible44` : dès 640 px un rail de deux ou trois onglets (Équipes, Planning) tient et ne défile pas : un `overflow` rognerait la cible ;
+  // en dessous il défile encore (中文 à 320 px).
+  const rail = cn("inline-flex max-w-full gap-0.5 rounded-full bg-secondary p-[3px]", cible44 ? "overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:overflow-visible" : "overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden", className);
+
+  if (liens) {
+    return (
+      <nav aria-label={etiquette} data-onglets="rail" className={rail}>
+        {onglets.map((o) => (
+          <Link key={o.id} href={o.href ?? "#"} aria-current={courant === o.id ? "page" : undefined} className={classe(courant === o.id)}>
+            {contenu(o)}
+          </Link>
+        ))}
+      </nav>
+    );
+  }
+  // Le seul arrêt de tabulation : l'onglet choisi, ou le premier.
+  const arret = Math.max(0, onglets.findIndex((o) => o.id === courant));
+  const auClavier = (e: KeyboardEvent<HTMLDivElement>) => {
+    const i = boutons.current.indexOf(e.target as HTMLButtonElement);
+    if (i < 0) return;
+    const n = onglets.length;
+    const cible = ({ ArrowRight: (i + 1) % n, ArrowLeft: (i - 1 + n) % n, Home: 0, End: n - 1 } as Record<string, number | undefined>)[e.key];
+    if (cible === undefined) return;
+    e.preventDefault();
+    boutons.current[cible]?.focus();
+  };
+  return (
+    <div role="tablist" aria-label={etiquette} data-onglets="rail" className={rail} onKeyDown={auClavier}>
+      {onglets.map((o, i) => (
+        <button
+          key={o.id}
+          ref={(b) => { boutons.current[i] = b; }}
+          type="button"
+          role="tab"
+          aria-selected={courant === o.id}
+          tabIndex={i === arret ? 0 : -1}
+          onClick={() => choisir?.(o.id)}
+          className={classe(courant === o.id)}
+        >
+          {contenu(o)}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+/**
+ * Les pilules : un choix dans une rangée (sous-onglet, filtre, planning). Retoucher la pilule
+ * active retire le filtre, sauf `obligatoire`. L'active est en encre, ou à sa `couleur` :
+ *   <Pilules etiquette="Plannings" valeur={cle} choisir={setCle} obligatoire
+ *            options={[{ cle: "culte", nom: "Culte Franco", couleur: PLANNING_COLORS.culte }, …]} />
+ * Avec un `href` par option, les pilules sont des liens (une navigation, `aria-current="page"` sur
+ * l'active : les plannings, T4a).
+ * Taille (D9, retouches v18 R5) : une règle pour toutes, selon l'appareil et jamais selon la page —
+ * 40 px de haut et 15 px au doigt (téléphone, tablette debout ou couchée), ≈ 28 px et 13 px en gras
+ * dès 1 024 px de large avec un pointeur fin (la planche `v18-bo-statistiques`).
+ * La rangée défile horizontalement quand elle ne tient pas (douze sensations sur un téléphone).
+ * `pastille` (organigrammes des groupes, lot 2, OG-C) : un point de la couleur devant le nom, sur
+ * toutes les pilules, active comprise (blanc sur la couleur).
+ */
+export function Pilules<T extends string>({
+  etiquette,
+  options,
+  valeur,
+  choisir,
+  obligatoire,
+}: {
+  /** Nom du groupe de filtres, lu par les lecteurs d'écran. */
+  etiquette: string;
+  /** `couleur` : celle de la pilule active (le service d'un planning) ; l'encre sinon. `href` : un lien. */
+  options: { cle: T; nom: string; couleur?: string; href?: string; pastille?: string }[];
+  valeur: T | null;
+  /** `null` = filtre retiré (retoucher la pilule active l'enlève). */
+  choisir: (v: T | null) => void;
+  /** Un choix est toujours actif (instrument) : on ne peut pas le retirer. */
+  obligatoire?: boolean;
+}) {
+  const liens = options.some((o) => o.href);
+  const Rangee = liens ? "nav" : "div";
+  return (
+    <Rangee
+      role={liens ? undefined : "group"}
+      aria-label={etiquette}
+      data-onglets="pilules"
+      className="-mx-4 -mt-0.5 flex gap-1.5 overflow-x-auto px-4 py-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+    >
+      {options.map((o) => {
+        const actif = valeur === o.cle;
+        const style = actif && o.couleur ? { backgroundColor: o.couleur, color: "#fff" } : undefined;
+        const classe = cn(
+          "relative inline-flex shrink-0 items-center whitespace-nowrap rounded-full transition-colors duration-150 after:absolute after:-inset-y-0.5 after:inset-x-0 after:content-['']",
+          "h-10 px-3.5 text-[15px] [@media(pointer:fine)_and_(min-width:1024px)]:h-7 [@media(pointer:fine)_and_(min-width:1024px)]:px-3 [@media(pointer:fine)_and_(min-width:1024px)]:text-[13px] [@media(pointer:fine)_and_(min-width:1024px)]:font-semibold",
+          actif ? "bg-foreground text-background font-semibold" : "bg-secondary text-foreground/80 active:bg-secondary/70",
+        );
+        const point = o.pastille && (
+          <span aria-hidden className="mr-1.5 h-2 w-2 shrink-0 rounded-full" style={{ background: actif && o.couleur ? "#fff" : o.pastille }} />
+        );
+        if (o.href) {
+          return (
+            <Link key={o.cle} href={o.href} aria-current={actif ? "page" : undefined} style={style} className={classe}>
+              {point}{o.nom}
+            </Link>
+          );
+        }
+        return (
+          <button
+            key={o.cle}
+            type="button"
+            aria-pressed={actif}
+            onClick={() => choisir(actif && !obligatoire ? null : o.cle)}
+            style={style}
+            className={classe}
+          >
+            {point}{o.nom}
+          </button>
+        );
+      })}
+    </Rangee>
+  );
+}

@@ -6,6 +6,7 @@ import {
   fromFsValue,
   type RawDoc,
 } from "./setlists";
+import { versDate } from "@/lib/utils/formatDate";
 import { FIREBASE_PROJECT_ID } from "./config";
 import type { SongProposal, SongProposalStatus } from "@/types/songProposal";
 
@@ -22,7 +23,8 @@ function fromFsProposal(raw: RawDoc): SongProposal {
     status: (data.status as SongProposalStatus) ?? "pending",
     authorId: (data.authorId as string) ?? "",
     authorName: (data.authorName as string) ?? "",
-    createdAt: (data.createdAt as Date | null) ?? null,
+    createdAt: versDate(data.createdAt),
+    ...(data.setlistId ? { setlistId: data.setlistId as string, setlistTitre: (data.setlistTitre as string) ?? "" } : {}),
   };
 }
 
@@ -45,7 +47,7 @@ export async function getSongProposals(): Promise<SongProposal[]> {
 }
 
 export async function createSongProposal(
-  data: Pick<SongProposal, "title" | "youtubeUrl" | "pdfUrl" | "authorId" | "authorName">
+  data: Pick<SongProposal, "title" | "youtubeUrl" | "pdfUrl" | "authorId" | "authorName" | "setlistId" | "setlistTitre">
 ): Promise<string> {
   const headers = await authHeader();
   const fields = {

@@ -1,0 +1,597 @@
+"use client";
+
+// Calendrier du Back-Office (lot U8, docs/spec-calendrier.md). C3 : la page en Mois.
+// En-tête (mois, ‹ ›, « Aujourd'hui »), pastilles des sources et « Seulement moi »
+// retenues par appareil, grille de six semaines, jour choisi dans le panneau de droite
+// (ordinateur, tablette couchée) ou dans une feuille (ailleurs). C4 : « Mois | Agenda »
+// (Agenda d'office sur téléphone, au choix ailleurs) ; sur téléphone, « Tout » ·
+// « Seulement moi » · « Sources » (feuille des sources) et le Mois à points, la liste
+// du jour touché dessous. C5 : créer depuis un jour — « Nouvel évènement le JJ/MM » et
+// « Nouvelle tâche pour le JJ/MM » en bas du panneau (ou de la feuille) du jour ; là où il
+// n'y a pas de panneau (téléphone, Agenda), un « + » à côté de « Mois | Agenda » les propose
+// pour le jour affiché (question 5). C6 : déplacer — glisser une entrée dans la grille du
+// Mois (ordinateur, tablettes), ou « Déplacer… » sous sa carte dans le panneau du jour et
+// dans sa feuille (seul moyen sur téléphone) ; la confirmation écrit, puis tout se relit.
+// C8 : `?jour=AAAA-MM-JJ` (le widget du tableau de bord) ouvre la page en Mois sur ce jour —
+// son panneau à droite, sa feuille sur tablette debout, sa liste sous le Mois à points.
+// Relecture : les sources se lisent une fois (`chargerCalendrier`), puis la période affichée
+// (`chargerPeriode` : fois des tâches qui y tombent, mes inscriptions pour « Seulement moi ») ;
+// une source illisible se nomme dans un bandeau, comme le Sheet.
+// Agencement v18 (B5, piste A ; planche v18-bo-calendrier-agenda-a) : en-tête commun « Calendrier »
+// (`EnTetePage`), « + Nouvel évènement » (`BoutonNouveau` ; sur téléphone, le rond « Créer » et sa
+// feuille), rail Mois · Agenda ; dans la rangée, « ‹ Octobre 2026 › », « Aujourd'hui », filet,
+// sources en pilules, « Seulement moi ». L'agenda suit le mois de la rangée (d'aujourd'hui pour le mois
+// en cours) ; dès 768 px, une colonne de jours par semaine, sur toute la largeur moins le volet du jour,
+// à droite en agenda comme en Mois, avec « Ajouter ce jour-là » et son menu ; toucher un jour le choisit.
+// BO-C (docs/spec-back-office-piste-a.md, BO8, BO10) : le Calendrier absorbe Évènements et Réunions. Un filtre
+// à choix unique (Tout · Évènements · Réunions · Services · Scène, `?filtre=`, `?vue=` lue aussi) ; les
+// pastilles des sources vivent dans la feuille « Sources », sur toutes les tailles ; « Ajouter » (menu
+// Évènement | Réunion dès 768 px, feuille des créations du jour sur téléphone) ; « Scène des fêtes » pour la
+// coordination ; une entrée du Sheet porte l'étiquette « Sheet » et la note du Sheet n'est que d'ici.
+
+import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
+import { useSearchParams } from "next/navigation";
+import { useTranslation } from "react-i18next";
+import Link from "next/link";
+import { CalendarDays, Check, ChevronDown, ChevronLeft, ChevronRight, CloudOff, ListChecks, Plus, SlidersHorizontal, UserRound, Users } from "lucide-react";
+import { creatableEvenementPours, equipesOuCreer, isCoordination, publicDeReunion } from "@/lib/access";
+import type { TacheValues } from "@/lib/firebase/taches";
+import { useProfile } from "@/lib/firebase/users";
+import { chargerCalendrier, chargerPeriode, enOrdre, type LectureCalendrier } from "@/lib/calendrier/charger";
+import {
+  entreesCalendrier,
+  filtrerEntrees,
+  sourcesPermises,
+  type DonneesCalendrier,
+  type EntreeCalendrier,
+  type ProfilCalendrier,
+  type SourceCalendrier,
+} from "@/lib/calendrier/entrees";
+import { finDuMois, joursDeLaGrille, moisVoisin, nomMois, titreJour, titreMois } from "@/lib/calendrier/grille";
+import { ecrirePreferences, lirePreferences, type PreferencesCalendrier } from "@/lib/calendrier/preferences";
+import { lireSheetEvenements, type LectureSheet } from "@/lib/evenements/sheet";
+import { avantBascule, jourDeParis } from "@/lib/evenements/bascule";
+import { todayIso } from "@/lib/scene/dimanches";
+import { cn } from "@/lib/utils";
+import { ANNONCE_SECTIONS } from "@/types/annonce";
+import type { NotifLang } from "@/types/user";
+import { AgendaSemaines, CartesDuJour, FeuilleEntree, ListeAgenda, useTitreDuJour } from "@/components/calendrier/Agenda";
+import { DialogueDeplacer, type DemandeDeplacement } from "@/components/calendrier/Deplacer";
+import { GrilleMois } from "@/components/calendrier/GrilleMois";
+import { GrillePoints } from "@/components/calendrier/GrillePoints";
+import { AjouterCeJour, BoutonsCreation, ListeDuJour, type DroitsCreation } from "@/components/calendrier/PanneauJour";
+import { TacheForm } from "@/components/taches/TacheForm";
+import { creerTache, useMembres } from "@/components/taches/creerTache";
+import { ICONES } from "@/components/calendrier/apparence";
+import { AnnonceBascule } from "@/components/evenements/AnnonceBascule";
+import { Button } from "@/components/ui/button";
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { EnTetePage } from "@/components/layout/EnTetePage";
+import { OngletsRail, Pilules } from "@/components/layout/Onglets";
+import { BoutonNouveau } from "@/components/layout/BoutonNouveau";
+
+// Les dispositions de U4 (bloc « Lot U4 » de globals.css) : le panneau du jour se pose à
+// droite sur ordinateur et sur la tablette couchée ; ailleurs il s'ouvre en feuille.
+// Le téléphone (C4) : sous la largeur d'une tablette debout ; Agenda d'office, Mois à points.
+function requeteMedia(requetes: string[]) {
+  const suivre = (changement: () => void) => {
+    const listes = requetes.map((q) => window.matchMedia(q));
+    listes.forEach((m) => m.addEventListener("change", changement));
+    return () => listes.forEach((m) => m.removeEventListener("change", changement));
+  };
+  const lire = () => requetes.some((q) => window.matchMedia(q).matches);
+  return () => useSyncExternalStore(suivre, lire, () => false);
+}
+const usePanneauADroite = requeteMedia([
+  "(pointer: fine) and (min-width: 1024px)",
+  "(pointer: coarse) and (orientation: landscape) and (min-width: 1024px)",
+]);
+const useTelephone = requeteMedia(["(max-width: 767px)"]);
+/** Faux au rendu du serveur et à l'hydratation, vrai ensuite (les requêtes média sont lues). */
+const useHydrate = () => useSyncExternalStore(() => () => {}, () => true, () => false);
+
+/** `?jour=` : une date « AAAA-MM-JJ », sinon rien. */
+const jourDeLAdresse = (v: string | null) => (v && /^\d{4}-\d{2}-\d{2}$/.test(v) ? v : null);
+
+type Vue = "mois" | "agenda";
+/** BO-C : le filtre à choix unique ; « tout » = les sources allumées des préférences. */
+type Filtre = "tout" | "evenements" | "reunions" | "services" | "scene";
+const FILTRES: readonly Filtre[] = ["tout", "evenements", "reunions", "services", "scene"];
+/** `?filtre=` : l'un des filtres, sinon « tout ». */
+const filtreDeLAdresse = (v: string | null): Filtre => FILTRES.find((f) => f === v) ?? "tout";
+/** `?vue=` : « agenda » ou « mois », sinon rien. */
+const vueDeLAdresse = (v: string | null): Vue | null => (v === "agenda" || v === "mois" ? v : null);
+
+const BOUTON_ROND =
+  "raised inline-flex h-8 min-w-8 items-center justify-center rounded-full px-2 text-[13px] font-bold text-foreground transition-opacity duration-150 hover:opacity-80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground";
+const PASTILLE =
+  "inline-flex h-8 shrink-0 items-center whitespace-nowrap gap-1.5 rounded-full px-3 text-[13px] font-semibold transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground";
+/** Sur téléphone, « Seulement moi » et « Sources » (rangée 3) ont la taille des pilules du filtre (`Pilules`, 40 px, 15 px). */
+const PASTILLE_TEL = "!h-10 !px-3.5 !text-[15px]";
+/** « Ajouter » (BO8) : la pilule md de `BoutonNouveau`, avec son menu. */
+const BOUTON_AJOUTER =
+  "inline-flex h-10 items-center gap-2 rounded-full bg-primary px-[18px] text-[14.5px] font-semibold text-primary-foreground transition-transform duration-150 active:scale-[.97] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground";
+
+export function CalendrierClient() {
+  const { t, i18n } = useTranslation();
+  const lang: NotifLang = i18n.language === "zh-CN" ? "zh-CN" : "fr";
+  const { user, profile } = useProfile();
+  const profil = profile as ProfilCalendrier | null;
+  const aujourdhui = useMemo(() => todayIso(), []);
+  // U9 : la bascule (pastille, lecture du Sheet en Agenda) tombe à minuit de Paris, même loin.
+  const jourParis = useMemo(() => jourDeParis(), []);
+  const aDroite = usePanneauADroite();
+  const telephone = useTelephone();
+  const titreDuJour = useTitreDuJour(lang, aujourdhui);
+  // Ouverte sur un jour (C8) : en Mois, ce jour choisi.
+  const adresse = useSearchParams();
+  const jourDemande = jourDeLAdresse(adresse.get("jour"));
+
+  // `?vue=` (prioritaire sur le défaut du téléphone ; `?jour=` ouvre toujours en Mois) et `?filtre=` ne se
+  // lisent qu'au premier rendu : ensuite l'état est local, l'adresse n'est pas réécrite.
+  const [vueChoisie, setVue] = useState<Vue | null>(jourDemande ? "mois" : vueDeLAdresse(adresse.get("vue")));
+  const [filtreChoisi, setFiltre] = useState<Filtre>(() => filtreDeLAdresse(adresse.get("filtre")));
+  const vue: Vue = vueChoisie ?? (telephone ? "agenda" : "mois");
+  const [mois, setMois] = useState((jourDemande ?? aujourdhui).slice(0, 7));
+  const [choisi, setChoisi] = useState(jourDemande ?? aujourdhui);
+  // Ouverte sur un jour, là où le jour s'affiche en feuille (tablette debout), sa feuille
+  // s'ouvre — une fois les requêtes média lues (`hydrate`), pour ne jamais passer sur un
+  // ordinateur, où le jour est dans le panneau de droite.
+  const [feuille, setFeuille] = useState(jourDemande !== null);
+  const hydrate = useHydrate();
+  const [feuilleSources, setFeuilleSources] = useState(false);
+  const [entree, setEntree] = useState<{ e: EntreeCalendrier | null; ouverte: boolean }>({ e: null, ouverte: false });
+  // L'agenda montre le mois de la rangée (d'aujourd'hui pour le mois en cours), plus les mois
+  // ajoutés par « Afficher … » ; ‹ › et « Aujourd'hui » les retirent.
+  const [moisEnPlus, setMoisEnPlus] = useState(0);
+  const [prefs, setPrefs] = useState<PreferencesCalendrier>(lirePreferences);
+  const [lu, setLu] = useState<LectureCalendrier | null>(null);
+  // La période lue : la dernière, même périmée le temps d'en lire une autre (rien ne clignote).
+  const [periode, setPeriode] = useState<{
+    de: LectureCalendrier;
+    cle: string;
+    donnees: Omit<DonneesCalendrier, "sheet">;
+    echecs: SourceCalendrier[];
+  } | null>(null);
+  const [sheet, setSheet] = useState<{ fenetre: string; lecture: LectureSheet } | null>(null);
+  // C5 : la feuille « Créer » (téléphone, Agenda), l'échéance d'une nouvelle tâche, ses responsables
+  // possibles, et un compteur qui fait relire les sources après une création.
+  const [feuilleCreer, setFeuilleCreer] = useState(false);
+  const [tacheLe, setTacheLe] = useState<string | null>(null);
+  // Les responsables possibles ne servent qu'au formulaire de tâche : lus à sa première ouverture.
+  const membres = useMembres(tacheLe !== null);
+  const [lecture, setLecture] = useState(0);
+  // C6 : le déplacement demandé (dépôt dans la grille, ou « Déplacer… »).
+  const [demande, setDemande] = useState<DemandeDeplacement | null>(null);
+  // Retouches v18 (R4, D7) : la ligne de l'agenda dont l'entrée est ouverte (sa clé), surlignée ;
+  // toucher un jour ou changer de mois la retire.
+  const [ligneOuverte, setLigneOuverte] = useState<string | null>(null);
+
+  const jours = useMemo(() => joursDeLaGrille(mois), [mois]);
+  const dernierMoisAgenda = moisVoisin(mois, moisEnPlus);
+  const moisCourant = mois === aujourdhui.slice(0, 7);
+  // La fenêtre lue : les six semaines de la grille, ou du début de l'agenda à sa fin.
+  const { debut, fin } = useMemo(
+    () => (vue === "agenda"
+      ? { debut: moisCourant ? aujourdhui : `${mois}-01`, fin: finDuMois(dernierMoisAgenda) }
+      : { debut: jours[0], fin: jours[jours.length - 1] }),
+    [vue, moisCourant, aujourdhui, mois, dernierMoisAgenda, jours],
+  );
+
+  useEffect(() => {
+    if (!user) return;
+    let vivant = true;
+    chargerCalendrier(user, profil, aujourdhui).then((l) => vivant && setLu(l));
+    return () => { vivant = false; };
+  }, [user, profil, aujourdhui, lecture]);
+
+  const seulementMoiActif = prefs.seulementMoi;
+  const clePeriode = `${debut}|${fin}|${seulementMoiActif}`;
+  useEffect(() => {
+    if (!user || !lu) return;
+    let vivant = true;
+    const cle = `${debut}|${fin}|${seulementMoiActif}`;
+    chargerPeriode(lu.base, user, profil, debut, fin, { seulementMoi: seulementMoiActif })
+      .then((p) => vivant && setPeriode({ de: lu, cle, ...p }));
+    return () => { vivant = false; };
+  }, [user, profil, lu, debut, fin, seulementMoiActif]);
+  const base = periode?.donnees ?? null;
+  const echecs = enOrdre([...(lu?.echecs ?? []), ...(periode?.echecs ?? [])]);
+
+  // Lot U9 (Q6) : un mois affiché à partir de la bascule ne lit plus le Sheet, pas même les
+  // derniers jours de décembre en tête de sa grille ; l'agenda, à partir d'aujourd'hui.
+  const lireLeSheet = avantBascule(vue === "agenda" && moisCourant ? jourParis : `${mois}-01`);
+  useEffect(() => {
+    let vivant = true;
+    const lecture = lireLeSheet ? lireSheetEvenements(debut, fin) : Promise.resolve<LectureSheet>({ entrees: [], injoignable: false });
+    lecture.then((l) => vivant && setSheet({ fenetre: `${debut}|${fin}`, lecture: l }));
+    return () => { vivant = false; };
+  }, [debut, fin, lireLeSheet]);
+
+  const permises = useMemo(() => (user ? sourcesPermises(user, profil) : []), [user, profil]);
+  // « Réunions » n'est offert qu'à qui voit cette source ; sinon (lien reçu) le filtre est « Tout ».
+  const filtre: Filtre = filtreChoisi === "reunions" && !permises.includes("reunions") ? "tout" : filtreChoisi;
+  const parJour = useMemo(() => {
+    const m = new Map<string, EntreeCalendrier[]>();
+    if (!user || !base) return m;
+    const donnees: DonneesCalendrier = { ...base, sheet: sheet?.lecture.entrees ?? [] };
+    const toutes = entreesCalendrier(debut, fin, donnees, { user, profile: profil, lang, today: aujourdhui });
+    const sources = filtre === "tout" ? prefs.sources.filter((s) => permises.includes(s)) : [filtre];
+    for (const e of filtrerEntrees(toutes, { sources, seulementMoi: prefs.seulementMoi })) {
+      m.set(e.date, [...(m.get(e.date) ?? []), e]);
+    }
+    return m;
+  }, [user, profil, base, sheet, debut, fin, lang, aujourdhui, prefs, permises, filtre]);
+
+  const chargement = !periode || periode.de !== lu || periode.cle !== clePeriode || sheet?.fenetre !== `${debut}|${fin}`;
+  const changer = (p: PreferencesCalendrier) => { setPrefs(p); ecrirePreferences(p); };
+  const basculer = (s: SourceCalendrier) =>
+    changer({ ...prefs, sources: prefs.sources.includes(s) ? prefs.sources.filter((x) => x !== s) : [...prefs.sources, s] });
+  const allerA = (m: string) => { setMois(m); setMoisEnPlus(0); setLigneOuverte(null); setChoisi(m === aujourdhui.slice(0, 7) ? aujourdhui : `${m}-01`); };
+  // Sur téléphone, le jour touché s'affiche sous le Mois à points, sans feuille (question 3).
+  const choisir = (date: string, cle: string | null = null) => {
+    setChoisi(date);
+    setLigneOuverte(cle);
+    if (!aDroite && !telephone) setFeuille(true);
+  };
+  const duJour = parJour.get(choisi) ?? [];
+  const ouvrirEntree = (e: EntreeCalendrier) => setEntree({ e, ouverte: true });
+  // La feuille du jour ou de l'entrée se ferme : la confirmation prend la place.
+  const deplacer = (e: EntreeCalendrier, vers: string | null) => {
+    setFeuille(false);
+    setEntree((x) => ({ ...x, ouverte: false }));
+    setDemande({ entree: e, vers });
+  };
+  const demanderDate = (e: EntreeCalendrier) => deplacer(e, null);
+
+  // Créer (Q4) : chaque bouton seulement pour qui a le droit — un évènement si un public lui est
+  // ouvert (un référent crée pour son équipe, décision 43, EQ21), une réunion pour une équipe dont
+  // on est référent, une tâche parmi les équipes où l'on crée (EQ14 : référent ; toutes pour un admin).
+  const pours = creatableEvenementPours(user, profile, ANNONCE_SECTIONS);
+  const ouCreer = equipesOuCreer(user, profile);
+  const droits: DroitsCreation = {
+    evenement: pours.length > 0,
+    reunion: pours.some(publicDeReunion),
+    tache: ouCreer.length > 0,
+  };
+  const peutCreer = droits.evenement || droits.reunion || droits.tache;
+  // La feuille « Créer » du téléphone : le jour touché du Mois à points ; en Agenda, où aucun jour ne
+  // se choisit, aujourd'hui (spec-calendrier, C5), même après ‹ ›.
+  const jourCreer = vue === "agenda" ? aujourdhui : choisi;
+  const nouvelleTache = (date: string) => () => { setFeuille(false); setFeuilleCreer(false); setTacheLe(date); };
+  const boutonsCreation = (date: string) => (
+    <BoutonsCreation date={date} lang={lang} droits={droits} onNouvelleTache={nouvelleTache(date)} />
+  );
+  // Comme sur la page de l'équipe (`creerTache`) : nommé par quelqu'un d'autre, le responsable est prévenu.
+  async function enregistrerTache(values: TacheValues, equipe: string) {
+    if (!user) return;
+    await creerTache(equipe, values, user.uid);
+    setTacheLe(null);
+    setLecture((n) => n + 1);
+  }
+
+  // « ‹ Octobre 2026 › » et « Aujourd'hui » : dans la rangée de l'en-tête, en Mois comme en Agenda
+  // (BO-G, 3 : l'année aussi sur téléphone).
+  const navigation = (
+    <div className="flex items-center gap-1.5">
+      <button type="button" className={BOUTON_ROND} aria-label={t("calendrier.precedent")} onClick={() => allerA(moisVoisin(mois, -1))}>
+        <ChevronLeft aria-hidden className="h-4 w-4" />
+      </button>
+      <span data-testid="mois-affiche" aria-live="polite" className="min-w-[92px] whitespace-nowrap text-center text-[17px] font-bold text-foreground md:min-w-[128px]">
+        {titreMois(mois, lang)}
+      </span>
+      <button type="button" className={BOUTON_ROND} aria-label={t("calendrier.suivant")} onClick={() => allerA(moisVoisin(mois, 1))}>
+        <ChevronRight aria-hidden className="h-4 w-4" />
+      </button>
+      <button type="button" className={cn(BOUTON_ROND, "px-3")} onClick={() => allerA(aujourdhui.slice(0, 7))}>
+        {t("calendrier.aujourdhui")}
+      </button>
+    </div>
+  );
+
+  const boutonsSources = permises.map((s) => {
+    const allumee = prefs.sources.includes(s);
+    const Icone = allumee ? Check : ICONES[s];
+    return (
+      <button
+        key={s}
+        type="button"
+        aria-pressed={allumee}
+        onClick={() => basculer(s)}
+        className={cn(PASTILLE, allumee ? "raised text-foreground" : "text-muted-foreground line-through hover:bg-muted/60")}
+      >
+        <Icone aria-hidden className="h-3.5 w-3.5 shrink-0" />
+        {t(`calendrier.sources.${s}`)}
+      </button>
+    );
+  });
+  const seulementMoi = (
+    <button
+      type="button"
+      aria-pressed={prefs.seulementMoi}
+      onClick={() => changer({ ...prefs, seulementMoi: !prefs.seulementMoi })}
+      className={cn(PASTILLE, telephone && PASTILLE_TEL, prefs.seulementMoi ? "bg-foreground text-background" : "raised text-foreground")}
+    >
+      <UserRound aria-hidden className="h-3.5 w-3.5 shrink-0" />
+      {t("calendrier.seulementMoi")}
+    </button>
+  );
+  // BO-C : « Sources » ouvre la feuille des pastilles ; seulement en « Tout » (un autre filtre ignore les préférences).
+  const boutonSources = filtre === "tout" && (
+    <button type="button" onClick={() => setFeuilleSources(true)} className={cn(PASTILLE, telephone && PASTILLE_TEL, "raised text-foreground")}>
+      <SlidersHorizontal aria-hidden className="h-3.5 w-3.5 shrink-0" />
+      {t("calendrier.sourcesFeuille")}
+    </button>
+  );
+  // BO-G, 3 : la rangée des filtres passe à la ligne au lieu de défiler (rien n'est coupé, plus de fondu latéral) ;
+  // `Pilules` défile de lui-même, on lui retire son défilement et ses marges négatives.
+  const filtres = (
+    <div className="[&>div]:mx-0 [&>div]:flex-wrap [&>div]:overflow-x-visible [&>div]:px-0 [&>div]:pb-0">
+    <Pilules
+      etiquette={t("backOffice.calendrier.filtrer")}
+      obligatoire
+      options={[
+        { cle: "tout", nom: t("calendrier.tout") },
+        { cle: "evenements", nom: t("calendrier.sources.evenements") },
+        ...(permises.includes("reunions") ? [{ cle: "reunions" as const, nom: t("calendrier.sources.reunions") }] : []),
+        { cle: "services", nom: t("calendrier.sources.services") },
+        { cle: "scene", nom: t("calendrier.sources.scene") },
+      ]}
+      valeur={filtre}
+      choisir={(v) => setFiltre(v ?? "tout")}
+    />
+    </div>
+  );
+
+  // La rangée sous le rail : la période, puis les filtres. Sur téléphone, trois lignes : la période, le filtre
+  // (`Pilules`), puis « Seulement moi » et « Sources ». Dès 768 px, une ligne qui passe à la ligne si elle ne tient
+  // pas (BO-G, 3) : le filtre, « Seulement moi », « Sources ».
+  const rangee = telephone ? (
+    <div className="flex flex-col gap-3">
+      {navigation}
+      {filtres}
+      <div className="flex items-center gap-1.5">
+        {seulementMoi}
+        {boutonSources}
+      </div>
+    </div>
+  ) : (
+    <div className="flex flex-wrap items-center gap-x-1.5 gap-y-2">
+      <div className="shrink-0">{navigation}</div>
+      <span aria-hidden className="mx-2 h-6 w-px shrink-0 bg-border" />
+      <div data-testid="filtres-calendrier" className="flex min-w-[16rem] flex-1 flex-wrap items-center gap-1.5">
+        {filtres}
+        {seulementMoi}
+        {boutonSources}
+      </div>
+    </div>
+  );
+
+  // L'action principale (R7, BO8, BO-G 4) : sur toutes les tailles les trois mêmes créations, chacune seulement pour qui
+  // en a le droit : Évènement, Réunion, Tâche, à la date choisie (le jour touché du Mois ; aujourd'hui en Agenda), avec
+  // les adresses de la feuille du jour. Dès 768 px un menu sous « Ajouter » ; sur téléphone, le rond « Ajouter » et sa feuille.
+  const ENTREE = "min-h-11 cursor-pointer gap-2.5 px-3 text-[15px]";
+  const action = telephone ? (
+    peutCreer && <BoutonNouveau label={t("backOffice.calendrier.ajouter")} onClick={() => setFeuilleCreer(true)} />
+  ) : (
+    peutCreer && (
+      <DropdownMenu>
+        <DropdownMenuTrigger className={BOUTON_AJOUTER}>
+          <Plus aria-hidden className="h-4 w-4 shrink-0" strokeWidth={2.4} />
+          {t("backOffice.calendrier.ajouter")}
+          <ChevronDown aria-hidden className="h-4 w-4 shrink-0" />
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="min-w-48">
+          {droits.evenement && (
+            <DropdownMenuItem asChild className={ENTREE}>
+              <Link href={`/back-office/evenements/nouveau?date=${jourCreer}`}>
+                <CalendarDays aria-hidden className="h-4 w-4 shrink-0 text-muted-foreground" />
+                {t("backOffice.calendrier.ajouterEvenement")}
+              </Link>
+            </DropdownMenuItem>
+          )}
+          {droits.reunion && (
+            <DropdownMenuItem asChild className={ENTREE}>
+              <Link href={`/back-office/reunions/nouvelle?date=${jourCreer}`}>
+                <Users aria-hidden className="h-4 w-4 shrink-0 text-muted-foreground" />
+                {t("backOffice.calendrier.ajouterReunion")}
+              </Link>
+            </DropdownMenuItem>
+          )}
+          {droits.tache && (
+            <DropdownMenuItem onSelect={nouvelleTache(jourCreer)} className={ENTREE}>
+              <ListChecks aria-hidden className="h-4 w-4 shrink-0 text-muted-foreground" />
+              {t("backOffice.calendrier.ajouterTache")}
+            </DropdownMenuItem>
+          )}
+        </DropdownMenuContent>
+      </DropdownMenu>
+    )
+  );
+  // « Scène des fêtes » (BO8) : la coordination y va d'ici ; sur un petit écran, l'icône seule.
+  const sceneDesFetes = isCoordination(user, profile) && (
+    <Button asChild size="sm" variant="outline" className="rounded-full">
+      <Link href="/back-office/evenements/scene" aria-label={t("backOffice.calendrier.sceneDesFetes")}>
+        <ICONES.scene aria-hidden />
+        <span className="max-[479px]:hidden">{t("backOffice.calendrier.sceneDesFetes")}</span>
+      </Link>
+    </Button>
+  );
+
+  return (
+    <div data-testid="calendrier" aria-busy={chargement} className="flex min-h-dvh flex-col">
+      <EnTetePage
+        titre={t("backOffice.entrees.calendrier")}
+        outils={sceneDesFetes || undefined}
+        action={action || undefined}
+        onglets={
+          <OngletsRail
+            etiquette={t("calendrier.vue.aria")}
+            onglets={[{ id: "mois", label: t("calendrier.vue.mois") }, { id: "agenda", label: t("calendrier.vue.agenda") }]}
+            actif={vue}
+            choisir={(v) => setVue(v as Vue)}
+          />
+        }
+        apres={rangee}
+      />
+      <div className="flex flex-1 items-stretch">
+        {/* BO-G, 3 : sur téléphone le « + » flottant (52 px, à `--tabbar-bottom` + 76 px) ne recouvre pas la dernière carte. */}
+        <div className={cn("min-w-0 flex-1 px-[var(--marge-page)] pb-10", telephone && peutCreer && "pb-[calc(var(--tabbar-bottom)+76px+52px+16px)]")}>
+          {/* U9 (Q7 b), BO10 : la note du Sheet, ici seulement et jusqu'au 31/12/2026. */}
+          <AnnonceBascule className="mb-3" />
+
+          {echecs.length > 0 && (
+            <div role="status" className="mb-3 flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700 dark:border-amber-800/50 dark:bg-amber-950/30 dark:text-amber-400">
+              <CloudOff aria-hidden className="h-3.5 w-3.5 shrink-0" />
+              {t("calendrier.echecs", { liste: echecs.map((s) => t(`calendrier.legende.${s}`)).join(lang === "zh-CN" ? "、" : ", ") })}
+            </div>
+          )}
+          {sheet?.lecture.injoignable && (
+            <div role="status" className="mb-3 flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700 dark:border-amber-800/50 dark:bg-amber-950/30 dark:text-amber-400">
+              <CloudOff aria-hidden className="h-3.5 w-3.5 shrink-0" />
+              {t("calendrier.sheetInjoignable")}
+            </div>
+          )}
+
+          {vue === "agenda" ? (
+            <div>
+              {telephone ? (
+                <ListeAgenda
+                  parJour={parJour}
+                  titreDuJour={titreDuJour}
+                  vide={t("calendrier.agendaVide", { mois: nomMois(dernierMoisAgenda, lang) })}
+                  onOuvrir={ouvrirEntree}
+                />
+              ) : (
+                <AgendaSemaines
+                  parJour={parJour}
+                  choisi={choisi}
+                  ligneOuverte={ligneOuverte}
+                  lang={lang}
+                  titreDuJour={titreDuJour}
+                  vide={t("calendrier.agendaVide", { mois: nomMois(dernierMoisAgenda, lang) })}
+                  onChoisir={choisir}
+                />
+              )}
+              <button
+                type="button"
+                onClick={() => setMoisEnPlus((n) => n + 1)}
+                className={cn(BOUTON_ROND, "mt-5 h-10 w-full rounded-2xl")}
+              >
+                {t("calendrier.afficherMois", { mois: nomMois(moisVoisin(dernierMoisAgenda, 1), lang) })}
+              </button>
+            </div>
+          ) : telephone ? (
+            <div>
+              <GrillePoints mois={mois} jours={jours} parJour={parJour} aujourdhui={aujourdhui} choisi={choisi} lang={lang} onChoisir={choisir} />
+              <section data-testid="jour-choisi" aria-labelledby="calendrier-jour-choisi" className="mt-2">
+                <h2 id="calendrier-jour-choisi" className="mx-0.5 mb-1.5 mt-4 text-[13px] font-semibold text-muted-foreground">
+                  {titreDuJour(choisi)}
+                </h2>
+                {duJour.length > 0 ? (
+                  <CartesDuJour entrees={duJour} onOuvrir={ouvrirEntree} />
+                ) : (
+                  <p className="text-sm text-muted-foreground">{t("calendrier.rien")}</p>
+                )}
+              </section>
+            </div>
+          ) : (
+            <GrilleMois
+              mois={mois}
+              jours={jours}
+              parJour={parJour}
+              aujourdhui={aujourdhui}
+              choisi={choisi}
+              lang={lang}
+              onChoisir={choisir}
+              onDeposer={deplacer}
+            />
+          )}
+        </div>
+
+        {/* Le volet du jour (B5) : à droite sur ordinateur et tablette couchée, en Mois comme en Agenda. */}
+        {aDroite && !telephone && (
+          // BO16 (a) : le volet garde ses 300 px et va jusqu'au bord (v18), mais ses cartes finissent sur la marge de la
+          // page, comme « Ajouter » au-dessus (elles la dépassaient de 20 px).
+          <aside aria-labelledby="calendrier-jour" className="w-[300px] shrink-0 border-l border-border">
+            <div className="sticky top-[var(--nav-h)] flex max-h-[calc(100dvh-var(--nav-h))] flex-col gap-3 overflow-y-auto pb-6 pl-5 pr-[var(--marge-page)] pt-1">
+              <h2 id="calendrier-jour" className="text-[17px] font-bold text-foreground">
+                {titreJour(choisi, lang)}
+              </h2>
+              <AjouterCeJour date={choisi} lang={lang} droits={droits} onNouvelleTache={nouvelleTache(choisi)} />
+              <ListeDuJour entrees={duJour} onDeplacer={demanderDate} />
+            </div>
+          </aside>
+        )}
+      </div>
+
+      <Drawer open={feuilleSources} onOpenChange={setFeuilleSources}>
+        <DrawerContent aria-describedby={undefined} className="md:mx-auto md:max-w-xl">
+          <DrawerHeader className="pb-2 text-left">
+            <DrawerTitle>{t("calendrier.sourcesFeuille")}</DrawerTitle>
+          </DrawerHeader>
+          <div role="group" aria-label={t("calendrier.sourcesAria")} data-onglets="pilules" className="flex flex-wrap gap-2 px-4 pb-8">
+            {boutonsSources}
+          </div>
+        </DrawerContent>
+      </Drawer>
+      {telephone && (
+        <Drawer open={feuilleCreer} onOpenChange={setFeuilleCreer}>
+          <DrawerContent aria-describedby={undefined}>
+            <DrawerHeader className="pb-2 text-left">
+              <DrawerTitle>{t("backOffice.calendrier.ajouter")}</DrawerTitle>
+            </DrawerHeader>
+            <div className="px-4 pb-8">{boutonsCreation(jourCreer)}</div>
+          </DrawerContent>
+        </Drawer>
+      )}
+      {ouCreer.length > 0 && (
+        <TacheForm
+          open={tacheLe !== null}
+          equipe={ouCreer[0]}
+          equipes={ouCreer}
+          echeance={tacheLe ?? undefined}
+          initial={null}
+          membres={membres}
+          onSubmit={enregistrerTache}
+          onClose={() => setTacheLe(null)}
+        />
+      )}
+      <FeuilleEntree
+        entree={entree.e}
+        ouverte={entree.ouverte}
+        lang={lang}
+        onFermer={() => setEntree((x) => ({ ...x, ouverte: false }))}
+        onDeplacer={demanderDate}
+      />
+      {demande && base && user && (
+        <DialogueDeplacer
+          key={`${demande.entree.cle}|${demande.vers ?? ""}`}
+          demande={demande}
+          donnees={base}
+          aujourdhui={aujourdhui}
+          lang={lang}
+          uid={user.uid}
+          onFermer={() => setDemande(null)}
+          onDeplace={() => { setDemande(null); setLecture((n) => n + 1); }}
+        />
+      )}
+
+      {/* Tablette debout : le jour touché (dans la grille ou l'agenda) s'ouvre en feuille. */}
+      {!aDroite && !telephone && (
+        <Drawer open={feuille && hydrate} onOpenChange={setFeuille}>
+          <DrawerContent className="max-h-[85vh] md:mx-auto md:max-w-xl">
+            <DrawerHeader className="pb-2 text-left">
+              <DrawerTitle>{titreJour(choisi, lang)}</DrawerTitle>
+            </DrawerHeader>
+            <div className="flex flex-col gap-4 overflow-y-auto px-4 pb-8">
+              <ListeDuJour entrees={duJour} onDeplacer={demanderDate} />
+              {boutonsCreation(choisi)}
+            </div>
+          </DrawerContent>
+        </Drawer>
+      )}
+    </div>
+  );
+}

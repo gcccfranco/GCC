@@ -3,10 +3,12 @@ import { adminDb, verifyIdToken } from "@/lib/push/admin";
 import { sendPushToUids } from "@/lib/push/send";
 import { recordNotification } from "@/lib/push/notifications";
 import { filterUidsByNotifPref, loadNotifLangs } from "@/lib/push/recipients";
-import { nouvelEvenementMessage } from "@/lib/evenements/rappel";
+import { pushNouvelEvenement } from "@/lib/evenements/rappel";
 import { canCreateEvenement, canEditEvenement } from "@/lib/access";
+import type { ProfilOrganigramme } from "@/lib/acces/organigramme";
 import { destinatairesEvenement } from "@/lib/evenements/serveur";
 import type { Evenement } from "@/types/evenement";
+import { apresEnvoi, envoyerReserve } from "@/lib/push/reserver";
 import { BACK_OFFICE } from "@/lib/backOffice"
 
 export const runtime = "nodejs";
@@ -40,25 +42,29 @@ export async function POST(req: NextRequest) {
   const snap = await db.collection("evenements").doc(evenementId).get();
   if (!snap.exists) return NextResponse.json({ error: "Évènement introuvable" }, { status: 404 });
   const e = { id: snap.id, ...snap.data() } as Evenement;
-  const profile = ((await db.collection("users").doc(user.uid).get()).data() ?? null) as { annonces?: string[]; poles?: string[] } | null;
+  const profile = ((await db.collection("users").doc(user.uid).get()).data() ?? null) as ({ annonces?: string[]; coordination?: boolean } & ProfilOrganigramme) | null; // Lot RS : `responsabilites` (orga) y passe
   if (!canEditEvenement(user, profile, e) && !canCreateEvenement(user, profile, e.pour)) {
     return NextResponse.json({ error: "Non autorisé" }, { status: 403 });
   }
 
-  const logRef = db.collection("notifLog").doc(`evenement-${evenementId}`);
-  if ((await logRef.get()).exists) return NextResponse.json({ ok: true, sent: 0, already: true });
-
+  const cle = `evenement-${evenementId}`;
   const uids = (await filterUidsByNotifPref(await destinatairesEvenement(db, e), "evenements")).filter((u) => u !== user.uid);
-  // Une fournée par langue (lot 8) : chacun reçoit le message dans la sienne.
-  const langs = await loadNotifLangs(uids);
-  let result: Awaited<ReturnType<typeof sendPushToUids>> | undefined;
-  for (const lang of ["fr", "zh-CN"] as const) {
-    const groupe = uids.filter((u) => (langs.get(u) ?? "fr") === lang);
-    if (!groupe.length) continue;
-    const payload = { ...nouvelEvenementMessage(e, lang), url: `/evenements/${evenementId}`, tag: `evenement-${evenementId}` };
-    result = await sendPushToUids(groupe, payload);
-    await recordNotification({ ...payload, kind: "evenement", recipients: groupe });
-  }
-  await logRef.set({ at: Date.now(), evenementId, pour: e.pour, recipients: uids.length });
-  return NextResponse.json({ ok: true, ...result, sent: uids.length });
+  // La clé est réservée AVANT l'envoi (deux appels simultanés : un seul envoi) et rendue si rien n'est parti ;
+  // la cloche s'écrit après l'envoi (envoyerReserve, src/lib/push/reserver.ts).
+  const r = await envoyerReserve(db, cle, { at: Date.now(), evenementId, pour: e.pour, recipients: uids.length }, {}, async (parti) => {
+    // Une fournée par langue (lot 8) : chacun reçoit le message dans la sienne.
+    const langs = await loadNotifLangs(uids);
+    let result: Awaited<ReturnType<typeof sendPushToUids>> | undefined;
+    for (const lang of ["fr", "zh-CN"] as const) {
+      const groupe = uids.filter((u) => (langs.get(u) ?? "fr") === lang);
+      if (!groupe.length) continue;
+      const payload = pushNouvelEvenement(e, lang);
+      result = await sendPushToUids(groupe, payload);
+      parti();
+      await apresEnvoi(() => recordNotification({ ...payload, kind: "evenement", recipients: groupe }), "notify-evenement");
+    }
+    return result;
+  });
+  if (!r.pris) return NextResponse.json({ ok: true, sent: 0, already: true });
+  return NextResponse.json({ ok: true, ...r.valeur, sent: uids.length, ...(r.partiel ? { notified: true } : {}) });
 }

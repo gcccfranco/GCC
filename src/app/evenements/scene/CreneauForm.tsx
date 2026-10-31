@@ -1,15 +1,31 @@
 "use client"
 
-// Formulaire d'un créneau sur scène (création ou modification) : dimanche à
-// venir, début et fin au quart d'heure, quoi (un), qui (un ou plusieurs), note.
+// Feuille d'un créneau sur scène. Lot U1 (docs/spec-scene-saison.md, planche
+// scene-reserver-feuille-telephone) : plus d'heure à taper. « Réserver » et
+// « Modifier » rappellent le jour et le créneau (« Dimanche 11 octobre ·
+// 15:00 – 16:00 »), puis quoi (un), qui (un ou plusieurs, limité aux groupes
+// permis), note. Pâques · Noël, P6 (docs/spec-scene-paques-noel.md, Q14, Q15 ;
+// planche v18-scene-a-feuille-telephone) : rien n'est coché d'avance, le bouton
+// plein dit « Choisis quoi et qui » tant qu'il manque l'un ou l'autre. La liste
+// « Qui » tient en dix valeurs (docs/spec-chants-fetes.md, CF3) : plus de « + N ». « Déplacer » ne propose que les
+// créneaux libres, en pastilles jour par jour (le créneau actuel compris), sans
+// liste déroulante, et ne touche ni quoi ni qui.
 
-import { useState, type FormEvent } from "react"
+import { useState, type CSSProperties, type FormEvent, type ReactNode } from "react"
 import { useTranslation } from "react-i18next"
+import { CalendarClock, Check } from "lucide-react"
 import { QUI, QUOI } from "@/types/programme"
-import { fdLongL } from "@/lib/planning/utils"
+import type { Place } from "@/lib/scene/saison"
 import { PLANNING_COLORS } from "@/lib/serviceColors"
+import { useStandaloneScrollLock } from "@/hooks/useStandaloneScrollLock"
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { titreDuJour } from "./libelles"
+import { libelleQui } from "@/lib/fetes/qui"
+import { styleTexteService } from "@/lib/couleurSombre"
+
+const COLOR = PLANNING_COLORS.scene
 
 export type CreneauValues = {
   dimanche: string
@@ -20,23 +36,27 @@ export type CreneauValues = {
   note: string
 }
 
-const quarter = (t: string) => /^\d{2}:\d{2}$/.test(t) && Number(t.slice(3)) % 15 === 0
-
-/** Cases « Qui » (un ou plusieurs), partagées par les créneaux et les passages. */
+/** Cases « Qui » (un ou plusieurs) de l'ordre de passage. Une valeur retirée de la liste (敬拜团,
+ *  Jeunes, Chorale) encore présente dans le passage reste affichée, cochée et grisée « retiré », pour
+ *  que la coordination la décoche ; elle n'est plus proposée à un nouveau passage (CF3). */
 export function QuiChecklist({ value, onChange }: { value: string[]; onChange: (qui: string[]) => void }) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
+  const langue = i18n.language === "zh-CN" ? "zh" : "fr"
+  const retires = value.filter((q) => !(QUI as readonly string[]).includes(q))
   return (
     <fieldset className="space-y-1">
       <legend className="text-xs font-semibold">{t("planning.programme.qui")}</legend>
       <div className="flex flex-wrap gap-2">
-        {QUI.map((q) => {
+        {[...QUI, ...retires].map((q) => {
           const checked = value.includes(q)
+          const retire = retires.includes(q)
           return (
-            <label key={q} className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-semibold cursor-pointer ${checked ? "" : "bg-background border-border text-muted-foreground"}`}
-              style={checked ? { background: `${PLANNING_COLORS.scene}15`, borderColor: PLANNING_COLORS.scene, color: PLANNING_COLORS.scene } : undefined}>
+            <label key={q} className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-semibold cursor-pointer ${checked ? "texte-service" : "bg-background border-border text-muted-foreground"} ${retire ? "opacity-60" : ""}`}
+              style={checked ? { background: `${PLANNING_COLORS.scene}15`, borderColor: PLANNING_COLORS.scene, ...styleTexteService(PLANNING_COLORS.scene) } : undefined}>
               <input type="checkbox" className="h-3.5 w-3.5" checked={checked}
                 onChange={() => onChange(checked ? value.filter((x) => x !== q) : [...value, q])} />
-              {q}
+              {libelleQui(q, langue)}
+              {retire && <span className="font-normal"> · {t("planning.programme.quiRetire")}</span>}
             </label>
           )
         })}
@@ -45,25 +65,86 @@ export function QuiChecklist({ value, onChange }: { value: string[]; onChange: (
   )
 }
 
-export function CreneauForm({ title, dimanches, initial, onSubmit, onCancel }: {
+/** Une pastille de la feuille : case ou bouton radio posé sur toute la
+ *  pastille (invisible), coche dessinée quand elle est choisie. */
+function Pastille({ type, name, label, checked, onChange, retire }: {
+  type: "radio" | "checkbox"
+  name: string
+  label: string
+  checked: boolean
+  onChange: () => void
+  /** Valeur sortie de la liste : grisée (la marque « retiré » est dans `label`). */
+  retire?: boolean
+}) {
+  return (
+    <label
+      className={`relative inline-flex h-11 items-center gap-1.5 rounded-xl px-3.5 text-sm font-semibold has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ring ${retire ? "opacity-60" : ""} ${checked ? "svc-ink" : "bg-card text-foreground/80 shadow-[inset_0_0_0_1px_hsl(var(--border))]"}`}
+      style={checked ? { "--svc": COLOR, background: `${COLOR}1a`, boxShadow: `inset 0 0 0 1.5px ${COLOR}` } as CSSProperties : undefined}
+    >
+      <input type={type} name={name} checked={checked} onChange={onChange} className="absolute inset-0 cursor-pointer opacity-0" />
+      {checked && <Check className="h-4 w-4" aria-hidden />}
+      {label}
+    </label>
+  )
+}
+
+function Groupe({ legende, children }: { legende: ReactNode; children: ReactNode }) {
+  return (
+    <fieldset>
+      <legend className="mb-2 text-[13px] font-semibold text-muted-foreground">{legende}</legend>
+      <div className="flex flex-wrap gap-2">{children}</div>
+    </fieldset>
+  )
+}
+
+const cle = (p: { debut: string; fin: string }) => `${p.debut}-${p.fin}`
+
+type Props = {
+  open: boolean
   title: string
-  /** Dimanches proposés (ISO), déjà limités à ceux à venir. */
-  dimanches: string[]
+  /** Libellé du bouton plein : « Réserver », ou « Enregistrer » pour modifier. */
+  submitLabel: string
+  /** Réserver ou modifier : le créneau, rappelé en tête. */
+  place?: Place
+  /** Déplacer : les créneaux proposés, jour par jour (seul choix de la feuille). */
+  places?: Place[]
   initial: CreneauValues
+  quiOptions: readonly string[]
+  /** « Qui » limité par la saison : la légende le dit. */
+  quiLimite?: boolean
   /** Renvoie un message d'erreur, ou null si le créneau est enregistré. */
   onSubmit: (values: CreneauValues) => Promise<string | null>
   onCancel: () => void
-}) {
+}
+
+/** La feuille (en bas sur téléphone, centrée et étroite au-delà, comme les tâches). */
+export function CreneauForm({ open, title, onCancel, ...champs }: Props) {
+  useStandaloneScrollLock(open)
+  return (
+    <Drawer open={open} onOpenChange={(o) => !o && onCancel()}>
+      <DrawerContent className="max-h-[92vh] md:max-w-lg md:mx-auto" aria-describedby={undefined}>
+        <DrawerHeader className="pb-1 text-left">
+          <DrawerTitle className="text-xl font-bold">{title}</DrawerTitle>
+        </DrawerHeader>
+        <Champs {...champs} onCancel={onCancel} />
+      </DrawerContent>
+    </Drawer>
+  )
+}
+
+function Champs({ submitLabel, place, places, initial, quiOptions, quiLimite, onSubmit, onCancel }: Omit<Props, "open" | "title">) {
   const { t, i18n } = useTranslation()
+  const langue = i18n.language === "zh-CN" ? "zh" : "fr"
   const [v, setV] = useState<CreneauValues>(initial)
   const [error, setError] = useState("")
   const [busy, setBusy] = useState(false)
-  const select = "w-full h-10 rounded-md border border-input bg-background px-3 text-sm"
+  const jours = places ? [...new Set(places.map((p) => p.jour))] : []
+  const choisie = (p: Place) => p.jour === v.dimanche && cle(p) === cle(v)
+  const pret = places ? places.some(choisie) : v.quoi !== "" && v.qui.length > 0
 
   async function submit(e: FormEvent) {
     e.preventDefault()
-    if (!quarter(v.debut) || !quarter(v.fin) || v.fin <= v.debut) { setError(t("planning.programme.invalidTime")); return }
-    if (v.qui.length === 0) { setError(t("planning.programme.needQui")); return }
+    if (!pret) return
     setBusy(true); setError("")
     const err = await onSubmit({ ...v, note: v.note.trim() })
     setBusy(false)
@@ -71,39 +152,61 @@ export function CreneauForm({ title, dimanches, initial, onSubmit, onCancel }: {
   }
 
   return (
-    <form onSubmit={submit} className="bg-card shadow-soft rounded-xl p-4 space-y-3" aria-labelledby="creneau-form-title">
-      <h3 id="creneau-form-title" className="text-sm font-bold">{title}</h3>
+    <form onSubmit={submit} className="px-4 pb-6 space-y-4 overflow-y-auto">
+      {place && (
+        <p className="flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-[15px] font-semibold svc-ink"
+          style={{ "--svc": COLOR, background: `${COLOR}1a` } as CSSProperties}>
+          <CalendarClock className="h-5 w-5 shrink-0" aria-hidden />
+          {t("planning.saison.place", { jour: titreDuJour(place.jour, i18n.language), debut: place.debut, fin: place.fin })}
+        </p>
+      )}
+      {places ? jours.map((d) => (
+        <Groupe key={d} legende={titreDuJour(d, i18n.language)}>
+          {places.filter((p) => p.jour === d).map((p) => (
+            <Pastille key={cle(p)} type="radio" name="creneau-place" label={`${p.debut} – ${p.fin}`} checked={choisie(p)}
+              onChange={() => setV({ ...v, dimanche: p.jour, debut: p.debut, fin: p.fin })} />
+          ))}
+        </Groupe>
+      )) : (
+        <>
+          <Groupe legende={t("planning.programme.quoi")}>
+            {QUOI.map((q) => (
+              <Pastille key={q} type="radio" name="creneau-quoi" label={q} checked={v.quoi === q} onChange={() => setV({ ...v, quoi: q })} />
+            ))}
+          </Groupe>
+          <Groupe legende={
+            <>
+              {t("planning.programme.qui")}
+              {quiLimite && <span className="font-normal"> · {t("planning.saison.quiPermisTitre")}</span>}
+            </>
+          }>
+            {quiOptions.map((q) => {
+              const checked = v.qui.includes(q)
+              const retire = !(QUI as readonly string[]).includes(q)
+              return (
+                <Pastille key={q} type="checkbox" name="creneau-qui" retire={retire}
+                  label={retire ? `${libelleQui(q, langue)} · ${t("planning.programme.quiRetire")}` : libelleQui(q, langue)} checked={checked}
+                  onChange={() => setV({ ...v, qui: checked ? v.qui.filter((x) => x !== q) : [...v.qui, q] })} />
+              )
+            })}
+          </Groupe>
+          <div className="space-y-2">
+            <label htmlFor="creneau-note" className="text-[13px] font-semibold text-muted-foreground">
+              {t("planning.programme.note")}<span className="font-normal"> · {t("planning.saison.facultatif")}</span>
+            </label>
+            <Input id="creneau-note" className="h-11 rounded-xl" value={v.note} maxLength={120} placeholder={t("planning.programme.noteHint")} onChange={(e) => setV({ ...v, note: e.target.value })} />
+          </div>
+        </>
+      )}
       {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
-      <div className="space-y-1">
-        <label htmlFor="creneau-dimanche" className="text-xs font-semibold">{t("planning.programme.dimanche")}</label>
-        <select id="creneau-dimanche" className={select} value={v.dimanche} onChange={(e) => setV({ ...v, dimanche: e.target.value })}>
-          {dimanches.map((d) => <option key={d} value={d}>{t("planning.programme.sunday", { date: fdLongL(d, i18n.language) })}</option>)}
-        </select>
-      </div>
-      <div className="grid grid-cols-2 gap-3">
-        <div className="space-y-1">
-          <label htmlFor="creneau-debut" className="text-xs font-semibold">{t("planning.programme.debut")}</label>
-          <Input id="creneau-debut" type="time" step={900} value={v.debut} onChange={(e) => setV({ ...v, debut: e.target.value })} required />
-        </div>
-        <div className="space-y-1">
-          <label htmlFor="creneau-fin" className="text-xs font-semibold">{t("planning.programme.fin")}</label>
-          <Input id="creneau-fin" type="time" step={900} value={v.fin} onChange={(e) => setV({ ...v, fin: e.target.value })} required />
-        </div>
-      </div>
-      <div className="space-y-1">
-        <label htmlFor="creneau-quoi" className="text-xs font-semibold">{t("planning.programme.quoi")}</label>
-        <select id="creneau-quoi" className={select} value={v.quoi} onChange={(e) => setV({ ...v, quoi: e.target.value })}>
-          {QUOI.map((q) => <option key={q} value={q}>{q}</option>)}
-        </select>
-      </div>
-      <QuiChecklist value={v.qui} onChange={(qui) => setV({ ...v, qui })} />
-      <div className="space-y-1">
-        <label htmlFor="creneau-note" className="text-xs font-semibold">{t("planning.programme.note")}</label>
-        <Input id="creneau-note" value={v.note} maxLength={120} placeholder={t("planning.programme.noteHint")} onChange={(e) => setV({ ...v, note: e.target.value })} />
-      </div>
-      <div className="flex gap-2">
-        <Button type="submit" disabled={busy} style={{ background: PLANNING_COLORS.scene }}>{t("planning.programme.save")}</Button>
-        <Button type="button" variant="ghost" onClick={onCancel}>{t("planning.programme.cancel")}</Button>
+      <div className="flex gap-2 pt-1">
+        <Button type="button" variant="secondary" className="h-11" onClick={onCancel}>{t("planning.programme.cancel")}</Button>
+        {/* Inactif : gris, comme la planche ; prêt : plein, de la couleur de la scène. */}
+        <Button type="submit" disabled={busy || !pret}
+          className={`h-11 flex-1 ${pret ? "text-white hover:opacity-90" : "bg-secondary text-muted-foreground disabled:opacity-100"}`}
+          style={pret ? { background: COLOR } : undefined}>
+          {pret || places ? submitLabel : t("planning.saison.choisisQuoiQui")}
+        </Button>
       </div>
     </form>
   )

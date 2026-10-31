@@ -1,0 +1,337 @@
+"use client"
+
+// Carte « Petit déj » en tête de Planning › Table (lot U3, tranche PD2,
+// docs/spec-petit-dej.md ; planche `petit-dej-telephone`). Une rangée par
+// dimanche du trimestre choisi (Q11) : « Libre » et « Je m'inscris », ou les
+// lignes, une équipe chacune. Son inscrit réécrit (✎) et retire sa ligne ; poser,
+// réécrire et retirer pour d'autres se fait au Back-Office (T10). Rien ne bouge un dimanche passé (Q2). Une lecture en échec
+// n'est pas « personne » : la carte le dit, sans « Libre » ni bouton (Q10).
+// Droits : canGererPetitDej (access.ts), firestore.rules.
+// 30/10/2026 (Timothée) : plus d'« Inscrire quelqu'un » ni de ⋯ sur les lignes des autres dans
+// l'App ; on les gère dans la case Petit déj de la grille du Back-Office (`PetitDejCase.tsx`).
+// Agencement v18 (A4, docs/spec-agencement-v18.md) : la ligne de l'inscrit (en encre)
+// porte un « ⋯ » (Modifier, Retirer) au lieu de deux boutons ;
+// « Ton petit déj » (`TonPetitDej`) reprend son prochain dimanche à côté de la carte. Les deux
+// cartes partagent un même état (`usePetitDej`) : « ⋯ › Modifier » ouvre le champ dans la rangée,
+// ou dans « Ton petit déj » quand la carte ne montre pas ce dimanche (un autre trimestre, une autre année).
+
+import { useEffect, useId, useRef, useState, type ReactNode } from "react"
+import Link from "next/link"
+import { useTranslation } from "react-i18next"
+import { useConfirmer } from "@/components/layout/Confirmer"
+import { Coffee, Pencil, Trash2 } from "lucide-react"
+import { MenuActions } from "@/components/layout/MenuActions"
+import { Tile } from "@/components/ui/tile"
+import { canGererPetitDej } from "@/lib/access"
+import { RefusDesRegles, inscrire, renommerLigne, retirerLigne } from "@/lib/firebase/petitDej"
+import { historyAuthor } from "@/lib/firebase/setlistHistory"
+import { useProfile } from "@/lib/firebase/users"
+import { lirePetitDej } from "@/lib/petitdej/lignes"
+import { dimanchesDe } from "@/lib/planning/grilles"
+import { joursAvant } from "@/lib/planning/accueil"
+import { todayIso } from "@/lib/scene/dimanches"
+import { currentSundayStr, getTri } from "@/lib/planning/utils"
+import { serviceButtonFill } from "@/lib/serviceButton"
+import { PLANNING_COLORS } from "@/lib/serviceColors"
+import type { LignePetitDej } from "@/types/petitDej"
+
+const COULEUR = PLANNING_COLORS.table
+/** Fond des boutons pleins : la Table assombrie, libellé blanc lisible (Q15). */
+const FOND = serviceButtonFill(COULEUR)
+const NOM_MAX = 80
+
+/** « 4 oct. », « 1er nov. » ; 中文 « 10月4日 ». */
+export function dateCourte(iso: string, lang: string): string {
+  const [y, m, d] = iso.split("-").map(Number)
+  if (lang === "zh-CN") return `${m}月${d}日`
+  return `${d === 1 ? "1er" : d} ${new Date(y, m - 1, d).toLocaleDateString("fr-FR", { month: "short" })}`
+}
+
+/** Une saisie en cours : réécrire une ligne (`id`), ou son propre nom (`inscription`, `id` nul),
+ *  quand le profil n'en donne aucun. */
+type Saisie = { dimanche: string; id: string | null; valeur: string; inscription?: boolean }
+
+/** L'état partagé de la carte « Petit déj » et de « Ton petit déj » : les lignes lues, la saisie
+ *  en cours, les écritures. `onLignes` : les lignes lues, après chaque lecture (la grille les suit). */
+export function usePetitDej(onLignes?: (lignes: LignePetitDej[]) => void) {
+  const { t } = useTranslation()
+  const confirmer = useConfirmer()
+  const { user, profile } = useProfile()
+  const [lignes, setLignes] = useState<LignePetitDej[] | "illisible" | null>(null)
+  const [saisie, setSaisie] = useState<Saisie | null>(null)
+  // Un message sous un dimanche : « X vient de s'inscrire. », ou un refus.
+  const [annonce, setAnnonce] = useState<{ dimanche: string; texte: string } | null>(null)
+  const [enCours, setEnCours] = useState(false)
+  // Entrée puis la sortie du champ (démonté) : une seule fin de saisie.
+  const fini = useRef(false)
+
+  const sun = currentSundayStr()
+  const peutGerer = canGererPetitDej(user, profile)
+
+  function lire() {
+    return lirePetitDej().then(
+      (l) => { setLignes(l); onLignes?.(l) },
+      () => setLignes("illisible"),
+    )
+  }
+
+  useEffect(() => {
+    let vivant = true
+    lirePetitDej().then(
+      (l) => { if (vivant) { setLignes(l); onLignes?.(l) } },
+      () => { if (vivant) setLignes("illisible") },
+    )
+    return () => { vivant = false }
+  }, [onLignes])
+
+  /** Écrit, dit le refus éventuel sous le dimanche, puis relit (le cache est oublié par l'écriture). */
+  async function ecrire(dimanche: string, action: () => Promise<void>): Promise<boolean> {
+    setAnnonce(null)
+    setEnCours(true)
+    let ok = true
+    try {
+      await action()
+    } catch (e) {
+      ok = false
+      // Hors ligne, refus des règles (403), ou tout autre échec : trois messages.
+      const horsLigne = typeof navigator !== "undefined" && navigator.onLine === false
+      const cle = horsLigne ? "planning.grille.horsLigne" : e instanceof RefusDesRegles ? "planning.grille.droitRetire" : "planning.petitDej.echec"
+      setAnnonce({ dimanche, texte: t(cle) })
+    } finally {
+      await lire()
+      setEnCours(false)
+    }
+    return ok
+  }
+
+  function sInscrire(dimanche: string) {
+    const nom = historyAuthor(profile)?.name ?? ""
+    // Ni nom de planning ni prénom : le champ demande un nom. Jamais le début de
+    // l'adresse mail, les lignes se lisant sans connexion (Q10).
+    if (!nom) commencer({ dimanche, id: null, valeur: "", inscription: true })
+    else inscrireAuNom(dimanche, nom)
+  }
+
+  function inscrireAuNom(dimanche: string, nom: string) {
+    if (!user) return
+    void ecrire(dimanche, async () => {
+      const r = await inscrire(dimanche, nom, user.uid)
+      // Quelqu'un vient de prendre ce dimanche : rien n'est écrit (Q11).
+      if ("deja" in r) setAnnonce({ dimanche, texte: t("planning.petitDej.vientDeSInscrire", { nom: r.deja.map((l) => l.nom).join(", ") }) })
+    })
+  }
+
+  async function retirer(l: LignePetitDej) {
+    if (!(await confirmer({ titre: t("planning.petitDej.confirmerRetrait"), action: t("common.buttons.remove"), destructif: true }))) return
+    void ecrire(l.dimanche, () => retirerLigne(l.id))
+  }
+
+  function commencer(s: Saisie) {
+    fini.current = false
+    setAnnonce(null)
+    setSaisie(s)
+  }
+
+  /** Entrée ou sortie du champ enregistre, Échap annule ; un texte vide est refusé. */
+  function terminer(enregistrer: boolean) {
+    if (fini.current || !saisie || !user) return
+    fini.current = true
+    const { dimanche, id } = saisie
+    const nom = saisie.valeur.trim()
+    setSaisie(null)
+    if (!enregistrer || !nom) return
+    if (saisie.inscription) {
+      inscrireAuNom(dimanche, nom)
+    } else if (id) {
+      const avant = Array.isArray(lignes) ? lignes.find((l) => l.id === id)?.nom : undefined
+      if (avant !== nom) void ecrire(dimanche, () => renommerLigne(id, nom))
+    }
+  }
+
+  return { user, profile, lignes, saisie, setSaisie, annonce, enCours, sun, peutGerer, sInscrire, retirer, commencer, terminer }
+}
+
+export type EtatPetitDej = ReturnType<typeof usePetitDej>
+
+/** Le « ⋯ » d'une ligne qu'on peut toucher : Modifier (le champ dans la rangée), Retirer (confirmé). */
+function actionsDeLaLigne(etat: EtatPetitDej, l: LignePetitDej, t: (cle: string) => string) {
+  return [
+    { label: t("planning.petitDej.modifier"), icone: Pencil, ouvreUnChamp: true, onSelect: () => etat.commencer({ dimanche: l.dimanche, id: l.id, valeur: l.nom }) },
+    { label: t("planning.petitDej.retirer"), icone: Trash2, destructif: true, onSelect: () => etat.retirer(l) },
+  ]
+}
+
+/** Le champ d'une saisie (réécrire une ligne, en ajouter une, son nom) : Entrée ou sortie du champ
+ *  enregistre, Échap annule. Composant du module, pas d'un rendu : défini dans la carte, il serait
+ *  remonté à chaque frappe et le champ perdrait le focus (même raison que PlanningGrille). */
+function ChampDeSaisie({ etat, label }: { etat: EtatPetitDej; label: string }) {
+  const { saisie, setSaisie, terminer } = etat
+  return (
+    <input
+      autoFocus
+      type="text"
+      maxLength={NOM_MAX}
+      aria-label={label}
+      placeholder={saisie?.inscription ? label : undefined}
+      value={saisie?.valeur ?? ""}
+      onChange={(e) => setSaisie((s) => (s ? { ...s, valeur: e.target.value } : s))}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") { e.preventDefault(); terminer(true) }
+        if (e.key === "Escape") { e.preventDefault(); terminer(false) }
+      }}
+      onBlur={() => terminer(true)}
+      className="h-9 w-full min-w-0 rounded-md border bg-background px-2 text-[16px] sm:text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/20"
+      style={{ borderColor: COULEUR }}
+    />
+  )
+}
+
+/** La carte « Petit déj » montre-t-elle ce dimanche (l'année et le trimestre choisis) ? */
+const dansLaPeriode = (dimanche: string, annee: number, tri: string) => dimanche.startsWith(`${annee}-`) && getTri(dimanche) === tri
+
+export function PetitDejCarte({ etat, annee, tri }: {
+  etat: EtatPetitDej
+  annee: number
+  /** « T1 » … « T4 », le trimestre choisi par la page. */
+  tri: string
+}) {
+  const { t, i18n } = useTranslation()
+  const { user, lignes, saisie, annonce, enCours, sun, sInscrire } = etat
+  const titreId = useId()
+  const dimanches = dimanchesDe(annee).filter((d) => dansLaPeriode(d, annee, tri))
+  // « n libres sur N » : les dimanches à venir du trimestre sans aucune ligne.
+  const libres = Array.isArray(lignes) ? dimanches.filter((d) => d >= sun && !lignes.some((l) => l.dimanche === d)).length : null
+
+  const champ = (label: string) => <ChampDeSaisie etat={etat} label={label} />
+
+  const bouton = "h-9 shrink-0 rounded-full px-3.5 text-sm font-semibold transition-[background-color,color,transform] duration-150 active:scale-[.96] disabled:opacity-60"
+
+  function laLigne(l: LignePetitDej): ReactNode {
+    if (saisie?.id === l.id) return <div key={l.id} className="flex min-h-9 items-center">{champ(t("planning.petitDej.modifier"))}</div>
+    return (
+      <div key={l.id} className="flex min-h-9 items-center gap-2">
+        <span className="min-w-0 flex-1 break-words font-semibold text-foreground">
+          {user && l.uid === user.uid
+            ? <b data-testid="moi" className="inline-block rounded-md bg-foreground px-1.5 py-px font-semibold text-background">{l.nom}</b>
+            : l.nom}
+        </span>
+        {user && l.uid === user.uid && l.dimanche >= sun && <MenuActions actions={actionsDeLaLigne(etat, l, t)} />}
+      </div>
+    )
+  }
+
+  function laRangee(d: string): ReactNode {
+    const passe = d < sun
+    const ouvert = !passe && !!user
+    const siennes = (lignes as LignePetitDej[]).filter((l) => l.dimanche === d)
+    return (
+      <li key={d} data-dimanche={d} className="flex gap-3 border-t border-border py-2">
+        <span className={`flex h-9 w-[62px] shrink-0 items-center text-sm font-bold ${passe ? "text-muted-foreground" : "text-foreground"}`}>
+          {dateCourte(d, i18n.language)}
+        </span>
+        <div className="min-w-0 flex-1 space-y-1">
+          {siennes.length === 0 && (saisie?.inscription && saisie.dimanche === d ? (
+            <div className="flex min-h-9 items-center">{champ(t("planning.petitDej.tonNom"))}</div>
+          ) : (
+            <div className="flex min-h-9 items-center gap-2">
+              {passe
+                ? <span className="text-muted-foreground">—</span>
+                : <span className="flex-1 font-semibold text-amber-700 dark:text-amber-400">{t("planning.petitDej.libre")}</span>}
+              {ouvert && (
+                <button type="button" disabled={enCours} onClick={() => sInscrire(d)} className={`${bouton} text-white`} style={{ background: FOND }}>
+                  {t("planning.petitDej.inscrire")}
+                </button>
+              )}
+            </div>
+          ))}
+          {siennes.map(laLigne)}
+          {annonce?.dimanche === d && (
+            <p role="status" className="text-[13px] text-muted-foreground">{annonce.texte}</p>
+          )}
+        </div>
+      </li>
+    )
+  }
+
+  return (
+    <section aria-labelledby={titreId} className="raised min-w-0 rounded-2xl px-4 pt-3 pb-2">
+      <div className="flex items-center gap-2 pb-2">
+        <span className="grid h-7 w-7 place-items-center rounded-lg" style={{ background: `${COULEUR}24`, color: FOND }} aria-hidden>
+          <Coffee className="h-4 w-4" />
+        </span>
+        <h3 id={titreId} className="text-[17px] font-bold text-foreground">{t("planning.tabs.petitDej")}</h3>
+        {libres !== null && (
+          <span className="ml-auto text-[13px] text-muted-foreground">{t("planning.petitDej.libresSur", { count: libres, total: dimanches.length })}</span>
+        )}
+      </div>
+      {lignes === "illisible" ? (
+        <p className="border-t border-border pt-3 pb-1.5 text-sm text-muted-foreground">{t("planning.petitDej.illisible")}</p>
+      ) : lignes === null ? (
+        <p className="border-t border-border pt-3 pb-1.5 text-sm text-muted-foreground">{t("common.loading")}</p>
+      ) : (
+        <ul>{dimanches.map(laRangee)}</ul>
+      )}
+    </section>
+  )
+}
+
+const majuscule = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
+
+/** « Ton petit déj » (A4) : son prochain dimanche inscrit, avec le même « ⋯ » que sa rangée ;
+ *  sans inscription à venir, une phrase. L'astuce du nom (« Famille … ») est ici. « Modifier » ouvre
+ *  le champ dans la rangée de la carte ; ici, à la place de la date, quand la carte montre une autre
+ *  période (`annee`, `tri` : ceux de la page). */
+export function TonPetitDej({ etat, annee, tri }: { etat: EtatPetitDej; annee: number; tri: string }) {
+  const { t, i18n } = useTranslation()
+  const { user, lignes, saisie, sun } = etat
+  const titreId = useId()
+  const prochaine = Array.isArray(lignes) && user
+    ? lignes.filter((l) => l.uid === user.uid && l.dimanche >= sun).sort((a, b) => (a.dimanche < b.dimanche ? -1 : 1))[0]
+    : undefined
+  const langue = i18n.language === "zh-CN" ? "zh-CN" : "fr-FR"
+
+  let corps: ReactNode
+  if (lignes === "illisible") corps = <p className="text-sm text-muted-foreground">{t("planning.petitDej.illisible")}</p>
+  else if (lignes === null) corps = <p className="text-sm text-muted-foreground">{t("common.loading")}</p>
+  else if (!prochaine) corps = <p className="text-sm text-muted-foreground">{t("planning.petitDej.aucunAVenir")}</p>
+  else {
+    const jour = new Date(`${prochaine.dimanche}T12:00:00`)
+    const n = joursAvant(prochaine.dimanche, todayIso())
+    const quand = n === 0 ? t("planning.accueil.aujourdhui") : n === 1 ? t("planning.accueil.demain") : t("planning.accueil.dansJours", { count: n })
+    corps = (
+      <div className="flex items-center gap-3">
+        <Tile color={COULEUR} big={jour.getDate()} small={new Intl.DateTimeFormat(langue, { month: "short" }).format(jour)} size="lg" />
+        {saisie?.id === prochaine.id && !dansLaPeriode(prochaine.dimanche, annee, tri) ? (
+          <div className="min-w-0 flex-1"><ChampDeSaisie etat={etat} label={t("planning.petitDej.modifier")} /></div>
+        ) : (
+          <>
+            <div className="min-w-0 flex-1">
+              <p className="text-base font-bold text-foreground">
+                {majuscule(new Intl.DateTimeFormat(langue, { weekday: "long", day: "numeric", month: "long" }).format(jour))}
+              </p>
+              <p className="text-[13px] text-muted-foreground">{quand}</p>
+            </div>
+            {user && prochaine.uid === user.uid && prochaine.dimanche >= sun && <MenuActions actions={actionsDeLaLigne(etat, prochaine, t)} />}
+          </>
+        )}
+      </div>
+    )
+  }
+
+  return (
+    <section aria-labelledby={titreId} className="raised min-w-0 rounded-2xl px-4 pt-3 pb-3.5">
+      <h3 id={titreId} className="pb-2 text-[17px] font-bold text-foreground">{t("planning.petitDej.ton")}</h3>
+      {corps}
+      <p className="mt-3 border-t border-border pt-2.5 text-[13px] text-muted-foreground">{t("planning.petitDej.astuce")}
+        {etat.peutGerer && (
+          <>
+            {" "}{t("planning.petitDej.astuceAutres")}{" "}
+            <Link href="/back-office/planning/table" className="inline-block py-2 font-medium text-foreground underline underline-offset-2">
+              {t("planning.petitDej.astuceAutresLien")}
+            </Link>
+          </>
+        )}
+      </p>
+    </section>
+  )
+}

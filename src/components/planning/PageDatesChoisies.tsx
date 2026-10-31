@@ -1,0 +1,101 @@
+"use client"
+
+import { useEffect, useState } from "react"
+import { useTranslation } from "react-i18next"
+import { PlanningGrille } from "@/components/planning/PlanningGrille"
+import { AnneeSelecteur } from "@/components/planning/AnneeSelecteur"
+import { AjouterDate } from "@/components/planning/AjouterDate"
+import { BarreDeGrille, FiltreDeNom, compterCasesVides, useFiltreNom } from "@/components/planning/BarreDeGrille"
+import { PREMIERE_ANNEE_APP, anneesDuPlanning, dimanchesDe, lignesDeLAnnee, lignesSimples, type DefinitionGrille } from "@/lib/planning/grilles"
+import { useGrilleApp } from "@/lib/planning/useGrilleApp"
+import { poserDate } from "@/lib/firebase/planningGrille"
+import { noterChangement } from "@/lib/firebase/planningHistorique"
+import { historyAuthor } from "@/lib/firebase/setlistHistory"
+import { useProfile } from "@/lib/firebase/users"
+import { canEditPlanning, isAdminUser } from "@/lib/access"
+import { useGestionPlanning } from "@/lib/planning/gestion"
+
+// Interfranco et Intergroupe (lot 17, G6 ; lot U2, P2) : une page par service,
+// toute l'année affichée, sans publication par trimestre. Les dates se
+// choisissent (Q3) : dès 2027, le responsable pose ses dimanches — jamais un
+// dimanche que l'autre service a déjà pris (Q5) — et peut en retirer un posé
+// par erreur (Q10). Avant 2027, le Sheet porte les dates.
+
+export function PageDatesChoisies({ definition, lire, lireAutre }: {
+  definition: DefinitionGrille
+  /** Le planning : grille de l'app et Sheet réunis (`fetchInterfranco`…). */
+  lire: () => Promise<string[][]>
+  /** L'autre service : un dimanche qu'il tient n'est pas proposé. */
+  lireAutre: () => Promise<string[][]>
+}) {
+  const { t } = useTranslation()
+  const { user, profile } = useProfile()
+  const [rows, setRows] = useState<string[][]>([])
+  const [autre, setAutre] = useState<string[][]>([])
+  const [loading, setLoading] = useState(true)
+  // Lot U6, B2 : on remplit au Back-Office ; dans l'App, la page se lit.
+  const gestion = useGestionPlanning()
+  const filtre = useFiltreNom()
+  const peutModifier = gestion && canEditPlanning(user, profile, definition.key)
+  const { datesDansLApp, comptes, absenceDe } = useGrilleApp(definition.key, peutModifier)
+
+  const recharger = () => lire().then(setRows).catch(() => { /* lignes d'avant gardées */ })
+  useEffect(() => {
+    lire().then(setRows).catch(() => {}).finally(() => setLoading(false))
+    lireAutre().then(setAutre).catch(() => {})
+  }, [lire, lireAutre])
+
+  // Q4 : sans publication, l'année suivante se voit dès sa première date posée ;
+  // le responsable la voit d'office, pour y poser ses dimanches.
+  const anneeCourante = new Date().getFullYear()
+  const [annee, setAnnee] = useState(anneeCourante)
+  const annees = anneesDuPlanning(anneeCourante, peutModifier || lignesDeLAnnee(definition, anneeCourante + 1, rows).length > 0)
+  const effAnnee = annees.includes(annee) ? annee : anneeCourante
+  const lignes = lignesDeLAnnee(definition, effAnnee, rows)
+  const dansLApp = effAnnee >= PREMIERE_ANNEE_APP
+  const periode = t("planning.grille.periodeAnnee", { annee: effAnnee })
+
+  const pris = new Set([...lignes, ...lignesDeLAnnee(definition, effAnnee, autre)].map((r) => r[0]))
+  const proposes = dimanchesDe(effAnnee).filter((d) => !pris.has(d))
+
+  async function ajouter(date: string) {
+    const auteur = historyAuthor(profile)
+    await poserDate(definition, date, auteur?.name ?? "")
+    if (auteur) await noterChangement(definition.key, auteur, { kind: "dimanche", date, retire: false })
+    await recharger()
+  }
+
+  return (
+    <div className="max-w-full space-y-4 mx-auto">
+      {/* Agencement v18 (A2, B7) : la rangée de la grille ; toute l'année, l'année seule en rail. */}
+      <BarreDeGrille
+        titre={t(definition.i18nTitre)}
+        couleur={definition.couleur}
+        detail={periode}
+        // Le nom du planning est dans la pastille active de la rangée : pas de second nom en sous-titre.
+        sousTitreBO={t("planning.barre.casesVidesAnnee", { count: compterCasesVides(definition, lignesSimples(lignes)) })}
+        chargement={loading}
+      >
+        <AnneeSelecteur annees={annees} annee={effAnnee} onChange={setAnnee} />
+        <FiltreDeNom filtre={filtre} couleur={definition.couleur} />
+      </BarreDeGrille>
+
+      {peutModifier && dansLApp && <AjouterDate annee={effAnnee} dimanches={proposes} onAjouter={ajouter} />}
+
+      <PlanningGrille
+        definition={definition}
+        lignesDuPlanning={rows}
+        periode={periode}
+        filtre={filtre}
+        lignes={lignesSimples(lignes)}
+        peutModifier={peutModifier}
+        datesDansLApp={datesDansLApp}
+        comptes={comptes}
+        absenceDe={absenceDe}
+        exporter={peutModifier ? { annee: effAnnee, rang: 1, tout: isAdminUser(user) } : undefined}
+        vide={dansLApp ? t("planning.annee.aucun", { annee: effAnnee }) : undefined}
+        retrait={{ libelle: t("planning.annee.retirer"), onRetire: () => void recharger() }}
+      />
+    </div>
+  )
+}

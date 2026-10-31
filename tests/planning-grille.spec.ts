@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { signInAs, type FakeProfile } from "./helpers/fakeSession";
+import { signInAs, type FakeProfile, remplit } from "./helpers/fakeSession";
 import { canEditPlanning } from "../src/lib/access";
 import { COLONNES_CULTE, GRILLE_CULTE, fusionnerLignes, lignesPubliees } from "../src/lib/planning/grilles";
 import { fusionnerChangements } from "../src/lib/planning/historique";
@@ -25,15 +25,15 @@ const CULTE = csv([
 ]);
 
 const MEMBRE: FakeProfile = { uid: "uid-membre", email: "membre@example.com", planningName: "Inès L." };
-const PUBLIEUR: FakeProfile = { uid: "uid-pub", email: "pub@example.com", planningName: "Paul W.", notify: ["*"] };
+const PUBLIEUR: FakeProfile = { uid: "uid-pub", email: "pub@example.com", planningName: "Paul W.", ...remplit("culte") };
 const CHRISTELLE: FakeProfile = {
   uid: "uid-christelle", email: "christelle@example.com",
   firstName: "Christelle", lastName: "Zhang", planningName: "Christelle Z.",
-  plannings: ["culte"],
+  ...remplit("culte"),
 };
 
 /** Un autre compte, pour l'autocomplétion : son nom de planning n'est nulle part dans la grille. */
-const ESTHER = { email: "esther@example.com", firstName: "Esther", lastName: "Chen", planningName: "Esther C.", serviceRoles: {}, annonces: [], notify: [], poles: [] };
+const ESTHER = { email: "esther@example.com", firstName: "Esther", lastName: "Chen", planningName: "Esther C.", serviceRoles: {}, annonces: [], notify: [] };
 
 /** Ouvre `to` le vendredi 18/09/2026 : dimanche courant = 20/09, trimestre T3. */
 async function open(page: Page, who: FakeProfile, to: string, docs: Record<string, Record<string, unknown>> = {}) {
@@ -49,11 +49,12 @@ async function open(page: Page, who: FakeProfile, to: string, docs: Record<strin
 const laCase = (page: Page, date: string, colonne: string) =>
   page.locator(`[data-case="${date}|${colonne}"]`).filter({ visible: true });
 
-/** Le champ d'une case en cours de saisie : table et cartes coexistent dans le
- *  DOM, on vise donc celui de la vue affichée. Un <input list> a le rôle ARIA
- *  « combobox » : on le désigne par son libellé. */
-const champDe = (page: Page, date: string, colonne: string, libelle: string) =>
-  laCase(page, date, colonne).getByLabel(libelle, { exact: true });
+/** Lot U2, P9 : une case de personne s'ouvre sur « Choisir » (menu sur
+ *  ordinateur, feuille ailleurs) ; on y prend un nom proposé. */
+async function choisir(page: Page, date: string, colonne: string, nom: string) {
+  await laCase(page, date, colonne).getByRole("button").click();
+  await page.getByRole("dialog").getByRole("option", { name: new RegExp(`^${nom.replace(/\./g, "\\.")}`) }).click();
+}
 
 const ordinateurEtTablette = () =>
   test.skip(test.info().project.name === "telephone", "la table : ordinateur et tablette");
@@ -120,9 +121,10 @@ test("historique : deux retouches d'une même case font une seule ligne, de l'av
 
 // ─── La grille en lecture (G1) ───────────────────────────────────────────────
 
-test("la grille du Culte : les colonnes du Sheet, un bandeau de période et d'horaire", async ({ page }) => {
+test("la grille du Culte : les colonnes du Sheet, la rangée dit le service, l'horaire et la période", async ({ page }) => {
   await open(page, PUBLIEUR, "/planning/culte");
-  const bandeau = page.getByTestId("grille-bandeau");
+  // Agencement v18 (A2) : le bandeau de couleur devient la rangée de la grille.
+  const bandeau = page.getByTestId("barre-grille");
   await expect(bandeau).toContainText("Culte Franco");
   await expect(bandeau).toContainText("Dimanche 10:30");
   await expect(bandeau).toContainText("2026");
@@ -138,21 +140,21 @@ test("ordinateur et tablette : les colonnes sont dans l'ordre du Sheet", async (
   ordinateurEtTablette();
   await open(page, PUBLIEUR, "/planning/culte");
   await expect(page.getByTestId("grille-colonnes")).toHaveText(
-    /Date.*Présidence.*Choriste 1.*Choriste 2.*Piano.*Guitare.*Batterie.*Sono.*PPT.*Orateur.*Trad\./
+    // La traduction est facultative (31/10/2026) : en lecture, sa colonne ne s'affiche que si la période en a une.
+    /Date.*Présidence.*Choriste 1.*Choriste 2.*Piano.*Guitare.*Batterie.*Sono.*PPT.*Orateur/
   );
 });
 
 test("le sélecteur de trimestre : T3 par défaut, T4 sur demande", async ({ page }) => {
-  await open(page, PUBLIEUR, "/planning/culte");
-  // Le trimestre courant est choisi d'office, et le bandeau le nomme.
-  await expect(page.getByRole("button", { name: "T3" })).toBeVisible();
-  await expect(page.getByTestId("grille-bandeau")).toContainText("T3");
+  await open(page, PUBLIEUR, "/back-office/planning/culte");
+  // Le trimestre courant est choisi d'office (rail de la période, agencement v18).
+  await expect(page.getByRole("tab", { name: "T3" })).toHaveAttribute("aria-selected", "true");
   await expect(laCase(page, "2026-10-11", "piano")).toHaveCount(0);
 
-  await page.getByRole("button", { name: "T4" }).click();
+  await page.getByRole("tab", { name: "T4" }).click();
   await expect(laCase(page, "2026-10-11", "piano")).toHaveText("Jo M.");
   await expect(laCase(page, "2026-09-20", "presidence"), "on ne voit qu'un trimestre à la fois").toHaveCount(0);
-  await expect(page.getByTestId("grille-bandeau")).toContainText("T4");
+  await expect(page.getByRole("tab", { name: "T4" })).toHaveAttribute("aria-selected", "true");
 });
 
 test("plus de fenêtre glissante : « Voir plus tôt » n'existe plus", async ({ page }) => {
@@ -172,7 +174,7 @@ test("ordinateur et tablette : la colonne des dates reste visible au défilement
   await page.setViewportSize({ width: 820, height: 800 });
   const defilement = page.getByTestId("grille-defilement");
   const date = page.locator('[data-date-cell="2026-09-20"]').filter({ visible: true });
-  const loin = laCase(page, "2026-09-20", "traduction");
+  const loin = laCase(page, "2026-09-20", "orateur"); // la traduction, facultative, peut être masquée en lecture
   const avant = { date: (await date.boundingBox())!.x, loin: (await loin.boundingBox())!.x };
   await defilement.evaluate((el) => { el.scrollLeft = el.scrollWidth; });
   await expect.poll(async () => Math.round((await loin.boundingBox())!.x), { message: "la grille défile bien" })
@@ -199,9 +201,9 @@ test("trimestre non publié : invisible pour un membre, marqué « Non publié �
 });
 
 test("trimestre non publié : le publieur voit les lignes, marquées", async ({ page }) => {
-  await open(page, PUBLIEUR, "/planning/culte");
+  await open(page, PUBLIEUR, "/back-office/planning/culte");
   // Le T4 n'est pas publié : le publieur a sa pilule, le membre ne l'a pas.
-  await page.getByRole("button", { name: "T4" }).click();
+  await page.getByRole("tab", { name: "T4" }).click();
   await expect(laCase(page, "2026-10-04", "presidence")).toHaveText("Paul W.");
   await expect(page.locator('[data-non-publie="2026-10-04"]').filter({ visible: true })).toBeVisible();
   await expect(page.locator('[data-non-publie="2026-09-20"]')).toHaveCount(0);
@@ -217,12 +219,8 @@ test("sans le droit : aucun bouton « Modifier », aucune case cliquable", async
 });
 
 test("avec le droit : une case s'écrit, tient après rechargement, et la voisine ne bouge pas", async ({ page }) => {
-  const db = await open(page, CHRISTELLE, "/planning/culte", { [`users/uid-esther`]: ESTHER });
-  await page.getByRole("button", { name: "Modifier" }).click();
-  await laCase(page, "2026-09-27", "piano").getByRole("button").click();
-  const champ = champDe(page, "2026-09-27", "piano", "Piano");
-  await champ.fill("Esther C.");
-  await champ.press("Enter");
+  const db = await open(page, CHRISTELLE, "/back-office/planning/culte", { [`users/uid-esther`]: ESTHER });
+  await choisir(page, "2026-09-27", "piano", "Esther C.");
   await expect(laCase(page, "2026-09-27", "piano")).toContainText("Esther C.");
   await expect(page.getByText("Enregistré")).toBeVisible();
 
@@ -238,71 +236,63 @@ test("avec le droit : une case s'écrit, tient après rechargement, et la voisin
   await expect(laCase(page, "2026-09-20", "piano"), "les autres dimanches viennent encore du Sheet").toContainText("Ruth K.");
 });
 
-test("un nom sans compte s'écrit ; l'autocomplétion propose la grille et les comptes ; Échap annule", async ({ page }) => {
-  await open(page, CHRISTELLE, "/planning/culte", { [`users/uid-esther`]: ESTHER });
-  await page.getByRole("button", { name: "Modifier" }).click();
+test("« Choisir » propose les comptes et les noms de la grille ; un nom sans compte s'écrit ; Échap annule", async ({ page }) => {
+  await open(page, CHRISTELLE, "/back-office/planning/culte", { [`users/uid-esther`]: ESTHER });
   await laCase(page, "2026-09-27", "orateur").getByRole("button").click();
-  // <option value="…"> n'a pas de texte : c'est la valeur qui est proposée.
-  const propose = (nom: string) => page.locator(`datalist#noms-culte option[value="${nom}"]`);
-  await expect(propose("Ruth K."), "un nom déjà dans la grille").toHaveCount(1);
-  await expect(propose("Esther C."), "le nom de planning d'un compte").toHaveCount(1);
-  const champ = champDe(page, "2026-09-27", "orateur", "Orateur");
+  // Lot U2, P9 : le menu « Choisir » remplace la datalist du lot 17 (D12).
+  const menu = page.getByRole("dialog");
+  await expect(menu.getByRole("option", { name: /^Ruth K\./ }), "un nom déjà dans la grille").toHaveCount(1);
+  await expect(menu.getByRole("option", { name: /^Esther C\./ }), "le nom de planning d'un compte").toHaveCount(1);
+  await expect(page.locator("datalist")).toHaveCount(0);
+  await menu.getByRole("button", { name: "Écrire un nom sans compte…" }).click();
+  const champ = menu.getByRole("textbox", { name: "Orateur", exact: true });
   await champ.fill("Pasteur ZHOU");
   await champ.press("Enter");
   await expect(laCase(page, "2026-09-27", "orateur")).toContainText("Pasteur ZHOU");
 
   await laCase(page, "2026-09-27", "sono").getByRole("button").click();
-  const autre = champDe(page, "2026-09-27", "sono", "Sono");
+  await page.getByRole("dialog").getByRole("button", { name: "Écrire un nom sans compte…" }).click();
+  const autre = page.getByRole("dialog").getByRole("textbox", { name: "Sono", exact: true });
   await autre.fill("Quelqu'un d'autre");
   await autre.press("Escape");
+  await expect(page.getByRole("dialog")).toHaveCount(0);
   await expect(laCase(page, "2026-09-27", "sono")).toContainText("Lorenzo S.");
   await expect(page.getByText("Quelqu'un d'autre")).toHaveCount(0);
 });
 
 test("droit retiré en cours de route : la case revient, le message et « Recharger » s'affichent", async ({ page }) => {
-  await open(page, CHRISTELLE, "/planning/culte");
+  await open(page, CHRISTELLE, "/back-office/planning/culte", { [`users/uid-esther`]: ESTHER });
   await page.route(/firestore\.googleapis\.com.*dimanches/, (route) =>
     route.request().method() === "PATCH"
       ? route.fulfill({ status: 403, contentType: "application/json", body: JSON.stringify({ error: { message: "PERMISSION_DENIED" } }) })
       : route.fallback()
   );
-  await page.getByRole("button", { name: "Modifier" }).click();
-  await laCase(page, "2026-09-27", "piano").getByRole("button").click();
-  const champ = champDe(page, "2026-09-27", "piano", "Piano");
-  await champ.fill("Esther C.");
-  await champ.press("Enter");
+  await choisir(page, "2026-09-27", "piano", "Esther C.");
   await expect(page.getByText(/Enregistrement refusé par le serveur/)).toBeVisible();
   await expect(page.getByRole("button", { name: "Recharger" })).toBeVisible();
   await expect(laCase(page, "2026-09-27", "piano")).toContainText("Eva C.");
 });
 
 test("l'historique nomme l'auteur, la case et le dimanche", async ({ page }) => {
-  await open(page, CHRISTELLE, "/planning/culte");
-  await page.getByRole("button", { name: "Modifier" }).click();
-  await laCase(page, "2026-09-27", "piano").getByRole("button").click();
-  const champ = champDe(page, "2026-09-27", "piano", "Piano");
-  await champ.fill("Esther C.");
-  await champ.press("Enter");
+  await open(page, CHRISTELLE, "/back-office/planning/culte", { [`users/uid-esther`]: ESTHER });
+  await choisir(page, "2026-09-27", "piano", "Esther C.");
   await expect(laCase(page, "2026-09-27", "piano")).toContainText("Esther C.");
 
   await page.getByRole("button", { name: "Historique des modifications" }).click();
   await expect(page.getByText("Christelle Z. a remplacé Eva C. par Esther C. au Piano du 27 septembre")).toBeVisible();
 
   // Une case vide remplie, puis effacée : les deux autres phrases.
-  await laCase(page, "2026-09-27", "sainteCene").getByRole("button").click();
-  await champDe(page, "2026-09-27", "sainteCene", "Sainte cène").fill("Ruth K.");
-  await champDe(page, "2026-09-27", "sainteCene", "Sainte cène").press("Enter");
+  await choisir(page, "2026-09-27", "sainteCene", "Ruth K.");
   await expect(page.getByText("Christelle Z. a mis Ruth K. au Sainte cène du 27 septembre")).toBeVisible();
   await laCase(page, "2026-09-27", "orateur").getByRole("button").click();
-  await champDe(page, "2026-09-27", "orateur", "Orateur").fill("");
-  await champDe(page, "2026-09-27", "orateur", "Orateur").press("Enter");
+  await page.getByRole("dialog").getByRole("button", { name: "Vider la case" }).click();
   await expect(page.getByText("Christelle Z. a effacé le Orateur du 27 septembre")).toBeVisible();
 });
 
 test("en 中文 : colonnes, horaire et pied de grille traduits", async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
   await open(page, PUBLIEUR, "/planning/culte");
-  await expect(page.getByTestId("grille-bandeau")).toContainText("主日 10:30");
+  await expect(page.getByTestId("barre-grille")).toContainText("主日 10:30");
   // Ordinateur et tablette : l'en-tête de colonne ; téléphone : le libellé de la carte.
   await expect(page.getByText("钢琴").filter({ visible: true }).first()).toBeVisible();
   await expect(page.getByText("某个主日无法服事？请联系负责排表的同工。")).toBeVisible();

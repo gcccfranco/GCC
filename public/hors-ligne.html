@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Pas de réseau · 无网络</title>
+<style>
+  :root { color-scheme: light dark; --fond: #faf8f4; --texte: #1c1b19; --doux: #6b675f; --lien: #3f63cf; }
+  @media (prefers-color-scheme: dark) { :root { --fond: #17161a; --texte: #f0eee8; --doux: #a29e95; --lien: #8da6f0; } }
+  html, body { margin: 0; background: var(--fond); color: var(--texte); }
+  body { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; box-sizing: border-box;
+         font: 16px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Noto Sans SC", sans-serif; }
+  main { max-width: 26rem; text-align: center; }
+  p { margin: 0 0 8px; }
+  p.zh { color: var(--doux); margin-bottom: 24px; }
+  nav { display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; }
+  a { color: var(--lien); font-weight: 600; text-decoration: none; }
+  a:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+<main>
+  <p id="fr" lang="fr">Pas de réseau — cette page n'a pas encore été ouverte sur cet appareil.</p>
+  <p id="zh" class="zh" lang="zh-CN">无网络——此页面尚未在此设备上打开过。</p>
+  <nav>
+    <a href="#" id="reessayer"><span lang="fr">Réessayer</span> · <span lang="zh-CN">重试</span></a>
+    <a href="/songs/"><span lang="fr">Les chants</span> · <span lang="zh-CN">诗歌</span></a>
+  </nav>
+</main>
+<script>
+  document.getElementById("reessayer").addEventListener("click", function (e) { e.preventDefault(); location.reload(); });
+</script>
+</body>
+</html>

@@ -8,6 +8,8 @@ import { signInAs, type FakeProfile } from "./helpers/fakeSession";
 const BLEU_ACCORDS = "rgb(63, 99, 207)"; // --chord-color
 const BLEU_ACCORDS_SOMBRE = "rgb(143, 176, 255)"; // --chord-color en sombre
 const ORANGE_REFRAIN = "rgb(224, 86, 10)"; // --sec-chorus
+const VERT_COUPLETS = "rgb(44, 138, 125)"; // --sec-verse
+const VERT_COUPLETS_SOMBRE = "rgb(89, 189, 172)"; // --sec-verse en sombre
 const CULTE = "rgb(45, 90, 101)"; // PLANNING_COLORS.culte
 const CAMPUS = "rgb(36, 113, 163)"; // PLANNING_COLORS.campus
 const EDD = "rgb(59, 109, 17)"; // PLANNING_COLORS.edd
@@ -20,8 +22,15 @@ const GEOMETRIE = {
   fiche: { petit: { largeur: "300px", hauteur: "220px", gauche: "-40px", haut: "-60px", flou: "blur(44px)" }, grand: { ...GRAND, gauche: "-140px" } },
   chant: { petit: { largeur: "300px", hauteur: "220px", droite: "-80px", haut: "-60px", flou: "blur(44px)" }, grand: { ...GRAND, droite: "-140px" } },
 };
-/** Le projet « ordinateur » fait 1280 px de large ; téléphone (412) et tablette (810) gardent la taille des planches. */
-const geometrie = (variante: keyof typeof GEOMETRIE) => GEOMETRIE[variante][test.info().project.name === "ordinateur" ? "grand" : "petit"];
+/** À partir de 1024 px de large (ordinateur, ordinateur-1440, tablette couchée : lot U4), le halo agrandi ;
+ *  téléphone (412) et tablette (810) gardent la taille des planches. */
+const geometrie = (variante: keyof typeof GEOMETRIE) => GEOMETRIE[variante][(test.info().project.use.viewport?.width ?? 0) >= 1024 ? "grand" : "petit"];
+/** Lot U4 : le halo part du bord de la barre latérale (0 sans elle) et fait le reste de la fenêtre. */
+const zoneDeContenu = (page: Page) =>
+  page.evaluate(() => {
+    const barre = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--barre-laterale")) || 0;
+    return { x: barre, y: 0, width: document.documentElement.clientWidth - barre };
+  });
 
 const MUSICIEN: FakeProfile = {
   uid: "uid-musicien",
@@ -46,15 +55,15 @@ const ellipse = (page: Page) =>
 async function auCoinDeLaFenetre(page: Page) {
   const halo = page.getByTestId("halo");
   await expect(halo).toBeVisible();
-  const largeur = await page.evaluate(() => document.documentElement.clientWidth);
-  await expect.poll(() => halo.boundingBox()).toMatchObject({ x: 0, y: 0, width: largeur });
+  const zone = await zoneDeContenu(page);
+  await expect.poll(() => halo.boundingBox()).toMatchObject(zone);
   expect(await halo.evaluate((el) => getComputedStyle(el).pointerEvents)).toBe("none");
   await expect(halo).toHaveAttribute("aria-hidden", "true");
   expect(await debordement(page)).toBe(0);
   // Même sur une page trop courte pour défiler (planning vide, setlist sans chant).
   await page.addStyleTag({ content: "body{min-height:3000px}" });
   await page.evaluate(() => window.scrollTo(0, 600));
-  await expect.poll(() => halo.boundingBox()).toMatchObject({ x: 0, y: 0, width: largeur });
+  await expect.poll(() => halo.boundingBox()).toMatchObject(zone);
   await page.evaluate(() => window.scrollTo(0, 0));
 }
 
@@ -67,13 +76,22 @@ async function capture(page: Page, name: string) {
   await page.screenshot({ path: `${dir}/${name}-${test.info().project.name}.png` });
 }
 
+/** Chants en deux volets (lot U5, docs/spec-deux-volets.md) : sur /songs, le halo est celui
+ *  de « Choisis un chant », à droite (planche `chants-accueil`) ; en un volet, celui de la liste. */
+const enDeuxVolets = (page: Page) =>
+  page.locator(".chants-volets").evaluate((el) => getComputedStyle(el).display === "grid");
+
 test.describe("halo d'en-tête (5C1, V6)", () => {
-  test("Chants : bleu des accords à 10 %, en haut à gauche", async ({ page }) => {
+  test("Chants : bleu des accords à 10 %, en haut à gauche (deux volets : vert des couplets à 12 %, à droite)", async ({ page }) => {
     await page.goto("/songs");
     await page.getByRole("searchbox").waitFor();
     await capture(page, "halo-chants");
     await auCoinDeLaFenetre(page);
-    expect(await ellipse(page)).toMatchObject({ couleur: BLEU_ACCORDS, opacite: "0.1", ...geometrie("page") });
+    if (await enDeuxVolets(page)) {
+      expect(await ellipse(page)).toMatchObject({ couleur: VERT_COUPLETS, opacite: "0.12", ...geometrie("chant") });
+    } else {
+      expect(await ellipse(page)).toMatchObject({ couleur: BLEU_ACCORDS, opacite: "0.1", ...geometrie("page") });
+    }
   });
 
   // Un chant français et un chant chinois (CLAUDE.md).
@@ -95,8 +113,8 @@ test.describe("halo d'en-tête (5C1, V6)", () => {
       await page.goto("/songs/beni-soit-ton-nom");
       await page.getByTestId("barre-outils").waitFor();
       const halo = page.getByTestId("halo");
-      const largeur = await page.evaluate(() => document.documentElement.clientWidth);
-      await expect.poll(() => halo.boundingBox()).toMatchObject({ x: 0, y: 0, width: largeur });
+      const zone = await zoneDeContenu(page);
+      await expect.poll(() => halo.boundingBox()).toMatchObject(zone);
     });
   }
 
@@ -159,7 +177,7 @@ test.describe("halo d'en-tête (5C1, V6)", () => {
     });
   }
 
-  test("un seul halo par page, et pas de halo hors des écrans prévus", async ({ page }) => {
+  test("un seul halo par page ; ailleurs, le halo par défaut (retours du 06/10/2026)", async ({ page }) => {
     await page.goto("/login");
     await page.locator('button[type="submit"]').first().waitFor();
     await expect(page.getByTestId("halo")).toHaveCount(0);
@@ -168,9 +186,12 @@ test.describe("halo d'en-tête (5C1, V6)", () => {
     await signInAs(page, MUSICIEN, {}, "/planning");
     await page.getByRole("heading", { level: 1, name: "Planning" }).waitFor();
     await expect(page.getByTestId("halo")).toHaveCount(1);
+    await expect(page.getByTestId("halo-defaut")).toBeHidden();
+    // Mes services n'a pas de couleur à lui : le halo par défaut, à l'encre (halo-partout.spec.ts).
     await page.goto("/mes-services");
     await page.getByRole("heading", { level: 1 }).first().waitFor();
     await expect(page.getByTestId("halo")).toHaveCount(0);
+    await expect(page.getByTestId("halo-defaut")).toBeVisible();
   });
 
   // Un ancêtre transformé devient le repère des éléments fixes : si le fondu d'entrée des
@@ -192,11 +213,11 @@ test.describe("halo d'en-tête (5C1, V6)", () => {
     expect(enCours).toEqual({ transform: "none", fondu: true });
   });
 
-  test("en sombre le halo reste, au bleu des accords du sombre ; à l'impression il disparaît", async ({ page }) => {
+  test("en sombre le halo reste, au bleu des accords du sombre (deux volets : vert des couplets) ; à l'impression il disparaît", async ({ page }) => {
     await page.goto("/songs");
     await page.getByRole("searchbox").waitFor();
     await page.emulateMedia({ colorScheme: "dark" });
-    await expect.poll(async () => (await ellipse(page)).couleur).toBe(BLEU_ACCORDS_SOMBRE);
+    await expect.poll(async () => (await ellipse(page)).couleur).toBe((await enDeuxVolets(page)) ? VERT_COUPLETS_SOMBRE : BLEU_ACCORDS_SOMBRE);
     await capture(page, "halo-chants-sombre");
     await page.emulateMedia({ media: "print" });
     await expect(page.getByTestId("halo")).toBeHidden();

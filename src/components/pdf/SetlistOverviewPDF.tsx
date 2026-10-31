@@ -4,6 +4,7 @@ import {
 import type { FSSetlist } from "@/lib/firebase/setlists";
 import type { SongIndexEntry } from "@/types/song";
 import { formatDate } from "@/lib/utils/formatDate";
+import { enAttente } from "@/lib/setlist/propositions";
 import frTranslations from "@/locales/fr.json";
 import zhTranslations from "@/locales/zh-CN.json";
 
@@ -16,7 +17,13 @@ Font.register({
 });
 Font.register({
   family: "Inter",
-  fonts: [{ src: "/fonts/Inter-Regular.ttf", fontWeight: 400 }],
+  fonts: [
+    { src: "/fonts/Inter-Regular.ttf", fontWeight: 400 },
+    // Les notes d'un chant sont en italique : sans cette face, le PDF liste d'une
+    // setlist annotée échouait (« Could not resolve font for Inter, … italic »). Pas
+    // d'Inter italique dans public/fonts : la droite en tient lieu.
+    { src: "/fonts/Inter-Regular.ttf", fontWeight: 400, fontStyle: "italic" },
+  ],
 });
 Font.register({
   family: "LiberationSans",
@@ -116,7 +123,7 @@ export function SetlistOverviewPDF({
               </Text>
               <View style={s.songInfo}>
                 <Text style={{ fontSize: 11, fontWeight: 700, color: BLACK, fontFamily: titleFont }}>
-                  {song?.title ?? item.songSlug}
+                  {item.type === "proposition" ? `${item.proposition?.titre ?? ""} — ${enAttente(language)}` : (song?.title ?? item.songSlug)}
                 </Text>
                 {song?.titlePinyin ? (
                   <Text style={{ fontSize: 8, color: GRAY, fontFamily: "SourceHanSansCN", fontWeight: 300, marginTop: 1 }}>

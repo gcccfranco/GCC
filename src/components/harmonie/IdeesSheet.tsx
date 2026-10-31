@@ -9,6 +9,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
 import { useStandaloneScrollLock } from "@/hooks/useStandaloneScrollLock";
@@ -18,7 +19,7 @@ import {
   ajouterIdee, ecarterSuggestion, getIdees, getRejets, modifierIdee,
   remettreSuggestion, suggestionsEcartees, supprimerIdee, type Idee, type Rejet,
 } from "@/lib/firebase/harmonie";
-import { apercuDuChangement, cinqPremieres, suggestionsPour, type Suggestion } from "@/lib/harmonie/suggestions";
+import { apercuDuChangement, cinqPremieres, regrouper, suggestionsPour, type Suggestion } from "@/lib/harmonie/suggestions";
 import { chiffreDuDegre, degresDeLaSuite } from "@/lib/harmonie/degres";
 import { semitonesTo, transposeLabel } from "@/lib/transpose";
 import { ficheDeLaTransition, transitionEntre } from "@/lib/harmonie/transitions";
@@ -26,9 +27,11 @@ import { modulationProposee, type ModulationProposee } from "@/lib/harmonie/modu
 import { MODULATIONS, type Modulation } from "@/lib/harmonie/regles";
 import { useCatalogue } from "@/lib/harmonie/useHarmonie";
 import type { Endroit } from "@/lib/harmonie/motifs";
+import { formatSectionName } from "@/lib/chordpro/parser";
 import type { ChordProSection } from "@/types/chordPro";
 import type { Fiche, Instrument } from "@/types/harmonie";
 import { ParagrapheFiche, TON_DES_FICHES } from "@/components/harmonie/TexteFiche";
+import { AccordTouchable } from "@/components/accords/AccordTouchable";
 
 export type Props = {
   open: boolean;
@@ -43,19 +46,45 @@ export type Props = {
    *  pour se relire juste quel que soit le ton choisi par chacun. */
   tonaliteOrigine?: string;
   instrument: Instrument;
-  /** Dans une setlist seulement : essayer l'idée dans Ma version. */
-  onEssayer?: (s: Suggestion, apres: string[]) => void;
+  /** Dans une setlist seulement : essayer l'idée dans Ma version, dans la
+   *  section choisie — `changements` : un par endroit de cette section. */
+  onEssayer?: (
+    s: Suggestion,
+    changements: { endroit: Endroit; apres: string[] }[],
+    sectionNom: string,
+  ) => void;
   /** Chant suivant de la setlist, pour la transition (lecture seule). */
   suivant?: { titre: string; tonalite: string };
   /** Poser une modulation sur la setlist — seulement pour qui peut la modifier. */
   onModuler?: (m: Modulation, prop: ModulationProposee) => void;
+  /** Dans une setlist : sélecteur du chant lu. Les identifiants de section se
+   *  répètent d'un chant à l'autre (« chorus-3-2 ») : « Montrer » cherche là. */
+  portee?: string;
 };
+
+/** La section visée, dans le chant lu : d'abord son occurrence, sinon (structure
+ *  modifiée dans la setlist, qui renumérote les occurrences) la première
+ *  occurrence de la même section. */
+function trouverLaSection(sectionUid: string, portee?: string): HTMLElement | null {
+  // Toutes les sections sous la portée (une fusion mélangée enveloppe chaque
+  // section de son chant à part).
+  const sections = Array.from(
+    document.querySelectorAll<HTMLElement>(portee ? `${portee} [data-section-uids]` : "[data-section-uids]"),
+  );
+  const uids = (el: HTMLElement) => (el.dataset.sectionUids ?? "").split(" ");
+  const sectionId = (uid: string) => uid.replace(/-\d+$/, "");
+  return (
+    sections.find((el) => uids(el).includes(sectionUid)) ??
+    sections.find((el) => uids(el).some((u) => sectionId(u) === sectionId(sectionUid))) ??
+    null
+  );
+}
 
 /** Montre l'endroit visé dans la partition affichée derrière la feuille : les
  *  sections portent déjà `data-section-uids` (le sommaire s'en sert). La
  *  feuille se ferme, la section défile au centre et s'entoure un instant. */
-function montrerLEndroit(endroit: Endroit, fermer: () => void) {
-  const el = document.querySelector<HTMLElement>(`[data-section-uids~="${endroit.sectionUid}"]`);
+function montrerLEndroit(endroit: Endroit, fermer: () => void, portee?: string) {
+  const el = trouverLaSection(endroit.sectionUid, portee);
   if (!el) return;
   fermer();
   requestAnimationFrame(() => {
@@ -63,6 +92,48 @@ function montrerLEndroit(endroit: Endroit, fermer: () => void) {
     el.classList.add("harmonie-surligne");
     setTimeout(() => el.classList.remove("harmonie-surligne"), 2500);
   });
+}
+
+/** Où en est le « Montrer i/n » de chaque carte : le prochain pas à montrer.
+ *  Au niveau du module, pour survivre à la fermeture de la feuille (Contenu est
+ *  démonté, et dans une setlist la feuille entière) ; perdu au rechargement. */
+const pasMontres = new Map<string, number>();
+
+type SectionDeCarte = NonNullable<Suggestion["sections"]>[number];
+
+/** Le nom d'une section de la carte, tel que le chant l'affiche. */
+function nomDeLaSection(c: SectionDeCarte, duChant: ChordProSection[], t: TFunction): string {
+  const section = duChant.find((x) => x.uid === c.uid);
+  return section ? formatSectionName(section, t) : c.nom;
+}
+
+/** « Couplets 1 et 2 · Refrain » : les sections d'une carte, les couplets de
+ *  numéros consécutifs contractés. */
+function nomsDesSections(cartes: SectionDeCarte[], duChant: ChordProSection[], t: TFunction): string {
+  const elements = cartes.map((c) => {
+    const section = duChant.find((x) => x.uid === c.uid);
+    const entier = section && !section.suffix && section.number && /^\d+$/.test(section.number);
+    return {
+      nom: nomDeLaSection(c, duChant, t),
+      base: section ? formatSectionName({ ...section, number: undefined, suffix: undefined }, t) : "",
+      numero: entier ? Number(section.number) : null,
+    };
+  });
+  const blocs: string[] = [];
+  for (let i = 0; i < elements.length; ) {
+    let j = i + 1;
+    const e = elements[i];
+    if (e.numero !== null) {
+      while (j < elements.length && elements[j].base === e.base && elements[j].numero === e.numero + (j - i)) j++;
+    }
+    const a = e.numero;
+    const b = e.numero !== null ? e.numero + (j - i - 1) : null;
+    if (j - i === 1) blocs.push(e.nom);
+    else if (j - i === 2) blocs.push(t("harmonie.sectionsEt", { type: e.base, a, b }));
+    else blocs.push(t("harmonie.sectionsA", { type: e.base, a, b }));
+    i = j;
+  }
+  return blocs.join(" · ");
 }
 
 export function IdeesSheet(props: Props) {
@@ -87,13 +158,17 @@ function degres(accords: string, tonalite: string): string {
   return suite.length ? suite.map(chiffreDuDegre).join(" – ") : "";
 }
 
-function Contenu({ slug, titre, sections, tonalite, tonaliteOrigine, instrument, onEssayer, suivant, onModuler, onClose }: Props) {
+function Contenu({ slug, titre, sections, tonalite, tonaliteOrigine, instrument, onEssayer, suivant, onModuler, onClose, portee }: Props) {
   const { t } = useTranslation();
   const { user, profile } = useProfile();
   const { fiches } = useCatalogue();
   const [rejets, setRejets] = useState<Rejet[]>([]);
   const [idees, setIdees] = useState<Idee[]>([]);
   const [tout, setTout] = useState(false);
+  // Carte dont le choix « Essayer dans Ma version, où ? » est déplié.
+  const [essayerOuvert, setEssayerOuvert] = useState<string | null>(null);
+  // Pour redessiner le « Montrer i/n » (le compteur vit hors du composant).
+  const [, redessiner] = useState(0);
 
   useEffect(() => {
     let vivant = true;
@@ -103,9 +178,35 @@ function Contenu({ slug, titre, sections, tonalite, tonaliteOrigine, instrument,
   }, [slug]);
 
   const suggestions = useMemo(
-    () => suggestionsPour(sections, tonalite, fiches, suggestionsEcartees(rejets)),
+    () => regrouper(suggestionsPour(sections, tonalite, fiches, suggestionsEcartees(rejets)), tonalite),
     [sections, tonalite, fiches, rejets],
   );
+  // Les cartes sans le filtre des refus : la liste « écartées » y range chaque
+  // refus dans sa carte.
+  const cartesCompletes = useMemo(
+    () => regrouper(suggestionsPour(sections, tonalite, fiches), tonalite),
+    [sections, tonalite, fiches],
+  );
+  const lignesEcartees = useMemo(() => {
+    const lignes: { cle: string; nom: string; rejets: Rejet[] }[] = [];
+    const rangees = new Set<string>();
+    for (const carte of cartesCompletes) {
+      const siens = rejets.filter((r) => (carte.ids ?? [carte.id]).includes(r.suggestion));
+      if (!siens.length) continue;
+      siens.forEach((r) => rangees.add(r.id));
+      lignes.push({ cle: siens.map((r) => r.id).join("+"), nom: carte.fiche.nom, rejets: siens });
+    }
+    // Un refus qui ne tombe dans aucune carte (chant modifié depuis) : sa ligne.
+    for (const r of rejets) {
+      if (rangees.has(r.id)) continue;
+      lignes.push({
+        cle: r.id,
+        nom: fiches.find((f) => f.id === r.suggestion.split("__")[0])?.nom ?? r.suggestion,
+        rejets: [r],
+      });
+    }
+    return lignes;
+  }, [cartesCompletes, rejets, fiches]);
   const { premieres, suite } = useMemo(() => cinqPremieres(suggestions, instrument), [suggestions, instrument]);
   const montrees = tout ? [...premieres, ...suite] : premieres;
 
@@ -113,7 +214,8 @@ function Contenu({ slug, titre, sections, tonalite, tonaliteOrigine, instrument,
 
   async function ecarter(s: Suggestion) {
     if (!user) return;
-    await ecarterSuggestion(slug, s.id, { uid: user.uid, auteur: nom });
+    // Un refus par section couverte : le format des refus ne change pas.
+    await Promise.all((s.ids ?? [s.id]).map((id) => ecarterSuggestion(slug, id, { uid: user.uid, auteur: nom })));
     setRejets(await getRejets(slug));
   }
 
@@ -130,6 +232,15 @@ function Contenu({ slug, titre, sections, tonalite, tonaliteOrigine, instrument,
         <ul className="space-y-2">
           {montrees.map((s) => {
             const apercu = apercuDuChangement(s, tonalite);
+            const cartes = s.sections ?? [];
+            const cle = `${slug}::${s.id}`;
+            const prochain = (pasMontres.get(cle) ?? 0) % Math.max(cartes.length, 1);
+            // Le changement appliqué à tous les endroits d'une section.
+            const changementsDe = (c: SectionDeCarte) =>
+              c.endroits.flatMap((endroit) => {
+                const a = apercuDuChangement(s, tonalite, endroit);
+                return a ? [{ endroit, apres: a.apresListe }] : [];
+              });
             return (
               <li key={s.id} className="rounded-xl bg-card p-3" data-suggestion={s.id}>
                 <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
@@ -141,14 +252,14 @@ function Contenu({ slug, titre, sections, tonalite, tonaliteOrigine, instrument,
                   </span>
                 </div>
                 <p className="mt-0.5 text-[13px] text-muted-foreground">
-                  {s.sectionNom}
-                  {s.endroits.length > 1 && ` · ${t("harmonie.endroits", { count: s.endroits.length })}`}
+                  {nomsDesSections(cartes, sections, t)}
+                  {cartes.length === 1 && s.endroits.length > 1 && ` · ${t("harmonie.endroits", { count: s.endroits.length })}`}
                 </p>
                 {apercu ? (
                   <p className="mt-1.5 text-[15px]">
-                    <span className="font-chord font-semibold">{apercu.avant}</span>
+                    <span className="font-chord font-semibold"><AccordTouchable etiquette={apercu.avant} visible /></span>
                     <span className="mx-1.5 text-muted-foreground">→</span>
-                    <span className="font-chord font-semibold">{apercu.apres}</span>
+                    <span className="font-chord font-semibold"><AccordTouchable etiquette={apercu.apres} visible /></span>
                     {/* Le degré en petit à côté : la même idée se relit dans
                         n'importe quelle tonalité. */}
                     <span className="ml-2 text-[13px] text-muted-foreground">
@@ -171,12 +282,38 @@ function Contenu({ slug, titre, sections, tonalite, tonaliteOrigine, instrument,
                   )
                 )}
                 <div className="mt-2 flex flex-wrap items-center gap-2">
-                  <Button variant="secondary" size="sm" onClick={() => montrerLEndroit(s.endroits[0], onClose)}>
-                    {t("harmonie.montrer")}
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => {
+                      // Un pas par section : le surlignage se fait par section.
+                      // Une section absente de la partition lue (structure
+                      // retouchée dans la setlist) est sautée.
+                      let k = prochain;
+                      for (let n = 0; n < cartes.length; n++, k = (k + 1) % cartes.length) {
+                        if (trouverLaSection(cartes[k].uid, portee)) break;
+                      }
+                      pasMontres.set(cle, (k + 1) % cartes.length);
+                      redessiner((n) => n + 1);
+                      montrerLEndroit(cartes[k].endroits[0], onClose, portee);
+                    }}
+                  >
+                    {cartes.length > 1
+                      ? t("harmonie.montrerPas", { i: prochain + 1, n: cartes.length })
+                      : t("harmonie.montrer")}
                   </Button>
-                  {onEssayer && apercu && (
-                    <Button size="sm" onClick={() => onEssayer(s, apercu.apresListe)}>
+                  {onEssayer && apercu && cartes.length === 1 && (
+                    <Button size="sm" onClick={() => onEssayer(s, changementsDe(cartes[0]), nomDeLaSection(cartes[0], sections, t))}>
                       {t("harmonie.essayer")}
+                    </Button>
+                  )}
+                  {onEssayer && apercu && cartes.length > 1 && (
+                    <Button
+                      size="sm"
+                      aria-expanded={essayerOuvert === s.id}
+                      onClick={() => setEssayerOuvert(essayerOuvert === s.id ? null : s.id)}
+                    >
+                      {t("harmonie.essayerOu")}
                     </Button>
                   )}
                   <button
@@ -187,6 +324,21 @@ function Contenu({ slug, titre, sections, tonalite, tonaliteOrigine, instrument,
                     {t("harmonie.neMarchePas")}
                   </button>
                 </div>
+                {onEssayer && apercu && cartes.length > 1 && essayerOuvert === s.id && (
+                  <div className="mt-2">
+                    <p className="text-[13px] text-muted-foreground">{t("harmonie.essayerOuTitre")}</p>
+                    <div className="mt-1.5 flex flex-wrap gap-2">
+                      {cartes.map((c) => {
+                        const nomC = nomDeLaSection(c, sections, t);
+                        return (
+                          <Button key={c.uid} size="sm" variant="secondary" onClick={() => onEssayer(s, changementsDe(c), nomC)}>
+                            {nomC}
+                          </Button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
               </li>
             );
           })}
@@ -203,33 +355,37 @@ function Contenu({ slug, titre, sections, tonalite, tonaliteOrigine, instrument,
         </button>
       )}
 
-      {rejets.length > 0 && (
+      {lignesEcartees.length > 0 && (
         <details className="mt-4">
           <summary className="cursor-pointer text-[13px] text-muted-foreground">
-            {t("harmonie.ecartees", { count: rejets.length })}
+            {t("harmonie.ecartees", { count: lignesEcartees.length })}
           </summary>
           <ul className="mt-2 space-y-1.5">
-            {rejets.map((r) => (
-              <li key={r.id} className="flex items-center gap-2 rounded-xl bg-card px-3 py-2 text-[13px]">
-                <span className="min-w-0 flex-1 truncate text-muted-foreground">
-                  {/* Quelle idée, et qui l'a écartée. */}
-                  {fiches.find((f) => f.id === r.suggestion.split("__")[0])?.nom ?? r.suggestion}
-                  {r.auteur && ` · ${r.auteur}`}
-                </span>
-                {(r.uid === user?.uid || isAdminUser(user)) && (
-                  <button
-                    type="button"
-                    className="shrink-0 underline underline-offset-4"
-                    onClick={async () => {
-                      await remettreSuggestion(slug, r.suggestion);
-                      setRejets(await getRejets(slug));
-                    }}
-                  >
-                    {t("harmonie.remettre")}
-                  </button>
-                )}
-              </li>
-            ))}
+            {lignesEcartees.map((ligne) => {
+              // Qui a écarté l'idée (une fois chacun).
+              const auteurs = [...new Set(ligne.rejets.map((r) => r.auteur).filter(Boolean))];
+              return (
+                <li key={ligne.cle} className="flex items-center gap-2 rounded-xl bg-card px-3 py-2 text-[13px]">
+                  <span className="min-w-0 flex-1 truncate text-muted-foreground">
+                    {/* Quelle idée, et qui l'a écartée. */}
+                    {ligne.nom}
+                    {auteurs.length > 0 && ` · ${auteurs.join(", ")}`}
+                  </span>
+                  {(isAdminUser(user) || ligne.rejets.every((r) => r.uid === user?.uid)) && (
+                    <button
+                      type="button"
+                      className="shrink-0 underline underline-offset-4"
+                      onClick={async () => {
+                        await Promise.all(ligne.rejets.map((r) => remettreSuggestion(slug, r.suggestion)));
+                        setRejets(await getRejets(slug));
+                      }}
+                    >
+                      {t("harmonie.remettre")}
+                    </button>
+                  )}
+                </li>
+              );
+            })}
           </ul>
         </details>
       )}
@@ -254,7 +410,7 @@ function Contenu({ slug, titre, sections, tonalite, tonaliteOrigine, instrument,
                     {prop.approche.length > 0 && (
                       <>
                         {" · "}
-                        <span className="font-chord font-semibold">{prop.approche.join(" – ")}</span>
+                        <span className="font-chord font-semibold"><AccordTouchable etiquette={prop.approche.join(" – ")} visible /></span>
                       </>
                     )}
                   </p>
@@ -286,7 +442,7 @@ function Contenu({ slug, titre, sections, tonalite, tonaliteOrigine, instrument,
               {transition.approche && (
                 <>
                   {" · "}
-                  <span className="font-chord font-semibold">{transition.approche}</span>
+                  <span className="font-chord font-semibold"><AccordTouchable etiquette={transition.approche} visible /></span>
                 </>
               )}
             </p>
@@ -375,9 +531,9 @@ function IdeesEquipe({
             <p className="text-[15px]">{i.texte}</p>
             {(i.avant || i.apres) && (
               <p className="mt-1 text-[15px]">
-                <span className="font-chord font-semibold">{lire(i.avant)}</span>
+                <span className="font-chord font-semibold"><AccordTouchable etiquette={lire(i.avant)} visible /></span>
                 <span className="mx-1.5 text-muted-foreground">→</span>
-                <span className="font-chord font-semibold">{lire(i.apres)}</span>
+                <span className="font-chord font-semibold"><AccordTouchable etiquette={lire(i.apres)} visible /></span>
               </p>
             )}
             {i.ficheId && fiches.some((f) => f.id === i.ficheId) && (

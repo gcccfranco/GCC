@@ -1,5 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
+import { ajouterChant, boutonTonalite, groupeTonalites, reglerElement } from "./helpers/editeurSetlist";
 
 // Chantier Setlist, lot 3 (docs/spec-setlist.md) : la tonalité la plus chantée
 // à Grace Church, validée par Timothée (docs/tonalites-recommandees.md), est
@@ -7,13 +8,14 @@ import { signInAs, type FakeProfile } from "./helpers/fakeSession";
 
 async function openSong(page: Page, path: string) {
   await page.goto(path, { waitUntil: "domcontentloaded" });
-  const select = page.locator("select").first();
+  // Dans la barre du chant : en deux volets, la liste (et son choix de thème) est à côté (lot U5).
+  const select = page.getByTestId("barre-outils").locator("select").first();
   await select.waitFor();
   return select;
 }
 
 const optionTexts = (page: Page) =>
-  page.locator("select").first().locator("option").evaluateAll((els) => els.map((e) => e.textContent?.trim()));
+  page.getByTestId("barre-outils").locator("select").first().locator("option").evaluateAll((els) => els.map((e) => e.textContent?.trim()));
 
 test("page du chant : démarre dans la recommandée, l'originale reste proposée (FR)", async ({ page }) => {
   const select = await openSong(page, "/songs/je-reviens-au-coeur");
@@ -35,14 +37,17 @@ test("page du chant : une originale écrite autrement (C#) reste dans le sélect
   expect(await optionTexts(page)).toContain("C# (orig.)");
 });
 
-test("page du chant : le bouton de retour ramène à la recommandée", async ({ page }) => {
+test("page du chant : plus de bouton de retour à la recommandée (retiré le 18/10/2026)", async ({ page }) => {
   const select = await openSong(page, "/songs/je-reviens-au-coeur");
+  await expect(select).toHaveValue("D");
   // Avant l'hydratation le choix est perdu : on recommence jusqu'à ce que la page réponde.
   await expect(async () => {
     await select.selectOption("Eb");
     await expect(select).toHaveValue("Eb", { timeout: 500 });
   }).toPass({ timeout: 15_000 });
-  await page.getByRole("button", { name: "Revenir à la tonalité recommandée" }).click();
+  await expect(page.getByRole("button", { name: "Revenir à la tonalité recommandée" })).toHaveCount(0);
+  // La recommandée reste dans le sélecteur.
+  await select.selectOption("D");
   await expect(select).toHaveValue("D");
 });
 
@@ -74,10 +79,11 @@ test("éditeur de setlist : un chant ajouté démarre dans la recommandée", asy
   await page.route(/docs\.google\.com\/spreadsheets/, (route) =>
     route.fulfill({ status: 200, contentType: "text/csv", body: "" }),
   );
-  await signInAs(page, musicien, {}, "/setlists/new");
-  await page.getByPlaceholder("Chercher un chant à ajouter…").fill("Je reviens au cœur");
-  await page.getByRole("button", { name: "Ajouter" }).first().click();
-  const key = page.getByLabel("Tonalité de Je reviens au cœur");
-  await expect(key).toHaveValue("D");
-  await expect(key.locator("option", { hasText: "Eb (orig.)" })).toHaveCount(1);
+  await signInAs(page, musicien, {}, "/setlists/new?autre=1");
+  await ajouterChant(page, "Je reviens au cœur");
+  // Lot U5 bis : la tonalité est un groupe de boutons dans les réglages du chant.
+  await reglerElement(page, "Je reviens au cœur");
+  const groupe = groupeTonalites(page, "Je reviens au cœur");
+  await expect(boutonTonalite(groupe, "D")).toBeChecked();
+  await expect(boutonTonalite(groupe, "Eb")).toHaveAccessibleName("Eb orig.");
 });

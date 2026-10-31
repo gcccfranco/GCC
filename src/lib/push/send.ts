@@ -3,6 +3,7 @@
 
 import webpush from "web-push";
 import { adminDb } from "./admin";
+import { avecBarreFinale } from "./notifications";
 
 let configured = false;
 function configure() {
@@ -75,7 +76,7 @@ async function dispatch(subs: SubDoc[], payload: PushPayload): Promise<{ sent: n
   if (!subs.length) return { sent: 0, failed: 0 };
   configure();
   const db = adminDb();
-  const body = JSON.stringify(payload);
+  const body = JSON.stringify(payload.url ? { ...payload, url: avecBarreFinale(payload.url) } : payload);
 
   let sent = 0;
   let failed = 0;

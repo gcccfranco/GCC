@@ -2,6 +2,7 @@
 
 import type { ChordProLine, Token } from "@/types/chordPro";
 import { pinyin_font } from "@/components/song/pinyinFont";
+import { AccordTouchable } from "@/components/accords/AccordTouchable";
 
 function isCJK(char: string): boolean {
   const cp = char.codePointAt(0) ?? 0;
@@ -72,7 +73,7 @@ export function JianpuLine({ line, showChords = true, showPinyin = true }: Jianp
               className="absolute bottom-0 font-bold font-chord text-chord dark:text-blue-400 text-sm whitespace-nowrap"
               style={{ left: `calc(${c.afterAllChars} * ${cellSize})` }}
             >
-              {c.chord}
+              <AccordTouchable etiquette={c.chord} />
             </span>
           ))}
         </div>

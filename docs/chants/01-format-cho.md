@@ -43,6 +43,7 @@ Dans cet ordre, une directive par ligne, puis une ligne vide :
 | `youtube` | lien fourni par Timothée | ligne omise |
 | `source` | nom du fichier dans `Partitions/` (voir « Source »), tel quel | — |
 | `recommended_key` | jamais à la création : posée par Timothée après validation | — |
+| `proposition` | **seulement** quand le chant naît d'une proposition de chant (« Proposer un chant », chant d'une setlist de Noël ou de Pâques en attente, `docs/spec-chants-fetes.md`, CF21) : l'identifiant de la proposition que Timothée donne (Réception le montre), recopié tel quel, sans espace, **jamais inventé ni cherché** ; en en-tête, sous `{key}` et `{recommended_key}`. Le site bascule alors la proposition en attente de la setlist vers ce chant | ligne omise |
 
 Une valeur inconnue s'omet ; on n'écrit ni `?`, ni une directive vide, ni un
 tempo estimé, ni un lien cherché ailleurs. Un thème absent de `themes.json`

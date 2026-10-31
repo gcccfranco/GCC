@@ -7,6 +7,16 @@
 
 import { adminDb } from "./admin";
 
+/** Chemin interne avec sa barre finale (le site sert ses pages ainsi ; sans elle, c'est une redirection 308 que le
+ *  service worker ne rejoue pas hors ligne). La barre se met avant « ? » et « # » ; une adresse à extension est laissée. */
+export function avecBarreFinale(url: string): string {
+  const fin = url.search(/[?#]/);
+  const chemin = fin === -1 ? url : url.slice(0, fin);
+  const reste = fin === -1 ? "" : url.slice(fin);
+  if (!chemin.startsWith("/") || chemin.endsWith("/") || (chemin.split("/").pop() ?? "").includes(".")) return url;
+  return `${chemin}/${reste}`;
+}
+
 export type BellKind = "manual" | "reminder" | "broadcast" | "presentation" | "scene" | "evenement" | "tache";
 
 export interface RecordNotificationInput {
@@ -33,7 +43,7 @@ export async function recordNotification(input: RecordNotificationInput): Promis
   await adminDb().collection("notifications").add({
     title: input.title,
     body: input.body,
-    url: input.url,
+    url: avecBarreFinale(input.url),
     kind: input.kind,
     recipients,
     everyone,

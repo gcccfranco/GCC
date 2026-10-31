@@ -1,5 +1,5 @@
 import type { FormItem, FormListItem, FormSectionItem } from "@/lib/setlist/formItems";
-import { isFormFusion, isFormTransition } from "@/lib/setlist/formItems";
+import { isFormFusion, isFormProposition, isFormTransition } from "@/lib/setlist/formItems";
 import type { SetlistItem, FusionSong, SectionNuance } from "@/types/setList";
 
 /** Sérialise les nuances non vides des sections, keyées par uid. */
@@ -61,6 +61,21 @@ export function buildSetlistItems(items: FormListItem[]): SetlistItem[] {
         sectionNotes: {},
         notes: "",
         transitionText: item.text,
+      };
+    }
+    if (isFormProposition(item)) {
+      return {
+        type: "proposition" as const,
+        songSlug: "",
+        position: idx + 1,
+        keyOverride: null,
+        showChords: false,
+        showPinyin: false,
+        useJianpu: false,
+        structureOverride: null,
+        sectionNotes: {},
+        notes: "",
+        proposition: { id: item.id, titre: item.titre },
       };
     }
     if (isFormFusion(item)) {
@@ -133,7 +148,7 @@ export function buildSetlistItems(items: FormListItem[]): SetlistItem[] {
 export function detectSetlistLanguage(items: FormListItem[]): "fr" | "zh" | "mixed" {
   const langs = new Set(
     items.flatMap((i) => {
-      if (isFormTransition(i)) return [];
+      if (isFormTransition(i) || isFormProposition(i)) return [];
       if (isFormFusion(i)) return i.songs.map((s) => s.song.language);
       return [i.song.language];
     })

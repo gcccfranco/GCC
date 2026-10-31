@@ -258,6 +258,7 @@ export function parseChordPro(source: string): ChordProAST {
     artist: "Inconnu",
     key: "C",
     recommendedKey: null,
+    proposition: null,
     jianpuKey: null,
     tempo: null,
     language: "fr",
@@ -357,6 +358,9 @@ export function parseChordPro(source: string): ChordProAST {
           break;
         case "recommended_key":
           metadata.recommendedKey = value || null;
+          break;
+        case "proposition":
+          metadata.proposition = value || null;
           break;
         case "jianpu_key":
           metadata.jianpuKey = value || null;
