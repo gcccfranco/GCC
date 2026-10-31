@@ -699,6 +699,7 @@
   .chants-chant .retour-chant:not([data-vers-setlist]) { display: none; }
   .chants-chant .song-zoom, .chants-chant .video-chant { margin-top: 0; }
   .chants-chant :is(.song-zoom, .song-zoom > div, .rangee-chant) { max-width: 900px; }
+  .chants-chant { container: chant-colonne / inline-size; }
 }
 @media screen and (pointer: fine) and (min-width: 1024px) {
   :root[data-barre="reduite"] .chants-volets { display: grid; grid-template-columns: clamp(320px, 37%, 400px) minmax(0, 1fr); column-gap: var(--ecart-volets); align-items: start; padding-left: var(--marge-page); --halo-chants: var(--sec-verse); }
@@ -712,6 +713,7 @@
   :root[data-barre="reduite"] .chants-chant .retour-chant:not([data-vers-setlist]) { display: none; }
   :root[data-barre="reduite"] .chants-chant .song-zoom, :root[data-barre="reduite"] .chants-chant .video-chant { margin-top: 0; }
   :root[data-barre="reduite"] .chants-chant :is(.song-zoom, .song-zoom > div, .rangee-chant) { max-width: 900px; }
+  :root[data-barre="reduite"] .chants-chant { container: chant-colonne / inline-size; }
 }
 @media screen and (pointer: fine) and (min-width: 1148px) {
   .chants-volets { display: grid; grid-template-columns: clamp(320px, 37%, 400px) minmax(0, 1fr); column-gap: var(--ecart-volets); align-items: start; padding-left: var(--marge-page); --halo-chants: var(--sec-verse); }
@@ -725,6 +727,21 @@
   .chants-chant .retour-chant:not([data-vers-setlist]) { display: none; }
   .chants-chant .song-zoom, .chants-chant .video-chant { margin-top: 0; }
   .chants-chant :is(.song-zoom, .song-zoom > div, .rangee-chant) { max-width: 900px; }
+  .chants-chant { container: chant-colonne / inline-size; }
+}
+
+/* Lot JE, JE4 (docs/spec-jianpu-entete-statistiques.md) : la page d'un chant en 简谱, deux colonnes quand la
+   colonne du chant (`.chants-chant`, conteneur nommé ci-dessus, volets seulement) a la place : l'en-tête
+   (titre, tonalité, statistiques, pastilles, bascule) à gauche, 260 px, collé sous la barre du chant ; le scan à
+   droite garde ses 900 px (la borne de lecture passe de 900 à 900 + 260 + 24). Dessous de 860 px de colonne,
+   ou sans conteneur (téléphone, tablette debout, impression) : l'agencement d'une colonne. `overflow-x: clip`
+   au lieu de `auto` sur `main` : un défilement propre à `main` empêcherait la colonne de coller.
+   --hauteur-barre-chant : la barre (`.barre-chant`, rangée de 52 px) mesurée à l'écran, hors téléphone. */
+@container chant-colonne (min-width: 860px) {
+  :root:root .chants-chant .song-zoom:has(> .chant-deux-colonnes) { max-width: calc(900px + 260px + 24px); overflow-x: clip; }
+  :root:root .chants-chant .song-zoom > .chant-deux-colonnes { max-width: calc(900px + 260px + 24px); display: grid; grid-template-columns: 260px minmax(0, 1fr); column-gap: 24px; align-items: start; }
+  .chant-deux-colonnes > .entete-colonne { position: sticky; top: calc(var(--nav-h) + var(--hauteur-barre-chant, 52px) + 12px); min-width: 0; }
+  .chant-deux-colonnes > .partition-colonne { min-width: 0; }
 }
 
 /* ══ Lot U5 bis — feuilles de l'éditeur de setlist (docs/spec-editeur-setlist.md, « Partout ») ══

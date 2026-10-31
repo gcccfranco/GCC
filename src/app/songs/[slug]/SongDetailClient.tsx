@@ -643,6 +643,7 @@ function useVersionDeLaSetlist(slug: string, setlistId: string | null, position:
           {/* L'en-tête du site reste au-dessus du scan (K3) ; le segment « 简谱 · Paroles »
               à droite des pastilles règle la préférence de l'appareil (D5). */}
             <SongView
+              pageChant
               statistiques={<StatistiquesDuChant slug={song.slug} />}
               bascule={
                 jianpuScore ? (
