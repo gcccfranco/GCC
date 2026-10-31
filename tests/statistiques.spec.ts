@@ -1,6 +1,6 @@
 import { expect, test, type Page, type TestInfo } from "@playwright/test";
 import { remplit, signInAs, type FakeProfile } from "./helpers/fakeSession";
-import { canFiltrerPresidence, canVoirStatistiques, entreesBackOffice, widgetsPermis } from "../src/lib/access";
+import { canFiltrerPresidence, canVoirStatistiques, canVoirStatsPersonne, entreesBackOffice, widgetsPermis } from "../src/lib/access";
 import { ajouterWidget, dispositionParDefaut } from "../src/lib/tableauDeBord/disposition";
 import { choisirReglage, groupesDeReglages } from "../src/lib/tableauDeBord/reglages";
 import type { UserProfile } from "../src/types/user";
@@ -38,6 +38,13 @@ test.describe("Statistiques (S2) : le droit (Q2)", () => {
     expect(canFiltrerPresidence(user(ADMIN))).toBe(true);
     expect(canFiltrerPresidence({ email: "membre@example.com" })).toBe(false);
     expect(canFiltrerPresidence(null)).toBe(false);
+  });
+
+  test("canVoirStatsPersonne : soi oui, un autre membre non, un admin oui, un visiteur non", () => {
+    expect(canVoirStatsPersonne(user(MEMBRE), MEMBRE.uid)).toBe(true);
+    expect(canVoirStatsPersonne(user(MEMBRE), RESPONSABLE.uid)).toBe(false);
+    expect(canVoirStatsPersonne(user(ADMIN), MEMBRE.uid)).toBe(true);
+    expect(canVoirStatsPersonne(null, MEMBRE.uid)).toBe(false);
   });
 
   test("« statistiques » n'est plus une entrée du menu (piste A, BO1) : la page garde ses droits, `canVoirStatistiques`", () => {

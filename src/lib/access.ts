@@ -805,6 +805,11 @@ export function canFiltrerPresidence(user: { email?: string | null } | null): bo
   return isAdminUser(user);
 }
 
+/** Lot SP, P2 : les stats d'une personne sont à elle et aux admins ; filtre côté site seulement, sans règle Firestore. */
+export function canVoirStatsPersonne(user: { uid?: string | null; email?: string | null } | null, uidCible: string): boolean {
+  return !!user && ((!!user.uid && user.uid === uidCible) || isAdminUser(user));
+}
+
 /** Entrées et widgets qui arrivent avec leur lot (Q17). Chaque lot retire la sienne de ces
  *  listes ; le rang est déjà gardé. U7 (Statistiques, Chants les plus joués) et U8 (l'entrée
  *  Calendrier en C3, son widget en C8) : arrivés. */
