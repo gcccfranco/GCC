@@ -128,6 +128,18 @@ Un commit par tranche, message en français. Aucune règle Firestore : le dire d
 le détail par groupe et ses chants les plus choisis ; un autre membre ne voit rien de Luc nulle part ; un admin
 choisit « Groupe Fidélité » dans Statistiques, voit la rangée du groupe, qui préside, et qui n'a pas présidé.
 
+## Avancement
+
+- **31/10/2026 — lot SP fait** (go de Timothée), sur `main` :
+  - **SP-A** : `statsPresidence`, `presidences`, `statsGroupe`, `nomDePresidence` ; `canVoirStatsPersonne`.
+    « Mois entre » = écart en jours / 30,44, au moins 1.
+  - **SP-B** : carte « Mes présidences » dans Moi, sous « Mes services » ; détail par
+    `FeuilleOuPanneau` (coquille partagée avec les statistiques d'un chant).
+  - **SP-C** : rangée du groupe (elle suit la période, **pas** le filtre de langue : la part FR / 中文 en est
+    le résultat) ; tableau « Présidences » en `div` ARIA (`role="table"`), pour ne pas gêner les tests qui
+    visent le tableau des chants.
+- Aucune règle Firestore, rien à publier.
+
 ## Hors périmètre
 
 Services au planning par personne ; setlists créées ; comparaison des groupes côte à côte ; export ; durcir les
