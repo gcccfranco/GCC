@@ -45,6 +45,8 @@ const SPECS_GRAND_ECRAN = [
   /acces-organigramme-ecrans\.spec\.ts/,
   // Lot « chants des fêtes » (docs/spec-chants-fetes.md, CF-C) : la page de la fête, chants et musiques dans l'ordre de passage.
   /chants-fetes-agencement\.spec\.ts/,
+  // Lot SP, SP-B (docs/spec-stats-personnes-groupes.md) : « Mes présidences » dans Moi, feuille ou panneau.
+  /mes-presidences\.spec\.ts/,
   // Lot U5 (docs/spec-deux-volets.md) : la setlist en deux volets.
   /setlist-deux-volets\.spec\.ts/,
   // … et Chants en deux volets.

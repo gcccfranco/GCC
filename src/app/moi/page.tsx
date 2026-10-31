@@ -18,6 +18,7 @@ import { CarteCompte } from "@/components/moi/CarteCompte";
 import { CarteCeQueTuPeuxFaire, CarteMesEquipes } from "@/components/moi/CartesAcces";
 import { ReglagesNotifications } from "@/components/moi/ReglagesNotifications";
 import { ApercuHarmonie, ApercuServices, ApercuTaches } from "@/components/moi/Apercus";
+import { MesPresidences } from "@/components/stats/MesPresidences";
 import { useAccesHarmonie } from "@/lib/harmonie/useHarmonie";
 import { RequireAuth } from "@/components/auth/RequireAuth";
 import { EnTetePage } from "@/components/layout/EnTetePage";
@@ -129,7 +130,10 @@ function MoiClient() {
   // Équipes, Harmonie, Tâches) ; leur « Tout voir » mène aux pages, rien ne disparaît.
   const apercus = (
     <div key="apercus" className="grid items-start gap-4 md:grid-cols-2">
-      <ApercuServices />
+      <div className="min-w-0 space-y-4">
+        <ApercuServices />
+        <MesPresidences profile={profile} />
+      </div>
       {BACK_OFFICE && equipes.length > 0 && user && <ApercuTaches equipes={equipes} />}
       {!harmonie.chargement && harmonie.peut && <ApercuHarmonie piano={harmonie.piano} />}
       {BACK_OFFICE && <CarteMesEquipes profile={profile} />}

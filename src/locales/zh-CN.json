@@ -4063,6 +4063,21 @@
       "aucune": "此期间未唱过",
       "note": "已发布且已过去的歌单，自 {{date}} 起",
       "toutes": "全部统计"
+    },
+    "presidences": {
+      "titre": "我的主领",
+      "visible": "仅你和管理员可见",
+      "nombre": "次主领",
+      "derniere": "最近",
+      "groupes": "团契",
+      "groupe": "团契",
+      "surtout": "主要在 {{service}}（{{count}}）",
+      "prochaineLe": "下次 {{date}}",
+      "chants": "我最常选的诗歌",
+      "jamais_one": "从未选过：{{count}} 首",
+      "jamais_other": "从未选过：{{count}} 首",
+      "note": "以「{{nom}}」计算 · 已发布且已过去的歌单",
+      "aucune": "此期间没有主领"
     }
   }
 }

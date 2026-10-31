@@ -7,7 +7,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { Trans, useTranslation } from "react-i18next";
-import { ChevronRight, X } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import { useAuth } from "@/lib/firebase/auth";
 import { canVoirStatistiques } from "@/lib/access";
 import { setlistsPourStats } from "@/lib/stats/setlistsPourStats";
@@ -15,11 +15,8 @@ import {
   debutDeLHistorique, jourCourt, jourEnLettres, serviceCourt, statsDuChant, type Periode,
 } from "@/lib/stats/chantsJoues";
 import { chargerIndexChants } from "@/hooks/useSongsIndex";
-import { useDeuxVolets } from "@/hooks/useDeuxVolets";
-import { useStandaloneScrollLock } from "@/hooks/useStandaloneScrollLock";
 import { Pilules } from "@/components/layout/Onglets";
-import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
-import { Drawer, DrawerContent, DrawerDescription, DrawerTitle } from "@/components/ui/drawer";
+import { FeuilleOuPanneau } from "@/components/stats/FeuilleOuPanneau";
 import type { FSSetlist } from "@/lib/firebase/setlists";
 import type { SongIndexEntry } from "@/types/song";
 
@@ -34,13 +31,11 @@ export function StatistiquesDuChant({ slug }: { slug: string }) {
   const zh = i18n.language === "zh-CN";
   const { user, loading } = useAuth();
   const connecte = !loading && canVoirStatistiques(user);
-  const deuxVolets = useDeuxVolets();
   // Même « aujourd'hui » que la page Statistiques.
   const aujourdhui = useMemo(() => new Date().toISOString().split("T")[0], []);
   const [lecture, setLecture] = useState<Lecture | null>(null);
   const [ouvert, setOuvert] = useState(false);
   const [periode, setPeriode] = useState<ChoixPeriode>("debut");
-  useStandaloneScrollLock(ouvert && !deuxVolets);
 
   useEffect(() => {
     if (!connecte) return;
@@ -102,34 +97,12 @@ export function StatistiquesDuChant({ slug }: { slug: string }) {
         <ChevronRight aria-hidden className="h-3.5 w-3.5 shrink-0" />
       </button>
 
-      {deuxVolets ? (
-        <Dialog open={ouvert} onOpenChange={setOuvert}>
-          <DialogContent
-            data-testid="statistiques-chant-panneau"
-            aria-describedby={undefined}
-            className="bottom-0 right-0 top-[var(--nav-h)] flex w-[380px] max-w-full flex-col overflow-hidden border-l border-border bg-background shadow-xl"
-          >
-            <div className="flex shrink-0 items-center justify-between border-b border-border pl-4 pr-1">
-              <DialogTitle className="font-semibold text-foreground">{t("stats.chant.titre")}</DialogTitle>
-              <button
-                type="button" onClick={() => setOuvert(false)} aria-label={t("common.buttons.close")}
-                className="flex h-11 w-11 items-center justify-center text-muted-foreground hover:text-foreground"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-            <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4">{detail}</div>
-          </DialogContent>
-        </Dialog>
-      ) : (
-        <Drawer open={ouvert} onOpenChange={setOuvert}>
-          <DrawerContent data-testid="statistiques-chant-feuille" className="max-h-[88vh] md:mx-auto md:max-w-3xl">
-            <DrawerTitle className="px-4 pt-3 text-center font-semibold text-foreground">{t("stats.chant.titre")}</DrawerTitle>
-            <DrawerDescription className="sr-only">{t("stats.chant.titre")}</DrawerDescription>
-            <div className="overflow-y-auto px-4 pb-6 pt-3">{detail}</div>
-          </DrawerContent>
-        </Drawer>
-      )}
+      <FeuilleOuPanneau
+        ouvert={ouvert} onOpenChange={setOuvert} titre={t("stats.chant.titre")}
+        testidPanneau="statistiques-chant-panneau" testidFeuille="statistiques-chant-feuille"
+      >
+        {detail}
+      </FeuilleOuPanneau>
     </>
   );
 }
