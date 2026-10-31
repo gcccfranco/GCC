@@ -119,4 +119,28 @@ de la page chant prend les règles des Dp puisqu'il partage `StructureStrip`, ri
 
 ## Avancement
 
-- 31/10/2026 : planche v2 et spec. **En attente du go** de Timothée pour le lot RS.
+- 31/10/2026 : planche v2 et spec. go de Timothée le même jour (« go pour le lot RS »).
+- 31/10/2026 : **lot RS codé** sur `claude/laughing-euler-q28fye` (pas en ligne) : RS-A `6b576b1` (règles des Dp,
+  `src/lib/setlist/dp.ts`), RS-B `5c2a9ff` (rappel Sections uniques), RS-D `63aecbc` (indice, `IndiceRappel.tsx`),
+  RS-C `2ad6b2d` (rappel Ordre joué, Dp imprimé une fois), passe finale `6826bef`, corrections de relecture `299efb4`.
+  Passe finale aux cinq projets : 785 réussis, 63 ignorés (propres à un appareil), 2 échecs expliqués (test ZH des
+  Sections uniques sans page 2 en deux colonnes, désormais ignoré). 70 captures (quatre dispositions + 1 440 px,
+  clair et sombre, Prince de paix FR et un chant ZH) triées puis regardées à l'œil.
+- **Choix faits en codant** :
+  - Annotations (décision de Timothée) : chaque annotation garde la hauteur du rappel au tracé (`rappel`,
+    `src/lib/annotations/strokes.ts`, `recaler`) ; les traits se décalent de l'écart (annotation d'avant le lot :
+    32 px × échelle en Sections uniques, 0 en Ordre joué). Une page recomposée sans annotation relit celle de
+    l'ancienne pagination dont la page commence par la même section ; sauvegarde sous la nouvelle clé, l'ancienne
+    jamais effacée. Pages 2+ recomposées (6 chants, 100/150 %, 3 appareils) : Ordre joué 19/106, Sections uniques
+    6/101. Puis Timothée : « on peut perdre les annotations, c'est pas grave » — donc pas de parade de plus pour
+    les pages contenant un Dp fusionné en Ordre joué (elles changent de clé).
+  - Réserve du rappel mesurée au pire cas (toutes pastilles pleines avec nuance), plancher 50 px.
+  - Bulle d'indice : clé écrite dès qu'elle paraît ; posée par-dessus le haut de la page, elle couvre le libellé de
+    la 1re section jusqu'au toucher ou à la page suivante (voulu : hors pagination).
+  - Couleur d'origine des Dp dans le corps : en Structure seule seulement (Ordre joué garde le cadre gris).
+- **Reste / connu** : réserve surestimée quand le rappel réel est plus court (points, téléphone) ; ancienne réserve
+  approximée à 32 px (un ancien rappel sur deux lignes n'est pas modélisé) ; un balayage commencé sur la bulle ne
+  tourne pas la page ; deux Dp de chants différents au même id peuvent se confondre dans une fusion en structure
+  mixte ; Structure seule au téléphone à 150 % : libellés longs et pastilles de nuance débordent du cadre (déjà
+  avant le lot) ; le premier « Dp ×2 » du bandeau s'élargit de sa ligne de nuances (« mp ↗ → mf »). Mise en ligne :
+  sur ordre de Timothée.
