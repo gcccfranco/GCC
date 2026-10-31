@@ -142,8 +142,14 @@ test.describe("annotations : décalage du rappel (pur)", () => {
     const r = recaler(base, 50, 32, 800);
     expect(r.rappel).toBe(50);
     expect(r.strokes[0].points[0][1]).toBeCloseTo(118, 5);
-    // Viewport d'enregistrement plus petit : l'écart est rapporté à l'espace d'origine.
-    expect(recaler({ ...base, h: 400 }, 50, 32, 800).strokes[0].points[0][1]).toBeCloseTo(100 + 9, 5);
+    // Viewport d'enregistrement plus petit (h = 400, écran 800) : tout est rapporté à l'espace de data.h.
+    // Rappel d'écran 50 -> 25 stocké, ancien 32 -> 16 : décalage de 9 ; la valeur réécrite est dans l'espace de data.h.
+    const petit = recaler({ ...base, h: 400 }, 50, 32, 800);
+    expect(petit.strokes[0].points[0][1]).toBeCloseTo(100 + 9, 5);
+    expect(petit.rappel).toBeCloseTo(25, 5);
+    // Avec le champ (espace de data.h) : 25 = 50 px d'écran, rien ne bouge ; 30 : le contenu a monté de 5.
+    expect(recaler({ ...base, h: 400, rappel: 25 }, 50, 32, 800).strokes[0].points[0][1]).toBe(100);
+    expect(recaler({ ...base, h: 400, rappel: 30 }, 50, 32, 800).strokes[0].points[0][1]).toBeCloseTo(95, 5);
     // Avec le champ : l'ancienne valeur par défaut est ignorée.
     expect(recaler({ ...base, rappel: 50 }, 50, 32, 800).strokes[0].points[0][1]).toBe(100);
     expect(recaler({ ...base, rappel: 60 }, 50, 32, 800).strokes[0].points[0][1]).toBeCloseTo(90, 5);
