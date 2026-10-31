@@ -1289,8 +1289,10 @@ par delta sur `majLe` ; LF2 profils gardés 10 min ; LF3 « À faire » et pasti
 écritures ; LF4 cloche bridée à une passe par minute ; LF5 fois des tâches en une requête par équipe. Tests :
 `tests/lectures-firestore.spec.ts`. **Ordre de mise en ligne de LF5** (écart avec la spec, plus sûr) :
 1. fusion dans `main` (sans la règle, repli tâche par tâche) ; 2. Timothée lance
-`npx tsx --env-file=.env.local scripts/rattrapage-fois-equipe.ts` (`--essai` d'abord) ; 3. il publie la règle
-`{chemin=**}/fois/{date}` de `firestore.rules`. Publiée avant le rattrapage, elle cacherait les fois anciennes ;
+`npx tsx --env-file=.env.local scripts/rattrapage-fois-equipe.ts` (`--essai` d'abord) ; 3. console Firebase ›
+Firestore › Index › Champ unique : exemption pour `fois`, champ `equipe`, portée « Groupe de collections »,
+croissant (pas créée seule ; sans elle, 400 et repli) ; 4. il publie la règle `{chemin=**}/fois/{date}` de
+`firestore.rules`. Publiée avant le rattrapage, elle cacherait les fois anciennes ;
 rattrapage avant la fusion, les fois cochées entre-temps resteraient sans `equipe`. Après la mise en ligne :
 comparer la courbe « Utilisation » de la console sur 24 h.
 

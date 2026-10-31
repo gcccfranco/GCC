@@ -130,6 +130,11 @@ Aujourd'hui `listTaches(equipe)` fait 1 requête pour les tâches + **1 par tâc
 - **Ordre de mise en ligne** (à écrire dans le compte rendu et la feuille de route) : 1. Timothée publie la
   règle ; 2. il lance le rattrapage ; 3. seulement ensuite la fusion dans `main`. Sans le rattrapage, les fois
   anciens seraient invisibles à la requête unique.
+- **Révisé au codage (31/10/2026)** : 1. fusion dans `main` (sans la règle, repli tâche par tâche ; toute fois
+  nouvelle porte `equipe`) ; 2. rattrapage ; 3. index de champ unique `fois.equipe`, portée « groupe de
+  collections » (console › Firestore › Index ; Firestore ne le crée pas seul, sans lui la requête répond 400 et
+  le repli joue) ; 4. la règle, en dernier. L'ordre initial laissait sans `equipe` les fois cochées entre le
+  rattrapage et la fusion.
 
 ## Tests (Playwright, trois appareils)
 

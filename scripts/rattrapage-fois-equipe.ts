@@ -8,8 +8,10 @@
 //   npx tsx --env-file=.env.local scripts/rattrapage-fois-equipe.ts           # pose le champ
 //
 // Ordre de mise en ligne : 1. fusion dans main (sans la règle, `listTaches` retombe sur la lecture tâche par
-// tâche, et toute nouvelle fois porte déjà `equipe`) ; 2. lancer ce script ; 3. publier en dernier la règle
-// `{chemin=**}/fois/{date}` de firestore.rules (console Firebase). Règle publiée avant ce script : les fois
+// tâche, et toute nouvelle fois porte déjà `equipe`) ; 2. lancer ce script ; 3. console Firebase › Firestore ›
+// Index › Champ unique : ajouter une exemption pour le groupe de collections `fois`, champ `equipe`, portée
+// « Groupe de collections », ordre croissant (Firestore ne le crée pas seul ; sans lui la requête unique répond
+// 400 et le repli joue) ; 4. publier en dernier la règle `{chemin=**}/fois/{date}` de firestore.rules. Règle publiée avant ce script : les fois
 // anciennes seraient invisibles à la requête unique. Relançable sans effet : ne touche que les documents où `equipe` manque
 // ou diffère du chemin.
 
