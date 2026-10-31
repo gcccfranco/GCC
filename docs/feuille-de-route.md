@@ -1262,6 +1262,14 @@ Bibliothèque de l'éditeur (détail dans la section « Avancement » de la spec
 recertifiées à l'œil, en-tête du site repris ; deux colonnes seulement quand la colonne du chant dépasse
 860 px (décision du 31/10/2026). Quatre références bibliques gravées douteuses à vérifier (spec, « Avancement »).
 
+### AI. Statistiques par personne et par groupe (Timothée, 31/10/2026) → `spec-stats-personnes-groupes.md`
+
+« Des stats par personnes que la personne concernée peut voir, et que les admins peuvent voir. Et aussi des
+stats par groupes. » Pas de nouvelle page. Planche (https://claude.ai/artifact/LKps7YqsFPqSjDmpj21p1b) validée
+le 31/10/2026 : « Mes présidences » dans Moi (personne + admins), filtre Présidence enrichi pour les admins,
+résumé de groupe dans Statistiques (chants pour tous, présidences pour les admins). Lot **SP** (SP-A à SP-C),
+**en attente de go**. Aucune règle Firestore.
+
 ## 4. Carte des modules de l'app « GCC »
 
 À valider par Timothée avant toute spec de module (les modules existants ne
