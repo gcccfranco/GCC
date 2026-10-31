@@ -86,3 +86,86 @@ test("la marque est posée à la connexion, effacée à la déconnexion", async 
   await page.getByText("Déconnexion", { exact: true }).click();
   await expect.poll(() => page.evaluate((c) => localStorage.getItem(c), MARQUE)).toBeNull();
 });
+
+// C6 : la forme est retenue aussi. Un responsable (profil fictif) retrouve, pendant l'attente, le sélecteur
+// App · Back-Office et les entrées du Back-Office ; un membre ordinaire n'a pas le sélecteur.
+const FORME = "gcc-forme";
+const RESPONSABLE: FakeProfile = {
+  uid: "u-ondine", email: "ondine@example.com", firstName: "Ondine", lastName: "T.", planningName: "Ondine T.",
+  responsabilites: ["planning:culte"],
+};
+const selecteur = (page: Page) => page.getByRole("group", { name: "Choisir l'espace" }).filter({ visible: true });
+const forme = (page: Page) => page.evaluate((c) => localStorage.getItem(c), FORME);
+
+/** Responsable connecté au Back-Office (sa forme est retenue), puis page rechargée avec Firebase retenu. */
+async function rouvrirResponsableEnAttente(page: Page, vers = "/back-office") {
+  await sansSheet(page);
+  await signInAs(page, RESPONSABLE, {}, vers);
+  await expect.poll(() => forme(page)).not.toBeNull();
+  const liberer = await retenirFirebase(page);
+  await page.reload();
+  return liberer;
+}
+
+test("responsable : pendant l'attente, le sélecteur App · Back-Office et les entrées du Back-Office sont là", async ({ page }, info) => {
+  const liberer = await rouvrirResponsableEnAttente(page);
+  expect(JSON.parse((await forme(page))!)).toEqual({ responsable: true, messages: true, entreesBackOffice: ["afaire", "calendrier", "planning", "messages"] });
+  await expect(page.locator("html")).toHaveAttribute("data-responsable", "1");
+  await expect(connexion(page)).not.toBeVisible();
+  await expect(selecteur(page)).toBeVisible();
+  const barre = page.getByTestId(aBarreLaterale(info) ? "barre-laterale" : "barre-du-bas");
+  for (const nom of ["À faire", "Calendrier", "Planning"]) await expect(barre.getByRole("link", { name: nom, exact: true })).toBeVisible();
+  // Messages : une entrée de la barre latérale, sinon l'icône de l'en-tête ; sans pastille pendant l'attente.
+  if (aBarreLaterale(info)) await expect(barre.getByRole("link", { name: "Messages", exact: true })).toBeVisible();
+  else await expect(page.getByTestId("icone-messages")).toBeVisible();
+  await expect(page.getByTestId("pastille")).toHaveCount(0);
+  await page.screenshot({ path: `test-results/chargement/responsable-${info.project.name}.png` });
+  liberer();
+  // Le profil arrivé, la forme réelle remplace la forme retenue : la même.
+  await expect(selecteur(page)).toBeVisible();
+  for (const nom of ["À faire", "Calendrier", "Planning"]) await expect(barre.getByRole("link", { name: nom, exact: true })).toBeVisible();
+});
+
+test("responsable : l'attente sur une page de l'App garde le sélecteur", async ({ page }) => {
+  const liberer = await rouvrirResponsableEnAttente(page, "/songs");
+  await expect(selecteur(page)).toBeVisible();
+  liberer();
+  await expect(selecteur(page)).toBeVisible();
+});
+
+test("membre ordinaire : pas de sélecteur pendant l'attente, et une forme retenue sans responsable", async ({ page }) => {
+  const liberer = await rouvrirEnAttente(page);
+  expect(JSON.parse((await forme(page))!)).toEqual({ responsable: false, messages: false, entreesBackOffice: [] });
+  await expect(page.locator("html")).not.toHaveAttribute("data-responsable", "1");
+  await expect(page.getByRole("group", { name: "Choisir l'espace" })).toHaveCount(0);
+  liberer();
+  await expect(page.getByRole("group", { name: "Choisir l'espace" })).toHaveCount(0);
+});
+
+test("forme illisible : comportement d'avant (forme du membre ordinaire pendant l'attente)", async ({ page }) => {
+  const liberer = await rouvrirResponsableEnAttente(page, "/songs");
+  await page.evaluate((c) => localStorage.setItem(c, "{pas du json"), FORME);
+  await page.reload();
+  await expect(connexion(page)).not.toBeVisible();
+  liberer();
+  // Le profil arrivé, la vraie forme est retenue de nouveau.
+  await expect(selecteur(page)).toBeVisible();
+  await expect.poll(() => forme(page)).toContain('"responsable":true');
+});
+
+test("la forme est effacée à la déconnexion", async ({ page }) => {
+  await sansSheet(page);
+  await signInAs(page, RESPONSABLE, {}, "/songs");
+  await expect.poll(() => forme(page)).not.toBeNull();
+  await page.goto("/moi");
+  await page.getByText("Déconnexion", { exact: true }).click();
+  await expect.poll(() => forme(page)).toBeNull();
+  await expect(page.locator("html")).not.toHaveAttribute("data-responsable", "1");
+});
+
+test("session expirée : la forme s'efface avec la marque", async ({ page }) => {
+  await sansSheet(page);
+  await page.addInitScript(([c, f]) => { localStorage.setItem(c, "1"); localStorage.setItem(f, JSON.stringify({ responsable: true, messages: false, entreesBackOffice: ["afaire"] })); }, [MARQUE, FORME]);
+  await page.goto("/songs");
+  await expect.poll(() => forme(page)).toBeNull();
+});

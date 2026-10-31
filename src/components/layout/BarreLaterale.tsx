@@ -31,7 +31,7 @@ import { getBarreReduite, setBarreReduite, suivreBarreReduite } from "@/lib/barr
 import { usePastilles } from "@/lib/tableauDeBord/usePastilles";
 import { Cloche } from "@/components/layout/Cloche";
 import { MenuCompte, useNomDuMembre } from "@/components/layout/MenuCompte";
-import { SelecteurEspace } from "@/components/layout/SelecteurEspace";
+import { SelecteurEspace, useFormeAffichee } from "@/components/layout/SelecteurEspace";
 import { ReportDialog } from "@/components/report/ReportDialog";
 import { Drawer, DrawerOverlay, DrawerPortal, DrawerTitle } from "@/components/ui/drawer";
 import { useStandaloneScrollLock } from "@/hooks/useStandaloneScrollLock";
@@ -212,8 +212,9 @@ function ContenuBarre({
   const { t, i18n } = useTranslation();
   const pathname = usePathname() || "";
   const { user, loading, probablementConnecte } = useAuth();
-  const { profile } = useProfile();
-  // Lot CH (C1, C2) : la marque « était connecté » fait dessiner la forme du membre pendant l'attente.
+  // Lot CH (C1, C2, C6) : la marque « était connecté » fait dessiner la forme du membre pendant l'attente,
+  // et les entrées du Back-Office que le profil avait données.
+  const forme = useFormeAffichee();
   const attente = loading && probablementConnecte;
   const { resolvedTheme, setTheme } = useTheme();
   const dark = mounted && resolvedTheme === "dark";
@@ -228,7 +229,7 @@ function ContenuBarre({
   // les entrées que donnent les droits (`entreesBackOffice`).
   const entrees = loading && !attente
     ? []
-    : entreesBarre(espaceDe(pathname), { connecte: !!user || attente, backOffice: BACK_OFFICE, permises: entreesBackOffice(user, profile) });
+    : entreesBarre(espaceDe(pathname), { connecte: !!user || attente, backOffice: BACK_OFFICE, permises: forme.entrees });
   // Sur une setlist, « Setlists » rouvre la liste filtrée qu'on a quittée (U5, Q7).
   const listeSetlists = useSyncExternalStore(rienASuivre, listeSetlistsRetenue, () => "/setlists");
 
@@ -281,7 +282,7 @@ function ContenuBarre({
         {entrees.map((entree) => {
           const { href, cle, Icone } = entree;
           const active = estEntreeActive(entree, pathname);
-          const n = pastilles[href] ?? 0;
+          const n = forme.retenue ? 0 : (pastilles[href] ?? 0);
           return (
             <Link
               key={href}

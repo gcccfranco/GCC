@@ -7,10 +7,9 @@ import { BACK_OFFICE } from "@/lib/backOffice";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/lib/firebase/auth";
 import { useProfile } from "@/lib/firebase/users";
-import { entreesBackOffice } from "@/lib/access";
 import { useScrollDirection } from "@/hooks/useScrollDirection";
 import { entreesBarre, espaceDe, estEntreeActive, ongletsBackOffice, ONGLET_APP } from "@/lib/navigation";
-import { useDernierePage } from "@/components/layout/SelecteurEspace";
+import { useDernierePage, useFormeAffichee } from "@/components/layout/SelecteurEspace";
 
 /**
  * Barre d'onglets fixée en bas d'écran, sur téléphone et tablette en portrait ;
@@ -28,9 +27,11 @@ export function MobileTabBar() {
   const { user, loading, probablementConnecte } = useAuth();
   // Lot CH (C1, C2) : la marque « était connecté » fait dessiner la barre du membre pendant l'attente.
   const attente = loading && probablementConnecte;
-  const { profile, loading: profilEnCours } = useProfile();
+  // C6 : pendant l'attente du profil, les onglets du Back-Office que la dernière visite avait donnés.
+  const forme = useFormeAffichee();
+  const { loading: profilEnCours } = useProfile();
   const auBackOffice = BACK_OFFICE && espaceDe(pathname) === "back-office";
-  const permises = auBackOffice ? entreesBackOffice(user, profile) : [];
+  const permises = auBackOffice ? forme.entrees : [];
   const app = useDernierePage("app");
   const [mounted, setMounted] = useState(false);
   const [fullscreen, setFullscreen] = useState(false);
@@ -47,8 +48,8 @@ export function MobileTabBar() {
   }, []);
 
   if (!mounted || (loading && !attente) || fullscreen) return null;
-  // Au Back-Office, on attend le profil : jamais une barre qui change sous le doigt.
-  if (auBackOffice && profilEnCours) return null;
+  // Au Back-Office, on attend le profil : jamais une barre qui change sous le doigt (sauf la forme retenue, C6).
+  if (auBackOffice && profilEnCours && !forme.retenue) return null;
   // Mêmes entrées que la barre latérale (lot U4) ; back-office coupé (lot 18) :
   // la section Évènements n'est pas en ligne.
   const tabs = permises.length > 0
