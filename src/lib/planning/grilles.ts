@@ -101,7 +101,8 @@ export const COLONNES_CULTE: ColonneGrille[] = [
   col("sono", "sono", 7),
   col("ppt", "ppt", 8),
   col("orateur", "orateur", 9),
-  col("traduction", "trad", 10),
+  // Traduction facultative (Timothée, 31/10/2026) : on n'a pas toujours besoin d'un traducteur.
+  col("traduction", "trad", 10, true),
   // Ajoutée au T4 2026 : masquée tant qu'aucune case de la période ne la porte.
   col("sainteCene", "sainteCene", 11, true),
 ]
@@ -128,7 +129,7 @@ export const GRILLE_INTERGROUPE: DefinitionGrille = {
     col("presidence", "presidence", 1), col("choriste1", "choriste1", 2), col("choriste2", "choriste2", 3),
     col("choriste3", "choriste3", 4), col("piano", "piano", 5), col("guitare", "guitare", 6),
     col("cajonBatterie", "cajonBatt", 7), col("sonoLive", "sonoLive", 8), col("ppt", "ppt", 9),
-    col("orateur", "orateur", 10), col("traduction", "trad", 11),
+    col("orateur", "orateur", 10), col("traduction", "trad", 11, true),
   ],
 }
 
@@ -141,7 +142,7 @@ export const GRILLE_INTERFRANCO: DefinitionGrille = {
   colonnes: [
     col("presidence", "presidence", 1), col("choriste1", "choriste1", 2), col("choriste2", "choriste2", 3),
     col("piano", "piano", 4), col("guitare", "guitare", 5), col("cajonBatterie", "cajonBatt", 6),
-    col("sonoLive", "sonoLive", 7), col("ppt", "ppt", 8), col("orateur", "orateur", 9), col("traduction", "trad", 10),
+    col("sonoLive", "sonoLive", 7), col("ppt", "ppt", 8), col("orateur", "orateur", 9), col("traduction", "trad", 10, true),
   ],
 }
 

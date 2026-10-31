@@ -56,7 +56,7 @@ test.describe("À faire (BO-B) : la fonction pure", () => {
     const [plus] = lignesDe(r, "plusTard");
     expect(plus).toMatchObject({ id: "cases:culte:plusTard", verbe: "remplir", href: "/back-office/planning/culte", date: "2026-11-22" });
     expect(plus.colonnes).toMatchObject([{ cle: "batterie", n: 1 }, { cle: "ppt", n: 1 }]);
-    expect([...plus.equipes].sort()).toEqual(["louange", "regie"]);
+    expect([...plus.equipes].sort()).toEqual(["louange"]); // lot RS, RS-D : plus de colonnes Régie, PPT suit Louange
   });
 
   test("cases vides : plusieurs référents ou aucun, les prénoms sont distincts", () => {

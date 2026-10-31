@@ -140,7 +140,8 @@ test("ordinateur et tablette : les colonnes sont dans l'ordre du Sheet", async (
   ordinateurEtTablette();
   await open(page, PUBLIEUR, "/planning/culte");
   await expect(page.getByTestId("grille-colonnes")).toHaveText(
-    /Date.*Présidence.*Choriste 1.*Choriste 2.*Piano.*Guitare.*Batterie.*Sono.*PPT.*Orateur.*Trad\./
+    // La traduction est facultative (31/10/2026) : en lecture, sa colonne ne s'affiche que si la période en a une.
+    /Date.*Présidence.*Choriste 1.*Choriste 2.*Piano.*Guitare.*Batterie.*Sono.*PPT.*Orateur/
   );
 });
 
@@ -173,7 +174,7 @@ test("ordinateur et tablette : la colonne des dates reste visible au défilement
   await page.setViewportSize({ width: 820, height: 800 });
   const defilement = page.getByTestId("grille-defilement");
   const date = page.locator('[data-date-cell="2026-09-20"]').filter({ visible: true });
-  const loin = laCase(page, "2026-09-20", "traduction");
+  const loin = laCase(page, "2026-09-20", "orateur"); // la traduction, facultative, peut être masquée en lecture
   const avant = { date: (await date.boundingBox())!.x, loin: (await loin.boundingBox())!.x };
   await defilement.evaluate((el) => { el.scrollLeft = el.scrollWidth; });
   await expect.poll(async () => Math.round((await loin.boundingBox())!.x), { message: "la grille défile bien" })

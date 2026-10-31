@@ -168,7 +168,8 @@ test.describe("Messages dans l'en-tête (BO2)", () => {
   });
 
   test("qui n'a pas l'entrée Messages n'a pas l'icône ; l'App non plus", async ({ page }) => {
-    await ouvrir(page, PLANNINGS);
+    // lot RS : un gestionnaire de planning notifie son service (donc a Messages) ; un référent seul n'a pas Messages.
+    await ouvrir(page, { ...PLANNINGS, plannings: [], dansEquipes: ["da"], referentDe: ["da"] });
     await expect(iconeMessages(page)).toHaveCount(0);
     await page.goto("/songs");
     await expect(page.getByRole("searchbox")).toBeVisible();
@@ -183,7 +184,8 @@ test.describe("Messages dans l'en-tête (BO2)", () => {
   test("un responsable qui notifie sans être admin : l'icône sans pastille, rien n'est lu", async ({ page }) => {
     const lus: string[] = [];
     page.on("request", (r) => { if (r.url().includes(":runQuery")) lus.push(r.postData() ?? ""); });
-    await ouvrir(page, { ...NOTIFY, ...notifie("Groupe Paix") }, REPORTS);
+    // lot RS : notifier vient d'une responsabilité (ici gestionnaire du planning de Paix), plus du droit coché ni du rôle.
+    await ouvrir(page, { ...NOTIFY, responsabilites: ["planning:paix"] }, REPORTS);
     await expect(iconeMessages(page)).toBeVisible();
     await expect(iconeMessages(page).getByTestId("pastille")).toHaveCount(0);
     expect(lus.filter((b) => b.includes("\"reports\"") || b.includes("\"songProposals\""))).toEqual([]);

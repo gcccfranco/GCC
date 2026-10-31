@@ -16,7 +16,7 @@ import {
 } from "../src/lib/tableauDeBord/donnees";
 import { widgetsPermis } from "../src/lib/access";
 import { casesVides } from "../src/lib/planning/casesVides";
-import { GRILLE_CULTE, GRILLE_INTERFRANCO } from "../src/lib/planning/grilles";
+import { GRILLE_CULTE, GRILLE_INTERFRANCO, GRILLE_INTERGROUPE } from "../src/lib/planning/grilles";
 import type { Evenement } from "../src/types/evenement";
 import type { Creneau } from "../src/types/programme";
 import type { Tache } from "../src/types/tache";
@@ -217,7 +217,17 @@ test.describe("Tableau de bord (B4) : données des widgets, règles pures", () =
     const r = casesVides(GRILLE_CULTE, [], ["2027-01-03"]);
     expect(r).toHaveLength(1);
     expect(r[0].colonnes.map((c) => c.cle)).toEqual(
-      ["presidence", "choriste1", "choriste2", "piano", "guitare", "batterie", "sono", "ppt", "orateur", "traduction"]);
+      // La traduction est facultative (31/10/2026) : elle n'est pas une case à remplir.
+      ["presidence", "choriste1", "choriste2", "piano", "guitare", "batterie", "sono", "ppt", "orateur"]);
+  });
+
+  test("traduction facultative (31/10/2026) : vide, elle ne compte pas au Culte, à l'Intergroupe ni à l'Interfranco", () => {
+    for (const g of [GRILLE_CULTE, GRILLE_INTERGROUPE, GRILLE_INTERFRANCO]) {
+      // Une ligne entièrement remplie, sauf la traduction (et la Sainte cène, déjà facultative).
+      const ligne = ["2027-01-10", ...g.colonnes.map((c) => (c.optionnelle ? "" : "Pers. A"))];
+      expect(g.colonnes.find((c) => c.cle === "traduction")?.optionnelle, g.key).toBe(true);
+      expect(casesVides(g, [ligne], ["2027-01-10"]), g.key).toEqual([]);
+    }
   });
 
   test("cases vides d'un planning à dates choisies : seulement ses dates posées", () => {
@@ -278,7 +288,7 @@ test.describe("Tableau de bord (B4) : données des widgets, règles pures", () =
     expect(brouillon.setlist).toBe(false);
     // Sans ligne ce dimanche-là (Sheet de 2026) : rien ; dès 2027, un dimanche vide est montré vide.
     expect(ceDimanche({ culte: [] }, [], ["Culte Francophone"], "2026-10-04")).toEqual([]);
-    expect(ceDimanche({ culte: [] }, [], ["Culte Francophone"], "2027-01-03")[0].vides).toBe(10);
+    expect(ceDimanche({ culte: [] }, [], ["Culte Francophone"], "2027-01-03")[0].vides).toBe(9); // la traduction, facultative (31/10/2026), ne compte pas
   });
 
   test("setlists à préparer : séances des services, sans setlist publiée, sur l'horizon", () => {
