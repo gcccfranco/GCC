@@ -218,6 +218,10 @@ async function requeteSetlists(
   return { docs: rows.filter((r) => r.document).map((r) => fromFsDoc(r.document!)), readTime };
 }
 
+/** Une lecture partie avant une déconnexion ou un changement de compte ne réécrit pas la copie qui vient
+ *  d'être effacée. */
+const memeCompte = (uid: string | null): boolean => !!uid && auth.currentUser?.uid === uid;
+
 async function lireSetlists(uid: string | null): Promise<FSSetlist[] | null> {
   const headers = await authHeader();
   // IndexedDB en échec : on retombe sur la lecture complète, sans rien montrer.
@@ -241,7 +245,7 @@ async function lireSetlists(uid: string | null): Promise<FSSetlist[] | null> {
       else parId.delete(s.id);
     }
     const liste = [...parId.values()].sort(parCreation);
-    if (uid) await ecrireCopieListe({ uid, lueLe: delta.readTime, completeLe: copie.completeLe, setlists: liste }).catch(() => {});
+    if (memeCompte(uid)) await ecrireCopieListe({ uid: uid!, lueLe: delta.readTime, completeLe: copie.completeLe, setlists: liste }).catch(() => {});
     return liste;
   }
 
@@ -251,7 +255,7 @@ async function lireSetlists(uid: string | null): Promise<FSSetlist[] | null> {
   }, headers);
   if (!complete) return null;
   const liste = complete.docs.filter(gardee);
-  if (uid) await ecrireCopieListe({ uid, lueLe: complete.readTime, completeLe: complete.readTime, setlists: liste }).catch(() => {});
+  if (memeCompte(uid)) await ecrireCopieListe({ uid: uid!, lueLe: complete.readTime, completeLe: complete.readTime, setlists: liste }).catch(() => {});
   return liste;
 }
 
