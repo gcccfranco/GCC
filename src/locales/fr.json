@@ -639,6 +639,8 @@
     "Pâques": "Pâques"
   },
   "performance": {
+    "indiceRappelJoue": "Points : déjà joué · Pleines : sur cette page, avec leur nuance",
+    "indiceRappelUnique": "Pleines : sur cette page, avec leur nuance",
     "layout": "Mise en page…",
     "next": "Ensuite :",
     "songList": "Liste des chants",
