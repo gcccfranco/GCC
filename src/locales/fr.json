@@ -4109,6 +4109,25 @@
       "note": "Setlists publiées et passées, depuis le {{date}}",
       "toutes": "Toutes les statistiques"
     },
+    "groupe": {
+      "setlists": "Setlists",
+      "parMois": "par mois",
+      "chantsDifferents": "chants différents",
+      "langues": "FR {{fr}} · 中文 {{zh}}",
+      "tonalite": "tonalité la plus jouée : {{t}}"
+    },
+    "presidencesAdmin": {
+      "titre": "Présidences",
+      "titreService": "Présidences à {{service}}",
+      "titreDe": "Présidences de {{nom}}",
+      "admins": "admins",
+      "qui": "Qui",
+      "fois": "Fois",
+      "derniere": "Dernière",
+      "groupes": "Groupes",
+      "nonPresides_one": "{{count}} membre du groupe n'a pas présidé sur la période",
+      "nonPresides_other": "{{count}} membres du groupe n'ont pas présidé sur la période"
+    },
     "presidences": {
       "titre": "Mes présidences",
       "visible": "visible par toi et les admins",

@@ -4064,6 +4064,25 @@
       "note": "已发布且已过去的歌单，自 {{date}} 起",
       "toutes": "全部统计"
     },
+    "groupe": {
+      "setlists": "歌单",
+      "parMois": "每月",
+      "chantsDifferents": "首不同诗歌",
+      "langues": "FR {{fr}} · 中文 {{zh}}",
+      "tonalite": "最常用调：{{t}}"
+    },
+    "presidencesAdmin": {
+      "titre": "主领",
+      "titreService": "{{service}} 的主领",
+      "titreDe": "{{nom}} 的主领",
+      "admins": "管理员",
+      "qui": "谁",
+      "fois": "次数",
+      "derniere": "最近",
+      "groupes": "团契",
+      "nonPresides_one": "{{count}} 位团契成员在此期间未主领",
+      "nonPresides_other": "{{count}} 位团契成员在此期间未主领"
+    },
     "presidences": {
       "titre": "我的主领",
       "visible": "仅你和管理员可见",

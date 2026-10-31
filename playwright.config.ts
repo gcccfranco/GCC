@@ -47,6 +47,8 @@ const SPECS_GRAND_ECRAN = [
   /chants-fetes-agencement\.spec\.ts/,
   // Lot SP, SP-B (docs/spec-stats-personnes-groupes.md) : « Mes présidences » dans Moi, feuille ou panneau.
   /mes-presidences\.spec\.ts/,
+  // Lot SP, SP-C : la rangée du groupe et les présidences de la page Statistiques.
+  /statistiques-groupes\.spec\.ts/,
   // Lot U5 (docs/spec-deux-volets.md) : la setlist en deux volets.
   /setlist-deux-volets\.spec\.ts/,
   // … et Chants en deux volets.
