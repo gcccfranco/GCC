@@ -452,7 +452,7 @@ export function StructureStrip({
   details = false,
   compacte = false,
   colonne = false,
-  cerclees,
+  pleines,
   className = "",
   children,
 }: {
@@ -461,21 +461,23 @@ export function StructureStrip({
   songKey?: string;
   details?: boolean;
   /** Rappel du mode louange (pages suivantes d'un chant en Sections uniques) :
-   *  pastilles de 24 px, sans nuance, modulation ni détails. */
+   *  pastilles de 30 px (26 px sous 640 px), sans modulation ni détails ; nuance
+   *  sous les seules pastilles pleines. */
   compacte?: boolean;
   /** Colonne de la marge du mode louange (page de scan en paysage) : pastilles
    *  empilées, chacune suivie de son nom, de « → X » et de sa nuance. */
   colonne?: boolean;
-  /** Occurrences imprimées sur la page : chacune cercle d'encre la première
-   *  étape qui la joue, ses reprises ne le sont pas. */
-  cerclees?: ReadonlySet<string>;
+  /** Rappel (compacte) : uids des occurrences imprimées sur la page. Chaque passage
+   *  qui en contient un est plein (fond de la section, nuance dessous) ; les autres
+   *  sont claires, et disparaissent sous 640 px. */
+  pleines?: ReadonlySet<string>;
   className?: string;
   /** Badges d'état propres au contexte (copie des paroles, version modifiée…). */
   children?: React.ReactNode;
 }) {
   const { t } = useTranslation();
   const groups = groupSteps(steps, (section) => formatSectionName(section, t));
-  const cerclee = new Set([...(cerclees ?? [])].map((uid) => groups.findIndex((g) => g.uids.includes(uid))));
+  const pleine = new Set(groups.flatMap((g, i) => (g.uids.some((uid) => pleines?.has(uid)) ? [i] : [])));
   // Pastille aux couleurs de la section (palette --sec-* de globals.css) :
   // fond clair, lettre en couleur — les mêmes teintes que les cadres du corps.
   // Un Dp prend la couleur de sa section d'origine (« – R » : orange du refrain).
@@ -505,17 +507,21 @@ export function StructureStrip({
             const targetKey = g.step.targetKey && g.step.targetKey !== songKey ? g.step.targetKey : undefined;
             const n = noteNumber.get(g);
             return (
-              <li key={i} className={colonne ? "flex items-center gap-3" : "flex flex-col items-center gap-1.5"}>
+              <li key={i} className={colonne ? "flex items-center gap-3" : `flex flex-col items-center ${compacte ? `gap-1 ${pleines && !pleine.has(i) ? "max-sm:hidden" : ""}` : "gap-1.5"}`}>
                 <span
-                  data-cerclee={cerclee.has(i) || undefined}
+                  data-pleine={pleine.has(i) || undefined}
                   className={`relative inline-flex items-center justify-center rounded-full ${
-                    compacte ? "h-6 min-w-6 px-1.5" : "h-8 min-w-8 px-2 sm:h-11 sm:min-w-11 sm:px-2.5"
-                  } ${cerclee.has(i) ? "border-2 border-foreground" : ""}`}
-                  style={{ background: tintOf(g.step.section), color: colorOf(g.step.section) }}
+                    compacte ? "h-[26px] min-w-[26px] px-1.5 sm:h-[30px] sm:min-w-[30px]" : "h-8 min-w-8 px-2 sm:h-11 sm:min-w-11 sm:px-2.5"
+                  }`}
+                  style={
+                    pleine.has(i)
+                      ? { background: colorOf(g.step.section), color: "hsl(var(--background))" }
+                      : { background: tintOf(g.step.section), color: colorOf(g.step.section) }
+                  }
                 >
-                  <span className={`inline-flex items-baseline font-bold leading-none tracking-[0.02em] ${compacte ? "text-[11px]" : "text-[14px] sm:text-[17px]"}`}>
+                  <span className={`inline-flex items-baseline font-bold leading-none tracking-[0.02em] ${compacte ? "text-[13px] sm:text-[14px]" : "text-[14px] sm:text-[17px]"}`}>
                     <abbr title={g.full} className="no-underline [text-decoration:none]">{g.abbr}</abbr>
-                    {g.repeat > 1 && <span className={`ml-px font-semibold ${compacte ? "text-[9px]" : "text-[11px] sm:text-[13px]"}`}>×{g.repeat}</span>}
+                    {g.repeat > 1 && <span className={`ml-px font-semibold ${compacte ? "text-[10px]" : "text-[11px] sm:text-[13px]"}`}>×{g.repeat}</span>}
                   </span>
                   {n !== undefined && (
                     <span aria-label={`${n}`} className={`absolute -right-1 -top-1 max-sm:h-4 max-sm:min-w-4 ${numberBadge}`}>{n}</span>
@@ -532,6 +538,9 @@ export function StructureStrip({
                   <>
                     {targetKey && !compacte && <span className="font-mono text-[12px] leading-none text-muted-foreground">→ {targetKey}</span>}
                     {!compacte && g.nuances.length > 0 && <span className="inline-flex flex-wrap items-center justify-center gap-x-1.5">{nuancesOf(g)}</span>}
+                    {compacte && pleine.has(i) && g.nuances.length > 0 && (
+                      <span className="inline-flex flex-wrap items-center justify-center gap-x-1 [&_span]:!text-[12px] [&_span]:!font-bold">{nuancesOf(g)}</span>
+                    )}
                   </>
                 )}
               </li>

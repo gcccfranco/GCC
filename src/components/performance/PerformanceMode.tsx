@@ -267,9 +267,23 @@ function splitSheetPages(
 // la pastille « Suivant : … », qui recouvrirait la dernière section.
 const STRUCTURE_MAX_SCALE = 3;
 const NEXT_PILL_RESERVE = 40;
-// Sections uniques : place du rappel de structure (24 px et 8 px dessous) en
-// haut des pages 2 et suivantes d'un chant (D11).
-const RAPPEL_RESERVE = 32;
+// Sections uniques : place du rappel de structure (pastille de 30 px, nuance de
+// 12 px dessous, 8 px de marge) en haut des pages 2 et suivantes d'un chant (D11, RS-B).
+const RAPPEL_RESERVE = 50;
+/** Rappel de structure d'une page 2 ou suivante (Sections uniques) : titre du chant
+ *  en tête dès 640 px, puis les pastilles ; sous 640 px, les seules pleines. */
+function RappelRangee({ titre, steps, pleines }: { titre?: string; steps: SectionOccurrence[]; pleines: ReadonlySet<string> }) {
+  return (
+    <div className="flex items-start gap-3">
+      {titre && (
+        <span className="hidden max-w-[16rem] shrink-0 truncate text-[13px] font-semibold uppercase leading-[30px] tracking-wide text-muted-foreground sm:block">
+          {titre}
+        </span>
+      )}
+      <StructureStrip className="min-w-0 flex-1" steps={steps} compacte pleines={pleines} />
+    </div>
+  );
+}
 // Tablette en portrait (lot L6) : bande fixe en bas, début de la page suivante
 // (≈ trois lignes de paroles), sous une ligne bleue de 2 px. Hauteur en px de mise en page :
 // la pagination la retranche de son budget, le rendu la met à l'échelle comme le texte.
@@ -779,7 +793,7 @@ export function PerformanceMode({
       const kindOf = (i: number) => blocks[i]?.kind;
       const all = blocks.map((_, i) => i);
       // Sections uniques : la réserve de chaque chant est la hauteur de son
-      // rappel (marge comprise), au moins la rangée de 32 px. Il passe à la
+      // rappel (marge comprise), au moins la rangée de nuances (RAPPEL_RESERVE). Il passe à la
       // ligne quand le texte grossit (huit pastilles ≈ 249 px de large).
       const reserves = new Map<number, number>();
       if (affichageVu === "unique") {
@@ -1202,7 +1216,7 @@ export function PerformanceMode({
   const fitPage = layout[currentPage]?.fit ?? false;
   // Sections uniques : sur les pages 2 et suivantes d'un chant, rappel de sa
   // structure collé en haut de la page (pas dans la barre : il ne s'escamote
-  // pas), les sections imprimées sur la page cerclées à leur 1re occurrence (D11).
+  // pas) ; chaque passage d'une section imprimée sur la page est plein (D11, RS-B).
   const rappel =
     affichageVu === "unique" && !fitPage && currentEntry && (currentPageIndices[0] ?? -1) > currentEntry.index
       ? currentEntry.block.steps
@@ -1210,7 +1224,7 @@ export function PerformanceMode({
   const sectionsDeLaPage = new Set(
     currentPageIndices.flatMap((i) => {
       const b = blocks[i];
-      return b?.kind === "section" && b.occurrenceUids?.length ? [b.occurrenceUids[0]] : [];
+      return b?.kind === "section" ? (b.occurrenceUids ?? []) : [];
     }),
   );
   // L3-T5b : page de scan en paysage sur grand écran, structure en colonne à gauche.
@@ -1299,7 +1313,10 @@ export function PerformanceMode({
             {blocks.map((block, i) =>
               block.kind === "song-header" && block.steps?.length ? (
                 <div key={block.uid} ref={(el) => { rappelRefs.current[i] = el; }} className="flow-root">
-                  <div className="mb-2"><StructureStrip steps={block.steps} compacte /></div>
+                  {/* Pire cas : tous les passages pleins, avec leur nuance. */}
+                  <div className="mb-2">
+                    <RappelRangee titre={block.title} steps={block.steps} pleines={new Set(block.steps.map((st) => st.section.uid))} />
+                  </div>
                 </div>
               ) : null,
             )}
@@ -1505,7 +1522,7 @@ export function PerformanceMode({
             <div>
               {rappel && (
                 <div data-rappel className="mb-2">
-                  <StructureStrip steps={rappel} compacte cerclees={sectionsDeLaPage} />
+                  <RappelRangee titre={currentEntry?.block.title} steps={rappel} pleines={sectionsDeLaPage} />
                 </div>
               )}
               {/* En-tête hors échelle, en pleine largeur : vue structure et

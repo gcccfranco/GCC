@@ -559,35 +559,122 @@ test.describe("rappel de structure (Sections uniques)", () => {
     await expect(compteur(page)).toHaveText(/^2 \//);
   }
 
-  test("pages 2 et suivantes : rappel de 24 px en haut, sections de la page cerclées à leur 1re occurrence (FR)", async ({ page }) => {
+  /** Abba Père avec trois nuances (inventées pour le test) : sur les refrains et le pont. */
+  const ABBA_NUANCES = item({
+    ...ABBA,
+    sectionNuances: { "verse-2-1": { tags: ["mp"] }, "chorus-3-2": { tags: ["mf"] }, "chorus-3-5": { tags: ["f"] }, "bridge-6-6": { tags: ["p"] } },
+  });
+
+  const telephone = (page: Page) => page.viewportSize()!.width < 640;
+
+  /** Les pastilles du rappel de la page affichée : indice du groupe, pleine ou non, visible ou non. */
+  const lirePastilles = (page: Page) =>
+    onStage(page, "[data-rappel] li").evaluateAll((lis) =>
+      lis.map((li) => {
+        const pastille = li.querySelector<HTMLElement>(":scope > span")!;
+        const r = pastille.getBoundingClientRect();
+        return {
+          pleine: pastille.hasAttribute("data-pleine"),
+          visible: r.width > 0 && r.height > 0,
+          hauteur: pastille.offsetHeight,
+          nuances: li.querySelectorAll("[data-nuance]").length,
+          lettre: getComputedStyle(pastille).color,
+          fond: getComputedStyle(pastille).backgroundColor,
+          taille: parseFloat(getComputedStyle(pastille.querySelector("abbr")!.parentElement!).fontSize),
+        };
+      }),
+    );
+
+  test("page 2 : pastilles pleines = tous les passages des sections de la page, nuance dessous, 30 px (26 px au téléphone), titre selon la largeur (FR)", async ({ page }) => {
     await page.addInitScript(() => localStorage.setItem("perf-font-scale", "1.5"));
-    await ouvrirMode(page, [ABBA], { affichage: "unique" });
+    await ouvrirMode(page, [ABBA_NUANCES], { affichage: "unique" });
     await expect(onStage(page, "[data-rappel]"), "page 1 : le bandeau, pas de rappel").toHaveCount(0);
     await pageSuivante(page);
     const rappel = onStage(page, "[data-rappel]");
     await expect(rappel).toBeVisible();
-    const pastilles = rappel.locator("li > span");
-    await expect(pastilles).toHaveCount(8);
-    for (const h of await pastilles.evaluateAll((els) => els.map((e) => (e as HTMLElement).offsetHeight))) {
-      expect(Math.abs(h - 24)).toBeLessThanOrEqual(1);
+    const pastilles = await lirePastilles(page);
+    expect(pastilles).toHaveLength(8);
+    await expect(onStage(page, "[data-rappel] [data-cerclee]")).toHaveCount(0);
+
+    // Toute section imprimée sur la page rend pleins tous ses passages (pas le seul premier).
+    const imprimees = await onStage(page, "[data-section]").evaluateAll((els) => els.flatMap((e) => e.getAttribute("data-section-uids")!.split(" ")));
+    const attendues = ETAPES.flatMap((uid, i) => (imprimees.includes(uid) ? [i] : []));
+    // Les passages d'une section unique : tous ses uids (refrain : 2, 5, 7 et 8).
+    const refrain = ["chorus-3-2", "chorus-3-5", "chorus-3-7"];
+    if (imprimees.includes("chorus-3-2")) for (const uid of refrain) expect(imprimees, "le bloc refrain porte tous ses passages").toContain(uid);
+    expect(pastilles.flatMap((p, i) => (p.pleine ? [i] : []))).toEqual(attendues);
+    expect(attendues.length).toBeGreaterThan(0);
+
+    for (const p of pastilles) {
+      if (p.pleine) {
+        expect(p.lettre, "lettre = couleur du fond de page").toBe("rgb(255, 255, 255)");
+        expect(p.fond).not.toBe(p.lettre);
+      } else {
+        expect(p.nuances, "une claire n'a pas de nuance").toBe(0);
+      }
+      if (!p.visible) continue;
+      expect(Math.abs(p.hauteur - (telephone(page) ? 26 : 30))).toBeLessThanOrEqual(1);
+      expect(p.taille).toBe(telephone(page) ? 13 : 14);
+    }
+    // Une nuance sous chaque pleine qui en a une, aucune ailleurs.
+    const avecNuance = ETAPES.map((uid) => ({ "verse-2-1": 1, "chorus-3-2": 1, "chorus-3-5": 1, "bridge-6-6": 1 }[uid] ?? 0));
+    pastilles.forEach((p, i) => expect(p.nuances, `pastille ${i}`).toBe(p.pleine ? avecNuance[i] : 0));
+    expect(pastilles.some((p) => p.pleine && p.nuances > 0)).toBe(true);
+
+    // Téléphone : seulement les pleines. Sinon toutes les pastilles et le titre du chant.
+    const titre = rappel.locator("span.uppercase");
+    if (telephone(page)) {
+      expect(pastilles.filter((p) => p.visible).every((p) => p.pleine)).toBe(true);
+      await expect(titre).toBeHidden();
+    } else {
+      expect(pastilles.every((p) => p.visible)).toBe(true);
+      await expect(titre).toBeVisible();
+      await expect(titre).toHaveText("Abba Père");
+      expect(await titre.evaluate((el) => getComputedStyle(el).fontSize)).toBe("13px");
     }
     // Au-dessus de toutes les sections de la page.
     const basRappel = await rappel.evaluate((el) => el.getBoundingClientRect().bottom);
     const hautSections = await onStage(page, "[data-section]").evaluateAll((els) => Math.min(...els.map((e) => e.getBoundingClientRect().top)));
     expect(basRappel).toBeLessThanOrEqual(hautSections);
 
-    const premieres = await onStage(page, "[data-section]").evaluateAll((els) => els.map((e) => e.getAttribute("data-section-uids")!.split(" ")[0]));
-    const attendues = premieres.map((uid) => ETAPES.indexOf(uid)).sort((a, b) => a - b);
-    const cerclees = await pastilles.evaluateAll((els) => els.flatMap((e, i) => (e.hasAttribute("data-cerclee") ? [i] : [])));
-    expect(cerclees).toEqual(attendues);
-    expect(cerclees, "le 2e R et R ×2 sont des reprises").not.toContain(5);
-    expect(cerclees).not.toContain(7);
-
     // Barres escamotées (la barre ne s'efface plus seule : toucher au centre) : le rappel est dans la page, il reste.
     const ecran = page.viewportSize()!;
     await page.mouse.click(ecran.width / 2, ecran.height / 2);
     await expect(page.getByRole("button", { name: "Quitter" })).toBeHidden({ timeout: 6000 });
     await expect(rappel).toBeVisible();
+  });
+
+  test("chant chinois : page 2, pleines = passages des sections de la page, titre chinois sur tablette et ordinateur (ZH)", async ({ page }) => {
+    const zh = item({
+      songSlug: "圣诞节耶稣为你而来",
+      position: 1,
+      structureOverride: ["intro-1-0", "verse-2-1", "chorus-5-2", "verse-3-3", "prechorus-4-4", "chorus-5-5", "bridge-6-6", "chorus-5-7"],
+      sectionNuances: {
+        "verse-2-1": { tags: ["mp"] }, "chorus-5-2": { tags: ["f"] }, "verse-3-3": { tags: ["mp"] }, "prechorus-4-4": { tags: ["mf"] },
+        "chorus-5-5": { tags: ["f"] }, "bridge-6-6": { tags: ["p"] }, "chorus-5-7": { tags: ["f"] },
+      },
+    });
+    await page.addInitScript(() => localStorage.setItem("perf-font-scale", "2"));
+    await ouvrirMode(page, [zh], { affichage: "unique" });
+    await expect(compteur(page)).toHaveText(/^1 \/ [2-9]/);
+    await page.keyboard.press("ArrowRight");
+    await expect(compteur(page)).toHaveText(/^2 \//);
+    const rappel = onStage(page, "[data-rappel]");
+    await expect(rappel).toBeVisible();
+    const pastilles = await lirePastilles(page);
+    const imprimees = await onStage(page, "[data-section]").evaluateAll((els) => els.flatMap((e) => e.getAttribute("data-section-uids")!.split(" ")));
+    // Le refrain est imprimé une fois, avec ses trois passages : les trois pastilles R sont pleines.
+    if (imprimees.includes("chorus-5-2")) {
+      for (const u of ["chorus-5-2", "chorus-5-5", "chorus-5-7"]) expect(imprimees, "le bloc refrain porte tous ses passages").toContain(u);
+      expect(pastilles.filter((p) => p.pleine).length).toBeGreaterThanOrEqual(3);
+    }
+    expect(pastilles.filter((p) => p.pleine).length).toBeGreaterThan(0);
+    expect(pastilles.filter((p) => p.pleine && p.nuances > 0).length).toBeGreaterThan(0);
+    for (const p of pastilles.filter((q) => q.visible)) expect(Math.abs(p.hauteur - (telephone(page) ? 26 : 30))).toBeLessThanOrEqual(1);
+    await expect(onStage(page, "[data-rappel] [data-cerclee]")).toHaveCount(0);
+    const titre = rappel.locator("span.uppercase");
+    if (telephone(page)) await expect(titre).toBeHidden();
+    else await expect(titre).toHaveText("圣诞节耶稣为你而来");
   });
 
   // Deux chants dont une page de Sections uniques est presque pleine : un rappel
@@ -621,16 +708,78 @@ test.describe("rappel de structure (Sections uniques)", () => {
     });
   }
 
-  test("thème de scène : le cercle est à l'encre claire (FR)", async ({ page }) => {
+  test("thème de scène : la lettre d'une pastille pleine est à l'encre du fond, contrastée avec la couleur de la section (FR)", async ({ page }) => {
     await page.addInitScript(() => {
       localStorage.setItem("perf-font-scale", "1.5");
       localStorage.setItem("perf-theme", "dark");
     });
-    await ouvrirMode(page, [ABBA], { affichage: "unique" });
+    await ouvrirMode(page, [ABBA_NUANCES], { affichage: "unique" });
     await pageSuivante(page);
-    const cerclee = onStage(page, "[data-rappel] [data-cerclee]").first();
-    await expect(cerclee).toBeVisible();
-    expect(await cerclee.evaluate((el) => getComputedStyle(el).borderTopColor)).toBe("rgb(242, 242, 247)");
+    const pleines = onStage(page, "[data-rappel] [data-pleine]");
+    await expect(pleines.first()).toBeVisible();
+    const couleurs = await pleines.evaluateAll((els) => els.map((e) => ({ lettre: getComputedStyle(e).color, fond: getComputedStyle(e).backgroundColor })));
+    const lum = (rgb: string) => {
+      const [r, g, b] = (rgb.match(/[\d.]+/g) ?? []).slice(0, 3).map((v) => {
+        const c = Number(v) / 255;
+        return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+      });
+      return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+    };
+    for (const { lettre, fond } of couleurs) {
+      expect(lettre, "fond de page sombre = noir").toBe("rgb(0, 0, 0)");
+      const [l1, l2] = [lum(lettre), lum(fond)].sort((x, y) => y - x);
+      expect((l1 + 0.05) / (l2 + 0.05), `contraste ${lettre} sur ${fond}`).toBeGreaterThanOrEqual(4.5);
+    }
+  });
+
+  test("un trait dessiné sur la page 2 reste sur sa section après rechargement (FR)", async ({ page }) => {
+    await page.addInitScript(() => localStorage.setItem("perf-font-scale", "1.5"));
+    await ouvrirMode(page, [ABBA_NUANCES], { affichage: "unique" });
+    await pageSuivante(page);
+    await expect(onStage(page, "[data-rappel]")).toBeVisible();
+    const calque = page.locator("[data-performance-mode] > canvas");
+    /** Boîte (px d'écran) des pixels dessinés du calque de lecture. */
+    const boite = () =>
+      calque.evaluate((c: HTMLCanvasElement) => {
+        const { width, height } = c;
+        const d = c.getContext("2d")!.getImageData(0, 0, width, height).data;
+        let x0 = width, y0 = height, x1 = -1, y1 = -1, n = 0;
+        for (let y = 0; y < height; y++) for (let x = 0; x < width; x++) if (d[(y * width + x) * 4 + 3] > 0) { n++; x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y); }
+        const k = c.getBoundingClientRect().width / width;
+        return n < 20 ? null : [x0 * k, y0 * k, x1 * k, y1 * k];
+      });
+    await montrerChrome(page);
+    await page.getByRole("button", { name: "Annoter" }).click();
+    await expect(calque).toHaveCount(1);
+    const ecran = page.viewportSize()!;
+    const x = ecran.width * 0.4;
+    const y = ecran.height * 0.55;
+    await page.mouse.move(x, y);
+    await page.mouse.down();
+    await page.mouse.move(x + 40, y + 15, { steps: 4 });
+    await page.mouse.move(x + 90, y + 30, { steps: 4 });
+    await page.mouse.up();
+    await page.getByRole("button", { name: "Annoter" }).click();
+    await expect.poll(boite, { message: "le trait est lu sur la page 2" }).not.toBeNull();
+    const avant = (await boite())!;
+    // Le trait est sous le rappel, dans la page : il est sur les sections, pas sur la rangée.
+    const basRappel = await onStage(page, "[data-rappel]").evaluate((el) => el.getBoundingClientRect().bottom);
+    expect(avant[1]).toBeGreaterThan(basRappel);
+    // Laisser l'enregistrement partir avant de recharger.
+    await page.waitForTimeout(1500);
+
+    await page.reload();
+    await lancer(page);
+    await expect(onStage(page, "[data-section]").first()).toBeVisible();
+    await page.keyboard.press("ArrowRight");
+    await expect(compteur(page)).toHaveText(/^2 \//);
+    await expect.poll(boite, { message: "le trait revient sur la page 2" }).not.toBeNull();
+    const apres = (await boite())!;
+    avant.forEach((v, i) => expect(Math.abs(v - apres[i]), `bord ${i} du trait`).toBeLessThanOrEqual(2));
+    // Pas sur la page 1.
+    await page.keyboard.press("ArrowLeft");
+    await expect(compteur(page)).toHaveText(/^1 \//);
+    await expect(calque, "aucun trait sur la page 1").toHaveCount(0);
   });
 
   test("Ordre joué : pas de rappel (FR)", async ({ page }) => {
