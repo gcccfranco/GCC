@@ -10,8 +10,9 @@ import { pinyin_font } from "@/components/song/pinyinFont";
 import type { ChordProAST, ChordProLine, ChordProSection, Token } from "@/types/chordPro";
 import { useTranslation } from "react-i18next";
 import { formatSectionName } from "@/lib/chordpro/parser";
-import { abbreviateSection } from "@/lib/chordpro/abbreviations";
-import { isRepeatOf, resolveSectionOccurrences, type SectionOccurrence } from "@/lib/setlist/sectionSteps";
+import { resolveSectionOccurrences, type SectionOccurrence } from "@/lib/setlist/sectionSteps";
+import { SECTION_PALETTE_KEY } from "@/lib/sectionPalette";
+import { dpFullName, groupSteps, paletteKeyOf } from "@/lib/setlist/dp";
 import { uniqueSections } from "@/lib/setlist/uniqueSections";
 import type { PartitionLayout } from "@/lib/partitionLayoutPref";
 import { resolveStructureOverride } from "@/lib/chordpro/structure";
@@ -70,18 +71,8 @@ export const CHART_TYPE_COLOR: Record<string, string> = {
   coda: "var(--sec-coda)",
 };
 
-// Clé --sec-* d'un type de section (mêmes correspondances que CHART_TYPE_COLOR).
-export const SECTION_PALETTE_KEY: Record<string, string> = {
-  intro: "intro",
-  verse: "verse",
-  prechorus: "prechorus",
-  chorus: "chorus",
-  postchorus: "chorus",
-  final: "chorus",
-  bridge: "bridge",
-  outro: "outro",
-  coda: "coda",
-};
+// Clé --sec-* d'un type de section : voir src/lib/sectionPalette.ts.
+export { SECTION_PALETTE_KEY };
 
 function getChartSectionStyle(type: string): React.CSSProperties {
   return {
@@ -483,23 +474,21 @@ export function StructureStrip({
   children?: React.ReactNode;
 }) {
   const { t } = useTranslation();
-  const groups: { step: SectionOccurrence; abbr: string; full: string; repeat: number; uids: string[] }[] = [];
-  for (const step of steps) {
-    const full = formatSectionName(step.section, t);
-    const last = groups[groups.length - 1];
-    if (last && isRepeatOf({ ...last.step, label: last.full }, { ...step, label: full })) {
-      last.repeat++;
-      last.uids.push(step.section.uid);
-      continue;
-    }
-    groups.push({ step, abbr: abbreviateSection(step.section), full, repeat: 1, uids: [step.section.uid] });
-  }
+  const groups = groupSteps(steps, (section) => formatSectionName(section, t));
   const cerclee = new Set([...(cerclees ?? [])].map((uid) => groups.findIndex((g) => g.uids.includes(uid))));
   // Pastille aux couleurs de la section (palette --sec-* de globals.css) :
   // fond clair, lettre en couleur — les mêmes teintes que les cadres du corps.
-  const secKey = (type: string) => SECTION_PALETTE_KEY[type] ?? "other";
-  const colorOf = (type: string) => `var(--sec-${secKey(type)})`;
-  const tintOf = (type: string) => `var(--sec-${secKey(type)}-tint)`;
+  // Un Dp prend la couleur de sa section d'origine (« – R » : orange du refrain).
+  const colorOf = (section: ChordProSection) => `var(--sec-${paletteKeyOf(section)})`;
+  const tintOf = (section: ChordProSection) => `var(--sec-${paletteKeyOf(section)}-tint)`;
+  // Nuances d'un groupe (plusieurs pour un Dp ×n), dans l'ordre : « mp ↗ → mf ».
+  const nuancesOf = (g: { nuances: SectionNuance[] }) =>
+    g.nuances.map((n, k) => (
+      <Fragment key={k}>
+        {k > 0 && <span aria-hidden="true" className="text-[14px] font-semibold leading-none text-muted-foreground">→</span>}
+        <NuanceBadge nuance={n} variant="text" />
+      </Fragment>
+    ));
   // Notes et transitions : un numéro noir accroché à la pastille, repris
   // dans la liste sous le bandeau (quand le corps ne les porte pas).
   const notes = details ? groups.filter((g) => g.step.note || g.step.transition) : [];
@@ -522,7 +511,7 @@ export function StructureStrip({
                   className={`relative inline-flex items-center justify-center rounded-full ${
                     compacte ? "h-6 min-w-6 px-1.5" : "h-8 min-w-8 px-2 sm:h-11 sm:min-w-11 sm:px-2.5"
                   } ${cerclee.has(i) ? "border-2 border-foreground" : ""}`}
-                  style={{ background: tintOf(g.step.section.type), color: colorOf(g.step.section.type) }}
+                  style={{ background: tintOf(g.step.section), color: colorOf(g.step.section) }}
                 >
                   <span className={`inline-flex items-baseline font-bold leading-none tracking-[0.02em] ${compacte ? "text-[11px]" : "text-[14px] sm:text-[17px]"}`}>
                     <abbr title={g.full} className="no-underline [text-decoration:none]">{g.abbr}</abbr>
@@ -535,14 +524,14 @@ export function StructureStrip({
                 {colonne ? (
                   // Nom, modulation et nuance passent à la ligne dans la largeur de la colonne.
                   <span className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
-                    <span className="text-[15px] font-semibold leading-tight text-foreground">{g.full}</span>
+                    <span className="text-[15px] font-semibold leading-tight text-foreground">{dpFullName(g.step.section, t) ?? g.full}</span>
                     {targetKey && <span className="font-mono text-[12px] leading-none text-muted-foreground">→ {targetKey}</span>}
-                    <NuanceBadge nuance={g.step.nuance} variant="text" />
+                    {nuancesOf(g)}
                   </span>
                 ) : (
                   <>
                     {targetKey && !compacte && <span className="font-mono text-[12px] leading-none text-muted-foreground">→ {targetKey}</span>}
-                    {!compacte && <NuanceBadge nuance={g.step.nuance} variant="text" />}
+                    {!compacte && g.nuances.length > 0 && <span className="inline-flex flex-wrap items-center justify-center gap-x-1.5">{nuancesOf(g)}</span>}
                   </>
                 )}
               </li>
@@ -591,9 +580,12 @@ export interface SectionViewProps {
   /** Occurrences de la structure jouée que cette impression représente
    *  (`data-section-uids`) : le sommaire s'en sert pour y aller et se marquer. */
   occurrenceUids?: string[];
+  /** Sorte de section dont le bloc emprunte la couleur du cadre (un Dp prend
+   *  celle de son origine, en Structure seule du mode louange). */
+  couleurDe?: string;
 }
 
-export function SectionView({ section, language, showChords, showPinyin, useJianpu, hideLyrics = false, note, nuance, keyChange, songSourceLabel, typography = "web", chartStyle = false, onLineSelect, nuanceSize = "sm", repeat = 1, occurrenceUids }: SectionViewProps) {
+export function SectionView({ section, language, showChords, showPinyin, useJianpu, hideLyrics = false, note, nuance, keyChange, songSourceLabel, typography = "web", chartStyle = false, onLineSelect, nuanceSize = "sm", repeat = 1, occurrenceUids, couleurDe }: SectionViewProps) {
   const isPdfTypo = typography === "pdf";
   const { t, i18n } = useTranslation();
   const isZh = language === "zh";
@@ -604,7 +596,7 @@ export function SectionView({ section, language, showChords, showPinyin, useJian
   // centré dans son cadre, même agrandi en vue structure.
   const bodyHidden = hideLyrics && !showChords;
   return (
-    <div data-section data-section-uids={occurrenceUids?.join(" ")} className="mb-5 print:mb-4" style={{ breakInside: "avoid", ...(chartStyle ? getChartSectionStyle(section.type) : getSectionStyle(section.type, isZh)), ...(bodyHidden ? { paddingBottom: 10 } : null) }}>
+    <div data-section data-section-uids={occurrenceUids?.join(" ")} className="mb-5 print:mb-4" style={{ breakInside: "avoid", ...(chartStyle ? getChartSectionStyle(couleurDe ?? section.type) : getSectionStyle(couleurDe ?? section.type, isZh)), ...(bodyHidden ? { paddingBottom: 10 } : null) }}>
       {/* Label de section — hors copie : la régie colle les paroles seules. */}
       <div data-copy-ignore className={bodyHidden ? undefined : "mb-1.5"} style={{ display: "flex", alignItems: "center", gap: 9 }}>
         <span

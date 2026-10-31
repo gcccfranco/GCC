@@ -23,6 +23,7 @@ import { SectionView, StructureStrip, TransitionNote } from "@/components/song/S
 import { pinyin_font } from "@/components/song/pinyinFont";
 import { formatSectionName } from "@/lib/chordpro/parser";
 import { isRepeatOf, type SectionOccurrence } from "@/lib/setlist/sectionSteps";
+import { dpOrigin, isDp } from "@/lib/setlist/dp";
 import { AnnotationCanvas, StrokesLayer } from "./AnnotationCanvas";
 import { type AnnotationData, serializeAnnotations, deserializeAnnotations } from "@/lib/annotations/strokes";
 import { loadAnnotation, saveAnnotation } from "@/lib/firebase/annotations";
@@ -78,6 +79,7 @@ function BlockRenderer({
   fit = false,
   repeat,
   bandeau = "simple",
+  couleurDe,
 }: {
   block: PerformanceBlock;
   showChordsGlobal: boolean;
@@ -91,6 +93,8 @@ function BlockRenderer({
   repeat?: number;
   /** Bandeau de structure de l'en-tête de chant (D11, D12). */
   bandeau?: Bandeau;
+  /** Structure seule : sorte de section dont un Dp emprunte la couleur (son origine). */
+  couleurDe?: string;
 }) {
   if (block.kind === "song-header") {
     return <SongHeader block={block} bandeau={bandeau} showTransitions={showTransitions} />;
@@ -133,6 +137,7 @@ function BlockRenderer({
       nuanceSize="lg"
       repeat={repeat}
       occurrenceUids={block.occurrenceUids}
+      couleurDe={couleurDe}
     />
   );
 }
@@ -710,7 +715,9 @@ export function PerformanceMode({
         return;
       }
       const first = blocks[lead];
-      if (first?.kind === "section" && isRepeatOf(step(first), step(b))) {
+      // Un Dp rejoué de suite (même section) se replie quelle que soit sa nuance.
+      const dpRepete = first?.kind === "section" && isDp(b.section) && isDp(first.section) && first.section.id === b.section.id;
+      if (first?.kind === "section" && !isDp(b.section) && !isDp(first.section) ? isRepeatOf(step(first), step(b)) : dpRepete) {
         repeatCount.set(lead, (repeatCount.get(lead) ?? 1) + 1);
         repeatHidden.add(i);
       } else {
@@ -1279,6 +1286,7 @@ export function PerformanceMode({
                   showPinyinGlobal={showPinyin}
                   repeat={repeatCount.get(i)}
                   bandeau={bandeau}
+                  couleurDe={structureMode && block.kind === "section" ? dpOrigin(block.section) ?? undefined : undefined}
                 />
               )}
             </div>
@@ -1371,6 +1379,7 @@ export function PerformanceMode({
                 fit={fit}
                 repeat={repeatCount.get(i)}
                 bandeau={bandeau}
+                couleurDe={structureMode && block.kind === "section" ? dpOrigin(block.section) ?? undefined : undefined}
               />
             );
           };
