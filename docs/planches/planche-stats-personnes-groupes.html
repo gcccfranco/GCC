@@ -1,0 +1,244 @@
+<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Statistiques personnes et groupes</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700&family=Noto+Serif+SC:wght@600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Planche : une bande par sujet, pistes côte à côte (téléphone · tablette · ordinateur), la recommandée marquée. */
+:root{
+  --bg:#f6f5f2; --surface:#ffffff; --ink:#1c1b19; --muted:#6d6a63; --line:#e3e0d9;
+  --chord:#3f63cf; --jianpu:#b3261d; --chorus:#e0560a; --verse:#2f7d6b; --intro:#5b6b8c;
+  --reco:#1f7a4d; --reco-bg:#e5f3ea; --warn:#a15c00; --warn-bg:#fdf0dc; --paper:#fffdf8;
+  --f-ui:"Inter Tight",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-zh:"Noto Serif SC","Songti SC","STSong",serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#141413; --surface:#1e1d1b; --ink:#f0eee9; --muted:#a29e95; --line:#34322e;
+  --chord:#8fb0ff; --jianpu:#ff7d72; --chorus:#fb923c; --verse:#6fc7b1; --intro:#a3b2d4;
+  --reco:#7fd4a4; --reco-bg:#16301f; --warn:#f2b45e; --warn-bg:#3a2a12; --paper:#22211e; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#141413; --surface:#1e1d1b; --ink:#f0eee9; --muted:#a29e95; --line:#34322e;
+  --chord:#8fb0ff; --jianpu:#ff7d72; --chorus:#fb923c; --verse:#6fc7b1; --intro:#a3b2d4;
+  --reco:#7fd4a4; --reco-bg:#16301f; --warn:#f2b45e; --warn-bg:#3a2a12; --paper:#22211e; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-ui);font-size:15px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:32px 64px}
+.wrap{max-width:1240px;margin:0 auto;display:flex;flex-direction:column;gap:56px}
+h1{font-size:30px;line-height:1.15;margin:0;text-wrap:balance;letter-spacing:-.01em}
+h2{font-size:22px;margin:0;text-wrap:balance}
+h3{font-size:16px;margin:0}
+p{margin:0;max-width:68ch}
+.eyebrow{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.intro{display:flex;flex-direction:column;gap:12px}
+section{display:flex;flex-direction:column;gap:20px}
+.constat{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
+.box{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.piste{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:20px;display:flex;flex-direction:column;gap:16px}
+.piste.reco{border:2px solid var(--reco)}
+.piste-head{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:baseline}
+.tag{font-size:12px;font-weight:700;padding:3px 10px;border-radius:999px;background:var(--reco-bg);color:var(--reco)}
+.tag.neutre{background:var(--bg);color:var(--muted)}
+.devices{display:flex;flex-wrap:wrap;gap:20px;align-items:flex-start}
+.dev{display:flex;flex-direction:column;gap:6px;min-width:0}
+.dev-label{font-size:12px;color:var(--muted);font-weight:600}
+.frame{border:1px solid var(--line);border-radius:22px;background:var(--paper);overflow:hidden;max-width:100%}
+.phone{width:280px}.tablet{width:420px}.desktop{width:520px;border-radius:12px}
+.pro-con{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;font-size:14px}
+.pro-con ul{margin:4px 0 0;padding-left:18px}
+.plus{color:var(--reco);font-weight:600}.moins{color:var(--warn);font-weight:600}
+
+/* — maquette de page chant — */
+.pg{padding:14px;display:flex;flex-direction:column;gap:10px}
+.hd{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}
+.t-zh{font-family:var(--f-zh);font-weight:700;font-size:26px;line-height:1.1}
+.t-py{color:var(--muted);font-size:13px}
+.t-ar{color:var(--muted);font-size:12px}
+.key{border:1.5px solid var(--jianpu);color:var(--jianpu);border-radius:999px;padding:1px 12px;font-weight:700;font-size:14px}
+.meta{font-family:var(--f-mono);font-size:11px;color:var(--muted);display:flex;gap:10px;flex-wrap:wrap}
+.meta b{color:var(--ink);font-weight:600}
+.secs{display:flex;gap:6px;flex-wrap:wrap}
+.sec{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-size:11px;font-weight:700;background:var(--bg)}
+.sec.i{color:var(--intro)}.sec.c{color:var(--verse)}.sec.r{color:var(--chorus)}
+.seg{margin-left:auto;display:flex;background:var(--bg);border-radius:999px;font-size:11px;font-weight:600}
+.seg span{padding:4px 9px;border-radius:999px}.seg span.on{background:var(--ink);color:var(--surface)}
+.score{font-family:var(--f-mono);font-size:10.5px;line-height:1.35;color:var(--ink);display:flex;flex-direction:column;gap:7px}
+.score .ch{color:var(--chord);font-weight:600}
+.score .ly{font-family:var(--f-zh);font-size:10.5px}
+.ghost{color:var(--muted);font-family:var(--f-zh);font-size:10px;display:flex;justify-content:space-between;gap:6px;border-bottom:1px dashed var(--jianpu);padding-bottom:5px;position:relative}
+.ghost .cut{position:absolute;right:0;bottom:-15px;font-family:var(--f-ui);font-size:9px;color:var(--jianpu);font-weight:600}
+.scanhead{text-align:center;font-family:var(--f-zh);display:flex;flex-direction:column;gap:2px}
+.scanhead .big{font-size:20px;font-weight:700}
+.scanhead .row{display:flex;justify-content:space-between;font-size:10px;color:var(--muted)}
+.slim{display:flex;align-items:center;gap:8px;padding:8px 12px;border-bottom:1px solid var(--line);font-size:12px;background:var(--surface)}
+.slim .t-zh{font-size:16px}
+.two{display:grid;grid-template-columns:150px 1fr;gap:14px}
+.side{display:flex;flex-direction:column;gap:8px;font-size:11px;border-right:1px solid var(--line);padding-right:12px}
+
+/* — statistiques — */
+.stat-line{display:flex;align-items:center;gap:8px;font-size:12px;background:var(--bg);border-radius:10px;padding:7px 10px}
+.stat-line b{font-variant-numeric:tabular-nums}
+.chev{margin-left:auto;color:var(--muted)}
+.sheet{background:var(--surface);border-top-left-radius:18px;border-top-right-radius:18px;border:1px solid var(--line);padding:12px 14px;display:flex;flex-direction:column;gap:10px;font-size:12px}
+.grab{width:36px;height:4px;border-radius:2px;background:var(--line);margin:0 auto}
+.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.kpi{background:var(--bg);border-radius:10px;padding:8px;display:flex;flex-direction:column;gap:2px}
+.kpi .n{font-size:18px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.1}
+.kpi .l{font-size:10px;color:var(--muted)}
+table{border-collapse:collapse;width:100%;font-size:11.5px;font-variant-numeric:tabular-nums}
+th{text-align:left;font-weight:600;color:var(--muted);font-size:10.5px;padding:4px 4px;border-bottom:1px solid var(--line)}
+td{padding:5px 4px;border-bottom:1px solid var(--line)}
+td.r,th.r{text-align:right}
+.bar{display:inline-block;height:6px;border-radius:3px;background:var(--chord);vertical-align:middle;opacity:.75}
+.hl td{background:var(--reco-bg)}
+.lib{display:flex;flex-direction:column;font-size:12px}
+.lib-row{display:grid;grid-template-columns:1fr auto;gap:2px 10px;padding:8px 0;border-bottom:1px solid var(--line);align-items:center}
+.lib-row .nm{font-weight:600}.lib-row .nm .zh{font-family:var(--f-zh)}
+.lib-row .sub{font-size:11px;color:var(--muted);grid-column:1}
+.plusbtn{grid-row:1/3;grid-column:2;width:26px;height:26px;border-radius:50%;background:var(--bg);display:grid;place-items:center;font-weight:700}
+.chip{display:inline-block;font-size:10.5px;font-weight:600;padding:1px 7px;border-radius:999px;background:var(--bg);color:var(--muted)}
+.chip.warn{background:var(--warn-bg);color:var(--warn)}
+.chip.ok{background:var(--reco-bg);color:var(--reco)}
+.filters{display:flex;gap:6px;flex-wrap:wrap}
+.filters span{font-size:11px;padding:3px 9px;border-radius:999px;background:var(--bg);font-weight:600}
+.filters span.on{background:var(--ink);color:var(--surface)}
+
+.questions{counter-reset:q;display:flex;flex-direction:column;gap:12px}
+.q{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:6px}
+.q h3::before{counter-increment:q;content:"Q" counter(q) " · ";color:var(--muted)}
+.q .rec{font-size:14px;color:var(--reco);font-weight:600}
+code{font-family:var(--f-mono);font-size:.9em;background:var(--bg);padding:1px 5px;border-radius:5px}
+@media (max-width:600px){.phone,.tablet,.desktop{width:100%}.two{grid-template-columns:1fr}.side{border-right:0;border-bottom:1px solid var(--line);padding:0 0 8px}}
+.moi-card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:8px;font-size:12px}
+.moi-card h4{margin:0;font-size:13px}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.small{font-size:10.5px;color:var(--muted)}
+.lock{font-size:10px;font-weight:700;color:var(--warn);background:var(--warn-bg);border-radius:999px;padding:1px 7px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.nav{font-size:11px;color:var(--muted);display:flex;gap:10px;border-bottom:1px solid var(--line);padding-bottom:6px}
+.nav b{color:var(--ink)}
+</style></head><body>
+<div class="wrap">
+
+<header class="intro">
+  <span class="eyebrow">Planche · 31/10/2026 · à trancher avant spec</span>
+  <h1>Statistiques par personne et par groupe</h1>
+  <p>Demande de Timothée (31/10/2026) : des statistiques par personne, visibles de la personne et des admins, et des statistiques par groupe. Ce qui est déjà convenu : une personne = <b>ses présidences</b> ; personne d'autre que la personne et les admins ne voit ses chiffres ; <b>aucune nouvelle page</b> ; pour un groupe, les <b>chants</b> pour tous, les <b>présidences</b> pour les admins. Noms fictifs. Rien n'est codé.</p>
+</header>
+
+<section>
+  <span class="eyebrow">Ce que le code permet</span>
+  <h2>D'où viennent les chiffres</h2>
+  <div class="constat">
+    <div class="box"><h3>La présidence est un texte</h3><p>Chaque setlist garde « Présidence » en texte libre (<code>leader</code>). Le filtre Présidence des admins regroupe déjà les graphies (<code>normalizeName</code>) : « Luc Essai », « luc essai » ne font qu'un.</p></div>
+    <div class="box"><h3>Relier le texte au compte</h3><p>Pour « Mes présidences », il faut dire quel texte est moi : le <b>nom de planning</b> du profil s'il existe, sinon « Prénom Nom », avec les rapprochements du planning. Une faute de frappe dans une setlist ne sera pas comptée.</p></div>
+    <div class="box"><h3>Le groupe, c'est le service</h3><p>Comme pour le lot ST (D7) : Groupe Paix, Fidélité, Bonté, 中班, 大班, 高班, et les cultes. Les setlists comptées restent publiées et passées (D4).</p></div>
+  </div>
+</section>
+
+<!-- SUJET 1 -->
+<section>
+  <span class="eyebrow">Sujet 1</span>
+  <h2>« Mes présidences », dans la page Moi</h2>
+  <div class="piste reco">
+    <div class="piste-head"><h3>Piste A · Une carte résumée, le détail en feuille</h3><span class="tag">Recommandée</span></div>
+    <p>Une carte de plus dans Moi, sous « Mes services » : trois chiffres et une phrase. La toucher ouvre le détail (feuille sur téléphone, panneau à droite dès la tablette paysage), comme les statistiques d'un chant. Rien si la personne n'a jamais présidé ni n'a de nom reconnu.</p>
+    <div class="devices">
+      <div class="dev"><span class="dev-label">Téléphone · la carte</span><div class="frame phone"><div class="pg">
+        <div class="nav"><b>Moi</b></div>
+        <div class="moi-card"><h4>Mes présidences <span class="small">· visible par toi et les admins</span></h4>
+          <div class="kpis"><div class="kpi"><span class="n">9</span><span class="l">présidences</span></div><div class="kpi"><span class="n">19/10</span><span class="l">dernière</span></div><div class="kpi"><span class="n">2</span><span class="l">groupes</span></div></div>
+          <div class="stat-line">Surtout à <b>Fidélité</b> (7) · prochaine le 09/11<span class="chev">›</span></div></div>
+      </div></div></div>
+      <div class="dev"><span class="dev-label">Téléphone · le détail (feuille)</span><div class="frame phone"><div class="pg">
+        <div class="sheet"><div class="grab"></div><b>Mes présidences</b>
+          <div class="filters"><span>3 mois</span><span>12 mois</span><span class="on">Depuis le début</span></div>
+          <table><tr><th>Groupe</th><th class="r">Fois</th><th class="r">Dernière</th></tr>
+            <tr><td>Fidélité <span class="bar" style="width:60px"></span></td><td class="r">7</td><td class="r">19/10</td></tr>
+            <tr><td>Paix <span class="bar" style="width:17px"></span></td><td class="r">2</td><td class="r">14/06</td></tr></table>
+          <b style="font-size:11.5px">Mes chants les plus choisis</b>
+          <table><tr><td>Abba Père</td><td class="r">5</td></tr><tr><td><span class="zh" style="font-family:var(--f-zh)">回家</span></td><td class="r">4</td></tr><tr><td>Tout puissant</td><td class="r">3</td></tr></table>
+          <span class="small">Jamais choisis : 342 chants · <u>les voir dans Statistiques</u></span>
+          <span class="small">Setlists publiées et passées où la présidence est « Luc Essai ».</span>
+        </div></div></div></div>
+      <div class="dev"><span class="dev-label">Ordinateur · carte dans Moi, panneau à droite</span><div class="frame desktop"><div class="pg">
+        <div class="grid2"><div class="moi-card"><h4>Mes services</h4><span class="small">dim. 09/11 · Fidélité · chant</span></div>
+          <div class="moi-card"><h4>Mes présidences</h4><div class="kpis"><div class="kpi"><span class="n">9</span><span class="l">présidences</span></div><div class="kpi"><span class="n">19/10</span><span class="l">dernière</span></div><div class="kpi"><span class="n">2</span><span class="l">groupes</span></div></div><div class="stat-line">Surtout à <b>Fidélité</b> (7)<span class="chev">›</span></div></div></div>
+      </div></div></div>
+    </div>
+  </div>
+  <div class="piste">
+    <div class="piste-head"><h3>Piste B · Tout déplié dans Moi</h3><span class="tag neutre">Possible</span></div>
+    <p>La carte montre directement le tableau par groupe et les trois chants les plus choisis. Plus rien à toucher, mais Moi s'allonge de ~300 px sur téléphone pour tout le monde qui préside.</p>
+  </div>
+</section>
+
+<!-- SUJET 2 -->
+<section>
+  <span class="eyebrow">Sujet 2</span>
+  <h2>Une personne, vue par un admin : le filtre Présidence enrichi</h2>
+  <div class="piste reco">
+    <div class="piste-head"><h3>Piste A · Un bloc « Présidences de … » au-dessus des chants</h3><span class="tag">Recommandée</span></div>
+    <p>Dans la page Statistiques, l'admin choisit déjà une présidence. En plus de filtrer les chants, la page montre en tête le même résumé que « Mes présidences » (fois, dernière, par groupe). Sans présidence choisie : un tableau « Présidences » (qui, fois, dernière, groupes), trié par fois, avec en bas « N membres n'ont jamais présidé sur la période ».</p>
+    <div class="devices">
+      <div class="dev"><span class="dev-label">Téléphone · présidence choisie</span><div class="frame phone"><div class="pg">
+        <b>Statistiques</b>
+        <div class="filters"><span>Tous les services</span><span class="on">Luc Essai ▾</span><span class="lock">admins</span></div>
+        <div class="moi-card"><h4>Présidences de Luc Essai</h4>
+          <div class="kpis"><div class="kpi"><span class="n">9</span><span class="l">fois</span></div><div class="kpi"><span class="n">19/10</span><span class="l">dernière</span></div><div class="kpi"><span class="n">2</span><span class="l">groupes</span></div></div>
+          <span class="small">Fidélité 7 · Paix 2</span></div>
+        <span class="small">Les plus joués quand Luc Essai préside…</span>
+      </div></div></div>
+      <div class="dev"><span class="dev-label">Ordinateur · aucune présidence choisie</span><div class="frame desktop"><div class="pg">
+        <div class="row"><b>Statistiques</b><span class="filters"><span class="on">12 mois</span><span>Groupe Fidélité ▾</span><span>Présidence ▾</span></span></div>
+        <div class="moi-card"><h4>Présidences <span class="lock">admins</span></h4>
+          <table><tr><th>Qui</th><th class="r">Fois</th><th class="r">Dernière</th><th>Groupes</th></tr>
+            <tr><td>Luc Essai</td><td class="r">7</td><td class="r">19/10</td><td>Fidélité</td></tr>
+            <tr><td>Inès Modèle</td><td class="r">5</td><td class="r">26/10</td><td>Fidélité</td></tr>
+            <tr><td>Noé Fictif</td><td class="r">1</td><td class="r">02/03</td><td>Fidélité</td></tr></table>
+          <span class="small">Clara Démo et 3 autres membres du groupe n'ont pas présidé sur la période ›</span></div>
+      </div></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- SUJET 3 -->
+<section>
+  <span class="eyebrow">Sujet 3</span>
+  <h2>Un groupe : un résumé quand on choisit un service</h2>
+  <div class="piste reco">
+    <div class="piste-head"><h3>Piste A · Une rangée de chiffres en tête, une partie admins</h3><span class="tag">Recommandée</span></div>
+    <p>Dans la page Statistiques, choisir « Groupe Fidélité » ajoute une rangée : setlists comptées, rythme (setlists par mois), chants différents, part FR / 中文, tonalité la plus jouée. Tout membre la voit. Les admins voient en plus le tableau « Présidences » du sujet 2, filtré sur le groupe. Les vues « Les plus joués · Jamais joués · À redécouvrir » restent dessous, inchangées.</p>
+    <div class="devices">
+      <div class="dev"><span class="dev-label">Téléphone · membre</span><div class="frame phone"><div class="pg">
+        <b>Statistiques</b><div class="filters"><span class="on">Groupe Fidélité ▾</span><span>FR et 中文 ▾</span></div>
+        <div class="kpis"><div class="kpi"><span class="n">21</span><span class="l">setlists</span></div><div class="kpi"><span class="n">1,8</span><span class="l">par mois</span></div><div class="kpi"><span class="n">64</span><span class="l">chants diff.</span></div></div>
+        <span class="small">FR 58 % · 中文 42 % · tonalité la plus jouée : G</span>
+        <span class="small">Les plus joués à Fidélité…</span>
+      </div></div></div>
+      <div class="dev"><span class="dev-label">Tablette · admin</span><div class="frame tablet"><div class="pg">
+        <div class="filters"><span class="on">Groupe Fidélité ▾</span><span>Présidence ▾</span></div>
+        <div class="kpis"><div class="kpi"><span class="n">21</span><span class="l">setlists</span></div><div class="kpi"><span class="n">1,8</span><span class="l">par mois</span></div><div class="kpi"><span class="n">64</span><span class="l">chants différents</span></div></div>
+        <div class="moi-card"><h4>Présidences à Fidélité <span class="lock">admins</span></h4><span class="small">Luc Essai 7 · Inès Modèle 5 · Noé Fictif 1 · 4 membres jamais</span></div>
+      </div></div></div>
+    </div>
+  </div>
+  <div class="piste">
+    <div class="piste-head"><h3>Piste B · Un onglet « Groupes » dans la page Statistiques</h3><span class="tag neutre">Possible</span></div>
+    <p>Une quatrième vue, à côté de « Les plus joués » : un tableau des groupes côte à côte (setlists, rythme, chants différents, FR / 中文). Pas de nouvelle page, mais un onglet de plus à comprendre ; la comparaison n'était pas demandée.</p>
+  </div>
+</section>
+
+<section>
+  <span class="eyebrow">À trancher</span>
+  <h2>Questions</h2>
+  <div class="questions">
+    <div class="q"><h3>« Mes présidences » : carte et feuille, ou tout déplié ?</h3><p class="rec">Recommandation : piste A (carte, détail en feuille ou panneau).</p></div>
+    <div class="q"><h3>Comment relier une présidence à un compte ?</h3><p>Le texte « Présidence » de la setlist comparé au nom de planning du profil, sinon à « Prénom Nom », graphies regroupées comme le filtre actuel.</p><p class="rec">Recommandation : oui ; et dans « Mes présidences », une ligne discrète « Présidences comptées sous le nom « Luc Essai » » pour qu'on comprenne un écart.</p></div>
+    <div class="q"><h3>« Membres qui n'ont jamais présidé » (admins) : qui compte comme membre d'un groupe ?</h3><p>Le site sait qui sert dans quel groupe par l'organigramme (rattachements des profils). Sans rattachement, on ne peut lister que les présidences existantes.</p><p class="rec">Recommandation : oui, pour un groupe choisi, à partir des rattachements de l'organigramme ; sans groupe choisi, pas de liste des « jamais ».</p></div>
+    <div class="q"><h3>Les chants jamais choisis par une personne : utile ?</h3><p class="rec">Recommandation : seulement le nombre, avec un lien vers « Jamais joués » de la page Statistiques filtrée sur sa présidence (admins) ; pour la personne elle-même, le lien ouvre « Jamais joués » sans filtre (le filtre reste aux admins).</p></div>
+    <div class="q"><h3>Le résumé de groupe : piste A (rangée en tête) ou B (onglet « Groupes ») ?</h3><p class="rec">Recommandation : A.</p></div>
+  </div>
+</section>
+
+</div>
+</body></html>
