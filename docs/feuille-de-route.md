@@ -1270,6 +1270,15 @@ le 31/10/2026 : « Mes présidences » dans Moi (personne + admins), filtre Pré
 résumé de groupe dans Statistiques (chants pour tous, présidences pour les admins). Lot **SP** (SP-A à SP-C),
 **fait le 31/10/2026** (go de Timothée). Aucune règle Firestore.
 
+### AJ. Rappel de structure du mode louange (Timothée, 31/10/2026) → `spec-rappel-structure-louange.md`
+
+« La barre supérieure est un peu bizarre et pas très lisible » (mode louange, Prince de paix), Dp de couleurs
+différentes, le même Dp une seule fois, « quelque chose pour chaque mode ». Planche
+(https://claude.ai/artifact/F4KLwJYLVBnbTmWKuhi6JN) : piste C, adaptée à chaque mode ; questions tranchées par la
+session sur « fais ce que tu penses est le mieux ». Lot **RS** (RS-A à RS-C). **En attente du go.** Au passage :
+paroles sans accords, l'espace après un accord était perdu (« àLui », 329 lignes dans 85 chants), corrigé et mis
+en ligne le 31/10/2026 (`7a2c62c`).
+
 ## 4. Carte des modules de l'app « GCC »
 
 À valider par Timothée avant toute spec de module (les modules existants ne

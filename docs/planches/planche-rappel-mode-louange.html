@@ -109,7 +109,7 @@
 
   <section class="carte">
     <h2>2 · Sections uniques</h2>
-    <p>Chaque section n'est imprimée qu'une fois, et on revient dessus quand la structure la rejoue : la page n'est pas un moment du chant, donc pas de points. Proposé : <b>chaque passage</b> d'une section imprimée sur la page est plein, avec sa nuance. On voit d'un coup d'œil à quels moments on reviendra sur cette page. Exemple : page 2, qui imprime Pont, Refrain et la Dp.</p>
+    <p>Chaque section n'est imprimée qu'une fois, et on revient dessus quand la structure la rejoue : la page n'est pas un moment du chant, donc pas de points. Proposé : <b>chaque passage</b> d'une section imprimée sur la page est plein, avec sa nuance. On voit d'un coup d'œil à quels moments on reviendra sur cette page. Exemple : page 2, qui imprime Pont, Refrain et la Dp. Sur téléphone, seulement les pastilles pleines, pour tenir sur une ligne.</p>
     <h3>Page 2 · aujourd'hui</h3>
     <div class="tailles" data-vue="unique-avant" data-tailles="tablette"></div>
     <h3>Page 2 · proposé</h3>
@@ -144,13 +144,14 @@
   </section>
 
   <section class="carte">
-    <h2>Questions encore ouvertes</h2>
+    <h2>Décisions (31/10/2026) <span class="badge">Tranché</span></h2>
     <ol class="decisions">
-      <li><b>Ordre joué</b> : ajouter le rappel aux pages 2 et suivantes, comme proposé, ou laisser ces pages sans rappel comme aujourd'hui ?</li>
-      <li><b>Dans le corps de la page</b>, le même Dp imprimé deux fois de suite (comme sur ta capture) : n'en imprimer qu'un, avec « ×2 » ? Proposé : oui en Ordre joué. En Sections uniques, il n'est déjà imprimé qu'une fois.</li>
-      <li><b>Dp et R de la même couleur</b> : une Dp tirée du refrain a exactement l'orange du R, et en Sections uniques tout l'orange est plein à la fois. Seules les lettres les distinguent. On garde, ou on donne aux Dp une pastille seulement entourée de leur couleur ?</li>
-      <li><b>Téléphone en Sections uniques</b> : sans les points, la rangée prend deux lignes (≈ 90 px). On l'accepte, ou on n'y montre que les pastilles pleines ?</li>
+      <li><b>Ordre joué</b> reçoit le rappel aux pages 2 et suivantes.</li>
+      <li><b>Dans le corps</b>, en Ordre joué, le même Dp joué de suite n'est imprimé qu'une fois, avec « ×2 ».</li>
+      <li><b>Dp et R</b> : une Dp tirée du refrain garde l'orange du R. La couleur dit l'origine ; une Dp de pont ou de couplet se distingue d'elle-même.</li>
+      <li><b>Téléphone en Sections uniques</b> : seulement les pastilles pleines, sur une ligne.</li>
     </ol>
+    <p>Spec : <code>docs/spec-rappel-structure-louange.md</code> (lot RS).</p>
   </section>
 </main>
 
@@ -177,6 +178,8 @@
     return `<div class="rc">${titre}${PRINCE.map((e, i) => {
       if (page && i < debut) return `<span class="pt" style="${v(e[1])}"></span>`;
       const ici = page ? page.includes(i) : sections.includes(e[2]);
+      // Sections uniques sur téléphone : seulement les pleines (D4).
+      if (!page && taille === "telephone" && !ici) return "";
       return `<span class="grp ${ici ? "ici" : ""}" style="${v(e[1])}"><span class="pa">${pa(e)}</span>${ici ? `<span class="nu">${e[3]}</span>` : ""}</span>`;
     }).join("")}</div>`;
   }
