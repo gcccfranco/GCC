@@ -3,7 +3,7 @@
 Spec écrite le 30/10/2026 après la planche
 https://claude.ai/artifact/SkYcXaBfGRG3EdHLyCXFvs (`docs/planches/planche-jianpu-statistiques.html`).
 Timothée a validé la piste A et toutes les recommandations des questions Q1 à Q6 le 30/10/2026.
-**Pas encore de go** : le code est prévu le 31/10/2026 à 12 h 02, sur un go donné à ce moment-là.
+Go de Timothée le 31/10/2026 (« fait le lot JE ») ; ST fait le 30/10/2026.
 Branche : `main` directement (consigne de Timothée du 30/10/2026, « ne crée pas de nouvelles branches »).
 
 ## Mots de Timothée (30/10/2026)
@@ -226,7 +226,30 @@ Fidélité 7 jours avant porte la pastille orange. Sans compte : aucune statisti
   - **ST-D** : `statsBibliotheque` (un passage pour tout le recueil), pastilles verte / orange, tri
     « Moins joués ici » ; ordinateur : colonnes « {Service} » et « Total », la pastille orange et
     « Jamais joué à GCC » restent sous le titre.
-- Reste : lot **JE** (pas de go).
+- **31/10/2026 — lot JE fait** (go de Timothée le 31/10/2026, « fait le lot JE »), sur `main` (commits locaux,
+  poussés sur ordre de Timothée) :
+  - **JE-A** : `{subtitle}`, `{time}`, `{bible}` (parseur, `Song`/index, validate `n/n`, `01-format-cho.md`,
+    `00-nouveau-chant.md`).
+  - **JE-B** : `cadrage.py propose --sous-entete` (une étiquette vide du calque est une gomme, ignorée) ; planche
+    `--cadrage --propose`. **190 pages recertifiées à l'œil**, par 9 lots : 180 propositions acceptées, 10
+    refusées et réglées à la main (一切歌颂赞美 185, 从心合一 132, 握手 120, 旷野中唯一的力量 132 : ancienne
+    valeur, premier accord ou crédits sur la bande gravée ; 哦十字架 286, 耶稣耶稣 268 : filigrane sans rangée
+    blanche ; 我们欢迎君王降临 312, 献上尊荣 318, 荣耀的呼召 316 : le repli laissait une rangée d'encre ;
+    永恒唯一的盼望 217 : la proposition cachait une première ligne sans accord, que le garde-fou à 1,5 système
+    n'a pas signalée). Sur une dizaine de pages aucune coupe propre n'existe et l'en-tête gravé reste en partie
+    (全然向你, 复兴的火, 握住幸福, 陪我走过春夏秋冬, 赞美之泉, 爱使我们勇敢…). Relevés : mesure sur 190 chants (187 × 4/4, 2 × 6/8, 1 × 12/8), sous-titre
+    sur 69, référence biblique sur 108, recopiés tels que gravés (quatre références douteuses sur le scan :
+    你永远如此深爱着我 « 箴8:35,38-39 », 在耶稣的脚前 « 腓4:6；10:39 », 我的家要荣耀主 « 书14:15 »,
+    这一生最美的祝福 « 诗28:1-14 » — à vérifier par Timothée). PDF de setlist : calque coupé au cadre de
+    l'image (`overflow: hidden`), sinon le « 1=X » réécrit et les gommes débordaient sur l'en-tête.
+  - **JE-C** : en-tête (sous-titre, référence, « 1=D · 4/4 · ♩ = 66 » en 简谱 avec la tonalité jouée,
+    « 4/4 · ♩ = 66 » en Paroles), prop `pageChant` de `SongView` (setlists inchangées). **Écart décidé par
+    Timothée le 31/10/2026** : à côté de la liste Chants, la colonne du chant ne fait que 600 px (tablette
+    paysage, ordinateur 1280) à 728 px (1 440) ; deux colonnes A2 **seulement quand la colonne dépasse
+    860 px** (conteneur `chant-colonne`, p. ex. 1 920 px), sinon une colonne. Spec
+    `tests/entete-chant-jianpu.spec.ts` dans `SPECS_GRAND_ECRAN`.
+  - Reste : la ligne de tempo est petite dans la colonne de 260 px (à regarder) ; mode Louange vérifié par
+    les tests (fenêtre `w / (h − top)`), pas par une capture.
 
 ## Hors périmètre
 
