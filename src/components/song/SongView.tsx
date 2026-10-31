@@ -743,8 +743,8 @@ export interface SongViewProps {
   corps?: React.ReactNode;
   /** Sous la rangée titre / pastille de l'en-tête (page chant : la ligne de statistiques, lot ST4). */
   statistiques?: React.ReactNode;
-  /** Page chant (lot JE, JE3 et JE4) : sous-titre, référence biblique et ligne « 1= · mesure · ♩ » dans l'en-tête ;
-   *  sur le scan 简谱, deux colonnes quand la colonne du chant a la place (globals.css). */
+  /** Page chant (lot JE, JE3) : sous-titre, référence biblique et ligne « 1= · mesure · ♩ » dans l'en-tête.
+   *  Une seule colonne à toutes les tailles (Timothée, 31/10/2026 : les deux colonnes A2 sont retirées). */
   pageChant?: boolean;
 }
 
@@ -803,7 +803,6 @@ export function SongView({
       );
     }
   }
-  const deuxColonnes = pageChant && corps !== undefined;
   const enTete = (
       <div className="mb-0 pb-3 print:mb-3 border-b border-border">
         <div className="flex items-start justify-between gap-5">
@@ -889,12 +888,13 @@ export function SongView({
       </>
   );
   return (
-    <div className={`max-w-2xl print:max-w-none${deuxColonnes ? " chant-deux-colonnes" : ""}`}>
-      {deuxColonnes ? <div className="entete-colonne">{enTete}{bandeau}</div> : <>{enTete}{bandeau}</>}
+    <div className="max-w-2xl print:max-w-none">
+      {enTete}
+      {bandeau}
 
       {/* Corps : ordre joué, ou chaque section une fois (les réglages
           d'occurrence restent dans le bandeau), ou rien du tout — ou le scan. */}
-      {deuxColonnes ? <div className="partition-colonne">{corps}</div> : corps ?? <div>
+      {corps ?? <div>
         {shown.map(({ step, uids, withDetails }, i) => {
           const { section } = step;
           // Modulation (升调) : la section s'affiche transposée dans sa tonalité cible.

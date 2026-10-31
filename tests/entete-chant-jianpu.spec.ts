@@ -42,9 +42,6 @@ test("un chant français sans {time} ni {subtitle} : ni sous-titre ni référenc
 
 test("aux tailles des projets : une colonne, l'en-tête est au-dessus du scan", async ({ page }) => {
   await openSheet(page, SLUG);
-  await expect(page.locator(".chant-deux-colonnes")).toHaveCount(1); // la classe suit « 简谱 » ; la grille, elle, suit la place
-  const grille = await page.locator(".chant-deux-colonnes").evaluate((el) => getComputedStyle(el).display);
-  expect(grille).not.toBe("grid");
   const [liste, scan] = await Promise.all([
     page.getByRole("list", { name: "Structure" }).boundingBox(),
     page.locator("[data-jianpu-fenetre]").first().boundingBox(),
@@ -52,34 +49,14 @@ test("aux tailles des projets : une colonne, l'en-tête est au-dessus du scan", 
   expect(liste!.y + liste!.height).toBeLessThanOrEqual(scan!.y);
 });
 
-test("(ordinateur, 1920 px) deux colonnes : en-tête à gauche, collé sous la barre ; paroles : pas de grille", async ({ page }, info) => {
+test("(ordinateur, 1920 px) une colonne aussi sur grand écran : l'en-tête au-dessus du scan", async ({ page }, info) => {
+  // Timothée, 31/10/2026 : les deux colonnes A2 sont retirées, une colonne à toutes les tailles.
   test.skip(info.project.name !== "ordinateur", "mesuré au projet ordinateur, élargi à 1920 px");
   await page.setViewportSize({ width: 1920, height: 1080 });
   await openSheet(page, SLUG);
-  const colonne = page.locator(".entete-colonne");
-  await expect(colonne).toBeVisible();
-  const scan = page.locator("[data-jianpu-fenetre]").first();
-  const [c, s] = await Promise.all([colonne.boundingBox(), scan.boundingBox()]);
-  expect(c!.x + c!.width, "en-tête à gauche du scan").toBeLessThanOrEqual(s!.x);
-  expect(Math.abs(c!.width - 260), "colonne d'environ 260 px").toBeLessThanOrEqual(2);
-  expect(s!.width, "le scan garde sa largeur").toBeGreaterThanOrEqual(600);
-  expect(s!.width).toBeLessThanOrEqual(900 + 1);
-
-  // Défilé : la colonne reste à l'écran, sous la barre du chant.
-  // Position de repos de la barre (haut posé + hauteur) : sa boîte à l'écran bouge pendant qu'elle glisse.
-  const barreBas = await page.getByTestId("barre-outils").evaluate((b: HTMLElement) => (parseFloat(getComputedStyle(b).top) || 0) + b.offsetHeight);
-  await page.evaluate(() => window.scrollBy(0, 800));
-  await expect.poll(async () => (await colonne.boundingBox())!.y, { timeout: 5000 }).toBeLessThanOrEqual(c!.y + 2);
-  const apres = (await colonne.boundingBox())!;
-  expect(apres.y, "jamais sous la barre").toBeGreaterThanOrEqual(barreBas);
-  expect(apres.y, "toujours à l'écran").toBeLessThan(200);
-  // La barre revient quand on remonte un peu : elle ne recouvre pas la colonne.
-  await page.evaluate(() => window.scrollBy(0, -60));
-  await expect(page.getByTestId("barre-outils")).toBeVisible();
-  await page.waitForTimeout(500);
-  const [b2, c2] = await Promise.all([page.getByTestId("barre-outils").boundingBox(), colonne.boundingBox()]);
-  expect(b2!.y + b2!.height).toBeLessThanOrEqual(c2!.y + 1);
-
-  await enParoles(page);
-  await expect(page.locator(".chant-deux-colonnes")).toHaveCount(0);
+  const [liste, scan] = await Promise.all([
+    page.getByRole("list", { name: "Structure" }).boundingBox(),
+    page.locator("[data-jianpu-fenetre]").first().boundingBox(),
+  ]);
+  expect(liste!.y + liste!.height).toBeLessThanOrEqual(scan!.y);
 });
