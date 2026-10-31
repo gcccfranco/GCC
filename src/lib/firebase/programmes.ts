@@ -6,6 +6,7 @@ import {
   fromFsValue,
   type RawDoc,
 } from "./setlists";
+import { viderGardesTableau } from "@/lib/tableauDeBord/gardes";
 import { idEdition, type Fete } from "@/lib/scene/fetes";
 import type { Creneau, Duree, Passage, Plage, Programme } from "@/types/programme";
 
@@ -97,6 +98,7 @@ async function post(path: string, data: Record<string, unknown>): Promise<string
     headers: { "Content-Type": "application/json", ...headers },
     body: JSON.stringify({ fields: toFsFields(data) }),
   });
+  viderGardesTableau(); // lot LF, docs/spec-lectures-firestore.md
   await checkRest(res);
   return ((await res.json()) as RawDoc).name.split("/").pop()!;
 }
@@ -113,6 +115,7 @@ async function patch(path: string, data: Record<string, unknown>, version?: stri
     headers: { "Content-Type": "application/json", ...headers },
     body: JSON.stringify({ fields: toFsFields(data) }),
   });
+  viderGardesTableau(); // lot LF, docs/spec-lectures-firestore.md
   if (version && res.status === 400) {
     const json = (await res.clone().json().catch(() => ({}))) as { error?: { status?: string } };
     if (json.error?.status === "FAILED_PRECONDITION") return false;
@@ -124,6 +127,7 @@ async function patch(path: string, data: Record<string, unknown>, version?: stri
 async function remove(path: string): Promise<void> {
   const headers = await authHeader();
   const res = await fetch(`${FS_BASE}/${path}`, { method: "DELETE", headers });
+  viderGardesTableau(); // lot LF, docs/spec-lectures-firestore.md
   await checkRest(res);
 }
 
@@ -165,6 +169,7 @@ export async function creerEdition(
     headers: { "Content-Type": "application/json", ...headers },
     body: JSON.stringify({ fields: toFsFields({ ...data, ...changement } as unknown as Record<string, unknown>) }),
   });
+  viderGardesTableau(); // lot LF, docs/spec-lectures-firestore.md
   if (res.status === 409) {
     if (protege) throw new ModifieEntreTemps((await getProgramme(id))?.modifiePar ?? "");
     if (Object.keys(changement).length) await updateProgramme(id, changement);

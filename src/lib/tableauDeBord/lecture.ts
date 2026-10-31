@@ -11,6 +11,7 @@ import { listTaches } from "@/lib/firebase/taches";
 import { collectPlanningNames, loadPlanningData } from "@/lib/planning/names";
 import { editionsAffichees } from "@/lib/scene/fetes";
 import { lignesDeTache } from "@/lib/taches/echeances";
+import { inscrireGarde, viderGardesTableau } from "./gardes";
 import { aFaire, type ResultatAFaire, type SourcesAFaire } from "./aFaire";
 import { equipesAFaire, estSienEvenement, planningsCasesVides, reunionsDuTableau } from "./donnees";
 import { fusionnerLignes } from "@/lib/planning/grilles";
@@ -51,10 +52,14 @@ export function lireSetlists(depuis: string): Promise<FSSetlist[]> {
 }
 
 // Lot TB2 : « Évènements » (et bientôt « Réunions ») lisent les mêmes évènements, « Plannings » et
-// « Comptes » les mêmes profils : une lecture chacun, gardée une minute, rejetée non gardée.
-const TTL_PARTAGE_MS = 60_000;
+// « Comptes » les mêmes profils : une lecture chacun, gardée 10 min (lot LF, docs/spec-lectures-firestore.md ;
+// vidée par `viderGardesTableau` à chaque écriture), rejetée non gardée.
+const TTL_PARTAGE_MS = 10 * 60_000;
+
+export { viderGardesTableau };
 function lectureGardee<T>(lire: (cle: string) => Promise<T>): (cle: string) => Promise<T> {
   let garde: { cle: string; at: number; promesse: Promise<T> } | null = null;
+  inscrireGarde(() => { garde = null; });
   return (cle) => {
     if (garde && garde.cle === cle && Date.now() - garde.at < TTL_PARTAGE_MS) return garde.promesse;
     const promesse = lire(cle);
@@ -163,8 +168,9 @@ async function lireSansGarde(user: { uid: string; email?: string | null }, profi
 
 // Gardée comme `lectureGardee`, mais les arguments passent par l'appel, et un résultat incomplet n'est pas gardé.
 let garde: { cle: string; at: number; promesse: Promise<LectureAFaire> } | null = null;
+inscrireGarde(() => { garde = null; });
 
-/** Ce qu'il y a à faire : une lecture gardée une minute par compte et par jour, partagée par la page et la pastille. */
+/** Ce qu'il y a à faire : une lecture gardée 10 min par compte et par jour, partagée par la page et la pastille. */
 export function lireAFaire(
   user: { uid: string; email?: string | null }, profile: UserProfile | null, today: string, nowIso: string,
 ): Promise<LectureAFaire> {

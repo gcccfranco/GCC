@@ -1,4 +1,5 @@
 import { FS_BASE, authHeader, checkRest, toFsFields } from "./setlists";
+import { viderGardesTableau } from "@/lib/tableauDeBord/gardes";
 import { oublierGrille } from "@/lib/planning/grille";
 import type { DefinitionGrille } from "@/lib/planning/grilles";
 
@@ -56,6 +57,7 @@ export async function ecrireCases({ definition, date, valeurs, auteur, semer }: 
     headers: { "Content-Type": "application/json", ...(await authHeader()) },
     body: JSON.stringify({ fields: toFsFields(champs) }),
   });
+  viderGardesTableau(); // lot LF, docs/spec-lectures-firestore.md
   await checkRest(res);
   oublierGrille(definition.key);
 }
@@ -74,6 +76,7 @@ export async function poserDate(definition: DefinitionGrille, date: string, aute
     headers: { "Content-Type": "application/json", ...(await authHeader()) },
     body: JSON.stringify({ fields: toFsFields(champs) }),
   });
+  viderGardesTableau(); // lot LF, docs/spec-lectures-firestore.md
   await checkRest(res);
   oublierGrille(definition.key);
 }
@@ -83,6 +86,7 @@ export async function retirerDate(definition: DefinitionGrille, date: string): P
     method: "DELETE",
     headers: await authHeader(),
   });
+  viderGardesTableau(); // lot LF, docs/spec-lectures-firestore.md
   await checkRest(res);
   oublierGrille(definition.key);
 }

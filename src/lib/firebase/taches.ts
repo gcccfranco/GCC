@@ -1,4 +1,5 @@
 import { FS_BASE, authHeader, checkRest, toFsFields, fromFsValue, type RawDoc } from "./setlists";
+import { viderGardesTableau } from "@/lib/tableauDeBord/gardes";
 import type { EtatFois, Fois, Prevenir, Repetition, Tache } from "@/types/tache";
 
 // Tâches par équipe (lot 7, docs/spec-taches.md ; lot 1 du chantier « équipes et groupes », EQ6) :
@@ -93,6 +94,7 @@ export async function createTache(equipe: string, values: TacheValues, auteurUid
     headers: { "Content-Type": "application/json", ...headers },
     body: JSON.stringify({ fields: toFsFields({ ...values, equipe, auteurUid, createdAt: now, updatedAt: now }) }),
   });
+  viderGardesTableau(); // lot LF, docs/spec-lectures-firestore.md
   await checkRest(res);
   return ((await res.json()) as RawDoc).name.split("/").pop()!;
 }
@@ -106,12 +108,15 @@ export async function updateTache(equipe: string, id: string, values: TacheValue
     headers: { "Content-Type": "application/json", ...headers },
     body: JSON.stringify({ fields: toFsFields(data) }),
   });
+  viderGardesTableau(); // lot LF, docs/spec-lectures-firestore.md
   await checkRest(res);
 }
 
 async function remove(path: string): Promise<void> {
   const headers = await authHeader();
-  await checkRest(await fetch(`${FS_BASE}/${path}`, { method: "DELETE", headers }));
+  const res = await fetch(`${FS_BASE}/${path}`, { method: "DELETE", headers });
+  viderGardesTableau(); // lot LF, docs/spec-lectures-firestore.md
+  await checkRest(res);
 }
 
 /** Supprime la tâche et ses fois (Firestore ne supprime pas les sous-collections). */
@@ -128,6 +133,7 @@ async function ecrireFois(equipe: string, id: string, fois: Fois): Promise<void>
     headers: { "Content-Type": "application/json", ...headers },
     body: JSON.stringify({ fields: toFsFields(fois as unknown as Record<string, unknown>) }),
   });
+  viderGardesTableau(); // lot LF, docs/spec-lectures-firestore.md
   await checkRest(res);
 }
 
@@ -160,6 +166,7 @@ export async function deplacerTache(equipe: string, id: string, vers: string, fo
     headers: { "Content-Type": "application/json", ...headers },
     body: JSON.stringify({ fields: toFsFields({ echeance: vers, updatedAt: new Date().toISOString() }) }),
   });
+  viderGardesTableau(); // lot LF, docs/spec-lectures-firestore.md
   await checkRest(res);
   if (fois) {
     await ecrireFois(equipe, id, { ...fois, date: vers });

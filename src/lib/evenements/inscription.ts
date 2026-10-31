@@ -1,6 +1,7 @@
 import { authHeader } from "@/lib/firebase/setlists";
 import { messageTraduit } from "@/lib/messageTraduit";
 import type { Inscription } from "@/types/evenement";
+import { viderGardesTableau } from "@/lib/tableauDeBord/gardes";
 
 // Inscriptions (lot 6) : toujours par le serveur, qui tient le compteur.
 // Avec compte, le jeton part dans l'en-tête ; sans compte, le nom dans le corps.
@@ -13,6 +14,7 @@ async function call<T>(path: string, body: Record<string, unknown>): Promise<T> 
     headers: { "Content-Type": "application/json", ...headers },
     body: JSON.stringify(body),
   });
+  viderGardesTableau(); // le serveur a pu écrire : « À faire » relit (lot LF, docs/spec-lectures-firestore.md)
   const json = (await res.json().catch(() => ({}))) as T & { error?: string; code?: string };
   if (!res.ok) {
     const cle = json.code ? `evenements.refus.${json.code}` : "";
