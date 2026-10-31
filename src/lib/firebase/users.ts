@@ -15,6 +15,7 @@ import { useAuth } from "./auth";
 import { CLES_RESPONSABILITES } from "@/lib/acces/responsabilites";
 import { lireChampsGroupe } from "@/lib/groupes/organigramme";
 import type { ServiceRole, UserProfile } from "@/types/user";
+import { viderGardesTableau } from "@/lib/tableauDeBord/gardes";
 
 export async function signUp(email: string, password: string): Promise<User> {
   const cred = await createUserWithEmailAndPassword(auth, email, password);
@@ -108,6 +109,7 @@ let cacheProfils: { uid: string | null; at: number; promesse: Promise<UserProfil
  *  serveur qui en écrivent (`/api/equipes/rattachement`, `/api/equipes/groupes`). */
 export function viderCacheProfils(): void {
   cacheProfils = null;
+  viderGardesTableau(); // « À faire » (Comptes, plannings) lit les profils
 }
 
 async function lireProfils(): Promise<UserProfile[] | null> {

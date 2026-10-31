@@ -8,6 +8,7 @@ import {
 } from "./setlists";
 import { versDate } from "@/lib/utils/formatDate";
 import type { Report, ReportKind, ReportStatus } from "@/types/report";
+import { viderGardesTableau } from "@/lib/tableauDeBord/gardes";
 
 function fromFsReport(raw: RawDoc): Report {
   const id = raw.name.split("/").pop()!;
@@ -76,6 +77,7 @@ export async function setReportStatus(id: string, status: ReportStatus): Promise
     headers: { "Content-Type": "application/json", ...headers },
     body: JSON.stringify({ name: docName, fields: toFsFields({ status }) }),
   });
+  viderGardesTableau(); // pastille Messages et « À faire » (lot LF)
   await checkRest(res);
 }
 
@@ -85,5 +87,6 @@ export async function deleteReport(id: string): Promise<void> {
     method: "DELETE",
     headers,
   });
+  viderGardesTableau(); // pastille Messages et « À faire » (lot LF)
   await checkRest(res);
 }
