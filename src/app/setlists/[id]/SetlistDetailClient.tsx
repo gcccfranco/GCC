@@ -3,38 +3,23 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { Trash2, List, Music, Pencil, SlidersHorizontal, PenLine, UserRound, Play, MoreHorizontal, Download, Copy, Share2, BellRing, FileText, Presentation, X, Info } from "lucide-react";
+import { Pencil, SlidersHorizontal, PenLine, UserRound, Play, MoreHorizontal, Download, Copy, FileText, Presentation } from "lucide-react";
 import { categoryColor } from "@/lib/serviceColors";
-import { styleTexteService } from "@/lib/couleurSombre";
 import { Halo } from "@/components/layout/Halo";
 import { FondDeBarre } from "@/components/layout/FondDeBarre";
 import { serviceButtonFill } from "@/lib/serviceButton";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
   DropdownMenuSeparator,
   DropdownMenuSub,
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { getSetlist, getSetlistOuCopie, lireCopieDuCompte, deleteSetlist, mettreALaCorbeille, duplicateSetlist, updateSetlist, authHeader } from "@/lib/firebase/setlists";
 import type { FSSetlist } from "@/types/setList";
 import { RELIRE_PROFIL, useProfile } from "@/lib/firebase/users";
@@ -62,6 +47,13 @@ import { titreAffiche } from "@/lib/fetes/droits";
 import { parsePresentationUrl } from "@/lib/setlist/presentationLink";
 import { setlistLyricsText } from "@/components/song/copyLyrics";
 import { SetlistHistory } from "./_components/SetlistHistory";
+import { EcranChargement, EcranConnexion, EcranErreur, EcranIntrouvable, EcranSansAcces } from "./_components/EcransSetlist";
+import { DroitsDeModifier, ReglagesAffichage, ActionsPartagees, MenuSupprimer, ReessayerCopie } from "./_components/MenusSetlist";
+import { ConfirmerSuppression, ConfirmerRetablir } from "./_components/DialoguesSetlist";
+import { BasculeVues } from "./_components/BasculeVues";
+import { BandeauChantsManquants } from "./_components/BandeauChantsManquants";
+import { IdeesDuChant } from "./_components/IdeesDuChant";
+import { TitreEnTete } from "./_components/TitreEnTete";
 import { continuePass, historyAuthor, recordHistory, type HistoryPass } from "@/lib/firebase/setlistHistory";
 import { getSetlistVersions, saveSetlistVersions } from "@/lib/firebase/setlistVersions";
 import type { SetlistVersions, VersionItem } from "@/types/setlistVersions";
@@ -71,7 +63,7 @@ import { getChartStylePref, setChartStylePref } from "@/lib/chartStylePref";
 import { getPartitionLayoutPref, setPartitionLayoutPref, type PartitionLayout } from "@/lib/partitionLayoutPref";
 import { getPinyinPref, setPinyinPref } from "@/lib/pinyinPref";
 import { jianpuPngDataUrl, loadJianpuCadrage, loadJianpuChords, loadJianpuManifest, scansAbsentsDuCache, urlsJianpuAGarder, useJianpuManifest } from "@/lib/jianpu/images";
-import { getJianpuPref, setJianpuPref, sheetEnabled, interrupteurAllume, prefDepuisInterrupteur, type JianpuPref } from "@/lib/jianpu/preference";
+import { getJianpuPref, setJianpuPref, sheetEnabled, type JianpuPref } from "@/lib/jianpu/preference";
 import { aDesRetouches } from "@/lib/jianpu/retouches";
 import { fetchSongAST, type SongContent} from "@/lib/api/songs";
 import { PerformanceMode } from "@/components/performance/PerformanceMode";
@@ -79,9 +71,6 @@ import { EditLineSheet, type EditLineTarget } from "@/components/setlists/EditLi
 import { PdfChoiceSheet, type PdfVersion } from "@/components/pdf/PdfChoiceSheet";
 import { pdfFileName, type PdfStyle } from "@/lib/pdfStylePref";
 import { itemAst } from "@/lib/chordpro/itemContent";
-import { IdeesSheet } from "@/components/harmonie/IdeesSheet";
-import { AccordsProvider } from "@/components/accords/AccordsProvider";
-import { appliquerDansLaSource } from "@/lib/harmonie/appliquer";
 import { useAccesHarmonie, useInstrument } from "@/lib/harmonie/useHarmonie";
 import { semitonesTo } from "@/lib/transpose";
 import { telechargerBlob, demanderPleinEcran } from "@/lib/telecharger";
@@ -577,7 +566,7 @@ export function SetlistDetailClient() {
     );
     setLoadingContent(false);
     return manquants;
-  }, [contents]);
+  }, [contents, setContents]);
 
   // Hors ligne (D2) : la page d'une setlist lue en ligne demande au service worker de garder sa propre page (une
   // page ouverte par un lien n'est pas une navigation que le service worker voit), celle de la liste, le contenu
@@ -1435,42 +1424,19 @@ export function SetlistDetailClient() {
   }
 
   if (loadingSetlist) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <p className="text-sm text-muted-foreground">{t("common.loading")}</p>
-      </div>
-    );
+    return <EcranChargement />;
   }
 
   if (!user) {
-    return (
-      <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-3 px-4">
-        <p className="text-sm text-muted-foreground">{t("setlists.detail.loginRequired")}</p>
-        <Link href={`/login?from=/setlists/${id}`} className="text-sm text-foreground hover:underline">
-          {t("common.header.login")}
-        </Link>
-      </div>
-    );
+    return <EcranConnexion id={id} />;
   }
 
   if (loadError) {
-    return (
-      <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-3 px-4">
-        <p className="text-sm text-muted-foreground">{t("setlists.detail.loadError")}</p>
-        <Button variant="outline" onClick={() => setRetryKey((k) => k + 1)}>
-          {t("common.retry")}
-        </Button>
-      </div>
-    );
+    return <EcranErreur onRetry={() => setRetryKey((k) => k + 1)} />;
   }
 
   if (!setlist) {
-    return (
-      <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-3">
-        <p className="text-sm text-muted-foreground">{t("setlists.detail.notFound")}</p>
-        <Link href={backPath} className="text-sm text-foreground hover:underline">{t("setlists.detail.back")}</Link>
-      </div>
-    );
+    return <EcranIntrouvable backPath={backPath} />;
   }
 
   // Accès : uniquement les setlists de ses services/groupe (ou créées par soi) ; lot AO (F1) : et celle d'une date
@@ -1479,18 +1445,9 @@ export function SetlistDetailClient() {
   if (copieLueLe === null && !canSeeSetlist(user, profile, setlist, datesDuCompte)) {
     // Profil en cours de relecture (retour du réseau après une copie) : attendre, ne pas conclure à « pas d'accès ».
     if (authLoading || (BACK_OFFICE && planningName && datesDuCompte === undefined)) {
-      return (
-        <div className="min-h-screen bg-background flex items-center justify-center">
-          <p className="text-sm text-muted-foreground">{t("common.loading")}</p>
-        </div>
-      );
+      return <EcranChargement />;
     }
-    return (
-      <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-3 px-4">
-        <p className="text-sm text-muted-foreground">{t("setlists.detail.noAccess")}</p>
-        <Link href="/setlists" className="text-sm text-foreground hover:underline">{t("setlists.detail.back")}</Link>
-      </div>
-    );
+    return <EcranSansAcces />;
   }
 
   // Modification : le créateur, son équipe, les admins (SC1, docs/spec-createur-corbeille-absences.md)
@@ -1622,123 +1579,40 @@ export function SetlistDetailClient() {
   }
   // Qui peut modifier — rend visible la logique de access.ts.
   const droitsDeModifier = (
-    <div className="mt-3 flex items-center gap-2 flex-wrap">
-      <Badge variant="secondary">
-        {canEdit ? t("setlists.detail.canEdit") : t("setlists.detail.readOnly")}
-      </Badge>
-      <button
-        type="button"
-        aria-label={t("setlists.detail.qui")}
-        aria-expanded={droitsDeplies}
-        onClick={() => setDroitsDeplies((o) => !o)}
-        className="sm:hidden relative flex h-6 w-6 items-center justify-center rounded-full text-muted-foreground before:absolute before:left-1/2 before:top-1/2 before:h-11 before:w-11 before:-translate-x-1/2 before:-translate-y-1/2 before:content-['']"
-      >
-        <Info className="h-4 w-4" aria-hidden />
-      </button>
-      <span className={`text-xs text-muted-foreground ${droitsDeplies ? "" : "max-sm:hidden"}`}>
-        {setlist.isPrivate
-          ? t(setlist.editeurs?.length ? "setlists.detail.editableByOwnerEquipe" : "setlists.detail.editableByOwner")
-          : t(setlist.editeurs?.length ? "setlists.detail.editableByEquipe" : "setlists.detail.editableBy", {
-              category: t("categories." + setlist.category, { defaultValue: setlist.category }),
-            })}
-      </span>
-    </div>
+    <DroitsDeModifier setlist={setlist} canEdit={canEdit} droitsDeplies={droitsDeplies} onBasculer={() => setDroitsDeplies((o) => !o)} />
   );
   // Réglages d'affichage : le bouton « Affichage » de G, le sous-menu « Affichage »
   // du ⋯ en deux volets (Q3, Q7).
   const reglagesAffichage = (
-    <>
-      <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">
-        {t("setlists.detail.layout.label")}
-      </DropdownMenuLabel>
-      <DropdownMenuRadioGroup value={layout} onValueChange={(v) => changeLayout(v as PartitionLayout)}>
-        {(["played", "unique", "structure"] as const).map((v) => (
-          <DropdownMenuRadioItem key={v} value={v} onSelect={(e) => e.preventDefault()}>
-            {t(`setlists.detail.layout.${v}`)}
-          </DropdownMenuRadioItem>
-        ))}
-      </DropdownMenuRadioGroup>
-      <DropdownMenuSeparator />
-      {/* Pinyin (chants zh) — préférence persistée */}
-      {hasZhSong && (
-        <DropdownMenuCheckboxItem
-          checked={showPinyin}
-          onCheckedChange={() => togglePinyin()}
-          onSelect={(e) => e.preventDefault()}
-        >
-          {t("setlists.detail.pinyin", { defaultValue: "Pinyin" })}
-        </DropdownMenuCheckboxItem>
-      )}
-      <DropdownMenuCheckboxItem
-        checked={chartStyle}
-        onCheckedChange={toggleChartStyle}
-        onSelect={(e) => e.preventDefault()}
-      >
-        {t("performance.chartStyle")}
-      </DropdownMenuCheckboxItem>
-      {hasJianpuSheets && (
-        <>
-          <DropdownMenuSeparator />
-          <DropdownMenuCheckboxItem
-            checked={interrupteurAllume(jianpuPref)}
-            onCheckedChange={(on) => changeJianpuPref(prefDepuisInterrupteur(on))}
-            onSelect={(e) => e.preventDefault()}
-          >
-            {t("performance.jianpuSheet")}
-          </DropdownMenuCheckboxItem>
-          <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">
-            {t("performance.jianpuSheetHint")}
-          </DropdownMenuLabel>
-        </>
-      )}
-    </>
+    <ReglagesAffichage
+      layout={layout}
+      changeLayout={changeLayout}
+      hasZhSong={hasZhSong}
+      showPinyin={showPinyin}
+      togglePinyin={togglePinyin}
+      chartStyle={chartStyle}
+      toggleChartStyle={toggleChartStyle}
+      hasJianpuSheets={hasJianpuSheets}
+      jianpuPref={jianpuPref}
+      changeJianpuPref={changeJianpuPref}
+    />
   );
   // Actions du menu ⋯ communes à G et aux deux volets.
   const actionsPartagees = (
-    <>
-      {canNotifyTeam && (
-        <DropdownMenuItem
-          disabled={notifying}
-          onClick={() =>
-            realSongCount < 4
-              ? flashFeedback(t("setlists.detail.notifyNeedSongs"))
-              : handleNotifyTeam()
-          }
-        >
-          <BellRing className="h-3.5 w-3.5 text-muted-foreground" />
-          {notifying
-            ? "…"
-            : t("setlists.detail.notifyTeam", { defaultValue: "Prévenir l'équipe" })}
-        </DropdownMenuItem>
-      )}
-      {canDuplicate && (
-        <DropdownMenuItem disabled={duplicating} onClick={() => handleDuplicate()}>
-          <Copy className="h-3.5 w-3.5 text-muted-foreground" />
-          {duplicating ? "…" : t(canEdit ? "setlists.detail.duplicate" : "setlists.detail.duplicateForNotes")}
-        </DropdownMenuItem>
-      )}
-      <DropdownMenuItem onClick={() => handleShare()}>
-        <Share2 className="h-3.5 w-3.5 text-muted-foreground" />
-        {t("setlists.detail.share")}
-      </DropdownMenuItem>
-    </>
+    <ActionsPartagees
+      canNotifyTeam={canNotifyTeam}
+      notifying={notifying}
+      realSongCount={realSongCount}
+      flashFeedback={flashFeedback}
+      handleNotifyTeam={handleNotifyTeam}
+      canDuplicate={canDuplicate}
+      duplicating={duplicating}
+      canEdit={canEdit}
+      handleDuplicate={handleDuplicate}
+      handleShare={handleShare}
+    />
   );
-  const supprimer = (
-    <>
-      {canDelete && (
-        <>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem
-            className="text-destructive focus:text-destructive"
-            onClick={() => setConfirmDelete(true)}
-          >
-            <Trash2 className="h-3.5 w-3.5" />
-            {t("setlists.detail.deleteButton")}
-          </DropdownMenuItem>
-        </>
-      )}
-    </>
-  );
+  const supprimer = <MenuSupprimer canDelete={canDelete} onSupprimer={() => setConfirmDelete(true)} />;
   // Les partitions : à droite en deux volets, côté Partitions sur G.
   const partitions = (
     <>
@@ -1797,9 +1671,10 @@ export function SetlistDetailClient() {
     date: new Intl.DateTimeFormat(i18n.language === "zh-CN" ? "zh-CN" : "fr-FR", { dateStyle: "long", timeStyle: "short" }).format(copieLueLe),
   });
   const reessayerCopie = (
-    <Button type="button" size="sm" variant="ghost" className={`${deuxVolets ? "ml-2 h-6" : "h-11 shrink-0"} px-2 text-xs`} onClick={() => { window.dispatchEvent(new Event(RELIRE_PROFIL)); setRetryKey((k) => k + 1); }}>
-      {t("common.retry")}
-    </Button>
+    <ReessayerCopie
+      deuxVolets={deuxVolets}
+      onReessayer={() => { window.dispatchEvent(new Event(RELIRE_PROFIL)); setRetryKey((k) => k + 1); }}
+    />
   );
   return (
     <div className="relative min-h-screen bg-background">
@@ -1824,22 +1699,7 @@ export function SetlistDetailClient() {
             <FondDeBarre />
             <div className="flex flex-wrap items-end gap-x-6 gap-y-3 px-7 pb-4 pt-5">
               {/* Le titre garde 18rem au moins : sinon les boutons passent dessous. */}
-              <div className="min-w-0 flex-[1_1_18rem]">
-                {setlist.fete ? <RepereFete setlist={setlist} passage={passageFete} /> : (
-                <p className="flex items-center gap-1.5 text-[13px] font-semibold texte-service" style={styleTexteService(categoryColor(setlist.category))}>
-                  <span aria-hidden className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ backgroundColor: categoryColor(setlist.category) }} />
-                  {t("categories." + setlist.category, { defaultValue: setlist.category })} · {formatDate(setlist.date, i18n.language)}
-                </p>)}
-                <h1 className="mt-1 text-[28px] font-bold leading-tight tracking-[-0.01em] text-foreground">{titreAffiche(setlist, i18n.language === "zh-CN" ? "zh" : "fr")}</h1>
-                {setlist.fete && <SousTitreFete setlist={setlist} passage={passageFete} />}
-                {(setlist.fete ? !!setlist.notes : (setlist.leader || setlist.notes)) && (
-                  <p className="mt-0.5 text-[13px] text-muted-foreground">
-                    {!setlist.fete && setlist.leader && <>{t("setlists.detail.leaderLabel")} {setlist.leader}</>}
-                    {!setlist.fete && setlist.leader && setlist.notes && " · "}
-                    {setlist.notes}
-                  </p>
-                )}
-              </div>
+              <TitreEnTete setlist={setlist} passage={passageFete} />
               {/* Présentation · Adapter · Ma version · Modifier · PDF · ⋯ · Mode louange,
                   libellés compris ; la rangée passe sous le titre quand elle n'y tient pas. */}
               <div className="flex flex-wrap items-center gap-2">
@@ -2197,40 +2057,14 @@ export function SetlistDetailClient() {
                 son `top` collant et non par un transform, qui la faisait remonter sur l'en-tête avant
                 qu'elle ne colle ; 3.5rem = sa hauteur (py-2 + p-0.5 + h-9). */}
             {setlist.items.length > 0 && (
-              <div
-                ref={basculeRef}
-                data-testid="bascule-vues"
-                className="print:hidden sticky z-10 -mx-4 px-4 py-2 mb-1 transition-[top] duration-300"
-                style={{
-                  top: scrollVisible ? `calc(var(--nav-h) + ${toolbarH}px)` : "-3.5rem",
-                }}
-              >
-                <FondDeBarre sousNavbar />
-                <div className="flex w-full sm:max-w-[360px] items-center gap-0.5 rounded-full bg-secondary p-0.5">
-                  <button
-                    type="button"
-                    aria-pressed={view === "liste"}
-                    onClick={versListe}
-                    className={`flex-1 flex items-center justify-center gap-1.5 h-9 rounded-full text-sm font-semibold transition-colors ${
-                      view === "liste" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
-                    }`}
-                  >
-                    <List className="h-3.5 w-3.5" aria-hidden="true" />
-                    {t("setlists.detail.tabList")}
-                  </button>
-                  <button
-                    type="button"
-                    aria-pressed={view === "partitions"}
-                    onClick={() => versPartitions()}
-                    className={`flex-1 flex items-center justify-center gap-1.5 h-9 rounded-full text-sm font-semibold transition-colors ${
-                      view === "partitions" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
-                    }`}
-                  >
-                    <Music className="h-3.5 w-3.5" aria-hidden="true" />
-                    {t("setlists.detail.tabCharts")}
-                  </button>
-                </div>
-              </div>
+              <BasculeVues
+                refBascule={basculeRef}
+                scrollVisible={scrollVisible}
+                toolbarH={toolbarH}
+                view={view}
+                versListe={versListe}
+                versPartitions={versPartitions}
+              />
             )}
 
             {/* Contenu selon la vue */}
@@ -2253,102 +2087,26 @@ export function SetlistDetailClient() {
       )}
 
       {/* Idées d'harmonie du chant (lot 9) */}
-      {ideesTarget !== null && setlist.items[ideesTarget] && (() => {
-        const item = setlist.items[ideesTarget];
-        // Fusion : les idées du chant touché, dans sa tonalité et sa version
-        // adaptée. Elles se lisent ; rien ne s'applique à la fusion.
-        const chantFusion = item.type === "fusion" ? item.fusionSongs?.find((fs) => fs.songSlug === ideesChant) : undefined;
-        if (item.type === "fusion" && !chantFusion) return null;
-        const slug = chantFusion?.songSlug ?? item.songSlug;
-        const ast = chantFusion
-          ? itemAst(chantFusion, contents[slug])
-          : itemAst(editMine ? withMine(item) : item, contents[item.songSlug]);
-        if (!ast) return null;
-        const tonalite = (chantFusion ?? item).keyOverride ?? ast.metadata.key;
-        // Le chant suivant, pour la transition : les fusions et les items sans
-        // chant sont sautés (la spec les exclut).
-        const suivantItem = setlist.items
-          .slice(ideesTarget + 1)
-          .find((i) => i.songSlug && i.type !== "fusion");
-        const suivantAst = suivantItem ? itemAst(suivantItem, contents[suivantItem.songSlug]) : null;
-        const suivant =
-          suivantItem && suivantAst
-            ? {
-                titre: songsMap[suivantItem.songSlug]?.title ?? suivantItem.songSlug,
-                tonalite: suivantItem.keyOverride ?? suivantAst.metadata.key,
-              }
-            : undefined;
-        return (
-          // Les accords proposés s'ouvrent au toucher, même en « Ma version » (DA-3, Q13).
-          <AccordsProvider chant={{ slug, titre: songsMap[slug]?.title ?? slug }}>
-          <IdeesSheet
-            open
-            onClose={() => { setIdeesTarget(null); setIdeesChant(null); }}
-            slug={slug}
-            titre={songsMap[slug]?.title ?? slug}
-            sections={ast.sections}
-            tonalite={tonalite}
-            tonaliteOrigine={ast.metadata.key}
-            instrument={instrumentHarmonie}
-            // « Montrer » cherche dans ce chant : les identifiants de section
-            // se répètent d'un chant à l'autre, et d'un chant à l'autre d'une fusion.
-            portee={`[data-outline-item="${item.position}"]${chantFusion ? ` [data-chant-slug="${CSS.escape(slug)}"]` : ""}`}
-            suivant={item.type === "fusion" ? undefined : suivant}
-            onModuler={
-              canEdit && !editMine && item.type !== "fusion"
-                ? (_m, prop) => {
-                    // Le 升调 existant porte la montée ; l'accord d'approche se
-                    // pose à la fin de la section d'avant, dans le chant adapté.
-                    const sectionKeys = { ...(item.sectionKeys ?? {}), [prop.sectionUid]: prop.tonaliteCible };
-                    const source = sourceForItem(item);
-                    const next =
-                      source && prop.endroitApproche && prop.approche.length
-                        ? appliquerDansLaSource(
-                            source,
-                            prop.endroitApproche,
-                            [...prop.endroitApproche.accords, ...prop.approche],
-                            semitonesTo(ast.metadata.key, tonalite),
-                            ast.metadata.key,
-                          )
-                        : source;
-                    void applyNewSource(ideesTarget, next ?? "", { sectionKeys });
-                    setIdeesTarget(null);
-                  }
-                : undefined
-            }
-            onEssayer={
-              editMine && !chantFusion
-                ? (s, changements, sectionNom) => {
-                    const source = sourceForItem(item);
-                    if (!source || !changements.length) return;
-                    const demiTons = semitonesTo(ast.metadata.key, tonalite);
-                    // Du dernier au premier : les accords en trop d'un
-                    // remplacement décalent les index des suivants d'une ligne.
-                    void applyNewSource(
-                      ideesTarget,
-                      changements.slice().reverse().reduce(
-                        (src, c) => appliquerDansLaSource(src, c.endroit, c.apres, demiTons, ast.metadata.key),
-                        source,
-                      ),
-                    );
-                    // Chant affiché en scan 简谱 : la retouche va bien dans la
-                    // version texte, mais elle ne se verra pas sur l'image —
-                    // on le dit, avec le changement à reporter à la main.
-                    if (jianpuManifest?.[item.songSlug] && sheetEnabled(jianpuPref, item.jianpuSheet)) {
-                      flashFeedback(
-                        t("harmonie.reporterJianpu", {
-                          quoi: `${sectionNom} : ${changements[0].endroit.accords.join(" – ")} → ${changements[0].apres.join(" – ")}`,
-                        }),
-                      );
-                    }
-                    setIdeesTarget(null);
-                  }
-                : undefined
-            }
-          />
-          </AccordsProvider>
-        );
-      })()}
+      {ideesTarget !== null && (
+        <IdeesDuChant
+          ideesTarget={ideesTarget}
+          ideesChant={ideesChant}
+          items={setlist.items}
+          contents={contents}
+          songsMap={songsMap}
+          editMine={editMine}
+          canEdit={canEdit}
+          instrument={instrumentHarmonie}
+          jianpuManifest={jianpuManifest}
+          jianpuPref={jianpuPref}
+          withMine={withMine}
+          sourceForItem={sourceForItem}
+          applyNewSource={applyNewSource}
+          flashFeedback={flashFeedback}
+          setIdeesTarget={setIdeesTarget}
+          setIdeesChant={setIdeesChant}
+        />
+      )}
 
       {/* Confirmation de suppression */}
       <PdfChoiceSheet
@@ -2360,24 +2118,13 @@ export function SetlistDetailClient() {
         onListe={deuxVolets ? () => handleDownload("liste") : undefined}
       />
 
-      <AlertDialog open={confirmDelete} onOpenChange={setConfirmDelete}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{setlist.fete ? t("setlists.detail.deleteButton") : t("setlists.detail.trashTitle")}</AlertDialogTitle>
-            <AlertDialogDescription>{setlist.fete ? t("setlists.detail.deleteConfirm") : t("setlists.detail.trashBody")}</AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>{t("setlists.detail.deleteCancel")}</AlertDialogCancel>
-            <AlertDialogAction
-              disabled={deleting}
-              onClick={handleDelete}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              {deleting ? "…" : setlist.fete ? t("setlists.detail.deleteYes") : t("setlists.detail.trashYes")}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ConfirmerSuppression
+        open={confirmDelete}
+        onOpenChange={setConfirmDelete}
+        fete={!!setlist.fete}
+        deleting={deleting}
+        onConfirmer={handleDelete}
+      />
 
       {/* Retour visuel du partage (lien copié / setlist privée) */}
       {shareFeedback && (
@@ -2409,64 +2156,27 @@ export function SetlistDetailClient() {
       />
 
       {/* Confirmation de rétablissement de l'original */}
-      <AlertDialog open={confirmRevert !== null} onOpenChange={(o) => !o && setConfirmRevert(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>
-              {editMine
-                ? t("setlists.myVersion.revert")
-                : t("setlists.contentEdit.revert", { defaultValue: "Rétablir l'original" })}
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              {editMine
-                ? t("setlists.myVersion.revertConfirm")
-                : t("setlists.contentEdit.revertConfirm", {
-                    defaultValue:
-                      "Toutes les modifications d'accords et de paroles de ce chant pour cette setlist seront perdues.",
-                  })}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>{t("common.cancel", { defaultValue: "Annuler" })}</AlertDialogCancel>
-            <AlertDialogAction
-              disabled={savingLine}
-              onClick={() => confirmRevert !== null && handleRevert(confirmRevert)}
-            >
-              {savingLine ? "…" : t("setlists.contentEdit.revertYes", { defaultValue: "Rétablir" })}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ConfirmerRetablir
+        open={confirmRevert !== null}
+        onOpenChange={(o) => !o && setConfirmRevert(null)}
+        editMine={editMine}
+        savingLine={savingLine}
+        onConfirmer={() => confirmRevert !== null && handleRevert(confirmRevert)}
+      />
 
       {/* Mode Louange */}
       {chantsManquants && !performanceMode && (
-        <div
-          role="alert"
-          data-chants-manquants
-          // Au-dessus de la barre du bas sur téléphone et tablette portrait (même calcul que BoutonNouveau).
-          className={`fixed z-50 flex max-w-md flex-wrap items-center justify-between gap-x-4 gap-y-2 rounded-2xl border border-border bg-card px-4 py-3 text-sm shadow-lg ${
-            // Deux volets : en bas à droite, sur le volet de lecture, sans couvrir le pied du sommaire.
-            deuxVolets ? "bottom-4 right-6" : "inset-x-4 mx-auto bottom-[calc(var(--tabbar-bottom)+78px+8px)]"
-          }`}
-        >
-          <span className="font-medium text-foreground">
-            {t("setlists.detail.chantsNonCharges", { count: chantsManquants.length })}
-            {essaiEchoue && !essaiEnCours && (
-              <span className="mt-0.5 block text-xs font-normal text-muted-foreground">{t("setlists.detail.chantsToujoursAbsents")}</span>
-            )}
-          </span>
-          <span className="flex items-center gap-2">
-            <Button ref={boutonReessayerRef} size="sm" variant="outline" disabled={essaiEnCours} onClick={reessayerLesChants}>
-              {essaiEnCours ? t("setlists.detail.essaiEnCours") : t("common.retry")}
-            </Button>
-            {aucunChantCharge ? null : (
-              <Button size="sm" onClick={continuerSansLesChants}>{t("setlists.detail.continuerQuandMeme")}</Button>
-            )}
-            <Button size="icon" variant="ghost" className="h-9 w-9" aria-label={t("common.buttons.close")} onClick={fermerLeBandeauDesChants}>
-              <X className="h-4 w-4" aria-hidden />
-            </Button>
-          </span>
-        </div>
+        <BandeauChantsManquants
+          nombre={chantsManquants.length}
+          deuxVolets={deuxVolets}
+          essaiEchoue={essaiEchoue}
+          essaiEnCours={essaiEnCours}
+          aucunChantCharge={aucunChantCharge}
+          refReessayer={boutonReessayerRef}
+          onReessayer={reessayerLesChants}
+          onContinuer={continuerSansLesChants}
+          onFermer={fermerLeBandeauDesChants}
+        />
       )}
       {performanceMode && (
         <PerformanceMode
