@@ -24,7 +24,7 @@ export const dynamic = "force-dynamic";
 // Lien de la présentation (PPT) d'une setlist (docs/spec-regie.md). Passe par le
 // serveur parce que la régie du jour ne peut être reconnue qu'en lisant le
 // planning, ce que les règles Firestore ne savent pas faire. `url` vide = retirer.
-// `updatedAt` n'est pas touché : ajouter le lien n'est pas modifier la setlist.
+// `updatedAt` n'est pas touché : ajouter le lien n'est pas modifier la setlist. `majLe` l'est (synchro de la liste, lot LF).
 // Lien posé ou remplacé → le président de la setlist est prévenu (lot 2,
 // docs/spec-notif-president.md) ; retrait ou lien inchangé → rien.
 
@@ -111,7 +111,7 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  await ref.update({ presentationUrl: presentationUrl || FieldValue.delete() });
+  await ref.update({ presentationUrl: presentationUrl || FieldValue.delete(), majLe: FieldValue.serverTimestamp() });
   const changed = presentationUrl && presentationUrl !== (setlist.presentationUrl ?? "");
   const notice = changed ? await notifyPresident(db, setlist, presentationUrl, { uid: user.uid, profile: profile }) : {};
   return NextResponse.json({ ok: true, presentationUrl: presentationUrl || null, ...notice });
