@@ -24,7 +24,7 @@
  *   npx tsx scripts/jianpu/audit-browser.ts 认识你真好
  *   npx tsx scripts/jianpu/audit-browser.ts 认识你真好 F --dark
  *   npx tsx scripts/jianpu/audit-browser.ts 认识你真好 --page=1 --slice=500
- *   npx tsx scripts/jianpu/audit-browser.ts 一生爱你 --cadrage [--dark]
+ *   npx tsx scripts/jianpu/audit-browser.ts 一生爱你 --cadrage [--dark] [--propose]
  *
  * `--cadrage` (chantier 简谱, L3-T1, docs/spec-jianpu-integration.md) : le haut
  * de la page entière tel que le navigateur le rend, avec la **ligne de coupe**
@@ -75,12 +75,17 @@ const width = flag("width", 1400);
 
 const chords = loadChords();
 
+/** `--propose` (lot JE, recertification) : la proposition passe avant la valeur certifiée. */
+const preferePropose = process.argv.includes("--propose");
+
 /** `top` de la page : certifié, sinon proposé, sinon absent. */
 function topDeCoupe(): { top: number; certifie: boolean } | undefined {
   const lire = (fichier: string) =>
     fs.existsSync(fichier) ? (JSON.parse(fs.readFileSync(fichier, "utf8")) as Record<string, number[]>)[slug]?.[pageIndex] : undefined;
   const certifie = lire(path.resolve(__dirname, "..", "..", "public", "jianpu", "cadrage.json"));
-  if (certifie !== undefined) return { top: certifie, certifie: true };
+  if (certifie !== undefined && !(preferePropose && lire(path.join(OUT_DIR, "cadrage-propose.json")) !== undefined)) {
+    return { top: certifie, certifie: true };
+  }
   const propose = lire(path.join(OUT_DIR, "cadrage-propose.json"));
   return propose !== undefined ? { top: propose, certifie: false } : undefined;
 }

@@ -1257,7 +1257,10 @@ repris par le site ; deux colonnes sur grand écran) et toutes les recommandatio
 Lots **JE** (JE-A à JE-C) et **ST** (ST-A à ST-D). Aucune règle Firestore à publier. Travail directement sur
 `main` (consigne du 30/10/2026). **ST fait le 30/10/2026** (go « Fait la partie ST ») : page
 `/songs/statistiques` ouverte à tout connecté, ligne et détail sur la page du chant, repères dans la
-Bibliothèque de l'éditeur (détail dans la section « Avancement » de la spec). **JE** : en attente de go.
+Bibliothèque de l'éditeur (détail dans la section « Avancement » de la spec). **JE fait le 31/10/2026** (go
+« fait le lot JE ») : directives `{subtitle}` `{time}` `{bible}`, 190 pages recoupées sous l'en-tête gravé et
+recertifiées à l'œil, en-tête du site repris ; deux colonnes seulement quand la colonne du chant dépasse
+860 px (décision du 31/10/2026). Quatre références bibliques gravées douteuses à vérifier (spec, « Avancement »).
 
 ## 4. Carte des modules de l'app « GCC »
 

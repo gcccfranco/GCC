@@ -13,6 +13,11 @@ export type Song = {
    *  setlist de fête qui l'attendait bascule alors sur ce chant (docs/spec-chants-fetes.md, CF21). */
   proposition?: string;
   tempo: number | null;
+  /** Sous-titre, mesure, référence biblique ({subtitle}, {time}, {bible}) : absents si le .cho ne les
+   *  donne pas (docs/spec-jianpu-entete-statistiques.md, JE1). */
+  subtitle?: string;
+  time?: string;
+  bible?: string;
   themes: string[];
   youtubeUrl: string | null;
   spotifyUrl: string | null;

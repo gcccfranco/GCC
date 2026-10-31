@@ -37,6 +37,8 @@ const SPECS_GRAND_ECRAN = [
   /captures-a6\.spec\.ts/,
   // Chantier 简谱, lot 3 (docs/spec-jianpu-integration.md) : la piste A sur toutes les surfaces.
   /jianpu-integration\.spec\.ts/,
+  // Lot JE, JE3 et JE4 (docs/spec-jianpu-entete-statistiques.md) : l'en-tête de la page chant et les deux colonnes sur 简谱.
+  /entete-chant-jianpu\.spec\.ts/,
   // Lot 1 du chantier « équipes et groupes » (docs/spec-equipes-sans-poles.md, EQ-D) : l'organigramme sans pôles.
   /equipes-agencement\.spec\.ts/,
   // Lot AO, AO-B (docs/spec-acces-organigramme.md) : les écrans de l'organigramme (Louange en trois sous-équipes, panneau, Personnes).

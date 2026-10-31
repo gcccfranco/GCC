@@ -47,6 +47,12 @@ export type ChordProAST = {
     proposition: string | null;
     jianpuKey: string | null;
     tempo: number | null;
+    /** Sous-titre gravé ({subtitle}), p. ex. « Coming Home » — null si aucun (lot JE, JE1). */
+    subtitle: string | null;
+    /** Mesure ({time}), p. ex. « 4/4 » — null si aucune. */
+    time: string | null;
+    /** Référence biblique ({bible}), p. ex. « 路15:11-32 » — null si aucune. */
+    bible: string | null;
     language: Language;
     themes: string[];
     youtubeUrl: string | null;

@@ -78,6 +78,9 @@ function main() {
       if (m.recommendedKey !== null && (!VALID_KEY.test(m.recommendedKey) || m.recommendedKey === m.key)) {
         errors.push(`${file} : tonalité recommandée invalide « ${m.recommendedKey} » (ou égale à {key})`);
       }
+      if (m.time !== null && !/^\d{1,2}\/\d{1,2}$/.test(m.time)) {
+        errors.push(`${file} : mesure invalide « ${m.time} » ({time: 4/4})`);
+      }
       for (const theme of m.themes) {
         if (!THEMES.has(slugifyTheme(theme))) errors.push(`${file} : thème « ${theme} » absent de content/themes.json`);
       }

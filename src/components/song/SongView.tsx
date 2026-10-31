@@ -1,4 +1,5 @@
 "use client";
+import { Fragment } from "react";
 import localFont from "next/font/local";
 import Link, { type LinkProps } from "next/link";
 import { ChordLine } from "@/components/song/ChordLine";
@@ -742,6 +743,9 @@ export interface SongViewProps {
   corps?: React.ReactNode;
   /** Sous la rangée titre / pastille de l'en-tête (page chant : la ligne de statistiques, lot ST4). */
   statistiques?: React.ReactNode;
+  /** Page chant (lot JE, JE3) : sous-titre, référence biblique et ligne « 1= · mesure · ♩ » dans l'en-tête.
+   *  Une seule colonne à toutes les tailles (Timothée, 31/10/2026 : les deux colonnes A2 sont retirées). */
+  pageChant?: boolean;
 }
 
 export function SongView({
@@ -762,6 +766,7 @@ export function SongView({
   bascule,
   corps,
   statistiques,
+  pageChant = false,
 }: SongViewProps) {
   const { t } = useTranslation();
   const isZh = ast.metadata.language === "zh";
@@ -784,9 +789,21 @@ export function SongView({
         : layout === "unique"
           ? uniqueSections(steps, ast.metadata.key).map((u) => ({ ...u, withDetails: false }))
           : steps.map((step) => ({ step, uids: [step.section.uid], withDetails: true }));
-  return (
-    <div className="max-w-2xl print:max-w-none">
-      {/* En-tête */}
+  // Ligne sous la pastille de la page chant : « 1=D · 4/4 · ♩ = 66 » sur le scan, « 4/4 · ♩ = 66 » en paroles.
+  const ligneTempo: React.ReactNode[] = [];
+  if (pageChant) {
+    if (corps !== undefined && ast.metadata.key) ligneTempo.push(`1=${ast.metadata.key}`);
+    if (ast.metadata.time) ligneTempo.push(ast.metadata.time);
+    if (ast.metadata.tempo) {
+      ligneTempo.push(
+        <span key="tempo" className="inline-flex items-baseline gap-0.5">
+          <span className="text-foreground/70 text-[15px] leading-none">♩</span>
+          {` = ${ast.metadata.tempo}`}
+        </span>
+      );
+    }
+  }
+  const enTete = (
       <div className="mb-0 pb-3 print:mb-3 border-b border-border">
         <div className="flex items-start justify-between gap-5">
           <div className="min-w-0">
@@ -804,9 +821,19 @@ export function SongView({
                 {ast.metadata.titlePinyin}
               </p>
             )}
+            {pageChant && ast.metadata.subtitle && (
+              <p data-testid="sous-titre" className={`text-muted-foreground text-[13px] mt-1 ${pinyin_font.className}`}>
+                {ast.metadata.subtitle}
+              </p>
+            )}
             <p className={`text-muted-foreground text-[13px] mt-1 ${isZh ? zh_lyric_font.className : chord_font.className}`}>
               {ast.metadata.artist}
             </p>
+            {pageChant && ast.metadata.bible && (
+              <p data-testid="reference-biblique" className={`text-muted-foreground/80 text-[12px] mt-0.5 ${isZh ? zh_lyric_font.className : chord_font.className}`}>
+                {ast.metadata.bible}
+              </p>
+            )}
           </div>
 
           <div className="flex flex-col items-end gap-2 shrink-0 pt-1">
@@ -818,11 +845,24 @@ export function SongView({
                 {canUseJianpu ? ast.metadata.jianpuKey ?? `1=${ast.metadata.key}` : ast.metadata.key}
               </span>
             )}
-            {ast.metadata.tempo && (
-              <span className="text-muted-foreground text-[11px] font-medium flex items-baseline gap-0.5">
-                <span className="text-foreground/70 text-[15px] leading-none">♩</span>
-                {` = ${ast.metadata.tempo}`}
-              </span>
+            {pageChant ? (
+              ligneTempo.length > 0 && (
+                <span data-testid="ligne-tempo" className="text-muted-foreground text-[11px] font-medium flex flex-wrap items-baseline justify-end gap-x-1 whitespace-nowrap">
+                  {ligneTempo.map((element, i) => (
+                    <Fragment key={i}>
+                      {i > 0 && <span aria-hidden="true">{" · "}</span>}
+                      {element}
+                    </Fragment>
+                  ))}
+                </span>
+              )
+            ) : (
+              ast.metadata.tempo && (
+                <span className="text-muted-foreground text-[11px] font-medium flex items-baseline gap-0.5">
+                  <span className="text-foreground/70 text-[15px] leading-none">♩</span>
+                  {` = ${ast.metadata.tempo}`}
+                </span>
+              )
             )}
           </div>
         </div>
@@ -835,7 +875,9 @@ export function SongView({
           </p>
         )}
       </div>
-
+  );
+  const bandeau = (
+      <>
       {/* Bandeau de structure (coup d'œil) : notes et transitions y passent
           dès que le corps ne les porte plus (sections uniques, structure seule,
           structure perso — même en ordre joué, défaut depuis le 20/09/2026). */}
@@ -843,6 +885,12 @@ export function SongView({
       <StructureStrip steps={steps} songKey={ast.metadata.key} details={corps !== undefined || layout !== "played" || personalSteps !== null} className="pt-2 pb-3">
         {bascule}
       </StructureStrip>
+      </>
+  );
+  return (
+    <div className="max-w-2xl print:max-w-none">
+      {enTete}
+      {bandeau}
 
       {/* Corps : ordre joué, ou chaque section une fois (les réglages
           d'occurrence restent dans le bandeau), ou rien du tout — ou le scan. */}
