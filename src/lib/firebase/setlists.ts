@@ -40,6 +40,20 @@ export async function authHeader(): Promise<Record<string, string>> {
   return { Authorization: `Bearer ${token}` };
 }
 
+/** Une requête structurée (`:runQuery`) sous `parent` (« » = racine) : les documents rendus, dans l'ordre de la
+ *  réponse. `null` = la requête a échoué (réponse en erreur) ; à l'appelant de choisir `[]`, `null` ou de lever. */
+export async function lireRequete(parent: string, structuredQuery: Record<string, unknown>): Promise<RawDoc[] | null> {
+  const headers = await authHeader();
+  const res = await fetch(`${FS_BASE}${parent ? `/${parent}` : ""}:runQuery`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...headers },
+    body: JSON.stringify({ structuredQuery }),
+  });
+  if (!res.ok) return null;
+  const rows = (await res.json()) as Array<{ document?: RawDoc }>;
+  return rows.filter((r) => r.document).map((r) => r.document!);
+}
+
 // ─── Value conversion: JS → Firestore REST ────────────────────────────────────
 
 function toFsValue(v: unknown): unknown {
@@ -150,22 +164,13 @@ function viderCacheSetlists(): void {
 }
 
 async function lireSetlists(): Promise<FSSetlist[] | null> {
-  const headers = await authHeader();
-  const res = await fetch(`${FS_BASE}:runQuery`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", ...headers },
-    body: JSON.stringify({
-      structuredQuery: {
-        from: [{ collectionId: "setlists" }],
-        orderBy: [{ field: { fieldPath: "createdAt" }, direction: "DESCENDING" }],
-      },
-    }),
+  const docs = await lireRequete("", {
+    from: [{ collectionId: "setlists" }],
+    orderBy: [{ field: { fieldPath: "createdAt" }, direction: "DESCENDING" }],
   });
-  if (!res.ok) return null;
-  const rows = await res.json() as Array<{ document?: RawDoc }>;
-  return rows
-    .filter((r) => r.document)
-    .map((r) => fromFsDoc(r.document!))
+  if (!docs) return null;
+  return docs
+    .map(fromFsDoc)
     .filter((s) => !s.isPrivate && !s.isDraft && sansFetes(s) && horsCorbeille(s));
 }
 
@@ -288,24 +293,14 @@ export async function getSetlistsSince(sinceMs: number, max: number): Promise<FS
 /** Les setlists dont `uid` est de l'équipe (`editeurs`), brouillons écartés. Refiltrée par
  *  l'appelant : la requête n'est pas crue sur parole. */
 export async function getSetlistsPartagees(uid: string): Promise<FSSetlist[]> {
-  const headers = await authHeader();
-  const res = await fetch(`${FS_BASE}:runQuery`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", ...headers },
-    body: JSON.stringify({
-      structuredQuery: {
-        from: [{ collectionId: "setlists" }],
-        where: {
-          fieldFilter: { field: { fieldPath: "editeurs" }, op: "ARRAY_CONTAINS", value: { stringValue: uid } },
-        },
-      },
-    }),
+  const docs = await lireRequete("", {
+    from: [{ collectionId: "setlists" }],
+    where: {
+      fieldFilter: { field: { fieldPath: "editeurs" }, op: "ARRAY_CONTAINS", value: { stringValue: uid } },
+    },
   });
-  if (!res.ok) return [];
-  const rows = await res.json() as Array<{ document?: RawDoc }>;
-  return rows
-    .filter((r) => r.document)
-    .map((r) => fromFsDoc(r.document!))
+  return (docs ?? [])
+    .map(fromFsDoc)
     .filter((s) => !s.isDraft && !!s.editeurs?.includes(uid) && sansFetes(s) && horsCorbeille(s));
 }
 
@@ -313,52 +308,32 @@ export async function getSetlistsPartagees(uid: string): Promise<FSSetlist[]> {
  *  (la requête n'est pas crue sur parole). Sans l'interrupteur du back-office : rien (CF24). */
 export async function getSetlistsDeFete(programme: string): Promise<FSSetlist[]> {
   if (!BACK_OFFICE) return [];
-  const headers = await authHeader();
-  const res = await fetch(`${FS_BASE}:runQuery`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", ...headers },
-    body: JSON.stringify({
-      structuredQuery: {
-        from: [{ collectionId: "setlists" }],
-        where: {
-          fieldFilter: { field: { fieldPath: "fete.programme" }, op: "EQUAL", value: { stringValue: programme } },
-        },
-      },
-    }),
+  const docs = await lireRequete("", {
+    from: [{ collectionId: "setlists" }],
+    where: {
+      fieldFilter: { field: { fieldPath: "fete.programme" }, op: "EQUAL", value: { stringValue: programme } },
+    },
   });
-  if (!res.ok) return [];
-  const rows = await res.json() as Array<{ document?: RawDoc }>;
-  return rows
-    .filter((r) => r.document)
-    .map((r) => fromFsDoc(r.document!))
+  return (docs ?? [])
+    .map(fromFsDoc)
     .filter((s) => !s.isDraft && s.fete?.programme === programme && horsCorbeille(s));
 }
 
 export async function getMySetlists(uid: string): Promise<FSSetlist[]> {
-  const headers = await authHeader();
   // No orderBy to avoid requiring a composite index on (ownerId, createdAt).
   // Sorting is done client-side instead.
-  const res = await fetch(`${FS_BASE}:runQuery`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", ...headers },
-    body: JSON.stringify({
-      structuredQuery: {
-        from: [{ collectionId: "setlists" }],
-        where: {
-          fieldFilter: {
-            field: { fieldPath: "ownerId" },
-            op: "EQUAL",
-            value: { stringValue: uid },
-          },
-        },
+  const docs = await lireRequete("", {
+    from: [{ collectionId: "setlists" }],
+    where: {
+      fieldFilter: {
+        field: { fieldPath: "ownerId" },
+        op: "EQUAL",
+        value: { stringValue: uid },
       },
-    }),
+    },
   });
-  if (!res.ok) return [];
-  const rows = await res.json() as Array<{ document?: RawDoc }>;
-  return rows
-    .filter((r) => r.document)
-    .map((r) => fromFsDoc(r.document!))
+  return (docs ?? [])
+    .map(fromFsDoc)
     .filter((s) => s.isPrivate === true && !s.isDraft && sansFetes(s) && horsCorbeille(s))
     .sort((a, b) => {
       const aTs = a.createdAt?.getTime() ?? 0;
@@ -534,22 +509,12 @@ export async function restaurerSetlist(id: string): Promise<void> {
 /** Les setlists à la corbeille, la plus récemment supprimée d'abord. Même requête que `getSetlists` ;
  *  l'appelant garde celles que la personne pourrait supprimer. */
 export async function getCorbeille(): Promise<FSSetlist[]> {
-  const headers = await authHeader();
-  const res = await fetch(`${FS_BASE}:runQuery`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", ...headers },
-    body: JSON.stringify({
-      structuredQuery: {
-        from: [{ collectionId: "setlists" }],
-        orderBy: [{ field: { fieldPath: "createdAt" }, direction: "DESCENDING" }],
-      },
-    }),
+  const docs = await lireRequete("", {
+    from: [{ collectionId: "setlists" }],
+    orderBy: [{ field: { fieldPath: "createdAt" }, direction: "DESCENDING" }],
   });
-  if (!res.ok) return [];
-  const rows = await res.json() as Array<{ document?: RawDoc }>;
-  return rows
-    .filter((r) => r.document)
-    .map((r) => fromFsDoc(r.document!))
+  return (docs ?? [])
+    .map(fromFsDoc)
     .filter((s) => !!s.supprimeeLe && !s.isDraft && sansFetes(s))
     .sort((a, b) => (b.supprimeeLe ?? "").localeCompare(a.supprimeeLe ?? ""));
 }

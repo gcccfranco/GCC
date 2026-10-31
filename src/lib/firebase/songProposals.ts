@@ -1,6 +1,7 @@
 import {
   FS_BASE,
   authHeader,
+  lireRequete,
   checkRest,
   toFsFields,
   fromFsValue,
@@ -29,20 +30,11 @@ function fromFsProposal(raw: RawDoc): SongProposal {
 
 /** Toutes les propositions, les plus récentes d'abord (lecture réservée aux admins). */
 export async function getSongProposals(): Promise<SongProposal[]> {
-  const headers = await authHeader();
-  const res = await fetch(`${FS_BASE}:runQuery`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", ...headers },
-    body: JSON.stringify({
-      structuredQuery: {
-        from: [{ collectionId: "songProposals" }],
-        orderBy: [{ field: { fieldPath: "createdAt" }, direction: "DESCENDING" }],
-      },
-    }),
+  const docs = await lireRequete("", {
+    from: [{ collectionId: "songProposals" }],
+    orderBy: [{ field: { fieldPath: "createdAt" }, direction: "DESCENDING" }],
   });
-  if (!res.ok) return [];
-  const rows = (await res.json()) as Array<{ document?: RawDoc }>;
-  return rows.filter((r) => r.document).map((r) => fromFsProposal(r.document!));
+  return (docs ?? []).map(fromFsProposal);
 }
 
 export async function createSongProposal(

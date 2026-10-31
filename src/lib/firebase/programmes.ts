@@ -1,6 +1,7 @@
 import {
   FS_BASE,
   authHeader,
+  lireRequete,
   checkRest,
   toFsFields,
   fromFsValue,
@@ -74,20 +75,10 @@ function fromFsCreneau(raw: RawDoc): Creneau {
 }
 
 async function runQuery(parent: string, collectionId: string, orderBy: string): Promise<RawDoc[]> {
-  const headers = await authHeader();
-  const res = await fetch(`${FS_BASE}${parent ? `/${parent}` : ""}:runQuery`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", ...headers },
-    body: JSON.stringify({
-      structuredQuery: {
-        from: [{ collectionId }],
-        orderBy: [{ field: { fieldPath: orderBy }, direction: "ASCENDING" }],
-      },
-    }),
-  });
-  if (!res.ok) return [];
-  const rows = (await res.json()) as Array<{ document?: RawDoc }>;
-  return rows.filter((r) => r.document).map((r) => r.document!);
+  return (await lireRequete(parent, {
+    from: [{ collectionId }],
+    orderBy: [{ field: { fieldPath: orderBy }, direction: "ASCENDING" }],
+  })) ?? [];
 }
 
 async function post(path: string, data: Record<string, unknown>): Promise<string> {

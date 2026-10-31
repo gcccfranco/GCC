@@ -1,4 +1,4 @@
-import { FS_BASE, authHeader, checkRest, fromFsValue, type RawDoc } from "./setlists";
+import { FS_BASE, authHeader, lireRequete, checkRest, fromFsValue, type RawDoc } from "./setlists";
 
 // Lecture des notifications « cloche » (collection écrite côté serveur, cf.
 // src/lib/push/notifications.ts). Même chemin léger et incrémental que
@@ -35,7 +35,6 @@ function fromFsNotif(raw: RawDoc): PushNotif {
 }
 
 export async function getNotifsSince(sinceMs: number, max: number): Promise<PushNotif[]> {
-  const headers = await authHeader();
   const structuredQuery: Record<string, unknown> = {
     from: [{ collectionId: "notifications" }],
     orderBy: [{ field: { fieldPath: "createdAt" }, direction: "DESCENDING" }],
@@ -50,14 +49,7 @@ export async function getNotifsSince(sinceMs: number, max: number): Promise<Push
       },
     };
   }
-  const res = await fetch(`${FS_BASE}:runQuery`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", ...headers },
-    body: JSON.stringify({ structuredQuery }),
-  });
-  if (!res.ok) return [];
-  const rows = (await res.json()) as Array<{ document?: RawDoc }>;
-  return rows.filter((r) => r.document).map((r) => fromFsNotif(r.document!));
+  return ((await lireRequete("", structuredQuery)) ?? []).map(fromFsNotif);
 }
 
 /** Les `max` derniers envois de Notifier (`kind: "manual"`, « Derniers envois », B11). Une égalité

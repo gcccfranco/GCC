@@ -1,6 +1,7 @@
 import {
   FS_BASE,
   authHeader,
+  lireRequete,
   checkRest,
   toFsFields,
   fromFsValue,
@@ -34,20 +35,11 @@ export async function getMySurveyResponse(uid: string): Promise<SurveyResponse |
 
 /** Toutes les réponses, les plus récentes d'abord (lecture réservée aux admins). */
 export async function getSurveyResponses(): Promise<SurveyResponse[]> {
-  const headers = await authHeader();
-  const res = await fetch(`${FS_BASE}:runQuery`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", ...headers },
-    body: JSON.stringify({
-      structuredQuery: {
-        from: [{ collectionId: "surveyResponses" }],
-        orderBy: [{ field: { fieldPath: "createdAt" }, direction: "DESCENDING" }],
-      },
-    }),
+  const docs = await lireRequete("", {
+    from: [{ collectionId: "surveyResponses" }],
+    orderBy: [{ field: { fieldPath: "createdAt" }, direction: "DESCENDING" }],
   });
-  if (!res.ok) return [];
-  const rows = (await res.json()) as Array<{ document?: RawDoc }>;
-  return rows.filter((r) => r.document).map((r) => fromFsResponse(r.document!));
+  return (docs ?? []).map(fromFsResponse);
 }
 
 /** Enregistre (ou met à jour) la réponse d'un membre — l'id du document est son uid.

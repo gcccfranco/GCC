@@ -6,6 +6,7 @@ import { auth } from "./config";
 import {
   FS_BASE,
   authHeader,
+  lireRequete,
   checkRest,
   toFsFields,
   fromFsValue,
@@ -100,19 +101,9 @@ export async function changerResponsabilites(uid: string, cles: readonly string[
 
 /** Tous les profils, triés par nom — réservé à la page admin. */
 export async function listProfiles(): Promise<UserProfile[]> {
-  const headers = await authHeader();
-  const res = await fetch(`${FS_BASE}:runQuery`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", ...headers },
-    body: JSON.stringify({
-      structuredQuery: { from: [{ collectionId: "users" }] },
-    }),
-  });
-  if (!res.ok) return [];
-  const rows = (await res.json()) as Array<{ document?: RawDoc }>;
-  return rows
-    .filter((r) => r.document)
-    .map((r) => fromFsProfile(r.document!))
+  const docs = await lireRequete("", { from: [{ collectionId: "users" }] });
+  return (docs ?? [])
+    .map(fromFsProfile)
     .sort(
       (a, b) =>
         a.lastName.localeCompare(b.lastName, "fr") ||

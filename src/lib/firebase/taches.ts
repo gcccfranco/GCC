@@ -1,4 +1,4 @@
-import { FS_BASE, authHeader, checkRest, toFsFields, fromFsValue, type RawDoc } from "./setlists";
+import { FS_BASE, authHeader, lireRequete, checkRest, toFsFields, fromFsValue, type RawDoc } from "./setlists";
 import type { EtatFois, Fois, Prevenir, Repetition, Tache } from "@/types/tache";
 
 // Tâches par équipe (lot 7, docs/spec-taches.md ; lot 1 du chantier « équipes et groupes », EQ6) :
@@ -47,20 +47,10 @@ function fromFsFois(raw: RawDoc): Fois {
 }
 
 async function runQuery(parent: string, collectionId: string, orderBy: string): Promise<RawDoc[]> {
-  const headers = await authHeader();
-  const res = await fetch(`${FS_BASE}/${parent}:runQuery`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", ...headers },
-    body: JSON.stringify({
-      structuredQuery: {
-        from: [{ collectionId }],
-        orderBy: [{ field: { fieldPath: orderBy }, direction: "ASCENDING" }],
-      },
-    }),
-  });
-  if (!res.ok) return [];
-  const rows = (await res.json()) as Array<{ document?: RawDoc }>;
-  return rows.filter((r) => r.document).map((r) => r.document!);
+  return (await lireRequete(parent, {
+    from: [{ collectionId }],
+    orderBy: [{ field: { fieldPath: orderBy }, direction: "ASCENDING" }],
+  })) ?? [];
 }
 
 const tachePath = (equipe: string, id: string) => `equipes/${equipe}/taches/${id}`;

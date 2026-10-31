@@ -1,6 +1,7 @@
 import {
   FS_BASE,
   authHeader,
+  lireRequete,
   checkRest,
   toFsFields,
   fromFsValue,
@@ -32,20 +33,11 @@ function fromFsReport(raw: RawDoc): Report {
 
 /** Tous les signalements, les plus récents d'abord (lecture réservée aux admins). */
 export async function getReports(): Promise<Report[]> {
-  const headers = await authHeader();
-  const res = await fetch(`${FS_BASE}:runQuery`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", ...headers },
-    body: JSON.stringify({
-      structuredQuery: {
-        from: [{ collectionId: "reports" }],
-        orderBy: [{ field: { fieldPath: "createdAt" }, direction: "DESCENDING" }],
-      },
-    }),
+  const docs = await lireRequete("", {
+    from: [{ collectionId: "reports" }],
+    orderBy: [{ field: { fieldPath: "createdAt" }, direction: "DESCENDING" }],
   });
-  if (!res.ok) return [];
-  const rows = (await res.json()) as Array<{ document?: RawDoc }>;
-  return rows.filter((r) => r.document).map((r) => fromFsReport(r.document!));
+  return (docs ?? []).map(fromFsReport);
 }
 
 /** Signalements (ou propositions de chants) en attente, pour la pastille de Messages (lot U6,

@@ -1,6 +1,7 @@
 import {
   FS_BASE,
   authHeader,
+  lireRequete,
   checkRest,
   toFsFields,
   fromFsValue,
@@ -76,15 +77,7 @@ function fromFsInscription(raw: RawDoc): Inscription {
 }
 
 async function runQuery(parent: string, structuredQuery: Record<string, unknown>): Promise<RawDoc[]> {
-  const headers = await authHeader();
-  const res = await fetch(`${FS_BASE}${parent ? `/${parent}` : ""}:runQuery`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", ...headers },
-    body: JSON.stringify({ structuredQuery }),
-  });
-  if (!res.ok) return [];
-  const rows = (await res.json()) as Array<{ document?: RawDoc }>;
-  return rows.filter((r) => r.document).map((r) => r.document!);
+  return (await lireRequete(parent, structuredQuery)) ?? [];
 }
 
 /** Tous les évènements lisibles : `publicOnly` (sans compte) = « pour = eglise » seulement. */
