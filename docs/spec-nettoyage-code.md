@@ -3,7 +3,8 @@
 **Origine** : Timothée, 31/10/2026 — « le code est très brouillon, il y a beaucoup de choses qu'on peut simplifier,
 nettoyer ». Outils externes autorisés le même jour pour un usage ponctuel (`npx knip`, `npx jscpd`, `npx madge`),
 sans rien ajouter au dépôt.
-**Statut** : spec écrite, **aucun lot n'a de go**. Questions à trancher au § 4.
+**Statut** : décisions prises par Claude sur délégation (Timothée, 31/10/2026 : « Fais ce que tu penses être le mieux
+pour moi »), § 4 ; **go pour N1, N2 et N3 seulement**. N4 à N8 attendent le bilan de N1–N3 et un nouveau go.
 **Mesuré sur** : commit `f8510da` (= `main` au 31/10/2026). Une autre session pousse en parallèle : chaque lot
 **refait les mesures** sur la branche à jour avant de coder (§ 5).
 
@@ -133,16 +134,16 @@ sous-composants (cartes téléphone, historique, en-tête, cellule date) ; hooks
 rendu) et `usePaginationScene` (`PerformanceMode` : refs de mesure, `useLayoutEffect`). Seulement après N4 et N5, et si
 le gain vaut encore le risque.
 
-## 4. Questions à trancher (Timothée)
+## 4. Décisions (Claude sur délégation, 31/10/2026 ; Timothée peut en rouvrir une)
 
-| # | Question | Recommandation |
+| # | Question | Décision |
 | --- | --- | --- |
-| Q1 | Scripts de migration `scripts/poles-vers-equipes.ts` (relevé à 0 opération), `scripts/acces-vers-organigramme.ts` (feuille de route : « à lancer »), `scripts/responsabilites-reprise.ts` (« à blanc ») et le brouillon `scripts/tmp/t.ts` : garder ou supprimer ? | Supprimer `t.ts` et `poles-vers-equipes.ts` (+ son `ETAPES`) ; garder les deux autres tant qu'ils ne sont pas joués |
-| Q2 | La « 简谱 simple » (`{jianpu: …}` au-dessus des paroles) ne s'affiche plus nulle part : `useJianpu` vaut toujours `false` (page chant, réglages, mode louange, PDF). Supprimer la fonction, ou la rebrancher ? | Supprimer le code d'affichage (les scans 简谱 l'ont remplacée) ; le parseur continue de lire la directive |
-| Q3 | La page campus en mode back-office coupé (`app/planning/campus/AncienTableau.tsx`) recopie ~130 lignes de `page.tsx` | Une carte de séance commune ; garder l'interrupteur |
-| Q4 | `canChangeSetlistCategory = canDeleteSetlist` (`access.ts`) ne sert qu'à un test d'identité | Garder (la règle reste nommée) |
-| Q5 | Retirer `export` des 97 noms utilisés seulement dans leur fichier ? | Oui, dans N1 (mécanique, aucun risque à l'exécution) |
-| Q6 | Jusqu'où aller ? | N1 à N3 d'abord (petits, sûrs) ; N4 à N7 un par un, selon le résultat ; N8 seulement si ça vaut encore le coup |
+| Q1 | Scripts de migration et brouillon | **Supprimer** `scripts/tmp/t.ts` et `scripts/poles-vers-equipes.ts` (relevé à 0 opération) avec l'`ETAPES` de `lib/equipes/migration.ts` s'il ne sert plus à rien d'autre. **Garder** `acces-vers-organigramme.ts` et `responsabilites-reprise.ts` (pas encore joués ; le second appartient au lot RS en cours) |
+| Q2 | « 简谱 simple » jamais affichée (`useJianpu` toujours `false`) | **Différé** : c'est une fonction, pas une faute ; on la retire dans un lot à part si Timothée confirme qu'elle est abandonnée. N1 n'y touche pas |
+| Q3 | Campus : `AncienTableau.tsx` recopie `page.tsx` | **Carte de séance commune** (`components/planning/`), interrupteur gardé — dans N2 |
+| Q4 | Alias `canChangeSetlistCategory` | **Gardé** |
+| Q5 | Retirer `export` des 97 noms internes | **Oui**, dans N1, sauf les fichiers du lot RS (§ 5) et `tests/helpers/` (gardés comme boîte à outils de test) |
+| Q6 | Jusqu'où | **N1 → N2 → N3** maintenant ; bilan ; N4 à N7 un par un sur nouveau go ; N8 seulement si le gain vaut encore le risque |
 
 ## 5. Coordination avec les autres sessions
 
@@ -150,3 +151,8 @@ le gain vaut encore le risque.
   que les constats encore vrais.
 - Un lot dit les fichiers qu'il touche ; on ne lance pas un lot sur un fichier qu'une autre session modifie en même
   temps (en particulier `PerformanceMode.tsx`, `SongPDF.tsx` et la 简谱 tant que le lot JE est ouvert).
+- **31/10/2026** : le lot RS « Responsabilités » code en ce moment. Tant qu'il n'est pas fusionné, N1–N3 **ne touchent
+  pas** `src/lib/access.ts`, `firestore.rules`, `src/lib/acces/*`, `src/lib/equipes/responsabilites.ts`,
+  `scripts/responsabilites-reprise.ts` ni leurs tests : les constats qui y tombent (`estReferentEdd`,
+  `estReferentRegie`, `ETAPES` de `repriseResponsabilites.ts`, le type `DateServie` de N3, exports en trop de
+  `lib/acces/`) attendent. Le lot JE est terminé (`f8510da`).
