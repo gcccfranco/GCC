@@ -84,7 +84,7 @@ test.describe("EnTetePage (R1, R2, R3, R8)", () => {
   });
 
   test("Statistiques : le titre, puis le rail, puis la rangée (filtres en pilules)", async ({ page }) => {
-    await ouvrir(page, "/back-office/statistiques");
+    await ouvrir(page, "/songs/statistiques");
     const entete = enTete(page);
     const h1 = entete.getByRole("heading", { level: 1, name: "Statistiques" });
     const rail = entete.locator('[data-onglets="rail"]');
@@ -170,7 +170,7 @@ test.describe("MenuActions (R9)", () => {
 
 test.describe("OngletsRail et Pilules (R4, R5)", () => {
   test("rail en boutons (Statistiques) : un tablist, un seul arrêt de tabulation, les flèches, Entrée choisit", async ({ page }) => {
-    await ouvrir(page, "/back-office/statistiques");
+    await ouvrir(page, "/songs/statistiques");
     const rail = enTete(page).locator('[data-onglets="rail"]');
     await expect(rail).toHaveAttribute("role", "tablist");
     const premier = rail.getByRole("tab", { name: "Les plus joués" });

@@ -135,7 +135,7 @@ test.describe("Barre du bas (BO2) : la barre", () => {
   });
 
   test("une page hors de la barre ne marque aucun onglet", async ({ page }) => {
-    await ouvrir(page, ADMIN, {}, "/back-office/statistiques");
+    await ouvrir(page, ADMIN, {}, "/back-office/messages");
     await expect(barre(page).locator("[aria-current]")).toHaveCount(0);
     await page.goto("/back-office/equipes");
     await expect(barre(page).getByRole("link", { name: "Équipes" })).toHaveAttribute("aria-current", "page");

@@ -794,9 +794,14 @@ export function estResponsable(user: AuthUser | null, profile: ProfilResponsable
     || nonVide(profile.remplitParRole) || nonVide(profile.publieParRole) || nonVide(profile.notifieParRole);
 }
 
-/** Statistiques des chants (lot U7, docs/spec-statistiques.md, Q2) : admins seulement (T1).
- *  Sans règle Firestore : rien de nouveau n'est lu ni écrit (précédent `canUseHarmonie`). */
+/** Statistiques des chants (lot U7, docs/spec-statistiques.md) : T1 et T7 de spec-statistiques.md remplacés par
+ *  D5 (30/10/2026, docs/spec-jianpu-entete-statistiques.md) : tout membre connecté ; sans règle Firestore. */
 export function canVoirStatistiques(user: { email?: string | null } | null): boolean {
+  return user !== null;
+}
+
+/** D5 : le filtre présidence reste aux admins. */
+export function canFiltrerPresidence(user: { email?: string | null } | null): boolean {
   return isAdminUser(user);
 }
 

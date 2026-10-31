@@ -20,6 +20,8 @@ import { useEditeurOrdinateur } from "@/hooks/useEditeurDeuxColonnes";
 /** Ce que SetlistForm donne à l'éditeur, quelle que soit sa disposition. */
 export interface ProprietesEditeur {
   isEdit: boolean;
+  /** Id de la setlist éditée (`null` à la création) : écartée des statistiques de la bibliothèque. */
+  setlistId?: string | null;
   items: FormListItem[];
   setItems: (items: FormListItem[]) => void;
   songs: SongIndexEntry[];
@@ -31,6 +33,11 @@ export interface ProprietesEditeur {
   onTerminer: () => void;
   /** Setlist de fête (CF20) : proposer un chant hors répertoire depuis la bibliothèque. */
   proposer?: (titre: string, index?: number) => void;
+}
+
+/** Ce que la bibliothèque sait de la setlist en cours : service et date (AAAA-MM-JJ) s'ils sont choisis. */
+export function contexteBibliotheque(champs: Pick<ChampsEnTete, "category" | "date">, setlistId: string | null) {
+  return { service: champs.category || null, date: champs.date ? champs.date.slice(0, 10) : null, setlistId };
 }
 
 /** « Publier » à la couleur du culte dès que la catégorie est connue (question 9), ou « Terminé ». */
@@ -69,6 +76,7 @@ export function BoutonFinal({ isEdit, categorie, saving, onPublier, onTerminer }
 
 export function EditeurDeuxColonnes({
   isEdit,
+  setlistId = null,
   items,
   setItems,
   songs,
@@ -81,7 +89,7 @@ export function EditeurDeuxColonnes({
   proposer,
 }: ProprietesEditeur) {
   const { t } = useTranslation();
-  const v = useVolet({ items, setItems, songs, actions, feuille: null, equipe: champs.equipe, proposer });
+  const v = useVolet({ items, setItems, songs, actions, feuille: null, equipe: champs.equipe, proposer, contexte: contexteBibliotheque(champs, setlistId) });
   // « + » entre deux éléments : ordinateur seulement, pas la tablette couchée (spec).
   const ordinateur = useEditeurOrdinateur();
   const voletRef = useRef<HTMLElement>(null);

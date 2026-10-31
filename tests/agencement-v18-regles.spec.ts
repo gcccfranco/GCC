@@ -64,7 +64,7 @@ const APP: PageAVerifier[] = [
   { chemin: "/songs" }, { chemin: "/setlists", colonne: 960 }, { chemin: "/setlists/new" }, { chemin: "/setlists/new?depuis=passee" },
   { chemin: "/evenements" }, { chemin: "/evenements/scene/noel" }, { chemin: "/mes-services" }, { chemin: "/moi" },
   { chemin: "/profil" }, { chemin: "/guide", lecture: true }, { chemin: "/questionnaire", lecture: true },
-  { chemin: "/harmonie" }, { chemin: "/taches" }, { chemin: "/equipes" },
+  { chemin: "/harmonie" }, { chemin: "/taches" }, { chemin: "/equipes" }, { chemin: "/songs/statistiques" },
 ];
 const BACK_OFFICE: PageAVerifier[] = [
   { chemin: "/back-office" }, { chemin: "/back-office/equipes/da" }, { chemin: "/back-office/evenements" },
@@ -73,7 +73,7 @@ const BACK_OFFICE: PageAVerifier[] = [
   // Réception et Questionnaire sans message ni réponse : la liste seule dans la colonne centrée (BO9).
   { chemin: "/back-office/messages", colonne: 960 }, { chemin: "/back-office/messages/notifier" },
   { chemin: "/back-office/messages/questionnaire", colonne: 960 },
-  { chemin: "/back-office/statistiques" }, { chemin: "/back-office/plus" },
+  { chemin: "/back-office/plus" },
 ];
 
 async function ouvrir(page: Page, chemin: string) {

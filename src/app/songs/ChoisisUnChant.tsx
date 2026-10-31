@@ -189,7 +189,7 @@ export function ChoisisUnChant() {
       )}
 
       {plus.length > 0 && (
-        <CarteChants titre={t("songs.choose.plusChantes")} aide={t("songs.choose.plusChantesAide")}>
+        <CarteChants titre={t("songs.choose.plusChantes")} aide={t("songs.choose.plusChantesAide")} lien={{ href: "/songs/statistiques", label: t("songs.choose.toutVoir") }}>
           <div className="grid grid-cols-2 gap-x-7">
             {plus.map((l) => {
               const chant = parSlug.get(l.slug);
@@ -205,7 +205,7 @@ export function ChoisisUnChant() {
 }
 
 /** Une carte titrée du volet (planche `carte`) : titre 15 px en gras, une aide à droite. */
-function CarteChants({ titre, aide, children }: { titre: string; aide?: string; children: React.ReactNode }) {
+function CarteChants({ titre, aide, lien, children }: { titre: string; aide?: string; lien?: { href: string; label: string }; children: React.ReactNode }) {
   return (
     <section className="raised min-w-0 rounded-2xl px-[18px] pb-2 pt-3.5">
       {/* Une carte étroite (tablette couchée) passe l'aide à la ligne plutôt que de couper le titre. */}
@@ -214,6 +214,11 @@ function CarteChants({ titre, aide, children }: { titre: string; aide?: string; 
         {aide && <span className="ml-auto whitespace-nowrap text-[13px] font-semibold text-muted-foreground">{aide}</span>}
       </div>
       {children}
+      {lien && (
+        <Link href={lien.href} className="mb-1.5 mt-1 block text-right text-[14px] font-semibold text-foreground underline underline-offset-2">
+          {lien.label}
+        </Link>
+      )}
     </section>
   );
 }

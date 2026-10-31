@@ -107,6 +107,7 @@
       "ajouteLe": "ajouté le {{date}}",
       "plusChantes": "Les plus chantés à GCC",
       "plusChantesAide": "ces 3 derniers mois",
+      "toutVoir": "Tout voir",
       "foisEnSetlist_one": "{{count}} fois en setlist",
       "foisEnSetlist_other": "{{count}} fois en setlist",
       "upcoming": "Prochaines setlists",
@@ -4012,7 +4013,7 @@
     "gerer": "Gérer les responsabilités"
   },
   "stats": {
-    "visible": "Visible par les admins seulement",
+    "depuis": "Setlists publiées, depuis le {{date}}",
     "aucuneSetlist": "aucune setlist comptée",
     "comptees_one": "{{count}} setlist comptée, du {{du}} au {{au}}",
     "comptees_other": "{{count}} setlists comptées, du {{du}} au {{au}}",
@@ -4076,6 +4077,37 @@
     "aucunARedecouvrir": "Aucun chant à redécouvrir sur cette période.",
     "joues": "Joués au moins {{n}} fois avant le {{debut}}, aucune fois du {{debut}} au {{fin}}",
     "jouesDepuis": "Joués au moins {{n}} fois avant le {{debut}}, aucune fois depuis",
-    "avantLaPeriode": "avant la période"
+    "avantLaPeriode": "avant la période",
+    "biblio": {
+      "total_fois_one": "{{count}} fois au total",
+      "total_fois_other": "{{count}} fois au total",
+      "total": "Total",
+      "dansService_one": "{{service}} : {{date}} · {{count}} fois au total",
+      "dansService_other": "{{service}} : {{date}} · {{count}} fois au total",
+      "jamaisA": "Jamais à {{service}}",
+      "jamaisCourt": "Jamais",
+      "ilYa": "{{service}} : il y a {{n}} j",
+      "prevu": "{{service}} : prévu le {{date}}",
+      "moinsJoues": "Moins joués ici",
+      "choisirService": "Choisis d'abord le service"
+    },
+    "chant": {
+      "joue_one": "Joué <n>{{count}} fois</n> · dernière fois {{date}}, {{service}}",
+      "joue_other": "Joué <n>{{count}} fois</n> · dernière fois {{date}}, {{service}}",
+      "jamais": "Jamais joué à GCC",
+      "prevu": "prévu le {{date}}, {{service}}",
+      "titre": "Statistiques du chant",
+      "setlists": "Setlists",
+      "derniere": "Dernière fois",
+      "tonalite": "Tonalité la plus jouée",
+      "service": "Service",
+      "fois": "Fois",
+      "derniereCol": "Dernière",
+      "jamaisDans": "Jamais : {{services}}",
+      "prochaine": "Prévu le {{date}}, {{service}}",
+      "aucune": "Jamais joué sur cette période",
+      "note": "Setlists publiées et passées, depuis le {{date}}",
+      "toutes": "Toutes les statistiques"
+    }
   }
 }

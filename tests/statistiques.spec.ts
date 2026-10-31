@@ -1,20 +1,22 @@
 import { expect, test, type Page, type TestInfo } from "@playwright/test";
 import { remplit, signInAs, type FakeProfile } from "./helpers/fakeSession";
-import { canVoirStatistiques, entreesBackOffice, widgetsPermis } from "../src/lib/access";
+import { canFiltrerPresidence, canVoirStatistiques, entreesBackOffice, widgetsPermis } from "../src/lib/access";
 import { ajouterWidget, dispositionParDefaut } from "../src/lib/tableauDeBord/disposition";
 import { choisirReglage, groupesDeReglages } from "../src/lib/tableauDeBord/reglages";
 import type { UserProfile } from "../src/types/user";
 
-// Lot U7 (docs/spec-statistiques.md) — la page « Statistiques » du Back-Office.
-// S2 : le droit (Q2, `canVoirStatistiques` = admin), l'adresse `/back-office/statistiques`
-// (question 7) et l'entrée du menu ; la page elle-même (filtres, tableau) vient avec S3 et S4.
-// Interrupteur coupé : 404 (tests/back-office-coupe.spec.ts).
+// Lot U7 (docs/spec-statistiques.md) — la page « Statistiques ». Lot ST (ST3, D5) : ouverte à tout membre
+// connecté, à l'adresse `/songs/statistiques` ; le filtre présidence reste aux admins ; l'ancienne adresse
+// du Back-Office y redirige, même interrupteur coupé (tests/back-office-coupe.spec.ts).
 // Lancé aussi sur `tablette-paysage` et `ordinateur-1440` (SPECS_GRAND_ECRAN) : l'entrée vit
 // dans la barre latérale.
 
 const ADMIN: FakeProfile = { uid: "uid-admin", email: "tc328829@gmail.com", firstName: "Admin", lastName: "T." };
 /** Un responsable non admin : il remplit un planning (Spec, « Tests »). */
 const RESPONSABLE: FakeProfile = { uid: "uid-pl", email: "pl@example.com", firstName: "Paul", lastName: "L.", ...remplit("culte") };
+
+/** Un membre simple, sans rôle : il lit les statistiques mais ne filtre pas par présidence. */
+const MEMBRE: FakeProfile = { uid: "uid-mb", email: "mb@example.com", firstName: "Maud", lastName: "B." };
 
 const user = (p: FakeProfile) => ({ uid: p.uid, email: p.email });
 const profil = (p: FakeProfile) =>
@@ -25,11 +27,17 @@ const profil = (p: FakeProfile) =>
 
 
 test.describe("Statistiques (S2) : le droit (Q2)", () => {
-  test("canVoirStatistiques : un admin oui ; un responsable non admin, un membre, un visiteur non", () => {
+  test("canVoirStatistiques : tout membre connecté (admin, responsable, membre) oui, un visiteur non", () => {
     expect(canVoirStatistiques(user(ADMIN))).toBe(true);
-    expect(canVoirStatistiques(user(RESPONSABLE))).toBe(false);
-    expect(canVoirStatistiques({ email: "membre@example.com" })).toBe(false);
+    expect(canVoirStatistiques(user(RESPONSABLE))).toBe(true);
+    expect(canVoirStatistiques({ email: "membre@example.com" })).toBe(true);
     expect(canVoirStatistiques(null)).toBe(false);
+  });
+
+  test("canFiltrerPresidence : un admin oui ; un membre, un visiteur non", () => {
+    expect(canFiltrerPresidence(user(ADMIN))).toBe(true);
+    expect(canFiltrerPresidence({ email: "membre@example.com" })).toBe(false);
+    expect(canFiltrerPresidence(null)).toBe(false);
   });
 
   test("« statistiques » n'est plus une entrée du menu (piste A, BO1) : la page garde ses droits, `canVoirStatistiques`", () => {
@@ -38,39 +46,54 @@ test.describe("Statistiques (S2) : le droit (Q2)", () => {
   });
 });
 
-test.describe("Statistiques (S2) : l'entrée et l'adresse", () => {
-  // Piste A (BO1, BO3) : Statistiques sort du menu ; on l'ouvre depuis Chants (describe BO3 plus bas).
-  test("un admin : l'adresse ouvre la page, et aucun menu n'y mène plus", async ({ page }) => {
-    await signInAs(page, ADMIN, {}, "/back-office/statistiques");
+test.describe("Statistiques (ST3) : la page ouverte à tout membre connecté (D5)", () => {
+  test.use({ serviceWorkers: "block" });
+
+  test("un admin : l'adresse ouvre la page, le sous-titre dit « depuis le », le filtre Présidence est là", async ({ page }) => {
+    await ouvrirStatistiques(page, "/songs/statistiques");
     await expect(page.getByRole("heading", { level: 1, name: "Statistiques" })).toBeVisible();
-    await expect(page.getByText("Visible par les admins seulement")).toBeVisible();
-    await expect(page.locator('nav a[href^="/back-office/statistiques"]')).toHaveCount(0);
+    await expect(page.locator("header[data-entete-page] p").first()).toContainText(/^Setlists publiées, depuis le /);
+    await expect(page.getByText("Visible par les admins seulement")).toHaveCount(0);
+    await expect(page.getByRole("combobox", { name: "Présidence" })).toBeVisible();
   });
 
-  test("un responsable non admin : l'adresse répond « Page réservée aux administrateurs. »", async ({ page }) => {
-    await signInAs(page, RESPONSABLE, {}, "/back-office/statistiques");
-    await expect(page.getByText("Page réservée aux administrateurs.")).toBeVisible();
-    await expect(page.getByRole("heading", { level: 1, name: "Statistiques" })).toHaveCount(0);
+  test("un responsable non admin voit la page, sans le filtre Présidence", async ({ page }) => {
+    await ouvrirStatistiques(page, "/songs/statistiques", {}, RESPONSABLE);
+    await expect(page.getByRole("heading", { level: 1, name: "Statistiques" })).toBeVisible();
+    await expect(page.getByRole("combobox", { name: "Service" })).toBeVisible();
+    await expect(page.getByRole("combobox", { name: "Présidence" })).toHaveCount(0);
+  });
+
+  test("un membre simple : une présidence venue de l'adresse est ignorée (comptes et adresse)", async ({ page }) => {
+    await ouvrirStatistiques(page, "/songs/statistiques?presidence=Luc%20R.", {}, MEMBRE);
+    await expect(page.getByRole("combobox", { name: "Présidence" })).toHaveCount(0);
+    await expect.poll(() => setlistsComptees(page)).toBe("6");
+    await expect(page).not.toHaveURL(/presidence/);
   });
 
   test("sans compte : la connexion, qui ramène à la page", async ({ page }) => {
-    await page.goto("/back-office/statistiques");
-    await expect(page.getByRole("link", { name: "Se connecter" })).toHaveAttribute(
-      "href", /^\/login\/?\?from=%2Fback-office%2Fstatistiques$/,
-    );
+    await page.goto("/songs/statistiques");
+    await expect(page).toHaveURL(/\/login\/?\?from=%2Fsongs%2Fstatistiques/);
     await expect(page.getByRole("heading", { level: 1, name: "Statistiques" })).toHaveCount(0);
+  });
+
+  test("l'ancienne adresse du Back-Office mène à la page, requête gardée", async ({ page }) => {
+    await ouvrirStatistiques(page, "/songs/statistiques");
+    await page.goto("/back-office/statistiques?vue=jamais-joues");
+    await expect(page).toHaveURL(/\/songs\/statistiques\/\?vue=jamais-joues/);
+    await expect(page.getByRole("heading", { level: 1, name: "Statistiques" })).toBeVisible();
   });
 });
 
-test.describe("Statistiques (BO3) : le lien depuis Chants", () => {
+test.describe("Statistiques (ST3) : les entrées depuis Chants", () => {
   test("un admin voit « Statistiques » dans l'en-tête de Chants, l'ouvre et revient par « ‹ Chants »", async ({ page }) => {
     await signInAs(page, ADMIN, {}, "/songs");
     // L'en-tête dès 768 px, la ligne du compteur (icône seule) en dessous : le lien visible.
     const lien = page.getByRole("link", { name: "Statistiques" }).filter({ visible: true });
     await expect(lien).toHaveCount(1);
-    await expect(lien).toHaveAttribute("href", /^\/back-office\/statistiques\/?$/);
+    await expect(lien).toHaveAttribute("href", /^\/songs\/statistiques\/?$/);
     await lien.click();
-    await expect(page).toHaveURL(/\/back-office\/statistiques\/?$/);
+    await expect(page).toHaveURL(/\/songs\/statistiques\/?$/);
     await expect(page.getByRole("heading", { level: 1, name: "Statistiques" })).toBeVisible();
     const retour = page.locator("[data-entete-page]").first().getByRole("link", { name: "Chants" });
     await expect(retour).toHaveAttribute("href", /^\/songs\/?$/);
@@ -79,10 +102,17 @@ test.describe("Statistiques (BO3) : le lien depuis Chants", () => {
     await expect(page.getByRole("heading", { level: 1, name: "Chants" })).toBeVisible();
   });
 
-  test("un membre ne voit pas « Statistiques » dans l'en-tête de Chants", async ({ page }) => {
-    await signInAs(page, RESPONSABLE, {}, "/songs");
+  test("un membre non admin voit aussi « Statistiques » dans Chants, et il mène à la page", async ({ page }) => {
+    await signInAs(page, MEMBRE, {}, "/songs");
     await expect(page.getByRole("heading", { level: 1, name: "Chants" })).toBeVisible();
-    await expect(page.locator('a[href^="/back-office/statistiques"]')).toHaveCount(0);
+    const lien = page.getByRole("link", { name: "Statistiques" }).filter({ visible: true });
+    await expect(lien).toHaveCount(1);
+    await expect(lien).toHaveAttribute("href", /^\/songs\/statistiques\/?$/);
+    await lien.click();
+    await expect(page).toHaveURL(/\/songs\/statistiques\/?$/);
+    await expect(page.getByRole("heading", { level: 1, name: "Statistiques" })).toBeVisible();
+    // Pleine largeur : ni la liste des chants ni l'en-tête « Chants » à côté.
+    await expect(page.getByRole("heading", { level: 1, name: "Chants" })).toHaveCount(0);
   });
 });
 
@@ -90,7 +120,7 @@ test.describe("Statistiques (S2) : captures à regarder", () => {
   // Comparées à la planche bo-statistiques (titre, sous-titre, entrée courante du menu).
   test("la page d'un admin, dans chaque disposition", async ({ page }, info) => {
     await page.clock.setFixedTime(new Date("2026-10-04T10:00:00"));
-    await signInAs(page, ADMIN, {}, "/back-office/statistiques");
+    await signInAs(page, ADMIN, {}, "/songs/statistiques");
     await expect(page.getByRole("heading", { level: 1, name: "Statistiques" })).toBeVisible();
     await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" });
     // Le fondu d'arrivée de la page : capturer une fois fini.
@@ -154,11 +184,11 @@ const PLUS_JOUES_12_MOIS = [
 const estTelephone = (info: TestInfo) => info.project.name === "telephone";
 
 /** Ouvre la page d'un admin, horloge au 04/10/2026, recueil et setlists simulés (plus `autres`). */
-async function ouvrirStatistiques(page: Page, chemin = "/back-office/statistiques", autres: Record<string, Record<string, unknown>> = {}) {
+async function ouvrirStatistiques(page: Page, chemin = "/songs/statistiques", autres: Record<string, Record<string, unknown>> = {}, profil: FakeProfile = ADMIN) {
   await page.clock.setFixedTime(new Date("2026-10-04T10:00:00"));
   await page.route(/\/songs-index\.json/, (route) =>
     route.fulfill({ contentType: "application/json", body: JSON.stringify({ generatedAt: "2026-10-01", songs: RECUEIL }) }));
-  const db = await signInAs(page, ADMIN, { ...SETLISTS, ...autres }, chemin);
+  const db = await signInAs(page, profil, { ...SETLISTS, ...autres }, chemin);
   // Tableau (tablette, ordinateur) ou liste (téléphone) : seul l'un des deux se voit.
   if (!chemin.includes("vue=")) await expect(page.locator('[data-testid="ligne-chant"]:visible').first()).toBeVisible();
   // Autres vues (S4) : la carte « Setlists comptées », ou le message d'une période vide.
@@ -327,7 +357,7 @@ test.describe("Statistiques (S3) : les plus joués", () => {
     await page.locator('[data-testid="ligne-chant"]:visible').getByRole("link", { name: "À jamais Tu es saint" }).click();
     await expect(page).toHaveURL(/\/songs\/a-jamais-tu-es-saint\/?$/);
     await page.goBack();
-    await expect(page).toHaveURL(/\/back-office\/statistiques\/?\?/);
+    await expect(page).toHaveURL(/\/songs\/statistiques\/?\?/);
     await expect(page.getByRole("button", { name: "3 mois" })).toHaveAttribute("aria-pressed", "true");
     await expect(page.getByRole("combobox", { name: "Service" })).toHaveValue("Groupe Paix");
     await expect.poll(() => colonne(page, "titre")).toEqual(["À jamais Tu es saint", "爱的约定"]);
@@ -335,7 +365,7 @@ test.describe("Statistiques (S3) : les plus joués", () => {
   });
 
   test("une adresse avec ses filtres ouvre l'écran tel quel", async ({ page }) => {
-    await ouvrirStatistiques(page, "/back-office/statistiques?periode=libre&du=2026-06-01&au=2026-06-30&langue=zh");
+    await ouvrirStatistiques(page, "/songs/statistiques?periode=libre&du=2026-06-01&au=2026-06-30&langue=zh");
     await expect(page.getByRole("button", { name: "Dates libres" })).toHaveAttribute("aria-pressed", "true");
     await expect(page.getByLabel("Du", { exact: true })).toHaveValue("2026-06-01");
     await expect.poll(() => colonne(page, "titre")).toEqual(["爱的约定"]);
@@ -486,7 +516,7 @@ test.describe("Statistiques (S4) : jamais joués et à redécouvrir", () => {
   });
 
   test("période vide : le même message dans les deux vues", async ({ page }) => {
-    await ouvrirStatistiques(page, "/back-office/statistiques?vue=jamais-joues&periode=libre&du=2026-07-01&au=2026-07-31");
+    await ouvrirStatistiques(page, "/songs/statistiques?vue=jamais-joues&periode=libre&du=2026-07-01&au=2026-07-31");
     await expect(page.getByText("Aucune setlist publiée sur cette période.")).toBeVisible();
     await expect(page.locator('[data-testid="ligne-jamais"]:visible')).toHaveCount(0);
     await vue(page, "À redécouvrir").click();
@@ -494,7 +524,7 @@ test.describe("Statistiques (S4) : jamais joués et à redécouvrir", () => {
   });
 
   test("un titre ouvre la page du chant ; le retour retrouve la vue et les filtres", async ({ page }) => {
-    await ouvrirStatistiques(page, "/back-office/statistiques?vue=a-redecouvrir&periode=3");
+    await ouvrirStatistiques(page, "/songs/statistiques?vue=a-redecouvrir&periode=3");
     await expect(vue(page, "À redécouvrir")).toHaveAttribute("aria-selected", "true");
     await expect.poll(() => lignesDe(page, "ligne-redecouvrir")).toHaveLength(1);
 
@@ -542,7 +572,7 @@ test.describe("Statistiques (relecture) : messages, menus, phrases", () => {
   });
 
   test("une catégorie inconnue : dans le groupe « Autres » du menu Service, et elle filtre (Q8)", async ({ page }) => {
-    await ouvrirStatistiques(page, "/back-office/statistiques", {
+    await ouvrirStatistiques(page, "/songs/statistiques", {
       "setlists/soiree": setlist("2026-09-27", "Soirée de louange", "Luc R.", [chant("a-la-croix")]),
     });
     expect(await setlistsComptees(page)).toBe("7");
@@ -562,15 +592,15 @@ test.describe("Statistiques (relecture) : messages, menus, phrases", () => {
   });
 
   test("une adresse au service ou à la présidence inconnus : le filtre est ignoré, menus et adresse le disent", async ({ page }) => {
-    await ouvrirStatistiques(page, "/back-office/statistiques?service=Inconnu&presidence=Personne&periode=3");
+    await ouvrirStatistiques(page, "/songs/statistiques?service=Inconnu&presidence=Personne&periode=3");
     expect(await setlistsComptees(page)).toBe("3");
     await expect(page.getByRole("combobox", { name: "Service" })).toHaveValue("");
     await expect(page.getByRole("combobox", { name: "Présidence" })).toHaveValue("");
-    await expect(page).toHaveURL(/\/back-office\/statistiques\/?\?periode=3$/);
+    await expect(page).toHaveURL(/\/songs\/statistiques\/?\?periode=3$/);
   });
 
   test("« À redécouvrir », dates libres finies avant hier : la phrase dit « aucune fois du … au … »", async ({ page }) => {
-    await ouvrirStatistiques(page, "/back-office/statistiques?vue=a-redecouvrir&periode=libre&du=2026-07-01&au=2026-08-31");
+    await ouvrirStatistiques(page, "/songs/statistiques?vue=a-redecouvrir&periode=libre&du=2026-07-01&au=2026-08-31");
     await expect.poll(() => lignesDe(page, "ligne-redecouvrir")).toEqual([
       { rang: "1", titre: "Abba Père", avant: "3", derniere: "28/06", tonalite: "G" },
     ]);
@@ -581,7 +611,7 @@ test.describe("Statistiques (relecture) : messages, menus, phrases", () => {
   });
 
   test("« À redécouvrir », dates libres sans « Du » : la page demande une date de début", async ({ page }) => {
-    await ouvrirStatistiques(page, "/back-office/statistiques?vue=a-redecouvrir&periode=libre&du=2026-07-01&au=2026-10-03");
+    await ouvrirStatistiques(page, "/songs/statistiques?vue=a-redecouvrir&periode=libre&du=2026-07-01&au=2026-10-03");
     await expect.poll(() => lignesDe(page, "ligne-redecouvrir")).toHaveLength(1);
     await page.getByLabel("Du", { exact: true }).fill("");
     await expect(page.getByText("Choisis une date de début (« Du ») pour voir les chants à redécouvrir.")).toBeVisible();
@@ -594,7 +624,7 @@ test.describe("Statistiques (S4) : captures à regarder", () => {
   test.use({ serviceWorkers: "block" });
   // Vues déduites de la planche bo-statistiques (spec, « Écrans ») : à regarder aux trois tailles.
   test("« Jamais joués » et « À redécouvrir » d'un admin, page entière, dans chaque disposition", async ({ page }, info) => {
-    await ouvrirStatistiques(page, "/back-office/statistiques?vue=jamais-joues&periode=3");
+    await ouvrirStatistiques(page, "/songs/statistiques?vue=jamais-joues&periode=3");
     await expect(page.locator('[data-testid="ligne-jamais"]:visible').first()).toBeVisible();
     await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" });
     await page.waitForTimeout(600);
@@ -633,9 +663,10 @@ async function ouvrirTableauDeBord(page: Page, qui: FakeProfile, docs: Record<st
 const widgetChants = (page: Page) => page.getByRole("region", { name: /^(Chants les plus joués|最常唱的诗歌)$/ });
 
 test.describe("Statistiques (S5) : le widget, règles pures", () => {
-  test("permis aux admins seuls ; au catalogue d'un admin (plus au défaut depuis T9), en M", () => {
+  test("permis à tout connecté depuis le lot ST (D5) ; au catalogue d'un admin (plus au défaut depuis T9), en M", () => {
     expect(widgetsPermis(user(ADMIN), profil(ADMIN))).toContain("chants");
-    expect(widgetsPermis(user(RESPONSABLE), profil(RESPONSABLE))).not.toContain("chants");
+    // Un responsable non admin (référent, back-office ouvert) a maintenant le widget.
+    expect(widgetsPermis(user(RESPONSABLE), { ...profil(RESPONSABLE), referentDe: ["louange"] } as UserProfile, true)).toContain("chants");
     const d = dispositionParDefaut(user(ADMIN), null);
     expect(d.map((w) => w.id)).toEqual(["dimanche", "planning", "evenements", "afaire", "reunions", "comptes"]);
     expect(ajouterWidget(d, "chants").at(-1)).toEqual({ id: "chants", taille: "m", reglages: {} });

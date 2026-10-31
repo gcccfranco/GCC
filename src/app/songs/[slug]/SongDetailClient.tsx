@@ -15,6 +15,7 @@ import { getChartStylePref, setChartStylePref } from "@/lib/chartStylePref";
 import { getPersonalKeys, setPersonalKey } from "@/lib/setlist/personalKeys";
 import { getFontScalePref, setFontScalePref, MIN_FONT_SCALE, MAX_FONT_SCALE } from "@/lib/fontScalePref";
 import { SongView } from "@/components/song/SongView";
+import { StatistiquesDuChant } from "@/components/songs/StatistiquesDuChant";
 import { JianpuSheet } from "@/components/jianpu/JianpuSheet";
 import { useJianpuScore } from "@/lib/jianpu/images";
 import { getJianpuPref, setJianpuPref, sheetEnabled, prefDepuisInterrupteur, type JianpuPref } from "@/lib/jianpu/preference";
@@ -642,6 +643,7 @@ function useVersionDeLaSetlist(slug: string, setlistId: string | null, position:
           {/* L'en-tête du site reste au-dessus du scan (K3) ; le segment « 简谱 · Paroles »
               à droite des pastilles règle la préférence de l'appareil (D5). */}
             <SongView
+              statistiques={<StatistiquesDuChant slug={song.slug} />}
               bascule={
                 jianpuScore ? (
                   <span role="radiogroup" aria-label={t("songs.detail.basculeJianpu")} className="inline-flex h-8 rounded-full bg-secondary p-0.5 print:hidden">

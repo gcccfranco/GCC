@@ -740,6 +740,8 @@ export interface SongViewProps {
   /** Remplace le corps (sections) sous l'en-tête et le bandeau : le scan 简谱
    *  garde ainsi l'en-tête du site au-dessus de lui (K3). */
   corps?: React.ReactNode;
+  /** Sous la rangée titre / pastille de l'en-tête (page chant : la ligne de statistiques, lot ST4). */
+  statistiques?: React.ReactNode;
 }
 
 export function SongView({
@@ -759,6 +761,7 @@ export function SongView({
   titleHref,
   bascule,
   corps,
+  statistiques,
 }: SongViewProps) {
   const { t } = useTranslation();
   const isZh = ast.metadata.language === "zh";
@@ -823,6 +826,8 @@ export function SongView({
             )}
           </div>
         </div>
+
+        {statistiques && <div className="print:hidden">{statistiques}</div>}
 
         {canUseJianpu && structureOverride && (
           <p className="mt-2 text-xs text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950 px-2 py-1 rounded">

@@ -79,3 +79,23 @@ export function premieresLignes(ast: ChordProAST, cible: string, n = 2): Token[]
   }
   return lignes;
 }
+
+/** La clé du recueil (`scripts/build-index.ts`) : le titre, le pinyin pour un chant chinois, sans tons ni ponctuation. */
+function cleAlphabetique(s: SongIndexEntry): string {
+  const cle = s.language === "zh" && s.titlePinyin ? s.titlePinyin : s.title;
+  return cle.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, "");
+}
+
+/** Tri « Moins joués ici » (lot ST, ST5) : les chants jamais joués dans le service d'abord (A→Z, pinyin pour
+ *  les chinois), puis la dernière fois dans ce service la plus ancienne d'abord (à égalité, A→Z). */
+export function trierMoinsJouesIci(songs: SongIndexEntry[], stats: Map<string, { dansService: { derniere: string } | null }>): SongIndexEntry[] {
+  const az = (a: SongIndexEntry, b: SongIndexEntry) => cleAlphabetique(a).localeCompare(cleAlphabetique(b), "fr", { sensitivity: "base" });
+  const derniere = (s: SongIndexEntry) => stats.get(s.slug)?.dansService?.derniere ?? null;
+  return [...songs].sort((a, b) => {
+    const da = derniere(a), db = derniere(b);
+    if (da === null && db === null) return az(a, b);
+    if (da === null) return -1;
+    if (db === null) return 1;
+    return da.localeCompare(db) || az(a, b);
+  });
+}
