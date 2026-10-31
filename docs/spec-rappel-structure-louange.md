@@ -47,9 +47,19 @@ ordinateur, le **titre du chant** ouvre la rangée (13 px, capitales, gris, tron
 | Mode | Rappel |
 | --- | --- |
 | **Ordre joué** | **Nouveau.** Étapes avant la page : **points** de 8 px de leur couleur (opacité 0,45). Étapes de la page : pleines. Étapes suivantes : claires. |
-| **Sections uniques** | **Refait.** Pas de points (la page n'est pas un moment du chant) : **chaque passage** d'une section imprimée sur la page est plein, avec sa nuance ; les autres claires. **Téléphone** : seulement les pastilles pleines, dans l'ordre joué, pour tenir sur une ligne. |
+| **Sections uniques** | **Refait.** Pas de points (la page n'est pas un moment du chant) : **chaque passage** d'une section imprimée sur la page est plein, avec sa nuance ; les autres claires. **Téléphone** : seulement les pastilles pleines, dans l'ordre joué. Une ligne le plus souvent ; deux quand la page porte beaucoup de passages (Prince de paix, page 2 : neuf passages), ce qu'on accepte. |
 | **Structure seule** | Aucun rappel. Règles des Dp seulement. |
 | **Scan 简谱** | Aucun rappel ajouté. Règles des Dp seulement (bandeau et colonne). |
+
+**Indice, une seule fois** (décision D6) : la 1ʳᵉ fois qu'un rappel s'affiche, une bulle sous la rangée explique
+le code, puis ne revient plus sur cet appareil. Une clé par mode, puisque le code diffère (`perf-astuce-rappel-joue`,
+`perf-astuce-rappel-unique`, localStorage, même principe que `perf-role-asked`) :
+- Ordre joué : « Points : déjà joué · Pleines : sur cette page, avec leur nuance » ;
+- Sections uniques : « Pleines : sur cette page, avec leur nuance ».
+Libellés i18n FR et 中文 (« 圆点：已唱过 · 实心：在本页，下方为力度 » ; « 实心：在本页，下方为力度 »). La bulle
+part d'elle-même à la page suivante, ou d'un toucher sur elle ; elle n'arrête aucun geste de page (principe 2 du
+mode louange) et ne prend pas de place dans la pagination (posée par-dessus le haut de la page, sous la rangée).
+Hors du mode louange (page d'un chant), pas d'indice.
 
 La réserve passe de 32 px à la hauteur mesurée du nouveau rappel (≈ 50 px), en Ordre joué comme en Sections uniques.
 
@@ -65,8 +75,11 @@ le retrouver. En Sections uniques il n'est déjà imprimé qu'une fois.
 - **D2** Le même Dp joué de suite est imprimé une fois en Ordre joué, avec « ×n ».
 - **D3** Une Dp tirée du refrain garde exactement l'orange du R : la couleur dit l'origine, les lettres font la
   différence, et un Dp de pont ou de couplet se distingue tout seul. Pas de style à part.
-- **D4** Téléphone en Sections uniques : seulement les pastilles pleines (une ligne), pas deux lignes de rappel.
+- **D4** Téléphone en Sections uniques : seulement les pastilles pleines. La rangée tient le plus souvent sur une
+  ligne ; elle en prend deux quand la page porte beaucoup de passages, ce qu'on accepte.
 - **D5** Pistes A et B écartées.
+- **D6** (Timothée, 31/10/2026) Pas de légende permanente : un indice à la première ouverture, une seule fois, et la
+  rangée reste propre ensuite.
 
 ## Hors champ
 
@@ -79,6 +92,7 @@ de la page chant prend les règles des Dp puisqu'il partage `StructureStrip`, ri
   `StructureStrip` est utilisé, et blocs de Structure seule.
 - **RS-B** Rappel refait en Sections uniques (pleines par passage, titre, tailles, téléphone réduit aux pleines).
 - **RS-C** Rappel en Ordre joué (points, pleines, claires), réserve mesurée, et Dp imprimé une fois dans le corps.
+- **RS-D** Indice à la première apparition du rappel, une clé par mode.
 
 ## Critères de succès (Playwright, trois appareils + les deux projets grand écran)
 
@@ -90,6 +104,8 @@ de la page chant prend les règles des Dp puisqu'il partage `StructureStrip`, ri
   aucune `data-cerclee`. Sur téléphone : seulement les pleines.
 - Ordre joué, page 3 : points avant, pleines sur la page, claires après ; rien sur la 1ʳᵉ page.
 - Ordre joué : le Dp joué deux fois de suite n'est imprimé qu'une fois, avec « ×2 ».
+- Indice : visible la 1ʳᵉ fois qu'un rappel paraît, absent à la page suivante et au rechargement ; une clé par mode ;
+  une page se tourne d'un toucher sur le côté pendant que la bulle est ouverte.
 - Un trait d'annotation dessiné sur une page 2 avant le changement reste sur sa section.
 - Chant FR et chant ZH, thème clair et sombre ; captures aux quatre dispositions + 1 440 px, regardées à l'œil.
 - `npx tsc --noEmit`, `npm run lint`.

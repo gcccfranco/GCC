@@ -71,6 +71,9 @@
   .liste .l { display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 600; }
   .liste .pa { height: 30px; min-width: 30px; padding: 0 8px; border-radius: 999px; display: inline-flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; background: var(--t); color: var(--c); }
   .liste .nu { font-weight: 700; font-size: 13px; }
+  .bulle { position: relative; display: inline-block; margin: 2px 0 10px; background: var(--fg); color: var(--bg); font-size: 13px; font-weight: 600; border-radius: 10px; padding: 8px 12px; box-shadow: 0 6px 18px rgba(0,0,0,.18); }
+  .bulle::before { content: ""; position: absolute; top: -6px; left: 28px; border: 6px solid transparent; border-top: 0; border-bottom-color: var(--fg); }
+  .bulle b { font-weight: 800; }
   .regles li, .decisions li { margin-bottom: 8px; }
   table.cmp { border-collapse: collapse; width: 100%; font-size: 14px; margin-top: 8px; }
   table.cmp th, table.cmp td { text-align: left; padding: 8px 10px; border-bottom: 1px solid #ececee; vertical-align: top; }
@@ -105,15 +108,19 @@
     <div class="tailles" data-vue="joue-avant" data-tailles="tablette"></div>
     <h3>Page 3 · proposé</h3>
     <div class="tailles" data-vue="joue"></div>
+    <h3>Page 3 · la 1ʳᵉ fois seulement : l'indice</h3>
+    <div class="tailles" data-vue="joue-indice" data-tailles="tablette"></div>
   </section>
 
   <section class="carte">
     <h2>2 · Sections uniques</h2>
-    <p>Chaque section n'est imprimée qu'une fois, et on revient dessus quand la structure la rejoue : la page n'est pas un moment du chant, donc pas de points. Proposé : <b>chaque passage</b> d'une section imprimée sur la page est plein, avec sa nuance. On voit d'un coup d'œil à quels moments on reviendra sur cette page. Exemple : page 2, qui imprime Pont, Refrain et la Dp. Sur téléphone, seulement les pastilles pleines, pour tenir sur une ligne.</p>
+    <p>Chaque section n'est imprimée qu'une fois, et on revient dessus quand la structure la rejoue : la page n'est pas un moment du chant, donc pas de points. Proposé : <b>chaque passage</b> d'une section imprimée sur la page est plein, avec sa nuance. On voit d'un coup d'œil à quels moments on reviendra sur cette page. Exemple : page 2, qui imprime Pont, Refrain et la Dp. Sur téléphone, seulement les pastilles pleines : une ligne le plus souvent, deux ici (neuf passages sur la page).</p>
     <h3>Page 2 · aujourd'hui</h3>
     <div class="tailles" data-vue="unique-avant" data-tailles="tablette"></div>
     <h3>Page 2 · proposé</h3>
     <div class="tailles" data-vue="unique"></div>
+    <h3>Page 2 · la 1ʳᵉ fois seulement : l'indice</h3>
+    <div class="tailles" data-vue="unique-indice" data-tailles="telephone,tablette"></div>
     <h3>Page 2 · proposé, thème sombre</h3>
     <div class="tailles" data-vue="unique" data-tailles="tablette" data-sombre="1"></div>
   </section>
@@ -149,7 +156,8 @@
       <li><b>Ordre joué</b> reçoit le rappel aux pages 2 et suivantes.</li>
       <li><b>Dans le corps</b>, en Ordre joué, le même Dp joué de suite n'est imprimé qu'une fois, avec « ×2 ».</li>
       <li><b>Dp et R</b> : une Dp tirée du refrain garde l'orange du R. La couleur dit l'origine ; une Dp de pont ou de couplet se distingue d'elle-même.</li>
-      <li><b>Téléphone en Sections uniques</b> : seulement les pastilles pleines, sur une ligne.</li>
+      <li><b>Téléphone en Sections uniques</b> : seulement les pastilles pleines ; deux lignes quand la page porte beaucoup de passages.</li>
+      <li><b>Pas de légende permanente</b> (Timothée) : un indice la 1ʳᵉ fois qu'un rappel paraît, une fois par mode, qui part à la page suivante ou d'un toucher. La rangée reste propre ensuite.</li>
     </ol>
     <p>Spec : <code>docs/spec-rappel-structure-louange.md</code> (lot RS).</p>
   </section>
@@ -199,6 +207,8 @@
     "joue": (t) => rappel(t, { page: [7, 8, 9] }) + (t === "ordinateur" ? deux(PONT + PONT, REFRAIN) : PONT + PONT + REFRAIN),
     "unique-avant": (t) => rappelAvant(new Set([4, 8, 7])) + (t === "ordinateur" ? deux(PONT, REFRAIN + DP) : PONT + REFRAIN + DP),
     "unique": (t) => rappel(t, { sections: ["p", "r", "dp"] }) + (t === "ordinateur" ? deux(PONT, REFRAIN + DP) : PONT + REFRAIN + DP),
+    "joue-indice": (t) => rappel(t, { page: [7, 8, 9] }) + `<div class="bulle"><b>Points</b> : déjà joué · <b>Pleines</b> : sur cette page, avec leur nuance</div>` + PONT,
+    "unique-indice": (t) => rappel(t, { sections: ["p", "r", "dp"] }) + `<div class="bulle"><b>Pleines</b> : sur cette page, avec leur nuance</div>` + PONT,
     "structure": () => ENTETE + `<div class="oss">${PRINCE.map((e) => `<div style="${v(e[1])}">${pa(e)}<span>${e[3]}</span></div>`).join("")}</div>`,
     "scan": () => ENTETE + bande() + `<div class="scan">scan 简谱</div>`,
     "scan-colonne": () => `<div class="colonne"><div>${ENTETE}<div class="liste">${PRINCE.map((e) => `<div class="l" style="${v(e[1])}"><span class="pa">${pa(e)}</span>${NOMS[e[0]]}<span class="nu">${e[3]}</span></div>`).join("")}</div></div><div class="scan" style="height:560px">scan 简谱</div></div>`,
