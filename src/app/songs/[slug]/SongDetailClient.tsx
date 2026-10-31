@@ -43,6 +43,7 @@ import { useAccesHarmonie, useInstrument } from "@/lib/harmonie/useHarmonie";
 import { pdfFileName, type PdfStyle } from "@/lib/pdfStylePref";
 import { getSetlist } from "@/lib/firebase/setlists";
 import { useAuth } from "@/lib/firebase/auth";
+import { telechargerBlob } from "@/lib/telecharger";
 import type { JianpuChords } from "@/types/setList";
 
 /** Téléphone : zone de toucher de 44 px autour d'un bouton plus petit, sans changer son dessin (G6, audit 24/10/2026). */
@@ -329,12 +330,7 @@ function useVersionDeLaSetlist(slug: string, setlistId: string | null, position:
             sectionStyle={style === "colors" ? "colors" : "classic"}
           />
         ).toBlob();
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = pdfFileName(`${song.slug}-${customize.currentKey}`, style);
-        a.click();
-        URL.revokeObjectURL(url);
+        telechargerBlob(blob, pdfFileName(`${song.slug}-${customize.currentKey}`, style));
       } finally {
         setDownloading(false);
       }

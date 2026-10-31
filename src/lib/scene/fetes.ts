@@ -4,6 +4,7 @@
 
 import type { Language } from "@/types/common";
 import type { Programme } from "@/types/programme";
+import { JOUR_MS as DAY, versUtc as utc, versIso as iso } from "@/lib/dates/iso";
 import { archiveDate, reservationsClosed } from "./dimanches";
 import { PLAGES_DEFAUT, saisonDe } from "./saison";
 
@@ -11,17 +12,6 @@ export type Fete = NonNullable<Programme["fete"]>;
 
 /** Dans l'ordre des onglets. */
 export const FETES: readonly Fete[] = ["paques", "noel"];
-
-const DAY = 86_400_000;
-
-function utc(iso: string): number {
-  const [y, m, d] = iso.split("-").map(Number);
-  return Date.UTC(y, m - 1, d);
-}
-
-function iso(ms: number): string {
-  return new Date(ms).toISOString().slice(0, 10);
-}
 
 const p2 = (n: number) => String(n).padStart(2, "0");
 

@@ -1,14 +1,5 @@
 import { delaiMax } from "@/lib/delaiMax";
-import { auth } from "@/lib/firebase/config";
-
-const FS_BASE =
-  "https://firestore.googleapis.com/v1/projects/gcclouange/databases/(default)/documents";
-
-async function authHeader(): Promise<Record<string, string>> {
-  if (!auth.currentUser) return {};
-  const token = await auth.currentUser.getIdToken();
-  return { Authorization: `Bearer ${token}` };
-}
+import { FS_BASE, authHeader } from "@/lib/firebase/setlists";
 
 function docId(userId: string, setlistId: string, pageKey: string) {
   return `${userId}__${setlistId}__${pageKey}`;

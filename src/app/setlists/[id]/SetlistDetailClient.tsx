@@ -83,6 +83,7 @@ import { AccordsProvider } from "@/components/accords/AccordsProvider";
 import { appliquerDansLaSource } from "@/lib/harmonie/appliquer";
 import { useAccesHarmonie, useInstrument } from "@/lib/harmonie/useHarmonie";
 import { semitonesTo } from "@/lib/transpose";
+import { telechargerBlob, demanderPleinEcran } from "@/lib/telecharger";
 import {
   replaceSourceLine,
   insertSourceLineAfter,
@@ -880,12 +881,7 @@ export function SetlistDetailClient() {
         const blob = await pdf(
           <SetlistOverviewPDF setlist={setlist} songsMap={songsMap} language={i18n.language} />
         ).toBlob();
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = `${setlist.title}-liste.pdf`;
-        a.click();
-        URL.revokeObjectURL(url);
+        telechargerBlob(blob, `${setlist.title}-liste.pdf`);
       } else {
         // Fetch any missing song contents inline (don't depend on React state timing)
         const allContents: Record<string, SongContent> = { ...contents };
@@ -943,12 +939,7 @@ export function SetlistDetailClient() {
             language={i18n.language}
           />
         ).toBlob();
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = pdfFileName(setlist.title, style, "partitions");
-        a.click();
-        URL.revokeObjectURL(url);
+        telechargerBlob(blob, pdfFileName(setlist.title, style, "partitions"));
       }
     } finally {
       setDownloading(false);
@@ -1564,7 +1555,7 @@ export function SetlistDetailClient() {
    *  await), sinon la demande est rejetée ; iPhone Safari ne le connaît pas. */
   async function ouvrirModeLouange() {
     try {
-      document.documentElement.requestFullscreen({ navigationUI: "hide" }).catch(() => {});
+      demanderPleinEcran();
     } catch { /* non supporté */ }
     await entrerEnLouange(true);
   }
@@ -1605,7 +1596,7 @@ export function SetlistDetailClient() {
    *  ouvrirModeLouange), puis l'essai ; un essai qui échoue encore le dit dans le bandeau. */
   async function reessayerLesChants() {
     try {
-      document.documentElement.requestFullscreen({ navigationUI: "hide" }).catch(() => {});
+      demanderPleinEcran();
     } catch { /* non supporté */ }
     setEssaiEnCours(true);
     setEssaiEchoue(false);
@@ -1623,7 +1614,7 @@ export function SetlistDetailClient() {
   }
   function continuerSansLesChants() {
     try {
-      document.documentElement.requestFullscreen({ navigationUI: "hide" }).catch(() => {});
+      demanderPleinEcran();
     } catch { /* non supporté */ }
     setChantsManquants(null);
     setPerformanceMode(true);

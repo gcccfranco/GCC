@@ -5,17 +5,7 @@
 import { peutCocher } from "@/lib/access";
 import type { Fois, Tache } from "@/types/tache";
 import type { TacheValues } from "@/lib/firebase/taches";
-
-const DAY = 86_400_000;
-
-function toUtc(iso: string): number {
-  const [y, m, d] = iso.split("-").map(Number);
-  return Date.UTC(y, m - 1, d);
-}
-
-function toIso(ms: number): string {
-  return new Date(ms).toISOString().slice(0, 10);
-}
+import { JOUR_MS as DAY, versUtc as toUtc, versIso as toIso } from "@/lib/dates/iso";
 
 export function addDays(iso: string, n: number): string {
   return toIso(toUtc(iso) + n * DAY);

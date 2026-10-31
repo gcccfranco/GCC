@@ -1,16 +1,7 @@
 // Calculs purs des programmes de scène : dimanches réservables, clôture,
 // chevauchements. Dates ISO « AAAA-MM-JJ », comparées comme du texte.
 
-const DAY = 86_400_000;
-
-function toUtc(iso: string): number {
-  const [y, m, d] = iso.split("-").map(Number);
-  return Date.UTC(y, m - 1, d);
-}
-
-function toIso(ms: number): string {
-  return new Date(ms).toISOString().slice(0, 10);
-}
+import { JOUR_MS as DAY, versUtc as toUtc, versIso as toIso } from "@/lib/dates/iso";
 
 /** Dimanches réservables : du premier dimanche ≥ `debut` au dernier avant
  *  `jourJ` (le jour J ne se réserve pas), croissants. */
