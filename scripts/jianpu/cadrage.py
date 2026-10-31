@@ -24,7 +24,7 @@ corrigée à la main. Un chant absent de `cadrage.json` n'est pas recadré.
 **Règle `--sous-entete`** (lot JE, JE2, docs/spec-jianpu-entete-statistiques.md) :
 la coupe descend sous **tout** l'en-tête gravé, « 1=X 4/4 » compris. `top` = la
 dernière rangée entièrement blanche au-dessus de `min(labels.y)` (première ligne
-d'accords), **en ignorant `keyLabel` et `titleKey`** ; repli `min(labels.y) −
+d'accords ; une étiquette vide est une gomme, ignorée), **en ignorant `keyLabel` et `titleKey`** ; repli `min(labels.y) −
 0,6 × labelH`. Garde-fou : si la première ligne d'accords est à plus de 1,5
 système sous le « 1=X » (première ligne de musique sans accord), la proposition
 le signale (« à régler à la main »).
@@ -63,9 +63,14 @@ SOUS_ENTETE = "--sous-entete" in sys.argv
 SYSTEMES = 1.5
 
 
+def accords(calque: dict) -> list[dict]:
+    """Les étiquettes d'accord ; une étiquette vide (`c: ""`) est une gomme, pas un accord."""
+    return [l for l in calque["labels"] if l["c"] or not SOUS_ENTETE]
+
+
 def systeme(calque: dict) -> float | None:
     """Hauteur d'un système : écart médian entre deux rangées d'étiquettes successives."""
-    rangs = sorted({round(l["y"] / calque["labelH"]) * calque["labelH"] for l in calque["labels"]})
+    rangs = sorted({round(l["y"] / calque["labelH"]) * calque["labelH"] for l in accords(calque)})
     ecarts = [b - a for a, b in zip(rangs, rangs[1:]) if b - a > 2 * calque["labelH"]]
     return float(np.median(ecarts)) if ecarts else None
 
@@ -73,14 +78,14 @@ def systeme(calque: dict) -> float | None:
 def alerte(calque: dict) -> str:
     """Garde-fou de `--sous-entete` : première ligne de musique sans accord."""
     h = systeme(calque)
-    ecart = min(l["y"] for l in calque["labels"]) - calque["keyLabel"]["y"]
+    ecart = min(l["y"] for l in accords(calque)) - calque["keyLabel"]["y"]
     return f" ⚠ 1re ligne d'accords à {ecart:.0f} px du 1=X (> {SYSTEMES} système) : à régler à la main" if h and ecart > SYSTEMES * h else ""
 
 
 def top_premiere_page(fichier: str, calque: dict) -> tuple[int, bool]:
     """`top` proposé pour la première page, et s'il vient du repli."""
     gris = np.asarray(Image.open(os.path.join(IMAGES, fichier)).convert("L"))
-    premiere = min(l["y"] for l in calque["labels"])
+    premiere = min(l["y"] for l in accords(calque))
     y0 = premiere if SOUS_ENTETE else min(calque["keyLabel"]["y"], premiere)
     blanches = (gris >= BLANC).all(axis=1)
     for y in range(int(y0) - 1, -1, -1):

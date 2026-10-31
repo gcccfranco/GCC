@@ -14,7 +14,7 @@ import { JianpuPDFPage } from "../src/components/pdf/SongPDF";
 
 const lire = <T,>(f: string): T => JSON.parse(readFileSync(f, "utf8")) as T;
 type Manifeste = Record<string, { pages: { file: string; w: number; h: number }[] }>;
-type Calques = Record<string, { keyLabel: { y: number }; labels: { y: number }[] }>;
+type Calques = Record<string, { keyLabel: { y: number }; labels: { y: number; c: string }[] }>;
 
 // ─── L3-T1 : recadrage, donnée certifiée ─────────────────────────────────────
 
@@ -39,9 +39,9 @@ test.describe("recadrage (données)", () => {
         if (i > 0) expect(top, `${slug} p.${i + 1} : pas d'en-tête gravé`).toBe(0);
       });
       // Lot JE (JE2) : la coupe passe sous tout l'en-tête gravé, « 1=X » compris, mais au-dessus du
-      // premier accord du calque, qu'aucune coupe ne cache.
+      // premier accord du calque, qu'aucune coupe ne cache (une étiquette vide est une gomme).
       const c = calques[slug];
-      const haut = Math.min(...c.labels.map((l) => l.y));
+      const haut = Math.min(...c.labels.filter((l) => l.c).map((l) => l.y));
       expect(tops[0], `${slug} : la coupe passe au-dessus des accords`).toBeLessThan(haut);
     }
   });
