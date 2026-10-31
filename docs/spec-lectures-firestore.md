@@ -1,7 +1,8 @@
 # Spec — Lot LF : lectures Firestore sous le quota gratuit
 
 > Demande de Timothée, 31/10/2026 : « ça fait plusieurs fois qu'on atteint la limite, optimise firebase »,
-> puis « écris la spec et code », « fais aussi le 3 et 4 ». Go pour le lot LF entier (LF1 à LF4).
+> puis « écris la spec et code », « fais aussi le 3 et 4 », puis « fais aussi la requête unique pour les tâches,
+> go pour coder ». Go pour le lot LF entier (LF1 à LF5).
 
 ## Constat (30–31/10/2026)
 
@@ -93,14 +94,42 @@ modification ou une mise à la corbeille se voit dans la minute.
   `planningGrille.ts`, `evenements.ts`, `programmes.ts` (une fonction `viderGardesTableau()` exportée par
   `lecture.ts`, appelée après chaque écriture, réussie ou non, comme `viderCacheSetlists`).
 - La page « À faire » garde un geste de rafraîchissement si elle en a un ; sinon rien à ajouter.
-- Hors lot : remplacer la requête par tâche (`listFois`) par une seule requête demande sans doute une règle
-  `{path=**}` ; noté dans la feuille de route, pas fait ici.
+- La requête par tâche (`listFois`) devient une requête par équipe : voir LF5.
 
 ## LF4 — Cloche
 
 `refresh()` de `useNotifications` ne repart pas si la précédente passe a eu lieu il y a **moins de 60 s**
 (sauf la première, et sauf changement de compte). `focus` et `visibilitychange` arrivant ensemble ne font
 donc qu'une passe. Le polling de 10 min ne change pas.
+
+## LF5 — Tâches : une requête par équipe pour les « fois »
+
+Aujourd'hui `listTaches(equipe)` fait 1 requête pour les tâches + **1 par tâche** pour ses « fois »
+(`equipes/{e}/taches/{t}/fois/{date}`). Cible : **2 requêtes par équipe**, quel que soit le nombre de tâches.
+
+- **Champ `equipe`** sur chaque document « fois », posé par tous ses écrivains : `taches.ts` (`cyclerEtat`,
+  `choisirEtat`, `deplacerTache`, etc.) et la route `src/app/api/taches/fait/route.ts` (Admin SDK) ; les
+  chercher tous (`grep -rn "fois" src`).
+- **Requête** : `runQuery` sur le parent `equipes/{e}`, `from: [{ collectionId: "fois", allDescendants: true }]`,
+  `where equipe == e` ; les fois se rangent par tâche d'après leur chemin (`…/taches/{t}/fois/{date}`).
+  `listFois(tache)` reste pour les appelants qui n'en veulent qu'une.
+- **Règle** (`firestore.rules`, à côté de `{chemin=**}/absences`), même droit que la lecture actuelle :
+  ```
+  match /{chemin=**}/fois/{date} {
+    allow read: if signedIn() && estDeLEquipe(resource.data.equipe);
+  }
+  ```
+  Le filtre `where equipe == e` de la requête est ce qui permet à Firestore de la prouver. **À publier à la
+  main par Timothée.** Pas de miroir à ajouter dans `access.ts` (même droit que `estDeLEquipe`).
+- **Repli** : si la requête unique est refusée (règle pas encore publiée), `listTaches` retombe sur l'ancienne
+  lecture tâche par tâche, sans erreur montrée.
+- **Rattrapage des fois existants** : `scripts/rattrapage-fois-equipe.ts` (`npx tsx`), lancé **une fois** par
+  Timothée en local (il lit les identifiants Admin de `.env.local`, comme les routes serveur) : parcourt
+  `collectionGroup("fois")`, pose `equipe` (tiré du chemin) là où il manque, affiche le nombre de documents
+  touchés ; relançable sans effet. Option `--essai` qui compte sans écrire.
+- **Ordre de mise en ligne** (à écrire dans le compte rendu et la feuille de route) : 1. Timothée publie la
+  règle ; 2. il lance le rattrapage ; 3. seulement ensuite la fusion dans `main`. Sans le rattrapage, les fois
+  anciens seraient invisibles à la requête unique.
 
 ## Tests (Playwright, trois appareils)
 
@@ -114,6 +143,8 @@ les requêtes** `:runQuery` vers `firestore.googleapis.com` par collection :
 - LF3 : deux pages du back-office à moins de 10 min → une seule passe de `lireAFaire` ; après une écriture de
   tâche, la passe suivante relit.
 - LF4 : `focus` + `visibilitychange` → une seule passe de la cloche.
+- LF5 : une équipe de trois tâches → 2 requêtes (tâches + fois), mêmes lignes « À faire » qu'avant ; requête
+  unique refusée (403 simulé) → repli tâche par tâche, mêmes lignes ; une fois cochée porte le champ `equipe`.
 
 Puis les suites existantes qui touchent ces écrans (setlists, statistiques, back-office, notifications,
 copie hors ligne), `npx tsc --noEmit`, `npm run lint`. Vérifier sur 1 chant FR et 1 chant ZH que les
