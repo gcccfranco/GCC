@@ -22,6 +22,33 @@ export interface AnnotationData {
   w: number;
   h: number;
   strokes: Stroke[];
+  /** Hauteur (px d'écran, marge comprise) occupée en haut de la page par le rappel
+   *  de structure au moment du tracé. Absent : annotation d'avant le rappel
+   *  refait (lot RS) — voir `recaler`. */
+  rappel?: number;
+}
+
+/** Ancienne réserve du rappel (px de mise en page) : Sections uniques avant le lot RS. */
+export const ANCIEN_RAPPEL = 32;
+
+/** Remet les traits dans l'espace de la page telle qu'elle est maintenant : le
+ *  contenu a descendu de (rappel actuel − rappel au tracé), en px d'écran. Sans
+ *  champ `rappel`, l'annotation date d'avant le lot : l'ancienne réserve en
+ *  Sections uniques quand la page a un rappel, rien sinon. */
+export function recaler(
+  data: AnnotationData,
+  actuel: number,
+  ancien: number,
+  hEcran: number,
+): AnnotationData {
+  const enregistre = data.rappel ?? ancien;
+  const dy = ((actuel - enregistre) * (data.h || hEcran)) / hEcran;
+  if (Math.abs(dy) < 0.01) return data.rappel === actuel ? data : { ...data, rappel: actuel };
+  return {
+    ...data,
+    rappel: actuel,
+    strokes: data.strokes.map((s) => ({ ...s, points: s.points.map(([x, y]) => [x, y + dy] as [number, number]) })),
+  };
 }
 
 export function serializeAnnotations(data: AnnotationData): string {
@@ -29,6 +56,7 @@ export function serializeAnnotations(data: AnnotationData): string {
   return JSON.stringify({
     w: Math.round(data.w),
     h: Math.round(data.h),
+    ...(typeof data.rappel === "number" ? { rappel: Math.round(data.rappel * 10) / 10 } : null),
     strokes: data.strokes.map((s) => ({
       ...s,
       points: s.points.map(([x, y]) => [Math.round(x * 10) / 10, Math.round(y * 10) / 10]),
@@ -40,6 +68,7 @@ export function deserializeAnnotations(raw: string): AnnotationData | null {
   try {
     const d = JSON.parse(raw);
     if (!d || !Array.isArray(d.strokes)) return null;
+    if (typeof d.rappel !== "number") delete d.rappel;
     return d as AnnotationData;
   } catch {
     return null;
