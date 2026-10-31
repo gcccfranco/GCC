@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { Pencil, SlidersHorizontal, PenLine, UserRound, Play, MoreHorizontal, Download, Copy, FileText, Presentation } from "lucide-react";
@@ -37,6 +37,9 @@ import { useScrollDirection } from "@/hooks/useScrollDirection";
 import { useSwipeViews } from "@/hooks/useSwipeViews";
 import { useDeuxVolets } from "@/hooks/useDeuxVolets";
 import { chargerIndexChants } from "@/hooks/useSongsIndex";
+import { useContenusChants } from "./_hooks/useContenusChants";
+import { usePreferencesAffichage } from "./_hooks/usePreferencesAffichage";
+import { useEntreeLouange } from "./_hooks/useEntreeLouange";
 import { ListView } from "./_components/ListView";
 import { PartitionsView } from "./_components/PartitionView";
 import { Sommaire } from "./_components/Sommaire";
@@ -67,11 +70,8 @@ import {
   type SongVersionView,
 } from "@/lib/setlist/versionChoice";
 import { adresseVue, lireAdresse, poser, surLaSetlist } from "@/lib/setlist/adresseVue";
-import { getChartStylePref, setChartStylePref } from "@/lib/chartStylePref";
-import { getPartitionLayoutPref, setPartitionLayoutPref, type PartitionLayout } from "@/lib/partitionLayoutPref";
-import { getPinyinPref, setPinyinPref } from "@/lib/pinyinPref";
 import { jianpuPngDataUrl, loadJianpuCadrage, loadJianpuChords, loadJianpuManifest, scansAbsentsDuCache, urlsJianpuAGarder, useJianpuManifest } from "@/lib/jianpu/images";
-import { getJianpuPref, setJianpuPref, sheetEnabled, type JianpuPref } from "@/lib/jianpu/preference";
+import { sheetEnabled } from "@/lib/jianpu/preference";
 import { aDesRetouches } from "@/lib/jianpu/retouches";
 import { fetchSongAST, type SongContent} from "@/lib/api/songs";
 import { PerformanceMode } from "@/components/performance/PerformanceMode";
@@ -218,23 +218,8 @@ export function SetlistDetailClient() {
   // Adaptations successives depuis cette page : un seul passage (adapter puis
   // rétablir ne laisse rien), tant que personne d'autre n'a touché la setlist.
   const historyPassRef = useRef<HistoryPass | null>(null);
-  const [contents, setContents] = useState<Record<string, SongContent>>({});
+  const { contents, setContents, loadingContent, loadContents } = useContenusChants();
   const [loadingSetlist, setLoadingSetlist] = useState(true);
-  const [loadingContent, setLoadingContent] = useState(false);
-  const [showChords, setShowChords] = useState(true);
-  // Accords changés sur cette page juste avant le mode louange : ils
-  // l'emportent alors sur le rôle mémorisé (reprise des réglages).
-  const [chordsTouched, setChordsTouched] = useState(false);
-  // Affichage du pinyin en vue partitions — préférence persistée (par appareil).
-  const [showPinyin, setShowPinyin] = useState(true);
-  // Couleurs par section — préférence par appareil partagée (fiche chant, mode louange).
-  const [chartStyle, setChartStyle] = useState(true);
-  // Coup d'œil : ordre joué / sections uniques / structure seule — par appareil.
-  const [layout, setLayout] = useState<PartitionLayout>("played");
-  // Partition 简谱 : affichée par défaut ; l'interrupteur règle l'appareil et
-  // prime alors sur le « Paroles » du responsable. Un seul état, partagé avec
-  // le mode louange.
-  const [jianpuPref, setJianpuPrefState] = useState<JianpuPref>("auto");
   const [view, setView] = useState<"liste" | "partitions">("liste");
   const affichePartitions = deuxVolets || view === "partitions";
   /** Occurrences de la section lue (`data-section-uids`) : la pastille marquée. */
@@ -352,17 +337,11 @@ export function SetlistDetailClient() {
     }
     sessionStorage.setItem("lastListPath", window.location.pathname);
   }, []);
-  // Restaure la préférence d'affichage du pinyin (masqué si "0").
-  useEffect(() => {
-    setShowPinyin(getPinyinPref());
-    setChartStyle(getChartStylePref());
-    setJianpuPrefState(getJianpuPref());
-    setLayout(getPartitionLayoutPref());
-  }, []);
-  const toggleChartStyle = (v: boolean) => {
-    setChartStyle(v);
-    setChartStylePref(v);
-  };
+  const {
+    showChords, setShowChords, chordsTouched, setChordsTouched,
+    showPinyin, chartStyle, layout, jianpuPref,
+    toggleChartStyle, changeLayout, changeJianpuPref, togglePinyin,
+  } = usePreferencesAffichage();
   // Adapter (la setlist) et Ma version (pour soi) s'excluent ; la barre d'outils
   // et, sur téléphone étroit, le menu « ⋯ » passent par ici.
   // Depuis la Liste, les deux modes ouvrent les partitions au chant lu (Q11) ; en
@@ -379,25 +358,11 @@ export function SetlistDetailClient() {
     setEditTarget(null);
     if (!editMine && !affichePartitions) versPartitions(current ?? undefined);
   };
-  const changeLayout = (v: PartitionLayout) => {
-    setLayout(v);
-    setPartitionLayoutPref(v);
-  };
-  const changeJianpuPref = (v: JianpuPref) => {
-    setJianpuPrefState(v);
-    setJianpuPref(v);
-  };
   // Le réglage 简谱 n'apparaît que si un chant de la setlist a un scan.
   const jianpuManifest = useJianpuManifest();
   const hasJianpuSheets = (setlist?.items ?? []).some(
     (it) => it.songSlug && jianpuManifest?.[it.songSlug],
   );
-  function togglePinyin() {
-    setShowPinyin((v) => {
-      setPinyinPref(!v);
-      return !v;
-    });
-  }
   // Lecture de la setlist + index des chants. Sans copie hors ligne, on attend le profil (authLoading) pour que
   // les setlists privées partent avec leur jeton. Avec la copie du MÊME compte, la lecture part dès que Firebase Auth
   // a restauré la session, sans attendre le profil, et la copie s'affiche au bout de 3 s si la lecture n'a pas
@@ -507,31 +472,6 @@ export function SetlistDetailClient() {
     }
   }, [setlist, user, profile, datesDuCompte, copieLueLe, versions, versionsLues]);
 
-  // Load full song content when switching to Partitions view
-  const loadContents = useCallback(async (items: SetlistItem[]) => {
-    setLoadingContent(true);
-    const slugsToLoad: string[] = [];
-    for (const item of items) {
-      if (item.type === "fusion" && item.fusionSongs) {
-        for (const fs of item.fusionSongs) {
-          if (!contents[fs.songSlug]) slugsToLoad.push(fs.songSlug);
-        }
-      } else if (item.songSlug && !contents[item.songSlug]) {
-        slugsToLoad.push(item.songSlug);
-      }
-    }
-    const manquants: string[] = [];
-    await Promise.all(
-      slugsToLoad.map(async (slug) => {
-        const res = await fetchSongAST(slug);
-        if (res) setContents((prev) => ({ ...prev, [slug]: res }));
-        else manquants.push(slug);
-      })
-    );
-    setLoadingContent(false);
-    return manquants;
-  }, [contents, setContents]);
-
   // Hors ligne (D2) : la page d'une setlist lue en ligne demande au service worker de garder sa propre page (une
   // page ouverte par un lien n'est pas une navigation que le service worker voit), celle de la liste, le contenu
   // et la page de chacun de ses chants, et les scans 简谱 de ceux qui en ont un (/jianpu/index.json donne leurs pages).
@@ -571,19 +511,7 @@ export function SetlistDetailClient() {
     requestAnimationFrame(() => loadContents(items));
   }, [setlist, loadContents]);
 
-  // « Mode louange » de l'accueil (lot U4 bis, B1, docs/spec-pages-en-grand.md, Q14) arrive
-  // avec `?louange=1` : le mode louange s'ouvre dès la setlist lue, sans plein écran natif
-  // (il faut un geste sur cette page) ; l'adresse perd le paramètre, retour arrière ne le relance pas.
-  const louangeDemandee = useRef(false);
-  useEffect(() => {
-    if (!setlist || louangeDemandee.current) return;
-    if (new URLSearchParams(window.location.search).get("louange") !== "1") return;
-    louangeDemandee.current = true;
-    window.history.replaceState(window.history.state, "", window.location.pathname);
-    // Même contrôle que le bouton : chants non chargés, scans 简谱 absents du cache hors ligne.
-    requestAnimationFrame(() => { void entrerEnLouange(false); });
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- lancé une fois (louangeDemandee), sur la setlist lue
-  }, [setlist, loadContents]);
+  useEntreeLouange({ setlist, loadContents, entrerEnLouange });
 
   // Vue lue dans l'adresse à l'ouverture (lien, rechargement) et au retour du
   // navigateur (Q9).
