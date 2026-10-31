@@ -10,6 +10,7 @@ import { sheetEnabled, type JianpuPref } from "@/lib/jianpu/preference";
 import { resolveSectionOccurrences, type SectionOccurrence } from "@/lib/setlist/sectionSteps";
 import { uniqueSections } from "@/lib/setlist/uniqueSections";
 import type { PartitionLayout } from "@/lib/partitionLayoutPref";
+import { isDp } from "@/lib/setlist/dp";
 
 export type SongHeaderBlock = {
   kind: "song-header";
@@ -53,6 +54,9 @@ export type SectionBlock = {
   /** Occurrences de la structure jouée que ce bloc représente (une en ordre
    *  joué, toutes les reprises en sections uniques). */
   occurrenceUids?: string[];
+  /** Ordre joué : le même Dp joué plusieurs fois de suite n'est imprimé qu'une
+   *  fois, « ×n » à côté du nom (le bloc garde les uids de tous ses passages). */
+  repeat?: number;
 };
 
 export type TransitionIntraBlock = {
@@ -122,6 +126,27 @@ function bandeau(occurrences: SectionOccurrence[], key: string): SectionOccurren
 function applyCapo(ast: ChordProAST, playedKey: string, capo: number): ChordProAST {
   if (!capo) return ast;
   return transposeAST(ast, -capo, getTransposedKey(playedKey, -capo));
+}
+
+/** Ordre joué : le même Dp (même section) joué de suite n'est imprimé qu'une fois.
+ *  Le bloc garde la nuance de son 1er passage et les uids de tous ; une
+ *  transition entre deux passages (bloc à part) coupe la suite. */
+function fusionnerDp(blocks: PerformanceBlock[]): PerformanceBlock[] {
+  const out: PerformanceBlock[] = [];
+  for (const b of blocks) {
+    const prev = out[out.length - 1];
+    if (
+      b.kind === "section" && prev?.kind === "section" &&
+      isDp(b.section) && isDp(prev.section) &&
+      b.section.id === prev.section.id && b.songTitle === prev.songTitle && b.keyChange === prev.keyChange
+    ) {
+      prev.occurrenceUids = [...(prev.occurrenceUids ?? [prev.section.uid]), ...(b.occurrenceUids ?? [b.section.uid])];
+      prev.repeat = (prev.repeat ?? 1) + 1;
+      continue;
+    }
+    out.push(b);
+  }
+  return out;
 }
 
 export function buildPerformanceBlocks(
@@ -387,7 +412,7 @@ export function buildPerformanceBlocks(
     }
   }
 
-  return blocks;
+  return affichage === "played" ? fusionnerDp(blocks) : blocks;
 }
 
 /** Signature de mise en page d'une page du mode louange, partie de la clé de

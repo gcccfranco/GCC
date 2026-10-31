@@ -453,6 +453,7 @@ export function StructureStrip({
   compacte = false,
   colonne = false,
   pleines,
+  rappel = "unique",
   className = "",
   children,
 }: {
@@ -471,6 +472,10 @@ export function StructureStrip({
    *  qui en contient un est plein (fond de la section, nuance dessous) ; les autres
    *  sont claires, et disparaissent sous 640 px. */
   pleines?: ReadonlySet<string>;
+  /** Rappel (compacte) : « unique » = Sections uniques (pleines et claires, claires cachées
+   *  au téléphone) ; « joue » = Ordre joué : points (déjà joué), pleines (sur la page),
+   *  claires (à venir), tout gardé au téléphone. */
+  rappel?: "joue" | "unique";
   className?: string;
   /** Badges d'état propres au contexte (copie des paroles, version modifiée…). */
   children?: React.ReactNode;
@@ -478,6 +483,14 @@ export function StructureStrip({
   const { t } = useTranslation();
   const groups = groupSteps(steps, (section) => formatSectionName(section, t));
   const pleine = new Set(groups.flatMap((g, i) => (g.uids.some((uid) => pleines?.has(uid)) ? [i] : [])));
+  // Ordre joué : les groupes tout entiers avant la 1re étape de la page sont des points.
+  const rangDe = new Map(steps.map((st, k) => [st.section.uid, k]));
+  const debutPage = Math.min(...[...(pleines ?? [])].map((uid) => rangDe.get(uid) ?? Infinity));
+  const point = new Set(
+    rappel === "joue" && compacte && Number.isFinite(debutPage)
+      ? groups.flatMap((g, i) => (!pleine.has(i) && Math.max(...g.uids.map((uid) => rangDe.get(uid) ?? -1)) < debutPage ? [i] : []))
+      : [],
+  );
   // Pastille aux couleurs de la section (palette --sec-* de globals.css) :
   // fond clair, lettre en couleur — les mêmes teintes que les cadres du corps.
   // Un Dp prend la couleur de sa section d'origine (« – R » : orange du refrain).
@@ -506,8 +519,15 @@ export function StructureStrip({
           {groups.map((g, i) => {
             const targetKey = g.step.targetKey && g.step.targetKey !== songKey ? g.step.targetKey : undefined;
             const n = noteNumber.get(g);
+            if (point.has(i)) {
+              return (
+                <li key={i} className="flex h-[26px] items-center px-[3px] sm:h-[30px]">
+                  <span data-point title={g.full} className="block h-2 w-2 shrink-0 rounded-full" style={{ background: colorOf(g.step.section), opacity: 0.45 }} />
+                </li>
+              );
+            }
             return (
-              <li key={i} className={colonne ? "flex items-center gap-3" : `flex flex-col items-center ${compacte ? `gap-1 ${pleines && !pleine.has(i) ? "max-sm:hidden" : ""}` : "gap-1.5"}`}>
+              <li key={i} className={colonne ? "flex items-center gap-3" : `flex flex-col items-center ${compacte ? `gap-1 ${pleines && rappel === "unique" && !pleine.has(i) ? "max-sm:hidden" : ""}` : "gap-1.5"}`}>
                 <span
                   data-pleine={pleine.has(i) || undefined}
                   className={`relative inline-flex items-center justify-center rounded-full ${
