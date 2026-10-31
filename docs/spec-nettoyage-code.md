@@ -4,7 +4,8 @@
 nettoyer ». Outils externes autorisés le même jour pour un usage ponctuel (`npx knip`, `npx jscpd`, `npx madge`),
 sans rien ajouter au dépôt.
 **Statut** : décisions prises par Claude sur délégation (Timothée, 31/10/2026 : « Fais ce que tu penses être le mieux
-pour moi »), § 4 ; **go pour N1, N2 et N3 seulement**. N4 à N8 attendent le bilan de N1–N3 et un nouveau go.
+pour moi »), § 4 ; **go pour N1, N2 et N3 seulement**. **N1, N2 (en partie) et N3 faits le 31/10/2026** sur la
+branche `claude/sweet-wright-d533ng` (§ 6) ; trois morceaux de N2 reportés. N4 à N8 attendent un nouveau go.
 **Mesuré sur** : commit `f8510da` (= `main` au 31/10/2026). Une autre session pousse en parallèle : chaque lot
 **refait les mesures** sur la branche à jour avant de coder (§ 5).
 
@@ -156,3 +157,51 @@ le gain vaut encore le risque.
   `scripts/responsabilites-reprise.ts` ni leurs tests : les constats qui y tombent (`estReferentEdd`,
   `estReferentRegie`, `ETAPES` de `repriseResponsabilites.ts`, le type `DateServie` de N3, exports en trop de
   `lib/acces/`) attendent. Le lot JE est terminé (`f8510da`).
+
+## 6. Avancement (31/10/2026)
+
+Branche `claude/sweet-wright-d533ng`, `main` fusionné par merge (lot RS mis en ligne, rappel de structure, lot SP).
+Pas encore sur `main` : la mise en ligne attend l'ordre de Timothée.
+
+| Tranche | Commit | Contenu | Tests (trois appareils) |
+| --- | --- | --- | --- |
+| N1a | `d79324f` | 3 dépendances, 15 exports morts, code mort interne, `scripts/tmp/t.ts` et `poles-vers-equipes.ts` (Q1), doc des diagrammes | 15 specs |
+| N1b | `a8f4728` | `export` retiré de ~205 noms internes (Q5) ; exports morts des fichiers RS (`estReferentEdd`, `estReferentRegie`, `ETAPES` de la reprise) | 13 specs, 1 334 passés |
+| N2a | `38424f3` | `authentifier(req)` (`lib/api/authentifier.ts`) dans 8 routes et `appelant` des tâches | 568 + `back-office-coupe` 263 |
+| N2b | `d025e40` | `transposerVers`, `ordreJoue`, `idDeSection`, `lib/cjk.ts`, `lib/chordpro/segments.ts` ; `tests/nettoyage-fonctions-chant.spec.ts` (FR + ZH) | 14 specs, 907 passés |
+| N2c | `84e87e8` | `lib/dates/iso.ts`, `FS_BASE`/`authHeader` importés dans `annotations.ts`, `suivreDisposition` (deux volets), `lib/telecharger.ts` (téléchargement, plein écran) | 6 specs, 504 passés |
+| N3 | `e1d2af2` | 13 cycles → 0 : types dans `src/types/` (`setlistVersions`, `planning`, `rappels`, `FSSetlist`) ; `contexteTaches`, `contexteMesServices`, `scene/pieces.tsx` | 15 specs ; échecs sous charge relancés seuls : 236 passés |
+| — | `e0a67c6` | `LAST_PHRASE` de nouveau exporté (importé par `lib/setlist/dp.ts`, arrivé de `main`) | après le merge de `main` : rappel ×3, sections uniques, statistiques, spec N2b : 413 passés |
+
+**Mesures avant → après** (knip 5, jscpd 4, madge 8) :
+
+| | Avant (`b768681`) | Après |
+| --- | --- | --- |
+| Fichiers inutilisés (knip) | 20 | 18 (faux positifs gardés : `sw.js`, banc `rude-epreuve`, scripts à la main) |
+| Dépendances inutilisées | 3 | 0 |
+| Exports inutilisés | 70 | 11 (kit `components/ui`, `tests/helpers`, 3 importés par des scripts) |
+| Types exportés inutilisés | 87 | 8 (`components/ui`, `tests/helpers`, `Seg`, `StepGroup` arrivé de `main`) |
+| Copier-coller (≥ 12 lignes) | 18 clones, 410 lignes (0,38 %) | 13 clones, 338 lignes (0,31 %) |
+| Imports circulaires | 13 | 0 |
+
+Lignes des tranches N : +875 / −1 253 (dont ~180 lignes de la spec de N2b).
+
+**Reportés** (N2, à reprendre dans un lot à part, sur go) :
+- carte de séance campus commune (`AncienTableau.tsx` / page campus, Q3) et `BoutonsChamps` (`SetlistFormRows.tsx`) :
+  il faut regarder les captures, plus risqué que le reste ; reportés pour tenir le temps de la session ;
+- module REST partagé (`runQuery`, historique, contrôle de version 409) : il touche cinq modules Firestore et leurs cas
+  d'erreur ;
+- `useBarreLeft` : les effets de `SetlistDetailClient` et `SongDetailClient` ne sont pas équivalents (mesure de
+  l'en-tête, `removeProperty`), rien à mettre en commun tel quel ;
+- ré-exports de type gardés par N3 (`FSSetlist` dans `setlists.ts`, `EtatAnnonce` dans `prevenir.ts`,
+  `ReminderService` dans `reminderMessage.ts`) : une quarantaine d'importeurs à repointer vers `src/types/`.
+
+**Notes** :
+- `tests/performance-mode.spec.ts:243` (tablette) échoue environ une fois sur quatre : le test clique « Agrandir le
+  texte » avant l'hydratation de la page du chant (un clic perdu → 110 % au lieu de 120 %). Vu aussi sans N2b ; 5/5 sur
+  `f8510da`. À durcir (attendre l'hydratation) dans un lot de tests.
+- Deux tranches menées en parallèle (N2a et N3, deux copies de travail) ont saturé la machine (charge ~15 sur 4 cœurs)
+  et donné des dizaines de faux échecs : une suite Playwright à la fois. `reuseExistingServer: true` branche
+  silencieusement une suite sur le serveur d'une autre copie qui occupe le même port.
+- Un `git pull --rebase` simple après un merge de `main` a recopié 20 commits de `main` sous d'autres identifiants ;
+  réparé par un second merge (`main` redevient ancêtre, aucun fichier changé). Après un merge : `git pull --rebase=merges`.
