@@ -53,7 +53,7 @@ const appeler = async (corps: Corps) => {
   }
 }
 
-export type Prevenir = ReturnType<typeof usePrevenir>
+type Prevenir = ReturnType<typeof usePrevenir>
 
 export function usePrevenir({ prevenir, definition, rows, speciaux, ecrites, comptes }: {
   prevenir?: PrevenirProp

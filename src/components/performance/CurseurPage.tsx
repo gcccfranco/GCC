@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 
-export interface RepereChant {
+interface RepereChant {
   /** Index de page (0-based) de la première page du chant. */
   page: number;
   titre: string;

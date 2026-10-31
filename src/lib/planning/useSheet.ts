@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { copiesServiesSheet } from "./sheets";
 
-export type SheetStatus = "loading" | "fresh" | "stale";
+type SheetStatus = "loading" | "fresh" | "stale";
 
 /**
  * Charge un planning depuis Google Sheets en distinguant trois états :

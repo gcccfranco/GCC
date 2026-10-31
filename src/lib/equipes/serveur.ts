@@ -28,7 +28,7 @@ export async function exigerDroitEquipes(
   if (!canEditerEquipes(user, data ?? null, backOffice)) throw new HttpError(403, "Réservé à qui tient l'organigramme");
 }
 
-export type EquipeServeur = { id: string; membres: MembreEquipe[] };
+type EquipeServeur = { id: string; membres: MembreEquipe[] };
 
 export async function lireEquipes(db: FirebaseFirestore.Firestore): Promise<EquipeServeur[]> {
   const snap = await db.collection("equipes").get();
@@ -70,7 +70,7 @@ export function recopieDuCompte(uid: string, data: Record<string, unknown>, equi
   return { listes, groupe };
 }
 
-export type Ignore = { uid: string; groupe: GroupeId };
+type Ignore = { uid: string; groupe: GroupeId };
 
 /** Ce que l'appelant peut poser comme référents (docs/spec-corrections-audit.md, A2, C7) : un référent NOUVEAU
  *  (absent de `actuel`) n'est gardé que si `peut(équipe)`. Un retrait (id présent dans `actuel`, absent de `voulu`) ne

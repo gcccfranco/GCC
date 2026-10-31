@@ -26,7 +26,7 @@ function docData(raw: RawDoc): { id: string; data: Record<string, unknown> } {
   };
 }
 
-export function fromFsEvenement(raw: RawDoc): Evenement {
+function fromFsEvenement(raw: RawDoc): Evenement {
   const { id, data } = docData(raw);
   return {
     id,

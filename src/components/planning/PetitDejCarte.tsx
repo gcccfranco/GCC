@@ -41,7 +41,7 @@ const FOND = serviceButtonFill(COULEUR)
 const NOM_MAX = 80
 
 /** « 4 oct. », « 1er nov. » ; 中文 « 10月4日 ». */
-export function dateCourte(iso: string, lang: string): string {
+function dateCourte(iso: string, lang: string): string {
   const [y, m, d] = iso.split("-").map(Number)
   if (lang === "zh-CN") return `${m}月${d}日`
   return `${d === 1 ? "1er" : d} ${new Date(y, m - 1, d).toLocaleDateString("fr-FR", { month: "short" })}`
@@ -151,7 +151,7 @@ export function usePetitDej(onLignes?: (lignes: LignePetitDej[]) => void) {
   return { user, profile, lignes, saisie, setSaisie, annonce, enCours, sun, peutGerer, sInscrire, retirer, commencer, terminer }
 }
 
-export type EtatPetitDej = ReturnType<typeof usePetitDej>
+type EtatPetitDej = ReturnType<typeof usePetitDej>
 
 /** Le « ⋯ » d'une ligne qu'on peut toucher : Modifier (le champ dans la rangée), Retirer (confirmé). */
 function actionsDeLaLigne(etat: EtatPetitDej, l: LignePetitDej, t: (cle: string) => string) {

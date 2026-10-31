@@ -14,7 +14,7 @@ import type { Accord } from "@/lib/accords/analyse";
 import type { Instrument } from "@/types/harmonie";
 import { decrire, grilleDe, notesEnLettres, pianoDe } from "./outils";
 
-export type Variante = "feuille" | "bulle" | "carte";
+type Variante = "feuille" | "bulle" | "carte";
 
 /** Guitare | Piano : deux vrais boutons dans un groupe (comme le segment 简谱 · Paroles de la page chant). */
 export function ChoixInstrument({

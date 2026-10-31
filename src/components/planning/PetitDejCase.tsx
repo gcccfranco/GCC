@@ -98,7 +98,7 @@ export function usePetitDejGrille(actif: boolean, onLignes: (lignes: LignePetitD
   return { lignes, annonce, enCours, ajouter, renommer, retirer }
 }
 
-export type EtatPetitDejGrille = ReturnType<typeof usePetitDejGrille>
+type EtatPetitDejGrille = ReturnType<typeof usePetitDejGrille>
 
 const BORD = "min-h-8 rounded-md border border-dashed px-1.5 py-1 text-[13px] sm:text-sm hover:bg-secondary active:bg-secondary disabled:opacity-60"
 const CHAMP = "w-full min-w-0 rounded-md border bg-background px-2 py-1 text-[16px] sm:text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/20"

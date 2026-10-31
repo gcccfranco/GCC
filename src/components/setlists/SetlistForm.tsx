@@ -63,7 +63,7 @@ export interface SetlistFormInitial {
   items: FormListItem[];
 }
 
-export interface SetlistFormProps {
+interface SetlistFormProps {
   mode: "create" | "edit";
   /** Requis en mode edit */
   setlistId?: string;

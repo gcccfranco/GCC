@@ -17,13 +17,13 @@ export interface SurveyCondition {
   anyOf: string[];
 }
 
-export interface SurveySection {
+interface SurveySection {
   id: string;
   dependsOn?: SurveyCondition;
 }
 
 /** Une étape du formulaire = plusieurs sections, pour limiter le nombre de clics. */
-export interface SurveyStep {
+interface SurveyStep {
   id: string;
   sections: string[];
 }
@@ -54,7 +54,7 @@ export const SURVEY_SECTIONS: SurveySection[] = [
 ];
 
 /** Regroupement des sections en étapes (titres : `survey.steps.<id>`). */
-export const SURVEY_STEPS: SurveyStep[] = [
+const SURVEY_STEPS: SurveyStep[] = [
   { id: "you", sections: ["usage", "general"] },
   { id: "features", sections: ["songs", "setlists", "performance"] },
   { id: "infos", sections: ["planning", "annonces", "misc"] },
@@ -314,7 +314,7 @@ export type SurveyAnswer = number | string | string[];
 export type SurveyAnswers = Record<string, SurveyAnswer>;
 
 /** Une condition est remplie si la réponse vaut (choice) ou contient (multi) une valeur attendue. */
-export function conditionMet(cond: SurveyCondition | undefined, answers: SurveyAnswers): boolean {
+function conditionMet(cond: SurveyCondition | undefined, answers: SurveyAnswers): boolean {
   if (!cond) return true;
   const value = answers[cond.question];
   if (Array.isArray(value)) return cond.anyOf.some((v) => value.includes(v));
@@ -329,7 +329,7 @@ export function visibleQuestions(section: string, answers: SurveyAnswers): Surve
 }
 
 /** Sections à parcourir, compte tenu des réponses (les hors-sujet sautent). */
-export function visibleSections(answers: SurveyAnswers): SurveySection[] {
+function visibleSections(answers: SurveyAnswers): SurveySection[] {
   return SURVEY_SECTIONS.filter(
     (s) => conditionMet(s.dependsOn, answers) && visibleQuestions(s.id, answers).length > 0
   );

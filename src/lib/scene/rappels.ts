@@ -5,7 +5,7 @@ import type { ReminderService } from "@/lib/push/reminderMessage";
 import type { Creneau } from "@/types/programme";
 import { libelleQui } from "@/lib/fetes/qui";
 
-export const SCENE_SERVICE = "Entraînement sur scène";
+const SCENE_SERVICE = "Entraînement sur scène";
 
 // « Qui » d'un créneau → catégorie de l'app (clé de serviceRoles) dont les
 // membres reçoivent le rappel. Sans correspondance (EDD 小班, Gp Amour, Gp Joie,

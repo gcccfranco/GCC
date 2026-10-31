@@ -27,7 +27,7 @@ export function trancheDeTempo(bpm: number | null): Tempo | null {
 }
 
 /** Le pinyin d'un titre sans tons, espaces ni ponctuation, en minuscules : « Yī shēng » → « yisheng ». */
-export function pinyinColle(titlePinyin: string | null | undefined): string {
+function pinyinColle(titlePinyin: string | null | undefined): string {
   return (titlePinyin ?? "")
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")

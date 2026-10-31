@@ -151,7 +151,7 @@ export function membresComite(groupe: OrganigrammeGroupe): Titulaire[] {
 
 // ─── Colonnes reliables (OG12) ───────────────────────────────────────────────
 
-export interface ColonneReliable {
+interface ColonneReliable {
   cle: string;
   /** Clé de `planning.roles.*`, déjà traduite en 中文. */
   i18n: string;
@@ -205,7 +205,7 @@ export function comptesCites(groupe: OrganigrammeGroupe): string[] {
 
 // ─── Ce que le serveur recopie sur un profil (OG19, OG3) ─────────────────────
 
-export interface RecopieGroupe {
+interface RecopieGroupe {
   /** Le groupe après OG3 : celui de la personne, ou celui où elle entre. */
   groupe: GroupeId | null;
   /** Vrai = une personne sans groupe entre dans `groupe` : le serveur écrit alors le champ. */

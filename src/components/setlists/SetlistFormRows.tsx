@@ -192,7 +192,7 @@ export function AnnotationFieldInput({
 
 // ─── Section row (sortable, inside a song) ────────────────────────────────────
 
-export function SortableSectionRow({
+function SortableSectionRow({
   item,
   onRemove,
   onNoteChange,

@@ -28,7 +28,7 @@ import { INSTRUMENTS, SOUS_EQUIPES, type Instrument, type SousEquipe } from "@/t
 import type { OrganigrammeGroupe } from "@/types/groupe";
 import { SERVICE_LIEUX, type ServiceLieu, type UserProfile } from "@/types/user";
 
-export type { Donnees, Magasin, Operation } from "@/lib/equipes/migration";
+export type { Donnees, Magasin } from "@/lib/equipes/migration";
 export { enLectureSeule } from "@/lib/equipes/migration";
 
 export const PAR_NOM = "migration AO";
@@ -47,7 +47,7 @@ type ProfilLu = { uid: string; data: Donnees };
 type EquipeLue = { id: string; existe: boolean; membres: Donnees[] };
 
 /** Tout ce que la migration lit, avant de calculer le relevé et le plan. */
-export type Etat = {
+type Etat = {
   profils: ProfilLu[];
   /** Les documents equipes/* lus ; louange, regie et edd y figurent toujours (absents = vides, `existe` faux). */
   equipes: EquipeLue[];
@@ -59,7 +59,7 @@ const tableau = <T>(v: unknown): T[] => (Array.isArray(v) ? (v as T[]) : []);
 const texte = (v: unknown): string => (typeof v === "string" ? v : "");
 const liste = (v: unknown): string[] => tableau<unknown>(v).filter((x): x is string => typeof x === "string");
 
-export async function lireEtat(m: Magasin, planning: PlanningData): Promise<Etat> {
+async function lireEtat(m: Magasin, planning: PlanningData): Promise<Etat> {
   const profils = (await m.lister("users")).map(({ id, data }) => ({ uid: id, data })).sort((a, b) => (a.uid < b.uid ? -1 : 1));
   const lus = await m.lister("equipes");
   const equipes: EquipeLue[] = lus.map(({ id, data }) => ({ id, existe: true, membres: tableau<Donnees>(data.membres) }));
@@ -168,7 +168,7 @@ function reunir<T extends string>(existant: unknown, ajout: Iterable<T>, ordre: 
 }
 
 /** Le nom d'un compte dans l'organigramme : la graphie du planning, sinon prénom + initiale. */
-export function nomDeMembre(data: Donnees): string {
+function nomDeMembre(data: Donnees): string {
   const planning = texte(data.planningName).trim();
   if (planning) return planning;
   const prenom = texte(data.firstName).trim();
@@ -387,9 +387,9 @@ function acces(p: UserProfile, backOffice: boolean, services: { role: string }[]
 
 // ─── Relevé et plan (purs) ──────────────────────────────────────────────────
 
-export type Personne = { uid: string; nom: string };
+type Personne = { uid: string; nom: string };
 
-export type Releve = {
+type Releve = {
   /** Garde son accès : rien de perdu ; `gagnes` = ce que le nouveau mode ouvre en plus. */
   gardent: (Personne & { gardes: string[]; gagnes: string[] })[];
   /** Perd un accès : la liste précise. */
@@ -419,7 +419,7 @@ function egales(a: string[], b: string[]): boolean {
   return a.join(",") === b.join(",");
 }
 
-export function releveEtPlan(etat: Etat, maintenant: string = new Date().toISOString()): { releve: Releve; plan: Operation[] } {
+function releveEtPlan(etat: Etat, maintenant: string = new Date().toISOString()): { releve: Releve; plan: Operation[] } {
   const plan: Operation[] = [];
   const completees = new Map<string, Complete>();
   for (const id of ["louange", "regie", "edd"] as const) completees.set(id, completer(etat, id));

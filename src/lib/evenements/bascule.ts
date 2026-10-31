@@ -33,7 +33,7 @@ export function dernierJourDuSheet(): string {
 }
 
 /** Dernier jour de la ligne d'annonce du Back-Office (Q7 b). */
-export const FIN_ANNONCE_BASCULE = "2027-01-31"
+const FIN_ANNONCE_BASCULE = "2027-01-31"
 
 /** La ligne d'annonce du Back-Office selon le jour : « avant » la bascule, « apres » jusqu'au
  *  31/01/2027, plus rien ensuite (`null`). */

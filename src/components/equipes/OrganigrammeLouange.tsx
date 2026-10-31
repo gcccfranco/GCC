@@ -161,7 +161,7 @@ export function MentionReferent({ m, louange, gerer }: { m: MembreEquipe; louang
   );
 }
 
-export type DroitsMembre = {
+type DroitsMembre = {
   /** Tient toute l'équipe (Orga, admin, référent de l'équipe) : mention, essai, retrait. */
   equipe: boolean;
   /** Tient cette sous-équipe de Louange. */

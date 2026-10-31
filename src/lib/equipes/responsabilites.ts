@@ -68,7 +68,7 @@ type ProfilFiche = ProfilResponsabilites & { referentDe?: string[]; referentSous
 
 /** Les mentions « Référent » d'un profil, d'après ses champs recopiés : une par équipe (Louange comprise), puis une par
  *  sous-équipe de Louange. */
-export function mentionsReferent(p: ProfilFiche | null | undefined, t: T): string[] {
+function mentionsReferent(p: ProfilFiche | null | undefined, t: T): string[] {
   const equipes = EQUIPES.filter((e) => (p?.referentDe ?? []).includes(e.id));
   return [
     ...equipes.map((e) => t("responsabilites.referentEquipe", { equipe: t(cleNomEquipe(e.id, true)) })),

@@ -3,7 +3,7 @@
 import { lignesDeLAnnee, type ColonneGrille, type DefinitionGrille } from "./grilles"
 import { getAnnee } from "./utils"
 
-export type CasesVides = { date: string; colonnes: ColonneGrille[] }
+type CasesVides = { date: string; colonnes: ColonneGrille[] }
 
 /** Les colonnes d'une ligne à remplir : ni optionnelles (Sainte cène, percussion), ni
  *  remplies ailleurs (petit déj). */

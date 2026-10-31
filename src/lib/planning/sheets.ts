@@ -161,7 +161,7 @@ export async function relireOnglets(noms: readonly string[]): Promise<string[]> 
 // Colonnes 1–11 : présidence … traduction, puis « Sainte cène » (index 11,
 // ajoutée au T4 2026). Jamais au-delà : les colonnes suivantes portent des
 // notes de travail.
-export async function lireCulteSheet(): Promise<string[][]> {
+async function lireCulteSheet(): Promise<string[][]> {
   const rows = await fetchSheet("Franco_Louange")
   return rows.flatMap(r => {
     const dt = parseDate(r[0])
@@ -198,7 +198,7 @@ export function parsePetitDej(rows: string[][]): string[][] {
   return out
 }
 
-export async function lireTableSheet(): Promise<string[][]> {
+async function lireTableSheet(): Promise<string[][]> {
   const rows = await fetchSheet("Franco_Table_PtD")
   const parDate = new Map<string, string[]>()
   const ligne = (d: string) => { const l = parDate.get(d) ?? [d, "", ""]; parDate.set(d, l); return l }
@@ -256,9 +256,9 @@ async function fetchMulti(sheets: string[], cols: number): Promise<string[][]> {
 // (Q14) : en ligne, l'ancien tableau, « Mes services » et les rappels lisent le
 // Sheet comme avant.
 const COLONNES_GROUPE = BACK_OFFICE ? 5 : 4
-export const lirePaixSheet = () => fetchMulti(["Paix_T1","Paix _T2","Paix _T3","Paix_T4"], COLONNES_GROUPE)
+const lirePaixSheet = () => fetchMulti(["Paix_T1","Paix _T2","Paix _T3","Paix_T4"], COLONNES_GROUPE)
 export const lireFideliteSheet = () => fetchMulti(["Fidélité_T1","Fidélité_T2","Fidélité_T3","Fidélité_T4"], 4)
-export const lireBonteSheet = () => fetchMulti(["Bonté_T1","Bonté _T2","Bonté _T3","Bonté_T4"], COLONNES_GROUPE)
+const lireBonteSheet = () => fetchMulti(["Bonté_T1","Bonté _T2","Bonté _T3","Bonté_T4"], COLONNES_GROUPE)
 
 export async function lireFideliteMusiciensSheet(): Promise<string[][]> {
   const rows = await fetchSheet("Fidélité_Musicien")
@@ -285,7 +285,7 @@ export async function fetchFidelite(): Promise<string[][]> {
   return completerMusiciensFidelite(groupe, musiciens, ecrites)
 }
 
-export async function fetchFideliteMusic(): Promise<string[][]> {
+async function fetchFideliteMusic(): Promise<string[][]> {
   return fusionnerLignes(await grilleDeLApp("fideliteMusiciens"), await lireFideliteMusiciensSheet())
 }
 
@@ -295,7 +295,7 @@ export async function fetchBonte(): Promise<string[][]> {
 
 // Intergroupe / Interfranco : 1 séance par trimestre (4 lignes/an). Structure
 // proche du culte. Intergroupe = 3 choristes, Interfranco = 2 choristes.
-export async function lireIntergroupeSheet(): Promise<string[][]> {
+async function lireIntergroupeSheet(): Promise<string[][]> {
   const rows = await fetchSheet("Intergroupe")
   return rows.flatMap(r => {
     const dt = parseDate(r[0])
@@ -304,7 +304,7 @@ export async function lireIntergroupeSheet(): Promise<string[][]> {
   })
 }
 
-export async function lireInterfrancoSheet(): Promise<string[][]> {
+async function lireInterfrancoSheet(): Promise<string[][]> {
   const rows = await fetchSheet("Interfranco")
   return rows.flatMap(r => {
     const dt = parseDate(r[0])
@@ -324,7 +324,7 @@ export async function fetchInterfranco(): Promise<string[][]> {
 // EDD : l'onglet énumère les dimanches classe par classe (le nom de la classe
 // en colonne 7 ouvre un bloc) ; cinq colonnes par ligne, plus COURS (colonne 6,
 // lot U2, P5) derrière l'interrupteur, comme la percussion des groupes.
-export async function lireEddSheet(classe: (typeof EDD_CLASSES)[number]): Promise<string[][]> {
+async function lireEddSheet(classe: (typeof EDD_CLASSES)[number]): Promise<string[][]> {
   const rows = await fetchSheet("EDD")
   const out: string[][] = []
   let cls: string | null = null
@@ -360,7 +360,7 @@ export async function fetchEDD(): Promise<EddDataStructure> {
 // Campus : une ligne par séance (colonne B = Matin / Soir) ; la grille de
 // chaque moment porte les treize cases dans l'ordre du Sheet, la répétition
 // en texte libre (« JJ/MM/AAAA HH:MM Salle »).
-export async function lireCampusSheet(moment: "Matin" | "Soir"): Promise<string[][]> {
+async function lireCampusSheet(moment: "Matin" | "Soir"): Promise<string[][]> {
   const rows = await fetchSheet("Campus_Louange")
   return rows.flatMap(r => {
     if (!r[0] || r[1] !== moment) return []

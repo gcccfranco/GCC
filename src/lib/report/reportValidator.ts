@@ -1,4 +1,4 @@
-export interface ReportInput {
+interface ReportInput {
   title: string;
   description?: string;
   userEmail?: string;

@@ -44,7 +44,7 @@ import { EtatVide } from "@/components/layout/EtatVide"
 // l'appareil, « Mes dates », séparateurs de mois, pastille « Cette semaine »,
 // badge de date, cartes sur téléphone.
 
-export interface PlanningGrilleProps {
+interface PlanningGrilleProps {
   definition: DefinitionGrille
   /** Lignes déjà filtrées par la publication (lignesPubliees). */
   lignes: LigneGrille[]

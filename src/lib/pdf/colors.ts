@@ -4,7 +4,7 @@
 
 import { nuanceDef } from "@/lib/setlist/nuances";
 
-export type NuancePdfColors =
+type NuancePdfColors =
   | { background: string; color: string }
   | { border: string; color: string };
 

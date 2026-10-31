@@ -1,6 +1,6 @@
 // Le rond aux initiales d'un titulaire (planches v19-org) ; pointillé pour un sans compte ou une place libre.
 
-export const initiales = (nom: string) =>
+const initiales = (nom: string) =>
   nom.split(/\s+/).filter(Boolean).slice(0, 2).map((m) => m[0]!.toUpperCase()).join("");
 
 export function Initiales({ nom, pointille = false, sombre = false }: { nom: string; pointille?: boolean; sombre?: boolean }) {

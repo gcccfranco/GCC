@@ -12,11 +12,11 @@ export function nouvelIdPassage(): string {
   return Array.from(octets, (o) => ALPHABET[o % ALPHABET.length]).join("");
 }
 
-export const MEDIAS_MAX = 10;
+const MEDIAS_MAX = 10;
 const TEMPS = /^\d{1,3}:[0-5]\d$/;
 
 export type ErreurMedia = "format" | "trop" | "type" | "titre" | "lien" | "duree" | "depart" | "note";
-export type ResultatMedias = { ok: true; medias: MediaPassage[] } | { ok: false; erreur: ErreurMedia };
+type ResultatMedias = { ok: true; medias: MediaPassage[] } | { ok: false; erreur: ErreurMedia };
 
 function lienHttps(s: string): boolean {
   try {

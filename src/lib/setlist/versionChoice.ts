@@ -5,7 +5,7 @@ import { structureWithCopies } from "@/lib/setlist/sectionOrigins";
 // la présidence, la sienne, ou celle qu'un autre a partagée et qu'elle a
 // choisie. Tout est calculé depuis les documents `setlists/{id}/versions`.
 
-export const PRESIDENCE = "presidence";
+const PRESIDENCE = "presidence";
 
 export type SongVersionView = {
   /** Ma version (structure appliquée au corps, badge, partage). */

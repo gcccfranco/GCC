@@ -5,7 +5,7 @@
 
 /** Ce que montre chaque volet. `droite` : la page de l'adresse (une fiche), le premier
  *  élément de la liste (Q3, en grand sans élément choisi), ou rien (un volet, sur la liste). */
-export interface Volets {
+interface Volets {
   liste: boolean;
   droite: "page" | "premier" | null;
 }

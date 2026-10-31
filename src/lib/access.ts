@@ -919,7 +919,7 @@ export function widgetsPermis(user: AuthUser | null, profile: UserProfile | null
  *  gère ou crée : admin, coordination, droit d'annonces, référent d'une équipe, décision 43) ·
  *  Scène (coordination, U1). Les réunions ont leur entrée depuis l'agencement v18 (B15).
  *  Affichage seulement. */
-export type SousPartieEvenements = "evenements" | "scene";
+type SousPartieEvenements = "evenements" | "scene";
 export function sousPartiesEvenements(
   user: AuthUser | null,
   profile: ProfilResponsable | null,

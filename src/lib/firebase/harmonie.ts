@@ -35,7 +35,7 @@ export type Idee = {
   modifieLe: string;
 };
 
-export type IdeeValues = Pick<Idee, "texte" | "avant" | "apres" | "ficheId">;
+type IdeeValues = Pick<Idee, "texte" | "avant" | "apres" | "ficheId">;
 
 function docData(raw: RawDoc): { id: string; data: Record<string, unknown> } {
   return {

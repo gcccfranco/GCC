@@ -67,7 +67,7 @@ export async function getProfile(uid: string): Promise<UserProfile | null> {
 
 /** Ce qu'un formulaire envoie : l'uid et les seuls champs qu'il tient. `createdAt`
  *  est dérivé du createTime du document Firestore, jamais persisté. */
-export type ProfilePatch = { uid: string } & Partial<Omit<UserProfile, "uid" | "createdAt">>;
+type ProfilePatch = { uid: string } & Partial<Omit<UserProfile, "uid" | "createdAt">>;
 
 function profilVide(uid: string): UserProfile {
   return { uid, email: "", firstName: "", lastName: "", planningName: "", serviceRoles: {}, annonces: [], notify: [], coordination: false, equipes: false, plannings: [] };

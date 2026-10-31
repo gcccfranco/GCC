@@ -19,10 +19,7 @@ export const SERVICE_LIEUX = [
 ] as const;
 export type ServiceLieu = (typeof SERVICE_LIEUX)[number];
 
-export const EDD_ROLES = ["musicien", "presidence"] as const;
-
 export const GROUPES = ["Groupe Paix", "Groupe Fidélité", "Groupe Bonté"] as const;
-export type Groupe = (typeof GROUPES)[number];
 
 export interface UserProfile {
   uid: string;

@@ -17,7 +17,7 @@ const suivre = (rappel: () => void) => {
 export const useClavier = () => useSyncExternalStore(suivre, () => window.matchMedia(POINTEUR_FIN).matches, () => false)
 
 export type CaseChoisie = { date: string; cle: string }
-export type Plage = { r0: number; r1: number; c0: number; c1: number }
+type Plage = { r0: number; r1: number; c0: number; c1: number }
 
 /** Ce que le clavier demande à la grille ; la grille le relit à chaque rendu. */
 export interface Poignees {

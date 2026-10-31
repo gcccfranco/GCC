@@ -103,8 +103,8 @@ function CarteService({ titre, href, heure, couleur, roles, colonnes, monNom, te
   )
 }
 
-export type Groupe = { cle: "paix" | "fidelite" | "bonte"; presidence: string; musiciens: string }
-export type Inter = { key: "interfranco" | "intergroupe"; choristes: string[]; rest: string[]; pres: string }
+type Groupe = { cle: "paix" | "fidelite" | "bonte"; presidence: string; musiciens: string }
+type Inter = { key: "interfranco" | "intergroupe"; choristes: string[]; rest: string[]; pres: string }
 
 export function CeDimanche({
   titre,

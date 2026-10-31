@@ -22,7 +22,7 @@ export function titreDuJour(iso: string, lang: string): string {
 }
 
 /** « 1er octobre » / « 10月1日 ». */
-export function dateCourte(iso: string, lang: string): string {
+function dateCourte(iso: string, lang: string): string {
   const d = jourLocal(iso)
   if (lang === "zh-CN") return `${d.getMonth() + 1}月${d.getDate()}日`
   return `${d.getDate() === 1 ? "1er" : d.getDate()} ${d.toLocaleDateString("fr-FR", { month: "long" })}`

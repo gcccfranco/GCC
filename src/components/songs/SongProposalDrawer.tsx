@@ -23,7 +23,7 @@ function isHttpUrl(s: string): boolean {
 
 /** Mode « setlist de fête » (docs/spec-chants-fetes.md, CF20) : le tiroir est ouvert par l'éditeur (pas de bouton),
  *  le titre est prérempli, la proposition garde la setlist qui l'attend, et `onAjoutee` la reçoit une fois créée. */
-export interface ProposerPourUneFete {
+interface ProposerPourUneFete {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   titreInitial: string;

@@ -10,7 +10,7 @@
 import type { FSSetlist } from "@/lib/firebase/setlists";
 import type { SetlistVersions } from "@/lib/firebase/setlistVersions";
 
-export type CopieSetlist = {
+type CopieSetlist = {
   /** Compte qui a lu la setlist. */
   uid: string;
   setlist: FSSetlist;
@@ -20,7 +20,7 @@ export type CopieSetlist = {
 };
 
 /** Durée de garde d'une copie. */
-export const GARDE_COPIE_MS = 14 * 24 * 60 * 60 * 1000;
+const GARDE_COPIE_MS = 14 * 24 * 60 * 60 * 1000;
 
 const BASE = "gcc-copies-hors-ligne";
 const STORE = "setlists";
@@ -46,7 +46,7 @@ function lire(json: string): CopieSetlist | null {
 }
 
 /** Versions à garder avec la copie : la mienne, et celles que j'ai choisies (`choices` : uid d'un auteur). */
-export function versionsAGarder(
+function versionsAGarder(
   versions: Record<string, SetlistVersions>,
   uid: string,
 ): Record<string, SetlistVersions> {

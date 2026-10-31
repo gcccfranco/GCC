@@ -10,7 +10,7 @@ import { Check } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 
-export type Etape = { libelle: string; etat: "fait" | "courant" | "avenir" };
+type Etape = { libelle: string; etat: "fait" | "courant" | "avenir" };
 
 function Etapes({ etapes, onEtape }: { etapes: Etape[]; onEtape?: (i: number) => void }) {
   return (

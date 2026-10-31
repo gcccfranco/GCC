@@ -689,7 +689,7 @@ function CompactBody({ sections, item, songKey, isZh, useJianpu, showChords, sho
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
-export interface SongPDFProps {
+interface SongPDFProps {
   ast: ChordProAST;
   showChords: boolean;
   showPinyin: boolean;

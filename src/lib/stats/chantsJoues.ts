@@ -215,7 +215,7 @@ export function statsChants(setlists: SetlistLue[], index: ChantDuRecueil[], f: 
 
 // ─── Un chant (lot ST, docs/spec-jianpu-entete-statistiques.md, ST2) ──────────
 
-export type StatsDuChant = {
+type StatsDuChant = {
   total: number;                                       // setlists publiées passées (dans la période)
   derniere: { jour: string; service: string } | null;
   tonalites: string[];                                 // la plus jouée (règle Q5)
@@ -283,7 +283,7 @@ export type StatsBibliotheque = {
 };
 
 /** D6 : « joué récemment » = moins de 3 semaines, avant ou après. */
-export const JOURS_RECENT = 21;
+const JOURS_RECENT = 21;
 
 /** Un seul passage sur les setlists pour tous les `slugs` de la bibliothèque. Le repère « récent » (D6) voit
  *  les setlists publiées du même service passées ou à venir ; les comptes, les seules passées (Q3). `sauf` =

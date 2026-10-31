@@ -24,7 +24,7 @@ import { useAccesHarmonie, useInstrument } from "@/lib/harmonie/useHarmonie";
 import { PanneauAccord } from "./PanneauAccord";
 import { decrire } from "./outils";
 
-export type DemandeAccord = {
+type DemandeAccord = {
   /** L'accord tel qu'affiché : « D/F# », « (A) », « Bb2 ». */
   accord: string;
   /** L'élément touché : la bulle se pose dessous et lui rend le focus à la fermeture. */

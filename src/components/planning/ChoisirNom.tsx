@@ -16,7 +16,7 @@ import type { Absence } from "@/types/absence"
 // Menu contre la case sur ordinateur (≥ 1024 px, tablette paysage comprise),
 // feuille sur tablette portrait et téléphone (spec, « Écrans »).
 
-export type OuvertureChoix = {
+type OuvertureChoix = {
   /** « Présidence · 10/1 » : titre de la feuille, nom du menu. */
   titre: string
   /** Libellé de la colonne : la marque des comptes du rôle, le nom du champ libre. */
@@ -40,7 +40,7 @@ const LARGEUR_MENU = 264
 const HAUTEUR_MENU = 440
 
 /** « Remplir vers le bas » (lot 3, PG18 à PG20) : absent, l'entrée n'est pas offerte. */
-export type RemplirVersLeBas = {
+type RemplirVersLeBas = {
   /** Sa phrase d'aide (ou « Aucune case vide plus bas ce trimestre. »). */
   aide: string
   /** Aucune case vide à remplir : l'entrée est grisée. */

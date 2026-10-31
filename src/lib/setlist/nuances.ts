@@ -3,9 +3,9 @@
 // Stockées par item de setlist dans `sectionNuances` (voir types/setList.ts),
 // keyées par uid/clé de section comme `sectionNotes`.
 
-export type NuanceGroup = "dynamic" | "expression";
+type NuanceGroup = "dynamic" | "expression";
 
-export type NuanceDef = {
+type NuanceDef = {
   /** Identifiant stable stocké dans Firestore. */
   id: string;
   /** Libellé affiché sur le badge (abréviation pour les dynamiques). */

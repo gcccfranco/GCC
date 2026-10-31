@@ -9,7 +9,7 @@ import type { DefinitionGrille } from "@/lib/planning/grilles";
 // Le document se crée s'il n'existe pas. Droits : firestore.rules
 // (plannings/{key}/dimanches) et canEditPlanning (src/lib/access.ts).
 
-export type EcritureCase = {
+type EcritureCase = {
   definition: DefinitionGrille;
   date: string;
   /** Clé de colonne (`piano`…). */
@@ -28,7 +28,7 @@ export type EcritureCase = {
   semer?: string[];
 };
 
-export type EcritureCases = Omit<EcritureCase, "colonne" | "valeur"> & {
+type EcritureCases = Omit<EcritureCase, "colonne" | "valeur"> & {
   /** Clé de colonne → valeur : tout un dimanche s'écrit en un seul PATCH (lot 3, PG4). */
   valeurs: Record<string, string>;
 };

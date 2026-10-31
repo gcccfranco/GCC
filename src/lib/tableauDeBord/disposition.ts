@@ -8,12 +8,12 @@ import { WIDGETS, type PreferencesBackOffice, type Reglages, type Taille, type W
 type AuthUser = { uid: string; email?: string | null };
 
 /** L'ordre de la planche `bo-tableau-de-bord` (Scène et Comptes à la suite, question 6). */
-export const ORDRE_DU_CATALOGUE: WidgetId[] = [
+const ORDRE_DU_CATALOGUE: WidgetId[] = [
   "dimanche", "calendrier", "afaire", "setlists", "planning", "evenements", "reunions", "chants", "petitdej", "raccourcis", "scene", "comptes",
 ];
 
 /** Taille de la table des widgets. */
-export const TAILLE_PAR_DEFAUT: Record<WidgetId, Taille> = {
+const TAILLE_PAR_DEFAUT: Record<WidgetId, Taille> = {
   dimanche: "s", calendrier: "m", afaire: "m", setlists: "s", planning: "l", evenements: "m", reunions: "s",
   chants: "m", petitdej: "s", scene: "s", comptes: "s", raccourcis: "s",
 };

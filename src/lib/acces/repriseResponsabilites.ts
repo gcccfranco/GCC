@@ -13,15 +13,14 @@ import {
 import { TABLE_GROUPES } from "@/lib/groupes/table";
 import { appliquer as appliquerPlan, type Donnees, type Magasin, type Operation } from "@/lib/equipes/migration";
 
-export type { Donnees, Magasin, Operation } from "@/lib/equipes/migration";
+export type { Donnees, Magasin } from "@/lib/equipes/migration";
 export { enLectureSeule } from "@/lib/equipes/migration";
 
-export const ETAPES: Record<number, string> = { 1: "users/{uid}.responsabilites complété (union de l'existant et de ce qui est gagné)" };
 
 const POUR_LOUANGE = ["planning:culte", "planning:intergroupe", "planning:interfranco", "planning:campus"];
 const POUR_EDD = ["planning:edd"];
 
-export type LigneReprise = {
+type LigneReprise = {
   uid: string;
   nom: string;
   /** Ses responsabilités valides déjà là. */
@@ -80,15 +79,15 @@ function pertesDe(d: Donnees, finales: string[]): string[] {
   return perd;
 }
 
-export type Etat = { profils: { uid: string; data: Donnees }[] };
+type Etat = { profils: { uid: string; data: Donnees }[] };
 
-export async function lireEtat(m: Magasin): Promise<Etat> {
+async function lireEtat(m: Magasin): Promise<Etat> {
   const profils = (await m.lister("users")).map(({ id, data }) => ({ uid: id, data })).sort((a, b) => (a.uid < b.uid ? -1 : 1));
   return { profils };
 }
 
 /** Le relevé « garde / gagne / perd » par personne, et le plan : une `maj` de `responsabilites` par profil qui gagne. */
-export function releveEtPlan(etat: Etat): { lignes: LigneReprise[]; plan: Operation[] } {
+function releveEtPlan(etat: Etat): { lignes: LigneReprise[]; plan: Operation[] } {
   const lignes: LigneReprise[] = [];
   const plan: Operation[] = [];
   for (const { uid, data } of etat.profils) {

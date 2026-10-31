@@ -16,7 +16,7 @@ import {
 } from "./droits";
 import { nouvelIdPassage, validerMedias } from "./passages";
 
-export type Appelant = { uid: string; email: string };
+type Appelant = { uid: string; email: string };
 
 /** Une édition lue dans `programmes/{id}` : refusée si ce n'est pas une fête (programme ordinaire). */
 interface EditionFete {
@@ -68,7 +68,7 @@ export async function lireContexteFetes(
 /** Un jeton valide ne dit rien du jour J : « jusqu'au jour J compris » (décision 45, Q9). */
 const apresLeJourJ = (aujourdhui: string, jourJ: string) => aujourdhui > jourJ;
 
-export interface DroitsPassage extends DroitsDeSaisie { id: string }
+interface DroitsPassage extends DroitsDeSaisie { id: string }
 
 /**
  * `POST /api/fetes/droits` (CF16) : donne un `id` aux passages qui n'en ont pas (CF1, une transaction,

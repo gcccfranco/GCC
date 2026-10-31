@@ -31,7 +31,7 @@ function parseChordParts(chord: string) {
   };
 }
 
-export function composeChord(root: string, acc: string, quality: string, bassRoot: string | null, bassAcc: string): string {
+function composeChord(root: string, acc: string, quality: string, bassRoot: string | null, bassAcc: string): string {
   return `${root}${acc}${quality}${bassRoot ? `/${bassRoot}${bassAcc}` : ""}`;
 }
 

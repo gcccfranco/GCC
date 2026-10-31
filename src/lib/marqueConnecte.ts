@@ -10,7 +10,7 @@ import { useSyncExternalStore } from "react";
 import { CLE_FORME as CLE_FORME_RETENUE, CLE_MARQUE_CONNECTE as CLE } from "./marqueConnecteScript";
 import { ENTREES, type Entree } from "@/types/backOffice";
 
-export function lireMarqueConnecte(): boolean {
+function lireMarqueConnecte(): boolean {
   try {
     return localStorage.getItem(CLE) === "1";
   } catch {
@@ -54,7 +54,7 @@ export function useMarqueConnecte(): boolean {
 // Lot CH, C6 : la forme que le profil a fait dessiner la dernière fois. Comme la marque : aucun droit, seulement
 // ce qu'on dessine pendant l'attente (sélecteur App · Back-Office, icône Messages, entrées du Back-Office et de sa
 // barre du bas, qui en dérive par `ongletsBackOffice`). Une valeur illisible ou incohérente = pas de forme retenue.
-export type FormeRetenue = { responsable: boolean; messages: boolean; entreesBackOffice: Entree[] };
+type FormeRetenue = { responsable: boolean; messages: boolean; entreesBackOffice: Entree[] };
 
 function lireFormeBrute(brut: string | null): FormeRetenue | null {
   if (!brut) return null;
@@ -74,7 +74,7 @@ function lireFormeBrute(brut: string | null): FormeRetenue | null {
 let formeBrute: string | null | undefined;
 let formeLue: FormeRetenue | null = null;
 
-export function lireFormeRetenue(): FormeRetenue | null {
+function lireFormeRetenue(): FormeRetenue | null {
   let brut: string | null = null;
   try {
     brut = localStorage.getItem(CLE_FORME_RETENUE);
@@ -104,6 +104,3 @@ export function poserFormeRetenue(forme: FormeRetenue) {
 export function useFormeRetenue(): FormeRetenue | null {
   return useSyncExternalStore(suivre, lireFormeRetenue, () => null);
 }
-
-/** Ligne de script de l'en-tête : pose `data-connecte` avant le premier affichage. */
-export { SCRIPT_MARQUE_CONNECTE } from "./marqueConnecteScript";

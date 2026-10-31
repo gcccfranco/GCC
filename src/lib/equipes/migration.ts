@@ -38,7 +38,7 @@ const POLES = Object.keys(POLE_VERS_EQUIPE);
 /** Les pôles qu'un profil pouvait porter (`users.poles`) : Louange était implicite, jamais écrit. */
 const POLES_DE_PROFIL = POLES.filter((p) => p !== "louange");
 
-export const ETAPES: Record<number, string> = {
+const ETAPES: Record<number, string> = {
   1: "dansEquipes et referentDe recalculés depuis l'organigramme",
   2: "tâches et fois recopiées sous equipes/{équipe}/taches, source supprimée",
   3: "évènements pole:* passés en equipe:*",
@@ -66,7 +66,7 @@ type EvenementLu = { id: string; data: Donnees; sujets: number };
 type CleLue = { ancien: string; nouveau: string; data: Donnees; dejaLa: boolean };
 
 /** Tout ce que la migration lit, avant de calculer le relevé et le plan. */
-export type Etat = {
+type Etat = {
   equipes: EquipeLue[];
   profils: ProfilLu[];
   taches: TacheLue[];
@@ -77,9 +77,9 @@ export type Etat = {
   tachesPoleInconnu: number;
 };
 
-export type Personne = { uid: string; nom: string };
+type Personne = { uid: string; nom: string };
 
-export type Releve = {
+type Releve = {
   /** 1 : pôle coché dont aucune équipe de la personne ne le donne (`PolesDuMembre`, retiré en EQ-A). */
   horsOrganigramme: (Personne & { poles: string[] })[];
   /** 2 : qui perd un accès (pôle donné par une autre équipe que la cible, sans être dans la cible),
@@ -118,7 +118,7 @@ export type Releve = {
 const tableau = <T>(v: unknown): T[] => (Array.isArray(v) ? (v as T[]) : []);
 const CLE_A_RECOPIER = /^((?:rappel-tache-(?:J3|J1|retard|encours)-)|tache-fait-|tache-assigne-)(media|evenement)-/;
 
-export async function lireEtat(m: Magasin): Promise<Etat> {
+async function lireEtat(m: Magasin): Promise<Etat> {
   const equipes: EquipeLue[] = (await m.lister("equipes")).map(({ id, data }) => ({
     id,
     pole: typeof data.pole === "string" ? data.pole : null,
@@ -193,7 +193,7 @@ function tacheVersEquipe(data: Donnees, cible: string): Donnees {
   return sortie;
 }
 
-export function releveEtPlan(etat: Etat): { releve: Releve; plan: Operation[] } {
+function releveEtPlan(etat: Etat): { releve: Releve; plan: Operation[] } {
   const plan: Operation[] = [];
   const conflits: string[] = [];
   const equipesDuRattachement = etat.equipes.map((e) => ({ id: e.id, membres: e.membres }));

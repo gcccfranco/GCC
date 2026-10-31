@@ -24,7 +24,7 @@ export type EtatAnnonce = {
 export type ChangementAnnonce = { date: string; cle: string; avant: string; apres: string }
 
 /** Une valeur de case dans l'état annoncé : tronquée (client et serveur pareil), jamais rejetée. */
-export const MAX_VALEUR = 200
+const MAX_VALEUR = 200
 export const borne = (v: string) => v.slice(0, MAX_VALEUR)
 
 /** Une référence envoyée par la grille remplace-t-elle l'état annoncé ? `siAbsent` : seulement s'il n'y en a pas.
@@ -93,7 +93,7 @@ export function changementsDepuis(
 
 export const datesDesChangements = (chs: readonly ChangementAnnonce[]): string[] => [...new Set(chs.map((c) => c.date))].sort()
 
-export type PersonneTouchee = {
+type PersonneTouchee = {
   nom: string
   /** Un compte lui correspond-il ? Sinon : « à prévenir toi-même ». */
   compte: boolean
@@ -165,7 +165,7 @@ export function verifierChangements(
 }
 
 /** Le plafond de cases d'une référence : un trimestre en a une centaine ; l'état tient dans un document. */
-export const MAX_CASES_REFERENCE = 600
+const MAX_CASES_REFERENCE = 600
 
 /**
  * Ce que le serveur vérifie d'une référence envoyée par la grille : des cases du trimestre seulement, et,

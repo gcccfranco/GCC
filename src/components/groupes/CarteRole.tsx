@@ -41,7 +41,7 @@ export function LignePlaces({ role, couleur }: { role: Pick<RoleGroupe, "places"
 }
 
 /** Les pastilles d'un rôle : colonne reliée, puis ses droits (seule « Saisit les chants des fêtes » reste, lot RS, RS-D). */
-export function PastillesRole({ role, groupeId }: { role: RoleGroupe; groupeId: string }) {
+function PastillesRole({ role, groupeId }: { role: RoleGroupe; groupeId: string }) {
   const { t } = useTranslation();
   const colonne = role.colonne ? colonnesReliables(groupeId).find((c) => c.cle === role.colonne) : undefined;
   const p: ReactNode[] = [];

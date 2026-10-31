@@ -19,7 +19,7 @@ import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/u
 import { useStandaloneScrollLock } from "@/hooks/useStandaloneScrollLock"
 import { styleTexteService } from "@/lib/couleurSombre"
 
-export type SectionTab = { href: string; label: string; color?: string }
+type SectionTab = { href: string; label: string; color?: string }
 
 /** Pilule teintée : fond à 14 % de la couleur du service, texte à sa couleur. */
 const teinte = (color?: string) =>

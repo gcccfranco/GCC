@@ -19,7 +19,7 @@ function configure() {
   configured = true;
 }
 
-export interface PushPayload {
+interface PushPayload {
   title: string;
   body: string;
   /** URL ouverte au clic (relative à l'origine du site) */

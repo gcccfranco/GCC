@@ -13,7 +13,7 @@ export function estTabletteVerticale(largeur: number, hauteur: number, tactileGr
   return hauteur > largeur && tactileGrossier && Math.min(largeur, hauteur) >= 600;
 }
 
-export type Geste = "toucher" | "balayage-gauche" | "balayage-droite" | null;
+type Geste = "toucher" | "balayage-gauche" | "balayage-droite" | null;
 
 /** Classe un geste à un doigt. Balayage vers la gauche (dx < 0) = page suivante,
  *  vers la droite (dx > 0) = page précédente. */

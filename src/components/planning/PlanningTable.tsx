@@ -7,7 +7,7 @@ import { currentSundayStr, fdShort, getAnnee, getMois, moisName } from "@/lib/pl
 import { useFiltreNom } from "./BarreDeGrille"
 import { EtatVide } from "@/components/layout/EtatVide"
 
-export interface PlanningTableProps {
+interface PlanningTableProps {
   /** cols[0] est la colonne date */
   cols: string[]
   /** row[0] est la date au format YYYY-MM-DD */

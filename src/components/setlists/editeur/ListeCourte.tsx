@@ -18,7 +18,7 @@ import { PastilleSection, dessinSection } from "@/components/setlists/editeur/Re
 // à la souris et au clavier (espace, flèches, espace — Q13).
 
 /** Titre d'un élément tel que la liste le nomme (et son bouton) : le chant, « A / B », « Transition ». */
-export function titreElement(item: FormListItem, transition: string): string {
+function titreElement(item: FormListItem, transition: string): string {
   if (isFormTransition(item)) return transition;
   if (isFormProposition(item)) return item.titre;
   if (isFormFusion(item)) return item.songs.map((s) => s.song.title).join(" / ");

@@ -42,10 +42,10 @@ export interface ContexteFetes {
   jourJ: string;
 }
 
-export type RaisonDroit =
+type RaisonDroit =
   | "president" | "vp" | "musicien" | "role-musicien" | "role-coche" | "planning-edd" | "team-edd" | "team-louange";
 
-export interface AyantDroit { uid: string; raison: RaisonDroit }
+interface AyantDroit { uid: string; raison: RaisonDroit }
 
 /** Colonnes de musicien des groupes (planning des groupes, `src/lib/planning/grilles.ts`). */
 const COLONNES_MUSICIENS: Record<string, readonly string[]> = {

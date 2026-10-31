@@ -17,9 +17,9 @@ import {
 type AuthUser = { uid: string; email?: string | null };
 
 /** Un choix : son nom est un texte tel quel (service, programme) ou une clé de traduction. */
-export type ChoixReglage = { valeur: string; texte?: string; i18n?: string; params?: Record<string, unknown> };
+type ChoixReglage = { valeur: string; texte?: string; i18n?: string; params?: Record<string, unknown> };
 
-export type GroupeReglages = {
+type GroupeReglages = {
   cle: keyof Reglages;
   /** Clé de traduction du titre du groupe (« Services », « Sur », « Afficher »…). */
   titre: string;

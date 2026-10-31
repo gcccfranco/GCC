@@ -4,7 +4,7 @@ import { noteToIndex } from "@/lib/transpose";
 import { analyserAccord, type Accord } from "./analyse";
 import { MOBILES, OUVERTES } from "./table";
 
-export type Doigte = {
+type Doigte = {
   /** Une case par corde : null = étouffée, 0 = à vide. */
   cases: (number | null)[];
   /** Doigt par corde : 1-4, « P » pour le pouce, null si étouffée, à vide ou sans doigt. */

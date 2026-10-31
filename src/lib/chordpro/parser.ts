@@ -86,7 +86,7 @@ function sectionType(key: string): ChordProSection["type"] {
   return SECTION_TYPE_MAP[key] ?? "other";
 }
 
-export function parseSectionHeader(typeKey: string, value: string) {
+function parseSectionHeader(typeKey: string, value: string) {
   let type: ChordProSection["type"] = sectionType(typeKey);
   let number: string | undefined = undefined;
   let suffix: string | undefined = undefined;

@@ -38,7 +38,7 @@ export interface ActionsEditeur {
   onDragEnd: (e: DragEndEvent) => void;
 }
 
-export type Vue = { nom: "reglages" } | { nom: "bibliotheque" } | { nom: "equipe" } | { nom: "fusionner"; depart: string };
+type Vue = { nom: "reglages" } | { nom: "bibliotheque" } | { nom: "equipe" } | { nom: "fusionner"; depart: string };
 
 export function useVolet({
   items,

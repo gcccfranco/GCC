@@ -5,9 +5,9 @@
 import { lecturesSheet, relireOnglets } from "./sheets"
 
 /** Pause avant la relecture des onglets ratés. */
-export const PAUSE_RELECTURE_MS = 1_500
+const PAUSE_RELECTURE_MS = 1_500
 
-export type BilanLectures = {
+type BilanLectures = {
   ok: boolean
   /** 500 seulement si TOUTES les lectures ont échoué (et aucune n'a réussi à la relecture), sinon 200. */
   status: 200 | 500

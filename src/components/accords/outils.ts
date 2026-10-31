@@ -5,7 +5,7 @@ import { analyserAccord, type Accord } from "@/lib/accords/analyse";
 import { notesDeLAccord, voicingPiano } from "@/lib/accords/notes";
 
 /** Le nom d'une note dans la langue : solfège en français (« si bémol »), lettre en 中文 (« Bb »). */
-export function nomDeNote(note: string, t: TFunction): string {
+function nomDeNote(note: string, t: TFunction): string {
   const alteration = note[1] === "#" ? t("accords.diese") : note[1] === "b" ? t("accords.bemol") : "";
   return t(`accords.solfege.${note[0]}`) + alteration;
 }

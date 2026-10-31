@@ -68,7 +68,7 @@ export async function retirerSujet(reunionId: string, sujetId: string): Promise<
 
 /** Le sujet a été repris dans la réunion `dans` : seul champ écrit (la règle
  *  n'accepte que lui, et une seule fois). */
-export async function marquerRepris(reunionId: string, sujetId: string, dans: string): Promise<void> {
+async function marquerRepris(reunionId: string, sujetId: string, dans: string): Promise<void> {
   const headers = await authHeader();
   const res = await fetch(`${FS_BASE}/evenements/${reunionId}/sujets/${sujetId}?updateMask.fieldPaths=reprisDans`, {
     method: "PATCH",

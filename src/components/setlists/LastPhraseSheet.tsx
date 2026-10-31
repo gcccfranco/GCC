@@ -14,7 +14,7 @@ import { semitonesTo } from "@/lib/transpose";
 import { transposeSection } from "@/lib/transposeAST";
 import type { SectionSummary, SongIndexEntry } from "@/types/song";
 
-export type LastPhraseResult = { contentOverride: string; sectionId: string; name: string };
+type LastPhraseResult = { contentOverride: string; sectionId: string; name: string };
 
 type Props = {
   open: boolean;

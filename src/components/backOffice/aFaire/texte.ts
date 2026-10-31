@@ -20,17 +20,17 @@ export const jourComplet = (iso: string, lang: string) => {
   return s.charAt(0).toUpperCase() + s.slice(1);
 };
 /** « 28/10 » en français, « 10月28日 » en 中文 (formatDate.ts : la date suit la langue). */
-export const jourMois = (iso: string, lang: string) => formatJourMois(iso, lang);
+const jourMois = (iso: string, lang: string) => formatJourMois(iso, lang);
 
 /** Le nom court d'un planning : son libellé, ou (en 中文, quand il est seul à le porter) le titre traduit de sa page. */
-export function nomPlanning(cle: string, t: TFunction, lang: string): string {
+function nomPlanning(cle: string, t: TFunction, lang: string): string {
   const def = grilleDe(cle);
   if (!def) return cle;
   const seul = GRILLES.filter((g) => g.i18nTitre === def.i18nTitre).length === 1;
   return lang === "zh-CN" && seul ? t(def.i18nTitre) : def.label;
 }
 
-export type TexteLigne = {
+type TexteLigne = {
   titre: string;
   /** La ligne de contexte ; `retard` = la date de la tâche, à mettre en rouge. */
   contexte: string;

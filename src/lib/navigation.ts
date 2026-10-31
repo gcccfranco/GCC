@@ -14,7 +14,7 @@ import { BACK_OFFICE } from "@/lib/backOffice";
 export type Espace = "app" | "back-office";
 
 /** Une entrée, la même pour la barre latérale et la barre du bas. */
-export type EntreeBarre = {
+type EntreeBarre = {
   href: string;
   /** Libellé i18n. */
   cle: string;

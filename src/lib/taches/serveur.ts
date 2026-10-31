@@ -69,7 +69,7 @@ export async function membresDeLEquipe(equipe: string, db: FirebaseFirestore.Fir
 
 /** uid des référents d'une équipe (EQ12) : les profils dont `referentDe` la contient. Pour
  *  « louange », les référents de TEAM LOUANGE. La base se passe pour les tests. */
-export async function referentsDeLEquipe(equipe: string, db: FirebaseFirestore.Firestore = adminDb()): Promise<string[]> {
+async function referentsDeLEquipe(equipe: string, db: FirebaseFirestore.Firestore = adminDb()): Promise<string[]> {
   const snap = await db.collection("users").get();
   return snap.docs.filter((d) => ((d.data().referentDe as string[] | undefined) ?? []).includes(equipe)).map((d) => d.id);
 }

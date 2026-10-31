@@ -32,7 +32,7 @@ export const EMPTY_PROFILE_FORM: ProfileFormValue = {
 };
 
 /** Fonction de dérivation des rôles depuis le planning, pour pré-remplir le formulaire. */
-export type DeriveFromPlanning = (name: string) => Record<string, ServiceRole[]>;
+type DeriveFromPlanning = (name: string) => Record<string, ServiceRole[]>;
 
 function toggle<T>(arr: T[], v: T): T[] {
   return arr.includes(v) ? arr.filter((x) => x !== v) : [...arr, v];

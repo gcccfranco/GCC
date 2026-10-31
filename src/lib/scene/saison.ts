@@ -44,12 +44,12 @@ export function jourDeSemaine(date: string): number {
   return new Date(utc(date)).getUTCDay();
 }
 
-export function minutes(hhmm: string): number {
+function minutes(hhmm: string): number {
   const [h, m] = hhmm.split(":").map(Number);
   return h * 60 + m;
 }
 
-export function hhmm(min: number): string {
+function hhmm(min: number): string {
   const p = (n: number) => String(n).padStart(2, "0");
   return `${p(Math.floor(min / 60))}:${p(min % 60)}`;
 }
@@ -217,7 +217,7 @@ export function horsGrille<C extends CreneauLike>(
 }
 
 /** Ce qui empêche d'enregistrer une saison. */
-export type ErreurSaison =
+type ErreurSaison =
   | "dateInvalide"
   | "finApresJourJ"
   | "finAvantDebut"

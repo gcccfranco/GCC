@@ -121,7 +121,7 @@ export interface DonneesCalendrier {
   grilles?: Record<string, string[][]>;
 }
 
-export interface ContexteCalendrier {
+interface ContexteCalendrier {
   user: Utilisateur;
   profile: ProfilCalendrier | null;
   lang: NotifLang;
@@ -161,7 +161,7 @@ const dans = (date: string, debut: string, fin: string) => !!date && date >= deb
 // ─── Droits ──────────────────────────────────────────────────────────────────
 
 /** Ce qu'on demande à déplacer. « sheet » : une entrée du Sheet des évènements. */
-export type CibleDeplacement =
+type CibleDeplacement =
   | { source: "evenements" | "reunions"; evenement: Pick<Evenement, "pour" | "organisateurUid" | "date"> }
   | { source: "taches"; tache: Pick<Tache, "equipe" | "repetition">; date: string; fois: Fois[] }
   | { source: "scene"; creneau: Pick<Creneau, "auteurUid" | "qui" | "dimanche">; programme: Pick<Programme, "ouvert" | "quiAutorises"> }

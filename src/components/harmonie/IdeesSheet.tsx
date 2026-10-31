@@ -33,7 +33,7 @@ import type { Fiche, Instrument } from "@/types/harmonie";
 import { ParagrapheFiche, TON_DES_FICHES } from "@/components/harmonie/TexteFiche";
 import { AccordTouchable } from "@/components/accords/AccordTouchable";
 
-export type Props = {
+type Props = {
   open: boolean;
   onClose: () => void;
   /** Le chant : son slug sert de clé aux idées et aux refus. */

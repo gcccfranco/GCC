@@ -17,12 +17,12 @@ const FLAT_DEGREES = new Set([3, 8, 10]);
 
 // Les douze tonalités mineures, dans l'orthographe usuelle (celle du relatif
 // majeur) ; index = demi-tons de C à la fondamentale.
-export const MINOR_KEYS = ["Cm", "C#m", "Dm", "Ebm", "Em", "Fm", "F#m", "Gm", "G#m", "Am", "Bbm", "Bm"];
+const MINOR_KEYS = ["Cm", "C#m", "Dm", "Ebm", "Em", "Fm", "F#m", "Gm", "G#m", "Am", "Bbm", "Bm"];
 // Relatif majeur de chacune : il décide de l'orthographe des accords.
 const RELATIVE_MAJOR = ["Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B", "C", "Db", "D"];
 
 /** Vrai pour « Am », « F#m »… (une tonalité mineure s'écrit avec un « m »). */
-export function isMinorKey(key: string): boolean {
+function isMinorKey(key: string): boolean {
   return /^[A-G][#b]?m$/.test(key);
 }
 

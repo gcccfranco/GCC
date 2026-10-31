@@ -26,7 +26,7 @@ export function chargerIndexChants(): Promise<SongIndexEntry[]> {
   return enCours;
 }
 
-export type SongsIndex = {
+type SongsIndex = {
   /** Les chants de l'index ; `null` tant qu'ils ne sont pas lus. */
   songs: SongIndexEntry[] | null;
   /** Vrai quand la lecture a échoué (hors ligne, sans copie du service worker). */

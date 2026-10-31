@@ -4,7 +4,7 @@
 
 import { statsChants, veille, type LigneChant } from "@/lib/stats/chantsJoues";
 
-export const JOURS_PLUS_CHANTES = 92;
+const JOURS_PLUS_CHANTES = 92;
 
 type Args = Parameters<typeof statsChants>;
 

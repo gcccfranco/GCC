@@ -73,11 +73,11 @@ export function servicesDuDimanche(r: Reglages, _user: AuthUser | null, profile:
   return siens.length ? siens : [CULTE];
 }
 
-export type LigneDuDimanche = { cle: string; i18n: string; valeur: string };
-export type ServiceDuDimanche = {
+type LigneDuDimanche = { cle: string; i18n: string; valeur: string };
+type ServiceDuDimanche = {
   categorie: string; libelle: string; lignes: LigneDuDimanche[]; vides: number; setlist: boolean; presentation: boolean;
 };
-export type SetlistDuDimanche = Pick<FSSetlist, "category" | "date"> &
+type SetlistDuDimanche = Pick<FSSetlist, "category" | "date"> &
   Partial<Pick<FSSetlist, "moment" | "isDraft" | "isPrivate" | "presentationUrl" | "leader">>;
 
 /**
@@ -184,7 +184,7 @@ export function evenementsAVenir(
 }
 
 /** Une ligne du widget 3 : un évènement de l'app, ou une entrée du Sheet des évènements. */
-export type ProchainEvenement =
+type ProchainEvenement =
   | { du: "app"; date: string; heure: string; evenement: Evenement }
   | { du: "sheet"; date: string; heure: string; entree: EntreeSheet };
 
@@ -243,8 +243,8 @@ export function nouveauxComptes<P extends { createdAt?: Date }>(profiles: P[], t
 
 // ─── 10. Raccourcis ──────────────────────────────────────────────────────────
 
-export const RACCOURCIS = ["tache", "evenement", "notifier", "setlist"] as const;
-export type Raccourci = (typeof RACCOURCIS)[number];
+const RACCOURCIS = ["tache", "evenement", "notifier", "setlist"] as const;
+type Raccourci = (typeof RACCOURCIS)[number];
 
 /** Adresses de la spec (Q4) ; « Setlist » ouvre « Pour quel service ? » (U5 bis). */
 const HREF_RACCOURCI: Record<Raccourci, string> = {
@@ -282,8 +282,8 @@ export function prochainDimanche(nowIso: string): string {
 
 // ─── Ce dimanche ─────────────────────────────────────────────────────────────
 
-export type Manque = { cle: string; i18n: string };
-export type EtatDuDimanche = { categorie: string; planning: string; libelle: string; manques: Manque[] };
+type Manque = { cle: string; i18n: string };
+type EtatDuDimanche = { categorie: string; planning: string; libelle: string; manques: Manque[] };
 
 const estPlanningDuCulte = (key: string) => (PLANNINGS_DU_CULTE as readonly string[]).includes(key);
 const estPlanningEdd = (key: string) => (PLANNINGS_EDD as readonly string[]).includes(key);
@@ -321,7 +321,7 @@ export function etatsDuDimanche(
 // ─── Qui relancer ────────────────────────────────────────────────────────────
 
 export type ProfilReferent = { uid: string; firstName: string; lastName: string; referentDe?: string[]; referentSous?: string[] };
-export type EquipeDeColonne = { equipe: string; sous?: SousEquipe };
+type EquipeDeColonne = { equipe: string; sous?: SousEquipe };
 
 /** L'équipe (et la sous-équipe de Louange) qui remplit une colonne d'un planning ; `null` pour un planning de groupe. */
 export function equipeDeLaColonne(planning: string, colonne: string): EquipeDeColonne | null {
@@ -338,7 +338,7 @@ export function equipeDeLaColonne(planning: string, colonne: string): EquipeDeCo
   return null;
 }
 
-export type Referent = { uid: string; prenom: string; nom: string; equipe: string; sous?: SousEquipe };
+type Referent = { uid: string; prenom: string; nom: string; equipe: string; sous?: SousEquipe };
 
 /** Le référent à relancer pour une case vide : celui de la sous-équipe, sinon celui de l'équipe ; le premier par prénom puis nom. */
 export function quiRelancer(planning: string, colonne: string, profils: ProfilReferent[]): Referent | null {
@@ -358,7 +358,7 @@ export function quiRelancer(planning: string, colonne: string, profils: ProfilRe
 
 // ─── Absences en conflit ─────────────────────────────────────────────────────
 
-export type AbsenceEnConflit = { planning: string; date: string; nom: string; colonne: { cle: string; i18n: string } };
+type AbsenceEnConflit = { planning: string; date: string; nom: string; colonne: { cle: string; i18n: string } };
 
 /** Les personnes planifiées (cases non en lecture seule) qui se sont déclarées absentes ce jour-là. Jamais le motif. */
 export function absencesEnConflit(
@@ -381,8 +381,8 @@ export function absencesEnConflit(
 
 // ─── Plannings (widget L) ────────────────────────────────────────────────────
 
-export type CaseVideARelancer = { planning: string; date: string; colonne: { cle: string; i18n: string }; relancer: Referent | null };
-export type PlanningsDuTableau = {
+type CaseVideARelancer = { planning: string; date: string; colonne: { cle: string; i18n: string }; relancer: Referent | null };
+type PlanningsDuTableau = {
   vides: CaseVideARelancer[]; conflits: AbsenceEnConflit[];
   plusTard: { jusquau: string; nombre: number; parPlanning: { planning: string; colonnes: { cle: string; i18n: string; n: number }[] }[] };
 };

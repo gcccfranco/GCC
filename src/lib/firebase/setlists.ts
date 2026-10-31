@@ -405,7 +405,7 @@ export async function getMySetlists(uid: string): Promise<FSSetlist[]> {
 }
 
 /** Échec de lecture dû au réseau (fetch qui lève, réponse 5xx, délai dépassé) : le seul cas où la copie hors ligne sert. */
-export class ErreurReseau extends Error {}
+class ErreurReseau extends Error {}
 
 /** Délai d'une lecture de setlist : au-delà, c'est une ErreurReseau (un réseau qui traîne ne bloque plus la page). */
 const DELAI_LECTURE_MS = 10_000;

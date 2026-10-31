@@ -14,7 +14,7 @@ import { useTranslation } from "react-i18next";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { rangerEnColonnes, type Colonne } from "@/lib/equipes/rangerEnColonnes";
 
-export interface CarteDuBandeau {
+interface CarteDuBandeau {
   id: string;
   /** Louange, EDD : une colonne large chacune, en dernier. */
   large: boolean;

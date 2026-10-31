@@ -39,7 +39,7 @@ import { Pill } from "./commun";
 import { libelleAudience, libelleRole, libelleService } from "./libelles";
 import { EtatVide } from "@/components/layout/EtatVide"
 
-export function profileToForm(p: UserProfile): ProfileFormValue {
+function profileToForm(p: UserProfile): ProfileFormValue {
   return {
     firstName: p.firstName,
     lastName: p.lastName,
@@ -49,7 +49,7 @@ export function profileToForm(p: UserProfile): ProfileFormValue {
 }
 
 /** Les filtres de la liste : Amour, Joie et « Sans groupe » s'y ajoutent interrupteur ouvert (OG-D). */
-export const FILTERS = filtresPersonnes();
+const FILTERS = filtresPersonnes();
 
 // Une inscription est « nouvelle » pendant ses 7 premiers jours.
 const NEW_DAYS = 7;
@@ -195,7 +195,7 @@ export function Avatar({ p, grand }: { p: UserProfile; grand?: boolean }) {
 /** Les services d'un membre en étiquettes (« Nouveau » d'abord). Interrupteur ouvert : « Groupe Paix ·
  *  Responsable louange, Musiciens » (rôles lus dans `groupes` s'ils le sont) ou « Sans groupe » remplace les
  *  étiquettes de clé de groupe de `serviceRoles` (OG-D). */
-export function ServicesDuMembre({ p, groupes }: { p: UserProfile; groupes?: OrganigrammeGroupe[] | null }) {
+function ServicesDuMembre({ p, groupes }: { p: UserProfile; groupes?: OrganigrammeGroupe[] | null }) {
   const { t, i18n } = useTranslation();
   const zh = i18n.language === "zh-CN";
   const avecGroupes = BACK_OFFICE;

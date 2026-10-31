@@ -58,7 +58,7 @@ const LEFT_BAR = new Set(["prechorus"]);
 
 // Style « chart » (option du Mode Louange) : la couleur suit le TYPE de section
 // (palette --sec-* de globals.css) et non la langue du chant.
-export const CHART_TYPE_COLOR: Record<string, string> = {
+const CHART_TYPE_COLOR: Record<string, string> = {
   intro: "var(--sec-intro)",
   verse: "var(--sec-verse)",
   prechorus: "var(--sec-prechorus)",
@@ -413,7 +413,7 @@ const NUANCE_TEXT_NEUTRAL_CLASS = "text-stone-600 dark:text-stone-300";
 /** Badge de nuances (dynamiques + expression voulues par la présidence).
  *  `lg` : mode louange, lu de plus loin ; `variant="text"` : bandeau de
  *  structure, texte discret sous l'abréviation. */
-export function NuanceBadge({ nuance, size = "sm", variant = "badge" }: { nuance?: SectionNuance; size?: "sm" | "lg"; variant?: "badge" | "text" }) {
+function NuanceBadge({ nuance, size = "sm", variant = "badge" }: { nuance?: SectionNuance; size?: "sm" | "lg"; variant?: "badge" | "text" }) {
   if (!nuance || (nuance.tags.length === 0 && !nuance.note)) return null;
   const lg = size === "lg";
   const text = variant === "text";
@@ -565,7 +565,7 @@ export function StructureStrip({
   );
 }
 
-export interface SectionViewProps {
+interface SectionViewProps {
   section: ChordProSection;
   language: "fr" | "zh";
   showChords: boolean;
@@ -711,7 +711,7 @@ export function SectionView({ section, language, showChords, showPinyin, useJian
 // SongView
 // ---------------------------------------------------------------------------
 
-export interface SongViewProps {
+interface SongViewProps {
   ast: ChordProAST;
   showChords?: boolean;
   showPinyin?: boolean;

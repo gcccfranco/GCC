@@ -25,7 +25,7 @@ import { visibleCategories, isAdminUser, canSeeEvenement } from "@/lib/access";
 // prête » ne vise QUE l'équipe planifiée ce jour-là (résolue par nom de
 // planning, cf. notify-setlist). Deux populations distinctes, par conception.
 
-export const NOTIFICATIONS_LAST_SEEN_KEY = "notificationsLastSeen";
+const NOTIFICATIONS_LAST_SEEN_KEY = "notificationsLastSeen";
 
 // Espacé volontairement : le polling toutes les minutes rescannait les
 // collections entières et faisait exploser les lectures Firestore. Le retour de

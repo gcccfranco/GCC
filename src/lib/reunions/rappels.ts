@@ -56,7 +56,7 @@ function texte(l: LigneEvenement, lang: NotifLang): string {
 
 export interface ServiceDuJour { tag: ReminderTag; date: string; services: ReminderService[] }
 
-export interface NotificationDuMatin {
+interface NotificationDuMatin {
   title: string;
   body: string;
   url: string;

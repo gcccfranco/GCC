@@ -48,11 +48,9 @@ const referent = (p: P, equipe: string) => liste(p?.referentDe).includes(equipe)
 const IDS_EQUIPES = EQUIPES.map((e) => e.id);
 
 /** Membre d'Orga (« coordination générale ») : partout dans l'église. */
-export const estOrga = (p: P): boolean => dans(p, "orga");
+const estOrga = (p: P): boolean => dans(p, "orga");
 /** Référent de Louange (D4), au-dessus des trois sous-équipes. */
-export const estReferentLouange = (p: P): boolean => referent(p, "louange");
-export const estReferentEdd = (p: P): boolean => referent(p, "edd");
-export const estReferentRegie = (p: P): boolean => referent(p, "regie");
+const estReferentLouange = (p: P): boolean => referent(p, "louange");
 
 // ─── Setlists ───────────────────────────────────────────────────────────────
 
@@ -100,7 +98,7 @@ export const PLANNINGS_DU_CULTE = ["culte", "intergroupe", "interfranco", "campu
  *  n'importe pas la table des grilles, qui tire releases.ts, qui l'importe). */
 export const PLANNINGS_EDD = ["eddZhongban", "eddDaban", "eddGaoban"] as const;
 /** Les plannings des groupes (clés de PUBLISHABLE_PLANNINGS et la grille des musiciens de Fidélité). */
-export const PLANNINGS_DES_GROUPES = ["paix", "bonte", "fidelite", "fideliteMusiciens"] as const;
+const PLANNINGS_DES_GROUPES = ["paix", "bonte", "fidelite", "fideliteMusiciens"] as const;
 /** Toutes les grilles, par clé (celles de GRILLES, src/lib/planning/grilles.ts). */
 export const TOUS_LES_PLANNINGS: readonly string[] = [...PLANNINGS_DU_CULTE, "table", ...PLANNINGS_EDD, ...PLANNINGS_DES_GROUPES];
 
@@ -142,7 +140,7 @@ export function audienceOrganigrammeValide(a: string): boolean {
 }
 
 /** Les sous-équipes dont on est référent : toutes pour le référent Louange, sinon `referentSous`. */
-export function sousEquipesReferent(p: P): SousEquipe[] {
+function sousEquipesReferent(p: P): SousEquipe[] {
   if (estReferentLouange(p)) return [...SOUS_EQUIPES];
   return SOUS_EQUIPES.filter((s) => liste(p?.referentSous).includes(s));
 }
@@ -171,7 +169,7 @@ export function sectionsCreables(p: P, sections: readonly string[]): string[] {
 
 // ─── Tenir l'organigramme ───────────────────────────────────────────────────
 
-export type TenirOrganigramme = { tout: boolean; equipes: string[]; sousEquipes: SousEquipe[] };
+type TenirOrganigramme = { tout: boolean; equipes: string[]; sousEquipes: SousEquipe[] };
 
 /** Ce qu'on tient dans l'organigramme : Orga, tout ; un référent, son équipe ; le référent Louange, toute la
  *  Louange et ses trois sous-équipes ; un référent de sous-équipe, la sienne. Président et VP tiennent leur
@@ -205,7 +203,7 @@ export function peutChangerReferents(_p: P, _equipe: string): boolean {
 
 // ─── « Ce que tu peux faire » / « Ce que ça lui ouvre » ──────────────────────
 
-export type Acces = { cle: string; params?: Record<string, string>; pourquoi: string };
+type Acces = { cle: string; params?: Record<string, string>; pourquoi: string };
 type Nommer = (cleI18n: string) => string;
 
 /** La liste des accès d'une personne avec leur raison, en clés i18n (`acces.ouvre.*`, `acces.pourquoi.*`) ; les `params`

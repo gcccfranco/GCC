@@ -12,10 +12,10 @@ export const TITRE_MAX = 80;
 export const MESSAGE_MAX = 300;
 export const SLUG_MAX = 200;
 export const UIDS_MAX = 200;
-export const ID_SIMPLE = /^[\w-]+$/;
+const ID_SIMPLE = /^[\w-]+$/;
 
 /** Chemin interne sûr uniquement (pas d'URL externe) ; sinon `defaut`. */
-export function cheminInterne(url: unknown, defaut: string): string {
+function cheminInterne(url: unknown, defaut: string): string {
   return typeof url === "string" && /^\/[a-zA-Z0-9/_-]*$/.test(url) ? url : defaut;
 }
 
@@ -36,22 +36,22 @@ export function cheminDeLaPage(referer: string | null | undefined, origine: stri
 }
 
 /** Titre et message d'une notification manuelle trop longs ? */
-export function texteTropLong(title: string, body: string): boolean {
+function texteTropLong(title: string, body: string): boolean {
   return title.trim().length > TITRE_MAX || body.trim().length > MESSAGE_MAX;
 }
 
 /** Slug de chant d'un signalement : une chaîne, coupée à SLUG_MAX. */
-export function coupeSlug(v: unknown): string {
+function coupeSlug(v: unknown): string {
   return typeof v === "string" ? v.slice(0, SLUG_MAX) : "";
 }
 
 /** Identifiant Firestore simple : un « / » ferait viser un autre document. */
-export function idSimple(v: unknown): v is string {
+function idSimple(v: unknown): v is string {
   return typeof v === "string" && ID_SIMPLE.test(v);
 }
 
 /** Année d'un planning : entier de 2026 à 2100. */
-export function anneeValide(v: unknown): v is number {
+function anneeValide(v: unknown): v is number {
   return typeof v === "number" && Number.isInteger(v) && v >= 2026 && v <= 2100;
 }
 

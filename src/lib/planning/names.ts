@@ -511,7 +511,7 @@ export function servantsForDate(data: PlanningData, dateISO: string): Servant[] 
   return out
 }
 
-export interface Rehearsal {
+interface Rehearsal {
   /** Graphie du nom telle qu'écrite dans le planning */
   name: string
   /** Heure de la répétition (ex. "17:00"), "" si non renseignée */

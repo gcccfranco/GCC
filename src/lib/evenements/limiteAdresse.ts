@@ -1,8 +1,8 @@
 // Limite des inscriptions sans compte par adresse : 5 par fenêtre de 10 minutes. Mémoire du processus,
 // horloge passée en argument (testable). Même lecture de l'adresse que /api/report.
 
-export const FENETRE_MS = 10 * 60 * 1000;
-export const MAX_PAR_FENETRE = 5;
+const FENETRE_MS = 10 * 60 * 1000;
+const MAX_PAR_FENETRE = 5;
 
 /** Enregistre une inscription pour `ip` à l'instant `now` ; vrai si elle dépasse la limite. */
 export function limiteAtteinte(hits: Map<string, number[]>, ip: string, now: number): boolean {

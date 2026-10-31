@@ -31,7 +31,7 @@ export type DetailFete = {
 }
 
 /** La setlist d'un passage (celle dont `fete.passage` est son id), avec ses propositions résolues. */
-export function setlistDuPassage(p: Passage, d: DetailFete): { setlist: FSSetlist; items: SetlistItem[] } | null {
+function setlistDuPassage(p: Passage, d: DetailFete): { setlist: FSSetlist; items: SetlistItem[] } | null {
   const setlist = p.id ? d.setlists.find((s) => s.fete?.passage === p.id) : undefined
   if (!setlist) return null
   return { setlist, items: resoudrePropositions(setlist.items, d.songs ?? []) }

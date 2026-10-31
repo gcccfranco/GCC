@@ -9,10 +9,10 @@ import type { NotifLang } from "@/types/user";
 import type { MembreEquipe } from "@/types/equipe";
 
 /** Les trois référents qui reçoivent le rappel : celui de Louange, celui de la Régie, celui de l'EDD. */
-export type DomaineReferent = "louange" | "regie" | "edd";
+type DomaineReferent = "louange" | "regie" | "edd";
 
 /** Ce que ce module lit d'un profil : le nom de planning, qui rattache un nom du planning à un compte. */
-export type ProfilRappel = { uid: string; planningName?: string };
+type ProfilRappel = { uid: string; planningName?: string };
 /** Ce que ce module lit d'une équipe de l'organigramme (`equipes/{id}`). */
 export type EquipeRappel = { id: string; membres: Pick<MembreEquipe, "nom" | "uid" | "referent">[] };
 

@@ -12,7 +12,7 @@
 // Lu par l'export brut de chaque onglet, pas par gviz : gviz efface les noms de
 // la colonne « Nom », où les numéros de jour dominent (vérifié le 04/10/2026).
 
-export const SHEET_EVENEMENTS_ID = "12FxK1sMrk08bFrVnL7BjCTJd6FXTqvRXyZoyDYhgPU8"
+const SHEET_EVENEMENTS_ID = "12FxK1sMrk08bFrVnL7BjCTJd6FXTqvRXyZoyDYhgPU8"
 
 /** Mois → gid de son onglet. Août → décembre 2026 : U9 n'en ajoute aucun. */
 export const ONGLETS_SHEET: Record<string, number> = {

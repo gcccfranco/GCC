@@ -8,7 +8,7 @@ import { EDD_CLASSES } from "@/lib/planning/utils";
 /** Une responsabilité de gestionnaire d'un planning : sa clé, les grilles qu'elle couvre (clés de `GRILLES`),
  *  les audiences qu'elle notifie et les catégories de setlists où le gestionnaire est traité comme quelqu'un
  *  qui sert. La Table garde son audience du petit déj, hors de ce module. */
-export type ResponsabilitePlanning = {
+type ResponsabilitePlanning = {
   cle: string;
   plannings: readonly string[];
   audiences: readonly string[];
@@ -33,7 +33,7 @@ export const ORGA = "orga";
 
 /** Les clés possibles, fermées : les neuf plannings, puis `orga`. */
 export const CLES_RESPONSABILITES = [...RESPONSABILITES_PLANNING.map((r) => r.cle), ORGA] as const;
-export type CleResponsabilite = (typeof CLES_RESPONSABILITES)[number];
+type CleResponsabilite = (typeof CLES_RESPONSABILITES)[number];
 
 /** Ce que ce module lit d'un profil. */
 export type ProfilResponsabilites = { responsabilites?: string[] };

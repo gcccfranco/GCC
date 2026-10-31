@@ -7,7 +7,7 @@ import { parseChordPro } from "@/lib/chordpro/parser";
 // paroles la voient donc sans code à part.
 
 /** Nom d'une section « Dernière phrase » (même règle que l'abréviation Dp). */
-export const LAST_PHRASE = /derni[eè]re phrase|最后一句/i;
+const LAST_PHRASE = /derni[eè]re phrase|最后一句/i;
 const MAX_LINES = 3;
 
 /** Nouveau source avec la section « Dernière phrase – <label> » ajoutée à la

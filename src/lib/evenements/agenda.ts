@@ -34,14 +34,14 @@ export function placesRestantes(e: Pick<Evenement, "placesMax" | "inscrits">): n
 export const byDate = (a: Pick<Evenement, "date" | "heure">, b: Pick<Evenement, "date" | "heure">) =>
   `${a.date} ${a.heure}`.localeCompare(`${b.date} ${b.heure}`);
 
-export function monthLabel(yyyyMm: string, lang: string): string {
+function monthLabel(yyyyMm: string, lang: string): string {
   const [y, m] = yyyyMm.split("-").map(Number);
   if (lang === "zh-CN") return `${y}年${m}月`;
   const s = new Date(y, m - 1, 1).toLocaleDateString("fr-FR", { month: "long", year: "numeric" });
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
-export interface MonthGroup<E extends Pick<Evenement, "date" | "heure">> {
+interface MonthGroup<E extends Pick<Evenement, "date" | "heure">> {
   key: string;
   label: string;
   evenements: E[];
@@ -70,11 +70,11 @@ export function daysAgo(today: string, days: number): string {
  *  `lien` aussi sans responsable (le Sheet n'a de bloc « INSCRIPTIONS » que sous un responsable). */
 export type EntreeSheetPublique = EntreeSheet & { lien: string };
 
-export type ElementAgenda =
+type ElementAgenda =
   | { source: "app"; date: string; heure: string; fin: string; evenement: Evenement }
   | { source: "sheet"; date: string; heure: string; fin: string; entree: EntreeSheetPublique };
 
-export interface AgendaPublic {
+interface AgendaPublic {
   aVenir: { key: string; label: string; elements: ElementAgenda[] }[];
   /** Les trois derniers mois, plus récents d'abord. */
   passes: ElementAgenda[];

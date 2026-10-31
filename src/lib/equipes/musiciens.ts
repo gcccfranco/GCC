@@ -107,7 +107,7 @@ export function matriceMusiciens(profils: ProfilMusicien[], data: PlanningData):
 
 // ─── Nouveau mode (lot AO-B) : la matrice vient de l'organigramme ────────────────────────────
 
-export type LigneMusicienOrganigramme = {
+type LigneMusicienOrganigramme = {
   /** uid, ou le nom d'un membre sans compte. */
   cle: string;
   uid: string;

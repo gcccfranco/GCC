@@ -69,7 +69,7 @@ function lectureGardee<T>(lire: (cle: string) => Promise<T>): (cle: string) => P
 export const lireEvenements: (today: string) => Promise<Evenement[]> = lectureGardee(() => listEvenements(false));
 
 /** Tous les profils (`listProfiles`), lus une fois pour tous les widgets. */
-export const lireProfils: () => Promise<UserProfile[]> = (() => { const l = lectureGardee(() => listProfiles()); return () => l(""); })();
+const lireProfils: () => Promise<UserProfile[]> = (() => { const l = lectureGardee(() => listProfiles()); return () => l(""); })();
 
 /** Signalements et propositions de chants en attente (admins), lus une fois pour la pastille de Messages et pour À faire. */
 export const lireEnAttente: (uid: string) => Promise<{ signalements: number; propositions: number }> = lectureGardee(async () => {
@@ -95,7 +95,7 @@ export function useLecture<T>(lire: () => Promise<T>, cle: string): { valeur: T 
 
 // ─── À faire (piste A, BO-B) ─────────────────────────────────────────────────
 
-export type LectureAFaire = { resultat: ResultatAFaire; incomplet: boolean };
+type LectureAFaire = { resultat: ResultatAFaire; incomplet: boolean };
 
 /** Lit chaque source que les droits permettent, comme le faisaient les widgets ; une source qui échoue est omise. */
 async function lireSansGarde(user: { uid: string; email?: string | null }, profile: UserProfile | null, today: string, nowIso: string): Promise<LectureAFaire> {

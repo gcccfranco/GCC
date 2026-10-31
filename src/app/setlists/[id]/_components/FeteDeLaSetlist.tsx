@@ -16,7 +16,7 @@ import { jourEnLettres } from "@/app/evenements/scene/libelles";
 import { libelleQui } from "@/lib/fetes/qui";
 import type { Passage, Programme } from "@/types/programme";
 
-export interface PassageDeLaSetlist {
+interface PassageDeLaSetlist {
   programme: Programme;
   setlists: FSSetlist[];
   index: number;

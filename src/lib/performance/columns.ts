@@ -35,7 +35,7 @@ const hauteurDePage = (premier: number | undefined, breakBefore: Set<number>, pa
 
 // Mode normal : une colonne par page. Chaque chant commence sur une nouvelle page
 // (breakBefore = en-têtes de chant) ; à l'intérieur d'un chant, remplissage glouton.
-export function paginateBlocks(
+function paginateBlocks(
   idxs: number[],
   heights: number[],
   viewportH: number,

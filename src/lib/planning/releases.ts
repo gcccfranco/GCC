@@ -41,7 +41,7 @@ export function getPlanning(key: string): PublishablePlanning | undefined {
 }
 
 export const TRI_ORDER = ["T1", "T2", "T3", "T4"] as const
-export type Tri = (typeof TRI_ORDER)[number]
+type Tri = (typeof TRI_ORDER)[number]
 
 export function triRank(tri: string): number {
   return TRI_ORDER.indexOf(tri as Tri)
@@ -98,7 +98,7 @@ export function droitsDePrevenir(
     backOffice ? profil?.publieParRole ?? [] : [], backOffice ? profil?.notifieParRole ?? [] : [])
 }
 
-export interface TriVisibility {
+interface TriVisibility {
   tri: string
   /** Affiché à l'utilisateur courant ? (membre : courant/passé OU publié ; publieur : toujours) */
   visible: boolean

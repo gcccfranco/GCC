@@ -345,7 +345,7 @@ const ROLE_PRESETS: Record<RolePreset, { chords: boolean; hideLyrics: boolean }>
 };
 const ROLE_PRESET_IDS = Object.keys(ROLE_PRESETS) as RolePreset[];
 
-export interface PerformanceModeProps {
+interface PerformanceModeProps {
   items: SetlistItem[];
   contents: Record<string, SongContent>;
   /** Accords changés sur la page setlist juste avant (absent sinon) : ils

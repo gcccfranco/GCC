@@ -152,7 +152,7 @@ export async function rendrePourUids(db: FirebaseFirestore.Firestore, jetons: Ma
   await Promise.all([...jetons].map(([u, jeton]) => rendreEnvoi(db, `${prefixe}-${u}`, jeton).catch(() => undefined)));
 }
 
-export const cleRelease = (planning: string, annee: number, tri: string) => `release_${planning}_${annee}_${tri}`;
+const cleRelease = (planning: string, annee: number, tri: string) => `release_${planning}_${annee}_${tri}`;
 
 /** Publication d'un trimestre de planning : que faire de la notification ? Masquer : rien. Publier : la
  *  première publication d'un (planning, année, trimestre) réserve la clé `release_…` et envoie ; le masquage
