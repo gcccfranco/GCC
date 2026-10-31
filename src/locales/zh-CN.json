@@ -635,6 +635,8 @@
     "Pâques": "复活节"
   },
   "performance": {
+    "indiceRappelJoue": "圆点：已唱过 · 实心：在本页，下方为力度",
+    "indiceRappelUnique": "实心：在本页，下方为力度",
     "layout": "排版中…",
     "next": "接下来：",
     "songList": "歌曲列表",
