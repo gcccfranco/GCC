@@ -16,7 +16,7 @@ import {
   presidentRecipients,
   presentationMessage,
 } from "@/lib/setlist/presentationLink";
-import type { FSSetlist } from "@/lib/firebase/setlists";
+import type { FSSetlist } from "@/types/setList";
 import type { UserProfile } from "@/types/user";
 
 export const runtime = "nodejs";

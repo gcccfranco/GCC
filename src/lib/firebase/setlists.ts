@@ -28,11 +28,6 @@ export const ALL_CATEGORIES = [...RESTRICTED_CATEGORIES, ...FREE_CATEGORIES];
  *  `ALL_CATEGORIES` (statistiques, prochaines setlists, profil) ne changent pas. */
 export const FETE_CATEGORIES = ["Noël", "Pâques"] as const;
 
-// ─── Firestore types ──────────────────────────────────────────────────────────
-
-// Ré-exporté : une quarantaine de fichiers (dont les routes src/app/api) l'importent encore d'ici.
-export type { FSSetlist } from "@/types/setList";
-
 // ─── Firestore REST API ───────────────────────────────────────────────────────
 // Using the REST API instead of the Firebase SDK to avoid WebChannel
 // connectivity issues in certain browser environments.

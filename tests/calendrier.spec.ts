@@ -17,7 +17,7 @@ import {
   type EntreeCalendrier,
   type ProfilCalendrier,
 } from "../src/lib/calendrier/entrees";
-import type { FSSetlist } from "../src/lib/firebase/setlists";
+import type { FSSetlist } from "../src/types/setList";
 import type { Evenement } from "../src/types/evenement";
 import type { Creneau, Programme } from "../src/types/programme";
 import type { Fois, Tache } from "../src/types/tache";

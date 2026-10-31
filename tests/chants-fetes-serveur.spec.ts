@@ -4,7 +4,7 @@ import {
   canDeleteSetlist, canDuplicateSetlist, canEditSetlist, canSeeSetlist, canSetSetlistTeam,
   canSetPresentationLink, estRegieDeFete, ADMIN_EMAILS,
 } from "../src/lib/access";
-import type { FSSetlist } from "../src/lib/firebase/setlists";
+import type { FSSetlist } from "../src/types/setList";
 import type { UserProfile } from "../src/types/user";
 import type { OrganigrammeGroupe } from "../src/types/groupe";
 import type { PlanningEddFete } from "../src/lib/fetes/droits";

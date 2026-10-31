@@ -7,9 +7,6 @@ import { findMyServices, type PlanningData } from "@/lib/planning/names";
 import type { ReminderService } from "@/types/rappels";
 import type { NotifLang } from "@/types/user";
 
-// Ré-exporté : la route cron (src/app/api) et les tests l'importent encore d'ici.
-export type { ReminderService } from "@/types/rappels";
-
 export type ReminderTag = "J7" | "J3" | "J1";
 
 // Les séances Campus (matin/soir) restent hors rappels : pendant la semaine du

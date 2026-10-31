@@ -9,7 +9,7 @@ import { useAuth } from "@/lib/firebase/auth";
 import { canVoirStatistiques } from "@/lib/access";
 import { setlistsPourStats } from "@/lib/stats/setlistsPourStats";
 import { jourCourt, serviceCourt, statsBibliotheque, type ContexteBibliotheque, type StatsBibliotheque } from "@/lib/stats/chantsJoues";
-import type { FSSetlist } from "@/lib/firebase/setlists";
+import type { FSSetlist } from "@/types/setList";
 import { fetchSongAST } from "@/lib/api/songs";
 import type { Token } from "@/types/chordPro";
 import { KeyPill } from "@/components/ui/key-pill";

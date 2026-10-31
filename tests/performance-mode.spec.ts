@@ -243,8 +243,18 @@ test.describe("reprise des réglages", () => {
   test("texte agrandi sur la page du chant → agrandi en mode louange, et inversement", async ({ page }) => {
     await page.addInitScript(() => localStorage.setItem("perf-role-preset", "pianiste"));
     await page.goto("/songs/abba-pere");
-    await page.getByRole("button", { name: "Agrandir le texte" }).click();
-    await page.getByRole("button", { name: "Agrandir le texte" }).click();
+    const agrandir = page.getByRole("button", { name: "Agrandir le texte" });
+    // Avant l'hydratation le bouton existe mais reste inerte : un clic y est perdu sans rien dire.
+    await agrandir.waitFor();
+    await page.waitForFunction(() => {
+      const b = document.querySelector('button[aria-label="Agrandir le texte"]');
+      return !!b && Object.keys(b).some((k) => k.startsWith("__reactProps"));
+    });
+    const transform = () => page.locator("main.song-zoom").evaluate((el) => el.style.transform);
+    await agrandir.click();
+    await expect.poll(transform).toBe("scale(1.1)");
+    await agrandir.click();
+    await expect.poll(transform).toBe("scale(1.2)");
     await signInAs(page, MUSICIEN, { [`setlists/${SETLIST_ID}`]: setlist(FR) }, `/setlists/${SETLIST_ID}`);
     await launch(page);
     const settings = await settingsText(page);

@@ -17,7 +17,7 @@ import {
 import { chargerIndexChants } from "@/hooks/useSongsIndex";
 import { Pilules } from "@/components/layout/Onglets";
 import { FeuilleOuPanneau } from "@/components/stats/FeuilleOuPanneau";
-import type { FSSetlist } from "@/lib/firebase/setlists";
+import type { FSSetlist } from "@/types/setList";
 import type { SongIndexEntry } from "@/types/song";
 
 type ChoixPeriode = "3" | "12" | "debut";

@@ -19,7 +19,7 @@ import {
   visibleCategories,
 } from "@/lib/access";
 import { lienOngletSheet, type EntreeSheet } from "@/lib/evenements/sheet";
-import type { FSSetlist } from "@/lib/firebase/setlists";
+import type { FSSetlist } from "@/types/setList";
 import { estLibre } from "@/lib/petitdej/lignes";
 import { casesVides } from "@/lib/planning/casesVides";
 import { GRILLE_CAMPUS_MATIN, GRILLE_CAMPUS_SOIR } from "@/lib/planning/grilles";

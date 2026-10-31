@@ -2,7 +2,7 @@ import "./helpers/cleFirebase";
 import { expect, test, type Page } from "@playwright/test";
 import { ADMIN_EMAIL, signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { upcomingSetlists } from "../src/lib/setlist/upcoming";
-import type { FSSetlist } from "../src/lib/firebase/setlists";
+import type { FSSetlist } from "../src/types/setList";
 
 // Lot « chants des fêtes », tranche CF-E (docs/spec-chants-fetes.md, CF13, CF15, CF24, CF25) : Setlists › Fêtes ›
 // Noël dans l'ordre de passage, « Sans chant », visibilité, « Mes services », « Prochaines setlists », cloche.

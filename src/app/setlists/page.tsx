@@ -2,7 +2,8 @@
 
 import { GuideLien } from "@/components/guide/GuideLien";
 import { useEffect, useState, useMemo, useCallback } from "react";
-import { ALL_CATEGORIES, FETE_CATEGORIES, getSetlists, getMySetlists, getSetlistsPartagees, deleteSetlist, deleteSetlists, getCorbeille, mettreALaCorbeilleGroupe, restaurerSetlist, type FSSetlist } from "@/lib/firebase/setlists";
+import { ALL_CATEGORIES, FETE_CATEGORIES, getSetlists, getMySetlists, getSetlistsPartagees, deleteSetlist, deleteSetlists, getCorbeille, mettreALaCorbeilleGroupe, restaurerSetlist } from "@/lib/firebase/setlists";
+import type { FSSetlist } from "@/types/setList";
 import { useProfile } from "@/lib/firebase/users";
 import { visibleCategories, canCreateSetlist, canDeleteSetlist, canSeeSetlist, isAdminUser } from "@/lib/access";
 import {

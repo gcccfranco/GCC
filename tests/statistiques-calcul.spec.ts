@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import type { FSSetlist } from "../src/lib/firebase/setlists";
+import type { FSSetlist } from "../src/types/setList";
 import type { SetlistItem } from "../src/types/setList";
 import {
   bornesDeLaPeriode, chantsDeLaSetlist, choixDesFiltres, debutDeLHistorique, libellePart, libelleTendance,

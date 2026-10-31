@@ -8,7 +8,7 @@ import {
 import { PLANNINGS_DU_CULTE, PLANNINGS_EDD } from "@/lib/acces/organigramme";
 import { borneInscription, byDate, isExpired, isInfo, isPast, modeInscriptions, refusInscription } from "@/lib/evenements/agenda";
 import type { EntreeSheet } from "@/lib/evenements/sheet";
-import type { FSSetlist } from "@/lib/firebase/setlists";
+import type { FSSetlist } from "@/types/setList";
 import { casesVides, colonnesVides } from "@/lib/planning/casesVides";
 import { absenceLe } from "@/lib/planning/choisir";
 import {

@@ -8,8 +8,6 @@
 import type { DefinitionGrille } from "./grilles"
 import type { EtatAnnonce } from "@/types/planning"
 
-// Ré-exporté : la route /api/planning/changements l'importe encore d'ici.
-export type { EtatAnnonce } from "@/types/planning"
 import { colonneDePersonnes } from "./choisir"
 import { normalizeName, splitNames } from "./names"
 import { getAnnee, getTri } from "./utils"

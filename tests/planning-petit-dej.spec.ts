@@ -4,7 +4,8 @@ import { ADMIN_EMAIL, abonneAuxNotifications, fsDoc, signInAs, type FakeProfile 
 import { fenetreDuSite, repondreDansLeSite } from "./helpers/agencement";
 import { parsePetitDej } from "../src/lib/planning/sheets";
 import { findMyServices, type PlanningData } from "../src/lib/planning/names";
-import { reminderBody, reminderServicesFor, type ReminderService } from "../src/lib/push/reminderMessage";
+import { reminderBody, reminderServicesFor } from "../src/lib/push/reminderMessage";
+import type { ReminderService } from "../src/types/rappels";
 import {
   ajouterPetitDejAuxRappels, estLibre, lirePetitDej, oublierPetitDej, rangeesPetitDej,
 } from "../src/lib/petitdej/lignes";

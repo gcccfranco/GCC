@@ -1,5 +1,5 @@
 import { normalizeName, type SetlistSeance } from "@/lib/planning/names";
-import type { FSSetlist } from "@/lib/firebase/setlists";
+import type { FSSetlist } from "@/types/setList";
 
 /** Setlist telle que lue par `getSetlists()` ; brouillons et privées, s'il en
  *  passe, ne prennent pas le service. */

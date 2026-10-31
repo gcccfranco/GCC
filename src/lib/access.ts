@@ -1,7 +1,7 @@
 import { EDD_CLASSES } from "@/lib/planning/utils";
 import { aCommence } from "@/lib/evenements/agenda";
 import type { Evenement } from "@/types/evenement";
-import type { FSSetlist } from "@/lib/firebase/setlists";
+import type { FSSetlist } from "@/types/setList";
 import type { Tache } from "@/types/tache";
 import type { DateServie } from "@/types/planning";
 import { EQUIPES } from "@/lib/equipes/table";

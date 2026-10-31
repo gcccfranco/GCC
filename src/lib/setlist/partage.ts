@@ -1,7 +1,7 @@
 // L'équipe d'une setlist (docs/spec-partage-setlist.md, PS-A) : des comptes choisis par le
 // propriétaire dans l'éditeur (`editeurs`, avec leur rôle dans `rolesPartage`). Fonctions pures.
 
-import type { FSSetlist } from "@/lib/firebase/setlists";
+import type { FSSetlist } from "@/types/setList";
 import type { UserProfile } from "@/types/user";
 import { normalizeName } from "@/lib/planning/names";
 import { rolesDeService } from "@/lib/acces/rolesDeService";

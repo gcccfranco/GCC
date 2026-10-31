@@ -15,9 +15,10 @@ import { colonneDePersonnes } from "@/lib/planning/choisir";
 import { normalizeName, splitNames } from "@/lib/planning/names";
 import {
   borne, datesDesChangements, etatApres, personnesTouchees, premierDimancheDepuis, referenceRemplace, verifierChangements, verifierReference,
-  type ChangementAnnonce, type EtatAnnonce,
+  type ChangementAnnonce,
 } from "@/lib/planning/prevenir";
 import { jourDeParis } from "@/lib/evenements/bascule";
+import type { EtatAnnonce } from "@/types/planning";
 import fr from "@/locales/fr.json";
 import zh from "@/locales/zh-CN.json";
 

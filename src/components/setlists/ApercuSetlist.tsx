@@ -13,7 +13,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTranslation } from "react-i18next";
 import { ListMusic, Play, Presentation } from "lucide-react";
-import type { FSSetlist } from "@/lib/firebase/setlists";
+import type { FSSetlist } from "@/types/setList";
 import type { PlanningData } from "@/lib/planning/names";
 import type { SongIndexEntry } from "@/types/song";
 import { categoryColor, categoryLabel } from "@/lib/serviceColors";

@@ -5,7 +5,7 @@ import { signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { ADMIN_EMAILS, isAdminEmail, canChangeSetlistCategory, canDeleteSetlist, canEditSetlist, canDuplicateSetlist } from "../src/lib/access";
 type AuthUser = { uid: string; email?: string | null };
 import type { UserProfile } from "../src/types/user";
-import type { FSSetlist } from "../src/lib/firebase/setlists";
+import type { FSSetlist } from "../src/types/setList";
 import { normalizeName } from "../src/lib/planning/names";
 import { NOTIF_TYPES, DEFAULT_NOTIF_PREFS } from "../src/types/user";
 import { planningReleaseMessage, setlistReadyMessage } from "../src/lib/push/messages";

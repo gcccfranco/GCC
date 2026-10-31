@@ -1,5 +1,6 @@
 import { canSeeSetlist } from "@/lib/access";
-import { ALL_CATEGORIES, type FSSetlist } from "@/lib/firebase/setlists";
+import { ALL_CATEGORIES } from "@/lib/firebase/setlists";
+import type { FSSetlist } from "@/types/setList";
 import type { UserProfile } from "@/types/user";
 
 /** « Prochaines setlists » de Chants en deux volets (lot U5, docs/spec-deux-volets.md, Q17) :

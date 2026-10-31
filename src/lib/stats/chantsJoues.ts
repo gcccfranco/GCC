@@ -3,7 +3,8 @@
 // le recueil (`/songs-index.json`) et la date du jour passée en argument.
 // Rien n'est écrit, rien d'autre n'est lu.
 
-import { ALL_CATEGORIES, type FSSetlist } from "@/lib/firebase/setlists";
+import { ALL_CATEGORIES } from "@/lib/firebase/setlists";
+import type { FSSetlist } from "@/types/setList";
 import { normalizeName } from "@/lib/planning/names";
 import { noteToIndex } from "@/lib/transpose";
 import type { SongIndexEntry } from "@/types/song";

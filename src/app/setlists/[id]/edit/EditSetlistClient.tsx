@@ -3,7 +3,8 @@
 import { useState, useEffect } from "react";
 import { useRouter, useParams, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { getSetlist, type FSSetlist } from "@/lib/firebase/setlists";
+import { getSetlist } from "@/lib/firebase/setlists";
+import type { FSSetlist } from "@/types/setList";
 import { chargerIndexChants } from "@/hooks/useSongsIndex";
 import { getProgramme } from "@/lib/firebase/programmes";
 import { anneeDe, feteDe, libelleEdition } from "@/lib/scene/fetes";

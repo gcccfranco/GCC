@@ -13,7 +13,7 @@ import { audienceLabel, isValidAudience, peutNotifierAudience } from "../src/lib
 import { droitsDePrevenir, droitsDePublication, getPlanning } from "../src/lib/planning/releases";
 import { datesServies, type PlanningData } from "../src/lib/planning/names";
 import { ANNONCE_SECTIONS } from "../src/types/annonce";
-import type { FSSetlist } from "../src/lib/firebase/setlists";
+import type { FSSetlist } from "../src/types/setList";
 import type { UserProfile } from "../src/types/user";
 
 // Lot AO, tranche AO-A (docs/spec-acces-organigramme.md, « Ce que chacun ouvre ») : chaque ligne du tableau, dans

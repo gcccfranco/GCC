@@ -4,7 +4,7 @@ import { isFirstSundayOfMonth } from "../src/lib/planning/utils";
 import { copiesServiesSheet, enTeteAttendu, fetchSheet, lecturesSheet, parseCSV, reinitialiserLecturesSheet } from "../src/lib/planning/sheets";
 import { bilanLectures, lireAvecRelecture, messageOngletsIllisibles } from "../src/lib/planning/relecture";
 import { ajouterAuxRappels } from "../src/lib/push/reminderMessage";
-import type { ReminderService } from "../src/lib/push/reminderMessage";
+import type { ReminderService } from "../src/types/rappels";
 
 // Tranche A4 (docs/spec-corrections-audit.md) : le planning lu dans le Google Sheet. Tests serveur, prénoms inventés.
 

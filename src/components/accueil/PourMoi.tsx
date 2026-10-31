@@ -9,7 +9,7 @@
 import Link from "next/link"
 import { useTranslation } from "react-i18next"
 import { ChevronRight, ListMusic, Play } from "lucide-react"
-import type { FSSetlist } from "@/lib/firebase/setlists"
+import type { FSSetlist } from "@/types/setList"
 import type { SongIndexEntry } from "@/types/song"
 import type { ServiceDuJour } from "@/lib/planning/accueil"
 import { joursAvant } from "@/lib/planning/accueil"

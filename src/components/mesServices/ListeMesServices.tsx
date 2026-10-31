@@ -14,7 +14,7 @@ import { OngletsRail } from "@/components/layout/Onglets";
 import { PushPrompt } from "@/components/push/PushPrompt";
 import { Tile } from "@/components/ui/tile";
 import { useDisposition } from "@/hooks/useDisposition";
-import type { FSSetlist } from "@/lib/firebase/setlists";
+import type { FSSetlist } from "@/types/setList";
 import { MOIS } from "@/lib/planning/utils";
 import { joursAvant } from "@/lib/planning/accueil";
 import { adresseDuService, cleDuService, type ServiceGroupe } from "@/lib/planning/mesServices";

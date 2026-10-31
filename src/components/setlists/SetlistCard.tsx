@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { Check, ChevronRight, Lock } from "lucide-react";
-import { type FSSetlist } from "@/lib/firebase/setlists";
+import type { FSSetlist } from "@/types/setList";
 import { useTranslation } from "react-i18next";
 import { formatDate } from "@/lib/utils/formatDate";
 import { categoryColor } from "@/lib/serviceColors";

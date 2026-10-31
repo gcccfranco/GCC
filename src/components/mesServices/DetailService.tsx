@@ -24,7 +24,7 @@ import { repetitionsDe, type ServiceGroupe } from "@/lib/planning/mesServices";
 import { equipeDuService } from "@/lib/setlist/equipeDuService";
 import { serviceColor } from "@/lib/serviceColors";
 import { serviceButtonFill } from "@/lib/serviceButton";
-import type { FSSetlist } from "@/lib/firebase/setlists";
+import type { FSSetlist } from "@/types/setList";
 import type { SongIndexEntry } from "@/types/song";
 import { cn } from "@/lib/utils";
 import { useMesServices } from "./contexteMesServices";

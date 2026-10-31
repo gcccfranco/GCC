@@ -14,7 +14,7 @@ import {
 } from "@/lib/firebase/setlists";
 import { useProfile } from "@/lib/firebase/users";
 import { creatableCategories, isAdminUser, canDeleteSetlist, canSetSetlistTeam } from "@/lib/access";
-import type { FSSetlist } from "@/lib/firebase/setlists";
+import type { FSSetlist } from "@/types/setList";
 import { notifierSetlistPrete, type RolePartage } from "@/lib/setlist/partage";
 import { loadPlanningData, setlistSeances, normalizeName, type PlanningData, type SetlistSeance } from "@/lib/planning/names";
 import { useTranslation } from "react-i18next";

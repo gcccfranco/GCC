@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext } from "react";
-import type { FSSetlist } from "@/lib/firebase/setlists";
+import type { FSSetlist } from "@/types/setList";
 import type { PlanningData } from "@/lib/planning/names";
 import type { ServiceGroupe } from "@/lib/planning/mesServices";
 import type { SongIndexEntry } from "@/types/song";

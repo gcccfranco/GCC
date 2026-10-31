@@ -3,7 +3,8 @@
 // Propre au compte (uid courant). Erreur ou hors ligne : `[]`, la promesse ratée est oubliée.
 
 import { auth } from "@/lib/firebase/config";
-import { getSetlists, type FSSetlist } from "@/lib/firebase/setlists";
+import { getSetlists } from "@/lib/firebase/setlists";
+import type { FSSetlist } from "@/types/setList";
 
 const DUREE_MS = 5 * 60_000;
 let cache: { uid: string | null; at: number; promesse: Promise<FSSetlist[] | null> } | null = null;

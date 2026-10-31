@@ -8,7 +8,7 @@ import {
   estDansLePartage, candidatsDeLEquipe, roleParDefaut, nomCourt, equipeDeLaSetlist, aPrevenir,
   peutPrevenirEquipe, notifierSetlistPrete, horodatageEnvoi,
 } from "../src/lib/setlist/partage";
-import type { FSSetlist } from "../src/lib/firebase/setlists";
+import type { FSSetlist } from "../src/types/setList";
 import type { UserProfile } from "../src/types/user";
 
 // Partage d'une setlist (docs/spec-partage-setlist.md) : personnes fictives.

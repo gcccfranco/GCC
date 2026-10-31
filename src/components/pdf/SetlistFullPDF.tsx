@@ -8,7 +8,7 @@ import { cleJouee, type JianpuCadrage, type JianpuChordsManifest, type JianpuMan
 import { sheetEnabled, type JianpuPref } from "@/lib/jianpu/preference";
 import { transposerVers } from "@/lib/transposeAST";
 import { semitonesTo } from "@/lib/transpose";
-import type { FSSetlist } from "@/lib/firebase/setlists";
+import type { FSSetlist } from "@/types/setList";
 import type { ChordProAST } from "@/types/chordPro";
 import { itemAst } from "@/lib/chordpro/itemContent";
 
