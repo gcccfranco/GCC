@@ -1,5 +1,7 @@
 import type { SetlistVersions, VersionItem } from "@/types/setlistVersions";
 import { structureWithCopies } from "@/lib/setlist/sectionOrigins";
+import { aDesRetouches } from "@/lib/jianpu/retouches";
+import type { SetlistItem } from "@/types/setList";
 
 // Version d'un chant affichée à une personne (docs/spec-version-perso.md, V3) :
 // la présidence, la sienne, ou celle qu'un autre a partagée et qu'elle a
@@ -66,4 +68,43 @@ export function songVersionView(
       : mine?.structure ?? null;
 
   return { mine, shown: chosen.kind, shownName: chosen.name, content, value: chosen.value, options, bodyStructure };
+}
+
+// Items tels qu'affichés (lot N, N4b : sortis de SetlistDetailClient). `myItems` = mes items de
+// `versions[uid].items` ; chaque fonction rend l'objet d'entrée lui-même quand rien ne change.
+
+type MesItems = Record<string, VersionItem> | undefined;
+
+/** Mes retouches d'accords sur un scan 简谱 remplacent celles de la présidence. */
+export function withMyJianpuItem(item: SetlistItem, myItems: MesItems): SetlistItem {
+  const jianpuChords = myItems?.[item.songSlug]?.jianpuChords;
+  return aDesRetouches(jianpuChords) ? { ...item, jianpuChords } : item;
+}
+
+/** Item en mode « Ma version » : mes accords et paroles à la place de ceux de la présidence. */
+export function withMineItem(item: SetlistItem, myItems: MesItems): SetlistItem {
+  const content = myItems?.[item.songSlug]?.content;
+  return withMyJianpuItem(content ? { ...item, contentOverride: content } : item, myItems);
+}
+
+/** Item tel qu'affiché : les accords et paroles de la version choisie (`view` = `viewOf(item)`). */
+export function withChosenItem(item: SetlistItem, view: SongVersionView | undefined, myItems: MesItems): SetlistItem {
+  const content = view?.content;
+  return withMyJianpuItem(content ? { ...item, contentOverride: content } : item, myItems);
+}
+
+/** Structure que suit le corps du chant en « Ma version » : la mienne, sinon celle de la présidence. */
+export function myStructureOf(item: SetlistItem, myItems: MesItems): string[] | null {
+  return myItems?.[item.songSlug]?.structure ?? item.structureOverride ?? null;
+}
+
+/** Sommaire et mode louange : ma structure remplace aussi celle de la présidence, sans ses notes,
+ *  nuances et transitions d'occurrence (`view` = `viewOf(item)`). */
+export function withMineStructureItem(item: SetlistItem, view: SongVersionView | undefined, myItems: MesItems): SetlistItem {
+  const structure = view?.bodyStructure;
+  if (!structure?.length) return item;
+  // Les réglages d'occurrence de la présidence ne suivent que si je garde sa structure.
+  return myItems?.[item.songSlug]?.structure?.length
+    ? { ...item, structureOverride: structure, sectionNotes: {}, sectionTransitions: {}, sectionNuances: {} }
+    : { ...item, structureOverride: structure };
 }

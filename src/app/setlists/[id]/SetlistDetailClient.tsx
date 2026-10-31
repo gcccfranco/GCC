@@ -58,7 +58,15 @@ import { continuePass, historyAuthor, recordHistory, type HistoryPass } from "@/
 import { getSetlistVersions, saveSetlistVersions } from "@/lib/firebase/setlistVersions";
 import type { SetlistVersions, VersionItem } from "@/types/setlistVersions";
 import { MyStructureSheet, type MyStructureTarget } from "@/components/setlists/MyStructureSheet";
-import { songVersionView, type SongVersionView } from "@/lib/setlist/versionChoice";
+import {
+  songVersionView,
+  withChosenItem,
+  withMineItem,
+  withMineStructureItem,
+  myStructureOf,
+  type SongVersionView,
+} from "@/lib/setlist/versionChoice";
+import { adresseVue, lireAdresse, poser, surLaSetlist } from "@/lib/setlist/adresseVue";
 import { getChartStylePref, setChartStylePref } from "@/lib/chartStylePref";
 import { getPartitionLayoutPref, setPartitionLayoutPref, type PartitionLayout } from "@/lib/partitionLayoutPref";
 import { getPinyinPref, setPinyinPref } from "@/lib/pinyinPref";
@@ -117,36 +125,6 @@ const SOUS_LA_BASCULE = 12;
 
 /** Réseau qui traîne : la copie hors ligne du même compte s'affiche après ce délai si la lecture n'a pas abouti. */
 const COPIE_APRES_MS = 3000;
-
-/** Adresse de la vue : `/setlists/[id]` (Liste) ou `?vue=partitions&chant=N` (Q9). */
-function adresseVue(chant: number | null): string {
-  return chant === null ? window.location.pathname : `${window.location.pathname}?vue=partitions&chant=${chant}`;
-}
-
-/** L'adresse est encore celle de la setlist : en partant vers la page d'un
- *  chant, la page défile en haut avant de disparaître, et récrire l'adresse
- *  effacerait alors les réglages du chant. */
-function surLaSetlist(id: string): boolean {
-  return window.location.pathname.replace(/\/$/, "") === `/setlists/${id}`;
-}
-
-/** Lit la vue dans l'adresse : `null` pour la Liste. */
-function lireAdresse(): { chant: number | null } | null {
-  const q = new URLSearchParams(window.location.search);
-  if (q.get("vue") !== "partitions") return null;
-  const n = Number(q.get("chant"));
-  return { chant: Number.isInteger(n) && n > 0 ? n : null };
-}
-
-/** Défile sans escamoter les barres : la bascule reste au-dessus du chant amené
- *  (même verrou que l'index A–Z, `useScrollDirection`). */
-function poser(y: number): number {
-  const root = document.documentElement;
-  root.setAttribute("data-nav-lock", "");
-  window.scrollTo({ top: Math.max(0, Math.round(y)), behavior: "instant" });
-  requestAnimationFrame(() => requestAnimationFrame(() => root.removeAttribute("data-nav-lock")));
-  return window.scrollY;
-}
 
 /** Boutons de l'en-tête des deux volets (planche `setlist-deux-volets`) : pilules
  *  libellées, l'état actif en encre comme la barre de G. */
@@ -337,14 +315,7 @@ export function SetlistDetailClient() {
   const myItems = user ? versions[user.uid]?.items : undefined;
   /** Item en mode « Ma version » : mes accords et paroles à la place de ceux de la présidence. */
   function withMine(item: SetlistItem): SetlistItem {
-    const content = myItems?.[item.songSlug]?.content;
-    return withMyJianpu(content ? { ...item, contentOverride: content } : item);
-  }
-  /** Mes retouches d'accords sur un scan 简谱 (lot 9) remplacent celles de la
-   *  présidence, comme mes accords et mes paroles. */
-  function withMyJianpu(item: SetlistItem): SetlistItem {
-    const jianpuChords = myItems?.[item.songSlug]?.jianpuChords;
-    return aDesRetouches(jianpuChords) ? { ...item, jianpuChords } : item;
+    return withMineItem(item, myItems);
   }
   /** Version d'un chant pour moi : la présidence, la mienne, ou celle d'un
    *  autre partagée et choisie. */
@@ -358,25 +329,18 @@ export function SetlistDetailClient() {
   }
   /** Item tel qu'affiché : les accords et paroles de la version choisie. */
   function withChosen(item: SetlistItem): SetlistItem {
-    const content = viewOf(item)?.content;
-    return withMyJianpu(content ? { ...item, contentOverride: content } : item);
+    return withChosenItem(item, viewOf(item), myItems);
   }
   /** Structure que suit le corps du chant en « Ma version » : la mienne si
    *  j'en ai une, sinon celle de la présidence. */
   function myStructure(item: SetlistItem): string[] | null {
-    return myItems?.[item.songSlug]?.structure ?? item.structureOverride ?? null;
+    return myStructureOf(item, myItems);
   }
   /** Pour le sommaire et le mode louange : ma structure remplace aussi celle
    *  de la présidence, sans ses notes, nuances et transitions d'occurrence
    *  (elles restent dans le bandeau de la vue partitions). */
   function withMineStructure(item: SetlistItem): SetlistItem {
-    const structure = viewOf(item)?.bodyStructure;
-    if (!structure?.length) return item;
-    // Les réglages d'occurrence de la présidence ne suivent que si je garde sa
-    // structure (un passage retouché seul ne la change pas vraiment).
-    return myItems?.[item.songSlug]?.structure?.length
-      ? { ...item, structureOverride: structure, sectionNotes: {}, sectionTransitions: {}, sectionNuances: {} }
-      : { ...item, structureOverride: structure };
+    return withMineStructureItem(item, viewOf(item), myItems);
   }
   // Feuille « Sections » de ma version : chant en cours de réglage.
   const [structureTarget, setStructureTarget] = useState<(MyStructureTarget & { itemIndex: number }) | null>(null);
