@@ -67,7 +67,7 @@ test("(ordinateur, 1920 px) deux colonnes : en-tête à gauche, collé sous la b
 
   // Défilé : la colonne reste à l'écran, sous la barre du chant.
   // Position de repos de la barre (haut posé + hauteur) : sa boîte à l'écran bouge pendant qu'elle glisse.
-  const barreBas = await page.getByTestId("barre-outils").evaluate((b) => (parseFloat(getComputedStyle(b).top) || 0) + b.offsetHeight);
+  const barreBas = await page.getByTestId("barre-outils").evaluate((b: HTMLElement) => (parseFloat(getComputedStyle(b).top) || 0) + b.offsetHeight);
   await page.evaluate(() => window.scrollBy(0, 800));
   await expect.poll(async () => (await colonne.boundingBox())!.y, { timeout: 5000 }).toBeLessThanOrEqual(c!.y + 2);
   const apres = (await colonne.boundingBox())!;
