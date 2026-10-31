@@ -49,8 +49,17 @@ type Segment = { chord: string | null; lyric: string };
 function toSegments(tokens: Token[], joinSyllables: boolean): Segment[] {
   const segments: Segment[] = [];
   // Sans accords, « infi - nie » se lit « infinie » : le tiret sort AVANT le
-  // découpage en mots, sinon « infi » et « nie » resteraient deux mots.
-  const clean = (s: string) => (joinSyllables ? s.replace(/\s?-\s/g, "").trimStart() : s);
+  // découpage en mots, sinon « infi » et « nie » resteraient deux mots. La ligne
+  // se recolle en entier d'abord : nettoyé accord par accord, « à[F] Lui »
+  // perdait son espace et devenait « àLui » (31/10/2026).
+  if (joinSyllables) {
+    const texte = tokens.filter((t) => t.type === "lyric").map((t) => t.value).join("");
+    return texte
+      .replace(/\s?-\s/g, "")
+      .split(/(?<=\s)/)
+      .filter((word) => word)
+      .map((word) => ({ chord: null, lyric: word }));
+  }
   let i = 0;
 
   while (i < tokens.length) {
@@ -66,7 +75,6 @@ function toSegments(tokens: Token[], joinSyllables: boolean): Segment[] {
         lyric += tokens[i].value;
         i++;
       }
-      lyric = clean(lyric);
 
       // Un mot par segment : une ligne trop longue passe à la ligne entre deux
       // mots. D'un seul bloc, elle débordait de l'écran, texte agrandi (27/09/2026).
@@ -80,7 +88,7 @@ function toSegments(tokens: Token[], joinSyllables: boolean): Segment[] {
         }
       }
     } else {
-      for (const word of clean(token.value).split(/(?<=\s)/)) {
+      for (const word of token.value.split(/(?<=\s)/)) {
         if (word) segments.push({ chord: null, lyric: word });
       }
       i++;
