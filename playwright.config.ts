@@ -23,6 +23,10 @@ const SPECS_GRAND_ECRAN = [
   /edd-sous-equipes\.spec\.ts/,
   // Lot RS, RS-C : la page Équipes › Responsabilités et les fiches (docs/spec-responsabilites.md).
   /responsabilites-ecrans\.spec\.ts/,
+  // Lot RS (docs/spec-rappel-structure-louange.md) : le rappel de structure et ses règles de Dp sur les quatre dispositions.
+  /rappel-dp\.spec\.ts/,
+  /rappel-ordre-joue\.spec\.ts/,
+  /rappel-indice\.spec\.ts/,
   /performance-mode\.spec\.ts/,
   /mode-louange-forscore\.spec\.ts/,
   /setlist-regie\.spec\.ts/,
