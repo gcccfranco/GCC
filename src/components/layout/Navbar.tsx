@@ -10,17 +10,17 @@ import { Sun, Moon, Globe, LogIn, ChevronDown } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useAuth } from "@/lib/firebase/auth";
 import { useProfile } from "@/lib/firebase/users";
-import { entreesBackOffice, equipesDe, isAdminUser } from "@/lib/access";
+import { equipesDe, isAdminUser } from "@/lib/access";
 import { useScrollDirection } from "@/hooks/useScrollDirection";
 import { BACK_OFFICE } from "@/lib/backOffice";
 import { saveNotifLang } from "@/lib/firebase/notifPrefs";
 import { FondDeBarre } from "@/components/layout/FondDeBarre";
 import { espaceDe, labelDeSection } from "@/lib/navigation";
 import { Cloche } from "@/components/layout/Cloche";
-import { IconeMessages } from "@/components/layout/IconeMessages";
+import { IconeMessages, IconeMessagesRetenue } from "@/components/layout/IconeMessages";
 import { useBarreMontree } from "@/components/layout/BarreLaterale";
 import { MenuCompte, useNomDuMembre } from "@/components/layout/MenuCompte";
-import { SelecteurEspace, useResponsable } from "@/components/layout/SelecteurEspace";
+import { SelecteurEspace, useFormeAffichee, useRetenirForme } from "@/components/layout/SelecteurEspace";
 
 // Bouton d'icône de la barre : rond, sans bordure, réponse dès l'appui.
 const ICON_BUTTON =
@@ -110,11 +110,13 @@ export function Navbar() {
   // Lot U6 (spec-back-office.md, question 5) : pour un responsable, le sélecteur
   // « App · Back-Office » suit le label ; sur téléphone il en prend la place, et la
   // langue passe par « Moi » (à 390 px, les quatre ne tiennent pas ensemble).
-  const responsable = useResponsable();
+  const forme = useFormeAffichee();
+  const responsable = forme.responsable;
+  useRetenirForme();
   // Piste A, BO2 : Messages n'est pas un onglet de la barre du bas, c'est une icône ici, à côté de la cloche.
   // Là où la barre latérale est montrée, c'est elle qui porte Messages et lit ses comptes : pas deux fois.
   const barreMontree = useBarreMontree();
-  const avecMessages = !barreMontree && responsable && !!user && espaceDe(pathname) === "back-office" && entreesBackOffice(user, profile).includes("messages");
+  const avecMessages = !barreMontree && responsable && (!!user || forme.retenue) && espaceDe(pathname) === "back-office" && forme.messages;
 
   return (
     <>
@@ -137,7 +139,7 @@ export function Navbar() {
                 priority
               />
             </div>
-            <span className={`font-bold text-lg text-foreground min-w-[111px] whitespace-nowrap flex items-center gap-1 ${responsable ? "max-sm:hidden" : ""}`}>
+            <span className={`brand-nom font-bold text-lg text-foreground min-w-[111px] whitespace-nowrap flex items-center gap-1 ${responsable ? "max-sm:hidden" : ""}`}>
               GCC{" "}
               <span
                 key={headerLabel}
@@ -149,6 +151,8 @@ export function Navbar() {
           </Link>
 
           {responsable && <SelecteurEspace />}
+          {/* C6 : avant l'hydratation, `data-responsable` (posé par le script) garde la place du sélecteur. */}
+          {!responsable && <span aria-hidden className="place-selecteur" />}
 
           {/* Sections (ordinateur) */}
           <nav className="hidden lg:flex items-center gap-1 ml-2" aria-label={t("common.aria.sections")}>
@@ -229,7 +233,7 @@ export function Navbar() {
 
           {/* Actions — pushed to far right */}
           <div className="ml-auto flex items-center gap-2">
-            {avecMessages && <IconeMessages boutonClassName={ICON_BUTTON} />}
+            {avecMessages && (forme.retenue ? <IconeMessagesRetenue boutonClassName={ICON_BUTTON} /> : <IconeMessages boutonClassName={ICON_BUTTON} />)}
             {/* Notifications */}
             {!authLoading && user && <Cloche boutonClassName={ICON_BUTTON} />}
             {attente && <span aria-hidden className={`${ICON_BUTTON} pointer-events-none`} />}

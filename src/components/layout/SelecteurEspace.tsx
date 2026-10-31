@@ -11,8 +11,11 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTranslation } from "react-i18next";
 import { House, ShieldCheck } from "lucide-react";
+import { useAuth } from "@/lib/firebase/auth";
 import { useProfile } from "@/lib/firebase/users";
 import { entreesBackOffice } from "@/lib/access";
+import { poserFormeRetenue, useFormeRetenue } from "@/lib/marqueConnecte";
+import type { Entree } from "@/types/backOffice";
 import { BACK_OFFICE } from "@/lib/backOffice";
 import { espaceDe, type Espace } from "@/lib/navigation";
 
@@ -48,11 +51,37 @@ export function useDernierePage(espace: Espace): string {
   return useSyncExternalStore(suivre, () => derniere(espace), () => PAR_DEFAUT[espace]);
 }
 
+/** La forme que dessinent le sélecteur, l'icône Messages et les entrées du Back-Office (barres comprises). */
+export type FormeAffichee = { responsable: boolean; messages: boolean; entrees: Entree[]; retenue: boolean };
+
+/** Lot CH, C6 : pendant l'attente (Firebase ou profil en cours) d'un membre à marque « connecté », la forme
+ *  retenue la dernière fois ; sinon (ou sans forme retenue) celle que donnent les droits. Affichage seulement :
+ *  aucun droit ne passe par là. */
+export function useFormeAffichee(): FormeAffichee {
+  const { probablementConnecte } = useAuth();
+  const { user, profile, loading } = useProfile();
+  const retenue = useFormeRetenue();
+  if (loading && probablementConnecte && retenue) {
+    return { responsable: retenue.responsable, messages: retenue.messages, entrees: retenue.entreesBackOffice, retenue: true };
+  }
+  const entrees = entreesBackOffice(user, profile);
+  return { responsable: BACK_OFFICE && entrees.length > 0, messages: entrees.includes("messages"), entrees, retenue: false };
+}
+
+/** Retient la forme calculée dès que le profil est là et qu'elle change (monté une fois, dans la barre du haut). */
+export function useRetenirForme() {
+  const { user, profile, loading } = useProfile();
+  useEffect(() => {
+    if (loading || !user || !profile) return;
+    const entrees = entreesBackOffice(user, profile);
+    poserFormeRetenue({ responsable: BACK_OFFICE && entrees.length > 0, messages: entrees.includes("messages"), entreesBackOffice: entrees });
+  }, [loading, user, profile]);
+}
+
 /** Vrai pour qui a le Back-Office (un responsable ; un simple membre d'équipe n'en a plus, BO4),
- *  interrupteur du back-office ouvert. */
+ *  interrupteur du back-office ouvert. Pendant l'attente, la forme retenue (C6). */
 export function useResponsable(): boolean {
-  const { user, profile } = useProfile();
-  return BACK_OFFICE && entreesBackOffice(user, profile).length > 0;
+  return useFormeAffichee().responsable;
 }
 
 export function SelecteurEspace({ pleineLargeur = false, compact = false, onChoix }: { pleineLargeur?: boolean; compact?: boolean; onChoix?: () => void }) {

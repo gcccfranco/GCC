@@ -22,6 +22,7 @@ place, **la vraie mise en page, vide**. Go le 31/10/2026. Lot **CH**.
 | C3 | **Plus de mot « Chargement… »** au chargement d'une page : à la place, des blocs gris discrets (squelette) dans la mise en page de la page, aux couleurs du site (clair et sombre), sans animation forte (`prefers-reduced-motion` respecté), qui laissent la place au contenu sans saut. Un seul composant partagé. |
 | C4 | Les autres « Chargement… » (un bouton qui travaille, une liste qui se recharge à l'intérieur d'une page déjà là) restent : seul l'écran d'attente d'une page entière change. |
 | C5 | Si Firebase répond « personne » alors que la marque disait « connecté » (session expirée), la page passe à l'état visiteur comme aujourd'hui, et la marque s'efface. |
+| C6 | (Timothée, 31/10/2026, « go ») **Se souvenir aussi de la forme** : en plus de « connecté », le téléphone retient ce que le profil a fait dessiner la dernière fois — responsable ou non (sélecteur App · Back-Office, boîte de réception, cloche) et les entrées du Back-Office et de sa barre du bas. Pendant l'attente, on dessine cette forme-là ; le profil arrivé, on la recalcule (et on retient la nouvelle). Comme la marque : aucun droit, seulement ce qu'on dessine ; effacée à la déconnexion. |
 
 ## Vérification
 
@@ -38,3 +39,8 @@ des visiteurs ; la déconnexion efface la marque ; français et chinois ; captur
   de pages entières ou de corps de page ; les « Chargement… » de boutons, listes et panneaux internes restent (C4).
   `tests/chargement.spec.ts` (cinq projets, fr et zh) vert. Limite : au Back-Office, les entrées n'apparaissent
   qu'avec le profil.
+- 31/10/2026 : **C6 codé** — la forme retenue (`gcc-forme` : responsable, messages, entrées du Back-Office), écrite
+  quand le profil est là, effacée avec la marque ; pendant l'attente, le sélecteur App · Back-Office, l'icône des
+  messages et les entrées du Back-Office (barre latérale, barre du bas) se dessinent tout de suite ; avant
+  l'hydratation, `<html data-responsable>` garde la place du sélecteur. Captures téléphone et ordinateur regardées ;
+  `chargement`, `barre-back-office`, `back-office-espace` verts sur trois appareils.

@@ -33,3 +33,18 @@ export function IconeMessages({ boutonClassName }: { boutonClassName: string }) 
     </Link>
   );
 }
+
+/** Pendant l'attente du profil (lot CH, C6) : l'icône à sa place, avec son lien, sans lire les comptes (ni pastille). */
+export function IconeMessagesRetenue({ boutonClassName }: { boutonClassName: string }) {
+  const { t } = useTranslation();
+  return (
+    <Link
+      href={entreeBackOffice("messages").href}
+      data-testid="icone-messages"
+      aria-label={t("backOffice.entrees.messages")}
+      className={`relative ${boutonClassName}`}
+    >
+      <Inbox className="h-[18px] w-[18px]" aria-hidden />
+    </Link>
+  );
+}
