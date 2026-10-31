@@ -1281,6 +1281,19 @@ de la spec. Au passage :
 paroles sans accords, l'espace après un accord était perdu (« àLui », 329 lignes dans 85 chants), corrigé et mis
 en ligne le 31/10/2026 (`7a2c62c`).
 
+### AK. Lectures Firestore sous le quota gratuit (Timothée, 31/10/2026) → `spec-lectures-firestore.md`
+
+« Ça fait plusieurs fois qu'on atteint la limite, optimise firebase » : 62 000 lectures en 24 h pour 50 000
+gratuites. Lot **LF**, go pour LF1 à LF5. **Codé le 31/10/2026** : LF1 setlists en copie sur l'appareil, relues
+par delta sur `majLe` ; LF2 profils gardés 10 min ; LF3 « À faire » et pastilles gardés 10 min, vidés par les
+écritures ; LF4 cloche bridée à une passe par minute ; LF5 fois des tâches en une requête par équipe. Tests :
+`tests/lectures-firestore.spec.ts`. **Ordre de mise en ligne de LF5** (écart avec la spec, plus sûr) :
+1. fusion dans `main` (sans la règle, repli tâche par tâche) ; 2. Timothée lance
+`npx tsx --env-file=.env.local scripts/rattrapage-fois-equipe.ts` (`--essai` d'abord) ; 3. il publie la règle
+`{chemin=**}/fois/{date}` de `firestore.rules`. Publiée avant le rattrapage, elle cacherait les fois anciennes ;
+rattrapage avant la fusion, les fois cochées entre-temps resteraient sans `equipe`. Après la mise en ligne :
+comparer la courbe « Utilisation » de la console sur 24 h.
+
 ## 4. Carte des modules de l'app « GCC »
 
 À valider par Timothée avant toute spec de module (les modules existants ne
