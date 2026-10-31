@@ -8,7 +8,7 @@ import { CalendarX } from "lucide-react";
 import { useParams, useSearchParams } from "next/navigation";
 import { useTranslation } from "react-i18next";
 import { DetailService } from "@/components/mesServices/DetailService";
-import { useMesServices } from "@/components/mesServices/SectionMesServices";
+import { useMesServices } from "@/components/mesServices/contexteMesServices";
 import { serviceDeLAdresse } from "@/lib/planning/mesServices";
 import { Impasse } from "@/components/layout/Impasse";
 

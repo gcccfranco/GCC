@@ -3,6 +3,7 @@ import { aCommence } from "@/lib/evenements/agenda";
 import type { Evenement } from "@/types/evenement";
 import type { FSSetlist } from "@/lib/firebase/setlists";
 import type { Tache } from "@/types/tache";
+import type { DateServie } from "@/types/planning";
 import { EQUIPES } from "@/lib/equipes/table";
 import { COMITES, groupeDef } from "@/lib/groupes/table";
 import { PUBLISHABLE_PLANNINGS, droitsDePrevenir, peutPrevenir } from "@/lib/planning/releases";
@@ -661,9 +662,6 @@ export function canDuplicateSetlist(
   if (setlist.fete) return false;
   return canSeeSetlist(user, profile, setlist, undefined, backOffice);
 }
-
-/** Une date où la personne sert, tirée du planning (`datesServies`, src/lib/planning/names.ts). `moment` : Campus. */
-export type DateServie = { date: string; categorie: string; moment?: "matin" | "soir" };
 
 /** Voir une setlist. Lot AO (`backOffice`, F1) : en plus de la catégorie visible, la setlist de la date et de la
  *  catégorie où la personne est inscrite au planning (`datesServies`) — lecture seule, cette setlist seulement

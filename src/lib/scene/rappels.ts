@@ -1,7 +1,7 @@
 // Rappels des entraînements sur scène (lot 3 bis) : fondus dans les rappels
 // regroupés des services (src/lib/push/reminderMessage.ts). Fonctions pures.
 
-import type { ReminderService } from "@/lib/push/reminderMessage";
+import type { ReminderService } from "@/types/rappels";
 import type { Creneau } from "@/types/programme";
 import { libelleQui } from "@/lib/fetes/qui";
 

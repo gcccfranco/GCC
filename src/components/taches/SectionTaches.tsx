@@ -8,7 +8,7 @@
 // fiche en page. Tablette portrait : « À faire pour moi » et « Les tâches des équipes » côte à côte.
 // Lot 1 du chantier « équipes et groupes » (EQ8, EQ15) : « à moi » suit `peutCocher`.
 
-import { createContext, useContext, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { ListChecks } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -17,6 +17,7 @@ import { EnTetePage } from "@/components/layout/EnTetePage";
 import { Group, GroupRow } from "@/components/ui/group";
 import { TacheLigne } from "@/components/taches/TacheLigne";
 import { FicheTache } from "@/components/taches/FicheTache";
+import { FournirTaches, type Valeur } from "@/components/taches/contexteTaches";
 import { texteRetour } from "@/components/taches/retour";
 import { useDisposition } from "@/hooks/useDisposition";
 import { useProfile } from "@/lib/firebase/users";
@@ -26,39 +27,10 @@ import { estSurLaListe } from "@/lib/deuxVolets";
 import { aFairePour, lignesDeTache, type Ligne } from "@/lib/taches/echeances";
 import { useTaches } from "@/lib/taches/useTaches";
 import { todayIso } from "@/lib/scene/dimanches";
-import { cyclerEtat, type TacheAvecFois } from "@/lib/firebase/taches";
+import { cyclerEtat } from "@/lib/firebase/taches";
 import { prevenirFait } from "@/lib/taches/prevenir";
 import { cn } from "@/lib/utils";
 import { Squelette } from "@/components/layout/Squelette";
-
-type Valeur = {
-  /** Les équipes de la personne, Louange élargi (`equipesDesTaches` ; un admin : toutes). */
-  equipes: string[];
-  items: TacheAvecFois[];
-  chargement: boolean;
-  /** Sans équipe, relit tout ; avec, seulement cette équipe (après une écriture dans cette équipe). */
-  reload: (equipe?: string) => Promise<void>;
-  aujourdhui: string;
-  /** Nom écrit sur une fois commencée ou terminée. */
-  parNom: string;
-  /** Adresse des fiches : `/taches` (App) ou `/back-office/taches` (agencement v18, B1). */
-  racine: string;
-  /** Back-Office › Tâches (B1, B2) : la fiche porte « ⋯ », l'historique, et « Modifier » ouvre le
-   *  formulaire dans le volet en grand ; dans l'App, la fiche d'aujourd'hui. */
-  backOffice: boolean;
-};
-
-const Contexte = createContext<Valeur | null>(null);
-
-/** Donne les tâches d'une section à ses pages (`SectionTaches` dans l'App ; le layout de
- *  Back-Office › Tâches, agencement v18, B1). */
-export const FournirTaches = Contexte.Provider;
-
-export function useMesTaches(): Valeur {
-  const v = useContext(Contexte);
-  if (!v) throw new Error("useMesTaches hors de SectionTaches");
-  return v;
-}
 
 /** Adresse de la fiche d'une ligne ; une tâche répétée dit laquelle de ses fois. */
 export function adresseDeLaLigne(l: Ligne, racine = "/taches"): string {
@@ -145,7 +117,7 @@ export function SectionTaches({ children }: { children: React.ReactNode }) {
   const surLaListe = estSurLaListe(chemin, "/taches");
   return (
     <div className="min-h-screen bg-background">
-      <Contexte.Provider value={valeur}>
+      <FournirTaches value={valeur}>
         {(disposition === "grand" || surLaListe) && <EnTetePage titre={t("taches.title")} />}
         <DeuxVolets
           racine="/taches"
@@ -156,7 +128,7 @@ export function SectionTaches({ children }: { children: React.ReactNode }) {
         >
           {children}
         </DeuxVolets>
-      </Contexte.Provider>
+      </FournirTaches>
     </div>
   );
 }

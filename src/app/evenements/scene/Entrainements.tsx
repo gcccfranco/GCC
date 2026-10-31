@@ -33,10 +33,10 @@ import type { Creneau, Programme } from "@/types/programme"
 import type { UserProfile } from "@/types/user"
 import { Button } from "@/components/ui/button"
 import { MenuActions, type ActionDuMenu } from "@/components/layout/MenuActions"
-import { BadgeHorsGrille } from "./Apercu"
+import { BadgeHorsGrille, Fleche, TuileDate } from "./pieces"
 import { CreneauForm, type CreneauValues } from "./CreneauForm"
 import { LigneJour } from "./LigneJour"
-import { bornesSemaine, jourCourt, jourEnLettres, joursCourts, semaineCourte, titreDuJour, tuileDate } from "./libelles"
+import { bornesSemaine, jourCourt, jourEnLettres, joursCourts, semaineCourte, titreDuJour } from "./libelles"
 import { libelleQui } from "@/lib/fetes/qui"
 
 const COLOR = PLANNING_COLORS.scene
@@ -443,18 +443,6 @@ export function Entrainements({ programme, creneaux, user, profile, onChanged, o
   )
 }
 
-/** La tuile de date (planche : « 11 » sur « oct. »). */
-export function TuileDate({ iso, lang }: { iso: string; lang: string }) {
-  const { jour, mois } = tuileDate(iso, lang)
-  return (
-    <span className="flex h-10 w-10 shrink-0 flex-col items-center justify-center rounded-xl leading-none svc-ink"
-      style={{ "--svc": COLOR, background: `color-mix(in srgb, ${COLOR} 10%, transparent)` } as CSSProperties}>
-      <span className="text-[15px] font-bold tabular-nums">{jour}</span>
-      <span className="mt-0.5 text-[10.5px] font-semibold">{mois}</span>
-    </span>
-  )
-}
-
 /** Une case par créneau de la semaine : pleine = pris (Q12). */
 function Cases({ cases, actif }: { cases: boolean[]; actif: boolean }) {
   if (cases.length === 0) return null
@@ -466,15 +454,5 @@ function Cases({ cases, actif }: { cases: boolean[]; actif: boolean }) {
           style={{ borderColor: pris ? c : `color-mix(in srgb, ${c} 45%, transparent)`, background: pris ? c : undefined }} />
       ))}
     </span>
-  )
-}
-
-/** ‹ et › de la semaine (deux volets). */
-export function Fleche({ label, disabled, onClick, children }: { label: string; disabled: boolean; onClick: () => void; children: ReactNode }) {
-  return (
-    <button type="button" aria-label={label} disabled={disabled} onClick={onClick}
-      className="raised flex h-9 w-9 items-center justify-center rounded-full text-foreground transition-opacity disabled:opacity-40">
-      {children}
-    </button>
   )
 }

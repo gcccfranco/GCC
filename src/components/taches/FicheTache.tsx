@@ -24,7 +24,7 @@ import { TacheForm } from "@/components/taches/TacheForm";
 import { useMembres } from "@/components/taches/creerTache";
 import { depuisQuand } from "@/components/taches/TacheLigne";
 import { texteRetour } from "@/components/taches/retour";
-import { useMesTaches } from "@/components/taches/SectionTaches";
+import { useMesTaches } from "@/components/taches/contexteTaches";
 import { useDeuxVolets } from "@/hooks/useDeuxVolets";
 import { estReferentDe, peutCocher } from "@/lib/access";
 import { cleNomEquipe } from "@/lib/equipes/table";

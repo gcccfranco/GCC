@@ -27,7 +27,7 @@ import { serviceButtonFill } from "@/lib/serviceButton";
 import type { FSSetlist } from "@/lib/firebase/setlists";
 import type { SongIndexEntry } from "@/types/song";
 import { cn } from "@/lib/utils";
-import { useMesServices } from "./SectionMesServices";
+import { useMesServices } from "./contexteMesServices";
 import { styleTexteService } from "@/lib/couleurSombre"
 
 const locale = (lang: string) => (lang === "zh-CN" ? "zh-CN" : "fr-FR");

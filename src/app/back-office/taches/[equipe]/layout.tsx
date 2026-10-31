@@ -9,7 +9,7 @@
 import { useParams, usePathname } from "next/navigation";
 import { useTranslation } from "react-i18next";
 import { EnTetePage } from "@/components/layout/EnTetePage";
-import { useMesTaches } from "@/components/taches/SectionTaches";
+import { useMesTaches } from "@/components/taches/contexteTaches";
 import { useDeuxVolets } from "@/hooks/useDeuxVolets";
 import { cleNomEquipe } from "@/lib/equipes/table";
 

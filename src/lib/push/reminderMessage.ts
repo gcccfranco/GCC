@@ -4,18 +4,13 @@
 // cron (/api/cron/reminders) et les tests. Voir docs/spec-planning-petits-lots.md.
 
 import { findMyServices, type PlanningData } from "@/lib/planning/names";
+import type { ReminderService } from "@/types/rappels";
 import type { NotifLang } from "@/types/user";
 
-export type ReminderTag = "J7" | "J3" | "J1";
+// Ré-exporté : la route cron (src/app/api) et les tests l'importent encore d'ici.
+export type { ReminderService } from "@/types/rappels";
 
-export interface ReminderService {
-  /** Libellé de findMyServices : « Culte Franco », « Prépa. Table », « Campus (répét.) »… */
-  service: string;
-  /** Rôles réunis (« Piano », « Sainte cène »…) ; vide pour la Prépa. Table. */
-  roles: string[];
-  time?: string;
-  location?: string;
-}
+export type ReminderTag = "J7" | "J3" | "J1";
 
 // Les séances Campus (matin/soir) restent hors rappels : pendant la semaine du
 // campus on sert tous les jours, seule la répétition est rappelée (règle conservée).

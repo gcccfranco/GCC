@@ -16,7 +16,7 @@ import { heureLocale, horsGrille, saisonDe } from "@/lib/scene/saison"
 import { PLANNING_COLORS } from "@/lib/serviceColors"
 import type { Creneau, Programme } from "@/types/programme"
 import { Pilules } from "@/components/layout/Onglets"
-import { BadgeHorsGrille } from "@/app/evenements/scene/Apercu"
+import { BadgeHorsGrille } from "@/app/evenements/scene/pieces"
 import { jourCourt } from "@/app/evenements/scene/libelles"
 import { libelleQui } from "@/lib/fetes/qui"
 

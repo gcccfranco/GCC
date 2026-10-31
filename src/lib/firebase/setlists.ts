@@ -2,10 +2,10 @@ import { delaiMax } from "@/lib/delaiMax";
 import { auth } from "@/lib/firebase/config";
 import { SERVICE_LIEUX } from "@/types/user";
 import { BACK_OFFICE } from "@/lib/backOffice";
-import type { SetlistItem } from "@/types/setList";
+import type { FSSetlist } from "@/types/setList";
 import { effacerCopie, lireCopie } from "@/lib/setlist/copieHorsLigne";
 import { repairCopyIds } from "@/lib/setlist/sectionOrigins";
-import type { SetlistVersions } from "@/lib/firebase/setlistVersions";
+import type { SetlistVersions } from "@/types/setlistVersions";
 
 // ─── Categories ───────────────────────────────────────────────────────────────
 
@@ -30,40 +30,8 @@ export const FETE_CATEGORIES = ["Noël", "Pâques"] as const;
 
 // ─── Firestore types ──────────────────────────────────────────────────────────
 
-export interface FSSetlist {
-  id: string;
-  title: string;
-  leader: string;
-  category: string;
-  date: string;
-  language: "fr" | "zh" | "mixed";
-  notes: string;
-  /** Séance Campus liée — distingue matin/soir d'un même jour pour le matching
-   *  setlist↔service. Absent pour les setlists hors planning / autres catégories. */
-  moment?: "matin" | "soir";
-  createdAt: Date | null;
-  updatedAt?: Date | null;
-  items: SetlistItem[];
-  isDraft?: boolean;
-  isPrivate?: boolean;
-  ownerId?: string | null;
-  /** Lien de la présentation (PPT) de la régie — écrit par /api/setlist/presentation. */
-  presentationUrl?: string;
-  /** L'équipe de la setlist (docs/spec-partage-setlist.md) : uids qui la voient et la modifient,
-   *  choisis par le propriétaire ou un admin. Absent = personne. */
-  editeurs?: string[];
-  /** Rôle de chaque personne de `editeurs`, pour l'affichage (absent = musicien). */
-  rolesPartage?: Record<string, "musicien" | "chanteur">;
-  /** Setlist d'un passage de fête (docs/spec-chants-fetes.md) : l'édition (`programmes/{id}`), le
-   *  passage et son seul « Qui » à la dernière saisie. Écrit par le serveur seul ; absent = setlist
-   *  ordinaire. */
-  fete?: { programme: string; passage: string; qui: string };
-  /** Corbeille (SC2, docs/spec-createur-corbeille-absences.md) : date-heure ISO de la mise à la corbeille
-   *  et uid de qui l'a faite. Absents = setlist en place ; présents = elle n'apparaît que dans la corbeille
-   *  et le cron la purge après 30 jours. */
-  supprimeeLe?: string;
-  supprimeePar?: string;
-}
+// Ré-exporté : une quarantaine de fichiers (dont les routes src/app/api) l'importent encore d'ici.
+export type { FSSetlist } from "@/types/setList";
 
 // ─── Firestore REST API ───────────────────────────────────────────────────────
 // Using the REST API instead of the Firebase SDK to avoid WebChannel

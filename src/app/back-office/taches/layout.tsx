@@ -13,7 +13,7 @@ import { useProfile } from "@/lib/firebase/users";
 import { equipesDesTaches } from "@/lib/access";
 import { useTaches } from "@/lib/taches/useTaches";
 import { todayIso } from "@/lib/scene/dimanches";
-import { FournirTaches } from "@/components/taches/SectionTaches";
+import { FournirTaches } from "@/components/taches/contexteTaches";
 
 function Taches({ children }: { children: React.ReactNode }) {
   const { user, profile, loading } = useProfile();

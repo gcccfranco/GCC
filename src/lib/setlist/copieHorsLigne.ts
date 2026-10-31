@@ -7,8 +7,8 @@
 // (`suivreLeCompte`). Gardée 14 jours, les plus vieilles sont balayées à chaque écriture et au démarrage.
 // Le site marche sans stockage : toute erreur est avalée.
 
-import type { FSSetlist } from "@/lib/firebase/setlists";
-import type { SetlistVersions } from "@/lib/firebase/setlistVersions";
+import type { FSSetlist } from "@/types/setList";
+import type { SetlistVersions } from "@/types/setlistVersions";
 
 type CopieSetlist = {
   /** Compte qui a lu la setlist. */

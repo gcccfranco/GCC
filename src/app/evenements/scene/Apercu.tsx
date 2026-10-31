@@ -14,15 +14,9 @@ import {
   commence, compteCreneaux, grilleDuJour, heureLocale, jourDeSemaine, lignesDuJour, saisonDe, semainesDe,
 } from "@/lib/scene/saison"
 import type { Creneau, Programme } from "@/types/programme"
-import { Fleche, TuileDate } from "./Entrainements"
+import { BadgeHorsGrille, Fleche, TuileDate } from "./pieces"
 import { LigneJour } from "./LigneJour"
 import { bornesSemaine, titreDuJour } from "./libelles"
-
-/** Pastille « Hors grille » : réservation hors des jours ou des créneaux de la saison. */
-export function BadgeHorsGrille() {
-  const { t } = useTranslation()
-  return <span className="inline-block text-xs px-2 py-0.5 rounded-full font-semibold border border-foreground/30 text-foreground">{t("planning.saison.horsGrille")}</span>
-}
 
 export function Apercu({ programme, creneaux }: {
   programme: Programme

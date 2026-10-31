@@ -79,3 +79,38 @@ export type SetlistItem = {
    *  (docs/spec-chants-fetes.md, CF21). */
   proposition?: { id: string; titre: string };
 };
+
+export interface FSSetlist {
+  id: string;
+  title: string;
+  leader: string;
+  category: string;
+  date: string;
+  language: "fr" | "zh" | "mixed";
+  notes: string;
+  /** Séance Campus liée — distingue matin/soir d'un même jour pour le matching
+   *  setlist↔service. Absent pour les setlists hors planning / autres catégories. */
+  moment?: "matin" | "soir";
+  createdAt: Date | null;
+  updatedAt?: Date | null;
+  items: SetlistItem[];
+  isDraft?: boolean;
+  isPrivate?: boolean;
+  ownerId?: string | null;
+  /** Lien de la présentation (PPT) de la régie — écrit par /api/setlist/presentation. */
+  presentationUrl?: string;
+  /** L'équipe de la setlist (docs/spec-partage-setlist.md) : uids qui la voient et la modifient,
+   *  choisis par le propriétaire ou un admin. Absent = personne. */
+  editeurs?: string[];
+  /** Rôle de chaque personne de `editeurs`, pour l'affichage (absent = musicien). */
+  rolesPartage?: Record<string, "musicien" | "chanteur">;
+  /** Setlist d'un passage de fête (docs/spec-chants-fetes.md) : l'édition (`programmes/{id}`), le
+   *  passage et son seul « Qui » à la dernière saisie. Écrit par le serveur seul ; absent = setlist
+   *  ordinaire. */
+  fete?: { programme: string; passage: string; qui: string };
+  /** Corbeille (SC2, docs/spec-createur-corbeille-absences.md) : date-heure ISO de la mise à la corbeille
+   *  et uid de qui l'a faite. Absents = setlist en place ; présents = elle n'apparaît que dans la corbeille
+   *  et le cron la purge après 30 jours. */
+  supprimeeLe?: string;
+  supprimeePar?: string;
+}

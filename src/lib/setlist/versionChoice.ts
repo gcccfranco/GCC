@@ -1,4 +1,4 @@
-import type { SetlistVersions, VersionItem } from "@/lib/firebase/setlistVersions";
+import type { SetlistVersions, VersionItem } from "@/types/setlistVersions";
 import { structureWithCopies } from "@/lib/setlist/sectionOrigins";
 
 // Version d'un chant affichée à une personne (docs/spec-version-perso.md, V3) :

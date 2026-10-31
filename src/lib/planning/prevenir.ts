@@ -6,19 +6,13 @@
 // case a changé quand sa valeur affichée en diffère.
 
 import type { DefinitionGrille } from "./grilles"
+import type { EtatAnnonce } from "@/types/planning"
+
+// Ré-exporté : la route /api/planning/changements l'importe encore d'ici.
+export type { EtatAnnonce } from "@/types/planning"
 import { colonneDePersonnes } from "./choisir"
 import { normalizeName, splitNames } from "./names"
 import { getAnnee, getTri } from "./utils"
-
-/** Ce qui a été annoncé d'un trimestre : les cases non vides (`AAAA-MM-JJ|clé` → valeur). */
-export type EtatAnnonce = {
-  cases: Record<string, string>
-  /** Date de la dernière écriture de l'état, et son auteur (uid). */
-  le?: string
-  par?: string
-  /** Date de la publication (posée seulement après « Publier le T… », PG37 a). */
-  publieLe?: string
-}
 
 /** Une case changée depuis l'état annoncé. */
 export type ChangementAnnonce = { date: string; cle: string; avant: string; apres: string }

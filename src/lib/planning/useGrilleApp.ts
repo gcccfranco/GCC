@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { fetchCasesEcrites, fetchGrille } from "./grille"
 import { lireAnnonces } from "./releases"
-import type { EtatAnnonce } from "./prevenir"
+import type { EtatAnnonce } from "@/types/planning"
 import { listProfiles, useProfile } from "@/lib/firebase/users"
 import { listGroupes } from "@/lib/firebase/groupes"
 import { groupeDe } from "@/lib/groupes/organigramme"

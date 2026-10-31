@@ -12,7 +12,7 @@ import { useTranslation } from "react-i18next"
 import { todayIso } from "@/lib/scene/dimanches"
 import { horsGrille, saisonDe, semainesDe } from "@/lib/scene/saison"
 import type { Creneau, Programme } from "@/types/programme"
-import { BadgeHorsGrille } from "@/app/evenements/scene/Apercu"
+import { BadgeHorsGrille } from "@/app/evenements/scene/pieces"
 import { semaineCourte, titreDuJour } from "@/app/evenements/scene/libelles"
 import { libelleQui } from "@/lib/fetes/qui"
 

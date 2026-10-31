@@ -7,7 +7,7 @@
 // aucun service, la liste seule dans la colonne de lecture de 960 px (règle de largeur du 25/10/2026, B4b).
 // Un volet : la liste, puis le service en page.
 
-import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useTranslation } from "react-i18next";
@@ -21,7 +21,7 @@ import { useProfile } from "@/lib/firebase/users";
 import { getSetlists, type FSSetlist } from "@/lib/firebase/setlists";
 import { datesServies, loadPlanningData, type PlanningData } from "@/lib/planning/names";
 import { setlistDuService } from "@/lib/planning/accueil";
-import { grouperServices, serviceDeLAdresse, cleDuService, type ServiceGroupe } from "@/lib/planning/mesServices";
+import { grouperServices, serviceDeLAdresse, cleDuService } from "@/lib/planning/mesServices";
 import { canSeeSetlist } from "@/lib/access";
 import { BACK_OFFICE } from "@/lib/backOffice";
 import { lirePetitDej } from "@/lib/petitdej/lignes";
@@ -30,25 +30,7 @@ import type { LignePetitDej } from "@/types/petitDej";
 import type { SongIndexEntry } from "@/types/song";
 import { ListeMesServices, type Onglet } from "./ListeMesServices";
 import { DetailService } from "./DetailService";
-
-type Valeur = {
-  /** Tous les services de la personne, dans l'ordre des dates. */
-  services: ServiceGroupe[];
-  aujourdhui: string;
-  planning: PlanningData;
-  songs: Record<string, SongIndexEntry>;
-  monNom: string;
-  /** La setlist liée à un service, si la personne peut l'ouvrir. */
-  setlistDe: (s: ServiceGroupe) => FSSetlist | undefined;
-};
-
-const Contexte = createContext<Valeur | null>(null);
-
-export function useMesServices(): Valeur {
-  const v = useContext(Contexte);
-  if (!v) throw new Error("useMesServices hors de SectionMesServices");
-  return v;
-}
+import { FournirMesServices, type Valeur } from "./contexteMesServices";
 
 /** Date du jour en heure LOCALE (pas UTC) — sinon le partage à venir / passés est décalé
  *  d'un jour quelques heures autour de minuit. */
@@ -192,7 +174,7 @@ export function SectionMesServices({ children }: { children: React.ReactNode }) 
           }
         />
       )}
-      <Contexte.Provider value={valeur}>
+      <FournirMesServices value={valeur}>
         <DeuxVolets
           racine="/mes-services"
           largeurListe={400}
@@ -202,7 +184,7 @@ export function SectionMesServices({ children }: { children: React.ReactNode }) 
         >
           {valeur ? children : null}
         </DeuxVolets>
-      </Contexte.Provider>
+      </FournirMesServices>
     </div>
   );
 }

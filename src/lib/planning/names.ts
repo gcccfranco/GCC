@@ -13,7 +13,7 @@ import { PREMIERE_ANNEE_APP, completerMusiciensFidelite, marquerDimanchesSpeciau
 import { PUBLISHABLE_PLANNINGS, getPublishedQuarters, triRank } from "./releases"
 import { BACK_OFFICE } from "@/lib/backOffice"
 import type { ServiceRole } from "@/types/user"
-import type { DateServie } from "@/lib/access"
+import type { DateServie } from "@/types/planning"
 
 export interface PlanningData {
   culte: string[][]

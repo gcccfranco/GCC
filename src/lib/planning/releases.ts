@@ -14,7 +14,7 @@
 import { NOTIFY_ALL } from "@/lib/push/audiences"
 import { BACK_OFFICE } from "@/lib/backOffice"
 import { previentPlanning, publiePlanning, type ProfilOrganigramme } from "@/lib/acces/organigramme"
-import type { EtatAnnonce } from "./prevenir"
+import type { EtatAnnonce } from "@/types/planning"
 
 export interface PublishablePlanning {
   /** Clé stable : id Firestore + sélecteur de groupe de la page Groupes. */

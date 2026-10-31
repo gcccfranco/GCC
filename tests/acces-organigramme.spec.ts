@@ -5,8 +5,9 @@ import {
   canGererPetitDej, canRetirerDate, canSaisirAbsence, canSeeEvenement, canSeeSetlist, canUseHarmonie, canVoirAbsencesDeTous,
   colonnesModifiables, creatableCategories, creatableEvenementPours, droitsDesPages, entreesBackOffice, equipesDe, estResponsable, faitDesPlannings,
   isCoordination, peutChangerReferents, peutModifierEquipe, peutPlacerMembre, peutPlacerSousEquipe, planningsDuBackOffice,
-  sousPartiesEvenements, visibleCategories, widgetsPermis, type DateServie,
+  sousPartiesEvenements, visibleCategories, widgetsPermis,
 } from "../src/lib/access";
+import type { DateServie } from "../src/types/planning";
 import { PLANNINGS_DU_CULTE, ceQueCaOuvre, colonnesRemplies, sectionsCreables } from "../src/lib/acces/organigramme";
 import { audienceLabel, isValidAudience, peutNotifierAudience } from "../src/lib/push/audiences";
 import { droitsDePrevenir, droitsDePublication, getPlanning } from "../src/lib/planning/releases";
