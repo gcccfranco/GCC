@@ -33,6 +33,7 @@ import { useDisposition } from "@/hooks/useDisposition"
 import type { Evenement } from "@/types/evenement"
 import { EntreeSheetCarte, EvenementCard, EvenementCarte } from "./EvenementCard"
 import { EvenementClient } from "./[id]/EvenementClient"
+import { Squelette } from "@/components/layout/Squelette";
 
 export function CalendrierClient({ enTete, peutCreer, children }: {
   enTete: React.ReactNode
@@ -115,7 +116,7 @@ export function CalendrierClient({ enTete, peutCreer, children }: {
   )
 
   const agenda = chargement ? (
-    <p className="text-sm text-muted-foreground">{t("common.loading")}</p>
+    <Squelette enTete={false} className="p-0" />
   ) : (
     <div className={grand ? "space-y-5" : "max-w-2xl mx-auto space-y-6 md:max-w-none"}>
       {infos.length > 0 && (

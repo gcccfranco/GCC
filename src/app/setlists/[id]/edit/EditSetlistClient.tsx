@@ -17,6 +17,7 @@ import { buildFormItems } from "@/lib/setlist/formItems";
 import { SetlistForm, type SetlistFormInitial } from "@/components/setlists/SetlistForm";
 import type { ContexteFeteEditeur } from "@/components/setlists/editeur/EnTeteEditeur";
 import type { Programme } from "@/types/programme";
+import { Squelette } from "@/components/layout/Squelette";
 
 export function EditSetlistClient() {
   const { t, i18n } = useTranslation();
@@ -73,11 +74,7 @@ export function EditSetlistClient() {
   }
 
   if (!initial || !setlist || !user || (setlist.fete && programme === undefined)) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <p className="text-sm text-muted-foreground">{t("common.loading")}</p>
-      </div>
-    );
+    return <Squelette />;
   }
 
   // Modification : créateur de la setlist + musiciens du même service

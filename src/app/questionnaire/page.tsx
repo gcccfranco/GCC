@@ -20,6 +20,7 @@ import { EnTetePage } from "@/components/layout/EnTetePage";
 import { Halo } from "@/components/layout/Halo";
 import { useDisposition } from "@/hooks/useDisposition";
 import { Impasse } from "@/components/layout/Impasse";
+import { Squelette } from "@/components/layout/Squelette";
 
 function isAnswered(a: SurveyAnswer | undefined): boolean {
   if (a === undefined) return false;
@@ -182,11 +183,7 @@ export default function QuestionnairePage() {
   const grand = disposition === "grand";
 
   if (loading || (user && loadingAnswers)) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <p className="text-sm text-muted-foreground">{t("common.loading")}</p>
-      </div>
-    );
+    return <Squelette />;
   }
 
   if (!user) {

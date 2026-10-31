@@ -14,6 +14,8 @@ export const BASE_URL_COUPE = `http://localhost:${PORT + 1}`;
  *  la navigation, le halo qui part du bord de la barre, et le dimanche (setlist,
  *  barre d'outils, sommaire, mode louange). */
 const SPECS_GRAND_ECRAN = [
+  // Lot CH (docs/spec-chargement.md) : la forme du membre pendant l'attente de Firebase, sur les quatre dispositions.
+  /chargement\.spec\.ts/,
   /navigation-grand-ecran\.spec\.ts/,
   /look-navigation\.spec\.ts/,
   /look-halo(-defilement)?\.spec\.ts/,

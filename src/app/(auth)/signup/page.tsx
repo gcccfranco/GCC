@@ -25,6 +25,7 @@ import {
   EMPTY_PROFILE_FORM,
   type ProfileFormValue,
 } from "@/components/auth/ProfileFields";
+import { Squelette } from "@/components/layout/Squelette";
 
 const STEP_KEYS = ["account", "identity", "services"] as const;
 
@@ -58,11 +59,7 @@ export default function SignupPage() {
     : undefined;
 
   if (regOpen === null) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <p className="text-sm text-muted-foreground">{t("common.loading")}</p>
-      </div>
-    );
+    return <Squelette />;
   }
 
   if (!regOpen) {

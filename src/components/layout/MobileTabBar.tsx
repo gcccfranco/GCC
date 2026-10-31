@@ -25,7 +25,9 @@ import { useDernierePage } from "@/components/layout/SelecteurEspace";
 export function MobileTabBar() {
   const { t } = useTranslation();
   const pathname = usePathname() || "";
-  const { user, loading } = useAuth();
+  const { user, loading, probablementConnecte } = useAuth();
+  // Lot CH (C1, C2) : la marque « était connecté » fait dessiner la barre du membre pendant l'attente.
+  const attente = loading && probablementConnecte;
   const { profile, loading: profilEnCours } = useProfile();
   const auBackOffice = BACK_OFFICE && espaceDe(pathname) === "back-office";
   const permises = auBackOffice ? entreesBackOffice(user, profile) : [];
@@ -44,14 +46,14 @@ export function MobileTabBar() {
     return () => document.removeEventListener("fullscreenchange", onChange);
   }, []);
 
-  if (!mounted || loading || fullscreen) return null;
+  if (!mounted || (loading && !attente) || fullscreen) return null;
   // Au Back-Office, on attend le profil : jamais une barre qui change sous le doigt.
   if (auBackOffice && profilEnCours) return null;
   // Mêmes entrées que la barre latérale (lot U4) ; back-office coupé (lot 18) :
   // la section Évènements n'est pas en ligne.
   const tabs = permises.length > 0
     ? ongletsBackOffice(permises, app)
-    : entreesBarre("app", { connecte: !!user, backOffice: BACK_OFFICE });
+    : entreesBarre("app", { connecte: !!user || attente, backOffice: BACK_OFFICE });
   // Une seule destination (visiteur : « Chants ») : pas de barre, ni sa cale de 110 px (C8, audit 24/10/2026).
   if (tabs.length <= 1) return null;
 

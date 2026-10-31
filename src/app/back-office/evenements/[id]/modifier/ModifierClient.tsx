@@ -19,6 +19,7 @@ import type { Evenement } from "@/types/evenement"
 import { EvenementForm } from "@/components/evenements/EvenementForm"
 import { EnTetePage } from "@/components/layout/EnTetePage"
 import { useDeuxVolets } from "@/hooks/useDeuxVolets"
+import { Squelette } from "@/components/layout/Squelette";
 
 export function ModifierClient() {
   const { t } = useTranslation()
@@ -49,7 +50,7 @@ export function ModifierClient() {
       <div className="px-[var(--marge-page)]">{contenu}</div>
     </>
   )
-  if (profileLoading || !user || evenement === undefined) return page(<p className="text-sm text-muted-foreground">{t("common.loading")}</p>)
+  if (profileLoading || !user || evenement === undefined) return page(<Squelette enTete={false} className="p-0" />)
   if (!evenement) return page(<p className="text-sm text-muted-foreground">{t("evenements.notFound")}</p>)
   if (!canEditEvenement(user, profile, evenement)) return page(<p className="text-sm text-muted-foreground">{t("evenements.reserved")}</p>)
 

@@ -211,8 +211,10 @@ function ContenuBarre({
 }) {
   const { t, i18n } = useTranslation();
   const pathname = usePathname() || "";
-  const { user, loading } = useAuth();
+  const { user, loading, probablementConnecte } = useAuth();
   const { profile } = useProfile();
+  // Lot CH (C1, C2) : la marque « était connecté » fait dessiner la forme du membre pendant l'attente.
+  const attente = loading && probablementConnecte;
   const { resolvedTheme, setTheme } = useTheme();
   const dark = mounted && resolvedTheme === "dark";
   const setLanguage = useSetLanguage();
@@ -224,9 +226,9 @@ function ContenuBarre({
   const idPastille = useId();
   // Back-office coupé (lot 18) : la section Évènements n'est pas en ligne. Au Back-Office (U6),
   // les entrées que donnent les droits (`entreesBackOffice`).
-  const entrees = loading
+  const entrees = loading && !attente
     ? []
-    : entreesBarre(espaceDe(pathname), { connecte: !!user, backOffice: BACK_OFFICE, permises: entreesBackOffice(user, profile) });
+    : entreesBarre(espaceDe(pathname), { connecte: !!user || attente, backOffice: BACK_OFFICE, permises: entreesBackOffice(user, profile) });
   // Sur une setlist, « Setlists » rouvre la liste filtrée qu'on a quittée (U5, Q7).
   const listeSetlists = useSyncExternalStore(rienASuivre, listeSetlistsRetenue, () => "/setlists");
 
@@ -246,7 +248,7 @@ function ContenuBarre({
       {/* Logo et label contextuel (comportement gelé : contextuel, rouge du logo, en fondu),
           puis « Réduire » ; barre réduite : le logo seul. */}
       <div className="flex items-center gap-1">
-        <Link href={user ? "/planning" : "/songs"} onClick={onChoix} className="relative flex min-w-0 items-center gap-2.5 rounded-xl px-1.5 py-0.5 after:absolute after:-inset-y-2 after:inset-x-0 after:content-['']">
+        <Link href={user || attente ? "/planning" : "/songs"} onClick={onChoix} className="relative flex min-w-0 items-center gap-2.5 rounded-xl px-1.5 py-0.5 after:absolute after:-inset-y-2 after:inset-x-0 after:content-['']">
           <span className="relative h-[30px] w-[30px] shrink-0 overflow-hidden rounded-full">
             <Image src="/logo.png" alt="GCC Logo" fill sizes="30px" className="object-contain" priority />
           </span>
@@ -326,6 +328,17 @@ function ContenuBarre({
       )}
 
       <div data-testid="pied-barre" className="barre-pied barre-laterale-filet mt-auto flex items-center gap-2 border-t px-1.5 pt-2">
+        {attente && (
+          // Forme du membre, sans le compte ni les droits : avatar, nom, cloche et langue gardent leur place.
+          <>
+            <span aria-hidden className="barre-fin h-8 w-8 shrink-0 rounded-full bg-secondary" />
+            <div aria-hidden className="barre-si-depliee min-w-0 flex-1" />
+            <div aria-hidden className="flex shrink-0 gap-1.5">
+              <span className={`${PASTILLE} pointer-events-none`} />
+              <span className={`${PASTILLE} barre-si-depliee pointer-events-none`} />
+            </div>
+          </>
+        )}
         {!loading &&
           (user ? (
             <>

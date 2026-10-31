@@ -51,6 +51,7 @@ import { heureCourte, jourEnLettres } from "@/app/evenements/scene/libelles"
 import { rangerReservations, ToutesReservations } from "./ToutesReservations"
 import { CetteSemaine } from "./CetteSemaine"
 import { ResumeSaison } from "./ResumeSaison"
+import { Squelette } from "@/components/layout/Squelette";
 
 /** « cetteSemaine » : la vue par défaut d'une saison ouverte, sur une colonne (P9). */
 type Vue = "saison" | "reservations" | "ordre" | "semaine" | "cetteSemaine"
@@ -111,7 +112,7 @@ export function FeteGestion({ fete }: { fete: Fete }) {
     return () => window.removeEventListener(PROGRAMMES_CHANGED, surChangement)
   }, [user, charger])
 
-  const chargement = <p className="px-[var(--marge-page)] text-sm text-muted-foreground">{t("common.loading")}</p>
+  const chargement = <Squelette enTete={false} />
   if (profileLoading || !user) return chargement
   if (!isCoordination(user, profile)) return <p className="px-[var(--marge-page)] text-sm text-muted-foreground">{t("backOffice.sceneReserve")}</p>
   if (!programmes && echec) {

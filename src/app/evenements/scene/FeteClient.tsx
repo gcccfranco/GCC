@@ -36,6 +36,7 @@ import { OrdrePassage } from "./OrdrePassage"
 import { OrdreAvecChants } from "./OrdreAvecChants"
 import { joursDeLaSemaine, jourEnLettres } from "./libelles"
 import { styleTexteService } from "@/lib/couleurSombre"
+import { Squelette } from "@/components/layout/Squelette";
 
 const COLOR = PLANNING_COLORS.scene
 
@@ -91,7 +92,7 @@ export function FeteClient({ fete }: { fete: Fete }) {
     )
   }
   if (profileLoading || !programmes || !user) {
-    return <p className="px-[var(--marge-page)] text-sm text-muted-foreground">{t("common.loading")}</p>
+    return <Squelette enTete={false} />
   }
 
   const today = todayIso()

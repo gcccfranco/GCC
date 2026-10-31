@@ -29,6 +29,7 @@ import { todayIso } from "@/lib/scene/dimanches";
 import { cyclerEtat, type TacheAvecFois } from "@/lib/firebase/taches";
 import { prevenirFait } from "@/lib/taches/prevenir";
 import { cn } from "@/lib/utils";
+import { Squelette } from "@/components/layout/Squelette";
 
 type Valeur = {
   /** Les équipes de la personne, Louange élargi (`equipesDesTaches` ; un admin : toutes). */
@@ -93,7 +94,7 @@ export function SectionTaches({ children }: { children: React.ReactNode }) {
     }
   }
 
-  if (loading) return <p className="px-4 pt-6 text-sm text-muted-foreground">{t("common.loading")}</p>;
+  if (loading) return <Squelette enTete={false} className="px-4" />;
 
   // La tâche ouverte : celle de l'adresse, ou en grand la première à faire (Q3).
   const [, , equipe, id] = chemin.split("/");

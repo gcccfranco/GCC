@@ -54,6 +54,7 @@ import { useDeuxVolets } from "@/hooks/useDeuxVolets"
 import { FicheGestion } from "@/app/back-office/evenements/FicheGestion"
 import styles from "@/app/back-office/evenements/gestion.module.css"
 import { styleTexteService } from "@/lib/couleurSombre"
+import { Squelette } from "@/components/layout/Squelette";
 
 const COLOR = PLANNING_COLORS.scene
 const URL_RE = /(https?:\/\/[^\s]+)/g
@@ -161,7 +162,7 @@ export function EvenementClient({ espace = "app", id: idDonne }: { espace?: "app
   useEffect(() => { if (versReunions) router.replace(`/back-office/reunions/${id}`) }, [versReunions, id, router])
 
   if (authLoading || (user && profileLoading) || evenement === undefined) {
-    return <p className="text-sm text-muted-foreground">{t("common.loading")}</p>
+    return <Squelette />
   }
   if (ailleurs || versReunions) return null
   if (!evenement || !canSeeEvenement(user, profile, evenement)) {

@@ -25,6 +25,7 @@ import type { UserProfile } from "@/types/user";
 import { EvenementCard } from "@/app/evenements/EvenementCard";
 import { DeuxVolets } from "@/components/layout/DeuxVolets";
 import { cn } from "@/lib/utils";
+import { Squelette } from "@/components/layout/Squelette";
 
 /** Qui peut créer dans l'entrée : une réunion (Réunions : une équipe dont on est référent) ou un
  *  évènement (Évènements : tout public ouvert, une équipe comprise). Décision 43 (lot 1 du chantier
@@ -109,7 +110,7 @@ function ListeGestion({ reunions, gestion, idActif }: { reunions: boolean; gesti
   const { chargement, aVenir, passes } = gestion;
   const cadre = cn("space-y-5", deuxVolets ? "px-3 py-4" : "px-[var(--marge-page)]");
 
-  if (chargement) return <p className={cn(cadre, "text-sm text-muted-foreground")}>{t("common.loading")}</p>;
+  if (chargement) return <Squelette enTete={false} className={cadre} />;
 
   const ligne = (e: Evenement, passe = false) => (
     <EvenementCard key={e.id} evenement={e} past={passe} actif={e.id === idActif} href={`${baseBackOffice(e)}/${e.id}`} />

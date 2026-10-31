@@ -38,6 +38,7 @@ import { useTaches } from "@/lib/taches/useTaches"
 import { ANNONCE_SECTIONS } from "@/types/annonce"
 import type { EvenementPour } from "@/types/evenement"
 import { EMPTY_EVENEMENT, EvenementForm, type EvenementValues } from "@/components/evenements/EvenementForm"
+import { Squelette } from "@/components/layout/Squelette";
 
 export function NouveauClient({ reunion = false }: { reunion?: boolean }) {
   const { t } = useTranslation()
@@ -93,7 +94,7 @@ export function NouveauClient({ reunion = false }: { reunion?: boolean }) {
       <div className="px-[var(--marge-page)]">{contenu}</div>
     </>
   )
-  if (profileLoading || !user || !initial) return page(<p className="text-sm text-muted-foreground">{t("common.loading")}</p>)
+  if (profileLoading || !user || !initial) return page(<Squelette enTete={false} className="p-0" />)
   if (pours.length === 0) return page(<p className="text-sm text-muted-foreground">{t("evenements.reserved")}</p>)
 
   const nom = profile ? `${profile.firstName} ${profile.lastName}`.trim() || profile.email : user.email ?? ""

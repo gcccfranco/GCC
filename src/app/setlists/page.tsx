@@ -50,6 +50,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useSetlistsNavState, type Tab } from "@/hooks/useSetlistsNavState";
 import { EtatVide } from "@/components/layout/EtatVide";
+import { Squelette } from "@/components/layout/Squelette";
 
 // Lot U4 bis, B2 (docs/spec-pages-en-grand.md, Q4) : en grand, la liste à gauche et l'aperçu
 // de la setlist choisie à droite (`?apercu=<id>`, sans aperçu choisi la première de la liste,
@@ -387,11 +388,7 @@ export default function SetlistsPage() {
     : t("setlists.list.emptyArchived");
 
   if (authLoading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <p className="text-sm text-muted-foreground">{t("common.loading")}</p>
-      </div>
-    );
+    return <Squelette />;
   }
 
   // Non connecté : les setlists sont réservées aux membres
@@ -623,9 +620,7 @@ export default function SetlistsPage() {
 
         {/* ── Contenu ── */}
         {(tab === "mine" ? loadingMine : loading || !programmesLus) ? (
-          <div className="text-sm text-muted-foreground text-center py-16">
-            {t("common.loading")}
-          </div>
+          <Squelette enTete={false} className="px-0" />
         ) : displayed.length === 0 ? (
           <EtatVide
             action={

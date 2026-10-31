@@ -13,6 +13,7 @@ import { ALL_CATEGORIES } from "@/lib/firebase/setlists";
 import { lirePreremplissage } from "@/lib/setlist/prochainsServices";
 import { PourQuelService } from "./PourQuelService";
 import { SetlistsPassees } from "./SetlistsPassees";
+import { Squelette } from "@/components/layout/Squelette";
 
 // `/setlists/new` (lot U5 bis, docs/spec-editeur-setlist.md, « Modèle ») :
 // sans paramètre, « Pour quel service ? » ; `?cat=…&date=…(&moment=…)`,
@@ -37,11 +38,7 @@ export function CreateSetlistClient() {
   }, []);
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <p className="text-sm text-muted-foreground">{t("common.loading")}</p>
-      </div>
-    );
+    return <Squelette />;
   }
 
   if (!user) {

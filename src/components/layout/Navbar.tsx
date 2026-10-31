@@ -41,10 +41,14 @@ export function Navbar() {
   const { t, i18n } = useTranslation();
   const pathname = usePathname() || "";
   const { resolvedTheme, setTheme } = useTheme();
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, probablementConnecte } = useAuth();
   const { profile } = useProfile();
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
+  // Lot CH (C1, C2) : pendant que Firebase lit la session, la marque « était connecté » fait dessiner la forme
+  // du membre (jamais l'en-tête des visiteurs) ; les éléments qui demandent le compte ou le profil gardent leur place.
+  const attente = authLoading && probablementConnecte;
+  const membre = !!user || attente;
   const dark = mounted && resolvedTheme === "dark";
   const toggleTheme = () => setTheme(dark ? "light" : "dark");
 
@@ -122,7 +126,7 @@ export function Navbar() {
         <FondDeBarre />
         <div className="max-w-[1080px] mx-auto px-4 h-full flex items-center gap-3">
           {/* Brand */}
-          <Link href={user ? "/planning" : "/songs"} className="relative flex items-center gap-2.5 shrink-0 after:absolute after:-inset-1 after:content-['']">
+          <Link href={membre ? "/planning" : "/songs"} className="relative flex items-center gap-2.5 shrink-0 after:absolute after:-inset-1 after:content-['']">
             <div className="relative h-9 w-9 rounded-full overflow-hidden shadow-sm">
               <Image
                 src="/logo.png"
@@ -148,13 +152,13 @@ export function Navbar() {
 
           {/* Sections (ordinateur) */}
           <nav className="hidden lg:flex items-center gap-1 ml-2" aria-label={t("common.aria.sections")}>
-            {!authLoading && user && (
+            {membre && (
               <Link href="/planning" className={sectionClass(isActivePlanning)}>
                 {t("common.header.planning")}
               </Link>
             )}
             {/* Louange : menu déroulant (connecté) ou lien direct vers les chants (visiteur) */}
-            {!authLoading && user ? (
+            {membre ? (
               <div className="relative" ref={dropdownRef}>
                 <button
                   onClick={() => setDropdownOpen((v) => !v)}
@@ -205,12 +209,12 @@ export function Navbar() {
                 </Link>
               )
             )}
-            {BACK_OFFICE && !authLoading && (
+            {BACK_OFFICE && (!authLoading || attente) && (
               <Link href="/evenements" className={sectionClass(isActiveEvenements)}>
                 {t("common.header.evenements")}
               </Link>
             )}
-            {!authLoading && user && (
+            {membre && (
               <Link href="/mes-services" className={sectionClass(isActiveMesServices)}>
                 {t("common.header.myServices")}
               </Link>
@@ -228,6 +232,7 @@ export function Navbar() {
             {avecMessages && <IconeMessages boutonClassName={ICON_BUTTON} />}
             {/* Notifications */}
             {!authLoading && user && <Cloche boutonClassName={ICON_BUTTON} />}
+            {attente && <span aria-hidden className={`${ICON_BUTTON} pointer-events-none`} />}
 
             {/* Langue : partout, pour les sinophones sans compte aussi */}
             <button
@@ -236,19 +241,20 @@ export function Navbar() {
               className={`${ICON_BUTTON} w-auto min-w-10 px-3 gap-1.5 text-sm font-semibold ${responsable ? "max-sm:hidden" : ""}`}
             >
               <Globe className="h-4 w-4" aria-hidden />
-              <span className={user ? "" : "hidden min-[400px]:inline"}>{isZh ? "中文" : "FR"}</span>
+              <span className={membre ? "" : "hidden min-[400px]:inline"}>{isZh ? "中文" : "FR"}</span>
             </button>
 
             {/* Thème : sur ordinateur ; sur tactile, un membre le trouve dans « Moi » */}
             <button
               onClick={toggleTheme}
               aria-label={dark ? t("common.aria.modeClair") : t("common.aria.modeSombre")}
-              className={`${ICON_BUTTON} ${user ? "hidden lg:flex" : "hidden sm:flex"}`}
+              className={`${ICON_BUTTON} ${membre ? "hidden lg:flex" : "hidden sm:flex"}`}
             >
               {dark ? <Sun className="h-[18px] w-[18px]" /> : <Moon className="h-[18px] w-[18px]" />}
             </button>
 
             {/* Compte (ordinateur) ou Connexion */}
+            {attente && <span aria-hidden className="hidden lg:flex h-9 w-9 shrink-0 rounded-full bg-secondary" />}
             {!authLoading && (
               user ? (
                 <MenuCompte>
@@ -264,7 +270,7 @@ export function Navbar() {
                 <Link
                   aria-label={t("common.header.login")}
                   href="/login"
-                  className="flex h-10 px-4 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 transition-[background-color,transform] duration-150 active:scale-[.96] items-center justify-center gap-1.5 text-sm font-semibold"
+                  className="connexion-visiteur flex h-10 px-4 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 transition-[background-color,transform] duration-150 active:scale-[.96] items-center justify-center gap-1.5 text-sm font-semibold"
                 >
                   <LogIn className="h-4 w-4" aria-hidden />
                   <span className="max-[359px]:hidden">{t("common.header.login")}</span>

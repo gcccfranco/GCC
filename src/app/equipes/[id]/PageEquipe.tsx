@@ -34,6 +34,7 @@ import { cn } from "@/lib/utils";
 import { ANNONCE_SECTIONS } from "@/types/annonce";
 import type { Equipe } from "@/types/equipe";
 import type { Evenement } from "@/types/evenement";
+import { Squelette } from "@/components/layout/Squelette";
 
 const idValide = (id: string) => EQUIPES.some((e) => e.id === id) || COMITES.includes(id);
 const CARTE = "raised rounded-2xl px-4 py-2";
@@ -52,7 +53,7 @@ export function PageEquipe({ id, backOffice }: { id: string; backOffice: boolean
   if (!connue) {
     return <EnTetePage retour={retour} titre={t("equipes.page.introuvable")} />;
   }
-  if (loading) return <p className="px-[var(--marge-page)] pt-6 text-sm text-muted-foreground">{t("common.loading")}</p>;
+  if (loading) return <Squelette />;
   if (!droit) {
     return (
       <>

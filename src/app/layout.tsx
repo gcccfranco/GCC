@@ -12,6 +12,7 @@ import { LyricsCopyListener } from "@/components/song/LyricsCopyListener";
 import { NotificationsProvider } from "@/components/layout/NotificationsPartagees";
 import { ConfirmerProvider } from "@/components/layout/Confirmer";
 import { SCRIPT_BARRE_REDUITE } from "@/lib/barreLateralePref";
+import { SCRIPT_MARQUE_CONNECTE } from "@/lib/marqueConnecteScript";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -61,6 +62,9 @@ export default function RootLayout({
         {/* Barre latérale réduite sur cet appareil (lot U4, N3) : `data-barre` posé avant le
             premier affichage, sinon la page sauterait de 180 px à chaque chargement. */}
         <script dangerouslySetInnerHTML={{ __html: SCRIPT_BARRE_REDUITE }} />
+        {/* Marque « était connecté » (lot CH, C1) : `data-connecte` posé avant le premier affichage,
+            pour que le CSS cache l'en-tête des visiteurs pendant que Firebase lit la session. */}
+        <script dangerouslySetInnerHTML={{ __html: SCRIPT_MARQUE_CONNECTE }} />
       </head>
       <body className="font-sans antialiased min-h-screen bg-background">
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>

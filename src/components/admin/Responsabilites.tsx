@@ -22,6 +22,7 @@ import {
 } from "@/lib/equipes/responsabilites";
 import type { Equipe } from "@/types/equipe";
 import type { UserProfile } from "@/types/user";
+import { Squelette } from "@/components/layout/Squelette";
 
 const nomComplet = (p: UserProfile) => `${p.firstName} ${p.lastName}`.trim() || p.planningName || p.email;
 
@@ -141,7 +142,7 @@ export function Responsabilites() {
         <div className="max-w-[760px] space-y-6">
           {erreur && <p role="alert" className="text-sm text-destructive">{erreur}</p>}
           {!chargee ? (
-            !erreur && <p className="py-6 text-center text-sm text-muted-foreground">{t("common.loading")}</p>
+            !erreur && <Squelette enTete={false} className="p-0" />
           ) : (
             <>
               {sansGestionnaire.length > 0 && (

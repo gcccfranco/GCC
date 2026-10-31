@@ -16,6 +16,7 @@ import { Personnes } from "@/components/admin/Personnes";
 import { InscriptionsComptes } from "@/components/admin/InscriptionsComptes";
 import { SansCompte } from "@/components/admin/SansCompte";
 import { ReserveAuxAdmins } from "@/components/admin/commun";
+import { Squelette } from "@/components/layout/Squelette";
 
 type AdminTab = "reception" | "membres" | "inscriptions" | "planning" | "questionnaire";
 
@@ -32,11 +33,7 @@ export function AncienneAdmin() {
   const surSansCompte = useCallback((n: number) => setSansCompte(n), []);
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <p className="text-sm text-muted-foreground">{t("common.loading")}</p>
-      </div>
-    );
+    return <Squelette />;
   }
 
   if (!user || !admin) return <ReserveAuxAdmins connecte={!!user} retour="/admin" />;

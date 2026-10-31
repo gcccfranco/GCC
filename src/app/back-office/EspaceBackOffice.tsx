@@ -16,6 +16,7 @@ import { useTranslation } from "react-i18next";
 import { ShieldCheck } from "lucide-react";
 import { useProfile } from "@/lib/firebase/users";
 import { droitsDesPages, entreesBackOffice } from "@/lib/access";
+import { Squelette } from "@/components/layout/Squelette";
 
 export function EspaceBackOffice({ children }: { children: React.ReactNode }) {
   const { t } = useTranslation();
@@ -36,11 +37,7 @@ export function EspaceBackOffice({ children }: { children: React.ReactNode }) {
   useEffect(() => { if (versApp) router.replace(versApp); }, [versApp, router]);
 
   if (loading) {
-    return (
-      <div className="min-h-[60vh] flex items-center justify-center">
-        <p className="text-sm text-muted-foreground">{t("common.loading")}</p>
-      </div>
-    );
+    return <Squelette />;
   }
   if (versApp) return null;
   if (entrees.length === 0) {

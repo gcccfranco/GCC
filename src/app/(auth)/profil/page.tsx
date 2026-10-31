@@ -27,6 +27,7 @@ import { PushToggle } from "@/components/push/PushToggle";
 import { MesAbsences } from "@/components/profil/MesAbsences";
 import { CarteMesEquipes } from "@/components/moi/CartesAcces";
 import { cn } from "@/lib/utils";
+import { Squelette } from "@/components/layout/Squelette";
 
 const FORMULAIRE = "formulaire-profil";
 
@@ -69,11 +70,7 @@ export default function ProfilPage() {
   }, [loading, profile, form]);
 
   if (loading || !user || !form) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <p className="text-sm text-muted-foreground">{t("common.loading")}</p>
-      </div>
-    );
+    return <Squelette />;
   }
 
   async function handleSubmit(e: React.FormEvent) {

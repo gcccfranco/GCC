@@ -19,6 +19,7 @@ import { lireAFaire, useLecture } from "@/lib/tableauDeBord/lecture";
 import { ColonneDroite } from "./ColonneDroite";
 import { RangeeAFaire } from "./RangeeAFaire";
 import { jourComplet } from "./texte";
+import { Squelette } from "@/components/layout/Squelette";
 
 export function AFaire({ titre }: { titre: string }) {
   const { t, i18n } = useTranslation();
@@ -57,7 +58,7 @@ export function AFaire({ titre }: { titre: string }) {
         <div>
           {incomplet && <p role="alert" className="mb-3 text-[13px] text-muted-foreground">{t("backOffice.aFaire.incomplet")}</p>}
           {!resultat ? (
-            !erreur && <p className="text-sm text-muted-foreground">{t("common.loading")}</p>
+            !erreur && <Squelette enTete={false} className="p-0" />
           ) : resultat.total === 0 ? (
             !incomplet && (
               <EtatVide role="status">{t(filtre === "mesEquipes" ? "backOffice.aFaire.videEquipes" : "backOffice.aFaire.vide")}</EtatVide>
