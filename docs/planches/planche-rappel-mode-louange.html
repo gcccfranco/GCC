@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Planche · rappel de structure du mode louange</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --fg: #1c1c1e; --muted: #6c6c72; --border: #e4e4e5; --bg: #ffffff; --page: #f5f4f1;
+    --chord: #3f63cf;
+    --sec-intro: #5b7fa6; --sec-intro-tint: #eef3f9;
+    --sec-verse: #2c8a7d; --sec-verse-tint: #e8f3f0;
+    --sec-chorus: #e0560a; --sec-chorus-tint: #fcece1;
+    --sec-bridge: #7a5bcb; --sec-bridge-tint: #f0ecf9;
+    --sec-other: #6b7280; --sec-other-tint: #f1f3f6;
+    --reco: #1f7a4d;
+  }
+  .sombre {
+    --fg: #f2f2f7; --muted: #98989f; --border: #373739; --bg: #000; --chord: #8fb0ff;
+    --sec-intro: #8fb2dc; --sec-intro-tint: #161f2a;
+    --sec-verse: #59bdac; --sec-verse-tint: #112320;
+    --sec-chorus: #fb923c; --sec-chorus-tint: #2a1810;
+    --sec-bridge: #b59ce9; --sec-bridge-tint: #1d1730;
+    --sec-other: #98a0ad; --sec-other-tint: #181d26;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: Inter, system-ui, sans-serif; background: var(--page); color: #1c1c1e; }
+  main { max-width: 1240px; margin: 0 auto; padding: 40px 24px 80px; }
+  h1 { font-size: 30px; letter-spacing: -0.02em; margin: 0 0 8px; }
+  h2 { font-size: 22px; letter-spacing: -0.01em; margin: 0 0 4px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  h3 { font-size: 13px; text-transform: uppercase; letter-spacing: .08em; color: #6c6c72; margin: 18px 0 8px; }
+  p, li { font-size: 15px; line-height: 1.55; color: #3a3a3e; }
+  .intro { max-width: 760px; }
+  .carte { background: #fff; border-radius: 18px; padding: 24px; margin: 28px 0; box-shadow: 0 1px 2px rgba(0,0,0,.05), 0 8px 24px rgba(0,0,0,.04); }
+  .carte.reco { outline: 2px solid var(--reco); }
+  .badge-reco { font-size: 12px; font-weight: 700; color: #fff; background: var(--reco); border-radius: 999px; padding: 3px 10px; letter-spacing: .02em; }
+  .tailles { display: flex; gap: 20px; align-items: flex-start; flex-wrap: wrap; }
+  .cadre { flex: none; }
+  .cadre-titre { font-size: 12px; color: #6c6c72; margin-bottom: 6px; font-weight: 600; }
+  .ecran-wrap { overflow: hidden; border-radius: 14px; border: 1px solid #d9d9dc; background: var(--bg); }
+  .ecran { transform-origin: top left; background: var(--bg); color: var(--fg); padding: 14px 18px 0; font-family: Inter, system-ui, sans-serif; }
+  /* Corps de page simulé */
+  .sec { border-left: 3px solid var(--c); border-radius: 6px; padding: 8px 12px; margin: 0 0 10px; background: color-mix(in srgb, var(--c) 7%, transparent); }
+  .sec-nom { font-size: 11px; font-weight: 700; letter-spacing: .1em; color: var(--c); text-transform: uppercase; }
+  .ligne { font-size: 17px; line-height: 1.15; margin-top: 6px; }
+  .acc { color: var(--chord); font-weight: 700; font-size: 15px; display: block; white-space: pre; }
+  .rappel { margin-bottom: 10px; }
+  /* ——— Aujourd'hui ——— */
+  .r0 { display: flex; flex-wrap: wrap; gap: 6px; }
+  .r0 span { height: 24px; min-width: 24px; padding: 0 6px; border-radius: 999px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; background: var(--t); color: var(--c); }
+  .r0 span.cer { box-shadow: inset 0 0 0 2px var(--fg); }
+  /* ——— A ——— */
+  .rA { display: flex; flex-wrap: wrap; gap: 6px; }
+  .rA span { height: 32px; min-width: 32px; padding: 0 8px; border-radius: 999px; display: inline-flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; background: var(--t); color: var(--c); }
+  .rA span.ici { background: var(--c); color: var(--bg); }
+  /* ——— B ——— */
+  .rB-ligne { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 14px; font-size: 16px; font-weight: 700; }
+  .rB-ligne .s { color: var(--c); white-space: nowrap; }
+  .rB-ligne .n { color: var(--fg); font-weight: 600; font-size: 14px; margin-left: 4px; }
+  .rB-ligne .sep { color: var(--muted); font-weight: 400; }
+  .rB-barre { display: flex; gap: 2px; margin-top: 8px; height: 6px; }
+  .rB-barre i { flex: 1; border-radius: 3px; background: var(--c); opacity: .25; }
+  .rB-barre i.ici { opacity: 1; }
+  /* ——— C ——— */
+  .rC { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 6px; }
+  .rC .pt { width: 8px; height: 8px; border-radius: 50%; background: var(--c); opacity: .45; margin-top: 12px; }
+  .rC .grp { display: flex; flex-direction: column; align-items: center; gap: 3px; }
+  .rC .pa { height: 30px; min-width: 30px; padding: 0 8px; border-radius: 999px; display: inline-flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; background: var(--t); color: var(--c); }
+  .rC .ici .pa { background: var(--c); color: var(--bg); }
+  .rC .nu { font-size: 12px; font-weight: 700; color: var(--fg); white-space: nowrap; }
+  .rC .titre { font-size: 13px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; margin: 7px 8px 0 0; max-width: 220px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .questions li { margin-bottom: 8px; }
+  .legende { font-size: 13px; color: #6c6c72; margin-top: 10px; }
+  table.cmp { border-collapse: collapse; width: 100%; font-size: 14px; margin-top: 8px; }
+  table.cmp th, table.cmp td { text-align: left; padding: 8px 10px; border-bottom: 1px solid #ececee; vertical-align: top; }
+  table.cmp th { font-size: 12px; color: #6c6c72; text-transform: uppercase; letter-spacing: .05em; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Rappel de structure du mode louange</h1>
+  <div class="intro">
+    <p>À partir de la 2ᵉ page d'un chant, une rangée de pastilles rappelle la structure en haut de page (le « rappel », <code>StructureStrip compacte</code>). Constat du 31/10/2026 sur <b>Prince de paix</b> : pastilles de 24 px, lettres de 11 px illisibles de loin ; quatre « Dp » qu'on ne distingue pas ; un cercle noir autour des sections de la page, sans qu'on comprenne pourquoi ; les nuances (mp, mf ↗…) de la 1ʳᵉ page ont disparu ; rien ne dit où l'on en est.</p>
+    <p>Restent gelés : les couleurs de sections (<code>--sec-*</code>), d'accords et du 简谱. Les maquettes ci-dessous reprennent ces couleurs telles quelles ; seule la rangée du haut change. Exemple : la page du Pont (sections imprimées : Pont, Pont, Refrain, Dp, Dp).</p>
+  </div>
+
+  <section class="carte">
+    <h2>Aujourd'hui</h2>
+    <div class="tailles" data-piste="0"></div>
+  </section>
+
+  <section class="carte">
+    <h2>A · Pastilles agrandies</h2>
+    <p>Même rangée, pastilles de 32 px et lettres de 14 px. Les sections de la page sont <b>pleines</b> (couleur de la section, lettre blanche) au lieu d'être cerclées de noir. Pas de nuance. Changement minimal : la réserve passe de 32 à 40 px.</p>
+    <div class="tailles" data-piste="A"></div>
+  </section>
+
+  <section class="carte">
+    <h2>B · Ligne parlante</h2>
+    <p>Plus de pastilles : les sections de la page écrites en toutes lettres avec leur nuance, dans leur couleur, puis une barre de progression découpée par section (la page en couleur pleine, le reste estompé). Le plus lisible pour la page en cours, mais on perd les lettres de la carte du chant.</p>
+    <div class="tailles" data-piste="B"></div>
+  </section>
+
+  <section class="carte reco">
+    <h2>C · Carte et nuances <span class="badge-reco">Recommandée</span></h2>
+    <p>On garde la carte du chant, mais elle dit où l'on en est. Les sections <b>déjà jouées</b> deviennent de petits points de leur couleur. Celles de la page sont <b>pleines</b>, avec leur nuance écrite dessous. Les suivantes restent des pastilles claires. Pastilles de 30 px et lettres de 14 px. Sur tablette et ordinateur, le titre du chant ouvre la rangée ; sur téléphone, la place manque et il saute. La réserve passe de 32 à environ 50 px.</p>
+    <div class="tailles" data-piste="C"></div>
+    <h3>Thème sombre</h3>
+    <div class="tailles" data-piste="C" data-sombre="1" data-seul="tablette"></div>
+  </section>
+
+  <section class="carte">
+    <h2>Comparaison</h2>
+    <table class="cmp">
+      <tr><th></th><th>Lisible de loin</th><th>Carte du chant</th><th>Où j'en suis</th><th>Nuances</th><th>Place prise</th></tr>
+      <tr><td>Aujourd'hui</td><td>Non (11 px)</td><td>Oui</td><td>Cercle peu clair</td><td>Non</td><td>32 px</td></tr>
+      <tr><td>A</td><td>Oui</td><td>Oui</td><td>Pleines</td><td>Non</td><td>40 px</td></tr>
+      <tr><td>B</td><td>Très</td><td>Barre sans lettres</td><td>Oui</td><td>Page seulement</td><td>≈ 36 px (2 lignes sur téléphone)</td></tr>
+      <tr><td><b>C</b></td><td>Oui</td><td>Oui</td><td>Points, pleines, claires</td><td>Page seulement</td><td>≈ 50 px</td></tr>
+    </table>
+  </section>
+
+  <section class="carte">
+    <h2>Questions à trancher</h2>
+    <ol class="questions">
+      <li><b>Quelle piste ?</b> A, B ou C (recommandée).</li>
+      <li><b>Sections déjà jouées</b> : réduites en points (C) ou seulement estompées, à pleine taille ?</li>
+      <li><b>« Dp »</b> (dernière phrase) : garder l'abréviation, ou écrire « Fin » qui se comprend seul ?</li>
+      <li><b>Titre du chant dans le rappel</b> (tablette et ordinateur) : oui, ou laisser la rangée aux seules pastilles ?</li>
+      <li><b>Place prise</b> : un rappel plus haut fait glisser les fins de page des chants en « Sections uniques ». Les annotations déjà dessinées sur les pages 2 et suivantes peuvent ne plus tomber au bon endroit. On l'accepte, ou on garde la hauteur actuelle (pastilles plus grandes sans nuance dessous) ?</li>
+    </ol>
+  </section>
+</main>
+
+<script>
+  // Prince de paix : structure jouée (capture du 31/10/2026).
+  const ETAPES = [
+    ["Dp","other","Fin","mp ↗"],["Dp","other","Fin","mf"],["I","intro","Intro","mf"],["C1","verse","Couplet 1","mf"],
+    ["R","chorus","Refrain","mf"],["C2","verse","Couplet 2","mf"],["R","chorus","Refrain","mf"],["Dp","other","Fin","mf ↘"],
+    ["P","bridge","Pont","mp ↗"],["P","bridge","Pont","mf ↗"],["R","chorus","Refrain","f"],["R","chorus","Refrain","f ↘"],
+    ["Dp","other","Fin","mf ↘"],["Dp","other","Fin","mp"],
+  ];
+  const PAGE = new Set([8, 9, 10, 12, 13]); // sections imprimées sur cette page
+  const DEBUT = 8;
+  const v = (k) => `--c:var(--sec-${k});--t:var(--sec-${k}-tint)`;
+
+  function rappel(piste, taille) {
+    if (piste === "0") return `<div class="r0">${ETAPES.map((e, i) => `<span class="${PAGE.has(i) ? "cer" : ""}" style="${v(e[1])}">${e[0]}</span>`).join("")}</div>`;
+    if (piste === "A") return `<div class="rA">${ETAPES.map((e, i) => `<span class="${PAGE.has(i) ? "ici" : ""}" style="${v(e[1])}">${e[0]}</span>`).join("")}</div>`;
+    if (piste === "B") {
+      const noms = [...PAGE].map((i) => ETAPES[i]);
+      const ligne = noms.map((e, k) => `${k ? '<span class="sep">·</span>' : ""}<span class="s" style="${v(e[1])}">${e[2]}<span class="n">${e[3]}</span></span>`).join("");
+      const barre = ETAPES.map((e, i) => `<i class="${PAGE.has(i) ? "ici" : ""}" style="${v(e[1])}"></i>`).join("");
+      return `<div class="rB-ligne">${ligne}</div><div class="rB-barre">${barre}</div>`;
+    }
+    const titre = taille !== "telephone" ? `<span class="titre">Prince de paix</span>` : "";
+    return `<div class="rC">${titre}${ETAPES.map((e, i) => {
+      if (i < DEBUT) return `<span class="pt" title="${e[2]}" style="${v(e[1])}"></span>`;
+      const ici = PAGE.has(i);
+      return `<span class="grp ${ici ? "ici" : ""}" style="${v(e[1])}"><span class="pa">${e[0]}</span>${ici ? `<span class="nu">${e[3]}</span>` : ""}</span>`;
+    }).join("")}</div>`;
+  }
+
+  const sec = (k, nom, lignes) => `<div class="sec" style="--c:var(--sec-${k})"><div class="sec-nom">— ${nom}</div>${lignes.map(([a, p]) => `<div class="ligne"><span class="acc">${a}</span>${p}</div>`).join("")}</div>`;
+  const PONT = sec("bridge", "Pont", [["C                   G                 D", "Plus qu'une sensation, c'est ma décision."], ["              Em          C", "Je choisis et je choisirai Ta paix."]]);
+  const REFRAIN = sec("chorus", "Refrain", [["C                         G", "Le Prince de paix, ô Jésus Tu es Celui"], ["D                               Em", "Qui donne librement Ta paix à chaque instant."]]);
+
+  const TAILLES = [
+    { id: "telephone", nom: "Téléphone · 390 px", w: 390, h: 230, s: 1, corps: PONT },
+    { id: "tablette", nom: "Tablette portrait · 820 px", w: 820, h: 230, s: 1, corps: PONT + REFRAIN },
+    { id: "ordinateur", nom: "Ordinateur · 1 440 px", w: 1440, h: 230, s: 0.8, corps: `<div style="display:grid;grid-template-columns:1fr 1fr;gap:24px">${PONT}${REFRAIN}</div>` },
+  ];
+
+  document.querySelectorAll("[data-piste]").forEach((el) => {
+    const piste = el.dataset.piste;
+    TAILLES.filter((t) => !el.dataset.seul || t.id === el.dataset.seul).forEach((t) => {
+      const s = t.s;
+      el.insertAdjacentHTML("beforeend", `
+        <div class="cadre">
+          <div class="cadre-titre">${t.nom}${el.dataset.sombre ? " · sombre" : ""}</div>
+          <div class="ecran-wrap ${el.dataset.sombre ? "sombre" : ""}" style="width:${t.w * s}px;height:${t.h * s}px">
+            <div class="ecran ${el.dataset.sombre ? "sombre" : ""}" style="width:${t.w}px;height:${t.h}px;transform:scale(${s})">
+              <div class="rappel">${rappel(piste, t.id)}</div>${t.corps}
+            </div>
+          </div>
+        </div>`);
+    });
+  });
+</script>
+</body>
+</html>
