@@ -4108,6 +4108,21 @@
       "aucune": "Jamais joué sur cette période",
       "note": "Setlists publiées et passées, depuis le {{date}}",
       "toutes": "Toutes les statistiques"
+    },
+    "presidences": {
+      "titre": "Mes présidences",
+      "visible": "visible par toi et les admins",
+      "nombre": "présidences",
+      "derniere": "dernière",
+      "groupes": "groupes",
+      "groupe": "Groupe",
+      "surtout": "Surtout à {{service}} ({{count}})",
+      "prochaineLe": "prochaine le {{date}}",
+      "chants": "Mes chants les plus choisis",
+      "jamais_one": "Jamais choisis : {{count}} chant",
+      "jamais_other": "Jamais choisis : {{count}} chants",
+      "note": "Présidences comptées sous le nom « {{nom}} » · setlists publiées et passées",
+      "aucune": "Aucune présidence sur cette période"
     }
   }
 }
