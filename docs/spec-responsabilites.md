@@ -199,12 +199,20 @@ fois, puis l'admin corrige sur la page Responsabilités.
   La Table reste sans gestionnaire (Q11), le référent Régie n'a rien (Q21) : à régler sur la page si besoin. Défaut
   d'affichage du relevé à corriger : un référent de l'équipe `comite-franco` y est lu comme un comité de groupe
   (« créer les évènements du groupe (franco) ») ; rien de faux n'est écrit.
-- **Reste** :
-  - **avant la mise en ligne** : la suite complète (arrêtée le 30/10 à 5 362 tests sur 11 487, pour la limite
-    hebdomadaire) montrait environ 330 échecs, presque tous dans des specs qui donnent des droits de gestion à des
-    comptes fictifs à l'ancienne (scène, planning, évènements, `equipes-coordination`, `back-office-admin`). Cause
-    probable : `tests/helpers/fakeSession.ts` ne traduit pas encore ces profils en `responsabilites`. À corriger
-    avec les règles de la reprise, puis relancer ces specs sur trois appareils ;
-  - RS-D, après la bascule et sur ordre de Timothée.
+- **Tests repris (31/10/2026)** : `tests/helpers/fakeSession.ts` traduit un compte fictif comme la reprise
+  (`responsabilitesDeLaReprise`), `coordination()` rend `orga` ; 33 specs reprises là où la spec change le comportement
+  (coordination = Comité Orga ; la Table, `planning:table` ; président de groupe : son comité seulement ; rôle
+  Notifier seul : plus de Back-Office ; un gestionnaire remplit et publie). Relevé de la reprise : `comite-franco` n'est
+  plus lu comme un comité de groupe. Les 50 specs rouges de la suite complète, vertes sur ordinateur (passes des
+  executants) et sur téléphone et tablette (2 294 tests, puis les 6 restants repris). Suite complète entière non
+  relancée.
+- **Reste** : mise en ligne sur `main` sur ordre de Timothée ; puis publier les règles de RS-D.
+- **RS-D codé (30/10/2026), non publié** : les règles de RS-D se publient seulement APRÈS la mise en ligne du lot RS
+  sur main. Retiré : dans `firestore.rules`, l'ancien côté de `isCoordination` (case `coordination`, référents Louange /
+  EDD, Orga placé), `faitDesPlannings` et `peutEcrirePlanning` (`plannings`, `remplitParRole`, référents, Orga),
+  `peutEcrireLaRegie` et `seulementColonnesRegie` (dimanches et historique des plannings : `peutEcrirePlanning(key)`
+  seul), `sectionCreeeParOrganigramme` et la branche `annonces` de `pourCreable` ; `COLONNES_REGIE` (Sono, Sono Live,
+  PPT suivent le cas général de `equipeDeLaColonne`, donc Louange) ; dans l'écran des groupes, les cases et pastilles
+  Remplit · Publie · Notifie (reste « Saisir les chants des fêtes »). `tests/acces-regles.spec.ts` redit le nouvel état.
 - **Code mort signalé, non supprimé** : clés i18n `acces.ouvre.planning*`, `notifier*`, `coordination`,
   `evenementSection`, `acces.pourquoi.roleGroupe`, `presidenceGroupe` ; `estReferentLouange/Edd/Regie` hors droits.

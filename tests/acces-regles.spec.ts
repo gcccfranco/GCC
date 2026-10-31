@@ -73,14 +73,9 @@ test.describe("les règles : lot AO, ancien ∪ nouveau", () => {
     expect(corps).toContain("request.resource.data.get('serviceRoles', {}) == {}");
   });
 
-  test("les règles : isCoordination = case cochée ∪ référent Louange ou EDD ∪ Orga", () => {
+  test("les règles : isCoordination ne retient ni la Régie ni un référent de sous-équipe (lot RS, RS-D : l'ancien côté est retiré)", () => {
     const f = sansEspaces(fonction("isCoordination"));
-    expect(f).toContain("profile().get('coordination', false) == true");
-    expect(f).toContain("'louange' in profile().get('referentDe', [])");
-    expect(f).toContain("'edd' in profile().get('referentDe', [])");
-    expect(f).toContain("'orga' in profile().get('dansEquipes', [])");
     expect(f).toContain("isAdmin()");
-    // Ni le référent Régie, ni un référent de sous-équipe.
     expect(f).not.toContain("'regie'");
     expect(f).not.toContain("referentSous");
   });
@@ -98,73 +93,20 @@ test.describe("les règles : lot AO, ancien ∪ nouveau", () => {
     expect(regles).toContain("la limite « sa sous-équipe seulement » est côté navigateur");
   });
 
-  test("les règles : peutEcrirePlanning = anciens droits ∪ référent Louange (culte) ∪ référent EDD ∪ Orga (Table)", () => {
+  test("les règles : peutEcrirePlanning ne retient ni la Régie ni un référent de sous-équipe (lot RS, RS-D : l'ancien côté est retiré)", () => {
     const f = sansEspaces(fonction("peutEcrirePlanning"));
-    expect(f).toContain("key in profile().get('plannings', [])");
-    expect(f).toContain("key in profile().get('remplitParRole', [])");
-    expect(f).toContain("'louange' in profile().get('referentDe', []) && key in ['culte', 'intergroupe', 'interfranco', 'campusMatin', 'campusSoir']");
-    expect(f).toContain("'edd' in profile().get('referentDe', []) && key in ['eddZhongban', 'eddDaban', 'eddGaoban']");
-    expect(f).toContain("key == 'table' && 'orga' in profile().get('dansEquipes', [])");
     expect(f).toContain("isAdmin()");
-    // Ni la Régie (condition à part) ni un référent de sous-équipe (E2).
     expect(f).not.toContain("'regie'");
     expect(f).not.toContain("referentSous");
   });
 
-  test("les règles : le référent Régie n'écrit que Sono, Sono Live, PPT et les champs d'une case, sans supprimer", () => {
-    const regie = sansEspaces(fonction("peutEcrireLaRegie"));
-    expect(regie).toContain("'regie' in profile().get('referentDe', [])");
-    expect(regie).toContain("key in ['culte', 'intergroupe', 'interfranco', 'campusMatin', 'campusSoir']");
-    const diff = sansEspaces(fonction("seulementColonnesRegie"));
-    expect(diff).toContain("request.resource.data.diff(resource == null ? {} : resource.data).affectedKeys()");
-    expect(diff).toContain(".hasOnly(['date', 'modifieLe', 'modifiePar', 'sono', 'sonoLive', 'ppt'])");
-
+  test("les règles : le retrait d'une date reste à peutEcrirePlanning seul, l'historique aussi ; jamais de delete (lot RS, RS-D : plus de condition Régie)", () => {
     const plannings = bloc("match /plannings/{key}");
     const dimanches = sansEspaces(plannings.slice(plannings.indexOf("match /dimanches/{date}"), plannings.indexOf("match /history/{entryId}")));
-    expect(dimanches).toContain("allow create, update: if (peutEcrirePlanning(key) || (peutEcrireLaRegie(key) && seulementColonnesRegie())) && request.resource.data.date == date");
-    // Le retrait d'une date n'est pas ouvert au référent Régie : peutEcrirePlanning seul, sur les quatre plannings à dates choisies.
     expect(dimanches).toContain("allow delete: if peutEcrirePlanning(key) && key in ['interfranco', 'intergroupe', 'campusMatin', 'campusSoir']");
-    expect(dimanches.slice(dimanches.indexOf("allow delete"))).not.toContain("peutEcrireLaRegie");
-    // L'historique lui est permis sur ces plannings ; jamais de delete.
     const histo = sansEspaces(plannings.slice(plannings.indexOf("match /history/{entryId}")));
-    expect(histo).toContain("allow create: if (peutEcrirePlanning(key) || peutEcrireLaRegie(key)) && request.resource.data.authorUid == request.auth.uid");
-    expect(histo).toContain("allow update: if (peutEcrirePlanning(key) || peutEcrireLaRegie(key)) && resource.data.authorUid == request.auth.uid");
+    expect(histo).toContain("allow update: if peutEcrirePlanning(key) && resource.data.authorUid == request.auth.uid");
     expect(histo).toContain("allow delete: if false");
-  });
-
-  test("les règles : les champs qu'une case pose toujours sont ceux de planningGrille.ts", () => {
-    const grille = readFileSync(path.join(ROOT, "src/lib/firebase/planningGrille.ts"), "utf8");
-    const champs = grille.slice(grille.indexOf("const champs: Record<string, unknown> = {"), grille.indexOf("...valeurs,"));
-    for (const c of ["date", "modifieLe", "modifiePar"]) expect(champs).toContain(c);
-    const diff = fonction("seulementColonnesRegie");
-    for (const c of ["date", "modifieLe", "modifiePar"]) expect(diff).toContain(`'${c}'`);
-  });
-
-  test("les règles : faitDesPlannings = plannings non vide ∪ rôle de groupe ∪ référent Louange, EDD ou Régie ∪ Orga", () => {
-    const f = sansEspaces(fonction("faitDesPlannings"));
-    expect(f).toContain("profile().get('plannings', []).size() > 0");
-    expect(f).toContain("profile().get('remplitParRole', []).size() > 0");
-    for (const e of ["louange", "edd", "regie"]) expect(f).toContain(`'${e}' in profile().get('referentDe', [])`);
-    expect(f).toContain("'orga' in profile().get('dansEquipes', [])");
-    expect(f).toContain("isAdmin()");
-  });
-
-  test("les règles : evenements create = coordination ∪ annonces ∪ section par l'organigramme (Louange, président et VP)", () => {
-    const evenements = sansEspaces(bloc("match /evenements/{id}"));
-    const create = evenements.slice(evenements.indexOf("allow create"), evenements.indexOf("allow update"));
-    // Le public se juge par pourCreable (partagée avec la modification).
-    expect(create).toContain("pourCreable(request.resource.data.pour)");
-    const creable = sansEspaces(fonction("pourCreable"));
-    expect(creable).toContain("isCoordination()");
-    expect(creable).toContain("pour in profile().get('annonces', [])");
-    expect(creable).toContain("sectionCreeeParOrganigramme(pour)");
-    // Les réunions d'équipe d'avant sont toujours là.
-    expect(creable).toContain("estReferentDe(pour.split(':')[1])");
-    const section = sansEspaces(fonction("sectionCreeeParOrganigramme"));
-    expect(section).toContain("pour == 'Culte Francophone' && 'louange' in profile().get('referentDe', [])");
-    expect(section).toContain("pour == 'Groupe Paix' && 'comite-paix' in profile().get('referentDe', [])");
-    expect(section).toContain("pour == 'Groupe Fidélité' && 'comite-fidelite' in profile().get('referentDe', [])");
-    expect(section).toContain("pour == 'Groupe Bonté' && 'comite-bonte' in profile().get('referentDe', [])");
   });
 
   test("les règles : setlists create = privée ∪ admin ∪ catégorie ouverte, et les gardes d'avant restent", () => {
@@ -473,6 +415,7 @@ test.describe("les règles : lot RS, la liste Responsabilités s'ajoute à l'anc
   test("la phrase du lot, en tête du fichier, à côté de celle du lot AO", () => {
     const tete = regles.slice(0, regles.indexOf("service cloud.firestore"));
     expect(tete).toContain("Lot RS");
+    expect(tete).toContain("Lot RS, RS-D : l'ancien côté est retiré");
     expect(tete).toContain("Lot AO : ancien ∪ nouveau, compatible avec le code en ligne");
   });
 
@@ -518,35 +461,30 @@ test.describe("les règles : lot RS, la liste Responsabilités s'ajoute à l'anc
     expect(sansEspaces(users)).toContain("allow update: if isAdmin();");
   });
 
-  test("isCoordination = Orga par les responsabilités ∪ tout l'ancien", () => {
+  test("isCoordination = admins ∪ Orga par les responsabilités ; l'ancien côté a disparu (lot RS, RS-D)", () => {
     const f = sansEspaces(fonction("isCoordination"));
     expect(f).toContain("'orga' in responsabilites()");
-    expect(f).toContain("profile().get('coordination', false) == true");
-    expect(f).toContain("'louange' in profile().get('referentDe', [])");
-    expect(f).toContain("'edd' in profile().get('referentDe', [])");
-    expect(f).toContain("'orga' in profile().get('dansEquipes', [])");
     expect(f).toContain("isAdmin()");
+    expect(f).not.toContain("coordination', false");
+    expect(f).not.toContain("referentDe");
+    expect(f).not.toContain("dansEquipes");
   });
 
-  test("faitDesPlannings = gereUnPlanning() ∪ tout l'ancien", () => {
+  test("faitDesPlannings = admins ∪ gereUnPlanning() ; l'ancien côté a disparu (lot RS, RS-D)", () => {
     const f = sansEspaces(fonction("faitDesPlannings"));
-    expect(f).toContain("gereUnPlanning()");
-    expect(f).toContain("profile().get('plannings', []).size() > 0");
-    expect(f).toContain("profile().get('remplitParRole', []).size() > 0");
-    for (const e of ["louange", "edd", "regie"]) expect(f).toContain(`'${e}' in profile().get('referentDe', [])`);
-    expect(f).toContain("'orga' in profile().get('dansEquipes', [])");
+    expect(f).toContain("isAdmin() || gereUnPlanning()");
+    for (const ancien of ["plannings", "remplitParRole", "referentDe", "dansEquipes"]) expect(f, ancien).not.toContain(ancien);
   });
 
-  test("peutEcrirePlanning = gerePlanning(key) ∪ tout l'ancien ; la Régie reste à part jusqu'à RS-D", () => {
+  test("peutEcrirePlanning = admins ∪ gerePlanning(key) ; ni l'ancien côté, ni la condition Régie (lot RS, RS-D)", () => {
     const f = sansEspaces(fonction("peutEcrirePlanning"));
-    expect(f).toContain("gerePlanning(key)");
-    expect(f).toContain("key in profile().get('plannings', [])");
-    expect(f).toContain("key in profile().get('remplitParRole', [])");
-    expect(f).toContain("'louange' in profile().get('referentDe', []) && key in ['culte', 'intergroupe', 'interfranco', 'campusMatin', 'campusSoir']");
-    expect(f).toContain("'edd' in profile().get('referentDe', []) && key in ['eddZhongban', 'eddDaban', 'eddGaoban']");
-    expect(f).toContain("key == 'table' && 'orga' in profile().get('dansEquipes', [])");
-    expect(sansEspaces(fonction("peutEcrireLaRegie"))).toContain("'regie' in profile().get('referentDe', [])");
-    expect(sansEspaces(bloc("match /plannings/{key}"))).toContain("peutEcrireLaRegie(key) && seulementColonnesRegie()");
+    expect(f).toContain("isAdmin() || gerePlanning(key)");
+    for (const ancien of ["plannings", "remplitParRole", "referentDe", "dansEquipes"]) expect(f, ancien).not.toContain(ancien);
+    expect(regles).not.toContain("peutEcrireLaRegie");
+    expect(regles).not.toContain("seulementColonnesRegie");
+    const plannings = sansEspaces(bloc("match /plannings/{key}"));
+    expect(plannings).toContain("allow create, update: if peutEcrirePlanning(key) && request.resource.data.date == date;");
+    expect(plannings).toContain("allow create: if peutEcrirePlanning(key) && request.resource.data.authorUid == request.auth.uid;");
   });
 
   test("créneaux de scène : create = coordination ∪ gestionnaire ∪ reservable ; update de l'auteur idem", () => {
@@ -580,12 +518,13 @@ test.describe("les règles : lot RS, la liste Responsabilités s'ajoute à l'anc
     expect(f).not.toContain("lieuxRegie");
   });
 
-  test("evenements : la création passe par isCoordination, donc par `orga` ; l'ancien reste", () => {
+  test("evenements : la création passe par isCoordination, donc par `orga` ; plus de droit d'annonces ni d'organigramme (lot RS, RS-D)", () => {
     const creable = sansEspaces(fonction("pourCreable"));
     expect(creable).toContain("isCoordination()");
-    expect(creable).toContain("pour in profile().get('annonces', [])");
-    expect(creable).toContain("sectionCreeeParOrganigramme(pour)");
     expect(creable).toContain("estReferentDe(pour.split(':')[1])");
+    expect(creable).not.toContain("annonces");
+    expect(creable).not.toContain("sectionCreeeParOrganigramme");
+    expect(regles).not.toContain("sectionCreeeParOrganigramme");
   });
 
   test("la recopie de l'organigramme ne pose jamais `responsabilites` et ne l'efface pas", async () => {

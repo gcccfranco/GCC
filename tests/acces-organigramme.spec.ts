@@ -7,7 +7,7 @@ import {
   isCoordination, peutChangerReferents, peutModifierEquipe, peutPlacerMembre, peutPlacerSousEquipe, planningsDuBackOffice,
   sousPartiesEvenements, visibleCategories, widgetsPermis, type DateServie,
 } from "../src/lib/access";
-import { COLONNES_REGIE, PLANNINGS_DU_CULTE, ceQueCaOuvre, colonnesRemplies, sectionsCreables } from "../src/lib/acces/organigramme";
+import { PLANNINGS_DU_CULTE, ceQueCaOuvre, colonnesRemplies, sectionsCreables } from "../src/lib/acces/organigramme";
 import { audienceLabel, isValidAudience, peutNotifierAudience } from "../src/lib/push/audiences";
 import { droitsDePrevenir, droitsDePublication, getPlanning } from "../src/lib/planning/releases";
 import { datesServies, type PlanningData } from "../src/lib/planning/names";
@@ -254,7 +254,7 @@ test.describe("pur : remplir, publier, prévenir les plannings", () => {
       expect(colonnesRemplies(OSMANE, key), key).toBeNull();
       expect(colonnesRemplies(NOEMIE, key), key).toBeNull();
     }
-    expect(COLONNES_REGIE).toEqual(["sono", "sonoLive", "ppt"]);
+    // lot RS, RS-D : COLONNES_REGIE est retiré (plus aucune colonne attribuée à la Régie).
     expect(colonnesModifiables(user(KEVIN), KEVIN, "culte", NEW)).toBeNull();
     expect(colonnesModifiables(user(OSMANE), OSMANE, "culte", NEW)).toBeNull();
     expect(colonnesModifiables(user(NOEMIE), NOEMIE, "culte", NEW)).toBeNull();

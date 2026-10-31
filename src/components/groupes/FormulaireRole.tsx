@@ -170,9 +170,7 @@ export function FormulaireRole({
 
       <div>
         <p className="pb-1 text-sm font-semibold text-foreground">{t("groupes.form.droits")}</p>
-        {avecPlanning && caseDroit("remplir", t("groupes.droit.remplir"), t("groupes.droit.remplirAide", { groupe: nomGroupe }), b.droits.publier)}
-        {avecPlanning && caseDroit("publier", t("groupes.droit.publier"), t("groupes.droit.publierAide"))}
-        {caseDroit("notifier", t("groupes.droit.notifier"), t("groupes.droit.notifierAide", { groupe: nomGroupe }))}
+        {/* Lot RS, RS-D : Remplit · Publie · Notifie ne se cochent plus ici, la liste Responsabilités les remplace. */}
         {caseDroit("saisirFetes", t("groupes.droit.saisirFetes"), t("groupes.droit.saisirFetesAide"))}
       </div>
 

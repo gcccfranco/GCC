@@ -484,7 +484,8 @@ test.describe("Tableau de bord v2 (TB2-a) : règles pures", () => {
     expect(quiRelancer("culte", "batterie", tous)).toEqual({ uid: "u-mus", prenom: "Ysaline", nom: "Ysaline V.", equipe: "louange", sous: "musiciens" });
     // Pas de référent Présidence : repli sur le référent Louange, sans sous-équipe.
     expect(quiRelancer("culte", "presidence", tous)).toEqual({ uid: "u-lou", prenom: "Corentin", nom: "Corentin R.", equipe: "louange" });
-    expect(quiRelancer("culte", "ppt", tous)).toMatchObject({ uid: "u-reg", equipe: "regie" });
+    // lot RS, RS-D : Sono, Sono Live et PPT ne sont plus attribuées à la Régie, elles suivent le cas général (Louange).
+    expect(quiRelancer("culte", "ppt", tous)).toMatchObject({ uid: "u-lou", equipe: "louange" });
     expect(quiRelancer("eddDaban", "cours", tous)).toMatchObject({ uid: "u-edd", equipe: "edd" });
     expect(quiRelancer("culte", "orateur", tous)).toMatchObject({ uid: "u-lou" });
   });
@@ -492,7 +493,9 @@ test.describe("Tableau de bord v2 (TB2-a) : règles pures", () => {
   test("qui relancer : planning de groupe, aucun référent, deux référents", () => {
     expect(equipeDeLaColonne("paix", "presidence")).toBeNull();
     expect(quiRelancer("paix", "presidence", tous)).toBeNull();
-    expect(quiRelancer("culte", "ppt", [REFERENTS.louange])).toBeNull();
+    // lot RS, RS-D : sans colonne Régie, le référent Louange est relancé pour PPT ; un seul référent Régie ne l'est plus.
+    expect(quiRelancer("culte", "ppt", [REFERENTS.louange])).toMatchObject({ uid: "u-lou" });
+    expect(quiRelancer("culte", "ppt", [REFERENTS.regie])).toBeNull();
     const deux = [
       { uid: "u2", firstName: "Zélie", lastName: "A.", referentSous: ["musiciens"] },
       { uid: "u1", firstName: "Étienne", lastName: "Z.", referentSous: ["musiciens"] },

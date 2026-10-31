@@ -10,10 +10,13 @@ rules_version = '2';
 // `lieuxLouange`, `lieuxRegie`, `joue`) : jamais l'un sans l'autre, pour que `main`, qui tourne en ligne dans
 // l'ancien mode, garde tous ses gestes. Une dernière passe retirera l'ancien côté le jour où il disparaît (AO-F).
 //
-// Lot RS (« les droits de gestion viennent d'une liste Responsabilités », docs/spec-responsabilites.md) : même principe,
-// ancien ∪ nouveau. Chaque condition d'avant reste ; on y AJOUTE, par `||`, la lecture de `users/{uid}.responsabilites`
-// (`planning:<x>`, `orga`), écrite par les admins seuls (refusée à la création d'un profil). Touchées : isCoordination,
-// faitDesPlannings, peutEcrirePlanning, créneaux de scène, peutCreerSetlistDans. RS-D retirera l'ancien côté.
+// Lot RS (« les droits de gestion viennent d'une liste Responsabilités », docs/spec-responsabilites.md) : les droits de
+// gestion (plannings, Comité Orga) se lisent dans `users/{uid}.responsabilites` (`planning:<x>`, `orga`), écrite par les
+// admins seuls (refusée à la création d'un profil). Touchées : isCoordination, faitDesPlannings, peutEcrirePlanning,
+// créneaux de scène, peutCreerSetlistDans.
+// Lot RS, RS-D : l'ancien côté est retiré (cases `coordination` et `plannings`, `remplitParRole`, `referentDe` louange /
+// edd / regie, `dansEquipes` orga, droit `annonces` et sections par l'organigramme, condition Régie par colonnes) ; à publier
+// APRÈS la mise en ligne du lot RS sur main.
 //
 // Modèle d'accès :
 // - Setlists : lecture réservée aux connectés (le filtrage par service se fait côté client) ;
@@ -46,8 +49,7 @@ rules_version = '2';
 //   ajoutés par les personnes de la réunion ; ordre et « traité » par
 //   l'organisateur et les admins ; retirés par l'auteur, l'organisateur, un admin.
 // - Programmes de scène (programmes/{id}, lot 3 bis) : lus par les connectés ;
-//   écrits par la coordination (droit `coordination` du profil + admins ; lot AO : aussi le référent Louange, le
-//   référent EDD et les membres d'Orga). Créneaux
+//   écrits par la coordination (admins et Comité Orga par `responsabilites` ; lot RS, RS-D). Créneaux
 //   (programmes/{id}/creneaux) : tout connecté en pose un à son nom — depuis le
 //   lot U1, dans une saison ouverte et pour les groupes permis (reservable()) ;
 //   auteur + coordination le modifient ou le retirent.
@@ -178,17 +180,10 @@ service cloud.firestore {
     // les siennes ; ceux qui font les plannings (admins, ou `plannings` non vide) en saisissent pour
     // quelqu'un et lisent celles de tous. Le motif n'est masqué que côté navigateur (canVoirMotifAbsence).
     // Miroir client : faitDesPlannings, canSaisirAbsence (src/lib/access.ts). Règle à publier à la main.
-    // Lot AO : ancien ∪ nouveau — aussi qui remplit au moins un planning par l'organigramme (rôle de groupe,
-    // référent Louange, EDD ou Régie, Orga) : mêmes conditions que peutEcrirePlanning / peutEcrireLaRegie.
-    // Lot RS : ancien ∪ nouveau — aussi qui gère au moins un planning (`planning:<x>` dans `responsabilites`).
+    // Lot RS, RS-D : les admins, et qui gère au moins un planning (`planning:<x>` dans `responsabilites`) ; l'ancien
+    // côté (`plannings`, `remplitParRole`, référents, Orga) est retiré.
     function faitDesPlannings() {
-      return isAdmin() || gereUnPlanning() || (hasProfile() && (
-        profile().get('plannings', []).size() > 0
-        || profile().get('remplitParRole', []).size() > 0
-        || 'louange' in profile().get('referentDe', [])
-        || 'edd' in profile().get('referentDe', [])
-        || 'regie' in profile().get('referentDe', [])
-        || 'orga' in profile().get('dansEquipes', [])));
+      return isAdmin() || gereUnPlanning();
     }
 
     function absenceValide() {
@@ -303,16 +298,10 @@ service cloud.firestore {
     // le droit `coordination` du profil, coché par un admin (lot 1 du chantier
     // « équipes et groupes », docs/spec-equipes-sans-poles.md, EQ24) : aucune équipe
     // ne la donne.
-    // Lot AO : ancien ∪ nouveau (D5) — aussi le référent Louange, le référent EDD et les membres d'Orga (champs recopiés
-    // par le serveur) ; ni le référent d'une sous-équipe, ni le référent Régie. Miroir : coordination
-    // (src/lib/acces/organigramme.ts).
-    // Lot RS : ancien ∪ nouveau — aussi le Comité Orga (`orga` dans `responsabilites`, Q11).
+    // Lot RS, RS-D : les admins et le Comité Orga (`orga` dans `responsabilites`, Q11) ; la case `coordination`, les
+    // référents Louange / EDD et les membres d'Orga (champs recopiés) ne comptent plus.
     function isCoordination() {
-      return isAdmin() || (hasProfile() && ('orga' in responsabilites()
-                                            || profile().get('coordination', false) == true
-                                            || 'louange' in profile().get('referentDe', [])
-                                            || 'edd' in profile().get('referentDe', [])
-                                            || 'orga' in profile().get('dansEquipes', [])));
+      return isAdmin() || (hasProfile() && 'orga' in responsabilites());
     }
 
     // Tâches par équipe (lot 7, docs/spec-taches.md ; lot 1 du chantier « équipes et groupes »,
@@ -383,32 +372,17 @@ service cloud.firestore {
 
     // Évènements (lot 6, docs/spec-evenements.md). « pour = eglise » : lisible par
     // tout le monde (calendrier public ; la requête filtre sur pour) ; les autres
-    // par les connectés. Création : coordination, ou membre dont le droit
-    // d'annonces couvre la section visée, à son nom, compteur à zéro.
+    // par les connectés. Création : coordination (lot RS, RS-D : plus le
+    // droit d'annonces ni l'organigramme), à son nom, compteur à zéro.
     // Modification et suppression : organisateur + coordination, sans toucher
     // au compteur. Le compteur `inscrits` et les inscriptions ne s'écrivent
     // que par le serveur (Admin SDK, /api/evenements/*). Miroir : canSeeEvenement,
     // canCreateEvenement, canEditEvenement (src/lib/access.ts).
-    // Lot AO : ancien ∪ nouveau — la section se crée aussi par l'organigramme : le référent Louange pour le Culte
-    // Francophone ; le président et les VP d'un groupe (leur `referentDe` porte « comite-<g> ») pour la catégorie de
-    // leur groupe. Table en dur (les rules ne savent pas dériver « Groupe Paix » de « paix »). Il n'existe pas de
-    // section EDD. Miroir : sectionsCreables (src/lib/acces/organigramme.ts).
-    function sectionCreeeParOrganigramme(pour) {
-      return hasProfile() && (
-        (pour == 'Culte Francophone' && 'louange' in profile().get('referentDe', []))
-        || (pour == 'Groupe Paix' && 'comite-paix' in profile().get('referentDe', []))
-        || (pour == 'Groupe Fidélité' && 'comite-fidelite' in profile().get('referentDe', []))
-        || (pour == 'Groupe Bonté' && 'comite-bonte' in profile().get('referentDe', [])));
-    }
-
     // Public d'un évènement qu'on peut créer : réunion d'une équipe dont on est référent, ou église et
-    // sections pour la coordination, les droits d'annonces et l'organigramme.
+    // sections pour la coordination. Lot RS, RS-D : le droit `annonces` et les sections par l'organigramme sont retirés.
     function pourCreable(pour) {
       return (pour.matches('equipe:[a-z0-9-]+') && estReferentDe(pour.split(':')[1]))
-        || (!pour.matches('(pole|equipe):.*')
-            && (isCoordination()
-                || (hasProfile() && pour in profile().get('annonces', []))
-                || sectionCreeeParOrganigramme(pour)));
+        || (!pour.matches('(pole|equipe):.*') && isCoordination());
     }
 
     match /evenements/{id} {
@@ -753,37 +727,12 @@ service cloud.firestore {
     // sa colonne (updateMask), donc deux personnes ne s'effacent jamais.
     // Lecture PUBLIQUE, comme planningReleases : les pages planning se
     // consultent sans compte, et le CSV gviz du Google Sheet l'est déjà.
-    // Écriture : les admins, et les profils dont `plannings` porte la clé — ou `remplitParRole`,
-    // recopié par le serveur depuis l'organigramme du groupe (lot 2, OG22).
+    // Écriture : les admins, et qui gère la grille (lot RS, RS-D).
     // Miroir client : canEditPlanning (src/lib/access.ts).
-    // Lot AO : ancien ∪ nouveau — aussi, par l'organigramme (miroir de colonnesRemplies, src/lib/acces/organigramme.ts) :
-    // le référent Louange sur les cinq plannings du culte, le référent EDD sur les trois classes, Orga sur la Table.
-    // Pas le référent Musiciens (E2) : `referentSous` n'ouvre aucun planning.
-    // Lot RS : ancien ∪ nouveau — aussi le gestionnaire du planning (`planning:<x>`, gerePlanning), sur toute la
-    // grille (Q5). `peutEcrireLaRegie` reste jusqu'à RS-D.
+    // Lot RS, RS-D : les admins et le gestionnaire du planning (`planning:<x>`, gerePlanning), sur toute la grille (Q5) ;
+    // l'ancien côté (`plannings`, `remplitParRole`, référents, Orga) et la condition Régie par colonnes sont retirés.
     function peutEcrirePlanning(key) {
-      return isAdmin() || gerePlanning(key) || (hasProfile() && (key in profile().get('plannings', [])
-                                            || key in profile().get('remplitParRole', [])
-                                            || ('louange' in profile().get('referentDe', [])
-                                                && key in ['culte', 'intergroupe', 'interfranco', 'campusMatin', 'campusSoir'])
-                                            || ('edd' in profile().get('referentDe', [])
-                                                && key in ['eddZhongban', 'eddDaban', 'eddGaoban'])
-                                            || (key == 'table' && 'orga' in profile().get('dansEquipes', []))));
-    }
-
-    // Lot AO : le référent Régie remplit les cinq plannings du culte, mais seulement ses colonnes (Sono, Sono Live,
-    // PPT) et les champs que l'écriture d'une case pose toujours (`date`, `modifieLe`, `modifiePar`, planningGrille.ts).
-    // Condition à part : elle ne donne PAS peutEcrirePlanning, donc ni le retrait d'une date (qui efface toutes les
-    // colonnes) ni les autres plannings. Les champs changés se lisent par diff avec le document d'avant (vide à la
-    // création).
-    function peutEcrireLaRegie(key) {
-      return hasProfile() && 'regie' in profile().get('referentDe', [])
-        && key in ['culte', 'intergroupe', 'interfranco', 'campusMatin', 'campusSoir'];
-    }
-
-    function seulementColonnesRegie() {
-      return request.resource.data.diff(resource == null ? {} : resource.data).affectedKeys()
-        .hasOnly(['date', 'modifieLe', 'modifiePar', 'sono', 'sonoLive', 'ppt']);
+      return isAdmin() || gerePlanning(key);
     }
 
     match /plannings/{key} {
@@ -792,7 +741,7 @@ service cloud.firestore {
 
       match /dimanches/{date} {
         allow read: if true;
-        allow create, update: if (peutEcrirePlanning(key) || (peutEcrireLaRegie(key) && seulementColonnesRegie()))
+        allow create, update: if peutEcrirePlanning(key)
           && request.resource.data.date == date;
         // On vide les cases, on ne supprime pas un dimanche — sauf une date
         // posée par erreur, là seulement où les dates se choisissent (lot U2,
@@ -806,10 +755,9 @@ service cloud.firestore {
       // setlists/{id}/history).
       match /history/{entryId} {
         allow read: if signedIn();
-        // Lot AO : le référent Régie écrit l'historique des plannings du culte, comme ses cases.
-        allow create: if (peutEcrirePlanning(key) || peutEcrireLaRegie(key))
+        allow create: if peutEcrirePlanning(key)
           && request.resource.data.authorUid == request.auth.uid;
-        allow update: if (peutEcrirePlanning(key) || peutEcrireLaRegie(key))
+        allow update: if peutEcrirePlanning(key)
           && resource.data.authorUid == request.auth.uid
           && request.resource.data.authorUid == request.auth.uid;
         allow delete: if false;

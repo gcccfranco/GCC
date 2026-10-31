@@ -656,8 +656,11 @@ test.describe("OG-B · miroirs client (OG22 à OG27)", () => {
   });
 
   // Lot AO (docs/spec-acces-organigramme.md, A2) : interrupteur ouvert, le droit coché `notify` ne compte plus.
-  test("audiencesNotifiables = notifieParRole (lot AO) ; interrupteur coupé → notify seul", () => {
-    expect(audiencesNotifiables({ notify: ["Campus"], notifieParRole: ["Groupe Joie"] }, true)).toEqual(["Groupe Joie"]);
+  // Lot RS (Q10, Q11) : le Comité Orga notifie « * », un gestionnaire l'audience de son service ; `notifieParRole` ne donne plus rien.
+  test("audiencesNotifiables = responsabilités (lot RS) ; interrupteur coupé → notify seul", () => {
+    expect(audiencesNotifiables({ notify: ["Campus"], notifieParRole: ["Groupe Joie"] }, true), "lot RS : un rôle Notifier ne notifie plus").toEqual([]);
+    expect(audiencesNotifiables({ notify: ["Campus"], responsabilites: ["planning:paix"] }, true)).toEqual(["Groupe Paix"]);
+    expect(audiencesNotifiables({ responsabilites: ["orga"] }, true)).toEqual(["*"]);
     expect(audiencesNotifiables({ notify: ["Campus"], notifieParRole: ["Groupe Joie"] }, false)).toEqual(["Campus"]);
     expect(audiencesNotifiables(null, true)).toEqual([]);
   });
@@ -742,8 +745,9 @@ test.describe("OG-B · règles Firestore (miroir, texte de firestore.rules)", ()
     }
   });
 
-  test("peutEcrirePlanning lit aussi remplitParRole ; création d'un profil sans groupe ni listes par rôle", () => {
-    expect(rules).toMatch(/function peutEcrirePlanning\(key\)[\s\S]*?key in profile\(\)\.get\('remplitParRole', \[\]\)/);
+  // Lot RS : peutEcrirePlanning lit `responsabilites` (gerePlanning), plus remplitParRole.
+  test("peutEcrirePlanning = admin ou gestionnaire du planning ; création d'un profil sans groupe ni listes par rôle", () => {
+    expect(rules).toMatch(/function peutEcrirePlanning\(key\)\s*\{\s*return isAdmin\(\) \|\| gerePlanning\(key\);/);
     const creation = rules.slice(rules.indexOf("match /users/{uid}"), rules.indexOf("allow update: if isAdmin();"));
     expect(creation).toMatch(/request\.resource\.data\.get\('groupe', null\) == null/);
     for (const champ of ["remplitParRole", "publieParRole", "notifieParRole"]) {
@@ -780,15 +784,18 @@ test.describe("OG-B · destinataires, audiences, routes (OG24, OG25, OG28)", () 
     expect(isValidAudience("Groupe Joie", false)).toBe(false);
   });
 
-  test("publication et Notifier : acceptés par un rôle, refusés sans ; rôles ignorés interrupteur coupé", () => {
+  // Lot RS : publier et notifier viennent de la responsabilité de gestionnaire ; les rôles de groupe (`publieParRole`,
+  // `notifieParRole`) ne donnent plus rien.
+  test("publication et Notifier : acceptés par un gestionnaire, refusés sans ; rien interrupteur coupé", () => {
     const paix = getPlanning("paix")!;
-    const moi = { notify: [], publieParRole: ["paix"], notifieParRole: ["Groupe Joie"] };
+    const moi = { notify: [], responsabilites: ["planning:paix"], publieParRole: ["bonte"], notifieParRole: ["Groupe Joie"] };
     expect(droitsDePublication(paix, false, moi, true)).toBe(true);
     expect(droitsDePublication(paix, false, moi, false)).toBe(false);
+    expect(droitsDePublication(getPlanning("bonte")!, false, moi, true), "lot RS : publieParRole ne publie plus").toBe(false);
     expect(droitsDePublication(paix, false, { notifieParRole: ["Groupe Paix"] }, true)).toBe(false);
-    expect(peutNotifierAudience("Groupe Joie", false, moi, true)).toBe(true);
-    expect(peutNotifierAudience("Groupe Joie", false, moi, false)).toBe(false);
-    expect(peutNotifierAudience("Groupe Paix", false, moi, true)).toBe(false);
+    expect(peutNotifierAudience("Groupe Paix", false, moi, true)).toBe(true);
+    expect(peutNotifierAudience("Groupe Paix", false, moi, false)).toBe(false);
+    expect(peutNotifierAudience("Groupe Joie", false, moi, true), "lot RS : notifieParRole ne notifie plus").toBe(false);
     expect(peutNotifierAudience("Groupe Paix", true, null, true)).toBe(true);
   });
 });
@@ -821,31 +828,32 @@ test.describe("OG-B · navigateur", () => {
     await expect.poll(() => corps).toEqual([{ key: "paix", tri: "T4", publish: true, year: 2026 }]);
   });
 
-  test("un titulaire « Notifier » seul de Paix : entrée Planning, grille en lecture, pas de « Publier le T… »", async ({ page }) => {
+  // Lot RS : un rôle « Notifier » seul ne donne plus d'entrée Planning ni de droit de notifier ; sans responsabilité ni référent,
+  // le Back-Office reste fermé (Q22).
+  test("lot RS : un titulaire « Notifier » seul de Paix n'a plus d'entrée Planning : « Réservé aux responsables. »", async ({ page }) => {
     await ouvrir(page, NOTIFIE, "/back-office/planning", {
       "plannings/paix/dimanches/2026-09-20": { date: "2026-09-20", musiciens: "Joël F." },
     });
-    await expect(page).toHaveURL(/\/back-office\/planning\/groupes\/?$/);
-    await expect(page.locator("[data-grille]")).toBeVisible();
-    const laCase = page.locator('[data-case="2026-09-20|musiciens"]').filter({ visible: true });
-    await expect(laCase).toHaveText("Joël F.");
-    await expect(laCase.getByRole("button")).toHaveCount(0);
-    await expect(page.getByRole("button", { name: /^Publier le T\d/ })).toHaveCount(0);
+    await expect(page.getByText("Réservé aux responsables.")).toBeVisible();
+    await expect(page.locator("[data-grille]")).toHaveCount(0);
+    await expect(page).not.toHaveURL(/\/back-office\/planning\/groupes/);
   });
 
-  test("Notifier : un titulaire « Notifier » de Joie voit « Groupe Joie », ses destinataires comptent les membres du groupe", async ({ page }) => {
-    const JOIE_NOTIFIE: FakeProfile = { uid: "zoe", email: "zoe@example.com", firstName: "Zoé", lastName: "W.", groupe: "joie", notifieParRole: ["Groupe Joie"] };
+  // Lot RS (Q10) : le scénario « Notifier de Joie » n'a plus d'objet (Joie n'a pas de planning, donc pas de gestionnaire) ; le cas
+  // voisin est le gestionnaire de Paix, qui notifie l'audience de son service.
+  test("Notifier : un gestionnaire de Paix voit « Groupe Paix », ses destinataires comptent les membres du groupe", async ({ page }) => {
+    const PAIX_GESTIONNAIRE: FakeProfile = { uid: "zoe", email: "zoe@example.com", firstName: "Zoé", lastName: "W.", groupe: "paix", responsabilites: ["planning:paix"] };
     const membre = (uid: string, prenom: string, o: Record<string, unknown>) =>
       ({ [`users/${uid}`]: { email: `${uid}@example.com`, firstName: prenom, lastName: "T.", planningName: "", serviceRoles: {}, ...o } });
-    await ouvrir(page, JOIE_NOTIFIE, "/back-office/messages/notifier", {
-      ...membre("ana", "Ana", { groupe: "joie" }),
-      ...membre("tom", "Tom", { groupe: "joie" }),
-      ...membre("luc", "Luc", { groupe: "paix" }),
-      ...membre("zoe", "Zoé", { groupe: "joie", notifieParRole: ["Groupe Joie"] }),
+    await ouvrir(page, PAIX_GESTIONNAIRE, "/back-office/messages/notifier", {
+      ...membre("ana", "Ana", { groupe: "paix" }),
+      ...membre("tom", "Tom", { groupe: "paix" }),
+      ...membre("luc", "Luc", { groupe: "joie" }),
+      ...membre("zoe", "Zoé", { groupe: "paix", responsabilites: ["planning:paix"] }),
     });
     await page.getByRole("group", { name: "Audience" }).getByRole("button", { name: "Groupes" }).click();
-    await expect(page.getByRole("group", { name: "Groupes" }).getByRole("button")).toHaveText(["Groupe Joie"]);
-    await page.getByRole("group", { name: "Groupes" }).getByRole("button", { name: "Groupe Joie" }).click();
+    await expect(page.getByRole("group", { name: "Groupes" }).getByRole("button")).toHaveText(["Groupe Paix"]);
+    await page.getByRole("group", { name: "Groupes" }).getByRole("button", { name: "Groupe Paix" }).click();
     await page.getByRole("textbox", { name: "Titre" }).fill("Pique-nique");
     await page.getByRole("textbox", { name: "Message" }).fill("Dimanche après le culte.");
     await expect(page.getByRole("button", { name: "Envoyer à 3 personnes" })).toBeEnabled();
@@ -910,7 +918,8 @@ test.describe("OG-C · Back-Office › Équipes › Organigramme", () => {
     await expect(page.getByRole("region", { name: "Le comité" }).first()).toContainText("Noé P.");
     await expect(carte(page, "r-mus")).toContainText("3 sur 3 places");
     await expect(carte(page, "r-mus")).toContainText("Colonne Musiciens");
-    await expect(carte(page, "r-resp")).toContainText("Publie");
+    // Lot RS, RS-D : plus de pastille Remplit · Publie · Notifie sur les rôles de groupe.
+    await expect(carte(page, "r-resp")).not.toContainText("Publie");
     await expect(carte(page, "r-resp")).not.toContainText("Remplit le planning");
     await expect(page.getByTestId("equipe-orga")).toHaveCount(0);
   });
@@ -963,17 +972,16 @@ test.describe("OG-C · Back-Office › Équipes › Organigramme", () => {
     await expect(page.getByRole("button", { name: /^Modifier TEAM/ })).toHaveCount(0);
   });
 
-  test("« Nouveau rôle » Paix : Thème absent, cadenas d'une colonne prise, Publier coche Remplir, quatre cases ; écrit droits.saisirFetes puis appelle la route", async ({ page }) => {
+  test("« Nouveau rôle » Paix : Thème absent, cadenas d'une colonne prise, deux cases (lot RS : plus de Remplir ni Publier) ; écrit droits.saisirFetes puis appelle la route", async ({ page }) => {
     const { db, routes } = await ouvrir(page, RUTH, "/back-office/equipes?groupe=paix");
     await page.getByRole("button", { name: "Nouveau rôle" }).click();
     const form = page.getByRole("form", { name: "Nouveau rôle" });
     const colonnes = form.getByRole("group", { name: "Colonne du planning reliée" });
     await expect(colonnes.getByRole("button", { name: /Thème/ })).toHaveCount(0);
     await expect(colonnes.getByRole("button", { name: /Musiciens/ })).toBeDisabled();
-    await expect(form.getByRole("checkbox")).toHaveCount(5); // au comité + quatre droits
-    await form.getByRole("checkbox", { name: /Publier le planning/ }).check();
-    await expect(form.getByRole("checkbox", { name: /Remplir le planning du groupe/ })).toBeChecked();
-    await expect(form.getByRole("checkbox", { name: /Remplir le planning du groupe/ })).toBeDisabled();
+    await expect(form.getByRole("checkbox")).toHaveCount(2); // lot RS : au comité + Saisir les chants des fêtes
+    await expect(form.getByRole("checkbox", { name: /Publier le planning/ })).toHaveCount(0);
+    await expect(form.getByRole("checkbox", { name: /Remplir le planning du groupe/ })).toHaveCount(0);
     await expect(form.getByRole("button", { name: "Créer le rôle" })).toBeDisabled();
     await form.getByRole("textbox", { name: "Nom du rôle" }).fill("Accueil");
     await colonnes.getByRole("button", { name: /Orateur/ }).click();
@@ -983,14 +991,14 @@ test.describe("OG-C · Back-Office › Équipes › Organigramme", () => {
     const ecrit = ecrituresGroupe(db, "paix").at(-1)!;
     expect(ecrit.method).toBe("PATCH");
     expect((ecrit.data.roles as RoleGroupe[]).at(-1)).toMatchObject({
-      nom: "Accueil", colonne: "orateur", droits: { remplir: true, publier: true, notifier: false, saisirFetes: true },
+      nom: "Accueil", colonne: "orateur", droits: { remplir: false, publier: false, notifier: false, saisirFetes: true },
     });
     await expect.poll(() => routes.length).toBe(1);
     const accueil = page.locator("[data-role]").filter({ hasText: "Accueil" });
     await expect(accueil).toContainText("Saisit les chants des fêtes");
   });
 
-  test("« Nouveau rôle » Joie : la phrase sans planning, Notifier et Saisir les chants des fêtes seulement", async ({ page }) => {
+  test("« Nouveau rôle » Joie : la phrase sans planning, Saisir les chants des fêtes seulement (lot RS : plus de Notifier)", async ({ page }) => {
     const { db } = await ouvrir(page, ADMIN, "/back-office/equipes?groupe=joie");
     // Groupe sans rôle : « Nouveau rôle » en tête et sous « Aucun rôle pour l'instant ».
     await expect(page.getByText("Aucun rôle pour l'instant")).toBeVisible();
@@ -998,7 +1006,7 @@ test.describe("OG-C · Back-Office › Équipes › Organigramme", () => {
     const form = page.getByRole("form", { name: "Nouveau rôle" });
     await expect(form).toContainText("Le Groupe Joie n'a pas de planning : pas de colonne à relier, ni de droit sur le planning.");
     await expect(form.getByRole("group", { name: "Colonne du planning reliée" })).toHaveCount(0);
-    await expect(form.getByRole("checkbox")).toHaveCount(3); // au comité, Notifier, Saisir les chants
+    await expect(form.getByRole("checkbox")).toHaveCount(2); // lot RS : au comité, Saisir les chants
     await form.getByRole("textbox", { name: "Nom du rôle" }).fill("Accueil");
     await form.getByRole("checkbox", { name: /Saisir les chants des fêtes/ }).check();
     await form.getByRole("button", { name: "Créer le rôle" }).click();

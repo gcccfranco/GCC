@@ -96,7 +96,7 @@ test("fiche du rôle : panneau de 420 px en grand, feuille sinon ; formulaire et
 
   await page.getByRole("button", { name: "Nouveau rôle" }).click();
   const form = page.getByRole("form", { name: "Nouveau rôle" });
-  await expect(form.getByRole("checkbox")).toHaveCount(5);
+  await expect(form.getByRole("checkbox")).toHaveCount(2); // lot RS : au comité + Saisir les chants des fêtes
   expect(await form.evaluate((f) => f.scrollWidth - f.clientWidth), "formulaire sans débordement").toBeLessThanOrEqual(0);
   await capture(page, "org-formulaire");
   await page.keyboard.press("Escape");

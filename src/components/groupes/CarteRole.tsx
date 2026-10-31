@@ -5,7 +5,7 @@
 // un clic ailleurs sur la carte → fiche du rôle (D10).
 
 import type { MouseEvent, ReactNode } from "react";
-import { Bell, Link2, Music, Pencil, Plus, Send, SquarePen } from "lucide-react";
+import { Link2, Music, Pencil, Plus } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { colonnesReliables } from "@/lib/groupes/organigramme";
 import { etatPlaces } from "@/lib/groupes/edition";
@@ -40,15 +40,12 @@ export function LignePlaces({ role, couleur }: { role: Pick<RoleGroupe, "places"
   );
 }
 
-/** Les pastilles d'un rôle : colonne reliée, puis ses droits (« Publie » seule quand Publier est coché). */
+/** Les pastilles d'un rôle : colonne reliée, puis ses droits (seule « Saisit les chants des fêtes » reste, lot RS, RS-D). */
 export function PastillesRole({ role, groupeId }: { role: RoleGroupe; groupeId: string }) {
   const { t } = useTranslation();
   const colonne = role.colonne ? colonnesReliables(groupeId).find((c) => c.cle === role.colonne) : undefined;
   const p: ReactNode[] = [];
   if (colonne) p.push(<Pastille key="c" icone={<Link2 className="h-3 w-3" aria-hidden />}>{t("groupes.pastille.colonne", { colonne: t(colonne.i18n) })}</Pastille>);
-  if (role.droits.publier) p.push(<Pastille key="p" icone={<Send className="h-3 w-3" aria-hidden />}>{t("groupes.pastille.publie")}</Pastille>);
-  else if (role.droits.remplir) p.push(<Pastille key="r" icone={<SquarePen className="h-3 w-3" aria-hidden />}>{t("groupes.pastille.remplit")}</Pastille>);
-  if (role.droits.notifier) p.push(<Pastille key="n" icone={<Bell className="h-3 w-3" aria-hidden />}>{t("groupes.pastille.notifie")}</Pastille>);
   if (role.droits.saisirFetes) p.push(<Pastille key="f" icone={<Music className="h-3 w-3" aria-hidden />}>{t("groupes.pastille.saisitFetes")}</Pastille>);
   return p.length ? <div className="flex flex-wrap gap-1.5">{p}</div> : null;
 }

@@ -5,7 +5,7 @@ import {
   canCreateSetlist, canSeeEvenement, creatableCategories, droitsDesPages, entreesBackOffice, equipesDesTaches, estDeLaReunion, estReunion, isAdminUser,
   visibleCategories,
 } from "@/lib/access";
-import { COLONNES_REGIE, PLANNINGS_DU_CULTE, PLANNINGS_EDD } from "@/lib/acces/organigramme";
+import { PLANNINGS_DU_CULTE, PLANNINGS_EDD } from "@/lib/acces/organigramme";
 import { borneInscription, byDate, isExpired, isInfo, isPast, modeInscriptions, refusInscription } from "@/lib/evenements/agenda";
 import type { EntreeSheet } from "@/lib/evenements/sheet";
 import type { FSSetlist } from "@/lib/firebase/setlists";
@@ -326,7 +326,6 @@ export type EquipeDeColonne = { equipe: string; sous?: SousEquipe };
 /** L'équipe (et la sous-équipe de Louange) qui remplit une colonne d'un planning ; `null` pour un planning de groupe. */
 export function equipeDeLaColonne(planning: string, colonne: string): EquipeDeColonne | null {
   if (estPlanningDuCulte(planning)) {
-    if ((COLONNES_REGIE as readonly string[]).includes(colonne)) return { equipe: "regie" };
     if (colonne === "presidence" || colonne === "suppleant") return { equipe: "louange", sous: "presidence" };
     if (["choriste1", "choriste2", "choriste3"].includes(colonne)) return { equipe: "louange", sous: "choristes" };
     if (["piano", "guitare", "batterie", "cajon", "cajonBatterie", "musiciens", "percussion", "pianiste", "guitariste"].includes(colonne)) {

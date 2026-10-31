@@ -99,10 +99,6 @@ export const PLANNINGS_DU_CULTE = ["culte", "intergroupe", "interfranco", "campu
 /** Les trois plannings de l'EDD (plus lu par les droits depuis le lot RS ; une grille par classe, `CLES_EDD` de grilles.ts — recopié ici : ce module
  *  n'importe pas la table des grilles, qui tire releases.ts, qui l'importe). */
 export const PLANNINGS_EDD = ["eddZhongban", "eddDaban", "eddGaoban"] as const;
-/** Les colonnes que le référent Régie remplissait (Sono, Sono Live, PPT) — plus lu par les droits depuis le lot RS
- *  (Q5 : un gestionnaire remplit toute la grille) ; retiré par la tranche RS-D. */
-export const COLONNES_REGIE = ["sono", "sonoLive", "ppt"] as const;
-
 /** Les plannings des groupes (clés de PUBLISHABLE_PLANNINGS et la grille des musiciens de Fidélité). */
 export const PLANNINGS_DES_GROUPES = ["paix", "bonte", "fidelite", "fideliteMusiciens"] as const;
 /** Toutes les grilles, par clé (celles de GRILLES, src/lib/planning/grilles.ts). */
