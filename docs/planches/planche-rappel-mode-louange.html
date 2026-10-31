@@ -72,6 +72,14 @@
   .rC .nu { font-size: 12px; font-weight: 700; color: var(--fg); white-space: nowrap; }
   .rC .titre { font-size: 13px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; margin: 7px 8px 0 0; max-width: 220px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .questions li { margin-bottom: 8px; }
+  .bande { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: flex-start; }
+  .bande .grp { display: flex; flex-direction: column; align-items: center; gap: 5px; }
+  .bande .pa { height: 44px; min-width: 44px; padding: 0 10px; border-radius: 999px; display: inline-flex; align-items: baseline; justify-content: center; padding-top: 13px; font-size: 17px; font-weight: 700; background: var(--t); color: var(--c); }
+  .bande .pa small { font-size: 13px; margin-left: 1px; }
+  .bande .nu { font-size: 14px; font-weight: 600; color: #1c1c1e; white-space: nowrap; }
+  .duo { display: grid; grid-template-columns: 1fr; gap: 14px; }
+  .duo .lib { font-size: 12px; font-weight: 700; color: #6c6c72; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 8px; }
+  .duo > div { border: 1px solid #ececee; border-radius: 12px; padding: 14px 16px; }
   .legende { font-size: 13px; color: #6c6c72; margin-top: 10px; }
   table.cmp { border-collapse: collapse; width: 100%; font-size: 14px; margin-top: 8px; }
   table.cmp th, table.cmp td { text-align: left; padding: 8px 10px; border-bottom: 1px solid #ececee; vertical-align: top; }
@@ -111,6 +119,16 @@
     <div class="tailles" data-piste="C" data-sombre="1" data-seul="tablette"></div>
   </section>
 
+  <section class="carte reco" id="dp">
+    <h2>Les « Dp » · ajout du 31/10/2026 <span class="badge-reco">Proposé</span></h2>
+    <p>Demande de Timothée : des couleurs différentes quand les Dp sont différents, et le même Dp une seule fois. Une « Dernière phrase » porte déjà dans son nom la section d'où elle vient (« Dernière phrase – R »). D'où deux règles, valables pour le bandeau de la 1ʳᵉ page <b>et</b> pour le rappel :</p>
+    <ol>
+      <li><b>Couleur de la section d'origine</b> : « – R » prend l'orange du refrain, « – C » le vert du couplet, « – P » le violet du pont. Ce sont les couleurs gelées, simplement réutilisées ; le gris actuel disparaît. Deux Dp différents tirés de la même section (par exemple les deux dernières lignes, puis la dernière seule) prennent un numéro : Dp1, Dp2.</li>
+      <li><b>Une seule pastille quand c'est le même</b> : le même Dp joué deux fois de suite devient « Dp ×2 », même si la nuance change d'une fois à l'autre. Les deux nuances s'écrivent alors dessous (« mp ↗ → mf »). Aujourd'hui, deux nuances différentes empêchent ce regroupement.</li>
+    </ol>
+    <div class="duo" id="dp-exemples"></div>
+  </section>
+
   <section class="carte">
     <h2>Comparaison</h2>
     <table class="cmp">
@@ -129,6 +147,7 @@
       <li><b>Sections déjà jouées</b> : réduites en points (C) ou seulement estompées, à pleine taille ?</li>
       <li><b>« Dp »</b> (dernière phrase) : garder l'abréviation, ou écrire « Fin » qui se comprend seul ?</li>
       <li><b>Titre du chant dans le rappel</b> (tablette et ordinateur) : oui, ou laisser la rangée aux seules pastilles ?</li>
+      <li><b>Les Dp</b> : couleur de la section d'origine et « ×2 » pour le même Dp joué de suite (carte ci-dessus) ? Et dans le corps de la page, le même Dp imprimé deux fois de suite (comme sur ta capture) : n'en imprimer qu'un, avec « ×2 » ?</li>
       <li><b>Place prise</b> : un rappel plus haut fait glisser les fins de page des chants en « Sections uniques ». Les annotations déjà dessinées sur les pages 2 et suivantes peuvent ne plus tomber au bon endroit. On l'accepte, ou on garde la hauteur actuelle (pastilles plus grandes sans nuance dessous) ?</li>
     </ol>
   </section>
@@ -188,6 +207,34 @@
         </div>`);
     });
   });
+
+  // ——— Les Dp ———
+  const COUL = { R: "chorus", C: "verse", P: "bridge", I: "intro" };
+  function bande(etapes, regles) {
+    const g = [];
+    for (const e of etapes) {
+      const [ab, k, , nu, src] = e;
+      const last = g[g.length - 1];
+      if (regles && last && src && last.src === src && last.ab === ab) { last.n++; last.nu.push(nu); continue; }
+      if (!regles && last && last.ab === ab && last.k === k && last.nu.join() === nu && !src) { last.n++; continue; }
+      if (!regles && last && src && last.src === src && last.nu[0] === nu) { last.n++; continue; }
+      g.push({ ab, k: regles && src ? COUL[src.replace(/\d.*/, "")] ?? "other" : k, nu: [nu], n: 1, src });
+    }
+    return `<div class="bande">${g.map((x) => `<span class="grp" style="${v(x.k)}"><span class="pa">${x.ab}${x.n > 1 ? `<small>×${x.n}</small>` : ""}</span><span class="nu">${x.nu.join(" → ")}</span></span>`).join("")}</div>`;
+  }
+  // Prince de paix : les cinq Dp sont la même « Dernière phrase – R ».
+  const PRINCE = ETAPES.map((e) => e[0] === "Dp" ? [...e, "R"] : e);
+  // Exemple inventé : deux Dp différents, l'un tiré du refrain, l'autre du couplet 2.
+  const AUTRE = [
+    ["I","intro","Intro","mp"],["C1","verse","Couplet 1","mp"],["R","chorus","Refrain","mf"],["Dp","other","Fin","mf","R"],
+    ["C2","verse","Couplet 2","mf"],["Dp","other","Fin","mp ↘","C2"],["R","chorus","Refrain","f"],["Dp","other","Fin","f","R"],["Dp","other","Fin","mf ↘","R"],
+  ];
+  const ex = document.getElementById("dp-exemples");
+  ex.innerHTML = `
+    <div><div class="lib">Prince de paix · aujourd'hui</div>${bande(PRINCE, false)}</div>
+    <div><div class="lib">Prince de paix · proposé (un seul Dp, celui du refrain)</div>${bande(PRINCE, true)}</div>
+    <div><div class="lib">Exemple inventé · aujourd'hui (Dp « – R » et Dp « – C2 » identiques en gris)</div>${bande(AUTRE, false)}</div>
+    <div><div class="lib">Exemple inventé · proposé</div>${bande(AUTRE, true)}</div>`;
 </script>
 </body>
 </html>
