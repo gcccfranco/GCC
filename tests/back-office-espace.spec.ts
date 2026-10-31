@@ -142,6 +142,7 @@ test.describe("Back-Office (B1) : les entrées selon les droits (BO1, BO4)", () 
   });
 });
 
+// Lot ST (D5) : « Chants les plus joués » suit `canVoirStatistiques`, ouvert à tout connecté : tout responsable l'a.
 test.describe("Back-Office (B1) : les widgets permis (table des widgets)", () => {
   test("un admin : tous ceux de U6, le Calendrier de U8 et Chants les plus joués (U7, S5)", () => {
     expect(widgetsPermis(user(ADMIN), profil(ADMIN))).toEqual(["dimanche", "calendrier", "afaire", "setlists", "planning", "evenements", "reunions", "chants", "petitdej", "scene", "comptes", "raccourcis"]);
@@ -150,17 +151,17 @@ test.describe("Back-Office (B1) : les widgets permis (table des widgets)", () =>
   test("membre d'une équipe qui notifie un groupe : Réunions sans Évènements, donc le widget Réunions sans celui des Évènements (TB2-corrections)", () => {
     const p: FakeProfile = { uid: "uid-nr", email: "nr@example.com", notify: ["Groupe Paix"], dansEquipes: ["regie"] };
     expect(droitsDesPages(user(p), profil(p)).evenements).toBe(false);
-    expect(widgetsPermis(user(p), profil(p))).toEqual(["dimanche", "calendrier", "afaire", "planning", "reunions", "petitdej", "scene", "raccourcis"]);
+    expect(widgetsPermis(user(p), profil(p))).toEqual(["dimanche", "calendrier", "afaire", "planning", "reunions", "chants", "petitdej", "scene", "raccourcis"]);
   });
 
   test("Alice : ni Setlists à préparer (elle ne crée pas de setlist), ni Cases vides, ni Comptes", () => {
-    expect(widgetsPermis(user(ALICE), profil(ALICE))).toEqual(["dimanche", "calendrier", "afaire", "evenements", "reunions", "petitdej", "scene", "raccourcis"]);
+    expect(widgetsPermis(user(ALICE), profil(ALICE))).toEqual(["dimanche", "calendrier", "afaire", "evenements", "reunions", "chants", "petitdej", "scene", "raccourcis"]);
   });
 
   test("un responsable musicien des plannings : Setlists à préparer et Cases vides ; un non-responsable : rien", () => {
     const p = { ...PLANNINGS, serviceRoles: { "Culte Francophone": ["musicien"] } };
     // Réunions (public Louange) sans Évènements : plus le widget des évènements (TB2-corrections).
-    expect(widgetsPermis(user(p), profil(p))).toEqual(["dimanche", "calendrier", "afaire", "setlists", "planning", "reunions", "petitdej", "scene", "raccourcis"]);
+    expect(widgetsPermis(user(p), profil(p))).toEqual(["dimanche", "calendrier", "afaire", "setlists", "planning", "reunions", "chants", "petitdej", "scene", "raccourcis"]);
     expect(widgetsPermis(user(CHORISTE), profil(CHORISTE))).toEqual([]);
   });
 });

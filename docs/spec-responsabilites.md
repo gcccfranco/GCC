@@ -206,7 +206,9 @@ fois, puis l'admin corrige sur la page Responsabilités.
   plus lu comme un comité de groupe. Les 50 specs rouges de la suite complète, vertes sur ordinateur (passes des
   executants) et sur téléphone et tablette (2 294 tests, puis les 6 restants repris). Suite complète entière non
   relancée.
-- **Reste** : mise en ligne sur `main` sur ordre de Timothée ; puis publier les règles de RS-D.
+- **Mis en ligne le 31/10/2026** (push sur `main`, ordre de Timothée), après fusion de `main` (lot ST) : cinq tests de
+  widgets repris (« Chants les plus joués » ouvert à tous par le lot ST, D5). **Reste** : vérifier en ligne, nommer
+  un gestionnaire de la Table, puis Timothée publie les règles de RS-D.
 - **RS-D codé (30/10/2026), non publié** : les règles de RS-D se publient seulement APRÈS la mise en ligne du lot RS
   sur main. Retiré : dans `firestore.rules`, l'ancien côté de `isCoordination` (case `coordination`, référents Louange /
   EDD, Orga placé), `faitDesPlannings` et `peutEcrirePlanning` (`plannings`, `remplitParRole`, référents, Orga),

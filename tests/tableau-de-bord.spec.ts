@@ -184,6 +184,7 @@ test.describe("Tableau de bord (B4) : disposition enregistrée (backOffice/{uid}
     }, user(ALICE), profil(ALICE));
     expect(d).toEqual([
       { id: "evenements", taille: "l", reglages: { nombre: 5 } },
+      { id: "chants", taille: "m", reglages: {} },           // lot ST (D5) : permis à tout connecté
       { id: "dimanche", taille: "s", reglages: {} },
     ]);
   });
@@ -349,8 +350,8 @@ const ecrituresBO = (db: FakeDb, uid: string) => db.writes.filter((w) => w.path 
 test.describe("Personnaliser (B5) : règles pures", () => {
   test("catalogue : les widgets permis non affichés, dans l'ordre de la planche ; jamais un widget non permis", () => {
     const d = dispositionParDefaut(user(ALICE), profil(ALICE));
-    expect(catalogue(d, user(ALICE), profil(ALICE))).toEqual(["calendrier", "petitdej", "raccourcis", "scene"]);
-    expect(catalogue([], user(ALICE), profil(ALICE))).toEqual(["dimanche", "calendrier", "afaire", "evenements", "reunions", "petitdej", "raccourcis", "scene"]);
+    expect(catalogue(d, user(ALICE), profil(ALICE))).toEqual(["calendrier", "chants", "petitdej", "raccourcis", "scene"]); // lot ST (D5) : chants pour tous
+    expect(catalogue([], user(ALICE), profil(ALICE))).toEqual(["dimanche", "calendrier", "afaire", "evenements", "reunions", "chants", "petitdej", "raccourcis", "scene"]);
     expect(catalogue(dispositionParDefaut(user(ADMIN), null), user(ADMIN), null)).toEqual(["calendrier", "setlists", "chants", "petitdej", "raccourcis", "scene"]);
     expect(catalogue(ajouterWidget(ajouterWidget(dispositionParDefaut(user(ADMIN), null), "calendrier"), "setlists"), user(ADMIN), null)).toEqual(["chants", "petitdej", "raccourcis", "scene"]);
   });
