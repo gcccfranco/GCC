@@ -78,9 +78,48 @@ export async function listFois(tache: Pick<Tache, "equipe" | "id">): Promise<Foi
   return (await runQuery(tachePath(tache.equipe, tache.id), "fois", "date")).map(fromFsFois);
 }
 
-/** Tâches d'une équipe, avec les fois cochées de chacune. */
+/** Toutes les fois d'une équipe en une requête (lot LF, LF5, docs/spec-lectures-firestore.md) : collection
+ *  group sous `equipes/{e}`, filtrée sur le champ `equipe` des documents (la règle s'appuie dessus).
+ *  Rangées par tâche d'après leur chemin, par date croissante (tri ici : pas d'orderBy, qui demanderait
+ *  un index composite). `null` si la requête est refusée (règle pas encore publiée) ou échoue. */
+async function listFoisEquipe(equipe: string): Promise<Map<string, Fois[]> | null> {
+  try {
+    const headers = await authHeader();
+    const res = await fetch(`${FS_BASE}/equipes/${equipe}:runQuery`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...headers },
+      body: JSON.stringify({
+        structuredQuery: {
+          from: [{ collectionId: "fois", allDescendants: true }],
+          where: { fieldFilter: { field: { fieldPath: "equipe" }, op: "EQUAL", value: { stringValue: equipe } } },
+        },
+      }),
+    });
+    if (!res.ok) return null;
+    const rows = (await res.json()) as Array<{ document?: RawDoc }>;
+    const parTache = new Map<string, Fois[]>();
+    for (const { document } of rows) {
+      if (!document) continue;
+      // …/documents/equipes/{e}/taches/{t}/fois/{date} : tout autre chemin est écarté.
+      const m = document.name.match(/\/documents\/equipes\/([^/]+)\/taches\/([^/]+)\/fois\/[^/]+$/);
+      if (!m || m[1] !== equipe) continue;
+      const liste = parTache.get(m[2]) ?? [];
+      liste.push(fromFsFois(document));
+      parTache.set(m[2], liste);
+    }
+    for (const liste of parTache.values()) liste.sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
+    return parTache;
+  } catch {
+    return null;
+  }
+}
+
+/** Tâches d'une équipe, avec les fois cochées de chacune : 2 requêtes quel que soit le nombre de tâches
+ *  (lot LF, LF5) ; si la requête des fois est refusée, retombe sur une requête par tâche. */
 export async function listTaches(equipe: string): Promise<TacheAvecFois[]> {
   const taches = await listTachesSeules(equipe);
+  const parTache = await listFoisEquipe(equipe);
+  if (parTache) return taches.map((tache) => ({ tache, fois: parTache.get(tache.id) ?? [] }));
   return Promise.all(taches.map(async (tache) => ({ tache, fois: await listFois(tache) })));
 }
 
@@ -131,7 +170,8 @@ async function ecrireFois(equipe: string, id: string, fois: Fois): Promise<void>
   const res = await fetch(`${FS_BASE}/${tachePath(equipe, id)}/fois/${fois.date}`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json", ...headers },
-    body: JSON.stringify({ fields: toFsFields(fois as unknown as Record<string, unknown>) }),
+    // `equipe` : lot LF, LF5 (docs/spec-lectures-firestore.md), pour la requête unique des fois d'une équipe.
+    body: JSON.stringify({ fields: toFsFields({ ...fois, equipe } as unknown as Record<string, unknown>) }),
   });
   viderGardesTableau(); // lot LF, docs/spec-lectures-firestore.md
   await checkRest(res);

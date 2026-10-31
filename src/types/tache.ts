@@ -56,4 +56,7 @@ export interface Fois {
   etat: EtatFois;
   /** ISO du passage en « En cours » ; "" si on ne le sait pas. */
   debutLe: string;
+  /** Id de l'équipe, posé à l'écriture (lot LF, LF5, docs/spec-lectures-firestore.md) : sert seulement à la
+   *  requête unique des fois d'une équipe et à sa règle ; non lu par `fromFsFois`. */
+  equipe?: string;
 }
