@@ -21,8 +21,16 @@ ligne de crédits ou le haut d'un « 4/4 » tranché = page refusée, valeur
 corrigée à la main. Un chant absent de `cadrage.json` n'est pas recadré.
 `chords.json` et `index.json` ne changent jamais.
 
+**Règle `--sous-entete`** (lot JE, JE2, docs/spec-jianpu-entete-statistiques.md) :
+la coupe descend sous **tout** l'en-tête gravé, « 1=X 4/4 » compris. `top` = la
+dernière rangée entièrement blanche au-dessus de `min(labels.y)` (première ligne
+d'accords), **en ignorant `keyLabel` et `titleKey`** ; repli `min(labels.y) −
+0,6 × labelH`. Garde-fou : si la première ligne d'accords est à plus de 1,5
+système sous le « 1=X » (première ligne de musique sans accord), la proposition
+le signale (« à régler à la main »).
+
 Usage (depuis la racine du dépôt) :
-    python3 scripts/jianpu/cadrage.py propose [slug…]     # tableau + debug/cadrage-propose.json
+    python3 scripts/jianpu/cadrage.py propose [--sous-entete] [slug…]     # tableau + debug/cadrage-propose.json
     python3 scripts/jianpu/cadrage.py certifier slug [top…] # écrit cadrage.json (proposition si pas de top)
     python3 scripts/jianpu/cadrage.py etat                 # certifiés / restants
 """
@@ -51,10 +59,29 @@ def charger(nom: str) -> dict:
         return json.load(f)
 
 
+SOUS_ENTETE = "--sous-entete" in sys.argv
+SYSTEMES = 1.5
+
+
+def systeme(calque: dict) -> float | None:
+    """Hauteur d'un système : écart médian entre deux rangées d'étiquettes successives."""
+    rangs = sorted({round(l["y"] / calque["labelH"]) * calque["labelH"] for l in calque["labels"]})
+    ecarts = [b - a for a, b in zip(rangs, rangs[1:]) if b - a > 2 * calque["labelH"]]
+    return float(np.median(ecarts)) if ecarts else None
+
+
+def alerte(calque: dict) -> str:
+    """Garde-fou de `--sous-entete` : première ligne de musique sans accord."""
+    h = systeme(calque)
+    ecart = min(l["y"] for l in calque["labels"]) - calque["keyLabel"]["y"]
+    return f" ⚠ 1re ligne d'accords à {ecart:.0f} px du 1=X (> {SYSTEMES} système) : à régler à la main" if h and ecart > SYSTEMES * h else ""
+
+
 def top_premiere_page(fichier: str, calque: dict) -> tuple[int, bool]:
     """`top` proposé pour la première page, et s'il vient du repli."""
     gris = np.asarray(Image.open(os.path.join(IMAGES, fichier)).convert("L"))
-    y0 = min(calque["keyLabel"]["y"], *(l["y"] for l in calque["labels"]))
+    premiere = min(l["y"] for l in calque["labels"])
+    y0 = premiere if SOUS_ENTETE else min(calque["keyLabel"]["y"], premiere)
     blanches = (gris >= BLANC).all(axis=1)
     for y in range(int(y0) - 1, -1, -1):
         if blanches[y]:
@@ -70,7 +97,8 @@ def proposer(slugs: list[str]) -> dict[str, list[int]]:
         pages = index[slug]["pages"]
         top, repli = top_premiere_page(pages[0]["file"], calques[slug])
         out[slug] = [top] + [0] * (len(pages) - 1)
-        print(f"{slug}\t{top}{' (repli)' if repli else ''}\t/ {pages[0]['h']}")
+        garde = alerte(calques[slug]) if SOUS_ENTETE else ""
+        print(f"{slug}\t{top}{' (repli)' if repli else ''}\t/ {pages[0]['h']}{garde}")
     os.makedirs(DEBUG, exist_ok=True)
     deja = {}
     if os.path.exists(PROPOSE):
@@ -111,7 +139,7 @@ def etat() -> None:
 if __name__ == "__main__":
     if len(sys.argv) < 2 or sys.argv[1] not in {"propose", "certifier", "etat"}:
         sys.exit(__doc__)
-    commande, args = sys.argv[1], sys.argv[2:]
+    commande, args = sys.argv[1], [a for a in sys.argv[2:] if a != "--sous-entete"]
     if commande == "propose":
         proposer(args)
     elif commande == "certifier":

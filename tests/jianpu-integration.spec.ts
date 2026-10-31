@@ -25,7 +25,7 @@ test.describe("recadrage (données)", () => {
     expect(empreinte).toBe("a02eec72e78981342434a70b291ba46981f8cb077b640d82a16b24c913960550");
   });
 
-  test("cadrage.json : une valeur par page, dans la page, au-dessus de « 1=X » et des accords ; pages suivantes à 0", () => {
+  test("cadrage.json : une valeur par page, dans la page, au-dessus des accords ; pages suivantes à 0", () => {
     test.skip(!existsSync("public/jianpu/cadrage.json"), "aucune page certifiée");
     const cadrage = lire<Record<string, number[]>>("public/jianpu/cadrage.json");
     const index = lire<Manifeste>("public/jianpu/index.json");
@@ -38,10 +38,11 @@ test.describe("recadrage (données)", () => {
         expect(Number.isInteger(top) && top >= 0 && top < pages[i].h, `${slug} p.${i + 1} : ${top}`).toBe(true);
         if (i > 0) expect(top, `${slug} p.${i + 1} : pas d'en-tête gravé`).toBe(0);
       });
-      // Le min du calcul garde « 1=X » et tout accord placé au-dessus dans la fenêtre.
+      // Lot JE (JE2) : la coupe passe sous tout l'en-tête gravé, « 1=X » compris, mais au-dessus du
+      // premier accord du calque, qu'aucune coupe ne cache.
       const c = calques[slug];
-      const haut = Math.min(c.keyLabel.y, ...c.labels.map((l) => l.y));
-      expect(tops[0], `${slug} : la coupe passe au-dessus de « 1=X » et des accords`).toBeLessThan(haut);
+      const haut = Math.min(...c.labels.map((l) => l.y));
+      expect(tops[0], `${slug} : la coupe passe au-dessus des accords`).toBeLessThan(haut);
     }
   });
 });
