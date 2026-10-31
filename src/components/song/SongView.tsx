@@ -14,7 +14,9 @@ import { abbreviateSection } from "@/lib/chordpro/abbreviations";
 import { isRepeatOf, resolveSectionOccurrences, type SectionOccurrence } from "@/lib/setlist/sectionSteps";
 import { uniqueSections } from "@/lib/setlist/uniqueSections";
 import type { PartitionLayout } from "@/lib/partitionLayoutPref";
-import { resolveStructureOverride } from "@/lib/chordpro/structure";
+import { ordreJoue, resolveStructureOverride } from "@/lib/chordpro/structure";
+import { toSegments } from "@/lib/chordpro/segments";
+import { isCJK } from "@/lib/cjk";
 import { semitonesTo } from "@/lib/transpose";
 import { transposeSection } from "@/lib/transposeAST";
 import {
@@ -36,8 +38,6 @@ import { cp } from "fs";
 // ---------------------------------------------------------------------------
 // Thèmes et styles de sections
 // ---------------------------------------------------------------------------
-type Seg = { chord: string | null; lyric: string };
-
 const LANG_THEME = {
   fr: {
     accent: "var(--fr-accent)",
@@ -171,11 +171,6 @@ function getSectionStyle(type: string, isZh: boolean): React.CSSProperties {
 // Rendu colonne par colonne pour le chinois
 // ---------------------------------------------------------------------------
 
-function isCJK(ch: string) {
-  const cp = ch.codePointAt(0) ?? 0;
-  return (cp >= 0x4e00 && cp <= 0x9fff) || (cp >= 0x3400 && cp <= 0x4dbf);
-}
-
 // Le guillemet fermant « ” » y est depuis le 27/09/2026 : sur 你的同在 (téléphone),
 // « 你。”[A] » coupait entre 。 et ”, qui ouvrait seul la rangée suivante avec son accord.
 const ZH_PUNCTUATION = /^[，。、；：！？」』）”…,.;:!?)]$/;
@@ -190,34 +185,6 @@ interface ZhLineProps {
   chord_font: ReturnType<typeof localFont>;
   zh_lyric_font: ReturnType<typeof localFont>;
   typography?: "web" | "pdf";
-}
-
-function toSegments(tokens: Token[]): Seg[] {
-  const out: Seg[] = [];
-  let i = 0;
-  while (i < tokens.length) {
-    const tok = tokens[i];
-    if (tok.type === "chord") {
-      const chord = tok.value;
-      let lyric = "";
-      i++;
-      while (i < tokens.length && tokens[i].type === "lyric") {
-        lyric += tokens[i].value;
-        i++;
-      }
-      const sp = lyric.search(/\s/);
-      if (sp === -1 || sp === lyric.length - 1) {
-        out.push({ chord, lyric });
-      } else {
-        out.push({ chord, lyric: lyric.slice(0, sp + 1) });
-        lyric.slice(sp + 1).split(/(?<=\s)/).forEach(w => w && out.push({ chord: null, lyric: w }));
-      }
-    } else {
-      tok.value.split(/(?<=\s)/).forEach(w => w && out.push({ chord: null, lyric: w }));
-      i++;
-    }
-  }
-  return out;
 }
 
 function ZhLine({ tokens, pinyin, showChords, showPinyin, hideLyrics = false, chord_font, zh_lyric_font, typography = "web" }: ZhLineProps) {
@@ -772,10 +739,7 @@ export function SongView({
   const isZh = ast.metadata.language === "zh";
   const canUseJianpu = isZh && useJianpu;
   const langAccent = isZh ? "var(--jianpu-color)" : "var(--chord-color)";
-  const sections =
-    structureOverride && structureOverride.length > 0 && !canUseJianpu
-      ? resolveStructureOverride(ast.sections, structureOverride)
-      : ast.sections;
+  const sections = ordreJoue(ast.sections, canUseJianpu ? null : structureOverride);
   const steps = resolveSectionOccurrences(sections, { sectionNotes, sectionTransitions, sectionNuances, sectionKeys });
   const personalSteps =
     bodyStructure && bodyStructure.length > 0 && !canUseJianpu

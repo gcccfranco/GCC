@@ -13,7 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { SectionStructureEditor } from "@/components/setlists/SetlistFormRows";
 import { useStandaloneScrollLock } from "@/hooks/useStandaloneScrollLock";
-import { resolveStructureOverride } from "@/lib/chordpro/structure";
+import { ordreJoue } from "@/lib/chordpro/structure";
 import type { FormSectionItem } from "@/lib/setlist/formItems";
 import type { ChordProAST } from "@/types/chordPro";
 import type { SectionSummary } from "@/types/song";
@@ -62,7 +62,7 @@ function sectionsOf(ast: ChordProAST): SectionSummary[] {
 }
 
 function toItems(sections: SectionSummary[], structure: string[] | null): FormSectionItem[] {
-  const ordered = structure && structure.length > 0 ? resolveStructureOverride(sections, structure) : sections;
+  const ordered = ordreJoue(sections, structure);
   return ordered.map((s, index) => ({
     uid: `${s.id}-${index}`,
     sectionId: s.id,

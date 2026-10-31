@@ -1,4 +1,4 @@
-import { keyLike, spellingKey, transposeLabel } from "@/lib/transpose";
+import { keyLike, semitonesTo, spellingKey, transposeLabel } from "@/lib/transpose";
 import type { ChordProAST, ChordProSection, Token } from "@/types/chordPro";
 
 function transposeTokens(tokens: Token[], semitones: number, targetKey: string): Token[] {
@@ -26,6 +26,12 @@ export function transposeSection<T extends ChordProSection>(
       tokens: transposeTokens(line.tokens, semitones, targetKey),
     })),
   };
+}
+
+/** Le chant vers la tonalité d'un item de setlist ; sans tonalité, ou la sienne, le même objet (identité gardée). */
+export function transposerVers(ast: ChordProAST, cle: string | null | undefined): ChordProAST {
+  if (!cle || cle === ast.metadata.key) return ast;
+  return transposeAST(ast, semitonesTo(ast.metadata.key, cle), cle);
 }
 
 /**

@@ -9,6 +9,7 @@ import type { SectionSummary } from "@/types/song";
 import { useJianpuManifest } from "@/lib/jianpu/images";
 import { sheetEnabled, type JianpuPref } from "@/lib/jianpu/preference";
 import { itemSections } from "@/lib/setlist/formItems";
+import { idDeSection } from "@/lib/setlist/sectionOrigins";
 
 /** Palette rotative pour relier chaque transition à son occurrence dans le fil :
  *  la section colorée et sa note en dessous partagent la même couleur. */
@@ -31,7 +32,7 @@ function sectionNamesFor(
 ): { name: string; keyChange?: string }[] {
   if (structureOverride && structureOverride.length > 0) {
     return structureOverride.map((ov) => {
-      const baseId = ov.replace(/-\d+$/, "");
+      const baseId = idDeSection(ov);
       const s = allSections.find((sec) => sec.uid === ov || sec.id === ov || sec.id === baseId);
       if (s) return { name: abbreviateSection(s), keyChange: sectionKeys[ov] ?? sectionKeys[s.id] };
       const type = ov.replace(/(-\d+)+$/, "");
@@ -291,7 +292,7 @@ export function ListView({
                 // Chaque section → nom affichable + transition interne éventuelle.
                 const entries: { name: string; transition?: string; keyChange?: string }[] = item.structureOverride
                   ? item.structureOverride.map((ov) => {
-                      const baseId = ov.replace(/-\d+$/, "");
+                      const baseId = idDeSection(ov);
                       const s = allSections.find((sec) => sec.uid === ov || sec.id === ov || sec.id === baseId);
                       if (s) return { name: abbreviateSection(s), transition: st[ov] ?? st[s.id], keyChange: sk[ov] ?? sk[s.id] };
                       // Section non résolue (ex. copie « Mode Adapter » absente de

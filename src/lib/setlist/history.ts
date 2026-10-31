@@ -4,7 +4,7 @@ import type { SectionSummary } from "@/types/song";
 import { withoutLastPhrases } from "@/lib/setlist/lastPhrase";
 import { abbreviateSection } from "@/lib/chordpro/abbreviations";
 import { parseChordPro } from "@/lib/chordpro/parser";
-import { resolveStructureOverride } from "@/lib/chordpro/structure";
+import { ordreJoue } from "@/lib/chordpro/structure";
 
 // Historique des modifications d'une setlist (docs/spec-setlist.md, lot 2).
 // Une modification est décrite par des « changements » (données, traduites à
@@ -88,7 +88,7 @@ function playedSteps(sections: SectionSummary[] | undefined, structure: string[]
   if (!sections?.length) return undefined;
   // Uid par défaut `<id>-<rang>`, la convention de l'éditeur (formItems.ts).
   const ranked = sections.map((s, i) => ({ ...s, uid: `${s.id}-${i}` }));
-  const played = structure?.length ? resolveStructureOverride(ranked, structure) : ranked;
+  const played = ordreJoue(ranked, structure);
   return played.map((s) => ({ id: s.id, uid: s.uid, label: abbreviateSection(s) }));
 }
 

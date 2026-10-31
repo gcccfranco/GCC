@@ -1,5 +1,5 @@
 import { nextUid } from "@/lib/uid";
-import { resolveStructureOverride } from "@/lib/chordpro/structure";
+import { ordreJoue } from "@/lib/chordpro/structure";
 import { parseChordPro } from "@/lib/chordpro/parser";
 import type { JianpuChords, SetlistItem, SectionNuance } from "@/types/setList";
 import type { SongIndexEntry, SectionSummary } from "@/types/song";
@@ -144,9 +144,7 @@ function toFormItem(
   adapted: { contentOverride?: string | null; sectionOrigins?: Record<string, string>; jianpuChords?: JianpuChords } = {}
 ): FormItem {
   const allSections = itemSections(song, adapted.contentOverride);
-  const orderedSections: SectionSummary[] = structureOverride && structureOverride.length > 0
-    ? resolveStructureOverride(allSections, structureOverride)
-    : allSections;
+  const orderedSections: SectionSummary[] = ordreJoue(allSections, structureOverride);
   const occ: Record<string, number> = {};
   return {
     uid: nextUid(),

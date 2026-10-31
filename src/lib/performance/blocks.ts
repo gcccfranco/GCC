@@ -1,9 +1,9 @@
 import type { SetlistItem, SectionNuance } from "@/types/setList";
 import type { ChordProSection, ChordProAST } from "@/types/chordPro";
 import type { SongContent } from "@/lib/api/songs";
-import { transposeAST, transposeSection } from "@/lib/transposeAST";
+import { transposeAST, transposeSection, transposerVers } from "@/lib/transposeAST";
 import { semitonesTo, getTransposedKey } from "@/lib/transpose";
-import { resolveStructureOverride } from "@/lib/chordpro/structure";
+import { ordreJoue } from "@/lib/chordpro/structure";
 import { itemAst } from "@/lib/chordpro/itemContent";
 import type { JianpuEntry, JianpuManifest } from "@/lib/jianpu/images";
 import { sheetEnabled, type JianpuPref } from "@/lib/jianpu/preference";
@@ -103,14 +103,8 @@ export type PerformanceBlock =
   | TransitionIntraBlock
   | TransitionInterBlock;
 
-function getTransposed(ast: ChordProAST, keyOverride: string | null): ChordProAST {
-  if (!keyOverride || keyOverride === ast.metadata.key) return ast;
-  return transposeAST(ast, semitonesTo(ast.metadata.key, keyOverride), keyOverride);
-}
-
 function resolveSections(ast: ChordProAST, structureOverride: string[] | null): ChordProSection[] {
-  if (!structureOverride?.length) return ast.sections;
-  return resolveStructureOverride(ast.sections, structureOverride);
+  return ordreJoue(ast.sections, structureOverride);
 }
 
 /** Déroulé pour le bandeau : une modulation vers la tonalité jouée n'en est pas une. */
@@ -161,7 +155,7 @@ export function buildPerformanceBlocks(
       const asts: Record<string, ChordProAST> = {};
       for (const fs of item.fusionSongs) {
         const ast = itemAst(fs, contents[fs.songSlug]);
-        if (ast) asts[fs.songSlug] = getTransposed(ast, fs.keyOverride);
+        if (ast) asts[fs.songSlug] = transposerVers(ast, fs.keyOverride);
       }
 
       if (item.mixedStructure?.length) {
@@ -300,7 +294,7 @@ export function buildPerformanceBlocks(
     const playedKey = personalKey ?? setlistKey;
     const personalShift = personalKey ? semitonesTo(setlistKey, personalKey) : 0;
     const capo = capos?.[item.songSlug] ?? 0;
-    const ast = applyCapo(getTransposed(baseAst, personalKey ?? item.keyOverride), playedKey, capo);
+    const ast = applyCapo(transposerVers(baseAst, personalKey ?? item.keyOverride), playedKey, capo);
     const sections = resolveSections(ast, item.structureOverride);
     const occurrences = resolveSectionOccurrences(sections, item).map((o) =>
       personalShift && o.targetKey ? { ...o, targetKey: getTransposedKey(o.targetKey, personalShift) } : o,

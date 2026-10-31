@@ -22,6 +22,7 @@ import {
 import { apercuDuChangement, cinqPremieres, regrouper, suggestionsPour, type Suggestion } from "@/lib/harmonie/suggestions";
 import { chiffreDuDegre, degresDeLaSuite } from "@/lib/harmonie/degres";
 import { semitonesTo, transposeLabel } from "@/lib/transpose";
+import { idDeSection } from "@/lib/setlist/sectionOrigins";
 import { ficheDeLaTransition, transitionEntre } from "@/lib/harmonie/transitions";
 import { modulationProposee, type ModulationProposee } from "@/lib/harmonie/modulation";
 import { MODULATIONS, type Modulation } from "@/lib/harmonie/regles";
@@ -72,10 +73,9 @@ function trouverLaSection(sectionUid: string, portee?: string): HTMLElement | nu
     document.querySelectorAll<HTMLElement>(portee ? `${portee} [data-section-uids]` : "[data-section-uids]"),
   );
   const uids = (el: HTMLElement) => (el.dataset.sectionUids ?? "").split(" ");
-  const sectionId = (uid: string) => uid.replace(/-\d+$/, "");
   return (
     sections.find((el) => uids(el).includes(sectionUid)) ??
-    sections.find((el) => uids(el).some((u) => sectionId(u) === sectionId(sectionUid))) ??
+    sections.find((el) => uids(el).some((u) => idDeSection(u) === idDeSection(sectionUid))) ??
     null
   );
 }

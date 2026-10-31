@@ -2,11 +2,11 @@ import { Document } from "@react-pdf/renderer";
 import { SongPDFPage, FusionPDFPage, TransitionPDFPage, JianpuPDFPage, CompactStrip, compactStripHeight, type FusionPDFSong, type PdfSectionStyle } from "@/components/pdf/SongPDF";
 import { compactTransitions } from "@/lib/pdf/compact";
 import { enAttente } from "@/lib/setlist/propositions";
-import { resolveStructureOverride } from "@/lib/chordpro/structure";
+import { ordreJoue } from "@/lib/chordpro/structure";
 import { resolveSectionOccurrences } from "@/lib/setlist/sectionSteps";
 import { cleJouee, type JianpuCadrage, type JianpuChordsManifest, type JianpuManifest } from "@/lib/jianpu/images";
 import { sheetEnabled, type JianpuPref } from "@/lib/jianpu/preference";
-import { transposeAST } from "@/lib/transposeAST";
+import { transposerVers } from "@/lib/transposeAST";
 import { semitonesTo } from "@/lib/transpose";
 import type { FSSetlist } from "@/lib/firebase/setlists";
 import type { ChordProAST } from "@/types/chordPro";
@@ -79,11 +79,7 @@ export function SetlistFullPDF({
           const fusionSongsData = item.fusionSongs
             .filter((fs) => !!contents[fs.songSlug])
             .map((fs): FusionPDFSong => {
-              let ast = itemAst(fs, contents[fs.songSlug])!;
-              if (fs.keyOverride && fs.keyOverride !== ast.metadata.key) {
-                const semitones = semitonesTo(ast.metadata.key, fs.keyOverride);
-                ast = transposeAST(ast, semitones, fs.keyOverride);
-              }
+              const ast = transposerVers(itemAst(fs, contents[fs.songSlug])!, fs.keyOverride);
               return { slug: fs.songSlug, ast, sectionNotes: fs.sectionNotes ?? {}, sectionNuances: fs.sectionNuances ?? {}, sectionKeys: fs.sectionKeys ?? {}, structureOverride: fs.structureOverride };
             });
 
@@ -128,11 +124,7 @@ export function SetlistFullPDF({
 
         const baseAst = itemAst(item, contents[item.songSlug]);
         if (!baseAst) return [];
-        let ast = baseAst;
-        if (item.keyOverride && item.keyOverride !== ast.metadata.key) {
-          const semitones = semitonesTo(ast.metadata.key, item.keyOverride);
-          ast = transposeAST(ast, semitones, item.keyOverride);
-        }
+        const ast = transposerVers(baseAst, item.keyOverride);
         // ── Partition 简谱 : le scan remplace les paroles, une page par page ──
         const sheet = sheetEnabled(jianpuPref, item.jianpuSheet)
           ? jianpuSheets?.[item.songSlug]
@@ -146,7 +138,7 @@ export function SetlistFullPDF({
           // Compact : le bandeau au-dessus du scan, comme la vue partitions.
           const steps = compact
             ? resolveSectionOccurrences(
-                item.structureOverride?.length ? resolveStructureOverride(ast.sections, item.structureOverride) : ast.sections,
+                ordreJoue(ast.sections, item.structureOverride),
                 item,
               )
             : [];

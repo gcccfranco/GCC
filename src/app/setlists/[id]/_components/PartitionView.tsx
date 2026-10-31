@@ -8,12 +8,12 @@ import { JianpuSheet } from "@/components/jianpu/JianpuSheet";
 import { AccordsProvider, ChantDesAccords } from "@/components/accords/AccordsProvider";
 import { resolveSectionOccurrences, type SectionOccurrence } from "@/lib/setlist/sectionSteps";
 import type { PartitionLayout } from "@/lib/partitionLayoutPref";
-import { resolveStructureOverride } from "@/lib/chordpro/structure";
+import { ordreJoue } from "@/lib/chordpro/structure";
 import { useJianpuScore } from "@/lib/jianpu/images";
 import { aDesRetouches } from "@/lib/jianpu/retouches";
 import { sheetEnabled, type JianpuPref } from "@/lib/jianpu/preference";
 import { useTranslation } from "react-i18next";
-import { transposeAST, transposeSection } from "@/lib/transposeAST";
+import { transposeSection, transposerVers } from "@/lib/transposeAST";
 import { semitonesTo } from "@/lib/transpose";
 import { itemAst } from "@/lib/chordpro/itemContent";
 import { lyricsText } from "@/components/song/copyLyrics";
@@ -159,13 +159,9 @@ export function PartitionsView({
           // chaque chant s'il en a une (sa Dernière phrase).
           const transposedAsts: Record<string, ChordProAST> = {};
           for (const fs of item.fusionSongs) {
-            let ast = itemAst(fs, contents[fs.songSlug]);
+            const ast = itemAst(fs, contents[fs.songSlug]);
             if (!ast) continue;
-            if (fs.keyOverride && fs.keyOverride !== ast.metadata.key) {
-              const semitones = semitonesTo(ast.metadata.key, fs.keyOverride);
-              ast = transposeAST(ast, semitones, fs.keyOverride);
-            }
-            transposedAsts[fs.songSlug] = ast;
+            transposedAsts[fs.songSlug] = transposerVers(ast, fs.keyOverride);
           }
           // Idées d'harmonie : celles de chaque chant de la fusion.
           const ideesFusion = onIdees && (
@@ -425,11 +421,7 @@ function NormalSongItem({
   const { ast, songKey } = useMemo(() => {
     const base = itemAst(item, content);
     if (!base) return { ast: undefined, songKey: undefined };
-    const key = base.metadata.key;
-    if (item.keyOverride && item.keyOverride !== key) {
-      return { ast: transposeAST(base, semitonesTo(key, item.keyOverride), item.keyOverride), songKey: key };
-    }
-    return { ast: base, songKey: key };
+    return { ast: transposerVers(base, item.keyOverride), songKey: base.metadata.key };
   }, [item, content]);
   // Partition 简谱 choisie pour cet item : le scan remplace les paroles.
   const jianpuScore = useJianpuScore(sheetEnabled(jianpuPref, item.jianpuSheet) ? item.songSlug : null);
@@ -463,9 +455,7 @@ function NormalSongItem({
 
   // Mode Adapter : on tape une occurrence précise → ordre joué forcé.
   const layout: PartitionLayout = editMode ? "played" : layoutPref;
-  const playedSections = item.structureOverride?.length
-    ? resolveStructureOverride(ast.sections, item.structureOverride)
-    : ast.sections;
+  const playedSections = ordreJoue(ast.sections, item.structureOverride);
   // Partition 简谱 : les 升调 de la structure jouée, qu'un scan ne peut pas montrer.
   const steps = jianpuScore ? resolveSectionOccurrences(playedSections, item) : [];
 

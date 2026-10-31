@@ -4,7 +4,9 @@ import {
 import type { ReactNode } from "react";
 import type { ChordProAST, ChordProSection, Token } from "@/types/chordPro";
 import { formatSectionName } from "@/lib/chordpro/parser";
-import { resolveStructureOverride } from "@/lib/chordpro/structure";
+import { ordreJoue } from "@/lib/chordpro/structure";
+import { toSegments } from "@/lib/chordpro/segments";
+import { isCJK } from "@/lib/cjk";
 import { altSpellingKey, semitonesTo, transposeLabel } from "@/lib/transpose";
 import { transposeSection } from "@/lib/transposeAST";
 import frTranslations from "@/locales/fr.json";
@@ -129,11 +131,6 @@ const SECTION_BOX: Record<string, BoxStyle> = {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function isCJK(ch: string) {
-  const cp = ch.codePointAt(0) ?? 0;
-  return (cp >= 0x4e00 && cp <= 0x9fff) || (cp >= 0x3400 && cp <= 0x4dbf);
-}
-
 /** Split a chord into root note + quality suffix for sized rendering.
  *  Slash chords (e.g. Bb/C) keep both sides at the same size. */
 function chordParts(chord: string): [string, string] {
@@ -161,36 +158,6 @@ function footerLabelFont(label: string): string {
 
 function sectionName(section: ChordProSection, uiLang: string): string {
   return formatSectionName(section, uiLang === "zh-CN" ? zhTranslations : frTranslations);
-}
-
-type Seg = { chord: string | null; lyric: string };
-
-function toSegments(tokens: Token[]): Seg[] {
-  const out: Seg[] = [];
-  let i = 0;
-  while (i < tokens.length) {
-    const tok = tokens[i];
-    if (tok.type === "chord") {
-      const chord = tok.value;
-      let lyric = "";
-      i++;
-      while (i < tokens.length && tokens[i].type === "lyric") {
-        lyric += tokens[i].value;
-        i++;
-      }
-      const sp = lyric.search(/\s/);
-      if (sp === -1 || sp === lyric.length - 1) {
-        out.push({ chord, lyric });
-      } else {
-        out.push({ chord, lyric: lyric.slice(0, sp + 1) });
-        lyric.slice(sp + 1).split(/(?<=\s)/).forEach(w => w && out.push({ chord: null, lyric: w }));
-      }
-    } else {
-      tok.value.split(/(?<=\s)/).forEach(w => w && out.push({ chord: null, lyric: w }));
-      i++;
-    }
-  }
-  return out;
 }
 
 // ─── Chord label (root + smaller quality) ────────────────────────────────────
@@ -734,9 +701,7 @@ export function SongPDFPage({
   const { title, titlePinyin, artist, key, jianpuKey, tempo } = ast.metadata;
   const displayKey = canUseJianpu ? (jianpuKey ?? `1=${key}`) : key;
 
-  const sections: ChordProSection[] = (!canUseJianpu && structureOverride && structureOverride.length > 0)
-    ? resolveStructureOverride(ast.sections, structureOverride)
-    : ast.sections;
+  const sections: ChordProSection[] = ordreJoue(ast.sections, canUseJianpu ? null : structureOverride);
 
   const titleFont = isZh ? "KaiTi" : "SpaceGrotesk";
   const metaFont = isZh ? "SourceHanSansCN" : "SpaceGrotesk";

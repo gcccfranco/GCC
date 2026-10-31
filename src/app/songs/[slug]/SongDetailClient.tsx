@@ -31,6 +31,7 @@ import { useDeuxVolets } from "@/hooks/useDeuxVolets";
 import { Halo } from "@/components/layout/Halo";
 import { FondDeBarre } from "@/components/layout/FondDeBarre";
 import { keyLike, keyOptions, semitonesTo, getTransposedKey } from "@/lib/transpose";
+import { idDeSection } from "@/lib/setlist/sectionOrigins";
 import { useSearchParams } from "next/navigation";
 import type { SectionItem } from "@/types/song";
 import type { SectionNuance } from "@/types/setList";
@@ -239,7 +240,7 @@ function useVersionDeLaSetlist(slug: string, setlistId: string | null, position:
     )
     useEffect(() => {
       const structure: SectionItem[] = structureOverride.map((uid: string, index: number) => {
-        const sectionId = uid.replace(/-\d+$/, "");
+        const sectionId = idDeSection(uid);
         const cleanUid = uid.match(/-\d+$/) ? uid : `${sectionId}-${index}`;
         return {
           uid: cleanUid,

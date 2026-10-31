@@ -15,6 +15,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { ChordPad } from "@/components/setlists/ChordPad";
 import { useStandaloneScrollLock } from "@/hooks/useStandaloneScrollLock";
 import { transposeLabel } from "@/lib/transpose";
+import { isCJK } from "@/lib/cjk";
 import {
   type EditableLine,
   parseEditableLine,
@@ -55,11 +56,6 @@ export type EditLineTarget = {
 
 type PadTarget = { kind: "add"; offset: number } | { kind: "edit"; index: number } | null;
 type Mode = "line" | "lyrics" | "instr";
-
-function isCJK(ch: string) {
-  const cp = ch.codePointAt(0) ?? 0;
-  return (cp >= 0x4e00 && cp <= 0x9fff) || (cp >= 0x3400 && cp <= 0x4dbf);
-}
 
 function transposeLine(line: EditableLine, semitones: number, targetKey: string): EditableLine {
   if (semitones === 0) return line;

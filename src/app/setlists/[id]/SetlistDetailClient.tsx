@@ -89,7 +89,7 @@ import {
   deleteSourceLines,
   materializeSectionCopy,
 } from "@/lib/chordpro/editSource";
-import { structUidAt, revertSectionOrigins } from "@/lib/setlist/sectionOrigins";
+import { structUidAt, revertSectionOrigins, idDeSection } from "@/lib/setlist/sectionOrigins";
 
 /** Téléphone : zone de toucher de 44 px autour d'un bouton plus petit, sans changer son dessin (G6, audit 24/10/2026). */
 const TOUCHER_44 =
@@ -1100,7 +1100,7 @@ export function SetlistDetailClient() {
     if (struct && sectionUid) {
       const sec = baseAst.sections.find((s) => s.lines.some((l) => l.srcLine === line.srcLine));
       if (sec) {
-        const refs = struct.filter((ov) => ov === sec.id || ov.replace(/-\d+$/, "") === sec.id);
+        const refs = struct.filter((ov) => ov === sec.id || idDeSection(ov) === sec.id);
         if (refs.length > 1) {
           const j = struct.findIndex((ov, k) => structUidAt(ov, k) === sectionUid);
           if (j !== -1) {
@@ -1115,7 +1115,7 @@ export function SetlistDetailClient() {
     // la tonalité de la section, pas celle de l'item.
     const displayKey =
       (sectionUid
-        ? item.sectionKeys?.[sectionUid] ?? item.sectionKeys?.[sectionUid.replace(/-\d+$/, "")]
+        ? item.sectionKeys?.[sectionUid] ?? item.sectionKeys?.[idDeSection(sectionUid)]
         : undefined) ??
       item.keyOverride ??
       origKey;

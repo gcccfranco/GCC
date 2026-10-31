@@ -5,6 +5,12 @@
 // les occurrences concernées disparaissent de la setlist.
 import type { SetlistItem } from "@/types/setList";
 
+/** Id de section d'un uid ou d'une entrée de structure : `couplet-2` → `couplet`, `pont-1-3` → `pont-1`
+ *  (l'id seul, sans rang, ne change pas). */
+export function idDeSection(uid: string): string {
+  return uid.replace(/-\d+$/, "");
+}
+
 /** uid d'une entrée de structureOverride, même convention que
  *  resolveStructureOverride (les entrées legacy sans rang prennent leur index). */
 export function structUidAt(ov: string, index: number): string {
@@ -28,7 +34,7 @@ function originOf(origins: Record<string, string>, sectionId: string): string | 
  *  setlists) désigne-t-elle un passage de la section `sectionId` — elle-même ou
  *  l'une de ses copies ? */
 function isOccurrenceOf(ov: string, sectionId: string, origins: Record<string, string>): boolean {
-  return [ov, ov.replace(/-\d+$/, "")].some(
+  return [ov, idDeSection(ov)].some(
     (id) => id === sectionId || originOf(origins, id) === sectionId,
   );
 }
