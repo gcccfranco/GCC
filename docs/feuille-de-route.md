@@ -1275,7 +1275,8 @@ résumé de groupe dans Statistiques (chants pour tous, présidences pour les ad
 « La barre supérieure est un peu bizarre et pas très lisible » (mode louange, Prince de paix), Dp de couleurs
 différentes, le même Dp une seule fois, « quelque chose pour chaque mode ». Planche
 (https://claude.ai/artifact/F4KLwJYLVBnbTmWKuhi6JN) : piste C, adaptée à chaque mode ; questions tranchées par la
-session sur « fais ce que tu penses est le mieux ». Lot **RS** (RS-A à RS-C). **En attente du go.** Au passage :
+session sur « fais ce que tu penses est le mieux ». Lot **RS** (RS-A à RS-D). **Fait le 31/10/2026** sur
+`claude/laughing-euler-q28fye`, pas en ligne (choix, chiffres et reste : « Avancement » de la spec). Au passage :
 paroles sans accords, l'espace après un accord était perdu (« àLui », 329 lignes dans 85 chants), corrigé et mis
 en ligne le 31/10/2026 (`7a2c62c`).
 
