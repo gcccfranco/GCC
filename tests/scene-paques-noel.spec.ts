@@ -422,7 +422,7 @@ const DOCS_SCENE: Record<string, Record<string, unknown>> = {
     inscriptions: "fermees", organisateurUid: "uid-alice",
   },
 };
-const ALICE_EVT: FakeProfile = { uid: "uid-alice", email: "alice@example.com", firstName: "Alice", lastName: "Q.", dansEquipes: ["evenementiel", "edd"], referentDe: ["evenementiel", "edd"] }; // lot AO : Coordination = référent EDD
+const ALICE_EVT: FakeProfile = { uid: "uid-alice", email: "alice@example.com", firstName: "Alice", lastName: "Q.", dansEquipes: ["evenementiel", "edd"], referentDe: ["evenementiel", "edd"], responsabilites: ["orga"] /* lot RS : la coordination vient du Comité Orga */ }; // lot AO : Coordination = référent EDD
 
 async function aFaire(page: Page, docs: Record<string, Record<string, unknown>>) {
   await page.clock.setFixedTime(new Date("2026-10-09T10:00:00"));

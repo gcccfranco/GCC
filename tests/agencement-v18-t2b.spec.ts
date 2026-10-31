@@ -15,7 +15,7 @@ import {
 // Personnes fictives.
 
 /** Pôle Événement et la coordination (cochée : gère tous les évènements, a la scène). */
-const COORD: FakeProfile = { uid: "uid-alice", email: "alice@example.com", firstName: "Alice", lastName: "Q.", dansEquipes: ["evenementiel", "edd"], referentDe: ["evenementiel", "edd"], coordination: true };
+const COORD: FakeProfile = { uid: "uid-alice", email: "alice@example.com", firstName: "Alice", lastName: "Q.", dansEquipes: ["evenementiel", "edd"], referentDe: ["evenementiel", "edd"], responsabilites: ["orga"] /* lot RS : la coordination vient du Comité Orga */, coordination: true };
 /** Référent de TEAM DA (lot 1 du chantier « équipes et groupes » ; son pôle sert encore aux tâches jusqu'à EQ-C). */
 const DA: FakeProfile = { uid: "uid-bruno", email: "bruno@example.com", firstName: "Bruno", lastName: "M.", dansEquipes: ["da"], referentDe: ["da"] };
 

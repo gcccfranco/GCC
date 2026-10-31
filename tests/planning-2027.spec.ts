@@ -165,7 +165,8 @@ test("Paix 2027 : un membre ne voit pas 2027 tant que rien n'est publié", async
   await expect(page.getByText("Invité A.")).toHaveCount(0);
 });
 
-test("Paix 2027 : l'écrivain sans droit de publier voit le brouillon, marqué, et le bandeau", async ({ page }) => {
+// Lot RS : il n'y a plus d'écrivain sans droit de publier — le gestionnaire de Paix remplit et publie (Q10).
+test("Paix 2027 : le gestionnaire voit le brouillon, marqué, le bandeau, et peut publier", async ({ page }) => {
   await ouvrir(page, ECRIVAIN, "/back-office/planning/groupes", CASE_2027);
   await page.getByRole("tab", { name: "2027", exact: true }).click();
   const bandeau = page.getByTestId("bandeau-annee");
@@ -173,7 +174,7 @@ test("Paix 2027 : l'écrivain sans droit de publier voit le brouillon, marqué, 
   await expect(bandeau).toContainText("les 52 dimanches de 2027 sont déjà posés");
   await expect(laCase(page, "2027-01-10", "presidence")).toContainText("Invité A.");
   await expect(page.locator("[data-non-publie='2027-01-10']").filter({ visible: true })).toHaveCount(1);
-  await expect(page.getByRole("button", { name: "Publier le T1" }), "publier demande le droit notify").toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Publier le T1" }), "lot RS : le gestionnaire publie").toBeVisible();
 });
 
 test("Paix 2027 : « Publier le T1 » appelle la route avec l'année, puis propose « Masquer le T1 »", async ({ page }) => {
@@ -224,7 +225,7 @@ test("Culte 2027 : l'écrivain du Culte voit le T1 2027 (13 dimanches, sainte c�
 });
 
 test("Table 2027 : l'écrivain voit les 13 dimanches du T1 ; le membre voit 2027 dès une case remplie", async ({ page, browser }) => {
-  await ouvrir(page, { ...ECRIVAIN, ...remplit("table") }, "/back-office/planning/table");
+  await ouvrir(page, { ...ECRIVAIN, responsabilites: ["planning:table"] } /* lot RS : gestionnaire de la Table */, "/back-office/planning/table");
   await page.getByRole("tab", { name: "2027", exact: true }).click();
   await page.getByRole("tab", { name: "T1", exact: true }).click();
   await expect.poll(() => datesAffichees(page)).toHaveLength(13);
@@ -907,7 +908,7 @@ test("publication : « Planning T1 2027 en ligne » quand l'année n'est pas l'a
 // ─── Relecture · une case à plusieurs noms ne se remplace pas d'un clic (mineur)
 
 test("P9 · une case qui porte plusieurs noms s'ouvre en texte, prérempli, sans « Choisir »", async ({ page }) => {
-  const db = await ouvrir(page, { ...ECRIVAIN, ...remplit("table") }, "/back-office/planning/table", {
+  const db = await ouvrir(page, { ...ECRIVAIN, responsabilites: ["planning:table"] } /* lot RS : gestionnaire de la Table */, "/back-office/planning/table", {
     "plannings/table/dimanches/2027-01-03": { date: "2027-01-03", equipe: "Alice Q., Bruno R., Julien Z." },
   });
   await page.getByRole("tab", { name: "2027", exact: true }).click();

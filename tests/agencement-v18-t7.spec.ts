@@ -33,7 +33,7 @@ const DOCS: Record<string, Record<string, unknown>> = {
 /** Membre d'un groupe, sans droit de création. */
 const MEMBRE: FakeProfile = { uid: "uid-membre", email: "membre@example.com", firstName: "Membre", lastName: "Essai", serviceRoles: { "Groupe Paix": ["chanteur"] } };
 /** Pôle Événement et la coordination (lot AO : référent EDD, plus la case cochée), qui crée des évènements. */
-const COORDINATION: FakeProfile = { uid: "uid-coordination", email: "coordination@example.com", firstName: "Coordination", lastName: "Essai", dansEquipes: ["evenementiel", "edd"], referentDe: ["evenementiel", "edd"] };
+const COORDINATION: FakeProfile = { uid: "uid-coordination", email: "coordination@example.com", firstName: "Coordination", lastName: "Essai", dansEquipes: ["evenementiel", "edd"], referentDe: ["evenementiel", "edd"], responsabilites: ["orga"] /* lot RS : la coordination vient du Comité Orga */ };
 
 async function ouvrir(page: Page, qui: FakeProfile, to: string) {
   interdireDialoguesNatifs(page);

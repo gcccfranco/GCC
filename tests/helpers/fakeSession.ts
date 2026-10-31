@@ -3,6 +3,7 @@ import { ADMIN_EMAILS } from "../../src/lib/access";
 import { groupeDe } from "../../src/lib/groupes/organigramme";
 import { EDD_CLASSES } from "../../src/lib/planning/utils";
 import { SERVICE_LIEUX } from "../../src/types/user";
+import { responsabilitesDeLaReprise } from "../../src/lib/acces/repriseResponsabilites";
 
 // Connexion Firebase et Firestore **simulés** : les pages réservées aux membres
 // (setlists) se testent sans identifiants ni écriture en production. Le SDK
@@ -105,6 +106,18 @@ function traduitCommeMigration(data: Record<string, unknown>): Record<string, un
     ...(sous.size ? { sousEquipes: ordre(["presidence", "musiciens", "choristes"], sous), lieuxLouange: ordre(SERVICE_LIEUX, lieuxLouange) } : {}),
     ...(lieuxRegie.size ? { lieuxRegie: ordre(SERVICE_LIEUX, lieuxRegie) } : {}),
   };
+}
+
+/**
+ * Lot RS — traduit comme la reprise (src/lib/acces/repriseResponsabilites.ts, lancée par Timothée le 30/10/2026) : un
+ * profil sans `responsabilites` reçoit celles que la reprise lui aurait données (référent Louange → les quatre plannings
+ * du culte ; référent EDD → l'EDD ; placé dans Orga → `orga` ; `remplitParRole`, `publieParRole`, `plannings` → le
+ * planning). Un profil qui pose `responsabilites` lui-même (même vide) n'est pas touché.
+ */
+function traduitCommeReprise(data: Record<string, unknown>): Record<string, unknown> {
+  if ("responsabilites" in data) return data;
+  const r = responsabilitesDeLaReprise(data);
+  return r.length ? { ...data, responsabilites: r } : data;
 }
 
 /** Document Firestore REST à partir d'un objet JS (miroir de toFsFields). */
@@ -418,11 +431,11 @@ export async function signInAs(
 
   // Un autre document users/* garde son ancien rôle sans traduction avec `organigramme: false` (champ retiré du document).
   const autreProfil = (d: Record<string, unknown>) => {
-    if (d.organigramme !== false) return traduitCommeMigration(d);
+    if (d.organigramme !== false) return traduitCommeReprise(traduitCommeMigration(d));
     const { organigramme: _non, ...reste } = d;
     return reste;
   };
-  const serviParLeProfil = (d: Record<string, unknown>) => (profile.organigramme === false ? d : traduitCommeMigration(d));
+  const serviParLeProfil = (d: Record<string, unknown>) => (profile.organigramme === false ? d : traduitCommeReprise(traduitCommeMigration(d)));
   const traduits = Object.fromEntries(Object.entries(docs).map(([chemin, d]) =>
     [chemin, /^users\/[^/]+$/.test(chemin) ? (chemin === `users/${profile.uid}` ? serviParLeProfil(d) : autreProfil(d)) : d]));
   const db = await fakeFirestore(page, {
@@ -518,9 +531,8 @@ export const publie = (...cles: string[]): Pick<FakeProfile, "publieParRole"> =>
 export const musicien = (...joue: string[]): Pick<FakeProfile, "dansEquipes" | "sousEquipes" | "lieuxLouange" | "joue"> =>
   ({ dansEquipes: ["louange"], sousEquipes: ["musiciens"], lieuxLouange: ["Culte Francophone"], joue });
 
-/** Lot AO : la place d'organigramme qui donne exactement la Coordination (scène, fêtes, évènements de l'Église) avec le moins
- *  d'autres droits : référent EDD (aussi : les plannings EDD, notifier l'EDD). Ni les évènements d'une section (il n'y a pas de section EDD). */
-export const coordination = (): Pick<FakeProfile, "dansEquipes" | "referentDe"> => ({ dansEquipes: ["edd"], referentDe: ["edd"] });
+/** Lot RS : la Coordination (scène, fêtes, évènements de l'Église) vient du Comité Orga seul (Q11). */
+export const coordination = (): Pick<FakeProfile, "responsabilites"> => ({ responsabilites: ["orga"] });
 /** Lot AO : référent Régie — remplit les colonnes Sono / PPT du culte et les publie ; ni Coordination, ni création d'évènement. */
 export const referentRegie = (): Pick<FakeProfile, "dansEquipes" | "referentDe"> => ({ dansEquipes: ["regie"], referentDe: ["regie"] });
 /** Lot AO : référent Louange — Coordination, tout le planning du culte, évènements « Culte Francophone », notifier Louange, tenir Louange. */

@@ -69,22 +69,23 @@ test.describe("rattachement : qui peut nommer un référent (C7)", () => {
     expect(profil.referentSous).toEqual(["musiciens"]);
   });
 
-  test("le référent Louange nomme un référent : recopié (référent d'équipe et de sous-équipe)", async () => {
+  // Lot RS (Q16) : les admins seuls attribuent un référent ; ni le référent Louange ni un membre d'Orga ne le font plus.
+  test("lot RS : le référent Louange ne nomme plus de référent : ni référent d'équipe ni de sous-équipe n'est recopié", async () => {
     const profils = {
       "u-didier": { dansEquipes: ["louange"], referentDe: ["louange"] },
       "u-emma": { dansEquipes: ["louange"] },
     };
     const equipes = { louange: { membres: [membre("u-didier", true), membre("u-emma", true, { sousEquipes: ["choristes"], referentSous: ["choristes"] })] } };
     const profil = await recopie(profils, equipes, "u-emma", "u-didier");
-    expect(profil.referentDe).toEqual(["louange"]);
-    expect(profil.referentSous).toEqual(["choristes"]);
+    expect(profil.referentDe ?? []).not.toContain("louange");
+    expect(profil.referentSous ?? []).toEqual([]);
   });
 
-  test("Orga nomme le référent d'une autre équipe : recopié", async () => {
+  test("lot RS : Orga ne nomme plus le référent d'une autre équipe : non recopié", async () => {
     const profils = { "u-fanny": { dansEquipes: ["orga"] }, "u-gilles": {} };
     const equipes = { regie: { membres: [membre("u-gilles", true)] } };
     const profil = await recopie(profils, equipes, "u-gilles", "u-fanny", false, "regie");
-    expect(profil.referentDe).toEqual(["regie"]);
+    expect(profil.referentDe ?? []).not.toContain("regie");
   });
 
   test("un admin nomme un référent : recopié", async () => {
@@ -103,13 +104,13 @@ test.describe("rattachement : qui peut nommer un référent (C7)", () => {
     expect(profil.referentDe).toEqual(["louange"]);
   });
 
-  test("le retrait d'une équipe par qui peut la nommer : appliqué", async () => {
+  test("lot RS : le retrait d'une équipe par un admin (seul à pouvoir la nommer) : appliqué", async () => {
     const profils = {
       "u-didier": { dansEquipes: ["louange"], referentDe: ["louange"] },
       "u-ophelie": { dansEquipes: ["louange"], referentDe: ["louange"] },
     };
     const equipes = { louange: { membres: [membre("u-didier", true), membre("u-ophelie", false)] } };
-    const profil = await recopie(profils, equipes, "u-ophelie", "u-didier");
+    const profil = await recopie(profils, equipes, "u-ophelie", "u-admin", true);
     expect(profil.referentDe).toEqual([]);
   });
 

@@ -1,5 +1,5 @@
 import { expect, test, type Page, type TestInfo } from "@playwright/test";
-import { notifie, signInAs, type FakeProfile } from "./helpers/fakeSession";
+import { signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { droitsDesPages, entreesBackOffice, estResponsable, widgetsPermis } from "../src/lib/access";
 import { entreesBarre } from "../src/lib/navigation";
 import type { UserProfile } from "../src/types/user";
@@ -465,7 +465,7 @@ test.describe("Back-Office : pastilles de la barre latérale (Q15)", () => {
     const lus: string[] = [];
     page.on("request", (r) => { if (r.url().includes(":runQuery")) lus.push(r.postData() ?? ""); });
     await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
-    await signInAs(page, { ...DA, ...notifie("Groupe Paix") }, PASTILLES, "/back-office");
+    await signInAs(page, { ...DA, responsabilites: ["planning:paix"] } /* lot RS : gestionnaire de Paix */, PASTILLES, "/back-office");
     await expect(page.getByRole("heading", { level: 1, name: "À faire" })).toBeVisible();
     await expect(menu(page, info).getByRole("link", { name: "Messages", exact: true }).getByTestId("pastille")).toHaveCount(0);
     expect(lus.filter((b) => b.includes("\"reports\"") || b.includes("\"songProposals\""))).toEqual([]);

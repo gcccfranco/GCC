@@ -29,13 +29,14 @@ const IRIS: FakeProfile = { uid: "u-iris", email: "iris@example.com", firstName:
 /** Droit Équipes (tenir l'organigramme) sans être admin. */
 const ELSA: FakeProfile = { uid: "u-elsa", email: "elsa@example.com", firstName: "Elsa", lastName: "N.", equipes: true, ...orga() };
 /** Lot AO : Coordination = une place d'organigramme. Hugo, référent de TEAM ÉVÉNEMENTIEL, aussi référent EDD ; Iris, membre d'Orga, sans autre équipe. */
-const HUGO_ORGA: FakeProfile = { ...HUGO, dansEquipes: ["evenementiel", "edd"], referentDe: ["evenementiel", "edd"] };
-const IRIS_ORGA: FakeProfile = { uid: "u-iris", email: "iris@example.com", firstName: "Iris", lastName: "D.", ...orga() };
+const HUGO_ORGA: FakeProfile = { ...HUGO, dansEquipes: ["evenementiel", "edd"], referentDe: ["evenementiel", "edd"], responsabilites: ["orga"] /* lot RS : la coordination vient du Comité Orga */ };
+const IRIS_ORGA: FakeProfile = { uid: "u-iris", email: "iris@example.com", firstName: "Iris", lastName: "D.", ...orga(), responsabilites: ["orga"] /* lot RS : la coordination vient du Comité Orga */ };
 
 const PROFIL = (p: FakeProfile, over: Record<string, unknown> = {}) => ({
   email: p.email, firstName: p.firstName, lastName: p.lastName, planningName: "",
   serviceRoles: {}, annonces: [], notify: [], equipes: false, plannings: [],
   ...(p.dansEquipes ? { dansEquipes: p.dansEquipes } : {}), ...(p.referentDe ? { referentDe: p.referentDe } : {}),
+  ...(p.responsabilites ? { responsabilites: p.responsabilites } : {}), // lot RS : la coordination vient du Comité Orga
   ...over,
 });
 
@@ -96,14 +97,15 @@ test("Personnes : la fiche d'un référent EDD dit « Coordination » dans « Ce
   if (estGrandEcran(info)) {
     await expect(carteDroits(page)).toContainText(/Admin\s*Non/);
     await expect(carteDroits(page)).not.toContainText("Coordination");
-    await expect(fiche(page).getByRole("region", { name: "Ce que ça lui ouvre" })).toContainText("Coordination : scène, fêtes et évènements de toute l'Église");
+    // lot RS : la fiche dit la raison « Comité Orga » (la coordination), avec son libellé de responsabilité
+    await expect(fiche(page).getByRole("region", { name: "Ce que ça lui ouvre" })).toContainText("Créer et modifier les évènements et les réunions, publier des annonces, notifier toute l'Église, réserver la scène");
     await capture(page, "coordination-fiche");
   }
   // Un volet : la fiche est une page entière, « Modifier » ouvre le formulaire.
   await page.getByRole("button", { name: "Modifier", exact: true }).click();
   await expect(page.getByRole("button", { name: "Coordination", exact: true })).toHaveCount(0);
   await expect(page.getByText("Régler la scène, créer pour toute l'église, modifier tout évènement")).toHaveCount(0);
-  await expect(page.getByText("Coordination : scène, fêtes et évènements de toute l'Église")).toBeVisible();
+  await expect(page.getByText("Créer et modifier les évènements et les réunions, publier des annonces, notifier toute l'Église, réserver la scène").first()).toBeVisible();
   await capture(page, "coordination-formulaire");
   await page.getByRole("button", { name: "Enregistrer", exact: true }).click();
   // L'identité seule s'écrit : aucun droit (ni `coordination`, ni `equipes`…) ne part d'ici.
@@ -115,14 +117,15 @@ test("Personnes en 中文 : « 协调 » dans « 这会开放什么权限 »", a
   await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
   await ouvrir(page, ADMIN, "/back-office/equipes/personnes?uid=u-hugo", { "users/u-hugo": PROFIL(HUGO_ORGA) });
   if (estGrandEcran(info)) {
-    await expect(fiche(page).getByRole("region", { name: "这会开放什么权限" })).toContainText("协调：舞台、节日和全教会的活动");
+    // lot RS : la coordination vient du Comité Orga, dite par son libellé
+    await expect(fiche(page).getByRole("region", { name: "这会开放什么权限" })).toContainText("创建和修改活动与聚会，发布公告，通知全教会，预约舞台");
     await capture(page, "coordination-fiche-zh");
   }
   // Tranche B5b de docs/spec-corrections-audit.md (§ 5, commit f9cfd5a1) : la fiche passe sous `t()`,
   // le bouton dit `common.buttons.edit`, 编辑 en 中文.
   await page.getByRole("button", { name: "编辑", exact: true }).click();
   await expect(page.getByRole("button", { name: "协调", exact: true })).toHaveCount(0);
-  await expect(page.getByText("协调：舞台、节日和全教会的活动")).toBeVisible();
+  await expect(page.getByText("创建和修改活动与聚会，发布公告，通知全教会，预约舞台", { exact: false }).first()).toBeVisible();
   await capture(page, "coordination-formulaire-zh");
 });
 

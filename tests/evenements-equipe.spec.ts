@@ -297,17 +297,18 @@ test("relecture : depuis « Ajouter » du Calendrier, « Évènement » propose 
   if (info.project.name === "telephone") await page.getByRole("link", { name: /^Nouvel évènement le / }).click();
   else await page.getByRole("menuitem", { name: "Évènement", exact: true }).click();
   await page.waitForURL(/\/back-office\/evenements\/nouveau\/?(\?date=\d{4}-\d{2}-\d{2})?$/);
-  await expect(page.getByLabel("Public").locator("option")).toHaveText(["Groupe Paix", "TEAM DA", "COMITÉ PAIX"]); // lot AO : la présidence du Groupe Paix crée aussi pour son comité
+  await expect(page.getByLabel("Public").locator("option")).toHaveText(["TEAM DA", "COMITÉ PAIX"]); // lot RS : la présidence de Paix ne crée plus d'évènement « Groupe Paix » (réunion de son comité seulement) ; le référent DA crée pour son équipe
 });
 
 test("relecture : un évènement d'équipe n'a pas « sans compte » — la case disparaît et rien n'est écrit", async ({ page }) => {
   await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
-  const db = await signInAs(page, ALICE, {}, "/back-office/evenements/nouveau");
+  // lot RS : les sections ne se créent plus que par le Comité Orga ; Alice est ici dans Orga pour avoir une section.
+  const db = await signInAs(page, { ...ALICE, responsabilites: ["orga"] }, {}, "/back-office/evenements/nouveau");
   await sansPush(page);
   await page.getByLabel("Nom de l'évènement").fill("Soirée DA");
   await page.getByLabel("Date", { exact: true }).fill("2026-10-10");
   // Pour une section, la case existe ; cochée, puis le public passe à l'équipe.
-  await expect(page.getByLabel("Public")).toHaveValue("Groupe Paix");
+  await page.getByLabel("Public").selectOption({ label: "Groupe Paix" });
   await page.getByText("Plus d'options").click();
   const sansCompte = page.getByRole("checkbox", { name: "Les personnes sans compte peuvent s'inscrire" });
   await sansCompte.check();

@@ -43,17 +43,24 @@ test.describe("cartesDeLaVisite", () => {
 
   test("coordination + planning + notifier : une carte, trois lignes dans l'ordre", () => {
     // Membre d'Orga : coordination, la Table, toute l'Église.
-    const cartes = cartesDeLaVisite(MOI, { dansEquipes: ["orga"] }, true);
+    // lot RS : la coordination vient du Comité Orga (`responsabilites`), plus de la place dans l'organigramme.
+    const cartes = cartesDeLaVisite(MOI, { dansEquipes: ["orga"], responsabilites: ["orga"] }, true);
     const resp = cartes.find((c) => c.kind === "responsabilites");
     expect(resp).toEqual({
       kind: "responsabilites",
-      lignes: [{ kind: "coordination" }, { kind: "planning", plannings: ["table"] }, { kind: "messages", audiences: ["*"] }],
+      // lot RS : le Comité Orga n'ouvre plus la Table (sans gestionnaire) ; il ouvre les évènements de toutes les sections.
+      lignes: [
+        { kind: "coordination" }, { kind: "messages", audiences: ["*"] },
+        { kind: "evenements", sections: ["Culte Francophone", "Groupe Paix", "Groupe Fidélité", "Groupe Bonté"] },
+      ],
     });
   });
 
   test("cinq droits : quatre lignes au plus", () => {
     // Référent Louange (coordination, plannings du culte, notifier, évènements du Culte) et président de Paix.
-    const cartes = cartesDeLaVisite(MOI, { dansEquipes: ["louange"], referentDe: ["louange", "comite-paix"] }, true);
+    // lot RS : ces droits viennent des `responsabilites` (Comité Orga + planning du culte), plus des référents ;
+    // être référent de son comité ne donne que la ligne « groupe ».
+    const cartes = cartesDeLaVisite(MOI, { dansEquipes: ["louange"], referentDe: ["louange", "comite-paix"], responsabilites: ["orga", "planning:culte"] }, true);
     const resp = cartes.find((c) => c.kind === "responsabilites");
     expect(resp && resp.kind === "responsabilites" && resp.lignes.map((l) => l.kind)).toEqual(["coordination", "groupe", "planning", "messages"]);
   });

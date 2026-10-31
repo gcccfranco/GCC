@@ -7,8 +7,10 @@ import { repondreDansLeSite } from "./helpers/agencement";
 // (aucun vrai push) ; aucune vraie base. Noms fictifs seulement.
 
 const PUBLIEUR: FakeProfile = { uid: "uid-publieur", email: "publieur@example.com", planningName: "Publieur P.", ...publie("paix"), ...remplit("paix") };
-const SANS_ECRITURE: FakeProfile = { ...PUBLIEUR, uid: "uid-lecteur", email: "lecteur@example.com", ...remplit() };
-const ECRIVAIN: FakeProfile = { uid: "uid-ecrivain", email: "ecrivain@example.com", planningName: "Écrivain E.", ...remplit("paix") };
+// Lot RS : plus d'« écrivain sans droit de publier » ni de « publieur sans droit d'écrire » — le gestionnaire du planning fait les
+// deux (Q10) ; un second gestionnaire de Paix, et un membre qui lit seulement.
+const CO_GESTIONNAIRE: FakeProfile = { uid: "uid-cogestionnaire", email: "cogestionnaire@example.com", planningName: "Cogestionnaire C.", responsabilites: ["planning:paix"] };
+const MEMBRE: FakeProfile = { uid: "uid-membre", email: "membre@example.com", planningName: "Membre M.", responsabilites: [] };
 
 const compte = (id: string, prenom: string, nom: string) => [`users/u-${id}`, {
   email: `${id}@example.com`, firstName: prenom, lastName: nom, planningName: `${prenom} ${nom}`,
@@ -81,8 +83,8 @@ test("un publieur voit la bannière « 3 cases ont changé… » et un point par
   await capture(page, "prevenir-banniere")
 })
 
-test("un écrivain sans droit de publier ne voit ni bannière ni points", async ({ page }) => {
-  await ouvrir(page, ECRIVAIN)
+test("lot RS : un membre qui lit le planning ne voit ni bannière ni points", async ({ page }) => {
+  await ouvrir(page, MEMBRE, DOCS, "/planning/groupes")
   await expect(page.locator("[data-case='2026-11-15|presidence']").filter({ visible: true })).toBeVisible()
   await expect(banniere(page)).toHaveCount(0)
   await expect(points(page)).toHaveCount(0)
@@ -98,12 +100,12 @@ test("un trimestre brouillon n'a ni bannière ni points", async ({ page }) => {
   await expect(points(page)).toHaveCount(0)
 })
 
-test("un publieur sans droit d'écrire : grille en lecture, mais bannière, points et feuille sont là (PG35)", async ({ page }) => {
-  await ouvrir(page, SANS_ECRITURE)
+test("lot RS : un cogestionnaire remplit la grille et voit bannière, points et feuille (PG35)", async ({ page }) => {
+  await ouvrir(page, CO_GESTIONNAIRE)
   await expect(banniere(page)).toContainText("3 cases ont changé")
   await expect(points(page)).toHaveCount(3)
-  await expect(page.getByRole("button", { name: /Copier le/ })).toHaveCount(0)
-  await expect(page.getByRole("button", { name: "Choisir" })).toHaveCount(0)
+  // « Copier le… » (signe qu'il écrit la grille) n'est en barre que sur ordinateur.
+  if (test.info().project.name.startsWith("ordinateur")) await expect(page.getByRole("button", { name: /Copier le/ }).first()).toBeVisible()
   await banniere(page).getByRole("button", { name: "Prévenir des changements" }).click()
   await expect(feuille(page)).toBeVisible()
 })

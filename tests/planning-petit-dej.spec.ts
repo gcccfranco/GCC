@@ -1,6 +1,6 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { readFileSync } from "node:fs";
-import { ADMIN_EMAIL, abonneAuxNotifications, fsDoc, signInAs, type FakeProfile, remplit } from "./helpers/fakeSession";
+import { ADMIN_EMAIL, abonneAuxNotifications, fsDoc, signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { fenetreDuSite, repondreDansLeSite } from "./helpers/agencement";
 import { parsePetitDej } from "../src/lib/planning/sheets";
 import { findMyServices, type PlanningData } from "../src/lib/planning/names";
@@ -375,7 +375,7 @@ test("« Je m'inscris » à la couleur de la Table : libellé blanc lisible (AA,
 /** A le droit d'écrire le planning Table : pose et retire des lignes pour d'autres (T10). */
 const ECRIVAIN_TABLE: FakeProfile = {
   uid: "uid-ecrivain", email: "ecrivain@example.com", firstName: "Noa", lastName: "Test", planningName: "Noa T.",
-  ...remplit("table"),
+  responsabilites: ["planning:table"], // lot RS : gestionnaire de la Table (Orga ne la remplit plus)
 };
 
 /** Ouvre Planning › Table le vendredi 18/09/2026 : dimanche en cours = 20/09, trimestre T3. */

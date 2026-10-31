@@ -339,7 +339,7 @@ test("ordinateur — le petit déj (colonne en lecture seule) est refusé au col
   ordinateurSeul()
   await page.clock.setFixedTime(new Date("2026-11-15T10:00:00"))
   await page.route(/docs\.google\.com\/spreadsheets/, (route) => route.fulfill({ status: 200, contentType: "text/csv", body: "" }))
-  const db = await signInAs(page, { ...ECRIVAIN, ...remplit("table") }, {}, "/back-office/planning/table")
+  const db = await signInAs(page, { ...ECRIVAIN, responsabilites: ["planning:table"] } /* lot RS : gestionnaire de la Table */, {}, "/back-office/planning/table")
   await page.getByRole("tab", { name: "2027", exact: true }).click()
   await expect(page.locator("[data-date-cell='2027-01-10']").filter({ visible: true })).toHaveCount(1)
   await poserPresse(page, "Équipe E.\tFamille X")

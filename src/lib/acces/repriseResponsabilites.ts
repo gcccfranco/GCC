@@ -10,6 +10,7 @@
 import {
   CLES_RESPONSABILITES, ORGA, audiencesDesPlannings, responsabiliteDuPlanning, responsabilitesDe,
 } from "@/lib/acces/responsabilites";
+import { TABLE_GROUPES } from "@/lib/groupes/table";
 import { appliquer as appliquerPlan, type Donnees, type Magasin, type Operation } from "@/lib/equipes/migration";
 
 export type { Donnees, Magasin, Operation } from "@/lib/equipes/migration";
@@ -53,6 +54,13 @@ function gainsDe(d: Donnees): Set<string> {
   return gains;
 }
 
+/** Les responsabilités que la reprise donne à ce profil, dans l'ordre de CLES_RESPONSABILITES (tests/helpers/fakeSession.ts
+ *  s'en sert pour les comptes fictifs « à l'ancienne », comme la reprise l'a fait pour les vrais). */
+export function responsabilitesDeLaReprise(d: Donnees): string[] {
+  const gains = gainsDe(d);
+  return CLES_RESPONSABILITES.filter((c) => gains.has(c));
+}
+
 /** Ce que ce profil perd, une fois ses responsabilités finales connues (`finales`). */
 function pertesDe(d: Donnees, finales: string[]): string[] {
   const referentDe = liste(d.referentDe);
@@ -60,8 +68,10 @@ function pertesDe(d: Donnees, finales: string[]): string[] {
   if (referentDe.includes("regie")) perd.push("Sono, Sono Live, PPT du Culte");
   if (referentDe.includes("louange")) perd.push("coordination (scène, évènements de l'Église), notifier la Louange");
   if (referentDe.includes("edd")) perd.push("coordination");
-  for (const id of referentDe.filter((r) => r.startsWith("comite-"))) perd.push(`créer les évènements du groupe (${id.slice("comite-".length)})`);
-  if (referentDe.some((r) => !r.startsWith("comite-")) || liste(d.referentSous).length > 0) {
+  // Seuls les comités des groupes (`comite-paix`…) créaient des évènements de section ; `comite-franco` est une équipe.
+  const comitesDeGroupe = referentDe.filter((r) => TABLE_GROUPES.some((g) => g.comite === r));
+  for (const id of comitesDeGroupe) perd.push(`créer les évènements du groupe (${id.slice("comite-".length)})`);
+  if (referentDe.some((r) => !comitesDeGroupe.includes(r)) || liste(d.referentSous).length > 0) {
     perd.push("notification libre à son équipe (restent les réunions)");
   }
   const couvertes = audiencesDesPlannings({ responsabilites: finales });

@@ -147,7 +147,8 @@ test.describe("B2 : Équipes (Organigramme, Personnes)", () => {
   test("admin : l'organigramme se modifie ici ; Personnes à côté, inscriptions en tête", async ({ page }) => {
     await ouvrir(page, ADMIN, "/back-office/equipes");
     await expect(page.getByRole("heading", { level: 1, name: "Équipes" })).toBeVisible();
-    await expect(ongletsRail(page).getByRole("link")).toHaveText(["Organigramme", "Personnes"]);
+    // lot RS : un troisième onglet « Responsabilités » (admins seuls)
+    await expect(ongletsRail(page).getByRole("link")).toHaveText(["Organigramme", "Personnes", "Responsabilités"]);
     await expect(page.getByTestId("equipe-orga").getByRole("button", { name: "Modifier" })).toBeVisible();
     await expect(page.getByRole("button", { name: "Recalculer depuis l'organigramme" })).toBeVisible();
     await expect(page.getByRole("button", { name: /Importer/ })).toHaveCount(0);
@@ -333,7 +334,7 @@ test("captures : Planning, Équipes, Messages au Back-Office ; la Table dans l'A
 // Scène (écran de U1) ; Réunions, entrée à part depuis l'agencement v18 (B15) ; nouveau, fiche de gestion, modifier ;
 // redirections ; « Gérer dans le Back-Office » sur la fiche de l'App (Q14).
 
-const COORD: FakeProfile = { uid: "uid-alice", email: "alice@example.com", firstName: "Alice", lastName: "Q.", dansEquipes: ["evenementiel", "edd"], referentDe: ["evenementiel", "edd"] };
+const COORD: FakeProfile = { uid: "uid-alice", email: "alice@example.com", firstName: "Alice", lastName: "Q.", dansEquipes: ["evenementiel", "edd"], referentDe: ["evenementiel", "edd"], responsabilites: ["orga"] /* lot RS : la coordination vient du Comité Orga */ };
 const DA_ORG: FakeProfile = { uid: "uid-bruno", email: "bruno@example.com", firstName: "Bruno", lastName: "M.", dansEquipes: ["da"], referentDe: ["da"] };
 const DA_MEMBRE: FakeProfile = { uid: "uid-dora", email: "dora@example.com", firstName: "Dora", lastName: "P.", dansEquipes: ["da"], referentDe: ["da"] };
 const ANNONCEUR: FakeProfile = { uid: "uid-hugo", email: "hugo@example.com", firstName: "Hugo", lastName: "B.", ...presidentGroupe("bonte") };

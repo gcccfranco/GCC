@@ -20,8 +20,8 @@ const NOEL_2026 = {
   passages: PASSAGES, plages: [{ jour: 0, debut: "14:00", fin: "19:00" }], duree: 60,
   createdBy: "uid-alice", updatedAt: "2026-10-01T10:00:00Z",
 };
-const ALICE: FakeProfile = { uid: "uid-alice", email: "alice@example.com", firstName: "Alice", lastName: "Q.", dansEquipes: ["evenementiel", "edd"], referentDe: ["evenementiel", "edd"] }; // lot AO : Coordination = référent EDD
-const BRUNO: FakeProfile = { uid: "uid-bruno", email: "bruno@example.com", firstName: "Bruno", lastName: "V.", dansEquipes: ["evenementiel", "edd"], referentDe: ["evenementiel", "edd"] };
+const ALICE: FakeProfile = { uid: "uid-alice", email: "alice@example.com", firstName: "Alice", lastName: "Q.", dansEquipes: ["evenementiel", "edd"], referentDe: ["evenementiel", "edd"], responsabilites: ["orga"] }; // lot RS : la Coordination est le Comité Orga (Q11), plus le référent EDD
+const BRUNO: FakeProfile = { uid: "uid-bruno", email: "bruno@example.com", firstName: "Bruno", lastName: "V.", dansEquipes: ["evenementiel", "edd"], referentDe: ["evenementiel", "edd"], responsabilites: ["orga"] }; // lot RS : Comité Orga
 
 async function ouvrirOrdre(page: Page, qui: FakeProfile, partage?: FakeDb) {
   interdireDialoguesNatifs(page);

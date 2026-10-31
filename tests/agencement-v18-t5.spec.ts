@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { notifie, signInAs, ADMIN_EMAIL, type FakeProfile } from "./helpers/fakeSession";
+import { signInAs, ADMIN_EMAIL, type FakeProfile } from "./helpers/fakeSession";
 import {
   enTete, estGrandEcran, fenetreDuSite, interdireDialoguesNatifs, ongletsRail, pilules,
   repondreDansLeSite, verifierAgencement,
@@ -74,7 +74,7 @@ test.describe("T5 : Équipes › Organigramme", () => {
     // Deux rangées de pilules depuis le lot 2 (OG-C) : le sélecteur Église · Paix · … et Équipes · Musiciens.
     await verifierAgencement(page, { premierBloc: bandeau, contenu: bandeau, onglets: { rail: 1, pilules: 2 } });
     // Rail : Organigramme · Personnes ; sous-onglets Équipes · Musiciens en pilules.
-    await expect(ongletsRail(page).getByRole("link")).toHaveText(["Organigramme", "Personnes"]);
+    await expect(ongletsRail(page).getByRole("link")).toHaveText(["Organigramme", "Personnes", "Responsabilités"]); // lot RS : la page Responsabilités (admins)
     await expect(pilules(page).filter({ hasText: "Musiciens" }).getByRole("button")).toHaveText(["Équipes", "Musiciens"]);
     await expect(enTete(page).getByRole("button", { name: "Recalculer depuis l'organigramme" })).toBeVisible();
     await expect(page.getByRole("button", { name: /Nouvelle équipe/ }), "les treize équipes sont fixes").toHaveCount(0);
@@ -474,8 +474,9 @@ test.describe("T5 : Messages", () => {
     await expect(envois).not.toContainText("Envoi 2");
   });
 
-  test("Notifier seul (le droit de notifier, sans être admin) : pas le sous-titre de Réception", async ({ page }) => {
-    const notifieur: FakeProfile = { uid: "u-notifieur", email: "notifieur@example.com", firstName: "Noé", lastName: "T.", ...notifie("Groupe Paix") };
+  // Lot RS : le droit de notifier d'un non-admin vient de la responsabilité de gestionnaire (Q10), plus d'un rôle « Notifier ».
+  test("Notifier seul (gestionnaire de Paix, sans être admin) : pas le sous-titre de Réception", async ({ page }) => {
+    const notifieur: FakeProfile = { uid: "u-notifieur", email: "notifieur@example.com", firstName: "Noé", lastName: "T.", responsabilites: ["planning:paix"] };
     await ouvrir(page, "/back-office/messages/notifier", DOCS, notifieur);
     await expect(page.getByRole("region", { name: "Aperçu" })).toBeVisible();
     await expect(titre(page)).toHaveText("Messages");

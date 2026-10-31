@@ -508,7 +508,9 @@ test.describe("C6 : glisser en vue Mois", () => {
     test.skip(estTelephone(info), GLISSER);
     await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
     await sheets(page);
-    await signInAs(page, P_AUTEUR, {
+    // lot RS : un gestionnaire de planning réserve toujours (Q12), la saison ne le limite pas ; ce test regarde un
+    // auteur sans responsabilité (référent d'équipe, qui a le Back-Office), que la saison limite.
+    await signInAs(page, { ...P_MEMBRE, uid: "u-auteur", firstName: "Ines", lastName: "R." }, {
       ...DOCS,
       "programmes/noel": { ...DOCS["programmes/noel"], quiAutorises: ["Jeunes"] },
       "programmes/noel/creneaux/chorale": {

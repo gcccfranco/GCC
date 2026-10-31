@@ -20,7 +20,7 @@ import type { UserProfile } from "../src/types/user";
 const ADMIN: FakeProfile = { uid: "uid-admin", email: "tc328829@gmail.com", firstName: "Admin", lastName: "T." };
 /** TEAM ÉVÉNEMENTIEL et la coordination (cochée) ; son pôle sert encore aux tâches jusqu'à EQ-C. */
 const COORD: FakeProfile = {
-  uid: "uid-alice", email: "alice@example.com", firstName: "Alice", lastName: "Q.", dansEquipes: ["evenementiel", "edd"], referentDe: ["edd"], coordination: true,
+  uid: "uid-alice", email: "alice@example.com", firstName: "Alice", lastName: "Q.", dansEquipes: ["evenementiel", "edd"], referentDe: ["edd"], coordination: true, responsabilites: ["orga"] /* lot RS : la coordination vient du Comité Orga */,
 };
 /** Référent de TEAM DA, sans droit d'annonces ; son pôle sert encore aux tâches jusqu'à EQ-C. */
 const DA: FakeProfile = { uid: "uid-bruno", email: "bruno@example.com", firstName: "Bruno", lastName: "M.", dansEquipes: ["da"], referentDe: ["da"] };
@@ -135,9 +135,11 @@ test.describe("T2a : le menu", () => {
 
   test("membre d'équipe responsable : sa barre du bas (téléphone, tablette portrait) n'a plus Réunions, l'adresse mène au Calendrier filtré (BO-C)", async ({ page }, info) => {
     test.skip(estGrandEcran(info), "la barre du bas : téléphone et tablette en portrait");
-    await ouvrir(page, NOTIFY_EQUIPE, "/back-office/reunions");
+    // lot RS (Q22) : le rôle Notifier seul n'ouvre plus le Back-Office ; un référent d'équipe, oui.
+    await ouvrir(page, { ...REFERENTE, uid: "uid-ne" }, "/back-office/reunions");
     await expect(page).toHaveURL(/\/back-office\/calendrier\/?\?vue=agenda&filtre=reunions$/);
-    await expect(barreDuBas(page).getByRole("link")).toHaveText(["À faire", "Calendrier", "App"]);
+    // lot RS : le référent tient son équipe, d'où « Équipes ».
+    await expect(barreDuBas(page).getByRole("link")).toHaveText(["À faire", "Calendrier", "Équipes", "App"]);
     await expect(barreDuBas(page).locator("[aria-current]")).toHaveCount(1);
     await expect(barreDuBas(page).getByRole("link", { name: "Calendrier" })).toHaveAttribute("aria-current", /.+/);
     await expect(page.getByRole("heading", { level: 1, name: "Calendrier" })).toBeVisible();
@@ -145,10 +147,11 @@ test.describe("T2a : le menu", () => {
 
   test("une barre enregistrée avec Évènements est ignorée : la barre est fixe", async ({ page }, info) => {
     test.skip(estGrandEcran(info), "la barre du bas : téléphone et tablette en portrait");
-    await ouvrir(page, NOTIFY_EQUIPE, "/back-office", {
+    // lot RS (Q22) : un référent d'équipe, le rôle Notifier seul n'ouvrant plus le Back-Office.
+    await ouvrir(page, { ...REFERENTE, uid: "uid-ne" }, "/back-office", {
       ...DOCS, "backOffice/uid-ne": { barreDuBas: ["tableau", "evenements", "calendrier", "taches"], majLe: "2026-09-30T10:00:00Z" },
     });
-    await expect(barreDuBas(page).getByRole("link")).toHaveText(["À faire", "Calendrier", "App"]);
+    await expect(barreDuBas(page).getByRole("link")).toHaveText(["À faire", "Calendrier", "Équipes", "App"]);
   });
 
   test("en 中文 : « 会议 » est le filtre où mène l'adresse des réunions (BO-C)", async ({ page }) => {
@@ -272,10 +275,11 @@ test.describe("T2a, relecture : là où mènent À faire et le guide", () => {
       "evenements/reu-regie": { ...REU, pour: "equipe:regie", titre: "Réunion Régie", date: "2026-10-12" },
       "evenements/kermesse": { ...EV, titre: "Kermesse", pour: "equipe:regie", organisateurUid: "uid-ne", inscriptionFin: "2026-10-08" },
     };
-    await ouvrir(page, NOTIFY_EQUIPE, "/back-office", docs);
+    // lot RS : le rôle Notifier ne donne plus l'accès au Back-Office ; le référent de l'équipe, lui, y tient ses
+    // réunions (et a aussi les Évènements de son équipe : sa Kermesse est la sienne, « Voir les inscrits » est permis).
+    await ouvrir(page, { ...REFERENTE, uid: "uid-ne" }, "/back-office", docs);
     await expect(ligne(page, "Réunion Régie").getByRole("link", { name: /^Écrire le compte rendu/ }))
       .toHaveAttribute("href", /^\/back-office\/reunions\/reu-regie-sept\/?$/);
-    await expect(page.getByRole("link", { name: /^Voir les inscrits/ })).toHaveCount(0);
     await expect(page.getByTestId("grille-widgets")).toHaveCount(0);
   });
 

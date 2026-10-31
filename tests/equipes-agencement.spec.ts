@@ -168,10 +168,11 @@ test("Back-Office d'un simple membre (BO4) : « Réservé aux responsables », a
   await capture(page, "membre-back-office");
 });
 
-test("Back-Office d'une référente sans Planning : À faire, Calendrier, Équipes ; Messages en grand, App au doigt", async ({ page }, info) => {
+// Lot RS : une référente ne notifie plus (que ses réunions) : plus de Messages en grand.
+test("Back-Office d'une référente sans Planning : À faire, Calendrier, Équipes ; App au doigt", async ({ page }, info) => {
   await ouvrir(page, LEA, "/back-office");
   const liens = menu(page, info).getByRole("link");
-  if (estOrdinateur(info)) await expect(liens).toHaveText([/^À faire/, /^Calendrier/, /^Équipes/, /^Messages/]);
+  if (estOrdinateur(info)) await expect(liens).toHaveText([/^À faire/, /^Calendrier/, /^Équipes/]);
   else await expect(liens).toHaveText([/^À faire/, /^Calendrier/, /^Équipes/, /^App/]);
   await capture(page, "referente-back-office");
 });

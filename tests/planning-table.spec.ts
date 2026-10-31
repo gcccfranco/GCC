@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { readFileSync } from "node:fs";
-import { signInAs, type FakeProfile, remplit } from "./helpers/fakeSession";
+import { signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { lirePdf } from "./helpers/pdf";
 import { repondreDansLeSite } from "./helpers/agencement";
 import { nomsAAjouter } from "../src/components/planning/PetitDejCase";
@@ -32,7 +32,7 @@ const TABLE = csv([
 const MEMBRE: FakeProfile = { uid: "uid-membre", email: "membre@example.com", planningName: "Inès L." };
 const RESPONSABLE: FakeProfile = {
   uid: "uid-resp", email: "resp@example.com", firstName: "Christelle", lastName: "Zhang", planningName: "Christelle Z.",
-  ...remplit("table"),
+  responsabilites: ["planning:table"], // lot RS : gestionnaire de la Table (l'ancien remplit("table") passait par Orga, qui ne remplit plus la Table)
 };
 
 /** Deux inscriptions au petit déj du 27/09, la plus récente d'abord dans la base. */
@@ -282,7 +282,7 @@ test("petit déj en 中文 : les libellés de la case sont traduits", async ({ p
 
 test("petit déj : un compte qui ne gère pas la Table n'ouvre pas la grille — aucune case, aucun bouton", async ({ page }) => {
   // Écrivain d'un autre planning : il ouvre le Back-Office, pas le droit « table ».
-  const AUTRE_PLANNING: FakeProfile = { uid: "uid-culte", email: "culte@example.com", planningName: "Gaëlle P.", ...remplit("culte") };
+  const AUTRE_PLANNING: FakeProfile = { uid: "uid-culte", email: "culte@example.com", planningName: "Gaëlle P.", responsabilites: ["planning:culte"] };
   await open(page, AUTRE_PLANNING, "/back-office/planning/table", PETIT_DEJ);
   await expect(page.getByText("Page réservée aux responsables de ce planning.")).toBeVisible();
   await expect(page.locator('[data-case$="|petitDej"]')).toHaveCount(0);

@@ -137,7 +137,7 @@ test("onglets : un connecté voit le programme de scène à côté du calendrier
 
 // ─── Tranche E2 : créer, modifier, dupliquer, supprimer, push à la création ──
 
-const ALICE: FakeProfile = { uid: "uid-alice", email: "alice@example.com", firstName: "Alice", lastName: "Q.", dansEquipes: ["evenementiel", "edd"], referentDe: ["evenementiel", "edd"] };
+const ALICE: FakeProfile = { uid: "uid-alice", email: "alice@example.com", firstName: "Alice", lastName: "Q.", dansEquipes: ["evenementiel", "edd"], referentDe: ["evenementiel", "edd"], responsabilites: ["orga"] /* lot RS : la coordination vient du Comité Orga */ };
 // Lot U6, B3 : la gestion d'un évènement est au Back-Office, ouvert aux responsables ; Steph
 // organise avec le droit d'annonces de sa section.
 const STEPH: FakeProfile = { uid: "uid-steph", email: "steph@example.com", firstName: "Steph", lastName: "R.", ...presidentGroupe("bonte") };
@@ -189,17 +189,17 @@ test("créer : le président d'un groupe ne crée que pour sa section et son com
   let pushed = false;
   await page.route("**/api/push/notify-evenement", (route) => { pushed = true; return route.fulfill({ json: { ok: true } }); });
   await page.getByRole("link", { name: "Nouvel évènement" }).click();
-  // Sa section, et le comité de son groupe (lot AO : le président d'un groupe est référent de son comité). Un rôle de
-  // service le met dans le public Louange, mais seuls les référents de TEAM LOUANGE créent pour lui (décision 5).
-  await expect(page.getByLabel("Public").locator("option")).toHaveText(["Groupe Paix", "COMITÉ PAIX"]);
-  await expect(page.getByLabel("Public")).toHaveValue("Groupe Paix");
+  // lot RS : le président d'un groupe ne crée plus d'évènement de sa section (Comité Orga seul) ; il propose son comité
+  // (réunion, car il en est référent). Un rôle de service le met dans le public Louange, mais seuls les référents de
+  // TEAM LOUANGE créent pour lui (décision 5).
+  await expect(page.getByLabel("Public").locator("option")).toHaveText(["COMITÉ PAIX"]);
   await page.getByLabel("Nom de l'évènement").fill("Prière du groupe");
   await page.getByLabel("Date", { exact: true }).fill("2026-10-20");
   await page.getByLabel("Prévenir les membres").uncheck();
   await page.getByRole("button", { name: "Créer l'évènement" }).click();
   await expect(page.getByRole("heading", { name: "Prière du groupe" })).toBeVisible();
   const created = db.writes.find((w) => w.method === "POST" && w.path.startsWith("evenements/"));
-  expect(created?.data).toMatchObject({ pour: "Groupe Paix", organisateurUid: "uid-resp" });
+  expect(created?.data).toMatchObject({ pour: "equipe:comite-paix", organisateurUid: "uid-resp" });
   await page.waitForTimeout(300);
   expect(pushed).toBe(false);
 });

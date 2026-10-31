@@ -210,7 +210,8 @@ test("règles Firestore : les créneaux passent par reservable(), miroir de canR
   // Jusqu'à l'accolade qui ferme le bloc (celle de « {cid} » viendrait avant : tranche vide).
   const del = bloc.slice(bloc.indexOf("allow delete"), bloc.indexOf("}", bloc.indexOf("allow delete")));
   expect(create).toContain("request.resource.data.auteurUid == request.auth.uid");
-  expect(create).toContain("isCoordination() || reservable(id, request.resource.data.qui)");
+  // lot RS : un gestionnaire de planning réserve aussi (gereUnPlanning), comme canReserverPour
+  expect(create).toContain("isCoordination() || gereUnPlanning() || reservable(id, request.resource.data.qui)");
   expect(update).toContain("reservable(id, request.resource.data.qui)");
   expect(del).toContain("resource.data.auteurUid == request.auth.uid");
   expect(del).not.toContain("reservable");
@@ -219,7 +220,7 @@ test("règles Firestore : les créneaux passent par reservable(), miroir de canR
 // ─── S3 : l'écran de la coordination ────────────────────────────────────────
 
 const NOE: FakeProfile = { uid: "uid-noe", email: "noe@example.com", firstName: "Noé", lastName: "L." };
-const ALICE: FakeProfile = { uid: "uid-alice", email: "alice@example.com", firstName: "Alice", lastName: "Q.", dansEquipes: ["evenementiel", "edd"], referentDe: ["evenementiel", "edd"], coordination: true }; // lot AO : la Coordination vient du référent EDD ; `coordination` ne sert plus qu'à `ouvrir` (choix de l'adresse)
+const ALICE: FakeProfile = { uid: "uid-alice", email: "alice@example.com", firstName: "Alice", lastName: "Q.", dansEquipes: ["evenementiel", "edd"], referentDe: ["evenementiel", "edd"], responsabilites: ["orga"] /* lot RS : la coordination vient du Comité Orga */, coordination: true }; // lot AO : la Coordination vient du référent EDD ; `coordination` ne sert plus qu'à `ouvrir` (choix de l'adresse)
 
 /** « Noël 2026 » de la Réussite, en brouillon. */
 const NOEL26 = {
