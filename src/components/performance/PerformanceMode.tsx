@@ -739,7 +739,7 @@ export function PerformanceMode({
       // Un Dp rejoué de suite (même section) se replie quelle que soit sa nuance.
       const dpRepete = first?.kind === "section" && isDp(b.section) && isDp(first.section) && first.section.id === b.section.id;
       if (first?.kind === "section" && !isDp(b.section) && !isDp(first.section) ? isRepeatOf(step(first), step(b)) : dpRepete) {
-        repeatCount.set(lead, (repeatCount.get(lead) ?? 1) + 1);
+        repeatCount.set(lead, (repeatCount.get(lead) ?? (first as SectionBlock).repeat ?? 1) + (b.repeat ?? 1));
         repeatHidden.add(i);
       } else {
         lead = i;
@@ -1049,11 +1049,24 @@ export function PerformanceMode({
     !!user && !annotateMode && showAnnotations && tailleAnnotee !== null &&
     Math.round(tailleAnnotee * 100) !== Math.round(fontScale * 100);
 
+  // Hauteur du rappel : mesure initiale, puis suivie par un ResizeObserver (chargement des polices, retour
+  // à la ligne) sans forcer une mise en page à chaque rendu.
+  const rappelPresent = (affichageVu === "unique" || affichageVu === "played") && !!layout[currentPage] && !layout[currentPage].fit;
   useLayoutEffect(() => {
     const el = rappelRef.current;
-    const h = el ? (el.offsetHeight + (parseFloat(getComputedStyle(el).marginBottom) || 0)) * fontScale : 0;
-    setRappelEcran((prev) => (Math.abs(prev - h) < 0.5 ? prev : h));
-  });
+    if (!el) {
+      setRappelEcran((prev) => (prev === 0 ? prev : 0));
+      return;
+    }
+    const mesurer = () => {
+      const h = (el.offsetHeight + (parseFloat(getComputedStyle(el).marginBottom) || 0)) * fontScale;
+      setRappelEcran((prev) => (Math.abs(prev - h) < 0.5 ? prev : h));
+    };
+    mesurer();
+    const obs = new ResizeObserver(mesurer);
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [rappelPresent, currentPage, fontScale, currentPageKey]);
   // Annotations d'avant le lot : Sections uniques avec rappel = ancienne réserve, sinon 0.
   const annotations = useMemo(
     () =>

@@ -41,12 +41,15 @@ export function recaler(
   ancien: number,
   hEcran: number,
 ): AnnotationData {
-  const enregistre = data.rappel ?? ancien;
-  const dy = ((actuel - enregistre) * (data.h || hEcran)) / hEcran;
-  if (Math.abs(dy) < 0.01) return data.rappel === actuel ? data : { ...data, rappel: actuel };
+  // `rappel` est dans l'espace de `data.h` ; `actuel` et `ancien` en px d'écran courants.
+  const echelle = (data.h || hEcran) / hEcran;
+  const enregistre = data.rappel ?? ancien * echelle;
+  const actuelStocke = actuel * echelle;
+  const dy = actuelStocke - enregistre;
+  if (Math.abs(dy) < 0.01) return data.rappel === actuelStocke ? data : { ...data, rappel: actuelStocke };
   return {
     ...data,
-    rappel: actuel,
+    rappel: actuelStocke,
     strokes: data.strokes.map((s) => ({ ...s, points: s.points.map(([x, y]) => [x, y + dy] as [number, number]) })),
   };
 }
