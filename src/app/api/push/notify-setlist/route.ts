@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { adminDb, verifyIdToken } from "@/lib/push/admin";
+import { adminDb } from "@/lib/push/admin";
+import { authentifier } from "@/lib/api/authentifier";
 import { sendPushToUids } from "@/lib/push/send";
 import { loadPlanningNameIndex, resolveNamesToUids, filterUidsByNotifPref, loadNotifLangs } from "@/lib/push/recipients";
 import { setlistReadyMessage } from "@/lib/push/messages";
@@ -35,19 +36,9 @@ const TEAM_ROLES: ServiceRole[] = ["chanteur", "musicien", "regie"];
 
 export async function POST(req: NextRequest) {
   // 1. Authentification de l'appelant
-  const authz = req.headers.get("authorization") ?? "";
-  const token = authz.startsWith("Bearer ") ? authz.slice(7) : "";
-  if (!token) return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
-
-  let uid: string;
-  let email: string;
-  try {
-    const decoded = await verifyIdToken(token);
-    uid = decoded.uid;
-    email = (decoded.email ?? "").toLowerCase();
-  } catch {
-    return NextResponse.json({ error: "Token invalide" }, { status: 401 });
-  }
+  const appelant = await authentifier(req);
+  if (appelant instanceof NextResponse) return appelant;
+  const { uid, email } = appelant;
 
   let corps: ReturnType<typeof lireCorpsNotifySetlist>;
   try {

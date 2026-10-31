@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { adminDb, verifyIdToken } from "@/lib/push/admin";
+import { adminDb } from "@/lib/push/admin";
+import { authentifier } from "@/lib/api/authentifier";
 import { sendPushToUids } from "@/lib/push/send";
 import { recordNotification } from "@/lib/push/notifications";
 import { loadNotifLangs } from "@/lib/push/recipients";
@@ -22,14 +23,8 @@ const ID = /^[\w-]+$/;
 export async function POST(req: NextRequest) {
   // Back-office coupé (lot 18, docs/spec-mise-en-ligne.md) : la route n'existe pas en ligne.
   if (!BACK_OFFICE) return new Response(null, { status: 404 })
-  const authz = req.headers.get("authorization") ?? "";
-  const token = authz.startsWith("Bearer ") ? authz.slice(7) : "";
-  if (!token) return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
-  try {
-    await verifyIdToken(token);
-  } catch {
-    return NextResponse.json({ error: "Token invalide" }, { status: 401 });
-  }
+  const appelant = await authentifier(req);
+  if (appelant instanceof NextResponse) return appelant;
 
   const { programmeId, creneauIds } = (await req.json().catch(() => ({}))) as { programmeId?: string; creneauIds?: string[] };
   if (

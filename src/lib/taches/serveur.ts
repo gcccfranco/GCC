@@ -3,7 +3,8 @@
 // uniquement (Admin).
 
 import { NextResponse, type NextRequest } from "next/server";
-import { adminDb, verifyIdToken } from "@/lib/push/admin";
+import { adminDb } from "@/lib/push/admin";
+import { authentifier } from "@/lib/api/authentifier";
 import { equipesDe, estDeLEquipe, estReferentDe, peutCocher } from "@/lib/access";
 import type { Tache } from "@/types/tache";
 
@@ -23,15 +24,7 @@ export function equipeDuChemin(chemin: string): string | null {
 
 /** Appelant authentifié (jeton vérifié), sinon la réponse d'erreur. */
 export async function appelant(req: NextRequest): Promise<{ uid: string; email: string } | NextResponse> {
-  const authz = req.headers.get("authorization") ?? "";
-  const token = authz.startsWith("Bearer ") ? authz.slice(7) : "";
-  if (!token) return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
-  try {
-    const decoded = await verifyIdToken(token);
-    return { uid: decoded.uid, email: (decoded.email ?? "").toLowerCase() };
-  } catch {
-    return NextResponse.json({ error: "Token invalide" }, { status: 401 });
-  }
+  return authentifier(req);
 }
 
 /** Ce que revérifient /api/taches/assigne et /fait (EQ11), dans la base passée (testable) : l'appelant

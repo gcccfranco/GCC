@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { adminDb, verifyIdToken } from "@/lib/push/admin";
+import { adminDb } from "@/lib/push/admin";
+import { authentifier } from "@/lib/api/authentifier";
 import { sendPushToUids, allSubscriberUids } from "@/lib/push/send";
 import { recordNotification } from "@/lib/push/notifications";
 import { uidsDuGroupe, loadNotifLangs } from "@/lib/push/recipients";
@@ -29,19 +30,9 @@ export const maxDuration = 60;
 
 export async function POST(req: NextRequest) {
   // 1. Authentification
-  const authz = req.headers.get("authorization") ?? "";
-  const token = authz.startsWith("Bearer ") ? authz.slice(7) : "";
-  if (!token) return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
-
-  let uid: string;
-  let email: string;
-  try {
-    const decoded = await verifyIdToken(token);
-    uid = decoded.uid;
-    email = (decoded.email ?? "").toLowerCase();
-  } catch {
-    return NextResponse.json({ error: "Token invalide" }, { status: 401 });
-  }
+  const appelant = await authentifier(req);
+  if (appelant instanceof NextResponse) return appelant;
+  const { uid, email } = appelant;
 
   // 2. Requête
   let corps: ReturnType<typeof lireCorpsRelease>;

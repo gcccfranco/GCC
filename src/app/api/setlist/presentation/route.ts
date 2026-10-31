@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { FieldValue } from "firebase-admin/firestore";
-import { adminDb, verifyIdToken } from "@/lib/push/admin";
+import { adminDb } from "@/lib/push/admin";
+import { authentifier } from "@/lib/api/authentifier";
 import { sendPushToUids } from "@/lib/push/send";
 import { recordNotification } from "@/lib/push/notifications";
 import { loadPlanningNameIndex, filterUidsByNotifPref, loadNotifLangs } from "@/lib/push/recipients";
@@ -59,17 +60,8 @@ async function notifyPresident(
 }
 
 export async function POST(req: NextRequest) {
-  const authz = req.headers.get("authorization") ?? "";
-  const token = authz.startsWith("Bearer ") ? authz.slice(7) : "";
-  if (!token) return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
-
-  let user: { uid: string; email: string };
-  try {
-    const decoded = await verifyIdToken(token);
-    user = { uid: decoded.uid, email: (decoded.email ?? "").toLowerCase() };
-  } catch {
-    return NextResponse.json({ error: "Token invalide" }, { status: 401 });
-  }
+  const user = await authentifier(req);
+  if (user instanceof NextResponse) return user;
 
   const { setlistId, url } = (await req.json().catch(() => ({}))) as { setlistId?: string; url?: string };
   // Identifiant Firestore simple : un « / » ferait viser un autre document.
