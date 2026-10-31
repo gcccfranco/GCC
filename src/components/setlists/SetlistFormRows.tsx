@@ -190,6 +190,48 @@ export function AnnotationFieldInput({
   );
 }
 
+// Les quatre boutons de champs (note, nuance, transition, changement de ton) d'une ligne d'éditeur,
+// communs à la ligne de section d'un chant et à la ligne de structure mixte. Au niveau du module : défini
+// dans un autre composant, il serait recréé à chaque rendu.
+function BoutonsChamps({
+  item,
+  expanded,
+  setExpanded,
+}: {
+  item: Pick<FormSectionItem, "note" | "nuanceTags" | "nuanceNote" | "transition" | "keyChange">;
+  expanded: AnnotationField;
+  setExpanded: (champ: AnnotationField) => void;
+}) {
+  return (
+    <>
+      <FieldToggleBtn
+        kind="note"
+        filled={!!item.note.trim()}
+        active={expanded === "note"}
+        onClick={() => setExpanded(expanded === "note" ? null : "note")}
+      />
+      <FieldToggleBtn
+        kind="nuance"
+        filled={item.nuanceTags.length > 0 || !!item.nuanceNote.trim()}
+        active={expanded === "nuance"}
+        onClick={() => setExpanded(expanded === "nuance" ? null : "nuance")}
+      />
+      <FieldToggleBtn
+        kind="transition"
+        filled={!!(item.transition ?? "").trim()}
+        active={expanded === "transition"}
+        onClick={() => setExpanded(expanded === "transition" ? null : "transition")}
+      />
+      <FieldToggleBtn
+        kind="keyChange"
+        filled={!!(item.keyChange ?? "").trim()}
+        active={expanded === "keyChange"}
+        onClick={() => setExpanded(expanded === "keyChange" ? null : "keyChange")}
+      />
+    </>
+  );
+}
+
 // ─── Section row (sortable, inside a song) ────────────────────────────────────
 
 function SortableSectionRow({
@@ -236,32 +278,7 @@ function SortableSectionRow({
         </button>
         <span data-nom-section className="flex-1 min-w-0 font-medium text-foreground truncate">{item.name}</span>
         {!hideNote && (
-          <>
-            <FieldToggleBtn
-              kind="note"
-              filled={!!item.note.trim()}
-              active={expanded === "note"}
-              onClick={() => setExpanded(expanded === "note" ? null : "note")}
-            />
-            <FieldToggleBtn
-              kind="nuance"
-              filled={item.nuanceTags.length > 0 || !!item.nuanceNote.trim()}
-              active={expanded === "nuance"}
-              onClick={() => setExpanded(expanded === "nuance" ? null : "nuance")}
-            />
-            <FieldToggleBtn
-              kind="transition"
-              filled={!!(item.transition ?? "").trim()}
-              active={expanded === "transition"}
-              onClick={() => setExpanded(expanded === "transition" ? null : "transition")}
-            />
-            <FieldToggleBtn
-              kind="keyChange"
-              filled={!!(item.keyChange ?? "").trim()}
-              active={expanded === "keyChange"}
-              onClick={() => setExpanded(expanded === "keyChange" ? null : "keyChange")}
-            />
-          </>
+          <BoutonsChamps item={item} expanded={expanded} setExpanded={setExpanded} />
         )}
         <button
           type="button"
@@ -492,30 +509,7 @@ function SortableMixedRow({
             {item.songTitle}
           </span>
         </div>
-        <FieldToggleBtn
-          kind="note"
-          filled={!!item.note.trim()}
-          active={expanded === "note"}
-          onClick={() => setExpanded(expanded === "note" ? null : "note")}
-        />
-        <FieldToggleBtn
-          kind="nuance"
-          filled={item.nuanceTags.length > 0 || !!item.nuanceNote.trim()}
-          active={expanded === "nuance"}
-          onClick={() => setExpanded(expanded === "nuance" ? null : "nuance")}
-        />
-        <FieldToggleBtn
-          kind="transition"
-          filled={!!(item.transition ?? "").trim()}
-          active={expanded === "transition"}
-          onClick={() => setExpanded(expanded === "transition" ? null : "transition")}
-        />
-        <FieldToggleBtn
-          kind="keyChange"
-          filled={!!(item.keyChange ?? "").trim()}
-          active={expanded === "keyChange"}
-          onClick={() => setExpanded(expanded === "keyChange" ? null : "keyChange")}
-        />
+        <BoutonsChamps item={item} expanded={expanded} setExpanded={setExpanded} />
         <button
           type="button"
           onClick={onRemove}
