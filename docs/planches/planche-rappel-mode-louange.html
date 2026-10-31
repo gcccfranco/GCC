@@ -8,14 +8,12 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
   :root {
-    --fg: #1c1c1e; --muted: #6c6c72; --border: #e4e4e5; --bg: #ffffff; --page: #f5f4f1;
-    --chord: #3f63cf;
+    --fg: #1c1c1e; --muted: #6c6c72; --border: #e4e4e5; --bg: #ffffff; --page: #f5f4f1; --chord: #3f63cf; --reco: #1f7a4d;
     --sec-intro: #5b7fa6; --sec-intro-tint: #eef3f9;
     --sec-verse: #2c8a7d; --sec-verse-tint: #e8f3f0;
     --sec-chorus: #e0560a; --sec-chorus-tint: #fcece1;
     --sec-bridge: #7a5bcb; --sec-bridge-tint: #f0ecf9;
     --sec-other: #6b7280; --sec-other-tint: #f1f3f6;
-    --reco: #1f7a4d;
   }
   .sombre {
     --fg: #f2f2f7; --muted: #98989f; --border: #373739; --bg: #000; --chord: #8fb0ff;
@@ -30,57 +28,50 @@
   main { max-width: 1240px; margin: 0 auto; padding: 40px 24px 80px; }
   h1 { font-size: 30px; letter-spacing: -0.02em; margin: 0 0 8px; }
   h2 { font-size: 22px; letter-spacing: -0.01em; margin: 0 0 4px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-  h3 { font-size: 13px; text-transform: uppercase; letter-spacing: .08em; color: #6c6c72; margin: 18px 0 8px; }
+  h3 { font-size: 13px; text-transform: uppercase; letter-spacing: .08em; color: #6c6c72; margin: 22px 0 8px; }
   p, li { font-size: 15px; line-height: 1.55; color: #3a3a3e; }
-  .intro { max-width: 760px; }
+  .intro { max-width: 820px; }
   .carte { background: #fff; border-radius: 18px; padding: 24px; margin: 28px 0; box-shadow: 0 1px 2px rgba(0,0,0,.05), 0 8px 24px rgba(0,0,0,.04); }
-  .carte.reco { outline: 2px solid var(--reco); }
-  .badge-reco { font-size: 12px; font-weight: 700; color: #fff; background: var(--reco); border-radius: 999px; padding: 3px 10px; letter-spacing: .02em; }
+  .badge { font-size: 12px; font-weight: 700; color: #fff; background: var(--reco); border-radius: 999px; padding: 3px 10px; }
   .tailles { display: flex; gap: 20px; align-items: flex-start; flex-wrap: wrap; }
-  .cadre { flex: none; }
   .cadre-titre { font-size: 12px; color: #6c6c72; margin-bottom: 6px; font-weight: 600; }
   .ecran-wrap { overflow: hidden; border-radius: 14px; border: 1px solid #d9d9dc; background: var(--bg); }
-  .ecran { transform-origin: top left; background: var(--bg); color: var(--fg); padding: 14px 18px 0; font-family: Inter, system-ui, sans-serif; }
-  /* Corps de page simulé */
+  .ecran { transform-origin: top left; background: var(--bg); color: var(--fg); padding: 14px 18px 0; }
   .sec { border-left: 3px solid var(--c); border-radius: 6px; padding: 8px 12px; margin: 0 0 10px; background: color-mix(in srgb, var(--c) 7%, transparent); }
   .sec-nom { font-size: 11px; font-weight: 700; letter-spacing: .1em; color: var(--c); text-transform: uppercase; }
   .ligne { font-size: 17px; line-height: 1.15; margin-top: 6px; }
   .acc { color: var(--chord); font-weight: 700; font-size: 15px; display: block; white-space: pre; }
-  .rappel { margin-bottom: 10px; }
-  /* ——— Aujourd'hui ——— */
-  .r0 { display: flex; flex-wrap: wrap; gap: 6px; }
+  .titre-chant { font-size: 22px; font-weight: 800; text-transform: uppercase; letter-spacing: -.01em; margin: 0 0 2px; }
+  .artiste { font-size: 12px; color: var(--muted); margin-bottom: 10px; }
+  .r0 { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
   .r0 span { height: 24px; min-width: 24px; padding: 0 6px; border-radius: 999px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; background: var(--t); color: var(--c); }
   .r0 span.cer { box-shadow: inset 0 0 0 2px var(--fg); }
-  /* ——— A ——— */
-  .rA { display: flex; flex-wrap: wrap; gap: 6px; }
-  .rA span { height: 32px; min-width: 32px; padding: 0 8px; border-radius: 999px; display: inline-flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; background: var(--t); color: var(--c); }
-  .rA span.ici { background: var(--c); color: var(--bg); }
-  /* ——— B ——— */
-  .rB-ligne { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 14px; font-size: 16px; font-weight: 700; }
-  .rB-ligne .s { color: var(--c); white-space: nowrap; }
-  .rB-ligne .n { color: var(--fg); font-weight: 600; font-size: 14px; margin-left: 4px; }
-  .rB-ligne .sep { color: var(--muted); font-weight: 400; }
-  .rB-barre { display: flex; gap: 2px; margin-top: 8px; height: 6px; }
-  .rB-barre i { flex: 1; border-radius: 3px; background: var(--c); opacity: .25; }
-  .rB-barre i.ici { opacity: 1; }
-  /* ——— C ——— */
-  .rC { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 6px; }
-  .rC .pt { width: 8px; height: 8px; border-radius: 50%; background: var(--c); opacity: .45; margin-top: 12px; }
-  .rC .grp { display: flex; flex-direction: column; align-items: center; gap: 3px; }
-  .rC .pa { height: 30px; min-width: 30px; padding: 0 8px; border-radius: 999px; display: inline-flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; background: var(--t); color: var(--c); }
-  .rC .ici .pa { background: var(--c); color: var(--bg); }
-  .rC .nu { font-size: 12px; font-weight: 700; color: var(--fg); white-space: nowrap; }
-  .rC .titre { font-size: 13px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; margin: 7px 8px 0 0; max-width: 220px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .questions li { margin-bottom: 8px; }
-  .bande { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: flex-start; }
-  .bande .grp { display: flex; flex-direction: column; align-items: center; gap: 5px; }
-  .bande .pa { height: 44px; min-width: 44px; padding: 0 10px; border-radius: 999px; display: inline-flex; align-items: baseline; justify-content: center; padding-top: 13px; font-size: 17px; font-weight: 700; background: var(--t); color: var(--c); }
-  .bande .pa small { font-size: 13px; margin-left: 1px; }
-  .bande .nu { font-size: 14px; font-weight: 600; color: #1c1c1e; white-space: nowrap; }
-  .duo { display: grid; grid-template-columns: 1fr; gap: 14px; }
-  .duo .lib { font-size: 12px; font-weight: 700; color: #6c6c72; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 8px; }
-  .duo > div { border: 1px solid #ececee; border-radius: 12px; padding: 14px 16px; }
-  .legende { font-size: 13px; color: #6c6c72; margin-top: 10px; }
+  .rc { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 6px; margin-bottom: 10px; }
+  .rc .pt { width: 8px; height: 8px; border-radius: 50%; background: var(--c); opacity: .45; margin-top: 11px; }
+  .rc .grp { display: flex; flex-direction: column; align-items: center; gap: 3px; }
+  .rc .pa { height: 30px; min-width: 30px; padding: 0 8px; border-radius: 999px; display: inline-flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; background: var(--t); color: var(--c); }
+  .rc .pa small, .bande .pa small, .liste .pa small { font-size: .78em; margin-left: 1px; }
+  .rc .ici .pa { background: var(--c); color: var(--bg); }
+  .rc .nu { font-size: 12px; font-weight: 700; color: var(--fg); white-space: nowrap; }
+  .rc .titre { font-size: 13px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; margin: 7px 8px 0 0; white-space: nowrap; }
+  .tel .rc .pa { height: 26px; min-width: 26px; padding: 0 6px; font-size: 13px; }
+  .tel .rc { gap: 5px; }
+  .bande { display: flex; flex-wrap: wrap; gap: 8px 10px; align-items: flex-start; margin-bottom: 14px; }
+  .bande .grp { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .bande .pa { height: 40px; min-width: 40px; padding: 0 9px; border-radius: 999px; display: inline-flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 700; background: var(--t); color: var(--c); }
+  .bande .nu { font-size: 13px; font-weight: 600; color: var(--fg); white-space: nowrap; }
+  .tel .bande .pa { height: 32px; min-width: 32px; font-size: 14px; padding: 0 7px; }
+  .tel .bande { gap: 6px 6px; }
+  .oss { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .oss div { border-left: 4px solid var(--c); background: color-mix(in srgb, var(--c) 9%, transparent); border-radius: 8px; padding: 10px 12px; font-size: 22px; font-weight: 800; color: var(--c); }
+  .oss div span { display: block; font-size: 14px; font-weight: 600; color: var(--fg); margin-top: 2px; }
+  .scan { height: 120px; border-radius: 6px; background: repeating-linear-gradient(180deg, #f3f1ec 0 16px, #e9e6df 16px 18px); display: flex; align-items: center; justify-content: center; color: #9a958a; font-size: 13px; }
+  .colonne { display: grid; grid-template-columns: 320px 1fr; gap: 18px; }
+  .liste { display: flex; flex-direction: column; gap: 7px; }
+  .liste .l { display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 600; }
+  .liste .pa { height: 30px; min-width: 30px; padding: 0 8px; border-radius: 999px; display: inline-flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; background: var(--t); color: var(--c); }
+  .liste .nu { font-weight: 700; font-size: 13px; }
+  .regles li, .decisions li { margin-bottom: 8px; }
   table.cmp { border-collapse: collapse; width: 100%; font-size: 14px; margin-top: 8px; }
   table.cmp th, table.cmp td { text-align: left; padding: 8px 10px; border-bottom: 1px solid #ececee; vertical-align: top; }
   table.cmp th { font-size: 12px; color: #6c6c72; text-transform: uppercase; letter-spacing: .05em; }
@@ -88,153 +79,150 @@
 </head>
 <body>
 <main>
-  <h1>Rappel de structure du mode louange</h1>
+  <h1>Structure en tête de page, dans chaque mode du mode louange</h1>
   <div class="intro">
-    <p>À partir de la 2ᵉ page d'un chant, une rangée de pastilles rappelle la structure en haut de page (le « rappel », <code>StructureStrip compacte</code>). Constat du 31/10/2026 sur <b>Prince de paix</b> : pastilles de 24 px, lettres de 11 px illisibles de loin ; quatre « Dp » qu'on ne distingue pas ; un cercle noir autour des sections de la page, sans qu'on comprenne pourquoi ; les nuances (mp, mf ↗…) de la 1ʳᵉ page ont disparu ; rien ne dit où l'on en est.</p>
-    <p>Restent gelés : les couleurs de sections (<code>--sec-*</code>), d'accords et du 简谱. Les maquettes ci-dessous reprennent ces couleurs telles quelles ; seule la rangée du haut change. Exemple : la page du Pont (sections imprimées : Pont, Pont, Refrain, Dp, Dp).</p>
+    <p>Constat du 31/10/2026 sur <b>Prince de paix</b> : à partir de la 2ᵉ page, le rappel de structure est une rangée de pastilles de 24 px aux lettres de 11 px, illisibles de loin. Quatre « Dp » qu'on ne distingue pas, un cercle noir qu'on ne comprend pas, plus de nuances, et rien ne dit où l'on en est. Ce rappel n'existe qu'en <b>Sections uniques</b> ; les autres modes n'ont rien après la 1ʳᵉ page.</p>
+    <p>Version 2 de la planche : la piste C est retenue, adaptée à chaque mode. Les pistes A (pastilles agrandies) et B (ligne en toutes lettres) sont écartées ; elles restent dans l'historique git de ce fichier. Les couleurs de sections (<code>--sec-*</code>) restent gelées et sont reprises telles quelles.</p>
   </div>
 
   <section class="carte">
-    <h2>Aujourd'hui</h2>
-    <div class="tailles" data-piste="0"></div>
-  </section>
-
-  <section class="carte">
-    <h2>A · Pastilles agrandies</h2>
-    <p>Même rangée, pastilles de 32 px et lettres de 14 px. Les sections de la page sont <b>pleines</b> (couleur de la section, lettre blanche) au lieu d'être cerclées de noir. Pas de nuance. Changement minimal : la réserve passe de 32 à 40 px.</p>
-    <div class="tailles" data-piste="A"></div>
-  </section>
-
-  <section class="carte">
-    <h2>B · Ligne parlante</h2>
-    <p>Plus de pastilles : les sections de la page écrites en toutes lettres avec leur nuance, dans leur couleur, puis une barre de progression découpée par section (la page en couleur pleine, le reste estompé). Le plus lisible pour la page en cours, mais on perd les lettres de la carte du chant.</p>
-    <div class="tailles" data-piste="B"></div>
-  </section>
-
-  <section class="carte reco">
-    <h2>C · Carte et nuances <span class="badge-reco">Recommandée</span></h2>
-    <p>On garde la carte du chant, mais elle dit où l'on en est. Les sections <b>déjà jouées</b> deviennent de petits points de leur couleur. Celles de la page sont <b>pleines</b>, avec leur nuance écrite dessous. Les suivantes restent des pastilles claires. Pastilles de 30 px et lettres de 14 px. Sur tablette et ordinateur, le titre du chant ouvre la rangée ; sur téléphone, la place manque et il saute. La réserve passe de 32 à environ 50 px.</p>
-    <div class="tailles" data-piste="C"></div>
-    <h3>Thème sombre</h3>
-    <div class="tailles" data-piste="C" data-sombre="1" data-seul="tablette"></div>
-  </section>
-
-  <section class="carte reco" id="dp">
-    <h2>Les « Dp » · ajout du 31/10/2026 <span class="badge-reco">Proposé</span></h2>
-    <p>Demande de Timothée : des couleurs différentes quand les Dp sont différents, et le même Dp une seule fois. Une « Dernière phrase » porte déjà dans son nom la section d'où elle vient (« Dernière phrase – R »). D'où deux règles, valables pour le bandeau de la 1ʳᵉ page <b>et</b> pour le rappel :</p>
-    <ol>
-      <li><b>Couleur de la section d'origine</b> : « – R » prend l'orange du refrain, « – C » le vert du couplet, « – P » le violet du pont. Ce sont les couleurs gelées, simplement réutilisées ; le gris actuel disparaît. Deux Dp différents tirés de la même section (par exemple les deux dernières lignes, puis la dernière seule) prennent un numéro : Dp1, Dp2.</li>
-      <li><b>Une seule pastille quand c'est le même</b> : le même Dp joué deux fois de suite devient « Dp ×2 », même si la nuance change d'une fois à l'autre. Les deux nuances s'écrivent alors dessous (« mp ↗ → mf »). Aujourd'hui, deux nuances différentes empêchent ce regroupement.</li>
+    <h2>Règles communes <span class="badge">Proposé</span></h2>
+    <ol class="regles">
+      <li><b>Pastilles de 30 px, lettres de 14 px</b> (26 et 13 px sur téléphone), contre 24 et 11 px aujourd'hui.</li>
+      <li><b>Pleine = sur cette page</b> (couleur de la section, lettre blanche), avec la nuance de ce passage écrite dessous. Claire = ailleurs, sans nuance. Le cercle noir disparaît.</li>
+      <li><b>Les Dp prennent la couleur de leur section d'origine</b> : « Dernière phrase – R » est orange comme le refrain, « – C2 » vert comme le couplet. Deux Dp différents tirés de la même section sont numérotés Dp1, Dp2.</li>
+      <li><b>Le même Dp joué deux fois de suite = une pastille « Dp ×2 »</b>, même si la nuance change ; les deux nuances s'écrivent dessous (« mp ↗ → mf »). Les autres sections gardent la règle actuelle : regroupées seulement à nuance égale, puisque P puis P à nuance différente se jouent différemment.</li>
+      <li><b>Titre du chant en tête du rappel</b> sur tablette et ordinateur ; il saute sur téléphone, faute de place.</li>
     </ol>
-    <div class="duo" id="dp-exemples"></div>
   </section>
 
   <section class="carte">
-    <h2>Comparaison</h2>
+    <h2>1 · Ordre joué</h2>
+    <p>Les sections sont imprimées dans l'ordre où on les joue : tourner la page, c'est avancer dans le chant. Aujourd'hui, il n'y a rien en tête des pages 2 et suivantes. Proposé : un rappel qui dit où l'on en est. Les sections <b>déjà jouées</b> deviennent de petits points, celles de la page sont pleines avec leur nuance, celles à venir restent claires. Exemple : page 3, qui imprime Pont, Pont, Refrain.</p>
+    <h3>Page 1 · bandeau (seules les règles des Dp changent)</h3>
+    <div class="tailles" data-vue="bande-joue"></div>
+    <h3>Page 3 · aujourd'hui : rien</h3>
+    <div class="tailles" data-vue="joue-avant" data-tailles="tablette"></div>
+    <h3>Page 3 · proposé</h3>
+    <div class="tailles" data-vue="joue"></div>
+  </section>
+
+  <section class="carte">
+    <h2>2 · Sections uniques</h2>
+    <p>Chaque section n'est imprimée qu'une fois, et on revient dessus quand la structure la rejoue : la page n'est pas un moment du chant, donc pas de points. Proposé : <b>chaque passage</b> d'une section imprimée sur la page est plein, avec sa nuance. On voit d'un coup d'œil à quels moments on reviendra sur cette page. Exemple : page 2, qui imprime Pont, Refrain et la Dp.</p>
+    <h3>Page 2 · aujourd'hui</h3>
+    <div class="tailles" data-vue="unique-avant" data-tailles="tablette"></div>
+    <h3>Page 2 · proposé</h3>
+    <div class="tailles" data-vue="unique"></div>
+    <h3>Page 2 · proposé, thème sombre</h3>
+    <div class="tailles" data-vue="unique" data-tailles="tablette" data-sombre="1"></div>
+  </section>
+
+  <section class="carte">
+    <h2>3 · Structure seule</h2>
+    <p>Un chant par page, la structure en grand, pour les batteurs : aucun rappel à ajouter, la page <i>est</i> la structure. Seules les règles des Dp s'y appliquent : couleur de la section d'origine, et un seul bloc « Dp ×2 » pour le même Dp joué de suite.</p>
+    <div class="tailles" data-vue="structure" data-tailles="telephone,tablette"></div>
+  </section>
+
+  <section class="carte">
+    <h2>4 · Page de scan 简谱</h2>
+    <p>Le scan occupe la page ; le bandeau avec ses détails est déjà au-dessus en portrait, ou en colonne à gauche en paysage sur grand écran. Rien à ajouter : seules les règles des Dp s'appliquent, et la colonne écrit le nom de la section d'origine (« Dernière phrase – Refrain »).</p>
+    <div class="tailles" data-vue="scan" data-tailles="telephone,tablette"></div>
+    <div class="tailles" style="margin-top:16px" data-vue="scan-colonne" data-tailles="ordinateur"></div>
+  </section>
+
+  <section class="carte">
+    <h2>Ce que ça coûte</h2>
     <table class="cmp">
-      <tr><th></th><th>Lisible de loin</th><th>Carte du chant</th><th>Où j'en suis</th><th>Nuances</th><th>Place prise</th></tr>
-      <tr><td>Aujourd'hui</td><td>Non (11 px)</td><td>Oui</td><td>Cercle peu clair</td><td>Non</td><td>32 px</td></tr>
-      <tr><td>A</td><td>Oui</td><td>Oui</td><td>Pleines</td><td>Non</td><td>40 px</td></tr>
-      <tr><td>B</td><td>Très</td><td>Barre sans lettres</td><td>Oui</td><td>Page seulement</td><td>≈ 36 px (2 lignes sur téléphone)</td></tr>
-      <tr><td><b>C</b></td><td>Oui</td><td>Oui</td><td>Points, pleines, claires</td><td>Page seulement</td><td>≈ 50 px</td></tr>
+      <tr><th>Mode</th><th>Change</th><th>Place prise en haut des pages 2 et suivantes</th></tr>
+      <tr><td>Ordre joué</td><td>Rappel ajouté</td><td>0 → ≈ 50 px</td></tr>
+      <tr><td>Sections uniques</td><td>Rappel refait</td><td>32 → ≈ 50 px</td></tr>
+      <tr><td>Structure seule</td><td>Dp seulement</td><td>Inchangée</td></tr>
+      <tr><td>Scan 简谱</td><td>Dp seulement</td><td>Inchangée</td></tr>
     </table>
+    <p>Un rappel plus haut fait glisser les fins de page en Ordre joué et en Sections uniques. Les annotations suivent leur section et non un numéro de page ; il faudra tout de même vérifier, au test, qu'un trait déjà dessiné reste au bon endroit.</p>
   </section>
 
   <section class="carte">
-    <h2>Questions à trancher</h2>
-    <ol class="questions">
-      <li><b>Quelle piste ?</b> A, B ou C (recommandée).</li>
-      <li><b>Sections déjà jouées</b> : réduites en points (C) ou seulement estompées, à pleine taille ?</li>
-      <li><b>« Dp »</b> (dernière phrase) : garder l'abréviation, ou écrire « Fin » qui se comprend seul ?</li>
-      <li><b>Titre du chant dans le rappel</b> (tablette et ordinateur) : oui, ou laisser la rangée aux seules pastilles ?</li>
-      <li><b>Les Dp</b> : couleur de la section d'origine et « ×2 » pour le même Dp joué de suite (carte ci-dessus) ? Et dans le corps de la page, le même Dp imprimé deux fois de suite (comme sur ta capture) : n'en imprimer qu'un, avec « ×2 » ?</li>
-      <li><b>Place prise</b> : un rappel plus haut fait glisser les fins de page des chants en « Sections uniques ». Les annotations déjà dessinées sur les pages 2 et suivantes peuvent ne plus tomber au bon endroit. On l'accepte, ou on garde la hauteur actuelle (pastilles plus grandes sans nuance dessous) ?</li>
+    <h2>Questions encore ouvertes</h2>
+    <ol class="decisions">
+      <li><b>Ordre joué</b> : ajouter le rappel aux pages 2 et suivantes, comme proposé, ou laisser ces pages sans rappel comme aujourd'hui ?</li>
+      <li><b>Dans le corps de la page</b>, le même Dp imprimé deux fois de suite (comme sur ta capture) : n'en imprimer qu'un, avec « ×2 » ? Proposé : oui en Ordre joué. En Sections uniques, il n'est déjà imprimé qu'une fois.</li>
+      <li><b>Dp et R de la même couleur</b> : une Dp tirée du refrain a exactement l'orange du R, et en Sections uniques tout l'orange est plein à la fois. Seules les lettres les distinguent. On garde, ou on donne aux Dp une pastille seulement entourée de leur couleur ?</li>
+      <li><b>Téléphone en Sections uniques</b> : sans les points, la rangée prend deux lignes (≈ 90 px). On l'accepte, ou on n'y montre que les pastilles pleines ?</li>
     </ol>
   </section>
 </main>
 
 <script>
-  // Prince de paix : structure jouée (capture du 31/10/2026).
-  const ETAPES = [
-    ["Dp","other","Fin","mp ↗"],["Dp","other","Fin","mf"],["I","intro","Intro","mf"],["C1","verse","Couplet 1","mf"],
-    ["R","chorus","Refrain","mf"],["C2","verse","Couplet 2","mf"],["R","chorus","Refrain","mf"],["Dp","other","Fin","mf ↘"],
-    ["P","bridge","Pont","mp ↗"],["P","bridge","Pont","mf ↗"],["R","chorus","Refrain","f"],["R","chorus","Refrain","f ↘"],
-    ["Dp","other","Fin","mf ↘"],["Dp","other","Fin","mp"],
+  // Prince de paix, structure jouée, Dp déjà regroupés (règle 4).
+  // [abréviation, couleur, section imprimée, nuances, nombre]
+  const PRINCE = [
+    ["Dp","chorus","dp","mp ↗ → mf",2],["I","intro","i","mf"],["C1","verse","c1","mf"],["R","chorus","r","mf"],
+    ["C2","verse","c2","mf"],["R","chorus","r","mf"],["Dp","chorus","dp","mf ↘"],["P","bridge","p","mp ↗"],
+    ["P","bridge","p","mf ↗"],["R","chorus","r","f"],["R","chorus","r","f ↘"],["Dp","chorus","dp","mf ↘ → mp",2],
   ];
-  const PAGE = new Set([8, 9, 10, 12, 13]); // sections imprimées sur cette page
-  const DEBUT = 8;
+  // Aujourd'hui : 14 pastilles, Dp grises.
+  const AVANT = ["Dp","Dp","I","C1","R","C2","R","Dp","P","P","R","R","Dp","Dp"];
+  const COUL_AVANT = { Dp: "other", I: "intro", C1: "verse", C2: "verse", R: "chorus", P: "bridge" };
   const v = (k) => `--c:var(--sec-${k});--t:var(--sec-${k}-tint)`;
+  const pa = (e) => `${e[0]}${e[4] ? `<small>×${e[4]}</small>` : ""}`;
 
-  function rappel(piste, taille) {
-    if (piste === "0") return `<div class="r0">${ETAPES.map((e, i) => `<span class="${PAGE.has(i) ? "cer" : ""}" style="${v(e[1])}">${e[0]}</span>`).join("")}</div>`;
-    if (piste === "A") return `<div class="rA">${ETAPES.map((e, i) => `<span class="${PAGE.has(i) ? "ici" : ""}" style="${v(e[1])}">${e[0]}</span>`).join("")}</div>`;
-    if (piste === "B") {
-      const noms = [...PAGE].map((i) => ETAPES[i]);
-      const ligne = noms.map((e, k) => `${k ? '<span class="sep">·</span>' : ""}<span class="s" style="${v(e[1])}">${e[2]}<span class="n">${e[3]}</span></span>`).join("");
-      const barre = ETAPES.map((e, i) => `<i class="${PAGE.has(i) ? "ici" : ""}" style="${v(e[1])}"></i>`).join("");
-      return `<div class="rB-ligne">${ligne}</div><div class="rB-barre">${barre}</div>`;
-    }
+  const bande = () => `<div class="bande">${PRINCE.map((e) => `<span class="grp" style="${v(e[1])}"><span class="pa">${pa(e)}</span><span class="nu">${e[3]}</span></span>`).join("")}</div>`;
+  const rappelAvant = (cer) => `<div class="r0">${AVANT.map((a, i) => `<span class="${cer.has(i) ? "cer" : ""}" style="${v(COUL_AVANT[a])}">${a}</span>`).join("")}</div>`;
+  // page : indices joués sur cette page (Ordre joué, points avant) ; sections : sections imprimées (Sections uniques).
+  function rappel(taille, { page, sections }) {
     const titre = taille !== "telephone" ? `<span class="titre">Prince de paix</span>` : "";
-    return `<div class="rC">${titre}${ETAPES.map((e, i) => {
-      if (i < DEBUT) return `<span class="pt" title="${e[2]}" style="${v(e[1])}"></span>`;
-      const ici = PAGE.has(i);
-      return `<span class="grp ${ici ? "ici" : ""}" style="${v(e[1])}"><span class="pa">${e[0]}</span>${ici ? `<span class="nu">${e[3]}</span>` : ""}</span>`;
+    const debut = page ? Math.min(...page) : -1;
+    return `<div class="rc">${titre}${PRINCE.map((e, i) => {
+      if (page && i < debut) return `<span class="pt" style="${v(e[1])}"></span>`;
+      const ici = page ? page.includes(i) : sections.includes(e[2]);
+      return `<span class="grp ${ici ? "ici" : ""}" style="${v(e[1])}"><span class="pa">${pa(e)}</span>${ici ? `<span class="nu">${e[3]}</span>` : ""}</span>`;
     }).join("")}</div>`;
   }
 
   const sec = (k, nom, lignes) => `<div class="sec" style="--c:var(--sec-${k})"><div class="sec-nom">— ${nom}</div>${lignes.map(([a, p]) => `<div class="ligne"><span class="acc">${a}</span>${p}</div>`).join("")}</div>`;
   const PONT = sec("bridge", "Pont", [["C                   G                 D", "Plus qu'une sensation, c'est ma décision."], ["              Em          C", "Je choisis et je choisirai Ta paix."]]);
   const REFRAIN = sec("chorus", "Refrain", [["C                         G", "Le Prince de paix, ô Jésus Tu es Celui"], ["D                               Em", "Qui donne librement Ta paix à chaque instant."]]);
+  const DP = sec("chorus", "Dernière phrase – R", [["Em        C  G      D       Em", "Tu   es là ave – c  moi."]]);
+  const COUPLET = sec("verse", "Couplet 1", [["C", "Je reçois Ta paix,"], ["G                        D", "Cette paix que Tu donnes, Tu donnes."]]);
+  const deux = (a, b) => `<div style="display:grid;grid-template-columns:1fr 1fr;gap:24px"><div>${a}</div><div>${b}</div></div>`;
+  const ENTETE = `<div class="titre-chant">Prince de paix</div><div class="artiste">Hillsong</div>`;
+  const NOMS = { Dp: "Dernière phrase – Refrain", I: "Intro", C1: "Couplet 1", C2: "Couplet 2", R: "Refrain", P: "Pont" };
 
-  const TAILLES = [
-    { id: "telephone", nom: "Téléphone · 390 px", w: 390, h: 230, s: 1, corps: PONT },
-    { id: "tablette", nom: "Tablette portrait · 820 px", w: 820, h: 230, s: 1, corps: PONT + REFRAIN },
-    { id: "ordinateur", nom: "Ordinateur · 1 440 px", w: 1440, h: 230, s: 0.8, corps: `<div style="display:grid;grid-template-columns:1fr 1fr;gap:24px">${PONT}${REFRAIN}</div>` },
-  ];
+  const VUES = {
+    "bande-joue": (t) => ENTETE + bande() + (t === "ordinateur" ? deux(COUPLET, REFRAIN) : COUPLET),
+    "joue-avant": (t) => (t === "ordinateur" ? deux(PONT + PONT, REFRAIN) : PONT + PONT + REFRAIN),
+    "joue": (t) => rappel(t, { page: [7, 8, 9] }) + (t === "ordinateur" ? deux(PONT + PONT, REFRAIN) : PONT + PONT + REFRAIN),
+    "unique-avant": (t) => rappelAvant(new Set([4, 8, 7])) + (t === "ordinateur" ? deux(PONT, REFRAIN + DP) : PONT + REFRAIN + DP),
+    "unique": (t) => rappel(t, { sections: ["p", "r", "dp"] }) + (t === "ordinateur" ? deux(PONT, REFRAIN + DP) : PONT + REFRAIN + DP),
+    "structure": () => ENTETE + `<div class="oss">${PRINCE.map((e) => `<div style="${v(e[1])}">${pa(e)}<span>${e[3]}</span></div>`).join("")}</div>`,
+    "scan": () => ENTETE + bande() + `<div class="scan">scan 简谱</div>`,
+    "scan-colonne": () => `<div class="colonne"><div>${ENTETE}<div class="liste">${PRINCE.map((e) => `<div class="l" style="${v(e[1])}"><span class="pa">${pa(e)}</span>${NOMS[e[0]]}<span class="nu">${e[3]}</span></div>`).join("")}</div></div><div class="scan" style="height:560px">scan 简谱</div></div>`,
+  };
 
-  document.querySelectorAll("[data-piste]").forEach((el) => {
-    const piste = el.dataset.piste;
-    TAILLES.filter((t) => !el.dataset.seul || t.id === el.dataset.seul).forEach((t) => {
-      const s = t.s;
+  const TAILLES = {
+    telephone: { nom: "Téléphone · 390 px", w: 390, s: 1 },
+    tablette: { nom: "Tablette portrait · 820 px", w: 820, s: 1 },
+    ordinateur: { nom: "Ordinateur · 1 440 px", w: 1440, s: 0.8 },
+  };
+  const HAUTEUR = { "scan-colonne": 620, structure: 520, "bande-joue": 300, scan: 330 };
+
+  document.querySelectorAll("[data-vue]").forEach((el) => {
+    const ids = (el.dataset.tailles ?? "telephone,tablette,ordinateur").split(",");
+    const sombre = el.dataset.sombre ? "sombre" : "";
+    for (const id of ids) {
+      const t = TAILLES[id];
+      const h = HAUTEUR[el.dataset.vue] ?? 260;
       el.insertAdjacentHTML("beforeend", `
-        <div class="cadre">
-          <div class="cadre-titre">${t.nom}${el.dataset.sombre ? " · sombre" : ""}</div>
-          <div class="ecran-wrap ${el.dataset.sombre ? "sombre" : ""}" style="width:${t.w * s}px;height:${t.h * s}px">
-            <div class="ecran ${el.dataset.sombre ? "sombre" : ""}" style="width:${t.w}px;height:${t.h}px;transform:scale(${s})">
-              <div class="rappel">${rappel(piste, t.id)}</div>${t.corps}
-            </div>
+        <div>
+          <div class="cadre-titre">${t.nom}${sombre ? " · sombre" : ""}</div>
+          <div class="ecran-wrap ${sombre}" style="width:${t.w * t.s}px;height:${h * t.s}px">
+            <div class="ecran ${sombre} ${id === "telephone" ? "tel" : ""}" style="width:${t.w}px;height:${h}px;transform:scale(${t.s})">${VUES[el.dataset.vue](id)}</div>
           </div>
         </div>`);
-    });
-  });
-
-  // ——— Les Dp ———
-  const COUL = { R: "chorus", C: "verse", P: "bridge", I: "intro" };
-  function bande(etapes, regles) {
-    const g = [];
-    for (const e of etapes) {
-      const [ab, k, , nu, src] = e;
-      const last = g[g.length - 1];
-      if (regles && last && src && last.src === src && last.ab === ab) { last.n++; last.nu.push(nu); continue; }
-      if (!regles && last && last.ab === ab && last.k === k && last.nu.join() === nu && !src) { last.n++; continue; }
-      if (!regles && last && src && last.src === src && last.nu[0] === nu) { last.n++; continue; }
-      g.push({ ab, k: regles && src ? COUL[src.replace(/\d.*/, "")] ?? "other" : k, nu: [nu], n: 1, src });
     }
-    return `<div class="bande">${g.map((x) => `<span class="grp" style="${v(x.k)}"><span class="pa">${x.ab}${x.n > 1 ? `<small>×${x.n}</small>` : ""}</span><span class="nu">${x.nu.join(" → ")}</span></span>`).join("")}</div>`;
-  }
-  // Prince de paix : les cinq Dp sont la même « Dernière phrase – R ».
-  const PRINCE = ETAPES.map((e) => e[0] === "Dp" ? [...e, "R"] : e);
-  // Exemple inventé : deux Dp différents, l'un tiré du refrain, l'autre du couplet 2.
-  const AUTRE = [
-    ["I","intro","Intro","mp"],["C1","verse","Couplet 1","mp"],["R","chorus","Refrain","mf"],["Dp","other","Fin","mf","R"],
-    ["C2","verse","Couplet 2","mf"],["Dp","other","Fin","mp ↘","C2"],["R","chorus","Refrain","f"],["Dp","other","Fin","f","R"],["Dp","other","Fin","mf ↘","R"],
-  ];
-  const ex = document.getElementById("dp-exemples");
-  ex.innerHTML = `
-    <div><div class="lib">Prince de paix · aujourd'hui</div>${bande(PRINCE, false)}</div>
-    <div><div class="lib">Prince de paix · proposé (un seul Dp, celui du refrain)</div>${bande(PRINCE, true)}</div>
-    <div><div class="lib">Exemple inventé · aujourd'hui (Dp « – R » et Dp « – C2 » identiques en gris)</div>${bande(AUTRE, false)}</div>
-    <div><div class="lib">Exemple inventé · proposé</div>${bande(AUTRE, true)}</div>`;
+  });
 </script>
 </body>
 </html>
