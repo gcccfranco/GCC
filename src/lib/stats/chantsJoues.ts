@@ -270,6 +270,139 @@ export function statsDuChant(setlists: SetlistLue[], index: ChantDuRecueil[], sl
   };
 }
 
+// ─── Personnes et groupes (lot SP, docs/spec-stats-personnes-groupes.md, SP1) ─
+
+export type StatsPresidence = {
+  total: number;                                          // setlists comptées (D4) dans la période
+  derniere: { jour: string; service: string } | null;
+  parService: { service: string; fois: number; derniere: string }[]; // fois ↓, puis la plus récente
+  chants: { slug: string; fois: number }[];                // fois ↓, puis dernière ↓, puis titre
+  jamaisChoisis: number;                                   // chants du recueil absents de ses setlists comptées
+  prochaine: { jour: string; service: string; setlistId: string } | null; // publiée, ≥ aujourd'hui
+};
+export type LignePresidence = { nom: string; fois: number; derniere: string; services: string[] };
+export type StatsGroupe = {
+  setlists: number; parMois: number;          // setlists / mois entre la première et la dernière comptées (1 décimale)
+  chantsDifferents: number; partZh: number;   // part des passages de chants 中文, 0 à 1
+  tonalites: string[];                        // la plus jouée (règle Q5)
+};
+
+/** Les setlists comptées (Q3) dans la période, sans filtre de service ni de présidence. */
+function setlistsDansLaPeriode(setlists: SetlistLue[], periode: Periode, aujourdhui: string) {
+  const { du, au } = bornesDeLaPeriode(periode, aujourdhui);
+  return publieesPassees(setlists, aujourdhui).filter((s) => (du === null || s.jour >= du) && s.jour <= au);
+}
+
+/** Les présidences d'une personne (P1) : les setlists dont `leader` a le même `normalizeName` que `nom`.
+ *  Mêmes setlists comptées que `statsChants` ; la prochaine est indépendante de la période. */
+export function statsPresidence(setlists: SetlistLue[], index: ChantDuRecueil[], nom: string, periode: Periode, aujourdhui: string): StatsPresidence {
+  const cle = normalizeName(nom);
+  const sienne = (s: SetlistLue) => normalizeName(s.leader ?? "") === cle;
+  const recueil = new Map(index.map((c) => [c.slug, c]));
+  const comptees = setlistsDansLaPeriode(setlists, periode, aujourdhui).filter(sienne);
+
+  const plusRecente = comptees.reduce<(typeof comptees)[number] | null>((max, s) => (max === null || s.jour > max.jour ? s : max), null);
+
+  const parServiceMap = new Map<string, { fois: number; derniere: string }>();
+  for (const s of comptees) {
+    if (!s.category) continue;
+    const ligne = parServiceMap.get(s.category) ?? { fois: 0, derniere: "" };
+    ligne.fois++;
+    if (s.jour > ligne.derniere) ligne.derniere = s.jour;
+    parServiceMap.set(s.category, ligne);
+  }
+  const parService = [...parServiceMap]
+    .map(([service, l]) => ({ service, ...l }))
+    .sort((a, b) => b.fois - a.fois || b.derniere.localeCompare(a.derniere));
+
+  const passages = passagesParChant(comptees, recueil);
+  const chants = [...passages]
+    .map(([slug, p]) => ({ slug, fois: p.length, derniere: derniere(p) }))
+    .sort((a, b) => b.fois - a.fois || b.derniere.localeCompare(a.derniere)
+      || (recueil.get(a.slug)?.title ?? a.slug).localeCompare(recueil.get(b.slug)?.title ?? b.slug, "fr"))
+    .map(({ slug, fois }) => ({ slug, fois }));
+
+  const prochaine = setlists
+    .flatMap((s) => {
+      const jour = (s.date ?? "").slice(0, 10);
+      return !s.isDraft && !s.isPrivate && JOUR.test(jour) && jour >= aujourdhui && sienne(s)
+        ? [{ jour, service: s.category, setlistId: s.id }] : [];
+    })
+    .sort((a, b) => a.jour.localeCompare(b.jour))[0] ?? null;
+
+  return {
+    total: comptees.length,
+    derniere: plusRecente ? { jour: plusRecente.jour, service: plusRecente.category } : null,
+    parService, chants,
+    jamaisChoisis: index.filter((c) => !passages.has(c.slug)).length,
+    prochaine,
+  };
+}
+
+/** Une ligne par présidence (leader regroupé par `normalizeName`, vide ignoré), sous sa graphie la plus
+ *  fréquente (à égalité la plus récente), dans la période ; `service` non nul = les setlists de ce service.
+ *  Tri : fois ↓, dernière ↓, nom A→Z. */
+export function presidences(setlists: SetlistLue[], periode: Periode, aujourdhui: string, service: string | null): LignePresidence[] {
+  type Groupe = { fois: number; derniere: string; services: Set<string>; graphies: Map<string, { n: number; dernier: string }> };
+  const groupes = new Map<string, Groupe>();
+  for (const s of setlistsDansLaPeriode(setlists, periode, aujourdhui)) {
+    if (service !== null && s.category !== service) continue;
+    const graphie = (s.leader ?? "").trim();
+    const cle = normalizeName(graphie);
+    if (!cle) continue;
+    const g = groupes.get(cle) ?? { fois: 0, derniere: "", services: new Set<string>(), graphies: new Map() };
+    g.fois++;
+    if (s.jour > g.derniere) g.derniere = s.jour;
+    if (s.category) g.services.add(s.category);
+    const compte = g.graphies.get(graphie) ?? { n: 0, dernier: "" };
+    compte.n++;
+    if (s.jour > compte.dernier) compte.dernier = s.jour;
+    g.graphies.set(graphie, compte);
+    groupes.set(cle, g);
+  }
+  const ordre = ALL_CATEGORIES as readonly string[];
+  const rang = (c: string) => (ordre.includes(c) ? ordre.indexOf(c) : ordre.length);
+  return [...groupes.values()]
+    .map((g) => ({
+      nom: [...g.graphies].sort(([, a], [, b]) => b.n - a.n || b.dernier.localeCompare(a.dernier))[0][0],
+      fois: g.fois, derniere: g.derniere,
+      services: [...g.services].sort((a, b) => rang(a) - rang(b) || a.localeCompare(b, "fr")),
+    }))
+    .sort((a, b) => b.fois - a.fois || b.derniere.localeCompare(a.derniere) || a.nom.localeCompare(b.nom, "fr"));
+}
+
+/** Ce que les setlists disent d'un service (P4). « Mois entre » la première et la dernière setlist
+ *  comptées : écart en jours / 30,44, au minimum 1 (une seule setlist → 1,0 par mois). */
+export function statsGroupe(setlists: SetlistLue[], index: ChantDuRecueil[], service: string, periode: Periode, aujourdhui: string): StatsGroupe {
+  const recueil = new Map(index.map((c) => [c.slug, c]));
+  const comptees = setlistsDansLaPeriode(setlists, periode, aujourdhui).filter((s) => s.category === service);
+  if (comptees.length === 0) return { setlists: 0, parMois: 0, chantsDifferents: 0, partZh: 0, tonalites: [] };
+
+  const jours = comptees.map((s) => s.jour).sort();
+  const mois = Math.max(1, (enMs(jours[jours.length - 1]) - enMs(jours[0])) / 86_400_000 / 30.44);
+  const passages = passagesParChant(comptees, recueil);
+  // Part 中文 : les passages (chant × setlist) des chants du recueil ; les chants hors recueil n'entrent pas.
+  let zh = 0, connus = 0;
+  for (const [slug, p] of passages) {
+    const langue = recueil.get(slug)?.language;
+    if (!langue) continue;
+    connus += p.length;
+    if (langue === "zh") zh += p.length;
+  }
+  return {
+    setlists: comptees.length,
+    parMois: Math.round((comptees.length / mois) * 10) / 10,
+    chantsDifferents: passages.size,
+    partZh: connus === 0 ? 0 : zh / connus,
+    tonalites: tonalitesLesPlusJouees([...passages.values()].flat()),
+  };
+}
+
+/** Le nom sous lequel les présidences d'un profil sont comptées (P6) : `planningName`, sinon prénom + nom. */
+export function nomDePresidence(profil: { planningName?: string; firstName?: string; lastName?: string }): string {
+  return profil.planningName?.trim() || `${profil.firstName ?? ""} ${profil.lastName ?? ""}`.trim();
+}
+
 // ─── La bibliothèque de l'éditeur (lot ST, ST5) ───────────────────────────────
 
 /** Ce que l'éditeur sait de la setlist en cours : son service, sa date (AAAA-MM-JJ) et son id (`null` = création). */
