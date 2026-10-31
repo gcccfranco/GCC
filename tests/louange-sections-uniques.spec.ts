@@ -782,11 +782,13 @@ test.describe("rappel de structure (Sections uniques)", () => {
     await expect(calque, "aucun trait sur la page 1").toHaveCount(0);
   });
 
-  test("Ordre joué : pas de rappel (FR)", async ({ page }) => {
+  test("Ordre joué : rien sur la 1re page, le rappel (points, pleines, claires) dès la 2e (FR) — détail dans rappel-ordre-joue.spec.ts", async ({ page }) => {
     await page.addInitScript(() => localStorage.setItem("perf-font-scale", "1.5"));
     await ouvrirMode(page, [ABBA]);
-    await pageSuivante(page);
     await expect(onStage(page, "[data-rappel]")).toHaveCount(0);
+    await pageSuivante(page);
+    await expect(onStage(page, "[data-rappel]")).toBeVisible();
+    await expect(onStage(page, "[data-rappel] [data-point]").first()).toBeVisible();
   });
 
   test("grand écran, deux colonnes : en-tête et bandeau en pleine largeur au-dessus des colonnes (FR)", async ({ page }) => {

@@ -26,7 +26,7 @@ import { formatSectionName } from "@/lib/chordpro/parser";
 import { isRepeatOf, type SectionOccurrence } from "@/lib/setlist/sectionSteps";
 import { dpOrigin, isDp } from "@/lib/setlist/dp";
 import { AnnotationCanvas, StrokesLayer } from "./AnnotationCanvas";
-import { type AnnotationData, serializeAnnotations, deserializeAnnotations } from "@/lib/annotations/strokes";
+import { type AnnotationData, ANCIEN_RAPPEL, recaler, serializeAnnotations, deserializeAnnotations } from "@/lib/annotations/strokes";
 import { loadAnnotation, saveAnnotation } from "@/lib/firebase/annotations";
 import { getChartStylePref, setChartStylePref } from "@/lib/chartStylePref";
 import { getPersonalKeys, setPersonalKey } from "@/lib/setlist/personalKeys";
@@ -136,7 +136,7 @@ function BlockRenderer({
       songSourceLabel={block.songSourceLabel}
       chartStyle={chartStyle}
       nuanceSize="lg"
-      repeat={repeat}
+      repeat={repeat ?? block.repeat}
       occurrenceUids={block.occurrenceUids}
       couleurDe={couleurDe}
     />
@@ -268,12 +268,12 @@ function splitSheetPages(
 // la pastille « Suivant : … », qui recouvrirait la dernière section.
 const STRUCTURE_MAX_SCALE = 3;
 const NEXT_PILL_RESERVE = 40;
-// Sections uniques : place du rappel de structure (pastille de 30 px, nuance de
+// Sections uniques et Ordre joué : place du rappel de structure (pastille de 30 px, nuance de
 // 12 px dessous, 8 px de marge) en haut des pages 2 et suivantes d'un chant (D11, RS-B).
 const RAPPEL_RESERVE = 50;
 /** Rappel de structure d'une page 2 ou suivante (Sections uniques) : titre du chant
  *  en tête dès 640 px, puis les pastilles ; sous 640 px, les seules pleines. */
-function RappelRangee({ titre, steps, pleines }: { titre?: string; steps: SectionOccurrence[]; pleines: ReadonlySet<string> }) {
+function RappelRangee({ titre, steps, pleines, rappel }: { titre?: string; steps: SectionOccurrence[]; pleines: ReadonlySet<string>; rappel: "joue" | "unique" }) {
   return (
     <div className="flex items-start gap-3">
       {titre && (
@@ -281,7 +281,7 @@ function RappelRangee({ titre, steps, pleines }: { titre?: string; steps: Sectio
           {titre}
         </span>
       )}
-      <StructureStrip className="min-w-0 flex-1" steps={steps} compacte pleines={pleines} />
+      <StructureStrip className="min-w-0 flex-1" steps={steps} compacte pleines={pleines} rappel={rappel} />
     </div>
   );
 }
@@ -471,6 +471,8 @@ export function PerformanceMode({
   const [songListOpen, setSongListOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [layout, setLayout] = useState<PerfPage[]>([]);
+  // Pagination d'avant le rappel refait (lot RS-C) : retrouve les annotations sous leurs anciennes clés.
+  const [layoutAncien, setLayoutAncien] = useState<PerfPage[]>([]);
   const [currentPage, setCurrentPage] = useState(0);
   const [remeasureKey, setRemeasureKey] = useState(0);
   // Même taille que la page du chant (fontScalePref).
@@ -659,7 +661,7 @@ export function PerformanceMode({
     block: undefined,
   });
   const layoutBlocksRef = useRef<PerformanceBlock[] | null>(null);
-  // Hauteur du rappel de chaque chant (Sections uniques), mesurée en copie.
+  // Hauteur du rappel de chaque chant (Sections uniques, Ordre joué), mesurée en copie.
   const rappelRefs = useRef<(HTMLDivElement | null)[]>([]);
   const measureInnerRef = useRef<HTMLDivElement | null>(null);
   // Hauteur des barres, pour qu'une page de scan tienne entre elles (K1).
@@ -682,6 +684,10 @@ export function PerformanceMode({
   // Annotations vectorielles de la page courante (toujours chargées, pas
   // seulement en mode annotation) + visibilité (œil dans les réglages)
   const [pageAnnotations, setPageAnnotations] = useState<AnnotationData | null>(null);
+  // Hauteur du rappel de la page affichée (px d'écran, marge comprise) : les traits
+  // se replacent selon le rappel qu'il y avait à leur tracé (lot RS-C).
+  const rappelRef = useRef<HTMLDivElement>(null);
+  const [rappelEcran, setRappelEcran] = useState(0);
   const [showAnnotations, setShowAnnotations] = useState(true);
 
   // Build flat block list (memoised — only changes when content changes)
@@ -797,7 +803,7 @@ export function PerformanceMode({
       // rappel (marge comprise), au moins la rangée de nuances (RAPPEL_RESERVE). Il passe à la
       // ligne quand le texte grossit (huit pastilles ≈ 249 px de large).
       const reserves = new Map<number, number>();
-      if (affichageVu === "unique") {
+      if (affichageVu === "unique" || affichageVu === "played") {
         blocks.forEach((b, i) => {
           if (b.kind !== "song-header") return;
           const mesuree = rappelRefs.current[i]?.getBoundingClientRect().height ?? 0;
@@ -810,6 +816,31 @@ export function PerformanceMode({
         if (b.kind === "song-header") courant = i;
         enteteDe.set(i, courant);
       });
+      const paginer = (reservesDe: Map<number, number>): PerfPage[] => {
+        const breakBefore = new Set(blocks.flatMap((b, i) => (b.kind === "song-header" ? [i] : [])));
+        return splitSheetPages(all, kindOf, (flow) => {
+          // Chant par chant (chacun ouvre une page) : chacun garde la réserve de son rappel.
+          const songs: number[][] = [];
+          for (const i of flow) {
+            if (kindOf(i) === "song-header" || songs.length === 0) songs.push([]);
+            songs[songs.length - 1].push(i);
+          }
+          return songs.flatMap((song) => {
+            const reserveSuite = reservesDe.get(enteteDe.get(song[0]) ?? -1) ?? 0;
+            if (!twoColumns) return pagesUneColonne(song, heights, viewportH, breakBefore, reserveSuite);
+            const header = kindOf(song[0]) === "song-header" ? song[0] : null;
+            return paginateColumns({
+              flow: header != null ? song.slice(1) : song,
+              header,
+              heightsFull: heights,
+              heightsColumn,
+              pageHeight: viewportH,
+              reserveSuite,
+            });
+          });
+        });
+      };
+      let ancienne: PerfPage[] = [];
       let computed: PerfPage[];
       if (structureMode) {
         // Un chant par page : on regroupe l'en-tête et ses sections, puis layoutSong.
@@ -828,31 +859,16 @@ export function PerformanceMode({
           }),
         );
       } else {
-        const breakBefore = new Set(blocks.flatMap((b, i) => (b.kind === "song-header" ? [i] : [])));
-        computed = splitSheetPages(all, kindOf, (flow) => {
-          // Chant par chant (chacun ouvre une page) : chacun garde la réserve de son rappel.
-          const songs: number[][] = [];
-          for (const i of flow) {
-            if (kindOf(i) === "song-header" || songs.length === 0) songs.push([]);
-            songs[songs.length - 1].push(i);
-          }
-          return songs.flatMap((song) => {
-            const reserveSuite = reserves.get(enteteDe.get(song[0]) ?? -1) ?? 0;
-            if (!twoColumns) return pagesUneColonne(song, heights, viewportH, breakBefore, reserveSuite);
-            const header = kindOf(song[0]) === "song-header" ? song[0] : null;
-            return paginateColumns({
-              flow: header != null ? song.slice(1) : song,
-              header,
-              heightsFull: heights,
-              heightsColumn,
-              pageHeight: viewportH,
-              reserveSuite,
-            });
-          });
-        });
+        computed = paginer(reserves);
+        // Lot RS-C : la pagination d'avant le rappel refait (Sections uniques : 32 px ; Ordre joué : rien),
+        // pour retrouver les annotations posées sous les anciennes clés de page.
+        const anciennes = new Map<number, number>();
+        if (affichageVu === "unique") reserves.forEach((_, i) => anciennes.set(i, ANCIEN_RAPPEL));
+        ancienne = paginer(anciennes);
       }
       layoutBlocksRef.current = blocks;
       setLayout(computed);
+      setLayoutAncien(ancienne);
       // La lecture reste à l'écran quand la mise en page change (« 2 colonnes »,
       // rotation, taille du texte) : la page qui contient le premier bloc de la
       // page lue. Une page tournée entre-temps n'est pas déplacée. Si les blocs
@@ -1007,12 +1023,45 @@ export function PerformanceMode({
   const cleScan = layout[currentPage]?.fit ? (ecran.grand ? "j3" : "j2") : "";
   const currentPageKey = computePageKey(blocks, currentPageIndices, `${layoutSig}${layout[currentPage]?.twoColumns ? "x2" : ""}${cleScan}${apercuActif && !layout[currentPage]?.fit ? "ap" : ""}`);
 
+  // Lot RS-C : le rappel plus haut déplace les fins de page (pages 2 et suivantes d'un chant). Une page dont la
+  // composition a changé a une nouvelle clé : on garde la clé qu'aurait eue, dans l'ancienne pagination, la page
+  // qui commence par la même section — l'annotation d'avant s'y retrouve.
+  const cleAncienne = useMemo(() => {
+    if (affichageVu !== "unique" && affichageVu !== "played") return null;
+    const cur = layout[currentPage];
+    if (!cur || cur.fit || !currentEntry || firstBlockIdx <= currentEntry.index) return null;
+    const premiereSection = currentPageIndices.find((i) => blocks[i]?.kind === "section");
+    if (premiereSection === undefined) return null;
+    for (const p of layoutAncien) {
+      const idx = p.header != null ? [p.header, ...p.cols.flat()] : p.cols.flat();
+      if (p.fit || idx.find((i) => blocks[i]?.kind === "section") !== premiereSection) continue;
+      const cle = computePageKey(blocks, idx, `${layoutSig}${p.twoColumns ? "x2" : ""}${apercuActif ? "ap" : ""}`);
+      return cle === currentPageKey ? null : cle;
+    }
+    return null;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [layoutAncien, layout, currentPage, blocks, layoutSig, apercuActif, affichageVu, currentPageKey]);
+
   // L5 : chant de la page courante, et taille à laquelle il a été annoté sur cet appareil.
   const slugAnnote = currentEntry?.block.songSlug;
   const tailleAnnotee = slugAnnote ? getTailleAnnotee(setlistId, slugAnnote) : null;
   const alerteAnnotations =
     !!user && !annotateMode && showAnnotations && tailleAnnotee !== null &&
     Math.round(tailleAnnotee * 100) !== Math.round(fontScale * 100);
+
+  useLayoutEffect(() => {
+    const el = rappelRef.current;
+    const h = el ? (el.offsetHeight + (parseFloat(getComputedStyle(el).marginBottom) || 0)) * fontScale : 0;
+    setRappelEcran((prev) => (Math.abs(prev - h) < 0.5 ? prev : h));
+  });
+  // Annotations d'avant le lot : Sections uniques avec rappel = ancienne réserve, sinon 0.
+  const annotations = useMemo(
+    () =>
+      pageAnnotations
+        ? recaler(pageAnnotations, rappelEcran, affichageVu === "unique" && rappelEcran > 0 ? ANCIEN_RAPPEL * fontScale : 0, window.innerHeight)
+        : null,
+    [pageAnnotations, rappelEcran, affichageVu, fontScale],
+  );
 
   // Charger les traits de la page courante (toujours — affichage permanent)
   useEffect(() => {
@@ -1022,7 +1071,11 @@ export function PerformanceMode({
     setPageAnnotations(null);
     // Temporisé : glisser le curseur de page change la clé à chaque cran, une requête par page serait perdue.
     const minuterie = setTimeout(() => {
-      loadAnnotation(user.uid, setlistId, currentPageKey).then((raw) => {
+      loadAnnotation(user.uid, setlistId, currentPageKey).then((raw) =>
+        // Rien sous la nouvelle clé : l'annotation de l'ancienne page (jamais effacée) ; la première
+        // modification l'enregistre sous la nouvelle clé.
+        raw === null && cleAncienne ? loadAnnotation(user.uid, setlistId, cleAncienne) : raw,
+      ).then((raw) => {
         if (stale) return;
         const parsed = raw ? deserializeAnnotations(raw) : null;
         setPageAnnotations(
@@ -1034,7 +1087,7 @@ export function PerformanceMode({
       });
     }, 150);
     return () => { stale = true; clearTimeout(minuterie); };
-  }, [user, setlistId, currentPageKey]);
+  }, [user, setlistId, currentPageKey, cleAncienne]);
 
   // Chaque modification (trait fini, gomme, annuler) est sauvegardée aussitôt
   const handleAnnotationsChange = useCallback(
@@ -1219,7 +1272,7 @@ export function PerformanceMode({
   // structure collé en haut de la page (pas dans la barre : il ne s'escamote
   // pas) ; chaque passage d'une section imprimée sur la page est plein (D11, RS-B).
   const rappel =
-    affichageVu === "unique" && !fitPage && currentEntry && (currentPageIndices[0] ?? -1) > currentEntry.index
+    (affichageVu === "unique" || affichageVu === "played") && !fitPage && currentEntry && (currentPageIndices[0] ?? -1) > currentEntry.index
       ? currentEntry.block.steps
       : undefined;
   const sectionsDeLaPage = new Set(
@@ -1254,6 +1307,7 @@ export function PerformanceMode({
     <div
       ref={rootRef}
       data-performance-mode
+      data-cle-ancienne={cleAncienne ?? undefined}
       className="fixed inset-0 z-[9999] bg-background overflow-hidden select-none"
       style={{
         "--sat": "env(safe-area-inset-top, 0px)",
@@ -1309,14 +1363,14 @@ export function PerformanceMode({
         </div>
         {/* Sections uniques : le rappel de chaque chant, à la largeur de la page, pour
             réserver sa vraie hauteur (il passe à la ligne quand le texte grossit). */}
-        {affichageVu === "unique" && (
+        {(affichageVu === "unique" || affichageVu === "played") && (
           <div className="absolute top-0 left-0" style={{ width: `calc(100% / ${fontScale})`, ...contentPadding }}>
             {blocks.map((block, i) =>
               block.kind === "song-header" && block.steps?.length ? (
                 <div key={block.uid} ref={(el) => { rappelRefs.current[i] = el; }} className="flow-root">
                   {/* Pire cas : tous les passages pleins, avec leur nuance. */}
                   <div className="mb-2">
-                    <RappelRangee titre={block.title} steps={block.steps} pleines={new Set(block.steps.map((st) => st.section.uid))} />
+                    <RappelRangee titre={block.title} steps={block.steps} pleines={new Set(block.steps.map((st) => st.section.uid))} rappel={affichageVu === "played" ? "joue" : "unique"} />
                   </div>
                 </div>
               ) : null,
@@ -1522,8 +1576,8 @@ export function PerformanceMode({
             <>
             <div>
               {rappel && (
-                <div data-rappel className="relative mb-2">
-                  <RappelRangee titre={currentEntry?.block.title} steps={rappel} pleines={sectionsDeLaPage} />
+                <div ref={rappelRef} data-rappel className="relative mb-2">
+                  <RappelRangee titre={currentEntry?.block.title} steps={rappel} pleines={sectionsDeLaPage} rappel={affichageVu === "played" ? "joue" : "unique"} />
                   {(affichageVu === "played" || affichageVu === "unique") && <IndiceRappel mode={affichageVu} page={currentPage} />}
                 </div>
               )}
@@ -1634,12 +1688,12 @@ export function PerformanceMode({
       )}
 
       {/* ── Annotations : calque de lecture permanent + canvas d'édition ── */}
-      {showAnnotations && !annotateMode && pageAnnotations && pageAnnotations.strokes.length > 0 && (
-        <StrokesLayer data={pageAnnotations} rogneBas={rogneBas} />
+      {showAnnotations && !annotateMode && annotations && annotations.strokes.length > 0 && (
+        <StrokesLayer data={annotations} rogneBas={rogneBas} />
       )}
-      {annotateMode && pageAnnotations && (
+      {annotateMode && annotations && (
         <AnnotationCanvas
-          data={pageAnnotations}
+          data={annotations}
           rogneBas={rogneBas}
           onChange={handleAnnotationsChange}
           zoom={annotZoom}
