@@ -70,7 +70,8 @@ test.describe("SC3 · droits (access.ts) et règles (firestore.rules)", () => {
     const regles = readFileSync("firestore.rules", "utf8");
     expect(regles).toContain("match /users/{uid}/absences/{id}");
     expect(regles).toContain("match /{chemin=**}/absences/{id}");
-    expect(regles).toMatch(/function faitDesPlannings\(\)[^}]*plannings/);
+    // Lot RS, RS-D : ceux qui font les plannings = les gestionnaires (`gereUnPlanning()`), plus le droit coché `plannings`.
+    expect(regles).toMatch(/function faitDesPlannings\(\)[^}]*gereUnPlanning\(\)/);
     expect(regles).toMatch(/function absenceValide\(\)/);
     const bloc = regles.slice(regles.indexOf("match /users/{uid}/absences/{id}"));
     expect(bloc.slice(0, 500)).toContain("faitDesPlannings()");

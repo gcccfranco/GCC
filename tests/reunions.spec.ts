@@ -954,7 +954,8 @@ test("règles : réunions d'équipe créées par leurs seuls ayants droit, même
   const garde = rules.slice(rules.indexOf("function pourCreable(pour)"), rules.indexOf("match /evenements/{id}"));
   expect(garde).not.toMatch(/pour\.matches\('pole:/);
   expect(garde).toMatch(/\(pour\.matches\('equipe:\[a-z0-9-\]\+'\) && estReferentDe\(/);
-  expect(garde).toMatch(/!pour\.matches\('\(pole\|equipe\):\.\*'\)\s*&& \(isCoordination\(\)/);
+  // Lot RS, RS-D : sous cette garde, la coordination (Comité Orga) seule ; plus de droit d'annonces ni de section par l'organigramme.
+  expect(garde).toMatch(/!pour\.matches\('\(pole\|equipe\):\.\*'\)\s*&& isCoordination\(\)/);
   // Plus de « isCoordination() || … » qui couvrirait tous les publics : la coordination est sous la garde « ni pôle ni équipe ».
   expect(garde).not.toMatch(/^\s*return isCoordination\(\)/m);
 });
