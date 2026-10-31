@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useLayoutEffect, useRef, useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
+import { IndiceRappel } from "./IndiceRappel";
 import { useTheme } from "next-themes";
 import { X, ChevronLeft, ChevronRight, Columns2, Link2, MessageSquare, ListMusic, Settings, PenLine, Sun, Moon } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -1521,8 +1522,9 @@ export function PerformanceMode({
             <>
             <div>
               {rappel && (
-                <div data-rappel className="mb-2">
+                <div data-rappel className="relative mb-2">
                   <RappelRangee titre={currentEntry?.block.title} steps={rappel} pleines={sectionsDeLaPage} />
+                  {(affichageVu === "played" || affichageVu === "unique") && <IndiceRappel mode={affichageVu} page={currentPage} />}
                 </div>
               )}
               {/* En-tête hors échelle, en pleine largeur : vue structure et
