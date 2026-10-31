@@ -44,8 +44,8 @@ const indice = (page: Page) => onStage(page, "[data-indice-rappel]");
 const cle = (page: Page, nom: string) => page.evaluate((n) => localStorage.getItem(n), nom);
 
 const TEXTES = {
-  fr: { bouton: /Mode Louange/, unique: "Pleines : sur cette page, avec leur nuance", joue: "Points : déjà joué" },
-  zh: { bouton: /敬拜模式/, unique: "实心：在本页，下方为力度", joue: "圆点：已唱过" },
+  fr: { bouton: /Mode Louange/, unique: "Pleines : sur cette page, avec leur nuance", joue: "Points : déjà joué", joueComplet: "Points : déjà joué · Pleines : sur cette page, avec leur nuance" },
+  zh: { bouton: /敬拜模式/, unique: "实心：在本页，下方为力度", joue: "圆点：已唱过", joueComplet: "圆点：已唱过 · 实心：在本页，下方为力度" },
 } as const;
 
 async function lancer(page: Page, langue: "fr" | "zh") {
@@ -54,16 +54,17 @@ async function lancer(page: Page, langue: "fr" | "zh") {
   await expect(onStage(page, "[data-section]").first()).toBeVisible();
 }
 
-async function ouvrir(page: Page, langue: "fr" | "zh" = "fr") {
-  await page.addInitScript((l) => {
+async function ouvrir(page: Page, langue: "fr" | "zh" = "fr", mode: "unique" | "joue" = "unique") {
+  await page.addInitScript(([l, m]) => {
     // Une seule fois : un rechargement ne doit pas remettre l'indice à zéro.
     if (sessionStorage.getItem("test-init")) return;
     sessionStorage.setItem("test-init", "1");
     localStorage.setItem("perf-role-preset", "pianiste");
     localStorage.setItem("perf-font-scale", "1.5");
-    localStorage.setItem("partition-layout", "unique");
+    if (m === "unique") localStorage.setItem("partition-layout", "unique");
+    else localStorage.removeItem("partition-layout");
     if (l === "zh") localStorage.setItem("i18nextLng", "zh-CN");
-  }, langue);
+  }, [langue, mode] as const);
   await signInAs(page, MUSICIEN, { [`setlists/${SETLIST_ID}`]: setlist }, `/setlists/${SETLIST_ID}`);
   await lancer(page, langue);
 }
@@ -123,6 +124,19 @@ for (const langue of ["fr", "zh"] as const) {
       await pageDeux(page);
       await expect(indice(page)).toBeVisible();
       expect(await cle(page, "perf-astuce-rappel-unique")).toBe("1");
+    });
+
+    test("Ordre joué : la bulle porte le texte des deux états, clé « joue » écrite, absente à la page suivante", async ({ page }) => {
+      await ouvrir(page, langue, "joue");
+      await expect(indice(page), "page 1 : le bandeau, pas de rappel ni d'indice").toHaveCount(0);
+      await pageDeux(page);
+      await expect(indice(page)).toBeVisible();
+      await expect(indice(page)).toHaveText(TEXTES[langue].joueComplet);
+      expect(await cle(page, "perf-astuce-rappel-joue"), "écrite dès que la bulle paraît").toBe("1");
+      expect(await cle(page, "perf-astuce-rappel-unique"), "l'autre mode n'est pas touché").toBeNull();
+      await page.keyboard.press("ArrowRight");
+      await expect(compteur(page)).toHaveText(/^3 \//);
+      await expect(indice(page)).toHaveCount(0);
     });
 
     test("une page se tourne d'un toucher sur le côté, la bulle ouverte", async ({ page }) => {
