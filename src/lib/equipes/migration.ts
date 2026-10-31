@@ -2,8 +2,8 @@
 // docs/spec-equipes-sans-poles.md, tranche EQ-E ; décisions 7, 8, 40, 41) : le relevé qui la précède
 // et le plan d'écritures. Tout est pur ou passe par un `Magasin` (la base vue comme des documents à
 // chemin), de sorte que les tests tournent sur une base en mémoire. Le script
-// scripts/poles-vers-equipes.ts branche l'Admin SDK ; il n'est lancé que par Timothée, à blanc
-// d'abord, puis avec --ecrire. Aucune session ne lit la vraie base.
+// scripts/poles-vers-equipes.ts (Admin SDK) a été joué par Timothée, à blanc d'abord, puis avec
+// --ecrire, puis retiré le 31/10/2026 (relevé à 0 opération). Aucune session ne lit la vraie base.
 //
 // Les noms de pôles (`da`, `media`, `orga`, `evenement`, `louange`) n'existent plus que dans ce fichier
 // (critère EQ1 : le module de migration est le seul à les nommer).

@@ -1,4 +1,4 @@
-<!-- Fichier généré par `npm run docs:diagrammes` (scripts/diagrammes/generer.ts). Modifier docs/diagrammes/*.mmd et docs/diagrammes/catalogue.json, pas ce fichier. -->
+<!-- Fichier généré par `npx tsx scripts/diagrammes/generer.ts`. Modifier docs/diagrammes/*.mmd et docs/diagrammes/catalogue.json, pas ce fichier. -->
 
 # Atlas GCC Louange
 

@@ -1,8 +1,6 @@
 export const MOIS = ["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"]
-export const JOURC = ["dim","lun","mar","mer","jeu","ven","sam"]
 
 export const EDD_PERIODES = ["P1_JanFev","P2_MarAvr","P3_MaiJun","P4_JulAou","P5_SepOct","P6_NovDec"] as const
-export const EDD_PERIODES_LABELS = ["Janv–Fév","Mars–Avr","Mai–Jun","Juil–Aoû","Sep–Oct","Nov–Déc"]
 export const EDD_CLASSES = ["中班","大班","高班"] as const
 
 export type EddPeriode = typeof EDD_PERIODES[number]
@@ -31,11 +29,6 @@ export function filterByTri(rows: string[][], tri: string, idx = 0) {
 export function fdShort(dateStr: string) {
   const [, mm, dd] = dateStr.split("-")
   return `${parseInt(dd)}/${parseInt(mm)}`
-}
-
-export function fdLong(dateStr: string) {
-  const [, mm, dd] = dateStr.split("-")
-  return `${parseInt(dd)} ${MOIS[parseInt(mm)-1]}`
 }
 
 /** Nom du mois (1–12) localisé selon la langue de l'interface. */

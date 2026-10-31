@@ -138,13 +138,6 @@ export function aFairePour(
     && peutCocher(user, profile, l.tache));
 }
 
-/** Le rail de Back-Office › Tâches (EQ9, décision 2 : une liste vide ne s'affiche pas) : parmi ses
- *  équipes, celles qui ont une tâche, plus celles dont on est référent (`referentDe` du profil, pour y
- *  créer la première ; un admin n'a donc pas treize onglets vides). */
-export function equipesDuRail(equipes: string[], taches: Pick<Tache, "equipe">[], referentDe: string[] = []): string[] {
-  return equipes.filter((e) => referentDe.includes(e) || taches.some((t) => t.equipe === e));
-}
-
 /** Jours entiers entre deux dates ISO (`debutLe` peut porter une heure). */
 export function joursEntre(debut: string, today: string): number {
   return Math.round((toUtc(today) - toUtc(debut.slice(0, 10))) / DAY);

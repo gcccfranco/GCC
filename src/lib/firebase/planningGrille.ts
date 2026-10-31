@@ -33,10 +33,6 @@ export type EcritureCases = Omit<EcritureCase, "colonne" | "valeur"> & {
   valeurs: Record<string, string>;
 };
 
-export function ecrireCase({ colonne, valeur, ...reste }: EcritureCase): Promise<void> {
-  return ecrireCases({ ...reste, valeurs: { [colonne]: valeur } });
-}
-
 export async function ecrireCases({ definition, date, valeurs, auteur, semer }: EcritureCases): Promise<void> {
   const champs: Record<string, unknown> = {
     date,

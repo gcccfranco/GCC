@@ -333,9 +333,6 @@ function lireEcran(): { grand: boolean; largeur: number; hauteur: number; tablet
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
-const MIN_SCALE = MIN_FONT_SCALE;
-const MAX_SCALE = MAX_FONT_SCALE;
-
 // Presets de rôle : raccourcis vers une combinaison accords/paroles. Mémorisé
 // par appareil ; un réglage manuel des toggles désélectionne le preset.
 type RolePreset = "pianiste" | "guitariste" | "presidence" | "choriste" | "batteur";
@@ -384,7 +381,6 @@ export function PerformanceMode({
 }: PerformanceModeProps) {
   const { t } = useTranslation();
   const { user } = useAuth();
-  const rootRef = useRef<HTMLDivElement>(null);
   const [storedRole] = useState<RolePreset | null>(() => {
     try {
       const v = localStorage.getItem("perf-role-preset");
@@ -880,7 +876,7 @@ export function PerformanceMode({
 
   const changeFontScale = useCallback((delta: number) => {
     setFontScale((s) => {
-      const next = Math.min(MAX_SCALE, Math.max(MIN_SCALE, Math.round((s + delta) * 10) / 10));
+      const next = Math.min(MAX_FONT_SCALE, Math.max(MIN_FONT_SCALE, Math.round((s + delta) * 10) / 10));
       setFontScalePref(next);
       return next;
     });
@@ -1230,7 +1226,6 @@ export function PerformanceMode({
 
   return (
     <div
-      ref={rootRef}
       data-performance-mode
       className="fixed inset-0 z-[9999] bg-background overflow-hidden select-none"
       style={{
@@ -2019,7 +2014,7 @@ export function PerformanceMode({
                   variant="outline"
                   size="icon-lg"
                   onClick={() => changeFontScale(-0.1)}
-                  disabled={fontScale <= MIN_SCALE || annotateMode}
+                  disabled={fontScale <= MIN_FONT_SCALE || annotateMode}
                   aria-label={t("performance.textSmaller")}
                   className="text-xs font-bold"
                 >
@@ -2032,7 +2027,7 @@ export function PerformanceMode({
                   variant="outline"
                   size="icon-lg"
                   onClick={() => changeFontScale(0.1)}
-                  disabled={fontScale >= MAX_SCALE || annotateMode}
+                  disabled={fontScale >= MAX_FONT_SCALE || annotateMode}
                   aria-label={t("performance.textLarger")}
                   className="text-sm font-bold"
                 >

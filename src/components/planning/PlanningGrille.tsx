@@ -233,11 +233,10 @@ export function PlanningGrille({
   // La page donne les lignes du trimestre choisi (demande de Timothée du
   // 18/09/2026 : « L'affichage du planning doit être affiché trimestre par
   // trimestre ») : la grille n'a plus de fenêtre à elle.
-  const dansLaFenetre = lignes
   const affichees = mesDates && aUnNom
-    ? dansLaFenetre.filter((l) => definition.colonnes.some((c) => estMoi(valeur(l.row[0], c, l.row))))
-    : dansLaFenetre
-  const toutes = dansLaFenetre.map((l) => l.row)
+    ? lignes.filter((l) => definition.colonnes.some((c) => estMoi(valeur(l.row[0], c, l.row))))
+    : lignes
+  const toutes = lignes.map((l) => l.row)
 
   // Une colonne optionnelle (Sainte cène) ne s'affiche que si une case de la
   // période la porte — sauf en modification, où il faut pouvoir la remplir.
@@ -245,12 +244,12 @@ export function PlanningGrille({
     (c) =>
       !c.optionnelle ||
       mode === "edition" ||
-      dansLaFenetre.some((l) => valeur(l.row[0], c, l.row).trim())
+      lignes.some((l) => valeur(l.row[0], c, l.row).trim())
   )
 
   // Prévenir des changements (PG33 à PG47) : les cases changées depuis l'état annoncé (un point chacune).
   const ecritesAppEtSeance = new Set([...(casesEcrites ?? []), ...Object.keys(modifs)])
-  const prev = usePrevenir({ prevenir, definition, rows: dansLaFenetre.map(ligneAffichee), speciaux: dimanchesSpeciaux, ecrites: ecritesAppEtSeance, comptes })
+  const prev = usePrevenir({ prevenir, definition, rows: lignes.map(ligneAffichee), speciaux: dimanchesSpeciaux, ecrites: ecritesAppEtSeance, comptes })
   const aChange = (date: string, cle: string) => prev.points.has(`${date}|${cle}`) || undefined
   const pointChange = (date: string, cle: string) => aChange(date, cle) && (
     <>
@@ -904,7 +903,7 @@ export function PlanningGrille({
             },
           } : undefined}
           absenceDe={absenceDe && choix ? (nom) => absenceDe(nom, choix.l.row[0]) : undefined}
-          reliees={groupe ? (recherche) => propositionsReliees(definition, choix?.c.cle ?? "", groupe, comptes, dansLaFenetre.map(ligneAffichee), recherche) : undefined}
+          reliees={groupe ? (recherche) => propositionsReliees(definition, choix?.c.cle ?? "", groupe, comptes, lignes.map(ligneAffichee), recherche) : undefined}
           proposer={(recherche) => propositions(definition, choix?.c.cle ?? "", comptes, lignes.map((l) => l.row), recherche)}
           onEcrire={(nom) => {
             if (!choix) return

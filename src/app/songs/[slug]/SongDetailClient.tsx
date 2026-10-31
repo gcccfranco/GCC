@@ -256,11 +256,10 @@ function useVersionDeLaSetlist(slug: string, setlistId: string | null, position:
 
     // Ouverte depuis une setlist : la tonalité choisie ici est retenue pour ce
     // chant dans cette setlist, sur cet appareil (reprise en mode louange).
-    const fromSetlist = useMemo(() => safeParseParam<string | null>(searchParams.get("setlist"), null, estTexteOuNul), [searchParams]);
     // Depuis une setlist, l'absence de `key` veut dire la tonalité originale.
     const setlistKey = useMemo(
-      () => safeParseParam<string>(searchParams.get("key"), fromSetlist ? originalKey : defaultKey, estTexte),
-      [searchParams, fromSetlist, originalKey, defaultKey]
+      () => safeParseParam<string>(searchParams.get("key"), setlistDOrigine ? originalKey : defaultKey, estTexte),
+      [searchParams, setlistDOrigine, originalKey, defaultKey]
     );
 
     // Tant que la tonalité de départ n'est pas appliquée, l'état porte encore la
@@ -269,16 +268,16 @@ function useVersionDeLaSetlist(slug: string, setlistId: string | null, position:
 
     useEffect(() => {
       // Un majeur sur un chant mineur se lit comme son relatif mineur (et inversement).
-      const songKey = keyLike(originalKey, (fromSetlist && getPersonalKeys(fromSetlist)[song.slug]) || setlistKey);
+      const songKey = keyLike(originalKey, (setlistDOrigine && getPersonalKeys(setlistDOrigine)[song.slug]) || setlistKey);
       const diff = semitonesTo(originalKey, songKey);
       setCustomize(prev => ({ ...prev, currentKey: songKey, semitones: diff }));
       setKeyReady(true);
     }, []); // une seule fois au montage
 
     useEffect(() => {
-      if (!fromSetlist || !keyReady) return;
-      setPersonalKey(fromSetlist, song.slug, customize.currentKey === setlistKey ? null : customize.currentKey);
-    }, [fromSetlist, keyReady, song.slug, setlistKey, customize.currentKey]);
+      if (!setlistDOrigine || !keyReady) return;
+      setPersonalKey(setlistDOrigine, song.slug, customize.currentKey === setlistKey ? null : customize.currentKey);
+    }, [setlistDOrigine, keyReady, song.slug, setlistKey, customize.currentKey]);
 
     const displayedAST = useMemo(
       () => transposeAST(ast, customize.semitones, customize.currentKey),
@@ -551,7 +550,7 @@ function useVersionDeLaSetlist(slug: string, setlistId: string | null, position:
                   size="icon-lg"
                   className={`${TOUCHER_44} h-9 w-9 lg:h-8 lg:w-8 rounded-full text-xs font-bold`}
                   onClick={() => changeFontScale(-0.1)}
-                  disabled={fontScale <= 0.8}
+                  disabled={fontScale <= MIN_FONT_SCALE}
                   aria-label={t("performance.textSmaller")}
                 >
                   A−
@@ -561,7 +560,7 @@ function useVersionDeLaSetlist(slug: string, setlistId: string | null, position:
                   size="icon-lg"
                   className={`${TOUCHER_44} h-9 w-9 lg:h-8 lg:w-8 rounded-full text-sm font-bold`}
                   onClick={() => changeFontScale(0.1)}
-                  disabled={fontScale >= 1.5}
+                  disabled={fontScale >= MAX_FONT_SCALE}
                   aria-label={t("performance.textLarger")}
                 >
                   A+

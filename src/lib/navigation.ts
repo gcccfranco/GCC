@@ -10,10 +10,6 @@ import type { Entree } from "@/types/backOffice";
 import { estReunion } from "@/lib/access";
 import { BACK_OFFICE } from "@/lib/backOffice";
 
-/** Vocabulaire commun du chantier U ; choisie par le CSS (globals.css, bloc « Lot U4 »),
- *  jamais par l'agent utilisateur. */
-export type Disposition = "telephone" | "tablette-portrait" | "tablette-paysage" | "ordinateur";
-
 /** Espace montré par les barres. U4 ne remplit que "app" ; U6 ajoute "back-office". */
 export type Espace = "app" | "back-office";
 

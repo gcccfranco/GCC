@@ -28,9 +28,6 @@ export function notifyGroups(backOffice: boolean = BACK_OFFICE): { label: string
 
 export const NOTIFY_GROUPS = notifyGroups();
 
-/** Toutes les catégories ciblables (hors « tout le monde »). */
-export const NOTIFY_CATEGORIES: string[] = NOTIFY_GROUPS.flatMap((g) => g.audiences);
-
 /** Audience valide ? (« tout le monde » ou une catégorie connue). Lot AO (`backOffice`) : aussi `equipe:<id>`
  *  (une des 13 équipes) et `louange:<sous-équipe>`. */
 export function isValidAudience(a: string, backOffice: boolean = BACK_OFFICE): boolean {

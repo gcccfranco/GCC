@@ -1569,7 +1569,7 @@ export function SetlistDetailClient() {
   }
   /** Aucun chant de la setlist n'a son contenu : « Continuer quand même » n'a rien à montrer (le mode Louange
    *  resterait sur « Mise en page… »). */
-  const slugsDeLaSetlist = (setlist?.items ?? []).flatMap((it) =>
+  const slugsDeLaSetlist = (setlist.items ?? []).flatMap((it) =>
     it.type === "fusion" && it.fusionSongs ? it.fusionSongs.map((fs) => fs.songSlug) : it.songSlug ? [it.songSlug] : [],
   );
   const aucunChantCharge = !slugsDeLaSetlist.some((slug) => !!contents[slug]);
@@ -1810,7 +1810,7 @@ export function SetlistDetailClient() {
   );
   return (
     <div className="relative min-h-screen bg-background">
-      <Halo variant="fiche" color={categoryColor(setlist?.category ?? "")} />
+      <Halo variant="fiche" color={categoryColor(setlist.category ?? "")} />
       {deuxVolets ? (
         // ── Deux volets (docs/spec-deux-volets.md, T4, planche `setlist-deux-volets`) :
         // l'en-tête pleine largeur colle en haut et s'escamote au défilement (Q7) ; à
@@ -2097,7 +2097,7 @@ export function SetlistDetailClient() {
                     onClick={ouvrirModeLouange}
                     aria-label={t("setlists.detail.performanceMode")}
                     // 5C1 : un bouton plein est en encre, sauf sur l'écran d'un culte, où il en prend la couleur.
-                    style={{ backgroundColor: serviceButtonFill(categoryColor(setlist?.category ?? "")) }}
+                    style={{ backgroundColor: serviceButtonFill(categoryColor(setlist.category ?? "")) }}
                     className={`${TOUCHER_44} ${PILULE_EMPILEE} h-8 px-2.5 sm:px-3 rounded-full text-white text-[12.5px] font-semibold flex items-center gap-1.5 hover:brightness-95 dark:ring-1 dark:ring-white/15 transition-all duration-150`}
                   >
                     <Play className="h-3.5 w-3.5" />
@@ -2260,7 +2260,7 @@ export function SetlistDetailClient() {
       )}
 
       {/* Idées d'harmonie du chant (lot 9) */}
-      {ideesTarget !== null && setlist?.items[ideesTarget] && (() => {
+      {ideesTarget !== null && setlist.items[ideesTarget] && (() => {
         const item = setlist.items[ideesTarget];
         // Fusion : les idées du chant touché, dans sa tonalité et sa version
         // adaptée. Elles se lisent ; rien ne s'applique à la fusion.
@@ -2370,8 +2370,8 @@ export function SetlistDetailClient() {
       <AlertDialog open={confirmDelete} onOpenChange={setConfirmDelete}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>{setlist?.fete ? t("setlists.detail.deleteButton") : t("setlists.detail.trashTitle")}</AlertDialogTitle>
-            <AlertDialogDescription>{setlist?.fete ? t("setlists.detail.deleteConfirm") : t("setlists.detail.trashBody")}</AlertDialogDescription>
+            <AlertDialogTitle>{setlist.fete ? t("setlists.detail.deleteButton") : t("setlists.detail.trashTitle")}</AlertDialogTitle>
+            <AlertDialogDescription>{setlist.fete ? t("setlists.detail.deleteConfirm") : t("setlists.detail.trashBody")}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>{t("setlists.detail.deleteCancel")}</AlertDialogCancel>
@@ -2380,7 +2380,7 @@ export function SetlistDetailClient() {
               onClick={handleDelete}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              {deleting ? "…" : setlist?.fete ? t("setlists.detail.deleteYes") : t("setlists.detail.trashYes")}
+              {deleting ? "…" : setlist.fete ? t("setlists.detail.deleteYes") : t("setlists.detail.trashYes")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

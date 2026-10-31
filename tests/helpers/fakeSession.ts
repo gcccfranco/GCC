@@ -533,8 +533,6 @@ export const musicien = (...joue: string[]): Pick<FakeProfile, "dansEquipes" | "
 
 /** Lot RS : la Coordination (scène, fêtes, évènements de l'Église) vient du Comité Orga seul (Q11). */
 export const coordination = (): Pick<FakeProfile, "responsabilites"> => ({ responsabilites: ["orga"] });
-/** Lot AO : référent Régie — remplit les colonnes Sono / PPT du culte et les publie ; ni Coordination, ni création d'évènement. */
-export const referentRegie = (): Pick<FakeProfile, "dansEquipes" | "referentDe"> => ({ dansEquipes: ["regie"], referentDe: ["regie"] });
 /** Lot AO : référent Louange — Coordination, tout le planning du culte, évènements « Culte Francophone », notifier Louange, tenir Louange. */
 export const referentLouange = (): Pick<FakeProfile, "dansEquipes" | "referentDe"> => ({ dansEquipes: ["louange"], referentDe: ["louange"] });
 /** Lot AO : membre d'Orga — Coordination, la Table, notifier toute l'Église, tenir tout l'organigramme. */

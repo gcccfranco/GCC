@@ -69,8 +69,3 @@ export function repartitionSuivante(
   if (longueur(avant.colonnes) <= longueur(candidat) + GAIN_MINIMAL || avant.quittees.includes(signature)) return avant;
   return { cle, colonnes: candidat, quittees: [...avant.quittees, JSON.stringify(avant.colonnes)] };
 }
-
-/** Hauteur de la plus haute colonne (même modèle que `repartirWidgets`) : la longueur de la page. */
-export function hauteurMax<W extends { id: string }>(colonnes: W[][], hauteurs: Record<string, number>, fractions: number[]): number {
-  return Math.max(0, ...colonnes.map((col, c) => col.reduce((s, w) => s + (hauteurs[w.id] ?? 0), 0) / fractions[c]));
-}

@@ -1,5 +1,3 @@
-import { Language } from "@/types/common";
-
 /** Nuance d'une section : étiquettes prédéfinies (voir lib/setlist/nuances.ts)
  *  + texte libre optionnel en complément. */
 export type SectionNuance = {
@@ -80,15 +78,4 @@ export type SetlistItem = {
    *  `songProposals/{id}` ; devient le chant dès qu'un `.cho` porte `{proposition: <id>}`
    *  (docs/spec-chants-fetes.md, CF21). */
   proposition?: { id: string; titre: string };
-};
-
-export type Setlist = {
-  id: string;
-  title: string;
-  date: string;
-  theme: string | null;
-  leader: string | null;
-  language: Language;
-  notes: string;
-  items: SetlistItem[];
 };

@@ -6,46 +6,6 @@ import localFont from "next/font/local";
 import { useLayoutEffect, useRef, useState } from "react";
 type Segment = { chord: string | null; lyric: string };
 
-// function toSegments(tokens: Token[]): Segment[] {
-//   const segments: Segment[] = [];
-//   let i = 0;
-
-//   while (i < tokens.length) {
-//     const token = tokens[i];
-
-//     if (token.type === "chord") {
-//       const chord = token.value;
-//       let lyric = "";
-//       i++;
-//       while (i < tokens.length && tokens[i].type === "lyric") {
-//         lyric += tokens[i].value;
-//         i++;
-//       }
-
-//       const spaceIdx = lyric.search(/\s/);
-//       if (spaceIdx === -1 || spaceIdx === lyric.length - 1) {
-//         segments.push({ chord, lyric });
-//       } else {
-//         const firstWord = lyric.slice(0, spaceIdx + 1);
-//         const rest = lyric.slice(spaceIdx + 1);
-//         segments.push({ chord, lyric: firstWord });
-//         const words = rest.split(/(?<=\s)/);
-//         for (const word of words) {
-//           if (word) segments.push({ chord: null, lyric: word });
-//         }
-//       }
-//     } else {
-//       const words = token.value.split(/(?<=\s)/);
-//       for (const word of words) {
-//         if (word) segments.push({ chord: null, lyric: word });
-//       }
-//       i++;
-//     }
-//   }
-
-//   return segments;
-// }
-
 function toSegments(tokens: Token[], joinSyllables: boolean): Segment[] {
   const segments: Segment[] = [];
   // Sans accords, « infi - nie » se lit « infinie » : le tiret sort AVANT le

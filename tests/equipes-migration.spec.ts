@@ -1,6 +1,4 @@
 import { expect, test } from "@playwright/test";
-import { readFileSync } from "node:fs";
-import path from "node:path";
 import { ADMIN_EMAIL } from "./helpers/fakeSession";
 import {
   POLE_VERS_EQUIPE, appliquer, enLectureSeule, formaterReleve, planifier, type Donnees, type Magasin,
@@ -10,8 +8,6 @@ import {
 // migration des pôles vers les équipes et le relevé qui la précède (décisions 7, 8, 40, 41).
 // Tout est pur : une base Firestore simulée en mémoire, aucune lecture de la vraie base. Le script
 // (scripts/poles-vers-equipes.ts) n'est lancé que par Timothée. Noms fictifs.
-
-const ROOT = path.resolve(__dirname, "..");
 
 /** Base simulée en mémoire : chemin complet -> document, comme Firestore (Admin SDK). */
 function magasinMemoire(depart: Record<string, Donnees>) {
@@ -390,10 +386,4 @@ test("à blanc : appliquer le plan sur une base en lecture seule lève sans rien
   await expect(appliquer(enLectureSeule(magasin), plan)).rejects.toThrow(/--ecrire/);
   expect(ecritures, "aucune écriture").toEqual([]);
   expect([...docs]).toEqual(avant);
-});
-
-test("le script branche la garde et ne contient aucune écriture de fichier", () => {
-  const script = readFileSync(path.join(ROOT, "scripts/poles-vers-equipes.ts"), "utf8");
-  expect(script).toContain('process.argv.includes("--ecrire")');
-  expect(script, "le relevé s'imprime au terminal, jamais dans un fichier du dépôt").not.toMatch(/writeFileSync|appendFileSync|createWriteStream/);
 });
