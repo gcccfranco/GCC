@@ -9,16 +9,20 @@
 // Agencement v18 (B13) : en-tête commun « Statistiques » (le compte des setlists dans le sous-titre),
 // rail des vues sous le titre, filtres dessous (périodes en pilules, listes) ; « Jamais joués » en
 // deux cartes, « En français » sur deux colonnes et « En chinois » sur une, puis « Tout afficher ».
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useTranslation } from "react-i18next";
-import { ArrowDownWideNarrow, ChevronDown, ChevronUp } from "lucide-react";
+import { ArrowDownWideNarrow, ChevronDown, ChevronRight, ChevronUp } from "lucide-react";
 import { useAuth } from "@/lib/firebase/auth";
 import { canFiltrerPresidence } from "@/lib/access";
 import { ALL_CATEGORIES, getSetlists, type FSSetlist } from "@/lib/firebase/setlists";
+import { listProfiles } from "@/lib/firebase/users";
+import { normalizeName } from "@/lib/planning/names";
+import type { UserProfile } from "@/types/user";
 import {
-  SEUIL_A_REDECOUVRIR, bornesDeLaPeriode, choixDesFiltres, debutDeLHistorique, jourCourt, jourEnLettres, libellePart, libelleTendance, statsChants,
-  veille, type FiltresStats, type LigneChant, type Periode, type StatsChants,
+  SEUIL_A_REDECOUVRIR, bornesDeLaPeriode, choixDesFiltres, debutDeLHistorique, jourCourt, jourEnLettres, libellePart, libelleTendance, nomDePresidence,
+  presidences, serviceCourt, statsChants, statsGroupe, statsPresidence,
+  veille, type FiltresStats, type LigneChant, type LignePresidence, type Periode, type StatsChants, type StatsGroupe, type StatsPresidence,
 } from "@/lib/stats/chantsJoues";
 import { LargeurBO } from "@/components/backOffice/LargeurBO";
 import { EnTetePage } from "@/components/layout/EnTetePage";
@@ -163,11 +167,37 @@ function StatistiquesContenu() {
   }, [aujourdhui, t]);
   useEffect(() => { lire(); }, [lire]);
 
+  // Lot SP, SP4/P7 : les profils ne sont lus que pour un admin qui a choisi un service, une fois par visite.
+  const profilsLus = useRef<Promise<UserProfile[]> | null>(null);
+  const [profils, setProfils] = useState<UserProfile[] | null>(null);
+  useEffect(() => {
+    if (loading || !peutFiltrerPresidence || !etat.service) return;
+    profilsLus.current ??= listProfiles();
+    let vivant = true;
+    profilsLus.current.then((p) => { if (vivant) setProfils(p); }).catch(() => {});
+    return () => { vivant = false; };
+  }, [loading, peutFiltrerPresidence, etat.service]);
+
   const donnees = lecture.etat === "pret" ? lecture : null;
   const stats = useMemo(() => {
     if (!donnees) return null;
     const filtres: FiltresStats = { periode: enPeriode(etat), service: etat.service, langue: etat.langue, presidence: peutFiltrerPresidence ? etat.presidence : null };
     return statsChants(donnees.setlists, donnees.recueil, filtres, aujourdhui);
+  }, [donnees, etat, aujourdhui, peutFiltrerPresidence]);
+  // Lot SP : la rangée du groupe (tout connecté, service choisi), les présidences (admins).
+  const groupe = useMemo(() => {
+    if (!donnees || !etat.service) return null;
+    return statsGroupe(donnees.setlists, donnees.recueil, etat.service, enPeriode(etat), aujourdhui);
+  }, [donnees, etat, aujourdhui]);
+  const presidenceChoisie = useMemo(() => {
+    if (!donnees || !peutFiltrerPresidence || !etat.presidence) return null;
+    // Un service choisi : ne garder que ses setlists, comme les vues filtrées.
+    const setlists = etat.service ? donnees.setlists.filter((s) => s.category === etat.service) : donnees.setlists;
+    return statsPresidence(setlists, donnees.recueil, etat.presidence, enPeriode(etat), aujourdhui);
+  }, [donnees, etat, aujourdhui, peutFiltrerPresidence]);
+  const lignesPresidence = useMemo(() => {
+    if (!donnees || !peutFiltrerPresidence || etat.presidence) return null;
+    return presidences(donnees.setlists, enPeriode(etat), aujourdhui, etat.service);
   }, [donnees, etat, aujourdhui, peutFiltrerPresidence]);
   const lignes = useMemo(() => {
     if (!stats) return [];
@@ -250,11 +280,26 @@ function StatistiquesContenu() {
     </section>
   );
 
+  // Noms courts : « Fidélité » en français ; 中文 prend la traduction de `categories` (déjà sans « Groupe »).
+  const nomService = (c: string) => (zh ? t("categories." + c, { defaultValue: serviceCourt(c) }) : serviceCourt(c));
+  // Le filtre attend une graphie présente dans ses choix : celle de `choix.presidences` de même `normalizeName`.
+  const choisirPresidence = (nom: string) =>
+    changer({ presidence: donnees.choix.presidences.find((p) => normalizeName(p) === normalizeName(nom)) ?? nom });
+
   return (
     <>
       {enTete}
       {/* Un conteneur : « Les plus joués » se range selon la place laissée par la barre (R6). */}
       <div className={cn(CORPS, "[container-type:inline-size]")}>
+        {groupe && groupe.setlists > 0 && <RangeeGroupe groupe={groupe} />}
+        {presidenceChoisie && etat.presidence && (
+          <BlocPresidence nom={etat.presidence} stats={presidenceChoisie} aujourdhui={aujourdhui} nomService={nomService} />
+        )}
+        {lignesPresidence && lignesPresidence.length > 0 && (
+          <CartePresidences key={[etat.periode, etat.du, etat.au, etat.service].join("|")}
+            lignes={lignesPresidence} service={etat.service} aujourdhui={aujourdhui} nomService={nomService}
+            choisir={choisirPresidence} profils={profils} />
+        )}
         {nombre === 0 ? (
           <p role="status" className="raised rounded-2xl px-5 py-8 text-center text-sm text-muted-foreground">
             {t("stats.aucuneSetlistPeriode")}
@@ -683,6 +728,154 @@ function ARedecouvrir({ chants, aujourdhui, debutPeriode, finPeriode, debutHisto
           ))}
         </tbody>
       </table>
+    </section>
+  );
+}
+
+// ─── Un groupe, une personne (lot SP, SP3 et SP4) ─────────────────────────────
+
+/** Le nombre d'une rangée de chiffres : le chiffre, son libellé dessous. */
+function Chiffre({ testId, valeur, libelle }: { testId: string; valeur: string; libelle: string }) {
+  return (
+    <div className="min-w-0">
+      <p data-testid={testId} className="text-2xl font-bold tabular-nums">{valeur}</p>
+      <p className="text-sm text-muted-foreground">{libelle}</p>
+    </div>
+  );
+}
+
+/** SP4 : la rangée d'un service choisi, pour tout connecté. Elle suit la période, pas la langue
+ *  (`statsGroupe` ne la prend pas : la part FR / 中文 en est justement le résultat). */
+function RangeeGroupe({ groupe }: { groupe: StatsGroupe }) {
+  const { t, i18n } = useTranslation();
+  const decimal = new Intl.NumberFormat(i18n.language === "zh-CN" ? "zh-CN" : "fr-FR", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+  return (
+    <section data-testid="groupe-rangee" className="raised rounded-2xl px-5 py-4">
+      <div className="grid grid-cols-3 gap-3">
+        <Chiffre testId="groupe-setlists" valeur={String(groupe.setlists)} libelle={t("stats.groupe.setlists")} />
+        <Chiffre testId="groupe-par-mois" valeur={decimal.format(groupe.parMois)} libelle={t("stats.groupe.parMois")} />
+        <Chiffre testId="groupe-chants" valeur={String(groupe.chantsDifferents)} libelle={t("stats.groupe.chantsDifferents")} />
+      </div>
+      <p data-testid="groupe-langues" className="mt-3 border-t border-border/60 pt-3 text-sm text-muted-foreground">
+        {groupe.chantsDifferents > 0
+          ? t("stats.groupe.langues", { fr: libellePart(1 - groupe.partZh), zh: libellePart(groupe.partZh) })
+          : t("stats.groupe.langues", { fr: "—", zh: "—" })}
+        {" · "}{t("stats.groupe.tonalite", { t: groupe.tonalites.join(" / ") || "—" })}
+      </p>
+    </section>
+  );
+}
+
+/** Les services d'une présidence, en noms courts : « Fidélité 7 · Paix 2 ». */
+function ServicesEtFois({ parService, nomService }: { parService: StatsPresidence["parService"]; nomService: (s: string) => string }) {
+  return <>{parService.map((p) => `${nomService(p.service)} ${p.fois}`).join(" · ")}</>;
+}
+
+/** SP3 : une présidence choisie, vue par un admin ; suit la période et le service choisis. */
+function BlocPresidence({ nom, stats, aujourdhui, nomService }: {
+  nom: string; stats: StatsPresidence; aujourdhui: string; nomService: (s: string) => string;
+}) {
+  const { t } = useTranslation();
+  return (
+    <section data-testid="presidence-bloc" className="raised rounded-2xl px-5 py-4">
+      <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+        <h2 className="text-sm font-semibold text-muted-foreground">{t("stats.presidencesAdmin.titreDe", { nom })}</h2>
+        <span className="rounded-full bg-secondary px-2 py-0.5 text-[11px] font-semibold text-muted-foreground">{t("stats.presidencesAdmin.admins")}</span>
+      </div>
+      <div className="mt-2 grid grid-cols-3 gap-3">
+        <Chiffre testId="presidence-fois" valeur={String(stats.total)} libelle={t("stats.presidencesAdmin.fois")} />
+        <Chiffre testId="presidence-derniere" valeur={stats.derniere ? jourCourt(stats.derniere.jour, aujourdhui) : "—"} libelle={t("stats.presidencesAdmin.derniere")} />
+        <Chiffre testId="presidence-groupes" valeur={String(stats.parService.length)} libelle={t("stats.presidencesAdmin.groupes")} />
+      </div>
+      {stats.parService.length > 0 && (
+        <p data-testid="presidence-services" className="mt-3 border-t border-border/60 pt-3 text-sm text-muted-foreground">
+          <ServicesEtFois parService={stats.parService} nomService={nomService} />
+        </p>
+      )}
+    </section>
+  );
+}
+
+const LIGNES_PRESIDENCES = 10;
+/** Colonnes Qui · Fois · Dernière (· Groupes dès `sm`), communes à l'en-tête et aux lignes. */
+const RANGEE = "grid grid-cols-[minmax(0,1fr)_3rem_4.5rem] gap-x-3 sm:grid-cols-[minmax(0,1fr)_3rem_4.5rem_minmax(0,1.2fr)]";
+
+/** SP3 : « Présidences » (admins), aucune présidence choisie ; avec un service choisi, « Présidences à … »
+ *  et, dessous, les membres du groupe qui n'ont pas présidé (P7). */
+function CartePresidences({ lignes, service, aujourdhui, nomService, choisir, profils }: {
+  lignes: LignePresidence[]; service: string | null; aujourdhui: string; nomService: (s: string) => string;
+  choisir: (nom: string) => void; profils: UserProfile[] | null;
+}) {
+  const { t } = useTranslation();
+  const [tout, setTout] = useState(false);
+  const [noms, setNoms] = useState(false);
+  const montrees = tout ? lignes : lignes.slice(0, LIGNES_PRESIDENCES);
+  const absents = useMemo(() => {
+    if (!service || !profils) return [];
+    const ontPreside = new Set(lignes.map((l) => normalizeName(l.nom)));
+    return profils
+      .filter((p) => (p.serviceRoles?.[service] ?? []).length > 0)
+      .filter((p) => !ontPreside.has(normalizeName(nomDePresidence(p))))
+      .map((p) => `${p.firstName} ${p.lastName}`.trim())
+      .filter(Boolean)
+      .sort((a, b) => a.localeCompare(b, "fr"));
+  }, [service, profils, lignes]);
+  const touche = "[@media(pointer:fine)]:min-h-8 min-h-11";
+  return (
+    <section data-testid="presidences-admin" className="raised rounded-2xl px-[18px] py-3.5">
+      <div className="flex min-h-8 flex-wrap items-center gap-x-2 gap-y-1 pb-1">
+        <h2 className="text-[15px] font-semibold text-foreground">
+          {service ? t("stats.presidencesAdmin.titreService", { service: nomService(service) }) : t("stats.presidencesAdmin.titre")}
+        </h2>
+        <span className="rounded-full bg-secondary px-2 py-0.5 text-[11px] font-semibold text-muted-foreground">{t("stats.presidencesAdmin.admins")}</span>
+      </div>
+      {/* Des div à rôles ARIA, pas de <table> : les tests d'agencement du tableau des chants le visent par sa balise. */}
+      <div role="table" aria-label={t("stats.presidencesAdmin.titre")} className="text-sm">
+        <div role="row" className={cn(RANGEE, "border-b border-border py-2 text-xs text-muted-foreground")}>
+          <span role="columnheader" className="font-semibold">{t("stats.presidencesAdmin.qui")}</span>
+          <span role="columnheader" className="text-right font-semibold">{t("stats.presidencesAdmin.fois")}</span>
+          <span role="columnheader" className="text-right font-semibold sm:text-left">{t("stats.presidencesAdmin.derniere")}</span>
+          <span role="columnheader" className="hidden font-semibold sm:block">{t("stats.presidencesAdmin.groupes")}</span>
+        </div>
+        <div className="divide-y divide-border">
+          {montrees.map((l) => {
+            const services = l.services.map(nomService).join(" · ");
+            return (
+              <div key={l.nom} role="row" data-testid="ligne-presidence" className={cn(RANGEE, "items-center py-1")}>
+                <span role="cell" className="min-w-0">
+                  <button type="button" data-champ="nom" onClick={() => choisir(l.nom)}
+                    className={cn("inline-flex items-center text-left font-semibold hover:underline underline-offset-2", touche)}>
+                    {l.nom}
+                  </button>
+                  {services && <span className="block pb-1 text-xs text-muted-foreground sm:hidden">{services}</span>}
+                </span>
+                <span role="cell" data-champ="fois" className="text-right font-bold tabular-nums">{l.fois}</span>
+                <span role="cell" data-champ="derniere" className="text-right tabular-nums sm:text-left">{jourCourt(l.derniere, aujourdhui)}</span>
+                <span role="cell" data-champ="groupes" className="hidden text-muted-foreground sm:block">{services}</span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+      {!tout && lignes.length > LIGNES_PRESIDENCES && (
+        <Button type="button" variant="outline" size="sm" onClick={() => setTout(true)} className="mt-2 [@media(pointer:coarse)]:h-11">
+          {t("stats.toutAfficher")}
+        </Button>
+      )}
+      {absents.length > 0 && (
+        <div data-testid="presidences-absents" className="mt-2 border-t border-border/60 pt-1">
+          <button type="button" aria-expanded={noms} onClick={() => setNoms((o) => !o)}
+            className={cn("inline-flex items-center gap-1 text-left text-sm font-semibold text-muted-foreground hover:text-foreground", touche)}>
+            {t("stats.presidencesAdmin.nonPresides", { count: absents.length })}
+            <ChevronRight className={cn("h-4 w-4 shrink-0 transition-transform", noms && "rotate-90")} aria-hidden />
+          </button>
+          {noms && (
+            <ul className="columns-2 gap-x-6 pb-1 text-sm sm:columns-3">
+              {absents.map((n) => <li key={n} className="break-inside-avoid py-0.5">{n}</li>)}
+            </ul>
+          )}
+        </div>
+      )}
     </section>
   );
 }
