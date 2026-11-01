@@ -1293,8 +1293,9 @@ par delta sur `majLe` ; LF2 profils gardés 10 min ; LF3 « À faire » et pasti
 Firestore › Index › Champ unique : exemption pour `fois`, champ `equipe`, portée « Groupe de collections »,
 croissant (pas créée seule ; sans elle, 400 et repli) ; 4. il publie la règle `{chemin=**}/fois/{date}` de
 `firestore.rules`. Publiée avant le rattrapage, elle cacherait les fois anciennes ;
-rattrapage avant la fusion, les fois cochées entre-temps resteraient sans `equipe`. Après la mise en ligne :
-comparer la courbe « Utilisation » de la console sur 24 h.
+rattrapage avant la fusion, les fois cochées entre-temps resteraient sans `equipe`. **Mis en ligne le 01/11/2026** : fusion dans `main` (`9d312c5`), rattrapage lancé par Timothée (0 fois à
+toucher, base `gcclouange`), exemption d'index `fois.equipe` créée, règle publiée. À faire : comparer la courbe
+« Utilisation » de la console sur 24 h.
 
 ## 4. Carte des modules de l'app « GCC »
 
