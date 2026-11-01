@@ -9,7 +9,10 @@ import { SommaireChants } from "./SommaireChants";
 import { FeuilleRole } from "./FeuilleRole";
 import { PageScan } from "./PageScan";
 import { PageTexte } from "./PageTexte";
-import { useTheme } from "next-themes";
+import { useThemeScene } from "./hooks/useThemeScene";
+import { useWakeLock } from "./hooks/useWakeLock";
+import { useTempoChant } from "./hooks/useTempoChant";
+import { useAnnotationsPage } from "./hooks/useAnnotationsPage";
 import { Link2, MessageSquare, Sun, Moon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -31,17 +34,16 @@ import { pinyin_font } from "@/components/song/pinyinFont";
 import type { SectionOccurrence } from "@/lib/setlist/sectionSteps";
 import { dpOrigin } from "@/lib/setlist/dp";
 import { AnnotationCanvas, StrokesLayer } from "./AnnotationCanvas";
-import { type AnnotationData, ANCIEN_RAPPEL, recaler, serializeAnnotations, deserializeAnnotations } from "@/lib/annotations/strokes";
-import { loadAnnotation, saveAnnotation } from "@/lib/firebase/annotations";
+import { ANCIEN_RAPPEL } from "@/lib/annotations/strokes";
 import { getChartStylePref, setChartStylePref } from "@/lib/chartStylePref";
 import { getPersonalKeys, setPersonalKey } from "@/lib/setlist/personalKeys";
 import type { PartitionLayout } from "@/lib/partitionLayoutPref";
 import { getPinyinPref, setPinyinPref } from "@/lib/pinyinPref";
 import { classerGeste, largeurZoneLaterale } from "@/lib/performance/gestes";
 import { LiseretTempo } from "@/components/performance/LiseretTempo";
-import { getTailleAnnotee, setTailleAnnotee } from "@/lib/performance/tailleAnnotee";
+import { getTailleAnnotee } from "@/lib/performance/tailleAnnotee";
 import { barreDejaVue, marquerBarreVue } from "@/lib/performance/barreVue";
-import { clampTempo, getMetronomePref, getTempoChant, setMetronomePref, setTempoChant, TEMPO_DEPART, TEMPO_MAX, TEMPO_MIN } from "@/lib/performance/tempo";
+import { getMetronomePref, setMetronomePref, TEMPO_DEPART, TEMPO_MAX, TEMPO_MIN } from "@/lib/performance/tempo";
 import { getFontScalePref, setFontScalePref, MIN_FONT_SCALE, MAX_FONT_SCALE } from "@/lib/fontScalePref";
 import { useAuth } from "@/lib/firebase/auth";
 import type { SetlistItem } from "@/types/setList";
@@ -362,8 +364,6 @@ export function PerformanceMode({
     }
   });
   const [annotateMode, setAnnotateMode] = useState(false);
-  // Les traits de la page n'ont pas pu être lus (réseau, 5xx) : page non initialisée, rien n'est enregistré.
-  const [annotationsIndispo, setAnnotationsIndispo] = useState(false);
   // Loupe du mode annotation : grossissement (≠ taille du texte, ne re-pagine pas)
   // + déplacement. Possédée ici car elle agrandit aussi le texte (transform CSS).
   const [annotZoom, setAnnotZoom] = useState(1);
@@ -383,53 +383,9 @@ export function PerformanceMode({
   // relu du stockage à chaque rendu (`tempoTick` relance le rendu après une écriture).
   const [metronome, setMetronomeState] = useState(() => getMetronomePref());
   const setMetronome = (v: boolean) => { setMetronomeState(v); setMetronomePref(v); };
-  const [, setTempoTick] = useState(0);
 
   // ── Thème scène (indépendant du thème du site, mémorisé) ──
-  const [stageTheme, setStageTheme] = useState<"light" | "dark">(() => {
-    try {
-      const saved = localStorage.getItem("perf-theme");
-      if (saved === "light" || saved === "dark") return saved;
-    } catch { /* stockage indisponible */ }
-    return typeof document !== "undefined" && document.documentElement.classList.contains("dark")
-      ? "dark"
-      : "light";
-  });
-  const { resolvedTheme } = useTheme();
-  // Thème courant du site (next-themes), relu à la sortie ; repli : la classe vue à l'ouverture.
-  const siteTheme = useRef<string | undefined>(resolvedTheme);
-  const siteWasDark = useRef<boolean | null>(null);
-  const stageThemeRef = useRef(stageTheme);
-  useEffect(() => { siteTheme.current = resolvedTheme; }, [resolvedTheme]);
-  useEffect(() => { stageThemeRef.current = stageTheme; }, [stageTheme]);
-
-  useEffect(() => {
-    const root = document.documentElement;
-    if (siteWasDark.current === null) siteWasDark.current = root.classList.contains("dark");
-    root.classList.toggle("dark", stageTheme === "dark");
-  }, [stageTheme]);
-
-  // Pendant le mode, si next-themes réécrit la classe (bascule du thème système), la scène reprend la main.
-  useEffect(() => {
-    const root = document.documentElement;
-    const obs = new MutationObserver(() => {
-      const voulu = stageThemeRef.current === "dark";
-      if (root.classList.contains("dark") !== voulu) root.classList.toggle("dark", voulu);
-    });
-    obs.observe(root, { attributes: true, attributeFilter: ["class"] });
-    return () => obs.disconnect();
-  }, []);
-
-  // Fermeture : le thème courant du site, pas celui d'avant l'ouverture
-  useEffect(() => () => {
-    const dark = siteTheme.current ? siteTheme.current === "dark" : siteWasDark.current;
-    if (dark !== null) document.documentElement.classList.toggle("dark", dark);
-  }, []);
-
-  const setTheme = useCallback((t: "light" | "dark") => {
-    setStageTheme(t);
-    try { localStorage.setItem("perf-theme", t); } catch { /* ignore */ }
-  }, []);
+  const { stageTheme, setTheme } = useThemeScene();
 
   const toggleHideLyrics = useCallback((v: boolean) => {
     setHideLyrics(v);
@@ -585,7 +541,6 @@ export function PerformanceMode({
 
   // Annotations vectorielles de la page courante (toujours chargées, pas
   // seulement en mode annotation) + visibilité (œil dans les réglages)
-  const [pageAnnotations, setPageAnnotations] = useState<AnnotationData | null>(null);
   // Hauteur du rappel de la page affichée (px d'écran, marge comprise) : les traits
   // se replacent selon le rappel qu'il y avait à leur tracé (lot RS-C).
   const rappelRef = useRef<HTMLDivElement>(null);
@@ -769,24 +724,7 @@ export function PerformanceMode({
   }, []);
 
   // Wake lock
-  useEffect(() => {
-    type WakeLock = { request: (t: string) => Promise<{ release: () => Promise<void> }> };
-    let sentinel: { release: () => Promise<void> } | null = null;
-    const acquire = async () => {
-      try {
-        if ("wakeLock" in navigator) {
-          sentinel = await (navigator as unknown as { wakeLock: WakeLock }).wakeLock.request("screen");
-        }
-      } catch { /* optional feature */ }
-    };
-    acquire();
-    const onVisible = () => { if (document.visibilityState === "visible") acquire(); };
-    document.addEventListener("visibilitychange", onVisible);
-    return () => {
-      sentinel?.release();
-      document.removeEventListener("visibilitychange", onVisible);
-    };
-  }, []);
+  useWakeLock();
 
   // Barre : pas de minuterie, elle reste jusqu'au toucher au centre (lot L1).
   const annotateModeRef = useRef(annotateMode);
@@ -905,55 +843,9 @@ export function PerformanceMode({
     obs.observe(el);
     return () => obs.disconnect();
   }, [rappelPresent, currentPage, fontScale, currentPageKey]);
-  // Annotations d'avant le lot : Sections uniques avec rappel = ancienne réserve, sinon 0.
-  const annotations = useMemo(
-    () =>
-      pageAnnotations
-        ? recaler(pageAnnotations, rappelEcran, affichageVu === "unique" && rappelEcran > 0 ? ANCIEN_RAPPEL * fontScale : 0, window.innerHeight)
-        : null,
-    [pageAnnotations, rappelEcran, affichageVu, fontScale],
-  );
-
-  // Charger les traits de la page courante (toujours — affichage permanent)
-  useEffect(() => {
-    setAnnotationsIndispo(false);
-    if (!user || !currentPageKey) { setPageAnnotations(null); return; }
-    let stale = false;
-    setPageAnnotations(null);
-    // Temporisé : glisser le curseur de page change la clé à chaque cran, une requête par page serait perdue.
-    const minuterie = setTimeout(() => {
-      loadAnnotation(user.uid, setlistId, currentPageKey).then((raw) =>
-        // Rien sous la nouvelle clé : l'annotation de l'ancienne page (jamais effacée) ; la première
-        // modification l'enregistre sous la nouvelle clé.
-        raw === null && cleAncienne ? loadAnnotation(user.uid, setlistId, cleAncienne) : raw,
-      ).then((raw) => {
-        if (stale) return;
-        const parsed = raw ? deserializeAnnotations(raw) : null;
-        setPageAnnotations(
-          parsed ?? { w: window.innerWidth, h: window.innerHeight, strokes: [] },
-        );
-      }).catch(() => {
-        // Lecture impossible ≠ page vide : sans calque, ni canvas ni enregistrement.
-        if (!stale) setAnnotationsIndispo(true);
-      });
-    }, 150);
-    return () => { stale = true; clearTimeout(minuterie); };
-  }, [user, setlistId, currentPageKey, cleAncienne]);
-
-  // Chaque modification (trait fini, gomme, annuler) est sauvegardée aussitôt
-  const handleAnnotationsChange = useCallback(
-    (data: AnnotationData) => {
-      setPageAnnotations(data);
-      // L5 : au premier trait d'un chant, on retient la taille du texte à laquelle on annote.
-      if (slugAnnote && data.strokes.length > 0 && getTailleAnnotee(setlistId, slugAnnote) === null) {
-        setTailleAnnotee(setlistId, slugAnnote, fontScale);
-      }
-      if (user && currentPageKey && !horsLigne) {
-        saveAnnotation(user.uid, setlistId, currentPageKey, serializeAnnotations(data));
-      }
-    },
-    [user, setlistId, currentPageKey, horsLigne, slugAnnote, fontScale],
-  );
+  const { annotationsIndispo, annotations, handleAnnotationsChange } = useAnnotationsPage({
+    user, setlistId, currentPageKey, cleAncienne, rappelEcran, affichageVu, fontScale, horsLigne, slugAnnote,
+  });
 
   // L5 : à l'entrée en annotation, la taille mémorisée du chant revient avant qu'on dessine.
   const basculerAnnotation = () => {
@@ -1076,19 +968,7 @@ export function PerformanceMode({
 
   // Métronome visuel : tempo réglé sur l'appareil pour ce chant, sinon celui du fichier.
   const tempoChantId = currentEntry?.block.songSlug;
-  const tempoAppareil = tempoChantId ? getTempoChant(tempoChantId) : null;
-  const tempoFichier = currentSong?.tempo != null ? clampTempo(currentSong.tempo) : undefined;
-  const tempoLiseret = tempoAppareil ?? tempoFichier;
-  const changerTempo = (delta: number) => {
-    if (!tempoChantId) return;
-    setTempoChant(tempoChantId, clampTempo((tempoLiseret ?? TEMPO_DEPART) + delta));
-    setTempoTick((n) => n + 1);
-  };
-  const effacerTempo = () => {
-    if (!tempoChantId) return;
-    setTempoChant(tempoChantId, null);
-    setTempoTick((n) => n + 1);
-  };
+  const { tempoAppareil, tempoLiseret, changerTempo, effacerTempo } = useTempoChant(tempoChantId, currentSong?.tempo);
 
   // Progression dans le chant courant + chant suivant
   const songStartPage = currentEntry ? pages.findIndex((p) => p.includes(currentEntry.index)) : -1;
