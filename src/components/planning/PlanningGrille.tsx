@@ -9,7 +9,7 @@ import { currentSundayStr, fdFullL, fdShort, getAnnee, getMois, moisName } from 
 import { PREMIERE_ANNEE_APP, type ColonneGrille, type DefinitionGrille, type LigneGrille } from "@/lib/planning/grilles"
 import { colonneDe, doitSemer, motifDuRefus, sansCompteDe, styleCase } from "@/lib/planning/grilleAffichage"
 import { ecrireCases, retirerDate } from "@/lib/firebase/planningGrille"
-import { getHistoriqueGrille, noterChangements, type EntreeGrille } from "@/lib/firebase/planningHistorique"
+import { noterChangements } from "@/lib/firebase/planningHistorique"
 import { historyAuthor } from "@/lib/firebase/setlistHistory"
 import { useProfile } from "@/lib/firebase/users"
 import { colonneDePersonnes, periodeAbsence, propositions, propositionsReliees, type CompteDuPlanning } from "@/lib/planning/choisir"
@@ -21,10 +21,12 @@ import { ExportModele, type ExportPlanning } from "./ExportModele"
 import { ChoisirNom, useOrdinateur } from "./ChoisirNom"
 import { DansLEnTete, type FiltreNom } from "./BarreDeGrille"
 import { useGestionPlanning } from "@/lib/planning/gestion"
-import { colonnesACopier, datesApres, enTexteTabule, lignePrecedente, lireCollage, parDimanche, planCollage, planCopie, planRemplir, type CaseGeste } from "@/lib/planning/gestes"
+import { datesApres, enTexteTabule, lireCollage, parDimanche, planCollage, planRemplir, type CaseGeste } from "@/lib/planning/gestes"
 import { BanniereGeste, BarreCollage, BarreSelection } from "./BanniereGeste"
 import { useClavier, useSelectionGrille, type Poignees } from "./useSelectionGrille"
-import { FenetreCopie, type DemandeCopie } from "./FenetreCopie"
+import { FenetreCopie } from "./FenetreCopie"
+import { useHistoriqueGrille } from "./hooks/useHistoriqueGrille"
+import { useCopiePrecedent } from "./hooks/useCopiePrecedent"
 import { PrevenirChangements, usePrevenir, type PrevenirProp } from "./PrevenirChangements"
 import { styleTexteService } from "@/lib/couleurSombre"
 import { EtatVide } from "@/components/layout/EtatVide"
@@ -151,8 +153,7 @@ export function PlanningGrille({
   const [choix, setChoix] = useState<{ l: LigneGrille; c: ColonneGrille; ancre: DOMRect } | null>(null)
   const [refus, setRefus] = useState<"" | "droitRetire" | "horsLigne">("")
   const [enregistre, setEnregistre] = useState(false)
-  const [histoOuvert, setHistoOuvert] = useState(false)
-  const [entrees, setEntrees] = useState<EntreeGrille[]>([])
+  const { histoOuvert, setHistoOuvert, entrees, rechargerHistorique } = useHistoriqueGrille(definition)
   // Dimanches semés pendant la séance : leur document n'existait pas encore.
   const semes = useRef(new Set<string>())
   const [geste, setGeste] = useState<DernierGeste | null>(null)
@@ -160,9 +161,6 @@ export function PlanningGrille({
   const [enCours, setEnCours] = useState(false)
   const enCoursRef = useRef(false)
   const fini = useRef(false)
-  // « Copier le dimanche précédent » (PG13 à PG15) : le dimanche dont l'aperçu est posé, et la fenêtre.
-  const [apercu, setApercu] = useState<string | null>(null)
-  const [fenetreCopie, setFenetreCopie] = useState<DemandeCopie | null>(null)
   const survol = useSurvol()
   const [collage, setCollage] = useState<Collage | null>(null)
   // Un refus qui n'a rien écrit (collage ou ⌫ sans case à écrire) : il se dit, sans toucher à l'« Annuler » du dernier geste.
@@ -278,43 +276,8 @@ export function PlanningGrille({
   const clesPlage = plage ? clesAffichees.slice(plage.c0, plage.c1 + 1) : []
   useEffect(() => { effacer() }, [definition.key, periode, effacer])
 
-  /** Copier le dimanche précédent sur `date` (PG10 à PG16) ; null : pas en modification. Un planning
-   *  hebdomadaire dont le J−7 manque garde sa source (vide, PG10) ; à dates choisies sans date
-   *  précédente, `source` est null. Dans les deux cas rien n'est offert (PG16). */
-  const copiePour = (date: string) => {
-    if (mode !== "edition") return null
-    const source = lignePrecedente(definition, datesDuPlanning, date)
-      ?? (definition.dates === "dimanches" ? new Date(new Date(`${date}T12:00:00Z`).getTime() - 7 * 86_400_000).toISOString().slice(0, 10) : null)
-    if (!source) return { source: null, plan: { vides: [], remplace: [], verrouillees: 0 }, offert: false }
-    const plan = planCopie({ colonnes: colonnesACopier(definition), source, cible: date, lire: lireCase, verrou })
-    return { source, plan, offert: plan.vides.length + plan.remplace.length > 0 }
-  }
-  /** L'aide de l'infobulle et du menu : ce qui sera copié, et ce qui ne l'est pas (PG14, PG15). */
-  const colonnesExclues = () =>
-    definition.colonnes.filter((x) => x.cle === "orateur" || x.cle === "theme").map((x) => t(x.i18n)).join(", ")
-  const aideCopie = (c: NonNullable<ReturnType<typeof copiePour>>) => {
-    if (!c.source) return undefined
-    const d = fdShort(c.source)
-    if (!c.offert) return t("planning.gestes.rienACopier", { date: d })
-    const base = c.plan.vides.length
-      ? t("planning.gestes.copierAide", { date: d, count: c.plan.vides.length })
-      : t("planning.gestes.copierAideRemplacer", { date: d, count: c.plan.remplace.length })
-    const exclues = colonnesExclues()
-    return exclues ? `${base} ${t("planning.gestes.exclues", { colonnes: exclues })}` : base
-  }
-  /** L'infobulle de la pastille (PG14) : « Les N cases vides reprennent le 17/1. … Un nom déjà posé reste. » */
-  const infobulleCopie = (c: NonNullable<ReturnType<typeof copiePour>>) => {
-    if (!c.source) return ""
-    const d = fdShort(c.source)
-    const exclues = colonnesExclues()
-    return [
-      c.plan.vides.length
-        ? t("planning.gestes.copierInfobulle", { date: d, count: c.plan.vides.length })
-        : t("planning.gestes.copierAideRemplacer", { date: d, count: c.plan.remplace.length }),
-      exclues && t("planning.gestes.exclues", { colonnes: exclues }),
-      c.plan.vides.length && t("planning.gestes.nomPoseReste"),
-    ].filter(Boolean).join(" ")
-  }
+  const { apercu, setApercu, fenetreCopie, copiePour, aideCopie, infobulleCopie, copier, choixDeLaFenetre } =
+    useCopiePrecedent({ definition, mode, datesDuPlanning, lireCase, verrou, appliquer, t })
   /** « Remplir vers le bas » pour la case dont « Choisir » est ouvert (PG18, PG19) : null si la case
    *  ne porte pas un seul nom. Les dimanches sont les lignes données à la grille, « Mes dates » ignoré. */
   const remplirPour = () => {
@@ -337,28 +300,6 @@ export function PlanningGrille({
     return prevue
       ? <span className={`block w-full min-h-8 rounded-md border border-dashed px-1.5 py-1 font-bold ${prevue.avant.trim() ? "border-orange-500 bg-orange-500/15" : ""}`} style={prevue.avant.trim() ? undefined : { borderColor: couleur }}>{prevue.apres}</span>
       : laCase(l, c)
-  }
-
-  function faireCopie(source: string, cible: string, cases: CaseGeste[], verrouillees: number) {
-    void appliquer(
-      cases,
-      t("planning.gestes.copie", { cible: fdShort(cible), source: fdShort(source), count: cases.length }),
-      verrouillees ? [t("planning.gestes.verrouillees", { count: verrouillees })] : [],
-    )
-  }
-  /** Le geste (PG12, PG13) : sans fenêtre quand il ne tombe que dans des cases vides. */
-  function copier(date: string) {
-    const c = copiePour(date)
-    setApercu(null)
-    if (!c?.offert || !c.source) return
-    if (c.plan.remplace.length) setFenetreCopie({ source: c.source, cible: date, vides: c.plan.vides, remplace: c.plan.remplace, verrouillees: c.plan.verrouillees })
-    else faireCopie(c.source, date, c.plan.vides, c.plan.verrouillees)
-  }
-  function choixDeLaFenetre(choix: "vides" | "tout" | null) {
-    const d = fenetreCopie
-    setFenetreCopie(null)
-    if (!d || !choix) return
-    faireCopie(d.source, d.cible, choix === "tout" ? [...d.vides, ...d.remplace] : d.vides, d.verrouillees)
   }
 
   /** Le « ⋯ » du dimanche (PG15) : tablette, téléphone, et les cartes. */
@@ -404,12 +345,6 @@ export function PlanningGrille({
   const rangDate = (date: string) => datesAffichees.indexOf(date)
   const dansGeste = (date: string, cle: string) => !!geste?.cases.some((c) => c.date === date && c.cle === cle)
   const largeurMin = 104 + 96 * colonnes.length
-
-  async function rechargerHistorique() {
-    try {
-      setEntrees((await getHistoriqueGrille(definition.key, 20)).filter((e) => e.changes.length))
-    } catch { /* historique illisible : le panneau reste vide */ }
-  }
 
   function commencer(l: LigneGrille, c: ColonneGrille) {
     if (mode !== "edition") return
