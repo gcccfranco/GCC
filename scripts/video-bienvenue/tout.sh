@@ -1,15 +1,14 @@
 #!/bin/bash
-# Rend les quatre vidéos (une par disposition) → ../../docs/video-bienvenue/bienvenue-<appareil>.mp4 + .jpg
+# Rend les quatre vidéos (une par disposition), sans son → ../../docs/video-bienvenue/bienvenue-<appareil>.mp4 + bienvenue.jpg
+# Une série d'images complète (630) n'est pas refaite : effacer frames/<appareil> pour la refaire.
 set -e
 cd "$(dirname "$0")"
-python3 music.py 2.5 5 6.25 10 12.5 15 16.25 17.5
 for d in telephone tablette tablette-paysage ordinateur; do
-  rm -rf frames/$d stills/$d
-  node render.mjs $d frames
+  if [ "$(ls frames/$d 2>/dev/null | wc -l)" != "630" ]; then rm -rf frames/$d; node render.mjs $d frames; fi
   node render.mjs $d stills 1.6
   cp stills/$d/t1.60.png frames/$d/0000.png   # affiche en image 0
-  ffmpeg -y -loglevel error -framerate 30 -i frames/$d/%04d.png -i music.wav -t 21 -af "afade=t=out:st=19.6:d=1.4" \
-    -vf scale=720:720:flags=lanczos -c:v libx264 -preset slow -crf 26 -pix_fmt yuv420p -c:a aac -b:a 96k \
+  ffmpeg -y -loglevel error -framerate 30 -i frames/$d/%04d.png -t 21 -an \
+    -vf scale=720:720:flags=lanczos -c:v libx264 -preset slow -crf 26 -pix_fmt yuv420p \
     -movflags +faststart ../../docs/video-bienvenue/bienvenue-$d.mp4
   echo "$d ok"
 done

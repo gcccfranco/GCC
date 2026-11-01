@@ -12,19 +12,20 @@ tailles, le comportement, quatre questions à trancher.
 | --- | --- |
 | VB1 | **Français seulement** : une seule vidéo, en français. |
 | VB2 | **Dans l'écran Bienvenue** de la visite (`src/components/onboarding/Accueil.tsx`, écran 1) : la vidéo **remplace le logo**. Pas d'écran de plus. |
-| VB3 | **Musique, démarrage muet** : lecture auto muette, bouton « Son » ; tout se comprend sans le son. |
-| VB4 | **Une vidéo par disposition** (Timothée, 01/11/2026, « une vidéo pour chaque responsive ») : téléphone, tablette portrait, tablette paysage, ordinateur. Mêmes scènes, même musique, même format carré ; les captures montrent le site **tel qu'il est sur cet appareil** (barre du bas, barre latérale réduite ou dépliée, deux volets). Chacun voit la sienne. |
+| VB3 | ~~Musique, démarrage muet~~ → **sans son** (Timothée, 01/11/2026, « retire le son ») : les vidéos n'ont plus de piste audio, pas de bouton « Son ». |
+| VB4 | **Une vidéo par disposition** (Timothée, 01/11/2026, « une vidéo pour chaque responsive ») : téléphone, tablette portrait, tablette paysage, ordinateur. Mêmes scènes, même montage, même format carré ; les captures montrent le site **tel qu'il est sur cet appareil** (barre du bas, barre latérale réduite ou dépliée, deux volets). Chacun voit la sienne. |
 
 ## La vidéo (faite)
 
 - Méthode /brag (`/brag-slim`) : captures du **vrai site** (serveur local, session simulée, profil fictif « Nina
   Dubreuil », présidence « Océane R. »), composées image par image ; aucune donnée Firestore réelle, aucun planning
   (vrais noms). Sources et recette : `scripts/video-bienvenue/README.md` ; storyboard : `scripts/video-bienvenue/plan.md`.
-- 21 s, carré, 30 i/s, quatre rendus web (720×720, H.264 + AAC, ≈ 1 Mo chacun, faststart) :
+- 21 s, carré, 30 i/s, quatre rendus web (720×720, H.264 sans son, ≈ 1 Mo chacun, faststart) :
   `docs/video-bienvenue/bienvenue-{telephone,tablette,tablette-paysage,ordinateur}.mp4` ; une affiche commune
   `bienvenue.jpg`, qui est aussi l'image 0 de chaque vidéo (logo + « Bienvenue dans GCC », identique partout).
   `scripts/video-bienvenue/tout.sh` refait les quatre.
-- Musique originale (numpy) : ré majeur, D A Bm G, 96 bpm ; chaque coupe tombe sur un temps.
+- Sans son (VB3). Le montage garde la grille d'une musique à 96 bpm (coupes toutes les 2,5 s) ; `music.py` reste dans
+  les sources si le son revient un jour.
 - Scènes : Bienvenue dans GCC · Tous les chants, en français et en 中文 · Dans ta tonalité, en un geste (toucher sur
   « + », G → Ab) · Les partitions 简谱, transposées sur le scan · Les chants du culte, dans l'ordre · Et le dimanche,
   le Mode Louange · C'est parti. (avec la vraie barre d'onglets).
@@ -33,7 +34,7 @@ tailles, le comportement, quatre questions à trancher.
 ## Ce qui est à construire (lot VB, sur go)
 
 1. **Fichiers** : déplacer (`git mv`) les quatre `bienvenue-*.mp4` et `bienvenue.jpg` dans `public/accueil/` —
-   ≈ 4,5 Mo de plus dans le dépôt et le déploiement, accepté ; chaque visiteur n'en charge qu'une ;
+   ≈ 4 Mo de plus dans le dépôt et le déploiement, accepté ; chaque visiteur n'en charge qu'une ;
    `docs/video-bienvenue/` disparaît.
 2. **Choix de la vidéo** (au montage du composant, `matchMedia`, mêmes requêtes que `src/lib/deuxVolets.ts` et
    `globals.css`) : `(pointer: fine) and (min-width: 1024px)` → `ordinateur` ; `(pointer: coarse) and (orientation:
@@ -47,13 +48,11 @@ tailles, le comportement, quatre questions à trancher.
      l'affiche fait sauter la mise en page) : largeur de la fenêtre − 64 px (`px-8`), soit ≈ 326 px sur un iPhone de
      390 px, 348 px sur le Pixel 7 du projet `telephone`, 384 px dans la fenêtre `md:max-w-md` ; `rounded-2xl`,
      ombre `raised` ;
-   - **muet posé en JavaScript** : React ne rend pas l'attribut `muted` dans le HTML, et iOS refuse alors la lecture
+   - **muet posé en JavaScript** (même sans piste audio) : React ne rend pas l'attribut `muted` dans le HTML, et iOS refuse alors la lecture
      auto. `ref.current.muted = true` avant `ref.current.play()` ;
    - **lecture auto refusée** (mode économie d'énergie d'iOS…) : `play().catch(…)` affiche l'affiche et un bouton
      lecture, comme le mouvement réduit ;
    - **une lecture** (pas de `loop`), puis l'image finale reste ; un bouton « Revoir » apparaît à la fin (Q1) ;
-   - bouton **« Son »** en bas à droite, sur la vidéo (pilule sombre, icône `Volume2` / `VolumeX`), `aria-pressed` ;
-     activer le son **ne remet pas** la vidéo au début ;
    - `aria-label` qui décrit la vidéo (« Vidéo de bienvenue : … ») ; la vidéo n'a pas de paroles, pas de sous-titres
      à prévoir ;
    - `prefers-reduced-motion: reduce` ou `navigator.connection.saveData` : **pas de lecture auto**, l'affiche avec un
@@ -63,12 +62,12 @@ tailles, le comportement, quatre questions à trancher.
    - **changer d'écran démonte la vidéo** : `Accueil.tsx` pose `key={etape}` sur le corps, donc « Suivant » ou un
      glissé retire le `<video>` (la lecture s'arrête) et « Retour » en remonte un neuf, qui **repart du début, muet**.
      C'est voulu (aucun code de pause/reprise, pas d'état à garder dans `Ecrans`). Le glissé est sur la fenêtre et
-     marche sur la vidéo (pas de contrôles natifs) ; un toucher sur « Son » ou « Revoir » (dx ≈ 0) ne change pas
+     marche sur la vidéo (pas de contrôles natifs) ; un toucher sur « Revoir » (dx ≈ 0) ne change pas
      d'écran.
 4. **Mode `retour`** (comptes du lot 8, « Bonjour … » + « Ce qui a changé ») et **langue 中文** : le logo, comme
    aujourd'hui (Q2).
 5. **Libellés** (`fr.json` et `zh-CN.json`, même si la vidéo n'est montrée qu'en français) : `accueil.video.label`,
-   `accueil.video.son`, `accueil.video.muet`, `accueil.video.revoir`, `accueil.video.lire`.
+   `accueil.video.revoir`, `accueil.video.lire`.
 6. **Service worker** (`public/sw.js`) : aujourd'hui tout ce qui n'est pas listé passe par la dernière branche,
    `event.respondWith(fetch(request).catch(…))`. Une vidéo se lit par requêtes **Range** (réponses 206), que Safari
    iOS gère mal à travers `respondWith`. Deux lignes :
@@ -83,8 +82,7 @@ tailles, le comportement, quatre questions à trancher.
    `SPECS_GRAND_ECRAN`, `playwright.config.ts`) — compte neuf (`accueil: true`) :
    - la vidéo est là, `muted === true`, `paused === false` et `currentTime > 0` peu après l'ouverture (le Chromium
      de la session lit le H.264 : `canPlayType('video/mp4; codecs="avc1.640020, mp4a.40.2"')` = `probably`, vérifié
-     le 01/11/2026 ; si une machine répond `""`, le test le dit et vérifie seulement les attributs) ; « Son »
-     bascule `muted` sans remettre `currentTime` à 0 ;
+     le 01/11/2026 ; si une machine répond `""`, le test le dit et vérifie seulement les attributs) ;
    - `reducedMotion: "reduce"` : pas de lecture auto, l'affiche et le bouton lecture ; `play()` refusé (simulé par
      un `addInitScript` qui fait rejeter `HTMLMediaElement.prototype.play`) : même résultat ;
    - `zh-CN` (posé par `localStorage "i18nextLng" = "zh-CN"`, comme `tests/nouveaux-membres.spec.ts`) : le logo,

@@ -1299,8 +1299,9 @@ comparer la courbe « Utilisation » de la console sur 24 h.
 ### AL. Vidéo de bienvenue à la première connexion (Timothée, 01/11/2026) → `spec-video-bienvenue.md`
 
 « Utilise https://github.com/latent-spaces/brag pour me faire une vidéo quand les gens se connectent pour la première
-fois. » Tranché le jour même : **français seulement**, **dans l'écran Bienvenue** (à la place du logo), **musique,
-démarrage muet**. Vidéo faite (21 s, carré, captures du vrai site avec des noms inventés, musique originale) :
+fois. » Tranché le jour même : **français seulement**, **dans l'écran Bienvenue** (à la place du logo) ; puis **une vidéo par disposition**
+(téléphone, tablettes, ordinateur) et **sans son**. Vidéos faites (21 s, carré, captures du vrai site avec des noms
+inventés) :
 `docs/video-bienvenue/`, sources `scripts/video-bienvenue/`. Planche : https://claude.ai/artifact/C9JexoTnCrVbEnvUHXbkHL
 (quatre questions). Lot **VB** à coder sur go.
 

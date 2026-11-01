@@ -5,7 +5,7 @@
 **Ton** : `polished` adouci — chaleureux, sobre (5C1 Encre · Relief), tutoiement, mots du site.
 **Format** : carré 1080×1080, 30 i/s, ~21 s ; lu muet par défaut, musique au bouton « son ».
 **Lisibilité** : affichée ~340 px de large sur téléphone → légendes ≥ 68 px dans le cadre (≈ 21 px à l'écran).
-**Musique** : originale, synthétisée (numpy) — ré majeur (tonalité recommandée la plus fréquente), I–V–vi–IV
+**Musique** (retirée le 01/11/2026, vidéos sans son ; le montage garde sa grille) : originale, synthétisée (numpy) — ré majeur (tonalité recommandée la plus fréquente), I–V–vi–IV
 (D A Bm G), 96 bpm, mesure = 2,5 s ; chaque coupe tombe sur un temps fort, carillon dans la tonalité.
 **Données** : captures Playwright du vrai site (serveur local, session simulée) ; profil fictif « Nina »,
 présidence « Océane R. » (inventés) ; aucune donnée Firestore réelle, pas de planning (vrais noms).

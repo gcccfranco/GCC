@@ -1,7 +1,7 @@
 # Vidéo de bienvenue (première connexion)
 
-Faite avec la méthode /brag (`latent-spaces/brag`, `/brag-slim`) le 01/11/2026 : 21 s, carré, français, musique
-originale, **une vidéo par disposition** (téléphone, tablette portrait, tablette paysage, ordinateur), mêmes scènes.
+Faite avec la méthode /brag (`latent-spaces/brag`, `/brag-slim`) le 01/11/2026 : 21 s, carré, français, **sans son**,
+**une vidéo par disposition** (téléphone, tablette portrait, tablette paysage, ordinateur), mêmes scènes.
 Rendus : `docs/video-bienvenue/bienvenue-<appareil>.mp4` (720×720) et l'affiche commune `bienvenue.jpg` (image 0).
 Spec d'intégration : `docs/spec-video-bienvenue.md`. Plan et storyboard : `plan.md`.
 
@@ -10,11 +10,11 @@ Refaire les vidéos (depuis ce dossier, serveur `npm run dev -- -p 3100` lancé 
 ```bash
 npx playwright test -c pw.config.ts            # captures du vrai site, 4 projets → shots/<appareil>/ (+ boxes.json)
 node render.mjs ordinateur stills 6.5 8.9 16.9 # quelques plans fixes à regarder → stills/<appareil>/
-./tout.sh                                      # musique + 4 × 630 images + encodage (≈ 8 min)
+./tout.sh                                      # 4 × 630 images + encodage sans son (≈ 8 min)
 ```
 
 - `compo.html` : chaque image est `render(t)`, fonction pure du temps ; la mise en page de chaque scène se calcule
   depuis `boxes.json` (boîtes mesurées par les captures : barre de tonalité, couplet, rangées de la setlist,
   « Ensuite », barre de navigation), injecté par `render.mjs`.
-- `music.py <coupes…>` : ré majeur, D A Bm G, 96 bpm ; un carillon dans la tonalité sur chaque coupe.
+- `music.py <coupes…>` : la musique d'origine (ré majeur, 96 bpm), retirée le 01/11/2026 ; gardée si le son revient.
 - Les captures ne lisent jamais le vrai Firestore ni le planning (vrais noms) ; profil fictif « Nina Dubreuil ».
