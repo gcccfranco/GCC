@@ -1640,6 +1640,7 @@ valider par Timothée** : relecture des textes 中文, regard sur les cartes (r�
   lot, à trancher. Reste en local (Timothée) : mesure iOS, suite complète. Questions ouvertes : « Avancement » de la spec.
 - 23/10/2026 : **rôle du Back-Office** redéfini (§ 3.AD) : planche du tableau de bord, entretien en quatre tours,
   vision écrite ; planche « Back-Office, les coulisses » publiée ; spec `spec-coulisses.md` (CO1 à CO9), mise en pause ; lot TB2 du tableau de bord seul. Rien de codé.
+- 01/11/2026 : **export FreeShow** (lot FS) : sept projets de la régie décortiqués, réponses de Timothée (setlist entière en `.project`, chinois + pinyin, bouton régie seule, fin vide, pas de traduction, Century Gothic) ; spec `spec-export-freeshow.md` (FS1 à FS9). Rien de codé, go attendu.
 
 ## 7. Relecture adversariale (14/09/2026)
 
