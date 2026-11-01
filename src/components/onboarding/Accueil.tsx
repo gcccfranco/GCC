@@ -6,6 +6,7 @@
 // compte (onboarding/{uid}, avec sa version), remontrée aux comptes du lot 8 quand le back-office est
 // ouvert, jamais sans compte. Plein écran sur téléphone, fenêtre centrée sur tablette et ordinateur.
 // « Passer » partout ; on avance avec « Suivant » ou d'un glissé. Le mode « revoir » (VR-C) n'écrit rien.
+// L'écran 1 montre la vidéo de bienvenue (premiere / revoir, pas en chinois) : docs/spec-video-bienvenue.md.
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { BACK_OFFICE } from "@/lib/backOffice";
@@ -18,6 +19,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { VideoBienvenue } from "@/components/onboarding/VideoBienvenue";
 import { entreesBackOffice } from "@/lib/access";
 import { cleNomEquipe } from "@/lib/equipes/table";
 import { getAccueilVu, setAccueilVu, VERSION_VISITE } from "@/lib/firebase/onboarding";
@@ -277,7 +279,7 @@ function Ecrans({ mode, notifs, uid, onFermer }: {
   const ecrans: { titre: string; corps: ReactNode; visuel: ReactNode; gauche?: boolean }[] = [
     {
       titre: mode === "retour" && prenom ? t("accueil.bonjour", { prenom }) : t("accueil.bienvenue.titre"),
-      visuel: (
+      visuel: (mode === "premiere" || mode === "revoir") && !zh ? <VideoBienvenue /> : (
         <>
           <Image src="/logo.png" alt="" width={72} height={72} className="rounded-full" priority />
           {mode === "retour" && <Etiquette>{t("accueil.change")}</Etiquette>}

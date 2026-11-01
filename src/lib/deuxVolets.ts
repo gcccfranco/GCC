@@ -8,7 +8,7 @@ import { getBarreReduite, suivreBarreReduite } from "@/lib/barreLateralePref";
 // Requêtes communes à `useDeuxVolets` et `useEditeurDeuxColonnes` : seule la requête « large »
 // (barre dépliée) change d'un hook à l'autre. Mêmes requêtes que le bloc « Lot U4 » de globals.css.
 export const ORDINATEUR = "(pointer: fine) and (min-width: 1024px)";
-const TABLETTE_PAYSAGE = "(pointer: coarse) and (orientation: landscape) and (min-width: 1024px)";
+export const TABLETTE_PAYSAGE = "(pointer: coarse) and (orientation: landscape) and (min-width: 1024px)";
 
 /** Tablette paysage : toujours ; ordinateur barre réduite : toujours ; barre dépliée : selon `large`. */
 export function dispositionMaintenant(large: string): boolean {

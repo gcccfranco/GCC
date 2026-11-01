@@ -2596,6 +2596,11 @@
   },
   "accueil": {
     "nom": "Bienvenue dans GCC",
+    "video": {
+      "label": "Vidéo de bienvenue : les chants en français et en chinois, la tonalité en un geste, les partitions 简谱, les setlists du culte et le mode louange",
+      "revoir": "Revoir",
+      "lire": "Lire la vidéo"
+    },
     "passer": "Passer",
     "suivant": "Suivant",
     "retour": "Retour",

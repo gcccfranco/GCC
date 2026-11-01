@@ -2,7 +2,7 @@
 
 Faite avec la méthode /brag (`latent-spaces/brag`, `/brag-slim`) le 01/11/2026 : 21 s, carré, français, **sans son**,
 **une vidéo par disposition** (téléphone, tablette portrait, tablette paysage, ordinateur), mêmes scènes.
-Rendus : `docs/video-bienvenue/bienvenue-<appareil>.mp4` (720×720) et l'affiche commune `bienvenue.jpg` (image 0).
+Rendus : `public/accueil/bienvenue-<appareil>.mp4` (720×720) et l'affiche commune `bienvenue.jpg` (image 0).
 Spec d'intégration : `docs/spec-video-bienvenue.md`. Plan et storyboard : `plan.md`.
 
 Refaire les vidéos (depuis ce dossier, serveur `npm run dev -- -p 3100` lancé à la racine) :
