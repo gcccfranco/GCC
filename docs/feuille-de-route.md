@@ -1296,6 +1296,14 @@ croissant (pas créée seule ; sans elle, 400 et repli) ; 4. il publie la règle
 rattrapage avant la fusion, les fois cochées entre-temps resteraient sans `equipe`. Après la mise en ligne :
 comparer la courbe « Utilisation » de la console sur 24 h.
 
+### AL. Vidéo de bienvenue à la première connexion (Timothée, 01/11/2026) → `spec-video-bienvenue.md`
+
+« Utilise https://github.com/latent-spaces/brag pour me faire une vidéo quand les gens se connectent pour la première
+fois. » Tranché le jour même : **français seulement**, **dans l'écran Bienvenue** (à la place du logo), **musique,
+démarrage muet**. Vidéo faite (21 s, carré, captures du vrai site avec des noms inventés, musique originale) :
+`docs/video-bienvenue/`, sources `scripts/video-bienvenue/`. Planche : https://claude.ai/artifact/C9JexoTnCrVbEnvUHXbkHL
+(quatre questions). Lot **VB** à coder sur go.
+
 ## 4. Carte des modules de l'app « GCC »
 
 À valider par Timothée avant toute spec de module (les modules existants ne
