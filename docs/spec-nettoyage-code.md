@@ -4,8 +4,9 @@
 nettoyer ». Outils externes autorisés le même jour pour un usage ponctuel (`npx knip`, `npx jscpd`, `npx madge`),
 sans rien ajouter au dépôt.
 **Statut** : décisions prises par Claude sur délégation (Timothée, 31/10/2026 : « Fais ce que tu penses être le mieux
-pour moi »), § 4 ; **go pour N1, N2 et N3 seulement**. **N1, N2 (en partie) et N3 faits le 31/10/2026** sur la
-branche `claude/sweet-wright-d533ng` (§ 6) ; trois morceaux de N2 reportés. N4 à N8 attendent un nouveau go.
+pour moi »), § 4 ; go pour N1 à N3, puis (Timothée, 31/10/2026 : « go pour toutes les modifications qu'il faut
+faire ») pour le reste. **N1 à N7 faits les 31/10 et 01/11/2026** sur la branche `claude/sweet-wright-d533ng` (§ 6 et
+§ 7) ; N8 exclu (§ 3). Pas encore sur `main` : la mise en ligne attend l'ordre de Timothée.
 **Mesuré sur** : commit `f8510da` (= `main` au 31/10/2026). Une autre session pousse en parallèle : chaque lot
 **refait les mesures** sur la branche à jour avant de coder (§ 5).
 
@@ -205,3 +206,65 @@ Lignes des tranches N : +875 / −1 253 (dont ~180 lignes de la spec de N2b).
   silencieusement une suite sur le serveur d'une autre copie qui occupe le même port.
 - Un `git pull --rebase` simple après un merge de `main` a recopié 20 commits de `main` sous d'autres identifiants ;
   réparé par un second merge (`main` redevient ancêtre, aucun fichier changé). Après un merge : `git pull --rebase=merges`.
+
+## 7. Avancement, suite (01/11/2026) : fin de N2, N4 à N7
+
+`main` fusionné une seconde fois (lot LF, lectures Firestore) : conflits résolus en gardant le comportement de LF
+(`FSSetlist` reste dans `src/types/setList.ts`, `majLe` ajouté ; `lireProfils` gardé 10 min, lu par `lireRequete`).
+
+| Tranche | Commit | Contenu | Tests (trois appareils, cinq projets pour l'agencement) |
+| --- | --- | --- | --- |
+| N2d | `bccde047` | `FSSetlist`, `EtatAnnonce`, `ReminderService` importés de `src/types/` (44 fichiers), ré-exports retirés ; `performance-mode:243` durci (attend l'hydratation, 10/10) | 892 passés (imports de types seulement) |
+| N2e | `9d277de6` | `lireRequete` (firebase/setlists.ts) : 3 `runQuery` locaux et les copies strictement équivalentes | passe commune N2e–N4b : 1 707 passés + 27 (ancien tableau campus) |
+| N2f | `595f1a3c` | `CarteJourCampus` (page campus et `AncienTableau`, Q3) ; `BoutonsChamps` (éditeur) | id. |
+| N4a | `fc5a781c` | page d'une setlist : 7 fichiers de sous-composants (écrans, menus, dialogues, bascule, idées, bandeau, titre) | id. |
+| N4b | `b76cc45f` | `lib/setlist/adresseVue.ts`, `with*` purs dans `versionChoice.ts` ; spec de 9 tests | id. |
+| N4c | `fd54618e` | `usePreferencesAffichage`, `useContenusChants`, `useEntreeLouange` | 437 passés |
+| N5a | `f86262d9` | `lib/performance/pagination.ts` (paginer, pageAncree, replisStructure, splitSheetPages, layoutSong…) ; spec de 37 tests | 1 036 passés |
+| N5b | `4b8333d6` | mode louange : SommaireChants, BarreHaut, BarreBas, FeuilleRole, PageScan, PageTexte | passe N5b–N5c : 1 158 passés |
+| N5c | `4e53c3d4` | `useWakeLock`, `useThemeScene`, `useTempoChant`, `useAnnotationsPage` | id. |
+| N6a–b | `b4da2ded` | `lib/planning/grilleAffichage.ts` (colonneDe ×5, motifDuRefus ×3…) ; GrilleEnTete, GrilleCelluleDate, GrilleHistorique, GrilleCarte ; spec de 6 tests | passe N6–N7a : 998 + 58 passés |
+| N6c | `f522a98b` | `useHistoriqueGrille`, `useCopiePrecedent` | id. |
+| N7a | `41e0bb2d` | `langueCourte` (20 copies) ; `lib/setlist/liste.ts` ; `useMessageTemporaire` ; 3 sous-composants de la liste ; spec de 9 tests | id. |
+| N7b | `f353406b`, `cacf9286` | PDF d'un chant coupé en `pdf/song/{lignes,sections,pages}.tsx` ; page chant : 3 hooks, 3 sous-composants | 395 + `jianpu-integration` 222 passés |
+
+Chaque échec vu pendant ces passes a été relancé seul, et pour les cas douteux comparé au code d'avant la tranche :
+tous passent seuls (`setlist-g:199/210`, `look-louange:160`, `jianpu-integration:711` et `:92`, `a-faire`, Mes services
+en deux volets). Ce sont des courses sous charge (clic avant hydratation, mesure pendant une animation, pixels) ;
+`setlist-g:199/210` échouent même davantage sur le code d'avant N4 (8/20).
+
+**Composants géants, avant → après** :
+
+| Fichier | Avant | Après |
+| --- | --- | --- |
+| `SetlistDetailClient.tsx` | 2 490 | 2 093 |
+| `PerformanceMode.tsx` | 2 263 | 1 632 |
+| `PlanningGrille.tsx` | 1 130 | 961 |
+| `setlists/page.tsx` | 813 | 648 |
+| `SongDetailClient.tsx` | 740 | 567 |
+| `SongPDF.tsx` | 1 332 | 53 (+ 3 fichiers) |
+
+**Mesures, début du lot → fin** (knip 5, jscpd 4, madge 8) :
+
+| | Avant (`b768681`) | Fin |
+| --- | --- | --- |
+| Dépendances inutilisées | 3 | 0 |
+| Exports inutilisés | 70 | 9 hors kit `components/ui` et `tests/helpers` : 3 importés par des scripts, 2 arrivés de `main` (LF) |
+| Types exportés inutilisés | 87 | 2 hors kit et helpers (`CopieListe`, `StepGroup`, arrivés de `main`) |
+| Copier-coller (≥ 12 lignes) | 18 clones, 410 lignes (0,38 %) | 8 clones, 142 lignes (0,12 %) |
+| Imports circulaires | 13 | 0 |
+| Lint | 0 erreur, 70 avertissements | 0 erreur, 69 avertissements |
+
+**Laissé, et pourquoi** (aucune de ces extractions n'est sûre telle quelle) :
+- `SetlistDetailClient` : en-tête deux volets, barre G, `PartitionsView` (≈ 25 props chacun) ; hooks
+  `useLectureSetlist` et `useEditionLignes` (états partagés, pas de bloc contigu) ; `useVuesG` (N8).
+- `PerformanceMode` : feuille Réglages (≈ 40 props), copie de mesure ; `useRoleScene` (états initialisés les uns des
+  autres) ; `usePaginationScene` (N8).
+- `PlanningGrille` : corps du tableau ; écriture et collage (sans hook React, les regrouper aurait demandé 10 à 17
+  paramètres : refusé) ; `laCase` et `champ` restent des fonctions de rendu (spec).
+- `setlists/page.tsx` : hooks de listes, corbeille, suppression groupée (mêlés aux effets de chargement).
+- `SongDetailClient` : `usePersonnalisationChant` (risque élevé, spec).
+- `useBarreLeft` (§ 6) ; les copies REST qui lèvent une erreur, partagent leurs en-têtes ou ajoutent un délai (N2e).
+
+**Pour aller plus loin** : les gros blocs restants demandent de regrouper des props (objet ou contexte) : c'est un
+choix de structure, pas un nettoyage ; à décider avant tout N8.

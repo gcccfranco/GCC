@@ -98,7 +98,7 @@ export function layoutSong(
 }
 
 /** Mesures et réglages dont dépend la pagination du flux normal (une ou deux colonnes). */
-export type ContextePagination = {
+type ContextePagination = {
   blocks: PerformanceBlock[];
   heights: number[];
   heightsColumn: number[];

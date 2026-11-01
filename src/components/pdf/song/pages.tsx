@@ -362,7 +362,7 @@ export function TransitionPDFPage({ text, footerCenter }: { text: string; footer
 
 // ─── Static styles (theme-independent) ───────────────────────────────────────
 
-export const styles = StyleSheet.create({
+const styles = StyleSheet.create({
   page: {
     paddingTop: 36,
     paddingBottom: 46,

@@ -50,15 +50,15 @@ export const C = {
 
 // ─── Shared sizes ─────────────────────────────────────────────────────────────
 
-export const CHORD_SIZE   = 13;    // ≈17px on screen (user spec)
-export const CHORD_Q_SIZE = 10;    // quality suffix (m, sus4, /F#…)
-export const LYRIC_FR     = 11;    // ≈15px
-export const LYRIC_ZH     = 11;    // ≈15px on screen (user spec)
-export const PINYIN_SIZE  = 8;
-export const JIANPU_SIZE  = 11;
-export const CHORD_H      = 16;    // reserved height for chord row
+const CHORD_SIZE   = 13;    // ≈17px on screen (user spec)
+const CHORD_Q_SIZE = 10;    // quality suffix (m, sus4, /F#…)
+const LYRIC_FR     = 11;    // ≈15px
+const LYRIC_ZH     = 11;    // ≈15px on screen (user spec)
+const PINYIN_SIZE  = 8;
+const JIANPU_SIZE  = 11;
+const CHORD_H      = 16;    // reserved height for chord row
 
-export const PAGE_CONTENT_W = 495; // A4 - 2×50pt margins
+const PAGE_CONTENT_W = 495; // A4 - 2×50pt margins
 
 // ─── Section box type ─────────────────────────────────────────────────────────
 
@@ -84,7 +84,7 @@ export const SECTION_BOX: Record<string, BoxStyle> = {
 
 /** Split a chord into root note + quality suffix for sized rendering.
  *  Slash chords (e.g. Bb/C) keep both sides at the same size. */
-export function chordParts(chord: string): [string, string] {
+function chordParts(chord: string): [string, string] {
   if (chord.includes("/")) return [chord, ""];
   const m = chord.match(/^([A-G][b#]?)(.*)$/);
   if (!m) return [chord, ""];
@@ -93,14 +93,14 @@ export function chordParts(chord: string): [string, string] {
 
 /** Largeur rendue (pt) d'un accord : racine @CHORD_SIZE + qualité @CHORD_Q_SIZE,
  *  exactement comme <ChordLabel> le dessine. */
-export function chordWidthPt(chord: string): number {
+function chordWidthPt(chord: string): number {
   const [root, qual] = chordParts(chord);
   return measureChord(root, CHORD_SIZE) + measureChord(qual, CHORD_Q_SIZE);
 }
 
 // Écart minimal après un accord (≈ le padding-right 0.5em du rendu web) pour que
 // deux accords successifs ne se touchent jamais.
-export const CHORD_GAP = measureChord(" ", CHORD_SIZE);
+const CHORD_GAP = measureChord(" ", CHORD_SIZE);
 
 /** LiberationSans (footers) n'a pas de glyphes CJK → police CJK si le libellé en contient. */
 export function footerLabelFont(label: string): string {
@@ -115,7 +115,7 @@ export function sectionName(section: ChordProSection, uiLang: string): string {
 // Uses View (not Text) for the container so Yoga respects the fixed height.
 // minHeight on <Text> is ignored by react-pdf's text engine — only View height works.
 
-export function ChordLabel({ chord, theme }: { chord: string; theme: Theme }) {
+function ChordLabel({ chord, theme }: { chord: string; theme: Theme }) {
   const [root, qual] = chordParts(chord);
   return (
     <View style={{ height: CHORD_H, flexDirection: "row", alignItems: "flex-end" }}>
@@ -272,7 +272,7 @@ export function ZhLine({ tokens, pinyin, showChords, showPinyin, theme }: {
 }
 
 /** Compact chord label for Chinese cell headers (smaller font). */
-export function ChordSmall({ chord, theme }: { chord: string | null; theme: Theme }) {
+function ChordSmall({ chord, theme }: { chord: string | null; theme: Theme }) {
   if (!chord) return <View style={{ height: 16 }} />;
   const [root, qual] = chordParts(chord);
   return (
@@ -293,7 +293,7 @@ export function ChordSmall({ chord, theme }: { chord: string | null; theme: Them
 
 // ─── Jianpu line (chord / number / char / pinyin) ────────────────────────────
 
-export const JP_CELL = 17;
+const JP_CELL = 17;
 
 export function JianpuLine({ tokens, jianpu, pinyin, showChords, showPinyin, theme }: {
   tokens: Token[];

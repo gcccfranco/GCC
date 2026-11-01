@@ -1,7 +1,7 @@
 import type { Token } from "@/types/chordPro";
 
 /** Un morceau de ligne : un accord (ou rien) posé sur le début de ses paroles. */
-export type Seg = { chord: string | null; lyric: string };
+type Seg = { chord: string | null; lyric: string };
 
 export function toSegments(tokens: Token[]): Seg[] {
   const out: Seg[] = [];
