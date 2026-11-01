@@ -15,16 +15,16 @@ import {
   DrawerTitle,
 } from "@/components/ui/drawer";
 import type { PerformanceBlock, SectionBlock, JianpuSheetBlock, SongHeaderBlock } from "@/lib/performance/blocks";
-import { ancreDeLecture, buildPerformanceBlocks, computePageKey, retrouverAncre, signatureAffichage, type AncreLecture } from "@/lib/performance/blocks";
-import { GRAND_ECRAN, pagesUneColonne, paginateColumns, twoColumnsPossible, type PerfPage } from "@/lib/performance/columns";
+import { ancreDeLecture, buildPerformanceBlocks, computePageKey, signatureAffichage, type AncreLecture } from "@/lib/performance/blocks";
+import { twoColumnsPossible, type PerfPage } from "@/lib/performance/columns";
+import { NEXT_PILL_RESERVE, layoutSong, lireEcran, pageAncree, paginer, replisStructure, sansTransitions, splitSheetPages } from "@/lib/performance/pagination";
 import { useJianpuManifest } from "@/lib/jianpu/images";
 import { interrupteurAllume, prefDepuisInterrupteur, type JianpuPref } from "@/lib/jianpu/preference";
 import { JianpuSheet } from "@/components/jianpu/JianpuSheet";
 import { SectionView, StructureStrip, TransitionNote } from "@/components/song/SongView";
 import { pinyin_font } from "@/components/song/pinyinFont";
-import { formatSectionName } from "@/lib/chordpro/parser";
-import { isRepeatOf, type SectionOccurrence } from "@/lib/setlist/sectionSteps";
-import { dpOrigin, isDp } from "@/lib/setlist/dp";
+import type { SectionOccurrence } from "@/lib/setlist/sectionSteps";
+import { dpOrigin } from "@/lib/setlist/dp";
 import { AnnotationCanvas, StrokesLayer } from "./AnnotationCanvas";
 import { type AnnotationData, ANCIEN_RAPPEL, recaler, serializeAnnotations, deserializeAnnotations } from "@/lib/annotations/strokes";
 import { loadAnnotation, saveAnnotation } from "@/lib/firebase/annotations";
@@ -32,7 +32,7 @@ import { getChartStylePref, setChartStylePref } from "@/lib/chartStylePref";
 import { getPersonalKeys, setPersonalKey } from "@/lib/setlist/personalKeys";
 import type { PartitionLayout } from "@/lib/partitionLayoutPref";
 import { getPinyinPref, setPinyinPref } from "@/lib/pinyinPref";
-import { classerGeste, estTabletteVerticale, largeurZoneLaterale } from "@/lib/performance/gestes";
+import { classerGeste, largeurZoneLaterale } from "@/lib/performance/gestes";
 import { LiseretTempo } from "@/components/performance/LiseretTempo";
 import { CurseurPage } from "@/components/performance/CurseurPage";
 import { getTailleAnnotee, setTailleAnnotee } from "@/lib/performance/tailleAnnotee";
@@ -151,10 +151,6 @@ const langAccent = (language?: "fr" | "zh") =>
  *  seule (la structure est déjà en grand). */
 type Bandeau = "aucun" | "simple" | "details";
 
-/** « Transitions » coupé : le bandeau n'en montre plus (les notes restent). */
-function sansTransitions(steps: SectionOccurrence[], showTransitions: boolean): SectionOccurrence[] {
-  return showTransitions ? steps : steps.map((s) => (s.transition ? { ...s, transition: "" } : s));
-}
 
 function SongHeader({ block, bandeau, showTransitions }: { block: SongHeaderBlock; bandeau: Bandeau; showTransitions: boolean }) {
   const { t } = useTranslation();
@@ -233,41 +229,6 @@ function SongHeader({ block, bandeau, showTransitions }: { block: SongHeaderBloc
 // ─── Pagination ───────────────────────────────────────────────────────────────
 // Pages en une et en deux colonnes (`PerfPage`) : src/lib/performance/columns.ts.
 
-// Une page de scan 简谱 = une page d'écran, avec l'en-tête du chant s'il la
-// précède immédiatement. Le reste des blocs est paginé normalement autour.
-function splitSheetPages(
-  idxs: number[],
-  kindOf: (i: number) => PerformanceBlock["kind"] | undefined,
-  paginate: (flow: number[]) => PerfPage[],
-): PerfPage[] {
-  const out: PerfPage[] = [];
-  let flow: number[] = [];
-  const flush = () => {
-    if (flow.length > 0) out.push(...paginate(flow));
-    flow = [];
-  };
-  for (const i of idxs) {
-    if (kindOf(i) !== "jianpu-sheet") {
-      flow.push(i);
-      continue;
-    }
-    // L'en-tête juste avant la partition part avec elle. Il n'est pas rendu
-    // (la page de scan a son en-tête d'une ligne) mais reste rattaché à la
-    // page : le sommaire, la progression dans le chant et le panneau capo
-    // repèrent le chant courant par l'indice de son en-tête.
-    const last = flow[flow.length - 1];
-    const header = last !== undefined && kindOf(last) === "song-header" ? flow.pop()! : null;
-    flush();
-    out.push({ header, cols: [[i]], scale: 1, fit: true });
-  }
-  flush();
-  return out;
-}
-
-// Vue structure : agrandissement maximal du corps, et place gardée en bas pour
-// la pastille « Suivant : … », qui recouvrirait la dernière section.
-const STRUCTURE_MAX_SCALE = 3;
-const NEXT_PILL_RESERVE = 40;
 // Sections uniques et Ordre joué : place du rappel de structure (pastille de 30 px, nuance de
 // 12 px dessous, 8 px de marge) en haut des pages 2 et suivantes d'un chant (D11, RS-B).
 const RAPPEL_RESERVE = 50;
@@ -292,64 +253,7 @@ const APERCU_H = 96;
 // Repli : au-delà de cette part de la hauteur de l'écran, la bande ne s'affiche pas.
 const APERCU_PART_MAX = 0.25;
 
-// Mode ossature : UN CHANT PAR PAGE. L'en-tête occupe la pleine largeur ; les
-// sections (libellés + notes/transitions) sont disposées en 1 colonne si elles
-// tiennent, sinon en 2 colonnes équilibrées lues colonne par colonne (↓ gauche
-// puis ↓ droite). Le corps est mis à l'échelle de la place restante : réduit
-// s'il déborde, agrandi (jusqu'à ×3) pour remplir la page — les batteurs lisent
-// la structure de loin. L'en-tête reste à l'échelle 1 : un titre long agrandi
-// serait tronqué.
-// L'agrandissement réduit d'autant la largeur de mise en page : il s'arrête
-// avant qu'un libellé (largeur naturelle `widths`) ne passe à la ligne ou ne
-// déborde de son cadre. Un libellé déjà plus large que sa colonne à l'échelle 1
-// n'est pas agrandi ; le rendu réel est de toute façon vérifié après coup.
-function layoutSong(
-  headerIdx: number | null,
-  body: number[],
-  heights: number[],
-  widths: number[],
-  viewportH: number,
-  contentW: number,
-): PerfPage {
-  const sum = (arr: number[]) => arr.reduce((s, i) => s + heights[i], 0);
-  const headerH = headerIdx != null ? heights[headerIdx] : 0;
-  const room = Math.max(1, viewportH - headerH - NEXT_PILL_RESERVE);
-  const bodyTotal = sum(body);
-  const widest = Math.max(1, ...body.map((i) => widths[i]));
-  const fit = (contentH: number, colW: number) =>
-    Math.min(STRUCTURE_MAX_SCALE, room / Math.max(1, contentH), Math.max(1, colW / widest));
 
-  // 1 colonne si peu de sections ou si tout tient en hauteur.
-  if (body.length <= 1 || bodyTotal <= room) {
-    return { header: headerIdx, cols: [body], scale: fit(bodyTotal, contentW) };
-  }
-
-  // 2 colonnes : coupure équilibrée minimisant la hauteur de la plus haute colonne.
-  let best = { k: 1, maxH: Infinity };
-  for (let k = 1; k < body.length; k++) {
-    const left = sum(body.slice(0, k));
-    const maxH = Math.max(left, bodyTotal - left);
-    if (maxH < best.maxH) best = { k, maxH };
-  }
-  return {
-    header: headerIdx,
-    cols: [body.slice(0, best.k), body.slice(best.k)],
-    // gap-x-4 entre les deux colonnes
-    scale: fit(best.maxH, (contentW - 16) / 2),
-  };
-}
-
-/** Disposition et largeur de la fenêtre : le mode louange est plein écran. */
-function lireEcran(): { grand: boolean; largeur: number; hauteur: number; tabletteVerticale: boolean } {
-  if (typeof window === "undefined") return { grand: false, largeur: 0, hauteur: 0, tabletteVerticale: false };
-  const grossier = typeof window.matchMedia === "function" && window.matchMedia("(pointer: coarse)").matches;
-  return {
-    grand: window.matchMedia(GRAND_ECRAN).matches,
-    largeur: window.innerWidth,
-    hauteur: window.innerHeight,
-    tabletteVerticale: estTabletteVerticale(window.innerWidth, window.innerHeight, grossier),
-  };
-}
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
@@ -711,38 +615,10 @@ export function PerformanceMode({
     [items, contents, capoActive, capos, jianpuManifest, jianpuPref, personalKeys, affichageVu],
   );
 
-  // Vue structure : passages consécutifs identiques repliés sur le premier
-  // (« Refrain ×2 ») ; les suivants ne sont ni rendus ni comptés en hauteur.
-  // Une transition masquée ne sépare pas deux passages.
-  const { repeatCount, repeatHidden } = useMemo(() => {
-    const repeatCount = new Map<number, number>();
-    const repeatHidden = new Set<number>();
-    if (!structureMode) return { repeatCount, repeatHidden };
-    const step = (b: SectionBlock) => ({
-      label: formatSectionName(b.section, t),
-      note: b.note,
-      nuance: b.nuance,
-      targetKey: b.keyChange,
-    });
-    let lead = -1;
-    blocks.forEach((b, i) => {
-      if (b.kind === "transition-intra" && !showTransitions) return;
-      if (b.kind !== "section") {
-        lead = -1;
-        return;
-      }
-      const first = blocks[lead];
-      // Un Dp rejoué de suite (même section) se replie quelle que soit sa nuance.
-      const dpRepete = first?.kind === "section" && isDp(b.section) && isDp(first.section) && first.section.id === b.section.id;
-      if (first?.kind === "section" && !isDp(b.section) && !isDp(first.section) ? isRepeatOf(step(first), step(b)) : dpRepete) {
-        repeatCount.set(lead, (repeatCount.get(lead) ?? (first as SectionBlock).repeat ?? 1) + (b.repeat ?? 1));
-        repeatHidden.add(i);
-      } else {
-        lead = i;
-      }
-    });
-    return { repeatCount, repeatHidden };
-  }, [blocks, structureMode, showTransitions, t]);
+  const { repeatCount, repeatHidden } = useMemo(
+    () => replisStructure(blocks, structureMode, showTransitions, t),
+    [blocks, structureMode, showTransitions, t],
+  );
 
   // Re-measure when a setting affecting heights changes
   useEffect(() => {
@@ -794,7 +670,6 @@ export function PerformanceMode({
       // Vue structure : largeur naturelle des sections (mesurées sans retour à la ligne).
       const widths = rects.map((r, i) => (structureMode && blocks[i]?.kind === "section" ? r?.width ?? 0 : 0));
       const kindOf = (i: number) => blocks[i]?.kind;
-      const all = blocks.map((_, i) => i);
       // Sections uniques : la réserve de chaque chant est la hauteur de son
       // rappel (marge comprise), au moins la rangée de nuances (RAPPEL_RESERVE). Il passe à la
       // ligne quand le texte grossit (huit pastilles ≈ 249 px de large).
@@ -812,30 +687,7 @@ export function PerformanceMode({
         if (b.kind === "song-header") courant = i;
         enteteDe.set(i, courant);
       });
-      const paginer = (reservesDe: Map<number, number>): PerfPage[] => {
-        const breakBefore = new Set(blocks.flatMap((b, i) => (b.kind === "song-header" ? [i] : [])));
-        return splitSheetPages(all, kindOf, (flow) => {
-          // Chant par chant (chacun ouvre une page) : chacun garde la réserve de son rappel.
-          const songs: number[][] = [];
-          for (const i of flow) {
-            if (kindOf(i) === "song-header" || songs.length === 0) songs.push([]);
-            songs[songs.length - 1].push(i);
-          }
-          return songs.flatMap((song) => {
-            const reserveSuite = reservesDe.get(enteteDe.get(song[0]) ?? -1) ?? 0;
-            if (!twoColumns) return pagesUneColonne(song, heights, viewportH, breakBefore, reserveSuite);
-            const header = kindOf(song[0]) === "song-header" ? song[0] : null;
-            return paginateColumns({
-              flow: header != null ? song.slice(1) : song,
-              header,
-              heightsFull: heights,
-              heightsColumn,
-              pageHeight: viewportH,
-              reserveSuite,
-            });
-          });
-        });
-      };
+      const ctxPagination = { blocks, heights, heightsColumn, viewportH, twoColumns, enteteDe };
       let ancienne: PerfPage[] = [];
       let computed: PerfPage[];
       if (structureMode) {
@@ -855,12 +707,12 @@ export function PerformanceMode({
           }),
         );
       } else {
-        computed = paginer(reserves);
+        computed = paginer(reserves, ctxPagination);
         // Lot RS-C : la pagination d'avant le rappel refait (Sections uniques : 32 px ; Ordre joué : rien),
         // pour retrouver les annotations posées sous les anciennes clés de page.
         const anciennes = new Map<number, number>();
         if (affichageVu === "unique") reserves.forEach((_, i) => anciennes.set(i, ANCIEN_RAPPEL));
-        ancienne = paginer(anciennes);
+        ancienne = paginer(anciennes, ctxPagination);
       }
       layoutBlocksRef.current = blocks;
       setLayout(computed);
@@ -871,20 +723,8 @@ export function PerformanceMode({
       // ont été reconstruits (changement d'affichage), l'indice ne désigne plus
       // le même bloc : on retrouve la section du même chant qui joue les mêmes
       // occurrences, sinon l'en-tête de ce chant.
-      const pageDe = (i: number) => computed.findIndex((p) => p.header === i || p.cols.some((c) => c.includes(i)));
       setCurrentPage((prev) => {
-        const { page, block, blocks: lus, ancre } = readingRef.current;
-        let anchored = -1;
-        if (page === prev && block !== undefined) {
-          if (lus === blocks) anchored = pageDe(block);
-          else if (ancre) {
-            for (const i of retrouverAncre(blocks, ancre)) {
-              anchored = pageDe(i);
-              if (anchored >= 0) break;
-            }
-          }
-        }
-        return anchored >= 0 ? anchored : Math.min(prev, Math.max(0, computed.length - 1));
+        return pageAncree(computed, blocks, prev, readingRef.current);
       });
     };
     run();
