@@ -136,8 +136,8 @@ function PetitDejEtTable({ rows, annee, tri, onLignes }: {
 }
 
 /** « Prépa. Table du Seigneur » : les équipes du trimestre choisi, une par dimanche de sainte cène
- *  qui en a une (planche v18-app-planning-table-a : tuile de date, noms, « Dimanche de sainte
- *  cène ») ; les dimanches passés en gris. */
+ *  qui en a une (planche v18-app-planning-table-a : tuile de date, noms ; aucune mention de la sainte
+ *  cène, Timothée, 01/11/2026) ; les dimanches passés en gris. */
 function TableDuSeigneur({ rows, annee, tri }: { rows: string[][]; annee: number; tri: string }) {
   const { t, i18n } = useTranslation()
   const titreId = useId()
@@ -160,7 +160,6 @@ function TableDuSeigneur({ rows, annee, tri }: { rows: string[][]; annee: number
                 <Tile color={GRILLE_TABLE.couleur} big={jour.getDate()} small={new Intl.DateTimeFormat(langue, { month: "short" }).format(jour)} size="lg" />
                 <div className="min-w-0">
                   <p className="text-sm font-semibold text-foreground">{r[1]}</p>
-                  <p className="text-[12.5px] text-muted-foreground">{t("planning.table.dimancheSainteCene")}</p>
                 </div>
               </li>
             )
