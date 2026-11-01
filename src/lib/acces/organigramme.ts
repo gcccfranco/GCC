@@ -16,6 +16,7 @@
 // de sous-équipe sont dans `referentSous`.
 
 import { EQUIPES, cleNomEquipe } from "@/lib/equipes/table";
+import { groupeDe, type ProfilGroupe } from "@/lib/groupes/organigramme";
 import { groupeDef } from "@/lib/groupes/table";
 import { EDD_CLASSES } from "@/lib/planning/utils";
 import {
@@ -29,6 +30,8 @@ export type ProfilOrganigramme = {
   dansEquipes?: string[];
   referentDe?: string[];
   groupe?: string | null;
+  /** Lu seulement pour déduire le groupe quand `groupe` manque (`groupeDe`, OG2). */
+  serviceRoles?: Record<string, unknown>;
   sousEquipes?: string[];
   referentSous?: string[];
   lieuxLouange?: string[];
@@ -55,12 +58,14 @@ const estReferentLouange = (p: P): boolean => referent(p, "louange");
 // ─── Setlists ───────────────────────────────────────────────────────────────
 
 /** Catégories où l'on CRÉE une setlist (C3, groupes, C4) : les lieux de service d'un membre de Louange
- *  (`lieuxLouange`), la catégorie de son groupe (champ `groupe`, Paix · Fidélité · Bonté : Amour et
+ *  (`lieuxLouange`), la catégorie de son groupe (`groupeDe` : le champ `groupe`, sinon déduit de `serviceRoles`,
+ *  comme partout ailleurs ; Paix · Fidélité · Bonté : Amour et
  *  Joie n'ont pas de setlists), les trois classes de l'EDD pour un membre d'`edd`. Dans l'ordre des
  *  lieux, du groupe, de l'EDD. */
 export function categoriesCreables(p: P): string[] {
   const lieux = SERVICE_LIEUX.filter((l) => liste(p?.lieuxLouange).includes(l)) as string[];
-  const cat = p?.groupe ? groupeDef(p.groupe)?.categorie : undefined;
+  const g = p ? groupeDe(p as ProfilGroupe) : null;
+  const cat = g ? groupeDef(g)?.categorie : undefined;
   const groupe = cat && (GROUPES as readonly string[]).includes(cat) ? [cat] : [];
   const edd = dans(p, "edd") ? [...EDD_CLASSES] as string[] : [];
   return [...new Set([...lieux, ...groupe, ...edd])];
@@ -217,7 +222,8 @@ export function ceQueCaOuvre(p: P, nommer: Nommer = (c) => c): Acces[] {
 
   const lieuxLouange = SERVICE_LIEUX.filter((l) => liste(p?.lieuxLouange).includes(l));
   if (lieuxLouange.length) out.push({ cle: "acces.ouvre.setlistsCreer", params: { lieux: noms(lieuxLouange, "categories.") }, pourquoi: "acces.pourquoi.louangeLieu" });
-  const cat = p?.groupe ? groupeDef(p.groupe)?.categorie : undefined;
+  const g = p ? groupeDe(p as ProfilGroupe) : null;
+  const cat = g ? groupeDef(g)?.categorie : undefined;
   if (cat && (GROUPES as readonly string[]).includes(cat)) {
     out.push({ cle: "acces.ouvre.setlistsGroupe", params: { groupe: nommer(`categories.${cat}`) }, pourquoi: "acces.pourquoi.groupe" });
   }

@@ -194,6 +194,21 @@ test.describe("pur : setlists d'un groupe et de l'EDD", () => {
     expect(creatableCategories(FANNY, NEW), "Amour n'a pas de setlists").toEqual([]);
   });
 
+  test("membre de groupe sans champ `groupe` : déduit de `serviceRoles` (groupeDe, OG2), voit et crée", () => {
+    // Compte d'avant les organigrammes, jamais placé dans un rôle : seul `serviceRoles` porte son groupe.
+    const ROMANE = profil({ uid: "u-romane", serviceRoles: { "Groupe Fidélité": [] } });
+    expect(creatableCategories(ROMANE, NEW)).toEqual(["Groupe Fidélité"]);
+    expect(voit(ROMANE, FIDELITE)).toBe(true);
+    expect(voit(ROMANE, PAIX)).toBe(false);
+    expect(canCreateSetlist(user(ROMANE), ROMANE, NEW)).toBe(true);
+    // `groupe: ""` (« sans groupe », OG5) l'emporte sur `serviceRoles`.
+    const SANS = profil({ uid: "u-sans", groupe: "", serviceRoles: { "Groupe Fidélité": [] } });
+    expect(creatableCategories(SANS, NEW)).toEqual([]);
+    // Deux clés de groupe : ambigu, aucun groupe déduit.
+    const DEUX = profil({ uid: "u-deux", serviceRoles: { "Groupe Paix": [], "Groupe Bonté": [] } });
+    expect(creatableCategories(DEUX, NEW)).toEqual([]);
+  });
+
   test("membre de l'EDD : voit et crée dans les trois classes", () => {
     expect(creatableCategories(GILLES, NEW)).toEqual(["中班", "大班", "高班"]);
     expect(voit(GILLES, ZHONG)).toBe(true);
