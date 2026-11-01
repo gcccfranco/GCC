@@ -80,14 +80,13 @@ test("la régie exporte : fichier 011126.project, deux chants dans l'ordre, chin
   expect(texte, "pinyin").toContain("yī shēng ài nǐ");
 });
 
-test("pas de bouton pour un musicien, ni pour l'admin sans rôle régie", async ({ page }) => {
+test("pas de bouton pour un musicien ; l'admin sans rôle régie le voit", async ({ page }) => {
   await ouvrir(page, MUSICIEN);
   await expect(page.getByRole("heading", { name: "Culte du 1er novembre" })).toBeVisible();
   await expect(page.getByRole("button", BOUTON)).toHaveCount(0);
 
   await ouvrir(page, ADMIN);
-  await expect(page.getByRole("heading", { name: "Culte du 1er novembre" })).toBeVisible();
-  await expect(page.getByRole("button", BOUTON)).toHaveCount(0);
+  await expect(page.getByRole("button", BOUTON).first()).toBeVisible();
 });
 
 test("pas de bouton sur une setlist privée, même pour la régie", async ({ page }) => {

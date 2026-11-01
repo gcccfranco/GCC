@@ -1719,7 +1719,7 @@ export function SetlistDetailClient() {
                   onSaved={(presentationUrl) => setSetlist({ ...setlist, presentationUrl })}
                   sansLien
                 />
-                {peutExporterFreeShow(profile, setlist) && (
+                {peutExporterFreeShow(user, profile, setlist) && (
                   <ExportFreeShow setlist={setlist} contents={contents} pret={tousLesChantsCharges} />
                 )}
               </div>
@@ -1938,7 +1938,7 @@ export function SetlistDetailClient() {
                 canChange={peutChangerPresentation}
                 onSaved={(presentationUrl) => setSetlist({ ...setlist, presentationUrl })}
               />
-              {peutExporterFreeShow(profile, setlist) && (
+              {peutExporterFreeShow(user, profile, setlist) && (
                 <ExportFreeShow setlist={setlist} contents={contents} pret={tousLesChantsCharges} />
               )}
               {setlist.notes && (

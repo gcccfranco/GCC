@@ -773,15 +773,16 @@ export function estRegieDeLaSetlist(
   return !!profile?.serviceRoles?.[setlist.category]?.includes("regie");
 }
 
-/** Bouton « Exporter pour FreeShow » (docs/spec-export-freeshow.md, FS1) : la régie de la setlist, ce drapeau
- *  seul (ni `canEditSetlist` ni admin), setlist non privée. Affichage seulement : l'export se fabrique dans le
- *  navigateur et n'écrit rien, donc aucune règle Firestore. */
+/** Bouton « Exporter pour FreeShow » (docs/spec-export-freeshow.md, FS1) : la régie de la setlist et les admins
+ *  (Timothée, 01/11/2026), pas `canEditSetlist` ; setlist non privée. Affichage seulement : l'export se fabrique
+ *  dans le navigateur et n'écrit rien, donc aucune règle Firestore. */
 export function peutExporterFreeShow(
+  user: { email?: string | null } | null,
   profile: UserProfile | null,
   setlist: FSSetlist,
   backOffice: boolean = BACK_OFFICE
 ): boolean {
-  return !setlist.isPrivate && estRegieDeLaSetlist(profile, setlist, backOffice);
+  return !setlist.isPrivate && (isAdminUser(user) || estRegieDeLaSetlist(profile, setlist, backOffice));
 }
 
 // ─── Back-Office (lot U6, docs/spec-back-office.md) ──────────────────────────
