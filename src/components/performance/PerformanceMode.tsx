@@ -2,15 +2,20 @@
 
 import { useState, useEffect, useLayoutEffect, useRef, useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { IndiceRappel } from "./IndiceRappel";
+import { langAccent } from "./langAccent";
+import { BarreHaut } from "./BarreHaut";
+import { BarreBas } from "./BarreBas";
+import { SommaireChants } from "./SommaireChants";
+import { FeuilleRole } from "./FeuilleRole";
+import { PageScan } from "./PageScan";
+import { PageTexte } from "./PageTexte";
 import { useTheme } from "next-themes";
-import { X, ChevronLeft, ChevronRight, Columns2, Link2, MessageSquare, ListMusic, Settings, PenLine, Sun, Moon } from "lucide-react";
+import { Link2, MessageSquare, Sun, Moon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import {
   Drawer,
   DrawerContent,
-  DrawerDescription,
   DrawerHeader,
   DrawerTitle,
 } from "@/components/ui/drawer";
@@ -34,7 +39,6 @@ import type { PartitionLayout } from "@/lib/partitionLayoutPref";
 import { getPinyinPref, setPinyinPref } from "@/lib/pinyinPref";
 import { classerGeste, largeurZoneLaterale } from "@/lib/performance/gestes";
 import { LiseretTempo } from "@/components/performance/LiseretTempo";
-import { CurseurPage } from "@/components/performance/CurseurPage";
 import { getTailleAnnotee, setTailleAnnotee } from "@/lib/performance/tailleAnnotee";
 import { barreDejaVue, marquerBarreVue } from "@/lib/performance/barreVue";
 import { clampTempo, getMetronomePref, getTempoChant, setMetronomePref, setTempoChant, TEMPO_DEPART, TEMPO_MAX, TEMPO_MIN } from "@/lib/performance/tempo";
@@ -143,8 +147,6 @@ function BlockRenderer({
   );
 }
 
-const langAccent = (language?: "fr" | "zh") =>
-  language === "zh" ? "var(--jianpu-color, #b3261d)" : "var(--chord-color, #3f63cf)";
 
 /** Bandeau de pastilles en tête de chant : sans détails en Ordre joué (D12),
  *  avec notes et transitions en Sections uniques (D11), aucun en Structure
@@ -1279,7 +1281,6 @@ export function PerformanceMode({
           </div>
         ) : (() => {
           const page = layout[currentPage];
-          const multiCol = page.cols.length > 1;
           // `blocks` peut se reconstruire sous la mise en page : le manifeste
           // 简谱 arrive en asynchrone et un chant joué sur sa partition passe
           // de N sections à un seul bloc. Le temps que la pagination se
@@ -1303,177 +1304,34 @@ export function PerformanceMode({
               />
             );
           };
-          // Page 简谱 : en-tête d'une ligne et bandeau de structure en haut, scan
-          // à l'échelle de la hauteur qui reste. Pas de pagination — un scan ne
-          // se coupe pas en deux. L'en-tête complet du chant n'est pas rendu :
-          // ses 200 px devenaient des marges blanches sur les côtés (la page est
-          // contrainte par sa hauteur) ; une ligne remplace le titre gravé, coupé
-          // depuis L3-T2b (K3). Le bandeau reprend ce que le scan ne peut pas savoir :
-          // l'ordre des sections voulu pour ce dimanche. Les pastilles du site
-          // (D14), avec notes et transitions sur chaque page de scan : le scan
-          // ne peut pas les porter (O8).
           if (page.fit) {
-            const sheet = blocks[page.cols[0][0]];
-            const enTete = sheet?.kind === "jianpu-sheet" ? sheet : null;
-            const rond = enTete && (
-              <span className="w-5 h-5 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center shrink-0">
-                {enTete.position}
-              </span>
-            );
-            const tempo = enTete?.tempo ? (
-              <span className="shrink-0 flex items-baseline gap-1 text-xs font-medium text-muted-foreground">
-                <span className="text-foreground/70 text-[15px] leading-none">♩</span>{enTete.tempo}
-              </span>
-            ) : null;
-            // Place comptée (téléphone, A+) : « setlist : X » se tronque avant le titre.
-            const tonalite = enTete && (
-              <span className={`${colonneScan ? "flex-wrap " : "ml-auto "}flex min-w-0 items-center gap-1.5`}>
-                {enTete.capo ? (
-                  <span className="shrink-0 text-xs font-bold font-mono border-2 border-border rounded-full px-2.5 py-0.5 text-muted-foreground">
-                    {t("performance.capoBadge", { n: enTete.capo })}
-                  </span>
-                ) : null}
-                <span className="shrink-0 text-sm font-bold font-mono border-2 rounded-full px-2.5 py-0.5"
-                  style={{ color: langAccent("zh"), borderColor: langAccent("zh") }}>
-                  {enTete.songKey}
-                </span>
-                {enTete.setlistKey && (
-                  <span className="min-w-0 truncate text-xs font-semibold text-muted-foreground">
-                    {t("performance.personalKey", { key: enTete.setlistKey })}
-                  </span>
-                )}
-              </span>
-            );
-            const bandeauScan = enTete && (
-              <StructureStrip
-                steps={sansTransitions(enTete.steps, showTransitions)}
-                details
-                colonne={colonneScan}
-                className={colonneScan ? "" : "mb-1.5"}
-              />
-            );
-            // Paysage sur grand écran : l'en-tête et le bandeau passent dans une
-            // colonne de la marge gauche, « Ensuite » en bas ; le scan, seul à
-            // droite, prend toute la hauteur entre les barres.
-            if (colonneScan) {
-              return (
-                <div className="flex h-full gap-6">
-                  <div data-colonne-scan className="flex h-full w-[200px] shrink-0 flex-col pl-5 pt-1">
-                    {enTete && (
-                      <>
-                        <div data-entete-scan className="mb-4">
-                          <div className="flex items-start gap-2">
-                            <span className="mt-1">{rond}</span>
-                            <h2 className="min-w-0 break-words text-[22px] font-bold text-foreground leading-tight uppercase tracking-tight">
-                              {enTete.songTitle}
-                            </h2>
-                          </div>
-                          <div className="mt-1.5 flex flex-wrap items-center gap-2 pl-7">
-                            {tempo}
-                            {tonalite}
-                          </div>
-                        </div>
-                        {/* Une structure longue défile seule : « Ensuite » reste en bas. */}
-                        <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden">{bandeauScan}</div>
-                      </>
-                    )}
-                    {isLastPageOfSong && nextEntry && (
-                      <div className="mt-auto shrink-0 pt-4 pb-1">
-                        <button
-                          type="button"
-                          data-suivant
-                          onClick={() => goToPage(nextSongPage, pages.length)}
-                          onPointerDown={(e) => e.stopPropagation()}
-                          onPointerUp={(e) => e.stopPropagation()}
-                          className="pointer-events-auto min-h-11 w-full rounded-xl border border-border/60 bg-background/85 px-3 py-2 text-left text-sm text-muted-foreground backdrop-blur"
-                        >
-                          {t("performance.next")}{" "}
-                          <span className="font-semibold text-foreground">{nextEntry.block.title}</span>
-                          {" · "}
-                          <span className="font-mono">{nextEntry.block.songKey}</span>
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                  <div className="h-full min-w-0 flex-1">{renderBlock(page.cols[0][0], true)}</div>
-                </div>
-              );
-            }
             return (
-              <div className="flex h-full flex-col">
-                {enTete && (
-                  // Retrait des autres pages (px-6) : la page de scan n'a que 0,25rem de marge.
-                  <div className="shrink-0 px-5">
-                    {/* En-tête du chant sur une ligne (K3) : le titre gravé est coupé. */}
-                    <div data-entete-scan className="mb-2 flex items-center gap-2">
-                      {rond}
-                      <h2 className="min-w-[3em] truncate text-[22px] font-bold text-foreground leading-tight uppercase tracking-tight">
-                        {enTete.songTitle}
-                      </h2>
-                      {tempo}
-                      {tonalite}
-                    </div>
-                    {bandeauScan}
-                  </div>
-                )}
-                <div className="min-h-0 flex-1">{renderBlock(page.cols[0][0], true)}</div>
-              </div>
+              <PageScan
+                sheet={blocks[page.cols[0][0]]}
+                showTransitions={showTransitions}
+                colonneScan={colonneScan}
+                isLastPageOfSong={isLastPageOfSong}
+                nextEntry={nextEntry}
+                onSuivant={() => goToPage(nextSongPage, pages.length)}
+              >
+                {renderBlock(page.cols[0][0], true)}
+              </PageScan>
             );
           }
           return (
-            <>
-            <div>
-              {rappel && (
-                <div ref={rappelRef} data-rappel className="relative mb-2">
-                  <RappelRangee titre={currentEntry?.block.title} steps={rappel} pleines={sectionsDeLaPage} rappel={affichageVu === "played" ? "joue" : "unique"} />
-                  {(affichageVu === "played" || affichageVu === "unique") && <IndiceRappel mode={affichageVu} page={currentPage} />}
-                </div>
-              )}
-              {/* En-tête hors échelle, en pleine largeur : vue structure et
-                  première page d'un chant en deux colonnes. */}
-              {page.header != null && renderBlock(page.header)}
-              {/* Mise à l'échelle d'une page (réduction si elle déborde, agrandissement
-                  en vue structure) : transform + largeur compensée, comme le
-                  conteneur parent (jamais `zoom` — arrondis de mise en page non
-                  déterministes, cf. commentaire du conteneur). */}
-              <div
-                ref={scaledBodyRef}
-                style={
-                  page.scale !== 1
-                    ? {
-                        transform: `scale(${page.scale})`,
-                        transformOrigin: "top left",
-                        width: `${100 / page.scale}%`,
-                      }
-                    : undefined
-                }
-              >
-                {/* Deux colonnes : gouttière de 2rem, celle de la mesure en colonne. */}
-                <div className={multiCol ? `flex items-start ${page.twoColumns ? "gap-x-8" : "gap-x-4"}` : undefined}>
-                  {page.cols.map((colIdxs, ci) => (
-                    <div key={ci} className={multiCol ? "flex-1 min-w-0" : undefined}>
-                      {colIdxs.map((i) => renderBlock(i))}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-            {apercu && (
-              <div
-                data-apercu-suivant
-                aria-hidden="true"
-                className="pointer-events-none absolute left-0 right-0"
-                style={{ bottom: contentPadding.paddingBottom, paddingLeft: contentPadding.paddingLeft, paddingRight: contentPadding.paddingRight }}
-              >
-                <div className="relative overflow-hidden" style={{ height: APERCU_H }}>
-                  <div className="h-0.5 bg-primary/70" />
-                  {apercu.header != null && renderBlock(apercu.header)}
-                  {apercu.cols.flat().map((i) => renderBlock(i))}
-                  <div className="absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-background to-transparent" />
-                </div>
-              </div>
-            )}
-            </>
+            <PageTexte
+              page={page}
+              rappel={rappel}
+              rappelRef={rappelRef}
+              rappelTrame={rappel ? <RappelRangee titre={currentEntry?.block.title} steps={rappel} pleines={sectionsDeLaPage} rappel={affichageVu === "played" ? "joue" : "unique"} /> : null}
+              affichageVu={affichageVu}
+              currentPage={currentPage}
+              scaledBodyRef={scaledBodyRef}
+              renderBlock={renderBlock}
+              apercu={apercu}
+              apercuHauteur={APERCU_H}
+              contentPadding={contentPadding}
+            />
           );
         })()}
       </div>
@@ -1552,49 +1410,14 @@ export function PerformanceMode({
 
       {/* ── Sommaire des chants ── */}
       {songListOpen && (
-        <div
-          className="absolute inset-0"
-          style={{ zIndex: 30 }}
-          onPointerDown={(e) => e.stopPropagation()}
-          onPointerUp={(e) => e.stopPropagation()}
-        >
-          <div className="absolute inset-0 bg-black/30" onClick={() => setSongListOpen(false)} />
-          <div
-            className="absolute left-0 top-0 bottom-0 w-72 max-w-[80vw] bg-background border-r border-border shadow-xl overflow-y-auto py-3 animate-in slide-in-from-left duration-200"
-            style={{ paddingTop: "calc(0.75rem + var(--sat, 0px))", paddingLeft: "var(--sal, 0px)" }}
-          >
-            <p className="px-4 pb-2 text-xs font-bold uppercase tracking-widest text-muted-foreground truncate">
-              {setlistTitle}
-            </p>
-            {songEntries.map(({ block, index }, i) => {
-              const page = pages.findIndex((p) => p.includes(index));
-              const isCurrent = i === currentSongEntryIdx;
-              return (
-                <button
-                  key={block.uid}
-                  onClick={() => {
-                    if (page >= 0) goToPage(page, pages.length);
-                    setSongListOpen(false);
-                  }}
-                  className={`w-full flex items-center gap-2.5 px-4 py-2.5 text-left transition-colors ${
-                    isCurrent ? "bg-secondary text-foreground" : "text-foreground hover:bg-muted/50"
-                  }`}
-                >
-                  <span className="w-5 h-5 rounded-full bg-muted text-muted-foreground text-xs font-bold flex items-center justify-center shrink-0">
-                    {block.position}
-                  </span>
-                  <span className="flex-1 min-w-0">
-                    <span className="block text-sm font-medium truncate">{block.title}</span>
-                    {block.titlePinyin && (
-                      <span className={`block text-[11px] text-muted-foreground truncate ${pinyin_font.className}`}>{block.titlePinyin}</span>
-                    )}
-                  </span>
-                  <span className="text-xs font-mono text-muted-foreground shrink-0">{block.songKey}</span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
+        <SommaireChants
+          setlistTitle={setlistTitle}
+          songEntries={songEntries}
+          pages={pages}
+          currentSongEntryIdx={currentSongEntryIdx}
+          goToPage={goToPage}
+          onClose={() => setSongListOpen(false)}
+        />
       )}
 
       {/* ── Métronome visuel : liseré silencieux, sous le chrome ── */}
@@ -1607,181 +1430,39 @@ export function PerformanceMode({
         aria-hidden={!showChrome}
         inert={!showChrome}
       >
-        {/* Top bar */}
-        <div
-          ref={barreHautRef}
-          className={`absolute top-0 left-0 right-0 ${showChrome ? "pointer-events-auto" : "pointer-events-none"} material-chrome material-steady shadow-[0_1px_0_hsl(var(--border))] px-4 py-3 flex items-center gap-3`}
-          style={{
-            paddingTop: "calc(0.75rem + var(--sat, 0px))",
-            paddingLeft: "calc(1rem + var(--sal, 0px))",
-            paddingRight: "calc(1rem + var(--sar, 0px))",
-          }}
-          onPointerDown={(e) => e.stopPropagation()}
-          onPointerUp={(e) => e.stopPropagation()}
-        >
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-foreground truncate leading-tight">
-              {currentSong?.songTitle ?? setlistTitle}
-            </p>
-            {currentSong?.songKey && (
-              <p className="text-xs text-muted-foreground font-mono leading-tight mt-0.5">
-                {currentSong.songKey}
-                {currentEntry?.block.setlistKey && (
-                  <>
-                    {" · "}
-                    <span className="font-sans">{t("performance.personalKey", { key: currentEntry.block.setlistKey })}</span>
-                  </>
-                )}
-                {currentSong.tempo ? (
-                  <span data-tempo-barre className="font-sans text-muted-foreground tabular-nums">
-                    {" · "}♩ {currentSong.tempo}
-                  </span>
-                ) : null}
-              </p>
-            )}
-          </div>
-          <div className="flex flex-col items-end gap-1 shrink-0">
-            {/* Points de progression du chant courant */}
-            {songPageCount > 1 && songPageCount <= 8 && (
-              <div className="flex items-center gap-1" aria-label={t("performance.pageOfSong", { current: songPageIdx + 1, total: songPageCount })}>
-                {Array.from({ length: songPageCount }).map((_, i) => (
-                  <span
-                    key={i}
-                    className={`w-1.5 h-1.5 rounded-full transition-colors ${
-                      i === songPageIdx ? "bg-primary" : "bg-muted-foreground/30"
-                    }`}
-                  />
-                ))}
-              </div>
-            )}
-            <span className="text-xs text-muted-foreground tabular-nums">
-              {pages.length > 0 ? `${currentPage + 1} / ${pages.length}` : "—"}
-            </span>
-          </div>
-          {/* Deux colonnes : à côté du compteur, seulement quand elles sont possibles. */}
-          {twoColumnsAvailable && (
-            <button
-              type="button"
-              aria-pressed={twoColumns}
-              onClick={toggleTwoColumns}
-              className={`h-11 px-3 shrink-0 flex items-center gap-1.5 rounded-full border text-xs font-semibold transition-colors active:bg-muted ${
-                twoColumns ? "bg-secondary text-foreground border-transparent" : "border-border text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              <Columns2 className="h-4 w-4" />
-              {t("performance.twoColumns")}
-            </button>
-          )}
-        </div>
+        <BarreHaut
+          barreRef={barreHautRef}
+          showChrome={showChrome}
+          currentSong={currentSong}
+          setlistTitle={setlistTitle}
+          personalKey={currentEntry?.block.setlistKey}
+          songPageCount={songPageCount}
+          songPageIdx={songPageIdx}
+          pageCount={pages.length}
+          currentPage={currentPage}
+          twoColumnsAvailable={twoColumnsAvailable}
+          twoColumns={twoColumns}
+          onToggleTwoColumns={toggleTwoColumns}
+        />
 
-        {/* Bottom bar */}
-        <div
-          ref={barreBasRef}
-          className={`absolute bottom-0 left-0 right-0 ${showChrome ? "pointer-events-auto" : "pointer-events-none"} material-chrome material-steady shadow-[0_-1px_0_hsl(var(--border))] px-3 py-2.5 flex items-center gap-1.5 flex-wrap`}
-          style={{
-            paddingBottom: "calc(0.625rem + var(--sab, 0px))",
-            paddingLeft: "calc(0.75rem + var(--sal, 0px))",
-            paddingRight: "calc(0.75rem + var(--sar, 0px))",
-          }}
-          onPointerDown={(e) => e.stopPropagation()}
-          onPointerUp={(e) => e.stopPropagation()}
-        >
-          {/* Curseur de page sur toute la setlist (L7) */}
-          {pages.length > 1 && (
-            <CurseurPage
-              total={pages.length}
-              courante={currentPage}
-              reperes={reperesChants}
-              libelle={t("performance.pageSlider")}
-              texteValeur={t("performance.pageSliderValue", { n: currentPage + 1, total: pages.length })}
-              onAller={(p) => goToPage(p, pages.length)}
-            />
-          )}
-
-          {/* Sommaire des chants */}
-          <IconBtn label={t("performance.songList")} onClick={() => { setSettingsOpen(false); setSongListOpen(true); }}>
-            <ListMusic className="h-5 w-5" />
-          </IconBtn>
-
-          {/* Réglages */}
-          <IconBtn label={t("performance.settings")} active={settingsOpen} onClick={() => setSettingsOpen(true)}>
-            <Settings className="h-5 w-5" />
-          </IconBtn>
-
-          {/* Annoter (connecté uniquement) */}
-          {user && !horsLigne && (
-            <IconBtn
-              label={t("performance.annotate")}
-              active={annotateMode}
-              accent="amber"
-              onClick={basculerAnnotation}
-            >
-              <PenLine className="h-5 w-5" />
-            </IconBtn>
-          )}
-
-          {/* Spacer + navigation arrows */}
-          <div className="ml-auto flex items-center gap-1">
-            <button
-              onClick={() => goToPage(currentPage - 1, pages.length)}
-              disabled={currentPage === 0}
-              className="h-11 w-11 flex items-center justify-center rounded-lg border border-border text-muted-foreground disabled:opacity-30 hover:text-foreground active:bg-muted"
-              aria-label={t("performance.prevPage")}
-            >
-              <ChevronLeft className="h-5 w-5" />
-            </button>
-            <button
-              onClick={() => goToPage(currentPage + 1, pages.length)}
-              disabled={currentPage >= pages.length - 1}
-              className="h-11 w-11 flex items-center justify-center rounded-lg border border-border text-muted-foreground disabled:opacity-30 hover:text-foreground active:bg-muted"
-              aria-label={t("performance.nextPage")}
-            >
-              <ChevronRight className="h-5 w-5" />
-            </button>
-          </div>
-
-          {/* Quitter */}
-          <IconBtn label={t("performance.exit")} onClick={onClose}>
-            <X className="h-5 w-5" />
-          </IconBtn>
-        </div>
+        <BarreBas
+          barreRef={barreBasRef}
+          showChrome={showChrome}
+          pageCount={pages.length}
+          currentPage={currentPage}
+          reperesChants={reperesChants}
+          goToPage={goToPage}
+          settingsOpen={settingsOpen}
+          annotateMode={annotateMode}
+          onAnnoter={user && !horsLigne ? basculerAnnotation : undefined}
+          onSommaire={() => { setSettingsOpen(false); setSongListOpen(true); }}
+          onReglages={() => setSettingsOpen(true)}
+          onQuitter={onClose}
+        />
       </div>
 
       {/* ── Choix du rôle à la première ouverture ── */}
-      <Drawer open={askRole} onOpenChange={(open) => !open && setAskRole(false)}>
-        <DrawerContent
-          className="z-[10000]"
-          overlayClassName="z-[10000] bg-black/40"
-          onPointerDown={(e) => e.stopPropagation()}
-          onPointerUp={(e) => e.stopPropagation()}
-        >
-          {/* Même colonne que les choix : titre et boutons alignés sur tablette. */}
-          <DrawerHeader className="pb-1 w-full max-w-md mx-auto">
-            <DrawerTitle>{t("performance.rolePrompt.title")}</DrawerTitle>
-            <DrawerDescription>{t("performance.rolePrompt.description")}</DrawerDescription>
-          </DrawerHeader>
-          <div
-            className="w-full max-w-md mx-auto px-4 pt-2 flex flex-col gap-1.5"
-            style={{ paddingBottom: "calc(1.5rem + env(safe-area-inset-bottom, 0px))" }}
-          >
-            {[...ROLE_PRESET_IDS, null].map((id) => (
-              <button
-                key={id ?? "none"}
-                type="button"
-                onClick={() => answerRole(id)}
-                className="min-h-12 px-4 py-2 rounded-lg border border-border text-left flex items-center justify-between gap-3 transition-colors hover:bg-muted/60 active:bg-muted"
-              >
-                <span className="text-sm font-semibold text-foreground">
-                  {id ? t(`performance.roles.${id}`) : t("performance.rolePrompt.none")}
-                </span>
-                <span className="text-xs text-muted-foreground text-right">
-                  {t(`performance.rolePrompt.hints.${id ?? "none"}`)}
-                </span>
-              </button>
-            ))}
-          </div>
-        </DrawerContent>
-      </Drawer>
+      <FeuilleRole open={askRole} roleIds={ROLE_PRESET_IDS} onFermer={() => setAskRole(false)} onChoisir={answerRole} />
 
       {/* ── Réglages : bottom-sheet (au-dessus du z-9999 du mode) ── */}
       <Drawer open={settingsOpen} onOpenChange={setSettingsOpen}>
@@ -2060,38 +1741,6 @@ export function PerformanceMode({
 }
 
 // ─── Petits composants de la barre ────────────────────────────────────────────
-
-function IconBtn({
-  label,
-  active = false,
-  accent = "primary",
-  onClick,
-  children,
-}: {
-  label: string;
-  active?: boolean;
-  accent?: "primary" | "amber";
-  onClick: () => void;
-  children: React.ReactNode;
-}) {
-  const activeClass =
-    accent === "amber"
-      ? "bg-amber-500/15 text-amber-600 dark:text-amber-400 border-transparent"
-      : "bg-secondary text-foreground border-transparent";
-
-  return (
-    <button
-      onClick={onClick}
-      aria-label={label}
-      title={label}
-      className={`h-11 w-11 flex items-center justify-center rounded-lg border transition-colors active:bg-muted ${
-        active ? activeClass : "border-border text-muted-foreground hover:text-foreground"
-      }`}
-    >
-      {children}
-    </button>
-  );
-}
 
 function SettingRow({ label, children }: { label: string; children: React.ReactNode }) {
   return (
