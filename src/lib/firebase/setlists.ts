@@ -4,6 +4,7 @@ import { SERVICE_LIEUX } from "@/types/user";
 import { BACK_OFFICE } from "@/lib/backOffice";
 import type { FSSetlist } from "@/types/setList";
 import { effacerCopie, lireCopie } from "@/lib/setlist/copieHorsLigne";
+import { ecrireCopieListe, lireCopieListe } from "@/lib/setlist/copieListe";
 import { repairCopyIds } from "@/lib/setlist/sectionOrigins";
 import type { SetlistVersions } from "@/types/setlistVersions";
 
@@ -153,25 +154,83 @@ const horsCorbeille = (s: FSSetlist): boolean => !s.supprimeeLe;
 
 // ─── CRUD ─────────────────────────────────────────────────────────────────────
 
-// Cache de session de `getSetlists` : la promesse, 30 s, propre au compte (uid courant), jamais pour un
-// échec (refus ou exception) ; vidé par toute écriture de ce module. Les appelants (historique,
-// statistiques, catalogue) lisent toute la collection : pas de borne par date ici.
-const CACHE_SETLISTS_MS = 30_000;
+// Lecture de `getSetlists` (lot LF, LF1, docs/spec-lectures-firestore.md) : une copie de la liste sur
+// l'appareil (`copieListe.ts`), mise à jour par une requête delta sur `majLe` plutôt que par une relecture de
+// toute la collection. Lecture complète sans copie, ou si la dernière a plus de 24 h (elle rattrape les
+// suppressions définitives faites ailleurs). En mémoire : la promesse, 60 s, propre au compte (uid courant),
+// jamais pour un échec (refus ou exception) ; vidée par toute écriture de ce module (la copie reste, la delta
+// suivante part sans attendre). Pas de borne par date : les appelants (historique, statistiques, catalogue)
+// lisent toute la liste.
+const CACHE_SETLISTS_MS = 60_000;
+const COMPLETE_MAX_MS = 24 * 60 * 60_000;
+const MARGE_DELTA_MS = 10 * 60_000; // horloges des appareils
 let cacheSetlists: { uid: string | null; at: number; promesse: Promise<FSSetlist[] | null> } | null = null;
 
 function viderCacheSetlists(): void {
   cacheSetlists = null;
 }
 
-async function lireSetlists(): Promise<FSSetlist[] | null> {
-  const docs = await lireRequete("", {
+const gardee = (s: FSSetlist): boolean => !s.isPrivate && !s.isDraft && sansFetes(s) && horsCorbeille(s);
+const parCreation = (a: FSSetlist, b: FSSetlist): number => (b.createdAt?.getTime() ?? 0) - (a.createdAt?.getTime() ?? 0);
+
+/** Une requête sur `setlists` : les documents et le `readTime` (celui de la première ligne qui en a un ; à défaut
+ *  l'heure de l'appareil notée juste avant l'envoi). Null si la réponse est refusée. */
+async function requeteSetlists(
+  structuredQuery: Record<string, unknown>,
+  headers: Record<string, string>,
+): Promise<{ docs: FSSetlist[]; readTime: number } | null> {
+  const avant = Date.now();
+  const res = await fetch(`${FS_BASE}:runQuery`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...headers },
+    body: JSON.stringify({ structuredQuery }),
+  });
+  if (!res.ok) return null;
+  const rows = await res.json() as Array<{ document?: RawDoc; readTime?: string }>;
+  const lu = rows.find((r) => r.readTime)?.readTime;
+  const readTime = lu && !Number.isNaN(Date.parse(lu)) ? Date.parse(lu) : avant;
+  return { docs: rows.filter((r) => r.document).map((r) => fromFsDoc(r.document!)), readTime };
+}
+
+/** Une lecture partie avant une déconnexion ou un changement de compte ne réécrit pas la copie qui vient
+ *  d'être effacée. */
+const memeCompte = (uid: string | null): boolean => !!uid && auth.currentUser?.uid === uid;
+
+async function lireSetlists(uid: string | null): Promise<FSSetlist[] | null> {
+  const headers = await authHeader();
+  // IndexedDB en échec : on retombe sur la lecture complète, sans rien montrer.
+  const copie = uid ? await lireCopieListe(uid).catch(() => null) : null;
+
+  if (copie && Date.now() - copie.completeLe < COMPLETE_MAX_MS) {
+    const delta = await requeteSetlists({
+      from: [{ collectionId: "setlists" }],
+      where: {
+        fieldFilter: {
+          field: { fieldPath: "majLe" },
+          op: "GREATER_THAN",
+          value: { timestampValue: new Date(copie.lueLe - MARGE_DELTA_MS).toISOString() },
+        },
+      },
+    }, headers);
+    if (!delta) return null;
+    const parId = new Map(copie.setlists.map((s) => [s.id, s]));
+    for (const s of delta.docs) {
+      if (gardee(s)) parId.set(s.id, s);
+      else parId.delete(s.id);
+    }
+    const liste = [...parId.values()].sort(parCreation);
+    if (memeCompte(uid)) await ecrireCopieListe({ uid: uid!, lueLe: delta.readTime, completeLe: copie.completeLe, setlists: liste }).catch(() => {});
+    return liste;
+  }
+
+  const complete = await requeteSetlists({
     from: [{ collectionId: "setlists" }],
     orderBy: [{ field: { fieldPath: "createdAt" }, direction: "DESCENDING" }],
-  });
-  if (!docs) return null;
-  return docs
-    .map(fromFsDoc)
-    .filter((s) => !s.isPrivate && !s.isDraft && sansFetes(s) && horsCorbeille(s));
+  }, headers);
+  if (!complete) return null;
+  const liste = complete.docs.filter(gardee);
+  if (memeCompte(uid)) await ecrireCopieListe({ uid: uid!, lueLe: complete.readTime, completeLe: complete.readTime, setlists: liste }).catch(() => {});
+  return liste;
 }
 
 export async function getSetlists(): Promise<FSSetlist[]> {
@@ -181,7 +240,7 @@ export async function getSetlists(): Promise<FSSetlist[]> {
     const memoire = await c.promesse;
     return memoire ? [...memoire] : [];
   }
-  const entree = { uid, at: Date.now(), promesse: lireSetlists() };
+  const entree = { uid, at: Date.now(), promesse: lireSetlists(uid) };
   cacheSetlists = entree;
   const clear = () => { if (cacheSetlists === entree) cacheSetlists = null; };
   try {
@@ -403,6 +462,7 @@ export async function createSetlist(
   const fields = {
     ...toFsFields(data as Record<string, unknown>),
     createdAt: { timestampValue: new Date().toISOString() },
+    majLe: { timestampValue: new Date().toISOString() },
   };
 
   const res = await withTimeout(
@@ -429,9 +489,10 @@ export async function updateSetlist(
   const fields = {
     ...toFsFields(data as Record<string, unknown>),
     updatedAt: { timestampValue: new Date().toISOString() },
+    majLe: { timestampValue: new Date().toISOString() },
   };
   const docName = `projects/gcclouange/databases/(default)/documents/setlists/${id}`;
-  const mask = [...Object.keys(data), "updatedAt"]
+  const mask = [...Object.keys(data), "updatedAt", "majLe"]
     .map((f) => `updateMask.fieldPaths=${encodeURIComponent(f)}`)
     .join("&");
   const res = await withTimeout(
@@ -448,12 +509,12 @@ export async function updateSetlist(
   await checkRest(res);
 }
 
-const MASQUE_CORBEILLE = ["supprimeeLe", "supprimeePar"]
+const MASQUE_CORBEILLE = ["supprimeeLe", "supprimeePar", "majLe"]
   .map((f) => `updateMask.fieldPaths=${f}`)
   .join("&");
 
-/** Met une setlist à la corbeille (SC2.1) : deux champs, pas de `updatedAt` (la setlist n'a pas été
- *  modifiée, et la cloche ne doit pas la signaler). Se défait par `restaurerSetlist`. */
+/** Met une setlist à la corbeille (SC2.1) : deux champs et `majLe` (synchro de la liste), pas de `updatedAt` (la
+ *  setlist n'a pas été modifiée, et la cloche ne doit pas la signaler). Se défait par `restaurerSetlist`. */
 export async function mettreALaCorbeille(id: string, uid: string): Promise<void> {
   const headers = await authHeader();
   const docName = `projects/gcclouange/databases/(default)/documents/setlists/${id}`;
@@ -463,7 +524,7 @@ export async function mettreALaCorbeille(id: string, uid: string): Promise<void>
       headers: { "Content-Type": "application/json", ...headers },
       body: JSON.stringify({
         name: docName,
-        fields: toFsFields({ supprimeeLe: new Date().toISOString(), supprimeePar: uid }),
+        fields: { ...toFsFields({ supprimeeLe: new Date().toISOString(), supprimeePar: uid }), majLe: { timestampValue: new Date().toISOString() } },
       }),
     }),
     20_000,
@@ -489,7 +550,7 @@ export async function mettreALaCorbeilleGroupe(ids: string[], uid: string): Prom
 }
 
 /** Sort une setlist de la corbeille (SC2.4) : le masque nomme les deux champs, le corps n'en porte
- *  aucun, Firestore les retire. */
+ *  aucun, Firestore les retire ; seul `majLe` est écrit. */
 export async function restaurerSetlist(id: string): Promise<void> {
   const headers = await authHeader();
   const docName = `projects/gcclouange/databases/(default)/documents/setlists/${id}`;
@@ -497,7 +558,7 @@ export async function restaurerSetlist(id: string): Promise<void> {
     fetch(`${FS_BASE}/setlists/${id}?${MASQUE_CORBEILLE}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json", ...headers },
-      body: JSON.stringify({ name: docName, fields: {} }),
+      body: JSON.stringify({ name: docName, fields: { majLe: { timestampValue: new Date().toISOString() } } }),
     }),
     20_000,
     "Délai dépassé — vérifie ta connexion internet et réessaie."
@@ -527,6 +588,14 @@ export async function deleteSetlist(id: string): Promise<void> {
   // là (docs/spec-suppression-groupee.md, R2).
   viderCacheSetlists(); // même en cas d'échec : l'écriture a pu passer
   await checkRest(res);
+  // Suppression définitive : l'id sort de la copie de la liste (best effort ; sinon la lecture complète de 24 h).
+  const uid = auth.currentUser?.uid;
+  if (uid) {
+    try {
+      const copie = await lireCopieListe(uid);
+      if (copie) await ecrireCopieListe({ ...copie, setlists: copie.setlists.filter((s) => s.id !== id) });
+    } catch { /* la copie est un confort */ }
+  }
 }
 
 /** Supprime plusieurs setlists l'une après l'autre, et **continue après un

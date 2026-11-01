@@ -93,6 +93,9 @@ export interface FSSetlist {
   moment?: "matin" | "soir";
   createdAt: Date | null;
   updatedAt?: Date | null;
+  /** Dernière écriture, par n'importe quel écrivain (lot LF) : sert seulement à la synchronisation de la copie
+   *  de la liste. `updatedAt` garde son sens (« setlist modifiée » de la cloche). */
+  majLe?: Date | null;
   items: SetlistItem[];
   isDraft?: boolean;
   isPrivate?: boolean;

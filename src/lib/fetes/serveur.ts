@@ -158,13 +158,14 @@ export async function saisirChants(
       if ((x.fete as { programme?: string } | undefined)?.programme !== programme || x.ownerId != null) {
         throw new HttpError(409, "Cette setlist existe déjà : demande à un admin")
       }
-      tx.update(slRef, { editeurs: ayants, title: titre, date: ed.jourJ, fete });
+      tx.update(slRef, { editeurs: ayants, title: titre, date: ed.jourJ, fete, majLe: FieldValue.serverTimestamp() });
     } else {
-      // Pas de `updatedAt` : `getSetlistsSince` l'interroge comme un horodatage.
+      // Pas de `updatedAt` : `getSetlistsSince` l'interroge comme un horodatage. `majLe` : synchro de
+      // la liste (lot LF, docs/spec-lectures-firestore.md).
       tx.set(slRef, {
         title: titre, leader: auteur, category: ed.fete === "noel" ? "Noël" : "Pâques", date: ed.jourJ,
         language: "fr", notes: "", items: [], isDraft: false, isPrivate: false, ownerId: null,
-        createdAt: FieldValue.serverTimestamp(), editeurs: ayants, fete,
+        createdAt: FieldValue.serverTimestamp(), majLe: FieldValue.serverTimestamp(), editeurs: ayants, fete,
       });
     }
   });

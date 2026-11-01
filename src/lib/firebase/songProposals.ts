@@ -9,6 +9,7 @@ import {
 } from "./setlists";
 import { versDate } from "@/lib/utils/formatDate";
 import type { SongProposal, SongProposalStatus } from "@/types/songProposal";
+import { viderGardesTableau } from "@/lib/tableauDeBord/gardes";
 
 function fromFsProposal(raw: RawDoc): SongProposal {
   const id = raw.name.split("/").pop()!;
@@ -50,6 +51,7 @@ export async function createSongProposal(
     headers: { "Content-Type": "application/json", ...headers },
     body: JSON.stringify({ fields }),
   });
+  viderGardesTableau(); // pastille Messages et « À faire » (lot LF)
   await checkRest(res);
   const doc = (await res.json()) as RawDoc;
   return doc.name.split("/").pop()!;
@@ -69,6 +71,7 @@ export async function setProposalStatus(
       body: JSON.stringify({ name: docName, fields: toFsFields({ status }) }),
     }
   );
+  viderGardesTableau(); // pastille Messages et « À faire » (lot LF)
   await checkRest(res);
 }
 
@@ -78,5 +81,6 @@ export async function deleteSongProposal(id: string): Promise<void> {
     method: "DELETE",
     headers,
   });
+  viderGardesTableau(); // pastille Messages et « À faire » (lot LF)
   await checkRest(res);
 }

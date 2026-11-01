@@ -1,6 +1,7 @@
 import { FS_BASE, authHeader, checkRest, toFsFields, fromFsValue, type RawDoc } from "./setlists";
 import type { Equipe, MembreEquipe } from "@/types/equipe";
 import { ModifieEntreTemps } from "./programmes";
+import { viderCacheProfils } from "./users";
 
 // Organigramme (lot 16, docs/spec-organigramme.md) : equipes/{id} en REST comme
 // le reste. Droits : firestore.rules (isEquipier) et canEditerEquipes
@@ -91,6 +92,7 @@ export async function majRattachement(uids: string[], equipe: string): Promise<v
     headers: { "Content-Type": "application/json", ...(await authHeader()) },
     body: JSON.stringify({ uids, equipe }),
   });
+  viderCacheProfils(); // même en cas d'échec : le serveur a pu écrire (lot LF)
   if (!res.ok) {
     const json = (await res.json().catch(() => ({}))) as { error?: string };
     throw new Error(json.error ?? `Erreur ${res.status}`);

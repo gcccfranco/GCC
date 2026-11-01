@@ -7,6 +7,7 @@ import {
   fromFsValue,
   type RawDoc,
 } from "./setlists";
+import { viderGardesTableau } from "@/lib/tableauDeBord/gardes";
 import type { CompteRendu, Deplacement, Evenement, Inscription } from "@/types/evenement";
 import { modeInscriptions } from "@/lib/evenements/agenda";
 import { estReunion } from "@/lib/access";
@@ -152,6 +153,7 @@ export async function createEvenement(data: Omit<Evenement, "id">): Promise<stri
     headers: { "Content-Type": "application/json", ...headers },
     body: JSON.stringify({ fields: toFsFields(data as unknown as Record<string, unknown>) }),
   });
+  viderGardesTableau(); // lot LF, docs/spec-lectures-firestore.md
   await checkRest(res);
   changed();
   return ((await res.json()) as RawDoc).name.split("/").pop()!;
@@ -167,6 +169,7 @@ export async function updateEvenement(id: string, data: Partial<Omit<Evenement, 
     headers: { "Content-Type": "application/json", ...headers },
     body: JSON.stringify({ fields: toFsFields(fields) }),
   });
+  viderGardesTableau(); // lot LF, docs/spec-lectures-firestore.md
   await checkRest(res);
   changed();
 }
@@ -180,6 +183,7 @@ export async function majCompteRendu(id: string, compteRendu: CompteRendu | null
     headers: { "Content-Type": "application/json", ...headers },
     body: JSON.stringify({ fields: toFsFields({ compteRendu }) }),
   });
+  viderGardesTableau(); // lot LF, docs/spec-lectures-firestore.md
   await checkRest(res);
   changed();
 }
@@ -187,6 +191,7 @@ export async function majCompteRendu(id: string, compteRendu: CompteRendu | null
 export async function deleteEvenement(id: string): Promise<void> {
   const headers = await authHeader();
   const res = await fetch(`${FS_BASE}/evenements/${id}`, { method: "DELETE", headers });
+  viderGardesTableau(); // lot LF, docs/spec-lectures-firestore.md
   await checkRest(res);
   changed();
 }

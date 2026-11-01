@@ -206,6 +206,14 @@ service cloud.firestore {
       allow read: if signedIn() && faitDesPlannings();
     }
 
+    // Lot LF, LF5 (docs/spec-lectures-firestore.md) : les fois d'une équipe en une requête (collection group,
+    // `where equipe == e`) ; même droit que la lecture sous equipes/{e}/taches. Règle à publier à la main
+    // par Timothée, en dernier : après la fusion dans main, le rattrapage (scripts/rattrapage-fois-equipe.ts) et
+    // l'index de champ unique `fois.equipe` à portée « groupe de collections ».
+    match /{chemin=**}/fois/{date} {
+      allow read: if signedIn() && estDeLEquipe(resource.data.equipe);
+    }
+
     match /annonces/{id} {
       allow read: if signedIn();
       // Publication : admins + membres dont le profil liste la section dans `annonces`

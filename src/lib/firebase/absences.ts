@@ -1,4 +1,5 @@
 import { FS_BASE, authHeader, lireRequete, checkRest, toFsFields, fromFsValue, type RawDoc } from "./setlists";
+import { viderGardesTableau } from "@/lib/tableauDeBord/gardes";
 import type { Absence } from "@/types/absence";
 
 // Congés et absences (SC3, docs/spec-createur-corbeille-absences.md) : users/{uid}/absences/{id},
@@ -39,13 +40,16 @@ export async function ajouterAbsence(uid: string, v: { du: string; au: string; m
     headers: { "Content-Type": "application/json", ...headers },
     body: JSON.stringify({ fields: toFsFields(fields) }),
   });
+  viderGardesTableau(); // lot LF, docs/spec-lectures-firestore.md
   await checkRest(res);
   return ((await res.json()) as RawDoc).name.split("/").pop()!;
 }
 
 export async function supprimerAbsence(uid: string, id: string): Promise<void> {
   const headers = await authHeader();
-  await checkRest(await fetch(`${FS_BASE}/users/${uid}/absences/${id}`, { method: "DELETE", headers }));
+  const res = await fetch(`${FS_BASE}/users/${uid}/absences/${id}`, { method: "DELETE", headers });
+  viderGardesTableau(); // lot LF, docs/spec-lectures-firestore.md
+  await checkRest(res);
 }
 
 /** Les absences de tout le monde d'un coup (collection group) : réservé à qui fait les plannings. Refus → []. */

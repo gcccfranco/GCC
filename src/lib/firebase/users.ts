@@ -16,6 +16,7 @@ import { useAuth } from "./auth";
 import { CLES_RESPONSABILITES } from "@/lib/acces/responsabilites";
 import { lireChampsGroupe } from "@/lib/groupes/organigramme";
 import type { ServiceRole, UserProfile } from "@/types/user";
+import { viderGardesTableau } from "@/lib/tableauDeBord/gardes";
 
 export async function signUp(email: string, password: string): Promise<User> {
   const cred = await createUserWithEmailAndPassword(auth, email, password);
@@ -88,6 +89,7 @@ export async function saveProfile(patch: ProfilePatch): Promise<void> {
     headers: { "Content-Type": "application/json", ...headers },
     body: JSON.stringify({ fields: toFsFields(data) }),
   });
+  viderCacheProfils(); // même en cas d'échec : l'écriture a pu passer
   await checkRest(res);
   const avant = profileCache.get(uid) ?? profilVide(uid);
   profileCache.set(uid, { ...avant, ...data, uid } as UserProfile);
@@ -99,16 +101,49 @@ export async function changerResponsabilites(uid: string, cles: readonly string[
   await saveProfile({ uid, responsabilites: CLES_RESPONSABILITES.filter((c) => cles.includes(c)) });
 }
 
-/** Tous les profils, triés par nom — réservé à la page admin. */
-export async function listProfiles(): Promise<UserProfile[]> {
+// Garde de `listProfiles` (lot LF, docs/spec-lectures-firestore.md) : la promesse, 10 min, propre au compte
+// (uid courant), jamais pour un échec (refus ou exception) ; vidée par toute écriture de profil côté client.
+const CACHE_PROFILS_MS = 10 * 60_000;
+let cacheProfils: { uid: string | null; at: number; promesse: Promise<UserProfile[] | null> } | null = null;
+
+/** À appeler après toute écriture qui change un profil `users/{uid}` (réussie ou non), y compris les routes
+ *  serveur qui en écrivent (`/api/equipes/rattachement`, `/api/equipes/groupes`). */
+export function viderCacheProfils(): void {
+  cacheProfils = null;
+  viderGardesTableau(); // « À faire » (Comptes, plannings) lit les profils
+}
+
+async function lireProfils(): Promise<UserProfile[] | null> {
   const docs = await lireRequete("", { from: [{ collectionId: "users" }] });
-  return (docs ?? [])
+  if (!docs) return null;
+  return docs
     .map(fromFsProfile)
     .sort(
       (a, b) =>
         a.lastName.localeCompare(b.lastName, "fr") ||
         a.firstName.localeCompare(b.firstName, "fr")
     );
+}
+
+/** Tous les profils, triés par nom — gardés 10 min en mémoire (lot LF). */
+export async function listProfiles(): Promise<UserProfile[]> {
+  const uid = auth.currentUser?.uid ?? null;
+  const c = cacheProfils;
+  if (c && c.uid === uid && Date.now() - c.at < CACHE_PROFILS_MS) {
+    const memoire = await c.promesse;
+    return memoire ? [...memoire] : [];
+  }
+  const entree = { uid, at: Date.now(), promesse: lireProfils() };
+  cacheProfils = entree;
+  const clear = () => { if (cacheProfils === entree) cacheProfils = null; };
+  try {
+    const liste = await entree.promesse;
+    if (!liste) { clear(); return []; }
+    return [...liste]; // une copie par appelant : un tri sur place ne touche pas les autres
+  } catch (e) {
+    clear();
+    throw e;
+  }
 }
 
 // ─── Inscriptions ouvertes / fermées (doc config/app, modifiable par les admins) ──

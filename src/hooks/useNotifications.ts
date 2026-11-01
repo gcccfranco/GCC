@@ -19,6 +19,8 @@ import { visibleCategories, isAdminUser, canSeeEvenement } from "@/lib/access";
 // getSetlistsSince (where createdAt/updatedAt > since + limit). Au premier
 // chargement on lit un lot borné (limit), ensuite ~0 lecture quand rien de neuf.
 // Le polling est espacé (cf. POLL_INTERVAL_MS) + rafraîchi au retour de focus.
+// Lot LF (LF4) : focus/visibilité ne relancent pas une passe de moins de 60 s
+// après la précédente (ECART_MIN_MS) ; `focus` + `visibilitychange` = une seule passe.
 //
 // N.B. ciblage volontairement différent du push : la cloche montre tout ce que
 // le membre PEUT voir (catégories de son profil), tandis que le push « setlist
@@ -31,6 +33,10 @@ const NOTIFICATIONS_LAST_SEEN_KEY = "notificationsLastSeen";
 // collections entières et faisait exploser les lectures Firestore. Le retour de
 // focus/visibilité rafraîchit en plus, donc une nouveauté reste vite visible.
 const POLL_INTERVAL_MS = 10 * 60_000; // 10 min
+// Écart minimal entre deux passes déclenchées par focus/visibilité (lot LF, LF4) :
+// ces deux évènements arrivent souvent ensemble et chaque passe coûte au moins
+// une lecture par requête. Ni le montage de l'effet ni l'intervalle ne sont bridés.
+const ECART_MIN_MS = 60_000;
 const MAX_ITEMS = 20;
 
 export interface NotificationItem {
@@ -59,9 +65,12 @@ export function useNotifications() {
   const latestTsRef = useRef(0);
   // Miroir des items courants, pour fusionner sans dépendre du cycle de rendu.
   const itemsRef = useRef<NotificationItem[]>([]);
+  // Heure de la dernière passe réellement lancée (0 = aucune).
+  const derniereRef = useRef(0);
 
   const refresh = useCallback(async () => {
     if (!user || document.visibilityState !== "visible") return;
+    derniereRef.current = Date.now();
     try {
       const since = latestTsRef.current;
       const [evenements, setlists, notifs] = await Promise.all([
@@ -154,6 +163,7 @@ export function useNotifications() {
     if (!user) {
       itemsRef.current = [];
       latestTsRef.current = 0;
+      derniereRef.current = 0;
       setItems([]);
       setUnreadCount(0);
       return;
@@ -161,7 +171,8 @@ export function useNotifications() {
     refresh();
     const interval = setInterval(refresh, POLL_INTERVAL_MS);
     const onVisible = () => {
-      if (document.visibilityState === "visible") refresh();
+      if (document.visibilityState !== "visible") return;
+      if (Date.now() - derniereRef.current >= ECART_MIN_MS) refresh();
     };
     document.addEventListener("visibilitychange", onVisible);
     window.addEventListener("focus", onVisible);
