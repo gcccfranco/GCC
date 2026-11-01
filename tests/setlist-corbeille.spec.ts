@@ -86,7 +86,8 @@ test("fiche : le créateur met à la corbeille, le bandeau propose d'annuler", a
   expect(ecrituresSetlists(db)).toEqual(["PATCH setlists/c1"]);
   expect(db.writes.find((w) => w.path === "setlists/c1")!.data).toMatchObject({ supprimeePar: NINA.uid, supprimeeLe: expect.any(String) });
   expect(db.writes.some((w) => w.method === "DELETE")).toBe(false);
-  expect(masques[0]).toEqual(["supprimeeLe", "supprimeePar"]);
+  // Lot LF : `majLe` (synchro de la liste des setlists) s'ajoute au masque, jamais `updatedAt`.
+  expect(masques[0]).toEqual(["supprimeeLe", "supprimeePar", "majLe"]);
   // Le paramètre `?corbeille=` ne reste pas dans l'adresse.
   await expect.poll(() => new URL(page.url()).search).not.toContain("corbeille");
 
@@ -95,8 +96,8 @@ test("fiche : le créateur met à la corbeille, le bandeau propose d'annuler", a
   await expect.poll(() => db.doc("setlists/c1")).toBeDefined();
   await expect.poll(() => "supprimeeLe" in (db.doc("setlists/c1") ?? {})).toBe(false);
   expect(db.doc("setlists/c1")).not.toHaveProperty("supprimeePar");
-  // Annuler ne touche que ces deux champs : le masque les nomme, le corps n'en porte aucun.
-  expect(masques[1]).toEqual(["supprimeeLe", "supprimeePar"]);
+  // Annuler retire ces deux champs : le masque les nomme, le corps n'en porte aucun (seul `majLe`, lot LF).
+  expect(masques[1]).toEqual(["supprimeeLe", "supprimeePar", "majLe"]);
   expect(ecrituresSetlists(db)).toEqual(["PATCH setlists/c1", "PATCH setlists/c1"]);
   await expect(page.getByText("Culte des familles").first()).toBeVisible();
 });
