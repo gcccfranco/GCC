@@ -20,8 +20,9 @@ import type { Disposition } from "./PourMoi"
 const vide = (v?: string) => !v?.trim() || v.trim() === "—"
 const majuscule = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
 const svc = (couleur: string) => ({ "--svc": couleur }) as React.CSSProperties
-/** Les heures du dimanche (retouches v18, D14 ; planches v18-app-planning-accueil et -reduite). */
-const HEURES = { culte: "10:30", groupes: "13:00", edd: "13:00", table: "10:00" } as const
+/** Les heures du dimanche (retouches v18, D14 ; planches v18-app-planning-accueil et -reduite). EDD : 15:30–17:00
+ *  (Timothée, 01/11/2026). */
+const HEURES = { culte: "10:30", groupes: "13:00", edd: "15:30–17:00", table: "10:00" } as const
 
 function Point({ couleur, className = "" }: { couleur: string; className?: string }) {
   return <span aria-hidden className={`h-2 w-2 shrink-0 rounded-full ${className}`} style={{ background: couleur }} />

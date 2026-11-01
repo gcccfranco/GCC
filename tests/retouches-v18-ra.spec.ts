@@ -417,7 +417,7 @@ test.describe("R3 : la liste-carte des deux volets tient dans la fenêtre", () =
   });
 });
 
-// R7 : les heures sur la carte « Ce dimanche » (D14 : Culte Franco 10:30, Groupes 13:00, EDD 13:00,
+// R7 : les heures sur la carte « Ce dimanche » (D14 : Culte Franco 10:30, Groupes 13:00, EDD 15:30–17:00,
 // Table 10:00 ; planches v18-app-planning-accueil et -reduite) ; plus de « un dimanche par mois » sur
 // la Prépa. Table du Seigneur (D15) ; en 中文, le bouton de Chants dit 推荐新诗歌 (D18). Feuilles
 // Google simulées ; personnes fictives.
@@ -451,12 +451,12 @@ test.describe("R7 : heures de « Ce dimanche », Prépa. Table, 推荐新诗歌"
   const ceDimanche = (page: Page) => page.locator('section[aria-labelledby="ce-dimanche"]');
   const carte = (page: Page, testId: string) => ceDimanche(page).getByTestId(testId).first().locator("xpath=ancestor-or-self::article[1]");
 
-  test("« Ce dimanche » : Culte Franco 10:30, Groupes 13:00, EDD 13:00, Table 10:00", async ({ page }) => {
+  test("« Ce dimanche » : Culte Franco 10:30, Groupes 13:00, EDD 15:30–17:00, Table 10:00", async ({ page }) => {
     await ouvrirR7(page, "/planning");
     await expect(ceDimanche(page).getByText("Présidente A.")).toBeVisible();
     await expect(carte(page, "carte-culte").getByRole("heading", { level: 3 })).toHaveText(/^Culte Franco\s*10:30$/);
     await expect(carte(page, "ligne-groupe").getByRole("heading", { level: 3 })).toHaveText("Groupes · 13:00");
-    await expect(carte(page, "ligne-edd").getByRole("heading", { level: 3 })).toHaveText("EDD · 13:00");
+    await expect(carte(page, "ligne-edd").getByRole("heading", { level: 3 })).toHaveText("EDD · 15:30–17:00");
     // La Table : « Table · 10:00 » en en-tête quand elle est sur deux étages (en grand), sinon l'heure
     // au bout de la ligne « Prépa. Table ». Une seule heure visible.
     const table = ceDimanche(page).getByTestId("carte-table");
@@ -480,7 +480,7 @@ test.describe("R7 : heures de « Ce dimanche », Prépa. Table, 推荐新诗歌"
     await expect(ceDimanche(page).getByText("Présidente A.")).toBeVisible();
     await expect(carte(page, "carte-culte").getByRole("heading", { level: 3 })).toContainText("10:30");
     await expect(carte(page, "ligne-groupe").getByRole("heading", { level: 3 })).toContainText("· 13:00");
-    await expect(carte(page, "ligne-edd").getByRole("heading", { level: 3 })).toContainText("· 13:00");
+    await expect(carte(page, "ligne-edd").getByRole("heading", { level: 3 })).toContainText("· 15:30–17:00");
     await expect(ceDimanche(page).getByTestId("carte-table").getByText("10:00").filter({ visible: true })).toHaveCount(1);
   });
 

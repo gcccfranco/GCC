@@ -9,14 +9,16 @@ import { nowIsoParis } from "@/lib/evenements/agenda";
 import { useProfile } from "@/lib/firebase/users";
 import { ficheEvenement } from "@/lib/navigation";
 import { todayIso } from "@/lib/scene/dimanches";
+import { EDD_CLASSES } from "@/lib/planning/utils";
 import { GRILLES_DU_SERVICE, ceDimanche, prochainDimanche, reunionsDuTableau, servicesDuDimanche } from "@/lib/tableauDeBord/donnees";
 import { lireEvenements, lireGrilles, lireSetlists, useLecture } from "@/lib/tableauDeBord/lecture";
 import { jourComplet, jourLong } from "./texte";
 
 const CARTE = "rounded-2xl bg-secondary px-4 py-3.5";
-/** Les heures du dimanche (comme l'accueil) ; un service sans heure connue n'en montre pas. */
+/** Les heures du dimanche (comme l'accueil ; EDD 15:30–17:00) ; un service sans heure connue n'en montre pas. */
 const HEURE_DU_SERVICE = (categorie: string) =>
-  categorie === "Culte Francophone" ? "10:30" : /^(Groupe |EDD|Classe)/.test(categorie) ? "13:00" : "";
+  categorie === "Culte Francophone" ? "10:30" : categorie.startsWith("Groupe ") ? "13:00"
+    : (EDD_CLASSES as readonly string[]).includes(categorie) ? "15:30–17:00" : "";
 
 export function ColonneDroite() {
   const { t, i18n } = useTranslation();
