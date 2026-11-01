@@ -2,7 +2,7 @@ import type { ComponentProps } from "react";
 import { useTranslation } from "react-i18next";
 import { categoryColor } from "@/lib/serviceColors";
 import { styleTexteService } from "@/lib/couleurSombre";
-import { formatDate } from "@/lib/utils/formatDate";
+import { formatDate, langueCourte } from "@/lib/utils/formatDate";
 import { titreAffiche } from "@/lib/fetes/droits";
 import type { FSSetlist } from "@/types/setList";
 import { RepereFete, SousTitreFete } from "./FeteDeLaSetlist";
@@ -23,7 +23,7 @@ export function TitreEnTete({
         <span aria-hidden className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ backgroundColor: categoryColor(setlist.category) }} />
         {t("categories." + setlist.category, { defaultValue: setlist.category })} · {formatDate(setlist.date, i18n.language)}
       </p>)}
-      <h1 className="mt-1 text-[28px] font-bold leading-tight tracking-[-0.01em] text-foreground">{titreAffiche(setlist, i18n.language === "zh-CN" ? "zh" : "fr")}</h1>
+      <h1 className="mt-1 text-[28px] font-bold leading-tight tracking-[-0.01em] text-foreground">{titreAffiche(setlist, langueCourte(i18n.language))}</h1>
       {setlist.fete && <SousTitreFete setlist={setlist} passage={passage} />}
       {(setlist.fete ? !!setlist.notes : (setlist.leader || setlist.notes)) && (
         <p className="mt-0.5 text-[13px] text-muted-foreground">

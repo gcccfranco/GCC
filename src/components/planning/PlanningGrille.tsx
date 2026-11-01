@@ -1,5 +1,6 @@
 "use client"
 
+import { langueCourte } from "@/lib/utils/formatDate";
 import { Fragment, useEffect, useId, useLayoutEffect, useRef, useState, useSyncExternalStore, type CSSProperties, type MouseEvent, type ReactNode } from "react"
 import { ChevronDown, Copy, Lock, Trash2 } from "lucide-react"
 import { useTranslation } from "react-i18next"
@@ -261,7 +262,7 @@ export function PlanningGrille({
   const marqueAbsent = (date: string, val: string) => {
     const absence = val ? absenceDe?.(val, date) : null
     return absence && (
-      <span title={periodeAbsence(absence, i18n.language === "zh-CN" ? "zh" : "fr")} className="ml-1.5 text-[11px] text-amber-700 dark:text-amber-400">
+      <span title={periodeAbsence(absence, langueCourte(i18n.language))} className="ml-1.5 text-[11px] text-amber-700 dark:text-amber-400">
         {t("planning.choisir.absentMarque")}
       </span>
     )

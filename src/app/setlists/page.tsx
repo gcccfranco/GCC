@@ -9,9 +9,6 @@ import { visibleCategories, canCreateSetlist, canDeleteSetlist, canSeeSetlist, i
 import {
   loadPlanningData,
   datesServies,
-  findMyServices,
-  serviceCategory,
-  normalizeName,
   type PlanningData,
 } from "@/lib/planning/names";
 import { estDansLePartage, nomCourt } from "@/lib/setlist/partage";
@@ -22,9 +19,8 @@ import { anneeDe, editionsDe, feteDe, libelleEdition } from "@/lib/scene/fetes";
 import { jourEnLettres } from "@/app/evenements/scene/libelles";
 import { titreAffiche } from "@/lib/fetes/droits";
 import type { Programme } from "@/types/programme";
+import { Lock } from "lucide-react";
 import { ChampRecherche } from "@/components/layout/ChampRecherche";
-import { Lock, LogIn, UserPen, ChevronDown } from "lucide-react";
-import Link from "next/link";
 import { EnTetePage } from "@/components/layout/EnTetePage";
 import { BoutonNouveau } from "@/components/layout/BoutonNouveau";
 import { OngletsRail } from "@/components/layout/Onglets";
@@ -38,20 +34,15 @@ import type { SongIndexEntry } from "@/types/song";
 import { PullToRefresh } from "@/components/layout/PullToRefresh";
 import { Halo } from "@/components/layout/Halo";
 import { FondDeBarre } from "@/components/layout/FondDeBarre";
-import { formatDate } from "@/lib/utils/formatDate";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { langueCourte } from "@/lib/utils/formatDate";
 import { useSetlistsNavState, type Tab } from "@/hooks/useSetlistsNavState";
 import { EtatVide } from "@/components/layout/EtatVide";
 import { Squelette } from "@/components/layout/Squelette";
+import { useMessageTemporaire } from "@/hooks/useMessageTemporaire";
+import { clesDeMesServices, estDeMesServices, trierSetlists } from "@/lib/setlist/liste";
+import { EcranConnexionRequise, EcranProfilRequis } from "./_components/EcransAccesListe";
+import { SectionCorbeille } from "./_components/SectionCorbeille";
+import { ConfirmationSuppressionGroupee, ConfirmationSuppressionDefinitive } from "./_components/ConfirmationsSuppression";
 
 // Lot U4 bis, B2 (docs/spec-pages-en-grand.md, Q4) : en grand, la liste à gauche et l'aperçu
 // de la setlist choisie à droite (`?apercu=<id>`, sans aperçu choisi la première de la liste,
@@ -94,25 +85,9 @@ export default function SetlistsPage() {
     loadPlanningData().then(setPlanning);
   }, []);
 
-  // Clés des services réels de l'utilisateur (filtre « Mes services »). Campus : matin et
-  // soir partagent date + catégorie → clés par moment (setlists récentes) ET par président
-  // (anciennes setlists sans moment) pour ne matcher que la séance où l'on sert réellement.
-  const myServiceKeys = useMemo(() => {
-    const set = new Set<string>();
-    if (!planning || !profile?.planningName) return set;
-    for (const e of findMyServices(planning, profile.planningName)) {
-      const cat = serviceCategory(e.service);
-      if (!cat) continue;
-      const date = e.setlistDate ?? e.date;
-      if (cat === "Campus") {
-        if (e.moment) set.add(`${date}|Campus|m:${e.moment}`);
-        set.add(`${date}|Campus|l:${normalizeName(e.leader ?? "")}`);
-      } else {
-        set.add(`${date}|${cat}`);
-      }
-    }
-    return set;
-  }, [planning, profile]);
+  // Clés des services réels de l'utilisateur (filtre « Mes services »), `src/lib/setlist/liste.ts` : pour Campus,
+  // la séance où l'on sert réellement (moment, ou président pour les anciennes setlists).
+  const myServiceKeys = useMemo(() => clesDeMesServices(planning, profile?.planningName), [planning, profile]);
 
   // Lot AO (F1) : les dates où l'on sert — leur setlist se lit même sans équipe (`canSeeSetlist`).
   const datesDuCompte = useMemo(
@@ -216,7 +191,7 @@ export default function SetlistsPage() {
       (categoryFilter === "Toutes" || s.category === categoryFilter) &&
       (!q ||
         s.title.toLowerCase().includes(q) ||
-        titreAffiche(s, i18n.language === "zh-CN" ? "zh" : "fr").toLowerCase().includes(q) ||
+        titreAffiche(s, langueCourte(i18n.language)).toLowerCase().includes(q) ||
         (s.leader ?? "").toLowerCase().includes(q) ||
         s.date.includes(q));
   }, [categoryFilter, query, i18n.language]);
@@ -235,18 +210,11 @@ export default function SetlistsPage() {
           estDansLePartage(s, user.uid) ||
           // Sous « Noël » ou « Pâques », toutes les setlists de la fête : rien ne s'y rattache à un service.
           (!!s.fete && feteFiltree) ||
-          (s.category === "Campus"
-            ? (!!s.moment && myServiceKeys.has(`${s.date}|Campus|m:${s.moment}`)) ||
-              myServiceKeys.has(`${s.date}|Campus|l:${normalizeName(s.leader ?? "")}`)
-            : myServiceKeys.has(`${s.date}|${s.category}`)) ||
+          estDeMesServices(s, myServiceKeys) ||
           s.ownerId === user?.uid)
     );
     // Un même jour, les setlists d'une fête suivent l'ordre de passage.
-    const memeJour = (a: FSSetlist, b: FSSetlist) =>
-      (a.fete ? 1 : 0) - (b.fete ? 1 : 0) || (a.fete?.programme ?? "").localeCompare(b.fete?.programme ?? "") || rangPassage(a) - rangPassage(b);
-    return tab === "upcoming"
-      ? list.filter((s) => s.date >= todayStr).sort((a, b) => a.date.localeCompare(b.date) || memeJour(a, b))
-      : list.filter((s) => s.date < todayStr).sort((a, b) => b.date.localeCompare(a.date) || memeJour(a, b));
+    return trierSetlists(list, tab === "upcoming", todayStr, rangPassage);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tab, toutes, mySetlists, matches, todayStr, user, profile, onlyMine, myServiceKeys, programmes, feteFiltree, datesDuCompte]);
 
@@ -268,7 +236,7 @@ export default function SetlistsPage() {
   const [coches, setCoches] = useState<Set<string>>(new Set());
   const [enCours, setEnCours] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
+  const [message, montrerMessage] = useMessageTemporaire();
 
   const peutSupprimer = (s: FSSetlist) => !!user && canDeleteSetlist(user, profile, s);
   const supprimables = displayed.filter(peutSupprimer);
@@ -277,12 +245,6 @@ export default function SetlistsPage() {
   const avecFete = selection.some((s) => !!s.fete);
   // La corbeille ne montre que ce qu'on pourrait supprimer : un musicien ne voit pas celle d'un autre.
   const corbeilleVisible = corbeille.filter(peutSupprimer);
-  const dateCourte = (iso: string) => {
-    const d = new Date(iso);
-    return i18n.language === "zh-CN"
-      ? `${d.getMonth() + 1}月${d.getDate()}日`
-      : new Intl.DateTimeFormat("fr-FR", { day: "2-digit", month: "2-digit" }).format(d);
-  };
 
   // Changer d'onglet vide la sélection : aucune ligne n'est commune d'un onglet
   // à l'autre, et revenir ne doit pas ramener des cases cochées oubliées.
@@ -330,7 +292,7 @@ export default function SetlistsPage() {
       setVersionCorbeille((v) => v + 1);
     }
     // Les mises à la corbeille se disent par le bandeau « Annuler » ; ici, les suppressions définitives et les échecs.
-    setMessage(
+    montrerMessage(
       [
         definitives.ok.length ? t("setlists.list.deleteDone", { count: definitives.ok.length }) : null,
         rates.length
@@ -340,7 +302,6 @@ export default function SetlistsPage() {
         .filter(Boolean)
         .join(" ")
     );
-    window.setTimeout(() => setMessage(null), 6000);
     setEnCours(false);
     if (ko.length === 0) setSelectionMode(false);
   }
@@ -350,8 +311,7 @@ export default function SetlistsPage() {
     try {
       for (const id of ids) await restaurerSetlist(id);
     } catch {
-      setMessage(t("setlists.corbeille.erreur"));
-      window.setTimeout(() => setMessage(null), 6000);
+      montrerMessage(t("setlists.corbeille.erreur"));
     }
     setEnCorbeille([]);
     await rafraichir().catch(() => {});
@@ -362,8 +322,7 @@ export default function SetlistsPage() {
       await restaurerSetlist(s.id);
       await rafraichir();
     } catch {
-      setMessage(t("setlists.corbeille.erreur"));
-      window.setTimeout(() => setMessage(null), 6000);
+      montrerMessage(t("setlists.corbeille.erreur"));
     }
   }
 
@@ -373,8 +332,7 @@ export default function SetlistsPage() {
       await deleteSetlist(s.id);
       setVersionCorbeille((v) => v + 1);
     } catch {
-      setMessage(t("setlists.corbeille.erreur"));
-      window.setTimeout(() => setMessage(null), 6000);
+      montrerMessage(t("setlists.corbeille.erreur"));
     }
     setEnCours(false);
     setASupprimerDefinitivement(null);
@@ -394,47 +352,12 @@ export default function SetlistsPage() {
 
   // Non connecté : les setlists sont réservées aux membres
   if (!user) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center px-4">
-        <div className="text-center space-y-4 max-w-sm">
-          <Lock className="h-8 w-8 mx-auto text-muted-foreground" />
-          <p className="text-sm text-muted-foreground">{t("setlists.list.loginRequired")}</p>
-          <div className="flex flex-col gap-2">
-            <Link
-              href="/login?from=/setlists"
-              className="flex items-center justify-center gap-2 py-2.5 rounded-full bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors"
-            >
-              <LogIn className="h-4 w-4" />
-              {t("common.header.login")}
-            </Link>
-            <Link
-              href="/signup"
-              className="flex items-center justify-center gap-2 py-2.5 rounded-lg border border-border text-foreground text-sm font-semibold hover:bg-muted/50 transition-colors"
-            >
-              {t("common.header.signup")}
-            </Link>
-          </div>
-        </div>
-      </div>
-    );
+    return <EcranConnexionRequise />;
   }
 
   // Connecté mais profil incomplet (les admins passent quand même)
   if (!profile && !admin) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center px-4">
-        <div className="text-center space-y-4 max-w-sm">
-          <UserPen className="h-8 w-8 mx-auto text-muted-foreground" />
-          <p className="text-sm text-muted-foreground">{t("setlists.list.profileRequired")}</p>
-          <Link
-            href="/profil?from=/setlists"
-            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-full bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors"
-          >
-            {t("common.header.profile")}
-          </Link>
-        </div>
-      </div>
-    );
+    return <EcranProfilRequis />;
   }
 
   // Agencement v18 (A9, R1 à R3, R7 de docs/spec-agencement-v18.md) : l'en-tête sur toute la
@@ -482,7 +405,7 @@ export default function SetlistsPage() {
   const enteteFete = editionFiltree && (
     <div className="mb-4 space-y-1">
       <h2 className="text-[15px] font-semibold text-foreground">
-        {libelleEdition(feteDe(editionFiltree)!, anneeDe(editionFiltree) ?? 0, i18n.language === "zh-CN" ? "zh" : "fr")}
+        {libelleEdition(feteDe(editionFiltree)!, anneeDe(editionFiltree) ?? 0, langueCourte(i18n.language))}
         {" · "}
         {jourEnLettres(editionFiltree.jourJ, i18n.language)}
       </h2>
@@ -671,52 +594,13 @@ export default function SetlistsPage() {
         )}
         {feteFiltree && tab !== "mine" && piedFete}
         {tab === "archived" && corbeilleVisible.length > 0 && (
-          <section className="mt-8" data-testid="corbeille">
-            <button
-              type="button"
-              aria-expanded={corbeilleOuverte}
-              onClick={() => setCorbeilleOuverte((o) => !o)}
-              className="flex min-h-11 w-full items-center justify-between gap-3 text-left"
-            >
-              <span className="min-w-0">
-                <span className="block text-[15px] font-semibold text-foreground">
-                  {t("setlists.corbeille.titre", { count: corbeilleVisible.length })}
-                </span>
-                <span className="block text-[13px] text-muted-foreground">{t("setlists.corbeille.aide")}</span>
-              </span>
-              <ChevronDown className={`h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-150 ${corbeilleOuverte ? "rotate-180" : ""}`} aria-hidden />
-            </button>
-            {corbeilleOuverte && (
-              <ul className="mt-1">
-                {corbeilleVisible.map((s) => (
-                  <li key={s.id} className="border-t border-border/70 py-3">
-                    <p className="text-[15px] font-semibold text-foreground">{titreAffiche(s, i18n.language === "zh-CN" ? "zh" : "fr")}</p>
-                    <p className="text-[13px] text-muted-foreground">
-                      <span className="inline-block first-letter:uppercase">{formatDate(s.date, i18n.language)}</span>
-                      {" · "}
-                      {t("setlists.corbeille.supprimeeLe", { date: dateCourte(s.supprimeeLe!) })}
-                    </p>
-                    <div className="mt-2 flex flex-wrap gap-2">
-                      <button
-                        type="button"
-                        onClick={() => void restaurer(s)}
-                        className="h-11 rounded-full bg-secondary px-5 text-sm font-semibold text-foreground transition-[background-color,transform] duration-150 hover:bg-muted active:scale-[.97]"
-                      >
-                        {t("setlists.corbeille.restaurer")}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setASupprimerDefinitivement(s)}
-                        className="h-11 rounded-full px-4 text-sm font-semibold text-destructive transition-[background-color,transform] duration-150 hover:bg-destructive/10 active:scale-[.97]"
-                      >
-                        {t("setlists.corbeille.supprimerDefinitivement")}
-                      </button>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </section>
+          <SectionCorbeille
+            setlists={corbeilleVisible}
+            ouverte={corbeilleOuverte}
+            onBasculer={() => setCorbeilleOuverte((o) => !o)}
+            onRestaurer={(s) => void restaurer(s)}
+            onSupprimer={setASupprimerDefinitivement}
+          />
         )}
         <GuideLien section="setlists" />
       </>
@@ -743,71 +627,22 @@ export default function SetlistsPage() {
         <div className="relative px-[var(--marge-page)] pb-10">{contenuListe}</div>
       )}
         {/* ── Confirmation : elle NOMME ce qui va disparaître (D3) ── */}
-        <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>
-                {avecFete ? t("setlists.list.deleteSelectedTitle", { count: selection.length }) : t("setlists.list.trashTitle", { count: selection.length })}
-              </AlertDialogTitle>
-              <AlertDialogDescription asChild>
-                <div>
-                  <ul className="list-disc pl-5 space-y-0.5">
-                    {selection.slice(0, 8).map((s) => (
-                      <li key={s.id}>
-                        {titreAffiche(s, i18n.language === "zh-CN" ? "zh" : "fr")}
-                        {" · "}
-                        <span className="inline-block first-letter:uppercase">{formatDate(s.date, i18n.language)}</span>
-                      </li>
-                    ))}
-                  </ul>
-                  {selection.length > 8 && (
-                    <p className="mt-1">
-                      {t("setlists.list.deleteMore", { count: selection.length - 8 })}
-                    </p>
-                  )}
-                  <p className="mt-2">
-                    {avecFete ? t("setlists.list.deleteSelectedBody") : t("setlists.list.trashBody", { count: selection.length })}
-                  </p>
-                </div>
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel disabled={enCours}>{t("setlists.detail.deleteCancel")}</AlertDialogCancel>
-              <AlertDialogAction
-                disabled={enCours}
-                onClick={() => void supprimerSelection()}
-                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              >
-                {enCours ? "…" : avecFete ? t("setlists.detail.deleteYes") : t("setlists.list.trashYes")}
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+        <ConfirmationSuppressionGroupee
+          ouvert={confirmOpen}
+          onOuvertChange={setConfirmOpen}
+          selection={selection}
+          avecFete={avecFete}
+          enCours={enCours}
+          onConfirmer={() => void supprimerSelection()}
+        />
 
         {/* ── Suppression définitive depuis la corbeille ── */}
-        <AlertDialog open={!!aSupprimerDefinitivement} onOpenChange={(o) => !o && setASupprimerDefinitivement(null)}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>
-                {t("setlists.corbeille.definitifTitre", { titre: aSupprimerDefinitivement ? titreAffiche(aSupprimerDefinitivement, i18n.language === "zh-CN" ? "zh" : "fr") : "" })}
-              </AlertDialogTitle>
-              <AlertDialogDescription>{t("setlists.corbeille.definitifCorps")}</AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel disabled={enCours}>{t("setlists.detail.deleteCancel")}</AlertDialogCancel>
-              <AlertDialogAction
-                disabled={enCours}
-                onClick={(e) => {
-                  e.preventDefault();
-                  if (aSupprimerDefinitivement) void supprimerDefinitivement(aSupprimerDefinitivement);
-                }}
-                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              >
-                {enCours ? "…" : t("setlists.corbeille.supprimerDefinitivement")}
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+        <ConfirmationSuppressionDefinitive
+          setlist={aSupprimerDefinitivement}
+          onFermer={() => setASupprimerDefinitivement(null)}
+          enCours={enCours}
+          onConfirmer={(s) => void supprimerDefinitivement(s)}
+        />
     </div>
   );
 }

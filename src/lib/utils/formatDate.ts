@@ -28,3 +28,8 @@ export function versDate(v: unknown): Date | null {
   }
   return d && !Number.isNaN(d.getTime()) ? d : null;
 }
+
+/** La langue de l'écran, en deux lettres, pour les libellés qui n'en connaissent que deux : « zh » en 中文, « fr » sinon. */
+export function langueCourte(langue: string): "fr" | "zh" {
+  return langue === "zh-CN" ? "zh" : "fr";
+}

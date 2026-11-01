@@ -20,6 +20,7 @@
 // jour ; après le jour J l'ordre de passage — et l'ordre de passage en carte tout en bas. Une autre
 // vue (`?vue=`, `?semaine=`) s'ouvre en page, avec un retour vers la fête.
 
+import { langueCourte } from "@/lib/utils/formatDate";
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { useTranslation } from "react-i18next"
@@ -69,7 +70,7 @@ const majuscule = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
 export function FeteGestion({ fete }: { fete: Fete }) {
   const { t, i18n } = useTranslation()
   const lang = i18n.language
-  const langue = lang === "zh-CN" ? "zh" : "fr"
+  const langue = langueCourte(lang)
   const { user } = useAuth()
   const { profile, loading: profileLoading } = useProfile()
   const router = useRouter()

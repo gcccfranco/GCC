@@ -32,7 +32,7 @@ import { useTranslation } from "react-i18next";
 import type { SongIndexEntry } from "@/types/song";
 import type { JianpuChords, SetlistItem } from "@/types/setList";
 import type { ChordProLine } from "@/types/chordPro";
-import { formatDate } from "@/lib/utils/formatDate";
+import { formatDate, langueCourte } from "@/lib/utils/formatDate";
 import { useScrollDirection } from "@/hooks/useScrollDirection";
 import { useSwipeViews } from "@/hooks/useSwipeViews";
 import { useDeuxVolets } from "@/hooks/useDeuxVolets";
@@ -1912,7 +1912,7 @@ export function SetlistDetailClient() {
               <div className="flex items-start gap-3">
                 <div className="flex-1">
                   <div className="flex items-center gap-3 flex-wrap">
-                    <h1 className="text-2xl font-bold text-foreground">{titreAffiche(setlist, i18n.language === "zh-CN" ? "zh" : "fr")}</h1>
+                    <h1 className="text-2xl font-bold text-foreground">{titreAffiche(setlist, langueCourte(i18n.language))}</h1>
                   </div>
                   {setlist.fete ? <div className="mt-1"><RepereFete setlist={setlist} passage={passageFete} /><SousTitreFete setlist={setlist} passage={passageFete} /></div> : (
                   <p className="text-muted-foreground first-letter:uppercase mt-1 text-sm">

@@ -5,6 +5,7 @@
 // « Musiques et danses — pour la régie » (en lecture) et « L'ordre de passage ». Lus dans le programme et dans les
 // setlists de l'édition ; rien n'est recopié.
 
+import { langueCourte } from "@/lib/utils/formatDate";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useTranslation } from "react-i18next";
@@ -46,7 +47,7 @@ export function usePassageDeLaSetlist(setlist: FSSetlist | null): PassageDeLaSet
     ...lu,
     index: lu.programme.passages.findIndex((p) => p.id === setlist.fete!.passage),
     fete,
-    titreFete: libelleEdition(fete, annee, i18n.language === "zh-CN" ? "zh" : "fr"),
+    titreFete: libelleEdition(fete, annee, langueCourte(i18n.language)),
   };
 }
 
@@ -79,7 +80,7 @@ export function SousTitreFete({ setlist, passage }: { setlist: FSSetlist; passag
 /** Les deux cartes sous la liste : musiques et danses du passage, ordre de passage. */
 export function CartesFete({ passage }: { passage: PassageDeLaSetlist }) {
   const { t, i18n } = useTranslation();
-  const langue = i18n.language === "zh-CN" ? "zh" : "fr";
+  const langue = langueCourte(i18n.language);
   const quiDe = (p: Passage) => p.qui.map((q) => libelleQui(q, langue)).join(" · ");
   const { programme, setlists, index } = passage;
   if (index < 0) return null;

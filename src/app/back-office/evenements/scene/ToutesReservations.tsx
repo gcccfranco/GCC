@@ -7,6 +7,7 @@
 // et porte « Déplacer » à la place de « ⋯ ». Le menu et la feuille sont ceux des membres
 // (`Entrainements`, P6) : l'appelant les passe. Remplace la liste hors grille de l'aperçu.
 
+import { langueCourte } from "@/lib/utils/formatDate";
 import { useId, useState, type CSSProperties, type ReactNode } from "react"
 import Link from "next/link"
 import { useTranslation } from "react-i18next"
@@ -112,7 +113,7 @@ export function ToutesReservations({ programme, creneaux, titre, voirCommeMembre
                       {c.quoi}
                     </span>
                   </td>
-                  <td className="whitespace-nowrap px-3 py-3">{c.qui.map((q) => libelleQui(q, i18n.language === "zh-CN" ? "zh" : "fr")).join(", ")}</td>
+                  <td className="whitespace-nowrap px-3 py-3">{c.qui.map((q) => libelleQui(q, langueCourte(i18n.language))).join(", ")}</td>
                   <td className="whitespace-nowrap px-3 py-3 text-foreground/80">{c.auteurNom}</td>
                   <td className="px-3 py-2 text-right">
                     {estHors ? (

@@ -1,5 +1,6 @@
 "use client";
 
+import { langueCourte } from "@/lib/utils/formatDate";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Plus, Trash2 } from "lucide-react";
@@ -26,7 +27,7 @@ const nomAffiche = (p: UserProfile) => p.planningName || `${p.firstName} ${p.las
 
 export function MesAbsences() {
   const { t, i18n } = useTranslation();
-  const langue = i18n.language === "zh-CN" ? "zh" : "fr";
+  const langue = langueCourte(i18n.language);
   const { user, profile } = useProfile();
   const responsable = faitDesPlannings(user, profile);
 

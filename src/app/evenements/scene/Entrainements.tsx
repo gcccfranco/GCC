@@ -16,6 +16,7 @@
 // morceaux où il veut (`children`). Le Back-Office (P8) pose aussi « ⋯ » et « Déplacer » dans son
 // tableau de toutes les réservations : la même feuille, le même menu.
 
+import { langueCourte } from "@/lib/utils/formatDate";
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { useTranslation } from "react-i18next"
@@ -123,7 +124,7 @@ export function Entrainements({ programme, creneaux, user, profile, onChanged, o
   const [erreurRetrait, setErreurRetrait] = useState("")
 
   const conflicts = new Set(creneaux.filter((c) => creneaux.some((o) => o.id !== c.id && overlaps(c, o))).map((c) => c.id))
-  const quiDe = (c: Creneau) => c.qui.map((q) => libelleQui(q, lang === "zh-CN" ? "zh" : "fr")).join(", ")
+  const quiDe = (c: Creneau) => c.qui.map((q) => libelleQui(q, langueCourte(lang))).join(", ")
   const slotLabel = (c: Creneau) => `${c.debut} – ${c.fin} · ${c.quoi} · ${quiDe(c)} (${c.auteurNom})`
   const auteurNom = profile ? `${profile.firstName} ${profile.lastName}`.trim() || profile.email : user.email ?? ""
   // Q4 : la coordination n'est pas limitée ; un membre choisit parmi les groupes permis.

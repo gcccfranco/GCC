@@ -1,5 +1,6 @@
 "use client";
 
+import { langueCourte } from "@/lib/utils/formatDate";
 import { useState, useEffect } from "react";
 import { useRouter, useParams, useSearchParams } from "next/navigation";
 import Link from "next/link";
@@ -90,7 +91,7 @@ export function EditSetlistClient() {
     );
   }
 
-  const langue = i18n.language === "zh-CN" ? "zh" : "fr";
+  const langue = langueCourte(i18n.language);
   const fete = programme && feteDe(programme);
   const annee = programme && anneeDe(programme);
   const passage = programme?.passages.findIndex((p) => p.id === setlist.fete?.passage) ?? -1;

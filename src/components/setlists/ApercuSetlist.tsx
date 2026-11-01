@@ -18,7 +18,7 @@ import type { PlanningData } from "@/lib/planning/names";
 import type { SongIndexEntry } from "@/types/song";
 import { categoryColor, categoryLabel } from "@/lib/serviceColors";
 import { serviceButtonFill } from "@/lib/serviceButton";
-import { formatDate } from "@/lib/utils/formatDate";
+import { formatDate, langueCourte } from "@/lib/utils/formatDate";
 import { parsePresentationUrl } from "@/lib/setlist/presentationLink";
 import { equipeDuService } from "@/lib/setlist/equipeDuService";
 import { equipeDeLaSetlist } from "@/lib/setlist/partage";
@@ -77,7 +77,7 @@ export function ApercuSetlist({
               {" · "}{formatDate(setlist.date, i18n.language)}
             </span>
           </p>
-          <h2 className="mt-1 text-[24px] font-bold leading-tight tracking-tight text-foreground text-balance">{titreAffiche(setlist, i18n.language === "zh-CN" ? "zh" : "fr")}</h2>
+          <h2 className="mt-1 text-[24px] font-bold leading-tight tracking-tight text-foreground text-balance">{titreAffiche(setlist, langueCourte(i18n.language))}</h2>
           {(setlist.leader || presentation) && (
             <p className="mt-0.5 flex flex-wrap items-center gap-x-1.5 text-sm text-muted-foreground">
               {setlist.leader && <span>{t("planning.accueil.presidence", { nom: setlist.leader })}</span>}

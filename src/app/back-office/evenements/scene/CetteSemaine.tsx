@@ -7,6 +7,7 @@
 // membres (Déplacer, Modifier, Retirer). Une réservation hors grille de la semaine y est aussi,
 // avec sa pastille. Le tableau de toute la saison reste « Toutes les réservations ».
 
+import { langueCourte } from "@/lib/utils/formatDate";
 import type { ReactNode } from "react"
 import { useTranslation } from "react-i18next"
 import { todayIso } from "@/lib/scene/dimanches"
@@ -65,7 +66,7 @@ export function CetteSemaine({ programme, creneaux, menu, erreur }: {
                       {c.debut} – {c.fin}
                       {hors.has(c.id) && <BadgeHorsGrille />}
                     </p>
-                    <p className="text-[13px] text-muted-foreground">{[c.quoi, c.qui.map((q) => libelleQui(q, i18n.language === "zh-CN" ? "zh" : "fr")).join(", "), c.auteurNom].join(" · ")}</p>
+                    <p className="text-[13px] text-muted-foreground">{[c.quoi, c.qui.map((q) => libelleQui(q, langueCourte(i18n.language))).join(", "), c.auteurNom].join(" · ")}</p>
                   </div>
                   {menu(c)}
                 </li>

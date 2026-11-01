@@ -5,6 +5,7 @@
 // modifie, retire et réordonne (glisser-déposer, comme les setlists). Retirer passe par la
 // confirmation du site (Pâques · Noël, P7 : plus de fenêtre du navigateur dans la scène).
 
+import { langueCourte } from "@/lib/utils/formatDate";
 import { useState, type FormEvent } from "react"
 import { useTranslation } from "react-i18next"
 import { DndContext, closestCenter, type DragEndEvent } from "@dnd-kit/core"
@@ -70,7 +71,7 @@ function Row({ id, index, passage, canEdit, detail, mien, onEdit, onRemove }: {
   id: string; index: number; passage: Passage; canEdit: boolean; detail?: DetailFete; mien: boolean; onEdit: () => void; onRemove: () => void
 }) {
   const { t, i18n } = useTranslation()
-  const langue = i18n.language === "zh-CN" ? "zh" : "fr"
+  const langue = langueCourte(i18n.language)
   const { attributes, listeners, setNodeRef, setActivatorNodeRef, transform, transition, isDragging } = useSortable({ id, disabled: !canEdit })
   return (
     <li ref={setNodeRef} data-mien={mien ? "oui" : undefined}

@@ -11,6 +11,7 @@
 // créneaux libres, en pastilles jour par jour (le créneau actuel compris), sans
 // liste déroulante, et ne touche ni quoi ni qui.
 
+import { langueCourte } from "@/lib/utils/formatDate";
 import { useState, type CSSProperties, type FormEvent, type ReactNode } from "react"
 import { useTranslation } from "react-i18next"
 import { CalendarClock, Check } from "lucide-react"
@@ -41,7 +42,7 @@ export type CreneauValues = {
  *  que la coordination la décoche ; elle n'est plus proposée à un nouveau passage (CF3). */
 export function QuiChecklist({ value, onChange }: { value: string[]; onChange: (qui: string[]) => void }) {
   const { t, i18n } = useTranslation()
-  const langue = i18n.language === "zh-CN" ? "zh" : "fr"
+  const langue = langueCourte(i18n.language)
   const retires = value.filter((q) => !(QUI as readonly string[]).includes(q))
   return (
     <fieldset className="space-y-1">
@@ -134,7 +135,7 @@ export function CreneauForm({ open, title, onCancel, ...champs }: Props) {
 
 function Champs({ submitLabel, place, places, initial, quiOptions, quiLimite, onSubmit, onCancel }: Omit<Props, "open" | "title">) {
   const { t, i18n } = useTranslation()
-  const langue = i18n.language === "zh-CN" ? "zh" : "fr"
+  const langue = langueCourte(i18n.language)
   const [v, setV] = useState<CreneauValues>(initial)
   const [error, setError] = useState("")
   const [busy, setBusy] = useState(false)

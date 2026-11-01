@@ -9,6 +9,7 @@
 // ouvre en page (`?vue=ordre`). Les paramètres d'adresse (`?vue=`, `?annee=`) remplacent
 // l'adresse sans entrée d'historique. Rien ne s'écrit ici : ouvrir l'onglet ne crée rien (Q6).
 
+import { langueCourte } from "@/lib/utils/formatDate";
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react"
 import Link from "next/link"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
@@ -48,7 +49,7 @@ const majuscule = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
 export function FeteClient({ fete }: { fete: Fete }) {
   const { t, i18n } = useTranslation()
   const lang = i18n.language
-  const langue = lang === "zh-CN" ? "zh" : "fr"
+  const langue = langueCourte(lang)
   const { user } = useAuth()
   const { profile, loading: profileLoading } = useProfile()
   const router = useRouter()
