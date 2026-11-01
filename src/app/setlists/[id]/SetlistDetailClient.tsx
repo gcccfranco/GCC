@@ -27,7 +27,7 @@ import { ecrireCopie } from "@/lib/setlist/copieHorsLigne";
 import { BACK_OFFICE } from "@/lib/backOffice";
 import { datesServies, loadPlanningData } from "@/lib/planning/names";
 import type { DateServie } from "@/types/planning";
-import { canSeeSetlist, canEditSetlist, canDeleteSetlist, canDuplicateSetlist, canSetPresentationLink, canHaveSetlistVersion, estRegieDeFete } from "@/lib/access";
+import { canSeeSetlist, canEditSetlist, canDeleteSetlist, canDuplicateSetlist, canSetPresentationLink, canHaveSetlistVersion, estRegieDeLaSetlist, peutExporterFreeShow } from "@/lib/access";
 import { useTranslation } from "react-i18next";
 import type { SongIndexEntry } from "@/types/song";
 import type { JianpuChords, SetlistItem } from "@/types/setList";
@@ -44,6 +44,7 @@ import { ListView } from "./_components/ListView";
 import { PartitionsView } from "./_components/PartitionView";
 import { Sommaire } from "./_components/Sommaire";
 import { PresentationLink } from "./_components/PresentationLink";
+import { ExportFreeShow } from "./_components/ExportFreeShow";
 import { CartesFete, RepereFete, SousTitreFete, usePassageDeLaSetlist } from "./_components/FeteDeLaSetlist";
 import { estUnChant, resoudrePropositions } from "@/lib/setlist/propositions";
 import { titreAffiche } from "@/lib/fetes/droits";
@@ -1375,12 +1376,7 @@ export function SetlistDetailClient() {
     user,
     profile,
     setlist,
-    // Lot AO (interrupteur ouvert seulement) : « Où il sert » à la Régie (`lieuxRegie`) au lieu du rôle `regie` du profil.
-    setlist.fete
-      ? estRegieDeFete(profile, setlist)
-      : BACK_OFFICE
-        ? !!profile?.lieuxRegie?.includes(setlist.category)
-        : !!profile?.serviceRoles[setlist.category]?.includes("regie"),
+    estRegieDeLaSetlist(profile, setlist),
   );
   const presentationHref = setlist.presentationUrl ? parsePresentationUrl(setlist.presentationUrl) : null;
   // « Copier toutes les paroles » (question 6) : seulement si chaque chant suit la
@@ -1723,6 +1719,9 @@ export function SetlistDetailClient() {
                   onSaved={(presentationUrl) => setSetlist({ ...setlist, presentationUrl })}
                   sansLien
                 />
+                {peutExporterFreeShow(profile, setlist) && (
+                  <ExportFreeShow setlist={setlist} contents={contents} pret={tousLesChantsCharges} />
+                )}
               </div>
               {setlist.items.length === 0 ? (
                 <p className="text-center py-16 text-sm text-muted-foreground border border-dashed border-border rounded-xl">
@@ -1939,6 +1938,9 @@ export function SetlistDetailClient() {
                 canChange={peutChangerPresentation}
                 onSaved={(presentationUrl) => setSetlist({ ...setlist, presentationUrl })}
               />
+              {peutExporterFreeShow(profile, setlist) && (
+                <ExportFreeShow setlist={setlist} contents={contents} pret={tousLesChantsCharges} />
+              )}
               {setlist.notes && (
                 <p className="mt-3 text-sm text-muted-foreground italic">{setlist.notes}</p>
               )}

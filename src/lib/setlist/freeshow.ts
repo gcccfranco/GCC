@@ -19,7 +19,7 @@ export const COUPE_VIRGULE_MAX = 0.65;
 const HANZI = /[㐀-鿿]/;
 const HANZI_G = /[㐀-鿿]/g;
 const PONCTUATION_FIN = /[,.;:!?…\s]+$/;
-const COUPE_ZH = /[，、；。！？]/;
+const COUPE_ZH = /[，、；：。！？]/;
 
 // ───────────────────────── Découpe ─────────────────────────
 

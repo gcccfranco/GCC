@@ -278,6 +278,8 @@
       "presentationError": "Échec de l'enregistrement — réessaie.",
       "presentationNotified": "Président prévenu.",
       "presentationUnlinked": "Personne n'a été prévenu : aucun compte relié au nom du président.",
+      "exportFreeShow": "Exporter pour FreeShow",
+      "exportFreeShowWait": "Chargement des chants…",
       "layout": {
         "label": "Affichage",
         "played": "Ordre joué",

@@ -4,7 +4,7 @@ Demande de Timothée du 01/11/2026 : « À l'église on utilise FreeShow, est-ce
 faire un export dans le format des documents FreeShow ? ». Réponses du même jour : **toute la setlist d'un coup**, au
 format **`.project`**, chants chinois en **caractères + pinyin** ; bouton **pour la régie seulement** ; diapo de fin
 **vide** (la régie y pose son image) ; **pas de traduction** des chants chinois (la régie l'ajoute à la main) ;
-police **Century Gothic** par défaut. Lot **FS**. Rien de codé : le code attend un go.
+police **Century Gothic** par défaut. Lot **FS**. **Go le 01/11/2026, codé le même jour** (voir « Avancement »).
 
 ## Ce que montrent les fichiers de la régie (7 projets, 13/09 → 01/11/2026)
 
@@ -61,6 +61,25 @@ sur 22 chants (828 diapos).
   clic télécharge un `.project` dont le contenu est relu. 1 chant FR + 1 chant ZH au moins.
 - **Essai réel par la régie** : importer l'export d'une setlist récente dans FreeShow et le comparer au fichier fait
   à la main ; régler les seuils de FS7 d'après ses retours.
+
+## Avancement (01/11/2026)
+
+- **Tranche 1** : `src/lib/setlist/freeshow.ts` (fonctions pures) — `fabriquerProjetFreeShow`, `decouperFrancais`,
+  `decouperChinois`, `nomDeGroupe`, `nomFichierFreeShow` ; seuils `LIGNE_LONGUE`, `COUPE_VIRGULE_MIN/MAX`. Forme
+  du JSON calée sur les `data.json` de la régie (ids de 11 caractères hexadécimaux, layout avec `children` en
+  objet, zone du titre à part). `paroleDeLigne` sortie de `lyricsText` (`copyLyrics.ts`) pour un nettoyage commun.
+  Tests purs : `tests/freeshow-fabrication.spec.ts`.
+- **Tranche 2** : bouton `ExportFreeShow.tsx` sous le lien de présentation, dans les deux dispositions de la
+  setlist, grisé tant que les chants chargent ; drapeau extrait en `estRegieDeLaSetlist` / `peutExporterFreeShow`
+  (`src/lib/access.ts`), réutilisé par `peutChangerPresentation`. Test `tests/export-freeshow.spec.ts` (trois
+  appareils + serveur coupé).
+- **Exemple pour l'essai** : `docs/freeshow/011126.project` (Gloire à son nom, 主的喜乐是我力量, Abba Père ; ordre
+  par défaut des chants, sans structure de présidence).
+- **Choix faits en codant** (à revoir à l'essai si besoin) : une reprise se reconnaît à l'`id` de la section et à
+  ses paroles (les occurrences n'ont pas le même `uid`) ; titre d'un chant chinois en KaiTi 150 px ; la découpe
+  chinoise coupe aussi à `、`, `：`, `！`, `？` ; une ligne chinoise sans pinyin donne une diapo sans pinyin ;
+  intro → « Intro », autre → « Autre » (gris) ; la route `/api/setlist/presentation` garde son propre calcul (elle
+  croise le planning du jour), seul le client partage le drapeau.
 
 ## Questions ouvertes
 

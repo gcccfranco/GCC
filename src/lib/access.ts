@@ -761,6 +761,29 @@ export function estRegieDeFete(
   return !!setlist.fete && !!profile?.dansEquipes?.includes("regie");
 }
 
+/** Régie de la setlist, côté client (affichage). Lot AO (interrupteur ouvert seulement) : « Où il sert » à la
+ *  Régie (`lieuxRegie`) au lieu du rôle `regie` du profil. Fête : TEAM RÉGIE (`estRegieDeFete`). */
+export function estRegieDeLaSetlist(
+  profile: UserProfile | null,
+  setlist: FSSetlist,
+  backOffice: boolean = BACK_OFFICE
+): boolean {
+  if (setlist.fete) return estRegieDeFete(profile, setlist);
+  if (backOffice) return !!profile?.lieuxRegie?.includes(setlist.category);
+  return !!profile?.serviceRoles?.[setlist.category]?.includes("regie");
+}
+
+/** Bouton « Exporter pour FreeShow » (docs/spec-export-freeshow.md, FS1) : la régie de la setlist, ce drapeau
+ *  seul (ni `canEditSetlist` ni admin), setlist non privée. Affichage seulement : l'export se fabrique dans le
+ *  navigateur et n'écrit rien, donc aucune règle Firestore. */
+export function peutExporterFreeShow(
+  profile: UserProfile | null,
+  setlist: FSSetlist,
+  backOffice: boolean = BACK_OFFICE
+): boolean {
+  return !setlist.isPrivate && estRegieDeLaSetlist(profile, setlist, backOffice);
+}
+
 // ─── Back-Office (lot U6, docs/spec-back-office.md) ──────────────────────────
 // Affichage seulement : le sélecteur et le menu ne protègent aucune donnée,
 // chaque sous-partie garde sa règle dans firestore.rules (signalements, profils,

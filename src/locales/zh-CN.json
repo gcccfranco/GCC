@@ -278,6 +278,8 @@
       "presentationError": "保存失败，请重试。",
       "presentationNotified": "已通知司会。",
       "presentationUnlinked": "无人收到通知：司会的名字未关联任何账号。",
+      "exportFreeShow": "导出到 FreeShow",
+      "exportFreeShowWait": "正在加载歌曲…",
       "layout": {
         "label": "显示",
         "played": "演奏顺序",
