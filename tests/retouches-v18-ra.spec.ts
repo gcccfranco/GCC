@@ -436,13 +436,13 @@ const FEUILLES_R7: Record<string, string> = {
 };
 const PIANISTE_R7: FakeProfile = { uid: "uid-pianiste", email: "pianiste@example.com", firstName: "Pianiste", lastName: "C.", planningName: "Pianiste C.", serviceRoles: { "Culte Francophone": ["musicien"] } };
 
-async function ouvrirR7(page: Page, vers: string, zh = false) {
+async function ouvrirR7(page: Page, vers: string, zh = false, feuilles: Record<string, string> = FEUILLES_R7, maintenant = "2026-10-01T10:00:00") {
   interdireDialoguesNatifs(page);
   if (zh) await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
-  await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
+  await page.clock.setFixedTime(new Date(maintenant));
   await page.route(/docs\.google\.com\/spreadsheets/, (route) => {
     const feuille = new URL(route.request().url()).searchParams.get("sheet") ?? "";
-    return route.fulfill({ status: 200, contentType: "text/csv", body: FEUILLES_R7[feuille] ?? "" });
+    return route.fulfill({ status: 200, contentType: "text/csv", body: feuilles[feuille] ?? "" });
   });
   return signInAs(page, PIANISTE_R7, {}, vers);
 }
@@ -454,7 +454,9 @@ test.describe("R7 : heures de « Ce dimanche », Prépa. Table, 推荐新诗歌"
   test("« Ce dimanche » : Culte Franco 10:30, Groupes 13:00, EDD 15:30–17:00, Table 10:00", async ({ page }) => {
     await ouvrirR7(page, "/planning");
     await expect(ceDimanche(page).getByText("Présidente A.")).toBeVisible();
-    await expect(carte(page, "carte-culte").getByRole("heading", { level: 3 })).toHaveText(/^Culte Franco\s*10:30$/);
+    await expect(carte(page, "carte-culte").getByRole("heading", { level: 3 })).toHaveText(/^Culte Franco\s*10:30\s*Sainte Cène$/);
+    // Le 04/10 est le premier dimanche du mois : le badge de la page Culte à côté de l'heure (01/11/2026).
+    await expect(carte(page, "carte-culte").getByTestId("badge-sainte-cene")).toBeVisible();
     await expect(carte(page, "ligne-groupe").getByRole("heading", { level: 3 })).toHaveText("Groupes · 13:00");
     await expect(carte(page, "ligne-edd").getByRole("heading", { level: 3 })).toHaveText("EDD · 15:30–17:00");
     // La Table : « Table · 10:00 » en en-tête quand elle est sur deux étages (en grand), sinon l'heure
@@ -473,6 +475,14 @@ test.describe("R7 : heures de « Ce dimanche », Prépa. Table, 推荐新诗歌"
     await expect(table.getByRole("heading", { level: 3 })).toHaveText("Table · 10:00");
     await expect(table.getByText("10:00").filter({ visible: true })).toHaveCount(1);
     await capture(page, "r7-ce-dimanche-reduite");
+  });
+
+  test("« Ce dimanche » : pas de badge Sainte Cène un autre dimanche que le premier du mois", async ({ page }) => {
+    const feuilles = { ...FEUILLES_R7, Franco_Louange: FEUILLES_R7.Franco_Louange.replace('"04/10"', '"11/10"') };
+    await ouvrirR7(page, "/planning", false, feuilles, "2026-10-08T10:00:00");
+    await expect(ceDimanche(page).getByText("Présidente A.")).toBeVisible();
+    await expect(carte(page, "carte-culte").getByRole("heading", { level: 3 })).toHaveText(/^Culte Franco\s*10:30$/);
+    await expect(carte(page, "carte-culte").getByTestId("badge-sainte-cene")).toHaveCount(0);
   });
 
   test("中文 : les mêmes heures", async ({ page }) => {

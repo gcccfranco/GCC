@@ -13,6 +13,7 @@ import { ChevronRight } from "lucide-react"
 import { PLANNING_COLORS } from "@/lib/serviceColors"
 import { serviceButtonFill } from "@/lib/serviceButton"
 import { porteLeNom } from "@/lib/planning/accueil"
+import { isFirstSundayOfMonth } from "@/lib/planning/utils"
 import { Tile } from "@/components/ui/tile"
 import type { Evenement } from "@/types/evenement"
 import type { Disposition } from "./PourMoi"
@@ -65,10 +66,12 @@ function Noms({ valeur, monNom }: { valeur: string; monNom: string }) {
 }
 
 /** Un service et ses rôles : deux colonnes en grand et sur tablette, une sur téléphone. */
-function CarteService({ titre, href, heure, couleur, roles, colonnes, monNom, testId, vide: messageVide }: {
+function CarteService({ titre, href, heure, badge, couleur, roles, colonnes, monNom, testId, vide: messageVide }: {
   titre: string
   href: string
   heure?: string
+  /** Après l'heure : « Sainte Cène » le premier dimanche du mois (carte du culte, Timothée, 01/11/2026). */
+  badge?: string
   couleur: string
   roles: [string, string][]
   /** « large » : deux colonnes, trois quand « Ce dimanche » dépasse 720 px (requête de conteneur, en grand). */
@@ -85,6 +88,11 @@ function CarteService({ titre, href, heure, couleur, roles, colonnes, monNom, te
           <Point couleur={couleur} />
           <span className="svc-ink text-base font-bold" style={svc(couleur)}>{titre}</span>
           {heure && <span className="text-[13px] text-muted-foreground tabular-nums">{heure}</span>}
+          {badge && (
+            <span data-testid="badge-sainte-cene" className="inline-block text-xs font-bold px-1.5 py-0.5 rounded bg-red-50 text-red-700 border border-red-200">
+              {badge}
+            </span>
+          )}
           <Chevron />
         </VersPlanning>
       </h3>
@@ -145,6 +153,7 @@ export function CeDimanche({
       titre={t("planning.tabs.culte")}
       href="/planning/culte"
       heure={HEURES.culte}
+      badge={culte?.[0] && isFirstSundayOfMonth(culte[0]) ? t("planning.sainteCene") : undefined}
       couleur={PLANNING_COLORS.culte}
       colonnes={colonnes}
       monNom={monNom}
