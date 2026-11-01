@@ -97,7 +97,13 @@ tailles, le comportement, quatre questions à trancher.
      `tests/visite-par-role.spec.ts`, `tests/back-office-coupe.spec.ts` ; une attente du logo sur l'écran 1 d'un
      compte neuf en français se corrige (vidéo), pas en chinois ni en `retour`.
 
-## À trancher (planche)
+## Tranché (go du 01/11/2026)
+
+Go de Timothée pour le lot VB le 01/11/2026, avec l'ordre de pousser sur `main` ; les quatre questions de la
+planche n'ayant pas reçu de réponse, **les recommandations s'appliquent** (Q1 une lecture puis « Revoir », Q2 le logo
+en chinois, Q3 montage tel quel, Q4 rien d'imposé).
+
+### Questions de la planche
 
 | # | Question | Recommandation |
 | --- | --- | --- |
