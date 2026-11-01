@@ -2,18 +2,17 @@
 
 import { useState, useMemo, useEffect, useLayoutEffect, useRef } from "react";
 import Link from "next/link";
-import { MoreHorizontal, Play, X, TriangleAlert , Settings, ChevronDown, Sparkles, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuCheckboxItem,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { getChartStylePref, setChartStylePref } from "@/lib/chartStylePref";
+import { TOUCHER_44 } from "./_components/toucher44";
+import { PiluleTonalite } from "./_components/PiluleTonalite";
+import { ActionsChant } from "./_components/ActionsChant";
+import { MenuChant } from "./_components/MenuChant";
+import { useRecents } from "./_hooks/useRecents";
+import { useTailleTexte } from "./_hooks/useTailleTexte";
+import { useBarreRappelee } from "./_hooks/useBarreRappelee";
 import { getPersonalKeys, setPersonalKey } from "@/lib/setlist/personalKeys";
-import { getFontScalePref, setFontScalePref, MIN_FONT_SCALE, MAX_FONT_SCALE } from "@/lib/fontScalePref";
+import { MIN_FONT_SCALE, MAX_FONT_SCALE } from "@/lib/fontScalePref";
 import { SongView } from "@/components/song/SongView";
 import { StatistiquesDuChant } from "@/components/songs/StatistiquesDuChant";
 import { JianpuSheet } from "@/components/jianpu/JianpuSheet";
@@ -30,7 +29,7 @@ import { useScrollDirection } from "@/hooks/useScrollDirection";
 import { useDeuxVolets } from "@/hooks/useDeuxVolets";
 import { Halo } from "@/components/layout/Halo";
 import { FondDeBarre } from "@/components/layout/FondDeBarre";
-import { keyLike, keyOptions, semitonesTo, getTransposedKey } from "@/lib/transpose";
+import { keyLike, semitonesTo } from "@/lib/transpose";
 import { idDeSection } from "@/lib/setlist/sectionOrigins";
 import { useSearchParams } from "next/navigation";
 import type { SectionItem } from "@/types/song";
@@ -45,11 +44,6 @@ import { getSetlist } from "@/lib/firebase/setlists";
 import { useAuth } from "@/lib/firebase/auth";
 import { telechargerBlob } from "@/lib/telecharger";
 import type { JianpuChords } from "@/types/setList";
-
-/** Téléphone : zone de toucher de 44 px autour d'un bouton plus petit, sans changer son dessin (G6, audit 24/10/2026). */
-const TOUCHER_44 =
-  "max-sm:relative max-sm:before:absolute max-sm:before:left-1/2 max-sm:before:top-1/2 max-sm:before:h-11 max-sm:before:min-h-full " +
-  "max-sm:before:w-full max-sm:before:min-w-11 max-sm:before:-translate-x-1/2 max-sm:before:-translate-y-1/2 max-sm:before:content-['']";
 
 interface SongDetailClientProps {
   song: Song;
@@ -160,18 +154,7 @@ function useVersionDeLaSetlist(slug: string, setlistId: string | null, position:
         window.removeEventListener("resize", update);
       };
     }, [deuxVolets]);
-    // Barre d'outils rappelée d'un tap sur la partition (tablette au pupitre :
-    // éviter de devoir remonter la page pour transposer / zoomer)
-    const [barPinned, setBarPinned] = useState(false);
-    useEffect(() => {
-      if (!barPinned) return;
-      const y0 = window.scrollY;
-      const onScroll = () => {
-        if (Math.abs(window.scrollY - y0) > 60) setBarPinned(false);
-      };
-      window.addEventListener("scroll", onScroll, { passive: true });
-      return () => window.removeEventListener("scroll", onScroll);
-    }, [barPinned]);
+    const { barPinned, setBarPinned } = useBarreRappelee();
     const [showVideo, setShowVideo] = useState(false);
     const [showPanel, setShowPanel] = useState(false);
     const [downloading, setDownloading] = useState(false);
@@ -188,16 +171,7 @@ function useVersionDeLaSetlist(slug: string, setlistId: string | null, position:
     }, []);
 
     // Mémoriser le chant dans les « récemment consultés » (affichés sur /songs)
-    useEffect(() => {
-      try {
-        const raw = localStorage.getItem("recentSongs");
-        const list: string[] = raw ? JSON.parse(raw) : [];
-        const next = [song.slug, ...list.filter((s) => s !== song.slug)].slice(0, 8);
-        localStorage.setItem("recentSongs", JSON.stringify(next));
-        // La liste des deux volets, restée montée, relit ses récents.
-        window.dispatchEvent(new Event("recentSongs"));
-      } catch { /* stockage indisponible */ }
-    }, [song.slug]);
+    useRecents(song.slug);
 
     const [customize, setCustomize] = useState<CustomizeState>({
       semitones: 0,
@@ -286,18 +260,7 @@ function useVersionDeLaSetlist(slug: string, setlistId: string | null, position:
       [ast, customize.semitones, customize.currentKey]
     );
 
-    // Taille de texte (zoom, persistée) — chargée après montage pour éviter
-    // un écart d'hydratation (le composant est rendu côté serveur).
-    const [fontScale, setFontScale] = useState(1);
-    // Même taille que le mode louange (fontScalePref).
-    useEffect(() => setFontScale(getFontScalePref()), []);
-    const changeFontScale = (delta: number) => {
-      setFontScale((s) => {
-        const next = Math.min(MAX_FONT_SCALE, Math.max(MIN_FONT_SCALE, Math.round((s + delta) * 10) / 10));
-        setFontScalePref(next);
-        return next;
-      });
-    };
+    const { fontScale, changeFontScale } = useTailleTexte();
 
     // Couleurs par section — préférence par appareil partagée avec le mode
     // louange ; chargée après montage (même raison d'hydratation que fontScale).
@@ -370,88 +333,7 @@ function useVersionDeLaSetlist(slug: string, setlistId: string | null, position:
 
   // Menu ⋯ (spec-barre-chant.md, Q3, Q5) : Vidéo, PDF et Idées sont dans la barre partout ; plus
   // de Spotify ni d'Apple Music (Timothée, 18/10/2026 : les chants n'ont que YouTube).
-  const menuChant = (
-                <DropdownMenuContent align="end" className="w-52">
-                  <DropdownMenuCheckboxItem
-                    checked={chartStyle}
-                    onCheckedChange={toggleChartStyle}
-                    onSelect={(e) => e.preventDefault()}
-                  >
-                    {t("performance.chartStyle")}
-                  </DropdownMenuCheckboxItem>
-                  <DropdownMenuItem onClick={() => setShowPanel(true)}>
-                    <Settings className="h-3.5 w-3.5 text-muted-foreground" />
-                    {t("songs.detail.customize")}
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick= {() => setShowReport(true)}>
-                    <TriangleAlert className='h-3.5 w-3.5 text-muted-foreground'/>
-                    {t('songs.detail.report')}
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-  );
-
-  // Les actions (Q2, Q5) : au bout de la rangée dès la tablette debout, sur la seconde rangée du
-  // téléphone, libellées. Idées et ⋯ en icône seule. Les deux sont rendues, une seule est visible.
-  const tel = (variante: "rangee" | "tel") => variante === "tel";
-  const actions = (variante: "rangee" | "tel") => {
-    const classe = tel(variante)
-      ? `raised ${TOUCHER_44} h-9 shrink-0 gap-1.5 px-3.5 rounded-full text-xs font-semibold bg-card text-foreground hover:bg-card`
-      : `${TOUCHER_44} h-9 lg:h-8 min-w-9 lg:min-w-8 px-2.5 rounded-full text-xs font-semibold`;
-    const libelle = tel(variante) ? undefined : "libelle-action";
-    const carre = tel(variante) ? `${classe} w-9 px-0` : `${TOUCHER_44} h-9 w-9 lg:h-8 lg:w-8 rounded-full`;
-    return (
-      <>
-        {youtubeId && (
-          <Button
-            variant="secondary"
-            aria-label={t("songs.detail.video")}
-            title={t("songs.detail.video")}
-            aria-pressed={showVideo}
-            onClick={() => setShowVideo((v) => !v)}
-            className={`${classe} ${showVideo ? "!bg-foreground !text-background hover:!bg-foreground/90" : ""}`}
-          >
-            {!showVideo ? <Play className="h-4 w-4" /> : <X className="h-4 w-4" />}
-            <span className={libelle}>{t("songs.detail.video")}</span>
-          </Button>
-        )}
-        <Button
-          variant="secondary"
-          aria-label={t("songs.detail.downloadPdf") || "PDF"}
-          title={t("songs.detail.downloadPdf") || "PDF"}
-          disabled={downloading}
-          onClick={() => setShowPdfChoice(true)}
-          className={classe}
-        >
-          <FileText className="h-4 w-4" />
-          <span className={libelle}>{t("songs.detail.downloadPdf") || "PDF"}</span>
-        </Button>
-        {accesHarmonie.peut && (
-          <Button
-            variant="secondary"
-            aria-label={t("harmonie.idees")}
-            title={t("harmonie.idees")}
-            onClick={() => setShowIdees(true)}
-            className={carre}
-          >
-            <Sparkles className="h-4 w-4" />
-          </Button>
-        )}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              variant="secondary"
-              size="icon-lg"
-              className={carre}
-              aria-label={t("common.moreActions")}
-            >
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          {menuChant}
-        </DropdownMenu>
-      </>
-    );
-  };
+  const menuChant = <MenuChant chartStyle={chartStyle} toggleChartStyle={toggleChartStyle} setShowPanel={setShowPanel} setShowReport={setShowReport} />;
 
   return (
     <AccordsProvider aide chant={{ slug: song.slug, titre: song.title }}>
@@ -482,62 +364,7 @@ function useVersionDeLaSetlist(slug: string, setlistId: string | null, position:
               </Link>
             </Button>
             {/* Transposition rapide */}
-            <div data-testid="pilule-tonalite" className="raised flex items-center gap-0.5 flex-1 min-w-0 sm:flex-none rounded-full p-0.5">
-              <Button
-                variant="ghost"
-                size="icon-lg"
-                className={`${TOUCHER_44} h-9 w-9 lg:h-8 lg:w-8 rounded-full text-sm font-bold`}
-                onClick={() =>
-                  setCustomize((c) => {
-                    const s = c.semitones - 1;
-                    return { ...c, semitones: s, currentKey: getTransposedKey(originalKey, s) };
-                  })
-                }
-              >
-                −
-              </Button>
-                {/* Fermé : la tonalité seule sur tactile (le suffixe rognait « E ( » à
-                    six commandes), tonalité + suffixe sur ordinateur ; la liste native,
-                    transparente par-dessus, garde ses libellés complets. */}
-                <span className="relative flex-1 min-w-12 h-9 lg:h-8 flex items-center justify-center gap-0.5 px-1.5 rounded-full text-foreground text-sm font-semibold focus-within:ring-2 focus-within:ring-ring/30">
-                  <span data-testid="tonalite-courante" className="truncate" aria-hidden>
-                    {customize.currentKey}
-                    <span className="hidden lg:inline">{keySuffix(customize.currentKey)}</span>
-                  </span>
-                  <ChevronDown className="h-3.5 w-3.5 shrink-0 opacity-60" aria-hidden />
-                  <select
-                    aria-label={t("customize.panel.key")}
-                    value={customize.currentKey}
-                    onChange={(e) => setCustomize((c) => {
-                      const key = e.target.value;
-                      const diff = semitonesTo(originalKey, key);
-                      return { ...c, semitones: diff, currentKey: key };
-                      })
-                    }
-                    className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
-                  >
-                    {keyOptions(customize.currentKey, originalKey).map((k) => (
-                      <option key={k} value={k}>
-                        {k}
-                        {keySuffix(k)}
-                      </option>
-                    ))}
-                  </select>
-                </span>
-              <Button
-                variant="ghost"
-                size="icon-lg"
-                className={`${TOUCHER_44} h-9 w-9 lg:h-8 lg:w-8 rounded-full text-sm font-bold`}
-                onClick={() =>
-                  setCustomize((c) => {
-                    const s = c.semitones + 1;
-                    return { ...c, semitones: s, currentKey: getTransposedKey(originalKey, s) };
-                  })
-                }
-              >
-                +
-              </Button>
-            </div>
+            <PiluleTonalite currentKey={customize.currentKey} originalKey={originalKey} keySuffix={keySuffix} setCustomize={setCustomize} />
 
             <div className="groupe-chant raised ml-auto flex gap-0.5 items-center justify-end rounded-full p-0.5">
               {/* Taille du texte */}
@@ -599,13 +426,13 @@ function useVersionDeLaSetlist(slug: string, setlistId: string | null, position:
                 Personnaliser et Signaler (globals.css, `.actions-chant`). */}
             <div className="actions-chant ml-auto shrink-0 items-center gap-1">
               <span aria-hidden className="mx-1 h-5 w-px bg-border" />
-              {actions("rangee")}
+              <ActionsChant variante="rangee" youtubeId={youtubeId} showVideo={showVideo} setShowVideo={setShowVideo} downloading={downloading} setShowPdfChoice={setShowPdfChoice} accesHarmoniePeut={accesHarmonie.peut} setShowIdees={setShowIdees} menuChant={menuChant} />
             </div>
           </div>
           {/* Téléphone, couché compris (Q5) : les actions sur une seconde rangée, qui défile en
               largeur, colle sous la première et s'escamote avec elle (globals.css, `.actions-tel`). */}
           <div className="actions-tel max-w-2xl mx-auto w-full gap-2 overflow-x-auto px-1.5 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            {actions("tel")}
+            <ActionsChant variante="tel" youtubeId={youtubeId} showVideo={showVideo} setShowVideo={setShowVideo} downloading={downloading} setShowPdfChoice={setShowPdfChoice} accesHarmoniePeut={accesHarmonie.peut} setShowIdees={setShowIdees} menuChant={menuChant} />
           </div>
 
           {/* Embed YouTube */}
