@@ -6,7 +6,8 @@
 // Lot U4 bis, B5 (docs/spec-pages-en-grand.md, Q9) : carte du compte, colonnes selon
 // la disposition, et les notifications dans Réglages.
 // Agencement v18, A12 (docs/spec-agencement-v18.md ; planche `v18-app-moi-a`) : l'en-tête commun,
-// des aperçus utiles (Mes services, Mes tâches, Harmonie, Mes équipes) et trois cartes d'aide.
+// des aperçus utiles (Mes services, Mes tâches, Mes équipes) et trois cartes d'aide. L'aperçu Harmonie est
+// retiré le 02/11/2026 (Timothée) : Harmonie vit dans l'espace Musiciens (docs/spec-espace-musiciens.md).
 
 import { useMemo, useState, type ReactNode } from "react";
 import Link from "next/link";
@@ -17,9 +18,8 @@ import { useDisposition } from "@/hooks/useDisposition";
 import { CarteCompte } from "@/components/moi/CarteCompte";
 import { CarteCeQueTuPeuxFaire, CarteMesEquipes } from "@/components/moi/CartesAcces";
 import { ReglagesNotifications } from "@/components/moi/ReglagesNotifications";
-import { ApercuHarmonie, ApercuServices, ApercuTaches } from "@/components/moi/Apercus";
+import { ApercuServices, ApercuTaches } from "@/components/moi/Apercus";
 import { MesPresidences } from "@/components/stats/MesPresidences";
-import { useAccesHarmonie } from "@/lib/harmonie/useHarmonie";
 import { RequireAuth } from "@/components/auth/RequireAuth";
 import { EnTetePage } from "@/components/layout/EnTetePage";
 import { Halo } from "@/components/layout/Halo";
@@ -39,9 +39,6 @@ function MoiClient() {
   const { user } = useAuth();
   const { profile } = useProfile();
   const { resolvedTheme, setTheme } = useTheme();
-  // Catalogue « Harmonie » (lot 9) : jusqu'au 19/09/2026 il n'était joignable
-  // que depuis l'onglet Chants et la page d'un chant.
-  const harmonie = useAccesHarmonie();
   const setLanguage = useSetLanguage();
   const [reportOpen, setReportOpen] = useState(false);
   const disposition = useDisposition();
@@ -135,7 +132,6 @@ function MoiClient() {
         <MesPresidences profile={profile} />
       </div>
       {BACK_OFFICE && equipes.length > 0 && user && <ApercuTaches equipes={equipes} />}
-      {!harmonie.chargement && harmonie.peut && <ApercuHarmonie piano={harmonie.piano} />}
       {BACK_OFFICE && <CarteMesEquipes profile={profile} />}
       {BACK_OFFICE && <CarteCeQueTuPeuxFaire profile={profile} admin={admin} />}
     </div>

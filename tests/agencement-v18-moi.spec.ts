@@ -6,7 +6,7 @@ import { enTete, estGrandEcran, estTelephone, interdireDialoguesNatifs, margeAtt
 // Agencement v18, tranche T10 (docs/spec-agencement-v18.md, A12 à A15 ; planches `v18-app-moi-a`,
 // `v18-app-profil`, `v18-app-guide`, `v18-app-questionnaire`, v17 sur téléphone et tablette portrait).
 // Moi : en-tête commun, la carte du compte et les réglages à gauche, des aperçus utiles à droite
-// (Mes services, Mes tâches, Harmonie, Mes équipes), trois cartes d'aide dessous. Profil :
+// (Mes services, Mes tâches, Mes équipes ; plus d'aperçu Harmonie depuis le 02/11/2026), trois cartes d'aide dessous. Profil :
 // « Enregistrer » dans l'en-tête dès 768 px, en bas sur téléphone, la carte Notifications revient.
 // Guide et Questionnaire : lecture (sommaire de 260 px, colonne de 720 px), titre au x du sommaire.
 // Feuilles Google, Firestore et date simulés ; personnes fictives. Cinq projets.
@@ -33,9 +33,9 @@ const ADMIN: FakeProfile = {
   serviceRoles: { "Culte Francophone": ["musicien"] },
   dansEquipes: ["da", "louange"], referentDe: ["da"], sousEquipes: ["musiciens"], lieuxLouange: ["Culte Francophone"], joue: ["piano"],
 };
-/** Un membre sans service ni pôle : ni tâches ni Harmonie. */
+/** Un membre sans service ni pôle : ni tâches. */
 const MEMBRE: FakeProfile = { uid: "uid-membre", email: "lea@example.com", firstName: "Léa", lastName: "M.", planningName: "", serviceRoles: {} };
-/** À la guitare dans le planning (colonne « Guitariste »), jamais au piano : Harmonie sans les sons du RD-2000. */
+/** À la guitare dans le planning (colonne « Guitariste ») : musicien, mais Moi ne montre plus Harmonie (02/11/2026). */
 const GUITARISTE: FakeProfile = {
   uid: "uid-samuel", email: "samuel@example.com", firstName: "Samuel", lastName: "K.", planningName: "Samuel K.", serviceRoles: {},
   dansEquipes: ["louange"], sousEquipes: ["musiciens"], lieuxLouange: ["Culte Francophone"], joue: ["guitare"],
@@ -124,7 +124,7 @@ test.describe("Moi (A12)", () => {
     await verifierAgencement(page, { contenu: contenuSousEnTete(page), onglets: SANS_ONGLETS });
   });
 
-  test("les aperçus d'un admin : services, tâches, Harmonie, équipes, puis l'aide", async ({ page }) => {
+  test("les aperçus d'un admin : services, tâches, équipes, puis l'aide ; plus d'Harmonie", async ({ page }) => {
     await ouvrir(page, ADMIN, "/moi");
 
     // Mes services : les trois prochains, « 4 à venir », « Tout voir » vers la page.
@@ -141,13 +141,8 @@ test.describe("Moi (A12)", () => {
     await expect(apercu(page, "Mes tâches").getByRole("link", { name: /4 à faire/ })).toHaveAttribute("href", /^\/taches\/?$/);
     await expect(lignes(page, "Mes tâches").first().getByRole("link")).toHaveAttribute("href", /^\/taches\/da\/t1\/?$/);
 
-    // Harmonie : le cours (2 / 23 chapitres, le prochain), les fiches et les sons.
-    const h = apercu(page, "Harmonie");
-    await expect(h.getByText("2 / 23 chapitres")).toBeVisible();
-    await expect(h.getByText("Prochain chapitre : 3. Lire la musique")).toBeVisible();
-    await expect(h.getByRole("link", { name: /Prochain chapitre/ })).toHaveAttribute("href", /^\/harmonie\/cours\/lire-la-musique\/?$/);
-    await expect(h.getByRole("link", { name: "Les fiches de réharmonisation" })).toHaveAttribute("href", /^\/harmonie\/?$/);
-    await expect(h.getByRole("link", { name: "Sons du RD-2000" })).toHaveAttribute("href", /^\/harmonie\/rd2000\/?$/);
+    // Harmonie : retirée de Moi le 02/11/2026 (Timothée) ; elle vit dans l'espace Musiciens.
+    await expect(apercu(page, "Harmonie")).toHaveCount(0);
 
     // Mes équipes : celles où l'organigramme me place, dans l'ordre de la table, mon rôle (AO-B).
     await expect(lignes(page, "Mes équipes")).toHaveCount(2);
@@ -205,11 +200,11 @@ test.describe("Moi (A12)", () => {
     await expect(page.getByRole("button", { name: /^语言|^Langue/ })).toContainText("中文");
   });
 
-  test("un guitariste : l'aperçu Harmonie mène aux fiches, pas aux sons du RD-2000 (réservés aux pianistes)", async ({ page }) => {
+  test("un guitariste : pas d'aperçu Harmonie dans Moi (retiré le 02/11/2026)", async ({ page }) => {
     await ouvrir(page, GUITARISTE, "/moi");
-    const h = apercu(page, "Harmonie");
-    await expect(h.getByRole("link", { name: "Les fiches de réharmonisation" })).toHaveAttribute("href", /^\/harmonie\/?$/);
-    await expect(h.getByRole("link", { name: "Sons du RD-2000" })).toHaveCount(0);
+    await expect(apercu(page, "Mes services")).toBeVisible();
+    await expect(apercu(page, "Harmonie")).toHaveCount(0);
+    await expect(page.getByRole("main").getByRole("link", { name: "Sons du RD-2000" })).toHaveCount(0);
   });
 
   test("en 中文 : le titre, le sous-titre, les aperçus et l'aide sont traduits (R18)", async ({ page }) => {
@@ -219,11 +214,7 @@ test.describe("Moi (A12)", () => {
     await expect(enTete(page).getByText("Noé T. · 管理员", { exact: true })).toBeVisible();
     await expect(apercu(page, "我的服事").getByRole("link", { name: /4 个即将到来/ })).toBeVisible();
     await expect(apercu(page, "我的任务").getByRole("link", { name: /4 项待办/ })).toBeVisible();
-    const h = apercu(page, "和声");
-    await expect(h.getByText("乐理课程")).toBeVisible();
-    await expect(h.getByText("2 / 23 章")).toBeVisible();
-    await expect(h.getByRole("link", { name: "和声重配卡片" })).toBeVisible();
-    await expect(h.getByRole("link", { name: "RD-2000 音色" })).toBeVisible();
+    await expect(apercu(page, "和声")).toHaveCount(0);
     await expect(apercu(page, "我的团队").getByRole("link", { name: /组织架构/ })).toBeVisible();
     await expect(page.getByRole("link", { name: /使用指南/ })).toContainText("一步步了解整个网站");
     await expect(page.getByRole("link", { name: /你对网站的意见/ })).toContainText("问卷");
@@ -243,23 +234,17 @@ test.describe("Moi (A12)", () => {
     await expect(s).not.toHaveAttribute("aria-busy", "true");
   });
 
-  test("pendant la lecture des tâches et du cours : ni « Rien à faire » ni « 0 / 23 chapitres »", async ({ page }) => {
+  test("pendant la lecture des tâches : pas de « Rien à faire »", async ({ page }) => {
     await ouvrir(page, ADMIN, "/guide");
     const lacher = await retenirFirestore(page, (url, corps) => corps.includes('"taches"') || url.includes("/coursProgres/"));
     await page.goto("/moi");
     const taches = apercu(page, "Mes tâches");
-    const h = apercu(page, "Harmonie");
     await expect(taches).toHaveAttribute("aria-busy", "true");
-    await expect(h).toHaveAttribute("aria-busy", "true");
     await expect(taches.getByText("Rien à faire pour toi.")).toHaveCount(0);
-    await expect(h.getByText(/^0 \/ 23 chapitres$/)).toHaveCount(0);
-    await expect(h.getByRole("link", { name: /Prochain chapitre : 1\./ })).toHaveCount(0);
     await capture(page, "t10-moi-lecture");
     lacher();
     await expect(lignes(page, "Mes tâches")).toHaveCount(3);
-    await expect(h.getByText("2 / 23 chapitres")).toBeVisible();
     await expect(taches).not.toHaveAttribute("aria-busy", "true");
-    await expect(h).not.toHaveAttribute("aria-busy", "true");
   });
 
   test("Mes équipes vient du profil : une lecture des équipes en échec n'y change rien", async ({ page }) => {
@@ -314,7 +299,6 @@ test.describe("Moi (A12)", () => {
     const reglages = await boite(page.getByRole("region", { name: "Réglages" }));
     const services = await boite(apercu(page, "Mes services"));
     const taches = await boite(apercu(page, "Mes tâches"));
-    const harmonie = await boite(apercu(page, "Harmonie"));
     if (estGrandEcran(info)) {
       expect(Math.round(compte.width), "le compte : 340 px").toBe(340);
       expect(reglages.y, "les réglages sous le compte").toBeGreaterThan(compte.y + compte.height - 1);
@@ -322,7 +306,8 @@ test.describe("Moi (A12)", () => {
       expect(Math.abs(services.y - compte.y), "ils partent ensemble").toBeLessThan(2);
       expect(Math.abs(taches.y - services.y), "deux colonnes d'aperçus").toBeLessThan(2);
       expect(taches.x).toBeGreaterThan(services.x + services.width - 1);
-      expect(harmonie.y, "Harmonie sous les services").toBeGreaterThan(services.y + services.height - 1);
+      const equipes = await boite(apercu(page, "Mes équipes"));
+      expect(equipes.y, "Mes équipes sous les services").toBeGreaterThan(services.y + services.height - 1);
     } else if (info.project.name === "tablette") {
       expect(Math.abs(reglages.y - compte.y), "compte et réglages côte à côte").toBeLessThan(2);
       expect(reglages.x).toBeGreaterThan(compte.x + compte.width - 1);
@@ -331,7 +316,8 @@ test.describe("Moi (A12)", () => {
     } else {
       expect(services.y, "une colonne : les services sous le compte").toBeGreaterThan(compte.y + compte.height - 1);
       expect(taches.y).toBeGreaterThan(services.y + services.height - 1);
-      expect(reglages.y, "les réglages après les aperçus").toBeGreaterThan(harmonie.y + harmonie.height - 1);
+      const equipes = await boite(apercu(page, "Mes équipes"));
+      expect(reglages.y, "les réglages après les aperçus").toBeGreaterThan(equipes.y + equipes.height - 1);
     }
     await capture(page, "t10-moi-disposition");
   });
@@ -344,7 +330,7 @@ test.describe("Moi, back-office coupé (A12, R17)", () => {
   test("ni Mes tâches ni Mes équipes ; Notifier et Admin restent", async ({ page }) => {
     await ouvrir(page, ADMIN, "/moi");
     await expect(lignes(page, "Mes services")).toHaveCount(3);
-    await expect(apercu(page, "Harmonie")).toBeVisible();
+    await expect(apercu(page, "Harmonie")).toHaveCount(0);
     await expect(apercu(page, "Mes tâches")).toHaveCount(0);
     await expect(apercu(page, "Mes équipes")).toHaveCount(0);
     await expect(page.getByRole("main").getByRole("link", { name: "Notifier" })).toBeVisible();
