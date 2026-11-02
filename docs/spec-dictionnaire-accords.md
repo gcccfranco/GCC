@@ -211,7 +211,7 @@ DA-4b) le 02/11/2026, session orchestratrice.**
 
 ### Avancement (DA-4)
 
-**DA-4a et DA-4b codés et poussés le 02/11/2026 sur `claude/adoring-wright-4ilq21`, à valider par Timothée.**
+**DA-4a et DA-4b codés et poussés le 02/11/2026 sur `claude/adoring-wright-4ilq21`, à valider par Timothée.** **En ligne le 02/11/2026** (ordre de Timothée ; avance rapide de `main` sur la branche).
 
 - **DA-4a** (`9b27a79`, `c6e0192`) : `MOBILES_SECONDES` (`table.ts`), formes écrites à la main (forme de ré sur la
   4e corde, forme de do, formes sur la 6e corde), qui ne passent jamais en premier ; 2e forme pour `/2` et `/7`
