@@ -134,3 +134,76 @@ ouverte).
   (4 tests « Adapter », lignes 105-157) et `jianpu-par-defaut.spec.ts:357` (page `/edit`).
 - **À regarder par Timothée** : la page `/accords` (téléphone, tablette, ordinateur) ; toucher un accord d'un chant FR
   et d'un chant ZH ; la bulle d'aide ; le 中文 des libellés du panneau (écrit par l'agent).
+
+## DA-4 — trois positions à la guitare, renversements au piano (02/11/2026)
+
+**État : spec écrite le 02/11/2026, en attente du go de Timothée.**
+
+### Mots de Timothée
+
+> « Est-ce que dans le dictionnaire des accords, c'est une bonne idée de proposer pour chaque accord tous les voicings
+> de l'accord ? » — réponse : non (trop de choix, doigtés calculés contraires à Q18, panneau illisible au-delà de
+> 3) ; compléter jusqu'à trois positions et ajouter les renversements au piano. Puis : « écris la spec DA-4,
+> 3 positions et renversements partout » (02/11/2026). « Partout » = **dans le panneau d'un accord et sur la page
+> `/accords`**, comme le reste du dictionnaire.
+
+### Ce que le code montre (02/11/2026)
+
+- `positionsGuitare` (`src/lib/accords/guitare.ts`) : formes ouvertes, puis formes mobiles de la plus basse à la plus
+  haute, `slice(0, 3)`. Les formes mobiles (`MOBILES`, `src/lib/accords/table.ts`) n'existent souvent qu'en une ou
+  deux exemplaires : majeur, m, 7, m7, sus4 = barrés type E et type A ; `sus2`, `6`, `m6`, `add9`, `add4`, `maj9`,
+  `m9`, `9`, `dim`… = **une seule forme**.
+- Mesuré sur les 383 chants (19 140 accords joués, tels qu'écrits) : **3 positions pour 11 702 (61 %), 2 pour 6 805
+  (36 %), 1 pour 630 (3 %)**, 3 sans doigté (dim9, 7#11). Les plus joués à 2 positions : F (1 246), Bm (605), Bb
+  (558), B (496), F#m (480), D/F# (397), C#m (339), Bm7 (242). À 1 position : Bb/C (77), F/G (47), Bb/F (35), A/B
+  (30), E2 (26), les `maj9`, `dim`, `9`, `7b9`.
+- Sur les 12 fondamentales : 2 = `sus2` n'a qu'une position dans 7 tonalités sur 12, `9` dans les 12, `maj9`, `m9`,
+  `m6`, `dim`, `add4`, `add9` dans 9 à 11.
+- Piano (`voicingPiano`, `src/lib/accords/notes.ts`) : **une seule disposition** — main gauche = la basse, main
+  droite = l'accord serré, fondamentale en bas, juste au-dessus de la main gauche. `PanneauAccord.tsx` ne montre
+  aucune flèche côté piano.
+
+### Décisions
+
+| # | Décision |
+| --- | --- |
+| R1 | **Guitare : trois positions au plus, comme Q9** ; le but devient **trois pour toute qualité courante sans basse**, sur les 12 fondamentales : majeur, m, 7, m7, maj7, sus4, sus2 (= 2), 7sus4, add9, 6, m6, maj9, m9, 9, add4, dim, m7b5, 5. La traîne (m11, 11, 13, 7b9, 7#5, 9sus4, madd9, dim7, aug, m(maj7)) : **deux au moins**. dim9 et 7#11 restent « Pas encore de doigté » (Q18). |
+| R2 | **Trois zones du manche** : la 1re position reste la plus simple (ouverte si possible, sinon le barré le plus bas : rien ne change pour ce qu'on voit aujourd'hui) ; les deux autres sont choisies **dans des zones différentes** — la plus basse case pressée d'une position diffère d'au moins 3 cases de celles déjà retenues. Exemple F (à confirmer au codage, selon les formes écrites) : barré case 1 (type E, `133211`) ; la forme type D `xx3565` est écartée (case 3, à 2 cases du barré) ; restent la forme type C `x8756x` (case 5) et le barré type A `x8.10.10.10.8` (case 8), à 3 cases l'une de l'autre. Si la règle ne trouve pas trois zones, on complète par les formes restantes, de la plus basse à la plus haute. |
+| R3 | **Toujours écrit à la main** (Q18 inchangée) : les nouvelles formes vont dans `MOBILES` / `OUVERTES`, aucune n'est calculée. Formes à ajouter en priorité : type D (4e corde) pour majeur, m, 7, m7, maj7, sus4, sus2 ; type E ou type C pour sus2, 6, m6, add9, maj9, m9, 9, add4, dim. La liste exacte se fixe au codage, guidée par le test R6. |
+| R4 | **Jouable** : au plus 4 doigts (pouce compris si `P`), un barré au plus, **écart de 4 cases au plus** entre la plus basse et la plus haute case pressée hors barré (5 pour les formes add9 déjà admises), case ≤ 15 (`CASE_MAX`), basse = la fondamentale (ou la basse de l'accord avec basse). |
+| R5 | **Piano : trois renversements de la main droite**, dans le panneau et sur la page : état fondamental (ce qu'on voit aujourd'hui, toujours en premier), 1er renversement (tierce en bas, ou la 2e note de l'accord), 2e renversement (la 3e note en bas). Les accords de 4 notes et plus s'arrêtent là (le 3e renversement n'est pas proposé) ; un accord de 2 notes (`5`) n'a que deux dispositions ; on n'affiche jamais deux fois le même jeu de touches. La **main gauche ne bouge pas** (Q11 : la basse, ou la fondamentale) ; la main droite reste strictement au-dessus d'elle, le plus bas possible ; le clavier s'étend à trois octaves si besoin, comme aujourd'hui. Calculé : c'est permis au piano (Q18 ne vise que la guitare). |
+| R6 | **Même geste qu'à la guitare** : sous le clavier, la rangée de flèches de la guitare telle quelle (‹ › ronds, texte au milieu, `aria-live`), texte « État fondamental · 1 sur 3 », « 1er renversement · 2 sur 3 », « 2e renversement · 3 sur 3 » ; 中文 « 原位 · 第 1 种，共 3 种 », « 第一转位 · … », « 第二转位 · … ». Les lignes « Main gauche : … · Main droite : … » suivent le renversement affiché. Le choix repart du premier quand l'accord change (comme la guitare) ; rien n'est retenu sur l'appareil. |
+| R7 | **Accords avec basse** (questions ci-dessous, Q-DA4-1) : en attendant, le but de trois positions ne s'applique pas à eux ; leurs formes restent celles de DA-1. Au piano, leurs renversements s'appliquent à la main droite seule (`D/F#` : fa# à gauche ; ré fa# la, fa# la ré, la ré fa# à droite). |
+
+### À trancher
+
+- **Q-DA4-1 — accords avec basse.** 2 950 accords joués ; les plus courants à une seule position : Bb/C, F/G, A/B
+  (accord majeur avec la seconde à la basse), Bb/F (quinte à la basse). **Recommandation** : pas de but chiffré ;
+  ajouter une 2e forme mobile pour les trois basses les plus jouées (seconde, tierce, quinte : clés `/2`, `/4`,
+  `/7` de `MOBILES`), sans viser trois.
+- **Q-DA4-2 — planche.** Le changement d'apparence se limite à la rangée de flèches de la guitare recopiée sous le
+  clavier. **Recommandation** : pas de planche ; les captures des cinq projets à la vérification en tiennent lieu.
+
+### Tranches (après le go)
+
+- **DA-4a — guitare** : formes ajoutées à `table.ts` ; sélection par zones (R2) dans `positionsGuitare` ;
+  `MAX_DOIGTES` reste 3. Aucun changement d'interface.
+- **DA-4b — piano** : `voicingPiano` rend la liste des renversements (`renversementsPiano`, ou un paramètre) ;
+  `PanneauAccord.tsx` ajoute la rangée de flèches côté piano ; libellés FR et 中文 (`src/locales/fr.json`,
+  `zh-CN.json`, clés `accords.*`).
+
+### Vérification
+
+- `tests/accords-garde-fou.spec.ts` (étendu) : chaque nouvelle forme sonne l'accord sur les 12 fondamentales (le test
+  existant le fait déjà pour toute forme de `MOBILES`) ; **chaque forme est jouable (R4)** ; **chaque qualité de R1
+  a trois positions sur les 12 fondamentales**, la traîne deux (liste des manques imprimée) ; les trois positions sont
+  dans trois zones quand la table le permet (R2) ; la 1re position de chaque accord des chants est **la même
+  qu'avant DA-4** (rien ne bouge pour ce qu'on voit d'abord).
+- Piano (sans page) : chaque renversement contient exactement les notes de l'accord, la bonne note en bas de la main
+  droite, la main droite au-dessus de la gauche ; pas deux renversements identiques ; l'état fondamental est celui
+  d'avant DA-4.
+- Playwright, trois appareils : sur un chant FR et un chant ZH, toucher `F` (ou un accord du chant qui en a trois)
+  montre « Position 1 sur 3 » et les trois diagrammes ; onglet Piano, les flèches passent du fondamental au 2e
+  renversement et les lignes main gauche / main droite suivent ; transposé +1 demi-ton, le panneau suit ; page
+  `/accords` pareil. `accords-toucher-agencement` et `accords-page` (cinq projets) : captures du piano avec flèches.
+- À l'œil, aux quatre dispositions + 1 440 px : panneau (feuille du bas, bulle de l'ordinateur), carte de la page.
