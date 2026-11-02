@@ -1324,7 +1324,7 @@ d'après le planning ou l'organigramme ; le non-musicien n'arrive au dictionnair
 comme aujourd'hui ; « Cours » devient « Théorie musicale » ; Harmonie quitte le menu du compte. **SF** — une entrée
 « Scène » dans la barre latérale du Back-Office (coordination), une carte en tête d'À faire sur téléphone et
 tablette en portrait. Aucune règle Firestore. **Codé le 02/11/2026** (go du jour) sur
-`claude/espace-musiciens-scene` : EM `e50abce`, SF `8f9db55` ; **à valider par Timothée en local**. Écarts et
+`claude/espace-musiciens-scene` : EM `e50abce`, SF `8f9db55` ; **en ligne le 02/11/2026** (`main` = `780a849`, ordre de Timothée). Écarts et
 deux tests rouges antérieurs aux lots : § État de la spec.
 
 ## 4. Carte des modules de l'app « GCC »
@@ -1673,7 +1673,7 @@ valider par Timothée** : relecture des textes 中文, regard sur les cartes (r�
   vision écrite ; planche « Back-Office, les coulisses » publiée ; spec `spec-coulisses.md` (CO1 à CO9), mise en pause ; lot TB2 du tableau de bord seul. Rien de codé.
 - 01/11/2026 : **export FreeShow** (lot FS) : sept projets de la régie décortiqués, réponses de Timothée (setlist entière en `.project`, chinois + pinyin, bouton régie seule, fin vide, pas de traduction, Century Gothic) ; spec `spec-export-freeshow.md` (FS1 à FS9). Rien de codé, go attendu.
 - 01/11/2026 : **lot FS codé** sur `claude/export-freeshow` (go du jour) : fabrication du `.project` dans le navigateur (`src/lib/setlist/freeshow.ts`), bouton « Exporter pour FreeShow » pour la régie seule ; exemple à essayer dans FreeShow : `docs/freeshow/011126.project`. Pas en ligne ; seuils de découpe à régler après l'essai de la régie.
-- 02/11/2026 : **espace Musiciens et scène des fêtes** (AM) : planche, Q1 à Q6 tranchées, spec `spec-espace-musiciens.md` ; lots EM (`e50abce`) et SF (`8f9db55`) codés sur `claude/espace-musiciens-scene` (go du jour) : troisième espace Musiciens (Accords · Harmonie · Théorie musicale · RD-2000), Harmonie hors du menu du compte, « Cours » → « Théorie musicale » ; entrée Scène du Back-Office et carte d'À faire pour la coordination. Passes complètes : EM 1 029 verts puis corrections, SF 765 verts ; deux tests rouges antérieurs aux lots (spec, § État).
+- 02/11/2026 : **espace Musiciens et scène des fêtes** (AM) : planche, Q1 à Q6 tranchées, spec `spec-espace-musiciens.md` ; lots EM (`e50abce`) et SF (`8f9db55`) codés sur `claude/espace-musiciens-scene` (go du jour), en ligne le jour même (`780a849`) : troisième espace Musiciens (Accords · Harmonie · Théorie musicale · RD-2000), Harmonie hors du menu du compte, « Cours » → « Théorie musicale » ; entrée Scène du Back-Office et carte d'À faire pour la coordination. Passes complètes : EM 1 029 verts puis corrections, SF 765 verts ; deux tests rouges antérieurs aux lots (spec, § État).
 
 ## 7. Relecture adversariale (14/09/2026)
 

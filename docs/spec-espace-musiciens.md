@@ -5,7 +5,7 @@ https://claude.ai/artifact/AEgKxRMpiRkGYrzkHaaL3T. Q1 à Q6 tranchées le 02/11/
 **EM** (espace Musiciens) et **SF** (scène des fêtes).
 
 **État : codé le 02/11/2026** (go de Timothée du 02/11/2026, « Go pour les deux ») sur
-`claude/espace-musiciens-scene` : lot EM `e50abce`, lot SF `8f9db55`. **À valider par Timothée en local.**
+`claude/espace-musiciens-scene` : lot EM `e50abce`, lot SF `8f9db55`. **En ligne le 02/11/2026** sur ordre de Timothée (`main` = `780a849`).
 Écarts et points ouverts (relevés au codage) :
 - Interrupteur coupé, l'espace Musiciens existe (Q1) : un admin, compté musicien, voit le sélecteur
   App · Musiciens. `tests/back-office-coupe.spec.ts` vérifie désormais qu'il n'y a jamais de Back-Office.
