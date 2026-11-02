@@ -73,7 +73,7 @@ test.describe("Moi : Mes équipes et Ce que tu peux faire", () => {
     // lot RS : un référent ne notifie plus (que par ses réunions) ; il garde de placer ses musiciens.
     await expect(acces).toHaveText([
       "Voir et créer les setlists de Interfranco, CampusLouange, là où tu sers",
-      "Idées d'harmonie et coursMusiciens, guitare",
+      "Idées d'harmonie et théorie musicaleMusiciens, guitare",
       "Placer les musiciens dans l'organigrammeRéférent Musiciens",
     ]);
     await expect(faire.getByText("Un accès te manque ? Demande à ton référent de te placer dans l'organigramme.")).toBeVisible();

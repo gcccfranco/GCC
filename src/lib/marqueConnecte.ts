@@ -9,6 +9,7 @@ import { useSyncExternalStore } from "react";
 
 import { CLE_FORME as CLE_FORME_RETENUE, CLE_MARQUE_CONNECTE as CLE } from "./marqueConnecteScript";
 import { ENTREES, type Entree } from "@/types/backOffice";
+import type { EntreeMusiciens } from "@/lib/navigation";
 
 function lireMarqueConnecte(): boolean {
   try {
@@ -41,6 +42,7 @@ export function poserMarqueConnecte(connecte: boolean) {
     else {
       delete document.documentElement.dataset.connecte;
       delete document.documentElement.dataset.responsable;
+      delete document.documentElement.dataset.selecteur3;
     }
   }
   abonnes.forEach((changement) => changement());
@@ -54,7 +56,10 @@ export function useMarqueConnecte(): boolean {
 // Lot CH, C6 : la forme que le profil a fait dessiner la dernière fois. Comme la marque : aucun droit, seulement
 // ce qu'on dessine pendant l'attente (sélecteur App · Back-Office, icône Messages, entrées du Back-Office et de sa
 // barre du bas, qui en dérive par `ongletsBackOffice`). Une valeur illisible ou incohérente = pas de forme retenue.
-type FormeRetenue = { responsable: boolean; messages: boolean; entreesBackOffice: Entree[] };
+// EM-2 : `musiciens` = les entrées de l'espace Musiciens (vide = pas musicien) ; une forme d'avant, sans ce champ, se lit `[]`.
+type FormeRetenue = { responsable: boolean; messages: boolean; entreesBackOffice: Entree[]; musiciens: EntreeMusiciens[] };
+
+const ENTREES_MUSICIENS_VALIDES: readonly unknown[] = ["accords", "harmonie", "theorie", "rd2000"];
 
 function lireFormeBrute(brut: string | null): FormeRetenue | null {
   if (!brut) return null;
@@ -64,7 +69,9 @@ function lireFormeBrute(brut: string | null): FormeRetenue | null {
     const entrees = v.entreesBackOffice;
     if (!entrees.every((e): e is Entree => (ENTREES as readonly unknown[]).includes(e))) return null;
     if (v.responsable !== entrees.length > 0 || v.messages !== entrees.includes("messages")) return null;
-    return { responsable: v.responsable, messages: v.messages, entreesBackOffice: entrees };
+    const musiciens = v.musiciens === undefined ? [] : v.musiciens;
+    if (!Array.isArray(musiciens) || !musiciens.every((e): e is EntreeMusiciens => ENTREES_MUSICIENS_VALIDES.includes(e))) return null;
+    return { responsable: v.responsable, messages: v.messages, entreesBackOffice: entrees, musiciens };
   } catch {
     return null;
   }
@@ -94,8 +101,11 @@ export function poserFormeRetenue(forme: FormeRetenue) {
     localStorage.setItem(CLE_FORME_RETENUE, brut);
   } catch { /* stockage indisponible : rien n'est retenu */ }
   if (typeof document !== "undefined") {
-    if (forme.responsable) document.documentElement.dataset.responsable = "1";
-    else delete document.documentElement.dataset.responsable;
+    const d = document.documentElement.dataset;
+    if (forme.responsable || forme.musiciens.length > 0) d.responsable = "1";
+    else delete d.responsable;
+    if (forme.responsable && forme.musiciens.length > 0) d.selecteur3 = "1";
+    else delete d.selecteur3;
   }
   abonnes.forEach((changement) => changement());
 }

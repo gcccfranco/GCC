@@ -7,8 +7,7 @@ import { useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useTranslation } from "react-i18next";
-import { LogOut, UserRound, BookOpen, MessageSquareHeart, TriangleAlert, Megaphone, ShieldCheck, Network, Sparkles } from "lucide-react";
-import { useAccesHarmonie } from "@/lib/harmonie/useHarmonie";
+import { LogOut, UserRound, BookOpen, MessageSquareHeart, TriangleAlert, Megaphone, ShieldCheck, Network } from "lucide-react";
 import { useAuth, logOut } from "@/lib/firebase/auth";
 import { useProfile } from "@/lib/firebase/users";
 import { isAdminUser } from "@/lib/access";
@@ -82,7 +81,6 @@ export function MenuCompte({
               <Link href="/equipes"><Network aria-hidden />{t("equipes.title")}</Link>
             </DropdownMenuItem>
           )}
-          <HarmonieMenuItem label={t("harmonie.titre")} />
           <DropdownMenuItem asChild>
             <Link href="/guide"><BookOpen aria-hidden />{t("common.header.guide")}</Link>
           </DropdownMenuItem>
@@ -113,18 +111,5 @@ export function MenuCompte({
           du dialogue fixe, qui s'afficherait dans sa bande ou pas du tout. */}
       {reportOpen && createPortal(<ReportDialog open onClose={() => { setReportOpen(false); setTimeout(() => declencheur.current?.focus(), 0); }} kind="site" />, document.body)}
     </>
-  );
-}
-
-/** Entrée « Harmonie » du menu du compte. Rendue seulement une fois le menu ouvert,
- *  donc l'accès (qui lit les plannings pour trouver l'instrument) n'est calculé qu'à
- *  ce moment-là, jamais à chaque page. */
-function HarmonieMenuItem({ label }: { label: string }) {
-  const acces = useAccesHarmonie();
-  if (acces.chargement || !acces.peut) return null;
-  return (
-    <DropdownMenuItem asChild>
-      <Link href="/harmonie"><Sparkles aria-hidden />{label}</Link>
-    </DropdownMenuItem>
   );
 }

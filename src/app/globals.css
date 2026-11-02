@@ -827,11 +827,13 @@
    ne voit pas le bouton de connexion des visiteurs pendant que Firebase lit sa session. */
 :root[data-connecte="1"] .connexion-visiteur { visibility: hidden; }
 
-/* Lot CH (C6) : un responsable qui rouvre le site (`data-responsable`, posé avant le premier affichage d'après la
+/* Lot CH (C6) : un responsable (ou, EM-2, un musicien) qui rouvre le site (`data-responsable`, posé avant le premier affichage d'après la
    forme retenue) garde, avant l'hydratation, la place du sélecteur App · Back-Office : sur téléphone le sélecteur
    remplace le nom « GCC », sur les autres tailles il s'ajoute après lui. Masqué dès que la barre dessine le vrai. */
 .place-selecteur { display: none; }
 :root[data-responsable="1"] .place-selecteur { display: block; height: 38px; width: 172px; flex-shrink: 0; border-radius: 9999px; background: var(--secondary); }
+/* EM-2 : trois segments (App · Musiciens · Back-Office) pour un responsable qui est aussi musicien. */
+:root[data-selecteur3="1"] .place-selecteur { width: 258px; }
 @media (max-width: 639px) {
   :root[data-responsable="1"] .brand-nom { display: none; }
 }

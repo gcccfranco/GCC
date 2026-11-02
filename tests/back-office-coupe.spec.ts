@@ -86,12 +86,15 @@ test.describe("back-office coupé : les entrées disparaissent", () => {
     await expect(page.getByRole("group", { name: "Tes services et rôles" })).toBeVisible();
   });
 
-  // Lot U6 (B1) : le sélecteur « App · Back-Office » n'apparaît pour personne, même un admin.
-  test("aucun sélecteur App · Back-Office, même pour un admin", async ({ page }) => {
+  // Lot U6 (B1) : le Back-Office n'apparaît pour personne, même un admin. Depuis EM (spec-espace-musiciens, Q1),
+  // l'espace Musiciens existe aussi interrupteur coupé : un admin (compté musicien) a le sélecteur App · Musiciens,
+  // jamais de segment Back-Office.
+  test("aucun Back-Office dans le sélecteur, même pour un admin (App · Musiciens seulement)", async ({ page }) => {
     await signInAs(page, ADMIN, {}, "/songs");
     await page.getByRole("searchbox").waitFor();
     await expect(page.getByRole("navigation", { name: "Navigation principale" }).first()).toBeAttached();
-    await expect(page.getByRole("group", { name: "Choisir l'espace" })).toHaveCount(0);
+    const segments = page.getByRole("group", { name: "Choisir l'espace" }).filter({ visible: true }).first().getByRole("link");
+    await expect.poll(() => segments.evaluateAll((liens) => liens.map((l) => l.getAttribute("aria-label") || l.textContent?.trim()))).toEqual(["App", "Musiciens"]);
     await expect(page.getByRole("link", { name: "Back-Office" })).toHaveCount(0);
   });
 

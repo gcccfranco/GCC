@@ -1,25 +1,26 @@
 "use client";
 
-// Sélecteur « App · Back-Office » (lot U6, docs/spec-back-office.md, Q6) : réservé à qui a le
+// Sélecteur « App · Musiciens · Back-Office » (EM-2 : le segment Musiciens, pour qui joue d'un instrument ; lot U6, docs/spec-back-office.md, Q6) : réservé à qui a le
 // Back-Office (`entreesBackOffice` : les responsables seuls depuis la piste A, BO4), le même pour
 // tous, posé dans les places de U4 — barre latérale dépliée (sous le label), barre du haut
 // (après le label sur tablette en portrait, à sa place sur téléphone, question 5). Deux liens,
 // l'espace courant marqué ; chacun rouvre la dernière page vue dans son espace pendant la
 // session, sinon À faire (`/back-office`), ou `/planning` côté App (cible du logo).
-import { useEffect, useSyncExternalStore } from "react";
+import { Fragment, useEffect, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTranslation } from "react-i18next";
-import { House, ShieldCheck } from "lucide-react";
+import { House, Music, ShieldCheck } from "lucide-react";
 import { useAuth } from "@/lib/firebase/auth";
+import { useAccesHarmonie } from "@/lib/harmonie/useHarmonie";
 import { useProfile } from "@/lib/firebase/users";
 import { entreesBackOffice } from "@/lib/access";
 import { poserFormeRetenue, useFormeRetenue } from "@/lib/marqueConnecte";
 import type { Entree } from "@/types/backOffice";
 import { BACK_OFFICE } from "@/lib/backOffice";
-import { espaceDe, type Espace } from "@/lib/navigation";
+import { entreesMusiciens, espaceAffiche, type Espace, type EntreeMusiciens } from "@/lib/navigation";
 
-const PAR_DEFAUT: Record<Espace, string> = { app: "/planning", "back-office": "/back-office" };
+const PAR_DEFAUT: Record<Espace, string> = { app: "/planning", musiciens: "/accords", "back-office": "/back-office" };
 const cle = (espace: Espace) => `gcc-derniere-page-${espace}`;
 
 /** Mémoire de session : une absence (navigation privée, stockage bloqué) = la page par défaut. */
@@ -52,7 +53,7 @@ export function useDernierePage(espace: Espace): string {
 }
 
 /** La forme que dessinent le sélecteur, l'icône Messages et les entrées du Back-Office (barres comprises). */
-type FormeAffichee = { responsable: boolean; messages: boolean; entrees: Entree[]; retenue: boolean };
+type FormeAffichee = { responsable: boolean; messages: boolean; entrees: Entree[]; musiciens: EntreeMusiciens[]; retenue: boolean };
 
 /** Lot CH, C6 : pendant l'attente (Firebase ou profil en cours) d'un membre à marque « connecté », la forme
  *  retenue la dernière fois ; sinon (ou sans forme retenue) celle que donnent les droits. Affichage seulement :
@@ -60,49 +61,67 @@ type FormeAffichee = { responsable: boolean; messages: boolean; entrees: Entree[
 export function useFormeAffichee(): FormeAffichee {
   const { probablementConnecte } = useAuth();
   const { user, profile, loading } = useProfile();
+  const acces = useAccesHarmonie();
   const retenue = useFormeRetenue();
-  if (loading && probablementConnecte && retenue) {
-    return { responsable: retenue.responsable, messages: retenue.messages, entrees: retenue.entreesBackOffice, retenue: true };
+  // EM-2 : tant que les plannings (qui disent l'instrument) ne sont pas lus, la forme retenue vaut aussi pour `musiciens`.
+  if (((loading && probablementConnecte) || (acces.chargement && probablementConnecte)) && retenue) {
+    return {
+      responsable: retenue.responsable, messages: retenue.messages, entrees: retenue.entreesBackOffice,
+      musiciens: retenue.musiciens, retenue: true,
+    };
   }
   const entrees = entreesBackOffice(user, profile);
-  return { responsable: BACK_OFFICE && entrees.length > 0, messages: entrees.includes("messages"), entrees, retenue: false };
+  return {
+    responsable: BACK_OFFICE && entrees.length > 0, messages: entrees.includes("messages"), entrees,
+    musiciens: entreesMusiciens(acces), retenue: false,
+  };
 }
 
 /** Retient la forme calculée dès que le profil est là et qu'elle change (monté une fois, dans la barre du haut). */
 export function useRetenirForme() {
   const { user, profile, loading } = useProfile();
+  const acces = useAccesHarmonie();
   useEffect(() => {
-    if (loading || !user || !profile) return;
+    if (loading || !user || !profile || acces.chargement) return;
     const entrees = entreesBackOffice(user, profile);
-    poserFormeRetenue({ responsable: BACK_OFFICE && entrees.length > 0, messages: entrees.includes("messages"), entreesBackOffice: entrees });
-  }, [loading, user, profile]);
+    poserFormeRetenue({
+      responsable: BACK_OFFICE && entrees.length > 0, messages: entrees.includes("messages"), entreesBackOffice: entrees,
+      musiciens: entreesMusiciens(acces),
+    });
+  }, [loading, user, profile, acces]);
 }
 
-/** Vrai pour qui a le Back-Office (un responsable ; un simple membre d'équipe n'en a plus, BO4),
- *  interrupteur du back-office ouvert. Pendant l'attente, la forme retenue (C6). */
-function useResponsable(): boolean {
-  return useFormeAffichee().responsable;
-}
 
 export function SelecteurEspace({ pleineLargeur = false, compact = false, onChoix }: { pleineLargeur?: boolean; compact?: boolean; onChoix?: () => void }) {
   const { t } = useTranslation();
   const pathname = usePathname() || "";
-  const responsable = useResponsable();
-  const espace = espaceDe(pathname);
-  const cibles: Record<Espace, string> = { app: useDernierePage("app"), "back-office": useDernierePage("back-office") };
+  // Vrai pour qui a le Back-Office (un responsable, BO4) ou joue d'un instrument (EM-2) ; pendant l'attente, la forme retenue (C6).
+  const { responsable, musiciens } = useFormeAffichee();
+  const musicien = musiciens.length > 0;
+  const espace = espaceAffiche(pathname, { musicien });
+  const cibles: Record<Espace, string> = {
+    app: useDernierePage("app"), musiciens: useDernierePage("musiciens"), "back-office": useDernierePage("back-office"),
+  };
+  // Segments selon les droits, dans l'ordre App · Musiciens · Back-Office.
+  const segments: Espace[] = ["app", ...(musicien ? (["musiciens"] as const) : []), ...(responsable ? (["back-office"] as const) : [])];
+  const affiche = responsable || musicien;
+  const libelles: Record<Espace, string> = {
+    app: t("backOffice.selecteur.app"), musiciens: t("backOffice.selecteur.musiciens"), "back-office": t("backOffice.selecteur.backOffice"),
+  };
 
   // Retenir la page courante pour son espace — pas la page de connexion, qu'on quitte aussitôt
   // (sinon « App » et « Revenir à l'app » y ramèneraient après s'être connecté).
   useEffect(() => {
-    if (responsable && !pathname.startsWith("/login")) retenir(espace, (pathname.replace(/\/$/, "") || "/") + window.location.search);
-  }, [responsable, pathname, espace]);
+    if (affiche && !pathname.startsWith("/login")) retenir(espace, (pathname.replace(/\/$/, "") || "/") + window.location.search);
+  }, [affiche, pathname, espace]);
 
-  if (!responsable) return null;
+  if (!affiche) return null;
 
   // BO-G, 10 : barre latérale réduite (ordinateur replié, tablette en paysage) : deux icônes, le nom en `aria-label` et
   // en infobulle. Le CSS ne la montre que dans la barre réduite (`barre-si-reduite`) ; le dessin tient dans 44 px de large,
   // la cible de toucher à 44 px par un `::after`.
   if (compact) {
+    const icones: Record<Espace, typeof House> = { app: House, musiciens: Music, "back-office": ShieldCheck };
     const icone = (e: Espace, libelle: string, Icone: typeof House) => (
       <Link
         key={e}
@@ -124,8 +143,7 @@ export function SelecteurEspace({ pleineLargeur = false, compact = false, onChoi
         data-testid="selecteur-icones"
         className="barre-si-reduite w-11 shrink-0 flex-col items-center gap-2 rounded-full bg-secondary p-1"
       >
-        {icone("app", t("backOffice.selecteur.app"), House)}
-        {icone("back-office", t("backOffice.selecteur.backOffice"), ShieldCheck)}
+        {segments.map((e) => icone(e, libelles[e], icones[e]))}
       </div>
     );
   }
@@ -152,8 +170,7 @@ export function SelecteurEspace({ pleineLargeur = false, compact = false, onChoi
       aria-label={t("backOffice.selecteur.aria")}
       className={`${pleineLargeur ? "flex" : "inline-flex"} shrink-0 rounded-full bg-secondary p-[3px]`}
     >
-      {lien("app", t("backOffice.selecteur.app"))}
-      {lien("back-office", t("backOffice.selecteur.backOffice"))}
+      {segments.map((e) => <Fragment key={e}>{lien(e, libelles[e])}</Fragment>)}
     </div>
   );
 }

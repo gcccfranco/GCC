@@ -87,6 +87,12 @@ export function harmonie(p: P): { piano: boolean; guitare: boolean } {
   return { piano: joue.includes("piano"), guitare: joue.includes("guitare") };
 }
 
+/** Musicien (spec-espace-musiciens, Q1) : joue d'un instrument (`joue` non vide) ou membre de la sous-équipe
+ *  Musiciens. */
+export function musicien(p: P): boolean {
+  return liste(p?.joue).length > 0 || liste(p?.sousEquipes).includes("musiciens");
+}
+
 // ─── Coordination ───────────────────────────────────────────────────────────
 
 /** Coordination (D5) : scène, fêtes, évènements de toute l'Église. Lot RS (Q11) : le Comité Orga seul

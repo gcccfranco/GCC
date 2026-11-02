@@ -81,7 +81,7 @@ test("cloche : la réunion d'un pôle reste invisible pour qui n'en est pas", as
 
 // ─── C1 et harmonie : Équipes et Harmonie se trouvent depuis le menu ───────
 
-test("ordinateur : le menu du compte mène à Équipes, et à Harmonie pour qui y a accès", async ({ page }) => {
+test("ordinateur : le menu du compte mène à Équipes, et n'offre plus Harmonie (espace Musiciens, EM-3)", async ({ page }) => {
   test.skip(test.info().project.name !== "ordinateur", "le menu du compte n'existe que sur ordinateur");
   await open(page, ADMIN, "/evenements");
   // L'indicateur de Next (développement seulement) est posé en bas à gauche, sur l'initiale
@@ -89,7 +89,7 @@ test("ordinateur : le menu du compte mène à Équipes, et à Harmonie pour qui 
   await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" });
   await page.getByRole("button", { name: "Compte" }).click();
   await expect(page.getByRole("menuitem", { name: "Équipes" })).toHaveAttribute("href", /\/equipes/);
-  await expect(page.getByRole("menuitem", { name: "Harmonie" })).toHaveAttribute("href", /\/harmonie/);
+  await expect(page.getByRole("menuitem", { name: "Harmonie" })).toHaveCount(0);
 });
 
 test("Moi : la ligne Harmonie n'apparaît qu'à qui a accès au catalogue", async ({ page }) => {

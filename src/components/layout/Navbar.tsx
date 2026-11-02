@@ -105,18 +105,20 @@ export function Navbar() {
   const isActiveEvenements = pathname.startsWith("/evenements");
   const isActiveTaches = pathname.startsWith("/taches");
   const admin = isAdminUser(user);
-  const headerLabel = t(labelDeSection(pathname));
   const { displayName, initial } = useNomDuMembre();
   // Lot U6 (spec-back-office.md, question 5) : pour un responsable, le sélecteur
   // « App · Back-Office » suit le label ; sur téléphone il en prend la place, et la
   // langue passe par « Moi » (à 390 px, les quatre ne tiennent pas ensemble).
   const forme = useFormeAffichee();
-  const responsable = forme.responsable;
+  const musicien = forme.musiciens.length > 0;
+  // EM-2 : le sélecteur est aussi celui d'un musicien (App · Musiciens).
+  const responsable = forme.responsable || musicien;
+  const headerLabel = t(labelDeSection(pathname, musicien));
   useRetenirForme();
   // Piste A, BO2 : Messages n'est pas un onglet de la barre du bas, c'est une icône ici, à côté de la cloche.
   // Là où la barre latérale est montrée, c'est elle qui porte Messages et lit ses comptes : pas deux fois.
   const barreMontree = useBarreMontree();
-  const avecMessages = !barreMontree && responsable && (!!user || forme.retenue) && espaceDe(pathname) === "back-office" && forme.messages;
+  const avecMessages = !barreMontree && (!!user || forme.retenue) && forme.responsable && espaceDe(pathname) === "back-office" && forme.messages;
 
   return (
     <>

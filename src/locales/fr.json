@@ -20,6 +20,7 @@
       "admin": "Admin",
       "evenements": "Évènements",
       "moi": "Moi",
+      "musiciens": "Musiciens",
       "account": "Compte",
       "taches": "Tâches",
       "backOffice": "Back-Office"
@@ -1002,6 +1003,7 @@
         "for": "Pianistes et guitaristes",
         "body": "Un catalogue d'idées pour **réharmoniser** un chant : substitutions, couleurs, lignes de basse, montées, fins, modulations… Chaque fiche dit ce que ça change, pourquoi ça marche, quand l'éviter, et comment le jouer au piano ou à la guitare.",
         "points": [
+          "Tout est dans l'**espace Musiciens** : le sélecteur **App · Musiciens** en haut ouvre **Accords** (le dictionnaire, pour tout musicien), **Harmonie**, **Théorie musicale** et, pour les pianistes, **RD-2000**.",
           "**Par où commencer** : dix fiches dans l'ordre, de la plus simple à la plus riche.",
           "Filtre par **sensation** (épique, douceur…), par **moment** du chant et par niveau.",
           "Sur un chant, **Idées d'harmonie** (menu ⋯) propose ce qui s'applique **à ce chant-là**, avec les vrais accords.",
@@ -2459,7 +2461,7 @@
       "aFaire_other": "{{count}} à faire",
       "rienAFaire": "Rien à faire pour toi.",
       "ouvrir": "Ouvrir",
-      "cours": "Cours de théorie",
+      "cours": "Théorie musicale",
       "chapitres": "{{faits}} / {{total}} chapitres",
       "prochain": "Prochain chapitre : {{titre}}",
       "coursFini": "Tous les chapitres sont finis.",
@@ -2648,7 +2650,7 @@
         "peut": {
           "1": "Ouvrir la setlist de ton service et la jouer en <b>Mode Louange</b>.",
           "2": "Transposer, mettre un capo, garder <b>ta version</b> d'un chant avec tes notes.",
-          "3": "Progresser avec <b>Harmonie</b> : le catalogue d'accords et les cours."
+          "3": "Progresser avec <b>Harmonie</b> : le catalogue d'accords et la théorie musicale."
         },
         "role": "Modifier la setlist : c'est la personne qui l'a créée."
       },
@@ -2786,6 +2788,15 @@
     "toutesTonalites": "Toutes les tonalités",
     "seule": "{{key}} seul"
   },
+  "musiciens": {
+    "entrees": {
+      "accords": "Accords",
+      "harmonie": "Harmonie",
+      "theorie": "Théorie musicale",
+      "theorieCourt": "Théorie",
+      "rd2000": "RD-2000"
+    }
+  },
   "accords": {
     "titre": "Accords",
     "sousTitre": "Comment jouer un accord, à la guitare et au piano.",
@@ -2915,8 +2926,8 @@
       "suite": "{{ecran}} (suite)"
     },
     "cours": {
-      "titre": "Cours",
-      "ligne": "Cours de théorie musicale",
+      "titre": "Théorie musicale",
+      "ligne": "Théorie musicale",
       "chapitres_one": "{{count}} chapitre",
       "chapitres_other": "{{count}} chapitres",
       "modeEmploi": "Mode d'emploi",
@@ -2930,7 +2941,7 @@
       "exercices_one": "{{count}} exercice",
       "exercices_other": "{{count}} exercices",
       "sommaire": "Sommaire",
-      "retour": "Cours",
+      "retour": "Théorie musicale",
       "nonTraduit": "Ce chapitre n'est pas encore traduit : texte en français.",
       "introuvable": "Chapitre introuvable.",
       "fini": "Fini",
@@ -3585,6 +3596,7 @@
     "selecteur": {
       "aria": "Choisir l'espace",
       "app": "App",
+      "musiciens": "Musiciens",
       "backOffice": "Back-Office"
     },
     "entrees": {
@@ -3782,7 +3794,7 @@
       "setlistsGroupe": "Voir et créer les setlists de {{groupe}}",
       "setlistsEdd": "Voir et créer les setlists de l'EDD (les trois classes)",
       "setlistsVoir": "Voir les setlists de {{lieux}}",
-      "harmonie": "Idées d'harmonie et cours",
+      "harmonie": "Idées d'harmonie et théorie musicale",
       "gestionnaire": "Remplir, publier et prévenir le planning {{planning}}, notifier son audience",
       "comiteOrga": "Créer et modifier les évènements et les réunions, publier des annonces, notifier toute l'Église, réserver la scène",
       "coordination": "Coordination : scène, fêtes et évènements de toute l'Église",

@@ -131,7 +131,7 @@ test.describe("Harmonie : le catalogue", () => {
     await page.locator(`a[href^="/harmonie/${PREMIERE.id}"]`).first().click();
     await expect(page.locator(`[data-fiche="${PREMIERE.id}"]`)).toBeVisible();
     await expect(liste(page)).toHaveCount(0);
-    await expect(page.getByRole("link", { name: "Harmonie" })).toBeVisible();
+    await expect(page.getByRole("main").getByRole("link", { name: "Harmonie" })).toBeVisible();
     expect(await sansDefilementHorizontal(page)).toBe(true);
   });
 
@@ -188,7 +188,8 @@ test.describe("Harmonie : le cours", () => {
   test("en grand, le sommaire à gauche et le chapitre en cours à droite", async ({ page }, info) => {
     test.skip(!enGrand(info), "deux volets : ordinateur et tablette paysage");
     await entrer(page, "/harmonie/cours");
-    await expect(page.locator("header[data-entete-page]").getByRole("link", { name: "Cours", exact: true })).toHaveAttribute("aria-current", "page");
+    // EM-2 : le rail est parti, la barre latérale de l'espace Musiciens allume « Théorie musicale ».
+    await expect(page.getByTestId("barre-laterale").getByRole("navigation").getByRole("link", { name: "Théorie musicale" })).toHaveAttribute("aria-current", "page");
     await expect(detail(page).locator(`[data-chapitre="${PREMIER_CHAPITRE.id}"]`)).toBeVisible();
     await expect(page).toHaveURL(/\/harmonie\/cours\/?$/);
   });
@@ -202,7 +203,7 @@ test.describe("Harmonie : le cours", () => {
     await expect(parties).toHaveCount(CADENCES.sousParties.length);
     await expect(parties.first()).toHaveAttribute("href", "#partie-0");
     await expect(detail(page).getByRole("navigation", { name: "Sommaire" }), "les parties sont à gauche").toHaveCount(0);
-    await expect(detail(page).getByRole("link", { name: "Cours" })).toHaveCount(0);
+    await expect(detail(page).getByRole("link", { name: "Théorie musicale" })).toHaveCount(0);
     expect(await sansDefilementHorizontal(page)).toBe(true);
     await capture(page, "b3-cours");
   });

@@ -24,7 +24,7 @@ import { Drawer as DrawerPrimitive } from "vaul";
 import { useAuth } from "@/lib/firebase/auth";
 import { useSetLanguage } from "@/lib/I18nProvider";
 import { BACK_OFFICE } from "@/lib/backOffice";
-import { entreeBackOffice, entreesBarre, espaceDe, estEntreeActive, labelDeSection, listeSetlistsRetenue } from "@/lib/navigation";
+import { entreeBackOffice, entreesBarre, espaceDe, espaceAffiche, estEntreeActive, labelDeSection, listeSetlistsRetenue } from "@/lib/navigation";
 import { entreesBackOffice } from "@/lib/access";
 import { useProfile } from "@/lib/firebase/users";
 import { getBarreReduite, setBarreReduite, suivreBarreReduite } from "@/lib/barreLateralePref";
@@ -216,11 +216,12 @@ function ContenuBarre({
   // et les entrées du Back-Office que le profil avait données.
   const forme = useFormeAffichee();
   const attente = loading && probablementConnecte;
+  const musicien = forme.musiciens.length > 0;
+  const label = t(labelDeSection(pathname, musicien));
   const { resolvedTheme, setTheme } = useTheme();
   const dark = mounted && resolvedTheme === "dark";
   const setLanguage = useSetLanguage();
   const isZh = i18n.language === "zh-CN";
-  const label = t(labelDeSection(pathname));
   const { displayName, initial, planningName } = useNomDuMembre();
   const compte = useACoteDeLaBarre();
   const cloche = useACoteDeLaBarre();
@@ -229,7 +230,7 @@ function ContenuBarre({
   // les entrées que donnent les droits (`entreesBackOffice`).
   const entrees = loading && !attente
     ? []
-    : entreesBarre(espaceDe(pathname), { connecte: !!user || attente, backOffice: BACK_OFFICE, permises: forme.entrees });
+    : entreesBarre(espaceAffiche(pathname, { musicien }), { connecte: !!user || attente, backOffice: BACK_OFFICE, permises: forme.entrees, musiciens: forme.musiciens });
   // Sur une setlist, « Setlists » rouvre la liste filtrée qu'on a quittée (U5, Q7).
   const listeSetlists = useSyncExternalStore(rienASuivre, listeSetlistsRetenue, () => "/setlists");
 

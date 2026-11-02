@@ -10,7 +10,7 @@
 //   déjà mis en cache mémoire 5 minutes par `fetchSheet`).
 
 import { useEffect, useMemo, useState } from "react";
-import { canUseHarmonie } from "@/lib/access";
+import { canUseHarmonie, estMusicien } from "@/lib/access";
 import { useProfile } from "@/lib/firebase/users";
 import { findMyServices, loadPlanningData } from "@/lib/planning/names";
 import type { Fiche, HarmonieIndex, Instrument } from "@/types/harmonie";
@@ -35,6 +35,8 @@ export interface AccesHarmonie {
   guitare: boolean;
   /** Ni pianiste, ni guitariste, ni admin : ni onglet, ni bouton. */
   peut: boolean;
+  /** Joue d'un instrument (Q1 de spec-espace-musiciens) : montre l'espace Musiciens. */
+  musicien: boolean;
   /** Tant que les plannings ne sont pas lus, on ne montre rien. */
   chargement: boolean;
 }
@@ -60,6 +62,7 @@ export function useAccesHarmonie(): AccesHarmonie {
     return {
       ...acces,
       peut: acces.piano || acces.guitare,
+      musicien: estMusicien(user, profile, (nom ? services : []) ?? []),
       chargement: loading || (Boolean(nom) && services === null),
     };
   }, [user, profile, nom, services, loading]);

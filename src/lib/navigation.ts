@@ -3,15 +3,16 @@
 // (ordinateur, tablette en paysage), pour que les deux ne divergent jamais.
 // U6 ajoute l'espace « back-office » (sélecteur App ↔ Back-Office, menu à 5 entrées depuis la piste A, BO1).
 import {
-  ArrowLeftRight, CalendarDays, CalendarRange, Inbox, ListChecks, ListMusic, Music, Network, Ticket, UserRound,
+  ArrowLeftRight, BookOpen, CalendarDays, CalendarRange, Guitar, Inbox, KeyboardMusic, ListChecks, ListMusic, Music, Network,
+  Sparkles, Ticket, UserRound,
   type LucideIcon,
 } from "lucide-react";
 import type { Entree } from "@/types/backOffice";
 import { estReunion } from "@/lib/access";
 import { BACK_OFFICE } from "@/lib/backOffice";
 
-/** Espace montré par les barres. U4 ne remplit que "app" ; U6 ajoute "back-office". */
-export type Espace = "app" | "back-office";
+/** Espace montré par les barres. U4 ne remplit que "app" ; U6 ajoute "back-office" ; EM-2 ajoute "musiciens". */
+export type Espace = "app" | "musiciens" | "back-office";
 
 /** Une entrée, la même pour la barre latérale et la barre du bas. */
 type EntreeBarre = {
@@ -23,6 +24,10 @@ type EntreeBarre = {
   actifSur: string[];
   /** Courante sur sa seule adresse, pas sur les pages en dessous (le tableau de bord, `/back-office`). */
   exact?: boolean;
+  /** Préfixes d'URL, sous `actifSur`, où l'entrée n'est pas la page courante (Harmonie : ni les cours ni le RD-2000). */
+  saufSur?: string[];
+  /** Libellé court i18n, lu par la barre du bas seulement (« Théorie » pour « Théorie musicale »). */
+  cleCourte?: string;
 };
 
 // Chants et Setlists ont chacun leur entrée (décision du 16/09/2026 : un onglet
@@ -89,9 +94,54 @@ export function ongletsBackOffice(permises: readonly Entree[], app: string = ONG
   return permises.length > 0 ? [...onglets, { ...ONGLET_APP, href: app }] : [];
 }
 
-/** L'espace d'une adresse : tout ce qui est sous `/back-office` est au Back-Office. */
+/** Entrées de l'espace Musiciens (EM-2, spec-espace-musiciens.md) : accords, harmonie, théorie, RD-2000. */
+export type EntreeMusiciens = "accords" | "harmonie" | "theorie" | "rd2000";
+
+const ENTREES_MUSICIENS: Record<EntreeMusiciens, EntreeBarre> = {
+  accords: { href: "/accords", cle: "musiciens.entrees.accords", Icone: Guitar, actifSur: ["/accords"] },
+  harmonie: {
+    href: "/harmonie", cle: "musiciens.entrees.harmonie", Icone: Sparkles, actifSur: ["/harmonie"],
+    saufSur: ["/harmonie/cours", "/harmonie/rd2000"],
+  },
+  theorie: {
+    href: "/harmonie/cours", cle: "musiciens.entrees.theorie", cleCourte: "musiciens.entrees.theorieCourt",
+    Icone: BookOpen, actifSur: ["/harmonie/cours"],
+  },
+  rd2000: { href: "/harmonie/rd2000", cle: "musiciens.entrees.rd2000", Icone: KeyboardMusic, actifSur: ["/harmonie/rd2000"] },
+};
+
+/** Les entrées de l'espace Musiciens que les droits donnent (Q2) : tout musicien a Accords ; Harmonie et Théorie
+ *  musicale demandent `peut` (piano ou guitare), le RD-2000 `piano`. Un non-musicien : aucune. */
+export function entreesMusiciens(acces: { musicien: boolean; peut: boolean; piano: boolean }): EntreeMusiciens[] {
+  if (!acces.musicien) return [];
+  return [
+    "accords",
+    ...(acces.peut ? (["harmonie", "theorie"] as const) : []),
+    ...(acces.piano ? (["rd2000"] as const) : []),
+  ];
+}
+
+/** Onglets de la barre du bas de l'espace Musiciens : ses entrées, puis « App » (comme `ongletsBackOffice`). */
+export function ongletsMusiciens(permises: readonly EntreeMusiciens[], app: string = ONGLET_APP.href): EntreeBarre[] {
+  return permises.length > 0
+    ? [...permises.map((e) => ENTREES_MUSICIENS[e]), { ...ONGLET_APP, href: app }]
+    : [];
+}
+
+/** L'espace d'une adresse, sans les droits : `/back-office…` au Back-Office, `/accords…` et `/harmonie…` chez les
+ *  musiciens. Ce que montrent les barres passe par `espaceAffiche`. */
 export function espaceDe(pathname: string): Espace {
-  return pathname === "/back-office" || pathname.startsWith("/back-office/") ? "back-office" : "app";
+  const p = pathname.length > 1 ? pathname.replace(/\/$/, "") : pathname;
+  const sous = (base: string) => p === base || p.startsWith(`${base}/`);
+  if (sous("/back-office")) return "back-office";
+  if (sous("/accords") || sous("/harmonie")) return "musiciens";
+  return "app";
+}
+
+/** L'espace que les barres dessinent : celui de l'adresse, sauf « musiciens » ramené à « app » pour qui n'est pas musicien. */
+export function espaceAffiche(pathname: string, { musicien }: { musicien: boolean }): Espace {
+  const espace = espaceDe(pathname);
+  return espace === "musiciens" && !musicien ? "app" : espace;
 }
 
 /**
@@ -101,8 +151,11 @@ export function espaceDe(pathname: string): Espace {
  */
 export function entreesBarre(
   espace: Espace,
-  ctx: { connecte: boolean; backOffice: boolean; permises?: readonly Entree[] },
+  ctx: { connecte: boolean; backOffice: boolean; permises?: readonly Entree[]; musiciens?: readonly EntreeMusiciens[] },
 ): EntreeBarre[] {
+  if (espace === "musiciens") {
+    return ctx.connecte ? (ctx.musiciens ?? []).map((e) => ENTREES_MUSICIENS[e]) : [];
+  }
   if (espace === "back-office") {
     return ctx.backOffice && ctx.connecte ? (ctx.permises ?? []).map((e) => ENTREES_BACK_OFFICE[e]) : [];
   }
@@ -128,12 +181,14 @@ export function listeSetlistsRetenue(): string {
 export function estEntreeActive(entree: EntreeBarre, pathname: string): boolean {
   // `trailingSlash` (next.config) : « /back-office/ » est la page « /back-office ».
   const p = pathname.length > 1 ? pathname.replace(/\/$/, "") : pathname;
+  if (entree.saufSur?.some((m) => p === m || p.startsWith(`${m}/`))) return false;
   return entree.actifSur.some((m) => p === m || (!entree.exact && p.startsWith(`${m}/`)));
 }
 
 /** Clé i18n du label contextuel « GCC <label> » (décisions du 15/09/2026, gelées). */
-export function labelDeSection(pathname: string): string {
+export function labelDeSection(pathname: string, musicien = false): string {
   if (BACK_OFFICE && pathname.startsWith("/back-office")) return "common.header.backOffice";
+  if (musicien && espaceDe(pathname) === "musiciens") return "common.header.musiciens";
   if (pathname.startsWith("/planning")) return "common.header.planning";
   if (pathname.startsWith("/mes-services")) return "common.header.service";
   if (pathname.startsWith("/evenements")) return "common.header.evenements";

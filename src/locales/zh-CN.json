@@ -20,6 +20,7 @@
       "admin": "管理",
       "evenements": "活动",
       "moi": "我",
+      "musiciens": "乐手",
       "account": "账户",
       "taches": "任务",
       "backOffice": "后台"
@@ -998,6 +999,7 @@
         "for": "钢琴手和吉他手",
         "body": "一个**重新配和声**的灵感目录：代理和弦、色彩音、低音线、过门、结尾、转调……每张卡片说明改动是什么、为什么好听、什么时候别用，以及钢琴和吉他怎么弹。",
         "points": [
+          "一切都在**乐手空间**：顶部的**应用 · 乐手**切换器可打开**和弦**（和弦字典，所有乐手可用）、**和声**、**乐理**，钢琴手还有 **RD-2000**。",
           "**从这里开始**：十张卡片，由浅入深。",
           "按**感觉**（史诗、柔和……）、按歌曲**段落**、按难度筛选。",
           "在一首歌里，**和声灵感**（⋯ 菜单）只提示适合这首歌的做法，并写出实际和弦。",
@@ -2426,7 +2428,7 @@
       "aFaire_other": "{{count}} 项待办",
       "rienAFaire": "你暂时没有待办事项。",
       "ouvrir": "打开",
-      "cours": "乐理课程",
+      "cours": "乐理",
       "chapitres": "{{faits}} / {{total}} 章",
       "prochain": "下一章：{{titre}}",
       "coursFini": "所有章节都已完成。",
@@ -2614,7 +2616,7 @@
         "peut": {
           "1": "打开你服事的歌单，用<b>敬拜模式</b>演奏。",
           "2": "转调、夹变调夹，保存带笔记的<b>我的版本</b>。",
-          "3": "用<b>和声</b>进步：和弦目录和课程。"
+          "3": "用<b>和声</b>进步：和弦目录和乐理。"
         },
         "role": "修改歌单：由创建者负责。"
       },
@@ -2752,6 +2754,15 @@
     "toutesTonalites": "所有调",
     "seule": "仅 {{key}}"
   },
+  "musiciens": {
+    "entrees": {
+      "accords": "和弦",
+      "harmonie": "和声",
+      "theorie": "乐理",
+      "theorieCourt": "乐理",
+      "rd2000": "RD-2000"
+    }
+  },
   "accords": {
     "titre": "和弦",
     "sousTitre": "如何用吉他和钢琴弹奏和弦。",
@@ -2881,8 +2892,8 @@
       "suite": "{{ecran}}（续）"
     },
     "cours": {
-      "titre": "课程",
-      "ligne": "乐理课程",
+      "titre": "乐理",
+      "ligne": "乐理",
       "chapitres_other": "{{count}} 章",
       "modeEmploi": "使用说明",
       "niveau1": "第 1 级 · 基础",
@@ -2893,7 +2904,7 @@
       "parties_other": "{{count}} 节",
       "exercices_other": "{{count}} 道练习",
       "sommaire": "目录",
-      "retour": "课程",
+      "retour": "乐理",
       "nonTraduit": "本章尚未翻译，暂以法文显示。",
       "introuvable": "找不到这一章。",
       "fini": "已完成",
@@ -3542,6 +3553,7 @@
     "selecteur": {
       "aria": "选择空间",
       "app": "应用",
+      "musiciens": "乐手",
       "backOffice": "后台"
     },
     "entrees": {
@@ -3737,7 +3749,7 @@
       "setlistsGroupe": "查看并创建{{groupe}}的歌单",
       "setlistsEdd": "查看并创建主日学（三个班）的歌单",
       "setlistsVoir": "查看{{lieux}}的歌单",
-      "harmonie": "和声灵感与课程",
+      "harmonie": "和声灵感与乐理",
       "gestionnaire": "填写、发布并通知{{planning}}的排班，通知其对象",
       "comiteOrga": "创建和修改活动与聚会，发布公告，通知全教会，预约舞台",
       "coordination": "协调：舞台、节日和全教会的活动",

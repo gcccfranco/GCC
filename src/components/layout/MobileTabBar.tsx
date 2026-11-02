@@ -7,8 +7,9 @@ import { BACK_OFFICE } from "@/lib/backOffice";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/lib/firebase/auth";
 import { useProfile } from "@/lib/firebase/users";
+import { useAccesHarmonie } from "@/lib/harmonie/useHarmonie";
 import { useScrollDirection } from "@/hooks/useScrollDirection";
-import { entreesBarre, espaceDe, estEntreeActive, ongletsBackOffice, ONGLET_APP } from "@/lib/navigation";
+import { entreesBarre, espaceAffiche, estEntreeActive, ongletsBackOffice, ongletsMusiciens, ONGLET_APP } from "@/lib/navigation";
 import { useDernierePage, useFormeAffichee } from "@/components/layout/SelecteurEspace";
 
 /**
@@ -19,7 +20,7 @@ import { useDernierePage, useFormeAffichee } from "@/components/layout/Selecteur
  * partition ; le mode louange (z-9999) passe par-dessus de toute façon.
  * Au Back-Office (piste A, BO2), un responsable a la sienne : cinq onglets fixes, À faire ·
  * Calendrier · Planning · Équipes · App (ceux qu'il a le droit de voir) ; Messages est une icône
- * de l'en-tête. Celle de l'App ne change pas.
+ * de l'en-tête. Celle de l'App ne change pas. Chez les musiciens (EM-2) : leurs entrées puis App.
  */
 export function MobileTabBar() {
   const { t } = useTranslation();
@@ -30,7 +31,10 @@ export function MobileTabBar() {
   // C6 : pendant l'attente du profil, les onglets du Back-Office que la dernière visite avait donnés.
   const forme = useFormeAffichee();
   const { loading: profilEnCours } = useProfile();
-  const auBackOffice = BACK_OFFICE && espaceDe(pathname) === "back-office";
+  const { chargement: accesEnCours } = useAccesHarmonie();
+  const espace = espaceAffiche(pathname, { musicien: forme.musiciens.length > 0 });
+  const auBackOffice = BACK_OFFICE && espace === "back-office";
+  const chezLesMusiciens = espace === "musiciens";
   const permises = auBackOffice ? forme.entrees : [];
   const app = useDernierePage("app");
   const [mounted, setMounted] = useState(false);
@@ -50,9 +54,13 @@ export function MobileTabBar() {
   if (!mounted || (loading && !attente) || fullscreen) return null;
   // Au Back-Office, on attend le profil : jamais une barre qui change sous le doigt (sauf la forme retenue, C6).
   if (auBackOffice && profilEnCours && !forme.retenue) return null;
+  // Chez les musiciens, on attend aussi la lecture du planning (qui dit l'instrument), sauf forme retenue.
+  if (chezLesMusiciens && (profilEnCours || accesEnCours) && !forme.retenue) return null;
   // Mêmes entrées que la barre latérale (lot U4) ; back-office coupé (lot 18) :
   // la section Évènements n'est pas en ligne.
-  const tabs = permises.length > 0
+  const tabs = chezLesMusiciens
+    ? ongletsMusiciens(forme.musiciens, app)
+    : permises.length > 0
     ? ongletsBackOffice(permises, app)
     : entreesBarre("app", { connecte: !!user || attente, backOffice: BACK_OFFICE });
   // Une seule destination (visiteur : « Chants ») : pas de barre, ni sa cale de 110 px (C8, audit 24/10/2026).
@@ -72,7 +80,7 @@ export function MobileTabBar() {
       >
         <div className="flex h-16 gap-0.5 p-1.5">
           {tabs.map((entree) => {
-            const { href, cle, Icone } = entree;
+            const { href, cle, Icone, cleCourte } = entree;
             const active = estEntreeActive(entree, pathname);
             return (
               <Link
@@ -86,7 +94,7 @@ export function MobileTabBar() {
                 }`}
               >
                 <Icone className="h-[22px] w-[22px]" strokeWidth={active ? 2.2 : 1.9} aria-hidden />
-                {t(cle)}
+                {t(cleCourte ?? cle)}
               </Link>
             );
           })}

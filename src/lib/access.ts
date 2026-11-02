@@ -603,6 +603,24 @@ export function canUseHarmonie(
   return { piano: roles.has("Piano"), guitare: roles.has("Guitare") };
 }
 
+/** Rôles du planning qui désignent un instrument. Le planning n'a pas de colonne Basse : un bassiste est reconnu
+ *  par l'organigramme seul. */
+export const ROLES_INSTRUMENT = ["Piano", "Guitare", "Batterie", "Cajon/Batterie", "Cajon", "Percussion", "Musicien"];
+
+/** Qui est musicien (spec-espace-musiciens, Q1) : admin, ou organigramme (`joue` non vide ou sous-équipe
+ *  Musiciens), ou un service du planning dont le rôle est un instrument. Les deux sources comptent quel que soit
+ *  l'interrupteur BACK_OFFICE. Sert seulement à afficher l'espace Musiciens : ne ferme aucune page, aucune règle
+ *  Firestore. */
+export function estMusicien(
+  user: { email?: string | null } | null,
+  profile: ProfilOrganigramme | null,
+  services: { role: string }[],
+): boolean {
+  if (isAdminUser(user)) return true;
+  if (org.musicien(profile)) return true;
+  return services.some((s) => ROLES_INSTRUMENT.includes(s.role));
+}
+
 const LEVEL_RANK: Record<AccessLevel, number> = { view: 0, create: 1, edit: 2 };
 
 const isGroupeOrEdd = (category: string): boolean =>

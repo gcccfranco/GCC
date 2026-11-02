@@ -175,7 +175,7 @@ test("la fiche d'une personne : ses sous-équipes depuis l'organigramme, « Ce q
   await expect(fiche).toContainText("TEAM LOUANGE");
   await expect(fiche).toContainText("Musiciens, référent·e");
   await expect(fiche.getByTestId("ce-que-ca-ouvre")).toContainText("Voir et créer les setlists de Culte Francophone");
-  await expect(fiche.getByTestId("ce-que-ca-ouvre")).toContainText("Idées d'harmonie et cours");
+  await expect(fiche.getByTestId("ce-que-ca-ouvre")).toContainText("Idées d'harmonie et théorie musicale");
   // Ni rôles de service ni planning dans la fiche.
   await expect(fiche).not.toContainText("Ses services");
   await capture(page, "fiche-personne-louange");
@@ -290,7 +290,7 @@ test("« Ce que ça lui ouvre » change quand l'administrateur coche Campus ; Mu
   await expect(groupe(tom, "Ce qu'il joue")).toHaveCount(0);
   await pastille(groupe(tom, "Sous-équipes"), "Musiciens").click();
   await pastille(groupe(tom, "Ce qu'il joue"), "Piano").click();
-  await expect(ouvre).toContainText("Idées d'harmonie et cours");
+  await expect(ouvre).toContainText("Idées d'harmonie et théorie musicale");
   // Lot RS : la pastille « Référent de Louange » est partie ; Tom n'est pas référent, la mention est absente.
   await expect(tom.getByTestId("mention-referent")).not.toContainText("Référent");
   await capture(page, "panneau-administrateur");
