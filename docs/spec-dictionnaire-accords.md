@@ -59,7 +59,7 @@ l'accord (planche) ; sur téléphone et tablette, une feuille du bas.**
 
 ## À trancher
 
-**Q14 — où mettre la page dictionnaire.** Proposition de l'entretien (non retenue pour l'instant) : une page
+**Q14 — où mettre la page dictionnaire.** *Fermée le 02/11/2026 par `spec-espace-musiciens.md` (Q3) : l'entrée « Accords » de l'espace Musiciens, pour les musiciens ; les autres y arrivent par le panneau d'un accord, comme aujourd'hui.* Proposition de l'entretien (non retenue pour l'instant) : une page
 `/accords`, sans compte, avec un bouton « Accords » en haut de la page Chants, une ligne dans le menu du compte, et
 « Voir tout le dictionnaire » dans le panneau. Timothée veut d'abord **l'inventaire des accès du site** (rôles,
 compte, équipes…) pour revoir l'ensemble ; carte des accès et emplacement proposé :

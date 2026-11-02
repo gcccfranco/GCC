@@ -1296,6 +1296,17 @@ croissant (pas créée seule ; sans elle, 400 et repli) ; 4. il publie la règle
 rattrapage avant la fusion, les fois cochées entre-temps resteraient sans `equipe`. Après la mise en ligne :
 comparer la courbe « Utilisation » de la console sur 24 h.
 
+### AL. Espace Musiciens et scène des fêtes en un clic (Timothée, 02/11/2026) → `spec-espace-musiciens.md`
+
+« Peut-être pour les musiciens créer un onglet comme le back office mais pour les musiciens » ; Pâques et Noël
+« on peut pas gérer directement dans le back office ». Planche du 02/11/2026
+(https://claude.ai/artifact/AEgKxRMpiRkGYrzkHaaL3T), Q1 à Q6 tranchées le jour même. Deux lots : **EM** — un
+troisième espace « Musiciens » (Accords · Harmonie · Théorie musicale · RD-2000), pour qui joue d'un instrument
+d'après le planning ou l'organigramme ; le non-musicien n'arrive au dictionnaire que par le panneau d'un accord,
+comme aujourd'hui ; « Cours » devient « Théorie musicale » ; Harmonie quitte le menu du compte. **SF** — une entrée
+« Scène » dans la barre latérale du Back-Office (coordination), une carte en tête d'À faire sur téléphone et
+tablette en portrait. **Attend le go.** Aucune règle Firestore.
+
 ## 4. Carte des modules de l'app « GCC »
 
 À valider par Timothée avant toute spec de module (les modules existants ne
