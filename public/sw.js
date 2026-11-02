@@ -299,14 +299,14 @@ self.addEventListener("fetch", (event) => {
     url.pathname.startsWith("/jianpu/") ||
     url.pathname.startsWith("/icon") ||
     url.pathname === "/logo.png" ||
-    url.pathname === "/accueil/bienvenue.jpg"
+    (url.pathname.startsWith("/accueil/") && url.pathname.endsWith(".jpg"))
   ) {
     const jianpu = url.pathname.startsWith("/jianpu/");
     event.respondWith(staleWhileRevalidate(event, jianpu ? "/jianpu/" : undefined, PLAFOND_JIANPU));
     return;
   }
 
-  // Vidéos de bienvenue : requêtes Range / 206 mal gérées par Safari à travers respondWith ; le navigateur charge lui-même, rien en cache.
+  // Vidéos de la visite : requêtes Range / 206 mal gérées par Safari à travers respondWith ; le navigateur charge lui-même, rien en cache.
   if (url.pathname.startsWith("/accueil/") && url.pathname.endsWith(".mp4")) return;
 
   // Le reste (autres API, CSV planning proxifié, etc.) : réseau, repli cache.

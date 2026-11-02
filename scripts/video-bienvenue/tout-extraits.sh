@@ -1,12 +1,12 @@
 #!/bin/bash
-# Extraits de la visite, sans son, en boucle, 640×360 → ../../docs/video-bienvenue/extraits/<extrait>-<appareil>.mp4 (+ .jpg)
+# Extraits de la visite, sans son, en boucle, 640×360 → ../../public/accueil/extraits/<extrait>-<appareil>.mp4 (+ .jpg)
 #   apercu   (Bienvenue, 8 s)          onglets (Où trouver quoi, 5 s)    musicien (tonalité puis Mode Louange, 9,6 s)
 #   melange  (recherche puis setlist : choriste, présidence, régie, membre, C'est parti, 8,4 s)
 #   taches   (équipe, référent, 5 s)   planning (responsabilités, notifications, 5 s)
 # Les séries d'images complètes ne sont pas refaites (effacer frames-extraits/<appareil>/<scène> pour la refaire).
 set -e
 cd "$(dirname "$0")"
-OUT=../../docs/video-bienvenue/extraits
+OUT=../../public/accueil/extraits
 mkdir -p $OUT
 enc() { ffmpeg -y -loglevel error "$@" -an -c:v libx264 -preset slow -crf 25 -pix_fmt yuv420p -movflags +faststart; }
 for d in telephone tablette tablette-paysage ordinateur; do

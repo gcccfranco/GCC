@@ -16,8 +16,8 @@ export const BASE_URL_COUPE = `http://localhost:${PORT + 1}`;
 const SPECS_GRAND_ECRAN = [
   // Lot CH (docs/spec-chargement.md) : la forme du membre pendant l'attente de Firebase, sur les quatre dispositions.
   /chargement\.spec\.ts/,
-  // Lot VB (docs/spec-video-bienvenue.md) : la vidéo de l'écran Bienvenue, sur les quatre dispositions.
-  /video-bienvenue\.spec\.ts/,
+  // Lot VB-E (docs/spec-video-bienvenue.md) : les extraits de la visite, sur les quatre dispositions.
+  /extraits-visite\.spec\.ts/,
   /navigation-grand-ecran\.spec\.ts/,
   /look-navigation\.spec\.ts/,
   /look-halo(-defilement)?\.spec\.ts/,

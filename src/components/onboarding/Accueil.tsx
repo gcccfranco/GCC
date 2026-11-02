@@ -6,7 +6,7 @@
 // compte (onboarding/{uid}, avec sa version), remontrée une fois à tout compte qui l'a vue dans une version
 // plus ancienne (lot VB-R), jamais sans compte. Plein écran sur téléphone, fenêtre centrée sur tablette et ordinateur.
 // « Passer » partout ; on avance avec « Suivant » ou d'un glissé. Le mode « revoir » (VR-C) n'écrit rien.
-// L'écran 1 montre la vidéo de bienvenue (premiere / revoir, pas en chinois) : docs/spec-video-bienvenue.md.
+// Lot VB-E (docs/spec-video-bienvenue.md) : l'écran 1 garde le logo ; chaque autre écran finit par un extrait vidéo en boucle.
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { BACK_OFFICE } from "@/lib/backOffice";
@@ -19,7 +19,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { VideoBienvenue } from "@/components/onboarding/VideoBienvenue";
+import { ExtraitVisite, type Extrait } from "@/components/onboarding/ExtraitVisite";
 import { entreesBackOffice } from "@/lib/access";
 import { cleNomEquipe } from "@/lib/equipes/table";
 import { getAccueilVu, setAccueilVu, VERSION_VISITE } from "@/lib/firebase/onboarding";
@@ -85,6 +85,13 @@ function Geste({ Icon, children }: { Icon: LucideIcon; children: ReactNode }) {
       <span className="pt-1 text-base leading-snug">{children}</span>
     </li>
   );
+}
+
+/** L'extrait de chaque carte (E4 à E6) : `melange` pour tout rôle de service autre que musicien, et pour la carte membre. */
+function extraitDeLaCarte(c: Carte): Extrait {
+  if (c.kind === "service") return c.role === "musicien" ? "musicien" : "melange";
+  if (c.kind === "equipe") return "taches";
+  return c.kind === "responsabilites" ? "planning" : "melange";
 }
 
 const EVENEMENT_VISITE = "gcc:visite";
@@ -202,10 +209,12 @@ function Ecrans({ mode, notifs, uid, onFermer }: {
     : lieu(a);
 
   const cartes = cartesDeLaVisite(user, profile, BACK_OFFICE);
+  // E9 : C'est parti montre `melange`, sauf à qui l'a déjà vu sur une de ses cartes (alors `apercu`).
+  const extraitFin: Extrait = cartes.some((c) => extraitDeLaCarte(c) === "melange") ? "apercu" : "melange";
   const backOffice = BACK_OFFICE && entreesBackOffice(user, profile).length > 0;
 
   /** Le gabarit d'une carte : pastille de texte, titre, « Tu peux » et ses gestes, filet, la ligne « c'est … », lien guide. */
-  function ecranCarte(id: string, titre: string, pastille: string | null, gestes: { Icon: LucideIcon; texte: ReactNode }[], role: string | null) {
+  function ecranCarte(id: string, extrait: Extrait, titre: string, pastille: string | null, gestes: { Icon: LucideIcon; texte: ReactNode }[], role: string | null) {
     return {
       titre,
       gauche: true,
@@ -222,6 +231,7 @@ function Ecrans({ mode, notifs, uid, onFermer }: {
           <Link href={`/guide#${ANCRES[id]}`} onClick={onFermer} className="inline-block text-sm font-semibold text-foreground underline underline-offset-4">
             {t("accueil.voirGuide")}
           </Link>
+          <div className="mt-6"><ExtraitVisite extrait={extrait} /></div>
         </div>
       ),
     };
@@ -238,14 +248,14 @@ function Ecrans({ mode, notifs, uid, onFermer }: {
       const lieux = c.lieux.map(lieu).join(", ");
       const aussi = c.aussi.length > 0 ? t("accueil.aussi", { roles: c.aussi.map(roleMin).join(sep) }) : "";
       const pastille = [t(`accueil.role.${c.role}`), lieux, aussi].filter(Boolean).join(" · ");
-      return ecranCarte(c.role, t(`accueil.carte.${c.role}.titre`), pastille, peut(c.role, GESTES[c.role]), t(`accueil.carte.${c.role}.role`));
+      return ecranCarte(c.role, extraitDeLaCarte(c), t(`accueil.carte.${c.role}.titre`), pastille, peut(c.role, GESTES[c.role]), t(`accueil.carte.${c.role}.role`));
     }
     if (c.kind === "equipe") {
       const noms = c.equipes.map(equipe);
       if (c.referentDe.length > 0) {
         const valeurs = { equipe: equipe(c.referentDe[0]) };
         return ecranCarte(
-          "referent", t("accueil.carte.referent.titre", valeurs), [noms.join(sep), t("accueil.referent")].join(" · "),
+          "referent", extraitDeLaCarte(c), t("accueil.carte.referent.titre", valeurs), [noms.join(sep), t("accueil.referent")].join(" · "),
           peut("referent", GESTES.referent), t("accueil.carte.referent.role"),
         );
       }
@@ -253,7 +263,7 @@ function Ecrans({ mode, notifs, uid, onFermer }: {
         ? t("accueil.carte.equipe.titre", { equipe: noms[0] })
         : t("accueil.carte.equipe.titres", { equipes: noms.join(sep) });
       return ecranCarte(
-        "equipe", titre, [noms.join(sep), t("accueil.membre")].join(" · "),
+        "equipe", extraitDeLaCarte(c), titre, [noms.join(sep), t("accueil.membre")].join(" · "),
         peut("equipe", GESTES.equipe), t("accueil.carte.equipe.role", { equipe: noms.join(sep) }),
       );
     }
@@ -267,26 +277,25 @@ function Ecrans({ mode, notifs, uid, onFermer }: {
           : {};
         return { Icon: ICONES_LIGNES[l.kind], texte: <Trans i18nKey={`accueil.carte.resp.${l.kind}`} values={valeurs} components={GRAS} /> };
       });
-      return ecranCarte("resp", t("accueil.carte.resp.titre"), null, gestes, null);
+      return ecranCarte("resp", extraitDeLaCarte(c), t("accueil.carte.resp.titre"), null, gestes, null);
     }
     // Membre : back-office coupé, la section Évènements est absente — le geste devient la lecture des setlists.
     const cles = [1, 2, 3].map((n) => (n === 2 && !BACK_OFFICE ? "accueil.carte.membre.peutSetlists" : `accueil.carte.membre.peut.${n}`));
     const icones = GESTES.membre.map((Icon, i) => (i === 1 && !BACK_OFFICE ? ListMusic : Icon));
-    return ecranCarte("membre", t("accueil.carte.membre.titre"), null, peut("membre", icones, undefined, cles), t("accueil.carte.membre.role"));
+    return ecranCarte("membre", extraitDeLaCarte(c), t("accueil.carte.membre.titre"), null, peut("membre", icones, undefined, cles), t("accueil.carte.membre.role"));
   }
 
   const ecrans: { titre: string; corps: ReactNode; visuel: ReactNode; gauche?: boolean }[] = [
     {
       titre: t("accueil.bienvenue.titre"),
-      visuel: !zh ? <VideoBienvenue /> : (
-        <Image src="/logo.png" alt="" width={72} height={72} className="rounded-full" priority />
-      ),
+      visuel: <Image src="/logo.png" alt="" width={72} height={72} className="rounded-full" priority />,
       corps: <p>{t(mode === "premiere" ? "accueil.bienvenue.texte" : "accueil.bienvenue.retour")}</p>,
     },
     {
       titre: t("accueil.ou.titre"),
       visuel: null,
       corps: (
+        <div>
         <ul className="space-y-3 text-left">
           {[
             ...ONGLETS,
@@ -301,6 +310,8 @@ function Ecrans({ mode, notifs, uid, onFermer }: {
             </li>
           ))}
         </ul>
+        <div className="mt-6"><ExtraitVisite extrait="onglets" /></div>
+        </div>
       ),
     },
     ...cartes.map(ecranDeLaCarte),
@@ -324,6 +335,7 @@ function Ecrans({ mode, notifs, uid, onFermer }: {
                   {push === "erreur" && <p role="alert" className="text-sm">{t("accueil.notifs.erreur")}</p>}
                 </>
               )}
+              <div className="mt-6"><ExtraitVisite extrait="planning" /></div>
             </div>
           ),
         }]),
@@ -336,6 +348,7 @@ function Ecrans({ mode, notifs, uid, onFermer }: {
           <Link href="/guide" onClick={onFermer} className="inline-block font-semibold text-foreground underline underline-offset-4">
             {t("accueil.fin.guide")}
           </Link>
+          <div className="mt-6"><ExtraitVisite extrait={extraitFin} /></div>
         </div>
       ),
     },

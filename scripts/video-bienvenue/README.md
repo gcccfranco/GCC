@@ -2,7 +2,9 @@
 
 Faite avec la méthode /brag (`latent-spaces/brag`, `/brag-slim`) le 01/11/2026 : 21 s, carré, français, **sans son**,
 **une vidéo par disposition** (téléphone, tablette portrait, tablette paysage, ordinateur), mêmes scènes.
-Rendus : `public/accueil/bienvenue-<appareil>.mp4` (720×720) et l'affiche commune `bienvenue.jpg` (image 0).
+Rendus : `rendus/bienvenue-<appareil>.mp4` (720×720) et l'affiche `bienvenue.jpg` (image 0) ; ces vidéos de 21 s ne sont plus servies
+(lot VB-E, 02/11/2026). Ce que le site sert : les extraits de la visite, `public/accueil/extraits/<extrait>-<disposition>.{mp4,jpg}`
+(`./tout-extraits.sh`).
 Spec d'intégration : `docs/spec-video-bienvenue.md`. Plan et storyboard : `plan.md`.
 
 Refaire les vidéos (depuis ce dossier, serveur `npm run dev -- -p 3100` lancé à la racine) :
