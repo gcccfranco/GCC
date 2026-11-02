@@ -11,5 +11,8 @@ le `CLAUDE.md` racine gagne.
   sobre mais moins fade et moins « document »). Les autres : sur besoin précis. Images, bannières, slides,
   articles, vidéo : seulement si la tâche en produit.
 - **Agents** (`executant`, `testeur`, `chercheur`, workflows) : aucun skill, la consigne porte la méthode.
-- **Renommages** : `mattpocock-code-review` (`/code-review` reste l'intégré) ; `ui-ux-pro-max-design`
-  (`design` reste l'intégré).
+- **Renommages** : `mattpocock-code-review` (`/code-review` reste l'intégré).
+- **Scan de sécurité** (01/11/2026) : tout skill ajouté se scanne avec SkillSpector (NVIDIA) avant d'être commité :
+  `python3 scripts/scan-skills.py` n'affiche que les alertes absentes de `.claude/skillspector-reference.json` (faux
+  positifs déjà vérifiés) ; une fois les nouvelles vérifiées, `--maj` les accepte. Installation :
+  `uv tool install git+https://github.com/NVIDIA/skillspector.git`.
