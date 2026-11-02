@@ -184,3 +184,9 @@ clip ». Questions restées sans réponse : recommandations appliquées (E8 à E
    charge **sa** disposition ; « Suivant » visible à 375×667. Relancer `visite-par-role`, `nouveaux-membres`,
    `back-office-coupe`. Captures des cinq dispositions + 375×667 sur trois écrans (Où trouver quoi, une carte, C'est
    parti), regardées à l'œil.
+
+### Remontrée à tous (Timothée, 02/11/2026)
+
+« Reset la première connexion de tout le monde » : `VERSION_VISITE` passe de 3 à 4 (`src/lib/firebase/onboarding.ts`,
+recopiée dans `tests/helpers/fakeSession.ts`). Même règle qu'au lot VB-R : tout compte dont la version vue est < 4
+revoit la visite une fois, en mode première, avec les extraits ; la fermer écrit 4.
