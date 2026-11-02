@@ -127,6 +127,9 @@ s'écrit ici, pas seulement en mémoire.
   vaut pour un lot, pas pour le suivant, ni pour une mise en ligne. Dans le doute, demander « go pour le lot N ? ».
 - **Design** : une demande qui change l'apparence ou l'organisation des écrans commence par une planche (artefact HTML
   ou Figma : pistes aux trois tailles, recommandation marquée, questions à trancher), puis la spec, puis le code sur go.
+  La planche se fait avec l'**équipe design** (02/11/2026, `docs/orchestration.md` § 4) : workflow `/planche`
+  (`directeur-artistique` → `maquettiste` → `critique-design` + `regard`) ; la conversation principale relit, publie
+  l'artefact et pose les questions. Après une tranche `/tranche` qui change l'apparence, la conversation principale lance aussi `critique-design` à la main.
   Zones gelées sauf demande explicite : § 2 « Restent gelés » de `docs/audit-ui-apple-design.md`.
 - **Coder = une session orchestratrice** (Timothée, 18/10/2026) : une session cloud qui reçoit un go ne code pas
   elle-même ; elle lance une **nouvelle session** (`create_session`) qui orchestre le code (agents `executant`,
@@ -137,11 +140,12 @@ s'écrit ici, pas seulement en mémoire.
 - **Déléguer** aux agents de `.claude/agents/` : `chercheur` (Haiku) pour une recherche qui parcourt plusieurs
   fichiers, `testeur` (Haiku) pour lancer une suite de tests et en rapporter les échecs, `executant` (Sonnet) pour
   appliquer une modification déjà décidée et décrite, `relecteur` (Sonnet) pour contre-vérifier un diff ou un constat,
-  `regard` (Sonnet) pour trier des captures. La conversation principale garde le jugement : specs, planches,
+  `regard` (Sonnet) pour trier des captures ; équipe design : `directeur-artistique` (Opus) pour proposer des pistes,
+  `maquettiste` (Sonnet) pour les rendre en planche, `critique-design` (Sonnet) pour les critiquer. La conversation principale garde le jugement : specs, planches,
   débogage, relecture du diff, regard sur les captures et les 简谱.
 - **Workflows** de `.claude/workflows/` (24/10/2026, `docs/orchestration.md`) : `/tranche` code une tranche décidée
   (executant → testeur → corrections → conseil Opus si ça résiste → relecteur, sans commit) ; `/verifier-constats`
-  contre-vérifie des constats avant un rapport ; `/audit-code` refait l'audit en 11 dimensions (≈ 60 agents, sur
+  contre-vérifie des constats avant un rapport ; `/planche` fait une planche de design (sans commit ni publication) ; `/audit-code` refait l'audit en 11 dimensions (≈ 60 agents, sur
   demande seulement). Un fichier ajouté sous `.claude/` s'indexe avec `git add -f` (le dossier est ignoré).
 
 ## Comportement (guidelines Karpathy)

@@ -85,6 +85,27 @@ Deux conséquences :
   texte coupé, contraste, cible minuscule, incohérence entre dispositions, langues, thèmes). Ne décide rien
   du design ; la conversation principale regarde les captures signalées.
 
+### Équipe design (02/11/2026)
+
+Demande de Timothée : « créer une équipe de design ». Trois agents, plus `regard`, et le workflow `/planche`.
+
+| Agent | Modèle | Skills chargés | Rôle |
+| --- | --- | --- | --- |
+| **`directeur-artistique`** | Opus, lecture seule | `frontend-design`, `apple-design` (+ `taste-skill`, catalogue d'`avoid-ai-design` à la demande) | trois pistes vraiment différentes, ancrées dans GCC, la recommandée, les questions |
+| **`maquettiste`** | Sonnet | `web-design-engineer`, `frontend-design` | planche HTML autonome dans `docs/planches/`, captures Playwright (390, 820, 1 180, 1 440 px, clair et sombre) dans `test-results/planches/<sujet>/` ; n'écrit nulle part ailleurs |
+| **`critique-design`** | Sonnet, lecture seule | `impeccable` (allégé), `avoid-ai-design`, `web-design-guidelines` (+ signes d'`unslop`) | critique d'une planche (dans `/planche`) ou, lancé à la main par la conversation principale après `/tranche`, d'une tranche qui change l'apparence ; verdict prouvé par capture ou `chemin:ligne` |
+| `regard` | Sonnet, lecture seule | — | première passe sur les captures |
+
+Le directeur artistique est sur Opus parce que proposer une direction est du jugement ; il **propose**, la
+conversation principale et Timothée **décident**. Les zones gelées (`docs/audit-ui-apple-design.md` § 2) bornent
+les trois agents. `avoid-ai-design` range le « crème + terracotta » parmi les clichés : la critique le signale
+sans en faire un rejet, puisque Timothée tranche la direction.
+
+Skills tiers installés le même jour, après scan SkillSpector et contre-vérification des 60 alertes par huit agents :
+`avoid-ai-design` et `unslop` tels quels ; `web-design-guidelines` sur une copie figée de ses consignes (il les
+téléchargeait à chaque usage) ; `impeccable` sans son lanceur ni ses commandes outillées (il téléchargeait et
+exécutait un binaire fermé hors du bac à sable).
+
 ### Workflows (`.claude/workflows/`, chargés au démarrage d'une session, ou par `/reload-skills`)
 
 - **`/tranche`** — une tranche décidée d'un lot : `executant` code → `testeur` lance tsc, lint et les specs
@@ -95,6 +116,11 @@ Deux conséquences :
 - **`/verifier-constats`** — un `relecteur` par constat, sur la tête de branche (un constat déjà corrigé sur
   `origin` sort en `deja_corrige`). À passer sur tout constat avant qu'il entre dans un rapport, une spec ou la
   feuille de route. `args : { base, constats: [...] }`.
+- **`/planche`** (02/11/2026) — une planche de design : `directeur-artistique` propose trois pistes →
+  `maquettiste` écrit `docs/planches/planche-<sujet>.html` et la capture → `critique-design` et `regard` en
+  parallèle → une reprise si la critique dit « à reprendre ». Ne commite pas, ne publie pas : la conversation
+  principale regarde les captures, publie l'artefact et pose les questions à Timothée.
+  `args : { sujet, demande, ecrans, captures?: [...], contraintes? }`.
 - **`/audit-code`** — l'audit en 11 dimensions du 24/10/2026, réutilisable : environ 60 agents et 5 millions
   de jetons, **sur demande de Timothée seulement**. `args : { commit, build? }`.
 - **Proposé, sur go** : versionner le banc d'essai de l'audit (parcours des pages sur les cinq dispositions avec

@@ -10,7 +10,14 @@ le `CLAUDE.md` racine gagne.
   planche ou pour rechoisir la direction (à rechoisir : « Sobre sur crème » rouverte le 13/09/2026, rester
   sobre mais moins fade et moins « document »). Les autres : sur besoin précis. Images, bannières, slides,
   articles, vidéo : seulement si la tâche en produit.
-- **Agents** (`executant`, `testeur`, `chercheur`, workflows) : aucun skill, la consigne porte la méthode.
+- **Agents** (`executant`, `testeur`, `chercheur`, workflows) : aucun skill, la consigne porte la méthode. Exception,
+  l'équipe design (02/11/2026) : `directeur-artistique` charge `frontend-design` + `apple-design`, `maquettiste`
+  `web-design-engineer` + `frontend-design`, `critique-design` `impeccable` + `avoid-ai-design` + `web-design-guidelines`
+  (champ `skills:` de l'agent).
+- **Skills design ajoutés le 02/11/2026** (scannés, alertes vérifiées une à une) : `avoid-ai-design`, `unslop` tels quels ;
+  `web-design-guidelines` lit une copie figée (`guidelines.md`), plus aucun téléchargement de consignes ; `impeccable`
+  allégé : sans `scripts/` ni les commandes `live`, `generate`, `hooks`, `doctor`, `pin` (le lanceur téléchargeait et
+  exécutait un binaire fermé). Ne pas réinstaller la version complète sans décision de Timothée.
 - **Renommages** : `mattpocock-code-review` (`/code-review` reste l'intégré).
 - **Scan de sécurité** (01/11/2026) : tout skill ajouté se scanne avec SkillSpector (NVIDIA) avant d'être commité :
   `python3 scripts/scan-skills.py` n'affiche que les alertes absentes de `.claude/skillspector-reference.json` (faux
