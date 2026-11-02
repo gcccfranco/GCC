@@ -7,7 +7,7 @@ import fs from "node:fs";
 
 const ici = path.dirname(new URL(import.meta.url).pathname);
 const [, , device, clip, mode = "stills", ...rest] = process.argv;
-const FPS = 30, DUREE = 5;
+const FPS = 30, DUREE = clip === "apercu" ? 8 : 5;
 const boxes = JSON.parse(fs.readFileSync(path.join(ici, "shots", device, "boxes.json"), "utf8"));
 const b = await chromium.launch({ args: ["--allow-file-access-from-files"] });
 const p = await b.newPage({ viewport: { width: 1280, height: 720 } });

@@ -114,6 +114,26 @@ if (CLIP === "tonalite") {
     camera(droite * d, bas * d, w);
     if (E) ring.style.cssText = `left:${E.x - 5}px;top:${E.y - 5}px;width:${E.width + 10}px;height:${E.height + 10}px;border-radius:${(E.height + 10) / 2}px;border-width:2.5px;opacity:${ramp(t, 2.3, 2.5) * (1 - ramp(t, 3.4, 3.6))}`;
   };
+} else if (CLIP === "planning") {
+  // Responsabilités, Notifications : « Pour moi » (ton prochain service), puis « Ce dimanche ». Noms inventés.
+  const K = { telephone: [390, 0, 220, 0, 450], tablette: [520, 20, 230, 20, 560], "tablette-paysage": [560, 270, 140, 270, 480], ordinateur: [640, 600, 120, 270, 140] }[D];
+  const [w, xa, ya, xb, yb] = K;
+  capture("09-planning");
+  render = (t) => { const d = eio(ramp(t, 1.2, 2.6)) * (1 - eio(ramp(t, 3.8, 4.8))); camera(lerp(xa, xb, d), lerp(ya, yb, d), w); };
+} else if (CLIP === "apercu") {
+  // Bienvenue : quatre écrans du site qui se succèdent (liste, chant, setlist, Mode Louange), en fondu, 8 s.
+  const noms = ["01-liste", "02-chant", "05-setlist", "06-louange-a"], w = Math.min(VP.width, 900);
+  const ims = noms.map((n) => capture(n, VP.width, 0));
+  render = (t) => {
+    camera(0, 0, w);
+    const i = Math.floor(t / 2) % 4, p = t % 2, f = ramp(p, 1.6, 2.0);
+    ims.forEach((im, k) => {
+      const op = k === i ? 1 : k === (i + 1) % 4 ? f : 0;
+      im.style.opacity = op; im.style.zIndex = k === (i + 1) % 4 ? 2 : 1;
+      const z = 1 + 0.03 * (k === i ? p / 2 : 0);
+      im.style.transformOrigin = "30% 20%"; im.style.transform = `scale(${z})`;
+    });
+  };
 } else if (CLIP === "fin") {
   // C'est parti : la barre de navigation, un anneau passe sur chaque entrée.
   const N = B.nav, horizontal = D === "telephone" || D === "tablette";
