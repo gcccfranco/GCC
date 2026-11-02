@@ -1,0 +1,229 @@
+{
+ "api-and-interface-design": [],
+ "apple-design": [],
+ "ask-matt": [],
+ "beautiful-article": [
+  "03bf4accd98348009feecdca8e80e8b011240b41de2a15cd0392b7b97f989e96",
+  "122e212bd6c22dd4f4063a1aa61997b7d842fff73f11a4b3c8bfdc8926939df6",
+  "1cd10603a5c1b0acda35a42418e369dc732b7be9d4b888dfafc9d609500f941b",
+  "30fcbe19cf488c45e1c1b22e75aad4350c5f78787287396f158b9a953300b89d",
+  "424d01ae8d4cbf2cfe8c1a20d8950e544c9d43c43078f3b80c293e165ad48739",
+  "588dfb1d22f1f11d62dacb690bbac86fcd9b3899b958f717a7c582e540a12787",
+  "656dcb4059d8caa12dbae6c97cd463a8cf0aa46804d7724810c634dcbe84a54a",
+  "6aaf5b27fbac44eeebc5148464451c523bbe23ca17bb4f17056189761d24d385",
+  "70d3fb5ee082f59a1b758ff9982e810f5912e26b1dc691cb75d3c241312a9360",
+  "LP3|SKILL.md|Skill declares no tool scope ('permissions' or 'allowed-tools') but code capabilities were detected: file_read, file_write, network.",
+  "b6a4219367248b675cc09314b80788a89fbcc2e7450e01694634b4f914bd13ba",
+  "d9988424e9dfd62136ea9e8611696a2a0509a789c218177d2f4e71d7d027e658",
+  "dfa1efa900ae4661ec189417e1c9b205e8c391e7653cbb869536cb36adffcb43",
+  "f0edab2a4dd2bf7dd3e136a09bb47128228147017bd826620c6e873e0a066f77",
+  "f180f6e14c181053482981aedd824b28119af0f4ef30ac43a4dc0d9e9592e734",
+  "f89045a8baff5e86e1367dd31ea9e36a8a847a23455fff7fc18ff896d503c545",
+  "f93ea7c95b3acfc2d072d9bd41d1947e36b5c69f5c5a0609a4b25ab8c668b10a"
+ ],
+ "brand": [
+  "18bb822f71209cb3a04d792499f0995d675d1c638e97c90968b496128c99c88d",
+  "39acce70b632baba9c053fd548fe36a924406f95c87a080fb005dad19985c477",
+  "63e397565d3ce0a81b7516d05337f42f95b1141e786a76c1cb29aec124052823",
+  "LP3|SKILL.md|Skill declares no tool scope ('permissions' or 'allowed-tools') but code capabilities were detected: file_read, file_write, shell."
+ ],
+ "browser-testing-with-devtools": [
+  "799a2ea8bf4e09be1b430a604814828d97c497a0a2221cc1c4cc34fb186a2635",
+  "80b6579db4fce32126ffbbce6761b213cd90ab636a49c5bc4c57be6a3551dae7",
+  "f3c25ad12027b4abae446d885d4e99fb4c61a7dc86fb056eeca39a06ab31d4b1"
+ ],
+ "brutalist-skill": [],
+ "ci-cd-and-automation": [
+  "1c4ec899769ec1ad845dfd17e08db14b18c730cbdd554c831485e716aeab526c",
+  "5d1e71786bcce07e288b1b7488d594b4d051d0f6efefb2c50641987706a012da",
+  "66ef81c27c03406fd9935e5fc86fc4126d7150c15b8d076fdc528d05cea7c7bf",
+  "cc926180331e2a6530821422d382714bb32f1f53e4c6da6c0c4a8aa07dbeb2b9",
+  "f93ea7c95b3acfc2d072d9bd41d1947e36b5c69f5c5a0609a4b25ab8c668b10a"
+ ],
+ "code-review-and-quality": [],
+ "code-simplification": [
+  "9c3f58ca3574777fed1fdfed7452e3e0ba98469ab607f366116c4ec2f509865a",
+  "f7c89e93a631ac5ee50a07e2fb7ed0483ed4da00a3837cabc5a816c697d9b2b0"
+ ],
+ "codebase-design": [],
+ "constraint-driven-development": [
+  "afd9398bcd5f2af0a8fecc77b7f8fdbbf9659784fd7f0b044e0f2ad53f2fcfd5"
+ ],
+ "context-engineering": [
+  "66ef81c27c03406fd9935e5fc86fc4126d7150c15b8d076fdc528d05cea7c7bf",
+  "9341b6f34d6af9081a0d6673f4217b7307d273da9f43357efd9029e15c5da76c",
+  "f93ea7c95b3acfc2d072d9bd41d1947e36b5c69f5c5a0609a4b25ab8c668b10a",
+  "fe5d1711651a4715ab1d9b8451c549b9733b35dcee753a00cc95b0754ef2c699"
+ ],
+ "debugging-and-error-recovery": [],
+ "deprecation-and-migration": [
+  "b338c434223ca4627319545d0a7cccac1c4d279acaf12e3fc3def9d821dfbfc4"
+ ],
+ "design-system": [
+  "2207acf1ba83f18d11219a233a79540930b6fd410dceb189d7194e7b06133b14",
+  "2331cdf7b4297f484e05309da6ae9b70bd15b46c04013cdc1a22b18bc6cf04d8",
+  "6c764939ae27574d4fab2f3831679cdcaf8ea064eb9d57e5227437e8695d7325",
+  "9ede3638652bb230c0fa0bf025f81e779c87908f22f768088fbba0c1c6d2367d",
+  "LP3|SKILL.md|Skill declares no tool scope ('permissions' or 'allowed-tools') but code capabilities were detected: env, file_read, file_write, network, shell."
+ ],
+ "diagnosing-bugs": [
+  "58f8a51bca70aeabbb60a53582a78222a10262e9d9bf749609a7cbe055c22812"
+ ],
+ "documentation-and-adrs": [],
+ "domain-modeling": [],
+ "doubt-driven-development": [
+  "6d7e3a19d528be064fb38dd3808fabb3d2b340216d5de8e8ad453caa88f8b562"
+ ],
+ "frontend-design": [
+  "6548012a81eb308abd86389fb7c9e00f5ae1bfa59164ef7c3962c84c137ad1d3"
+ ],
+ "frontend-ui-engineering": [],
+ "git-workflow-and-versioning": [
+  "f21f5124192a6ca491d13034d2b1dcaae69642decbd659201773b11a2bc5c2a5",
+  "f93ea7c95b3acfc2d072d9bd41d1947e36b5c69f5c5a0609a4b25ab8c668b10a"
+ ],
+ "gpt-tasteskill": [],
+ "graphify": [
+  "308a9ec223c8d7183a684991d98e31d2a5a937ccb9cf5ae0af3091829cb41b36",
+  "50c08f851e203c1c18a390ec9a5009920ed4a7960939e179c02a0dc889120c64",
+  "53c32905e950cbdc0f915b81bab4262cf87077e93ee69f468581a690049d9c76",
+  "543b6deed7ec89ce7cbc79d9011894b687c0bf55459ce60c37d43219e91ee4a4",
+  "630d6ec603d1f22199783c48acd0547e9c04c6a95b279aef2664a9ce9cf84b0f",
+  "a6a01f4ceb83758d44ca5c54a79747972e0b88f55b0c3f2a8e73262ed7fa3904",
+  "b66b51ad78baeafba9a19546959b86d5cefcbed1ae7b68e4e40d9b4f8c75ddac",
+  "b83fe2c9cbf387b99a059b5d77a64f66f7f648d47b1003d0aae6c21fc0e10636",
+  "e1c52694e854c5bd049e3a3ae66f3efcfe098f61a8ee160655ad3b90035f67fd"
+ ],
+ "grill-me": [],
+ "grill-with-docs": [],
+ "grilling": [
+  "9de502b09a567df9fdaf24805fd25357cfaae1ef9e04e7f68c439b4b11307bcf"
+ ],
+ "handoff": [],
+ "idea-refine": [],
+ "implement": [],
+ "improve-codebase-architecture": [],
+ "incremental-implementation": [
+  "f93ea7c95b3acfc2d072d9bd41d1947e36b5c69f5c5a0609a4b25ab8c668b10a"
+ ],
+ "interview-me": [],
+ "mattpocock-code-review": [],
+ "minimalist-skill": [],
+ "observability-and-instrumentation": [],
+ "output-skill": [],
+ "performance-optimization": [
+  "799d229d4be80a664b62b0192c372c813571bf3ce2d47af705f99aae36917fc9",
+  "f2f8e9a6be4febff2f4c5af84484e173f9a84ddeb2c7ced91952ca382e972979"
+ ],
+ "planning-and-task-breakdown": [
+  "6464a18f86607fbd4940d3be07cb4323b3073961c7e40f6d99254fbd009fae68",
+  "8dc77d3dce9ba1f2672e813265a1b1a0c8594866ef38a4e978bf4f4451795465"
+ ],
+ "prototype": [],
+ "redesign-skill": [],
+ "research": [],
+ "resolving-merge-conflicts": [],
+ "security-and-hardening": [
+  "021f7ffa4122cf8ed26ecae08a0a46ff9aa27fee40f717ab4c3bff5f82c6550e",
+  "4b9d13ac603b6b3b7223dbea83ec4db8a7d9cd4c5f75cb33027bd83f42ec46e4",
+  "66ef81c27c03406fd9935e5fc86fc4126d7150c15b8d076fdc528d05cea7c7bf",
+  "d4917bc32ab1bbcd613110cc8a6d50fce418e23d2561b1b0948af4f78abccc4c",
+  "d61ab72824eae3143803cfed4f723d8454fedefdac1d6ad5c7f4299f9032a6ee"
+ ],
+ "setup-matt-pocock-skills": [
+  "8dc77d3dce9ba1f2672e813265a1b1a0c8594866ef38a4e978bf4f4451795465"
+ ],
+ "shipping-and-launch": [
+  "1c4ec899769ec1ad845dfd17e08db14b18c730cbdd554c831485e716aeab526c",
+  "6c8054857f33a9ba7845d7c88384ccfa0cdb75d2cd98c594df12b25a3c301d9c"
+ ],
+ "slides": [],
+ "soft-skill": [],
+ "source-driven-development": [
+  "7f4628556472f313b15747f5a17dac99756fa4970aae5e69c5fea3ff34828f0a",
+  "9341b6f34d6af9081a0d6673f4217b7307d273da9f43357efd9029e15c5da76c",
+  "ea5a25d6b62cc8dc6f0b13c124dda7e61e83c99d4d419254f02e84010e674353"
+ ],
+ "spec-driven-development": [
+  "3956e312a09c45937f1b74d1433180e3f493c8beba515f298a83cb01fad9270d",
+  "7868080a35a6878aa292c53196ddb331f19d628c33953fb70850fdaf54c4191c",
+  "849e3f11d3a120acd790c460c01f2f8e2a3ff433e56e536ae6ef3e74e35464e1",
+  "98873c26463abab434868124c53e8f2ed92a1e507fb0f6c1435ee8c68acfdd20"
+ ],
+ "stitch-skill": [],
+ "taste-skill": [
+  "53c32905e950cbdc0f915b81bab4262cf87077e93ee69f468581a690049d9c76",
+  "6c764939ae27574d4fab2f3831679cdcaf8ea064eb9d57e5227437e8695d7325"
+ ],
+ "tdd": [],
+ "teach": [],
+ "test-driven-development": [
+  "9341b6f34d6af9081a0d6673f4217b7307d273da9f43357efd9029e15c5da76c"
+ ],
+ "to-questionnaire": [
+  "b4404d69f30b43064cedf6b7a3bc0f82006c7ad3e8bc125c4f8dc6a681444289"
+ ],
+ "to-spec": [],
+ "to-tickets": [
+  "d5b180efaad32e00810c94f93be98d5cf959b9fc5c959b1d0f82ef9a189ae3ac"
+ ],
+ "triage": [],
+ "ui-styling": [
+  "050c1ecdee97f6346fc283d618cd1a195d60f2a24b3b51e56b0edd4616f1605a",
+  "19983074f3e8b1503bce2442fdc1c1376f20ecb6e331c0181f319f9d7c7a6c86",
+  "26790e7b1fb893d5f629b6f37d55e6a291bd75d2c63742e22ff50da90b50eedb",
+  "28fee33913ae22f988225b4a5340e0ea993d5fb85e0cc08e3ad63901fe1e642e",
+  "2bb87de6fccba4b2dc35bf620098e447807772cc6d188fd23580bf6c0df60dbf",
+  "3408fa18f4cabec49edebcd6c7652590a8cd6adbcc133afd56d4751325085d7c",
+  "54d733e479801dfead936d8d720ef0c8c94bb6f71034983065eea0c665051549",
+  "6c764939ae27574d4fab2f3831679cdcaf8ea064eb9d57e5227437e8695d7325",
+  "6eaad1d0ff83f04ae3745779c17dfe842296b1331c031f31b80a4048ceecc6a2",
+  "LP3|SKILL.md|Skill declares no tool scope ('permissions' or 'allowed-tools') but code capabilities were detected: file_read, file_write, shell.",
+  "a88da99eb209a910f3b54198abbf7a928442fc3e39e05d97d85b2160abc486ad",
+  "ecebe0f34a6d724a7a0d7eb49a7d522a529157ecd00c959912d877f3e8b570f0",
+  "f80fac3f227c2cbbdb0ae4d56a38523a14d3e3f9e19e3e57f74cce89e000e02c"
+ ],
+ "ui-ux-pro-max": [
+  "021f7ffa4122cf8ed26ecae08a0a46ff9aa27fee40f717ab4c3bff5f82c6550e",
+  "152a270c69e5f498026be5430f75d09c53e612d4c86635345fe7e35d93b38ee0",
+  "185d22f157da5a84d02dff9686fa7f147180d794b4c7e43df099ae9daa3d598e",
+  "1fc12cbf34ff66660f8df2822253260f3d4414cda578e4279ccdf4ebed1d9c6e",
+  "2bd4b2b5d1a3a3c3d8b825f93ab91a457cfde2288d26ad0faf620deda92e5c5d",
+  "3cdeaf2338d43c8f116fba406f5a7bc5fad83fb416b817fc22df918219ea0c4c",
+  "3d92d7b42d5b4d8de293902d7d2cf811108f43aa718ab857ceda5f7df5db81e7",
+  "457bb74dd0eb3f195d54fbf3bf07e26dc6f982b06ad90b9a248f56071c83b964",
+  "492aab6839b1e29866177197d5d15d50d9cd681b2beab3f9e2f7e5513ec48969",
+  "585dfe66dcf8dd59e27929295d3eb32cf81458b5bd468cd9bf20325fec8ad8d4",
+  "5ccce46f157865494276872c4bd7b292e179a279ca96a970dfb00a21bd51d742",
+  "6464a18f86607fbd4940d3be07cb4323b3073961c7e40f6d99254fbd009fae68",
+  "66ef81c27c03406fd9935e5fc86fc4126d7150c15b8d076fdc528d05cea7c7bf",
+  "6c764939ae27574d4fab2f3831679cdcaf8ea064eb9d57e5227437e8695d7325",
+  "8d917baac03779a421e90f894620a765c8fd0787d50e2d8abf3d4267050d15a4",
+  "9341b6f34d6af9081a0d6673f4217b7307d273da9f43357efd9029e15c5da76c",
+  "LP3|SKILL.md|Skill declares no tool scope ('permissions' or 'allowed-tools') but code capabilities were detected: env, file_read, file_write, network, shell.",
+  "a2bfb0d7cc6cfe091106d72bc83701d46f04fadd9e90ccddd446da3e6aceb44e",
+  "a2ced90794f3b952126ee4e13e22891194b7f0947fb845402aa3f5e5062c2164",
+  "adb9319f8efc136c14cc6a957ebc312fbb0f8a8df66640545a5279d63681d7c8",
+  "afca04afeb75db76cbddc1ffb2a73598f31d2d03b5941c69a9de6af31da2733a",
+  "b370c043f28fd7082491639210e5b065ba1220624bf28f2b06542b0bde56b538",
+  "cf159af5f3c5aa20214f7ff51b2ec06e8190ff1ab76c35f09188a749bd35c424",
+  "dad52087f7635db0a14b6bbb3e59a0236b63f26b2607628a9944c31f2c4e5268",
+  "e6271431a6c67aa46b0391ea79c00ebd89e0e9f58029edfd1f5beb04a84ed2b1",
+  "edce26c80d1d1074b21925313fe17adbd030dacbbd53825ee6473b5e07a59fee"
+ ],
+ "using-agent-skills": [
+  "8db53b29ee2a947f415f92059d24849bcd6dd8e0dd6b2e1cd45dc449b8f679e4",
+  "9341b6f34d6af9081a0d6673f4217b7307d273da9f43357efd9029e15c5da76c"
+ ],
+ "wait-what": [],
+ "wayfinder": [],
+ "web-design-engineer": [
+  "470e2fa84035c1966dd0348cec6a61c2256ac76b71360358f0277ea394043f1d",
+  "731ef0155f26112c4c1cc910a8e3b6bfdee4b5d4a82a23e53f510e0c512ad6b9",
+  "8dc77d3dce9ba1f2672e813265a1b1a0c8594866ef38a4e978bf4f4451795465"
+ ],
+ "wizard": [
+  "66ef81c27c03406fd9935e5fc86fc4126d7150c15b8d076fdc528d05cea7c7bf"
+ ],
+ "writing-for-agents": []
+}
