@@ -2,7 +2,7 @@
 import type { TFunction } from "i18next";
 import { noteToIndex } from "@/lib/transpose";
 import { analyserAccord, type Accord } from "@/lib/accords/analyse";
-import { notesDeLAccord, voicingPiano } from "@/lib/accords/notes";
+import { notesDeLAccord, renversementsPiano } from "@/lib/accords/notes";
 
 /** Le nom d'une note dans la langue : solfège en français (« si bémol »), lettre en 中文 (« Bb »). */
 function nomDeNote(note: string, t: TFunction): string {
@@ -27,11 +27,17 @@ export function grilleDe(cases: (number | null)[]): string {
   return cases.map((c) => (c === null ? "x" : String(c))).join(sep);
 }
 
-/** Les deux mains du piano, avec les noms de notes à écrire sur les touches. */
-export function pianoDe(a: Accord): { gauche: number[]; droite: number[]; nomsGauche: string[]; nomsDroite: string[] } {
+/** Les deux mains du piano au renversement `i` (0 = état fondamental), avec les noms de notes à écrire sur les touches. */
+export function pianoDe(a: Accord, i = 0): { gauche: number[]; droite: number[]; nomsGauche: string[]; nomsDroite: string[] } {
   const { noms, classes, nomBasse } = notesDeLAccord(a);
-  const { gauche, droite } = voicingPiano(a);
+  const jeux = renversementsPiano(a);
+  const { gauche, droite } = jeux[i % jeux.length];
   return { gauche, droite, nomsGauche: [nomBasse], nomsDroite: droite.map((n) => noms[classes.indexOf(n % 12)] ?? "") };
+}
+
+/** Combien de renversements le piano propose pour cet accord (3 au plus, 2 pour une quinte). */
+export function nombreDeRenversements(a: Accord): number {
+  return renversementsPiano(a).length;
 }
 
 /** La clé qui dit que deux écritures sont le même accord (« A#m » = « Bbm », « Dsus2 » = « D2 »). */

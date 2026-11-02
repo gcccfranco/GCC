@@ -73,6 +73,29 @@ test("Piano : Main gauche F# pour D/F#, et le choix est retenu après rechargeme
   await expect(carte(page).getByText("Main gauche : F#")).toBeVisible();
 });
 
+test("Piano : flèches des renversements", async ({ page }) => {
+  await ouvrir(page, "C");
+  await page.getByRole("radio", { name: "Piano" }).click();
+  const suivant = carte(page).getByRole("button", { name: "Renversement suivant" });
+  await expect(carte(page).getByText("État fondamental · 1 sur 3")).toBeVisible();
+  await expect(carte(page).locator("[data-renversement]")).toHaveAttribute("data-renversement", "0");
+  await suivant.click();
+  await expect(carte(page).getByText("1er renversement · 2 sur 3")).toBeVisible();
+  await expect(carte(page).getByText("Main droite : E G C")).toBeVisible();
+  await expect(carte(page).locator("[data-renversement]")).toHaveAttribute("data-renversement", "1");
+  await suivant.click();
+  await expect(carte(page).getByText("2e renversement · 3 sur 3")).toBeVisible();
+  await expect(carte(page).getByText("Main droite : G C E")).toBeVisible();
+  await suivant.click();
+  await expect(carte(page).getByText("État fondamental · 1 sur 3")).toBeVisible();
+  await suivant.click();
+  await expect(carte(page).getByText("1er renversement · 2 sur 3")).toBeVisible();
+  // Un autre accord repart du premier renversement.
+  await page.goto("/accords?accord=G");
+  await page.getByRole("radio", { name: "Piano" }).click();
+  await expect(carte(page).getByText("État fondamental · 1 sur 3")).toBeVisible();
+});
+
 test("D2 dit D2 = Dsus2, D5 dit accord de puissance", async ({ page }) => {
   await ouvrir(page);
   await chercher(page).fill("D2");
@@ -104,6 +127,7 @@ test("en 中文 les libellés sont traduits", async ({ page }) => {
   await expect(carte(page).getByText(/大三和弦/)).toBeVisible();
   await page.getByRole("radio", { name: "钢琴" }).click();
   await expect(carte(page).getByText(/左手/)).toBeVisible();
+  await expect(carte(page).getByText("原位 · 第 1 种，共 3 种")).toBeVisible();
 });
 
 test("aucun lien vers /accords dans la navigation", async ({ page }) => {
@@ -126,6 +150,9 @@ for (const [langue, stockee] of [["fr", "fr"], ["zh", "zh-CN"]] as const) {
       await page.getByRole("radio", { name: "Piano" }).click();
       await expect(carte(page).getByText("Main gauche : F#")).toBeVisible();
       await carte(page).screenshot({ path: `test-results/captures-accords/${testInfo.project.name}-panneau-piano.png` });
+      await carte(page).getByRole("button", { name: "Renversement suivant" }).click();
+      await expect(carte(page).getByText(/^1er renversement/)).toBeVisible();
+      await carte(page).screenshot({ path: `test-results/captures-accords/${testInfo.project.name}-panneau-piano-renversement.png` });
     }
   });
 }

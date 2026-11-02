@@ -66,17 +66,26 @@ test("chant FR : le panneau d'un accord (capture)", async ({ page }) => {
   await accord.scrollIntoViewIfNeeded();
   await verifier(page, accord);
   await photo(page, "panneau-fr");
+  await panneau(page).getByRole("radio", { name: "Piano" }).click();
+  await panneau(page).getByRole("button", { name: "Renversement suivant" }).click();
+  await expect(panneau(page).getByText(/^1er renversement/)).toBeVisible();
+  await photo(page, "panneau-fr-piano-renversement");
 });
 
 test("chant ZH : le panneau d'un accord (capture)", async ({ page }) => {
   await sansAide(page);
   await page.addInitScript(() => localStorage.setItem("jianpu-sheet-pref", "never"));
+  await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
   await page.goto("/songs/" + encodeURIComponent("一切歌颂赞美"));
   await expect(touchables(page).first()).toBeVisible();
   const accord = touchables(page).nth(3);
   await accord.scrollIntoViewIfNeeded();
   await verifier(page, accord);
   await photo(page, "panneau-zh");
+  await panneau(page).getByRole("radio", { name: "钢琴" }).click();
+  await panneau(page).getByRole("button", { name: "下一个转位" }).click();
+  await expect(panneau(page).getByText(/^第一转位/)).toBeVisible();
+  await photo(page, "panneau-zh-piano-renversement");
 });
 
 test("la bulle d'aide se pose sous le premier accord visible (capture)", async ({ page }) => {

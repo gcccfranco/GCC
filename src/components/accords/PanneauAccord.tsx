@@ -12,7 +12,7 @@ import { DiagrammeGuitare, ClavierMains } from "@/components/harmonie/Diagrammes
 import { positionsGuitare } from "@/lib/accords/guitare";
 import type { Accord } from "@/lib/accords/analyse";
 import type { Instrument } from "@/types/harmonie";
-import { decrire, grilleDe, notesEnLettres, pianoDe } from "./outils";
+import { decrire, grilleDe, nombreDeRenversements, notesEnLettres, pianoDe } from "./outils";
 
 type Variante = "feuille" | "bulle" | "carte";
 
@@ -43,6 +43,36 @@ export function ChoixInstrument({
           {t(`accords.${i}`)}
         </button>
       ))}
+    </div>
+  );
+}
+
+/** La rangée ‹ texte › sous le dessin : positions de la guitare, renversements du piano (même rangée, même geste). */
+function Fleches({
+  rondBouton,
+  precedent,
+  suivant,
+  texte,
+  aller,
+}: {
+  rondBouton: string;
+  precedent: string;
+  suivant: string;
+  texte: string;
+  aller: (delta: number) => void;
+}) {
+  const classe = `${rondBouton} flex items-center justify-center rounded-full border border-border text-foreground transition-colors hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring`;
+  return (
+    <div className="mt-3 flex items-center justify-center gap-3">
+      <button type="button" onClick={() => aller(-1)} aria-label={precedent} className={classe}>
+        <ChevronLeft className="h-4 w-4" aria-hidden />
+      </button>
+      <span aria-live="polite" className="min-w-[8.5rem] text-center text-sm font-medium text-foreground">
+        {texte}
+      </span>
+      <button type="button" onClick={() => aller(1)} aria-label={suivant} className={classe}>
+        <ChevronRight className="h-4 w-4" aria-hidden />
+      </button>
     </div>
   );
 }
@@ -79,7 +109,12 @@ export function PanneauAccord({
   const aller = (delta: number) =>
     setChoix({ pour: accord.texte, i: (position + delta + doigtes.length) % doigtes.length });
 
-  const piano = useMemo(() => pianoDe(accord), [accord]);
+  const nbRenversements = useMemo(() => nombreDeRenversements(accord), [accord]);
+  const [choixPiano, setChoixPiano] = useState<{ pour: string; i: number }>({ pour: accord.texte, i: 0 });
+  const renversement = choixPiano.pour === accord.texte ? choixPiano.i % Math.max(nbRenversements, 1) : 0;
+  const allerPiano = (delta: number) =>
+    setChoixPiano({ pour: accord.texte, i: (renversement + delta + nbRenversements) % nbRenversements });
+  const piano = useMemo(() => pianoDe(accord, renversement), [accord, renversement]);
   const doigte = doigtes[position];
   const rondBouton = bulle ? "h-8 w-8" : "h-11 w-11";
   const puissance = accord.qualite === "5" && accord.ecrite === "5";
@@ -152,27 +187,13 @@ export function PanneauAccord({
                 <p className="mt-3 text-center text-sm text-muted-foreground">{t("accords.basseAJouer", { note: basseAJouer })}</p>
               )}
               {doigtes.length > 1 && (
-                <div className="mt-3 flex items-center justify-center gap-3">
-                  <button
-                    type="button"
-                    onClick={() => aller(-1)}
-                    aria-label={t("accords.positionPrecedente")}
-                    className={`${rondBouton} flex items-center justify-center rounded-full border border-border text-foreground transition-colors hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring`}
-                  >
-                    <ChevronLeft className="h-4 w-4" aria-hidden />
-                  </button>
-                  <span aria-live="polite" className="min-w-[8.5rem] text-center text-sm font-medium text-foreground">
-                    {t("accords.position", { n: position + 1, total: doigtes.length })}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => aller(1)}
-                    aria-label={t("accords.positionSuivante")}
-                    className={`${rondBouton} flex items-center justify-center rounded-full border border-border text-foreground transition-colors hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring`}
-                  >
-                    <ChevronRight className="h-4 w-4" aria-hidden />
-                  </button>
-                </div>
+                <Fleches
+                  rondBouton={rondBouton}
+                  precedent={t("accords.positionPrecedente")}
+                  suivant={t("accords.positionSuivante")}
+                  texte={t("accords.position", { n: position + 1, total: doigtes.length })}
+                  aller={aller}
+                />
               )}
               {!carte && (
                 <p className="mt-3 text-center text-xs text-muted-foreground">
@@ -202,7 +223,7 @@ export function PanneauAccord({
           )
         ) : (
           <>
-            <div className="flex justify-center text-foreground [&_svg]:h-auto [&_svg]:max-w-full">
+            <div data-renversement={renversement} className="flex justify-center text-foreground [&_svg]:h-auto [&_svg]:max-w-full">
               <ClavierMains
                 gauche={piano.gauche}
                 droite={piano.droite}
@@ -215,6 +236,19 @@ export function PanneauAccord({
                 })}
               />
             </div>
+            {nbRenversements > 1 && (
+              <Fleches
+                rondBouton={rondBouton}
+                precedent={t("accords.renversementPrecedent")}
+                suivant={t("accords.renversementSuivant")}
+                texte={t("accords.renversement", {
+                  nom: t(`accords.renversements.${renversement}`),
+                  n: renversement + 1,
+                  total: nbRenversements,
+                })}
+                aller={allerPiano}
+              />
+            )}
             <ul className="mt-3 flex flex-wrap justify-center gap-x-5 gap-y-1 text-sm text-foreground">
               <li>
                 <span aria-hidden className="text-foreground">●</span>{" "}

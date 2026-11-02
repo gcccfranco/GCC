@@ -3,7 +3,7 @@ import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { accordsDeLEtiquette, analyserAccord } from "../src/lib/accords/analyse";
 import { formesMobiles, positionsGuitare } from "../src/lib/accords/guitare";
-import { voicingPiano } from "../src/lib/accords/notes";
+import { notesDeLAccord, renversementsPiano, voicingPiano } from "../src/lib/accords/notes";
 import { MOBILES, MOBILES_SECONDES, OUVERTES, QUALITES } from "../src/lib/accords/table";
 import { CHORD_TOKEN, LABEL_SPLIT, getTransposedKey, noteToIndex, transposeChord } from "../src/lib/transpose";
 
@@ -190,7 +190,7 @@ test("DA-4 R4 : chaque forme est jouable (4 doigts au plus, écart de 4 cases, 5
 test("DA-4 R1 : trois positions pour les qualités courantes sur les 12 fondamentales, deux pour la traîne", () => {
   const manques: string[] = [];
   for (const q of [...R1, ...TRAINE, ...SANS_DOIGTE]) {
-    const but = SANS_DOIGTE.has(q) ? 0 : q === "sus2" ? 2 : R1.includes(q) ? 3 : 2;
+    const but = SANS_DOIGTE.has(q) ? 0 : R1.includes(q) ? 3 : 2;
     for (const n of NOMS_B) {
       const nb = positionsGuitare(analyserAccord(n + q)!).doigtes.length;
       if (nb < but) manques.push(`${n}${q} : ${nb} sur ${but}`);
@@ -219,7 +219,21 @@ test("DA-4 R2 : les positions 2 et 3 sont dans d'autres zones du manche dès que
       // Les suivantes vont de la plus basse à la plus haute.
       if (l.slice(1).some((v, i, t) => i > 0 && v < t[i - 1])) fautes.push(`${n}${q} : ${l.join(",")} pas dans l'ordre`);
       const dansTroisZones = l.every((x, i) => l.every((y, j) => i === j || Math.abs(x - y) >= 3));
-      if (!dansTroisZones) horsZones.push(`${n}${q} [${l.join(",")}]`);
+      if (dansTroisZones || !d.length) continue;
+      horsZones.push(`${n}${q} [${l.join(",")}]`);
+      // Toutes les formes que la table connaît pour cet accord (ouvertes et mobiles) : si deux d'entre elles se
+      // posent avec la 1re dans trois zones, la sélection devait les trouver.
+      const racine = NOMS_B.indexOf(n);
+      const ouvertes = Object.entries(OUVERTES)
+        .filter(([e]) => {
+          const o = analyserAccord(e)!;
+          return !o.basse && o.qualite === q && noteToIndex(o.fondamentale) === racine;
+        })
+        .flatMap(([, f]) => f.map(([c]) => c.split("").map((x) => (x === "x" ? null : Number(x)))));
+      const bas = [...ouvertes, ...formesMobiles(racine, q).map((f) => f.cases)].map(plusBasse);
+      const z0 = l[0];
+      const possible = bas.some((x, i) => bas.some((y, j) => j > i && [z0, x, y].every((u, k, t) => t.every((v, m) => k === m || Math.abs(u - v) >= 3))));
+      if (possible) fautes.push(`${n}${q} [${l.join(",")}] : trois zones possibles dans la table, non retenues`);
     }
   // Exemple de la spec : fa = barré case 1, forme de do case 5, barré type la case 8.
   expect(positionsGuitare(analyserAccord("F")!).doigtes.map((d) => grille(d.cases))).toEqual(["1,3,3,2,1,1", "x,8,7,5,6,x", "x,8,10,10,10,8"]);
@@ -237,4 +251,47 @@ test("DA-4 : la 1re position de chaque accord est celle d'avant DA-4", () => {
   }
   console.log(`accords comparés : ${Object.keys(avant).length}`);
   expect(changees).toEqual([]);
+});
+
+test("DA-4 R5 : les renversements du piano (notes, note du bas, au-dessus de la gauche, tous différents)", () => {
+  const jetons = [
+    ...Object.keys(QUALITES).flatMap((q) => NOMS.map((n) => n + q)),
+    "D/F#", "Bb/C", "G/B", "C/E",
+  ];
+  const fautes: string[] = [];
+  for (const jeton of jetons) {
+    const a = analyserAccord(jeton)!;
+    const { classes, basse } = notesDeLAccord(a);
+    const u = [...new Set(classes)];
+    const jeux = renversementsPiano(a);
+    const attendu = Math.min(u.length, 3);
+    if (jeux.length !== attendu) fautes.push(`${jeton} : ${jeux.length} renversements au lieu de ${attendu}`);
+    if (u.length === 2 && jeux.length !== 2) fautes.push(`${jeton} : un accord de 2 notes en a 2`);
+    const vus = new Set<string>();
+    jeux.forEach((jeu, k) => {
+      const cle = jeu.droite.join();
+      if (vus.has(cle)) fautes.push(`${jeton} : renversement ${k} en double`);
+      vus.add(cle);
+      if (jeu.gauche.join() !== String(basse)) fautes.push(`${jeton} : main gauche changée au renversement ${k}`);
+      if ([...new Set(jeu.droite.map((n) => n % 12))].sort((x, y) => x - y).join() !== [...u].sort((x, y) => x - y).join()
+        || jeu.droite.length !== u.length) fautes.push(`${jeton} : notes de la main droite fausses au renversement ${k}`);
+      if (jeu.droite[0] % 12 !== u[k]) fautes.push(`${jeton} : note du bas ${jeu.droite[0] % 12} au lieu de ${u[k]} au renversement ${k}`);
+      if (!(Math.min(...jeu.droite) > jeu.gauche[0])) fautes.push(`${jeton} : main droite pas au-dessus de la gauche au renversement ${k}`);
+    });
+    // L'état fondamental est l'ancien calcul de voicingPiano.
+    const racine = classes[0];
+    const depart = racine > basse ? racine : racine + 12;
+    const ancien = u.map((c) => depart + ((c - racine + 12) % 12)).sort((x, y) => x - y);
+    if (jeux[0].droite.join() !== ancien.join()) fautes.push(`${jeton} : l'état fondamental diffère d'avant DA-4`);
+  }
+  expect(fautes).toEqual([]);
+});
+
+test("DA-4 R7 : D/F# au piano, fa# à gauche, ré fa# la / fa# la ré / la ré fa# à droite", () => {
+  expect(renversementsPiano(analyserAccord("D/F#")!)).toEqual([
+    { gauche: [6], droite: [14, 18, 21] },
+    { gauche: [6], droite: [18, 21, 26] },
+    { gauche: [6], droite: [9, 14, 18] },
+  ]);
+  expect(renversementsPiano(analyserAccord("C")!).map((j) => j.droite)).toEqual([[12, 16, 19], [4, 7, 12], [7, 12, 16]]);
 });

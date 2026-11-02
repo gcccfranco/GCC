@@ -123,6 +123,32 @@ test.describe("page chant", () => {
     await expect(nom(page)).toHaveText("F");
   });
 
+  test("FR : Piano, la flèche suivante passe au 1er renversement et la main droite change", async ({ page }) => {
+    await sansAide(page);
+    await page.goto("/songs/abba-pere");
+    await touchables(page).first().click();
+    await panneau(page).getByRole("radio", { name: "Piano" }).click();
+    await expect(panneau(page).getByText("État fondamental · 1 sur 3")).toBeVisible();
+    const avant = await panneau(page).getByText(/Main droite/).textContent();
+    await panneau(page).getByRole("button", { name: "Renversement suivant" }).click();
+    await expect(panneau(page).getByText(/^1er renversement/)).toBeVisible();
+    await expect(panneau(page).getByText(/Main droite/)).not.toHaveText(avant!);
+  });
+
+  test("ZH : Piano, la flèche suivante passe au 第一转位 et la main droite change", async ({ page }) => {
+    await sansAide(page);
+    await paroles(page);
+    await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
+    await page.goto("/songs/" + encodeURIComponent("一切歌颂赞美"));
+    await touchables(page).first().click();
+    await panneau(page).getByRole("radio", { name: "钢琴" }).click();
+    await expect(panneau(page).getByText("原位 · 第 1 种，共 3 种")).toBeVisible();
+    const avant = await panneau(page).getByText(/右手：/).textContent();
+    await panneau(page).getByRole("button", { name: "下一个转位" }).click();
+    await expect(panneau(page).getByText(/^第一转位/)).toBeVisible();
+    await expect(panneau(page).getByText(/右手：/)).not.toHaveText(avant!);
+  });
+
   test("calque 简谱 en lecture : un accord du calque s'ouvre tel qu'il est affiché (transposé)", async ({ page }) => {
     await sansAide(page);
     await openSheet(page, "一生爱你", { key: "F" });

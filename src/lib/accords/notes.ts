@@ -50,14 +50,24 @@ export function notesDeLAccord(a: Accord): { classes: number[]; noms: string[]; 
 }
 
 /**
- * Piano à deux mains (décision Q11), en demi-tons depuis le do grave du clavier :
- * main gauche = la basse (slash ou fondamentale) dans la première octave ; main droite =
- * l'accord en position serrée, fondamentale la plus basse, strictement au-dessus de la main gauche.
+ * Piano à deux mains (décisions Q11, DA-4 R5), en demi-tons depuis le do grave du clavier : main gauche = la basse
+ * (slash ou fondamentale) dans la première octave ; main droite = l'accord serré, strictement au-dessus de la main
+ * gauche, le plus bas possible. Un jeu par renversement : état fondamental, 1er, 2e (jamais de 3e ; un accord de
+ * 2 notes n'en a que deux) ; la main gauche ne bouge pas, deux jeux identiques ne sont pas rendus.
  */
-export function voicingPiano(a: Accord): { gauche: number[]; droite: number[] } {
+export function renversementsPiano(a: Accord): { gauche: number[]; droite: number[] }[] {
   const { classes, basse } = notesDeLAccord(a);
-  const racine = classes[0];
-  const depart = racine > basse ? racine : racine + 12;
-  const droite = [...new Set(classes)].map((c) => depart + ((c - racine + 12) % 12)).sort((x, y) => x - y);
-  return { gauche: [basse], droite };
+  const uniques = [...new Set(classes)];
+  const rendus: { gauche: number[]; droite: number[] }[] = [];
+  for (const b of uniques.slice(0, 3)) {
+    const depart = b > basse ? b : b + 12;
+    const droite = uniques.map((c) => depart + ((c - b + 12) % 12)).sort((x, y) => x - y);
+    if (!rendus.some((r) => r.droite.join() === droite.join())) rendus.push({ gauche: [basse], droite });
+  }
+  return rendus;
+}
+
+/** Le premier jeu de `renversementsPiano` : l'état fondamental (fondamentale en bas), utilisé par les tests. */
+export function voicingPiano(a: Accord): { gauche: number[]; droite: number[] } {
+  return renversementsPiano(a)[0];
 }
