@@ -106,7 +106,7 @@ async function allerA(page: Page, titre: string) {
   await expect(h).toBeVisible();
 }
 
-test("compte neuf musicien + Médias : « Tu joues le dimanche », « Ton équipe : Médias », « Commencer » écrit version 3", async ({ page }) => {
+test("compte neuf musicien + Médias : « Tu joues le dimanche », « Ton équipe : Médias », « Commencer » écrit version 4", async ({ page }) => {
   await sansNotifications(page);
   const db = await signInAs(page, MUSICIENNE, {}, "/moi");
   await expect(visite(page)).toBeVisible();
@@ -120,7 +120,7 @@ test("compte neuf musicien + Médias : « Tu joues le dimanche », « Ton équip
   await suivant(page).click();
   await visite(page).getByRole("button", { name: "Commencer" }).click();
   await expect(visite(page)).toHaveCount(0);
-  await expect.poll(() => db.doc(`onboarding/${MUSICIENNE.uid}`)?.version).toBe(3);
+  await expect.poll(() => db.doc(`onboarding/${MUSICIENNE.uid}`)?.version).toBe(4);
   expect(db.doc(`onboarding/${MUSICIENNE.uid}`)?.vu).toBe(true);
 });
 
@@ -132,16 +132,16 @@ test("un compte du lot 8 revoit la visite en mode première : « Bienvenue dans 
   await expect(visite(page).getByRole("heading", { name: /Bonjour/ })).toHaveCount(0);
   await visite(page).getByRole("button", { name: "Passer" }).click();
   await expect(visite(page)).toHaveCount(0);
-  await expect.poll(() => db.doc(`onboarding/${NEUF.uid}`)?.version).toBe(3);
+  await expect.poll(() => db.doc(`onboarding/${NEUF.uid}`)?.version).toBe(4);
 });
 
-test("un compte resté à la version 2 de la visite la revoit une fois : « Passer » écrit la version 3 (lot VB-R)", async ({ page }) => {
-  const db = await signInAs(page, { ...NEUF, accueil: false, visiteVersion: 2 }, {}, "/moi");
+test("un compte resté à la version 3 de la visite la revoit une fois : « Passer » écrit la version 4 (lot VB-E)", async ({ page }) => {
+  const db = await signInAs(page, { ...NEUF, accueil: false, visiteVersion: 3 }, {}, "/moi");
   await expect(visite(page)).toBeVisible();
   await expect(visite(page).getByRole("heading", { name: "Bienvenue dans GCC" })).toBeVisible();
   await visite(page).getByRole("button", { name: "Passer" }).click();
   await expect(visite(page)).toHaveCount(0);
-  await expect.poll(() => db.doc(`onboarding/${NEUF.uid}`)?.version).toBe(3);
+  await expect.poll(() => db.doc(`onboarding/${NEUF.uid}`)?.version).toBe(4);
 });
 
 test("compte neuf sans rôle ni équipe : quatre écrans au plus, carte « La vie de l'église »", async ({ page }) => {

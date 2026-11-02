@@ -6,7 +6,7 @@ import { SERVICE_LIEUX } from "../../src/types/user";
 import { responsabilitesDeLaReprise } from "../../src/lib/acces/repriseResponsabilites";
 
 // Miroir de src/lib/firebase/onboarding.ts (ce module tire le SDK Firebase : pas importé côté Node).
-const VERSION_VISITE = 3;
+const VERSION_VISITE = 4;
 
 // Connexion Firebase et Firestore **simulés** : les pages réservées aux membres
 // (setlists) se testent sans identifiants ni écriture en production. Le SDK

@@ -1301,13 +1301,18 @@ comparer la courbe « Utilisation » de la console sur 24 h.
 « Utilise https://github.com/latent-spaces/brag pour me faire une vidéo quand les gens se connectent pour la première
 fois. » Tranché le jour même : **français seulement**, **dans l'écran Bienvenue** (à la place du logo) ; puis **une vidéo par disposition**
 (téléphone, tablettes, ordinateur) et **sans son**. Vidéos faites (21 s, carré, captures du vrai site avec des noms
-inventés) :
-`docs/video-bienvenue/`, sources `scripts/video-bienvenue/`. Planche : https://claude.ai/artifact/C9JexoTnCrVbEnvUHXbkHL
+inventés), sources `scripts/video-bienvenue/`. Planche : https://claude.ai/artifact/C9JexoTnCrVbEnvUHXbkHL
 (quatre questions, recommandations appliquées au go). **En ligne** : lot VB le 02/11/2026 (`0fa7940`), puis lot
 **VB-R** (visite version 3, remontrée une fois à tous, `068fa12`, `main` = `c2eb512`) ; correctif de la boucle d'imports
 du planning (`GRILLES`, trouvé en testant) en ligne aussi (`40704ba`). Restes signalés : clés `accueil.bonjour`,
 `accueil.change`, `accueil.bienvenue.retour` orphelines ; `VERSION_VISITE` recopiée dans `tests/helpers/fakeSession.ts` ;
 `navigation-grand-ecran.spec.ts:52` (cloche) en échec avant le lot, à regarder.
+**Lot VB-E** (02/11/2026, en ligne, `main` = `ee83b27`) : la vidéo d'ouverture est remplacée par **un extrait sur chaque
+écran** de la visite (logo seul sur Bienvenue ; onglets, musicien = tonalité puis Mode Louange, mélange recherche +
+setlist, tâches, planning, aperçu), 16:9, sans son, en boucle, par disposition, en chinois aussi :
+`public/accueil/extraits/`. Restes signalés : pas de test régie ni musicien + choriste ; hors ligne au premier passage,
+l'affiche d'un extrait n'est pas encore en cache (cadre vide) ; sur iPhone SE et ordinateur 1280×720, l'extrait d'une
+carte se voit en faisant défiler.
 
 ### AM. Espace Musiciens et scène des fêtes en un clic (Timothée, 02/11/2026) → `spec-espace-musiciens.md`
 
