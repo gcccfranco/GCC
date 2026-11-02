@@ -3,12 +3,13 @@
 // Visite de première connexion déjà vue (lot 8, docs/spec-nouveaux-membres.md ; visite par rôle,
 // docs/spec-visite-par-role.md) : doc auto-géré onboarding/{uid} { vu, version, le }, que l'intéressé écrit
 // lui-même (le profil users/{uid} est verrouillé). Même patron que notifPrefs/{uid}. REST.
-// `version` : 2 = la visite par rôle ; absent = l'accueil du lot 8 (version 1) ; pas de document = jamais vue.
+// `version` : 3 = la visite avec la vidéo de bienvenue (lot VB-R, remontrée à tous) ; 2 = la visite par rôle ;
+// absent = l'accueil du lot 8 ; pas de document = jamais vue.
 
 import { FS_BASE, authHeader, toFsFields } from "@/lib/firebase/setlists";
 
 /** Version de la visite que `setAccueilVu` écrit. */
-export const VERSION_VISITE = 2;
+export const VERSION_VISITE = 3;
 
 /** La version de la visite déjà vue : 0 = jamais (document absent, 404), 1 = l'accueil du lot 8 (document sans
  *  `version`), sinon le champ `version`. Une autre erreur (réseau, règle pas encore publiée) = « vu » : on ne

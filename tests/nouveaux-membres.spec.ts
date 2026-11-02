@@ -37,7 +37,7 @@ test("un compte qui n'a pas vu l'accueil le voit, le parcourt et « Commencer »
   await d.getByRole("button", { name: "Commencer" }).click();
   await expect(accueil(page)).toHaveCount(0);
   await expect.poll(() => db.doc("onboarding/uid-neuf")?.vu).toBe(true);
-  expect(db.doc("onboarding/uid-neuf")?.version).toBe(2);
+  expect(db.doc("onboarding/uid-neuf")?.version).toBe(3);
 });
 
 test("« Passer » ferme l'accueil et le mémorise aussi", async ({ page }) => {

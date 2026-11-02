@@ -5,6 +5,9 @@ import { EDD_CLASSES } from "../../src/lib/planning/utils";
 import { SERVICE_LIEUX } from "../../src/types/user";
 import { responsabilitesDeLaReprise } from "../../src/lib/acces/repriseResponsabilites";
 
+// Miroir de src/lib/firebase/onboarding.ts (ce module tire le SDK Firebase : pas importé côté Node).
+const VERSION_VISITE = 3;
+
 // Connexion Firebase et Firestore **simulés** : les pages réservées aux membres
 // (setlists) se testent sans identifiants ni écriture en production. Le SDK
 // Auth ne vérifie pas la signature du jeton côté navigateur, il le décode
@@ -52,11 +55,14 @@ export type FakeProfile = {
   /** Lot RS — les responsabilités de gestion (`planning:<x>`, `orga`), écrites par les admins seuls. */
   responsabilites?: string[];
   /** Vrai = compte qui n'a pas encore vu l'accueil de première connexion (lot 8).
-   *  Par défaut la visite est déjà vue (`version: 2`), pour ne pas masquer les pages testées. */
+   *  Par défaut la visite est déjà vue (`version: VERSION_VISITE`), pour ne pas masquer les pages testées. */
   accueil?: boolean;
   /** Vrai = compte qui avait vu l'accueil du lot 8 : `onboarding/{uid}` sans `version` (docs/spec-visite-par-role.md).
-   *  Avec le back-office ouvert, la visite s'ouvre de nouveau ; sans, elle reste fermée. */
+   *  La visite s'ouvre de nouveau, en mode première (lot VB-R). */
   accueilLot8?: boolean;
+  /** Version de la visite déjà vue, pour simuler un compte d'une version plus ancienne (ex. 2). Sans effet si
+   *  `accueilLot8` est posé. */
+  visiteVersion?: number;
   /** Lot AO — `false` interdit la traduction automatique d'un profil « à l'ancienne » (voir `traduitCommeMigration`). */
   organigramme?: false;
 };
@@ -466,7 +472,7 @@ export async function signInAs(
     ...(profile.accueil ? {} : {
       [`onboarding/${profile.uid}`]: profile.accueilLot8
         ? { vu: true, le: "2026-09-01T10:00:00Z" }
-        : { vu: true, version: 2, le: "2026-09-01T10:00:00Z" },
+        : { vu: true, version: profile.visiteVersion ?? VERSION_VISITE, le: "2026-09-01T10:00:00Z" },
     }),
     ...traduits,
   }, partage);

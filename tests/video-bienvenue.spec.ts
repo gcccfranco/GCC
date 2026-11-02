@@ -147,13 +147,13 @@ test("en 中文 : le logo, pas de vidéo", async ({ page }) => {
   await expect(d.locator('img[src*="logo"]')).toBeVisible();
 });
 
-test("mode retour : le logo et « La visite a changé », pas de vidéo", async ({ page }) => {
+test("compte du lot 8 : la visite revient avec la vidéo, sans « La visite a changé »", async ({ page }) => {
   await signInAs(page, { ...NEUF, accueil: false, accueilLot8: true }, {}, "/moi");
   const d = accueil(page);
   await expect(d).toBeVisible();
-  await expect(d.locator("video")).toHaveCount(0);
-  await expect(d.locator('img[src*="logo"]')).toBeVisible();
-  await expect(d.getByText("La visite a changé")).toBeVisible();
+  await expect(video(page)).toBeVisible();
+  await expect(d.locator('img[src*="logo"]')).toHaveCount(0);
+  await expect(d.getByText("La visite a changé")).toHaveCount(0);
 });
 
 test("mode revoir : « Revoir la visite » sur Moi rouvre la visite avec la vidéo", async ({ page }) => {

@@ -3,8 +3,8 @@
 // Visite de première connexion (lot 8, docs/spec-nouveaux-membres.md ; visite par rôle,
 // docs/spec-visite-par-role.md) : Bienvenue, Où trouver quoi, au plus trois cartes tirées du profil
 // (`cartesDeLaVisite`), Notifications si à proposer, C'est parti — sept écrans au plus. Vue une fois par
-// compte (onboarding/{uid}, avec sa version), remontrée aux comptes du lot 8 quand le back-office est
-// ouvert, jamais sans compte. Plein écran sur téléphone, fenêtre centrée sur tablette et ordinateur.
+// compte (onboarding/{uid}, avec sa version), remontrée une fois à tout compte qui l'a vue dans une version
+// plus ancienne (lot VB-R), jamais sans compte. Plein écran sur téléphone, fenêtre centrée sur tablette et ordinateur.
 // « Passer » partout ; on avance avec « Suivant » ou d'un glissé. Le mode « revoir » (VR-C) n'écrit rien.
 // L'écran 1 montre la vidéo de bienvenue (premiere / revoir, pas en chinois) : docs/spec-video-bienvenue.md.
 
@@ -30,8 +30,8 @@ import { categoryLabel } from "@/lib/serviceColors";
 import type { ServiceRole } from "@/types/user";
 
 type Notifs = "proposer" | "iphone" | "masquer";
-/** « premiere » : compte neuf ; « retour » : compte qui avait vu l'accueil du lot 8 ; « revoir » : à la demande, sans écriture. */
-type Mode = "premiere" | "retour" | "revoir";
+/** « premiere » : visite jamais vue ou vue dans une version plus ancienne ; « revoir » : à la demande, sans écriture. */
+type Mode = "premiere" | "revoir";
 
 // Back-office coupé (lot 18) : l'accueil ne présente pas une section qui n'est pas en ligne.
 const ONGLETS: { key: string; texte: string; Icon: LucideIcon }[] = [
@@ -116,13 +116,13 @@ export function Accueil() {
       try {
         if (sessionStorage.getItem(`accueil-vu-${user.uid}`) === String(VERSION_VISITE)) return;
       } catch { /* stockage indisponible */ }
-      // Jamais vue : on l'ouvre ; vue au lot 8 : seulement back-office ouvert (VR8).
+      // Jamais vue ou vue dans une version plus ancienne (lot VB-R) : on l'ouvre, interrupteur ouvert ou coupé.
       const version = await getAccueilVu(user.uid);
-      if (!(version === 0 || (BACK_OFFICE && version < VERSION_VISITE))) return;
+      if (version >= VERSION_VISITE) return;
       const n = await notifsAProposer();
       if (!alive) return;
       setNotifs(n);
-      setMode(version === 0 ? "premiere" : "retour");
+      setMode("premiere");
       setOuvert(true);
     })();
     return () => {
@@ -203,7 +203,6 @@ function Ecrans({ mode, notifs, uid, onFermer }: {
 
   const cartes = cartesDeLaVisite(user, profile, BACK_OFFICE);
   const backOffice = BACK_OFFICE && entreesBackOffice(user, profile).length > 0;
-  const prenom = profile?.firstName?.trim();
 
   /** Le gabarit d'une carte : pastille de texte, titre, « Tu peux » et ses gestes, filet, la ligne « c'est … », lien guide. */
   function ecranCarte(id: string, titre: string, pastille: string | null, gestes: { Icon: LucideIcon; texte: ReactNode }[], role: string | null) {
@@ -278,12 +277,9 @@ function Ecrans({ mode, notifs, uid, onFermer }: {
 
   const ecrans: { titre: string; corps: ReactNode; visuel: ReactNode; gauche?: boolean }[] = [
     {
-      titre: mode === "retour" && prenom ? t("accueil.bonjour", { prenom }) : t("accueil.bienvenue.titre"),
-      visuel: (mode === "premiere" || mode === "revoir") && !zh ? <VideoBienvenue /> : (
-        <>
-          <Image src="/logo.png" alt="" width={72} height={72} className="rounded-full" priority />
-          {mode === "retour" && <Etiquette>{t("accueil.change")}</Etiquette>}
-        </>
+      titre: t("accueil.bienvenue.titre"),
+      visuel: !zh ? <VideoBienvenue /> : (
+        <Image src="/logo.png" alt="" width={72} height={72} className="rounded-full" priority />
       ),
       corps: <p>{t(mode === "premiere" ? "accueil.bienvenue.texte" : "accueil.bienvenue.retour")}</p>,
     },
