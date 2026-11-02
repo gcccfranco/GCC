@@ -1303,7 +1303,11 @@ fois. » Tranché le jour même : **français seulement**, **dans l'écran Bienv
 (téléphone, tablettes, ordinateur) et **sans son**. Vidéos faites (21 s, carré, captures du vrai site avec des noms
 inventés) :
 `docs/video-bienvenue/`, sources `scripts/video-bienvenue/`. Planche : https://claude.ai/artifact/C9JexoTnCrVbEnvUHXbkHL
-(quatre questions). Lot **VB** à coder sur go.
+(quatre questions, recommandations appliquées au go). **En ligne** : lot VB le 02/11/2026 (`0fa7940`), puis lot
+**VB-R** (visite version 3, remontrée une fois à tous, `068fa12`, `main` = `c2eb512`) ; correctif de la boucle d'imports
+du planning (`GRILLES`, trouvé en testant) en ligne aussi (`40704ba`). Restes signalés : clés `accueil.bonjour`,
+`accueil.change`, `accueil.bienvenue.retour` orphelines ; `VERSION_VISITE` recopiée dans `tests/helpers/fakeSession.ts` ;
+`navigation-grand-ecran.spec.ts:52` (cloche) en échec avant le lot, à regarder.
 
 ## 4. Carte des modules de l'app « GCC »
 

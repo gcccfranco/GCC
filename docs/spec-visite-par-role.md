@@ -28,7 +28,7 @@ Guide.
 | VR5 | Plusieurs équipes : **une carte** « Tes équipes » qui les nomme ; référent d'au moins une → la version référent, qui nomme laquelle. Le public Louange élargi (toute personne avec un rôle de service) **ne donne pas** de carte équipe : la carte service en tient lieu. TEAM LOUANGE (`dansEquipes` ∋ `louange`) en donne une. |
 | VR6 | Chaque carte : « **Tu peux** » (trois gestes au plus, en gras ce qu'on cherche dans l'app) et, quand quelqu'un est à nommer, **une ligne « X : c'est le rôle de … »** (pas de « Pas pour toi »). |
 | VR7 | **Aucune carte pour les admins.** |
-| VR8 | Remontrée à tous **derrière l'interrupteur du back-office** : la version 2 de la visite ne s'impose aux comptes qui ont vu l'accueil du lot 8 que si `BACK_OFFICE` est vrai. Elle part en ligne avec lui. |
+| VR8 | Remontrée à tous **derrière l'interrupteur du back-office** : la version 2 de la visite ne s'impose aux comptes qui ont vu l'accueil du lot 8 que si `BACK_OFFICE` est vrai. Elle part en ligne avec lui. **Remplacé le 02/11/2026 par le lot VB-R** (`spec-video-bienvenue.md`) : version 3, remontrée une fois à tous, interrupteur ouvert ou coupé, en mode « première » ; le mode « retour » n'existe plus. |
 | VR9 | **Revoir la visite** : une carte dans Moi (avec Guide, Ton avis, Signaler) et un encart en haut du Guide. Revoir n'écrit rien. |
 | VR10 | « **Voir dans le guide** » sous une carte seulement là où une section existe (table ci-dessous). |
 | VR11 | Harmonie sur la carte musicien seule. Planning et notifier : deux lignes de la carte responsabilités. |
