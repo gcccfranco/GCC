@@ -117,3 +117,21 @@ en chinois, Q3 montage tel quel, Q4 rien d'imposé).
 - Une version 中文 de la vidéo (VB1) ; la refaire plus tard = mêmes sources, légendes traduites.
 - Toute autre page que l'écran Bienvenue (le Guide, la page de connexion).
 - Rien à publier dans Firebase, aucune règle touchée.
+
+## Lot VB-R — Remontrer la visite à tout le monde (Timothée, 02/11/2026)
+
+« Reset aussi la première connexion pour tout le monde. » Remplace Q4 (« rien d'imposé »).
+
+- Pas d'écriture dans Firestore (aucun accès depuis les sessions) : le reset passe par la version de la visite.
+  `VERSION_VISITE` passe de **2 à 3** (`src/lib/firebase/onboarding.ts`). Tout compte dont `onboarding/{uid}` est
+  absent ou porte une version < 3 voit la visite **une fois** à sa prochaine ouverture du site ; la fermer écrit 3.
+- **Pour tout le monde**, interrupteur du back-office ouvert ou coupé : la condition d'ouverture devient
+  `version < VERSION_VISITE` (le `BACK_OFFICE &&` de VR8 tombe).
+- **Mode « première » pour tous** (écran 1 avec la vidéo en français, le logo en chinois). Le mode « retour »
+  (« Bonjour … », étiquette « Ce qui a changé ») n'a plus de cas : son code, rendu orphelin par ce changement, part ;
+  les clés de traduction `accueil.bonjour`, `accueil.change`, `accueil.bienvenue.retour` restent (signalées).
+- Tests : `tests/helpers/fakeSession.ts` écrit par défaut `version: VERSION_VISITE` (importée), sinon chaque compte
+  simulé verrait la visite ; `accueilLot8` garde son sens (document sans version) et ouvre désormais la visite en mode
+  première. À adapter : `tests/visite-par-role.spec.ts` (compte du lot 8), `tests/video-bienvenue.spec.ts` (compte du
+  lot 8 : vidéo, plus le logo), `tests/back-office-coupe.spec.ts` (serveur coupé : la visite s'ouvre aussi). Ajouter :
+  un compte en version 2 voit la visite, et sa fermeture écrit 3.
