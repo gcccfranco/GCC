@@ -208,3 +208,33 @@ DA-4b) le 02/11/2026, session orchestratrice.**
   renversement et les lignes main gauche / main droite suivent ; transposé +1 demi-ton, le panneau suit ; page
   `/accords` pareil. `accords-toucher-agencement` et `accords-page` (cinq projets) : captures du piano avec flèches.
 - À l'œil, aux quatre dispositions + 1 440 px : panneau (feuille du bas, bulle de l'ordinateur), carte de la page.
+
+### Avancement (DA-4)
+
+**DA-4a et DA-4b codés et poussés le 02/11/2026 sur `claude/adoring-wright-4ilq21`, à valider par Timothée.**
+
+- **DA-4a** (`9b27a79`, `c6e0192`) : `MOBILES_SECONDES` (`table.ts`), formes écrites à la main (forme de ré sur la
+  4e corde, forme de do, formes sur la 6e corde), qui ne passent jamais en premier ; 2e forme pour `/2` et `/7`
+  (`/4` en avait déjà deux). `positionsGuitare` : 1re position d'avant, puis deux autres dans d'autres zones (plus
+  basses cases à 3 cases au moins), à défaut complétées de la plus basse à la plus haute ; une forme contenue dans
+  une autre (`x3231x` dans `x32310`) n'est pas une autre position. F = `133211`, `x8756x`, `x8.10.10.10.8` (exemple
+  de R2). **Toutes les qualités de R1 ont trois positions sur les 12 fondamentales, la traîne deux au moins** ;
+  dim9 et 7#11 toujours sans doigté. Sur les 19 140 accords joués des chants : **3 positions pour 17 646 (92 %)**,
+  2 pour 1 331 (D/F#, A/C#, B/D#, Bb/C, F/C, F/G… et les `sus2`/`2` dont la 3e forme est hors du manche), 1 pour
+  160 (accords avec basse rares : B/E, Bbmaj7/F, E/A, A/D…), 3 sans doigté.
+- **DA-4b** (`71a652b`) : `renversementsPiano` (`notes.ts`), rangée de flèches sous le clavier (panneau, bulle,
+  carte de `/accords`), libellés fr / 中文.
+- **Tests** : garde-fou étendu — jouabilité R4, comptes R1 (liste des manques imprimée : aucune), zones R2 (échoue
+  si trois zones étaient possibles dans la table et n'ont pas été retenues ; 122 accords qualité × fondamentale
+  restent hors zones faute de formes, complétés), 1re position inchangée pour 1 097 accords (instantané
+  `tests/fixtures/accords-premieres-positions.json`, pris avant DA-4 par `scripts/accords-premieres-positions.ts`),
+  renversements du piano. Playwright : 209 tests verts (`accords-*`, trois appareils ; `accords-page` et
+  `accords-toucher-agencement` sur les cinq projets) ; captures regardées. Échecs antérieurs connus non relancés :
+  `harmonie-jianpu.spec.ts` « Adapter », `jianpu-par-defaut.spec.ts:357`.
+- **Écarts** : la forme `/4` avec pouce (`Px1243`, d'avant DA-4) compte 5 doigts et dépasse R4 ; gardée pour ne
+  changer aucune 1re position (B/D#, F#/A#…), exemptée et nommée dans le test. La règle des zones retire des
+  positions d'avant : G perd `320033` et le barré case 3 (remplacés par `xx5787`), E7 perd `x79797`, A/C# perd
+  `x4222x` (contenu dans `x42220`). Au piano, un renversement peut descendre sous l'état fondamental (C : do mi sol
+  à l'octave, puis mi sol do juste au-dessus du do de la main gauche) : c'est « le plus bas possible » de R5.
+- **À regarder par Timothée** : les nouveaux doigtés (F, Bm, Bb, B, F#m, sus2, maj9, m9, 9 : page `/accords`) et
+  les flèches du piano, sur un chant FR et un chant ZH.
