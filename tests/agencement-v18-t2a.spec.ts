@@ -76,8 +76,8 @@ const sousParties = (page: Page) => page.getByRole("navigation", { name: "Sous-p
 // ─── Règles pures ────────────────────────────────────────────────────────────────
 
 test.describe("T2a : les droits d'affichage (B15)", () => {
-  test("un admin a les cinq entrées de la piste A et ouvre les pages Réunions, Évènements, Tâches", () => {
-    expect(permises(ADMIN)).toEqual(["afaire", "calendrier", "planning", "equipes", "messages"]);
+  test("un admin a les six entrées (piste A + Scène, SF-1) et ouvre les pages Réunions, Évènements, Tâches", () => {
+    expect(permises(ADMIN)).toEqual(["afaire", "calendrier", "scene", "planning", "equipes", "messages"]);
     expect(droitsDesPages(user(ADMIN), profil(ADMIN))).toEqual({ taches: true, evenements: true, reunions: true });
   });
 
@@ -124,12 +124,12 @@ test.describe("T2a : les droits d'affichage (B15)", () => {
 // ─── Menu ────────────────────────────────────────────────────────────────────────
 
 test.describe("T2a : le menu", () => {
-  test("un admin : cinq entrées ; sur une page Réunions, aucune n'est la page courante (Réunions n'est plus une entrée)", async ({ page }, info) => {
+  test("un admin : six entrées ; sur une page Réunions, aucune n'est la page courante (Réunions n'est plus une entrée)", async ({ page }, info) => {
     test.skip(!estGrandEcran(info), "la barre latérale : grand écran");
     await ouvrir(page, ADMIN, "/back-office/reunions/reu-da");
     await expect(page.getByRole("heading", { name: "Réunion DA", exact: true })).toBeVisible();
     const menu = await menuLateral(page, info);
-    await expect(menu.getByRole("link")).toHaveText([/^À faire\d*$/, "Calendrier", "Planning", "Équipes", "Messages"]);
+    await expect(menu.getByRole("link")).toHaveText([/^À faire\d*$/, "Calendrier", "Scène", "Planning", "Équipes", "Messages"]);
     await expect(menu.locator("[aria-current]")).toHaveCount(0);
   });
 

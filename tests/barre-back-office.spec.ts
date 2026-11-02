@@ -60,6 +60,8 @@ test.describe("Barre du bas (BO2) : règles pures", () => {
     expect(ongletsBackOffice(permises(PLANNINGS)).map((o) => o.cle)).toEqual([
       "backOffice.entrees.afaire", "backOffice.entrees.calendrier", "backOffice.entrees.planning", "backOffice.barre.app",
     ]);
+    // SF-1 : Scène est une entrée de la barre latérale, jamais un onglet de la barre du bas.
+    expect(ongletsBackOffice(permises(ADMIN)).map((o) => o.cle)).not.toContain("backOffice.entrees.scene");
     expect(ongletsBackOffice(["afaire", "calendrier", "messages"]).map((o) => o.cle)).not.toContain("backOffice.entrees.messages");
     expect(ongletsBackOffice([]), "pas de Back-Office, pas de barre").toEqual([]);
   });

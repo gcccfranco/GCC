@@ -3,16 +3,19 @@
 // L'écran « À faire » de /back-office (piste A, BO-B, docs/spec-back-office-piste-a.md BO6) : une seule liste, une action
 // par ligne, la plus urgente en premier, en quatre groupes ; le filtre « Tout · Mes équipes » ; rien à faire = une phrase.
 // Sur grand écran (barre latérale affichée), « Ce dimanche » et « Prochaine réunion » à droite.
+import Link from "next/link";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { ChevronRight, Drama } from "lucide-react";
 import { LargeurBO } from "@/components/backOffice/LargeurBO";
 import { EnTetePage } from "@/components/layout/EnTetePage";
 import { EtatVide } from "@/components/layout/EtatVide";
 import { useBarreMontree } from "@/components/layout/BarreLaterale";
 import { Pilules } from "@/components/layout/Onglets";
-import { equipesDe } from "@/lib/access";
+import { equipesDe, isCoordination } from "@/lib/access";
 import { nowIsoParis } from "@/lib/evenements/agenda";
 import { useProfile } from "@/lib/firebase/users";
+import { PLANNING_COLORS } from "@/lib/serviceColors";
 import { todayIso } from "@/lib/scene/dimanches";
 import { filtrer, type Filtre } from "@/lib/tableauDeBord/aFaire";
 import { lireAFaire, useLecture } from "@/lib/tableauDeBord/lecture";
@@ -56,6 +59,22 @@ export function AFaire({ titre }: { titre: string }) {
       />
       <div className={`px-[var(--marge-page)] pb-10 ${montree ? "grid grid-cols-[minmax(0,1fr)_300px] items-start gap-8" : ""}`}>
         <div>
+          {/* SF-2 : la porte de la scène des fêtes là où la barre latérale n'existe pas (téléphone, tablette en portrait). */}
+          {isCoordination(user, profile) && (
+            <Link
+              href="/back-office/evenements/scene" data-testid="carte-scene-des-fetes"
+              className="hide-on-desktop mb-6 flex min-h-[44px] items-center gap-3 rounded-2xl border border-border bg-card px-4 py-3"
+            >
+              <span aria-hidden className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-secondary" style={{ color: PLANNING_COLORS.scene }}>
+                <Drama className="h-[18px] w-[18px]" />
+              </span>
+              <span className="min-w-0 flex-1">
+                <b className="block break-words text-[15px] font-semibold text-foreground">{t("backOffice.aFaire.sceneDesFetes.titre")}</b>
+                <span className="block break-words text-[13px] text-muted-foreground">{t("backOffice.aFaire.sceneDesFetes.sousTitre")}</span>
+              </span>
+              <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
+            </Link>
+          )}
           {incomplet && <p role="alert" className="mb-3 text-[13px] text-muted-foreground">{t("backOffice.aFaire.incomplet")}</p>}
           {!resultat ? (
             !erreur && <Squelette enTete={false} className="p-0" />

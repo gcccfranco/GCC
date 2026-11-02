@@ -109,7 +109,7 @@ async function rouvrirResponsableEnAttente(page: Page, vers = "/back-office") {
 
 test("responsable : pendant l'attente, le sélecteur App · Back-Office et les entrées du Back-Office sont là", async ({ page }, info) => {
   const liberer = await rouvrirResponsableEnAttente(page);
-  expect(JSON.parse((await forme(page))!)).toEqual({ responsable: true, messages: true, entreesBackOffice: ["afaire", "calendrier", "planning", "messages"] });
+  expect(JSON.parse((await forme(page))!)).toEqual({ responsable: true, messages: true, entreesBackOffice: ["afaire", "calendrier", "planning", "messages"], musiciens: [] }); // EM-2 : la forme retient aussi les entrées Musiciens (aucune ici)
   await expect(page.locator("html")).toHaveAttribute("data-responsable", "1");
   await expect(connexion(page)).not.toBeVisible();
   await expect(selecteur(page)).toBeVisible();
@@ -135,7 +135,7 @@ test("responsable : l'attente sur une page de l'App garde le sélecteur", async 
 
 test("membre ordinaire : pas de sélecteur pendant l'attente, et une forme retenue sans responsable", async ({ page }) => {
   const liberer = await rouvrirEnAttente(page);
-  expect(JSON.parse((await forme(page))!)).toEqual({ responsable: false, messages: false, entreesBackOffice: [] });
+  expect(JSON.parse((await forme(page))!)).toEqual({ responsable: false, messages: false, entreesBackOffice: [], musiciens: [] });
   await expect(page.locator("html")).not.toHaveAttribute("data-responsable", "1");
   await expect(page.getByRole("group", { name: "Choisir l'espace" })).toHaveCount(0);
   liberer();

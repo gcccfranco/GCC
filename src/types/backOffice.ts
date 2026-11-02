@@ -1,7 +1,7 @@
-// Lot U6 (docs/spec-back-office.md, § Modèle) — l'espace Back-Office : ses 5 entrées, dans
+// Lot U6 (docs/spec-back-office.md, § Modèle) — l'espace Back-Office : ses 6 entrées, dans
 // l'ordre du menu (piste A, BO1, docs/spec-back-office-piste-a.md), et les 12 widgets du tableau de bord
 // (qui s'en va avec BO-B). Document `backOffice/{uid}`, écrit par l'intéressé seul (B5).
-export const ENTREES = ["afaire", "calendrier", "planning", "equipes", "messages"] as const;
+export const ENTREES = ["afaire", "calendrier", "scene", "planning", "equipes", "messages"] as const;
 export const WIDGETS = ["dimanche", "calendrier", "afaire", "setlists", "planning", "evenements", "reunions", "chants", "petitdej", "scene", "comptes", "raccourcis"] as const;
 export type Entree = (typeof ENTREES)[number];
 export type WidgetId = (typeof WIDGETS)[number];

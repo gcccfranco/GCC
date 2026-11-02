@@ -3,8 +3,8 @@
 // (ordinateur, tablette en paysage), pour que les deux ne divergent jamais.
 // U6 ajoute l'espace « back-office » (sélecteur App ↔ Back-Office, menu à 5 entrées depuis la piste A, BO1).
 import {
-  ArrowLeftRight, BookOpen, CalendarDays, CalendarRange, Guitar, Inbox, KeyboardMusic, ListChecks, ListMusic, Music, Network,
-  Sparkles, Ticket, UserRound,
+  ArrowLeftRight, BookOpen, CalendarDays, CalendarRange, Drama, Guitar, Inbox, KeyboardMusic, ListChecks, ListMusic, Music,
+  Network, Sparkles, Ticket, UserRound,
   type LucideIcon,
 } from "lucide-react";
 import type { Entree } from "@/types/backOffice";
@@ -53,6 +53,7 @@ const ENTREES_VISITEUR: EntreeBarre[] = [
 const ENTREES_BACK_OFFICE: Record<Entree, EntreeBarre> = {
   afaire: { href: "/back-office", cle: "backOffice.entrees.afaire", Icone: ListChecks, actifSur: ["/back-office"], exact: true },
   calendrier: { href: "/back-office/calendrier", cle: "backOffice.entrees.calendrier", Icone: CalendarRange, actifSur: ["/back-office/calendrier"] },
+  scene: { href: "/back-office/evenements/scene", cle: "backOffice.entrees.scene", Icone: Drama, actifSur: ["/back-office/evenements/scene"] },
   planning: { href: "/back-office/planning", cle: "backOffice.entrees.planning", Icone: CalendarDays, actifSur: ["/back-office/planning"] },
   equipes: { href: "/back-office/equipes", cle: "backOffice.entrees.equipes", Icone: Network, actifSur: ["/back-office/equipes"] },
   messages: { href: "/back-office/messages", cle: "backOffice.entrees.messages", Icone: Inbox, actifSur: ["/back-office/messages"] },

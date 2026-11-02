@@ -93,12 +93,12 @@ test.describe("Back-Office (B1) : qui est responsable (Q1)", () => {
 });
 
 test.describe("Back-Office (B1) : les entrées selon les droits (BO1, BO4)", () => {
-  test("un admin voit les cinq entrées, dans l'ordre : À faire, Calendrier, Planning, Équipes, Messages", () => {
-    expect(entreesBackOffice(user(ADMIN), profil(ADMIN))).toEqual(["afaire", "calendrier", "planning", "equipes", "messages"]);
+  test("un admin voit les six entrées, dans l'ordre : À faire, Calendrier, Scène, Planning, Équipes, Messages", () => {
+    expect(entreesBackOffice(user(ADMIN), profil(ADMIN))).toEqual(["afaire", "calendrier", "scene", "planning", "equipes", "messages"]);
   });
 
-  test("Alice (TEAM ÉVÉNEMENTIEL, coordination) : À faire et Calendrier seulement", () => {
-    expect(entreesBackOffice(user(ALICE), profil(ALICE))).toEqual(["afaire", "calendrier"]);
+  test("Alice (TEAM ÉVÉNEMENTIEL, coordination) : À faire, Calendrier et Scène (la coordination seule)", () => {
+    expect(entreesBackOffice(user(ALICE), profil(ALICE))).toEqual(["afaire", "calendrier", "scene"]);
   });
 
   test("chaque droit ouvre ses entrées, et rien d'autre", () => {
@@ -135,7 +135,7 @@ test.describe("Back-Office (B1) : les entrées selon les droits (BO1, BO4)", () 
   test("les entrées deviennent celles des barres dans l'espace « back-office », aux adresses de BO1", () => {
     const entrees = entreesBarre("back-office", { connecte: true, backOffice: true, permises: entreesBackOffice(user(ADMIN), profil(ADMIN)) });
     expect(entrees.map((e) => e.href)).toEqual([
-      "/back-office", "/back-office/calendrier", "/back-office/planning", "/back-office/equipes", "/back-office/messages",
+      "/back-office", "/back-office/calendrier", "/back-office/evenements/scene", "/back-office/planning", "/back-office/equipes", "/back-office/messages",
     ]);
     // L'espace « app » ne change pas.
     expect(entreesBarre("app", { connecte: true, backOffice: true }).map((e) => e.href)).toEqual(["/songs", "/setlists", "/planning", "/evenements", "/moi"]);
@@ -218,7 +218,7 @@ test.describe("Back-Office (B1) : rien de neuf pour l'assemblée", () => {
 });
 
 test.describe("Back-Office (B1) : le sélecteur et le menu", () => {
-  test("un admin passe de l'App au Back-Office : les cinq entrées, espace marqué", async ({ page }, info) => {
+  test("un admin passe de l'App au Back-Office : les six entrées, espace marqué", async ({ page }, info) => {
     await sansSheet(page);
     await signInAs(page, ADMIN, {}, "/songs");
     await page.getByRole("searchbox").waitFor();
@@ -233,8 +233,8 @@ test.describe("Back-Office (B1) : le sélecteur et le menu", () => {
     await expect(menu(page, info).getByRole("link")).toHaveText(
       estOrdinateur(info) || estTablettePaysage(info)
         // « À faire » porte la pastille du nombre de ses lignes quand il y en a (BO-B).
-        ? [/^À faire\d*$/, "Calendrier", "Planning", "Équipes", "Messages"]
-        // Barre du bas (BO2) : cinq onglets fixes ; Messages est l'icône de l'en-tête.
+        ? [/^À faire\d*$/, "Calendrier", "Scène", "Planning", "Équipes", "Messages"]
+        // Barre du bas (BO2) : cinq onglets fixes, sans Scène (SF-1) ; Messages est l'icône de l'en-tête.
         : ["À faire", "Calendrier", "Planning", "Équipes", "App"],
     );
     await expect(menu(page, info).getByRole("link", { name: "À faire" })).toHaveAttribute("aria-current", "page");

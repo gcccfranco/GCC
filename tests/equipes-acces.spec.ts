@@ -159,8 +159,8 @@ test.describe("pur : qui est responsable, ses entrées (EQ17, EQ18, décision 43
     expect(sousPartiesEvenements(user(JOEL), profil(JOEL))).toEqual([]);
   });
 
-  test("la coordination seule : la page Évènements, ni Tâches ni Réunions (elle n'ouvre aucune équipe, EQ25)", () => {
-    expect(entreesBackOffice(user(IRIS), profil(IRIS))).toEqual(["afaire", "calendrier"]);
+  test("la coordination seule : la page Évènements et l'entrée Scène (SF-1), ni Tâches ni Réunions (elle n'ouvre aucune équipe, EQ25)", () => {
+    expect(entreesBackOffice(user(IRIS), profil(IRIS))).toEqual(["afaire", "calendrier", "scene"]);
     expect(droitsDesPages(user(IRIS), profil(IRIS))).toEqual({ taches: false, evenements: true, reunions: false });
   });
 

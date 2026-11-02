@@ -3473,6 +3473,10 @@
       "sansCompteAvecCompte": "排班表中尚无账号的名字（{{count}}）"
     },
     "aFaire": {
+      "sceneDesFetes": {
+        "titre": "节日舞台",
+        "sousTitre": "预约与出场顺序 · 复活节、圣诞节"
+      },
       "sousTitre": "{{jour}}，最紧急的在前",
       "filtreAria": "显示",
       "filtre": {
@@ -3559,6 +3563,7 @@
     "entrees": {
       "afaire": "待办",
       "calendrier": "日历",
+      "scene": "舞台",
       "planning": "排班表",
       "taches": "任务",
       "evenements": "活动",

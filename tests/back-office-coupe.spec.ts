@@ -145,6 +145,15 @@ test.describe("back-office coupé : une adresse tapée à la main tombe dans le 
   }
 });
 
+// Lot SF : rien de la scène des fêtes du Back-Office (entrée « Scène », carte d'À faire) tant que l'interrupteur est coupé.
+test("back-office coupé : ni entrée « Scène » ni lien vers la scène du Back-Office, même pour un admin", async ({ page }) => {
+  await signInAs(page, ADMIN, {}, "/moi");
+  await expect(page.getByRole("heading", { name: "Moi", level: 1 })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Scène", exact: true })).toHaveCount(0);
+  await expect(page.getByTestId("carte-scene-des-fetes")).toHaveCount(0);
+  await expect(page.locator('a[href*="/back-office/evenements/scene"]')).toHaveCount(0);
+});
+
 // Lot U6 (B2) : en ligne, l'Admin et Notifier restent les pages d'aujourd'hui (le
 // Back-Office qui les accueille n'y répond pas) ; Moi et le menu du compte les gardent.
 test.describe("back-office coupé : l'administration et Notifier restent où ils sont", () => {

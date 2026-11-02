@@ -868,6 +868,8 @@ export function entreesBackOffice(user: AuthUser | null, profile: ProfilResponsa
   const visible: Record<Entree, boolean> = {
     afaire: true,
     calendrier: true,
+    // Même condition que le lien « Scène des fêtes » du Calendrier (SF-1).
+    scene: isCoordination(user, profile, backOffice),
     planning: admin || (!backOffice && nonVide(profile?.plannings)) || planningsDuBackOffice(user, profile, backOffice).length > 0,
     equipes: canEditerEquipes(user, profile, backOffice) || tientUnGroupe(user, profile),
     // Le Back-Office n'existe qu'interrupteur ouvert (OG27) : les rôles comptent ici, sans dépendre de

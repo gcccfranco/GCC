@@ -3516,6 +3516,10 @@
       "sansCompteAvecCompte": "Noms du planning sans compte ({{count}})"
     },
     "aFaire": {
+      "sceneDesFetes": {
+        "titre": "Scène des fêtes",
+        "sousTitre": "Réservations et ordre de passage · Pâques, Noël"
+      },
       "sousTitre": "{{jour}}, le plus urgent en premier",
       "filtreAria": "Afficher",
       "filtre": {
@@ -3602,6 +3606,7 @@
     "entrees": {
       "afaire": "À faire",
       "calendrier": "Calendrier",
+      "scene": "Scène",
       "planning": "Planning",
       "taches": "Tâches",
       "evenements": "Évènements",
