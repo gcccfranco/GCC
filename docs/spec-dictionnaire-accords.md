@@ -137,7 +137,8 @@ ouverte).
 
 ## DA-4 — trois positions à la guitare, renversements au piano (02/11/2026)
 
-**État : spec écrite le 02/11/2026, en attente du go de Timothée.**
+**État : spec écrite le 02/11/2026 ; Q-DA4-1 et Q-DA4-2 tranchées sur les recommandations et go pour DA-4 (DA-4a et
+DA-4b) le 02/11/2026, session orchestratrice.**
 
 ### Mots de Timothée
 
@@ -173,9 +174,9 @@ ouverte).
 | R4 | **Jouable** : au plus 4 doigts (pouce compris si `P`), un barré au plus, **écart de 4 cases au plus** entre la plus basse et la plus haute case pressée hors barré (5 pour les formes add9 déjà admises), case ≤ 15 (`CASE_MAX`), basse = la fondamentale (ou la basse de l'accord avec basse). |
 | R5 | **Piano : trois renversements de la main droite**, dans le panneau et sur la page : état fondamental (ce qu'on voit aujourd'hui, toujours en premier), 1er renversement (tierce en bas, ou la 2e note de l'accord), 2e renversement (la 3e note en bas). Les accords de 4 notes et plus s'arrêtent là (le 3e renversement n'est pas proposé) ; un accord de 2 notes (`5`) n'a que deux dispositions ; on n'affiche jamais deux fois le même jeu de touches. La **main gauche ne bouge pas** (Q11 : la basse, ou la fondamentale) ; la main droite reste strictement au-dessus d'elle, le plus bas possible ; le clavier s'étend à trois octaves si besoin, comme aujourd'hui. Calculé : c'est permis au piano (Q18 ne vise que la guitare). |
 | R6 | **Même geste qu'à la guitare** : sous le clavier, la rangée de flèches de la guitare telle quelle (‹ › ronds, texte au milieu, `aria-live`), texte « État fondamental · 1 sur 3 », « 1er renversement · 2 sur 3 », « 2e renversement · 3 sur 3 » ; 中文 « 原位 · 第 1 种，共 3 种 », « 第一转位 · … », « 第二转位 · … ». Les lignes « Main gauche : … · Main droite : … » suivent le renversement affiché. Le choix repart du premier quand l'accord change (comme la guitare) ; rien n'est retenu sur l'appareil. |
-| R7 | **Accords avec basse** (questions ci-dessous, Q-DA4-1) : en attendant, le but de trois positions ne s'applique pas à eux ; leurs formes restent celles de DA-1. Au piano, leurs renversements s'appliquent à la main droite seule (`D/F#` : fa# à gauche ; ré fa# la, fa# la ré, la ré fa# à droite). |
+| R7 | **Accords avec basse** (Q-DA4-1, tranchée) : le but de trois positions ne s'applique pas à eux ; on ajoute une 2e forme mobile pour la seconde, la tierce et la quinte à la basse (clés `/2`, `/4`, `/7`), le reste est inchangé. Au piano, leurs renversements s'appliquent à la main droite seule (`D/F#` : fa# à gauche ; ré fa# la, fa# la ré, la ré fa# à droite). |
 
-### À trancher
+### Tranché le 02/11/2026 (sur les recommandations)
 
 - **Q-DA4-1 — accords avec basse.** 2 950 accords joués ; les plus courants à une seule position : Bb/C, F/G, A/B
   (accord majeur avec la seconde à la basse), Bb/F (quinte à la basse). **Recommandation** : pas de but chiffré ;
