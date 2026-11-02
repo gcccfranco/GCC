@@ -135,3 +135,52 @@ en chinois, Q3 montage tel quel, Q4 rien d'imposé).
   première. À adapter : `tests/visite-par-role.spec.ts` (compte du lot 8), `tests/video-bienvenue.spec.ts` (compte du
   lot 8 : vidéo, plus le logo), `tests/back-office-coupe.spec.ts` (serveur coupé : la visite s'ouvre aussi). Ajouter :
   un compte en version 2 voit la visite, et sa fermeture écrit 3.
+
+## Lot VB-E — Un extrait sur chaque écran de la visite (Timothée, 02/11/2026)
+
+Planche (version 6) : https://claude.ai/artifact/C9JexoTnCrVbEnvUHXbkHL. Remplace l'écran 1 du lot VB (la vidéo de 21 s
+faisait doublon avec le titre « Bienvenue dans GCC »). Go de Timothée le 02/11/2026 ; ses mots : « découper la vidéo
+en petites sections et les insérer dans chaque partie », « les choristes regardent l'écran devant eux, pas les
+partitions », « la page présidence doit être vue par tout le monde tout comme la page des chants : fais un mix des
+deux », « il faut une vidéo sur chaque page », « pour les musiciens je veux les deux », « pour la page Bienvenue pas de
+clip ». Questions restées sans réponse : recommandations appliquées (E8 à E10).
+
+| # | Décision |
+| --- | --- |
+| E1 | **Écran 1 (Bienvenue)** : le logo de l'église seul, comme avant le lot VB. Plus de vidéo, plus de `VideoBienvenue` à cet endroit. |
+| E2 | **Tous les autres écrans** ont un extrait : 16:9, sans son, sans légende, **en boucle**, une version par disposition (`telephone`, `tablette`, `tablette-paysage`, `ordinateur`, même choix par `matchMedia` qu'au lot VB). |
+| E3 | Où trouver quoi → `onglets` (la barre de navigation, un anneau passe sur chaque onglet). Sur téléphone l'écran défile un peu : accepté. |
+| E4 | Carte **musicien** → `musicien` (tonalité « + / − » puis Mode Louange, 9,6 s). |
+| E5 | Cartes **chanteur (choriste)**, **présidence**, **régie**, **membre** → `melange` (recherche d'un chant, puis la setlist qui se remplit, 8,4 s). |
+| E6 | Cartes **équipe** et **référent** → `taches` ; carte **responsabilités** et écran **Notifications** → `planning`. |
+| E7 | **C'est parti** → `melange`, vu par tout le monde. |
+| E8 | Place : **sous le texte** de l'écran (sous « Voir dans le guide » sur une carte, sous la liste d'Où trouver quoi, sous le bouton d'Notifications, sous « Ouvrir le guide » sur C'est parti) ; le texte ne bouge pas. |
+| E9 | C'est parti pour qui a déjà vu `melange` sur une de ses cartes : l'extrait `apercu` à la place (quatre écrans du site en fondu, 8 s), pas deux fois le même. |
+| E10 | **En chinois aussi** : les extraits n'ont pas de légende (l'interface filmée reste en français). |
+
+### Ce qui est à construire
+
+1. **Fichiers** : `git mv docs/video-bienvenue/extraits public/accueil/extraits` (24 `.mp4` + 24 `.jpg`, 5,5 Mo :
+   `<extrait>-<disposition>.{mp4,jpg}`, extraits `apercu`, `onglets`, `musicien`, `melange`, `taches`, `planning`). Les
+   vidéos du lot VB (`public/accueil/bienvenue-*.mp4`, `bienvenue.jpg`) ne servent plus : à supprimer, avec leur
+   mention dans `scripts/video-bienvenue/README.md` mise à jour.
+2. **Composant** : `VideoBienvenue.tsx` devient `ExtraitVisite.tsx` (`{ extrait }`), mêmes règles qu'au lot VB (muet posé
+   en JS avant `play()`, lecture refusée / mouvement réduit / `saveData` → affiche + bouton lecture, erreur → affiche,
+   `playsInline`, `preload="metadata"`, `aria-label` par extrait) mais **en boucle** (`loop`, plus de « Revoir ») et cadre
+   **`aspect-video w-full max-w-sm rounded-xl`**. L'affiche est `<extrait>-<disposition>.jpg`.
+3. **`Accueil.tsx`** : écran 1 = le logo seul (en `premiere` et `revoir`, en français et en chinois) ; chaque autre
+   écran reçoit son extrait selon E3–E9, placé à la fin du corps (E8). La carte → extrait suit le `kind` de
+   `cartesDeLaVisite` (`service` : `musicien` → `musicien`, `chanteur` / `presidence` / `regie` → `melange` ;
+   `equipe` → `taches` ; `responsabilites` → `planning` ; `membre` → `melange`). E9 se calcule dans `Ecrans` à partir
+   des cartes affichées.
+4. **Libellés** (`fr.json` et `zh-CN.json`) : `accueil.video.extrait.<extrait>` (six descriptions pour `aria-label`) ;
+   `accueil.video.revoir` et `accueil.video.label` deviennent orphelins : les retirer.
+5. **Service worker** : la règle `/accueil/*.mp4` (réseau, pas de cache) couvre les extraits ; les affiches
+   `/accueil/**/*.jpg` passent en stale-while-revalidate (à la place de la seule `bienvenue.jpg`).
+6. **Tests** (`tests/video-bienvenue.spec.ts`, renommé `tests/extraits-visite.spec.ts`, reste dans
+   `SPECS_GRAND_ECRAN`) : écran 1 = logo, aucune vidéo ; chaque écran suivant porte le bon extrait pour un profil
+   musicien, un choriste, une présidence, un référent, un membre ; E9 (C'est parti = `apercu` si `melange` déjà vu) ;
+   chinois : extraits présents ; boucle (`loop`), muet, lecture ; mouvement réduit → affiche + bouton ; chaque projet
+   charge **sa** disposition ; « Suivant » visible à 375×667. Relancer `visite-par-role`, `nouveaux-membres`,
+   `back-office-coupe`. Captures des cinq dispositions + 375×667 sur trois écrans (Où trouver quoi, une carte, C'est
+   parti), regardées à l'œil.
