@@ -10,6 +10,9 @@ import { ORDINATEUR, TABLETTE_PAYSAGE } from "@/lib/deuxVolets";
 
 type Etat = "lecture" | "fin" | "arret" | "erreur";
 
+/** Lecture refusée : le bouton lecture, sauf si la vidéo est en erreur (une 404 rejette aussi `play()`, après l'erreur). */
+const refusee = (e: Etat): Etat => (e === "erreur" ? e : "arret");
+
 const CADRE = "relative aspect-square w-full max-w-sm overflow-hidden rounded-2xl raised";
 const BOUTON = "bg-black/55 text-white backdrop-blur focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white";
 
@@ -42,7 +45,7 @@ export function VideoBienvenue() {
       return;
     }
     video.muted = true;
-    video.play().catch(() => setEtat("arret"));
+    video.play().catch(() => setEtat(refusee));
   }, [src]);
 
   function lire(depuis0: boolean) {
@@ -51,7 +54,9 @@ export function VideoBienvenue() {
     if (depuis0) video.currentTime = 0;
     video.muted = true;
     setEtat("lecture");
-    video.play().catch(() => setEtat("arret"));
+    // Le bouton cliqué disparaît : le focus passe à la vidéo, au lieu de retomber sur la page.
+    video.focus();
+    video.play().catch(() => setEtat(refusee));
   }
 
   if (!src || etat === "erreur") {
@@ -69,9 +74,10 @@ export function VideoBienvenue() {
         preload="metadata"
         poster="/accueil/bienvenue.jpg"
         aria-label={t("accueil.video.label")}
+        tabIndex={-1}
         onEnded={() => setEtat("fin")}
         onError={() => setEtat("erreur")}
-        className="h-full w-full object-cover"
+        className="h-full w-full object-cover outline-none"
       />
       {etat === "arret" && (
         <button

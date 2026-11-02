@@ -70,6 +70,8 @@ test.describe("mouvement réduit", () => {
     const lire = accueil(page).getByRole("button", { name: "Lire la vidéo" });
     await expect(lire).toBeVisible();
     await lire.click();
+    // Le bouton disparaît : le focus passe à la vidéo, pas à la page.
+    await expect(video(page)).toBeFocused();
     if (await litH264(page)) await expect.poll(async () => (await etat(page)).paused).toBe(false);
   });
 });
@@ -101,10 +103,25 @@ test("à la fin, « Revoir » relance la vidéo depuis le début", async ({ page
   await expect(revoir).toBeVisible();
   await revoir.click();
   await expect(revoir).toHaveCount(0);
+  await expect(video(page)).toBeFocused();
   if (h264) {
     await expect.poll(async () => (await etat(page)).paused).toBe(false);
     expect((await etat(page)).currentTime).toBeLessThan(3);
   }
+});
+
+test.describe("vidéo introuvable", () => {
+  test("erreur de chargement : l'affiche seule, sans bouton, et la visite continue", async ({ page }) => {
+    await page.route("**/accueil/*.mp4", (route) => route.fulfill({ status: 404, body: "" }));
+    await ouvrir(page);
+    const affiche = accueil(page).locator('img[src="/accueil/bienvenue.jpg"]');
+    await expect(affiche).toBeVisible();
+    await expect(video(page)).toHaveCount(0);
+    await expect(accueil(page).getByRole("button", { name: /Lire la vidéo|Revoir/ })).toHaveCount(0);
+    await expect(accueil(page).getByRole("heading", { name: "Bienvenue dans GCC" })).toBeVisible();
+    await suivant(page).click();
+    await expect(affiche).toHaveCount(0);
+  });
 });
 
 test("« Suivant » retire la vidéo, « Retour » en remonte une neuve, muette, repartie du début", async ({ page }) => {
