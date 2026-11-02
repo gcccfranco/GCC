@@ -4,7 +4,17 @@ Demande de Timothée du 02/11/2026. Planche faite le jour même :
 https://claude.ai/artifact/AEgKxRMpiRkGYrzkHaaL3T. Q1 à Q6 tranchées le 02/11/2026. Deux lots :
 **EM** (espace Musiciens) et **SF** (scène des fêtes).
 
-**État : spec écrite le 02/11/2026, attend le go** (« go pour EM », « go pour SF »).
+**État : codé le 02/11/2026** (go de Timothée du 02/11/2026, « Go pour les deux ») sur
+`claude/espace-musiciens-scene` : lot EM `e50abce`, lot SF `8f9db55`. **À valider par Timothée en local.**
+Écarts et points ouverts (relevés au codage) :
+- Interrupteur coupé, l'espace Musiciens existe (Q1) : un admin, compté musicien, voit le sélecteur
+  App · Musiciens. `tests/back-office-coupe.spec.ts` vérifie désormais qu'il n'y a jamais de Back-Office.
+- `/accords` garde son lien « ‹ Chants » en tête (page inchangée, Q3), aussi dans l'espace Musiciens.
+- Pendant la lecture du planning, la barre du bas de l'espace Musiciens attend (comme celle du Back-Office), sauf
+  forme retenue ; la barre latérale montre ses entrées dès le profil lu.
+- Deux tests rouges **antérieurs aux lots** (rouges aussi sur `cce6973`) : `back-office-coupe.spec.ts`
+  « prénom effacé » (course, un appareil différent à chaque passe) et `navigation-grand-ecran.spec.ts:52`
+  « une seule requête de notifications » (0 requête au retour sur la page).
 
 ## Mots de Timothée
 
