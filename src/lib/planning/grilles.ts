@@ -15,7 +15,7 @@
 // `dimanches/{date}` ne porte qu'une ligne.
 
 import { PLANNING_COLORS } from "@/lib/serviceColors"
-import { TRI_ORDER, triRank, triVisibilities, triVisibilitiesAnnee } from "./releases"
+import { TRI_ORDER, triRank, triVisibilities, triVisibilitiesAnnee } from "./trimestres"
 import { EDD_CLASSES, getAnnee, getTri } from "./utils"
 
 export type ColonneGrille = {
