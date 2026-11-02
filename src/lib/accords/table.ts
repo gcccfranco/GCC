@@ -146,6 +146,43 @@ export const MOBILES: Record<string, [corde: 0 | 1 | 2, intervalle: number, deca
   "m/10": [[0, 10, "0,0,-1,-1,-2,x", "34221x", null]],
 };
 
+// Formes ajoutées au lot DA-4 (02/11/2026), même écriture que `MOBILES` : elles complètent jusqu'à trois positions
+// dans d'autres zones du manche, et ne passent jamais en premier (la 1re position reste celle d'avant).
+export const MOBILES_SECONDES: typeof MOBILES = {
+  // Forme de ré (fondamentale sur la 4e corde) : xx0232, xx0231…
+  "": [[2, 0, "x,x,0,2,3,2", "xx1243", null], [1, 0, "x,0,-1,-3,-2,x", "x4312x", null]],
+  "m": [[2, 0, "x,x,0,2,3,1", "xx1342", null]],
+  "7": [[2, 0, "x,x,0,2,1,2", "xx1324", null], [1, 0, "x,0,-1,0,-2,x", "x3241x", null]],
+  "m7": [[2, 0, "x,x,0,2,1,1", "xx1423", null]],
+  "maj7": [[2, 0, "x,x,0,2,2,2", "xx1234", null]],
+  "sus4": [[2, 0, "x,x,0,2,3,3", "xx1234", null]],
+  "sus2": [[2, 0, "x,x,0,2,3,0", "xx1341", [2, 5]]],
+  "7sus4": [[2, 0, "x,x,0,2,1,3", "xx1324", null]],
+  "5": [[2, 0, "x,x,0,2,3,x", "xx134x", null]],
+  "add9": [[1, 0, "x,0,-1,-3,0,x", "x3214x", null], [2, 0, "x,x,0,-1,-2,0", "xx3214", null]],
+  "6": [[2, 0, "x,x,0,2,0,2", "xx1314", [2, 5]], [0, 0, "0,x,2,1,2,x", "1x324x", null]],
+  "m6": [[2, 0, "x,x,0,2,0,1", "xx1312", [2, 4]], [0, 0, "0,x,-1,0,0,x", "2x134x", null]],
+  "maj9": [[0, 0, "0,x,1,1,x,2", "1x23x4", null], [2, 0, "x,x,0,-1,2,0", "xx2143", null]],
+  "m9": [[2, 0, "x,x,0,-2,1,0", "xx3142", null], [0, 0, "0,2,0,0,0,2", "131114", [0, 5]]],
+  "9": [[0, 0, "0,2,0,1,0,2", "131214", [0, 5]], [2, 0, "x,x,0,-1,1,0", "xx2143", null]],
+  "add4": [[2, 0, "x,x,0,0,3,2", "xx1132", [2, 3]], [0, 0, "0,0,2,1,0,0", "113211", [0, 5]]],
+  "dim": [[2, 0, "x,x,0,1,3,1", "xx1243", null], [0, 0, "0,1,2,0,x,x", "1231xx", [0, 3]]],
+  "m7b5": [[2, 0, "x,x,0,1,1,1", "xx1234", null]],
+  "m11": [[0, 0, "0,0,0,0,0,0", "111111", [0, 5]]],
+  "11": [[2, 0, "x,x,0,0,1,0", "xx1121", [2, 5]]],
+  "9sus4": [[2, 0, "x,x,0,0,1,0", "xx1121", [2, 5]]],
+  "13": [[1, 0, "x,0,x,0,2,2", "x1x234", null]],
+  "7b9": [[2, 0, "x,x,0,-1,1,-1", "xx3142", null]],
+  "7#5": [[0, 0, "0,x,0,1,1,x", "1x234x", null]],
+  "madd9": [[2, 0, "x,x,0,-2,-2,0", "xx3124", null]],
+  "dim7": [[1, 0, "x,0,1,-1,1,x", "x2314x", null]],
+  "aug": [[1, 0, "x,0,-1,-2,-2,x", "x4312x", null]],
+  "m(maj7)": [[2, 0, "x,x,0,2,2,1", "xx1342", null]],
+  // Accords avec basse (R7) : une 2e forme pour la seconde et la quinte à la basse (la tierce en a déjà deux).
+  "/2": [[0, 2, "0,x,0,-1,-2,x", "3x421x", null]],
+  "/7": [[1, 7, "x,0,0,-1,-2,x", "x3421x", null]],
+};
+
 // Qualités (notes.ts) : intervalles en demi-tons depuis la fondamentale, et ceux qu'un doigté de guitare peut omettre.
 export const QUALITES: Record<string, { intervalles: number[]; facultatifs: number[] }> = {
   "": { intervalles: [0, 4, 7], facultatifs: [7] },

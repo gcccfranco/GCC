@@ -4,7 +4,7 @@ import { join } from "node:path";
 import { accordsDeLEtiquette, analyserAccord } from "../src/lib/accords/analyse";
 import { formesMobiles, positionsGuitare } from "../src/lib/accords/guitare";
 import { voicingPiano } from "../src/lib/accords/notes";
-import { MOBILES, OUVERTES, QUALITES } from "../src/lib/accords/table";
+import { MOBILES, MOBILES_SECONDES, OUVERTES, QUALITES } from "../src/lib/accords/table";
 import { CHORD_TOKEN, LABEL_SPLIT, getTransposedKey, noteToIndex, transposeChord } from "../src/lib/transpose";
 
 // Lot DA / DA-1 — le garde-fou de la spec : chaque doigté de la table sonne l'accord qu'il annonce, et chaque
@@ -56,7 +56,7 @@ test("chaque forme ouverte de la table sonne l'accord de son étiquette", () => 
 test("chaque forme mobile de la table, posée sur les douze fondamentales, sonne l'accord", () => {
   const fautes: string[] = [];
   let posees = 0;
-  for (const cle of Object.keys(MOBILES)) {
+  for (const cle of new Set([...Object.keys(MOBILES), ...Object.keys(MOBILES_SECONDES)])) {
     const [qualite, intervalle] = cle.split("/");
     for (let racine = 0; racine < 12; racine++) {
       const basse = intervalle === undefined ? null : (racine + Number(intervalle)) % 12;
@@ -148,4 +148,93 @@ test("chaque accord des chants, et ses 11 transpositions, a un piano et une guit
   expect([...refuses].sort(), "jetons que CHORD_TOKEN accepte et que analyserAccord refuse").toEqual([]);
   expect([...sansPiano], "accords sans main droite").toEqual([]);
   expect([...sansDoigteInattendu].sort(), "accords sans doigté hors des qualités assumées (SANS_DOIGTE)").toEqual([]);
+});
+
+// Lot DA-4 (docs/spec-dictionnaire-accords.md, R1 à R4) — trois positions, zones du manche, jouabilité, 1re position.
+
+const NOMS_B = ["C", "C#", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B"];
+const R1 = ["", "m", "7", "m7", "maj7", "sus4", "sus2", "7sus4", "add9", "6", "m6", "maj9", "m9", "9", "add4", "dim", "m7b5", "5"];
+const TRAINE = ["m11", "11", "13", "7b9", "7#5", "9sus4", "madd9", "dim7", "aug", "m(maj7)"];
+const plusBasse = (cases: (number | null)[]) => {
+  const p = cases.filter((c): c is number => c !== null && c > 0);
+  return p.length ? Math.min(...p) : 0;
+};
+const grille = (cases: (number | null)[]) => cases.map((c) => c ?? "x").join(",");
+
+/** Forme d'avant DA-4 qui dépasse R4 (5 doigts, pouce compris) : la retirer changerait des 1res positions (B/D#…). */
+const horsR4 = (cle: string, d: { doigts: (number | "P" | null)[] }) => cle === "/4" && d.doigts.includes("P");
+
+test("DA-4 R4 : chaque forme est jouable (4 doigts au plus, écart de 4 cases, 5 pour add9, case 15 au plus)", () => {
+  const fautes: string[] = [];
+  const verifier = (nom: string, d: { cases: (number | null)[]; doigts: (number | "P" | null)[] }, qualite: string) => {
+    const doigts = new Set(d.doigts.filter((x) => x !== null));
+    const p = d.cases.filter((c): c is number => c !== null && c > 0);
+    const ecart = p.length ? Math.max(...p) - Math.min(...p) + 1 : 0;
+    const max = qualite.includes("add9") ? 5 : 4;
+    const sansDoigt = d.cases.some((c, i) => c !== null && c > 0 && d.doigts[i] === null);
+    if (doigts.size > 4 || ecart > max || sansDoigt || Math.max(0, ...p) > 15)
+      fautes.push(`${nom} ${grille(d.cases)} : ${doigts.size} doigts, écart ${ecart}${sansDoigt ? ", case sans doigt" : ""}`);
+  };
+  for (const [etiquette, formes] of Object.entries(OUVERTES))
+    for (const [cases, doigts] of formes) {
+      const c = cases.split("").map((x) => (x === "x" ? null : Number(x)));
+      const d = doigts.split("").map((x, i) => (x === "x" || !c[i] ? null : x === "P" ? ("P" as const) : Number(x)));
+      verifier(etiquette, { cases: c, doigts: d }, analyserAccord(etiquette)!.qualite);
+    }
+  for (const cle of new Set([...Object.keys(MOBILES), ...Object.keys(MOBILES_SECONDES)]))
+    for (let r = 0; r < 12; r++)
+      for (const d of formesMobiles(r, cle)) if (!horsR4(cle, d)) verifier(`${NOMS_B[r]} (forme ${cle})`, d, cle);
+  expect([...new Set(fautes)].sort(), "formes injouables (R4)").toEqual([]);
+});
+
+test("DA-4 R1 : trois positions pour les qualités courantes sur les 12 fondamentales, deux pour la traîne", () => {
+  const manques: string[] = [];
+  for (const q of [...R1, ...TRAINE, ...SANS_DOIGTE]) {
+    const but = SANS_DOIGTE.has(q) ? 0 : q === "sus2" ? 2 : R1.includes(q) ? 3 : 2;
+    for (const n of NOMS_B) {
+      const nb = positionsGuitare(analyserAccord(n + q)!).doigtes.length;
+      if (nb < but) manques.push(`${n}${q} : ${nb} sur ${but}`);
+      expect(nb, `${n}${q}`).toBeLessThanOrEqual(3);
+    }
+  }
+  // Accords avec basse (R7) : deux formes au moins pour la seconde, la tierce et la quinte à la basse.
+  for (const [cle, intervalle] of [["/2", 2], ["/4", 4], ["/7", 7]] as const)
+    for (let r = 0; r < 12; r++) {
+      const nom = `${NOMS_B[r]}/${NOMS_B[(r + intervalle) % 12]}`;
+      const nb = positionsGuitare(analyserAccord(nom)!).doigtes.length;
+      if (nb < 2) manques.push(`${nom} (${cle}) : ${nb} sur 2`);
+    }
+  console.log(`positions sous le but : ${manques.length ? manques.join(", ") : "aucune"}`);
+  expect(manques).toEqual([]);
+});
+
+test("DA-4 R2 : les positions 2 et 3 sont dans d'autres zones du manche dès que la table le permet", () => {
+  const fautes: string[] = [];
+  const horsZones: string[] = [];
+  for (const q of Object.keys(QUALITES))
+    for (const n of NOMS_B) {
+      const a = analyserAccord(n + q)!;
+      const d = positionsGuitare(a).doigtes;
+      const l = d.map((x) => plusBasse(x.cases));
+      // Les suivantes vont de la plus basse à la plus haute.
+      if (l.slice(1).some((v, i, t) => i > 0 && v < t[i - 1])) fautes.push(`${n}${q} : ${l.join(",")} pas dans l'ordre`);
+      const dansTroisZones = l.every((x, i) => l.every((y, j) => i === j || Math.abs(x - y) >= 3));
+      if (!dansTroisZones) horsZones.push(`${n}${q} [${l.join(",")}]`);
+    }
+  // Exemple de la spec : fa = barré case 1, forme de do case 5, barré type la case 8.
+  expect(positionsGuitare(analyserAccord("F")!).doigtes.map((d) => grille(d.cases))).toEqual(["1,3,3,2,1,1", "x,8,7,5,6,x", "x,8,10,10,10,8"]);
+  console.log(`hors zones faute de formes (complétées de la plus basse à la plus haute) : ${horsZones.length}`);
+  expect(fautes).toEqual([]);
+});
+
+test("DA-4 : la 1re position de chaque accord est celle d'avant DA-4", () => {
+  const avant: Record<string, string> = JSON.parse(readFileSync(join(__dirname, "fixtures", "accords-premieres-positions.json"), "utf8"));
+  const changees: string[] = [];
+  for (const [jeton, cases] of Object.entries(avant)) {
+    const d = positionsGuitare(analyserAccord(jeton)!).doigtes[0];
+    const maintenant = d ? grille(d.cases) : "";
+    if (maintenant !== cases) changees.push(`${jeton} : ${cases || "aucune"} → ${maintenant || "aucune"}`);
+  }
+  console.log(`accords comparés : ${Object.keys(avant).length}`);
+  expect(changees).toEqual([]);
 });

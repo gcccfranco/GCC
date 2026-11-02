@@ -2,7 +2,7 @@
 // (`table.ts`) : jamais de doigté calculé autrement. Cordes indexées de la 6e (grave) à la 1re (aiguë).
 import { noteToIndex } from "@/lib/transpose";
 import { analyserAccord, type Accord } from "./analyse";
-import { MOBILES, OUVERTES } from "./table";
+import { MOBILES, MOBILES_SECONDES, OUVERTES } from "./table";
 
 type Doigte = {
   /** Une case par corde : null = étouffée, 0 = à vide. */
@@ -56,11 +56,9 @@ for (const [etiquette, formes] of Object.entries(OUVERTES)) {
   OUVERTES_INDEX.set(k, liste);
 }
 
-/** Les formes mobiles de la clé (qualité, ou qualité/intervalle de la basse), posées sur cette fondamentale
- *  (classe de hauteur). Exporté pour le garde-fou, qui les vérifie toutes sur les douze fondamentales. */
-export function formesMobiles(racine: number, cleMobile: string): Doigte[] {
+function poser(racine: number, liste: (typeof MOBILES)[string]): Doigte[] {
   const sortie: Doigte[] = [];
-  for (const [corde, intervalle, decalages, doigts, barre] of MOBILES[cleMobile] ?? []) {
+  for (const [corde, intervalle, decalages, doigts, barre] of liste) {
     const decal = lireCases(decalages);
     const min = Math.min(...decal.filter((d): d is number => d !== null));
     let r = (((racine + intervalle - CORDE_A_VIDE[corde]) % 12) + 12) % 12;
@@ -77,23 +75,59 @@ export function formesMobiles(racine: number, cleMobile: string): Doigte[] {
   return sortie.sort((x, y) => plusPetiteCase(x) - plusPetiteCase(y));
 }
 
+/** Toutes les formes mobiles de la clé (qualité, ou qualité/intervalle de la basse), `MOBILES` puis
+ *  `MOBILES_SECONDES`, posées sur cette fondamentale (classe de hauteur). Exporté pour le garde-fou, qui les vérifie
+ *  toutes sur les douze fondamentales. */
+export function formesMobiles(racine: number, cleMobile: string): Doigte[] {
+  return poser(racine, [...(MOBILES[cleMobile] ?? []), ...(MOBILES_SECONDES[cleMobile] ?? [])]);
+}
+
+function sansDoublon(liste: Doigte[]): Doigte[] {
+  const vues = new Set<string>();
+  return liste.filter((d) => {
+    const k = d.cases.join(",");
+    if (vues.has(k)) return false;
+    vues.add(k);
+    return true;
+  });
+}
+
+/** `a` ne fait que reprendre une partie de `b` (mêmes cases là où elle joue) : ce n'est pas une autre position. */
+function contenue(a: Doigte, b: Doigte): boolean {
+  return a.cases.every((c, i) => c === null || c === b.cases[i]);
+}
+
+/** Écart minimal, en cases, entre les plus basses cases pressées de deux positions de zones différentes (R2). */
+const ECART_ZONES = 3;
+
 function formes(racine: number, qualite: string, basse: number | null): Doigte[] {
   const ouvertes = OUVERTES_INDEX.get(cle(racine, qualite, basse)) ?? [];
   const cleMobile = basse === null ? qualite : `${qualite}/${(basse - racine + 12) % 12}`;
-  const toutes = [...ouvertes, ...formesMobiles(racine, cleMobile)];
-  const vues = new Set<string>();
-  return toutes
-    .filter((d) => {
-      const k = d.cases.join(",");
-      if (vues.has(k)) return false;
-      vues.add(k);
-      return true;
-    })
-    .slice(0, MAX_DOIGTES);
+  // 1re position : celle d'avant DA-4 — la forme ouverte, sinon la plus basse de `MOBILES` (jamais une seconde).
+  const premiere = sansDoublon([...ouvertes, ...poser(racine, MOBILES[cleMobile] ?? [])])[0];
+  if (!premiere) return [];
+  const candidates = sansDoublon([premiere, ...ouvertes, ...formesMobiles(racine, cleMobile)]);
+  const reste = candidates
+    .slice(1)
+    .filter((d) => !candidates.some((e) => e !== d && contenue(d, e)))
+    .sort((x, y) => plusPetiteCase(x) - plusPetiteCase(y));
+  // Les suivantes dans d'autres zones du manche, de la plus basse à la plus haute ; à défaut, les formes restantes.
+  const retenues = [premiere];
+  for (const d of reste) {
+    if (retenues.length === MAX_DOIGTES) break;
+    if (retenues.every((r) => Math.abs(plusPetiteCase(r) - plusPetiteCase(d)) >= ECART_ZONES)) retenues.push(d);
+  }
+  for (const d of reste) {
+    if (retenues.length === MAX_DOIGTES) break;
+    if (!retenues.includes(d)) retenues.push(d);
+  }
+  return [premiere, ...retenues.slice(1).sort((x, y) => plusPetiteCase(x) - plusPetiteCase(y))];
 }
 
 /**
- * Les doigtés d'un accord : ouverts d'abord, puis les formes mobiles de la plus basse à la plus haute, trois au plus.
+ * Les doigtés d'un accord, trois au plus (DA-4, R2) : la 1re position d'avant (ouverte, sinon la mobile la plus
+ * basse), puis deux autres dans d'autres zones du manche (plus basses cases pressées à 3 cases au moins l'une de
+ * l'autre), de la plus basse à la plus haute.
  * Un accord avec basse que la table ne connaît pas rend ceux de l'accord sans sa basse, et `basseAJouer` dit la
  * basse à ajouter. Aucun doigté connu → `doigtes` vide (« Pas encore de doigté »).
  */
