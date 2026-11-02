@@ -2598,6 +2598,17 @@
   },
   "accueil": {
     "nom": "Bienvenue dans GCC",
+    "video": {
+      "extrait": {
+        "apercu": "Aperçu du site : les chants, une setlist, le planning et le mode louange",
+        "onglets": "Aperçu de la barre de navigation : Chants, Setlists, Planning, Évènements, Moi",
+        "musicien": "Aperçu : changer la tonalité d'un chant, puis le mode louange",
+        "melange": "Aperçu : chercher un chant, puis la setlist du culte qui se remplit",
+        "taches": "Aperçu : les tâches d'une équipe",
+        "planning": "Aperçu : le planning des services"
+      },
+      "lire": "Lire la vidéo"
+    },
     "passer": "Passer",
     "suivant": "Suivant",
     "retour": "Retour",

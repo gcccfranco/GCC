@@ -1296,7 +1296,20 @@ croissant (pas créée seule ; sans elle, 400 et repli) ; 4. il publie la règle
 rattrapage avant la fusion, les fois cochées entre-temps resteraient sans `equipe`. Après la mise en ligne :
 comparer la courbe « Utilisation » de la console sur 24 h.
 
-### AL. Espace Musiciens et scène des fêtes en un clic (Timothée, 02/11/2026) → `spec-espace-musiciens.md`
+### AL. Vidéo de bienvenue à la première connexion (Timothée, 01/11/2026) → `spec-video-bienvenue.md`
+
+« Utilise https://github.com/latent-spaces/brag pour me faire une vidéo quand les gens se connectent pour la première
+fois. » Tranché le jour même : **français seulement**, **dans l'écran Bienvenue** (à la place du logo) ; puis **une vidéo par disposition**
+(téléphone, tablettes, ordinateur) et **sans son**. Vidéos faites (21 s, carré, captures du vrai site avec des noms
+inventés) :
+`docs/video-bienvenue/`, sources `scripts/video-bienvenue/`. Planche : https://claude.ai/artifact/C9JexoTnCrVbEnvUHXbkHL
+(quatre questions, recommandations appliquées au go). **En ligne** : lot VB le 02/11/2026 (`0fa7940`), puis lot
+**VB-R** (visite version 3, remontrée une fois à tous, `068fa12`, `main` = `c2eb512`) ; correctif de la boucle d'imports
+du planning (`GRILLES`, trouvé en testant) en ligne aussi (`40704ba`). Restes signalés : clés `accueil.bonjour`,
+`accueil.change`, `accueil.bienvenue.retour` orphelines ; `VERSION_VISITE` recopiée dans `tests/helpers/fakeSession.ts` ;
+`navigation-grand-ecran.spec.ts:52` (cloche) en échec avant le lot, à regarder.
+
+### AM. Espace Musiciens et scène des fêtes en un clic (Timothée, 02/11/2026) → `spec-espace-musiciens.md`
 
 « Peut-être pour les musiciens créer un onglet comme le back office mais pour les musiciens » ; Pâques et Noël
 « on peut pas gérer directement dans le back office ». Planche du 02/11/2026
@@ -1655,7 +1668,7 @@ valider par Timothée** : relecture des textes 中文, regard sur les cartes (r�
   vision écrite ; planche « Back-Office, les coulisses » publiée ; spec `spec-coulisses.md` (CO1 à CO9), mise en pause ; lot TB2 du tableau de bord seul. Rien de codé.
 - 01/11/2026 : **export FreeShow** (lot FS) : sept projets de la régie décortiqués, réponses de Timothée (setlist entière en `.project`, chinois + pinyin, bouton régie seule, fin vide, pas de traduction, Century Gothic) ; spec `spec-export-freeshow.md` (FS1 à FS9). Rien de codé, go attendu.
 - 01/11/2026 : **lot FS codé** sur `claude/export-freeshow` (go du jour) : fabrication du `.project` dans le navigateur (`src/lib/setlist/freeshow.ts`), bouton « Exporter pour FreeShow » pour la régie seule ; exemple à essayer dans FreeShow : `docs/freeshow/011126.project`. Pas en ligne ; seuils de découpe à régler après l'essai de la régie.
-- 02/11/2026 : **espace Musiciens et scène des fêtes** (AL) : planche, Q1 à Q6 tranchées, spec `spec-espace-musiciens.md` ; lots EM (`e50abce`) et SF (`8f9db55`) codés sur `claude/espace-musiciens-scene` (go du jour) : troisième espace Musiciens (Accords · Harmonie · Théorie musicale · RD-2000), Harmonie hors du menu du compte, « Cours » → « Théorie musicale » ; entrée Scène du Back-Office et carte d'À faire pour la coordination. Passes complètes : EM 1 029 verts puis corrections, SF 765 verts ; deux tests rouges antérieurs aux lots (spec, § État).
+- 02/11/2026 : **espace Musiciens et scène des fêtes** (AM) : planche, Q1 à Q6 tranchées, spec `spec-espace-musiciens.md` ; lots EM (`e50abce`) et SF (`8f9db55`) codés sur `claude/espace-musiciens-scene` (go du jour) : troisième espace Musiciens (Accords · Harmonie · Théorie musicale · RD-2000), Harmonie hors du menu du compte, « Cours » → « Théorie musicale » ; entrée Scène du Back-Office et carte d'À faire pour la coordination. Passes complètes : EM 1 029 verts puis corrections, SF 765 verts ; deux tests rouges antérieurs aux lots (spec, § État).
 
 ## 7. Relecture adversariale (14/09/2026)
 

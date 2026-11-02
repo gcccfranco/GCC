@@ -18,6 +18,8 @@ const SPECS_GRAND_ECRAN = [
   /chargement\.spec\.ts/,
   // Lot SF (docs/spec-espace-musiciens.md) : l'entrée « Scène » de la barre latérale et la carte d'À faire.
   /scene-des-fetes\.spec\.ts/,
+  // Lot VB-E (docs/spec-video-bienvenue.md) : les extraits de la visite, sur les quatre dispositions.
+  /extraits-visite\.spec\.ts/,
   /navigation-grand-ecran\.spec\.ts/,
   /look-navigation\.spec\.ts/,
   /look-halo(-defilement)?\.spec\.ts/,

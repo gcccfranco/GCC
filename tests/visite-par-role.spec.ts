@@ -106,7 +106,7 @@ async function allerA(page: Page, titre: string) {
   await expect(h).toBeVisible();
 }
 
-test("compte neuf musicien + Médias : « Tu joues le dimanche », « Ton équipe : Médias », « Commencer » écrit version 2", async ({ page }) => {
+test("compte neuf musicien + Médias : « Tu joues le dimanche », « Ton équipe : Médias », « Commencer » écrit version 3", async ({ page }) => {
   await sansNotifications(page);
   const db = await signInAs(page, MUSICIENNE, {}, "/moi");
   await expect(visite(page)).toBeVisible();
@@ -120,18 +120,28 @@ test("compte neuf musicien + Médias : « Tu joues le dimanche », « Ton équip
   await suivant(page).click();
   await visite(page).getByRole("button", { name: "Commencer" }).click();
   await expect(visite(page)).toHaveCount(0);
-  await expect.poll(() => db.doc(`onboarding/${MUSICIENNE.uid}`)?.version).toBe(2);
+  await expect.poll(() => db.doc(`onboarding/${MUSICIENNE.uid}`)?.version).toBe(3);
   expect(db.doc(`onboarding/${MUSICIENNE.uid}`)?.vu).toBe(true);
 });
 
-test("un compte qui avait vu l'accueil du lot 8 revoit la visite : « La visite a changé », « Bonjour Nina »", async ({ page }) => {
+test("un compte du lot 8 revoit la visite en mode première : « Bienvenue dans GCC », sans « La visite a changé »", async ({ page }) => {
   const db = await signInAs(page, { ...NEUF, accueil: false, accueilLot8: true }, {}, "/moi");
   await expect(visite(page)).toBeVisible();
-  await expect(visite(page).getByText("La visite a changé")).toBeVisible();
-  await expect(visite(page).getByRole("heading", { name: "Bonjour Nina" })).toBeVisible();
+  await expect(visite(page).getByRole("heading", { name: "Bienvenue dans GCC" })).toBeVisible();
+  await expect(visite(page).getByText("La visite a changé")).toHaveCount(0);
+  await expect(visite(page).getByRole("heading", { name: /Bonjour/ })).toHaveCount(0);
   await visite(page).getByRole("button", { name: "Passer" }).click();
   await expect(visite(page)).toHaveCount(0);
-  await expect.poll(() => db.doc(`onboarding/${NEUF.uid}`)?.version).toBe(2);
+  await expect.poll(() => db.doc(`onboarding/${NEUF.uid}`)?.version).toBe(3);
+});
+
+test("un compte resté à la version 2 de la visite la revoit une fois : « Passer » écrit la version 3 (lot VB-R)", async ({ page }) => {
+  const db = await signInAs(page, { ...NEUF, accueil: false, visiteVersion: 2 }, {}, "/moi");
+  await expect(visite(page)).toBeVisible();
+  await expect(visite(page).getByRole("heading", { name: "Bienvenue dans GCC" })).toBeVisible();
+  await visite(page).getByRole("button", { name: "Passer" }).click();
+  await expect(visite(page)).toHaveCount(0);
+  await expect.poll(() => db.doc(`onboarding/${NEUF.uid}`)?.version).toBe(3);
 });
 
 test("compte neuf sans rôle ni équipe : quatre écrans au plus, carte « La vie de l'église »", async ({ page }) => {
