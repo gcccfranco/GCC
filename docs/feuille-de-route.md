@@ -1678,6 +1678,7 @@ valider par Timothée** : relecture des textes 中文, regard sur les cartes (r�
 - 02/11/2026 : **équipe design** (demande de Timothée) : skills `impeccable` (allégé), `unslop`, `avoid-ai-design`, `web-design-guidelines` (consignes figées) installés après scan SkillSpector et contre-vérification ; agents `directeur-artistique`, `maquettiste`, `critique-design` et workflow `/planche` (`docs/orchestration.md` § 4). Aucun code du site touché.
 - 02/11/2026 : **audit du design** par l'équipe design (demande de Timothée : « la DA est correcte, voir ce qui va et ce qui ne va pas ») : 314 captures, 93 constats retenus après contre-vérification, six visibles au premier coup d'œil ; rapport `audit-design-2026-11-02.md` (§ 4 : quatre chantiers proposés, § 5 : questions à trancher). Rien de codé, go attendu.
 - 03/11/2026 : planches de corrections (sept groupes, propositions et recommandations), revue des 28 constats « à confirmer » (18 confirmés, 9 écartés, 1 gelé) ; préférences provisoires de Timothée, à valider après avoir tout vu : surface C (fond gris), contrôles B (trois), titres C (mixte), halos B (porteurs de couleur) — `audit-design-2026-11-02.md` § 5 bis. Audit des 55 pages restantes en cours. Rien de codé.
+- 03/11/2026 : **go de Timothée** sur les corrections du design, « comme recommandé pour tout » (lot CD) : spec `spec-corrections-design.md` et 17 annexes (204 entrées, tranches T1a à T5), branche `claude/corrections-design`, rien sur `main`.
 
 ## 7. Relecture adversariale (14/09/2026)
 
