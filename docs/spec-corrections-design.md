@@ -98,3 +98,32 @@ Quand deux annexes touchent le même code, **ceci fait foi** :
 Chaque annexe liste en tête ses points « à confirmer au code » (largeurs Mac / Windows, valeur de `--shadow-flottant`,
 mécanisme du plancher P13, clé `songs.list.filterThemeNom`…). La tranche concernée les tranche au moment de coder et le
 dit dans son commit.
+
+## État
+
+**Méthode, accordée par Timothée le 03/11/2026 (« oui pour 1, 2, 3, 4 »)** : `/tranche` attend la fin de Playwright, ne
+relance que les specs rouges, borne les specs voisines à quatre (lues par texte) ; les petites tranches se groupent (T1b
+fait un seul passage avec la suivante quand c'est possible) ; T1c, T1e et T1g tournent dans des sessions parallèles.
+
+### T1a · Navigation commune — fait
+- Sélecteur d'espace : segments de la barre latérale resserrés (`flex-auto min-w-0`, `px-2`, 12 px, 30 px) ; au
+  téléphone (< 640 px), icône seule de 36 px pour les espaces non courants ; Musiciens en `Drum` ; rail réduit : filet de
+  1 px × 32 px sous les espaces, actif sans ombre (chants-1, chants-7, back-office-1, dimanche-20).
+- « Moi » allumé sur `/equipes` et ses fiches, retour « ‹ Moi » sur l'index Équipes de l'App, marque « GCC Équipes » /
+  « GCC 团队 » (clé `common.header.equipes` créée) (back-office-8 + equipes-app-1, arbitrage 20 : la liste des labels
+  s'étend d'une entrée, comportement inchangé).
+- Retour « ‹ … » : zone de 44 px au toucher (evenements-app-6 = volet retour de back-office-9).
+- Règle des 44 px : une seule définition, `src/lib/toucher44.ts` (`TOUCHER_44`, `TOUCHER_RETOUR`, `TOUCHER_SEGMENT`), en
+  `::after` sous `[@media(pointer:coarse)]` ; l'ancien `songs/[slug]/_components/toucher44.ts` (en `max-sm:` et
+  `::before`) est supprimé, ses trois usages pointent sur le module partagé.
+- zh-CN : `setlists.list.myServicesFilter` 我的服侍 → 我的服事 (partout-servir).
+- **Tranché au code** : un écran Tailwind `coarse` brut fait disparaître toutes les variantes `max-*` (Tailwind 3.4) →
+  variante arbitraire ; la pastille glissante de back-office-1 n'est pas faite (fondu `duration-150` gardé) ; au-dessus
+  de 640 px la barre du haut ne change pas (`max-sm:gap-2`).
+- **Écarts / reste** : `SetlistDetailClient.tsx` garde sa propre copie de l'ancienne recette 44 px (`max-sm:` +
+  `::before`), à ramener sur `src/lib/toucher44.ts` (T3) ; d'autres occurrences de 服侍 restent dans `zh-CN.json` hors de
+  la clé visée ; largeurs des segments mesurées sous Linux seulement (Segoe et SF à regarder).
+- **Échecs connus, déjà rouges sur la base `da0b3ef`** : `tests/navigation-grand-ecran.spec.ts:52` (« un retour sur la
+  page relance une seule requête de notifications », 0 au lieu de 1, cinq projets). Courses vues sous charge, vertes
+  seules : `organigrammes-groupes.spec.ts:816`, `reunions.spec.ts:268`, `:274`. Lint : deux `require("node:fs")` des specs
+  de captures de l'audit design passés en `import` (erreurs antérieures à la tranche).

@@ -3,7 +3,7 @@ import { MoreHorizontal, Play, X, Sparkles, FileText } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { TOUCHER_44 } from "./toucher44";
+import { TOUCHER_44 } from "@/lib/toucher44";
 
 /** Les actions de la barre du chant (Q2, Q5) : Vidéo, PDF, Idées d'harmonie, ⋯. Rendues deux fois
  *  (au bout de la rangée, et sur la seconde rangée du téléphone) : une seule est visible. */

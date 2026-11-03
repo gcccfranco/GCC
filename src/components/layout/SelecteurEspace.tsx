@@ -10,7 +10,7 @@ import { Fragment, useEffect, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTranslation } from "react-i18next";
-import { House, Music, ShieldCheck } from "lucide-react";
+import { Drum, House, ShieldCheck } from "lucide-react";
 import { useAuth } from "@/lib/firebase/auth";
 import { useAccesHarmonie } from "@/lib/harmonie/useHarmonie";
 import { useProfile } from "@/lib/firebase/users";
@@ -18,6 +18,7 @@ import { entreesBackOffice } from "@/lib/access";
 import { poserFormeRetenue, useFormeRetenue } from "@/lib/marqueConnecte";
 import type { Entree } from "@/types/backOffice";
 import { BACK_OFFICE } from "@/lib/backOffice";
+import { TOUCHER_SEGMENT } from "@/lib/toucher44";
 import { entreesMusiciens, espaceAffiche, type Espace, type EntreeMusiciens } from "@/lib/navigation";
 
 const PAR_DEFAUT: Record<Espace, string> = { app: "/planning", musiciens: "/accords", "back-office": "/back-office" };
@@ -117,11 +118,12 @@ export function SelecteurEspace({ pleineLargeur = false, compact = false, onChoi
 
   if (!affiche) return null;
 
+  const icones: Record<Espace, typeof House> = { app: House, musiciens: Drum, "back-office": ShieldCheck };
+
   // BO-G, 10 : barre latérale réduite (ordinateur replié, tablette en paysage) : deux icônes, le nom en `aria-label` et
   // en infobulle. Le CSS ne la montre que dans la barre réduite (`barre-si-reduite`) ; le dessin tient dans 44 px de large,
   // la cible de toucher à 44 px par un `::after`.
   if (compact) {
-    const icones: Record<Espace, typeof House> = { app: House, musiciens: Music, "back-office": ShieldCheck };
     const icone = (e: Espace, libelle: string, Icone: typeof House) => (
       <Link
         key={e}
@@ -130,36 +132,50 @@ export function SelecteurEspace({ pleineLargeur = false, compact = false, onChoi
         title={libelle}
         aria-current={e === espace ? "true" : undefined}
         className={`relative flex h-9 w-9 items-center justify-center rounded-full after:absolute after:-inset-1 after:content-[''] transition-[background-color,color] duration-150 ${
-          e === espace ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+          e === espace ? "bg-background text-foreground" : "text-muted-foreground hover:text-foreground"
         }`}
       >
         <Icone className="h-[18px] w-[18px]" aria-hidden />
       </Link>
     );
+    // Le filet de 1 px sépare les espaces des pages (dimanche-20) ; comme le groupe, le CSS ne le montre que réduit.
     return (
-      <div
-        role="group"
-        aria-label={t("backOffice.selecteur.aria")}
-        data-testid="selecteur-icones"
-        className="barre-si-reduite w-11 shrink-0 flex-col items-center gap-2 rounded-full bg-secondary p-1"
-      >
-        {segments.map((e) => icone(e, libelles[e], icones[e]))}
-      </div>
+      <>
+        <div
+          role="group"
+          aria-label={t("backOffice.selecteur.aria")}
+          data-testid="selecteur-icones"
+          className="barre-si-reduite w-11 shrink-0 flex-col items-center gap-2 rounded-full bg-secondary p-1"
+        >
+          {segments.map((e) => icone(e, libelles[e], icones[e]))}
+        </div>
+        <div aria-hidden data-testid="filet-espaces" className="barre-si-reduite h-px w-8 shrink-0 bg-border" />
+      </>
     );
   }
 
   const lien = (e: Espace, libelle: string) => {
     const courant = e === espace;
+    const Icone = icones[e];
+    // Barre latérale (`pleineLargeur`) : segments qui se partagent les 220 px utiles, 30 px dessinés (chants-1).
+    // Barre du haut : au téléphone (< 640 px) l'espace courant garde icône et libellé, les autres une icône de 36 px
+    // (back-office-1) ; au-delà rien ne change. Le nom reste en `aria-label` et `title`.
+    const forme = pleineLargeur
+      ? "h-[30px] min-w-0 flex-auto px-2 text-[12px] tracking-[-0.01em]"
+      : `py-1.5 text-[13px] ${courant ? "px-3.5 max-sm:h-9 max-sm:px-2.5" : "px-3.5 max-sm:h-9 max-sm:w-9 max-sm:px-0"}`;
     return (
       <Link
         href={cibles[e]}
         aria-current={courant ? "true" : undefined}
+        aria-label={libelle}
+        title={libelle}
         onClick={onChoix}
-        className={`relative flex items-center justify-center whitespace-nowrap rounded-full px-3.5 py-1.5 after:absolute after:-inset-y-2 after:inset-x-0 after:content-[''] text-[13px] font-semibold transition-[background-color,color] duration-150 ${
-          pleineLargeur ? "flex-1" : ""
-        } ${courant ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+        className={`${TOUCHER_SEGMENT} flex items-center justify-center gap-1.5 whitespace-nowrap rounded-full font-semibold transition-[background-color,color] duration-150 ${forme} ${
+          courant ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+        }`}
       >
-        {libelle}
+        {!pleineLargeur && <Icone className="h-[18px] w-[18px] shrink-0 sm:hidden" aria-hidden />}
+        <span className={pleineLargeur ? "truncate" : courant ? "" : "max-sm:hidden"}>{libelle}</span>
       </Link>
     );
   };
@@ -168,7 +184,7 @@ export function SelecteurEspace({ pleineLargeur = false, compact = false, onChoi
     <div
       role="group"
       aria-label={t("backOffice.selecteur.aria")}
-      className={`${pleineLargeur ? "flex" : "inline-flex"} shrink-0 rounded-full bg-secondary p-[3px]`}
+      className={`${pleineLargeur ? "flex w-full min-w-0" : "inline-flex shrink-0"} rounded-full bg-secondary p-[3px]`}
     >
       {segments.map((e) => <Fragment key={e}>{lien(e, libelles[e])}</Fragment>)}
     </div>

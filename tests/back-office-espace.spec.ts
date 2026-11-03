@@ -1,8 +1,10 @@
 import { expect, test, type Page, type TestInfo } from "@playwright/test";
-import { signInAs, type FakeProfile } from "./helpers/fakeSession";
+import { musicien, signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { droitsDesPages, entreesBackOffice, estResponsable, widgetsPermis } from "../src/lib/access";
 import { entreesBarre } from "../src/lib/navigation";
 import type { UserProfile } from "../src/types/user";
+import zh from "../src/locales/zh-CN.json";
+import { ouvrirAvecBarre } from "./helpers/agencement";
 
 // Lot U6 (docs/spec-back-office.md), tranche B1 — l'espace « Back-Office » :
 // qui est responsable (Q1), quelles entrées chacun voit (piste A, BO1 : cinq entrées, À faire · Calendrier ·
@@ -322,6 +324,49 @@ test.describe("Back-Office (B1) : le sélecteur et le menu", () => {
     expect(s.x + s.width, "dans l'écran").toBeLessThanOrEqual(page.viewportSize()!.width);
   });
 
+  // Lot CD, T1a (back-office-1) : sous 640 px l'espace courant garde icône et libellé, les autres une icône de 36 px dont
+  // la zone de toucher fait 44 px sans recouvrir sa voisine ; la cloche reste à 16 px du bord (3 px avant, à 360 px en français).
+  for (const [largeur, langue] of [[393, "fr"], [375, "fr"], [360, "fr"], [360, "zh"]] as const) {
+    test(`téléphone ${largeur} px en ${langue} : icônes pour les espaces non courants, cloche à 16 px du bord, cibles de 44 px`, async ({ page }, info) => {
+      test.skip(!estTelephone(info), "propre au téléphone");
+      await page.setViewportSize({ width: largeur, height: 800 });
+      if (langue === "zh") await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
+      await signInAs(page, ADMIN, {}, "/songs");
+      const enTete = page.locator("header.barre-haut");
+      const groupe = enTete.getByRole("group").first();
+      await expect(groupe).toBeVisible();
+      const liens = groupe.getByRole("link");
+      await expect(liens).toHaveCount(3);
+      const noms = await liens.evaluateAll((els) => els.map((e) => e.getAttribute("aria-label")));
+      expect(noms, "le nom reste en aria-label").toEqual(langue === "zh" ? ["应用", "乐手", "后台"] : ["App", "Musiciens", "Back-Office"]);
+      // Le courant (App) : icône et libellé ; l'autre : icône seule, 36 px.
+      await expect(liens.nth(0).locator("span")).toBeVisible();
+      await expect(liens.nth(0).locator("svg")).toBeVisible();
+      for (const i of [1, 2]) {
+        await expect(liens.nth(i).locator("span")).toBeHidden();
+        await expect(liens.nth(i).locator("svg")).toBeVisible();
+        const autre = (await liens.nth(i).boundingBox())!;
+        expect(autre.width).toBeCloseTo(36, 0);
+        expect(autre.height).toBeCloseTo(36, 0);
+      }
+      // Pas de débordement, la cloche à 16 px ou plus du bord droit.
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
+      const cloche = (await enTete.getByRole("button", { name: langue === "zh" ? zh.notifications.title : "Notifications" }).boundingBox())!;
+      expect(largeur - (cloche.x + cloche.width), "cloche à 16 px du bord").toBeGreaterThanOrEqual(16);
+      // Zone de toucher : 44 px de haut (21 px de part et d'autre du centre), aux deux bords du segment, sans empiéter sur le voisin.
+      const toucheA = (x: number, y: number) =>
+        page.evaluate(({ x, y }) => document.elementFromPoint(x, y)?.closest("a")?.getAttribute("aria-label") ?? null, { x, y });
+      for (let i = 0; i < 3; i++) {
+        const b = (await liens.nth(i).boundingBox())!;
+        for (const dy of [-21, 21]) {
+          for (const x of [b.x + 2, b.x + b.width - 2]) {
+            expect(await toucheA(x, b.y + b.height / 2 + dy), `zone de ${noms[i]} (${dy} px, x=${Math.round(x)})`).toBe(noms[i]);
+          }
+        }
+      }
+    });
+  }
+
   test("tablette en portrait : label, puis sélecteur, cloche et langue", async ({ page }, info) => {
     test.skip(info.project.name !== "tablette", "propre à la tablette en portrait");
     await signInAs(page, ADMIN, {}, "/songs");
@@ -333,6 +378,34 @@ test.describe("Back-Office (B1) : le sélecteur et le menu", () => {
     expect((await selecteur(page).boundingBox())!.x, "après le label").toBeGreaterThan((await label.boundingBox())!.x);
     await expect(enTete.getByRole("button", { name: "切换为中文" })).toBeVisible();
   });
+
+  // Lot CD, T1a (chants-1) : « Back-Office » entier dans la barre dépliée, segments de 30 px qui se partagent les 220 px utiles.
+  for (const langue of ["fr", "zh"] as const) {
+    test(`barre dépliée en ${langue} : les trois segments tiennent dans 220 px, sans « … »`, async ({ page }, info) => {
+      test.skip(!estOrdinateur(info) && !estTablettePaysage(info), "propre aux grands écrans");
+      await ouvrirAvecBarre(page, "depliee");
+      if (langue === "zh") await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
+      await signInAs(page, { ...ADMIN, ...musicien("piano") }, {}, "/songs");
+      await page.getByRole("searchbox").waitFor();
+      if (estTablettePaysage(info)) await page.getByTestId("barre-laterale").getByRole("button", { name: /Déplier la barre latérale|展开侧边栏/ }).tap();
+      const groupe = page.locator('[data-testid="place-selecteur"]:visible').getByRole("group");
+      await expect(groupe).toBeVisible();
+      const liens = groupe.getByRole("link");
+      const n = await liens.count();
+      expect(n, "App, Musiciens, Back-Office").toBeGreaterThanOrEqual(2);
+      let somme = 0;
+      for (let i = 0; i < n; i++) {
+        const b = (await liens.nth(i).boundingBox())!;
+        somme += b.width;
+        expect(b.height, "hauteur dessinée de 30 px").toBeCloseTo(30, 0);
+        const coupe = await liens.nth(i).locator("span").evaluate((e) => ({ style: getComputedStyle(e).textOverflow, trop: e.scrollWidth > e.clientWidth + 0.5 }));
+        expect(coupe.trop, `« ${await liens.nth(i).getAttribute("aria-label")} » n'est pas coupé`).toBe(false);
+      }
+      expect(somme, "somme des segments").toBeLessThanOrEqual(220.5);
+      const conteneur = (await groupe.boundingBox())!;
+      expect(conteneur.width, "le conteneur ne dépasse pas la barre").toBeLessThanOrEqual(248);
+    });
+  }
 
   test("grand écran : le sélecteur sous le label de la barre dépliée ; réduite, l'interrupteur reste en deux icônes nommées (BO-G, 10)", async ({ page }, info) => {
     test.skip(!estOrdinateur(info) && !estTablettePaysage(info), "propre aux grands écrans");

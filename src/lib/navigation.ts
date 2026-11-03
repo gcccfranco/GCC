@@ -38,7 +38,7 @@ const ENTREES_MEMBRE: EntreeBarre[] = [
   { href: "/setlists", cle: "common.header.setlists", Icone: ListMusic, actifSur: ["/setlists"] },
   { href: "/planning", cle: "common.header.planning", Icone: CalendarDays, actifSur: ["/planning"] },
   { href: "/evenements", cle: "common.header.evenements", Icone: Ticket, actifSur: ["/evenements"] },
-  { href: "/moi", cle: "common.header.moi", Icone: UserRound, actifSur: ["/moi", "/mes-services", "/taches", "/profil", "/guide", "/questionnaire", "/notifier", "/admin"] },
+  { href: "/moi", cle: "common.header.moi", Icone: UserRound, actifSur: ["/moi", "/mes-services", "/taches", "/equipes", "/profil", "/guide", "/questionnaire", "/notifier", "/admin"] },
 ];
 
 // Sans compte : les chants et le calendrier public (décision Q10 du lot 6).
@@ -189,6 +189,7 @@ export function estEntreeActive(entree: EntreeBarre, pathname: string): boolean 
 /** Clé i18n du label contextuel « GCC <label> » (décisions du 15/09/2026, gelées). */
 export function labelDeSection(pathname: string, musicien = false): string {
   if (BACK_OFFICE && pathname.startsWith("/back-office")) return "common.header.backOffice";
+  if (pathname.startsWith("/equipes")) return "common.header.equipes";
   if (musicien && espaceDe(pathname) === "musiciens") return "common.header.musiciens";
   if (pathname.startsWith("/planning")) return "common.header.planning";
   if (pathname.startsWith("/mes-services")) return "common.header.service";

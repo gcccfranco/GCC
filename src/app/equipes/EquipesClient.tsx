@@ -189,6 +189,7 @@ export function EquipesClient({
   // Lot 2 (OG-E) : le sélecteur Église · Paix · … à gauche, Équipes · Musiciens à droite, et le sous-titre des organigrammes.
   const enTeteApp = (
     <EnTetePage
+      retour={{ href: "/moi", label: t("moi.title") }}
       titre={t("equipes.title")}
       sousTitre={selecteur ? t("groupes.app.sousTitre") : t("equipes.sousTitre")}
       apres={selecteur ? (

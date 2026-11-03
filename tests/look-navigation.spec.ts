@@ -207,3 +207,47 @@ test.describe("navigation par sections (T2), ordinateur : la barre latérale (lo
     await expect(page.getByTestId("barre-du-bas")).toBeHidden();
   });
 });
+
+// Lot CD, T1a : Équipes est une page de « Moi » (equipes-app-1, back-office-8) ; le retour « ‹ Moi » est une cible de 44 px
+// au toucher (evenements-app-6 : zone élargie par `::after`, sans bouger le titre).
+test.describe("Moi sur /equipes, marque « Équipes », retour à 44 px", () => {
+  const EQUIPIER = { ...MEMBRE, uid: "u-noor", email: "noor@example.com", firstName: "Noor", lastName: "A.", planningName: "Noor A.", dansEquipes: ["da"] };
+  const DOCS = { "equipes/da": { pole: "da", membres: [{ nom: "Noor A.", uid: "", mention: "", referent: false, essai: false, groupe: "" }], updatedAt: "2026-09-18T10:00:00Z", parUid: "", parNom: "" } };
+  const lienMoi = (page: Page) =>
+    page.getByRole("navigation", { name: "Navigation principale" }).getByRole("link", { name: "Moi" }).filter({ visible: true }).first();
+  const marque = (page: Page, info: { project: { name: string } }) =>
+    info.project.name.startsWith("ordinateur") || info.project.name === "tablette-paysage"
+      ? page.getByTestId("label-section")
+      : header(page).locator(".brand-nom");
+
+  for (const adresse of ["/equipes", "/equipes/da"]) {
+    test(`${adresse} : « Moi » porte aria-current, la marque dit « Équipes » (jumeau de /taches)`, async ({ page }, info) => {
+      await signInAs(page, EQUIPIER, DOCS, adresse);
+      await expect(lienMoi(page)).toHaveAttribute("aria-current", "page");
+      await expect(marque(page, info)).toContainText("Équipes");
+    });
+  }
+
+  test("/taches garde « Moi » allumé et la marque « Tâches »", async ({ page }, info) => {
+    await signInAs(page, EQUIPIER, DOCS, "/taches");
+    await expect(lienMoi(page)).toHaveAttribute("aria-current", "page");
+    await expect(marque(page, info)).toContainText("Tâches");
+  });
+
+  test("au toucher, 20 px au-dessus et au-dessous du texte du retour, le lien reste atteint ; la souris n'a pas de zone élargie", async ({ page }) => {
+    await signInAs(page, EQUIPIER, DOCS, "/equipes");
+    const retour = page.locator("header[data-entete-page]").getByRole("link", { name: "Moi" });
+    await expect(retour).toBeVisible();
+    const tactile = await page.evaluate(() => matchMedia("(pointer: coarse)").matches);
+    const b = (await retour.boundingBox())!;
+    const atteint = (dy: number) =>
+      page.evaluate(({ x, y }) => document.elementFromPoint(x, y)?.closest("a")?.getAttribute("href") ?? null, { x: b.x + b.width / 2, y: b.y + b.height / 2 + dy });
+    const href = await retour.getAttribute("href");
+    for (const dy of [-20, 20]) {
+      if (tactile) expect(await atteint(dy), `zone de 44 px (${dy} px)`).toBe(href);
+      else expect(await atteint(dy), `souris : pas de zone élargie (${dy} px)`).not.toBe(href);
+    }
+    // Rien ne bouge : le dessin du lien garde ses 20 px de haut.
+    expect(b.height).toBeLessThan(26);
+  });
+});

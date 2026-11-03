@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { appendFileSync } from "node:fs";
 import { ADMIN_EMAIL, signInAs, type FakeProfile } from "./helpers/fakeSession";
 
 // Audit du design, second lot (03/11/2026) : les pages que audit-design-captures.spec.ts ne couvre pas.
@@ -189,7 +190,7 @@ async function photographier(page: Page, nom: string) {
     await page.waitForTimeout(1500);
     const texte = await page.evaluate(() => document.body.innerText);
     const vues = [...new Set(texte.match(/[\w.+-]+@gmail\.com/g) ?? [])];
-    if (vues.length) require("node:fs").appendFileSync(process.env.PW_EMAIL_CHECK, `${test.info().project.name} ${nom}: ${vues.join(", ")}\n`);
+    if (vues.length) appendFileSync(process.env.PW_EMAIL_CHECK, `${test.info().project.name} ${nom}: ${vues.join(", ")}\n`);
     return;
   }
   await page.waitForLoadState("networkidle").catch(() => {});

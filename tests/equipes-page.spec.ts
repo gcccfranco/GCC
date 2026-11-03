@@ -99,6 +99,31 @@ test.describe("la page d'une équipe dans l'app (BO4)", () => {
     await expect(page.getByText("Page introuvable").first()).toBeVisible();
   });
 
+  test("/equipes/da : « Moi » est allumé dans la barre, la marque dit « Équipes » (fr) / « 团队 » (zh), et « ‹ Moi » mène à /moi", async ({ page }, info) => {
+    await ouvrir(page, MIRA, "/equipes");
+    const nav = page.getByRole("navigation", { name: /Navigation principale|主导航/ });
+    const moi = nav.getByRole("link", { name: /^(Moi|我)$/ }).filter({ visible: true }).first();
+    const marque = estGrandEcran(info) ? page.getByTestId("label-section") : page.locator("header.barre-haut .brand-nom");
+    await expect(moi, "allumé sur l'index").toHaveAttribute("aria-current", "page");
+    await expect(marque).toContainText("Équipes");
+    // Le retour de l'index : « ‹ Moi » au-dessus du titre, sur l'App seulement.
+    const retour = page.locator("header[data-entete-page]").getByRole("link", { name: "Moi" });
+    await expect(retour).toHaveAttribute("href", /\/moi\/?$/);
+    await retour.click();
+    await expect(page).toHaveURL(/\/moi\/?$/);
+    await page.goto("/equipes/da/");
+    await expect(page.getByRole("heading", { name: "DA", level: 1 })).toBeVisible();
+    await expect(moi, "allumé sur la page d'une équipe").toHaveAttribute("aria-current", "page");
+    await expect(marque).toContainText("Équipes");
+  });
+
+  test("/equipes en 中文 : la marque dit « 团队 » et « ‹ 我 » est au-dessus du titre", async ({ page }, info) => {
+    await ouvrir(page, MIRA, "/equipes", { zh: true });
+    const marque = estGrandEcran(info) ? page.getByTestId("label-section") : page.locator("header.barre-haut .brand-nom");
+    await expect(marque).toContainText("团队");
+    await expect(page.locator("header[data-entete-page]").getByRole("link", { name: "我" })).toHaveAttribute("href", /\/moi\/?$/);
+  });
+
   test("Moi › Mes équipes : la ligne de DA mène à /equipes/da", async ({ page }) => {
     await ouvrir(page, MIRA, "/moi");
     const ligne = page.getByTestId("equipe-ligne").first();

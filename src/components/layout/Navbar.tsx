@@ -128,7 +128,7 @@ export function Navbar() {
         }`}
       >
         <FondDeBarre />
-        <div className="max-w-[1080px] mx-auto px-4 h-full flex items-center gap-3">
+        <div className="max-w-[1080px] mx-auto px-4 h-full flex items-center gap-3 max-sm:gap-2">
           {/* Brand */}
           <Link href={membre ? "/planning" : "/songs"} className="relative flex items-center gap-2.5 shrink-0 after:absolute after:-inset-1 after:content-['']">
             <div className="relative h-9 w-9 rounded-full overflow-hidden shadow-sm">

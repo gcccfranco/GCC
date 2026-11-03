@@ -23,6 +23,7 @@
       "musiciens": "乐手",
       "account": "账户",
       "taches": "任务",
+      "equipes": "团队",
       "backOffice": "后台"
     },
     "buttons": {
@@ -208,7 +209,7 @@
       "emptyUpcoming": "暂无即将到来的崇拜。",
       "emptyArchived": "暂无历史记录。",
       "searchPlaceholder": "按标题、带领人或日期搜索…",
-      "myServicesFilter": "我的服侍",
+      "myServicesFilter": "我的服事",
       "mainMeetings": "主要聚会",
       "groupsLabel": "团契小组",
       "fetes": "节日",

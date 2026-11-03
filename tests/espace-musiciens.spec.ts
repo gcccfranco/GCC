@@ -1,7 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import { musicien, signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { entreesBarre, entreesMusiciens, espaceAffiche, espaceDe, estEntreeActive, labelDeSection, ongletsMusiciens } from "../src/lib/navigation";
-import { estGrandEcran, interdireDialoguesNatifs } from "./helpers/agencement";
+import { estGrandEcran, interdireDialoguesNatifs, ouvrirAvecBarre } from "./helpers/agencement";
 
 // EM-2 (docs/spec-espace-musiciens.md, Q1-Q3) : l'espace Musiciens, ses entrées, son sélecteur « App · Musiciens ·
 // Back-Office » et sa barre du bas, sur les cinq dispositions (SPECS_GRAND_ECRAN). Plannings et profils simulés ;
@@ -130,6 +130,26 @@ test.describe("Espace Musiciens : le pianiste", () => {
       await expect.poll(() => noms(page.getByTestId("selecteur-icones").first().getByRole("link"))).toEqual(["App", "Musiciens"]);
     }
     await capture(page, "accords-pianiste");
+  });
+
+  test("barre réduite : Musiciens a l'icône batterie, pas celle de Chants ; dans l'espace, une seule guitare (« Accords ») ; un filet sépare espaces et pages", async ({ page }, info) => {
+    test.skip(!estGrandEcran(info), "la barre réduite n'existe que sur ordinateur et tablette en paysage");
+    await ouvrirAvecBarre(page, "reduite");
+    await entrer(page, PIANISTE, "/songs");
+    const icones = page.getByTestId("selecteur-icones");
+    await expect(icones).toBeVisible();
+    const svg = (lien: ReturnType<Page["locator"]>) => lien.locator("svg").first().evaluate((e) => e.outerHTML);
+    const drum = await svg(icones.getByRole("link", { name: "Musiciens", exact: true }));
+    const chants = await svg(laterale(page).getByRole("navigation").getByRole("link", { name: "Chants", exact: true }));
+    expect(drum).toContain("lucide-drum");
+    expect(drum, "Musiciens ne porte pas l'icône de Chants").not.toBe(chants);
+    expect(await icones.getByRole("link").evaluateAll((els) => els.filter((e) => e.getAttribute("aria-current") === "true").length)).toBe(1);
+    const filet = laterale(page).getByTestId("filet-espaces");
+    await expect(filet).toBeVisible();
+    expect((await filet.boundingBox())!.height).toBeCloseTo(1, 0);
+    await page.goto("/accords");
+    await expect(page.getByRole("heading", { level: 1, name: "Accords" })).toBeVisible();
+    await expect(laterale(page).locator("svg.lucide-guitar")).toHaveCount(1);
   });
 
   test("Théorie musicale mène aux cours, et Harmonie n'est plus courante dessus ; le rail de l'en-tête a disparu", async ({ page }, info) => {

@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import type { CustomizeState } from "@/components/customPanel/CustomizePanel";
 import { keyOptions, semitonesTo, getTransposedKey } from "@/lib/transpose";
-import { TOUCHER_44 } from "./toucher44";
+import { TOUCHER_44 } from "@/lib/toucher44";
 
 /** Transposition rapide de la barre du chant : − / liste des tonalités / +. */
 export function PiluleTonalite({ currentKey, originalKey, keySuffix, setCustomize }: {
