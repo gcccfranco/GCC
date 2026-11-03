@@ -117,6 +117,8 @@ const PAGES: Page_[] = [
   { nom: "evenements_scene_fete", chemin: "/evenements/scene/noel" },
   { nom: "planning_campus", chemin: "/planning/campus" },
   { nom: "planning_culte", chemin: "/planning/culte" },
+  // L'accueil avec un service à venir (Alix D. au piano le 08/11 dans Franco_Louange) : la forme à deux colonnes.
+  { nom: "accueil-avec-service", chemin: "/" },
   { nom: "planning_edd", chemin: "/planning/edd" },
   { nom: "planning_groupes", chemin: "/planning/groupes" },
   { nom: "planning_interfranco", chemin: "/planning/interfranco" },
