@@ -76,7 +76,7 @@ const specsRouges = (r) => [...new Set(r.echecs.map((e) => (e.lieu.match(/tests\
 
 phase('Coder')
 const code = await agent(
-  `Tranche ${A.tranche} de ${A.spec} (lis la spec pour le contexte, la consigne ci-dessous fait foi).\n\nCONSIGNE DÉCIDÉE :\n${A.consigne}\n\nTests de la tranche : ${tests || 'aucun nommé'}.`,
+  `Tranche ${A.tranche} de ${A.spec} (lis la spec pour le contexte, la consigne ci-dessous fait foi).\n\nCONSIGNE DÉCIDÉE :\n${A.consigne}\n\nTests de la tranche : ${tests || 'aucun nommé'}. Pour te vérifier, lance seulement ces specs, sur un seul projet (\`--project=telephone\` ou celui que l'entrée vise), et \`npx tsc --noEmit\` : la passe sur tous les appareils et les specs voisines, c'est le testeur qui la fait juste après (03/11/2026 : l'executant relançait 612 tests, puis le testeur les mêmes).`,
   { agentType: 'executant', label: `coder:${A.tranche}`, phase: 'Coder' })
 
 let t = await tester(1)
