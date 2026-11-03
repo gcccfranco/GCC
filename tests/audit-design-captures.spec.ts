@@ -78,6 +78,15 @@ async function preparer(page: Page, langue: string, sombre: boolean) {
 }
 
 async function photographier(page: Page, nom: string) {
+  // PW_EMAIL_CHECK=<fichier> : au lieu de photographier, note les pages qui affichent une adresse e-mail réelle
+  // (le compte admin simulé porte une vraie adresse) — à ne pas recopier dans une planche du dépôt public.
+  if (process.env.PW_EMAIL_CHECK) {
+    await page.waitForTimeout(1500);
+    const texte = await page.evaluate(() => document.body.innerText);
+    const vues = [...new Set(texte.match(/[\w.+-]+@gmail\.com/g) ?? [])];
+    if (vues.length) require("node:fs").appendFileSync(process.env.PW_EMAIL_CHECK, `${test.info().project.name} ${nom}: ${vues.join(", ")}\n`);
+    return;
+  }
   await page.waitForLoadState("networkidle").catch(() => {});
   await page.waitForTimeout(800);
   await page.screenshot({ path: `${DIR}/${test.info().project.name}/${nom}.png`, fullPage: true });

@@ -181,6 +181,15 @@ async function preparer(page: Page, langue: string, sombre: boolean) {
 }
 
 async function photographier(page: Page, nom: string) {
+  // PW_EMAIL_CHECK=<fichier> : au lieu de photographier, note les pages qui affichent une adresse e-mail réelle
+  // (le compte admin simulé porte une vraie adresse) — à ne pas recopier dans une planche du dépôt public.
+  if (process.env.PW_EMAIL_CHECK) {
+    await page.waitForTimeout(1500);
+    const texte = await page.evaluate(() => document.body.innerText);
+    const vues = [...new Set(texte.match(/[\w.+-]+@gmail\.com/g) ?? [])];
+    if (vues.length) require("node:fs").appendFileSync(process.env.PW_EMAIL_CHECK, `${test.info().project.name} ${nom}: ${vues.join(", ")}\n`);
+    return;
+  }
   await page.waitForLoadState("networkidle").catch(() => {});
   // Le badge « Compiling… » de `next dev` recouvrait la barre de navigation sur certaines captures.
   await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" }).catch(() => {});
