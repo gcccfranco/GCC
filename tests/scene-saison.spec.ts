@@ -3,7 +3,7 @@ import path from "node:path";
 import { expect, test, type Page } from "@playwright/test";
 import { signInAs, type FakeDb, type FakeProfile } from "./helpers/fakeSession";
 import { estGrandEcran, estTelephone, interdireDialoguesNatifs, repondreDansLeSite } from "./helpers/agencement";
-import { fermerFeuille, reglageSaison, versToutesLesReservations } from "./helpers/saisonScene";
+import { fermerFeuille, reglageSaison, resumeSaison, versToutesLesReservations } from "./helpers/saisonScene";
 import { canReserverPour } from "../src/lib/access";
 import {
   commence, creneauxLibres, erreursSaison, FAMILLES, famillesDe, grilleDuJour, horsGrille, joursReservables,
@@ -420,6 +420,32 @@ test("plages : la pastille s'ouvre pour changer la plage ; retirer la seule plag
   await expect(c.getByRole("button", { name: "sam.", exact: true, pressed: false })).toBeVisible();
   await expect(c.getByText("Chaque jour coché a au moins une plage.")).toHaveCount(0);
   await expect.poll(() => patches(db).at(-1)?.data.plages).toEqual([{ jour: 0, debut: "14:00", fin: "19:00" }]);
+});
+
+const UNE_PLAGE = { ...NOEL26, ouvert: true, plages: [{ jour: 0, debut: "14:00", fin: "19:00" }] };
+
+test("téléphone : « Terminé » enregistre la plage en cours d'édition", async ({ page }) => {
+  test.skip(!estTelephone(test.info()), "la feuille et son bouton « Terminé » n'existent que sur téléphone");
+  const db = await ouvrir(page, ALICE, { "programmes/noel": UNE_PLAGE }, "2026-11-03T10:00:00", SAISON_NOEL);
+  const c = await reglageSaison(page, "Jours et plages");
+  await c.getByRole("button", { name: "dim. 14:00 – 19:00" }).click();
+  await c.getByLabel("Début de la plage").fill("17:00");
+  await page.getByRole("dialog").getByRole("button", { name: "Terminé", exact: true }).click();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect.poll(() => patches(db).at(-1)?.data.plages).toEqual([{ jour: 0, debut: "17:00", fin: "19:00" }]);
+  await expect(resumeSaison(page)).toContainText("dim. 17–19");
+});
+
+test("téléphone : « Terminé » avec une plage refusée garde la feuille ouverte et n'écrit rien", async ({ page }) => {
+  test.skip(!estTelephone(test.info()), "la feuille et son bouton « Terminé » n'existent que sur téléphone");
+  const db = await ouvrir(page, ALICE, { "programmes/noel": UNE_PLAGE }, "2026-11-03T10:00:00", SAISON_NOEL);
+  const c = await reglageSaison(page, "Jours et plages");
+  await c.getByRole("button", { name: "dim. 14:00 – 19:00" }).click();
+  await c.getByLabel("Fin de la plage").fill("13:00");
+  await page.getByRole("dialog").getByRole("button", { name: "Terminé", exact: true }).click();
+  await expect(page.getByRole("dialog")).toBeVisible();
+  await expect(page.getByRole("dialog").getByText("La fin d'une plage doit être après son début.")).toBeVisible();
+  expect(db.writes.filter((w) => JSON.stringify(w.data ?? w).includes("plages"))).toHaveLength(0);
 });
 
 test("plages : « + Plage » ajoute une seconde plage au dimanche, rangée par heure", async ({ page }) => {
