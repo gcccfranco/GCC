@@ -14,7 +14,7 @@ import { useCallback, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTranslation } from "react-i18next";
-import { GraduationCap, Piano } from "lucide-react";
+import { ChevronDown, GraduationCap, Piano } from "lucide-react";
 import { DeuxVolets } from "@/components/layout/DeuxVolets";
 import { OngletsRail, Pilules } from "@/components/layout/Onglets";
 import { Group, GroupRow } from "@/components/ui/group";
@@ -140,11 +140,13 @@ function ListeCatalogue({
   const etapes = toutLeParcours ? parcours : parcours.slice(0, 3);
   // Tablette debout (un volet, dès 768 px) : des cartes qui utilisent la largeur (planche
   // `harmonie-tablette`) ; téléphone et volet de gauche : des lignes.
+  // Le badge « à relire » n'a de sens que s'il distingue : quand toutes les fiches le sont, le bandeau suffit.
+  const badgeARelire = visibles.some((f) => f.statut === "validee");
   const cartes = !deuxVolets;
   const carte = cartes ? "md:raised md:mx-0 md:w-full md:rounded-2xl md:px-4 md:py-3 md:before:hidden" : undefined;
 
   return (
-    <div className={cn("space-y-5", deuxVolets ? "px-5 pt-6 pb-10" : "mx-auto max-w-2xl px-4 pb-10 md:max-w-none md:px-6")} data-harmonie>
+    <div className={cn("flex flex-col gap-5", deuxVolets ? "px-5 pt-4 pb-10" : "mx-auto max-w-2xl px-4 pb-10 md:max-w-none md:px-6")} data-harmonie>
       {/* Cours et sons du clavier : en tête, au-dessus des fiches, sur téléphone seulement ; dès
           768 px, le rail de l'en-tête (agencement v18, A16) les remplace. */}
       {(lecons.length > 0 || rd2000) && (
@@ -232,7 +234,10 @@ function ListeCatalogue({
           </div>
           {!toutLeParcours && parcours.length > etapes.length && (
             <GroupRow onClick={() => setToutLeParcours(true)} className={cn(cartes && "md:min-h-0")}>
-              <span className="font-medium text-muted-foreground">{t("harmonie.voirPlus")}</span>
+              <span className="flex items-center gap-1.5 font-medium text-foreground">
+                {t("harmonie.voirLesAutres", { count: parcours.length - etapes.length })}
+                <ChevronDown className="h-4 w-4" aria-hidden />
+              </span>
             </GroupRow>
           )}
         </section>
@@ -249,15 +254,15 @@ function ListeCatalogue({
           </button>
         </div>
       ) : (
-        <div className={cn("space-y-5", cartes && "md:grid md:grid-cols-2 md:items-start md:gap-4 md:space-y-0")}>
+        <div className={cn("space-y-5", cartes && "md:columns-2 md:gap-4 md:space-y-0")}>
           {familles.map(([nom, liste]) => (
-            <div key={nom} data-famille className={cn(cartes && "md:raised md:rounded-2xl md:px-4 md:pt-3.5 md:pb-1.5")}>
+            <div key={nom} data-famille className={cn(cartes && "md:raised md:mb-4 md:break-inside-avoid md:rounded-2xl md:px-4 md:pt-3.5 md:pb-1.5")}>
               <Group title={nom} className={cn(cartes && "md:[&>h2]:text-[17px] md:[&>h2]:text-foreground")}>
                 {liste.map((f) => (
                   <GroupRow key={f.id} href={`/harmonie/${f.id}`} chevron actif={f.id === ouverte}>
                     <span className="flex items-center gap-2">
-                      <span className="truncate font-medium">{f.nom}</span>
-                      {f.statut !== "validee" && (
+                      <span className="line-clamp-2 font-medium">{f.nom}</span>
+                      {badgeARelire && f.statut !== "validee" && (
                         <span className={cn("shrink-0 rounded-full px-1.5 py-0.5 text-[11px]", f.id === ouverte ? "bg-background font-medium text-foreground" : "bg-secondary text-muted-foreground")}>
                           {t("harmonie.aRelire")}
                         </span>

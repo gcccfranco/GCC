@@ -2972,6 +2972,8 @@
     "ariaDoigte": "吉他指法 {{doigte}}",
     "ariaClavier": "钢琴音：{{notes}}",
     "voirPlus": "查看更多",
+    "voirLesAutres_other": "查看其余 {{count}} 个",
+    "voirLesAutresChants_other": "查看其余 {{count}} 首",
     "aRelire": "待校对",
     "aRelireTout": "这些卡片仍在校对中，内容可能会改动。",
     "instrument": {

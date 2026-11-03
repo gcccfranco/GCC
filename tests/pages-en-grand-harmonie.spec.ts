@@ -1,6 +1,6 @@
 import { expect, test, type Page, type TestInfo } from "@playwright/test";
 import { readFileSync } from "fs";
-import { musicien, signInAs, type FakeProfile } from "./helpers/fakeSession";
+import { ADMIN_EMAIL, musicien, signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { couperEnDeuxColonnes } from "../src/lib/harmonie/rd2000";
 
 // Lot U4 bis, tranche B3 — Harmonie en grand (docs/spec-pages-en-grand.md, Q6 ; planches
@@ -33,12 +33,15 @@ const CADENCES = COURS.chapitres.find((c) => c.numero === 9)!;
 /** Le chapitre en cours d'une personne qui n'a rien fini : le premier du niveau 1. */
 const PREMIER_CHAPITRE = COURS.chapitres.find((c) => c.niveau === 1)!;
 
-async function entrer(page: Page, to: string) {
+// Un admin voit les deux instruments : l'interrupteur Piano | Guitare existe pour lui.
+const ADMIN: FakeProfile = { uid: "uid-admin", email: ADMIN_EMAIL, firstName: "Admin", lastName: "T.", planningName: "Pianiste D." };
+
+async function entrer(page: Page, to: string, qui: FakeProfile = RUTH) {
   await page.route(/docs\.google\.com\/spreadsheets/, (route) => {
     const sheet = new URL(route.request().url()).searchParams.get("sheet");
     return route.fulfill({ status: 200, contentType: "text/csv", body: sheet === "Franco_Louange" ? CULTE : "" });
   });
-  await signInAs(page, RUTH, {}, to);
+  await signInAs(page, qui, {}, to);
 }
 
 const enGrand = (info: TestInfo) => !["telephone", "tablette"].includes(info.project.name);
@@ -167,6 +170,56 @@ test.describe("Harmonie : le catalogue", () => {
     expect(parcours.y).toBeGreaterThan(filtres.y);
   });
 
+  // musiciens-3 : un seul interrupteur Piano | Guitare par disposition.
+  test("un seul interrupteur Piano | Guitare : celui de la liste sur deux volets, celui de la fiche sinon", async ({ page }, info) => {
+    await entrer(page, `/harmonie/${AUTRE.id}`, ADMIN);
+    await expect(page.locator(`[data-fiche="${AUTRE.id}"]`)).toBeVisible();
+    const interrupteurs = page.getByRole("tablist", { name: "Piano" }).filter({ visible: true });
+    await expect(interrupteurs).toHaveCount(1);
+    if (enGrand(info)) {
+      await expect(liste(page).getByRole("tablist", { name: "Piano" })).toBeVisible();
+      await expect(detail(page).getByRole("tablist", { name: "Piano" })).toHaveCount(0);
+      const haut = (await boite(liste(page))).y;
+      const premier = await boite(liste(page).locator("[data-harmonie]").locator("> *").filter({ visible: true }).first());
+      expect(Math.round(premier.y - haut), "16 px entre le haut du volet et sa première rangée").toBe(16);
+    } else {
+      await expect(page.locator("[data-fiche]").getByRole("tablist", { name: "Piano" })).toBeVisible();
+    }
+  });
+
+  // musiciens-6 : la grille de la fiche décide d'après la largeur du volet, pas d'après la disposition.
+  test("les cartes de la fiche : une colonne sous 640 px de volet, deux dessus", async ({ page }) => {
+    await entrer(page, `/harmonie/${AUTRE.id}`);
+    const fiche = page.locator(`[data-fiche="${AUTRE.id}"]`);
+    await expect(fiche).toBeVisible();
+    const largeur = await fiche.evaluate((el) => {
+      const s = getComputedStyle(el);
+      return el.clientWidth - parseFloat(s.paddingLeft) - parseFloat(s.paddingRight);
+    });
+    const colonnes = await fiche.locator("> .grid.items-start").first().evaluate((el) => getComputedStyle(el).gridTemplateColumns.split(" ").length);
+    expect(colonnes, `volet de ${Math.round(largeur)} px`).toBe(largeur < 640 ? 1 : 2);
+  });
+
+  // musiciens-7 : sur tablette portrait, deux colonnes qui se lisent colonne par colonne, titres sur deux lignes.
+  test("les familles ne se coupent pas entre deux colonnes, et aucun titre n'est tronqué ; une colonne ailleurs", async ({ page }, info) => {
+    await entrer(page, "/harmonie");
+    const cat = page.locator("[data-harmonie]");
+    const familles = cat.locator("[data-famille]");
+    await expect(familles.first()).toBeVisible();
+    const zone = await boite(cat);
+    const milieu = zone.x + zone.width / 2;
+    const n = await familles.count();
+    const xs = new Set<number>();
+    for (let i = 0; i < n; i++) {
+      const b = await boite(familles.nth(i));
+      xs.add(Math.round(b.x));
+      if (info.project.name === "tablette") expect(b.x + b.width <= milieu + 1 || b.x >= milieu - 1, `la famille ${i} tient dans une colonne`).toBe(true);
+    }
+    expect(xs.size, info.project.name === "tablette" ? "deux colonnes" : "une colonne").toBe(info.project.name === "tablette" ? 2 : 1);
+    const tronques = await cat.locator("[data-famille] a .line-clamp-2").evaluateAll((els) => els.filter((e) => e.scrollWidth > e.clientWidth + 1 || e.scrollHeight > e.clientHeight + 1).length);
+    expect(tronques, "aucun titre coupé").toBe(0);
+  });
+
   // Agencement v18 (A16) : dès 768 px, le rail de l'en-tête remplace les cartes Cours et Sons.
   test("tablette portrait : le parcours en cartes, les familles sur deux colonnes", async ({ page }, info) => {
     test.skip(info.project.name !== "tablette", "tablette portrait seulement");
@@ -176,9 +229,16 @@ test.describe("Harmonie : le catalogue", () => {
     const [e1, e2] = [await boite(etapes.nth(0)), await boite(etapes.nth(1))];
     expect(Math.abs(e1.y - e2.y)).toBeLessThan(2);
     const familles = cat.locator("[data-famille]");
-    const [f1, f2] = [await boite(familles.nth(0)), await boite(familles.nth(1))];
-    expect(Math.abs(f1.y - f2.y), "deux familles côte à côte").toBeLessThan(2);
-    expect(f2.x).toBeGreaterThan(f1.x + f1.width - 1);
+    // musiciens-7 : deux colonnes qui se lisent colonne par colonne — la première famille de la seconde
+    // colonne est en haut, à droite de la première.
+    const f1 = await boite(familles.nth(0));
+    let f2 = f1;
+    for (let i = 1; i < (await familles.count()); i++) {
+      const b = await boite(familles.nth(i));
+      if (b.x > f1.x + f1.width - 1) { f2 = b; break; }
+    }
+    expect(f2.x, "une seconde colonne").toBeGreaterThan(f1.x + f1.width - 1);
+    expect(Math.abs(f1.y - f2.y), "les deux colonnes partent du même haut").toBeLessThan(2);
     expect(await sansDefilementHorizontal(page)).toBe(true);
     await capture(page, "b3-harmonie");
   });

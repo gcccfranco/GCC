@@ -16,6 +16,20 @@ import { decrire, grilleDe, nombreDeRenversements, notesEnLettres, pianoDe } fro
 
 type Variante = "feuille" | "bulle" | "carte";
 
+/** Une légende « a · b · c » dont chaque élément ne se coupe jamais (« P pouce » seul en bout de ligne, musiciens-5). */
+function Insecables({ elements }: { elements: string[] }) {
+  return (
+    <>
+      {elements.map((e, i) => (
+        <span key={i}>
+          {i > 0 && " · "}
+          <span className="whitespace-nowrap">{e}</span>
+        </span>
+      ))}
+    </>
+  );
+}
+
 /** Guitare | Piano : deux vrais boutons dans un groupe (comme le segment 简谱 · Paroles de la page chant). */
 export function ChoixInstrument({
   instrument,
@@ -176,6 +190,7 @@ export function PanneauAccord({
               >
                 <DiagrammeGuitare
                   grand
+                  agrandi={carte}
                   cases={doigte.cases}
                   doigts={doigte.doigts}
                   depart={doigte.depart}
@@ -196,14 +211,14 @@ export function PanneauAccord({
                 />
               )}
               {!carte && (
-                <p className="mt-3 text-center text-xs text-muted-foreground">
-                  {[
-                    doigte.doigts.includes("P") && t("accords.legendePouce"),
-                    doigte.cases.includes(null) && t("accords.legendeEtouffee"),
-                    doigte.cases.includes(0) && t("accords.legendeVide"),
-                  ]
-                    .filter(Boolean)
-                    .join(" · ")}
+                <p className="accords-legende mt-3 text-center text-xs text-muted-foreground">
+                  <Insecables
+                    elements={[
+                      doigte.doigts.includes("P") && t("accords.legendePouce"),
+                      doigte.cases.includes(null) && t("accords.legendeEtouffee"),
+                      doigte.cases.includes(0) && t("accords.legendeVide"),
+                    ].filter((x): x is string => Boolean(x))}
+                  />
                 </p>
               )}
             </>
@@ -272,7 +287,7 @@ export function PanneauAccord({
           {instrument === "guitare" && doigte && (
             <>
               <dt className="text-muted-foreground">{t("accords.doigts")}</dt>
-              <dd className="text-foreground">{t("accords.doigtsLegende")}</dd>
+              <dd className="accords-legende text-foreground"><Insecables elements={t("accords.doigtsLegende").split(" · ")} /></dd>
               <dt className="text-muted-foreground">{t("accords.cordes")}</dt>
               <dd className="text-foreground">{t("accords.cordesLegende")}</dd>
             </>

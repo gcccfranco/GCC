@@ -14,6 +14,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useRef, type KeyboardEvent, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
+import { useFonduLateral } from "@/hooks/useFonduLateral";
 
 export type OngletRail = {
   /** Identifiant de l'onglet (rendu par `choisir`, comparé à `actif`). */
@@ -170,12 +171,15 @@ export function Pilules<T extends string>({
 }) {
   const liens = options.some((o) => o.href);
   const Rangee = liens ? "nav" : "div";
+  // La rangée s'estompe du côté où il reste des pastilles, au lieu d'en trancher une (musiciens-4).
+  const rangee = useFonduLateral<HTMLDivElement>(options.length);
   return (
     <Rangee
+      ref={rangee}
       role={liens ? undefined : "group"}
       aria-label={etiquette}
       data-onglets="pilules"
-      className="-mx-4 -mt-0.5 flex gap-1.5 overflow-x-auto px-4 py-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      className="fondu-lateral -mx-4 -mt-0.5 flex gap-1.5 overflow-x-auto px-4 py-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
     >
       {options.map((o) => {
         const actif = valeur === o.cle;

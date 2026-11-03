@@ -38,6 +38,17 @@ test("?accord=D%2FF%23 montre D/F# et sa grille 2x0232", async ({ page }) => {
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
 });
 
+test("musiciens-12 : le diagramme de la carte est agrandi (≥ 190 px) ; musiciens-5 : « P pouce » ne se coupe jamais", async ({ page }) => {
+  await ouvrir(page, "D/F#");
+  const dessin = carte(page).locator("[data-grille] svg");
+  await expect(dessin).toBeVisible();
+  expect((await dessin.boundingBox())!.width).toBeGreaterThanOrEqual(190);
+  const morceaux = carte(page).locator(".accords-legende .whitespace-nowrap");
+  await expect(morceaux).toHaveCount(5);
+  const coupes = await morceaux.evaluateAll((els) => els.filter((e) => e.getClientRects().length > 1).length);
+  expect(coupes, "chaque doigt tient sur une seule ligne").toBe(0);
+});
+
 test("la recherche A# allume la pastille Bb et garde l'écriture A#", async ({ page }) => {
   await ouvrir(page);
   await chercher(page).fill("A#");

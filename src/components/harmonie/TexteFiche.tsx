@@ -13,19 +13,28 @@ import { transposeLabel } from "@/lib/transpose";
 /** Tonalité dans laquelle les fiches écrivent leurs accords. */
 export const TON_DES_FICHES = "D";
 
+/** Espaces insécables à l'affichage seulement (les fichiers .md ne changent pas) : jamais un « ouvrant seul en
+ *  fin de ligne, ni un ? ! : ; ou un » au début de la suivante, ni une flèche séparée de ses voisins. */
+function lier(s: string) {
+  return s
+    .replace(/« /g, "«\u202F")
+    .replace(/ ([»?!:;])/g, "\u202F$1")
+    .replace(/ → /g, "\u00A0→\u00A0");
+}
+
 /** Découpe « **gras**, *italique*, `accords` » en morceaux rendus. */
 export function TexteFiche({ texte, demiTons, tonalite }: { texte: string; demiTons: number; tonalite: string }) {
   const morceaux = texte.split(/(\*\*[^*]+\*\*|\*[^*]+\*|`[^`]+`)/g).filter(Boolean);
   return (
     <>
       {morceaux.map((m, i) => {
-        if (m.startsWith("**") && m.endsWith("**")) return <strong key={i} className="font-semibold">{m.slice(2, -2)}</strong>;
+        if (m.startsWith("**") && m.endsWith("**")) return <strong key={i} className="font-semibold">{lier(m.slice(2, -2))}</strong>;
         if (m.startsWith("`") && m.endsWith("`")) {
           const accords = demiTons ? transposeLabel(m.slice(1, -1), demiTons, tonalite) : m.slice(1, -1);
           return <span key={i} className="font-chord font-semibold">{accords}</span>;
         }
-        if (m.startsWith("*") && m.endsWith("*")) return <em key={i}>{m.slice(1, -1)}</em>;
-        return <span key={i}>{m}</span>;
+        if (m.startsWith("*") && m.endsWith("*")) return <em key={i}>{lier(m.slice(1, -1))}</em>;
+        return <span key={i}>{lier(m)}</span>;
       })}
     </>
   );

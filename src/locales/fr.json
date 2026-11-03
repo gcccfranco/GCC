@@ -3009,6 +3009,10 @@
     "ariaDoigte": "Doigté guitare {{doigte}}",
     "ariaClavier": "Notes au piano : {{notes}}",
     "voirPlus": "Voir plus",
+    "voirLesAutres_one": "Voir l'autre",
+    "voirLesAutres_other": "Voir les {{count}} autres",
+    "voirLesAutresChants_one": "Voir l'autre",
+    "voirLesAutresChants_other": "Voir les {{count}} autres",
     "aRelire": "à relire",
     "aRelireTout": "Les fiches sont en relecture : leur contenu peut encore changer.",
     "instrument": {

@@ -54,10 +54,10 @@ test("un batteur ne voit ni la ligne ni le catalogue", async ({ page }) => {
 test("le parcours « Par où commencer » mène à sa première fiche", async ({ page }) => {
   await ouvrir(page, JO, "/harmonie");
   const parcours = page.locator("section", { has: page.getByRole("heading", { name: "Par où commencer" }) });
-  // Trois étapes visibles, les dix après « Voir plus » (un téléphone ne tient
+  // Trois étapes visibles, les dix après « Voir les 7 autres » (un téléphone ne tient
   // pas dix lignes avant les filtres).
   await expect(parcours.getByRole("link")).toHaveCount(3);
-  await parcours.getByRole("button", { name: "Voir plus" }).click();
+  await parcours.getByRole("button", { name: "Voir les 7 autres" }).click();
   await expect(parcours.getByRole("link")).toHaveCount(10);
   await parcours.getByRole("link").first().click();
   await expect(page.locator("[data-fiche]")).toBeVisible();
@@ -87,6 +87,36 @@ test("une fiche montre avant → après, le pourquoi, les pièges et les exemple
   await expect(page.getByRole("heading", { name: "Dans le répertoire" })).toBeVisible();
   await expect(page.getByText(/chants? qui le joue/), "les exemples sont comptés").toBeVisible();
   await capture(page, "harmonie-fiche");
+});
+
+test("musiciens-8 : toutes les fiches sont à relire, donc aucune ne porte de badge ; le bandeau reste", async ({ page }) => {
+  await ouvrir(page, JO, "/harmonie");
+  await expect(page.locator("[data-famille]").first()).toBeVisible();
+  await expect(page.locator("[data-famille]").getByText("à relire", { exact: true })).toHaveCount(0);
+  await expect(page.locator("[data-harmonie]").getByText(/Les fiches sont en relecture/)).toBeVisible();
+});
+
+test("musiciens-5 : les guillemets et la flèche d'une fiche sont liés par des espaces insécables", async ({ page }) => {
+  await ouvrir(page, JO, "/harmonie/substitutions/2m7-pour-4");
+  const fiche = page.locator("[data-fiche]");
+  await expect(fiche).toBeVisible();
+  const texte = (await fiche.textContent()) ?? "";
+  expect(texte, "« glisse » : espace fine insécable à l'intérieur des guillemets").toMatch(/«\u202Fglisse\u202F»/);
+  // Le texte lu par l'écran n'est pas altéré : getByText normalise les espaces.
+  await expect(fiche.getByText("La phrase « glisse » vers A", { exact: false })).toBeVisible();
+});
+
+test("musiciens-11 : les listes Tonalité et Capo font 44 px au doigt, 36 px à la souris", async ({ page }) => {
+  await ouvrir(page, ELOISE, "/harmonie/substitutions/2m7-pour-4");
+  await expect(page.locator("#ton-fiche")).toBeVisible();
+  const tactile = await page.evaluate(() => matchMedia("(pointer: coarse)").matches);
+  const attendu = tactile ? 44 : 36;
+  for (const id of ["#ton-fiche", "#capo-fiche"]) {
+    const cible = page.locator(id);
+    if (id === "#capo-fiche" && (await cible.count()) === 0) continue;
+    expect(Math.round((await cible.boundingBox())!.height), id).toBe(attendu);
+  }
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), "pas de débordement").toBe(true);
 });
 
 test("changer de tonalité transpose les accords de la fiche", async ({ page }) => {

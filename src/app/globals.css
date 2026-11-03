@@ -31,6 +31,8 @@
     -webkit-mask-image: linear-gradient(to right, transparent 0, #000 var(--fondu-gauche, 0px), #000 calc(100% - var(--fondu-droite, 0px)), transparent 100%);
     mask-image: linear-gradient(to right, transparent 0, #000 var(--fondu-gauche, 0px), #000 calc(100% - var(--fondu-droite, 0px)), transparent 100%);
   }
+  /* Coupures de ligne des fiches Harmonie et des légendes d'accords : pas de mot seul en dernière ligne (musiciens-5). */
+  [data-fiche] p, [data-fiche] li, .accords-legende { text-wrap: pretty; }
   /* Lignes d'une liste : un filet d'un bord à l'autre, aligné sur le titre de la page (5C1). */
   .group-row + .group-row::before {
     content: "";

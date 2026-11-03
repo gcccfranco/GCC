@@ -11,6 +11,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { ChevronDown } from "lucide-react";
 import { Retour } from "@/components/layout/EnTetePage";
 import { useTranslation } from "react-i18next";
 import { Group, GroupRow } from "@/components/ui/group";
@@ -92,7 +93,7 @@ export function FicheHarmonie({ id }: { id: string }) {
 
   return (
     <div
-      className={cn("space-y-4 pb-10", deuxVolets ? undefined : "mx-auto max-w-2xl px-4 pt-3 md:max-w-3xl md:px-6")}
+      className={cn("[container-type:inline-size] space-y-4 pb-10", deuxVolets ? undefined : "mx-auto max-w-2xl px-4 pt-3 md:max-w-3xl md:px-6")}
       data-fiche={fiche.id}
     >
       {!deuxVolets && (
@@ -100,7 +101,7 @@ export function FicheHarmonie({ id }: { id: string }) {
       )}
 
       <header className="space-y-3">
-        <div className="flex items-start justify-between gap-4">
+        <div>
           <div className="min-w-0">
             {/* En grand, sous l'en-tête « Harmonie » : un h2 de 24 px (agencement v18, R3) ; seule, le h1. */}
             <Titre className={deuxVolets ? "text-[24px] font-bold leading-tight" : "text-[22px] font-bold leading-tight lg:text-[26px]"}>{fiche.nom}</Titre>
@@ -113,7 +114,6 @@ export function FicheHarmonie({ id }: { id: string }) {
               {fiche.niveauNote && ` · ${fiche.niveauNote}`}
             </p>
           </div>
-          {deuxVolets && choixInstrument && <div className="shrink-0">{choixInstrument}</div>}
         </div>
         {fiche.statut !== "validee" && (
           <p className="rounded-xl border border-border bg-card px-3 py-2 text-[13px] text-muted-foreground">{t("harmonie.aRelireTout")}</p>
@@ -134,7 +134,7 @@ export function FicheHarmonie({ id }: { id: string }) {
               id="ton-fiche"
               value={tonalite}
               onChange={(e) => setTonalite(e.target.value)}
-              className="h-9 rounded-lg bg-secondary px-2 text-[15px]"
+              className="h-11 rounded-lg bg-secondary px-2 text-[15px] [@media(pointer:fine)]:h-9"
             >
               {ALL_KEYS.map((k) => <option key={k} value={k}>{k}</option>)}
             </select>
@@ -148,7 +148,7 @@ export function FicheHarmonie({ id }: { id: string }) {
       )}
 
       {/* Pourquoi (et quand l'éviter) à côté de l'instrument, dès qu'il y a la place. */}
-      <div className={cn("grid items-start gap-4", deuxVolets ? "grid-cols-2" : "md:grid-cols-2")}>
+      <div className={"grid items-start gap-4 [@container(min-width:640px)]:grid-cols-2"}>
         {(fiche.pourquoi || fiche.eviter.length > 0) && (
           <div className="raised space-y-1 rounded-2xl pt-3.5 pb-1">
             {fiche.pourquoi && (
@@ -179,7 +179,7 @@ export function FicheHarmonie({ id }: { id: string }) {
                   id="capo-fiche"
                   value={capo}
                   onChange={(e) => setCapo(Number(e.target.value))}
-                  className="h-9 rounded-lg bg-secondary px-2 text-[15px]"
+                  className="h-11 rounded-lg bg-secondary px-2 text-[15px] [@media(pointer:fine)]:h-9"
                 >
                   <option value={0}>{t("harmonie.sansCapo")}</option>
                   {[1, 2, 3, 4, 5, 6, 7].map((n) => <option key={n} value={n}>{n}</option>)}
@@ -241,7 +241,10 @@ export function FicheHarmonie({ id }: { id: string }) {
               {!tousLesExemples && exemples.length > 6 && (
                 <div className="px-4">
                   <GroupRow onClick={() => setTousLesExemples(true)}>
-                    <span className="font-medium text-muted-foreground">{t("harmonie.voirPlus")}</span>
+                    <span className="flex items-center gap-1.5 font-medium text-foreground">
+                      {t("harmonie.voirLesAutresChants", { count: exemples.length - 6 })}
+                      <ChevronDown className="h-4 w-4" aria-hidden />
+                    </span>
                   </GroupRow>
                 </div>
               )}

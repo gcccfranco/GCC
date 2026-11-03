@@ -30,6 +30,7 @@ export function DiagrammeGuitare({
   depart,
   barre,
   grand,
+  agrandi,
   label,
 }: {
   doigte?: string;
@@ -40,10 +41,12 @@ export function DiagrammeGuitare({
   depart?: number;
   barre?: Barre;
   grand?: boolean;
+  /** Carte de la page /accords : la grille `grand` ×1,2 (30 / 36 / 24 px). */
+  agrandi?: boolean;
 }) {
   if (cases || doigts || depart !== undefined || barre || grand || doigte?.includes(",")) {
     const lues = cases ?? lireDoigte(doigte ?? "");
-    return <GrilleGuitare cases={lues} doigts={doigts} depart={depart} barre={barre ?? null} grand={!!grand} label={label ?? (doigte ?? lues.map((c) => c ?? "x").join(" "))} />;
+    return <GrilleGuitare cases={lues} doigts={doigts} depart={depart} barre={barre ?? null} grand={!!grand} agrandi={!!agrandi} label={label ?? (doigte ?? lues.map((c) => c ?? "x").join(" "))} />;
   }
   return <DiagrammeFiche doigte={doigte ?? ""} label={label} />;
 }
@@ -105,13 +108,14 @@ function DiagrammeFiche({ doigte, label }: { doigte: string; label?: string }) {
 }
 
 /** La grille du dictionnaire : cordes de 24 px, cases de 30 px, points de 20 px portant le doigt (mode `grand`,
- *  162 × 152 px comme la planche) ; en petit, la même grille en plus petit. */
+ *  162 × 152 px comme la planche) ; en petit, la même grille en plus petit. `agrandi` (carte de /accords) : 30 / 36 / 24 px. */
 function GrilleGuitare({
   cases,
   doigts,
   depart,
   barre,
   grand,
+  agrandi,
   label,
 }: {
   cases: (number | null)[];
@@ -119,17 +123,18 @@ function GrilleGuitare({
   depart?: number;
   barre: Barre;
   grand: boolean;
+  agrandi: boolean;
   label: string;
 }) {
   const pressees = cases.filter((c): c is number => c !== null && c > 0);
   const premiere = depart ?? (pressees.length && Math.max(...pressees) > 4 ? Math.min(...pressees) : 1);
-  const S = grand ? 24 : 13; // pas entre deux cordes
-  const F = grand ? 30 : 15; // hauteur d'une case
-  const D = grand ? 20 : 9; // diamètre d'un point
+  const S = agrandi ? 30 : grand ? 24 : 13; // pas entre deux cordes
+  const F = agrandi ? 36 : grand ? 30 : 15; // hauteur d'une case
+  const D = agrandi ? 24 : grand ? 20 : 9; // diamètre d'un point
   const x0 = grand ? 26 : 16;
-  const y0 = grand ? 24 : 14;
-  const largeur = grand ? 162 : x0 + S * (CORDES - 1) + 8;
-  const hauteur = y0 + F * CASES_DICO + (grand ? 8 : 4);
+  const y0 = agrandi ? 29 : grand ? 24 : 14;
+  const largeur = agrandi ? x0 + S * (CORDES - 1) + 16 : grand ? 162 : x0 + S * (CORDES - 1) + 8;
+  const hauteur = y0 + F * CASES_DICO + (agrandi ? 10 : grand ? 8 : 4);
   const bas = y0 + F * CASES_DICO;
   const x = (i: number) => x0 + S * i;
   const yCase = (c: number) => y0 + (c - premiere + 0.5) * F;
