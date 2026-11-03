@@ -93,7 +93,7 @@ Demande de Timothée : « créer une équipe de design ». Trois agents, plus `r
 | --- | --- | --- | --- |
 | **`directeur-artistique`** | Opus, lecture seule | `frontend-design`, `apple-design` (+ `taste-skill`, catalogue d'`avoid-ai-design` à la demande) | trois pistes vraiment différentes, ancrées dans GCC, la recommandée, les questions |
 | **`maquettiste`** | Sonnet | `web-design-engineer`, `frontend-design` | planche HTML autonome dans `docs/planches/`, captures Playwright (390, 820, 1 180, 1 440 px, clair et sombre) dans `test-results/planches/<sujet>/` ; n'écrit nulle part ailleurs |
-| **`critique-design`** | Sonnet, lecture seule | `impeccable` (allégé), `avoid-ai-design`, `web-design-guidelines` (+ signes d'`unslop`) | critique d'une planche (dans `/planche`) ou, lancé à la main par la conversation principale après `/tranche`, d'une tranche qui change l'apparence ; verdict prouvé par capture ou `chemin:ligne` |
+| **`critique-design`** | Opus (Sonnet jusqu'au 03/11/2026), lecture seule | `impeccable` (allégé), `avoid-ai-design`, `web-design-guidelines` (+ signes d'`unslop`) | critique d'une planche (dans `/planche`) ou, lancé à la main par la conversation principale après `/tranche`, d'une tranche qui change l'apparence ; verdict prouvé par capture ou `chemin:ligne` |
 | `regard` | Sonnet, lecture seule | — | première passe sur les captures |
 
 Le directeur artistique est sur Opus parce que proposer une direction est du jugement ; il **propose**, la

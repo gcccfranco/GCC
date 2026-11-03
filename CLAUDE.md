@@ -141,7 +141,7 @@ s'écrit ici, pas seulement en mémoire.
   fichiers, `testeur` (Haiku) pour lancer une suite de tests et en rapporter les échecs, `executant` (Sonnet) pour
   appliquer une modification déjà décidée et décrite, `relecteur` (Sonnet) pour contre-vérifier un diff ou un constat,
   `regard` (Sonnet) pour trier des captures ; équipe design : `directeur-artistique` (Opus) pour proposer des pistes,
-  `maquettiste` (Sonnet) pour les rendre en planche, `critique-design` (Sonnet) pour les critiquer. La conversation principale garde le jugement : specs, planches,
+  `maquettiste` (Sonnet) pour les rendre en planche, `critique-design` (Opus, 03/11/2026) pour les critiquer. La conversation principale garde le jugement : specs, planches,
   débogage, relecture du diff, regard sur les captures et les 简谱.
 - **Workflows** de `.claude/workflows/` (24/10/2026, `docs/orchestration.md`) : `/tranche` code une tranche décidée
   (executant → testeur → corrections → conseil Opus si ça résiste → relecteur, sans commit) ; `/verifier-constats`
