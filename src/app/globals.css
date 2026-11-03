@@ -2,6 +2,17 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Altérations du cours d'Harmonie (harmonie-4) : ♯ ♭ ♮ 𝄪 𝄫 seuls, sous-ensemble de Noto Music (OFL,
+   scripts/build-fonts.py). Hors de ces cinq signes, le navigateur garde la police du texte. */
+@font-face {
+  font-family: "Noto Music";
+  src: url("/fonts/NotoMusic-alterations.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+266D-266F, U+1D12A-1D12B;
+}
+
 @layer utilities {
   .no-scrollbar::-webkit-scrollbar { display: none; }
   .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
@@ -23,6 +34,8 @@
     -webkit-backdrop-filter: blur(20px) saturate(1.4);
     backdrop-filter: blur(20px) saturate(1.4);
   }
+  /* Une altération dans un texte : un peu plus grande que les lettres, sur leur ligne de base. */
+  .alteration { font-family: "Noto Music", sans-serif; font-size: 1.15em; position: relative; top: -0.05em; line-height: 1; }
   /* Rangée qui glisse (V7) : elle s'estompe du côté où il reste quelque chose à voir,
      au lieu de trancher une pastille en deux au bord de la colonne. Les deux largeurs
      sont posées par `useFonduLateral` ; à 0 le dégradé est de longueur nulle, donc rien
@@ -30,6 +43,29 @@
   .fondu-lateral {
     -webkit-mask-image: linear-gradient(to right, transparent 0, #000 var(--fondu-gauche, 0px), #000 calc(100% - var(--fondu-droite, 0px)), transparent 100%);
     mask-image: linear-gradient(to right, transparent 0, #000 var(--fondu-gauche, 0px), #000 calc(100% - var(--fondu-droite, 0px)), transparent 100%);
+  }
+  /* Volet qui défile (harmonie-2) : il s'estompe en haut dès qu'on a défilé et en bas tant qu'il y a une suite.
+     Posées par `useFonduVertical`, les deux hauteurs valent 0 quand rien n'est à estomper. Deux voiles collants
+     de la couleur de la carte plutôt qu'un masque : un masque tronquerait aussi l'ombre `--shadow-raised`. */
+  .fondu-vertical::before,
+  .fondu-vertical::after {
+    content: "";
+    display: block;
+    position: sticky;
+    z-index: 1;
+    pointer-events: none;
+  }
+  .fondu-vertical::before {
+    top: 0;
+    height: var(--fondu-haut, 0px);
+    margin-bottom: calc(-1 * var(--fondu-haut, 0px));
+    background: linear-gradient(to bottom, hsl(var(--raised)), hsl(var(--raised) / 0));
+  }
+  .fondu-vertical::after {
+    bottom: 0;
+    height: var(--fondu-bas, 0px);
+    margin-top: calc(-1 * var(--fondu-bas, 0px));
+    background: linear-gradient(to top, hsl(var(--raised)), hsl(var(--raised) / 0));
   }
   /* Coupures de ligne des fiches Harmonie et des légendes d'accords : pas de mot seul en dernière ligne (musiciens-5). */
   [data-fiche] p, [data-fiche] li, .accords-legende { text-wrap: pretty; }

@@ -19,6 +19,7 @@ import { OngletsRail } from "@/components/layout/Onglets";
 import { Clavier, DiagrammeGuitare, doigtesDe, notesDe } from "@/components/harmonie/Diagrammes";
 import { ParagrapheFiche, TexteFiche, TON_DES_FICHES } from "@/components/harmonie/TexteFiche";
 import { useCatalogueHarmonie } from "@/components/harmonie/catalogueContexte";
+import { decouperRepertoire } from "@/lib/harmonie/repertoire";
 import { useDeuxVolets } from "@/hooks/useDeuxVolets";
 import { chargerIndexChants } from "@/hooks/useSongsIndex";
 import { ALL_KEYS, getTransposedKey, semitonesTo } from "@/lib/transpose";
@@ -74,6 +75,8 @@ export function FicheHarmonie({ id }: { id: string }) {
   }
 
   const Titre = deuxVolets ? "h2" : "h1";
+  const colonnesRepertoire = deuxVolets ? "grid-cols-2 gap-x-8 min-[1440px]:grid-cols-3" : "md:grid-cols-2 md:gap-x-8";
+  const phrase = fiche.repertoire ? decouperRepertoire(fiche.repertoire) : null;
   const texteInstrument = instrument === "piano" ? fiche.piano : fiche.guitare;
   const montreCapo = instrument === "guitare";
   // Les doigtés écrits dans la fiche sont ceux de D (tout y est écrit). Le
@@ -149,27 +152,16 @@ export function FicheHarmonie({ id }: { id: string }) {
 
       {/* Pourquoi (et quand l'éviter) à côté de l'instrument, dès qu'il y a la place. */}
       <div className={"grid items-start gap-4 [@container(min-width:640px)]:grid-cols-2"}>
-        {(fiche.pourquoi || fiche.eviter.length > 0) && (
-          <div className="raised space-y-1 rounded-2xl pt-3.5 pb-1">
-            {fiche.pourquoi && (
-              <Group title={t("harmonie.pourquoi")} className="[&>h2]:px-4">
-                <ParagrapheFiche className="px-4 pb-3 text-[15px] leading-relaxed" texte={fiche.pourquoi} demiTons={0} tonalite={TON_DES_FICHES} />
-              </Group>
-            )}
-            {fiche.eviter.length > 0 && (
-              <Group title={t("harmonie.eviter")} className="[&>h2]:px-4">
-                <ul className="divide-y divide-border">
-                  {fiche.eviter.map((e, i) => (
-                    <li key={i} className="px-4 py-2.5 text-[15px] leading-relaxed">
-                      <TexteFiche texte={e.replace(/\s*\n\s*/g, " ")} demiTons={0} tonalite={TON_DES_FICHES} />
-                    </li>
-                  ))}
-                </ul>
-              </Group>
-            )}
+        {fiche.pourquoi && (
+          <div className="raised rounded-2xl pt-3.5 pb-1">
+            <Group title={t("harmonie.pourquoi")} className="[&>h2]:px-4">
+              <ParagrapheFiche className="px-4 pb-3 text-[15px] leading-relaxed" texte={fiche.pourquoi} demiTons={0} tonalite={TON_DES_FICHES} />
+            </Group>
           </div>
         )}
 
+        {(texteInstrument || fiche.eviter.length > 0) && (
+          <div className="space-y-4">
         {texteInstrument && (
           <Group title={instrument === "piano" ? t("harmonie.auPiano") : t("harmonie.aLaGuitare")} className={CARTE}>
             {montreCapo && (
@@ -214,34 +206,64 @@ export function FicheHarmonie({ id }: { id: string }) {
             )}
           </Group>
         )}
+        {fiche.eviter.length > 0 && (
+          <Group title={t("harmonie.eviter")} className={CARTE}>
+            <ul className="divide-y divide-border">
+              {fiche.eviter.map((e, i) => (
+                <li key={i} className="px-4 py-2.5 text-[15px] leading-relaxed">
+                  <TexteFiche texte={e.replace(/\s*\n\s*/g, " ")} demiTons={0} tonalite={TON_DES_FICHES} />
+                </li>
+              ))}
+            </ul>
+          </Group>
+        )}
+          </div>
+        )}
       </div>
 
       {(fiche.repertoire || exemples.length > 0) && (
         <Group title={t("harmonie.repertoire")} className={cn(CARTE, "pb-2")}>
-          {fiche.repertoire && (
+          {fiche.repertoire && (phrase ? (
+            <div className="px-4 pb-2" data-ou-l-entendre>
+              <h3 className="mb-1 text-[13px] font-semibold text-muted-foreground">{t("harmonie.ouLEntendre")}</h3>
+              <ul className={cn("grid", colonnesRepertoire)}>
+                {phrase.map((e, i) => (
+                  <li key={i} className="border-t border-border py-2">
+                    <span className="block text-[15px] font-semibold leading-[21px]">{e.titre}</span>
+                    {e.detail.length > 0 && (
+                      <span className="block text-[13px] leading-[18px] text-muted-foreground">
+                        {e.detail.map((m, j) => (m.accord ? <span key={j} className="font-chord font-semibold text-[var(--chord-color)]">{m.texte}</span> : <span key={j}>{m.texte}</span>))}
+                      </span>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : (
             <ParagrapheFiche className="px-4 py-2 text-[15px] leading-relaxed" texte={fiche.repertoire} demiTons={0} tonalite={TON_DES_FICHES} />
-          )}
+          ))}
           {exemples.length > 0 && (
             <>
               <p className="px-4 pb-1 text-[13px] text-muted-foreground">
                 {t("harmonie.repertoireCompte", { count: exemples.length })}
               </p>
-              <div className={cn("grid px-4", deuxVolets ? "grid-cols-2 gap-x-8 min-[1440px]:grid-cols-3" : "md:grid-cols-2 md:gap-x-8")}>
+              <div className={cn("grid px-4", colonnesRepertoire)}>
                 {(tousLesExemples ? exemples : exemples.slice(0, 6)).map(({ slug, chant, fois }) => (
-                  <GroupRow key={slug} href={`/songs/${slug}`} chevron className="mx-0 w-full rounded-none border-t border-border px-0 before:hidden">
+                  <GroupRow
+                    key={slug}
+                    href={`/songs/${slug}`}
+                    chevron
+                    trailing={fois > 0 ? <span className="text-[13px] leading-[18px]" aria-label={t("harmonie.foisEnSetlist", { count: fois })}>{fois}×</span> : undefined}
+                    className="mx-0 min-h-11 w-full rounded-none border-t border-border px-0 py-0 before:hidden"
+                  >
                     <span className="block truncate font-medium">{chant?.titlePinyin ? `${chant.title} · ${chant.titlePinyin}` : chant?.title ?? slug}</span>
-                    {fois > 0 && (
-                      <span className="block text-[13px] text-muted-foreground">
-                        {t("harmonie.foisEnSetlist", { count: fois })}
-                      </span>
-                    )}
                   </GroupRow>
                 ))}
               </div>
               {!tousLesExemples && exemples.length > 6 && (
                 <div className="px-4">
-                  <GroupRow onClick={() => setTousLesExemples(true)}>
-                    <span className="flex items-center gap-1.5 font-medium text-foreground">
+                  <GroupRow onClick={() => setTousLesExemples(true)} className="mx-0 mt-2 min-h-11 w-full justify-center bg-secondary py-0 before:hidden">
+                    <span className="flex items-center justify-center gap-1.5 font-semibold text-foreground">
                       {t("harmonie.voirLesAutresChants", { count: exemples.length - 6 })}
                       <ChevronDown className="h-4 w-4" aria-hidden />
                     </span>

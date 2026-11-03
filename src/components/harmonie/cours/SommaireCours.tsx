@@ -76,13 +76,13 @@ function LigneChapitre({ chapitre, fini, ouvert, surLien }: { chapitre: Chapitre
             : undefined
         }
       >
-        <span className="block truncate font-medium" data-fini={fini || undefined}>
+        <span className="block text-[15px] font-medium leading-[21px]" data-fini={fini || undefined}>
           {fini && <span className="sr-only">{t("harmonie.cours.fini")} : </span>}
           {fini && chapitre.numero !== null && <span className="tabular-nums">{chapitre.numero}. </span>}
           {chapitre.titre}
         </span>
         {chapitre.niveau !== null && (
-          <span className="block truncate text-[13px] text-muted-foreground">
+          <span className="block text-[13px] leading-[18px] text-muted-foreground">
             {t("harmonie.cours.parties", { count: chapitre.sousParties.length })} · {t("harmonie.cours.exercices", { count: chapitre.exercices })}
           </span>
         )}
@@ -176,25 +176,15 @@ export function SommaireCours({
   const modeEmploi = chapitres.find((c) => c.partie === 0);
   const annexes = chapitres.filter((c) => c.partie === 4);
   const lecons = leconsDansLOrdre(chapitres);
-  const faits = lecons.filter((c) => fini[c.id]).length;
   const prochain = lecons.find((c) => !fini[c.id]);
 
   return (
     <div className="space-y-6" data-cours>
-      <div className="space-y-2">
-        <p className="text-[15px] font-medium" data-cours-progres>
-          {t("harmonie.cours.progres", { fait: faits, total: lecons.length })}
-        </p>
-        <div className="h-1.5 overflow-hidden rounded-full bg-secondary" aria-hidden>
-          <div className="h-full rounded-full bg-[var(--sec-verse)]" style={{ width: `${lecons.length ? (100 * faits) / lecons.length : 0}%` }} />
-        </div>
-      </div>
-
       <Group>
         {prochain ? (
           <GroupRow href={`/harmonie/cours/${prochain.id}`} chevron>
             <span className="block text-[13px] text-muted-foreground">{t("harmonie.cours.prochain")}</span>
-            <span className="block truncate font-medium" data-prochain>{prochain.numero}. {prochain.titre}</span>
+            <span className="block font-medium" data-prochain>{prochain.numero}. {prochain.titre}</span>
           </GroupRow>
         ) : (
           <p className="py-2 text-[15px]">{t("harmonie.cours.tousFinis")}</p>

@@ -12,9 +12,52 @@ import { usePathname } from "next/navigation";
 import { useTranslation } from "react-i18next";
 import { EnTetePage } from "@/components/layout/EnTetePage";
 import { useDeuxVolets } from "@/hooks/useDeuxVolets";
-import { useAccesHarmonie } from "@/lib/harmonie/useHarmonie";
+import { useRd2000 } from "@/lib/harmonie/rd2000";
+import { leconsDansLOrdre, useCoursIndex, useCoursProgres } from "@/lib/harmonie/useCours";
+import { useAccesHarmonie, useCatalogue } from "@/lib/harmonie/useHarmonie";
 
 const LISTES = ["/harmonie", "/harmonie/cours", "/harmonie/rd2000"];
+
+// Le titre dit la page où l'on est (Théorie musicale, Sons du RD-2000, sinon Harmonie) et, dessous, une
+// ligne d'état calculée sur les données (harmonie-1). Un espace insécable tient la place pendant le
+// chargement : l'en-tête ne bouge pas. Chaque état charge ses données sur sa seule page.
+const ESPACE = "\u00A0";
+
+function EtatFiches() {
+  const { t } = useTranslation();
+  const { fiches } = useCatalogue();
+  return <>{fiches.length ? t("harmonie.compteFiches", { count: fiches.length }) : ESPACE}</>;
+}
+
+function EtatCours() {
+  const { t } = useTranslation();
+  const { chapitres } = useCoursIndex();
+  const { fini, chargement } = useCoursProgres();
+  const lecons = leconsDansLOrdre(chapitres);
+  const faits = lecons.filter((c) => fini[c.id]).length;
+  return (
+    <>
+      <span data-cours-progres>{lecons.length && !chargement ? t("harmonie.cours.progres", { fait: faits, total: lecons.length }) : ESPACE}</span>
+      <span className="mt-2 block h-1 w-60 max-w-full overflow-hidden rounded-full bg-secondary" aria-hidden>
+        <span className="block h-full rounded-full bg-[var(--sec-verse)]" style={{ width: `${lecons.length && !chargement ? (100 * faits) / lecons.length : 0}%` }} />
+      </span>
+    </>
+  );
+}
+
+function EtatSons({ actif }: { actif: boolean }) {
+  const { t, i18n } = useTranslation();
+  const { donnees } = useRd2000(actif);
+  if (!donnees) return <>{ESPACE}</>;
+  return (
+    <>
+      {t("harmonie.rd2000.resume", {
+        essentiels: donnees.sons.filter((s) => s.premier).length,
+        total: donnees.sons.length.toLocaleString(i18n.language),
+      })}
+    </>
+  );
+}
 
 export function EnTeteHarmonie() {
   const { t } = useTranslation();
@@ -25,10 +68,18 @@ export function EnTeteHarmonie() {
   if (!deuxVolets && !LISTES.includes(chemin)) return null;
   if (!acces.chargement && !acces.peut) return null;
 
+  const page = chemin === "/harmonie/cours" || chemin.startsWith("/harmonie/cours/") ? "cours"
+    : chemin === "/harmonie/rd2000" || chemin.startsWith("/harmonie/rd2000/") ? "sons"
+    : "fiches";
+
   return (
     <EnTetePage
-      titre={t("harmonie.titre")}
-      sousTitre={t("harmonie.sousTitre")}
+      titre={page === "cours" ? t("harmonie.cours.titre") : page === "sons" ? t("harmonie.rd2000.titre") : t("harmonie.titre")}
+      sousTitre={
+        page === "cours" ? <EtatCours />
+          : page === "sons" ? <EtatSons actif={acces.piano} />
+          : <EtatFiches />
+      }
     />
   );
 }

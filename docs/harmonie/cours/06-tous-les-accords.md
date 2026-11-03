@@ -13,18 +13,18 @@ On part de la fondamentale et on saute une note de la gamme sur deux : 1, 3, 5, 
 | Empilement | Résultat | En Do |
 | --- | --- | --- |
 | Tierce majeure + tierce mineure | Accord majeur | Do Mi Sol |
-| Tierce mineure + tierce majeure | Accord mineur | Do Mib Sol |
-| Tierce mineure + tierce mineure | Accord diminué | Do Mib Solb |
-| Tierce majeure + tierce majeure | Accord augmenté | Do Mi Sol# |
+| Tierce mineure + tierce majeure | Accord mineur | Do Mi♭ Sol |
+| Tierce mineure + tierce mineure | Accord diminué | Do Mi♭ Sol♭ |
+| Tierce majeure + tierce majeure | Accord augmenté | Do Mi Sol♯ |
 
 ## 6.2 Les triades (3 sons)
 
 | Accord | Formule | En Do | Symbole | Caractère |
 | --- | --- | --- | --- | --- |
 | Majeur | 1 3 5 | Do Mi Sol | C | Joie, certitude, lumière |
-| Mineur | 1 b3 5 | Do Mib Sol | Cm | Intériorité, profondeur, humilité |
-| Diminué | 1 b3 b5 | Do Mib Solb | Cdim, C° | Tension, instabilité |
-| Augmenté | 1 3 #5 | Do Mi Sol# | Caug, C+ | Suspense, élan vers l'avant |
+| Mineur | 1 b3 5 | Do Mi♭ Sol | Cm | Intériorité, profondeur, humilité |
+| Diminué | 1 b3 b5 | Do Mi♭ Sol♭ | Cdim, C° | Tension, instabilité |
+| Augmenté | 1 3 #5 | Do Mi Sol♯ | Caug, C+ | Suspense, élan vers l'avant |
 | Sus2 | 1 2 5 | Do Ré Sol | Csus2 | Ouverture, espace, ni majeur ni mineur |
 | Sus4 | 1 4 5 | Do Fa Sol | Csus4 | Attente, aspiration, hymne |
 | Quinte seule | 1 5 | Do Sol | C5 | Neutre, puissant, rock |
@@ -34,26 +34,26 @@ On part de la fondamentale et on saute une note de la gamme sur deux : 1, 3, 5, 
 | Accord | Formule | En Do | Symbole | Caractère |
 | --- | --- | --- | --- | --- |
 | Majeur 7 | 1 3 5 7 | Do Mi Sol Si | Cmaj7 | Paix, contemplation, douceur |
-| Septième de dominante | 1 3 5 b7 | Do Mi Sol Sib | C7 | Tension qui appelle une résolution, gospel, blues |
-| Mineur 7 | 1 b3 5 b7 | Do Mib Sol Sib | Cm7 | Mélancolie sereine, repos doux |
-| Mineur majeur 7 | 1 b3 5 7 | Do Mib Sol Si | Cm(maj7) | Mystère, drame |
-| Demi-diminué | 1 b3 b5 b7 | Do Mib Solb Sib | Cm7(b5), Cø | Tristesse élégante, passage |
-| Diminué 7 | 1 b3 b5 bb7 | Do Mib Solb La | Cdim7, C°7 | Tension extrême, pivot |
-| Augmenté 7 | 1 3 #5 b7 | Do Mi Sol# Sib | C7(#5), C+7 | Tension gospel, âme |
-| Majeur 7 augmenté | 1 3 #5 7 | Do Mi Sol# Si | Cmaj7(#5) | Flottant, onirique |
-| Septième sus4 | 1 4 5 b7 | Do Fa Sol Sib | C7sus4 | Suspension puissante, worship |
+| Septième de dominante | 1 3 5 b7 | Do Mi Sol Si♭ | C7 | Tension qui appelle une résolution, gospel, blues |
+| Mineur 7 | 1 b3 5 b7 | Do Mi♭ Sol Si♭ | Cm7 | Mélancolie sereine, repos doux |
+| Mineur majeur 7 | 1 b3 5 7 | Do Mi♭ Sol Si | Cm(maj7) | Mystère, drame |
+| Demi-diminué | 1 b3 b5 b7 | Do Mi♭ Sol♭ Si♭ | Cm7(b5), Cø | Tristesse élégante, passage |
+| Diminué 7 | 1 b3 b5 bb7 | Do Mi♭ Sol♭ La | Cdim7, C°7 | Tension extrême, pivot |
+| Augmenté 7 | 1 3 #5 b7 | Do Mi Sol♯ Si♭ | C7(#5), C+7 | Tension gospel, âme |
+| Majeur 7 augmenté | 1 3 #5 7 | Do Mi Sol♯ Si | Cmaj7(#5) | Flottant, onirique |
+| Septième sus4 | 1 4 5 b7 | Do Fa Sol Si♭ | C7sus4 | Suspension puissante, worship |
 | Sixte | 1 3 5 6 | Do Mi Sol La | C6 | Chaleur, style vintage |
-| Mineur sixte | 1 b3 5 6 | Do Mib Sol La | Cm6 | Nostalgie tendre |
+| Mineur sixte | 1 b3 5 6 | Do Mi♭ Sol La | Cm6 | Nostalgie tendre |
 
 ## 6.4 Les accords « ajoutés » (sans septième)
 
 | Accord | Formule | En Do | Symbole | Usage en louange |
 | --- | --- | --- | --- | --- |
 | Add9 | 1 3 5 9 | Do Mi Sol Ré | Cadd9, Cadd2 | Le son worship moderne par excellence |
-| Mineur add9 | 1 b3 5 9 | Do Mib Sol Ré | Cm(add9) | Intimité lumineuse |
+| Mineur add9 | 1 b3 5 9 | Do Mi♭ Sol Ré | Cm(add9) | Intimité lumineuse |
 | Add4 (add11) | 1 3 4 5 | Do Mi Fa Sol | Cadd4 | Frottement doux, texture de pad |
 | Six-neuf | 1 3 5 6 9 | Do Mi Sol La Ré | C6/9 | Accord final lumineux, gospel |
-| Mineur six-neuf | 1 b3 5 6 9 | Do Mib Sol La Ré | Cm6/9 | Mineur sophistiqué |
+| Mineur six-neuf | 1 b3 5 6 9 | Do Mi♭ Sol La Ré | Cm6/9 | Mineur sophistiqué |
 
 ## 6.5 Les extensions (9, 11, 13)
 
@@ -73,13 +73,13 @@ Les extensions ajoutent de la couleur au-dessus de la septième. Toutes ne vont 
 
 | Accord | Formule | En Do | Caractère | Résout vers |
 | --- | --- | --- | --- | --- |
-| 7(b9) | 1 3 5 b7 b9 | Do Mi Sol Sib Réb | Drame, cri | Un accord mineur (Fm) |
-| 7(#9) | 1 3 5 b7 #9 | Do Mi Sol Sib Ré# | Agressif, blues-rock | Rare en louange |
-| 7(b5) | 1 3 b5 b7 | Do Mi Solb Sib | Tension jazz | Fa |
-| 7(#11) | 1 3 5 b7 #11 | Do Mi Sol Sib Fa# | Lydien dominant, lumineux | Fa, ou reste en suspension |
-| 7(b13) | 1 3 5 b7 b13 | Do Mi Sol Sib Lab | Sombre, gospel | Fm ou F |
-| 13(b9) | 1 3 b7 b9 13 | Do Mi Sib Réb La | Gospel riche | Fa |
-| 7alt | 1 3 b7 + b9, #9, b5, #5 | Do Mi Sib Réb Mib Lab | Tension maximale contrôlée | Fa ou Fm |
+| 7(b9) | 1 3 5 b7 b9 | Do Mi Sol Si♭ Ré♭ | Drame, cri | Un accord mineur (Fm) |
+| 7(#9) | 1 3 5 b7 #9 | Do Mi Sol Si♭ Ré♯ | Agressif, blues-rock | Rare en louange |
+| 7(b5) | 1 3 b5 b7 | Do Mi Sol♭ Si♭ | Tension jazz | Fa |
+| 7(#11) | 1 3 5 b7 #11 | Do Mi Sol Si♭ Fa♯ | Lydien dominant, lumineux | Fa, ou reste en suspension |
+| 7(b13) | 1 3 5 b7 b13 | Do Mi Sol Si♭ La♭ | Sombre, gospel | Fm ou F |
+| 13(b9) | 1 3 b7 b9 13 | Do Mi Si♭ Ré♭ La | Gospel riche | Fa |
+| 7alt | 1 3 b7 + b9, #9, b5, #5 | Do Mi Si♭ Ré♭ Mi♭ La♭ | Tension maximale contrôlée | Fa ou Fm |
 
 ## 6.7 Les accords renversés et les « slash chords »
 
@@ -196,7 +196,7 @@ Un accord n'a pas d'émotion tout seul : il la reçoit de la façon dont on le j
 | Sol (quinte) | Ouvert, neutre |
 | Si (7e majeure) | Rêveur, suspendu |
 | Ré (9e) | Frais, moderne, plein d'espérance |
-| Fa# (#11) | Émerveillement |
+| Fa♯ (#11) | Émerveillement |
 | La (6e ou 13e) | Tendre, nostalgique |
 
 **Le contexte.** Am juste après C sonne comme une ombre douce. Le même Am, dans un chant en La mineur, sonne comme la maison. C'est ce qui précède qui donne son sens à un accord.

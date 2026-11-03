@@ -21,7 +21,7 @@ La spontanéité se prépare. Plus tu maîtrises tes gammes, tes accords et tes 
 | Tierces ou sixtes parallèles | Deux notes qui descendent la gamme ensemble | Chaleureux, gospel | Piano, guitare |
 | Octaves | La mélodie doublée à l'octave | Puissant, lumineux | Piano |
 | Course pentatonique | Descente rapide dans la pentatonique | Énergie, élan | Piano, guitare électrique |
-| Glissé b3 → 3 | Mib glissé vers Mi sur un accord de Do | Blues, gospel | Piano, guitare |
+| Glissé b3 → 3 | Mi♭ glissé vers Mi sur un accord de Do | Blues, gospel | Piano, guitare |
 | Appoggiature | Note étrangère qui résout d'un demi-ton | Tendresse, expression | Tous |
 | Écho | Répéter la fin de la phrase du chanteur | Dialogue | Piano, guitare, violon |
 | Note tenue | Une seule note aiguë, longue | Suspension, ciel ouvert | Guitare électrique, pad |

@@ -81,7 +81,7 @@ Certains voicings se déplacent facilement d'un accord à l'autre, d'autres sonn
 ## 11.7 Les quatre gestes de liaison à la main droite
 
 1. **Le pivot :** un doigt reste, les autres tournent autour. C → Am : Do et Mi restent, Sol monte à La.
-2. **Le glissement chromatique :** une seule voix bouge d'un demi-ton. C → Cm (Mi → Mib), C → Caug (Sol → Sol#). C'est le geste le plus expressif.
+2. **Le glissement chromatique :** une seule voix bouge d'un demi-ton. C → Cm (Mi → Mi♭), C → Caug (Sol → Sol♯). C'est le geste le plus expressif.
 3. **La suspension :** on retarde une note de l'accord suivant. Csus4 → C (Fa → Mi), Cadd9 → C (Ré → Do).
 4. **L'anticipation :** on joue une note de l'accord suivant avant le temps. Le La de F joué sur le « 4 et » de la mesure de C.
 
@@ -170,9 +170,9 @@ Quand tu ne sais pas comment relier deux accords, construis d'abord la basse : l
 | --- | --- | --- | --- |
 | Descendante diatonique | C – G/B – Am – Am/G – F – C/E – Dm – G | Do Si La Sol Fa Mi Ré Sol | La plus universelle après I – V – vi – IV |
 | Montante diatonique | C – C/E – F – G – Am | Do Mi Fa Sol La | Élan, espérance, pré-refrains |
-| Descendante chromatique | C – C/B – C7/Bb – F/A – Fm/Ab – C/G | Do Si Sib La Lab Sol | Ponts, passage couplet → refrain |
-| Montante chromatique | C – C/C# – D | Do Do# Ré | Monter d'un ton |
-| Montante par diminués | C – C#°7 – Dm – D#°7 – Em | Do Do# Ré Ré# Mi | Tension qui monte |
+| Descendante chromatique | C – C/B – C7/Bb – F/A – Fm/Ab – C/G | Do Si Si♭ La La♭ Sol | Ponts, passage couplet → refrain |
+| Montante chromatique | C – C/C# – D | Do Do♯ Ré | Monter d'un ton |
+| Montante par diminués | C – C#°7 – Dm – D#°7 – Em | Do Do♯ Ré Ré♯ Mi | Tension qui monte |
 | Walk-up vers IV | C – Dm7 – C/E – F | Do Ré Mi Fa | Gospel, retour au refrain |
 | Par quintes | C – F – Bb – Eb – … | Quartes montantes | Par fragments de 3 ou 4 accords |
 | Walking | Un accord tous les deux temps, basse conjointe ou en arpège | Variable | Cantiques, gospel |
@@ -236,7 +236,7 @@ On garde exactement la même forme de voicing et on la déplace d'un bloc.
 | Parallèle diatonique | Voicings quartaux qui montent la gamme | Modal, ouvert, moderne |
 | Parallèle chromatique | Même accord monté par demi-tons | Tension, montée |
 | Parallèle par tons | Même accord monté par tons entiers | Flottant, impressionniste |
-| Quartes parallèles | Do-Fa-Sib → Ré-Sol-Do → Mi-La-Ré | Son de pad contemporain |
+| Quartes parallèles | Do-Fa-Si♭ → Ré-Sol-Do → Mi-La-Ré | Son de pad contemporain |
 
 **En louange :** excellent pour les intros planantes et les nappes, à éviter derrière un chant d'assemblée (l'harmonie devient illisible).
 
@@ -249,11 +249,11 @@ On arrive sur un accord par un accord bref situé un demi-ton à côté, souvent
 | Par le bas | B – C | Glissement qui monte |
 | Par le haut | Db – C | Glissement qui descend, très gospel |
 | Double approche | Db – B – C | Ornement qui encercle l'accord |
-| Basse seule | Basse Si ou Réb, puis Do | Liaison discrète, accords inchangés |
+| Basse seule | Basse Si ou Ré♭, puis Do | Liaison discrète, accords inchangés |
 
 ## 11.18 Les liaisons en tonalité mineure
 
-En mineur, la sensible (Sol# en La mineur) n'existe que si l'on emprunte à la mineure harmonique. Chaque liaison se joue donc avec ou sans sensible : avec, elle est dramatique ; sans, elle est modale et plus douce.
+En mineur, la sensible (Sol♯ en La mineur) n'existe que si l'on emprunte à la mineure harmonique. Chaque liaison se joue donc avec ou sans sensible : avec, elle est dramatique ; sans, elle est modale et plus douce.
 
 | Liaison | Progression (La mineur) | Effet |
 | --- | --- | --- |
@@ -272,7 +272,7 @@ En mineur, la sensible (Sol# en La mineur) n'existe que si l'on emprunte à la m
 
 ## 11.19 La tierce picarde : du mineur vers la lumière
 
-La tierce picarde consiste à finir un passage mineur sur l'accord **majeur** de même fondamentale. En La mineur : Dm – E7 – **A** au lieu de Am. La tierce monte d'un demi-ton (Do → Do#) et la lumière entre d'un coup.
+La tierce picarde consiste à finir un passage mineur sur l'accord **majeur** de même fondamentale. En La mineur : Dm – E7 – **A** au lieu de Am. La tierce monte d'un demi-ton (Do → Do♯) et la lumière entre d'un coup.
 
 En louange, elle raconte l'Évangile en un seul accord : la lamentation qui se termine dans l'espérance.
 
@@ -296,7 +296,7 @@ C'est la partie la plus pratique du chapitre. Les distances sont comptées en de
 | Arrivée | Distance | Notes communes | Liaisons, de la plus simple à la plus riche |
 | --- | --- | --- | --- |
 | Cm, C7, Csus4, Cadd9, C6 | Même fondamentale | 2 à 3 | 1) Changer une seule voix ; 2) C – Cmaj7 – C7 (une voix descend) ; 3) C – Caug – C6 ; 4) C → Cm direct (assombrissement) ; 5) C → C7, qui mène vers F |
-| Db | +1 | Aucune | 1) Direct, après un break ; 2) Ab7 – Db ; 3) Ebm7 – Ab7 – Db ; 4) D7 – Db (D7 remplace Ab7) ; 5) C – Ab – Db (Ab est le bVI de Do et le V de Réb) |
+| Db | +1 | Aucune | 1) Direct, après un break ; 2) Ab7 – Db ; 3) Ebm7 – Ab7 – Db ; 4) D7 – Db (D7 remplace Ab7) ; 5) C – Ab – Db (Ab est le bVI de Do et le V de Ré♭) |
 | D | +2 | Aucune | 1) A7 – D ; 2) Em7 – A7 – D ; 3) C – C#°7 – D ; 4) C – C/C# – D ; 5) C – Em – A7 – D ; 6) C – D direct (couleur lydienne, très lumineuse) ; 7) C – Bb – C – D (élan par bVII) |
 | Eb | +3 | 1 (Sol) | 1) Direct (médiante chromatique) ; 2) Bb7 – Eb ; 3) Fm7 – Bb7 – Eb ; 4) C – Cm – Eb ; 5) C – Ab – Bb – Eb ; 6) C – D°7 – Eb |
 | E | +4 | 1 (Mi) | 1) Direct (éblouissement) ; 2) B7 – E ; 3) F#m7(b5) – B7 – E ; 4) C – D#°7 – E ; 5) C – Am – B7 – E ; 6) C – E7 – Am – B7 – E |
@@ -345,7 +345,7 @@ Quels que soient les deux accords, tu as toujours au moins ces cinq options :
 | vi – IV – I – V | Am – F – C – G | Émotion, montée |
 | Pédale de tonique | C – F/C – G/C – C | Hypnotique, stable |
 | Isus2 – IVmaj7 | Csus2 – Fmaj7 | Planant, ambiant |
-| Quartes parallèles | Do-Fa-Sib → Ré-Sol-Do | Nappe moderne |
+| Quartes parallèles | Do-Fa-Si♭ → Ré-Sol-Do | Nappe moderne |
 | I – II (lydien) | C – D/C | Céleste, avant un moment de gloire |
 
 ## 11.24 Du couplet au refrain

@@ -166,7 +166,7 @@ function ListeCatalogue({
               <span className="block truncate font-medium">{t("harmonie.rd2000.titre")}</span>
               <span className="block truncate text-[13px] text-muted-foreground">
                 {t("harmonie.rd2000.resume", {
-                  essentiels: rd2000.sons.filter((s) => s.louange === 3).length,
+                  essentiels: rd2000.sons.filter((s) => s.premier).length,
                   total: rd2000.sons.length.toLocaleString(i18n.language),
                 })}
               </span>

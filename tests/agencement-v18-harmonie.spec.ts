@@ -68,19 +68,20 @@ const contenu = (page: Page, info: TestInfo, attendu: string) =>
 // Tous les sons · Paramètres) ; en pilules, les trois filtres du catalogue (sensation, moment, niveau), rien ailleurs.
 // Le pianiste ne joue pas de la guitare : pas de rail Piano · Guitare.
 const ONGLETS = [
-  { adresse: "/harmonie", nom: "Harmonie", attendu: "[data-harmonie]", onglets: { rail: 0, pilules: 3 } },
-  { adresse: "/harmonie/cours", nom: "Théorie", attendu: "[data-cours]", onglets: { rail: 0, pilules: 0 } },
-  { adresse: "/harmonie/rd2000", nom: "RD-2000", attendu: "[data-rd2000]", onglets: { rail: 1, pilules: 0 } },
+  // Le titre et la ligne d'état suivent la page (harmonie-1) : « Théorie musicale » et « Sons du RD-2000 » ont le leur.
+  { adresse: "/harmonie", nom: "Harmonie", titre: "Harmonie", etat: /^\d+ fiches, au piano et à la guitare$/, attendu: "[data-harmonie]", onglets: { rail: 0, pilules: 3 } },
+  { adresse: "/harmonie/cours", nom: "Théorie", titre: "Théorie musicale", etat: /^\d+ \/ \d+ chapitres finis$/, attendu: "[data-cours]", onglets: { rail: 0, pilules: 0 } },
+  { adresse: "/harmonie/rd2000", nom: "RD-2000", titre: "Sons du RD-2000", etat: /^\d+ essentiels sur [\d\s\u202F\u00A0.,]+$/, attendu: "[data-rd2000]", onglets: { rail: 1, pilules: 0 } },
 ] as const;
 
 test.describe("Harmonie en onglets (T11)", () => {
   for (const o of ONGLETS) {
-    test(`${o.adresse} : l'en-tête « Harmonie » sans rail, l'entrée « ${o.nom} » de la barre de l'espace allumée, sans titre de liste`, async ({ page }, info) => {
+    test(`${o.adresse} : l'en-tête « ${o.titre} » et sa ligne d'état, sans rail, l'entrée « ${o.nom} » de la barre de l'espace allumée, sans titre de liste`, async ({ page }, info) => {
       await entrer(page, o.adresse);
       await expect(page.locator(o.attendu).first()).toBeVisible();
       const entete = enTete(page);
-      await expect(entete.getByRole("heading", { level: 1, name: "Harmonie", exact: true })).toBeVisible();
-      await expect(entete.getByText("Des idées pour réharmoniser, au piano et à la guitare.")).toBeVisible();
+      await expect(entete.getByRole("heading", { level: 1, name: o.titre, exact: true })).toBeVisible();
+      await expect(entete.locator("p").first()).toHaveText(o.etat);
       await expect(enTete(page).locator('[data-onglets="rail"]'), "plus de rail dans l'en-tête").toHaveCount(0);
       expect(await nomCourant(page, info), "l'entrée courante de la barre suit l'adresse").toMatch(new RegExp(`^${o.nom}`));
       // Les titres de liste ont disparu : plus de « Harmonie », « Cours », « Sons du RD-2000 » en titre sous l'en-tête

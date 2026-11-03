@@ -9,23 +9,23 @@ Un intervalle est la distance entre deux notes. Tout accord, toute gamme et tout
 ## 4.1 Nommer un intervalle en deux étapes
 
 1. **Le nombre :** compte les noms de notes, en incluant les deux extrémités. Do → Mi = Do, Ré, Mi = tierce.
-2. **La qualité :** compte les demi-tons. Do → Mi = 4 demi-tons = tierce **majeure**. Do → Mib = 3 demi-tons = tierce **mineure**.
+2. **La qualité :** compte les demi-tons. Do → Mi = 4 demi-tons = tierce **majeure**. Do → Mi♭ = 3 demi-tons = tierce **mineure**.
 
 ## 4.2 Tableau complet des intervalles
 
 | Demi-tons | Intervalle | Abrév. | Depuis Do | Caractère | Repère à l'oreille (en montant) |
 | --- | --- | --- | --- | --- | --- |
 | 0 | Unisson | 1 | Do → Do | Identité, unité | Deux voix sur la même note |
-| 1 | Seconde mineure | 2m | Do → Réb | Frottement, tension forte | Le thème des *Dents de la mer* |
+| 1 | Seconde mineure | 2m | Do → Ré♭ | Frottement, tension forte | Le thème des *Dents de la mer* |
 | 2 | Seconde majeure | 2M | Do → Ré | Mouvement, légère tension | *Frère Jacques* (« Frè-re ») |
-| 3 | Tierce mineure | 3m | Do → Mib | Douceur, mélancolie | *Greensleeves* (deux premières notes) |
+| 3 | Tierce mineure | 3m | Do → Mi♭ | Douceur, mélancolie | *Greensleeves* (deux premières notes) |
 | 4 | Tierce majeure | 3M | Do → Mi | Joie, lumière | *Oh When the Saints* (« Oh when ») |
 | 5 | Quarte juste | 4J | Do → Fa | Ouverture, hymne | *Amazing Grace* (« A-ma- ») |
-| 6 | Triton (4+ ou 5dim) | TT | Do → Fa# | Instabilité maximale | *Maria* (West Side Story) |
+| 6 | Triton (4+ ou 5dim) | TT | Do → Fa♯ | Instabilité maximale | *Maria* (West Side Story) |
 | 7 | Quinte juste | 5J | Do → Sol | Stabilité, puissance | *Ah ! vous dirai-je, maman* (2e → 3e note) |
-| 8 | Sixte mineure | 6m | Do → Lab | Tendresse, nostalgie | *The Entertainer* (3e → 4e note) |
+| 8 | Sixte mineure | 6m | Do → La♭ | Tendresse, nostalgie | *The Entertainer* (3e → 4e note) |
 | 9 | Sixte majeure | 6M | Do → La | Chaleur, douceur | *My Bonnie* (« My Bon- ») |
-| 10 | Septième mineure | 7m | Do → Sib | Appel, groove | Générique original de *Star Trek* |
+| 10 | Septième mineure | 7m | Do → Si♭ | Appel, groove | Générique original de *Star Trek* |
 | 11 | Septième majeure | 7M | Do → Si | Rêverie, sophistication | Joue Do puis Si : la note « veut » monter à Do |
 | 12 | Octave | 8 | Do → Do | Plénitude | *Somewhere Over the Rainbow* (« Some-where ») |
 
@@ -67,7 +67,7 @@ Au-delà de l'octave, on retire 7 pour retrouver l'intervalle simple. Ces interv
 
 ## 4.6 Les intervalles enharmoniques
 
-Deux intervalles peuvent sonner pareil et porter deux noms. Quarte augmentée (Do → Fa#) et quinte diminuée (Do → Solb) sonnent pareil. Seconde augmentée (Do → Ré#) et tierce mineure (Do → Mib) aussi. Le nom dépend de la fonction de la note dans la gamme ou l'accord.
+Deux intervalles peuvent sonner pareil et porter deux noms. Quarte augmentée (Do → Fa♯) et quinte diminuée (Do → Sol♭) sonnent pareil. Seconde augmentée (Do → Ré♯) et tierce mineure (Do → Mi♭) aussi. Le nom dépend de la fonction de la note dans la gamme ou l'accord.
 
 ## 4.7 Les intervalles dans la pratique
 

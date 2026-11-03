@@ -47,4 +47,4 @@ Une cadence est l'enchaînement qui termine une phrase musicale, comme la ponctu
 
 1. Joue les quatre premières cadences du tableau et dis à chaque fois quel signe de ponctuation tu entends.
 2. Prends un chant connu et remplace sa dernière cadence parfaite par une plagale mineure (IV – iv – I). Qu'est-ce qui change dans l'émotion ?
-3. Travaille la cadence gospel dans trois tonalités : Do, Fa et Sib.
+3. Travaille la cadence gospel dans trois tonalités : Do, Fa et Si♭.

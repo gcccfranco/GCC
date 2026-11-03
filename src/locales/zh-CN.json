@@ -2877,6 +2877,7 @@
     "rd2000": {
       "titre": "RD-2000 音色",
       "premierChoix": "首选",
+      "layer": "叠加",
       "resume": "精选 {{essentiels}} 个（共 {{total}} 个）",
       "vues": {
         "moment": "按环节",
@@ -2942,6 +2943,7 @@
     },
     "titre": "和声",
     "sousTitre": "为钢琴和吉他提供的重新配和声灵感。",
+    "compteFiches_other": "{{count}} 张卡片，钢琴与吉他",
     "idees": "和声灵感",
     "parcours": "从这里开始",
     "aVerifier": "请弹奏确认",
@@ -3023,6 +3025,7 @@
     "auPiano": "钢琴弹法",
     "aLaGuitare": "吉他弹法",
     "repertoire": "曲库中的例子",
+    "ouLEntendre": "在哪里听到",
     "repertoireCompte_one": "{{count}} 首歌已经这样弹",
     "repertoireCompte_other": "{{count}} 首歌已经这样弹",
     "tonalite": "调",

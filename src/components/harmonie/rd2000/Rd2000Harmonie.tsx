@@ -82,14 +82,18 @@ export function Rd2000Harmonie({ children }: { children: React.ReactNode }) {
 }
 
 /** Un son, touchable vers sa page : le N° à taper d'abord, en gros. */
-function LigneSon({ son, prefixe, actif }: { son: Son; prefixe?: string; actif?: boolean }) {
+function LigneSon({ son, layer, actif }: { son: Son; layer?: boolean; actif?: boolean }) {
   const { t } = useTranslation();
   return (
     <GroupRow href={`/harmonie/rd2000/${son.n}`} chevron actif={actif}>
-      <span className="flex items-baseline gap-2.5">
-        {prefixe && <span className="text-muted-foreground">{prefixe}</span>}
+      <span className="flex items-start gap-2.5">
+        {layer && (
+          <span className={cn("shrink-0 rounded-full px-2 py-0.5 text-[12px] leading-4 font-medium", actif ? "bg-background text-foreground" : "bg-secondary text-foreground")} data-layer>
+            {t("harmonie.rd2000.layer")}
+          </span>
+        )}
         <span className="shrink-0 text-[17px] font-semibold tabular-nums" data-son={son.n}>{son.n}</span>
-        <span className="min-w-0 truncate font-medium">{son.nom}</span>
+        <span className="min-w-0 font-medium">{son.nom}</span>
         {son.premier && (
           <span className={cn("shrink-0 rounded-full px-1.5 py-0.5 text-[11px] font-medium", actif ? "bg-background text-foreground" : "bg-secondary text-foreground")}>
             {t("harmonie.rd2000.premierChoix")}
@@ -97,7 +101,7 @@ function LigneSon({ son, prefixe, actif }: { son: Son; prefixe?: string; actif?:
         )}
         <span className="ml-auto shrink-0 text-[13px] text-muted-foreground" aria-label={`${son.louange} / 3`}>{etoiles(son.louange)}</span>
       </span>
-      {son.commentaire && <span className="block truncate text-[13px] text-muted-foreground">{son.commentaire}</span>}
+      {son.commentaire && <span className="line-clamp-2 text-[13px] leading-[18px] text-muted-foreground">{son.commentaire}</span>}
     </GroupRow>
   );
 }
@@ -115,7 +119,7 @@ function ParMoment({ ouvert, cartes }: { ouvert?: string; cartes: boolean }) {
       {groupes.map(([groupe, moments]) => (
         <section key={groupe}>
           <h2 className="mb-1.5 text-[13px] font-semibold uppercase tracking-wide text-muted-foreground">{groupe}</h2>
-          <div className={cn(cartes && "md:grid md:grid-cols-2 md:gap-4")}>
+          <div className={cn(cartes && "md:grid md:grid-cols-2 md:items-start md:gap-4")}>
             {moments.map((m) => {
               const son = parN.get(m.son);
               const layer = m.layer ? parN.get(m.layer) : undefined;
@@ -126,9 +130,9 @@ function ParMoment({ ouvert, cartes }: { ouvert?: string; cartes: boolean }) {
                   data-moment={m.moment}
                 >
                   <p className="text-[15px] font-semibold">{m.moment}</p>
+                  {m.conseil && <p className="text-[15px] leading-[21px] text-foreground/80">{m.conseil}</p>}
                   {son && <LigneSon son={son} actif={son.n === ouvert} />}
-                  {layer && <LigneSon son={layer} prefixe="+" actif={layer.n === ouvert} />}
-                  {m.conseil && <p className="text-[13px] text-muted-foreground">{m.conseil}</p>}
+                  {layer && <LigneSon son={layer} layer actif={layer.n === ouvert} />}
                 </div>
               );
             })}

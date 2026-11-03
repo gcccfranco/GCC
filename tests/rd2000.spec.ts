@@ -15,13 +15,14 @@ const JO: FakeProfile = { uid: "uid-jo", email: "jo@example.com", firstName: "Jo
 const ELOISE: FakeProfile = { uid: "uid-eloise", email: "eloise@example.com", firstName: "Éloïse", lastName: "M.", planningName: "Éloïse M.", ...musicien("guitare") };
 
 const DONNEES = JSON.parse(readFileSync("public/rd2000.json", "utf8")) as {
-  sons: { n: string; nom: string; louange: number }[];
-  moments: { groupe: string; moment: string; son: string; layer: string }[];
+  sons: { n: string; nom: string; louange: number; premier?: boolean }[];
+  moments: { groupe: string; moment: string; son: string; layer: string; conseil: string }[];
   recettes: { n: string; exemples: string[] }[];
   fiches: { n: string; reglages: { ecran: string }[] }[];
   parametres: unknown[];
 };
-const ESSENTIELS = DONNEES.sons.filter((s) => s.louange === 3).length;
+const ESSENTIELS = DONNEES.sons.filter((s) => s.premier).length;
+const TROIS_ETOILES = DONNEES.sons.filter((s) => s.louange === 3).length;
 
 async function entrer(page: Page, qui: FakeProfile, to: string) {
   await page.route(/docs\.google\.com\/spreadsheets/, (route) => {
@@ -39,8 +40,11 @@ async function capture(page: Page, name: string) {
 
 test("un pianiste trouve les sons en tête d'Harmonie, ouverts sur « Par moment »", async ({ page }, info) => {
   await entrer(page, JO, "/harmonie");
-  // Agencement v18 (A16) : l'onglet « Sons du RD-2000 » du rail partout ; la carte, sur téléphone seulement.
-  const onglet = page.locator("header[data-entete-page]").getByRole("link", { name: "Sons du RD-2000" });
+  // Espace Musiciens (EM-2) : l'entrée « RD-2000 » de la barre (latérale en grand, du bas sinon) ; la carte, sur téléphone seulement.
+  const barre = ["ordinateur", "tablette-paysage"].includes(info.project.name) || (await page.getByTestId("barre-laterale").isVisible())
+    ? page.getByTestId("barre-laterale").getByRole("navigation")
+    : page.getByTestId("barre-du-bas");
+  const onglet = barre.locator('a[href="/harmonie/rd2000"], a[href="/harmonie/rd2000/"]');
   await expect(onglet).toBeVisible();
   if (info.project.name === "telephone") {
     const ligne = page.locator("[data-harmonie]").getByRole("link", { name: /Sons du RD-2000/ });
@@ -59,6 +63,13 @@ test("par moment : le son principal et le layer mènent à leur page", async ({ 
   await entrer(page, JO, "/harmonie/rd2000");
   const moment = page.locator("[data-moment]", { hasText: avecLayer.moment }).first();
   await expect(moment.locator("[data-son]")).toHaveText([avecLayer.son, avecLayer.layer]);
+  // harmonie-8 : le conseil du moment est sous son nom, avant les sons ; le layer porte la pastille « Layer », plus de « + » nu.
+  await expect(moment.locator("[data-layer]")).toHaveText("Layer");
+  await expect(moment.locator("[data-layer]")).toBeVisible();
+  const conseil = moment.getByText(avecLayer.conseil, { exact: true });
+  await expect(conseil).toBeVisible();
+  const avant = await conseil.evaluate((p, n) => Boolean(p.compareDocumentPosition(document.querySelector(`[data-son="${n}"]`)!) & Node.DOCUMENT_POSITION_FOLLOWING), avecLayer.son);
+  expect(avant, "le conseil précède le premier son").toBe(true);
   await moment.locator(`[data-son="${avecLayer.layer}"]`).click();
   await page.waitForURL(new RegExp(`/harmonie/rd2000/${avecLayer.layer}/?$`));
 });
@@ -74,7 +85,7 @@ test("un guitariste n'a ni la ligne ni la page", async ({ page }) => {
 test("tous les sons : ★★★ d'abord, « Tous » donne le catalogue, la recherche porte sur tout", async ({ page }) => {
   await entrer(page, JO, "/harmonie/rd2000");
   await page.getByRole("tab", { name: "Tous les sons" }).click();
-  await expect(page.locator("[data-vue=sons] [data-son]")).toHaveCount(ESSENTIELS);
+  await expect(page.locator("[data-vue=sons] [data-son]")).toHaveCount(TROIS_ETOILES);
   await page.getByRole("button", { name: "Tous", exact: true }).click();
   await expect(page.locator("[data-vue=sons] [data-son]")).toHaveCount(DONNEES.sons.length);
   await page.getByRole("button", { name: "★★★", exact: true }).click();

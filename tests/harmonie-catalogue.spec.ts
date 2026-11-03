@@ -86,6 +86,18 @@ test("une fiche montre avant → après, le pourquoi, les pièges et les exemple
   await expect(page.getByRole("heading", { name: "Au piano" }), "Jo est pianiste").toBeVisible();
   await expect(page.getByRole("heading", { name: "Dans le répertoire" })).toBeVisible();
   await expect(page.getByText(/chants? qui le joue/), "les exemples sont comptés").toBeVisible();
+  // harmonie-10 : toutes les lignes de chants ont la même hauteur (44 px) ; « Voir les N autres » déplie le reste.
+  const lignes = page.locator('[data-fiche] a[href^="/songs/"]');
+  await expect(lignes.first()).toBeVisible();
+  const hauteurs = await lignes.evaluateAll((els) => els.map((e) => Math.round(e.getBoundingClientRect().height)));
+  expect(new Set(hauteurs), "des lignes d'une seule hauteur").toEqual(new Set([44]));
+  const autres = page.locator("[data-fiche]").getByRole("button", { name: /^Voir les \d+ autres$/ });
+  if (await autres.count()) {
+    const avant = await lignes.count();
+    await autres.click();
+    expect(await lignes.count(), "la liste se déplie").toBeGreaterThan(avant);
+    await expect(autres).toHaveCount(0);
+  }
   await capture(page, "harmonie-fiche");
 });
 

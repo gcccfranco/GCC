@@ -3,6 +3,7 @@
 import { useEffect, useRef, type CSSProperties, type ReactNode } from "react";
 import { usePathname } from "next/navigation";
 import { useDeuxVolets } from "@/hooks/useDeuxVolets";
+import { useFonduVertical } from "@/hooks/useFonduVertical";
 import { disposerVolets, estSurLaListe } from "@/lib/deuxVolets";
 
 // Deux volets des pages de liste (lot U4 bis, docs/spec-pages-en-grand.md, Q1 à Q3).
@@ -57,6 +58,8 @@ export function DeuxVolets({
   const avecListe = Boolean(volets.liste);
   const seule = deuxVolets && colonneSeule && volets.droite === "premier";
 
+  useFonduVertical(carte, deuxVolets && avecListe && !seule);
+
   useEffect(() => {
     const el = carte.current;
     if (!deuxVolets || !avecListe || seule || !el) return;
@@ -106,7 +109,7 @@ export function DeuxVolets({
             seule
               ? "page-fade raised rounded-2xl"
               : deuxVolets
-              ? "page-fade sticky top-[calc(var(--nav-h)+20px)] max-h-[calc(100dvh-var(--haut-liste,calc(var(--nav-h)+20px))-24px)] w-[var(--largeur-liste)] shrink-0 overflow-y-auto overscroll-contain raised rounded-2xl"
+              ? "page-fade fondu-vertical sticky top-[calc(var(--nav-h)+20px)] max-h-[calc(100dvh-var(--haut-liste,calc(var(--nav-h)+20px))-24px)] w-[var(--largeur-liste)] shrink-0 overflow-y-auto overscroll-contain raised rounded-2xl"
               : "page-fade"
           }
         >

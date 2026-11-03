@@ -2911,6 +2911,7 @@
     "rd2000": {
       "titre": "Sons du RD-2000",
       "premierChoix": "Premier choix",
+      "layer": "Layer",
       "resume": "{{essentiels}} essentiels sur {{total}}",
       "vues": {
         "moment": "Par moment",
@@ -2979,6 +2980,8 @@
     },
     "titre": "Harmonie",
     "sousTitre": "Des idées pour réharmoniser, au piano et à la guitare.",
+    "compteFiches_one": "{{count}} fiche, au piano et à la guitare",
+    "compteFiches_other": "{{count}} fiches, au piano et à la guitare",
     "idees": "Idées d'harmonie",
     "parcours": "Par où commencer",
     "aVerifier": "À vérifier en jouant",
@@ -3062,6 +3065,7 @@
     "auPiano": "Au piano",
     "aLaGuitare": "À la guitare",
     "repertoire": "Dans le répertoire",
+    "ouLEntendre": "Où l'entendre",
     "repertoireCompte_one": "{{count}} chant qui le joue déjà",
     "repertoireCompte_other": "{{count}} chants qui le jouent déjà",
     "tonalite": "Tonalité",

@@ -72,6 +72,6 @@ Moduler, c'est changer de tonalité pendant un chant ou entre deux chants. Une b
 
 ## 14.7 Exercices
 
-1. Joue un refrain en Sol, puis module en Lab par un break, puis en La par E7sus4 – E7.
+1. Joue un refrain en Sol, puis module en La♭ par un break, puis en La par E7sus4 – E7.
 2. De Do vers Sol, utilise Am comme accord pivot : C – F – Am – D7 – G.
 3. Enchaîne deux chants du répertoire dans des tonalités différentes, sans silence, avec la méthode de ton choix.

@@ -309,10 +309,24 @@ test.describe("Harmonie : le cours", () => {
     const [a, b] = [await boite(lignes.nth(0)), await boite(lignes.nth(1))];
     expect(b.y).toBeGreaterThanOrEqual(a.y + a.height - 1);
     await expect(lignes.nth(0)).toContainText("Formule");
-    // « Choisir la cadence selon le texte » : deux colonnes, il reste un tableau.
-    await expect(tableaux.nth(1).locator("thead")).toBeVisible();
+    // « Choisir la cadence selon le texte » : ses deux colonnes sont longues (harmonie-12, décider selon le contenu),
+    // donc lui aussi s'empile.
+    await expect(tableaux.nth(1).locator("thead")).toBeHidden();
     expect(await sansDefilementHorizontal(page)).toBe(true);
     await capture(page, "b3-cours-lecon");
+  });
+
+  test("téléphone : leçon 1, le tableau 1.2 reste un tableau (une seule colonne longue), le tableau 1.1 s'empile (harmonie-12)", async ({ page }, info) => {
+    test.skip(info.project.name !== "telephone", "téléphone seulement");
+    const lecon1 = COURS.chapitres.find((c) => c.numero === 1)!;
+    await entrer(page, `/harmonie/cours/${lecon1.id}`);
+    const tableaux = page.locator("[data-cours-tableau]");
+    await expect(tableaux.first()).toBeVisible();
+    // 1.1 « Ce que c'est » et « En louange » sont longues : empilé, libellé au-dessus de sa valeur.
+    await expect(tableaux.nth(0).locator("thead")).toBeHidden();
+    // 1.2 « Les sept notes naturelles » : seule « Sur le clavier » est longue.
+    await expect(tableaux.nth(1).locator("thead")).toBeVisible();
+    expect(await sansDefilementHorizontal(page)).toBe(true);
   });
 });
 
@@ -355,6 +369,16 @@ test.describe("Harmonie : les sons du RD-2000", () => {
     const [a, b] = [await boite(moments.nth(0)), await boite(moments.nth(1))];
     expect(Math.abs(a.y - b.y)).toBeLessThan(2);
     expect(b.x).toBeGreaterThan(a.x + a.width - 1);
+    // harmonie-7 : chaque carte garde sa hauteur (`items-start`) — deux voisines d'une rangée n'ont pas forcément la
+    // même — et aucune n'a plus de 24 px de vide entre son dernier texte et son bas.
+    const mesures = await moments.evaluateAll((els) => els.map((el) => {
+      const carte = el.getBoundingClientRect();
+      const dernier = el.lastElementChild!.getBoundingClientRect();
+      return { y: Math.round(carte.top), h: Math.round(carte.height), vide: carte.bottom - dernier.bottom };
+    }));
+    for (const m of mesures) expect(m.vide, "pas de vide intérieur").toBeLessThanOrEqual(24);
+    const memeRangee = mesures.some((m, i) => mesures.some((n, j) => j !== i && Math.abs(m.y - n.y) < 2 && m.h !== n.h));
+    expect(memeRangee, "deux cartes d'une même rangée ont des hauteurs différentes").toBe(true);
     expect(await sansDefilementHorizontal(page)).toBe(true);
     await capture(page, "b3-rd2000");
   });

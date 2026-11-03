@@ -125,6 +125,9 @@ test("« J'ai fini » n'écrit que ce chapitre dans coursProgres/<mon uid>, et t
   await expect(page.getByText(/^Fini le /)).toBeVisible();
   // Sous la leçon : en grand, la liste du cours à gauche a aussi sa ligne « Prochain chapitre » (U4 bis, B3).
   await expect(page.locator("[data-j-ai-fini]").getByRole("link", { name: /Prochain chapitre/ })).toContainText("2.");
+  // harmonie-1 : en deux volets, l'en-tête suit la coche sans recharger (même progrès que la liste).
+  const progresEnTete = page.locator("header[data-entete-page] [data-cours-progres]");
+  if (test.info().project.name === "ordinateur") await expect(progresEnTete).toHaveText("1 / 23 chapitres finis");
   const cours = () => db.writes.filter((w) => w.path.startsWith("coursProgres/"));
   await expect.poll(() => cours().map((w) => `${w.method} ${w.path}`)).toEqual([`PATCH coursProgres/${RUTH.uid}`]);
   expect(Object.keys((cours()[0].data.fini ?? {}) as object), "ce seul chapitre").toEqual([ch1.id]);

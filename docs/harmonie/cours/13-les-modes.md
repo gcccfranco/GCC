@@ -12,13 +12,13 @@ Tous les exemples partent de Do, pour comparer les couleurs sur la même tonique
 
 | Mode | Degré d'origine | Notes sur Do | Comparé à… | Note caractéristique | Accord type | Enchaînement typique |
 | --- | --- | --- | --- | --- | --- | --- |
-| Lydien | IV | Do Ré Mi **Fa#** Sol La Si | Majeur | #4 | Cmaj7(#11) | C – D/C |
+| Lydien | IV | Do Ré Mi **Fa♯** Sol La Si | Majeur | #4 | Cmaj7(#11) | C – D/C |
 | Ionien | I | Do Ré Mi Fa Sol La Si | — (c'est le majeur) | 7 majeure | Cmaj7 | C – F – G |
-| Mixolydien | V | Do Ré Mi Fa Sol La **Sib** | Majeur | b7 | C7 | C – Bb – F |
-| Dorien | II | Do Ré Mib Fa Sol **La** Sib | Mineur | 6 majeure | Cm7, Cm6 | Cm – F |
-| Éolien | VI | Do Ré Mib Fa Sol Lab Sib | — (c'est le mineur naturel) | b6 | Cm | Cm – Ab – Bb |
-| Phrygien | III | Do **Réb** Mib Fa Sol Lab Sib | Mineur | b2 | Cm7 | Cm – Db |
-| Locrien | VII | Do Réb Mib Fa **Solb** Lab Sib | Mineur | b2 et b5 | Cm7(b5) | Rarement un centre tonal |
+| Mixolydien | V | Do Ré Mi Fa Sol La **Si♭** | Majeur | b7 | C7 | C – Bb – F |
+| Dorien | II | Do Ré Mi♭ Fa Sol **La** Si♭ | Mineur | 6 majeure | Cm7, Cm6 | Cm – F |
+| Éolien | VI | Do Ré Mi♭ Fa Sol La♭ Si♭ | — (c'est le mineur naturel) | b6 | Cm | Cm – Ab – Bb |
+| Phrygien | III | Do **Ré♭** Mi♭ Fa Sol La♭ Si♭ | Mineur | b2 | Cm7 | Cm – Db |
+| Locrien | VII | Do Ré♭ Mi♭ Fa **Sol♭** La♭ Si♭ | Mineur | b2 et b5 | Cm7(b5) | Rarement un centre tonal |
 
 Les modes sont rangés ici du plus lumineux au plus sombre. Chaque pas vers le bas ajoute un bémol.
 
@@ -40,16 +40,16 @@ Pour installer un mode, il suffit souvent de deux accords qui font entendre la n
 
 | Mode | Vamp sur Do | Note caractéristique entendue |
 | --- | --- | --- |
-| Lydien | C – D/C | Fa# (dans D) |
+| Lydien | C – D/C | Fa♯ (dans D) |
 | Ionien | C – F/C | Fa naturel et Si |
-| Mixolydien | C – Bb/C | Sib (dans Bb) |
+| Mixolydien | C – Bb/C | Si♭ (dans Bb) |
 | Dorien | Cm7 – F/C | La naturel (dans F) |
-| Éolien | Cm – Ab/C | Lab (dans Ab) |
-| Phrygien | Cm – Db/C | Réb (dans Db) |
+| Éolien | Cm – Ab/C | La♭ (dans Ab) |
+| Phrygien | Cm – Db/C | Ré♭ (dans Db) |
 
 ## 13.4 Les modes de la mineure mélodique
 
-Ces modes nourrissent le jazz et le gospel. Exemple sur Do mineur mélodique : Do Ré Mib Fa Sol La Si.
+Ces modes nourrissent le jazz et le gospel. Exemple sur Do mineur mélodique : Do Ré Mi♭ Fa Sol La Si.
 
 | Degré | Nom | Accord associé | Usage |
 | --- | --- | --- | --- |
@@ -63,7 +63,7 @@ Ces modes nourrissent le jazz et le gospel. Exemple sur Do mineur mélodique : D
 
 ## 13.5 Le mode utile de la mineure harmonique
 
-Le 5e mode de la mineure harmonique s'appelle **phrygien dominant**. En La mineur harmonique, il part de Mi : Mi Fa Sol# La Si Do Ré. Il colore l'accord E7(b9) qui résout vers Am. C'est le son du V7 dramatique en mineur.
+Le 5e mode de la mineure harmonique s'appelle **phrygien dominant**. En La mineur harmonique, il part de Mi : Mi Fa Sol♯ La Si Do Ré. Il colore l'accord E7(b9) qui résout vers Am. C'est le son du V7 dramatique en mineur.
 
 ## 13.6 Quelle gamme sur quel accord
 

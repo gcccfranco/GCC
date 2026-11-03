@@ -40,25 +40,25 @@ Le jianpu (notation chiffrée) est très utilisé dans les églises chinophones.
 
 | Symbole | Nom | Effet | Exemple |
 | --- | --- | --- | --- |
-| # | Dièse | Monte la note d'un demi-ton | Fa# = touche noire à droite de Fa |
-| b | Bémol | Descend la note d'un demi-ton | Sib = touche noire à gauche de Si |
-| ♮ | Bécarre | Annule un dièse ou un bémol | Fa♮ dans une tonalité avec Fa# |
-| x | Double dièse | Monte d'un ton | Fax sonne comme Sol |
-| bb | Double bémol | Descend d'un ton | Sibb sonne comme La |
+| ♯ | Dièse | Monte la note d'un demi-ton | Fa♯ = touche noire à droite de Fa |
+| ♭ | Bémol | Descend la note d'un demi-ton | Si♭ = touche noire à gauche de Si |
+| ♮ | Bécarre | Annule un dièse ou un bémol | Fa♮ dans une tonalité avec Fa♯ |
+| 𝄪 | Double dièse | Monte d'un ton | Fa𝄪 sonne comme Sol |
+| 𝄫 | Double bémol | Descend d'un ton | Si𝄫 sonne comme La |
 
 ## 1.5 L'enharmonie : un son, deux noms
 
 | Touche noire | Nom avec dièse | Nom avec bémol |
 | --- | --- | --- |
-| Entre Do et Ré | Do# (C#) | Réb (Db) |
-| Entre Ré et Mi | Ré# (D#) | Mib (Eb) |
-| Entre Fa et Sol | Fa# (F#) | Solb (Gb) |
-| Entre Sol et La | Sol# (G#) | Lab (Ab) |
-| Entre La et Si | La# (A#) | Sib (Bb) |
+| Entre Do et Ré | Do♯ (C#) | Ré♭ (Db) |
+| Entre Ré et Mi | Ré♯ (D#) | Mi♭ (Eb) |
+| Entre Fa et Sol | Fa♯ (F#) | Sol♭ (Gb) |
+| Entre Sol et La | Sol♯ (G#) | La♭ (Ab) |
+| Entre La et Si | La♯ (A#) | Si♭ (Bb) |
 
-Les touches blanches ont aussi des doubles noms : Mi# = Fa, Si# = Do, Fab = Mi, Dob = Si.
+Les touches blanches ont aussi des doubles noms : Mi♯ = Fa, Si♯ = Do, Fa♭ = Mi, Do♭ = Si.
 
-Pourquoi deux noms ? Dans une tonalité, chaque lettre n'apparaît qu'une fois. En Fa majeur, on écrit Sib et non La#, car La existe déjà dans la gamme. Le bon nom aide à lire vite et à comprendre la fonction de la note.
+Pourquoi deux noms ? Dans une tonalité, chaque lettre n'apparaît qu'une fois. En Fa majeur, on écrit Si♭ et non La♯, car La existe déjà dans la gamme. Le bon nom aide à lire vite et à comprendre la fonction de la note.
 
 ## 1.6 Les octaves et la numérotation
 
