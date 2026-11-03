@@ -379,14 +379,33 @@ test.describe("Statistiques (S3) : les plus joués", () => {
     expect(await setlistsComptees(page)).toBe("2");
   });
 
-  test("période vide : « Aucune setlist publiée sur cette période. »", async ({ page }) => {
+  test("période vide : cadre pointillé, titre et bouton « Voir depuis le début » qui bascule la période (chants-14)", async ({ page }) => {
     await ouvrirStatistiques(page);
     await page.getByRole("button", { name: "Dates libres" }).click();
     await page.getByLabel("Du", { exact: true }).fill("2026-07-01");
     await page.getByLabel("Au", { exact: true }).fill("2026-07-31");
-    await expect(page.getByText("Aucune setlist publiée sur cette période.")).toBeVisible();
+    const vide = page.getByRole("status").filter({ hasText: "Aucune setlist publiée sur cette période" });
+    await expect(vide).toBeVisible();
+    expect(await vide.evaluate((el) => getComputedStyle(el).borderTopStyle), "cadre pointillé").toBe("dashed");
     await expect(page.locator('[data-testid="ligne-chant"]:visible')).toHaveCount(0);
     await expect(page.getByTestId("dix-premiers")).toHaveCount(0);
+    const bouton = vide.getByRole("button", { name: "Voir depuis le début" });
+    expect(Math.round((await bouton.boundingBox())!.height), "bouton de 44 px").toBe(44);
+    await bouton.click();
+    await expect(page.getByRole("button", { name: "Depuis le début", exact: true })).toHaveAttribute("aria-pressed", "true");
+    await expect(vide).toHaveCount(0);
+    await expect.poll(() => setlistsComptees(page)).toBe("6");
+  });
+
+  test("période vide « Depuis le début » : le titre seul, pas de bouton (chants-14)", async ({ page }) => {
+    await page.route(/\/songs-index\.json/, (route) =>
+      route.fulfill({ contentType: "application/json", body: JSON.stringify({ generatedAt: "2026-10-01", songs: RECUEIL }) }));
+    // Avant la première setlist : rien de passé à compter, même depuis le début.
+    await page.clock.setFixedTime(new Date("2026-05-01T10:00:00"));
+    await signInAs(page, ADMIN, SETLISTS, "/songs/statistiques?periode=debut");
+    const vide = page.getByRole("status").filter({ hasText: "Aucune setlist publiée sur cette période" });
+    await expect(vide).toBeVisible();
+    await expect(vide.getByRole("button")).toHaveCount(0);
   });
 
   test("lecture refusée : « Impossible de lire les setlists. », puis « Réessayer »", async ({ page }) => {
@@ -524,10 +543,10 @@ test.describe("Statistiques (S4) : jamais joués et à redécouvrir", () => {
 
   test("période vide : le même message dans les deux vues", async ({ page }) => {
     await ouvrirStatistiques(page, "/songs/statistiques?vue=jamais-joues&periode=libre&du=2026-07-01&au=2026-07-31");
-    await expect(page.getByText("Aucune setlist publiée sur cette période.")).toBeVisible();
+    await expect(page.getByText("Aucune setlist publiée sur cette période")).toBeVisible();
     await expect(page.locator('[data-testid="ligne-jamais"]:visible')).toHaveCount(0);
     await vue(page, "À redécouvrir").click();
-    await expect(page.getByText("Aucune setlist publiée sur cette période.")).toBeVisible();
+    await expect(page.getByText("Aucune setlist publiée sur cette période")).toBeVisible();
   });
 
   test("un titre ouvre la page du chant ; le retour retrouve la vue et les filtres", async ({ page }) => {
@@ -712,7 +731,7 @@ test.describe("Statistiques (S5) : le widget n'est plus sur /back-office", () =>
   test("des setlists illisibles ou absentes ne font pas de ligne dans À faire : « Rien à faire », jamais des zéros", async ({ page }) => {
     await ouvrirTableauDeBord(page, ADMIN, { "setlists/a-venir": SETLISTS["setlists/a-venir"], ...SEUL_LE_WIDGET() });
     await expect(page.getByRole("status").or(page.getByTestId("ligne-a-faire").first())).toBeVisible();
-    await expect(page.getByText("Aucune setlist publiée sur cette période.")).toHaveCount(0);
+    await expect(page.getByText("Aucune setlist publiée sur cette période")).toHaveCount(0);
     await expect(page.getByText("Lecture impossible pour l'instant.")).toHaveCount(0);
   });
 

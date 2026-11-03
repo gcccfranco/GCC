@@ -110,3 +110,21 @@ test("transposé, la tonalité reste lisible entière à côté du bouton de ret
   expect(large).toBeGreaterThan(0);
   expect(plein).toBeLessThanOrEqual(Math.ceil(large));
 });
+
+// chants-4 : un mot devant la lettre du ton, dans la langue de l'interface (pas celle du chant).
+test.describe("pilule de tonalité : le mot « Ton » / « 调 » devant la lettre", () => {
+  test("interface française : « Ton A » sur un chant français", async ({ page }) => {
+    const select = await ouvrir(page, "la-benediction");
+    await expect(select).toHaveValue("B");
+    await expect(page.getByTestId("tonalite-courante")).toContainText("Ton");
+    await expect(page.getByTestId("tonalite-lettre")).toHaveText("B");
+    await expect(page.getByTestId("tonalite-courante")).toHaveText(/^Ton\s*B/, { useInnerText: true });
+  });
+
+  test("interface chinoise : « 调 E » sur un chant chinois", async ({ page }) => {
+    await page.addInitScript(() => { try { localStorage.setItem("i18nextLng", "zh-CN"); } catch {} });
+    const select = await ouvrir(page, "一生爱你");
+    await expect(select).toHaveValue("E");
+    await expect(page.getByTestId("tonalite-courante")).toHaveText(/^调\s*E/, { useInnerText: true });
+  });
+});

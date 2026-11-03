@@ -342,7 +342,7 @@ function useVersionDeLaSetlist(slug: string, setlistId: string | null, position:
           <FondDeBarre sousNavbar />
           {/* `rangee-chant` : les libellés suivent la place de la rangée (`data-libelles`, plus haut),
               donc celle du volet en deux volets. */}
-          <div ref={rangeeRef} className="rangee-chant max-w-2xl mx-auto w-full flex flex-nowrap gap-1 items-center py-2 px-1.5">
+          <div ref={rangeeRef} className="rangee-chant max-w-2xl mx-auto w-full flex flex-nowrap gap-1 items-center py-2 px-4">
             <Button
               asChild
               variant="secondary"
@@ -390,11 +390,11 @@ function useVersionDeLaSetlist(slug: string, setlistId: string | null, position:
               </div>
 
               {/* Accords */}
-              <button aria-label={t("songs.detail.chords") || "Accords"}
+              <button aria-label={t("songs.detail.chords") || "Accords"} aria-pressed={customize.showChords}
                 onClick={() => setCustomize((c) => ({ ...c, showChords: !c.showChords }))}
-                className={`${TOUCHER_44} h-9 min-w-9 lg:h-8 lg:min-w-8 px-2.5 rounded-full text-xs font-semibold flex items-center justify-center gap-1.5 transition-all duration-150 ${
+                className={`${TOUCHER_44} h-9 min-w-9 lg:h-8 lg:min-w-8 px-2.5 rounded-full text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors duration-150 ease-out ${
                       customize.showChords
-                        ? "bg-card text-foreground shadow-sm"
+                        ? "bg-foreground text-background"
                         : "text-muted-foreground hover:text-foreground"
                     }`}
               >
@@ -404,11 +404,11 @@ function useVersionDeLaSetlist(slug: string, setlistId: string | null, position:
 
               {/* Pinyin (chants zh) */}
               {isZh && (
-                    <button aria-label={t("songs.detail.pinyin") || "Pinyin"}
+                    <button aria-label={t("songs.detail.pinyin") || "Pinyin"} aria-pressed={customize.showPinyin}
                       onClick={() => setCustomize((c) => ({ ...c, showPinyin: !c.showPinyin }))}
-                      className={`${TOUCHER_44} h-9 min-w-9 lg:h-8 lg:min-w-8 px-2.5 rounded-full text-xs font-semibold flex items-center justify-center gap-1.5 transition-all duration-150 ${
+                      className={`${TOUCHER_44} ml-0.5 h-9 min-w-9 lg:h-8 lg:min-w-8 px-2.5 rounded-full text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors duration-150 ease-out ${
                         customize.showPinyin
-                          ? "bg-card text-foreground shadow-sm"
+                          ? "bg-foreground text-background"
                           : "text-muted-foreground hover:text-foreground"
                       }`}
                     >
@@ -429,7 +429,7 @@ function useVersionDeLaSetlist(slug: string, setlistId: string | null, position:
           </div>
           {/* Téléphone, couché compris (Q5) : les actions sur une seconde rangée, qui défile en
               largeur, colle sous la première et s'escamote avec elle (globals.css, `.actions-tel`). */}
-          <div className="actions-tel max-w-2xl mx-auto w-full gap-2 overflow-x-auto px-1.5 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <div className="actions-tel max-w-2xl mx-auto w-full gap-2 overflow-x-auto px-4 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             <ActionsChant variante="tel" youtubeId={youtubeId} showVideo={showVideo} setShowVideo={setShowVideo} downloading={downloading} setShowPdfChoice={setShowPdfChoice} accesHarmoniePeut={accesHarmonie.peut} setShowIdees={setShowIdees} menuChant={menuChant} />
           </div>
 

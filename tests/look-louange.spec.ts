@@ -348,7 +348,7 @@ test.describe("louange (T3) : sélecteur de tonalité, téléphone et tablette",
     await page.evaluate(() => Promise.all(document.getAnimations().map((a) => a.finished.catch(() => {}))));
     const tonalite = page.getByTestId("tonalite-courante");
     // innerText : le suffixe « (orig.) » existe dans le DOM mais n'est affiché que sur ordinateur.
-    await expect(tonalite).toHaveText("E", { useInnerText: true });
+    await expect(page.getByTestId("tonalite-lettre")).toHaveText("E", { useInnerText: true });
     expect(await tonalite.evaluate((el) => el.scrollWidth <= el.clientWidth), "la tonalité n'est pas rognée").toBe(true);
     const [t, pilule] = await Promise.all([tonalite.boundingBox(), page.getByTestId("pilule-tonalite").boundingBox()]);
     expect(t!.x).toBeGreaterThanOrEqual(pilule!.x);
@@ -357,7 +357,7 @@ test.describe("louange (T3) : sélecteur de tonalité, téléphone et tablette",
     await expect(select).toHaveValue("E");
     await expect(select.locator("option[value=E]")).toHaveText(/\(orig\.\)/);
     await select.selectOption("F");
-    await expect(tonalite).toHaveText("F", { useInnerText: true });
+    await expect(page.getByTestId("tonalite-lettre")).toHaveText("F", { useInnerText: true });
     await expect(select).toHaveValue("F");
   });
 });

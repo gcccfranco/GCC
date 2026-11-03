@@ -27,6 +27,7 @@ import {
 } from "@/lib/stats/chantsJoues";
 import { LargeurBO } from "@/components/backOffice/LargeurBO";
 import { EnTetePage } from "@/components/layout/EnTetePage";
+import { EtatVide } from "@/components/layout/EtatVide";
 import { OngletsRail, Pilules } from "@/components/layout/Onglets";
 import { Button } from "@/components/ui/button";
 import { KeyPill } from "@/components/ui/key-pill";
@@ -302,9 +303,15 @@ function StatistiquesContenu() {
             choisir={choisirPresidence} profils={profils} />
         )}
         {nombre === 0 ? (
-          <p role="status" className="raised rounded-2xl px-5 py-8 text-center text-sm text-muted-foreground">
-            {t("stats.aucuneSetlistPeriode")}
-          </p>
+          <EtatVide
+            role="status"
+            titre={t("stats.aucuneSetlistPeriodeTitre")}
+            action={etat.periode !== "debut" && (
+              <Button type="button" variant="outline" className="h-11 rounded-full" onClick={() => choisirPeriode("debut")}>
+                {t("stats.voirDepuisDebut")}
+              </Button>
+            )}
+          />
         ) : etat.vue === "plus" ? (
           // Dès 1 100 px de conteneur (planche v18-bo-statistiques) : les chiffres à gauche, le classement
           // à droite. En dessous (D11, retouches v18 R6), les trois chiffres sur une rangée au-dessus du
@@ -329,9 +336,7 @@ function StatistiquesContenu() {
             <div className="min-w-0 space-y-4">
               {lignes.length > 0 && <DixPremiers lignes={stats.plusJoues.slice(0, 10)} />}
               {stats.plusJoues.length === 0 ? (
-                <p role="status" className="raised rounded-2xl px-5 py-8 text-center text-sm text-muted-foreground">
-                  {t("stats.aucunChantLangue")}
-                </p>
+                <EtatVide role="status">{t("stats.aucunChantLangue")}</EtatVide>
               ) : (
                 <>
                   <ListeTelephone lignes={lignes} aujourdhui={aujourdhui} tri={etat.tri} trier={(cle) => changer({ tri: cle, sens: SENS_PAR_DEFAUT[cle] })} />

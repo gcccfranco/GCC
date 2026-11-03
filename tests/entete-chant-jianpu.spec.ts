@@ -60,3 +60,38 @@ test("(ordinateur, 1920 px) une colonne aussi sur grand écran : l'en-tête au-d
   ]);
   expect(liste!.y + liste!.height).toBeLessThanOrEqual(scan!.y);
 });
+
+// chants-11 : la ligne de l'auteur est un crédit (12 px, 16 px de ligne, 8 px au-dessus), le latin en Atkinson 400.
+for (const [slug, nom] of [["一切歌颂赞美", "chant chinois"], ["aucune-peur", "chant français"]] as const) {
+  test(`${nom} : la ligne de l'auteur est un crédit de 12 px, 8 px sous le groupe du titre, en graisse 400`, async ({ page }) => {
+    await page.goto(`/songs/${encodeURIComponent(slug)}`);
+    const auteur = page.getByTestId("auteur");
+    await expect(auteur).toBeVisible();
+    const style = await auteur.evaluate((el) => {
+      const s = getComputedStyle(el);
+      return { taille: s.fontSize, hauteur: s.lineHeight, marge: s.marginTop, graisse: s.fontWeight, police: s.fontFamily };
+    });
+    expect(style.taille).toBe("12px");
+    expect(style.hauteur).toBe("16px");
+    expect(style.marge).toBe("8px");
+    expect(style.graisse).toBe("400");
+    // Pile Atkinson d'abord (le latin y prend sa graisse 400), puis Source Han (chant chinois) pour les seuls caractères chinois.
+    const familles = style.police.split(",").map((f) => f.trim());
+    expect(familles[0], "Atkinson en tête de pile").toMatch(/chord_font/);
+    if (slug === "一切歌颂赞美") {
+      const zh = familles.findIndex((f) => /zh_lyric_font/.test(f));
+      expect(zh, "Source Han après Atkinson").toBeGreaterThan(0);
+    }
+  });
+}
+
+// chants-10 : ligne de tempo à 12 px au téléphone, 13 px dès 768 px, « ♩ = 92 » à espaces fines insécables.
+test("ligne de tempo : 12 px au téléphone, 13 px dès 768 px, espaces fines autour du signe égal", async ({ page }) => {
+  await page.goto("/songs/aucune-peur");
+  const ligne = page.getByTestId("ligne-tempo");
+  await expect(ligne).toBeVisible();
+  const largeur = page.viewportSize()!.width;
+  expect(await ligne.evaluate((el) => getComputedStyle(el).fontSize)).toBe(largeur >= 768 ? "13px" : "12px");
+  expect(await ligne.textContent()).toBe("♩ = 95");
+  expect(await ligne.evaluate((el) => el.scrollWidth <= el.clientWidth + 1), "la ligne ne déborde pas").toBe(true);
+});

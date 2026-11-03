@@ -612,6 +612,7 @@
     "panel": {
       "title": "Personnaliser",
       "key": "Tonalité",
+      "keyCourt": "Ton",
       "keyOriginal": "(orig.)",
       "keyRecommended": "(reco.)",
       "keyBackToRecommended": "Revenir à la tonalité recommandée",
@@ -4093,6 +4094,8 @@
     "dixPremiers": "Les 10 premiers",
     "aucunChantLangue": "Aucun chant dans cette langue sur cette période.",
     "aucuneSetlistPeriode": "Aucune setlist publiée sur cette période.",
+    "aucuneSetlistPeriodeTitre": "Aucune setlist publiée sur cette période",
+    "voirDepuisDebut": "Voir depuis le début",
     "absentRecueil": "absent du recueil",
     "trierPar": "Trier par :",
     "trierParAria": "Trier par",

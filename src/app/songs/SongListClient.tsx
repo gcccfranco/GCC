@@ -325,7 +325,7 @@ export function SongListClient({ songs, themes, actif = null, erreur = false, on
       )}
 
       {/* Compteur + proposition de chant */}
-      <div className="flex items-center justify-between gap-3 mb-3">
+      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 mb-3">
         <p className="text-sm text-muted-foreground">
           {!chargee
             ? "\u00a0"
@@ -335,7 +335,7 @@ export function SongListClient({ songs, themes, actif = null, erreur = false, on
         </p>
         {/* Dès 768 px, « Proposer un chant » est dans l'en-tête (ChantsVolets, agencement v18 R7). */}
         <span className="flex items-center gap-3 md:hidden">
-          <BoutonStatistiques icone />
+          <BoutonStatistiques />
           <SongProposalDrawer />
         </span>
       </div>

@@ -118,7 +118,7 @@ async function accords(page: Page, n: number): Promise<string[]> {
   return lus.map((t) => t.trim()).filter((t) => /^[A-G]/.test(t)).slice(0, n);
 }
 
-const pilule = (page: Page) => page.getByTestId("tonalite-courante");
+const pilule = (page: Page) => page.getByTestId("tonalite-lettre");
 
 test.describe("page du chant", () => {
   test("À l'agneau : choisir Bm transpose les accords et la pilule", async ({ page }) => {
@@ -147,7 +147,7 @@ test.describe("page du chant", () => {
     await moins.click();
     await moins.click();
     await expect(pilule(page)).toHaveText(/^Am/);
-    await expect(pilule(page)).toContainText("orig.");
+    await expect(page.getByTestId("tonalite-courante")).toContainText("orig.");
     await moins.click();
     await expect(pilule(page)).toHaveText(/^G#m/);
     await expect.poll(() => accords(page, 3)).toEqual(["G#m", "E", "F#"]);
@@ -166,7 +166,7 @@ test.describe("page du chant", () => {
     await expect(pilule(page)).not.toHaveText(/^G#/);
     await moins.click();
     await expect(pilule(page)).toHaveText(/^G#/);
-    await expect(pilule(page)).toContainText("orig.");
+    await expect(page.getByTestId("tonalite-courante")).toContainText("orig.");
     await expect.poll(() => accords(page, 3)).toEqual(["G#", "Fm", "C#"]);
   });
 

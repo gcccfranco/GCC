@@ -781,13 +781,18 @@ export function SongView({
     if (ast.metadata.time) ligneTempo.push(ast.metadata.time);
     if (ast.metadata.tempo) {
       ligneTempo.push(
-        <span key="tempo" className="inline-flex items-baseline gap-0.5">
-          <span className="text-foreground/70 text-[15px] leading-none">♩</span>
-          {` = ${ast.metadata.tempo}`}
+        <span key="tempo">
+          <span className="text-foreground/70">♩</span>
+          {`\u202f=\u202f${ast.metadata.tempo}`}
         </span>
       );
     }
   }
+  // Lignes de crédit (auteur, référence biblique) : Atkinson d'abord, Source Han seulement pour les caractères
+  // chinois (Atkinson n'en a aucun) ; sans cela le latin d'un nom prenait la graisse Medium du chinois.
+  const pileCredit: React.CSSProperties | undefined = isZh
+    ? { fontFamily: `${chord_font.style.fontFamily}, ${zh_lyric_font.style.fontFamily}` }
+    : undefined;
   const enTete = (
       <div className="mb-0 pb-3 print:mb-3 border-b border-border">
         <div className="flex items-start justify-between gap-5">
@@ -811,11 +816,11 @@ export function SongView({
                 {ast.metadata.subtitle}
               </p>
             )}
-            <p className={`text-muted-foreground text-[13px] mt-1 ${isZh ? zh_lyric_font.className : chord_font.className}`}>
+            <p data-testid="auteur" className={`text-muted-foreground text-[12px] leading-4 mt-2 ${chord_font.className}`} style={pileCredit}>
               {ast.metadata.artist}
             </p>
             {pageChant && ast.metadata.bible && (
-              <p data-testid="reference-biblique" className={`text-muted-foreground/80 text-[12px] mt-0.5 ${isZh ? zh_lyric_font.className : chord_font.className}`}>
+              <p data-testid="reference-biblique" className={`text-muted-foreground/80 text-[12px] mt-0.5 ${chord_font.className}`} style={pileCredit}>
                 {ast.metadata.bible}
               </p>
             )}
@@ -832,7 +837,7 @@ export function SongView({
             )}
             {pageChant ? (
               ligneTempo.length > 0 && (
-                <span data-testid="ligne-tempo" className="text-muted-foreground text-[11px] font-medium flex flex-wrap items-baseline justify-end gap-x-1 whitespace-nowrap">
+                <span data-testid="ligne-tempo" className="text-foreground/70 text-[12px] md:text-[13px] font-medium flex flex-wrap items-baseline justify-end gap-x-1 whitespace-nowrap">
                   {ligneTempo.map((element, i) => (
                     <Fragment key={i}>
                       {i > 0 && <span aria-hidden="true">{" · "}</span>}

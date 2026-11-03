@@ -38,7 +38,10 @@ async function uneSeuleLigne(page: Page) {
   const r = rangee(page);
   // Une ligne : la hauteur d'un bouton (36 px) et ses marges (2 × 8 px), pas deux.
   await expect.poll(async () => (await r.boundingBox())!.height).toBeLessThanOrEqual(56);
-  expect(await r.evaluate((el) => el.scrollWidth - el.clientWidth), "rien ne déborde de la rangée").toBeLessThanOrEqual(1);
+  // Au toucher, la zone de 44 px (`::after`, src/lib/toucher44.ts) du dernier bouton dépasse de quelques pixels quand la rangée n'a
+  // plus de marge intérieure (deux volets tactiles seulement, chants-8 ; au téléphone, aucune tolérance) : `scrollWidth` la compte, l'œil non (les bords des éléments, eux, sont mesurés plus bas).
+  const toucher = await page.evaluate(() => (matchMedia("(pointer: coarse)").matches && innerWidth >= 1024 ? 6 : 0));
+  expect(await r.evaluate((el) => el.scrollWidth - el.clientWidth), "rien ne déborde de la rangée").toBeLessThanOrEqual(1 + toucher);
   // … ni dans sa marge intérieure, que `scrollWidth` ne compte pas.
   const depasse = await r.evaluate((el) => {
     const fin = el.getBoundingClientRect().right - parseFloat(getComputedStyle(el).paddingRight);
@@ -73,8 +76,10 @@ for (const chant of CHANTS) {
         const main = (await page.locator("main.song-zoom").boundingBox())!;
         const premier = (await rangee(page).locator(":scope > :visible").first().boundingBox())!;
         const dernier = boites.at(-1)!;
-        expect(Math.abs(premier.x - (main.x + 16)), "bord gauche de la partition").toBeLessThanOrEqual(2);
-        expect(Math.abs(dernier.x + dernier.width - (main.x + main.width - 16)), "bord droit de la partition").toBeLessThanOrEqual(2);
+        // Même marge intérieure que `main` : 16 px en un volet, 0 en deux volets (chants-8, les bords du chant sont ceux du volet).
+        const [gauche, droit] = await page.locator("main.song-zoom").evaluate((el) => [parseFloat(getComputedStyle(el).paddingLeft), parseFloat(getComputedStyle(el).paddingRight)]);
+        expect(Math.abs(premier.x - (main.x + gauche)), "bord gauche de la partition").toBeLessThanOrEqual(2);
+        expect(Math.abs(dernier.x + dernier.width - (main.x + main.width - droit)), "bord droit de la partition").toBeLessThanOrEqual(2);
         await capture(page, `barre-chant-${chant.zh ? "zh" : "fr"}`);
         // Q3 : le menu ⋯ ne garde que l'écoute, les couleurs, Personnaliser et Signaler.
         await b.getByRole("button", { name: "Plus d'actions" }).click();
@@ -124,7 +129,7 @@ for (const chant of CHANTS) {
 
     test("+1 demi-ton change la tonalité", async ({ page }) => {
       await ouvrir(page, chant.slug);
-      const courante = page.getByTestId("tonalite-courante");
+      const courante = page.getByTestId("tonalite-lettre");
       await expect(courante).toHaveText(new RegExp(`^${chant.tonalite}`));
       await barre(page).getByRole("button", { name: "+", exact: true }).click();
       await expect(courante).toHaveText(chant.plusUn);
@@ -221,3 +226,40 @@ test.describe("deux volets : partition et barre jusqu'à 900 px (Q8)", () => {
     });
   }
 });
+
+// chants-2 (docs/spec-corrections-design/chants.md) : au téléphone, les deux rangées de la barre sont
+// alignées sur la gouttière de 16 px.
+for (const largeur of [412, 390]) {
+  test(`téléphone ${largeur} px : le retour et le début de la 2e rangée sont à 16 px du bord`, async ({ page }, info) => {
+    test.skip(info.project.name !== "telephone", "la seconde rangée n'existe qu'au téléphone");
+    await page.setViewportSize({ width: largeur, height: 800 });
+    await ouvrir(page, "abba-pere");
+    const retour = (await barre(page).locator(".retour-chant").boundingBox())!;
+    const premierBouton = (await barre(page).locator(".actions-tel").getByRole("button").first().boundingBox())!;
+    expect(retour.x, "retour").toBe(16);
+    expect(premierBouton.x, "début de la 2e rangée").toBe(16);
+    const fin = (await barre(page).locator(".groupe-chant").boundingBox())!;
+    expect(fin.x + fin.width, "fin de la capsule à 16 px du bord droit").toBeLessThanOrEqual(largeur - 16 + 1);
+  });
+}
+
+// chants-3 : Accords et Pinyin actifs à l'encre pleine, aria-pressed, fond différent de l'éteint.
+for (const sombre of [false, true]) {
+  test(`Accords et Pinyin : aria-pressed et fond d'encre quand actifs (${sombre ? "sombre" : "clair"})`, async ({ page }) => {
+    await ouvrir(page, "一生爱你");
+    await page.evaluate((s) => document.documentElement.classList.toggle("dark", s), sombre);
+    const fond = (nom: string) => barre(page).getByRole("button", { name: nom, exact: true }).evaluate((el) => getComputedStyle(el).backgroundColor);
+    const encre = sombre ? "rgb(242, 242, 247)" : "rgb(28, 28, 30)";
+    for (const nom of ["Accords", "Pinyin"]) {
+      const bouton = barre(page).getByRole("button", { name: nom, exact: true });
+      await expect(bouton).toHaveAttribute("aria-pressed", "true");
+      await expect.poll(() => fond(nom), "actif : encre pleine").toBe(encre);
+      await bouton.click();
+      await expect(bouton).toHaveAttribute("aria-pressed", "false");
+      await expect.poll(() => fond(nom), "éteint : sans fond").not.toBe(encre);
+      await bouton.click();
+      await expect(bouton).toHaveAttribute("aria-pressed", "true");
+      await expect.poll(() => fond(nom)).toBe(encre);
+    }
+  });
+}

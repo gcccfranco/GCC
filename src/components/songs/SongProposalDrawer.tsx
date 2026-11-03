@@ -123,10 +123,10 @@ export function SongProposalDrawer({ enTete = false, controle }: { enTete?: bool
         <button
           type="button"
           onClick={() => setOpen(true)}
-          className="inline-flex items-center gap-1.5 text-sm font-semibold text-foreground underline-offset-2 hover:underline"
+          className="inline-flex h-11 items-center gap-1.5 text-sm font-semibold text-foreground underline-offset-2 hover:underline"
         >
           <Music4 className="h-4 w-4" />
-          {t("proposition.titre")}
+          {t("songs.list.proposer")}
         </button>
       )}
 

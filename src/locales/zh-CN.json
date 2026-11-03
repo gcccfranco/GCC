@@ -608,6 +608,7 @@
     "panel": {
       "title": "个性化设置",
       "key": "调性升降",
+      "keyCourt": "调",
       "keyOriginal": "(原调)",
       "keyRecommended": "(推荐)",
       "keyBackToRecommended": "回到推荐调",
@@ -4046,6 +4047,8 @@
     "dixPremiers": "前 10 名",
     "aucunChantLangue": "这段时间内没有这种语言的诗歌。",
     "aucuneSetlistPeriode": "这段时间内没有已发布的歌单。",
+    "aucuneSetlistPeriodeTitre": "这段时间内没有已发布的歌单",
+    "voirDepuisDebut": "改为从头开始",
     "absentRecueil": "不在诗歌本中",
     "trierPar": "排序：",
     "trierParAria": "排序方式",

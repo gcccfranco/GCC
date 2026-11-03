@@ -161,7 +161,7 @@ test.describe("en-tête et liste (A5, R1 à R3, R7, R10)", () => {
     await signInAs(page, MUSICIEN, PASSEES, "/songs");
     await listePrete(page);
     const dansEntete = enTete(page).getByRole("button", { name: "Proposer un chant" });
-    const dansListe = liste(page).getByRole("button", { name: "Proposer un nouveau chant" });
+    const dansListe = liste(page).getByRole("button", { name: "Proposer un chant" });
     if (estTelephone(info)) {
       await expect(dansEntete).toBeHidden();
       await expect(dansListe).toBeVisible();
@@ -175,6 +175,41 @@ test.describe("en-tête et liste (A5, R1 à R3, R7, R10)", () => {
     }
     await expect(page.getByRole("dialog").getByText("Proposer un nouveau chant")).toBeVisible();
   });
+
+  // chants-8 : tablette debout, liste sur une colonne — les actions de l'en-tête finissent où finissent la recherche et la liste.
+  test("tablette portrait : « Proposer un chant » finit au même x que la recherche (gouttière de 28 px)", async ({ page }, info) => {
+    test.skip(info.project.name !== "tablette", "tablette debout seulement");
+    await signInAs(page, MUSICIEN, PASSEES, "/songs");
+    await listePrete(page);
+    const [action, recherche] = await Promise.all([
+      enTete(page).getByRole("button", { name: "Proposer un chant" }).boundingBox(),
+      liste(page).getByRole("searchbox").boundingBox(),
+    ]);
+    expect(Math.abs(action!.x + action!.width - (recherche!.x + recherche!.width)), "même bord droit").toBeLessThanOrEqual(2);
+  });
+
+  // chants-5 (T1c) : « Statistiques » et « Proposer un chant » sont deux boutons libellés de 44 px au
+  // téléphone ; la ligne du compteur se replie sur la largeur réelle, sans débordement ni coupure.
+  for (const largeur of [412, 390, 360]) {
+    for (const filtre of [false, true]) {
+      test(`téléphone ${largeur} px${filtre ? ", filtre posé" : ""} : boutons de 44 px, ligne sans débordement`, async ({ page }, info) => {
+        test.skip(!estTelephone(info), "la ligne du compteur ne porte les boutons qu'au téléphone");
+        await page.setViewportSize({ width: largeur, height: 800 });
+        await signInAs(page, MUSICIEN, PASSEES, "/songs");
+        await listePrete(page);
+        if (filtre) await liste(page).locator("input[type=search]").fill("abba");
+        const stats = liste(page).getByRole("link", { name: "Statistiques" });
+        const proposer = liste(page).getByRole("button", { name: "Proposer un chant" });
+        await expect(stats).toBeVisible();
+        await expect(proposer).toBeVisible();
+        const [bS, bP] = await Promise.all([stats.boundingBox(), proposer.boundingBox()]);
+        expect(Math.round(bS!.height), "Statistiques : 44 px").toBe(44);
+        expect(Math.round(bP!.height), "Proposer : 44 px").toBe(44);
+        for (const b of [bS!, bP!]) expect(b.x + b.width, "dans l'écran").toBeLessThanOrEqual(largeur);
+        expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), "pas de débordement horizontal").toBe(true);
+      });
+    }
+  }
 });
 
 test.describe("le volet de droite avant d'avoir choisi (A5 à A8, grands écrans)", () => {

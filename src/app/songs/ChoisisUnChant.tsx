@@ -138,7 +138,7 @@ export function ChoisisUnChant() {
   );
 
   return (
-    <div data-choisis-un-chant className="relative flex flex-col gap-4 pb-12 pr-[var(--marge-page)]">
+    <div data-choisis-un-chant className="relative flex flex-col gap-4 pb-12 [container-type:inline-size]">
       <div>
         <h2 className="text-[24px] font-bold leading-[29px] tracking-[-0.02em] text-foreground">{t("songs.choose.title")}</h2>
         <p className="mt-1 text-[14px] text-muted-foreground">
@@ -150,7 +150,7 @@ export function ChoisisUnChant() {
         <section aria-labelledby="prochaines-setlists" className="mt-2">
           <h2 id="prochaines-setlists" className="text-[17px] font-bold text-foreground">{t("songs.choose.upcoming")}</h2>
           <p className="mt-0.5 text-[13px] text-muted-foreground">{t("songs.choose.upcomingHelp")}</p>
-          <div className="mt-4 grid gap-4 [grid-template-columns:repeat(auto-fill,minmax(216px,1fr))]">
+          <div className="mt-4 grid gap-4 [grid-template-columns:repeat(auto-fill,minmax(216px,300px))]">
             {prochaines.map((s) => (
               <CarteSetlist key={s.id} setlist={s} langue={i18n.language} />
             ))}
@@ -179,10 +179,12 @@ export function ChoisisUnChant() {
             </CarteChants>
           )}
           {nouveaux.length > 0 && (
-            <CarteChants titre={t("songs.choose.nouveaux")}>
-              {nouveaux.map((s) => (
-                <LigneChant key={s.slug} chant={s} sous={t("songs.choose.ajouteLe", { date: jourCourt(s.ajouteLe!, i18n.language) })} />
-              ))}
+            <CarteChants titre={t("songs.choose.nouveaux")} classe="carte-nouveaux">
+              <div className="nouveaux-chants grid gap-x-7">
+                {nouveaux.map((s) => (
+                  <LigneChant key={s.slug} chant={s} sous={t("songs.choose.ajouteLe", { date: jourCourt(s.ajouteLe!, i18n.language) })} />
+                ))}
+              </div>
             </CarteChants>
           )}
         </div>
@@ -205,9 +207,9 @@ export function ChoisisUnChant() {
 }
 
 /** Une carte titrée du volet (planche `carte`) : titre 15 px en gras, une aide à droite. */
-function CarteChants({ titre, aide, lien, children }: { titre: string; aide?: string; lien?: { href: string; label: string }; children: React.ReactNode }) {
+function CarteChants({ titre, aide, lien, classe, children }: { titre: string; aide?: string; lien?: { href: string; label: string }; classe?: string; children: React.ReactNode }) {
   return (
-    <section className="raised min-w-0 rounded-2xl px-[18px] pb-2 pt-3.5">
+    <section className={`raised min-w-0 rounded-2xl px-[18px] pb-2 pt-3.5${classe ? ` ${classe}` : ""}`}>
       {/* Une carte étroite (tablette couchée) passe l'aide à la ligne plutôt que de couper le titre. */}
       <div className="mb-1.5 flex flex-wrap items-baseline gap-x-2">
         <h3 className="text-[15px] font-bold text-foreground">{titre}</h3>

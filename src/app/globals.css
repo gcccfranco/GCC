@@ -630,6 +630,9 @@
 .chants-volets:where([data-sur-liste]) > .chants-chant,
 .chants-volets:where(:not([data-sur-liste])) > .chants-entete,
 .chants-volets:where(:not([data-sur-liste])) > .chants-liste { display: none; }
+/* Tablette debout, liste sur une colonne (chants-8, R2) : les actions de l'en-tête finissent où finissent la recherche
+   et la liste, à la gouttière de 28 px de l'index A–Z (`pr-7` de SongListClient). Deux volets : l'en-tête garde toute la largeur. */
+@media (min-width: 768px) { .chants-entete { padding-right: 1.75rem; } }
 
 /* Barre du chant, piste A (docs/spec-barre-chant.md, Q4) : libellés par priorité, jamais de
    deuxième ligne — tous (2), ceux des actions Vidéo et PDF seuls (1), aucun (0) ; Idées et ⋯
@@ -668,8 +671,8 @@
    06/10/2026 : bornés à `--largeur-lecture` et centrés, ils laissaient une bande vide à côté de la barre).
    Agencement v18 (R10, A5) : l'en-tête « Chants » sur toute la largeur, au-dessus des deux volets ;
    la liste est une carte en relief (rayon 16 px, sans filet) à `--marge-page` du bord, collante
-   20 px sous la barre du haut ; la page à `--ecart-volets` de la carte (« Choisis un chant » pose
-   lui-même la marge de droite : la page d'un chant garde ses marges, hors du lot). Le chant
+   20 px sous la barre du haut ; la page à `--ecart-volets` de la carte ; le volet du chant porte la marge de droite
+   (`.chants-chant`, chants-8 B) et le chant y perd ses marges intérieures. Le chant
    s'étire sur toute la rangée : un chant court sous une liste plus haute garde sa barre collée.
    L'index A–Z se centre dans `--cadre-index`, la part de la carte toujours à l'écran : page en haut,
    la carte part sous l'en-tête (104 px : 24 + titre 36 + 4 + sous-titre 20 + 20) et finit sous le
@@ -680,38 +683,41 @@
    colonne, l'intérieur de `JianpuSheet` n'est pas touché. */
 @media screen and (pointer: coarse) and (orientation: landscape) and (min-width: 1024px) {
   .chants-volets { display: grid; grid-template-columns: clamp(320px, 37%, 400px) minmax(0, 1fr); column-gap: var(--ecart-volets); align-items: start; padding-left: var(--marge-page); }
-  .chants-volets > .chants-entete { display: block; grid-column: 1 / -1; margin-left: calc(-1 * var(--marge-page)); }
+  .chants-volets > .chants-entete { display: block; grid-column: 1 / -1; margin-left: calc(-1 * var(--marge-page)); padding-right: 0; }
   .chants-volets > .chants-liste { --cadre-index: calc(100svh - var(--nav-h) - 104px); display: block; position: sticky; top: calc(var(--nav-h) + 20px); z-index: 1; max-height: calc(100svh - var(--nav-h) - 44px); margin-bottom: 24px; overflow-y: auto; overscroll-behavior: contain; border-radius: 16px; background-color: hsl(var(--raised)); box-shadow: var(--shadow-raised); }
   .chants-liste .chants-liste-fond { min-height: 0; }
   .chants-liste .chants-liste-corps { padding: 14px 16px 8px; }
-  .chants-volets > .chants-chant { display: block; min-width: 0; align-self: stretch; }
+  .chants-volets > .chants-chant { display: block; min-width: 0; align-self: stretch; padding-right: var(--marge-page); }
   .chants-chant .barre-chant { position: sticky; left: auto; right: auto; width: calc(100% * var(--zoom-chant, 1)); }
   .chants-chant .retour-chant:not([data-vers-setlist]) { display: none; }
   .chants-chant .song-zoom, .chants-chant .video-chant { margin-top: 0; }
+  .chants-chant :is(main.song-zoom, .rangee-chant) { padding-inline: 0; }
   .chants-chant :is(.song-zoom, .song-zoom > div, .rangee-chant) { max-width: 900px; }
 }
 @media screen and (pointer: fine) and (min-width: 1024px) {
   :root[data-barre="reduite"] .chants-volets { display: grid; grid-template-columns: clamp(320px, 37%, 400px) minmax(0, 1fr); column-gap: var(--ecart-volets); align-items: start; padding-left: var(--marge-page); }
-  :root[data-barre="reduite"] .chants-volets > .chants-entete { display: block; grid-column: 1 / -1; margin-left: calc(-1 * var(--marge-page)); }
+  :root[data-barre="reduite"] .chants-volets > .chants-entete { display: block; grid-column: 1 / -1; margin-left: calc(-1 * var(--marge-page)); padding-right: 0; }
   :root[data-barre="reduite"] .chants-volets > .chants-liste { --cadre-index: calc(100svh - var(--nav-h) - 104px); display: block; position: sticky; top: calc(var(--nav-h) + 20px); z-index: 1; max-height: calc(100svh - var(--nav-h) - 44px); margin-bottom: 24px; overflow-y: auto; overscroll-behavior: contain; border-radius: 16px; background-color: hsl(var(--raised)); box-shadow: var(--shadow-raised); }
   :root[data-barre="reduite"] .chants-liste .chants-liste-fond { min-height: 0; }
   :root[data-barre="reduite"] .chants-liste .chants-liste-corps { padding: 14px 16px 8px; }
-  :root[data-barre="reduite"] .chants-volets > .chants-chant { display: block; min-width: 0; align-self: stretch; }
+  :root[data-barre="reduite"] .chants-volets > .chants-chant { display: block; min-width: 0; align-self: stretch; padding-right: var(--marge-page); }
   :root[data-barre="reduite"] .chants-chant .barre-chant { position: sticky; left: auto; right: auto; width: calc(100% * var(--zoom-chant, 1)); }
   :root[data-barre="reduite"] .chants-chant .retour-chant:not([data-vers-setlist]) { display: none; }
   :root[data-barre="reduite"] .chants-chant .song-zoom, :root[data-barre="reduite"] .chants-chant .video-chant { margin-top: 0; }
+  :root[data-barre="reduite"] .chants-chant :is(main.song-zoom, .rangee-chant) { padding-inline: 0; }
   :root[data-barre="reduite"] .chants-chant :is(.song-zoom, .song-zoom > div, .rangee-chant) { max-width: 900px; }
 }
 @media screen and (pointer: fine) and (min-width: 1148px) {
   .chants-volets { display: grid; grid-template-columns: clamp(320px, 37%, 400px) minmax(0, 1fr); column-gap: var(--ecart-volets); align-items: start; padding-left: var(--marge-page); }
-  .chants-volets > .chants-entete { display: block; grid-column: 1 / -1; margin-left: calc(-1 * var(--marge-page)); }
+  .chants-volets > .chants-entete { display: block; grid-column: 1 / -1; margin-left: calc(-1 * var(--marge-page)); padding-right: 0; }
   .chants-volets > .chants-liste { --cadre-index: calc(100svh - var(--nav-h) - 104px); display: block; position: sticky; top: calc(var(--nav-h) + 20px); z-index: 1; max-height: calc(100svh - var(--nav-h) - 44px); margin-bottom: 24px; overflow-y: auto; overscroll-behavior: contain; border-radius: 16px; background-color: hsl(var(--raised)); box-shadow: var(--shadow-raised); }
   .chants-liste .chants-liste-fond { min-height: 0; }
   .chants-liste .chants-liste-corps { padding: 14px 16px 8px; }
-  .chants-volets > .chants-chant { display: block; min-width: 0; align-self: stretch; }
+  .chants-volets > .chants-chant { display: block; min-width: 0; align-self: stretch; padding-right: var(--marge-page); }
   .chants-chant .barre-chant { position: sticky; left: auto; right: auto; width: calc(100% * var(--zoom-chant, 1)); }
   .chants-chant .retour-chant:not([data-vers-setlist]) { display: none; }
   .chants-chant .song-zoom, .chants-chant .video-chant { margin-top: 0; }
+  .chants-chant :is(main.song-zoom, .rangee-chant) { padding-inline: 0; }
   .chants-chant :is(.song-zoom, .song-zoom > div, .rangee-chant) { max-width: 900px; }
 }
 
@@ -735,6 +741,14 @@
 @media (prefers-reduced-motion: reduce) {
   [data-volet][data-vaul-drawer][data-state="open"] { animation-name: volet-fondu !important; animation-duration: 200ms !important; }
   [data-volet][data-vaul-drawer][data-state="closed"] { animation-name: volet-fondu-sortie !important; animation-duration: 200ms !important; }
+}
+
+/* « Choisis un chant » (chants-9) : à partir de 520 px de contenu (volet de 560 px moins sa marge), « Nouveaux au
+   répertoire » prend la ligne et met ses chants sur deux colonnes, comme « Les plus chantés » ; en dessous, une colonne.
+   La largeur est celle du volet (conteneur `[data-choisis-un-chant]`), pas de la fenêtre. */
+@container (min-width: 520px) {
+  .carte-nouveaux { grid-column: 1 / -1; }
+  .nouveaux-chants { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
 /* Services et rôles du profil et de l'inscription (lot U4 bis, B5, Q10 et Q13) : les cartes des
