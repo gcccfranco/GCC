@@ -6,7 +6,8 @@
 // feuille est la carte de la saison réduite à ce réglage (`SaisonForm seul`) : même écriture à
 // chaque changement, même erreur sous le champ, rien d'écrit tant qu'elle s'affiche. Refermer la
 // feuille oublie un réglage refusé : le résumé dit ce qui est en base. « Terminé » enregistre d'abord la
-// plage en cours d'édition (comme son « OK ») et laisse la feuille ouverte si elle est refusée.
+// plage en cours d'édition (comme son « OK ») et laisse la feuille ouverte si elle est refusée ; une plage
+// ajoutée par « + Plage » et laissée intacte est oubliée.
 
 import { useRef, useState } from "react"
 import { useTranslation } from "react-i18next"

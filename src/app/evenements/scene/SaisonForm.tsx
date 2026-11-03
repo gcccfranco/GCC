@@ -27,7 +27,7 @@ export type SaisonPatch = Partial<Pick<Programme, "jourJ" | "debut" | "fin" | "p
 /** Un réglage seul (P9, une feuille du téléphone) ; les jours et les plages vont ensemble. */
 export type ReglageSeul = "jourJ" | "dates" | "joursPlages" | "duree" | "qui"
 
-/** « Terminé » de la feuille du téléphone : enregistre la plage en cours d'édition ; faux si elle est refusée. */
+/** « Terminé » de la feuille du téléphone : enregistre la plage en cours d'édition, sauf une nouvelle plage laissée intacte ; faux si elle est refusée. */
 export type SaisonFormHandle = { terminer: () => boolean }
 
 /** La période de réservation de l'édition de l'autre fête (Q8), et son titre pour l'erreur. */
@@ -190,7 +190,17 @@ export function SaisonForm({ programme, onSave, jourJCalcule, autre, onErreur, s
     return true
   }
 
-  useImperativeHandle(ref, () => ({ terminer: validerPlage }))
+  /** « Terminé » : comme « OK », sauf une nouvelle plage restée telle que « + Plage » l'a proposée, oubliée. */
+  function terminer() {
+    const proposee = s.plages.at(-1) ?? PLAGES_DEFAUT[0]
+    if (editeur?.index === null && editeur.plage.jour === proposee.jour && editeur.plage.debut === proposee.debut && editeur.plage.fin === proposee.fin) {
+      setEditeur(null)
+      return true
+    }
+    return validerPlage()
+  }
+
+  useImperativeHandle(ref, () => ({ terminer }))
 
   function retirerPlage() {
     if (editeur?.index == null) return
