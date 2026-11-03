@@ -12,6 +12,7 @@ export const meta = {
 }
 
 // args : { spec: "docs/spec-x.md", tranche: "T2", consigne: "quoi, où, critères", tests: ["tests/x.spec.ts"], base: "<commit avant la tranche>",
+//          echecsConnus?: ["tests/x.spec.ts:52 (rouge sur la base)"],
 //          preuve?: "essai réel à faire par le testeur, p. ex. banc horsligne sur build de production (scripts/rude-epreuve/README.md)" }
 // `preuve` : obligatoire dès qu'une tranche touche le service worker, le hors ligne, les notifications ou les droits — les tests
 // simulés n'ont pas vu, le 24/10/2026, une setlist ouverte par un lien jamais gardée hors ligne.
@@ -53,13 +54,25 @@ const VERDICT = {
   required: ['verdict', 'points', 'non_verifie'],
 }
 
-const tester = (n) => agent(
-  `Tranche ${A.tranche} (${A.spec}). Lance, dans l'ordre : \`npx tsc --noEmit\`, \`npm run lint\` (les avertissements ne comptent pas), puis ` +
-  (tests ? `\`npx playwright test ${tests} --reporter=line\` (les projets de playwright.config.ts : trois appareils, cinq pour une spec d'agencement).` : 'aucune spec Playwright (rien de nommé).') +
-  ` Ajoute à la passe Playwright les **specs voisines** : pour chaque fichier de \`git diff --name-only ${A.base}\`, les specs de tests/ qui citent son chemin ou son nom (\`grep -rlF\`), car une spec qui lit le code par texte casse au moindre changement de forme. **Huit au plus** : d'abord celles qui lisent le fichier par texte (readFileSync, fs), puis celles qui l'importent ; laisse celles qui ne font que naviguer vers une page (la suite complète de fin de lot les couvre). Au tour 1, liste-les dans \`commande\`, et dis celles que tu as laissées.` +
+// 03/11/2026 (Timothée, « oui pour 1, 2, 3, 4 ») : le testeur attend la fin de Playwright (le premier tour du lot CD
+// rendait son bilan pendant que la suite tournait, et toute la suite repartait au tour 2) ; à partir du tour 2 il ne
+// relance que les specs rouges ; les specs voisines se bornent à celles qui lisent un fichier du diff par texte, quatre
+// au plus (la suite complète de fin de lot couvre le reste) ; `echecsConnus` (args) liste les échecs déjà rouges sur la
+// base, qui ne comptent pas.
+const connus = (A.echecsConnus || []).join(' ; ')
+const tester = (n, rouges) => agent(
+  `Tranche ${A.tranche} (${A.spec}). Avant tout, vérifie qu'aucun \`next dev\` ni \`playwright test\` ne reste d'une passe précédente (\`pgrep -af "next dev|playwright test"\`) ; s'il en reste, arrête-les (\`pkill -f\`) : un serveur orphelin sur 3100/3101 ralentit ou bloque la suite. ` +
+  `Lance, dans l'ordre : \`npx tsc --noEmit\`, \`npm run lint\` (les avertissements ne comptent pas), puis ` +
+  (rouges && rouges.length
+    ? `seulement les specs restées rouges au tour précédent : \`npx playwright test ${rouges.join(' ')} --reporter=line\`.`
+    : (tests ? `\`npx playwright test ${tests} --reporter=line\` (les projets de playwright.config.ts : trois appareils, cinq pour une spec d'agencement).` : 'aucune spec Playwright (rien de nommé).') +
+      ` Ajoute à la passe les **specs voisines** : pour chaque fichier de \`git diff --name-only ${A.base}\`, les specs de tests/ qui le **lisent par texte** (readFileSync, fs, avec son chemin) — pas celles qui l'importent ou naviguent vers sa page. **Quatre au plus** ; liste-les dans \`commande\`, et dis celles que tu as laissées.`) +
+  ` **Attends la fin de la commande Playwright** avant de rendre ton bilan (sortie dans un fichier, \`timeout\` long, puis lecture par \`grep\`/\`tail\`) : un bilan rendu pendant que la suite tourne est faux.` +
   (A.preuve ? ` Puis fais la preuve réelle demandée, et compte chaque écart comme un échec : ${A.preuve}` : '') +
-  ` Rends chaque échec ; une erreur tsc ou lint compte comme un échec.`,
+  (connus ? ` Échecs déjà rouges sur la base, à ne PAS rendre comme échecs (cite-les dans \`commande\` s'ils réapparaissent) : ${connus}.` : '') +
+  ` Rends chaque autre échec ; une erreur tsc ou lint compte comme un échec. Un échec qui passe quand tu relances sa spec seule est une course : marque-le \`course\`.`,
   { agentType: 'testeur', schema: ECHECS, label: `tester:${A.tranche}:${n}`, phase: 'Tester' })
+const specsRouges = (r) => [...new Set(r.echecs.map((e) => (e.lieu.match(/tests\/[^\s:]+\.spec\.ts/) || [])[0]).filter(Boolean))]
 
 phase('Coder')
 const code = await agent(
@@ -68,17 +81,17 @@ const code = await agent(
 
 let t = await tester(1)
 let tours = 0
-while (t && t.echecs.length && tours < 2) {
+while (t && t.echecs.filter((e) => !e.course).length && tours < 2) {
   tours++
   await agent(
     `Tranche ${A.tranche} (${A.spec}). Les vérifications échouent :\n${JSON.stringify(t.echecs, null, 1)}\n\n` +
     `Corrige dans le périmètre de la consigne de départ :\n${A.consigne}\n\nUn échec marqué course, ou dans un test étranger à la tranche : n'y touche pas, rends-le en question. Ne désactive, n'ignore et n'affaiblis aucun test.`,
     { agentType: 'executant', label: `corriger:${A.tranche}:${tours}`, phase: 'Corriger' })
-  t = await tester(tours + 1)
+  t = await tester(tours + 1, specsRouges(t))
 }
 
 let conseil = null
-if (t && t.echecs.length) {
+if (t && t.echecs.filter((e) => !e.course).length) {
   // Conseiller : modèle de la session (Opus), lecture et diagnostic seulement.
   conseil = await agent(
     `Deux tours de correction n'ont pas suffi pour la tranche ${A.tranche} (${A.spec}). Échecs restants :\n${JSON.stringify(t.echecs, null, 1)}\n\n` +
@@ -87,7 +100,7 @@ if (t && t.echecs.length) {
   await agent(
     `Applique exactement ce diagnostic pour la tranche ${A.tranche} (${A.spec}) :\n${conseil}`,
     { agentType: 'executant', label: `appliquer-conseil:${A.tranche}`, phase: 'Corriger' })
-  t = await tester(tours + 2)
+  t = await tester(tours + 2, specsRouges(t))
 }
 
 const relu = await agent(

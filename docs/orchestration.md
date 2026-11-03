@@ -205,6 +205,12 @@ Règles à partir du 24/10/2026, 20 h :
 - **En parallèle quand les tranches sont indépendantes** (25/10/2026) : une session par tranche, chacune avec ses
   fichiers, sur la même branche. Les traductions vont chacune dans leur propre espace de clés, et l'Avancement de la
   spec est tenu par la session principale, ce qui évite les conflits de `git pull --rebase` sur les mêmes lignes.
-- **Specs voisines bornées à huit** dans `/tranche` (A6 : 2 h 45, dont une bonne part en specs voisines lourdes). La
+- **Specs voisines bornées à quatre, lues par texte seulement** (Timothée, 03/11/2026, lot CD) : seules les specs qui
+  lisent un fichier du diff par texte (`readFileSync`) accompagnent une tranche ; le testeur attend la fin de Playwright
+  avant de rendre son bilan (au premier essai il rendait pendant que la suite tournait, et les 1 945 tests repartaient au
+  tour 2), ne relance aux tours suivants que les specs rouges, arrête les serveurs `next dev` orphelins avant de lancer, et
+  ignore les échecs déjà rouges sur la base (`echecsConnus`). Les petites tranches voisines se groupent en un seul passage
+  de tests ; les tranches qui ne touchent pas les mêmes fichiers tournent dans des sessions parallèles.
+- *(Avant le 03/11/2026)* **Specs voisines bornées à huit** dans `/tranche` (A6 : 2 h 45, dont une bonne part en specs voisines lourdes). La
   suite complète, en fin de lot, se découpe en trois (`--shard=1/3`…), dans trois sessions de test légères en
   parallèle.
