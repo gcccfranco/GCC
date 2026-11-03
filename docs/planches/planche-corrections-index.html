@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="claude:viewport-fit-sides" content="cover">
+<title>Corrections du design</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+/* Page d'accueil des sept planches : une colonne de 760 px, les décisions d'abord, les planches ensuite. */
+:root{
+  --bg:#f2f2f4; --surface:#ffffff; --ink:#1c1c1e; --muted:#6c6c72; --line:#e3e3e8;
+  --reco:#1f7a4d; --reco-bg:#e2f2e9; --grave:#b3261d; --pres:#c24a07; --warn:#9a5600; --warn-bg:#fdefd8;
+  --f:"Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",sans-serif; --mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#000000; --surface:#1c1c1e; --ink:#f2f2f7; --muted:#98989f; --line:#38383c;
+  --reco:#7fd4a4; --reco-bg:#16301f; --grave:#ff7d72; --pres:#fb923c; --warn:#f2b45e; --warn-bg:#3a2a12; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#000000; --surface:#1c1c1e; --ink:#f2f2f7; --muted:#98989f; --line:#38383c;
+  --reco:#7fd4a4; --reco-bg:#16301f; --grave:#ff7d72; --pres:#fb923c; --warn:#f2b45e; --warn-bg:#3a2a12; color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 var(--f);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:32px 64px}
+main{max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:36px}
+h1{font-size:clamp(28px,5vw,36px);line-height:1.15;margin:0;text-wrap:balance}
+h2{font-size:21px;margin:0 0 12px}
+h3{font-size:16px;margin:0}
+p{margin:0}
+.sur{font-size:13px;color:var(--muted);font-weight:700;letter-spacing:.04em;text-transform:uppercase}
+.chapo{font-size:18px;max-width:65ch}
+.meta{font-size:14px;color:var(--muted);max-width:65ch}
+.planches{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+@media (max-width:560px){.planches{grid-template-columns:minmax(0,1fr)}}
+a.planche{display:flex;flex-direction:column;gap:4px;background:var(--surface);border-radius:14px;padding:16px 18px;color:inherit;text-decoration:none;min-height:44px}
+a.planche:hover h3{text-decoration:underline}
+a.planche:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+a.planche span{font-size:14px;color:var(--muted)}
+a.planche .nb{font-variant-numeric:tabular-nums;color:var(--ink);font-weight:700}
+table{width:100%;border-collapse:collapse;font-size:15px}
+.tab{background:var(--surface);border-radius:14px;padding:4px 16px;overflow-x:auto}
+th,td{text-align:left;padding:10px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+tr:last-child td{border-bottom:0}
+th{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.03em}
+.reco{display:inline-block;background:var(--reco-bg);color:var(--reco);font-weight:700;font-size:13px;border-radius:999px;padding:2px 9px;white-space:nowrap}
+.vig{background:var(--warn-bg);color:var(--ink);border-radius:12px;padding:12px 14px;font-size:14px}
+.vig b{color:var(--warn)}
+code{font:500 .86em var(--mono)}
+ol{margin:0;padding-left:22px;display:flex;flex-direction:column;gap:8px}
+footer{font-size:13px;color:var(--muted)}
+</style>
+</head>
+<body>
+<main>
+<header style="display:flex;flex-direction:column;gap:12px">
+  <p class="sur">Suites de l'audit du design · 3 novembre 2026</p>
+  <h1>Ce qu'on propose de corriger, et comment</h1>
+  <p class="chapo">Pour chaque défaut : la vraie capture d'aujourd'hui, deux ou trois propositions dessinées, et une recommandation. Rien n'est codé avant ton feu vert.</p>
+  <p class="meta">93 constats de l'audit du 2 novembre, répartis en sept planches. Chaque planche a été préparée par le directeur artistique, dessinée par le maquettiste, relue par le critique, puis retouchée.</p>
+</header>
+
+<section>
+  <h2>Les sept planches</h2>
+  <div class="planches">
+    <a class="planche" href="planche-corrections-partout.html"><h3>Partout</h3><span>Sélecteur d'espace, icônes, recette de surface, contrôles, typographie, questions ouvertes, ordre de livraison</span></a>
+    <a class="planche" href="planche-corrections-chants.html"><h3>Chants</h3><span><span class="nb">10</span> constats, dont 6 avec propositions dessinées</span></a>
+    <a class="planche" href="planche-corrections-dimanche.html"><h3>Le dimanche</h3><span><span class="nb">24</span> constats, dont 11 avec propositions : setlists, éditeur, mode louange</span></a>
+    <a class="planche" href="planche-corrections-quotidien.html"><h3>Quotidien</h3><span><span class="nb">13</span> constats, dont 6 avec propositions : accueil, planning, mes services</span></a>
+    <a class="planche" href="planche-corrections-eglise.html"><h3>Église</h3><span><span class="nb">18</span> constats, dont 6 avec propositions : évènements, guide, connexion</span></a>
+    <a class="planche" href="planche-corrections-musiciens.html"><h3>Musiciens</h3><span><span class="nb">11</span> constats, dont 2 avec propositions : harmonie, accords</span></a>
+    <a class="planche" href="planche-corrections-back-office.html"><h3>Back-office</h3><span><span class="nb">13</span> constats, dont 5 avec propositions : à faire, équipes</span></a>
+  </div>
+</section>
+
+<section>
+  <h2>Les grandes décisions, en un coup d'œil</h2>
+  <div class="tab"><table>
+    <thead><tr><th>Sujet</th><th>Options</th><th>Recommandation</th></tr></thead>
+    <tbody>
+      <tr><td><b>Recette de surface</b></td><td>A une carte et une ombre · B le filet · C fond de groupe gris clair, comme le sombre</td><td><span class="reco">C</span> retire la fadeur ; revient sur le fond blanc du 20/09</td></tr>
+      <tr><td><b>Contrôles de choix</b></td><td>A quatre contrôles (avec une feuille de filtres) · B trois : rail, pilule, menu</td><td><span class="reco">B</span> tout l'état reste visible</td></tr>
+      <tr><td><b>Typographie</b></td><td>A les six crans actuels · B une échelle ajustée</td><td><span class="reco">B</span> plancher 12 px, 13 px sur grand écran, largeur selon le contenu</td></tr>
+      <tr><td><b>Titres de chants</b></td><td>A capitales partout · B casse normale partout · C casse normale sur la page, capitales en mode louange</td><td><span class="reco">C</span></td></tr>
+      <tr><td><b>Halos</b></td><td>A tout garder · B seulement ceux qui portent une couleur de service ou de section</td><td><span class="reco">B</span></td></tr>
+      <tr><td><b>Chinois</b></td><td>Guide et fiches d'Harmonie : assumer le français, traduire l'essentiel, tout traduire</td><td><span class="reco">Guide traduit</span> après les chantiers ; Harmonie : bandeau « en français pour l'instant »</td></tr>
+      <tr><td><b>« Back-Office » coupé</b></td><td>A resserrer · B renommer « Gestion » · C un menu d'espace</td><td><span class="reco">A</span> sur ordinateur ; C au téléphone pour la cloche (planche Back-office)</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section>
+  <h2>Ordre de livraison proposé</h2>
+  <ol>
+    <li><b>Corrections immédiates</b> : les défauts visibles et les « de près » des six planches de pages, avec la casse des titres et les halos si tu les tranches. Un go, sans autre planche.</li>
+    <li><b>Recette de surface</b> : d'abord les jetons et trois écrans pilotes, regardés sur les quatre dispositions, puis le reste. Go séparé.</li>
+    <li><b>Contrôles de choix</b> : un composant de menu, puis Statistiques, Setlists, Chants, Harmonie, Équipes. Go séparé.</li>
+    <li><b>Typographie et largeurs</b> : en dernier, parce que ça touche presque tout. Go séparé.</li>
+    <li><b>Contenu chinois</b> : captures du guide en 中文 et bandeau d'Harmonie, après les chantiers 2 à 4 pour ne pas refaire les captures deux fois.</li>
+  </ol>
+</section>
+
+<p class="vig"><b>Pour valider</b> : dis pour chaque sujet la lettre que tu retiens (ou « comme recommandé »), et quelles tranches tu veux lancer. Chaque planche finit par sa liste « À décider ».</p>
+
+<footer>Source : <code>docs/audit-design-2026-11-02.md</code>. Les « avant » sont de vraies captures du site, avec des comptes et des noms fictifs.</footer>
+</main>
+</body>
+</html>
