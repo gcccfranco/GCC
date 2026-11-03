@@ -10,7 +10,6 @@ import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react
 import Link from "next/link";
 import { ChevronRight, Link2, Lock } from "lucide-react";
 import { Trans, useTranslation } from "react-i18next";
-import { Halo } from "@/components/layout/Halo";
 import { libellePoste, postesDeCompte } from "@/lib/groupes/personnes";
 import { EnTetePage } from "@/components/layout/EnTetePage";
 import { BoutonNouveau } from "@/components/layout/BoutonNouveau";
@@ -398,7 +397,6 @@ export function OrganigrammeGroupe({
   if (!app) return page;
   return (
     <div className="relative">
-      <Halo variant="moi" color="hsl(var(--foreground))" />
       <div className="relative">{page}</div>
     </div>
   );

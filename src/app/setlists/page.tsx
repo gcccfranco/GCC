@@ -32,7 +32,6 @@ import { useDisposition } from "@/hooks/useDisposition";
 import { chargerIndexChants } from "@/hooks/useSongsIndex";
 import type { SongIndexEntry } from "@/types/song";
 import { PullToRefresh } from "@/components/layout/PullToRefresh";
-import { Halo } from "@/components/layout/Halo";
 import { FondDeBarre } from "@/components/layout/FondDeBarre";
 import { langueCourte } from "@/lib/utils/formatDate";
 import { useSetlistsNavState, type Tab } from "@/hooks/useSetlistsNavState";
@@ -609,7 +608,6 @@ export default function SetlistsPage() {
   return (
     <div className="relative min-h-screen bg-background">
       <PullToRefresh />
-      <Halo color="var(--chord-color)" />
       {enTete}
       {grand ? (
         <DeuxVolets

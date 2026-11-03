@@ -24,7 +24,6 @@ import {
   Sparkles,
 } from "lucide-react";
 import { RequireAuth } from "@/components/auth/RequireAuth";
-import { Halo } from "@/components/layout/Halo";
 import { EnTetePage } from "@/components/layout/EnTetePage";
 import { useDisposition } from "@/hooks/useDisposition";
 import { ouvrirVisite } from "@/components/onboarding/Accueil";
@@ -171,7 +170,6 @@ export default function GuidePage() {
   return (
     <RequireAuth>
       <div className="relative min-h-screen">
-        <Halo variant="moi" color="hsl(var(--foreground))" />
         {/* A14 (agencement v18) : l'en-tête commun, « ‹ Moi », sans icône ; en grand, la lecture (R14) :
             sommaire de 260 px collant à gauche, colonne de 720 px, calés sur le titre. */}
         <div className="relative pb-16">

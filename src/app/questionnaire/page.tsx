@@ -17,7 +17,6 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { EnTetePage } from "@/components/layout/EnTetePage";
-import { Halo } from "@/components/layout/Halo";
 import { useDisposition } from "@/hooks/useDisposition";
 import { Impasse } from "@/components/layout/Impasse";
 import { Squelette } from "@/components/layout/Squelette";
@@ -259,7 +258,6 @@ export default function QuestionnairePage() {
   if (done) {
     return (
       <div className="relative min-h-screen pb-10">
-        <Halo variant="moi" color="hsl(var(--foreground))" />
         <div className="relative">
           {entete}
           {lecture(
@@ -332,7 +330,6 @@ export default function QuestionnairePage() {
 
   return (
     <div className="relative min-h-screen pb-10">
-      <Halo variant="moi" color="hsl(var(--foreground))" />
       <div className="relative">
         {entete}
         {lecture(

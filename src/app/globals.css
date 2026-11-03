@@ -81,29 +81,16 @@
     opacity: 0.1;
     filter: blur(40px);
   }
-  /* Fiche d'une setlist, puis page d'un chant (à droite) : géométries des planches C et B.
+  /* Fiche d'une setlist : géométrie de la planche C.
      Chaque variante vaut aussi pour la copie que repeignent les barres (V8) : celle-ci ne
      porte pas la classe de la page, elle la lit par `:has()`. */
   .halo-fiche::before, :root:has(.halo-fiche) .barre-halo::before { left: -40px; top: calc(-60px + var(--sat)); width: 300px; height: 220px; opacity: 0.14; filter: blur(44px); }
-  /* « Moi » (V7) : l'écran n'appartient à aucune section, donc l'encre — plus discrète
-     que les couleurs, un gris franc se lirait comme une salissure et non comme une lumière. */
-  .halo-moi::before, :root:has(.halo-moi) .barre-halo::before { opacity: 0.08; }
-  /* Le halo par défaut (`HaloParDefaut`, retours du 06/10/2026) : l'encre de Moi, sur les pages
-     sans couleur à elles ; il s'efface dès qu'une page pose son propre halo. */
-  .halo-defaut::before, :root:not(:has(.halo:not(.halo-defaut, .barre-halo))) .barre-halo::before { opacity: 0.08; }
-  :root:has(.halo:not(.halo-defaut, .barre-halo)) .halo-defaut { display: none; }
-  /* Au Back-Office (agencement v18, R12) : le halo par défaut prend le bleu gris de la planche
-     (`--halo-back-office`), à l'opacité de la planche ; la copie des barres suit. */
-  .halo-defaut[data-back-office]::before,
-  :root:has(.halo-defaut[data-back-office]):not(:has(.halo:not(.halo-defaut, .barre-halo))) .barre-halo::before { opacity: 0.8; }
-  .halo-chant::before, :root:has(.halo-chant) .barre-halo::before { left: auto; right: -80px; top: calc(-60px + var(--sat)); width: 300px; height: 220px; opacity: 0.12; filter: blur(44px); }
   /* Grand écran (ordinateur, tablette en paysage ; tranché le 20/09/2026 au soir) : la
      colonne de contenu est centrée, le halo des planches resterait coincé dans le coin.
      Agrandi à l'écran, il repasse sous le logo et atteint le titre. */
   @media (min-width: 1024px) {
     .halo { height: 560px; }
     .halo::before, .halo-fiche::before, :root:has(.halo-fiche) .barre-halo::before { left: -140px; top: calc(-200px + var(--sat)); width: 860px; height: 560px; filter: blur(90px); }
-    .halo-chant::before, :root:has(.halo-chant) .barre-halo::before { left: auto; right: -140px; top: calc(-200px + var(--sat)); width: 860px; height: 560px; filter: blur(90px); }
   }
   @media print { .halo { display: none; } }
   /* Fond des barres (V8, 27/09/2026, `FondDeBarre`) : le texte passait derrière le logo et
@@ -130,6 +117,8 @@
   /* Une barre qui glisse au défilement est transformée, donc le repère de la copie fixe :
      celle-ci remonte de la hauteur où la barre est posée (`--barre-top`, sur la barre). */
   .barre-halo { top: calc(-1 * var(--barre-top, 0px)); }
+  /* Une page sans halo (partout-q2) ne laisse aucune copie sous les barres. */
+  :root:not(:has(.halo:not(.barre-halo))) .barre-halo { display: none; }
   /* Fondu d'entrée des pages (PageTransition) : l'opacité seule. Le `animate-in` de
      tailwindcss-animate porte un `transform`, qui ferait de la page le repère des
      éléments fixes le temps du fondu : le halo sauterait de la hauteur de la navbar. */
@@ -688,39 +677,36 @@
    qu'il porte) et la rangée de la barre vont jusqu'à 900 px au lieu de 672 ; la 简谱 suit la
    colonne, l'intérieur de `JianpuSheet` n'est pas touché. */
 @media screen and (pointer: coarse) and (orientation: landscape) and (min-width: 1024px) {
-  .chants-volets { display: grid; grid-template-columns: clamp(320px, 37%, 400px) minmax(0, 1fr); column-gap: var(--ecart-volets); align-items: start; padding-left: var(--marge-page); --halo-chants: var(--sec-verse); }
+  .chants-volets { display: grid; grid-template-columns: clamp(320px, 37%, 400px) minmax(0, 1fr); column-gap: var(--ecart-volets); align-items: start; padding-left: var(--marge-page); }
   .chants-volets > .chants-entete { display: block; grid-column: 1 / -1; margin-left: calc(-1 * var(--marge-page)); }
   .chants-volets > .chants-liste { --cadre-index: calc(100svh - var(--nav-h) - 104px); display: block; position: sticky; top: calc(var(--nav-h) + 20px); z-index: 1; max-height: calc(100svh - var(--nav-h) - 44px); margin-bottom: 24px; overflow-y: auto; overscroll-behavior: contain; border-radius: 16px; background-color: hsl(var(--raised)); box-shadow: var(--shadow-raised); }
   .chants-liste .chants-liste-fond { min-height: 0; }
   .chants-liste .chants-liste-corps { padding: 14px 16px 8px; }
   .chants-volets > .chants-chant { display: block; min-width: 0; align-self: stretch; }
-  .halo-chants::before { left: auto; right: -140px; opacity: 0.12; }
   .chants-chant .barre-chant { position: sticky; left: auto; right: auto; width: calc(100% * var(--zoom-chant, 1)); }
   .chants-chant .retour-chant:not([data-vers-setlist]) { display: none; }
   .chants-chant .song-zoom, .chants-chant .video-chant { margin-top: 0; }
   .chants-chant :is(.song-zoom, .song-zoom > div, .rangee-chant) { max-width: 900px; }
 }
 @media screen and (pointer: fine) and (min-width: 1024px) {
-  :root[data-barre="reduite"] .chants-volets { display: grid; grid-template-columns: clamp(320px, 37%, 400px) minmax(0, 1fr); column-gap: var(--ecart-volets); align-items: start; padding-left: var(--marge-page); --halo-chants: var(--sec-verse); }
+  :root[data-barre="reduite"] .chants-volets { display: grid; grid-template-columns: clamp(320px, 37%, 400px) minmax(0, 1fr); column-gap: var(--ecart-volets); align-items: start; padding-left: var(--marge-page); }
   :root[data-barre="reduite"] .chants-volets > .chants-entete { display: block; grid-column: 1 / -1; margin-left: calc(-1 * var(--marge-page)); }
   :root[data-barre="reduite"] .chants-volets > .chants-liste { --cadre-index: calc(100svh - var(--nav-h) - 104px); display: block; position: sticky; top: calc(var(--nav-h) + 20px); z-index: 1; max-height: calc(100svh - var(--nav-h) - 44px); margin-bottom: 24px; overflow-y: auto; overscroll-behavior: contain; border-radius: 16px; background-color: hsl(var(--raised)); box-shadow: var(--shadow-raised); }
   :root[data-barre="reduite"] .chants-liste .chants-liste-fond { min-height: 0; }
   :root[data-barre="reduite"] .chants-liste .chants-liste-corps { padding: 14px 16px 8px; }
   :root[data-barre="reduite"] .chants-volets > .chants-chant { display: block; min-width: 0; align-self: stretch; }
-  :root[data-barre="reduite"] .halo-chants::before { left: auto; right: -140px; opacity: 0.12; }
   :root[data-barre="reduite"] .chants-chant .barre-chant { position: sticky; left: auto; right: auto; width: calc(100% * var(--zoom-chant, 1)); }
   :root[data-barre="reduite"] .chants-chant .retour-chant:not([data-vers-setlist]) { display: none; }
   :root[data-barre="reduite"] .chants-chant .song-zoom, :root[data-barre="reduite"] .chants-chant .video-chant { margin-top: 0; }
   :root[data-barre="reduite"] .chants-chant :is(.song-zoom, .song-zoom > div, .rangee-chant) { max-width: 900px; }
 }
 @media screen and (pointer: fine) and (min-width: 1148px) {
-  .chants-volets { display: grid; grid-template-columns: clamp(320px, 37%, 400px) minmax(0, 1fr); column-gap: var(--ecart-volets); align-items: start; padding-left: var(--marge-page); --halo-chants: var(--sec-verse); }
+  .chants-volets { display: grid; grid-template-columns: clamp(320px, 37%, 400px) minmax(0, 1fr); column-gap: var(--ecart-volets); align-items: start; padding-left: var(--marge-page); }
   .chants-volets > .chants-entete { display: block; grid-column: 1 / -1; margin-left: calc(-1 * var(--marge-page)); }
   .chants-volets > .chants-liste { --cadre-index: calc(100svh - var(--nav-h) - 104px); display: block; position: sticky; top: calc(var(--nav-h) + 20px); z-index: 1; max-height: calc(100svh - var(--nav-h) - 44px); margin-bottom: 24px; overflow-y: auto; overscroll-behavior: contain; border-radius: 16px; background-color: hsl(var(--raised)); box-shadow: var(--shadow-raised); }
   .chants-liste .chants-liste-fond { min-height: 0; }
   .chants-liste .chants-liste-corps { padding: 14px 16px 8px; }
   .chants-volets > .chants-chant { display: block; min-width: 0; align-self: stretch; }
-  .halo-chants::before { left: auto; right: -140px; opacity: 0.12; }
   .chants-chant .barre-chant { position: sticky; left: auto; right: auto; width: calc(100% * var(--zoom-chant, 1)); }
   .chants-chant .retour-chant:not([data-vers-setlist]) { display: none; }
   .chants-chant .song-zoom, .chants-chant .video-chant { margin-top: 0; }
@@ -757,20 +743,10 @@
   .grille-services-cartes { grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; }
 }
 
-/* Panneau de marque de la connexion et de l'inscription (lot U4 bis, B5, Q13) : le rouge du logo
-   et le bleu des accords en deux halos très pâles (planches `connexion-*`, `inscription-*`). */
-.panneau-marque {
-  background:
-    radial-gradient(ellipse 75% 55% at 15% 12%, rgb(207 42 32 / 0.13), transparent 70%),
-    radial-gradient(ellipse 75% 55% at 85% 88%, rgb(63 99 207 / 0.12), transparent 70%),
-    hsl(var(--secondary) / 0.5);
-}
-.dark .panneau-marque {
-  background:
-    radial-gradient(ellipse 75% 55% at 15% 12%, rgb(207 42 32 / 0.22), transparent 70%),
-    radial-gradient(ellipse 75% 55% at 85% 88%, rgb(63 99 207 / 0.2), transparent 70%),
-    hsl(var(--secondary) / 0.5);
-}
+/* Panneau de marque de la connexion et de l'inscription (partout-q2) : un panneau uni, le logo seul le décore ;
+   la teinte `--secondary / 0.5` est posée sur `--background` pour qu'aucun bloc placé derrière (le panneau est
+   `sticky`) ne transparaisse. */
+.panneau-marque { background: linear-gradient(hsl(var(--secondary) / 0.5), hsl(var(--secondary) / 0.5)), hsl(var(--background)); }
 
 /* Équipes en bandeau (lot U4 bis, B6, Q12) : la page tient dans la hauteur de l'écran, sous la
    navbar et au-dessus de la cale de la barre du bas (`MobileTabBar`, 78 px + `--tabbar-bottom`) ;
@@ -794,15 +770,12 @@
                        tablette couchée. Rien n'est centré dans une borne : la place gagnée en
                        réduisant la barre va au contenu.
    --ecart-volets      entre la liste-carte et la fiche : 24 px, 20 px barre réduite.
-   --halo-back-office  le halo par défaut sous `/back-office` (bleu gris de la planche).
    Mêmes requêtes que le bloc « Lot U4 » : la disposition se décide ici. */
 @layer base {
   :root {
     --marge-page: 16px;
     --ecart-volets: 24px;
-    --halo-back-office: #e4e7f6;
   }
-  .dark { --halo-back-office: #262b45; }
   @media screen and (min-width: 768px) {
     :root { --marge-page: 24px; }
   }

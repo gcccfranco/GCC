@@ -139,7 +139,6 @@ export function ChoisisUnChant() {
 
   return (
     <div data-choisis-un-chant className="relative flex flex-col gap-4 pb-12 pr-[var(--marge-page)]">
-      {/* Son halo est celui de /songs (songs/ChantsVolets), réglé par le CSS. */}
       <div>
         <h2 className="text-[24px] font-bold leading-[29px] tracking-[-0.02em] text-foreground">{t("songs.choose.title")}</h2>
         <p className="mt-1 text-[14px] text-muted-foreground">

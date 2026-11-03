@@ -17,7 +17,6 @@ import { Pencil, X } from "lucide-react";
 import { EnTetePage } from "@/components/layout/EnTetePage";
 import { Pilules } from "@/components/layout/Onglets";
 import { useDisposition } from "@/hooks/useDisposition";
-import { Halo } from "@/components/layout/Halo";
 import { BandeauEquipes } from "@/components/equipes/BandeauEquipes";
 import { Drawer, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
@@ -203,7 +202,6 @@ export function EquipesClient({
   if (bandeau) {
     return (
       <div className="relative">
-        <Halo variant="moi" color="hsl(var(--foreground))" />
         <div className="equipes-ecran relative flex flex-col">
           {enTeteApp}
           <BandeauEquipes
@@ -218,7 +216,6 @@ export function EquipesClient({
   // App, vue des musiciens.
   return (
     <div className="relative">
-      <Halo variant="moi" color="hsl(var(--foreground))" />
       <div className="relative">
         {enTeteApp}
         <div className="px-[var(--marge-page)] pb-10">

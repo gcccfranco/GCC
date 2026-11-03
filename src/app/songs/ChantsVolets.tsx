@@ -3,7 +3,6 @@
 import { usePathname } from "next/navigation";
 import { useTranslation } from "react-i18next";
 import { EnTetePage } from "@/components/layout/EnTetePage";
-import { Halo } from "@/components/layout/Halo";
 import { BoutonStatistiques } from "@/components/songs/BoutonStatistiques";
 import { SongProposalDrawer } from "@/components/songs/SongProposalDrawer";
 import { useDeuxVolets } from "@/hooks/useDeuxVolets";
@@ -36,11 +35,6 @@ export function ChantsVolets({ themes, nombre, children }: { themes: Theme[]; no
 
   return (
     <div className="chants-volets" data-sur-liste={surListe ? "" : undefined}>
-      {/* Le halo de /songs, un seul, juste dès le premier affichage : en un volet celui de la
-          liste (bleu des accords, à gauche) ; en deux volets celui de « Choisis un chant »
-          (vert des couplets, à droite, planche `chants-accueil`) — le CSS en décide
-          (`--halo-chants`, `.halo-chants`). Sur la page d'un chant, c'est le sien. */}
-      {surListe && <Halo variant="chants" color="var(--halo-chants, var(--chord-color))" />}
       {/* Affiché par le CSS là où la liste l'est : dès le rendu du serveur, à sa place. */}
       <div className="chants-entete">
         <EnTetePage

@@ -27,7 +27,6 @@ import { parseChordPro } from "@/lib/chordpro/parser";
 import { transposeAST } from "@/lib/transposeAST";
 import { useScrollDirection } from "@/hooks/useScrollDirection";
 import { useDeuxVolets } from "@/hooks/useDeuxVolets";
-import { Halo } from "@/components/layout/Halo";
 import { FondDeBarre } from "@/components/layout/FondDeBarre";
 import { keyLike, semitonesTo } from "@/lib/transpose";
 import { idDeSection } from "@/lib/setlist/sectionOrigins";
@@ -338,7 +337,6 @@ function useVersionDeLaSetlist(slug: string, setlistId: string | null, position:
   return (
     <AccordsProvider aide chant={{ slug: song.slug, titre: song.title }}>
       <div className="relative min-h-screen print:min-h-0 bg-background" style={{ width: `${100 / fontScale}%`, "--zoom-chant": fontScale } as React.CSSProperties}>
-        <Halo variant="chant" color="var(--sec-chorus)" />
         {/* Barre de contrôles */}
         <div ref={barreRef} data-testid="barre-outils" className={`barre-chant print:hidden fixed left-[var(--barre-laterale)] right-0 top-[var(--nav-h)] [--barre-top:var(--nav-h)] [--barre-left:var(--barre-laterale)] z-10 material-chrome transition-transform duration-300 ${ scrollVisible ? "translate-y-0" : barPinned ? "-translate-y-[calc(var(--nav-h)-var(--sat))]" : "-translate-y-[calc(100%+var(--nav-h))]"}`}>
           <FondDeBarre sousNavbar />

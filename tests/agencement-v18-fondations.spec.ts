@@ -1,7 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import { ADMIN_EMAIL, signInAs, type FakeProfile } from "./helpers/fakeSession";
 import {
-  HALO_BACK_OFFICE, HALO_BACK_OFFICE_SOMBRE, enTete, estGrandEcran, estTelephone, fenetreDuSite, interdireDialoguesNatifs,
+  enTete, estGrandEcran, estTelephone, fenetreDuSite, interdireDialoguesNatifs,
   margeAttendue, ongletsRail, ouvrirAvecBarre, pilules, verifierAgencement, verifierPleineLargeur, zoneDeContenu,
 } from "./helpers/agencement";
 
@@ -256,40 +256,12 @@ test.describe("DeuxVolets en liste-carte (R10)", () => {
   });
 });
 
-test.describe("Halo du Back-Office (R12)", () => {
-  test("sous /back-office, sans halo à elle, la page prend le bleu gris", async ({ page }) => {
-    await ouvrir(page, "/back-office");
-    const halo = page.getByTestId("halo-defaut");
-    await expect(halo).toBeVisible();
-    const [variable, bleuGris] = await page.evaluate(() => {
-      const st = getComputedStyle(document.documentElement);
-      return [st.getPropertyValue("--halo").trim(), st.getPropertyValue("--halo-back-office").trim()];
+test.describe("Pas de halo par défaut (partout-q2)", () => {
+  for (const chemin of ["/back-office", "/profil"]) {
+    test(`${chemin} : ni halo ni --halo`, async ({ page }) => {
+      await ouvrir(page, chemin);
+      await expect(page.locator('[data-testid="halo"], [data-testid="halo-defaut"]')).toHaveCount(0);
+      expect(await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue("--halo").trim())).toBe("");
     });
-    expect(bleuGris).toBe(HALO_BACK_OFFICE);
-    expect(variable).toBe(HALO_BACK_OFFICE);
-    expect(await halo.evaluate((el) => getComputedStyle(el, "::before").backgroundColor)).toBe("rgb(228, 231, 246)");
-    await capture(page, "f1-halo-back-office");
-  });
-
-  test("en sombre, le halo du Back-Office prend la valeur sombre du bleu gris", async ({ page }) => {
-    await page.emulateMedia({ colorScheme: "dark" });
-    await ouvrir(page, "/back-office");
-    await expect(page.locator("html")).toHaveClass(/\bdark\b/);
-    const halo = page.getByTestId("halo-defaut");
-    await expect(halo).toBeVisible();
-    const lire = () => page.evaluate(() => {
-      const st = getComputedStyle(document.documentElement);
-      return [st.getPropertyValue("--halo").trim(), st.getPropertyValue("--halo-back-office").trim()];
-    });
-    await expect.poll(lire).toEqual([HALO_BACK_OFFICE_SOMBRE, HALO_BACK_OFFICE_SOMBRE]);
-    expect(await halo.evaluate((el) => getComputedStyle(el, "::before").backgroundColor)).toBe("rgb(38, 43, 69)");
-    await capture(page, "f1-halo-back-office-sombre");
-  });
-
-  test("hors du Back-Office (Mon profil), le halo par défaut reste l'encre", async ({ page }) => {
-    await ouvrir(page, "/profil");
-    const halo = page.getByTestId("halo-defaut");
-    await expect(halo).toBeVisible();
-    expect(await halo.evaluate((el) => getComputedStyle(el, "::before").backgroundColor)).toBe("rgb(28, 28, 30)");
-  });
+  }
 });

@@ -22,7 +22,6 @@ import { MesPresidences } from "@/components/stats/MesPresidences";
 import { useAccesHarmonie } from "@/lib/harmonie/useHarmonie";
 import { RequireAuth } from "@/components/auth/RequireAuth";
 import { EnTetePage } from "@/components/layout/EnTetePage";
-import { Halo } from "@/components/layout/Halo";
 import { Group, GroupRow } from "@/components/ui/group";
 import { ouvrirVisite } from "@/components/onboarding/Accueil";
 import { ReportDialog } from "@/components/report/ReportDialog";
@@ -171,7 +170,6 @@ function MoiClient() {
 
   return (
     <div className="relative">
-      <Halo variant="moi" color="hsl(var(--foreground))" />
       <div className="relative pb-10">
         <EnTetePage titre={t("moi.title")} sousTitre={admin ? `${name || user?.email} · ${t("moi.admin")}` : name || user?.email} />
         <div className="px-[var(--marge-page)]">{contenu}</div>

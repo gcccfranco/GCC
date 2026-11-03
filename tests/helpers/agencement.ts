@@ -117,21 +117,12 @@ export async function verifierSansDebordement(page: Page) {
   expect(await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth), "aucun défilement horizontal").toBeLessThanOrEqual(0);
 }
 
-/** Le bleu gris du halo du Back-Office (R12), clair et sombre. */
-export const HALO_BACK_OFFICE = "#e4e7f6";
-export const HALO_BACK_OFFICE_SOMBRE = "#262b45";
-
-/** Un halo visible ; sous `/back-office`, sans halo propre à la page, `--halo` vaut le bleu gris. */
+/** Au plus un halo visible (partout-q2 : seules les pages porteuses d'une couleur en ont un) ; sans halo, rien sur la racine. */
 export async function verifierHalo(page: Page) {
-  const halos = page.locator('[data-testid="halo"], [data-testid="halo-defaut"]').filter({ visible: true });
-  await expect(halos, "un halo visible").toHaveCount(1);
-  const auBackOffice = new URL(page.url()).pathname.startsWith("/back-office");
-  if (auBackOffice && (await halos.getAttribute("data-testid")) === "halo-defaut") {
-    const [halo, attendu] = await page.evaluate(() => {
-      const st = getComputedStyle(document.documentElement);
-      return [st.getPropertyValue("--halo").trim(), st.getPropertyValue("--halo-back-office").trim()];
-    });
-    expect(halo, "halo du Back-Office : le bleu gris").toBe(attendu);
+  const halos = page.locator('[data-testid="halo"]').filter({ visible: true });
+  expect(await halos.count(), "un halo au plus").toBeLessThanOrEqual(1);
+  if ((await halos.count()) === 0) {
+    expect(await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue("--halo").trim()), "sans halo, pas de --halo").toBe("");
   }
 }
 

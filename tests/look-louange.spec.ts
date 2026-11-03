@@ -2,6 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 import * as fs from "fs";
 import * as path from "path";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
+import { attendreMiseEnPage, onStage } from "./helpers/louange";
 import { ouvrirPartitions } from "./helpers/setlist";
 
 // Lot 4 « Nouveau look », tranche T3 : louange (docs/spec-look.md).
@@ -91,6 +92,33 @@ test.describe("louange (T3) : page du chant", () => {
   }
 });
 
+// partout-q1 : casse normale sur la page chant, capitales gardées sur la scène du mode louange.
+test.describe("louange : casse des titres de chants (partout-q1)", () => {
+  test("le titre est en casse normale sur la page chant, en capitales sur la scène", async ({ page }) => {
+    await page.goto("/songs/abba-pere");
+    const titre = page.getByRole("heading", { level: 1, name: /abba/i }).last();
+    await expect(titre).toBeVisible();
+    expect(await titre.evaluate((el) => getComputedStyle(el).textTransform)).toBe("none");
+    expect(await titre.evaluate((el) => getComputedStyle(el).letterSpacing)).not.toBe("normal");
+
+    await page.addInitScript(() => localStorage.setItem("perf-role-preset", "pianiste"));
+    const setlist = {
+      title: "Culte du 14 septembre", leader: "Présidence", category: "Culte Francophone", date: "2026-09-14", language: "mixed",
+      notes: "", ownerId: "uid-owner", isPrivate: false,
+      items: [{
+        keyOverride: null, showChords: true, showPinyin: true, useJianpu: false, structureOverride: null, sectionNotes: {}, notes: "",
+        songSlug: "abba-pere", position: 1,
+      }],
+    };
+    await signInAs(page, MUSICIEN, { "setlists/setlist-louange": setlist }, "/setlists/setlist-louange");
+    await page.getByRole("button", { name: /Mode Louange/ }).click();
+    await attendreMiseEnPage(page);
+    const titreScene = onStage(page, "[data-entete-chant] h2").first();
+    await expect(titreScene).toBeVisible();
+    expect(await titreScene.evaluate((el) => getComputedStyle(el).textTransform)).toBe("uppercase");
+  });
+});
+
 // Retour de Timothée du 20/09/2026 : en vue partitions, la barre d'outils de la
 // setlist passait sur deux lignes sur son iPhone (402 pt) — 374 pt de commandes
 // pour 370 pt de large. Une seule ligne à toute largeur de téléphone ; sous
@@ -167,6 +195,9 @@ test.describe("louange : barre d'outils de la setlist, une seule ligne sur tél�
       // Setlist G (docs/spec-deux-volets.md, Q3 et Q11) : « Affichage » remplace
       // Pinyin dans la barre ; la bascule Liste | Partitions est sous l'en-tête.
       await expect(barre.getByRole("button", { name: "Affichage" })).toBeVisible();
+      // La barre glisse (transition-transform) quand la page défile : la mesurer à l'arrêt, sinon un
+      // décalage fractionnaire donne 31,999996 px au lieu de 32 sous charge.
+      await expect.poll(() => barre.evaluate((el) => getComputedStyle(el).transform)).toMatch(/^(none|matrix\(1, 0, 0, 1, 0, 0\))$/);
 
       const boites = await barre.locator("a, button").evaluateAll((els) =>
         els

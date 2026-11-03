@@ -250,15 +250,20 @@ test.describe("barres (5C1, V8) : opaques, elles repeignent la page qu'elles cac
     expect((await barres(page)).map((b) => b.deborde)).toEqual(sansNavbar() ? [FONDU] : [1, FONDU]);
   });
 
-  // Rien ne dépend de React : ni bande blanche ni halo absent le temps qu'il démarre.
-  test("dès le premier affichage, avant que React ne démarre, la navbar repeint déjà le halo", async ({ page }) => {
+  // Rien ne dépend de React : ni bande blanche le temps qu'il démarre. Lot CD (partout-q2) : /songs n'a plus de halo,
+  // donc la navbar n'en peint aucune copie, dès le premier affichage (les pages à halo — Planning, fiche de setlist,
+  // scène — sont derrière la connexion : leur copie se vérifie hydratée, plus haut).
+  test("dès le premier affichage, avant que React ne démarre, la navbar couvre la page et ne peint aucune copie de halo", async ({ page }) => {
     test.skip(sansNavbar(), "là où il y a une navbar : pas sur ordinateur (lot U4)");
     await page.route(/\/_next\/.*\.js(\?|$)/, (route) => route.abort());
     await page.goto("/songs");
     await page.locator("header").first().waitFor();
     expect((await barres(page)).map((b) => b.couvre)).toEqual([true]);
-    const halo = await page.evaluate(() => getComputedStyle(document.querySelector("header .barre-halo")!, "::before").backgroundColor);
-    expect(halo, "la copie du halo a sa couleur").not.toBe("rgba(0, 0, 0, 0)");
+    const copie = await page.evaluate(() => {
+      const el = document.querySelector("header .barre-halo");
+      return el ? getComputedStyle(el).display : "absente";
+    });
+    expect(copie, "aucune copie de halo visible sous la navbar").toMatch(/^(none|absente)$/);
   });
 
   // Qui demande moins de transparence garde des barres pleines.

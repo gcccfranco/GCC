@@ -127,3 +127,20 @@ fait un seul passage avec la suivante quand c'est possible) ; T1c, T1e et T1g to
   page relance une seule requête de notifications », 0 au lieu de 1, cinq projets). Courses vues sous charge, vertes
   seules : `organigrammes-groupes.spec.ts:816`, `reunions.spec.ts:268`, `:274`. Lint : deux `require("node:fs")` des specs
   de captures de l'audit design passés en `import` (erreurs antérieures à la tranche).
+
+### T1b · Titres et halos — fait
+- Page chant : titre en casse normale, `tracking-[-0.02em]` ; mode louange et PDF gardent les capitales (partout-q1).
+- Halos (partout-q2, décision B ; point à confirmer n° 1 tranché : chant et liste des chants partent) : retirés de
+  `HaloParDefaut` (supprimé, avec `.halo-defaut` et `--halo-back-office`), Moi, Équipes, guide, questionnaire,
+  organigramme, chant, liste des chants (`--halo-chants`), setlists ; `Halo.tsx` ne garde que `page` et `fiche`.
+  Restent : Planning, fiche de setlist, scène des évènements (dans le code, le calendrier et les fiches d'évènements
+  n'en avaient déjà pas). Une règle `:root:not(:has(.halo:not(.barre-halo))) .barre-halo { display: none }` empêche
+  toute copie sous les barres d'une page sans halo.
+- Connexion : panneau de marque uni, `--secondary / 0.5` posé sur `--background` (la teinte seule laissait
+  transparaître deux blocs derrière le panneau `sticky`, vu à 1 440 px).
+- Tests adaptés : `halo-partout`, `look-halo`, `look-halo-defilement`, `look-louange` (titre `none` sur la page,
+  `uppercase` sur la scène, qui est un `h2`), `navigation-grand-ecran` (halo mesuré sur Planning), `look-barres`
+  (premier affichage sans React : aucune copie de halo sous la navbar), `agencement-v18-fondations`, `helpers/agencement`.
+  `look-louange` : la barre de la setlist se mesure à l'arrêt (course de sous-pixel sous charge, 31,999996 px).
+- **Écarts** : en clair, le panneau de marque a presque le gris de la barre latérale (critique : finition) ; valeur
+  de la spec gardée. Aucun test ne prouve que « Proposer un chant » redevient `#1c1c1e` (rien ne le teinte plus).
