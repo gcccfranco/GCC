@@ -144,3 +144,20 @@ fait un seul passage avec la suivante quand c'est possible) ; T1c, T1e et T1g to
   `look-louange` : la barre de la setlist se mesure à l'arrêt (course de sous-pixel sous charge, 31,999996 px).
 - **Écarts** : en clair, le panneau de marque a presque le gris de la barre latérale (critique : finition) ; valeur
   de la spec gardée. Aucun test ne prouve que « Proposer un chant » redevient `#1c1c1e` (rien ne le teinte plus).
+
+### Découpage parallèle (03/11/2026)
+T1c, T1e et T1g tournent dans trois sessions parallèles. `musiciens.md` passe de T1e à T1g : elle partage `Catalogue`,
+`EnTeteHarmonie`, `FicheHarmonie` et `SommaireCours` avec `harmonie.md`. T1e = `quotidien.md` + `eglise.md`.
+
+### T1c · Chants — fait (`6b9cd5a`, session parallèle)
+- chants-2, -3, -4, -5a, -8 (trois blocs en volets, tablette debout à 28 px), -9, -10, -11, -14 ; chants-5b et chants-6
+  restent en T3. Clés nouvelles : `customize.panel.keyCourt`, `stats.aucuneSetlistPeriodeTitre`, `stats.voirDepuisDebut`
+  (zh à faire relire).
+- **Tranché au code** : « Nouveaux au répertoire » prend toute la ligne dès 520 px de contenu ; la racine de « Choisis un
+  chant » perd son `pr` (marge comptée deux fois) ; en deux volets tactiles, 6 px de tolérance sur `scrollWidth` (zone
+  `::after` de 44 px), aucune au téléphone. Critique prise : au téléphone « Statistiques » devient un lien texte comme
+  « Proposer » ; 4 px entre les pastilles Accords et Pinyin actives ; « Ton » se coupe avant la lettre.
+- **Écarts** : ♩ petit et suivi d'un vide sous Linux (police de repli), à regarder sur un vrai téléphone ; `EtatVide`
+  `role=status` englobe le bouton (finition) ; les états vides `tousJoues`, `choisirDebut`, `aucunARedecouvrir` restent en
+  carte ; `stats.aucuneSetlistPeriode` est du code mort (signalé, non supprimé).
+- **Question pour Timothée** : « 调 D » ou l'usage « D调 » ?
