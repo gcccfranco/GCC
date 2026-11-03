@@ -96,6 +96,11 @@ Demande de Timothée : « créer une équipe de design ». Trois agents, plus `r
 | **`critique-design`** | Opus (Sonnet jusqu'au 03/11/2026), lecture seule | `impeccable` (allégé), `avoid-ai-design`, `web-design-guidelines` (+ signes d'`unslop`) | critique d'une planche (dans `/planche`) ou, lancé à la main par la conversation principale après `/tranche`, d'une tranche qui change l'apparence ; verdict prouvé par capture ou `chemin:ligne` |
 | `regard` | Sonnet, lecture seule | — | première passe sur les captures |
 
+**Économies (Timothée, 03/11/2026)** : les planches ont fait les deux tiers des jetons de la session du 02-03/11.
+Désormais le maquettiste ne dessine que les constats « premier coup d'œil » et « à regarder de près » (les finitions en
+une ligne), ne prend que trois captures (390 px clair, 1 440 px clair, 390 px sombre) et corrige dans la même passe ;
+une retouche ne se relance que pour un défaut visible.
+
 Le directeur artistique est sur Opus parce que proposer une direction est du jugement ; il **propose**, la
 conversation principale et Timothée **décident**. Les zones gelées (`docs/audit-ui-apple-design.md` § 2) bornent
 les trois agents. `avoid-ai-design` range le « crème + terracotta » parmi les clichés : la critique le signale
