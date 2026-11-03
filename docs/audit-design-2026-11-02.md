@@ -97,6 +97,18 @@ Les pages musicales sont construites avec les mêmes pièces ; les pages de gest
   halo gris par défaut.
 - **Contenu d'Harmonie et captures du guide en chinois** : à traduire, ou assumé en français ?
 
+## 5 bis. Décisions de Timothée (03/11/2026)
+
+Sur les planches de corrections (`docs/planches/planche-corrections-*.html`) :
+- **Recette de surface : C**, fond de groupe gris clair (`#f2f2f7`) sur les pages de liste et de gestion, groupes
+  blancs sans ombre, pages de lecture blanches.
+- **Contrôles de choix : B**, trois contrôles (rail segmenté, pastille filtre, un seul menu déroulant).
+- **Titres de chants : C**, casse normale sur la page chant, capitales gardées en mode louange ; PDF inchangé.
+- **Halos : B**, seulement ceux qui portent une couleur de service ou de section.
+
+Restent à trancher : l'échelle typographique, le contenu chinois (guide, Harmonie), les choix constat par constat et
+l'ordre de livraison. Rien de codé : chaque tranche attend son go.
+
 ## 6. Limites
 
 - Captures statiques : ni mouvement, ni survol, ni menus ou feuilles ouverts.
