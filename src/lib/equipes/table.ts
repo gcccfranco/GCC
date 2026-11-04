@@ -26,7 +26,7 @@ export function cleNomEquipe(id: string, court = false): string {
 export const EQUIPES: EquipeDef[] = [
   { id: "orga", nom: "TEAM ORGA", soustitre: "Coordination générale", cle: "orga" },
   { id: "comite-franco", nom: "COMITÉ FRANCO", soustitre: "", cle: "comite franco" },
-  { id: "da", nom: "TEAM DA", soustitre: "Direction Artistique", cle: "da" },
+  { id: "da", nom: "TEAM DA", soustitre: "Direction artistique", cle: "da" },
   { id: "medias", nom: "TEAM MÉDIAS", soustitre: "Photo, Vidéo", cle: "medias" },
   { id: "developpement", nom: "TEAM DÉVELOPPEMENT", soustitre: "GCCLouange, Siteweb, Livret digital", cle: "developpement" },
   { id: "regie", nom: "TEAM RÉGIE", soustitre: "Sono Live & PPT", cle: "regie" },

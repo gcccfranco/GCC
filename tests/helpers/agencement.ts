@@ -68,8 +68,8 @@ export const pilules = (page: Page) => page.locator('[data-onglets="pilules"]');
  * Un seul `header[data-entete-page]` visible, un seul h1 dedans, à la bonne taille ; le h1 part de
  * la zone + la marge (au pixel près) ; `premierBloc` (le premier bloc de contenu sous l'en-tête,
  * par défaut l'élément qui suit l'en-tête) commence au même x. Avec `colonne` (règle de largeur du
- * 25/10/2026 : une lecture ou une liste seule tient dans une colonne de 960 px, centrée), le bloc est
- * centré dans la zone dès qu'elle est plus large que la colonne et ses deux marges ; sinon, au x du titre.
+ * 25/10/2026 : une lecture ou une liste seule tient dans une colonne de 960 px, calée sur le titre
+ * depuis quotidien-5), le bloc commence au x du titre ; `colonne` ne sert plus qu'au contrôle de largeur.
  */
 export async function verifierEnTete(page: Page, options: { premierBloc?: Locator; colonne?: number } = {}) {
   const entete = enTete(page).filter({ visible: true });
@@ -105,10 +105,9 @@ export async function verifierEnTete(page: Page, options: { premierBloc?: Locato
       const r = e.getBoundingClientRect();
       return { x: r.x, contenu: r.x };
     }, zone.gauche);
-    const centre = options.colonne !== undefined && zone.droite - zone.gauche - 2 * marge > options.colonne;
-    const attendu = centre ? zone.gauche + (zone.droite - zone.gauche - options.colonne!) / 2 : zone.gauche + marge;
-    expect(Math.abs(contenu - attendu) <= 1 || (!centre && Math.abs(x - attendu) <= 1),
-      `le premier bloc commence au x ${centre ? "de la colonne centrée" : "du titre"} (bloc ${Math.round(x)}, contenu ${Math.round(contenu)}, attendu ${attendu})`).toBe(true);
+    const attendu = zone.gauche + marge;
+    expect(Math.abs(contenu - attendu) <= 1 || Math.abs(x - attendu) <= 1,
+      `le premier bloc commence au x du titre (bloc ${Math.round(x)}, contenu ${Math.round(contenu)}, attendu ${attendu})`).toBe(true);
   }
 }
 

@@ -69,8 +69,8 @@ export function AFaire({ titre }: { titre: string }) {
                 <Drama className="h-[18px] w-[18px]" />
               </span>
               <span className="min-w-0 flex-1">
-                <b className="block break-words text-[15px] font-semibold text-foreground">{t("backOffice.aFaire.sceneDesFetes.titre")}</b>
-                <span className="block break-words text-[13px] text-muted-foreground">{t("backOffice.aFaire.sceneDesFetes.sousTitre")}</span>
+                <b className="block text-balance break-words text-[15px] font-semibold text-foreground">{t("backOffice.aFaire.sceneDesFetes.titre")}</b>
+                <span className="block text-balance break-words text-[13px] text-muted-foreground">{t("backOffice.aFaire.sceneDesFetes.sousTitre")}</span>
               </span>
               <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
             </Link>

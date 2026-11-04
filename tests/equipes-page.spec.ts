@@ -55,6 +55,8 @@ test.describe("la page d'une équipe dans l'app (BO4)", () => {
     await expect(page.getByRole("heading", { name: "DA", level: 1 })).toBeVisible();
     await expect(page.getByRole("heading", { level: 2 })).toHaveText(["Tâches", "Réunions", "Membres"]);
     await expect(page.getByText("3 membres · référent : Otto Verdane")).toBeVisible();
+    // back-office-11 : le rôle de l'équipe sur sa ligne, puis le nombre de membres (deux lignes, dans cet ordre).
+    await expect(page.locator("header[data-entete-page] h1 + p > span")).toHaveText(["Direction artistique", "3 membres · référent : Otto Verdane"]);
     const taches = section(page, "Tâches");
     await expect(taches.getByText("Rendre le visuel de rentrée")).toBeVisible();
     await expect(taches.getByText("Affiche de Noël")).toBeVisible();
@@ -117,6 +119,18 @@ test.describe("la page d'une équipe dans l'app (BO4)", () => {
     await expect(marque).toContainText("Équipes");
   });
 
+  test("« ‹ Moi » : zone de toucher de 44 px sans changer le dessin, un toucher à 20 px au-dessus du centre mène à /moi (back-office-9)", async ({ page }) => {
+    await ouvrir(page, MIRA, "/equipes/da");
+    await expect(page.getByRole("heading", { name: "DA", level: 1 })).toBeVisible();
+    test.skip(!(await page.evaluate(() => matchMedia("(pointer: coarse)").matches)), "la zone de 44 px est celle du doigt : appareils tactiles");
+    const retour = page.locator("header[data-entete-page]").getByRole("link", { name: "Moi" });
+    expect(parseFloat(await retour.evaluate((el) => getComputedStyle(el, "::after").height)), "hauteur du ::after").toBeGreaterThanOrEqual(44);
+    const b = (await retour.boundingBox())!;
+    expect(b.height, "le dessin ne grandit pas").toBeLessThan(44);
+    await page.touchscreen.tap(b.x + b.width / 2, b.y + b.height / 2 - 20);
+    await expect(page).toHaveURL(/\/moi\/?$/);
+  });
+
   test("/equipes en 中文 : la marque dit « 团队 » et « ‹ 我 » est au-dessus du titre", async ({ page }, info) => {
     await ouvrir(page, MIRA, "/equipes", { zh: true });
     const marque = estGrandEcran(info) ? page.getByTestId("label-section") : page.locator("header.barre-haut .brand-nom");
@@ -148,6 +162,16 @@ test.describe("la page d'une équipe au Back-Office (BO7)", () => {
     // Le retour de la fiche (« ‹ DA » en grand, « ‹ Tâches » en un volet) ramène à la page de l'équipe.
     await page.locator("header[data-entete-page]").getByRole("link", { name: estGrandEcran(test.info()) ? "DA" : "Tâches", exact: true }).click();
     await expect(page).toHaveURL(/\/back-office\/equipes\/da\/?$/);
+  });
+
+  test("titre court, rôle puis effectif : en 中文 le rôle « 美术设计 » est sur sa propre ligne ; une équipe sans rôle n'a que l'effectif (back-office-11)", async ({ page }) => {
+    await ouvrir(page, ADMIN, "/back-office/equipes/da", { zh: true });
+    const lignes = page.locator("header[data-entete-page] h1 + p > span");
+    await expect(lignes).toHaveCount(2);
+    await expect(lignes.first()).toHaveText("美术设计");
+    await page.goto("/back-office/equipes/traduction", { waitUntil: "domcontentloaded" });
+    await expect(page.locator("header[data-entete-page] h1")).toBeVisible();
+    await expect(page.locator("header[data-entete-page] h1 + p > span")).toHaveCount(0);
   });
 
   test("/back-office/taches/da redirige vers la page de l'équipe ; /back-office/taches vers Équipes", async ({ page }) => {
@@ -214,17 +238,41 @@ test.describe("agencement et captures", () => {
 // BO-G, 2 : la page d'une équipe prend la largeur utile de la zone (la règle d'« À faire »), plus de plafond à 720 px.
 test.describe("BO-G : largeur de la page d'une équipe, « sans compte »", () => {
   for (const [nom, adresse] of [["Back-Office", "/back-office/equipes/da"], ["app", "/equipes/da"]] as const) {
-    test(`${nom} : les cartes prennent la largeur utile de la zone`, async ({ page }) => {
+    test(`${nom} : les cartes prennent la largeur utile de la zone ; deux colonnes dès que la barre latérale est montrée (back-office-10)`, async ({ page }, info) => {
       await ouvrir(page, ADMIN, adresse);
       await expect(page.getByRole("heading", { name: "Tâches", level: 2 })).toBeVisible();
       const zone = await zoneDeContenu(page);
       const marge = await margeAttendue(page);
       const utile = Math.min(1440, zone.droite - zone.gauche) - 2 * marge;
+      const deux = estGrandEcran(info);
+      const attendu: Record<string, number> = deux
+        ? { Tâches: utile - 332, Réunions: 300, Membres: 300 }
+        : { Tâches: utile, Réunions: utile, Membres: utile };
       for (const titre of ["Tâches", "Réunions", "Membres"]) {
         const carte = section(page, titre).locator("div").first();
         const largeur = (await carte.boundingBox())!.width;
-        expect(Math.round(largeur), `${titre} : toute la largeur utile (${utile})`).toBeGreaterThanOrEqual(Math.round(utile) - 2);
-        expect(largeur, `${titre} : plus de plafond à 720 px`).toBeGreaterThan(utile > 760 ? 720 : 0);
+        expect(Math.round(largeur), `${titre} : ${attendu[titre]} px`).toBeGreaterThanOrEqual(Math.round(attendu[titre]) - 2);
+        expect(Math.round(largeur), `${titre} : ${attendu[titre]} px`).toBeLessThanOrEqual(Math.round(attendu[titre]) + 2);
+        expect(largeur, `${titre} : plus de plafond à 720 px`).toBeGreaterThan(attendu[titre] > 760 ? 720 : 0);
+      }
+      // back-office-10 : Réunions à droite de Tâches, hauts alignés ; une seule colonne sinon (Réunions sous Tâches).
+      const t = (await section(page, "Tâches").boundingBox())!;
+      const r = (await section(page, "Réunions").boundingBox())!;
+      const m = (await section(page, "Membres").boundingBox())!;
+      if (deux) {
+        expect(r.x, "Réunions à droite de Tâches").toBeGreaterThanOrEqual(t.x + t.width);
+        expect(Math.abs(r.y - t.y), "hauts alignés").toBeLessThanOrEqual(1);
+        expect(m.y, "Membres sous Réunions").toBeGreaterThan(r.y + r.height - 1);
+        expect(Math.abs(m.x - r.x), "même colonne").toBeLessThanOrEqual(1);
+        if (nom === "Back-Office") {
+          // Le bouton reste au bord droit de la colonne de gauche, avant la colonne de droite.
+          const nouvelle = (await page.getByRole("link", { name: "Nouvelle tâche" }).boundingBox())!;
+          expect(nouvelle.x + nouvelle.width, "« Nouvelle tâche » dans la colonne Tâches").toBeLessThanOrEqual(t.x + t.width + 1);
+          expect(nouvelle.x + nouvelle.width, "…et avant Réunions").toBeLessThan(r.x);
+        }
+      } else {
+        expect(r.y, "Réunions sous Tâches").toBeGreaterThan(t.y + t.height - 1);
+        expect(Math.abs(r.x - t.x)).toBeLessThanOrEqual(1);
       }
     });
   }

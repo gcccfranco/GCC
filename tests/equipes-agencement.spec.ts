@@ -100,6 +100,20 @@ test("organigramme : aucun nom d'équipe ni de sous-groupe coupé, les flèches 
     const f = (await suivantes.boundingBox())!;
     const b = (await bandeau.boundingBox())!;
     expect(f.y + f.height, "au-dessus des colonnes").toBeLessThanOrEqual(b.y + 1);
+    // back-office-5 : flèches de 36 px habillées comme les pilules (gris, ni ombre ni relief), alignées sur le bas de la dernière rangée.
+    expect(Math.round(f.width), "flèche de 36 px").toBe(36);
+    expect(Math.round(f.height), "flèche de 36 px").toBe(36);
+    expect(await suivantes.evaluate((el) => getComputedStyle(el).boxShadow), "ni ombre ni relief").toBe("none");
+    const bas = Math.max(...(await Promise.all((await page.locator("[data-pilule]").all()).map(async (p) => { const r = (await p.boundingBox())!; return r.y + r.height; }))));
+    expect(Math.abs(f.y + f.height - bas), "bas des flèches = bas de la dernière rangée de pilules").toBeLessThanOrEqual(1);
+    const precedentes = page.getByRole("button", { name: "Équipes précédentes" });
+    await suivantes.click();
+    await expect(precedentes).toBeVisible();
+    if (await suivantes.count()) {
+      const g = (await precedentes.boundingBox())!;
+      const g2 = (await suivantes.boundingBox())!;
+      expect(g2.x - (g.x + g.width), "huit pixels entre les deux flèches").toBeGreaterThanOrEqual(7);
+    }
   }
   // Les puces de l'index (dernières comprises : EDD, TEAM LOUANGE) restent dans la marge de la zone, à la ligne s'il le faut.
   if (!estTelephone(info)) {
@@ -112,6 +126,73 @@ test("organigramme : aucun nom d'équipe ni de sous-groupe coupé, les flèches 
     }
   }
 });
+
+// back-office-4 : à chaque arrêt du bandeau (› au pointeur fin, glissement au toucher), une colonne large (Louange, EDD) est
+// entière avant la marge droite ou n'en montre que moins de la moitié ; jamais entre les deux, hors du bout.
+const GROS: Record<string, Record<string, unknown>> = Object.fromEntries(
+  ["orga", "da", "medias", "developpement", "regie", "traduction", "theologie", "evenementiel", "decoration", "accueil-j1", "louange"].map((id) => [
+    `equipes/${id}`,
+    { membres: Array.from({ length: 9 }, (_, i) => M(`Membre ${i + 1}`, { referent: i === 0 })), updatedAt: "2026-09-18T10:00:00Z", parUid: "", parNom: "" },
+  ]),
+);
+
+for (const [jeu, docs] of [["peu de cartes", DOCS], ["beaucoup de membres", { ...DOCS, ...GROS }]] as const) {
+  test(`bandeau (${jeu}) : à chaque arrêt, aucune colonne large visible entre 50 % et 100 %, hors du bout`, async ({ page }, info) => {
+    test.skip(estTelephone(info), "au téléphone le bandeau est une colonne : la page défile");
+    await ouvrir(page, ADMIN, "/back-office/equipes", docs);
+    const bandeau = page.getByTestId("bandeau-equipes");
+    await expect(bandeau).toHaveAttribute("data-range", "1");
+    const marge = await margeAttendue(page);
+    const fin = await page.evaluate(() => matchMedia("(pointer: fine)").matches);
+    const lire = () => bandeau.evaluate((el, marge) => {
+      const b = el.getBoundingClientRect();
+      const bout = el.scrollLeft >= el.scrollWidth - el.clientWidth - 1;
+      const larges = [...el.querySelectorAll<HTMLElement>('[data-colonne][data-large="1"]')].map((c) => {
+        const r = c.getBoundingClientRect();
+        const visible = Math.max(0, Math.min(r.right, b.right) - Math.max(r.left, b.left));
+        return { id: c.getAttribute("data-colonne") ?? c.querySelector("[data-testid]")?.getAttribute("data-testid") ?? "?", entiere: r.right <= b.right - marge + 1 && r.left >= b.left - 1, part: visible / r.width };
+      });
+      return { x: Math.round(el.scrollLeft), bout, larges };
+    }, marge);
+    const verifier = (etat: Awaited<ReturnType<typeof lire>>, ou: string) => {
+      if (etat.bout) return;
+      for (const l of etat.larges) {
+        expect(l.entiere || l.part <= 0.51, `${ou} (x = ${etat.x}) : colonne large à ${Math.round(l.part * 100)} %`).toBe(true);
+      }
+    };
+    const stable = async () => {
+      let avant = -1;
+      await expect.poll(async () => { const x = (await lire()).x; const fini = x === avant; avant = x; return fini; }, { timeout: 5_000, intervals: [150] }).toBe(true);
+    };
+    await stable();
+    verifier(await lire(), "départ");
+    let arrets = 0;
+    if (fin) {
+      // Pointeur fin : › de arrêt en arrêt, jusqu'au bout.
+      const suivantes = page.getByRole("button", { name: "Équipes suivantes" });
+      while (await suivantes.count() && arrets < 25) {
+        await suivantes.click();
+        arrets++;
+        await stable();
+        verifier(await lire(), `› n° ${arrets}`);
+      }
+    } else {
+      // Toucher : des glissements de 400 px, l'accroche (snap) choisit l'arrêt.
+      let precedent = -1;
+      while (arrets < 25) {
+        await bandeau.evaluate((el) => el.scrollBy({ left: 400, behavior: "instant" }));
+        arrets++;
+        await stable();
+        const etat = await lire();
+        verifier(etat, `glissement n° ${arrets}`);
+        if (etat.bout || etat.x === precedent) break;
+        precedent = etat.x;
+      }
+    }
+    expect((await lire()).bout, "le parcours mène au bout du bandeau").toBe(true);
+    expect(arrets, "au plus une vingtaine d'arrêts").toBeLessThan(25);
+  });
+}
 
 // BO-G, 16 : cibles de toucher de 44 px sans changer le dessin (::after) : rail Organigramme | Personnes, puces de l'index et des groupes.
 test("tablettes : le rail Organigramme | Personnes et les puces ont une cible de 44 px", async ({ page }, info) => {

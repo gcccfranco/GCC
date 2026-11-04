@@ -13,6 +13,7 @@ import { useRouter } from "next/navigation";
 import { useTranslation } from "react-i18next";
 import { ChevronRight, Plus } from "lucide-react";
 import { LargeurBO } from "@/components/backOffice/LargeurBO";
+import { useBarreMontree } from "@/components/layout/BarreLaterale";
 import { EnTetePage } from "@/components/layout/EnTetePage";
 import { buttonVariants } from "@/components/ui/button";
 import { TacheLigne, dateCourte } from "@/components/taches/TacheLigne";
@@ -82,21 +83,38 @@ function CorpsEquipe({ id, nom, retour, backOffice }: { id: string; nom: string;
     [equipe],
   );
   const referents = membres.filter((m) => m.referent).map((m) => m.nom);
-  const sousTitre = !equipe || membres.length === 0 ? undefined
+  const montree = useBarreMontree();
+  const nombre = !equipe || membres.length === 0 ? undefined
     : referents.length > 0
       ? t("equipes.page.sousTitre", { count: membres.length, referents: t("equipes.page.referents", { count: referents.length, noms: referents.join(", ") }) })
       : t("equipes.page.sousTitreSeul", { count: membres.length });
+  // back-office-11 : le rôle de l'équipe (« Direction artistique ») sur sa ligne, puis le nombre de membres.
+  const role = t(`equipes.soustitre.${id}`, { defaultValue: "" });
+  const sousTitre = role || nombre
+    ? <>{role && <span className="block truncate">{role}</span>}{nombre && <span className="block truncate">{nombre}</span>}</>
+    : undefined;
 
   return (
     <div className="pb-16">
       {/* BO-G, 2 : la largeur d'À faire (LargeurBO), plus de plafond à 720 px. */}
       <LargeurBO>
-        <EnTetePage retour={retour} titre={nom} sousTitre={sousTitre} />
-        <div className="space-y-8 px-[var(--marge-page)]">
-          <SectionTachesEquipe id={id} backOffice={backOffice} />
-          <SectionReunions id={id} backOffice={backOffice} />
-          <SectionMembres id={id} membres={membres} lue={lue} backOffice={backOffice} />
-        </div>
+        <EnTetePage retour={retour} titre={nom} sousTitre={sousTitre} sousTitrePlie />
+        {/* back-office-10 : barre latérale montrée, deux colonnes comme À faire (Tâches à gauche, Réunions et Membres à droite). */}
+        {montree ? (
+          <div data-testid="corps-equipe" className="grid grid-cols-[minmax(0,1fr)_300px] items-start gap-8 px-[var(--marge-page)]">
+            <SectionTachesEquipe id={id} backOffice={backOffice} />
+            <div className="space-y-8">
+              <SectionReunions id={id} backOffice={backOffice} />
+              <SectionMembres id={id} membres={membres} lue={lue} backOffice={backOffice} />
+            </div>
+          </div>
+        ) : (
+          <div data-testid="corps-equipe" className="space-y-8 px-[var(--marge-page)]">
+            <SectionTachesEquipe id={id} backOffice={backOffice} />
+            <SectionReunions id={id} backOffice={backOffice} />
+            <SectionMembres id={id} membres={membres} lue={lue} backOffice={backOffice} />
+          </div>
+        )}
       </LargeurBO>
     </div>
   );

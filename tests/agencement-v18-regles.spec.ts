@@ -70,7 +70,7 @@ const BACK_OFFICE: PageAVerifier[] = [
   { chemin: "/back-office" }, { chemin: "/back-office/equipes/da" }, { chemin: "/back-office/evenements" },
   { chemin: "/back-office/evenements/scene/noel" }, { chemin: "/back-office/reunions" }, { chemin: "/back-office/calendrier" },
   { chemin: "/back-office/planning" }, { chemin: "/back-office/equipes" }, { chemin: "/back-office/equipes/personnes" },
-  // Réception et Questionnaire sans message ni réponse : la liste seule dans la colonne centrée (BO9).
+  // Réception et Questionnaire sans message ni réponse : la liste seule dans la colonne de 960 px calée sur le titre (BO9).
   { chemin: "/back-office/messages", colonne: 960 }, { chemin: "/back-office/messages/notifier" },
   { chemin: "/back-office/messages/questionnaire", colonne: 960 },
   { chemin: "/back-office/plus" },

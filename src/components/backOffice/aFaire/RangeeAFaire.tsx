@@ -7,6 +7,7 @@ import { useTranslation } from "react-i18next";
 import { CalendarDays, ChevronRight, Drama, FileText, ListChecks, MessageSquare, Ticket, UserPlus, UserX, type LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { LigneAFaire, SorteAFaire } from "@/lib/tableauDeBord/aFaire";
+import { TOUCHER_44 } from "@/lib/toucher44";
 import { texteLigne } from "./texte";
 
 const ICONES: Record<SorteAFaire, LucideIcon> = {
@@ -28,16 +29,16 @@ export function RangeeAFaire({ ligne, today }: { ligne: LigneAFaire; today: stri
       </span>
       <span className="min-w-0 flex-1">
         {/* BO-G, 14 : le titre se coupe (deux lignes, puis « … ») avant que le verbe ne quitte la ligne. */}
-        <b className="line-clamp-2 break-words text-[15px] font-semibold text-foreground" title={titre}>{titre}</b>
-        <span className="block break-words text-[13px] text-muted-foreground">
+        <b className="line-clamp-2 text-balance break-words text-[15px] font-semibold text-foreground" title={titre}>{titre}</b>
+        <span className="block text-balance break-words text-[13px] text-muted-foreground">
           {contexte}
-          {retard && <span className={enRetard ? "font-semibold text-red-700 dark:text-red-400" : undefined}>{retard}</span>}
+          {retard && <span className={enRetard ? "whitespace-nowrap font-semibold text-red-700 dark:text-red-400" : "whitespace-nowrap"}>{retard}</span>}
         </span>
       </span>
       {/* BO16 (b) : au téléphone, un verbe long passe sur deux lignes, et le titre garde sa place (deux lignes). */}
       <Button
         asChild variant="outline"
-        className="h-auto min-h-10 max-w-[8.5rem] shrink-0 gap-0.5 whitespace-normal py-1.5 pl-3 pr-2 text-left text-sm leading-tight sm:h-10 sm:max-w-none sm:whitespace-nowrap sm:pl-4 sm:pr-3"
+        className={`h-auto min-h-10 max-w-[8.5rem] shrink-0 gap-0.5 whitespace-normal py-1.5 pl-3 pr-2 text-left text-sm leading-tight sm:h-10 sm:max-w-none sm:whitespace-nowrap sm:pl-4 sm:pr-3 ${TOUCHER_44}`}
       >
         <Link href={ligne.href} aria-label={t("backOffice.aFaire.verbeAria", { verbe, titre: objet ?? titre })}>
           <span>{verbe}</span>
