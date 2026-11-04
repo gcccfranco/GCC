@@ -2442,7 +2442,7 @@
       "titre": "Compte rendu",
       "aide": "Après la réunion, toute personne de la réunion (ou un admin) colle ici le lien du Google Doc du récap ; les autres sont prévenus dans le rappel du matin.",
       "lien": "Lien du compte rendu",
-      "placeholder": "Lien du Google Doc",
+      "placeholder": "Lien du doc",
       "enregistrer": "Enregistrer",
       "invalide": "Colle un lien complet, qui commence par https://",
       "ajoutePar": "{{source}} · ajouté par {{nom}} le {{date}}",

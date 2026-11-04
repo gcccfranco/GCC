@@ -787,7 +787,7 @@ test("compte rendu et sujets (bo-reunions-taches-4) : un seul « champ à action
   const champLien = compteRendu(page).locator("label").filter({ has: page.getByRole("textbox", { name: "Lien du compte rendu" }) });
   const champSujet = carte(page).locator("form");
   await expect(champLien).toBeVisible();
-  await expect(lienCR(page)).toHaveAttribute("placeholder", "Lien du Google Doc");
+  await expect(lienCR(page)).toHaveAttribute("placeholder", "Lien du doc");
   for (const champ of [champLien, champSujet]) {
     const s = await champ.evaluate((e) => { const c = getComputedStyle(e); return { style: c.borderTopStyle, largeur: c.borderTopWidth, hauteur: e.getBoundingClientRect().height, fond: c.backgroundColor }; });
     expect(s.style === "none" || s.largeur === "0px", "ni pointillés ni contour").toBe(true);

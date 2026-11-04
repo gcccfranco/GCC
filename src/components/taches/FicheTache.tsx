@@ -263,7 +263,9 @@ function Fiche({ ligne, toutesLesFois }: { ligne: Ligne; toutesLesFois: Fois[] }
               {backOffice && (
                 <span aria-hidden className={cn(
                   "flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-full border-2",
-                  e === "terminee" ? "border-foreground bg-foreground text-background" : e === "encours" ? "border-foreground" : "border-muted-foreground/60",
+                  // Le signe prend la couleur du libellé ; seul le segment choisi « Terminée » est plein (critique).
+                  "border-current",
+                  e === "terminee" && etat === e && "border-foreground bg-foreground text-background",
                 )}>
                   {e === "terminee" && <Check className="h-2.5 w-2.5" strokeWidth={3} />}
                   {e === "encours" && <Minus className="h-2.5 w-2.5" strokeWidth={3} />}
@@ -298,7 +300,7 @@ function Fiche({ ligne, toutesLesFois }: { ligne: Ligne; toutesLesFois: Fois[] }
             </section>
           )}
           {historique.length > 0 && (
-            <ul aria-label={t("taches.fiche.historique")} className="space-y-0.5 px-1">
+            <ul aria-label={t("taches.fiche.historique")} className="space-y-0.5 px-4">
               {historique.map((h) => <li key={h} className="text-[13px] text-muted-foreground">{h}</li>)}
             </ul>
           )}

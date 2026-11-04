@@ -257,7 +257,7 @@ function Champs({ enLigne, equipe: equipeDepart, equipes, evenement, echeance, i
         // Formulaires (R13) : en bas de la carte, à droite, « Annuler » (texte, 44 px) puis le bouton plein.
         <div className="flex justify-end gap-2 border-t border-border/70 pt-4">
           <Button type="button" variant="ghost" className="h-11 text-foreground" onClick={onClose}>{t("taches.annuler")}</Button>
-          <Button type="submit" className="rounded-full" disabled={busy}>{initial ? t("taches.enregistrer") : t("taches.creer")}</Button>
+          <Button type="submit" className="h-11 rounded-full" disabled={busy}>{initial ? t("taches.enregistrer") : t("taches.creer")}</Button>
         </div>
       ) : (
       <div className="flex flex-col gap-2 pt-1">

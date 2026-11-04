@@ -2409,7 +2409,7 @@
       "titre": "会议记录",
       "aide": "会议结束后，参会的任何人（或管理员）都可以在这里粘贴会议记录的 Google 文档链接；其他人会在早间提醒中收到通知。",
       "lien": "会议记录链接",
-      "placeholder": "Google 文档链接",
+      "placeholder": "文档链接",
       "enregistrer": "保存",
       "invalide": "请粘贴以 https:// 开头的完整链接",
       "ajoutePar": "{{source}} · {{nom}} 于{{date}}添加",
@@ -2490,7 +2490,7 @@
   "taches": {
     "title": "任务",
     "mesTaches": "我的任务",
-    "retourEquipe": "{{equipe}} 的任务",
+    "retourEquipe": "{{equipe}}的任务",
     "aFairePourMoi": "我要做的",
     "subtitle": "团队任务",
     "aucuneEquipe": "你不属于任何团队：任务只对团队成员开放。",

@@ -63,6 +63,13 @@ export function EnTetePage({
 }) {
   return (
     <header data-entete-page="" className="relative px-[var(--marge-page)] pb-5 pt-6">
+      {/* Sans titre (fiche en deux volets) : l'action monte sur la ligne du retour. */}
+      {!titre && !sousTitre ? (
+        <div className="flex items-center gap-3">
+          {retour && <Retour href={retour.href}>{retour.label}</Retour>}
+          {(outils || action) && <div className="ml-auto flex shrink-0 items-center gap-2">{outils}{action}</div>}
+        </div>
+      ) : (<>
       {retour && <Retour href={retour.href}>{retour.label}</Retour>}
       <div className="flex items-start gap-3">
         <div className="min-w-0 flex-1">
@@ -76,6 +83,7 @@ export function EnTetePage({
           </div>
         )}
       </div>
+      </>)}
       {onglets && <div className="mt-4">{onglets}</div>}
       {apres && <div className="mt-3">{apres}</div>}
     </header>
