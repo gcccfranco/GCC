@@ -220,7 +220,7 @@ export default function GuidePage() {
         {/* A14 (agencement v18) : l'en-tête commun, « ‹ Moi », sans icône ; en grand, la lecture (R14) :
             sommaire de 260 px collant à gauche, colonne de 720 px, calés sur le titre. */}
         <div className="relative pb-16">
-          <EnTetePage retour={{ href: "/moi", label: t("moi.title") }} titre={t("guide.title")} sousTitre={t("guide.subtitle")} />
+          <EnTetePage fond="blanc" retour={{ href: "/moi", label: t("moi.title") }} titre={t("guide.title")} sousTitre={t("guide.subtitle")} />
           <div
             className={
               grand

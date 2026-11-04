@@ -272,3 +272,24 @@ Back-office à 7 px du bord à 360 px en français (sélecteur de T1a, espace Ba
   colonne de 592 px à 1 280 px, deux à 1 440) ; `agencement-v18-moi:215` lit « 乐理 » (libellé du lot EM) ; sélecteur
   d'espace : sous 375 px, l'espace courant n'est plus qu'une icône de 36 px lui aussi (cloche à ≥ 16 px du bord à 360 px,
   testé avec App, Musiciens et Back-office courants, fr et zh). 352 tests verts sur les cinq projets.
+
+### T2a · Recette de surface, jetons et écrans pilotes — fait (orchestratrice)
+- Jetons : `--fond-groupe` (#f2f2f7 / noir), `--radius-groupe` 16 px, `--secondary-fond` (#e5e5ea / #2c2c2e),
+  `--shadow-flottant` = l'ombre de la barre d'onglets (`0 14px 40px rgba(28,28,30,.2), 0 2px 6px rgba(28,28,30,.08),
+  inset 0 1px 0 rgba(255,255,255,.8)` ; sombre comme `--shadow-raised`), couleurs Tailwind `fond-groupe`,
+  `secondary-fond`, rayon `groupe` ; `GROUPE = "rounded-groupe bg-card"` dans `ui/group.tsx`. `--shadow-soft` gardé
+  jusqu'à T2b.
+- **Mécanisme du fond** : prop `fond="groupe" | "blanc"` sur `EnTetePage` et `DeuxVolets` (gris par défaut), qui pose
+  `data-fond-groupe` ; `:root:has([data-fond-groupe])` bascule `--fond-page`, lu par `body` et les barres. Pages de lecture
+  en `fond="blanc"` : Harmonie, guide, questionnaire (non classé par la spec : laissé blanc, à confirmer). Chants décidé
+  en CSS (gris sur la liste et en deux volets, blanc pour un chant seul, y compris de 1 024 à 1 147 px barre dépliée).
+  Toute nouvelle page de lecture bâtie sur `EnTetePage` doit passer `fond="blanc"`.
+- Pilotes : Accueil (verset sans aplat, cloche et menu en blanc), Setlists (contrôles hors de la carte à 1 280, piste
+  `--secondary-fond`, liste en groupe), À faire (une seule recette, colonne de droite comprise), Chants (liste en groupe
+  blanc à toutes les tailles, qui finit avant l'index A–Z ; recherche en aplat `--secondary` dans le groupe ; page du
+  chant en groupe `--background` en deux volets). Sombre : contrôles inchangés par rapport à `9ecec9f`.
+- **Laissé à T2b** : cartes `.raised` de l'accueil (Ce dimanche, Pour moi) et des setlists en tablette portrait ; menus,
+  feuilles et toasts en `--shadow-flottant` ; liste des deux volets en sombre (a perdu son liseré : à rendre) ; meta
+  `theme-color` (#fff au-dessus du gris).
+- **Go de Timothée pour T2b (04/11/2026)** : « Tu peux go après », confirmé « go T2b direct », sans attendre de voir les
+  captures des pilotes.

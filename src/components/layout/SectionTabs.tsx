@@ -107,7 +107,7 @@ export function SectionTabs({ tabs, rootHref, menuLabel, pleineLargeur = false, 
               aria-label={menuLabel}
               aria-haspopup="dialog"
               onClick={() => setFeuilleOuverte(true)}
-              className={`inline-flex min-h-10 items-center gap-2 rounded-full px-3.5 text-sm font-semibold transition-colors duration-150 cursor-pointer ${courant?.color ? "texte-service" : "bg-secondary text-foreground"}`}
+              className={`inline-flex min-h-10 items-center gap-2 rounded-full px-3.5 text-sm font-semibold transition-colors duration-150 cursor-pointer ${courant?.color ? "texte-service" : "blanc-sur-gris bg-secondary text-foreground"}`}
               style={teinte(courant?.color)}
             >
               {courant?.label}

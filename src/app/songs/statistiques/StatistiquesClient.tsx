@@ -244,7 +244,7 @@ function StatistiquesContenu() {
       <>
         {enTete}
         <div className={CORPS}>
-        <div role="alert" className="raised rounded-2xl px-5 py-8 flex flex-col items-center gap-3 text-center">
+        <div role="alert" className="bg-card rounded-groupe px-5 py-8 flex flex-col items-center gap-3 text-center">
           <p className="text-sm text-muted-foreground">{lecture.message}</p>
           <button type="button" onClick={() => { setLecture({ etat: "calcul" }); lire(); }} className="h-9 px-4 rounded-full bg-foreground text-background text-sm font-semibold transition-transform active:scale-[.97]">
             {t("common.retry")}
@@ -269,7 +269,7 @@ function StatistiquesContenu() {
   const carteComptees = nombre > 0 && (
     // Téléphone : le nombre à gauche, le titre et les dates à droite, sur une ligne.
     <section data-testid="setlists-comptees"
-      className="raised rounded-2xl px-5 py-4 grid grid-cols-[auto_minmax(0,1fr)] items-center gap-x-4 sm:grid-cols-1 sm:items-start sm:content-start">
+      className="bg-card rounded-groupe px-5 py-4 grid grid-cols-[auto_minmax(0,1fr)] items-center gap-x-4 sm:grid-cols-1 sm:items-start sm:content-start">
       <h2 className="col-start-2 row-start-1 self-end text-sm font-semibold text-muted-foreground sm:col-start-1 sm:self-auto">
         {t("stats.setlistsComptees")}
       </h2>
@@ -320,14 +320,14 @@ function StatistiquesContenu() {
           <div className="grid items-start gap-4 [@container(min-width:1100px)]:grid-cols-[260px_minmax(0,1fr)]">
             <div className="grid gap-4 lg:grid-cols-3 [@container(min-width:1100px)]:grid-cols-1">
               {carteComptees}
-              <section className="raised hidden rounded-2xl px-5 py-4 lg:block">
+              <section className="bg-card hidden rounded-groupe px-5 py-4 lg:block">
                 <h2 className="text-sm font-semibold text-muted-foreground">{t("stats.chantsDifferents")}</h2>
                 {/* Les chants du recueil seuls : un absent du recueil ferait dire « 6 sur 5 ». */}
                 <p className="mt-1 text-3xl font-bold tabular-nums">{stats.plusJoues.filter((l) => l.langue).length}</p>
                 <p className="text-sm text-muted-foreground">{t("stats.surRepertoire", { n: auRepertoire })}</p>
               </section>
               <button type="button" onClick={() => changer({ vue: "jamais" })}
-                className="raised hidden rounded-2xl px-5 py-4 text-left transition-transform active:scale-[.99] lg:block">
+                className="bg-card hidden rounded-groupe px-5 py-4 text-left transition-transform active:scale-[.99] lg:block">
                 <span className="block text-sm font-semibold text-muted-foreground">{t("stats.vues.jamais")}</span>
                 <span className="mt-1 block text-3xl font-bold tabular-nums">{stats.jamaisJoues.length}</span>
                 <span className="block text-sm text-muted-foreground">{t("stats.voirOnglet")}</span>
@@ -490,7 +490,7 @@ function DixPremiers({ lignes }: { lignes: LigneChant[] }) {
   const { t } = useTranslation();
   const max = lignes[0]?.setlists ?? 1;
   return (
-    <section data-testid="dix-premiers" className="raised rounded-2xl px-5 py-4">
+    <section data-testid="dix-premiers" className="bg-card rounded-groupe px-5 py-4">
       <h2 className="text-sm font-semibold text-muted-foreground">{t("stats.dixPremiers")}</h2>
       <ol className="mt-2 space-y-1">
         {lignes.map((l) => (
@@ -526,7 +526,7 @@ function ListeTelephone({ lignes, aujourdhui, tri, trier }: {
         </select>
         <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2" aria-hidden />
       </label>
-      <ol className="raised rounded-2xl px-4 divide-y divide-border">
+      <ol className="bg-card rounded-groupe px-4 divide-y divide-border">
         {lignes.map((l) => (
           <li key={l.slug} data-testid="ligne-chant" className="flex gap-3 py-3">
             <span data-champ="rang" className="w-5 shrink-0 text-right text-sm text-muted-foreground tabular-nums">{l.rang}</span>
@@ -568,7 +568,7 @@ function Tableau({ lignes, aujourdhui, tri, sens, trier }: {
   // Les chiffres passent au-dessus sous 1 100 px de conteneur (R6) : le tableau a la largeur et ne
   // défile plus ; `overflow-x-auto` reste un garde-fou (texte agrandi), rien ne sort de la carte.
   return (
-    <div className="hidden raised overflow-x-auto rounded-2xl px-2 sm:block">
+    <div className="hidden bg-card overflow-x-auto rounded-groupe px-2 sm:block">
       <table className="w-full text-sm">
         <thead className="text-left text-xs text-muted-foreground">
           <tr className="border-b border-border">
@@ -601,7 +601,7 @@ function Tableau({ lignes, aujourdhui, tri, sens, trier }: {
 
 // ─── Jamais joués, À redécouvrir (S4) ─────────────────────────────────────────
 
-const MESSAGE = "raised rounded-2xl px-5 py-8 text-center text-sm text-muted-foreground";
+const MESSAGE = "bg-card rounded-groupe px-5 py-8 text-center text-sm text-muted-foreground";
 
 /** « Jamais joués » : les chants du recueil absents des setlists comptées, dans l'ordre du recueil
  *  (Q11), avec l'artiste et la dernière fois toutes dates confondues ou « jamais ». Agencement v18
@@ -637,7 +637,7 @@ function CarteJamais({ testId, titre, chants, limite, colonnes, tonalites, aujou
   const [tout, setTout] = useState(false);
   const montres = tout ? chants : chants.slice(0, limite);
   return (
-    <section data-testid={testId} aria-labelledby={`${testId}-titre`} className="raised min-w-0 rounded-2xl px-[18px] py-3.5">
+    <section data-testid={testId} aria-labelledby={`${testId}-titre`} className="bg-card min-w-0 rounded-groupe px-[18px] py-3.5">
       <div className="flex min-h-8 items-center gap-3 pb-2">
         <h2 id={`${testId}-titre`} className="text-[15px] font-semibold text-foreground">{titre} · {chants.length}</h2>
         {!tout && chants.length > LIMITE_TELEPHONE && (
@@ -691,7 +691,7 @@ function ARedecouvrir({ chants, aujourdhui, debutPeriode, finPeriode, debutHisto
   }
   if (chants.length === 0) return <p role="status" className={MESSAGE}>{t("stats.aucunARedecouvrir")}</p>;
   return (
-    <section className="raised rounded-2xl px-2">
+    <section className="bg-card rounded-groupe px-2">
       <h2 className="px-3 pt-4 pb-1 text-sm font-semibold text-muted-foreground">
         {finPeriode
           ? t("stats.joues", { n: SEUIL_A_REDECOUVRIR, debut: jourCourt(debutPeriode, aujourdhui), fin: jourCourt(finPeriode, aujourdhui) })
@@ -756,7 +756,7 @@ function RangeeGroupe({ groupe }: { groupe: StatsGroupe }) {
   const { t, i18n } = useTranslation();
   const decimal = new Intl.NumberFormat(i18n.language === "zh-CN" ? "zh-CN" : "fr-FR", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
   return (
-    <section data-testid="groupe-rangee" className="raised rounded-2xl px-5 py-4">
+    <section data-testid="groupe-rangee" className="bg-card rounded-groupe px-5 py-4">
       <div className="grid grid-cols-3 gap-3">
         <Chiffre testId="groupe-setlists" valeur={String(groupe.setlists)} libelle={t("stats.groupe.setlists")} />
         <Chiffre testId="groupe-par-mois" valeur={decimal.format(groupe.parMois)} libelle={t("stats.groupe.parMois")} />
@@ -783,7 +783,7 @@ function BlocPresidence({ nom, stats, aujourdhui, nomService }: {
 }) {
   const { t } = useTranslation();
   return (
-    <section data-testid="presidence-bloc" className="raised rounded-2xl px-5 py-4">
+    <section data-testid="presidence-bloc" className="bg-card rounded-groupe px-5 py-4">
       <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
         <h2 className="text-sm font-semibold text-muted-foreground">{t("stats.presidencesAdmin.titreDe", { nom })}</h2>
         <span className="rounded-full bg-secondary px-2 py-0.5 text-[11px] font-semibold text-muted-foreground">{t("stats.presidencesAdmin.admins")}</span>
@@ -828,7 +828,7 @@ function CartePresidences({ lignes, service, aujourdhui, nomService, choisir, pr
   }, [service, profils, lignes]);
   const touche = "[@media(pointer:fine)]:min-h-8 min-h-11";
   return (
-    <section data-testid="presidences-admin" className="raised rounded-2xl px-[18px] py-3.5">
+    <section data-testid="presidences-admin" className="bg-card rounded-groupe px-[18px] py-3.5">
       <div className="flex min-h-8 flex-wrap items-center gap-x-2 gap-y-1 pb-1">
         <h2 className="text-[15px] font-semibold text-foreground">
           {service ? t("stats.presidencesAdmin.titreService", { service: nomService(service) }) : t("stats.presidencesAdmin.titre")}

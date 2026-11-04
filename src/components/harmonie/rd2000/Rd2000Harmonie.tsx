@@ -70,6 +70,7 @@ export function Rd2000Harmonie({ children }: { children: React.ReactNode }) {
   return (
     <ContexteRd2000.Provider value={valeur}>
       <DeuxVolets
+        fond="blanc"
         racine="/harmonie/rd2000"
         largeurListe={420}
         liste={<ListeRd2000 vue={vue} setVue={setVue} filtres={filtres} setFiltres={setFiltres} parCategorie={parCategorie} premier={premier} />}

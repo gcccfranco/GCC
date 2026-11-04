@@ -2,6 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { ADMIN_EMAIL, signInAs } from "./helpers/fakeSession";
+import { ouvrirAvecBarre } from "./helpers/agencement";
 
 // Lot 4 « Nouveau look », tranche T1 : fondations (docs/spec-look.md), reprises
 // par la direction 5C1 « Encre · Relief » (§ 20/09/2026, tranche V1).
@@ -165,5 +166,100 @@ test.describe("formulaires du Back-Office et bouton désactivé (CD, T1h)", () =
     expect(source).toContain("disabled:bg-secondary");
     expect(source).toContain("disabled:text-muted-foreground");
     expect(source).not.toMatch(/disabled:opacity/);
+  });
+});
+
+// Recette de surface (C, lot CD, T2a ; docs/spec-corrections-design/partout.md) : le fond de groupe #f2f2f7 sur les
+// pages de liste et de gestion, le blanc sur les pages de lecture, le noir en sombre partout.
+test.describe("fond de page : le gris des listes, le blanc de la lecture (recette de surface C)", () => {
+  const GRIS = "rgb(242, 242, 247)";
+  const MUSICIEN = { uid: "uid-surface", email: "surface@example.com", planningName: "Lia M.", serviceRoles: { "Culte Francophone": ["musicien"] } };
+  const sansSheet = (page: Page) =>
+    page.route(/docs\.google\.com\/spreadsheets/, (route) => route.fulfill({ status: 200, contentType: "text/csv", body: "" }));
+  const PAGES = [
+    { nom: "setlists", vers: "/setlists", clair: GRIS, attente: (page: Page) => page.getByRole("heading", { level: 1, name: "Setlists" }).waitFor() },
+    { nom: "planning", vers: "/planning", clair: GRIS, attente: (page: Page) => page.getByRole("heading", { level: 1, name: "Planning" }).waitFor() },
+    { nom: "un chant", vers: "/songs/tu-m-aimes", clair: FOND_CLAIR, attente: (page: Page) => page.getByTestId("barre-outils").waitFor() },
+    { nom: "harmonie", vers: "/harmonie", clair: FOND_CLAIR, attente: (page: Page) => page.getByRole("heading", { level: 1 }).waitFor() },
+  ];
+  for (const { nom, vers, clair, attente } of PAGES) {
+    test(`${nom} : ${clair === GRIS ? "#f2f2f7" : "blanc"} en clair, noir en sombre`, async ({ page }) => {
+      await sansSheet(page);
+      await signInAs(page, MUSICIEN, {}, vers);
+      await attente(page);
+      // Un chant en deux volets : le gris autour, la page du chant est un grand groupe blanc posé dessus.
+      if (nom === "un chant" && await page.locator(".chants-liste").isVisible()) {
+        await expect.poll(() => fondDe(page)).toBe(GRIS);
+        expect(await page.locator(".chants-chant").evaluate((e) => getComputedStyle(e).backgroundColor)).toBe(FOND_CLAIR);
+      } else await expect.poll(() => fondDe(page)).toBe(clair);
+      await page.emulateMedia({ colorScheme: "dark" });
+      await expect.poll(() => fondDe(page)).toBe(FOND_SOMBRE);
+    });
+  }
+
+  test("planning : les barres repeignent le gris (navbar et barre des onglets)", async ({ page }) => {
+    test.skip(test.info().project.name.startsWith("ordinateur"), "ordinateur : pas de barre en haut (lot U4)");
+    await sansSheet(page);
+    await signInAs(page, MUSICIEN, {}, "/planning");
+    await page.getByRole("heading", { level: 1, name: "Planning" }).waitFor();
+    const fonds = await page.locator(".material-chrome:not(.material-steady) > .barre-fond").evaluateAll((els) =>
+      els.filter((el) => el.getClientRects().length > 0).map((el) => getComputedStyle(el).backgroundColor));
+    expect(fonds.length).toBeGreaterThan(0);
+    for (const fond of fonds) expect(fond).toBe(GRIS);
+  });
+
+  test("ordinateur 1100 px, barre dépliée : la page d'un chant seule reste blanche (pas deux volets)", async ({ page }) => {
+    test.skip(test.info().project.name !== "ordinateur", "propre à l'ordinateur à 1100 px");
+    await page.setViewportSize({ width: 1100, height: 800 });
+    await ouvrirAvecBarre(page, "depliee");
+    await sansSheet(page);
+    await signInAs(page, MUSICIEN, {}, "/songs/tu-m-aimes");
+    await page.getByTestId("barre-outils").waitFor();
+    await expect(page.locator(".chants-liste")).toBeHidden();
+    await expect.poll(() => fondDe(page)).toBe(FOND_CLAIR);
+  });
+
+  test("un volet, clair, /songs : la liste finit avant l'index A–Z, et la recherche est en aplat sans ombre", async ({ page }) => {
+    await sansSheet(page);
+    await signInAs(page, MUSICIEN, {}, "/songs");
+    await page.locator(".chants-liste").waitFor();
+    // Deux volets (ordinateur, tablette couchée) : l'index est dans la carte, autre règle.
+    test.skip(await page.locator(".chants-chant").isVisible(), "propre à la disposition en un volet");
+    const index = page.locator('nav[aria-label="Index alphabétique"]');
+    await expect(index).toBeVisible();
+    const liste = (await page.locator(".chants-liste").boundingBox())!;
+    const indexBox = (await index.boundingBox())!;
+    expect(liste.x + liste.width).toBeLessThanOrEqual(indexBox.x);
+    const recherche = page.locator('.chants-liste input[type="search"]');
+    expect(await recherche.evaluate((e) => getComputedStyle(e).backgroundColor)).toBe("rgb(242, 242, 244)");
+    expect(await recherche.evaluate((e) => getComputedStyle(e).boxShadow)).toBe("none");
+  });
+
+  test("sombre, Setlists : la recherche et la cloche gardent leur fond d'avant la recette", async ({ page }) => {
+    await sansSheet(page);
+    await signInAs(page, MUSICIEN, {}, "/setlists");
+    await page.getByRole("heading", { level: 1, name: "Setlists" }).waitFor();
+    await page.emulateMedia({ colorScheme: "dark" });
+    await expect.poll(() => fondDe(page)).toBe(FOND_SOMBRE);
+    // Recherche : `raised` sombre (#1c1c1e) et son liseré ; cloche : `--secondary` sombre (#2c2c2e).
+    const recherche = page.locator('input[type="search"]').first();
+    await expect.poll(() => recherche.evaluate((e) => getComputedStyle(e).backgroundColor)).toBe("rgb(28, 28, 30)");
+    expect(await recherche.evaluate((e) => getComputedStyle(e).boxShadow)).toContain("0px 0px 0px 1px");
+    const fonds = await page.locator(".blanc-sur-gris").evaluateAll((els) =>
+      els.filter((el) => el.getClientRects().length > 0).map((el) => getComputedStyle(el).backgroundColor));
+    // Sur ordinateur la barre du haut n'existe pas (lot U4) : pas de cloche à mesurer.
+    if (!test.info().project.name.startsWith("ordinateur") && test.info().project.name !== "tablette-paysage") expect(fonds.length).toBeGreaterThan(0);
+    for (const fond of fonds) expect(fond).toBe("rgb(44, 44, 46)");
+  });
+
+  test("téléphone, /songs en clair : la liste est un groupe blanc de rayon 16", async ({ page }) => {
+    test.skip(test.info().project.name !== "telephone", "propre au téléphone");
+    await sansSheet(page);
+    await signInAs(page, MUSICIEN, {}, "/songs");
+    const liste = page.locator(".chants-liste");
+    await liste.waitFor();
+    await expect.poll(() => fondDe(page)).toBe(GRIS);
+    const style = await liste.evaluate((e) => { const c = getComputedStyle(e); return { fond: c.backgroundColor, rayon: c.borderTopLeftRadius }; });
+    expect(style).toEqual({ fond: FOND_CLAIR, rayon: "16px" });
   });
 });

@@ -74,6 +74,7 @@ export function EnTeteHarmonie() {
 
   return (
     <EnTetePage
+      fond="blanc"
       titre={page === "cours" ? t("harmonie.cours.titre") : page === "sons" ? t("harmonie.rd2000.titre") : t("harmonie.titre")}
       sousTitre={
         page === "cours" ? <EtatCours />

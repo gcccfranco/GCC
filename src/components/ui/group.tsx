@@ -8,6 +8,10 @@ import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+/** Recette de surface (C, lot CD) : le groupe est un aplat `--card` de rayon 16, ni bordure ni ombre. Une seule
+ *  recette pour tout le site ; à poser sur le fond `--fond-groupe` (jamais une carte dans une carte). */
+export const GROUPE = "rounded-groupe bg-card";
+
 export function Group({
   title,
   children,

@@ -62,6 +62,7 @@ export function OngletsRail({
   choisir,
   className,
   cible44 = false,
+  surGris = false,
 }: {
   /** Nom du groupe d'onglets, lu par les lecteurs d'écran. */
   etiquette: string;
@@ -73,6 +74,8 @@ export function OngletsRail({
   className?: string;
   /** BO-G, 16 : cible de toucher de 44 px sans changer le dessin ; pour un rail de deux onglets (le rail ne défile plus). */
   cible44?: boolean;
+  /** Recette de surface (C) : le rail posé sur le fond de groupe est une piste `--secondary-fond` (curseur blanc), libellés inactifs à 70 % d'encre (≥ 4,5:1). */
+  surGris?: boolean;
 }) {
   const chemin = usePathname() ?? "";
   const boutons = useRef<(HTMLButtonElement | null)[]>([]);
@@ -83,7 +86,7 @@ export function OngletsRail({
       "relative flex shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-full px-4 py-1.5 text-[13px] font-semibold transition-[background-color,color] duration-150",
       // BO-G, 16 : la cible de toucher fait 44 px sans changer le dessin (`::after`, comme BO-E2).
       cible44 && "after:absolute after:-inset-y-1.5 after:inset-x-0 after:content-['']",
-      on ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground",
+      on ? "bg-background text-foreground shadow-sm" : (surGris ? "text-foreground/70 dark:text-muted-foreground hover:text-foreground" : "text-muted-foreground hover:text-foreground"),
     );
   const contenu = (o: OngletRail) => (
     <>
@@ -97,7 +100,7 @@ export function OngletsRail({
   // plannings-2 : le rail serré s'estompe du côté où il reste des onglets et ramène l'actif en vue. Avec `cible44`, le
   // masque ne vaut que là où le rail défile (sous `sm`) : au-delà il rognerait la zone de 44 px de l'`::after`.
   const railRef = useFonduLateral<HTMLDivElement>(onglets.length);
-  const rail = cn("inline-flex max-w-full gap-0.5 rounded-full bg-secondary p-[3px]", cible44 ? "max-sm:fondu-lateral overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:overflow-visible" : "fondu-lateral overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden", className);
+  const rail = cn("inline-flex max-w-full gap-0.5 rounded-full p-[3px]", surGris ? "bg-secondary-fond dark:bg-secondary" : "bg-secondary", cible44 ? "max-sm:fondu-lateral overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:overflow-visible" : "fondu-lateral overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden", className);
   // Centre la pastille active dans le rail : sans animation au montage, en douceur ensuite (instantané sous `prefers-reduced-motion`).
   const premierPassage = useRef(true);
   useEffect(() => {

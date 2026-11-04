@@ -230,6 +230,8 @@ test.describe("barres (5C1, V8) : opaques, elles repeignent la page qu'elles cac
     await signInAs(page, MUSICIEN, {}, "/planning");
     await page.getByRole("heading", { level: 1, name: "Planning" }).waitFor();
     await barresOpaquesEtInvisibles(page, avecNavbar(2), "planning", { sousLeTitre: true });
+    // Recette de surface (C) : le Planning est une page de liste, les barres repeignent le gris #f2f2f7.
+    for (const { fond } of await barres(page)) expect(fond).toBe("rgb(242, 242, 247)");
   });
 
   test("en sombre aussi, le fond repeint la page", async ({ page }) => {

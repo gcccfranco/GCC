@@ -244,7 +244,7 @@ export default function QuestionnairePage() {
     }
   }
 
-  const entete = <EnTetePage retour={{ href: "/moi", label: t("moi.title") }} titre={t("survey.title")} sousTitre={t("survey.sousTitre")} />;
+  const entete = <EnTetePage fond="blanc" retour={{ href: "/moi", label: t("moi.title") }} titre={t("survey.title")} sousTitre={t("survey.sousTitre")} />;
   const lecture = (sommaire: ReactNode, colonne: ReactNode) => (
     <div
       className={

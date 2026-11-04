@@ -86,6 +86,7 @@ export function HarmonieCatalogue({ children }: { children: React.ReactNode }) {
   return (
     <ContexteCatalogue.Provider value={valeur}>
       <DeuxVolets
+        fond="blanc"
         racine="/harmonie"
         largeurListe={400}
         liste={

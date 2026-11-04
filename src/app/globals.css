@@ -87,7 +87,7 @@
     background-color: hsl(var(--raised) / 0.82);
     -webkit-backdrop-filter: blur(22px) saturate(1.5);
     backdrop-filter: blur(22px) saturate(1.5);
-    box-shadow: 0 14px 40px rgba(28, 28, 30, 0.2), 0 2px 6px rgba(28, 28, 30, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+    box-shadow: var(--shadow-flottant);
   }
   .dark .material-bar {
     box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.1), 0 14px 40px rgba(0, 0, 0, 0.8);
@@ -142,7 +142,7 @@
     inset: 0 0 -12px 0;
     z-index: -1;
     pointer-events: none;
-    background-color: hsl(var(--background));
+    background-color: hsl(var(--fond-page));
     /* La copie du halo est fixe comme l'original, donc toujours à sa place, même sous une
        barre qui colle en cours de défilement : `clip-path` la coupe au bord du fond, ce que
        `overflow` ne sait pas faire d'un élément fixe. */
@@ -241,6 +241,16 @@
     /* Ce qui se touche (recherche, pilule d'outils, boutons, barre du bas). */
     --raised: 0 0% 100%;
     --shadow-raised: 0 4px 14px rgba(28, 28, 30, 0.1), 0 1px 2px rgba(28, 28, 30, 0.06);
+    /* Recette de surface (C, lot CD, T2a) : fond des pages de liste et de gestion, groupe blanc
+       dessus (rayon 16, ni bordure ni ombre), piste des contrôles posés sur ce gris. Les pages de
+       lecture gardent `--background`. */
+    --fond-groupe: 240 24% 96%;      /* #f2f2f7 */
+    --radius-groupe: 16px;
+    --secondary-fond: 240 11% 91%;   /* #e5e5ea */
+    /* Ce qui flotte (barre d'onglets, menus, feuilles, toasts) : l'ombre de la barre d'onglets. */
+    --shadow-flottant: 0 14px 40px rgba(28, 28, 30, 0.2), 0 2px 6px rgba(28, 28, 30, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+    /* Fond que peignent la page et les barres : blanc, ou gris sur les pages de liste (`data-fond-groupe`). */
+    --fond-page: var(--background);
     /* Teinte d'une vignette de service. */
     --svc-tint: 13%;
 
@@ -309,6 +319,9 @@
     --shadow-soft: 0 0 0 0 transparent;
     --raised: 240 3.4% 11.4%;        /* #1c1c1e */
     --shadow-raised: 0 0 0 1px rgba(255, 255, 255, 0.1);
+    --fond-groupe: 0 0% 0%;
+    --secondary-fond: 240 2.2% 17.6%;
+    --shadow-flottant: 0 0 0 1px rgba(255, 255, 255, 0.1);
     --svc-tint: 26%;
 
     --chord-color: #8fb0ff;   /* bleu PDF FR dark */
@@ -361,11 +374,21 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply text-foreground;
+    background-color: hsl(var(--fond-page));
     font-feature-settings: "rlig" 1, "calt" 1;
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
   }
+  /* Pages de liste et de gestion : le gris tient toute la page et repeint les barres (`.barre-fond`).
+     Posé par `EnTetePage` et `DeuxVolets` (`data-fond-groupe`), jamais par les pages de lecture. Chants :
+     la liste est sur le gris (un volet sur /songs, deux volets partout, voir `.chants-volets` plus bas) ;
+     la page d'un chant seule reste blanche. Sur le gris, la liste des chants est un groupe (`--card`, rayon 16)
+     à toutes les tailles. */
+  :root:is(:has([data-fond-groupe]), :has(.chants-volets[data-sur-liste])) { --fond-page: var(--fond-groupe); }
+  /* Un contrôle rond posé sur le gris (cloche, menu « Accueil ⌄ ») est blanc, sans ombre, en clair seulement :
+     en sombre il garde son `--secondary`. */
+  :root:not(.dark):is(:has([data-fond-groupe]), :has(.chants-volets[data-sur-liste])) .blanc-sur-gris { background-color: hsl(var(--card)); }
 }
 
 @layer utilities {
@@ -684,6 +707,18 @@
 .chants-volets:where([data-sur-liste]) > .chants-chant,
 .chants-volets:where(:not([data-sur-liste])) > .chants-entete,
 .chants-volets:where(:not([data-sur-liste])) > .chants-liste { display: none; }
+/* Sur le fond gris (un volet, /songs), la liste est un groupe : `--card`, rayon 16, ni bordure ni ombre, à la marge
+   de la page. `:where` : les deux volets (plus bas) la posent eux-mêmes, d'où leur `margin-inline: 0`. En clair
+   seulement : en sombre le fond est noir et la liste reste nue. */
+:where(:root:not(.dark)) :where(.chants-volets[data-sur-liste]) { --index-hors: 44px; --index-fond: transparent; }
+:where(:root:not(.dark)) :where(.chants-volets[data-sur-liste]) > .chants-liste { margin-inline: var(--marge-page) calc(var(--marge-page) + var(--index-hors)); border-radius: var(--radius-groupe); background-color: hsl(var(--card)); }
+:where(:root:not(.dark)) :where(.chants-volets[data-sur-liste]) .chants-liste-corps { padding: 14px 16px 8px; }
+/* Un volet, clair : la liste finit avant l'index A–Z, qui reste sur le gris à droite (colonne de 44 px, `--index-hors`,
+   remise à 0 en deux volets où l'index est dans la carte). Dans le groupe blanc, la recherche est en aplat `--secondary`. */
+.chants-liste-contenu { padding-right: calc(1.75rem - var(--index-hors, 0px)); }
+.index-az-colonne { right: calc(-1rem - var(--index-hors, 0px)); }
+.index-az { background-color: var(--index-fond, hsl(var(--background) / 0.7)); }
+:root:not(.dark) .chants-volets[data-sur-liste] .chants-liste input[type="search"] { background-color: hsl(var(--secondary)); box-shadow: none; }
 /* Tablette debout, liste sur une colonne (chants-8, R2) : les actions de l'en-tête finissent où finissent la recherche
    et la liste, à la gouttière de 28 px de l'index A–Z (`pr-7` de SongListClient). Deux volets : l'en-tête garde toute la largeur. */
 @media (min-width: 768px) { .chants-entete { padding-right: 1.75rem; } }
@@ -736,12 +771,15 @@
    qu'il porte) et la rangée de la barre vont jusqu'à 900 px au lieu de 672 ; la 简谱 suit la
    colonne, l'intérieur de `JianpuSheet` n'est pas touché. */
 @media screen and (pointer: coarse) and (orientation: landscape) and (min-width: 1024px) {
-  .chants-volets { display: grid; grid-template-columns: clamp(320px, 37%, 400px) minmax(0, 1fr); column-gap: var(--ecart-volets); align-items: start; padding-left: var(--marge-page); }
+  :root:has(.chants-volets) { --fond-page: var(--fond-groupe); }
+  .chants-volets { display: grid; grid-template-columns: clamp(320px, 37%, 400px) minmax(0, 1fr); column-gap: var(--ecart-volets); align-items: start; padding-left: var(--marge-page); --index-hors: 0px; --index-fond: hsl(var(--background) / 0.7); }
   .chants-volets > .chants-entete { display: block; grid-column: 1 / -1; margin-left: calc(-1 * var(--marge-page)); padding-right: 0; }
-  .chants-volets > .chants-liste { --cadre-index: calc(100svh - var(--nav-h) - 104px); display: block; position: sticky; top: calc(var(--nav-h) + 20px); z-index: 1; max-height: calc(100svh - var(--nav-h) - 44px); margin-bottom: 24px; overflow-y: auto; overscroll-behavior: contain; border-radius: 16px; background-color: hsl(var(--raised)); box-shadow: var(--shadow-raised); }
+  .chants-volets > .chants-liste { --cadre-index: calc(100svh - var(--nav-h) - 104px); display: block; position: sticky; top: calc(var(--nav-h) + 20px); z-index: 1; max-height: calc(100svh - var(--nav-h) - 44px); margin-inline: 0; margin-bottom: 24px; overflow-y: auto; overscroll-behavior: contain; border-radius: var(--radius-groupe); background-color: hsl(var(--card)); }
   .chants-liste .chants-liste-fond { min-height: 0; }
+  .chants-liste input[type="search"] { background-color: hsl(var(--secondary)); box-shadow: none; }
   .chants-liste .chants-liste-corps { padding: 14px 16px 8px; }
-  .chants-volets > .chants-chant { display: block; min-width: 0; align-self: stretch; padding-right: var(--marge-page); }
+  .chants-volets > .chants-chant { display: block; min-width: 0; align-self: stretch; margin-right: var(--marge-page); border-radius: var(--radius-groupe); background-color: hsl(var(--background)); }
+  .chants-chant .barre-fond { background-color: hsl(var(--background)); }
   .chants-chant .barre-chant { position: sticky; left: auto; right: auto; width: calc(100% * var(--zoom-chant, 1)); }
   .chants-chant .retour-chant:not([data-vers-setlist]) { display: none; }
   .chants-chant .song-zoom, .chants-chant .video-chant { margin-top: 0; }
@@ -749,12 +787,15 @@
   .chants-chant :is(.song-zoom, .song-zoom > div, .rangee-chant) { max-width: 900px; }
 }
 @media screen and (pointer: fine) and (min-width: 1024px) {
-  :root[data-barre="reduite"] .chants-volets { display: grid; grid-template-columns: clamp(320px, 37%, 400px) minmax(0, 1fr); column-gap: var(--ecart-volets); align-items: start; padding-left: var(--marge-page); }
+  :root[data-barre="reduite"]:has(.chants-volets) { --fond-page: var(--fond-groupe); }
+  :root[data-barre="reduite"] .chants-volets { display: grid; grid-template-columns: clamp(320px, 37%, 400px) minmax(0, 1fr); column-gap: var(--ecart-volets); align-items: start; padding-left: var(--marge-page); --index-hors: 0px; --index-fond: hsl(var(--background) / 0.7); }
   :root[data-barre="reduite"] .chants-volets > .chants-entete { display: block; grid-column: 1 / -1; margin-left: calc(-1 * var(--marge-page)); padding-right: 0; }
-  :root[data-barre="reduite"] .chants-volets > .chants-liste { --cadre-index: calc(100svh - var(--nav-h) - 104px); display: block; position: sticky; top: calc(var(--nav-h) + 20px); z-index: 1; max-height: calc(100svh - var(--nav-h) - 44px); margin-bottom: 24px; overflow-y: auto; overscroll-behavior: contain; border-radius: 16px; background-color: hsl(var(--raised)); box-shadow: var(--shadow-raised); }
+  :root[data-barre="reduite"] .chants-volets > .chants-liste { --cadre-index: calc(100svh - var(--nav-h) - 104px); display: block; position: sticky; top: calc(var(--nav-h) + 20px); z-index: 1; max-height: calc(100svh - var(--nav-h) - 44px); margin-inline: 0; margin-bottom: 24px; overflow-y: auto; overscroll-behavior: contain; border-radius: var(--radius-groupe); background-color: hsl(var(--card)); }
   :root[data-barre="reduite"] .chants-liste .chants-liste-fond { min-height: 0; }
+  :root[data-barre="reduite"] .chants-liste input[type="search"] { background-color: hsl(var(--secondary)); box-shadow: none; }
   :root[data-barre="reduite"] .chants-liste .chants-liste-corps { padding: 14px 16px 8px; }
-  :root[data-barre="reduite"] .chants-volets > .chants-chant { display: block; min-width: 0; align-self: stretch; padding-right: var(--marge-page); }
+  :root[data-barre="reduite"] .chants-volets > .chants-chant { display: block; min-width: 0; align-self: stretch; margin-right: var(--marge-page); border-radius: var(--radius-groupe); background-color: hsl(var(--background)); }
+  :root[data-barre="reduite"] .chants-chant .barre-fond { background-color: hsl(var(--background)); }
   :root[data-barre="reduite"] .chants-chant .barre-chant { position: sticky; left: auto; right: auto; width: calc(100% * var(--zoom-chant, 1)); }
   :root[data-barre="reduite"] .chants-chant .retour-chant:not([data-vers-setlist]) { display: none; }
   :root[data-barre="reduite"] .chants-chant .song-zoom, :root[data-barre="reduite"] .chants-chant .video-chant { margin-top: 0; }
@@ -762,12 +803,15 @@
   :root[data-barre="reduite"] .chants-chant :is(.song-zoom, .song-zoom > div, .rangee-chant) { max-width: 900px; }
 }
 @media screen and (pointer: fine) and (min-width: 1148px) {
-  .chants-volets { display: grid; grid-template-columns: clamp(320px, 37%, 400px) minmax(0, 1fr); column-gap: var(--ecart-volets); align-items: start; padding-left: var(--marge-page); }
+  :root:has(.chants-volets) { --fond-page: var(--fond-groupe); }
+  .chants-volets { display: grid; grid-template-columns: clamp(320px, 37%, 400px) minmax(0, 1fr); column-gap: var(--ecart-volets); align-items: start; padding-left: var(--marge-page); --index-hors: 0px; --index-fond: hsl(var(--background) / 0.7); }
   .chants-volets > .chants-entete { display: block; grid-column: 1 / -1; margin-left: calc(-1 * var(--marge-page)); padding-right: 0; }
-  .chants-volets > .chants-liste { --cadre-index: calc(100svh - var(--nav-h) - 104px); display: block; position: sticky; top: calc(var(--nav-h) + 20px); z-index: 1; max-height: calc(100svh - var(--nav-h) - 44px); margin-bottom: 24px; overflow-y: auto; overscroll-behavior: contain; border-radius: 16px; background-color: hsl(var(--raised)); box-shadow: var(--shadow-raised); }
+  .chants-volets > .chants-liste { --cadre-index: calc(100svh - var(--nav-h) - 104px); display: block; position: sticky; top: calc(var(--nav-h) + 20px); z-index: 1; max-height: calc(100svh - var(--nav-h) - 44px); margin-inline: 0; margin-bottom: 24px; overflow-y: auto; overscroll-behavior: contain; border-radius: var(--radius-groupe); background-color: hsl(var(--card)); }
   .chants-liste .chants-liste-fond { min-height: 0; }
+  .chants-liste input[type="search"] { background-color: hsl(var(--secondary)); box-shadow: none; }
   .chants-liste .chants-liste-corps { padding: 14px 16px 8px; }
-  .chants-volets > .chants-chant { display: block; min-width: 0; align-self: stretch; padding-right: var(--marge-page); }
+  .chants-volets > .chants-chant { display: block; min-width: 0; align-self: stretch; margin-right: var(--marge-page); border-radius: var(--radius-groupe); background-color: hsl(var(--background)); }
+  .chants-chant .barre-fond { background-color: hsl(var(--background)); }
   .chants-chant .barre-chant { position: sticky; left: auto; right: auto; width: calc(100% * var(--zoom-chant, 1)); }
   .chants-chant .retour-chant:not([data-vers-setlist]) { display: none; }
   .chants-chant .song-zoom, .chants-chant .video-chant { margin-top: 0; }

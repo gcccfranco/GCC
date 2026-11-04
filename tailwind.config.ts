@@ -50,6 +50,8 @@ const config: Config = {
           DEFAULT: "hsl(var(--popover))",
           foreground: "hsl(var(--popover-foreground))",
         },
+        "fond-groupe": "hsl(var(--fond-groupe))",
+        "secondary-fond": "hsl(var(--secondary-fond))",
         card: {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
@@ -85,6 +87,7 @@ const config: Config = {
         "2xl": ["30px", { lineHeight: "34px", letterSpacing: "-0.02em" }],
       },
       borderRadius: {
+        groupe: "var(--radius-groupe)",
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",

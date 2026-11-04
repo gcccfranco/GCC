@@ -32,6 +32,7 @@ export function DeuxVolets({
   largeurListe = 380,
   colonneSeule = false,
   listeNaturelle = false,
+  fond = "groupe",
   children,
 }: {
   /** Adresse de la liste (`/mes-services`) : sur elle, aucun élément n'est choisi. */
@@ -53,6 +54,8 @@ export function DeuxVolets({
    *  (bo-evenements-13, la scène des fêtes). Le volet de droite s'étire alors sur la rangée, pour que la page
    *  puisse y coller son contenu. */
   listeNaturelle?: boolean;
+  /** Fond de la page : `groupe` (défaut, gris `--fond-groupe`, la liste est un groupe blanc) ou `blanc` (page de lecture : Harmonie). */
+  fond?: "groupe" | "blanc";
   /** La page de l'adresse : la fiche choisie. */
   children: ReactNode;
 }) {
@@ -63,6 +66,8 @@ export function DeuxVolets({
   const avecListe = Boolean(volets.liste);
   const seule = deuxVolets && colonneSeule && volets.droite === "premier";
   const bornee = !listeNaturelle;
+  // Un groupe blanc sans ombre sur le gris ; sur une page de lecture blanche, la carte en relief d'avant.
+  const surface = fond === "groupe" ? "bg-card" : "raised";
 
   useFonduVertical(carte, deuxVolets && avecListe && !seule && bornee);
 
@@ -100,6 +105,7 @@ export function DeuxVolets({
     <div
       data-deux-volets={deuxVolets ? "" : undefined}
       data-colonne-seule={seule ? "" : undefined}
+      data-fond-groupe={fond === "groupe" ? "" : undefined}
       className={
         seule
           ? "w-full max-w-[calc(960px+2*var(--marge-page))] px-[var(--marge-page)] pb-6"
@@ -113,11 +119,11 @@ export function DeuxVolets({
           data-volet="liste"
           className={
             seule
-              ? "page-fade raised rounded-2xl"
+              ? `page-fade ${surface} rounded-groupe`
               : deuxVolets && !bornee
-              ? "page-fade raised w-[var(--largeur-liste)] shrink-0 self-start rounded-2xl"
+              ? `page-fade ${surface} w-[var(--largeur-liste)] shrink-0 self-start rounded-groupe`
               : deuxVolets
-              ? "page-fade fondu-vertical sticky top-[calc(var(--nav-h)+20px)] max-h-[calc(100dvh-var(--haut-liste,calc(var(--nav-h)+20px))-24px)] w-[var(--largeur-liste)] shrink-0 overflow-y-auto overscroll-contain raised rounded-2xl"
+              ? `page-fade fondu-vertical sticky top-[calc(var(--nav-h)+20px)] max-h-[calc(100dvh-var(--haut-liste,calc(var(--nav-h)+20px))-24px)] w-[var(--largeur-liste)] shrink-0 overflow-y-auto overscroll-contain rounded-groupe ${surface}`
               : "page-fade"
           }
         >

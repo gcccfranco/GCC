@@ -24,7 +24,7 @@ import { SelecteurEspace, useFormeAffichee, useRetenirForme } from "@/components
 
 // Bouton d'icône de la barre : rond, sans bordure, réponse dès l'appui.
 const ICON_BUTTON =
-  "h-10 w-10 shrink-0 rounded-full bg-secondary text-foreground/80 hover:text-foreground transition-[background-color,color,transform] duration-150 active:scale-[.94] flex items-center justify-center cursor-pointer";
+  "blanc-sur-gris h-10 w-10 shrink-0 rounded-full bg-secondary text-foreground/80 hover:text-foreground transition-[background-color,color,transform] duration-150 active:scale-[.94] flex items-center justify-center cursor-pointer";
 const SECTION_LINK = "px-3 py-[7px] rounded-full text-sm font-semibold transition-colors duration-150 whitespace-nowrap";
 const sectionClass = (active: boolean) =>
   `${SECTION_LINK} ${active ? "bg-secondary text-foreground" : "text-muted-foreground hover:text-foreground hover:bg-secondary"}`;

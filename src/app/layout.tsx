@@ -65,7 +65,7 @@ export default function RootLayout({
             pour que le CSS cache l'en-tête des visiteurs pendant que Firebase lit la session. */}
         <script dangerouslySetInnerHTML={{ __html: SCRIPT_MARQUE_CONNECTE }} />
       </head>
-      <body className="font-sans antialiased min-h-screen bg-background">
+      <body className="font-sans antialiased min-h-screen">
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <I18nProvider>
             {/* Une seule fenêtre de confirmation pour tout le site (agencement v18, R9) : `useConfirmer`. */}

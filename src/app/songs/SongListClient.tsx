@@ -249,7 +249,7 @@ export function SongListClient({ songs, themes, actif = null, erreur = false, on
   return (
     // pr-7 : gouttière fixe de l'index A–Z. Elle ne dépend pas de la recherche,
     // pour que le champ ne change pas de largeur pendant la frappe.
-    <div className="relative pr-7" onClickCapture={saveScrollPos}>
+    <div className="chants-liste-contenu relative pr-7" onClickCapture={saveScrollPos}>
       {/* Barre de recherche */}
       <ChampRecherche
         className="mb-3.5"
@@ -411,7 +411,7 @@ export function SongListClient({ songs, themes, actif = null, erreur = false, on
         // La colonne remonte bien au-dessus de la liste (jusqu'au-dessus de l'en-tête de la
         // page, agencement v18), pour que l'index soit déjà à sa place collante avant le
         // premier défilement : sinon il glisserait sous le doigt au premier geste.
-        <div className="absolute -top-[100svh] bottom-0 -right-4 w-11 flex justify-end pointer-events-none">
+        <div className="index-az-colonne absolute -top-[100svh] bottom-0 -right-4 w-11 flex justify-end pointer-events-none">
           <nav
             aria-label={t("common.aria.indexAlphabetique")}
             onPointerDown={(e) => {
@@ -426,7 +426,7 @@ export function SongListClient({ songs, themes, actif = null, erreur = false, on
             }}
             onPointerUp={releasePointer}
             onPointerCancel={releasePointer}
-            className="pointer-events-auto sticky z-30 mr-0.5 flex flex-col items-center px-0.5 py-1 rounded-full bg-background/70 backdrop-blur-sm touch-none select-none"
+            className="index-az pointer-events-auto sticky z-30 mr-0.5 flex flex-col items-center px-0.5 py-1 rounded-full backdrop-blur-sm touch-none select-none"
             // Centré par `top` et non par une translation : en bas de liste,
             // le collant bute sur la fin de la colonne et une translation
             // ferait sortir le haut de l'index de l'écran. Centré dans

@@ -32,6 +32,7 @@ import { useDisposition } from "@/hooks/useDisposition";
 import { chargerIndexChants } from "@/hooks/useSongsIndex";
 import type { SongIndexEntry } from "@/types/song";
 import { PullToRefresh } from "@/components/layout/PullToRefresh";
+import { GROUPE } from "@/components/ui/group";
 import { FondDeBarre } from "@/components/layout/FondDeBarre";
 import { langueCourte } from "@/lib/utils/formatDate";
 import { useSetlistsNavState, type Tab } from "@/hooks/useSetlistsNavState";
@@ -359,16 +360,6 @@ export default function SetlistsPage() {
     return <EcranProfilRequis />;
   }
 
-  // Agencement v18 (A9, R1 à R3, R7 de docs/spec-agencement-v18.md) : l'en-tête sur toute la
-  // largeur, au-dessus des deux volets ; « + Nouvelle setlist » y est l'action principale
-  // (pilule dès 768 px, rond fixe sur téléphone). La liste n'a plus de titre.
-  const enTete = (
-    <EnTetePage
-      titre={t("common.header.setlists")}
-      sousTitre={t("setlists.list.sousTitre")}
-      action={canCreate ? <BoutonNouveau label={t("setlists.list.newButton")} href="/setlists/new" /> : undefined}
-    />
-  );
 
   // « Mes services » : seul sur sa ligne au téléphone (inchangé) ; en tête de la rangée des
   // filtres en grand et sur tablette (planches `setlists-*`).
@@ -380,7 +371,7 @@ export default function SetlistsPage() {
       className={`shrink-0 inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-sm font-semibold transition-[background-color,color,transform] duration-150 active:scale-[.97] ${
         onlyMine
           ? "bg-foreground text-background"
-          : "bg-secondary text-muted-foreground hover:text-foreground"
+          : "bg-card dark:bg-secondary text-muted-foreground hover:text-foreground"
       }`}
     >
       {onlyMine ? `✓ ${t("setlists.list.myServicesFilter")}` : t("setlists.list.myServicesFilter")}
@@ -415,12 +406,11 @@ export default function SetlistsPage() {
     <p className="mt-4 text-[13px] text-muted-foreground">{t("setlists.fete.sansChant", { liste: sansChant.join(", ") })}</p>
   );
 
-  const contenuListe = (
-      <>
-        {/* ── Vues : le rail (R4) ── */}
+  const rail = (
         <OngletsRail
           etiquette={t("common.header.setlists")}
-          className="mb-4 flex w-full [&>button]:flex-1"
+          surGris
+          className={`flex w-full [&>button]:flex-1 ${grand ? "max-w-[400px]" : ""}`}
           actif={tab}
           choisir={(o) => changerOnglet(o as Tab)}
           onglets={[
@@ -442,14 +432,15 @@ export default function SetlistsPage() {
             },
           ]}
         />
-
-        {/* ── Barre de filtres partagée ── */}
-        <div className="space-y-3 mb-5">
+  );
+  const filtres = (
+        <div className={`space-y-3 ${grand ? "max-w-[400px]" : ""}`}>
           <ChampRecherche
             value={query}
             onChange={setQuery}
             placeholder={t("setlists.list.searchPlaceholder")}
             label={t("setlists.list.searchPlaceholder")}
+            surGris
           />
 
           {disposition === "telephone" && mesServices}
@@ -460,7 +451,7 @@ export default function SetlistsPage() {
               <button
                 type="button"
                 onClick={() => setSelectionMode(true)}
-                className="shrink-0 h-9 px-4 rounded-full bg-secondary text-foreground text-sm font-semibold hover:bg-muted transition-[background-color,transform] duration-150 active:scale-[.97]"
+                className="shrink-0 h-9 px-4 rounded-full bg-card dark:bg-secondary text-foreground text-sm font-semibold hover:bg-muted transition-[background-color,transform] duration-150 active:scale-[.97]"
               >
                 {t("setlists.list.select")}
               </button>
@@ -469,7 +460,7 @@ export default function SetlistsPage() {
               aria-label={t("setlists.list.filterCategoryLabel")}
               value={categoryFilter}
               onChange={(e) => setCategoryFilter(e.target.value)}
-              className="min-w-0 flex-1 h-9 px-3 rounded-lg border border-transparent bg-secondary text-foreground text-[16px] sm:text-sm focus:outline-none focus:ring-2 focus:ring-ring/30"
+              className="min-w-0 flex-1 h-9 px-3 rounded-lg border border-transparent bg-card dark:bg-secondary text-foreground text-[16px] sm:text-sm focus:outline-none focus:ring-2 focus:ring-ring/30"
             >
               <option value="Toutes">{t("setlists.list.allCategories")}</option>
               <optgroup label={t("setlists.list.mainMeetings")}>
@@ -498,7 +489,23 @@ export default function SetlistsPage() {
             </select>
           </div>
         </div>
+  );
+  // Agencement v18 (A9, R1 à R3, R7 de docs/spec-agencement-v18.md) : l'en-tête sur toute la
+  // largeur, au-dessus des deux volets ; « + Nouvelle setlist » y est l'action principale
+  // (pilule dès 768 px, rond fixe sur téléphone). La liste n'a plus de titre. Recette de surface (C) :
+  // le rail et les filtres sont des contrôles posés sur le gris (sous le titre), seule la liste est un groupe blanc.
+  const enTete = (
+    <EnTetePage
+      titre={t("common.header.setlists")}
+      sousTitre={t("setlists.list.sousTitre")}
+      action={canCreate ? <BoutonNouveau label={t("setlists.list.newButton")} href="/setlists/new" /> : undefined}
+      onglets={rail}
+      apres={filtres}
+    />
+  );
 
+  const contenuListe = (
+      <>
         {feteFiltree && tab !== "mine" && enteteFete}
 
         {/* ── Résultat de la dernière suppression ── */}
@@ -573,7 +580,7 @@ export default function SetlistsPage() {
               ))}
             </ul>
           ) : (
-          <ul>
+          <ul className={grand ? undefined : `${GROUPE} px-4 py-1`}>
             {displayed.map((s) => (
               <li key={s.id} className="group-row relative">
                 <SetlistCard
@@ -606,7 +613,7 @@ export default function SetlistsPage() {
   );
 
   return (
-    <div className="relative min-h-screen bg-background">
+    <div className="relative min-h-screen">
       <PullToRefresh />
       {enTete}
       {grand ? (

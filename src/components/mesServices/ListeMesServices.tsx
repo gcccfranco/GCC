@@ -19,6 +19,7 @@ import { MOIS } from "@/lib/planning/utils";
 import { joursAvant } from "@/lib/planning/accueil";
 import { adresseDuService, cleDuService, type ServiceGroupe } from "@/lib/planning/mesServices";
 import { serviceColor } from "@/lib/serviceColors";
+import { GROUPE } from "@/components/ui/group";
 import { cn } from "@/lib/utils";
 import { PastilleRole } from "./PastilleRole";
 import { nomDuService } from "@/lib/planning/names";
@@ -92,7 +93,7 @@ export function ListeMesServices({
               <p className={cn("text-sm font-semibold text-muted-foreground mb-1.5 first-letter:uppercase", disposition !== "tablette" && "px-1")}>{m.label}</p>
               <ul className={cn(
                 disposition === "tablette" && "grid grid-cols-2 gap-3",
-                disposition === "telephone" && "raised rounded-2xl",
+                disposition === "telephone" && GROUPE,
               )}>
                 {m.items.map((e) => (
                   <LigneService

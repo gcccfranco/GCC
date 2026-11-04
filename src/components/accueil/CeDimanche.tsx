@@ -328,7 +328,7 @@ export function CeDimanche({
 
   return (
     <section aria-labelledby="ce-dimanche" className={disposition === "grand" ? "min-w-0 [container-type:inline-size]" : "min-w-0"}>
-      <h2 id="ce-dimanche" className="mb-3 text-[17px] font-bold">{titre}</h2>
+      <h2 id="ce-dimanche" className="mb-3 text-lg font-bold">{titre}</h2>
       <div className="flex flex-col gap-3.5">
         {carteCulte}
         {disposition === "telephone" ? (

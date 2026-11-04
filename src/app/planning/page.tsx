@@ -231,11 +231,11 @@ export default function PlanningAccueil() {
       )}
 
       {/* Verset (question 1 de la spec : gardé en bas) */}
-      <blockquote className="bg-secondary rounded-xl p-5">
-        <p className="text-sm text-muted-foreground leading-relaxed mb-3">
+      <blockquote>
+        <p className="mb-3 text-base text-foreground/70">
           {t("planning.verse.text")}
         </p>
-        <footer className="text-xs font-semibold text-muted-foreground text-right">{t("planning.verse.ref")}</footer>
+        <footer className="text-right text-sm font-semibold text-foreground/70">{t("planning.verse.ref")}</footer>
       </blockquote>
       <GuideLien section="planning" />
     </div>

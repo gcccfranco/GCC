@@ -16,7 +16,7 @@ import { GRILLES_DU_SERVICE, ceDimanche, prochainDimanche, reunionsDuTableau, se
 import { lireEvenements, lireGrilles, lireSetlists, useLecture } from "@/lib/tableauDeBord/lecture";
 import { jourComplet, jourLong } from "./texte";
 
-const CARTE = "rounded-2xl bg-secondary px-4 py-3.5";
+const CARTE = "rounded-groupe bg-card px-4 py-3.5";
 /** Les heures du dimanche (comme l'accueil ; EDD 15:30–17:00) ; un service sans heure connue n'en montre pas. */
 const HEURE_DU_SERVICE = (categorie: string) =>
   categorie === "Culte Francophone" ? "10:30" : categorie.startsWith("Groupe ") ? "13:00"

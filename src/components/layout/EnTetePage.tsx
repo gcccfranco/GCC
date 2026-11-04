@@ -41,6 +41,7 @@ export function EnTetePage({
   action,
   onglets,
   apres,
+  fond = "groupe",
 }: {
   /** Le titre de la page : le h1, même place et même taille partout. Facultatif : en deux volets, une fiche
    *  (réunion, tâche) est le grand titre et la bande du haut ne garde que le retour et l'action. */
@@ -57,9 +58,12 @@ export function EnTetePage({
   onglets?: ReactNode;
   /** Une rangée libre sous les onglets : `Pilules`, période, interrupteur. */
   apres?: ReactNode;
+  /** Fond de la page (recette de surface, lot CD) : `groupe` (défaut) pose le gris `--fond-groupe` sur la page et les barres ;
+   *  `blanc` pour une page de lecture (Harmonie, guide, chant). Posé ici et dans `DeuxVolets`, nulle part ailleurs. */
+  fond?: "groupe" | "blanc";
 }) {
   return (
-    <header data-entete-page="" className="relative px-[var(--marge-page)] pb-5 pt-6">
+    <header data-entete-page="" data-fond-groupe={fond === "groupe" ? "" : undefined} className="relative px-[var(--marge-page)] pb-5 pt-6">
       {/* Sans titre (fiche en deux volets) : l'action monte sur la ligne du retour. */}
       {!titre && !sousTitre ? (
         <div className="flex items-center gap-3">

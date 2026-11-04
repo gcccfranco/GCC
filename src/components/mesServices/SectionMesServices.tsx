@@ -162,7 +162,7 @@ export function SectionMesServices({ children }: { children: React.ReactNode }) 
   const avecEnTete = deuxVolets || !date;
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen">
       {avecEnTete && (
         <EnTetePage
           titre={t("mesServices.title")}

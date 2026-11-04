@@ -18,6 +18,7 @@ export function ChampRecherche({
   labelEffacer,
   className,
   inputProps,
+  surGris = false,
 }: {
   value: string;
   onChange: (v: string) => void;
@@ -25,6 +26,8 @@ export function ChampRecherche({
   label: string;
   labelEffacer?: string;
   className?: string;
+  /** Posé sur le fond de groupe (recette de surface) : blanc, sans ombre. */
+  surGris?: boolean;
   inputProps?: Omit<InputHTMLAttributes<HTMLInputElement>, "value" | "onChange" | "type" | "placeholder" | "className">;
 }) {
   const { t } = useTranslation();
@@ -39,7 +42,7 @@ export function ChampRecherche({
         {...inputProps}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="raised w-full h-[46px] pl-[42px] pr-10 border border-transparent rounded-full text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-ring/50 focus:ring-[3px] focus:ring-ring/10 text-[16px] transition-all duration-150 [&::-webkit-search-cancel-button]:hidden"
+        className={`${surGris ? "bg-card dark:[background-color:hsl(var(--raised))] dark:[box-shadow:var(--shadow-raised)]" : "raised"} w-full h-[46px] pl-[42px] pr-10 border border-transparent rounded-full text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-ring/50 focus:ring-[3px] focus:ring-ring/10 text-[16px] transition-all duration-150 [&::-webkit-search-cancel-button]:hidden`}
       />
       {value && (
         <button
