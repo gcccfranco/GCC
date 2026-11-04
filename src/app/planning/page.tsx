@@ -216,7 +216,9 @@ export default function PlanningAccueil() {
     <div className="relative space-y-6">
       <StaleBanner show={stale} />
 
-      {disposition === "grand" ? (
+      {disposition === "grand" && !pourMoiBloc ? (
+        ceDimanche
+      ) : disposition === "grand" ? (
         <div className="grid grid-cols-[minmax(0,1.45fr)_minmax(0,1fr)] items-start gap-5">
           {ceDimanche}
           {pourMoiBloc}
@@ -230,7 +232,7 @@ export default function PlanningAccueil() {
 
       {/* Verset (question 1 de la spec : gardé en bas) */}
       <blockquote className="bg-secondary rounded-xl p-5">
-        <p className="text-sm text-muted-foreground italic leading-relaxed mb-3">
+        <p className="text-sm text-muted-foreground leading-relaxed mb-3">
           {t("planning.verse.text")}
         </p>
         <footer className="text-xs font-semibold text-muted-foreground text-right">{t("planning.verse.ref")}</footer>

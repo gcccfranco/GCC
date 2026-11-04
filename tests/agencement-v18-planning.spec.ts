@@ -362,6 +362,34 @@ test.describe("T4b — Planning, accueil (A1)", () => {
     }
   });
 
+  // quotidien-11 : EDD sur deux étages comme Groupes, les deux cartes de la rangée à la même hauteur.
+  test("Groupes et EDD de même hauteur de rangée", async ({ page }, info) => {
+    test.skip(info.project.name === "telephone", "téléphone : pile");
+    await ouvrirAccueilOuTable(page, "/planning");
+    await expect(carteDeLaTable(page)).toContainText("Famille Test");
+    await expect(ceDimanche(page).getByTestId("ligne-edd")).toHaveCount(3);
+    const [g, e] = [await boite(carteDesGroupes(page)), await boite(carteEdd(page))];
+    expect(Math.abs(g.y - e.y), "Groupes et EDD sur la même rangée").toBeLessThan(2);
+    expect(Math.abs(g.height - e.height), "Groupes et EDD").toBeLessThan(2);
+    // Deux étages : la classe, puis « Présidence … » ou « — » dessous (et non à côté).
+    for (const ligne of await ceDimanche(page).getByTestId("ligne-edd").all()) {
+      const [classe, detail] = [await boite(ligne.locator("b").first()), await boite(ligne.locator("p").first())];
+      expect(detail.y, "second étage sous la classe").toBeGreaterThanOrEqual(classe.y + classe.height - 1);
+      expect(Math.abs(detail.x - classe.x), "étages alignés à gauche").toBeLessThan(1);
+    }
+  });
+
+  // quotidien-10 : onglets de section de la tablette portrait, 44 px, actif noir.
+  test("tablette portrait : onglets du Planning de 44 px, l'actif en noir", async ({ page }, info) => {
+    test.skip(info.project.name !== "tablette", "tablette portrait");
+    await ouvrirAccueilOuTable(page, "/planning");
+    const onglet = page.getByTestId("onglets-section").getByRole("link", { name: "Accueil" });
+    await expect(onglet).toHaveAttribute("aria-current", "page");
+    expect((await boite(onglet)).height, "44 px").toBeGreaterThanOrEqual(43.5);
+    const encre = await page.locator("body").evaluate((el) => getComputedStyle(el).color);
+    expect(await fond(onglet), "actif noir (bg-foreground)").toBe(encre);
+  });
+
   test("barre dépliée : la Table sous Groupes et EDD, sur une ligne", async ({ page }, info) => {
     test.skip(!estGrandEcran(info) || info.project.name === "tablette-paysage", "ordinateur, barre dépliée");
     await ouvrirAvecBarre(page, "depliee");

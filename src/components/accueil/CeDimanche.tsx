@@ -12,6 +12,7 @@ import { useTranslation } from "react-i18next"
 import { ChevronRight } from "lucide-react"
 import { PLANNING_COLORS } from "@/lib/serviceColors"
 import { serviceButtonFill } from "@/lib/serviceButton"
+import { TOUCHER_44 } from "@/lib/toucher44"
 import { porteLeNom } from "@/lib/planning/accueil"
 import { isFirstSundayOfMonth } from "@/lib/planning/utils"
 import { Tile } from "@/components/ui/tile"
@@ -232,9 +233,11 @@ export function CeDimanche({
       </h3>
       <ul>
         {edd.map((c) => (
-          <li key={c.classe} data-testid="ligne-edd" className="flex gap-2.5 border-t border-border/70 py-2 text-sm">
-            <b className="svc-ink w-12 shrink-0 font-semibold" style={svc(PLANNING_COLORS.edd)}>{c.classe}</b>
-            <span className="min-w-0">{vide(c.presidence) ? "—" : <>{r("presidence")} <Noms valeur={c.presidence} monNom={monNom} /></>}</span>
+          <li key={c.classe} data-testid="ligne-edd" className="flex items-start gap-2.5 border-t border-border/70 py-2 text-sm">
+            <div className="min-w-0">
+              <b className="svc-ink font-semibold" style={svc(PLANNING_COLORS.edd)}>{c.classe}</b>
+              <p className="text-[13px] text-muted-foreground">{vide(c.presidence) ? "—" : <>{r("presidence")} <Noms valeur={c.presidence} monNom={monNom} /></>}</p>
+            </div>
           </li>
         ))}
       </ul>
@@ -282,7 +285,7 @@ export function CeDimanche({
               <span className="font-semibold text-amber-700 dark:text-amber-400">{t("planning.accueil.libre")}</span>
               <Link
                 href="/planning/table"
-                className="relative z-10 ml-auto inline-flex h-8 items-center rounded-full px-3.5 text-[13px] font-semibold text-white transition-transform duration-150 active:scale-[.97]"
+                className={`relative z-10 ml-auto inline-flex h-8 items-center rounded-full px-3.5 ${TOUCHER_44} text-[13px] font-semibold text-white transition-transform duration-150 active:scale-[.97]`}
                 style={{ background: serviceButtonFill(PLANNING_COLORS.table) }}
               >
                 {t("planning.accueil.inscrire")}
@@ -343,7 +346,7 @@ export function CeDimanche({
               {carteGroupes}{carteEdd}
             </div>
             {disposition === "tablette" && carteEvenements ? (
-              <div className="grid grid-cols-2 items-start gap-3.5">{carteTable}{carteEvenements}</div>
+              <div className="grid grid-cols-2 items-stretch gap-3.5">{carteTable}{carteEvenements}</div>
             ) : (
               <>{carteTable}{carteEvenements}</>
             )}

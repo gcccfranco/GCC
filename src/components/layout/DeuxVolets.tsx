@@ -96,7 +96,7 @@ export function DeuxVolets({
       data-colonne-seule={seule ? "" : undefined}
       className={
         seule
-          ? "mx-auto w-full max-w-[calc(960px+2*var(--marge-page))] px-[var(--marge-page)] pb-6"
+          ? "w-full max-w-[calc(960px+2*var(--marge-page))] px-[var(--marge-page)] pb-6"
           : deuxVolets ? "flex items-start gap-[var(--ecart-volets)] px-[var(--marge-page)] pb-6" : undefined
       }
       style={deuxVolets ? ({ "--largeur-liste": `${largeurListe}px` } as CSSProperties) : undefined}

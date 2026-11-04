@@ -128,15 +128,21 @@ function MoiClient() {
   // A12 (agencement v18) : des aperçus utiles à la place des lignes de liens d'avant (Mes services,
   // Équipes, Harmonie, Tâches) ; leur « Tout voir » mène aux pages, rien ne disparaît.
   const apercus = (
-    <div key="apercus" className="grid items-start gap-4 md:grid-cols-2">
-      <div className="min-w-0 space-y-4">
-        <ApercuServices />
-        <MesPresidences profile={profile} />
+    <div key="apercus" className="min-w-0 [container-type:inline-size]">
+      <div className="grid items-start gap-4 [@container(min-width:720px)]:grid-cols-2">
+        <div className="min-w-0 space-y-4">
+          <ApercuServices />
+          <MesPresidences profile={profile} />
+          {!harmonie.chargement && harmonie.peut && <ApercuHarmonie piano={harmonie.piano} />}
+        </div>
+        {BACK_OFFICE && (
+          <div className="min-w-0 space-y-4">
+            {equipes.length > 0 && user && <ApercuTaches equipes={equipes} />}
+            <CarteMesEquipes profile={profile} />
+            <CarteCeQueTuPeuxFaire profile={profile} admin={admin} />
+          </div>
+        )}
       </div>
-      {BACK_OFFICE && equipes.length > 0 && user && <ApercuTaches equipes={equipes} />}
-      {!harmonie.chargement && harmonie.peut && <ApercuHarmonie piano={harmonie.piano} />}
-      {BACK_OFFICE && <CarteMesEquipes profile={profile} />}
-      {BACK_OFFICE && <CarteCeQueTuPeuxFaire profile={profile} admin={admin} />}
     </div>
   );
   const aide = (
@@ -158,7 +164,7 @@ function MoiClient() {
   const sousLeCompte = BACK_OFFICE && !grand && !telephone;
   const contenu = (
     <div className={grand ? "grid grid-cols-[340px_minmax(0,1fr)] items-start gap-5" : "space-y-4"}>
-      <div className={grand ? "space-y-4" : telephone ? undefined : "grid grid-cols-2 items-start gap-4"}>
+      <div className={grand ? "space-y-4 sticky top-[calc(var(--nav-h)+20px)]" : telephone ? undefined : "grid grid-cols-2 items-start gap-4"}>
         {/* BO-G, 12 : au Back-Office, tablette portrait, « Déconnexion » sous le compte : plus de grand vide sous « Mon profil ». */}
         {sousLeCompte ? <div className="space-y-4">{compte}{deconnexion}</div> : compte}
         {!telephone && <div className="space-y-4">{reglages}{notifierAdmin}{!sousLeCompte && deconnexion}</div>}

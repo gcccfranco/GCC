@@ -90,6 +90,24 @@ test.describe("Moi (Q9)", () => {
       expect(r.y, "puis les réglages").toBeGreaterThan(services.y);
       expect(deconnexion.y, "la déconnexion en dernier").toBeGreaterThan(r.y + r.height - 1);
     }
+    // quotidien-3 : deux piles seulement au-delà de 720 px de conteneur (1 440 px, tablette portrait), une colonne ailleurs.
+    const pileGauche = await boite(page.getByRole("region", { name: "Mes services", exact: true }));
+    const tache = page.getByRole("region", { name: /Mes tâches|Mes équipes|Ce que tu peux faire/ }).first();
+    await expect(tache, "pile de droite (back-office ouvert)").toBeVisible();
+    {
+      const droite = await boite(tache);
+      if (info.project.name === "ordinateur-1440" || d === "tablette") {
+        expect(droite.x, "la pile de droite à droite de celle de gauche").toBeGreaterThan(pileGauche.x + pileGauche.width - 1);
+        expect(Math.abs(droite.y - pileGauche.y), "hauts alignés").toBeLessThan(40);
+      } else if (d === "grand") {
+        expect(Math.abs(droite.x - pileGauche.x), "une colonne").toBeLessThan(2);
+      }
+    }
+    // quotidien-4 : aucune ligne d'aperçu coupée par « … » (une colonne de 592 px à 1 280 px).
+    expect(await page.evaluate(() => [...document.querySelectorAll("section.raised .truncate")].filter(e => e.scrollWidth > e.clientWidth + 1).length), "lignes d'aperçu coupées").toBe(0);
+    if (d === "grand") {
+      expect(await compte(page).evaluate((el) => getComputedStyle(el.parentElement!).position), "compte collant en grand").toBe("sticky");
+    }
     expect(await sansDefilementHorizontal(page), "pas de défilement horizontal").toBe(true);
   });
 

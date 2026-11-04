@@ -201,6 +201,33 @@ test("téléphone : la liste, puis le service en page (l'équipe avant la setlis
   await expect(page).toHaveURL(/\/mes-services\/?$/);
 });
 
+// quotidien-7 : la bannière « Active les rappels » est un encadré gris sans filet ; la croix a une zone de 44 px au toucher.
+test("bannière des rappels : encadré sans filet coloré, croix de 44 px au toucher", async ({ page }) => {
+  await ouvrir(page, "/mes-services");
+  const bandeau = page.getByText("Active les rappels de service").locator("xpath=ancestor::div[contains(@class,'rounded-2xl')][1]");
+  await expect(bandeau).toBeVisible();
+  expect(await bandeau.evaluate((el) => getComputedStyle(el).borderTopWidth), "pas de filet").toBe("0px");
+  const croix = await page.getByRole("button", { name: "Fermer", exact: true }).first().evaluate((el) => ({
+    coarse: matchMedia("(pointer:coarse)").matches,
+    zone: [parseFloat(getComputedStyle(el, "::after").width), parseFloat(getComputedStyle(el, "::after").height)],
+  }));
+  expect(croix.coarse, "pointeur grossier sur les appareils tactiles").toBe(!!test.info().project.use.hasTouch);
+  if (croix.coarse) for (const c of croix.zone) expect(c, "zone de la croix").toBeGreaterThanOrEqual(44);
+});
+
+// quotidien-5 : la colonne seule part du bord du titre (plus de carte centrée).
+test("liste seule : le bord gauche de la carte est celui du titre", async ({ page }, info) => {
+  test.skip(disposition(info) !== "grand", "colonne seule : grand écran");
+  await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
+  await page.route(/docs\.google\.com\/spreadsheets/, (route) => route.fulfill({ status: 200, contentType: "text/csv", body: "" }));
+  await signInAs(page, RUTH, {}, "/mes-services");
+  const seule = page.locator("[data-colonne-seule]");
+  await expect(seule).toBeVisible();
+  const titre = (await page.locator("header[data-entete-page]").getByRole("heading", { name: "Mes services", level: 1 }).boundingBox())!;
+  const carte = (await seule.locator(".raised").first().boundingBox())!;
+  expect(Math.abs(carte.x - titre.x), "bord de la carte = bord du titre").toBeLessThan(2);
+});
+
 test("capture : Mes services", async ({ page }, info) => {
   await ouvrir(page, disposition(info) === "grand" ? "/mes-services/2026-10-18" : "/mes-services");
   await expect(page.getByText("Culte Franco").first()).toBeVisible();

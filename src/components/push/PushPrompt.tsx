@@ -73,11 +73,11 @@ export function PushPrompt() {
   }
 
   return (
-    <div className="relative rounded-xl border border-primary/30 bg-primary/5 px-4 py-3">
+    <div className="relative rounded-2xl bg-secondary px-4 py-3">
       <button
         onClick={dismiss}
         aria-label={t("signalement.fermer")}
-        className="absolute right-2 top-2 text-muted-foreground hover:text-foreground"
+        className="absolute right-2 top-2 text-muted-foreground hover:text-foreground [@media(pointer:coarse)]:after:absolute [@media(pointer:coarse)]:after:-inset-3.5 [@media(pointer:coarse)]:after:content-['']"
       >
         <X className="h-4 w-4" />
       </button>
@@ -86,11 +86,11 @@ export function PushPrompt() {
         <div className="flex-1">
           <p className="text-sm font-semibold text-foreground">{t("push.promptTitle")}</p>
           {needsInstall ? (
-            <p className="text-xs text-muted-foreground mt-0.5">
+            <p className="text-[13px] text-muted-foreground mt-0.5">
               {t("push.iosInstall")}
             </p>
           ) : (
-            <p className="text-xs text-muted-foreground mt-0.5">
+            <p className="text-[13px] text-muted-foreground mt-0.5">
               {t("push.promptText")}
             </p>
           )}
@@ -99,7 +99,7 @@ export function PushPrompt() {
             <button
               onClick={enable}
               disabled={busy}
-              className="mt-2 h-8 px-3 rounded-full bg-primary text-primary-foreground text-sm font-semibold disabled:opacity-50"
+              className="mt-2 h-8 [@media(pointer:coarse)]:h-11 px-3 rounded-full bg-primary text-primary-foreground text-sm font-semibold disabled:opacity-50"
             >
               {busy ? "…" : t("accueil.notifs.activer")}
             </button>

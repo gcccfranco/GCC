@@ -155,9 +155,9 @@ export function SectionTabs({ tabs, rootHref, menuLabel, pleineLargeur = false, 
                 href={tab.href}
                 ref={(el) => { tabRefs.current[i] = el }}
                 aria-current={active ? "page" : undefined}
-                className={`inline-flex min-h-10 flex-shrink-0 items-center rounded-full px-3.5 text-sm font-semibold whitespace-nowrap transition-colors duration-150 ${
+                className={`inline-flex min-h-11 flex-shrink-0 items-center rounded-full px-3.5 text-sm font-semibold whitespace-nowrap transition-colors duration-150 ${
                   active
-                    ? tab.color ? "texte-service" : "bg-secondary text-foreground"
+                    ? tab.color ? "texte-service" : "bg-foreground text-background"
                     : "text-muted-foreground hover:text-foreground"
                 }`}
                 style={active ? teinte(tab.color) : undefined}
