@@ -16,6 +16,7 @@ import { Retour } from "@/components/layout/EnTetePage";
 import { useTranslation } from "react-i18next";
 import { Group, GroupRow } from "@/components/ui/group";
 import { OngletsRail } from "@/components/layout/Onglets";
+import { Menu } from "@/components/ui/menu";
 import { Clavier, DiagrammeGuitare, doigtesDe, notesDe } from "@/components/harmonie/Diagrammes";
 import { ParagrapheFiche, TexteFiche, TON_DES_FICHES } from "@/components/harmonie/TexteFiche";
 import { useCatalogueHarmonie } from "@/components/harmonie/catalogueContexte";
@@ -132,15 +133,14 @@ export function FicheHarmonie({ id }: { id: string }) {
             <ParagrapheFiche texte={fiche.avantApres} demiTons={demiTons} tonalite={tonalite} />
           </div>
           <div className="flex flex-wrap items-center gap-3 border-t border-border px-4 py-2.5">
-            <label className="text-[13px] text-muted-foreground" htmlFor="ton-fiche">{t("harmonie.tonalite")}</label>
-            <select
-              id="ton-fiche"
+            <span className="text-[13px] text-muted-foreground">{t("harmonie.tonalite")}</span>
+            <Menu
+              label={t("harmonie.tonalite")}
               value={tonalite}
-              onChange={(e) => setTonalite(e.target.value)}
-              className="h-11 rounded-lg bg-secondary px-2 text-[15px] [@media(pointer:fine)]:h-9"
-            >
-              {ALL_KEYS.map((k) => <option key={k} value={k}>{k}</option>)}
-            </select>
+              defaultValue={TON_DES_FICHES}
+              onChange={setTonalite}
+              options={ALL_KEYS.map((k) => ({ valeur: k, libelle: k }))}
+            />
           </div>
           {demiTons !== 0 && (
             <p className="border-t border-border px-4 py-2 text-[13px] text-muted-foreground">
@@ -166,16 +166,14 @@ export function FicheHarmonie({ id }: { id: string }) {
           <Group title={instrument === "piano" ? t("harmonie.auPiano") : t("harmonie.aLaGuitare")} className={CARTE}>
             {montreCapo && (
               <div className="flex flex-wrap items-center gap-3 px-4 pt-1">
-                <label className="text-[13px] text-muted-foreground" htmlFor="capo-fiche">{t("harmonie.capoTitre")}</label>
-                <select
-                  id="capo-fiche"
-                  value={capo}
-                  onChange={(e) => setCapo(Number(e.target.value))}
-                  className="h-11 rounded-lg bg-secondary px-2 text-[15px] [@media(pointer:fine)]:h-9"
-                >
-                  <option value={0}>{t("harmonie.sansCapo")}</option>
-                  {[1, 2, 3, 4, 5, 6, 7].map((n) => <option key={n} value={n}>{n}</option>)}
-                </select>
+                <span className="text-[13px] text-muted-foreground">{t("harmonie.capoTitre")}</span>
+                <Menu
+                  label={t("harmonie.capoTitre")}
+                  value={String(capo)}
+                  defaultValue="0"
+                  onChange={(v) => setCapo(Number(v))}
+                  options={["0", "1", "2", "3", "4", "5", "6", "7"].map((n) => ({ valeur: n, libelle: n === "0" ? t("harmonie.sansCapo") : n }))}
+                />
                 <span className="text-[13px] text-muted-foreground">
                   {capo > 0
                     ? t("harmonie.formesSonnent", { ton: TON_DES_FICHES, sonne: tonDesFormes })

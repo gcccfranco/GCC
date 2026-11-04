@@ -108,8 +108,9 @@ test.describe("Harmonie : le catalogue", () => {
   test("en grand, les filtres restent d'une fiche à l'autre ; la première suit le filtre ; retour arrière", async ({ page }, info) => {
     test.skip(!enGrand(info), "deux volets : ordinateur et tablette paysage");
     await entrer(page, "/harmonie");
-    const avance = liste(page).getByRole("group", { name: "Niveau" }).getByRole("button", { name: "Avancé" });
-    await avance.click();
+    const niveau = liste(page).locator('[data-menu][aria-label^="Niveau"]');
+    await niveau.click();
+    await page.getByRole("menuitemradio", { name: "Avancé", exact: true }).click();
     const premiereAvancee = fichesPiano.find((f) => f.niveau.piano === "avance")!;
     await expect(detail(page).locator(`[data-fiche="${premiereAvancee.id}"]`), "Q3 : la première de la liste filtrée").toBeVisible();
     const lignes = liste(page).locator("a[href^='/harmonie/']:not([href^='/harmonie/cours']):not([href^='/harmonie/rd2000'])");
@@ -120,10 +121,11 @@ test.describe("Harmonie : le catalogue", () => {
     await expect(detail(page).locator(`[data-fiche="${deuxieme}"]`)).toBeVisible();
     await lignes.nth(0).click();
     await expect(detail(page).locator(`[data-fiche="${premiereAvancee.id}"]`)).toBeVisible();
-    await expect(avance, "le filtre est resté").toHaveAttribute("aria-pressed", "true");
+    await expect(niveau, "le filtre est resté").toContainText("Avancé");
+    await expect(niveau).toHaveAttribute("data-pose", "");
     await page.goBack();
     await expect(detail(page).locator(`[data-fiche="${deuxieme}"]`), "retour arrière rend la fiche précédente").toBeVisible();
-    await expect(avance).toHaveAttribute("aria-pressed", "true");
+    await expect(niveau).toContainText("Avancé");
   });
 
   test("un volet : la liste seule, puis la fiche avec son retour, comme aujourd'hui", async ({ page }, info) => {
@@ -166,8 +168,32 @@ test.describe("Harmonie : le catalogue", () => {
     await entrer(page, "/harmonie");
     const cat = page.locator("[data-harmonie]");
     const filtres = await boite(cat.getByRole("group", { name: "Sensation" }));
-    const parcours = await boite(cat.getByRole("heading", { name: "Par où commencer" }));
+    const parcours = await boite(cat.locator("[data-parcours]"));
     expect(parcours.y).toBeGreaterThan(filtres.y);
+  });
+
+  test("aucun <select> hors formulaire dans le catalogue", async ({ page }) => {
+    await entrer(page, "/harmonie");
+    await expect(page.locator("[data-harmonie] [data-menu]").first()).toBeVisible();
+    expect(await page.locator("[data-harmonie] select:visible").count()).toBe(0);
+  });
+
+  test("deux volets : le parcours est replié au départ, puis se déplie sur place ; ailleurs il reste ouvert", async ({ page }, info) => {
+    await entrer(page, "/harmonie");
+    const parcours = page.locator("[data-parcours]");
+    await expect(parcours).toBeVisible();
+    if (enGrand(info)) {
+      const bouton = parcours.getByRole("button", { name: /Par où commencer/ });
+      await expect(bouton).toHaveAttribute("aria-expanded", "false");
+      await expect(bouton).toContainText("fiches dans l'ordre");
+      await expect(parcours.getByRole("link")).toHaveCount(0);
+      await bouton.click();
+      await expect(bouton).toHaveAttribute("aria-expanded", "true");
+      await expect(parcours.getByRole("link")).toHaveCount(3);
+    } else {
+      await expect(parcours.getByRole("button", { name: /Par où commencer/ })).toHaveCount(0);
+      await expect(parcours.getByRole("link")).toHaveCount(3);
+    }
   });
 
   // musiciens-3 : un seul interrupteur Piano | Guitare par disposition.

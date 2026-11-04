@@ -193,7 +193,7 @@
       "sousTitre": "每次服事预备的诗歌",
       "draft": "草稿",
       "private": "私密",
-      "allCategories": "全部类型",
+      "allCategories": "所有聚会",
       "filterCategoryLabel": "按类别筛选",
       "empty": "目前没有歌单。",
       "emptyCategory": "此类型下没有歌单。",
@@ -2977,6 +2977,7 @@
     "compteFiches_other": "{{count}} 张卡片，钢琴与吉他",
     "idees": "和声灵感",
     "parcours": "从这里开始",
+    "parcoursSous_other": "按顺序的 {{count}} 张卡片",
     "aVerifier": "请弹奏确认",
     "essayer": "在我的版本中试试",
     "appliquer": "应用到歌单",
@@ -3018,7 +3019,8 @@
       "facile": "简单",
       "intermediaire": "中等",
       "avance": "进阶",
-      "titre": "难度"
+      "titre": "难度",
+      "tous": "全部难度"
     },
     "sensation": {
       "titre": "感觉",
@@ -3037,6 +3039,7 @@
     },
     "moment": {
       "titre": "段落",
+      "tous": "全部段落",
       "intro": "前奏",
       "couplet": "主歌",
       "montee": "过门",

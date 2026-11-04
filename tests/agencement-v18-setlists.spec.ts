@@ -99,6 +99,38 @@ test.describe("Setlists (A9)", () => {
     expect((await enTete(page).boundingBox())!.y + 1, "le titre au-dessus du rail").toBeLessThan((await rail.boundingBox())!.y);
   });
 
+  test("jeu B : le rail à la largeur de son contenu (pleine largeur au téléphone), « Mes services » en pilule, aucun <select>", async ({ page }, info) => {
+    await ouvrir(page, "/setlists");
+    await expect(ligneSetlist(page, "Culte du 4 octobre")).toBeVisible();
+    const rail = ongletsRail(page).filter({ visible: true });
+    const largeur = (await rail.boundingBox())!.width;
+    if (estTelephone(info)) {
+      expect(largeur, "pleine largeur au téléphone").toBeGreaterThan(page.viewportSize()!.width - 48);
+    } else {
+      expect(largeur, "à la largeur du contenu").toBeLessThanOrEqual(420);
+    }
+    const mes = page.getByRole("button", { name: "Mes services", exact: true });
+    const avant = await mes.getAttribute("aria-pressed");
+    expect(["true", "false"]).toContain(avant);
+    await mes.click();
+    await expect(mes).toHaveAttribute("aria-pressed", avant === "true" ? "false" : "true");
+    await expect(mes).not.toContainText("✓");
+    expect(await page.locator("select:visible:not(form select)").count(), "aucun <select> hors formulaire").toBe(0);
+    // Le filtre de catégorie est un Menu : au repos « Tous les services », une catégorie choisie le met à l'encre.
+    const menu = page.locator("[data-menu]").filter({ hasText: "Tous les services" });
+    await expect(menu).toBeVisible();
+    await expect(menu).not.toHaveAttribute("data-pose", "");
+    await menu.click();
+    const premiere = page.getByRole("menu").getByRole("menuitemradio").nth(1);
+    const nom = (await premiere.innerText()).trim();
+    await premiere.click();
+    const pose = page.locator("[data-menu][data-pose]");
+    await expect(pose).toContainText(nom);
+    await pose.click();
+    await page.getByRole("menu").getByRole("menuitemradio", { name: "Tous les services" }).click();
+    await expect(page.locator("[data-menu][data-pose]")).toHaveCount(0);
+  });
+
   test("l'onglet « Mes setlists » garde son cadenas à 360 px, sans coupure (dimanche-25)", async ({ page }) => {
     await page.setViewportSize({ width: 360, height: 780 });
     await ouvrir(page, "/setlists");

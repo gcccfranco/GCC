@@ -24,6 +24,8 @@ import { ChampRecherche } from "@/components/layout/ChampRecherche";
 import { EnTetePage } from "@/components/layout/EnTetePage";
 import { BoutonNouveau } from "@/components/layout/BoutonNouveau";
 import { OngletsRail } from "@/components/layout/Onglets";
+import { Menu } from "@/components/ui/menu";
+import { TOUCHER_44, TOUCHER_PILULE } from "@/lib/toucher44";
 import { SetlistCard, SetlistCarteChants } from "@/components/setlists/SetlistCard";
 import { BandeauCorbeille } from "@/components/setlists/BandeauCorbeille";
 import { ApercuSetlist } from "@/components/setlists/ApercuSetlist";
@@ -368,13 +370,13 @@ export default function SetlistsPage() {
       type="button"
       aria-pressed={onlyMine}
       onClick={() => setOnlyMine((v) => !v)}
-      className={`shrink-0 inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-sm font-semibold transition-[background-color,color,transform] duration-150 active:scale-[.97] ${
+      className={`inline-flex h-7 shrink-0 items-center whitespace-nowrap rounded-full px-3 text-[13px] font-semibold transition-colors duration-150 [@media(pointer:coarse)]:h-8 [@media(pointer:coarse)]:text-[14px] ${TOUCHER_PILULE} ${
         onlyMine
-          ? "bg-foreground text-background"
-          : "bg-card dark:bg-secondary text-muted-foreground hover:text-foreground"
+          ? "bg-primary text-primary-foreground"
+          : "bg-secondary-fond dark:bg-secondary text-foreground active:bg-secondary/70"
       }`}
     >
-      {onlyMine ? `✓ ${t("setlists.list.myServicesFilter")}` : t("setlists.list.myServicesFilter")}
+      {t("setlists.list.myServicesFilter")}
     </button>
   );
 
@@ -410,7 +412,7 @@ export default function SetlistsPage() {
         <OngletsRail
           etiquette={t("common.header.setlists")}
           surGris
-          className={`flex w-full [&>button]:flex-1 ${grand ? "max-w-[400px]" : ""}`}
+          pleineLargeur={disposition === "telephone"}
           actif={tab}
           choisir={(o) => changerOnglet(o as Tab)}
           onglets={[
@@ -447,46 +449,32 @@ export default function SetlistsPage() {
 
           <div className="flex items-center gap-2">
             {disposition !== "telephone" && mesServices}
+            <Menu
+              label={t("setlists.list.filterCategoryLabel")}
+              surGris
+              value={categoryFilter}
+              defaultValue="Toutes"
+              onChange={setCategoryFilter}
+              options={[
+                { valeur: "Toutes", libelle: t("setlists.list.allCategories") },
+                ...[
+                  { groupe: t("setlists.list.mainMeetings"), cats: ALL_CATEGORIES.slice(0, 4).filter((cat) => myCategories.includes(cat)) },
+                  { groupe: t("setlists.list.groupsLabel"), cats: ALL_CATEGORIES.slice(4).filter((cat) => myCategories.includes(cat)) },
+                  ...(BACK_OFFICE ? [{ groupe: t("setlists.list.fetes"), cats: [...FETE_CATEGORIES] }] : []),
+                ]
+                  .filter((g) => g.cats.length > 0)
+                  .map((g) => ({ groupe: g.groupe, options: g.cats.map((cat) => ({ valeur: cat as string, libelle: t("categories." + cat, { defaultValue: cat }) })) })),
+              ]}
+            />
             {!selectionMode && supprimables.length > 0 && (
               <button
                 type="button"
                 onClick={() => setSelectionMode(true)}
-                className="shrink-0 h-9 px-4 rounded-full bg-card dark:bg-secondary text-foreground text-sm font-semibold hover:bg-muted transition-[background-color,transform] duration-150 active:scale-[.97]"
+                className={`ml-auto shrink-0 text-sm font-semibold text-foreground underline underline-offset-2 cursor-pointer ${TOUCHER_44}`}
               >
                 {t("setlists.list.select")}
               </button>
             )}
-            <select
-              aria-label={t("setlists.list.filterCategoryLabel")}
-              value={categoryFilter}
-              onChange={(e) => setCategoryFilter(e.target.value)}
-              className="min-w-0 flex-1 h-9 px-3 rounded-lg border border-transparent bg-card dark:bg-secondary text-foreground text-[16px] sm:text-sm focus:outline-none focus:ring-2 focus:ring-ring/30"
-            >
-              <option value="Toutes">{t("setlists.list.allCategories")}</option>
-              <optgroup label={t("setlists.list.mainMeetings")}>
-                {ALL_CATEGORIES.slice(0, 4).filter((cat) => myCategories.includes(cat)).map((cat) => (
-                  <option key={cat} value={cat}>
-                    {t("categories." + cat, { defaultValue: cat })}
-                  </option>
-                ))}
-              </optgroup>
-              <optgroup label={t("setlists.list.groupsLabel")}>
-                {ALL_CATEGORIES.slice(4).filter((cat) => myCategories.includes(cat)).map((cat) => (
-                  <option key={cat} value={cat}>
-                    {t("categories." + cat, { defaultValue: cat })}
-                  </option>
-                ))}
-              </optgroup>
-              {BACK_OFFICE && (
-                <optgroup label={t("setlists.list.fetes")}>
-                  {FETE_CATEGORIES.map((cat) => (
-                    <option key={cat} value={cat}>
-                      {t("categories." + cat, { defaultValue: cat })}
-                    </option>
-                  ))}
-                </optgroup>
-              )}
-            </select>
           </div>
         </div>
   );

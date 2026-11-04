@@ -14,17 +14,16 @@ import { useCallback, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTranslation } from "react-i18next";
-import { ChevronDown, GraduationCap, Piano } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import { DeuxVolets } from "@/components/layout/DeuxVolets";
 import { OngletsRail, Pilules } from "@/components/layout/Onglets";
 import { Group, GroupRow } from "@/components/ui/group";
+import { Menu } from "@/components/ui/menu";
 import { FicheHarmonie } from "@/components/harmonie/FicheHarmonie";
 import { ContexteCatalogue, useCatalogueHarmonie } from "@/components/harmonie/catalogueContexte";
 import { useDeuxVolets } from "@/hooks/useDeuxVolets";
 import { useAccesHarmonie, useCatalogue, useInstrument } from "@/lib/harmonie/useHarmonie";
-import { useCoursIndex, useCoursProgres } from "@/lib/harmonie/useCours";
 import { getSetlists } from "@/lib/firebase/setlists";
-import { useRd2000 } from "@/lib/harmonie/rd2000";
 import { cn } from "@/lib/utils";
 import { MOMENTS, SENSATIONS, type Fiche, type HarmonieIndex, type Instrument, type Niveau } from "@/types/harmonie";
 import { ImpasseHarmonie } from "@/components/harmonie/ImpasseHarmonie";
@@ -116,17 +115,13 @@ function ListeCatalogue({
   filtres: Filtres;
   setFiltres: (f: Filtres) => void;
 }) {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const { acces, fiches, instrument, setInstrument } = useCatalogueHarmonie();
   const deuxVolets = useDeuxVolets();
   const ouverte = ficheDeLAdresse(usePathname() ?? "/harmonie") ?? (deuxVolets ? visibles[0]?.id : null);
-  const { chapitres } = useCoursIndex();
-  const lecons = chapitres.filter((c) => c.niveau !== null);
-  const { fini } = useCoursProgres();
-  const faits = lecons.filter((c) => fini[c.id]).length;
-  // Sons du RD-2000 (docs/spec-sons-rd2000.md) : pour les pianistes seulement.
-  const { donnees: rd2000 } = useRd2000(acces.piano);
   const [toutLeParcours, setToutLeParcours] = useState(false);
+  // Sur deux volets, le parcours est replié au départ en une ligne qui se déplie sur place.
+  const [parcoursOuvert, setParcoursOuvert] = useState(false);
 
   const familles = useMemo(() => {
     const out = new Map<string, Fiche[]>();
@@ -148,69 +143,65 @@ function ListeCatalogue({
 
   return (
     <div className={cn("flex flex-col gap-5", deuxVolets ? "px-5 pt-4 pb-10" : "mx-auto max-w-2xl px-4 pb-10 md:max-w-none md:px-6")} data-harmonie>
-      {/* Cours et sons du clavier : en tête, au-dessus des fiches, sur téléphone seulement ; dès
-          768 px, le rail de l'en-tête (agencement v18, A16) les remplace. */}
-      {(lecons.length > 0 || rd2000) && (
-        <div className="md:hidden">
-          {lecons.length > 0 && (
-            <GroupRow href="/harmonie/cours" chevron leading={<GraduationCap aria-hidden />}>
-              <span className="block truncate font-medium">{t("harmonie.cours.ligne")}</span>
-              <span className="block truncate text-[13px] text-muted-foreground">
-                {faits > 0
-                  ? t("harmonie.cours.progres", { fait: faits, total: lecons.length })
-                  : t("harmonie.cours.chapitres", { count: lecons.length })}
-              </span>
-            </GroupRow>
-          )}
-          {acces.piano && rd2000 && (
-            <GroupRow href="/harmonie/rd2000" chevron leading={<Piano aria-hidden />}>
-              <span className="block truncate font-medium">{t("harmonie.rd2000.titre")}</span>
-              <span className="block truncate text-[13px] text-muted-foreground">
-                {t("harmonie.rd2000.resume", {
-                  essentiels: rd2000.sons.filter((s) => s.premier).length,
-                  total: rd2000.sons.length.toLocaleString(i18n.language),
-                })}
-              </span>
-            </GroupRow>
-          )}
-        </div>
-      )}
-
       {/* Filtres, en rangées qui défilent (réponse 5 du 05/10), au-dessus du parcours. */}
       <div className="space-y-2">
-        {acces.piano && acces.guitare && (
-          <OngletsRail
-            etiquette={t("harmonie.instrument.piano")}
-            onglets={(["piano", "guitare"] as Instrument[]).map((i) => ({ id: i, label: t(`harmonie.instrument.${i}`) }))}
-            actif={instrument}
-            choisir={(v) => setInstrument(v as Instrument)}
+        <div className="flex flex-wrap items-center gap-1.5">
+          {acces.piano && acces.guitare && (
+            <OngletsRail
+              etiquette={t("harmonie.instrument.piano")}
+              onglets={(["piano", "guitare"] as Instrument[]).map((i) => ({ id: i, label: t(`harmonie.instrument.${i}`) }))}
+              actif={instrument}
+              choisir={(v) => setInstrument(v as Instrument)}
+            />
+          )}
+          <Menu
+            label={t("harmonie.moment.titre")}
+            nom={t("harmonie.moment.titre")}
+            surGris
+            value={filtres.moment ?? ""}
+            defaultValue=""
+            onChange={(v) => setFiltres({ ...filtres, moment: v || null })}
+            options={[{ valeur: "", libelle: t("harmonie.moment.tous") }, ...MOMENTS.map((m) => ({ valeur: m as string, libelle: t(`harmonie.moment.${m}`) }))]}
           />
-        )}
+          <Menu
+            label={t("harmonie.niveau.titre")}
+            nom={t("harmonie.niveau.titre")}
+            surGris
+            value={filtres.niveau ?? ""}
+            defaultValue=""
+            onChange={(v) => setFiltres({ ...filtres, niveau: v || null })}
+            options={[{ valeur: "", libelle: t("harmonie.niveau.tous") }, ...NIVEAUX.map((n) => ({ valeur: n as string, libelle: t(`harmonie.niveau.${n}`) }))]}
+          />
+        </div>
         <Pilules
           etiquette={t("harmonie.sensation.titre")}
           options={SENSATIONS.map((s) => ({ cle: s, nom: t(`harmonie.sensation.${s}`) }))}
           valeur={filtres.sensation}
           choisir={(sensation) => setFiltres({ ...filtres, sensation })}
         />
-        <Pilules
-          etiquette={t("harmonie.moment.titre")}
-          options={MOMENTS.map((m) => ({ cle: m, nom: t(`harmonie.moment.${m}`) }))}
-          valeur={filtres.moment}
-          choisir={(moment) => setFiltres({ ...filtres, moment })}
-        />
-        <Pilules
-          etiquette={t("harmonie.niveau.titre")}
-          options={NIVEAUX.map((n) => ({ cle: n, nom: t(`harmonie.niveau.${n}`) }))}
-          valeur={filtres.niveau}
-          choisir={(niveau) => setFiltres({ ...filtres, niveau })}
-        />
       </div>
 
       {/* Parcours : dix fiches dans l'ordre, sans suivi ; il s'efface au premier filtre. */}
       {!filtre && parcours.length > 0 && (
         <section data-parcours>
-          <h2 className="mb-1.5 text-sm font-semibold text-muted-foreground">{t("harmonie.parcours")}</h2>
-          <div className={cn(cartes && "md:grid md:grid-cols-3 md:gap-3")}>
+          {deuxVolets ? (
+            <button
+              type="button"
+              aria-expanded={parcoursOuvert}
+              onClick={() => setParcoursOuvert((v) => !v)}
+              className="flex min-h-11 w-full items-center gap-2 rounded-xl bg-secondary-fond px-3 py-2 text-left"
+            >
+              <span className="min-w-0 flex-1">
+                <span className="block text-sm font-semibold text-foreground">{t("harmonie.parcours")}</span>
+                <span className="block text-[13px] text-muted-foreground">{t("harmonie.parcoursSous", { count: parcours.length })}</span>
+              </span>
+              <ChevronDown className={cn("h-4 w-4 shrink-0 transition-transform duration-150", parcoursOuvert && "rotate-180")} aria-hidden />
+            </button>
+          ) : (
+            <h2 className="mb-1.5 text-sm font-semibold text-muted-foreground">{t("harmonie.parcours")}</h2>
+          )}
+          {(!deuxVolets || parcoursOuvert) && (<>
+          <div className={cn(deuxVolets && "mt-1.5", cartes && "md:grid md:grid-cols-3 md:gap-3")}>
             {etapes.map((e) => {
               const id = e.fiches.find((x) => parFiche.get(x)?.instrument === instrument) ?? e.fiches[0];
               const fiche = parFiche.get(id);
@@ -241,6 +232,7 @@ function ListeCatalogue({
               </span>
             </GroupRow>
           )}
+          </>)}
         </section>
       )}
 

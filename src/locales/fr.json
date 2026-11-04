@@ -193,7 +193,7 @@
       "sousTitre": "Les chants prévus pour chaque service",
       "draft": "Brouillon",
       "private": "Privée",
-      "allCategories": "Toutes",
+      "allCategories": "Tous les services",
       "filterCategoryLabel": "Filtrer par catégorie",
       "empty": "Aucune setlist pour l'instant.",
       "emptyCategory": "Aucune setlist dans cette catégorie.",
@@ -3016,6 +3016,8 @@
     "compteFiches_other": "{{count}} fiches, au piano et à la guitare",
     "idees": "Idées d'harmonie",
     "parcours": "Par où commencer",
+    "parcoursSous_one": "{{count}} fiche dans l'ordre",
+    "parcoursSous_other": "{{count}} fiches dans l'ordre",
     "aVerifier": "À vérifier en jouant",
     "essayer": "Essayer dans Ma version",
     "appliquer": "Appliquer à la setlist",
@@ -3059,7 +3061,8 @@
       "facile": "Facile",
       "intermediaire": "Intermédiaire",
       "avance": "Avancé",
-      "titre": "Niveau"
+      "titre": "Niveau",
+      "tous": "Tous les niveaux"
     },
     "sensation": {
       "titre": "Sensation",
@@ -3078,6 +3081,7 @@
     },
     "moment": {
       "titre": "Moment",
+      "tous": "Tous les moments",
       "intro": "Intro",
       "couplet": "Couplet",
       "montee": "Montée",

@@ -53,10 +53,9 @@ test("le cours importé : 23 chapitres à cocher, 79 exercices, niveaux de 5 · 
 
 test("un pianiste trouve le cours en tête d'Harmonie, rangé par niveau", async ({ page }) => {
   await entrer(page, RUTH, "/harmonie");
-  // Agencement v18 (A16) : la carte du cours sur téléphone ; dès 768 px (EM-2), l'entrée « Théorie musicale » de la barre
-  // de l'espace Musiciens (latérale en grand, du bas en portrait) — la seule visible à porter ce nom.
-  if (test.info().project.name === "telephone") await page.getByRole("link", { name: /Théorie musicale/ }).click();
-  else await page.getByRole("link", { name: /^Théorie/ }).filter({ visible: true }).click();
+  // La carte du cours au téléphone a disparu du catalogue (T3b) : l'entrée « Théorie » de la barre de l'espace Musiciens
+  // (du bas au téléphone et en portrait, latérale en grand) est la seule visible à porter ce nom.
+  await page.getByRole("link", { name: /^Théorie/ }).filter({ visible: true }).click();
   await page.waitForURL(/\/harmonie\/cours\/?$/);
   await expect(page.getByRole("link", { name: "Mode d'emploi" })).toBeVisible();
   for (const [n, nom, total] of [[1, "Fondations", 5], [2, "Accompagnateur", 6], [3, "Musicien d'équipe", 5], [4, "Directeur musical", 7]] as const) {

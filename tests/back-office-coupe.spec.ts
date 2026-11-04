@@ -593,7 +593,11 @@ test.describe("back-office coupé : les setlists de fête n'existent pas", () =>
     await signInAs(page, MO, docs, "/setlists");
     await expect(page.getByText("Aucun culte à venir.")).toBeVisible();
     await expect(page.getByRole("link", { name: /Noël 2026/ })).toHaveCount(0);
-    await expect(page.locator('optgroup[label="Fêtes"]')).toHaveCount(0);
+    await page.getByRole("button", { name: /^Filtrer par catégorie/ }).click();
+    const panneau = page.getByRole("menu");
+    await expect(panneau.getByRole("menuitemradio", { name: "Tous les services" })).toBeVisible();
+    await expect(panneau.getByText("Fêtes", { exact: true })).toHaveCount(0);
+    await expect(panneau.getByRole("menuitemradio", { name: /Noël|Pâques/ })).toHaveCount(0);
   });
 
   test("sa page est introuvable", async ({ page }) => {

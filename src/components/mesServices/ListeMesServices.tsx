@@ -73,7 +73,7 @@ export function ListeMesServices({
       {/* Vues : le rail (R4). */}
       <OngletsRail
         etiquette={t("mesServices.title")}
-        className={cn("flex w-full [&>button]:flex-1", disposition === "tablette" && "max-w-sm")}
+        pleineLargeur={disposition === "telephone"}
         actif={onglet}
         choisir={(o) => setOnglet(o as Onglet)}
         onglets={[

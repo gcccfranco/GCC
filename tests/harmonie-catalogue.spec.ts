@@ -53,7 +53,11 @@ test("un batteur ne voit ni la ligne ni le catalogue", async ({ page }) => {
 
 test("le parcours « Par où commencer » mène à sa première fiche", async ({ page }) => {
   await ouvrir(page, JO, "/harmonie");
-  const parcours = page.locator("section", { has: page.getByRole("heading", { name: "Par où commencer" }) });
+  const parcours = page.locator("[data-parcours]");
+  // Sur deux volets le parcours est replié au départ : on le déplie.
+  await expect(parcours).toBeVisible();
+  const replie = parcours.getByRole("button", { name: /Par où commencer/ });
+  if (await replie.count()) await replie.click();
   // Trois étapes visibles, les dix après « Voir les 7 autres » (un téléphone ne tient
   // pas dix lignes avant les filtres).
   await expect(parcours.getByRole("link")).toHaveCount(3);
@@ -75,6 +79,27 @@ test("les filtres réduisent la liste, et « Tout afficher » la rend", async ({
   await expect.poll(async () => fiches.count(), { message: "moins de fiches avec un filtre" }).toBeLessThan(total);
   await page.getByRole("group", { name: "Sensation" }).getByRole("button", { name: "Tension" }).click();
   await expect.poll(async () => fiches.count()).toBe(total);
+});
+
+test("Moment et Niveau sont des menus : choisir une valeur réduit la liste, « Tous les moments » la rend", async ({ page }) => {
+  await ouvrir(page, JO, "/harmonie");
+  const fiches = page.locator("[data-harmonie] a[href^='/harmonie/']:not([href^='/harmonie/cours']):not([href^='/harmonie/rd2000'])");
+  await expect(fiches.first()).toBeVisible();
+  const total = await fiches.count();
+  const moment = page.locator('[data-harmonie] [data-menu][aria-label^="Moment"]');
+  await expect(moment).toBeVisible();
+  await expect(moment).not.toHaveAttribute("data-pose", "");
+  await moment.click();
+  await page.getByRole("menuitemradio", { name: "Refrain", exact: true }).click();
+  await expect(moment).toContainText("Refrain");
+  await expect(moment).toHaveAttribute("data-pose", "");
+  await expect.poll(async () => fiches.count(), { message: "moins de fiches avec un moment" }).toBeLessThan(total);
+  await expect(page.getByRole("menu"), "le panneau est refermé").toHaveCount(0);
+  await moment.click();
+  await page.getByRole("menuitemradio", { name: "Tous les moments" }).click();
+  await expect.poll(async () => fiches.count()).toBe(total);
+  await expect(page.locator('[data-harmonie] [data-menu][aria-label^="Niveau"]')).toBeVisible();
+  expect(await page.locator("[data-harmonie] select:visible").count(), "aucun <select> dans le catalogue").toBe(0);
 });
 
 test("une fiche montre avant → après, le pourquoi, les pièges et les exemples", async ({ page }) => {
@@ -118,16 +143,17 @@ test("musiciens-5 : les guillemets et la flèche d'une fiche sont liés par des 
   await expect(fiche.getByText("La phrase « glisse » vers A", { exact: false })).toBeVisible();
 });
 
-test("musiciens-11 : les listes Tonalité et Capo font 44 px au doigt, 36 px à la souris", async ({ page }) => {
+test("musiciens-11 (jeu B) : Tonalité et Capo sont des menus de 32 px au doigt, 28 px à la souris ; aucun <select> sur la fiche", async ({ page }) => {
   await ouvrir(page, ELOISE, "/harmonie/substitutions/2m7-pour-4");
-  await expect(page.locator("#ton-fiche")).toBeVisible();
+  const tonalite = page.getByRole("button", { name: /^Tonalité/ });
+  await expect(tonalite).toBeVisible();
   const tactile = await page.evaluate(() => matchMedia("(pointer: coarse)").matches);
-  const attendu = tactile ? 44 : 36;
-  for (const id of ["#ton-fiche", "#capo-fiche"]) {
-    const cible = page.locator(id);
-    if (id === "#capo-fiche" && (await cible.count()) === 0) continue;
-    expect(Math.round((await cible.boundingBox())!.height), id).toBe(attendu);
+  const attendu = tactile ? 32 : 28;
+  for (const cible of [tonalite, page.getByRole("button", { name: /^Capo/ })]) {
+    if ((await cible.count()) === 0) continue;
+    expect(Math.round((await cible.boundingBox())!.height)).toBe(attendu);
   }
+  expect(await page.locator("select:visible:not(form select)").count(), "aucun <select> hors formulaire sur une fiche").toBe(0);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), "pas de débordement").toBe(true);
 });
 
@@ -135,7 +161,8 @@ test("changer de tonalité transpose les accords de la fiche", async ({ page }) 
   await ouvrir(page, JO, "/harmonie/substitutions/2m7-pour-4");
   const avant = page.locator("section", { has: page.getByRole("heading", { name: "Avant → après" }) });
   await expect(avant.getByText("Em7 → A", { exact: true }), "écrite en D").toBeVisible();
-  await avant.getByLabel("Tonalité").selectOption("F");
+  await avant.getByRole("button", { name: /^Tonalité/ }).click();
+  await page.getByRole("menuitemradio", { name: "F", exact: true }).click();
   await expect(avant.getByText("Gm7 → C", { exact: true }), "la même fiche en F").toBeVisible();
   await expect(avant.getByText("Em7 → A", { exact: true })).toHaveCount(0);
 });
@@ -145,7 +172,7 @@ test("les filets d'une fiche sont ceux des listes, pas la couleur du texte", asy
   // Le jeton `--filet` n'était défini nulle part : ces filets prenaient la
   // couleur du texte, un trait noir là où les listes ont un gris clair.
   const eviter = page.locator("section", { has: page.getByRole("heading", { name: "Quand l'éviter" }) });
-  const filets = [page.locator("#ton-fiche").locator(".."), eviter.locator("li").nth(1)];
+  const filets = [page.getByRole("button", { name: /^Tonalité/ }).locator(".."), eviter.locator("li").nth(1)];
   const attendu = await page.evaluate(() => {
     const temoin = document.createElement("div");
     temoin.style.borderTopColor = "hsl(var(--border))";
@@ -172,7 +199,8 @@ test("le capo donne les formes jouées, côté guitare", async ({ page }) => {
   await ouvrir(page, ELOISE, "/harmonie/substitutions/2m7-pour-4");
   const guitare = page.locator("section", { has: page.getByRole("heading", { name: "À la guitare" }) });
   await expect(guitare.getByText("Formes écrites en D."), "la fiche est écrite en D").toBeVisible();
-  await guitare.getByLabel("Capo").selectOption("2");
+  await guitare.getByRole("button", { name: /^Capo/ }).click();
+  await page.getByRole("menuitemradio", { name: "2", exact: true }).click();
   // Les doigtés ne changent pas : avec un capo 2, ces formes de D sonnent en E.
   await expect(guitare.getByText("Ces formes (écrites en D) sonnent en E.")).toBeVisible();
 });

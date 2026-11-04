@@ -12,6 +12,7 @@ import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
+import { ChampSelect } from "@/components/ui/champ-select";
 import { useStandaloneScrollLock } from "@/hooks/useStandaloneScrollLock";
 import { useProfile } from "@/lib/firebase/users";
 import { isAdminUser } from "@/lib/access";
@@ -601,17 +602,16 @@ function IdeesEquipe({
               className="h-10 min-w-0 flex-1 rounded-lg bg-secondary px-3 text-[15px]"
             />
           </div>
-          <select
+          <ChampSelect
             value={fiche}
             onChange={(e) => setFiche(e.target.value)}
             aria-label={t("harmonie.idee.fiche")}
-            className="h-10 w-full rounded-lg bg-secondary px-2 text-[15px]"
           >
             <option value="">{t("harmonie.idee.fiche")}</option>
             {fiches.map((f) => (
               <option key={f.id} value={f.id}>{f.nom}</option>
             ))}
-          </select>
+          </ChampSelect>
           <div className="flex gap-2">
             <Button size="sm" onClick={enregistrer} disabled={!texte.trim()}>{t("harmonie.idee.enregistrer")}</Button>
             <Button size="sm" variant="secondary" onClick={reinitialiser}>{t("harmonie.idee.annuler")}</Button>
