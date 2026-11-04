@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import { BASE_URL_COUPE } from "../playwright.config";
 import { ADMIN_EMAIL, signInAs, type FakeProfile } from "./helpers/fakeSession";
 
-// Lot FS (docs/spec-export-freeshow.md, tranche 2) : le bouton « Exporter pour FreeShow » de la setlist,
+// Lot FS (docs/spec-export-freeshow.md, tranche 2) : l'entrée « Exporter pour FreeShow » du menu ⋯ de la setlist,
 // réservé à la régie de la setlist (FS1). Le serveur ordinaire a le back-office ouvert : la régie y est
 // celle de « Où il sert » (`lieuxRegie`), on donne donc au profil les deux.
 const SETLIST_ID = "setlist-freeshow";
@@ -57,11 +57,16 @@ function setlist(over: Record<string, unknown> = {}) {
 const ouvrir = (page: Page, profile: FakeProfile, data = setlist()) =>
   signInAs(page, profile, { [`setlists/${SETLIST_ID}`]: data }, `/setlists/${SETLIST_ID}`);
 
-const BOUTON = { name: "Exporter pour FreeShow" };
+// Dimanche-16 : l'export est une entrée du menu « ⋯ » de la page, plus un bouton en tête.
+const ENTREE = { name: "Exporter pour FreeShow" };
+const menu = async (page: Page) => {
+  await page.getByRole("button", { name: "Plus d'actions" }).first().click();
+  return page.getByRole("menuitem", ENTREE);
+};
 
 test("la régie exporte : fichier 011126.project, deux chants dans l'ordre, chinois et pinyin", async ({ page }, testInfo) => {
   await ouvrir(page, REGIE);
-  const bouton = page.getByRole("button", BOUTON).first();
+  const bouton = await menu(page);
   await expect(bouton).toBeVisible();
   await expect(bouton).toBeEnabled();
   await testInfo.attach("bouton", { body: await page.screenshot(), contentType: "image/png" });
@@ -83,24 +88,26 @@ test("la régie exporte : fichier 011126.project, deux chants dans l'ordre, chin
 test("pas de bouton pour un musicien ; l'admin sans rôle régie le voit", async ({ page }) => {
   await ouvrir(page, MUSICIEN);
   await expect(page.getByRole("heading", { name: "Culte du 1er novembre" })).toBeVisible();
-  await expect(page.getByRole("button", BOUTON)).toHaveCount(0);
+  await expect(await menu(page)).toHaveCount(0);
 
   await ouvrir(page, ADMIN);
-  await expect(page.getByRole("button", BOUTON).first()).toBeVisible();
+  await expect(await menu(page)).toBeVisible();
 });
 
 test("pas de bouton sur une setlist privée, même pour la régie", async ({ page }) => {
   await ouvrir(page, { ...REGIE, uid: "uid-owner" }, setlist({ isPrivate: true }));
   await expect(page.getByRole("heading", { name: "Culte du 1er novembre" })).toBeVisible();
-  await expect(page.getByRole("button", BOUTON)).toHaveCount(0);
+  await expect(await menu(page)).toHaveCount(0);
 });
 
 test.describe("deux volets (1 600 px)", () => {
   test.use({ viewport: { width: 1600, height: 900 } });
-  test("le bouton est sous l'en-tête de la colonne de partitions", async ({ page }, testInfo) => {
+  test("l'entrée est dans le menu ⋯ de l'en-tête, aucun bouton en page", async ({ page }, testInfo) => {
     await ouvrir(page, REGIE);
-    await expect(page.getByRole("button", BOUTON)).toHaveCount(1);
-    await expect(page.getByRole("button", BOUTON)).toBeEnabled();
+    await expect(page.getByRole("button", ENTREE)).toHaveCount(0);
+    const entree = await menu(page);
+    await expect(entree).toHaveCount(1);
+    await expect(entree).toBeEnabled();
     await page.screenshot({ path: `test-results/export-freeshow-deux-volets-${testInfo.project.name}.png` });
   });
 });
@@ -109,6 +116,6 @@ test.describe("site coupé (interrupteur du back-office absent)", () => {
   test.use({ baseURL: BASE_URL_COUPE });
   test("la régie du profil (rôle regie) voit le bouton", async ({ page }) => {
     await ouvrir(page, { ...REGIE, lieuxRegie: undefined });
-    await expect(page.getByRole("button", BOUTON).first()).toBeVisible();
+    await expect(await menu(page)).toBeVisible();
   });
 });

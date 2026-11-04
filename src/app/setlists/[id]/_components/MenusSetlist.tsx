@@ -1,4 +1,4 @@
-import { Trash2, BellRing, Copy, Share2, Info } from "lucide-react";
+import { Trash2, BellRing, Copy, Share2, Info, Link as LinkIcon, Download } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -20,15 +20,18 @@ export function DroitsDeModifier({
   canEdit,
   droitsDeplies,
   onBasculer,
+  className = "mt-3",
 }: {
   setlist: FSSetlist;
   canEdit: boolean;
   droitsDeplies: boolean;
   onBasculer: () => void;
+  className?: string;
 }) {
   const { t } = useTranslation();
+  // « Modifiable par… » replié derrière le ⓘ sur toutes les tailles (dimanche-16 : à l'ordinateur, une seule rangée).
   return (
-    <div className="mt-3 flex items-center gap-2 flex-wrap">
+    <div className={`${className} flex items-center gap-2 flex-wrap`}>
       <Badge variant="secondary">
         {canEdit ? t("setlists.detail.canEdit") : t("setlists.detail.readOnly")}
       </Badge>
@@ -37,11 +40,11 @@ export function DroitsDeModifier({
         aria-label={t("setlists.detail.qui")}
         aria-expanded={droitsDeplies}
         onClick={onBasculer}
-        className="sm:hidden relative flex h-6 w-6 items-center justify-center rounded-full text-muted-foreground before:absolute before:left-1/2 before:top-1/2 before:h-11 before:w-11 before:-translate-x-1/2 before:-translate-y-1/2 before:content-['']"
+        className="relative flex h-6 w-6 items-center justify-center rounded-full text-muted-foreground before:absolute before:left-1/2 before:top-1/2 before:h-11 before:w-11 before:-translate-x-1/2 before:-translate-y-1/2 before:content-['']"
       >
         <Info className="h-4 w-4" aria-hidden />
       </button>
-      <span className={`text-xs text-muted-foreground ${droitsDeplies ? "" : "max-sm:hidden"}`}>
+      <span className={`text-xs text-muted-foreground ${droitsDeplies ? "" : "hidden"}`}>
         {setlist.isPrivate
           ? t(setlist.editeurs?.length ? "setlists.detail.editableByOwnerEquipe" : "setlists.detail.editableByOwner")
           : t(setlist.editeurs?.length ? "setlists.detail.editableByEquipe" : "setlists.detail.editableBy", {
@@ -139,6 +142,12 @@ export function ActionsPartagees({
   canEdit,
   handleDuplicate,
   handleShare,
+  canChangerLien,
+  aUnLien,
+  onLien,
+  canExporter,
+  exportPret,
+  onExporter,
 }: {
   canNotifyTeam: boolean;
   notifying: boolean;
@@ -150,10 +159,34 @@ export function ActionsPartagees({
   canEdit: boolean;
   handleDuplicate: () => void;
   handleShare: () => void;
+  /** Lien de la présentation et export FreeShow (dimanche-16) : en tête du menu, avec leurs droits. */
+  canChangerLien: boolean;
+  aUnLien: boolean;
+  onLien: () => void;
+  canExporter: boolean;
+  exportPret: boolean;
+  onExporter: () => void;
 }) {
   const { t } = useTranslation();
   return (
     <>
+      {canChangerLien && (
+        <DropdownMenuItem onClick={onLien}>
+          <LinkIcon className="h-3.5 w-3.5 text-muted-foreground" />
+          {aUnLien ? t("setlists.detail.presentationChange") : t("setlists.detail.presentationAdd")}
+        </DropdownMenuItem>
+      )}
+      {canExporter && (
+        <DropdownMenuItem
+          disabled={!exportPret}
+          title={exportPret ? undefined : t("setlists.detail.exportFreeShowWait")}
+          onClick={onExporter}
+        >
+          <Download className="h-3.5 w-3.5 text-muted-foreground" />
+          {t("setlists.detail.exportFreeShow")}
+        </DropdownMenuItem>
+      )}
+      {(canChangerLien || canExporter) && <DropdownMenuSeparator />}
       {canNotifyTeam && (
         <DropdownMenuItem
           disabled={notifying}

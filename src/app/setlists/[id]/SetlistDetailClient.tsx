@@ -44,7 +44,7 @@ import { ListView } from "./_components/ListView";
 import { PartitionsView } from "./_components/PartitionView";
 import { Sommaire } from "./_components/Sommaire";
 import { PresentationLink } from "./_components/PresentationLink";
-import { ExportFreeShow } from "./_components/ExportFreeShow";
+import { exporterFreeShow } from "./_components/ExportFreeShow";
 import { CartesFete, RepereFete, SousTitreFete, usePassageDeLaSetlist } from "./_components/FeteDeLaSetlist";
 import { estUnChant, resoudrePropositions } from "@/lib/setlist/propositions";
 import { titreAffiche } from "@/lib/fetes/droits";
@@ -293,8 +293,10 @@ export function SetlistDetailClient() {
   const [versionsLues, setVersionsLues] = useState(false);
   // Mode « Ma version » : mêmes gestes qu'Adapter, écrits dans mon document.
   const [editMine, setEditMine] = useState(false);
-  // Téléphone : la phrase des droits est repliée derrière un « i » (G15, audit 24/10/2026).
+  // La phrase des droits est repliée derrière un « i » (G15, audit 24/10/2026 ; toutes tailles depuis dimanche-16).
   const [droitsDeplies, setDroitsDeplies] = useState(false);
+  // Formulaire du lien de la présentation, ouvert par l'entrée du menu ⋯ (dimanche-16).
+  const [editionLien, setEditionLien] = useState(false);
   // Retouche d'une section répétée en « Ma version » : toutes les répétitions
   // (défaut, comme avant le lot 9) ou ce seul passage (docs/spec-harmonie.md).
   const [repeatScope, setRepeatScope] = useState<"all" | "one">("all");
@@ -1467,7 +1469,7 @@ export function SetlistDetailClient() {
   }
   // Qui peut modifier — rend visible la logique de access.ts.
   const droitsDeModifier = (
-    <DroitsDeModifier setlist={setlist} canEdit={canEdit} droitsDeplies={droitsDeplies} onBasculer={() => setDroitsDeplies((o) => !o)} />
+    <DroitsDeModifier setlist={setlist} canEdit={canEdit} droitsDeplies={droitsDeplies} onBasculer={() => setDroitsDeplies((o) => !o)} className="" />
   );
   // Réglages d'affichage : le bouton « Affichage » de G, le sous-menu « Affichage »
   // du ⋯ en deux volets (Q3, Q7).
@@ -1498,6 +1500,12 @@ export function SetlistDetailClient() {
       canEdit={canEdit}
       handleDuplicate={handleDuplicate}
       handleShare={handleShare}
+      canChangerLien={peutChangerPresentation}
+      aUnLien={!!setlist.presentationUrl}
+      onLien={() => setEditionLien(true)}
+      canExporter={peutExporterFreeShow(user, profile, setlist)}
+      exportPret={tousLesChantsCharges}
+      onExporter={() => exporterFreeShow(setlist, contents)}
     />
   );
   const supprimer = <MenuSupprimer canDelete={canDelete} onSupprimer={() => setConfirmDelete(true)} />;
@@ -1704,24 +1712,23 @@ export function SetlistDetailClient() {
             <div className="min-w-0 px-7 pb-16 pt-6">
               {/* Ce que garde la question 4, sous le titre : historique, langue, qui peut
                   modifier ; la régie ajoute ou change ici le lien de la présentation. */}
-              <div className="mb-6 print:hidden">
+              <div className="mb-4 print:hidden">
+                {/* Une seule rangée : droits (phrase dans le ⓘ), langue, historique (dimanche-16). */}
                 <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-                  <SetlistHistory key={historyVersion} setlistId={id} songsMap={songsMap} />
+                  {droitsDeModifier}
                   <span className="text-xs px-2 py-0.5 rounded border border-border text-muted-foreground">
                     {t("common.languages." + setlist.language, { defaultValue: setlist.language })}
                   </span>
+                  <SetlistHistory key={historyVersion} setlistId={id} songsMap={songsMap} />
                 </div>
-                {droitsDeModifier}
                 <PresentationLink
                   setlistId={id}
                   url={setlist.presentationUrl}
-                  canChange={peutChangerPresentation}
+                  edition={editionLien}
+                  onEdition={setEditionLien}
                   onSaved={(presentationUrl) => setSetlist({ ...setlist, presentationUrl })}
                   sansLien
                 />
-                {peutExporterFreeShow(user, profile, setlist) && (
-                  <ExportFreeShow setlist={setlist} contents={contents} pret={tousLesChantsCharges} />
-                )}
               </div>
               {setlist.items.length === 0 ? (
                 <p className="text-center py-16 text-sm text-muted-foreground border border-dashed border-border rounded-xl">
@@ -1899,7 +1906,7 @@ export function SetlistDetailClient() {
             </div>
           </div>
 
-          <div ref={zoneRef} className="relative max-w-2xl mx-auto px-4 py-8 print:px-0 print:py-4" style={{ marginTop: toolbarH }}>
+          <div ref={zoneRef} className="relative max-w-2xl mx-auto px-4 pb-8 pt-6 print:px-0 print:py-4" style={{ marginTop: toolbarH }}>
             {copieLueLe !== null && (
               <div role="status" data-copie-hors-ligne className="mb-4 flex items-center justify-between gap-2 rounded-lg bg-muted py-1 pl-3 pr-1 text-xs text-muted-foreground print:hidden">
                 <span>{texteCopie}</span>
@@ -1907,7 +1914,7 @@ export function SetlistDetailClient() {
               </div>
             )}
             {/* Header setlist */}
-            <div className="mb-3 pb-5 print:mb-4">
+            <div className="pb-2 print:mb-4">
               <div className="flex items-start gap-3">
                 <div className="flex-1">
                   <div className="flex items-center gap-3 flex-wrap">
@@ -1931,18 +1938,20 @@ export function SetlistDetailClient() {
                   <span>{t("setlists.detail.leaderLabel")} <span className="text-foreground">{setlist.leader}</span></span>
                 )}
               </div>
-              {droitsDeModifier}
-              <PresentationLink
-                setlistId={id}
-                url={setlist.presentationUrl}
-                canChange={peutChangerPresentation}
-                onSaved={(presentationUrl) => setSetlist({ ...setlist, presentationUrl })}
-              />
-              {peutExporterFreeShow(user, profile, setlist) && (
-                <ExportFreeShow setlist={setlist} contents={contents} pret={tousLesChantsCharges} />
-              )}
+              {/* Droits et « Présentation ↗ » sur une rangée (dimanche-16). */}
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                {droitsDeModifier}
+                <PresentationLink
+                  setlistId={id}
+                  url={setlist.presentationUrl}
+                  edition={editionLien}
+                  onEdition={setEditionLien}
+                  onSaved={(presentationUrl) => setSetlist({ ...setlist, presentationUrl })}
+                  className=""
+                />
+              </div>
               {setlist.notes && (
-                <p className="mt-3 text-sm text-muted-foreground italic">{setlist.notes}</p>
+                <p className="mt-3 whitespace-pre-line text-sm text-muted-foreground italic">{setlist.notes}</p>
               )}
             </div>
 

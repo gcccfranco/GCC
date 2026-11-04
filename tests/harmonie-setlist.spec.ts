@@ -1,6 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import { musicien, signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { ouvrirPartitions } from "./helpers/setlist";
+import { verifierPuce } from "./helpers/puce";
 
 // Lot 9 / H2 et H4 dans une setlist : le bouton « Idées d'harmonie » sur un
 // chant, l'essai dans Ma version (jamais dans la setlist de la présidence), et
@@ -82,6 +83,11 @@ test("un pianiste ouvre les idées d'un chant de la setlist, avec la transition 
   await expect(transition, "Abba Père (A) → 一生爱你 (E) : une quinte plus haut").toContainText("Vers la tonalité du 5");
   await expect(transition).toContainText("一生爱你");
   await capture(page, "idees-setlist");
+});
+
+test("« Idées d'harmonie » est une puce de 32 px, 12 px au moins, zone de toucher de 44 px (dimanche-17)", async ({ page }, info) => {
+  await openPartitions(page);
+  await verifierPuce(page.locator('[data-outline-item="1"]').getByRole("button", { name: "Idées d'harmonie" }), info);
 });
 
 test("hors « Ma version », l'idée se lit mais ne s'applique pas", async ({ page }) => {

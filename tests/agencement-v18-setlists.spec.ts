@@ -99,6 +99,18 @@ test.describe("Setlists (A9)", () => {
     expect((await enTete(page).boundingBox())!.y + 1, "le titre au-dessus du rail").toBeLessThan((await rail.boundingBox())!.y);
   });
 
+  test("l'onglet « Mes setlists » garde son cadenas à 360 px, sans coupure (dimanche-25)", async ({ page }) => {
+    await page.setViewportSize({ width: 360, height: 780 });
+    await ouvrir(page, "/setlists");
+    await expect(ligneSetlist(page, "Culte du 4 octobre")).toBeVisible();
+    const onglet = ongletsRail(page).filter({ visible: true }).getByRole("tab", { name: /Mes setlists/ });
+    await expect(onglet.locator("svg").first()).toBeVisible();
+    const mesure = await onglet.evaluate((el) => ({ coupe: el.scrollWidth > el.clientWidth + 1, hauteur: el.getBoundingClientRect().height }));
+    expect(mesure.coupe, "l'onglet ne déborde pas").toBe(false);
+    expect(mesure.hauteur, "le libellé tient sur une ligne").toBeLessThan(60);
+    await capture(page, "v18-setlists-cadenas-360");
+  });
+
   test("deux volets : la liste en carte, l'en-tête au-dessus des deux, l'aperçu en h2 de 24 px (grands écrans)", async ({ page }, info) => {
     test.skip(!estGrandEcran(info), "deux volets : ordinateur et tablette couchée");
     // Une setlist choisie (`?apercu=`) : les deux volets ; sans elle, la liste seule dans la colonne (largeurs-b4).

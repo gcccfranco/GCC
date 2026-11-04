@@ -9,7 +9,7 @@ import { Plus, X } from "lucide-react";
 import { keyLike, keyOptions } from "@/lib/transpose";
 import { useDefaultSensors } from "@/lib/dnd/sensors";
 import { abbreviateSection } from "@/lib/chordpro/abbreviations";
-import { sectionKindOfName } from "@/lib/chordpro/parser";
+import { formatSectionName, sectionKindOfName } from "@/lib/chordpro/parser";
 import { SECTION_PALETTE_KEY } from "@/components/song/SongView";
 import { NUANCES } from "@/lib/setlist/nuances";
 import type { FormSectionItem } from "@/lib/setlist/formItems";
@@ -34,6 +34,14 @@ export function dessinSection(sections: SectionSummary[], sectionId: string, nom
   const kind = sectionKindOfName(nom) || (s && s.type !== "other" ? s.type : null);
   const cle = (kind && SECTION_PALETTE_KEY[kind]) || "other";
   return { abbr: abbreviateSection(s ?? { type: "other", name: nom }), cle };
+}
+
+/** Le nom d'une étape tel qu'on le lit dans la langue du site (dimanche-5) : traduit à partir du type et du numéro,
+ *  comme la page de lecture. Un nom qui n'est pas celui de la section (nom personnalisé) est gardé ; le nom stocké
+ *  (`item.name`) ne change pas, il fait les ids des structures, notes et annotations. */
+export function nomAffiche(t: (key: string, options?: { defaultValue?: string }) => string, sections: SectionSummary[], sectionId: string, nom: string) {
+  const s = sections.find((x) => x.id === sectionId);
+  return s && s.name === nom ? formatSectionName(s, t) : nom;
 }
 
 /** Pastille ronde d'une section (« C1 », « R », « Dp »), teintée par sa sorte. */
@@ -101,7 +109,7 @@ export function Tonalites({
           >
             <span
               className={`flex h-9 w-10 items-center justify-center rounded-lg text-sm font-semibold transition-colors group-focus-visible:ring-2 group-focus-visible:ring-ring ${
-                on ? "text-white" : "bg-background text-foreground shadow-[inset_0_0_0_1px_hsl(var(--border))] hover:bg-muted"
+                on ? "text-white dark:text-primary-foreground" : "bg-background text-foreground shadow-[inset_0_0_0_1px_hsl(var(--border))] hover:bg-muted"
               }`}
               style={on ? { background: couleur } : undefined}
             >
@@ -137,6 +145,7 @@ function PastilleEtape({
   const { t } = useTranslation();
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: item.uid });
   const { abbr, cle } = dessinSection(sections, item.sectionId, item.name);
+  const nom = nomAffiche(t, sections, item.sectionId, item.name);
   return (
     <div
       ref={setNodeRef}
@@ -158,9 +167,9 @@ function PastilleEtape({
           }
         }}
         onClick={onChoisir}
-        aria-label={t("setlists.editeur.etape", { nom: item.name, n: index + 1 })}
+        aria-label={t("setlists.editeur.etape", { nom, n: index + 1 })}
         aria-pressed={choisie}
-        title={item.name}
+        title={nom}
         style={{ touchAction: "none" }}
         className={`block rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
           choisie ? "ring-2 ring-offset-2 ring-offset-background" : ""
@@ -177,7 +186,7 @@ function PastilleEtape({
         <button
           type="button"
           onClick={onRetirer}
-          aria-label={t("setlists.editeur.retirerEtape", { nom: item.name })}
+          aria-label={t("setlists.editeur.retirerEtape", { nom })}
           className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-foreground text-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
           <X className="h-3 w-3" strokeWidth={3} />
@@ -280,7 +289,7 @@ export function StructurePastilles({
             className="flex h-8 items-center gap-1 rounded-full border border-border px-3 text-[13px] font-medium text-foreground transition-colors hover:bg-muted"
           >
             <Plus className="h-3.5 w-3.5" aria-hidden />
-            {s.name}
+            {formatSectionName(s, t)}
           </button>
         ))}
         {lastPhrase && (
@@ -365,6 +374,7 @@ function LigneParSection({
   const { t } = useTranslation();
   const [ouvert, setOuvert] = useState<Champ | null>(null);
   const { abbr, cle } = dessinSection(sections, item.sectionId, item.name);
+  const nom = nomAffiche(t, sections, item.sectionId, item.name);
   const basculer = (c: Champ) => setOuvert(ouvert === c ? null : c);
   const nuance = [
     ...item.nuanceTags.map((id) => NUANCES.find((n) => n.id === id)?.label ?? id),
@@ -376,8 +386,8 @@ function LigneParSection({
         <span className="flex w-8 shrink-0 justify-center">
           <PastilleSection abbr={abbr} cle={cle} />
         </span>
-        <span data-nom-section className="w-28 shrink-0 truncate text-sm font-medium text-foreground" title={item.name}>
-          {item.name}
+        <span data-nom-section className="w-28 shrink-0 truncate text-sm font-medium text-foreground" title={nom}>
+          {nom}
         </span>
         <div className="flex min-w-0 flex-wrap gap-1.5">
           <BoutonChamp champ="note" rempli={!!item.note.trim()} ouvert={ouvert === "note"} texte={item.note.trim() || t("setlists.editeur.note")} onClick={() => basculer("note")} />

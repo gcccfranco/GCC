@@ -103,6 +103,23 @@ const commandes = (page: Page) =>
   );
 
 test.describe("setlist G, téléphone et tablette portrait", () => {
+  test("le premier chant commence avant 45 % de la hauteur de l'écran (dimanche-16)", async ({ page }, info) => {
+    await ouvrir(page);
+    await expect(ligne(page, 1)).toBeVisible();
+    const [y, h] = await Promise.all([ligne(page, 1).evaluate((el) => el.getBoundingClientRect().top), page.evaluate(() => innerHeight)]);
+    expect(y / h, `le chant 1 à ${Math.round(y)} px sur ${h}`).toBeLessThan(0.45);
+    // Aucune rangée d'actions de préparation en tête de page : elles sont dans le menu ⋯.
+    await expect(page.getByRole("button", { name: "Ajouter le lien de la présentation" })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Exporter pour FreeShow" })).toHaveCount(0);
+  });
+
+  test("les notes de la setlist gardent leurs retours à la ligne à la lecture (dimanche-4)", async ({ page }) => {
+    await ouvrir(page);
+    const note = page.getByText("Thème : la grâce.");
+    await expect(note).toBeVisible();
+    expect(await note.evaluate((el) => getComputedStyle(el).whiteSpace)).toBe("pre-line");
+  });
+
   test("la bascule « Liste | Partitions » est sous l'en-tête, hors de la barre ; la Liste d'abord", async ({ page }) => {
     await ouvrir(page);
     await expect(boutonVue(page, "Liste")).toHaveAttribute("aria-pressed", "true");

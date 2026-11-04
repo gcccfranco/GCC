@@ -76,7 +76,7 @@ test("création : une seule page, brouillon enregistré tout seul, « Publier »
   await page.getByLabel("Titre").fill("Culte du 28 septembre");
   await page.getByLabel("Catégorie").selectOption("Culte Francophone");
   await champPresidence(page).selectOption("__other__");
-  await page.getByPlaceholder("ex. Timothée").fill("Jonathan Z.");
+  await page.getByPlaceholder("Nom", { exact: true }).fill("Jonathan Z.");
   await ajouterChant(page, "Abba Père");
 
   await expect.poll(() => setlistWrites(db).at(-1)?.data.isDraft, { timeout: 10_000 }).toBe(true);
@@ -124,7 +124,7 @@ test("création : « Publier » juste après une retouche, sur réseau lent, ne 
   await page.getByLabel("Titre").fill("Culte du 28 septembre");
   await page.getByLabel("Catégorie").selectOption("Culte Francophone");
   await champPresidence(page).selectOption("__other__");
-  await page.getByPlaceholder("ex. Timothée").fill("Jonathan Z.");
+  await page.getByPlaceholder("Nom", { exact: true }).fill("Jonathan Z.");
   await expect.poll(() => setlistWrites(db).length, { timeout: 10_000 }).toBeGreaterThan(0);
   // Réseau lent : chaque écriture de la setlist met 2,5 s à partir.
   await page.route(/documents\/setlists\/[^/:?]+\?/, async (route) => {

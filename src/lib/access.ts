@@ -791,7 +791,7 @@ export function estRegieDeLaSetlist(
   return !!profile?.serviceRoles?.[setlist.category]?.includes("regie");
 }
 
-/** Bouton « Exporter pour FreeShow » (docs/spec-export-freeshow.md, FS1) : la régie de la setlist et les admins
+/** Entrée « Exporter pour FreeShow » du menu ⋯ (docs/spec-export-freeshow.md, FS1) : la régie de la setlist et les admins
  *  (Timothée, 01/11/2026), pas `canEditSetlist` ; setlist non privée. Affichage seulement : l'export se fabrique
  *  dans le navigateur et n'écrit rien, donc aucune règle Firestore. */
 export function peutExporterFreeShow(

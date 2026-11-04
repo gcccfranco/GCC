@@ -223,7 +223,7 @@ test.describe("partage : l'éditeur", () => {
     await page.getByLabel("Titre").fill("Soirée louange");
     await page.getByLabel("Catégorie").selectOption("Culte Francophone");
     await champPresidence(page).selectOption("__other__");
-    await page.getByPlaceholder("ex. Timothée").fill("Présidence A");
+    await page.getByPlaceholder("Nom", { exact: true }).fill("Présidence A");
     await ajouterChant(page, "Abba Père");
 
     await puceEquipe(page).click();
@@ -362,7 +362,7 @@ test.describe("partage : l'éditeur", () => {
     await page.getByLabel("Titre").fill("Soirée privée");
     await page.getByLabel("Catégorie").selectOption("Culte Francophone");
     await champPresidence(page).selectOption("__other__");
-    await page.getByPlaceholder("ex. Timothée").fill("Présidence A");
+    await page.getByPlaceholder("Nom", { exact: true }).fill("Présidence A");
     await ajouterChant(page, "Abba Père");
     await page.getByLabel("Visibilité").selectOption("privee");
     await puceEquipe(page).click();
@@ -381,9 +381,8 @@ test.describe("partage : l'éditeur", () => {
     await expect(page.locator("[data-liste-courte]")).toHaveCount(0);
     await page.goto(`/setlists/${ID}`);
     await expect(page.getByText("Lecture seule")).toBeVisible();
-    // Téléphone : les droits sont repliés derrière le bouton « i » (G15).
-    const qui = page.getByRole("button", { name: "Qui peut modifier" }).filter({ visible: true });
-    if (await qui.count()) await qui.first().click();
+    // Les droits sont repliés derrière le bouton « i » (G15 ; toutes tailles depuis dimanche-16).
+    await page.getByRole("button", { name: "Qui peut modifier" }).filter({ visible: true }).first().click();
     await expect(page.getByText("Modifiable par son créateur seulement (et les admins)")).toBeVisible();
     await page.getByRole("button", { name: "Plus d'actions" }).filter({ visible: true }).first().click();
     await expect(page.getByRole("menuitem", { name: "Dupliquer pour mes notes" })).toBeVisible();
@@ -504,6 +503,8 @@ test.describe("partage : la page d'une setlist (PS14, PS15)", () => {
     await planningVide(page);
     await signInAs(page, fp(JOEL), { ...ANNUAIRE, ...LISTE }, "/setlists/sl-priv");
     await expect(page.getByText("Tu peux modifier")).toBeVisible();
+    // Les droits sont repliés derrière le bouton « i », sur toutes les tailles (dimanche-16).
+    await page.getByRole("button", { name: "Qui peut modifier" }).filter({ visible: true }).first().click();
     await expect(page.getByText("Privée — visible et modifiable par son créateur et son équipe")).toBeVisible();
     await menu(page).click();
     await expect(page.getByRole("menuitem", { name: "Prévenir l'équipe" })).toBeVisible();
@@ -513,6 +514,7 @@ test.describe("partage : la page d'une setlist (PS14, PS15)", () => {
   test("publique avec équipe : « Modifiable par son créateur et son équipe seulement » ; Léa supprime", async ({ page }) => {
     await planningVide(page);
     await signInAs(page, fp(LEA), { ...ANNUAIRE, ...LISTE }, "/setlists/sl-pub");
+    await page.getByRole("button", { name: "Qui peut modifier" }).filter({ visible: true }).first().click();
     await expect(page.getByText("Modifiable par son créateur et son équipe seulement (et les admins)")).toBeVisible();
     await menu(page).click();
     await expect(page.getByRole("menuitem", { name: "Supprimer" })).toBeVisible();
@@ -521,7 +523,8 @@ test.describe("partage : la page d'une setlist (PS14, PS15)", () => {
   test("sans équipe, les textes d'avant restent", async ({ page }) => {
     await planningVide(page);
     await signInAs(page, fp(LEA), { ...ANNUAIRE, "setlists/sl-x": DOC({ isPrivate: true }) }, "/setlists/sl-x");
-    await expect(page.getByText("Privée — visible et modifiable uniquement par son créateur")).toBeVisible();
+    await page.getByRole("button", { name: "Qui peut modifier" }).filter({ visible: true }).first().click();
+    await expect(page.getByText("Privée — visible et modifiable uniquement par son créateur").filter({ visible: true }).first()).toBeVisible();
   });
 
   test("« Partager » une privée avec équipe copie le lien et le dit", async ({ page }) => {

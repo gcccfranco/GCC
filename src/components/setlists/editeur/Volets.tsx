@@ -3,6 +3,7 @@
 import { useId, useMemo, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { ChevronLeft, Link2, Shuffle, Trash2, Unlink } from "lucide-react";
+import { formatSectionName } from "@/lib/chordpro/parser";
 import { useJianpuScore } from "@/lib/jianpu/images";
 import { nextUid } from "@/lib/uid";
 import {
@@ -74,7 +75,7 @@ export function VoletChant({
   const [etape, setEtape] = useState<string | null>(null);
   const sections = useMemo(() => itemSections(item.song, item.contentOverride), [item.song, item.contentOverride]);
   const allSections = item.song.sections ?? [];
-  const noms = [...new Set(allSections.map((s) => s.name))].join(", ");
+  const noms = [...new Set(allSections.map((s) => formatSectionName(s, t)))].join(t("setlists.editeur.separateurSections"));
   const sousTitre = [item.song.artist, noms].filter(Boolean).join(" · ");
   const idNote = useId();
   const lastPhrase: LastPhraseTarget = {

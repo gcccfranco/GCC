@@ -41,7 +41,7 @@ sur 22 chants (828 diapos).
 
 | # | Décision |
 | --- | --- |
-| FS1 | Bouton **« Exporter pour FreeShow »** dans la page d'une setlist, **pour la régie seulement** : même drapeau `regie` que le lien de présentation (`SetlistDetailClient.tsx`, `peutChangerPresentation`) — setlist de fête : TEAM RÉGIE (`estRegieDeFete`) ; back-office ouvert : `lieuxRegie` ∋ catégorie ; coupé : rôle `regie` dans la catégorie. Les **admins** le voient aussi (Timothée, 01/11/2026, après la mise en ligne) ; « peut modifier » seul ne suffit pas. Setlist privée : pas de bouton. Hors ligne : le bouton reste (rien n'est écrit). |
+| FS1 | Entrée **« Exporter pour FreeShow »** du menu **« ⋯ »** de la page d'une setlist (déplacée depuis un bouton en tête de page, dimanche-16, 03/11/2026 : choix produit validé, la régie doit savoir que c'est dans « ⋯ »), **pour la régie seulement** : même drapeau `regie` que le lien de présentation (`SetlistDetailClient.tsx`, `peutChangerPresentation`) — setlist de fête : TEAM RÉGIE (`estRegieDeFete`) ; back-office ouvert : `lieuxRegie` ∋ catégorie ; coupé : rôle `regie` dans la catégorie. Les **admins** le voient aussi (Timothée, 01/11/2026, après la mise en ligne) ; « peut modifier » seul ne suffit pas. Setlist privée : pas de bouton. Hors ligne : l'entrée reste (rien n'est écrit). |
 | FS2 | **Toute la setlist d'un coup**, un fichier `.project` en JSON (pas de zip : aucune image), nommé `JJMMAA.project` d'après la date de la setlist (comme ceux de la régie) ; nom du projet `JJ/MM/AA`. Fabriqué **dans le navigateur** avec les chants déjà chargés : pas de route API, rien dans `firestore.rules`. |
 | FS3 | Un **show par chant** dans l'ordre de la setlist (transitions exclues ; une fusion = un show, sections dans l'ordre de la fusion), `category: "presentation"`, catégorie « Chants » déclarée dans `categories`. Sections et ordre : `playedSections` (reprises comprises), la **version de la présidence** — même texte que « Copier les paroles ». |
 | FS4 | Chaque show : diapo de **titre** (`group: "."`) ; un **groupe par section** (diapo de tête + filles), une reprise réutilise le même groupe ; diapo **vide de fin** `Rien`, sans image (la régie pose la sienne). Sections sans paroles (intro, instrumental) : aucune diapo. |
@@ -69,8 +69,8 @@ sur 22 chants (828 diapos).
   du JSON calée sur les `data.json` de la régie (ids de 11 caractères hexadécimaux, layout avec `children` en
   objet, zone du titre à part). `paroleDeLigne` sortie de `lyricsText` (`copyLyrics.ts`) pour un nettoyage commun.
   Tests purs : `tests/freeshow-fabrication.spec.ts`.
-- **Tranche 2** : bouton `ExportFreeShow.tsx` sous le lien de présentation, dans les deux dispositions de la
-  setlist, grisé tant que les chants chargent ; drapeau extrait en `estRegieDeLaSetlist` / `peutExporterFreeShow`
+- **Tranche 2** : fonction `exporterFreeShow` (`ExportFreeShow.tsx`) appelée par une entrée du menu « ⋯ » (`ActionsPartagees`, `MenusSetlist.tsx`), dans les deux dispositions de la
+  setlist, grisée tant que les chants chargent (dimanche-16 : ce n'était plus un bouton sous le lien de présentation) ; drapeau extrait en `estRegieDeLaSetlist` / `peutExporterFreeShow`
   (`src/lib/access.ts`), réutilisé par `peutChangerPresentation`. Test `tests/export-freeshow.spec.ts` (trois
   appareils + serveur coupé).
 - **Exemple pour l'essai** : `docs/freeshow/011126.project` (Gloire à son nom, 主的喜乐是我力量, Abba Père ; ordre

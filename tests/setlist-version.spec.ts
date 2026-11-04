@@ -3,6 +3,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { attendreMiseEnPage } from "./helpers/louange";
 import { enDeuxVolets, ouvrirAffichage, ouvrirListe, ouvrirPartitions } from "./helpers/setlist";
+import { verifierPuce } from "./helpers/puce";
 
 // Version perso d'un chant dans une setlist (docs/spec-version-perso.md).
 // V1 : « Ma version » — accords et paroles retouchés pour soi, enregistrés
@@ -337,22 +338,32 @@ test("une version partagée se choisit, et le choix suit mon compte jusqu'en mod
   await expect(onStage(page, "flottait").first()).toBeVisible();
 });
 
+test("les actions de « Ma version » sont des puces de 32 px, 12 px au moins, zone de toucher de 44 px (dimanche-17)", async ({ page }, info) => {
+  await openPartitions(page, {
+    [VERSION_DOC]: myDoc({ "abba-pere": { content: MY_ABBA, structure: null, shared: false } }),
+  });
+  await page.getByRole("button", { name: "Ma version" }).click();
+  for (const nom of ["Partager ma version", "Sections"]) {
+    await verifierPuce(song(page, 1).getByRole("button", { name: nom }), info);
+  }
+});
+
 test("partager ma version, puis retirer le partage", async ({ page }) => {
   const db = await openPartitions(page, {
     [VERSION_DOC]: myDoc({ "abba-pere": { content: MY_ABBA, structure: null, shared: false } }),
   });
   await page.getByRole("button", { name: "Ma version" }).click();
-  const share = song(page, 1).getByRole("checkbox", { name: "Partager ma version" });
-  await expect(share).not.toBeChecked();
+  const share = song(page, 1).getByRole("button", { name: "Partager ma version" });
+  await expect(share).toHaveAttribute("aria-pressed", "false");
   await share.click();
-  await expect(share).toBeChecked();
+  await expect(share).toHaveAttribute("aria-pressed", "true");
   await capture(page, "v3-partager");
   let items = db.writes.filter((w) => w.path === VERSION_DOC).pop()!.data.items as Record<string, { shared: boolean; content: string }>;
   expect(items["abba-pere"].shared).toBe(true);
   expect(items["abba-pere"].content).toContain("flottait");
 
   await share.click();
-  await expect(share).not.toBeChecked();
+  await expect(share).toHaveAttribute("aria-pressed", "false");
   items = db.writes.filter((w) => w.path === VERSION_DOC).pop()!.data.items as Record<string, { shared: boolean; content: string }>;
   expect(items["abba-pere"].shared).toBe(false);
 });

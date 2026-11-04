@@ -9,6 +9,7 @@ import { ChevronRight, CirclePlus, GripVertical, MessageSquare } from "lucide-re
 import { useJianpuScore } from "@/lib/jianpu/images";
 import { isFormChant, isFormFusion, isFormProposition, isFormTransition, itemSections, type FormItem, type FormListItem } from "@/lib/setlist/formItems";
 import { KeyPill } from "@/components/ui/key-pill";
+import { TOUCHER_44 } from "@/lib/toucher44";
 import { PastilleSection, dessinSection } from "@/components/setlists/editeur/Reglages";
 
 // La setlist en liste courte (lot U5 bis, T3, planche `creer-piste2-ordinateur`) :
@@ -34,11 +35,11 @@ function Poignee({ titre, attributes, listeners, choisi }: { titre: string; attr
       {...listeners}
       aria-label={t("setlists.editeur.reordonner", { titre })}
       style={{ touchAction: "none" }}
-      className={`relative z-10 -ml-1 mt-0.5 flex h-7 w-6 shrink-0 cursor-grab items-center justify-center rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring active:cursor-grabbing ${
-        choisi ? "text-background/60" : "text-muted-foreground/60"
+      className={`relative z-10 -ml-1 mt-0.5 flex h-7 w-6 shrink-0 cursor-grab items-center justify-center rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring active:cursor-grabbing ${TOUCHER_44} [@media(pointer:coarse)]:after:-z-10 [@media(pointer:coarse)]:after:rounded-lg [@media(pointer:coarse)]:active:after:bg-secondary ${
+        choisi ? "text-background/60" : "text-muted-foreground"
       }`}
     >
-      <GripVertical className="h-4 w-4" aria-hidden />
+      <GripVertical className="h-5 w-5" aria-hidden />
     </button>
   );
 }

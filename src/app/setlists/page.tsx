@@ -430,7 +430,7 @@ export default function SetlistsPage() {
               id: "mine",
               label: (
                 <>
-                  <Lock className="hidden sm:block h-3.5 w-3.5" aria-hidden />
+                  <Lock className="h-3.5 w-3.5" aria-hidden />
                   {t("setlists.list.mySetlists")}
                   {mySetlists.length > 0 && (
                     <span className="text-xs px-1.5 py-0.5 rounded-full font-medium bg-secondary text-muted-foreground">

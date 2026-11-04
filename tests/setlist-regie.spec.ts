@@ -3,6 +3,8 @@ import { signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { ouvrirPartitions } from "./helpers/setlist";
 import { isOnDutyRegie, parsePresentationUrl } from "../src/lib/setlist/presentationLink";
 import type { Servant } from "../src/lib/planning/names";
+import { cliquerMenuSetlist } from "./helpers/menuSetlist";
+import { verifierPuce } from "./helpers/puce";
 
 // Chantier Régie (docs/spec-regie.md) : ce dont la régie se sert avant le
 // culte, sur ordinateur, depuis la vue partitions de la setlist.
@@ -51,6 +53,11 @@ async function openPartitions(page: Page, profile = REGIE, data = setlist()) {
   await signInAs(page, profile, { [`setlists/${SETLIST_ID}`]: data }, `/setlists/${SETLIST_ID}`);
   await ouvrirPartitions(page);
 }
+
+test("« Copier les paroles » est une puce de 32 px, 12 px au moins, zone de toucher de 44 px (dimanche-17)", async ({ page }, info) => {
+  await openPartitions(page);
+  await verifierPuce(page.locator('[data-outline-item="1"]').getByRole("button", { name: "Copier les paroles" }), info);
+});
 
 test("bouton « Copier les paroles » : ordre joué, reprises comprises, ligne vide entre sections (FR)", async ({ page }) => {
   await openPartitions(page);
@@ -144,7 +151,7 @@ test.describe("lien de présentation", () => {
       sent = { body: route.request().postDataJSON(), auth: route.request().headers()["authorization"] };
       return route.fulfill({ json: { ok: true, presentationUrl: CANVA } });
     });
-    await page.getByRole("button", { name: "Ajouter le lien de la présentation" }).click();
+    await cliquerMenuSetlist(page, "Ajouter le lien de la présentation");
     const input = page.getByRole("textbox", { name: "Lien de la présentation" });
 
     // Un lien sans https:// est refusé avant tout envoi.
@@ -164,7 +171,7 @@ test.describe("lien de présentation", () => {
     await signInAs(page, REGIE, { [`setlists/${SETLIST_ID}`]: setlist() }, `/setlists/${SETLIST_ID}`);
     const refusal = "Seule la régie inscrite au planning ce jour-là peut ajouter ce lien.";
     await page.route(API, (route) => route.fulfill({ status: 403, json: { error: refusal } }));
-    await page.getByRole("button", { name: "Ajouter le lien de la présentation" }).click();
+    await cliquerMenuSetlist(page, "Ajouter le lien de la présentation");
     await page.getByRole("textbox", { name: "Lien de la présentation" }).fill(CANVA);
     await page.getByRole("button", { name: "Enregistrer" }).click();
     await expect(page.getByText(refusal)).toBeVisible();

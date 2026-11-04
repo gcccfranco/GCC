@@ -174,7 +174,7 @@ test("publier une nouvelle setlist écrit « A créé la setlist »", async ({ p
   await page.getByLabel("Titre").fill("Culte du 28 septembre");
   await page.getByLabel("Catégorie").selectOption("Culte Francophone");
   await champPresidence(page).selectOption("__other__");
-  await page.getByPlaceholder("ex. Timothée").fill("Jonathan Z.");
+  await page.getByPlaceholder("Nom", { exact: true }).fill("Jonathan Z.");
   await page.getByRole("button", { name: "Publier" }).click();
   await page.waitForURL(/\/setlists\/fake-/);
   await page.getByRole("button", { name: /Créée par Ruth K\./ }).click();

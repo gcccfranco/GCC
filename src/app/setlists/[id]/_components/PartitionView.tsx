@@ -20,13 +20,17 @@ import { lyricsText } from "@/components/song/copyLyrics";
 import { playedSections } from "@/lib/setlist/playedSections";
 import { isLastPhraseOnly } from "@/lib/setlist/lastPhrase";
 import { Button } from "@/components/ui/button";
-import { Check, Copy, Link2, MessageSquare } from "lucide-react";
+import { Check, Copy, Link2, ListOrdered, MessageSquare, RotateCcw, Sparkles } from "lucide-react";
+import { TOUCHER_44 } from "@/lib/toucher44";
 import type { ChordProAST, ChordProLine, ChordProSection } from "@/types/chordPro";
 import type { SongVersionView } from "@/lib/setlist/versionChoice";
 
 /** Badge ambre de la version affichée : « Version modifiée », « Ma version », « Version de … ». */
 const AMBER_BADGE =
   "text-[10px] px-1.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-400 border border-amber-300/60 dark:border-amber-700/50 font-semibold print:hidden";
+
+/** Les actions de la rangée d'un chant (dimanche-17) : une puce à contour de 32 px, 12,5 px, zone de toucher de 44 px. */
+const PUCE = `${TOUCHER_44} inline-flex h-8 items-center gap-1.5 rounded-full border border-border bg-background px-3 text-[12.5px] font-semibold text-foreground transition-colors hover:bg-secondary print:hidden`;
 
 /** Copie les paroles d'un chant, dans l'ordre joué, pour la régie (PPT). */
 function CopyLyricsButton({ sections }: { sections: ChordProSection[] }) {
@@ -43,9 +47,9 @@ function CopyLyricsButton({ sections }: { sections: ChordProSection[] }) {
     <button
       type="button"
       onClick={copy}
-      className="h-6 px-2 rounded-md border border-border bg-card text-[11px] font-semibold text-muted-foreground hover:text-foreground inline-flex items-center gap-1 transition-colors print:hidden"
+      className={PUCE}
     >
-      {copied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+      {copied ? <Check className="h-3.5 w-3.5" aria-hidden /> : <Copy className="h-3.5 w-3.5" aria-hidden />}
       {copied ? t("setlists.detail.copyLyricsDone") : t("setlists.detail.copyLyrics")}
     </button>
   );
@@ -490,8 +494,9 @@ function NormalSongItem({
         <button
           type="button"
           onClick={() => onRevert?.(origIndex)}
-          className="text-[11px] text-muted-foreground underline hover:text-foreground"
+          className={PUCE}
         >
+          <RotateCcw className="h-3.5 w-3.5" aria-hidden />
           {editMine
             ? t("setlists.myVersion.revert")
             : t("setlists.contentEdit.revert", { defaultValue: "Rétablir l'original" })}
@@ -501,8 +506,9 @@ function NormalSongItem({
         <button
           type="button"
           onClick={() => onIdees(origIndex)}
-          className="text-[11px] text-muted-foreground underline hover:text-foreground"
+          className={PUCE}
         >
+          <Sparkles className="h-3.5 w-3.5" aria-hidden />
           {t("harmonie.idees")}
         </button>
       )}
@@ -510,21 +516,22 @@ function NormalSongItem({
         <button
           type="button"
           onClick={() => onEditStructure?.(origIndex)}
-          className="text-[11px] text-muted-foreground underline hover:text-foreground"
+          className={PUCE}
         >
+          <ListOrdered className="h-3.5 w-3.5" aria-hidden />
           {t("setlists.myVersion.sections")}
         </button>
       )}
       {editMode && editMine && mine?.content && (
-        <label className="inline-flex items-center gap-1.5 text-[11px] text-muted-foreground cursor-pointer">
-          <input
-            type="checkbox"
-            checked={mine.shared}
-            onChange={(e) => onShare?.(origIndex, e.target.checked)}
-            className="h-3.5 w-3.5 accent-primary"
-          />
+        <button
+          type="button"
+          aria-pressed={mine.shared}
+          onClick={() => onShare?.(origIndex, !mine.shared)}
+          className={`${PUCE} aria-pressed:bg-secondary`}
+        >
+          {mine.shared ? <Check className="h-3.5 w-3.5" aria-hidden /> : <Link2 className="h-3.5 w-3.5" aria-hidden />}
           {t("setlists.myVersion.share")}
-        </label>
+        </button>
       )}
       {!editMode && version && version.options.length > 1 && (
         <select
