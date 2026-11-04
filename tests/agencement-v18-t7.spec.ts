@@ -87,19 +87,22 @@ test.describe("T7 : l'en-tête de la section Évènements", () => {
     expect(d.x).toBeGreaterThan(l.x + l.width);
   });
 
-  test("responsable : « + Nouvel évènement » à libellé en grand et sur tablette, rond sur téléphone", async ({ page }, info) => {
+  test("responsable : « + Nouvel évènement » à libellé dans l'en-tête dès 768 px, pilule dans le flux sur téléphone", async ({ page }, info) => {
     await ouvrir(page, COORDINATION, "/evenements");
     const bouton = nouvel(page);
     await expect(bouton).toHaveCount(1);
     await expect(bouton).toHaveAttribute("href", /^\/back-office\/evenements\/nouveau\/?$/);
-    await expect(enTete(page).getByRole("link", { name: "Nouvel évènement" }), "dans l'en-tête").toHaveCount(1);
-    const boite = (await bouton.boundingBox())!;
     if (estTelephone(info)) {
-      expect(await bouton.evaluate((el) => getComputedStyle(el).position), "rond fixe").toBe("fixed");
-      expect(Math.round(boite.width)).toBe(52);
-      expect(Math.round(boite.height)).toBe(52);
-      await expect(bouton.getByText("Nouvel évènement"), "libellé pour les lecteurs d'écran seulement").toHaveClass(/sr-only/);
+      // eglise-1 : plus de rond fixe sur le contenu ; une pilule de 44 px au bas de la liste.
+      await expect(enTete(page).getByRole("link", { name: "Nouvel évènement" }), "plus dans l'en-tête").toHaveCount(0);
+      await bouton.scrollIntoViewIfNeeded();
+      const boite = (await bouton.boundingBox())!;
+      expect(await bouton.evaluate((el) => getComputedStyle(el).position), "dans le flux").not.toBe("fixed");
+      expect(Math.round(boite.height)).toBe(44);
+      await expect(bouton.getByText("Nouvel évènement"), "libellé visible").not.toHaveClass(/sr-only/);
     } else {
+      await expect(enTete(page).getByRole("link", { name: "Nouvel évènement" }), "dans l'en-tête").toHaveCount(1);
+      const boite = (await bouton.boundingBox())!;
       await expect(bouton.getByText("Nouvel évènement")).toBeVisible();
       expect(boite.width, "pilule à libellé").toBeGreaterThan(120);
       const h1 = (await enTete(page).locator("h1").boundingBox())!;
@@ -210,14 +213,15 @@ test.describe("T7 : la fiche dans le volet", () => {
     expect(Math.round(g.y - bas), "un seul écart de 16 px, pas deux").toBe(16);
   });
 
-  test("« Gérer dans le Back-Office » en contour, à côté du titre", async ({ page }) => {
+  // eglise-8 : « Gérer » et « Partager » montent sur la rangée des étiquettes, alignés à droite, le titre dessous.
+  test("« Gérer dans le Back-Office » en contour, sur la rangée des étiquettes au-dessus du titre, à droite", async ({ page }) => {
     await ouvrir(page, COORDINATION, "/evenements/foot");
     const titre = volet(page).getByRole("heading", { level: 2, name: "Foot au parc" });
     const gerer = volet(page).getByRole("link", { name: "Gérer dans le Back-Office" });
     await expect(gerer).toHaveAttribute("href", /^\/back-office\/evenements\/foot\/?$/);
     const [t, g] = [(await titre.boundingBox())!, (await gerer.boundingBox())!];
-    expect(g.x, "à droite du titre").toBeGreaterThan(t.x + t.width - 1);
-    expect(g.y, "sur la rangée du titre").toBeLessThan(t.y + t.height);
+    expect(g.y + g.height, "au-dessus du titre, sur la rangée des étiquettes").toBeLessThanOrEqual(t.y + 1);
+    expect(g.x + g.width, "aligné à droite de la colonne du titre").toBeGreaterThan(t.x + t.width - 120);
     expect(parseFloat(await gerer.evaluate((el) => getComputedStyle(el).borderTopWidth)), "en contour").toBeGreaterThanOrEqual(1);
   });
 });

@@ -9,7 +9,7 @@
 
 import Link from "next/link"
 import { useTranslation } from "react-i18next"
-import { CalendarDays, Check, Clock, ExternalLink, Image as ImageIcon, Info, MapPin } from "lucide-react"
+import { CalendarDays, Check, Clock, ExternalLink, Info, MapPin } from "lucide-react"
 import { isInfo, nowIsoParis, placesRestantes, refusInscription, type EntreeSheetPublique } from "@/lib/evenements/agenda"
 import { useRaisonInscription } from "@/components/evenements/ChoixInscriptions"
 import { fdFullL } from "@/lib/planning/utils"
@@ -56,28 +56,27 @@ export function TypePour({ e }: { e: Pick<Evenement, "type" | "pour"> }) {
   )
 }
 
-/** La bannière : l'image, ou une zone d'attente (une info sans image n'en a pas). */
+/** La bannière : l'image seulement (sans image, la vignette de date de `EnteteEvenement` la remplace). */
 export function Banniere({ e }: { e: Evenement }) {
-  if (isInfo(e) && !e.images[0]) return null
+  if (!e.images[0]) return null
   return (
     <div data-testid="banniere" className="flex aspect-[16/9] w-full items-center justify-center overflow-hidden rounded-xl bg-secondary">
-      {e.images[0] ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={e.images[0]} alt={e.titre} className="h-full w-full object-cover" />
-      ) : (
-        <ImageIcon className="h-10 w-10 text-muted-foreground/50" aria-hidden />
-      )}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src={e.images[0]} alt={e.titre} className="h-full w-full object-cover" />
     </div>
   )
 }
 
 /** Badges (type, public) et titre ; `grand` : le titre d'une fiche dans le volet de droite, 24 px
  *  (agencement v18, R3). */
-export function TitreEvenement({ e, niveau = "h2", grand = false }: { e: Evenement; niveau?: "h1" | "h2" | "h3"; grand?: boolean }) {
+export function TitreEvenement({ e, niveau = "h2", grand = false, actions }: { e: Evenement; niveau?: "h1" | "h2" | "h3"; grand?: boolean; actions?: React.ReactNode }) {
   const Titre = niveau
   return (
     <div>
-      <div className="flex flex-wrap gap-1"><TypePour e={e} /></div>
+      <div className="flex flex-wrap items-center gap-1">
+        <TypePour e={e} />
+        {actions && <div className="ml-auto flex items-center gap-2">{actions}</div>}
+      </div>
       <Titre className={`mt-2 font-bold text-foreground text-balance ${grand ? "text-[24px] leading-[29px] tracking-tight" : "text-xl"}`}>{e.titre}</Titre>
     </div>
   )
@@ -109,7 +108,7 @@ export function InfosEvenement({ e, titrees = false }: { e: Evenement; titrees?:
           <Icone className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
           {titrees ? (
             <span className="min-w-0">
-              <span className="block text-xs text-muted-foreground">{libelle}</span>
+              <span className="block text-[13px] text-muted-foreground">{libelle}</span>
               <span className={`${classe || "block"} font-medium break-words`}>{valeur}</span>
             </span>
           ) : (
@@ -127,10 +126,18 @@ export function InfosEvenement({ e, titrees = false }: { e: Evenement; titrees?:
  *  carte de gestion les porte déjà), lignes date · horaire · lieu. Lot U4 bis (B2) :
  *  les trois morceaux se posent aussi séparément (fiche en deux colonnes). */
 export function EnteteEvenement({ e, titre }: { e: Evenement; titre: "h2" | "h3" | false }) {
+  const { i18n } = useTranslation()
+  // Sans image, une vignette de date de 56 px à la place du cadre gris (une info n'a pas de date).
+  const vignette = !e.images[0] && !isInfo(e)
   return (
     <>
       <Banniere e={e} />
-      {titre && <TitreEvenement e={e} niveau={titre} />}
+      {titre && (vignette ? (
+        <div className="flex items-start gap-4">
+          <Tile color={COLOR} big={Number(e.date.slice(8, 10))} small={monthLabel(e.date, i18n.language)} size="xl" />
+          <div className="min-w-0 flex-1"><TitreEvenement e={e} niveau={titre} /></div>
+        </div>
+      ) : <TitreEvenement e={e} niveau={titre} />)}
       <InfosEvenement e={e} />
     </>
   )

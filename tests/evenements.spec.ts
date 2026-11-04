@@ -676,14 +676,15 @@ test("L4 formulaire : champs courants dans l'ordre de la maquette, responsable p
 
 const BLANC = "rgb(255, 255, 255)";
 
-test("L6 fiche : tout le contenu dans une carte blanche, zone d'attente quand il n'y a pas de bannière", async ({ page }, info) => {
+test("L6 fiche : tout le contenu dans une carte blanche, vignette de date quand il n'y a pas de bannière", async ({ page }, info) => {
   // En grand, la fiche est en deux colonnes (planche `evenements-ordinateur`) : pages-en-grand-evenements.spec.ts.
   test.skip(enGrand(info), "en grand, la fiche est en deux colonnes (U4 bis, B2, Q5)");
   await member(page, JO, "/evenements/paix");
   const carte = page.getByTestId("fiche-carte");
   await expect(carte).toBeVisible();
   expect(await carte.evaluate((el) => getComputedStyle(el).backgroundColor)).toBe(BLANC);
-  await expect(carte.getByTestId("banniere")).toBeVisible();
+  await expect(carte.getByTestId("banniere"), "plus de cadre gris").toHaveCount(0);
+  await expect(carte.getByTestId("tuile"), "la vignette de date").toBeVisible();
   await expect(carte.getByRole("heading", { name: "Repas Groupe Paix" })).toBeVisible();
   await expect(carte.getByText("Parc de Bercy")).toBeVisible();
   await expect(carte.getByRole("button", { name: "S'inscrire" })).toBeVisible();
@@ -810,7 +811,7 @@ test("calendrier : un évènement à venir est une grande carte comme la maquett
   test.skip(enGrand(info), CARTES_EN_UN_VOLET);
   await member(page, JO, "/evenements", { ...DOCS, "evenements/foot": { ...FOOT, heureFin: "21:00", contact: "Steph R." } });
   const carte = page.getByRole("link", { name: /Foot au parc/ });
-  await expect(carte.getByTestId("banniere")).toBeVisible();
+  await expect(carte.getByTestId("tuile"), "sans image : la vignette de date").toBeVisible();
   for (const texte of ["Sport", "Toute l'église", "samedi 10 octobre 2026", "19:00 – 21:00", "Parc de Bercy", "Pour plus d'infos : Steph R.", "S'inscrire", "4 déjà inscrits"]) {
     await expect(carte).toContainText(texte);
   }

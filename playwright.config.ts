@@ -18,6 +18,8 @@ const SPECS_GRAND_ECRAN = [
   /chargement\.spec\.ts/,
   // Lot CD, services-3 : la page « Pour quel service ? » (carte des entrées plafonnée à 720 px) sur les quatre dispositions.
   /setlist-pour-quel-service\.spec\.ts/,
+  // Connexion (docs/spec-corrections-design/eglise.md, eglise-11 et eglise-13) : liens, retour, largeur du formulaire, nom du site.
+  /connexion\.spec\.ts/,
   // Lot SF (docs/spec-espace-musiciens.md) : l'entrée « Scène » de la barre latérale et la carte d'À faire.
   /scene-des-fetes\.spec\.ts/,
   // Lot VB-E (docs/spec-video-bienvenue.md) : les extraits de la visite, sur les quatre dispositions.

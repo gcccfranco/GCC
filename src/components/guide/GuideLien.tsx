@@ -13,7 +13,7 @@ export function GuideLien({ section }: { section: string }) {
   const { user } = useAuth();
   if (!user) return null;
   return (
-    <p className="pt-2 text-center">
+    <p className="pt-2">
       <Link href={`/guide#${section}`} className="text-sm text-muted-foreground underline underline-offset-4 hover:text-foreground">
         {t("guide.commentCaMarche")}
       </Link>

@@ -22,22 +22,34 @@ const CLASSE = cn(
   "md:static md:h-10 md:w-auto md:gap-2 md:px-[18px] md:text-[14.5px] md:font-semibold",
 );
 
-export function BoutonNouveau({ label, href, onClick }: { label: string; href?: string; onClick?: () => void }) {
-  const contenu = (
+// `dansLeFlux` (agenda des évènements, téléphone) : pas de rond fixe qui couvre le contenu, une pilule de 44 px
+// posée dans le flux, en bas de la liste (comme « Proposer un chant » sur Chants) ; dès 768 px elle disparaît, la
+// pilule d'en-tête prend le relais.
+const CLASSE_FLUX =
+  "inline-flex h-11 items-center justify-center gap-2 rounded-full bg-primary px-5 text-[15px] font-semibold text-primary-foreground transition-transform duration-150 active:scale-[.97] md:hidden print:hidden";
+
+export function BoutonNouveau({ label, href, onClick, dansLeFlux = false }: { label: string; href?: string; onClick?: () => void; dansLeFlux?: boolean }) {
+  const contenu = dansLeFlux ? (
+    <>
+      <Plus className="h-4 w-4 shrink-0" strokeWidth={2.4} aria-hidden />
+      <span>{label}</span>
+    </>
+  ) : (
     <>
       <Plus className="h-6 w-6 shrink-0 md:h-4 md:w-4" strokeWidth={2.4} aria-hidden />
       <span className="sr-only md:not-sr-only">{label}</span>
     </>
   );
+  const classe = dansLeFlux ? CLASSE_FLUX : CLASSE;
   if (href) {
     return (
-      <Link href={href} aria-label={label} className={CLASSE}>
+      <Link href={href} aria-label={label} className={classe}>
         {contenu}
       </Link>
     );
   }
   return (
-    <button type="button" aria-label={label} onClick={onClick} className={CLASSE}>
+    <button type="button" aria-label={label} onClick={onClick} className={classe}>
       {contenu}
     </button>
   );

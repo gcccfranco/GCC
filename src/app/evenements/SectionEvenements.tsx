@@ -36,7 +36,8 @@ export function SectionEvenements({ children }: { children: React.ReactNode }) {
     <EnTetePage
       titre={t("evenements.title")}
       sousTitre={t("evenements.sousTitre")}
-      action={!scene && peutCreer && <BoutonNouveau label={t("evenements.nouveau")} href="/back-office/evenements/nouveau" />}
+      // Sous 768 px la création est une pilule en bas de la liste (`CalendrierClient`), pas un rond fixe.
+      action={!scene && peutCreer && <span className="max-md:hidden"><BoutonNouveau label={t("evenements.nouveau")} href="/back-office/evenements/nouveau" /></span>}
       onglets={onglets.length > 1 && <OngletsRail etiquette={t("evenements.onglets")} onglets={onglets} />}
     />
   )

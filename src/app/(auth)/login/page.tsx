@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { EcranMarque } from "@/components/auth/EcranMarque";
+import { Retour } from "@/components/layout/EnTetePage";
 
 function LoginForm() {
   const { t } = useTranslation();
@@ -62,6 +63,7 @@ function LoginForm() {
     // Lot U4 bis, B5 (Q13) : titre « Connexion » (l'app s'ouvre à toute l'église), la marque à côté
     // en grand, au-dessus ailleurs.
     <EcranMarque>
+      <Retour href="/setlists">{t("common.header.songs")}</Retour>
       <h1 className="mb-5 text-2xl font-bold text-foreground">{t("login.heading")}</h1>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-1.5">
@@ -90,6 +92,15 @@ function LoginForm() {
             className="h-11"
             placeholder={t("login.passwordPlaceholder")}
           />
+          <div className="flex justify-end">
+            <button
+              type="button"
+              onClick={handleForgotPassword}
+              className="inline-flex min-h-11 cursor-pointer items-center text-sm text-muted-foreground underline underline-offset-2 hover:text-foreground"
+            >
+              {t("login.forgotPassword")}
+            </button>
+          </div>
         </div>
 
         {error && (
@@ -107,21 +118,15 @@ function LoginForm() {
           {loading ? t("login.submitLoading") : t("login.submit")}
         </Button>
       </form>
-      <div className="mt-6 flex flex-col items-center gap-3">
-        <button
-          type="button"
-          onClick={handleForgotPassword}
-          className="text-sm text-muted-foreground hover:text-foreground underline underline-offset-2 block cursor-pointer"
+      <p className="mt-4 text-center text-sm text-muted-foreground">
+        {t("login.signupQuestion")}{" "}
+        <Link
+          href="/signup"
+          className="inline-flex min-h-11 items-center font-semibold text-foreground underline underline-offset-2"
         >
-          {t("login.forgotPassword")}
-        </button>
-        <Link href="/signup" className="text-sm text-foreground underline underline-offset-2 block">
-          {t("login.signupLink")}
+          {t("login.signupAction")}
         </Link>
-        <Link href="/setlists" className="text-sm text-muted-foreground hover:text-foreground block">
-          {t("login.backToSetlists")}
-        </Link>
-      </div>
+      </p>
     </EcranMarque>
   );
 }

@@ -1,7 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
+import { Maximize2, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { Dialog, DialogClose, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { TOUCHER_44 } from "@/lib/toucher44";
 import type { Annotation, GuideFigure as Figure } from "@/lib/guide/figures";
 
 // Couleur des annotations (cercles/flèches) — orange de marque, ressort sur les
@@ -98,38 +101,111 @@ function Labels({ items, figureId }: { items: Annotation[]; figureId: string }) 
   );
 }
 
-/** Capture annotée d'une section du guide (masquée si l'image manque). */
+/** Annotations posées sur l'image (communes à la figure et à la feuille). */
+function Surimpression({ figure }: { figure: Figure }) {
+  if (!figure.annotations || figure.annotations.length === 0) return null;
+  return (
+    <>
+      <Shapes items={figure.annotations} />
+      <Labels items={figure.annotations} figureId={figure.id} />
+    </>
+  );
+}
+
+// En sombre seulement, la capture claire est adoucie (les annotations, posées dessus, restent hors filtre).
+const IMG_SOMBRE = "dark:[filter:brightness(.85)_contrast(.95)]";
+
+/** Capture annotée d'une section du guide (masquée si l'image manque). Le bouton « Agrandir la capture »
+ *  ouvre une feuille où l'image garde sa largeur réelle (1 280 px) : on la fait défiler ou on la pince. */
 export function GuideFigure({ figure }: { figure: Figure }) {
   const { t } = useTranslation();
   const [hidden, setHidden] = useState(false);
+  const [ouvert, setOuvert] = useState(false);
+  const [origine, setOrigine] = useState("50% 50%");
+  const cadre = useRef<HTMLDivElement>(null);
   if (hidden) return null;
+
+  const src = `/guide/${figure.id}.png`;
+  const alt = t(`guide.captures.${figure.id}.caption`, { defaultValue: "" });
+
+  function agrandir() {
+    const r = cadre.current?.getBoundingClientRect();
+    if (r) setOrigine(`${Math.round(r.left + r.width / 2)}px ${Math.round(r.top + r.height / 2)}px`);
+    setOuvert(true);
+  }
 
   return (
     <figure className="space-y-1.5">
+      {/* Passe-partout de 6 px en --secondary, liseré plus net en contraste élevé. */}
       <div
-        className="relative w-full overflow-hidden rounded-lg border border-border bg-secondary/40"
-        style={{ aspectRatio: String(figure.aspect ?? 1.6) }}
+        ref={cadre}
+        className="relative w-full rounded-lg border border-foreground/15 bg-secondary p-1.5 contrast-more:border-foreground/40"
       >
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={`/guide/${figure.id}.png`}
-          alt={t(`guide.captures.${figure.id}.caption`, { defaultValue: "" })}
-          loading="lazy"
-          className="h-full w-full object-cover"
-          onError={() => setHidden(true)}
-        />
-        {figure.annotations && figure.annotations.length > 0 && (
-          <>
-            <Shapes items={figure.annotations} />
-            <Labels items={figure.annotations} figureId={figure.id} />
-          </>
-        )}
+        <div className="relative w-full overflow-hidden rounded-md" style={{ aspectRatio: String(figure.aspect ?? 1.6) }}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={src}
+            alt={alt}
+            loading="lazy"
+            className={`h-full w-full object-cover ${IMG_SOMBRE}`}
+            onError={() => setHidden(true)}
+          />
+          <Surimpression figure={figure} />
+        </div>
+        {/* Enveloppe positionnée : `TOUCHER_44` pose `relative` au toucher, le bouton ne peut pas être `absolute`.
+            À cheval sur le coin du passe-partout, pour ne pas couvrir les annotations de la capture. */}
+        <div className="absolute -right-3 -top-3">
+          <button
+            type="button"
+            onClick={agrandir}
+            aria-label={t("guide.agrandirCapture")}
+            title={t("guide.agrandirCapture")}
+            className={`${TOUCHER_44} flex h-9 w-9 cursor-zoom-in items-center justify-center rounded-full border border-foreground/15 bg-background/90 text-foreground shadow-sm transition-transform duration-150 active:scale-[.94]`}
+          >
+            <Maximize2 className="h-4 w-4" aria-hidden />
+          </button>
+        </div>
       </div>
       {figure.caption && (
         <figcaption className="text-xs text-muted-foreground text-center">
           {t(`guide.captures.${figure.id}.caption`)}
         </figcaption>
       )}
+
+      <Dialog open={ouvert} onOpenChange={setOuvert}>
+        <DialogContent
+          aria-describedby={undefined}
+          data-testid="capture-feuille"
+          className="capture-scrim inset-0 flex items-stretch justify-center sm:items-center sm:p-6"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setOuvert(false);
+          }}
+        >
+          <div style={{ transformOrigin: origine }} className="capture-feuille flex h-full max-h-full w-full flex-col overflow-hidden bg-card max-sm:pt-[env(safe-area-inset-top)] max-sm:pb-[env(safe-area-inset-bottom)] sm:h-auto sm:w-[92vw] sm:max-w-[1280px] sm:rounded-2xl sm:border sm:border-foreground/15">
+            <div className="flex items-start gap-3 border-b border-border px-4 py-2">
+              <div className="min-w-0 flex-1">
+                <DialogTitle className="sr-only">{alt || t("guide.agrandirCapture")}</DialogTitle>
+                <p className="text-xs leading-snug text-muted-foreground sm:hidden">{t("guide.captureDefilement")}</p>
+                <p className="hidden text-xs leading-snug text-muted-foreground sm:block">{t("guide.captureFermerAide")}</p>
+              </div>
+              <DialogClose
+                aria-label={t("common.buttons.close")}
+                title={t("common.buttons.close")}
+                className={`${TOUCHER_44} flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-secondary text-foreground`}
+              >
+                <X className="h-4 w-4" aria-hidden />
+              </DialogClose>
+            </div>
+            <div data-testid="capture-defilement" className="min-h-0 flex-1 overflow-auto [touch-action:pan-x_pan-y_pinch-zoom]">
+              <div className="relative" style={{ width: 1280, aspectRatio: String(figure.aspect ?? 1.6) }}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={src} alt={alt} data-testid="capture-agrandie" className={`h-full w-full max-w-none ${IMG_SOMBRE}`} />
+                <Surimpression figure={figure} />
+              </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </figure>
   );
 }

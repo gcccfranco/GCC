@@ -143,10 +143,10 @@ test("un volet, responsable : « ‹ Évènements · Gérer dans le Back-Office 
   const gerer = barre.getByRole("link", { name: "Gérer dans le Back-Office" });
   await expect(retour).toHaveAttribute("href", /^\/evenements\/?$/);
   await expect(gerer).toHaveAttribute("href", /^\/back-office\/evenements\/foot\/?$/);
-  const [r, g, b] = [(await retour.boundingBox())!, (await gerer.boundingBox())!, (await fiche(page).getByTestId("banniere").boundingBox())!];
+  const [r, g, b] = [(await retour.boundingBox())!, (await gerer.boundingBox())!, (await fiche(page).boundingBox())!];
   expect(Math.abs(r.y + r.height / 2 - (g.y + g.height / 2)), "sur une rangée").toBeLessThan(4);
   expect(g.x, "« Gérer » à droite").toBeGreaterThan(r.x + r.width);
-  expect(g.y + g.height, "au-dessus de la bannière").toBeLessThanOrEqual(b.y);
+  expect(g.y + g.height, "au-dessus de la fiche").toBeLessThanOrEqual(b.y);
   await expect(page.getByRole("link", { name: "Gérer dans le Back-Office" }), "une seule fois").toHaveCount(1);
   expect(await sansDefilementLateral(page)).toBe(true);
   await capture(page, "relecture-fiche-evenement");
@@ -159,10 +159,10 @@ test("un volet, membre : la barre n'a que « ‹ Évènements »", async ({ page
   await expect(page.getByRole("link", { name: "Gérer dans le Back-Office" })).toHaveCount(0);
 });
 
-test("téléphone : l'agenda garde ses cartes à bannière ; la fiche fait remonter l'inscription sous les infos", async ({ page }, info) => {
+test("téléphone : l'agenda garde ses cartes (vignette de date sans image) ; la fiche fait remonter l'inscription sous les infos", async ({ page }, info) => {
   test.skip(disposition(info) !== "telephone", "téléphone");
   await membre(page, SACHA, "/evenements");
-  await expect(page.getByTestId("carte-evenement").first().getByTestId("banniere")).toBeVisible();
+  await expect(page.getByTestId("carte-evenement").first().getByTestId("tuile")).toBeVisible();
   await page.goto("/evenements/foot");
   const sinscrire = (await page.getByRole("button", { name: "S'inscrire" }).boundingBox())!;
   const description = (await page.getByText("Match amical, venez nombreux.").boundingBox())!;
@@ -170,4 +170,175 @@ test("téléphone : l'agenda garde ses cartes à bannière ; la fiche fait remon
   expect(sinscrire.y, "l'inscription sous les infos").toBeGreaterThan(lieu.y);
   expect(description.y, "la description après l'inscription").toBeGreaterThan(sinscrire.y);
   expect(await sansDefilementLateral(page)).toBe(true);
+});
+
+// ── T1 (docs/spec-corrections-design/eglise.md) : eglise-8, eglise-1, eglise-4, eglise-9, eglise-17 ──
+
+async function enChinois(page: Page) {
+  await page.addInitScript(() => { try { localStorage.setItem("i18nextLng", "zh-CN") } catch { /* stockage refusé */ } });
+}
+
+// eglise-8 : « Partager » ne sort plus de l'écran. Mesuré à 320, 360 et 390 px (le défaut est masqué à 412 px),
+// avec et sans « Gérer » : si l'en-tête déborde seul, c'est une autre cause que la barre de la fiche.
+for (const largeur of [320, 360, 390]) {
+  for (const [langue, titre] of [["fr", "français"], ["zh", "中文"]] as const) {
+    test(`téléphone ${largeur} px, ${titre} : la barre de la fiche tient, « Gérer » et « Partager » sont deux ronds de 40 px`, async ({ page }, info) => {
+      test.skip(disposition(info) !== "telephone", "téléphone");
+      await page.setViewportSize({ width: largeur, height: 800 });
+      if (langue === "zh") await enChinois(page);
+      await membre(page, SACHA, "/evenements/foot");
+      const barre = page.getByTestId("barre-fiche");
+      await expect(barre).toBeVisible();
+      expect(await sansDefilementLateral(page), "sans « Gérer » (membre)").toBe(true);
+      await page.goto("about:blank");
+      await membre(page, ALICE, "/evenements/foot");
+      const gerer = barre.getByRole("link", { name: langue === "fr" ? "Gérer dans le Back-Office" : "在后台管理" });
+      const partager = barre.getByRole("button", { name: langue === "fr" ? "Partager" : /分享|共享/ });
+      await expect(gerer).toBeVisible();
+      expect(await sansDefilementLateral(page), "avec « Gérer » (responsable)").toBe(true);
+      for (const rond of [gerer, partager]) {
+        const b = (await rond.boundingBox())!;
+        expect(Math.round(b.width), "rond de 40 px").toBe(40);
+        expect(Math.round(b.height)).toBe(40);
+        expect(b.x + b.width, "entièrement dans l'écran").toBeLessThanOrEqual(largeur);
+      }
+    });
+  }
+}
+
+test("téléphone (écran tactile) : les deux ronds de la barre ont une zone de 44 px", async ({ page }, info) => {
+  test.skip(disposition(info) !== "telephone", "téléphone");
+  await membre(page, ALICE, "/evenements/foot");
+  const barre = page.getByTestId("barre-fiche");
+  for (const rond of [barre.getByRole("link", { name: "Gérer dans le Back-Office" }), barre.getByRole("button", { name: "Partager" })]) {
+    await expect(rond).toBeVisible();
+    const zone = await rond.evaluate((el) => { const s = getComputedStyle(el, "::after"); return { h: parseFloat(s.height), w: parseFloat(s.width) }; });
+    expect(zone.h, "zone tactile (::after)").toBeGreaterThanOrEqual(44);
+    expect(zone.w).toBeGreaterThanOrEqual(44);
+  }
+});
+
+test("tablette portrait : « Gérer dans le Back-Office » garde son libellé complet, à côté de « Partager »", async ({ page }, info) => {
+  test.skip(disposition(info) !== "tablette", "tablette portrait");
+  await membre(page, ALICE, "/evenements/foot");
+  const barre = page.getByTestId("barre-fiche");
+  await expect(barre.getByRole("link", { name: "Gérer dans le Back-Office" })).toContainText("Gérer dans le Back-Office");
+  await expect(barre.getByRole("button", { name: "Partager" })).toContainText("Partager");
+  expect(await sansDefilementLateral(page)).toBe(true);
+});
+
+test("en grand : les deux boutons montent sur la rangée des étiquettes, le titre tient sur une ligne", async ({ page }, info) => {
+  test.skip(disposition(info) !== "grand", "deux volets");
+  await membre(page, ALICE, "/evenements/foot");
+  const titre = detail(page).getByRole("heading", { name: "Foot au parc", level: 2 });
+  const gerer = detail(page).getByRole("link", { name: "Gérer dans le Back-Office" });
+  const partager = detail(page).getByRole("button", { name: "Partager" });
+  await expect(titre).toBeVisible();
+  const [t, g, p] = [(await titre.boundingBox())!, (await gerer.boundingBox())!, (await partager.boundingBox())!];
+  expect(g.y + g.height, "« Gérer » au-dessus du titre").toBeLessThanOrEqual(t.y + 1);
+  expect(p.y + p.height, "« Partager » au-dessus du titre").toBeLessThanOrEqual(t.y + 1);
+  expect(t.height, "le titre tient sur une ligne").toBeLessThan(40);
+});
+
+// eglise-1 : plus de rond fixe sur la liste, une pilule de 44 px en bas de la liste (sous 768 px).
+test("téléphone : « Nouvel évènement » est une pilule dans le flux, en bas de la liste, qui ne recouvre aucun « S'inscrire »", async ({ page }, info) => {
+  test.skip(disposition(info) !== "telephone", "téléphone");
+  await membre(page, ALICE, "/evenements");
+  const pilule = page.getByRole("link", { name: "Nouvel évènement" });
+  await expect(pilule).toHaveCount(1);
+  await pilule.scrollIntoViewIfNeeded();
+  expect(await pilule.evaluate((el) => getComputedStyle(el).position), "ne flotte pas").not.toBe("fixed");
+  const p = (await pilule.boundingBox())!;
+  expect(Math.round(p.height), "44 px de haut").toBe(44);
+  const cartes = page.getByTestId("carte-evenement");
+  expect(await cartes.count()).toBeGreaterThan(0);
+  for (let i = 0; i < await cartes.count(); i++) {
+    const c = (await cartes.nth(i).boundingBox())!;
+    expect(p.y >= c.y + c.height - 1 || p.y + p.height <= c.y + 1, `la pilule ne recouvre pas la carte ${i}`).toBe(true);
+  }
+  const derniere = (await cartes.last().boundingBox())!;
+  expect(p.y, "en bas de la liste").toBeGreaterThan(derniere.y + derniere.height);
+});
+
+test("un membre sans droit de création ne voit aucune pilule « Nouvel évènement »", async ({ page }) => {
+  await membre(page, SACHA, "/evenements");
+  await expect(page.getByTestId("carte-evenement").or(liste(page)).first()).toBeVisible();
+  await expect(page.getByRole("link", { name: "Nouvel évènement" })).toHaveCount(0);
+});
+
+test("dès 768 px : la pilule « Nouvel évènement » est dans l'en-tête, une seule", async ({ page }, info) => {
+  test.skip(disposition(info) === "telephone", "dès 768 px");
+  await membre(page, ALICE, "/evenements");
+  const pilule = page.getByRole("link", { name: "Nouvel évènement" });
+  await expect(pilule).toHaveCount(1);
+  await expect(page.locator("header[data-entete-page]").getByRole("link", { name: "Nouvel évènement" })).toBeVisible();
+  // L'enveloppe de la pilule du flux ne laisse pas de bloc vide (et sa marge) avant « Comment ça marche ? ».
+  const flux = page.locator('div:has(> a[href*="/back-office/evenements/nouveau"])').filter({ hasNot: page.locator("header") });
+  if (disposition(info) === "tablette") await expect(flux.first(), "pilule du flux présente, cachée").toBeAttached();
+  for (const d of await flux.evaluateAll((els) => els.filter((el) => !el.closest("header")).map((el) => getComputedStyle(el).display)))
+    expect(d, "enveloppe cachée dès 768 px").toBe("none");
+});
+
+// eglise-4 : sans image, une vignette de date de 56 × 56 px à la place du cadre gris.
+for (const [langue, titre, mois] of [["fr", "français", "oct."], ["zh", "中文", "10月"]] as const) {
+  test(`${titre} : un évènement sans image porte une vignette de date de 56 × 56 px (carte et fiche)`, async ({ page }, info) => {
+    test.skip(disposition(info) === "grand", "un volet : téléphone et tablette portrait");
+    if (langue === "zh") await enChinois(page);
+    await membre(page, SACHA, "/evenements");
+    const carte = page.getByTestId("carte-evenement").first();
+    await expect(carte).toBeVisible();
+    await expect(carte.getByTestId("banniere"), "plus de cadre gris").toHaveCount(0);
+    for (const tuile of [carte.getByTestId("tuile")]) {
+      await expect(tuile).toBeVisible();
+      const b = (await tuile.boundingBox())!;
+      expect([Math.round(b.width), Math.round(b.height)]).toEqual([56, 56]);
+      await expect(tuile).toContainText(mois);
+    }
+    await page.goto("/evenements/foot");
+    const tuile = fiche(page).getByTestId("tuile");
+    await expect(tuile).toBeVisible();
+    const b = (await tuile.boundingBox())!;
+    expect([Math.round(b.width), Math.round(b.height)]).toEqual([56, 56]);
+    await expect(fiche(page).getByTestId("banniere")).toHaveCount(0);
+  });
+}
+
+test("une info (sans date) n'a pas de vignette, et une carte avec image garde sa bannière", async ({ page }, info) => {
+  test.skip(disposition(info) === "grand", "un volet : téléphone et tablette portrait");
+  await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
+  await signInAs(page, SACHA, { ...DOCS, "evenements/foot": { ...FOOT, images: [PIXEL] } }, "/evenements");
+  await expect(page.getByRole("link", { name: /Foot au parc/ }).getByTestId("banniere")).toBeVisible();
+  await expect(page.getByRole("link", { name: /Foot au parc/ }).getByTestId("tuile")).toHaveCount(0);
+  await expect(page.getByRole("link", { name: /Nouveau parking/ }).getByTestId("tuile")).toHaveCount(0);
+});
+
+// eglise-9 : « Inscriptions » comme « Tâches » (16 px), étiquettes Date / Heure / Lieu à 13 px, plus de sous-panneau gris.
+test("la fiche d'un responsable : « Inscriptions » comme « Tâches », sans fond gris", async ({ page }) => {
+  await membre(page, ALICE, "/evenements/foot");
+  const titre = page.getByRole("heading", { name: "Inscriptions", level: 3 }).first();
+  await expect(titre).toBeVisible();
+  const taches = page.getByRole("heading", { name: "Tâches", level: 3 }).first();
+  await expect(taches).toBeVisible();
+  const style = (l: typeof titre) => l.evaluate((el) => { const s = getComputedStyle(el); return { taille: s.fontSize, graisse: s.fontWeight }; });
+  expect(await style(titre), "même taille et même graisse que « Tâches » (text-base, 16 px au rem de base)").toEqual(await style(taches));
+  expect(await titre.evaluate((el) => getComputedStyle(el.closest("section")!).backgroundColor), "pas de carte dans la carte").toBe("rgba(0, 0, 0, 0)");
+});
+
+test("en grand : les étiquettes Date / Heure / Lieu de la fiche sont à 13 px", async ({ page }, info) => {
+  test.skip(disposition(info) !== "grand", "les étiquettes titrées n'existent qu'en grand");
+  await membre(page, SACHA, "/evenements/foot");
+  const etiquette = detail(page).getByText("Date", { exact: true }).first();
+  await expect(etiquette).toBeVisible();
+  expect(await etiquette.evaluate((el) => getComputedStyle(el).fontSize)).toBe("13px");
+});
+
+// eglise-17 : « Comment ça marche ? » calé à gauche, sur la gouttière des cartes.
+test("« Comment ça marche ? » est aligné à gauche sur la première carte de l'agenda", async ({ page }) => {
+  await membre(page, SACHA, "/evenements");
+  const lien = page.getByRole("link", { name: "Comment ça marche ?" });
+  await lien.scrollIntoViewIfNeeded();
+  await expect(lien).toBeVisible();
+  const premiere = disposition(test.info()) === "grand" ? liste(page).getByRole("link", { name: /Soirée louange|Repas Groupe Paix|Foot au parc/ }).first() : page.getByTestId("carte-evenement").first();
+  const [l, c] = [(await lien.boundingBox())!, (await premiere.boundingBox())!];
+  expect(Math.abs(l.x - c.x), "même bord gauche").toBeLessThanOrEqual(1);
 });

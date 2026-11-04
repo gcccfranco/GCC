@@ -34,6 +34,7 @@ import type { Evenement } from "@/types/evenement"
 import { EntreeSheetCarte, EvenementCard, EvenementCarte } from "./EvenementCard"
 import { EvenementClient } from "./[id]/EvenementClient"
 import { Squelette } from "@/components/layout/Squelette";
+import { BoutonNouveau } from "@/components/layout/BoutonNouveau";
 
 export function CalendrierClient({ enTete, peutCreer, children }: {
   enTete: React.ReactNode
@@ -160,6 +161,7 @@ export function CalendrierClient({ enTete, peutCreer, children }: {
           {t("evenements.loginHint")} <Link href="/login?from=%2Fevenements" className="font-semibold underline">{t("evenements.login")}</Link>
         </p>
       )}
+      {peutCreer && <div className="md:hidden"><BoutonNouveau dansLeFlux label={t("evenements.nouveau")} href="/back-office/evenements/nouveau" /></div>}
       <GuideLien section="evenements" />
     </div>
   )

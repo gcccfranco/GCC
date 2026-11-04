@@ -370,15 +370,17 @@ function ContenuBarre({
             </>
           ) : (
             <>
-              <Link
-                href="/login"
-                aria-label={t("common.header.login")}
-                title={enIcones ? t("common.header.login") : undefined}
-                className="barre-connexion h-9 min-w-0 flex-1 rounded-full bg-primary px-3 text-primary-foreground hover:bg-primary/90 transition-[background-color,transform] duration-150 active:scale-[.96] flex items-center justify-center gap-1.5 text-sm font-semibold"
-              >
-                <LogIn className="h-4 w-4 shrink-0" aria-hidden />
-                <span className="barre-texte truncate">{t("common.header.login")}</span>
-              </Link>
+              {!pathname.startsWith("/login") && !pathname.startsWith("/signup") && (
+                <Link
+                  href="/login"
+                  aria-label={t("common.header.login")}
+                  title={enIcones ? t("common.header.login") : undefined}
+                  className="barre-connexion h-9 min-w-0 flex-1 rounded-full bg-primary px-3 text-primary-foreground hover:bg-primary/90 transition-[background-color,transform] duration-150 active:scale-[.96] flex items-center justify-center gap-1.5 text-sm font-semibold"
+                >
+                  <LogIn className="h-4 w-4 shrink-0" aria-hidden />
+                  <span className="barre-texte truncate">{t("common.header.login")}</span>
+                </Link>
+              )}
               {langue()}
               <button
                 onClick={() => setTheme(dark ? "light" : "dark")}

@@ -158,9 +158,9 @@
     "passwordPlaceholder": "••••••••",
     "submit": "Se connecter",
     "submitLoading": "Connexion…",
-    "backToSetlists": "← Revenir aux chants",
     "errorInvalid": "Identifiants incorrects. Vérifie l'email et le mot de passe.",
-    "signupLink": "Pas encore de compte ? Créer un compte",
+    "signupQuestion": "Pas encore de compte ?",
+    "signupAction": "Créer un compte",
     "forgotPassword": "Mot de passe oublié ?",
     "resetNeedEmail": "Saisis d'abord ton email ci-dessus.",
     "resetSent": "Email de réinitialisation envoyé — vérifie ta boîte mail (et les spams).",
@@ -850,6 +850,7 @@
     "title": "Guide d'utilisation",
     "subtitle": "Tout ce qu'il faut savoir pour utiliser le site GCC Louange.",
     "tocTitle": "Sur cette page",
+    "tocReplie": "Sur cette page ({{count}})",
     "sections": {
       "songs": {
         "title": "Trouver et lire un chant",
@@ -963,6 +964,7 @@
           "Renseigne prénom, nom, lieux et rôles de service, et ton nom de planning.",
           "Dans **Moi › Réglages**, **Langue** passe toute l'interface du français au 中文 (et inversement).",
           "**Thème** bascule entre clair et sombre.",
+          "Le thème suit le réglage de ton appareil tant que tu n'es pas connecté.",
           "Une fois complété, le profil n'est modifiable que par un responsable : signale-lui toute erreur."
         ]
       },
@@ -1050,6 +1052,9 @@
         ]
       }
     },
+    "agrandirCapture": "Agrandir la capture",
+    "captureDefilement": "Capture à sa largeur réelle : on la fait défiler ou on la pince.",
+    "captureFermerAide": "Échap, × ou clic hors de la feuille pour fermer · défilement horizontal",
     "captures": {
       "songs": {
         "labels": {

@@ -865,3 +865,19 @@
 @media (max-width: 639px) {
   :root[data-responsable="1"] .brand-nom { display: none; }
 }
+
+/* Feuille « Agrandir la capture » du guide (eglise-6) : scrim assombri, entrée sans rebond (réponse 0,35 s) depuis
+   la figure (`transform-origin` posé en ligne) ; fondu de 200 ms sous `prefers-reduced-motion` ; scrim opaque sous
+   `prefers-reduced-transparency`. */
+/* Le voile de Dialog (35 %) est déjà dessous : 40 % de plus donnent environ 60 % de noir. Le voile se fond,
+   seule la feuille grandit (depuis la figure). */
+.capture-scrim { background-color: rgb(0 0 0 / 0.4); animation: capture-fondu 200ms linear; }
+.capture-scrim .capture-feuille { animation: capture-entree 350ms cubic-bezier(.32, .72, 0, 1); }
+@keyframes capture-entree { from { opacity: 0; transform: scale(.92); } }
+@keyframes capture-fondu { from { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) {
+  .capture-scrim .capture-feuille { animation: capture-fondu 200ms linear; }
+}
+@media (prefers-reduced-transparency: reduce) {
+  .capture-scrim { background-color: #0b0b0c; }
+}

@@ -272,7 +272,7 @@ export function Navbar() {
                     {initial}
                   </button>
                 </MenuCompte>
-              ) : (
+              ) : pathname.startsWith("/login") || pathname.startsWith("/signup") ? null : (
                 <Link
                   aria-label={t("common.header.login")}
                   href="/login"

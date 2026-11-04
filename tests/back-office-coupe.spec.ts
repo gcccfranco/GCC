@@ -636,3 +636,17 @@ test.describe("back-office coupé : textes de publication d'un trimestre", () =>
     expect(readFileSync("src/components/planning/PublishPlanningPanel.tsx", "utf8")).not.toMatch(/`Trimestre \$\{tri\} publié/);
   });
 });
+
+// eglise-18 : le sommaire replié du guide dit combien d'entrées il ouvre (SECTIONS.length) : 14 sans le back-office
+// (évènements, scène et tâches des équipes retirés), 17 interrupteur ouvert (pages-en-grand-guide-equipes.spec.ts).
+test("guide, téléphone : le sommaire replié dit 14 entrées, et la liste ouverte en compte 14", async ({ browser }) => {
+  const contexte = await browser.newContext({ ...phone, baseURL: BASE_URL_COUPE });
+  const page = await contexte.newPage();
+  await page.route(/docs\.google\.com\/spreadsheets/, (route) => route.fulfill({ status: 200, contentType: "text/csv", body: "" }));
+  await signInAs(page, ADMIN, {}, "/guide");
+  const bouton = page.getByRole("button", { name: "Sur cette page (14)" });
+  await expect(bouton).toHaveAttribute("aria-expanded", "false");
+  await bouton.click();
+  await expect(page.getByRole("navigation", { name: "Sur cette page" }).getByRole("link")).toHaveCount(14);
+  await contexte.close();
+});

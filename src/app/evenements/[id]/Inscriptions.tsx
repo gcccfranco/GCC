@@ -230,10 +230,10 @@ export function PanneauInscriptions({ evenement: e, relire, onInscrits, onMode, 
   }
 
   return (
-    <section aria-label={t("evenements.panneauInscriptions")} className="space-y-3 rounded-xl bg-secondary/60 p-4">
+    <section aria-label={t("evenements.panneauInscriptions")} className="space-y-3">
       {error && <p className="text-sm text-destructive">{error}</p>}
       <div className="flex items-center justify-between gap-2">
-        <h3 className="text-sm font-semibold text-foreground">{t("evenements.panneauInscriptions")}</h3>
+        <h3 className="text-base font-semibold text-foreground">{t("evenements.panneauInscriptions")}</h3>
         <span data-testid="etat-inscriptions" className={`rounded-full px-2.5 py-1 text-xs font-semibold ${etat === "ouvertes" ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400" : etat === "bientot" ? "bg-amber-500/15 text-amber-800 dark:text-amber-300" : "bg-secondary text-muted-foreground"}`}>
           {t(`evenements.${etat}`)}
         </span>

@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useCallback, useEffect, useState } from "react";
+import { Fragment, useCallback, useEffect, useId, useState } from "react";
 import { BACK_OFFICE } from "@/lib/backOffice";
 import { useTranslation } from "react-i18next";
 import {
@@ -22,6 +22,8 @@ import {
   UserCog,
   Lightbulb,
   Sparkles,
+  List,
+  ChevronDown,
 } from "lucide-react";
 import { RequireAuth } from "@/components/auth/RequireAuth";
 import { EnTetePage } from "@/components/layout/EnTetePage";
@@ -119,19 +121,12 @@ export default function GuidePage() {
   const disposition = useDisposition();
   const grand = disposition === "grand";
   const [lue, setLue] = usePartieLue(CLES, disposition !== "telephone");
+  // Téléphone : le sommaire est replié sur une ligne (eglise-18), la liste s'ouvre au toucher.
+  const telephone = disposition === "telephone";
+  const [ouvert, setOuvert] = useState(false);
+  const idListe = useId();
 
-  const sommaire = (
-    <nav
-      aria-label={t("guide.tocTitle")}
-      className={
-        grand
-          ? "sticky top-[calc(var(--nav-h)+24px)] max-h-[calc(100dvh-var(--nav-h)-48px)] self-start overflow-y-auto"
-          : "raised rounded-2xl p-3"
-      }
-    >
-      <p className={`text-sm font-semibold text-muted-foreground ${grand ? "mb-1.5 px-2.5" : "mb-1 px-2"}`}>
-        {t("guide.tocTitle")}
-      </p>
+  const liste = (
       <ul
         className={
           disposition === "tablette"
@@ -148,7 +143,10 @@ export default function GuidePage() {
               <a
                 href={`#${key}`}
                 aria-current={allume ? "location" : undefined}
-                onClick={() => setLue(key)}
+                onClick={() => {
+                  setLue(key);
+                  if (telephone) setOuvert(false);
+                }}
                 className={`flex items-center gap-2.5 rounded-lg px-2.5 text-sm font-medium transition-colors ${
                   disposition === "telephone" ? "min-h-11 py-2.5 text-[15px]" : "py-1.5"
                 } ${
@@ -164,6 +162,55 @@ export default function GuidePage() {
           );
         })}
       </ul>
+  );
+
+  const sommaire = (
+    <nav
+      aria-label={t("guide.tocTitle")}
+      className={
+        grand
+          ? "sticky top-[calc(var(--nav-h)+24px)] max-h-[calc(100dvh-var(--nav-h)-48px)] self-start overflow-y-auto"
+          : telephone
+            ? "raised rounded-2xl"
+            : "raised rounded-2xl p-3"
+      }
+    >
+      {telephone ? (
+        <button
+          type="button"
+          aria-expanded={ouvert}
+          aria-controls={idListe}
+          onClick={() => setOuvert((o) => !o)}
+          className="flex h-[52px] w-full items-center gap-2.5 rounded-2xl px-4 text-left text-[15px] font-semibold text-foreground"
+        >
+          <List className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
+          <span className="min-w-0 flex-1 truncate">{t("guide.tocReplie", { count: SECTIONS.length })}</span>
+          <ChevronDown
+            className={`h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-300 [transition-timing-function:cubic-bezier(.32,.72,0,1)] motion-reduce:transition-none ${ouvert ? "rotate-180" : ""}`}
+            aria-hidden
+          />
+        </button>
+      ) : (
+        <p className={`text-sm font-semibold text-muted-foreground ${grand ? "mb-1.5 px-2.5" : "mb-1 px-2"}`}>
+          {t("guide.tocTitle")}
+        </p>
+      )}
+      {telephone ? (
+        // Hauteur et opacité sans rebond (réponse 0,3 s) ; sous `prefers-reduced-motion`, un simple fondu de 150 ms.
+        <div
+          id={idListe}
+          inert={!ouvert}
+          className={`grid transition-[grid-template-rows,opacity] duration-300 [transition-timing-function:cubic-bezier(.32,.72,0,1)] motion-reduce:transition-opacity motion-reduce:duration-150 ${
+            ouvert ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
+          }`}
+        >
+          <div className="overflow-hidden">
+            <div className="px-3 pb-3">{liste}</div>
+          </div>
+        </div>
+      ) : (
+        liste
+      )}
     </nav>
   );
 
@@ -174,9 +221,17 @@ export default function GuidePage() {
             sommaire de 260 px collant à gauche, colonne de 720 px, calés sur le titre. */}
         <div className="relative pb-16">
           <EnTetePage retour={{ href: "/moi", label: t("moi.title") }} titre={t("guide.title")} sousTitre={t("guide.subtitle")} />
-          {user && !loading && (
-            <div className="mb-5 px-[var(--marge-page)]">
-              <div className="flex max-w-[calc(720px+2*var(--marge-page))] items-center justify-between gap-3 rounded-2xl bg-secondary px-4 py-3">
+          <div
+            className={
+              grand
+                ? "grid grid-cols-[260px_minmax(0,720px)] gap-x-10 px-[var(--marge-page)]"
+                : "max-w-[calc(720px+2*var(--marge-page))] space-y-6 px-[var(--marge-page)]"
+            }
+          >
+            {/* eglise-7 : la bande « Pour toi » est la première rangée de la grille, sur toute sa largeur
+                (ses bords tombent sur ceux du sommaire et de la colonne de lecture). */}
+            {user && !loading && (
+              <div data-testid="bande-pour-toi" className={`col-span-full flex items-center justify-between gap-3 rounded-2xl bg-secondary px-4 py-3 ${grand ? "mb-6" : ""}`}>
                 <p className="min-w-0 text-[15px] font-semibold text-foreground">{t("accueil.pourToi", { count: nCartes })}</p>
                 <button
                   type="button"
@@ -186,15 +241,7 @@ export default function GuidePage() {
                   {t("accueil.revoir")}
                 </button>
               </div>
-            </div>
-          )}
-          <div
-            className={
-              grand
-                ? "grid grid-cols-[260px_minmax(0,720px)] gap-x-10 px-[var(--marge-page)]"
-                : "max-w-[calc(720px+2*var(--marge-page))] space-y-6 px-[var(--marge-page)]"
-            }
-          >
+            )}
             {sommaire}
 
             {/* Sections */}

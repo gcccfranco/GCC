@@ -268,12 +268,133 @@ test.describe("Guide", () => {
   test("téléphone : le sommaire en une colonne, en tête (téléphone)", async ({ page }, info) => {
     test.skip(info.project.name !== "telephone", "téléphone");
     await ouvrirGuide(page);
+    await page.getByRole("button", { name: /Sur cette page \(\d+\)/ }).click();
     const liens = sommaire(page).getByRole("link");
+    await expect(liens.first()).toBeVisible();
     const a = (await liens.nth(0).boundingBox())!;
     const b = (await liens.nth(1).boundingBox())!;
     expect(Math.abs(a.x - b.x)).toBeLessThan(2);
     expect(b.y).toBeGreaterThan(a.y);
     // Des lignes qu'on touche du pouce.
     expect(a.height).toBeGreaterThanOrEqual(40);
+  });
+
+  // eglise-18 : sur téléphone le sommaire est replié sur une ligne de 52 px ; ailleurs il reste ouvert.
+  test("téléphone : le sommaire est replié (≤ 60 px), le nombre dit celui des liens, choisir une entrée referme", async ({ page }, info) => {
+    test.skip(info.project.name !== "telephone", "téléphone");
+    await ouvrirGuide(page);
+    const bouton = page.getByRole("button", { name: /Sur cette page \(\d+\)/ });
+    await expect(bouton).toHaveAttribute("aria-expanded", "false");
+    expect((await sommaire(page).boundingBox())!.height, "replié : une ligne").toBeLessThanOrEqual(60);
+    const nombre = Number((await bouton.innerText()).match(/\((\d+)\)/)![1]);
+    await bouton.click();
+    await expect(bouton).toHaveAttribute("aria-expanded", "true");
+    await expect(sommaire(page).getByRole("link")).toHaveCount(nombre);
+    await sommaire(page).getByRole("link", { name: "Harmonie" }).click();
+    await expect(bouton).toHaveAttribute("aria-expanded", "false");
+    await expect(page.locator("section#harmonie")).toBeInViewport();
+  });
+
+  test("tablette et grand : le sommaire reste ouvert, sans bouton de repli", async ({ page }, info) => {
+    test.skip(info.project.name === "telephone", "téléphone : sommaire replié");
+    await ouvrirGuide(page);
+    await expect(page.getByRole("button", { name: /Sur cette page \(\d+\)/ })).toHaveCount(0);
+    await expect(sommaire(page).getByRole("link", { name: "Trouver et lire un chant" })).toBeVisible();
+  });
+
+  // eglise-7 : la bande « Pour toi » est la première rangée de la grille.
+  test("la bande « Pour toi » : ses bords sont ceux du sommaire et de la colonne de lecture (en grand), la largeur des sections sinon", async ({ page }, info) => {
+    await ouvrirGuide(page);
+    const bande = page.getByTestId("bande-pour-toi");
+    await expect(bande).toBeVisible();
+    const [b, nav, derniere, premiere] = [(await bande.boundingBox())!, (await sommaire(page).boundingBox())!, (await page.locator("section#account").boundingBox())!, (await page.locator("section#songs").boundingBox())!];
+    if (enGrand(info)) {
+      expect(Math.abs(b.x - nav.x), "bord gauche = celui du sommaire").toBeLessThanOrEqual(1);
+      expect(Math.abs(b.x + b.width - (derniere.x + derniere.width)), "bord droit = celui de la colonne de lecture").toBeLessThanOrEqual(1);
+    } else {
+      expect(Math.abs(b.x - premiere.x), "même bord gauche que les sections").toBeLessThanOrEqual(1);
+      expect(Math.abs(b.width - premiere.width), "même largeur que les sections").toBeLessThanOrEqual(1);
+    }
+    expect(b.y + b.height, "la bande est au-dessus du sommaire").toBeLessThanOrEqual(nav.y + 1);
+  });
+
+  // eglise-15 : la puce sur le thème d'un visiteur.
+  for (const [langue, titre, puce] of [["fr", "français", "Le thème suit le réglage de ton appareil tant que tu n'es pas connecté."], ["zh", "中文", "未登录时，主题会跟随你设备的设置。"]] as const) {
+    test(`« Compte, langue et thème » en ${titre} : la puce sur le thème d'un visiteur`, async ({ page }) => {
+      if (langue === "zh") await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
+      await sansSheets(page);
+      await signInAs(page, MEMBRE, {}, "/guide");
+      await expect(page.locator("section#account").getByText(puce)).toBeVisible();
+    });
+  }
+
+  // eglise-6 : captures adoucies en sombre, bouton « Agrandir la capture ».
+  test("sombre : la capture est adoucie par un filtre ; en clair, aucun", async ({ page }) => {
+    await page.emulateMedia({ colorScheme: "dark" });
+    await page.addInitScript(() => { try { localStorage.setItem("theme", "dark"); } catch {} });
+    await ouvrirGuide(page);
+    const img = page.locator('img[src="/guide/songs.png"]').first();
+    await img.scrollIntoViewIfNeeded();
+    expect(await img.evaluate((el) => getComputedStyle(el).filter)).toContain("brightness");
+  });
+
+  test("clair : aucun filtre sur la capture", async ({ page }) => {
+    await page.emulateMedia({ colorScheme: "light" });
+    await page.addInitScript(() => { try { localStorage.setItem("theme", "light"); } catch {} });
+    await ouvrirGuide(page);
+    const img = page.locator('img[src="/guide/songs.png"]').first();
+    await img.scrollIntoViewIfNeeded();
+    expect(await img.evaluate((el) => getComputedStyle(el).filter)).toBe("none");
+  });
+
+  test("« Agrandir la capture » : la feuille montre l'image à 1 280 px, Échap ferme, le focus revient au bouton", async ({ page }) => {
+    await ouvrirGuide(page);
+    const bouton = page.getByRole("button", { name: "Agrandir la capture" }).first();
+    await bouton.scrollIntoViewIfNeeded();
+    const zone = (await bouton.boundingBox())!;
+    expect(zone.width).toBeGreaterThanOrEqual(36);
+    // À cheval sur le coin du cadre : le rond dépasse en haut et à droite de l'image (annotations dégagées).
+    const img = (await page.locator("figure img").first().boundingBox())!;
+    expect(zone.y, "dépasse en haut de l'image").toBeLessThan(img.y);
+    expect(zone.x + zone.width, "dépasse à droite de l'image").toBeGreaterThan(img.x + img.width);
+    await bouton.click();
+    const feuille = page.getByTestId("capture-feuille");
+    await expect(feuille).toBeVisible();
+    const image = page.getByTestId("capture-agrandie");
+    await expect.poll(() => image.evaluate((el) => (el as HTMLImageElement).naturalWidth)).toBeGreaterThan(0);
+    // L'entrée de la feuille dure 350 ms (échelle de .92 à 1) : on attend la fin avant de mesurer.
+    await expect.poll(async () => Math.round((await image.boundingBox())!.width), { message: "largeur de 1 280 px CSS" }).toBe(1280);
+    const vue = page.viewportSize()!;
+    const panneau = (await feuille.locator("> div").boundingBox())!;
+    expect(panneau.width, "plafonnée à 1 280 px").toBeLessThanOrEqual(1280);
+    expect(panneau.width, "jamais plus large que l'écran").toBeLessThanOrEqual(vue.width);
+    await page.keyboard.press("Escape");
+    await expect(feuille).toHaveCount(0);
+    await expect(bouton).toBeFocused();
+  });
+
+  test("« Agrandir la capture » : sur tablette portrait, le panneau fait 92 vw", async ({ page }, info) => {
+    test.skip(info.project.name !== "tablette", "tablette portrait");
+    await ouvrirGuide(page);
+    const bouton = page.getByRole("button", { name: "Agrandir la capture" }).first();
+    await bouton.scrollIntoViewIfNeeded();
+    await bouton.click();
+    const feuille = page.getByTestId("capture-feuille");
+    await expect(feuille).toBeVisible();
+    await expect.poll(async () => Math.round((await feuille.locator("> div").boundingBox())!.width)).toBe(Math.round(page.viewportSize()!.width * 0.92));
+  });
+
+  test("« Agrandir la capture » : le × et un clic hors de la feuille ferment (≥ 640 px)", async ({ page }, info) => {
+    test.skip(info.project.name === "telephone", "téléphone : feuille plein écran, pas de dehors");
+    await ouvrirGuide(page);
+    const bouton = page.getByRole("button", { name: "Agrandir la capture" }).first();
+    await bouton.scrollIntoViewIfNeeded();
+    await bouton.click();
+    await page.getByTestId("capture-feuille").getByRole("button", { name: "Fermer" }).click();
+    await expect(page.getByTestId("capture-feuille")).toHaveCount(0);
+    await bouton.click();
+    await expect(page.getByTestId("capture-feuille")).toBeVisible();
+    await page.mouse.click(3, 3);
+    await expect(page.getByTestId("capture-feuille")).toHaveCount(0);
   });
 });

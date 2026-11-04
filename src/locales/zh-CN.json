@@ -149,7 +149,7 @@
     }
   },
   "login": {
-    "title": "GCC 敬拜诗歌",
+    "title": "GCC 敬拜",
     "heading": "登录",
     "reserve": "仅限教会成员",
     "emailLabel": "电子邮箱",
@@ -158,9 +158,9 @@
     "passwordPlaceholder": "••••••••",
     "submit": "登录",
     "submitLoading": "登录中…",
-    "backToSetlists": "← 返回歌曲列表",
     "errorInvalid": "登录凭证错误。请检查电子邮箱和密码。",
-    "signupLink": "还没有账号？注册",
+    "signupQuestion": "还没有账号？",
+    "signupAction": "注册",
     "forgotPassword": "忘记密码？",
     "resetNeedEmail": "请先在上方输入你的邮箱。",
     "resetSent": "重置邮件已发送——请查收邮箱（包括垃圾邮件）。",
@@ -187,7 +187,7 @@
       "passageVoisin": "第 {{i}} 个节目 · {{qui}}"
     },
     "list": {
-      "title": "GCC 敬拜诗歌",
+      "title": "GCC 敬拜",
       "newButton": "新建歌单",
       "sousTitre": "每次服事预备的诗歌",
       "draft": "草稿",
@@ -795,7 +795,7 @@
   },
   "signup": {
     "title": "创建账号",
-    "subtitle": "GCC敬拜——仅限教会成员",
+    "subtitle": "GCC 敬拜——仅限教会成员",
     "steps": {
       "account": "账号",
       "identity": "身份",
@@ -846,6 +846,7 @@
     "title": "使用指南",
     "subtitle": "使用 GCC 敬拜网站所需了解的一切。",
     "tocTitle": "本页内容",
+    "tocReplie": "本页内容（{{count}}）",
     "sections": {
       "songs": {
         "title": "查找与阅读诗歌",
@@ -959,6 +960,7 @@
           "填写名字、姓氏、服事地点与角色，以及你在排班表中的名字。",
           "在「**我 › 设置**」中，「**语言**」可切换整个界面的语言。",
           "「**主题**」可在浅色和深色之间切换。",
+          "未登录时，主题会跟随你设备的设置。",
           "资料一旦完善，只有负责人可以修改：如有错误请告知他们。"
         ]
       },
@@ -1046,6 +1048,9 @@
         ]
       }
     },
+    "agrandirCapture": "放大截图",
+    "captureDefilement": "截图保持原始宽度：可滑动或双指缩放。",
+    "captureFermerAide": "按 Esc、点 × 或点击面板外关闭 · 可横向滚动",
     "captures": {
       "songs": {
         "labels": {

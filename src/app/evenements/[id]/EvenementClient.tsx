@@ -28,10 +28,11 @@ import { useEffect, useState, useSyncExternalStore } from "react"
 import Link from "next/link"
 import { useParams, usePathname, useRouter } from "next/navigation"
 import { baseBackOffice } from "@/lib/navigation"
+import { TOUCHER_44 } from "@/lib/toucher44"
 import { useTranslation } from "react-i18next"
 import { useConfirmer } from "@/components/layout/Confirmer"
 import { Button, buttonVariants } from "@/components/ui/button"
-import { ArrowRight, Check, Share2 } from "lucide-react"
+import { Check, Settings2, Share2 } from "lucide-react"
 import { Retour } from "@/components/layout/EnTetePage"
 import { useAuth } from "@/lib/firebase/auth"
 import { useProfile } from "@/lib/firebase/users"
@@ -292,18 +293,19 @@ export function EvenementClient({ espace = "app", id: idDonne }: { espace?: "app
   if (!backOffice && grand) {
     return (
       <div className="fiche-grand space-y-4">
-        <div className="flex items-end gap-3">
-          <div className="min-w-0 flex-1"><TitreEvenement e={e} niveau="h2" grand /></div>
-          {gestionnaire && estResponsable(user, profile) && (
-            <Button asChild variant="outline" size="sm" className="shrink-0">
-              <Link href={`${baseBackOffice(e)}/${e.id}`}>
-                <ArrowRight aria-hidden />
-                {t("backOffice.gerer")}
-              </Link>
-            </Button>
-          )}
-          <Partager e={e} className={buttonVariants({ variant: "outline", size: "sm", className: "shrink-0" })} />
-        </div>
+        <TitreEvenement e={e} niveau="h2" grand actions={
+          <>
+            {gestionnaire && estResponsable(user, profile) && (
+              <Button asChild variant="outline" size="sm" className="shrink-0">
+                <Link href={`${baseBackOffice(e)}/${e.id}`}>
+                  <Settings2 aria-hidden />
+                  {t("backOffice.gerer")}
+                </Link>
+              </Button>
+            )}
+            <Partager e={e} className={buttonVariants({ variant: "outline", size: "sm", className: "shrink-0" })} />
+          </>
+        } />
         <div className="fiche-colonnes">
           <div>
             {e.images[0] && <div className="order-1"><Banniere e={e} /></div>}
@@ -335,12 +337,12 @@ export function EvenementClient({ espace = "app", id: idDonne }: { espace?: "app
           <Retour href={liste}>{t("evenements.title")}</Retour>
           <div className="flex min-w-0 items-center gap-2">
             {gestionnaire && estResponsable(user, profile) && (
-              <Link href={`${baseBackOffice(e)}/${e.id}`} className="raised inline-flex h-10 shrink-0 items-center gap-1.5 rounded-full px-4 text-sm font-semibold text-foreground transition-transform duration-150 active:scale-[.97]">
-                <ArrowRight className="h-4 w-4" aria-hidden />
-                {t("backOffice.gerer")}
+              <Link href={`${baseBackOffice(e)}/${e.id}`} aria-label={t("backOffice.gerer")} title={t("backOffice.gerer")} className={`${TOUCHER_44} raised inline-flex h-10 w-10 shrink-0 items-center justify-center gap-1.5 rounded-full p-0 text-sm font-semibold text-foreground transition-transform duration-150 active:scale-[.97] sm:w-auto sm:px-4`}>
+                <Settings2 className="h-[18px] w-[18px] sm:h-4 sm:w-4" aria-hidden />
+                <span className="max-sm:sr-only">{t("backOffice.gerer")}</span>
               </Link>
             )}
-            <Partager e={e} compact className="raised inline-flex h-10 min-w-10 shrink-0 items-center justify-center gap-1.5 rounded-full px-3 text-sm font-semibold text-foreground transition-transform duration-150 active:scale-[.97] sm:px-4" />
+            <Partager e={e} compact className={`${TOUCHER_44} raised inline-flex h-10 min-w-10 shrink-0 items-center justify-center gap-1.5 rounded-full px-3 text-sm font-semibold text-foreground transition-transform duration-150 active:scale-[.97] sm:px-4`} />
           </div>
         </div>
         {gestionnaire && (

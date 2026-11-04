@@ -75,7 +75,7 @@ export function EcranMarque({
     <div className="min-h-screen bg-background lg:grid lg:grid-cols-2">
       <div
         data-testid="panneau-marque"
-        className="panneau-marque flex flex-col items-center justify-center px-4 py-8 text-center sm:py-12 lg:sticky lg:top-0 lg:h-screen"
+        className="panneau-marque flex flex-col items-center justify-center px-4 py-6 text-center sm:py-12 lg:sticky lg:top-0 lg:h-screen"
       >
         <div className="relative h-20 w-20 sm:h-28 sm:w-28 lg:h-36 lg:w-36">
           <Image src="/logo.png" alt="" fill sizes="144px" className="object-contain" priority />
@@ -87,7 +87,7 @@ export function EcranMarque({
         {etapes && <Etapes etapes={etapes} onEtape={onEtape} />}
       </div>
       <div className="flex justify-center px-4 py-8 sm:py-10 lg:items-center lg:px-10">
-        <div className={cn("w-full", large ? "max-w-[620px]" : "max-w-[380px]")}>{children}</div>
+        <div data-testid="formulaire-connexion" className={cn("w-full", large ? "max-w-[620px]" : "max-w-[380px] lg:max-w-[420px]")}>{children}</div>
       </div>
     </div>
   );
