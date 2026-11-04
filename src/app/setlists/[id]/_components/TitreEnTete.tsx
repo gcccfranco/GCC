@@ -25,13 +25,11 @@ export function TitreEnTete({
       </p>)}
       <h1 className="mt-1 text-[28px] font-bold leading-tight tracking-[-0.01em] text-foreground">{titreAffiche(setlist, langueCourte(i18n.language))}</h1>
       {setlist.fete && <SousTitreFete setlist={setlist} passage={passage} />}
-      {(setlist.fete ? !!setlist.notes : (setlist.leader || setlist.notes)) && (
-        <p className="mt-0.5 text-[13px] text-muted-foreground">
-          {!setlist.fete && setlist.leader && <>{t("setlists.detail.leaderLabel")} {setlist.leader}</>}
-          {!setlist.fete && setlist.leader && setlist.notes && " · "}
-          {setlist.notes}
-        </p>
+      {!setlist.fete && setlist.leader && (
+        <p className="mt-0.5 text-[13px] text-muted-foreground">{t("setlists.detail.leaderLabel")} {setlist.leader}</p>
       )}
+      {/* La note garde ses retours à la ligne (dimanche-4). */}
+      {setlist.notes && <p className="mt-0.5 whitespace-pre-line text-[13px] text-muted-foreground">{setlist.notes}</p>}
     </div>
   );
 }

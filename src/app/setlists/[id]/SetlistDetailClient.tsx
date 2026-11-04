@@ -200,7 +200,7 @@ export function SetlistDetailClient() {
     const el = enTeteRef.current;
     if (!el) return;
     const update = () => {
-      setEnTeteH(el.offsetHeight);
+      setEnTeteH(el.getBoundingClientRect().height);
       el.style.setProperty("--barre-left", `${el.getBoundingClientRect().left}px`);
     };
     update();
@@ -550,7 +550,8 @@ export function SetlistDetailClient() {
    *  quand les barres s'escamotent : le chant lu changerait avec elles. */
   function hautDeLecture(): number {
     const enTete = enTeteRef.current;
-    if (enTete) return (parseFloat(getComputedStyle(enTete).top) || 0) + enTete.offsetHeight + SOUS_LA_BASCULE;
+    // Hauteur exacte (offsetHeight arrondit : un demi-pixel décalait le chant amené, 04/11/2026).
+    if (enTete) return (parseFloat(getComputedStyle(enTete).top) || 0) + enTete.getBoundingClientRect().height + SOUS_LA_BASCULE;
     const barre = toolbarRef.current;
     const bascule = basculeRef.current;
     return (barre ? barre.offsetTop + barre.offsetHeight : 0) + (bascule?.offsetHeight ?? 0) + SOUS_LA_BASCULE;

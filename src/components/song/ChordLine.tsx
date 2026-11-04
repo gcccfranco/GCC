@@ -74,20 +74,19 @@ function toWords(segments: Segment[]): { seg: Segment; i: number }[][] {
 /** Regroupe les mots en rangées insécables : un accord ouvre un groupe, qui prend tous les
  *  mots sans accord jusqu'à l'accord suivant. La ligne ne passe à la ligne qu'avant un accord
  *  (sinon une rangée d'accords restait vide au-dessus d'un mot orphelin, 03/11/2026). Les mots
- *  d'avant le premier accord se collent au groupe suivant. Sans accord affiché : un groupe par mot. */
+ *  d'avant le premier accord restent séparés, la ligne peut se couper entre eux. Sans accord affiché : un groupe par mot. */
 function toChunks<T extends { seg: Segment }>(words: T[][], avecAccords: boolean): T[][][] {
   if (!avecAccords) return words.map((w) => [w]);
   const chunks: T[][][] = [];
-  let enAttente: T[][] = [];
+  let accordVu = false;
   for (const word of words) {
     const accorde = word.some((w) => w.seg.chord !== null);
-    if (accorde) {
-      chunks.push([...enAttente, word]);
-      enAttente = [];
-    } else if (chunks.length > 0) chunks[chunks.length - 1].push(word);
-    else enAttente.push(word);
+    // Avant le premier accord : un groupe par mot, la ligne peut se couper entre eux (sinon le groupe du premier
+    // accord, trop large, se recoupait en laissant une rangée d'accords vide, critique du 04/11/2026).
+    if (accorde || !accordVu) chunks.push([word]);
+    else chunks[chunks.length - 1].push(word);
+    accordVu ||= accorde;
   }
-  if (enAttente.length) chunks.push(enAttente);
   return chunks;
 }
 

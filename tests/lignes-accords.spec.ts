@@ -170,8 +170,10 @@ async function segmentsCoupes(page: Page): Promise<string[]> {
         const cle = Math.round(c.getBoundingClientRect().top / 6);
         rangees.set(cle, [...(rangees.get(cle) ?? []), c]);
       }
+      // Les mots d'avant le premier accord peuvent former leurs propres rangées (la ligne se coupe entre eux).
+      const avant = new Set(colonnes.slice(0, colonnes.findIndex(aUnAccord)));
       for (const cols of rangees.values()) {
-        if (!cols.some(aUnAccord) && !cols.every((c) => large.has(c))) out.push(`rangée sans accord hors segment large — ${cols.map((c) => c.textContent).join("").slice(0, 40)}`);
+        if (!cols.some(aUnAccord) && !cols.every((c) => large.has(c) || avant.has(c))) out.push(`rangée sans accord hors segment large — ${cols.map((c) => c.textContent).join("").slice(0, 40)}`);
       }
     }
     return out;

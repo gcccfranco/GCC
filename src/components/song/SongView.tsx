@@ -237,19 +237,17 @@ function ZhLine({ tokens, pinyin, showChords, showPinyin, hideLyrics = false, ch
   }
 
   // La ligne ne se coupe qu'avant un accord : un groupe qui ouvre sur un accord ouvre une rangée
-  // insécable, les groupes sans accord se collent au précédent (ceux d'avant le premier accord,
-  // au suivant). Plus large que la ligne, la rangée se coupe de nouveau entre ses groupes.
+  // insécable, les groupes sans accord se collent au précédent (ceux d'avant le premier accord
+  // restent séparés). Plus large que la ligne, la rangée se coupe de nouveau entre ses groupes.
   const chunks: { group: (typeof groups)[number]; gi: number }[][] = [];
   if (hasAnyChord) {
-    let enAttente: { group: (typeof groups)[number]; gi: number }[] = [];
+    let accordVu = false;
     groups.forEach((group, gi) => {
-      if (group.cols[0].chord !== null) {
-        chunks.push([...enAttente, { group, gi }]);
-        enAttente = [];
-      } else if (chunks.length > 0) chunks[chunks.length - 1].push({ group, gi });
-      else enAttente.push({ group, gi });
+      const accorde = group.cols[0].chord !== null;
+      if (accorde || !accordVu) chunks.push([{ group, gi }]);
+      else chunks[chunks.length - 1].push({ group, gi });
+      accordVu ||= accorde;
     });
-    if (enAttente.length) chunks.push(enAttente);
   } else {
     groups.forEach((group, gi) => chunks.push([{ group, gi }]));
   }
