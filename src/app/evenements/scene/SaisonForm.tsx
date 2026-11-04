@@ -211,7 +211,7 @@ export function SaisonForm({ programme, onSave, jourJCalcule, autre, onErreur, s
     .join(" ") || undefined
 
   return (
-    <section aria-label={t("planning.saison.carte")} className={seul ? "space-y-4" : "bg-card shadow-soft rounded-2xl p-5 space-y-4"}>
+    <section aria-label={t("planning.saison.carte")} className={seul ? "space-y-4" : "carte-groupe p-5 space-y-4"}>
 
       {montrer("jourJ") && <Reglage
         titre={t("planning.gestion.jourJ")}

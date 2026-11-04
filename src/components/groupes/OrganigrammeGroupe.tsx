@@ -207,7 +207,7 @@ export function OrganigrammeGroupe({
   );
 
   const enTete = (
-    <section aria-label={t("groupes.enTete.titre")} className="raised rounded-2xl p-4">
+    <section aria-label={t("groupes.enTete.titre")} className="carte-groupe rounded-2xl p-4">
       <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
         <h2 className="whitespace-nowrap text-base font-bold text-foreground">{t("groupes.enTete.titre")}</h2>
         <span className="inline-flex items-center gap-1 whitespace-nowrap text-xs text-muted-foreground"><Lock className="h-3 w-3" aria-hidden />{t("groupes.enTete.nommesParAdmin")}</span>
@@ -225,7 +225,7 @@ export function OrganigrammeGroupe({
   );
 
   const carteComite = (
-    <section aria-label={t("groupes.comite.titre")} className="raised rounded-2xl p-4">
+    <section aria-label={t("groupes.comite.titre")} className="carte-groupe rounded-2xl p-4">
       <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
         <h2 className="text-base font-bold text-foreground">{t("groupes.comite.titre")}</h2>
         <span className="text-xs text-muted-foreground">{t("groupes.comite.personnes", { count: comite.length })}</span>
@@ -262,7 +262,7 @@ export function OrganigrammeGroupe({
   );
 
   const aucun = (
-    <div className="raised rounded-2xl p-6 text-center">
+    <div className="carte-groupe rounded-2xl p-6 text-center">
       <p className="text-sm text-muted-foreground">{t("groupes.aucunRole")}</p>
       {peutTenir && <Button className="mt-3 h-10" onClick={() => { setErreurForm(""); setForm({ role: null }); }}>{t("groupes.role.nouveau")}</Button>}
     </div>

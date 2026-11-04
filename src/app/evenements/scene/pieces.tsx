@@ -29,7 +29,7 @@ export function TuileDate({ iso, lang }: { iso: string; lang: string }) {
 export function Fleche({ label, disabled, onClick, children }: { label: string; disabled: boolean; onClick: () => void; children: ReactNode }) {
   return (
     <button type="button" aria-label={label} disabled={disabled} onClick={onClick}
-      className="raised flex h-9 w-9 items-center justify-center rounded-full text-foreground transition-opacity disabled:opacity-40">
+      className="sur-gris flex h-9 w-9 items-center justify-center rounded-full text-foreground transition-opacity disabled:opacity-40">
       {children}
     </button>
   )

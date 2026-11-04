@@ -414,7 +414,7 @@ export function FeteGestion({ fete }: { fete: Fete }) {
     }
   }
   const cartePassee = etat === "passee" && edition.annee === courante.annee && (
-    <section aria-labelledby="scene-gestion-passee" className="raised flex flex-wrap items-center gap-4 rounded-2xl p-5 print:hidden">
+    <section aria-labelledby="scene-gestion-passee" className="carte-groupe flex flex-wrap items-center gap-4 rounded-2xl p-5 print:hidden">
       <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-secondary">
         <CircleCheck className="h-5 w-5" aria-hidden />
       </span>
@@ -509,11 +509,11 @@ export function FeteGestion({ fete }: { fete: Fete }) {
           {enTeteEdition}
           {texteBrouillon}
           {erreurEcriture}
-          {lance && <div className="raised space-y-1 rounded-2xl p-1.5">{entrees}</div>}
+          {lance && <div className="carte-groupe space-y-1 rounded-2xl p-1.5">{entrees}</div>}
         </section>
         {droite(m)}
         {anneesPassees}
-        {vue !== "ordre" && <div className="raised rounded-2xl p-1.5">{entreeOrdre}</div>}
+        {vue !== "ordre" && <div className="carte-groupe rounded-2xl p-1.5">{entreeOrdre}</div>}
       </div>
     )
   }

@@ -62,6 +62,6 @@ test.describe("planning (T4)", () => {
     await expect(tuile).toContainText("20");
     await expect(tuile).toContainText("sept");
     expect(await couleur(tuile)).toBe(CULTE_COULEUR);
-    await expect(page.getByText("Culte Franco", { exact: true })).toBeVisible();
+    await expect(page.getByText("Culte Francophone", { exact: true })).toBeVisible();
   });
 });

@@ -157,7 +157,7 @@ export function ChoisisUnChant() {
           </div>
         </section>
       ) : connecte && lues !== null && (
-        <div data-sans-setlist className="raised flex items-center gap-3.5 rounded-2xl px-[18px] py-3.5">
+        <div data-sans-setlist className="bloc-info flex items-center gap-3.5 rounded-2xl px-[18px] py-3.5">
           <span aria-hidden className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-secondary text-foreground">
             <ListMusic className="h-[18px] w-[18px]" />
           </span>
@@ -209,7 +209,7 @@ export function ChoisisUnChant() {
 /** Une carte titrée du volet (planche `carte`) : titre 15 px en gras, une aide à droite. */
 function CarteChants({ titre, aide, lien, classe, children }: { titre: string; aide?: string; lien?: { href: string; label: string }; classe?: string; children: React.ReactNode }) {
   return (
-    <section className={`raised min-w-0 rounded-2xl px-[18px] pb-2 pt-3.5${classe ? ` ${classe}` : ""}`}>
+    <section className={`bloc-info min-w-0 rounded-2xl px-[18px] pb-2 pt-3.5${classe ? ` ${classe}` : ""}`}>
       {/* Une carte étroite (tablette couchée) passe l'aide à la ligne plutôt que de couper le titre. */}
       <div className="mb-1.5 flex flex-wrap items-baseline gap-x-2">
         <h3 className="text-[15px] font-bold text-foreground">{titre}</h3>
@@ -255,7 +255,7 @@ function CarteSetlist({ setlist, langue }: { setlist: FSSetlist; langue: string 
   const chants = setlist.items.filter((i) => i.type !== "transition");
 
   return (
-    <article data-carte-setlist className="raised rounded-2xl px-[18px] pb-3 pt-4">
+    <article data-carte-setlist className="bloc-info rounded-2xl px-[18px] pb-3 pt-4">
       <p className="flex items-center gap-1.5 text-[13px] font-semibold texte-service" style={styleTexteService(couleur)}>
         <span aria-hidden className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ backgroundColor: couleur }} />
         {t("categories." + setlist.category, { defaultValue: setlist.category })}

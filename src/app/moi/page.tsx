@@ -53,7 +53,7 @@ function MoiClient() {
   // « Mes tâches » (lot 7 ; EQ15) : seulement pour les membres d'une équipe (Louange élargi) et les admins.
   const equipes = useMemo(() => equipesDesTaches(user, profile), [user, profile]);
 
-  const carte = "raised rounded-2xl px-4 py-1.5";
+  const carte = "carte-groupe rounded-2xl px-4 py-1.5";
   const blocs = {
     compte: (
       <CarteCompte
@@ -76,7 +76,7 @@ function MoiClient() {
     ),
     // Q9 : Réglages = Notifications · Langue · Thème (les notifications ont quitté le profil).
     reglages: (
-      <section key="reglages" aria-label={t("moi.settings")} className="raised rounded-2xl px-4 pb-1.5 pt-3">
+      <section key="reglages" aria-label={t("moi.settings")} className="carte-groupe rounded-2xl px-4 pb-1.5 pt-3">
         <Group title={t("moi.settings")}>
           {profile && <ReglagesNotifications feuille={disposition === "telephone"} />}
           {/* BO-G, 12 : au Back-Office, un état (« Langue  Français »), pas un bouton d'action ; toucher la ligne bascule.
@@ -197,7 +197,7 @@ function CarteAide({ href, onClick, icone, titre, sous }: { href?: string; onCli
       <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground/60" aria-hidden />
     </>
   );
-  const classe = "raised flex min-w-0 items-center gap-3 rounded-2xl px-4 py-3.5 text-left text-foreground transition-transform duration-150 active:scale-[.98]";
+  const classe = "carte-groupe flex min-w-0 items-center gap-3 rounded-2xl px-4 py-3.5 text-left text-foreground transition-transform duration-150 active:scale-[.98]";
   return href ? <Link href={href} className={classe}>{inner}</Link> : <button type="button" onClick={onClick} className={classe}>{inner}</button>;
 }
 

@@ -391,7 +391,7 @@ export function AnnotationCanvas({ data, onChange, zoom, pan, onZoomPanChange, r
 
       {/* Panneau d'outils — bord droit, centré entre les deux barres (l'étiquette de la glissière, dimanche-24, a grandi celle du bas) */}
       <div
-        className="absolute my-auto h-fit flex flex-col gap-1.5 material-panel border border-border rounded-xl p-2 shadow-lg max-h-[85vh] overflow-y-auto"
+        className="absolute my-auto h-fit flex flex-col gap-1.5 material-panel [box-shadow:var(--shadow-flottant)] rounded-xl p-2 max-h-[85vh] overflow-y-auto"
         style={{ zIndex: 11, right: "calc(0.75rem + var(--sar, 0px))", top: (barres?.haut ?? 0) + 8, bottom: (barres?.bas ?? 0) + 8 }}
         onPointerDown={(e) => e.stopPropagation()}
         onPointerUp={(e) => e.stopPropagation()}

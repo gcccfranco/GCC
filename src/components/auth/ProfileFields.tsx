@@ -297,7 +297,7 @@ export function PlanningNameField({
       </button>
 
       {open && (
-        <div className="mt-1 rounded-lg border border-transparent bg-secondary shadow-sm overflow-hidden">
+        <div className="mt-1 rounded-lg border border-transparent bg-secondary overflow-hidden">
           <div className="p-2 border-b border-border">
             <div className="relative">
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />

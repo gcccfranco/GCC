@@ -144,7 +144,7 @@ function ListeCatalogue({
   // Le badge « à relire » n'a de sens que s'il distingue : quand toutes les fiches le sont, le bandeau suffit.
   const badgeARelire = visibles.some((f) => f.statut === "validee");
   const cartes = !deuxVolets;
-  const carte = cartes ? "md:raised md:mx-0 md:w-full md:rounded-2xl md:px-4 md:py-3 md:before:hidden" : undefined;
+  const carte = cartes ? "md:bloc-info md:mx-0 md:w-full md:rounded-2xl md:px-4 md:py-3 md:before:hidden" : undefined;
 
   return (
     <div className={cn("flex flex-col gap-5", deuxVolets ? "px-5 pt-4 pb-10" : "mx-auto max-w-2xl px-4 pb-10 md:max-w-none md:px-6")} data-harmonie>
@@ -221,7 +221,7 @@ function ListeCatalogue({
                 </span>
               );
               return (
-                <GroupRow key={e.n} href={`/harmonie/${fiche.id}`} chevron className={cn(carte, cartes && "md:flex-col md:items-start md:gap-2 md:[&>svg]:hidden")}>
+                <GroupRow key={e.n} href={`/harmonie/${fiche.id}`} chevron className={cn(carte, cartes && "md:hover:bg-secondary-fond md:active:bg-secondary-fond md:flex-col md:items-start md:gap-2 md:[&>svg]:hidden")}>
                   <span className="flex items-center gap-3">
                     {numero}
                     <span className="min-w-0">
@@ -257,10 +257,10 @@ function ListeCatalogue({
       ) : (
         <div className={cn("space-y-5", cartes && "md:columns-2 md:gap-4 md:space-y-0")}>
           {familles.map(([nom, liste]) => (
-            <div key={nom} data-famille className={cn(cartes && "md:raised md:mb-4 md:break-inside-avoid md:rounded-2xl md:px-4 md:pt-3.5 md:pb-1.5")}>
+            <div key={nom} data-famille className={cn(cartes && "md:bloc-info md:mb-4 md:break-inside-avoid md:rounded-2xl md:px-4 md:pt-3.5 md:pb-1.5")}>
               <Group title={nom} className={cn(cartes && "md:[&>h2]:text-[17px] md:[&>h2]:text-foreground")}>
                 {liste.map((f) => (
-                  <GroupRow key={f.id} href={`/harmonie/${f.id}`} chevron actif={f.id === ouverte}>
+                  <GroupRow key={f.id} href={`/harmonie/${f.id}`} chevron actif={f.id === ouverte} className={cn(cartes && f.id !== ouverte && "md:hover:bg-secondary-fond md:active:bg-secondary-fond")}>
                     <span className="flex items-center gap-2">
                       <span className="line-clamp-2 font-medium">{f.nom}</span>
                       {badgeARelire && f.statut !== "validee" && (

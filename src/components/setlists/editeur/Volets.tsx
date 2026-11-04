@@ -127,7 +127,7 @@ export function VoletChant({
                   aria-checked={on}
                   onClick={() => onPatch({ jianpuSheet: sur })}
                   className={`h-8 rounded-full px-4 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
-                    on ? "bg-background text-foreground shadow-soft" : "text-muted-foreground hover:text-foreground"
+                    on ? "bg-background text-foreground" : "text-muted-foreground hover:text-foreground"
                   }`}
                 >
                   {libelle}

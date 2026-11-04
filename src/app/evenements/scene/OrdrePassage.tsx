@@ -45,7 +45,7 @@ function PassageForm({ title, initial, onSubmit, onCancel }: {
   }
 
   return (
-    <form onSubmit={submit} className="bg-card shadow-soft rounded-xl p-4 space-y-3" aria-labelledby="passage-form-title">
+    <form onSubmit={submit} className="carte-groupe p-4 space-y-3" aria-labelledby="passage-form-title">
       <h3 id="passage-form-title" className="text-sm font-bold">{title}</h3>
       {error && <p className="text-sm text-destructive">{error}</p>}
       <div className="space-y-1">
@@ -160,7 +160,7 @@ export function OrdrePassage({ passages, canEdit, onSave, detail, seulementMiens
           onCancel={() => setEditing(null)}
         />
       )}
-      <section className="bg-card shadow-soft rounded-xl overflow-hidden">
+      <section className="carte-groupe overflow-hidden">
         <h3 className="px-4 py-2.5 text-sm font-semibold text-white" style={{ background: COLOR }}>{t("planning.programme.ordreTitle")}</h3>
         {passages.length === 0 && <p className="px-4 py-3 text-sm text-muted-foreground">{t("planning.programme.noPassage")}</p>}
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>

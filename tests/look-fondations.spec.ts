@@ -263,3 +263,46 @@ test.describe("fond de page : le gris des listes, le blanc de la lecture (recett
     expect(style).toEqual({ fond: FOND_CLAIR, rayon: "16px" });
   });
 });
+
+test.describe("pages grises : ni bordure ni ombre ensemble, ombre réservée aux commandes et à ce qui flotte (recette de surface C, T2b)", () => {
+  const ADMIN = { uid: "uid-surface-admin", email: ADMIN_EMAIL, firstName: "Alix", lastName: "D.", planningName: "Alix D.", dansEquipes: ["da"], referentDe: ["da"], serviceRoles: { "Culte Francophone": ["musicien"] } };
+  const PAGES_GRISES = [
+    { nom: "setlists", vers: "/setlists" },
+    { nom: "planning", vers: "/planning" },
+    { nom: "mes-services", vers: "/mes-services" },
+    { nom: "moi", vers: "/moi" },
+    { nom: "back-office", vers: "/back-office" },
+    { nom: "evenements", vers: "/evenements" },
+  ];
+  for (const { nom, vers } of PAGES_GRISES) {
+    test(`${nom} : aucun élément de main n'a bordure et ombre à la fois, aucun aplat blanc arrondi n'a d'ombre`, async ({ page }) => {
+      await page.route(/docs\.google\.com\/spreadsheets/, (route) => route.fulfill({ status: 200, contentType: "text/csv", body: "" }));
+      await signInAs(page, ADMIN, {}, vers);
+      await page.locator("main").first().waitFor();
+      await page.waitForLoadState("networkidle").catch(() => {});
+      await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" }).catch(() => {});
+      await expect.poll(() => fondDe(page)).toBe("rgb(242, 242, 247)");
+      const fautifs = await page.evaluate(() => {
+        const decrit = (el: Element) => `${el.tagName.toLowerCase()}${el.id ? `#${el.id}` : ""}.${String(el.getAttribute("class") ?? "").split(/\s+/).slice(0, 4).join(".")}`;
+        // Le curseur du rail (jeu B) est une commande : sa pastille blanche garde son ombre.
+        const flottant = (el: Element) => Boolean(el.closest('[data-onglets="rail"], .material-bar, .material-panel, .flottant, [role="dialog"], [role="menu"], [role="listbox"], [data-radix-popper-content-wrapper], header, nav'));
+        const vus: string[] = [];
+        for (const el of document.querySelectorAll("main *")) {
+          if (el.getClientRects().length === 0 || flottant(el)) continue;
+          const c = getComputedStyle(el);
+          if (c.visibility === "hidden" || c.display === "none") continue;
+          const ombre = c.boxShadow !== "none";
+          const bordure = ["Top", "Right", "Bottom", "Left"].some((cote) => {
+            const k = c[`border${cote}Width` as "borderTopWidth"];
+            return parseFloat(k) > 0 && c[`border${cote}Style` as "borderTopStyle"] !== "none" && !/rgba\(\d+, \d+, \d+, 0\)/.test(c[`border${cote}Color` as "borderTopColor"]) && c[`border${cote}Color` as "borderTopColor"] !== "transparent";
+          });
+          if (ombre && bordure) vus.push(`bordure+ombre ${decrit(el)}`);
+          const arrondi = parseFloat(c.borderTopLeftRadius) > 0;
+          if (ombre && arrondi && c.backgroundColor === "rgb(255, 255, 255)") vus.push(`blanc arrondi ombré ${decrit(el)}`);
+        }
+        return vus;
+      });
+      expect(fautifs).toEqual([]);
+    });
+  }
+});

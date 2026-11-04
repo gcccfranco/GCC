@@ -442,7 +442,7 @@ export function SongListClient({ songs, themes, actif = null, erreur = false, on
                 data-testid="index-letter"
                 role="status"
                 aria-live="polite"
-                className="pointer-events-none absolute right-full mr-2 flex h-9 min-w-9 -translate-y-1/2 items-center justify-center rounded-sm bg-card px-2.5 text-[22px] font-extrabold text-foreground shadow-soft"
+                className="pointer-events-none absolute right-full mr-2 flex h-9 min-w-9 -translate-y-1/2 items-center justify-center rounded-sm bg-card px-2.5 text-[22px] font-extrabold text-foreground"
                 style={{ top: `calc((${activeIndex} + 0.5) * 100% / ${letterIndex.length})` }}
               >
                 {letterIndex[activeIndex][0]}

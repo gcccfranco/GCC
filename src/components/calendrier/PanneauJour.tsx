@@ -71,7 +71,7 @@ function Carte({ e, onDeplacer }: { e: EntreeCalendrier; onDeplacer?: (e: Entree
   const classe =
     "block rounded-2xl px-3.5 py-3 transition-opacity duration-150 hover:opacity-85 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground";
   return (
-    <div className="raised rounded-2xl">
+    <div className="carte-groupe rounded-2xl">
       {e.duSheet ? (
         <a href={e.lien} target="_blank" rel="noopener noreferrer" className={classe}>
           {contenu}
@@ -208,7 +208,7 @@ export function AjouterCeJour({ date, lang, droits, onNouvelleTache }: {
         </button>
         <DropdownMenuTrigger
           aria-label={t("calendrier.ajouterCeJourMenu")}
-          className="raised inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-foreground transition-opacity duration-150 hover:opacity-80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground"
+          className="bg-secondary inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-foreground transition-opacity duration-150 hover:opacity-80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground"
         >
           <ChevronDown aria-hidden className="h-4 w-4 shrink-0" />
         </DropdownMenuTrigger>

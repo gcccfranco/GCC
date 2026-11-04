@@ -66,8 +66,8 @@ export function DeuxVolets({
   const avecListe = Boolean(volets.liste);
   const seule = deuxVolets && colonneSeule && volets.droite === "premier";
   const bornee = !listeNaturelle;
-  // Un groupe blanc sans ombre sur le gris ; sur une page de lecture blanche, la carte en relief d'avant.
-  const surface = fond === "groupe" ? "bg-card" : "raised";
+  // Un groupe blanc sans ombre sur le gris ; sur une page de lecture blanche : aplat `--secondary`, sans ombre.
+  const surface = fond === "groupe" ? "carte-groupe" : "bg-secondary";
 
   useFonduVertical(carte, deuxVolets && avecListe && !seule && bornee);
 

@@ -119,7 +119,7 @@ type Collage = { cases: CaseGeste[]; remplace: number; notes: string[] }
 
 /** Le rond « ‹ » « › » du bord de la grille (plannings-1) : 28 px dessinés, cible de 44 px, pointeur fin seulement. */
 const rondDefilement =
-  "absolute top-[5px] z-20 hidden h-7 w-7 items-center justify-center rounded-full bg-background text-foreground shadow-[var(--shadow-raised)] [@media(pointer:fine)]:flex after:absolute after:left-1/2 after:top-1/2 after:h-11 after:w-11 after:-translate-x-1/2 after:-translate-y-1/2 after:content-['']"
+  "absolute top-[5px] z-20 hidden h-7 w-7 items-center justify-center rounded-full bg-secondary text-foreground [@media(pointer:fine)]:flex after:absolute after:left-1/2 after:top-1/2 after:h-11 after:w-11 after:-translate-x-1/2 after:-translate-y-1/2 after:content-['']"
 
 export function PlanningGrille({
   definition,
@@ -861,7 +861,7 @@ export function PlanningGrille({
       {!sansLigne && <div ref={enveloppe} data-en-cours={enCours || undefined} inert={enCours ? true : undefined} className="relative">
       {/* La carte porte l'ombre (`raised`, sans `overflow-hidden`) ; l'enveloppe intérieure défile, avec un fondu à droite.
           Requête de conteneur : « Cette semaine » devient une pastille quand la grille tient (GrilleCelluleDate). */}
-      <div className={`hidden sm:block relative [container-type:inline-size] ${app ? "raised rounded-2xl" : "rounded-xl border border-border"}`}>
+      <div className={`hidden sm:block relative [container-type:inline-size] ${app ? "carte-groupe rounded-2xl" : "rounded-xl border border-border"}`}>
       <div ref={defilement} data-defile={defile.gauche || undefined} data-testid="grille-defilement" role="region" tabIndex={0} aria-label={t("planning.grille.region")} inert={collage ? true : undefined} className="fondu-lateral overflow-x-auto rounded-[inherit] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring">
         <table className="w-full table-fixed text-sm border-collapse" style={{ minWidth: largeurMin }}>
           <colgroup>

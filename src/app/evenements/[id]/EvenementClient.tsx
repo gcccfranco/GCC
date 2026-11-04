@@ -311,10 +311,10 @@ export function EvenementClient({ espace = "app", id: idDonne }: { espace?: "app
             {e.images[0] && <div className="order-1"><Banniere e={e} /></div>}
             <div className="order-3 space-y-4 empty:hidden">{contenu}</div>
             {/* La gestion des inscriptions (organisateur) : la colonne large, ses trois choix y tiennent. */}
-            {panneau && <div data-testid="gestion-carte" className="raised order-4 space-y-4 rounded-2xl p-4">{panneau}</div>}
+            {panneau && <div data-testid="gestion-carte" className="carte-groupe order-4 space-y-4 rounded-2xl p-4">{panneau}</div>}
           </div>
           <div>
-            <div data-testid="fiche-carte" className="raised order-2 space-y-4 rounded-2xl p-4">
+            <div data-testid="fiche-carte" className="carte-groupe order-2 space-y-4 rounded-2xl p-4">
               <InfosEvenement e={e} titrees />
               <PlusInfos e={e} />
               {inscriptions}
@@ -337,12 +337,12 @@ export function EvenementClient({ espace = "app", id: idDonne }: { espace?: "app
           <Retour href={liste}>{t("evenements.title")}</Retour>
           <div className="flex min-w-0 items-center gap-2">
             {gestionnaire && estResponsable(user, profile) && (
-              <Link href={`${baseBackOffice(e)}/${e.id}`} aria-label={t("backOffice.gerer")} title={t("backOffice.gerer")} className={`${TOUCHER_44} raised inline-flex h-10 w-10 shrink-0 items-center justify-center gap-1.5 rounded-full p-0 text-sm font-semibold text-foreground transition-transform duration-150 active:scale-[.97] sm:w-auto sm:px-4`}>
+              <Link href={`${baseBackOffice(e)}/${e.id}`} aria-label={t("backOffice.gerer")} title={t("backOffice.gerer")} className={`${TOUCHER_44} sur-gris inline-flex h-10 w-10 shrink-0 items-center justify-center gap-1.5 rounded-full p-0 text-sm font-semibold text-foreground transition-transform duration-150 active:scale-[.97] sm:w-auto sm:px-4`}>
                 <Settings2 className="h-[18px] w-[18px] sm:h-4 sm:w-4" aria-hidden />
                 <span className="max-sm:sr-only">{t("backOffice.gerer")}</span>
               </Link>
             )}
-            <Partager e={e} compact className={`${TOUCHER_44} raised inline-flex h-10 min-w-10 shrink-0 items-center justify-center gap-1.5 rounded-full px-3 text-sm font-semibold text-foreground transition-transform duration-150 active:scale-[.97] sm:px-4`} />
+            <Partager e={e} compact className={`${TOUCHER_44} sur-gris inline-flex h-10 min-w-10 shrink-0 items-center justify-center gap-1.5 rounded-full px-3 text-sm font-semibold text-foreground transition-transform duration-150 active:scale-[.97] sm:px-4`} />
           </div>
         </div>
         {gestionnaire && (

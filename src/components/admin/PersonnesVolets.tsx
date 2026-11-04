@@ -119,7 +119,7 @@ export function PersonnesVolets() {
           {t("groupes.personnes.retour")}
         </button>
         {modif ? (
-          <div className="raised rounded-2xl p-4 space-y-4">
+          <div className="carte-groupe rounded-2xl p-4 space-y-4">
             <h2 className="text-[22px] font-bold leading-tight text-foreground">{nom(ouvertHorsGrand)}</h2>
             <FormulairePersonne
               key={ouvertHorsGrand.uid}
@@ -141,7 +141,7 @@ export function PersonnesVolets() {
       <>
         {entete}
         <div className="px-[var(--marge-page)] pb-10">
-          <div className="raised rounded-2xl p-3 space-y-3 sm:p-4">
+          <div className="carte-groupe rounded-2xl p-3 space-y-3 sm:p-4">
             <RangeeSansCompte n={sansCompte} />
             <FiltresPersonnes f={f} />
             {/* Un volet : la personne de l'adresse s'ouvre en page entière (ci-dessus). */}
@@ -192,7 +192,7 @@ export function PersonnesVolets() {
         <Avatar p={choisi} grand />
         <h2 className="text-[24px] font-bold leading-tight tracking-tight text-foreground">{nom(choisi)}</h2>
       </div>
-      <div className="raised rounded-2xl p-5">
+      <div className="carte-groupe rounded-2xl p-5">
         <FormulairePersonne
           key={choisi.uid}
           p={choisi}
@@ -230,7 +230,7 @@ export function PersonnesVolets() {
 /** Une carte de la fiche : titre, puis ses lignes. */
 function Carte({ titre, note, children, className }: { titre: string; note?: ReactNode; children: ReactNode; className?: string }) {
   return (
-    <section aria-label={titre} className={`raised rounded-2xl px-5 py-4 ${className ?? ""}`}>
+    <section aria-label={titre} className={`carte-groupe rounded-2xl px-5 py-4 ${className ?? ""}`}>
       <div className="mb-2 flex items-center justify-between gap-3">
         <h3 className="text-[16px] font-bold text-foreground">{titre}</h3>
         {note && <span className="text-[12px] text-muted-foreground">{note}</span>}
@@ -475,7 +475,7 @@ function FicheDuMembre({
       </div>
 
       {BACK_OFFICE && (
-        <section aria-label={t("equipes.organigramme.ceQueCaOuvre")} className="raised rounded-2xl px-5 py-4">
+        <section aria-label={t("equipes.organigramme.ceQueCaOuvre")} className="carte-groupe rounded-2xl px-5 py-4">
           <CeQueCaOuvre profil={p} nu note={<Link href="/back-office/equipes" className={BOUTON_CONTOUR}>{t("equipes.organigramme.voir")}</Link>} />
         </section>
       )}

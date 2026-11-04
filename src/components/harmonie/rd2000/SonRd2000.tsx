@@ -15,7 +15,7 @@ import { useDeuxVolets } from "@/hooks/useDeuxVolets";
 import { couperEnDeuxColonnes, etoiles, parEcran, type Fiche, type Reglage } from "@/lib/harmonie/rd2000";
 import { cn } from "@/lib/utils";
 
-const CARTE = "raised rounded-2xl px-4 pt-3.5 pb-1";
+const CARTE = "bloc-info rounded-2xl px-4 pt-3.5 pb-1";
 
 function Ecran({ ecran, reglages, suite }: { ecran: string; reglages: Reglage[]; suite?: boolean }) {
   const { t } = useTranslation();
@@ -117,7 +117,7 @@ export function SonRd2000({ n }: { n: string }) {
               {son.commentaire && <span className="text-muted-foreground"> · {son.commentaire}</span>}
             </p>
           </header>
-          <div className="raised divide-y divide-border rounded-2xl px-4 text-[15px]">
+          <div className="bloc-info divide-y divide-border rounded-2xl px-4 text-[15px]">
             <p className="py-3"><span className="text-muted-foreground">{t("harmonie.rd2000.edition")} : </span>{son.edition}</p>
             <p className="py-3 tabular-nums" data-midi>
               {t("harmonie.rd2000.midi", { msb: son.msb, lsb: son.lsb, pc: son.pc, pcMidi: son.pc - 1 })}

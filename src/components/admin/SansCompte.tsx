@@ -15,8 +15,6 @@ import { BACK_OFFICE } from "@/lib/backOffice";
 import { loadPlanningData, collectPlanningNames, normalizeName, type PlanningData } from "@/lib/planning/names";
 import type { UserProfile } from "@/types/user";
 
-/** BO-G, 7 : au Back-Office (Personnes › sans compte), le contour des cartes du back-office ; ailleurs (/admin, en ligne), l'ancienne carte. */
-const carte = (backOffice: boolean) => (backOffice ? "raised rounded-2xl" : "rounded-xl bg-card shadow-soft");
 
 /** Le repère d'initiale d'un nom (bo-equipes-12) : sa lettre, accents pliés (« Élise » sous E) ; « 中文 » pour un nom en caractères
  *  chinois ; « # » pour un chiffre ou une marque. */
@@ -77,7 +75,7 @@ export function SansCompte({ onCompte, titreDePage = false }: { onCompte?: (n: n
 
   return (
     <div className="space-y-4">
-    <div className={`${carte(titreDePage)} p-5 space-y-3`}>
+    <div className="carte-groupe p-5 space-y-3">
       <h2 id={titreDePage ? "personnes-sans-compte" : undefined} className={titreDePage ? "text-[17px] font-semibold text-foreground" : "text-sm font-semibold text-muted-foreground"}>
         {titreDePage ? t("backOffice.equipe.sansCompteAvecCompte", { count: unlinkedNames.length }) : t("admin.sansCompte.titre", { count: unlinkedNames.length })}
       </h2>
@@ -137,7 +135,7 @@ function TitulairesSansCompte({ lignes }: { lignes: TitulaireSansCompte[] }) {
   if (lignes.length === 0) return null;
   const titre = `${t("groupes.personnes.sansCompteTitre")} (${lignes.length})`;
   return (
-    <section aria-label={titre} className="raised rounded-2xl p-5 space-y-3">
+    <section aria-label={titre} className="carte-groupe p-5 space-y-3">
       <h2 className="text-sm font-semibold text-muted-foreground">{titre}</h2>
       <p className="text-xs text-muted-foreground">{t("groupes.personnes.sansCompteAide")}</p>
       <ul className="divide-y divide-border">

@@ -83,7 +83,7 @@ export function BarreSelection({ count, dimanches, colonnes, style, onFermer }: 
       data-testid="barre-selection"
       role="status"
       style={style}
-      className="pointer-events-none absolute z-30 flex w-max max-w-[calc(100%-1rem)] items-center gap-x-3 whitespace-nowrap rounded-lg bg-foreground px-3 py-1.5 text-xs text-background shadow-lg"
+      className="pointer-events-none absolute z-30 flex w-max max-w-[calc(100%-1rem)] items-center gap-x-3 whitespace-nowrap rounded-lg bg-foreground px-3 py-1.5 text-xs text-background shadow-[var(--shadow-flottant)]"
     >
       <span className="font-semibold">{t("planning.gestes.selection", { count, dimanches, colonnes })}</span>
       <span className="opacity-80">{cmd}C {t("planning.gestes.copier")}</span>

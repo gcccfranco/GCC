@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { cn } from "@/lib/utils";
 import { BellRing, X } from "lucide-react";
 import { useProfile } from "@/lib/firebase/users";
 import { visibleCategories } from "@/lib/access";
@@ -19,7 +20,7 @@ const DISMISS_KEY = "pushPromptDismissed";
 /** Invite à activer les notifications push, affichée aux personnes qui servent
  *  (serviceRoles non vide) mais pas encore abonnées. Push uniquement → c'est le
  *  levier d'adoption. Rejetable (localStorage). Gère la contrainte iOS (PWA). */
-export function PushPrompt() {
+export function PushPrompt({ surGris }: { surGris?: boolean } = {}) {
   const { t } = useTranslation();
   const { user, profile } = useProfile();
   const [show, setShow] = useState(false);
@@ -73,7 +74,7 @@ export function PushPrompt() {
   }
 
   return (
-    <div className="relative rounded-2xl bg-secondary px-4 py-3">
+    <div className={cn("relative rounded-2xl px-4 py-3", surGris ? "carte-groupe" : "bg-secondary")}>
       <button
         onClick={dismiss}
         aria-label={t("signalement.fermer")}

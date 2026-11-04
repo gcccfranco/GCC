@@ -148,6 +148,7 @@ export function FiltresPersonnes({ f }: { f: ReturnType<typeof useFiltresPersonn
         onChange={f.setQuery}
         placeholder={t("admin.membre.rechercherPlaceholder")}
         label={t("admin.membre.rechercher")}
+        surGris
       />
       <Pilules
         etiquette={t("admin.membre.filtrer")}
@@ -408,7 +409,7 @@ export function Personnes({ onCompte }: { onCompte?: (n: number) => void }) {
   }, [onCompte, profiles.length]);
 
   return (
-    <div className="rounded-xl bg-card shadow-soft p-5 space-y-4">
+    <div className="carte-groupe p-5 space-y-4">
       <div className="flex items-center justify-between">
         <h2 className="text-sm font-semibold text-muted-foreground">
           {t("admin.membres")}

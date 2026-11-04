@@ -155,7 +155,7 @@ export function ReceptionVolets() {
     if (grand)
       return (
         <>
-          {(texte || liens.some(Boolean)) && <div className="raised rounded-2xl px-5 py-[18px]">{contenu}</div>}
+          {(texte || liens.some(Boolean)) && <div className="carte-groupe rounded-2xl px-5 py-[18px]">{contenu}</div>}
           <div className="mt-4">{actions}</div>
           <div className="mt-5 grid grid-cols-[repeat(auto-fit,minmax(280px,1fr))] items-start gap-4">
             {chantSignale(m)}
@@ -177,7 +177,7 @@ export function ReceptionVolets() {
     const chant = songs?.find((c) => c.slug === m.r!.songSlug);
     const id = `chant-${m.r.id}`;
     return (
-      <section aria-labelledby={id} className="raised rounded-2xl px-5 py-4">
+      <section aria-labelledby={id} className="carte-groupe rounded-2xl px-5 py-4">
         <div className="flex items-center justify-between gap-3">
           <h3 id={id} className="text-[15px] font-bold text-foreground">{t("backOffice.reception.chantSignale")}</h3>
           <Link href={`/songs/${m.r.songSlug}`} className={BOUTON}>
@@ -210,7 +210,7 @@ export function ReceptionVolets() {
       return t(st === "pending" ? "backOffice.reception.enAttenteCourt" : st === "rejected" ? "backOffice.reception.refuseCourt" : "backOffice.reception.traiteCourt");
     };
     return (
-      <section aria-labelledby={id} className="raised rounded-2xl px-5 py-4">
+      <section aria-labelledby={id} className="carte-groupe rounded-2xl px-5 py-4">
         <h3 id={id} className="text-[15px] font-bold text-foreground">{t("backOffice.reception.memeMembre")}</h3>
         <ul className="mt-2">
           {autres.map((x) => (
@@ -272,7 +272,7 @@ export function ReceptionVolets() {
     const id = `reception-${type}`;
     const grand = disposition === "grand";
     return (
-      <section aria-labelledby={id} className={cn(disposition === "tablette" && "raised min-w-0 rounded-2xl px-[18px] py-3.5")}>
+      <section aria-labelledby={id} className={cn(disposition === "tablette" && "carte-groupe min-w-0 rounded-2xl px-[18px] py-3.5")}>
         <div className={cn("flex items-center gap-2", grand ? "px-2.5 pb-1 pt-3" : "pb-1")}>
           <h2 id={id} className={grand ? "text-[13px] font-semibold text-muted-foreground" : "text-[15px] font-bold text-foreground"}>
             {t(type === "s" ? "backOffice.reception.titreSignalements" : "backOffice.reception.titrePropositions")}
@@ -374,7 +374,7 @@ export function ReceptionVolets() {
         rienDuTout ? sections : (
           <>
             <div className="mb-3">{pilules}</div>
-            <div className="raised space-y-4 rounded-2xl px-4 py-3">{sections}</div>
+            <div className="carte-groupe space-y-4 rounded-2xl px-4 py-3">{sections}</div>
           </>
         )
       )}

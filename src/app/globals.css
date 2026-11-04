@@ -237,7 +237,6 @@
     --ring: 240 3.4% 11.4%;          /* focus encre */
     --radius: 0.75rem;               /* 12 : groupes et champs ; 8 : petits contrôles ; pilules : rounded-full */
     /* Les listes n'ont pas d'ombre : ce sont des filets. */
-    --shadow-soft: 0 0 0 0 transparent;
     /* Ce qui se touche (recherche, pilule d'outils, boutons, barre du bas). */
     --raised: 0 0% 100%;
     --shadow-raised: 0 4px 14px rgba(28, 28, 30, 0.1), 0 1px 2px rgba(28, 28, 30, 0.06);
@@ -316,7 +315,6 @@
     --border: 240 1.8% 22%;          /* #373739 — filet des groupes ; le mode louange s'en sert aussi */
     --input: 240 1.8% 22%;
     --ring: 240 23.8% 95.9%;         /* focus blanc cassé */
-    --shadow-soft: 0 0 0 0 transparent;
     --raised: 240 3.4% 11.4%;        /* #1c1c1e */
     --shadow-raised: 0 0 0 1px rgba(255, 255, 255, 0.1);
     --fond-groupe: 0 0% 0%;
@@ -386,6 +384,11 @@
      la page d'un chant seule reste blanche. Sur le gris, la liste des chants est un groupe (`--card`, rayon 16)
      à toutes les tailles. */
   :root:is(:has([data-fond-groupe]), :has(.chants-volets[data-sur-liste])) { --fond-page: var(--fond-groupe); }
+  /* Rail et pilules posés directement sur le gris (hors d'un groupe blanc) : piste et pilules inactives en `--secondary-fond`,
+     libellés à 70 % d'encre (≥ 4,5:1). Clair seulement : en sombre `--secondary` est déjà distinct du noir. */
+  :root:not(.dark):is(:has([data-fond-groupe]), :has(.chants-volets[data-sur-liste])) [data-onglets="rail"]:not(.carte-groupe *, .chants-chant *) { background-color: hsl(var(--secondary-fond)); }
+  :root:not(.dark):is(:has([data-fond-groupe]), :has(.chants-volets[data-sur-liste])) [data-onglets="rail"]:not(.carte-groupe *, .chants-chant *) :is([role="tab"]:not([aria-selected="true"]), a:not([aria-current])) { color: hsl(var(--foreground) / 0.7); }
+  :root:not(.dark):is(:has([data-fond-groupe]), :has(.chants-volets[data-sur-liste])) [data-onglets="pilules"]:not(.carte-groupe *, .chants-chant *) > :is(button[aria-pressed="false"], a:not([aria-current])) { background-color: hsl(var(--secondary-fond)); }
   /* Un contrôle rond posé sur le gris (cloche, menu « Accueil ⌄ ») est blanc, sans ombre, en clair seulement :
      en sombre il garde son `--secondary`. */
   :root:not(.dark):is(:has([data-fond-groupe]), :has(.chants-volets[data-sur-liste])) .blanc-sur-gris { background-color: hsl(var(--card)); }
@@ -418,10 +421,25 @@
     background-color: hsl(var(--raised));
     box-shadow: var(--shadow-raised);
   }
-  .shadow-soft {
-    box-shadow: var(--shadow-soft);
-  }
+}
 
+@layer components {
+  /* Recette de surface C (lot CD) : un groupe est un aplat `--card` de rayon 16, ni bordure ni ombre ; en sombre il
+     garde le liseré de `--shadow-raised` (aucun changement visible). `.sur-gris` : même aplat pour un contrôle posé
+     directement sur le fond gris (bouton rond, recherche). `.flottant` : ce qui flotte (menu, feuille, panneau). */
+  .sur-gris, .carte-groupe { background-color: hsl(var(--card)); }
+  .dark .sur-gris, .dark .carte-groupe { background-color: hsl(var(--raised)); box-shadow: var(--shadow-raised); }
+  .carte-groupe { border-radius: var(--radius-groupe); }
+  /* Dans un groupe blanc, la recherche est un aplat `--secondary` (clair seulement : en sombre elle garde son relief). */
+  :root:not(.dark) .carte-groupe input[type="search"] { background-color: hsl(var(--secondary)); box-shadow: none; }
+  .flottant { background-color: hsl(var(--raised)); box-shadow: var(--shadow-flottant); }
+  /* Bloc d'information posé sur une page blanche (ou dans un groupe) : aplat `--secondary` en clair, sans ombre ;
+     en sombre, rendu de `.raised` (fond `--raised` + liseré). */
+  .bloc-info { background-color: hsl(var(--secondary)); }
+  .dark .bloc-info { background-color: hsl(var(--raised)); box-shadow: var(--shadow-raised); }
+}
+
+@layer utilities {
   /* Harmonie (lot 9) : la section visée par une idée s'entoure un instant
      quand on touche « Montrer ». */
   .harmonie-surligne {
@@ -777,6 +795,7 @@
   .chants-volets > .chants-liste { --cadre-index: calc(100svh - var(--nav-h) - 104px); display: block; position: sticky; top: calc(var(--nav-h) + 20px); z-index: 1; max-height: calc(100svh - var(--nav-h) - 44px); margin-inline: 0; margin-bottom: 24px; overflow-y: auto; overscroll-behavior: contain; border-radius: var(--radius-groupe); background-color: hsl(var(--card)); }
   .chants-liste .chants-liste-fond { min-height: 0; }
   .chants-liste input[type="search"] { background-color: hsl(var(--secondary)); box-shadow: none; }
+  .dark .chants-volets > .chants-liste { box-shadow: var(--shadow-raised); }
   .chants-liste .chants-liste-corps { padding: 14px 16px 8px; }
   .chants-volets > .chants-chant { display: block; min-width: 0; align-self: stretch; margin-right: var(--marge-page); border-radius: var(--radius-groupe); background-color: hsl(var(--background)); }
   .chants-chant .barre-fond { background-color: hsl(var(--background)); }
@@ -793,6 +812,7 @@
   :root[data-barre="reduite"] .chants-volets > .chants-liste { --cadre-index: calc(100svh - var(--nav-h) - 104px); display: block; position: sticky; top: calc(var(--nav-h) + 20px); z-index: 1; max-height: calc(100svh - var(--nav-h) - 44px); margin-inline: 0; margin-bottom: 24px; overflow-y: auto; overscroll-behavior: contain; border-radius: var(--radius-groupe); background-color: hsl(var(--card)); }
   :root[data-barre="reduite"] .chants-liste .chants-liste-fond { min-height: 0; }
   :root[data-barre="reduite"] .chants-liste input[type="search"] { background-color: hsl(var(--secondary)); box-shadow: none; }
+  :root.dark[data-barre="reduite"] .chants-volets > .chants-liste { box-shadow: var(--shadow-raised); }
   :root[data-barre="reduite"] .chants-liste .chants-liste-corps { padding: 14px 16px 8px; }
   :root[data-barre="reduite"] .chants-volets > .chants-chant { display: block; min-width: 0; align-self: stretch; margin-right: var(--marge-page); border-radius: var(--radius-groupe); background-color: hsl(var(--background)); }
   :root[data-barre="reduite"] .chants-chant .barre-fond { background-color: hsl(var(--background)); }
@@ -809,6 +829,7 @@
   .chants-volets > .chants-liste { --cadre-index: calc(100svh - var(--nav-h) - 104px); display: block; position: sticky; top: calc(var(--nav-h) + 20px); z-index: 1; max-height: calc(100svh - var(--nav-h) - 44px); margin-inline: 0; margin-bottom: 24px; overflow-y: auto; overscroll-behavior: contain; border-radius: var(--radius-groupe); background-color: hsl(var(--card)); }
   .chants-liste .chants-liste-fond { min-height: 0; }
   .chants-liste input[type="search"] { background-color: hsl(var(--secondary)); box-shadow: none; }
+  .dark .chants-volets > .chants-liste { box-shadow: var(--shadow-raised); }
   .chants-liste .chants-liste-corps { padding: 14px 16px 8px; }
   .chants-volets > .chants-chant { display: block; min-width: 0; align-self: stretch; margin-right: var(--marge-page); border-radius: var(--radius-groupe); background-color: hsl(var(--background)); }
   .chants-chant .barre-fond { background-color: hsl(var(--background)); }

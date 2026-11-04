@@ -241,7 +241,7 @@ function Fiche({ ligne, toutesLesFois }: { ligne: Ligne; toutesLesFois: Fois[] }
 
       {retour && <p role="status" className="text-sm text-muted-foreground">{retour}</p>}
 
-      <section className={cn("raised rounded-2xl px-4 py-3.5", backOffice ? "space-y-2" : deuxVolets && "flex flex-wrap items-center gap-x-4 gap-y-3")}>
+      <section className={cn("carte-groupe rounded-2xl px-4 py-3.5", backOffice ? "space-y-2" : deuxVolets && "flex flex-wrap items-center gap-x-4 gap-y-3")}>
         {/* Au Back-Office : « État », puis le segmenté seul (l'état n'est écrit qu'une fois), son sous-titre dessous (-10). */}
         {backOffice && <p className="text-[13px] font-semibold text-muted-foreground">{t("taches.etat.titre")}</p>}
         <div role="radiogroup" aria-label={t("taches.etat.titre")} className="flex gap-0.5 rounded-full bg-secondary p-1 text-sm">
@@ -278,7 +278,7 @@ function Fiche({ ligne, toutesLesFois }: { ligne: Ligne; toutesLesFois: Fois[] }
         {sousTitre && <p className={cn("min-w-0 text-[13px] text-muted-foreground", !backOffice && !deuxVolets && "mt-2 basis-full")}>{sousTitre}</p>}
       </section>
 
-      <dl className="raised rounded-2xl px-4 py-1">
+      <dl className="carte-groupe rounded-2xl px-4 py-1">
         {lignes.map(([icone, label, valeur]) => (
           <div key={label} className={cn("flex gap-3 border-t border-border/70 py-2.5 first:border-t-0", deuxVolets ? "items-center" : "items-start")}>
             <span className="mt-0.5 shrink-0 text-muted-foreground [&_svg]:h-4 [&_svg]:w-4" aria-hidden>{icone}</span>
@@ -294,7 +294,7 @@ function Fiche({ ligne, toutesLesFois }: { ligne: Ligne; toutesLesFois: Fois[] }
         // La note seule en carte, pleine largeur ; l'historique en lignes grises au pied, sans carte (-11).
         <>
           {tache.note && (
-            <section className="raised rounded-2xl px-4 py-3">
+            <section className="carte-groupe rounded-2xl px-4 py-3">
               <SousTitre className="text-[15px] font-bold">{t("taches.champs.note")}</SousTitre>
               <p className="mt-1 whitespace-pre-wrap text-[15px]">{tache.note}</p>
             </section>
@@ -306,7 +306,7 @@ function Fiche({ ligne, toutesLesFois }: { ligne: Ligne; toutesLesFois: Fois[] }
           )}
         </>
       ) : tache.note && (
-        <section className="raised rounded-2xl px-4 py-3">
+        <section className="carte-groupe rounded-2xl px-4 py-3">
           <SousTitre className="text-[13px] font-semibold text-muted-foreground">{t("taches.champs.note")}</SousTitre>
           <p className="mt-0.5 whitespace-pre-wrap text-[15px]">{tache.note}</p>
         </section>

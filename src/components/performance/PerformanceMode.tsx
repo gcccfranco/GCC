@@ -1414,7 +1414,7 @@ export function PerformanceMode({
                     aria-checked={affichageVu === v}
                     onClick={() => changeAffichage(v)}
                     className={`h-11 min-w-0 flex-1 rounded-md px-2 text-[13px] font-semibold whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
-                      affichageVu === v ? "bg-background text-foreground shadow-soft" : "text-muted-foreground hover:text-foreground"
+                      affichageVu === v ? "bg-background text-foreground" : "text-muted-foreground hover:text-foreground"
                     }`}
                   >
                     {t(`setlists.detail.layout.${v}`)}

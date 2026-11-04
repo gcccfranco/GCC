@@ -53,7 +53,7 @@ export function CetteSemaine({ programme, creneaux, menu, erreur }: {
       {jours.map((d) => {
         const duJour = resas.filter((c) => c.dimanche === d).sort((a, b) => a.debut.localeCompare(b.debut))
         return (
-          <section key={d} aria-label={titreDuJour(d, lang)} className="raised overflow-hidden rounded-2xl">
+          <section key={d} aria-label={titreDuJour(d, lang)} className="carte-groupe overflow-hidden rounded-2xl">
             <h4 className="px-4 pt-3 pb-2 text-[14px] font-bold text-foreground">{titreDuJour(d, lang)}</h4>
             <ul>
               {duJour.length === 0 && (

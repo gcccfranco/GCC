@@ -93,9 +93,9 @@ export function ToutesReservations({ programme, creneaux, titre, voirCommeMembre
       {erreur}
 
       {lignes.length === 0 ? (
-        <div className="raised rounded-2xl"><p className="px-4 py-4 text-sm text-muted-foreground">{t("planning.gestion.aucuneReservation")}</p></div>
+        <div className="carte-groupe rounded-2xl"><p className="px-4 py-4 text-sm text-muted-foreground">{t("planning.gestion.aucuneReservation")}</p></div>
       ) : (<>
-      <div data-testid="reservations-tableau" className={`${styles.tableau} raised overflow-x-auto rounded-2xl`}>
+      <div data-testid="reservations-tableau" className={`${styles.tableau} carte-groupe overflow-x-auto rounded-2xl`}>
         <table aria-labelledby={titreId} className="w-full border-collapse text-left text-[14px]">
           <thead>
             <tr className="border-b border-border text-[12.5px] whitespace-nowrap text-muted-foreground">
@@ -148,7 +148,7 @@ export function ToutesReservations({ programme, creneaux, titre, voirCommeMembre
       <div data-testid="reservations-liste" className={styles.liste}>
         <div className="space-y-3">
           {jours.map(([d, duJour]) => (
-            <section key={d} aria-label={jourCourt(d, lang)} className="raised overflow-hidden rounded-2xl">
+            <section key={d} aria-label={jourCourt(d, lang)} className="carte-groupe overflow-hidden rounded-2xl">
               <h3 className="px-4 pt-3 pb-2 text-[15px] leading-[21px] font-semibold text-foreground">{jourCourt(d, lang)}</h3>
               <ul>
                 {duJour.map((c) => {

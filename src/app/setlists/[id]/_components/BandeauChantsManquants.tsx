@@ -31,7 +31,7 @@ export function BandeauChantsManquants({
       role="alert"
       data-chants-manquants
       // Au-dessus de la barre du bas sur téléphone et tablette portrait (même calcul que BoutonNouveau).
-      className={`fixed z-50 flex max-w-md flex-wrap items-center justify-between gap-x-4 gap-y-2 rounded-2xl border border-border bg-card px-4 py-3 text-sm shadow-lg ${
+      className={`fixed z-50 flex max-w-md flex-wrap items-center justify-between gap-x-4 gap-y-2 rounded-2xl bg-card px-4 py-3 text-sm shadow-[var(--shadow-flottant)] ${
         // Deux volets : en bas à droite, sur le volet de lecture, sans couvrir le pied du sommaire.
         deuxVolets ? "bottom-4 right-6" : "inset-x-4 mx-auto bottom-[calc(var(--tabbar-bottom)+78px+8px)]"
       }`}

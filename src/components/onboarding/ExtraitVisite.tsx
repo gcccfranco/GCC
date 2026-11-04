@@ -16,7 +16,7 @@ type Etat = "lecture" | "arret" | "erreur";
 /** Lecture refusée : le bouton lecture, sauf si la vidéo est en erreur (une 404 rejette aussi `play()`, après l'erreur). */
 const refusee = (e: Etat): Etat => (e === "erreur" ? e : "arret");
 
-const CADRE = "relative aspect-video w-full max-w-sm overflow-hidden rounded-xl raised";
+const CADRE = "relative aspect-video w-full max-w-sm overflow-hidden rounded-xl bg-secondary";
 const BOUTON = "bg-black/55 text-white backdrop-blur focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white";
 
 function disposition(): string {

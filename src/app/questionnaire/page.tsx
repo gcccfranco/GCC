@@ -265,7 +265,7 @@ export default function QuestionnairePage() {
           {entete}
           {lecture(
             grand && <div aria-hidden />,
-            <div className="raised flex flex-col items-center gap-3 rounded-2xl p-8 text-center">
+            <div className="bloc-info flex flex-col items-center gap-3 rounded-2xl p-8 text-center">
               <CheckCircle2 className="h-10 w-10 text-green-500" />
               <h2 className="text-lg font-bold text-foreground">{t("survey.thanksTitle")}</h2>
               <p className="text-sm text-muted-foreground">{t("survey.thanksBody")}</p>
@@ -358,7 +358,7 @@ export default function QuestionnairePage() {
             )}
 
             {/* Une carte par étape, un bloc par section : moins de scroll qu'une carte par question. */}
-            <section data-testid="questions" aria-label={t(`survey.steps.${current.id}`)} className="raised rounded-2xl px-5 pb-4 pt-5 md:px-6">
+            <section data-testid="questions" aria-label={t(`survey.steps.${current.id}`)} className="pb-4 pt-5">
               {groups.map((group, i) => (
                 <div key={group.id} className={i > 0 ? "mt-4 border-t border-border pt-5" : ""}>
                   <h2 className="text-[19px] font-bold leading-tight text-foreground">{t(`survey.s.${group.id}.title`)}</h2>

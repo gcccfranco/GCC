@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { signInAs, type FakeProfile } from "./helpers/fakeSession";
 
 // Garde-fou (21/09/2026) : `black-translucent` a été en ligne quelques heures, et iOS
 // FIGE ce réglage à l'installation de l'icône — il ne le relit jamais. Les appareils où
@@ -9,6 +10,12 @@ import { expect, test, type Page } from "@playwright/test";
 // Playwright ne simule pas de zone sûre : on la pose à la main, comme `look-navigation`
 // le fait déjà avec `--sab` pour la barre du bas.
 const SAT = 59;
+const MUSICIEN: FakeProfile = {
+  uid: "uid-musicien",
+  email: "musicien@example.com",
+  planningName: "Ruth K.",
+  serviceRoles: { "Culte Francophone": ["musicien"] },
+};
 const poser = (page: Page, px: number) => page.addStyleTag({ content: `:root { --sat: ${px}px !important; }` });
 
 /** Lot U4 : sur ordinateur, pas de navbar ; la barre latérale porte la même garde. */
@@ -53,8 +60,10 @@ test.describe("zone sûre du haut", () => {
   });
 
   test("le halo suit la barre au lieu de rester derrière l'heure", async ({ page }) => {
-    await page.goto("/songs");
-    await page.getByRole("searchbox").waitFor();
+    // /songs n'a plus de halo depuis T1b (partout-q2) : le planning en porte un, coloré.
+    await page.route(/docs\.google\.com\/spreadsheets/, (route) => route.fulfill({ status: 200, contentType: "text/csv", body: "" }));
+    await signInAs(page, MUSICIEN, {}, "/planning");
+    await page.getByRole("heading", { level: 1, name: "Planning" }).waitFor();
     await poser(page, SAT);
     const repos = test.info().project.name === "ordinateur" ? -200 : -80;
     await expect

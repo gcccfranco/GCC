@@ -177,7 +177,7 @@ export function Responsabilites() {
           ) : (
             <>
               {aPourvoir && (
-                <section data-testid="sans-gestionnaire" aria-labelledby="resp-a-pourvoir" className="raised space-y-3 rounded-2xl px-5 py-4">
+                <section data-testid="sans-gestionnaire" aria-labelledby="resp-a-pourvoir" className="carte-groupe space-y-3 rounded-2xl px-5 py-4">
                   <div className="space-y-1">
                     <h2 id="resp-a-pourvoir" className="text-[15px] font-semibold leading-[21px] text-foreground">{t("responsabilites.aPourvoir", { liste: aPourvoir })}</h2>
                     <p className="text-[13px] leading-[18px] text-muted-foreground">{t("responsabilites.aPourvoirAide")}</p>
@@ -236,7 +236,7 @@ function Section({
   return (
     <section aria-label={titre} className="space-y-2">
       {!sansEntete && <h2 className="text-[16px] font-bold text-foreground">{titre}</h2>}
-      <div className="raised divide-y divide-border rounded-2xl px-4 sm:px-5">
+      <div className="carte-groupe divide-y divide-border rounded-2xl px-4 sm:px-5">
         {lignes.map((l) => (
           <LigneResponsabilite key={l.cle} ligne={l} profils={profils} occupee={suivi.enCours === l.cle} enregistre={suivi.enregistre === l.cle} surlignee={suivi.surligne === l.cle} />
         ))}

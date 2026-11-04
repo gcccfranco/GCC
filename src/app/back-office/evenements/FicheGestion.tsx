@@ -40,7 +40,7 @@ import { TachesEvenement } from "@/app/evenements/[id]/TachesEvenement"
 import styles from "./gestion.module.css"
 
 const BASE = "/back-office/evenements"
-const carte = "raised rounded-2xl p-4"
+const carte = "carte-groupe rounded-2xl p-4"
 
 /** Une cellule CSV : entre guillemets si besoin (`;`, guillemet, retour à la ligne). Un texte qui
  *  commence comme une formule (`=`, `+`, `-`, `@`, tabulation, retour chariot) prend une apostrophe :

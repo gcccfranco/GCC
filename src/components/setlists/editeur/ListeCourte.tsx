@@ -178,7 +178,7 @@ function LigneElement({
       {boutonInserer}
       <div
         className={`relative flex items-start gap-3 rounded-xl px-3 py-3 ${
-          choisi ? "bg-foreground text-background shadow-soft" : "hover:bg-muted/50"
+          choisi ? "bg-foreground text-background" : "hover:bg-muted/50"
         } ${isDragging ? "shadow-md" : ""}`}
       >
         <Poignee titre={titre} attributes={attributes} listeners={listeners} choisi={choisi} />

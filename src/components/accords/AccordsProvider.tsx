@@ -324,7 +324,7 @@ function Bulle(props: Omit<React.ComponentProps<typeof PanneauAccord>, "variante
         top: place?.top ?? 0,
         visibility: place ? "visible" : "hidden",
       }}
-      className="pointer-events-auto z-50 rounded-2xl border border-border bg-card text-foreground shadow-xl outline-none"
+      className="pointer-events-auto z-50 rounded-2xl bg-card [box-shadow:var(--shadow-flottant)] text-foreground outline-none"
     >
       {place && !place.sansFleche && (
         <span

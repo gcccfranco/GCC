@@ -2,7 +2,9 @@ import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
 /**
- * État vide : cadre pointillé, une phrase, un titre et une action facultatifs.
+ * État vide : bloc d'information (aplat sans bordure, rayon 16), une phrase, un titre et une action facultatifs.
+ * `surGris` : posé directement sur le fond gris, il devient un groupe blanc ; sinon (dans un groupe, sur une page
+ * blanche) il reste en aplat `--secondary`.
  * `role="status"` seulement s'il remplace un contenu chargé dynamiquement.
  */
 export function EtatVide({
@@ -11,6 +13,7 @@ export function EtatVide({
   action,
   compact,
   role,
+  surGris,
   className,
 }: {
   titre?: ReactNode;
@@ -18,12 +21,13 @@ export function EtatVide({
   action?: ReactNode;
   compact?: boolean;
   role?: "status";
+  surGris?: boolean;
   className?: string;
 }) {
   return (
     <div
       role={role}
-      className={cn("rounded-xl border border-dashed border-border px-4 text-center", compact ? "py-6" : "py-12", className)}
+      className={cn("rounded-2xl px-4 text-center", surGris ? "carte-groupe" : "bloc-info", compact ? "py-6" : "py-12", className)}
     >
       {titre && <p className="text-[15px] font-semibold text-foreground">{titre}</p>}
       {children && <p className={cn("text-sm text-muted-foreground", titre && "mt-1")}>{children}</p>}

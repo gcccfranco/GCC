@@ -375,7 +375,7 @@ export function SurveyResults({ backOffice = false }: { backOffice?: boolean }) 
         </p>
         <div className="grid grid-cols-[repeat(auto-fit,minmax(300px,1fr))] items-start gap-4">
           {questions.map((q) => (
-            <div key={q.id} className="raised rounded-2xl px-5 py-4">
+            <div key={q.id} className="carte-groupe rounded-2xl px-5 py-4">
               <QuestionBlock q={q} responses={responses} />
             </div>
           ))}
@@ -390,7 +390,7 @@ export function SurveyResults({ backOffice = false }: { backOffice?: boolean }) 
   }
 
   const carte = (
-    <div className="raised rounded-2xl p-5 space-y-4">
+    <div className="carte-groupe rounded-2xl p-5 space-y-4">
       <p className="text-[15px] text-muted-foreground">
         <span className="mr-1.5 text-[28px] font-bold leading-none text-foreground tabular-nums">{all.length}</span>{" "}
         {t("admin.questionnaire.reponses", { count: all.length })}

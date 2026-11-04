@@ -73,7 +73,7 @@ export function AFaire({ titre }: { titre: string }) {
                   <h2 id={`a-faire-${g.id}`} className="mb-2 px-1 text-[13px] font-semibold text-muted-foreground">
                     {t(`backOffice.aFaire.groupe.${g.id}`)}
                   </h2>
-                  <ul className="divide-y divide-border/60 overflow-hidden rounded-groupe bg-card">
+                  <ul className="divide-y divide-border/60 overflow-hidden carte-groupe">
                     {g.lignes.map((l) => <RangeeAFaire key={l.id} ligne={l} today={today} />)}
                   </ul>
                 </section>
@@ -84,7 +84,7 @@ export function AFaire({ titre }: { titre: string }) {
           {isCoordination(user, profile) && (
             <Link
               href="/back-office/evenements/scene" data-testid="carte-scene-des-fetes"
-              className="hide-on-desktop mt-6 flex min-h-[44px] items-center gap-3 rounded-groupe bg-card px-4 py-3"
+              className="hide-on-desktop mt-6 flex min-h-[44px] items-center gap-3 carte-groupe px-4 py-3"
             >
               <span aria-hidden className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-secondary" style={{ color: PLANNING_COLORS.scene }}>
                 <Drama className="h-[18px] w-[18px]" />

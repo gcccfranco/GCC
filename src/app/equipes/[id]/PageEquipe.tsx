@@ -38,7 +38,7 @@ import type { Evenement } from "@/types/evenement";
 import { Squelette } from "@/components/layout/Squelette";
 
 const idValide = (id: string) => EQUIPES.some((e) => e.id === id) || COMITES.includes(id);
-const CARTE = "raised rounded-2xl px-4 py-2";
+const CARTE = "carte-groupe rounded-2xl px-4 py-2";
 const LIEN_LIGNE = "flex min-h-[52px] items-center gap-3 px-1 py-2";
 
 export function PageEquipe({ id, backOffice }: { id: string; backOffice: boolean }) {

@@ -73,7 +73,7 @@ export function ChapitreHarmonie({ id }: { id: string }) {
 
       {/* Téléphone : le sommaire de la leçon en tête ; en grand et sur tablette, il est dans la liste du cours. */}
       {!deuxVolets && chapitre.contenu.length > 1 && (
-        <div className="raised rounded-2xl px-4 pt-3 pb-1 md:hidden">
+        <div className="bloc-info rounded-2xl px-4 pt-3 pb-1 md:hidden">
           <p className="text-[13px] font-semibold text-muted-foreground">{t("harmonie.cours.sommaire")}</p>
           <nav aria-label={t("harmonie.cours.sommaire")}>
             <ol className="divide-y divide-border text-[15px]">

@@ -48,7 +48,7 @@ export function InscriptionsComptes({
 
   if (court) {
     return (
-      <section aria-label={t("admin.inscriptions")} className="raised rounded-2xl px-4 py-3 sm:px-5">
+      <section aria-label={t("admin.inscriptions")} className="carte-groupe rounded-2xl px-4 py-3 sm:px-5">
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
           <Switch
             checked={!!regOpen}
@@ -94,7 +94,7 @@ export function InscriptionsComptes({
           <AlertDescription>{error}</AlertDescription>
         </Alert>
       )}
-    <div className="rounded-xl bg-card shadow-soft p-5 space-y-3">
+    <div className="carte-groupe p-5 space-y-3">
       <h2 className="text-sm font-semibold text-muted-foreground">
         {t("admin.inscriptions")}
       </h2>

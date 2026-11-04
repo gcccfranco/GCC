@@ -68,7 +68,7 @@ export function ListeMesServices({
 
   return (
     <div className={cn("space-y-4", disposition === "grand" ? "px-4 pb-4 pt-4" : "px-[var(--marge-page)] pb-10")}>
-      <PushPrompt />
+      <PushPrompt surGris={disposition !== "grand"} />
 
       {/* Vues : le rail (R4). */}
       <OngletsRail
@@ -85,7 +85,7 @@ export function ListeMesServices({
       {!charge ? (
         <p className="text-sm text-muted-foreground text-center py-16">{t("mesServices.loading")}</p>
       ) : affiches.length === 0 ? (
-        <EtatVide>{onglet === "upcoming" ? t("mesServices.emptyUpcoming") : t("mesServices.emptyPast")}</EtatVide>
+        <EtatVide surGris={disposition !== "grand"}>{onglet === "upcoming" ? t("mesServices.emptyUpcoming") : t("mesServices.emptyPast")}</EtatVide>
       ) : (
         <div className="space-y-5">
           {mois.map((m) => (
@@ -135,7 +135,7 @@ function LigneService({ e, href, setlistId, jours, actif, carte, chevron }: {
       data-testid={carte ? "carte-service" : undefined}
       className={cn(
         "relative flex items-center gap-3 px-4 py-3",
-        carte ? "raised rounded-2xl" : "group-row",
+        carte ? "carte-groupe rounded-2xl" : "group-row",
         actif && "rounded-xl bg-foreground text-background [&_.text-muted-foreground]:text-background/70",
       )}
     >

@@ -102,7 +102,7 @@ export function PourMoi({
     return (
       <section aria-labelledby="pour-moi">
         <h2 id="pour-moi" className="sr-only">{t("planning.accueil.pourMoi")}</h2>
-        <article data-carte className="raised rounded-2xl p-4">
+        <article data-carte className="carte-groupe rounded-2xl p-4">
           <Link href="/mes-services" className="flex items-center gap-3">
             {tuile}
             <span className="min-w-0 flex-1">
@@ -132,7 +132,7 @@ export function PourMoi({
     <section aria-labelledby="pour-moi" className="min-w-0">
       <h2 id="pour-moi" className="mb-3 text-[17px] font-bold">{t("planning.accueil.pourMoi")}</h2>
       <div className={disposition === "tablette" ? "grid grid-cols-2 items-stretch gap-3.5" : "flex flex-col gap-3.5"}>
-        <article data-carte className="raised flex flex-col rounded-2xl p-4">
+        <article data-carte className="carte-groupe flex flex-col rounded-2xl p-4">
           <p className="mb-2.5 text-[13px] font-semibold text-muted-foreground">{t("planning.nextService")}</p>
           <div className="flex items-center gap-3.5">
             {tuile}
@@ -163,7 +163,7 @@ export function PourMoi({
           </Link>
         </article>
         {setlist && (
-          <article data-carte className="raised rounded-2xl p-4">
+          <article data-carte className="carte-groupe rounded-2xl p-4">
             <p className="text-[13px] font-semibold text-muted-foreground">{t("planning.accueil.setlistDuService")}</p>
             <p className="text-base font-bold">{setlist.title}</p>
             {presidence && <p className="text-[13px] text-muted-foreground">{presidence}</p>}

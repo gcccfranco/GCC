@@ -32,8 +32,8 @@ export function CarteDimanche({
     <div
       data-testid="grille-carte"
       data-date-carte={date}
-      className="rounded-xl border border-transparent bg-card shadow-soft overflow-hidden"
-      style={{ borderColor: cetteSemaine ? couleur : undefined }}
+      className="border border-transparent dark:border-0 carte-groupe overflow-hidden"
+      style={cetteSemaine ? { borderColor: couleur, borderWidth: 1, boxShadow: "none" } : undefined}
     >
       <div
         className="px-3.5 py-2 flex items-center gap-2 flex-wrap"

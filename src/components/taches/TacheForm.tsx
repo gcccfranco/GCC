@@ -64,7 +64,7 @@ export function TacheForm({ open, enLigne, equipe, equipes, evenement, echeance,
   const { t } = useTranslation();
   if (enLigne) {
     return open ? (
-      <div className="raised max-w-[720px] rounded-2xl pt-5">
+      <div className="carte-groupe max-w-[720px] rounded-2xl pt-5">
         <Champs enLigne equipe={equipe} equipes={equipes} evenement={evenement} echeance={echeance} initial={initial} membres={membres} onSubmit={onSubmit} onDelete={onDelete} onClose={onClose} />
       </div>
     ) : null;

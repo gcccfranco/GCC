@@ -127,7 +127,7 @@ function ParMoment({ ouvert, cartes }: { ouvert?: string; cartes: boolean }) {
               return (
                 <div
                   key={m.moment}
-                  className={cn("border-t border-border py-2 first:border-t-0", cartes && "md:raised md:rounded-2xl md:border-t-0 md:px-4 md:py-3")}
+                  className={cn("border-t border-border py-2 first:border-t-0", cartes && "md:bloc-info md:rounded-2xl md:border-t-0 md:px-4 md:py-3")}
                   data-moment={m.moment}
                 >
                   <p className="text-[15px] font-semibold">{m.moment}</p>

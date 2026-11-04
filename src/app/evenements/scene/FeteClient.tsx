@@ -164,7 +164,7 @@ export function FeteClient({ fete }: { fete: Fete }) {
     if (etat === "fermees") return <CarteInfo titre={t("planning.fete.fermees")} texte={t("planning.fete.fermeesDetail")} />
     if (etat === "passee") {
       return (
-        <section className="raised rounded-2xl p-4 space-y-1.5" aria-labelledby="scene-passee-titre">
+        <section className="carte-groupe rounded-2xl p-4 space-y-1.5" aria-labelledby="scene-passee-titre">
           <h3 id="scene-passee-titre" className="text-[15px] font-bold texte-service" style={styleTexteService(COLOR)}>{t("planning.scene.passed", { nom: titre })}</h3>
           <p className="text-sm text-muted-foreground">{t("planning.scene.passedHint")}</p>
         </section>
@@ -251,7 +251,7 @@ export function FeteClient({ fete }: { fete: Fete }) {
   }
   const ordreCourant = programme && ordreDe(programme, majuscule(fdFullL(jourJ, lang)), true)
   const commentReserver = (
-    <div className="raised rounded-2xl flex items-start gap-3 p-4">
+    <div className="carte-groupe rounded-2xl flex items-start gap-3 p-4">
       <CircleHelp className="mt-0.5 h-5 w-5 shrink-0 text-foreground" aria-hidden />
       <div>
         <p className="text-[15px] font-semibold">{t("planning.fete.commentReserver")}</p>
@@ -313,7 +313,7 @@ export function FeteClient({ fete }: { fete: Fete }) {
       <div className="space-y-5 px-[var(--marge-page)]">
         {colonne}
         {aDroite}
-        {entreeOrdre && <div className="raised rounded-2xl p-1">{entreeOrdre}</div>}
+        {entreeOrdre && <div className="carte-groupe rounded-2xl p-1">{entreeOrdre}</div>}
       </div>
     )
   }
@@ -336,7 +336,7 @@ export function FeteClient({ fete }: { fete: Fete }) {
 /** Une carte d'annonce de la colonne (planche : icône de calendrier, titre, texte). */
 function CarteInfo({ titre, texte }: { titre: string; texte?: string }) {
   return (
-    <div className="raised rounded-2xl flex items-start gap-3 p-4">
+    <div className="carte-groupe rounded-2xl flex items-start gap-3 p-4">
       <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl texte-service" style={{ background: `color-mix(in srgb, ${COLOR} 12%, transparent)`, ...styleTexteService(COLOR) }}>
         <CalendarClock className="h-5 w-5" aria-hidden />
       </span>

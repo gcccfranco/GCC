@@ -91,7 +91,7 @@ export function PublishPlanningPanel({
 
   if (!planning) {
     return (
-      <div className="rounded-xl bg-card shadow-soft p-5">
+      <div className="carte-groupe p-5">
         <p className="text-sm text-muted-foreground">
           {t("backOffice.boE1.publier.pasAutorise")}
         </p>
@@ -100,7 +100,7 @@ export function PublishPlanningPanel({
   }
 
   return (
-    <div className="rounded-xl bg-card shadow-soft p-5 space-y-4">
+    <div className="carte-groupe p-5 space-y-4">
       <div className="space-y-1.5">
         <label htmlFor="publier-planning" className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
           {t("backOffice.boE1.publier.planning")}

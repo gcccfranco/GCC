@@ -390,7 +390,7 @@ test.describe("louange (T3) : setlists", () => {
 
   // 5C1 : les listes sont des filets, plus des boîtes ; et en sombre une couleur de
   // service (serviceColors.ts n'a pas de variante sombre) est éclaircie pour rester lisible.
-  test("la liste est en filets, et en sombre la vignette de date reste lisible", async ({ page }) => {
+  test("la liste est un groupe à filets, et en sombre la vignette de date reste lisible", async ({ page }) => {
     await page.clock.setFixedTime(new Date("2026-09-15T10:00:00"));
     await page.route(/docs\.google\.com\/spreadsheets/, (route) => route.fulfill({ status: 200, contentType: "text/csv", body: "" }));
     await page.emulateMedia({ colorScheme: "dark" });
@@ -405,7 +405,8 @@ test.describe("louange (T3) : setlists", () => {
     const ligneSetlist = page.getByRole("link", { name: /Culte Franco 27\/09/ });
     await expect(ligneSetlist).toBeVisible();
     const liste = ligneSetlist.locator("xpath=ancestor::ul[1]");
-    expect(await liste.evaluate((el) => getComputedStyle(el).backgroundColor), "pas de boîte autour de la liste").toBe("rgba(0, 0, 0, 0)");
+    // Recette de surface (C) : au téléphone la liste est un groupe `--card` (#1c1c1e en sombre, avec son liseré), plus des filets nus.
+    expect(await liste.evaluate((el) => getComputedStyle(el).backgroundColor), "la liste est un groupe").toBe("rgb(28, 28, 30)");
     // Contraste du texte de la vignette sur le noir du fond : au moins 4,5.
     const contraste = await ligneSetlist.getByTestId("tuile").evaluate((el) => {
       const c = document.createElement("canvas").getContext("2d")!;

@@ -110,7 +110,7 @@ export function ApercuSetlist({
       </div>
 
       <div className="apercu-colonnes grid items-start gap-4">
-        <article className="raised rounded-2xl px-5 pb-2 pt-4">
+        <article className="carte-groupe rounded-2xl px-5 pb-2 pt-4">
           <p className="flex items-baseline justify-between gap-3 border-b border-border pb-2">
             <b className="text-base font-bold">{t("setlists.list.songCounter", { count: chants })}</b>
             <span className="text-xs text-muted-foreground">{t("setlists.apercu.tonalites")}</span>

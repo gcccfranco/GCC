@@ -151,7 +151,7 @@ export function SetlistCarteChants({
     .filter((i) => i.type !== "transition")
     .sort((a, b) => a.position - b.position);
   return (
-    <article data-testid="carte-setlist" className="raised rounded-2xl px-4 pb-2 pt-2">
+    <article data-testid="carte-setlist" className="carte-groupe rounded-2xl px-4 pb-2 pt-2">
       <SetlistCard {...ligne} />
       <ol className="mt-1">
         {chants.map((it, n) => {

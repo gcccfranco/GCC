@@ -37,7 +37,7 @@ const SOUS = "block truncate text-[13px] text-muted-foreground";
  *  `chargement` : une lecture est en cours (`aria-busy`). */
 export function Apercu({ titre, lien, chargement = false, children }: { titre: string; lien?: { href: string; label: string }; chargement?: boolean; children: ReactNode }) {
   return (
-    <section aria-label={titre} aria-busy={chargement || undefined} className="raised min-w-0 rounded-2xl px-4 pb-1.5 pt-3.5">
+    <section aria-label={titre} aria-busy={chargement || undefined} className="carte-groupe min-w-0 rounded-2xl px-4 pb-1.5 pt-3.5">
       <div className="flex items-center gap-2 pb-2.5">
         <h2 className="min-w-0 flex-1 truncate text-[16px] font-bold text-foreground">{titre}</h2>
         {lien && (

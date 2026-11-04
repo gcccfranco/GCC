@@ -237,7 +237,7 @@ export function PanneauSommaire({ ouvert, fermer }: { ouvert: string; fermer: ()
         onKeyDown={(e) => { if (e.key === "Escape") fermer(); }}
         onClick={(e) => e.stopPropagation()}
         className={cn(
-          "raised absolute left-4 top-[calc(var(--nav-h)+7rem)] flex max-h-[calc(100dvh-var(--nav-h)-9rem)] w-[min(384px,calc(100vw-2rem))] flex-col rounded-2xl outline-none",
+          "flottant absolute left-4 top-[calc(var(--nav-h)+7rem)] flex max-h-[calc(100dvh-var(--nav-h)-9rem)] w-[min(384px,calc(100vw-2rem))] flex-col rounded-2xl outline-none",
         )}
       >
         <div className="flex items-center justify-between px-5 pt-4 pb-2">

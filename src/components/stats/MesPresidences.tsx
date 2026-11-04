@@ -73,7 +73,7 @@ export function MesPresidences({ profile }: { profile: Pick<UserProfile, "planni
         data-testid="mes-presidences"
         aria-haspopup="dialog"
         onClick={() => setOuvert(true)}
-        className="raised block w-full min-w-0 rounded-2xl px-4 pb-3.5 pt-3.5 text-left transition-colors hover:bg-secondary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        className="carte-groupe block w-full min-w-0 rounded-2xl px-4 pb-3.5 pt-3.5 text-left transition-colors hover:bg-secondary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       >
         <span className="flex flex-wrap items-baseline gap-x-2">
           <span className="text-[16px] font-bold text-foreground">{t("stats.presidences.titre")}</span>

@@ -29,7 +29,7 @@ export function SommaireChants({
     >
       <div className="absolute inset-0 bg-black/30" onClick={() => onClose()} />
       <div
-        className="absolute left-0 top-0 bottom-0 w-72 max-w-[80vw] bg-background border-r border-border shadow-xl overflow-y-auto py-3 animate-in slide-in-from-left duration-200"
+        className="absolute left-0 top-0 bottom-0 w-72 max-w-[80vw] bg-background [box-shadow:var(--shadow-flottant)] overflow-y-auto py-3 animate-in slide-in-from-left duration-200"
         style={{ paddingTop: "calc(0.75rem + var(--sat, 0px))", paddingLeft: "var(--sal, 0px)" }}
       >
         <p className="px-4 pb-2 text-xs font-bold uppercase tracking-widest text-muted-foreground truncate">

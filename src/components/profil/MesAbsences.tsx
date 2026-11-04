@@ -116,7 +116,7 @@ export function MesAbsences() {
   }
 
   return (
-    <section aria-label={t("absences.titre")} className="raised rounded-2xl p-5 space-y-4">
+    <section aria-label={t("absences.titre")} className="carte-groupe rounded-2xl p-5 space-y-4">
       <div>
         <h2 className="text-sm font-bold text-foreground">{t("absences.titre")}</h2>
         <p className="mt-0.5 text-xs text-muted-foreground">{t("absences.aide")}</p>

@@ -109,7 +109,7 @@ const filtreDeLAdresse = (v: string | null): Filtre => FILTRES.find((f) => f ===
 const vueDeLAdresse = (v: string | null): Vue | null => (v === "agenda" || v === "mois" ? v : null);
 
 const BOUTON_ROND =
-  "raised inline-flex h-8 min-w-8 items-center justify-center rounded-full px-2 text-[13px] font-bold text-foreground transition-opacity duration-150 hover:opacity-80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground";
+  "sur-gris inline-flex h-8 min-w-8 items-center justify-center rounded-full px-2 text-[13px] font-bold text-foreground transition-opacity duration-150 hover:opacity-80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground";
 const PASTILLE =
   "inline-flex h-8 shrink-0 items-center whitespace-nowrap gap-1.5 rounded-full px-3 text-[13px] font-semibold transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground";
 /** Sur téléphone, « Seulement moi » et « Sources » (rangée 3) ont la taille des pilules du filtre (`Pilules`, 40 px, 15 px). */
@@ -326,7 +326,7 @@ export function CalendrierClient() {
         type="button"
         aria-pressed={allumee}
         onClick={() => basculer(s)}
-        className={cn(PASTILLE, allumee ? "raised text-foreground" : "text-muted-foreground line-through hover:bg-muted/60")}
+        className={cn(PASTILLE, allumee ? "sur-gris text-foreground" : "text-muted-foreground line-through hover:bg-muted/60")}
       >
         <Icone aria-hidden className="h-3.5 w-3.5 shrink-0" />
         {t(`calendrier.sources.${s}`)}
@@ -338,7 +338,7 @@ export function CalendrierClient() {
       type="button"
       aria-pressed={prefs.seulementMoi}
       onClick={() => changer({ ...prefs, seulementMoi: !prefs.seulementMoi })}
-      className={cn(PASTILLE, telephone && PASTILLE_TEL, prefs.seulementMoi ? "bg-foreground text-background" : "raised text-foreground")}
+      className={cn(PASTILLE, telephone && PASTILLE_TEL, prefs.seulementMoi ? "bg-foreground text-background" : "sur-gris text-foreground")}
     >
       <UserRound aria-hidden className="h-3.5 w-3.5 shrink-0" />
       {t("calendrier.seulementMoi")}
@@ -346,7 +346,7 @@ export function CalendrierClient() {
   );
   // BO-C : « Sources » ouvre la feuille des pastilles ; seulement en « Tout » (un autre filtre ignore les préférences).
   const boutonSources = filtre === "tout" && (
-    <button type="button" onClick={() => setFeuilleSources(true)} className={cn(PASTILLE, telephone && PASTILLE_TEL, "raised text-foreground")}>
+    <button type="button" onClick={() => setFeuilleSources(true)} className={cn(PASTILLE, telephone && PASTILLE_TEL, "sur-gris text-foreground")}>
       <SlidersHorizontal aria-hidden className="h-3.5 w-3.5 shrink-0" />
       {t("calendrier.sourcesFeuille")}
     </button>

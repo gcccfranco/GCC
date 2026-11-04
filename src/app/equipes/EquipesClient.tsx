@@ -341,8 +341,8 @@ function CarteEquipe({
     <section
       data-testid={`equipe-${def.id}`}
       className={enBandeau
-        ? "raised rounded-2xl p-4 space-y-2.5"
-        : "mb-3 break-inside-avoid rounded-xl bg-card shadow-soft p-4 space-y-2.5"}
+        ? "carte-groupe rounded-2xl p-4 space-y-2.5"
+        : "mb-3 break-inside-avoid carte-groupe p-4 space-y-2.5"}
     >
       <header className="space-y-1">
         <div className="flex items-start justify-between gap-2">

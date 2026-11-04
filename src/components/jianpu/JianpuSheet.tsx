@@ -585,7 +585,7 @@ export function JianpuSheet({ entry, title, slug, layout = "flow", playedKey: de
                 onClick={() => setShowAlt(v)}
                 className={
                   "h-8 rounded-full px-4 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring " +
-                  (showAlt === v ? "bg-background text-foreground shadow-soft" : "text-muted-foreground hover:text-foreground")
+                  (showAlt === v ? "bg-background text-foreground" : "text-muted-foreground hover:text-foreground")
                 }
               >
                 {v

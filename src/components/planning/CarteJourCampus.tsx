@@ -39,7 +39,7 @@ export function CarteJourCampus({ day, seances, entrainement }: { day: string; s
   const iso = seances[0]?.date
   const aujourdhui = !!iso && iso === todayIso()
   return (
-    <div className="bg-card shadow-soft rounded-xl overflow-hidden border border-transparent" style={{ borderColor: aujourdhui ? COLOR : undefined }}>
+    <div className="carte-groupe overflow-hidden border border-transparent dark:border-0" style={aujourdhui ? { borderColor: COLOR, borderWidth: 1, boxShadow: "none" } : undefined}>
       <div className="px-4 py-2 flex items-center gap-2" style={{ background: aujourdhui ? `${COLOR}1a` : `${COLOR}0d` }}>
         <span className="text-sm font-bold texte-service" style={styleTexteService(COLOR)}>{iso ? jourCourtL(iso, i18n.language) : day}</span>
         {aujourdhui && (

@@ -158,7 +158,7 @@ export default function ProfilPage() {
             <fieldset
               disabled={!canEdit}
               aria-label={t("signup.steps.identity")}
-              className={cn("raised min-w-0 space-y-6 rounded-2xl p-5", !canEdit && "opacity-60")}
+              className={cn("carte-groupe min-w-0 space-y-6 rounded-2xl p-5", !canEdit && "opacity-60")}
             >
               <IdentityFields value={form} onChange={setForm} />
               <PlanningNameField
@@ -168,7 +168,7 @@ export default function ProfilPage() {
                 deriveFromPlanning={deriveFromPlanning}
               />
             </fieldset>
-            <section aria-label={t("moi.notifications")} className="raised overflow-hidden rounded-2xl">
+            <section aria-label={t("moi.notifications")} className="carte-groupe overflow-hidden rounded-2xl">
               <PushToggle />
             </section>
           </div>
@@ -183,7 +183,7 @@ export default function ProfilPage() {
             <fieldset
               disabled={!canEdit}
               aria-label={t("profile.fields.accessTitle")}
-              className={cn("raised order-3 min-w-0 rounded-2xl p-5 md:col-start-2 md:row-span-2 md:row-start-1", !canEdit && "opacity-60")}
+              className={cn("carte-groupe order-3 min-w-0 rounded-2xl p-5 md:col-start-2 md:row-span-2 md:row-start-1", !canEdit && "opacity-60")}
             >
               <ServiceGrid value={form} onChange={setForm} deriveFromPlanning={deriveFromPlanning} />
             </fieldset>

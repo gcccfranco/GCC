@@ -84,7 +84,7 @@ export function SectionTaches({ children }: { children: React.ReactNode }) {
         <p className="text-sm text-muted-foreground">{t("taches.aucuneEquipe")}</p>
       ) : (
         <div className="space-y-6">
-          <Group title={t("taches.aFairePourMoi")} className={cn(disposition !== "grand" && "raised rounded-2xl px-4 pb-1 pt-3")}>
+          <Group title={t("taches.aFairePourMoi")} className={cn(disposition !== "grand" && "carte-groupe rounded-2xl px-4 pb-1 pt-3")}>
             {miennes.length === 0 ? (
               <GroupRow>{<span className="text-muted-foreground">{t("taches.rienAFaire")}</span>}</GroupRow>
             ) : (
@@ -101,7 +101,7 @@ export function SectionTaches({ children }: { children: React.ReactNode }) {
             )}
           </Group>
           {versBackOffice && (
-            <Group className={cn(disposition !== "grand" && "raised rounded-2xl px-4 py-1")}>
+            <Group className={cn(disposition !== "grand" && "carte-groupe rounded-2xl px-4 py-1")}>
               <GroupRow href="/back-office/taches" leading={<ListChecks />} trailing={t("backOffice.selecteur.backOffice")} chevron>
                 {t("backOffice.tachesDesEquipes")}
               </GroupRow>

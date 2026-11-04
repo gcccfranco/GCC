@@ -416,7 +416,7 @@ export function Notifier({ backOffice = false, titre }: { backOffice?: boolean; 
     };
     return (
       <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-4 px-[var(--marge-page)] pb-10 lg:grid-cols-[minmax(0,1fr)_minmax(300px,0.72fr)]">
-        <div className="raised rounded-2xl p-5 space-y-4 sm:p-6">
+        <div className="carte-groupe rounded-2xl p-5 space-y-4 sm:p-6">
           <div>
             <h2 className="text-[18px] font-bold text-foreground">{t("notifier.prevenir")}</h2>
             <p className="text-sm text-muted-foreground">
@@ -529,7 +529,7 @@ export function Notifier({ backOffice = false, titre }: { backOffice?: boolean; 
       {mode === "publish" ? (
         <PublishPlanningPanel isAdmin={admin} notifyRights={notifyRights} />
       ) : (
-      <div className="rounded-xl bg-card shadow-soft p-5 space-y-4">
+      <div className="carte-groupe p-5 space-y-4">
         {selectAudience}
         {destinataires}
         {champs}

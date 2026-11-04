@@ -74,7 +74,7 @@ export function ExportModele({
             <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-black/35" />
             <DialogPrimitive.Content
               aria-describedby={undefined}
-              className="fixed left-1/2 top-1/2 z-50 w-[calc(100%-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-2xl border bg-background p-5 shadow-lg"
+              className="fixed left-1/2 top-1/2 z-50 w-[calc(100%-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-2xl bg-background p-5 shadow-[var(--shadow-flottant)]"
             >
               <div className="mb-3 flex items-center justify-between gap-3">
                 <DialogPrimitive.Title className="text-base font-semibold text-foreground">{titre}</DialogPrimitive.Title>

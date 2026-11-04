@@ -245,7 +245,7 @@ export function Entrainements({ programme, creneaux, user, profile, onChanged, o
         <h3 id="scene-mes" className={titreSection}>{t("planning.semaines.mes")}</h3>
         <span data-testid="compte" className="px-1 text-[13px] tabular-nums text-muted-foreground">{mesResas.length}</span>
       </div>
-      <ul className="raised rounded-2xl p-1.5">
+      <ul className="carte-groupe rounded-2xl p-1.5">
         {mesResas.map((c) => (
           <li key={c.id} className="flex items-center gap-1 pr-1.5">
             <button
@@ -301,7 +301,7 @@ export function Entrainements({ programme, creneaux, user, profile, onChanged, o
                 onClick={() => choisir(s.lundi)}
                 className={deuxVolets
                   ? `flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-colors ${actif ? "bg-foreground text-background" : "hover:bg-secondary"}`
-                  : `flex min-w-[124px] flex-col gap-1.5 whitespace-nowrap rounded-2xl px-3 py-2.5 text-left transition-colors ${actif ? "bg-foreground text-background" : "raised"}`}
+                  : `flex min-w-[124px] flex-col gap-1.5 whitespace-nowrap rounded-2xl px-3 py-2.5 text-left transition-colors ${actif ? "bg-foreground text-background" : "sur-gris"}`}
               >
                 <span className={deuxVolets ? "min-w-0 flex-1" : "contents"}>
                   <span className="block text-[15px] font-semibold tabular-nums">{semaineCourte(s.jours, lang)}</span>
@@ -352,7 +352,7 @@ export function Entrainements({ programme, creneaux, user, profile, onChanged, o
         const libres = lignes.filter((l) => l.type === "libre" && !commence(d, l.debut, today, maintenant)).length
         const grille = lignes.filter((l) => l.type === "libre" || l.couvre > 0).length
         return (
-          <section key={d} id={`scene-jour-${d}`} aria-label={label} className="raised rounded-2xl scroll-mt-[calc(var(--nav-h)+12px)]">
+          <section key={d} id={`scene-jour-${d}`} aria-label={label} className="carte-groupe rounded-2xl scroll-mt-[calc(var(--nav-h)+12px)]">
             <div className="flex items-center gap-3 px-4 pt-3.5 pb-2">
               <TuileDate iso={d} lang={lang} />
               <h3 className="min-w-0 flex-1 text-[17px] font-bold text-foreground">{label}</h3>

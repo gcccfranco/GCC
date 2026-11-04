@@ -29,7 +29,7 @@ import type { Instrument } from "@/types/harmonie";
 type Entree = { slug: string; title: string; titlePinyin: string | null; language: string };
 
 /** Une carte de la fiche : le titre dedans, petit et gris, comme la planche. */
-const CARTE = "raised rounded-2xl pt-3.5 pb-1 [&>h2]:px-4";
+const CARTE = "bloc-info rounded-2xl pt-3.5 pb-1 [&>h2]:px-4";
 
 export function FicheHarmonie({ id }: { id: string }) {
   const { t } = useTranslation();
@@ -153,7 +153,7 @@ export function FicheHarmonie({ id }: { id: string }) {
       {/* Pourquoi (et quand l'éviter) à côté de l'instrument, dès qu'il y a la place. */}
       <div className={"grid items-start gap-4 [@container(min-width:640px)]:grid-cols-2"}>
         {fiche.pourquoi && (
-          <div className="raised rounded-2xl pt-3.5 pb-1">
+          <div className="bloc-info rounded-2xl pt-3.5 pb-1">
             <Group title={t("harmonie.pourquoi")} className="[&>h2]:px-4">
               <ParagrapheFiche className="px-4 pb-3 text-[15px] leading-relaxed" texte={fiche.pourquoi} demiTons={0} tonalite={TON_DES_FICHES} />
             </Group>
@@ -262,7 +262,7 @@ export function FicheHarmonie({ id }: { id: string }) {
               </div>
               {!tousLesExemples && exemples.length > 6 && (
                 <div className="px-4">
-                  <GroupRow onClick={() => setTousLesExemples(true)} className="mx-0 mt-2 min-h-11 w-full justify-center bg-secondary py-0 before:hidden">
+                  <GroupRow onClick={() => setTousLesExemples(true)} className="mx-0 mt-2 min-h-11 w-full justify-center bg-secondary py-0 before:hidden hover:bg-secondary-fond active:bg-secondary-fond">
                     <span className="flex items-center justify-center gap-1.5 font-semibold text-foreground">
                       {t("harmonie.voirLesAutresChants", { count: exemples.length - 6 })}
                       <ChevronDown className="h-4 w-4" aria-hidden />

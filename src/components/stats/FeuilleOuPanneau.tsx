@@ -26,7 +26,7 @@ export function FeuilleOuPanneau({ ouvert, onOpenChange, titre, testidPanneau, t
       <DialogContent
         data-testid={testidPanneau}
         aria-describedby={undefined}
-        className="bottom-0 right-0 top-[var(--nav-h)] flex w-[380px] max-w-full flex-col overflow-hidden border-l border-border bg-background shadow-xl"
+        className="bottom-0 right-0 top-[var(--nav-h)] flex w-[380px] max-w-full flex-col overflow-hidden bg-background shadow-[var(--shadow-flottant)]"
       >
         <div className="flex shrink-0 items-center justify-between border-b border-border pl-4 pr-1">
           <DialogTitle className="font-semibold text-foreground">{titre}</DialogTitle>

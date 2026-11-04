@@ -61,7 +61,7 @@ export function ReglagesNotifications({ feuille }: { feuille: boolean }) {
             <DrawerOverlay />
             <DrawerPrimitive.Content
               aria-describedby={undefined}
-              className="fixed inset-y-0 right-0 z-50 flex w-[420px] max-w-[90vw] flex-col bg-secondary pt-[var(--sat,0px)] shadow-2xl outline-none"
+              className="fixed inset-y-0 right-0 z-50 flex w-[420px] max-w-[90vw] flex-col bg-secondary pt-[var(--sat,0px)] shadow-[var(--shadow-flottant)] outline-none"
             >
               {contenu}
             </DrawerPrimitive.Content>

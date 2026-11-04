@@ -87,7 +87,7 @@ export function PourQuelService({ categories }: { categories: string[] }) {
                 return (
                   <li
                     key={`${s.category}|${s.date}|${s.moment ?? ""}`}
-                    className="raised flex items-center gap-3 rounded-xl px-4 py-3.5"
+                    className="carte-groupe flex items-center gap-3 px-4 py-3.5"
                   >
                     <div className="min-w-0 flex-1">
                       <p
@@ -120,7 +120,7 @@ export function PourQuelService({ categories }: { categories: string[] }) {
           )}
         </section>
 
-        <ul data-testid="autres-entrees" className="raised mt-3 max-w-[720px] divide-y divide-border/70 rounded-2xl">
+        <ul data-testid="autres-entrees" className="carte-groupe mt-3 max-w-[720px] divide-y divide-border/70 rounded-2xl">
           {autres.map(({ href, Icone, titre, sous }) => (
             <li key={href}>
               <Link

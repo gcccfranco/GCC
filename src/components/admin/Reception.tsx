@@ -125,7 +125,7 @@ export function Reception({ onEnAttente }: { onEnAttente?: (n: number) => void }
       )}
 
       {/* ── Réception : signalements ── */}
-      <div className="rounded-xl bg-card shadow-soft p-5 space-y-3">
+      <div className="carte-groupe p-5 space-y-3">
         <div className="flex items-center justify-between">
           <h2 className="text-sm font-semibold text-muted-foreground">
             {t("backOffice.reception.titreSignalements")}
@@ -268,7 +268,7 @@ export function Reception({ onEnAttente }: { onEnAttente?: (n: number) => void }
       </div>
 
       {/* ── Réception : propositions de chants ── */}
-      <div className="rounded-xl bg-card shadow-soft p-5 space-y-3">
+      <div className="carte-groupe p-5 space-y-3">
         <div className="flex items-center justify-between">
           <h2 className="text-sm font-semibold text-muted-foreground">
             {t("backOffice.reception.titrePropositions")}

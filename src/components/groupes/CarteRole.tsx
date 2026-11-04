@@ -75,7 +75,7 @@ export function CarteRole({
       data-role={role.id}
       aria-label={role.nom}
       onClick={onFiche}
-      className="raised mb-3 cursor-pointer break-inside-avoid space-y-2.5 rounded-2xl p-4"
+      className="carte-groupe mb-3 cursor-pointer break-inside-avoid space-y-2.5 rounded-2xl p-4"
     >
       <header className="flex items-start justify-between gap-2">
         <div className="min-w-0">

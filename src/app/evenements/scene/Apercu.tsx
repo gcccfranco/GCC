@@ -70,7 +70,7 @@ export function Apercu({ programme, creneaux }: {
           </div>
         </div>
         {premier && (
-          <section aria-label={titreDuJour(premier, lang)} className="raised rounded-2xl">
+          <section aria-label={titreDuJour(premier, lang)} className="carte-groupe rounded-2xl">
             <div className="flex items-center gap-3 px-4 pt-3.5 pb-2">
               <TuileDate iso={premier} lang={lang} />
               <h4 className="min-w-0 flex-1 text-[17px] font-bold text-foreground">{titreDuJour(premier, lang)}</h4>
@@ -93,7 +93,7 @@ export function Apercu({ programme, creneaux }: {
           </section>
         )}
         {semaine && (
-          <p className="raised rounded-2xl px-4 py-3 text-[13px] text-muted-foreground">
+          <p className="carte-groupe rounded-2xl px-4 py-3 text-[13px] text-muted-foreground">
             {[...semaine.jours.slice(1).map(phraseDuJour), total].join(" ")}
           </p>
         )}

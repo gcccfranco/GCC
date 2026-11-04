@@ -56,7 +56,7 @@ export function RechercheTitulaire({
           <DialogPrimitive.Content
             aria-describedby={undefined}
             style={{ ...place, width: LARGEUR }}
-            className="fixed z-50 rounded-2xl border bg-popover p-2 text-popover-foreground shadow-lg"
+            className="fixed z-50 rounded-2xl bg-popover p-2 text-popover-foreground shadow-[var(--shadow-flottant)]"
           >
             <DialogPrimitive.Title className="px-1.5 pt-1 text-sm font-semibold">{ouverture?.titre}</DialogPrimitive.Title>
             <p className="px-1.5 pb-2 text-xs text-muted-foreground">{ouverture?.sousTitre}</p>

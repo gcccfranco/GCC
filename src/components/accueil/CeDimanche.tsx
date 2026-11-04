@@ -83,7 +83,7 @@ function CarteService({ titre, href, heure, badge, couleur, roles, colonnes, mon
 }) {
   const remplis = roles.filter(([, v]) => !vide(v))
   return (
-    <article data-testid={testId} className="raised relative rounded-2xl px-4 py-3.5">
+    <article data-testid={testId} className="carte-groupe relative rounded-2xl px-4 py-3.5">
       <h3 className="mb-1.5">
         <VersPlanning href={href} className="flex items-center gap-2">
           <Point couleur={couleur} />
@@ -195,7 +195,7 @@ export function CeDimanche({
       ]}
     />
   ) : (
-    <article data-testid="carte-groupes" className="raised relative rounded-2xl px-4 py-3.5">
+    <article data-testid="carte-groupes" className="carte-groupe relative rounded-2xl px-4 py-3.5">
       <h3 className="mb-1 text-[13px] font-semibold text-muted-foreground">
         <VersPlanning href="/planning/groupes" className="flex items-center gap-2">
           {t("planning.tabs.groupes")} · {HEURES.groupes}
@@ -224,7 +224,7 @@ export function CeDimanche({
   )
 
   const carteEdd = (
-    <article data-testid="carte-edd" className="raised relative rounded-2xl px-4 py-3.5">
+    <article data-testid="carte-edd" className="carte-groupe relative rounded-2xl px-4 py-3.5">
       <h3 className="svc-ink mb-1 text-[13px] font-semibold" style={svc(PLANNING_COLORS.edd)}>
         <VersPlanning href="/planning/edd" className="flex items-center gap-2">
           {t("planning.tabs.edd")} · {HEURES.edd}
@@ -260,8 +260,8 @@ export function CeDimanche({
     <article
       data-testid="carte-table"
       className={etages
-        ? "raised relative col-span-2 rounded-2xl px-4 py-2 [@container(min-width:720px)]:col-span-1 [@container(min-width:720px)]:py-3"
-        : "raised relative rounded-2xl px-4 py-2"}
+        ? "carte-groupe relative col-span-2 rounded-2xl px-4 py-2 [@container(min-width:720px)]:col-span-1 [@container(min-width:720px)]:py-3"
+        : "carte-groupe relative rounded-2xl px-4 py-2"}
     >
       {/* Sur deux étages, un en-tête comme Groupes et EDD (planche : `table_empilee`). */}
       {etages && (
@@ -300,7 +300,7 @@ export function CeDimanche({
   )
 
   const carteEvenements = evenements && evenements.length > 0 ? (
-    <article className="raised rounded-2xl px-4 py-3.5">
+    <article className="carte-groupe rounded-2xl px-4 py-3.5">
       <h3 className="mb-1 text-[13px] font-semibold text-muted-foreground">{t("planning.accueil.evenements")}</h3>
       <ul className={disposition === "grand" ? "grid grid-cols-2 gap-4 pt-1.5" : ""}>
         {evenements.map((e) => {

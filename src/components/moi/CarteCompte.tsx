@@ -44,7 +44,7 @@ export function CarteCompte({
   const initiale = (nom || email).trim().charAt(0).toUpperCase();
 
   return (
-    <section aria-label={t("moi.compte")} className="raised rounded-2xl p-5">
+    <section aria-label={t("moi.compte")} className="carte-groupe rounded-2xl p-5">
       <div className="flex items-center gap-4">
         <span aria-hidden className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-foreground text-2xl font-semibold text-background">
           {initiale}

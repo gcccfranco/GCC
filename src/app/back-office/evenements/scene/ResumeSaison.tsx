@@ -59,7 +59,7 @@ export function ResumeSaison({ programme, onSave, jourJCalcule, autre, onErreur 
 
   return (
     <>
-      <ul aria-label={t("planning.gestion.reglagesSaison")} className="raised divide-y divide-border overflow-hidden rounded-2xl">
+      <ul aria-label={t("planning.gestion.reglagesSaison")} className="carte-groupe divide-y divide-border overflow-hidden rounded-2xl">
         {lignes.map((l) => (
           <li key={l.cle}>
             <button

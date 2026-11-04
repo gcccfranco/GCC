@@ -553,6 +553,7 @@ export default function SetlistsPage() {
           <Squelette enTete={false} className="px-0" />
         ) : displayed.length === 0 ? (
           <EtatVide
+            surGris={!grand}
             action={
               /* Qui peut créer a « + Nouvelle setlist » dans l'en-tête : pas de seconde action ici (R7). */
               tab === "upcoming" && !query && !canCreate ? (
@@ -608,7 +609,7 @@ export default function SetlistsPage() {
             onSupprimer={setASupprimerDefinitivement}
           />
         )}
-        <GuideLien section="setlists" />
+        {!grand && <GuideLien section="setlists" />}
       </>
   );
 
@@ -631,6 +632,8 @@ export default function SetlistsPage() {
       ) : (
         <div className="relative px-[var(--marge-page)] pb-10">{contenuListe}</div>
       )}
+      {/* « Comment ça marche ? » : sous la liste, sur le gris, jamais dans le groupe. */}
+      {grand && <div className="px-[var(--marge-page)] pb-6"><GuideLien section="setlists" /></div>}
         {/* ── Confirmation : elle NOMME ce qui va disparaître (D3) ── */}
         <ConfirmationSuppressionGroupee
           ouvert={confirmOpen}

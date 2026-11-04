@@ -258,7 +258,7 @@ export function PetitDejCarte({ etat, annee, tri }: {
   }
 
   return (
-    <section aria-labelledby={titreId} className="raised min-w-0 rounded-2xl px-4 pt-3 pb-2">
+    <section aria-labelledby={titreId} className="carte-groupe min-w-0 rounded-2xl px-4 pt-3 pb-2">
       <div className="flex items-center gap-2 pb-2">
         <span className="grid h-7 w-7 place-items-center rounded-lg" style={{ background: `${COULEUR}24`, color: FOND }} aria-hidden>
           <Coffee className="h-4 w-4" />
@@ -331,7 +331,7 @@ export function TonPetitDej({ etat, annee, tri }: { etat: EtatPetitDej; annee: n
   }
 
   return (
-    <section aria-labelledby={titreId} className="raised min-w-0 rounded-2xl px-4 pt-3 pb-3.5">
+    <section aria-labelledby={titreId} className="carte-groupe min-w-0 rounded-2xl px-4 pt-3 pb-3.5">
       <h3 id={titreId} className="pb-2 text-[17px] font-bold text-foreground">{t("planning.petitDej.ton")}</h3>
       {corps}
       <p className="mt-3 border-t border-border pt-2.5 text-[13px] text-muted-foreground">{t("planning.petitDej.astuce")}

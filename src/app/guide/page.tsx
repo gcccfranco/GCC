@@ -171,8 +171,8 @@ export default function GuidePage() {
         grand
           ? "sticky top-[calc(var(--nav-h)+24px)] max-h-[calc(100dvh-var(--nav-h)-48px)] self-start overflow-y-auto"
           : telephone
-            ? "raised rounded-2xl"
-            : "raised rounded-2xl p-3"
+            ? "bloc-info rounded-2xl"
+            : "bloc-info rounded-2xl p-3"
       }
     >
       {telephone ? (
@@ -260,7 +260,7 @@ export default function GuidePage() {
                   <section
                     key={key}
                     id={key}
-                    className="raised scroll-mt-[calc(var(--nav-h)+16px)] space-y-3 rounded-2xl p-4 md:p-5"
+                    className="bloc-info scroll-mt-[calc(var(--nav-h)+16px)] space-y-3 rounded-2xl p-4 md:p-5"
                   >
                     <div className="flex flex-wrap items-center gap-2">
                       <h2 className="flex items-center gap-2.5 text-lg font-bold text-foreground">

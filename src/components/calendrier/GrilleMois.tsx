@@ -175,7 +175,9 @@ export function GrilleMois({
       onDragEnd={fin}
       onDragCancel={() => setGlissee(null)}
     >
-      <div data-testid="grille-mois" className="grid grid-cols-7 border-l border-t border-border">
+      {/* Groupe blanc (recette de surface C) : le -1 px de droite et du bas rogne les filets du bord, `overflow-hidden` arrondit les coins. */}
+      <div className="carte-groupe overflow-hidden">
+      <div data-testid="grille-mois" className="-mb-px -mr-px grid grid-cols-7">
         {joursDeLaSemaine(lang).map((j) => (
           <div
             key={j}
@@ -200,6 +202,7 @@ export function GrilleMois({
             onChoisir={onChoisir}
           />
         ))}
+      </div>
       </div>
       {/* Planche : l'entrée soulevée, cernée d'encre et penchée. */}
       <DragOverlay dropAnimation={null}>

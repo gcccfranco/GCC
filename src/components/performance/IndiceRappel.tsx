@@ -37,7 +37,7 @@ export function IndiceRappel({ mode, page }: { mode: "played" | "unique"; page: 
         e.stopPropagation();
         setPageVue(null);
       }}
-      className="material-panel pointer-events-auto absolute left-0 top-full z-20 mt-1 max-w-full rounded-xl border border-border/60 bg-background/85 px-3 py-1.5 text-[13px] leading-snug text-foreground shadow-soft backdrop-blur"
+      className="material-panel pointer-events-auto absolute left-0 top-full z-20 mt-1 max-w-full rounded-xl border border-border/60 bg-background/85 px-3 py-1.5 text-[13px] leading-snug text-foreground backdrop-blur"
     >
       {t(mode === "played" ? "performance.indiceRappelJoue" : "performance.indiceRappelUnique")}
     </div>

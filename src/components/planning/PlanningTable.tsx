@@ -177,10 +177,10 @@ export function PlanningTable({ cols, rows, color, dateBadge, minWidth = 480, gr
           return (
             <Fragment key={row[0]}>
               <div
-                className="rounded-xl border border-transparent bg-card shadow-soft overflow-hidden"
+                className="border border-transparent dark:border-0 carte-groupe overflow-hidden"
                 style={{
-                  borderColor: isThis ? color : undefined,
-                  boxShadow: mine ? `inset 3px 0 0 ${color}` : undefined,
+                  ...(isThis ? { borderColor: color, borderWidth: 1 } : null),
+                  boxShadow: mine ? `inset 3px 0 0 ${color}` : isThis ? "none" : undefined,
                 }}
               >
                 <div

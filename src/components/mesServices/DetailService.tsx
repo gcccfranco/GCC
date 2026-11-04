@@ -92,7 +92,7 @@ export function DetailService({ s }: { s: ServiceGroupe }) {
       </header>
 
       {repetitions.map((r) => (
-        <article key={`${r.date}|${r.service}`} className="raised flex items-center gap-3.5 rounded-2xl px-4 py-3.5">
+        <article key={`${r.date}|${r.service}`} className="carte-groupe flex items-center gap-3.5 rounded-2xl px-4 py-3.5">
           <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-secondary text-muted-foreground">
             <Clock className="h-5 w-5" aria-hidden />
           </span>
@@ -141,7 +141,7 @@ function CarteSetlist({ setlist, songs, couleur, boutonsEnTete }: {
     </div>
   );
   return (
-    <section aria-labelledby={id} className="raised space-y-3 rounded-2xl px-5 pb-4 pt-4">
+    <section aria-labelledby={id} className="carte-groupe space-y-3 rounded-2xl px-5 pb-4 pt-4">
       <div>
         <h2 id={id} className="text-[13px] font-semibold text-muted-foreground">{t("planning.accueil.setlistDuService")}</h2>
         <p className="text-lg font-bold leading-snug">{setlist.title}</p>

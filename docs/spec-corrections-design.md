@@ -293,3 +293,28 @@ Back-office à 7 px du bord à 360 px en français (sélecteur de T1a, espace Ba
   `theme-color` (#fff au-dessus du gris).
 - **Go de Timothée pour T2b (04/11/2026)** : « Tu peux go après », confirmé « go T2b direct », sans attendre de voir les
   captures des pilotes.
+
+### T2b · Recette de surface, le reste des pages — fait (orchestratrice)
+- `.shadow-soft` et `--shadow-soft` supprimés (20 fichiers) ; les 70 fichiers en `raised` triés. Classes posées dans
+  `@layer components` (globals.css), pour que les utilitaires `hover:` et `dark:` gagnent la cascade : `.carte-groupe`
+  (groupe : `--card`, rayon 16, sans ombre ; en sombre le liseré de l'ancien `.raised`, donc sombre inchangé),
+  `.sur-gris` (contrôle blanc sans ombre sur le gris), `.flottant`, `.bloc-info` (bloc non touchable : `--secondary` sans
+  ombre en clair, rendu `.raised` en sombre) ; `GROUPE = "carte-groupe"`.
+- Ombre gardée : barre d'outils du chant et ses pilules, barre latérale, bouton rond flottant, curseur blanc du rail ;
+  mode louange inchangé. Ombre flottante sans bordure : menus (`dropdown-menu`, popovers de nom et de titulaire,
+  popover des accords), dialogues et feuilles (`alert-dialog`, `drawer`, panneaux), toasts, sommaire et annotation du
+  mode louange. Groupes : ≈ 65 fichiers. Rail et pilules posés sur le gris : piste `--secondary-fond`, libellés à 70 %.
+- Pages grises : accueil, planning, setlists et création, liste des chants, statistiques, Mes services, Moi, profil,
+  admin, annonces, notifier, évènements, tâches, équipes, Back-office. Blanches : setlist en lecture, chant seul, accords,
+  Harmonie, guide, questionnaire, connexion, mode louange.
+- Reprises de la relecture et de la critique : bandeau des rappels et état vide en groupe blanc sur le gris (`surGris`),
+  en `bloc-info` ailleurs (plus de pointillés) ; grille du mois du calendrier en groupe ; cartes du planning sans bordure
+  et liseré ensemble en sombre ; rayons des menus et du tiroir à 12 px ; « Comment ça marche ? » hors du groupe des
+  setlists partout ; entrées du catalogue d'Harmonie avec un retour au survol ; bloc des questions du questionnaire sans
+  surface.
+- Tests : `look-*` (8 specs) 406 verts ; `look-fondations`, `look-secondaires`, `look-planning`, `calendrier` 557 verts,
+  tous projets. Nouvelle vérification transverse : sur six pages grises, aucune bordure avec ombre, aucun groupe blanc
+  ombré.
+- **À trancher** : meta `theme-color` gardée à #fff (barre d'état blanche au-dessus du gris sur les pages de liste) ;
+  boutons à contour (`inset 0 0 0 1px`) gardés sur les pages grises (commandes) ; `AccordsProvider`, `Switch`, etc. hors
+  liste gardent `shadow-lg/xl` là où rien ne flotte.
