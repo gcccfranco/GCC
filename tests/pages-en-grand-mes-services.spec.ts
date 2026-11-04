@@ -2,6 +2,10 @@ import { expect, test, type Page, type TestInfo } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { cleDeTransition } from "../src/lib/deuxVolets";
 import { adresseDuService, repetitionsDe, serviceDeLAdresse } from "../src/lib/planning/mesServices";
+import { CULTE_ROLES, EDD_ROLES_COLS, FIDELITE_ROLES, GROUPE_ROLES, INTERFRANCO_ROLES, INTERGROUPE_ROLES, nomDuService } from "../src/lib/planning/names";
+import { CLE_ROLE, libelleRole } from "../src/components/mesServices/PastilleRole";
+import fr from "../src/locales/fr.json";
+import zh from "../src/locales/zh-CN.json";
 
 // Lot U4 bis, tranche B4 — Mes services (docs/spec-pages-en-grand.md, Q7 ; planches
 // `mes-services-*`). En grand : la liste à gauche, le service à droite (rôles, répétition,
@@ -122,7 +126,7 @@ test.describe("Mes services en grand", () => {
     // Agencement v18 (A11) : le titre dans l'en-tête, au-dessus des deux volets ; le service en h2.
     await expect(page.locator("header[data-entete-page]").getByRole("heading", { name: "Mes services", level: 1 })).toBeVisible();
     await expect(detail(page).getByRole("heading", { name: "Dimanche 4 octobre", level: 2 })).toBeVisible();
-    await expect(ligne(page, /Culte Franco.*4 oct/)).toHaveAttribute("aria-current", "page");
+    await expect(ligne(page, /Culte Francophone.*4 oct/)).toHaveAttribute("aria-current", "page");
     expect(new URL(page.url()).pathname).toMatch(/^\/mes-services\/?$/);
     // L'équipe d'après le planning, la personne en pastille d'encre ; la setlist liée.
     await expect(equipe(page).getByText("Léa M.")).toBeVisible();
@@ -139,12 +143,12 @@ test.describe("Mes services en grand", () => {
   test("un lien direct vers un service : la liste à gauche, le service à droite ; retour arrière rend le précédent", async ({ page }) => {
     await ouvrir(page, "/mes-services/2026-10-18");
     await expect(detail(page).getByRole("heading", { name: "Dimanche 18 octobre", level: 2 })).toBeVisible();
-    await expect(ligne(page, /Culte Franco.*18 oct/)).toHaveAttribute("aria-current", "page");
+    await expect(ligne(page, /Culte Francophone.*18 oct/)).toHaveAttribute("aria-current", "page");
     await expect(equipe(page).getByText("Hugo L.")).toBeVisible();
-    await ligne(page, /Culte Franco.*25 oct/).click();
+    await ligne(page, /Culte Francophone.*25 oct/).click();
     await expect(page).toHaveURL(/\/mes-services\/2026-10-25\/?$/);
     await expect(detail(page).getByRole("heading", { name: "Dimanche 25 octobre", level: 2 })).toBeVisible();
-    await expect(ligne(page, /Culte Franco.*18 oct/), "la liste reste montée").toBeVisible();
+    await expect(ligne(page, /Culte Francophone.*18 oct/), "la liste reste montée").toBeVisible();
     await page.goBack();
     await expect(page).toHaveURL(/\/mes-services\/2026-10-18\/?$/);
     await expect(detail(page).getByRole("heading", { name: "Dimanche 18 octobre", level: 2 })).toBeVisible();
@@ -155,7 +159,7 @@ test.describe("Mes services en grand", () => {
     await ligne(page, /Groupe Paix.*4 oct/).click();
     await expect(page).toHaveURL(/\/mes-services\/2026-10-04\/?\?service=Groupe(\+|%20)Paix$/);
     await expect(ligne(page, /Groupe Paix.*4 oct/)).toHaveAttribute("aria-current", "page");
-    await expect(ligne(page, /Culte Franco.*4 oct/)).not.toHaveAttribute("aria-current", "page");
+    await expect(ligne(page, /Culte Francophone.*4 oct/)).not.toHaveAttribute("aria-current", "page");
     await expect(equipe(page).getByText("Clara B.")).toBeVisible();
   });
 
@@ -174,7 +178,7 @@ test("tablette portrait : cartes sur deux colonnes ; le service seul sur son adr
   const [b1, b2] = [(await cartes.nth(0).boundingBox())!, (await cartes.nth(1).boundingBox())!];
   expect(b2.x, "deux colonnes").toBeGreaterThan(b1.x + b1.width - 1);
   expect(Math.abs(b2.y - b1.y)).toBeLessThan(2);
-  await page.getByRole("link", { name: /Culte Franco.*18 oct/ }).click();
+  await page.getByRole("link", { name: /Culte Francophone.*18 oct/ }).click();
   await expect(page).toHaveURL(/\/mes-services\/2026-10-18\/?$/);
   await expect(page.getByRole("heading", { name: "Dimanche 18 octobre", level: 1 })).toBeVisible();
   await expect(liste(page)).toHaveCount(0);
@@ -188,7 +192,7 @@ test("téléphone : la liste, puis le service en page (l'équipe avant la setlis
   await expect(page.getByRole("heading", { name: "Mes services", level: 1 })).toBeVisible();
   // Le lien « Setlist » de la ligne mène toujours à la setlist.
   await expect(page.getByRole("link", { name: "Setlist" }).first()).toHaveAttribute("href", /^\/setlists\/sl-1\/?$/);
-  await page.getByRole("link", { name: /Culte Franco.*4 oct/ }).click();
+  await page.getByRole("link", { name: /Culte Francophone.*4 oct/ }).click();
   await expect(page).toHaveURL(/\/mes-services\/2026-10-04\/?\?service=Culte(\+|%20)Franco$/);
   await expect(page.getByRole("heading", { name: "Dimanche 4 octobre", level: 1 })).toBeVisible();
   await expect(liste(page)).toHaveCount(0);
@@ -230,11 +234,103 @@ test("liste seule : le bord gauche de la carte est celui du titre", async ({ pag
 
 test("capture : Mes services", async ({ page }, info) => {
   await ouvrir(page, disposition(info) === "grand" ? "/mes-services/2026-10-18" : "/mes-services");
-  await expect(page.getByText("Culte Franco").first()).toBeVisible();
+  await expect(page.getByText("Culte Francophone").first()).toBeVisible();
   await page.screenshot({ path: `test-results/pages-en-grand/mes-services-${info.project.name}.png`, animations: "disabled" });
   if (disposition(info) !== "grand") {
     await page.goto("/mes-services/2026-10-04?service=Culte%20Franco");
     await expect(equipe(page)).toBeVisible();
     await page.screenshot({ path: `test-results/pages-en-grand/mes-services-detail-${info.project.name}.png`, fullPage: true, animations: "disabled" });
   }
+});
+
+// Lot CD, tranche T1 (services-1, -2, -6, -9).
+test.describe("Mes services : pastille de rôle, noms traduits, titre du détail", () => {
+  test("(pur) chaque libellé de rôle du planning a sa clé `planning.roles.*` (hors Chant et Régie)", () => {
+    const libelles = new Set([...CULTE_ROLES, ...EDD_ROLES_COLS, ...INTERGROUPE_ROLES, ...INTERFRANCO_ROLES, ...GROUPE_ROLES, ...FIDELITE_ROLES].map(([, l]) => l as string));
+    for (const l of libelles) {
+      expect(CLE_ROLE[l], l).toBeTruthy();
+      expect((zh.planning.roles as Record<string, string>)[CLE_ROLE[l]], l).toBeTruthy();
+    }
+  });
+
+  test("(pur) nom du service et rôle : français brut ou « Culte Francophone », 中文 traduit", () => {
+    const tr = (langue: typeof fr | typeof zh) => (cle: string, o?: { defaultValue: string }) =>
+      cle.split(".").reduce<unknown>((n, k) => (n as Record<string, unknown> | undefined)?.[k], langue) as string ?? o?.defaultValue ?? cle;
+    expect(nomDuService("Culte Franco", tr(fr))).toBe("Culte Francophone");
+    expect(nomDuService("Culte Franco", tr(zh))).toBe("法语崇拜");
+    expect(nomDuService("Campus (soir)", tr(zh))).toBe("Campus (soir)");
+    expect(libelleRole("Choriste", "fr", tr(fr))).toBe("Choriste");
+    expect(libelleRole("Piano", "zh-CN", tr(zh))).toBe("钢琴");
+    expect(libelleRole("Régie", "zh-CN", tr(zh))).toBe("Régie");
+  });
+
+  test("sombre : la pastille de rôle de la liste se lit à 4,5:1, active ou non, et reprend la couleur de l'en-tête", async ({ page }, info) => {
+    await page.emulateMedia({ colorScheme: "dark" });
+    await page.addInitScript(() => { try { localStorage.setItem("theme", "dark"); } catch {} });
+    await ouvrir(page, "/mes-services");
+    const grand = disposition(info) === "grand";
+    const zone = grand ? liste(page) : page.locator("main");
+    const pastilles = zone.locator(".texte-service").filter({ hasText: "Piano" });
+    await expect(pastilles.first()).toBeVisible();
+    const mesure = (el: Element) => {
+      const pixel = (css: string): [number, number, number, number] => {
+        const c = document.createElement("canvas"); c.width = c.height = 1;
+        const g = c.getContext("2d", { willReadFrequently: true })!; g.clearRect(0, 0, 1, 1); g.fillStyle = css; g.fillRect(0, 0, 1, 1);
+        const d = g.getImageData(0, 0, 1, 1).data; return [d[0], d[1], d[2], d[3] / 255];
+      };
+      const sur = (haut: [number, number, number, number], bas: [number, number, number, number]) =>
+        [0, 1, 2].map((i) => haut[i] * haut[3] + bas[i] * (1 - haut[3])).concat(1) as [number, number, number, number];
+      let fond: [number, number, number, number] = pixel(getComputedStyle(document.body).backgroundColor);
+      const chaine: Element[] = []; for (let n: Element | null = el.parentElement; n; n = n.parentElement) chaine.unshift(n);
+      for (const n of chaine) { const f = pixel(getComputedStyle(n).backgroundColor); if (f[3] > 0) fond = sur(f, fond); }
+      const pastille = sur(pixel(getComputedStyle(el).backgroundColor), fond);
+      const texte = sur(pixel(getComputedStyle(el).color), pastille);
+      const lum = (c: number[]) => { const [r, g, b] = c.slice(0, 3).map((v) => { const x = v / 255; return x <= 0.03928 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4; }); return 0.2126 * r + 0.7152 * g + 0.0722 * b; };
+      const [a, b] = [lum(texte), lum(pastille)];
+      return { contraste: (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05), couleur: getComputedStyle(el).color };
+    };
+    const n = await pastilles.count();
+    for (let i = 0; i < Math.min(n, 3); i++) {
+      const m = await pastilles.nth(i).evaluate(mesure);
+      expect(m.contraste, `pastille ${i}`).toBeGreaterThanOrEqual(4.5);
+    }
+    if (grand) {
+      const liste2 = await pastilles.nth(1).evaluate((el) => getComputedStyle(el).color);
+      const entete = await detail(page).locator("header .texte-service").filter({ hasText: "Piano" }).first().evaluate((el) => getComputedStyle(el).color);
+      expect(liste2).toBe(entete);
+    }
+  });
+
+  test("中文 : la liste, l'en-tête et la répétition disent 法语崇拜 et 钢琴", async ({ page }, info) => {
+    await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
+    await ouvrir(page, "/mes-services");
+    const zone = disposition(info) === "grand" ? liste(page) : page.locator("main");
+    const premiere = zone.locator("li").filter({ hasText: "法语崇拜" }).first();
+    await expect(premiere).toContainText("钢琴");
+    await expect(premiere).not.toContainText("Culte Franco");
+    await expect(premiere).not.toContainText("Piano");
+    if (disposition(info) === "grand") {
+      await expect(detail(page).locator("header")).toContainText("法语崇拜");
+      await expect(detail(page).locator("header")).toContainText("钢琴");
+    }
+  });
+
+  test("la pastille du rôle est sur la ligne « dans N jours », à moins de 16 px du texte", async ({ page }) => {
+    await ouvrir(page, "/mes-services/2026-10-04?service=Culte%20Franco");
+    const entete = page.locator('[data-volet="detail"] header, main header').filter({ hasText: /dans 3/ }).last();
+    await expect(entete).toBeVisible();
+    const quand = (await entete.getByText(/dans 3/).boundingBox())!;
+    const pastille = (await entete.locator(".texte-service").filter({ hasText: "Piano" }).boundingBox())!;
+    expect(pastille.x - (quand.x + quand.width)).toBeLessThan(16);
+    expect(Math.abs(pastille.y + pastille.height / 2 - (quand.y + quand.height / 2))).toBeLessThan(8);
+  });
+
+  test("le titre du détail : 22 px au téléphone et en deux volets, 30 px en tablette portrait, une ligne", async ({ page }, info) => {
+    await ouvrir(page, "/mes-services/2026-10-04?service=Culte%20Franco");
+    const titre = page.getByRole("heading", { name: "Dimanche 4 octobre" });
+    await expect(titre).toBeVisible();
+    const taille = await titre.evaluate((el) => getComputedStyle(el).fontSize);
+    expect(taille).toBe(disposition(info) === "tablette" ? "30px" : "22px");
+    if (disposition(info) === "telephone") expect((await titre.boundingBox())!.height).toBeLessThanOrEqual(34);
+  });
 });

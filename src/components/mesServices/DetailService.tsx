@@ -5,7 +5,7 @@
 // répétition (Campus), la setlist liée (« Ouvrir », « Mode louange ») et l'équipe du service
 // d'après le planning. En grand, la setlist et l'équipe côte à côte, sans « Retour » ; en un
 // volet, « ‹ Mes services », puis l'équipe avant la setlist.
-// Agencement v18 (A11, R3, R8, R10) : en deux volets, le titre est un h2 de 24 px (le h1 est celui
+// Agencement v18 (A11, R3, R8, R10) : en deux volets, le titre est un h2 de 22 px (`xl`) (le h1 est celui
 // de l'en-tête de la section) et la fiche ne pose plus de marge ; en un volet, le service en page
 // garde son h1 et le seul retour du site, `Retour`.
 
@@ -19,7 +19,7 @@ import { KeyPill } from "@/components/ui/key-pill";
 import { CarteEquipe } from "@/components/setlists/CarteEquipe";
 import { useDeuxVolets } from "@/hooks/useDeuxVolets";
 import { joursAvant } from "@/lib/planning/accueil";
-import { serviceCategory } from "@/lib/planning/names";
+import { nomDuService, serviceCategory } from "@/lib/planning/names";
 import { repetitionsDe, type ServiceGroupe } from "@/lib/planning/mesServices";
 import { equipeDuService } from "@/lib/setlist/equipeDuService";
 import { serviceColor } from "@/lib/serviceColors";
@@ -28,7 +28,7 @@ import type { FSSetlist } from "@/types/setList";
 import type { SongIndexEntry } from "@/types/song";
 import { cn } from "@/lib/utils";
 import { useMesServices } from "./contexteMesServices";
-import { styleTexteService } from "@/lib/couleurSombre"
+import { PastilleRole } from "./PastilleRole";
 
 const locale = (lang: string) => (lang === "zh-CN" ? "zh-CN" : "fr-FR");
 const majuscule = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
@@ -36,14 +36,9 @@ const dateLongue = (iso: string, lang: string) =>
   majuscule(new Intl.DateTimeFormat(locale(lang), { weekday: "long", day: "numeric", month: "long" }).format(new Date(`${iso}T12:00:00`)));
 
 function Roles({ s }: { s: ServiceGroupe }) {
-  const couleur = serviceColor(s.service);
   return (
     <span className="flex flex-wrap gap-1">
-      {s.roles.map((r) => (
-        <span key={r} className="rounded-full px-2 py-0.5 text-xs font-semibold texte-service" style={{ background: `color-mix(in srgb, ${couleur} 13%, transparent)`, ...styleTexteService(couleur) }}>
-          {r}
-        </span>
-      ))}
+      {s.roles.map((r) => <PastilleRole key={r} role={r} service={s.service} />)}
     </span>
   );
 }
@@ -86,15 +81,14 @@ export function DetailService({ s }: { s: ServiceGroupe }) {
       <header className="flex items-start gap-4">
         <Tile color={couleur} big={jour.getDate()} small={mois} size="lg" className="h-14 w-14 rounded-xl [&>span:first-child]:text-2xl" />
         <div className="min-w-0 flex-1">
-          <p className="svc-ink text-[13px] font-semibold" style={{ "--svc": couleur } as React.CSSProperties}>{s.service}</p>
-          <Titre className={cn("font-bold leading-tight tracking-tight", deuxVolets ? "text-[24px]" : "text-2xl lg:text-[28px]")}>{dateLongue(s.date, i18n.language)}</Titre>
+          <p className="svc-ink text-[13px] font-semibold" style={{ "--svc": couleur } as React.CSSProperties}>{nomDuService(s.service, t)}</p>
+          <Titre className={cn("font-bold leading-tight tracking-tight", deuxVolets ? "text-xl" : "text-xl md:text-2xl")}>{dateLongue(s.date, i18n.language)}</Titre>
           <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1">
             {quand && <span className="text-sm text-muted-foreground">{quand}</span>}
-            {!deuxVolets && <Roles s={s} />}
+            <Roles s={s} />
           </div>
           <HeureLieu s={s} />
         </div>
-        {deuxVolets && <div className="shrink-0 pt-1"><Roles s={s} /></div>}
       </header>
 
       {repetitions.map((r) => (
@@ -103,7 +97,7 @@ export function DetailService({ s }: { s: ServiceGroupe }) {
             <Clock className="h-5 w-5" aria-hidden />
           </span>
           <div className="min-w-0 flex-1">
-            <p className="text-[13px] text-muted-foreground">{r.service}</p>
+            <p className="text-[13px] text-muted-foreground">{nomDuService(r.service, t)}</p>
             <p className="text-base font-bold">{dateLongue(r.date, i18n.language)}{r.time && ` · ${r.time}`}</p>
             {r.location && <p className="inline-flex items-center gap-1 text-sm"><MapPin className="h-3.5 w-3.5" aria-hidden />{r.location}</p>}
           </div>

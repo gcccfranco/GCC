@@ -65,7 +65,7 @@ async function capture(page: Page, nom: string) {
 }
 
 /** La liste est une carte en relief (rayon 16 px, ombre), l'en-tête au-dessus des deux volets. */
-async function verifierDeuxVolets(page: Page) {
+async function verifierDeuxVolets(page: Page, taille = "24px") {
   const l = liste(page);
   expect(await l.evaluate((el) => getComputedStyle(el).borderTopLeftRadius)).toBe("16px");
   expect(await l.evaluate((el) => getComputedStyle(el).boxShadow)).not.toBe("none");
@@ -75,7 +75,7 @@ async function verifierDeuxVolets(page: Page) {
   expect(bListe!.x + bListe!.width, "la fiche à droite de la liste").toBeLessThan(bDetail!.x);
   // La fiche ne pose plus de marge (R10) : son contenu part à l'écart de la carte, et son haut est celui de la carte.
   const titre = detail(page).getByRole("heading", { level: 2 }).first();
-  expect(await titre.evaluate((el) => getComputedStyle(el).fontSize), "la fiche : un h2 de 24 px").toBe("24px");
+  expect(await titre.evaluate((el) => getComputedStyle(el).fontSize), `la fiche : un h2 de ${taille}`).toBe(taille);
   const ecart = await page.evaluate(() => parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--ecart-volets")));
   expect(Math.abs(bDetail!.x - (bListe!.x + bListe!.width) - ecart)).toBeLessThanOrEqual(1);
 }
@@ -204,11 +204,12 @@ test.describe("Mes services (A11)", () => {
     await capture(page, "v18-mes-services-360");
   });
 
-  test("deux volets : la liste en carte, l'en-tête au-dessus des deux, le service en h2 de 24 px (grands écrans)", async ({ page }, info) => {
+  test("deux volets : la liste en carte, l'en-tête au-dessus des deux, le service en h2 de 22 px (grands écrans)", async ({ page }, info) => {
     test.skip(!estGrandEcran(info), "deux volets : ordinateur et tablette couchée");
     await ouvrir(page, "/mes-services");
     await expect(detail(page).getByRole("heading", { level: 2, name: "Dimanche 4 octobre" })).toBeVisible();
-    await verifierDeuxVolets(page);
+    // Lot CD, services-9 : le titre du service passe à `xl` (22 px) en deux volets.
+    await verifierDeuxVolets(page, "22px");
     // Un lien direct vers un service : l'en-tête reste, au même endroit.
     const avant = (await enTete(page).locator("h1").boundingBox())!;
     await page.getByRole("link", { name: /Culte Franco.*18 oct/ }).click();

@@ -486,7 +486,7 @@
     },
     "entree": {
       "pourQuelService": "为哪场聚会准备？",
-      "pourQuelServiceHint": "以下是计划表中尚未有歌单的即将到来的聚会。聚会、日期和主席会自动填好。",
+      "pourQuelServiceHint": "根据排班表，聚会、日期和主席会自动填好。",
       "preparer": "准备",
       "preparerLabel": "准备 {{service}}，{{date}}",
       "presidence": "主席：{{name}}",
@@ -494,7 +494,7 @@
       "matin": "上午",
       "soir": "晚上",
       "moment": "时段",
-      "aucunService": "你的聚会类型中暂无尚未准备歌单的即将到来的聚会。",
+      "aucunService": "排班表中，你的聚会类型暂无未准备歌单的聚会。",
       "planningIllisible": "无法读取计划表。",
       "autre": "其他歌单",
       "autreHint": "自行选择聚会和日期",

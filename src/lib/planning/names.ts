@@ -177,9 +177,9 @@ export const CULTE_ROLES: [number, string][] = [
 // Lot U2, P5 : Percussion (groupes, index 5) et Cours (EDD, index 6), colonnes
 // du Sheet de 2026 que l'app ignorait. Les lecteurs ne les rendent que derrière
 // l'interrupteur (`sheets.ts`) : en ligne, ces index restent vides.
-const GROUPE_ROLES: [number, string][] = [[1, "Présidence"], [2, "Musicien"], [3, "Orateur"], [5, "Percussion"]]
+export const GROUPE_ROLES: [number, string][] = [[1, "Présidence"], [2, "Musicien"], [3, "Orateur"], [5, "Percussion"]]
 // Lot F (D24, D26) : un seul planning ; le pianiste est celui du groupe.
-const FIDELITE_ROLES: [number, string][] = [[1, "Présidence"], [2, "Orateur"], [4, "Piano"], [5, "Guitare"], [6, "Batterie"]]
+export const FIDELITE_ROLES: [number, string][] = [[1, "Présidence"], [2, "Orateur"], [4, "Piano"], [5, "Guitare"], [6, "Batterie"]]
 export const EDD_ROLES_COLS: [number, string][] = [[1, "Présidence"], [2, "Suppléant"], [3, "Piano"], [4, "Cajon"], [5, "Guitare"], [6, "Cours"]]
 export const INTERGROUPE_ROLES: [number, string][] = [
   [1, "Présidence"], [2, "Choriste"], [3, "Choriste"], [4, "Choriste"],
@@ -369,6 +369,15 @@ export function serviceCategory(service: string): string | null {
   if (service === "Intergroupe") return "Intergroupe"
   if (service === "Interfranco") return "Interfranco"
   return null
+}
+
+/** Nom affiché d'un service (services-2) : « Culte Franco » du planning devient « Culte Francophone » (法语崇拜),
+ *  de même les groupes, l'Intergroupe et l'Interfranco ; Campus, EDD et le reste restent tels quels. */
+export function nomDuService(service: string, t: (cle: string, options?: { defaultValue: string }) => string): string {
+  if (service === "Culte Franco" || service.startsWith("Groupe ") || service === "Intergroupe" || service === "Interfranco") {
+    return t("categories." + serviceCategory(service), { defaultValue: service })
+  }
+  return service
 }
 
 /** Les dates où la personne sert, avec la catégorie de setlist de chacune (lot AO, F1) : de quoi lire la setlist

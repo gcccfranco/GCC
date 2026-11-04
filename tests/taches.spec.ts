@@ -591,3 +591,48 @@ test("capture : les trois états sur la page d'une équipe", async ({ page }) =>
   await expect((await terminees(page)).getByText("Vidéo d'annonce")).toBeVisible();
   await capture(page, "taches-trois-etats");
 });
+
+// Lot CD, tranche T1 (equipes-app-2, -3, -5).
+function luminance(rgb: string): number {
+  const [r, g, b] = (rgb.match(/[\d.]+/g) ?? []).slice(0, 3).map(Number).map((v) => { const x = v / 255; return x <= 0.03928 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4; });
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+
+test("le rond à cocher : cible de 44 x 44 px, filet à 4,5:1 au moins sur le fond blanc", async ({ page }) => {
+  await signInAs(page, MEMBRE_DA, { "equipes/da/taches/t1": tacheDoc() }, "/back-office/equipes/da");
+  const cercle = groupe(page, "Cette semaine").getByRole("checkbox", { name: /Fond PPT/ });
+  await expect(cercle).toBeVisible();
+  const boite = (await cercle.boundingBox())!;
+  expect([Math.round(boite.width), Math.round(boite.height)]).toEqual([44, 44]);
+  const filet = await cercle.locator("span").first().evaluate((el) => getComputedStyle(el).borderTopColor);
+  expect((1 + 0.05) / (luminance(filet) + 0.05)).toBeGreaterThanOrEqual(4.5);
+});
+
+test("la fiche : l'état n'est dit que par le segment, la phrase seulement quand elle dit quelque chose", async ({ page }) => {
+  await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
+  await signInAs(page, MEMBRE_DA, {
+    "equipes/da/taches/t1": tacheDoc({ titre: "Maquette du flyer", echeance: "2026-10-05" }),
+    "equipes/da/taches/t2": tacheDoc({ titre: "Logo du camp", echeance: "2026-10-02" }),
+    "equipes/da/taches/t2/fois/2026-10-02": { date: "2026-10-02", parUid: "uid-da", parNom: "Ruth Kouassi", le: "2026-10-02T09:00:00Z", etat: "terminee", debutLe: "" },
+  }, "/taches/da/t1");
+  const etat = page.getByRole("radiogroup", { name: "État" });
+  await expect(etat.getByRole("radio", { name: "À faire" })).toBeChecked();
+  await expect(page.getByText("À faire", { exact: true })).toHaveCount(1); // le seul radio
+  await expect(page.getByText(/Faite par|Commencée par/)).toHaveCount(0);
+  await page.goto("/taches/da/t2?date=2026-10-02");
+  await expect(page.getByRole("radiogroup", { name: "État" }).getByRole("radio", { name: "Terminée" })).toBeChecked();
+  await expect(page.getByText("Faite par Ruth Kouassi")).toBeVisible();
+  await expect(page.getByText("Terminée", { exact: true })).toHaveCount(1);
+});
+
+test("中文 : segment 待办 / 进行中 / 已完成, et le titre de la fiche se répartit (text-wrap: balance)", async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
+  await signInAs(page, MEMBRE_DA, { "equipes/da/taches/t1": tacheDoc({ titre: "Préparer les affiches de Noël pour le grand culte" }) }, "/taches/da/t1");
+  const etat = page.getByRole("radiogroup");
+  await expect(etat.getByRole("radio", { name: "待办" })).toBeChecked();
+  await expect(etat.getByRole("radio", { name: "进行中" })).toBeVisible();
+  await expect(etat.getByRole("radio", { name: "已完成" })).toBeVisible();
+  const titre = page.locator("header[data-entete-page] h1, h1.titre-page").first();
+  await expect(titre).toBeVisible();
+  expect(await titre.evaluate((el) => getComputedStyle(el).textWrap)).toBe("balance");
+});

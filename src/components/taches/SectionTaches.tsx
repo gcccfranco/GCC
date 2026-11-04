@@ -83,7 +83,7 @@ export function SectionTaches({ children }: { children: React.ReactNode }) {
       {equipes.length === 0 ? (
         <p className="text-sm text-muted-foreground">{t("taches.aucuneEquipe")}</p>
       ) : (
-        <div className={cn("space-y-6", disposition === "tablette" && versBackOffice && "grid grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)] items-start gap-5 space-y-0")}>
+        <div className="space-y-6">
           <Group title={t("taches.aFairePourMoi")} className={cn(disposition !== "grand" && "raised rounded-2xl px-4 pb-1 pt-3")}>
             {miennes.length === 0 ? (
               <GroupRow>{<span className="text-muted-foreground">{t("taches.rienAFaire")}</span>}</GroupRow>

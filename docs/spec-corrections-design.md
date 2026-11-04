@@ -181,3 +181,19 @@ T1c, T1e et T1g tournent dans trois sessions parallèles. `musiciens.md` passe d
   « 乐手 » de la page étant le libellé du sélecteur d'espace, caché au téléphone ; le test vise désormais `main`
   (correction de l'orchestratrice). Courses sous charge, vertes seules : `organigrammes-groupes:818`, `a-faire:417`,
   `harmonie-regroupees:79`, `agencement-v18-planning:259`, `bilingue-b5:90`.
+
+### T1f-a · Services et équipes de l'App — fait (orchestratrice)
+- services-1, -2, -3, -6, -9 : `PastilleRole` (nouveau, `src/components/mesServices/PastilleRole.tsx` : contraste en
+  sombre, rôles traduits en 中文 par `planning.roles.*`), `nomDuService` (`src/lib/planning/names.ts` : « Culte
+  Francophone » / 法语崇拜 partout dans Mes services), pastille à côté de « dans N jours », titre du détail `xl` / `md:2xl`
+  (22 px en deux volets) ; « Pour quel service ? » sans cadre pointillé, grille plafonnée à 720 px, deux entrées en une
+  carte (spec ajoutée à `SPECS_GRAND_ECRAN`). Couleurs des services inchangées.
+- equipes-app-2 à -6 : rond à cocher `h-11 w-11` réel (exigé par l'entrée, pas `TOUCHER_44`), filet plus contrasté ;
+  fiche tâche sans rond ni état en gras, segment en tête ; nom d'équipe en `<p>` sous le h2 ; `text-wrap: balance` sur
+  `.titre-page` ; la carte « Les tâches des équipes » s'empile à la tablette portrait.
+- zh-CN modifiées, à faire relire : `setlists.entree.pourQuelServiceHint`, `setlists.entree.aucunService`.
+- **Écarts** : fiche tâche en deux volets, la phrase d'état passe sous le segmenté (≈ 580 px pour 496), critère « sur une
+  ligne » non tenu, rendu propre, gardé ; l'aperçu « Mes services » de `/moi` dit encore « Culte Franco » (hors annexe) ;
+  le test zh d'equipes-app-5 vérifie `text-wrap: balance`, pas la coupe réelle (alternative admise par l'entrée).
+- **Échec connu, antérieur au lot** : `tests/agencement-v18-moi.spec.ts:215` (« en 中文 : … l'aide sont traduits »), cinq
+  projets : il cherche « 乐理课程 », renommé « 乐理 » au lot EM (`e50abce`).

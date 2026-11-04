@@ -490,7 +490,7 @@
     },
     "entree": {
       "pourQuelService": "Pour quel service ?",
-      "pourQuelServiceHint": "Les services à venir qui n'ont pas encore de setlist, d'après le planning. Le service, la date et la présidence seront déjà remplis.",
+      "pourQuelServiceHint": "D'après le planning : service, date et présidence déjà remplis.",
       "preparer": "Préparer",
       "preparerLabel": "Préparer {{service}}, {{date}}",
       "presidence": "Présidence : {{name}}",
@@ -498,7 +498,7 @@
       "matin": "Matin",
       "soir": "Soir",
       "moment": "Moment",
-      "aucunService": "Aucun service à venir sans setlist dans tes catégories.",
+      "aucunService": "Le planning n'a aucun service à venir sans setlist dans tes catégories.",
       "planningIllisible": "Le planning n'a pas pu être lu.",
       "autre": "Autre setlist",
       "autreHint": "Choisir le service et la date soi-même",

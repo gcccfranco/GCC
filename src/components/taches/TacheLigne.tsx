@@ -56,7 +56,7 @@ export function TacheLigne({ ligne, onToggle, onOpen, equipeLabel, sansEvenement
   ].filter(Boolean).join(" · ");
 
   return (
-    <div className={`group-row relative flex w-full min-h-[52px] items-center gap-1 pl-1.5 pr-3 py-1.5${actif
+    <div className={`group-row relative flex w-full min-h-[52px] items-center gap-1 pl-0.5 pr-3 py-1.5${actif
       ? " rounded-xl bg-foreground text-background [&_*]:border-background [&_.text-foreground]:text-background [&_.text-muted-foreground]:text-background/70"
       : ""}`}>
       <button
@@ -66,12 +66,12 @@ export function TacheLigne({ ligne, onToggle, onOpen, equipeLabel, sansEvenement
         aria-label={t("taches.cocher", { titre: tache.titre, date: date_ })}
         onClick={onToggle}
         disabled={!onToggle}
-        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full active:scale-[.94] transition-transform duration-150 cursor-pointer disabled:cursor-default disabled:opacity-50 disabled:active:scale-100"
+        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full active:scale-[.94] transition-transform duration-150 cursor-pointer disabled:cursor-default disabled:opacity-50 disabled:active:scale-100"
       >
         <span className={`flex h-[22px] w-[22px] items-center justify-center rounded-full border-2 ${
           terminee ? "border-foreground bg-foreground text-background"
             : enCours ? "border-foreground text-foreground"
-            : "border-muted-foreground/50"}`}>
+            : "border-muted-foreground"}`}>
           {terminee && <Check className="h-3.5 w-3.5" strokeWidth={3} aria-hidden />}
           {enCours && <Minus className="h-3.5 w-3.5" strokeWidth={3} aria-hidden />}
         </span>

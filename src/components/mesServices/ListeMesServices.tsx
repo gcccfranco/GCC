@@ -20,6 +20,8 @@ import { joursAvant } from "@/lib/planning/accueil";
 import { adresseDuService, cleDuService, type ServiceGroupe } from "@/lib/planning/mesServices";
 import { serviceColor } from "@/lib/serviceColors";
 import { cn } from "@/lib/utils";
+import { PastilleRole } from "./PastilleRole";
+import { nomDuService } from "@/lib/planning/names";
 import { EtatVide } from "@/components/layout/EtatVide";
 
 export type Onglet = "upcoming" | "past";
@@ -139,14 +141,14 @@ function LigneService({ e, href, setlistId, jours, actif, carte, chevron }: {
       {/* Toute la ligne ouvre le service ; le lien « Setlist » passe au-dessus. */}
       <Link
         href={href}
-        aria-label={`${e.service}, ${date}`}
+        aria-label={`${nomDuService(e.service, t)}, ${date}`}
         aria-current={actif ? "page" : undefined}
         className="absolute inset-0 rounded-[inherit] transition-colors active:bg-secondary/40"
       />
       <Tile color={color} big={jour.getDate()} small={moisCourt} size="lg" className={cn(actif && "!bg-background")} />
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2 flex-wrap">
-          <p className="text-base font-semibold">{e.service}</p>
+          <p className="text-base font-semibold">{nomDuService(e.service, t)}</p>
           {jours === 0 && (
             <span className="text-xs font-bold px-1.5 py-0.5 rounded-full bg-foreground text-background">{t("mesServices.today")}</span>
           )}
@@ -165,13 +167,7 @@ function LigneService({ e, href, setlistId, jours, actif, carte, chevron }: {
       <div className="flex flex-col items-end gap-1.5 shrink-0">
         <div className="flex flex-wrap gap-1 justify-end">
           {e.roles.map((r) => (
-            <span
-              key={r}
-              className={cn("text-xs font-semibold px-2 py-0.5 rounded-full", actif && "!bg-background")}
-              style={{ background: `color-mix(in srgb, ${color} 13%, transparent)`, color }}
-            >
-              {r}
-            </span>
+            <PastilleRole key={r} role={r} service={e.service} actif={actif} />
           ))}
         </div>
         {setlistId && (

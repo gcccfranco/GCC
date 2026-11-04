@@ -16,6 +16,8 @@ export const BASE_URL_COUPE = `http://localhost:${PORT + 1}`;
 const SPECS_GRAND_ECRAN = [
   // Lot CH (docs/spec-chargement.md) : la forme du membre pendant l'attente de Firebase, sur les quatre dispositions.
   /chargement\.spec\.ts/,
+  // Lot CD, services-3 : la page « Pour quel service ? » (carte des entrées plafonnée à 720 px) sur les quatre dispositions.
+  /setlist-pour-quel-service\.spec\.ts/,
   // Lot SF (docs/spec-espace-musiciens.md) : l'entrée « Scène » de la barre latérale et la carte d'À faire.
   /scene-des-fetes\.spec\.ts/,
   // Lot VB-E (docs/spec-video-bienvenue.md) : les extraits de la visite, sur les quatre dispositions.

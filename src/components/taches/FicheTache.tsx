@@ -17,7 +17,7 @@ import { useEffect, useId, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useTranslation } from "react-i18next";
-import { Bell, CalendarDays, Check, Link2, ListChecks, Minus, Pencil, Repeat, Ticket, Trash2, UserRound } from "lucide-react";
+import { Bell, CalendarDays, Link2, ListChecks, Pencil, Repeat, Ticket, Trash2, UserRound } from "lucide-react";
 import { EnTetePage } from "@/components/layout/EnTetePage";
 import { MenuActions } from "@/components/layout/MenuActions";
 import { TacheForm } from "@/components/taches/TacheForm";
@@ -199,9 +199,6 @@ function Fiche({ ligne, toutesLesFois }: { ligne: Ligne; toutesLesFois: Fois[] }
     }]} />
   );
   const nomEquipe = t(cleNomEquipe(tache.equipe, true));
-  const badgeEquipe = (
-    <span className="inline-block rounded-full bg-secondary px-2.5 py-0.5 text-xs font-semibold">{nomEquipe}</span>
-  );
 
   // En grand au Back-Office, « Modifier » remplace la fiche par le formulaire (B2).
   if (dansLeVolet && modifier) {
@@ -221,9 +218,9 @@ function Fiche({ ligne, toutesLesFois }: { ligne: Ligne; toutesLesFois: Fois[] }
       ) : (
         <header className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            {badgeEquipe}
             {/* En grand, sous l'en-tête « Tâches » : un h2 de 24 px (R3). */}
-            <h2 id={titreId} className="mt-2 text-2xl font-bold leading-tight tracking-tight text-balance">{tache.titre}</h2>
+            <h2 id={titreId} className="text-2xl font-bold leading-tight tracking-tight text-balance">{tache.titre}</h2>
+            <p className="mt-1 text-sm text-muted-foreground">{nomEquipe}</p>
           </div>
           <div className="flex shrink-0 items-center gap-2">
             {boutonModifier}
@@ -235,20 +232,7 @@ function Fiche({ ligne, toutesLesFois }: { ligne: Ligne; toutesLesFois: Fois[] }
       {retour && <p role="status" className="text-sm text-muted-foreground">{retour}</p>}
 
       <section className={cn("raised rounded-2xl px-4 py-3.5", deuxVolets && "flex flex-wrap items-center gap-x-4 gap-y-3")}>
-        <div className="flex min-w-0 flex-1 basis-56 items-center gap-3">
-          <span className={cn(
-            "flex h-7 w-7 shrink-0 items-center justify-center rounded-full border-2",
-            etat === "terminee" ? "border-foreground bg-foreground text-background" : etat === "encours" ? "border-foreground" : "border-muted-foreground/50",
-          )}>
-            {etat === "terminee" && <Check className="h-4 w-4" strokeWidth={3} aria-hidden />}
-            {etat === "encours" && <Minus className="h-4 w-4" strokeWidth={3} aria-hidden />}
-          </span>
-          <div className="min-w-0">
-            <p className="text-base font-bold">{t(`taches.etat.${etat}`)}</p>
-            {sousTitre && <p className="text-[13px] text-muted-foreground">{sousTitre}</p>}
-          </div>
-        </div>
-        <div role="radiogroup" aria-label={t("taches.etat.titre")} className={cn("flex gap-0.5 rounded-full bg-secondary p-1 text-sm", !deuxVolets && "mt-3")}>
+        <div role="radiogroup" aria-label={t("taches.etat.titre")} className="flex gap-0.5 rounded-full bg-secondary p-1 text-sm">
           {ETATS.map((e) => (
             <button
               key={e}
@@ -267,6 +251,7 @@ function Fiche({ ligne, toutesLesFois }: { ligne: Ligne; toutesLesFois: Fois[] }
             </button>
           ))}
         </div>
+        {sousTitre && <p className={cn("min-w-0 text-[13px] text-muted-foreground", !deuxVolets && "mt-2 basis-full")}>{sousTitre}</p>}
       </section>
 
       <dl className="raised rounded-2xl px-4 py-1">

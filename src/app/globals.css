@@ -845,7 +845,7 @@
 
 @layer components {
   /* Le titre de la page, le h1 de `EnTetePage` (R2) : 24 px sur téléphone, 30 px dès 768 px. */
-  .titre-page { font-size: 24px; line-height: 30px; font-weight: 700; letter-spacing: -0.02em; }
+  .titre-page { font-size: 24px; line-height: 30px; font-weight: 700; letter-spacing: -0.02em; text-wrap: balance; }
   @media (min-width: 768px) {
     .titre-page { font-size: 30px; line-height: 36px; }
   }
