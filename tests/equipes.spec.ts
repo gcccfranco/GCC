@@ -171,8 +171,8 @@ test("Équipes › Organigramme : le droit « Équipes » ajoute un membre et fa
   // EQ27 : plus de pastille « Donne le pôle … » sur les cartes.
   await expect(page.getByText(/Donne le pôle/)).toHaveCount(0);
   // Agencement v18 (B8) : le crayon de la carte ouvre le panneau d'édition.
-  await carte.getByRole("button", { name: "Modifier TEAM DA" }).click();
-  const panneau = page.getByRole("dialog", { name: "TEAM DA" });
+  await carte.getByRole("button", { name: "Modifier DA" }).click();
+  const panneau = page.getByRole("dialog", { name: "DA", exact: true });
   // EQ27 : ni sélecteur « Pôle donné par cette équipe », ni liste de pôles.
   await expect(panneau.getByText("Pôle donné par cette équipe")).toHaveCount(0);
   await expect(panneau.getByRole("combobox")).toHaveCount(0);
@@ -182,7 +182,7 @@ test("Équipes › Organigramme : le droit « Équipes » ajoute un membre et fa
   // Un signe à l'écran d'abord : le panneau se referme et le nom apparaît dans la carte.
   await expect(panneau).toBeHidden();
   await expect(carte.getByRole("button", { name: /Ruth K\./ })).toBeVisible();
-  await expect(carte.getByRole("button", { name: "Modifier TEAM DA" })).toBeVisible();
+  await expect(carte.getByRole("button", { name: "Modifier DA" })).toBeVisible();
   const ecrit = db.doc("equipes/da") as { membres: MembreEquipe[] } | undefined;
   expect(ecrit?.membres.filter((m) => m.uid === "u-ruth")).toHaveLength(1);
   // Le corps n'écrit plus `pole` (masque : membres et signature) ; le champ stocké, que le relevé
@@ -215,8 +215,8 @@ test("Équipes › Organigramme : la recopie échoue après l'écriture — « R
     "/back-office/equipes",
   );
   const carte = page.getByTestId("equipe-da");
-  await carte.getByRole("button", { name: "Modifier TEAM DA" }).click();
-  const panneau = page.getByRole("dialog", { name: "TEAM DA" });
+  await carte.getByRole("button", { name: "Modifier DA" }).click();
+  const panneau = page.getByRole("dialog", { name: "DA", exact: true });
   await panneau.getByPlaceholder("Ajouter un membre").fill("Ruth");
   await panneau.getByRole("button", { name: /Ruth K\./ }).click();
   await panneau.getByRole("button", { name: "Enregistrer" }).click();

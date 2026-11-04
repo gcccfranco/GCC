@@ -92,7 +92,7 @@ async function suivreRecopie(page: Page) {
   return envois;
 }
 
-const panneau = (page: Page, nom = "TEAM LOUANGE") => page.getByRole("dialog", { name: nom });
+const panneau = (page: Page, nom = "Louange") => page.getByRole("dialog", { name: nom });
 const membre = (page: Page, uid: string) => page.getByTestId(`membre-${uid}`);
 const groupe = (p: ReturnType<typeof membre>, nom: string) => p.getByRole("group", { name: nom, exact: true });
 const pastille = (g: ReturnType<typeof groupe>, nom: string) => g.getByRole("button", { name: nom, exact: true });
@@ -172,7 +172,7 @@ test("la fiche d'une personne : ses sous-équipes depuis l'organigramme, « Ce q
   await ouvrir(page, ADMIN, "/back-office/equipes");
   await page.getByTestId("louange-musiciens").getByRole("button", { name: /^Noé Brandt/ }).click();
   const fiche = page.getByTestId("fiche");
-  await expect(fiche).toContainText("TEAM LOUANGE");
+  await expect(fiche).toContainText("Louange");
   await expect(fiche).toContainText("Musiciens, référent·e");
   await expect(fiche.getByTestId("ce-que-ca-ouvre")).toContainText("Voir et créer les setlists de Culte Francophone");
   await expect(fiche.getByTestId("ce-que-ca-ouvre")).toContainText("Idées d'harmonie et théorie musicale");
@@ -187,9 +187,9 @@ test("un référent de Musiciens ouvre un musicien, coche Campus, enregistre : l
   const envois = await suivreRecopie(page);
   const db = await ouvrir(page, NOE, "/back-office/equipes");
   // Le crayon n'est que sur Louange.
-  await expect(page.getByRole("button", { name: "Modifier TEAM DA" })).toHaveCount(0);
-  await expect(page.getByRole("button", { name: "Modifier TEAM RÉGIE" })).toHaveCount(0);
-  await page.getByRole("button", { name: "Modifier TEAM LOUANGE" }).click();
+  await expect(page.getByRole("button", { name: "Modifier DA" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Modifier Régie" })).toHaveCount(0);
+  await page.getByRole("button", { name: "Modifier Louange" }).click();
   const p = panneau(page);
   await expect(p).toBeVisible();
 
@@ -246,7 +246,7 @@ test("un référent de Musiciens ouvre un musicien, coche Campus, enregistre : l
 test("un référent de Musiciens qui retire de sa sous-équipe : la ligne reste si la personne en a une autre", async ({ page }) => {
   const db = await ouvrir(page, NOE, "/back-office/equipes");
   await suivreRecopie(page);
-  await page.getByRole("button", { name: "Modifier TEAM LOUANGE" }).click();
+  await page.getByRole("button", { name: "Modifier Louange" }).click();
   await page.getByRole("button", { name: "Retirer Mila Serre" }).click();
   await panneau(page).getByRole("button", { name: "Enregistrer" }).click();
   await expect(panneau(page)).toBeHidden();
@@ -257,7 +257,7 @@ test("un référent de Musiciens qui retire de sa sous-équipe : la ligne reste 
 test("un référent de Musiciens ajoute quelqu'un : il entre dans les Musiciens", async ({ page }) => {
   const db = await ouvrir(page, NOE, "/back-office/equipes", { ...DOCS, ...compte("u-zoe", "Zoé", "Lemaire") });
   await suivreRecopie(page);
-  await page.getByRole("button", { name: "Modifier TEAM LOUANGE" }).click();
+  await page.getByRole("button", { name: "Modifier Louange" }).click();
   await panneau(page).getByPlaceholder("Ajouter un membre").fill("Zoé");
   await panneau(page).getByRole("button", { name: "Zoé Lemaire" }).click();
   await panneau(page).getByRole("button", { name: "Enregistrer" }).click();
@@ -276,7 +276,7 @@ test("un simple membre ne voit aucun crayon", async ({ page }) => {
 test("« Ce que ça lui ouvre » change quand l'administrateur coche Campus ; Musiciens fait apparaître « Ce qu'il joue »", async ({ page }) => {
   await ouvrir(page, ADMIN, "/back-office/equipes");
   await suivreRecopie(page);
-  await page.getByRole("button", { name: "Modifier TEAM LOUANGE" }).click();
+  await page.getByRole("button", { name: "Modifier Louange" }).click();
   const tom = membre(page, "u-tom");
   await tom.getByRole("button", { name: /^Tom Vidal/ }).click();
   await expect(tom.locator("[aria-expanded]").first()).toHaveAttribute("aria-expanded", "true");
@@ -299,7 +299,7 @@ test("« Ce que ça lui ouvre » change quand l'administrateur coche Campus ; Mu
 test("TEAM RÉGIE : « Où il sert » et le référent", async ({ page }) => {
   await ouvrir(page, ADMIN, "/back-office/equipes");
   await suivreRecopie(page);
-  await page.getByRole("button", { name: "Modifier TEAM RÉGIE" }).click();
+  await page.getByRole("button", { name: "Modifier Régie" }).click();
   const yanis = membre(page, "u-yanis");
   await yanis.getByRole("button", { name: /^Yanis Roux/ }).click();
   await expect(groupe(yanis, "Sous-équipes")).toHaveCount(0);
@@ -312,7 +312,7 @@ test("TEAM RÉGIE : « Où il sert » et le référent", async ({ page }) => {
 
 test("le panneau replié montre la ligne de résumé", async ({ page }) => {
   await ouvrir(page, ADMIN, "/back-office/equipes");
-  await page.getByRole("button", { name: "Modifier TEAM LOUANGE" }).click();
+  await page.getByRole("button", { name: "Modifier Louange" }).click();
   await expect(membre(page, "u-ines")).toContainText("Présidence, référent·e · Franco · Interfranco");
   await expect(membre(page, "u-noe")).toContainText("Musiciens, référent·e · Guitare · Franco");
 });

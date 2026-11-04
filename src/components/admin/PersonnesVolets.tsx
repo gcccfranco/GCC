@@ -8,14 +8,13 @@
 // liste d'office. « Modifier » montre le formulaire d'aujourd'hui dans le volet. Un volet
 // (tablette debout, téléphone) : la liste, puis la personne en page entière (planche).
 // Bilingue depuis B5b (docs/spec-corrections-audit.md).
-import { useState, type ReactNode } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useProfile } from "@/lib/firebase/users";
 import { useTranslation } from "react-i18next";
 import { Bell, CalendarDays, ChevronLeft, ChevronRight, KeyRound, Link2, Pencil, PenLine, ShieldCheck, UserRound, Users } from "lucide-react";
 import { EnTetePage } from "@/components/layout/EnTetePage";
-import { buttonVariants } from "@/components/ui/button";
 import { DeuxVolets } from "@/components/layout/DeuxVolets";
 import { useDisposition } from "@/hooks/useDisposition";
 import { isAdminUser } from "@/lib/access";
@@ -23,7 +22,9 @@ import { useConfirmer } from "@/components/layout/Confirmer";
 import { Panneau } from "@/components/groupes/Panneau";
 import { changerGroupeDe } from "@/lib/firebase/groupes";
 import { groupeDe } from "@/lib/groupes/organigramme";
-import { droitsParRoles, libellePoste, nombreSansGroupe, postesDeCompte } from "@/lib/groupes/personnes";
+import { droitsParRoles, libellePoste, nombreSansGroupe, nomsSansCompte, postesDeCompte, titulairesSansCompte } from "@/lib/groupes/personnes";
+import { cleNomEquipe } from "@/lib/equipes/table";
+import { TOUCHER_44 } from "@/lib/toucher44";
 import { TABLE_GROUPES, groupeDef } from "@/lib/groupes/table";
 import type { OrganigrammeGroupe } from "@/types/groupe";
 import { findMyServices, type PlanningData } from "@/lib/planning/names";
@@ -44,6 +45,26 @@ import {
 
 const RACINE = "/back-office/equipes/personnes";
 const nom = (p: UserProfile) => `${p.firstName} ${p.lastName}`.trim() || p.email;
+
+/** Un bouton-lien ou un bouton secondaire de la fiche : 32 px de dessin, 44 px de zone au toucher (bo-equipes-6, 7). */
+const BOUTON_CONTOUR = `inline-flex h-8 shrink-0 items-center rounded-full bg-background px-3 text-[13px] font-semibold text-foreground shadow-[inset_0_0_0_1px_hsl(var(--border))] hover:bg-secondary ${TOUCHER_44}`;
+
+/** La première ligne de la liste (bo-equipes-1) : les noms du planning sans compte, avec leur nombre ; elle ouvre la page « Sans compte ». */
+function RangeeSansCompte({ n }: { n: number | null }) {
+  const { t } = useTranslation();
+  if (n === null) return null;
+  return (
+    <Link
+      href={`${RACINE}/sans-compte`}
+      data-testid="rangee-sans-compte"
+      className="flex h-[52px] items-center gap-3 rounded-xl bg-secondary/60 px-4 hover:bg-secondary"
+    >
+      <span className="min-w-0 flex-1 line-clamp-2 text-balance text-[15px] leading-[18px] font-semibold text-foreground">{t("backOffice.equipe.sansCompte")}</span>
+      <span className="shrink-0 text-[13px] text-muted-foreground">{t("groupes.personnes.sansCompteNombre", { count: n })}</span>
+      <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground/60" aria-hidden />
+    </Link>
+  );
+}
 
 export function PersonnesVolets() {
   const { t } = useTranslation();
@@ -70,16 +91,16 @@ export function PersonnesVolets() {
   };
 
   const { stats } = d;
+  // Le nombre de noms du planning sans compte (le même calcul que la page « Sans compte ») ; pas de rangée tant qu'il n'est pas connu.
+  const sansCompte = useMemo(
+    () => (d.planningData && !d.loadingProfiles && d.groupes ? nomsSansCompte(d.planningNames, d.profiles, titulairesSansCompte(d.groupes)).length : null),
+    [d.planningData, d.loadingProfiles, d.groupes, d.planningNames, d.profiles],
+  );
   const ouvertHorsGrand = !grand && uid ? d.profiles.find((p) => p.uid === uid) ?? null : null;
   const entete = (
     <EnTetePage
       titre={t("backOffice.entrees.equipes")}
-      sousTitre={d.loadingProfiles ? undefined : [
-        t("equipes.compte.inscrits", { count: d.profiles.length }),
-        t("groupes.personnes.groupesSansGroupe", { count: nombreSansGroupe(d.profiles) }),
-      ].join(" · ")}
-      // Piste A (BO7) : l'ancienne page Planning › Sans compte, dans Personnes.
-      outils={<Link href="/back-office/equipes/personnes/sans-compte" className={buttonVariants({ variant: "outline", size: "sm" })}>{t("backOffice.equipe.sansCompte")}</Link>}
+      sousTitre={d.loadingProfiles ? undefined : t("groupes.personnes.inscritsDontSansGroupe", { count: d.profiles.length, sans: nombreSansGroupe(d.profiles) })}
       onglets={<RailEquipes />}
       apres={<InscriptionsComptes court nouveaux={stats.nouveaux} onVoir={voirNouveaux} />}
     />
@@ -121,9 +142,10 @@ export function PersonnesVolets() {
         {entete}
         <div className="px-[var(--marge-page)] pb-10">
           <div className="raised rounded-2xl p-3 space-y-3 sm:p-4">
+            <RangeeSansCompte n={sansCompte} />
             <FiltresPersonnes f={f} />
             {/* Un volet : la personne de l'adresse s'ouvre en page entière (ci-dessus). */}
-            <ListePersonnes d={d} f={f} deplie={null} setDeplie={choisir} />
+            <ListePersonnes d={d} f={f} deplie={null} setDeplie={choisir} ouvrePage />
           </div>
         </div>
       </>
@@ -133,6 +155,7 @@ export function PersonnesVolets() {
   // défiler en largeur comme la rangée de `Pilules` le fait ailleurs.
   const liste = (
     <div className="p-3 space-y-3 [&_[data-onglets=pilules]]:mx-0 [&_[data-onglets=pilules]]:flex-wrap [&_[data-onglets=pilules]]:overflow-visible [&_[data-onglets=pilules]]:px-0">
+      <RangeeSansCompte n={sansCompte} />
       <FiltresPersonnes f={f} />
       {d.loadingProfiles ? (
         <p className="py-6 text-center text-sm text-muted-foreground">{t("common.loading")}</p>
@@ -148,11 +171,10 @@ export function PersonnesVolets() {
               <div key={p.uid} className={`rounded-xl transition-colors ${actif ? "bg-secondary" : "hover:bg-secondary/60"}`}>
                 <LignePersonne
                   p={p}
-                  compact
                   groupes={d.groupes}
                   actif={actif}
                   onClick={() => choisir(p.uid)}
-                  fin={<ChevronRight className="mt-2 h-4 w-4 shrink-0 text-muted-foreground/60" aria-hidden />}
+                  fin={<ChevronRight className="h-4 w-4 shrink-0 self-center text-muted-foreground/60" aria-hidden />}
                 />
               </div>
             );
@@ -209,7 +231,7 @@ export function PersonnesVolets() {
 function Carte({ titre, note, children, className }: { titre: string; note?: ReactNode; children: ReactNode; className?: string }) {
   return (
     <section aria-label={titre} className={`raised rounded-2xl px-5 py-4 ${className ?? ""}`}>
-      <div className="mb-2 flex items-baseline justify-between gap-3">
+      <div className="mb-2 flex items-center justify-between gap-3">
         <h3 className="text-[16px] font-bold text-foreground">{titre}</h3>
         {note && <span className="text-[12px] text-muted-foreground">{note}</span>}
       </div>
@@ -285,14 +307,14 @@ function FicheDuMembre({
         <button
           type="button"
           onClick={onModifier}
-          className="inline-flex h-10 shrink-0 items-center gap-2 rounded-full bg-background px-4 text-[14px] font-semibold text-foreground shadow-[inset_0_0_0_1px_hsl(var(--border))] hover:bg-secondary"
+          className={`inline-flex h-10 shrink-0 items-center gap-2 rounded-full bg-background px-4 text-[14px] font-semibold text-foreground shadow-[inset_0_0_0_1px_hsl(var(--border))] hover:bg-secondary ${TOUCHER_44}`}
         >
           <Pencil className="h-4 w-4" aria-hidden />
           {t("common.buttons.edit")}
         </button>
       </header>
 
-      <div className="grid grid-cols-[repeat(auto-fit,minmax(300px,1fr))] items-start gap-4">
+      <div className="space-y-4">
         {(groupes !== null || BACK_OFFICE) && (
         <div className="space-y-4">
           <Carte
@@ -303,7 +325,7 @@ function FicheDuMembre({
                 onClick={() => setFeuille(true)}
                 disabled={enCours}
                 aria-busy={enCours}
-                className="inline-flex h-9 items-center rounded-full bg-background px-3 text-[13px] font-semibold text-foreground shadow-[inset_0_0_0_1px_hsl(var(--border))] hover:bg-secondary"
+                className={`inline-flex h-9 items-center rounded-full bg-background px-3 text-[13px] font-semibold text-foreground shadow-[inset_0_0_0_1px_hsl(var(--border))] hover:bg-secondary ${TOUCHER_44}`}
               >
                 {t("groupes.personnes.changer")}
               </button>
@@ -314,7 +336,6 @@ function FicheDuMembre({
                 <span aria-hidden className="h-2.5 w-2.5 rounded-full" style={{ background: def ? categoryColor(def.categorie) : "#94a3b8" }} />
                 {def ? nomGroupe : t("groupes.personnes.sansGroupe")}
               </span>
-              <span className="text-muted-foreground">{t("groupes.personnes.unSeul")}</span>
             </p>
             <p className="mt-2 text-[12px] text-muted-foreground">
               {def ? t("groupes.personnes.changerAide", { groupe: nomGroupe }) : t("groupes.personnes.changerAideSans")}
@@ -324,7 +345,7 @@ function FicheDuMembre({
           {def && (
             <Carte
               titre={t("groupes.personnes.rolesDans", { groupe: nomGroupe })}
-              note={<Link href={`/back-office/equipes?groupe=${def.id}`} className="font-semibold text-foreground underline underline-offset-2">{t("groupes.personnes.organigramme")}</Link>}
+              note={<Link href={`/back-office/equipes?groupe=${def.id}`} className={BOUTON_CONTOUR}>{t("groupes.personnes.organigramme")}</Link>}
             >
               {postes.length === 0 ? (
                 <p className="text-sm text-muted-foreground">{t("groupes.aucunRole")}</p>
@@ -356,7 +377,6 @@ function FicheDuMembre({
         )}
         <Carte
           titre={BACK_OFFICE ? t("groupes.personnes.servicesEquipes") : t("admin.membre.servicesRoles")}
-          note={BACK_OFFICE ? t("groupes.personnes.transition") : undefined}
         >
           {/* Lot AO-B : en nouveau mode, ni `serviceRoles` ni rôles déclarés — seulement l'organigramme. */}
           {BACK_OFFICE ? (
@@ -378,7 +398,7 @@ function FicheDuMembre({
             <div key={id} className={ligne}>
               <span className="flex items-center gap-2 font-semibold text-foreground">
                 <Users className="h-3.5 w-3.5 text-muted-foreground" aria-hidden />
-                {t(`equipes.team.${id}`, { defaultValue: id })}
+                {t(cleNomEquipe(id, true), { defaultValue: id })}
               </span>
               <span className="text-right text-muted-foreground">
                 {[
@@ -411,30 +431,41 @@ function FicheDuMembre({
               <div className={ligne}>
                 <span className="flex items-center gap-2 text-muted-foreground"><PenLine className="h-4 w-4" aria-hidden />{t("groupes.personnes.parRoles")}</span>
                 <span className="text-right text-foreground">
-                  {parRoles.publie ? t("groupes.personnes.remplitPublie") : parRoles.remplit ? t("groupes.personnes.remplit") : "—"}
+                  {parRoles.publie ? t("groupes.personnes.remplitPublie") : parRoles.remplit ? t("groupes.personnes.remplit") : t("groupes.personnes.aucun")}
                 </span>
               </div>
               <div className={ligne}>
                 <span className="flex items-center gap-2 text-muted-foreground"><Bell className="h-4 w-4" aria-hidden />{t("groupes.personnes.notifications")}</span>
                 <span className="text-right text-foreground">
-                  {notifie.length ? notifie.map((n) => t("groupes.personnes.celles", { groupe: n })).join(", ") : "—"}
+                  {notifie.length ? notifie.map((n) => t("groupes.personnes.celles", { groupe: n })).join(", ") : t("responsabilites.aucune")}
                 </span>
               </div>
             </>)}
             {/* Lot RS : lecture seule ; l'admin les change sur la page Responsabilités. */}
-            {BACK_OFFICE && (
-              <div className={ligne} data-testid="fiche-responsabilites">
-                <span className="flex items-center gap-2 text-muted-foreground"><KeyRound className="h-4 w-4" aria-hidden />{t("responsabilites.ligne")}</span>
-                <span className="text-right text-foreground">
-                  {libellesResponsabilites(p, (c, o) => t(c, o)).join(" · ") || t("responsabilites.aucune")}
-                </span>
-              </div>
-            )}
-            {BACK_OFFICE && admin && (
-              <p className="pt-1 text-[12px]">
-                <Link href="/back-office/equipes/responsabilites" className="font-semibold text-foreground underline underline-offset-2">{t("responsabilites.gerer")}</Link>
-              </p>
-            )}
+            {/* bo-equipes-7 : pour l'admin la ligne entière est le lien (44 px, chevron) ; pour un autre, une ligne de texte. */}
+            {BACK_OFFICE && (() => {
+              const contenu = (
+                <>
+                  <span className="flex items-center gap-2 text-muted-foreground"><KeyRound className="h-4 w-4" aria-hidden />{t("responsabilites.ligne")}</span>
+                  <span className="flex items-center gap-1 text-right text-foreground">
+                    {libellesResponsabilites(p, (c, o) => t(c, o)).join(" · ") || t("responsabilites.aucune")}
+                    {admin && <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground/60" aria-hidden />}
+                  </span>
+                </>
+              );
+              return admin ? (
+                <Link
+                  href="/back-office/equipes/responsabilites"
+                  aria-label={t("responsabilites.gerer")}
+                  data-testid="fiche-responsabilites"
+                  className={`${ligne} min-h-11`}
+                >
+                  {contenu}
+                </Link>
+              ) : (
+                <div className={ligne} data-testid="fiche-responsabilites">{contenu}</div>
+              );
+            })()}
             <div className={ligne}>
               <span className="flex items-center gap-2 text-muted-foreground"><UserRound className="h-4 w-4" aria-hidden />{t("admin.membre.nomAuPlanning")}</span>
               <span className="text-foreground">{p.planningName || "—"}</span>
@@ -444,15 +475,12 @@ function FicheDuMembre({
       </div>
 
       {BACK_OFFICE && (
-        <section aria-label={t("equipes.organigramme.ceQueCaOuvre")} className="raised space-y-3 rounded-2xl px-5 py-4">
-          <CeQueCaOuvre profil={p} />
-          <p className="text-[12px] text-muted-foreground">
-            <Link href="/back-office/equipes" className="font-semibold text-foreground underline underline-offset-2">{t("equipes.organigramme.voir")}</Link>
-          </p>
+        <section aria-label={t("equipes.organigramme.ceQueCaOuvre")} className="raised rounded-2xl px-5 py-4">
+          <CeQueCaOuvre profil={p} nu note={<Link href="/back-office/equipes" className={BOUTON_CONTOUR}>{t("equipes.organigramme.voir")}</Link>} />
         </section>
       )}
 
-      <Carte titre={t("admin.membre.prochainsServices")} note={<Link href="/planning" className="font-semibold text-foreground underline underline-offset-2">{t("common.header.planning")}</Link>}>
+      <Carte titre={t("admin.membre.prochainsServices")} note={<Link href="/planning" className={BOUTON_CONTOUR}>{t("common.header.planning")}</Link>}>
         {services.length === 0 ? (
           <p className="text-sm text-muted-foreground">
             {planning ? t("admin.membre.aucunService") : t("common.loading")}

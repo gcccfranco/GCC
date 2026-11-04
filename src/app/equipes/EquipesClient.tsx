@@ -40,6 +40,8 @@ import { SERVICE_LIEUX, SERVICE_ROLE_LABELS, type UserProfile } from "@/types/us
 import { SOUS_EQUIPES, SOUS_EQUIPES_EDD, type Equipe, type MembreEquipe } from "@/types/equipe";
 import { libellesResponsabilites } from "@/lib/equipes/responsabilites";
 import { colonnesEdd } from "@/lib/equipes/edd";
+import { cleNomEquipe } from "@/lib/equipes/table";
+import { TOUCHER_44 } from "@/lib/toucher44";
 import { PastillesEdd } from "@/components/equipes/OrganigrammeEdd";
 
 const nomComplet = (p: UserProfile) =>
@@ -255,7 +257,7 @@ function PanneauEquipe({
         {def && (
           <>
             <DrawerHeader className="pb-1 text-left">
-              <DrawerTitle>{t(`equipes.team.${def.id}`)}</DrawerTitle>
+              <DrawerTitle>{t(cleNomEquipe(def.id, true))}</DrawerTitle>
               {sousTitre && <DrawerDescription>{sousTitre}</DrawerDescription>}
             </DrawerHeader>
             <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-6">
@@ -298,7 +300,7 @@ function CarteEquipe({
   const soustitre = t(`equipes.soustitre.${def.id}`);
   const groupes = [...new Set(membres.map((m) => m.groupe))];
   const enColonnes = enBandeau && !!def.sousColonnes;
-  const nom = t(`equipes.team.${def.id}`);
+  const nom = t(cleNomEquipe(def.id, true));
 
   // Lot AO-B : Louange en trois sous-équipes, lignes grises des lieux pour Louange et Régie.
   const nouveauLouange = BACK_OFFICE && def.id === "louange";
@@ -344,7 +346,7 @@ function CarteEquipe({
     >
       <header className="space-y-1">
         <div className="flex items-start justify-between gap-2">
-          <h2 className="min-w-0 break-words hyphens-auto text-base font-bold text-foreground">
+          <h2 className="min-w-0 break-words hyphens-auto text-[17px] font-bold leading-[23px] text-foreground">
             {href ? <Link href={href} className="rounded-sm hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">{nom}</Link> : nom}
           </h2>
           {peutEditer && (
@@ -353,13 +355,13 @@ function CarteEquipe({
               onClick={onModifier}
               aria-label={t("equipes.modifierEquipe", { nom })}
               title={t("equipes.modifier")}
-              className="-mr-1 -mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-background text-foreground shadow-[inset_0_0_0_1px_hsl(var(--border))] transition-colors hover:bg-secondary"
+              className={`-mr-1 -mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-background text-foreground shadow-[inset_0_0_0_1px_hsl(var(--border))] transition-colors hover:bg-secondary ${TOUCHER_44}`}
             >
               <Pencil className="h-3.5 w-3.5" aria-hidden />
             </button>
           )}
         </div>
-        {soustitre && <p className="text-xs text-muted-foreground">{soustitre}</p>}
+        {soustitre && <p className="text-[13px] leading-[18px] text-muted-foreground">{soustitre}</p>}
         <div className="flex flex-wrap items-center gap-1.5">
           {membres.length > 0 && (
             <span className="text-[11px] text-muted-foreground">
@@ -844,7 +846,7 @@ function FichePersonne({
                 const detail = BACK_OFFICE && porteDesLieux(e.id) ? resume(t, e.id, m) : "";
                 return (
                   <p key={e.id} className="text-sm text-foreground">
-                    {t(`equipes.team.${e.id}`)}
+                    {t(cleNomEquipe(e.id, true))}
                     {!detail && m.referent && <span className="ml-1.5 text-xs text-muted-foreground">{t("equipes.referent")}</span>}
                     {m.essai && <span className="ml-1.5 text-xs text-muted-foreground">{t("equipes.essai")}</span>}
                     {detail && <span className="block text-xs text-muted-foreground">{detail}</span>}

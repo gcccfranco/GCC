@@ -7,7 +7,7 @@
 // volets) ; `Personnes` les assemble comme avant pour l'ancienne administration.
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { ChevronDown, ChevronUp, UserRound } from "lucide-react";
+import { ChevronDown, ChevronRight, ChevronUp, UserRound } from "lucide-react";
 import { listProfiles, saveProfile } from "@/lib/firebase/users";
 import { listGroupes } from "@/lib/firebase/groupes";
 import { groupeDe } from "@/lib/groupes/organigramme";
@@ -205,15 +205,18 @@ function ServicesDuMembre({ p, groupes }: { p: UserProfile; groupes?: Organigram
   // Lot AO-B : en nouveau mode, ni `serviceRoles` ni rôles déclarés — les sous-équipes et les lieux de l'organigramme.
   const roles = avecGroupes ? [] : Object.entries(p.serviceRoles);
   const lieux = SERVICE_LIEUX.filter((l) => [...(p.lieuxLouange ?? []), ...(p.lieuxRegie ?? [])].includes(l));
+  // bo-equipes-9 : une personne sans groupe ni rien à dire n'a pas de troisième ligne (le filtre dit « Sans groupe »).
+  const rien = !isRecent(p.createdAt) && !def && (p.sousEquipes ?? []).length === 0 && lieux.length === 0 && roles.length === 0 && (avecGroupes || Object.keys(p.serviceRoles).length > 0);
+  if (rien) return null;
   return (
     <div className="flex flex-wrap gap-1">
       {isRecent(p.createdAt) && <Pill label={t("admin.membre.nouveau")} color="#16a34a" />}
-      {avecGroupes && (def
-        ? <Pill
-            label={[t(`categories.${def.categorie}`), ...(postes.length ? [postes.map((x) => libellePoste(t, i18n.language === "zh-CN", x)).join(", ")] : [])].join(" · ")}
-            color={categoryColor(def.categorie)}
-          />
-        : <Pill label={t("groupes.personnes.sansGroupe")} />)}
+      {avecGroupes && def && (
+        <Pill
+          label={[t(`categories.${def.categorie}`), ...(postes.length ? [postes.map((x) => libellePoste(t, i18n.language === "zh-CN", x)).join(", ")] : [])].join(" · ")}
+          color={categoryColor(def.categorie)}
+        />
+      )}
       {avecGroupes && (p.sousEquipes ?? []).map((x) => <Pill key={x} label={`${t("equipes.public.louange")} · ${t(`acces.sousEquipe.${x}`)}`} />)}
       {avecGroupes && lieux.map((l) => <Pill key={l} label={libelleService(t, zh, l)} color={categoryColor(l)} />)}
       {roles.map(([cat, roles]) => (
@@ -228,44 +231,37 @@ function ServicesDuMembre({ p, groupes }: { p: UserProfile; groupes?: Organigram
   );
 }
 
-/** Une ligne de la liste : avatar, nom, e-mail, services. `fin` : chevron ou autre. */
+/** Une ligne de la liste : avatar, nom (et « admin »), e-mail, puis groupe et services ; « inscrit le… » et le nom au
+ *  planning sont dans la fiche (bo-equipes-9). `fin` : chevron ou autre. */
 export function LignePersonne({
-  p, onClick, compact, actif, deplie, fin, groupes,
+  p, onClick, actif, deplie, fin, groupes,
 }: {
   p: UserProfile;
   groupes?: OrganigrammeGroupe[] | null;
   onClick: () => void;
-  /** Deux volets (B9) : avatar, nom, services ; l'e-mail et la date sont dans la fiche. */
-  compact?: boolean;
   /** Choisie dans les deux volets (`aria-current`). */
   actif?: boolean;
   /** Dépliée sur place (un volet, `aria-expanded`). */
   deplie?: boolean;
   fin?: ReactNode;
 }) {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   return (
     <button
       onClick={onClick}
       aria-current={actif ? "true" : undefined}
       aria-expanded={deplie}
-      className="w-full flex items-start gap-3 px-4 py-3 text-left"
+      className="group w-full flex items-start gap-3 px-4 py-3 text-left"
     >
       <Avatar p={p} />
       <div className="min-w-0 flex-1 space-y-1">
-        <p className="text-sm font-semibold text-foreground truncate">
-          {p.firstName} {p.lastName}
+        <p className="flex items-center gap-2">
+          <span className="min-w-0 truncate text-[15px] font-semibold leading-[21px] text-foreground">{p.firstName} {p.lastName}</span>
           {isAdminUser(p) && (
-            <span className="ml-2 text-xs font-semibold text-muted-foreground">{t("admin.membre.admin")}</span>
+            <span className="inline-flex h-5 shrink-0 items-center rounded-full bg-secondary px-2 text-[12px] font-semibold leading-4 text-muted-foreground group-aria-[current=true]:bg-background">{t("admin.membre.admin")}</span>
           )}
         </p>
-        {!compact && (
-          <p className="text-xs text-muted-foreground truncate">
-            {p.email}
-            {p.planningName ? ` · ${t("admin.membre.planningNom", { nom: p.planningName })}` : ""}
-            {p.createdAt ? ` · ${t("admin.membre.inscritLe", { date: p.createdAt.toLocaleDateString(i18n.language === "zh-CN" ? "zh-CN" : "fr-FR") })}` : ""}
-          </p>
-        )}
+        <p className="truncate text-[13px] leading-[18px] text-muted-foreground">{p.email}</p>
         <ServicesDuMembre p={p} groupes={groupes} />
       </div>
       {fin}
@@ -431,12 +427,14 @@ export function Personnes({ onCompte }: { onCompte?: (n: number) => void }) {
 
 /** La liste, un membre déplié sur place avec son formulaire (un volet). */
 export function ListePersonnes({
-  d, f, deplie, setDeplie,
+  d, f, deplie, setDeplie, ouvrePage = false,
 }: {
   d: ReturnType<typeof useDonneesPersonnes>;
   f: ReturnType<typeof useFiltresPersonnes>;
   deplie: string | null;
   setDeplie: (uid: string | null) => void;
+  /** La ligne ouvre la fiche en page entière au lieu de se déplier : chevron droit, pas d'`aria-expanded` (bo-equipes-11). */
+  ouvrePage?: boolean;
 }) {
   const { t } = useTranslation();
   const { profiles, loadingProfiles } = d;
@@ -454,10 +452,12 @@ export function ListePersonnes({
           <div key={p.uid} className="rounded-xl bg-card">
             <LignePersonne
               p={p}
-              deplie={isEditing}
+              deplie={ouvrePage ? undefined : isEditing}
               groupes={d.groupes}
               onClick={() => setDeplie(isEditing ? null : p.uid)}
-              fin={isEditing
+              fin={ouvrePage
+                ? <ChevronRight className="h-4 w-4 shrink-0 self-center text-muted-foreground/60" aria-hidden />
+                : isEditing
                 ? <ChevronUp className="h-4 w-4 text-muted-foreground shrink-0 mt-2" />
                 : <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0 mt-2" />}
             />

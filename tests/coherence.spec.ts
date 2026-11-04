@@ -218,6 +218,20 @@ test("push : « Setlist prête » et « Planning en ligne » existent en frança
   });
 });
 
+// ─── bo-equipes-13 : guillemets français à espace fine insécable, pas d'émoji dans l'interface ─────
+
+test("langues : aucun guillemet français à espace ordinaire dans fr.json (espace fine insécable), aucun ✅", () => {
+  const fr = lire("src/locales/fr.json");
+  const lignes = fr.split("\n");
+  const ouvrants = lignes.map((l, i) => [i + 1, l] as const).filter(([, l]) => l.includes("« "));
+  const fermants = lignes.map((l, i) => [i + 1, l] as const).filter(([, l]) => l.includes(" »"));
+  expect(ouvrants.map(([n]) => n), "« suivi d'une espace ordinaire").toEqual([]);
+  expect(fermants.map(([n]) => n), "» précédé d'une espace ordinaire").toEqual([]);
+  expect(fr.includes("«\u202f"), "l'espace fine insécable est bien là").toBe(true);
+  expect(fr.includes("✅")).toBe(false);
+  expect(lire("src/locales/zh-CN.json").includes("✅")).toBe(false);
+});
+
 // ─── I11 : la casse d'un e-mail admin ne compte pas, côté serveur non plus ─
 
 test("admin : l'adresse est reconnue quelle que soit sa casse, partout", () => {

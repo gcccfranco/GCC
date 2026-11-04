@@ -110,7 +110,7 @@ test.describe("T5 : Équipes › Organigramme", () => {
     // Lot AO : tenir l'organigramme vient d'une place (ici référente de TEAM DA : elle tient son équipe), plus de la case « Équipes ».
     const equipier: FakeProfile = { uid: "u-equipier", email: "equipier@example.com", firstName: "Elsa", lastName: "N.", dansEquipes: ["da"], referentDe: ["da"] };
     await ouvrir(page, "/back-office/equipes", DOCS, equipier);
-    await expect(page.getByTestId("equipe-da").getByRole("button", { name: "Modifier TEAM DA" })).toBeVisible();
+    await expect(page.getByTestId("equipe-da").getByRole("button", { name: "Modifier DA" })).toBeVisible();
     await expect(ongletsRail(page)).toHaveCount(0);
     await expect(enTete(page).locator(":scope > div:empty"), "aucun bloc vide (la place du rail)").toHaveCount(0);
   });
@@ -119,13 +119,13 @@ test.describe("T5 : Équipes › Organigramme", () => {
     const avertissements: string[] = [];
     page.on("console", (m) => { if (/Missing `Description`/.test(m.text())) avertissements.push(m.text()); });
     await ouvrir(page, "/back-office/equipes");
-    await page.getByTestId("equipe-da").getByRole("button", { name: "Modifier TEAM DA" }).click();
-    await expect(page.getByRole("dialog", { name: "TEAM DA" })).toHaveAccessibleDescription("Direction artistique");
+    await page.getByTestId("equipe-da").getByRole("button", { name: "Modifier DA" }).click();
+    await expect(page.getByRole("dialog", { name: "DA", exact: true })).toHaveAccessibleDescription("Direction artistique");
     await page.keyboard.press("Escape");
     await expect(page.getByRole("dialog")).toHaveCount(0);
     // Une équipe sans sous-titre.
-    await page.getByTestId("equipe-traduction").getByRole("button", { name: "Modifier TEAM TRADUCTION" }).click();
-    await expect(page.getByRole("dialog", { name: "TEAM TRADUCTION" })).toBeVisible();
+    await page.getByTestId("equipe-traduction").getByRole("button", { name: "Modifier Traduction" }).click();
+    await expect(page.getByRole("dialog", { name: "Traduction", exact: true })).toBeVisible();
     await page.waitForTimeout(300);
     expect(avertissements).toEqual([]);
   });
@@ -139,8 +139,8 @@ test.describe("T5 : Équipes › Organigramme", () => {
     await expect(carte).toContainText("Bérénice A.");
     await expect(page.getByTestId("bandeau-equipes")).toHaveAttribute("data-range", "1");
     const hauteur = (await carte.boundingBox())!.height;
-    await carte.getByRole("button", { name: "Modifier TEAM DA" }).click();
-    const panneau = page.getByRole("dialog", { name: "TEAM DA" });
+    await carte.getByRole("button", { name: "Modifier DA" }).click();
+    const panneau = page.getByRole("dialog", { name: "DA", exact: true });
     await expect(panneau).toBeVisible();
     // La carte garde sa hauteur : l'édition n'est pas dedans.
     expect(Math.abs((await carte.boundingBox())!.height - hauteur)).toBeLessThan(1);
@@ -192,7 +192,7 @@ test.describe("T5 : Équipes › Personnes", () => {
     interdireDialoguesNatifs(page);
     await ouvrir(page, "/back-office/equipes/personnes");
     await expect(titre(page)).toHaveText("Équipes");
-    await expect(enTete(page)).toContainText("4 inscrits · 5 groupes · 4 sans groupe");
+    await expect(enTete(page)).toContainText("4 inscrits, dont 4 sans groupe");
     const inscriptions = enTete(page).getByRole("region", { name: "Inscriptions" });
     await expect(inscriptions).toContainText("Inscriptions ouvertes");
     await expect(inscriptions.getByRole("switch")).toBeChecked();
@@ -200,6 +200,42 @@ test.describe("T5 : Équipes › Personnes", () => {
     await expect(page.getByRole("button", { name: /Bérénice A\./ })).toBeVisible();
     await verifierAgencement(page, { contenu: sousEnTete(page), onglets: { rail: 1, pilules: 1 } });
     await expect(ongletsRail(page).getByRole("link", { name: "Personnes" })).toHaveAttribute("aria-current", "page");
+  });
+
+  // bo-equipes-2 : le texte d'aide du champ dit quoi taper et tient en entier (mesuré au canvas, avec la police du champ).
+  for (const zh of [false, true]) {
+    test(`le texte d'aide du champ de recherche tient en entier${zh ? " (中文)" : ""}`, async ({ page }, info) => {
+      if (zh) await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
+      await ouvrir(page, "/back-office/equipes/personnes");
+      const champ = estGrandEcran(info) ? page.locator('[data-volet="liste"]').getByRole("searchbox") : page.getByRole("searchbox").first();
+      await expect(champ).toBeVisible();
+      const aide = await champ.getAttribute("placeholder");
+      expect(aide).toBe(zh ? "姓名、邮箱或排班名" : "Nom, e-mail ou nom au planning");
+      await expect(champ).toHaveAttribute("aria-label", zh ? "按姓名、邮箱或排班名搜索成员" : "Rechercher un membre par nom, e-mail ou nom au planning");
+      const { texte, utile } = await champ.evaluate((el, a) => {
+        const s = getComputedStyle(el);
+        const ctx = document.createElement("canvas").getContext("2d")!;
+        ctx.font = `${s.fontStyle} ${s.fontWeight} ${s.fontSize} ${s.fontFamily}`;
+        return { texte: ctx.measureText(a ?? "").width, utile: el.clientWidth - parseFloat(s.paddingLeft) - parseFloat(s.paddingRight) };
+      }, aide);
+      expect(texte, "largeur du texte d'aide < largeur utile du champ").toBeLessThan(utile);
+    });
+  }
+
+  // bo-equipes-11 : sur une ligne qui ouvre une page (un volet) ou choisit une personne (deux volets), un chevron droit, jamais « ˅ ».
+  test("une ligne de la liste ne se déplie pas : chevron droit, pas d'aria-expanded", async ({ page }) => {
+    await ouvrir(page, "/back-office/equipes/personnes");
+    const ligne = page.getByRole("button", { name: /Gaspard O\./ });
+    await expect(ligne).toBeVisible();
+    await expect(ligne).not.toHaveAttribute("aria-expanded", /.*/);
+    await expect(ligne.locator("svg.lucide-chevron-down")).toHaveCount(0);
+    await expect(ligne.locator("svg.lucide-chevron-right")).toHaveCount(1);
+    // Centré sur la ligne.
+    await expect.poll(async () => {
+      const l = (await ligne.boundingBox())!;
+      const c = (await ligne.locator("svg.lucide-chevron-right").boundingBox())!;
+      return Math.abs(c.y + c.height / 2 - (l.y + l.height / 2));
+    }, { message: "chevron centré sur la ligne" }).toBeLessThanOrEqual(2);
   });
 
   test("l'interrupteur ferme les inscriptions ; son nom ne change pas, son état dit ouvert ou fermé", async ({ page }) => {
@@ -291,7 +327,7 @@ test.describe("T5 : Équipes › Personnes", () => {
     await expect(fiche.getByRole("heading", { level: 2 })).toHaveText("Bérénice A.");
     await fiche.getByRole("button", { name: "Modifier" }).click();
     await expect(fiche.getByRole("button", { name: "Enregistrer" })).toBeVisible();
-    await liste.getByPlaceholder(/Rechercher un membre/).fill("Gaspard");
+    await liste.getByRole("searchbox", { name: /Rechercher un membre/ }).fill("Gaspard");
     await expect(liste.getByRole("button", { name: /Gaspard O\./ })).toBeVisible();
     await expect(liste.getByRole("button", { name: /Bérénice A\./ })).toHaveCount(0);
     await expect(fiche.getByRole("heading", { level: 2 })).toHaveText("Bérénice A.");
@@ -301,12 +337,12 @@ test.describe("T5 : Équipes › Personnes", () => {
     await expect(page).toHaveURL(/[?&]uid=u-berenice/);
   });
 
-  test("en grand : une ligne de la liste = avatar, nom, services (ni e-mail ni date)", async ({ page }, info) => {
+  test("en grand : une ligne de la liste = avatar, nom, e-mail, services (ni nom au planning ni date, bo-equipes-9)", async ({ page }, info) => {
     test.skip(!estGrandEcran(info), "propre aux grands écrans");
     await ouvrir(page, "/back-office/equipes/personnes");
     const ligne = page.locator('[data-volet="liste"]').getByRole("button", { name: /Gaspard O\./ });
     await expect(ligne).toContainText("Présidence");
-    await expect(ligne).not.toContainText("gaspard@example.com");
+    await expect(ligne).toContainText("gaspard@example.com");
     await expect(ligne).not.toContainText("planning :");
     await expect(ligne).not.toContainText("inscrit le");
   });
@@ -587,7 +623,7 @@ test("captures : Équipes et Messages", async ({ page }, info) => {
   const dossier = "test-results/agencement-v18-t5";
   await page.waitForTimeout(400);
   await page.screenshot({ path: `${dossier}/organigramme-${info.project.name}.png` });
-  await page.getByTestId("equipe-da").getByRole("button", { name: "Modifier TEAM DA" }).click();
+  await page.getByTestId("equipe-da").getByRole("button", { name: "Modifier DA" }).click();
   await page.waitForTimeout(500);
   await page.screenshot({ path: `${dossier}/organigramme-panneau-${info.project.name}.png` });
   for (const [nom, chemin] of [

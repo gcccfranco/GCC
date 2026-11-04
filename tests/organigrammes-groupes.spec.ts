@@ -1258,10 +1258,11 @@ test.describe("OG-D · navigateur (Personnes, Sans compte)", () => {
   }
   const fiche = (page: Page) => page.locator("article");
 
-  test("Personnes : le sous-titre compte les inscrits, les groupes et les comptes sans groupe ; trois filtres de plus", async ({ page }) => {
+  test("Personnes : le sous-titre compte les inscrits et ceux sans groupe ; trois filtres de plus", async ({ page }) => {
     await ouvrir(page, "/back-office/equipes/personnes");
     // Sans groupe : Marc (clé de Bonté seule : déduit Bonté, donc avec groupe), Yann, Eva (deux clés) et l'admin : 3.
-    await expect(page.locator("header[data-entete-page]")).toContainText("7 inscrits · 5 groupes · 3 sans groupe");
+    await expect(page.locator("header[data-entete-page]")).toContainText("7 inscrits, dont 3 sans groupe");
+    await expect(page.locator("header[data-entete-page]")).not.toContainText("5 groupes");
     const filtres = page.getByRole("group", { name: "Filtrer les membres" });
     await expect(filtres.getByRole("button", { name: "Groupe Amour" })).toBeVisible();
     await expect(filtres.getByRole("button", { name: "Groupe Joie" })).toBeVisible();
@@ -1274,12 +1275,16 @@ test.describe("OG-D · navigateur (Personnes, Sans compte)", () => {
     await expect(page.getByRole("button", { name: /Yann M\./ })).toHaveCount(0);
   });
 
-  test("Personnes : la ligne dit le groupe et les rôles ; « Sans groupe » pour qui n'en a pas", async ({ page }) => {
+  test("Personnes : la ligne dit le groupe et les rôles ; rien pour qui n'a pas de groupe (bo-equipes-9)", async ({ page }) => {
     await ouvrir(page, "/back-office/equipes/personnes");
     const joel = page.getByRole("button", { name: /Joël F\./ });
     await expect(joel).toContainText("Groupe Paix · Responsable louange, Musiciens");
-    await expect(page.getByRole("button", { name: /Yann M\./ })).toContainText("Sans groupe");
+    await expect(page.getByRole("button", { name: /Yann M\./ })).not.toContainText("Sans groupe");
     await expect(page.getByRole("button", { name: /Ruth K\./ })).toContainText("Groupe Paix · Président");
+    // L'e-mail seul en deuxième ligne : ni « planning : … » ni « inscrit le … » dans la liste.
+    await expect(joel).toContainText("joel@example.com");
+    await expect(joel).not.toContainText("planning :");
+    await expect(joel).not.toContainText("inscrit le");
   });
 
   test("la fiche : carte Groupe, Rôles dans le Groupe Paix, Droits « par ses rôles », Services et équipes", async ({ page }) => {
@@ -1288,8 +1293,9 @@ test.describe("OG-D · navigateur (Personnes, Sans compte)", () => {
     await expect(f.getByRole("heading", { level: 2 })).toHaveText("Joël F.");
     const groupe = f.getByRole("region", { name: "Groupe", exact: true });
     await expect(groupe).toContainText("Groupe Paix");
-    await expect(groupe).toContainText("un seul groupe par personne");
-    await expect(groupe).toContainText("Changer de groupe retire ses rôles du Groupe Paix (admin seulement).");
+    // Une seule phrase d'aide (bo-equipes-8) : plus de « un seul groupe par personne » à côté du nom du groupe.
+    await expect(groupe).toContainText("Un seul groupe par personne ; changer de groupe retire ses rôles du Groupe Paix (admin seulement).");
+    await expect(groupe.locator("p")).toHaveCount(2);
     const roles = f.getByRole("region", { name: "Rôles dans le Groupe Paix" });
     await expect(roles).toContainText("Responsable louange");
     await expect(roles).toContainText("敬拜负责人");
@@ -1303,7 +1309,7 @@ test.describe("OG-D · navigateur (Personnes, Sans compte)", () => {
     await expect(droitsCarte).toContainText("Celles du Groupe Paix");
     // Lot AO-B : plus de case de coordination, la note qui la disait cochée par un admin a disparu.
     await expect(droitsCarte).not.toContainText("cochée par un admin");
-    await expect(f.getByRole("region", { name: "Services et équipes" })).toContainText("pendant la transition");
+    await expect(f.getByRole("region", { name: "Services et équipes" })).not.toContainText("pendant la transition");
     await expect(f).not.toContainText("Services et rôles");
   });
 
@@ -1312,7 +1318,12 @@ test.describe("OG-D · navigateur (Personnes, Sans compte)", () => {
     const f = fiche(page);
     await expect(f.getByRole("region", { name: "Groupe", exact: true })).toContainText("Sans groupe");
     await expect(f.getByRole("region", { name: /^Rôles dans le/ })).toHaveCount(0);
-    await expect(f.getByRole("region", { name: "Droits" })).toContainText(/Par ses rôles\s*—/);
+    // bo-equipes-8 : « Aucun » et « Aucune » à la place des « — ».
+    const droits = f.getByRole("region", { name: "Droits" });
+    await expect(droits).toContainText(/Par ses rôles\s*Aucun/);
+    await expect(droits).toContainText(/Notifications\s*Aucune/);
+    await expect(droits).not.toContainText(/(Par ses rôles|Notifications)\s*—/);
+    await expect(f.getByRole("region", { name: "Groupe", exact: true })).toContainText("Un seul groupe par personne ; seul un admin peut le changer.");
   });
 
   test("« Changer de groupe » : feuille des cinq groupes et « Sans groupe », confirmation dans le site, route changerGroupe", async ({ page }) => {

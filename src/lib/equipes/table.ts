@@ -4,7 +4,7 @@
 
 export interface EquipeDef {
   id: string;
-  /** Nom du Sheet — l'écran affiche la traduction `equipes.team.<id>`. */
+  /** Nom du Sheet, qui sert à lire le Sheet ; l'écran affiche `equipes.court.<id>`. */
   nom: string;
   soustitre: string;
   /** Clé de reconnaissance dans le Sheet, normalisée (accents et casse pliés). */
@@ -14,7 +14,8 @@ export interface EquipeDef {
 }
 
 /** Clé de langue du nom d'une équipe (lot 1 du chantier « équipes et groupes », EQ23) : le nom
- *  long (`equipes.team.<id>`, « TEAM DA ») ou court (`equipes.court.<id>`, « DA ») ; pour
+ *  court (`equipes.court.<id>`, « DA ») que les écrans affichent depuis bo-equipes-15, ou le nom
+ *  long (`equipes.team.<id>`, « TEAM DA », qui ne sert plus qu'aux comités et aux notifications) ; pour
  *  « louange », le public élargi `equipes.public.louange` (« Louange », 敬拜, EQ4), jamais
  *  « TEAM LOUANGE » : il est plus large que l'équipe. */
 export function cleNomEquipe(id: string, court = false): string {

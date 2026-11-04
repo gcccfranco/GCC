@@ -57,8 +57,8 @@ test("un ancien membre au groupe « Pianistes » apparaît sous Pianistes", asyn
 
 test("le référent EDD coche Professeurs cours et Cajon : la personne figure sous les deux, l'écriture porte sousEquipesEdd", async ({ page }) => {
   const db = await ouvrir(page, REFERENT, "/back-office/equipes", DOCS([...EDD, M("Léandre Pique", { uid: "u-leandre", groupe: "Pianistes" })]));
-  await page.getByRole("button", { name: "Modifier TEAM EDD" }).click();
-  const p = page.getByRole("dialog", { name: "TEAM EDD" });
+  await page.getByRole("button", { name: "Modifier EDD" }).click();
+  const p = page.getByRole("dialog", { name: "EDD", exact: true });
   await expect(p).toBeVisible();
   const ligne = p.getByTestId("membre-u-liang");
   const sous = ligne.getByRole("group", { name: "Sous-équipes", exact: true });
@@ -85,7 +85,7 @@ test("le référent EDD coche Professeurs cours et Cajon : la personne figure so
 test("un membre de l'EDD non référent ne voit ni crayon ni pastilles", async ({ page }) => {
   await ouvrir(page, SIMPLE, "/equipes");
   await expect(page.getByTestId("equipe-edd")).toBeVisible();
-  await expect(page.getByRole("button", { name: "Modifier TEAM EDD" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Modifier EDD" })).toHaveCount(0);
   await expect(page.getByRole("group", { name: "Sous-équipes", exact: true })).toHaveCount(0);
 });
 

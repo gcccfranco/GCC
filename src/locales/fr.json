@@ -172,7 +172,7 @@
       "propositionAide": "Pas encore au répertoire. Le passage garde la proposition en attente ; elle devient le chant dès qu'il est au répertoire.",
       "proposerDescription": "Ta proposition est envoyée aux administrateurs. Le passage la garde en attente jusqu'à ce que le chant soit au répertoire.",
       "proposerEtAjouter": "Proposer et ajouter",
-      "proposer": "Proposer « {{titre}} »",
+      "proposer": "Proposer « {{titre}} »",
       "sansChant": "Sans chant : {{liste}}",
       "passageN": "passage {{n}}",
       "musiquesSur": "Musiques et danses : sur la page de {{fete}}",
@@ -241,7 +241,7 @@
       "supprimeeLe": "Supprimée le {{date}}",
       "restaurer": "Restaurer",
       "supprimerDefinitivement": "Supprimer définitivement",
-      "definitifTitre": "Supprimer définitivement « {{titre}} » ?",
+      "definitifTitre": "Supprimer définitivement « {{titre}} » ?",
       "definitifCorps": "Elle ne pourra plus être restaurée.",
       "erreur": "L'opération a échoué. Réessaie."
     },
@@ -373,7 +373,7 @@
       "lastPhrase": {
         "add": "Dernière phrase",
         "title": "Dernière phrase (Dp)",
-        "hint": "Les dernières lignes d'une section, avec leurs accords, ajoutées comme une étape « Dp » à la fin de la structure.",
+        "hint": "Les dernières lignes d'une section, avec leurs accords, ajoutées comme une étape « Dp » à la fin de la structure.",
         "section": "Section",
         "lines": "Lignes",
         "nLines_one": "{{count}} ligne",
@@ -576,7 +576,7 @@
       "instrNeedsChord": "Ajoute au moins un accord pour valider.",
       "confirmChord": "Valider l'accord",
       "majQuality": "maj",
-      "customQuality": "Qualité « {{quality}} » conservée",
+      "customQuality": "Qualité « {{quality}} » conservée",
       "bassToggle": "/ basse",
       "modifiedBadge": "Version modifiée",
       "revert": "Rétablir l'original",
@@ -759,7 +759,7 @@
   },
   "profile": {
     "title": "Mon profil",
-    "welcome": "Bienvenue ! Complète ton profil pour accéder aux setlists de tes services et à l'onglet « Mes Services ».",
+    "welcome": "Bienvenue ! Complète ton profil pour accéder aux setlists de tes services et à l'onglet « Mes Services ».",
     "locked": "Ton profil est complété. Pour le modifier, contacte un administrateur.",
     "save": "Enregistrer mon profil",
     "enregistrer": "Enregistrer",
@@ -784,7 +784,7 @@
       "none": "Aucun",
       "groupeMusicien": "Je suis musicien dans mon groupe",
       "planningName": "Ton nom dans les plannings",
-      "planningNameHint": "Choisis le nom qui te désigne dans les plannings — il sert à remplir « Mes services », dans Moi.",
+      "planningNameHint": "Choisis le nom qui te désigne dans les plannings — il sert à remplir « Mes services », dans Moi.",
       "notInPlannings": "— Je ne suis pas encore dans les plannings —",
       "otherName": "Autre (saisir mon nom)…",
       "customNamePlaceholder": "Nom exact tel qu'écrit dans les plannings",
@@ -859,7 +859,7 @@
         "points": [
           "Les filtres limitent l'affichage à une langue ou à un thème précis.",
           "La pastille de couleur à droite donne la tonalité du chant ; sa couleur indique la langue : bleu = français, rouge = chinois.",
-          "Tes derniers chants ouverts apparaissent en haut, sous « Récemment consultés ».",
+          "Tes derniers chants ouverts apparaissent en haut, sous « Récemment consultés ».",
           "Un chant manque ? Le bouton **Proposer un chant** l'envoie aux responsables."
         ]
       },
@@ -893,10 +893,10 @@
         "for": "Lecture pour tous · création selon tes droits",
         "body": "Une setlist regroupe les chants d'un culte ou d'une réunion. Tu vois celles des services auxquels ton profil donne accès.",
         "points": [
-          "Ouvre une setlist pour parcourir les chants, lancer le **Mode Louange** ou télécharger un **PDF** (voir « Vue partitions et coup d'œil »).",
+          "Ouvre une setlist pour parcourir les chants, lancer le **Mode Louange** ou télécharger un **PDF** (voir « Vue partitions et coup d'œil »).",
           "Chaque chant garde sa tonalité, son mode (standard / Jianpu) et ses notes propres au culte.",
           "**Dupliquer** crée ta propre copie d'une setlist ; **Partager** copie son lien.",
-          "Avec le rôle **musicien / présidence** (créer et modifier) ou **choriste** (créer), tu composes les setlists de tes services — voir « Composer une setlist » ci-dessous."
+          "Avec le rôle **musicien / présidence** (créer et modifier) ou **choriste** (créer), tu composes les setlists de tes services — voir « Composer une setlist » ci-dessous."
         ],
         "tip": "Une setlist **privée** n'est visible que de son auteur et des responsables ; un **brouillon** reste caché tant qu'il n'est pas publié."
       },
@@ -911,7 +911,7 @@
           "**Adapter** : modifie les **accords** ou les **paroles** d'un chant — ces changements ne concernent que cette setlist.",
           "**Notes à trois niveaux** : note de la setlist, note d'un chant, et note d'une section précise.",
           "**Nuances par section** : pose une dynamique ou une indication (pp, mf, crescendo, a cappella…) sur une section.",
-          "**Transitions** : ajoute un texte « transition après cette section » pour noter une modulation, un enchaînement, un silence…",
+          "**Transitions** : ajoute un texte « transition après cette section » pour noter une modulation, un enchaînement, un silence…",
           "**Fusion de chants (medley)** : sélectionne plusieurs chants puis **Fusionner** pour les enchaîner d'un bloc ; **Mélanger les sections** entrelace leurs couplets/refrains, et **Défusionner** les sépare à nouveau.",
           "**Brouillon** : tant que tu n'as pas touché **Publier**, la setlist reste un brouillon, invisible des autres — tu peux la finir plus tard."
         ],
@@ -978,7 +978,7 @@
           "Les **infos** épinglées restent en tête du calendrier : elles remplacent les anciennes annonces.",
           "Avec le droit d'annonces d'une section, ou comme référent d'une équipe, tu peux **créer** un évènement pour ta section ou pour ton équipe.",
           "Tu reçois un rappel la veille des évènements auxquels tu es inscrit.",
-          "**Où créer un évènement** : ceux de toute l'église datés jusqu'au {{jour}} s'écrivent dans le Sheet des évènements ; à partir de 2027, ils se créent dans le **Back-Office › Évènements › « Nouvel évènement »**, comme les sorties de section. Les réunions d'équipe se créent dans **Back-Office › Réunions › « Nouvelle réunion »**."
+          "**Où créer un évènement** : ceux de toute l'église datés jusqu'au {{jour}} s'écrivent dans le Sheet des évènements ; à partir de 2027, ils se créent dans le **Back-Office › Évènements › « Nouvel évènement »**, comme les sorties de section. Les réunions d'équipe se créent dans **Back-Office › Réunions › « Nouvelle réunion »**."
         ],
         "tip": "L'organisateur retrouve la liste des inscrits et un **QR code** sur la fiche de l'évènement."
       },
@@ -1016,7 +1016,7 @@
           "Une idée ne convient pas ? **Ne marche pas sur ce chant** la retire pour tout le monde.",
           "Ajoute tes propres **idées** : l'équipe les voit sur le chant."
         ],
-        "tip": "Les idées sont calculées sur les accords : le site n'entend pas la mélodie. D'où « À vérifier en jouant »."
+        "tip": "Les idées sont calculées sur les accords : le site n'entend pas la mélodie. D'où « À vérifier en jouant »."
       },
       "maVersion": {
         "title": "Ma version d'un chant",
@@ -1040,7 +1040,7 @@
           "Tu reçois un rappel 3 jours et 1 jour avant l'échéance, et le lendemain si elle n'est pas faite.",
           "Les **réunions d'équipe** se créent dans **Back-Office › Réunions**."
         ],
-        "tip": "« Mes tâches », dans Moi, montre ce qui reste à faire pour toi."
+        "tip": "« Mes tâches », dans Moi, montre ce qui reste à faire pour toi."
       },
       "moi": {
         "title": "Moi et réglages",
@@ -1168,7 +1168,7 @@
       "saving": "Enregistrement…",
       "errorTitle": "Donne un titre à l'annonce.",
       "errorEmpty": "L'annonce est vide — ajoute du texte ou une image.",
-      "errorLink": "Le lien « {{url}} » doit commencer par http:// ou https://",
+      "errorLink": "Le lien « {{url}} » doit commencer par http:// ou https://",
       "errorImages": "Limite d'images atteinte pour cette annonce (poids total).",
       "errorImageAdd": "Erreur lors de l'ajout de l'image.",
       "errorSave": "Erreur lors de l'enregistrement."
@@ -1259,7 +1259,7 @@
       "tropLongues_other": "{{count}} cellules trop longues ignorées.",
       "etAutres_one": "et {{count}} autre",
       "etAutres_other": "et {{count}} autres",
-      "sansCompte": "« {{noms}} » : sans compte.",
+      "sansCompte": "« {{noms}} » : sans compte.",
       "horsGrille_one": "{{count}} case hors de la grille ignorée.",
       "horsGrille_other": "{{count}} cases hors de la grille ignorées.",
       "verrouillees_one": "{{count}} case verrouillée laissée telle quelle.",
@@ -1267,7 +1267,7 @@
       "videes_one": "{{count}} case vidée.",
       "videes_other": "{{count}} cases vidées.",
       "annuler": "Annuler",
-      "clavier": "Au clavier · Clic : une case · Maj + clic : jusqu'à cette case · flèches : se déplacer · Entrée : ouvrir « Choisir » · Échap : tout désélectionner"
+      "clavier": "Au clavier · Clic : une case · Maj + clic : jusqu'à cette case · flèches : se déplacer · Entrée : ouvrir « Choisir » · Échap : tout désélectionner"
     },
     "welcome": "Bienvenue",
     "title": "GCC — Planning des services",
@@ -1388,7 +1388,7 @@
       "confirmerRetrait": "Retirer cette ligne ?",
       "astuceAutres": "Pour inscrire quelqu'un d'autre :",
       "astuceAutresLien": "Back-Office › Planning › Prépa. Table",
-      "astuce": "Tu peux écrire « Famille … » à la place de ton nom.",
+      "astuce": "Tu peux écrire « Famille … » à la place de ton nom.",
       "vientDeSInscrire": "{{nom}} vient de s'inscrire.",
       "illisible": "Inscriptions illisibles pour l'instant.",
       "echec": "Enregistrement impossible, réessaie.",
@@ -1459,21 +1459,21 @@
       "grille": "Grille"
     },
     "verse": {
-      "text": "« Tout ce que vous faites, faites-le de bon cœur, comme pour le Seigneur et non pour des hommes, sachant que vous recevrez du Seigneur l'héritage pour récompense. Servez Christ, le Seigneur. »",
+      "text": "« Tout ce que vous faites, faites-le de bon cœur, comme pour le Seigneur et non pour des hommes, sachant que vous recevrez du Seigneur l'héritage pour récompense. Servez Christ, le Seigneur. »",
       "ref": "— Colossiens 3 : 23-24"
     },
     "programmes": {
       "newTitle": "Nouveau programme",
-      "editTitle": "Modifier « {{nom}} »",
+      "editTitle": "Modifier « {{nom}} »",
       "nom": "Nom",
-      "nomHint": "Court : c'est le nom de l'onglet (« Noël »).",
+      "nomHint": "Court : c'est le nom de l'onglet (« Noël »).",
       "jourJ": "Jour J",
       "create": "Créer le programme",
       "save": "Enregistrer",
       "cancel": "Annuler",
       "edit": "Modifier",
       "delete": "Supprimer",
-      "confirmDelete": "Supprimer « {{nom}} » et tous ses créneaux ?",
+      "confirmDelete": "Supprimer « {{nom}} » et tous ses créneaux ?",
       "show": "Afficher",
       "hide": "Masquer",
       "shown": "Affiché",
@@ -1629,7 +1629,7 @@
     "publierConfirm": "Publier le {{tri}} {{annee}} de {{planning}} ?",
     "publierConfirmTexte": "Tous ses membres le verront. Ils sont prévenus à la première publication du trimestre.",
     "publierEchec": "La publication a échoué. Réessaie.",
-    "dejaAnnonce": "Ce trimestre avait déjà été annoncé : personne n'est prévenu de nouveau. Pour signaler des corrections, utilise « Prévenir des changements ».",
+    "dejaAnnonce": "Ce trimestre avait déjà été annoncé : personne n'est prévenu de nouveau. Pour signaler des corrections, utilise « Prévenir des changements ».",
     "dejaAnnonceEnLigne": "Ce trimestre avait déjà été annoncé : personne n'est prévenu de nouveau.",
     "trimestrePublie": "Trimestre {{tri}} publié.",
     "trimestrePublieNotifie": "Trimestre {{tri}} publié — notification envoyée ({{count}}).",
@@ -1778,11 +1778,11 @@
       "fermerConfirmer": "Fermer",
       "cetteFete": "Cette fête",
       "saison": "Saison",
-      "saisonARegler": "à régler, puis « Lancer les réservations »",
+      "saisonARegler": "à régler, puis « Lancer les réservations »",
       "toutMembre": "tout membre",
       "familles_one": "{{count}} famille",
       "familles_other": "{{count}} familles",
-      "brouillonTexte": "Rien n'est visible des membres tant que la saison est en brouillon. Ils voient « {{phrase}} ».",
+      "brouillonTexte": "Rien n'est visible des membres tant que la saison est en brouillon. Ils voient « {{phrase}} ».",
       "annees": "Choisir l'année",
       "jourJ": "Jour J",
       "choisirJourJ": "Choisir le jour J",
@@ -2030,7 +2030,7 @@
       },
       "songsErrorsDetail": {
         "label": "Lesquelles ? (les chants concernés, si tu t'en souviens)",
-        "placeholder": "ex. « Tu es fidèle » : l'accord du refrain ne tombe pas au bon endroit."
+        "placeholder": "ex. « Tu es fidèle » : l'accord du refrain ne tombe pas au bon endroit."
       },
       "songsMissing": {
         "label": "Quels chants manquent au répertoire ?",
@@ -2115,7 +2115,7 @@
         }
       },
       "mesServicesRating": {
-        "label": "La page « Mes services » (tes prochains services) est…",
+        "label": "La page « Mes services » (tes prochains services) est…",
         "low": "Peu utile",
         "high": "Très utile"
       },
@@ -2180,7 +2180,7 @@
         "opt": {
           "ask": "Je demande à quelqu'un",
           "guide": "Je vais voir le guide",
-          "report": "J'utilise « Signaler un problème »",
+          "report": "J'utilise « Signaler un problème »",
           "giveUp": "Je laisse tomber"
         }
       },
@@ -2259,7 +2259,7 @@
     "modifier": "Modifier",
     "dupliquer": "Dupliquer",
     "supprimer": "Supprimer",
-    "confirmDelete": "Supprimer « {{titre}} » ?",
+    "confirmDelete": "Supprimer « {{titre}} » ?",
     "confirmDeleteTexte": "Les inscriptions seront perdues.",
     "erreurSuppression": "Suppression impossible. Réessaie.",
     "reserved": "Cette page est réservée à la coordination et aux responsables de section.",
@@ -2376,7 +2376,7 @@
     "libelleDate": "Date",
     "libelleHeure": "Heure",
     "libelleLieu": "Lieu",
-    "noneHint": "Ajoute le prochain avec « Nouvel évènement ».",
+    "noneHint": "Ajoute le prochain avec « Nouvel évènement ».",
     "bientot": "Bientôt",
     "reglageInscriptions": "Inscriptions",
     "aHeure": "{{jour}} à {{heure}}",
@@ -2404,10 +2404,10 @@
       "ajouter": "Ajouter",
       "vide": "Aucun sujet pour l'instant.",
       "commencee": "La réunion a commencé : on n'ajoute plus de sujet.",
-      "deplacer": "Déplacer « {{texte}} »",
+      "deplacer": "Déplacer « {{texte}} »",
       "traite": "Traité : {{texte}}",
-      "retirer": "Retirer « {{texte}} »",
-      "confirmRetirer": "Retirer le sujet « {{texte}} » ?",
+      "retirer": "Retirer « {{texte}} »",
+      "confirmRetirer": "Retirer le sujet « {{texte}} » ?",
       "nonTraite": "non traité",
       "noteAvant": "Un sujet non traité reste en rouge ; à la création de la réunion suivante, on te propose de le reprendre.",
       "noteRouge_one": "{{count}} sujet non traité : il restera en rouge tant qu'on ne l'a pas repris dans une prochaine réunion.",
@@ -2415,10 +2415,10 @@
       "erreur": "Échec de l'enregistrement. Réessaie.",
       "erreurLecture": "Les sujets n'ont pas pu être chargés.",
       "instructions": "Pour déplacer un sujet : Espace ou Entrée pour le saisir, flèches haut et bas pour le déplacer, Espace ou Entrée pour le poser, Échap pour annuler.",
-      "annonceSaisi": "Sujet « {{texte}} » saisi, position {{position}} sur {{total}}.",
-      "annonceDeplace": "Sujet « {{texte}} » en position {{position}} sur {{total}}.",
-      "annoncePose": "Sujet « {{texte}} » posé en position {{position}} sur {{total}}.",
-      "annonceAnnule": "Déplacement annulé : « {{texte}} » reste à sa place.",
+      "annonceSaisi": "Sujet « {{texte}} » saisi, position {{position}} sur {{total}}.",
+      "annonceDeplace": "Sujet « {{texte}} » en position {{position}} sur {{total}}.",
+      "annoncePose": "Sujet « {{texte}} » posé en position {{position}} sur {{total}}.",
+      "annonceAnnule": "Déplacement annulé : « {{texte}} » reste à sa place.",
       "reprisLe": "repris le {{date}}",
       "reprisSansDate": "repris dans une autre réunion",
       "reprisDu": "repris du {{date}}"
@@ -2525,7 +2525,7 @@
     "aucuneEquipe": "Tu ne fais partie d'aucune équipe : les tâches sont réservées aux membres des équipes.",
     "pasMembre": "Tu ne fais pas partie de cette équipe.",
     "rienAFaire": "Rien à faire pour l'instant.",
-    "vide": "Aucune tâche pour l'instant. Ajoute la première avec « Nouvelle tâche ».",
+    "vide": "Aucune tâche pour l'instant. Ajoute la première avec « Nouvelle tâche ».",
     "nouvelle": "Nouvelle tâche",
     "modifier": "Modifier la tâche",
     "groupes": {
@@ -2739,7 +2739,7 @@
       "texte": "Reçois un rappel avant chaque service, et les nouvelles de l'église.",
       "activer": "Activer les notifications",
       "actives": "Notifications activées.",
-      "iphone": "Sur iPhone, ajoute d'abord GCC à l'écran d'accueil (Partager, puis « Sur l'écran d'accueil »). Tu pourras ensuite les activer dans Moi.",
+      "iphone": "Sur iPhone, ajoute d'abord GCC à l'écran d'accueil (Partager, puis « Sur l'écran d'accueil »). Tu pourras ensuite les activer dans Moi.",
       "erreur": "Les notifications n'ont pas pu être activées. Tu peux réessayer depuis Moi."
     },
     "fin": {
@@ -2771,7 +2771,7 @@
     "title": "Notifications",
     "description": "Rappels avant un service (1 semaine puis 3 jours) et alerte quand une setlist est prête.",
     "unsupported": "Cet appareil ou ce navigateur ne supporte pas les notifications.",
-    "iosInstall": "Sur iPhone ou iPad : ajoute d'abord le site à l'écran d'accueil (Partager, puis « Sur l'écran d'accueil »), puis ouvre-le depuis l'icône pour activer les notifications.",
+    "iosInstall": "Sur iPhone ou iPad : ajoute d'abord le site à l'écran d'accueil (Partager, puis « Sur l'écran d'accueil »), puis ouvre-le depuis l'icône pour activer les notifications.",
     "blocked": "Les notifications sont bloquées pour ce site dans ton navigateur. Pour les réactiver : clique sur l'icône à gauche de l'adresse, puis Notifications, Autoriser, et recharge la page.",
     "promptTitle": "Active les rappels de service",
     "promptText": "Reçois un rappel avant chaque service et une alerte quand une setlist est prête.",
@@ -2806,7 +2806,7 @@
     "accordsOriginePage": "Page {{n}} : les accords imprimés sont ceux d'origine ({{key}}) et ne suivent pas la transposition ; les chiffres, eux, restent justes.",
     "accordsOrigine": "Les chiffres du 简谱 restent justes dans toutes les tonalités, mais les accords imprimés sur cette partition sont ceux d'origine et ne suivent pas la transposition.",
     "partiel": "Seuls les accords <bleu>en bleu</bleu> ont été transposés. Les autres sont ceux d'origine ({{key}}) et ne suivent pas la transposition ; les chiffres, eux, restent justes.",
-    "partielIndication": "Seuls les accords <bleu>en bleu</bleu> ont été transposés. Les autres sont ceux d'origine ({{key}}), comme l'indication « 1={{key}} » en haut de page, et ne suivent pas la transposition ; les chiffres, eux, restent justes.",
+    "partielIndication": "Seuls les accords <bleu>en bleu</bleu> ont été transposés. Les autres sont ceux d'origine ({{key}}), comme l'indication « 1={{key}} » en haut de page, et ne suivent pas la transposition ; les chiffres, eux, restent justes.",
     "accords": "Accords :",
     "deuxTonalites": "{{a}} et {{b}}",
     "toutesTonalites": "Toutes les tonalités",
@@ -2859,7 +2859,7 @@
     "signaler": "Signaler",
     "signalerTitre": "Doigté manquant : {{accord}}",
     "signalerDescription": "Accord {{accord}} : pas de doigté de guitare.",
-    "signalerChant": "Vu dans le chant « {{titre}} ».",
+    "signalerChant": "Vu dans le chant « {{titre}} ».",
     "voirComment": "Voir comment jouer {{accord}}",
     "aideToucher": "Touche un accord pour voir comment le jouer, à la guitare ou au piano.",
     "aideCliquer": "Clique sur un accord pour voir comment le jouer, à la guitare ou au piano.",
@@ -3136,7 +3136,7 @@
       "titreN": "Le comité · {{n}}",
       "personnes_one": "{{count}} personne · une équipe",
       "personnes_other": "{{count}} personnes · une équipe",
-      "aide": "Le président, les VP et les rôles cochés « au comité ». Référents : le président et les VP.",
+      "aide": "Le président, les VP et les rôles cochés « au comité ». Référents : le président et les VP.",
       "reunions": "Réunions et tâches du comité"
     },
     "roles": "Rôles · {{n}}",
@@ -3175,7 +3175,7 @@
       "creer": "Créer le rôle",
       "supprimer": "Supprimer le rôle",
       "modifierNom": "Modifier le rôle {{nom}}",
-      "supprimerTitre": "Supprimer le rôle « {{nom}} » ?",
+      "supprimerTitre": "Supprimer le rôle « {{nom}} » ?",
       "supprimerTexte": "Ses titulaires le perdent, et sa colonne du planning se libère."
     },
     "form": {
@@ -3193,7 +3193,7 @@
       "auComite": "Au comité",
       "auComiteAide": "Ses titulaires entrent au comité.",
       "colonne": "Colonne du planning reliée",
-      "colonneAide": "« Choisir » y proposera d'abord les titulaires",
+      "colonneAide": "« Choisir » y proposera d'abord les titulaires",
       "aucune": "Aucune",
       "colonnePrise": "colonne déjà reliée à un autre rôle",
       "cadenas": "Cadenas : colonne déjà reliée à un autre rôle. Thème n'est pas une personne : pas de lien.",
@@ -3204,7 +3204,7 @@
       "remplir": "Remplir le planning du groupe",
       "remplirAide": "Écrire dans les cases du planning du {{groupe}}",
       "publier": "Publier le planning",
-      "publierAide": "Publier un trimestre et « Prévenir des changements »",
+      "publierAide": "Publier un trimestre et « Prévenir des changements »",
       "notifier": "Notifier le groupe",
       "notifierAide": "Envoyer une notification à tout le {{groupe}}",
       "saisirFetes": "Saisir les chants des fêtes",
@@ -3220,7 +3220,7 @@
       "non": "Non",
       "aussi": "aussi {{roles}}",
       "actionsDe": "Actions pour {{nom}}",
-      "dansColonne": "Dans la colonne {{colonne}}, « Choisir » propose d'abord {{noms}}.",
+      "dansColonne": "Dans la colonne {{colonne}}, « Choisir » propose d'abord {{noms}}.",
       "recoivent": "Les titulaires reçoivent les notifications du {{groupe}}."
     },
     "recherche": {
@@ -3231,12 +3231,12 @@
       "entrera": "Sans groupe · entrera dans le {{groupe}}",
       "deja": "Déjà titulaire",
       "autre": "Dans le {{groupe}} : un admin peut le changer de groupe",
-      "ajouterSansCompte": "Ajouter « {{nom}} » sans compte",
+      "ajouterSansCompte": "Ajouter « {{nom}} » sans compte",
       "sansCompteAide": "Écris le nom complet : il n'aura pas de notification"
     },
     "relier": {
       "action": "Relier à un compte",
-      "titre": "Relier « {{nom}} » à un compte",
+      "titre": "Relier « {{nom}} » à un compte",
       "sousTitre": "dans tous ses rôles du {{groupe}}"
     },
     "choisir": {
@@ -3252,21 +3252,22 @@
       "toi": "toi",
       "sousTitre": "Organigrammes de l'église et des groupes",
       "toiDans": "Toi dans le {{groupe}}. Tu reçois les notifications du groupe.",
-      "toiDansRoles": "Toi dans le {{groupe}} : {{roles}}. Tu reçois les notifications du groupe ; tes dates sont dans <lien>« Mes services »</lien>.",
-      "toiRoles": "Toi : {{roles}}. Tes dates sont dans <lien>« Mes services »</lien>."
+      "toiDansRoles": "Toi dans le {{groupe}} : {{roles}}. Tu reçois les notifications du groupe ; tes dates sont dans <lien>« Mes services »</lien>.",
+      "toiRoles": "Toi : {{roles}}. Tes dates sont dans <lien>« Mes services »</lien>."
     },
     "personnes": {
-      "groupesSansGroupe_one": "5 groupes · {{count}} sans groupe",
-      "groupesSansGroupe_other": "5 groupes · {{count}} sans groupe",
+      "inscritsDontSansGroupe_one": "{{count}} inscrit, dont {{sans}} sans groupe",
+      "inscritsDontSansGroupe_other": "{{count}} inscrits, dont {{sans}} sans groupe",
+      "sansCompteNombre_one": "{{count}} nom à relier",
+      "sansCompteNombre_other": "{{count}} noms à relier",
       "sansGroupe": "Sans groupe",
       "retour": "Personnes",
       "groupe": "Groupe",
-      "unSeul": "un seul groupe par personne",
       "changer": "Changer de groupe",
-      "changerAide": "Changer de groupe retire ses rôles du {{groupe}} (admin seulement).",
-      "changerAideSans": "Seul un admin change quelqu'un de groupe.",
+      "changerAide": "Un seul groupe par personne ; changer de groupe retire ses rôles du {{groupe}} (admin seulement).",
+      "changerAideSans": "Un seul groupe par personne ; seul un admin peut le changer.",
       "changerSousTitre": "{{nom}} · un seul groupe par personne",
-      "changerConfirmer": "Changer {{nom}} vers « {{vers}} » ?",
+      "changerConfirmer": "Changer {{nom}} vers « {{vers}} » ?",
       "changerTexteRoles": "Changer de groupe retire ses rôles du {{groupe}}.",
       "changerTexteAucun": "Aucun rôle de groupe à retirer.",
       "changerErreur": "Le changement de groupe a échoué : réessaie.",
@@ -3274,13 +3275,13 @@
       "rolesDans": "Rôles dans le {{groupe}}",
       "organigramme": "Organigramme",
       "parRoles": "Par ses rôles",
+      "aucun": "Aucun",
       "remplitPublie": "Remplit et publie le planning",
       "remplit": "Remplit le planning",
       "notifications": "Notifications",
       "celles": "Celles du {{groupe}}",
       "noteDroits": "Coordination : cochée par un admin. Admin : liste des adresses, ne se coche pas. Le reste vient de ses rôles.",
       "servicesEquipes": "Services et équipes",
-      "transition": "pendant la transition",
       "referent": "Référent",
       "membre": "Membre",
       "sansCompteTitre": "Titulaires sans compte",
@@ -3394,7 +3395,7 @@
     "enregistrer": "Enregistrer",
     "annuler": "Annuler",
     "ajouterMembre": "Ajouter un membre",
-    "nomLibre": "Ajouter « {{nom}} » sans compte",
+    "nomLibre": "Ajouter « {{nom}} » sans compte",
     "retirer": "Retirer {{nom}}",
     "mention": "Mention",
     "erreur": "L'enregistrement a échoué.",
@@ -3444,8 +3445,6 @@
     "vue": "Vue",
     "modifierEquipe": "Modifier {{nom}}",
     "compte": {
-      "inscrits_one": "{{count}} inscrit",
-      "inscrits_other": "{{count}} inscrits",
       "musiciens_one": "{{count}} musicien",
       "musiciens_other": "{{count}} musiciens",
       "presidences_one": "{{count}} présidence",
@@ -3549,7 +3548,9 @@
     },
     "equipe": {
       "sansCompte": "Noms du planning sans compte",
-      "sansCompteAvecCompte": "Noms du planning sans compte ({{count}})"
+      "sansCompteAvecCompte": "Noms du planning sans compte ({{count}})",
+      "sansCompteAide": "Ces noms figurent au planning sans être liés à un compte : ces personnes ne reçoivent ni rappel ni notification « setlist prête ». Page de lecture : pour lier un nom, ouvre la fiche de la personne.",
+      "toutesLesPersonnes": "Toutes les personnes"
     },
     "aFaire": {
       "sceneDesFetes": {
@@ -3775,8 +3776,8 @@
     "jourAria_other": "{{jour}}, {{count}} entrées",
     "rien": "Rien ce jour-là.",
     "casesVides": "Cases vides : {{liste}}",
-    "setlistDuService_one": "Setlist « {{titre}} » · {{count}} chant",
-    "setlistDuService_other": "Setlist « {{titre}} » · {{count}} chants",
+    "setlistDuService_one": "Setlist « {{titre}} » · {{count}} chant",
+    "setlistDuService_other": "Setlist « {{titre}} » · {{count}} chants",
     "echecs": "Lecture impossible : {{liste}}. Le reste s'affiche.",
     "duSheet": "Lu dans le Sheet des évènements",
     "sheetInjoignable": "Sheet des évènements injoignable : ses évènements n'apparaissent pas pour l'instant.",
@@ -3799,7 +3800,7 @@
     "semaineDu": "Semaine du {{date}}",
     "deplacer": {
       "bouton": "Déplacer…",
-      "titre": "Déplacer « {{titre}} »",
+      "titre": "Déplacer « {{titre}} »",
       "nouvelleDate": "Nouvelle date",
       "deposer": "Déposer pour déplacer",
       "prevenirInscrits": "Prévenir les inscrits ({{count}})",
@@ -3939,7 +3940,7 @@
     "envoye": "Envoyé ({{n}} notification(s)).",
     "echec": "Échec de l'envoi.",
     "prevenir": "Prévenir des membres",
-    "prevenirAide": "Une notification sur leur téléphone, et le message dans « Notifications ».",
+    "prevenirAide": "Une notification sur leur téléphone, et le message dans « Notifications ».",
     "aQui": "À qui",
     "apercu": "Aperçu",
     "maintenant": "maintenant",
@@ -3977,8 +3978,8 @@
       "erreurSupprSignalement": "Impossible de supprimer le signalement. Règles Firestore publiées ?"
     },
     "membre": {
-      "rechercher": "Rechercher un membre (nom, email, nom de planning)",
-      "rechercherPlaceholder": "Rechercher un membre (nom, email, nom de planning)…",
+      "rechercher": "Rechercher un membre par nom, e-mail ou nom au planning",
+      "rechercherPlaceholder": "Nom, e-mail ou nom au planning",
       "filtrer": "Filtrer les membres",
       "tous": "Tous",
       "neSertPas": "Ne sert pas",
@@ -3988,7 +3989,6 @@
       "az": "A–Z",
       "nouveau": "Nouveau",
       "admin": "admin",
-      "planningNom": "planning : {{nom}}",
       "inscritLe": "inscrit le {{date}}",
       "peutNotifier": "Peut envoyer des notifications à :",
       "enregistrement": "Enregistrement…",
@@ -4043,22 +4043,34 @@
     },
     "sansCompte": {
       "titre": "Planning sans compte ({{count}})",
-      "aide": "Ces noms apparaissent dans les plannings mais ne sont liés à aucun compte — ces personnes ne reçoivent ni rappels ni notification « setlist prête ».",
-      "tous": "✅ Tous les noms du planning sont liés à un compte."
+      "aide": "Ces noms apparaissent dans les plannings mais ne sont liés à aucun compte — ces personnes ne reçoivent ni rappels ni notification « setlist prête ».",
+      "tous": "Tous les noms du planning sont liés à un compte.",
+      "chercher": "Chercher un nom",
+      "nombre_one": "{{count}} nom",
+      "nombre_other": "{{count}} noms",
+      "filtres": "{{n}} sur {{total}}",
+      "aucunNom": "Aucun nom ne correspond."
     }
   },
   "responsabilites": {
-    "sousTitre": "Qui gère quoi : les plannings, le Comité Orga et les référents. Chaque changement est enregistré tout de suite.",
-    "sansGestionnaire": "Sans gestionnaire",
-    "sansGestionnaireAide": "Personne ne gère ces plannings : seuls les admins peuvent les remplir et les publier.",
-    "plannings": "Plannings",
-    "referents": "Référents",
+    "sousTitre": "Qui gère quoi : les plannings, le Comité Orga et les référents.",
+    "aPourvoir": "À pourvoir : {{liste}}",
+    "aPourvoirAide": "Sans gestionnaire, seuls les admins peuvent remplir et publier un planning.",
+    "aPourvoirPlannings": "Plannings",
+    "aPourvoirEquipes": "Équipes",
+    "nbPlannings_one": "{{count}} planning",
+    "nbPlannings_other": "{{count}} plannings",
+    "nbEquipes_one": "{{count}} équipe",
+    "nbEquipes_other": "{{count}} équipes",
+    "plannings": "Gestionnaires des plannings",
+    "referents": "Référents d'équipe",
     "gestionnaire": "Gestionnaire · {{planning}}",
     "referentEquipe": "Référent · {{equipe}}",
     "referentSous": "Référent · {{sous}}",
     "sousLouange": "Louange · {{sous}}",
     "ajouter": "Ajouter",
-    "personne": "Personne",
+    "vacant": "À pourvoir",
+    "enregistre": "Enregistré",
     "retirer": "Retirer {{nom}}",
     "chercher": "Chercher un compte par nom",
     "aucunCompte": "Aucun compte ne correspond.",
@@ -4130,7 +4142,7 @@
     "enChinois": "En chinois",
     "toutAfficher": "Tout afficher",
     "jamais": "jamais",
-    "choisirDebut": "Choisis une date de début (« Du ») pour voir les chants à redécouvrir.",
+    "choisirDebut": "Choisis une date de début (« Du ») pour voir les chants à redécouvrir.",
     "historique": "L'historique commence le {{date}} : choisis une période plus courte.",
     "aucunARedecouvrir": "Aucun chant à redécouvrir sur cette période.",
     "joues": "Joués au moins {{n}} fois avant le {{debut}}, aucune fois du {{debut}} au {{fin}}",
@@ -4198,7 +4210,7 @@
       "chants": "Mes chants les plus choisis",
       "jamais_one": "Jamais choisis : {{count}} chant",
       "jamais_other": "Jamais choisis : {{count}} chants",
-      "note": "Présidences comptées sous le nom « {{nom}} » · setlists publiées et passées",
+      "note": "Présidences comptées sous le nom « {{nom}} » · setlists publiées et passées",
       "aucune": "Aucune présidence sur cette période"
     }
   }

@@ -187,9 +187,13 @@ test.describe("la page d'une équipe au Back-Office (BO7)", () => {
     await expect(page.getByRole("heading", { level: 2, name: /^Noms du planning sans compte \(\d+\)$/ })).toBeVisible();
   });
 
-  test("Personnes : le lien « Noms du planning sans compte » de l'en-tête mène à la sous-page (admin)", async ({ page }) => {
+  test("Personnes : la rangée « Noms du planning sans compte » de la liste mène à la sous-page (admin), plus de bouton dans l'en-tête", async ({ page }) => {
     await ouvrir(page, ADMIN, "/back-office/equipes/personnes");
-    await page.locator("header[data-entete-page]").getByRole("link", { name: "Noms du planning sans compte" }).click();
+    await expect(page.locator("header[data-entete-page]").getByRole("link", { name: "Noms du planning sans compte" })).toHaveCount(0);
+    const rangee = page.getByTestId("rangee-sans-compte");
+    await expect(rangee).toBeVisible();
+    expect(Math.round((await rangee.boundingBox())!.height), "rangée de 52 px").toBe(52);
+    await rangee.click();
     await expect(page).toHaveURL(/\/back-office\/equipes\/personnes\/sans-compte\/?$/);
     await expect(page.getByRole("heading", { level: 2, name: /^Noms du planning sans compte \(\d+\)$/ })).toBeVisible();
   });
@@ -204,7 +208,7 @@ test.describe("la page d'une équipe au Back-Office (BO7)", () => {
 
   test("organigramme : le nom de la carte DA mène à la page de l'équipe", async ({ page }) => {
     await ouvrir(page, ADMIN, "/back-office/equipes");
-    const lien = page.getByTestId("equipe-da").getByRole("link", { name: "TEAM DA" });
+    const lien = page.getByTestId("equipe-da").getByRole("link", { name: "DA", exact: true });
     await expect(lien).toHaveAttribute("href", /\/back-office\/equipes\/da\/?$/);
     await lien.click();
     await expect(page).toHaveURL(/\/back-office\/equipes\/da\/?$/);
@@ -277,13 +281,13 @@ test.describe("BO-G : largeur de la page d'une équipe, « sans compte »", () =
     });
   }
 
-  test("sans compte : « ‹ Personnes » sous le titre, un seul titre avec le compte, la carte comme les autres", async ({ page }) => {
+  test("sans compte : « ‹ Toutes les personnes » sous le titre, un seul titre avec le compte, la carte comme les autres", async ({ page }) => {
     await ouvrir(page, ADMIN, "/back-office/equipes/personnes/sans-compte");
     const titre = page.getByRole("heading", { level: 2, name: /^Noms du planning sans compte \(\d+\)$/ });
     await expect(titre).toBeVisible();
     await expect(page.getByRole("heading", { level: 2 }), "un seul titre de section").toHaveCount(1);
     const h1 = (await page.getByRole("heading", { level: 1, name: "Équipes" }).boundingBox())!;
-    const retour = page.locator("section[aria-labelledby=\"personnes-sans-compte\"]").getByRole("link", { name: "Personnes", exact: true });
+    const retour = page.locator("section[aria-labelledby=\"personnes-sans-compte\"]").getByRole("link", { name: "Toutes les personnes", exact: true });
     const r = (await retour.boundingBox())!;
     expect(r.y, "le retour est sous le titre « Équipes »").toBeGreaterThan(h1.y + h1.height);
     const rail = (await page.locator('[data-onglets="rail"]').boundingBox())!;

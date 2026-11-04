@@ -155,7 +155,7 @@ test.describe("B2 : Équipes (Organigramme, Personnes)", () => {
 
     await ongletsRail(page).getByRole("link", { name: "Personnes" }).click();
     await expect(page).toHaveURL(/\/back-office\/equipes\/personnes\/?$/);
-    const recherche = page.getByPlaceholder(/Rechercher un membre/);
+    const recherche = page.getByRole("searchbox", { name: /Rechercher un membre/ });
     await expect(recherche).toBeVisible();
     // Agencement v18 (B9) : la carte des inscriptions, dans l'en-tête, avant la liste des membres.
     const inscriptions = page.getByRole("region", { name: "Inscriptions" });

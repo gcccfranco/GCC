@@ -138,10 +138,12 @@ const DOCS_PERSONNES = {
     .map(({ uid, ...p }) => [`users/${uid}`, p as Record<string, unknown>])),
 };
 
-async function ouvrirPersonnes(page: Page, to: string, zh = false) {
+async function ouvrirPersonnes(page: Page, to: string, zh = false, csv = "") {
   if (zh) await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
   await page.route("**/api/equipes/groupes", (route) => route.fulfill({ json: { ok: true, maj: 0, ignores: [] } }));
-  await page.route(/docs\.google\.com\/spreadsheets/, (route) => route.fulfill({ status: 200, contentType: "text/csv", body: "" }));
+  // `csv` : le planning du Culte Franco (onglet Franco_Louange) ; les autres onglets restent vides.
+  await page.route(/docs\.google\.com\/spreadsheets/, (route) =>
+    route.fulfill({ status: 200, contentType: "text/csv", body: new URL(route.request().url()).searchParams.get("sheet") === "Franco_Louange" ? csv : "" }));
   await signInAs(page, ADMIN, DOCS_PERSONNES, to);
 }
 
@@ -150,6 +152,13 @@ test("Personnes : la fiche (Groupe, Rôles, Droits) sans débordement ; « Chang
   const fiche = page.locator("article");
   await expect(fiche.getByRole("region", { name: "Rôles dans le Groupe Paix" })).toBeVisible();
   await verifierSansDebordement(page);
+  // bo-equipes-3 : une seule colonne à toutes les tailles (1 440 px compris) ; les cartes se suivent sans se recouvrir.
+  const cartes = await fiche.locator("section[aria-label]").evaluateAll((els) =>
+    els.map((e) => { const r = e.getBoundingClientRect(); return { x: Math.round(r.x), y: r.y, bas: r.y + r.height }; }));
+  expect(cartes.length).toBeGreaterThanOrEqual(4);
+  expect(new Set(cartes.map((c) => c.x)).size, "toutes les cartes de la fiche sur la même colonne").toBe(1);
+  const parHauteur = [...cartes].sort((a, b) => a.y - b.y);
+  parHauteur.slice(1).forEach((c, i) => expect(c.y, "sans chevauchement").toBeGreaterThanOrEqual(parHauteur[i].bas - 1));
   await capture(page, "personne-fiche");
   await fiche.getByRole("button", { name: "Changer de groupe" }).click();
   const panneau = page.getByRole("dialog");
@@ -175,7 +184,131 @@ test("Personnes › Sans compte (ex-Planning › Sans compte) : le bloc des titu
   await ouvrirPersonnes(page, "/back-office/equipes/personnes/sans-compte");
   await expect(page.getByRole("region", { name: /^Titulaires sans compte/ })).toContainText("Inès V.");
   await verifierSansDebordement(page);
-  await capture(page, "sans-compte");
+  // Pas de capture ici : la page montre les noms de secours du dépôt (de vrais noms).
+});
+
+// bo-equipes-6 : « Modifier » (40 px) et « Changer de groupe » (36 px) gardent leur dessin, leur zone de toucher fait 44 px.
+test("toucher : « Modifier » et « Changer de groupe » ont une zone de 44 px (::after), un toucher à 21 px du centre les active", async ({ page }) => {
+  await ouvrirPersonnes(page, "/back-office/equipes/personnes?uid=joel");
+  const fiche = page.locator("article");
+  await expect(fiche.getByRole("region", { name: "Rôles dans le Groupe Paix" })).toBeVisible();
+  test.skip(!(await page.evaluate(() => matchMedia("(pointer: coarse)").matches)), "la zone de 44 px est celle du doigt : projets au toucher");
+  const modifier = fiche.getByRole("button", { name: "Modifier", exact: true });
+  const changer = fiche.getByRole("button", { name: "Changer de groupe" });
+  expect(Math.round((await modifier.boundingBox())!.height), "« Modifier » : 40 px de dessin").toBe(40);
+  expect(Math.round((await changer.boundingBox())!.height), "« Changer de groupe » : 36 px de dessin").toBe(36);
+  for (const [nom, bouton] of [["Modifier", modifier], ["Changer de groupe", changer]] as const) {
+    const zone = await bouton.evaluate((el) => parseFloat(getComputedStyle(el, "::after").height));
+    expect(zone, `« ${nom} » : ::after de 44 px`).toBeGreaterThanOrEqual(43.5);
+  }
+  const c = (await changer.boundingBox())!;
+  await page.touchscreen.tap(c.x + c.width / 2, c.y + c.height / 2 + 21);
+  await expect(page.getByRole("dialog")).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  const m = (await modifier.boundingBox())!;
+  await page.touchscreen.tap(m.x + m.width / 2, m.y + m.height / 2 + 21);
+  await expect(page.getByRole("button", { name: "Enregistrer" })).toBeVisible();
+});
+
+// bo-equipes-12 : « Sans compte » est une liste de lecture (recherche, repères d'initiale, compteur), sans pastille d'alerte.
+// Noms fictifs, inventés pour ce test, ajoutés au planning du Culte. Les plannings sans onglet lu retombent sur les données de
+// secours du dépôt (de vrais noms) : AUCUNE capture de cette page, et aucun total écrit en dur (on lit celui de la page).
+const PLANNING_FICTIF = [
+  ["2026 DATE", "Présidence", "Choristes", "", "Pianiste", "Guitariste", "Batterie", "Sono + Live", "PPT", "Orateur", "Traducteur", "Sainte cène", "Notes"],
+  ["11/10", "Élise Vandame", "Bastien Orlan", "", "Sébastien Tressol", "Cléo Marchal", "", "", "", "Étude de la prière", "李明华", "", ""],
+  ["18/10", "(invité) Noé Prat", "", "", "Zoé Lemaire", "", "", "", "", "", "", "", ""],
+].map((r) => r.map((c) => `"${c}"`).join(",")).join("\n");
+
+/** Le nombre de noms sans compte que dit le titre de la page « Sans compte ». */
+async function nombreDuTitre(page: Page): Promise<number> {
+  // Le titre dit 0 tant que le planning se charge : on attend la liste.
+  await expect(page.getByTestId("sans-compte-nombre")).toBeVisible();
+  const titre = page.getByRole("heading", { level: 2, name: /^(Noms du planning sans compte \(\d+\)|排班表中尚无账号的名字（\d+）)$/ });
+  await expect(titre).toBeVisible();
+  return Number(/\d+/.exec((await titre.textContent())!)![0]);
+}
+
+test("Personnes › Sans compte : liste de lecture avec recherche, repères d'initiale et compteur ; aucune pastille ambre", async ({ page }) => {
+  await ouvrirPersonnes(page, "/back-office/equipes/personnes/sans-compte", false, PLANNING_FICTIF);
+  const total = await nombreDuTitre(page);
+  const carte = page.getByRole("heading", { level: 2, name: /^Noms du planning sans compte/ }).locator("xpath=..");
+  await expect(carte).toContainText("Page de lecture : pour lier un nom, ouvre la fiche de la personne.");
+  await expect(page.getByTestId("sans-compte-nombre")).toHaveText(`${total} noms`);
+  // Les repères : A à Z, puis « 中文 », puis « # » ; « Élise » et « Étude » sous E (accents pliés).
+  const reperes = page.locator("[data-repere]");
+  const lettres = await reperes.evaluateAll((els) => els.map((e) => e.getAttribute("data-repere")!));
+  expect(lettres.slice(-2), "« 中文 » puis « # » en dernier").toEqual(["中文", "#"]);
+  const alpha = lettres.slice(0, -2);
+  expect(alpha, "A à Z dans l'ordre").toEqual([...alpha].sort());
+  for (const l of ["B", "C", "E", "S", "Z"]) expect(alpha).toContain(l);
+  await expect(page.locator('[data-repere="E"]')).toContainText("Élise Vandame");
+  await expect(page.locator('[data-repere="E"]')).toContainText("Étude de la prière");
+  await expect(page.locator('[data-repere="中文"]')).toContainText("李明华");
+  await expect(page.locator('[data-repere="#"]')).toContainText("(invité) Noé Prat");
+  // Les noms qui n'en sont pas (une étude) sont affichés comme les autres ; aucune couleur d'alerte sur la page.
+  await expect(carte.locator('[class*="amber"]')).toHaveCount(0);
+  const colonnes = new Set(await reperes.evaluateAll((els) => els.map((e) => Math.round(e.getBoundingClientRect().x))));
+  if (projet() === "telephone") expect(colonnes.size, "une colonne au téléphone").toBe(1);
+  else expect(colonnes.size, "trois colonnes dès la tablette").toBe(3);
+  // bo-equipes-13 : ni « en fin de ligne ni » en début de ligne (espace fine insécable de part et d'autre).
+  const orphelins = await carte.locator("p").first().evaluate((p) => {
+    const noeud = p.firstChild as Text;
+    const haut = (i: number) => { const r = document.createRange(); r.setStart(noeud, i); r.setEnd(noeud, i + 1); return r.getClientRects()[0]?.top; };
+    const sortie: string[] = [];
+    for (let i = 0; i < noeud.data.length; i++) {
+      const c = noeud.data[i];
+      if (c === "«" && Math.abs(haut(i)! - haut(i + 1)!) > 2) sortie.push(`« orphelin à ${i}`);
+      if (c === "»" && Math.abs(haut(i)! - haut(i - 1)!) > 2) sortie.push(`» orphelin à ${i}`);
+    }
+    return { guillemets: (noeud.data.match(/[«»]/g) ?? []).length, sortie };
+  });
+  expect(orphelins.guillemets, "l'aide porte bien des guillemets").toBeGreaterThanOrEqual(2);
+  expect(orphelins.sortie).toEqual([]);
+  await verifierSansDebordement(page);
+
+  // La recherche ignore casse et accents, et le compteur dit « n sur total ».
+  const champ = page.getByRole("searchbox", { name: "Chercher un nom" });
+  expect(Math.round((await champ.boundingBox())!.height)).toBeGreaterThanOrEqual(44);
+  await champ.fill("SEBASTIEN tressol");
+  await expect(page.getByTestId("sans-compte-nombre")).toHaveText(`1 sur ${total}`);
+  await expect(page.locator("[data-repere]")).toHaveCount(1);
+  await expect(carte).toContainText("Sébastien Tressol");
+  await expect(carte).not.toContainText("Élise Vandame");
+  await champ.fill("zzzqq");
+  await expect(carte).toContainText("Aucun nom ne correspond.");
+  await champ.fill("");
+  await expect(page.getByTestId("sans-compte-nombre")).toHaveText(`${total} noms`);
+  // Le retour est « Toutes les personnes » (bo-messages-planning-5).
+  await expect(page.getByRole("link", { name: "Toutes les personnes", exact: true })).toHaveAttribute("href", /\/back-office\/equipes\/personnes\/?$/);
+});
+
+test("Personnes › Sans compte en 中文 : le repère « 中文 », le compteur filtré", async ({ page }) => {
+  await ouvrirPersonnes(page, "/back-office/equipes/personnes/sans-compte", true, PLANNING_FICTIF);
+  const total = await nombreDuTitre(page);
+  await expect(page.locator('[data-repere="中文"]')).toContainText("李明华");
+  await expect(page.getByTestId("sans-compte-nombre")).toHaveText(`${total} 个名字`);
+  await page.getByRole("searchbox", { name: "搜索名字" }).fill("李明");
+  await expect(page.getByTestId("sans-compte-nombre")).toHaveText(`${total} 个中的 1 个`);
+  await expect(page.getByRole("link", { name: "所有人", exact: true })).toBeVisible();
+  await verifierSansDebordement(page);
+});
+
+// bo-equipes-1 : l'entrée « sans compte » est une rangée de la liste (52 px, le nombre à droite, un chevron), plus un bouton de l'en-tête.
+test("Personnes : la rangée « Noms du planning sans compte » ouvre la page, avec le même nombre", async ({ page }) => {
+  await ouvrirPersonnes(page, "/back-office/equipes/personnes", false, PLANNING_FICTIF);
+  const rangee = page.getByTestId("rangee-sans-compte");
+  await expect(rangee).toContainText("Noms du planning sans compte");
+  const dite = Number(/(\d+) noms? à relier/.exec((await rangee.textContent())!)![1]);
+  expect(Math.round((await rangee.boundingBox())!.height)).toBe(52);
+  await expect(page.locator("header[data-entete-page]").getByRole("link", { name: "Noms du planning sans compte" })).toHaveCount(0);
+  // La première ligne du groupe de liste, au-dessus du champ de recherche.
+  const champ = page.getByRole("searchbox", { name: /Rechercher un membre/ });
+  expect((await rangee.boundingBox())!.y).toBeLessThan((await champ.boundingBox())!.y);
+  await verifierSansDebordement(page);
+  await rangee.click();
+  await expect(page).toHaveURL(/\/personnes\/sans-compte\/?$/);
+  expect(await nombreDuTitre(page), "le chiffre de la rangée est celui de la page").toBe(dite);
 });
 
 // ─── OG-E : App › Équipes ────────────────────────────────────────────────────

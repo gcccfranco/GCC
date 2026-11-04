@@ -20,7 +20,7 @@ export default function Page() {
       <EnTetePage titre={t("backOffice.entrees.equipes")} onglets={<RailEquipes />} />
       {/* BO-G, 7 : le retour sous le titre de la section (l'onglet Personnes est actif), puis un seul titre, avec le compte. */}
       <section aria-labelledby="personnes-sans-compte" className="px-[var(--marge-page)] pb-16">
-        <Retour href="/back-office/equipes/personnes">{t("backOffice.parties.personnes")}</Retour>
+        <Retour href="/back-office/equipes/personnes">{t("backOffice.equipe.toutesLesPersonnes")}</Retour>
         <div className="max-w-[760px]">
           <SansCompte titreDePage />
         </div>

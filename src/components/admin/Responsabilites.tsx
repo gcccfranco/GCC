@@ -10,7 +10,6 @@ import { useTranslation } from "react-i18next";
 import { Plus, Search, X } from "lucide-react";
 import { EnTetePage } from "@/components/layout/EnTetePage";
 import { Initiales } from "@/components/groupes/Initiales";
-import { ListePuces } from "./commun";
 import { RailEquipes } from "@/app/back-office/equipes/RailEquipes";
 import { changerResponsabilites, listProfiles, useProfile } from "@/lib/firebase/users";
 import { listEquipes, majRattachement, saveEquipe } from "@/lib/firebase/equipes";
@@ -23,6 +22,7 @@ import {
 import type { Equipe } from "@/types/equipe";
 import type { UserProfile } from "@/types/user";
 import { Squelette } from "@/components/layout/Squelette";
+import { TOUCHER_44 } from "@/lib/toucher44";
 
 const nomComplet = (p: UserProfile) => `${p.firstName} ${p.lastName}`.trim() || p.planningName || p.email;
 
@@ -36,12 +36,26 @@ type Ligne = {
 };
 
 export function Responsabilites() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { user, profile } = useProfile();
   const [profils, setProfils] = useState<UserProfile[] | null>(null);
   const [equipes, setEquipes] = useState<Record<string, Equipe> | null>(null);
   const [erreur, setErreur] = useState("");
   const [enCours, setEnCours] = useState<string | null>(null);
+  /** La ligne qui vient d'être enregistrée (« Enregistré », 2,5 s) et celle qu'une pastille de l'encart a amenée. */
+  const [enregistre, setEnregistre] = useState<{ cle: string } | null>(null);
+  const [surligne, setSurligne] = useState<{ cle: string; reduit: boolean } | null>(null);
+  useEffect(() => {
+    if (!enregistre) return;
+    const id = setTimeout(() => setEnregistre(null), 2500);
+    return () => clearTimeout(id);
+  }, [enregistre]);
+  useEffect(() => {
+    // `prefers-reduced-motion` : la ligne reste surlignée, sans fondu.
+    if (!surligne || surligne.reduit) return;
+    const id = setTimeout(() => setSurligne(null), 1200);
+    return () => clearTimeout(id);
+  }, [surligne]);
 
   const lire = useCallback(async () => {
     try {
@@ -63,6 +77,7 @@ export function Responsabilites() {
     setEnCours(cle);
     try {
       await action();
+      setEnregistre({ cle });
     } catch (e) {
       if (e instanceof ModifieEntreTemps) {
         setErreur(e.prenom ? t("planning.programme.modifieEntreTemps", { prenom: e.prenom }) : t("planning.programme.modifieEntreTempsSansNom"));
@@ -98,7 +113,7 @@ export function Responsabilites() {
     // Préfixe : l'équipe `orga` ne se confond pas avec la ligne `orga` du Comité.
     const cle = `ref:${cleLigne(l)}`;
     const equipe = equipes?.[l.equipe];
-    const nomEquipe = t(cleNomEquipe(l.equipe));
+    const nomEquipe = t(cleNomEquipe(l.equipe, true));
     const poser = async (personne: { uid: string; nom: string }, present: boolean) => {
       if (!user) return;
       const avant = equipe?.membres ?? [];
@@ -132,8 +147,24 @@ export function Responsabilites() {
 
   const chargee = profils !== null && equipes !== null;
   const lignesPlannings = RESPONSABILITES_PLANNING.map((r) =>
-    ligneProfil(r.cle, t("responsabilites.gestionnaire", { planning: t(`acces.responsabilite.${r.cle.slice("planning:".length)}`) })));
-  const sansGestionnaire = lignesPlannings.filter((l) => l.puces.length === 0);
+    ligneProfil(r.cle, t(`acces.responsabilite.${r.cle.slice("planning:".length)}`)));
+  const lignesReferents = LIGNES_REFERENTS.map(ligneReferents);
+  // Un seul calcul des postes vacants : l'encart « À pourvoir » le lit.
+  const plannings = lignesPlannings.filter((l) => l.puces.length === 0);
+  const equipesVacantes = lignesReferents.filter((l) => l.puces.length === 0);
+  const aPourvoir = [
+    ...(plannings.length ? [t("responsabilites.nbPlannings", { count: plannings.length })] : []),
+    ...(equipesVacantes.length ? [t("responsabilites.nbEquipes", { count: equipesVacantes.length })] : []),
+  ].join(i18n.language === "zh-CN" ? "，" : ", ");
+
+  /** Une pastille de l'encart amène sa ligne (défilement doux, ou saut direct sous `prefers-reduced-motion`) et la surligne
+   *  1,2 s ; sous `prefers-reduced-motion`, la ligne reste surlignée, sans fondu. */
+  function aller(cle: string) {
+    const reduit = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    document.getElementById(`resp-ligne-${cle}`)?.scrollIntoView({ behavior: reduit ? "auto" : "smooth", block: "center" });
+    setSurligne({ cle, reduit });
+  }
+  const suivi = { enCours, enregistre: enregistre?.cle ?? null, surligne: surligne?.cle ?? null };
 
   return (
     <>
@@ -145,18 +176,19 @@ export function Responsabilites() {
             !erreur && <Squelette enTete={false} className="p-0" />
           ) : (
             <>
-              {sansGestionnaire.length > 0 && (
-                <div data-testid="sans-gestionnaire">
-                  <ListePuces
-                    titre={t("responsabilites.sansGestionnaire")}
-                    aide={t("responsabilites.sansGestionnaireAide")}
-                    items={sansGestionnaire.map((l) => l.titre)}
-                  />
-                </div>
+              {aPourvoir && (
+                <section data-testid="sans-gestionnaire" aria-labelledby="resp-a-pourvoir" className="raised space-y-3 rounded-2xl px-5 py-4">
+                  <div className="space-y-1">
+                    <h2 id="resp-a-pourvoir" className="text-[15px] font-semibold leading-[21px] text-foreground">{t("responsabilites.aPourvoir", { liste: aPourvoir })}</h2>
+                    <p className="text-[13px] leading-[18px] text-muted-foreground">{t("responsabilites.aPourvoirAide")}</p>
+                  </div>
+                  <PastillesVacantes etiquette={t("responsabilites.aPourvoirPlannings")} lignes={plannings} aller={aller} />
+                  <PastillesVacantes etiquette={t("responsabilites.aPourvoirEquipes")} lignes={equipesVacantes} aller={aller} />
+                </section>
               )}
-              <Section titre={t("responsabilites.plannings")} lignes={lignesPlannings} profils={profils} enCours={enCours} />
-              <Section titre={t("acces.responsabilite.orga")} lignes={[ligneProfil(ORGA, t("acces.responsabilite.orga"))]} profils={profils} enCours={enCours} sansEntete />
-              <Section titre={t("responsabilites.referents")} lignes={LIGNES_REFERENTS.map(ligneReferents)} profils={profils} enCours={enCours} />
+              <Section titre={t("responsabilites.plannings")} lignes={lignesPlannings} profils={profils} suivi={suivi} />
+              <Section titre={t("acces.responsabilite.orga")} lignes={[ligneProfil(ORGA, t("acces.responsabilite.orga"))]} profils={profils} suivi={suivi} sansEntete />
+              <Section titre={t("responsabilites.referents")} lignes={lignesReferents} profils={profils} suivi={suivi} />
             </>
           )}
         </div>
@@ -166,13 +198,38 @@ export function Responsabilites() {
 }
 
 /** Un bloc : son titre, puis une ligne par clé, dans une carte (même carte que la fiche de Personnes). */
+/** Une rangée de pastilles d'alerte de l'encart « À pourvoir » : chacune est une ancre vers sa ligne. */
+function PastillesVacantes({ etiquette, lignes, aller }: { etiquette: string; lignes: Ligne[]; aller: (cle: string) => void }) {
+  if (lignes.length === 0) return null;
+  return (
+    <div className="flex flex-wrap items-center gap-x-3 gap-y-3">
+      <span className="text-[13px] font-semibold leading-[18px] text-muted-foreground">{etiquette}</span>
+      <ul className="flex flex-wrap gap-2">
+        {lignes.map((l) => (
+          <li key={l.cle}>
+            <a
+              href={`#resp-ligne-${l.cle}`}
+              onClick={(e) => { e.preventDefault(); aller(l.cle); }}
+              className={`inline-flex min-h-8 items-center rounded-full bg-amber-100 px-3 text-[13px] font-semibold leading-[18px] text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 ${TOUCHER_44}`}
+            >
+              {l.titre}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+type Suivi = { enCours: string | null; enregistre: string | null; surligne: string | null };
+
 function Section({
-  titre, lignes, profils, enCours, sansEntete = false,
+  titre, lignes, profils, suivi, sansEntete = false,
 }: {
   titre: string;
   lignes: Ligne[];
   profils: UserProfile[];
-  enCours: string | null;
+  suivi: Suivi;
   /** Une seule ligne qui porte déjà le titre : pas de titre de section en plus. */
   sansEntete?: boolean;
 }) {
@@ -180,13 +237,17 @@ function Section({
     <section aria-label={titre} className="space-y-2">
       {!sansEntete && <h2 className="text-[16px] font-bold text-foreground">{titre}</h2>}
       <div className="raised divide-y divide-border rounded-2xl px-4 sm:px-5">
-        {lignes.map((l) => <LigneResponsabilite key={l.cle} ligne={l} profils={profils} occupee={enCours === l.cle} />)}
+        {lignes.map((l) => (
+          <LigneResponsabilite key={l.cle} ligne={l} profils={profils} occupee={suivi.enCours === l.cle} enregistre={suivi.enregistre === l.cle} surlignee={suivi.surligne === l.cle} />
+        ))}
       </div>
     </section>
   );
 }
 
-function LigneResponsabilite({ ligne, profils, occupee }: { ligne: Ligne; profils: UserProfile[]; occupee: boolean }) {
+function LigneResponsabilite({
+  ligne, profils, occupee, enregistre, surlignee,
+}: { ligne: Ligne; profils: UserProfile[]; occupee: boolean; enregistre: boolean; surlignee: boolean }) {
   const { t } = useTranslation();
   const [recherche, setRecherche] = useState<string | null>(null);
   const q = (recherche ?? "").trim().toLowerCase();
@@ -194,42 +255,50 @@ function LigneResponsabilite({ ligne, profils, occupee }: { ligne: Ligne; profil
   const resultats = q ? profils.filter((p) => !deja.has(p.uid) && nomComplet(p).toLowerCase().includes(q)).slice(0, 6) : [];
 
   return (
-    <div role="group" aria-label={ligne.titre} aria-busy={occupee} data-testid={`resp-${ligne.cle}`} className="space-y-2 py-3">
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-        <h3 className="min-w-[8rem] flex-1 text-[15px] font-semibold text-foreground">{ligne.titre}</h3>
+    <div
+      role="group" aria-label={ligne.titre} aria-busy={occupee} id={`resp-ligne-${ligne.cle}`} data-testid={`resp-${ligne.cle}`} data-surlignee={surlignee || undefined}
+      className={`space-y-2 py-3 motion-safe:transition-[background-color,box-shadow] motion-safe:duration-500 ${surlignee ? "bg-secondary shadow-[-8px_0_0_hsl(var(--secondary)),8px_0_0_hsl(var(--secondary))]" : ""}`}
+    >
+      {/* Téléphone : l'objet et « + Ajouter » sur une ligne, la valeur dessous. À partir de 640 px : une ligne, l'objet à gauche, la valeur à droite. */}
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-2 sm:min-h-8 sm:flex-nowrap">
+        <div className="flex min-w-[8rem] flex-1 items-baseline gap-2">
+          <h3 className="text-[15px] font-semibold text-foreground">{ligne.titre}</h3>
+          {enregistre && <span role="status" className="text-[12px] leading-4 text-muted-foreground">{t("responsabilites.enregistre")}</span>}
+        </div>
+        <div className="order-3 w-full sm:order-none sm:w-auto sm:max-w-[60%]">
+          {ligne.puces.length === 0 ? (
+            <p className="text-[13px] leading-[18px] text-muted-foreground sm:text-right">{t("responsabilites.vacant")}</p>
+          ) : (
+            <ul className="flex flex-wrap gap-1.5 sm:justify-end">
+              {ligne.puces.map((p) => (
+                <li key={p.cle} className="inline-flex min-h-11 items-center gap-2 rounded-full bg-secondary py-1 pl-1.5 pr-1 text-sm font-semibold text-foreground">
+                  <Initiales nom={p.nom} />
+                  <span>{p.nom}</span>
+                  <button
+                    type="button"
+                    aria-label={t("responsabilites.retirer", { nom: p.nom })}
+                    disabled={occupee}
+                    onClick={() => void ligne.retirer(p)}
+                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:text-destructive disabled:opacity-50"
+                  >
+                    <X className="h-4 w-4" aria-hidden />
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
         <button
           type="button"
           aria-expanded={recherche !== null}
           disabled={occupee}
           onClick={() => setRecherche((r) => (r === null ? "" : null))}
-          className="inline-flex min-h-11 shrink-0 items-center gap-1 rounded-full bg-background px-3.5 text-[14px] font-semibold text-foreground shadow-[inset_0_0_0_1px_hsl(var(--border))] hover:bg-secondary disabled:opacity-50"
+          className={`inline-flex min-h-11 shrink-0 items-center gap-1 rounded-full bg-background px-3.5 text-[14px] font-semibold text-foreground shadow-[inset_0_0_0_1px_hsl(var(--border))] hover:bg-secondary disabled:opacity-50 sm:min-h-8 ${TOUCHER_44}`}
         >
           <Plus className="h-4 w-4" aria-hidden />
           {t("responsabilites.ajouter")}
         </button>
       </div>
-
-      {ligne.puces.length === 0 ? (
-        <p className="text-sm text-muted-foreground">{t("responsabilites.personne")}</p>
-      ) : (
-        <ul className="flex flex-wrap gap-1.5">
-          {ligne.puces.map((p) => (
-            <li key={p.cle} className="inline-flex min-h-11 items-center gap-2 rounded-full bg-secondary py-1 pl-1.5 pr-1 text-sm font-semibold text-foreground">
-              <Initiales nom={p.nom} />
-              <span>{p.nom}</span>
-              <button
-                type="button"
-                aria-label={t("responsabilites.retirer", { nom: p.nom })}
-                disabled={occupee}
-                onClick={() => void ligne.retirer(p)}
-                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:text-destructive disabled:opacity-50"
-              >
-                <X className="h-4 w-4" aria-hidden />
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
 
       {recherche !== null && (
         <div className="space-y-1">

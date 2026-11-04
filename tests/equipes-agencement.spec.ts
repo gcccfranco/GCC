@@ -194,6 +194,70 @@ for (const [jeu, docs] of [["peu de cartes", DOCS], ["beaucoup de membres", { ..
   });
 }
 
+// bo-equipes-4 : le bandeau recoupe ses cartes en colonnes de hauteurs voisines (pas d'escalier, pas de trou sous la dernière
+// petite colonne), dans l'ordre de l'organigramme ; Louange et EDD restent en dernier.
+test("bandeau : colonnes simples de hauteurs voisines, ordre gardé, Louange et EDD en dernier", async ({ page }, info) => {
+  test.skip(!["tablette-paysage", "ordinateur", "ordinateur-1440"].includes(info.project.name), "le bandeau en colonnes est celui des grands écrans");
+  await ouvrir(page, ADMIN, "/back-office/equipes", { ...DOCS, ...GROS });
+  const bandeau = page.getByTestId("bandeau-equipes");
+  await expect(bandeau).toHaveAttribute("data-range", "1");
+  await expect(page.getByTestId("equipe-orga")).toBeVisible();
+  const colonnes = await bandeau.evaluate((el) =>
+    [...el.querySelectorAll<HTMLElement>("[data-colonne]")].map((c) => {
+      const cartes = [...c.querySelectorAll<HTMLElement>('[data-testid^="equipe-"]')];
+      return {
+        large: c.dataset.large === "1",
+        ids: cartes.map((x) => x.dataset.testid!.slice("equipe-".length)),
+        hauteur: cartes.reduce((h, x) => h + x.getBoundingClientRect().height, 0) + 16 * Math.max(0, cartes.length - 1),
+        plusHaute: Math.max(...cartes.map((x) => x.getBoundingClientRect().height)),
+      };
+    }));
+  const simples = colonnes.filter((c) => !c.large);
+  const larges = colonnes.filter((c) => c.large);
+  expect(larges.map((c) => c.ids)).toEqual([["louange"], ["edd"]]);
+  expect(colonnes.slice(-2).every((c) => c.large), "Louange et EDD en dernier").toBe(true);
+  expect(simples.flatMap((c) => c.ids), "l'ordre de l'organigramme").toEqual(
+    ["orga", "comite-franco", "da", "medias", "developpement", "regie", "traduction", "theologie", "evenementiel", "decoration", "accueil-j1"]);
+  const hauteurs = simples.map((c) => c.hauteur);
+  const carte = Math.max(...simples.map((c) => c.plusHaute));
+  expect(Math.max(...hauteurs) - Math.min(...hauteurs), `colonnes ${hauteurs.map(Math.round).join(", ")} : au plus une carte d'écart`).toBeLessThanOrEqual(carte + 16);
+});
+
+// bo-equipes-15 : casse normale, sans « TEAM » répété ; le nom long reste en sous-titre.
+test("organigramme : aucun titre de carte ne commence par « TEAM », les noms courts en casse normale", async ({ page }) => {
+  await ouvrir(page, ADMIN, "/back-office/equipes", { ...DOCS, ...GROS });
+  await expect(page.getByTestId("equipe-da")).toBeVisible();
+  const titres = await page.locator('[data-testid^="equipe-"] h2').allTextContents();
+  expect(titres.length).toBeGreaterThanOrEqual(13);
+  for (const t of titres) expect(t, `titre « ${t} »`).not.toMatch(/^TEAM\b/);
+  expect(titres).toEqual(expect.arrayContaining(["Orga", "Comité Franco", "DA", "Médias", "Louange", "EDD"]));
+  await expect(page.getByTestId("equipe-da")).toContainText("Direction artistique");
+});
+
+// bo-equipes-6 : le crayon d'une carte (32 px de dessin) a une zone de toucher de 44 px, sans que le dessin grandisse ni que le titre-lien perde son clic.
+test("toucher : le crayon de la carte d'équipe a une zone de 44 px (::after), un toucher à 18 px sous son centre ouvre le panneau", async ({ page }) => {
+  await ouvrir(page, ADMIN, "/back-office/equipes");
+  const carte = page.getByTestId("equipe-da");
+  await expect(carte).toBeVisible();
+  test.skip(!(await page.evaluate(() => matchMedia("(pointer: coarse)").matches)), "la zone de 44 px est celle du doigt : projets au toucher");
+  const crayon = carte.getByRole("button", { name: "Modifier DA" });
+  await crayon.scrollIntoViewIfNeeded();
+  const b = (await crayon.boundingBox())!;
+  expect(Math.round(b.height), "le dessin ne grandit pas").toBe(32);
+  const zone = await crayon.evaluate((el) => { const s = getComputedStyle(el, "::after"); return { h: parseFloat(s.height), w: parseFloat(s.width) }; });
+  expect(zone.h, "::after de 44 px de haut").toBeGreaterThanOrEqual(43.5);
+  expect(zone.w, "::after de 44 px de large").toBeGreaterThanOrEqual(43.5);
+  // Le titre reste un lien cliquable en son centre.
+  const lien = carte.getByRole("link", { name: "DA", exact: true });
+  if (await lien.count()) {
+    const l = (await lien.boundingBox())!;
+    const dessus = await page.evaluate(({ x, y }) => document.elementFromPoint(x, y)?.closest("a,button")?.tagName ?? null, { x: l.x + l.width / 2, y: l.y + l.height / 2 });
+    expect(dessus, "le titre garde son clic").toBe("A");
+  }
+  await page.touchscreen.tap(b.x + b.width / 2, b.y + b.height / 2 + 18);
+  await expect(page.getByRole("dialog", { name: "DA", exact: true })).toBeVisible();
+});
+
 // BO-G, 16 : cibles de toucher de 44 px sans changer le dessin (::after) : rail Organigramme | Personnes, puces de l'index et des groupes.
 test("tablettes : le rail Organigramme | Personnes et les puces ont une cible de 44 px", async ({ page }, info) => {
   test.skip(!info.project.name.startsWith("tablette"), "la cible de 44 px est celle du doigt : tablettes (portrait et paysage)");
@@ -219,8 +283,8 @@ test("tablettes : le rail Organigramme | Personnes et les puces ont une cible de
 
 test("panneau d'édition : ni sélecteur de pôle ni liste de pôles", async ({ page }) => {
   await ouvrir(page, ADMIN, "/back-office/equipes");
-  await page.getByTestId("equipe-da").getByRole("button", { name: "Modifier TEAM DA" }).click();
-  const panneau = page.getByRole("dialog", { name: "TEAM DA" });
+  await page.getByTestId("equipe-da").getByRole("button", { name: "Modifier DA" }).click();
+  const panneau = page.getByRole("dialog", { name: "DA", exact: true });
   await expect(panneau.getByPlaceholder("Ajouter un membre")).toBeVisible();
   await expect(panneau.getByText("Pôle donné par cette équipe")).toHaveCount(0);
   await expect(panneau.getByRole("combobox")).toHaveCount(0);

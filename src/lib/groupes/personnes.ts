@@ -122,3 +122,16 @@ export function nomsDistincts(...listes: readonly (readonly string[])[]): string
     return true;
   });
 }
+
+/** Les noms des plannings liés à aucun compte (`planningName`) : ces personnes échappent aux rappels et aux notifications
+ *  « setlist prête » (ciblage par nom de planning). Un nom aussi écrit dans un organigramme n'est compté qu'une fois : il reste
+ *  dans « Titulaires sans compte » (OG32). Une seule soustraction pour la page « Sans compte » et pour la rangée de Personnes. */
+export function nomsSansCompte(
+  planningNames: readonly string[],
+  profils: readonly { planningName: string }[],
+  titulaires: readonly { nom: string }[],
+): string[] {
+  const lies = new Set(profils.map((p) => normalizeName(p.planningName.trim())).filter(Boolean));
+  const ecrits = new Set(titulaires.map((l) => normalizeName(l.nom)));
+  return planningNames.filter((n) => !lies.has(normalizeName(n.trim())) && !ecrits.has(normalizeName(n.trim())));
+}

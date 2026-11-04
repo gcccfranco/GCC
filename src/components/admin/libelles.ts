@@ -26,7 +26,7 @@ export function libelleAudience(t: TFunction, zh: boolean, a: string): string {
   if (a.startsWith("equipe:")) {
     const id = a.slice("equipe:".length);
     if (id === "louange") return t("notifier.touteLaLouange");
-    return t(`equipes.team.${id}`, { defaultValue: EQUIPES.find((e) => e.id === id)?.nom ?? a });
+    return t(`equipes.court.${id}`, { defaultValue: EQUIPES.find((e) => e.id === id)?.nom ?? a });
   }
   if (a.startsWith("louange:")) {
     const sous = a.slice("louange:".length);

@@ -44,12 +44,23 @@ export function resume(t: TFunction, equipe: EquipeALieux, m: MembreEquipe): str
 
 // ── Encadré « Ce que ça lui ouvre » ─────────────────────────────────────────
 
-export function CeQueCaOuvre({ profil, sansCompte = false }: { profil: ProfilOrganigramme | null | undefined; sansCompte?: boolean }) {
+/** `nu` (fiche de Personnes, bo-equipes-8) : posé dans une carte qui est déjà la sienne, sans pastille grise ; le titre y est un
+ *  titre de carte ordinaire (pas de capitales) et `note` se pose à sa droite. */
+export function CeQueCaOuvre({
+  profil, sansCompte = false, nu = false, note,
+}: { profil: ProfilOrganigramme | null | undefined; sansCompte?: boolean; nu?: boolean; note?: ReactNode }) {
   const { t } = useTranslation();
   const acces = sansCompte ? [] : ceQueCaOuvre(profil, (c) => t(c));
   return (
-    <div data-testid="ce-que-ca-ouvre" className="space-y-1.5 rounded-xl bg-secondary/70 p-3">
-      <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t("equipes.organigramme.ceQueCaOuvre")}</p>
+    <div data-testid="ce-que-ca-ouvre" className={nu ? "space-y-2" : "space-y-1.5 rounded-xl bg-secondary/70 p-3"}>
+      {nu ? (
+        <div className="flex items-center justify-between gap-3">
+          <h3 className="text-[15px] font-semibold leading-[21px] text-foreground">{t("equipes.organigramme.ceQueCaOuvre")}</h3>
+          {note}
+        </div>
+      ) : (
+        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t("equipes.organigramme.ceQueCaOuvre")}</p>
+      )}
       {sansCompte ? (
         <p className="text-sm text-muted-foreground">{t("equipes.organigramme.sansCompte")}</p>
       ) : acces.length === 0 ? (
