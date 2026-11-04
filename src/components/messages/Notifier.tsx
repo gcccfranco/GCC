@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, useSyncExternalStore, type ReactNode } from "react";
 import Link from "next/link";
 import { Trans, useTranslation } from "react-i18next";
 import { Send, Lock } from "lucide-react";
@@ -41,6 +41,13 @@ const DESTINATIONS: { value: string; cle: string }[] = [
  *  Agencement v18 (B11 de docs/spec-agencement-v18.md ; planche `v18-bo-messages-notifier`) : au
  *  Back-Office, le formulaire en carte à gauche (audience en pilules, pied « Annuler · Envoyer à
  *  n personnes »), à droite l'aperçu de la notification puis les derniers envois. */
+const LARGE = "(min-width: 1024px)";
+const suivreLarge = (changement: () => void) => {
+  const m = window.matchMedia(LARGE);
+  m.addEventListener("change", changement);
+  return () => m.removeEventListener("change", changement);
+};
+
 export function Notifier({ backOffice = false, titre }: { backOffice?: boolean; titre?: ReactNode }) {
   const { t, i18n } = useTranslation();
   const zh = i18n.language === "zh-CN";
@@ -116,9 +123,16 @@ export function Notifier({ backOffice = false, titre }: { backOffice?: boolean; 
     setPeopleQuery("");
   }, [audience, profiles]);
 
+  // compte-13 : l'aperçu est dans le formulaire sous `lg`, dans la colonne de droite au-delà (un seul rendu).
+  const large = useSyncExternalStore(suivreLarge, () => window.matchMedia(LARGE).matches, () => false);
   const allSelected = pool.length > 0 && selected.size === pool.length;
   const broadcast = audience === NOTIFY_ALL && allSelected;
   const canSend = !!title.trim() && !!body.trim() && !busy && selected.size > 0;
+  // compte-12 : la première condition qui manque, dite sous « Envoyer » tant qu'il est grisé.
+  const manque = busy || canSend ? null
+    : selected.size === 0 ? "destinataires"
+    : !title.trim() ? "titre"
+    : "message";
   const needsConfirm = broadcast || selected.size > CONFIRM_THRESHOLD;
   const recipLabel = broadcast ? t("notifier.toutLeMondeMin") : t("notifier.personnesN", { count: selected.size });
 
@@ -327,6 +341,8 @@ export function Notifier({ backOffice = false, titre }: { backOffice?: boolean; 
         />
       </div>
 
+      {backOffice && !large && <ApercuNotification titre={title} message={body} />}
+
       <div className="space-y-1.5">
         <label htmlFor="notif-destination" className="text-sm font-medium text-foreground">
           {t("notifier.ouvreAuClic")}
@@ -438,32 +454,42 @@ export function Notifier({ backOffice = false, titre }: { backOffice?: boolean; 
           {confirmOpen ? (
             envoi
           ) : (
-            <div className="flex justify-end gap-2 border-t border-border pt-4">
-              <button
-                type="button"
-                onClick={annuler}
-                className="h-10 rounded-full bg-background px-4 text-sm font-semibold text-foreground shadow-[inset_0_0_0_1px_hsl(var(--border))] hover:bg-secondary"
-              >
-                {t("common.buttons.cancel")}
-              </button>
-              <button
-                type="button"
-                onClick={attemptSend}
-                disabled={!canSend}
-                className="inline-flex h-10 items-center gap-1.5 rounded-full bg-primary px-5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
-              >
-                <Send className="h-4 w-4" aria-hidden />
-                {busy
-                  ? t("notifier.envoi")
-                  : selected.size === 0
-                  ? t("notifier.envoyer")
-                  : t("notifier.envoyerA", { count: selected.size })}
-              </button>
+            <div className="border-t border-border pt-4">
+              <div className="flex justify-end gap-2">
+                {(title.trim() || body.trim() || audience || groupe) && (
+                  <button
+                    type="button"
+                    onClick={annuler}
+                    className="h-11 rounded-full px-4 text-sm font-semibold text-foreground/70 lg:h-10 hover:bg-secondary hover:text-foreground"
+                  >
+                    {t("notifier.effacer")}
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={attemptSend}
+                  disabled={!canSend}
+                  aria-describedby={manque ? "notif-manque" : undefined}
+                  className="inline-flex h-11 items-center gap-1.5 rounded-full bg-primary px-5 lg:h-10 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:border-transparent disabled:bg-secondary disabled:text-muted-foreground"
+                >
+                  <Send className="h-4 w-4" aria-hidden />
+                  {busy
+                    ? t("notifier.envoi")
+                    : selected.size === 0
+                    ? t("notifier.envoyer")
+                    : t("notifier.envoyerA", { count: selected.size })}
+                </button>
+              </div>
+              {manque && (
+                <p id="notif-manque" className="mt-2 text-right text-sm text-muted-foreground motion-safe:transition-opacity motion-safe:duration-150">
+                  {t(`notifier.manque.${manque}`)}
+                </p>
+              )}
             </div>
           )}
         </div>
-        <div className="space-y-4">
-          <ApercuNotification titre={title} message={body} />
+        <div className="space-y-4 lg:sticky lg:top-[calc(var(--nav-h)+24px)]">
+          {large && <ApercuNotification titre={title} message={body} />}
           <DerniersEnvois cle={envois} />
         </div>
       </div>

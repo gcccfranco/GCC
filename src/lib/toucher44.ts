@@ -14,3 +14,7 @@ export const TOUCHER_RETOUR = `${BASE} [@media(pointer:coarse)]:after:-inset-x-2
 /** Variante à insets précis : un segment du sélecteur d'espace, à la largeur du segment (pas de recouvrement des
  *  voisins) ; 46 px pour 30 de dessin, 44 px pour les 36 de l'icône au téléphone. */
 export const TOUCHER_SEGMENT = `${BASE} [@media(pointer:coarse)]:after:inset-x-0 [@media(pointer:coarse)]:after:-inset-y-2 max-sm:[@media(pointer:coarse)]:after:-inset-y-1`;
+
+/** Lien étendu à toute sa ligne (compte-10, « Relier ») : au pointeur comme au doigt, la ligne entière est la cible
+ *  (bien plus de 44 px). Le parent porte `relative` ; le lien ne doit pas porter d'`::after` propre. */
+export const LIGNE_ENTIERE = "after:absolute after:inset-0 after:content-[''] after:rounded-[inherit]";

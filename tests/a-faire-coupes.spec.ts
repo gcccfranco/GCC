@@ -25,8 +25,10 @@ async function ouvrir(page: Page) {
 const ligne = (page: Page, texte: string) => page.getByTestId("ligne-a-faire").filter({ hasText: texte });
 const coarse = (page: Page) => page.evaluate(() => matchMedia("(pointer: coarse)").matches);
 
-test.describe("back-office-9 : la zone de toucher de « Fait » et « Relier »", () => {
-  for (const [texte, verbe] of [["Affiche de l'atelier", "Fait"], ["Noms du planning sans compte", "Relier"]] as const) {
+// « Relier » n'est plus un bouton depuis compte-10 (arbitrage 16) : la ligne entière est le lien, testé dans
+// a-faire.spec.ts (« compte-10 : … une ligne entière touchable »).
+test.describe("back-office-9 : la zone de toucher de « Fait »", () => {
+  for (const [texte, verbe] of [["Affiche de l'atelier", "Fait"]] as const) {
     test(`« ${verbe} » : ::after de 44 px, le dessin ne grandit pas, un toucher à 21 px du centre suit le lien`, async ({ page }) => {
       await ouvrir(page);
       test.skip(!(await coarse(page)), "la zone de 44 px est celle du doigt : appareils tactiles");

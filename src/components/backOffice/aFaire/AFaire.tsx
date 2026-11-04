@@ -59,22 +59,6 @@ export function AFaire({ titre }: { titre: string }) {
       />
       <div className={`px-[var(--marge-page)] pb-10 ${montree ? "grid grid-cols-[minmax(0,1fr)_300px] items-start gap-8" : ""}`}>
         <div>
-          {/* SF-2 : la porte de la scène des fêtes là où la barre latérale n'existe pas (téléphone, tablette en portrait). */}
-          {isCoordination(user, profile) && (
-            <Link
-              href="/back-office/evenements/scene" data-testid="carte-scene-des-fetes"
-              className="hide-on-desktop mb-6 flex min-h-[44px] items-center gap-3 rounded-2xl border border-border bg-card px-4 py-3"
-            >
-              <span aria-hidden className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-secondary" style={{ color: PLANNING_COLORS.scene }}>
-                <Drama className="h-[18px] w-[18px]" />
-              </span>
-              <span className="min-w-0 flex-1">
-                <b className="block text-balance break-words text-[15px] font-semibold text-foreground">{t("backOffice.aFaire.sceneDesFetes.titre")}</b>
-                <span className="block text-balance break-words text-[13px] text-muted-foreground">{t("backOffice.aFaire.sceneDesFetes.sousTitre")}</span>
-              </span>
-              <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
-            </Link>
-          )}
           {incomplet && <p role="alert" className="mb-3 text-[13px] text-muted-foreground">{t("backOffice.aFaire.incomplet")}</p>}
           {!resultat ? (
             !erreur && <Squelette enTete={false} className="p-0" />
@@ -95,6 +79,22 @@ export function AFaire({ titre }: { titre: string }) {
                 </section>
               ))}
             </div>
+          )}
+          {/* SF-2 : la porte de la scène des fêtes là où la barre latérale n'existe pas (téléphone, tablette en portrait) ; compte-10 : après les groupes. */}
+          {isCoordination(user, profile) && (
+            <Link
+              href="/back-office/evenements/scene" data-testid="carte-scene-des-fetes"
+              className="hide-on-desktop mt-6 flex min-h-[44px] items-center gap-3 rounded-2xl border border-border bg-card px-4 py-3"
+            >
+              <span aria-hidden className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-secondary" style={{ color: PLANNING_COLORS.scene }}>
+                <Drama className="h-[18px] w-[18px]" />
+              </span>
+              <span className="min-w-0 flex-1">
+                <b className="block text-balance break-words text-[15px] font-semibold text-foreground">{t("backOffice.aFaire.sceneDesFetes.titre")}</b>
+                <span className="block text-balance break-words text-[13px] text-muted-foreground">{t("backOffice.aFaire.sceneDesFetes.sousTitre")}</span>
+              </span>
+              <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
+            </Link>
           )}
         </div>
         {montree && <ColonneDroite />}

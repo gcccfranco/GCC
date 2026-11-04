@@ -17,11 +17,10 @@ import { getEnvoisManuels, type PushNotif } from "@/lib/firebase/notifications";
 export function ApercuNotification({ titre, message }: { titre: string; message: string }) {
   const { t } = useTranslation();
   return (
-    <section aria-label={t("notifier.apercu")} className="raised rounded-2xl p-[18px]">
-      <h2 className="mb-3 text-[16px] font-bold text-foreground">{t("notifier.apercu")}</h2>
-      <div className="rounded-[22px] bg-gradient-to-b from-[#3a4a7a] to-[#1e2440] px-4 pb-5 pt-4">
-        <p className="mb-4 text-center text-[40px] font-light leading-none text-white/95 tabular-nums">9:41</p>
-        <div className="rounded-2xl bg-white/85 px-3 py-2.5 text-[#1c1c1e] shadow-sm backdrop-blur dark:bg-white/80">
+    <section aria-label={t("notifier.apercu")}>
+      <h2 className="mb-2 text-sm font-semibold text-muted-foreground">{t("notifier.apercu")}</h2>
+      <div className="rounded-2xl bg-secondary p-3">
+        <div className="rounded-2xl bg-card px-3 py-2.5 text-foreground">
           <div className="flex items-start gap-2.5">
             <span className="relative mt-0.5 h-7 w-7 shrink-0 overflow-hidden rounded-full bg-white">
               <Image src="/logo.png" alt="" fill sizes="28px" className="object-contain" />
@@ -29,12 +28,12 @@ export function ApercuNotification({ titre, message }: { titre: string; message:
             <div className="min-w-0 flex-1">
               <div className="flex items-baseline justify-between gap-2">
                 <p className="text-[12px] font-semibold">{t("common.header.title")}</p>
-                <p className="shrink-0 text-[11px] text-black/50">{t("notifier.maintenant")}</p>
+                <p className="shrink-0 text-[11px] text-muted-foreground">{t("notifier.maintenant")}</p>
               </div>
-              <p className={`truncate text-[14px] font-semibold ${titre.trim() ? "" : "text-black/40"}`}>
+              <p className={`truncate text-sm font-semibold ${titre.trim() ? "" : "text-muted-foreground"}`}>
                 {titre.trim() || t("notifier.titreApercu")}
               </p>
-              <p className={`line-clamp-3 whitespace-pre-wrap text-[13px] leading-[18px] ${message.trim() ? "" : "text-black/40"}`}>
+              <p className={`line-clamp-3 whitespace-pre-wrap text-sm ${message.trim() ? "" : "text-muted-foreground"}`}>
                 {message.trim() || t("notifier.messageApercu")}
               </p>
             </div>

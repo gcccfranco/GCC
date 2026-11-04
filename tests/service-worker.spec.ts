@@ -46,10 +46,50 @@ test("service worker : en local, les fichiers de développement ne sont jamais m
 
 test("hors-ligne.html : la page de repli se charge, avec ses deux messages", async ({ page }) => {
   await page.goto("/hors-ligne.html");
-  await expect(page.getByText("Pas de réseau — cette page n'a pas encore été ouverte sur cet appareil.")).toBeVisible();
-  await expect(page.getByText("无网络——此页面尚未在此设备上打开过。")).toBeVisible();
+  await expect(page.getByText("Pas de réseau. Cette page n'a pas encore été ouverte sur cet appareil.")).toBeVisible();
+  await expect(page.getByText("无网络。此页面尚未在此设备上打开过。")).toBeVisible();
   await expect(page.getByRole("link", { name: /Réessayer/ })).toBeVisible();
   await expect(page.getByRole("link", { name: /Les chants/ })).toHaveAttribute("href", "/songs/");
+  // compte-16 : ni « — » ni « · » visibles, le français d'abord et en encre.
+  const texte = await page.locator("body").innerText();
+  expect(texte).not.toMatch(/[—·]/);
+  expect(await page.evaluate(() => document.documentElement.lang)).toBe("fr");
+  expect(await page.evaluate(() => document.title)).toBe("Pas de réseau, 无网络");
+  expect(await page.locator("main > p").first().getAttribute("id")).toBe("fr");
+});
+
+test("hors-ligne.html : fonds du site et boutons de 44 px, en clair et en sombre (compte-16)", async ({ page }) => {
+  for (const [scheme, fond] of [["light", "rgb(255, 255, 255)"], ["dark", "rgb(0, 0, 0)"]] as const) {
+    await page.emulateMedia({ colorScheme: scheme });
+    await page.goto("/hors-ligne.html");
+    expect(await page.evaluate(() => getComputedStyle(document.body).backgroundColor), scheme).toBe(fond);
+    for (const lien of await page.locator("nav a").all()) {
+      expect(Math.round((await lien.boundingBox())!.height), scheme).toBe(44);
+    }
+  }
+});
+
+test("hors-ligne.html : l'interface en 中文 met le chinois d'abord (compte-17)", async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
+  await page.goto("/hors-ligne.html");
+  expect(await page.locator("main > p").first().getAttribute("id")).toBe("zh");
+  expect(await page.evaluate(() => document.documentElement.lang)).toBe("zh-CN");
+  expect(await page.evaluate(() => document.title)).toBe("无网络，Pas de réseau");
+  await expect(page.locator("#reessayer span").first()).toHaveText("重试");
+  await expect(page.locator("#reessayer span").last()).toHaveText("Réessayer");
+  await expect(page.locator("#chants span").first()).toHaveText("诗歌");
+});
+
+test("hors-ligne.html : sans langue enregistrée, le français d'abord (compte-17)", async ({ page }) => {
+  await page.goto("/hors-ligne.html");
+  await expect(page.locator("#reessayer span").first()).toHaveText("Réessayer");
+  await expect(page.locator("#chants span").first()).toHaveText("Les chants");
+});
+
+test("hors-ligne.html : stockage bloqué, la page s'affiche (compte-17)", async ({ page }) => {
+  await page.addInitScript(() => { Storage.prototype.getItem = () => { throw new Error("stockage bloqué"); }; });
+  await page.goto("/hors-ligne.html");
+  await expect(page.getByRole("link", { name: /Réessayer|重试/ })).toBeVisible();
 });
 
 test("sw.js : il se parse, et le test d'hôte local reconnaît les adresses privées", async ({ request }) => {
@@ -65,10 +105,11 @@ test("sw.js : il se parse, et le test d'hôte local reconnaît les adresses priv
   }
 });
 
-test("sw.js : le cache est v5 et la page hors ligne est précachée", async ({ request }) => {
+test("sw.js : le cache est v6 ; la page hors ligne et le logo sont précachés", async ({ request }) => {
   const texte = await (await request.get("/sw.js")).text();
-  expect(texte).toContain('const CACHE = "gcc-louange-v5"');
+  expect(texte).toContain('const CACHE = "gcc-louange-v6"');
   expect(texte).toMatch(/PRECACHE = \[[^\]]*"\/hors-ligne\.html"|HORS_LIGNE\]/);
+  expect(texte).toMatch(/PRECACHE = \[[^\]]*"\/logo\.png"/);
 });
 
 // ─── A3 bis : sw.js exécuté comme en ligne, avec un cache et un réseau simulés ───

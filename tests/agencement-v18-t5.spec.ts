@@ -414,7 +414,8 @@ test.describe("T5 : Messages", () => {
     await verifierAgencement(page, { contenu: sousEnTete(page), onglets: { rail: 1, pilules: filtres } });
     const ici = async () => (await titre(page).boundingBox())!;
     const a = await ici();
-    await expect(enTete(page)).toContainText("Ce que les membres signalent et proposent");
+    // compte-11 : « Messages » n'a plus de sous-titre (il décrivait la seule Réception).
+    await expect(enTete(page)).not.toContainText("Ce que les membres signalent et proposent");
 
     await ongletsRail(page).getByRole("link", { name: "Notifier" }).click();
     await expect(page).toHaveURL(/\/back-office\/messages\/notifier\/?$/);
@@ -470,12 +471,38 @@ test.describe("T5 : Messages", () => {
     await expect(message.getByRole("heading", { level: 2 })).toHaveText("Un chant proposé");
   });
 
-  test("Notifier : l'aperçu reprend le titre et le message tapés ; pied « Annuler · Envoyer à n personnes »", async ({ page }) => {
+  test("Notifier : l'aperçu reprend le titre et le message tapés ; pied « Effacer · Envoyer à n personnes » et ce qui manque (compte-12, compte-13)", async ({ page }) => {
     interdireDialoguesNatifs(page);
     await ouvrir(page, "/back-office/messages/notifier", DOCS);
     const apercu = page.getByRole("region", { name: "Aperçu" });
     await expect(apercu).toContainText("GCC Louange");
+    // compte-13 : un seul aperçu, neutre (ni heure, ni dégradé) ; sous `lg` dans le formulaire (entre Message et « Ouvre au clic »), au-delà à droite.
+    await expect(apercu).toHaveCount(1);
+    await expect(apercu).not.toContainText("9:41");
+    const banniere = apercu.locator("div.bg-card");
+    expect(await banniere.evaluate((el) => getComputedStyle(el).backgroundImage)).toBe("none");
+    const largeur = page.viewportSize()!.width;
+    const yApercu = (await apercu.boundingBox())!.y;
+    const yMessage = (await page.locator("#notif-message").boundingBox())!.y;
+    const yDestination = (await page.locator("#notif-destination").boundingBox())!.y;
+    if (largeur < 1024) {
+      expect(yApercu, "sous le champ Message").toBeGreaterThan(yMessage);
+      expect(yApercu, "avant « Ouvre au clic »").toBeLessThan(yDestination);
+    } else {
+      const xMessage = (await page.locator("#notif-message").boundingBox())!.x;
+      expect((await apercu.boundingBox())!.x, "dans la colonne de droite").toBeGreaterThan(xMessage);
+    }
+    // compte-12 : vide, « Effacer » absent, « Envoyer » grisé, la première condition qui manque dessous.
+    const aide = page.locator("#notif-manque");
+    await expect(page.getByRole("button", { name: "Effacer" })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Envoyer", exact: true })).toBeDisabled();
+    await expect(aide).toHaveText("Choisis à qui écrire.");
+    await expect(page.getByRole("button", { name: "Envoyer", exact: true })).toHaveAttribute("aria-describedby", "notif-manque");
     await page.getByRole("textbox", { name: "Titre" }).fill("Répétition déplacée");
+    await expect(page.getByRole("button", { name: "Effacer" })).toBeVisible();
+    await page.getByRole("group", { name: "Audience" }).getByRole("button", { name: "Cultes" }).click();
+    await page.getByRole("group", { name: "Cultes" }).getByRole("button", { name: "Culte Franco" }).click();
+    await expect(aide).toHaveText("Ajoute un message.");
     await page.getByRole("textbox", { name: "Message" }).fill("Rendez-vous à 18 h au lieu de 17 h.");
     await expect(apercu).toContainText("Répétition déplacée");
     await expect(apercu).toContainText("Rendez-vous à 18 h au lieu de 17 h.");
@@ -488,11 +515,11 @@ test.describe("T5 : Messages", () => {
       expect(r.x + r.width, "pilule dans la carte").toBeLessThanOrEqual(carteNotifier.x + carteNotifier.width);
     }
     expect(await aQui.evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(true);
-    // Audience en pilules : « Cultes » puis « Culte Franco » (un musicien et une présidence).
-    await page.getByRole("group", { name: "Audience" }).getByRole("button", { name: "Cultes" }).click();
-    await page.getByRole("group", { name: "Cultes" }).getByRole("button", { name: "Culte Franco" }).click();
+    // Audience en pilules : « Cultes » puis « Culte Franco » (un musicien et une présidence), choisie plus haut.
     await expect(page.getByRole("button", { name: "Envoyer à 2 personnes" })).toBeEnabled();
-    await page.getByRole("button", { name: "Annuler" }).click();
+    await expect(aide).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Annuler" })).toHaveCount(0);
+    await page.getByRole("button", { name: "Effacer" }).click();
     await expect(page.getByRole("textbox", { name: "Titre" })).toHaveValue("");
     await expect(apercu).not.toContainText("Répétition déplacée");
   });

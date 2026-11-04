@@ -303,6 +303,26 @@ test.describe("À faire (BO-B) : l'écran", () => {
     await expect(bouton("Noms du planning sans compte", "Relier")).toHaveAttribute("href", /\/back-office\/equipes\/personnes\/sans-compte\/?$/);
   });
 
+  test("compte-10 : « Fait » sans chevron ; « Relier » est une ligne entière touchable, avec un chevron et sans contour", async ({ page }) => {
+    await ouvrir(page, ADMIN);
+    const fait = ligne(page, "Affiche de l'atelier").getByRole("link", { name: /^Fait/ });
+    await expect(fait).toBeVisible();
+    await expect(fait.locator("svg")).toHaveCount(0);
+    const relier = ligne(page, "Noms du planning sans compte").getByRole("link", { name: /^Relier/ });
+    await expect(relier.locator("svg")).toHaveCount(1);
+    expect((await relier.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+    // La zone de toucher couvre la ligne entière (pseudo-élément étendu au <li>).
+    const zone = await relier.evaluate((el) => {
+      const li = el.closest("li")!.getBoundingClientRect();
+      const a = getComputedStyle(el, "::after");
+      return { position: a.position, largeur: parseFloat(a.width), hauteur: parseFloat(a.height), liL: li.width, liH: li.height };
+    });
+    expect(zone.position).toBe("absolute");
+    expect(Math.abs(zone.largeur - zone.liL)).toBeLessThanOrEqual(1);
+    expect(Math.abs(zone.hauteur - zone.liH)).toBeLessThanOrEqual(1);
+    expect(await relier.evaluate((el) => getComputedStyle(el).borderTopWidth)).toBe("0px");
+  });
+
   test("chaque ligne : titre, une ligne de contexte, bouton nommé « verbe : titre » et assez haut pour le doigt", async ({ page }) => {
     await ouvrir(page, ADMIN);
     const batterie = ligne(page, "Culte Franco : Batterie");

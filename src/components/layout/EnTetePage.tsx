@@ -1,7 +1,7 @@
 // L'en-tête de toutes les pages, App et Back-Office (agencement v18, R1, R2, R3, R8 de
 // docs/spec-agencement-v18.md ; planches `entete`, agencement_bo.py, et `tete`, agencement_app.py).
 // A remplacé `PageTitle` et `EnTeteEntree` (retirés à la tranche Z). Dans l'ordre :
-//   « ‹ Section » (retour), le titre (le seul h1 de la page) et son sous-titre d'une ligne, à
+//   « ‹ Section » (retour), le titre (le seul h1 de la page) et son sous-titre de deux lignes au plus, à
 //   droite les outils puis l'action principale, dessous les onglets (rail), puis une rangée libre
 //   (`apres` : filtres, période, interrupteur).
 // Il porte la marge de la zone (`--marge-page`) et les 20 px qui le séparent du contenu : la page
@@ -36,7 +36,6 @@ export function Retour({ href, children }: { href: string; children: ReactNode }
 export function EnTetePage({
   titre,
   sousTitre,
-  sousTitrePlie,
   retour,
   outils,
   action,
@@ -46,10 +45,8 @@ export function EnTetePage({
   /** Le titre de la page : le h1, même place et même taille partout. Facultatif : en deux volets, une fiche
    *  (réunion, tâche) est le grand titre et la bande du haut ne garde que le retour et l'action. */
   titre?: ReactNode;
-  /** Une ligne, coupée par « … » si elle ne tient pas. */
+  /** Deux lignes au plus : il passe à la ligne, coupé par « … » seulement au-delà (compte-2). */
   sousTitre?: ReactNode;
-  /** Le sous-titre passe à la ligne au lieu d'être coupé (« Lundi · bonjour Adèle… », G16). */
-  sousTitrePlie?: boolean;
   /** « ‹ Section » : une page qui dépend d'une autre (Mon profil › Moi, une fiche sur téléphone). */
   retour?: { href: string; label: ReactNode };
   /** Boutons secondaires (contour) et « ⋯ » (`MenuActions`), avant l'action principale. */
@@ -74,7 +71,7 @@ export function EnTetePage({
       <div className="flex items-start gap-3">
         <div className="min-w-0 flex-1">
           {titre && <h1 className="titre-page text-foreground">{titre}</h1>}
-          {sousTitre && <p className={`mt-1 ${sousTitrePlie ? "" : "truncate "}text-[14px] leading-5 text-muted-foreground`}>{sousTitre}</p>}
+          {sousTitre && <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{sousTitre}</p>}
         </div>
         {(outils || action) && (
           <div className="flex shrink-0 items-center gap-2 pt-0.5">

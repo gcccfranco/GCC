@@ -1804,7 +1804,7 @@
     "thanksBody": "你的回答已保存，随时可以修改。",
     "error": "保存失败。请检查网络连接（以及 Firestore 规则是否已发布）。",
     "errorRequired": "请回答标有星号的问题。",
-    "identityNotice": "以 {{name}} 的名义提交。",
+    "identityNotice": "提交人：{{name}}",
     "steps": {
       "you": "你与网站",
       "features": "各项功能",
@@ -2742,7 +2742,12 @@
     "description": "服侍前的提醒（提前 1 周和 3 天），以及歌单准备好时的通知。",
     "unsupported": "此设备或浏览器不支持通知。",
     "iosInstall": "在 iPhone 或 iPad 上：请先把网站添加到主屏幕（点「分享」，再点「添加到主屏幕」），然后从图标打开，才能开启通知。",
-    "blocked": "你的浏览器屏蔽了本网站的通知。要重新开启：点击地址栏左侧的图标，选择「通知」，设为「允许」，然后刷新页面。",
+    "blocked": "此浏览器已屏蔽通知",
+    "blockedSteps": [
+      "点击地址栏左侧的图标。",
+      "选择「通知」，设为「允许」。",
+      "刷新页面。"
+    ],
     "promptTitle": "开启服侍提醒",
     "promptText": "在每次服侍前收到提醒，歌单准备好时也会通知你。",
     "recevoir": "接收",
@@ -3513,7 +3518,7 @@
     "aFaire": {
       "sceneDesFetes": {
         "titre": "节日舞台",
-        "sousTitre": "预约与出场顺序 · 复活节、圣诞节"
+        "sousTitre": "复活节和圣诞节"
       },
       "sousTitre": "{{jour}}，最紧急的在前",
       "filtreAria": "显示",
@@ -3694,7 +3699,6 @@
       "aucunEnAttente": "暂无待处理消息。",
       "message": "消息",
       "erreur": "未能保存。请检查网络后重试。",
-      "sousTitreSection": "成员反馈的问题和推荐",
       "chantSignale": "被反馈的诗歌",
       "ouvrirPartition": "打开乐谱",
       "tonalite": "{{cle}} 调",
@@ -3894,6 +3898,12 @@
     "envoyer": "发送",
     "envoyerA_one": "发送给 {{count}} 人",
     "envoyerA_other": "发送给 {{count}} 人",
+    "effacer": "清空",
+    "manque": {
+      "destinataires": "请选择发给谁。",
+      "titre": "请填写标题。",
+      "message": "请填写内容。"
+    },
     "envoye": "已发送（{{n}} 条通知）。",
     "echec": "发送失败。",
     "prevenir": "通知成员",

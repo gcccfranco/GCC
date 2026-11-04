@@ -98,7 +98,7 @@ function CorpsEquipe({ id, nom, retour, backOffice }: { id: string; nom: string;
     <div className="pb-16">
       {/* BO-G, 2 : la largeur d'À faire (LargeurBO), plus de plafond à 720 px. */}
       <LargeurBO>
-        <EnTetePage retour={retour} titre={nom} sousTitre={sousTitre} sousTitrePlie />
+        <EnTetePage retour={retour} titre={nom} sousTitre={sousTitre} />
         {/* back-office-10 : barre latérale montrée, deux colonnes comme À faire (Tâches à gauche, Réunions et Membres à droite). */}
         {montree ? (
           <div data-testid="corps-equipe" className="grid grid-cols-[minmax(0,1fr)_300px] items-start gap-8 px-[var(--marge-page)]">

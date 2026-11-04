@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Bell } from "lucide-react";
+import { Bell, BellOff } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Switch } from "@/components/ui/switch";
+import { Bandeau } from "@/components/layout/Bandeau";
 import { Card, CardContent } from "@/components/ui/card";
 import { useProfile } from "@/lib/firebase/users";
 import {
@@ -161,21 +162,28 @@ export function PushToggle() {
         )}
 
         {supported && needsInstall && (
-          <p className="text-xs text-amber-700 dark:text-amber-400 mt-3">
+          <Bandeau ton="alerte" role="status" icone={<BellOff className="h-4 w-4" aria-hidden />} className="mt-3">
             {t("push.iosInstall", {
               defaultValue:
-                "Sur iPhone/iPad : ajoute d'abord le site à l'écran d'accueil (Partager → « Sur l'écran d'accueil »), puis ouvre-le depuis l'icône pour activer les notifications.",
+                "Sur iPhone/iPad : ajoute d'abord le site à l'écran d'accueil (Partager, puis « Sur l'écran d'accueil »), puis ouvre-le depuis l'icône pour activer les notifications.",
             })}
-          </p>
+          </Bandeau>
         )}
 
         {supported && !needsInstall && denied && (
-          <p className="text-xs text-amber-700 dark:text-amber-400 mt-3">
-            {t("push.blocked", {
-              defaultValue:
-                "Les notifications sont bloquées pour ce site dans ton navigateur. Pour les réactiver : clique sur l'icône à gauche de l'adresse (🔒) → Notifications → Autoriser, puis recharge la page.",
-            })}
-          </p>
+          <Bandeau ton="alerte" role="status" icone={<BellOff className="h-4 w-4" aria-hidden />} className="mt-3">
+            <p className="font-semibold">
+              {t("push.blocked", { defaultValue: "Notifications bloquées dans ce navigateur" })}
+            </p>
+            <ol className="mt-1 list-decimal pl-5">
+              {(t("push.blockedSteps", {
+                returnObjects: true,
+                defaultValue: ["Ouvre l'icône à gauche de l'adresse.", "Notifications, puis Autoriser.", "Recharge la page."],
+              }) as string[]).map((etape) => (
+                <li key={etape}>{etape}</li>
+              ))}
+            </ol>
+          </Bandeau>
         )}
 
         {error && <p className="text-xs text-destructive mt-3">{error}</p>}

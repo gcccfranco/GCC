@@ -61,6 +61,48 @@ test.describe("pages secondaires (T5), téléphone", () => {
     expect(await page.locator("main input, main select").count()).toBeGreaterThanOrEqual(3);
   });
 
+  test("questionnaire : sous-titre sur deux lignes sans coupe, bande d'étape collante, pied empilé (compte-2, -3, -15)", async ({ page }) => {
+    await page.route(/docs\.google\.com\/spreadsheets/, (r) => r.fulfill({ status: 200, contentType: "text/csv", body: "" }));
+    await signInAs(page, { ...MEMBRE, firstName: "Marie-Charlotte", lastName: "Bérengère D." }, {}, "/questionnaire");
+    // compte-2 : le sous-titre passe à la ligne (deux lignes au plus), sans « … ».
+    const sousTitre = page.locator("header[data-entete-page] h1 + p");
+    await expect(sousTitre).toBeVisible();
+    expect(await sousTitre.evaluate((el) => ({ coupe: el.scrollHeight > el.clientHeight + 1, clamp: getComputedStyle(el).webkitLineClamp }))).toEqual({ coupe: false, clamp: "2" });
+    // compte-15 : la bande reste collée sous la barre du haut, dans le viewport, après défilement.
+    const bande = page.getByTestId("bande-etape");
+    await expect(bande).toBeVisible();
+    await expect(bande).toContainText("1 / 3");
+    await page.evaluate(() => window.scrollTo(0, 1500));
+    await page.waitForTimeout(300);
+    const navH = await page.evaluate(() => {
+      const sonde = document.createElement("div");
+      sonde.style.height = "var(--nav-h)";
+      document.body.appendChild(sonde);
+      const h = sonde.getBoundingClientRect().height;
+      sonde.remove();
+      return h;
+    });
+    // La barre du haut se cache au défilement vers le bas : la bande la suit (bas de la barre, ou haut de l'écran).
+    await page.waitForTimeout(400);
+    const basBarre = await page.evaluate(() => Math.max(0, document.querySelector("body > div header, header")!.getBoundingClientRect().bottom));
+    const boite = (await bande.boundingBox())!;
+    expect(navH).toBeGreaterThan(0);
+    expect(Math.abs(boite.y - basBarre)).toBeLessThanOrEqual(2);
+    expect(boite.y + boite.height).toBeLessThanOrEqual(664);
+    // compte-3 : étape 1, « Suivant » seul en pleine largeur ; étape 2, deux moitiés de 44 px ; mention sans point doublé.
+    await expect(page.getByRole("button", { name: "Précédent" })).toHaveCount(0);
+    const mention = page.getByText(/^Envoyé par /);
+    await expect(mention).toHaveText("Envoyé par Marie-Charlotte Bérengère D.");
+    expect(await mention.evaluate((el) => el.textContent!.includes(".."))).toBe(false);
+    // « Suivant » seul : 44 px de haut, la largeur de la carte (moins ses retraits), sous la mention.
+    const suivant = page.getByRole("button", { name: "Suivant" });
+    const s1 = (await suivant.boundingBox())!;
+    expect(Math.round(s1.height)).toBe(44);
+    const carte = (await page.getByTestId("questions").boundingBox())!;
+    expect(s1.width).toBeGreaterThan(carte.width - 60);
+    expect((await mention.boundingBox())!.y + (await mention.boundingBox())!.height).toBeLessThanOrEqual(s1.y);
+  });
+
   for (const chemin of ["/profil", "/guide", "/questionnaire", "/notifier"]) {
     test(`connecté : ${chemin}`, async ({ page }) => {
       const erreurs = ecouteErreurs(page);

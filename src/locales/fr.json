@@ -1837,7 +1837,7 @@
     "thanksBody": "Tes réponses sont bien enregistrées. Tu peux les modifier quand tu veux.",
     "error": "Enregistrement impossible. Vérifie ta connexion (et que les règles Firestore sont publiées).",
     "errorRequired": "Merci de répondre aux questions marquées d'une étoile.",
-    "identityNotice": "Envoyé au nom de {{name}}.",
+    "identityNotice": "Envoyé par {{name}}",
     "steps": {
       "you": "Toi et le site",
       "features": "Les fonctionnalités",
@@ -2777,7 +2777,12 @@
     "description": "Rappels avant un service (1 semaine puis 3 jours) et alerte quand une setlist est prête.",
     "unsupported": "Cet appareil ou ce navigateur ne supporte pas les notifications.",
     "iosInstall": "Sur iPhone ou iPad : ajoute d'abord le site à l'écran d'accueil (Partager, puis « Sur l'écran d'accueil »), puis ouvre-le depuis l'icône pour activer les notifications.",
-    "blocked": "Les notifications sont bloquées pour ce site dans ton navigateur. Pour les réactiver : clique sur l'icône à gauche de l'adresse, puis Notifications, Autoriser, et recharge la page.",
+    "blocked": "Notifications bloquées dans ce navigateur",
+    "blockedSteps": [
+      "Ouvre l'icône à gauche de l'adresse.",
+      "Notifications, puis Autoriser.",
+      "Recharge la page."
+    ],
     "promptTitle": "Active les rappels de service",
     "promptText": "Reçois un rappel avant chaque service et une alerte quand une setlist est prête.",
     "recevoir": "Recevoir",
@@ -3560,7 +3565,7 @@
     "aFaire": {
       "sceneDesFetes": {
         "titre": "Scène des fêtes",
-        "sousTitre": "Réservations et ordre de passage · Pâques, Noël"
+        "sousTitre": "Pâques et Noël"
       },
       "sousTitre": "{{jour}}, le plus urgent en premier",
       "filtreAria": "Afficher",
@@ -3741,7 +3746,6 @@
       "aucunEnAttente": "Aucun message en attente.",
       "message": "Message",
       "erreur": "Changement non enregistré. Vérifie ta connexion, puis recommence.",
-      "sousTitreSection": "Ce que les membres signalent et proposent",
       "chantSignale": "Le chant signalé",
       "ouvrirPartition": "Ouvrir la partition",
       "tonalite": "tonalité {{cle}}",
@@ -3943,6 +3947,12 @@
     "envoyer": "Envoyer",
     "envoyerA_one": "Envoyer à {{count}} personne",
     "envoyerA_other": "Envoyer à {{count}} personnes",
+    "effacer": "Effacer",
+    "manque": {
+      "destinataires": "Choisis à qui écrire.",
+      "titre": "Ajoute un titre.",
+      "message": "Ajoute un message."
+    },
     "envoye": "Envoyé ({{n}} notification(s)).",
     "echec": "Échec de l'envoi.",
     "prevenir": "Prévenir des membres",

@@ -159,8 +159,8 @@ test.describe("la page d'une équipe au Back-Office (BO7)", () => {
     await expect(section(page, "Réunions").getByRole("link", { name: /Point DA d'octobre/ })).toHaveAttribute("href", /\/back-office\/reunions\/prochaine\/?$/);
     await section(page, "Tâches").getByText("Affiche de Noël").click();
     await expect(page).toHaveURL(/\/back-office\/taches\/da\/affiche\/?$/);
-    // Le retour de la fiche (« ‹ DA » en grand, « ‹ Tâches » en un volet) ramène à la page de l'équipe.
-    await page.locator("header[data-entete-page]").getByRole("link", { name: estGrandEcran(test.info()) ? "DA" : "Tâches", exact: true }).click();
+    // Le retour de la fiche (« ‹ Tâches de DA », en grand comme en un volet) ramène à la page de l'équipe.
+    await page.locator("header[data-entete-page]").getByRole("link", { name: "Tâches de DA", exact: true }).click();
     await expect(page).toHaveURL(/\/back-office\/equipes\/da\/?$/);
   });
 

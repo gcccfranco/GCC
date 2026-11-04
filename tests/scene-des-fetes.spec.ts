@@ -5,7 +5,7 @@ import { ongletsBackOffice } from "../src/lib/navigation";
 
 // Lot SF (docs/spec-espace-musiciens.md, § Lot SF ; Q5, Q6) — la scène des fêtes à portée de la coordination :
 // SF-1, l'entrée « Scène » de la barre latérale du Back-Office (entre Calendrier et Planning, jamais dans la barre du bas) ;
-// SF-2, la carte « Scène des fêtes » en tête d'À faire, là où la barre latérale n'existe pas.
+// SF-2, la carte « Scène des fêtes » en bas d'À faire, là où la barre latérale n'existe pas.
 // Comptes simulés, noms fictifs. Lancé sur les cinq dispositions (SPECS_GRAND_ECRAN).
 
 const COMITE: FakeProfile = { uid: "uid-orlane", email: "orlane@example.com", firstName: "Orlane", lastName: "V.", ...coordination() };
@@ -78,22 +78,22 @@ test.describe("SF-1 : l'entrée « Scène » de la barre latérale", () => {
   });
 });
 
-test.describe("SF-2 : la carte « Scène des fêtes » en tête d'À faire", () => {
-  test("téléphone et tablette en portrait : en tête, un toucher ouvre la scène, la barre du bas n'a pas Scène", async ({ page }, info) => {
+test.describe("SF-2 : la carte « Scène des fêtes » en bas d'À faire", () => {
+  test("téléphone et tablette en portrait : en bas, un toucher ouvre la scène, la barre du bas n'a pas Scène", async ({ page }, info) => {
     test.skip(estGrandEcran(info), "la barre latérale porte déjà l'entrée");
     await ouvrirAFaire(page, COMITE);
     const carte = page.getByTestId("carte-scene-des-fetes");
     await expect(carte).toBeVisible();
     await expect(carte).toContainText("Scène des fêtes");
-    await expect(carte).toContainText("Réservations et ordre de passage · Pâques, Noël");
+    await expect(carte).toContainText("Pâques et Noël");
     await expect(carte).toHaveAttribute("href", /^\/back-office\/evenements\/scene\/?$/);
     // Cible de toucher d'au moins 44 px.
     expect((await carte.boundingBox())!.height).toBeGreaterThanOrEqual(44);
-    // En tête : au-dessus de tout le reste de la zone À faire.
+    // compte-10 : en dernier, sous tous les groupes et toutes les lignes de la zone À faire.
     const contenu = page.getByRole("main");
     const hautCarte = (await carte.boundingBox())!.y;
     for (const autre of await contenu.locator('[data-testid^="groupe-"], [data-testid="ligne-a-faire"]').all()) {
-      expect((await autre.boundingBox())!.y).toBeGreaterThan(hautCarte);
+      expect((await autre.boundingBox())!.y).toBeLessThan(hautCarte);
     }
     // La barre du bas garde ses onglets, sans Scène.
     const barre = page.getByTestId("barre-du-bas");

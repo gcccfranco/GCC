@@ -111,6 +111,22 @@ test.describe("Moi (Q9)", () => {
     expect(await sansDefilementHorizontal(page), "pas de défilement horizontal").toBe(true);
   });
 
+  test("compte-6 : notifications refusées, un bandeau d'alerte avec l'état puis trois étapes numérotées (13 px au moins)", async ({ page }) => {
+    await page.addInitScript(() => {
+      const enregistrement = { pushManager: { getSubscription: async () => null } };
+      Object.defineProperty(ServiceWorkerContainer.prototype, "ready", { configurable: true, get: () => Promise.resolve(enregistrement) });
+      Object.defineProperty(Notification, "permission", { configurable: true, get: () => "denied" });
+      Object.defineProperty(Navigator.prototype, "standalone", { configurable: true, get: () => true });
+    });
+    await ouvrir(page, MEMBRE, "/profil");
+    const bandeau = page.getByRole("status").filter({ hasText: "Notifications bloquées dans ce navigateur" });
+    await expect(bandeau).toBeVisible();
+    await expect(bandeau.getByRole("listitem")).toHaveCount(3);
+    await expect(bandeau.getByRole("listitem").first()).toHaveText("Ouvre l'icône à gauche de l'adresse.");
+    expect(await bandeau.locator("li").first().evaluate((el) => parseFloat(getComputedStyle(el).fontSize))).toBeGreaterThanOrEqual(13);
+    expect(await bandeau.evaluate((el) => getComputedStyle(el).color)).not.toBe("rgb(224, 86, 10)");
+  });
+
   test("Réglages = Notifications · Langue · Thème ; « Notifications » ouvre ses réglages", async ({ page }, info) => {
     await abonneAuxNotifications(page);
     await ouvrir(page, MEMBRE, "/moi");

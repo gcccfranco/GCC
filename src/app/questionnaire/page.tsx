@@ -18,6 +18,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { EnTetePage } from "@/components/layout/EnTetePage";
 import { useDisposition } from "@/hooks/useDisposition";
+import { useScrollDirection } from "@/hooks/useScrollDirection";
 import { Impasse } from "@/components/layout/Impasse";
 import { Squelette } from "@/components/layout/Squelette";
 
@@ -179,6 +180,8 @@ export default function QuestionnairePage() {
   // A15 (agencement v18 ; planche `v18-app-questionnaire`) : en grand, la lecture (R14) — les étapes
   // en sommaire à gauche (260 px), les questions de l'étape à 720 px ; ailleurs, la progression d'avant.
   const disposition = useDisposition();
+  // La barre du haut se cache au défilement vers le bas (téléphone) : la bande d'étape monte alors en haut de l'écran.
+  const barreVisible = useScrollDirection();
   const grand = disposition === "grand";
 
   if (loading || (user && loadingAnswers)) {
@@ -283,7 +286,8 @@ export default function QuestionnairePage() {
     );
   }
 
-  const progress = steps.length > 1 ? (step / (steps.length - 1)) * 100 : 100;
+  // La bande dit « Étape 1 / 3 » : la barre en montre déjà un tiers (critique).
+  const progress = steps.length > 0 ? ((step + 1) / steps.length) * 100 : 100;
   const etapeSur = t("survey.stepOf", { step: step + 1, total: steps.length });
 
   // En grand : les étapes, l'étape en cours en encre (on y avance par « Suivant », comme avant).
@@ -315,16 +319,20 @@ export default function QuestionnairePage() {
       </p>
     </nav>
   ) : (
-    /* Ailleurs : la progression d'avant. */
-    <div className="space-y-1.5">
-      <div className="flex items-baseline justify-between gap-2">
-        <p className="text-sm font-semibold text-muted-foreground">{t(`survey.steps.${current.id}`)}</p>
-        <span className="text-[11px] text-muted-foreground shrink-0 tabular-nums">{etapeSur}</span>
+    /* Ailleurs (compte-15) : une bande collante de 44 px sous la barre du haut, la barre de 3 px sur son bord bas. */
+    <div
+      data-testid="bande-etape"
+      className="material-bar sticky z-20 max-md:-mx-[var(--marge-page)] !shadow-none transition-[top] duration-300 motion-reduce:transition-none"
+      style={{ top: barreVisible ? "var(--nav-h)" : "var(--sat, 0px)" }}
+    >
+      <div className="flex h-[41px] items-center justify-between gap-2 max-md:px-[var(--marge-page)]">
+        <p className="min-w-0 truncate text-sm font-semibold text-foreground">{t(`survey.steps.${current.id}`)}</p>
+        <span className="shrink-0 text-sm font-semibold tabular-nums text-muted-foreground">{etapeSur}</span>
       </div>
-      <div className="h-1.5 rounded-full bg-secondary overflow-hidden">
-        <div className="h-full rounded-full bg-primary transition-[width] duration-300" style={{ width: `${progress}%` }} />
+      <div className="h-[3px] bg-secondary">
+        <div className="h-full bg-primary transition-[width] duration-300 [transition-timing-function:cubic-bezier(.32,.72,0,1)] motion-reduce:transition-none" style={{ width: `${progress}%` }} />
       </div>
-      <p className="text-xs text-muted-foreground">{t("survey.sautees")}</p>
+      <div aria-hidden className="pointer-events-none absolute inset-x-0 top-full h-3 bg-gradient-to-b from-background/80 to-transparent" />
     </div>
   );
 
@@ -340,6 +348,8 @@ export default function QuestionnairePage() {
                 <AlertDescription>{t("survey.resumed")}</AlertDescription>
               </Alert>
             )}
+
+            {!grand && <p className="text-sm text-muted-foreground">{t("survey.sautees")}</p>}
 
             {error && (
               <Alert variant="destructive">
@@ -366,20 +376,26 @@ export default function QuestionnairePage() {
                 </div>
               ))}
 
-              <div className="mt-1 flex flex-wrap items-center gap-3 border-t border-border pt-4">
-                <span className="min-w-0 flex-1 text-[13px] text-muted-foreground">{t("survey.identityNotice", { name: authorName })}</span>
-                <div className="flex gap-2">
+              <div className={grand ? "mt-1 flex flex-wrap items-center gap-3 border-t border-border pt-4" : "mt-1 space-y-3 border-t border-border pt-4"}>
+                <span className={grand ? "min-w-0 flex-1 text-sm text-muted-foreground" : "block text-sm text-muted-foreground"}>{t("survey.identityNotice", { name: authorName })}</span>
+                <div className={grand ? "flex gap-2" : "grid grid-cols-2 gap-2"}>
+                  {(grand || step > 0) && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => goTo(step - 1)}
+                      disabled={step === 0 || saving}
+                      className={grand ? "h-10 rounded-full" : "h-11 rounded-full"}
+                    >
+                      <ArrowLeft className="h-4 w-4 mr-1.5" />
+                      {t("survey.previous")}
+                    </Button>
+                  )}
                   <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => goTo(step - 1)}
-                    disabled={step === 0 || saving}
-                    className="h-10 rounded-full"
+                    onClick={handleNext}
+                    disabled={saving}
+                    className={grand ? "h-10 rounded-full" : `h-11 rounded-full ${step === 0 ? "col-span-2" : ""}`}
                   >
-                    <ArrowLeft className="h-4 w-4 mr-1.5" />
-                    {t("survey.previous")}
-                  </Button>
-                  <Button onClick={handleNext} disabled={saving} className="h-10 rounded-full">
                     {saving
                       ? t("survey.submitting")
                       : isLast

@@ -31,7 +31,7 @@
 //     (/planning) se retrouve avec sa barre (/planning/) ; les plafonds suivent un
 //     LRU : une entrée relue passe en fin d'ordre (delete + put, sans réseau).
 
-const CACHE = "gcc-louange-v5";
+const CACHE = "gcc-louange-v6";
 
 /** Nombre maximal d'entrées gardées pour /_next/static et pour /jianpu/ (les plus anciennes partent d'abord). */
 const PLAFOND_STATIC = 300;
@@ -58,7 +58,7 @@ const LOCAL = estHoteLocal(self.location.hostname);
 
 // Ressources du shell préchargées à l'installation (best-effort, une par une).
 const HORS_LIGNE = "/hors-ligne.html";
-const PRECACHE = ["/songs/", "/songs-index.json", HORS_LIGNE];
+const PRECACHE = ["/songs/", "/songs-index.json", "/logo.png", HORS_LIGNE];
 
 self.addEventListener("install", (event) => {
   if (!LOCAL) {
