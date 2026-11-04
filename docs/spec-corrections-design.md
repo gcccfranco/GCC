@@ -212,3 +212,20 @@ T1c, T1e et T1g tournent dans trois sessions parallèles. `musiciens.md` passe d
   guide sans animation.
 - zh-CN à faire relire : `emptyUpcoming`, `guide.tocReplie`, `agrandirCapture`, `captureDefilement`, `captureFermerAide`,
   `login.signupQuestion`, `signupAction`, puce d'eglise-15. Course vue : `evenements.spec.ts:316`.
+
+### T1d · Le dimanche — fait (session parallèle)
+- Commits : `d89dd5e` setlists et éditeur (dimanche-3, -4, -5, -6, -16, -17, -23, -25) · `8840127` mode louange
+  (dimanche-1, -10, -11 B, -13, -14, -24) · `b7b6c5e` reprises de la critique.
+- **Tranché au code** : zones de 44 px par `TOUCHER_44` (`::after`, règle § 3) au lieu du `::before` de l'annexe ;
+  « Modifiable par… » derrière le ⓘ sur toutes les tailles ; droits, langue et historique sur une rangée en deux volets ;
+  pastille « Ensuite » dans le flux, sous la colonne la plus courte (barre affichée et pastille couverte à 1 440 px :
+  pastille flottante au-dessus de la barre ; sans place : page réduite à l'échelle). Corrigés en passant : panneau
+  d'annotation centré entre les barres (la barre du bas couvrait « Annuler ») ; hauteur exacte de l'en-tête des deux
+  volets ; `rowGap` des rangées chinoises recoupées ; note en deux volets avec ses retours à la ligne.
+- **Écarts** : alignement tablette de dimanche-16 laissé à dimanche-9 (T4) ; premier chant au téléphone ≈ 43–47 % de
+  la hauteur selon la note (cible 41 %) ; essais au doigt à faire (chevron de 36 px de la puce présidence, poignée).
+- **À trancher par Timothée** : la bulle d'indice du rappel est coupée par la barre opaque (la cacher quand la barre est
+  affichée casse `rappel-indice`) ; liseré de lettres sous la barre du haut ; FreeShow et PDF ont la même icône dans ⋯.
+- Tests : `PW_CHANTS_ZH=all` vert (771) ; `PW_SLUGS=all` 2 778 / 2 880 sans échec avant la limite de temps. Courses
+  vertes seules : `setlist-g:216`, `:227`, `setlist-editeur-piste2` Q13. zh à faire relire : 姓名, 、, 给团队的备注,
+  第 {{n}} / {{total}} 页.
