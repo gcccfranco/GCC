@@ -58,7 +58,9 @@ export function ReceptionVolets() {
   const choisi = tous.find((m) => m.cle === choix) ?? tous.find(enAttente) ?? null;
   // Rien à montrer (après filtre) : un seul message vide à la place des sections.
   const vide = !rec.loadingReports && !rec.loadingProposals && tous.length === 0;
-  const cleVide = disposition === "tablette" || filtre === "tout" ? "backOffice.boE1.aucunMessage"
+  // Aucun message du tout (avant filtre) : le cadre seul, sans filtres, sur toutes les dispositions (bo-messages-planning-11).
+  const rienDuTout = !rec.loadingReports && !rec.loadingProposals && signalements.length + propositions.length === 0;
+  const cleVide = rienDuTout || disposition === "tablette" || filtre === "tout" ? "backOffice.boE1.aucunMessage"
     : filtre === "signalements" ? "backOffice.reception.aucunSignalement" : "backOffice.reception.aucuneProposition";
 
   const date = (d: Date | null) => (d ? ` · ${d.toLocaleDateString(i18n.language === "zh-CN" ? "zh-CN" : "fr-FR")}` : "");
@@ -348,7 +350,7 @@ export function ReceptionVolets() {
           <div className="px-2.5 pb-4 pt-3">
             {/* Volet de droite caché : l'alerte d'erreur reste visible, en tête de la liste. */}
             {!choisi && erreur}
-            <div className="px-2.5 pb-1">{pilules}</div>
+            {!rienDuTout && <div className="px-2.5 pb-1">{pilules}</div>}
             {sections}
           </div>
         }
@@ -369,10 +371,12 @@ export function ReceptionVolets() {
       {disposition === "tablette" ? (
         <div className="grid grid-cols-2 items-start gap-3.5">{sections}</div>
       ) : (
-        <>
-          <div className="mb-3">{pilules}</div>
-          <div className="raised space-y-4 rounded-2xl px-4 py-3">{sections}</div>
-        </>
+        rienDuTout ? sections : (
+          <>
+            <div className="mb-3">{pilules}</div>
+            <div className="raised space-y-4 rounded-2xl px-4 py-3">{sections}</div>
+          </>
+        )
       )}
     </div>
   );

@@ -68,7 +68,7 @@ export function BarreCollage({ count, remplace, videsSeulement, onAnnuler, onVid
   )
 }
 
-/** La barre de sélection (PG23), sombre, sous la plage : les touches sont des rappels, pas des boutons. */
+/** La barre de sélection (PG23), sombre, sous la plage : les touches sont des rappels, pas des boutons. Elle laisse passer le pointeur (sauf « Fermer ») : posée sous la plage, elle couvre sinon les cases de la ligne suivante et empêche d'étendre la sélection au Maj+clic. */
 export function BarreSelection({ count, dimanches, colonnes, style, onFermer }: {
   count: number
   dimanches: number
@@ -83,13 +83,13 @@ export function BarreSelection({ count, dimanches, colonnes, style, onFermer }: 
       data-testid="barre-selection"
       role="status"
       style={style}
-      className="absolute z-30 flex w-max max-w-[calc(100%-1rem)] items-center gap-x-3 whitespace-nowrap rounded-lg bg-foreground px-3 py-1.5 text-xs text-background shadow-lg"
+      className="pointer-events-none absolute z-30 flex w-max max-w-[calc(100%-1rem)] items-center gap-x-3 whitespace-nowrap rounded-lg bg-foreground px-3 py-1.5 text-xs text-background shadow-lg"
     >
       <span className="font-semibold">{t("planning.gestes.selection", { count, dimanches, colonnes })}</span>
       <span className="opacity-80">{cmd}C {t("planning.gestes.copier")}</span>
       <span className="opacity-80">{cmd}V {t("planning.gestes.coller")}</span>
       <span className="opacity-80">⌫ {t("planning.gestes.vider")}</span>
-      <button type="button" onClick={onFermer} aria-label={t("common.buttons.close")} className="rounded p-0.5 opacity-80 hover:opacity-100">
+      <button type="button" onClick={onFermer} aria-label={t("common.buttons.close")} className="pointer-events-auto rounded p-0.5 opacity-80 hover:opacity-100">
         <X className="h-3.5 w-3.5" aria-hidden />
       </button>
     </div>

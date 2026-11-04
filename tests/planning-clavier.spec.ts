@@ -382,6 +382,9 @@ test("ordinateur — le « ? » ouvre l'aide ; Échap la ferme, rend le focus au
   const boutonAide = (await aide.boundingBox())!
   const grille = (await page.getByTestId("grille-defilement").boundingBox())!
   expect(boutonAide.y + boutonAide.height, "le « ? » est au-dessus de la grille").toBeLessThan(grille.y)
+  // bo-messages-planning-10 : le « ? » a la hauteur d'« Exporter » (36 px).
+  const exporter = (await page.locator("header[data-entete-page]").getByRole("button", { name: /Exporter/ }).boundingBox())!
+  expect(Math.abs(boutonAide.height - exporter.height), "« ? » et « Exporter » de même hauteur").toBeLessThanOrEqual(1)
   await aide.click()
   await expect(aide).toHaveAttribute("aria-expanded", "true")
   await expect(page.getByText("Au clavier", { exact: false })).toBeVisible()

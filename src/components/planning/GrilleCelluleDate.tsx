@@ -18,6 +18,7 @@ export function GrilleCelluleDate({
   badge,
   retirer,
   copie,
+  menu,
 }: {
   date: string
   app: boolean
@@ -29,8 +30,10 @@ export function GrilleCelluleDate({
   badge: ReactNode
   /** Le bouton « Retirer », ou null quand la date ne se retire pas. */
   retirer: ReactNode
-  /** La pastille « Copier le … » (survol) ou le « ⋯ » du dimanche, déjà posés. */
+  /** La pastille « Copier le … » (survol), déjà posée. */
   copie: ReactNode
+  /** Le « ⋯ » du dimanche (toucher), à droite de la date (bo-messages-planning-10). */
+  menu?: ReactNode
 }) {
   const { t } = useTranslation()
   return (
@@ -40,16 +43,19 @@ export function GrilleCelluleDate({
       style={{ ...styleTexteService(couleur), backgroundImage: fond ? `linear-gradient(${fond}, ${fond})` : undefined }}
     >
       {/* La date, puis « Cette semaine » dessous (planches `v18-app-planning-grille-a`, `v18-bo-planning-a`). */}
-      <div className="flex items-center gap-1.5">
-        {/* bo-messages-planning-1 : quand la grille tient sans défiler (conteneur ≥ 960 px), « Cette semaine » n'est plus
-            qu'une pastille de 6 px devant la date ; le texte reste pour les lecteurs d'écran. */}
-        {cetteSemaine && (
-          <span className="hidden [@container(min-width:960px)]:inline">
-            <span aria-hidden className="block h-1.5 w-1.5 rounded-full" style={{ background: couleur }} />
-            <span className="sr-only">{t("planning.table.thisWeek")}</span>
-          </span>
-        )}
-        {fdShort(date)}
+      <div className="flex items-center justify-between gap-1">
+        <div className="flex items-center gap-1.5">
+          {/* bo-messages-planning-1 : quand la grille tient sans défiler (conteneur ≥ 960 px), « Cette semaine » n'est plus
+              qu'une pastille de 6 px devant la date ; le texte reste pour les lecteurs d'écran. */}
+          {cetteSemaine && (
+            <span className="hidden [@container(min-width:960px)]:inline">
+              <span aria-hidden className="block h-1.5 w-1.5 rounded-full" style={{ background: couleur }} />
+              <span className="sr-only">{t("planning.table.thisWeek")}</span>
+            </span>
+          )}
+          {fdShort(date)}
+        </div>
+        {menu}
       </div>
       {cetteSemaine && (
         <span className={`mt-0.5 mr-1 inline-block [@container(min-width:960px)]:hidden text-xs font-bold px-1.5 py-0.5 rounded ${app ? "bg-foreground text-background" : "text-white"}`} style={app ? undefined : { background: couleur }}>

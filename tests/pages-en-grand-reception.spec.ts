@@ -167,7 +167,9 @@ test("aucun message : un seul état vide, pas de volet de droite", async ({ page
   await page.clock.setFixedTime(new Date("2026-10-03T10:00:00"));
   await page.route(/docs\.google\.com\/spreadsheets/, (route) => route.fulfill({ status: 200, contentType: "text/csv", body: "" }));
   await signInAs(page, ADMIN, {}, "/back-office/messages");
-  await expect(page.getByText("Aucun message pour l'instant.")).toHaveCount(1);
+  await expect(page.getByText("Aucun message pour l'instant. Les signalements et propositions de chants des membres arrivent ici.")).toHaveCount(1);
+  // bo-messages-planning-11 : le cadre seul, sans filtres, sur toutes les dispositions.
+  await expect(page.getByRole("group", { name: "Filtrer les messages" })).toHaveCount(0);
   await expect(page.getByText("Aucun signalement")).toHaveCount(0);
   await expect(page.getByText("Aucune proposition")).toHaveCount(0);
   await expect(page.locator('[data-volet="detail"]')).toHaveCount(0);

@@ -3482,7 +3482,7 @@
       "etiquetteSheet": "Sheet"
     },
     "boE1": {
-      "aucunMessage": "暂时没有消息。",
+      "aucunMessage": "暂时没有消息。成员提交的问题反馈和诗歌推荐会显示在这里。",
       "aideClavier": "键盘快捷键",
       "publier": {
         "echec": "失败。",
@@ -3585,7 +3585,8 @@
       "incomplet": "部分内容未能读取，列表可能不完整。",
       "dimanche": {
         "titre": "本主日，{{date}}",
-        "ouvrir": "打开排班表"
+        "ouvrir": "打开排班表",
+        "aChoisir": "待安排"
       },
       "reunion": {
         "titre": "下一次会议"
@@ -3989,7 +3990,8 @@
       "repondants_one": "{{count}} 位答卷人",
       "repondants_other": "{{count}} 位答卷人",
       "parPersonne": "按人查看",
-      "voirPage": "查看问卷页面",
+      "ouvrir": "打开问卷",
+      "aideCourte": "每人只有一份回答，可随时修改。问题右侧的数字是答题人数。",
       "aucuneReponsePourLInstant": "目前还没有回答。",
       "moyenne": "平均 {{moyenne}}（满分 {{max}}）",
       "reponsesN": "{{count}} 条回答",

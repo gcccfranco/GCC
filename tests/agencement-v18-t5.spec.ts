@@ -480,6 +480,14 @@ test.describe("T5 : Messages", () => {
     await expect(apercu).toContainText("Répétition déplacée");
     await expect(apercu).toContainText("Rendez-vous à 18 h au lieu de 17 h.");
 
+    // bo-messages-planning-8 : « À qui » passe à la ligne ; chaque pilule est dans la carte, sans défilement horizontal.
+    const aQui = page.getByRole("group", { name: "Audience" });
+    const carteNotifier = (await aQui.locator("xpath=ancestor::div[contains(@class,'raised')][1]").boundingBox())!;
+    for (const b of await aQui.getByRole("button").all()) {
+      const r = (await b.boundingBox())!;
+      expect(r.x + r.width, "pilule dans la carte").toBeLessThanOrEqual(carteNotifier.x + carteNotifier.width);
+    }
+    expect(await aQui.evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(true);
     // Audience en pilules : « Cultes » puis « Culte Franco » (un musicien et une présidence).
     await page.getByRole("group", { name: "Audience" }).getByRole("button", { name: "Cultes" }).click();
     await page.getByRole("group", { name: "Cultes" }).getByRole("button", { name: "Culte Franco" }).click();
@@ -606,7 +614,7 @@ test.describe("T5 : Messages", () => {
       // La moyenne d'une question s'écrit comme celle de la partie (planche : « 4,0 »).
       await expect(partie).toContainText("4,0/5 (3)");
       await expect(partie).not.toContainText("4.0/5");
-      await expect(sommaire.getByRole("link", { name: "Voir la page du questionnaire" })).toHaveAttribute("href", /\/questionnaire/);
+      await expect(sommaire.getByRole("link", { name: "Ouvrir le questionnaire" })).toHaveAttribute("href", /\/questionnaire/);
     } else {
       // Un volet : les parties dépliables, la première ouverte.
       await expect(page.getByRole("button", { name: "Toi et ton usage" })).toHaveAttribute("aria-expanded", "true");

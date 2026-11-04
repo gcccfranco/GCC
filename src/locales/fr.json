@@ -3529,7 +3529,7 @@
       "etiquetteSheet": "Sheet"
     },
     "boE1": {
-      "aucunMessage": "Aucun message pour l'instant.",
+      "aucunMessage": "Aucun message pour l'instant. Les signalements et propositions de chants des membres arrivent ici.",
       "aideClavier": "Raccourcis clavier",
       "publier": {
         "echec": "Échec.",
@@ -3632,7 +3632,8 @@
       "incomplet": "Une partie de la liste n'a pas pu être lue : elle peut être incomplète.",
       "dimanche": {
         "titre": "Ce dimanche, {{date}}",
-        "ouvrir": "Ouvrir le planning"
+        "ouvrir": "Ouvrir le planning",
+        "aChoisir": "à choisir"
       },
       "reunion": {
         "titre": "Prochaine réunion"
@@ -4038,7 +4039,8 @@
       "repondants_one": "{{count}} répondant",
       "repondants_other": "{{count}} répondants",
       "parPersonne": "Par personne",
-      "voirPage": "Voir la page du questionnaire",
+      "ouvrir": "Ouvrir le questionnaire",
+      "aideCourte": "Chacun a une seule réponse, modifiable à tout moment. Le compte à droite d'une question est son nombre de répondants.",
       "aucuneReponsePourLInstant": "Aucune réponse pour l'instant.",
       "moyenne": "moyenne {{moyenne}} sur {{max}}",
       "reponsesN": "{{count}} réponse(s)",

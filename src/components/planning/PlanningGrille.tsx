@@ -2,7 +2,7 @@
 
 import { langueCourte } from "@/lib/utils/formatDate";
 import { Fragment, useEffect, useId, useLayoutEffect, useRef, useState, useSyncExternalStore, type CSSProperties, type MouseEvent, type ReactNode } from "react"
-import { ChevronDown, ChevronLeft, ChevronRight, Copy, Lock, Trash2 } from "lucide-react"
+import { ChevronDown, ChevronLeft, ChevronRight, CircleHelp, Copy, Lock, Trash2 } from "lucide-react"
 import { useTranslation } from "react-i18next"
 import { useConfirmer } from "@/components/layout/Confirmer"
 import { MenuActions } from "@/components/layout/MenuActions"
@@ -29,9 +29,10 @@ import { FenetreCopie } from "./FenetreCopie"
 import { useHistoriqueGrille } from "./hooks/useHistoriqueGrille"
 import { useCopiePrecedent } from "./hooks/useCopiePrecedent"
 import { PrevenirChangements, usePrevenir, type PrevenirProp } from "./PrevenirChangements"
-import { styleTexteService } from "@/lib/couleurSombre"
+import { couleurSombre, styleTexteService } from "@/lib/couleurSombre"
 import { useFonduLateral } from "@/hooks/useFonduLateral"
 import { EtatVide } from "@/components/layout/EtatVide"
+import { TOUCHER_44 } from "@/lib/toucher44"
 import { GrilleEnTete } from "./GrilleEnTete"
 import { GrilleCelluleDate } from "./GrilleCelluleDate"
 import { GrilleHistorique } from "./GrilleHistorique"
@@ -338,11 +339,12 @@ export function PlanningGrille({
   }
 
   /** Le « ⋯ » du dimanche (PG15) : tablette, téléphone, et les cartes. */
-  const menuCopie = (date: string) => {
+  const menuCopie = (date: string, compact?: boolean) => {
     const c = copiePour(date)
     if (!c) return null
     return (
       <MenuActions
+        compact={compact}
         onOuvert={(ouvert) => setApercu(ouvert ? date : null)}
         actions={[{ label: t("planning.gestes.copierPrecedent"), icone: Copy, aide: aideCopie(c), desactive: !c.offert, onSelect: () => copier(date) }]}
       />
@@ -670,6 +672,10 @@ export function PlanningGrille({
       />
   )
 
+  /** Case remplie : contour plein discret (20 % de la couleur du service, 35 % éclaircie en sombre), fond de carte. */
+  const CASE_REMPLIE = "w-full min-h-8 truncate rounded-md border border-solid bg-card px-1.5 py-1 text-left text-foreground border-[color:var(--contour-clair)] dark:border-[color:var(--contour-sombre)] hover:bg-secondary active:bg-secondary"
+  const contourCase = { "--contour-clair": `${couleur}33`, "--contour-sombre": `${couleurSombre(couleur)}59` } as CSSProperties
+
   function laCase(l: LigneGrille, c: ColonneGrille): ReactNode {
     const val = valeur(l.row[0], c, l.row)
     if (edition?.date === l.row[0] && edition.cle === c.cle) return champ(l, c)
@@ -701,7 +707,8 @@ export function PlanningGrille({
           <button
             type="button"
             onClick={ouvrir}
-            className="inline-flex min-h-8 items-center gap-1 rounded-lg border-[1.5px] border-dashed border-border px-2 py-1 text-[13px] text-muted-foreground hover:bg-secondary active:bg-secondary"
+            className="inline-flex min-h-8 max-w-full items-center gap-1 rounded-lg border-[1.5px] border-dashed px-1.5 py-1 text-[13px] font-semibold texte-service border-[color:var(--contour-clair)] dark:border-[color:var(--contour-sombre)] hover:bg-secondary active:bg-secondary"
+            style={{ ...styleTexteService(couleur), "--contour-clair": couleur, "--contour-sombre": couleurSombre(couleur) } as CSSProperties}
           >
             {t("planning.choisir.bouton")}
             <ChevronDown className="h-3 w-3" aria-hidden />
@@ -713,8 +720,8 @@ export function PlanningGrille({
           type="button"
           onClick={ouvrir}
           title={val}
-          className="w-full min-h-8 truncate rounded-md border border-dashed px-1.5 py-1 text-left hover:bg-secondary active:bg-secondary"
-          style={{ borderColor: `${couleur}55` }}
+          className={CASE_REMPLIE}
+          style={contourCase}
         >
           {val}
           {marqueAbsent(l.row[0], val)}
@@ -726,11 +733,11 @@ export function PlanningGrille({
         <button
           type="button"
           onClick={() => commencer(l, c)}
-          // Trait pointillé : sans lui, une case modifiable ne se distingue pas
-          // d'un simple texte (vu à l'œil sur la planche du 18/09/2026).
+          // Un contour garde le signe « modifiable » : plein pour une case remplie, pointillé pour le texte libre vide
+          // (bo-messages-planning-7).
           title={val || undefined}
-          className="w-full min-h-8 truncate rounded-md border border-dashed px-1.5 py-1 text-left hover:bg-secondary active:bg-secondary"
-          style={{ borderColor: `${couleur}55` }}
+          className={val ? CASE_REMPLIE : "w-full min-h-8 truncate rounded-md border border-dashed px-1.5 py-1 text-left hover:bg-secondary active:bg-secondary"}
+          style={val ? contourCase : { borderColor: `${couleur}55` }}
         >
           {val || <span className="text-muted-foreground">+</span>}
         </button>
@@ -764,9 +771,9 @@ export function PlanningGrille({
             aria-controls={idAide}
             onClick={() => setAideOuverte((v) => !v)}
             onKeyDown={(e) => { if (e.key === "Escape" && aideOuverte) { e.stopPropagation(); setAideOuverte(false); boutonAide.current?.focus() } }}
-            className="relative hidden h-7 w-7 items-center justify-center rounded-full text-xs font-semibold text-muted-foreground ring-1 ring-inset ring-border transition-colors after:absolute after:-inset-2 after:content-[''] hover:text-foreground sm:inline-flex"
+            className={`hidden h-9 w-9 items-center justify-center rounded-full border border-border bg-card text-muted-foreground transition-colors hover:text-foreground sm:inline-flex ${TOUCHER_44}`}
           >
-            ?
+            <CircleHelp className="h-4 w-4" aria-hidden />
           </button>
         )}
       </DansLEnTete>
@@ -890,7 +897,8 @@ export function PlanningGrille({
                       nonPublie={l.nonPublie}
                       badge={dateBadge?.(l.row, toutes)}
                       retirer={peutRetirer(date) && <div className="-ml-1.5 mt-0.5">{boutonRetirer(date, false)}</div>}
-                      copie={survol ? pastilleCopie(date) : <div className="mt-1">{menuCopie(date)}</div>}
+                      copie={survol ? pastilleCopie(date) : null}
+                      menu={survol ? null : menuCopie(date, true)}
                     />
                     {colonnes.map((c, j) => (
                       <td

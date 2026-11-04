@@ -239,6 +239,20 @@ test("avec le droit : une case s'écrit, tient après rechargement, et la voisin
   await expect(laCase(page, "2026-09-20", "piano"), "les autres dimanches viennent encore du Sheet").toContainText("Ruth K.");
 });
 
+test("case remplie : contour plein de 1 px ; case vide : pointillé de 1,5 px (bo-messages-planning-7)", async ({ page }) => {
+  await open(page, CHRISTELLE, "/back-office/planning/culte", { [`users/uid-esther`]: ESTHER });
+  const remplie = laCase(page, "2026-09-20", "piano").getByRole("button");
+  await expect(remplie).toContainText("Ruth K.");
+  const styleRemplie = await remplie.evaluate((el) => { const c = getComputedStyle(el); return [c.borderTopStyle, c.borderTopWidth]; });
+  expect(styleRemplie).toEqual(["solid", "1px"]);
+  const vide = page.locator("[data-case] button", { hasText: "Choisir" }).filter({ visible: true }).first();
+  await expect(vide, "au moins une case de personne vide").toBeVisible();
+  const styleVide = await vide.evaluate((el) => { const c = getComputedStyle(el); return [c.borderTopStyle, c.borderTopWidth]; });
+  // 1,5 px est arrondi par le navigateur selon la densité de pixels : le style fait foi, la largeur est de 1 px au moins.
+  expect(styleVide[0]).toBe("dashed");
+  expect(parseFloat(styleVide[1])).toBeGreaterThanOrEqual(1);
+});
+
 test("« Choisir » propose les comptes et les noms de la grille ; un nom sans compte s'écrit ; Échap annule", async ({ page }) => {
   await open(page, CHRISTELLE, "/back-office/planning/culte", { [`users/uid-esther`]: ESTHER });
   await laCase(page, "2026-09-27", "orateur").getByRole("button").click();

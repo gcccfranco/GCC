@@ -174,6 +174,7 @@ export function Pilules<T extends string>({
   valeur,
   choisir,
   obligatoire,
+  aLaLigne,
 }: {
   /** Nom du groupe de filtres, lu par les lecteurs d'écran. */
   etiquette: string;
@@ -184,6 +185,8 @@ export function Pilules<T extends string>({
   choisir: (v: T | null) => void;
   /** Un choix est toujours actif (instrument) : on ne peut pas le retirer. */
   obligatoire?: boolean;
+  /** La rangée passe à la ligne au lieu de défiler (peu de choix dans une carte étroite : « À qui »). */
+  aLaLigne?: boolean;
 }) {
   const liens = options.some((o) => o.href);
   const Rangee = liens ? "nav" : "div";
@@ -195,7 +198,7 @@ export function Pilules<T extends string>({
       role={liens ? undefined : "group"}
       aria-label={etiquette}
       data-onglets="pilules"
-      className="fondu-lateral -mx-4 -mt-0.5 flex gap-1.5 overflow-x-auto px-4 py-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      className={aLaLigne ? "flex flex-wrap gap-2" : "fondu-lateral -mx-4 -mt-0.5 flex gap-1.5 overflow-x-auto px-4 py-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"}
     >
       {options.map((o) => {
         const actif = valeur === o.cle;

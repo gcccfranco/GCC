@@ -77,8 +77,13 @@ test.describe("BO Planning, piste A", () => {
     await expect(page.locator('[data-grille="culte"]').getByRole("button", { name: /Exporter/ })).toHaveCount(0);
 
     if (estGrandEcran(info)) {
-      // Plannings et période sur la même rangée, sous le titre (BO7 : plus de rail de sous-parties) ; la grille juste dessous.
-      expect(Math.abs((await milieuY(plannings)) - (await milieuY(periode)))).toBeLessThan(12);
+      // bo-messages-planning-2 : les plannings sur leur propre ligne, la période dessous ; les sept liens sont dans le cadre de la barre.
+      expect(await milieuY(plannings)).toBeLessThan(await milieuY(periode));
+      const cadre = (await barre(page).boundingBox())!;
+      for (const lien of await plannings.getByRole("link").all()) {
+        const r = (await lien.boundingBox())!;
+        expect(r.x + r.width, "lien dans le cadre de la barre").toBeLessThanOrEqual(cadre.x + cadre.width);
+      }
       expect(await milieuY(enTete(page).getByRole("heading", { level: 1 }))).toBeLessThan(await milieuY(plannings));
       const finBarre = (await barre(page).boundingBox())!;
       const grille = (await page.getByTestId("grille-defilement").boundingBox())!;
@@ -261,6 +266,14 @@ test.describe("App Planning : le titre « Planning », le service en h2", () => 
       const ligne = page.locator('[data-date-cell="2026-11-15"], [data-date-carte="2026-11-15"]').filter({ visible: true });
       await expect(ligne).toContainText("15/11");
       await expect(ligne).toContainText("Cette semaine");
+      // bo-messages-planning-10 : au toucher, le « ⋯ » est sur la ligne de la date et la ligne reste basse.
+      const menu = ligne.getByRole("button", { name: "Plus d'actions" });
+      if ((await ligne.getAttribute("data-date-cell")) !== null && await menu.count()) {
+        const m = (await menu.boundingBox())!;
+        const d = (await ligne.boundingBox())!;
+        expect(Math.abs(m.y + m.height / 2 - (d.y + 24)), "« ⋯ » sur la ligne de la date").toBeLessThan(6);
+        expect(d.height, "ligne basse").toBeLessThanOrEqual(70);
+      }
     });
   }
 

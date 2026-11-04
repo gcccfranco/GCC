@@ -207,14 +207,14 @@ export function BarreDeGrille({
   const gestion = useGestionPlanning()
   const enCours = chargement && <span className="text-xs text-muted-foreground">{t("common.loading")}</span>
   return (
-    // Au Back-Office, en grand, une seule rangée : les plannings défilent en largeur s'ils ne
-    // tiennent pas à côté de la période (sept plannings et deux années à 1 280 px), estompés au bord.
-    <div data-testid="barre-grille" className={`flex flex-wrap items-center justify-between gap-x-4 gap-y-2.5 ${gestion ? "lg:flex-nowrap" : ""}`}>
+    // Au Back-Office, deux rangées partout : les plannings prennent leur propre ligne pleine largeur,
+    // année, trimestre et « Mes dates » dessous, à gauche.
+    <div data-testid="barre-grille" className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2.5">
       {gestion ? (
         <>
           <DansLEnTete ou="sousTitre">{sousTitreBO ?? titre}</DansLEnTete>
           {enCours && <DansLEnTete ou="outils">{enCours}</DansLEnTete>}
-          <div className="min-w-0 max-w-full lg:flex-1 lg:[mask-image:linear-gradient(to_right,black_calc(100%-28px),transparent)]">
+          <div className="min-w-0 basis-full">
             <PlanningsDuBackOffice />
           </div>
         </>
@@ -226,7 +226,7 @@ export function BarreDeGrille({
           {enCours}
         </div>
       )}
-      {children && <div className={`flex max-w-full flex-wrap items-center gap-2 ${gestion ? "lg:shrink-0 lg:flex-nowrap" : ""}`}>{children}</div>}
+      {children && <div className="flex max-w-full flex-wrap items-center gap-2">{children}</div>}
     </div>
   )
 }

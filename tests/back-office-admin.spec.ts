@@ -124,6 +124,10 @@ test.describe("B2 : Messages (Réception, Notifier, Questionnaire)", () => {
     // Agencement v18 (B12) : l'onglet du rail, sous l'en-tête « Messages ».
     await expect(ongletsRail(page).getByRole("link", { name: "Questionnaire" })).toHaveAttribute("aria-current", "page");
     await expect(page.getByText("Aucune réponse pour l'instant.")).toBeVisible();
+    // bo-messages-planning-3 : le chiffre partout, plus de titre en capitales, le lien libellé comme une action.
+    await expect(page.getByText(/^0\s+réponse$/).first()).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Questionnaire", exact: true })).toHaveCount(0);
+    await expect(page.getByRole("link", { name: "Ouvrir le questionnaire" })).toHaveAttribute("href", /\/questionnaire/);
   });
 
   test("droit de notifier seul : Messages mène à Notifier, sans Réception ni Questionnaire", async ({ page }) => {

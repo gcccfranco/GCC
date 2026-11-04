@@ -5,11 +5,13 @@
 import Link from "next/link";
 import { useTranslation } from "react-i18next";
 import { widgetsPermis } from "@/lib/access";
+import { styleTexteService } from "@/lib/couleurSombre";
 import { nowIsoParis } from "@/lib/evenements/agenda";
 import { useProfile } from "@/lib/firebase/users";
 import { ficheEvenement } from "@/lib/navigation";
 import { todayIso } from "@/lib/scene/dimanches";
 import { EDD_CLASSES } from "@/lib/planning/utils";
+import { categoryColor } from "@/lib/serviceColors";
 import { GRILLES_DU_SERVICE, ceDimanche, prochainDimanche, reunionsDuTableau, servicesDuDimanche } from "@/lib/tableauDeBord/donnees";
 import { lireEvenements, lireGrilles, lireSetlists, useLecture } from "@/lib/tableauDeBord/lecture";
 import { jourComplet, jourLong } from "./texte";
@@ -56,18 +58,25 @@ export function ColonneDroite() {
           {etats.length === 0 && <p className="mt-2 text-[13px] text-muted-foreground">{t("backOffice.aFaire.rienDePrevu")}</p>}
           <div className={etats.length > 0 ? "mt-2 space-y-2.5" : "hidden"}>
             {etats.map((e) => {
-              const postes = e.lignes.filter((l) => l.valeur).map((l) => `${t(l.i18n)} ${l.valeur}`);
               const heure = HEURE_DU_SERVICE(e.categorie);
               return (
                 <div key={`${e.categorie}-${e.libelle}`} data-testid="service-dimanche">
                   <p className="text-sm font-semibold text-foreground">{e.libelle}{heure && <span className="font-normal text-muted-foreground"> {heure}</span>}</p>
-                  {postes.length > 0 && (
-                    // Une paire « Poste Nom » ne se coupe pas : la ligne passe entre deux paires.
-                    <p className="break-words text-[13px] text-muted-foreground">
-                      {postes.map((poste, i) => (
-                        <span key={i}>{i > 0 && " "}<span className="whitespace-nowrap">{poste}{i < postes.length - 1 && " ·"}</span></span>
+                  {e.lignes.length > 0 && (
+                    <dl className="mt-0.5">
+                      {e.lignes.map((l) => (
+                        <div key={l.cle} className="flex min-w-0 gap-2.5 border-t border-border/70 py-1.5 text-sm">
+                          <dt className="w-[88px] shrink-0 text-[13px] text-muted-foreground">{t(l.i18n)}</dt>
+                          <dd className="min-w-0 break-words text-foreground">
+                            {l.valeur || (
+                              <Link href="/back-office/planning" className="texte-service font-semibold underline-offset-2 hover:underline" style={styleTexteService(categoryColor(e.categorie))}>
+                                {t("backOffice.aFaire.dimanche.aChoisir")}
+                              </Link>
+                            )}
+                          </dd>
+                        </div>
                       ))}
-                    </p>
+                    </dl>
                   )}
                 </div>
               );

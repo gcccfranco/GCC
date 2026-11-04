@@ -385,10 +385,13 @@ test.describe("À faire (BO-B) : l'écran", () => {
     await expect(colonne.getByRole("heading", { name: "Ce dimanche, 25 octobre" })).toBeVisible();
     const culte = colonne.getByTestId("service-dimanche").filter({ hasText: "Culte Franco" });
     await expect(culte).toContainText("10:30");
-    await expect(culte).toContainText("Présidence Pers. A");
-    await expect(culte).toContainText("Sono Pers. G");
-    // Les cases vides sont omises : la batterie n'est pas là.
-    await expect(culte).not.toContainText("Batterie");
+    // Une liste rôle / nom (dt / dd), comme « Ce dimanche » de l'App.
+    await expect(culte.locator("dt", { hasText: /^Présidence$/ })).toBeVisible();
+    await expect(culte.locator("dt", { hasText: /^Présidence$/ }).locator("xpath=following-sibling::dd[1]")).toHaveText("Pers. A");
+    await expect(culte.locator("dt", { hasText: /^Sono$/ }).locator("xpath=following-sibling::dd[1]")).toHaveText("Pers. G");
+    // Un poste vide dit « à choisir » et mène au planning.
+    await expect(culte.locator("dt", { hasText: /^Batterie$/ }).locator("xpath=following-sibling::dd[1]").getByRole("link", { name: "à choisir" }))
+      .toHaveAttribute("href", /\/back-office\/planning\/?$/);
     await expect(colonne.getByRole("link", { name: "Ouvrir le planning" })).toHaveAttribute("href", /\/back-office\/planning\/?$/);
     await expect(colonne.getByRole("heading", { name: "Prochaine réunion" })).toBeVisible();
     const prochaine = colonne.getByRole("link", { name: /Point des bâtisseurs/ });

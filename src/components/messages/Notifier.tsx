@@ -410,6 +410,7 @@ export function Notifier({ backOffice = false, titre }: { backOffice?: boolean; 
           <div className="space-y-2">
             <p className="text-sm font-medium text-foreground">{t("notifier.aQui")}</p>
             <Pilules
+              aLaLigne
               etiquette={t("notifier.audience")}
               options={[
                 ...(canAll ? [{ cle: NOTIFY_ALL, nom: aud(NOTIFY_ALL) }] : []),
@@ -423,6 +424,7 @@ export function Notifier({ backOffice = false, titre }: { backOffice?: boolean; 
             />
             {groupeChoisi && (
               <Pilules
+                aLaLigne
                 etiquette={t(`notifier.groupe.${groupeChoisi.label}`)}
                 options={groupeChoisi.audiences.map((a) => ({ cle: a, nom: aud(a), couleur: categoryColor(a) }))}
                 valeur={audience || null}

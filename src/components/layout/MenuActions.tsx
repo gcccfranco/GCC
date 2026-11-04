@@ -24,6 +24,7 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
+import { TOUCHER_44 } from "@/lib/toucher44";
 import { useConfirmer, type DemandeDeConfirmation } from "./Confirmer";
 
 export type ActionDuMenu = {
@@ -46,9 +47,11 @@ export type ActionDuMenu = {
   desactive?: boolean;
 };
 
-export function MenuActions({ actions, label, onOuvert }: {
+export function MenuActions({ actions, label, onOuvert, compact }: {
   actions: ActionDuMenu[];
   label?: string;
+  /** Rond de 32 px au lieu de 36 (une cellule étroite) ; la zone de toucher reste de 44 px. */
+  compact?: boolean;
   /** Appelé à l'ouverture et à la fermeture du menu (un aperçu posé tant qu'il est ouvert). */
   onOuvert?: (ouvert: boolean) => void;
 }) {
@@ -67,7 +70,7 @@ export function MenuActions({ actions, label, onOuvert }: {
     <DropdownMenu modal={false} onOpenChange={onOuvert}>
       <DropdownMenuTrigger
         aria-label={label ?? t("common.moreActions")}
-        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-background text-foreground shadow-[inset_0_0_0_1px_hsl(var(--border))] transition-colors hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        className={cn("flex shrink-0 items-center justify-center rounded-full bg-background text-foreground shadow-[inset_0_0_0_1px_hsl(var(--border))] transition-colors hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring", compact ? `h-8 w-8 ${TOUCHER_44}` : "h-9 w-9")}
       >
         <MoreHorizontal className="h-4 w-4" aria-hidden />
       </DropdownMenuTrigger>

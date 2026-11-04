@@ -9,7 +9,7 @@
 // Un volet : les parties dépliables d'avant, la première ouverte. Bilingue depuis B5b.
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { Trans, useTranslation } from "react-i18next";
+import { useTranslation } from "react-i18next";
 import { ChevronDown, ChevronRight, ChevronUp, Star, Trash2 } from "lucide-react";
 import { DeuxVolets } from "@/components/layout/DeuxVolets";
 import { useConfirmer } from "@/components/layout/Confirmer";
@@ -327,6 +327,13 @@ export function SurveyResults({ backOffice = false }: { backOffice?: boolean }) 
           {derniere ? ` · ${t("admin.questionnaire.derniere", { date: derniere.toLocaleDateString(lieu, { day: "numeric", month: "short" }) })}` : ""}
           {drafts > 0 ? ` · ${t("admin.questionnaire.nEnCours", { count: drafts })}` : ""}
         </p>
+        {/* bo-messages-planning-3 : même ordre partout (chiffre, lien, aide, contenu) ; l'aide parle des questions, elle attend une réponse. */}
+        <div className="mb-3 space-y-1.5 px-2.5">
+          <Link href="/questionnaire" className="block text-[13px] font-semibold text-muted-foreground underline underline-offset-2 hover:text-foreground">
+            {t("admin.questionnaire.ouvrir")}
+          </Link>
+          {!vide && <p className="text-[13px] text-muted-foreground">{t("admin.questionnaire.aideCourte")}</p>}
+        </div>
         {drafts > 0 && (
           <button
             type="button"
@@ -348,9 +355,6 @@ export function SurveyResults({ backOffice = false }: { backOffice?: boolean }) 
           {ligne("personnes", t("admin.questionnaire.parPersonne"), t("admin.questionnaire.repondants", { count: byName.length }), null)}
         </div>
         )}
-        <Link href="/questionnaire" className="mt-3 block px-2.5 text-[13px] font-semibold text-muted-foreground underline underline-offset-2 hover:text-foreground">
-          {t("admin.questionnaire.voirPage")}
-        </Link>
       </div>
     );
     const droite = loading ? (
@@ -386,18 +390,18 @@ export function SurveyResults({ backOffice = false }: { backOffice?: boolean }) 
   }
 
   const carte = (
-    <div className="rounded-xl bg-card shadow-soft p-5 space-y-4">
-      <div className="flex items-center justify-between">
-        <h2 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
-          {t("admin.questionnaire.titre")}
-        </h2>
-        <span className="text-xs text-muted-foreground">
-          {t("admin.questionnaire.reponsesN", { count: all.length })}{drafts > 0 ? ` · ${t("admin.questionnaire.nEnCours", { count: drafts })}` : ""}
-        </span>
-      </div>
-      <p className="text-xs text-muted-foreground">
-        <Trans i18nKey="admin.questionnaire.aide" components={{ code: <span className="font-mono" /> }} />
+    <div className="raised rounded-2xl p-5 space-y-4">
+      <p className="text-[15px] text-muted-foreground">
+        <span className="mr-1.5 text-[28px] font-bold leading-none text-foreground tabular-nums">{all.length}</span>{" "}
+        {t("admin.questionnaire.reponses", { count: all.length })}
+        {drafts > 0 ? ` · ${t("admin.questionnaire.nEnCours", { count: drafts })}` : ""}
       </p>
+      <div className="space-y-1.5">
+        <Link href="/questionnaire" className="block text-[13px] font-semibold text-muted-foreground underline underline-offset-2 hover:text-foreground">
+          {t("admin.questionnaire.ouvrir")}
+        </Link>
+        {!loading && responses.length > 0 && <p className="text-[13px] text-muted-foreground">{t("admin.questionnaire.aideCourte")}</p>}
+      </div>
 
       {drafts > 0 && (
         <button
