@@ -707,7 +707,7 @@ test("P5 — la liste des semaines : jours, places libres, une case par créneau
   const grand = estGrandEcran(test.info());
   await expect(semaines.first()).toHaveText(grand ? /^10 – 11 oct\.\s*sam\. et dim\. · 3 places libres/ : /^10 – 11 oct\.\s*3 libres/);
   await expect(semaines.nth(1)).toHaveText(grand ? /^17 – 18 oct\.\s*sam\. et dim\. · 6 places libres/ : /^17 – 18 oct\.\s*6 libres/);
-  if (!grand) await expect(semaines.first().getByText(/libres?|complet/)).toBeVisible();
+  if (!grand) await expect(semaines.first().getByText(/libres?|complet/).first()).toBeVisible();
   await expect(semaines.nth(3)).toHaveText(/^31 oct\. – 1er nov\./);
   await expect(semaines.first().locator("[data-case]")).toHaveCount(7);
   await expect(semaines.first().locator('[data-case="pris"]')).toHaveCount(4);

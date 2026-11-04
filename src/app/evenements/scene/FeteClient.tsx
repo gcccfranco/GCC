@@ -214,7 +214,7 @@ export function FeteClient({ fete }: { fete: Fete }) {
       </span>
       <span className="min-w-0 flex-1">
         <span className="block text-[15px] font-semibold">{t("planning.fete.ordreEntree")}</span>
-        <span className="block text-[13px] text-muted-foreground">{jourEnLettres(jourJ, lang)} · {programme!.passages.length ? t("planning.fete.passagesEtChants", { count: programme!.passages.length }) : t("planning.fete.aucunNumero")}</span>
+        <span className="block text-[13px] text-muted-foreground [text-wrap:pretty]">{jourEnLettres(jourJ, lang)} · {programme!.passages.length ? t("planning.fete.passagesEtChants", { count: programme!.passages.length }) : t("planning.fete.aucunNumero")}</span>
       </span>
       <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
     </button>
@@ -286,8 +286,9 @@ export function FeteClient({ fete }: { fete: Fete }) {
     )
 
     // Pied de la carte de la liste : l'ordre de passage reste entier au bas, la colonne défile au-dessus. Au-dessus du
-    // voile `.fondu-vertical::after` (z-index 1) de DeuxVolets, qui sinon estomperait le bas du bouton.
-    const pied = entreeOrdre && <div className="sticky bottom-0 z-[2] border-t border-border bg-card px-5 py-0.5">{entreeOrdre}</div>
+    // voile `.fondu-vertical::after` (z-index 1) de DeuxVolets, qui sinon estomperait le bas du bouton ; le pied porte donc
+    // son propre fondu de 24 px au-dessus du filet (critique : la liste semblait tranchée net).
+    const pied = entreeOrdre && <div className="sticky bottom-0 z-[2] border-t border-border bg-card px-5 py-0.5 before:pointer-events-none before:absolute before:inset-x-0 before:bottom-full before:h-6 before:bg-[linear-gradient(to_top,hsl(var(--raised)),hsl(var(--raised)/0))] before:content-['']">{entreeOrdre}</div>
 
     if (deuxVolets) {
       return (

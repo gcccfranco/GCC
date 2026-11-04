@@ -290,9 +290,9 @@ export function Entrainements({ programme, creneaux, user, profile, onChanged, o
       >
         {visibles.map((s) => {
           const actif = semaineActive && s === choisie
-          const detail = deuxVolets
-            ? [joursCourts(s.jours, lang, t("planning.fete.et")), places(s.libres, s.cases.length)].filter(Boolean).join(" · ")
-            : places(s.libres, s.cases.length, true)
+          const detailLong = [joursCourts(s.jours, lang, t("planning.fete.et")), places(s.libres, s.cases.length)].filter(Boolean).join(" · ")
+          // Une colonne : le détail court se voit, le long reste dit aux lecteurs d'écran (critique).
+          const detailCourt = deuxVolets ? null : places(s.libres, s.cases.length, true)
           return (
             <li key={s.lundi} className={deuxVolets ? "py-0.5" : "shrink-0"}>
               <button
@@ -305,7 +305,9 @@ export function Entrainements({ programme, creneaux, user, profile, onChanged, o
               >
                 <span className={deuxVolets ? "min-w-0 flex-1" : "contents"}>
                   <span className="block text-[15px] font-semibold tabular-nums">{semaineCourte(s.jours, lang)}</span>
-                  <span className={`block text-[13px] ${actif ? "opacity-75" : "text-muted-foreground"}`}>{detail}</span>
+                  {detailCourt === null
+                    ? <span className={`block text-[13px] ${actif ? "opacity-75" : "text-muted-foreground"}`}>{detailLong}</span>
+                    : <><span aria-hidden className={`block text-[13px] ${actif ? "opacity-75" : "text-muted-foreground"}`}>{detailCourt}</span><span className="sr-only">{detailLong}</span></>}
                 </span>
                 <Cases cases={s.cases} actif={actif} />
                 {deuxVolets && <ChevronRight className="h-4 w-4 shrink-0 opacity-60" aria-hidden />}
