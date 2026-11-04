@@ -82,6 +82,7 @@
       "clearSearch": "清除搜索",
       "filterLanguage": "语言",
       "filterTheme": "所有主题",
+      "filterThemeNom": "主题",
       "filterThemeLabel": "按主题筛选",
       "noSongsFound": "未找到相关诗歌。",
       "counter_one": "{{count}} 首诗歌",

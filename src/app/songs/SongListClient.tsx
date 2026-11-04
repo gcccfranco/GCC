@@ -278,6 +278,7 @@ export function SongListClient({ songs, themes, actif = null, erreur = false, on
         {/* Thème : un Menu (jeu de contrôles B, lot CD, T3a/T3b) */}
         <Menu
           label={t("songs.list.filterThemeLabel")}
+          nom={t("songs.list.filterThemeNom")}
           value={themeFilter}
           defaultValue=""
           onChange={setThemeFilter}

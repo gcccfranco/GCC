@@ -202,6 +202,13 @@ export function Pilules<T extends string>({
   const Rangee = liens ? "nav" : "div";
   // La rangée s'estompe du côté où il reste des pastilles, au lieu d'en trancher une (musiciens-4).
   const rangee = useFonduLateral<HTMLDivElement>(options.length);
+  // Au toucher la rangée défile : une valeur posée ne doit pas rester cachée hors écran. Au montage, sans animation.
+  useEffect(() => {
+    const el = rangee.current;
+    const on = el?.querySelector<HTMLElement>('[aria-pressed="true"], [aria-current="page"]');
+    if (!el || !on || el.scrollWidth <= el.clientWidth) return;
+    el.scrollTo({ left: el.scrollLeft + on.getBoundingClientRect().left - el.getBoundingClientRect().left - (el.clientWidth - on.offsetWidth) / 2, behavior: "instant" });
+  }, [rangee]);
   return (
     <Rangee
       ref={rangee}

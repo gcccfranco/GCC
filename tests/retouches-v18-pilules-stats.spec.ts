@@ -65,6 +65,9 @@ async function ouvrirStatistiques(page: Page) {
   await expect(page.getByTestId("setlists-comptees")).toBeVisible();
 }
 
+/** Le déclencheur d'un `Menu` (nom accessible « <critère> : <valeur> »). */
+const menuNomme = (page: Page, nom: string) => page.locator(`[data-menu][aria-label^="${nom} :"]`);
+
 /** La hauteur et la taille du texte de chaque pilule d'une rangée. */
 const mesurer = (rangee: Locator) =>
   rangee.evaluate((el) =>
@@ -94,18 +97,62 @@ test.describe("R5 · T3a : les pilules de 28 px au pointeur fin, 32 px au doigt"
     await capture(page, "r5-pilules-statistiques");
   });
 
-  test("Statistiques : les menus Service, Langue, Présidence à la hauteur des pilules de la même rangée", async ({ page }, info) => {
+  test("Statistiques : les menus Service, Langue, Présidence à la hauteur des pilules", async ({ page }, info) => {
     await ouvrirStatistiques(page);
-    // Planche v18-bo-statistiques : les menus sont des pastilles de la même taille que les périodes. Ce sont encore des
-    // `<select>` : 40 px au doigt jusqu'à leur passage en `Menu` (T3b), qui les met à 32 px comme les pilules.
-    const hauteur = info.project.name.startsWith("ordinateur") ? 28 : 40;
+    // Lot CD, T3b : les trois filtres sont des `Menu` (déclencheur en pilule), à la taille des pilules de période.
+    const hauteur = hauteurAttendue(info.project.name);
     for (const nom of ["Service", "Langue", "Présidence"]) {
-      const menu = page.getByRole("combobox", { name: nom });
+      const menu = menuNomme(page, nom);
       const h = Math.round((await menu.boundingBox())!.height);
       expect(Math.abs(h - hauteur), `« ${nom} » : ${h} px, attendu ≈ ${hauteur} px`).toBeLessThanOrEqual(1);
       if (hauteur === 28) expect(await menu.evaluate((el) => parseFloat(getComputedStyle(el).fontSize)), `« ${nom} » : texte`).toBe(13);
     }
     await capture(page, "r5-menus-statistiques");
+  });
+
+  test("T3b : aucun <select> visible hors formulaire sur Statistiques ni sur la liste des chants", async ({ page }) => {
+    await ouvrirStatistiques(page);
+    await expect(page.locator("select:visible:not(form select)")).toHaveCount(0);
+    await page.goto("/songs");
+    await expect(page.locator("[data-menu]").first()).toBeVisible();
+    await expect(page.locator("select:visible:not(form select)")).toHaveCount(0);
+  });
+
+  test("T3b : les périodes et les trois menus sont sur deux rangées distinctes, sans pilule de période sur la rangée des menus", async ({ page }) => {
+    await ouvrirStatistiques(page);
+    const periode = (await page.getByRole("button", { name: "3 mois" }).boundingBox())!;
+    const periodes = (await Promise.all((await pilules(page).filter({ has: page.getByRole("button", { name: "3 mois" }) }).locator(":scope > button").all()).map((b) => b.boundingBox())));
+    const menus = await Promise.all(["Service", "Langue", "Présidence"].map(async (n) => (await menuNomme(page, n).boundingBox())!));
+    const basPeriodes = Math.max(...periodes.map((b) => b!.y + b!.height));
+    for (const m of menus) {
+      expect(m.y, "un menu sous les périodes").toBeGreaterThanOrEqual(basPeriodes - 1);
+      expect(Math.abs(m.y - menus[0].y), "les trois menus sur la même ligne").toBeLessThanOrEqual(1);
+    }
+    expect(periode.y + periode.height).toBeLessThanOrEqual(menus[0].y + 1);
+  });
+
+  test("T3b : le menu Service lit « Service » au repos, le nom du service une fois posé", async ({ page }) => {
+    await ouvrirStatistiques(page);
+    const menu = menuNomme(page, "Service");
+    await expect(menu).toHaveText("Service");
+    await expect(menu).not.toHaveAttribute("data-pose");
+    await menu.click();
+    const premiere = page.getByRole("menuitemradio").first();
+    await expect(premiere).toHaveText("Tous les services");
+    await page.getByRole("menuitemradio", { name: "Groupe Paix", exact: true }).click();
+    await expect(page.getByRole("menu")).toHaveCount(0);
+    await expect(menu).toHaveAttribute("data-pose", "");
+    await expect(menu).toHaveText("Groupe Paix");
+    await menu.click();
+    await expect(page.getByRole("menuitemradio").first()).toHaveText("Tous les services");
+  });
+
+  test("T3b : le menu Thème de la liste des chants lit « Thème » au repos", async ({ page }) => {
+    await page.goto("/songs");
+    const menu = page.locator("[data-menu]").first();
+    await expect(menu).toBeVisible();
+    await expect(menu).toHaveText("Thème");
+    await expect(menu).not.toHaveAttribute("data-pose");
   });
 
   test("Back-Office › Planning : la rangée des plannings suit la même règle (plus de taille propre)", async ({ page }, info) => {

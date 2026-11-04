@@ -43,6 +43,8 @@ export function Menu<T extends string = string>({
   label,
   surGris = false,
   className,
+  nom,
+  prefixe,
 }: {
   value: T
   /** La valeur neutre (« Tous »). Une autre valeur met le déclencheur en encre pleine. */
@@ -54,6 +56,10 @@ export function Menu<T extends string = string>({
   /** Posé directement sur le fond gris de la page (recette de surface C) : piste `--secondary-fond` en clair. */
   surGris?: boolean
   className?: string
+  /** Le nom du critère (« Service ») : tant que rien n'est posé, le déclencheur l'affiche à la place du libellé de l'option neutre. */
+  nom?: string
+  /** Affiché dans le déclencheur avant la valeur (une icône et « Trier par »). */
+  prefixe?: React.ReactNode
 }) {
   const plates = options.flatMap((e) => (estGroupe(e) ? e.options : [e]))
   // Valeur absente des options : le déclencheur retombe sur le libellé de `defaultValue`, gris.
@@ -72,7 +78,8 @@ export function Menu<T extends string = string>({
           className,
         )}
       >
-        <span className="truncate">{courante?.libelle ?? ""}</span>
+        {prefixe}
+        <span className="truncate">{!posee && nom ? nom : (courante?.libelle ?? "")}</span>
         <ChevronDown className="h-3.5 w-3.5 shrink-0" aria-hidden />
       </DropdownMenuTrigger>
       <DropdownMenuContent

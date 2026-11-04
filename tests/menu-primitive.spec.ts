@@ -14,6 +14,12 @@ const declencheur = (page: Page) => page.locator("[data-menu]").first();
 async function ouvrirListe(page: Page) {
   await page.goto("/songs");
   await expect(declencheur(page)).toBeVisible();
+  // Liste prête (comme `listePrete` de agencement-v18-chants.spec.ts) : sans ça, les touches partent avant que le menu ait recensé ses lignes.
+  await expect(page.locator('[id="song-li-abba-pere"] a')).toBeAttached({ timeout: 15_000 });
+  await page.waitForFunction(() => {
+    const s = document.querySelector("[data-volet-liste] input[type=search]");
+    return !!s && Object.keys(s).some((k) => k.startsWith("__reactProps"));
+  });
 }
 
 const fond = (el: ReturnType<typeof declencheur>) => el.evaluate((e) => getComputedStyle(e).backgroundColor);
@@ -64,7 +70,6 @@ test.describe("Menu (jeu B)", () => {
     await page.keyboard.press("Enter");
     await expect(d).toHaveAttribute("aria-expanded", "true");
     const lignes = page.getByRole("menu").getByRole("menuitemradio");
-    await page.keyboard.press("ArrowDown");
     await expect(lignes.first()).toBeFocused();
     await page.keyboard.press("ArrowDown");
     await expect(lignes.nth(1)).toBeFocused();

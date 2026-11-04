@@ -61,19 +61,19 @@ test.describe("Statistiques (ST3) : la page ouverte à tout membre connecté (D5
     await expect(page.getByRole("heading", { level: 1, name: "Statistiques" })).toBeVisible();
     await expect(page.locator("header[data-entete-page] p").first()).toContainText(/^Setlists publiées, depuis le /);
     await expect(page.getByText("Visible par les admins seulement")).toHaveCount(0);
-    await expect(page.getByRole("combobox", { name: "Présidence" })).toBeVisible();
+    await expect(declencheurMenu(page, "Présidence")).toBeVisible();
   });
 
   test("un responsable non admin voit la page, sans le filtre Présidence", async ({ page }) => {
     await ouvrirStatistiques(page, "/songs/statistiques", {}, RESPONSABLE);
     await expect(page.getByRole("heading", { level: 1, name: "Statistiques" })).toBeVisible();
-    await expect(page.getByRole("combobox", { name: "Service" })).toBeVisible();
-    await expect(page.getByRole("combobox", { name: "Présidence" })).toHaveCount(0);
+    await expect(declencheurMenu(page, "Service")).toBeVisible();
+    await expect(declencheurMenu(page, "Présidence")).toHaveCount(0);
   });
 
   test("un membre simple : une présidence venue de l'adresse est ignorée (comptes et adresse)", async ({ page }) => {
     await ouvrirStatistiques(page, "/songs/statistiques?presidence=Luc%20R.", {}, MEMBRE);
-    await expect(page.getByRole("combobox", { name: "Présidence" })).toHaveCount(0);
+    await expect(declencheurMenu(page, "Présidence")).toHaveCount(0);
     await expect.poll(() => setlistsComptees(page)).toBe("6");
     await expect(page).not.toHaveURL(/presidence/);
   });
@@ -217,9 +217,17 @@ async function setlistsComptees(page: Page) {
   return (await page.getByTestId("setlists-comptees").getByTestId("nombre").textContent())?.trim();
 }
 
+/** Un menu (primitive `Menu`) : le déclencheur se nomme « <critère> : <valeur> », l'option est un `menuitemradio`. */
+const declencheurMenu = (page: Page, nom: string) => page.locator(`[data-menu][aria-label^="${nom} :"]`);
+async function choisirMenu(page: Page, nom: string, option: string) {
+  await declencheurMenu(page, nom).click();
+  await page.getByRole("menuitemradio", { name: option, exact: true }).click();
+  await expect(page.getByRole("menu")).toHaveCount(0);
+}
+
 /** Trier : un en-tête cliquable (tableau) ou le menu « Trier par » (téléphone). */
 async function trierPar(page: Page, info: TestInfo, colonneNom: "Chant" | "Setlists" | "Dernière fois" | "Tendance") {
-  if (estTelephone(info)) await page.getByRole("combobox", { name: "Trier par" }).selectOption({ label: colonneNom });
+  if (estTelephone(info)) await choisirMenu(page, "Trier par", colonneNom);
   else await page.getByRole("columnheader", { name: colonneNom, exact: true }).getByRole("button").click();
 }
 
@@ -302,7 +310,7 @@ test.describe("Statistiques (S3) : les plus joués", () => {
 
   test("service : « Groupe Paix » réduit les setlists comptées", async ({ page }) => {
     await ouvrirStatistiques(page);
-    await page.getByRole("combobox", { name: "Service" }).selectOption("Groupe Paix");
+    await choisirMenu(page, "Service", "Groupe Paix");
     await expect.poll(() => setlistsComptees(page)).toBe("2");
     expect(await lignes(page)).toEqual([
       { rang: "1", titre: "爱的约定", setlists: "2", part: "100 %", derniere: "06/09", tonalite: "D / C", tendance: "=" },
@@ -313,16 +321,16 @@ test.describe("Statistiques (S3) : les plus joués", () => {
 
   test("présidence : les graphies d'un même nom se regroupent, sous la plus fréquente", async ({ page }) => {
     await ouvrirStatistiques(page);
-    const choix = page.getByRole("combobox", { name: "Présidence" });
-    await expect(choix.locator("option")).toHaveText(["Toutes les présidences", "Luc R.", "Marc L."]);
-    await choix.selectOption("Marc L.");
+    await declencheurMenu(page, "Présidence").click();
+    await expect(page.getByRole("menuitemradio")).toHaveText(["Toutes les présidences", "Luc R.", "Marc L."]);
+    await page.getByRole("menuitemradio", { name: "Marc L.", exact: true }).click();
     await expect.poll(() => setlistsComptees(page)).toBe("4");
     expect(await colonne(page, "titre")).toEqual(["À jamais Tu es saint", "Abba Père", "ancien-chant", "爱的约定", "Abrite-moi"]);
   });
 
   test("langue : « 中文 » retire les lignes FR sans changer le %", async ({ page }) => {
     await ouvrirStatistiques(page);
-    await page.getByRole("combobox", { name: "Langue" }).selectOption({ label: "中文" });
+    await choisirMenu(page, "Langue", "中文");
     await expect.poll(() => colonne(page, "titre")).toEqual(["爱的约定"]);
     expect(await setlistsComptees(page)).toBe("6");
     expect(await lignes(page)).toEqual([{ ...PLUS_JOUES_12_MOIS[1], rang: "1" }]);
@@ -356,7 +364,7 @@ test.describe("Statistiques (S3) : les plus joués", () => {
   test("un titre ouvre la page du chant ; le retour retrouve période, filtres et tri", async ({ page }, info) => {
     await ouvrirStatistiques(page);
     await page.getByRole("button", { name: "3 mois" }).click();
-    await page.getByRole("combobox", { name: "Service" }).selectOption("Groupe Paix");
+    await choisirMenu(page, "Service", "Groupe Paix");
     await trierPar(page, info, "Chant");
     await expect.poll(() => colonne(page, "titre")).toEqual(["À jamais Tu es saint", "爱的约定"]);
     await expect(page).toHaveURL(/periode=3/);
@@ -366,7 +374,7 @@ test.describe("Statistiques (S3) : les plus joués", () => {
     await page.goBack();
     await expect(page).toHaveURL(/\/songs\/statistiques\/?\?/);
     await expect(page.getByRole("button", { name: "3 mois" })).toHaveAttribute("aria-pressed", "true");
-    await expect(page.getByRole("combobox", { name: "Service" })).toHaveValue("Groupe Paix");
+    await expect(declencheurMenu(page, "Service")).toHaveAttribute("aria-label", "Service : Groupe Paix");
     await expect.poll(() => colonne(page, "titre")).toEqual(["À jamais Tu es saint", "爱的约定"]);
     expect(await setlistsComptees(page)).toBe("1");
   });
@@ -472,7 +480,7 @@ test.describe("Statistiques (S4) : jamais joués et à redécouvrir", () => {
     await expect(page.locator('[data-testid="ligne-chant"]:visible')).toHaveCount(0);
     expect(await setlistsComptees(page)).toBe("6");
     await expect(page.getByRole("button", { name: "12 mois" })).toHaveAttribute("aria-pressed", "true");
-    await expect(page.getByRole("combobox", { name: "Service" })).toBeVisible();
+    await expect(declencheurMenu(page, "Service")).toBeVisible();
 
     await vue(page, "À redécouvrir").click();
     await expect(page).toHaveURL(/vue=a-redecouvrir/);
@@ -504,10 +512,10 @@ test.describe("Statistiques (S4) : jamais joués et à redécouvrir", () => {
     await expect(ligne.getByRole("link", { name: "Abba Père" })).toHaveAttribute("href", /^\/songs\/abba-pere\/?$/);
 
     // La langue retire des chants (la carte de l'autre langue).
-    await page.getByRole("combobox", { name: "Langue" }).selectOption({ label: "FR" });
+    await choisirMenu(page, "Langue", "FR");
     await expect(page.getByRole("heading", { name: "En français · 3", exact: true })).toBeVisible();
     await expect(page.getByTestId("jamais-zh")).toHaveCount(0);
-    await page.getByRole("combobox", { name: "Langue" }).selectOption({ label: "中文" });
+    await choisirMenu(page, "Langue", "中文");
     await expect(page.getByText("Tous les chants ont été joués sur cette période.")).toBeVisible();
     await expect(page.locator('[data-testid="ligne-jamais"]:visible')).toHaveCount(0);
   });
@@ -524,7 +532,7 @@ test.describe("Statistiques (S4) : jamais joués et à redécouvrir", () => {
     expect(await setlistsComptees(page)).toBe("3");
 
     // Avec un historique, mais aucun chant qui le mérite.
-    await page.getByRole("combobox", { name: "Service" }).selectOption("Groupe Paix");
+    await choisirMenu(page, "Service", "Groupe Paix");
     await expect(page.getByText("Aucun chant à redécouvrir sur cette période.")).toBeVisible();
     await expect(page.locator('[data-testid="ligne-redecouvrir"]:visible')).toHaveCount(0);
   });
@@ -577,7 +585,7 @@ test.describe("Statistiques (relecture) : messages, menus, phrases", () => {
     await page.getByRole("button", { name: "Dates libres" }).click();
     await page.getByLabel("Du", { exact: true }).fill("2026-06-01");
     await page.getByLabel("Au", { exact: true }).fill("2026-06-15");
-    await page.getByRole("combobox", { name: "Langue" }).selectOption({ label: "中文" });
+    await choisirMenu(page, "Langue", "中文");
     await expect(page.getByText("Aucun chant dans cette langue sur cette période.")).toBeVisible();
     expect(await setlistsComptees(page)).toBe("1");
     await expect(page.locator('[data-testid="ligne-chant"]:visible')).toHaveCount(0);
@@ -602,9 +610,10 @@ test.describe("Statistiques (relecture) : messages, menus, phrases", () => {
       "setlists/soiree": setlist("2026-09-27", "Soirée de louange", "Luc R.", [chant("a-la-croix")]),
     });
     expect(await setlistsComptees(page)).toBe("7");
-    const service = page.getByRole("combobox", { name: "Service" });
-    await expect(service.locator('optgroup[label="Autres"] option')).toHaveText(["Soirée de louange"]);
-    await service.selectOption("Soirée de louange");
+    await declencheurMenu(page, "Service").click();
+    await expect(page.getByRole("menuitemradio", { name: "Soirée de louange", exact: true })).toBeVisible();
+    await expect(page.getByText("Autres", { exact: true })).toBeVisible();
+    await page.getByRole("menuitemradio", { name: "Soirée de louange", exact: true }).click();
     await expect.poll(() => setlistsComptees(page)).toBe("1");
     expect(await colonne(page, "titre")).toEqual(["À la croix"]);
   });
@@ -620,8 +629,8 @@ test.describe("Statistiques (relecture) : messages, menus, phrases", () => {
   test("une adresse au service ou à la présidence inconnus : le filtre est ignoré, menus et adresse le disent", async ({ page }) => {
     await ouvrirStatistiques(page, "/songs/statistiques?service=Inconnu&presidence=Personne&periode=3");
     expect(await setlistsComptees(page)).toBe("3");
-    await expect(page.getByRole("combobox", { name: "Service" })).toHaveValue("");
-    await expect(page.getByRole("combobox", { name: "Présidence" })).toHaveValue("");
+    await expect(declencheurMenu(page, "Service")).toHaveAttribute("aria-label", "Service : Tous les services");
+    await expect(declencheurMenu(page, "Présidence")).toHaveAttribute("aria-label", "Présidence : Toutes les présidences");
     await expect(page).toHaveURL(/\/songs\/statistiques\/?\?periode=3$/);
   });
 

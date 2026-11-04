@@ -101,8 +101,8 @@ test.describe("T6 — Statistiques (B13)", () => {
     await expect(periodes).toHaveAttribute("aria-label", "Période");
     await expect(periodes.getByRole("button", { name: "12 mois" })).toHaveAttribute("aria-pressed", "true");
     expect((await periodes.boundingBox())!.y, "les filtres sous le rail").toBeGreaterThanOrEqual(r.y + r.height);
-    await expect(enTete(page).getByRole("combobox", { name: "Service" })).toBeVisible();
-    await expect(enTete(page).getByRole("combobox", { name: "Présidence" })).toBeVisible();
+    await expect(enTete(page).locator('[data-menu][aria-label^="Service :"]')).toBeVisible();
+    await expect(enTete(page).locator('[data-menu][aria-label^="Présidence :"]')).toBeVisible();
 
     await periodes.getByRole("button", { name: "3 mois" }).click();
     await expect(page).toHaveURL(/periode=3/);

@@ -29,6 +29,8 @@ import { LargeurBO } from "@/components/backOffice/LargeurBO";
 import { EnTetePage } from "@/components/layout/EnTetePage";
 import { EtatVide } from "@/components/layout/EtatVide";
 import { OngletsRail, Pilules } from "@/components/layout/Onglets";
+import { Menu, type EntreeMenu } from "@/components/ui/menu";
+import { useFonduLateral } from "@/hooks/useFonduLateral";
 import { Button } from "@/components/ui/button";
 import { KeyPill } from "@/components/ui/key-pill";
 import type { SongIndexEntry } from "@/types/song";
@@ -369,8 +371,6 @@ function StatistiquesContenu() {
 
 // ─── Filtres ──────────────────────────────────────────────────────────────────
 
-const PASTILLE = "inline-flex h-8 items-center gap-1.5 whitespace-nowrap rounded-full px-3 text-sm font-semibold transition-[background-color,color,transform] duration-150 active:scale-[.97]";
-
 function Filtres({ etat, aujourdhui, services, presidences, nomService, choisirPeriode, changer }: {
   etat: Etat; aujourdhui: string; services: string[]; presidences: string[] | null;
   nomService: (categorie: string) => string;
@@ -382,36 +382,23 @@ function Filtres({ etat, aujourdhui, services, presidences, nomService, choisirP
   const groupes = ALL_CATEGORIES.slice(4) as string[];
   const autres = services.slice(ALL_CATEGORIES.length);
   const hier = veille(aujourdhui);
+  const optionsService: EntreeMenu[] = [
+    { valeur: "", libelle: t("stats.tousServices") },
+    { groupe: t("stats.reunionsPrincipales"), options: principales.map((c) => ({ valeur: c, libelle: nomService(c) })) },
+    { groupe: t("stats.groupes"), options: groupes.map((c) => ({ valeur: c, libelle: nomService(c) })) },
+    ...(autres.length > 0 ? [{ groupe: t("stats.autres"), options: autres.map((c) => ({ valeur: c, libelle: c })) }] : []),
+  ];
+  const rangeeMenus = useFonduLateral<HTMLDivElement>(presidences?.length ?? 0);
   return (
     <div className="space-y-3">
-      <div className="flex flex-wrap items-center gap-2">
-        <div className="min-w-0 max-w-full">
-          <Pilules etiquette={t("stats.periode.label")} options={PERIODES.map((cle) => ({ cle, nom: t(`stats.periode.${cle}`) }))} valeur={etat.periode} choisir={(p) => p && choisirPeriode(p)} obligatoire />
-        </div>
-        <span className="mx-1 hidden h-6 w-px bg-border sm:block" aria-hidden />
-        <Choix libelle={t("stats.service")} valeur={etat.service ?? ""} onChange={(v) => changer({ service: v || null })}>
-          <option value="">{t("stats.tousServices")}</option>
-          <optgroup label={t("stats.reunionsPrincipales")}>
-            {principales.map((c) => <option key={c} value={c}>{nomService(c)}</option>)}
-          </optgroup>
-          <optgroup label={t("stats.groupes")}>
-            {groupes.map((c) => <option key={c} value={c}>{nomService(c)}</option>)}
-          </optgroup>
-          {autres.length > 0 && (
-            <optgroup label={t("stats.autres")}>
-              {autres.map((c) => <option key={c} value={c}>{c}</option>)}
-            </optgroup>
-          )}
-        </Choix>
-        <Choix libelle={t("stats.langue")} valeur={etat.langue ?? ""} onChange={(v) => changer({ langue: v === "fr" || v === "zh" ? v : null })}>
-          <option value="">{t("stats.frEtZh")}</option>
-          <option value="fr">FR</option>
-          <option value="zh">中文</option>
-        </Choix>
-        {presidences && <Choix libelle={t("stats.presidence")} valeur={etat.presidence ?? ""} onChange={(v) => changer({ presidence: v || null })}>
-          <option value="">{t("stats.toutesPresidences")}</option>
-          {presidences.map((p) => <option key={p} value={p}>{p}</option>)}
-        </Choix>}
+      <Pilules etiquette={t("stats.periode.label")} options={PERIODES.map((cle) => ({ cle, nom: t(`stats.periode.${cle}`) }))} valeur={etat.periode} choisir={(p) => p && choisirPeriode(p)} obligatoire />
+      {/* Les trois menus : une rangée à eux, qui se comporte comme `Pilules` (à la ligne au pointeur fin, défilante avec fondu au toucher). */}
+      <div ref={rangeeMenus} className="flex flex-wrap gap-1.5 [@media(pointer:coarse)]:fondu-lateral [@media(pointer:coarse)]:-mx-4 [@media(pointer:coarse)]:-my-1.5 [@media(pointer:coarse)]:flex-nowrap [@media(pointer:coarse)]:overflow-x-auto [@media(pointer:coarse)]:px-4 [@media(pointer:coarse)]:py-1.5 [@media(pointer:coarse)]:[scrollbar-width:none] [@media(pointer:coarse)]:[&::-webkit-scrollbar]:hidden">
+        <Menu label={t("stats.service")} nom={t("stats.service")} surGris value={etat.service ?? ""} defaultValue="" onChange={(v) => changer({ service: v || null })} options={optionsService} />
+        <Menu label={t("stats.langue")} nom={t("stats.langue")} surGris value={etat.langue ?? ""} defaultValue="" onChange={(v) => changer({ langue: v === "fr" || v === "zh" ? v : null })}
+          options={[{ valeur: "", libelle: t("stats.frEtZh") }, { valeur: "fr", libelle: "FR" }, { valeur: "zh", libelle: "中文" }]} />
+        {presidences && <Menu label={t("stats.presidence")} nom={t("stats.presidence")} surGris value={etat.presidence ?? ""} defaultValue="" onChange={(v) => changer({ presidence: v || null })}
+          options={[{ valeur: "", libelle: t("stats.toutesPresidences") }, ...presidences.map((p) => ({ valeur: p, libelle: p }))]} />}
       </div>
       {etat.periode === "libre" && (
         <div className="flex flex-wrap items-center gap-3 text-sm">
@@ -428,22 +415,6 @@ function Filtres({ etat, aujourdhui, services, presidences, nomService, choisirP
         </div>
       )}
     </div>
-  );
-}
-
-/** Un `<select>` en pastille (planche : « Tous les services ▾ »), à la hauteur des pilules de la rangée
- *  (`Pilules`, D9) : 40 px au doigt, ≈ 28 px et 13 px dès 1 024 px avec un pointeur fin. */
-function Choix({ libelle, valeur, onChange, children }: {
-  libelle: string; valeur: string; onChange: (v: string) => void; children: React.ReactNode;
-}) {
-  return (
-    <span className="relative inline-flex">
-      <select aria-label={libelle} value={valeur} onChange={(e) => onChange(e.target.value)}
-        className={cn(PASTILLE, "h-10 appearance-none border border-input bg-background pr-8 text-foreground hover:bg-muted focus:outline-none focus:ring-2 focus:ring-ring/30 [@media(pointer:fine)_and_(min-width:1024px)]:h-7 [@media(pointer:fine)_and_(min-width:1024px)]:text-[13px]")}>
-        {children}
-      </select>
-      <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2" aria-hidden />
-    </span>
   );
 }
 
@@ -518,15 +489,9 @@ function ListeTelephone({ lignes, aujourdhui, tri, trier }: {
   const { t } = useTranslation();
   return (
     <div className="space-y-3 sm:hidden">
-      <label className={cn(PASTILLE, "sur-gris relative pr-8")}>
-        <ArrowDownWideNarrow className="h-4 w-4" aria-hidden />
-        <span aria-hidden>{t("stats.trierPar")}</span>
-        <select aria-label={t("stats.trierParAria")} value={tri} onChange={(e) => trier(e.target.value as CleTri)}
-          className="appearance-none bg-transparent font-semibold focus:outline-none">
-          {COLONNES_TRI.map((cle) => <option key={cle} value={cle}>{t(`stats.col.${cle}`)}</option>)}
-        </select>
-        <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2" aria-hidden />
-      </label>
+      <Menu label={t("stats.trierParAria")} value={tri} defaultValue={tri} onChange={(c) => c !== tri && trier(c)} surGris
+        prefixe={<><ArrowDownWideNarrow className="h-4 w-4" aria-hidden /><span>{t("stats.trierPar")}</span></>}
+        options={COLONNES_TRI.map((cle) => ({ valeur: cle, libelle: t(`stats.col.${cle}`) }))} />
       <ol className="carte-groupe px-4 divide-y divide-border">
         {lignes.map((l) => (
           <li key={l.slug} data-testid="ligne-chant" className="flex gap-3 py-3">

@@ -82,6 +82,7 @@
       "clearSearch": "Effacer la recherche",
       "filterLanguage": "Langue",
       "filterTheme": "Tous les thèmes",
+      "filterThemeNom": "Thème",
       "filterThemeLabel": "Filtrer par thème",
       "noSongsFound": "Aucun chant trouvé.",
       "counter_one": "{{count}} chant",
