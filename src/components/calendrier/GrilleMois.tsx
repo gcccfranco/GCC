@@ -72,6 +72,7 @@ function Case({
   lang,
   glissee,
   deplacable,
+  contour,
   onChoisir,
 }: {
   date: string;
@@ -82,6 +83,8 @@ function Case({
   lang: NotifLang;
   glissee: EntreeCalendrier | null;
   deplacable: boolean;
+  /** Le jour choisi porte un contour encre de 2 px (le volet du jour est ouvert). */
+  contour: boolean;
   onChoisir: (date: string) => void;
 }) {
   const { t } = useTranslation();
@@ -102,6 +105,7 @@ function Case({
       className={cn(
         "flex min-h-[88px] min-w-0 flex-col items-stretch gap-[3px] border-b border-r border-border p-1 text-left transition-colors duration-150 hover:bg-muted/50 focus-visible:relative focus-visible:z-10 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-foreground lg:min-h-[118px] lg:px-1.5",
         choisi && "bg-muted/70",
+        choisi && contour && "relative z-10 outline outline-2 outline-offset-[-2px] outline-foreground",
         visee && "bg-muted/70",
       )}
     >
@@ -134,6 +138,7 @@ export function GrilleMois({
   aujourdhui,
   choisi,
   lang,
+  contourChoisi = false,
   onChoisir,
   onDeposer,
 }: {
@@ -143,6 +148,8 @@ export function GrilleMois({
   aujourdhui: string;
   choisi: string | null;
   lang: NotifLang;
+  /** Un contour encre autour du jour choisi (volet du jour flottant ouvert, bo-evenements-2). */
+  contourChoisi?: boolean;
   onChoisir: (date: string) => void;
   /** C6 : une entrée déposée sur un autre jour. Sans elle, rien ne se soulève. */
   onDeposer?: (entree: EntreeCalendrier, vers: string) => void;
@@ -189,6 +196,7 @@ export function GrilleMois({
             lang={lang}
             glissee={glissee}
             deplacable={!!onDeposer}
+            contour={contourChoisi}
             onChoisir={onChoisir}
           />
         ))}

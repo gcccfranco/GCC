@@ -33,6 +33,8 @@ const DOCS: Record<string, Record<string, unknown>> = {
 /** Jeudi 1er octobre 2026, en Agenda ; les Sheets (évènements, planning) répondent vides. */
 async function ouvrirAgenda(page: Page, lang?: "zh-CN") {
   interdireDialoguesNatifs(page);
+  // Le panneau fixe du jour n'existe qu'à partir de 1 600 px (bo-evenements-2) ; en dessous, l'Agenda n'a pas de volet.
+  if (estGrandEcran(test.info()) && (page.viewportSize()?.width ?? 0) >= 1024) await page.setViewportSize({ width: 1600, height: 900 });
   if (lang) await page.addInitScript((l) => localStorage.setItem("i18nextLng", l), lang);
   await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
   await page.route(/docs\.google\.com\/spreadsheets/, (route) => route.fulfill({ status: 200, contentType: "text/csv", body: "" }));

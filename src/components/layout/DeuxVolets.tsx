@@ -31,6 +31,7 @@ export function DeuxVolets({
   premier = null,
   largeurListe = 380,
   colonneSeule = false,
+  listeNaturelle = false,
   children,
 }: {
   /** Adresse de la liste (`/mes-services`) : sur elle, aucun élément n'est choisi. */
@@ -48,6 +49,10 @@ export function DeuxVolets({
    *  l'adresse, ou `colonneSeule` retiré par la page), les deux volets reviennent. Le même arbre :
    *  seules les classes changent, la liste n'est pas remontée. */
   colonneSeule?: boolean;
+  /** La carte de liste prend sa hauteur naturelle : ni collante ni bornée, c'est la page qui défile
+   *  (bo-evenements-13, la scène des fêtes). Le volet de droite s'étire alors sur la rangée, pour que la page
+   *  puisse y coller son contenu. */
+  listeNaturelle?: boolean;
   /** La page de l'adresse : la fiche choisie. */
   children: ReactNode;
 }) {
@@ -57,12 +62,13 @@ export function DeuxVolets({
   const carte = useRef<HTMLDivElement>(null);
   const avecListe = Boolean(volets.liste);
   const seule = deuxVolets && colonneSeule && volets.droite === "premier";
+  const bornee = !listeNaturelle;
 
-  useFonduVertical(carte, deuxVolets && avecListe && !seule);
+  useFonduVertical(carte, deuxVolets && avecListe && !seule && bornee);
 
   useEffect(() => {
     const el = carte.current;
-    if (!deuxVolets || !avecListe || seule || !el) return;
+    if (!deuxVolets || !avecListe || seule || !bornee || !el) return;
     let image = 0;
     const relire = () => {
       cancelAnimationFrame(image);
@@ -85,7 +91,7 @@ export function DeuxVolets({
       taille.disconnect();
       el.style.removeProperty("--haut-liste");
     };
-  }, [deuxVolets, avecListe, seule]);
+  }, [deuxVolets, avecListe, seule, bornee]);
   // Les deux emplacements restent à la même place quel que soit le cas : la page n'est pas
   // remontée quand la fenêtre passe d'un volet à deux (rien n'est relu ni refait). La section
   // n'est pas remontée d'une adresse à l'autre (`SECTIONS_EN_DEUX_VOLETS`, PageTransition) :
@@ -97,7 +103,7 @@ export function DeuxVolets({
       className={
         seule
           ? "w-full max-w-[calc(960px+2*var(--marge-page))] px-[var(--marge-page)] pb-6"
-          : deuxVolets ? "flex items-start gap-[var(--ecart-volets)] px-[var(--marge-page)] pb-6" : undefined
+          : deuxVolets ? `flex ${bornee ? "items-start" : "items-stretch"} gap-[var(--ecart-volets)] px-[var(--marge-page)] pb-6` : undefined
       }
       style={deuxVolets ? ({ "--largeur-liste": `${largeurListe}px` } as CSSProperties) : undefined}
     >
@@ -108,6 +114,8 @@ export function DeuxVolets({
           className={
             seule
               ? "page-fade raised rounded-2xl"
+              : deuxVolets && !bornee
+              ? "page-fade raised w-[var(--largeur-liste)] shrink-0 self-start rounded-2xl"
               : deuxVolets
               ? "page-fade fondu-vertical sticky top-[calc(var(--nav-h)+20px)] max-h-[calc(100dvh-var(--haut-liste,calc(var(--nav-h)+20px))-24px)] w-[var(--largeur-liste)] shrink-0 overflow-y-auto overscroll-contain raised rounded-2xl"
               : "page-fade"

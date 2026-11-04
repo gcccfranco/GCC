@@ -342,3 +342,24 @@ test("« Comment ça marche ? » est aligné à gauche sur la première carte de
   const [l, c] = [(await lien.boundingBox())!, (await premiere.boundingBox())!];
   expect(Math.abs(l.x - c.x), "même bord gauche").toBeLessThanOrEqual(1);
 });
+
+// ─── bo-evenements-4 : l'en-tête de la fiche de gestion ─────────────────────────────────────────────────────
+
+test("bo-evenements-4 — à 1 280 px, le titre de la fiche de gestion tient sur une ligne ; « Voir comme un membre » est la 1re entrée du menu « ⋯ »", async ({ page }, info) => {
+  test.skip(disposition(info) !== "grand", "deux volets : ordinateur et iPad paysage");
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await membre(page, ALICE, "/back-office/evenements/foot");
+  const gestion = page.getByTestId("fiche-gestion");
+  const titre = gestion.getByRole("heading", { name: "Foot au parc", level: 2 });
+  await expect(titre).toBeVisible();
+  const { hauteur, interligne } = await titre.evaluate((el) => ({ hauteur: el.getBoundingClientRect().height, interligne: parseFloat(getComputedStyle(el).lineHeight) }));
+  expect(hauteur, "une seule ligne de titre").toBeLessThan(interligne * 1.5);
+  // Plus un bouton de l'en-tête : la première entrée du menu.
+  await expect(gestion.getByRole("link", { name: "Voir comme un membre" })).toHaveCount(0);
+  await expect(gestion.getByRole("button", { name: "Voir comme un membre" })).toHaveCount(0);
+  await gestion.getByRole("button", { name: "Plus d'actions" }).click();
+  const entrees = page.getByRole("menuitem");
+  await expect(entrees.first()).toHaveText("Voir comme un membre");
+  await entrees.first().click();
+  await expect(page).toHaveURL(/\/evenements\/foot\/?$/);
+});

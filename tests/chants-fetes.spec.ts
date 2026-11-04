@@ -108,6 +108,15 @@ test.describe("liste « Qui » et familles (décision 34, CF3-CF5)", () => {
     expect(libelleQui("EDD 中班", "zh")).toBe("EDD 中班");
   });
 
+  test("libelleQui en 中文 : les cinq groupes suivent categories[\"Groupe …\"] de zh-CN.json (bo-evenements-9)", () => {
+    const zh = JSON.parse(readFileSync(path.join(process.cwd(), "src/locales/zh-CN.json"), "utf8")) as { categories: Record<string, string> };
+    for (const nom of ["Paix", "Fidélité", "Bonté", "Amour", "Joie"]) {
+      expect(zh.categories[`Groupe ${nom}`], `Groupe ${nom}`).toBeTruthy();
+      expect(libelleQui(`Gp ${nom}`, "zh")).toBe(zh.categories[`Groupe ${nom}`]);
+      expect(libelleQui(`Gp ${nom}`)).toBe(`Gp ${nom}`);
+    }
+  });
+
   test("FAMILLES à trois : groupes, edd, louange", () => {
     expect(FAMILLES.map((f) => f.cle)).toEqual(["groupes", "edd", "louange"]);
     expect(FAMILLES[2].qui).toEqual(["Franco"]);
@@ -207,7 +216,7 @@ test.describe("qui saisit (CF16, décisions 30, 35, 45)", () => {
     expect(titreSetlistFete("noel", 2026, "Gp Paix")).toBe("Noël 2026 · Gp Paix");
     expect(titreSetlistFete("noel", 2026, "EDD 大班")).toBe("Noël 2026 · EDD 大班");
     expect(titreSetlistFete("noel", 2026, "Franco")).toBe("Noël 2026 · Culte Francophone");
-    expect(titreSetlistFete("noel", 2026, "Gp Paix", "zh")).toBe("圣诞节 2026 · Gp Paix");
+    expect(titreSetlistFete("noel", 2026, "Gp Paix", "zh")).toBe("圣诞节 2026 · 和平团契");
     expect(titreSetlistFete("paques", 2027, "Franco", "zh")).toBe("复活节 2027 · 法语崇拜");
   });
 });

@@ -51,11 +51,12 @@ export const ORDRE_PASTILLES: readonly SourceCalendrier[] = ["services", "evenem
 export const SOURCES_D_OFFICE: readonly SourceCalendrier[] = SOURCES.filter((s) => s !== "setlists");
 
 /** Couleurs de la planche, rangées avec le calendrier et non dans
- *  serviceColors.ts (Q1, questions 1 et 2) : le point et le fond teinté. */
+ *  serviceColors.ts (Q1, questions 1 et 2) : le point ; les fonds teintés sont des jetons de `globals.css`
+ *  (`--cal-*`, clair et sombre). */
 export const COULEURS_CALENDRIER = {
-  evenements: { point: "#e0a100", fond: "#fff3d6" },
-  taches: { point: "#8e8e93", fond: "#f2f2f4" },
-  reunions: { point: "#6b4a8e", fond: "#f0ecf9" },
+  evenements: { point: "#e0a100" },
+  taches: { point: "#8e8e93" },
+  reunions: { point: "#6b4a8e" },
 } as const;
 
 export interface EntreeCalendrier {
@@ -70,6 +71,12 @@ export interface EntreeCalendrier {
   titre: string;
   /** « Présidence : … », « 20:00 · Salle 2 », « DA · échéance ». */
   detail: string;
+  /** Évènements et réunions avec inscrits : « 12/40 », ou « 12 » sans limite de places. */
+  compteur?: string;
+  /** La phrase complète du compteur : « 12 inscrits sur 40 places ». */
+  compteurAria?: string;
+  /** Toutes les places sont prises : « Complet » remplace le compteur. */
+  complet?: boolean;
   couleur: string;
   /** Lue dans le Sheet des évènements : lecture seule. */
   duSheet: boolean;
@@ -133,8 +140,9 @@ interface ContexteCalendrier {
 const MOTS = {
   fr: {
     presidence: (nom: string) => `Présidence : ${nom}`,
+    // Phrase complète du compteur d'inscrits (nom accessible, feuille du détail).
     inscrits: (n: number, max: number | null) =>
-      max ? `${n} inscrit${n > 1 ? "s" : ""} sur ${max}` : `${n} inscrit${n > 1 ? "s" : ""}`,
+      max ? `${n} inscrit${n > 1 ? "s" : ""} sur ${max} places` : `${n} inscrit${n > 1 ? "s" : ""}`,
     echeance: "échéance",
     scene: "Scène",
     petitDej: "Petit déj",
@@ -144,7 +152,7 @@ const MOTS = {
   },
   "zh-CN": {
     presidence: (nom: string) => `司会：${nom}`,
-    inscrits: (n: number, max: number | null) => (max ? `已报名 ${n}/${max}` : `已报名 ${n} 人`),
+    inscrits: (n: number, max: number | null) => (max ? `已报名 ${n} 人，共 ${max} 个名额` : `已报名 ${n} 人`),
     echeance: "截止",
     scene: "舞台",
     petitDej: "早餐",
@@ -360,8 +368,12 @@ function evenements(d: DonneesCalendrier, c: ContexteCalendrier, debut: string, 
     const moi =
       e.organisateurUid === c.user.uid ||
       (reunion ? equipe !== null && mesEquipes.includes(equipe) : d.mesInscriptions.includes(e.id));
-    const inscrits = !e.lienExterne && e.inscrits > 0 ? m.inscrits(e.inscrits, e.placesMax) : "";
-    const detail = joindre([plage(e.heure, e.heureFin), e.lieu, inscrits]);
+    // Le compteur d'inscrits n'est plus dans le détail : il a sa place à droite du titre (bo-evenements-8).
+    const avecCompteur = !e.lienExterne && e.inscrits > 0;
+    const compteur = avecCompteur ? (e.placesMax ? `${e.inscrits}/${e.placesMax}` : String(e.inscrits)) : undefined;
+    const compteurAria = avecCompteur ? m.inscrits(e.inscrits, e.placesMax) : undefined;
+    const complet = avecCompteur && !!e.placesMax && e.inscrits >= e.placesMax;
+    const detail = joindre([plage(e.heure, e.heureFin), e.lieu]);
     const deplacable = peutDeplacer(c.user, c.profile, { source, evenement: e }, c.today);
     // Une fin mal formée ne compte pas ; on ne parcourt que les jours de la fenêtre.
     const dernier = ISO.test(e.dateFin) && e.dateFin > e.date ? e.dateFin : e.date;
@@ -378,6 +390,7 @@ function evenements(d: DonneesCalendrier, c: ContexteCalendrier, debut: string, 
         heureFin: premier && dernier === e.date ? e.heureFin : "",
         titre: e.titre,
         detail,
+        ...(compteur ? { compteur, compteurAria, complet } : {}),
         couleur: (reunion ? COULEURS_CALENDRIER.reunions : COULEURS_CALENDRIER.evenements).point,
         duSheet: false,
         moi,

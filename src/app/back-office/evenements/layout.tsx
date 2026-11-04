@@ -44,8 +44,7 @@ export default function EvenementsLayout({ children }: { children: React.ReactNo
   const enTete = (
     <EnTetePage
       retour={{ href: "/back-office/calendrier", label: t("backOffice.entrees.calendrier") }}
-      titre={scene ? t("backOffice.calendrier.sceneDesFetes") : t("backOffice.entrees.evenements")}
-      sousTitre={t("backOffice.gestion.sousTitreEvenements")}
+      titre={scene ? t("backOffice.calendrier.sceneDesFetes") : surNouveau ? t("evenements.nouveau") : t("backOffice.entrees.evenements")}
       action={!scene && !surNouveau && peutCreerDans(user, profile, false) && <BoutonNouveau label={t("evenements.nouveau")} href={`${BASE}/nouveau`} />}
       onglets={onglets.length > 0 && <OngletsRail etiquette={t("backOffice.sousParties")} onglets={onglets} />}
     />

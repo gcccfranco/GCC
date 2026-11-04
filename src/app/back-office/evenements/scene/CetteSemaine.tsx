@@ -66,7 +66,7 @@ export function CetteSemaine({ programme, creneaux, menu, erreur }: {
                       {c.debut} – {c.fin}
                       {hors.has(c.id) && <BadgeHorsGrille />}
                     </p>
-                    <p className="text-[13px] text-muted-foreground">{[c.quoi, c.qui.map((q) => libelleQui(q, langueCourte(i18n.language))).join(", "), c.auteurNom].join(" · ")}</p>
+                    <p className="text-[13px] text-muted-foreground">{[t(`planning.quoi.${c.quoi}`, { defaultValue: c.quoi }), c.qui.map((q) => libelleQui(q, langueCourte(i18n.language))).join(", "), c.auteurNom].join(" · ")}</p>
                   </div>
                   {menu(c)}
                 </li>

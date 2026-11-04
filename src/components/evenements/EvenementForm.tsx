@@ -270,14 +270,17 @@ export function EvenementForm({ initial, pours, creation, inscrits = 0, titreCac
       {!reunion && banniere("space-y-2 p-4")}
 
       {!info && !reunion && (
-        <div className="space-y-4 px-4 py-3.5">
-          {/* Lot 11 : le lien externe est en tête, c'est lui qui décide si le reste s'applique. */}
-          <Champ id="ev-lien-externe" label={t("evenements.form.lienExterne")}>
-            <Input id="ev-lien-externe" className="h-11" type="url" value={v.lienExterne} placeholder="https://…" onChange={(e) => set({ lienExterne: e.target.value })} />
-            <p className="text-xs text-muted-foreground">{t("evenements.form.lienExterneAide")}</p>
-          </Champ>
+        <>
+          {/* Lot 11 : le lien externe est en tête, c'est lui qui décide si le reste s'applique. Deux blocs frères :
+              le filet de `divide-y` sépare l'aide du lien du groupe « Inscriptions » (bo-evenements-14). */}
+          <div className="space-y-4 p-4">
+            <Champ id="ev-lien-externe" label={t("evenements.form.lienExterne")}>
+              <Input id="ev-lien-externe" className="h-11" type="url" value={v.lienExterne} placeholder="https://…" onChange={(e) => set({ lienExterne: e.target.value })} />
+              <p className="text-xs text-muted-foreground">{t("evenements.form.lienExterneAide")}</p>
+            </Champ>
+          </div>
           {!externe && (
-            <>
+            <div className="space-y-4 p-4">
               <Champ label={t("evenements.form.inscriptions")}>
                 <ChoixInscriptions label={t("evenements.form.inscriptions")} mode={mode} onChange={(m) => set({ inscriptions: m })} />
                 {mode !== "auto" && <p className="text-xs text-muted-foreground">{t(`evenements.form.modeAide.${mode}`)}</p>}
@@ -290,9 +293,9 @@ export function EvenementForm({ initial, pours, creation, inscrits = 0, titreCac
                     aide={t("evenements.form.insFinAide")} value={v.inscriptionFin ?? ""} onChange={(x) => set({ inscriptionFin: x })} />
                 </>
               )}
-            </>
+            </div>
           )}
-        </div>
+        </>
       )}
 
       {creation && (

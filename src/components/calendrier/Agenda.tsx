@@ -57,6 +57,22 @@ export function LienOuvrirScene({ e, className }: { e: EntreeCalendrier; classNa
   );
 }
 
+/** Le compteur d'inscrits, à droite de la ligne du titre : « 12/40 », « Complet » (en encre pleine) quand c'est plein. */
+export function CompteurInscrits({ e }: { e: EntreeCalendrier }) {
+  const { t } = useTranslation();
+  if (!e.compteur) return null;
+  return (
+    <span
+      role="img"
+      data-compteur
+      aria-label={e.compteurAria}
+      className={cn("shrink-0 text-[13px] tabular-nums", e.complet ? "font-semibold text-foreground" : "text-foreground/70")}
+    >
+      {e.complet ? t("evenements.complet") : e.compteur}
+    </span>
+  );
+}
+
 function CarteAgenda({ e, onOuvrir }: { e: EntreeCalendrier; onOuvrir: (e: EntreeCalendrier) => void }) {
   const Icone = ICONES[e.source];
   return (
@@ -69,8 +85,11 @@ function CarteAgenda({ e, onOuvrir }: { e: EntreeCalendrier; onOuvrir: (e: Entre
       <span aria-hidden style={styleCase(e)} className="flex h-[34px] w-[34px] shrink-0 items-center justify-center rounded-[10px]">
         <Icone className="h-[18px] w-[18px]" />
       </span>
-      <span className="min-w-0">
-        <span className="block truncate text-[15px] font-semibold leading-snug text-foreground">{e.titre}{e.duSheet && <EtiquetteSheet />}</span>
+      <span className="min-w-0 flex-1">
+        <span className="flex items-baseline gap-2">
+          <span className="min-w-0 flex-1 truncate text-[15px] font-semibold leading-snug text-foreground">{e.titre}{e.duSheet && <EtiquetteSheet />}</span>
+          <CompteurInscrits e={e} />
+        </span>
         {e.detail && <span className="block truncate text-[13px] text-muted-foreground">{e.detail}</span>}
       </span>
     </button>
@@ -145,7 +164,10 @@ function LigneAgenda({ e, ouverte, onChoisir }: { e: EntreeCalendrier; ouverte: 
         {e.heureFin && <span className="block text-xs text-muted-foreground">{e.heureFin}</span>}
       </span>
       <span className="min-w-0 flex-1">
-        <span className="block truncate text-[15px] font-semibold leading-snug text-foreground">{e.titre}{e.duSheet && <EtiquetteSheet />}</span>
+        <span className="flex items-baseline gap-2">
+          <span className="min-w-0 flex-1 truncate text-[15px] font-semibold leading-snug text-foreground">{e.titre}{e.duSheet && <EtiquetteSheet />}</span>
+          <CompteurInscrits e={e} />
+        </span>
         {detail && <span className="block truncate text-[13px] text-muted-foreground">{detail}</span>}
       </span>
       <span
@@ -268,6 +290,7 @@ export function FeuilleEntree({
             </DrawerHeader>
             <div className="flex flex-col gap-1 px-4 pb-8">
               {entree.detail && <p className="text-[15px] text-foreground">{entree.detail}</p>}
+              {entree.compteurAria && <p className="text-[15px] text-foreground">{entree.compteurAria}</p>}
               {entree.duSheet && <p className="text-xs text-muted-foreground">{t("calendrier.duSheet")}</p>}
               {entree.repetee && <p className="text-[13px] text-muted-foreground">{t("calendrier.deplacer.repetee")}</p>}
               <div className="mt-4 flex flex-col gap-2">

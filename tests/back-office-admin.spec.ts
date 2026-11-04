@@ -369,6 +369,10 @@ const TACHE = {
 /** Ouvre `to` le lundi 5 octobre 2026 à 10:00, après une connexion sur `/moi` (une adresse
  *  qui redirige ne se laisse pas attendre par `signInAs`). */
 async function ouvrirB3(page: Page, qui: FakeProfile, to: string, docs: Record<string, Record<string, unknown>> = DOCS_EV) {
+  // Ces adresses mènent à l'Agenda du Calendrier, dont le panneau fixe du jour n'existe qu'à partir de 1 600 px (bo-evenements-2).
+  if ((to === "/back-office/evenements" || to === "/back-office/reunions") && /^(ordinateur|tablette-paysage)/.test(test.info().project.name)) {
+    await page.setViewportSize({ width: 1600, height: 900 });
+  }
   await page.clock.setFixedTime(new Date("2026-10-05T10:00:00"));
   await page.route(/docs\.google\.com\/spreadsheets/, (route) => route.fulfill({ status: 200, contentType: "text/csv", body: "" }));
   const db = await signInAs(page, qui, docs, "/moi");

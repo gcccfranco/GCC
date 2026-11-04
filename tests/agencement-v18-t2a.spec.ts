@@ -124,13 +124,14 @@ test.describe("T2a : les droits d'affichage (B15)", () => {
 // ─── Menu ────────────────────────────────────────────────────────────────────────
 
 test.describe("T2a : le menu", () => {
-  test("un admin : six entrées ; sur une page Réunions, aucune n'est la page courante (Réunions n'est plus une entrée)", async ({ page }, info) => {
+  test("un admin : six entrées ; sur une page Réunions, Calendrier seul est la page courante (Réunions n'est plus une entrée, evenements-app-1)", async ({ page }, info) => {
     test.skip(!estGrandEcran(info), "la barre latérale : grand écran");
     await ouvrir(page, ADMIN, "/back-office/reunions/reu-da");
     await expect(page.getByRole("heading", { name: "Réunion DA", exact: true })).toBeVisible();
     const menu = await menuLateral(page, info);
     await expect(menu.getByRole("link")).toHaveText([/^À faire\d*$/, "Calendrier", "Scène", "Planning", "Équipes", "Messages"]);
-    await expect(menu.locator("[aria-current]")).toHaveCount(0);
+    await expect(menu.locator("[aria-current]")).toHaveCount(1);
+    await expect(menu.getByRole("link", { name: "Calendrier" })).toHaveAttribute("aria-current", /.+/);
   });
 
   test("membre d'équipe responsable : sa barre du bas (téléphone, tablette portrait) n'a plus Réunions, l'adresse mène au Calendrier filtré (BO-C)", async ({ page }, info) => {

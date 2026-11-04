@@ -28,7 +28,7 @@ import type { NotifLang } from "@/types/user";
 import type { EntreeCalendrier } from "@/lib/calendrier/entrees";
 import { COULEURS_CALENDRIER } from "@/lib/calendrier/entrees";
 import { couleurSource } from "./apparence";
-import { EtiquetteSheet, LienOuvrirScene } from "./Agenda";
+import { CompteurInscrits, EtiquetteSheet, LienOuvrirScene } from "./Agenda";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { styleTexteService } from "@/lib/couleurSombre"
 
@@ -51,7 +51,10 @@ function Carte({ e, onDeplacer }: { e: EntreeCalendrier; onDeplacer?: (e: Entree
         {POINT[e.source] && <span aria-hidden className="h-2 w-2 shrink-0 rounded-full" style={{ background: POINT[e.source] }} />}
         {source}
       </span>
-      <span className="mt-0.5 block font-bold leading-snug text-foreground">{titre}{e.duSheet && <EtiquetteSheet />}</span>
+      <span className="mt-0.5 flex items-baseline gap-2">
+        <span className="min-w-0 flex-1 font-bold leading-snug text-foreground">{titre}{e.duSheet && <EtiquetteSheet />}</span>
+        <CompteurInscrits e={e} />
+      </span>
       {detail && <span className="mt-0.5 block text-sm text-muted-foreground">{detail}</span>}
       {e.setlist && (
         <span className="mt-0.5 block text-sm text-muted-foreground">

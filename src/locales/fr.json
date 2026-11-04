@@ -1743,6 +1743,13 @@
         "autreFete": "Les réservations de {{edition}} courent jusqu'au {{date}} : commence après."
       }
     },
+    "quoi": {
+      "Séance louange": "Séance louange",
+      "Chant": "Chant",
+      "Danse": "Danse",
+      "Sketch": "Sketch",
+      "Spectacle": "Spectacle"
+    },
     "gestion": {
       "reservations": "Réservations",
       "apresLancement": "après le lancement",
@@ -3699,7 +3706,6 @@
     "dupliquerProchaine": "Dupliquer pour la prochaine",
     "passees": "Passées",
     "gestion": {
-      "sousTitreEvenements": "Ce que voit l'assemblée, et sa gestion",
       "voirCommeMembre": "Voir comme un membre",
       "contact": "Contact : {{nom}}",
       "exporter": "Exporter",

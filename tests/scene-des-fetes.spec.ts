@@ -1,5 +1,5 @@
 import { expect, test, type Page, type TestInfo } from "@playwright/test";
-import { coordination, signInAs, type FakeProfile } from "./helpers/fakeSession";
+import { coordination, musicien, signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { estGrandEcran } from "./helpers/agencement";
 import { ongletsBackOffice } from "../src/lib/navigation";
 
@@ -145,5 +145,47 @@ test.describe("SF-1 : la forme retenue (C6) accepte « scene »", () => {
     }
     liberer();
     await expect(page.getByRole("heading", { level: 1, name: "À faire" })).toBeVisible();
+  });
+});
+
+// ─── bo-evenements-13 : la carte de liste de la scène prend sa hauteur naturelle ─────────────────────────────
+
+const NOEL_OUVERT = {
+  nom: "Noël 2026", fete: "noel", annee: 2026, jourJ: "2026-12-24", debut: "2026-10-01", ouvert: true,
+  plages: [{ jour: 6, debut: "10:00", fin: "12:00" }, { jour: 0, debut: "14:00", fin: "19:00" }], duree: 60,
+  quiAutorises: ["Gp Paix", "Gp Fidélité", "Gp Bonté", "Gp Amour", "Gp Joie", "Franco"],
+  passages: [{ quoi: "Chant", qui: ["Franco"], titre: "Ouverture" }],
+  createdBy: "uid-orlane", updatedAt: "2026-09-14T20:00:00Z",
+};
+
+test.describe("bo-evenements-13 : la scène des fêtes, en deux volets", () => {
+  test.beforeEach(({}, info) => { test.skip(!estGrandEcran(info), "deux volets : ordinateur et tablette en paysage"); });
+
+  test("à 1 280 × 720, la carte de liste n'a pas d'overflow-y: auto, la dernière semaine est atteignable et visible, l'ordre de passage est dans « Cette fête »", async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 720 });
+    await sansSheet(page);
+    await page.clock.setFixedTime(new Date("2026-10-09T10:00:00"));
+    await signInAs(page, COMITE, { "programmes/noel-2026": NOEL_OUVERT }, "/back-office/evenements/scene/noel");
+    const colonne = page.getByRole("region", { name: "Cette fête" });
+    await expect(colonne.getByRole("heading", { level: 2 })).toHaveText("Noël 2026");
+    const carte = page.locator('[data-volet="liste"]');
+    expect(await carte.evaluate((el) => getComputedStyle(el).overflowY), "la page défile, pas la carte").not.toBe("auto");
+    await expect(colonne.getByRole("button", { name: /Ordre de passage du jour J/ })).toBeVisible();
+    const derniere = page.getByRole("list", { name: "Semaines" }).getByRole("listitem").last();
+    await derniere.scrollIntoViewIfNeeded();
+    await expect(derniere).toBeVisible();
+    const [boite, fenetre] = [(await derniere.boundingBox())!, page.viewportSize()!];
+    expect(boite.y, "haut de la dernière semaine dans la fenêtre").toBeGreaterThanOrEqual(0);
+    expect(boite.y + boite.height, "bas de la dernière semaine dans la fenêtre").toBeLessThanOrEqual(fenetre.height);
+  });
+
+  test("une autre page en deux volets (Harmonie) garde un max-height sur sa carte de liste", async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 720 });
+    await sansSheet(page);
+    const pianiste: FakeProfile = { uid: "uid-ruth", email: "ruth@example.com", firstName: "Ruth", lastName: "K.", planningName: "Ruth K.", ...musicien("piano") };
+    await signInAs(page, pianiste, {}, "/harmonie");
+    const carte = page.locator('[data-volet="liste"]');
+    await expect(carte).toBeVisible();
+    expect(await carte.evaluate((el) => getComputedStyle(el).maxHeight)).not.toBe("none");
   });
 });

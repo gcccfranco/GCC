@@ -2,7 +2,7 @@
 
 // Fiche de gestion d'un évènement au Back-Office, pour qui le gère (organisateur, coordination) (agencement v18, B3, piste A ; planche
 // `v18-bo-evenements-a`). En grand, dans le volet de droite : vignette (si image), badges, titre en h2,
-// « Voir comme un membre » (la fiche de l'App), « Modifier », « ⋯ » (Dupliquer, Supprimer) ; le bandeau
+// « Modifier », « ⋯ » (Voir comme un membre, Dupliquer, Supprimer) ; le bandeau
 // d'infos (date, heure, lieu, public, contact) ; « Inscrits » (jauge, liste, Exporter) à gauche,
 // « Tâches » et « Période d'inscription » (réglage, QR code) à droite — l'un sous l'autre quand le volet
 // est étroit. En un volet, la fiche est une page : son en-tête commun porte le seul retour,
@@ -19,6 +19,7 @@ import { useConfirmer } from "@/components/layout/Confirmer"
 import { EnTetePage } from "@/components/layout/EnTetePage"
 import { MenuActions } from "@/components/layout/MenuActions"
 import { ChoixInscriptions, useRaisonInscription } from "@/components/evenements/ChoixInscriptions"
+import { PastilleEtat } from "@/components/evenements/PastilleEtat"
 import { QrCodeLink } from "@/components/evenements/QrCode"
 import { Button } from "@/components/ui/button"
 import { useDeuxVolets } from "@/hooks/useDeuxVolets"
@@ -30,6 +31,7 @@ import { listInscriptions, updateEvenement } from "@/lib/firebase/evenements"
 import { fdFullL } from "@/lib/planning/utils"
 import { categoryLabel } from "@/lib/serviceColors"
 import { cn } from "@/lib/utils"
+import { TOUCHER_44 } from "@/lib/toucher44"
 import type { Evenement, Inscription } from "@/types/evenement"
 import type { UserProfile } from "@/types/user"
 import { TypePour } from "@/app/evenements/EvenementCard"
@@ -64,21 +66,16 @@ export function FicheGestion({ e, user, profile, onSupprimer, erreur, onChange }
 
   const menu = (
     <MenuActions actions={[
+      { label: t("backOffice.gestion.voirCommeMembre"), icone: Eye, onSelect: () => router.push(`/evenements/${e.id}`) },
       { label: t("evenements.dupliquer"), icone: Copy, onSelect: () => router.push(`${BASE}/nouveau?from=${e.id}`) },
       { label: t("evenements.supprimer"), icone: Trash2, destructif: true, onSelect: onSupprimer },
     ]} />
   )
   const modifier = (
-    <Button asChild variant="outline" size="sm" className="rounded-full">
+    <Button asChild variant="outline" size="sm" className={`rounded-full ${TOUCHER_44}`}>
       <Link href={`${BASE}/${e.id}/modifier`}><Pencil aria-hidden /> {t("evenements.modifier")}</Link>
     </Button>
   )
-  const voir = (
-    <Button asChild variant="outline" size="sm" className="rounded-full">
-      <Link href={`/evenements/${e.id}`}><Eye aria-hidden /> {t("backOffice.gestion.voirCommeMembre")}</Link>
-    </Button>
-  )
-
   const publicLabel = e.pour === "eglise"
     ? t("evenements.pourEglise")
     : equipeDuPour(e.pour) ? t(cleNomEquipe(equipeDuPour(e.pour)!))
@@ -96,26 +93,25 @@ export function FicheGestion({ e, user, profile, onSupprimer, erreur, onChange }
   return (
     <article data-testid="fiche-gestion" className={cn(styles.cadre, "space-y-4", !deuxVolets && "[&>*:not(header)]:mx-[var(--marge-page)]")}>
       {deuxVolets ? (
-        <header className="flex flex-wrap items-start gap-x-4 gap-y-3">
-          <div className="flex min-w-0 flex-1 items-center gap-4">
+        <header className={styles.entete}>
+          <div className={styles.titre}>
             {e.images[0] && (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={e.images[0]} alt="" className="h-[60px] w-24 shrink-0 rounded-xl object-cover" />
             )}
-            <div className="min-w-0">
-              <div className="flex flex-wrap gap-1"><TypePour e={e} /></div>
-              <h2 className="mt-1.5 text-2xl font-bold leading-tight tracking-tight text-foreground text-balance">{e.titre}</h2>
-            </div>
+            <h2 className="min-w-0 text-[22px] font-bold leading-[27px] tracking-tight text-foreground text-balance">{e.titre}</h2>
           </div>
-          <div className="flex flex-wrap items-center gap-2">{voir}{modifier}{menu}</div>
+          <div className={styles.types}><TypePour e={e} /></div>
+          <div className={styles.actions}>{modifier}{menu}</div>
         </header>
       ) : (
         <>
-          <EnTetePage retour={{ href: BASE, label: t("backOffice.parties.evenements") }} titre={e.titre} outils={<>{modifier}{menu}</>} />
-          <div className="flex flex-wrap items-center gap-2">
-            <TypePour e={e} />
-            <span className="ml-auto">{voir}</span>
-          </div>
+          <EnTetePage
+            retour={{ href: BASE, label: t("backOffice.parties.evenements") }}
+            titre={e.titre}
+            sousTitre={<span className="inline-flex flex-wrap gap-1"><TypePour e={e} /></span>}
+          />
+          <div className="flex items-center gap-2">{modifier}{menu}</div>
         </>
       )}
       {erreur}
@@ -227,9 +223,7 @@ function CartePeriode({ e, onChange }: { e: Evenement; onChange: (e: Evenement) 
     <section aria-labelledby={`periode-${e.id}`} className={cn(carte, "space-y-3")}>
       <div className="flex items-center justify-between gap-2">
         <h3 id={`periode-${e.id}`} className="text-base font-semibold text-foreground">{t("backOffice.gestion.periode")}</h3>
-        <span data-testid="etat-inscriptions" className={`rounded-full px-2.5 py-1 text-xs font-semibold ${etat === "ouvertes" ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400" : etat === "bientot" ? "bg-amber-500/15 text-amber-800 dark:text-amber-300" : "bg-secondary text-muted-foreground"}`}>
-          {t(`evenements.${etat}`)}
-        </span>
+        <PastilleEtat etat={etat} testId="etat-inscriptions">{t(`evenements.${etat}`)}</PastilleEtat>
       </div>
       {erreur && <p role="alert" className="text-sm text-destructive">{erreur}</p>}
       {!externe && (

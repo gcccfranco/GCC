@@ -16,12 +16,12 @@
 // `evenements/[id]/Inscriptions.tsx`) : le menu, déjà fermé, n'a rien pour les montrer, et une
 // erreur qui en sort n'est rattrapée par personne.
 
-import { useId, useRef } from "react";
+import { Fragment, useId, useRef } from "react";
 import type { LucideIcon } from "lucide-react";
 import { MoreHorizontal } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import {
-  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { TOUCHER_44 } from "@/lib/toucher44";
@@ -88,9 +88,11 @@ export function MenuActions({ actions, label, onOuvert, compact }: {
         {actions.map((a, i) => {
           const Icone = a.icone;
           return (
+            <Fragment key={i}>
+            {/* Un filet avant la première action destructive qui en suit une autre (bo-evenements-4). */}
+            {a.destructif && i > 0 && !actions[i - 1].destructif && <DropdownMenuSeparator />}
             <DropdownMenuItem
               // L'ordre des actions ne change pas d'un rendu à l'autre ; deux libellés peuvent se répéter.
-              key={i}
               // Le menu se ferme d'abord : la fenêtre de confirmation prend alors le focus.
               onSelect={() => { void choisir(a); }}
               disabled={a.desactive}
@@ -105,6 +107,7 @@ export function MenuActions({ actions, label, onOuvert, compact }: {
                 </span>
               ) : a.label}
             </DropdownMenuItem>
+            </Fragment>
           );
         })}
       </DropdownMenuContent>

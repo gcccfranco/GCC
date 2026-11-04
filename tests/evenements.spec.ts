@@ -720,28 +720,31 @@ test("L6 organisateur : le compteur n'est écrit qu'une fois", async ({ page }) 
 
 // Agencement v18 (B3, piste A) : au Back-Office, la fiche de gestion remplace la carte du 17/09/2026 ;
 // la fiche des membres (avec « S'inscrire ») est dans l'App, par « Voir comme un membre ».
-test("organisateur : fiche de gestion au Back-Office (titre, badges, Voir comme un membre, Modifier, « ⋯ », inscriptions, lien)", async ({ page }) => {
+test("organisateur : fiche de gestion au Back-Office (titre, badges, Modifier, « ⋯ » dont Voir comme un membre, inscriptions, lien)", async ({ page }) => {
   await member(page, STEPH, "/back-office/evenements/foot");
   const gestion = page.getByTestId("fiche-gestion");
   await expect(gestion.getByRole("heading", { name: "Foot au parc" })).toBeVisible();
   await expect(gestion.getByText("Sport")).toBeVisible();
-  await expect(gestion.getByRole("link", { name: "Voir comme un membre" })).toHaveAttribute("href", /^\/evenements\/foot\/?$/);
+  // bo-evenements-4 : « Voir comme un membre » n'est plus un bouton de l'en-tête, c'est la première entrée du menu « ⋯ ».
+  await expect(gestion.getByRole("link", { name: "Voir comme un membre" })).toHaveCount(0);
   await expect(gestion.getByRole("link", { name: "Modifier" })).toBeVisible();
   await gestion.getByRole("button", { name: "Plus d'actions" }).click();
-  await expect(page.getByRole("menuitem")).toHaveText(["Dupliquer", "Supprimer"]);
-  await page.keyboard.press("Escape");
+  await expect(page.getByRole("menuitem")).toHaveText(["Voir comme un membre", "Dupliquer", "Supprimer"]);
+  // Un filet avant « Supprimer ».
+  await expect(page.getByRole("separator")).toHaveCount(1);
+  await page.getByRole("menuitem", { name: "Voir comme un membre" }).click();
+  await expect(page).toHaveURL(/\/evenements\/foot\/?$/);
   await expect(gestion.getByRole("region", { name: "Période d'inscription" })).toContainText("Ouvertes");
   await expect(gestion.getByText("Lien d'inscription")).toBeVisible();
   await expect(gestion.getByRole("img", { name: /QR code/ })).toBeVisible();
   await expect(gestion.getByRole("button", { name: "S'inscrire" })).toHaveCount(0);
 });
 
-test("organisateur : « Modifier » et « Voir comme un membre » sont des pilules à bord ; « Supprimer » est en rouge dans « ⋯ »", async ({ page }) => {
+test("organisateur : « Modifier » est une pilule à bord ; « Supprimer » est en rouge dans « ⋯ »", async ({ page }) => {
   await member(page, STEPH, "/back-office/evenements/foot");
   const bord = (name: string) =>
     page.getByTestId("fiche-gestion").getByRole("link", { name }).evaluate((el) => getComputedStyle(el).borderTopWidth);
   expect(await bord("Modifier")).toBe("1px");
-  expect(await bord("Voir comme un membre")).toBe("1px");
   await page.getByTestId("fiche-gestion").getByRole("button", { name: "Plus d'actions" }).click();
   await expect(page.getByRole("menuitem", { name: "Supprimer" })).toHaveClass(/text-destructive/);
 });
@@ -1067,3 +1070,82 @@ test("lot 11 中文 : la fiche et le formulaire montrent les nouveaux libellés"
   await expect(page.getByLabel("外部报名链接")).toHaveValue(FORMULAIRE);
   await expect(page.getByText(/应用不再统计名额和报名人数/)).toBeVisible();
 });
+
+// Corrections du design, bo-evenements-6 : « Nouvel évènement » dit l'action dans un titre unique, le retour dit l'objet
+// (« ‹ Calendrier »), ni sous-titre ni second bouton « Nouvel évènement » ; le formulaire cache son titre.
+test("bo-evenements-6 — Nouveau : un seul h1 « Nouvel évènement », retour « ‹ Calendrier », le formulaire n'a pas de second titre visible", async ({ page }) => {
+  await member(page, ALICE, "/back-office/evenements/nouveau")
+  await expect(page.getByLabel("Nom de l'évènement")).toBeVisible()
+  await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1)
+  await expect(page.getByRole("heading", { level: 1, name: "Nouvel évènement" })).toBeVisible()
+  await expect(page.getByRole("link", { name: "Nouvel évènement" })).toHaveCount(0)
+  await expect(page.getByRole("button", { name: "Nouvel évènement" })).toHaveCount(0)
+  await expect(page.getByRole("main").getByRole("link", { name: "Calendrier", exact: true })).toHaveAttribute("href", /^\/back-office\/calendrier\/?$/)
+  await expect(page.getByText("Ce que voit l'assemblée, et sa gestion")).toHaveCount(0)
+  // Le titre du formulaire reste pour les lecteurs d'écran, jamais à l'écran.
+  const titreForm = page.locator("#evenement-form-title")
+  expect(await titreForm.evaluate((el) => el.getBoundingClientRect().width)).toBeLessThanOrEqual(1)
+})
+
+// bo-evenements-14 : le lien externe et le groupe « Inscriptions » sont deux blocs frères de la carte du formulaire,
+// séparés par le filet de `divide-y` ; avec un lien externe, le second disparaît.
+test("bo-evenements-14 — l'aide du lien externe et « Inscriptions » : deux blocs, un filet, plus de 24 px entre eux ; un lien externe retire le second", async ({ page }) => {
+  await member(page, ALICE, "/back-office/evenements/nouveau")
+  const carte = page.getByTestId("form-carte")
+  const aide = carte.getByText(/^Google Forms, Sheets…/)
+  const titre = carte.getByText("Inscriptions", { exact: true })
+  await expect(aide).toBeVisible()
+  await expect(titre).toBeVisible()
+  const blocLien = carte.locator("> div").filter({ has: page.locator("#ev-lien-externe") })
+  const blocInscriptions = carte.locator("> div").filter({ has: page.getByText("Inscriptions", { exact: true }) })
+  await expect(blocLien).toHaveCount(1)
+  await expect(blocInscriptions).toHaveCount(1)
+  expect(await blocLien.evaluate((a, b) => a !== b, await blocInscriptions.elementHandle())).toBe(true)
+  const a = (await aide.boundingBox())!
+  const t = (await titre.boundingBox())!
+  expect(t.y - (a.y + a.height), "l'aide et le titre « Inscriptions » ne se touchent plus").toBeGreaterThan(24)
+  expect(await blocInscriptions.evaluate((el) => getComputedStyle(el).borderTopWidth), "le filet de divide-y").toBe("1px")
+  await carte.locator("#ev-lien-externe").fill("https://forms.example.org/inscription")
+  await expect(blocInscriptions).toHaveCount(0)
+})
+
+// bo-evenements-10 : la même pastille sur la fiche de gestion, point vert « Ouvertes », en 中文 « 开放中 ».
+test("bo-evenements-10 — la fiche de gestion : pastille neutre, point `aria-hidden` vert en « Ouvertes » ; en 中文 « 开放中 »", async ({ page }) => {
+  await member(page, STEPH, "/back-office/evenements/foot")
+  const etat = page.getByTestId("etat-inscriptions")
+  await expect(etat).toHaveText("Ouvertes")
+  const point = etat.locator('[aria-hidden="true"]')
+  await expect(point).toHaveCount(1)
+  expect(await point.evaluate((el) => getComputedStyle(el).backgroundColor)).toBe("rgb(31, 157, 85)")
+})
+
+test("bo-evenements-10 — en 中文, la pastille de la fiche dit 开放中", async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"))
+  await member(page, STEPH, "/back-office/evenements/foot")
+  await expect(page.getByTestId("etat-inscriptions")).toHaveText("开放中")
+})
+
+// bo-evenements-4 : le titre d'abord, les étiquettes dessous, puis les actions ; à 720 px de volet et plus, « Modifier » et « ⋯ »
+// passent à droite du titre. Deux volets seulement (ordinateur) : la fenêtre fixe la largeur du volet.
+for (const [largeur, cote] of [[1280, "dessous"], [1600, "droite"]] as const) {
+  test(`bo-evenements-4 — fiche en deux volets à ${largeur} px : le titre tient sur une ligne, les actions ${cote === "droite" ? "sont à droite du titre" : "sont sous les étiquettes"}`, async ({ page }, info) => {
+    test.skip(info.project.name !== "ordinateur", "deux volets : l'ordinateur, dont la fenêtre est réglée ici")
+    await page.setViewportSize({ width: largeur, height: 900 })
+    await member(page, STEPH, "/back-office/evenements/pique", { ...DOCS, "evenements/pique": { ...FOOT, titre: "Pique-nique de rentrée" } })
+    const gestion = page.getByTestId("fiche-gestion")
+    const titre = gestion.getByRole("heading", { name: "Pique-nique de rentrée", level: 2 })
+    await expect(titre).toBeVisible()
+    const h = await titre.evaluate((el) => ({ hauteur: el.getBoundingClientRect().height, ligne: parseFloat(getComputedStyle(el).lineHeight) }))
+    expect(h.hauteur, "une seule ligne").toBeLessThan(h.ligne * 1.5)
+    const t = (await titre.boundingBox())!
+    const modifier = (await gestion.getByRole("link", { name: "Modifier" }).boundingBox())!
+    const types = (await gestion.getByText("Sport", { exact: true }).boundingBox())!
+    expect(types.y, "les étiquettes sont sous le titre").toBeGreaterThan(t.y + t.height - 1)
+    if (cote === "droite") {
+      expect(modifier.x, "« Modifier » est à droite du titre").toBeGreaterThan(t.x + t.width - 1)
+      expect(modifier.y, "sur sa première ligne").toBeLessThan(t.y + t.height)
+    } else {
+      expect(modifier.y, "« Modifier » est sous les étiquettes").toBeGreaterThan(types.y + types.height - 1)
+    }
+  })
+}

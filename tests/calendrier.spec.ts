@@ -292,7 +292,7 @@ test.describe("sources du calendrier (pur)", () => {
     expect(e[0].cle).not.toBe(e[1].cle);
   });
 
-  test("évènements de l'app : hors réunions, une info sans date n'y est pas, « 19:00 · 4 inscrits sur 10 »", () => {
+  test("évènements de l'app : hors réunions, une info sans date n'y est pas, « 19:00 » et le compteur « 4/10 » à part", () => {
     const d = vide();
     d.evenements = [
       evenement({ id: "foot", titre: "Foot au parc", lieu: "", inscrits: 4, placesMax: 10 }),
@@ -303,8 +303,8 @@ test.describe("sources du calendrier (pur)", () => {
     ];
     const e = de(entreesCalendrier(...OCT, d, ctx(ADMIN, null)), "evenements");
     expect(e.map((x) => x.titre)).toEqual(["Foot au parc", "Repas"]);
-    expect(e[0]).toMatchObject({ cle: "evenements:foot:2026-10-10", detail: "19:00 · 4 inscrits sur 10", couleur: "#e0a100", duSheet: false, lien: "/evenements/foot" });
-    expect(e[1]).toMatchObject({ heure: "12:00", heureFin: "14:00", detail: "12:00 – 14:00 · Salle 1 · 3 inscrits" });
+    expect(e[0]).toMatchObject({ cle: "evenements:foot:2026-10-10", detail: "19:00", compteur: "4/10", compteurAria: "4 inscrits sur 10 places", complet: false, couleur: "#e0a100", duSheet: false, lien: "/evenements/foot" });
+    expect(e[1]).toMatchObject({ heure: "12:00", heureFin: "14:00", detail: "12:00 – 14:00 · Salle 1", compteur: "3", compteurAria: "3 inscrits" });
   });
 
   test("évènements : un évènement sur plusieurs jours a une entrée par jour, l'heure le premier jour", () => {
@@ -546,7 +546,7 @@ test.describe("sources du calendrier (pur)", () => {
     const e = entreesCalendrier("2026-10-04", "2026-10-11", d, ctx(ADMIN, null, "zh-CN"));
     const par = (s: EntreeCalendrier["source"]) => de(e, s)[0];
     expect(par("services").detail).toBe("司会：Alix P.");
-    expect(par("evenements").detail).toBe("19:00 · 已报名 4/10");
+    expect(par("evenements")).toMatchObject({ detail: "19:00", compteur: "4/10", compteurAria: "已报名 4 人，共 10 个名额" });
     expect(par("taches").detail).toBe("美工组 · 截止");
     expect(par("scene").titre).toBe("舞台 · Chant EDD 中班");
     expect(par("petitDej")).toMatchObject({ titre: "早餐", detail: "空闲" });
@@ -807,6 +807,9 @@ const jour = (page: Page, date: string) => page.locator(`[data-jour="${date}"]`)
 const pastilles = (page: Page) => page.getByRole("group", { name: "Sources affichées" });
 /** Panneau du jour : à droite sur ordinateur et tablette couchée, en feuille ailleurs. */
 const panneauADroite = (info: TestInfo) => info.project.name.startsWith("ordinateur") || info.project.name === "tablette-paysage";
+/** Le panneau fixe du jour n'existe qu'à partir de 1 600 px (bo-evenements-2) ; en dessous, le jour s'ouvre dans un volet
+ *  flottant en Mois et rien ne s'ouvre en Agenda. Les tests qui lisent le panneau fixe élargissent la fenêtre d'abord. */
+const largeFixe = (page: Page, info: TestInfo) => panneauADroite(info) ? page.setViewportSize({ width: 1600, height: 900 }) : Promise.resolve();
 /** Téléphone (C4) : Agenda d'office, Mois à points, pastilles dans la feuille « Sources ». */
 const estTelephone = (info: TestInfo) => info.project.name === "telephone";
 const SANS_TELEPHONE = "grille étiquetée : ordinateur et tablettes ; le téléphone a l'agenda et le Mois à points (C4)";
@@ -933,10 +936,17 @@ test.describe("C3 : la page du calendrier en Mois", () => {
     await expect(panneau).not.toContainText("Cases vides");
   });
 
-  test("sur grand écran, le panneau montre aujourd'hui dès l'ouverture", async ({ page }, info) => {
+  test("à partir de 1 600 px, le panneau fixe montre aujourd'hui dès l'ouverture ; en dessous, le volet attend un jour touché", async ({ page }, info) => {
     test.skip(!panneauADroite(info), "panneau à droite : ordinateur et tablette couchée");
     await ouvrir(page);
-    await expect(page.getByRole("complementary", { name: "Jeudi 1er octobre" })).toBeVisible();
+    const volet = page.getByRole("complementary", { name: "Jeudi 1er octobre" });
+    await expect(volet).toBeHidden();
+    await jour(page, "2026-10-01").click();
+    await expect(volet).toBeVisible();
+    await page.keyboard.press("Escape");
+    await expect(volet).toBeHidden();
+    await page.setViewportSize({ width: 1600, height: 900 });
+    await expect(volet).toBeVisible();
   });
 
   test("trois entrées dans une case, puis « +N », qui ouvre le jour entier (ordinateur et tablettes)", async ({ page }, info) => {
@@ -1196,9 +1206,12 @@ test.describe("C4 : Agenda, feuille « Sources », Mois à points", () => {
     await expect(dimanche.first()).toContainText("Présidence : Lou M.");
     await expect(jour(page, "2026-10-04").locator('[data-source="scene"]')).toContainText(/17:00.*18:00/);
     await expect(jour(page, "2026-10-04").locator('[data-source="petitDej"]')).toContainText("Libre");
-    await expect(jour(page, "2026-10-22").locator('[data-source="evenements"]')).toContainText(/19:00.*Gymnase · 4 inscrits sur 10/);
-    // Le volet du jour à côté de l'agenda en grand (agenda v18, B5) ; aucun ailleurs.
-    await expect(page.getByRole("complementary")).toHaveCount(panneauADroite(test.info()) ? 1 : 0);
+    await expect(jour(page, "2026-10-22").locator('[data-source="evenements"]')).toContainText(/19:00.*Gymnase/);
+    // Le compteur est à droite du titre, et le détail ne le porte plus (bo-evenements-8).
+    await expect(jour(page, "2026-10-22").locator('[data-source="evenements"]')).not.toContainText("inscrit");
+    await expect(jour(page, "2026-10-22").locator('[data-source="evenements"]').getByLabel("4 inscrits sur 10 places")).toHaveText("4/10");
+    // Le panneau fixe n'a lieu d'être qu'à partir de 1 600 px (bo-evenements-2) : en dessous, la liste est déjà l'agenda.
+    await expect(page.getByRole("complementary")).toHaveCount(0);
   });
 
   test("Agenda : rien avant aujourd'hui", async ({ page }) => {
@@ -1238,6 +1251,7 @@ test.describe("C4 : Agenda, feuille « Sources », Mois à points", () => {
 
   test("Agenda dès 768 px : toucher une ligne choisit son jour ; la carte du Sheet, en lecture seule, ouvre l'onglet du mois", async ({ page }, info) => {
     test.skip(estTelephone(info), "le téléphone ouvre la feuille de l'entrée (tests précédents)");
+    await largeFixe(page, info);
     await ouvrir(page);
     await vue(page, "Agenda");
     await jour(page, "2026-10-06").getByRole("button", { name: /Soirée louange/ }).click();
@@ -1690,7 +1704,8 @@ test.describe("BO-C : « Scène des fêtes »", () => {
     await expect(page.getByRole("link", { name: "节日舞台" })).toHaveAttribute("href", /^\/back-office\/evenements\/scene\/?$/);
   });
 
-  test("une entrée de la scène garde son lien de l'app et offre, à la coordination, « Ouvrir la scène dans le back-office »", async ({ page }) => {
+  test("une entrée de la scène garde son lien de l'app et offre, à la coordination, « Ouvrir la scène dans le back-office »", async ({ page }, info) => {
+    await largeFixe(page, info);
     await ouvrirAdresse(page, "/back-office/calendrier?vue=agenda&filtre=scene");
     await page.locator('[data-source="scene"]').first().click();
     const ouvrirScene = page.getByRole("link", { name: "Ouvrir la scène dans le back-office" });
@@ -1707,6 +1722,7 @@ test.describe("BO16 (a) : le volet du jour tient dans la marge", () => {
   for (const langue of ["fr", "zh-CN"] as const) {
     test(`${langue} : le volet du jour et ses cartes finissent avant la marge droite (ordinateur et tablette couchée)`, async ({ page }, info) => {
       test.skip(!panneauADroite(info), "le volet du jour n'est à droite que sur ordinateur et tablette couchée");
+      await largeFixe(page, info);
       if (langue === "zh-CN") await page.addInitScript(() => { try { localStorage.setItem("i18nextLng", "zh-CN"); } catch {} });
       await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
       await sheets(page);
@@ -1716,7 +1732,8 @@ test.describe("BO16 (a) : le volet du jour tient dans la marge", () => {
       const panneau = page.getByRole("complementary").filter({ has: page.getByRole("link", { name: /Culte Franco/ }) });
       await expect(panneau).toBeVisible();
       const zone = await zoneDeContenu(page);
-      const bord = Math.min(zone.droite, zone.gauche + 1440) - (await margeAttendue(page));
+      // À 1 600 px (le panneau fixe, bo-evenements-2) le Calendrier n'est pas plafonné à 1 440 px : il va jusqu'à la marge de la fenêtre.
+      const bord = zone.droite - (await margeAttendue(page));
       // Le volet lui-même va jusqu'au bord (agencement v18, agencement-v18-calendrier) ; ses cartes, non.
       const p = (await panneau.boundingBox())!;
       expect(Math.abs(p.x + p.width - zone.droite), "le volet va jusqu'au bord").toBeLessThanOrEqual(1);

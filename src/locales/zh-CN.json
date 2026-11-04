@@ -1710,6 +1710,13 @@
         "autreFete": "{{edition}} 的预约持续到{{date}}：请在此之后开始。"
       }
     },
+    "quoi": {
+      "Séance louange": "敬拜赞美",
+      "Chant": "献唱",
+      "Danse": "舞蹈",
+      "Sketch": "短剧",
+      "Spectacle": "表演"
+    },
     "gestion": {
       "reservations": "预约",
       "apresLancement": "启动后可用",
@@ -2339,7 +2346,7 @@
     "confirmer": "确认",
     "annuler": "取消",
     "panneauInscriptions": "报名",
-    "ouvertes": "开放",
+    "ouvertes": "开放中",
     "fermees": "已关闭",
     "voirInscrits": "查看报名（{{count}}）",
     "masquerInscrits": "收起报名名单",
@@ -3652,7 +3659,6 @@
     "dupliquerProchaine": "复制为下一次",
     "passees": "已结束",
     "gestion": {
-      "sousTitreEvenements": "会众看到的活动，以及它们的管理",
       "voirCommeMembre": "以成员身份查看",
       "contact": "联系人：{{nom}}",
       "exporter": "导出",

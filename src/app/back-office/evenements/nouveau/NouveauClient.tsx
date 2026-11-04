@@ -93,7 +93,7 @@ export function NouveauClient({ reunion = false }: { reunion?: boolean }) {
       <EnTetePage
         retour={reunion
           ? { href: "/back-office/calendrier?vue=agenda&filtre=reunions", label: t("backOffice.entrees.calendrier") }
-          : { href: base, label: t("backOffice.parties.evenements") }}
+          : { href: "/back-office/calendrier", label: t("backOffice.entrees.calendrier") }}
         titre={titre}
       />
       <div className="px-[var(--marge-page)]">{contenu}</div>
@@ -109,7 +109,7 @@ export function NouveauClient({ reunion = false }: { reunion?: boolean }) {
       <EvenementForm
         initial={{ ...initial, contact: initial.contact || nom, ...(!from && pours.includes(pourDeLEquipe) ? { pour: pourDeLEquipe } : {}) }}
         pours={pours}
-        titreCache={!deuxVolets}
+        titreCache={!reunion || !deuxVolets}
         creation
         onSubmit={async (values, prevenir) => {
           // Réponse avant d'écrire quoi que ce soit : sans réunion créée, rien n'est repris.

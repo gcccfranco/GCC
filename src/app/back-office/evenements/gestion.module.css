@@ -25,3 +25,14 @@
     grid-template-areas: "sujets droite" "sujets taches";
   }
 }
+
+/* En-tête de la fiche d'un évènement, en deux volets (bo-evenements-4) : le titre d'abord, les étiquettes à 8 px
+   dessous, les actions 12 px plus bas ; à 720 px de volet, « Modifier » et « ⋯ » passent à droite du titre. */
+.entete { display: grid; grid-template-columns: minmax(0, 1fr); grid-template-areas: "titre" "types" "actions"; align-items: start; }
+.titre { grid-area: titre; display: flex; align-items: center; gap: 1rem; min-width: 0; }
+.types { grid-area: types; display: flex; flex-wrap: wrap; gap: 0.25rem; margin-top: 0.5rem; }
+.actions { grid-area: actions; display: flex; align-items: center; gap: 0.5rem; margin-top: 0.75rem; }
+@container (min-width: 720px) {
+  .entete { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "titre actions" "types types"; column-gap: 1rem; }
+  .actions { margin-top: 0; }
+}

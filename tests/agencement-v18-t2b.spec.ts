@@ -67,11 +67,12 @@ test.describe("T2b : Back-Office › Évènements", () => {
     await expect(page.getByRole("button", { name: /Foot au parc/ })).toBeVisible();
   });
 
-  test("l'agencement commun autour d'une fiche : en-tête « Évènements », sous-titre, « ‹ Calendrier », pas de rail", async ({ page }, info) => {
+  test("l'agencement commun autour d'une fiche : en-tête « Évènements » sans sous-titre, « ‹ Calendrier », pas de rail", async ({ page }, info) => {
     test.skip(!estGrandEcran(info), "l'en-tête de la section : deux volets, grand écran");
     await ouvrir(page, COORD, "/back-office/evenements/foot");
     await expect(enTete(page).getByRole("heading", { level: 1, name: "Évènements" })).toBeVisible();
-    await expect(enTete(page)).toContainText("Ce que voit l'assemblée, et sa gestion");
+    // bo-evenements-11 : le sous-titre recopié sur tout le segment est retiré.
+    await expect(page.getByText("Ce que voit l'assemblée, et sa gestion")).toHaveCount(0);
     await expect(enTete(page).getByRole("link", { name: "Calendrier", exact: true })).toHaveAttribute("href", /^\/back-office\/calendrier\/?$/);
     await expect(ongletsRail(page)).toHaveCount(0);
     await expect(liste(page).getByRole("link", { name: /Foot au parc/ })).toBeVisible();
@@ -86,7 +87,8 @@ test.describe("T2b : Back-Office › Évènements", () => {
     // La ligne de l'évènement ouvert est marquée dans la liste.
     await expect(liste(page).getByRole("link", { name: /Foot au parc/ })).toHaveAttribute("aria-current", "page");
     const fiche = volet(page);
-    await expect(fiche.getByRole("link", { name: "Voir comme un membre" })).toHaveAttribute("href", /^\/evenements\/foot\/?$/);
+    // bo-evenements-4 : « Voir comme un membre » n'est plus dans l'en-tête, mais la première entrée du menu « ⋯ ».
+    await expect(fiche.getByRole("link", { name: "Voir comme un membre" })).toHaveCount(0);
     await expect(fiche.getByRole("link", { name: "Modifier" })).toHaveAttribute("href", /^\/back-office\/evenements\/foot\/modifier\/?$/);
     // Bandeau d'infos, Inscrits (jauge et liste), Période d'inscription, Tâches.
     await expect(fiche.getByTestId("infos-gestion")).toContainText("Parc de Bercy");
@@ -102,7 +104,8 @@ test.describe("T2b : Back-Office › Évènements", () => {
   test("« Voir comme un membre » mène à la fiche de l'App", async ({ page }, info) => {
     test.skip(!estGrandEcran(info), "deux volets : grand écran");
     await ouvrir(page, COORD, "/back-office/evenements/foot");
-    await volet(page).getByRole("link", { name: "Voir comme un membre" }).click();
+    await volet(page).getByRole("button", { name: "Plus d'actions" }).click();
+    await page.getByRole("menuitem", { name: "Voir comme un membre" }).click();
     await expect(page).toHaveURL(/\/evenements\/foot\/?$/);
   });
 
@@ -132,7 +135,11 @@ test.describe("T2b : Back-Office › Évènements", () => {
     await expect(volet(page).getByLabel("Nom de l'évènement")).toBeVisible();
     await expect(liste(page)).toBeVisible();
     await expect(page.getByRole("dialog")).toHaveCount(0);
-    await expect(enTete(page).getByRole("heading", { level: 1, name: "Évènements" })).toBeVisible();
+    // bo-evenements-6 : l'en-tête dit l'action, sans sous-titre ni second bouton « Nouvel évènement ».
+    await expect(enTete(page).getByRole("heading", { level: 1, name: "Nouvel évènement" })).toBeVisible();
+    await expect(enTete(page).getByRole("link", { name: "Calendrier", exact: true })).toHaveAttribute("href", /^\/back-office\/calendrier\/?$/);
+    await expect(page.getByRole("link", { name: "Nouvel évènement" })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Nouvel évènement" })).toHaveCount(0);
   });
 
   test("créer un évènement l'ajoute à la liste et ouvre sa fiche", async ({ page }, info) => {
@@ -240,17 +247,19 @@ test.describe("T2b : Back-Office › Évènements", () => {
     const retour = enTete(page).getByRole("link", { name: "Évènements" });
     await expect(retour).toHaveAttribute("href", /^\/back-office\/evenements\/?$/);
     await expect(page.getByText("←")).toHaveCount(0);
-    await expect(page.getByRole("link", { name: "Voir comme un membre" })).toBeVisible();
+    await page.getByRole("button", { name: "Plus d'actions" }).click();
+    await expect(page.getByRole("menuitem", { name: "Voir comme un membre" })).toBeVisible();
+    await page.keyboard.press("Escape");
     await verifierAgencement(page, { contenu: contenu(page), onglets: { rail: 0, pilules: 0 } });
     await retour.click();
     await expect(page).toHaveURL(/\/back-office\/calendrier\/?\?vue=agenda&filtre=evenements$/);
   });
 
-  test("en 中文 : le sous-titre de l'en-tête", async ({ page }, info) => {
+  test("en 中文 : plus de sous-titre sous l'en-tête (bo-evenements-11)", async ({ page }, info) => {
     test.skip(!estGrandEcran(info), "l'en-tête de la section : deux volets, grand écran");
     await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
     await ouvrir(page, COORD, "/back-office/evenements/foot");
-    await expect(enTete(page)).toContainText("会众看到的活动，以及它们的管理");
+    await expect(page.getByText("会众看到的活动，以及它们的管理")).toHaveCount(0);
   });
 });
 

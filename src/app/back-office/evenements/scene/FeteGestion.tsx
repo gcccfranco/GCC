@@ -43,6 +43,7 @@ import { Button } from "@/components/ui/button"
 import { DeuxVolets } from "@/components/layout/DeuxVolets"
 import { Retour } from "@/components/layout/EnTetePage"
 import { useConfirmer } from "@/components/layout/Confirmer"
+import { PastilleEtat } from "@/components/evenements/PastilleEtat"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Apercu } from "@/app/evenements/scene/Apercu"
 import { Entrainements, type MorceauxEntrainements } from "@/app/evenements/scene/Entrainements"
@@ -222,9 +223,7 @@ export function FeteGestion({ fete }: { fete: Fete }) {
   }
   const numeros = (p: Programme) => (p.passages.length ? t("planning.fete.numeros", { count: p.passages.length }) : t("planning.fete.aucunNumero"))
   const pastilleEtat = (testId?: string) => (
-    <span data-testid={testId} className="shrink-0 rounded-full bg-secondary px-2.5 py-0.5 text-[12px] font-semibold text-foreground/80">
-      {t(`planning.gestion.etats.${etat}`)}
-    </span>
+    <PastilleEtat etat={etat} testId={testId}>{t(`planning.gestion.etats.${etat}`)}</PastilleEtat>
   )
 
   /** « sam. 10–12, dim. 14–19 · 1 h · 4 familles ». */
@@ -336,11 +335,11 @@ export function FeteGestion({ fete }: { fete: Fete }) {
       <div className="space-y-1">
         <p className="px-1 text-[13px] font-semibold text-muted-foreground">{t("planning.gestion.cetteFete")}</p>
         {entrees}
+        {entreeOrdre}
       </div>
       {m?.semaines}
       {texteBrouillon}
       {anneesPassees}
-      <div className="border-t border-border pt-3">{entreeOrdre}</div>
     </section>
   )
 
@@ -488,7 +487,7 @@ export function FeteGestion({ fete }: { fete: Fete }) {
   const disposer = (m: MorceauxEntrainements | null) => {
     if (deuxVolets) {
       return (
-        <DeuxVolets racine={pathname} liste={colonne(m)} premier={droite(m)} largeurListe={400}>
+        <DeuxVolets racine={pathname} liste={colonne(m)} premier={<PanneauCollant>{droite(m)}</PanneauCollant>} largeurListe={400} listeNaturelle>
           {null}
         </DeuxVolets>
       )
@@ -564,3 +563,25 @@ function Entree({ icone: Icone, titre, sous, actif, disabled, onClick }: {
   )
 }
 
+
+/** Le panneau de droite reste en place pendant que la page défile (bo-evenements-13), 20 px sous la barre du haut
+ *  comme la carte des autres pages en deux volets. S'il est plus haut que la fenêtre, on ne le colle pas : sans quoi
+ *  son bas resterait inatteignable, il défile avec la page. */
+function PanneauCollant({ children }: { children: ReactNode }) {
+  const ref = useRef<HTMLDivElement>(null)
+  const [colle, setColle] = useState(true)
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const mesurer = () => {
+      const haut = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--nav-h")) || 58
+      setColle(el.offsetHeight <= window.innerHeight - haut - 40)
+    }
+    mesurer()
+    const taille = new ResizeObserver(mesurer)
+    taille.observe(el)
+    window.addEventListener("resize", mesurer)
+    return () => { taille.disconnect(); window.removeEventListener("resize", mesurer) }
+  }, [])
+  return <div ref={ref} data-testid="panneau-collant" className={colle ? "sticky top-[calc(var(--nav-h)+20px)]" : undefined}>{children}</div>
+}

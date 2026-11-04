@@ -1,0 +1,10 @@
+/* « Toutes les réservations » (bo-evenements-1) : le tableau à partir de 640 px de conteneur, dessous la liste « par
+   jour » de « Cette semaine ». Les deux lisent les mêmes lignes ; `display: none` laisse un seul rendu aux lecteurs
+   d'écran. Une requête de conteneur en CSS de module (Tailwind 3.4 n'a pas `@container`). */
+.cadre { container-type: inline-size; }
+.liste { display: block; }
+.tableau { display: none; }
+@container (min-width: 640px) {
+  .liste { display: none; }
+  .tableau { display: block; }
+}

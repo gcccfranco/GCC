@@ -33,7 +33,8 @@ import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { useSearchParams } from "next/navigation";
 import { useTranslation } from "react-i18next";
 import Link from "next/link";
-import { CalendarDays, Check, ChevronDown, ChevronLeft, ChevronRight, CloudOff, ListChecks, Plus, SlidersHorizontal, UserRound, Users } from "lucide-react";
+import { CalendarDays, Check, ChevronDown, ChevronLeft, ChevronRight, CloudOff, ListChecks, Plus, SlidersHorizontal, UserRound, Users, X } from "lucide-react";
+import styles from "./volet.module.css";
 import { creatableEvenementPours, equipesOuCreer, isCoordination, publicDeReunion } from "@/lib/access";
 import type { TacheValues } from "@/lib/firebase/taches";
 import { useProfile } from "@/lib/firebase/users";
@@ -88,6 +89,9 @@ const usePanneauADroite = requeteMedia([
   "(pointer: fine) and (min-width: 1024px)",
   "(pointer: coarse) and (orientation: landscape) and (min-width: 1024px)",
 ]);
+/** Au-dessus de 1 600 px le jour choisi a son panneau fixe de 300 px ; en dessous, la grille prend la largeur et le
+ *  jour s'ouvre dans un volet flottant (bo-evenements-2). */
+const usePanneauFixe = requeteMedia(["(min-width: 1600px)"]);
 const useTelephone = requeteMedia(["(max-width: 767px)"]);
 /** Faux au rendu du serveur et à l'hydratation, vrai ensuite (les requêtes média sont lues). */
 const useHydrate = () => useSyncExternalStore(() => () => {}, () => true, () => false);
@@ -123,6 +127,7 @@ export function CalendrierClient() {
   // U9 : la bascule (pastille, lecture du Sheet en Agenda) tombe à minuit de Paris, même loin.
   const jourParis = useMemo(() => jourDeParis(), []);
   const aDroite = usePanneauADroite();
+  const fixe = usePanneauFixe();
   const telephone = useTelephone();
   const titreDuJour = useTitreDuJour(lang, aujourdhui);
   // Ouverte sur un jour (C8) : en Mois, ce jour choisi.
@@ -134,6 +139,8 @@ export function CalendrierClient() {
   const [vueChoisie, setVue] = useState<Vue | null>(jourDemande ? "mois" : vueDeLAdresse(adresse.get("vue")));
   const [filtreChoisi, setFiltre] = useState<Filtre>(() => filtreDeLAdresse(adresse.get("filtre")));
   const vue: Vue = vueChoisie ?? (telephone ? "agenda" : "mois");
+  const panneauFixe = aDroite && fixe && !telephone;
+  const voletFlottant = aDroite && !fixe && !telephone;
   const [mois, setMois] = useState((jourDemande ?? aujourdhui).slice(0, 7));
   const [choisi, setChoisi] = useState(jourDemande ?? aujourdhui);
   // Ouverte sur un jour, là où le jour s'affiche en feuille (tablette debout), sa feuille
@@ -141,6 +148,8 @@ export function CalendrierClient() {
   // ordinateur, où le jour est dans le panneau de droite.
   const [feuille, setFeuille] = useState(jourDemande !== null);
   const hydrate = useHydrate();
+  // Le volet flottant du jour (1 024 à 1 599 px, en Mois comme en Agenda) : ouvert par un jour touché, fermé par le même jour, ✕ ou Échap.
+  const [voletOuvert, setVoletOuvert] = useState(jourDemande !== null);
   const [feuilleSources, setFeuilleSources] = useState(false);
   const [entree, setEntree] = useState<{ e: EntreeCalendrier | null; ouverte: boolean }>({ e: null, ouverte: false });
   // L'agenda montre le mois de la rangée (d'aujourd'hui pour le mois en cours), plus les mois
@@ -229,14 +238,28 @@ export function CalendrierClient() {
   const changer = (p: PreferencesCalendrier) => { setPrefs(p); ecrirePreferences(p); };
   const basculer = (s: SourceCalendrier) =>
     changer({ ...prefs, sources: prefs.sources.includes(s) ? prefs.sources.filter((x) => x !== s) : [...prefs.sources, s] });
-  const allerA = (m: string) => { setMois(m); setMoisEnPlus(0); setLigneOuverte(null); setChoisi(m === aujourdhui.slice(0, 7) ? aujourdhui : `${m}-01`); };
+  const allerA = (m: string) => { setMois(m); setMoisEnPlus(0); setLigneOuverte(null); setVoletOuvert(false); setChoisi(m === aujourdhui.slice(0, 7) ? aujourdhui : `${m}-01`); };
   // Sur téléphone, le jour touché s'affiche sous le Mois à points, sans feuille (question 3).
   const choisir = (date: string, cle: string | null = null) => {
-    setChoisi(date);
     setLigneOuverte(cle);
+    if (voletFlottant) setVoletOuvert(date !== choisi || !voletOuvert);
+    setChoisi(date);
     if (!aDroite && !telephone) setFeuille(true);
   };
   const duJour = parJour.get(choisi) ?? [];
+  useEffect(() => {
+    if (!voletFlottant || !voletOuvert) return;
+    // Un Échap déjà pris (menu « Déplacer… », confirmation) ne ferme pas aussi le volet.
+    const sur = (ev: KeyboardEvent) => {
+      if (ev.key !== "Escape" || ev.defaultPrevented) return;
+      if (document.querySelector('[role="dialog"][data-state="open"], [role="alertdialog"][data-state="open"], [role="menu"]')) return;
+      setVoletOuvert(false);
+    };
+    document.addEventListener("keydown", sur);
+    return () => document.removeEventListener("keydown", sur);
+  }, [voletFlottant, voletOuvert]);
+  // Le volet entre du côté opposé au jour choisi : du lundi au jeudi par la droite, du vendredi au dimanche par la gauche.
+  const coteVolet = vue === "agenda" || (new Date(`${choisi}T00:00:00Z`).getUTCDay() + 6) % 7 <= 3 ? "droite" : "gauche";
   const ouvrirEntree = (e: EntreeCalendrier) => setEntree({ e, ouverte: true });
   // La feuille du jour ou de l'entrée se ferme : la confirmation prend la place.
   const deplacer = (e: EntreeCalendrier, vers: string | null) => {
@@ -436,7 +459,7 @@ export function CalendrierClient() {
         }
         apres={rangee}
       />
-      <div className="flex flex-1 items-stretch">
+      <div className="relative flex flex-1 items-stretch overflow-x-clip">
         {/* BO-G, 3 : sur téléphone le « + » flottant (52 px, à `--tabbar-bottom` + 76 px) ne recouvre pas la dernière carte. */}
         <div className={cn("min-w-0 flex-1 px-[var(--marge-page)] pb-10", telephone && peutCreer && "pb-[calc(var(--tabbar-bottom)+76px+52px+16px)]")}>
           {/* U9 (Q7 b), BO10 : la note du Sheet, ici seulement et jusqu'au 31/12/2026. */}
@@ -505,6 +528,7 @@ export function CalendrierClient() {
               aujourdhui={aujourdhui}
               choisi={choisi}
               lang={lang}
+              contourChoisi={vue === "mois" && voletFlottant && voletOuvert}
               onChoisir={choisir}
               onDeposer={deplacer}
             />
@@ -512,7 +536,7 @@ export function CalendrierClient() {
         </div>
 
         {/* Le volet du jour (B5) : à droite sur ordinateur et tablette couchée, en Mois comme en Agenda. */}
-        {aDroite && !telephone && (
+        {panneauFixe && (
           // BO16 (a) : le volet garde ses 300 px et va jusqu'au bord (v18), mais ses cartes finissent sur la marge de la
           // page, comme « Ajouter » au-dessus (elles la dépassaient de 20 px).
           <aside aria-labelledby="calendrier-jour" className="w-[300px] shrink-0 border-l border-border">
@@ -524,6 +548,37 @@ export function CalendrierClient() {
               <ListeDuJour entrees={duJour} onDeplacer={demanderDate} />
             </div>
           </aside>
+        )}
+
+        {/* Sous 1 600 px, en Mois et en Agenda : le jour choisi dans un volet flottant de 340 px, sans voile (bo-evenements-2). */}
+        {voletFlottant && (
+          <div className={styles.rail} data-cote={coteVolet}>
+            <aside
+              aria-labelledby="calendrier-jour"
+              data-testid="volet-jour"
+              data-ouvert={voletOuvert ? "true" : "false"}
+              inert={!voletOuvert}
+              className={`${styles.volet} material-panel`}
+            >
+              <div className="flex flex-col gap-3 p-4 pt-3">
+                <div className="flex items-center justify-between gap-2">
+                  <h2 id="calendrier-jour" className="text-[17px] leading-[23px] font-bold text-foreground">
+                    {titreJour(choisi, lang)}
+                  </h2>
+                  <button
+                    type="button"
+                    aria-label={t("common.buttons.close")}
+                    onClick={() => setVoletOuvert(false)}
+                    className="-mr-2 flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-foreground"
+                  >
+                    <X aria-hidden className="h-4 w-4" />
+                  </button>
+                </div>
+                <AjouterCeJour date={choisi} lang={lang} droits={droits} onNouvelleTache={nouvelleTache(choisi)} />
+                <ListeDuJour entrees={duJour} onDeplacer={demanderDate} />
+              </div>
+            </aside>
+          </div>
         )}
       </div>
 

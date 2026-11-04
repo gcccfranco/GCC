@@ -267,7 +267,8 @@ const SAISON_NOEL = "/back-office/evenements/scene/noel?vue=saison";
 async function horsGrilleDuTableau(page: Page, n: number) {
   await versToutesLesReservations(page);
   await page.getByRole("group", { name: "Filtrer les réservations" }).getByRole("button", { name: `Hors grille ${n}` }).click();
-  return page.getByRole("table", { name: "Toutes les réservations" }).locator("tbody tr");
+  // Le tableau à partir de 640 px de conteneur, dessous la liste « par jour » (bo-evenements-1) : les lignes du rendu visible.
+  return page.locator('[data-testid="reservations-tableau"] tbody tr, [data-testid="reservations-liste"] li').filter({ visible: true });
 }
 
 test("brouillon : un membre a l'onglet Noël (fixe, P4) mais ni grille ni réservation", async ({ page }) => {
@@ -806,7 +807,8 @@ test("hors grille : une réservation d'un jour passé n'est plus signalée ; cel
   await ouvrir(page, ALICE, { "programmes/noel": NOEL, "programmes/noel/creneaux/p": passee, "programmes/noel/creneaux/v": aVenir }, "2026-10-15T10:00:00");
   const hors = await horsGrilleDuTableau(page, 1);
   await expect(hors).toHaveCount(1);
-  await expect(hors).toContainText("dim. 18 oct.");
+  // Le jour est dans la première cellule du tableau, ou dans le titre du groupe de la liste.
+  await expect(page.getByText("dim. 18 oct.", { exact: true }).filter({ visible: true })).toHaveCount(1);
 });
 
 test("membres : un créneau qui commence pendant que la feuille est ouverte est refusé à la validation (horloge simulée)", async ({ page }) => {
@@ -845,7 +847,7 @@ test("« Retirer » qui échoue le dit au-dessus du tableau de toutes les réser
   await page.getByRole("menuitem", { name: "Retirer" }).click();
   await repondreDansLeSite(page, "Retirer");
   await expect(toutes.getByRole("alert")).toHaveText("Enregistrement impossible. Vérifie ta connexion et réessaie.");
-  await expect(toutes.getByRole("table")).toContainText("15:00 – 16:00");
+  await expect(toutes.locator('[data-testid="reservations-tableau"], [data-testid="reservations-liste"]').filter({ visible: true })).toContainText("15:00 – 16:00");
 });
 
 test("membres : la feuille range les groupes permis par famille, comme la planche (Groupes, EDD)", async ({ page }) => {

@@ -1,0 +1,29 @@
+/* Le volet du jour du Calendrier, sous 1 600 px en Mois (bo-evenements-2) : 340 px, flottant sans voile, il entre
+   du côté opposé au jour choisi (`data-cote`), par un ressort sans rebond de 0,35 s, interruptible (une transition
+   CSS repart de là où elle est). Fermé, il est invisible et inerte. Avec `prefers-reduced-motion` : un fondu de 200 ms. */
+.rail { position: absolute; top: 0; bottom: 0; z-index: 20; width: 340px; pointer-events: none; }
+.rail[data-cote="droite"] { right: var(--marge-page); --sortie: calc(100% + var(--marge-page)); }
+.rail[data-cote="gauche"] { left: var(--marge-page); --sortie: calc(-100% - var(--marge-page)); }
+.volet {
+  position: sticky;
+  top: calc(var(--nav-h) + 12px);
+  max-height: calc(100dvh - var(--nav-h) - 24px);
+  overflow-y: auto;
+  pointer-events: auto;
+  border-radius: 16px;
+  box-shadow: var(--shadow-raised);
+  transform: translateX(var(--sortie));
+  opacity: 0;
+  visibility: hidden;
+  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.2s linear, visibility 0s linear 0.35s;
+}
+.volet[data-ouvert="true"] {
+  transform: none;
+  opacity: 1;
+  visibility: visible;
+  transition-delay: 0s;
+}
+@media (prefers-reduced-motion: reduce) {
+  .volet, .volet[data-ouvert="true"] { transform: none; transition: opacity 0.2s linear, visibility 0s linear 0.2s; }
+  .volet[data-ouvert="true"] { transition-delay: 0s; }
+}

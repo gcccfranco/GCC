@@ -271,6 +271,15 @@
     --zh-accent: #b3261d;
     --zh-box-fill: #fbeae9; 
     --zh-box-border: #e5c4c2;
+
+    /* Pastilles du calendrier hors service (bo-evenements-7) ; les services gardent leur couleur. */
+    --cal-evenement-fond: #fff3d6;  --cal-evenement-texte: #1c1c1e;
+    --cal-tache-fond: #f2f2f4;      --cal-tache-texte: #1c1c1e;
+    --cal-reunion-fond: #f0ecf9;    --cal-reunion-texte: #6b4a8e;
+    --cal-petitdej-fond: #f8ece2;   --cal-petitdej-texte: #9a5a2c;
+    /* Point de la pastille d'état (bo-evenements-10). */
+    --etat-ouvert: #1f9d55;
+    --etat-attente: #d99a00;
   }
 
   .dark {
@@ -326,6 +335,13 @@
     --zh-accent: #f2b8b5;  
     --zh-box-fill: #2d1412; 
     --zh-box-border: #5c2e2b; 
+
+    --cal-evenement-fond: #43371a;  --cal-evenement-texte: #ffd66b;
+    --cal-tache-fond: #2c2c2e;      --cal-tache-texte: #f2f2f7;
+    --cal-reunion-fond: #30283a;    --cal-reunion-texte: #c9b3e6;
+    --cal-petitdej-fond: #423026;   --cal-petitdej-texte: #e8a878;
+    --etat-ouvert: #34c759;
+    --etat-attente: #d99a00;
     }
 }
 
