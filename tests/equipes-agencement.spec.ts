@@ -50,6 +50,8 @@ async function ouvrir(page: Page, qui: FakeProfile, to: string, docs = DOCS) {
 }
 
 const estOrdinateur = estGrandEcran;
+/** Le déclencheur du menu « Aller à une équipe » (nommé par son texte). */
+const declencheurIndex = (page: Page) => page.getByRole("button", { name: "Aller à une équipe" });
 const menu = (page: Page, info: TestInfo) => estOrdinateur(info)
   ? page.getByTestId("barre-laterale").getByRole("navigation", { name: "Navigation principale" })
   : page.getByTestId("barre-du-bas");
@@ -66,7 +68,9 @@ for (const [langue, sousTitre] of [
     await expect(enTete(page)).not.toContainText(/pôles|部门/);
     await expect(page.getByText(/Donne le pôle|归入.*部门/)).toHaveCount(0);
     const bandeau = page.getByTestId("bandeau-equipes");
-    await verifierAgencement(page, { premierBloc: bandeau, contenu: bandeau, onglets: { rail: 1, pilules: 2 } });
+    await verifierAgencement(page, { premierBloc: bandeau, contenu: bandeau, onglets: { rail: 3, pilules: 0 } });
+    // Lot CD, T3c : plus aucun <select> natif visible hors formulaire (l'index est un Menu).
+    await expect(page.locator("select:visible"), "aucun select visible").toHaveCount(0);
     // Rien ne déborde d'une carte (le bandeau défile en lui-même, pas la page : verifierAgencement).
     for (const carte of await page.getByTestId(/^equipe-/).all()) {
       expect(await carte.evaluate((el) => el.scrollWidth - el.clientWidth), "le contenu de la carte tient dedans").toBeLessThanOrEqual(1);
@@ -92,7 +96,7 @@ test("organigramme : aucun nom d'équipe ni de sous-groupe coupé, les flèches 
   for (const titre of await bandeau.locator("h2, p.uppercase").all()) {
     expect(await titre.evaluate((el) => el.scrollWidth - el.clientWidth), `« ${await titre.textContent()} » entier`).toBeLessThanOrEqual(1);
   }
-  // Les flèches ne flottent plus sur les colonnes : dans la rangée de l'index, au-dessus du bandeau, hors flux absolu.
+  // Les flèches ne flottent plus sur les colonnes : dans la ligne du menu, au-dessus du bandeau, hors flux absolu.
   const suivantes = page.getByRole("button", { name: "Équipes suivantes" });
   if (!estTelephone(info) && (await suivantes.count())) {
     await expect(suivantes).toBeVisible();
@@ -100,12 +104,13 @@ test("organigramme : aucun nom d'équipe ni de sous-groupe coupé, les flèches 
     const f = (await suivantes.boundingBox())!;
     const b = (await bandeau.boundingBox())!;
     expect(f.y + f.height, "au-dessus des colonnes").toBeLessThanOrEqual(b.y + 1);
-    // back-office-5 : flèches de 36 px habillées comme les pilules (gris, ni ombre ni relief), alignées sur le bas de la dernière rangée.
+    // back-office-5 : flèches de 36 px habillées comme les pilules (gris, ni ombre ni relief), centrées sur le menu « Aller à une équipe ».
     expect(Math.round(f.width), "flèche de 36 px").toBe(36);
     expect(Math.round(f.height), "flèche de 36 px").toBe(36);
     expect(await suivantes.evaluate((el) => getComputedStyle(el).boxShadow), "ni ombre ni relief").toBe("none");
-    const bas = Math.max(...(await Promise.all((await page.locator("[data-pilule]").all()).map(async (p) => { const r = (await p.boundingBox())!; return r.y + r.height; }))));
-    expect(Math.abs(f.y + f.height - bas), "bas des flèches = bas de la dernière rangée de pilules").toBeLessThanOrEqual(1);
+    const m = (await declencheurIndex(page).boundingBox())!;
+    expect(Math.abs(f.y + f.height / 2 - (m.y + m.height / 2)), "flèches centrées sur le menu").toBeLessThanOrEqual(1);
+    expect(f.x, "flèches à droite du menu").toBeGreaterThanOrEqual(m.x + m.width - 1);
     const precedentes = page.getByRole("button", { name: "Équipes précédentes" });
     await suivantes.click();
     await expect(precedentes).toBeVisible();
@@ -115,16 +120,67 @@ test("organigramme : aucun nom d'équipe ni de sous-groupe coupé, les flèches 
       expect(g2.x - (g.x + g.width), "huit pixels entre les deux flèches").toBeGreaterThanOrEqual(7);
     }
   }
-  // Les puces de l'index (dernières comprises : EDD, TEAM LOUANGE) restent dans la marge de la zone, à la ligne s'il le faut.
+  // Le menu de l'index reste dans la marge de la zone.
   if (!estTelephone(info)) {
     const zone = await zoneDeContenu(page);
     const marge = await margeAttendue(page);
-    for (const puce of await page.locator("[data-pilule]").all()) {
-      const p = (await puce.boundingBox())!;
-      expect(p.x, "puce à la marge gauche").toBeGreaterThanOrEqual(zone.gauche + marge - 1);
-      expect(p.x + p.width, `puce « ${await puce.textContent()} » avant la marge droite`).toBeLessThanOrEqual(zone.droite - marge + 1);
-    }
+    const p = (await declencheurIndex(page).boundingBox())!;
+    expect(p.x, "menu à la marge gauche").toBeGreaterThanOrEqual(zone.gauche + marge - 1);
+    expect(p.x + p.width, "menu avant la marge droite").toBeLessThanOrEqual(zone.droite - marge + 1);
   }
+});
+
+// Lot CD, T3c (bo-equipes-5, arbitrage 17) : l'index des 13 équipes est un Menu « Aller à une équipe » (plus de pastilles) ;
+// le choisir amène la colonne de l'équipe, la coche marque l'équipe en vue, le déclencheur ne passe jamais en encre.
+test("index des équipes : un menu « Aller à une équipe », 13 lignes, choisir amène la colonne", async ({ page }, info) => {
+  await ouvrir(page, ADMIN, "/back-office/equipes", { ...DOCS, ...GROS });
+  const bandeau = page.getByTestId("bandeau-equipes");
+  await expect(bandeau).toHaveAttribute("data-range", "1");
+  await expect(page.locator("[data-pilule]"), "plus de pastilles d'index").toHaveCount(0);
+  const declencheur = declencheurIndex(page);
+  await expect(declencheur).toHaveText("Aller à une équipe");
+  await expect(declencheur).not.toHaveAttribute("data-pose", /.*/);
+  await declencheur.click();
+  const lignes = page.getByRole("menuitemradio");
+  await expect(lignes).toHaveCount(13);
+  await expect(lignes.first(), "l'équipe en vue est cochée").toHaveAttribute("aria-checked", "true");
+  await page.getByRole("menuitemradio", { name: "Louange", exact: true }).click();
+  await expect(declencheur, "toujours le même texte, jamais en encre").toHaveText("Aller à une équipe");
+  await expect(declencheur).not.toHaveAttribute("data-pose", /.*/);
+  const carte = page.getByTestId("equipe-louange");
+  if (estTelephone(info)) {
+    await expect.poll(async () => (await carte.boundingBox())!.y, { timeout: 5_000 }).toBeLessThan(260);
+  } else {
+    await expect.poll(async () => {
+      const c = (await carte.boundingBox())!;
+      const b = (await bandeau.boundingBox())!;
+      return c.x >= b.x - 1 && c.x + c.width <= b.x + b.width + 1;
+    }, { timeout: 5_000 }).toBe(true);
+  }
+});
+
+// Lot CD, T3c (back-office-7, arbitrage 3) : « Équipes · Musiciens » est un rail (role=tab), de 44 px de zone de toucher ;
+// tablette portrait : sur la ligne du sélecteur des groupes ; téléphone : à la ligne dessous.
+test("« Équipes · Musiciens » : un rail, sur la ligne du sélecteur sauf au téléphone", async ({ page }, info) => {
+  await ouvrir(page, ADMIN, "/back-office/equipes");
+  await expect(page.getByTestId("equipe-da")).toBeVisible();
+  const vue = page.getByRole("tablist", { name: "Vue" });
+  const onglets = vue.getByRole("tab");
+  await expect(onglets).toHaveText(["Équipes", "Musiciens"]);
+  await expect(onglets.first()).toHaveAttribute("aria-selected", "true");
+  const sel = (await page.getByRole("tablist", { name: "Organigrammes" }).boundingBox())!;
+  const v = (await vue.boundingBox())!;
+  if (estTelephone(info)) expect(v.y, "la vue passe à la ligne").toBeGreaterThan(sel.y + sel.height - 1);
+  else expect(Math.abs(v.y - sel.y), "même ligne que le sélecteur").toBeLessThanOrEqual(1);
+  const b = (await onglets.first().boundingBox())!;
+  // La zone de 44 px n'existe qu'au toucher (TOUCHER_RANGEE) ; au pointeur fin, `::after` n'a pas de hauteur.
+  const zone = await onglets.first().evaluate((el) => parseFloat(getComputedStyle(el, "::after").height) || 0);
+  const toucher = await page.evaluate(() => matchMedia("(pointer: coarse)").matches);
+  if (toucher)
+    expect(Math.max(b.height, zone), "cible d'au moins 44 px").toBeGreaterThanOrEqual(43.5);
+  await onglets.nth(1).click();
+  await expect(onglets.nth(1)).toHaveAttribute("aria-selected", "true");
+  await expect(page.getByTestId("bandeau-equipes")).toHaveCount(0);
 });
 
 // back-office-4 : à chaque arrêt du bandeau (› au pointeur fin, glissement au toucher), une colonne large (Louange, EDD) est
@@ -258,15 +314,15 @@ test("toucher : le crayon de la carte d'équipe a une zone de 44 px (::after), u
   await expect(page.getByRole("dialog", { name: "DA", exact: true })).toBeVisible();
 });
 
-// BO-G, 16 : cibles de toucher de 44 px sans changer le dessin (::after) : rail Organigramme | Personnes, puces de l'index et des groupes.
-test("tablettes : le rail Organigramme | Personnes et les puces ont une cible de 44 px", async ({ page }, info) => {
+// BO-G, 16 : cibles de toucher de 44 px sans changer le dessin (::after) : rail Organigramme | Personnes, onglets des groupes et des vues, menu de l'index.
+test("tablettes : le rail Organigramme | Personnes, les onglets et le menu ont une cible de 44 px", async ({ page }, info) => {
   test.skip(!info.project.name.startsWith("tablette"), "la cible de 44 px est celle du doigt : tablettes (portrait et paysage)");
   await ouvrir(page, ADMIN, "/back-office/equipes");
   await expect(page.getByTestId("equipe-da")).toBeVisible();
   const cibles = [
     ...(await page.locator('[data-onglets="rail"]').first().getByRole("link").all()),
-    ...(await page.locator('[data-onglets="pilules"]').first().getByRole("button").all()),
-    ...(await page.locator("[data-pilule]").all()),
+    ...(await page.locator('[data-onglets="rail"]').getByRole("tab").all()),
+    ...(await page.locator("[data-menu]").all()),
   ];
   expect(cibles.length).toBeGreaterThan(6);
   for (const cible of cibles) {

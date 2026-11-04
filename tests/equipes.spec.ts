@@ -250,7 +250,7 @@ test("matrice : tableau sur grand écran, cartes sur téléphone, sans défileme
       ], updatedAt: "2026-10-01T10:00:00Z", parUid: "", parNom: "" }, },
     "/equipes",
   );
-  await page.getByRole("button", { name: "Musiciens" }).click();
+  await page.getByRole("tab", { name: "Musiciens" }).click();
   const telephone = info.project.name === "telephone";
   await expect(page.getByTestId(telephone ? "matrice-cartes" : "matrice-table")).toBeVisible();
   await expect(page.getByTestId(telephone ? "matrice-table" : "matrice-cartes")).toBeHidden();
@@ -286,7 +286,7 @@ test("onglet Musiciens : un président ou une choriste n'y figure pas (retours d
     },
     "/equipes",
   );
-  await page.getByRole("button", { name: "Musiciens" }).click();
+  await page.getByRole("tab", { name: "Musiciens" }).click();
   const vue = page.getByTestId(info.project.name === "telephone" ? "matrice-cartes" : "matrice-table");
   await expect(vue).toContainText("Ruth K.");
   await expect(vue).toContainText("Piano");

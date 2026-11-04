@@ -12,7 +12,7 @@ import { listProfiles, saveProfile } from "@/lib/firebase/users";
 import { listGroupes } from "@/lib/firebase/groupes";
 import { groupeDe } from "@/lib/groupes/organigramme";
 import { FILTRE_SANS_GROUPE, correspondAuFiltreGroupe, filtresPersonnes, libellePoste, postesDeCompte } from "@/lib/groupes/personnes";
-import { groupeDef } from "@/lib/groupes/table";
+import { groupeDef, groupeDeLaCategorie } from "@/lib/groupes/table";
 import type { OrganigrammeGroupe } from "@/types/groupe";
 import { isAdminUser } from "@/lib/access";
 import {
@@ -34,7 +34,8 @@ import { BACK_OFFICE } from "@/lib/backOffice";
 import { Button } from "@/components/ui/button";
 import { ChampRecherche } from "@/components/layout/ChampRecherche";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Pilules } from "@/components/layout/Onglets";
+import { OngletsRail, Pilules } from "@/components/layout/Onglets";
+import { Menu, type GroupeMenu } from "@/components/ui/menu";
 import { Pill } from "./commun";
 import { libelleAudience, libelleRole, libelleService } from "./libelles";
 import { EtatVide } from "@/components/layout/EtatVide"
@@ -137,10 +138,25 @@ export function useFiltresPersonnes(profiles: UserProfile[]) {
   return { query, setQuery, filter, setFilter, sort, setSort, displayed };
 }
 
-/** Recherche, filtres en pilules (R4), tri Récents · A–Z. */
+// Lot CD, T3c (bo-equipes-10) : les filtres se rangent en deux menus (service, groupe) et une pilule-bascule
+// (« Sans équipe »). Un seul `filter` : en choisir un dans un menu remet l'autre à « Tous ».
+const FILTRES_SANS_EQUIPE = "Ne sert pas";
+const estGroupe = (x: string) => x !== FILTRE_SANS_GROUPE && groupeDeLaCategorie(x) !== undefined;
+const FILTRES_SERVICE = FILTERS.filter((x) => x !== "Tous" && x !== FILTRES_SANS_EQUIPE && x !== FILTRE_SANS_GROUPE && !estGroupe(x));
+const FILTRES_GROUPE = FILTERS.filter(estGroupe);
+const AVEC_SANS_GROUPE = FILTERS.includes(FILTRE_SANS_GROUPE);
+
+/** Recherche, filtres (menus Service et Groupe, pastille Sans équipe), tri Récents · A–Z (rail). */
 export function FiltresPersonnes({ f }: { f: ReturnType<typeof useFiltresPersonnes> }) {
   const { t, i18n } = useTranslation();
   const zh = i18n.language === "zh-CN";
+  const duService = FILTRES_SERVICE.includes(f.filter);
+  const duGroupe = FILTRES_GROUPE.includes(f.filter) || f.filter === FILTRE_SANS_GROUPE;
+  // Retoucher « Tous » dans un menu dont le filtre n'est pas posé ne retire pas celui de l'autre.
+  const choisirDans = (propre: boolean) => (v: string) => { if (v !== "Tous" || propre) f.setFilter(v); };
+  const sansGroupe: GroupeMenu[] = AVEC_SANS_GROUPE
+    ? [{ groupe: "", options: [{ valeur: FILTRE_SANS_GROUPE, libelle: t("groupes.personnes.sansGroupe") }] }]
+    : [];
   return (
     <div className="space-y-2">
       <ChampRecherche
@@ -150,33 +166,52 @@ export function FiltresPersonnes({ f }: { f: ReturnType<typeof useFiltresPersonn
         label={t("admin.membre.rechercher")}
         surGris
       />
-      <Pilules
-        etiquette={t("admin.membre.filtrer")}
-        options={FILTERS.map((x) => ({
-          cle: x,
-          nom: x === FILTRE_SANS_GROUPE ? t("groupes.personnes.sansGroupe") : BACK_OFFICE && x === "Ne sert pas" ? t("equipes.organigramme.personnes.sansEquipe") : x === "Tous" ? t("admin.membre.tous") : x === "EDD" ? t("notifier.groupe.EDD") : x === "Ne sert pas" ? t("admin.membre.neSertPas") : libelleService(t, zh, x),
-          couleur: x === "EDD" ? "#3b6d11" : x !== "Tous" && x !== "Ne sert pas" && x !== FILTRE_SANS_GROUPE ? categoryColor(x) : undefined,
-        }))}
-        valeur={f.filter}
-        choisir={(v) => f.setFilter(v ?? "Tous")}
-        obligatoire
-      />
-      <div className="flex items-center gap-1.5 text-[11px]">
-        <span className="font-semibold text-muted-foreground">{t("admin.membre.trier")}</span>
-        {(["recent", "name"] as const).map((x) => (
-          <button
-            key={x}
-            onClick={() => f.setSort(x)}
-            aria-pressed={f.sort === x}
-            className={`px-2.5 py-1 rounded-full font-semibold border transition-colors ${
-              f.sort === x
-                ? "bg-foreground text-background border-transparent"
-                : "bg-background border-border text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            {x === "recent" ? t("admin.membre.recents") : t("admin.membre.az")}
-          </button>
-        ))}
+      <div className="flex flex-wrap items-center gap-1.5">
+        <Menu
+          label={t("stats.service")}
+          // Sans filtre posé, le déclencheur dit « Service ⌄ » (planche bo-equipes-10 : les trois filtres sur une ligne de 400 px).
+          texteDeclencheur={duService ? undefined : t("stats.service")}
+          value={duService ? f.filter : "Tous"}
+          defaultValue="Tous"
+          onChange={choisirDans(duService)}
+          surGris
+          options={[
+            { valeur: "Tous", libelle: t("stats.tousServices") },
+            ...FILTRES_SERVICE.map((x) => ({ valeur: x, libelle: x === "EDD" ? t("notifier.groupe.EDD") : libelleService(t, zh, x) })),
+          ]}
+        />
+        {FILTRES_GROUPE.length > 0 && (
+          <Menu
+            label={t("groupes.personnes.groupe")}
+            texteDeclencheur={duGroupe ? undefined : t("groupes.personnes.groupe")}
+            value={duGroupe ? f.filter : "Tous"}
+            defaultValue="Tous"
+            onChange={choisirDans(duGroupe)}
+            surGris
+            options={[
+              { valeur: "Tous", libelle: t("admin.membre.tousGroupes") },
+              ...FILTRES_GROUPE.map((x) => ({ valeur: x, libelle: libelleService(t, zh, x) })),
+              ...sansGroupe,
+            ]}
+          />
+        )}
+        <Pilules
+          etiquette={t("admin.membre.filtrer")}
+          options={[{ cle: FILTRES_SANS_EQUIPE, nom: BACK_OFFICE ? t("equipes.organigramme.personnes.sansEquipe") : t("admin.membre.neSertPas") }]}
+          valeur={f.filter === FILTRES_SANS_EQUIPE ? FILTRES_SANS_EQUIPE : null}
+          choisir={(v) => f.setFilter(v ?? "Tous")}
+        />
+      </div>
+      <div className="flex items-center justify-end gap-2">
+        {/* Le mot visible : sans lui, le rail se lit comme un choix de vue (critique-design, T3c). */}
+        <span aria-hidden className="text-[13px] font-semibold text-muted-foreground">{t("admin.membre.trier")}</span>
+        <OngletsRail
+          etiquette={t("admin.membre.trier").replace(/\s*[:：]$/, "")}
+          surGris
+          onglets={[{ id: "recent", label: t("admin.membre.recents") }, { id: "name", label: t("admin.membre.az") }]}
+          actif={f.sort}
+          choisir={(v) => f.setSort(v as "recent" | "name")}
+        />
       </div>
     </div>
   );

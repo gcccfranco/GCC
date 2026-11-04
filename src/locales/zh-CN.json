@@ -3346,6 +3346,7 @@
       "louange": "敬拜"
     },
     "index": "团队索引",
+    "allerA": "跳到团队",
     "precedentes": "上一组团队",
     "suivantes": "下一组团队",
     "soustitre": {
@@ -3959,6 +3960,7 @@
       "rechercherPlaceholder": "姓名、邮箱或排班名",
       "filtrer": "筛选成员",
       "tous": "全部",
+      "tousGroupes": "所有团契",
       "neSertPas": "不服事",
       "neSertPasPoint": "不服事。",
       "trier": "排序：",

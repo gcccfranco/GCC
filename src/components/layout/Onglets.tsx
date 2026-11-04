@@ -4,8 +4,8 @@
 // Une exception se discute, elle ne s'invente pas (planche `v18-bo-regles-communes`) :
 // - `OngletsRail`, le rail gris à pastille blanche : CHOISIR UNE VUE. Les sous-parties d'une entrée
 //   (Organigramme · Personnes, Réception · Notifier · Questionnaire, Calendrier · Pâques · Noël…) et
-//   les vues d'une page (À venir · Passés, T1 à T4, Paix · Fidélité · Bonté…). Sous le titre.
-// - `Pilules` : sous-onglets (Équipes · Musiciens), filtres (catégories, périodes, audiences…) et
+//   les vues d'une page (À venir · Passés, T1 à T4, Paix · Fidélité · Bonté, Équipes · Musiciens…). Sous le titre.
+// - `Pilules` : filtres (catégories, périodes, audiences, Tout · Mes équipes du Back-office…) et
 //   les plannings, l'actif à la couleur de son service.
 // Ont remplacé `EnTeteEntree`, `FilterButtons`, `SectionTabs` en grand (il reste la barre collante des
 // plannings sur téléphone et tablette, R6) et les boutons de groupes (tranche Z).

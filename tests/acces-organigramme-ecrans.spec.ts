@@ -67,11 +67,12 @@ async function captureElement(el: Locator, nom: string) {
   if (dir) await el.screenshot({ path: `${dir}/${nom}-${test.info().project.name}.png` });
 }
 
-/** Amène la carte Louange dans le champ en touchant sa pastille dans l'index du bandeau. */
-async function amenerLouange(page: Page, nom = "Louange") {
+/** Amène la carte Louange dans le champ par le menu « Aller à une équipe » du bandeau (lot CD, T3c). */
+async function amenerLouange(page: Page, nom = "Louange", allerA = "Aller à une équipe") {
   // Une carte plus haute que le bandeau défile dans sa colonne : pour la voir entière, la fenêtre s'agrandit le temps de la capture.
   await page.setViewportSize({ width: page.viewportSize()!.width, height: 1800 });
-  await page.getByRole("button", { name: nom, exact: true }).first().click();
+  await page.getByRole("button", { name: allerA }).click();
+  await page.getByRole("menuitemradio", { name: nom, exact: true }).click();
   await page.waitForTimeout(900); // défilement doux du bandeau
 }
 
@@ -164,7 +165,7 @@ test("carte Louange en 中文 : intertitres, référents et lieux traduits", asy
   await expect(page.getByTestId("louange-choristes")).toContainText("和声");
   await expect(page.getByTestId("louange-sans")).toContainText("夏令营");
   await capture(page, "carte-louange-zh");
-  await amenerLouange(page, "敬拜组");
+  await amenerLouange(page, "敬拜组", "跳到团队");
   await captureElement(page.getByTestId("equipe-louange"), "element-carte-louange-zh");
 });
 
@@ -347,7 +348,9 @@ test("Personnes : les filtres par lieu viennent de l'organigramme", async ({ pag
     ...compte("u-vieux", "Victor", "Ancien", { serviceRoles: { Campus: ["musicien"] }, organigramme: false }),
   });
   if (!estGrandEcran(info)) await expect(page.getByText("Voss").first()).toBeVisible();
-  await page.getByRole("button", { name: "Campus", exact: true }).click();
+  // Lot CD, T3c (bo-equipes-10) : le lieu se choisit dans le menu « Service ».
+  await page.getByRole("button", { name: /^Service( :|$)/ }).first().click();
+  await page.getByRole("menuitemradio", { name: "Campus", exact: true }).click();
   await expect(page.getByText("Léna Voss").first()).toBeVisible();
   await expect(page.getByText("Victor Ancien")).toHaveCount(0);
   await expect(page.getByText("Adèle Fabre")).toHaveCount(0);
@@ -355,7 +358,7 @@ test("Personnes : les filtres par lieu viennent de l'organigramme", async ({ pag
 
 test("vue Musiciens : les Musiciens de l'organigramme, ce qu'ils jouent et où ils servent", async ({ page }) => {
   await ouvrir(page, ADMIN, "/back-office/equipes");
-  await enTete(page).getByRole("button", { name: "Musiciens", exact: true }).click();
+  await enTete(page).getByRole("tab", { name: "Musiciens", exact: true }).click();
   const matrice = page.locator('[data-testid^="matrice-"]:visible');
   await expect(matrice).toContainText("Noé Brandt");
   await expect(matrice).toContainText("Guitare");

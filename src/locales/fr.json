@@ -3390,6 +3390,7 @@
       "louange": "Louange"
     },
     "index": "Index des équipes",
+    "allerA": "Aller à une équipe",
     "precedentes": "Équipes précédentes",
     "suivantes": "Équipes suivantes",
     "soustitre": {
@@ -4008,6 +4009,7 @@
       "rechercherPlaceholder": "Nom, e-mail ou nom au planning",
       "filtrer": "Filtrer les membres",
       "tous": "Tous",
+      "tousGroupes": "Tous les groupes",
       "neSertPas": "Ne sert pas",
       "neSertPasPoint": "Ne sert pas.",
       "trier": "Trier :",

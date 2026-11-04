@@ -902,17 +902,17 @@ test.describe("OG-C · Back-Office › Équipes › Organigramme", () => {
     const db = await signInAs(page, qui, d, to);
     return { db, routes };
   }
-  const selecteur = (page: Page) => page.getByRole("group", { name: "Organigrammes", exact: true });
+  const selecteur = (page: Page) => page.getByRole("tablist", { name: "Organigrammes", exact: true });
   const carte = (page: Page, id: string) => page.locator(`[data-role="${id}"]`);
   const ecrituresGroupe = (db: { writes: { method: string; path: string; data: Record<string, unknown> }[] }, id: string) =>
     db.writes.filter((w) => w.path === `groupes/${id}` || (w.method === "POST" && w.path.startsWith("groupes")));
 
   test("admin : Église garde le bandeau et Équipes · Musiciens ; Paix montre En tête, le comité et les rôles", async ({ page }) => {
     await ouvrir(page, ADMIN, "/back-office/equipes");
-    await expect(selecteur(page).getByRole("button")).toHaveText(["Église", "Paix", "Fidélité", "Bonté", "Amour", "Joie"]);
+    await expect(selecteur(page).getByRole("tab")).toHaveText(["Église", "Paix", "Fidélité", "Bonté", "Amour", "Joie"]);
     await expect(page.getByTestId("equipe-orga")).toBeVisible();
-    await expect(page.getByRole("group", { name: "Vue" }).getByRole("button", { name: "Musiciens" })).toBeVisible();
-    await selecteur(page).getByRole("button", { name: "Paix" }).click();
+    await expect(page.getByRole("tablist", { name: "Vue" }).getByRole("tab", { name: "Musiciens" })).toBeVisible();
+    await selecteur(page).getByRole("tab", { name: "Paix" }).click();
     await expect(page).toHaveURL(/\/back-office\/equipes\/?\?groupe=paix$/);
     await expect(page.getByRole("region", { name: "En tête" })).toContainText("Ruth K.");
     await expect(page.getByRole("region", { name: "Le comité" }).first()).toContainText("Noé P.");
@@ -957,17 +957,17 @@ test.describe("OG-C · Back-Office › Équipes › Organigramme", () => {
   test("président sans droit Équipes : entrée Équipes, Paix ouvert et modifiable ; ni « Nommer » ni plafond ; Bonté et Église en lecture ; pas de rail", async ({ page }) => {
     await ouvrir(page, RUTH, "/back-office/equipes");
     // Sans `?groupe=`, la page s'ouvre sur le groupe qu'il tient.
-    await expect(selecteur(page).getByRole("button", { name: "Paix" })).toHaveAttribute("aria-pressed", "true");
+    await expect(selecteur(page).getByRole("tab", { name: "Paix" })).toHaveAttribute("aria-selected", "true");
     await expect(page.getByRole("button", { name: "Nouveau rôle" })).toBeVisible();
     await expect(carte(page, "r-mus").getByRole("button", { name: "Modifier le rôle Musiciens" })).toBeVisible();
     await expect(page.getByRole("button", { name: "Nommer", exact: true })).toHaveCount(0);
     await expect(page.getByRole("link", { name: "Personnes" })).toHaveCount(0);
-    await selecteur(page).getByRole("button", { name: "Bonté" }).click();
+    await selecteur(page).getByRole("tab", { name: "Bonté" }).click();
     await expect(carte(page, "b-acc")).toContainText("Marc A.");
     await expect(carte(page, "b-acc").getByRole("button", { name: /Modifier le rôle/ })).toHaveCount(0);
     await expect(carte(page, "b-acc").getByRole("button", { name: "Ajouter un titulaire" })).toHaveCount(0);
     await expect(page.getByRole("button", { name: "Nouveau rôle" })).toHaveCount(0);
-    await selecteur(page).getByRole("button", { name: "Église" }).click();
+    await selecteur(page).getByRole("tab", { name: "Église" }).click();
     await expect(page.getByTestId("equipe-orga")).toBeVisible();
     await expect(page.getByRole("button", { name: /^Modifier TEAM/ })).toHaveCount(0);
   });
@@ -1263,14 +1263,18 @@ test.describe("OG-D · navigateur (Personnes, Sans compte)", () => {
     // Sans groupe : Marc (clé de Bonté seule : déduit Bonté, donc avec groupe), Yann, Eva (deux clés) et l'admin : 3.
     await expect(page.locator("header[data-entete-page]")).toContainText("7 inscrits, dont 3 sans groupe");
     await expect(page.locator("header[data-entete-page]")).not.toContainText("5 groupes");
-    const filtres = page.getByRole("group", { name: "Filtrer les membres" });
-    await expect(filtres.getByRole("button", { name: "Groupe Amour" })).toBeVisible();
-    await expect(filtres.getByRole("button", { name: "Groupe Joie" })).toBeVisible();
-    await filtres.getByRole("button", { name: "Sans groupe" }).click();
+    // Lot CD, T3c : les groupes se choisissent dans le menu « Groupe » (Sans groupe en dernier, à part).
+    const groupe = page.getByRole("button", { name: /^Groupe( :|$)/ });
+    await groupe.click();
+    await expect(page.getByRole("menuitemradio", { name: "Groupe Amour" })).toBeVisible();
+    await expect(page.getByRole("menuitemradio", { name: "Groupe Joie" })).toBeVisible();
+    await expect(page.getByRole("menuitemradio").last()).toHaveText("Sans groupe");
+    await page.getByRole("menuitemradio", { name: "Sans groupe", exact: true }).click();
     const lignes = page.getByRole("button", { name: /Yann M\.|Eva D\./ });
     await expect(lignes).toHaveCount(2);
     await expect(page.getByRole("button", { name: /Joël F\./ })).toHaveCount(0);
-    await filtres.getByRole("button", { name: "Groupe Joie" }).click();
+    await groupe.click();
+    await page.getByRole("menuitemradio", { name: "Groupe Joie" }).click();
     await expect(page.getByRole("button", { name: /Ana T\./ })).toBeVisible();
     await expect(page.getByRole("button", { name: /Yann M\./ })).toHaveCount(0);
   });
@@ -1408,13 +1412,13 @@ test.describe("OG-E · App › Équipes", () => {
     await page.route(/docs\.google\.com\/spreadsheets/, (route) => route.fulfill({ status: 200, contentType: "text/csv", body: "" }));
     return signInAs(page, qui, docs(), to);
   }
-  const selecteur = (page: Page) => page.getByRole("group", { name: "Organigrammes", exact: true });
+  const selecteur = (page: Page) => page.getByRole("tablist", { name: "Organigrammes", exact: true });
   const carte = (page: Page, id: string) => page.locator(`[data-role="${id}"]`);
 
-  test("six pilules ; la page s'ouvre sur le groupe de la personne, « Toi », son nom marqué, une place libre, aucun outil de modification", async ({ page }, info) => {
+  test("six onglets ; la page s'ouvre sur le groupe de la personne, « Toi », son nom marqué, une place libre, aucun outil de modification", async ({ page }, info) => {
     await ouvrir(page, JOEL);
-    await expect(selecteur(page).getByRole("button")).toHaveText(["Église", "Paix", "Fidélité", "Bonté", "Amour", "Joie"]);
-    await expect(selecteur(page).getByRole("button", { name: "Paix" })).toHaveAttribute("aria-pressed", "true");
+    await expect(selecteur(page).getByRole("tab")).toHaveText(["Église", "Paix", "Fidélité", "Bonté", "Amour", "Joie"]);
+    await expect(selecteur(page).getByRole("tab", { name: "Paix" })).toHaveAttribute("aria-selected", "true");
     await expect(page.getByRole("heading", { level: 1 })).toHaveText("Équipes");
     await expect(page.locator("header[data-entete-page]")).toContainText("Organigrammes de l'église et des groupes");
     const moi = page.locator("[data-moi-bandeau]");
@@ -1440,8 +1444,8 @@ test.describe("OG-E · App › Équipes", () => {
   test("sans groupe : l'église, avec le sélecteur et Équipes · Musiciens ; choisir Bonté lit Bonté, sans bandeau « Toi »", async ({ page }) => {
     await ouvrir(page, YANN);
     await expect(page.getByTestId("bandeau-equipes")).toBeVisible();
-    await expect(selecteur(page).getByRole("button", { name: "Église" })).toHaveAttribute("aria-pressed", "true");
-    await selecteur(page).getByRole("button", { name: "Bonté" }).click();
+    await expect(selecteur(page).getByRole("tab", { name: "Église" })).toHaveAttribute("aria-selected", "true");
+    await selecteur(page).getByRole("tab", { name: "Bonté" }).click();
     await expect(page).toHaveURL(/\/equipes\/?\?groupe=bonte$/);
     await expect(carte(page, "b-acc")).toContainText("Marc A.");
     await expect(page.locator("[data-moi-bandeau]")).toHaveCount(0);
@@ -1474,7 +1478,7 @@ test.describe("OG-E · App › Équipes", () => {
 
   test("中文 : sélecteur, sous-titre et bandeau « Toi » traduits", async ({ page }) => {
     await ouvrir(page, JOEL, "/equipes", true);
-    await expect(page.getByRole("group", { name: "组织架构", exact: true })).toBeVisible();
+    await expect(page.getByRole("tablist", { name: "组织架构", exact: true })).toBeVisible();
     await expect(page.locator("header[data-entete-page]")).toContainText("教会及各团契的组织架构");
     await expect(page.locator("[data-moi-bandeau]")).toContainText("你");
     await expect(page.locator("[data-moi-bandeau]")).toContainText("我的服事");

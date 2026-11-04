@@ -1,7 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import { signInAs, ADMIN_EMAIL, type FakeProfile } from "./helpers/fakeSession";
 import {
-  enTete, estGrandEcran, fenetreDuSite, interdireDialoguesNatifs, ongletsRail, pilules,
+  enTete, estGrandEcran, fenetreDuSite, interdireDialoguesNatifs, ongletsRail,
   repondreDansLeSite, verifierAgencement,
 } from "./helpers/agencement";
 import type { MembreEquipe } from "../src/types/equipe";
@@ -71,11 +71,11 @@ test.describe("T5 : Équipes › Organigramme", () => {
     await expect(enTete(page)).not.toContainText("pôles");
     await expect(page.getByTestId("bandeau-equipes")).toBeVisible();
     const bandeau = page.getByTestId("bandeau-equipes");
-    // Deux rangées de pilules depuis le lot 2 (OG-C) : le sélecteur Église · Paix · … et Équipes · Musiciens.
-    await verifierAgencement(page, { premierBloc: bandeau, contenu: bandeau, onglets: { rail: 1, pilules: 2 } });
-    // Rail : Organigramme · Personnes ; sous-onglets Équipes · Musiciens en pilules.
+    // Trois rails depuis le lot CD, T3c : Organigramme · Personnes, le sélecteur Église · Paix · … et Équipes · Musiciens.
+    await verifierAgencement(page, { premierBloc: bandeau, contenu: bandeau, onglets: { rail: 3, pilules: 0 } });
+    // Rail : Organigramme · Personnes ; vues Équipes · Musiciens en rail aussi.
     await expect(ongletsRail(page).getByRole("link")).toHaveText(["Organigramme", "Personnes", "Responsabilités"]); // lot RS : la page Responsabilités (admins)
-    await expect(pilules(page).filter({ hasText: "Musiciens" }).getByRole("button")).toHaveText(["Équipes", "Musiciens"]);
+    await expect(page.getByRole("tablist", { name: "Vue" }).getByRole("tab")).toHaveText(["Équipes", "Musiciens"]);
     await expect(enTete(page).getByRole("button", { name: "Recalculer depuis l'organigramme" })).toBeVisible();
     await expect(page.getByRole("button", { name: /Nouvelle équipe/ }), "les treize équipes sont fixes").toHaveCount(0);
   });
@@ -111,7 +111,7 @@ test.describe("T5 : Équipes › Organigramme", () => {
     const equipier: FakeProfile = { uid: "u-equipier", email: "equipier@example.com", firstName: "Elsa", lastName: "N.", dansEquipes: ["da"], referentDe: ["da"] };
     await ouvrir(page, "/back-office/equipes", DOCS, equipier);
     await expect(page.getByTestId("equipe-da").getByRole("button", { name: "Modifier DA" })).toBeVisible();
-    await expect(ongletsRail(page)).toHaveCount(0);
+    await expect(page.locator('nav[data-onglets="rail"]')).toHaveCount(0);
     await expect(enTete(page).locator(":scope > div:empty"), "aucun bloc vide (la place du rail)").toHaveCount(0);
   });
 
@@ -177,8 +177,8 @@ test.describe("T5 : Équipes › Organigramme", () => {
         updatedAt: "2026-09-18T10:00:00Z", parUid: "", parNom: "",
       },
     });
-    await pilules(page).getByRole("button", { name: "Musiciens" }).click();
-    await expect(pilules(page).getByRole("button", { name: "Musiciens" })).toHaveAttribute("aria-pressed", "true");
+    await page.getByRole("tab", { name: "Musiciens" }).click();
+    await expect(page.getByRole("tab", { name: "Musiciens" })).toHaveAttribute("aria-selected", "true");
     await expect(page.getByTestId("bandeau-equipes")).toHaveCount(0);
     await expect(titre(page)).toHaveText("Équipes");
     await expect(page.getByText("Bérénice A.").filter({ visible: true }).first()).toBeVisible();
@@ -198,7 +198,7 @@ test.describe("T5 : Équipes › Personnes", () => {
     await expect(inscriptions.getByRole("switch")).toBeChecked();
     await expect(inscriptions, "aucun compte de la semaine").not.toContainText("nouveau compte");
     await expect(page.getByRole("button", { name: /Bérénice A\./ })).toBeVisible();
-    await verifierAgencement(page, { contenu: sousEnTete(page), onglets: { rail: 1, pilules: 1 } });
+    await verifierAgencement(page, { contenu: sousEnTete(page), onglets: { rail: 2, pilules: 1 } });
     await expect(ongletsRail(page).getByRole("link", { name: "Personnes" })).toHaveAttribute("aria-current", "page");
   });
 
@@ -258,7 +258,7 @@ test.describe("T5 : Équipes › Personnes", () => {
     const inscriptions = enTete(page).getByRole("region", { name: "Inscriptions" });
     await expect(inscriptions).toContainText("4 nouveaux comptes");
     await inscriptions.getByRole("button", { name: "Voir les 4" }).click();
-    await expect(page.getByRole("button", { name: "Récents" })).toHaveAttribute("aria-pressed", "true");
+    await expect(page.getByRole("tab", { name: "Récents" })).toHaveAttribute("aria-selected", "true");
     if (estGrandEcran(info)) {
       // La personne choisie : le plus récent des nouveaux comptes (ici le premier de la liste).
       await expect(page).toHaveURL(/[?&]uid=u-berenice/);
@@ -332,7 +332,7 @@ test.describe("T5 : Équipes › Personnes", () => {
     await expect(liste.getByRole("button", { name: /Bérénice A\./ })).toHaveCount(0);
     await expect(fiche.getByRole("heading", { level: 2 })).toHaveText("Bérénice A.");
     await expect(fiche.getByRole("button", { name: "Enregistrer" })).toBeVisible();
-    await liste.getByRole("button", { name: "A–Z" }).click();
+    await liste.getByRole("tab", { name: "A–Z" }).click();
     await expect(fiche.getByRole("heading", { level: 2 })).toHaveText("Bérénice A.");
     await expect(page).toHaveURL(/[?&]uid=u-berenice/);
   });
@@ -347,23 +347,35 @@ test.describe("T5 : Équipes › Personnes", () => {
     await expect(ligne).not.toContainText("inscrit le");
   });
 
-  test("en grand : les filtres se replient dans la colonne de la liste, sans défiler en largeur", async ({ page }, info) => {
+  test("en grand : les filtres tiennent sur une ligne dans la colonne de la liste (deux menus et une pastille), le tri dessous à droite", async ({ page }, info) => {
     test.skip(!estGrandEcran(info), "propre aux grands écrans");
-    // Relecture : dans la colonne de 400 px, la rangée de pilules défilait et coupait la dernière ;
-    // la planche les replie sur plusieurs lignes.
+    // Lot CD, T3c (bo-equipes-10) : plus de rangée de pilules à plier ; Service et Groupe sont des menus, « Sans équipe » une
+    // pastille-bascule, « Trier » un rail de deux segments sur sa propre ligne.
     await ouvrir(page, "/back-office/equipes/personnes");
     const liste = page.locator('[data-volet="liste"]');
-    const filtres = liste.getByRole("group", { name: "Filtrer les membres" });
-    await expect(filtres.getByRole("button", { name: "Sans équipe" })).toBeVisible();
-    const { defile, lignes } = await filtres.evaluate((e) => ({
-      defile: e.scrollWidth > e.clientWidth + 1,
-      lignes: new Set([...e.children].map((b) => Math.round(b.getBoundingClientRect().top))).size,
-    }));
-    expect(defile, "aucun défilement en largeur").toBe(false);
-    expect(lignes, "plusieurs lignes de pilules").toBeGreaterThan(1);
-    const boite = (await liste.boundingBox())!;
-    const derniere = (await filtres.getByRole("button", { name: "Sans équipe" }).boundingBox())!;
-    expect(derniere.x + derniere.width, "la dernière pilule entière dans la colonne").toBeLessThanOrEqual(boite.x + boite.width);
+    const service = liste.getByRole("button", { name: /^Service( :|$)/ });
+    const groupe = liste.getByRole("button", { name: /^Groupe( :|$)/ });
+    const sansEquipe = liste.getByRole("button", { name: "Sans équipe" });
+    await expect(sansEquipe).toBeVisible();
+    await expect(liste.locator("select:visible"), "aucun select").toHaveCount(0);
+    // Lues ensemble (la rangée « sans compte » arrive après et pousse les filtres : trois lectures séparées se croisaient).
+    const lire = async () => [(await service.boundingBox())!, (await groupe.boundingBox())!, (await sansEquipe.boundingBox())!];
+    await expect.poll(async () => new Set((await lire()).map((b) => Math.round(b.y))).size, { message: "une seule ligne" }).toBe(1);
+    const boites = await lire();
+    const colonne = (await liste.boundingBox())!;
+    for (const b of boites) expect(b.x + b.width, "entier dans la colonne").toBeLessThanOrEqual(colonne.x + colonne.width);
+    const tri = liste.getByRole("tablist", { name: "Trier", exact: true });
+    await expect(tri.getByRole("tab")).toHaveText(["Récents", "A–Z"]);
+    const t = (await tri.boundingBox())!;
+    expect(t.y, "le tri sur sa propre ligne").toBeGreaterThan(boites[0].y + boites[0].height - 1);
+    // Un seul filtre à la fois : choisir un groupe remet le service à « Tous ».
+    await service.click();
+    await page.getByRole("menuitemradio", { name: "Campus", exact: true }).click();
+    await expect(service).toHaveAttribute("aria-label", "Service : Campus");
+    await groupe.click();
+    await page.getByRole("menuitemradio", { name: "Groupe Paix" }).click();
+    await expect(service).toHaveAttribute("aria-label", "Service");
+    await expect(groupe).toHaveAttribute("aria-label", "Groupe : Groupe Paix");
   });
 });
 

@@ -57,7 +57,7 @@ test("groupe : agencement, colonnes de rôles, En tête et comité, sélecteur s
   await expect(page.locator("[data-role]").first()).toBeVisible();
   await verifierAgencement(page);
   expect(await colonnesDeRoles(page), "colonnes de rôles").toBe(COLONNES[projet()]);
-  const boutons = page.getByRole("group", { name: "Organigrammes", exact: true }).getByRole("button");
+  const boutons = page.getByRole("tablist", { name: "Organigrammes", exact: true }).getByRole("tab");
   await expect(boutons).toHaveCount(6);
   const ys = await boutons.evaluateAll((els) => els.map((e) => Math.round(e.getBoundingClientRect().y)));
   expect(new Set(ys).size, "le sélecteur sur une rangée").toBe(1);
@@ -69,11 +69,12 @@ test("groupe : agencement, colonnes de rôles, En tête et comité, sélecteur s
   await capture(page, "org-groupe");
 });
 
-test("Église : Équipes · Musiciens à droite du sélecteur en grand, dessous sinon", async ({ page }) => {
+test("Église : Équipes · Musiciens à droite du sélecteur sauf au téléphone, dessous alors", async ({ page }) => {
   await ouvrir(page, "/back-office/equipes");
-  const selecteur = (await page.getByRole("group", { name: "Organigrammes", exact: true }).boundingBox())!;
-  const vue = (await page.getByRole("group", { name: "Vue" }).boundingBox())!;
-  if ((page.viewportSize()?.width ?? 0) >= 1024) {
+  const selecteur = (await page.getByRole("tablist", { name: "Organigrammes", exact: true }).boundingBox())!;
+  const vue = (await page.getByRole("tablist", { name: "Vue" }).boundingBox())!;
+  // Lot CD, T3c (back-office-7) : un seul seuil, le téléphone ; la tablette portrait a les deux rails sur une ligne.
+  if (projet() !== "telephone") {
     expect(Math.abs(vue.y - selecteur.y), "même rangée").toBeLessThan(4);
     expect(vue.x, "à droite").toBeGreaterThan(selecteur.x + 200);
   } else {
@@ -114,7 +115,7 @@ test("fiche du rôle : panneau de 420 px en grand, feuille sinon ; formulaire et
 
 test("中文 : le groupe se lit sans débordement, sélecteur et libellés traduits", async ({ page }) => {
   await ouvrir(page, "/back-office/equipes?groupe=paix", true);
-  await expect(page.getByRole("group", { name: "组织架构", exact: true }).getByRole("button", { name: "恩慈" })).toBeVisible();
+  await expect(page.getByRole("tablist", { name: "组织架构", exact: true }).getByRole("tab", { name: "恩慈" })).toBeVisible();
   await expect(page.getByRole("region", { name: "带领", exact: true })).toBeVisible();
   // Le plafond, la case et la pastille « Saisir les chants des fêtes », sans « 主席 » en double.
   await expect(page.locator('[data-role="r8"]')).toContainText("填写节日诗歌");
@@ -322,7 +323,7 @@ test("App › Équipes : un groupe en lecture, colonnes de rôles, sélecteur su
   await expect(page.locator("[data-moi-bandeau]")).toBeVisible();
   await verifierAgencement(page);
   expect(await colonnesDeRoles(page), "colonnes de rôles").toBe(COLONNES[projet()]);
-  const boutons = page.getByRole("group", { name: "Organigrammes", exact: true }).getByRole("button");
+  const boutons = page.getByRole("tablist", { name: "Organigrammes", exact: true }).getByRole("tab");
   const ys = await boutons.evaluateAll((els) => els.map((e) => Math.round(e.getBoundingClientRect().y)));
   expect(new Set(ys).size, "le sélecteur tient sur une rangée").toBe(1);
   await verifierSansDebordement(page);
@@ -332,11 +333,11 @@ test("App › Équipes : un groupe en lecture, colonnes de rôles, sélecteur su
 test("App › Équipes : l'église garde son bandeau, le sélecteur à gauche et Équipes · Musiciens à droite en grand", async ({ page }) => {
   await signInAs(page, { ...ADMIN, uid: "yann", email: "yann@example.com" }, { "users/yann": { email: "yann@example.com", firstName: "Yann", lastName: "M.", planningName: "Yann M.", serviceRoles: {} } }, "/equipes");
   await expect(page.getByTestId("bandeau-equipes")).toBeVisible();
-  const selecteur = page.getByRole("group", { name: "Organigrammes", exact: true });
-  const vues = page.getByRole("group", { name: "Vue" });
+  const selecteur = page.getByRole("tablist", { name: "Organigrammes", exact: true });
+  const vues = page.getByRole("tablist", { name: "Vue" });
   const a = (await selecteur.boundingBox())!;
   const b = (await vues.boundingBox())!;
-  if (grand()) {
+  if (projet() !== "telephone") {
     expect(b.x, "Équipes · Musiciens à droite du sélecteur").toBeGreaterThan(a.x + a.width - 1);
     expect(Math.abs(a.y - b.y), "sur la même rangée").toBeLessThan(24);
   } else expect(b.y, "dessous").toBeGreaterThan(a.y);

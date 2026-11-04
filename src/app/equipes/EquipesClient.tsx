@@ -15,7 +15,7 @@ import Link from "next/link";
 import { useTranslation } from "react-i18next";
 import { Pencil, X } from "lucide-react";
 import { EnTetePage } from "@/components/layout/EnTetePage";
-import { Pilules } from "@/components/layout/Onglets";
+import { OngletsRail } from "@/components/layout/Onglets";
 import { useDisposition } from "@/hooks/useDisposition";
 import { BandeauEquipes } from "@/components/equipes/BandeauEquipes";
 import { Drawer, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
@@ -61,7 +61,7 @@ export function EquipesClient({
    *  à droite (en dessous sur téléphone et tablette debout). */
   selecteur?: ReactNode;
   /** Au Back-Office : l'en-tête commun (titre, sous-titre, outils, rail) ; `sousEnTete` se pose
-   *  sous les pilules Équipes · Musiciens (le résultat de « Recalculer »). */
+   *  sous le rail Équipes · Musiciens (le résultat de « Recalculer »). */
   enTete?: Omit<ComponentProps<typeof EnTetePage>, "apres"> & { sousEnTete?: ReactNode };
 }) {
   const { t } = useTranslation();
@@ -109,17 +109,16 @@ export function EquipesClient({
     />
   );
 
-  // Équipes · Musiciens : un sous-onglet, en pilules (agencement v18, R4), App et Back-Office.
+  // Équipes · Musiciens : une vue de la page, en rail (arbitrage 3 du lot CD), App et Back-Office.
   const vues = (
-    <Pilules
+    <OngletsRail
       etiquette={t("equipes.vue")}
-      options={[
-        { cle: "equipes" as const, nom: onglets[0] },
-        { cle: "musiciens" as const, nom: onglets[1] },
+      onglets={[
+        { id: "equipes", label: onglets[0] },
+        { id: "musiciens", label: onglets[1] },
       ]}
-      valeur={onglet}
-      choisir={(v) => v && setOnglet(v)}
-      obligatoire
+      actif={onglet}
+      choisir={(v) => setOnglet(v as typeof onglet)}
     />
   );
 
@@ -135,8 +134,8 @@ export function EquipesClient({
   );
 
   if (gestion) {
-    // Back-Office (agencement v18, B8) : l'en-tête commun, Équipes · Musiciens en pilules
-    // (un sous-onglet, R4) ; le bandeau sous l'en-tête, ou la matrice des musiciens.
+    // Back-Office (agencement v18, B8) : l'en-tête commun, Équipes · Musiciens en rail
+    // (une vue de la page) ; le bandeau sous l'en-tête, ou la matrice des musiciens.
     const defEditee = EQUIPES.find((d) => d.id === editee) ?? null;
     const entete = (
       <EnTetePage
@@ -145,7 +144,7 @@ export function EquipesClient({
         apres={
           <>
             {selecteur ? (
-              <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
+              <div className="flex flex-wrap items-center justify-between gap-2">
                 <div className="min-w-0">{selecteur}</div>
                 <div className="shrink-0">{vues}</div>
               </div>
@@ -186,7 +185,7 @@ export function EquipesClient({
     );
   }
 
-  // App (agencement v18, tranche Z) : l'en-tête commun, Équipes · Musiciens dessous.
+  // App (agencement v18, tranche Z) : l'en-tête commun, Équipes · Musiciens (rail) dessous.
   // Lot 2 (OG-E) : le sélecteur Église · Paix · … à gauche, Équipes · Musiciens à droite, et le sous-titre des organigrammes.
   const enTeteApp = (
     <EnTetePage
@@ -194,7 +193,7 @@ export function EquipesClient({
       titre={t("equipes.title")}
       sousTitre={selecteur ? t("groupes.app.sousTitre") : t("equipes.sousTitre")}
       apres={selecteur ? (
-        <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="min-w-0">{selecteur}</div>
           <div className="shrink-0">{vues}</div>
         </div>
@@ -355,7 +354,7 @@ function CarteEquipe({
               onClick={onModifier}
               aria-label={t("equipes.modifierEquipe", { nom })}
               title={t("equipes.modifier")}
-              className={`-mr-1 -mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-background text-foreground shadow-[inset_0_0_0_1px_hsl(var(--border))] transition-colors hover:bg-secondary ${TOUCHER_44}`}
+              className={`-mr-1 -mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-pose text-foreground shadow-[inset_0_0_0_1px_hsl(var(--border))] transition-colors hover:bg-secondary ${TOUCHER_44}`}
             >
               <Pencil className="h-3.5 w-3.5" aria-hidden />
             </button>

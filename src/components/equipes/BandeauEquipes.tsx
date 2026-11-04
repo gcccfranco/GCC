@@ -4,8 +4,8 @@
 // L'écran garde sa hauteur : les équipes se rangent en colonnes (`rangerEnColonnes`, nourrie des
 // hauteurs mesurées des cartes) et seul le bandeau défile de gauche à droite. La colonne suivante
 // dépasse du bord, sous un fondu ; flèches ‹ › avec un pointeur fin ; accroche aux colonnes sur
-// écran tactile. Au-dessus, l'index : une pilule par équipe, toucher une pilule amène sa colonne,
-// la pilule de la première colonne visible s'allume.
+// écran tactile. Au-dessus, l'index : un Menu « Aller à une équipe » (une ligne par équipe), choisir
+// une équipe amène sa colonne ; la coche marque la première colonne visible.
 // Agencement v18 (B8, tranche Z) : App et Back-Office le posent à la marge de la zone
 // (`--marge-page`), sous l'en-tête commun.
 
@@ -13,6 +13,7 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNo
 import { useTranslation } from "react-i18next";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { rangerEnColonnes, type Colonne } from "@/lib/equipes/rangerEnColonnes";
+import { Menu } from "@/components/ui/menu";
 import { TOUCHER_44 } from "@/lib/toucher44";
 
 interface CarteDuBandeau {
@@ -47,8 +48,9 @@ export function BandeauEquipes({ cartes }: { cartes: CarteDuBandeau[] }) {
   const { t } = useTranslation();
   const bandeau = useRef<HTMLDivElement>(null);
   const rangee = useRef<HTMLDivElement>(null);
-  const index = useRef<HTMLDivElement>(null);
   const elements = useRef(new Map<string, HTMLElement>());
+  const apresMenu = useRef<number | undefined>(undefined);
+  useEffect(() => () => clearTimeout(apresMenu.current), []);
   const observateur = useRef<ResizeObserver | null>(null);
   const [mesures, setMesures] = useState<Mesures | null>(null);
   const [vue, setVue] = useState<Vue>({ premiere: 0, debut: true, bout: false });
@@ -198,16 +200,6 @@ export function BandeauEquipes({ cartes }: { cartes: CarteDuBandeau[] }) {
     ? choisie
     : ids[premiere?.cartes[0] ?? 0];
 
-  // La pilule allumée reste dans la rangée de l'index.
-  useEffect(() => {
-    const rang = index.current;
-    const pilule = rang?.querySelector<HTMLElement>(`[data-pilule="${actif}"]`);
-    if (!rang || !pilule) return;
-    if (pilule.offsetLeft < rang.scrollLeft || pilule.offsetLeft + pilule.offsetWidth > rang.scrollLeft + rang.clientWidth) {
-      rang.scrollTo({ left: Math.max(0, pilule.offsetLeft - 16), behavior: comportement() });
-    }
-  }, [actif]);
-
   const allerA = (k: number) => {
     const col = colonnesDOM()[k];
     if (col && surTelephone()) col.scrollIntoView({ behavior: comportement(), block: "start" });
@@ -241,38 +233,31 @@ export function BandeauEquipes({ cartes }: { cartes: CarteDuBandeau[] }) {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-3">
-      {/* BO-G, 6 : dès 640 px l'index passe à la ligne (aucune pilule au-delà de la marge) et les flèches ‹ › vivent
-          au bout de sa rangée, plus flottantes sur les colonnes ; sur téléphone il défile, comme avant. */}
-      <nav aria-label={t("equipes.index")} className="flex items-end gap-2 sm:px-[var(--marge-page)]">
-        <div
-          ref={index}
-          className="relative flex min-w-0 flex-1 gap-1.5 overflow-x-auto px-[var(--marge-page)] py-1 [scrollbar-width:none] sm:flex-wrap sm:gap-y-3.5 sm:overflow-x-visible sm:px-0 [&::-webkit-scrollbar]:hidden"
-        >
-          {cartes.map(({ id }) => (
-            <button
-              key={id}
-              type="button"
-              data-pilule={id}
-              aria-current={actif === id ? "true" : undefined}
-              onClick={() => amener(id)}
-              className={`relative shrink-0 whitespace-nowrap rounded-full px-3 py-1.5 text-sm font-semibold after:absolute after:-inset-y-[7px] after:inset-x-0 after:content-[''] transition-[background-color,color,transform] duration-150 active:scale-[.96] ${
-                actif === id ? "bg-foreground text-background" : "bg-secondary text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              {t(`equipes.court.${id}`)}
-            </button>
-          ))}
-        </div>
-        {/* back-office-5 : flèches de 36 px habillées comme les pilules, calées sur le bas de la dernière rangée (pb-1 = py-1
-            de l'index). Elles n'existent qu'au pointeur fin ; TOUCHER_44 ne joue que sur
+      {/* Lot CD, T3c (bo-equipes-5, arbitrage 17) : l'index des équipes est un Menu « Aller à une équipe » (la coche marque
+          l'équipe en vue), les flèches ‹ › à sa droite sur la même ligne. */}
+      <nav aria-label={t("equipes.index")} className="flex items-center gap-2 px-[var(--marge-page)]">
+        <Menu
+          label={t("equipes.index")}
+          texteDeclencheur={t("equipes.allerA")}
+          surGris
+          value={actif}
+          defaultValue=""
+          options={cartes.map(({ id }) => ({ valeur: id, libelle: t(`equipes.court.${id}`) }))}
+          // Après la fermeture du menu : tant qu'il est ouvert (puis rend le focus), Radix verrouille le défilement de la page.
+          onChange={(id) => {
+            clearTimeout(apresMenu.current);
+            apresMenu.current = window.setTimeout(() => amener(id), 150);
+          }}
+        />
+        {/* back-office-5 : flèches de 36 px habillées comme les pilules, centrées sur la ligne du Menu. Elles n'existent qu'au pointeur fin ; TOUCHER_44 ne joue que sur
             un écran tactile qui annonce aussi un pointeur fin (portable tactile). */}
-        <div className="hidden shrink-0 gap-2 pb-1 [@media(pointer:fine)]:flex">
+        <div className="hidden shrink-0 gap-2 [@media(pointer:fine)]:flex">
           {!vue.debut && (
             <button
               type="button"
               aria-label={t("equipes.precedentes")}
               onClick={() => fleche(-1)}
-              className={`flex h-9 w-9 items-center justify-center rounded-full bg-secondary text-foreground ${TOUCHER_44}`}
+              className={`flex h-9 w-9 items-center justify-center rounded-full bg-secondary-fond text-foreground dark:bg-secondary ${TOUCHER_44}`}
             >
               <ChevronLeft className="h-5 w-5" />
             </button>
@@ -282,7 +267,7 @@ export function BandeauEquipes({ cartes }: { cartes: CarteDuBandeau[] }) {
               type="button"
               aria-label={t("equipes.suivantes")}
               onClick={() => fleche(1)}
-              className={`flex h-9 w-9 items-center justify-center rounded-full bg-secondary text-foreground ${TOUCHER_44}`}
+              className={`flex h-9 w-9 items-center justify-center rounded-full bg-secondary-fond text-foreground dark:bg-secondary ${TOUCHER_44}`}
             >
               <ChevronRight className="h-5 w-5" />
             </button>

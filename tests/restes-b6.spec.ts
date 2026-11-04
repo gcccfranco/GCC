@@ -51,7 +51,7 @@ test("matrice des Musiciens : région défilante nommée (ordinateur et tablette
     ], updatedAt: "2026-10-01T10:00:00Z", parUid: "", parNom: "" } },
     "/equipes",
   );
-  await page.getByRole("button", { name: "Musiciens" }).click();
+  await page.getByRole("tab", { name: "Musiciens" }).click();
   const matrice = page.getByTestId("matrice-table");
   await expect(matrice).toBeVisible();
   await expect(matrice).toHaveAttribute("tabindex", "0");

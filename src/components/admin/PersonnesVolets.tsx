@@ -151,10 +151,8 @@ export function PersonnesVolets() {
       </>
     );
 
-  // Dans la colonne de 400 px, les filtres se replient sur plusieurs lignes (planche) au lieu de
-  // défiler en largeur comme la rangée de `Pilules` le fait ailleurs.
   const liste = (
-    <div className="p-3 space-y-3 [&_[data-onglets=pilules]]:mx-0 [&_[data-onglets=pilules]]:flex-wrap [&_[data-onglets=pilules]]:overflow-visible [&_[data-onglets=pilules]]:px-0">
+    <div className="p-3 space-y-3">
       <RangeeSansCompte n={sansCompte} />
       <FiltresPersonnes f={f} />
       {d.loadingProfiles ? (

@@ -23,7 +23,7 @@ import {
 //    320 px de haut au plus avec défilement. Clavier de Radix : ↓ ↑ Début Fin, Entrée ou Espace choisit, Échap ferme.
 
 export type OptionMenu<T extends string = string> = { valeur: T; libelle: string }
-/** Un groupe d'options sous un titre : remplace un `<optgroup>`. */
+/** Un groupe d'options sous un titre : remplace un `<optgroup>`. Sans titre (`groupe: ""`), un simple séparateur. */
 export type GroupeMenu<T extends string = string> = { groupe: string; options: OptionMenu<T>[] }
 export type EntreeMenu<T extends string = string> = OptionMenu<T> | GroupeMenu<T>
 
@@ -42,6 +42,7 @@ export function Menu<T extends string = string>({
   onChange,
   label,
   surGris = false,
+  texteDeclencheur,
   className,
   nom,
   prefixe,
@@ -55,6 +56,8 @@ export function Menu<T extends string = string>({
   label: string
   /** Posé directement sur le fond gris de la page (recette de surface C) : piste `--secondary-fond` en clair. */
   surGris?: boolean
+  /** Un menu d'aller-à (pas un filtre) : le déclencheur affiche ce texte (son nom accessible aussi) et reste gris ; `label` nomme alors la liste ; `value` ne sert qu'à la coche. */
+  texteDeclencheur?: string
   className?: string
   /** Le nom du critère (« Service ») : tant que rien n'est posé, le déclencheur l'affiche à la place du libellé de l'option neutre. */
   nom?: string
@@ -64,11 +67,11 @@ export function Menu<T extends string = string>({
   const plates = options.flatMap((e) => (estGroupe(e) ? e.options : [e]))
   // Valeur absente des options : le déclencheur retombe sur le libellé de `defaultValue`, gris.
   const courante = plates.find((o) => o.valeur === value) ?? plates.find((o) => o.valeur === defaultValue)
-  const posee = value !== defaultValue && courante?.valeur === value
+  const posee = !texteDeclencheur && value !== defaultValue && courante?.valeur === value
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
-        aria-label={courante ? `${label} : ${courante.libelle}` : label}
+        aria-label={texteDeclencheur ?? (courante ? `${label} : ${courante.libelle}` : label)}
         data-menu=""
         data-pose={posee ? "" : undefined}
         className={cn(
@@ -79,7 +82,7 @@ export function Menu<T extends string = string>({
         )}
       >
         {prefixe}
-        <span className="truncate">{!posee && nom ? nom : (courante?.libelle ?? "")}</span>
+        <span className="truncate">{texteDeclencheur ?? (!posee && nom ? nom : (courante?.libelle ?? ""))}</span>
         <ChevronDown className="h-3.5 w-3.5 shrink-0" aria-hidden />
       </DropdownMenuTrigger>
       <DropdownMenuContent
@@ -92,7 +95,7 @@ export function Menu<T extends string = string>({
             estGroupe(e) ? (
               <React.Fragment key={`g-${e.groupe}`}>
                 {i > 0 && <DropdownMenuSeparator className="mx-1" />}
-                <DropdownMenuLabel className="px-3 pb-1 pt-2 text-[12px] font-semibold text-muted-foreground">{e.groupe}</DropdownMenuLabel>
+                {e.groupe && <DropdownMenuLabel className="px-3 pb-1 pt-2 text-[12px] font-semibold text-muted-foreground">{e.groupe}</DropdownMenuLabel>}
                 {e.options.map((o) => <LigneMenu key={o.valeur} option={o} />)}
               </React.Fragment>
             ) : (

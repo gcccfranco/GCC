@@ -91,8 +91,20 @@ const COURTS: Record<string, string> = {
 };
 
 const bandeau = (page: Page) => page.getByTestId("bandeau-equipes");
-const index = (page: Page) => page.getByRole("navigation", { name: "Index des équipes" });
-const pilule = (page: Page, nomCourt: string) => index(page).getByRole("button", { name: nomCourt, exact: true });
+// Lot CD, T3c : l'index est un menu « Aller à une équipe » ; la coche marque l'équipe en vue.
+const declencheur = (page: Page, nom = "Aller à une équipe") => page.getByRole("button", { name: nom });
+const ligne = (page: Page, nomCourt: string) => page.getByRole("menuitemradio", { name: nomCourt, exact: true });
+async function choisirEquipe(page: Page, nomCourt: string) {
+  await declencheur(page).click();
+  await ligne(page, nomCourt).click();
+}
+/** Ouvre le menu, lit la coche de l'équipe, le referme. */
+async function verifierEnVue(page: Page, nomCourt: string, enVue: boolean) {
+  await declencheur(page).click();
+  await expect(ligne(page, nomCourt)).toHaveAttribute("aria-checked", enVue ? "true" : "false");
+  await page.keyboard.press("Escape");
+  await expect(ligne(page, nomCourt)).toHaveCount(0);
+}
 
 // ── Équipes ─────────────────────────────────────────────────────────────────────────────────
 
@@ -136,12 +148,12 @@ test.describe("Équipes en bandeau", () => {
     }
   });
 
-  test("toucher « Louange » dans l'index amène la carte Louange dans le bandeau et allume sa pilule", async ({ page }) => {
+  test("toucher « Louange » dans le menu d'index amène la carte Louange dans le bandeau et la coche", async ({ page }) => {
     await ouvrirEquipes(page);
-    await expect(pilule(page, "Orga")).toHaveAttribute("aria-current", "true");
-    await pilule(page, "Louange").click();
-    await expect(pilule(page, "Louange")).toHaveAttribute("aria-current", "true");
-    await expect(pilule(page, "Orga")).not.toHaveAttribute("aria-current", "true");
+    await verifierEnVue(page, "Orga", true);
+    await choisirEquipe(page, "Louange");
+    await verifierEnVue(page, "Louange", true);
+    await verifierEnVue(page, "Orga", false);
     await expect
       .poll(async () => {
         const b = (await bandeau(page).boundingBox())!;
@@ -152,10 +164,10 @@ test.describe("Équipes en bandeau", () => {
     await capture(page, "b6-equipes-louange");
   });
 
-  test("la pilule allumée suit le défilement du bandeau", async ({ page }, info) => {
+  test("l'équipe cochée du menu suit le défilement du bandeau", async ({ page }, info) => {
     test.skip(info.project.name === "telephone", "sous 640 px, le bandeau ne défile plus en largeur (B3)");
     await ouvrirEquipes(page);
-    await expect(pilule(page, "Orga")).toHaveAttribute("aria-current", "true");
+    await verifierEnVue(page, "Orga", true);
     // Défilement à la main jusqu'à la colonne de Régie.
     await bandeau(page).evaluate((el) => {
       const carte = el.querySelector("[data-testid='equipe-regie']")!;
@@ -165,10 +177,10 @@ test.describe("Équipes en bandeau", () => {
     const premiere = await bandeau(page).evaluate((el) =>
       el.querySelector("[data-testid='equipe-regie']")!.closest("[data-colonne]")!.querySelector("[data-testid^='equipe-']")!.getAttribute("data-testid")!.replace("equipe-", ""),
     );
-    await expect(pilule(page, COURTS[premiere])).toHaveAttribute("aria-current", "true");
-    await expect(pilule(page, "Orga")).not.toHaveAttribute("aria-current", "true");
+    await verifierEnVue(page, COURTS[premiere], true);
+    await verifierEnVue(page, "Orga", false);
     await bandeau(page).evaluate((el) => el.scrollTo({ left: 0, behavior: "instant" }));
-    await expect(pilule(page, "Orga")).toHaveAttribute("aria-current", "true");
+    await verifierEnVue(page, "Orga", true);
   });
 
   test("flèches ‹ › sur ordinateur seulement ; accroche aux colonnes sur écran tactile", async ({ page }, info) => {
@@ -186,16 +198,18 @@ test.describe("Équipes en bandeau", () => {
     await suivantes.click();
     await expect.poll(() => bandeau(page).evaluate((el) => el.scrollLeft)).toBeGreaterThan(100);
     await expect(page.getByRole("button", { name: "Équipes précédentes" })).toBeVisible();
-    await expect(pilule(page, "Orga")).not.toHaveAttribute("aria-current", "true");
+    await verifierEnVue(page, "Orga", false);
   });
 
   test("中文 : l'index porte les noms d'équipe traduits", async ({ page }) => {
     await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
     await sansSheets(page);
     await signInAs(page, MEMBRE, DOCS, "/equipes");
-    const idx = page.getByRole("navigation", { name: "团队索引" });
-    await expect(idx.getByRole("button", { name: "敬拜组" })).toBeVisible();
-    await expect(idx.getByRole("button", { name: "主日学" })).toBeVisible();
+    await expect(declencheur(page, "跳到团队")).toHaveText("跳到团队");
+    await declencheur(page, "跳到团队").click();
+    await expect(ligne(page, "敬拜组")).toBeVisible();
+    await expect(ligne(page, "主日学")).toBeVisible();
+    await page.keyboard.press("Escape");
     await capture(page, "b6-equipes-zh");
   });
 });
