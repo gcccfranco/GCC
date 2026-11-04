@@ -245,3 +245,25 @@ T1c, T1e et T1g tournent dans trois sessions parallèles. `musiciens.md` passe d
 - Corrigé en passant : `tests/helpers/agencement.ts` (colonne de 960 px calée sur le titre depuis quotidien-5) ;
   `BanniereGeste` laisse passer le pointeur. zh à relire : voir les messages de `1186fb7`, `dff1982`, `48ad28a`.
 - **Échec à regarder** : `agencement-v18-moi.spec.ts:310` (ordinateur, tablette paysage), rouge aussi sans T1h-X.
+
+### T1h-Y · Réunions, tâches, évènements — fait (session parallèle)
+- Commits : `0df0c79` + `8789565` bo-reunions-taches (-1, -3 à -11, -13 à -20) · `23407ba` + `c4ea3bb` evenements-app (-1,
+  -2, -5, -7 à -10) · `c7d7f3e` + `58c05cd` bo-evenements (-1, -2, -4, -6 à -11, -13, -14). Laissés à T3 : bo-reunions-taches-2,
+  -12 ; à T4 : evenements-app-3, bo-evenements-5, -12.
+- Posés : `button.tsx` (désactivé = `--secondary` / `--muted-foreground`, sans opacité), `ui/champ.tsx` (`Champ`),
+  `Textarea` gris de 96 px (= evenements-app-4), `EnTetePage` à titre facultatif, `DeuxVolets` prop `listeNaturelle`,
+  `PastilleEtat`, jetons `--cal-*` et `--etat-*`.
+- **Tranché au code** : bo-reunions-taches-10 et -5 au Back-office seulement ; -9 l'emporte sur -6 (Modifier une réunion
+  revient à sa fiche) ; arbitrage 14 : bo-evenements-6 ne touche que Nouveau ; pas d'ombre de bord ajoutée à `DeuxVolets`
+  (le fondu existant en tient lieu) ; le volet flottant du calendrier (< 1 600 px) sert aussi en Agenda ; tableau des
+  réservations dès 720 px de conteneur (pas 640 : le créneau se coupait) ; placeholder du compte rendu « Lien du doc ».
+- **Questions laissées au défaut de l'annexe** : bo-evenements Q1 (deux mots), Q4 (côté membres non traduit), Q5 (seul
+  nombre) ; « + Nouvelle réunion » encore présent sur `/reunions/nouvelle`.
+- zh à relire : 会议名称, 团队, 创建会议, 本次会议暂无任务。, 修改会议, {{equipe}}的任务, 由 {{nom}} 于{{date}}创建, 文档链接, 保存,
+  收起过去的周, 余 {{count}}, 敬拜赞美, 献唱, 舞蹈, 短剧, 表演, 开放中, groupes de `libelleQui`. Courses vues : `back-office-coupe:279`,
+  `calendrier:862`, `:886`, `:1634`, `reunions:296`.
+
+### Fin de T1 (04/11/2026)
+Toutes les entrées T1 des 17 annexes sont codées. Restent à régler avant T2 : `agencement-v18-taches.spec.ts:95`, `:198`,
+`:249` (page d'équipe en deux colonnes depuis back-office-10, T1h-X) ; `agencement-v18-moi.spec.ts:310` ; la cloche du
+Back-office à 7 px du bord à 360 px en français (sélecteur de T1a, espace Back-office courant) ; puis la suite complète.
