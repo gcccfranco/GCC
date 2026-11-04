@@ -161,3 +161,23 @@ T1c, T1e et T1g tournent dans trois sessions parallèles. `musiciens.md` passe d
   `role=status` englobe le bouton (finition) ; les états vides `tousJoues`, `choisirDebut`, `aucunARedecouvrir` restent en
   carte ; `stats.aucuneSetlistPeriode` est du code mort (signalé, non supprimé).
 - **Question pour Timothée** : « 调 D » ou l'usage « D调 » ?
+
+### T1g · Musiciens, Harmonie, Plannings — fait (session parallèle)
+- Commits : `eb77cd9` Musiciens (-3, -4, -5, -6, -7, -8, -11, -12) · `a5f9ef4` Harmonie (-1, -2, -3, -4, -6, -7, -8, -10,
+  -12 ; -9 abandonnée, arbitrage 2 ; -5 en T5) · `267d2da` Plannings (-1 à -7, plus la pastille « Cette semaine »,
+  arbitrage 9) · `4792c85` reprises de la critique. Nouvelle spec `tests/pages-en-grand-harmonie-corrections.spec.ts`.
+- **Tranché au code** : `@container` écrit `[container-type:inline-size]` ; harmonie-2 en deux voiles collants couleur
+  `--raised` (vaut pour toutes les pages `DeuxVolets`) ; colonnes courtes du cours comptées par le mot le plus long de
+  la tête ; tableau 9.2 empilé au téléphone ; progrès du cours partagé par l'évènement `gcc:cours-progres` ; seuil de la
+  pastille fixe à 960 px. harmonie-4 : police Noto Music (OFL, sous-ensemble de 5 signes), 16 chapitres réécrits en
+  ♯ ♭ 𝄫 (accords intacts) — pas regardé sur Apple, Windows ni Android.
+- **Écarts** : musiciens-5, le texte copié garde les espaces insécables (la recette de la spec contredit son critère) ;
+  `OngletsRail` recentre l'actif sans rejouer au redimensionnement ; harmonie-10, la colonne de gauche reste vide sous
+  « Pourquoi » sur certaines fiches (placement de la spec gardé). Finitions laissées : « Chants / Chants à venir »
+  répété, barre de progrès vide à 0, deux surtitres de suite au bas de la fiche ; en T4, noms coupés à 84 px dans la
+  grille.
+- zh-CN à faire relire : 查看其余 N 个/首, 张卡片，钢琴与吉他, 在哪里听到, 叠加, 查看后面/前面的栏目, 已过 N 个主日, 诗歌待定.
+- `tests/bilingue-b5.spec.ts` (« les services et rôles à cocher se lisent en 中文 ») : rouge depuis T1a, le premier
+  « 乐手 » de la page étant le libellé du sélecteur d'espace, caché au téléphone ; le test vise désormais `main`
+  (correction de l'orchestratrice). Courses sous charge, vertes seules : `organigrammes-groupes:818`, `a-faire:417`,
+  `harmonie-regroupees:79`, `agencement-v18-planning:259`, `bilingue-b5:90`.

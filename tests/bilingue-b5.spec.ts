@@ -64,8 +64,8 @@ test.describe("Profil, site en ligne (interrupteur coupé)", () => {
   test("les services et rôles à cocher se lisent en 中文", async ({ page }) => {
     await enZh(page);
     await signInAs(page, MEMBRE, {}, "/profil");
-    await expect(page.getByText("法语崇拜").first()).toBeVisible();
-    await expect(page.getByText("乐手").first()).toBeVisible();
+    await expect(page.locator("main").getByText("法语崇拜").first()).toBeVisible();
+    await expect(page.locator("main").getByText("乐手").first()).toBeVisible();
     expect(await texteDuMain(page)).not.toMatch(FRANCAIS);
   });
 });
