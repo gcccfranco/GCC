@@ -229,3 +229,19 @@ T1c, T1e et T1g tournent dans trois sessions parallèles. `musiciens.md` passe d
 - Tests : `PW_CHANTS_ZH=all` vert (771) ; `PW_SLUGS=all` 2 778 / 2 880 sans échec avant la limite de temps. Courses
   vertes seules : `setlist-g:216`, `:227`, `setlist-editeur-piste2` Q13. zh à faire relire : 姓名, 、, 给团队的备注,
   第 {{n}} / {{total}} 页.
+
+### T1h-X · Back-office, Équipes, Messages, Compte — fait (session parallèle)
+- Commits : `1440e76` back-office (-4, -5, -9 « Fait », -10, -11, -12) · `1186fb7` bo-equipes (-1 à -4, -6 à -9, -11 à -16,
+  plus le retour « Toutes les personnes ») · `dff1982` bo-messages-planning (-2, -3, -4, -7, -8, -10, -11) · `48ad28a`
+  compte (-2, -3, -6, -10, -11, -12, -13, -15, -16, -17). Non faits par arbitrage : bmp-1 (T1g), bmp-5 « Relier » (sorti),
+  bmp-6 → compte-12, bmp-9 → compte-10, compte-9 (supprimée).
+- **Tranché au code** : sous-titre de Responsabilités « Qui gère quoi… » ; Comité Orga hors encart ; `LIGNE_ENTIERE`
+  ajoutée à `src/lib/toucher44.ts` pour « Relier » ; flèches ‹ › de l'index avec `TOUCHER_44` ; la bande d'étape du
+  questionnaire suit la barre du haut cachée. Service worker : cache `gcc-louange-v6` (page hors ligne avec logo, fr puis
+  zh ; preuve sur build de production, réseau coupé) ; `CLAUDE.md` mis à jour.
+- **Écarts** : « Nouvelle tâche » à 577 px du titre à 1 440 px (critère de 300 px intenable avec deux colonnes) ; Louange
+  montre 43 % au départ à 1 440 px ; rangée « sans compte » masquée si `listGroupes` échoue ; la page hors ligne suit le
+  thème système seulement ; fondu de 150 ms de l'aide de Notifier non fait.
+- Corrigé en passant : `tests/helpers/agencement.ts` (colonne de 960 px calée sur le titre depuis quotidien-5) ;
+  `BanniereGeste` laisse passer le pointeur. zh à relire : voir les messages de `1186fb7`, `dff1982`, `48ad28a`.
+- **Échec à regarder** : `agencement-v18-moi.spec.ts:310` (ordinateur, tablette paysage), rouge aussi sans T1h-X.
