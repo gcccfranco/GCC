@@ -93,7 +93,7 @@ function LigneSon({ son, layer, actif }: { son: Son; layer?: boolean; actif?: bo
           </span>
         )}
         <span className="shrink-0 text-[17px] font-semibold tabular-nums" data-son={son.n}>{son.n}</span>
-        <span className="min-w-0 font-medium">{son.nom}</span>
+        <span className="min-w-0 font-medium [overflow-wrap:anywhere]">{son.nom}</span>
         {son.premier && (
           <span className={cn("shrink-0 rounded-full px-1.5 py-0.5 text-[11px] font-medium", actif ? "bg-background text-foreground" : "bg-secondary text-foreground")}>
             {t("harmonie.rd2000.premierChoix")}
@@ -130,7 +130,7 @@ function ParMoment({ ouvert, cartes }: { ouvert?: string; cartes: boolean }) {
                   data-moment={m.moment}
                 >
                   <p className="text-[15px] font-semibold">{m.moment}</p>
-                  {m.conseil && <p className="text-[15px] leading-[21px] text-foreground/80">{m.conseil}</p>}
+                  {m.conseil && <p className="mb-1.5 text-[15px] leading-[21px] text-foreground/80">{m.conseil}</p>}
                   {son && <LigneSon son={son} actif={son.n === ouvert} />}
                   {layer && <LigneSon son={layer} layer actif={layer.n === ouvert} />}
                 </div>

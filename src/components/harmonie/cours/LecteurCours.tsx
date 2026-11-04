@@ -77,7 +77,10 @@ function Bloc({ bloc, schemas }: { bloc: BlocCours; schemas: Record<string, Reac
             <thead className={cn(empile && "max-sm:hidden")}>
               <tr className="bg-secondary/60">
                 {bloc.entetes.map((e, i) => (
-                  <th key={i} className={cn("py-2 text-left text-[13px] font-semibold leading-[18px]", courtes[i] ? "w-px px-2" : "px-3")}><Texte texte={e} /></th>
+                  <th key={i} className={cn("py-2 text-left text-[13px] font-semibold leading-[18px]", courtes[i] ? "w-px px-2" : "px-3")}>
+                    {/* Tête de plusieurs mots d'une colonne courte : deux lignes au plus, pas une par mot (au téléphone, la place va au texte). */}
+                    {courtes[i] && /\s/.test(brut(e).trim()) ? <span className="block sm:min-w-24"><Texte texte={e.replace(/\(([^)]*)\)/g, (m) => m.replace(/ /g, "\u00A0"))} /></span> : <Texte texte={e} />}
+                  </th>
                 ))}
               </tr>
             </thead>

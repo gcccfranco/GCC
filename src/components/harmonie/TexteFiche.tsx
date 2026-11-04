@@ -40,7 +40,7 @@ export function TexteFiche({ texte, demiTons, tonalite }: { texte: string; demiT
       {morceaux.map((m, i) => {
         if (m.startsWith("**") && m.endsWith("**")) return <strong key={i} className="font-semibold">{alterer(lier(m.slice(2, -2)))}</strong>;
         if (m.startsWith("`") && m.endsWith("`")) {
-          const accords = demiTons ? transposeLabel(m.slice(1, -1), demiTons, tonalite) : m.slice(1, -1);
+          const accords = (demiTons ? transposeLabel(m.slice(1, -1), demiTons, tonalite) : m.slice(1, -1)).replace(/ → /g, "\u00A0→\u00A0");
           return <span key={i} className="font-chord font-semibold">{accords}</span>;
         }
         if (m.startsWith("*") && m.endsWith("*")) return <em key={i}>{alterer(lier(m.slice(1, -1)))}</em>;
