@@ -724,6 +724,70 @@ test("forScore, L7 : le curseur couvre toute la setlist, 3 repères = débuts de
   expect(erreurs).toEqual([]);
 });
 
+test("forScore, L7 : étiquette sous la glissière (titre du chant courant, page n / total, 12 px), mise à jour après un saut de page (dimanche-24)", async ({ page }) => {
+  const erreurs = surveillerErreurs(page);
+  await ouvrirTroisChants(page);
+  const total = Number((await lirePage(page)).split("/")[1]);
+  await barreVisible(page);
+  const etiquette = page.locator("[data-performance-mode] [data-curseur-etiquette]");
+  await expect(etiquette.locator("[data-etiquette-page]")).toHaveText(`page 1 / ${total}`);
+  const reperes = page.locator(REPERES);
+  const debuts = await reperes.evaluateAll((els) => els.map((e) => ({ page: Number(e.getAttribute("data-page")), titre: e.getAttribute("data-titre")! })));
+  await expect(etiquette.locator("[data-etiquette-titre]")).toHaveText(debuts[0].titre);
+  const taille = await etiquette.locator("[data-etiquette-page]").evaluate((el) => parseFloat(getComputedStyle(el).fontSize));
+  expect(taille).toBeGreaterThanOrEqual(12);
+  // Saut au dernier chant : le titre et le numéro suivent.
+  await reperes.nth(2).click();
+  await expect(etiquette.locator("[data-etiquette-titre]")).toHaveText(debuts[2].titre);
+  await expect(etiquette.locator("[data-etiquette-page]")).toHaveText(`page ${debuts[2].page + 1} / ${total}`);
+  // Le titre tronqué ne pousse pas la barre hors de l'écran.
+  const debord = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+  expect(debord).toBeLessThanOrEqual(0);
+  // « ‹ » désactivé : bordure visible, opacité 40 %.
+  await reperes.nth(0).click();
+  const prec = page.locator("[data-performance-mode]").getByRole("button", { name: "Page précédente" });
+  await expect(prec).toBeDisabled();
+  expect(await prec.evaluate((el) => getComputedStyle(el).opacity)).toBe("0.4");
+  expect(await prec.evaluate((el) => parseFloat(getComputedStyle(el).borderTopWidth))).toBeGreaterThan(0);
+  expect(erreurs).toEqual([]);
+});
+
+test("forScore : barres du mode louange opaques (fond d'alpha 1, sans flou), dimanche-1", async ({ page }) => {
+  await ouvrir(page);
+  await expect(async () => {
+    if ((await page.locator(BARRES).first().evaluate((el) => getComputedStyle(el).pointerEvents)) === "none") await toucherCentre(page);
+    await expect(page.locator(BARRES).first()).not.toHaveCSS("pointer-events", "none", { timeout: 1_000 });
+  }).toPass({ timeout: 15_000 });
+  const barres = page.locator(BARRES);
+  for (const i of [0, 1]) {
+    const m = await barres.nth(i).evaluate((el) => {
+      const cs = getComputedStyle(el);
+      return { fond: cs.backgroundColor, flou: cs.backdropFilter };
+    });
+    // Alpha exactement 1 : « rgb(r, g, b) », sans quatrième composante (rgba, color() ou oklch avec « / a »).
+    expect(m.fond).toMatch(/^rgb\(\d+, \d+, \d+\)$/);
+    expect(m.flou === "none" || m.flou === "").toBe(true);
+  }
+});
+
+test("forScore, tablette portrait : l'aperçu s'efface quand la barre est affichée, revient quand elle est escamotée (dimanche-10)", async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== "tablette", "propre à la tablette en portrait");
+  await ouvrir(page, { chants: 4 });
+  const apercu = page.locator(`[data-performance-mode] ${APERCU}`);
+  await expect(apercu).toHaveCount(1);
+  // Première ouverture sur l'appareil : la barre est affichée, l'aperçu est effacé.
+  await expect(page.locator(BARRES).first()).not.toHaveCSS("pointer-events", "none");
+  await expect(apercu).toHaveCSS("opacity", "0");
+  const posAffichee = (await apercu.boundingBox())!;
+  // Escamotée (état normal en service) : visible, en entier, au même endroit.
+  await toucherCentre(page);
+  await expect(page.locator(BARRES).first()).toHaveCSS("pointer-events", "none");
+  await expect(apercu).toHaveCSS("opacity", "1");
+  expect(Math.abs((await apercu.boundingBox())!.y - posAffichee.y)).toBeLessThan(1);
+  await toucherCentre(page);
+  await expect(apercu).toHaveCSS("opacity", "0");
+});
+
 test("forScore, L7 : le curseur au clavier (Fin, Début, flèche) change de page et le compteur suit", async ({ page }) => {
   const erreurs = surveillerErreurs(page);
   await ouvrirTroisChants(page);
@@ -973,7 +1037,7 @@ test("barre : fermer le mode puis le rouvrir sans recharger la page, elle reste 
   expect(erreurs).toEqual([]);
 });
 
-test("barre masquée à l'ouverture : la pastille « Ensuite » se pose au bas de l'écran, remonte avec la barre", async ({ page }) => {
+test("barre masquée à l'ouverture : la pastille « Ensuite » est dans le flux, sous le dernier bloc ; barre ouverte, elle reste au-dessus de la barre", async ({ page }) => {
   const erreurs = surveillerErreurs(page);
   await ouvrirDernierePage(page);
   await rouvrirApresRechargement(page);
@@ -986,13 +1050,25 @@ test("barre masquée à l'ouverture : la pastille « Ensuite » se pose au bas d
   }).toPass({ timeout: 20_000 });
   const hauteurEcran = page.viewportSize()!.height;
   const bas = (await suivant.boundingBox())!;
-  const barreBasse = (await page.locator(BARRES).nth(1).boundingBox())!;
-  // Barre masquée : la pastille est sous le haut de la barre basse (elle ne la contourne plus).
-  expect(bas.y + bas.height).toBeGreaterThan(barreBasse.y + 0.5);
   expect(bas.y + bas.height).toBeLessThanOrEqual(hauteurEcran + 0.5);
+  // Dans le flux (dimanche-11) : aucun bloc de la page ne passe sous la pastille.
+  const intersections = await page.evaluate(() => {
+    const p = document.querySelector("[data-performance-mode] [data-suivant]:not([aria-hidden=true] *)")!.getBoundingClientRect();
+    return [...document.querySelectorAll("[data-performance-mode] [data-section]")]
+      .filter((el) => !el.closest("[aria-hidden=true]"))
+      .map((el) => el.getBoundingClientRect())
+      .filter((r) => r.width > 0 && r.left < p.right && r.right > p.left && r.top < p.bottom - 0.5 && r.bottom > p.top + 0.5).length;
+  });
+  expect(intersections).toBe(0);
   await toucherCentre(page);
   await expect(page.locator(BARRES).first()).not.toHaveCSS("pointer-events", "none");
-  await expect.poll(async () => (await suivant.boundingBox())!.y + (await suivant.boundingBox())!.height).toBeLessThanOrEqual(barreBasse.y + 0.5);
+  const barreBasse = (await page.locator(BARRES).nth(1).boundingBox())!;
+  // Barre ouverte : la pastille reste visible au-dessus de la barre du bas — dans le flux si la barre ne la
+  // couvre pas (elle ne bouge pas), sinon posée au-dessus de la barre, comme avant dimanche-11.
+  await expect(suivant).toHaveCount(1);
+  const apres = (await suivant.boundingBox())!;
+  if (bas.y + bas.height <= barreBasse.y + 0.5) expect(Math.abs(apres.y - bas.y)).toBeLessThan(1);
+  expect(apres.y + apres.height).toBeLessThanOrEqual(barreBasse.y + 0.5);
   expect(erreurs).toEqual([]);
 });
 

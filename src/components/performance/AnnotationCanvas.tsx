@@ -95,9 +95,11 @@ interface Props {
   onZoomPanChange: (zoom: number, pan: Pan) => void;
   /** Bas de l'écran non couvert (aperçu de page, lot L6). */
   rogneBas?: string;
+  /** Hauteurs des barres du haut et du bas : le panneau d'outils se centre entre elles, sans passer dessous. */
+  barres?: { haut: number; bas: number };
 }
 
-export function AnnotationCanvas({ data, onChange, zoom, pan, onZoomPanChange, rogneBas }: Props) {
+export function AnnotationCanvas({ data, onChange, zoom, pan, onZoomPanChange, rogneBas, barres }: Props) {
   const { t } = useTranslation();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [tool, setTool] = useState<Tool>("pen");
@@ -387,10 +389,10 @@ export function AnnotationCanvas({ data, onChange, zoom, pan, onZoomPanChange, r
         }}
       />
 
-      {/* Panneau d'outils — bord droit, centré */}
+      {/* Panneau d'outils — bord droit, centré entre les deux barres (l'étiquette de la glissière, dimanche-24, a grandi celle du bas) */}
       <div
-        className="absolute top-1/2 -translate-y-1/2 flex flex-col gap-1.5 material-panel border border-border rounded-xl p-2 shadow-lg max-h-[85vh] overflow-y-auto"
-        style={{ zIndex: 11, right: "calc(0.75rem + var(--sar, 0px))" }}
+        className="absolute my-auto h-fit flex flex-col gap-1.5 material-panel border border-border rounded-xl p-2 shadow-lg max-h-[85vh] overflow-y-auto"
+        style={{ zIndex: 11, right: "calc(0.75rem + var(--sar, 0px))", top: (barres?.haut ?? 0) + 8, bottom: (barres?.bas ?? 0) + 8 }}
         onPointerDown={(e) => e.stopPropagation()}
         onPointerUp={(e) => e.stopPropagation()}
       >

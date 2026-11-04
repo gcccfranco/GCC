@@ -106,11 +106,14 @@ type ContextePagination = {
   twoColumns: boolean;
   /** Indice du bloc → indice de l'en-tête de son chant (-1 avant le premier). */
   enteteDe: Map<number, number>;
+  /** Hauteur de la pastille « Ensuite » comptée dans la dernière page d'un chant suivi d'un autre (absent : 0). */
+  pastille?: number;
 };
 
 /** Pagine tous les blocs hors vue structure ; `reservesDe` : place gardée en haut des pages 2 et suivantes, par en-tête. */
 export function paginer(reservesDe: Map<number, number>, ctx: ContextePagination): PerfPage[] {
-  const { blocks, heights, heightsColumn, viewportH, twoColumns, enteteDe } = ctx;
+  const { blocks, heights, heightsColumn, viewportH, twoColumns, enteteDe, pastille = 0 } = ctx;
+  const dernierEntete = blocks.reduce((m, b, i) => (b.kind === "song-header" ? i : m), -1);
   const kindOf = (i: number) => blocks[i]?.kind;
   const all = blocks.map((_, i) => i);
   const breakBefore = new Set(blocks.flatMap((b, i) => (b.kind === "song-header" ? [i] : [])));
@@ -123,7 +126,9 @@ export function paginer(reservesDe: Map<number, number>, ctx: ContextePagination
     }
     return songs.flatMap((song) => {
       const reserveSuite = reservesDe.get(enteteDe.get(song[0]) ?? -1) ?? 0;
-      if (!twoColumns) return pagesUneColonne(song, heights, viewportH, breakBefore, reserveSuite);
+      // Chant suivi d'un autre : sa dernière page porte la pastille « Ensuite » dans le flux.
+      const placePastille = (enteteDe.get(song[0]) ?? -1) < dernierEntete ? pastille : 0;
+      if (!twoColumns) return pagesUneColonne(song, heights, viewportH, breakBefore, reserveSuite, placePastille);
       const header = kindOf(song[0]) === "song-header" ? song[0] : null;
       return paginateColumns({
         flow: header != null ? song.slice(1) : song,
@@ -132,6 +137,7 @@ export function paginer(reservesDe: Map<number, number>, ctx: ContextePagination
         heightsColumn,
         pageHeight: viewportH,
         reserveSuite,
+        pastille: placePastille,
       });
     });
   });

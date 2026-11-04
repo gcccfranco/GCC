@@ -24,6 +24,8 @@ export function PageTexte({
   apercu,
   apercuHauteur,
   contentPadding,
+  showChrome,
+  pastille,
 }: {
   page: PerfPage;
   rappel: SectionOccurrence[] | undefined;
@@ -36,6 +38,10 @@ export function PageTexte({
   apercu: PerfPage | null;
   apercuHauteur: number;
   contentPadding: CSSProperties;
+  /** Barres affichées : l'aperçu s'efface (pas d'aperçu pendant qu'on règle quelque chose). */
+  showChrome: boolean;
+  /** Pastille « Ensuite » : rendue à la fin de la colonne `page.suivant`, dans le flux. */
+  pastille?: ReactNode;
 }) {
   const multiCol = page.cols.length > 1;
   return (
@@ -71,6 +77,7 @@ export function PageTexte({
           {page.cols.map((colIdxs, ci) => (
             <div key={ci} className={multiCol ? "flex-1 min-w-0" : undefined}>
               {colIdxs.map((i) => renderBlock(i))}
+              {pastille && page.suivant === ci && <div className="mt-4 flex">{pastille}</div>}
             </div>
           ))}
         </div>
@@ -80,7 +87,8 @@ export function PageTexte({
       <div
         data-apercu-suivant
         aria-hidden="true"
-        className="pointer-events-none absolute left-0 right-0"
+        data-chrome={showChrome ? "1" : "0"}
+        className={`pointer-events-none absolute left-0 right-0 ease-out motion-reduce:transition-none ${showChrome ? "opacity-0 transition-opacity duration-100" : "opacity-100 transition-opacity duration-150"}`}
         style={{ bottom: contentPadding.paddingBottom, paddingLeft: contentPadding.paddingLeft, paddingRight: contentPadding.paddingRight }}
       >
         <div className="relative overflow-hidden" style={{ height: apercuHauteur }}>

@@ -12,10 +12,10 @@ test("一同齐声宣扬 — le texte latin d'une ligne chinoise ne se coupe qu'
   await page.evaluate(() => document.fonts.ready);
 
   // Les colonnes de chaque ligne : leur caractère et la hauteur de leur rangée
-  // (les accords et le pinyin de la colonne sont à part, data-copy-ignore).
+  // (les accords et le pinyin de la colonne sont à part, data-copy-ignore). Ligne > rangée insécable > groupe > colonne.
   const lignes = await page.locator("main.song-zoom [data-copy-line]").evaluateAll((els) =>
     els.map((el) =>
-      [...el.querySelectorAll(":scope > span > span")].map((col) => {
+      [...el.querySelectorAll(":scope > span > span > span")].map((col) => {
         const char = [...col.children].find((c) => !c.hasAttribute("data-copy-ignore"));
         return { c: char?.textContent ?? "", top: Math.round(col.getBoundingClientRect().top) };
       })

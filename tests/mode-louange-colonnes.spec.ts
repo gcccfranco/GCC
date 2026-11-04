@@ -344,3 +344,37 @@ test("téléphone et tablette portrait : pas d'interrupteur, une colonne, même 
   await expect(interrupteur(page)).toHaveCount(0);
   expect(await totalPages(page)).toBe(total);
 });
+
+// dimanche-11 : la pastille « Ensuite » est dans le flux, sous la colonne qui a la place ; jamais sur un bloc.
+test("dernière page d'un chant suivi d'un autre : la pastille « Ensuite » ne recouvre aucun bloc, le nombre de pages ne change pas", async ({ page }) => {
+  await ouvrirMode(page, [item({ songSlug: "abba-pere", position: 1 }), item({ songSlug: "a-l-agneau", position: 2 })]);
+  const suivant = onStage(page, "[data-suivant]");
+  const total = await totalPages(page);
+  for (let p = 1; p < total; p++) {
+    if (await suivant.count()) break;
+    await page.keyboard.press("ArrowRight");
+    await expect(compteur(page)).toHaveText(`${p + 1} / ${total}`);
+  }
+  await expect(suivant).toBeVisible();
+  // En service, la barre est escamotée : la pastille est alors dans le flux (barre affichée, si elle la couvre,
+  // la pastille se pose au-dessus de la barre, comme avant dimanche-11).
+  const barre = page.locator("[data-performance-mode] .material-chrome").first();
+  if ((await barre.evaluate((el) => getComputedStyle(el).pointerEvents)) !== "none") {
+    const v = page.viewportSize()!;
+    await page.mouse.click(v.width / 2, v.height / 2);
+    await expect(barre).toHaveCSS("pointer-events", "none");
+  }
+  await expect(suivant).toBeVisible();
+  const intersections = await page.evaluate(() => {
+    const p = document.querySelector("[data-performance-mode] [data-suivant]:not([aria-hidden=true] *)")!.getBoundingClientRect();
+    return [...document.querySelectorAll("[data-performance-mode] [data-section]")]
+      .filter((el) => !el.closest("[aria-hidden=true]"))
+      .map((el) => el.getBoundingClientRect())
+      .filter((r) => r.width > 0 && r.left < p.right && r.right > p.left && r.top < p.bottom - 0.5 && r.bottom > p.top + 0.5).length;
+  });
+  expect(intersections).toBe(0);
+  const boite = (await suivant.boundingBox())!;
+  expect(boite.height).toBeGreaterThanOrEqual(44);
+  expect(boite.y + boite.height).toBeLessThanOrEqual((await page.evaluate(() => innerHeight)) + 0.5);
+  await capture(page, "louange-pastille-suivant");
+});

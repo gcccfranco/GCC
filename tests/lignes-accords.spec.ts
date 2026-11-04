@@ -141,3 +141,62 @@ for (const slug of ["abba-pere", "tu-m-aimes"]) {
   });
 }
 
+
+// dimanche-13 (téléphone) : une ligne ne se coupe qu'avant un accord. Un segment (un accord et ses paroles
+// jusqu'à l'accord suivant) qui tient dans la ligne reste sur une seule rangée ; une rangée sans aucun accord
+// n'existe que dans un segment plus large que la ligne (qui se coupe alors à l'intérieur, garde-fou).
+async function segmentsCoupes(page: Page): Promise<string[]> {
+  return page.evaluate(() => {
+    const out: string[] = [];
+    for (const ligne of Array.from(document.querySelectorAll<HTMLElement>("[data-copy-line]"))) {
+      const zh = ligne.classList.contains("items-start");
+      const colonnes = Array.from(ligne.querySelectorAll<HTMLElement>(zh ? "span[style*='column']" : "span.flex-col"));
+      const aUnAccord = (c: HTMLElement) =>
+        zh ? getComputedStyle(c.children[0] as HTMLElement).visibility === "visible" && !!c.children[0].textContent?.trim() && c.children[0].textContent !== "x"
+           : !!c.querySelector(".font-chord");
+      if (!colonnes.some(aUnAccord)) continue;
+      const largeur = ligne.getBoundingClientRect().width;
+      const rangees = new Map<number, HTMLElement[]>();
+      const large = new Set<HTMLElement>();
+      for (const chunk of Array.from(ligne.children) as HTMLElement[]) {
+        const tient = chunk.getBoundingClientRect().width < largeur - 1;
+        const cols = colonnes.filter((c) => chunk.contains(c));
+        if (tient) {
+          const tops = new Set(cols.map((c) => Math.round(c.getBoundingClientRect().top / 6)));
+          if (tops.size > 1) out.push(`segment coupé alors qu'il tient — ${chunk.textContent?.slice(0, 40)}`);
+        } else cols.forEach((c) => large.add(c));
+      }
+      for (const c of colonnes) {
+        const cle = Math.round(c.getBoundingClientRect().top / 6);
+        rangees.set(cle, [...(rangees.get(cle) ?? []), c]);
+      }
+      for (const cols of rangees.values()) {
+        if (!cols.some(aUnAccord) && !cols.every((c) => large.has(c))) out.push(`rangée sans accord hors segment large — ${cols.map((c) => c.textContent).join("").slice(0, 40)}`);
+      }
+    }
+    return out;
+  });
+}
+
+for (const slug of ["abba-pere", "tu-m-aimes", "一切歌颂赞美"]) {
+  test(`${slug} — téléphone : une ligne ne se coupe qu'avant un accord, aucune rangée d'accords vide`, async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== "telephone", "propre au téléphone");
+    await ouvrir(page, slug);
+    expect(await segmentsCoupes(page)).toEqual([]);
+  });
+}
+
+// dimanche-14 : une rangée d'accords sans paroles, suivie d'une ligne avec paroles, laisse l'écart normal
+// entre deux lignes (>= 0,4 em) ; elle tenait à line-height 0 et touchait la ligne suivante.
+test("hosanna — rangée d'accords sans paroles du Pont : écart >= 0,4 em avec la ligne suivante", async ({ page }) => {
+  await ouvrir(page, "hosanna");
+  const mesure = await page.evaluate(() => {
+    const lignes = Array.from(document.querySelectorAll<HTMLElement>("main.song-zoom [data-copy-line]"));
+    const i = lignes.findIndex((l) => l.textContent?.replace(/\s+/g, " ").trim() === "Bm7 D Em7 F#m7");
+    if (i < 0) return null;
+    const em = parseFloat(getComputedStyle(lignes[i]).fontSize);
+    return { gap: lignes[i + 1].getBoundingClientRect().top - lignes[i].getBoundingClientRect().bottom, em };
+  });
+  expect(mesure, "rangée « Bm7 D Em7 F#m7 » trouvée").not.toBeNull();
+  expect(mesure!.gap).toBeGreaterThanOrEqual(0.4 * mesure!.em);
+});

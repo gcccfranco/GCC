@@ -166,6 +166,12 @@ function getSectionStyle(type: string, isZh: boolean): React.CSSProperties {
 // « 你。”[A] » coupait entre 。 et ”, qui ouvrait seul la rangée suivante avec son accord.
 const ZH_PUNCTUATION = /^[，。、；：！？」』）”…,.;:!?)]$/;
 
+const aDesParoles = (tokens: Token[] | undefined) =>
+  tokens?.some((t) => t.type === "lyric" && t.value.trim() !== "") ?? false;
+/** Rangée d'accords seule (aucune parole) : la ligne reste à line-height 0 dans ChordLine. */
+const sansParoles = (tokens: Token[]) => tokens.some((t) => t.type === "chord") && !aDesParoles(tokens);
+const avecParoles = aDesParoles;
+
 interface ZhLineProps {
   tokens: Token[];
   pinyin: string | null;
@@ -230,6 +236,24 @@ function ZhLine({ tokens, pinyin, showChords, showPinyin, hideLyrics = false, ch
     else groups.push({ cols: [col], lyric });
   }
 
+  // La ligne ne se coupe qu'avant un accord : un groupe qui ouvre sur un accord ouvre une rangée
+  // insécable, les groupes sans accord se collent au précédent (ceux d'avant le premier accord,
+  // au suivant). Plus large que la ligne, la rangée se coupe de nouveau entre ses groupes.
+  const chunks: { group: (typeof groups)[number]; gi: number }[][] = [];
+  if (hasAnyChord) {
+    let enAttente: { group: (typeof groups)[number]; gi: number }[] = [];
+    groups.forEach((group, gi) => {
+      if (group.cols[0].chord !== null) {
+        chunks.push([...enAttente, { group, gi }]);
+        enAttente = [];
+      } else if (chunks.length > 0) chunks[chunks.length - 1].push({ group, gi });
+      else enAttente.push({ group, gi });
+    });
+    if (enAttente.length) chunks.push(enAttente);
+  } else {
+    groups.forEach((group, gi) => chunks.push([{ group, gi }]));
+  }
+
   const cellMinWidth = (col: Col): string | undefined => {
     if (isCJK(col.char)) return "1.6em";
     // Un accord seul (sans caractère) prend la largeur de son étiquette : avec
@@ -253,7 +277,9 @@ function ZhLine({ tokens, pinyin, showChords, showPinyin, hideLyrics = false, ch
         rowGap: chordAir,
       }}
     >
-      {groups.map((group, gi) => (
+      {chunks.map((chunk) => (
+      <span key={chunk[0].gi} style={{ display: "flex", flexWrap: "wrap", alignItems: "flex-start", maxWidth: "100%", flexShrink: 0, rowGap: chordAir }}>
+      {chunk.map(({ group, gi }) => (
         <span key={gi} style={{ display: "inline-flex", alignItems: "flex-start" }}>
           {group.cols.map((col, i) => {
             if (!showChords && col.char === " " && col.chord !== null) return null;
@@ -316,6 +342,8 @@ function ZhLine({ tokens, pinyin, showChords, showPinyin, hideLyrics = false, ch
             );
           })}
         </span>
+      ))}
+      </span>
       ))}
     </div>
   );
@@ -667,6 +695,7 @@ export function SectionView({ section, language, showChords, showPinyin, useJian
                   fr_lyric_font={fr_lyric_font}
                   fontSize={isPdfTypo ? 0.9375 : undefined}
                   chordEm={isPdfTypo ? 1.13 : undefined}
+                  ecartApres={!isPdfTypo && section.type !== "intro" && sansParoles(line.tokens) && avecParoles(section.lines[i + 1]?.tokens)}
                 />
               );
             }

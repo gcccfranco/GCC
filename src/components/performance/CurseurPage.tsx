@@ -14,6 +14,8 @@ interface Props {
   reperes: RepereChant[];
   libelle: string;
   texteValeur: string;
+  /** Étiquette visible sous la glissière, à droite (« page 3 / 6 »). */
+  etiquette: string;
   onAller: (page: number) => void;
 }
 
@@ -23,7 +25,7 @@ const arreter = (e: React.PointerEvent) => e.stopPropagation();
 
 /** Curseur de page (forScore, lot L7) : toute la setlist, un repère au début de chaque chant.
  *  Chaque élément arrête les pointeurs : un geste ici ne tourne jamais la page par la racine. */
-export function CurseurPage({ total, courante, reperes, libelle, texteValeur, onAller }: Props) {
+export function CurseurPage({ total, courante, reperes, libelle, texteValeur, etiquette, onAller }: Props) {
   const max = Math.max(total - 1, 1);
   const [visee, setVisee] = useState<number | null>(null);
   const minuterie = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
@@ -51,13 +53,16 @@ export function CurseurPage({ total, courante, reperes, libelle, texteValeur, on
 
   const chantVise =
     visee === null ? null : [...reperes].reverse().find((r) => r.page <= visee) ?? reperes[0] ?? null;
+  // Titre du chant de la page courante : le dernier repère dont la page est <= courante.
+  const titreCourant = [...reperes].reverse().find((r) => r.page <= courante)?.titre ?? reperes[0]?.titre ?? "";
   const frac = visee === null ? 0 : visee / max;
 
   return (
+    <div className="basis-full w-full">
     <div
       ref={racine}
       data-curseur-page
-      className="relative h-10 -mb-1.5 basis-full w-full overflow-x-clip"
+      className="relative h-10 -mb-1.5 w-full overflow-x-clip"
       onPointerDown={arreter}
       onPointerUp={arreter}
     >
@@ -144,6 +149,11 @@ export function CurseurPage({ total, courante, reperes, libelle, texteValeur, on
           <span className="block h-3 w-0.5 rounded-full bg-muted-foreground/70" />
         </button>
       ))}
+    </div>
+    <div data-curseur-etiquette className="mt-1 flex items-baseline justify-between gap-3 text-[12px] text-muted-foreground">
+      <span data-etiquette-titre className="min-w-0 truncate">{titreCourant}</span>
+      <span data-etiquette-page className="shrink-0" style={{ fontVariantNumeric: "tabular-nums" }}>{etiquette}</span>
+    </div>
     </div>
   );
 }

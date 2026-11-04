@@ -71,6 +71,26 @@ function toWords(segments: Segment[]): { seg: Segment; i: number }[][] {
   return words;
 }
 
+/** Regroupe les mots en rangées insécables : un accord ouvre un groupe, qui prend tous les
+ *  mots sans accord jusqu'à l'accord suivant. La ligne ne passe à la ligne qu'avant un accord
+ *  (sinon une rangée d'accords restait vide au-dessus d'un mot orphelin, 03/11/2026). Les mots
+ *  d'avant le premier accord se collent au groupe suivant. Sans accord affiché : un groupe par mot. */
+function toChunks<T extends { seg: Segment }>(words: T[][], avecAccords: boolean): T[][][] {
+  if (!avecAccords) return words.map((w) => [w]);
+  const chunks: T[][][] = [];
+  let enAttente: T[][] = [];
+  for (const word of words) {
+    const accorde = word.some((w) => w.seg.chord !== null);
+    if (accorde) {
+      chunks.push([...enAttente, word]);
+      enAttente = [];
+    } else if (chunks.length > 0) chunks[chunks.length - 1].push(word);
+    else enAttente.push(word);
+  }
+  if (enAttente.length) chunks.push(enAttente);
+  return chunks;
+}
+
 const LETTRE_LATINE = /^\p{Script=Latin}$/u;
 
 /** Tiret de liaison dans un mot coupé par un accord, là où l'accord laisse un espace (« re – culé », C10, audit 24/10/2026) :
@@ -108,9 +128,11 @@ interface ChordLineProps {
   chordEm?: number;
   chord_font?: ReturnType<typeof localFont>;
   fr_lyric_font?: ReturnType<typeof localFont>;
+  /** Rangée d'accords sans paroles suivie d'une ligne avec paroles : ajoute l'écart entre les deux lignes. */
+  ecartApres?: boolean;
 }
 
-export function ChordLine({ tokens, showChords = true, hideLyrics = false, fontSize, chordEm = 0.9, chord_font, fr_lyric_font }: ChordLineProps) {
+export function ChordLine({ tokens, showChords = true, hideLyrics = false, fontSize, chordEm = 0.9, chord_font, fr_lyric_font, ecartApres = false }: ChordLineProps) {
   const segments = toSegments(tokens, !showChords);
   const hasAnyChord = showChords && segments.some((s) => s.chord !== null);
   return (
@@ -123,9 +145,14 @@ export function ChordLine({ tokens, showChords = true, hideLyrics = false, fontS
         paddingTop: "0.15em",
         paddingBottom: "0.15em",
         lineHeight: segments.every(s => !s.lyric?.trim()) ? "0" : undefined,
+        // Rangée d'accords sans paroles suivie d'une ligne avec paroles : l'écart normal entre deux lignes.
+        marginBottom: ecartApres ? "0.5em" : undefined,
       }}  
     >
-      {toWords(segments).map((word) => (
+      {toChunks(toWords(segments), hasAnyChord).map((chunk) => (
+      // Une rangée ne se coupe qu'avant un accord ; plus large que la ligne, elle se coupe de nouveau entre ses mots.
+      <span key={chunk[0][0].i} className="flex max-w-full shrink-0 flex-wrap items-end">
+      {chunk.map((word) => (
       <span key={word[0].i} className="inline-flex items-end">
       {word.map(({ seg, i }, k) => {
         const chordLen = seg.chord?.length ?? 0;
@@ -192,6 +219,8 @@ export function ChordLine({ tokens, showChords = true, hideLyrics = false, fontS
           </span>
         );
       })}
+      </span>
+      ))}
       </span>
       ))}
     </div>

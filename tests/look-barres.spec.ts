@@ -10,8 +10,8 @@ import { enDeuxVolets } from "./helpers/setlist";
 // fond opaque (`FondDeBarre`) qui repeint ce qu'il cache, le fond de la page et son
 // halo ; la barre reste donc invisible tant que rien n'est dessous. Sous la dernière
 // barre, le contenu s'efface sur 12 px au lieu d'être tranché (ni voile, ni flou, ni
-// filet : V7 les a écartés). Le mode louange garde ses deux barres voilées (20/09/2026).
-const VOILE = "rgba(255, 255, 255, 0.8)";
+// filet : V7 les a écartés). Le mode louange a gardé ses deux barres voilées du 20/09/2026 au 03/11/2026 ;
+// depuis dimanche-1 (lot CD), elles sont opaques, sans flou : le contenu ne passe plus dessous (V8).
 const FONDU = 12;
 
 const MUSICIEN: FakeProfile = {
@@ -276,14 +276,17 @@ test.describe("barres (5C1, V8) : opaques, elles repeignent la page qu'elles cac
     await expect.poll(() => page.locator(".material-chrome:not(.material-steady)").evaluateAll((els) => els.map((el) => getComputedStyle(el).backgroundColor))).toEqual(["rgb(255, 255, 255)"]);
   });
 
-  test("le mode louange garde ses deux barres voilées", async ({ page }) => {
+  test("le mode louange a deux barres opaques, sans flou (dimanche-1)", async ({ page }) => {
     await sansSheet(page);
     await page.addInitScript(() => localStorage.setItem("perf-role-preset", "pianiste"));
     await signInAs(page, MUSICIEN, { "setlists/culte": FICHE }, "/setlists/culte");
     await page.getByRole("button", { name: "Mode louange" }).click();
     await attendreMiseEnPage(page);
-    const voilees = page.locator(".material-chrome.material-steady");
-    await expect(voilees).toHaveCount(2); // la barre du haut et celle du bas
-    for (const fond of await voilees.evaluateAll((els) => els.map((el) => getComputedStyle(el).backgroundColor))) expect(fond).toBe(VOILE);
+    const barres = page.locator(".material-chrome.material-steady");
+    await expect(barres).toHaveCount(2); // la barre du haut et celle du bas
+    for (const { fond, flou } of await barres.evaluateAll((els) => els.map((el) => ({ fond: getComputedStyle(el).backgroundColor, flou: getComputedStyle(el).backdropFilter })))) {
+      expect(fond).toBe("rgb(255, 255, 255)");
+      expect(flou === "none" || flou === "").toBe(true);
+    }
   });
 });

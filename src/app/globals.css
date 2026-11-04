@@ -27,12 +27,11 @@
      nette entre le flou et le reste se voit toujours, quelle qu'en soit la douceur.
      Depuis V8 (27/09/2026), le contenu ne passe plus dessous : chacune a un fond opaque
      qui repeint la page et son halo (`.barre-fond`, plus bas).
-     `.material-steady` garde voile et flou : les deux barres du mode louange sont
-     posées sur les paroles, et doivent s'en détacher pour rester lisibles. */
+     `.material-steady` (mode louange) suit la même règle V8 : fond opaque, ni voile ni
+     flou. Les deux barres ne laissent plus transparaître les paroles ni le titre du
+     chant qu'elles couvrent (T1d-B, 04/11/2026). */
   .material-steady {
-    background-color: hsl(var(--background) / 0.8);
-    -webkit-backdrop-filter: blur(20px) saturate(1.4);
-    backdrop-filter: blur(20px) saturate(1.4);
+    background-color: hsl(var(--background));
   }
   /* Une altération dans un texte : un peu plus grande que les lettres, sur leur ligne de base. */
   .alteration { font-family: "Noto Music", sans-serif; font-size: 1.15em; position: relative; top: -0.05em; line-height: 1; }

@@ -24,7 +24,7 @@ import {
 } from "@/components/ui/drawer";
 import type { PerformanceBlock, SectionBlock, JianpuSheetBlock, SongHeaderBlock } from "@/lib/performance/blocks";
 import { ancreDeLecture, buildPerformanceBlocks, computePageKey, signatureAffichage, type AncreLecture } from "@/lib/performance/blocks";
-import { twoColumnsPossible, type PerfPage } from "@/lib/performance/columns";
+import { PASTILLE_SUIVANT_H, twoColumnsPossible, type PerfPage } from "@/lib/performance/columns";
 import { NEXT_PILL_RESERVE, layoutSong, lireEcran, pageAncree, paginer, replisStructure, sansTransitions, splitSheetPages } from "@/lib/performance/pagination";
 import { useJianpuManifest } from "@/lib/jianpu/images";
 import { interrupteurAllume, prefDepuisInterrupteur, type JianpuPref } from "@/lib/jianpu/preference";
@@ -526,6 +526,10 @@ export function PerformanceMode({
   const barreHautRef = useRef<HTMLDivElement>(null);
   const barreBasRef = useRef<HTMLDivElement>(null);
   const [barres, setBarres] = useState({ haut: 0, bas: 0 });
+  // Pastille « Ensuite » dans le flux (dimanche-11) : barre du bas affichée, si la barre (opaque) la couvre, elle
+  // s'efface et la pastille flottante se pose au-dessus de la barre, comme avant ; barre escamotée, elle reste dans le flux.
+  const refPastilleFlux = useRef<HTMLButtonElement>(null);
+  const [pastilleCouverte, setPastilleCouverte] = useState(false);
   useLayoutEffect(() => {
     const haut = barreHautRef.current;
     const bas = barreBasRef.current;
@@ -644,7 +648,7 @@ export function PerformanceMode({
         if (b.kind === "song-header") courant = i;
         enteteDe.set(i, courant);
       });
-      const ctxPagination = { blocks, heights, heightsColumn, viewportH, twoColumns, enteteDe };
+      const ctxPagination = { blocks, heights, heightsColumn, viewportH, twoColumns, enteteDe, pastille: PASTILLE_SUIVANT_H };
       let ancienne: PerfPage[] = [];
       let computed: PerfPage[];
       if (structureMode) {
@@ -1029,6 +1033,32 @@ export function PerformanceMode({
   // ni page de scan 简谱 (courante ou suivante) ; rien non plus sous la loupe d'annotation.
   const pageSuivante = layout[currentPage + 1];
   const apercuPossible = apercuActif && !fitPage && annotZoom === 1 && pageSuivante && !pageSuivante.fit ? pageSuivante : null;
+  // Pastille « Ensuite : … » (titre + tonalité du chant suivant) ; `classes` en règle la place et le fond.
+  const pastilleSuivant = (classes: string, ref?: React.Ref<HTMLButtonElement>, cachee = false) =>
+    nextEntry ? (
+      <button
+        ref={ref}
+        type="button"
+        data-suivant={cachee ? undefined : ""}
+        aria-hidden={cachee || undefined}
+        tabIndex={cachee ? -1 : undefined}
+        onClick={() => goToPage(nextSongPage, pages.length)}
+        onPointerDown={(e) => e.stopPropagation()}
+        onPointerUp={(e) => e.stopPropagation()}
+        className={`flex min-h-11 items-center gap-1.5 rounded-full border px-4 py-2 text-sm text-muted-foreground ${classes}`}
+      >
+        <span>{t("performance.next")}</span>{" "}
+        <span className="min-w-0 truncate font-semibold text-foreground">{nextEntry.block.title}</span>{" "}
+        <span>·</span>{" "}
+        <span className="font-mono">{nextEntry.block.songKey}</span>
+      </button>
+    ) : null;
+
+  useLayoutEffect(() => {
+    const el = refPastilleFlux.current;
+    const couverte = !!el && showChrome && el.getBoundingClientRect().bottom > window.innerHeight - barres.bas;
+    setPastilleCouverte(couverte);
+  }, [showChrome, currentPage, layout, barres.bas]);
   // Sur la dernière page d'un chant, la pastille « Ensuite » occupe déjà la bande : pas d'aperçu par-dessous.
   const apercu = isLastPageOfSong && nextEntry ? null : apercuPossible;
   // Les calques d'annotation ne couvrent pas la bande (bas de page + 16 px de marge + sab).
@@ -1211,6 +1241,8 @@ export function PerformanceMode({
               apercu={apercu}
               apercuHauteur={APERCU_H}
               contentPadding={contentPadding}
+              showChrome={showChrome}
+              pastille={isLastPageOfSong && nextEntry && !colonneScan ? pastilleSuivant(`pointer-events-auto max-w-full border-border/60 ${pastilleCouverte ? "invisible" : ""}`, refPastilleFlux, pastilleCouverte) : null}
             />
           );
         })()}
@@ -1251,25 +1283,15 @@ export function PerformanceMode({
         </div>
       )}
 
-      {/* ── « Ensuite : … » sur la dernière page d'un chant : touchable, sans confirmation ── */}
-      {isLastPageOfSong && nextEntry && !colonneScan && (
+      {/* ── « Ensuite : … » sur la dernière page d'un chant : touchable, sans confirmation.
+          Dans le flux (PageTexte) quand la pagination lui a gardé la place ; posée en absolu sinon (vue structure),
+          ou quand la barre du bas, affichée, couvre la pastille du flux. ── */}
+      {isLastPageOfSong && nextEntry && !colonneScan && (layout[currentPage]?.suivant === undefined || pastilleCouverte) && (
         <div
           className="absolute left-0 right-0 flex justify-center pointer-events-none"
           style={{ zIndex: 5, bottom: showChrome ? `${barres.bas + 8}px` : "calc(0.625rem + var(--sab, 0px))" }}
         >
-          <button
-            type="button"
-            data-suivant
-            onClick={() => goToPage(nextSongPage, pages.length)}
-            onPointerDown={(e) => e.stopPropagation()}
-            onPointerUp={(e) => e.stopPropagation()}
-            className="pointer-events-auto flex min-h-11 max-w-[92%] items-center gap-1.5 rounded-full border border-border/60 bg-background/85 px-4 py-2 text-sm text-muted-foreground backdrop-blur"
-          >
-            <span>{t("performance.next")}</span>{" "}
-            <span className="min-w-0 truncate font-semibold text-foreground">{nextEntry.block.title}</span>{" "}
-            <span>·</span>{" "}
-            <span className="font-mono">{nextEntry.block.songKey}</span>
-          </button>
+          {pastilleSuivant("pointer-events-auto max-w-[92%] border-border/60 bg-background/85 backdrop-blur")}
         </div>
       )}
 
@@ -1281,6 +1303,7 @@ export function PerformanceMode({
         <AnnotationCanvas
           data={annotations}
           rogneBas={rogneBas}
+          barres={barres}
           onChange={handleAnnotationsChange}
           zoom={annotZoom}
           pan={annotPan}

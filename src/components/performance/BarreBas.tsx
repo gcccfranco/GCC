@@ -56,6 +56,7 @@ export function BarreBas({
           reperes={reperesChants}
           libelle={t("performance.pageSlider")}
           texteValeur={t("performance.pageSliderValue", { n: currentPage + 1, total: pageCount })}
+          etiquette={t("performance.pageEtiquette", { n: currentPage + 1, total: pageCount })}
           onAller={(p) => goToPage(p, pageCount)}
         />
       )}
@@ -87,7 +88,7 @@ export function BarreBas({
         <button
           onClick={() => goToPage(currentPage - 1, pageCount)}
           disabled={currentPage === 0}
-          className="h-11 w-11 flex items-center justify-center rounded-lg border border-border text-muted-foreground disabled:opacity-30 hover:text-foreground active:bg-muted"
+          className="h-11 w-11 flex items-center justify-center rounded-lg border border-border text-muted-foreground disabled:opacity-40 hover:text-foreground active:bg-muted"
           aria-label={t("performance.prevPage")}
         >
           <ChevronLeft className="h-5 w-5" />
@@ -95,7 +96,7 @@ export function BarreBas({
         <button
           onClick={() => goToPage(currentPage + 1, pageCount)}
           disabled={currentPage >= pageCount - 1}
-          className="h-11 w-11 flex items-center justify-center rounded-lg border border-border text-muted-foreground disabled:opacity-30 hover:text-foreground active:bg-muted"
+          className="h-11 w-11 flex items-center justify-center rounded-lg border border-border text-muted-foreground disabled:opacity-40 hover:text-foreground active:bg-muted"
           aria-label={t("performance.nextPage")}
         >
           <ChevronRight className="h-5 w-5" />
