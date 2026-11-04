@@ -9,7 +9,9 @@
 // Back-Office › Tâches (agencement v18, B1, B2 ; planche `v18-bo-taches`) : la même fiche, titrée
 // en h2 sous l'en-tête « Tâches » en grand (en un volet, son propre `EnTetePage` avec « ‹ Tâches »),
 // « Modifier » et « ⋯ › Supprimer », « Note » et « Historique » côte à côte ; en grand, « Modifier »
-// ouvre le formulaire dans le volet au lieu de la feuille.
+// ouvre le formulaire dans le volet au lieu de la feuille. Corrections du design (bo-reunions-taches) : en grand
+// l'objet est le seul grand titre (h1 de 28 px, retour « ‹ Tâches de DA »), l'état est un segmenté précédé de
+// « État » avec le signe de chaque état, l'historique est un pied de page de lignes grises (-5, -10, -11).
 // Lot 1 du chantier « équipes et groupes » (EQ8, décision 41) : « Modifier » et « ⋯ › Supprimer » aux
 // référents et aux admins ; l'état ne se choisit que par qui peut cocher la tâche (`peutCocher`).
 
@@ -17,7 +19,7 @@ import { useEffect, useId, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useTranslation } from "react-i18next";
-import { Bell, CalendarDays, Link2, ListChecks, Pencil, Repeat, Ticket, Trash2, UserRound } from "lucide-react";
+import { Bell, CalendarDays, Check, Link2, ListChecks, Minus, Pencil, Repeat, Ticket, Trash2, UserRound } from "lucide-react";
 import { EnTetePage } from "@/components/layout/EnTetePage";
 import { MenuActions } from "@/components/layout/MenuActions";
 import { TacheForm } from "@/components/taches/TacheForm";
@@ -176,7 +178,7 @@ function Fiche({ ligne, toutesLesFois }: { ligne: Ligne; toutesLesFois: Fois[] }
   const historique: string[] = [];
   if (fois?.etat === "encours") historique.push(`${t("taches.commenceePar", { nom: fois.parNom })} · ${jourCourt(fois.debutLe || fois.le, i18n.language)}`);
   if (fois?.etat === "terminee") historique.push(`${t("taches.faitePar", { nom: fois.parNom })} · ${jourCourt(fois.le, i18n.language)}`);
-  if (auteur !== undefined) historique.push(`${t("taches.fiche.creeePar", { nom: auteur ?? t("taches.fiche.unMembre") })} · ${jourCourt(tache.createdAt, i18n.language)}`);
+  if (auteur !== undefined) historique.push(t("taches.fiche.creeeLe", { nom: auteur ?? t("taches.fiche.unMembre"), date: jourCourt(tache.createdAt, i18n.language) }));
   const SousTitre = deuxVolets ? "h3" : "h2";
 
   const boutonModifier = gerer && (
@@ -210,17 +212,25 @@ function Fiche({ ligne, toutesLesFois }: { ligne: Ligne; toutesLesFois: Fois[] }
       {!deuxVolets ? (
         // Un volet : la fiche est une page, avec le seul retour (R8) et son titre en h1.
         <EnTetePage
-          retour={{ href: backOffice ? `${racine}/${tache.equipe}` : racine, label: t("taches.title") }}
+          retour={{
+            href: backOffice ? `${racine}/${tache.equipe}` : racine,
+            label: backOffice ? t("taches.retourEquipe", { equipe: nomEquipe }) : t("taches.title"),
+          }}
           titre={<span id={titreId}>{tache.titre}</span>}
-          sousTitre={nomEquipe}
+          sousTitre={backOffice ? undefined : nomEquipe}
           outils={<>{boutonModifier}{menu}</>}
         />
       ) : (
         <header className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            {/* En grand, sous l'en-tête « Tâches » : un h2 de 24 px (R3). */}
-            <h2 id={titreId} className="text-2xl font-bold leading-tight tracking-tight text-balance">{tache.titre}</h2>
-            <p className="mt-1 text-sm text-muted-foreground">{nomEquipe}</p>
+            {/* En grand : l'App garde son h2 de 24 px sous l'en-tête « Tâches » (R3) ; au Back-Office la fiche est le
+                seul grand titre, un h1 de 28 px, et l'équipe est dans le retour (-5). */}
+            {backOffice
+              ? <h1 id={titreId} className="text-[28px] font-bold leading-tight tracking-[-0.02em] text-balance">{tache.titre}</h1>
+              : <>
+                  <h2 id={titreId} className="text-2xl font-bold leading-tight tracking-tight text-balance">{tache.titre}</h2>
+                  <p className="mt-1 text-sm text-muted-foreground">{nomEquipe}</p>
+                </>}
           </div>
           <div className="flex shrink-0 items-center gap-2">
             {boutonModifier}
@@ -231,7 +241,9 @@ function Fiche({ ligne, toutesLesFois }: { ligne: Ligne; toutesLesFois: Fois[] }
 
       {retour && <p role="status" className="text-sm text-muted-foreground">{retour}</p>}
 
-      <section className={cn("raised rounded-2xl px-4 py-3.5", deuxVolets && "flex flex-wrap items-center gap-x-4 gap-y-3")}>
+      <section className={cn("raised rounded-2xl px-4 py-3.5", backOffice ? "space-y-2" : deuxVolets && "flex flex-wrap items-center gap-x-4 gap-y-3")}>
+        {/* Au Back-Office : « État », puis le segmenté seul (l'état n'est écrit qu'une fois), son sous-titre dessous (-10). */}
+        {backOffice && <p className="text-[13px] font-semibold text-muted-foreground">{t("taches.etat.titre")}</p>}
         <div role="radiogroup" aria-label={t("taches.etat.titre")} className="flex gap-0.5 rounded-full bg-secondary p-1 text-sm">
           {ETATS.map((e) => (
             <button
@@ -243,15 +255,25 @@ function Fiche({ ligne, toutesLesFois }: { ligne: Ligne; toutesLesFois: Fois[] }
               disabled={!cochable}
               className={cn(
                 "min-h-9 flex-1 whitespace-nowrap rounded-full px-4 font-semibold transition-colors duration-150 disabled:cursor-default",
+                backOffice && "inline-flex items-center justify-center gap-1.5",
                 !cochable && etat !== e && "opacity-50",
                 etat === e ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground",
               )}
             >
+              {backOffice && (
+                <span aria-hidden className={cn(
+                  "flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-full border-2",
+                  e === "terminee" ? "border-foreground bg-foreground text-background" : e === "encours" ? "border-foreground" : "border-muted-foreground/60",
+                )}>
+                  {e === "terminee" && <Check className="h-2.5 w-2.5" strokeWidth={3} />}
+                  {e === "encours" && <Minus className="h-2.5 w-2.5" strokeWidth={3} />}
+                </span>
+              )}
               {t(`taches.etat.${e}`)}
             </button>
           ))}
         </div>
-        {sousTitre && <p className={cn("min-w-0 text-[13px] text-muted-foreground", !deuxVolets && "mt-2 basis-full")}>{sousTitre}</p>}
+        {sousTitre && <p className={cn("min-w-0 text-[13px] text-muted-foreground", !backOffice && !deuxVolets && "mt-2 basis-full")}>{sousTitre}</p>}
       </section>
 
       <dl className="raised rounded-2xl px-4 py-1">
@@ -267,21 +289,20 @@ function Fiche({ ligne, toutesLesFois }: { ligne: Ligne; toutesLesFois: Fois[] }
       </dl>
 
       {backOffice ? (
-        // « Note » et « Historique » côte à côte en grand (B1).
-        <div className={cn("grid items-start gap-4", tache.note && "md:grid-cols-2")}>
+        // La note seule en carte, pleine largeur ; l'historique en lignes grises au pied, sans carte (-11).
+        <>
           {tache.note && (
             <section className="raised rounded-2xl px-4 py-3">
               <SousTitre className="text-[15px] font-bold">{t("taches.champs.note")}</SousTitre>
               <p className="mt-1 whitespace-pre-wrap text-[15px]">{tache.note}</p>
             </section>
           )}
-          <section className="raised rounded-2xl px-4 py-3">
-            <SousTitre className="text-[15px] font-bold">{t("taches.fiche.historique")}</SousTitre>
-            <ul className="mt-1">
-              {historique.map((h) => <li key={h} className="border-t border-border/70 py-1.5 text-sm first:border-t-0">{h}</li>)}
+          {historique.length > 0 && (
+            <ul aria-label={t("taches.fiche.historique")} className="space-y-0.5 px-1">
+              {historique.map((h) => <li key={h} className="text-[13px] text-muted-foreground">{h}</li>)}
             </ul>
-          </section>
-        </div>
+          )}
+        </>
       ) : tache.note && (
         <section className="raised rounded-2xl px-4 py-3">
           <SousTitre className="text-[13px] font-semibold text-muted-foreground">{t("taches.champs.note")}</SousTitre>

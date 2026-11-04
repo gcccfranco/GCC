@@ -4,7 +4,8 @@
 // les réunions de ses équipes (toutes pour un admin). En-tête « Réunions », sans rail
 // (pas de sous-parties), « + Nouvelle réunion » ; dessous, deux volets : « À venir » puis « Passées »,
 // la prochaine ouverte d'office ; la fiche, « nouvelle » et « modifier » dans le volet de droite.
-// BO-C : « ‹ Calendrier » en retour (les listes sont dans le Calendrier).
+// BO-C : « ‹ Calendrier » en retour (les listes sont dans le Calendrier). Corrections du design (-5) : la bande
+// du haut n'a plus de titre, le grand titre est celui de la fiche (ou du formulaire) à droite.
 // Affichage seulement : evenements/{id} garde ses règles.
 import { usePathname } from "next/navigation";
 import { useTranslation } from "react-i18next";
@@ -23,9 +24,7 @@ export default function ReunionsLayout({ children }: { children: React.ReactNode
 
   const enTete = (
     <EnTetePage
-      retour={{ href: "/back-office/calendrier", label: t("backOffice.entrees.calendrier") }}
-      titre={t("backOffice.entrees.reunions")}
-      sousTitre={t("backOffice.gestion.sousTitreReunions")}
+      retour={{ href: "/back-office/calendrier?vue=agenda&filtre=reunions", label: t("backOffice.entrees.calendrier") }}
       action={peutCreerDans(user, profile, true) && <BoutonNouveau label={t("backOffice.nouvelleReunion")} href="/back-office/reunions/nouvelle" />}
     />
   );

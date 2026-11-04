@@ -19,6 +19,8 @@ import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-
 import { CSS } from "@dnd-kit/utilities"
 import { Check, GripVertical, Plus, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { BOUTON_CHAMP_ACTION, CHAMP_ACTION } from "@/components/reunions/champAction"
+import { TOUCHER_44 } from "@/lib/toucher44"
 import { peutAjouterSujet, peutOrdonnerSujets, peutRetirerSujet } from "@/lib/access"
 import { useSensorsAvecClavier } from "@/lib/dnd/sensors"
 import { aCommence, nowIsoParis } from "@/lib/evenements/agenda"
@@ -30,9 +32,9 @@ import type { UserProfile } from "@/types/user"
 
 const ROUGE = "text-red-700 dark:text-red-400"
 
-/** « 28/09 », en heure de Paris. */
+/** « 28 sept. » / « 9月28日 », en heure de Paris. */
 function dateCourte(iso: string, lang: string): string {
-  return new Date(iso).toLocaleDateString(lang === "zh-CN" ? "zh-CN" : "fr-FR", { day: "2-digit", month: "2-digit", timeZone: "Europe/Paris" })
+  return new Date(iso).toLocaleDateString(lang === "zh-CN" ? "zh-CN" : "fr-FR", { day: "numeric", month: "short", timeZone: "Europe/Paris" })
 }
 
 function LigneSujet({ sujet, rouge, provenance, ordonner, retirer, onTraite, onRetirer }: {
@@ -200,20 +202,18 @@ export function SujetsAborder({ evenement: e, user, profile, reunions = [] }: {
         {/* « Sujets à aborder » avant le début, « Sujets » et le bilan après (planches). */}
         <h3 id="sujets-titre" className="text-base font-semibold text-foreground">{t(commencee ? "evenements.sujets.titreApres" : "evenements.sujets.titre")}</h3>
         {sujets && !commencee && <span className="rounded-md bg-secondary px-1.5 text-xs font-semibold tabular-nums text-muted-foreground">{total}</span>}
-        {/* Le bilan, court, reste à droite même sur téléphone ; l'aide, longue, y passe à la ligne. */}
-        <span className={`text-xs text-muted-foreground ${commencee ? "ml-auto" : "w-full sm:ml-auto sm:w-auto"}`}>
-          {commencee ? t("evenements.sujets.traites", { count: traites, total }) : t("evenements.sujets.aide")}
-        </span>
+        {/* Le bilan, court, reste à droite ; avant le début, l'aide est au pied de la carte. */}
+        {commencee && <span className="ml-auto text-xs text-muted-foreground">{t("evenements.sujets.traites", { count: traites, total })}</span>}
       </div>
 
       {peutAjouterSujet(user, profile, e, now) && (
         <form onSubmit={ajouter}
-          className="flex h-11 items-center gap-2 rounded-full border-[1.5px] border-foreground bg-background pl-3.5 pr-1.5 ring-offset-background focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2">
+          className={CHAMP_ACTION}>
           <Plus className="h-4 w-4 shrink-0 text-foreground" aria-hidden />
           <input value={texte} onChange={(ev) => setTexte(ev.target.value)}
             aria-label={t("evenements.sujets.nouveau")} placeholder={t("evenements.sujets.placeholder")}
             className="min-w-0 flex-1 bg-transparent text-base text-foreground outline-none placeholder:text-muted-foreground" />
-          <Button type="submit" size="sm" className="h-8" disabled={busy || !texte.trim()}>{t("evenements.sujets.ajouter")}</Button>
+          <Button type="submit" size="sm" className={`${BOUTON_CHAMP_ACTION} ${TOUCHER_44}`} disabled={busy || !texte.trim()}>{t("evenements.sujets.ajouter")}</Button>
         </form>
       )}
 
@@ -235,7 +235,7 @@ export function SujetsAborder({ evenement: e, user, profile, reunions = [] }: {
         </DndContext>
       )}
 
-      {!commencee && <p className="text-sm text-muted-foreground">{t("evenements.sujets.noteAvant")}</p>}
+      {!commencee && <p className="text-[13px] text-muted-foreground">{t("evenements.sujets.aide")} {t("evenements.sujets.noteAvant")}</p>}
       {rouges > 0 && <p className={`text-sm ${ROUGE}`}>{t("evenements.sujets.noteRouge", { count: rouges })}</p>}
     </section>
   )

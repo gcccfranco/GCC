@@ -2232,8 +2232,10 @@
     "reserved": "此页面仅限协调组和各小组负责人。",
     "form": {
       "titre": "活动名称",
+      "titreReunion": "会议名称",
       "type": "类别",
       "pour": "对象",
+      "pourReunion": "团队",
       "date": "日期",
       "heure": "时间",
       "heureFin": "活动结束（时间）",
@@ -2256,6 +2258,7 @@
       "addImage": "添加图片",
       "removeImage": "删除图片",
       "create": "创建活动",
+      "createReunion": "创建会议",
       "save": "保存",
       "cancel": "取消",
       "errorTitre": "标题为必填项。",
@@ -2358,12 +2361,13 @@
     "externe": "外部表单",
     "taches": {
       "titre": "任务",
-      "vide": "此活动还没有任务。"
+      "vide": "此活动还没有任务。",
+      "videReunion": "本次会议暂无任务。"
     },
     "sujets": {
       "titre": "待讨论议题",
       "titreApres": "议题",
-      "aide": "参会的每个人在会议开始前都可以添加",
+      "aide": "参会的每个人在会议开始前都可以添加。",
       "traites_one": "已讨论 {{count}} / {{total}}",
       "traites_other": "已讨论 {{count}} / {{total}}",
       "nouveau": "新议题",
@@ -2405,8 +2409,8 @@
       "titre": "会议记录",
       "aide": "会议结束后，参会的任何人（或管理员）都可以在这里粘贴会议记录的 Google 文档链接；其他人会在早间提醒中收到通知。",
       "lien": "会议记录链接",
-      "placeholder": "https://docs.google.com/document/…",
-      "enregistrer": "保存链接",
+      "placeholder": "Google 文档链接",
+      "enregistrer": "保存",
       "invalide": "请粘贴以 https:// 开头的完整链接",
       "ajoutePar": "{{source}} · {{nom}} 于{{date}}添加",
       "ouvrir": "打开",
@@ -2486,6 +2490,7 @@
   "taches": {
     "title": "任务",
     "mesTaches": "我的任务",
+    "retourEquipe": "{{equipe}} 的任务",
     "aFairePourMoi": "我要做的",
     "subtitle": "团队任务",
     "aucuneEquipe": "你不属于任何团队：任务只对团队成员开放。",
@@ -2565,7 +2570,7 @@
       "modifier": "编辑",
       "enRetard": "已逾期",
       "historique": "记录",
-      "creeePar": "{{nom}} 创建",
+      "creeeLe": "由 {{nom}} 于{{date}}创建",
       "unMembre": "一位成员"
     },
     "etat": {
@@ -3627,6 +3632,7 @@
     "aucunEvenement": "没有需要管理的活动。",
     "aucuneReunion": "暂无会议。",
     "nouvelleReunion": "新建会议",
+    "modifierReunion": "修改会议",
     "annonceBascule": {
       "aria": "公告",
       "avant": "2026 年的活动仍记在活动表（Sheet）中；2027 年的活动请在这里创建。"
@@ -3638,7 +3644,6 @@
     "passees": "已结束",
     "gestion": {
       "sousTitreEvenements": "会众看到的活动，以及它们的管理",
-      "sousTitreReunions": "你所在团队的会议",
       "voirCommeMembre": "以成员身份查看",
       "contact": "联系人：{{nom}}",
       "exporter": "导出",

@@ -1,4 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
+import { readFileSync } from "node:fs";
+import path from "node:path";
+import { ADMIN_EMAIL, signInAs } from "./helpers/fakeSession";
 
 // Lot 4 « Nouveau look », tranche T1 : fondations (docs/spec-look.md), reprises
 // par la direction 5C1 « Encre · Relief » (§ 20/09/2026, tranche V1).
@@ -77,4 +80,90 @@ test.describe("fondations du nouveau look (T1)", () => {
       expect(petits).toEqual([]);
     });
   }
+});
+
+// Lot CD, T1h (docs/spec-corrections-design/bo-reunions-taches.md, -7, -13, -16) : la zone de texte est de la famille des
+// champs d'une ligne, les libellés des deux formulaires du Back-Office ont une seule recette, un bouton désactivé se lit
+// « pas encore » (pas un blanc à moitié transparent). Compte simulé, personnes fictives.
+test.describe("formulaires du Back-Office et bouton désactivé (CD, T1h)", () => {
+  const MIREILLE = { uid: "uid-mireille", email: ADMIN_EMAIL, firstName: "Mireille", lastName: "V.", dansEquipes: ["da"], referentDe: ["da"] };
+  const REUNION = {
+    titre: "Réunion DA", type: "loisir", pour: "equipe:da", reunion: true, date: "2026-10-10", heure: "20:00", heureFin: "", dateFin: "",
+    lieu: "Salle 2", description: "", liens: [], images: [], placesMax: null, inscriptions: "fermees", inscriptionDebut: "", inscriptionFin: "",
+    sansCompte: false, lienExterne: "", contact: "", organisateurUid: "uid-mireille", organisateurNom: "Mireille V.", epingle: false,
+    expiresAt: null, inscrits: 0, createdAt: "2026-09-18T10:00:00Z", updatedAt: "2026-09-18T10:00:00Z",
+  };
+  const DOCS = { "evenements/reunion-da": REUNION };
+  const ouvrir = async (page: Page, vers: string) => {
+    await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
+    await page.route(/docs\.google\.com\/spreadsheets/, (route) => route.fulfill({ status: 200, contentType: "text/csv", body: "" }));
+    await signInAs(page, MIREILLE, DOCS, vers);
+  };
+  /** Les couleurs des jetons, lues sur des éléments témoins. */
+  const jetons = (page: Page) => page.evaluate(() => {
+    const lire = (classe: string, propriete: "color" | "backgroundColor") => {
+      const el = document.createElement("span");
+      el.className = classe;
+      document.body.appendChild(el);
+      const v = getComputedStyle(el)[propriete];
+      el.remove();
+      return v;
+    };
+    return { muted: lire("text-muted-foreground", "color"), secondary: lire("bg-secondary", "backgroundColor") };
+  });
+
+  for (const theme of ["light", "dark"] as const) {
+    test(`${theme} : la zone « Description » est un aplat gris sans filet, de 96 px au moins, et les libellés ont une recette`, async ({ page }) => {
+      await page.emulateMedia({ colorScheme: theme });
+      await ouvrir(page, "/back-office/reunions/nouvelle");
+      const description = page.getByLabel("Description");
+      await expect(description).toBeVisible();
+      const j = await jetons(page);
+      const zone = await description.evaluate((e) => {
+        const s = getComputedStyle(e);
+        return { fond: s.backgroundColor, bordure: s.borderTopColor, largeurBordure: s.borderTopWidth, hauteur: e.getBoundingClientRect().height };
+      });
+      expect(zone.fond).toBe(j.secondary);
+      expect(zone.bordure === "rgba(0, 0, 0, 0)" || zone.largeurBordure === "0px", "aucun filet visible").toBe(true);
+      expect(zone.hauteur).toBeGreaterThanOrEqual(96);
+      // Les libellés : 13 px semi-gras gris, champs de 44 px (nom, date, lieu).
+      for (const nom of ["Nom de la réunion", "Date", "Lieu"]) {
+        const libelle = page.locator("label", { hasText: new RegExp(`^${nom}$`) }).first();
+        const s = await libelle.evaluate((e) => { const c = getComputedStyle(e); return { taille: c.fontSize, graisse: c.fontWeight, couleur: c.color }; });
+        expect(s, `libellé « ${nom} »`).toEqual({ taille: "13px", graisse: "600", couleur: j.muted });
+        const champ = page.getByLabel(nom, { exact: true });
+        expect((await champ.boundingBox())!.height, `champ « ${nom} »`).toBeCloseTo(44, 0);
+      }
+    });
+
+    test(`${theme} : « Nouvelle tâche » a les mêmes libellés et des champs de 44 px`, async ({ page }) => {
+      await page.emulateMedia({ colorScheme: theme });
+      await ouvrir(page, "/back-office/taches/da/nouvelle");
+      const j = await jetons(page);
+      for (const nom of ["Titre", "Échéance", "Note"]) {
+        const libelle = page.locator("label", { hasText: new RegExp(`^${nom}$`) }).first();
+        await expect(libelle).toBeVisible();
+        const s = await libelle.evaluate((e) => { const c = getComputedStyle(e); return { taille: c.fontSize, graisse: c.fontWeight, couleur: c.color }; });
+        expect(s, `libellé « ${nom} »`).toEqual({ taille: "13px", graisse: "600", couleur: j.muted });
+        expect((await page.getByLabel(nom, { exact: true }).boundingBox())!.height, `champ « ${nom} »`).toBeCloseTo(44, 0);
+      }
+    });
+
+    test(`${theme} : le bouton « Enregistrer » du lien, champ vide, est lisible « pas encore » (opacité 1, texte gris, sans aplat)`, async ({ page }) => {
+      await page.emulateMedia({ colorScheme: theme });
+      await ouvrir(page, "/back-office/reunions/reunion-da");
+      const bouton = page.getByTestId("compte-rendu-carte").getByRole("button", { name: "Enregistrer", exact: true });
+      await expect(bouton).toBeDisabled();
+      const j = await jetons(page);
+      const s = await bouton.evaluate((e) => { const c = getComputedStyle(e); return { opacite: c.opacity, couleur: c.color, fond: c.backgroundColor }; });
+      expect(s).toEqual({ opacite: "1", couleur: j.muted, fond: "rgba(0, 0, 0, 0)" });
+    });
+  }
+
+  test("la règle des boutons désactivés est unique, dans button.tsx : fond --secondary, texte --muted-foreground, sans opacité", () => {
+    const source = readFileSync(path.join(__dirname, "..", "src/components/ui/button.tsx"), "utf8");
+    expect(source).toContain("disabled:bg-secondary");
+    expect(source).toContain("disabled:text-muted-foreground");
+    expect(source).not.toMatch(/disabled:opacity/);
+  });
 });

@@ -176,7 +176,7 @@ async function nouvelleTache(page: Page) {
   if (estGrandEcran(test.info())) {
     return { form: page.getByRole("form", { name: "Nouvelle tâche" }), creer: "Créer la tâche" };
   }
-  return { form: page.getByRole("dialog", { name: "Nouvelle tâche" }), creer: "Enregistrer" };
+  return { form: page.getByRole("dialog", { name: "Nouvelle tâche" }), creer: "Créer la tâche" };
 }
 const laListe = (page: Page) => page.getByRole("region", { name: "Tâches", exact: true });
 
@@ -404,11 +404,11 @@ test("créer une réunion d'équipe : pas d'inscriptions", async ({ page }) => {
   await page.route("**/api/push/notify-evenement", (route) => { pushed = true; return route.fulfill({ json: { ok: true } }); });
   // Retouches v18, lot E : une réunion se crée par « + Nouvelle réunion » (« Nouvel évènement » = évènement de pôle).
   const db = await signInAs(page, MEMBRE_DA, {}, "/back-office/reunions/nouvelle");
-  await page.getByLabel("Public").selectOption({ label: "TEAM DA" });
+  await page.getByLabel("Équipe", { exact: true }).selectOption({ label: "DA" });
   await expect(page.getByRole("radiogroup", { name: "Inscriptions" })).toHaveCount(0);
-  await page.getByLabel("Nom de l'évènement").fill("Réunion DA");
+  await page.getByLabel("Nom de la réunion").fill("Réunion DA");
   await page.getByLabel("Date", { exact: true }).fill("2026-10-10");
-  await page.getByRole("button", { name: "Créer l'évènement" }).click();
+  await page.getByRole("button", { name: "Créer la réunion" }).click();
   await expect(page.getByRole("heading", { name: "Réunion DA" })).toBeVisible();
   const created = db.writes.find((w) => w.method === "POST" && w.path.startsWith("evenements/"));
   expect(created?.data).toMatchObject({ pour: "equipe:da", inscriptions: "fermees", sansCompte: false, placesMax: null });

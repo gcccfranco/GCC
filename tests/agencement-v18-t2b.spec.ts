@@ -50,6 +50,8 @@ async function ouvrir(page: Page, qui: FakeProfile, to: string, docs: Record<str
 const liste = (page: Page) => page.locator('[data-volet="liste"]');
 const volet = (page: Page) => page.locator('[data-volet="detail"]');
 const titreFiche = (page: Page, nom: string) => volet(page).getByRole("heading", { level: 2, name: nom, exact: true });
+/** Le titre d'une réunion en grand : le seul h1 de la page, dans le volet de la fiche (corrections du design, -5). */
+const titreReunion = (page: Page, nom: string) => volet(page).getByRole("heading", { level: 1, name: nom, exact: true });
 /** Le bloc de contenu sous l'en-tête (`verifierAgencement`, pleine zone) : les deux volets, ou la liste
  *  seule, ou la fiche en page. */
 const contenu = (page: Page) => page.locator('[data-volet="liste"], [data-volet="detail"]').first().locator("..");
@@ -255,15 +257,17 @@ test.describe("T2b : Back-Office › Évènements", () => {
 // ─── Réunions (B4) ───────────────────────────────────────────────────────────────
 
 test.describe("T2b : Back-Office › Réunions", () => {
-  test("l'agencement commun autour d'une fiche : en-tête « Réunions », sous-titre, « ‹ Calendrier », sans rail", async ({ page }, info) => {
+  test("l'agencement commun autour d'une fiche : la bande du haut sans titre (« ‹ Calendrier » et « Nouvelle réunion »), le titre de la réunion en h1, sans rail", async ({ page }, info) => {
     test.skip(!estGrandEcran(info), "l'en-tête de la section : deux volets, grand écran");
     await ouvrir(page, DA, "/back-office/reunions/reu-da");
-    await expect(enTete(page).getByRole("heading", { level: 1, name: "Réunions" })).toBeVisible();
-    await expect(enTete(page)).toContainText("Les réunions de tes équipes");
-    await expect(enTete(page).getByRole("link", { name: "Calendrier", exact: true })).toHaveAttribute("href", /^\/back-office\/calendrier\/?$/);
+    // Corrections du design (-5) : ni « Réunions » ni sous-titre ; le grand titre est celui de la fiche.
+    await expect(enTete(page).getByRole("heading")).toHaveCount(0);
+    await expect(enTete(page)).not.toContainText("Les réunions de tes équipes");
+    await expect(titreReunion(page, "Réunion DA")).toBeVisible();
+    await expect(enTete(page).getByRole("link", { name: "Calendrier", exact: true })).toHaveAttribute("href", /^\/back-office\/calendrier\/?\?vue=agenda&filtre=reunions$/);
     await expect(ongletsRail(page)).toHaveCount(0);
     await expect(enTete(page).getByRole("link", { name: "Nouvelle réunion" })).toHaveAttribute("href", /^\/back-office\/reunions\/nouvelle\/?$/);
-    await verifierAgencement(page, { contenu: contenu(page), onglets: { rail: 0, pilules: 0 } });
+    await verifierAgencement(page, { contenu: contenu(page), titreDansLeVolet: true, onglets: { rail: 0, pilules: 0 } });
   });
 
   test("la liste : « À venir » puis « Passées », sans évènement", async ({ page }, info) => {
@@ -279,7 +283,7 @@ test.describe("T2b : Back-Office › Réunions", () => {
     test.skip(!estGrandEcran(info), "deux volets : grand écran");
     await ouvrir(page, DA, "/back-office/reunions/reu-da");
     await expect(liste(page)).toBeVisible();
-    await expect(titreFiche(page, "Réunion DA")).toBeVisible();
+    await expect(titreReunion(page, "Réunion DA")).toBeVisible();
     await expect(liste(page).locator('[aria-current="page"]')).toHaveAttribute("href", /^\/back-office\/reunions\/reu-da\/?$/);
     const fiche = volet(page);
     await expect(fiche.getByText("Réunion d'équipe · DA")).toBeVisible();
@@ -297,8 +301,9 @@ test.describe("T2b : Back-Office › Réunions", () => {
       expect(taches.x).toBeGreaterThan(sujets.x + sujets.width - 1);
       expect(compteRendu.x).toBeGreaterThan(sujets.x + sujets.width - 1);
     } else {
-      expect(compteRendu.y).toBeLessThan(sujets.y);
-      expect(taches.y).toBeGreaterThan(sujets.y + sujets.height - 1);
+      // Une colonne : Sujets, puis le compte rendu et les réunions précédentes, puis les tâches (corrections du design, -17).
+      expect(compteRendu.y).toBeGreaterThan(sujets.y + sujets.height - 1);
+      expect(taches.y).toBeGreaterThan(compteRendu.y + compteRendu.height - 1);
     }
   });
 
@@ -326,12 +331,12 @@ test.describe("T2b : Back-Office › Réunions", () => {
     await ouvrir(page, DA, "/back-office/reunions/reu-da-sept");
     await expect(page).toHaveURL(/\/back-office\/reunions\/reu-da-sept\/?$/);
     if (estGrandEcran(info)) {
-      await expect(enTete(page).getByRole("heading", { level: 1, name: "Réunions" })).toBeVisible();
-      await expect(titreFiche(page, "Réunion DA de septembre")).toBeVisible();
+      await expect(enTete(page).getByRole("heading")).toHaveCount(0);
+      await expect(titreReunion(page, "Réunion DA de septembre")).toBeVisible();
       await expect(liste(page).getByRole("link", { name: /Réunion DA de septembre/ })).toHaveAttribute("aria-current", "page");
     } else {
       await expect(page.getByRole("heading", { level: 1, name: "Réunion DA de septembre" })).toBeVisible();
-      await expect(enTete(page).getByRole("link", { name: "Réunions" })).toHaveAttribute("href", /^\/back-office\/reunions\/?$/);
+      await expect(enTete(page).getByRole("link", { name: "Calendrier" })).toHaveAttribute("href", /^\/back-office\/calendrier\/?\?vue=agenda&filtre=reunions$/);
       await verifierAgencement(page, { contenu: contenu(page), onglets: { rail: 0, pilules: 0 } });
     }
   });
@@ -341,9 +346,11 @@ test.describe("T2b : Back-Office › Réunions", () => {
     await ouvrir(page, DA, "/back-office/reunions/reu-da");
     await enTete(page).getByRole("link", { name: "Nouvelle réunion" }).click();
     await expect(page).toHaveURL(/\/back-office\/reunions\/nouvelle\/?$/);
-    await expect(volet(page).getByLabel("Nom de l'évènement")).toBeVisible();
+    await expect(volet(page).getByLabel("Nom de la réunion")).toBeVisible();
     await expect(liste(page)).toBeVisible();
-    await expect(enTete(page).getByRole("heading", { level: 1, name: "Réunions" })).toBeVisible();
+    // Le formulaire est le grand titre (h1 « Nouvelle réunion ») ; la bande du haut n'en a plus (-5).
+    await expect(enTete(page).getByRole("heading")).toHaveCount(0);
+    await expect(volet(page).getByRole("heading", { level: 1, name: "Nouvelle réunion" })).toBeVisible();
   });
 
   test("« ⋯ › Supprimer » confirme dans le site, retire la réunion et revient à la liste", async ({ page }) => {

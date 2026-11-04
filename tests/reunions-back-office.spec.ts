@@ -107,6 +107,19 @@ test("G2 : la notification de publication d'une réunion mène au Back-Office ; 
 
 // ─── Écrans ─────────────────────────────────────────────────────────────────
 
+// Corrections du design, bo-reunions-taches-17 : l'ordre fixe de la fiche est Sujets, Compte rendu, Tâches (une colonne).
+test("la fiche d'une réunion, au téléphone : Sujets, puis Compte rendu, puis Tâches", async ({ page }, info) => {
+  test.skip(info.project.name !== "telephone", "une seule colonne : le téléphone");
+  const alice: FakeProfile = { uid: "uid-alice", email: "alice@example.com", firstName: "Alice", lastName: "Q.", dansEquipes: ["da"], referentDe: ["da"] };
+  await ouvrir(page, alice, "/back-office/reunions/reunion-da");
+  await expect(page.getByRole("heading", { level: 1, name: "Réunion DA" })).toBeVisible();
+  const y = async (zone: string) => (await page.locator(`[data-zone="${zone}"]`).boundingBox())!.y;
+  await expect(page.locator('[data-zone="taches"]')).toBeVisible();
+  const [sujets, droite, taches] = [await y("sujets"), await y("droite"), await y("taches")];
+  expect(sujets).toBeLessThan(droite);
+  expect(droite).toBeLessThan(taches);
+});
+
 test("G1 : un membre de l'équipe ne voit aucune réunion dans Évènements ; l'évènement d'équipe y reste", async ({ page }, info) => {
   await ouvrir(page, BRUNO, "/evenements");
   await expect(page.getByRole("link", { name: /Soirée DA/ }).first()).toBeVisible();

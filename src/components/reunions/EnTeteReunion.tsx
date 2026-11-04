@@ -5,8 +5,8 @@
 // 20:00 · Salle 2 · organisée par Alice Q. » ; à droite, pour qui la gère, « Dupliquer pour la prochaine »,
 // « Modifier » et « ⋯ » (Supprimer).
 // Agencement v18 (B4, planche `v18-bo-reunions`) : en grand, la fiche est dans le volet de droite, sous
-// l'en-tête « Réunions » : badge de l'équipe, titre en h2 de 24 px. En un volet, la fiche est une page : l'en-tête
-// commun (`EnTetePage`) avec « ‹ Réunions » pour seul retour (R8), le titre en h1.
+// la bande du haut : badge de l'équipe, titre en h1 de 28 px (le seul de la page). En un volet, la fiche est une page :
+// l'en-tête commun (`EnTetePage`) avec « ‹ Calendrier » pour seul retour (R8), le titre en h1.
 import type { CSSProperties } from "react"
 import Link from "next/link"
 import { useTranslation } from "react-i18next"
@@ -57,7 +57,7 @@ export function EnTeteReunion({ e, gestion, onSupprimer }: { e: Evenement; gesti
     return (
       <>
         <EnTetePage
-          retour={{ href: "/back-office/reunions", label: t("backOffice.parties.reunions") }}
+          retour={{ href: "/back-office/calendrier?vue=agenda&filtre=reunions", label: t("backOffice.entrees.calendrier") }}
           titre={e.titre}
           outils={gestion && <>{modifier}{menu}</>}
         />
@@ -75,7 +75,7 @@ export function EnTeteReunion({ e, gestion, onSupprimer }: { e: Evenement; gesti
       <div className="flex flex-wrap items-start gap-x-4 gap-y-3">
         <div className="min-w-0 flex-1">
           {badge}
-          <h2 className="mt-1.5 text-2xl font-bold leading-tight tracking-tight text-foreground text-balance">{e.titre}</h2>
+          <h1 className="mt-1.5 text-[28px] font-bold leading-tight tracking-[-0.02em] text-foreground text-balance">{e.titre}</h1>
         </div>
         {gestion && <div className="flex flex-wrap items-center gap-2">{dupliquer}{modifier}{menu}</div>}
       </div>

@@ -10,9 +10,11 @@
 }
 
 /* Fiche d'une réunion : « Sujets à aborder » (large) à gauche ; compte rendu, réunions précédentes
-   et tâches à droite. Sur une colonne, l'ordre d'avant : compte rendu et réunions précédentes,
-   puis les sujets, puis les tâches. */
-.reunion { display: grid; gap: 1rem; align-items: start; grid-template-areas: "droite" "sujets" "taches"; }
+   et tâches à droite. Sur une colonne, le même ordre de lecture : les sujets, puis le compte rendu et les
+   réunions précédentes, puis les tâches (corrections du design, -17). */
+/* Une seule colonne explicite à `minmax(0, 1fr)` : sans elle la piste `auto` prend la largeur du contenu le plus
+   large (le champ du lien du compte rendu) et pousse les cartes contre le bord droit au téléphone (-1, garde-fou B). */
+.reunion { display: grid; gap: 1rem; align-items: start; grid-template-columns: minmax(0, 1fr); grid-template-areas: "sujets" "droite" "taches"; }
 .reunion > [data-zone="droite"] { grid-area: droite; }
 .reunion > [data-zone="sujets"] { grid-area: sujets; }
 .reunion > [data-zone="taches"] { grid-area: taches; }

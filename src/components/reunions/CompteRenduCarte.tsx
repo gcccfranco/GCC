@@ -10,8 +10,10 @@
 import { useState, type FormEvent } from "react"
 import { useTranslation } from "react-i18next"
 import { useConfirmer } from "@/components/layout/Confirmer"
-import { Check, FileText, X } from "lucide-react"
+import { FileText, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { BOUTON_CHAMP_ACTION, CHAMP_ACTION } from "@/components/reunions/champAction"
+import { TOUCHER_44 } from "@/lib/toucher44"
 import { majCompteRendu } from "@/lib/firebase/evenements"
 import { lienCompteRendu, sourceDuLien } from "@/lib/reunions/compteRendu"
 import type { CompteRendu, Evenement } from "@/types/evenement"
@@ -97,16 +99,16 @@ export function CompteRenduCarte({ evenement: e, user, profile, onChange }: {
         <p className="text-sm text-muted-foreground">{t("evenements.compteRendu.aide")}</p>
       </div>
       <form onSubmit={enregistrer} noValidate className="space-y-3">
-        <label className="flex h-11 items-center gap-2 rounded-full border-[1.5px] border-dashed border-muted-foreground/40 bg-background px-3.5 ring-offset-background focus-within:border-solid focus-within:border-foreground focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2">
+        <label className={CHAMP_ACTION}>
           <FileText className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
           <input type="url" inputMode="url" value={saisie} onChange={(ev) => { setSaisie(ev.target.value); setErreur("") }}
             aria-label={t("evenements.compteRendu.lien")} placeholder={t("evenements.compteRendu.placeholder")}
             className="min-w-0 flex-1 bg-transparent text-base text-foreground outline-none placeholder:text-muted-foreground" />
+          <Button type="submit" size="sm" disabled={busy || !saisie.trim()} className={`${BOUTON_CHAMP_ACTION} ${TOUCHER_44}`}>
+            {t("evenements.compteRendu.enregistrer")}
+          </Button>
         </label>
         {alerte}
-        <Button type="submit" disabled={busy || !saisie.trim()} className="gap-1.5">
-          <Check className="h-4 w-4" aria-hidden />{t("evenements.compteRendu.enregistrer")}
-        </Button>
       </form>
     </section>
   )

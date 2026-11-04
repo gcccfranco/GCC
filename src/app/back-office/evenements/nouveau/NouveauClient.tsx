@@ -14,7 +14,7 @@
 // Retouches v18, lot E1 : « Nouvelle réunion » écrit `reunion: true` ; « Nouvel évènement » écrit
 // `reunion: false`, quel que soit le public (une équipe comprise : un évènement d'équipe).
 // Agencement v18 (B3, B4) : en grand, le formulaire s'ouvre dans le volet de droite, sous l'en-tête de
-// l'entrée et à côté de la liste ; en un volet, c'est une page, avec « ‹ Évènements » (ou « ‹ Réunions »).
+// l'entrée et à côté de la liste ; en un volet, c'est une page, avec « ‹ Évènements » (ou « ‹ Calendrier » pour une réunion).
 
 import { useEffect, useRef, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
@@ -90,7 +90,12 @@ export function NouveauClient({ reunion = false }: { reunion?: boolean }) {
   const titre = t(reunion ? "backOffice.nouvelleReunion" : "evenements.nouveau")
   const page = (contenu: React.ReactNode) => deuxVolets ? <div className="max-w-[720px]">{contenu}</div> : (
     <>
-      <EnTetePage retour={{ href: base, label: t(reunion ? "backOffice.parties.reunions" : "backOffice.parties.evenements") }} titre={titre} />
+      <EnTetePage
+        retour={reunion
+          ? { href: "/back-office/calendrier?vue=agenda&filtre=reunions", label: t("backOffice.entrees.calendrier") }
+          : { href: base, label: t("backOffice.parties.evenements") }}
+        titre={titre}
+      />
       <div className="px-[var(--marge-page)]">{contenu}</div>
     </>
   )

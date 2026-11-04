@@ -71,21 +71,30 @@ export const pilules = (page: Page) => page.locator('[data-onglets="pilules"]');
  * 25/10/2026 : une lecture ou une liste seule tient dans une colonne de 960 px, calée sur le titre
  * depuis quotidien-5), le bloc commence au x du titre ; `colonne` ne sert plus qu'au contrôle de largeur.
  */
-export async function verifierEnTete(page: Page, options: { premierBloc?: Locator; colonne?: number } = {}) {
+export async function verifierEnTete(page: Page, options: { premierBloc?: Locator; colonne?: number; titreDansLeVolet?: boolean } = {}) {
   const entete = enTete(page).filter({ visible: true });
   await expect(entete, "un seul en-tête de page").toHaveCount(1);
-  const h1 = entete.locator("h1");
-  await expect(h1, "un seul h1 dans l'en-tête").toHaveCount(1);
-  await expect(page.locator("h1").filter({ visible: true }), "un seul h1 dans la page").toHaveCount(1);
-
-  const taille = await tailleDuTitreAttendue(page);
-  expect(await h1.evaluate((el) => parseFloat(getComputedStyle(el).fontSize)), "taille du titre").toBe(taille);
-
   const zone = await zoneDeContenu(page);
   const marge = await margeAttendue(page);
-  await expect
-    .poll(async () => Math.round((await h1.boundingBox())!.x - zone.gauche), { message: "bord gauche du titre = zone + marge" })
-    .toBe(marge);
+  if (options.titreDansLeVolet) {
+    // Corrections du design (bo-reunions-taches-5) : en deux volets, une fiche est le grand titre ; la bande du haut ne garde
+    // que le retour et l'action. Un seul h1 dans la page, hors de la bande, de 28 px.
+    await expect(entete.locator("h1"), "pas de h1 dans la bande du haut").toHaveCount(0);
+    const h1 = page.locator("h1").filter({ visible: true });
+    await expect(h1, "un seul h1 dans la page").toHaveCount(1);
+    expect(await h1.evaluate((el) => parseFloat(getComputedStyle(el).fontSize)), "taille du titre de la fiche").toBe(28);
+  } else {
+    const h1 = entete.locator("h1");
+    await expect(h1, "un seul h1 dans l'en-tête").toHaveCount(1);
+    await expect(page.locator("h1").filter({ visible: true }), "un seul h1 dans la page").toHaveCount(1);
+
+    const taille = await tailleDuTitreAttendue(page);
+    expect(await h1.evaluate((el) => parseFloat(getComputedStyle(el).fontSize)), "taille du titre").toBe(taille);
+
+    await expect
+      .poll(async () => Math.round((await h1.boundingBox())!.x - zone.gauche), { message: "bord gauche du titre = zone + marge" })
+      .toBe(marge);
+  }
 
   // Par défaut, le premier frère VISIBLE de l'en-tête : un bloc masqué à cette taille (la barre
   // collante des plannings, cachée en grand, R6) ne compte pas.
@@ -173,7 +182,7 @@ export async function repondreDansLeSite(page: Page, bouton: string) {
  */
 export async function verifierAgencement(
   page: Page,
-  options: { premierBloc?: Locator; contenu?: Locator; lecture?: boolean; colonne?: number; onglets?: { rail?: number; pilules?: number } } = {},
+  options: { premierBloc?: Locator; contenu?: Locator; lecture?: boolean; colonne?: number; titreDansLeVolet?: boolean; onglets?: { rail?: number; pilules?: number } } = {},
 ) {
   await verifierEnTete(page, options);
   await verifierSansDebordement(page);

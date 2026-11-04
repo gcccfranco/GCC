@@ -4,7 +4,7 @@
 // compteur d'inscrits n'est jamais envoyé. Lot U6, B3 : au Back-Office ; une réunion sous
 // Réunions, un évènement sous Évènements (agencement v18, B15), l'autre adresse redirige.
 // Agencement v18 (B3, B4) : en grand, le formulaire s'ouvre dans le volet de droite ; en un volet, c'est
-// une page, avec « ‹ Évènements » (ou « ‹ Réunions ») pour retour.
+// une page, avec « ‹ Évènements » pour retour ; une réunion s'intitule « Modifier la réunion » et revient à sa fiche.
 
 import { useEffect, useState } from "react"
 import { useParams, usePathname, useRouter } from "next/navigation"
@@ -42,11 +42,18 @@ export function ModifierClient() {
   const reunion = !!evenement && estReunion(evenement)
   const page = (contenu: React.ReactNode) => deuxVolets ? <div className="max-w-[720px]">{contenu}</div> : (
     <>
-      <EnTetePage
-        retour={{ href: reunion ? "/back-office/reunions" : "/back-office/evenements", label: t(reunion ? "backOffice.parties.reunions" : "backOffice.parties.evenements") }}
-        titre={evenement ? evenement.titre : t("evenements.modifier")}
-        sousTitre={evenement ? t("evenements.modifier") : undefined}
-      />
+      {reunion ? (
+        <EnTetePage
+          retour={{ href: `/back-office/reunions/${id}`, label: evenement.titre }}
+          titre={t("backOffice.modifierReunion")}
+        />
+      ) : (
+        <EnTetePage
+          retour={{ href: "/back-office/evenements", label: t("backOffice.parties.evenements") }}
+          titre={evenement ? evenement.titre : t("evenements.modifier")}
+          sousTitre={evenement ? t("evenements.modifier") : undefined}
+        />
+      )}
       <div className="px-[var(--marge-page)]">{contenu}</div>
     </>
   )
@@ -65,6 +72,7 @@ export function ModifierClient() {
       initial={initial}
       pours={pours}
       creation={false}
+      titreCache={!deuxVolets && reunion}
       inscrits={evenement.inscrits}
       onSubmit={async (values) => {
         await updateEvenement(evenement.id, values)

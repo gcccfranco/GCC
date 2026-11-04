@@ -127,11 +127,11 @@ test("« + Nouvelle réunion » : sans inscriptions, écrit « reunion: true »,
   await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
   const db = await signInAs(page, ALICE, {}, "/back-office/reunions/nouvelle");
   await sansPush(page);
-  await expect(page.getByLabel("Public")).toHaveValue("equipe:da");
+  await expect(page.getByLabel("Équipe", { exact: true })).toHaveValue("equipe:da");
   await expect(page.getByRole("radiogroup", { name: "Inscriptions" })).toHaveCount(0);
-  await page.getByLabel("Nom de l'évènement").fill("Réunion DA");
+  await page.getByLabel("Nom de la réunion").fill("Réunion DA");
   await page.getByLabel("Date", { exact: true }).fill("2026-10-10");
-  await page.getByRole("button", { name: "Créer l'évènement" }).click();
+  await page.getByRole("button", { name: "Créer la réunion" }).click();
   await page.waitForURL(/\/back-office\/reunions\/fake-\d+\/?$/);
   expect(creee(db).data).toMatchObject({ pour: "equipe:da", reunion: true, inscriptions: "fermees" });
 });

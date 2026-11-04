@@ -3,7 +3,7 @@
 // Back-Office › une tâche d'une équipe (lot 7, docs/spec-taches.md ; piste A, BO7). La liste des tâches
 // d'une équipe est devenue la page de l'équipe (`/back-office/equipes/<équipe>`) ; ce gabarit garde la
 // fiche (`[id]`) et le formulaire (`nouvelle`) à leur adresse, en une colonne sous un en-tête qui
-// ramène à l'équipe (« ‹ TEAM DA »). En un volet, la fiche pose son propre en-tête. Réservé aux membres
+// ramène à l'équipe (« ‹ Tâches de DA »). En un volet, la fiche pose son propre en-tête. Réservé aux membres
 // de l'équipe (Louange élargi) et aux admins (affichage ; equipes/{équipe}/taches garde sa règle).
 
 import { useParams, usePathname } from "next/navigation";
@@ -22,11 +22,13 @@ export default function EquipeLayout({ children }: { children: React.ReactNode }
   const equipe = equipes.includes(brut) ? brut : null;
   const nouvelle = chemin.replace(/\/+$/, "").endsWith("/nouvelle");
 
-  // En un volet, la fiche est une page qui pose son propre en-tête ; le formulaire n'en a pas.
+  // En un volet, la fiche est une page qui pose son propre en-tête ; le formulaire n'en a pas. Une fiche
+  // ouverte en deux volets est le grand titre (corrections du design, -5) : la bande ne garde que le retour.
+  const fiche = !nouvelle && !!equipe;
   const enTete = (deuxVolets || nouvelle || !equipe) && (
     <EnTetePage
-      retour={{ href: `/back-office/equipes/${encodeURIComponent(brut)}`, label: t(cleNomEquipe(brut, true)) }}
-      titre={t("backOffice.entrees.taches")}
+      retour={{ href: `/back-office/equipes/${encodeURIComponent(brut)}`, label: fiche ? t("taches.retourEquipe", { equipe: t(cleNomEquipe(brut, true)) }) : t(cleNomEquipe(brut, true)) }}
+      titre={fiche ? undefined : t("backOffice.entrees.taches")}
     />
   );
 

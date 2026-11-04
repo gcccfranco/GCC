@@ -787,11 +787,11 @@ test("fiche : la date n'est pas en gras", async ({ page }) => {
   expect(poids).toBeLessThan(600);
 });
 
-test("formulaire : libellés discrets, « Prévenir les membres » et le bouton pleine largeur dans la carte", async ({ page }) => {
+test("formulaire : libellés de 13 px semi-gras gris (corrections du design, -13), « Prévenir les membres » et le bouton pleine largeur dans la carte", async ({ page }) => {
   await member(page, ALICE, "/back-office/evenements/nouveau");
   const carte = page.getByTestId("form-carte");
-  const poids = await carte.locator("label[for='ev-titre']").evaluate((el) => Number(getComputedStyle(el).fontWeight));
-  expect(poids).toBeLessThan(600);
+  const libelle = await carte.locator("label[for='ev-titre']").evaluate((el) => { const c = getComputedStyle(el); return { poids: c.fontWeight, taille: c.fontSize }; });
+  expect(libelle).toEqual({ poids: "600", taille: "13px" });
   await expect(carte.getByLabel("Prévenir les membres")).toBeVisible();
   const bouton = carte.getByRole("button", { name: "Créer l'évènement" });
   await expect(bouton).toBeVisible();

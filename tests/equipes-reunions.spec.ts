@@ -194,7 +194,7 @@ test.describe("écrans : Louange, public élargi (décision 5)", () => {
   test("le choriste ne crée rien : « Nouvelle réunion » lui répond « réservé aux responsables » (BO4)", async ({ page }) => {
     await ouvrir(page, MAELLE, "/back-office/reunions/nouvelle");
     await expect(page.getByText("Réservé aux responsables.")).toBeVisible();
-    await expect(page.getByLabel("Nom de l'évènement")).toHaveCount(0);
+    await expect(page.getByLabel("Nom de la réunion")).toHaveCount(0);
   });
 
   // G2 (une réunion s'ouvre dans le Back-Office pour qui l'a), inversé par la piste A (BO4) : qui n'a pas de
@@ -211,11 +211,11 @@ test.describe("écrans : Louange, public élargi (décision 5)", () => {
   test("la référente de TEAM LOUANGE crée une réunion de Louange", async ({ page }) => {
     const db = await ouvrir(page, INES, "/back-office/reunions/nouvelle");
     await sansPush(page);
-    await expect(page.getByLabel("Public").locator("option")).toHaveText(["Louange"]);
-    await expect(page.getByLabel("Public")).toHaveValue("equipe:louange");
-    await page.getByLabel("Nom de l'évènement").fill("Réunion Louange de novembre");
+    await expect(page.getByLabel("Équipe", { exact: true }).locator("option")).toHaveText(["Louange"]);
+    await expect(page.getByLabel("Équipe", { exact: true })).toHaveValue("equipe:louange");
+    await page.getByLabel("Nom de la réunion").fill("Réunion Louange de novembre");
     await page.getByLabel("Date", { exact: true }).fill("2026-11-07");
-    await page.getByRole("button", { name: "Créer l'évènement" }).click();
+    await page.getByRole("button", { name: "Créer la réunion" }).click();
     await page.waitForURL(/\/back-office\/reunions\/fake-\d+\/?$/);
     expect(creee(db).data).toMatchObject({ pour: "equipe:louange", reunion: true, organisateurUid: "u-ines" });
   });
@@ -261,14 +261,14 @@ test.describe("écrans : « Nouvelle réunion » depuis la page d'une équipe (B
     await expect(lien).toHaveAttribute("href", /^\/back-office\/reunions\/nouvelle\/?\?equipe=da$/);
     await lien.click();
     await page.waitForURL(/\/back-office\/reunions\/nouvelle\/?\?equipe=da$/);
-    await expect(page.getByLabel("Public")).toHaveValue("equipe:da");
+    await expect(page.getByLabel("Équipe", { exact: true })).toHaveValue("equipe:da");
     await page.goto("/back-office/reunions/nouvelle");
-    await expect(page.getByLabel("Public")).not.toHaveValue("equipe:da");
+    await expect(page.getByLabel("Équipe", { exact: true })).not.toHaveValue("equipe:da");
   });
 
   test("une équipe où l'on ne peut pas créer n'est pas imposée : la référente de Louange garde Louange", async ({ page }) => {
     await ouvrir(page, INES, "/back-office/reunions/nouvelle?equipe=da");
-    await expect(page.getByLabel("Public")).toHaveValue("equipe:louange");
+    await expect(page.getByLabel("Équipe", { exact: true })).toHaveValue("equipe:louange");
   });
 });
 
@@ -313,10 +313,10 @@ test.describe("écrans : réunions précédentes et reprise, au public migré", 
   test("Léa M. crée la réunion suivante : le sujet laissé en septembre lui est proposé", async ({ page }) => {
     const db = await ouvrir(page, LEA, "/back-office/reunions/nouvelle", HISTORIQUE);
     await sansPush(page);
-    await expect(page.getByLabel("Public")).toHaveValue("equipe:medias");
-    await page.getByLabel("Nom de l'évènement").fill("Réunion Médias de novembre");
+    await expect(page.getByLabel("Équipe", { exact: true })).toHaveValue("equipe:medias");
+    await page.getByLabel("Nom de la réunion").fill("Réunion Médias de novembre");
     await page.getByLabel("Date", { exact: true }).fill("2026-11-07");
-    await page.getByRole("button", { name: "Créer l'évènement" }).click();
+    await page.getByRole("button", { name: "Créer la réunion" }).click();
     const question = page.getByRole("alertdialog", { name: "Reprendre les sujets non traités ?" });
     await expect(question.getByRole("listitem")).toHaveText([/^Vidéo de rentrée/]);
     await question.getByRole("button", { name: "Oui, les reprendre" }).click();

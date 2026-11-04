@@ -181,9 +181,25 @@ test("membre du pôle, la veille : la carte liste les sujets dans l'ordre, avec 
   await expect(carte(page).getByRole("heading", { name: "Sujets à aborder", exact: true })).toBeVisible();
   await expect(lignes(page)).toHaveCount(4);
   await attendreOrdre(page, ORDRE);
-  await expect(lignes(page).nth(0)).toContainText("Alice Q. · 28/09");
-  await expect(carte(page)).toContainText("Chaque personne de la réunion peut en ajouter jusqu'au début");
+  await expect(lignes(page).nth(0)).toContainText("Alice Q. · 28 sept.");
+  await expect(carte(page)).toContainText("Chaque personne de la réunion peut en ajouter jusqu'au début.");
+  // Corrections du design, -3 : le titre n'a plus d'aide à sa droite ; l'aide et la note du bas sont un seul paragraphe de 13 px.
+  const entete = carte(page).locator("div").filter({ has: page.locator("h3") }).first();
+  await expect(entete).not.toContainText("Chaque personne");
+  const pied = carte(page).locator("p", { hasText: "Chaque personne de la réunion" });
+  await expect(pied).toHaveCount(1);
+  await expect(pied).toContainText("Un sujet non traité reste en rouge");
+  await expect(pied).toHaveCSS("font-size", "13px");
   await expect(carte(page).getByText("4", { exact: true })).toBeVisible();
+});
+
+test("membre du pôle, en 中文 : la date courte d'un sujet est en mots (9月28日), comme celle du compte rendu", async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
+  await ouvrir(page, BRUNO);
+  const zhLignes = page.getByTestId("sujets-carte").getByRole("listitem");
+  await expect(zhLignes).toHaveCount(4);
+  await expect(zhLignes.nth(0)).toContainText("Alice Q. · 9月28日");
+  await expect(zhLignes.nth(0)).not.toContainText("09/28");
 });
 
 test("membre du pôle, la veille : il ajoute un sujet, qui va à la fin, à son nom", async ({ page }) => {
@@ -193,7 +209,7 @@ test("membre du pôle, la veille : il ajoute un sujet, qui va à la fin, à son 
   await carte(page).getByRole("button", { name: "Ajouter", exact: true }).click();
   await expect(lignes(page)).toHaveCount(5);
   await expect(lignes(page).nth(4)).toContainText("Décor de la crèche");
-  await expect(lignes(page).nth(4)).toContainText("Bruno M. · 02/10");
+  await expect(lignes(page).nth(4)).toContainText("Bruno M. · 2 oct.");
   await expect(champ(page)).toHaveValue("");
   const [post] = ecritures(db, "POST");
   expect(post.path).toMatch(/^evenements\/reunion-da\/sujets\/[^/]+$/);
@@ -352,7 +368,7 @@ test("après le début : 3 traités sur 4, le quatrième en rouge, « non trait�
   await expect(carte(page).getByRole("heading", { name: "Sujets", exact: true })).toBeVisible();
   await expect(carte(page)).toContainText("3 traités sur 4");
   const rouge = lignes(page).nth(3);
-  await expect(rouge).toContainText("Bruno M. · 01/10 · non traité");
+  await expect(rouge).toContainText("Bruno M. · 1 oct. · non traité");
   await expect(rouge.getByText("Budget impression du trimestre")).toHaveCSS("color", "rgb(185, 28, 28)");
   await expect(lignes(page).nth(0).getByText("Affiche de Noël : valider le visuel")).not.toHaveCSS("color", "rgb(185, 28, 28)");
   await expect(carte(page)).toContainText("1 sujet non traité : il restera en rouge tant qu'on ne l'a pas repris dans une prochaine réunion.");
@@ -467,11 +483,11 @@ const sansPush = (page: Page) => page.route("**/api/push/notify-evenement", (rou
  *  « Nouvel évènement » crée un évènement d'équipe ; une réunion se crée par « + Nouvelle réunion ». */
 async function creerReunion(page: Page, date: string) {
   await page.goto("/back-office/reunions/nouvelle");
-  await page.getByLabel("Nom de l'évènement").fill("Réunion DA");
-  await expect(page.getByLabel("Public")).toHaveValue("equipe:da");
+  await page.getByLabel("Nom de la réunion").fill("Réunion DA");
+  await expect(page.getByLabel("Équipe", { exact: true })).toHaveValue("equipe:da");
   await page.getByLabel("Date", { exact: true }).fill(date);
   await page.getByLabel("Horaire", { exact: true }).fill("20:00");
-  await page.getByRole("button", { name: "Créer l'évènement" }).click();
+  await page.getByRole("button", { name: "Créer la réunion" }).click();
 }
 
 /** Id de la réunion créée pendant le test (dernière écrite). */
@@ -487,7 +503,7 @@ test("reprise, oui : en dupliquant pour la prochaine, le sujet laissé est recop
   await expect(lignes(page)).toHaveCount(4);
   await page.getByRole("link", { name: "Dupliquer pour la prochaine" }).click();
   await page.getByLabel("Date", { exact: true }).fill("2026-11-07");
-  await page.getByRole("button", { name: "Créer l'évènement" }).click();
+  await page.getByRole("button", { name: "Créer la réunion" }).click();
 
   await expect(question(page)).toBeVisible();
   await expect(question(page)).toContainText("La réunion du 3 octobre en a laissé 1 :");
@@ -510,13 +526,13 @@ test("reprise, oui : en dupliquant pour la prochaine, le sujet laissé est recop
   expect(ecritures(db, "PATCH")).toEqual([{ method: "PATCH", path: "evenements/reunion-da/sujets/s4", data: { reprisDans: nouvelle } }]);
   await expect(lignes(page)).toHaveCount(1);
   await expect(lignes(page).nth(0)).toContainText("Budget impression du trimestre");
-  await expect(lignes(page).nth(0)).toContainText("Bruno M. · 01/10 · repris du 3 octobre");
+  await expect(lignes(page).nth(0)).toContainText("Bruno M. · 1 oct. · repris du 3 octobre");
 
   // L'ancienne réunion : plus rouge, « repris le 7 novembre ».
   await page.goto("/evenements/reunion-da");
   await expect(lignes(page)).toHaveCount(4);
   const repris = lignes(page).nth(3);
-  await expect(repris).toContainText("Bruno M. · 01/10 · repris le 7 novembre");
+  await expect(repris).toContainText("Bruno M. · 1 oct. · repris le 7 novembre");
   await expect(repris).not.toContainText("non traité");
   await expect(repris.getByText("Budget impression du trimestre")).not.toHaveCSS("color", "rgb(185, 28, 28)");
   await expect(carte(page)).not.toContainText("sujet non traité");
@@ -538,7 +554,7 @@ test("reprise, non : rien n'est écrit, le sujet reste rouge et revient à la cr
   }
   expect(db.writes.filter((w) => w.path.includes("/sujets/"))).toEqual([]);
   await page.goto("/evenements/reunion-da");
-  await expect(lignes(page).nth(3)).toContainText("Bruno M. · 01/10 · non traité");
+  await expect(lignes(page).nth(3)).toContainText("Bruno M. · 1 oct. · non traité");
 });
 
 test("reprise : les sujets laissés par plusieurs réunions de l'équipe, ni ceux d'une autre équipe, ni ceux d'une réunion à venir", async ({ page }) => {
@@ -647,7 +663,7 @@ test("libellés R3 : le compte rendu en français et en 中文, clé pour clé",
   const fr = JSON.parse(lire("src/locales/fr.json")).evenements.compteRendu;
   const zh = JSON.parse(lire("src/locales/zh-CN.json")).evenements.compteRendu;
   expect(fr.titre).toBe("Compte rendu");
-  expect(fr.enregistrer).toBe("Enregistrer le lien");
+  expect(fr.enregistrer).toBe("Enregistrer");
   expect(Object.keys(zh).sort()).toEqual(Object.keys(fr).sort());
 });
 
@@ -748,12 +764,12 @@ test("compte rendu : un membre colle le lien après la réunion ; seul le champ 
   const db = await ouvrir(page, BRUNO, "2026-10-04T10:00:00");
   await expect(compteRendu(page)).toContainText("Après la réunion, toute personne de la réunion (ou un admin) colle ici le lien du Google Doc du récap ; les autres sont prévenus dans le rappel du matin.");
   await lienCR(page).fill("docs.google.com/document/d/oct");
-  await compteRendu(page).getByRole("button", { name: "Enregistrer le lien" }).click();
+  await compteRendu(page).getByRole("button", { name: "Enregistrer" }).click();
   await expect(compteRendu(page).getByRole("alert")).toHaveText("Colle un lien complet, qui commence par https://");
   expect(ecrituresReunion(db)).toHaveLength(0);
 
   await lienCR(page).fill("  https://docs.google.com/document/d/oct  ");
-  await compteRendu(page).getByRole("button", { name: "Enregistrer le lien" }).click();
+  await compteRendu(page).getByRole("button", { name: "Enregistrer" }).click();
   await expect.poll(() => ecrituresReunion(db).length).toBe(1);
   const ecrit = ecrituresReunion(db)[0].data;
   expect(Object.keys(ecrit)).toEqual(["compteRendu"]);
@@ -764,6 +780,31 @@ test("compte rendu : un membre colle le lien après la réunion ; seul le champ 
 
   await page.reload();
   await expect(compteRendu(page)).toContainText("Google Doc · ajouté par Bruno M. le 4 oct.");
+});
+
+test("compte rendu et sujets (bo-reunions-taches-4) : un seul « champ à action », plus de pointillés, le bouton dans la boîte du champ", async ({ page }) => {
+  await ouvrir(page, BRUNO, "2026-10-01T10:00:00");
+  const champLien = compteRendu(page).locator("label").filter({ has: page.getByRole("textbox", { name: "Lien du compte rendu" }) });
+  const champSujet = carte(page).locator("form");
+  await expect(champLien).toBeVisible();
+  await expect(lienCR(page)).toHaveAttribute("placeholder", "Lien du Google Doc");
+  for (const champ of [champLien, champSujet]) {
+    const s = await champ.evaluate((e) => { const c = getComputedStyle(e); return { style: c.borderTopStyle, largeur: c.borderTopWidth, hauteur: e.getBoundingClientRect().height, fond: c.backgroundColor }; });
+    expect(s.style === "none" || s.largeur === "0px", "ni pointillés ni contour").toBe(true);
+    expect(s.style).not.toBe("dashed");
+    expect(s.hauteur).toBeCloseTo(44, 0);
+  }
+  expect(await champLien.evaluate((e) => getComputedStyle(e).backgroundColor)).toBe(await champSujet.evaluate((e) => getComputedStyle(e).backgroundColor));
+  for (const [champ, bouton] of [[champLien, compteRendu(page).getByRole("button", { name: "Enregistrer", exact: true })], [champSujet, carte(page).getByRole("button", { name: "Ajouter", exact: true })]] as const) {
+    const c = (await champ.boundingBox())!;
+    const b = (await bouton.boundingBox())!;
+    expect(b.x).toBeGreaterThanOrEqual(c.x);
+    expect(b.x + b.width).toBeLessThanOrEqual(c.x + c.width + 0.5);
+    expect(b.y).toBeGreaterThanOrEqual(c.y);
+    expect(b.y + b.height).toBeLessThanOrEqual(c.y + c.height + 0.5);
+    expect(b.height).toBeCloseTo(36, 0);
+    await expect(bouton).toBeDisabled();
+  }
 });
 
 test("compte rendu : on l'ouvre dans un nouvel onglet ; une personne de la réunion le retire", async ({ page }) => {
@@ -784,7 +825,7 @@ test("compte rendu : on l'ouvre dans un nouvel onglet ; une personne de la réun
 test("compte rendu : un admin hors du pôle le colle aussi, tout lien https:// accepté", async ({ page }) => {
   const db = await ouvrir(page, ADMIN, "2026-10-04T10:00:00");
   await lienCR(page).fill("https://exemple.org/cr.pdf");
-  await compteRendu(page).getByRole("button", { name: "Enregistrer le lien" }).click();
+  await compteRendu(page).getByRole("button", { name: "Enregistrer" }).click();
   await expect(compteRendu(page)).toContainText("exemple.org · ajouté par Admin T.");
   expect(ecrituresReunion(db)).toHaveLength(1);
 });
@@ -977,12 +1018,12 @@ async function ouvrirRegie(page: Page, qui: FakeProfile, vers = "/evenements/reu
 test("référente : elle crée la réunion de son équipe, sans inscriptions, et y retrouve les sujets", async ({ page }) => {
   const db = await ouvrirRegie(page, ROSE, "/back-office/reunions/nouvelle");
   await sansPush(page);
-  await expect(page.getByLabel("Public")).toHaveValue("equipe:regie");
-  await expect(page.getByLabel("Public").locator("option")).toHaveText(["TEAM RÉGIE"]);
-  await page.getByLabel("Nom de l'évènement").fill("Réunion Régie");
+  await expect(page.getByLabel("Équipe", { exact: true })).toHaveValue("equipe:regie");
+  await expect(page.getByLabel("Équipe", { exact: true }).locator("option")).toHaveText(["Régie"]);
+  await page.getByLabel("Nom de la réunion").fill("Réunion Régie");
   await page.getByLabel("Date", { exact: true }).fill("2026-10-10");
   await page.getByLabel("Horaire", { exact: true }).fill("20:00");
-  await page.getByRole("button", { name: "Créer l'évènement" }).click();
+  await page.getByRole("button", { name: "Créer la réunion" }).click();
   await page.waitForURL(/\/back-office\/reunions\/fake-\d+\/?$/);
   const ecrit = db.doc(`evenements/${creee(db)}`)!;
   expect(ecrit).toMatchObject({ pour: "equipe:regie", inscriptions: "fermees", organisateurUid: "uid-rose", placesMax: null });

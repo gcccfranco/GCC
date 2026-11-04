@@ -52,6 +52,7 @@ import { ecrirePreferences, lirePreferences, type PreferencesCalendrier } from "
 import { lireSheetEvenements, type LectureSheet } from "@/lib/evenements/sheet";
 import { avantBascule, jourDeParis } from "@/lib/evenements/bascule";
 import { todayIso } from "@/lib/scene/dimanches";
+import { TOUCHER_44 } from "@/lib/toucher44";
 import { cn } from "@/lib/utils";
 import { ANNONCE_SECTIONS } from "@/types/annonce";
 import type { NotifLang } from "@/types/user";
@@ -409,12 +410,12 @@ export function CalendrierClient() {
       </DropdownMenu>
     )
   );
-  // « Scène des fêtes » (BO8) : la coordination y va d'ici ; sur un petit écran, l'icône seule.
+  // « Scène des fêtes » (BO8) : la coordination y va d'ici ; la pastille garde son nom à toutes les largeurs (-19).
   const sceneDesFetes = isCoordination(user, profile) && (
-    <Button asChild size="sm" variant="outline" className="rounded-full">
+    <Button asChild size="sm" variant="outline" className={`rounded-full ${TOUCHER_44}`}>
       <Link href="/back-office/evenements/scene" aria-label={t("backOffice.calendrier.sceneDesFetes")}>
         <ICONES.scene aria-hidden />
-        <span className="max-[479px]:hidden">{t("backOffice.calendrier.sceneDesFetes")}</span>
+        <span>{t("backOffice.calendrier.sceneDesFetes")}</span>
       </Link>
     </Button>
   );

@@ -254,7 +254,7 @@ async function nouvelleTache(page: Page) {
   if (estGrandEcran(test.info())) {
     return { form: page.getByRole("form", { name: "Nouvelle tâche" }), creer: "Créer la tâche" };
   }
-  return { form: page.getByRole("dialog", { name: "Nouvelle tâche" }), creer: "Enregistrer" };
+  return { form: page.getByRole("dialog", { name: "Nouvelle tâche" }), creer: "Créer la tâche" };
 }
 const sansNouvelleTache = async (page: Page) => {
   await expect(page.getByRole("link", { name: "Nouvelle tâche" })).toHaveCount(0);

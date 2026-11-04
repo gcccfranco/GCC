@@ -17,7 +17,7 @@ import { Button } from "@/components/ui/button"
 import { TacheForm } from "@/components/taches/TacheForm"
 import { TacheLigne } from "@/components/taches/TacheLigne"
 import { texteRetour } from "@/components/taches/retour"
-import { equipesDesTaches, equipesOuCreer, peutCocher } from "@/lib/access"
+import { equipesDesTaches, equipesOuCreer, estReunion, peutCocher } from "@/lib/access"
 import { cleNomEquipe } from "@/lib/equipes/table"
 import { createTache, cyclerEtat, type TacheValues } from "@/lib/firebase/taches"
 import { listProfiles } from "@/lib/firebase/users"
@@ -29,7 +29,7 @@ import type { Evenement } from "@/types/evenement"
 import type { UserProfile } from "@/types/user"
 
 export function TachesEvenement({ evenement, user, profile }: {
-  evenement: Pick<Evenement, "id" | "titre">
+  evenement: Pick<Evenement, "id" | "titre" | "pour" | "reunion">
   user: { uid: string; email?: string | null } | null
   profile: UserProfile | null
 }) {
@@ -81,7 +81,7 @@ export function TachesEvenement({ evenement, user, profile }: {
         {ouCreer.length > 0 && <Button size="sm" variant="outline" onClick={() => setCreation(true)}>{t("taches.nouvelle")}</Button>}
       </div>
       {retour && <p role="status" className="text-sm text-muted-foreground">{retour}</p>}
-      {!loading && lignes.length === 0 && <p className="text-sm text-muted-foreground">{t("evenements.taches.vide")}</p>}
+      {!loading && lignes.length === 0 && <p className="text-sm text-muted-foreground">{t(estReunion(evenement) ? "evenements.taches.videReunion" : "evenements.taches.vide")}</p>}
       {lignes.length > 0 && (
         <div className="-mx-4 -mb-2">
           {lignes.map((l) => (

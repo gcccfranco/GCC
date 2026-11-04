@@ -1454,7 +1454,7 @@ test.describe("C5 : créer depuis un jour", () => {
     await expect(form.getByLabel("Équipe").locator("option")).toHaveText(["DA", "Médias"]);
     await form.getByLabel("Équipe").selectOption("medias");
     await form.getByLabel("Titre").fill("Affiche du concert");
-    await form.getByRole("button", { name: "Enregistrer" }).click();
+    await form.getByRole("button", { name: "Créer la tâche" }).click();
     await expect(form).toHaveCount(0);
     const ecrite = db.writes.find((w) => w.method === "POST" && w.path.startsWith("equipes/medias/taches/"));
     expect(ecrite?.data).toMatchObject({ titre: "Affiche du concert", echeance: "2026-10-11", equipe: "medias", repetition: null });
@@ -1654,6 +1654,28 @@ test.describe("BO-C : « Scène des fêtes »", () => {
     expect(boite.x + boite.width).toBeLessThanOrEqual(page.viewportSize()!.width);
   });
 
+  // bo-reunions-taches-19 : la pastille garde son nom au téléphone, à 393 puis 360 px, en français comme en 中文, sans tronquer
+  // le titre de la ligne ni sortir de la marge de 16 px.
+  for (const [largeur, nom, langue] of [[393, "Scène des fêtes", "fr"], [360, "Scène des fêtes", "fr"], [360, "节日舞台", "zh-CN"]] as const) {
+    test(`téléphone ${largeur} px, ${langue} : « ${nom} » est écrit et tient sur la ligne du titre`, async ({ page }, info) => {
+      test.skip(!estTelephone(info), "propre au téléphone");
+      await page.setViewportSize({ width: largeur, height: 800 });
+      if (langue === "zh-CN") await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
+      await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
+      await sheets(page);
+      await signInAs(page, P_ADMIN, DOCS, "/back-office/calendrier");
+      const entete = page.locator("header[data-entete-page]");
+      const lien = entete.getByRole("link", { name: nom });
+      await expect(lien).toBeVisible();
+      await expect(lien).toContainText(nom);
+      const titre = (await entete.getByRole("heading", { level: 1 }).boundingBox())!;
+      const b = (await lien.boundingBox())!;
+      expect(b.x, "après le titre, sans le recouvrir").toBeGreaterThanOrEqual(titre.x + titre.width - 1);
+      expect(largeur - (b.x + b.width), "marge de 16 px").toBeGreaterThanOrEqual(15.5);
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
+    });
+  }
+
   test("sans la coordination (référent d'équipe), pas de lien « Scène des fêtes »", async ({ page }) => {
     await ouvrirAdresse(page, "/back-office/calendrier", P_POLES);
     await expect(page.getByRole("heading", { level: 1, name: "Calendrier" })).toBeVisible();
@@ -1700,9 +1722,12 @@ test.describe("BO16 (a) : le volet du jour tient dans la marge", () => {
       expect(Math.abs(p.x + p.width - zone.droite), "le volet va jusqu'au bord").toBeLessThanOrEqual(1);
       const cartes = await panneau.getByRole("link").all();
       expect(cartes.length).toBeGreaterThan(0);
+      // Corrections du design, bo-reunions-taches-18 : la dernière carte du volet et le bouton « Ajouter » de l'en-tête finissent au même x, à 1 px près.
+      const ajouter = (await page.locator('header[data-entete-page] button[aria-haspopup="menu"]').first().boundingBox())!; // « Ajouter » / « 添加 »
       for (const el of cartes) {
         const b = (await el.boundingBox())!;
         expect(b.x + b.width, "la carte finit sur la marge droite").toBeLessThanOrEqual(bord + 1);
+        expect(Math.abs(b.x + b.width - (ajouter.x + ajouter.width)), "même bord droit que « Ajouter »").toBeLessThanOrEqual(1);
       }
       expect(await panneau.evaluate((p) => p.scrollWidth - p.clientWidth), "rien ne déborde du volet").toBeLessThanOrEqual(0);
       await page.screenshot({ path: `test-results/bo16-volet-jour/${info.project.name}-${langue}.png`, animations: "disabled" });

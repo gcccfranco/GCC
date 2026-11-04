@@ -167,19 +167,22 @@ test("la liste : En retard, Cette semaine, Plus tard ; « Terminées (1) » repl
 test.describe("en grand (deux volets)", () => {
   test.beforeEach(({}, info: TestInfo) => { test.skip(!estGrandEcran(info), "formulaire dans la page : ordinateur et iPad paysage"); });
 
-  test("la section « Tâches » en carte ; toucher une tâche ouvre sa fiche à lire, titrée en h2", async ({ page }) => {
+  test("la section « Tâches » en carte ; toucher une tâche ouvre sa fiche à lire, titrée en h1", async ({ page }) => {
     await ouvrir(page, PAGE_DA);
     await expect(liste(page).locator(".raised").first()).toBeVisible();
     // (Plus de première tâche ouverte à côté, ni de ligne allumée : la fiche a son adresse, R11 n'existe plus.)
     await ligne(page, "Affiche de Noël").click();
     await expect(page).toHaveURL(/\/back-office\/taches\/da\/t1\/?$/);
-    await expect(detail(page).getByRole("heading", { level: 2, name: "Affiche de Noël" })).toBeVisible();
+    await expect(detail(page).getByRole("heading", { level: 1, name: "Affiche de Noël" })).toBeVisible();
     // État, infos, Note et Historique.
     await expect(detail(page).getByRole("radio", { name: "En cours" })).toHaveAttribute("aria-checked", "true");
     await expect(detail(page).getByText("Culte de Noël")).toBeVisible();
     await expect(detail(page).getByText("Format A3 et version Instagram")).toBeVisible();
-    const historique = detail(page).locator("section", { has: page.getByRole("heading", { name: "Historique" }) });
-    await expect(historique.getByRole("listitem")).toHaveText(["Commencée par Ruth K. · 29 sept.", "Créée par Léa M. · 21 sept."]);
+    // Corrections du design (-11) : l'historique est une liste étiquetée hors carte, en lignes grises de 13 px.
+    const historique = detail(page).getByRole("list", { name: "Historique" });
+    await expect(historique.getByRole("listitem")).toHaveText(["Commencée par Ruth K. · 29 sept.", "Créée par Léa M. le 21 sept."]);
+    await expect(historique.getByRole("listitem").first()).toHaveCSS("font-size", "13px");
+    await expect(detail(page).locator("section", { has: page.getByRole("heading", { name: "Historique" }) })).toHaveCount(0);
     await expect(detail(page).getByRole("button", { name: "Modifier" })).toBeVisible();
     await expect(detail(page).getByRole("button", { name: "Plus d'actions" })).toBeVisible();
   });
@@ -188,16 +191,15 @@ test.describe("en grand (deux volets)", () => {
     await ouvrir(page, PAGE_DA);
     await ligne(page, "Livret de l'Avent").click();
     await expect(page).toHaveURL(/\/back-office\/taches\/da\/t3\/?$/);
-    await expect(detail(page).getByRole("heading", { level: 2, name: "Livret de l'Avent" })).toBeVisible();
-    await expect(detail(page).locator("section", { has: page.getByRole("heading", { name: "Historique" }) }).getByRole("listitem"))
-      .toHaveText(["Créée par Ruth K. · 1 sept."]);
+    await expect(detail(page).getByRole("heading", { level: 1, name: "Livret de l'Avent" })).toBeVisible();
+    await expect(detail(page).getByRole("list", { name: "Historique" }).getByRole("listitem")).toHaveText(["Créée par Ruth K. le 1 sept."]);
   });
 
-  test("un lien direct vers une tâche ouvre sa fiche, et « ‹ DA » ramène à la page de l'équipe, sur sa ligne", async ({ page }) => {
+  test("un lien direct vers une tâche ouvre sa fiche, et « ‹ Tâches de DA » ramène à la page de l'équipe, sur sa ligne", async ({ page }) => {
     await ouvrir(page, "/back-office/taches/da/t2?date=2026-10-08");
-    await expect(detail(page).getByRole("heading", { level: 2, name: "Fond PPT du culte" })).toBeVisible();
-    await verifierAgencement(page, { contenu: detail(page), lecture: true, onglets: { rail: 0, pilules: 0 } });
-    await page.getByRole("link", { name: "DA", exact: true }).click();
+    await expect(detail(page).getByRole("heading", { level: 1, name: "Fond PPT du culte" })).toBeVisible();
+    await verifierAgencement(page, { contenu: detail(page), lecture: true, titreDansLeVolet: true, onglets: { rail: 0, pilules: 0 } });
+    await page.getByRole("link", { name: "Tâches de DA", exact: true }).click();
     await expect(page).toHaveURL(/\/back-office\/equipes\/da\/?$/);
     await expect(ligne(page, "Affiche de Noël")).toBeVisible();
     await expect(liste(page).getByRole("button", { name: /^Fond PPT du culte.*8 oct/ })).toBeVisible();
@@ -224,9 +226,9 @@ test.describe("en grand (deux volets)", () => {
     expect(cree.data).toMatchObject({ titre: "Affiche de la retraite", equipe: "da", echeance: "2026-10-06", repetition: { rythme: "semaine" }, auteurUid: "uid-ruth" });
     const id = cree.path.split("/").pop();
     await expect(page).toHaveURL(new RegExp(`/back-office/taches/da/${id}/?$`));
-    await expect(detail(page).getByRole("heading", { level: 2, name: "Affiche de la retraite" })).toBeVisible();
+    await expect(detail(page).getByRole("heading", { level: 1, name: "Affiche de la retraite" })).toBeVisible();
     // Et la tâche est dans la section « Tâches » de la page de l'équipe.
-    await page.getByRole("link", { name: "DA", exact: true }).click();
+    await page.getByRole("link", { name: "Tâches de DA", exact: true }).click();
     await expect(ligne(page, "Affiche de la retraite")).toBeVisible();
   });
 
@@ -252,8 +254,8 @@ test.describe("en grand (deux volets)", () => {
     expect(await margeAttendue(page), "la barre est bien réduite").toBe(28);
     await verifierAgencement(page, surLaListe(page));
     await ligne(page, "Livret de l'Avent").click();
-    await expect(detail(page).getByRole("heading", { level: 2, name: "Livret de l'Avent" })).toBeVisible();
-    await verifierAgencement(page, { contenu: detail(page), lecture: true, onglets: { rail: 0, pilules: 0 } });
+    await expect(detail(page).getByRole("heading", { level: 1, name: "Livret de l'Avent" })).toBeVisible();
+    await verifierAgencement(page, { contenu: detail(page), lecture: true, titreDansLeVolet: true, onglets: { rail: 0, pilules: 0 } });
   });
 
   test("l'équipe d'une nouvelle tâche se choisit en pilules", async ({ page }) => {
@@ -284,10 +286,77 @@ test.describe("en grand (deux volets)", () => {
     await expect(form.getByLabel("Titre")).toHaveValue("Livret de l'Avent");
     await form.getByLabel("Titre").fill("Livret de l'Avent 2026");
     await form.getByRole("button", { name: "Enregistrer" }).click();
-    await expect(detail(page).getByRole("heading", { level: 2, name: "Livret de l'Avent 2026" })).toBeVisible();
+    await expect(detail(page).getByRole("heading", { level: 1, name: "Livret de l'Avent 2026" })).toBeVisible();
     expect(db.doc("equipes/da/taches/t3")).toMatchObject({ titre: "Livret de l'Avent 2026" });
   });
 });
+
+// Corrections du design (bo-reunions-taches-5, -10) : un seul grand titre, le retour nomme l'équipe, l'état n'est écrit
+// qu'une fois (« État », puis le segmenté avec le signe de chaque état), son sous-titre dessous.
+test("la fiche : un seul h1, retour « Tâches de DA », ni badge ni titre « Tâches » ; l'état dans le segmenté seul", async ({ page }, info) => {
+  await ouvrir(page, "/back-office/taches/da/t1");
+  await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1);
+  await expect(page.getByRole("heading", { level: 1, name: "Affiche de Noël" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Tâches", exact: true })).toHaveCount(0);
+  await expect(page.locator("header[data-entete-page]").getByRole("link", { name: "Tâches de DA", exact: true })).toHaveAttribute("href", /^\/back-office\/(equipes|taches)\/da\/?$/);
+  if (estGrandEcran(info)) {
+    await expect(page.getByRole("heading", { level: 1 })).toHaveCSS("font-size", "28px");
+    await expect(detail(page).getByText("DA", { exact: true })).toHaveCount(0);
+  }
+  const section = detail(page).locator("section").first();
+  await expect(section.getByText("État", { exact: true })).toBeVisible();
+  const etat = section.getByRole("radiogroup", { name: "État" });
+  await expect(etat.getByRole("radio")).toHaveText(["À faire", "En cours", "Terminée"]);
+  for (const radio of await etat.getByRole("radio").all()) {
+    await expect(radio.locator("span[aria-hidden]"), "le signe de l'état").toHaveCount(1);
+    expect((await radio.boundingBox())!.height).toBeGreaterThanOrEqual(36);
+  }
+  await expect(section.getByText("À faire", { exact: true })).toHaveCount(1);
+  const sous = (await section.getByText(/Ruth K\./).boundingBox())!;
+  const rail = (await etat.boundingBox())!;
+  expect(sous.y, "le sous-titre est sous le segmenté").toBeGreaterThanOrEqual(rail.y + rail.height - 1);
+});
+
+for (const largeur of [393, 360]) {
+  test(`téléphone ${largeur} px : la feuille « Nouvelle tâche » a la répétition pleine largeur, « Créer la tâche » de 50 px, « Annuler » dessous`, async ({ page }, info) => {
+    test.skip(!estTelephone(info), "propre au téléphone");
+    await page.setViewportSize({ width: largeur, height: 800 });
+    await ouvrir(page, PAGE_DA);
+    await nouvelleTache(page).click();
+    const feuille = page.getByRole("dialog", { name: "Nouvelle tâche" });
+    await expect(feuille).toBeVisible();
+    // Une seule lecture des boîtes, la feuille arrêtée (elle glisse à l'ouverture).
+    await feuille.evaluate((el) => Promise.all(el.getAnimations({ subtree: true }).map((x) => x.finished)));
+    const m = await feuille.evaluate((el) => {
+      const r = (e: Element | null) => { const b = e!.getBoundingClientRect(); return { y: b.y, h: b.height, w: b.width }; };
+      const bouton = (nom: string) => Array.from(el.querySelectorAll("button")).find((b) => b.textContent?.trim() === nom) ?? null;
+      return { form: r(el.querySelector("form")), repetition: r(el.querySelector("#tache-repetition")), creer: r(bouton("Créer la tâche")), annuler: r(bouton("Annuler")) };
+    });
+    expect(m.repetition.w, "Répétition occupe toute la largeur du formulaire").toBeGreaterThanOrEqual(m.form.w - 32.5);
+    expect(m.creer.h).toBeCloseTo(50, 0);
+    expect(m.creer.w, "bouton plein pleine largeur").toBeGreaterThanOrEqual(m.form.w - 32.5);
+    expect(m.annuler.y, "Annuler dessous").toBeGreaterThanOrEqual(m.creer.y + m.creer.h - 1);
+    expect(m.annuler.h).toBeGreaterThanOrEqual(43.5);
+  });
+}
+
+for (const theme of ["light", "dark"] as const) {
+  test(`${theme} : « Annuler » du formulaire en ligne est un texte de 44 px, sans fond ni contour, à gauche du bouton plein`, async ({ page }, info) => {
+    test.skip(!estGrandEcran(info), "le formulaire dans la page : ordinateur et iPad paysage");
+    await page.emulateMedia({ colorScheme: theme });
+    await ouvrir(page, "/back-office/taches/da/nouvelle");
+    const form = formulaire(page, "Nouvelle tâche");
+    const annuler = form.getByRole("button", { name: "Annuler" });
+    await expect(annuler).toBeVisible();
+    const s = await annuler.evaluate((e) => { const c = getComputedStyle(e); return { fond: c.backgroundColor, bordure: c.borderTopWidth, hauteur: e.getBoundingClientRect().height }; });
+    expect(s.fond).toBe("rgba(0, 0, 0, 0)");
+    expect(s.bordure).toBe("0px");
+    expect(s.hauteur).toBeCloseTo(44, 0);
+    const creer = (await form.getByRole("button", { name: "Créer la tâche" }).boundingBox())!;
+    const a = (await annuler.boundingBox())!;
+    expect(a.x + a.width).toBeLessThanOrEqual(creer.x);
+  });
+}
 
 test("« ⋯ › Supprimer » : la fenêtre du site ; Annuler garde la tâche, Supprimer la retire", async ({ page }) => {
   const db = await ouvrir(page, "/back-office/taches/da/t3");
@@ -338,7 +407,7 @@ test.describe("un volet (téléphone, tablette portrait)", () => {
     // La fiche en page : ni rail ni pilules (« ‹ Tâches » ramène à la page de l'équipe).
     await verifierAgencement(page, { contenu: detail(page), lecture: true, onglets: { rail: 0, pilules: 0 } });
     await capture(page, "v18-bo-tache-fiche");
-    await page.locator("header[data-entete-page]").getByRole("link", { name: "Tâches", exact: true }).click();
+    await page.locator("header[data-entete-page]").getByRole("link", { name: "Tâches de DA", exact: true }).click();
     await expect(page).toHaveURL(/\/back-office\/equipes\/da\/?$/);
     await expect(ligne(page, "Livret de l'Avent")).toBeVisible();
   });
@@ -350,12 +419,12 @@ test.describe("un volet (téléphone, tablette portrait)", () => {
     await expect(feuille).toBeVisible();
     await feuille.getByLabel("Titre").fill("Affiche de la retraite");
     await feuille.getByLabel("Échéance").fill("2026-10-09");
-    await feuille.getByRole("button", { name: "Enregistrer" }).click();
+    await feuille.getByRole("button", { name: "Créer la tâche" }).click();
     await expect(feuille).toHaveCount(0);
     expect(db.writes.find((w) => w.method === "POST" && w.path.startsWith("equipes/da/taches/"))?.data).toMatchObject({ titre: "Affiche de la retraite" });
     // La page de la nouvelle tâche, puis la liste de l'équipe l'a.
     await expect(page.getByRole("heading", { level: 1 })).toHaveText("Affiche de la retraite");
-    await page.locator("header[data-entete-page]").getByRole("link", { name: "Tâches", exact: true }).click();
+    await page.locator("header[data-entete-page]").getByRole("link", { name: "Tâches de DA", exact: true }).click();
     await expect(ligne(page, "Affiche de la retraite")).toBeVisible();
   });
 

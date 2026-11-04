@@ -43,8 +43,9 @@ export function EnTetePage({
   onglets,
   apres,
 }: {
-  /** Le titre de la page : le h1, même place et même taille partout. */
-  titre: ReactNode;
+  /** Le titre de la page : le h1, même place et même taille partout. Facultatif : en deux volets, une fiche
+   *  (réunion, tâche) est le grand titre et la bande du haut ne garde que le retour et l'action. */
+  titre?: ReactNode;
   /** Une ligne, coupée par « … » si elle ne tient pas. */
   sousTitre?: ReactNode;
   /** Le sous-titre passe à la ligne au lieu d'être coupé (« Lundi · bonjour Adèle… », G16). */
@@ -65,7 +66,7 @@ export function EnTetePage({
       {retour && <Retour href={retour.href}>{retour.label}</Retour>}
       <div className="flex items-start gap-3">
         <div className="min-w-0 flex-1">
-          <h1 className="titre-page text-foreground">{titre}</h1>
+          {titre && <h1 className="titre-page text-foreground">{titre}</h1>}
           {sousTitre && <p className={`mt-1 ${sousTitrePlie ? "" : "truncate "}text-[14px] leading-5 text-muted-foreground`}>{sousTitre}</p>}
         </div>
         {(outils || action) && (

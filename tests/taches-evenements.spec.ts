@@ -153,6 +153,14 @@ test("fiche : sans tâche, le bloc le dit ; une info sans date n'a pas de bloc",
   await expect(carte(page)).toHaveCount(0);
 });
 
+test("fiche : une réunion sans tâche dit « Aucune tâche pour cette réunion. » (bo-reunions-taches-8)", async ({ page }) => {
+  await member(page, RUTH_DA, "/evenements/reunion", {
+    "evenements/reunion": { ...NOEL, titre: "Réunion DA", type: "info", pour: "equipe:da", date: "2026-10-10", heure: "20:00" },
+  });
+  await expect(carte(page)).toContainText("Aucune tâche pour cette réunion.");
+  await expect(carte(page)).not.toContainText("évènement");
+});
+
 test("fiche : une réunion d'équipe a aussi son bloc Tâches", async ({ page }) => {
   await member(page, RUTH_DA, "/evenements/reunion", {
     "evenements/reunion": { ...NOEL, titre: "Réunion DA", type: "info", pour: "equipe:da", date: "2026-10-10", heure: "20:00" },
@@ -195,7 +203,7 @@ test("fiche : Nouvelle tâche crée une tâche liée dans l'équipe choisie, à 
   await form.getByLabel("Titre").fill("Diaporama des enfants");
   await form.getByLabel("Échéance").fill("2026-12-17");
   await capture(page, "evenement-tache-nouvelle");
-  await form.getByRole("button", { name: "Enregistrer" }).click();
+  await form.getByRole("button", { name: "Créer la tâche" }).click();
   await expect(form).toHaveCount(0);
   const cree = db.writes.filter((w) => w.method === "POST" && w.path.startsWith("equipes/"));
   expect(cree).toHaveLength(1);
@@ -215,7 +223,7 @@ test("fiche : avec une seule équipe, le formulaire ne demande pas l'équipe", a
   await expect(form.getByLabel("Équipe")).toHaveCount(0);
   await form.getByLabel("Titre").fill("Carte de vœux");
   await form.getByLabel("Échéance").fill("2026-12-01");
-  await form.getByRole("button", { name: "Enregistrer" }).click();
+  await form.getByRole("button", { name: "Créer la tâche" }).click();
   await expect(form).toHaveCount(0);
   const cree = db.writes.find((w) => w.method === "POST" && w.path.startsWith("equipes/"));
   expect(cree?.path).toMatch(/^equipes\/da\/taches\//);

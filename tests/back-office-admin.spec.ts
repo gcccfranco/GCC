@@ -557,8 +557,8 @@ test.describe("B3 : Évènements", () => {
     // « Nouvelle réunion » : jamais d'Info, la date est demandée.
     await page.goto("/back-office/reunions/nouvelle");
     await expect(page.getByLabel("Date", { exact: true })).toBeVisible();
-    await expect(page.getByLabel("Catégorie").locator('option[value="loisir"]')).toHaveCount(1);
-    await expect(page.getByLabel("Catégorie").locator('option[value="info"]')).toHaveCount(0);
+    // Bo-reunions-taches-8 : une réunion n'a plus de champ « Catégorie » (la valeur stockée n'est jamais « info »).
+    await expect(page.getByLabel("Catégorie")).toHaveCount(0);
   });
 
   test("fiche d'une réunion au Back-Office : un autre membre du pôle a les cartes, sans Modifier", async ({ page }) => {
@@ -596,10 +596,10 @@ test.describe("B3 : Évènements", () => {
 
   test("« Nouvelle réunion » propose seulement les réunions", async ({ page }) => {
     await ouvrirB3(page, COORD, "/back-office/reunions/nouvelle");
-    await expect(page.getByLabel("Public")).toBeVisible();
-    const publics = await page.getByLabel("Public").locator("option").allTextContents();
+    await expect(page.getByLabel("Équipe", { exact: true })).toBeVisible();
+    const publics = await page.getByLabel("Équipe", { exact: true }).locator("option").allTextContents();
     expect(publics.length).toBeGreaterThan(0);
-    expect(publics.every((p) => p.startsWith("TEAM") || p === "Louange")).toBe(true);
+    expect(publics.every((p) => !p.startsWith("TEAM"))).toBe(true);
     await expect(page.getByRole("radiogroup", { name: "Inscriptions" })).toHaveCount(0);
   });
 

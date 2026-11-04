@@ -16,6 +16,8 @@ export const BASE_URL_COUPE = `http://localhost:${PORT + 1}`;
 const SPECS_GRAND_ECRAN = [
   // Lot CH (docs/spec-chargement.md) : la forme du membre pendant l'attente de Firebase, sur les quatre dispositions.
   /chargement\.spec\.ts/,
+  // Lot CD, T1h (bo-reunions-taches-1) : aucun débordement horizontal des pages du Back-Office, aux largeurs du téléphone.
+  /debordement-back-office\.spec\.ts/,
   // Lot CD, services-3 : la page « Pour quel service ? » (carte des entrées plafonnée à 720 px) sur les quatre dispositions.
   /setlist-pour-quel-service\.spec\.ts/,
   // Connexion (docs/spec-corrections-design/eglise.md, eglise-11 et eglise-13) : liens, retour, largeur du formulaire, nom du site.

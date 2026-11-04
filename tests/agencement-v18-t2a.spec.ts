@@ -194,9 +194,9 @@ test.describe("T2a : les adresses /back-office/reunions/*", () => {
     await expect(page.getByRole("link", { name: "Dupliquer pour la prochaine" })).toHaveAttribute("href", /^\/back-office\/reunions\/nouvelle\/?\?from=reu-da$/);
     await expect(page.getByRole("region", { name: "Réunions précédentes" }).getByRole("link", { name: "5 sept.", exact: true }))
       .toHaveAttribute("href", /^\/back-office\/reunions\/reu-da-sept\/?$/);
-    // En un volet, la fiche est une page : « ‹ Réunions » pour seul retour (agencement v18, T2b) ; en grand, la liste est à côté.
+    // En un volet, la fiche est une page : « ‹ Calendrier » pour seul retour, vers l'Agenda des réunions (corrections du design, -6) ; en grand, la liste est à côté.
     if (!estGrandEcran(info)) {
-      await expect(page.locator("header[data-entete-page]").getByRole("link", { name: "Réunions" })).toHaveAttribute("href", /^\/back-office\/reunions\/?$/);
+      await expect(page.locator("header[data-entete-page]").getByRole("link", { name: "Calendrier" })).toHaveAttribute("href", /^\/back-office\/calendrier\/?\?vue=agenda&filtre=reunions$/);
     }
   });
 
@@ -209,16 +209,65 @@ test.describe("T2a : les adresses /back-office/reunions/*", () => {
     await expect(page.getByRole("group", { name: "Filtrer le calendrier" }).getByRole("button", { name: "Réunions", exact: true })).toHaveAttribute("aria-pressed", "true");
   });
 
+  // Corrections du design (bo-reunions-taches-5, -6, -9) : un seul grand titre par page, le retour dit « Calendrier »,
+  // « Modifier » n'est écrit qu'une fois. Quatre dispositions plus 1 440 px (les cinq projets).
+  test("la fiche : un seul h1 (le titre de la réunion, 28 px) ; ni « Réunions » ni sous-titre ; retour « ‹ Calendrier »", async ({ page }, info) => {
+    await ouvrir(page, DA, "/back-office/reunions/reu-da");
+    await expect(page.getByRole("heading", { level: 1, name: "Réunion DA", exact: true })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1);
+    await expect(page.getByRole("heading", { name: "Réunions", exact: true })).toHaveCount(0);
+    await expect(page.getByText("Les réunions de tes équipes")).toHaveCount(0);
+    if (estGrandEcran(info)) {
+      await expect(page.getByRole("heading", { level: 1 })).toHaveCSS("font-size", "28px");
+      await expect(page.getByRole("heading", { level: 1 })).toHaveCSS("font-weight", "700");
+    }
+    const retour = page.locator("header[data-entete-page]").getByRole("link", { name: "Calendrier" }).first();
+    await expect(retour).toHaveAttribute("href", /^\/back-office\/calendrier\/?\?vue=agenda&filtre=reunions$/);
+  });
+
+  test("« Nouvelle réunion » et « Modifier » : un seul h1, le retour de la page à un volet, « Modifier » écrit une fois", async ({ page }, info) => {
+    await ouvrir(page, DA, "/back-office/reunions/nouvelle");
+    await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1);
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Nouvelle réunion");
+    if (!estGrandEcran(info)) {
+      await expect(page.locator("header[data-entete-page]").getByRole("link", { name: "Calendrier" })).toHaveAttribute("href", /^\/back-office\/calendrier\/?\?vue=agenda&filtre=reunions$/);
+    }
+    await page.goto("/back-office/reunions/reu-da/modifier");
+    await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1);
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Modifier la réunion");
+    await expect(page.getByLabel("Nom de la réunion")).toHaveValue("Réunion DA");
+    await expect(page.getByText("Modifier", { exact: true })).toHaveCount(0);
+    if (!estGrandEcran(info)) {
+      await expect(page.locator("header[data-entete-page]").getByRole("link", { name: "Réunion DA" })).toHaveAttribute("href", /^\/back-office\/reunions\/reu-da\/?$/);
+    }
+  });
+
+  test("« Nouvelle réunion » parle de réunion : ni « évènement », ni « Catégorie », bannière sous « Plus d'options »", async ({ page }) => {
+    await ouvrir(page, DA, "/back-office/reunions/nouvelle");
+    await expect(page.getByLabel("Nom de la réunion")).toBeVisible();
+    await expect(page.getByLabel("Équipe", { exact: true })).toBeVisible();
+    await expect(page.getByLabel("Catégorie")).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Créer la réunion" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Annuler" })).toBeVisible();
+    // Le texte visible du formulaire (« Plus d'options » est replié) ne dit pas « évènement ».
+    expect(await page.locator("form").innerText()).not.toMatch(/évènement/i);
+    const banniere = page.getByText("Ajouter une bannière");
+    await expect(banniere).toBeHidden();
+    await page.getByText("Plus d'options").click();
+    await expect(banniere).toBeVisible();
+  });
+
   test("créer une réunion : seulement les réunions au choix, puis sa fiche sous Réunions", async ({ page }) => {
     await page.route("**/api/push/notify-evenement", (route) => route.fulfill({ json: { ok: true } }));
     await ouvrir(page, DA, "/back-office/reunions/nouvelle");
-    await expect(page.getByLabel("Public")).toBeVisible();
-    const publics = await page.getByLabel("Public").locator("option").allTextContents();
+    await expect(page.getByLabel("Équipe", { exact: true })).toBeVisible();
+    const publics = await page.getByLabel("Équipe", { exact: true }).locator("option").allTextContents();
     expect(publics.length).toBeGreaterThan(0);
-    expect(publics.every((p) => p.startsWith("TEAM"))).toBe(true);
-    await page.getByLabel("Nom de l'évènement").fill("Réunion de rentrée");
+    // Bo-reunions-taches-8 : les équipes s'écrivent en nom court (« DA »), pas « TEAM DA ».
+    expect(publics.every((p) => !p.startsWith("TEAM"))).toBe(true);
+    await page.getByLabel("Nom de la réunion").fill("Réunion de rentrée");
     await page.getByLabel("Date", { exact: true }).fill("2026-10-20");
-    await page.getByRole("button", { name: "Créer l'évènement" }).click();
+    await page.getByRole("button", { name: "Créer la réunion" }).click();
     await expect(page).toHaveURL(/\/back-office\/reunions\/fake-\d+\/?$/);
     await expect(page.getByRole("heading", { name: "Réunion de rentrée", exact: true })).toBeVisible();
   });
@@ -231,7 +280,7 @@ test.describe("T2a : les adresses /back-office/reunions/*", () => {
 
   test("modifier une réunion : enregistrer ramène à sa fiche sous Réunions", async ({ page }) => {
     const db = await ouvrir(page, DA, "/back-office/reunions/reu-da/modifier");
-    await page.getByLabel("Nom de l'évènement").fill("Réunion DA d'octobre");
+    await page.getByLabel("Nom de la réunion").fill("Réunion DA d'octobre");
     await page.getByRole("button", { name: "Enregistrer" }).click();
     await expect(page).toHaveURL(/\/back-office\/reunions\/reu-da\/?$/);
     expect(db.doc("evenements/reu-da")).toMatchObject({ titre: "Réunion DA d'octobre" });

@@ -7,6 +7,9 @@
 // docs/spec-inscriptions-periode.md) ; les champs rares (fin
 // de l'évènement, liens, places, sans compte) sous « Plus d'options ». Une
 // « info » n'a ni date ni inscription : elle est épinglée et expire.
+// Corrections du design (bo-reunions-taches-8, -13) : en mode réunion, le même formulaire parle de réunion
+// (« Nom de la réunion », « Équipe », ni « Catégorie », bannière sous « Plus d'options », « Créer la réunion ») ;
+// libellés par `Champ` (13 px semi-gras gris), champs de 44 px.
 
 import { useState, type FormEvent } from "react"
 import { useTranslation } from "react-i18next"
@@ -21,6 +24,7 @@ import { borneInscription, modeInscriptions } from "@/lib/evenements/agenda"
 import { dansLeSheet, dernierJourDuSheet } from "@/lib/evenements/bascule"
 import { lienOngletSheet } from "@/lib/evenements/sheet"
 import { Button } from "@/components/ui/button"
+import { Champ } from "@/components/ui/champ"
 import { Input } from "@/components/ui/input"
 import { Switch } from "@/components/ui/switch"
 import { Textarea } from "@/components/ui/textarea"
@@ -50,14 +54,13 @@ function Periode({ id, label, heureLabel, aide, value, onChange }: {
 }) {
   const [jour = "", heure = ""] = value.split("T")
   return (
-    <div className="space-y-1">
-      <label htmlFor={id} className="text-sm text-muted-foreground">{label}</label>
+    <Champ id={id} label={label}>
       <div className="grid grid-cols-2 gap-3">
-        <Input id={id} type="date" max={DATE_MAX} value={jour} onChange={(e) => onChange(joindre(e.target.value, heure))} />
-        <Input type="time" aria-label={heureLabel} value={heure} disabled={!jour} onChange={(e) => onChange(joindre(jour, e.target.value))} />
+        <Input id={id} className="h-11" type="date" max={DATE_MAX} value={jour} onChange={(e) => onChange(joindre(e.target.value, heure))} />
+        <Input className="h-11" type="time" aria-label={heureLabel} value={heure} disabled={!jour} onChange={(e) => onChange(joindre(jour, e.target.value))} />
       </div>
       <p className="text-xs text-muted-foreground">{aide}</p>
-    </div>
+    </Champ>
   )
 }
 
@@ -99,10 +102,10 @@ export function EvenementForm({ initial, pours, creation, inscrits = 0, titreCac
   // refusé : un évènement déjà dans l'app (créé avant la règle) se corrige toujours.
   const refusSheet = dansLeSheet(v) && (creation || !dansLeSheet(initial))
   const set = (patch: Partial<EvenementValues>) => setV((x) => ({ ...x, ...patch }))
-  // Listes au style des champs du site (fond gris, sans bord), libellés
-  // discrets comme la maquette (retour du 17/09/2026).
-  const field = "w-full h-10 rounded-lg border border-transparent bg-secondary px-3 text-base md:text-sm"
-  const LABEL = "text-sm text-muted-foreground"
+  // Listes au style des champs du site (fond gris, sans bord), de 44 px comme les champs d'une ligne.
+  const field = "w-full h-11 rounded-lg border border-transparent bg-secondary px-3 text-base md:text-sm"
+  // Le titre dit l'action d'une réunion ; un évènement garde « Nouvel évènement » / « Modifier ».
+  const Titre = reunion && !titreCache ? "h1" : "h2"
 
   function setType(type: EvenementType) {
     set({ type, ...(type === "info" ? { date: "", heure: "", heureFin: "", dateFin: "", ...sansInscription } : {}) })
@@ -168,81 +171,9 @@ export function EvenementForm({ initial, pours, creation, inscrits = 0, titreCac
     }
   }
 
-  return (
-    <form onSubmit={submit} className="space-y-4" aria-labelledby="evenement-form-title">
-      <h2 id="evenement-form-title" className={titreCache ? "sr-only" : "text-base font-bold"}>{creation ? t("evenements.nouveau") : t("evenements.modifier")}</h2>
-      {error && <p className="text-sm text-destructive">{error}</p>}
-
-      <div data-testid="form-carte" className="divide-y divide-border rounded-2xl bg-card">
-      <div className="space-y-4 p-4">
-        <div className="space-y-1">
-          <label htmlFor="ev-titre" className={LABEL}>{t("evenements.form.titre")}</label>
-          <Input id="ev-titre" value={v.titre} maxLength={80} onChange={(e) => set({ titre: e.target.value })} required />
-        </div>
-
-        <div className="grid grid-cols-2 gap-3">
-          <div className="space-y-1">
-            <label htmlFor="ev-type" className={LABEL}>{t("evenements.form.type")}</label>
-            <select id="ev-type" className={field} value={v.type} onChange={(e) => setType(e.target.value as EvenementType)}>
-              {EVENEMENT_TYPES.filter((x) => !reunion || x !== "info").map((x) => <option key={x} value={x}>{t(`evenements.types.${x}`)}</option>)}
-            </select>
-          </div>
-          <div className="space-y-1">
-            <label htmlFor="ev-pour" className={LABEL}>{t("evenements.form.pour")}</label>
-            <select id="ev-pour" className={field} value={v.pour}
-              onChange={(e) => set({
-                pour: e.target.value as EvenementValues["pour"],
-                ...(estReunion({ ...v, pour: e.target.value }) ? { ...sansInscription, ...(info ? { type: TYPE_REUNION } : {}) } : {}),
-              })}>
-              {pours.map((p) => {
-                const equipe = equipeDuPour(p)
-                return <option key={p} value={p}>{p === "eglise" ? t("evenements.pourEglise") : equipe ? t(cleNomEquipe(equipe)) : categoryLabel(p)}</option>
-              })}
-            </select>
-          </div>
-        </div>
-
-        {!info && (
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1">
-              <label htmlFor="ev-date" className={LABEL}>{t("evenements.form.date")}</label>
-              <Input id="ev-date" type="date" max={DATE_MAX} value={v.date} onChange={(e) => set({ date: e.target.value })} required
-                aria-invalid={refusSheet || undefined} aria-describedby={refusSheet ? "ev-date-sheet" : undefined} />
-            </div>
-            <div className="space-y-1">
-              <label htmlFor="ev-heure" className={LABEL}>{t("evenements.form.heure")}</label>
-              <Input id="ev-heure" type="time" value={v.heure} onChange={(e) => set({ heure: e.target.value })} />
-            </div>
-          </div>
-        )}
-        {refusSheet && (
-          <p id="ev-date-sheet" className="-mt-2 text-sm text-destructive">
-            {t("evenements.form.refusSheet", { jour: dernierJourDuSheet() })}{" "}
-            <a href={lienOngletSheet(v.date)} target="_blank" rel="noopener noreferrer"
-              className="font-semibold underline underline-offset-2">
-              {t("evenements.form.ouvrirSheet")}
-            </a>
-          </p>
-        )}
-
-        <div className="space-y-1">
-          <label htmlFor="ev-lieu" className={LABEL}>{t("evenements.form.lieu")}</label>
-          <Input id="ev-lieu" value={v.lieu} maxLength={120} onChange={(e) => set({ lieu: e.target.value })} />
-        </div>
-
-        <div className="space-y-1">
-          <label htmlFor="ev-contact" className={LABEL}>{t("evenements.form.contact")}</label>
-          <Input id="ev-contact" value={v.contact} maxLength={80} placeholder={t("evenements.form.contactHint")} onChange={(e) => set({ contact: e.target.value })} />
-        </div>
-
-        <div className="space-y-1">
-          <label htmlFor="ev-description" className={LABEL}>{t("evenements.form.description")}</label>
-          <Textarea id="ev-description" value={v.description} rows={4} maxLength={4000} onChange={(e) => set({ description: e.target.value })} />
-        </div>
-      </div>
-
-      {/* Bannière : la première image ; jusqu'à trois. */}
-      <div className="space-y-2 p-4">
+  /** La zone « Ajouter une bannière » : visible pour un évènement, sous « Plus d'options » pour une réunion. */
+  const banniere = (classe: string) => (
+      <div className={classe}>
         {v.images.length > 0 && (
           <div className="grid grid-cols-3 gap-2">
             {v.images.map((src, i) => (
@@ -263,15 +194,88 @@ export function EvenementForm({ initial, pours, creation, inscrits = 0, titreCac
           </label>
         )}
       </div>
+  )
+
+  return (
+    <form onSubmit={submit} className="space-y-4" aria-labelledby="evenement-form-title">
+      <Titre id="evenement-form-title" className={titreCache ? "sr-only" : reunion ? "text-[28px] font-bold leading-tight tracking-[-0.02em] text-foreground text-balance" : "text-base font-bold"}>
+        {reunion ? t(creation ? "backOffice.nouvelleReunion" : "backOffice.modifierReunion") : creation ? t("evenements.nouveau") : t("evenements.modifier")}
+      </Titre>
+      {error && <p className="text-sm text-destructive">{error}</p>}
+
+      <div data-testid="form-carte" className="divide-y divide-border rounded-2xl bg-card">
+      <div className="space-y-4 p-4">
+        <Champ id="ev-titre" label={t(reunion ? "evenements.form.titreReunion" : "evenements.form.titre")}>
+          <Input id="ev-titre" className="h-11" value={v.titre} maxLength={80} onChange={(e) => set({ titre: e.target.value })} required />
+        </Champ>
+
+        <div className={reunion ? undefined : "grid grid-cols-2 gap-3"}>
+          {/* Une réunion n'a pas de catégorie à choisir : la valeur déjà stockée reste (-8). */}
+          {!reunion && (
+            <Champ id="ev-type" label={t("evenements.form.type")}>
+              <select id="ev-type" className={field} value={v.type} onChange={(e) => setType(e.target.value as EvenementType)}>
+                {EVENEMENT_TYPES.map((x) => <option key={x} value={x}>{t(`evenements.types.${x}`)}</option>)}
+              </select>
+            </Champ>
+          )}
+          <Champ id="ev-pour" label={t(reunion ? "evenements.form.pourReunion" : "evenements.form.pour")}>
+            <select id="ev-pour" className={field} value={v.pour}
+              onChange={(e) => set({
+                pour: e.target.value as EvenementValues["pour"],
+                ...(estReunion({ ...v, pour: e.target.value }) ? { ...sansInscription, ...(info ? { type: TYPE_REUNION } : {}) } : {}),
+              })}>
+              {pours.map((p) => {
+                const equipe = equipeDuPour(p)
+                return <option key={p} value={p}>{p === "eglise" ? t("evenements.pourEglise") : equipe ? t(cleNomEquipe(equipe, reunion)) : categoryLabel(p)}</option>
+              })}
+            </select>
+          </Champ>
+        </div>
+
+        {!info && (
+          <div className="grid grid-cols-2 gap-3">
+            <Champ id="ev-date" label={t("evenements.form.date")}>
+              <Input id="ev-date" className="h-11" type="date" max={DATE_MAX} value={v.date} onChange={(e) => set({ date: e.target.value })} required
+                aria-invalid={refusSheet || undefined} aria-describedby={refusSheet ? "ev-date-sheet" : undefined} />
+            </Champ>
+            <Champ id="ev-heure" label={t("evenements.form.heure")}>
+              <Input id="ev-heure" className="h-11" type="time" value={v.heure} onChange={(e) => set({ heure: e.target.value })} />
+            </Champ>
+          </div>
+        )}
+        {refusSheet && (
+          <p id="ev-date-sheet" className="-mt-2 text-sm text-destructive">
+            {t("evenements.form.refusSheet", { jour: dernierJourDuSheet() })}{" "}
+            <a href={lienOngletSheet(v.date)} target="_blank" rel="noopener noreferrer"
+              className="font-semibold underline underline-offset-2">
+              {t("evenements.form.ouvrirSheet")}
+            </a>
+          </p>
+        )}
+
+        <Champ id="ev-lieu" label={t("evenements.form.lieu")}>
+          <Input id="ev-lieu" className="h-11" value={v.lieu} maxLength={120} onChange={(e) => set({ lieu: e.target.value })} />
+        </Champ>
+
+        <Champ id="ev-contact" label={t("evenements.form.contact")}>
+          <Input id="ev-contact" className="h-11" value={v.contact} maxLength={80} placeholder={t("evenements.form.contactHint")} onChange={(e) => set({ contact: e.target.value })} />
+        </Champ>
+
+        <Champ id="ev-description" label={t("evenements.form.description")}>
+          <Textarea id="ev-description" value={v.description} rows={4} maxLength={4000} onChange={(e) => set({ description: e.target.value })} />
+        </Champ>
+      </div>
+
+      {/* Bannière : la première image ; jusqu'à trois. Une réunion la range sous « Plus d'options » (-8). */}
+      {!reunion && banniere("space-y-2 p-4")}
 
       {!info && !reunion && (
         <div className="space-y-3 px-4 py-3.5">
           {/* Lot 11 : le lien externe est en tête, c'est lui qui décide si le reste s'applique. */}
-          <div className="space-y-1">
-            <label htmlFor="ev-lien-externe" className={LABEL}>{t("evenements.form.lienExterne")}</label>
-            <Input id="ev-lien-externe" type="url" value={v.lienExterne} placeholder="https://…" onChange={(e) => set({ lienExterne: e.target.value })} />
+          <Champ id="ev-lien-externe" label={t("evenements.form.lienExterne")}>
+            <Input id="ev-lien-externe" className="h-11" type="url" value={v.lienExterne} placeholder="https://…" onChange={(e) => set({ lienExterne: e.target.value })} />
             <p className="text-xs text-muted-foreground">{t("evenements.form.lienExterneAide")}</p>
-          </div>
+          </Champ>
           {!externe && (
             <>
               <div className="space-y-2">
@@ -305,10 +309,9 @@ export function EvenementForm({ initial, pours, creation, inscrits = 0, titreCac
             <input type="checkbox" className="h-4 w-4" checked={v.epingle} onChange={(e) => set({ epingle: e.target.checked })} />
             {t("evenements.form.epingle")}
           </label>
-          <div className="space-y-1">
-            <label htmlFor="ev-expires" className={LABEL}>{t("evenements.form.expiresAt")}</label>
-            <Input id="ev-expires" type="date" value={v.expiresAt ?? ""} onChange={(e) => set({ expiresAt: e.target.value || null })} />
-          </div>
+          <Champ id="ev-expires" label={t("evenements.form.expiresAt")}>
+            <Input id="ev-expires" className="h-11" type="date" value={v.expiresAt ?? ""} onChange={(e) => set({ expiresAt: e.target.value || null })} />
+          </Champ>
         </div>
       )}
 
@@ -317,19 +320,19 @@ export function EvenementForm({ initial, pours, creation, inscrits = 0, titreCac
         <div className="space-y-4 border-t border-border p-4">
           {!info && (
             <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1">
-                <label htmlFor="ev-heure-fin" className={LABEL}>{t("evenements.form.heureFin")}</label>
-                <Input id="ev-heure-fin" type="time" value={v.heureFin} onChange={(e) => set({ heureFin: e.target.value })} />
-              </div>
-              <div className="space-y-1">
-                <label htmlFor="ev-date-fin" className={LABEL}>{t("evenements.form.dateFin")}</label>
-                <Input id="ev-date-fin" type="date" max={DATE_MAX} value={v.dateFin} onChange={(e) => set({ dateFin: e.target.value })} />
-              </div>
+              <Champ id="ev-heure-fin" label={t("evenements.form.heureFin")}>
+                <Input id="ev-heure-fin" className="h-11" type="time" value={v.heureFin} onChange={(e) => set({ heureFin: e.target.value })} />
+              </Champ>
+              <Champ id="ev-date-fin" label={t("evenements.form.dateFin")}>
+                <Input id="ev-date-fin" className="h-11" type="date" max={DATE_MAX} value={v.dateFin} onChange={(e) => set({ dateFin: e.target.value })} />
+              </Champ>
             </div>
           )}
 
-          <div className="space-y-2">
-            <p className={LABEL}>{t("annonces.form.links")}</p>
+          {reunion && banniere("space-y-2")}
+
+          <Champ label={t("annonces.form.links")}>
+            <div className="space-y-2">
             {v.liens.map((l, i) => (
               <div key={i} className="grid grid-cols-[1fr_1fr_auto] gap-2">
                 <Input aria-label={t("evenements.form.lienLabel")} value={l.label} placeholder={t("evenements.form.lienLabel")}
@@ -340,18 +343,18 @@ export function EvenementForm({ initial, pours, creation, inscrits = 0, titreCac
               </div>
             ))}
             <Button type="button" variant="outline" size="sm" onClick={() => set({ liens: [...v.liens, { label: "", url: "" }] })}>{t("evenements.form.addLink")}</Button>
-          </div>
+            </div>
+          </Champ>
 
           {/* Lot 11 : avec un lien externe, ces réglages restent là mais ne
               servent plus — retirer le lien rend l'ancien réglage. */}
           {!info && !reunion && (
             <div className={`space-y-3 ${externe ? "opacity-60" : ""}`}>
               {externe && <p className="text-xs text-muted-foreground">{t("evenements.form.placesExterne")}</p>}
-              <div className="space-y-1">
-                <label htmlFor="ev-places" className={LABEL}>{t("evenements.form.places")}</label>
-                <Input id="ev-places" type="number" min={1} max={999} value={v.placesMax ?? ""} placeholder={t("evenements.form.placesHint")} disabled={externe}
+              <Champ id="ev-places" label={t("evenements.form.places")}>
+                <Input id="ev-places" className="h-11" type="number" min={1} max={999} value={v.placesMax ?? ""} placeholder={t("evenements.form.placesHint")} disabled={externe}
                   onChange={(e) => set({ placesMax: e.target.value ? Number(e.target.value) : null })} />
-              </div>
+              </Champ>
               {!reserve && (
                 <label className="flex items-center gap-2 text-sm">
                   <input type="checkbox" className="h-4 w-4" checked={v.sansCompte} disabled={externe} onChange={(e) => set({ sansCompte: e.target.checked })} />
@@ -365,9 +368,9 @@ export function EvenementForm({ initial, pours, creation, inscrits = 0, titreCac
 
       <div className="space-y-1 p-4">
         <Button type="submit" size="lg" disabled={busy || compressing} className="w-full">
-          {creation ? t("evenements.form.create") : t("evenements.form.save")}
+          {creation ? t(reunion ? "evenements.form.createReunion" : "evenements.form.create") : t("evenements.form.save")}
         </Button>
-        <Button type="button" variant="ghost" className="w-full text-muted-foreground" onClick={onCancel}>{t("evenements.form.cancel")}</Button>
+        <Button type="button" variant="ghost" className="w-full text-foreground" onClick={onCancel}>{t("evenements.form.cancel")}</Button>
       </div>
       </div>
     </form>

@@ -2265,8 +2265,10 @@
     "reserved": "Cette page est réservée à la coordination et aux responsables de section.",
     "form": {
       "titre": "Nom de l'évènement",
+      "titreReunion": "Nom de la réunion",
       "type": "Catégorie",
       "pour": "Public",
+      "pourReunion": "Équipe",
       "date": "Date",
       "heure": "Horaire",
       "heureFin": "Fin de l'évènement (heure)",
@@ -2289,6 +2291,7 @@
       "addImage": "Ajouter une image",
       "removeImage": "Retirer l'image",
       "create": "Créer l'évènement",
+      "createReunion": "Créer la réunion",
       "save": "Enregistrer",
       "cancel": "Annuler",
       "errorTitre": "Le titre est obligatoire.",
@@ -2391,12 +2394,13 @@
     "externe": "Formulaire externe",
     "taches": {
       "titre": "Tâches",
-      "vide": "Aucune tâche pour cet évènement."
+      "vide": "Aucune tâche pour cet évènement.",
+      "videReunion": "Aucune tâche pour cette réunion."
     },
     "sujets": {
       "titre": "Sujets à aborder",
       "titreApres": "Sujets",
-      "aide": "Chaque personne de la réunion peut en ajouter jusqu'au début",
+      "aide": "Chaque personne de la réunion peut en ajouter jusqu'au début.",
       "traites_one": "{{count}} traité sur {{total}}",
       "traites_other": "{{count}} traités sur {{total}}",
       "nouveau": "Nouveau sujet",
@@ -2438,8 +2442,8 @@
       "titre": "Compte rendu",
       "aide": "Après la réunion, toute personne de la réunion (ou un admin) colle ici le lien du Google Doc du récap ; les autres sont prévenus dans le rappel du matin.",
       "lien": "Lien du compte rendu",
-      "placeholder": "https://docs.google.com/document/…",
-      "enregistrer": "Enregistrer le lien",
+      "placeholder": "Lien du Google Doc",
+      "enregistrer": "Enregistrer",
       "invalide": "Colle un lien complet, qui commence par https://",
       "ajoutePar": "{{source}} · ajouté par {{nom}} le {{date}}",
       "ouvrir": "Ouvrir",
@@ -2520,6 +2524,7 @@
   "taches": {
     "title": "Tâches",
     "mesTaches": "Mes tâches",
+    "retourEquipe": "Tâches de {{equipe}}",
     "aFairePourMoi": "À faire pour moi",
     "subtitle": "Tâches de l'équipe",
     "aucuneEquipe": "Tu ne fais partie d'aucune équipe : les tâches sont réservées aux membres des équipes.",
@@ -2599,7 +2604,7 @@
       "modifier": "Modifier",
       "enRetard": "en retard",
       "historique": "Historique",
-      "creeePar": "Créée par {{nom}}",
+      "creeeLe": "Créée par {{nom}} le {{date}}",
       "unMembre": "un membre"
     },
     "etat": {
@@ -3674,6 +3679,7 @@
     "aucunEvenement": "Aucun évènement à gérer.",
     "aucuneReunion": "Aucune réunion.",
     "nouvelleReunion": "Nouvelle réunion",
+    "modifierReunion": "Modifier la réunion",
     "annonceBascule": {
       "aria": "Annonce",
       "avant": "Les évènements de 2026 restent dans le Sheet ; ceux de 2027 se créent ici."
@@ -3685,7 +3691,6 @@
     "passees": "Passées",
     "gestion": {
       "sousTitreEvenements": "Ce que voit l'assemblée, et sa gestion",
-      "sousTitreReunions": "Les réunions de tes équipes",
       "voirCommeMembre": "Voir comme un membre",
       "contact": "Contact : {{nom}}",
       "exporter": "Exporter",

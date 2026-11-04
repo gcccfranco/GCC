@@ -120,11 +120,11 @@ test.describe("B1 : le formulaire refuse « Toute l'église » avant la bascule"
   test("une réunion d'équipe le 20/12/2026 passe", async ({ page }) => {
     // Retouches v18, lot E : une réunion se crée par « + Nouvelle réunion ».
     const { db } = await ouvrir(page, COORD, "/back-office/reunions/nouvelle", "2026-12-15T10:00:00");
-    await page.getByLabel("Nom de l'évènement").fill("Réunion de fin d'année");
-    await page.getByLabel("Public").selectOption("equipe:evenementiel");
+    await page.getByLabel("Nom de la réunion").fill("Réunion de fin d'année");
+    await page.getByLabel("Équipe", { exact: true }).selectOption("equipe:evenementiel");
     await page.getByLabel("Date", { exact: true }).fill("2026-12-20");
     await expect(page.getByText(REFUS)).toHaveCount(0);
-    await creer(page);
+    await page.getByRole("button", { name: "Créer la réunion" }).click();
     // Agencement v18 (B15) : une réunion se gère sous Réunions.
     await expect(page).toHaveURL(/\/back-office\/reunions\/fake-\d+\/?$/);
     expect(ecrit(db)?.data).toMatchObject({ pour: "equipe:evenementiel", date: "2026-12-20" });
