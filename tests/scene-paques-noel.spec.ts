@@ -1819,13 +1819,13 @@ test("evenements-app-7 — thème sombre : les carrés pris des semaines prennen
 
 // Corrections du design, bo-evenements-1 : « Toutes les réservations » en tableau à partir de 640 px de conteneur, en liste
 // « par jour » dessous ; chaque réservation garde son « ⋯ » (ou « Déplacer »), dans la fenêtre, sans défilement horizontal.
-test("bo-evenements-1 — le tableau au-dessus de 640 px de conteneur, la liste « par jour » dessous : « ⋯ » ou « Déplacer » dans la fenêtre, rien ne défile", async ({ page }) => {
+test("bo-evenements-1 — le tableau au-dessus de 720 px de conteneur, la liste « par jour » dessous : « ⋯ » ou « Déplacer » dans la fenêtre, rien ne défile", async ({ page }) => {
   await ouvrirFete(page, `${BO}/noel`, DOCS_P8, "2026-10-09", ALICE_EVT);
   await versToutesLesReservations(page);
   const section = page.getByRole("region", { name: "Toutes les réservations" });
   const largeur = (await section.boundingBox())!.width;
-  await expect(page.getByTestId("reservations-tableau")).toBeVisible({ visible: largeur >= 640 });
-  await expect(page.getByTestId("reservations-liste")).toBeVisible({ visible: largeur < 640 });
+  await expect(page.getByTestId("reservations-tableau")).toBeVisible({ visible: largeur >= 720 });
+  await expect(page.getByTestId("reservations-liste")).toBeVisible({ visible: largeur < 720 });
   const lignes = lignesTableau(page);
   await expect(lignes).toHaveCount(4);
   const fenetre = page.viewportSize()!.width;
@@ -1835,7 +1835,7 @@ test("bo-evenements-1 — le tableau au-dessus de 640 px de conteneur, la liste 
     const b = (await bouton.boundingBox())!;
     expect(b.x + b.width, "le bouton reste dans la fenêtre").toBeLessThanOrEqual(fenetre);
   }
-  const cadre = page.getByTestId(largeur >= 640 ? "reservations-tableau" : "reservations-liste");
+  const cadre = page.getByTestId(largeur >= 720 ? "reservations-tableau" : "reservations-liste");
 
   expect(await cadre.evaluate((el) => el.scrollWidth - el.clientWidth), "aucun défilement horizontal du cadre").toBeLessThanOrEqual(0);
   // Une réservation hors grille garde son fond et « Déplacer ».

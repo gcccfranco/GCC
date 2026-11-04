@@ -29,7 +29,7 @@
 // Évènement | Réunion dès 768 px, feuille des créations du jour sur téléphone) ; « Scène des fêtes » pour la
 // coordination ; une entrée du Sheet porte l'étiquette « Sheet » et la note du Sheet n'est que d'ici.
 
-import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { useSearchParams } from "next/navigation";
 import { useTranslation } from "react-i18next";
 import Link from "next/link";
@@ -258,6 +258,9 @@ export function CalendrierClient() {
     document.addEventListener("keydown", sur);
     return () => document.removeEventListener("keydown", sur);
   }, [voletFlottant, voletOuvert]);
+  // Clavier : à l'ouverture du volet, le focus va sur son ✕ (critique : sinon il faut traverser tout le mois).
+  const fermerVolet = useRef<HTMLButtonElement>(null);
+  useEffect(() => { if (voletFlottant && voletOuvert) fermerVolet.current?.focus({ preventScroll: true }); }, [voletFlottant, voletOuvert, choisi]);
   // Le volet entre du côté opposé au jour choisi : du lundi au jeudi par la droite, du vendredi au dimanche par la gauche.
   const coteVolet = vue === "agenda" || (new Date(`${choisi}T00:00:00Z`).getUTCDay() + 6) % 7 <= 3 ? "droite" : "gauche";
   const ouvrirEntree = (e: EntreeCalendrier) => setEntree({ e, ouverte: true });
@@ -526,7 +529,7 @@ export function CalendrierClient() {
               jours={jours}
               parJour={parJour}
               aujourdhui={aujourdhui}
-              choisi={choisi}
+              choisi={voletFlottant && !voletOuvert ? null : choisi}
               lang={lang}
               contourChoisi={vue === "mois" && voletFlottant && voletOuvert}
               onChoisir={choisir}
@@ -567,6 +570,7 @@ export function CalendrierClient() {
                   </h2>
                   <button
                     type="button"
+                    ref={fermerVolet}
                     aria-label={t("common.buttons.close")}
                     onClick={() => setVoletOuvert(false)}
                     className="-mr-2 flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-foreground"

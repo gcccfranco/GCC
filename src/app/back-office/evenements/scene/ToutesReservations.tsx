@@ -18,6 +18,7 @@ import { PLANNING_COLORS } from "@/lib/serviceColors"
 import type { Creneau, Programme } from "@/types/programme"
 import { Pilules } from "@/components/layout/Onglets"
 import { BadgeHorsGrille } from "@/app/evenements/scene/pieces"
+import { TOUCHER_44 } from "@/lib/toucher44"
 import { jourCourt } from "@/app/evenements/scene/libelles"
 import { libelleQui } from "@/lib/fetes/qui"
 import styles from "./ToutesReservations.module.css"
@@ -118,7 +119,7 @@ export function ToutesReservations({ programme, creneaux, titre, voirCommeMembre
                 >
                   <td className="whitespace-nowrap px-4 py-3 font-semibold tabular-nums text-foreground">{nouveauJour ? jourCourt(c.dimanche, lang) : ""}</td>
                   <td className="px-3 py-3 tabular-nums">
-                    <span className="inline-flex flex-wrap items-center gap-x-2 gap-y-1">{c.debut} – {c.fin}{estHors && <BadgeHorsGrille />}</span>
+                    <span className="inline-flex flex-wrap items-center gap-x-2 gap-y-1"><span className="whitespace-nowrap">{c.debut} – {c.fin}</span>{estHors && <BadgeHorsGrille />}</span>
                   </td>
                   <td className="px-3 py-3">
                     <span className="inline-block whitespace-nowrap rounded-full px-2 py-0.5 text-[12.5px] font-semibold svc-ink"
@@ -172,7 +173,7 @@ export function ToutesReservations({ programme, creneaux, titre, voirCommeMembre
                       </div>
                       {estHors ? (
                         <button type="button" onClick={() => deplacer(c)}
-                          className="inline-flex h-9 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full bg-background px-3 text-[13.5px] font-semibold text-foreground shadow-[inset_0_0_0_1px_hsl(var(--border))] hover:bg-secondary">
+                          className={`${TOUCHER_44} inline-flex h-9 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full bg-background px-3 text-[13.5px] font-semibold text-foreground shadow-[inset_0_0_0_1px_hsl(var(--border))] hover:bg-secondary`}>
                           <ArrowLeftRight className="h-4 w-4" aria-hidden /> {t("planning.saison.deplacer")}
                         </button>
                       ) : menu(c)}

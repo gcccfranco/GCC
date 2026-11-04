@@ -65,7 +65,7 @@ export function CompteurInscrits({ e }: { e: EntreeCalendrier }) {
     <span
       role="img"
       data-compteur
-      aria-label={e.compteurAria}
+      aria-label={e.complet ? `${t("evenements.complet")}, ${e.compteurAria}` : e.compteurAria}
       className={cn("shrink-0 text-[13px] tabular-nums", e.complet ? "font-semibold text-foreground" : "text-foreground/70")}
     >
       {e.complet ? t("evenements.complet") : e.compteur}

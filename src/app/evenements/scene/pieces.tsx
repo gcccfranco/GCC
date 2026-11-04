@@ -10,7 +10,7 @@ const COLOR = PLANNING_COLORS.scene
 /** Pastille « Hors grille » : réservation hors des jours ou des créneaux de la saison. */
 export function BadgeHorsGrille() {
   const { t } = useTranslation()
-  return <span className="inline-block text-xs px-2 py-0.5 rounded-full font-semibold border border-foreground/30 text-foreground">{t("planning.saison.horsGrille")}</span>
+  return <span className="inline-block whitespace-nowrap text-xs px-2 py-0.5 rounded-full font-semibold border border-foreground/30 text-foreground">{t("planning.saison.horsGrille")}</span>
 }
 
 /** La tuile de date (planche : « 11 » sur « oct. »). */
