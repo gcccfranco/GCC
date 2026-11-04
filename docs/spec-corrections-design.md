@@ -267,3 +267,8 @@ T1c, T1e et T1g tournent dans trois sessions parallèles. `musiciens.md` passe d
 Toutes les entrées T1 des 17 annexes sont codées. Restent à régler avant T2 : `agencement-v18-taches.spec.ts:95`, `:198`,
 `:249` (page d'équipe en deux colonnes depuis back-office-10, T1h-X) ; `agencement-v18-moi.spec.ts:310` ; la cloche du
 Back-office à 7 px du bord à 360 px en français (sélecteur de T1a, espace Back-office courant) ; puis la suite complète.
+- Reprises faites : `agencement-v18-taches` mesure les deux colonnes de back-office-10 (rendu conforme) ;
+  `agencement-v18-moi:310` suit quotidien-3 / -4 (aperçus de Moi en deux colonnes au-delà de 720 px de conteneur : une
+  colonne de 592 px à 1 280 px, deux à 1 440) ; `agencement-v18-moi:215` lit « 乐理 » (libellé du lot EM) ; sélecteur
+  d'espace : sous 375 px, l'espace courant n'est plus qu'une icône de 36 px lui aussi (cloche à ≥ 16 px du bord à 360 px,
+  testé avec App, Musiciens et Back-office courants, fr et zh). 352 tests verts sur les cinq projets.

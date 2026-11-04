@@ -340,8 +340,10 @@ test.describe("Back-Office (B1) : le sélecteur et le menu", () => {
       const noms = await liens.evaluateAll((els) => els.map((e) => e.getAttribute("aria-label")));
       expect(noms, "le nom reste en aria-label").toEqual(langue === "zh" ? ["应用", "乐手", "后台"] : ["App", "Musiciens", "Back-Office"]);
       // Le courant (App) : icône et libellé ; l'autre : icône seule, 36 px.
-      await expect(liens.nth(0).locator("span")).toBeVisible();
+      // Sous 375 px le courant lui aussi n'est plus qu'une icône de 36 px (la pastille le marque).
+      await expect(liens.nth(0).locator("span")).toBeVisible({ visible: largeur >= 375 });
       await expect(liens.nth(0).locator("svg")).toBeVisible();
+      if (largeur < 375) expect((await liens.nth(0).boundingBox())!.width).toBeCloseTo(36, 0);
       for (const i of [1, 2]) {
         await expect(liens.nth(i).locator("span")).toBeHidden();
         await expect(liens.nth(i).locator("svg")).toBeVisible();
@@ -365,6 +367,35 @@ test.describe("Back-Office (B1) : le sélecteur et le menu", () => {
         }
       }
     });
+  }
+
+  // Lot CD, fin de T1 : l'espace courant peut être n'importe lequel des trois ; la cloche reste à 16 px du bord. Sous 375 px le
+  // courant n'est plus qu'une icône de 36 px (libellé en aria-label), de 375 à 639 px il garde icône et libellé.
+  for (const [largeur, langue] of [[375, "fr"], [375, "zh"], [360, "fr"], [360, "zh"]] as const) {
+    for (const [courant, chemin] of [["Back-Office", "/back-office"], ["Musiciens", "/accords"]] as const) {
+      test(`téléphone ${largeur} px en ${langue}, espace courant ${courant} : cloche à 16 px du bord`, async ({ page }, info) => {
+        test.skip(!estTelephone(info), "propre au téléphone");
+        await page.setViewportSize({ width: largeur, height: 800 });
+        if (langue === "zh") await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
+        await signInAs(page, ADMIN, {}, chemin);
+        const enTete = page.locator("header.barre-haut");
+        const groupe = enTete.getByRole("group").first();
+        await expect(groupe).toBeVisible();
+        const nom = langue === "zh" ? { "Back-Office": "后台", Musiciens: "乐手" }[courant] : courant;
+        const lien = groupe.getByRole("link", { name: nom, exact: true });
+        await expect(lien).toHaveAttribute("aria-current", "true");
+        await expect(lien.locator("svg")).toBeVisible();
+        if (largeur < 375) {
+          await expect(lien.locator("span")).toBeHidden();
+          expect((await lien.boundingBox())!.width).toBeCloseTo(36, 0);
+        } else {
+          await expect(lien.locator("span")).toBeVisible();
+        }
+        expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
+        const cloche = (await enTete.getByRole("button", { name: langue === "zh" ? zh.notifications.title : "Notifications" }).boundingBox())!;
+        expect(largeur - (cloche.x + cloche.width), "cloche à 16 px du bord").toBeGreaterThanOrEqual(16);
+      });
+    }
   }
 
   test("tablette en portrait : label, puis sélecteur, cloche et langue", async ({ page }, info) => {

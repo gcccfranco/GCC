@@ -2,7 +2,7 @@ import { expect, test, type Page, type Request, type Route, type TestInfo } from
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
 import {
   estGrandEcran, estTelephone, fenetreDuSite, interdireDialoguesNatifs, margeAttendue, ouvrirAvecBarre,
-  repondreDansLeSite, verifierAgencement,
+  repondreDansLeSite, verifierAgencement, zoneDeContenu,
 } from "./helpers/agencement";
 
 // Agencement v18, tranche T1 (docs/spec-agencement-v18.md, B1 et B2 ; planches `v18-bo-taches`,
@@ -61,9 +61,29 @@ const liste = (page: Page) => page.getByRole("region", { name: "Tâches", exact:
 const detail = (page: Page) => page.locator("article");
 const formulaire = (page: Page, nom: string) => page.getByRole("form", { name: nom });
 const ligne = (page: Page, titre: string) => liste(page).getByRole("button", { name: new RegExp(`^${titre}`) });
-/** La page de l'équipe : la section « Tâches » prend toute la zone moins deux marges (BO-G, 2 : la largeur d'« À faire », plus de
- *  plafond à 720 px) ; ni rail ni pilules. */
-const surLaListe = (page: Page) => ({ contenu: liste(page), onglets: { rail: 0, pilules: 0 } });
+/** La page de l'équipe. Barre latérale montrée (ordinateur, tablette paysage) : deux colonnes (back-office-10, `grid-cols-[minmax(0,1fr)_300px] gap-8`),
+ *  le corps prend toute la zone moins deux marges, « Tâches » à gauche et Réunions à droite dans 300 px, hauts alignés. Sinon (BO-G, 2 : la
+ *  largeur d'« À faire », plus de plafond à 720 px) : la section « Tâches » prend toute la zone moins deux marges, Réunions dessous. Ni rail ni pilules. */
+async function verifierEquipe(page: Page) {
+  const zone = await zoneDeContenu(page);
+  const marge = await margeAttendue(page);
+  await verifierAgencement(page, { onglets: { rail: 0, pilules: 0 } });
+  const corps = (await page.getByTestId("corps-equipe").boundingBox())!;
+  expect(corps.width, "le corps : toute la zone moins deux marges").toBeGreaterThanOrEqual(zone.droite - zone.gauche - 2 * marge - 1);
+  const taches = (await liste(page).boundingBox())!;
+  const reunions = (await page.getByRole("heading", { level: 2, name: "Réunions" }).boundingBox())!;
+  const titreTaches = (await page.getByRole("heading", { level: 2, name: "Tâches", exact: true }).boundingBox())!;
+  if (zone.gauche > 0) {
+    // Le corps porte les marges en dedans (`px-[var(--marge-page)]`) : la grille mesure le corps moins deux marges.
+    expect(Math.abs(taches.width - (corps.width - 2 * marge - 300 - 32)), "Tâches : le corps moins la colonne de 300 px et l'écart de 32 px").toBeLessThanOrEqual(1);
+    expect(reunions.x, "Réunions à droite de Tâches, à 32 px").toBeGreaterThanOrEqual(taches.x + taches.width + 31);
+    expect(Math.abs(corps.x + corps.width - marge - (reunions.x + 300)), "colonne de droite de 300 px, au bord de la grille").toBeLessThanOrEqual(1);
+    expect(Math.abs(reunions.y - titreTaches.y), "titres alignés").toBeLessThanOrEqual(2);
+  } else {
+    expect(taches.width, "Tâches : toute la zone moins deux marges").toBeGreaterThanOrEqual(zone.droite - zone.gauche - 2 * marge - 1);
+    expect(reunions.y, "Réunions sous Tâches").toBeGreaterThan(taches.y + taches.height - 1);
+  }
+}
 const nouvelleTache = (page: Page) => page.getByRole("link", { name: "Nouvelle tâche" });
 
 /** Chemin Firestore d'une requête (`equipes/da:runQuery`, `equipes/da/taches/t3`), sans le préfixe du projet. */
@@ -100,7 +120,7 @@ test("l'agencement commun : en-tête = le nom de l'équipe, section « Tâches �
   // Les trois tâches de TEAM DA à faire (le compte de l'ancien rail « DA · 3 ») : quatre lignes, la tâche répétée en a deux.
   await expect(liste(page).getByRole("checkbox")).toHaveCount(4);
   for (const titre of ["Affiche de Noël", "Fond PPT du culte", "Livret de l'Avent"]) await expect(ligne(page, titre).first()).toBeVisible();
-  await verifierAgencement(page, surLaListe(page));
+  await verifierEquipe(page);
   await capture(page, "v18-bo-taches");
   // Une autre équipe, sa page : le titre et une seule tâche (« Médias · 1 »).
   await page.goto("/back-office/equipes/medias");
@@ -203,7 +223,7 @@ test.describe("en grand (deux volets)", () => {
     await expect(page).toHaveURL(/\/back-office\/equipes\/da\/?$/);
     await expect(ligne(page, "Affiche de Noël")).toBeVisible();
     await expect(liste(page).getByRole("button", { name: /^Fond PPT du culte.*8 oct/ })).toBeVisible();
-    await verifierAgencement(page, surLaListe(page));
+    await verifierEquipe(page);
   });
 
   test("« + Nouvelle tâche » ouvre le formulaire dans la page ; créer ouvre sa fiche", async ({ page }) => {
@@ -252,7 +272,7 @@ test.describe("en grand (deux volets)", () => {
     await ouvrir(page, PAGE_DA);
     await expect(ligne(page, "Affiche de Noël")).toBeVisible();
     expect(await margeAttendue(page), "la barre est bien réduite").toBe(28);
-    await verifierAgencement(page, surLaListe(page));
+    await verifierEquipe(page);
     await ligne(page, "Livret de l'Avent").click();
     await expect(detail(page).getByRole("heading", { level: 1, name: "Livret de l'Avent" })).toBeVisible();
     await verifierAgencement(page, { contenu: detail(page), lecture: true, titreDansLeVolet: true, onglets: { rail: 0, pilules: 0 } });
@@ -399,7 +419,7 @@ test.describe("un volet (téléphone, tablette portrait)", () => {
   test("la liste, puis la fiche en page avec « ‹ Tâches »", async ({ page }) => {
     await ouvrir(page, PAGE_DA);
     await expect(ligne(page, "Livret de l'Avent")).toBeVisible();
-    await verifierAgencement(page, surLaListe(page));
+    await verifierEquipe(page);
     await ligne(page, "Livret de l'Avent").click();
     await expect(page).toHaveURL(/\/back-office\/taches\/da\/t3\/?$/);
     await expect(page.getByRole("heading", { level: 1 })).toHaveText("Livret de l'Avent");

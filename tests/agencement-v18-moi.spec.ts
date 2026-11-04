@@ -220,7 +220,7 @@ test.describe("Moi (A12)", () => {
     await expect(apercu(page, "我的服事").getByRole("link", { name: /4 个即将到来/ })).toBeVisible();
     await expect(apercu(page, "我的任务").getByRole("link", { name: /4 项待办/ })).toBeVisible();
     const h = apercu(page, "和声");
-    await expect(h.getByText("乐理课程")).toBeVisible();
+    await expect(h.getByText("乐理", { exact: true })).toBeVisible();
     await expect(h.getByText("2 / 23 章")).toBeVisible();
     await expect(h.getByRole("link", { name: "和声重配卡片" })).toBeVisible();
     await expect(h.getByRole("link", { name: "RD-2000 音色" })).toBeVisible();
@@ -320,8 +320,16 @@ test.describe("Moi (A12)", () => {
       expect(reglages.y, "les réglages sous le compte").toBeGreaterThan(compte.y + compte.height - 1);
       expect(services.x, "les aperçus à droite du compte").toBeGreaterThan(compte.x + compte.width - 1);
       expect(Math.abs(services.y - compte.y), "ils partent ensemble").toBeLessThan(2);
-      expect(Math.abs(taches.y - services.y), "deux colonnes d'aperçus").toBeLessThan(2);
-      expect(taches.x).toBeGreaterThan(services.x + services.width - 1);
+      if (info.project.name === "ordinateur-1440") {
+        // quotidien-3, 4 : deux piles, côte à côte dès 720 px de conteneur (1 440 px).
+        expect(Math.abs(taches.y - services.y), "deux colonnes d'aperçus").toBeLessThan(2);
+        expect(taches.x).toBeGreaterThan(services.x + services.width - 1);
+      } else {
+        // 1 280 px : le conteneur des aperçus fait 592 px, sous les 720 px : une colonne (quotidien-4), pile de gauche puis pile de droite.
+        expect(services.width, "une colonne de moins de 720 px").toBeLessThan(720);
+        expect(Math.abs(taches.x - services.x), "une seule colonne d'aperçus").toBeLessThan(2);
+        expect(taches.y, "les tâches sous les services").toBeGreaterThan(services.y + services.height - 1);
+      }
       expect(harmonie.y, "Harmonie sous les services").toBeGreaterThan(services.y + services.height - 1);
     } else if (info.project.name === "tablette") {
       expect(Math.abs(reglages.y - compte.y), "compte et réglages côte à côte").toBeLessThan(2);
