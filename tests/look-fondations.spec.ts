@@ -306,3 +306,30 @@ test.describe("pages grises : ni bordure ni ombre ensemble, ombre réservée aux
     });
   }
 });
+
+test.describe("jeton --pose (lot CD, T3a, back-office-3)", () => {
+  const sonde = (page: Page) =>
+    page.evaluate(() => {
+      const el = document.createElement("span");
+      el.className = "bg-pose";
+      document.body.append(el);
+      const fond = getComputedStyle(el).backgroundColor;
+      el.remove();
+      return { jeton: getComputedStyle(document.documentElement).getPropertyValue("--pose").trim(), fond };
+    });
+
+  test("blanc en clair (rien ne change), #3a3a3c en sombre ; la couleur Tailwind `pose` le suit", async ({ page }) => {
+    await page.goto("/login");
+    expect(await sonde(page)).toEqual({ jeton: "0 0% 100%", fond: FOND_CLAIR });
+    await page.emulateMedia({ colorScheme: "dark" });
+    await expect.poll(async () => (await sonde(page)).fond).toBe("rgb(58, 58, 60)");
+    expect((await sonde(page)).jeton).toBe("240 1.7% 23.1%");
+  });
+});
+
+test("la variante `outline` de button.tsx est posée sur `--pose` (une seule modification), ni `bg-background` ni noir en sombre", () => {
+  const source = readFileSync(path.join(process.cwd(), "src/components/ui/button.tsx"), "utf8");
+  const outline = source.split("\n").find((l) => l.includes("border border-input")) ?? "";
+  expect(outline).toContain("bg-pose");
+  expect(outline).not.toContain("bg-background");
+});

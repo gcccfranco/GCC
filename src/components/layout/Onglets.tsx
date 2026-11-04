@@ -15,6 +15,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useRef, type KeyboardEvent, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { useFonduLateral } from "@/hooks/useFonduLateral";
+import { TOUCHER_PILULE, TOUCHER_RANGEE } from "@/lib/toucher44";
 
 export type OngletRail = {
   /** Identifiant de l'onglet (rendu par `choisir`, comparé à `actif`). */
@@ -61,7 +62,7 @@ export function OngletsRail({
   actif,
   choisir,
   className,
-  cible44 = false,
+  pleineLargeur = false,
   surGris = false,
 }: {
   /** Nom du groupe d'onglets, lu par les lecteurs d'écran. */
@@ -72,8 +73,8 @@ export function OngletsRail({
   /** Pour des boutons : appelé avec l'`id` de l'onglet touché. */
   choisir?: (id: string) => void;
   className?: string;
-  /** BO-G, 16 : cible de toucher de 44 px sans changer le dessin ; pour un rail de deux onglets (le rail ne défile plus). */
-  cible44?: boolean;
+  /** Les onglets se partagent toute la largeur (la vue principale d'une page au téléphone) ; sinon le rail prend celle de son contenu. */
+  pleineLargeur?: boolean;
   /** Recette de surface (C) : le rail posé sur le fond de groupe est une piste `--secondary-fond` (curseur blanc), libellés inactifs à 70 % d'encre (≥ 4,5:1). */
   surGris?: boolean;
 }) {
@@ -81,12 +82,14 @@ export function OngletsRail({
   const boutons = useRef<(HTMLButtonElement | null)[]>([]);
   const liens = onglets.some((o) => o.href);
   const courant = actif ?? (liens ? ongletDuChemin(onglets, chemin) : undefined);
+  // Lot CD, T3a (jeu B) : 36 px au pointeur fin, 40 au toucher (piste) ; l'onglet fait 30 / 34 px dedans (marge de 3 px) et sa
+  // zone de toucher 44 px (`::after`, TOUCHER_RANGEE).
   const classe = (on: boolean) =>
     cn(
-      "relative flex shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-full px-4 py-1.5 text-[13px] font-semibold transition-[background-color,color] duration-150",
-      // BO-G, 16 : la cible de toucher fait 44 px sans changer le dessin (`::after`, comme BO-E2).
-      cible44 && "after:absolute after:-inset-y-1.5 after:inset-x-0 after:content-['']",
-      on ? "bg-background text-foreground shadow-sm" : (surGris ? "text-foreground/70 dark:text-muted-foreground hover:text-foreground" : "text-muted-foreground hover:text-foreground"),
+      "flex h-[30px] shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-full px-4 text-[13px] font-semibold transition-[background-color,color] duration-150 [@media(pointer:coarse)]:h-[34px]",
+      TOUCHER_RANGEE,
+      pleineLargeur && "flex-1",
+      on ? "bg-pose text-foreground shadow-[var(--shadow-raised)]" : (surGris ? "text-foreground/70 dark:text-muted-foreground hover:text-foreground" : "text-muted-foreground hover:text-foreground"),
     );
   const contenu = (o: OngletRail) => (
     <>
@@ -95,12 +98,12 @@ export function OngletsRail({
       {o.compte !== undefined && <span className="tabular-nums opacity-70">· {o.compte}</span>}
     </>
   );
-  // `cible44` : dès 640 px un rail de deux ou trois onglets (Équipes, Planning) tient et ne défile pas : un `overflow` rognerait la cible ;
-  // en dessous il défile encore (中文 à 320 px).
-  // plannings-2 : le rail serré s'estompe du côté où il reste des onglets et ramène l'actif en vue. Avec `cible44`, le
-  // masque ne vaut que là où le rail défile (sous `sm`) : au-delà il rognerait la zone de 44 px de l'`::after`.
+  // plannings-2 : le rail serré s'estompe du côté où il reste des onglets et ramène l'actif en vue. Le défilant (`railRef`) est
+  // transparent et porte 2 px de rembourrage vertical au toucher (compensés par une marge négative) : il garde ainsi la zone
+  // de 44 px des onglets, que son `overflow` rognerait sur la piste seule. La piste (`data-onglets="rail"`) est dedans.
   const railRef = useFonduLateral<HTMLDivElement>(onglets.length);
-  const rail = cn("inline-flex max-w-full gap-0.5 rounded-full p-[3px]", surGris ? "bg-secondary-fond dark:bg-secondary" : "bg-secondary", cible44 ? "max-sm:fondu-lateral overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:overflow-visible" : "fondu-lateral overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden", className);
+  const defilant = "fondu-lateral flex max-w-full overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden [@media(pointer:coarse)]:-my-0.5 [@media(pointer:coarse)]:py-0.5";
+  const rail = cn("inline-flex min-w-max gap-0.5 rounded-full p-[3px]", surGris ? "bg-secondary-fond dark:bg-secondary" : "bg-secondary", pleineLargeur && "w-full", className);
   // Centre la pastille active dans le rail : sans animation au montage, en douceur ensuite (instantané sous `prefers-reduced-motion`).
   const premierPassage = useRef(true);
   useEffect(() => {
@@ -117,13 +120,15 @@ export function OngletsRail({
 
   if (liens) {
     return (
-      <nav ref={railRef} aria-label={etiquette} data-onglets="rail" className={rail}>
-        {onglets.map((o) => (
-          <Link key={o.id} href={o.href ?? "#"} aria-current={courant === o.id ? "page" : undefined} className={classe(courant === o.id)}>
-            {contenu(o)}
-          </Link>
-        ))}
-      </nav>
+      <div ref={railRef} className={defilant}>
+        <nav aria-label={etiquette} data-onglets="rail" className={rail}>
+          {onglets.map((o) => (
+            <Link key={o.id} href={o.href ?? "#"} aria-current={courant === o.id ? "page" : undefined} className={classe(courant === o.id)}>
+              {contenu(o)}
+            </Link>
+          ))}
+        </nav>
+      </div>
     );
   }
   // Le seul arrêt de tabulation : l'onglet choisi, ou le premier.
@@ -138,21 +143,23 @@ export function OngletsRail({
     boutons.current[cible]?.focus();
   };
   return (
-    <div ref={railRef} role="tablist" aria-label={etiquette} data-onglets="rail" className={rail} onKeyDown={auClavier}>
-      {onglets.map((o, i) => (
-        <button
-          key={o.id}
-          ref={(b) => { boutons.current[i] = b; }}
-          type="button"
-          role="tab"
-          aria-selected={courant === o.id}
-          tabIndex={i === arret ? 0 : -1}
-          onClick={() => choisir?.(o.id)}
-          className={classe(courant === o.id)}
-        >
-          {contenu(o)}
-        </button>
-      ))}
+    <div ref={railRef} className={defilant}>
+      <div role="tablist" aria-label={etiquette} data-onglets="rail" className={rail} onKeyDown={auClavier}>
+        {onglets.map((o, i) => (
+          <button
+            key={o.id}
+            ref={(b) => { boutons.current[i] = b; }}
+            type="button"
+            role="tab"
+            aria-selected={courant === o.id}
+            tabIndex={i === arret ? 0 : -1}
+            onClick={() => choisir?.(o.id)}
+            className={classe(courant === o.id)}
+          >
+            {contenu(o)}
+          </button>
+        ))}
+      </div>
     </div>
   );
 }
@@ -164,10 +171,10 @@ export function OngletsRail({
  *            options={[{ cle: "culte", nom: "Culte Franco", couleur: PLANNING_COLORS.culte }, …]} />
  * Avec un `href` par option, les pilules sont des liens (une navigation, `aria-current="page"` sur
  * l'active : les plannings, T4a).
- * Taille (D9, retouches v18 R5) : une règle pour toutes, selon l'appareil et jamais selon la page —
- * 40 px de haut et 15 px au doigt (téléphone, tablette debout ou couchée), ≈ 28 px et 13 px en gras
- * dès 1 024 px de large avec un pointeur fin (la planche `v18-bo-statistiques`).
- * La rangée défile horizontalement quand elle ne tient pas (douze sensations sur un téléphone).
+ * Taille (lot CD, T3a, jeu B) : une règle pour toutes, selon l'appareil et jamais selon la page — 28 px de haut et 13 px
+ * en semi-gras au pointeur fin, 32 px et 14 px au toucher, portés à 44 px par un `::after` (TOUCHER_PILULE). Marge de
+ * 12 px, 6 px entre deux, rayon plein. Au pointeur fin la rangée passe à la ligne ; au toucher elle défile avec un fondu
+ * (douze sensations sur un téléphone). Inactive : `--secondary` ; active : `--primary`, ou sa `couleur`.
  * `pastille` (organigrammes des groupes, lot 2, OG-C) : un point de la couleur devant le nom, sur
  * toutes les pilules, active comprise (blanc sur la couleur).
  */
@@ -188,7 +195,7 @@ export function Pilules<T extends string>({
   choisir: (v: T | null) => void;
   /** Un choix est toujours actif (instrument) : on ne peut pas le retirer. */
   obligatoire?: boolean;
-  /** La rangée passe à la ligne au lieu de défiler (peu de choix dans une carte étroite : « À qui »). */
+  /** La rangée passe à la ligne même au toucher, au lieu de défiler (peu de choix dans une carte étroite : « À qui »). */
   aLaLigne?: boolean;
 }) {
   const liens = options.some((o) => o.href);
@@ -201,15 +208,19 @@ export function Pilules<T extends string>({
       role={liens ? undefined : "group"}
       aria-label={etiquette}
       data-onglets="pilules"
-      className={aLaLigne ? "flex flex-wrap gap-2" : "fondu-lateral -mx-4 -mt-0.5 flex gap-1.5 overflow-x-auto px-4 py-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"}
+      className={cn(
+        "flex flex-wrap gap-1.5",
+        // Au toucher : une rangée qui défile ; 6 px de rembourrage vertical (compensés) gardent la zone de 44 px des pilules de 32 px.
+        !aLaLigne && "[@media(pointer:coarse)]:fondu-lateral [@media(pointer:coarse)]:-mx-4 [@media(pointer:coarse)]:-my-1.5 [@media(pointer:coarse)]:flex-nowrap [@media(pointer:coarse)]:overflow-x-auto [@media(pointer:coarse)]:px-4 [@media(pointer:coarse)]:py-1.5 [@media(pointer:coarse)]:[scrollbar-width:none] [@media(pointer:coarse)]:[&::-webkit-scrollbar]:hidden",
+      )}
     >
       {options.map((o) => {
         const actif = valeur === o.cle;
         const style = actif && o.couleur ? { backgroundColor: o.couleur, color: "#fff" } : undefined;
         const classe = cn(
-          "relative inline-flex shrink-0 items-center whitespace-nowrap rounded-full transition-colors duration-150 after:absolute after:-inset-y-0.5 after:inset-x-0 after:content-['']",
-          "h-10 px-3.5 text-[15px] [@media(pointer:fine)_and_(min-width:1024px)]:h-7 [@media(pointer:fine)_and_(min-width:1024px)]:px-3 [@media(pointer:fine)_and_(min-width:1024px)]:text-[13px] [@media(pointer:fine)_and_(min-width:1024px)]:font-semibold",
-          actif ? "bg-foreground text-background font-semibold" : "bg-secondary text-foreground/80 active:bg-secondary/70",
+          "inline-flex h-7 shrink-0 items-center whitespace-nowrap rounded-full px-3 text-[13px] font-semibold transition-colors duration-150 [@media(pointer:coarse)]:h-8 [@media(pointer:coarse)]:text-[14px]",
+          TOUCHER_PILULE,
+          actif ? "bg-primary text-primary-foreground" : "bg-secondary text-foreground active:bg-secondary/70",
         );
         const point = o.pastille && (
           <span aria-hidden className="mr-1.5 h-2 w-2 shrink-0 rounded-full" style={{ background: actif && o.couleur ? "#fff" : o.pastille }} />

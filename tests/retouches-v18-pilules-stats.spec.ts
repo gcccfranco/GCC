@@ -5,18 +5,18 @@ import {
 } from "./helpers/agencement";
 
 // Retouches v18, tranches R5 et R6 (docs/spec-retouches-v18.md, D9 et D11).
-// - R5 (D9) : les pilules (`Pilules`) sont compactes en grand, ≈ 28 px (13 px, gras, comme la planche
-//   `v18-bo-statistiques`) dès 1 024 px de large avec un pointeur fin, et gardent 40 px au doigt
-//   (téléphone, tablette debout et couchée). Une règle du composant commun : la rangée des plannings
-//   du Back-Office, autrefois « compacte » à 32 px partout, la suit aussi.
+// - R5 (D9), reprise par le lot CD, T3a (jeu B) : les pilules (`Pilules`) font 28 px (13 px, semi-gras) au pointeur
+//   fin et 32 px (14 px) au toucher, portées à 44 px par un `::after` (au toucher seulement), qui s'arrête à mi-écart
+//   de la voisine. Une règle du composant commun : la rangée des plannings du Back-Office la suit aussi.
+//   Le rail (`OngletsRail`) : piste de 36 px au pointeur fin, 40 px au toucher, onglets de 30 / 34 px dedans, zone de 44 px.
 // - R6 (D11) : Statistiques › « Les plus joués » : sous ≈ 1 100 px de conteneur, les chiffres passent
 //   au-dessus du tableau ; rien ne défile de côté.
 // Cinq projets. Firestore, Sheets et date simulés ; personnes fictives.
 
 const ADMIN: FakeProfile = { uid: "uid-admin", email: ADMIN_EMAIL, firstName: "Admin", lastName: "T.", planningName: "Pianiste D." };
 
-/** Hauteur attendue des pilules selon l'appareil : fixée ici d'après D9, pas lue dans le CSS. */
-const hauteurAttendue = (projet: string) => (projet.startsWith("ordinateur") ? 28 : 40);
+/** Hauteur attendue des pilules selon l'appareil : fixée ici d'après le jeu B (T3a), pas lue dans le CSS. */
+const hauteurAttendue = (projet: string) => (projet.startsWith("ordinateur") ? 28 : 32);
 
 /** Capture à regarder à l'œil (PW_CAPTURES=<dossier>), une par appareil. */
 async function capture(page: Page, nom: string, fullPage = false) {
@@ -80,14 +80,14 @@ function verifierTaille(mesures: { nom: string; hauteur: number; texte: number }
   const hauteur = hauteurAttendue(projet);
   for (const m of mesures) {
     expect(Math.abs(m.hauteur - hauteur), `« ${m.nom} » : ${m.hauteur} px, attendu ≈ ${hauteur} px`).toBeLessThanOrEqual(1);
-    expect(m.texte, `« ${m.nom} » : texte`).toBe(hauteur === 28 ? 13 : 15);
+    expect(m.texte, `« ${m.nom} » : texte`).toBe(hauteur === 28 ? 13 : 14);
   }
 }
 
-test.describe("R5 · D9 : les pilules compactes en grand, 40 px au doigt", () => {
+test.describe("R5 · T3a : les pilules de 28 px au pointeur fin, 32 px au doigt", () => {
   test.use({ serviceWorkers: "block" });
 
-  test("Statistiques : les périodes en pilules, ≈ 28 px à la souris dès 1 024 px, 40 px au doigt", async ({ page }, info) => {
+  test("Statistiques : les périodes en pilules, 28 px à la souris, 32 px au doigt", async ({ page }, info) => {
     await ouvrirStatistiques(page);
     const periodes = pilules(page).filter({ has: page.getByRole("button", { name: "3 mois" }) });
     verifierTaille(await mesurer(periodes), info.project.name);
@@ -96,8 +96,9 @@ test.describe("R5 · D9 : les pilules compactes en grand, 40 px au doigt", () =>
 
   test("Statistiques : les menus Service, Langue, Présidence à la hauteur des pilules de la même rangée", async ({ page }, info) => {
     await ouvrirStatistiques(page);
-    // Planche v18-bo-statistiques : les menus sont des pastilles de la même taille que les périodes.
-    const hauteur = hauteurAttendue(info.project.name);
+    // Planche v18-bo-statistiques : les menus sont des pastilles de la même taille que les périodes. Ce sont encore des
+    // `<select>` : 40 px au doigt jusqu'à leur passage en `Menu` (T3b), qui les met à 32 px comme les pilules.
+    const hauteur = info.project.name.startsWith("ordinateur") ? 28 : 40;
     for (const nom of ["Service", "Langue", "Présidence"]) {
       const menu = page.getByRole("combobox", { name: nom });
       const h = Math.round((await menu.boundingBox())!.height);
@@ -118,12 +119,83 @@ test.describe("R5 · D9 : les pilules compactes en grand, 40 px au doigt", () =>
     await capture(page, "r5-pilules-planning");
   });
 
-  test("ordinateur sous 1 024 px : 40 px, même à la souris (ordinateur)", async ({ page }, info) => {
+  test("ordinateur sous 1 024 px : 28 px aussi, c'est le pointeur qui décide (ordinateur)", async ({ page }, info) => {
     test.skip(info.project.name !== "ordinateur", "ordinateur seulement : la fenêtre passe à 1 000 px");
     await page.setViewportSize({ width: 1000, height: 800 });
     await ouvrirStatistiques(page);
     const periodes = pilules(page).filter({ has: page.getByRole("button", { name: "3 mois" }) });
-    verifierTaille(await mesurer(periodes), "telephone");
+    verifierTaille(await mesurer(periodes), "ordinateur");
+  });
+
+  test("zones de toucher : 44 px de haut au doigt (::after, rail comme pilules), aucune au pointeur fin", async ({ page }, info) => {
+    await ouvrirStatistiques(page);
+    const coarse = !info.project.name.startsWith("ordinateur");
+    const zone = (el: Element) => {
+      const c = getComputedStyle(el, "::after");
+      return { contenu: c.content, haut: parseFloat(c.height), gauche: parseFloat(c.left), largeur: parseFloat(c.width) };
+    };
+    const periodes = pilules(page).filter({ has: page.getByRole("button", { name: "3 mois" }) });
+    const unePilule = periodes.getByRole("button").first();
+    const rail = page.locator('[data-onglets="rail"]').first();
+    const unOnglet = rail.getByRole("tab").first();
+    const [zp, zr] = [await unePilule.evaluate(zone), await unOnglet.evaluate(zone)];
+    if (coarse) {
+      expect(zp.haut, "pilule : ::after").toBe(44);
+      expect(zr.haut, "rail : ::after").toBe(44);
+      // La pilule : 3 px de plus de chaque côté (mi-écart), l'onglet du rail : à sa largeur.
+      expect(zp.gauche).toBe(-3);
+      const boite = (await unePilule.boundingBox())!;
+      expect(Math.round(zp.largeur)).toBe(Math.round(boite.width) + 6);
+      expect(zr.gauche).toBe(0);
+      // La piste du rail, 40 px, et l'onglet, 34 : le défilant garde les 44 px, rien ne rogne la zone.
+      expect(Math.round((await rail.boundingBox())!.height)).toBe(40);
+      expect(Math.round((await unOnglet.boundingBox())!.height)).toBe(34);
+      const defilant = rail.locator("..");
+      expect(Math.round((await defilant.boundingBox())!.height), "le défilant du rail").toBe(44);
+    } else {
+      expect(zp.contenu, "pilule au pointeur fin : pas de ::after").toBe("none");
+      expect(zr.contenu, "rail au pointeur fin : pas de ::after").toBe("none");
+      expect(Math.round((await rail.boundingBox())!.height)).toBe(36);
+      expect(Math.round((await unOnglet.boundingBox())!.height)).toBe(30);
+    }
+    expect(await unOnglet.evaluate((el) => parseFloat(getComputedStyle(el).fontSize))).toBe(13);
+  });
+
+  test("téléphone : un toucher à 2 px du bord d'une pilule va à elle, pas à sa voisine", async ({ page }, info) => {
+    test.skip(info.project.name !== "telephone", "téléphone seulement : page.touchscreen");
+    await ouvrirStatistiques(page);
+    const periodes = pilules(page).filter({ has: page.getByRole("button", { name: "3 mois" }) });
+    const boutons = periodes.getByRole("button");
+    await expect(boutons.nth(1)).toBeVisible();
+    const a = boutons.nth(0);
+    const b = boutons.nth(1);
+    const [ba, bb] = [(await a.boundingBox())!, (await b.boundingBox())!];
+    expect(Math.round(bb.x - (ba.x + ba.width)), "6 px entre deux pilules").toBe(6);
+    const y = ba.y + ba.height / 2;
+    const pressee = (l: Locator) => l.getAttribute("aria-pressed");
+    // Juste hors de A (1 px) : la zone prolongée de A, 3 px de chaque côté, la reçoit.
+    await page.touchscreen.tap(ba.x + ba.width + 1, y);
+    await expect.poll(() => pressee(a)).toBe("true");
+    expect(await pressee(b)).toBe("false");
+    // Juste hors de B (1 px, côté A) : B.
+    await page.touchscreen.tap(bb.x - 1, y);
+    await expect.poll(() => pressee(b)).toBe("true");
+    expect(await pressee(a)).toBe("false");
+  });
+
+  test("téléphone : dans une zone commune (prolongée de 6 px), le toucher va à la pilule la plus tardive du DOM (raison des 3 px)", async ({ page }, info) => {
+    test.skip(info.project.name !== "telephone", "téléphone seulement : page.touchscreen");
+    await ouvrirStatistiques(page);
+    const periodes = pilules(page).filter({ has: page.getByRole("button", { name: "3 mois" }) });
+    const boutons = periodes.getByRole("button");
+    await expect(boutons.nth(1)).toBeVisible();
+    await page.addStyleTag({ content: '[data-onglets="pilules"] > *::after { left: -6px !important; right: -6px !important; width: auto !important; }' });
+    const [ba, bb] = [(await boutons.nth(0).boundingBox())!, (await boutons.nth(1).boundingBox())!];
+    // À 1 px de A, dans le vide de 6 px, donc bien plus près de A que de B : B, plus tardive dans le DOM, reçoit quand même.
+    await page.touchscreen.tap(ba.x + ba.width + 1, ba.y + ba.height / 2);
+    await expect.poll(() => boutons.nth(1).getAttribute("aria-pressed")).toBe("true");
+    expect(await boutons.nth(0).getAttribute("aria-pressed")).toBe("false");
+    expect(bb.x - (ba.x + ba.width)).toBeCloseTo(6, 0);
   });
 });
 

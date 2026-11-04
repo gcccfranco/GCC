@@ -10,6 +10,7 @@ import Fuse from "fuse.js";
 import { OPTIONS_RECHERCHE_CHANTS } from "@/lib/setlist/bibliotheque";
 import { ChampRecherche } from "@/components/layout/ChampRecherche";
 import { Button } from "@/components/ui/button";
+import { Menu } from "@/components/ui/menu";
 import { KeyPill } from "@/components/ui/key-pill";
 import { useTranslation } from "react-i18next";
 import type { SongIndexEntry, Theme } from "@/types/song";
@@ -274,21 +275,18 @@ export function SongListClient({ songs, themes, actif = null, erreur = false, on
           ]}
         />
 
-        {/* Thème */}
-        <select
-          aria-label={t("songs.list.filterThemeLabel")}
+        {/* Thème : un Menu (jeu de contrôles B, lot CD, T3a/T3b) */}
+        <Menu
+          label={t("songs.list.filterThemeLabel")}
           value={themeFilter}
-          onChange={(e) => setThemeFilter(e.target.value)}
-          className="h-8 pl-3 pr-7 rounded-sm text-[16px] sm:text-sm font-semibold bg-secondary text-foreground border border-transparent focus:outline-none focus:ring-2 focus:ring-ring/20 cursor-pointer appearance-none"
-          style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7079' stroke-width='2.5'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")`, backgroundRepeat: "no-repeat", backgroundPosition: "right 9px center" }}
-        >
-          <option value="">{t("songs.list.filterTheme")}</option>
-          {availableThemes.map((themeItem) => (
-            <option key={themeItem.slug} value={themeItem.slug}>
-              {isZhLocale ? themeItem.name_zh : themeItem.name_fr}
-            </option>
-          ))}
-        </select>
+          defaultValue=""
+          onChange={setThemeFilter}
+          surGris
+          options={[
+            { valeur: "", libelle: t("songs.list.filterTheme") },
+            ...availableThemes.map((themeItem) => ({ valeur: themeItem.slug, libelle: isZhLocale ? themeItem.name_zh : themeItem.name_fr })),
+          ]}
+        />
 
         {hasFilter && (
           <button

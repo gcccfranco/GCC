@@ -52,6 +52,7 @@ const config: Config = {
         },
         "fond-groupe": "hsl(var(--fond-groupe))",
         "secondary-fond": "hsl(var(--secondary-fond))",
+        pose: "hsl(var(--pose))",
         card: {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",

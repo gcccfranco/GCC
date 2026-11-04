@@ -132,7 +132,7 @@ export function SelecteurEspace({ pleineLargeur = false, compact = false, onChoi
         title={libelle}
         aria-current={e === espace ? "true" : undefined}
         className={`relative flex h-9 w-9 items-center justify-center rounded-full after:absolute after:-inset-1 after:content-[''] transition-[background-color,color] duration-150 ${
-          e === espace ? "bg-background text-foreground" : "text-muted-foreground hover:text-foreground"
+          e === espace ? "bg-pose text-foreground" : "text-muted-foreground hover:text-foreground"
         }`}
       >
         <Icone className="h-[18px] w-[18px]" aria-hidden />
@@ -171,7 +171,7 @@ export function SelecteurEspace({ pleineLargeur = false, compact = false, onChoi
         title={libelle}
         onClick={onChoix}
         className={`${TOUCHER_SEGMENT} flex items-center justify-center gap-1.5 whitespace-nowrap rounded-full font-semibold transition-[background-color,color] duration-150 ${forme} ${
-          courant ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+          courant ? "bg-pose text-foreground shadow-sm dark:shadow-[inset_0_1px_0_rgba(255,255,255,.08)]" : "text-muted-foreground hover:text-foreground"
         }`}
       >
         {!pleineLargeur && <Icone className="h-[18px] w-[18px] shrink-0 sm:hidden" aria-hidden />}

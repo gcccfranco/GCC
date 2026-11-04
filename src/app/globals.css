@@ -246,6 +246,9 @@
     --fond-groupe: 240 24% 96%;      /* #f2f2f7 */
     --radius-groupe: 16px;
     --secondary-fond: 240 11% 91%;   /* #e5e5ea */
+    /* Ce qui est « posé » sur une piste ou sur la page (lot CD, T3a, back-office-3) : segment actif du sélecteur d'espace,
+       curseur du rail, bouton `outline`. Blanc en clair (= `--background`, rien ne change), gris moyen en sombre. */
+    --pose: 0 0% 100%;
     /* Ce qui flotte (barre d'onglets, menus, feuilles, toasts) : l'ombre de la barre d'onglets. */
     --shadow-flottant: 0 14px 40px rgba(28, 28, 30, 0.2), 0 2px 6px rgba(28, 28, 30, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.8);
     /* Fond que peignent la page et les barres : blanc, ou gris sur les pages de liste (`data-fond-groupe`). */
@@ -319,6 +322,7 @@
     --shadow-raised: 0 0 0 1px rgba(255, 255, 255, 0.1);
     --fond-groupe: 0 0% 0%;
     --secondary-fond: 240 2.2% 17.6%;
+    --pose: 240 1.7% 23.1%;      /* #3a3a3c : plus clair que la piste #2c2c2e, jamais noir sur gris */
     --shadow-flottant: 0 0 0 1px rgba(255, 255, 255, 0.1);
     --svc-tint: 26%;
 

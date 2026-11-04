@@ -52,9 +52,16 @@ test.describe("louange (T3) : liste des chants", () => {
   test("les thèmes restent dans le filtre", async ({ page }) => {
     await page.goto("/songs?theme=adoration");
     await page.getByRole("searchbox").waitFor();
-    await expect(page.locator("select").first()).toHaveValue("adoration");
+    const menu = page.locator("[data-menu]").first();
+    await expect(menu).toHaveAttribute("data-pose", "");
+    await expect(menu).toContainText("Adoration");
+    await expect(menu).toHaveAttribute("aria-label", /: Adoration$/);
+    await expect.poll(() => menu.evaluate((el) => getComputedStyle(el).backgroundColor), "déclencheur en encre").toBe(ENCRE);
     await expect(page.getByText(new RegExp(`résultats? sur ${TOTAL}`))).toBeVisible();
-    await expect(page.locator("select").first().locator("option")).toContainText(["Adoration", "Foi"]);
+    await menu.click();
+    const lignes = page.getByRole("menu").getByRole("menuitemradio");
+    await expect(lignes.filter({ hasText: "Adoration" }).first()).toHaveAttribute("aria-checked", "true");
+    await expect(lignes.filter({ hasText: "Foi" }).first()).toBeVisible();
   });
 
   test("connecté : « Proposer un nouveau chant » est en encre, pas en rouge", async ({ page }) => {

@@ -318,3 +318,20 @@ Back-office à 7 px du bord à 360 px en français (sélecteur de T1a, espace Ba
 - **À trancher** : meta `theme-color` gardée à #fff (barre d'état blanche au-dessus du gris sur les pages de liste) ;
   boutons à contour (`inset 0 0 0 1px`) gardés sur les pages grises (commandes) ; `AccordsProvider`, `Switch`, etc. hors
   liste gardent `shadow-lg/xl` là où rien ne flotte.
+
+### T3a · Contrôles, primitives — fait (orchestratrice)
+- `--pose` (blanc en clair, `240 1.7% 23.1%` = rgb(58, 58, 60) en sombre ; couleur Tailwind `pose`) : curseur du rail,
+  segment actif de `SelecteurEspace` (ombre `shadow-sm`, liseré intérieur en sombre), bouton `outline` (`button.tsx`).
+- `OngletsRail` : 36 / 40 px, onglets 30 / 34 px, curseur `--pose` + `--shadow-raised`, 13 px semi-gras, largeur au
+  contenu (prop `pleineLargeur`), zone de 44 px (`TOUCHER_RANGEE`) ; la prop `cible44` disparaît (comportement par défaut).
+  Le rail est un conteneur défilant transparent qui porte la zone de 44 px, la piste dedans.
+- `Pilules` : 28 / 32 px (texte 13 / 14 px), inactive `--secondary`, active `--primary` ou la couleur du service ; à la
+  ligne au pointeur fin, défilement avec fondu au toucher. **Constaté au navigateur** : dans un recouvrement, le toucher va
+  à la pilule la plus tardive du DOM ; la zone (`TOUCHER_PILULE`) s'arrête donc à mi-écart (3 px de chaque côté).
+- `Menu` (`src/components/ui/menu.tsx`) : `value`, `defaultValue`, `options` (avec groupes), `onChange`, `label`,
+  `surGris` ; déclencheur en pilule, en encre quand un filtre est posé ; panneau `material-panel`, rayon 12, lignes 36 / 44
+  px, coche à gauche. Premier usage : le filtre de thème de la liste des chants. `ChampSelect`
+  (`src/components/ui/champ-select.tsx`, 44 px, rayon 12, chevron 16 px) : pas encore utilisé (T3c).
+- Restent pour T3b/T3c : `MenuActions.tsx:70` et `EquipesClient.tsx:358` en `bg-pose` (back-office-3) ; prop
+  `pleineLargeur` à poser sur les rails de Mes services et Setlists ; recouvrement vertical de 6 px entre deux lignes de
+  pilules au toucher (mineur).
