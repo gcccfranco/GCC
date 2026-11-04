@@ -78,10 +78,10 @@ test("Campus : la zone des cartes occupe plus de 80 % de la zone de contenu", as
   // Le sélecteur Louange / Répétition / Grille est au-dessus, aligné avec le contenu.
   const x = (await barre.boundingBox())!.x;
   expect(Math.abs((await cartes.boundingBox())!.x - x)).toBeLessThanOrEqual(2);
-  // Deux colonnes dès 1 024 px de fenêtre.
-  const colonnes = await cartes.evaluate((el) => getComputedStyle(el).gridTemplateColumns.split(" ").length);
+  // Deux colonnes de journal dès 1 024 px de fenêtre (plannings-3), une seule en dessous.
+  const colonnes = await cartes.evaluate((el) => getComputedStyle(el).columnCount);
   const fenetre = page.viewportSize()!.width;
-  expect(colonnes).toBe(fenetre >= 1024 ? 2 : 1);
+  expect(colonnes).toBe(fenetre >= 1024 ? "2" : "auto");
 });
 
 test("Prépa. Table : le tableau prend toute la zone de contenu", async ({ page }) => {

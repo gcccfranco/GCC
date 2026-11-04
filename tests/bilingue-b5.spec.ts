@@ -34,6 +34,10 @@ test("Campus en 中文 : postes traduits, aucun français hors noms", async ({ p
   await expect(page.getByTestId("campus-cartes")).toBeVisible();
   await expect(page.getByTestId("campus-cartes")).toContainText("钢琴");
   const brut = await page.getByTestId("campus-cartes").innerText();
+  // plannings-5 et 6 : la date porte le jour de la semaine ; une séance sans chant dit « 诗歌待定 », plus de « 诗歌 1 ».
+  expect(brut).toContain("周一");
+  expect(brut).toContain("诗歌待定");
+  expect(brut).not.toMatch(/诗歌 \d/);
   expect(brut).not.toMatch(/\b(Piano|Guitare|Batterie|Sono|PPT)\b/);
   expect(await texteDuMain(page)).not.toMatch(/\b(Piano|Guitare|Batterie|Aucune|donnée|Matin|Soir)\b/);
 });

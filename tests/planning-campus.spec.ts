@@ -123,3 +123,66 @@ test("en 中文 : le volet et les colonnes des chants sont traduits", async ({ p
   await expect(page.getByText("诗歌 1").filter({ visible: true }).first()).toBeVisible();
   await expect(page.getByText("排练").filter({ visible: true }).first()).toBeVisible();
 });
+
+// ─── corrections du design, plannings-5 et plannings-6 : l'en-tête des cartes, « Chants à venir » ───────────
+
+/** Deux séances fictives : le 20/09 sans aucun chant, le 27/09 avec un chant. */
+const CAMPUS_CARTES = csv([
+  ["DATE", "MOMENT", "PRESIDENT", "CHORISTE", "CHORISTE", "PIANO", "GUITARE", "BATTERIE", "SONO", "PPT", "CHANT 1", "CHANT 2", "CHANT 3", "CHANT 4", "REPETITION"],
+  ["20/09/2026", "Matin", "Président X.", "Choriste Y.", "", "Pianiste Z.", "", "", "", "", "", "", "", "", ""],
+  ["27/09/2026", "Matin", "Président W.", "Choriste V.", "", "Pianiste U.", "", "", "", "", "Chant fictif", "", "", "", ""],
+]);
+
+async function ouvrirCartes(page: Page, quand: string) {
+  await page.clock.setFixedTime(new Date(quand));
+  await page.route(/docs\.google\.com\/spreadsheets/, (route) => {
+    const sheet = new URL(route.request().url()).searchParams.get("sheet");
+    return route.fulfill({ status: 200, contentType: "text/csv", body: sheet === "Campus_Louange" ? CAMPUS_CARTES : "" });
+  });
+  await signInAs(page, MEMBRE, {}, "/planning/campus");
+  await expect(page.getByTestId("campus-cartes")).toBeVisible();
+}
+const enTeteDeCarte = (page: Page, n: number) => page.getByTestId("campus-cartes").locator("> div").nth(n).locator("> div").first().locator("> div").first();
+const alpha = (css: string) => {
+  const m = css.match(/rgba?\(([^)]+)\)/);
+  const v = m ? m[1].split(/[ ,/]+/).filter(Boolean) : [];
+  return v.length > 3 ? Number(v[3]) : 1;
+};
+
+test("plannings-5 : l'en-tête d'une carte est teinté (pas plein), la date porte le jour de la semaine", async ({ page }) => {
+  await ouvrirCartes(page, "2026-09-18T10:00:00");
+  const entete = enTeteDeCarte(page, 0);
+  await expect(entete).toContainText("Dim. 20/9");
+  const fond = await entete.evaluate((el) => getComputedStyle(el).backgroundColor);
+  expect(alpha(fond), "teinte légère, plus de barre pleine").toBeLessThan(0.2);
+  await expect(entete).not.toContainText("Aujourd'hui");
+  const intertitre = page.getByTestId("campus-cartes").getByText("Chants", { exact: true }).first();
+  expect(await intertitre.evaluate((el) => getComputedStyle(el).textTransform), "intertitre en casse normale").toBe("none");
+});
+
+test("plannings-5 : le jour du camp, la carte du jour a le filet bleu et le badge « Aujourd'hui », pas les autres", async ({ page }) => {
+  await ouvrirCartes(page, "2026-09-20T10:00:00");
+  await expect(enTeteDeCarte(page, 0)).toContainText("Aujourd'hui");
+  await expect(enTeteDeCarte(page, 1)).not.toContainText("Aujourd'hui");
+  const bordure = (n: number) => page.getByTestId("campus-cartes").locator("> div").nth(n).locator("> div").first().evaluate((el) => getComputedStyle(el).borderTopColor);
+  expect(await bordure(0), "le bleu Campus (PLANNING_COLORS.campus)").toBe("rgb(36, 113, 163)");
+  expect(await bordure(1)).not.toBe("rgb(36, 113, 163)");
+});
+
+test("plannings-6 : une séance sans chant dit « Chants à venir » sur une ligne, une séance avec chant montre la liste", async ({ page }) => {
+  await ouvrirCartes(page, "2026-09-18T10:00:00");
+  const sans = page.getByTestId("campus-cartes").locator("> div").nth(0);
+  await expect(sans.getByText("Chants à venir", { exact: true })).toBeVisible();
+  await expect(sans.getByText("Chant 1")).toHaveCount(0);
+  const avec = page.getByTestId("campus-cartes").locator("> div").nth(1);
+  await expect(avec.getByText("Chant fictif", { exact: true })).toBeVisible();
+  await expect(avec.getByText("Chants à venir")).toHaveCount(0);
+  await expect(avec.getByText("Chants", { exact: true })).toBeVisible();
+});
+
+test("plannings-6 en 中文 : « 诗歌待定 »", async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
+  await ouvrirCartes(page, "2026-09-18T10:00:00");
+  await expect(page.getByTestId("campus-cartes").locator("> div").nth(0)).toContainText("诗歌待定");
+  await expect(enTeteDeCarte(page, 0)).toContainText("9/20 周日");
+});

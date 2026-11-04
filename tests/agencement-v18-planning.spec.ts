@@ -619,3 +619,233 @@ test("captures T4b : accueil et Prépa. Table", async ({ page }, info) => {
   await expect(carteTonPetitDej(page).getByRole("textbox", { name: "Modifier" })).toBeFocused();
   await capture("app-table-ton-petit-dej-modifier");
 });
+
+// ─── Corrections du design, T1g Plannings (docs/spec-corrections-design/plannings.md) ─────────────
+
+const fondu = (l: Locator, nom: "--fondu-gauche" | "--fondu-droite") => l.evaluate((el, n) => (el as HTMLElement).style.getPropertyValue(n), nom);
+/** Le centre horizontal d'un bloc. */
+const milieuX = async (l: Locator) => {
+  const b = (await l.boundingBox())!;
+  return b.x + b.width / 2;
+};
+
+test.describe("plannings-1 : le bord de la grille parle", () => {
+  test("Culte : tient entier à l'ordinateur et en paysage ; défile en portrait, fondu à droite seulement, sans rond au doigt", async ({ page }, info) => {
+    test.skip(estTelephone(info), "au téléphone, une carte par date (pas de tableau)");
+    await ouvrir(page, MEMBRE, "/planning/culte");
+    const defilement = page.getByTestId("grille-defilement");
+    await expect(page.locator('[data-case="2026-11-15|presidence"]').filter({ visible: true })).toContainText("Président J.");
+    const mesure = () => defilement.evaluate((el) => ({ trop: el.scrollWidth - el.clientWidth }));
+    if (estGrandEcran(info)) {
+      expect((await mesure()).trop, "le tableau tient sans défiler").toBeLessThanOrEqual(0);
+      expect(await fondu(defilement, "--fondu-droite")).toBe("0px");
+      await expect(page.getByRole("button", { name: "Voir les colonnes suivantes" })).toHaveCount(0);
+    } else {
+      // Tablette portrait : le tableau défile, fondu de 24 px à droite, pas de rond (pointeur grossier).
+      expect((await mesure()).trop).toBeGreaterThan(0);
+      await expect.poll(() => fondu(defilement, "--fondu-droite")).toBe("24px");
+      expect(await fondu(defilement, "--fondu-gauche")).toBe("0px");
+      await expect(page.getByRole("button", { name: "Voir les colonnes suivantes" })).toHaveCount(0);
+      await defilement.evaluate((el) => { el.scrollLeft = el.scrollWidth; });
+      await expect(defilement).toHaveAttribute("data-defile", "true");
+      await expect.poll(() => fondu(defilement, "--fondu-droite")).toBe("0px");
+      expect(await fondu(defilement, "--fondu-gauche"), "jamais de fondu à gauche (colonne Date collante)").toBe("0px");
+      // Le filet de 1 px sur le bord droit de la colonne Date.
+      expect(await page.locator('[data-date-cell="2026-11-15"]').evaluate((el) => getComputedStyle(el).boxShadow)).toContain("1px 0px 0px 0px");
+    }
+  });
+
+  test("ordinateur, fenêtre étroite : le rond « › » défile d'un cran, « ‹ » revient, les deux de 28 px dessinés", async ({ page }, info) => {
+    test.skip(info.project.name !== "ordinateur", "pointeur fin : l'ordinateur");
+    await page.setViewportSize({ width: 1024, height: 800 });
+    await ouvrir(page, MEMBRE, "/planning/culte");
+    const defilement = page.getByTestId("grille-defilement");
+    await expect(page.locator('[data-case="2026-11-15|presidence"]').filter({ visible: true })).toContainText("Président J.");
+    const suivant = page.getByRole("button", { name: "Voir les colonnes suivantes" });
+    await expect(suivant).toBeVisible();
+    const b = (await suivant.boundingBox())!;
+    expect(Math.round(b.width), "28 px dessinés").toBe(28);
+    await expect(page.getByRole("button", { name: "Voir les colonnes précédentes" })).toHaveCount(0);
+    await suivant.click();
+    await expect.poll(() => defilement.evaluate((el) => el.scrollLeft)).toBeGreaterThan(40);
+    const precedent = page.getByRole("button", { name: "Voir les colonnes précédentes" });
+    await expect(precedent).toBeVisible();
+    expect(await fondu(defilement, "--fondu-gauche"), "pas de fondu à gauche").toBe("0px");
+    await precedent.click();
+    await expect.poll(() => defilement.evaluate((el) => el.scrollLeft)).toBeLessThan(2);
+    await expect(precedent).toHaveCount(0);
+  });
+
+  test("sans date : ni tableau ni en-têtes, « Planning à venir » centré", async ({ page }, info) => {
+    await ouvrir(page, MEMBRE, "/planning/interfranco");
+    await expect(barre(page).getByRole("heading", { level: 2 })).toHaveText("Interfranco");
+    const bloc = page.getByText("Planning à venir", { exact: true }).filter({ visible: true });
+    await expect(bloc).toBeVisible();
+    await expect(page.getByTestId("grille-colonnes")).toHaveCount(0);
+    await expect(page.locator("table")).toHaveCount(0);
+    const zone = (await barre(page).boundingBox())!;
+    expect(Math.abs((await milieuX(bloc)) - (zone.x + zone.width / 2)), `centré (${info.project.name})`).toBeLessThanOrEqual(20);
+    // Le texte lui-même, au centre de sa carte (±2 px).
+    const ecart = await bloc.evaluate((el) => {
+      const r = document.createRange();
+      r.selectNodeContents(el);
+      const texte = r.getBoundingClientRect();
+      const carte = el.parentElement!.getBoundingClientRect();
+      return Math.abs(texte.x + texte.width / 2 - (carte.x + carte.width / 2));
+    });
+    expect(ecart, "texte centré dans sa carte").toBeLessThanOrEqual(2);
+  });
+
+  test("« Cette semaine » : pastille de 6 px quand la grille tient (conteneur ≥ 960 px), badge texte sinon", async ({ page }, info) => {
+    test.skip(estTelephone(info), "au téléphone, une carte par date");
+    await ouvrir(page, MEMBRE, "/planning/culte");
+    const cellule = page.locator('[data-date-cell="2026-11-15"]').filter({ visible: true });
+    await expect(cellule).toContainText("15/11");
+    const largeur = await page.getByTestId("grille-defilement").evaluate((el) => el.parentElement!.getBoundingClientRect().width);
+    const pastille = cellule.locator("span[aria-hidden].rounded-full");
+    const badge = cellule.locator("span.inline-block", { hasText: "Cette semaine" });
+    if (largeur >= 960) {
+      await expect(pastille).toBeVisible();
+      const b = (await pastille.boundingBox())!;
+      expect(Math.round(b.width), "pastille de 6 px").toBe(6);
+      await expect(badge).toBeHidden();
+    } else {
+      await expect(badge).toBeVisible();
+      await expect(pastille).toBeHidden();
+    }
+  });
+
+  test("un nom plus long que la case se coupe et garde son nom complet au survol", async ({ page }, info) => {
+    test.skip(estTelephone(info), "au téléphone, une carte par date");
+    const long = "Prénom-Composé Nom-Très-Long-De-Famille";
+    await page.route(/docs\.google\.com\/spreadsheets/, (route) => {
+      const sheet = new URL(route.request().url()).searchParams.get("sheet");
+      return route.fulfill({ status: 200, contentType: "text/csv", body: sheet === "Franco_Louange" ? CULTE.replace("Président J.", long) : "" });
+    });
+    interdireDialoguesNatifs(page);
+    await page.clock.setFixedTime(new Date("2026-11-15T10:00:00"));
+    await signInAs(page, MEMBRE, {}, "/planning/culte");
+    const nom = page.locator('[data-case="2026-11-15|presidence"]').filter({ visible: true }).locator("span[title]").first();
+    await expect(nom).toHaveAttribute("title", long);
+    expect(await nom.evaluate((el) => el.scrollWidth > el.clientWidth), "coupé par des points de suspension").toBe(true);
+  });
+});
+
+test.describe("plannings-2 : le rail serré ramène l'actif en vue", () => {
+  test("EDD, période Nov–Déc : la pastille active est entière dans le rail, fondu à gauche seulement ; un autre choix la ramène en vue", async ({ page }, info) => {
+    await ouvrir(page, MEMBRE, "/planning/edd");
+    const rail = barre(page).getByRole("tablist", { name: "Période" });
+    await expect(rail.getByRole("tab")).toHaveCount(6);
+    const actif = rail.getByRole("tab", { selected: true });
+    const dedans = async (a: Locator) => {
+      const [r, t] = [(await rail.boundingBox())!, (await a.boundingBox())!];
+      return t.x >= r.x - 0.5 && t.x + t.width <= r.x + r.width + 0.5;
+    };
+    if (estTelephone(info)) {
+      await expect(actif).toContainText("Nov");
+      await expect.poll(() => dedans(actif)).toBe(true);
+      expect(await fondu(rail, "--fondu-gauche")).toBe("24px");
+      expect(await fondu(rail, "--fondu-droite")).toBe("0px");
+      await rail.getByRole("tab").first().click();
+      const premier = rail.getByRole("tab", { selected: true });
+      await expect.poll(() => dedans(premier)).toBe(true);
+      await expect.poll(() => fondu(rail, "--fondu-droite")).toBe("24px");
+      expect(await fondu(rail, "--fondu-gauche")).toBe("0px");
+    } else {
+      // Les six périodes tiennent : ni fondu ni défilement.
+      expect(await rail.evaluate((el) => el.scrollWidth - el.clientWidth)).toBeLessThanOrEqual(0);
+      expect(await fondu(rail, "--fondu-gauche")).toBe("0px");
+      expect(await fondu(rail, "--fondu-droite")).toBe("0px");
+    }
+  });
+});
+
+/** Campus fictif : 27/7 soir seul, 28 à 30/7 matin et soir, 31/7 matin seul. */
+const CAMPUS_FICTIF = csv([
+  ["DATE", "MOMENT", "PRESIDENT", "CHORISTE", "CHORISTE", "PIANO", "GUITARE", "BATTERIE", "SONO", "PPT", "CHANT 1", "CHANT 2", "CHANT 3", "CHANT 4", "REPETITION"],
+  ...[["27", "Soir"], ["28", "Matin"], ["28", "Soir"], ["29", "Matin"], ["29", "Soir"], ["30", "Matin"], ["30", "Soir"], ["31", "Matin"]].map(([j, m]) =>
+    [`${j}/07/2026`, m, "Président X.", "Choriste Y.", "", "Pianiste Z.", "", "", "", "", "", "", "", "", ""]),
+]);
+
+test.describe("plannings-3 : Campus en colonnes de journal", () => {
+  test("à partir de lg, la deuxième carte est sous la première, à 16 px ; sous lg une seule colonne", async ({ page }) => {
+    interdireDialoguesNatifs(page);
+    await page.clock.setFixedTime(new Date("2026-06-01T10:00:00"));
+    await page.route(/docs\.google\.com\/spreadsheets/, (route) => {
+      const sheet = new URL(route.request().url()).searchParams.get("sheet");
+      return route.fulfill({ status: 200, contentType: "text/csv", body: sheet === "Campus_Louange" ? CAMPUS_FICTIF : "" });
+    });
+    await signInAs(page, MEMBRE, {}, "/planning/campus");
+    const cartes = page.getByTestId("campus-cartes").locator("> div");
+    await expect(cartes).toHaveCount(5);
+    const [a, b, c] = [await boite(cartes.nth(0)), await boite(cartes.nth(1)), await boite(cartes.nth(4))];
+    if (page.viewportSize()!.width >= 1024) {
+      expect(Math.abs(b.x - a.x), "même colonne").toBeLessThan(2);
+      expect(Math.abs(b.y - (a.y + a.height + 16)), "16 px sous la première").toBeLessThanOrEqual(2);
+      expect(c.x, "la fin dans la colonne de droite").toBeGreaterThan(a.x + a.width - 1);
+    } else {
+      expect(Math.abs(b.x - a.x)).toBeLessThan(2);
+      expect(Math.abs(c.x - a.x)).toBeLessThan(2);
+      expect(c.y).toBeGreaterThan(b.y);
+    }
+  });
+});
+
+test.describe("plannings-4 : Groupes prend la couleur du groupe ouvert", () => {
+  const couleurTexte = (l: Locator) => l.evaluate((el) => getComputedStyle(el).color);
+  test("Fidélité : l'adresse porte le groupe, l'onglet ou le menu prend sa couleur", async ({ page }, info) => {
+    await ouvrir(page, MEMBRE, "/planning/groupes");
+    const groupes = barre(page).getByRole("tablist", { name: "Groupes" });
+    await groupes.getByRole("tab", { name: "Fidélité" }).click();
+    await expect(page).toHaveURL(/\/planning\/groupes\/?\?groupe=fidelite$/);
+    await expect(groupes.getByRole("tab", { name: "Fidélité" })).toHaveAttribute("aria-selected", "true");
+    if (estGrandEcran(info)) {
+      await expect.poll(() => fond(enTete(page).getByRole("navigation", { name: "Plannings" }).getByRole("link", { name: "Groupes" }))).toBe(rgb(PLANNING_COLORS.fidelite));
+    } else if (estTelephone(info)) {
+      await expect.poll(() => couleurTexte(page.getByTestId("menu-plannings"))).toBe(rgb(PLANNING_COLORS.fidelite));
+    }
+    await groupes.getByRole("tab", { name: "Bonté" }).click();
+    await expect(page).toHaveURL(/groupe=bonte$/);
+    if (estGrandEcran(info)) {
+      await expect.poll(() => fond(enTete(page).getByRole("navigation", { name: "Plannings" }).getByRole("link", { name: "Groupes" }))).toBe(rgb(PLANNING_COLORS.bonte));
+    }
+  });
+
+  test("le lien ?groupe=fidelite s'ouvre sur Fidélité ; un membre sans groupe arrive sur Paix", async ({ page }) => {
+    await ouvrir(page, MEMBRE, "/planning/groupes?groupe=fidelite");
+    await expect(barre(page).getByRole("tab", { name: "Fidélité" })).toHaveAttribute("aria-selected", "true");
+    await page.goto("/planning/groupes");
+    await expect(barre(page).getByRole("tab", { name: "Paix" }), "un membre sans groupe : Paix").toHaveAttribute("aria-selected", "true");
+  });
+
+  test("téléphone, thème sombre : le menu des plannings en couleur de Fidélité garde un contraste ≥ 4,5", async ({ page }, info) => {
+    test.skip(!estTelephone(info), "le menu des plannings : au téléphone");
+    await page.emulateMedia({ colorScheme: "dark" });
+    await ouvrir(page, MEMBRE, "/planning/groupes?groupe=fidelite");
+    const menu = page.getByTestId("menu-plannings");
+    await expect(menu).toBeVisible();
+    const ratio = await menu.evaluate((el) => {
+      const lire = (c: string) => (c.match(/[\d.]+/g) ?? []).slice(0, 4).map(Number);
+      const fondDe = (e: Element | null): number[] => {
+        for (; e; e = e.parentElement) {
+          const v = lire(getComputedStyle(e).backgroundColor);
+          if (v.length === 3 || v[3] > 0.9) return v.slice(0, 3);
+        }
+        return lire(getComputedStyle(document.body).backgroundColor).slice(0, 3);
+      };
+      const lum = ([r, g, b]: number[]) => {
+        const f = (x: number) => { x /= 255; return x <= 0.03928 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4; };
+        return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b);
+      };
+      const [a, b] = [lum(lire(getComputedStyle(el).color).slice(0, 3)), lum(fondDe(el))];
+      return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
+    });
+    expect(ratio).toBeGreaterThanOrEqual(4.5);
+  });
+
+  test("un membre dont le groupe est Bonté arrive sur Bonté", async ({ page }) => {
+    await ouvrir(page, { ...MEMBRE, uid: "uid-bonte", email: "bonte@example.com", groupe: "bonte" }, "/planning/groupes");
+    await expect(barre(page).getByRole("tab", { name: "Bonté" })).toHaveAttribute("aria-selected", "true");
+    await expect(page.locator('[data-grille="bonte"]')).toBeVisible();
+  });
+});

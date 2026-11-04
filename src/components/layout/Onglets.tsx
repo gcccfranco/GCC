@@ -12,7 +12,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useRef, type KeyboardEvent, type ReactNode } from "react";
+import { useEffect, useRef, type KeyboardEvent, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { useFonduLateral } from "@/hooks/useFonduLateral";
 
@@ -94,11 +94,27 @@ export function OngletsRail({
   );
   // `cible44` : dès 640 px un rail de deux ou trois onglets (Équipes, Planning) tient et ne défile pas : un `overflow` rognerait la cible ;
   // en dessous il défile encore (中文 à 320 px).
-  const rail = cn("inline-flex max-w-full gap-0.5 rounded-full bg-secondary p-[3px]", cible44 ? "overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:overflow-visible" : "overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden", className);
+  // plannings-2 : le rail serré s'estompe du côté où il reste des onglets et ramène l'actif en vue. Avec `cible44`, le
+  // masque ne vaut que là où le rail défile (sous `sm`) : au-delà il rognerait la zone de 44 px de l'`::after`.
+  const railRef = useFonduLateral<HTMLDivElement>(onglets.length);
+  const rail = cn("inline-flex max-w-full gap-0.5 rounded-full bg-secondary p-[3px]", cible44 ? "max-sm:fondu-lateral overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:overflow-visible" : "fondu-lateral overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden", className);
+  // Centre la pastille active dans le rail : sans animation au montage, en douceur ensuite (instantané sous `prefers-reduced-motion`).
+  const premierPassage = useRef(true);
+  useEffect(() => {
+    const el = railRef.current;
+    const on = el?.querySelector<HTMLElement>('[aria-selected="true"], [aria-current="page"]');
+    if (!el || !on) return;
+    // (le rail n'est pas positionné : `offsetLeft` serait relatif à un ancêtre, d'où les rectangles)
+    const left = el.scrollLeft + on.getBoundingClientRect().left - el.getBoundingClientRect().left - (el.clientWidth - on.offsetWidth) / 2;
+    const doux = !premierPassage.current && !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    premierPassage.current = false;
+    if (doux) el.scrollTo({ left, behavior: "smooth" });
+    else el.scrollLeft = left;
+  }, [courant, railRef]);
 
   if (liens) {
     return (
-      <nav aria-label={etiquette} data-onglets="rail" className={rail}>
+      <nav ref={railRef} aria-label={etiquette} data-onglets="rail" className={rail}>
         {onglets.map((o) => (
           <Link key={o.id} href={o.href ?? "#"} aria-current={courant === o.id ? "page" : undefined} className={classe(courant === o.id)}>
             {contenu(o)}
@@ -119,7 +135,7 @@ export function OngletsRail({
     boutons.current[cible]?.focus();
   };
   return (
-    <div role="tablist" aria-label={etiquette} data-onglets="rail" className={rail} onKeyDown={auClavier}>
+    <div ref={railRef} role="tablist" aria-label={etiquette} data-onglets="rail" className={rail} onKeyDown={auClavier}>
       {onglets.map((o, i) => (
         <button
           key={o.id}

@@ -1320,6 +1320,8 @@
       "enregistre": "已保存",
       "plusTot": "查看更早",
       "plusTard": "查看更晚",
+      "colonnesSuivantes": "查看后面的栏目",
+      "colonnesPrecedentes": "查看前面的栏目",
       "aVenir": "服事表待定",
       "periode": "{{du}}至{{au}}",
       "nonPublie": "尚未发布",
@@ -1339,6 +1341,7 @@
     },
     "petitDej": {
       "libresSur_other": "{{total}} 个主日中 {{count}} 个空闲",
+      "passes_other": "已过 {{count}} 个主日",
       "ton": "你的早餐",
       "aucunAVenir": "你还没有报名之后的早餐。",
       "libre": "空闲",
@@ -1412,7 +1415,7 @@
       "presChoristes": "司会与和声",
       "musiciens": "乐手",
       "chants": "诗歌",
-      "chantN": "诗歌 {{n}}",
+      "chantsAVenir": "诗歌待定",
       "grille": "表格"
     },
     "verse": {

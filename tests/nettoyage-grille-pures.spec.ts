@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { colonneDe, doitSemer, motifDuRefus, phraseHistorique, sansCompteDe, styleCase } from "../src/lib/planning/grilleAffichage";
+import { jourCourtL } from "../src/lib/planning/utils";
 import type { CaseGeste } from "../src/lib/planning/gestes";
 
 // Lot N, tranche N6a (docs/spec-nettoyage-code.md) : fonctions pures sorties de PlanningGrille. Spec sans page :
@@ -109,4 +110,11 @@ test("styleCase : fond du geste, arêtes de la plage", () => {
     background: "#11223312",
     boxShadow: "inset 0 2px 0 0 #112233, inset 0 -2px 0 0 #112233, inset 2px 0 0 0 #112233, inset -2px 0 0 0 #112233",
   });
+});
+
+test("jourCourtL : le jour de la semaine abrégé, « Lun. 27/7 » en français, « 7/27 周一 » en chinois", () => {
+  expect(jourCourtL("2026-07-27", "fr")).toBe("Lun. 27/7");
+  expect(jourCourtL("2026-07-27", "zh-CN")).toBe("7/27 周一");
+  expect(jourCourtL("2026-12-06", "fr")).toBe("Dim. 6/12");
+  expect(jourCourtL("2026-12-06", "zh-CN")).toBe("12/6 周日");
 });

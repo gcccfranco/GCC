@@ -1,11 +1,13 @@
 "use client"
 
-import { usePathname } from "next/navigation"
+import { usePathname, useSearchParams } from "next/navigation"
 import { useTranslation } from "react-i18next"
 import { PLANNING_COLORS } from "@/lib/serviceColors"
 import { SectionTabs } from "@/components/layout/SectionTabs"
 import { EnTetePage } from "@/components/layout/EnTetePage"
 import { Pilules } from "@/components/layout/Onglets"
+import { useProfile } from "@/lib/firebase/users"
+import { groupePlanning } from "@/lib/groupes/organigramme"
 
 // `key` = clé i18n (planning.tabs.*), `color` = couleur de service reprise par
 // l'indicateur d'onglet actif (source unique : PLANNING_COLORS).
@@ -33,6 +35,10 @@ const HORS_GRAND =
 export function PlanningTabs() {
   const { t } = useTranslation()
   const chemin = (usePathname() ?? "").replace(/\/$/, "")
+  const { profile } = useProfile()
+  // plannings-4 : Groupes prend la couleur du groupe ouvert (la seule entrée dont la couleur change sans changer de page).
+  const groupe = groupePlanning(useSearchParams().get("groupe"), profile)
+  const onglets = PLANNING_TABS.map((tab) => (tab.key === "groupes" ? { ...tab, color: PLANNING_COLORS[groupe] } : tab))
   const actif = PLANNING_TABS.find((tab) => (tab.href === "/planning" ? chemin === "/planning" : chemin.startsWith(tab.href)))?.key ?? null
   return (
     <>
@@ -46,7 +52,7 @@ export function PlanningTabs() {
               valeur={actif}
               choisir={() => {}}
               obligatoire
-              options={PLANNING_TABS.map((tab) => ({ cle: tab.key, nom: t(`planning.tabs.${tab.key}`), couleur: tab.color, href: tab.href }))}
+              options={onglets.map((tab) => ({ cle: tab.key, nom: t(`planning.tabs.${tab.key}`), couleur: tab.color, href: tab.href }))}
             />
           </div>
         }
@@ -57,7 +63,7 @@ export function PlanningTabs() {
         rootHref="/planning"
         pleineLargeur
         menuLabel={t("planning.choisirPlanning")}
-        tabs={PLANNING_TABS.map((tab) => ({ href: tab.href, label: t(`planning.tabs.${tab.key}`), color: tab.color }))}
+        tabs={onglets.map((tab) => ({ href: tab.href, label: t(`planning.tabs.${tab.key}`), color: tab.color }))}
       />
     </>
   )

@@ -172,9 +172,11 @@ function CampusPage() {
       )}
 
       {sub !== "grille" && order.length > 0 && (
-      <div data-testid="campus-cartes" className="grid items-start gap-4 lg:grid-cols-2">
+      <div data-testid="campus-cartes" className="lg:columns-2 lg:gap-4">
       {order.map(day => (
-        <CarteJourCampus key={day} day={day} seances={days[day]} entrainement={sub === "entrainement"} />
+        <div key={day} className="mb-4 break-inside-avoid">
+          <CarteJourCampus day={day} seances={days[day]} entrainement={sub === "entrainement"} />
+        </div>
       ))}
       </div>
       )}

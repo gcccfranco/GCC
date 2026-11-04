@@ -21,6 +21,7 @@ import { useTranslation } from "react-i18next"
 import { useConfirmer } from "@/components/layout/Confirmer"
 import { Coffee, Pencil, Trash2 } from "lucide-react"
 import { MenuActions } from "@/components/layout/MenuActions"
+import { PassesReplies } from "./PassesReplies"
 import { Tile } from "@/components/ui/tile"
 import { canGererPetitDej } from "@/lib/access"
 import { RefusDesRegles, inscrire, renommerLigne, retirerLigne } from "@/lib/firebase/petitDej"
@@ -202,6 +203,9 @@ export function PetitDejCarte({ etat, annee, tri }: {
   // « n libres sur N » : les dimanches à venir du trimestre sans aucune ligne.
   const libres = Array.isArray(lignes) ? dimanches.filter((d) => d >= sun && !lignes.some((l) => l.dimanche === d)).length : null
 
+  const passes = dimanches.filter((d) => d < sun)
+  const avenir = dimanches.filter((d) => d >= sun)
+
   const champ = (label: string) => <ChampDeSaisie etat={etat} label={label} />
 
   const bouton = "h-9 shrink-0 rounded-full px-3.5 text-sm font-semibold transition-[background-color,color,transform] duration-150 active:scale-[.96] disabled:opacity-60"
@@ -269,7 +273,15 @@ export function PetitDejCarte({ etat, annee, tri }: {
       ) : lignes === null ? (
         <p className="border-t border-border pt-3 pb-1.5 text-sm text-muted-foreground">{t("common.loading")}</p>
       ) : (
-        <ul>{dimanches.map(laRangee)}</ul>
+        // Les dimanches passés se replient devant les à venir ; tout un trimestre passé (ou futur) reste déplié.
+        passes.length > 0 && avenir.length > 0 ? (
+          <>
+            <PassesReplies count={passes.length}><ul>{passes.map(laRangee)}</ul></PassesReplies>
+            <ul>{avenir.map(laRangee)}</ul>
+          </>
+        ) : (
+          <ul>{dimanches.map(laRangee)}</ul>
+        )
       )}
     </section>
   )

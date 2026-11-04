@@ -48,11 +48,11 @@ const PETIT_DEJ = {
 };
 
 /** Ouvre `to` le vendredi 18/09/2026 : dimanche courant = 20/09, trimestre T3. */
-async function open(page: Page, who: FakeProfile, to: string, docs: Record<string, Record<string, unknown>> = {}) {
+async function open(page: Page, who: FakeProfile, to: string, docs: Record<string, Record<string, unknown>> = {}, table = TABLE) {
   await page.clock.setFixedTime(new Date("2026-09-18T10:00:00"));
   await page.route(/docs\.google\.com\/spreadsheets/, (route) => {
     const sheet = new URL(route.request().url()).searchParams.get("sheet");
-    return route.fulfill({ status: 200, contentType: "text/csv", body: sheet === "Franco_Table_PtD" ? TABLE : "" });
+    return route.fulfill({ status: 200, contentType: "text/csv", body: sheet === "Franco_Table_PtD" ? table : "" });
   });
   return signInAs(page, who, docs, to);
 }
@@ -341,4 +341,51 @@ test("en 中文 : les deux colonnes sont traduites", async ({ page }) => {
   await open(page, RESPONSABLE, "/back-office/planning/table", PETIT_DEJ);
   await expect(page.getByText("团队").filter({ visible: true }).first()).toBeVisible();
   await expect(page.getByText("早餐").filter({ visible: true }).first()).toBeVisible();
+});
+
+// ─── plannings-7 : les dimanches passés se replient devant les à venir ───────────
+
+/** Quatre équipes fictives : deux dimanches passés (06/09, 13/09), deux à venir (20/09, 27/09). */
+const TABLE_PASSES = csv([
+  ligne({ 1: "DATE", 2: "Équipe", 7: "DATE", 8: "Équipe" }),
+  ligne({ 1: "06/09", 2: "Nolwenn", 7: "13/09", 8: "Gaspard" }),
+  ligne({ 1: "20/09", 2: "Mathis", 7: "27/09", 8: "Élodie" }),
+]);
+const carteTable = (page: Page) => page.getByRole("region", { name: "Prépa. Table du Seigneur", exact: true });
+
+test("carte Prépa. Table : les passés sont repliés devant les à venir, l'ouverture les montre en gris", async ({ page }) => {
+  await open(page, MEMBRE, "/planning/table", {}, TABLE_PASSES);
+  const carte = carteTable(page);
+  const pli = carte.getByRole("button", { name: "2 dimanches passés" });
+  await expect(pli).toHaveAttribute("aria-expanded", "false");
+  expect((await pli.boundingBox())!.height, "une rangée de 44 px").toBeGreaterThanOrEqual(44);
+  const le20 = carte.locator('[data-dimanche="2026-09-20"]');
+  await expect(le20).toContainText("Mathis");
+  const avant = (await le20.boundingBox())!.y;
+  expect(await carte.locator('[data-dimanche="2026-09-06"]').evaluate((el) => !!el.closest("[inert]")), "fermé : ni focus ni lecture").toBe(true);
+  await pli.focus();
+  await page.keyboard.press("Enter");
+  await expect(pli).toHaveAttribute("aria-expanded", "true");
+  await expect(carte.locator('[data-dimanche="2026-09-06"]')).toContainText("Nolwenn");
+  await expect(carte.locator('[data-dimanche="2026-09-13"]')).toContainText("Gaspard");
+  await expect.poll(async () => (await le20.boundingBox())!.y - avant, { message: "les à venir descendent de deux rangées" }).toBeGreaterThan(80);
+  await page.keyboard.press("Space");
+  await expect(pli).toHaveAttribute("aria-expanded", "false");
+});
+
+test("carte Prépa. Table en 中文 : « 已过 2 个主日 » ; sans passé ou tout passé, pas de pli", async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
+  await open(page, MEMBRE, "/planning/table", {}, TABLE_PASSES);
+  const carte = page.getByRole("region", { name: "圣餐预备" });
+  await expect(carte.getByRole("button", { name: "已过 2 个主日" })).toBeVisible();
+});
+
+test("carte Prépa. Table : un trimestre sans passé ou tout passé reste déplié, sans bouton", async ({ page }) => {
+  // Seuls les dimanches à venir : rien à replier.
+  await open(page, MEMBRE, "/planning/table", {}, csv([
+    ligne({ 1: "DATE", 2: "Équipe", 7: "DATE", 8: "Équipe" }),
+    ligne({ 1: "20/09", 2: "Mathis", 7: "27/09", 8: "Élodie" }),
+  ]));
+  await expect(carteTable(page).locator('[data-dimanche="2026-09-20"]')).toContainText("Mathis");
+  await expect(carteTable(page).getByRole("button", { name: /dimanches? passés?/ })).toHaveCount(0);
 });

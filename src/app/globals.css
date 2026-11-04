@@ -44,6 +44,9 @@
     -webkit-mask-image: linear-gradient(to right, transparent 0, #000 var(--fondu-gauche, 0px), #000 calc(100% - var(--fondu-droite, 0px)), transparent 100%);
     mask-image: linear-gradient(to right, transparent 0, #000 var(--fondu-gauche, 0px), #000 calc(100% - var(--fondu-droite, 0px)), transparent 100%);
   }
+  /* Grille d'un planning (plannings-1) : une fois défilée, un filet de 1 px sépare la colonne Date collante. */
+  [data-defile] td[data-date-cell],
+  [data-defile] thead th:first-child { box-shadow: 1px 0 0 hsl(var(--border)); }
   /* Volet qui défile (harmonie-2) : il s'estompe en haut dès qu'on a défilé et en bas tant qu'il y a une suite.
      Posées par `useFonduVertical`, les deux hauteurs valent 0 quand rien n'est à estomper. Deux voiles collants
      de la couleur de la carte plutôt qu'un masque : un masque tronquerait aussi l'ombre `--shadow-raised`. */

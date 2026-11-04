@@ -180,6 +180,9 @@ test("ordinateur et tablette : la colonne des dates reste visible au défilement
   await expect.poll(async () => Math.round((await loin.boundingBox())!.x), { message: "la grille défile bien" })
     .toBeLessThan(Math.round(avant.loin) - 50);
   expect(Math.abs((await date.boundingBox())!.x - avant.date), "la colonne des dates ne bouge pas").toBeLessThan(3);
+  // plannings-1 : une fois défilée, le filet de 1 px sur la colonne Date et jamais de fondu à gauche.
+  await expect(defilement).toHaveAttribute("data-defile", "true");
+  expect(await defilement.evaluate((el) => el.style.getPropertyValue("--fondu-gauche"))).toBe("0px");
 });
 
 test("téléphone : une carte par dimanche, aucun défilement horizontal de la page", async ({ page }) => {

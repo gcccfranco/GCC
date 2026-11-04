@@ -1,6 +1,7 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { Suspense, useEffect, useState } from "react"
+import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { useTranslation } from "react-i18next"
 import { OngletsRail } from "@/components/layout/Onglets"
 import { BarreDeGrille, FiltreDeNom, compterCasesVides, ongletsDePeriode, useFiltreNom, useTrimestreEnLettres } from "@/components/planning/BarreDeGrille"
@@ -24,6 +25,7 @@ import {
   droitsDePrevenir,
   triVisibilitiesAnnee,
 } from "@/lib/planning/releases"
+import { groupePlanning } from "@/lib/groupes/organigramme"
 import { BACK_OFFICE } from "@/lib/backOffice"
 import { useGestionPlanning } from "@/lib/planning/gestion"
 import { AncienTableau } from "./AncienTableau"
@@ -56,7 +58,10 @@ function GroupesPage() {
   const [intergroupe, setIntergroupe] = useState<string[][]>([])
   const [loading, setLoading] = useState(true)
   const [stale, setStale] = useState(false)
-  const [grp, setGrp] = useState<Groupe>("paix")
+  // plannings-4 : le groupe ouvert est dans l'adresse (`?groupe=`), le lien se partage ; sans lui, celui du membre.
+  const router = useRouter()
+  const chemin = usePathname()
+  const grp: Groupe = groupePlanning(useSearchParams().get("groupe"), profile)
   const [tri, setTri] = useState(getCurrentTri())
   // Lot U2 : l'année choisie ; publication lue pour l'année en cours et la suivante.
   const anneeCourante = new Date().getFullYear()
@@ -130,7 +135,7 @@ function GroupesPage() {
           etiquette={t("planning.pages.groupes")}
           onglets={(["paix", "fidelite", "bonte"] as Groupe[]).map((g) => ({ id: g, label: t(`planning.groupes.${g}`), couleur: GRP_COLORS[g] }))}
           actif={grp}
-          choisir={(g) => setGrp(g as Groupe)}
+          choisir={(g) => router.replace(`${chemin}?groupe=${g}`, { scroll: false })}
         />
         <AnneeSelecteur annees={annees} annee={effAnnee} onChange={changerAnnee} />
         {visibleTris.length > 0 && (
@@ -186,4 +191,9 @@ function GroupesPage() {
 }
 
 // Back-office coupé (lot 18) : le tableau d'avant, lu dans le Sheet seul.
-export default BACK_OFFICE ? GroupesPage : AncienTableau
+// `useSearchParams` se lit sous une frontière Suspense.
+function GroupesPageSousSuspense() {
+  return <Suspense><GroupesPage /></Suspense>
+}
+
+export default BACK_OFFICE ? GroupesPageSousSuspense : AncienTableau

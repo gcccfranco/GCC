@@ -27,13 +27,13 @@ export function GrilleEnTete({
     <thead>
       <tr data-testid="grille-colonnes" className={app ? "bg-secondary text-muted-foreground" : "text-white"}>
         <th
-          className={`sticky left-0 z-20 px-3 py-2.5 text-left text-[11px] font-semibold whitespace-nowrap ${app ? "bg-secondary" : ""}`}
+          className={`sticky left-0 z-20 px-2.5 py-2.5 text-left text-[11px] font-semibold whitespace-nowrap ${app ? "bg-secondary" : ""}`}
           style={app ? undefined : { background: couleur }}
         >
           {t("planning.roles.date")}
         </th>
         {colonnes.map((c) => (
-          <th key={c.cle} className="px-3 py-2.5 text-left text-[11px] font-semibold whitespace-nowrap" style={app ? undefined : { background: couleur }}>
+          <th key={c.cle} title={t(c.i18n)} className="overflow-hidden text-ellipsis px-2.5 py-2.5 text-left text-[11px] font-semibold whitespace-nowrap" style={app ? undefined : { background: couleur }}>
             {t(c.i18n)}
             {!app && groupe && groupeDef(groupe.id)?.planning === definition.key && roleDeColonne(groupe, c.cle) && (
               <Link2

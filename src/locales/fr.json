@@ -1348,6 +1348,8 @@
       "enregistre": "Enregistré",
       "plusTot": "Voir plus tôt",
       "plusTard": "Voir plus tard",
+      "colonnesSuivantes": "Voir les colonnes suivantes",
+      "colonnesPrecedentes": "Voir les colonnes précédentes",
       "aVenir": "Planning à venir",
       "periode": "{{du}} à {{au}}",
       "nonPublie": "Non publié",
@@ -1368,6 +1370,8 @@
     "petitDej": {
       "libresSur_one": "{{count}} libre sur {{total}}",
       "libresSur_other": "{{count}} libres sur {{total}}",
+      "passes_one": "{{count}} dimanche passé",
+      "passes_other": "{{count}} dimanches passés",
       "ton": "Ton petit déj",
       "aucunAVenir": "Aucun petit déj à venir à ton nom.",
       "libre": "Libre",
@@ -1444,7 +1448,7 @@
       "presChoristes": "Présidence & choristes",
       "musiciens": "Musiciens",
       "chants": "Chants",
-      "chantN": "Chant {{n}}",
+      "chantsAVenir": "Chants à venir",
       "grille": "Grille"
     },
     "verse": {

@@ -2,7 +2,7 @@
 
 import { langueCourte } from "@/lib/utils/formatDate";
 import { Fragment, useEffect, useId, useLayoutEffect, useRef, useState, useSyncExternalStore, type CSSProperties, type MouseEvent, type ReactNode } from "react"
-import { ChevronDown, Copy, Lock, Trash2 } from "lucide-react"
+import { ChevronDown, ChevronLeft, ChevronRight, Copy, Lock, Trash2 } from "lucide-react"
 import { useTranslation } from "react-i18next"
 import { useConfirmer } from "@/components/layout/Confirmer"
 import { MenuActions } from "@/components/layout/MenuActions"
@@ -30,6 +30,7 @@ import { useHistoriqueGrille } from "./hooks/useHistoriqueGrille"
 import { useCopiePrecedent } from "./hooks/useCopiePrecedent"
 import { PrevenirChangements, usePrevenir, type PrevenirProp } from "./PrevenirChangements"
 import { styleTexteService } from "@/lib/couleurSombre"
+import { useFonduLateral } from "@/hooks/useFonduLateral"
 import { EtatVide } from "@/components/layout/EtatVide"
 import { GrilleEnTete } from "./GrilleEnTete"
 import { GrilleCelluleDate } from "./GrilleCelluleDate"
@@ -114,6 +115,10 @@ type DernierGeste = { texte: string; notes: string[]; cases: CaseGeste[]; sansCo
 /** Un collage qui remplace des noms, en attente de « Coller » (PG29) : rien n'est encore écrit. */
 type Collage = { cases: CaseGeste[]; remplace: number; notes: string[] }
 
+
+/** Le rond « ‹ » « › » du bord de la grille (plannings-1) : 28 px dessinés, cible de 44 px, pointeur fin seulement. */
+const rondDefilement =
+  "absolute top-[5px] z-20 hidden h-7 w-7 items-center justify-center rounded-full bg-background text-foreground shadow-[var(--shadow-raised)] [@media(pointer:fine)]:flex after:absolute after:left-1/2 after:top-1/2 after:h-11 after:w-11 after:-translate-x-1/2 after:-translate-y-1/2 after:content-['']"
 
 export function PlanningGrille({
   definition,
@@ -247,6 +252,35 @@ export function PlanningGrille({
       lignes.some((l) => valeur(l.row[0], c, l.row).trim())
   )
 
+  const sansLigne = affichees.length === 0
+  // plannings-1 : l'enveloppe qui défile s'estompe à droite seulement (la colonne Date est collante à gauche) ;
+  // les ronds « ‹ » « › » (pointeur fin) et le filet de la colonne Date se lisent dans `defile`.
+  const defilement = useFonduLateral<HTMLDivElement>(`${colonnes.length}-${sansLigne}`, { gauche: false })
+  const [defile, setDefile] = useState({ gauche: false, droite: false })
+  useEffect(() => {
+    const el = defilement.current
+    if (!el) return
+    const maj = () => {
+      const gauche = el.scrollLeft > 1
+      const droite = el.scrollWidth - el.clientWidth - el.scrollLeft > 1
+      setDefile((p) => (p.gauche === gauche && p.droite === droite ? p : { gauche, droite }))
+    }
+    maj()
+    el.addEventListener("scroll", maj, { passive: true })
+    const observateur = new ResizeObserver(maj)
+    observateur.observe(el)
+    return () => {
+      el.removeEventListener("scroll", maj)
+      observateur.disconnect()
+    }
+  }, [defilement, colonnes.length, sansLigne])
+  const defiler = (sens: 1 | -1) => {
+    const el = defilement.current
+    if (!el) return
+    const doux = !window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    el.scrollBy({ left: sens * 0.8 * el.clientWidth, behavior: doux ? "smooth" : "auto" })
+  }
+
   // Prévenir des changements (PG33 à PG47) : les cases changées depuis l'état annoncé (un point chacune).
   const ecritesAppEtSeance = new Set([...(casesEcrites ?? []), ...Object.keys(modifs)])
   const prev = usePrevenir({ prevenir, definition, rows: lignes.map(ligneAffichee), speciaux: dimanchesSpeciaux, ecrites: ecritesAppEtSeance, comptes })
@@ -345,7 +379,8 @@ export function PlanningGrille({
   }
   const rangDate = (date: string) => datesAffichees.indexOf(date)
   const dansGeste = (date: string, cle: string) => !!geste?.cases.some((c) => c.date === date && c.cle === cle)
-  const largeurMin = 104 + 96 * colonnes.length
+  // plannings-1 : 96 px pour la Date, 84 px par colonne (`<colgroup>` du tableau).
+  const largeurMin = 96 + 84 * colonnes.length
 
   function commencer(l: LigneGrille, c: ColonneGrille) {
     if (mode !== "edition") return
@@ -677,7 +712,8 @@ export function PlanningGrille({
         <button
           type="button"
           onClick={ouvrir}
-          className="w-full min-h-8 rounded-md border border-dashed px-1.5 py-1 text-left hover:bg-secondary active:bg-secondary"
+          title={val}
+          className="w-full min-h-8 truncate rounded-md border border-dashed px-1.5 py-1 text-left hover:bg-secondary active:bg-secondary"
           style={{ borderColor: `${couleur}55` }}
         >
           {val}
@@ -692,7 +728,8 @@ export function PlanningGrille({
           onClick={() => commencer(l, c)}
           // Trait pointillé : sans lui, une case modifiable ne se distingue pas
           // d'un simple texte (vu à l'œil sur la planche du 18/09/2026).
-          className="w-full min-h-8 rounded-md border border-dashed px-1.5 py-1 text-left hover:bg-secondary active:bg-secondary"
+          title={val || undefined}
+          className="w-full min-h-8 truncate rounded-md border border-dashed px-1.5 py-1 text-left hover:bg-secondary active:bg-secondary"
           style={{ borderColor: `${couleur}55` }}
         >
           {val || <span className="text-muted-foreground">+</span>}
@@ -702,7 +739,7 @@ export function PlanningGrille({
     // La couleur du service reste aux dates (A2) : son nom se repère en encre.
     return (
       <>
-        <span className={estMoi(val) ? "rounded-md bg-foreground px-1.5 py-0.5 font-semibold text-background" : ""}>{val || "—"}</span>
+        <span title={val || undefined} className={`inline-block max-w-full truncate align-bottom ${estMoi(val) ? "rounded-md bg-foreground px-1.5 py-0.5 font-semibold text-background" : ""}`}>{val || "—"}</span>
         {marqueAbsent(l.row[0], val)}
       </>
     )
@@ -810,19 +847,22 @@ export function PlanningGrille({
         />
       )}
 
+      {/* ── Vide : un seul bloc, au téléphone comme en grand (plannings-1) ── */}
+      {sansLigne && <EtatVide compact>{vide ?? t("planning.grille.aVenir")}</EtatVide>}
+
       {/* ── Grille (ordinateur, tablette) ── */}
-      <div ref={enveloppe} data-en-cours={enCours || undefined} inert={enCours ? true : undefined} className="relative">
-      <div data-testid="grille-defilement" role="region" tabIndex={0} aria-label={t("planning.grille.region")} inert={collage ? true : undefined} className={`hidden sm:block overflow-x-auto focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${app ? "raised rounded-2xl" : "rounded-xl border border-border"}`}>
-        <table className="w-full text-sm border-collapse" style={{ minWidth: largeurMin }}>
+      {!sansLigne && <div ref={enveloppe} data-en-cours={enCours || undefined} inert={enCours ? true : undefined} className="relative">
+      {/* La carte porte l'ombre (`raised`, sans `overflow-hidden`) ; l'enveloppe intérieure défile, avec un fondu à droite.
+          Requête de conteneur : « Cette semaine » devient une pastille quand la grille tient (GrilleCelluleDate). */}
+      <div className={`hidden sm:block relative [container-type:inline-size] ${app ? "raised rounded-2xl" : "rounded-xl border border-border"}`}>
+      <div ref={defilement} data-defile={defile.gauche || undefined} data-testid="grille-defilement" role="region" tabIndex={0} aria-label={t("planning.grille.region")} inert={collage ? true : undefined} className="fondu-lateral overflow-x-auto rounded-[inherit] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring">
+        <table className="w-full table-fixed text-sm border-collapse" style={{ minWidth: largeurMin }}>
+          <colgroup>
+            <col style={{ width: 96 }} />
+            {colonnes.map((c) => <col key={c.cle} style={{ width: 84 }} />)}
+          </colgroup>
           <GrilleEnTete app={app} couleur={couleur} colonnes={colonnes} groupe={groupe} definition={definition} />
           <tbody>
-            {affichees.length === 0 && (
-              <tr>
-                <td colSpan={colonnes.length + 1} className="px-4 py-8 text-center text-sm text-muted-foreground">
-                  {vide ?? t("planning.grille.aVenir")}
-                </td>
-              </tr>
-            )}
             {affichees.map((l, i) => {
               const date = l.row[0]
               const mois = getMois(date)
@@ -863,7 +903,7 @@ export function PlanningGrille({
                         data-changement={aChange(date, c.cle)}
                         onMouseDownCapture={(e) => { if (actifClavier && e.shiftKey) e.preventDefault() }}
                         onClickCapture={(e) => surCase(e, date, c.cle)}
-                        className={`relative px-3 py-2 text-foreground ${aChange(date, c.cle) ? "bg-amber-100/70 dark:bg-amber-500/15" : ""} ${dansSansCompte(date, c.cle) ? "[&_button]:underline [&_button]:decoration-dotted [&_button]:underline-offset-4" : ""}`}
+                        className={`relative px-2.5 py-2 text-foreground ${aChange(date, c.cle) ? "bg-amber-100/70 dark:bg-amber-500/15" : ""} ${dansSansCompte(date, c.cle) ? "[&_button]:underline [&_button]:decoration-dotted [&_button]:underline-offset-4" : ""}`}
                         style={styleCase(plage, couleur, dansGeste(date, c.cle), rangDate(date), j)}
                       >
                         {caseOuApercu(l, c)}
@@ -877,6 +917,18 @@ export function PlanningGrille({
           </tbody>
         </table>
       </div>
+      {/* Au pointeur fin seulement (au doigt, le fondu suffit) : un rond dessiné de 28 px, cible de 44 px. */}
+      {defile.droite && (
+        <button type="button" onClick={() => defiler(1)} aria-label={t("planning.grille.colonnesSuivantes")} className={rondDefilement + " right-2"}>
+          <ChevronRight className="h-4 w-4" aria-hidden />
+        </button>
+      )}
+      {defile.gauche && (
+        <button type="button" onClick={() => defiler(-1)} aria-label={t("planning.grille.colonnesPrecedentes")} className={rondDefilement + " left-[104px]"}>
+          <ChevronLeft className="h-4 w-4" aria-hidden />
+        </button>
+      )}
+      </div>
       {actifClavier && plage && posBarre && !collage && (
         <BarreSelection
           count={datesPlage.length * clesPlage.length}
@@ -886,13 +938,10 @@ export function PlanningGrille({
           onFermer={effacer}
         />
       )}
-      </div>
+      </div>}
 
       {/* ── Une carte par dimanche (téléphone) ── */}
-      <div inert={enCours ? true : undefined} data-cartes-en-cours={enCours || undefined} className="sm:hidden space-y-2.5">
-        {affichees.length === 0 && (
-          <EtatVide compact>{vide ?? t("planning.grille.aVenir")}</EtatVide>
-        )}
+      {!sansLigne && <div inert={enCours ? true : undefined} data-cartes-en-cours={enCours || undefined} className="sm:hidden space-y-2.5">
         {affichees.map((l) => {
           const date = l.row[0]
           const cetteSemaine = date === sun
@@ -933,7 +982,7 @@ export function PlanningGrille({
             </CarteDimanche>
           )
         })}
-      </div>
+      </div>}
 
 
       {/* BO-G, 5 : le « ? » est dans la barre d'outils (en-tête) ; le texte de l'aide, lui, s'ouvre ici, dans sa zone vive. */}

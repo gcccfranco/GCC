@@ -12,16 +12,20 @@ const FONDU = 24;
  * `cle` : ce dont dépend la largeur du contenu (le nombre d'éléments, par exemple) —
  * un contenu qui arrive après le montage ne change pas la taille de la rangée, donc
  * rien ne préviendrait l'observateur de taille.
+ *
+ * `options.gauche: false` : pas de fondu à gauche (plannings-1, la colonne Date collante de la grille
+ * d'un planning ne doit pas être blanchie) ; `--fondu-gauche` reste à 0.
  */
-export function useFonduLateral<T extends HTMLElement>(cle: unknown) {
+export function useFonduLateral<T extends HTMLElement>(cle: unknown, options?: { gauche?: boolean }) {
   const ref = useRef<T>(null);
+  const gauche = options?.gauche ?? true;
 
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
     const majFondu = () => {
       const reste = el.scrollWidth - el.clientWidth - el.scrollLeft;
-      el.style.setProperty("--fondu-gauche", `${el.scrollLeft > 1 ? FONDU : 0}px`);
+      el.style.setProperty("--fondu-gauche", `${gauche && el.scrollLeft > 1 ? FONDU : 0}px`);
       el.style.setProperty("--fondu-droite", `${reste > 1 ? FONDU : 0}px`);
     };
     majFondu();
@@ -32,7 +36,7 @@ export function useFonduLateral<T extends HTMLElement>(cle: unknown) {
       el.removeEventListener("scroll", majFondu);
       observateur.disconnect();
     };
-  }, [cle]);
+  }, [cle, gauche]);
 
   return ref;
 }

@@ -36,13 +36,23 @@ export function GrilleCelluleDate({
   return (
     <td
       data-date-cell={date}
-      className="sticky left-0 z-10 w-[112px] px-3 py-2 font-semibold whitespace-nowrap bg-card texte-service"
+      className="sticky left-0 z-10 w-24 px-2.5 py-2 font-semibold whitespace-nowrap bg-card texte-service"
       style={{ ...styleTexteService(couleur), backgroundImage: fond ? `linear-gradient(${fond}, ${fond})` : undefined }}
     >
       {/* La date, puis « Cette semaine » dessous (planches `v18-app-planning-grille-a`, `v18-bo-planning-a`). */}
-      <div>{fdShort(date)}</div>
+      <div className="flex items-center gap-1.5">
+        {/* bo-messages-planning-1 : quand la grille tient sans défiler (conteneur ≥ 960 px), « Cette semaine » n'est plus
+            qu'une pastille de 6 px devant la date ; le texte reste pour les lecteurs d'écran. */}
+        {cetteSemaine && (
+          <span className="hidden [@container(min-width:960px)]:inline">
+            <span aria-hidden className="block h-1.5 w-1.5 rounded-full" style={{ background: couleur }} />
+            <span className="sr-only">{t("planning.table.thisWeek")}</span>
+          </span>
+        )}
+        {fdShort(date)}
+      </div>
       {cetteSemaine && (
-        <span className={`mt-0.5 mr-1 inline-block text-xs font-bold px-1.5 py-0.5 rounded ${app ? "bg-foreground text-background" : "text-white"}`} style={app ? undefined : { background: couleur }}>
+        <span className={`mt-0.5 mr-1 inline-block [@container(min-width:960px)]:hidden text-xs font-bold px-1.5 py-0.5 rounded ${app ? "bg-foreground text-background" : "text-white"}`} style={app ? undefined : { background: couleur }}>
           {t("planning.table.thisWeek")}
         </span>
       )}

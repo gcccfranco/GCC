@@ -31,6 +31,14 @@ export function fdShort(dateStr: string) {
   return `${parseInt(dd)}/${parseInt(mm)}`
 }
 
+/** Date courte avec jour de la semaine : « Lun. 27/7 » en français, « 7/27 周一 » en chinois (plannings-5). */
+export function jourCourtL(iso: string, lang: string) {
+  const [y, m, d] = iso.split("-").map(Number)
+  const zh = lang === "zh-CN"
+  const jour = new Date(y, m - 1, d).toLocaleDateString(zh ? "zh-CN" : "fr-FR", { weekday: "short" })
+  return zh ? `${m}/${d} ${jour}` : `${jour.charAt(0).toUpperCase()}${jour.slice(1)} ${d}/${m}`
+}
+
 /** Nom du mois (1–12) localisé selon la langue de l'interface. */
 export function moisName(m1: number, lang: string) {
   return new Date(2000, m1 - 1, 1).toLocaleDateString(lang === "zh-CN" ? "zh-CN" : "fr-FR", { month: "long" })

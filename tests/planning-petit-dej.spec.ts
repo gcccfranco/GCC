@@ -491,6 +491,8 @@ test("carte : aucun bouton sur la ligne d'un autre ni un dimanche passé, pas d'
   await expect(le27.getByText("Famille Martin", { exact: true })).toBeVisible();
   await expect(le27.getByRole("button"), "la ligne d'un autre : le texte seul").toHaveCount(0);
 
+  // plannings-7 : les dimanches passés sont repliés ; la lecture d'un passé ouvre d'abord le pli.
+  await carte.getByRole("button", { name: /dimanches passés/ }).click();
   const le13 = rangee(carte, "2026-09-13");
   await expect(le13.getByText("Charlie B.", { exact: true })).toBeVisible();
   await expect(le13.getByRole("button"), "un dimanche passé, même ma ligne : aucun bouton").toHaveCount(0);
@@ -889,4 +891,51 @@ test("Moi › Réglages › Notifications en 中文 : la liste « Recevoir » es
   await expect(page.getByText("Petit déj", { exact: true })).toHaveCount(0);
   await page.getByRole("switch", { name: "早餐" }).scrollIntoViewIfNeeded();
   await capture(page, "profil-notifications-petit-dej-zh");
+});
+
+// ─── plannings-7 : les dimanches passés se replient en une rangée de 44 px ───────
+
+/** Le vendredi 18/09/2026 : dimanche en cours = 20/09 ; au T3, onze dimanches passés (5/07 → 13/09) et deux à venir. */
+test("carte : « 11 dimanches passés » replié, la première date libre monte ; un toucher déplie, les inscrits passés restent visibles", async ({ page }) => {
+  await ouvrirTable(page, CHARLIE, docsPetitDej([
+    ligne({ id: "p", dimanche: "2026-09-13", nom: "Famille Dupuis", uid: "uid-autre", auteurUid: "uid-autre" }),
+  ]));
+  const carte = carteDe(page);
+  const pli = carte.getByRole("button", { name: "11 dimanches passés" });
+  await expect(pli).toHaveAttribute("aria-expanded", "false");
+  expect((await pli.boundingBox())!.height, "44 px de haut").toBeGreaterThanOrEqual(44);
+  const le20 = rangee(carte, "2026-09-20");
+  await expect(le20.getByText("Libre", { exact: true })).toBeVisible();
+  const replie = (await le20.boundingBox())!.y;
+  const inerte = (l: Locator) => l.evaluate((el) => !!el.closest("[inert]"));
+  expect(await inerte(rangee(carte, "2026-09-13")), "fermé : inert").toBe(true);
+  await capture(page, "petit-dej-passes-replies");
+
+  await pli.click();
+  await expect(pli).toHaveAttribute("aria-expanded", "true");
+  await expect(rangee(carte, "2026-09-13").getByText("Famille Dupuis", { exact: true })).toBeVisible();
+  expect(await inerte(rangee(carte, "2026-09-13")), "ouvert : plus inert").toBe(false);
+  await expect.poll(async () => (await le20.boundingBox())!.y - replie, { message: "la première date libre monte d'au moins 200 px quand c'est replié" })
+    .toBeGreaterThanOrEqual(200);
+  await capture(page, "petit-dej-passes-deplies");
+  await pli.click();
+  await expect(pli).toHaveAttribute("aria-expanded", "false");
+});
+
+test("carte : un trimestre tout passé s'affiche déplié sans bouton, un trimestre futur n'a pas de pli", async ({ page }) => {
+  await ouvrirTable(page, CHARLIE);
+  const carte = carteDe(page);
+  const trimestres = page.getByTestId("barre-grille").filter({ visible: true }).getByRole("tablist", { name: "Trimestre" });
+  await trimestres.getByRole("tab", { name: /^T2/ }).click();
+  await expect(rangee(carte, "2026-06-28")).toBeVisible();
+  await expect(carte.getByRole("button", { name: /dimanches? passés?/ }), "tout passé : déplié").toHaveCount(0);
+  await trimestres.getByRole("tab", { name: /^T4/ }).click();
+  await expect(rangee(carte, "2026-10-04").getByText("Libre", { exact: true })).toBeVisible();
+  await expect(carte.getByRole("button", { name: /dimanches? passés?/ }), "futur : pas de pli").toHaveCount(0);
+});
+
+test("carte en 中文 : « 已过 11 个主日 »", async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
+  await ouvrirTable(page, CHARLIE);
+  await expect(carteDe(page, "早餐").getByRole("button", { name: "已过 11 个主日" })).toBeVisible();
 });

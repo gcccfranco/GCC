@@ -24,6 +24,7 @@ import { BACK_OFFICE } from "@/lib/backOffice"
 import { useGestionPlanning } from "@/lib/planning/gestion"
 import { avecPetitDej, rangeesPetitDej } from "@/lib/petitdej/lignes"
 import type { LignePetitDej } from "@/types/petitDej"
+import { PassesReplies } from "@/components/planning/PassesReplies"
 import { AncienTableau } from "./AncienTableau"
 
 // Prépa. Table du Seigneur + petit déjeuner : une grille à deux cases par
@@ -146,25 +147,34 @@ function TableDuSeigneur({ rows, annee, tri }: { rows: string[][]; annee: number
   const lignes = rows
     .filter((r) => r[0].startsWith(`${annee}-`) && getTri(r[0]) === tri && r[1]?.trim())
     .sort((a, b) => (a[0] < b[0] ? -1 : 1))
+  const passees = lignes.filter((r) => r[0] < dimanche)
+  const aVenir = lignes.filter((r) => r[0] >= dimanche)
+  const ligne = (r: string[]) => {
+    const jour = new Date(`${r[0]}T12:00:00`)
+    return (
+      <li key={r[0]} data-dimanche={r[0]} className={`flex items-center gap-3 border-t border-border py-2.5 ${r[0] < dimanche ? "opacity-60" : ""}`}>
+        <Tile color={GRILLE_TABLE.couleur} big={jour.getDate()} small={new Intl.DateTimeFormat(langue, { month: "short" }).format(jour)} size="lg" />
+        <div className="min-w-0">
+          <p className="text-sm font-semibold text-foreground">{r[1]}</p>
+        </div>
+      </li>
+    )
+  }
   return (
     <section aria-labelledby={titreId} className="raised min-w-0 rounded-2xl px-4 pt-3 pb-1.5">
       <div className="flex items-baseline gap-2 pb-2">
         <h3 id={titreId} className="text-[17px] font-bold text-foreground">{t("planning.pages.table")}</h3>
       </div>
       {lignes.length ? (
-        <ul>
-          {lignes.map((r) => {
-            const jour = new Date(`${r[0]}T12:00:00`)
-            return (
-              <li key={r[0]} data-dimanche={r[0]} className={`flex items-center gap-3 border-t border-border py-2.5 ${r[0] < dimanche ? "opacity-60" : ""}`}>
-                <Tile color={GRILLE_TABLE.couleur} big={jour.getDate()} small={new Intl.DateTimeFormat(langue, { month: "short" }).format(jour)} size="lg" />
-                <div className="min-w-0">
-                  <p className="text-sm font-semibold text-foreground">{r[1]}</p>
-                </div>
-              </li>
-            )
-          })}
-        </ul>
+        // Les dimanches passés se replient devant les à venir (plannings-7) ; tous passés ou tous à venir, rien ne se replie.
+        passees.length > 0 && aVenir.length > 0 ? (
+          <>
+            <PassesReplies count={passees.length}><ul>{passees.map(ligne)}</ul></PassesReplies>
+            <ul>{aVenir.map(ligne)}</ul>
+          </>
+        ) : (
+          <ul>{lignes.map(ligne)}</ul>
+        )
       ) : (
         <p className="border-t border-border py-2.5 text-sm text-muted-foreground">{t("planning.table.noData")}</p>
       )}
