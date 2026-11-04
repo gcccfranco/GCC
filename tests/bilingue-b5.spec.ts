@@ -158,10 +158,13 @@ async function lireEcran(page: Page): Promise<{ texte: string; attributs: string
   return { texte: sansDonnees(texte), attributs: attributs.map(sansDonnees) };
 }
 
-/** Les noms des plannings (données du Sheet, en puces ambre) ne sont pas du texte de l'écran : retirés avant de lire. */
+/** Les noms des plannings (données du Sheet, en lignes de liste ou en puces ambre) ne sont pas du texte de l'écran : retirés avant de lire. */
 async function sansLesNomsDuPlanning(page: Page) {
-  await expect(page.locator(".bg-amber-100:visible").first()).toBeVisible();
-  await page.locator(".bg-amber-100").evaluateAll((puces) => puces.forEach((p) => p.remove()));
+  // Équipes › Personnes › Sans compte : les noms sont les lignes d'une liste de lecture (bo-equipes-12) ;
+  // l'ancienne administration (/admin) garde ses pastilles ambre.
+  const noms = page.locator('[data-testid="sans-compte-liste"] li, .bg-amber-100');
+  await expect(noms.filter({ visible: true }).first()).toBeVisible();
+  await noms.evaluateAll((puces) => puces.forEach((p) => p.remove()));
 }
 
 /** Aucun français dans l'écran affiché (texte et attributs), avec le fragment fautif dans le message. */
@@ -327,7 +330,7 @@ test.describe("B5b : en français, les écrans gardent leurs libellés", () => {
 
   test("Notifier et Statistiques", async ({ page }) => {
     await ouvrirAdmin(page, "/back-office/messages/notifier", "fr");
-    await expect(page.getByText("À qui")).toBeVisible();
+    await expect(page.getByText("À qui", { exact: true })).toBeVisible();
     await expect(page.getByText("Derniers envois").first()).toBeVisible();
     await expect(page.getByText("Aperçu").first()).toBeVisible();
     expect((await lireEcran(page)).texte).not.toMatch(/\b(notifier|admin|stats)\.[a-zA-Z]+/);

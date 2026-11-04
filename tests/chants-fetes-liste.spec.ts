@@ -97,7 +97,8 @@ test.describe("CF-E · Setlists › Fêtes (CF13)", () => {
     const menu = categorie(page);
     await expect(menu.locator('optgroup[label="节日"] option')).toHaveText(["圣诞节", "复活节"]);
     await menu.selectOption("Noël");
-    await expect(page.getByRole("link", { name: /圣诞节 2026 · Gp Paix/ })).toBeVisible();
+    // Le groupe se lit en 中文 dans le titre (bo-evenements-9, src/lib/fetes/qui.ts) ; la valeur stockée reste « Gp Paix ».
+    await expect(page.getByRole("link", { name: /圣诞节 2026 · 和平团契/ })).toBeVisible();
   });
 });
 

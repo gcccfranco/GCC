@@ -272,6 +272,15 @@ Back-office à 7 px du bord à 360 px en français (sélecteur de T1a, espace Ba
   colonne de 592 px à 1 280 px, deux à 1 440) ; `agencement-v18-moi:215` lit « 乐理 » (libellé du lot EM) ; sélecteur
   d'espace : sous 375 px, l'espace courant n'est plus qu'une icône de 36 px lui aussi (cloche à ≥ 16 px du bord à 360 px,
   testé avec App, Musiciens et Back-office courants, fr et zh). 352 tests verts sur les cinq projets.
+- Suite complète sur `9ecec9f` (trois tiers en sessions parallèles) : 27 régressions du lot, réglées après T3a. Rendus
+  voulus, tests adaptés : « Lun. 26/7 » (plannings-5), « Culte Francophone » (services-2), « Ce dimanche » en `dt`/`dd`
+  (dff1982), sous-titre 13 px (compte-2), h1 dans le volet de la fiche, « Voir comme un membre » premier du menu « ⋯ »,
+  « Partager » sur la rangée des étiquettes (eglise-8), 和平团契 / 喜乐团契 en 中文, plus de pastille ambre (bo-equipes-12),
+  « À qui » exact, groupe blanc sans ombre (T2), segments du sélecteur sans zone au pointeur fin (§ 3). Défauts corrigés :
+  défilement horizontal de la page chant (marge du scan 简谱 coupée par `overflow-x: clip` sur la colonne) ; panneau de
+  marque en couleur opaque `color-mix` (plus de dégradé) ; icône de 36 px du sélecteur au téléphone portée à 44 px de
+  zone (8 px vers l'extérieur aux bouts, 4 px au milieu) ; menu « Choisir un nom » du planning borné à la place restante
+  de l'écran et défilant (il sortait de l'écran sous une case à mi-hauteur). Seize autres rouges sont des courses (verts seuls).
 
 ### T2a · Recette de surface, jetons et écrans pilotes — fait (orchestratrice)
 - Jetons : `--fond-groupe` (#f2f2f7 / noir), `--radius-groupe` 16 px, `--secondary-fond` (#e5e5ea / #2c2c2e),

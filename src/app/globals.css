@@ -807,6 +807,7 @@
   .chants-chant .retour-chant:not([data-vers-setlist]) { display: none; }
   .chants-chant .song-zoom, .chants-chant .video-chant { margin-top: 0; }
   .chants-chant :is(main.song-zoom, .rangee-chant) { padding-inline: 0; }
+  .chants-chant main.song-zoom > div { overflow-x: clip; } /* sans marge intérieure, la marge blanche du scan 简谱 (qui déborde de la colonne) ne doit pas faire défiler `main` */
   .chants-chant :is(.song-zoom, .song-zoom > div, .rangee-chant) { max-width: 900px; }
 }
 @media screen and (pointer: fine) and (min-width: 1024px) {
@@ -824,6 +825,7 @@
   :root[data-barre="reduite"] .chants-chant .retour-chant:not([data-vers-setlist]) { display: none; }
   :root[data-barre="reduite"] .chants-chant .song-zoom, :root[data-barre="reduite"] .chants-chant .video-chant { margin-top: 0; }
   :root[data-barre="reduite"] .chants-chant :is(main.song-zoom, .rangee-chant) { padding-inline: 0; }
+  :root[data-barre="reduite"] .chants-chant main.song-zoom > div { overflow-x: clip; } /* sans marge intérieure, la marge blanche du scan 简谱 (qui déborde de la colonne) ne doit pas faire défiler `main` */
   :root[data-barre="reduite"] .chants-chant :is(.song-zoom, .song-zoom > div, .rangee-chant) { max-width: 900px; }
 }
 @media screen and (pointer: fine) and (min-width: 1148px) {
@@ -841,6 +843,7 @@
   .chants-chant .retour-chant:not([data-vers-setlist]) { display: none; }
   .chants-chant .song-zoom, .chants-chant .video-chant { margin-top: 0; }
   .chants-chant :is(main.song-zoom, .rangee-chant) { padding-inline: 0; }
+  .chants-chant main.song-zoom > div { overflow-x: clip; } /* sans marge intérieure, la marge blanche du scan 简谱 (qui déborde de la colonne) ne doit pas faire défiler `main` */
   .chants-chant :is(.song-zoom, .song-zoom > div, .rangee-chant) { max-width: 900px; }
 }
 
@@ -883,9 +886,9 @@
 }
 
 /* Panneau de marque de la connexion et de l'inscription (partout-q2) : un panneau uni, le logo seul le décore ;
-   la teinte `--secondary / 0.5` est posée sur `--background` pour qu'aucun bloc placé derrière (le panneau est
-   `sticky`) ne transparaisse. */
-.panneau-marque { background: linear-gradient(hsl(var(--secondary) / 0.5), hsl(var(--secondary) / 0.5)), hsl(var(--background)); }
+   la teinte `--secondary` à 50 % est composée sur `--background` en une couleur opaque (pas de dégradé) pour qu'aucun
+   bloc placé derrière (le panneau est `sticky`) ne transparaisse. */
+.panneau-marque { background-color: color-mix(in srgb, hsl(var(--secondary)) 50%, hsl(var(--background))); }
 
 /* Équipes en bandeau (lot U4 bis, B6, Q12) : la page tient dans la hauteur de l'écran, sous la
    navbar et au-dessus de la cale de la barre du bas (`MobileTabBar`, 78 px + `--tabbar-bottom`) ;

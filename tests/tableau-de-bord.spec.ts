@@ -697,8 +697,10 @@ test.describe("À faire (BO-B) : équivalents des écrans du tableau de bord (B4
     await expect(colonne.getByRole("heading", { name: "Ce dimanche, 4 octobre" })).toBeVisible();
     const culte = colonne.getByTestId("service-dimanche").filter({ hasText: "Culte Franco" });
     await expect(culte).toContainText("10:30");
-    await expect(culte).toContainText("Présidence Pers. A");
-    await expect(culte).not.toContainText("Batterie");
+    // Une paire rôle / nom est un dt / dd (bo-messages-planning-4) ; un poste vide dit « à choisir » et mène au planning.
+    const rang = (poste: string) => culte.locator("dl > div").filter({ has: page.locator("dt", { hasText: poste }) });
+    await expect(rang("Présidence").locator("dd")).toHaveText("Pers. A");
+    await expect(rang("Batterie").locator("dd").getByRole("link", { name: "à choisir" })).toHaveAttribute("href", /\/back-office\/planning\/?$/);
   });
 
   test("Ce dimanche : sans réglage de services, le Culte Franco par défaut (le réglage de services n'existe plus)", async ({ page }) => {

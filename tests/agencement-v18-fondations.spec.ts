@@ -47,7 +47,8 @@ async function ouvrir(page: Page, chemin: string) {
   await page.clock.setFixedTime(new Date("2026-10-06T10:00:00"));
   await page.route(/docs\.google\.com\/spreadsheets/, (route) => route.fulfill({ status: 200, contentType: "text/csv", body: "" }));
   await signInAs(page, ADMIN, DOCS, chemin);
-  await expect(enTete(page).locator("h1").filter({ visible: true }).first()).toBeVisible();
+  // Un h1 visible dans la page : dans l'en-tête, ou dans le volet de la fiche en deux volets (bo-reunions-taches-5).
+  await expect(page.locator("h1").filter({ visible: true }).first()).toBeVisible();
 }
 
 /** Capture à regarder à l'œil et à comparer aux planches v18 (PW_CAPTURES=<dossier>), une par appareil. */
@@ -72,7 +73,7 @@ test.describe("EnTetePage (R1, R2, R3, R8)", () => {
     // Le seul retour : « ‹ Section », 14 px gras gris, vers la section.
     await expect(retour).toHaveAttribute("href", /^\/moi\/?$/); // trailingSlash de next.config
     expect(await retour.evaluate((el) => [getComputedStyle(el).fontSize, getComputedStyle(el).fontWeight])).toEqual(["14px", "600"]);
-    expect(await sous.evaluate((el) => getComputedStyle(el).fontSize)).toBe("14px");
+    expect(await sous.evaluate((el) => getComputedStyle(el).fontSize)).toBe("13px");
     if (!estTelephone(info)) {
       // L'action principale est à droite du titre, sur sa ligne.
       const action = entete.getByRole("button", { name: "Enregistrer" });
@@ -154,9 +155,9 @@ test.describe("MenuActions (R9)", () => {
     const menu = page.getByRole("menu");
     await expect(menu).toBeVisible();
     await capture(page, "f1-menu");
-    // Au clavier : Début et Fin vont à la première et à la dernière action.
+    // Au clavier : Début et Fin vont à la première et à la dernière action (« Voir comme un membre » ouvre le menu : commit c7d7f3e, fiche de gestion).
     await page.keyboard.press("Home");
-    await expect(menu.getByRole("menuitem", { name: "Dupliquer" })).toBeFocused();
+    await expect(menu.getByRole("menuitem", { name: "Voir comme un membre" })).toBeFocused();
     await page.keyboard.press("End");
     await expect(menu.getByRole("menuitem", { name: "Supprimer" })).toBeFocused();
     await page.keyboard.press("Enter");
@@ -230,14 +231,15 @@ test.describe("DeuxVolets en liste-carte (R10)", () => {
       const marge = await margeAttendue(page);
       const bL = (await liste.boundingBox())!;
       const bD = (await detail.boundingBox())!;
-      // La liste : une carte en relief (rayon 16 px, ombre), à la marge de la zone, sans filet.
+      // La liste : un groupe blanc (rayon 16 px, aplat sans ombre : recette de surface C, T2), à la marge de la zone, sans filet.
       expect(Math.round(bL.x - zone.gauche)).toBe(marge);
       const style = await liste.evaluate((el) => {
         const s = getComputedStyle(el);
-        return { rayon: s.borderTopLeftRadius, ombre: s.boxShadow, filet: s.borderRightWidth };
+        return { rayon: s.borderTopLeftRadius, ombre: s.boxShadow, fond: s.backgroundColor, filet: s.borderRightWidth };
       });
       expect(style.rayon).toBe("16px");
-      expect(style.ombre).not.toBe("none");
+      expect(style.ombre).toBe("none");
+      expect(style.fond).toBe("rgb(255, 255, 255)");
       expect(style.filet).toBe("0px");
       // La fiche prend le reste, jusqu'à la marge de droite : aucune bande vide.
       expect(bD.x).toBeGreaterThan(bL.x + bL.width);

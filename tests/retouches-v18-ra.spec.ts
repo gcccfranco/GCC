@@ -79,7 +79,7 @@ async function capture(page: Page, nom: string) {
 }
 
 test.describe("R1 : « Partager » sur la fiche d'un évènement", () => {
-  test("membre : « Partager » à droite du titre en grand, dans la barre de la fiche sinon", async ({ page }, info) => {
+  test("membre : « Partager » à droite, sur la rangée des étiquettes au-dessus du titre en grand, dans la barre de la fiche sinon", async ({ page }, info) => {
     await simulerPartage(page, false);
     await ouvrir(page, MEMBRE, "/evenements/foot");
     const bouton = partager(page);
@@ -90,8 +90,9 @@ test.describe("R1 : « Partager » sur la fiche d'un évènement", () => {
     if (estGrandEcran(info)) {
       const titre = volet(page).getByRole("heading", { level: 2, name: "Foot au parc" });
       const t = (await titre.boundingBox())!;
-      expect(b.x, "à droite du titre").toBeGreaterThan(t.x + t.width - 1);
-      expect(b.y, "sur la rangée du titre").toBeLessThan(t.y + t.height);
+      // eglise-8 : « Partager » est monté sur la rangée des étiquettes, au-dessus du titre, aligné à droite de sa colonne.
+      expect(b.y + b.height, "au-dessus du titre, sur la rangée des étiquettes").toBeLessThanOrEqual(t.y + 1);
+      expect(b.x + b.width, "aligné à droite de la colonne du titre").toBeGreaterThan(t.x + t.width - 120);
       await expect(bouton.getByText("Partager"), "libellé visible en grand").toBeVisible();
     } else {
       await expect(page.getByTestId("barre-fiche").getByRole("button", { name: "Partager" })).toHaveCount(1);

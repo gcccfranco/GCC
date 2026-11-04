@@ -126,7 +126,8 @@ for (const langue of ["fr", "zh-CN"] as const) {
     // en grand, sans `?apercu=`, la liste est seule dans sa colonne de 960 px. La première setlist de l'ordre
     // de passage choisie : les deux volets et son aperçu.
     await signInAs(page, MEMBRE, DOCS_CFD, "/setlists?cat=No%C3%ABl&apercu=noel-2026-p1aaaaaa");
-    await expect(page.getByRole("link", { name: /Gp Joie/ }).first()).toBeVisible();
+    // En 中文 le groupe se lit 喜乐团契 dans le titre (bo-evenements-9, src/lib/fetes/qui.ts) ; la valeur stockée reste « Gp Joie ».
+    await expect(page.getByRole("link", { name: langue === "fr" ? /Gp Joie/ : /喜乐团契/ }).first()).toBeVisible();
     await expect(page.getByText(langue === "fr" ? /Sans chant : 3 · Le grand spectacle/ : /没有诗歌：3 · Le grand spectacle/)).toBeVisible();
     if (estGrandEcran(info)) {
       // Deux volets : l'aperçu porte les cartes « Musiques et danses » et « L'ordre de passage ».

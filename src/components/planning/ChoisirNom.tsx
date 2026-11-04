@@ -80,6 +80,8 @@ export function ChoisirNom({
     const place = a && {
       left: Math.max(8, Math.min(a.left, window.innerWidth - LARGEUR_MENU - 8)),
       ...(enHaut ? { bottom: window.innerHeight - a.top + 4 } : { top: a.bottom + 4 }),
+      // Ni dessus ni dessous n'ont 440 px (case au milieu d'un écran bas) : le menu tient dans la place qui reste et défile.
+      maxHeight: (enHaut ? a.top : window.innerHeight - a.bottom) - 12,
     }
     return (
       <DialogPrimitive.Root open={!!ouverture} onOpenChange={changer}>
@@ -89,7 +91,7 @@ export function ChoisirNom({
           <DialogPrimitive.Content
             aria-describedby={undefined}
             style={{ ...place, width: LARGEUR_MENU }}
-            className="fixed z-50 rounded-2xl bg-popover p-1.5 text-popover-foreground shadow-[var(--shadow-flottant)]"
+            className="fixed z-50 overflow-y-auto overscroll-contain rounded-2xl bg-popover p-1.5 text-popover-foreground shadow-[var(--shadow-flottant)]"
           >
             <DialogPrimitive.Title className="sr-only">{ouverture?.titre}</DialogPrimitive.Title>
             {menu}

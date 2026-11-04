@@ -827,10 +827,10 @@ test("Campus 2027 : « Ajouter une séance » (date et moment) ; les cartes ne m
 
   // Le volet « Louange » de la page, à côté de « Grille » (la barre de navigation a aussi une section « Louange »).
   await page.getByRole("tab", { name: "Grille", exact: true }).locator("..").getByRole("tab", { name: "Louange", exact: true }).click();
-  await expect(page.getByText("26/7", { exact: true })).toBeVisible();
-  await expect(page.getByText("27/7", { exact: true }), "les séances de 2026 restent dans 2026").toHaveCount(0);
+  await expect(page.getByText("Lun. 26/7", { exact: true })).toBeVisible();
+  await expect(page.getByText("Lun. 27/7", { exact: true }), "les séances de 2026 restent dans 2026").toHaveCount(0);
   await page.getByRole("tab", { name: "2026", exact: true }).click();
-  await expect(page.getByText("27/7", { exact: true })).toBeVisible();
+  await expect(page.getByText("Lun. 27/7", { exact: true })).toBeVisible();
 });
 
 // ─── Relecture · le brouillon de 2027 hors de « Mes services » (Q4) ─────────

@@ -154,6 +154,12 @@ export function SelecteurEspace({ pleineLargeur = false, compact = false, onChoi
     );
   }
 
+  // Au toucher, une icône de 36 px n'a que 36 px de large (TOUCHER_SEGMENT suit le segment) : la zone s'étend de 8 px vers
+  // l'extérieur du groupe pour le premier et le dernier segment (rien à recouvrir), de 4 px de chaque côté au milieu (44 px).
+  const ZONE_ICONE =
+    "max-sm:[@media(pointer:coarse)]:after:-inset-x-1 max-sm:[@media(pointer:coarse)]:first:after:left-[-8px] max-sm:[@media(pointer:coarse)]:first:after:right-0 " +
+    "max-sm:[@media(pointer:coarse)]:last:after:right-[-8px] max-sm:[@media(pointer:coarse)]:last:after:left-0";
+
   const lien = (e: Espace, libelle: string) => {
     const courant = e === espace;
     const Icone = icones[e];
@@ -162,7 +168,7 @@ export function SelecteurEspace({ pleineLargeur = false, compact = false, onChoi
     // (back-office-1) ; sous 375 px le courant lui aussi n'est plus qu'une icône de 36 px (la pastille le marque) ; au-delà rien ne change. Le nom reste en `aria-label` et `title`.
     const forme = pleineLargeur
       ? "h-[30px] min-w-0 flex-auto px-2 text-[12px] tracking-[-0.01em]"
-      : `py-1.5 text-[13px] ${courant ? "px-3.5 max-sm:h-9 max-sm:px-2.5 max-[374px]:w-9 max-[374px]:px-0" : "px-3.5 max-sm:h-9 max-sm:w-9 max-sm:px-0"}`;
+      : `py-1.5 text-[13px] ${ZONE_ICONE} ${courant ? "px-3.5 max-sm:h-9 max-sm:px-2.5 max-[374px]:w-9 max-[374px]:px-0" : "px-3.5 max-sm:h-9 max-sm:w-9 max-sm:px-0"}`;
     return (
       <Link
         href={cibles[e]}

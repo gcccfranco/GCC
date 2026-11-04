@@ -240,8 +240,14 @@ test.describe("En-tête du back-office (BO-E2) : cibles de toucher de 44 × 44 p
         const r = el.getBoundingClientRect();
         const z = getComputedStyle(el, "::after");
         const w = parseFloat(z.width), h = parseFloat(z.height);
-        return { position: z.position, w: Math.max(w || 0, r.width), h: Math.max(h || 0, r.height), dessinW: r.width, dessinH: r.height };
+        return { position: z.position, w: Math.max(w || 0, r.width), h: Math.max(h || 0, r.height), dessinW: r.width, dessinH: r.height, toucher: matchMedia("(pointer: coarse)").matches };
       });
+      // Les segments du sélecteur suivent la règle commune des 44 px (spec-corrections-design § 3, T1a) : zone au
+      // toucher seulement ; au pointeur fin, aucune zone posée.
+      if (!zone.toucher && cibles.indexOf(cible) < 2) {
+        expect(zone.position, "segment au pointeur fin : pas de zone de toucher").toBe("static");
+        continue;
+      }
       const nom = await cible.evaluate((el) => el.outerHTML.slice(0, 60));
       expect(zone.w, nom).toBeGreaterThanOrEqual(44);
       expect(zone.h, nom).toBeGreaterThanOrEqual(44);
