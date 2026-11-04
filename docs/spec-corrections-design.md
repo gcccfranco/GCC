@@ -197,3 +197,18 @@ T1c, T1e et T1g tournent dans trois sessions parallèles. `musiciens.md` passe d
   le test zh d'equipes-app-5 vérifie `text-wrap: balance`, pas la coupe réelle (alternative admise par l'entrée).
 - **Échec connu, antérieur au lot** : `tests/agencement-v18-moi.spec.ts:215` (« en 中文 : … l'aide sont traduits »), cinq
   projets : il cherche « 乐理课程 », renommé « 乐理 » au lot EM (`e50abce`).
+
+### T1e · Quotidien et Église — fait (session parallèle)
+- Commits : `0cae6ba` Quotidien (-1, -3, -4, -5, -7, -8, -10, -11, -12) · `89f532d` Église (-1, -4, -6, -7, -8, -9, -11,
+  -12 réduite au `py-6`, -13, -15, -16, -17, -18). Critique prise : bouton « Agrandir » à cheval sur le coin du
+  passe-partout ; un seul voile qui se fond ; zones de sécurité au téléphone.
+- **Tranché au code** : la croix de `PushPrompt` garde son propre `::after` (`TOUCHER_44` la passerait en `relative`) ;
+  « Inscriptions » prend la classe de « Tâches », `text-base` (15 px dans l'échelle du dépôt, pas 16) ; les PNG du guide
+  (2 560 px) s'affichent à 1 280 px CSS dans la feuille ; la colonne collante de Moi tient dans 1 280 × 720.
+  quotidien-5 retire `mx-auto` de `DeuxVolets` : touche toutes les pages en colonne seule (Tâches, Personnes,
+  questionnaire, réception). `i18n-hydration` masque le badge de développement de Next sur `/login`.
+- **Restent** : `/signup` sans retour « ‹ Chants » (réservé à la planche d'inscription) ; carte de gestion d'un évènement
+  sans image sans vignette ; 32 px au lieu de 24 entre la pilule et « Comment ça marche ? » ; fermeture de la feuille du
+  guide sans animation.
+- zh-CN à faire relire : `emptyUpcoming`, `guide.tocReplie`, `agrandirCapture`, `captureDefilement`, `captureFermerAide`,
+  `login.signupQuestion`, `signupAction`, puce d'eglise-15. Course vue : `evenements.spec.ts:316`.
