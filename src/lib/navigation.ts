@@ -52,7 +52,7 @@ const ENTREES_VISITEUR: EntreeBarre[] = [
 // Planning, Équipes, Messages.
 const ENTREES_BACK_OFFICE: Record<Entree, EntreeBarre> = {
   afaire: { href: "/back-office", cle: "backOffice.entrees.afaire", Icone: ListChecks, actifSur: ["/back-office"], exact: true },
-  calendrier: { href: "/back-office/calendrier", cle: "backOffice.entrees.calendrier", Icone: CalendarRange, actifSur: ["/back-office/calendrier"] },
+  calendrier: { href: "/back-office/calendrier", cle: "backOffice.entrees.calendrier", Icone: CalendarRange, actifSur: ["/back-office/calendrier", "/back-office/evenements", "/back-office/reunions"], saufSur: ["/back-office/evenements/scene"] },
   scene: { href: "/back-office/evenements/scene", cle: "backOffice.entrees.scene", Icone: Drama, actifSur: ["/back-office/evenements/scene"] },
   planning: { href: "/back-office/planning", cle: "backOffice.entrees.planning", Icone: CalendarDays, actifSur: ["/back-office/planning"] },
   equipes: { href: "/back-office/equipes", cle: "backOffice.entrees.equipes", Icone: Network, actifSur: ["/back-office/equipes"] },

@@ -282,13 +282,16 @@ export function FeteClient({ fete }: { fete: Fete }) {
         {carteEtat}
         {enPlus}
         {anneesPassees}
-        {deuxVolets && entreeOrdre && <div className="border-t border-border pt-3">{entreeOrdre}</div>}
       </div>
     )
 
+    // Pied de la carte de la liste : l'ordre de passage reste entier au bas, la colonne défile au-dessus. Au-dessus du
+    // voile `.fondu-vertical::after` (z-index 1) de DeuxVolets, qui sinon estomperait le bas du bouton.
+    const pied = entreeOrdre && <div className="sticky bottom-0 z-[2] border-t border-border bg-card px-5 py-0.5">{entreeOrdre}</div>
+
     if (deuxVolets) {
       return (
-        <DeuxVolets racine={pathname} liste={colonne} premier={aDroite} largeurListe={400}>
+        <DeuxVolets racine={pathname} liste={<>{colonne}{pied}</>} premier={aDroite} largeurListe={400}>
           {null}
         </DeuxVolets>
       )

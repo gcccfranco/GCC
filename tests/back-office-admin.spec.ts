@@ -615,6 +615,34 @@ test.describe("B3 : Évènements", () => {
     expect(db.doc("evenements/fete")).toMatchObject({ titre: "Fête de la rentrée" });
   });
 
+  test("navigation : Calendrier est la seule entrée allumée sur Nouveau, Modifier et la fiche ; sur la scène, seule Scène (evenements-app-1)", async ({ page }, info) => {
+    test.setTimeout(90_000); // cinq chargements de page dans un seul test
+    const allumees = () => page.locator("nav a[aria-current='page']").filter({ visible: true }).evaluateAll((l) => l.map((a) => a.textContent?.trim()));
+    for (const adresse of ["/back-office/evenements/nouveau", "/back-office/evenements/fete/modifier", "/back-office/evenements/fete", "/back-office/reunions/reu-da"]) {
+      await ouvrirB3(page, COORD, adresse);
+      await expect.poll(allumees, adresse).toEqual(["Calendrier"]);
+    }
+    await page.goto("/back-office/evenements/scene");
+    if (info.project.name === "telephone" || info.project.name === "tablette") {
+      // Barre du bas sans entrée Scène : Calendrier ne doit pas s'allumer à sa place (la tablette debout allume aussi l'onglet « Noël »).
+      await expect(page.getByRole("heading", { level: 1, name: "Scène des fêtes" })).toBeVisible();
+      await expect.poll(allumees).not.toContain("Calendrier");
+    } else await expect.poll(allumees).toEqual(["Scène"]);
+  });
+
+  test("Modifier : « Modifier » une seule fois en une colonne, le titre du formulaire reste en lecteur d'écran ; création sans « Nouvel évènement » (evenements-app-8, -10)", async ({ page }, info) => {
+    await ouvrirB3(page, COORD, "/back-office/evenements/fete/modifier");
+    const unVolet = info.project.name === "telephone" || info.project.name === "tablette";
+    // Le <h2> en `sr-only` compte pour « visible » chez Playwright (boîte de 1 px) : on ne compte que le texte à l'écran.
+    const visibles = page.getByText("Modifier", { exact: true }).filter({ visible: true });
+    if (unVolet) await expect.poll(() => visibles.evaluateAll((l) => l.filter((e) => !e.closest(".sr-only")).length)).toBe(1);
+    else await expect(page.getByRole("heading", { name: "Modifier", level: 2 })).toBeVisible();
+    await expect(page.getByRole("form", { name: "Modifier" })).toBeAttached();
+    await page.goto("/back-office/evenements/nouveau");
+    await expect(page.getByLabel("Nom de l'évènement")).toBeVisible();
+    await expect(page.getByRole("link", { name: "Nouvel évènement" })).toHaveCount(0);
+  });
+
   test("anciennes adresses : nouveau (avec ?from=) et modifier mènent au Back-Office", async ({ page }) => {
     await ouvrirB3(page, COORD, "/evenements/nouveau?from=fete");
     await expect(page).toHaveURL(/\/back-office\/evenements\/nouveau\/?\?from=fete$/);

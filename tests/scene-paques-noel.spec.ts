@@ -703,17 +703,26 @@ test("P5 — la liste des semaines : jours, places libres, une case par créneau
   await ouvrirFete(page, "/evenements/scene/noel", DOCS_P5);
   const semaines = listeSemaines(page).getByRole("button");
   await expect(semaines).toHaveCount(11);
-  await expect(semaines.first()).toHaveText(/^10 – 11 oct\.\s*sam\. et dim\. · 3 places libres/);
-  await expect(semaines.nth(1)).toHaveText(/^17 – 18 oct\.\s*sam\. et dim\. · 6 places libres/);
+  // Deux volets : les jours et les places en toutes lettres ; une colonne : le détail court sous la date (evenements-app-7).
+  const grand = estGrandEcran(test.info());
+  await expect(semaines.first()).toHaveText(grand ? /^10 – 11 oct\.\s*sam\. et dim\. · 3 places libres/ : /^10 – 11 oct\.\s*3 libres/);
+  await expect(semaines.nth(1)).toHaveText(grand ? /^17 – 18 oct\.\s*sam\. et dim\. · 6 places libres/ : /^17 – 18 oct\.\s*6 libres/);
+  if (!grand) await expect(semaines.first().getByText(/libres?|complet/)).toBeVisible();
   await expect(semaines.nth(3)).toHaveText(/^31 oct\. – 1er nov\./);
   await expect(semaines.first().locator("[data-case]")).toHaveCount(7);
   await expect(semaines.first().locator('[data-case="pris"]')).toHaveCount(4);
   await expect(semaines.last()).toHaveText(/^19 – 20 déc\./);
-  const passees = page.getByRole("button", { name: "Semaines passées (1)" });
+  // Le libellé change à l'ouverture (« Masquer… ») : on tient le bouton par son état, pas par son nom.
+  const passees = page.locator("button[aria-expanded]").filter({ hasText: /Semaines passées|Masquer les semaines passées/ });
+  await expect(passees).toHaveText(/Semaines passées \(1\)/);
   await expect(passees).toHaveAttribute("aria-expanded", "false");
   await expect(listeSemaines(page).getByRole("button", { name: /^3 – 4 oct\./ })).toHaveCount(0);
   await passees.click();
   await expect(passees).toHaveAttribute("aria-expanded", "true");
+  // Un vrai bouton qui déplie (evenements-app-9) : plus de soulignement, 44 px de haut, un libellé « Masquer… » une fois ouvert.
+  await expect(page.getByRole("button", { name: "Masquer les semaines passées" })).toBeVisible();
+  expect(await passees.evaluate((el) => getComputedStyle(el).textDecorationLine)).toBe("none");
+  expect((await passees.boundingBox())!.height).toBeGreaterThanOrEqual(44);
   await expect(semaines).toHaveCount(12);
   await expect(semaines.first()).toHaveText(/^3 – 4 oct\./);
 });
@@ -724,7 +733,7 @@ test("P5 — une semaine pleine dit « complet »", async ({ page }) => {
     "programmes/x7Kq2": court,
     "programmes/x7Kq2/creneaux/a": { ...resaDe("a", "2026-10-11", "14:00", "15:00"), auteurUid: "uid-lea", auteurNom: "Léa M." },
   });
-  await expect(semaineChoisie(page)).toHaveText(/^11 oct\.\s*dim\. · complet/);
+  await expect(semaineChoisie(page)).toHaveText(estGrandEcran(test.info()) ? /^11 oct\.\s*dim\. · complet/ : /^11 oct\.\s*complet/);
   await expect(jour(page, "Dimanche 11 octobre")).toContainText("complet");
 });
 
@@ -789,8 +798,10 @@ test("P5 — en chinois : 我的预约, les semaines et leurs places", async ({ 
   await ouvrirFete(page, "/evenements/scene/noel", DOCS_P5);
   await expect(mesReservations(page)).toHaveCount(0);
   await expect(page.getByRole("region", { name: "我的预约" })).toBeVisible();
-  await expect(page.getByRole("list", { name: "周次" }).locator('[aria-current="true"]')).toHaveText(/^10月10日 – 11日\s*周六和周日 · 剩余 3 个名额/);
+  await expect(page.getByRole("list", { name: "周次" }).locator('[aria-current="true"]')).toHaveText(estGrandEcran(test.info()) ? /^10月10日 – 11日\s*周六和周日 · 剩余 3 个名额/ : /^10月10日 – 11日\s*余 3/);
   await expect(page.getByRole("button", { name: "过去的周（1）" })).toBeVisible();
+  await page.getByRole("button", { name: "过去的周（1）" }).click();
+  await expect(page.getByRole("button", { name: "收起过去的周" })).toHaveAttribute("aria-expanded", "true");
   if (estGrandEcran(test.info())) await expect(page.getByRole("heading", { level: 2, name: "10月10日至11日这一周" })).toBeVisible();
 });
 
@@ -1763,4 +1774,27 @@ test("relecture — captures à regarder (menu « ⋯ » avec ses aides, lecture
   await page.reload();
   await expect(page.getByRole("alert").filter({ hasText: "Impossible de charger la scène" })).toBeVisible();
   await page.screenshot({ path: `${dir}/relecture-echec-${nom}.png` });
+});
+
+test("evenements-app-2 — deux volets, 1 280 × 720 : « Ordre de passage du jour J » est le pied de la carte, entier et dans la fenêtre", async ({ page }) => {
+  test.skip(!estGrandEcran(test.info()), "pied de carte : deux volets seulement");
+  await page.setViewportSize({ width: 1280, height: 720 });
+  await ouvrirFete(page, "/evenements/scene/noel", DOCS_P5);
+  const carte = page.locator('[data-volet="liste"]');
+  const ordre = carte.getByRole("button", { name: /Ordre de passage du jour J/ });
+  await expect(ordre).toBeVisible();
+  await page.getByRole("button", { name: /Semaines passées/ }).click();
+  const c = (await carte.boundingBox())!;
+  const o = (await ordre.boundingBox())!;
+  expect(o.y + o.height, "le pied ne dépasse pas le bas de la carte").toBeLessThanOrEqual(c.y + c.height + 1);
+  expect(o.y + o.height, "ni le bas de la fenêtre").toBeLessThanOrEqual(720);
+});
+
+test("evenements-app-7 — thème sombre : les carrés pris des semaines prennent la variante sombre de la scène", async ({ page }) => {
+  await page.emulateMedia({ colorScheme: "dark" });
+  await page.addInitScript(() => { try { localStorage.setItem("theme", "dark"); } catch {} });
+  await ouvrirFete(page, "/evenements/scene/noel", DOCS_P5);
+  const pris = listeSemaines(page).locator('button:not([aria-current])').locator('[data-case="pris"]').first(); // la carte active garde l'encre inversée
+  await expect(pris).toBeAttached();
+  expect(await pris.evaluate((el) => getComputedStyle(el).borderTopColor)).toBe("rgb(159, 168, 209)");
 });

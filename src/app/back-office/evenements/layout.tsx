@@ -34,6 +34,7 @@ export default function EvenementsLayout({ children }: { children: React.ReactNo
   // Les anciennes listes (`page.tsx` redirige vers le Calendrier) : le layout ne les habille pas, sans quoi
   // les volets n'afficheraient pas la page et sa redirection ne se déclencherait jamais.
   const ancienneListe = chemin === BASE || chemin === `${BASE}/reunions`;
+  const surNouveau = chemin === `${BASE}/nouveau`;
   const scene = chemin === SCENE || chemin.startsWith(`${SCENE}/`);
   // La sous-partie « scene » donne les deux onglets des fêtes (P7), sur la scène seulement.
   const onglets = scene && sousPartiesEvenements(user, profile).includes("scene")
@@ -45,7 +46,7 @@ export default function EvenementsLayout({ children }: { children: React.ReactNo
       retour={{ href: "/back-office/calendrier", label: t("backOffice.entrees.calendrier") }}
       titre={scene ? t("backOffice.calendrier.sceneDesFetes") : t("backOffice.entrees.evenements")}
       sousTitre={t("backOffice.gestion.sousTitreEvenements")}
-      action={!scene && peutCreerDans(user, profile, false) && <BoutonNouveau label={t("evenements.nouveau")} href={`${BASE}/nouveau`} />}
+      action={!scene && !surNouveau && peutCreerDans(user, profile, false) && <BoutonNouveau label={t("evenements.nouveau")} href={`${BASE}/nouveau`} />}
       onglets={onglets.length > 0 && <OngletsRail etiquette={t("backOffice.sousParties")} onglets={onglets} />}
     />
   );

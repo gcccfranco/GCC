@@ -270,7 +270,7 @@ export function EvenementForm({ initial, pours, creation, inscrits = 0, titreCac
       {!reunion && banniere("space-y-2 p-4")}
 
       {!info && !reunion && (
-        <div className="space-y-3 px-4 py-3.5">
+        <div className="space-y-4 px-4 py-3.5">
           {/* Lot 11 : le lien externe est en tête, c'est lui qui décide si le reste s'applique. */}
           <Champ id="ev-lien-externe" label={t("evenements.form.lienExterne")}>
             <Input id="ev-lien-externe" className="h-11" type="url" value={v.lienExterne} placeholder="https://…" onChange={(e) => set({ lienExterne: e.target.value })} />
@@ -278,11 +278,10 @@ export function EvenementForm({ initial, pours, creation, inscrits = 0, titreCac
           </Champ>
           {!externe && (
             <>
-              <div className="space-y-2">
-                <p className="text-sm">{t("evenements.form.inscriptions")}</p>
+              <Champ label={t("evenements.form.inscriptions")}>
                 <ChoixInscriptions label={t("evenements.form.inscriptions")} mode={mode} onChange={(m) => set({ inscriptions: m })} />
                 {mode !== "auto" && <p className="text-xs text-muted-foreground">{t(`evenements.form.modeAide.${mode}`)}</p>}
-              </div>
+              </Champ>
               {mode === "auto" && (
                 <>
                   <Periode id="ev-ins-debut" label={t("evenements.form.insDebut")} heureLabel={t("evenements.form.insDebutHeure")}

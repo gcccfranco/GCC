@@ -20,7 +20,7 @@ import { langueCourte } from "@/lib/utils/formatDate";
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { useTranslation } from "react-i18next"
-import { ArrowLeftRight, ChevronLeft, ChevronRight, Pencil, Trash2 } from "lucide-react"
+import { ArrowLeftRight, ChevronDown, ChevronLeft, ChevronRight, Pencil, Trash2 } from "lucide-react"
 import type { User } from "firebase/auth"
 import { canEditCreneau, canReserverPour, isCoordination } from "@/lib/access"
 import { createCreneau, deleteCreneau, listCreneaux, updateCreneau } from "@/lib/firebase/programmes"
@@ -29,6 +29,7 @@ import {
   commence, creneauxLibres, heureLocale, lignesDuJour, quiPermis, saisonDe, semainesDe, type Place, type Semaine,
 } from "@/lib/scene/saison"
 import { PLANNING_COLORS } from "@/lib/serviceColors"
+import { styleTexteService } from "@/lib/couleurSombre"
 import { useDeuxVolets } from "@/hooks/useDeuxVolets"
 import type { Creneau, Programme } from "@/types/programme"
 import type { UserProfile } from "@/types/user"
@@ -230,7 +231,7 @@ export function Entrainements({ programme, creneaux, user, profile, onChanged, o
     choisir(lundiDe(c.dimanche))
   }
 
-  const places = (libres: number, cases: number) => (cases === 0 ? null : libres ? t("planning.semaines.placesLibres", { count: libres }) : t("planning.semaines.complet"))
+  const places = (libres: number, cases: number, court = false) => (cases === 0 ? null : libres ? t(court ? "planning.semaines.libresCourt" : "planning.semaines.placesLibres", { count: libres }) : t("planning.semaines.complet"))
   const mesResas = creneaux
     .filter((c) => c.auteurUid === user.uid && (c.dimanche > today || (c.dimanche === today && c.fin > maintenant)))
     .sort((a, b) => (a.dimanche + a.debut).localeCompare(b.dimanche + b.debut))
@@ -274,8 +275,9 @@ export function Entrainements({ programme, creneaux, user, profile, onChanged, o
         <h3 id="scene-entrainements" className={titreSection}>{t("planning.programme.entrainements")}</h3>
         {passees.length > 0 && (
           <button type="button" aria-expanded={voirPassees} onClick={() => setShowPast(!voirPassees)}
-            className="px-1 text-[13px] font-semibold text-foreground underline underline-offset-4 decoration-foreground/30 hover:decoration-foreground">
-            {t("planning.semaines.passees", { n: passees.length })}
+            className="inline-flex min-h-11 items-center gap-1 px-1 text-[13px] font-semibold text-muted-foreground hover:text-foreground">
+            {voirPassees ? t("planning.semaines.masquerPassees") : t("planning.semaines.passees", { n: passees.length })}
+            <ChevronDown className={`h-3.5 w-3.5 transition-transform duration-200 motion-reduce:transition-none ${voirPassees ? "rotate-180" : ""}`} aria-hidden />
           </button>
         )}
       </div>
@@ -288,7 +290,9 @@ export function Entrainements({ programme, creneaux, user, profile, onChanged, o
       >
         {visibles.map((s) => {
           const actif = semaineActive && s === choisie
-          const detail = [joursCourts(s.jours, lang, t("planning.fete.et")), places(s.libres, s.cases.length)].filter(Boolean).join(" · ")
+          const detail = deuxVolets
+            ? [joursCourts(s.jours, lang, t("planning.fete.et")), places(s.libres, s.cases.length)].filter(Boolean).join(" · ")
+            : places(s.libres, s.cases.length, true)
           return (
             <li key={s.lundi} className={deuxVolets ? "py-0.5" : "shrink-0"}>
               <button
@@ -301,7 +305,7 @@ export function Entrainements({ programme, creneaux, user, profile, onChanged, o
               >
                 <span className={deuxVolets ? "min-w-0 flex-1" : "contents"}>
                   <span className="block text-[15px] font-semibold tabular-nums">{semaineCourte(s.jours, lang)}</span>
-                  <span className={deuxVolets ? `block text-[13px] ${actif ? "opacity-75" : "text-muted-foreground"}` : "sr-only"}>{detail}</span>
+                  <span className={`block text-[13px] ${actif ? "opacity-75" : "text-muted-foreground"}`}>{detail}</span>
                 </span>
                 <Cases cases={s.cases} actif={actif} />
                 {deuxVolets && <ChevronRight className="h-4 w-4 shrink-0 opacity-60" aria-hidden />}
@@ -447,12 +451,12 @@ export function Entrainements({ programme, creneaux, user, profile, onChanged, o
 /** Une case par créneau de la semaine : pleine = pris (Q12). */
 function Cases({ cases, actif }: { cases: boolean[]; actif: boolean }) {
   if (cases.length === 0) return null
-  const c = actif ? "currentColor" : COLOR
+  // Hors carte active, la teinte du service en variante sombre (`texte-service`) ; sur la carte active, l'encre de la carte.
   return (
-    <span aria-hidden className="flex shrink-0 flex-wrap gap-[3px]">
+    <span aria-hidden className={`flex shrink-0 flex-wrap gap-[3px] ${actif ? "" : "texte-service"}`} style={actif ? undefined : styleTexteService(COLOR)}>
       {cases.map((pris, i) => (
         <span key={i} data-case={pris ? "pris" : "libre"} className="h-[8px] w-[8px] rounded-[2.5px] border-[1.5px]"
-          style={{ borderColor: pris ? c : `color-mix(in srgb, ${c} 45%, transparent)`, background: pris ? c : undefined }} />
+          style={{ borderColor: pris ? "currentColor" : "color-mix(in srgb, currentColor 60%, transparent)", background: pris ? "currentColor" : undefined }} />
       ))}
     </span>
   )
