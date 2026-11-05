@@ -144,10 +144,12 @@ function ListeCatalogue({
   return (
     <div className={cn("flex flex-col gap-5", deuxVolets ? "px-5 pt-4 pb-10" : "mx-auto max-w-2xl px-4 pb-10 md:max-w-none md:px-6")} data-harmonie>
       {/* Filtres, en rangées qui défilent (réponse 5 du 05/10), au-dessus du parcours. */}
-      <div className="space-y-2">
+      {/* Deux volets : les filtres sont posés sur le volet gris ; rail et pilules inactives en `--secondary-fond` (clair). */}
+      <div className={cn("space-y-2", deuxVolets && "[&_[data-onglets=pilules]>button[aria-pressed=false]]:bg-secondary-fond dark:[&_[data-onglets=pilules]>button[aria-pressed=false]]:bg-secondary")}>
         <div className="flex flex-wrap items-center gap-1.5">
           {acces.piano && acces.guitare && (
             <OngletsRail
+              surGris={deuxVolets}
               etiquette={t("harmonie.instrument.piano")}
               onglets={(["piano", "guitare"] as Instrument[]).map((i) => ({ id: i, label: t(`harmonie.instrument.${i}`) }))}
               actif={instrument}
@@ -157,7 +159,7 @@ function ListeCatalogue({
           <Menu
             label={t("harmonie.moment.titre")}
             nom={t("harmonie.moment.titre")}
-            surGris
+            surGris={deuxVolets}
             value={filtres.moment ?? ""}
             defaultValue=""
             onChange={(v) => setFiltres({ ...filtres, moment: v || null })}
@@ -166,7 +168,7 @@ function ListeCatalogue({
           <Menu
             label={t("harmonie.niveau.titre")}
             nom={t("harmonie.niveau.titre")}
-            surGris
+            surGris={deuxVolets}
             value={filtres.niveau ?? ""}
             defaultValue=""
             onChange={(v) => setFiltres({ ...filtres, niveau: v || null })}

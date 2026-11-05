@@ -388,7 +388,7 @@ function Filtres({ etat, aujourdhui, services, presidences, nomService, choisirP
     { groupe: t("stats.groupes"), options: groupes.map((c) => ({ valeur: c, libelle: nomService(c) })) },
     ...(autres.length > 0 ? [{ groupe: t("stats.autres"), options: autres.map((c) => ({ valeur: c, libelle: c })) }] : []),
   ];
-  const rangeeMenus = useFonduLateral<HTMLDivElement>(presidences?.length ?? 0);
+  const rangeeMenus = useFonduLateral<HTMLDivElement>(`${presidences?.length ?? 0}|${etat.service}|${etat.langue}|${etat.presidence}`);
   return (
     <div className="space-y-3">
       <Pilules etiquette={t("stats.periode.label")} options={PERIODES.map((cle) => ({ cle, nom: t(`stats.periode.${cle}`) }))} valeur={etat.periode} choisir={(p) => p && choisirPeriode(p)} obligatoire />

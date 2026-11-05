@@ -136,6 +136,7 @@ export function FicheHarmonie({ id }: { id: string }) {
             <span className="text-[13px] text-muted-foreground">{t("harmonie.tonalite")}</span>
             <Menu
               label={t("harmonie.tonalite")}
+              className="[&:not([data-pose])]:bg-card"
               value={tonalite}
               defaultValue={TON_DES_FICHES}
               onChange={setTonalite}
@@ -169,6 +170,7 @@ export function FicheHarmonie({ id }: { id: string }) {
                 <span className="text-[13px] text-muted-foreground">{t("harmonie.capoTitre")}</span>
                 <Menu
                   label={t("harmonie.capoTitre")}
+                  className="[&:not([data-pose])]:bg-card"
                   value={String(capo)}
                   defaultValue="0"
                   onChange={(v) => setCapo(Number(v))}

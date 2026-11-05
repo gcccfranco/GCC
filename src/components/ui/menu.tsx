@@ -88,7 +88,7 @@ export function Menu<T extends string = string>({
       <DropdownMenuContent
         align="start"
         sideOffset={6}
-        className="material-panel max-h-[min(320px,var(--radix-dropdown-menu-content-available-height))] min-w-[var(--radix-dropdown-menu-trigger-width)] rounded-[12px] p-1"
+        className="material-panel max-h-[min(320px,var(--radix-dropdown-menu-content-available-height))] min-w-[var(--radix-dropdown-menu-trigger-width)] rounded-[12px] p-1 [box-shadow:var(--shadow-flottant)] [@media(pointer:coarse)]:max-h-[min(294px,var(--radix-dropdown-menu-content-available-height))]"
       >
         <DropdownMenuRadioGroup value={value} onValueChange={(v) => onChange(v as T)}>
           {options.map((e, i) =>
