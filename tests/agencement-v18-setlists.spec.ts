@@ -121,12 +121,15 @@ test.describe("Setlists (A9)", () => {
     await expect(menu).toBeVisible();
     await expect(menu).not.toHaveAttribute("data-pose", "");
     await menu.click();
+    await expect(page.getByRole("menu")).toBeVisible();
     const premiere = page.getByRole("menu").getByRole("menuitemradio").nth(1);
     const nom = (await premiere.innerText()).trim();
     await premiere.click();
     const pose = page.locator("[data-menu][data-pose]");
     await expect(pose).toContainText(nom);
+    await expect(page.getByRole("menu")).toHaveCount(0);
     await pose.click();
+    await expect(page.getByRole("menu")).toBeVisible();
     await page.getByRole("menu").getByRole("menuitemradio", { name: "Tous les services" }).click();
     await expect(page.locator("[data-menu][data-pose]")).toHaveCount(0);
   });
