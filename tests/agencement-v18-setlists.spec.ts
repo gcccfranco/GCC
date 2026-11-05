@@ -68,7 +68,8 @@ async function capture(page: Page, nom: string) {
 async function verifierDeuxVolets(page: Page, taille = "24px") {
   const l = liste(page);
   expect(await l.evaluate((el) => getComputedStyle(el).borderTopLeftRadius)).toBe("16px");
-  expect(await l.evaluate((el) => getComputedStyle(el).boxShadow)).not.toBe("none");
+  // Recette C : la liste est un groupe qui se détache de la page, par son aplat blanc en clair, par son ombre en sombre.
+  expect(await l.evaluate((el) => getComputedStyle(el).boxShadow !== "none" || getComputedStyle(el).backgroundColor !== getComputedStyle(document.body).backgroundColor)).toBe(true);
   const [bEntete, bListe, bDetail] = await Promise.all([enTete(page).boundingBox(), l.boundingBox(), detail(page).boundingBox()]);
   expect(bEntete!.y + bEntete!.height, "l'en-tête au-dessus de la liste").toBeLessThanOrEqual(bListe!.y + 1);
   expect(bEntete!.y + bEntete!.height, "… et au-dessus de la fiche").toBeLessThanOrEqual(bDetail!.y + 1);
@@ -152,9 +153,16 @@ test.describe("Setlists (A9)", () => {
     await ouvrir(page, "/setlists?apercu=sl-1");
     await expect(detail(page).getByRole("heading", { level: 2, name: "Culte du 4 octobre" })).toBeVisible();
     await verifierDeuxVolets(page);
-    // Le rail et la recherche dans la carte, « Comment ça marche ? » en bas de la carte.
-    await expect(liste(page).locator('[data-onglets="rail"]')).toBeVisible();
-    await expect(liste(page).getByRole("searchbox")).toBeVisible();
+    // Recette C : le rail, la recherche et les filtres sont des contrôles posés sur le gris, dans l'en-tête, au-dessus
+    // de la carte (seule la liste est un groupe blanc).
+    await expect(liste(page).locator('[data-onglets="rail"]')).toHaveCount(0);
+    await expect(liste(page).getByRole("searchbox")).toHaveCount(0);
+    const bListe = (await liste(page).boundingBox())!;
+    for (const controle of [ongletsRail(page).filter({ visible: true }), page.getByRole("searchbox")]) {
+      await expect(controle).toBeVisible();
+      const b = (await controle.boundingBox())!;
+      expect(b.y + b.height, "le contrôle au-dessus de la carte").toBeLessThanOrEqual(bListe.y + 1);
+    }
     await capture(page, "v18-setlists");
   });
 

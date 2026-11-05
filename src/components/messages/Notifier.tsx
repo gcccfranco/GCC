@@ -488,7 +488,7 @@ export function Notifier({ backOffice = false, titre }: { backOffice?: boolean; 
           )}
         </div>
         <div className="space-y-4 lg:sticky lg:top-[calc(var(--nav-h)+24px)]">
-          {large && <ApercuNotification titre={title} message={body} />}
+          {large && <div className="carte-groupe rounded-2xl px-[18px] py-4"><ApercuNotification titre={title} message={body} /></div>}
           <DerniersEnvois cle={envois} />
         </div>
       </div>

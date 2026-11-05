@@ -186,7 +186,7 @@ export function Navbar() {
                       : "opacity-0 invisible -translate-y-1"
                   }`}
                 >
-                  <div className="bg-popover rounded-xl shadow-[var(--shadow-flottant)] py-1 min-w-[160px]">
+                  <div className="bg-popover rounded-xl [box-shadow:var(--shadow-flottant)] py-1 min-w-[160px]">
                     <Link
                       href="/songs"
                       onClick={() => setDropdownOpen(false)}

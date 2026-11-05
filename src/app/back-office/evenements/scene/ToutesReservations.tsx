@@ -157,7 +157,7 @@ export function ToutesReservations({ programme, creneaux, titre, voirCommeMembre
                     <li
                       key={c.id}
                       data-hors-grille={estHors ? "true" : undefined}
-                      className={`flex items-center gap-2 border-t border-border py-2.5 pr-1.5 pl-4 ${estHors ? "bg-secondary/70" : ""}`}
+                      className={`flex items-center gap-2 border-t border-border py-2.5 pr-4 pl-4 ${estHors ? "bg-secondary/70" : ""}`}
                     >
                       <div className="min-w-0 flex-1 space-y-0.5">
                         <p className="flex flex-wrap items-center gap-2 text-[15px] font-semibold tabular-nums text-foreground">

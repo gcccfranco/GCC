@@ -169,7 +169,7 @@ export function CustomizePanel({
     <Dialog open onOpenChange={(o) => { if (!o) onClose(); }}>
       <DialogContent
         aria-describedby={undefined}
-        className="inset-y-0 right-0 w-full max-w-sm bg-background flex flex-col shadow-[var(--shadow-flottant)] overflow-hidden"
+        className="inset-y-0 right-0 w-full max-w-sm bg-background flex flex-col [box-shadow:var(--shadow-flottant)] overflow-hidden"
       >
         {/* Header */}
         <div className="flex items-center justify-between pl-4 pr-1 border-b border-border shrink-0">

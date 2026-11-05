@@ -197,7 +197,7 @@ export function EvenementForm({ initial, pours, creation, inscrits = 0, titreCac
   )
 
   return (
-    <form onSubmit={submit} className="space-y-4" aria-labelledby="evenement-form-title">
+    <form onSubmit={submit} className="space-y-4 [&>.sr-only+*]:!mt-0" aria-labelledby="evenement-form-title">
       <Titre id="evenement-form-title" className={titreCache ? "sr-only" : reunion ? "text-[28px] font-bold leading-tight tracking-[-0.02em] text-foreground text-balance" : "text-base font-bold"}>
         {reunion ? t(creation ? "backOffice.nouvelleReunion" : "backOffice.modifierReunion") : creation ? t("evenements.nouveau") : t("evenements.modifier")}
       </Titre>

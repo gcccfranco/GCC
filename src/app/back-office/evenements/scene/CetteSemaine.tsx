@@ -60,7 +60,7 @@ export function CetteSemaine({ programme, creneaux, menu, erreur }: {
                 <li className="border-t border-border px-4 py-3 text-[13.5px] text-muted-foreground">{t("planning.gestion.aucuneReservation")}</li>
               )}
               {duJour.map((c) => (
-                <li key={c.id} className="flex items-center gap-2 border-t border-border py-2.5 pr-1.5 pl-4">
+                <li key={c.id} className="flex items-center gap-2 border-t border-border py-2.5 pr-4 pl-4">
                   <div className="min-w-0 flex-1">
                     <p className="flex flex-wrap items-center gap-2 text-[15px] font-semibold tabular-nums text-foreground">
                       {c.debut} – {c.fin}

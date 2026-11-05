@@ -130,7 +130,7 @@ export function PourMoi({
 
   return (
     <section aria-labelledby="pour-moi" className="min-w-0">
-      <h2 id="pour-moi" className="mb-3 text-[17px] font-bold">{t("planning.accueil.pourMoi")}</h2>
+      <h2 id="pour-moi" className="mb-3 text-lg font-bold">{t("planning.accueil.pourMoi")}</h2>
       <div className={disposition === "tablette" ? "grid grid-cols-2 items-stretch gap-3.5" : "flex flex-col gap-3.5"}>
         <article data-carte className="carte-groupe flex flex-col rounded-2xl p-4">
           <p className="mb-2.5 text-[13px] font-semibold text-muted-foreground">{t("planning.nextService")}</p>

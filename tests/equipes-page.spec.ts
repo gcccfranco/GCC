@@ -293,7 +293,7 @@ test.describe("BO-G : largeur de la page d'une équipe, « sans compte »", () =
     const rail = (await page.locator('[data-onglets="rail"]').boundingBox())!;
     expect(r.y, "…et sous le rail").toBeGreaterThan(rail.y + rail.height - 1);
     const carte = titre.locator("xpath=..");
-    await expect(carte).toHaveClass(/raised/);
+    await expect(carte).toHaveClass(/carte-groupe/);
     expect(await carte.evaluate((el) => getComputedStyle(el).borderRadius), "coins des autres cartes").toBe("16px");
   });
 });

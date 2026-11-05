@@ -64,7 +64,7 @@ export function AFaire({ titre }: { titre: string }) {
             !erreur && <Squelette enTete={false} className="p-0" />
           ) : resultat.total === 0 ? (
             !incomplet && (
-              <EtatVide role="status">{t(filtre === "mesEquipes" ? "backOffice.aFaire.videEquipes" : "backOffice.aFaire.vide")}</EtatVide>
+              <EtatVide role="status" surGris>{t(filtre === "mesEquipes" ? "backOffice.aFaire.videEquipes" : "backOffice.aFaire.vide")}</EtatVide>
             )
           ) : (
             <div className="space-y-6">

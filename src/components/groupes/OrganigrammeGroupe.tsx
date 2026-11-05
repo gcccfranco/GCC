@@ -197,7 +197,7 @@ export function OrganigrammeGroupe({
   const moi = app ? user?.uid : undefined;
   const moiPostes = app && user && profile && groupeDe(profile) === groupe.id ? postesDeCompte(groupe, user.uid).map((x) => libellePoste(t, zh, x)) : null;
   const bandeauMoi = moiPostes && (
-    <p data-moi-bandeau="" className="mx-[var(--marge-page)] mb-4 rounded-2xl bg-secondary px-4 py-3 text-sm text-foreground">
+    <p data-moi-bandeau="" className="mx-[var(--marge-page)] mb-4 carte-groupe rounded-2xl px-4 py-3 text-sm text-foreground">
       <Trans
         i18nKey={moiPostes.length ? (telephone ? "groupes.app.toiRoles" : "groupes.app.toiDansRoles") : "groupes.app.toiDans"}
         values={{ groupe: nomGroupe, roles: moiPostes.join(", ") }}

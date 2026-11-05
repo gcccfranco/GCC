@@ -59,7 +59,7 @@ export function PourQuelService({ categories }: { categories: string[] }) {
   ];
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen">
       {/* Agencement v18 (R1, R8, tranche Z) : l'en-tête commun et son seul retour. */}
       <EnTetePage retour={{ href: "/setlists", label: t("common.header.setlists") }} titre={t("setlists.form.titleNew")} />
       <div className="px-[var(--marge-page)] pb-28">
@@ -74,7 +74,7 @@ export function PourQuelService({ categories }: { categories: string[] }) {
           {etat === "chargement" ? (
             <p className="py-8 text-sm text-muted-foreground">{t("common.loading")}</p>
           ) : etat === "erreur" ? (
-            <EtatVide role="status" compact className="mt-3">
+            <EtatVide role="status" compact surGris className="mt-3">
               {t("setlists.entree.planningIllisible")}
             </EtatVide>
           ) : etat.length === 0 ? null : (

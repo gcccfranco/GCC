@@ -99,7 +99,7 @@ test("harmonie-2 : le volet de la liste s'estompe sur 32 px en bas, puis en haut
   await volet.evaluate((el) => { el.scrollTop = el.scrollHeight; });
   await expect.poll(fondu).toEqual({ haut: 32, bas: 0 });
   // La carte garde son coin et son ombre : le voile n'est pas un masque.
-  expect(await volet.evaluate((el) => { const c = getComputedStyle(el); return [c.borderTopLeftRadius, c.boxShadow !== "none", c.maskImage]; })).toEqual(["16px", true, "none"]);
+  expect(await volet.evaluate((el) => { const c = getComputedStyle(el); return [c.borderTopLeftRadius, c.boxShadow !== "none" || c.backgroundColor !== getComputedStyle(document.body).backgroundColor, c.maskImage]; })).toEqual(["16px", true, "none"]);
 });
 
 test.describe("le cours : tableaux de la leçon 1", () => {

@@ -387,14 +387,15 @@ test.describe("Statistiques (S3) : les plus joués", () => {
     expect(await setlistsComptees(page)).toBe("2");
   });
 
-  test("période vide : cadre pointillé, titre et bouton « Voir depuis le début » qui bascule la période (chants-14)", async ({ page }) => {
+  test("période vide : groupe blanc, titre et bouton « Voir depuis le début » qui bascule la période (chants-14)", async ({ page }) => {
     await ouvrirStatistiques(page);
     await page.getByRole("button", { name: "Dates libres" }).click();
     await page.getByLabel("Du", { exact: true }).fill("2026-07-01");
     await page.getByLabel("Au", { exact: true }).fill("2026-07-31");
     const vide = page.getByRole("status").filter({ hasText: "Aucune setlist publiée sur cette période" });
     await expect(vide).toBeVisible();
-    expect(await vide.evaluate((el) => getComputedStyle(el).borderTopStyle), "cadre pointillé").toBe("dashed");
+    // Recette de surface C : posé sur le fond gris, l'état vide est un groupe blanc (rayon 16, sans cadre pointillé).
+    expect(await vide.evaluate((el) => el.classList.contains("carte-groupe") && getComputedStyle(el).borderTopWidth === "0px" && getComputedStyle(el).borderTopLeftRadius), "groupe blanc").toBe("16px");
     await expect(page.locator('[data-testid="ligne-chant"]:visible')).toHaveCount(0);
     await expect(page.getByTestId("dix-premiers")).toHaveCount(0);
     const bouton = vide.getByRole("button", { name: "Voir depuis le début" });

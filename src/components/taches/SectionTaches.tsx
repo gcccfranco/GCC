@@ -116,7 +116,7 @@ export function SectionTaches({ children }: { children: React.ReactNode }) {
   // (et de la liste seule) ; en un volet, la fiche est une page qui pose le sien (« ‹ Tâches »).
   const surLaListe = estSurLaListe(chemin, "/taches");
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen">
       <FournirTaches value={valeur}>
         {(disposition === "grand" || surLaListe) && <EnTetePage titre={t("taches.title")} />}
         <DeuxVolets

@@ -89,7 +89,7 @@ export function OngletsRail({
       "flex h-[30px] shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-full px-4 text-[13px] font-semibold transition-[background-color,color] duration-150 [@media(pointer:coarse)]:h-[34px]",
       TOUCHER_RANGEE,
       pleineLargeur && "flex-1",
-      on ? "bg-pose text-foreground shadow-[var(--shadow-raised)]" : (surGris ? "text-foreground/70 dark:text-muted-foreground hover:text-foreground" : "text-muted-foreground hover:text-foreground"),
+      on ? "bg-pose text-foreground shadow-sm dark:shadow-[inset_0_1px_0_rgba(255,255,255,.08)]" : (surGris ? "text-foreground/70 dark:text-muted-foreground hover:text-foreground" : "text-muted-foreground hover:text-foreground"),
     );
   const contenu = (o: OngletRail) => (
     <>
@@ -217,6 +217,8 @@ export function Pilules<T extends string>({
       data-onglets="pilules"
       className={cn(
         "flex flex-wrap gap-1.5",
+        // À la ligne : la zone de toucher des pilules déborde de 3 px de chaque côté ; le rembourrage la garde dans la rangée (pas de défilement latéral).
+        aLaLigne && "[@media(pointer:coarse)]:-mx-[3px] [@media(pointer:coarse)]:px-[3px]",
         // Au toucher : une rangée qui défile ; 6 px de rembourrage vertical (compensés) gardent la zone de 44 px des pilules de 32 px.
         !aLaLigne && "[@media(pointer:coarse)]:fondu-lateral [@media(pointer:coarse)]:-mx-4 [@media(pointer:coarse)]:-my-1.5 [@media(pointer:coarse)]:flex-nowrap [@media(pointer:coarse)]:overflow-x-auto [@media(pointer:coarse)]:px-4 [@media(pointer:coarse)]:py-1.5 [@media(pointer:coarse)]:[scrollbar-width:none] [@media(pointer:coarse)]:[&::-webkit-scrollbar]:hidden",
       )}

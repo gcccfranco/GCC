@@ -317,7 +317,7 @@ export function BandeauEquipes({ cartes }: { cartes: CarteDuBandeau[] }) {
         {!vue.bout && (
           <div
             aria-hidden
-            className="pointer-events-none absolute inset-y-0 right-0 w-5 bg-gradient-to-l from-background to-transparent md:w-16"
+            className="pointer-events-none absolute inset-y-0 right-0 w-5 bg-gradient-to-l from-[hsl(var(--fond-page))] to-transparent md:w-16"
           />
         )}
       </div>

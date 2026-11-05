@@ -521,7 +521,7 @@ test.describe("T5 : Messages", () => {
 
     // bo-messages-planning-8 : « À qui » passe à la ligne ; chaque pilule est dans la carte, sans défilement horizontal.
     const aQui = page.getByRole("group", { name: "Audience" });
-    const carteNotifier = (await aQui.locator("xpath=ancestor::div[contains(@class,'raised')][1]").boundingBox())!;
+    const carteNotifier = (await aQui.locator("xpath=ancestor::div[contains(@class,'carte-groupe')][1]").boundingBox())!;
     for (const b of await aQui.getByRole("button").all()) {
       const r = (await b.boundingBox())!;
       expect(r.x + r.width, "pilule dans la carte").toBeLessThanOrEqual(carteNotifier.x + carteNotifier.width);

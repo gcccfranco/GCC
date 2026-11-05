@@ -855,13 +855,13 @@ export function PlanningGrille({
       )}
 
       {/* ── Vide : un seul bloc, au téléphone comme en grand (plannings-1) ── */}
-      {sansLigne && <EtatVide compact>{vide ?? t("planning.grille.aVenir")}</EtatVide>}
+      {sansLigne && <EtatVide compact surGris>{vide ?? t("planning.grille.aVenir")}</EtatVide>}
 
       {/* ── Grille (ordinateur, tablette) ── */}
       {!sansLigne && <div ref={enveloppe} data-en-cours={enCours || undefined} inert={enCours ? true : undefined} className="relative">
       {/* La carte porte l'ombre (`raised`, sans `overflow-hidden`) ; l'enveloppe intérieure défile, avec un fondu à droite.
           Requête de conteneur : « Cette semaine » devient une pastille quand la grille tient (GrilleCelluleDate). */}
-      <div className={`hidden sm:block relative [container-type:inline-size] ${app ? "carte-groupe rounded-2xl" : "rounded-xl border border-border"}`}>
+      <div className={`hidden sm:block relative [container-type:inline-size] carte-groupe rounded-2xl`}>
       <div ref={defilement} data-defile={defile.gauche || undefined} data-testid="grille-defilement" role="region" tabIndex={0} aria-label={t("planning.grille.region")} inert={collage ? true : undefined} className="fondu-lateral overflow-x-auto rounded-[inherit] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring">
         <table className="w-full table-fixed text-sm border-collapse" style={{ minWidth: largeurMin }}>
           <colgroup>

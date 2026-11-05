@@ -3,7 +3,7 @@ import { CreateSetlistClient } from "./CreateSetlistClient";
 
 export default function NewSetlistPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-background" />}>
+    <Suspense fallback={<div className="min-h-screen" />}>
       <CreateSetlistClient />
     </Suspense>
   );

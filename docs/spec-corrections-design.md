@@ -381,3 +381,24 @@ Back-office à 7 px du bord à 360 px en français (sélecteur de T1a, espace Ba
 - **Leçon** : un regard sur des captures juge la mise en page (marges, alignements, vides, coins), pas seulement
   l'absence de coupure. Suite : même défaut cherché sur toutes les pages, et un test mesuré des marges intérieures.
 
+### Reprise R1 · trous de la recette de surface C sur tout le site (05/11/2026)
+- Revue de tout le site (77 pages, cinq dispositions, clair, sombre, 中文) sur les signes du défaut de la page chant :
+  43 constats, 32 confirmés par un relecteur (11 réfutés), dont 18 venus du lot. Captures avant/après comparées.
+- Causes communes réglées : un aplat `--secondary` posé sur le gris est invisible (états vides de Planning, Réception,
+  À faire, aperçu de Notifier, bandeau « Toi ») → groupe blanc (`surGris`, `carte-groupe`) ; groupe blanc sur page
+  blanche (Nouvelle setlist, fiche de tâche) → la page passe au gris ; fondus et feuilles peints en blanc ou en noir fixe
+  (bandeau des Équipes, feuille en sombre) → `--fond-page` / `--raised`. Grille du planning en groupe sans bordure ;
+  groupes d'Harmonie espacés ; tableaux des cours à 12 px du cadre ; « Réserver » et « … » de la Scène à 16 px ;
+  formulaire d'évènement aligné sur la liste ; « Modifier » de la fiche de tâche en `sur-gris`.
+- Ombres : `shadow-[var(--shadow-…)]` était lu par Tailwind comme une couleur (aucune ombre, 14 endroits) →
+  `[box-shadow:var(--shadow-…)]`. Le curseur du rail prend l'ombre courte du segment actif (`shadow-sm`), pas
+  `--shadow-raised` : rognée par le rail qui défile et trop lourde.
+- Tests rougis par T2 / T3a adaptés à la recette C (statistiques:390, agencement-v18-setlists:146 et :239,
+  pages-en-grand-harmonie-corrections:84, equipes-page:284, agencement-v18-t5:486).
+- **Non fait, à trancher** : en mode louange, la barre du haut recouvre l'en-tête du chant quand les barres s'affichent ;
+  la corriger touche la coupe des pages (lignes passées sous la barre du bas) : remis à l'état d'avant, question pour
+  Timothée. Teinte de « Cette semaine » dans la grille (couleur de service, gelée) gardée. Bouton d'agrandissement du
+  guide gardé à cheval sur le coin (le rentrer cachait le texte des captures).
+- Restent pour R2 (antérieurs au lot ou rouges sur la base) : constats n° 1, 3/19, 8, 9/20, 10, 11, 13, 15, 21, 28, 32 ;
+  agencement-v18-planning:776, look-barres:208 et :237, look-planning-feuille:94, look-navigation:113.
+

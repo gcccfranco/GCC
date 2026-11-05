@@ -249,7 +249,7 @@ function ListeCatalogue({
           </button>
         </div>
       ) : (
-        <div className={cn("space-y-5", cartes && "md:columns-2 md:gap-4 md:space-y-0")}>
+        <div className={cn(cartes ? "max-md:space-y-5 md:columns-2 md:gap-4" : "space-y-5")}>
           {familles.map(([nom, liste]) => (
             <div key={nom} data-famille className={cn(cartes && "md:bloc-info md:mb-4 md:break-inside-avoid md:rounded-2xl md:px-4 md:pt-3.5 md:pb-1.5")}>
               <Group title={nom} className={cn(cartes && "md:[&>h2]:text-[17px] md:[&>h2]:text-foreground")}>

@@ -63,7 +63,7 @@ export function ReportDialog({ open, onClose, kind, songSlug, songTitle, titreIn
     <Dialog open={open} onOpenChange={(o) => { if (!o) onClose(); }}>
       <DialogContent
         aria-describedby={undefined}
-        className="left-1/2 top-1/2 w-[calc(100%-2rem)] max-w-sm -translate-x-1/2 -translate-y-1/2 bg-card rounded-xl shadow-[var(--shadow-flottant)] flex flex-col"
+        className="left-1/2 top-1/2 w-[calc(100%-2rem)] max-w-sm -translate-x-1/2 -translate-y-1/2 bg-card rounded-xl [box-shadow:var(--shadow-flottant)] flex flex-col"
       >
         {/* Header */}
         <div className="flex items-center justify-between pl-4 pr-1 py-1 border-b border-border">

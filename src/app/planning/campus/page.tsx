@@ -168,7 +168,7 @@ function CampusPage() {
       )}
 
       {sub !== "grille" && order.length === 0 && (
-        <EtatVide>{t("planning.campus.noSeance")}</EtatVide>
+        <EtatVide surGris>{t("planning.campus.noSeance")}</EtatVide>
       )}
 
       {sub !== "grille" && order.length > 0 && (

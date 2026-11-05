@@ -320,7 +320,7 @@ export function ReceptionVolets() {
     />
   );
   const sections = vide ? (
-    <EtatVide compact className={disposition === "tablette" ? "col-span-2" : undefined}>{t(cleVide)}</EtatVide>
+    <EtatVide compact surGris={disposition === "tablette" || (disposition === "telephone" && rienDuTout)} sansFond={disposition === "grand"} className={disposition === "tablette" ? "col-span-2" : undefined}>{t(cleVide)}</EtatVide>
   ) : (
     <>
       {voirS && section("s")}
@@ -347,7 +347,7 @@ export function ReceptionVolets() {
         largeurListe={380}
         colonneSeule={!choisi}
         liste={
-          <div className="px-2.5 pb-4 pt-3">
+          <div className={rienDuTout ? "p-4" : "px-2.5 pb-4 pt-3"}>
             {/* Volet de droite caché : l'alerte d'erreur reste visible, en tête de la liste. */}
             {!choisi && erreur}
             {!rienDuTout && <div className="px-2.5 pb-1">{pilules}</div>}

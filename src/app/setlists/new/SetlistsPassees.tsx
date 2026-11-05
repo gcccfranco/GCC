@@ -73,7 +73,7 @@ export function SetlistsPassees() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen">
       {/* Agencement v18 (R1, R8, tranche Z) : l'en-tête commun et son seul retour. */}
       <EnTetePage
         retour={{ href: "/setlists/new", label: t("setlists.form.titleNew") }}
@@ -114,7 +114,7 @@ export function SetlistsPassees() {
         {setlists === null ? (
           <p className="py-8 text-center text-sm text-muted-foreground">{t("common.loading")}</p>
         ) : affichees.length === 0 ? (
-          <EtatVide role="status">
+          <EtatVide role="status" surGris>
             {t(recherche.trim() ? "setlists.entree.aucunePasseeRecherche" : "setlists.entree.aucunePassee")}
           </EtatVide>
         ) : (

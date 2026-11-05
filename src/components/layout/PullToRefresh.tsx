@@ -54,7 +54,7 @@ export function PullToRefresh() {
   if (state === "idle") return null;
 
   return (
-    <div className="fixed top-[calc(var(--nav-h)+10px)] left-[calc(50%+var(--barre-laterale)/2)] -translate-x-1/2 z-40 flex items-center gap-2 px-3.5 py-2 rounded-full bg-foreground text-background text-xs font-semibold shadow-[var(--shadow-flottant)] print:hidden">
+    <div className="fixed top-[calc(var(--nav-h)+10px)] left-[calc(50%+var(--barre-laterale)/2)] -translate-x-1/2 z-40 flex items-center gap-2 px-3.5 py-2 rounded-full bg-foreground text-background text-xs font-semibold [box-shadow:var(--shadow-flottant)] print:hidden">
       <RefreshCw className={`h-3.5 w-3.5 ${state === "refreshing" ? "animate-spin" : ""}`} />
       {state === "refreshing" ? t("common.pull.refreshing") : t("common.pull.release")}
     </div>

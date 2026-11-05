@@ -187,7 +187,7 @@ function Fiche({ ligne, toutesLesFois }: { ligne: Ligne; toutesLesFois: Fois[] }
       onClick={() => setModifier(true)}
       className={cn(
         "inline-flex h-10 shrink-0 items-center gap-1.5 rounded-full px-4 text-sm font-semibold transition-transform duration-150 active:scale-[.97]",
-        backOffice ? "h-9 bg-background shadow-[inset_0_0_0_1px_hsl(var(--border))] hover:bg-secondary" : "bg-secondary",
+        backOffice ? "h-9 bg-background shadow-[inset_0_0_0_1px_hsl(var(--border))] hover:bg-secondary" : "sur-gris",
       )}
     >
       <Pencil className="h-4 w-4" aria-hidden />

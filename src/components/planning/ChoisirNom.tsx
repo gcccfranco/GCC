@@ -91,7 +91,7 @@ export function ChoisirNom({
           <DialogPrimitive.Content
             aria-describedby={undefined}
             style={{ ...place, width: LARGEUR_MENU }}
-            className="fixed z-50 overflow-y-auto overscroll-contain rounded-2xl bg-popover p-1.5 text-popover-foreground shadow-[var(--shadow-flottant)]"
+            className="fixed z-50 overflow-y-auto overscroll-contain rounded-2xl bg-popover p-1.5 text-popover-foreground [box-shadow:var(--shadow-flottant)]"
           >
             <DialogPrimitive.Title className="sr-only">{ouverture?.titre}</DialogPrimitive.Title>
             {menu}
