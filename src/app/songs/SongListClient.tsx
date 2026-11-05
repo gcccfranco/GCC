@@ -229,7 +229,19 @@ export function SongListClient({ songs, themes, actif = null, erreur = false, on
   // adresse, ou par le retour du navigateur.
   useEffect(() => {
     if (!actif || !chargee) return;
-    document.getElementById(`song-li-${actif}`)?.scrollIntoView({ block: "nearest" });
+    const ligne = document.getElementById(`song-li-${actif}`);
+    const volet = ligne?.closest<HTMLElement>("[data-volet-liste]");
+    // En deux volets, seule la liste défile : `scrollIntoView` faisait aussi défiler la fenêtre (58 px à 1 440 × 900),
+    // et la page du chant s'ouvrait défilée, sa barre rangée, l'en-tête « Chants » coupé.
+    if (ligne && volet && volet.scrollHeight > volet.clientHeight) {
+      // Page en haut, la carte de la liste dépasse sous l'écran : la ligne vient au-dessus du bas visible.
+      const l = ligne.getBoundingClientRect(), v = volet.getBoundingClientRect();
+      const bas = Math.min(v.bottom, window.innerHeight - 24);
+      if (l.top < v.top) volet.scrollTop += l.top - v.top;
+      else if (l.bottom > bas) volet.scrollTop += l.bottom - bas;
+      return;
+    }
+    ligne?.scrollIntoView({ block: "nearest" });
   }, [actif, chargee]);
 
   const usedThemeSlugs = new Set(songs.flatMap((s) => s.themes));

@@ -144,13 +144,25 @@ function useVersionDeLaSetlist(slug: string, setlistId: string | null, position:
         return;
       }
       const update = () => el.style.setProperty("--barre-left", `${el.getBoundingClientRect().left}px`);
+      // Barre collée (le haut du panneau du chant est passé au-dessus d'elle) : `data-collee` lui fait dessiner le haut
+      // d'un panneau, aligné sur la carte de la liste, et repeindre au gris la bande au-dessus (globals.css).
+      const panneau = el.closest<HTMLElement>(".chants-chant");
+      const colle = () => {
+        if (!panneau) return;
+        const haut = parseFloat(getComputedStyle(el).top) || 0;
+        el.toggleAttribute("data-collee", panneau.getBoundingClientRect().top + 16 < haut - 0.5);
+      };
       update();
+      colle();
       const ro = new ResizeObserver(update);
       ro.observe(el);
       window.addEventListener("resize", update);
+      window.addEventListener("scroll", colle, { passive: true });
       return () => {
         ro.disconnect();
         window.removeEventListener("resize", update);
+        window.removeEventListener("scroll", colle);
+        el.removeAttribute("data-collee");
       };
     }, [deuxVolets]);
     const { barPinned, setBarPinned } = useBarreRappelee();
@@ -338,7 +350,7 @@ function useVersionDeLaSetlist(slug: string, setlistId: string | null, position:
     <AccordsProvider aide chant={{ slug: song.slug, titre: song.title }}>
       <div className="relative min-h-screen print:min-h-0 bg-background" style={{ width: `${100 / fontScale}%`, "--zoom-chant": fontScale } as React.CSSProperties}>
         {/* Barre de contrôles */}
-        <div ref={barreRef} data-testid="barre-outils" className={`barre-chant print:hidden fixed left-[var(--barre-laterale)] right-0 top-[var(--nav-h)] [--barre-top:var(--nav-h)] [--barre-left:var(--barre-laterale)] z-10 material-chrome transition-transform duration-300 ${ scrollVisible ? "translate-y-0" : barPinned ? "-translate-y-[calc(var(--nav-h)-var(--sat))]" : "-translate-y-[calc(100%+var(--nav-h))]"}`}>
+        <div ref={barreRef} data-testid="barre-outils" className={`barre-chant print:hidden fixed left-[var(--barre-laterale)] right-0 top-[var(--nav-h)] [--barre-top:var(--nav-h)] [--barre-left:var(--barre-laterale)] z-10 material-chrome transition-transform duration-300 ${ scrollVisible ? "translate-y-0" : barPinned ? "-translate-y-[calc(var(--nav-h)-var(--sat))]" : "-translate-y-[calc(100%+var(--nav-h)+var(--barre-decalage,0px)+var(--barre-ombre,0px))]"}`}>
           <FondDeBarre sousNavbar />
           {/* `rangee-chant` : les libellés suivent la place de la rangée (`data-libelles`, plus haut),
               donc celle du volet en deux volets. */}

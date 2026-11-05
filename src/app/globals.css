@@ -743,7 +743,11 @@
 :root:not(.dark) .chants-volets[data-sur-liste] .chants-liste input[type="search"] { background-color: hsl(var(--secondary)); box-shadow: none; }
 /* Tablette debout, liste sur une colonne (chants-8, R2) : les actions de l'en-tête finissent où finissent la recherche
    et la liste, à la gouttière de 28 px de l'index A–Z (`pr-7` de SongListClient). Deux volets : l'en-tête garde toute la largeur. */
-@media (min-width: 768px) { .chants-entete { padding-right: 1.75rem; } }
+@media (min-width: 768px) {
+  .chants-entete { padding-right: 1.75rem; }
+  /* Liste en groupe sur un seul volet, en clair (T2a) : la liste est décalée de --index-hors et garde 16 px de chaque côté. */
+  :where(:root:not(.dark) .chants-volets[data-sur-liste]) > .chants-entete { padding-right: calc(var(--index-hors) + 16px); }
+}
 
 /* Barre du chant, piste A (docs/spec-barre-chant.md, Q4) : libellés par priorité, jamais de
    deuxième ligne — tous (2), ceux des actions Vidéo et PDF seuls (1), aucun (0) ; Idées et ⋯
@@ -783,7 +787,8 @@
    Agencement v18 (R10, A5) : l'en-tête « Chants » sur toute la largeur, au-dessus des deux volets ;
    la liste est une carte en relief (rayon 16 px, sans filet) à `--marge-page` du bord, collante
    20 px sous la barre du haut ; la page à `--ecart-volets` de la carte ; le volet du chant porte la marge de droite
-   (`.chants-chant`, chants-8 B) et le chant y perd ses marges intérieures. Le chant
+   (`.chants-chant`, chants-8 B) et, comme un groupe de lecture, 16 px en haut et 24 px de chaque côté : le chant, sa barre
+   et « Choisis un chant » y rentrent, sans marge propre ; la barre colle au même décalage que la liste (20 px). Le chant
    s'étire sur toute la rangée : un chant court sous une liste plus haute garde sa barre collée.
    L'index A–Z se centre dans `--cadre-index`, la part de la carte toujours à l'écran : page en haut,
    la carte part sous l'en-tête (104 px : 24 + titre 36 + 4 + sous-titre 20 + 20) et finit sous le
@@ -801,9 +806,12 @@
   .chants-liste input[type="search"] { background-color: hsl(var(--secondary)); box-shadow: none; }
   .dark .chants-volets > .chants-liste { box-shadow: var(--shadow-raised); }
   .chants-liste .chants-liste-corps { padding: 14px 16px 8px; }
-  .chants-volets > .chants-chant { display: block; min-width: 0; align-self: stretch; margin-right: var(--marge-page); border-radius: var(--radius-groupe); background-color: hsl(var(--background)); }
+  .chants-volets > .chants-chant { display: block; min-width: 0; align-self: stretch; margin-right: var(--marge-page); margin-bottom: 24px; padding: 16px 24px 0; border-radius: var(--radius-groupe); background-color: hsl(var(--background)); }
   .chants-chant .barre-fond { background-color: hsl(var(--background)); }
-  .chants-chant .barre-chant { position: sticky; left: auto; right: auto; width: calc(100% * var(--zoom-chant, 1)); }
+  .chants-chant .barre-chant { position: sticky; top: calc(var(--nav-h) + 36px); --barre-top: calc(var(--nav-h) + 36px); --barre-decalage: 36px; --barre-ombre: 24px; left: auto; right: auto; width: calc(100% * var(--zoom-chant, 1)); }
+  .chants-chant .barre-chant[data-collee] .barre-fond { top: -16px; left: -24px; right: -24px; border-radius: var(--radius-groupe) var(--radius-groupe) 0 0; }
+  .chants-chant .barre-chant[data-collee]::before { content: ""; position: absolute; z-index: -2; left: -24px; right: -24px; bottom: 100%; height: calc(var(--nav-h) + 36px); background-color: hsl(var(--fond-page)); pointer-events: none; }
+  .dark .chants-volets > .chants-chant { box-shadow: var(--shadow-raised); }
   .chants-chant .retour-chant:not([data-vers-setlist]) { display: none; }
   .chants-chant .song-zoom, .chants-chant .video-chant { margin-top: 0; }
   .chants-chant :is(main.song-zoom, .rangee-chant) { padding-inline: 0; }
@@ -819,9 +827,12 @@
   :root[data-barre="reduite"] .chants-liste input[type="search"] { background-color: hsl(var(--secondary)); box-shadow: none; }
   :root.dark[data-barre="reduite"] .chants-volets > .chants-liste { box-shadow: var(--shadow-raised); }
   :root[data-barre="reduite"] .chants-liste .chants-liste-corps { padding: 14px 16px 8px; }
-  :root[data-barre="reduite"] .chants-volets > .chants-chant { display: block; min-width: 0; align-self: stretch; margin-right: var(--marge-page); border-radius: var(--radius-groupe); background-color: hsl(var(--background)); }
+  :root[data-barre="reduite"] .chants-volets > .chants-chant { display: block; min-width: 0; align-self: stretch; margin-right: var(--marge-page); margin-bottom: 24px; padding: 16px 24px 0; border-radius: var(--radius-groupe); background-color: hsl(var(--background)); }
   :root[data-barre="reduite"] .chants-chant .barre-fond { background-color: hsl(var(--background)); }
-  :root[data-barre="reduite"] .chants-chant .barre-chant { position: sticky; left: auto; right: auto; width: calc(100% * var(--zoom-chant, 1)); }
+  :root[data-barre="reduite"] .chants-chant .barre-chant { position: sticky; top: calc(var(--nav-h) + 36px); --barre-top: calc(var(--nav-h) + 36px); --barre-decalage: 36px; --barre-ombre: 24px; left: auto; right: auto; width: calc(100% * var(--zoom-chant, 1)); }
+  :root[data-barre="reduite"] .chants-chant .barre-chant[data-collee] .barre-fond { top: -16px; left: -24px; right: -24px; border-radius: var(--radius-groupe) var(--radius-groupe) 0 0; }
+  :root[data-barre="reduite"] .chants-chant .barre-chant[data-collee]::before { content: ""; position: absolute; z-index: -2; left: -24px; right: -24px; bottom: 100%; height: calc(var(--nav-h) + 36px); background-color: hsl(var(--fond-page)); pointer-events: none; }
+  :root.dark[data-barre="reduite"] .chants-volets > .chants-chant { box-shadow: var(--shadow-raised); }
   :root[data-barre="reduite"] .chants-chant .retour-chant:not([data-vers-setlist]) { display: none; }
   :root[data-barre="reduite"] .chants-chant .song-zoom, :root[data-barre="reduite"] .chants-chant .video-chant { margin-top: 0; }
   :root[data-barre="reduite"] .chants-chant :is(main.song-zoom, .rangee-chant) { padding-inline: 0; }
@@ -837,9 +848,12 @@
   .chants-liste input[type="search"] { background-color: hsl(var(--secondary)); box-shadow: none; }
   .dark .chants-volets > .chants-liste { box-shadow: var(--shadow-raised); }
   .chants-liste .chants-liste-corps { padding: 14px 16px 8px; }
-  .chants-volets > .chants-chant { display: block; min-width: 0; align-self: stretch; margin-right: var(--marge-page); border-radius: var(--radius-groupe); background-color: hsl(var(--background)); }
+  .chants-volets > .chants-chant { display: block; min-width: 0; align-self: stretch; margin-right: var(--marge-page); margin-bottom: 24px; padding: 16px 24px 0; border-radius: var(--radius-groupe); background-color: hsl(var(--background)); }
   .chants-chant .barre-fond { background-color: hsl(var(--background)); }
-  .chants-chant .barre-chant { position: sticky; left: auto; right: auto; width: calc(100% * var(--zoom-chant, 1)); }
+  .chants-chant .barre-chant { position: sticky; top: calc(var(--nav-h) + 36px); --barre-top: calc(var(--nav-h) + 36px); --barre-decalage: 36px; --barre-ombre: 24px; left: auto; right: auto; width: calc(100% * var(--zoom-chant, 1)); }
+  .chants-chant .barre-chant[data-collee] .barre-fond { top: -16px; left: -24px; right: -24px; border-radius: var(--radius-groupe) var(--radius-groupe) 0 0; }
+  .chants-chant .barre-chant[data-collee]::before { content: ""; position: absolute; z-index: -2; left: -24px; right: -24px; bottom: 100%; height: calc(var(--nav-h) + 36px); background-color: hsl(var(--fond-page)); pointer-events: none; }
+  .dark .chants-volets > .chants-chant { box-shadow: var(--shadow-raised); }
   .chants-chant .retour-chant:not([data-vers-setlist]) { display: none; }
   .chants-chant .song-zoom, .chants-chant .video-chant { margin-top: 0; }
   .chants-chant :is(main.song-zoom, .rangee-chant) { padding-inline: 0; }

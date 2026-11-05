@@ -93,7 +93,8 @@ test.describe("en-tête et liste (A5, R1 à R3, R7, R10)", () => {
     await listePrete(page);
     const l = liste(page);
     expect(await l.evaluate((el) => getComputedStyle(el).borderTopLeftRadius)).toBe("16px");
-    expect(await l.evaluate((el) => getComputedStyle(el).boxShadow)).not.toBe("none");
+    // Recette de surface C (T2b) : carte sans ombre en clair ; le liseré n'existe qu'en sombre.
+    expect(await l.evaluate((el) => getComputedStyle(el).boxShadow)).toBe("none");
     const [bEntete, bListe, bDroite] = await Promise.all([enTete(page).boundingBox(), l.boundingBox(), droite(page).boundingBox()]);
     expect(bEntete!.y + bEntete!.height, "l'en-tête au-dessus de la liste").toBeLessThanOrEqual(bListe!.y + 1);
     expect(bEntete!.y + bEntete!.height, "… et au-dessus de la fiche").toBeLessThanOrEqual(bDroite!.y + 1);
@@ -101,11 +102,11 @@ test.describe("en-tête et liste (A5, R1 à R3, R7, R10)", () => {
     const choisis = droite(page).getByRole("heading", { level: 2, name: "Choisis un chant" });
     await expect(choisis).toBeVisible();
     expect(await choisis.evaluate((el) => getComputedStyle(el).fontSize)).toBe("24px");
-    // Le volet de droite va jusqu'à la marge de droite.
+    // Le volet de droite va jusqu'à la marge de droite ; son contenu rentre de 24 px (corrections du design, T2a reprise).
     const marge = await page.evaluate(() => parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--marge-page")));
     const largeurFenetre = await page.evaluate(() => document.documentElement.clientWidth);
     const finDuContenu = await droite(page).locator("[data-choisis-un-chant]").evaluate((el) => el.getBoundingClientRect().right - parseFloat(getComputedStyle(el).paddingRight));
-    expect(Math.abs(finDuContenu - (largeurFenetre - marge))).toBeLessThanOrEqual(1);
+    expect(Math.abs(finDuContenu - (largeurFenetre - marge - 24))).toBeLessThanOrEqual(1);
   });
 
   test("deux volets : l'index A–Z tient entier dans la carte, page en haut comme défilée (grands écrans)", async ({ page }, info) => {
@@ -177,7 +178,7 @@ test.describe("en-tête et liste (A5, R1 à R3, R7, R10)", () => {
   });
 
   // chants-8 : tablette debout, liste sur une colonne — les actions de l'en-tête finissent où finissent la recherche et la liste.
-  test("tablette portrait : « Proposer un chant » finit au même x que la recherche (gouttière de 28 px)", async ({ page }, info) => {
+  test("tablette portrait : « Proposer un chant » finit au même x que la recherche (même fin que la liste en groupe)", async ({ page }, info) => {
     test.skip(info.project.name !== "tablette", "tablette debout seulement");
     await signInAs(page, MUSICIEN, PASSEES, "/songs");
     await listePrete(page);

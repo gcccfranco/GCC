@@ -344,3 +344,40 @@ Back-office à 7 px du bord à 360 px en français (sélecteur de T1a, espace Ba
 - Restent pour T3b/T3c : `MenuActions.tsx:70` et `EquipesClient.tsx:358` en `bg-pose` (back-office-3) ; prop
   `pleineLargeur` à poser sur les rails de Mes services et Setlists ; recouvrement vertical de 6 px entre deux lignes de
   pilules au toucher (mineur).
+
+### T3b · Contrôles B : Statistiques, Chants, Setlists, Harmonie — fait (session parallèle)
+- Commits `7ba6544`, `6a93bb6`, `9a7d3bb`, `9167617`, `3bbda9e`. Plus aucun `<select>` visible hors formulaire sur les
+  quatre écrans. Statistiques en trois rangées, tri du téléphone en `Menu` ; Chants « Thème » ; Setlists : `Menu` « Tous
+  les services », « Mes services » en pilule `aria-pressed` ; Harmonie : Tonalité, Capo, Moment, Niveau en `Menu`.
+  `Menu` reçoit `nom` et `prefixe` ; `Pilules` ramène l'active en vue au montage.
+- **Tranché au code** : musiciens-2 fait foi pour Harmonie (Moment et Niveau en `Menu`, pas en pilules) ; doublon
+  Théorie / RD-2000 retiré au téléphone (la barre du bas les porte) ; parcours replié en deux volets ; le tri de
+  Statistiques ne passe jamais à l'encre.
+- **À trancher** : au téléphone, « Mes services » seul sur sa rangée à côté de « Tous les services » (libellé) ;
+  curseur du rail peu contrasté en sombre. zh à faire relire : 主题, 所有聚会, 全部段落, 全部难度, 按顺序的 {{count}} 张卡片.
+
+### T3c · Contrôles B : Équipes et formulaires — fait (session parallèle)
+- Commits `b6cdf4b`, `45e1148`. Équipes en `OngletsRail` (point de couleur), index en `Menu` « Aller à une équipe »,
+  filtres de Personnes en `Menu` ; `ChampSelect` dans les dix formulaires ; Bibliothèque et version de `PartitionView`
+  en `Menu` ; agenda en deux rangées ; `TOUCHER_44` de `SetlistDetailClient` ramené sur `toucher44.ts`. `Menu` gagne
+  `texteDeclencheur` et le groupe sans titre (filet).
+- **Tranché au code** : le `Menu` d'index reste sur sa propre rangée ; `PiluleTonalite` et les puces d'`EnTeteEditeur`
+  gardent leur select transparent.
+- **À trancher** : au téléphone du Back-office, trois rails empilés plus le `Menu` avant la première carte (piste : la
+  vue à droite du `Menu`). zh à faire relire : 跳到团队, 所有团契.
+- **Défaut relevé, à reprendre** : `shadow-[var(--shadow-…)]` est lu par Tailwind comme une couleur d'ombre (aucune
+  ombre) ; corrigé dans `dropdown-menu.tsx` (`[box-shadow:var(--shadow-flottant)]`), restent ~15 occurrences (T2b).
+
+### Reprise · la page du chant en deux volets (05/11/2026, signalée par Timothée)
+- Cause : T2a avait posé le chant dans un groupe blanc arrondi sur le gris, sans rendre la marge retirée par chants-8 B
+  (« à confirmer » dans partout.md, jamais regardé). Contenu collé aux bords, barre collée au bord de l'écran, bande vide.
+- Fait : le panneau du chant est un groupe de lecture frère de la liste (même haut, rayon 16, 16 px en haut, 24 px de
+  côté, 24 px en bas) ; la barre est dans le panneau ; collée, elle dessine le haut du panneau aligné sur la carte de
+  la liste et repeint au gris la bande au-dessus (`data-collee`) ; escamotée, elle emporte son ombre ; en sombre, le
+  panneau prend le liseré de la liste. La page s'ouvre en haut : seule la liste défile jusqu'au chant ouvert (le
+  `scrollIntoView` faisait défiler la fenêtre, défaut antérieur au lot), ligne gardée au-dessus du bas visible.
+- Tablette portrait : « Proposer un chant » finit au même x que la recherche (régression de T2a). Tests :
+  `chants-deux-volets` (panneau, barre collée, ouverture d'un chant du bas de liste), `barre-chant`, `agencement-v18-chants`.
+- **Leçon** : un regard sur des captures juge la mise en page (marges, alignements, vides, coins), pas seulement
+  l'absence de coupure. Suite : même défaut cherché sur toutes les pages, et un test mesuré des marges intérieures.
+

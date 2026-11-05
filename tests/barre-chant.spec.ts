@@ -188,7 +188,9 @@ test("barre rappelée d'un tap après défilement : collée en haut, sans trou s
   await expect.poll(async () => { const n = await page.locator("header").first().boundingBox(); return n ? n.y + n.height : 0; }).toBeLessThanOrEqual(1);
   // Mesurer une fois la glissade finie (300 ms), pas en route.
   await barre(page).evaluate((el) => Promise.all(el.getAnimations().map((a) => a.finished)));
-  expect(Math.abs((await barre(page).boundingBox())!.y), "la barre colle en haut de l'écran").toBeLessThanOrEqual(1);
+  // En deux volets, elle colle 16 px sous le haut du panneau qu'elle dessine, lui-même aligné sur la liste (20 px) : 36 px.
+  const decalage = await barre(page).evaluate((el) => (getComputedStyle(el).position === "sticky" ? 36 : 0));
+  expect(Math.abs((await barre(page).boundingBox())!.y - decalage), "la barre colle en haut de l'écran").toBeLessThanOrEqual(1);
   await capture(page, "barre-chant-rappelee");
 });
 
