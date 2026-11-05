@@ -317,7 +317,7 @@ test.describe("R6 · D11 : « Les plus joués », les chiffres au-dessus du tabl
 test.describe("musiciens-4 : le fondu latéral des pilules, sur le catalogue d'Harmonie", () => {
   const fondu = (rangee: Locator, nom: string) => rangee.evaluate((el, n) => parseFloat(el.style.getPropertyValue(n) || "0"), nom);
 
-  test("la rangée « Sensation » s'estompe à droite puis à gauche ; « Niveau », qui tient, n'a aucun masque", async ({ page }) => {
+  test("la rangée « Sensation » s'estompe à droite puis à gauche ; « Période » (Statistiques), quand elle tient, n'a aucun masque", async ({ page }) => {
     await page.route(/docs\.google\.com\/spreadsheets/, (route) => route.fulfill({ status: 200, contentType: "text/csv", body: "" }));
     await signInAs(page, ADMIN, {}, "/harmonie");
     const sensation = page.getByRole("group", { name: "Sensation" });
@@ -331,10 +331,13 @@ test.describe("musiciens-4 : le fondu latéral des pilules, sur le catalogue d'H
       await expect.poll(() => fondu(sensation, "--fondu-gauche")).toBeGreaterThan(0);
       expect(await fondu(sensation, "--fondu-droite")).toBe(0);
     }
-    const niveau = page.getByRole("group", { name: "Niveau" });
-    if (!(await niveau.evaluate((el) => el.scrollWidth > el.clientWidth + 1))) {
-      expect(await fondu(niveau, "--fondu-gauche")).toBe(0);
-      expect(await fondu(niveau, "--fondu-droite")).toBe(0);
+    // Niveau est devenu un Menu (musiciens-2, T3b) : la rangée qui tient se vérifie sur les périodes de Statistiques.
+    await expect(page.locator('[data-menu][aria-label^="Niveau :"]')).toBeVisible();
+    await ouvrirStatistiques(page);
+    const periode = page.getByRole("group", { name: "Période" });
+    if (!(await periode.evaluate((el) => el.scrollWidth > el.clientWidth + 1))) {
+      expect(await fondu(periode, "--fondu-gauche")).toBe(0);
+      expect(await fondu(periode, "--fondu-droite")).toBe(0);
     }
   });
 });

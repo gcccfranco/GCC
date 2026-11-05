@@ -34,7 +34,7 @@ test.describe("Menu (jeu B)", () => {
     await expect(d).toHaveAttribute("aria-haspopup", "menu");
     await expect(d).toHaveAttribute("aria-expanded", "false");
     await expect(d).not.toHaveAttribute("data-pose");
-    expect(await fond(d)).not.toBe(ENCRE);
+    await expect.poll(() => fond(d), { message: "fond revenu au gris (transition de 150 ms)" }).not.toBe(ENCRE);
     expect(await d.locator("svg").evaluate((s) => Math.round(s.getBoundingClientRect().width))).toBe(14);
     expect(await d.evaluate((e) => getComputedStyle(e).borderTopWidth)).toBe("0px");
   });
@@ -98,7 +98,7 @@ test.describe("Menu (jeu B)", () => {
     await page.keyboard.press("Enter");
     await page.getByRole("menu").getByRole("menuitemradio").first().click();
     await expect(d).not.toHaveAttribute("data-pose");
-    expect(await fond(d)).not.toBe(ENCRE);
+    await expect.poll(() => fond(d), { message: "fond revenu au gris (transition de 150 ms)" }).not.toBe(ENCRE);
   });
 
   test("sombre : le panneau reste lisible, le déclencheur posé s'inverse en encre claire", async ({ page }) => {
