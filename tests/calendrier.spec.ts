@@ -1465,8 +1465,10 @@ test.describe("C5 : créer depuis un jour", () => {
     await ou.bouton("Nouvelle tâche pour le 11/10").click();
     const form = page.getByRole("dialog", { name: "Nouvelle tâche" });
     await expect(form.getByLabel("Échéance")).toHaveValue("2026-10-11");
-    await expect(form.getByLabel("Équipe").locator("option")).toHaveText(["DA", "Médias"]);
-    await form.getByLabel("Équipe").selectOption("medias");
+    await form.getByRole("button", { name: /^Équipe : / }).click();
+    await expect(page.getByRole("menu").getByRole("menuitemradio")).toHaveText(["DA", "Médias"]);
+    await page.getByRole("menuitemradio", { name: "Médias" }).click();
+    await expect(form.getByRole("button", { name: "Équipe : Médias" })).toBeVisible();
     await form.getByLabel("Titre").fill("Affiche du concert");
     await form.getByRole("button", { name: "Créer la tâche" }).click();
     await expect(form).toHaveCount(0);

@@ -296,28 +296,31 @@ test("filtre de langue : Tous · FR · 中文, le compteur suit", async ({ page 
 
 test("filtres thème et tempo : le compteur suit ; un chant sans tempo disparaît", async ({ page }, testInfo) => {
   await ouvrirLaBibliotheque(page);
-  const theme = volet(page).getByLabel("Thème", { exact: true });
-  const tempo = volet(page).getByLabel("Tempo", { exact: true });
+  // Thème et tempo sont des menus (T3c) : le déclencheur nomme le critère et la valeur posée, la liste s'ouvre en panneau.
+  const choisir = async (critere: "Thème" | "Tempo", libelle: string) => {
+    await volet(page).getByRole("button", { name: new RegExp(`^${critere} : `) }).click();
+    await page.getByRole("menuitemradio", { name: libelle, exact: true }).click();
+  };
 
-  await theme.selectOption("adoration");
+  await choisir("Thème", "Adoration");
   await expect(compteur(page, attendus({ theme: "adoration" }))).toBeVisible();
-  await theme.selectOption("");
+  await choisir("Thème", "Thèmes");
   await expect(compteur(page, INDEX.length)).toBeVisible();
 
-  await tempo.selectOption("lent");
+  await choisir("Tempo", "Lent (moins de 90)");
   await expect(compteur(page, attendus({ tempo: "lent" }))).toBeVisible();
   // Abba Père n'a pas de tempo : il disparaît ; 一生爱你 (65) est lent.
   await recherche(page).fill("Abba Père");
   await expect(resultats(page).filter({ hasText: "Abba Père" })).toHaveCount(0);
   await recherche(page).fill("yi sheng ai ni");
   await expect(resultats(page).filter({ hasText: "一生爱你" })).toHaveCount(1);
-  await tempo.selectOption("rapide");
+  await choisir("Tempo", "Rapide (120 et plus)");
   await expect(resultats(page).filter({ hasText: "一生爱你" })).toHaveCount(0);
   await recherche(page).fill("");
   await expect(compteur(page, attendus({ tempo: "rapide" }))).toBeVisible();
 
   // Les filtres se cumulent.
-  await theme.selectOption("adoration");
+  await choisir("Thème", "Adoration");
   await expect(compteur(page, attendus({ tempo: "rapide", theme: "adoration" }))).toBeVisible();
   await page.screenshot({ path: testInfo.outputPath(`bibliotheque-filtres-${testInfo.project.name}.png`) });
 });

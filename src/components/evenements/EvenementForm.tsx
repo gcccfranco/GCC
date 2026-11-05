@@ -25,6 +25,7 @@ import { dansLeSheet, dernierJourDuSheet } from "@/lib/evenements/bascule"
 import { lienOngletSheet } from "@/lib/evenements/sheet"
 import { Button } from "@/components/ui/button"
 import { Champ } from "@/components/ui/champ"
+import { ChampSelect } from "@/components/ui/champ-select"
 import { Input } from "@/components/ui/input"
 import { Switch } from "@/components/ui/switch"
 import { Textarea } from "@/components/ui/textarea"
@@ -103,7 +104,6 @@ export function EvenementForm({ initial, pours, creation, inscrits = 0, titreCac
   const refusSheet = dansLeSheet(v) && (creation || !dansLeSheet(initial))
   const set = (patch: Partial<EvenementValues>) => setV((x) => ({ ...x, ...patch }))
   // Listes au style des champs du site (fond gris, sans bord), de 44 px comme les champs d'une ligne.
-  const field = "w-full h-11 rounded-lg border border-transparent bg-secondary px-3 text-base md:text-sm"
   // Le titre dit l'action d'une réunion ; un évènement garde « Nouvel évènement » / « Modifier ».
   const Titre = reunion && !titreCache ? "h1" : "h2"
 
@@ -213,13 +213,13 @@ export function EvenementForm({ initial, pours, creation, inscrits = 0, titreCac
           {/* Une réunion n'a pas de catégorie à choisir : la valeur déjà stockée reste (-8). */}
           {!reunion && (
             <Champ id="ev-type" label={t("evenements.form.type")}>
-              <select id="ev-type" className={field} value={v.type} onChange={(e) => setType(e.target.value as EvenementType)}>
+              <ChampSelect id="ev-type" value={v.type} onChange={(e) => setType(e.target.value as EvenementType)}>
                 {EVENEMENT_TYPES.map((x) => <option key={x} value={x}>{t(`evenements.types.${x}`)}</option>)}
-              </select>
+              </ChampSelect>
             </Champ>
           )}
           <Champ id="ev-pour" label={t(reunion ? "evenements.form.pourReunion" : "evenements.form.pour")}>
-            <select id="ev-pour" className={field} value={v.pour}
+            <ChampSelect id="ev-pour" value={v.pour}
               onChange={(e) => set({
                 pour: e.target.value as EvenementValues["pour"],
                 ...(estReunion({ ...v, pour: e.target.value }) ? { ...sansInscription, ...(info ? { type: TYPE_REUNION } : {}) } : {}),
@@ -228,7 +228,7 @@ export function EvenementForm({ initial, pours, creation, inscrits = 0, titreCac
                 const equipe = equipeDuPour(p)
                 return <option key={p} value={p}>{p === "eglise" ? t("evenements.pourEglise") : equipe ? t(cleNomEquipe(equipe, reunion)) : categoryLabel(p)}</option>
               })}
-            </select>
+            </ChampSelect>
           </Champ>
         </div>
 

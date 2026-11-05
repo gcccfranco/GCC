@@ -94,7 +94,12 @@ const bodySections = (page: Page, position: number) => song(page, position).loca
 const sectionAt = (page: Page, position: number, uid: string) =>
   song(page, position).locator(`[data-section-uids="${uid}"]`);
 const lyricLine = (page: Page, text: string) => page.locator("[data-copy-line]", { hasText: text });
-const versionSelect = (page: Page, position: number) => song(page, position).getByRole("combobox", { name: "Version" });
+// Le choix de version est un menu (T3c) : le déclencheur se nomme « Version : <choix> », le panneau est dans le portail de la page.
+const versionSelect = (page: Page, position: number) => song(page, position).getByRole("button", { name: /^Version : / });
+const choisirVersion = async (page: Page, position: number, libelle: string) => {
+  await versionSelect(page, position).click();
+  await page.getByRole("menuitemradio", { name: libelle, exact: true }).click();
+};
 /** Page affichée du mode louange, sans la copie invisible qui sert à mesurer. */
 const onStage = (page: Page, text: string) =>
   page.locator("[data-performance-mode] [data-copy-line]:not([aria-hidden=true] *)", { hasText: text });
@@ -202,7 +207,7 @@ test("version partagée : le dernier refrain retouché reste le dernier", async 
     CHRISTELLE,
     setlist(TROIS_REFRAINS),
   );
-  await versionSelect(page, 1).selectOption(RUTH.uid);
+  await choisirVersion(page, 1, "Ruth K.");
 
   await expect(lyricLine(page, "Papa")).toHaveCount(1);
   await expect(bodySections(page, 1), "C R C R R chez la présidence").toHaveCount(5);
@@ -223,7 +228,7 @@ test("version partagée : un refrain du milieu garde son rang", async ({ page })
     CHRISTELLE,
     setlist(TROIS_REFRAINS),
   );
-  await versionSelect(page, 1).selectOption(RUTH.uid);
+  await choisirVersion(page, 1, "Ruth K.");
 
   await expect(lyricLine(page, "Papa")).toHaveCount(1);
   await expect(bodySections(page, 1).nth(3), "2e refrain de la présidence").toContainText("Papa");
@@ -239,7 +244,7 @@ test("version partagée : un rang qui n'existe pas ne s'affiche pas", async ({ p
     CHRISTELLE,
     setlist(UN_REFRAIN),
   );
-  await versionSelect(page, 1).selectOption(RUTH.uid);
+  await choisirVersion(page, 1, "Ruth K.");
 
   await expect(lyricLine(page, "Papa"), "un seul refrain chez la présidence").toHaveCount(0);
   await expect(bodySections(page, 1), "le refrain copié ne s'ajoute pas à la fin").toHaveCount(2);

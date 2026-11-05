@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { Plus } from "lucide-react"
 import { useTranslation } from "react-i18next"
+import { ChampSelect } from "@/components/ui/champ-select"
 import { fdFullL } from "@/lib/planning/utils"
 
 // Lot U2 (Q3, docs/spec-planning-2027.md) : poser une date sur un planning à
@@ -50,9 +51,9 @@ export function AjouterDate({ annee, dimanches, moments, onAjouter }: {
   return (
     <div className="flex flex-wrap items-center gap-2">
       {dimanches ? (
-        <select aria-label={t("planning.annee.choisirDate")} value={choisie} onChange={(e) => setDate(e.target.value)} className={champ}>
+        <ChampSelect aria-label={t("planning.annee.choisirDate")} value={choisie} onChange={(e) => setDate(e.target.value)} classeConteneur="min-w-0">
           {dimanches.map((d) => <option key={d} value={d}>{fdFullL(d, i18n.language)}</option>)}
-        </select>
+        </ChampSelect>
       ) : (
         <>
           <input
@@ -65,9 +66,9 @@ export function AjouterDate({ annee, dimanches, moments, onAjouter }: {
             className={champ}
           />
           {moments && (
-            <select aria-label={t("planning.annee.moment")} value={leMoment} onChange={(e) => setMoment(e.target.value)} className={champ}>
+            <ChampSelect aria-label={t("planning.annee.moment")} value={leMoment} onChange={(e) => setMoment(e.target.value)} classeConteneur="min-w-0">
               {moments.map((m) => <option key={m.valeur} value={m.valeur}>{m.libelle}</option>)}
-            </select>
+            </ChampSelect>
           )}
         </>
       )}

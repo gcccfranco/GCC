@@ -70,14 +70,15 @@ async function capture(page: Page, nom: string) {
   await page.screenshot({ path: `${dir}/${nom}-${test.info().project.name}.png` });
 }
 
-// BO-G, 3 : la décision D6 (une seule rangée qui défile, bord fondu) est remplacée : la rangée passe à la ligne, rien n'est
-// coupé et plus aucun fondu latéral. Mêmes garanties qu'avant : à droite de la période, tous les filtres atteignables.
-test.describe("R4 · D6 (BO-G, 3) : les filtres du calendrier passent à la ligne au lieu de défiler", () => {
+// T3c (bo-reunions-taches-2) : la rangée des filtres est la même aux quatre dispositions, sous la période : le filtre,
+// un filet, « Seulement moi », « Sources ». Elle tient sur une ligne en tablette et sur ordinateur (rien à défiler,
+// donc aucun fondu à découvrir) ; le téléphone, lui, la fait défiler (agencement-v18-calendrier.spec.ts).
+test.describe("R4 · D6 (BO-G, 3, puis T3c) : la rangée des filtres du calendrier, sous la période", () => {
   test.beforeEach(() => {
-    test.skip(estTelephone(test.info()), "le téléphone garde « Tout · Seulement moi » et la feuille des sources");
+    test.skip(estTelephone(test.info()), "le téléphone fait défiler la rangée (agencement-v18-calendrier.spec.ts)");
   });
 
-  test("à droite de la période, tous les filtres visibles, ni défilement ni fondu", async ({ page }) => {
+  test("sous la période, sur une ligne : tous les filtres visibles, rien à défiler, aucun fondu", async ({ page }) => {
     await ouvrirAgenda(page);
     const rangee = filtres(page);
     const boutons = rangee.getByRole("button");
@@ -86,11 +87,16 @@ test.describe("R4 · D6 (BO-G, 3) : les filtres du calendrier passent à la lign
     await expect(rangee.getByRole("button", { name: "Seulement moi" })).toHaveCount(1);
     const mois = (await page.getByTestId("mois-affiche").boundingBox())!;
     const premier = (await boutons.first().boundingBox())!;
-    expect(premier.x, "à droite de la période").toBeGreaterThan(mois.x + mois.width);
-    // Ni défilement ni fondu latéral : la rangée passe à la ligne.
+    expect(premier.y, "sous la période").toBeGreaterThan(mois.y + mois.height);
+    // Une seule ligne : tous les boutons à la même hauteur.
+    for (const b of await boutons.all()) {
+      const r = (await b.boundingBox())!;
+      expect(Math.abs(r.y - premier.y), "une seule ligne").toBeLessThanOrEqual(2);
+    }
     const etat = await fondu(page);
-    expect(etat.defile).not.toBe("auto");
-    expect(etat).toMatchObject({ gauche: "", droite: "", masque: false, deborde: false });
+    expect(etat.deborde, "rien à défiler").toBe(false);
+    expect(["", "0px"]).toContain(etat.gauche);
+    expect(["", "0px"]).toContain(etat.droite);
     await verifierSansDebordement(page);
     const largeur = page.viewportSize()!.width;
     for (const b of await boutons.all()) {
@@ -112,15 +118,13 @@ test.describe("R4 · D6 (BO-G, 3) : les filtres du calendrier passent à la lign
     await verifierSansDebordement(page);
   });
 
-  test("ordinateur : la fenêtre passe du téléphone à la tablette, la rangée apparaît et tient", async ({ page }, info) => {
+  test("ordinateur : à 800 px, la rangée est là et tient sur une ligne", async ({ page }, info) => {
     test.skip(info.project.name !== "ordinateur", "ordinateur seulement : la fenêtre change de taille");
-    await page.setViewportSize({ width: 600, height: 900 });
-    await ouvrirAgenda(page);
-    await expect(filtres(page)).toHaveCount(0);
     await page.setViewportSize({ width: 800, height: 900 });
+    await ouvrirAgenda(page);
     await expect(filtres(page)).toBeVisible();
     const etat = await fondu(page);
-    expect(etat).toMatchObject({ deborde: false, masque: false });
+    expect(etat.deborde).toBe(false);
     const dernier = (await filtres(page).getByRole("button").last().boundingBox())!;
     expect(dernier.x + dernier.width, "à 800 px, le dernier filtre est dans la fenêtre").toBeLessThanOrEqual(800);
   });

@@ -199,7 +199,10 @@ test("fiche : Nouvelle tâche crée une tâche liée dans l'équipe choisie, à 
   await expect(form).toContainText("Noël 2026");
   await expect(form.getByLabel("Répétition")).toHaveCount(0);
   await expect(form.getByLabel("Échéance")).toHaveValue("");
-  await form.getByLabel("Équipe").selectOption({ label: "Médias" });
+  // Lot CD, T3c (bo-reunions-taches-12) : l'équipe se choisit dans un menu.
+  await form.getByRole("button", { name: /^Équipe : / }).click();
+  await page.getByRole("menuitemradio", { name: "Médias", exact: true }).click();
+  await expect(form.getByRole("button", { name: "Équipe : Médias" })).toBeVisible();
   await form.getByLabel("Titre").fill("Diaporama des enfants");
   await form.getByLabel("Échéance").fill("2026-12-17");
   await capture(page, "evenement-tache-nouvelle");

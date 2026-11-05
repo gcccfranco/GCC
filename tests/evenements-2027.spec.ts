@@ -465,6 +465,9 @@ test.describe("B3 : la ligne d'annonce en tête du Back-Office", () => {
     await expect(page.getByTestId("mois-affiche")).toHaveText(/^Décembre( 2026)?$/);
     await expect(annonce(page)).toHaveText(ANNONCE_AVANT);
     await expect(page.getByText(ANNONCE_APRES)).toHaveCount(0);
+    // T3c : la note est en pied de liste, sous le contenu du calendrier (dernier bloc de la colonne), sans aplat.
+    expect(await annonce(page).evaluate((el) => el.nextElementSibling === null && getComputedStyle(el).backgroundColor === "rgba(0, 0, 0, 0)")).toBe(true);
+    expect((await annonce(page).boundingBox())!.y).toBeGreaterThan((await page.getByTestId("mois-affiche").boundingBox())!.y);
   });
 
   test("calendrier : plus de note à partir du 01/01/2027 (ni « après », ni « avant »)", async ({ page }) => {

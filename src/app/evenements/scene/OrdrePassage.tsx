@@ -18,6 +18,7 @@ import { QUOI, type Passage } from "@/types/programme"
 import { libelleQui } from "@/lib/fetes/qui"
 import { nouvelIdPassage } from "@/lib/fetes/passages"
 import { Button } from "@/components/ui/button"
+import { ChampSelect } from "@/components/ui/champ-select"
 import { Input } from "@/components/ui/input"
 import { useConfirmer } from "@/components/layout/Confirmer"
 import { QuiChecklist } from "./CreneauForm"
@@ -54,9 +55,9 @@ function PassageForm({ title, initial, onSubmit, onCancel }: {
       </div>
       <div className="space-y-1">
         <label htmlFor="passage-quoi" className="text-xs font-semibold">{t("planning.programme.quoi")}</label>
-        <select id="passage-quoi" className="w-full h-10 rounded-md border border-input bg-background px-3 text-sm" value={v.quoi} onChange={(e) => setV({ ...v, quoi: e.target.value })}>
+        <ChampSelect id="passage-quoi" value={v.quoi} onChange={(e) => setV({ ...v, quoi: e.target.value })}>
           {QUOI.map((q) => <option key={q} value={q}>{q}</option>)}
-        </select>
+        </ChampSelect>
       </div>
       <QuiChecklist value={v.qui} onChange={(qui) => setV({ ...v, qui })} />
       <div className="flex gap-2">

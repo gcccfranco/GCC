@@ -20,6 +20,7 @@ import { lyricsText } from "@/components/song/copyLyrics";
 import { playedSections } from "@/lib/setlist/playedSections";
 import { isLastPhraseOnly } from "@/lib/setlist/lastPhrase";
 import { Button } from "@/components/ui/button";
+import { Menu } from "@/components/ui/menu";
 import { Check, Copy, Link2, ListOrdered, MessageSquare, RotateCcw, Sparkles } from "lucide-react";
 import { TOUCHER_44 } from "@/lib/toucher44";
 import type { ChordProAST, ChordProLine, ChordProSection } from "@/types/chordPro";
@@ -534,22 +535,21 @@ function NormalSongItem({
         </button>
       )}
       {!editMode && version && version.options.length > 1 && (
-        <select
-          aria-label={t("setlists.myVersion.version")}
+        <Menu
+          label={t("setlists.myVersion.version")}
           value={version.value}
-          onChange={(e) => onChooseVersion?.(origIndex, e.target.value)}
-          className="h-6 rounded-md border border-border bg-card px-1.5 text-[11px] font-semibold text-muted-foreground print:hidden"
-        >
-          {version.options.map((o) => (
-            <option key={o.value} value={o.value}>
-              {o.kind === "presidence"
-                ? t("setlists.myVersion.presidence")
-                : o.kind === "mine"
-                  ? t("setlists.myVersion.me")
-                  : o.name || t("setlists.history.someone")}
-            </option>
-          ))}
-        </select>
+          defaultValue={version.value}
+          onChange={(v) => onChooseVersion?.(origIndex, v)}
+          className="print:hidden"
+          options={version.options.map((o) => ({
+            valeur: o.value,
+            libelle: o.kind === "presidence"
+              ? t("setlists.myVersion.presidence")
+              : o.kind === "mine"
+                ? t("setlists.myVersion.me")
+                : o.name || t("setlists.history.someone"),
+          }))}
+        />
       )}
     </>
   );

@@ -18,6 +18,7 @@ import {
 } from "@/lib/scene/saison"
 import type { Plage, Programme } from "@/types/programme"
 import { Button } from "@/components/ui/button"
+import { ChampSelect } from "@/components/ui/champ-select"
 import { Input } from "@/components/ui/input"
 import { jourEnLettres, nomDuJour } from "./libelles"
 
@@ -250,11 +251,10 @@ export function SaisonForm({ programme, onSave, jourJCalcule, autre, onErreur, s
           <div className="basis-full mt-1 flex flex-wrap items-end gap-2 rounded-xl border border-border p-3">
             <label className="space-y-1 text-xs font-semibold">
               <span className="block">{t("planning.saison.jour")}</span>
-              <select aria-label={t("planning.saison.jourPlage")} value={editeur.plage.jour}
-                className="h-10 rounded-md border border-input bg-background px-2 text-sm"
+              <ChampSelect aria-label={t("planning.saison.jourPlage")} value={editeur.plage.jour}
                 onChange={(e) => setEditeur({ ...editeur, plage: { ...editeur.plage, jour: Number(e.target.value) } })}>
                 {ORDRE_JOURS.map((j) => <option key={j} value={j}>{jourCourt(j)}</option>)}
-              </select>
+              </ChampSelect>
             </label>
             <label className="space-y-1 text-xs font-semibold">
               <span className="block">{t("planning.programme.debut")}</span>

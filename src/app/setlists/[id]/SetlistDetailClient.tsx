@@ -90,11 +90,8 @@ import {
   materializeSectionCopy,
 } from "@/lib/chordpro/editSource";
 import { structUidAt, revertSectionOrigins, idDeSection } from "@/lib/setlist/sectionOrigins";
+import { TOUCHER_44 } from "@/lib/toucher44";
 
-/** Téléphone : zone de toucher de 44 px autour d'un bouton plus petit, sans changer son dessin (G6, audit 24/10/2026). */
-const TOUCHER_44 =
-  "max-sm:relative max-sm:before:absolute max-sm:before:left-1/2 max-sm:before:top-1/2 max-sm:before:h-11 max-sm:before:min-h-full " +
-  "max-sm:before:w-full max-sm:before:min-w-11 max-sm:before:-translate-x-1/2 max-sm:before:-translate-y-1/2 max-sm:before:content-['']";
 // Sous 1024 px, où `.libelle-outil` est masqué : l'icône et un libellé court dessous (G15, audit 24/10/2026).
 const PILULE_EMPILEE = "max-lg:h-auto max-lg:min-h-8 max-lg:flex-col max-lg:justify-center max-lg:gap-0.5 max-lg:px-1 max-lg:py-1 max-lg:rounded-2xl";
 const LIBELLE_COURT = "hidden max-lg:block max-w-[64px] truncate text-[10px] font-medium leading-tight";

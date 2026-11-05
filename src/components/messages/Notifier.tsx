@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState, useSyncExternalStore, type ReactNode } fr
 import Link from "next/link";
 import { Trans, useTranslation } from "react-i18next";
 import { Send, Lock } from "lucide-react";
+import { ChampSelect } from "@/components/ui/champ-select";
 import { ChampRecherche } from "@/components/layout/ChampRecherche";
 import { useProfile, listProfiles } from "@/lib/firebase/users";
 import { isAdminUser } from "@/lib/access";
@@ -217,11 +218,10 @@ export function Notifier({ backOffice = false, titre }: { backOffice?: boolean; 
         <label htmlFor="notif-audience" className="text-sm font-medium text-foreground">
           {t("notifier.audience")}
         </label>
-        <select
+        <ChampSelect
           id="notif-audience"
           value={audience}
           onChange={(e) => setAudience(e.target.value)}
-          className="w-full h-11 px-3 rounded-lg border border-transparent bg-secondary text-foreground text-[16px] sm:text-sm focus:outline-none focus:ring-2 focus:ring-ring/30"
         >
           <option value="">{t("notifier.choisir")}</option>
           {canAll && <option value={NOTIFY_ALL}>{aud(NOTIFY_ALL)}</option>}
@@ -234,7 +234,7 @@ export function Notifier({ backOffice = false, titre }: { backOffice?: boolean; 
               ))}
             </optgroup>
           ))}
-        </select>
+        </ChampSelect>
       </div>
     </>
   );
@@ -347,18 +347,17 @@ export function Notifier({ backOffice = false, titre }: { backOffice?: boolean; 
         <label htmlFor="notif-destination" className="text-sm font-medium text-foreground">
           {t("notifier.ouvreAuClic")}
         </label>
-        <select
+        <ChampSelect
           id="notif-destination"
           value={dest}
           onChange={(e) => setDest(e.target.value)}
-          className="w-full h-11 px-3 rounded-lg border border-transparent bg-secondary text-foreground text-[16px] sm:text-sm focus:outline-none focus:ring-2 focus:ring-ring/30"
         >
           {DESTINATIONS.filter((d) => !backOffice || d.value !== "/annonces").map((d) => (
             <option key={d.value} value={d.value}>
               {t(d.cle)}
             </option>
           ))}
-        </select>
+        </ChampSelect>
       </div>
     </>
   );

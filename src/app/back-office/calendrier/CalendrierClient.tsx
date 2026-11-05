@@ -53,7 +53,8 @@ import { ecrirePreferences, lirePreferences, type PreferencesCalendrier } from "
 import { lireSheetEvenements, type LectureSheet } from "@/lib/evenements/sheet";
 import { avantBascule, jourDeParis } from "@/lib/evenements/bascule";
 import { todayIso } from "@/lib/scene/dimanches";
-import { TOUCHER_44 } from "@/lib/toucher44";
+import { TOUCHER_44, TOUCHER_PILULE } from "@/lib/toucher44";
+import { useFonduLateral } from "@/hooks/useFonduLateral";
 import { cn } from "@/lib/utils";
 import { ANNONCE_SECTIONS } from "@/types/annonce";
 import type { NotifLang } from "@/types/user";
@@ -110,10 +111,11 @@ const vueDeLAdresse = (v: string | null): Vue | null => (v === "agenda" || v ===
 
 const BOUTON_ROND =
   "sur-gris inline-flex h-8 min-w-8 items-center justify-center rounded-full px-2 text-[13px] font-bold text-foreground transition-opacity duration-150 hover:opacity-80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground";
-const PASTILLE =
-  "inline-flex h-8 shrink-0 items-center whitespace-nowrap gap-1.5 rounded-full px-3 text-[13px] font-semibold transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground";
-/** Sur téléphone, « Seulement moi » et « Sources » (rangée 3) ont la taille des pilules du filtre (`Pilules`, 40 px, 15 px). */
-const PASTILLE_TEL = "!h-10 !px-3.5 !text-[15px]";
+/** La hauteur de `Pilules` (28 px, 13 px ; 32 px et 14 px au toucher, zone de 44 px) : « Seulement moi » et « Sources » en sont les sœurs. */
+const PASTILLE = cn(
+  "inline-flex h-7 shrink-0 items-center whitespace-nowrap gap-1.5 rounded-full px-3 text-[13px] font-semibold transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground [@media(pointer:coarse)]:h-8 [@media(pointer:coarse)]:text-[14px]",
+  TOUCHER_PILULE,
+);
 /** « Ajouter » (BO8) : la pilule md de `BoutonNouveau`, avec son menu. */
 const BOUTON_AJOUTER =
   "inline-flex h-10 items-center gap-2 rounded-full bg-primary px-[18px] text-[14.5px] font-semibold text-primary-foreground transition-transform duration-150 active:scale-[.97] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground";
@@ -220,6 +222,8 @@ export function CalendrierClient() {
   }, [debut, fin, lireLeSheet]);
 
   const permises = useMemo(() => (user ? sourcesPermises(user, profil) : []), [user, profil]);
+  // La rangée des filtres défile au toucher : son fondu suit ce qu'elle contient.
+  const rangeeFiltres = useFonduLateral<HTMLDivElement>(`${permises.length}-${filtreChoisi === "tout"}`);
   // « Réunions » n'est offert qu'à qui voit cette source ; sinon (lien reçu) le filtre est « Tout ».
   const filtre: Filtre = filtreChoisi === "reunions" && !permises.includes("reunions") ? "tout" : filtreChoisi;
   const parJour = useMemo(() => {
@@ -338,7 +342,7 @@ export function CalendrierClient() {
       type="button"
       aria-pressed={prefs.seulementMoi}
       onClick={() => changer({ ...prefs, seulementMoi: !prefs.seulementMoi })}
-      className={cn(PASTILLE, telephone && PASTILLE_TEL, prefs.seulementMoi ? "bg-foreground text-background" : "sur-gris text-foreground")}
+      className={cn(PASTILLE, prefs.seulementMoi ? "bg-foreground text-background" : "sur-gris text-foreground")}
     >
       <UserRound aria-hidden className="h-3.5 w-3.5 shrink-0" />
       {t("calendrier.seulementMoi")}
@@ -346,49 +350,43 @@ export function CalendrierClient() {
   );
   // BO-C : « Sources » ouvre la feuille des pastilles ; seulement en « Tout » (un autre filtre ignore les préférences).
   const boutonSources = filtre === "tout" && (
-    <button type="button" onClick={() => setFeuilleSources(true)} className={cn(PASTILLE, telephone && PASTILLE_TEL, "sur-gris text-foreground")}>
+    <button type="button" onClick={() => setFeuilleSources(true)} className={cn(PASTILLE, "sur-gris text-foreground")}>
       <SlidersHorizontal aria-hidden className="h-3.5 w-3.5 shrink-0" />
       {t("calendrier.sourcesFeuille")}
     </button>
   );
-  // BO-G, 3 : la rangée des filtres passe à la ligne au lieu de défiler (rien n'est coupé, plus de fondu latéral) ;
-  // `Pilules` défile de lui-même, on lui retire son défilement et ses marges négatives.
+  // `Pilules` défile de lui-même au toucher (avec son fondu) quand il est seul ; ici la rangée 2 entière défile, donc il
+  // garde sa largeur de contenu (`shrink-0`).
   const filtres = (
-    <div className="[&>div]:mx-0 [&>div]:flex-wrap [&>div]:overflow-x-visible [&>div]:px-0 [&>div]:pb-0">
-    <Pilules
-      etiquette={t("backOffice.calendrier.filtrer")}
-      obligatoire
-      options={[
-        { cle: "tout", nom: t("calendrier.tout") },
-        { cle: "evenements", nom: t("calendrier.sources.evenements") },
-        ...(permises.includes("reunions") ? [{ cle: "reunions" as const, nom: t("calendrier.sources.reunions") }] : []),
-        { cle: "services", nom: t("calendrier.sources.services") },
-        { cle: "scene", nom: t("calendrier.sources.scene") },
-      ]}
-      valeur={filtre}
-      choisir={(v) => setFiltre(v ?? "tout")}
-    />
+    <div className="shrink-0">
+      <Pilules
+        etiquette={t("backOffice.calendrier.filtrer")}
+        obligatoire
+        options={[
+          { cle: "tout", nom: t("calendrier.tout") },
+          { cle: "evenements", nom: t("calendrier.sources.evenements") },
+          ...(permises.includes("reunions") ? [{ cle: "reunions" as const, nom: t("calendrier.sources.reunions") }] : []),
+          { cle: "services", nom: t("calendrier.sources.services") },
+          { cle: "scene", nom: t("calendrier.sources.scene") },
+        ]}
+        valeur={filtre}
+        choisir={(v) => setFiltre(v ?? "tout")}
+      />
     </div>
   );
 
-  // La rangée sous le rail : la période, puis les filtres. Sur téléphone, trois lignes : la période, le filtre
-  // (`Pilules`), puis « Seulement moi » et « Sources ». Dès 768 px, une ligne qui passe à la ligne si elle ne tient
-  // pas (BO-G, 3) : le filtre, « Seulement moi », « Sources ».
-  const rangee = telephone ? (
+  // La rangée sous le rail, aux quatre dispositions : la période, puis une seconde rangée (le filtre, un filet,
+  // « Seulement moi », « Sources ») qui tient sur une ligne et, au toucher, défile avec un fondu.
+  const rangee = (
     <div className="flex flex-col gap-3">
       {navigation}
-      {filtres}
-      <div className="flex items-center gap-1.5">
-        {seulementMoi}
-        {boutonSources}
-      </div>
-    </div>
-  ) : (
-    <div className="flex flex-wrap items-center gap-x-1.5 gap-y-2">
-      <div className="shrink-0">{navigation}</div>
-      <span aria-hidden className="mx-2 h-6 w-px shrink-0 bg-border" />
-      <div data-testid="filtres-calendrier" className="flex min-w-[16rem] flex-1 flex-wrap items-center gap-1.5">
+      <div
+        ref={rangeeFiltres}
+        data-testid="filtres-calendrier"
+        className="flex items-center gap-1.5 [@media(pointer:coarse)]:fondu-lateral [@media(pointer:coarse)]:-mx-4 [@media(pointer:coarse)]:-my-1.5 [@media(pointer:coarse)]:overflow-x-auto [@media(pointer:coarse)]:px-4 [@media(pointer:coarse)]:py-1.5 [@media(pointer:coarse)]:[scrollbar-width:none] [@media(pointer:coarse)]:[&::-webkit-scrollbar]:hidden"
+      >
         {filtres}
+        <span aria-hidden className="mx-2 h-6 w-px shrink-0 bg-border" />
         {seulementMoi}
         {boutonSources}
       </div>
@@ -465,9 +463,6 @@ export function CalendrierClient() {
       <div className="relative flex flex-1 items-stretch overflow-x-clip">
         {/* BO-G, 3 : sur téléphone le « + » flottant (52 px, à `--tabbar-bottom` + 76 px) ne recouvre pas la dernière carte. */}
         <div className={cn("min-w-0 flex-1 px-[var(--marge-page)] pb-10", telephone && peutCreer && "pb-[calc(var(--tabbar-bottom)+76px+52px+16px)]")}>
-          {/* U9 (Q7 b), BO10 : la note du Sheet, ici seulement et jusqu'au 31/12/2026. */}
-          <AnnonceBascule className="mb-3" />
-
           {echecs.length > 0 && (
             <div role="status" className="mb-3 flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700 dark:border-amber-800/50 dark:bg-amber-950/30 dark:text-amber-400">
               <CloudOff aria-hidden className="h-3.5 w-3.5 shrink-0" />
@@ -536,6 +531,9 @@ export function CalendrierClient() {
               onDeposer={deplacer}
             />
           )}
+
+          {/* U9 (Q7 b), BO10 : la note du Sheet, ici seulement et jusqu'au 31/12/2026 ; en pied de liste (T3c). */}
+          <AnnonceBascule className="mt-6" />
         </div>
 
         {/* Le volet du jour (B5) : à droite sur ordinateur et tablette couchée, en Mois comme en Agenda. */}

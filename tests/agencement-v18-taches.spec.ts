@@ -189,7 +189,7 @@ test.describe("en grand (deux volets)", () => {
 
   test("la section « Tâches » en carte ; toucher une tâche ouvre sa fiche à lire, titrée en h1", async ({ page }) => {
     await ouvrir(page, PAGE_DA);
-    await expect(liste(page).locator(".raised").first()).toBeVisible();
+    await expect(liste(page).locator(".carte-groupe").first()).toBeVisible();
     // (Plus de première tâche ouverte à côté, ni de ligne allumée : la fiche a son adresse, R11 n'existe plus.)
     await ligne(page, "Affiche de Noël").click();
     await expect(page).toHaveURL(/\/back-office\/taches\/da\/t1\/?$/);
@@ -233,7 +233,7 @@ test.describe("en grand (deux volets)", () => {
     const form = formulaire(page, "Nouvelle tâche");
     await expect(form).toBeVisible();
     await expect(page.getByRole("dialog")).toHaveCount(0);
-    await expect(form.getByRole("group", { name: "Équipe" }).getByRole("button", { name: "DA" })).toHaveAttribute("aria-pressed", "true");
+    await expect(form.getByRole("button", { name: "Équipe : DA" })).toBeVisible();
     await form.getByLabel("Titre").fill("Affiche de la retraite");
     await form.getByLabel("Échéance").fill("2026-10-06");
     await form.getByRole("tablist", { name: "Répétition" }).getByRole("tab", { name: "Semaine", exact: true }).click();
@@ -256,8 +256,8 @@ test.describe("en grand (deux volets)", () => {
     await ouvrir(page, "/back-office/taches/da/nouvelle");
     const form = formulaire(page, "Nouvelle tâche");
     await expect(form).toBeVisible();
-    // Le formulaire a l'équipe en pilules et la répétition en rail (B2, planche `v18-bo-tache-nouvelle`) ; le rail des équipes a disparu (BO7).
-    await verifierAgencement(page, { contenu: form, lecture: true, onglets: { rail: 1, pilules: 1 } });
+    // Le formulaire a l'équipe en menu (T3c) et la répétition en rail (B2, planche `v18-bo-tache-nouvelle`) ; le rail des équipes a disparu (BO7).
+    await verifierAgencement(page, { contenu: form, lecture: true, onglets: { rail: 1, pilules: 0 } });
     const carte = (await form.boundingBox())!;
     const annuler = (await form.getByRole("button", { name: "Annuler" }).boundingBox())!;
     const creer = (await form.getByRole("button", { name: "Créer la tâche" }).boundingBox())!;
@@ -278,10 +278,13 @@ test.describe("en grand (deux volets)", () => {
     await verifierAgencement(page, { contenu: detail(page), lecture: true, titreDansLeVolet: true, onglets: { rail: 0, pilules: 0 } });
   });
 
-  test("l'équipe d'une nouvelle tâche se choisit en pilules", async ({ page }) => {
+  test("l'équipe d'une nouvelle tâche se choisit dans un menu", async ({ page }) => {
     const db = await ouvrir(page, "/back-office/taches/da/nouvelle");
     const form = formulaire(page, "Nouvelle tâche");
-    await form.getByRole("group", { name: "Équipe" }).getByRole("button", { name: "Médias" }).click();
+    await form.getByRole("button", { name: "Équipe : DA" }).click();
+    await page.getByRole("menuitemradio", { name: "Médias" }).click();
+    await expect(form.getByRole("button", { name: "Équipe : Médias" })).toBeVisible();
+    await expect(form.locator("select#tache-equipe")).toHaveCount(0);
     await form.getByLabel("Titre").fill("Montage du teaser");
     await form.getByLabel("Échéance").fill("2026-10-12");
     await form.getByRole("button", { name: "Créer la tâche" }).click();

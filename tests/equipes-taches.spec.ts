@@ -403,10 +403,11 @@ test.describe("écrans : chacun ses équipes (Réussite 3 et 4, EQ9)", () => {
     // les 5 comités des groupes (lot 2, OG17).
     await ouvrir(page, ADMIN, "/back-office/equipes/medias");
     const { form } = await nouvelleTache(page);
-    const choix = estGrandEcran(test.info())
-      ? form.getByRole("group", { name: "Équipe" }).getByRole("button")
-      : form.getByLabel("Équipe").locator("option");
-    await expect(choix).toHaveCount(EQUIPES.length + COMITES.length);
+    // Le choix de l'équipe est un menu (T3c) à toutes les dispositions : le panneau liste les 13 équipes et les 5 comités.
+    await form.getByRole("button", { name: /^Équipe : / }).click();
+    await expect(page.getByRole("menu").getByRole("menuitemradio")).toHaveCount(EQUIPES.length + COMITES.length);
+    await page.keyboard.press("Escape");
+    await expect(form.locator("select#tache-equipe")).toHaveCount(0);
     await capture(page, "taches-admin-rail");
   });
 

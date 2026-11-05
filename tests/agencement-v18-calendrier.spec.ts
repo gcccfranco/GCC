@@ -142,21 +142,42 @@ test("« Ajouter » (menu Évènement | Réunion | Tâche) dans l'en-tête dès 
   await expect(page.getByRole("dialog", { name: "Nouvelle tâche" }).getByLabel("Échéance")).toHaveValue("2026-10-01");
 });
 
-// BO-G, 3 : la rangée de filtres passe à la ligne au lieu de défiler ; rien n'est coupé, « Seulement moi » est toujours là.
-test("les filtres du calendrier passent à la ligne : rien de coupé, « Seulement moi » et « Sources » visibles", async ({ page }) => {
+// T3c (bo-reunions-taches-2) : une seule structure aux quatre dispositions : rangée 1 la période, rangée 2 le filtre, un filet,
+// « Seulement moi », « Sources ». Au téléphone la rangée 2 défile avec un fondu (« Scène » et « Seulement moi » se
+// découvrent en défilant) ; en tablette et sur ordinateur elle tient sur une ligne.
+test("la rangée des filtres : une ligne sous la période ; au téléphone elle défile avec un fondu", async ({ page }) => {
   await ouvrir(page);
   const largeur = page.viewportSize()!.width;
   const groupe = page.getByRole("group", { name: "Filtrer le calendrier" });
-  const rangee = estTelephone(test.info()) ? groupe : page.getByTestId("filtres-calendrier");
-  const boutons = [...(await groupe.getByRole("button").all()), page.getByRole("button", { name: "Seulement moi" }), page.getByRole("button", { name: "Sources", exact: true })];
+  const rangee = page.getByTestId("filtres-calendrier");
+  const moi = page.getByRole("button", { name: "Seulement moi" });
+  const sources = page.getByRole("button", { name: "Sources", exact: true });
+  const mois = (await page.getByTestId("mois-affiche").boundingBox())!;
+  expect((await groupe.boundingBox())!.y, "sous la période").toBeGreaterThan(mois.y + mois.height);
+  if (estTelephone(test.info())) {
+    expect(await rangee.evaluate((el) => el.scrollWidth - el.clientWidth), "la rangée défile").toBeGreaterThan(1);
+    expect(await rangee.evaluate((el) => getComputedStyle(el).overflowX)).toBe("auto");
+    await expect.poll(() => rangee.evaluate((el) => getComputedStyle(el).getPropertyValue("--fondu-droite").trim()), "fondu à droite").toBe("24px");
+    expect(await rangee.evaluate((el) => (getComputedStyle(el).maskImage || "none") !== "none"), "masque posé").toBe(true);
+    // « Scène » et « Seulement moi » se découvrent en défilant.
+    await rangee.evaluate((el) => { el.scrollLeft = el.scrollWidth; });
+    for (const bouton of [groupe.getByRole("button", { name: "Scène" }), moi, sources]) {
+      const b = (await bouton.boundingBox())!;
+      expect(b.x + b.width, "atteint en défilant").toBeLessThanOrEqual(largeur);
+    }
+    await expect.poll(() => rangee.evaluate((el) => getComputedStyle(el).getPropertyValue("--fondu-gauche").trim())).toBe("24px");
+    return;
+  }
+  const boutons = [...(await groupe.getByRole("button").all()), moi, sources];
+  const premier = (await boutons[0].boundingBox())!;
   for (const bouton of boutons) {
     await expect(bouton).toBeVisible();
     const b = (await bouton.boundingBox())!;
     expect(b.x, "dans l'écran, à gauche").toBeGreaterThanOrEqual(0);
     expect(b.x + b.width, "dans l'écran, à droite").toBeLessThanOrEqual(largeur);
+    expect(Math.abs(b.y - premier.y), "une seule ligne").toBeLessThanOrEqual(2);
   }
   expect(await rangee.evaluate((el) => el.scrollWidth - el.clientWidth), "la rangée ne défile pas").toBeLessThanOrEqual(1);
-  expect(await groupe.evaluate((el) => getComputedStyle(el).overflowX), "le groupe de pilules non plus").not.toBe("auto");
 });
 
 // BO-G, 3 : sur téléphone, le « + » flottant ne recouvre pas la dernière carte de l'Agenda.

@@ -24,6 +24,7 @@ import { aCommence, modeInscriptions, nowIsoParis, placesRestantes, refusInscrip
 import { PLANNING_COLORS } from "@/lib/serviceColors"
 import type { Evenement, Inscription, ModeInscriptions } from "@/types/evenement"
 import { Button, buttonVariants } from "@/components/ui/button"
+import { ChampSelect } from "@/components/ui/champ-select"
 import { Input } from "@/components/ui/input"
 import { ChoixInscriptions, useRaisonInscription } from "@/components/evenements/ChoixInscriptions"
 import { styleTexteService } from "@/lib/couleurSombre"
@@ -149,9 +150,9 @@ export function Inscriptions({ evenement: e, user, organisateur, onInscrits }: {
             )}
             <div className="space-y-1">
               <label htmlFor="ins-invites" className="text-xs font-semibold">{t("evenements.invitesLabel")}</label>
-              <select id="ins-invites" className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm" value={invites} onChange={(ev) => setInvites(Number(ev.target.value))}>
+              <ChampSelect id="ins-invites" value={invites} onChange={(ev) => setInvites(Number(ev.target.value))}>
                 {INVITES.map((n) => <option key={n} value={n}>{n}</option>)}
-              </select>
+              </ChampSelect>
             </div>
             <div className="flex gap-2">
               <Button type="submit" disabled={busy} className="flex-1">{t("evenements.confirmer")}</Button>

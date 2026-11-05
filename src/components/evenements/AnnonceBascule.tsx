@@ -16,9 +16,9 @@ export function AnnonceBascule({ className }: { className?: string }) {
     <p
       role="note"
       aria-label={t("backOffice.annonceBascule.aria")}
-      className={cn("flex items-start gap-2 rounded-lg bg-secondary/60 px-3 py-2 text-xs leading-relaxed text-muted-foreground", className)}
+      className={cn("flex items-start gap-2 text-[13px] leading-relaxed text-muted-foreground", className)}
     >
-      <Info aria-hidden className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+      <Info aria-hidden className="mt-[3px] h-3.5 w-3.5 shrink-0" />
       <span>{t("backOffice.annonceBascule.avant")}</span>
     </p>
   );

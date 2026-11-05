@@ -3,10 +3,12 @@
 import { useId, useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { useConfirmer } from "@/components/layout/Confirmer";
-import { OngletsRail, Pilules } from "@/components/layout/Onglets";
+import { OngletsRail } from "@/components/layout/Onglets";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
 import { Champ } from "@/components/ui/champ";
+import { ChampSelect } from "@/components/ui/champ-select";
+import { Menu } from "@/components/ui/menu";
 import { Input } from "@/components/ui/input";
 import { useStandaloneScrollLock } from "@/hooks/useStandaloneScrollLock";
 import { SERVICE_LIEUX, type UserProfile } from "@/types/user";
@@ -14,8 +16,6 @@ import type { Prevenir, Rythme, Tache } from "@/types/tache";
 import { equipesDe } from "@/lib/access";
 import { EQUIPES, cleNomEquipe } from "@/lib/equipes/table";
 import type { TacheValues } from "@/lib/firebase/taches";
-
-const FIELD = "w-full h-11 rounded-lg bg-secondary px-3 text-base md:text-sm";
 
 function prevenirValue(p: Prevenir): string {
   if (!p) return "";
@@ -148,18 +148,13 @@ function Champs({ enLigne, equipe: equipeDepart, equipes, evenement, echeance, i
         </div>
       )}
       {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
-      {equipes && equipes.length > 1 && (enLigne ? (
+      {equipes && equipes.length > 1 && (
         <Champ label={t("taches.champs.equipe")}>
-          <Pilules etiquette={t("taches.champs.equipe")} obligatoire valeur={equipe} choisir={(e) => e && changerEquipe(e)}
-            options={equipes.map((e) => ({ cle: e, nom: t(cleNomEquipe(e, true)) }))} />
+          <Menu label={t("taches.champs.equipe")} value={equipe} defaultValue={equipe}
+            options={equipes.map((e) => ({ valeur: e, libelle: t(cleNomEquipe(e, true)) }))} onChange={changerEquipe}
+            className="h-11 w-full justify-between rounded-[12px] px-3 text-base font-normal [@media(pointer:coarse)]:h-11 [@media(pointer:coarse)]:text-base" />
         </Champ>
-      ) : (
-        <Champ id="tache-equipe" label={t("taches.champs.equipe")}>
-          <select id="tache-equipe" className={FIELD} value={equipe} onChange={(e) => changerEquipe(e.target.value)}>
-            {equipes.map((e) => <option key={e} value={e}>{t(cleNomEquipe(e, true))}</option>)}
-          </select>
-        </Champ>
-      ))}
+      )}
       <Champ id="tache-titre" label={t("taches.champs.titre")}>
         <Input id="tache-titre" className="h-11" value={v.titre} maxLength={80} onChange={(e) => set({ titre: e.target.value })} />
       </Champ>
@@ -172,7 +167,7 @@ function Champs({ enLigne, equipe: equipeDepart, equipes, evenement, echeance, i
             })} />
         </Champ>
         <Champ id="tache-responsable" label={t("taches.champs.responsable")}>
-          <select id="tache-responsable" className={FIELD} value={v.responsableUid ?? ""}
+          <ChampSelect id="tache-responsable" value={v.responsableUid ?? ""}
             onChange={(e) => {
               const m = membres.find((x) => x.uid === e.target.value);
               set({ responsableUid: m?.uid ?? null, responsableNom: m ? `${m.firstName} ${m.lastName}`.trim() : "" });
@@ -181,7 +176,7 @@ function Champs({ enLigne, equipe: equipeDepart, equipes, evenement, echeance, i
             {proposes.map((m) => <option key={m.uid} value={m.uid}>{`${m.firstName} ${m.lastName}`.trim() || m.email}</option>)}
             {/* Le responsable de la tâche reste affiché, membres pas encore lus ou parti de l'équipe. */}
             {v.responsableUid && !proposes.some((m) => m.uid === v.responsableUid) && <option value={v.responsableUid}>{v.responsableNom}</option>}
-          </select>
+          </ChampSelect>
         </Champ>
       </div>
       {/* Une tâche liée à un évènement ne se répète pas (lot 14) : l'évènement
@@ -206,37 +201,37 @@ function Champs({ enLigne, equipe: equipeDepart, equipes, evenement, echeance, i
           {rythme === "an" && <p className="text-xs text-muted-foreground">{t("taches.anAide")}</p>}
           {rythme === "mois" && (
             <Champ id="tache-rang" label={t("taches.champs.rang")} className="max-w-xs pt-1.5">
-              <select id="tache-rang" className={FIELD} value={String(v.repetition?.rang ?? 1)}
+              <ChampSelect id="tache-rang" value={String(v.repetition?.rang ?? 1)}
                 onChange={(e) => set({ repetition: { rythme: "mois", rang: Number(e.target.value) } })}>
                 {["1", "2", "3", "4", "-1"].map((r) => <option key={r} value={r}>{t(`taches.rang.${r}`)}</option>)}
-              </select>
+              </ChampSelect>
             </Champ>
           )}
         </Champ>
       ) : (
       <div className="space-y-4">
         <Champ id="tache-repetition" label={t("taches.champs.repetition")}>
-          <select id="tache-repetition" className={FIELD} value={rythme} onChange={(e) => setRythme(e.target.value as Rythme | "")}>
+          <ChampSelect id="tache-repetition" value={rythme} onChange={(e) => setRythme(e.target.value as Rythme | "")}>
             <option value="">{t("taches.rythme.aucun")}</option>
             <option value="semaine">{t("taches.rythme.semaine")}</option>
             <option value="2semaines">{t("taches.rythme.2semaines")}</option>
             <option value="mois">{t("taches.rythme.mois")}</option>
             <option value="an">{t("taches.rythme.an")}</option>
-          </select>
+          </ChampSelect>
           {rythme === "an" && <p className="text-xs text-muted-foreground">{t("taches.anAide")}</p>}
         </Champ>
         {rythme === "mois" && (
           <Champ id="tache-rang" label={t("taches.champs.rang")}>
-            <select id="tache-rang" className={FIELD} value={String(v.repetition?.rang ?? 1)}
+            <ChampSelect id="tache-rang" value={String(v.repetition?.rang ?? 1)}
               onChange={(e) => set({ repetition: { rythme: "mois", rang: Number(e.target.value) } })}>
               {["1", "2", "3", "4", "-1"].map((r) => <option key={r} value={r}>{t(`taches.rang.${r}`)}</option>)}
-            </select>
+            </ChampSelect>
           </Champ>
         )}
       </div>
       )}
       <Champ id="tache-prevenir" label={t("taches.champs.prevenir")}>
-        <select id="tache-prevenir" className={FIELD} value={prevenirValue(v.prevenir)} onChange={(e) => set({ prevenir: parsePrevenir(e.target.value) })}>
+        <ChampSelect id="tache-prevenir" value={prevenirValue(v.prevenir)} onChange={(e) => set({ prevenir: parsePrevenir(e.target.value) })}>
           <option value="">{t("taches.prevenirPersonne")}</option>
           {/* Les autres équipes, sous leur nom (EQ10), puis les régies. */}
           {EQUIPES.filter((e) => e.id !== equipe).map((e) => (
@@ -245,7 +240,7 @@ function Champs({ enLigne, equipe: equipeDepart, equipes, evenement, echeance, i
           {SERVICE_LIEUX.map((s) => (
             <option key={s} value={`regie:${s}`}>{t("taches.prevenirRegie", { service: t(`categories.${s}`, { defaultValue: s }) })}</option>
           ))}
-        </select>
+        </ChampSelect>
       </Champ>
       <Champ id="tache-lien" label={t("taches.champs.lien")}>
         <Input id="tache-lien" className="h-11" type="url" inputMode="url" value={v.lien} placeholder="https://" onChange={(e) => set({ lien: e.target.value })} />

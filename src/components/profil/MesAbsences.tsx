@@ -11,6 +11,7 @@ import { dateAbsence } from "@/lib/planning/choisir";
 import type { Absence } from "@/types/absence";
 import type { UserProfile } from "@/types/user";
 import { Button } from "@/components/ui/button";
+import { ChampSelect } from "@/components/ui/champ-select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
@@ -125,15 +126,14 @@ export function MesAbsences() {
       {responsable && (
         <div className="space-y-1.5">
           <Label htmlFor="absences-pour-qui">{t("absences.pourQui")}</Label>
-          <select
+          <ChampSelect
             id="absences-pour-qui"
             value={uidCible}
             onChange={(e) => { setCible(e.target.value === user.uid ? "" : e.target.value); setOuvert(false); }}
-            className="h-10 w-full rounded-lg border border-transparent bg-secondary px-3 text-base md:text-sm"
           >
             <option value={user.uid}>{t("absences.moi")}</option>
             {autres.map((p) => <option key={p.uid} value={p.uid}>{nomAffiche(p)}</option>)}
-          </select>
+          </ChampSelect>
         </div>
       )}
 

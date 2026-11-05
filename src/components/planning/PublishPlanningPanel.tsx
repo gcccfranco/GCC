@@ -5,6 +5,7 @@ import { Send, Check, EyeOff } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { authHeader } from "@/lib/firebase/setlists";
 import { BACK_OFFICE } from "@/lib/backOffice";
+import { ChampSelect } from "@/components/ui/champ-select"
 import { getCurrentTri } from "@/lib/planning/utils";
 import { audienceLabel } from "@/lib/push/audiences";
 import {
@@ -105,18 +106,17 @@ export function PublishPlanningPanel({
         <label htmlFor="publier-planning" className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
           {t("backOffice.boE1.publier.planning")}
         </label>
-        <select
+        <ChampSelect
           id="publier-planning"
           value={key}
           onChange={(e) => setKey(e.target.value)}
-          className="w-full h-11 px-3 rounded-lg border border-transparent bg-secondary text-foreground text-[16px] sm:text-sm focus:outline-none focus:ring-2 focus:ring-ring/30"
         >
           {plannings.map((p) => (
             <option key={p.key} value={p.key}>
               {p.label}
             </option>
           ))}
-        </select>
+        </ChampSelect>
       </div>
 
       <p className="text-sm text-muted-foreground">

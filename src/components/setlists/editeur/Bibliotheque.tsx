@@ -13,6 +13,7 @@ import type { FSSetlist } from "@/types/setList";
 import { fetchSongAST } from "@/lib/api/songs";
 import type { Token } from "@/types/chordPro";
 import { KeyPill } from "@/components/ui/key-pill";
+import { Menu } from "@/components/ui/menu";
 import { ChordLine } from "@/components/song/ChordLine";
 import type { SongIndexEntry, Theme } from "@/types/song";
 import { TitreVolet, useFeuille } from "@/components/setlists/editeur/feuille";
@@ -37,8 +38,7 @@ const pilule = (actif: boolean) =>
     actif ? "bg-foreground text-background" : "bg-secondary text-foreground hover:bg-secondary/80"
   }`;
 
-/** « Thèmes ▾ », « Tempo ▾ » : une pilule à la largeur de son libellé (le choix fait, sinon
- *  « Thèmes »), un menu natif transparent posé dessus — accessible, sans dépendance. */
+/** « Thèmes ▾ », « Tempo ▾ » : le `Menu` des contrôles (jeu B) ; le choix fait, sinon « Thèmes ». */
 function MenuPilule({ label, vide, valeur, options, onChange }: {
   label: string;
   vide: string;
@@ -46,23 +46,14 @@ function MenuPilule({ label, vide, valeur, options, onChange }: {
   options: { value: string; label: string }[];
   onChange: (v: string) => void;
 }) {
-  const affiche = options.find((o) => o.value === valeur)?.label ?? vide;
   return (
-    <span className={`${pilule(valeur !== "")} relative flex items-center gap-1.5 focus-within:ring-2 focus-within:ring-ring`}>
-      <span className="max-w-[12rem] truncate">{affiche}</span>
-      <ChevronDown className={`h-3.5 w-3.5 shrink-0 ${valeur ? "text-background" : "text-muted-foreground"}`} aria-hidden />
-      <select
-        aria-label={label}
-        value={valeur}
-        onChange={(e) => onChange(e.target.value)}
-        className="absolute inset-0 h-full w-full cursor-pointer appearance-none opacity-0"
-      >
-        <option value="">{vide}</option>
-        {options.map((o) => (
-          <option key={o.value} value={o.value}>{o.label}</option>
-        ))}
-      </select>
-    </span>
+    <Menu
+      label={label}
+      value={valeur}
+      defaultValue=""
+      options={[{ valeur: "", libelle: vide }, ...options.map((o) => ({ valeur: o.value, libelle: o.label }))]}
+      onChange={onChange}
+    />
   );
 }
 
