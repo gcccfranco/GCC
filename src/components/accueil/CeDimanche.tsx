@@ -342,7 +342,7 @@ export function CeDimanche({
           </>
         ) : (
           <>
-            <div className={inter ? "flex flex-col gap-3.5" : "grid grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)] gap-3.5"}>
+            <div className={inter ? "flex flex-col gap-3.5" : "grid grid-cols-2 gap-3.5"}>
               {carteGroupes}{carteEdd}
             </div>
             {disposition === "tablette" && carteEvenements ? (

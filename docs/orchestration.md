@@ -143,6 +143,11 @@ exécutait un binaire fermé hors du bac à sable).
 3. **Chaque tranche** : `/tranche` avec la consigne exacte et les specs de test. Au retour : la session lit le
    verdict du `relecteur`, relit le diff, regarde les captures sur les trois appareils (cinq pour une page
    d'agencement), commite (un commit par tranche, message en français), puis lance la suivante.
+   **Relire les captures, c'est juger l'agencement** (règle de Timothée, 05/11/2026) : après une tranche qui change
+   l'apparence, la relecture ne se contente pas de constater l'absence de coupure ou de débordement ; elle juge les
+   marges intérieures des groupes, les alignements entre voisins, les vides, les coins et les groupes invisibles
+   (gris sur gris, blanc sur blanc). `tests/agencement-groupes.spec.ts` mesure ces cinq points sur une quinzaine de
+   pages (cinq projets) et doit rester vert : une exception s'y écrit nommément, avec sa raison, dans `EXEMPTIONS`.
 4. **Fin du lot** : `testeur` passe la suite complète ; `relecteur` relit le diff du lot entier ; la feuille de
    route et la spec notent l'avancement ; on annonce à Timothée ce qui est à valider en local.
 

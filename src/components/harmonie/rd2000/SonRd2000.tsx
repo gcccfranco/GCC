@@ -92,7 +92,7 @@ export function SonRd2000({ n }: { n: string }) {
 
   return (
     <div
-      className={cn("space-y-6 pb-10", deuxVolets ? undefined : "mx-auto max-w-2xl px-4 pt-3 md:max-w-3xl md:px-6")}
+      className={cn("space-y-6 pb-10", deuxVolets ? undefined : "max-w-2xl px-[var(--marge-page)] pt-3 md:max-w-3xl")}
       data-son-page={n}
     >
       {!deuxVolets && (

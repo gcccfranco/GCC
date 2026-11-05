@@ -10,7 +10,7 @@ export default function EvenementsLayout({ children }: { children: React.ReactNo
   // Back-office coupé (lot 18) : toute la section répond 404, fiches et scène comprises.
   if (!BACK_OFFICE) notFound()
   return (
-    <div className="min-h-screen">
+    <div className="relative">
       <PullToRefresh />
       <SectionEvenements>{children}</SectionEvenements>
     </div>

@@ -25,6 +25,7 @@ import type { User } from "firebase/auth"
 import { canEditCreneau, canReserverPour, isCoordination } from "@/lib/access"
 import { createCreneau, deleteCreneau, listCreneaux, updateCreneau } from "@/lib/firebase/programmes"
 import { overlaps, todayIso } from "@/lib/scene/dimanches"
+import { TOUCHER_44 } from "@/lib/toucher44"
 import {
   commence, creneauxLibres, heureLocale, lignesDuJour, quiPermis, saisonDe, semainesDe, type Place, type Semaine,
 } from "@/lib/scene/saison"
@@ -367,7 +368,7 @@ export function Entrainements({ programme, creneaux, user, profile, onChanged, o
                       key={`${l.type}-${l.debut}`}
                       ligne={l}
                       droite={libre ? (
-                        <Button size="sm" className="h-11 -my-2 -mr-2 px-4 svc-ink hover:opacity-80"
+                        <Button size="sm" className={`h-8 px-4 svc-ink hover:opacity-80 ${TOUCHER_44}`}
                           style={{ "--svc": COLOR, background: `${COLOR}1f` } as CSSProperties}
                           aria-label={t("planning.saison.reserverA", { debut: l.debut, fin: l.fin })}
                           onClick={() => ouvrir({ type: "nouveau", place: { jour: d, debut: l.debut, fin: l.fin } })}>

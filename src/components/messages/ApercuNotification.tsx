@@ -58,7 +58,7 @@ export function DerniersEnvois({ cle = 0 }: { cle?: number }) {
   }, [cle]);
 
   return (
-    <section aria-label={t("notifier.derniersEnvois")} className="carte-groupe rounded-2xl px-[18px] py-4">
+    <section aria-label={t("notifier.derniersEnvois")} className="carte-groupe rounded-2xl p-5 sm:p-6">
       <h2 className="text-[16px] font-bold text-foreground">{t("notifier.derniersEnvois")}</h2>
       {envois === null ? (
         <p className="mt-2 text-sm text-muted-foreground">{t("common.loading")}</p>

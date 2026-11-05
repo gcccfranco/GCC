@@ -775,9 +775,11 @@ test.describe("plannings-1 : le bord de la grille parle", () => {
 test.describe("plannings-2 : le rail serré ramène l'actif en vue", () => {
   test("EDD, période Nov–Déc : la pastille active est entière dans le rail, fondu à gauche seulement ; un autre choix la ramène en vue", async ({ page }, info) => {
     await ouvrir(page, MEMBRE, "/planning/edd");
-    const rail = barre(page).getByRole("tablist", { name: "Période" });
-    await expect(rail.getByRole("tab")).toHaveCount(6);
-    const actif = rail.getByRole("tab", { selected: true });
+    const piste = barre(page).getByRole("tablist", { name: "Période" });
+    // T3a : la piste (le tablist) est dans un défilant transparent, qui porte le fondu et borne la vue (`useFonduLateral`).
+    const rail = piste.locator("xpath=..");
+    await expect(piste.getByRole("tab")).toHaveCount(6);
+    const actif = piste.getByRole("tab", { selected: true });
     const dedans = async (a: Locator) => {
       const [r, t] = [(await rail.boundingBox())!, (await a.boundingBox())!];
       return t.x >= r.x - 0.5 && t.x + t.width <= r.x + r.width + 0.5;
@@ -787,8 +789,8 @@ test.describe("plannings-2 : le rail serré ramène l'actif en vue", () => {
       await expect.poll(() => dedans(actif)).toBe(true);
       expect(await fondu(rail, "--fondu-gauche")).toBe("24px");
       expect(await fondu(rail, "--fondu-droite")).toBe("0px");
-      await rail.getByRole("tab").first().click();
-      const premier = rail.getByRole("tab", { selected: true });
+      await piste.getByRole("tab").first().click();
+      const premier = piste.getByRole("tab", { selected: true });
       await expect.poll(() => dedans(premier)).toBe(true);
       await expect.poll(() => fondu(rail, "--fondu-droite")).toBe("24px");
       expect(await fondu(rail, "--fondu-gauche")).toBe("0px");

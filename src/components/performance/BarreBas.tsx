@@ -39,11 +39,11 @@ export function BarreBas({
   return (
     <div
       ref={barreRef}
-      className={`absolute bottom-0 left-0 right-0 ${showChrome ? "pointer-events-auto" : "pointer-events-none"} material-chrome material-steady shadow-[0_-1px_0_hsl(var(--border))] px-3 py-2.5 flex items-center gap-1.5 flex-wrap`}
+      className={`absolute bottom-0 left-0 right-0 ${showChrome ? "pointer-events-auto" : "pointer-events-none"} material-chrome material-steady shadow-[0_-1px_0_hsl(var(--border))] py-2.5 [--marge-barre:0.75rem] md:[--marge-barre:1.5rem] flex items-center gap-1.5 flex-wrap`}
       style={{
         paddingBottom: "calc(0.625rem + var(--sab, 0px))",
-        paddingLeft: "calc(0.75rem + var(--sal, 0px))",
-        paddingRight: "calc(0.75rem + var(--sar, 0px))",
+        paddingLeft: "calc(var(--marge-barre) + var(--sal, 0px))",
+        paddingRight: "calc(var(--marge-barre) + var(--sar, 0px))",
       }}
       onPointerDown={(e) => e.stopPropagation()}
       onPointerUp={(e) => e.stopPropagation()}

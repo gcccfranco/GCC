@@ -46,7 +46,11 @@ const barres = (page: Page) =>
         fond: fond ? getComputedStyle(fond).backgroundColor : null,
         // Écart entre le bas du fond et le bas de la barre : le fondu.
         deborde: f ? Math.round(f.bottom - b.bottom) : null,
-        couvre: f ? Math.round(f.top - b.top) === 0 && Math.round(f.left - b.left) === 0 && Math.round(f.right - b.right) === 0 : false,
+        // Collée dans le panneau du chant (reprise 1b0c716 : `[data-collee]`), le fond déborde de -16 / -24 px pour repeindre le panneau
+        // jusqu'à ses bords : il doit alors contenir la barre ; sinon il la recouvre exactement.
+        couvre: !f ? false : el.hasAttribute("data-collee")
+          ? Math.round(f.top - b.top) <= 0 && Math.round(f.left - b.left) <= 0 && Math.round(f.right - b.right) >= 0 && Math.round(f.bottom - b.bottom) >= 0
+          : Math.round(f.top - b.top) === 0 && Math.round(f.left - b.left) === 0 && Math.round(f.right - b.right) === 0,
         glisse: getComputedStyle(el).transitionProperty,
       };
     })
@@ -168,6 +172,17 @@ async function barresOpaquesEtInvisibles(page: Page, combien: number, nom: strin
   const transformations = () => page.locator(".material-chrome:not(.material-steady)").evaluateAll((els) => els.filter((el) => el.getClientRects().length > 0).map((el) => getComputedStyle(el).transform));
   const enPlace = Array(combien).fill("matrix(1, 0, 0, 1, 0, 0)");
   await page.addStyleTag({ content: "body{min-height:3000px}" });
+  // `body` porte `min-h-screen` (classe, plus forte que ce sélecteur) : sur une page courte (Planning, depuis que sa mise en page
+  // n'ajoute plus `min-h-screen`), rien ne défilerait. On ajoute alors du vide en fin de page, juste assez pour défiler de 600 px.
+  await page.evaluate(() => {
+    const manque = 700 - (document.documentElement.scrollHeight - window.innerHeight);
+    if (manque > 0 && document.documentElement.scrollHeight - window.innerHeight < 150) {
+      const cale = document.createElement("div");
+      cale.setAttribute("aria-hidden", "true");
+      cale.style.height = `${manque}px`;
+      document.body.appendChild(cale);
+    }
+  });
   await page.mouse.move(zone.x + zone.width / 2, 400);
   await page.mouse.wheel(0, 600);
   await expect.poll(transformations, "les barres se rangent quand on descend").not.toEqual(enPlace);
@@ -187,8 +202,24 @@ async function barresOpaquesEtInvisibles(page: Page, combien: number, nom: strin
   } else {
     // Attendu jusqu'à ce que le rendu se pose (1 fois sur 90, la capture tombait juste après
     // le défilement) : du contenu visible sous une barre, lui, ne disparaîtrait jamais.
-    await expect.poll(async () => ecart(page, fondSeul, await page.screenshot({ clip: zone })), "rien ne transparaît sous les barres")
-      .toMatchObject({ trop: 0 });
+    // Chant en deux volets (reprise de la page du chant, 1b0c716) : la barre collée repeint le panneau (`.barre-fond` décalé de
+    // -16 / -24 px, rayon du panneau en haut) et un voile de `--fond-page` couvre le haut de l'écran ; la zone n'est donc plus
+    // celle de la page en haut. Ce que la barre garantit reste identique : rien du chant n'apparaît dessous. On compare la zone
+    // à elle-même, le chant (partition, vidéo) masqué : si du contenu transparaissait, les deux images différeraient.
+    const colleeDansLePanneau = (await page.locator(".barre-chant[data-collee]").count()) > 0;
+    if (colleeDansLePanneau) {
+      const sansChant = async () => {
+        const cache = await page.addStyleTag({ content: ".chants-chant :is(main.song-zoom, .rangee-chant, .video-chant) { visibility: hidden !important }" });
+        const image = await page.screenshot({ clip: zone });
+        await cache.evaluate((el) => (el as ChildNode).remove());
+        return image;
+      };
+      await expect.poll(async () => ecart(page, await sansChant(), await page.screenshot({ clip: zone })), "rien ne transparaît sous les barres")
+        .toMatchObject({ trop: 0 });
+    } else {
+      await expect.poll(async () => ecart(page, fondSeul, await page.screenshot({ clip: zone })), "rien ne transparaît sous les barres")
+        .toMatchObject({ trop: 0 });
+    }
   }
 
   await masque.evaluate((el) => (el as ChildNode).remove());

@@ -43,6 +43,8 @@ const SPECS_GRAND_ECRAN = [
   /setlist-partage\.spec\.ts/,
   /coup-d-oeil\.spec\.ts/,
   /equipes-page\.spec\.ts/,
+  // Reprise R2 (docs/orchestration.md § 4) : le garde-fou mesuré des groupes (gris sur gris, marges, voisins, pages courtes).
+  /agencement-groupes\.spec\.ts/,
   // Lot DA, DA-2 (docs/spec-dictionnaire-accords.md) : la page /accords (carte + groupes d'accords).
   /accords-page\.spec\.ts/,
   // … DA-3 : le panneau d'un accord touché (bulle sur ordinateur, feuille ailleurs) et la bulle d'aide.

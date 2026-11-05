@@ -257,8 +257,8 @@ function SectionReunions({ id, backOffice }: { id: string; backOffice: boolean }
     <section aria-labelledby="equipe-reunions">
       <TitreSection id="equipe-reunions" titre={t("equipes.page.reunions")} action={peutCreer && <BoutonSection href={`/back-office/reunions/nouvelle?equipe=${encodeURIComponent(id)}`} label={t("backOffice.nouvelleReunion")} />} />
       <div className={cn(CARTE, "space-y-3")}>
-        {reunions === null && <p className="py-1 text-sm text-muted-foreground">{t("common.loading")}</p>}
-        {reunions !== null && reunions.length === 0 && <p className="py-1 text-sm text-muted-foreground">{t("equipes.page.aucuneReunion")}</p>}
+        {reunions === null && <p className="px-1 py-1 text-sm text-muted-foreground">{t("common.loading")}</p>}
+        {reunions !== null && reunions.length === 0 && <p className="px-1 py-1 text-sm text-muted-foreground">{t("equipes.page.aucuneReunion")}</p>}
         {aVenir.length > 0 && (
           <div>
             <h3 className="px-1 text-sm font-semibold text-muted-foreground">{t("equipes.page.aVenir")}</h3>
@@ -286,17 +286,17 @@ function SectionMembres({ id, membres, lue, backOffice }: { id: string; membres:
     <section aria-labelledby="equipe-membres">
       <TitreSection id="equipe-membres" titre={t("equipes.page.membres")} />
       <div className={cn(CARTE, "py-3")}>
-        {!lue && <p className="text-sm text-muted-foreground">{t("common.loading")}</p>}
+        {!lue && <p className="px-1 text-sm text-muted-foreground">{t("common.loading")}</p>}
         {sansDocument && (
           <>
-            <p className="mb-1 text-sm text-muted-foreground">{t("equipes.page.comiteAide")}</p>
+            <p className="mb-1 px-1 text-sm text-muted-foreground">{t("equipes.page.comiteAide")}</p>
             <Link href={`${backOffice ? "/back-office" : ""}/equipes?groupe=${groupe.id}`} className={cn(LIEN_LIGNE, "text-[15px] font-semibold text-foreground")}>
               <span className="min-w-0 flex-1">{t("equipes.page.organigrammeGroupe")}</span>
               <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground/60" aria-hidden />
             </Link>
           </>
         )}
-        {lue && !groupe && membres.length === 0 && <p className="text-sm text-muted-foreground">{t("equipes.aucunMembre")}</p>}
+        {lue && !groupe && membres.length === 0 && <p className="px-1 text-sm text-muted-foreground">{t("equipes.aucunMembre")}</p>}
         {membres.length > 0 && (
           <ul className="flex flex-wrap gap-2">
             {membres.map((m, i) => (

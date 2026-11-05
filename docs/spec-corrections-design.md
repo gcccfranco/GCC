@@ -402,3 +402,34 @@ Back-office à 7 px du bord à 360 px en français (sélecteur de T1a, espace Ba
 - Restent pour R2 (antérieurs au lot ou rouges sur la base) : constats n° 1, 3/19, 8, 9/20, 10, 11, 13, 15, 21, 28, 32 ;
   agencement-v18-planning:776, look-barres:208 et :237, look-planning-feuille:94, look-navigation:113.
 
+### Reprise R2 · défauts d'agencement antérieurs au lot et garde-fou (05/11/2026)
+- Constats n° 1 (Déconnexion de Moi en rangée pleine largeur), 3/19 (gouttières de l'accueil), 9/20 (`min-h-screen`
+  dans `<main>` en plus de la cale : 150 px de gris à faire défiler), 10, 11 (marges des barres du mode louange à 24 px
+  dès 768 px, pagination non touchée), 13 (pages de détail d'Harmonie à `--marge-page`), 15, 21, 28, 32 ; bouton
+  d'agrandissement du guide dans la ligne de légende ; « Par où commencer » en `blanc-sur-gris` ; sélecteur d'espaces et
+  pastille « Toute l'église » lisibles sur le gris ; colonnes extrêmes de la grille du planning à 12 px.
+- n° 8 (liste des chants plus haute que l'écran à l'ouverture) **non fait** : la corriger laissait 80 px de vide une
+  fois collée ; à reprendre en liant la hauteur au défilement, ou à laisser.
+- Tests rouges sur la base réglés (tous « voulus », adaptés sans baisser de seuil) : agencement-v18-planning:776,
+  look-barres:208 et :237, look-planning-feuille:94, look-navigation:113.
+- **Garde-fou** `tests/agencement-groupes.spec.ts` (dans `SPECS_GRAND_ECRAN`) : une quinzaine de pages, cinq projets,
+  mesure (a) aplat gris sur gris, (b) groupe de la couleur de la page, (c) texte à moins de 12 px du bord d'un groupe,
+  (d) groupes voisins au même haut, (e) page courte qui défile. Aucune exemption. Règle écrite dans
+  `docs/orchestration.md` § 5.
+
+## Reprendre ici (pour une nouvelle session, 05/11/2026)
+Lire seulement : `CLAUDE.md`, ce fichier (§ 2 arbitrages, § 3 règles, et cette section), puis l'annexe de la tranche
+en cours. Ne pas relire les sections « État » plus haut sauf besoin précis. Agents quelques-uns à la fois ; pas
+d'audit de tout le site ; `--workers=2` pour Playwright (le serveur de test meurt faute de mémoire au-delà).
+1. **T4a / T4b** : échelle typographique B, plancher P12/P13, largeurs L1 (`partout.md`, « Typographie et
+   largeurs », plus les entrées « - Tranche : T4 » des annexes). Une tranche `/tranche` chacune, captures de quatre
+   dispositions + 1 440 px, `tests/agencement-groupes.spec.ts` vert.
+2. **T5** (en dernier) : captures du guide en 中文 (eglise-5, partout-q3-guide), bandeau d'Harmonie (harmonie-5).
+3. **Fin de lot** : suite complète en trois tiers dans trois sessions parallèles (`--shard=1/3` … ; ~18 000 tests,
+   trop pour un conteneur), relecture finale, feuille de route, puis annoncer à Timothée ce qu'il valide en local.
+4. **Questions ouvertes pour Timothée** (à poser en une fois) : 调 D ou D调 ; mode louange (barre du haut sur le titre
+   quand les barres s'affichent ; bulle d'indice ; liseré ; FreeShow/PDF même icône) ; questionnaire laissé blanc ;
+   `theme-color` #fff ; bo-evenements Q1/Q4/Q5 ; « + Nouvelle réunion » sur /reunions/nouvelle ; « Mes services » seul
+   sur sa rangée (Setlists, téléphone) ; trois rails empilés au téléphone du Back-office ; curseur du rail peu
+   contrasté en sombre ; n° 8 ci-dessus ; traductions 中文 à faire relire (listées dans les sections T1 à T3c).
+

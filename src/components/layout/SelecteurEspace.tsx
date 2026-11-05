@@ -190,7 +190,7 @@ export function SelecteurEspace({ pleineLargeur = false, compact = false, onChoi
     <div
       role="group"
       aria-label={t("backOffice.selecteur.aria")}
-      className={`${pleineLargeur ? "flex w-full min-w-0" : "inline-flex shrink-0"} rounded-full bg-secondary p-[3px]`}
+      className={`${pleineLargeur ? "flex w-full min-w-0" : "inline-flex shrink-0"} rounded-full bg-secondary rail-sur-gris p-[3px]`}
     >
       {segments.map((e) => <Fragment key={e}>{lien(e, libelles[e])}</Fragment>)}
     </div>

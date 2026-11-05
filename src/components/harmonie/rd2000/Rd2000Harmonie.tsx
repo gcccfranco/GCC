@@ -127,7 +127,7 @@ function ParMoment({ ouvert, cartes }: { ouvert?: string; cartes: boolean }) {
               return (
                 <div
                   key={m.moment}
-                  className={cn("border-t border-border py-2 first:border-t-0", cartes && "md:bloc-info md:rounded-2xl md:border-t-0 md:px-4 md:py-3")}
+                  className={cn("border-t border-border py-2 first:border-t-0", cartes && "md:bloc-info md:blanc-sur-gris md:rounded-2xl md:border-t-0 md:px-5 md:py-3")}
                   data-moment={m.moment}
                 >
                   <p className="text-[15px] font-semibold">{m.moment}</p>
@@ -274,7 +274,7 @@ function ListeRd2000({ vue, setVue, filtres, setFiltres, parCategorie, premier }
   const cartes = !deuxVolets;
 
   return (
-    <div className={cn("space-y-6", deuxVolets ? "px-5 pt-4 pb-10" : "mx-auto max-w-2xl px-4 pb-10 md:max-w-none md:px-6")} data-rd2000>
+    <div className={cn("space-y-6", deuxVolets ? "px-5 pt-4 pb-10" : "mx-auto max-w-2xl px-[var(--marge-page)] pb-10 md:max-w-none")} data-rd2000>
       <OngletsRail
         etiquette={t("harmonie.rd2000.titre")}
         onglets={(["moment", "sons", "parametres"] as const).map((v) => ({ id: v, label: t(`harmonie.rd2000.vues.${v}`) }))}

@@ -911,7 +911,7 @@ export function PlanningGrille({
                         data-changement={aChange(date, c.cle)}
                         onMouseDownCapture={(e) => { if (actifClavier && e.shiftKey) e.preventDefault() }}
                         onClickCapture={(e) => surCase(e, date, c.cle)}
-                        className={`relative px-2.5 py-2 text-foreground ${aChange(date, c.cle) ? "bg-amber-100/70 dark:bg-amber-500/15" : ""} ${dansSansCompte(date, c.cle) ? "[&_button]:underline [&_button]:decoration-dotted [&_button]:underline-offset-4" : ""}`}
+                        className={`relative px-2.5 py-2 text-foreground ${j === colonnes.length - 1 ? "pr-3" : ""} ${aChange(date, c.cle) ? "bg-amber-100/70 dark:bg-amber-500/15" : ""} ${dansSansCompte(date, c.cle) ? "[&_button]:underline [&_button]:decoration-dotted [&_button]:underline-offset-4" : ""}`}
                         style={styleCase(plage, couleur, dansGeste(date, c.cle), rangDate(date), j)}
                       >
                         {caseOuApercu(l, c)}

@@ -392,6 +392,8 @@
      libellés à 70 % d'encre (≥ 4,5:1). Clair seulement : en sombre `--secondary` est déjà distinct du noir. */
   :root:not(.dark):is(:has([data-fond-groupe]), :has(.chants-volets[data-sur-liste])) [data-onglets="rail"]:not(.carte-groupe *, .chants-chant *) { background-color: hsl(var(--secondary-fond)); }
   :root:not(.dark):is(:has([data-fond-groupe]), :has(.chants-volets[data-sur-liste])) [data-onglets="rail"]:not(.carte-groupe *, .chants-chant *) :is([role="tab"]:not([aria-selected="true"]), a:not([aria-current])) { color: hsl(var(--foreground) / 0.7); }
+  /* Le sélecteur d'espaces de la barre du haut (App · Musiciens · Back-Office) est un rail comme les autres : sur le gris, `--secondary-fond` (R2, garde-fou des groupes). */
+  :root:not(.dark):is(:has([data-fond-groupe]), :has(.chants-volets[data-sur-liste])) .material-chrome .rail-sur-gris { background-color: hsl(var(--secondary-fond)); }
   :root:not(.dark):is(:has([data-fond-groupe]), :has(.chants-volets[data-sur-liste])) [data-onglets="pilules"]:not(.carte-groupe *, .chants-chant *) > :is(button[aria-pressed="false"], a:not([aria-current])) { background-color: hsl(var(--secondary-fond)); }
   /* Un contrôle rond posé sur le gris (cloche, menu « Accueil ⌄ ») est blanc, sans ombre, en clair seulement :
      en sombre il garde son `--secondary`. */

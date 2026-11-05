@@ -63,7 +63,7 @@ export function PageAccords() {
   ];
 
   return (
-    <div className="mx-auto w-full max-w-[1120px] px-[var(--marge-page)] pb-28 pt-6">
+    <div className="w-full max-w-[1120px] px-[var(--marge-page)] pb-28 pt-6">
       <Retour href="/">{t("accords.retour")}</Retour>
       <h1 className="text-[32px] font-bold leading-10 tracking-tight text-foreground">{t("accords.titre")}</h1>
       <p className="mt-1 text-[15px] leading-6 text-muted-foreground">{t("accords.sousTitre")}</p>

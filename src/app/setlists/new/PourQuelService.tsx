@@ -59,7 +59,7 @@ export function PourQuelService({ categories }: { categories: string[] }) {
   ];
 
   return (
-    <div className="min-h-screen">
+    <div className="relative">
       {/* Agencement v18 (R1, R8, tranche Z) : l'en-tête commun et son seul retour. */}
       <EnTetePage retour={{ href: "/setlists", label: t("common.header.setlists") }} titre={t("setlists.form.titleNew")} />
       <div className="px-[var(--marge-page)] pb-28">

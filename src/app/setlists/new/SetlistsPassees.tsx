@@ -73,7 +73,7 @@ export function SetlistsPassees() {
   }
 
   return (
-    <div className="min-h-screen">
+    <div className="relative">
       {/* Agencement v18 (R1, R8, tranche Z) : l'en-tête commun et son seul retour. */}
       <EnTetePage
         retour={{ href: "/setlists/new", label: t("setlists.form.titleNew") }}

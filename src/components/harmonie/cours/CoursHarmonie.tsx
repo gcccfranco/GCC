@@ -46,7 +46,7 @@ export function CoursHarmonie({ children }: { children: React.ReactNode }) {
         fond="blanc"
         racine="/harmonie/cours"
         liste={
-          <div className={cn(deuxVolets ? "px-5 pt-4 pb-10" : "mx-auto max-w-2xl px-4 pb-10 md:max-w-none md:px-6")}>
+          <div className={cn(deuxVolets ? "px-5 pt-4 pb-10" : "mx-auto max-w-2xl px-[var(--marge-page)] pb-10 md:max-w-none")}>
             <SommaireCours ouvert={ouvert} />
           </div>
         }

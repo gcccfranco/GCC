@@ -161,14 +161,14 @@ function MoiClient() {
   // Une rotation ou la barre pliée ne les démonte donc pas (sinon toutes leurs lectures repartiraient).
   const grand = disposition === "grand";
   const telephone = disposition === "telephone";
-  const sousLeCompte = BACK_OFFICE && !grand && !telephone;
   const contenu = (
     <div className={grand ? "grid grid-cols-[340px_minmax(0,1fr)] items-start gap-5" : "space-y-4"}>
       <div className={grand ? "space-y-4 sticky top-[calc(var(--nav-h)+20px)]" : telephone ? undefined : "grid grid-cols-2 items-start gap-4"}>
-        {/* BO-G, 12 : au Back-Office, tablette portrait, « Déconnexion » sous le compte : plus de grand vide sous « Mon profil ». */}
-        {sousLeCompte ? <div className="space-y-4">{compte}{deconnexion}</div> : compte}
-        {!telephone && <div className="space-y-4">{reglages}{notifierAdmin}{!sousLeCompte && deconnexion}</div>}
+        {compte}
+        {!telephone && <div className="space-y-4">{reglages}{notifierAdmin}{grand && deconnexion}</div>}
       </div>
+      {/* R2, n° 1 : en tablette, « Déconnexion » en rangée pleine largeur sous la paire compte / réglages (ni vide gris sous l'une, ni colonne inégale). */}
+      {!grand && !telephone && deconnexion}
       <div className="min-w-0 space-y-4">{apercus}{aide}</div>
       {telephone && <div className="space-y-4">{notifierAdmin}{reglages}{deconnexion}</div>}
     </div>

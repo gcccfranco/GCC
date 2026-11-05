@@ -38,11 +38,11 @@ export function BarreHaut({
   return (
     <div
       ref={barreRef}
-      className={`absolute top-0 left-0 right-0 ${showChrome ? "pointer-events-auto" : "pointer-events-none"} material-chrome material-steady shadow-[0_1px_0_hsl(var(--border))] px-4 py-3 flex items-center gap-3`}
+      className={`absolute top-0 left-0 right-0 ${showChrome ? "pointer-events-auto" : "pointer-events-none"} material-chrome material-steady shadow-[0_1px_0_hsl(var(--border))] py-3 [--marge-barre:1rem] md:[--marge-barre:1.5rem] flex items-center gap-3`}
       style={{
         paddingTop: "calc(0.75rem + var(--sat, 0px))",
-        paddingLeft: "calc(1rem + var(--sal, 0px))",
-        paddingRight: "calc(1rem + var(--sar, 0px))",
+        paddingLeft: "calc(var(--marge-barre) + var(--sal, 0px))",
+        paddingRight: "calc(var(--marge-barre) + var(--sar, 0px))",
       }}
       onPointerDown={(e) => e.stopPropagation()}
       onPointerUp={(e) => e.stopPropagation()}

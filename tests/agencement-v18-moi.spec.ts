@@ -184,11 +184,10 @@ test.describe("Moi (A12)", () => {
     const deconnexion = await boite(page.getByRole("button", { name: "Déconnexion" }));
     const reglages = await boite(page.getByRole("region", { name: "Réglages" }));
     if (info.project.name === "tablette") {
-      // Compte et réglages côte à côte ; « Déconnexion » sous le compte : la colonne du compte finit près de celle des réglages.
+      // Compte et réglages côte à côte ; « Déconnexion » en rangée pleine largeur dessous (R2, n° 1) : aucun vide gris sous l'une des deux cartes.
       expect(Math.abs(reglages.y - compte.y), "compte et réglages côte à côte").toBeLessThan(2);
-      expect(deconnexion.y, "« Déconnexion » sous le compte").toBeGreaterThan(compte.y + compte.height - 1);
-      expect(deconnexion.x, "dans la colonne du compte").toBeLessThan(reglages.x);
-      expect(Math.abs((deconnexion.y + deconnexion.height) - (reglages.y + reglages.height)), "colonnes de même hauteur à 80 px près").toBeLessThanOrEqual(80);
+      expect(deconnexion.y, "« Déconnexion » sous la paire").toBeGreaterThanOrEqual(Math.max(compte.y + compte.height, reglages.y + reglages.height) - 1);
+      expect(deconnexion.width, "pleine largeur").toBeGreaterThan(compte.width + reglages.width);
     }
     expect(compte.y + compte.height - (profil.y + profil.height), "« Mon profil » finit au bas de sa carte").toBeLessThanOrEqual(24);
     // Langue : libellé + valeur en texte secondaire dans une ligne ; plus de pilule de bouton.

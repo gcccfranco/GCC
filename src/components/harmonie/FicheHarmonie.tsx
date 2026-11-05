@@ -97,7 +97,7 @@ export function FicheHarmonie({ id }: { id: string }) {
 
   return (
     <div
-      className={cn("[container-type:inline-size] space-y-4 pb-10", deuxVolets ? undefined : "mx-auto max-w-2xl px-4 pt-3 md:max-w-3xl md:px-6")}
+      className={cn("[container-type:inline-size] space-y-4 pb-10", deuxVolets ? undefined : "max-w-2xl px-[var(--marge-page)] pt-3 md:max-w-3xl")}
       data-fiche={fiche.id}
     >
       {!deuxVolets && (

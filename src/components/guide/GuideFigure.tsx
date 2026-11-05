@@ -152,25 +152,27 @@ export function GuideFigure({ figure }: { figure: Figure }) {
           />
           <Surimpression figure={figure} />
         </div>
-        {/* Enveloppe positionnée : `TOUCHER_44` pose `relative` au toucher, le bouton ne peut pas être `absolute`.
-            À cheval sur le coin du passe-partout, pour ne pas couvrir les annotations de la capture. */}
-        <div className="absolute -right-3 -top-3">
-          <button
-            type="button"
-            onClick={agrandir}
-            aria-label={t("guide.agrandirCapture")}
-            title={t("guide.agrandirCapture")}
-            className={`${TOUCHER_44} flex h-9 w-9 cursor-zoom-in items-center justify-center rounded-full border border-foreground/15 bg-background/90 text-foreground shadow-sm transition-transform duration-150 active:scale-[.94]`}
-          >
-            <Maximize2 className="h-4 w-4" aria-hidden />
-          </button>
-        </div>
       </div>
-      {figure.caption && (
-        <figcaption className="text-xs text-muted-foreground text-center">
-          {t(`guide.captures.${figure.id}.caption`)}
-        </figcaption>
-      )}
+      {/* R2 : le bouton « Agrandir » sort de la capture, dans la ligne de légende, à droite (zone de 44 px au doigt) :
+          il ne couvre rien et ne touche plus le bord de la section. La légende reste centrée (cale de 36 px à gauche). */}
+      <div className="flex items-center gap-2">
+        {figure.caption ? (
+          <figcaption className="min-w-0 flex-1 pl-9 text-center text-xs text-muted-foreground">
+            {t(`guide.captures.${figure.id}.caption`)}
+          </figcaption>
+        ) : (
+          <span className="flex-1" />
+        )}
+        <button
+          type="button"
+          onClick={agrandir}
+          aria-label={t("guide.agrandirCapture")}
+          title={t("guide.agrandirCapture")}
+          className={`${TOUCHER_44} flex h-9 w-9 shrink-0 cursor-zoom-in items-center justify-center rounded-full border border-foreground/15 bg-background/90 text-foreground shadow-sm transition-transform duration-150 active:scale-[.94]`}
+        >
+          <Maximize2 className="h-4 w-4" aria-hidden />
+        </button>
+      </div>
 
       <Dialog open={ouvert} onOpenChange={setOuvert}>
         <DialogContent

@@ -602,7 +602,7 @@ export default function SetlistsPage() {
   );
 
   return (
-    <div className="relative min-h-screen">
+    <div className="relative">
       <PullToRefresh />
       {enTete}
       {grand ? (

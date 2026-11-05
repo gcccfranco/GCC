@@ -110,7 +110,7 @@ test.describe("navigation par sections (T2), onglets de section", () => {
   // Cible tactile (16/09/2026) : les pilules faisaient 30 px de haut. Depuis V7
   // (21/09/2026), sous 1024 px c'est la pastille du menu qui se touche.
   // Retouches v18 (R5, D9) : compacte (≈ 28 px) en grand avec un pointeur fin, 40 px au doigt.
-  test("une pilule de section fait au moins 40 px de haut au doigt, ≈ 28 px à la souris en grand", async ({ page }) => {
+  test("une pilule de section : zone de 44 px au doigt (pastille du menu ≥ 40 px au téléphone), ≈ 28 px à la souris en grand", async ({ page }) => {
     await page.route(/docs\.google\.com\/spreadsheets/, (route) => route.fulfill({ status: 200, contentType: "text/csv", body: "" }));
     await signInAs(page, MEMBRE, {}, "/planning");
     // Le téléphone a la pastille qui ouvre la feuille ; dès la tablette, les huit
@@ -126,7 +126,17 @@ test.describe("navigation par sections (T2), onglets de section", () => {
     await page.evaluate(() => Promise.all(document.getAnimations().map((a) => a.finished.catch(() => {}))));
     const box = await pilule.boundingBox();
     if (projet.startsWith("ordinateur")) expect(Math.abs(box!.height - 28)).toBeLessThanOrEqual(2);
-    else expect(box!.height).toBeGreaterThanOrEqual(40);
+    else if (projet === "telephone" || projet === "tablette") expect(box!.height).toBeGreaterThanOrEqual(40);
+    else {
+      // Tablette en paysage (T3a) : la pilule de l'en-tête se dessine à 32 px (28 à la souris) ; c'est la zone `::after` de TOUCHER_PILULE qui est portée à 44 px au doigt.
+      expect(box!.height, "dessin de la pilule : 32 px").toBeGreaterThanOrEqual(30);
+      const zone = await pilule.evaluate((el) => {
+        const a = getComputedStyle(el, "::after");
+        return { hauteur: parseFloat(a.height), position: a.position };
+      });
+      expect(zone.position, "zone de toucher en `::after`").toBe("absolute");
+      expect(zone.hauteur, "zone de toucher d'au moins 44 px au doigt").toBeGreaterThanOrEqual(44);
+    }
   });
 });
 

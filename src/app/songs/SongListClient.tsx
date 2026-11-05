@@ -374,7 +374,7 @@ export function SongListClient({ songs, themes, actif = null, erreur = false, on
               <Link
                 href={`/songs/${song.slug}`}
                 aria-current={ouvert ? "page" : undefined}
-                className={`-mx-3 flex min-h-[60px] items-center gap-3 rounded-xl px-3 py-2.5 transition-colors duration-150 ${
+                className={`-mx-2 flex min-h-[60px] items-center gap-3 rounded-xl px-2 py-2.5 transition-colors duration-150 ${
                   // Le chant ouvert à droite (deux volets, planche `Main`) : la ligne en encre.
                   ouvert ? "bg-foreground" : "active:bg-secondary/70"
                 }`}

@@ -367,10 +367,12 @@ test.describe("Guide", () => {
     await bouton.scrollIntoViewIfNeeded();
     const zone = (await bouton.boundingBox())!;
     expect(zone.width).toBeGreaterThanOrEqual(36);
-    // À cheval sur le coin du cadre : le rond dépasse en haut et à droite de l'image (annotations dégagées).
+    // R2 : hors de la capture, dans la ligne de légende sous l'image, à droite : il ne couvre rien et reste dans la section.
     const img = (await page.locator("figure img").first().boundingBox())!;
-    expect(zone.y, "dépasse en haut de l'image").toBeLessThan(img.y);
-    expect(zone.x + zone.width, "dépasse à droite de l'image").toBeGreaterThan(img.x + img.width);
+    expect(zone.y, "sous l'image").toBeGreaterThanOrEqual(img.y + img.height);
+    const figure = (await page.locator("figure").first().boundingBox())!;
+    expect(zone.x + zone.width, "reste dans la figure, à droite").toBeLessThanOrEqual(figure.x + figure.width + 1);
+    expect(zone.x + zone.width, "à droite de la légende").toBeGreaterThan(img.x + img.width / 2);
     await bouton.click();
     const feuille = page.getByTestId("capture-feuille");
     await expect(feuille).toBeVisible();

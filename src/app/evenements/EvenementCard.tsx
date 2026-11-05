@@ -33,7 +33,7 @@ function monthLabel(iso: string, lang: string): string {
 function PastillePublic({ pour, className }: { pour: string; className: string }) {
   const { t } = useTranslation()
   return (
-    <span className={`inline-block rounded-full font-semibold bg-secondary text-foreground ${pour === "eglise" ? "" : "texte-service"} ${className}`}
+    <span className={`inline-block rounded-full font-semibold bg-secondary blanc-sur-gris text-foreground ${pour === "eglise" ? "" : "texte-service"} ${className}`}
       style={pour === "eglise" ? undefined : { background: `${categoryColor(pour)}18`, ...styleTexteService(categoryColor(pour)) }}>
       {pour === "eglise"
         ? t("evenements.pourEglise")
