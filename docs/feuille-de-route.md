@@ -1337,6 +1337,21 @@ passages instrumentaux. **Tranché par Timothée le 07/11/2026 : interlude « In
 sur le constat 16 du § 7). Les « Dernière phrase – Pm » et l'historique déjà enregistrés restent lisibles, sans
 migration. **Lot AB-I codé le 07/11/2026** (go du jour) sur `claude/cool-allen-pkzti6` (`b538acc`) ; **en ligne le 07/11/2026** (ordre de Timothée).
 
+### AO. Mode louange façon forScore, apparence comprise (Timothée, 07/11/2026) → spec à écrire après la planche
+
+« J'aime pas le mode louange, je trouve qu'il ressemble pas assez à forScore alors que je t'avais [dit] de faire tout
+comme forScore, de la navigation à l'apparence etc. ; l'UI du mode louange est bof, que ce soit la vue des musiciens
+ou autre. En gros tout le mode louange. » La « vue des musiciens » = les vues par rôle du mode louange (pianiste,
+guitariste, choriste, batteur), précisé le jour même. Le chantier d'octobre (`spec-mode-louange-forscore.md`, L0–L7)
+n'avait repris que les gestes et gardé l'apparence du site : captures de l'existant (barre haute sans commande, tout
+dans la barre basse, tiroir de liste, longue feuille de réglages, cartes de section façon appli web, vue batteur en
+cadres vides). Cette demande **rouvre toute l'apparence du mode louange** ; restent gelées les couleurs d'accords, de
+sections et du 简谱, les calques 简谱 et le PDF. Planche `/planche` en cours (`docs/planches/planche-mode-louange-forscore-2.html`).
+**Vue par rôle proposée d'après le planning** (question du jour, étude `chantier-forscore/04-role-suggere.md`) :
+**proposer, pas imposer** ; **cajon → vue Batteur** ; **rôle retenu par compte sur un iPad partagé** (tranché par
+Timothée le 07/11/2026). Restent ouverts : deux rôles le même jour, « Musicien » sans instrument, Percussion.
+Rien n'est codé : planche, puis spec, puis go.
+
 ## 4. Carte des modules de l'app « GCC »
 
 À valider par Timothée avant toute spec de module (les modules existants ne
