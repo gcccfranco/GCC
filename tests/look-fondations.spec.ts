@@ -426,10 +426,12 @@ test.describe("plancher de texte et gris à 13 px en grand (CD, T4a)", () => {
           const texte = el.textContent?.trim() ?? "";
           const estVignette = el.matches('[data-testid="tuile"]') || (vignette.test(texte) && getComputedStyle(el).flexDirection === "column");
           if (!estVignette || el.clientHeight === 0 || getComputedStyle(el).display === "none") continue;
-          const zone = document.createRange();
-          zone.selectNodeContents(el);
-          const [t, b] = [zone.getBoundingClientRect(), el.getBoundingClientRect()];
-          if (t.height === 0) continue;
+          // Les boîtes des lignes (jour, mois), pas la zone de police entière (`Range`) : celle d'un chiffre de 30 px
+          // dépasse sa ligne de quelques px sans que rien ne touche le bord à l'œil.
+          const lignes = [...el.children].map((c) => c.getBoundingClientRect()).filter((r) => r.height > 0);
+          if (!lignes.length) continue;
+          const t = { top: Math.min(...lignes.map((r) => r.top)), bottom: Math.max(...lignes.map((r) => r.bottom)) };
+          const b = el.getBoundingClientRect();
           if (t.top < b.top + 2 || t.bottom > b.bottom - 2) {
             sortie.push(`vignette « ${texte} » : air ${(t.top - b.top).toFixed(1)} px en haut, ${(b.bottom - t.bottom).toFixed(1)} px en bas`);
           }

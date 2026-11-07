@@ -58,7 +58,7 @@ export function GrilleCelluleDate({
         {menu}
       </div>
       {cetteSemaine && (
-        <span className={`mt-0.5 mr-1 inline-block [@container(min-width:960px)]:hidden text-xs font-bold px-1.5 py-0.5 rounded ${app ? "bg-foreground text-background" : "text-white"}`} style={app ? undefined : { background: couleur }}>
+        <span className={`mt-0.5 mr-1 inline-block [@container(min-width:960px)]:hidden text-xs leading-[14px] font-bold px-1.5 py-0.5 rounded ${app ? "bg-foreground text-background" : "text-white"}`} style={app ? undefined : { background: couleur }}>
           {t("planning.table.thisWeek")}
         </span>
       )}

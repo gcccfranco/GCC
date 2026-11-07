@@ -74,12 +74,13 @@ export function DetailService({ s }: { s: ServiceGroupe }) {
   const carteEquipe = equipe.length > 0 && <CarteEquipe equipe={equipe} monNom={monNom} niveau={2} />;
   const carteSetlist = setlist && <CarteSetlist setlist={setlist} songs={songs} couleur={couleur} boutonsEnTete={!deuxVolets} />;
 
+  // En deux volets, `DeuxVolets` pose déjà la marge basse (pb-6) : pas de seconde (lot CD, T4b).
   return (
-    <div className={cn("service-detail space-y-4 pb-10", !deuxVolets && "px-[var(--marge-page)] pt-3")}>
+    <div className={cn("service-detail space-y-4", !deuxVolets && "px-[var(--marge-page)] pb-10 pt-3")}>
       {!deuxVolets && <Retour href="/mes-services">{t("mesServices.title")}</Retour>}
 
       <header className="flex items-start gap-4">
-        <Tile color={couleur} big={jour.getDate()} small={mois} size="lg" className="h-14 w-14 rounded-xl [&>span:first-child]:text-2xl" />
+        <Tile color={couleur} big={jour.getDate()} small={mois} size="lg" className="h-14 w-14 rounded-xl [&>span:first-child]:text-2xl [&>span:first-child]:leading-none" />
         <div className="min-w-0 flex-1">
           <p className="svc-ink text-sm font-semibold" style={{ "--svc": couleur } as React.CSSProperties}>{nomDuService(s.service, t)}</p>
           <Titre className={cn("font-bold leading-tight tracking-tight", deuxVolets ? "text-xl" : "text-xl md:text-2xl")}>{dateLongue(s.date, i18n.language)}</Titre>

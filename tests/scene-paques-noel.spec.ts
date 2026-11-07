@@ -1597,8 +1597,8 @@ test("P9 — tablette portrait et grands écrans : la carte de saison entière, 
   await expect(resumeSaison(page)).toHaveCount(0);
 });
 
-test("P9 — une colonne (téléphone, tablette portrait) : « Lancer les réservations » pleine largeur, sous la saison, puis l'aperçu", async ({ page }) => {
-  test.skip(estGrandEcran(test.info()), "propre au téléphone et à la tablette debout");
+test("P9 — une colonne (téléphone ; la tablette portrait a deux colonnes, bo-evenements-12, scene-des-fetes.spec.ts) : « Lancer les réservations » pleine largeur, sous la saison, puis l'aperçu", async ({ page }) => {
+  test.skip(!estTelephone(test.info()), "une colonne : le téléphone seul depuis bo-evenements-12 (lot CD, T4b)");
   await ouvrirFete(page, `${BO}/paques`, { "programmes/paques-2027": DOC_PAQUES_2027_BROUILLON }, "2026-10-09", ALICE_EVT);
   const lancer = page.getByRole("button", { name: "Lancer les réservations", exact: true });
   const saison = estTelephone(test.info()) ? resumeSaison(page) : carteSaison(page);
@@ -1611,8 +1611,8 @@ test("P9 — une colonne (téléphone, tablette portrait) : « Lancer les réser
   await verifierAgencement(page);
 });
 
-test("P9 — une colonne (téléphone, tablette portrait) : saison lancée → « Cette fête », « Cette semaine » en cartes par jour avec « ⋯ », l'ordre de passage en carte en bas", async ({ page }) => {
-  test.skip(estGrandEcran(test.info()), "propre au téléphone et à la tablette debout");
+test("P9 — une colonne (téléphone ; la tablette portrait a deux colonnes, bo-evenements-12, scene-des-fetes.spec.ts) : saison lancée → « Cette fête », « Cette semaine » en cartes par jour avec « ⋯ », l'ordre de passage en carte en bas", async ({ page }) => {
+  test.skip(!estTelephone(test.info()), "une colonne : le téléphone seul depuis bo-evenements-12 (lot CD, T4b)");
   await ouvrirFete(page, `${BO}/noel`, DOCS_P8, "2026-10-09", ALICE_EVT);
   const colonne = colonneFete(page);
   await expect(colonne.getByRole("button", { name: /^Saison/ })).toContainText("sam. 10–12, dim. 14–19 · 1 h · tout membre");

@@ -193,15 +193,21 @@ function mesurer(page: Page): Promise<Mesures> {
 
     // (e) une page courte ne défile pas dans le vide : si le contenu et la cale de la barre du bas tiennent dans l'écran,
     //     le document dépasse l'écran de 24 px au plus. Le bas du contenu : le dernier texte, image ou contrôle de `main`.
+    //     (`dt` / `dd` comptent : la fiche d'un service en deux volets finit sur une liste de définitions, lot CD T4b.)
     const barre = document.querySelector<HTMLElement>('[data-testid="barre-du-bas"]');
     const cale = barre && visible(barre) ? (barre.previousElementSibling as HTMLElement | null) : null;
     const hauteurCale = cale && getComputedStyle(cale).display !== "none" ? cale.getBoundingClientRect().height : 0;
     let basContenu = 0;
-    for (const el of Array.from(document.querySelectorAll("main :is(h1, h2, h3, p, span, li, a, button, input, textarea, select, img, svg, label, td, th)"))) {
+    for (const el of Array.from(document.querySelectorAll("main :is(h1, h2, h3, p, span, li, dt, dd, a, button, input, textarea, select, img, svg, label, td, th)"))) {
       if (!visible(el) || el.closest('[aria-hidden="true"], nextjs-portal')) continue;
       let fixe = false;
       for (let a: Element | null = el; a && a !== document.body; a = a.parentElement) if (getComputedStyle(a).position === "fixed") fixe = true;
       if (!fixe) basContenu = Math.max(basContenu, el.getBoundingClientRect().bottom + window.scrollY);
+    }
+    // Un groupe blanc est du contenu jusqu'à son bord (sa marge intérieure basse comprise) : une carte qui dépasse
+    // l'écran n'est pas du vide (lot CD, T4b : fiche d'un service, cartes empilées en tablette paysage).
+    for (const g of Array.from(document.querySelectorAll("main .carte-groupe"))) {
+      if (visible(g)) basContenu = Math.max(basContenu, g.getBoundingClientRect().bottom + window.scrollY);
     }
     const defile = doc.scrollHeight - window.innerHeight;
     if (basContenu + hauteurCale <= window.innerHeight && defile > 24) {
