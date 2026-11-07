@@ -76,8 +76,11 @@ test("Mes services sans service : un cadre vide (EtatVide), sans 🙂", async ({
   const vide = page.getByText(/Aucun service à venir/);
   await expect(vide).toBeVisible();
   await expect(vide).not.toContainText("🙂");
+  // Lot CD (T2b, recette de surface C ; T4b, pilote Mes services) : l'état vide est un groupe blanc ou un bloc
+  // d'information, sans pointillés (il en avait avant le lot).
   const cadre = vide.locator("xpath=..");
-  expect(await cadre.evaluate((el) => getComputedStyle(el).borderTopStyle)).toBe("dashed");
+  await expect(cadre).toHaveClass(/\b(carte-groupe|bloc-info)\b/);
+  expect(await cadre.evaluate((el) => getComputedStyle(el).borderTopStyle)).not.toBe("dashed");
 });
 
 test("bandeau « planning périmé » : rôle status", async ({ page }) => {

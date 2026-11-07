@@ -396,7 +396,9 @@ const NUANCE_TEXT_NEUTRAL_CLASS = "text-stone-600 dark:text-stone-300";
 
 /** Badge de nuances (dynamiques + expression voulues par la présidence).
  *  `lg` : mode louange, lu de plus loin ; `variant="text"` : bandeau de
- *  structure, texte discret sous l'abréviation. */
+ *  structure, texte discret sous l'abréviation. Notation de la partition : ses
+ *  tailles en px restent hors de l'échelle de texte B et de son plancher (lot CD,
+ *  T4a), pour garder le badge du mode louange nettement plus grand. */
 function NuanceBadge({ nuance, size = "sm", variant = "badge" }: { nuance?: SectionNuance; size?: "sm" | "lg"; variant?: "badge" | "text" }) {
   if (!nuance || (nuance.tags.length === 0 && !nuance.note)) return null;
   const lg = size === "lg";
@@ -416,8 +418,8 @@ function NuanceBadge({ nuance, size = "sm", variant = "badge" }: { nuance?: Sect
             aria-label={arrowOnly ? nuanceLabel(id) : undefined}
             className={`inline-flex items-center gap-[0.25em] leading-none normal-case tracking-normal ${
               text
-                ? `text-sm font-semibold ${def?.intensity ? NUANCE_TEXT_INTENSITY_CLASS[def.intensity] : NUANCE_TEXT_NEUTRAL_CLASS}`
-                : `${lg ? "text-sm font-bold px-2 py-1 rounded-md" : "text-xs font-semibold px-1.5 py-0.5 rounded"} ${def?.intensity ? NUANCE_INTENSITY_CLASS[def.intensity] : NUANCE_NEUTRAL_CLASS}`
+                ? `text-[14px] font-semibold ${def?.intensity ? NUANCE_TEXT_INTENSITY_CLASS[def.intensity] : NUANCE_TEXT_NEUTRAL_CLASS}`
+                : `${lg ? "text-[0.8125rem] font-bold px-2 py-1 rounded-md" : "text-[10px] font-semibold px-1.5 py-0.5 rounded"} ${def?.intensity ? NUANCE_INTENSITY_CLASS[def.intensity] : NUANCE_NEUTRAL_CLASS}`
             }`}
           >
             {Icon && <Icon aria-hidden="true" className={arrowOnly ? "h-[1.5em] w-[1.5em] shrink-0" : "h-[1.1em] w-[1.1em] shrink-0"} strokeWidth={2.5} />}
@@ -426,7 +428,7 @@ function NuanceBadge({ nuance, size = "sm", variant = "badge" }: { nuance?: Sect
         );
       })}
       {nuance.note && (
-        <span className={`normal-case tracking-normal text-stone-600 dark:text-stone-300 ${text ? "text-sm font-normal" : lg ? "text-sm font-semibold" : "text-xs font-normal"}`}>
+        <span className={`normal-case tracking-normal text-stone-600 dark:text-stone-300 ${text ? "text-[13px] font-normal" : lg ? "text-[0.8125rem] font-semibold" : "text-[11px] font-normal"}`}>
           {nuance.note}
         </span>
       )}
@@ -456,7 +458,8 @@ export function StructureStrip({
   details?: boolean;
   /** Rappel du mode louange (pages suivantes d'un chant en Sections uniques) :
    *  pastilles de 30 px (26 px sous 640 px), sans modulation ni détails ; nuance
-   *  sous les seules pastilles pleines. */
+   *  sous les seules pastilles pleines. Mode louange : ses tailles en px restent hors
+   *  de l'échelle de texte B (lot CD, T4a). */
   compacte?: boolean;
   /** Colonne de la marge du mode louange (page de scan en paysage) : pastilles
    *  empilées, chacune suivie de son nom, de « → X » et de sa nuance. */
@@ -532,9 +535,9 @@ export function StructureStrip({
                       : { background: tintOf(g.step.section), color: colorOf(g.step.section) }
                   }
                 >
-                  <span className={`inline-flex items-baseline font-bold leading-none tracking-[0.02em] ${compacte ? "text-sm" : "text-sm sm:text-lg"}`}>
+                  <span className={`inline-flex items-baseline font-bold leading-none tracking-[0.02em] ${compacte ? "text-[13px] sm:text-[14px]" : "text-sm sm:text-lg"}`}>
                     <abbr title={g.full} className="no-underline [text-decoration:none]">{g.abbr}</abbr>
-                    {g.repeat > 1 && <span className={`ml-px font-semibold leading-none ${compacte ? "text-xs" : "text-xs sm:text-sm"}`}>×{g.repeat}</span>}
+                    {g.repeat > 1 && <span className={`ml-px font-semibold leading-none ${compacte ? "text-[10px]" : "text-xs sm:text-sm"}`}>×{g.repeat}</span>}
                   </span>
                   {n !== undefined && (
                     <span aria-label={`${n}`} className={`absolute -right-1 -top-1 max-sm:h-4 max-sm:min-w-4 ${numberBadge}`}>{n}</span>
@@ -552,7 +555,7 @@ export function StructureStrip({
                     {targetKey && !compacte && <span className="font-mono text-xs leading-none text-muted-foreground">→ {targetKey}</span>}
                     {!compacte && g.nuances.length > 0 && <span className="inline-flex flex-wrap items-center justify-center gap-x-1.5">{nuancesOf(g)}</span>}
                     {compacte && pleine.has(i) && g.nuances.length > 0 && (
-                      <span className="inline-flex flex-wrap items-center justify-center gap-x-1 [&_span]:!text-xs [&_span]:!font-bold">{nuancesOf(g)}</span>
+                      <span className="inline-flex flex-wrap items-center justify-center gap-x-1 [&_span]:!text-[12px] [&_span]:!font-bold">{nuancesOf(g)}</span>
                     )}
                   </>
                 )}

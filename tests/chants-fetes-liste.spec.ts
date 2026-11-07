@@ -39,14 +39,25 @@ async function ouvrir(page: Page, docs: Record<string, Record<string, unknown>> 
   await page.clock.setFixedTime(new Date("2026-10-09T10:00:00"));
   return signInAs(page, MEMBRE, docs, chemin);
 }
-const categorie = (page: Page) => page.locator("select").filter({ has: page.locator("optgroup") }).first();
+// Le filtre de catégorie est un `Menu` depuis le lot CD (T3b, jeu de contrôles B) : plus de <select> ni d'<optgroup>,
+// un titre de groupe et des entrées `menuitemradio`.
+async function ouvrirCategories(page: Page) {
+  await page.getByRole("button", { name: /^(Filtrer par catégorie|按类别筛选)/ }).click();
+  const menu = page.getByRole("menu");
+  await expect(menu).toBeVisible();
+  return menu;
+}
+async function choisirCategorie(page: Page, libelle: string) {
+  await (await ouvrirCategories(page)).getByRole("menuitemradio", { name: libelle, exact: true }).click();
+}
 
 test.describe("CF-E · Setlists › Fêtes (CF13)", () => {
   test("un membre sans catégorie voit « Fêtes › Noël » ; les setlists non vides, dans l'ordre de passage", async ({ page }) => {
     await ouvrir(page);
-    const menu = categorie(page);
-    await expect(menu.locator('optgroup[label="Fêtes"] option')).toHaveText(["Noël", "Pâques"]);
-    await menu.selectOption("Noël");
+    const menu = await ouvrirCategories(page);
+    await expect(menu.getByText("Fêtes", { exact: true })).toBeVisible();
+    await expect(menu.getByRole("menuitemradio", { name: /^(Noël|Pâques)$/ })).toHaveText(["Noël", "Pâques"]);
+    await menu.getByRole("menuitemradio", { name: "Noël", exact: true }).click();
     await expect(page.getByText("Noël 2026 · jeudi 24 décembre")).toBeVisible();
     const titres = page.getByRole("link", { name: /Noël 2026 · / });
     await expect(titres.nth(0)).toContainText("Noël 2026 · Gp Paix");
@@ -58,13 +69,13 @@ test.describe("CF-E · Setlists › Fêtes (CF13)", () => {
 
   test("« Sans chant : … » : les passages sans setlist non vide, dont celui à deux Qui", async ({ page }) => {
     await ouvrir(page);
-    await categorie(page).selectOption("Noël");
+    await choisirCategorie(page, "Noël");
     await expect(page.getByText("Sans chant : 3 · Le grand spectacle, 4 · Louange finale")).toBeVisible();
   });
 
   test("une fête sans setlist : « Sans chant » pour tous ses passages", async ({ page }) => {
     await ouvrir(page, { "programmes/noel-2026": PROGRAMME });
-    await categorie(page).selectOption("Noël");
+    await choisirCategorie(page, "Noël");
     await expect(page.getByText(/^Sans chant : 1 · Ouverture, 2 · Les bergers, 3 · Le grand spectacle, 4 · Louange finale$/)).toBeVisible();
   });
 
@@ -73,7 +84,7 @@ test.describe("CF-E · Setlists › Fêtes (CF13)", () => {
     await expect(page.getByRole("button", { name: /Mes services/ })).toHaveAttribute("aria-pressed", "true");
     await expect(page.getByRole("link", { name: /Noël 2026 · Gp Paix/ })).toBeVisible();
     await expect(page.getByRole("link", { name: /Noël 2026 · Gp Joie/ })).toHaveCount(0);
-    await categorie(page).selectOption("Noël");
+    await choisirCategorie(page, "Noël");
     await expect(page.getByRole("link", { name: /Noël 2026 · Gp Joie/ })).toBeVisible();
   });
 
@@ -86,7 +97,7 @@ test.describe("CF-E · Setlists › Fêtes (CF13)", () => {
   test("un passage retiré de l'ordre de passage : sa setlist n'est plus listée", async ({ page }) => {
     const sans = { ...PROGRAMME, passages: PROGRAMME.passages.filter((p) => p.id !== "p2bbbbbb") };
     await ouvrir(page, { ...DOCS, "programmes/noel-2026": sans });
-    await categorie(page).selectOption("Noël");
+    await choisirCategorie(page, "Noël");
     await expect(page.getByRole("link", { name: /Noël 2026 · Gp Paix/ })).toBeVisible();
     await expect(page.getByRole("link", { name: /Noël 2026 · Gp Joie/ })).toHaveCount(0);
   });
@@ -94,9 +105,10 @@ test.describe("CF-E · Setlists › Fêtes (CF13)", () => {
   test("en 中文 : le groupe « 节日 », « 圣诞节 » et le titre recalculé", async ({ page }) => {
     await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
     await ouvrir(page);
-    const menu = categorie(page);
-    await expect(menu.locator('optgroup[label="节日"] option')).toHaveText(["圣诞节", "复活节"]);
-    await menu.selectOption("Noël");
+    const menu = await ouvrirCategories(page);
+    await expect(menu.getByText("节日", { exact: true })).toBeVisible();
+    await expect(menu.getByRole("menuitemradio", { name: /^(圣诞节|复活节)$/ })).toHaveText(["圣诞节", "复活节"]);
+    await menu.getByRole("menuitemradio", { name: "圣诞节", exact: true }).click();
     // Le groupe se lit en 中文 dans le titre (bo-evenements-9, src/lib/fetes/qui.ts) ; la valeur stockée reste « Gp Paix ».
     await expect(page.getByRole("link", { name: /圣诞节 2026 · 和平团契/ })).toBeVisible();
   });
