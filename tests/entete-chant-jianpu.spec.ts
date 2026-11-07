@@ -62,6 +62,7 @@ test("(ordinateur, 1920 px) une colonne aussi sur grand écran : l'en-tête au-d
 });
 
 // chants-11 : la ligne de l'auteur est un crédit (12 px, 16 px de ligne, 8 px au-dessus), le latin en Atkinson 400.
+// Lot CD, T4a (P13) : gris, il passe à 13 px dès 1 024 px de fenêtre ; son `leading-4` garde la ligne de 16 px.
 for (const [slug, nom] of [["一切歌颂赞美", "chant chinois"], ["aucune-peur", "chant français"]] as const) {
   test(`${nom} : la ligne de l'auteur est un crédit de 12 px, 8 px sous le groupe du titre, en graisse 400`, async ({ page }) => {
     await page.goto(`/songs/${encodeURIComponent(slug)}`);
@@ -71,7 +72,7 @@ for (const [slug, nom] of [["一切歌颂赞美", "chant chinois"], ["aucune-peu
       const s = getComputedStyle(el);
       return { taille: s.fontSize, hauteur: s.lineHeight, marge: s.marginTop, graisse: s.fontWeight, police: s.fontFamily };
     });
-    expect(style.taille).toBe("12px");
+    expect(style.taille).toBe(page.viewportSize()!.width >= 1024 ? "13px" : "12px");
     expect(style.hauteur).toBe("16px");
     expect(style.marge).toBe("8px");
     expect(style.graisse).toBe("400");
