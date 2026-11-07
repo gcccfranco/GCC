@@ -1355,7 +1355,14 @@ et piano au même service) : un service, un rôle. Restent ouverts : « Musicien
 **Paroles du site dans le mode louange** (demande du 07/11/2026 : « les dispositions des paroles qui existent déjà
 sur le site, le mode par défaut en bleu et le mode section en couleur ») : planche à part
 (`docs/planches/planche-mode-louange-paroles-site.html`, https://claude.ai/artifact/EPfZA3RAvEXrE2cqzPXcCf),
-vraies captures sous le chrome de la piste A, quatre questions. **Le mode
+vraies captures sous le chrome de la piste A. **Tranché par Timothée le 07/11/2026 (« comme tes propositions ») :**
+(1) la page du mode louange garde **les paroles du site** sous la barre forScore, pas la « partition imprimée » de la
+piste A (barre, menus, points, « Je joue », feuille de route du batteur gardés) ; (2) un appareil neuf démarre en
+**Bleu** ; (3) les **pastilles de structure** restent en tête de chant, le menu Repères les reprend ; (4) le **chinois
+reste rouge** en mode Bleu. **Nouvelle demande du même soir** : « propose-moi plus de dispositions pour les
+partitions, pour que je choisisse ; on va mettre 3-4 types que les gens peuvent choisir sur le site » : le réglage
+« Couleurs par section » deviendrait un choix entre 3 ou 4 dispositions, partagé par la page du chant, la vue
+partitions et le mode louange (planche `docs/planches/planche-dispositions-partition.html`, en cours). **Le mode
 louange suit le réglage du site** (Timothée, 07/11/2026 : « si sur le site ils sont en couleur par section, dans le
 mode louange on le met en couleur par section ») : c'est déjà le cas, un seul réglage « Couleurs par section » par
 appareil partagé par la page du chant, la vue partitions de la setlist et le mode louange (`src/lib/chartStylePref.ts`) ;
