@@ -824,7 +824,7 @@ export function SongView({
       <div className="mb-0 pb-3 print:mb-3 border-b border-border">
         <div className="flex items-start justify-between gap-5">
           <div className="min-w-0">
-            <h1 className={`text-xl font-bold text-foreground leading-[1.05] tracking-[-0.02em] ${isZh ? KaiTiFont.className : chord_font.className}`}>
+            <h1 className={`text-xl md:text-2xl font-bold text-foreground leading-[1.05] tracking-[-0.02em] ${isZh ? KaiTiFont.className : chord_font.className}`}>
               {titleHref ? (
                 <Link href={titleHref} className="hover:underline underline-offset-4 decoration-2">
                   {ast.metadata.title}
