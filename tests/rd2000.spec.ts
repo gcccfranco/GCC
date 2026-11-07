@@ -40,18 +40,16 @@ async function capture(page: Page, name: string) {
 
 test("un pianiste trouve les sons en tête d'Harmonie, ouverts sur « Par moment »", async ({ page }, info) => {
   await entrer(page, JO, "/harmonie");
-  // Espace Musiciens (EM-2) : l'entrée « RD-2000 » de la barre (latérale en grand, du bas sinon) ; la carte, sur téléphone seulement.
+  // Espace Musiciens (EM-2) : l'entrée « RD-2000 » de la barre (latérale en grand, du bas sinon). La carte du catalogue au
+  // téléphone est partie au lot CD (T3b) ; son compte des essentiels est la ligne d'état de l'en-tête des sons (harmonie-1).
   const barre = ["ordinateur", "tablette-paysage"].includes(info.project.name) || (await page.getByTestId("barre-laterale").isVisible())
     ? page.getByTestId("barre-laterale").getByRole("navigation")
     : page.getByTestId("barre-du-bas");
   const onglet = barre.locator('a[href="/harmonie/rd2000"], a[href="/harmonie/rd2000/"]');
   await expect(onglet).toBeVisible();
-  if (info.project.name === "telephone") {
-    const ligne = page.locator("[data-harmonie]").getByRole("link", { name: /Sons du RD-2000/ });
-    await expect(ligne).toContainText(`${ESSENTIELS} essentiels sur ${DONNEES.sons.length.toLocaleString("fr-FR")}`);
-    await ligne.click();
-  } else await onglet.click();
+  await onglet.click();
   await page.waitForURL(/\/harmonie\/rd2000\/?$/);
+  await expect(page.locator("header[data-entete-page]")).toContainText(`${ESSENTIELS} essentiels sur ${DONNEES.sons.length.toLocaleString("fr-FR")}`);
   await expect(page.getByRole("tab", { name: "Par moment" })).toHaveAttribute("aria-selected", "true");
   await expect(page.locator("[data-moment]")).toHaveCount(DONNEES.moments.length);
   await expect(page.locator("[data-regle]")).toBeVisible();
