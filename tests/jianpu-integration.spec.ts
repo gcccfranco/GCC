@@ -61,6 +61,9 @@ type Rvb = [number, number, number];
 
 /** La couleur des points (px CSS de la fenêtre) sur une capture de la page, lue dans le navigateur. */
 async function couleurs(page: Page, pts: Pt[]): Promise<Rvb[]> {
+  // Ce qui passe par-dessus le scan sans en être : le badge de Next en développement, et la barre du bas au
+  // téléphone, qui se montre ou se cache au défilement entre les deux captures comparées (serveur froid).
+  await page.addStyleTag({ content: "nextjs-portal, [data-testid='barre-du-bas'] { display: none !important; }" });
   const png = (await page.screenshot({ animations: "disabled" })).toString("base64");
   return page.evaluate(async ({ b64, pts }) => {
     const img = new Image();

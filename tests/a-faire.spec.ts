@@ -399,7 +399,8 @@ test.describe("À faire (BO-B) : l'écran", () => {
       // Pas de colonne de droite sous 1024 px : la même adresse, à la main.
       await page.goto(adresse);
     }
-    await expect(page).toHaveURL(/\/back-office\/planning\/culte\/?\?case=culte%7C2026-10-25%7Cbatterie$/);
+    // Sur un serveur de test froid, la première compilation de la page du planning dépasse les 5 s par défaut.
+    await expect(page).toHaveURL(/\/back-office\/planning\/culte\/?\?case=culte%7C2026-10-25%7Cbatterie$/, { timeout: 30_000 });
     // La case qu'on voit (grille, ou case de la carte au téléphone en édition), sinon la carte du dimanche.
     const cible = page.locator('[data-grille="culte"] [data-cible]');
     await expect(cible).toHaveCount(1);
