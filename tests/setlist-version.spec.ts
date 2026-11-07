@@ -197,15 +197,15 @@ test("ma structure : le corps la suit, le bandeau, le sommaire et la liste reste
   await expect(bodySections(page, 1).nth(1)).toContainText("Refrain");
   await expect(bodySections(page, 1).nth(2)).toContainText("Pont");
   await expect(song(page, 1).getByText("Ma version", { exact: true })).toBeVisible();
-  await expect(strip(page, 1), "le bandeau garde la structure de la présidence").toHaveText(["I", "C1", "R", "Pm", "C2", "P"]);
+  await expect(strip(page, 1), "le bandeau garde la structure de la présidence").toHaveText(["I", "C1", "R", "Int", "C2", "P"]);
   const deuxVolets = await enDeuxVolets(page);
   if (deuxVolets) await expect(pastilles(page, 1), "le sommaire suit ce qui est affiché").toHaveText(["C1", "R", "P"]);
   await capture(page, "v2-ma-structure");
   if (deuxVolets) return; // pas de vue liste en deux volets
 
   await ouvrirListe(page);
-  // 5C1 (20/09/2026) : la liste écrit la structure en abrégé — l'interlude de la présidence y est « Pm ».
-  await expect(page.getByRole("listitem").filter({ hasText: "Abba Père" }).first(), "la vue liste garde la présidence").toContainText("Pm");
+  // 5C1 (20/09/2026) : la liste écrit la structure en abrégé — l'interlude de la présidence y est « Int ».
+  await expect(page.getByRole("listitem").filter({ hasText: "Abba Père" }).first(), "la vue liste garde la présidence").toContainText("Int");
 });
 
 test("la feuille « Sections » enregistre ma structure sans toucher la setlist", async ({ page }) => {
@@ -250,7 +250,7 @@ test("« Structure seule » masque le corps même avec ma structure", async ({ p
   await ouvrirAffichage(page);
   await page.getByRole("menuitemradio", { name: "Structure seule" }).click();
   await expect(bodySections(page, 1)).toHaveCount(0);
-  await expect(strip(page, 1)).toHaveText(["I", "C1", "R", "Pm", "C2", "P"]);
+  await expect(strip(page, 1)).toHaveText(["I", "C1", "R", "Int", "C2", "P"]);
 });
 
 test("mode louange : ma structure, sans les notes d'occurrence de la présidence", async ({ page }) => {

@@ -10,7 +10,7 @@ import { fermerMenus, ouvrirAffichage, ouvrirPartitions } from "./helpers/setlis
 
 // Lot 2 du chantier 简谱 (docs/spec-jianpu-integration.md) : « Sections uniques » et
 // structure dans le mode louange. Setlist « Culte du 11 octobre » (fictive) :
-// 1 为我而来 (C), 2 一生爱你 (D, gravé en E), 3 Abba Père (A, I · C1 · R · Pm · C2 · R · P · R ×2,
+// 1 为我而来 (C), 2 一生爱你 (D, gravé en E), 3 Abba Père (A, I · C1 · R · Int · C2 · R · P · R ×2,
 // transition après C2, note sur le 2e R).
 
 // ─── Données ─────────────────────────────────────────────────────────────────
@@ -33,7 +33,7 @@ const item = (over: Partial<SetlistItem> & { songSlug: string; position: number 
   ...over,
 });
 
-/** Abba Père : I · C1 · R · Pm · C2 · R · P · R · R ; transition après C2, note sur le 2e R. */
+/** Abba Père : I · C1 · R · Int · C2 · R · P · R · R ; transition après C2, note sur le 2e R. */
 const ABBA = item({
   songSlug: "abba-pere",
   position: 3,
@@ -455,7 +455,7 @@ test.describe("bandeau de pastilles en tête du chant", () => {
   test("Ordre joué : huit étapes sans détails, la note reste sur sa section (FR)", async ({ page }) => {
     await ouvrirMode(page, [ABBA]);
     await expect(bandeauEntete(page).getByRole("listitem")).toHaveCount(8);
-    await expect(bandeauEntete(page).getByRole("listitem")).toHaveText(["I", "C1", "R", "Pm", "C2", "R", "P", "R×2"]);
+    await expect(bandeauEntete(page).getByRole("listitem")).toHaveText(["I", "C1", "R", "Int", "C2", "R", "P", "R×2"]);
     await expect(onStage(page, "[data-entete-chant]").getByText("Piano seul, voix douces")).toHaveCount(0);
     expect(await surToutesLesPages(page, "[data-section]"), "neuf passages joués").toBe(9);
   });
@@ -472,7 +472,7 @@ test.describe("bandeau de pastilles en tête du chant", () => {
 
   test("neuf étapes non repliées tiennent sur une rangée du bandeau, au téléphone (C9) (FR)", async ({ page }) => {
     test.skip(page.viewportSize()!.width >= 640, "propre au téléphone");
-    // I · C1 · R · Pm · C2 · R · P · Pm · R : aucune reprise consécutive, donc neuf pastilles.
+    // I · C1 · R · Int · C2 · R · P · Int · R : aucune reprise consécutive, donc neuf pastilles.
     const neuf = { ...ABBA, structureOverride: ["intro-1-0", "verse-2-1", "chorus-3-2", "intro-4-3", "verse-5-4", "chorus-3-5", "bridge-6-6", "intro-4-7", "chorus-3-8"] };
     await ouvrirMode(page, [neuf]);
     const pastilles = bandeauEntete(page).locator("li > span");

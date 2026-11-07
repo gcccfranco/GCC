@@ -9,7 +9,7 @@
 // de l'autre fête (`autre`) ; `onErreur` dit à l'écran si une erreur bloque « Lancer ».
 // P9 (Q22) : `seul` ne montre qu'un réglage, pour la feuille ouverte depuis le résumé du téléphone.
 
-import { useEffect, useId, useRef, useState, type ReactNode } from "react"
+import { useEffect, useId, useImperativeHandle, useRef, useState, type ReactNode, type Ref } from "react"
 import { useTranslation } from "react-i18next"
 import { Plus } from "lucide-react"
 import {
@@ -27,6 +27,9 @@ export type SaisonPatch = Partial<Pick<Programme, "jourJ" | "debut" | "fin" | "p
 
 /** Un réglage seul (P9, une feuille du téléphone) ; les jours et les plages vont ensemble. */
 export type ReglageSeul = "jourJ" | "dates" | "joursPlages" | "duree" | "qui"
+
+/** « Terminé » de la feuille du téléphone : enregistre la plage en cours d'édition, sauf une nouvelle plage laissée intacte ; faux si elle est refusée. */
+export type SaisonFormHandle = { terminer: () => boolean }
 
 /** La période de réservation de l'édition de l'autre fête (Q8), et son titre pour l'erreur. */
 export type AutreFete = { debut: string; fin: string; titre: string }
@@ -104,7 +107,7 @@ function DatePastille({ prefixe, label, value, max, avecAnnee = false, onChange 
   )
 }
 
-export function SaisonForm({ programme, onSave, jourJCalcule, autre, onErreur, seul }: {
+export function SaisonForm({ programme, onSave, jourJCalcule, autre, onErreur, seul, ref }: {
   programme: Programme
   /** Écrit les champs changés (updateMask), puis recharge la page ; ne rejette
    *  jamais (un échec d'écriture s'affiche en haut de l'écran de la saison). */
@@ -116,6 +119,7 @@ export function SaisonForm({ programme, onSave, jourJCalcule, autre, onErreur, s
   onErreur?: (erreur: boolean) => void
   /** Ce réglage seul, sans la carte autour (P9). */
   seul?: ReglageSeul
+  ref?: Ref<SaisonFormHandle>
 }) {
   const { t, i18n } = useTranslation()
   const lang = i18n.language
@@ -174,17 +178,30 @@ export function SaisonForm({ programme, onSave, jourJCalcule, autre, onErreur, s
   }
 
   function validerPlage() {
-    if (!editeur) return
+    if (!editeur) return true
     const plages = triPlages(editeur.index === null
       ? [...s.plages, editeur.plage]
       : s.plages.map((p, i) => (i === editeur.index ? editeur.plage : p)))
     const next = { ...s, plages, jours: joursDes(plages) }
     const textes = verifier(next)
     // Plage refusée : l'éditeur reste ouvert sur elle, rien ne bouge.
-    if (textes.length > 0) { setErreur({ champ: "plages", textes }); return }
+    if (textes.length > 0) { setErreur({ champ: "plages", textes }); return false }
     setEditeur(null)
     appliquer(next, "plages")
+    return true
   }
+
+  /** « Terminé » : comme « OK », sauf une nouvelle plage restée telle que « + Plage » l'a proposée, oubliée. */
+  function terminer() {
+    const proposee = s.plages.at(-1) ?? PLAGES_DEFAUT[0]
+    if (editeur?.index === null && editeur.plage.jour === proposee.jour && editeur.plage.debut === proposee.debut && editeur.plage.fin === proposee.fin) {
+      setEditeur(null)
+      return true
+    }
+    return validerPlage()
+  }
+
+  useImperativeHandle(ref, () => ({ terminer }))
 
   function retirerPlage() {
     if (editeur?.index == null) return

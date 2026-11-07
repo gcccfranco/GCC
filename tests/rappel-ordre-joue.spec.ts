@@ -32,7 +32,7 @@ const item = (over: Partial<SetlistItem> & { songSlug: string }): SetlistItem =>
   ...over,
 });
 
-/** Abba Père : I · C1 · R · Pm · C2 · R · P · R · R (nuances inventées). */
+/** Abba Père : I · C1 · R · Int · C2 · R · P · R · R (nuances inventées). */
 const ORDRE_ABBA = ["intro-1-0", "verse-2-1", "chorus-3-2", "intro-4-3", "verse-5-4", "chorus-3-5", "bridge-6-6", "chorus-3-7", "chorus-3-8"];
 const ABBA = item({
   songSlug: "abba-pere",

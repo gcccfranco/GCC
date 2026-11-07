@@ -263,8 +263,8 @@ test("H1 — structure : la section retirée et la section ajoutée se voient av
 
   const sheet = await finishAndOpenHistory(page);
   const change = changeItem(sheet, "Structure de Abba Père modifiée");
-  await expect(change.getByRole("list", { name: "Avant" }).getByRole("listitem")).toHaveText(["I", "C1", "R", "Pm", "C2", "P (retiré)"]);
-  await expect(change.getByRole("list", { name: "Après" }).getByRole("listitem")).toHaveText(["I", "C1", "R", "Pm", "C2", "R (ajouté)"]);
+  await expect(change.getByRole("list", { name: "Avant" }).getByRole("listitem")).toHaveText(["I", "C1", "R", "Int", "C2", "P (retiré)"]);
+  await expect(change.getByRole("list", { name: "Après" }).getByRole("listitem")).toHaveText(["I", "C1", "R", "Int", "C2", "R (ajouté)"]);
   await expect(change.getByRole("list", { name: "Avant" }).getByRole("listitem").last()).toHaveAttribute("data-mark", "removed");
 });
 
@@ -292,7 +292,7 @@ test("H1 — deux retouches à moins de 15 min : l'avant de la première, l'apr�
   await openEditor(page, {
     [`setlists/${SETLIST_ID}`]: withoutBridge,
     [`setlists/${SETLIST_ID}/history/avant`]: entry("uid-musicien", "Ruth K.", minutesAgo(5), [
-      { kind: "structure", song: "abba-pere", from: ["I", "C1", "R", "Pm", "C2", "P"], to: ["I", "C1", "R", "Pm", "C2"] },
+      { kind: "structure", song: "abba-pere", from: ["I", "C1", "R", "Int", "C2", "P"], to: ["I", "C1", "R", "Int", "C2"] },
     ]),
   });
   await reglerElement(page, "Abba Père");
@@ -301,8 +301,8 @@ test("H1 — deux retouches à moins de 15 min : l'avant de la première, l'apr�
   const sheet = await finishAndOpenHistory(page);
   await expect(sheet.getByRole("article")).toHaveCount(1);
   const change = changeItem(sheet, "Structure de Abba Père modifiée");
-  await expect(change.getByRole("list", { name: "Avant" }).getByRole("listitem")).toHaveText(["I", "C1", "R", "Pm", "C2", "P (retiré)"]);
-  await expect(change.getByRole("list", { name: "Après" }).getByRole("listitem")).toHaveText(["I", "C1", "R", "Pm", "C2", "R (ajouté)"]);
+  await expect(change.getByRole("list", { name: "Avant" }).getByRole("listitem")).toHaveText(["I", "C1", "R", "Int", "C2", "P (retiré)"]);
+  await expect(change.getByRole("list", { name: "Après" }).getByRole("listitem")).toHaveText(["I", "C1", "R", "Int", "C2", "R (ajouté)"]);
 });
 
 test("H1 — section déplacée, fusion numérotée, ancienne entrée sans avant / après", async ({ page }) => {
@@ -334,6 +334,26 @@ test("H1 — section déplacée, fusion numérotée, ancienne entrée sans avant
   const old = changeItem(sheet, "Structure de 一生爱你 modifiée");
   await expect(old).toBeVisible();
   await expect(old.getByRole("list")).toHaveCount(0);
+});
+
+test("H1 — ancienne entrée écrite « Pm » (avant le 07/11/2026) : la pastille garde son texte et sa section", async ({ page }) => {
+  await signInAs(
+    page,
+    MUSICIEN,
+    {
+      [`setlists/${SETLIST_ID}`]: SETLIST,
+      [`setlists/${SETLIST_ID}/history/e1`]: entry("uid-musicien", "Ruth K.", minutesAgo(30), [
+        { kind: "structure", song: "abba-pere", from: ["I", "C1", "R", "Pm", "C2", "P"], to: ["I", "C1", "R", "Pm", "C2"] },
+      ]),
+    },
+    `/setlists/${SETLIST_ID}`,
+  );
+  await page.getByRole("button", { name: /Modifiée par Ruth K\./ }).click();
+  const sheet = page.getByRole("dialog", { name: "Historique des modifications" });
+  const change = changeItem(sheet, "Structure de Abba Père modifiée");
+  const avant = change.getByRole("list", { name: "Avant" }).getByRole("listitem");
+  await expect(avant).toHaveText(["I", "C1", "R", "Pm", "C2", "P (retiré)"]);
+  await expect(avant.nth(3).locator("abbr")).toHaveAttribute("title", "Interlude");
 });
 
 test("H1 — en 中文, avant / après traduits", async ({ page }) => {

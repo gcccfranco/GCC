@@ -50,10 +50,12 @@ const FF: SectionNuance = { tags: ["ff"] };
 
 test.describe("Dp : origine, palette, nom (pur)", () => {
   test("l'origine se lit après le tiret, par l'inverse des abréviations", () => {
-    const lues = [["R", "chorus"], ["C", "verse"], ["P", "bridge"], ["Pr", "prechorus"], ["Po", "postchorus"], ["I", "intro"], ["F", "outro"], ["Pm", "interlude"], ["Tag", "tag"]];
+    const lues = [["R", "chorus"], ["C", "verse"], ["P", "bridge"], ["Pr", "prechorus"], ["Po", "postchorus"], ["I", "intro"], ["F", "outro"], ["Int", "interlude"], ["Inst", "instrumental"], ["Tag", "tag"]];
     for (const [abbr, sorte] of lues) {
       expect(dpOrigin({ type: "other", name: `Dernière phrase – ${abbr}` }), abbr).toBe(sorte);
     }
+    // « Pm » jusqu'au 07/11/2026 : les Dp déjà enregistrés gardent leur origine.
+    expect(dpOrigin({ type: "other", name: "Dernière phrase – Pm" }), "ancien Pm").toBe("interlude");
     expect(dpOrigin({ type: "other", name: "最后一句 – R" })).toBe("chorus");
     expect(dpOrigin({ type: "other", name: "Dernière phrase – C2" }), "chiffre ignoré").toBe("verse");
     expect(dpOrigin({ type: "other", name: "Dernière phrase" }), "sans tiret").toBeNull();

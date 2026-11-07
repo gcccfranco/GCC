@@ -17,6 +17,9 @@ const ORIGIN_OF_ABBR: Record<string, string> = {
   r: "chorus",
   po: "postchorus",
   p: "bridge",
+  int: "interlude",
+  inst: "instrumental",
+  // « Pm » avant le 07/11/2026 : des « Dernière phrase – Pm » sont enregistrées.
   pm: "interlude",
   f: "outro",
   tag: "tag",

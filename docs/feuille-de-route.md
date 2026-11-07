@@ -1178,6 +1178,7 @@ d'accords sur le site pour aider les musiciens à savoir comment jouer l'accord 
   doigté. **Spec écrite ; Q14 (emplacement de la page) ouverte** : Timothée revoit d'abord l'inventaire des accès du
   site (carte : https://claude.ai/artifact/RVnkQYaFbyyBgZ8ti4ET6s) ; planche https://claude.ai/artifact/TvcfEjNLGYC8QjJYBhnQND ; **go le 21/10/2026 pour DA-1 à DA-3 sauf les portes d'entrée de la page** (pas de bouton sur Chants ni d'entrée au menu tant que Q14 n'est pas tranchée ; `/accords` joignable par le panneau seulement), session orchestratrice. **DA-1 à DA-3 codés et poussés le 21/10/2026, à valider par Timothée** (détail : « Avancement » de la spec ; 26 accords sans doigté de guitare, tous dim9 et 7#11). Refonte des accès : chantier à part, non lancé.
 - **DA-4** (02/11/2026) — « tous les voicings ? » : non ; **trois positions de guitare dans trois zones du manche** pour toute qualité courante (39 % des accords joués n'en ont que deux, dont F, Bm, Bb) et **trois renversements de la main droite au piano**, dans le panneau et sur `/accords`. Spec : § DA-4 de `spec-dictionnaire-accords.md` ; deux questions tranchées sur les recommandations (accords avec basse : une 2e forme pour seconde, tierce, quinte à la basse ; pas de planche) ; **go le 02/11/2026**, session orchestratrice. **Codé et poussé le 02/11/2026 (DA-4a, DA-4b), à valider par Timothée** ; **en ligne le 02/11/2026** (ordre de Timothée) : 92 % des accords joués à trois positions (61 % avant), renversements au piano (détail : « Avancement (DA-4) » de la spec).
+- **Moi sans Harmonie** (Timothée, 02/11/2026 : « retire la section harmonie de l'onglet moi ») : l'aperçu Harmonie (cours, fiches, sons du RD-2000) quitte la page Moi ; Harmonie reste dans l'espace Musiciens (`spec-espace-musiciens.md`). `src/app/moi/page.tsx`, `ApercuHarmonie` retiré de `src/components/moi/Apercus.tsx`, six libellés `moi.apercus.*` devenus orphelins retirés (fr, 中文) ; tests `agencement-v18-moi`, `coherence` adaptés (118 verts, cinq projets). **En ligne le 02/11/2026** (ordre de Timothée).
 
 ### AC. Les accès viennent de l'organigramme (Timothée, 21/10/2026) → `spec-acces-organigramme.md`
 
@@ -1327,6 +1328,14 @@ comme aujourd'hui ; « Cours » devient « Théorie musicale » ; Harmonie quitt
 tablette en portrait. Aucune règle Firestore. **Codé le 02/11/2026** (go du jour) sur
 `claude/espace-musiciens-scene` : EM `e50abce`, SF `8f9db55` ; **en ligne le 02/11/2026** (`main` = `780a849`, ordre de Timothée). Écarts et
 deux tests rouges antérieurs aux lots : § État de la spec.
+
+### AN. Pastilles « Int » et « Inst » au lieu de « Pm » (signalement du 06/11/2026) → `spec-abreviation-interlude.md`
+
+Un membre signale que l'Interlude donne une pastille « Pm », qui se lit comme une sorte de Pont (« P ») ; il propose
+« Tag » ou « Int ». « Tag » écarté : dans le corpus, les Tag sont de courtes reprises chantées, les interludes des
+passages instrumentaux. **Tranché par Timothée le 07/11/2026 : interlude « Int », instrumental « Inst »** (revient
+sur le constat 16 du § 7). Les « Dernière phrase – Pm » et l'historique déjà enregistrés restent lisibles, sans
+migration. **Lot AB-I codé le 07/11/2026** (go du jour) sur `claude/cool-allen-pkzti6` (`b538acc`) ; **en ligne le 07/11/2026** (ordre de Timothée).
 
 ## 4. Carte des modules de l'app « GCC »
 
@@ -1687,11 +1696,15 @@ valider par Timothée** : relecture des textes 中文, regard sur les cartes (r�
   Timothée). Passes de tests divisées en sessions parallèles ; suite complète (18 403 tests, six sessions) : rouges
   réglés sauf trois antérieurs à T4 et T5 (`spec-corrections-design.md`, « Fin de lot »). Traductions 中文 à faire relire
   (Harmonie, 复制链接). **À valider en local par Timothée**, puis mise en ligne sur son ordre.
+- 07/11/2026 : **pastilles Int et Inst** (AN) : signalement d'un membre (« Pm » se confond avec « P »), Timothée tranche « Int + Inst » ; spec `spec-abreviation-interlude.md`, lot AB-I codé sur `claude/cool-allen-pkzti6` (go du jour, `b538acc`), en ligne le jour même (ordre de Timothée).
+- 07/11/2026 : **Tu es notre Dieu en A** : signalement d'un membre du 08/10/2026 (« la gamme originale est A et non D ») ; le fichier suivait la feuille de l'église en D. Go de Timothée : accords transposés de D en A, places inchangées, `{source}` gardée, ligne `#` d'explication dans le fichier. Les setlists où le chant est resté « tonalité d'origine » passent de D à A. Codé sur `claude/cool-allen-pkzti6` (`dba7002`), en ligne le jour même (ordre de Timothée).
 - 07/11/2026 (soir) : **retouches V1 à V6** de la validation de Timothée sur écran large (go « 1 à 6 avec l'option A ») :
   index A–Z des Chants à hauteur de la liste ; case vide du dimanche (À faire) en « — » qui ouvre sa case du planning ;
   Setlists avec l'aperçu de la première setlist d'emblée ; fiche de Mes services en setlist + équipe ; colonne des
   partitions d'une setlist à 860 px centrée ; 简谱 centrée malgré les marges inégales des scans (`marges.json`). Tests
-  ciblés en quatre sessions (2 659 tests), rouges réglés. Toujours sur la branche, à valider en local.
+  ciblés en quatre sessions (2 659 tests), rouges réglés. Validé par Timothée en local, puis **lot CD en ligne le
+  07/11/2026** (ordre de Timothée) : `main` fusionné dans la branche (Moi sans Harmonie, AB-I, Tu es notre Dieu en A,
+  saison de scène gardés), puis `main` avancé jusqu'à elle.
 
 ## 7. Relecture adversariale (14/09/2026)
 
@@ -1720,7 +1733,7 @@ contre le code. Classement : **agir** (le plan change), **arbitrer**
 | 13 | Évènements « église » publics vs annonces (texte, section, épinglé) vs planning (dimanches spéciaux, réservé aux connectés) : trois canaux pour une même date. | arbitrer | **Tranché** : les annonces fusionnent dans le calendrier (page Annonces supprimée, annonce sans date = entrée épinglée) ; migration au lot 6. | 6 |
 | 14 | Inscriptions sans compte et places max : écritures anonymes et comptage concurrent. | agir | Lot 6 : inscriptions via route serveur (Admin SDK), comptage transactionnel, `events` en lecture publique, protection contre l'abus. | 6 |
 | 15 | Nouveaux envois automatiques (échéances, chaîne, évènements) sans type de préférence. | agir | `NOTIF_TYPES` gagne `evenements` et `taches`, filtrés comme les autres. | 6–7 |
-| 16 | Table d'abréviations incomplète (post-refrain, final, tag, interlude, sections « autre » à nom libre, 中文) ; « Pm » vs nuance « instrumental » ; type « final » inexistant. | agir + arbitrer | **Tranché** : I · C1 C2… · Pr · R · Po (post-refrain) · P (pont) · Pm (interlude / instrumental) · F (final) · Tag · Dp · ×2 ; sections « autre » = nom écrit (ex. 间奏). La nuance « instrumental » reste une nuance (jouer sans voix), Pm est une section. | 3 |
+| 16 | Table d'abréviations incomplète (post-refrain, final, tag, interlude, sections « autre » à nom libre, 中文) ; « Pm » vs nuance « instrumental » ; type « final » inexistant. | agir + arbitrer | **Tranché** : I · C1 C2… · Pr · R · Po (post-refrain) · P (pont) · ~~Pm (interlude / instrumental)~~ Int (interlude) · Inst (instrumental), *revu le 07/11/2026 (§ 3.AN)* · F (final) · Tag · Dp · ×2 ; sections « autre » = nom écrit (ex. 间奏). La nuance « instrumental » reste une nuance (jouer sans voix), ~~Pm~~ Int / Inst est une section. | 3 |
 | 17 | Le bandeau « nuance sous chaque étape + notes + transitions » ne tient pas sur une ligne à 390 px. | agir | Bandeau en grille qui passe à la ligne (étape = abréviation au-dessus de sa nuance) ; notes et transitions sur une ligne fine en dessous, pas en ligne ; **testé sur les trois appareils** avec un pire cas (fusion mélangée, 12 étapes). | 3 |
 | 18 | Menu par sections vs barre du bas à 4 onglets figée et navigation sans compte (pas d'entrée vers le calendrier public). | arbitrer (lot 4) | Prérequis écrit du lot 4 : correspondance sections → onglets et navigation anonyme. | 4 |
 | 19 | Règle `onboarding/{uid}` à rétablir (permissions en double) ; l'inscription est centrée sur le nom de planning alors que l'assemblée arrive au lot 6. | agir | Lot 8 : règle rétablie. Lot 6 : parcours d'inscription **sans** nom de planning déplacé en prérequis (`comptes-roles`). | 6, 8 |

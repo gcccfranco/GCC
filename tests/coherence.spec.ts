@@ -92,10 +92,10 @@ test("ordinateur : le menu du compte mène à Équipes, et n'offre plus Harmonie
   await expect(page.getByRole("menuitem", { name: "Harmonie" })).toHaveCount(0);
 });
 
-test("Moi : la ligne Harmonie n'apparaît qu'à qui a accès au catalogue", async ({ page }) => {
+test("Moi : plus de ligne Harmonie, même pour qui a accès au catalogue (retirée le 02/11/2026)", async ({ page }) => {
   test.skip(test.info().project.name === "ordinateur", "la page Moi est celle du tactile");
   await open(page, ADMIN, "/moi");
-  await expect(page.getByRole("link", { name: "Harmonie" })).toHaveAttribute("href", /\/harmonie/);
+  await expect(page.getByRole("main").getByRole("link", { name: /Harmonie/ })).toHaveCount(0);
   await open(page, MEMBRE, "/moi");
   await expect(page.getByRole("link", { name: "Équipes" })).toBeVisible();
   await expect(page.getByRole("link", { name: "Harmonie" })).toHaveCount(0);
