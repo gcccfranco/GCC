@@ -250,7 +250,7 @@ export function PetitDejCarte({ etat, annee, tri }: {
           ))}
           {siennes.map(laLigne)}
           {annonce?.dimanche === d && (
-            <p role="status" className="text-[13px] text-muted-foreground">{annonce.texte}</p>
+            <p role="status" className="text-sm text-muted-foreground">{annonce.texte}</p>
           )}
         </div>
       </li>
@@ -263,9 +263,9 @@ export function PetitDejCarte({ etat, annee, tri }: {
         <span className="grid h-7 w-7 place-items-center rounded-lg" style={{ background: `${COULEUR}24`, color: FOND }} aria-hidden>
           <Coffee className="h-4 w-4" />
         </span>
-        <h3 id={titreId} className="text-[17px] font-bold text-foreground">{t("planning.tabs.petitDej")}</h3>
+        <h3 id={titreId} className="text-lg font-bold text-foreground">{t("planning.tabs.petitDej")}</h3>
         {libres !== null && (
-          <span className="ml-auto text-[13px] text-muted-foreground">{t("planning.petitDej.libresSur", { count: libres, total: dimanches.length })}</span>
+          <span className="ml-auto text-sm text-muted-foreground">{t("planning.petitDej.libresSur", { count: libres, total: dimanches.length })}</span>
         )}
       </div>
       {lignes === "illisible" ? (
@@ -321,7 +321,7 @@ export function TonPetitDej({ etat, annee, tri }: { etat: EtatPetitDej; annee: n
               <p className="text-base font-bold text-foreground">
                 {majuscule(new Intl.DateTimeFormat(langue, { weekday: "long", day: "numeric", month: "long" }).format(jour))}
               </p>
-              <p className="text-[13px] text-muted-foreground">{quand}</p>
+              <p className="text-sm text-muted-foreground">{quand}</p>
             </div>
             {user && prochaine.uid === user.uid && prochaine.dimanche >= sun && <MenuActions actions={actionsDeLaLigne(etat, prochaine, t)} />}
           </>
@@ -332,9 +332,9 @@ export function TonPetitDej({ etat, annee, tri }: { etat: EtatPetitDej; annee: n
 
   return (
     <section aria-labelledby={titreId} className="carte-groupe min-w-0 rounded-2xl px-4 pt-3 pb-3.5">
-      <h3 id={titreId} className="pb-2 text-[17px] font-bold text-foreground">{t("planning.petitDej.ton")}</h3>
+      <h3 id={titreId} className="pb-2 text-lg font-bold text-foreground">{t("planning.petitDej.ton")}</h3>
       {corps}
-      <p className="mt-3 border-t border-border pt-2.5 text-[13px] text-muted-foreground">{t("planning.petitDej.astuce")}
+      <p className="mt-3 border-t border-border pt-2.5 text-sm text-muted-foreground">{t("planning.petitDej.astuce")}
         {etat.peutGerer && (
           <>
             {" "}{t("planning.petitDej.astuceAutres")}{" "}

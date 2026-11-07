@@ -99,7 +99,7 @@ export function FiltreDeNom({ filtre, couleur }: { filtre: FiltreNom; couleur: s
             value={filtre.nom}
             onChange={(e) => filtre.changerNom(e.target.value)}
             placeholder={t("planning.table.myName")}
-            className="h-9 w-full rounded-full border border-border bg-card pl-8 pr-8 text-[16px] font-semibold text-foreground placeholder:font-normal sm:text-[13px] focus:outline-none focus:ring-2 focus:ring-ring/20"
+            className="h-9 w-full rounded-full border border-border bg-card pl-8 pr-8 text-[16px] font-semibold text-foreground placeholder:font-normal sm:text-sm focus:outline-none focus:ring-2 focus:ring-ring/20"
           />
           {filtre.nom && (
             <button
@@ -118,7 +118,7 @@ export function FiltreDeNom({ filtre, couleur }: { filtre: FiltreNom; couleur: s
           type="button"
           aria-pressed={filtre.mesDates}
           onClick={filtre.basculerMesDates}
-          className={`inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full px-3.5 text-[13px] font-semibold transition-[background-color,color,transform] duration-150 active:scale-[.96] cursor-pointer ${
+          className={`inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full px-3.5 text-sm font-semibold transition-[background-color,color,transform] duration-150 active:scale-[.96] cursor-pointer ${
             filtre.mesDates ? "text-white" : "border border-border bg-card text-foreground hover:bg-secondary"
           }`}
           style={filtre.mesDates ? { background: couleur } : undefined}
@@ -221,8 +221,8 @@ export function BarreDeGrille({
       ) : (
         <div className="flex min-w-0 flex-wrap items-baseline gap-x-2.5 gap-y-0.5">
           <span aria-hidden className="h-2.5 w-2.5 shrink-0 self-center rounded-full" style={{ background: couleur }} />
-          <h2 className={`text-[22px] font-bold leading-7 text-foreground ${SR_HORS_GRAND}`}>{titre}</h2>
-          {detail && <span className="text-[14px] text-muted-foreground">{detail}</span>}
+          <h2 className={`text-xl font-bold leading-7 text-foreground ${SR_HORS_GRAND}`}>{titre}</h2>
+          {detail && <span className="text-sm text-muted-foreground">{detail}</span>}
           {enCours}
         </div>
       )}

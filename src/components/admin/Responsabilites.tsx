@@ -179,8 +179,8 @@ export function Responsabilites() {
               {aPourvoir && (
                 <section data-testid="sans-gestionnaire" aria-labelledby="resp-a-pourvoir" className="carte-groupe space-y-3 rounded-2xl px-5 py-4">
                   <div className="space-y-1">
-                    <h2 id="resp-a-pourvoir" className="text-[15px] font-semibold leading-[21px] text-foreground">{t("responsabilites.aPourvoir", { liste: aPourvoir })}</h2>
-                    <p className="text-[13px] leading-[18px] text-muted-foreground">{t("responsabilites.aPourvoirAide")}</p>
+                    <h2 id="resp-a-pourvoir" className="text-base font-semibold leading-[21px] text-foreground">{t("responsabilites.aPourvoir", { liste: aPourvoir })}</h2>
+                    <p className="text-sm leading-[18px] text-muted-foreground">{t("responsabilites.aPourvoirAide")}</p>
                   </div>
                   <PastillesVacantes etiquette={t("responsabilites.aPourvoirPlannings")} lignes={plannings} aller={aller} />
                   <PastillesVacantes etiquette={t("responsabilites.aPourvoirEquipes")} lignes={equipesVacantes} aller={aller} />
@@ -203,14 +203,14 @@ function PastillesVacantes({ etiquette, lignes, aller }: { etiquette: string; li
   if (lignes.length === 0) return null;
   return (
     <div className="flex flex-wrap items-center gap-x-3 gap-y-3">
-      <span className="text-[13px] font-semibold leading-[18px] text-muted-foreground">{etiquette}</span>
+      <span className="text-sm font-semibold leading-[18px] text-muted-foreground">{etiquette}</span>
       <ul className="flex flex-wrap gap-2">
         {lignes.map((l) => (
           <li key={l.cle}>
             <a
               href={`#resp-ligne-${l.cle}`}
               onClick={(e) => { e.preventDefault(); aller(l.cle); }}
-              className={`inline-flex min-h-8 items-center rounded-full bg-amber-100 px-3 text-[13px] font-semibold leading-[18px] text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 ${TOUCHER_44}`}
+              className={`inline-flex min-h-8 items-center rounded-full bg-amber-100 px-3 text-sm font-semibold leading-[18px] text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 ${TOUCHER_44}`}
             >
               {l.titre}
             </a>
@@ -235,7 +235,7 @@ function Section({
 }) {
   return (
     <section aria-label={titre} className="space-y-2">
-      {!sansEntete && <h2 className="text-[16px] font-bold text-foreground">{titre}</h2>}
+      {!sansEntete && <h2 className="text-base font-bold text-foreground">{titre}</h2>}
       <div className="carte-groupe divide-y divide-border rounded-2xl px-4 sm:px-5">
         {lignes.map((l) => (
           <LigneResponsabilite key={l.cle} ligne={l} profils={profils} occupee={suivi.enCours === l.cle} enregistre={suivi.enregistre === l.cle} surlignee={suivi.surligne === l.cle} />
@@ -262,12 +262,12 @@ function LigneResponsabilite({
       {/* Téléphone : l'objet et « + Ajouter » sur une ligne, la valeur dessous. À partir de 640 px : une ligne, l'objet à gauche, la valeur à droite. */}
       <div className="flex flex-wrap items-center gap-x-3 gap-y-2 sm:min-h-8 sm:flex-nowrap">
         <div className="flex min-w-[8rem] flex-1 items-baseline gap-2">
-          <h3 className="text-[15px] font-semibold text-foreground">{ligne.titre}</h3>
-          {enregistre && <span role="status" className="text-[12px] leading-4 text-muted-foreground">{t("responsabilites.enregistre")}</span>}
+          <h3 className="text-base font-semibold text-foreground">{ligne.titre}</h3>
+          {enregistre && <span role="status" className="text-xs leading-4 text-muted-foreground">{t("responsabilites.enregistre")}</span>}
         </div>
         <div className="order-3 w-full sm:order-none sm:w-auto sm:max-w-[60%]">
           {ligne.puces.length === 0 ? (
-            <p className="text-[13px] leading-[18px] text-muted-foreground sm:text-right">{t("responsabilites.vacant")}</p>
+            <p className="text-sm leading-[18px] text-muted-foreground sm:text-right">{t("responsabilites.vacant")}</p>
           ) : (
             <ul className="flex flex-wrap gap-1.5 sm:justify-end">
               {ligne.puces.map((p) => (
@@ -293,7 +293,7 @@ function LigneResponsabilite({
           aria-expanded={recherche !== null}
           disabled={occupee}
           onClick={() => setRecherche((r) => (r === null ? "" : null))}
-          className={`inline-flex min-h-11 shrink-0 items-center gap-1 rounded-full bg-background px-3.5 text-[14px] font-semibold text-foreground shadow-[inset_0_0_0_1px_hsl(var(--border))] hover:bg-secondary disabled:opacity-50 sm:min-h-8 ${TOUCHER_44}`}
+          className={`inline-flex min-h-11 shrink-0 items-center gap-1 rounded-full bg-background px-3.5 text-sm font-semibold text-foreground shadow-[inset_0_0_0_1px_hsl(var(--border))] hover:bg-secondary disabled:opacity-50 sm:min-h-8 ${TOUCHER_44}`}
         >
           <Plus className="h-4 w-4" aria-hidden />
           {t("responsabilites.ajouter")}
@@ -325,7 +325,7 @@ function LigneResponsabilite({
                     className="flex min-h-11 w-full items-center gap-3 rounded-xl px-1.5 py-1.5 text-left hover:bg-secondary"
                   >
                     <Initiales nom={nomComplet(p)} />
-                    <span className="min-w-0 flex-1 truncate text-[15px] font-semibold text-foreground sm:text-sm">{nomComplet(p)}</span>
+                    <span className="min-w-0 flex-1 truncate text-base font-semibold text-foreground sm:text-sm">{nomComplet(p)}</span>
                   </button>
                 </li>
               ))}

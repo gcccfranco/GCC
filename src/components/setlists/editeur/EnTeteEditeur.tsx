@@ -104,7 +104,7 @@ function jourCourt(iso: string, langue: string): string {
 export function LienMusiquesEtDanses({ fete }: { fete: ContexteFeteEditeur }) {
   const { t } = useTranslation();
   return (
-    <p className="mt-4 text-[13px] text-muted-foreground">
+    <p className="mt-4 text-sm text-muted-foreground">
       <Link href={`/evenements/scene/${fete.fete}`} className="underline underline-offset-2 hover:text-foreground">
         {t("setlists.fete.musiquesSur", { fete: fete.titreFete })}
       </Link>
@@ -132,7 +132,7 @@ export function EnTeteEditeur({
   // Setlist de fête ouverte depuis la page de la fête : « ‹ Noël 2026 » y ramène (CF19) ; l'enregistrement
   // en cours part au démontage de l'éditeur.
   const retourFete = f?.depuisFete ? (
-    <div className="flex items-center gap-2.5 text-[15px] font-medium text-muted-foreground">
+    <div className="flex items-center gap-2.5 text-base font-medium text-muted-foreground">
       <Link href={`/evenements/scene/${f.fete}`} aria-label={t("common.buttons.back")} className={rondRetour}>
         <ChevronLeft className="h-4 w-4" aria-hidden />
       </Link>
@@ -143,7 +143,7 @@ export function EnTeteEditeur({
   return (
     <div className="space-y-3.5">
       {retourFete ?? (retour ? (
-        <div className="flex items-center gap-2.5 text-[15px] font-medium text-muted-foreground">
+        <div className="flex items-center gap-2.5 text-base font-medium text-muted-foreground">
           {retour.onClick ? (
             <button type="button" onClick={retour.onClick} aria-label={t("common.buttons.back")} className={rondRetour}>
               <ChevronLeft className="h-4 w-4" aria-hidden />
@@ -156,7 +156,7 @@ export function EnTeteEditeur({
           <span>{nomPage}</span>
         </div>
       ) : (
-        <nav aria-label={t("setlists.editeur.fil")} className="text-[13px] text-muted-foreground">
+        <nav aria-label={t("setlists.editeur.fil")} className="text-sm text-muted-foreground">
           <Link href="/setlists" className="hover:text-foreground hover:underline">{t("common.header.setlists")}</Link>
           <span aria-hidden> › </span>
           <span>{nomPage}</span>
@@ -164,7 +164,7 @@ export function EnTeteEditeur({
       ))}
 
       {f ? (
-        <h1 className="text-[24px] font-bold leading-tight tracking-tight text-foreground sm:text-[28px]">{f.titreAffiche}</h1>
+        <h1 className="text-xl font-bold leading-tight tracking-tight text-foreground sm:text-2xl">{f.titreAffiche}</h1>
       ) : (
         <div className="flex items-center gap-2">
           <input
@@ -174,7 +174,7 @@ export function EnTeteEditeur({
             onChange={(e) => c.setTitle(e.target.value)}
             aria-label={t("setlists.form.titleLabel")}
             placeholder={t("setlists.form.titlePlaceholder")}
-            className="min-w-0 max-w-full rounded-lg bg-transparent text-[24px] sm:text-[28px] [field-sizing:content] font-bold leading-tight tracking-tight text-foreground placeholder:text-muted-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+            className="min-w-0 max-w-full rounded-lg bg-transparent text-xl sm:text-2xl [field-sizing:content] font-bold leading-tight tracking-tight text-foreground placeholder:text-muted-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
           />
           <button
             type="button"
@@ -362,13 +362,13 @@ export function EnTeteEditeur({
       )}
 
       <label className="block">
-        <span className="mb-1.5 block text-[13px] text-muted-foreground">{t("setlists.editeur.notes")}</span>
+        <span className="mb-1.5 block text-sm text-muted-foreground">{t("setlists.editeur.notes")}</span>
         <textarea
           rows={2}
           value={c.notes}
           onChange={(e) => c.setNotes(e.target.value)}
           placeholder={t("setlists.form.notesPlaceholder")}
-          className="block min-h-11 max-h-[84px] w-full resize-none overflow-y-auto rounded-xl border border-border bg-background px-3.5 py-2.5 text-[15px] leading-snug text-foreground [field-sizing:content] placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/30"
+          className="block min-h-11 max-h-[84px] w-full resize-none overflow-y-auto rounded-xl border border-border bg-background px-3.5 py-2.5 text-base leading-snug text-foreground [field-sizing:content] placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/30"
         />
       </label>
     </div>

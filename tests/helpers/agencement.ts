@@ -78,11 +78,11 @@ export async function verifierEnTete(page: Page, options: { premierBloc?: Locato
   const marge = await margeAttendue(page);
   if (options.titreDansLeVolet) {
     // Corrections du design (bo-reunions-taches-5) : en deux volets, une fiche est le grand titre ; la bande du haut ne garde
-    // que le retour et l'action. Un seul h1 dans la page, hors de la bande, de 28 px.
+    // que le retour et l'action. Un seul h1 dans la page, hors de la bande, de 30 px (`text-2xl`, échelle B du lot CD, T4a).
     await expect(entete.locator("h1"), "pas de h1 dans la bande du haut").toHaveCount(0);
     const h1 = page.locator("h1").filter({ visible: true });
     await expect(h1, "un seul h1 dans la page").toHaveCount(1);
-    expect(await h1.evaluate((el) => parseFloat(getComputedStyle(el).fontSize)), "taille du titre de la fiche").toBe(28);
+    expect(await h1.evaluate((el) => parseFloat(getComputedStyle(el).fontSize)), "taille du titre de la fiche").toBe(30);
   } else {
     const h1 = entete.locator("h1");
     await expect(h1, "un seul h1 dans l'en-tête").toHaveCount(1);

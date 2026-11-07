@@ -83,18 +83,18 @@ function Carte({ e, onDeplacer }: { e: EntreeCalendrier; onDeplacer?: (e: Entree
       )}
       <LienOuvrirScene
         e={e}
-        className="block px-3.5 pb-2.5 text-[13px] font-semibold text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
+        className="block px-3.5 pb-2.5 text-sm font-semibold text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
       />
       {/* C6 : « Déplacer… » sur les entrées déplaçables (la voie sans glisser, Q5). */}
       {e.repetee && onDeplacer && (
-        <p className="-mt-1.5 px-3.5 pb-2.5 text-right text-[13px] text-muted-foreground">{t("calendrier.deplacer.repetee")}</p>
+        <p className="-mt-1.5 px-3.5 pb-2.5 text-right text-sm text-muted-foreground">{t("calendrier.deplacer.repetee")}</p>
       )}
       {e.deplacable && onDeplacer && (
         <div className="-mt-1.5 flex justify-end px-2 pb-2">
           <button
             type="button"
             onClick={() => onDeplacer(e)}
-            className="rounded-full bg-secondary px-3 py-1 text-[13px] font-semibold text-foreground transition-opacity duration-150 hover:opacity-80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground"
+            className="rounded-full bg-secondary px-3 py-1 text-sm font-semibold text-foreground transition-opacity duration-150 hover:opacity-80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground"
           >
             {t("calendrier.deplacer.bouton")}
           </button>
@@ -125,7 +125,7 @@ const BOUTON =
  *  réunion (une équipe), une tâche (une de ses équipes). */
 export type DroitsCreation = { evenement: boolean; reunion: boolean; tache: boolean };
 
-const ENTREE_MENU = "min-h-11 cursor-pointer gap-2.5 px-3 text-[15px]";
+const ENTREE_MENU = "min-h-11 cursor-pointer gap-2.5 px-3 text-base";
 
 const lienEvenement = (date: string) => `/back-office/evenements/nouveau?date=${date}`;
 const lienReunion = (date: string) => `/back-office/reunions/nouvelle?date=${date}`;
@@ -201,7 +201,7 @@ export function AjouterCeJour({ date, lang, droits, onNouvelleTache }: {
             parLeBouton.current = true;
             setOuvert((o) => !o);
           }}
-          className="inline-flex h-9 items-center gap-1.5 rounded-full bg-foreground pl-3 pr-3.5 text-[13.5px] font-semibold text-background transition-opacity duration-150 hover:opacity-85 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground"
+          className="inline-flex h-9 items-center gap-1.5 rounded-full bg-foreground pl-3 pr-3.5 text-sm font-semibold text-background transition-opacity duration-150 hover:opacity-85 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground"
         >
           <Plus aria-hidden className="h-4 w-4 shrink-0" strokeWidth={2.4} />
           {t("calendrier.ajouterCeJour")}

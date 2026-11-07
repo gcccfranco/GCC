@@ -25,13 +25,13 @@ async function verifie(page: Page, erreurs: string[]) {
       if (!texte) continue;
       const style = getComputedStyle(noeud.parentElement!);
       if (style.display === "none" || style.visibility === "hidden") continue;
-      if (parseFloat(style.fontSize) < 11) petits.push(`${texte.slice(0, 20)} ${style.fontSize}`);
+      if (parseFloat(style.fontSize) < 12) petits.push(`${texte.slice(0, 20)} ${style.fontSize}`);
     }
     return { nonPilules, liensRouges, petits };
   });
   expect(mesures.nonPilules, "les boutons pleins sont des pilules").toEqual([]);
   expect(mesures.liensRouges, "les liens sont en encre, pas en rouge").toEqual([]);
-  expect(mesures.petits, "aucun texte sous 11 px").toEqual([]);
+  expect(mesures.petits, "aucun texte sous 12 px").toEqual([]);
 }
 
 function ecouteErreurs(page: Page) {

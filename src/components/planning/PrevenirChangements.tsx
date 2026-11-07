@@ -293,7 +293,7 @@ function Feuille({ prev, prevenir, definition, onFermer, onIgnorer, onEnvoye }: 
                   <label htmlFor={`prevenir-${i}`} className={`min-w-0 flex-1 ${p.compte ? "" : "text-muted-foreground"}`}>
                     <span className="font-semibold">{p.nom}</span>{" "}
                     {[...new Set(p.motifs.map((m) => m.sens))].map((s) => (
-                      <span key={s} className={`mr-1 rounded-full px-1.5 py-0.5 text-[11px] font-semibold ${s === "ajout" ? "bg-emerald-100 text-emerald-900 dark:bg-emerald-950 dark:text-emerald-200" : "bg-secondary text-foreground"}`}>
+                      <span key={s} className={`mr-1 rounded-full px-1.5 py-0.5 text-xs font-semibold ${s === "ajout" ? "bg-emerald-100 text-emerald-900 dark:bg-emerald-950 dark:text-emerald-200" : "bg-secondary text-foreground"}`}>
                         {t(`planning.prevenir.${s}`)}
                       </span>
                     ))}

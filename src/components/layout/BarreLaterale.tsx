@@ -254,7 +254,7 @@ function ContenuBarre({
           <span className="relative h-[30px] w-[30px] shrink-0 overflow-hidden rounded-full">
             <Image src="/logo.png" alt="GCC Logo" fill sizes="30px" className="object-contain" priority />
           </span>
-          <span className="barre-texte whitespace-nowrap text-[17px] font-bold tracking-[-0.01em] text-foreground">
+          <span className="barre-texte whitespace-nowrap text-lg font-bold tracking-[-0.01em] text-foreground">
             GCC{" "}
             <span key={label} data-testid="label-section" className="text-brand animate-in fade-in duration-150">
               {label}
@@ -293,7 +293,7 @@ function ContenuBarre({
               aria-describedby={n > 0 ? `${idPastille}-${cle}` : undefined}
               title={enIcones ? t(cle) : undefined}
               onClick={onChoix}
-              className={`barre-entree relative flex items-center gap-3 rounded-xl px-3 py-[9px] text-[15px] font-semibold transition-colors duration-150 ${
+              className={`barre-entree relative flex items-center gap-3 rounded-xl px-3 py-[9px] text-base font-semibold transition-colors duration-150 ${
                 active ? "bg-primary text-primary-foreground" : "text-foreground/85 hover:bg-foreground/5"
               }`}
             >
@@ -349,13 +349,13 @@ function ContenuBarre({
                   <button
                     aria-label={t("common.header.account")}
                     title={displayName}
-                    className="barre-fin relative h-8 w-8 shrink-0 rounded-full after:absolute after:-inset-1.5 after:content-[''] bg-foreground text-background text-[13px] font-bold flex items-center justify-center transition-transform duration-150 active:scale-[.94] cursor-pointer"
+                    className="barre-fin relative h-8 w-8 shrink-0 rounded-full after:absolute after:-inset-1.5 after:content-[''] bg-foreground text-background text-sm font-bold flex items-center justify-center transition-transform duration-150 active:scale-[.94] cursor-pointer"
                   >
                     {initial}
                   </button>
                 </MenuCompte>
               </span>
-              <div className="barre-si-depliee min-w-0 flex-1 text-[13px] leading-4">
+              <div className="barre-si-depliee min-w-0 flex-1 text-sm leading-4">
                 <div className="truncate font-bold text-foreground">{displayName}</div>
                 {planningName && planningName !== displayName && (
                   <div className="truncate text-muted-foreground">{planningName}</div>

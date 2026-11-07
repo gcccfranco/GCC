@@ -424,7 +424,7 @@ function Filtres({ etat, aujourdhui, services, presidences, nomService, choisirP
 function Langue({ langue }: { langue: "fr" | "zh" }) {
   const couleur = langue === "zh" ? "var(--zh-accent)" : "var(--fr-accent)";
   return (
-    <span data-testid="langue" className="inline-flex shrink-0 items-center rounded-md px-1.5 py-0.5 text-[11px] font-bold leading-none"
+    <span data-testid="langue" className="inline-flex shrink-0 items-center rounded-md px-1.5 py-0.5 text-xs font-bold leading-none"
       style={{ color: couleur, background: `color-mix(in srgb, ${couleur} 11%, transparent)` }}>
       {langue === "zh" ? "中文" : "FR"}
     </span>
@@ -605,7 +605,7 @@ function CarteJamais({ testId, titre, chants, limite, colonnes, tonalites, aujou
   return (
     <section data-testid={testId} aria-labelledby={`${testId}-titre`} className="bg-card min-w-0 rounded-groupe px-[18px] py-3.5">
       <div className="flex min-h-8 items-center gap-3 pb-2">
-        <h2 id={`${testId}-titre`} className="text-[15px] font-semibold text-foreground">{titre} · {chants.length}</h2>
+        <h2 id={`${testId}-titre`} className="text-base font-semibold text-foreground">{titre} · {chants.length}</h2>
         {!tout && chants.length > LIMITE_TELEPHONE && (
           <Button type="button" variant="outline" size="sm" onClick={() => setTout(true)}
             className={cn("ml-auto h-8", chants.length <= limite && "sm:hidden")}>
@@ -752,7 +752,7 @@ function BlocPresidence({ nom, stats, aujourdhui, nomService }: {
     <section data-testid="presidence-bloc" className="carte-groupe px-5 py-4">
       <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
         <h2 className="text-sm font-semibold text-muted-foreground">{t("stats.presidencesAdmin.titreDe", { nom })}</h2>
-        <span className="rounded-full bg-secondary px-2 py-0.5 text-[11px] font-semibold text-muted-foreground">{t("stats.presidencesAdmin.admins")}</span>
+        <span className="rounded-full bg-secondary px-2 py-0.5 text-xs font-semibold text-muted-foreground">{t("stats.presidencesAdmin.admins")}</span>
       </div>
       <div className="mt-2 grid grid-cols-3 gap-3">
         <Chiffre testId="presidence-fois" valeur={String(stats.total)} libelle={t("stats.presidencesAdmin.fois")} />
@@ -796,10 +796,10 @@ function CartePresidences({ lignes, service, aujourdhui, nomService, choisir, pr
   return (
     <section data-testid="presidences-admin" className="carte-groupe px-[18px] py-3.5">
       <div className="flex min-h-8 flex-wrap items-center gap-x-2 gap-y-1 pb-1">
-        <h2 className="text-[15px] font-semibold text-foreground">
+        <h2 className="text-base font-semibold text-foreground">
           {service ? t("stats.presidencesAdmin.titreService", { service: nomService(service) }) : t("stats.presidencesAdmin.titre")}
         </h2>
-        <span className="rounded-full bg-secondary px-2 py-0.5 text-[11px] font-semibold text-muted-foreground">{t("stats.presidencesAdmin.admins")}</span>
+        <span className="rounded-full bg-secondary px-2 py-0.5 text-xs font-semibold text-muted-foreground">{t("stats.presidencesAdmin.admins")}</span>
       </div>
       {/* Des div à rôles ARIA, pas de <table> : les tests d'agencement du tableau des chants le visent par sa balise. */}
       <div role="table" aria-label={t("stats.presidencesAdmin.titre")} className="text-sm">

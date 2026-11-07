@@ -31,7 +31,7 @@ import type { LignePetitDej } from "@/types/petitDej";
 import { styleTexteService } from "@/lib/couleurSombre"
 
 const LIGNE = "flex items-center gap-3 py-2.5";
-const SOUS = "block truncate text-[13px] text-muted-foreground";
+const SOUS = "block truncate text-sm text-muted-foreground";
 
 /** Le cadre d'un aperçu : titre, « Tout voir » à droite (son libellé dit combien), puis les lignes.
  *  `chargement` : une lecture est en cours (`aria-busy`). */
@@ -39,12 +39,12 @@ export function Apercu({ titre, lien, chargement = false, children }: { titre: s
   return (
     <section aria-label={titre} aria-busy={chargement || undefined} className="carte-groupe min-w-0 rounded-2xl px-4 pb-1.5 pt-3.5">
       <div className="flex items-center gap-2 pb-2.5">
-        <h2 className="min-w-0 flex-1 truncate text-[16px] font-bold text-foreground">{titre}</h2>
+        <h2 className="min-w-0 flex-1 truncate text-base font-bold text-foreground">{titre}</h2>
         {lien && (
           <Link
             href={lien.href}
             aria-label={`${titre} · ${lien.label}`}
-            className="-mr-1 inline-flex shrink-0 items-center gap-0.5 rounded-md px-1 text-[13px] font-semibold text-foreground transition-colors hover:text-muted-foreground"
+            className="-mr-1 inline-flex shrink-0 items-center gap-0.5 rounded-md px-1 text-sm font-semibold text-foreground transition-colors hover:text-muted-foreground"
           >
             {lien.label}
             <ChevronRight className="h-3.5 w-3.5" strokeWidth={2.4} aria-hidden />
@@ -57,7 +57,7 @@ export function Apercu({ titre, lien, chargement = false, children }: { titre: s
 }
 
 /** Une ligne vide : ce que l'aperçu n'a pas (rien à faire, aucune équipe), ou une lecture en échec. */
-export const Vide = ({ children }: { children: ReactNode }) => <p className="py-3 text-[14px] text-muted-foreground">{children}</p>;
+export const Vide = ({ children }: { children: ReactNode }) => <p className="py-3 text-sm text-muted-foreground">{children}</p>;
 
 /** Une ligne grisée tant que la lecture n'est pas finie. */
 const Squelette = ({ className = "h-9" }: { className?: string }) => (
@@ -117,7 +117,7 @@ export function ApercuServices() {
             <Link href={adresseDuService(s, tous)} className={LIGNE}>
               <Tile color={couleur} big={jour.getDate()} small={new Intl.DateTimeFormat(locale(i18n.language), { month: "short" }).format(jour)} />
               <span className="min-w-0 flex-1">
-                <span className="block truncate text-[15px] font-semibold text-foreground">{s.service}</span>
+                <span className="block truncate text-base font-semibold text-foreground">{s.service}</span>
                 <span className={SOUS}>{quand}</span>
               </span>
               <span
@@ -168,7 +168,7 @@ export function ApercuTaches({ equipes }: { equipes: string[] }) {
                 {enCours && <Minus className="h-3.5 w-3.5" strokeWidth={3} />}
               </span>
               <span className="min-w-0 flex-1">
-                <span className="block truncate text-[15px] text-foreground">{l.tache.titre}</span>
+                <span className="block truncate text-base text-foreground">{l.tache.titre}</span>
                 <span className={SOUS}>{details}</span>
               </span>
             </Link>
@@ -193,7 +193,7 @@ export function ApercuHarmonie({ piano }: { piano: boolean }) {
   const lien = (href: string, icone: ReactNode, label: string) => (
     <Link href={href} className={LIGNE}>
       <span aria-hidden className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-secondary text-foreground [&_svg]:h-4 [&_svg]:w-4">{icone}</span>
-      <span className="min-w-0 flex-1 truncate text-[15px] text-foreground">{label}</span>
+      <span className="min-w-0 flex-1 truncate text-base text-foreground">{label}</span>
       <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground/60" aria-hidden />
     </Link>
   );
@@ -203,8 +203,8 @@ export function ApercuHarmonie({ piano }: { piano: boolean }) {
       {!chargement && lecons.length > 0 && (
         <Link href={prochain ? `/harmonie/cours/${prochain.id}` : "/harmonie/cours"} className="block py-2.5">
           <span className="flex items-baseline gap-2">
-            <span className="min-w-0 flex-1 truncate text-[15px] font-semibold text-foreground">{t("moi.apercus.cours")}</span>
-            <span className="shrink-0 text-[13px] tabular-nums text-muted-foreground">
+            <span className="min-w-0 flex-1 truncate text-base font-semibold text-foreground">{t("moi.apercus.cours")}</span>
+            <span className="shrink-0 text-sm tabular-nums text-muted-foreground">
               {t("moi.apercus.chapitres", { faits, total: lecons.length })}
             </span>
           </span>

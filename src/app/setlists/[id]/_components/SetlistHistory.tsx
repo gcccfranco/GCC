@@ -108,7 +108,7 @@ function SectionPill({ label, songs, mark, side, songsMap }: {
   return (
     <li
       data-mark={shown}
-      className={`relative inline-flex h-7 min-w-7 items-center justify-center gap-0.5 rounded-full px-2 text-[13px] font-bold leading-none ${
+      className={`relative inline-flex h-7 min-w-7 items-center justify-center gap-0.5 rounded-full px-2 text-sm font-bold leading-none ${
         shown === "removed" ? "opacity-60" : ""
       } ${shown === "added" ? "ring-2 ring-emerald-600 ring-offset-1 ring-offset-background dark:ring-emerald-400" : ""}`}
       style={{ background: `var(--sec-${key}-tint)`, color: `var(--sec-${key})` }}
@@ -118,7 +118,7 @@ function SectionPill({ label, songs, mark, side, songsMap }: {
         <span aria-hidden className="pointer-events-none absolute inset-x-1 top-1/2 h-[1.5px] -translate-y-1/2 -rotate-[20deg] rounded-full bg-current" />
       )}
       {shown === "moved" && <ArrowUpDown className="h-3 w-3" aria-hidden />}
-      {number && <span className="text-[10px] font-semibold opacity-75">{number} </span>}
+      {number && <span className="text-xs font-semibold opacity-75">{number} </span>}
       <abbr title={section?.name} className="no-underline">{abbr}</abbr>
       {shown !== "same" && <span className="sr-only"> ({t(`setlists.history.${shown}`)})</span>}
     </li>

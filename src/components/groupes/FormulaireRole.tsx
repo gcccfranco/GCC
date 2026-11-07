@@ -140,7 +140,7 @@ export function FormulaireRole({
               type="button"
               aria-pressed={b.colonne === null}
               onClick={() => change({ colonne: null })}
-              className={`rounded-full px-3 py-1.5 text-[13px] font-semibold ${b.colonne === null ? "bg-foreground text-background" : "bg-secondary text-foreground/80"}`}
+              className={`rounded-full px-3 py-1.5 text-sm font-semibold ${b.colonne === null ? "bg-foreground text-background" : "bg-secondary text-foreground/80"}`}
             >
               {t("groupes.form.aucune")}
             </button>
@@ -154,7 +154,7 @@ export function FormulaireRole({
                   aria-pressed={active}
                   disabled={prise}
                   onClick={() => change({ colonne: c.cle })}
-                  className={`inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-[13px] font-semibold disabled:opacity-50 ${active ? "bg-foreground text-background" : "bg-secondary text-foreground/80"}`}
+                  className={`inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-sm font-semibold disabled:opacity-50 ${active ? "bg-foreground text-background" : "bg-secondary text-foreground/80"}`}
                 >
                   {prise ? <Lock className="h-3 w-3" aria-label={t("groupes.form.colonnePrise")} /> : active && <Link2 className="h-3 w-3" aria-hidden />}
                   {t(c.i18n)}

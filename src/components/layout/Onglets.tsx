@@ -86,7 +86,7 @@ export function OngletsRail({
   // zone de toucher 44 px (`::after`, TOUCHER_RANGEE).
   const classe = (on: boolean) =>
     cn(
-      "flex h-[30px] shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-full px-4 text-[13px] font-semibold transition-[background-color,color] duration-150 [@media(pointer:coarse)]:h-[34px]",
+      "flex h-[30px] shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-full px-4 text-sm font-semibold transition-[background-color,color] duration-150 [@media(pointer:coarse)]:h-[34px]",
       TOUCHER_RANGEE,
       pleineLargeur && "flex-1",
       on ? "bg-pose text-foreground shadow-sm dark:shadow-[inset_0_1px_0_rgba(255,255,255,.08)]" : (surGris ? "text-foreground/70 dark:text-muted-foreground hover:text-foreground" : "text-muted-foreground hover:text-foreground"),
@@ -227,7 +227,7 @@ export function Pilules<T extends string>({
         const actif = valeur === o.cle;
         const style = actif && o.couleur ? { backgroundColor: o.couleur, color: "#fff" } : undefined;
         const classe = cn(
-          "inline-flex h-7 shrink-0 items-center whitespace-nowrap rounded-full px-3 text-[13px] font-semibold transition-colors duration-150 [@media(pointer:coarse)]:h-8 [@media(pointer:coarse)]:text-[14px]",
+          "inline-flex h-7 shrink-0 items-center whitespace-nowrap rounded-full px-3 text-sm font-semibold transition-colors duration-150 [@media(pointer:coarse)]:h-8",
           TOUCHER_PILULE,
           actif ? "bg-primary text-primary-foreground" : "bg-secondary text-foreground active:bg-secondary/70",
         );

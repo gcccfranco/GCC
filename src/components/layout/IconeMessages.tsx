@@ -25,7 +25,7 @@ export function IconeMessages({ boutonClassName }: { boutonClassName: string }) 
         <span
           data-testid="pastille"
           aria-hidden
-          className="absolute -right-1 -top-1 min-w-[18px] rounded-full bg-destructive px-1 text-center text-[11px] font-bold leading-[18px] text-destructive-foreground"
+          className="absolute -right-1 -top-1 min-w-[18px] rounded-full bg-destructive px-1 text-center text-xs font-bold leading-[18px] text-destructive-foreground"
         >
           {n}
         </span>

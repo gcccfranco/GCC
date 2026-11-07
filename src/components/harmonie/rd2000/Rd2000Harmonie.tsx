@@ -89,20 +89,20 @@ function LigneSon({ son, layer, actif }: { son: Son; layer?: boolean; actif?: bo
     <GroupRow href={`/harmonie/rd2000/${son.n}`} chevron actif={actif}>
       <span className="flex items-start gap-2.5">
         {layer && (
-          <span className={cn("shrink-0 rounded-full px-2 py-0.5 text-[12px] leading-4 font-medium", actif ? "bg-background text-foreground" : "bg-secondary text-foreground")} data-layer>
+          <span className={cn("shrink-0 rounded-full px-2 py-0.5 text-xs leading-4 font-medium", actif ? "bg-background text-foreground" : "bg-secondary text-foreground")} data-layer>
             {t("harmonie.rd2000.layer")}
           </span>
         )}
-        <span className="shrink-0 text-[17px] font-semibold tabular-nums" data-son={son.n}>{son.n}</span>
+        <span className="shrink-0 text-lg font-semibold tabular-nums" data-son={son.n}>{son.n}</span>
         <span className="min-w-0 font-medium [overflow-wrap:anywhere]">{son.nom}</span>
         {son.premier && (
-          <span className={cn("shrink-0 rounded-full px-1.5 py-0.5 text-[11px] font-medium", actif ? "bg-background text-foreground" : "bg-secondary text-foreground")}>
+          <span className={cn("shrink-0 rounded-full px-1.5 py-0.5 text-xs font-medium", actif ? "bg-background text-foreground" : "bg-secondary text-foreground")}>
             {t("harmonie.rd2000.premierChoix")}
           </span>
         )}
-        <span className="ml-auto shrink-0 text-[13px] text-muted-foreground" aria-label={`${son.louange} / 3`}>{etoiles(son.louange)}</span>
+        <span className="ml-auto shrink-0 text-sm text-muted-foreground" aria-label={`${son.louange} / 3`}>{etoiles(son.louange)}</span>
       </span>
-      {son.commentaire && <span className="line-clamp-2 text-[13px] leading-[18px] text-muted-foreground">{son.commentaire}</span>}
+      {son.commentaire && <span className="line-clamp-2 text-sm leading-[18px] text-muted-foreground">{son.commentaire}</span>}
     </GroupRow>
   );
 }
@@ -119,7 +119,7 @@ function ParMoment({ ouvert, cartes }: { ouvert?: string; cartes: boolean }) {
     <div className="space-y-6" data-vue="moment">
       {groupes.map(([groupe, moments]) => (
         <section key={groupe}>
-          <h2 className="mb-1.5 text-[13px] font-semibold uppercase tracking-wide text-muted-foreground">{groupe}</h2>
+          <h2 className="mb-1.5 text-sm font-semibold uppercase tracking-wide text-muted-foreground">{groupe}</h2>
           <div className={cn(cartes && "md:grid md:grid-cols-2 md:items-start md:gap-4")}>
             {moments.map((m) => {
               const son = parN.get(m.son);
@@ -130,8 +130,8 @@ function ParMoment({ ouvert, cartes }: { ouvert?: string; cartes: boolean }) {
                   className={cn("border-t border-border py-2 first:border-t-0", cartes && "md:bloc-info md:blanc-sur-gris md:rounded-2xl md:border-t-0 md:px-5 md:py-3")}
                   data-moment={m.moment}
                 >
-                  <p className="text-[15px] font-semibold">{m.moment}</p>
-                  {m.conseil && <p className="mb-1.5 text-[15px] leading-[21px] text-foreground/80">{m.conseil}</p>}
+                  <p className="text-base font-semibold">{m.moment}</p>
+                  {m.conseil && <p className="mb-1.5 text-base leading-[21px] text-foreground/80">{m.conseil}</p>}
                   {son && <LigneSon son={son} actif={son.n === ouvert} />}
                   {layer && <LigneSon son={layer} layer actif={layer.n === ouvert} />}
                 </div>
@@ -141,7 +141,7 @@ function ParMoment({ ouvert, cartes }: { ouvert?: string; cartes: boolean }) {
         </section>
       ))}
       <Group title={t("harmonie.rd2000.regle")}>
-        <p className="text-[15px] leading-relaxed" data-regle>{donnees.regleMoments}</p>
+        <p className="text-base leading-relaxed" data-regle>{donnees.regleMoments}</p>
       </Group>
     </div>
   );
@@ -212,20 +212,20 @@ function Parametres() {
     <div className="space-y-8" data-vue="parametres">
       {parties.map(([partie, groupes]) => (
         <section key={partie} className="space-y-5">
-          <h2 className="text-[13px] font-semibold uppercase tracking-wide text-muted-foreground">{partie}</h2>
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">{partie}</h2>
           {[...groupes.entries()].map(([groupe, liste]) => (
             <Group key={groupe} title={groupe}>
               {liste.map((p) => (
                 <div key={p.nom} className="border-t border-border py-2.5 first:border-t-0" data-parametre>
                   <p className="flex items-baseline gap-2">
                     <span className="font-semibold">{p.nom}</span>
-                    <span className="text-[13px] text-muted-foreground">{p.plage}</span>
-                    <span className="ml-auto shrink-0 text-[13px] text-muted-foreground" aria-label={`${t("harmonie.rd2000.priorite")} ${p.priorite} / 3`}>
+                    <span className="text-sm text-muted-foreground">{p.plage}</span>
+                    <span className="ml-auto shrink-0 text-sm text-muted-foreground" aria-label={`${t("harmonie.rd2000.priorite")} ${p.priorite} / 3`}>
                       {etoiles(p.priorite)}
                     </span>
                   </p>
-                  <p className="text-[15px]">{p.effet}</p>
-                  {p.conseil && <p className="text-[13px] text-muted-foreground">{t("harmonie.rd2000.conseil", { valeur: p.conseil })}</p>}
+                  <p className="text-base">{p.effet}</p>
+                  {p.conseil && <p className="text-sm text-muted-foreground">{t("harmonie.rd2000.conseil", { valeur: p.conseil })}</p>}
                 </div>
               ))}
             </Group>
@@ -249,7 +249,7 @@ function ModeDEmploi() {
       {sections.map(([section, lignes]) => (
         <Group key={section} title={section}>
           {lignes.map((l, i) => (
-            <p key={i} className="border-t border-border py-2 text-[15px] first:border-t-0">
+            <p key={i} className="border-t border-border py-2 text-base first:border-t-0">
               <span className="font-semibold">{l.element}</span> — {l.texte}
             </p>
           ))}
@@ -287,7 +287,7 @@ function ListeRd2000({ vue, setVue, filtres, setFiltres, parCategorie, premier }
       {vue === "parametres" && <Parametres />}
       {vue === "legende" && <ModeDEmploi />}
 
-      <p className="text-[13px] text-muted-foreground">
+      <p className="text-sm text-muted-foreground">
         <button type="button" onClick={() => setVue("legende")} className="underline underline-offset-4">
           {t("harmonie.rd2000.modeEmploi")}
         </button>

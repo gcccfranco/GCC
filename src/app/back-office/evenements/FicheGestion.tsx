@@ -99,7 +99,7 @@ export function FicheGestion({ e, user, profile, onSupprimer, erreur, onChange }
               // eslint-disable-next-line @next/next/no-img-element
               <img src={e.images[0]} alt="" className="h-[60px] w-24 shrink-0 rounded-xl object-cover" />
             )}
-            <h2 className="min-w-0 text-[22px] font-bold leading-[27px] tracking-tight text-foreground text-balance">{e.titre}</h2>
+            <h2 className="min-w-0 text-xl font-bold leading-[27px] tracking-tight text-foreground text-balance">{e.titre}</h2>
           </div>
           <div className={styles.types}><TypePour e={e} /></div>
           <div className={styles.actions}>{modifier}{menu}</div>

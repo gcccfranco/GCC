@@ -76,10 +76,10 @@ export function SansCompte({ onCompte, titreDePage = false }: { onCompte?: (n: n
   return (
     <div className="space-y-4">
     <div className="carte-groupe p-5 space-y-3">
-      <h2 id={titreDePage ? "personnes-sans-compte" : undefined} className={titreDePage ? "text-[17px] font-semibold text-foreground" : "text-sm font-semibold text-muted-foreground"}>
+      <h2 id={titreDePage ? "personnes-sans-compte" : undefined} className={titreDePage ? "text-lg font-semibold text-foreground" : "text-sm font-semibold text-muted-foreground"}>
         {titreDePage ? t("backOffice.equipe.sansCompteAvecCompte", { count: unlinkedNames.length }) : t("admin.sansCompte.titre", { count: unlinkedNames.length })}
       </h2>
-      <p className={titreDePage ? "text-[13px] leading-[18px] text-muted-foreground" : "text-xs text-muted-foreground"}>
+      <p className={titreDePage ? "text-sm leading-[18px] text-muted-foreground" : "text-xs text-muted-foreground"}>
         {titreDePage ? t("backOffice.equipe.sansCompteAide") : t("admin.sansCompte.aide")}
       </p>
       {planningData == null ? (
@@ -91,7 +91,7 @@ export function SansCompte({ onCompte, titreDePage = false }: { onCompte?: (n: n
       ) : titreDePage ? (
         <div className="space-y-3">
           <ChampRecherche value={recherche} onChange={setRecherche} placeholder={t("admin.sansCompte.chercher")} label={t("admin.sansCompte.chercher")} />
-          <p role="status" data-testid="sans-compte-nombre" className="text-[13px] leading-[18px] text-muted-foreground">
+          <p role="status" data-testid="sans-compte-nombre" className="text-sm leading-[18px] text-muted-foreground">
             {recherche.trim()
               ? t("admin.sansCompte.filtres", { n: filtres.length, total: unlinkedNames.length })
               : t("admin.sansCompte.nombre", { count: unlinkedNames.length })}
@@ -102,9 +102,9 @@ export function SansCompte({ onCompte, titreDePage = false }: { onCompte?: (n: n
             <div data-testid="sans-compte-liste" className="columns-[180px] gap-x-6">
               {nomsParRepere(filtres).map((g) => (
                 <section key={g.repere} aria-label={g.repere} data-repere={g.repere} className="break-inside-avoid pb-3">
-                  <h3 className="text-[13px] font-semibold leading-[18px] text-muted-foreground">{g.repere}</h3>
+                  <h3 className="text-sm font-semibold leading-[18px] text-muted-foreground">{g.repere}</h3>
                   <ul>
-                    {g.noms.map((n) => <li key={n} className="py-0.5 text-[15px] leading-[21px] text-foreground">{n}</li>)}
+                    {g.noms.map((n) => <li key={n} className="py-0.5 text-base leading-[21px] text-foreground">{n}</li>)}
                   </ul>
                 </section>
               ))}
@@ -116,7 +116,7 @@ export function SansCompte({ onCompte, titreDePage = false }: { onCompte?: (n: n
           {unlinkedNames.map((n) => (
             <span
               key={n}
-              className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300"
+              className="text-xs font-semibold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300"
             >
               {n}
             </span>

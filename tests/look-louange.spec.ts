@@ -129,7 +129,8 @@ test.describe("louange : casse des titres de chants (partout-q1)", () => {
 // Retour de Timothée du 20/09/2026 : en vue partitions, la barre d'outils de la
 // setlist passait sur deux lignes sur son iPhone (402 pt) — 374 pt de commandes
 // pour 370 pt de large. Une seule ligne à toute largeur de téléphone ; sous
-// 390 pt, « Adapter » et « Ma version » vivent dans le menu « ⋯ ». Même défaut sur
+// 431 pt (lot CD, T4a : libellés de 12 px et pastilles à 8 px de marge, la barre ne tient plus
+// sur un 430 pt), « Adapter » et « Ma version » vivent dans le menu « ⋯ ». Même défaut sur
 // tablette, l'appareil du pupitre : les libellés texte arrivaient dès 640 px et ne
 // ne tiennent pas (iPad en portrait : 768 à 834 px). En paysage aussi (demande du
 // soir même) : un téléphone reste en icônes dans les deux sens, jusqu'à 956 px de
@@ -214,7 +215,7 @@ test.describe("louange : barre d'outils de la setlist, une seule ligne sur tél�
             return { nom: el.getAttribute("aria-label") ?? "", milieu: r.top + r.height / 2, gauche: r.left, droite: r.right, h: r.height, l: r.width };
           }),
       );
-      expect(boites.length, "retour, affichage, (adapter), accords, (ma version), mode louange, ⋯").toBe(largeur >= 390 ? 7 : 5);
+      expect(boites.length, "retour, affichage, (adapter), accords, (ma version), mode louange, ⋯").toBe(largeur >= 431 ? 7 : 5);
       const milieux = boites.map((b) => b.milieu);
       expect(Math.max(...milieux) - Math.min(...milieux), `une seule ligne : ${JSON.stringify(boites.map((b) => [b.nom, Math.round(b.milieu)]))}`).toBeLessThan(4);
       for (const b of boites) {
@@ -228,7 +229,7 @@ test.describe("louange : barre d'outils de la setlist, une seule ligne sur tél�
       // La barre seule : à 320 px une longue ligne d'accords du corps (« Dm7(b5)/G ») dépasse de 4 px, c'est une autre histoire.
       expect(await barre.evaluate((el) => el.scrollWidth <= el.clientWidth), "la barre ne déborde pas").toBe(true);
 
-      if (largeur >= 390) {
+      if (largeur >= 431) {
         // Assez de place : les deux modes restent dans la barre, comme avant.
         await barre.getByRole("button", { name: "Adapter" }).click();
         await expect(page.getByText(AIDE_ADAPTER)).toBeVisible();

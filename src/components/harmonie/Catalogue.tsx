@@ -195,7 +195,7 @@ function ListeCatalogue({
             >
               <span className="min-w-0 flex-1">
                 <span className="block text-sm font-semibold text-foreground">{t("harmonie.parcours")}</span>
-                <span className="block text-[13px] text-muted-foreground">{t("harmonie.parcoursSous", { count: parcours.length })}</span>
+                <span className="block text-sm text-muted-foreground">{t("harmonie.parcoursSous", { count: parcours.length })}</span>
               </span>
               <ChevronDown className={cn("h-4 w-4 shrink-0 transition-transform duration-150", parcoursOuvert && "rotate-180")} aria-hidden />
             </button>
@@ -209,7 +209,7 @@ function ListeCatalogue({
               const fiche = parFiche.get(id);
               if (!fiche) return null;
               const numero = (
-                <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-secondary text-[13px] font-semibold tabular-nums text-foreground">
+                <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-secondary text-sm font-semibold tabular-nums text-foreground">
                   {e.n}
                 </span>
               );
@@ -219,7 +219,7 @@ function ListeCatalogue({
                     {numero}
                     <span className="min-w-0">
                       <span className="block truncate font-medium">{fiche.nom}</span>
-                      <span className="block truncate text-[13px] text-muted-foreground">{fiche.familleNom}</span>
+                      <span className="block truncate text-sm text-muted-foreground">{fiche.familleNom}</span>
                     </span>
                   </span>
                 </GroupRow>
@@ -242,7 +242,7 @@ function ListeCatalogue({
         <div className="py-10 text-center" role="status">
           <p className="text-muted-foreground">{t("harmonie.aucuneFiche")}</p>
           <button
-            className="mt-3 text-[15px] font-medium text-foreground underline underline-offset-4"
+            className="mt-3 text-base font-medium text-foreground underline underline-offset-4"
             onClick={() => setFiltres(SANS_FILTRE)}
           >
             {t("harmonie.effacerFiltres")}
@@ -252,18 +252,18 @@ function ListeCatalogue({
         <div className={cn(cartes ? "max-md:space-y-5 md:columns-2 md:gap-4" : "space-y-5")}>
           {familles.map(([nom, liste]) => (
             <div key={nom} data-famille className={cn(cartes && "md:bloc-info md:blanc-sur-gris md:mb-4 md:break-inside-avoid md:rounded-2xl md:px-5 md:pt-3.5 md:pb-1.5")}>
-              <Group title={nom} className={cn(cartes && "md:[&>h2]:text-[17px] md:[&>h2]:text-foreground")}>
+              <Group title={nom} className={cn(cartes && "md:[&>h2]:text-lg md:[&>h2]:text-foreground")}>
                 {liste.map((f) => (
                   <GroupRow key={f.id} href={`/harmonie/${f.id}`} chevron actif={f.id === ouverte} className={cn(cartes && f.id !== ouverte && "md:hover:bg-secondary-fond md:active:bg-secondary-fond")}>
                     <span className="flex items-center gap-2">
                       <span className="line-clamp-2 font-medium">{f.nom}</span>
                       {badgeARelire && f.statut !== "validee" && (
-                        <span className={cn("shrink-0 rounded-full px-1.5 py-0.5 text-[11px]", f.id === ouverte ? "bg-background font-medium text-foreground" : "bg-secondary text-muted-foreground")}>
+                        <span className={cn("shrink-0 rounded-full px-1.5 py-0.5 text-xs", f.id === ouverte ? "bg-background font-medium text-foreground" : "bg-secondary text-muted-foreground")}>
                           {t("harmonie.aRelire")}
                         </span>
                       )}
                     </span>
-                    <span className="block truncate text-[13px] text-muted-foreground">
+                    <span className="block truncate text-sm text-muted-foreground">
                       {f.sensations.map((s) => t(`harmonie.sensation.${s}`)).join(" · ")}
                     </span>
                   </GroupRow>
@@ -274,7 +274,7 @@ function ListeCatalogue({
         </div>
       )}
 
-      <p className="text-[13px] text-muted-foreground">
+      <p className="text-sm text-muted-foreground">
         {t("harmonie.aRelireTout")}{" "}
         <Link href="/guide" className="underline underline-offset-4">
           {t("common.header.guide")}

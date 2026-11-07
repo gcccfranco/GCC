@@ -49,7 +49,7 @@ export function useRecalculOrganigramme() {
       disabled={etat === "busy"}
       aria-label={libelle}
       title={t("equipes.recalcul.aide")}
-      className="inline-flex h-10 shrink-0 items-center gap-2 rounded-full bg-background px-3 text-[14px] font-semibold text-foreground shadow-[inset_0_0_0_1px_hsl(var(--border))] transition-colors hover:bg-secondary disabled:opacity-60 sm:px-4"
+      className="inline-flex h-10 shrink-0 items-center gap-2 rounded-full bg-background px-3 text-sm font-semibold text-foreground shadow-[inset_0_0_0_1px_hsl(var(--border))] transition-colors hover:bg-secondary disabled:opacity-60 sm:px-4"
     >
       <RefreshCw className={`h-4 w-4 shrink-0 ${etat === "busy" ? "animate-spin" : ""}`} aria-hidden />
       <span className="hidden sm:inline">{libelle}</span>

@@ -16,7 +16,7 @@ import { categoryLabel } from "@/lib/serviceColors";
 import { SOUS_EQUIPES } from "@/types/equipe";
 import { SERVICE_LIEUX, type UserProfile } from "@/types/user";
 
-const SOUS = "block truncate text-[13px] text-muted-foreground";
+const SOUS = "block truncate text-sm text-muted-foreground";
 const majuscule = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
 /** Le nom d'un lieu ou d'un groupe : celui du site en français (« Culte Franco »), la traduction en 中文. */
@@ -53,7 +53,7 @@ export function CarteMesEquipes({ profile }: { profile: UserProfile | null }) {
     <Apercu titre={t("moi.apercus.mesEquipes")} lien={{ href: "/equipes", label: t("moi.apercus.organigramme") }}>
       {lignes.length === 0 && <Vide>{t("moi.apercus.aucuneEquipe")}</Vide>}
       {lignes.map((l) => (
-        <Link key={l.cle} href={`/equipes/${l.id}`} data-testid="equipe-ligne" className="flex min-h-[44px] items-center gap-3 py-2.5 text-[15px] text-foreground">
+        <Link key={l.cle} href={`/equipes/${l.id}`} data-testid="equipe-ligne" className="flex min-h-[44px] items-center gap-3 py-2.5 text-base text-foreground">
           <span className="min-w-0 flex-1">
             {l.sous ? <>{l.nom} · <b>{l.sous}</b></> : <b>{l.nom}</b>}
             {l.referent && <span className="text-muted-foreground"> — {t("equipes.referent")}</span>}
@@ -77,11 +77,11 @@ export function CarteCeQueTuPeuxFaire({ profile, admin }: { profile: UserProfile
       {!admin && acces.length === 0 && <Vide>{t("moi.carteFaire.aucun")}</Vide>}
       {acces.map((a, i) => (
         <div key={`${a.cle}-${i}`} data-testid="acces-ligne" className="py-2.5">
-          <span className="block text-[15px] text-foreground">{t(a.cle, a.params)}</span>
+          <span className="block text-base text-foreground">{t(a.cle, a.params)}</span>
           <span className={SOUS}>{t(a.pourquoi, a.params)}</span>
         </div>
       ))}
-      {!admin && <p className="py-3 text-[13px] leading-[1.45] text-muted-foreground">{t("acces.manque")}</p>}
+      {!admin && <p className="py-3 text-sm leading-[1.45] text-muted-foreground">{t("acces.manque")}</p>}
     </Apercu>
   );
 }

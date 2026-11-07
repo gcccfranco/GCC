@@ -42,7 +42,7 @@ function Chant({ item, songs }: { item: SetlistItem; songs: SongIndexEntry[] | n
   const song = (slug: string) => songs?.find((s) => s.slug === slug)
   if (item.type === "proposition") {
     return (
-      <li className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[14px]">
+      <li className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
         <span>{item.proposition?.titre}</span>
         <span className="rounded-full px-2 py-0.5 text-xs font-semibold text-orange-700 dark:text-orange-300" style={{ background: "#ea580c1f" }}>
           {t("planning.fete.propositionEnAttente")}
@@ -55,7 +55,7 @@ function Chant({ item, songs }: { item: SetlistItem; songs: SongIndexEntry[] | n
   const premier = song(slugs[0])
   const ton = item.keyOverride ?? premier?.recommendedKey ?? premier?.originalKey
   return (
-    <li className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[14px]">
+    <li className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
       <span>{titre}</span>
       {ton && <span className="rounded-md bg-secondary px-1.5 py-0.5 text-xs font-bold tabular-nums">{ton}</span>}
     </li>
@@ -68,11 +68,11 @@ function Media({ m, p, d }: { m: MediaPassage; p: Passage; d: DetailFete }) {
   const titre = m.lien ? <a href={m.lien} target="_blank" rel="noopener noreferrer" className="underline underline-offset-2">{m.titre}</a> : m.titre
   const detail = [m.duree, m.depart && t("planning.fete.departA", { temps: m.depart })].filter(Boolean).join(" · ")
   return (
-    <li className="text-[14px]">
+    <li className="text-sm">
       <div className="flex items-start gap-1">
         <span className="min-w-0 flex-1">
           <span aria-hidden>▷</span> {t(`planning.fete.media.${m.type}`)} · {titre}{detail && <> · {detail}</>}
-          {m.note && <span className="block text-[13px] italic text-muted-foreground">{t("planning.fete.regie", { note: m.note })}</span>}
+          {m.note && <span className="block text-sm italic text-muted-foreground">{t("planning.fete.regie", { note: m.note })}</span>}
         </span>
         {droit?.musiques && (
           <MenuActions
@@ -103,11 +103,11 @@ export function PassageContenu({ passage, d }: { passage: Passage; d: DetailFete
       {chants.length > 0 ? (
         <ul className="space-y-1" aria-label={t("planning.fete.chants")}>{chants.map((c, i) => <Chant key={i} item={c} songs={d.songs} />)}</ul>
       ) : (
-        <p className="text-[13px] text-muted-foreground">{t("planning.fete.pasDeChant")}</p>
+        <p className="text-sm text-muted-foreground">{t("planning.fete.pasDeChant")}</p>
       )}
       {medias.length > 0 && <ul className="space-y-1" aria-label={t("planning.fete.media.liste")}>{medias.map((m) => <Media key={m.id} m={m} p={passage} d={d} />)}</ul>}
       {droit?.musiques && (
-        <Button type="button" size="sm" variant="ghost" className="-ml-2 h-9 px-2 text-[14px]" onClick={() => d.onAjouterMedia?.(passage)}>
+        <Button type="button" size="sm" variant="ghost" className="-ml-2 h-9 px-2 text-sm" onClick={() => d.onAjouterMedia?.(passage)}>
           {t("planning.fete.media.ajouter")}
         </Button>
       )}

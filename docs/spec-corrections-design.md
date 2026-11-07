@@ -417,13 +417,38 @@ Back-office à 7 px du bord à 360 px en français (sélecteur de T1a, espace Ba
   (d) groupes voisins au même haut, (e) page courte qui défile. Aucune exemption. Règle écrite dans
   `docs/orchestration.md` § 5.
 
+### T4a · Échelle B et plancher P12/P13 — fait (07/11/2026)
+- Découpage tranché au code : T4a = `partout-echelle`, `partout-plancher` et les entrées T4 de taille de texte
+  (`eglise-19`, `musiciens-9`, `dimanche-15`) ; T4b = `partout-largeurs` et les entrées T4 de largeur
+  (bo-evenements-5 et -12, dimanche-7, -8, -9, evenements-app-3, services-4 et -8).
+- `xs` à 12 / 16 (+0,005em) ; codemod de ≈ 730 tailles arbitraires dans 127 fichiers selon les correspondances de
+  l'annexe. Exceptions gardées : champs à 16 px au téléphone, mode louange, 简谱, PDF, lignes de paroles
+  (`EditLineSheet`), pastilles de ton (`PiluleTonalite`, `SongView`), noms d'accord en grand (`PanneauAccord`
+  `TAILLE_NOM`, 32/26/40), `lg:text-[40px]` de l'écran de marque (aucun cran au-delà de 34 px).
+- **P13** (point à confirmer au code) : `@layer utilities` + `@media (min-width: 1024px)` sur
+  `.text-xs:where(.text-muted-foreground, [class*="text-muted-foreground/"])` → 13 / 18. `:where()` garde la
+  spécificité d'une classe : la règle sort après `.text-xs` et avant les variantes responsives, une variante plus grande
+  (`lg:text-base`) l'emporte. Le gris hérité d'un parent n'est pas couvert : aucun cas sur les pages mesurées.
+- `dimanche-15` : seuil du menu « ⋯ » à **431 px** au lieu de 412 : avec les libellés à 12 px et 8 px de marge, les
+  sept commandes ne tiennent plus sur un téléphone de 430 px (« Mode Louange » et « ⋯ » à la ligne). Tous les
+  téléphones en portrait rangent donc « Adapter » et « Ma version » dans le menu. Aucune clé de langue.
+- Hors entrée : Évènements en grand, `pb-16` retiré (doublait le `pb-6` de `DeuxVolets`) : la page courte défilait de
+  25 px à 1 440 × 900 une fois le texte grandi (garde-fou `agencement-groupes`, mesure e).
+- Tests : nouveaux P12/P13 et débordement des vignettes et badges (`look-fondations`) ; seuils 11 → 12
+  (`look-fondations`, `look-secondaires`) ; valeurs de l'ancienne échelle passées au nouveau cran (agencement-v18-chants,
+  -fondations, -harmonie, -setlists, -t2a, -t7, -taches, `helpers/agencement.ts`, retouches-v18-pilules-stats,
+  look-louange). Rouge sur la base, laissé à T4b : `pages-en-grand-mes-services:223` (cherche `.raised`, absent de
+  Mes services depuis T2).
+
 ## Reprendre ici (pour une nouvelle session, 05/11/2026)
 Lire seulement : `CLAUDE.md`, ce fichier (§ 2 arbitrages, § 3 règles, et cette section), puis l'annexe de la tranche
 en cours. Ne pas relire les sections « État » plus haut sauf besoin précis. Agents quelques-uns à la fois ; pas
 d'audit de tout le site ; `--workers=2` pour Playwright (le serveur de test meurt faute de mémoire au-delà).
-1. **T4a / T4b** : échelle typographique B, plancher P12/P13, largeurs L1 (`partout.md`, « Typographie et
-   largeurs », plus les entrées « - Tranche : T4 » des annexes). Une tranche `/tranche` chacune, captures de quatre
-   dispositions + 1 440 px, `tests/agencement-groupes.spec.ts` vert.
+1. **T4a** fait (07/11/2026, section « T4a » ci-dessus). **T4b** (go séparé, annexe `partout.md`) : largeurs L1 et
+   entrées T4 de largeur listées dans la section T4a ; un `/tranche`, captures de quatre dispositions + 1 440 px,
+   `tests/agencement-groupes.spec.ts` vert, `pages-en-grand-mes-services:223` à adapter. La passe Playwright d'une
+   tranche (≈ 1 800 tests, 30 min à deux workers) peut se diviser en sessions parallèles (`--shard`) une fois la
+   tranche poussée.
 2. **T5** (en dernier) : captures du guide en 中文 (eglise-5, partout-q3-guide), bandeau d'Harmonie (harmonie-5).
 3. **Fin de lot** : suite complète en trois tiers dans trois sessions parallèles (`--shard=1/3` … ; ~18 000 tests,
    trop pour un conteneur), relecture finale, feuille de route, puis annoncer à Timothée ce qu'il valide en local.

@@ -47,7 +47,7 @@ export function ChapitreHarmonie({ id }: { id: string }) {
             <button
               type="button"
               onClick={() => setSommaire(true)}
-              className="inline-flex h-11 items-center gap-2 rounded-full bg-foreground px-4 text-[15px] font-semibold text-background"
+              className="inline-flex h-11 items-center gap-2 rounded-full bg-foreground px-4 text-base font-semibold text-background"
             >
               <List className="h-4 w-4" aria-hidden />
               {t("harmonie.cours.sommaire")}
@@ -59,24 +59,24 @@ export function ChapitreHarmonie({ id }: { id: string }) {
 
       <header>
         {/* En grand, sous l'en-tête « Harmonie » : un h2 de 24 px (agencement v18, R3) ; seule, le h1. */}
-        <Titre className={deuxVolets ? "text-[24px] font-bold leading-tight" : "text-[22px] font-bold leading-tight lg:text-[28px]"}>
+        <Titre className={deuxVolets ? "text-xl font-bold leading-tight" : "text-xl font-bold leading-tight lg:text-2xl"}>
           {chapitre.numero !== null && `${chapitre.numero}. `}
           {chapitre.titre}
         </Titre>
         {chapitre.niveau !== null && (
-          <p className="mt-1 text-[13px] text-muted-foreground">{t(`harmonie.cours.niveau${chapitre.niveau}`)}</p>
+          <p className="mt-1 text-sm text-muted-foreground">{t(`harmonie.cours.niveau${chapitre.niveau}`)}</p>
         )}
         {i18n.language.startsWith("zh") && (
-          <p className="mt-2 rounded-xl bg-card px-3 py-2 text-[13px] text-muted-foreground">{t("harmonie.cours.nonTraduit")}</p>
+          <p className="mt-2 rounded-xl bg-card px-3 py-2 text-sm text-muted-foreground">{t("harmonie.cours.nonTraduit")}</p>
         )}
       </header>
 
       {/* Téléphone : le sommaire de la leçon en tête ; en grand et sur tablette, il est dans la liste du cours. */}
       {!deuxVolets && chapitre.contenu.length > 1 && (
         <div className="bloc-info rounded-2xl px-4 pt-3 pb-1 md:hidden">
-          <p className="text-[13px] font-semibold text-muted-foreground">{t("harmonie.cours.sommaire")}</p>
+          <p className="text-sm font-semibold text-muted-foreground">{t("harmonie.cours.sommaire")}</p>
           <nav aria-label={t("harmonie.cours.sommaire")}>
-            <ol className="divide-y divide-border text-[15px]">
+            <ol className="divide-y divide-border text-base">
               {chapitre.contenu.map((s, i) => (
                 <li key={i}>
                   <a href={`#partie-${i}`} className="flex items-center justify-between gap-3 py-2.5 active:text-muted-foreground">
@@ -94,7 +94,7 @@ export function ChapitreHarmonie({ id }: { id: string }) {
 
       {chapitre.contenu.map((s, i) => (
         <section key={i} id={`partie-${i}`} className="scroll-mt-[calc(var(--nav-h)+4rem)] space-y-3" data-sous-partie>
-          <h2 className="text-[19px] font-bold leading-snug">{s.titre}</h2>
+          <h2 className="text-lg font-bold leading-snug">{s.titre}</h2>
           <LecteurCours blocs={s.blocs} schemas={SCHEMAS_DU_COURS} />
         </section>
       ))}
@@ -121,7 +121,7 @@ function JaiFini({ date, marquer, prochain }: {
   return (
     <div className="space-y-3 border-t border-border pt-5" data-j-ai-fini>
       {date ? (
-        <p className="flex flex-wrap items-center gap-x-2 text-[15px]">
+        <p className="flex flex-wrap items-center gap-x-2 text-base">
           <Check className="h-4 w-4 text-[var(--sec-verse)]" aria-hidden />
           <span>{t("harmonie.cours.finiLe", { date: jour })}</span>
           <span className="text-muted-foreground" aria-hidden>·</span>
@@ -135,7 +135,7 @@ function JaiFini({ date, marquer, prochain }: {
       {date && prochain && (
         <Group>
           <GroupRow href={`/harmonie/cours/${prochain.id}`} chevron>
-            <span className="block text-[13px] text-muted-foreground">{t("harmonie.cours.prochain")}</span>
+            <span className="block text-sm text-muted-foreground">{t("harmonie.cours.prochain")}</span>
             <span className="block truncate font-medium">{prochain.numero}. {prochain.titre}</span>
           </GroupRow>
         </Group>

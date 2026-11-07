@@ -27,7 +27,7 @@ export function Impasse({
         <Icone size={28} aria-hidden />
       </span>
       <div className="space-y-1">
-        <p className="text-[15px] font-semibold text-foreground">{titre}</p>
+        <p className="text-base font-semibold text-foreground">{titre}</p>
         {aide && <p className="mx-auto max-w-sm text-sm text-muted-foreground">{aide}</p>}
       </div>
       <Link

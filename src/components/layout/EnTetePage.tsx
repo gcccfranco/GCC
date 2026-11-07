@@ -25,7 +25,7 @@ export function Retour({ href, children }: { href: string; children: ReactNode }
   return (
     <Link
       href={href}
-      className={`${TOUCHER_RETOUR} -ml-1 mb-1.5 inline-flex items-center gap-0.5 rounded-md text-[14px] leading-5 font-semibold text-muted-foreground transition-colors hover:text-foreground`}
+      className={`${TOUCHER_RETOUR} -ml-1 mb-1.5 inline-flex items-center gap-0.5 rounded-md text-sm leading-5 font-semibold text-muted-foreground transition-colors hover:text-foreground`}
     >
       <ChevronLeft className="h-4 w-4 shrink-0" strokeWidth={2.4} aria-hidden />
       {children}

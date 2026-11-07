@@ -151,7 +151,7 @@ export function EditeurDeuxColonnes({
           {champs.fete && <LienMusiquesEtDanses fete={champs.fete} />}
         </div>
         <div className="flex shrink-0 items-center gap-3 border-t border-border bg-background px-6 py-4">
-          <p role="status" className="min-w-0 flex-1 text-[13px] font-medium text-muted-foreground">{statut}</p>
+          <p role="status" className="min-w-0 flex-1 text-sm font-medium text-muted-foreground">{statut}</p>
           <BoutonFinal isEdit={isEdit} categorie={champs.category} saving={saving} onPublier={onPublier} onTerminer={onTerminer} />
         </div>
       </section>

@@ -108,11 +108,11 @@ export function FicheHarmonie({ id }: { id: string }) {
         <div>
           <div className="min-w-0">
             {/* En grand, sous l'en-tête « Harmonie » : un h2 de 24 px (agencement v18, R3) ; seule, le h1. */}
-            <Titre className={deuxVolets ? "text-[24px] font-bold leading-tight" : "text-[22px] font-bold leading-tight lg:text-[26px]"}>{fiche.nom}</Titre>
-            <p className="mt-1 text-[13px] text-muted-foreground">
+            <Titre className={deuxVolets ? "text-xl font-bold leading-tight" : "text-xl font-bold leading-tight"}>{fiche.nom}</Titre>
+            <p className="mt-1 text-sm text-muted-foreground">
               {fiche.familleNom} · {fiche.sensations.map((s) => t(`harmonie.sensation.${s}`)).join(" · ")}
             </p>
-            <p className="mt-0.5 text-[13px] text-muted-foreground">
+            <p className="mt-0.5 text-sm text-muted-foreground">
               {fiche.moments.map((m) => t(`harmonie.moment.${m}`)).join(" · ")}
               {fiche.niveau[instrument] && ` · ${t(`harmonie.niveau.${fiche.niveau[instrument]}`)}`}
               {fiche.niveauNote && ` · ${fiche.niveauNote}`}
@@ -120,7 +120,7 @@ export function FicheHarmonie({ id }: { id: string }) {
           </div>
         </div>
         {fiche.statut !== "validee" && (
-          <p className="rounded-xl border border-border bg-card px-3 py-2 text-[13px] text-muted-foreground">{t("harmonie.aRelireTout")}</p>
+          <p className="rounded-xl border border-border bg-card px-3 py-2 text-sm text-muted-foreground">{t("harmonie.aRelireTout")}</p>
         )}
       </header>
 
@@ -129,11 +129,11 @@ export function FicheHarmonie({ id }: { id: string }) {
       {/* Avant → après, le cœur de la fiche */}
       {fiche.avantApres && (
         <Group title={t("harmonie.avantApres")} className={CARTE}>
-          <div className="px-4 py-2 text-[17px] leading-relaxed lg:text-[19px]">
+          <div className="px-4 py-2 text-lg leading-relaxed">
             <ParagrapheFiche texte={fiche.avantApres} demiTons={demiTons} tonalite={tonalite} />
           </div>
           <div className="flex flex-wrap items-center gap-3 border-t border-border px-4 py-2.5">
-            <span className="text-[13px] text-muted-foreground">{t("harmonie.tonalite")}</span>
+            <span className="text-sm text-muted-foreground">{t("harmonie.tonalite")}</span>
             <Menu
               label={t("harmonie.tonalite")}
               className="[&:not([data-pose])]:bg-card"
@@ -144,7 +144,7 @@ export function FicheHarmonie({ id }: { id: string }) {
             />
           </div>
           {demiTons !== 0 && (
-            <p className="border-t border-border px-4 py-2 text-[13px] text-muted-foreground">
+            <p className="border-t border-border px-4 py-2 text-sm text-muted-foreground">
               {t("harmonie.resteEnD", { ton: TON_DES_FICHES })}
             </p>
           )}
@@ -156,7 +156,7 @@ export function FicheHarmonie({ id }: { id: string }) {
         {fiche.pourquoi && (
           <div className="bloc-info rounded-2xl pt-3.5 pb-1">
             <Group title={t("harmonie.pourquoi")} className="[&>h2]:px-4">
-              <ParagrapheFiche className="px-4 pb-3 text-[15px] leading-relaxed" texte={fiche.pourquoi} demiTons={0} tonalite={TON_DES_FICHES} />
+              <ParagrapheFiche className="px-4 pb-3 text-base leading-relaxed" texte={fiche.pourquoi} demiTons={0} tonalite={TON_DES_FICHES} />
             </Group>
           </div>
         )}
@@ -167,7 +167,7 @@ export function FicheHarmonie({ id }: { id: string }) {
           <Group title={instrument === "piano" ? t("harmonie.auPiano") : t("harmonie.aLaGuitare")} className={CARTE}>
             {montreCapo && (
               <div className="flex flex-wrap items-center gap-3 px-4 pt-1">
-                <span className="text-[13px] text-muted-foreground">{t("harmonie.capoTitre")}</span>
+                <span className="text-sm text-muted-foreground">{t("harmonie.capoTitre")}</span>
                 <Menu
                   label={t("harmonie.capoTitre")}
                   className="[&:not([data-pose])]:bg-card"
@@ -176,20 +176,20 @@ export function FicheHarmonie({ id }: { id: string }) {
                   onChange={(v) => setCapo(Number(v))}
                   options={["0", "1", "2", "3", "4", "5", "6", "7"].map((n) => ({ valeur: n, libelle: n === "0" ? t("harmonie.sansCapo") : n }))}
                 />
-                <span className="text-[13px] text-muted-foreground">
+                <span className="text-sm text-muted-foreground">
                   {capo > 0
                     ? t("harmonie.formesSonnent", { ton: TON_DES_FICHES, sonne: tonDesFormes })
                     : t("harmonie.formesEcrites", { ton: TON_DES_FICHES })}
                 </span>
               </div>
             )}
-            <ParagrapheFiche className="px-4 py-2 text-[15px] leading-relaxed" texte={texteInstrument} demiTons={0} tonalite={TON_DES_FICHES} />
+            <ParagrapheFiche className="px-4 py-2 text-base leading-relaxed" texte={texteInstrument} demiTons={0} tonalite={TON_DES_FICHES} />
             {instrument === "guitare" && doigtesDe(texteInstrument).length > 0 && (
               <div className="flex flex-wrap gap-4 px-4 py-3 text-foreground">
                 {doigtesDe(texteInstrument).map((d, i) => (
                   <figure key={i} className="text-center">
                     <DiagrammeGuitare doigte={d} capo={capo} label={t("harmonie.ariaDoigte", { doigte: d })} />
-                    <figcaption className="mt-1 text-[11px] text-muted-foreground">{d}</figcaption>
+                    <figcaption className="mt-1 text-sm text-muted-foreground">{d}</figcaption>
                   </figure>
                 ))}
               </div>
@@ -199,7 +199,7 @@ export function FicheHarmonie({ id }: { id: string }) {
                 {notesDe(texteInstrument).slice(0, 4).map((notes, i) => (
                   <figure key={i} className="text-center">
                     <Clavier notes={notes} label={t("harmonie.ariaClavier", { notes: notes.join(" ") })} />
-                    <figcaption className="mt-1 text-[11px] text-muted-foreground">{notes.join(" ")}</figcaption>
+                    <figcaption className="mt-1 text-sm text-muted-foreground">{notes.join(" ")}</figcaption>
                   </figure>
                 ))}
               </div>
@@ -210,7 +210,7 @@ export function FicheHarmonie({ id }: { id: string }) {
           <Group title={t("harmonie.eviter")} className={CARTE}>
             <ul className="divide-y divide-border">
               {fiche.eviter.map((e, i) => (
-                <li key={i} className="px-4 py-2.5 text-[15px] leading-relaxed">
+                <li key={i} className="px-4 py-2.5 text-base leading-relaxed">
                   <TexteFiche texte={e.replace(/\s*\n\s*/g, " ")} demiTons={0} tonalite={TON_DES_FICHES} />
                 </li>
               ))}
@@ -225,13 +225,13 @@ export function FicheHarmonie({ id }: { id: string }) {
         <Group title={t("harmonie.repertoire")} className={cn(CARTE, "pb-2")}>
           {fiche.repertoire && (phrase ? (
             <div className="px-4 pb-2" data-ou-l-entendre>
-              <h3 className="mb-1 text-[13px] font-semibold text-muted-foreground">{t("harmonie.ouLEntendre")}</h3>
+              <h3 className="mb-1 text-sm font-semibold text-muted-foreground">{t("harmonie.ouLEntendre")}</h3>
               <ul className={cn("grid", colonnesRepertoire)}>
                 {phrase.map((e, i) => (
                   <li key={i} className="border-t border-border py-2">
-                    <span className="block text-[15px] font-semibold leading-[21px]">{e.titre}</span>
+                    <span className="block text-base font-semibold leading-[21px]">{e.titre}</span>
                     {e.detail.length > 0 && (
-                      <span className="block text-[13px] leading-[18px] text-muted-foreground">
+                      <span className="block text-sm leading-[18px] text-muted-foreground">
                         {e.detail.map((m, j) => (m.accord ? <span key={j} className="font-chord font-semibold text-[var(--chord-color)]">{m.texte}</span> : <span key={j}>{m.texte}</span>))}
                       </span>
                     )}
@@ -240,11 +240,11 @@ export function FicheHarmonie({ id }: { id: string }) {
               </ul>
             </div>
           ) : (
-            <ParagrapheFiche className="px-4 py-2 text-[15px] leading-relaxed" texte={fiche.repertoire} demiTons={0} tonalite={TON_DES_FICHES} />
+            <ParagrapheFiche className="px-4 py-2 text-base leading-relaxed" texte={fiche.repertoire} demiTons={0} tonalite={TON_DES_FICHES} />
           ))}
           {exemples.length > 0 && (
             <>
-              <p className="px-4 pb-1 text-[13px] text-muted-foreground">
+              <p className="px-4 pb-1 text-sm text-muted-foreground">
                 {t("harmonie.repertoireCompte", { count: exemples.length })}
               </p>
               <div className={cn("grid px-4", colonnesRepertoire)}>
@@ -253,7 +253,7 @@ export function FicheHarmonie({ id }: { id: string }) {
                     key={slug}
                     href={`/songs/${slug}`}
                     chevron
-                    trailing={fois > 0 ? <span className="text-[13px] leading-[18px]" aria-label={t("harmonie.foisEnSetlist", { count: fois })}>{fois}×</span> : undefined}
+                    trailing={fois > 0 ? <span className="text-sm leading-[18px]" aria-label={t("harmonie.foisEnSetlist", { count: fois })}>{fois}×</span> : undefined}
                     className="mx-0 min-h-11 w-full rounded-none border-t border-border px-0 py-0 before:hidden"
                   >
                     <span className="block truncate font-medium">{chant?.titlePinyin ? `${chant.title} · ${chant.titlePinyin}` : chant?.title ?? slug}</span>
@@ -276,7 +276,7 @@ export function FicheHarmonie({ id }: { id: string }) {
       )}
 
       {fiche.regle && (
-        <p className="text-[13px] leading-relaxed text-muted-foreground">
+        <p className="text-sm leading-relaxed text-muted-foreground">
           <TexteFiche texte={fiche.regle.replace(/\s*\n\s*/g, " ")} demiTons={0} tonalite={TON_DES_FICHES} />
         </p>
       )}

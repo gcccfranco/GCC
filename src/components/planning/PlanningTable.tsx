@@ -100,7 +100,7 @@ export function PlanningTable({ cols, rows, color, dateBadge, minWidth = 480, gr
           <thead>
             <tr style={{ background: color }} className="text-white">
               {cols.map((c) => (
-                <th key={c} className="px-3 py-2.5 text-left text-[11px] font-semibold whitespace-nowrap">{c}</th>
+                <th key={c} className="px-3 py-2.5 text-left text-xs font-semibold whitespace-nowrap">{c}</th>
               ))}
             </tr>
           </thead>
@@ -198,8 +198,8 @@ export function PlanningTable({ cols, rows, color, dateBadge, minWidth = 480, gr
                 <div className="px-3.5 py-2.5 space-y-1">
                   {row.slice(1).map((cell, ci) =>
                     cell ? (
-                      <div key={ci} className="flex items-baseline gap-2 text-[13px]">
-                        <span className="w-24 shrink-0 text-[11px] text-muted-foreground">{cols[ci + 1]}</span>
+                      <div key={ci} className="flex items-baseline gap-2 text-sm">
+                        <span className="w-24 shrink-0 text-xs text-muted-foreground">{cols[ci + 1]}</span>
                         <span
                           className={`min-w-0 ${matchCell(cell) ? "font-bold" : "text-foreground"}`}
                           style={matchCell(cell) ? { color } : undefined}

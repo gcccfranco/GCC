@@ -167,8 +167,10 @@ export function CalendrierClient({ enTete, peutCreer, children }: {
   )
 
   if (grand) {
+    // Pas de marge basse ici : `DeuxVolets` pose déjà la sienne (pb-6). Les deux ensemble (88 px) faisaient défiler
+    // une page courte dans le vide à 1 440 × 900 (tests/agencement-groupes.spec.ts, mesure e).
     return (
-      <div className="pb-16">
+      <div>
         {enTete}
         <DeuxVolets
           racine="/evenements"

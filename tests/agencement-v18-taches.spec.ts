@@ -323,7 +323,7 @@ test("la fiche : un seul h1, retour « Tâches de DA », ni badge ni titre « T�
   await expect(page.getByRole("heading", { name: "Tâches", exact: true })).toHaveCount(0);
   await expect(page.locator("header[data-entete-page]").getByRole("link", { name: "Tâches de DA", exact: true })).toHaveAttribute("href", /^\/back-office\/(equipes|taches)\/da\/?$/);
   if (estGrandEcran(info)) {
-    await expect(page.getByRole("heading", { level: 1 })).toHaveCSS("font-size", "28px");
+    await expect(page.getByRole("heading", { level: 1 })).toHaveCSS("font-size", "30px");
     await expect(detail(page).getByText("DA", { exact: true })).toHaveCount(0);
   }
   const section = detail(page).locator("section").first();

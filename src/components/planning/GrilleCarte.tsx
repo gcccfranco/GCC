@@ -46,7 +46,7 @@ export function CarteDimanche({
           </span>
         )}
         {nonPublie && (
-          <span data-non-publie={date} className="inline-flex items-center gap-1 text-[11px] font-semibold text-muted-foreground">
+          <span data-non-publie={date} className="inline-flex items-center gap-1 text-xs font-semibold text-muted-foreground">
             <Lock className="h-3 w-3" aria-hidden />
             {t("planning.grille.nonPublie")}
           </span>
@@ -78,8 +78,8 @@ export function LigneDeCarte({
   children: ReactNode
 }) {
   return (
-    <div className="flex items-baseline gap-2 text-[13px]">
-      <span className="w-24 shrink-0 text-[11px] text-muted-foreground">{libelle}</span>
+    <div className="flex items-baseline gap-2 text-sm">
+      <span className="w-24 shrink-0 text-xs text-muted-foreground">{libelle}</span>
       <span data-case={dataCase} data-geste={dansGeste || undefined} data-apercu={apercu} data-changement={changement} className={`relative min-w-0 flex-1 rounded-md ${changement ? "bg-amber-100/70 pr-4 dark:bg-amber-500/15" : ""}`} style={dansGeste ? { background: `${couleur}22` } : undefined}>{children}</span>
     </div>
   )

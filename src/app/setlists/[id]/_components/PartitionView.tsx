@@ -28,10 +28,10 @@ import type { SongVersionView } from "@/lib/setlist/versionChoice";
 
 /** Badge ambre de la version affichée : « Version modifiée », « Ma version », « Version de … ». */
 const AMBER_BADGE =
-  "text-[10px] px-1.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-400 border border-amber-300/60 dark:border-amber-700/50 font-semibold print:hidden";
+  "text-xs px-1.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-400 border border-amber-300/60 dark:border-amber-700/50 font-semibold print:hidden";
 
 /** Les actions de la rangée d'un chant (dimanche-17) : une puce à contour de 32 px, 12,5 px, zone de toucher de 44 px. */
-const PUCE = `${TOUCHER_44} inline-flex h-8 items-center gap-1.5 rounded-full border border-border bg-background px-3 text-[12.5px] font-semibold text-foreground transition-colors hover:bg-secondary print:hidden`;
+const PUCE = `${TOUCHER_44} inline-flex h-8 items-center gap-1.5 rounded-full border border-border bg-background px-3 text-xs font-semibold text-foreground transition-colors hover:bg-secondary print:hidden`;
 
 /** Copie les paroles d'un chant, dans l'ordre joué, pour la régie (PPT). */
 function CopyLyricsButton({ sections }: { sections: ChordProSection[] }) {
@@ -176,7 +176,7 @@ export function PartitionsView({
                   key={fs.songSlug}
                   type="button"
                   onClick={() => onIdees(origIndex, fs.songSlug)}
-                  className="text-[11px] text-muted-foreground underline hover:text-foreground"
+                  className="text-xs text-muted-foreground underline hover:text-foreground"
                 >
                   {t("harmonie.idees")} · {transposedAsts[fs.songSlug].metadata.title}
                 </button>

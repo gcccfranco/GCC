@@ -15,7 +15,7 @@ import { styleTexteService } from "@/lib/couleurSombre"
 
 export function Pastille({ icone, children }: { icone?: ReactNode; children: ReactNode }) {
   return (
-    <span className="inline-flex items-center gap-1 rounded-full bg-secondary px-2 py-0.5 text-[11px] font-semibold text-foreground/80">
+    <span className="inline-flex items-center gap-1 rounded-full bg-secondary px-2 py-0.5 text-xs font-semibold text-foreground/80">
       {icone}
       {children}
     </span>
@@ -88,7 +88,7 @@ export function CarteRole({
           <div className="mt-1 flex flex-wrap items-center gap-1.5">
             <LignePlaces role={role} couleur={couleur} />
             {role.comite && (
-              <span className="rounded-full px-1.5 py-0.5 text-[11px] font-semibold texte-service" style={{ background: `${couleur}1f`, ...styleTexteService(couleur) }}>
+              <span className="rounded-full px-1.5 py-0.5 text-xs font-semibold texte-service" style={{ background: `${couleur}1f`, ...styleTexteService(couleur) }}>
                 {t("groupes.auComite")}
               </span>
             )}
@@ -115,7 +115,7 @@ export function CarteRole({
                 <Initiales nom={x.nom} pointille={!x.uid} />
                 <span className={c ? "min-w-0 truncate rounded-full bg-foreground px-2 py-0.5 font-semibold text-background" : "min-w-0 truncate text-foreground"}>{x.nom}{c && <span className="sr-only"> ({t("groupes.app.toi")})</span>}</span>
                 {!x.uid && <Pastille>{t("groupes.sansCompte")}</Pastille>}
-                {autre && <span className="text-[11px] text-muted-foreground">{autre}</span>}
+                {autre && <span className="text-xs text-muted-foreground">{autre}</span>}
               </li>
             );
           })}

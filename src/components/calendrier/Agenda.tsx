@@ -39,7 +39,7 @@ export function useTitreDuJour(lang: NotifLang, aujourdhui: string) {
 export function EtiquetteSheet() {
   const { t } = useTranslation();
   return (
-    <span className="ml-1.5 inline-flex shrink-0 items-center rounded-md bg-secondary px-1.5 py-px text-[11px] font-semibold text-foreground/70 align-middle">
+    <span className="ml-1.5 inline-flex shrink-0 items-center rounded-md bg-secondary px-1.5 py-px text-xs font-semibold text-foreground/70 align-middle">
       {t("backOffice.calendrier.etiquetteSheet")}
     </span>
   );
@@ -66,7 +66,7 @@ export function CompteurInscrits({ e }: { e: EntreeCalendrier }) {
       role="img"
       data-compteur
       aria-label={e.complet ? `${t("evenements.complet")}, ${e.compteurAria}` : e.compteurAria}
-      className={cn("shrink-0 text-[13px] tabular-nums", e.complet ? "font-semibold text-foreground" : "text-foreground/70")}
+      className={cn("shrink-0 text-sm tabular-nums", e.complet ? "font-semibold text-foreground" : "text-foreground/70")}
     >
       {e.complet ? t("evenements.complet") : e.compteur}
     </span>
@@ -87,10 +87,10 @@ function CarteAgenda({ e, onOuvrir }: { e: EntreeCalendrier; onOuvrir: (e: Entre
       </span>
       <span className="min-w-0 flex-1">
         <span className="flex items-baseline gap-2">
-          <span className="min-w-0 flex-1 truncate text-[15px] font-semibold leading-snug text-foreground">{e.titre}{e.duSheet && <EtiquetteSheet />}</span>
+          <span className="min-w-0 flex-1 truncate text-base font-semibold leading-snug text-foreground">{e.titre}{e.duSheet && <EtiquetteSheet />}</span>
           <CompteurInscrits e={e} />
         </span>
-        {e.detail && <span className="block truncate text-[13px] text-muted-foreground">{e.detail}</span>}
+        {e.detail && <span className="block truncate text-sm text-muted-foreground">{e.detail}</span>}
       </span>
     </button>
   );
@@ -126,7 +126,7 @@ export function ListeAgenda({
     <div data-testid="agenda">
       {[...parJour].map(([date, entrees]) => (
         <section key={date} data-jour={date} aria-labelledby={`agenda-${date}`}>
-          <h2 id={`agenda-${date}`} className="mx-0.5 mb-1.5 mt-4 text-[13px] font-semibold text-muted-foreground">
+          <h2 id={`agenda-${date}`} className="mx-0.5 mb-1.5 mt-4 text-sm font-semibold text-muted-foreground">
             {titreDuJour(date)}
           </h2>
           <CartesDuJour entrees={entrees} onOuvrir={onOuvrir} />
@@ -165,10 +165,10 @@ function LigneAgenda({ e, ouverte, onChoisir }: { e: EntreeCalendrier; ouverte: 
       </span>
       <span className="min-w-0 flex-1">
         <span className="flex items-baseline gap-2">
-          <span className="min-w-0 flex-1 truncate text-[15px] font-semibold leading-snug text-foreground">{e.titre}{e.duSheet && <EtiquetteSheet />}</span>
+          <span className="min-w-0 flex-1 truncate text-base font-semibold leading-snug text-foreground">{e.titre}{e.duSheet && <EtiquetteSheet />}</span>
           <CompteurInscrits e={e} />
         </span>
-        {detail && <span className="block truncate text-[13px] text-muted-foreground">{detail}</span>}
+        {detail && <span className="block truncate text-sm text-muted-foreground">{detail}</span>}
       </span>
       <span
         data-etiquette
@@ -213,7 +213,7 @@ export function AgendaSemaines({
       {semaines.size === 0 && <p className="mt-4 text-sm text-muted-foreground">{vide}</p>}
       {[...semaines].map(([lundi, jours]) => (
         <section key={lundi} aria-labelledby={`semaine-${lundi}`}>
-          <h2 id={`semaine-${lundi}`} className="pb-1.5 pt-4 text-[13px] font-semibold text-muted-foreground">
+          <h2 id={`semaine-${lundi}`} className="pb-1.5 pt-4 text-sm font-semibold text-muted-foreground">
             {t("calendrier.semaineDu", { date: jourEtMois(lundi, lang) })}
           </h2>
           {jours.map(([date, entrees]) => {
@@ -254,10 +254,10 @@ export function AgendaSemaines({
 }
 
 const BOUTON_PLEIN =
-  "flex h-11 w-full items-center justify-center rounded-full bg-foreground text-[15px] font-semibold text-background transition-opacity duration-150 hover:opacity-85 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground";
+  "flex h-11 w-full items-center justify-center rounded-full bg-foreground text-base font-semibold text-background transition-opacity duration-150 hover:opacity-85 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground";
 
 const BOUTON_SECOND =
-  "flex h-11 w-full items-center justify-center rounded-full bg-secondary text-[15px] font-semibold text-foreground transition-opacity duration-150 hover:opacity-85 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground";
+  "flex h-11 w-full items-center justify-center rounded-full bg-secondary text-base font-semibold text-foreground transition-opacity duration-150 hover:opacity-85 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground";
 
 /** La feuille d'une entrée : sa source, son titre, sa date, son détail, « Ouvrir », et
  *  « Déplacer… » si elle bouge (C6 : seul moyen sur téléphone, Q5) ; une tâche répétée
@@ -289,10 +289,10 @@ export function FeuilleEntree({
               <DrawerDescription>{titreJour(entree.date, lang)}</DrawerDescription>
             </DrawerHeader>
             <div className="flex flex-col gap-1 px-4 pb-8">
-              {entree.detail && <p className="text-[15px] text-foreground">{entree.detail}</p>}
-              {entree.compteurAria && <p className="text-[15px] text-foreground">{entree.compteurAria}</p>}
+              {entree.detail && <p className="text-base text-foreground">{entree.detail}</p>}
+              {entree.compteurAria && <p className="text-base text-foreground">{entree.compteurAria}</p>}
               {entree.duSheet && <p className="text-xs text-muted-foreground">{t("calendrier.duSheet")}</p>}
-              {entree.repetee && <p className="text-[13px] text-muted-foreground">{t("calendrier.deplacer.repetee")}</p>}
+              {entree.repetee && <p className="text-sm text-muted-foreground">{t("calendrier.deplacer.repetee")}</p>}
               <div className="mt-4 flex flex-col gap-2">
                 {entree.duSheet ? (
                   <a href={entree.lien} target="_blank" rel="noopener noreferrer" className={BOUTON_PLEIN}>

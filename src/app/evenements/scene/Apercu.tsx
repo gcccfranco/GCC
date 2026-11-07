@@ -55,8 +55,8 @@ export function Apercu({ programme, creneaux }: {
       <section aria-labelledby={titreId} className="space-y-3">
         <div className="flex items-start gap-3">
           <div className="min-w-0 flex-1">
-            <h3 id={titreId} className="text-[17px] font-semibold">{t("planning.gestion.apercu")}</h3>
-            <p className="text-[13px] text-muted-foreground">
+            <h3 id={titreId} className="text-lg font-semibold">{t("planning.gestion.apercu")}</h3>
+            <p className="text-sm text-muted-foreground">
               {bornes ? (bornes.au ? t("planning.semaines.titre", bornes) : t("planning.semaines.titreJour", { du: bornes.du })) : t("planning.saison.aucunJour")}
             </p>
           </div>
@@ -73,8 +73,8 @@ export function Apercu({ programme, creneaux }: {
           <section aria-label={titreDuJour(premier, lang)} className="carte-groupe rounded-2xl">
             <div className="flex items-center gap-3 px-4 pt-3.5 pb-2">
               <TuileDate iso={premier} lang={lang} />
-              <h4 className="min-w-0 flex-1 text-[17px] font-bold text-foreground">{titreDuJour(premier, lang)}</h4>
-              <span className="shrink-0 text-[13px] text-muted-foreground">{t("planning.gestion.libres", { count: libres })}</span>
+              <h4 className="min-w-0 flex-1 text-lg font-bold text-foreground">{titreDuJour(premier, lang)}</h4>
+              <span className="shrink-0 text-sm text-muted-foreground">{t("planning.gestion.libres", { count: libres })}</span>
             </div>
             <ul className="px-3 pb-3 space-y-1.5">
               {lignes.map((l) => (
@@ -93,7 +93,7 @@ export function Apercu({ programme, creneaux }: {
           </section>
         )}
         {semaine && (
-          <p className="carte-groupe rounded-2xl px-4 py-3 text-[13px] text-muted-foreground">
+          <p className="carte-groupe rounded-2xl px-4 py-3 text-sm text-muted-foreground">
             {[...semaine.jours.slice(1).map(phraseDuJour), total].join(" ")}
           </p>
         )}

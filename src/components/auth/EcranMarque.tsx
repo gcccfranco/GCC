@@ -21,14 +21,14 @@ function Etapes({ etapes, onEtape }: { etapes: Etape[]; onEtape?: (i: number) =>
           <>
             <span
               className={cn(
-                "flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[13px] font-bold",
+                "flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-sm font-bold",
                 e.etat === "fait" ? "bg-foreground text-background" : "border-2 border-foreground text-foreground",
                 e.etat === "avenir" && "border-muted-foreground/50 text-muted-foreground",
               )}
             >
               {e.etat === "fait" ? <Check className="h-3.5 w-3.5" aria-hidden /> : i + 1}
             </span>
-            <span className={cn("text-[15px] font-semibold", e.etat === "avenir" ? "text-muted-foreground" : "text-foreground")}>
+            <span className={cn("text-base font-semibold", e.etat === "avenir" ? "text-muted-foreground" : "text-foreground")}>
               {e.libelle}
             </span>
           </>
@@ -80,7 +80,7 @@ export function EcranMarque({
         <div className="relative h-20 w-20 sm:h-28 sm:w-28 lg:h-36 lg:w-36">
           <Image src="/logo.png" alt="" fill sizes="144px" className="object-contain" priority />
         </div>
-        <p className="mt-4 text-[28px] font-bold leading-tight tracking-tight text-foreground lg:mt-6 lg:text-[40px]">
+        <p className="mt-4 text-2xl font-bold leading-tight tracking-tight text-foreground lg:mt-6 lg:text-[40px]">
           {gcc} <span className="text-brand">{reste.join(" ")}</span>
         </p>
         <p className="mt-1 text-base text-muted-foreground lg:text-lg">{t("login.reserve")}</p>

@@ -88,7 +88,7 @@ function CarteService({ titre, href, heure, badge, couleur, roles, colonnes, mon
         <VersPlanning href={href} className="flex items-center gap-2">
           <Point couleur={couleur} />
           <span className="svc-ink text-base font-bold" style={svc(couleur)}>{titre}</span>
-          {heure && <span className="text-[13px] text-muted-foreground tabular-nums">{heure}</span>}
+          {heure && <span className="text-sm text-muted-foreground tabular-nums">{heure}</span>}
           {badge && (
             <span data-testid="badge-sainte-cene" className="inline-block text-xs font-bold px-1.5 py-0.5 rounded bg-red-50 text-red-700 border border-red-200">
               {badge}
@@ -196,7 +196,7 @@ export function CeDimanche({
     />
   ) : (
     <article data-testid="carte-groupes" className="carte-groupe relative rounded-2xl px-4 py-3.5">
-      <h3 className="mb-1 text-[13px] font-semibold text-muted-foreground">
+      <h3 className="mb-1 text-sm font-semibold text-muted-foreground">
         <VersPlanning href="/planning/groupes" className="flex items-center gap-2">
           {t("planning.tabs.groupes")} · {HEURES.groupes}
           <Chevron />
@@ -210,7 +210,7 @@ export function CeDimanche({
               <Point couleur={PLANNING_COLORS[g.cle]} className="mt-1.5" />
               <div className="min-w-0">
                 <b className="font-semibold">{t(`planning.groupes.${g.cle}`)}</b>
-                <p className="text-[13px] text-muted-foreground">
+                <p className="text-sm text-muted-foreground">
                   {resume.length ? resume.map(([cle, v], i) => (
                     <Fragment key={cle}>{i > 0 && " · "}{r(cle)} <Noms valeur={v} monNom={monNom} /></Fragment>
                   )) : "—"}
@@ -225,7 +225,7 @@ export function CeDimanche({
 
   const carteEdd = (
     <article data-testid="carte-edd" className="carte-groupe relative rounded-2xl px-4 py-3.5">
-      <h3 className="svc-ink mb-1 text-[13px] font-semibold" style={svc(PLANNING_COLORS.edd)}>
+      <h3 className="svc-ink mb-1 text-sm font-semibold" style={svc(PLANNING_COLORS.edd)}>
         <VersPlanning href="/planning/edd" className="flex items-center gap-2">
           {t("planning.tabs.edd")} · {HEURES.edd}
           <Chevron />
@@ -236,7 +236,7 @@ export function CeDimanche({
           <li key={c.classe} data-testid="ligne-edd" className="flex items-start gap-2.5 border-t border-border/70 py-2 text-sm">
             <div className="min-w-0">
               <b className="svc-ink font-semibold" style={svc(PLANNING_COLORS.edd)}>{c.classe}</b>
-              <p className="text-[13px] text-muted-foreground">{vide(c.presidence) ? "—" : <>{r("presidence")} <Noms valeur={c.presidence} monNom={monNom} /></>}</p>
+              <p className="text-sm text-muted-foreground">{vide(c.presidence) ? "—" : <>{r("presidence")} <Noms valeur={c.presidence} monNom={monNom} /></>}</p>
             </div>
           </li>
         ))}
@@ -254,7 +254,7 @@ export function CeDimanche({
     : "flex min-h-10 items-center gap-2.5 py-1 text-sm"
   const pointTable = etages ? "[@container(min-width:720px)]:hidden" : ""
   const libelleTable = etages
-    ? "w-28 shrink-0 font-semibold [@container(min-width:720px)]:w-full [@container(min-width:720px)]:text-[13px] [@container(min-width:720px)]:text-muted-foreground"
+    ? "w-28 shrink-0 font-semibold [@container(min-width:720px)]:w-full [@container(min-width:720px)]:text-sm [@container(min-width:720px)]:text-muted-foreground"
     : "w-28 shrink-0 font-semibold"
   const carteTable = (
     <article
@@ -265,7 +265,7 @@ export function CeDimanche({
     >
       {/* Sur deux étages, un en-tête comme Groupes et EDD (planche : `table_empilee`). */}
       {etages && (
-        <h3 className="svc-ink mb-1 hidden text-[13px] font-semibold [@container(min-width:720px)]:block" style={svc(PLANNING_COLORS.table)}>
+        <h3 className="svc-ink mb-1 hidden text-sm font-semibold [@container(min-width:720px)]:block" style={svc(PLANNING_COLORS.table)}>
           {t("planning.accueil.carteTable")} · {HEURES.table}
         </h3>
       )}
@@ -274,7 +274,7 @@ export function CeDimanche({
         <b className={libelleTable}><VersPlanning href="/planning/table">{t("planning.tabs.table")}</VersPlanning></b>
         <span className="min-w-0">{vide(table) ? "—" : <Noms valeur={table} monNom={monNom} />}</span>
         {/* L'heure au bout de la ligne ; sur deux étages, elle est dans l'en-tête « Table · 10:00 ». */}
-        <span className={`ml-auto shrink-0 text-[13px] text-muted-foreground tabular-nums ${pointTable}`}>{HEURES.table}</span>
+        <span className={`ml-auto shrink-0 text-sm text-muted-foreground tabular-nums ${pointTable}`}>{HEURES.table}</span>
       </div>
       {(!vide(petitDej) || libre) && (
         <div className={`${ligneTable} border-t border-border/70`}>
@@ -285,7 +285,7 @@ export function CeDimanche({
               <span className="font-semibold text-amber-700 dark:text-amber-400">{t("planning.accueil.libre")}</span>
               <Link
                 href="/planning/table"
-                className={`relative z-10 ml-auto inline-flex h-8 items-center rounded-full px-3.5 ${TOUCHER_44} text-[13px] font-semibold text-white transition-transform duration-150 active:scale-[.97]`}
+                className={`relative z-10 ml-auto inline-flex h-8 items-center rounded-full px-3.5 ${TOUCHER_44} text-sm font-semibold text-white transition-transform duration-150 active:scale-[.97]`}
                 style={{ background: serviceButtonFill(PLANNING_COLORS.table) }}
               >
                 {t("planning.accueil.inscrire")}
@@ -301,7 +301,7 @@ export function CeDimanche({
 
   const carteEvenements = evenements && evenements.length > 0 ? (
     <article className="carte-groupe rounded-2xl px-4 py-3.5">
-      <h3 className="mb-1 text-[13px] font-semibold text-muted-foreground">{t("planning.accueil.evenements")}</h3>
+      <h3 className="mb-1 text-sm font-semibold text-muted-foreground">{t("planning.accueil.evenements")}</h3>
       <ul className={disposition === "grand" ? "grid grid-cols-2 gap-4 pt-1.5" : ""}>
         {evenements.map((e) => {
           const jour = new Date(`${e.date}T12:00:00`)
@@ -316,7 +316,7 @@ export function CeDimanche({
                 <Tile color={PLANNING_COLORS.scene} big={jour.getDate()} small={new Intl.DateTimeFormat(locale, { month: "short" }).format(jour)} />
                 <span className="min-w-0">
                   <span className="block truncate text-sm font-semibold">{e.titre}</span>
-                  <span className="block truncate text-[13px] text-muted-foreground">{quand}</span>
+                  <span className="block truncate text-sm text-muted-foreground">{quand}</span>
                 </span>
               </Link>
             </li>

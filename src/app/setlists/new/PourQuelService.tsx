@@ -64,7 +64,7 @@ export function PourQuelService({ categories }: { categories: string[] }) {
       <EnTetePage retour={{ href: "/setlists", label: t("common.header.setlists") }} titre={t("setlists.form.titleNew")} />
       <div className="px-[var(--marge-page)] pb-28">
         <section aria-labelledby="pour-quel-service">
-          <h2 id="pour-quel-service" className="text-[17px] font-bold text-foreground lg:text-xl">
+          <h2 id="pour-quel-service" className="text-lg font-bold text-foreground lg:text-xl">
             {t("setlists.entree.pourQuelService")}
           </h2>
           <p className="mt-1 text-sm text-muted-foreground">
@@ -91,13 +91,13 @@ export function PourQuelService({ categories }: { categories: string[] }) {
                   >
                     <div className="min-w-0 flex-1">
                       <p
-                        className="svc-ink flex items-center gap-1.5 text-[13px] font-bold"
+                        className="svc-ink flex items-center gap-1.5 text-sm font-bold"
                         style={{ "--svc": couleur } as React.CSSProperties}
                       >
                         <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: couleur }} aria-hidden />
                         <span className="truncate">{service}</span>
                       </p>
-                      <p className="mt-0.5 text-[17px] font-bold text-foreground">
+                      <p className="mt-0.5 text-lg font-bold text-foreground">
                         {moment ? `${jour} · ${moment}` : jour}
                       </p>
                       <p className="truncate text-sm text-muted-foreground">
@@ -131,7 +131,7 @@ export function PourQuelService({ categories }: { categories: string[] }) {
                   <Icone className="h-4 w-4" />
                 </span>
                 <span className="min-w-0 flex-1">
-                  <span className="block text-[15px] font-semibold text-foreground">{titre}</span>
+                  <span className="block text-base font-semibold text-foreground">{titre}</span>
                   <span className="block text-sm text-muted-foreground">{sous}</span>
                 </span>
                 <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground/60" aria-hidden />

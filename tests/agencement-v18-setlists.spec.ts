@@ -5,7 +5,7 @@ import { enTete, estGrandEcran, estTelephone, interdireDialoguesNatifs, ongletsR
 // Agencement v18, tranche T9 — App Setlists et Mes services (docs/spec-agencement-v18.md, A9 et
 // A11) : l'en-tête commun (titre, sous-titre, « + Nouvelle setlist ») au-dessus des deux volets,
 // la liste en carte, ses vues dans le rail (À venir · Archives · Mes setlists, À venir · Passés) ;
-// la fiche de droite se titre en h2 de 24 px. « + Nouvelle setlist » : pilule à libellé dès
+// la fiche de droite se titre en h2 de 22 px. « + Nouvelle setlist » : pilule à libellé dès
 // 768 px, rond sur téléphone. Cinq projets (`agencement-v18-*` est dans SPECS_GRAND_ECRAN).
 // Feuilles Google, Firestore et date simulés ; personnes fictives.
 
@@ -65,7 +65,7 @@ async function capture(page: Page, nom: string) {
 }
 
 /** La liste est une carte en relief (rayon 16 px, ombre), l'en-tête au-dessus des deux volets. */
-async function verifierDeuxVolets(page: Page, taille = "24px") {
+async function verifierDeuxVolets(page: Page, taille = "22px") {
   const l = liste(page);
   expect(await l.evaluate((el) => getComputedStyle(el).borderTopLeftRadius)).toBe("16px");
   // Recette C : la liste est un groupe qui se détache de la page, par son aplat blanc en clair, par son ombre en sombre.
@@ -147,7 +147,7 @@ test.describe("Setlists (A9)", () => {
     await capture(page, "v18-setlists-cadenas-360");
   });
 
-  test("deux volets : la liste en carte, l'en-tête au-dessus des deux, l'aperçu en h2 de 24 px (grands écrans)", async ({ page }, info) => {
+  test("deux volets : la liste en carte, l'en-tête au-dessus des deux, l'aperçu en h2 de 22 px (grands écrans)", async ({ page }, info) => {
     test.skip(!estGrandEcran(info), "deux volets : ordinateur et tablette couchée");
     // Une setlist choisie (`?apercu=`) : les deux volets ; sans elle, la liste seule dans la colonne (largeurs-b4).
     await ouvrir(page, "/setlists?apercu=sl-1");

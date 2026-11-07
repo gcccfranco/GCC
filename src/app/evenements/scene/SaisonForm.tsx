@@ -49,7 +49,7 @@ function Pilule({ actif, onClick, children }: { actif: boolean; onClick: () => v
       type="button"
       aria-pressed={actif}
       onClick={onClick}
-      className={`h-8 px-3 rounded-full text-[13px] font-semibold whitespace-nowrap transition-colors duration-150 active:scale-[.97] ${
+      className={`h-8 px-3 rounded-full text-sm font-semibold whitespace-nowrap transition-colors duration-150 active:scale-[.97] ${
         actif ? "bg-foreground text-background" : "bg-secondary text-foreground/80 hover:text-foreground"
       }`}
     >
@@ -63,9 +63,9 @@ function Reglage({ titre, aide, erreurs, children }: { titre: string; aide?: str
   const id = useId()
   return (
     <div role="group" aria-labelledby={id} className="space-y-1.5">
-      <p id={id} className="text-[13px] font-semibold text-muted-foreground">{titre}</p>
+      <p id={id} className="text-sm font-semibold text-muted-foreground">{titre}</p>
       <div className="flex flex-wrap gap-1.5">{children}</div>
-      {aide && <p className="text-[12.5px] text-muted-foreground">{aide}</p>}
+      {aide && <p className="text-xs text-muted-foreground">{aide}</p>}
       {erreurs?.map((e) => <p key={e} role="alert" className="text-sm text-destructive">{e}</p>)}
     </div>
   )
@@ -243,7 +243,7 @@ export function SaisonForm({ programme, onSave, jourJCalcule, autre, onErreur, s
           </button>
         ))}
         <button type="button" aria-label={t("planning.saison.ajouterPlage")} aria-expanded={editeur?.index === null}
-          className="h-[30px] self-center inline-flex items-center gap-1 rounded-full bg-secondary px-2.5 text-[13px] font-semibold"
+          className="h-[30px] self-center inline-flex items-center gap-1 rounded-full bg-secondary px-2.5 text-sm font-semibold"
           onClick={() => setEditeur({ index: null, plage: { ...(s.plages.at(-1) ?? PLAGES_DEFAUT[0]) } })}>
           <Plus className="h-3.5 w-3.5" aria-hidden /> {t("planning.saison.plage")}
         </button>
@@ -290,7 +290,7 @@ export function SaisonForm({ programme, onSave, jourJCalcule, autre, onErreur, s
         ))}
       </Reglage>}
 
-      {!seul && <p className="text-[13px] text-muted-foreground">{t("planning.saison.regle")}</p>}
+      {!seul && <p className="text-sm text-muted-foreground">{t("planning.saison.regle")}</p>}
     </section>
   )
 }

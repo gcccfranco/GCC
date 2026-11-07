@@ -56,7 +56,7 @@ export function Sommaire({
   return (
     <nav aria-label={t("setlists.detail.sommaire")} className={`flex flex-col ${className ?? ""}`} style={style}>
       <div className="min-h-0 flex-1 overflow-y-auto px-3 pb-4 pt-5">
-        <p className="px-2 pb-2 text-[13px] font-semibold text-muted-foreground">{t("setlists.detail.sommaire")}</p>
+        <p className="px-2 pb-2 text-sm font-semibold text-muted-foreground">{t("setlists.detail.sommaire")}</p>
         <ol className="space-y-1">
           {chants.map((item, i) => {
             // Une proposition garde son numéro (comme la liste) mais n'a rien à ouvrir.
@@ -81,7 +81,7 @@ export function Sommaire({
                 }`}
               >
                 <div className="flex items-start gap-3">
-                  <span className={`w-4 shrink-0 pt-px text-right text-[13px] font-bold tabular-nums ${lu ? "" : "text-muted-foreground"}`}>
+                  <span className={`w-4 shrink-0 pt-px text-right text-sm font-bold tabular-nums ${lu ? "" : "text-muted-foreground"}`}>
                     {num}
                   </span>
                   <div className="min-w-0 flex-1">
@@ -91,7 +91,7 @@ export function Sommaire({
                       data-sommaire-chant
                       aria-current={lu ? "true" : undefined}
                       onClick={() => onGo(item.position)}
-                      className="block w-full text-left text-[15px] font-semibold leading-snug before:absolute before:inset-0 before:rounded-xl focus-visible:outline-none focus-visible:before:ring-2 focus-visible:before:ring-ring"
+                      className="block w-full text-left text-base font-semibold leading-snug before:absolute before:inset-0 before:rounded-xl focus-visible:outline-none focus-visible:before:ring-2 focus-visible:before:ring-ring"
                     >
                       {titre}
                     </button>
@@ -106,7 +106,7 @@ export function Sommaire({
                               data-pastille
                               aria-current={ici ? "true" : undefined}
                               onClick={() => onGo(item.position, s.uid)}
-                              className={`h-[18px] min-w-[18px] rounded-full px-1.5 text-[10.5px] font-semibold leading-[18px] transition-colors ${
+                              className={`h-[18px] min-w-[18px] rounded-full px-1.5 text-xs font-semibold leading-[18px] transition-colors ${
                                 ici
                                   ? "bg-background text-foreground"
                                   : lu
@@ -121,10 +121,10 @@ export function Sommaire({
                       </div>
                     )}
                     {item.notes && (
-                      <p className={`mt-1.5 text-[12.5px] leading-snug ${lu ? "text-background/80" : "text-muted-foreground"}`}>{item.notes}</p>
+                      <p className={`mt-1.5 text-xs leading-snug ${lu ? "text-background/80" : "text-muted-foreground"}`}>{item.notes}</p>
                     )}
                     {surScan && (
-                      <p className={`mt-1 text-[12.5px] ${lu ? "text-background/80" : "text-muted-foreground"}`}>{t("performance.jianpuSheet")}</p>
+                      <p className={`mt-1 text-xs ${lu ? "text-background/80" : "text-muted-foreground"}`}>{t("performance.jianpuSheet")}</p>
                     )}
                   </div>
                   {!fusion && tonalite && (
@@ -170,7 +170,7 @@ function CopierTout({ copier, pret }: { copier: () => string; pret: boolean }) {
           window.clearTimeout(minuteur.current);
           minuteur.current = window.setTimeout(() => setCopie(false), 2000);
         }}
-        className="flex items-center gap-2 text-[13px] text-muted-foreground transition-colors enabled:hover:text-foreground disabled:opacity-50"
+        className="flex items-center gap-2 text-sm text-muted-foreground transition-colors enabled:hover:text-foreground disabled:opacity-50"
       >
         {copie ? <Check className="h-4 w-4" aria-hidden /> : <Copy className="h-4 w-4" aria-hidden />}
         {copie ? t("setlists.detail.copyLyricsDone") : t("setlists.detail.copyAllLyrics")}

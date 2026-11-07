@@ -8,7 +8,7 @@ import {
 // `v18-app-evenements`, `v18-app-evenements-reduite`). L'en-tête de toute la section (agenda et scène) :
 // « Évènements », « Les rendez-vous de l'église et les inscriptions », « + Nouvel évènement » (pilule à
 // libellé en grand, rond sur téléphone), les onglets en rail sous le titre ; sur l'onglet de la scène, le
-// même en-tête sans action principale. En grand, la fiche dans le volet : titre en h2 de 24 px, une
+// même en-tête sans action principale. En grand, la fiche dans le volet : titre en h2 de 22 px, une
 // colonne sous 760 px de volet, deux au-delà ; sans image, elle commence par son titre (plus de cadre
 // gris) ; « Gérer dans le Back-Office » en contour à côté du titre. Firestore et date simulés ;
 // personnes fictives.
@@ -73,13 +73,13 @@ test.describe("T7 : l'en-tête de la section Évènements", () => {
     await capture(page, "agenda");
   });
 
-  test("en grand : la liste n'a plus de titre, la fiche se titre en h2 de 24 px", async ({ page }, info) => {
+  test("en grand : la liste n'a plus de titre, la fiche se titre en h2 de 22 px", async ({ page }, info) => {
     test.skip(!estGrandEcran(info), "deux volets : grand écran");
     await ouvrir(page, MEMBRE, "/evenements");
     await expect(liste(page).getByRole("heading", { name: "Évènements" })).toHaveCount(0);
     const titre = volet(page).getByRole("heading", { level: 2, name: "Soirée louange" });
     await expect(titre).toBeVisible();
-    expect(await titre.evaluate((el) => parseFloat(getComputedStyle(el).fontSize))).toBe(24);
+    expect(await titre.evaluate((el) => parseFloat(getComputedStyle(el).fontSize))).toBe(22);
     // La liste est une carte en relief, sans marge de plus autour de la fiche (R10).
     const [l, d] = [(await liste(page).boundingBox())!, (await volet(page).boundingBox())!];
     const premier = (await titre.boundingBox())!;

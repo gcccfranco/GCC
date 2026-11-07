@@ -235,7 +235,7 @@ export function SujetsAborder({ evenement: e, user, profile, reunions = [] }: {
         </DndContext>
       )}
 
-      {!commencee && <p className="text-[13px] text-muted-foreground">{t("evenements.sujets.aide")}{i18n.language === "zh-CN" ? "" : " "}{t("evenements.sujets.noteAvant")}</p>}
+      {!commencee && <p className="text-sm text-muted-foreground">{t("evenements.sujets.aide")}{i18n.language === "zh-CN" ? "" : " "}{t("evenements.sujets.noteAvant")}</p>}
       {rouges > 0 && <p className={`text-sm ${ROUGE}`}>{t("evenements.sujets.noteRouge", { count: rouges })}</p>}
     </section>
   )

@@ -52,7 +52,7 @@ function PartiesDuChapitre({ parties, surLien, className }: { parties: string[];
       <ol data-parties className="ml-[27px] space-y-0.5 border-l-2 border-foreground/80 py-1 pl-5">
         {parties.map((titre, i) => (
           <li key={i}>
-            <a href={`#partie-${i}`} onClick={surLien} className="block py-1 text-[14px] text-muted-foreground active:text-foreground">
+            <a href={`#partie-${i}`} onClick={surLien} className="block py-1 text-sm text-muted-foreground active:text-foreground">
               {titre}
             </a>
           </li>
@@ -72,17 +72,17 @@ function LigneChapitre({ chapitre, fini, ouvert, surLien }: { chapitre: Chapitre
         actif={ouvert}
         leading={
           fini ? <Check aria-hidden />
-            : chapitre.numero !== null ? <span className="text-[13px] font-semibold tabular-nums">{chapitre.numero}</span>
+            : chapitre.numero !== null ? <span className="text-sm font-semibold tabular-nums">{chapitre.numero}</span>
             : undefined
         }
       >
-        <span className="block text-[15px] font-medium leading-[21px]" data-fini={fini || undefined}>
+        <span className="block text-base font-medium leading-[21px]" data-fini={fini || undefined}>
           {fini && <span className="sr-only">{t("harmonie.cours.fini")} : </span>}
           {fini && chapitre.numero !== null && <span className="tabular-nums">{chapitre.numero}. </span>}
           {chapitre.titre}
         </span>
         {chapitre.niveau !== null && (
-          <span className="block text-[13px] leading-[18px] text-muted-foreground">
+          <span className="block text-sm leading-[18px] text-muted-foreground">
             {t("harmonie.cours.parties", { count: chapitre.sousParties.length })} · {t("harmonie.cours.exercices", { count: chapitre.exercices })}
           </span>
         )}
@@ -123,12 +123,12 @@ function ProgresDeLEquipe({ lecons }: { lecons: ChapitreResume[] }) {
   return (
     <Group title={t("harmonie.cours.equipe")}>
       {lignes.length === 0 ? (
-        <p className="py-2 text-[15px] text-muted-foreground">{t("harmonie.cours.equipeVide")}</p>
+        <p className="py-2 text-base text-muted-foreground">{t("harmonie.cours.equipeVide")}</p>
       ) : (
         <div className="overflow-x-auto" data-cours-equipe>
-          <table className="w-full border-collapse text-[15px]">
+          <table className="w-full border-collapse text-base">
             <thead>
-              <tr className="text-left text-[13px] text-muted-foreground">
+              <tr className="text-left text-sm text-muted-foreground">
                 <th className="py-1.5 pr-3 font-medium" />
                 {NIVEAUX.map((n) => <th key={n} className="px-2 py-1.5 text-right font-medium">N{n}</th>)}
                 <th className="py-1.5 pl-2 text-right font-medium">{t("harmonie.cours.total")}</th>
@@ -183,11 +183,11 @@ export function SommaireCours({
       <Group>
         {prochain ? (
           <GroupRow href={`/harmonie/cours/${prochain.id}`} chevron>
-            <span className="block text-[13px] text-muted-foreground">{t("harmonie.cours.prochain")}</span>
+            <span className="block text-sm text-muted-foreground">{t("harmonie.cours.prochain")}</span>
             <span className="block font-medium" data-prochain>{prochain.numero}. {prochain.titre}</span>
           </GroupRow>
         ) : (
-          <p className="py-2 text-[15px]">{t("harmonie.cours.tousFinis")}</p>
+          <p className="py-2 text-base">{t("harmonie.cours.tousFinis")}</p>
         )}
         {modeEmploi && (
           <GroupRow href={`/harmonie/cours/${modeEmploi.id}`} chevron actif={ouvert === modeEmploi.id}>
@@ -204,7 +204,7 @@ export function SommaireCours({
           <Group key={n} title={`${t(`harmonie.cours.niveau${n}`)} · ${finis} / ${liste.length}`}>
             {liste.map((c) => <LigneChapitre key={c.id} chapitre={c} fini={Boolean(fini[c.id])} ouvert={c.id === ouvert} surLien={surLien} />)}
             {finis === liste.length && (
-              <p className="py-2 text-[13px] font-medium text-[var(--sec-verse)]" data-niveau-fini={n}>{t("harmonie.cours.niveauFini")}</p>
+              <p className="py-2 text-sm font-medium text-[var(--sec-verse)]" data-niveau-fini={n}>{t("harmonie.cours.niveauFini")}</p>
             )}
           </Group>
         );
@@ -241,7 +241,7 @@ export function PanneauSommaire({ ouvert, fermer }: { ouvert: string; fermer: ()
         )}
       >
         <div className="flex items-center justify-between px-5 pt-4 pb-2">
-          <h2 className="text-[19px] font-bold">{t("harmonie.cours.sommaire")}</h2>
+          <h2 className="text-lg font-bold">{t("harmonie.cours.sommaire")}</h2>
           <button type="button" onClick={fermer} aria-label={t("common.buttons.close")} className="grid h-8 w-8 place-items-center rounded-full text-muted-foreground active:bg-secondary">
             ✕
           </button>

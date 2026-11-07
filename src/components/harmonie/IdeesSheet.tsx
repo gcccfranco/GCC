@@ -225,7 +225,7 @@ function Contenu({ slug, titre, sections, tonalite, tonaliteOrigine, instrument,
 
   return (
     <div className="overflow-y-auto px-4 pb-8">
-      <p className="mb-3 text-[13px] text-muted-foreground">{titre}</p>
+      <p className="mb-3 text-sm text-muted-foreground">{titre}</p>
 
       {montrees.length === 0 ? (
         <p className="py-6 text-center text-muted-foreground">{t("harmonie.aucuneFiche")}</p>
@@ -248,22 +248,22 @@ function Contenu({ slug, titre, sections, tonalite, tonaliteOrigine, instrument,
                   <Link href={`/harmonie/${s.fiche.id}`} className="font-semibold underline-offset-4 hover:underline">
                     {s.fiche.nom}
                   </Link>
-                  <span className="rounded-full bg-secondary px-1.5 py-0.5 text-[11px] text-muted-foreground">
+                  <span className="rounded-full bg-secondary px-1.5 py-0.5 text-xs text-muted-foreground">
                     {t("harmonie.aVerifier")}
                   </span>
                 </div>
-                <p className="mt-0.5 text-[13px] text-muted-foreground">
+                <p className="mt-0.5 text-sm text-muted-foreground">
                   {nomsDesSections(cartes, sections, t)}
                   {cartes.length === 1 && s.endroits.length > 1 && ` · ${t("harmonie.endroits", { count: s.endroits.length })}`}
                 </p>
                 {apercu ? (
-                  <p className="mt-1.5 text-[15px]">
+                  <p className="mt-1.5 text-base">
                     <span className="font-chord font-semibold"><AccordTouchable etiquette={apercu.avant} visible /></span>
                     <span className="mx-1.5 text-muted-foreground">→</span>
                     <span className="font-chord font-semibold"><AccordTouchable etiquette={apercu.apres} visible /></span>
                     {/* Le degré en petit à côté : la même idée se relit dans
                         n'importe quelle tonalité. */}
-                    <span className="ml-2 text-[13px] text-muted-foreground">
+                    <span className="ml-2 text-sm text-muted-foreground">
                       {degres(apercu.avant, tonalite)}
                       {" → "}
                       {degres(apercu.apres, tonalite)}
@@ -275,7 +275,7 @@ function Contenu({ slug, titre, sections, tonalite, tonaliteOrigine, instrument,
                   // Rendus comme sur la fiche : gras, et accords dans la tonalité du chant.
                   s.fiche.avantApres && (
                     <ParagrapheFiche
-                      className="mt-1.5 text-[15px] text-muted-foreground"
+                      className="mt-1.5 text-base text-muted-foreground"
                       texte={s.fiche.avantApres}
                       demiTons={semitonesTo(TON_DES_FICHES, tonalite)}
                       tonalite={tonalite}
@@ -320,14 +320,14 @@ function Contenu({ slug, titre, sections, tonalite, tonaliteOrigine, instrument,
                   <button
                     type="button"
                     onClick={() => ecarter(s)}
-                    className="ml-auto text-[13px] text-muted-foreground underline underline-offset-4"
+                    className="ml-auto text-sm text-muted-foreground underline underline-offset-4"
                   >
                     {t("harmonie.neMarchePas")}
                   </button>
                 </div>
                 {onEssayer && apercu && cartes.length > 1 && essayerOuvert === s.id && (
                   <div className="mt-2">
-                    <p className="text-[13px] text-muted-foreground">{t("harmonie.essayerOuTitre")}</p>
+                    <p className="text-sm text-muted-foreground">{t("harmonie.essayerOuTitre")}</p>
                     <div className="mt-1.5 flex flex-wrap gap-2">
                       {cartes.map((c) => {
                         const nomC = nomDeLaSection(c, sections, t);
@@ -350,7 +350,7 @@ function Contenu({ slug, titre, sections, tonalite, tonaliteOrigine, instrument,
         <button
           type="button"
           onClick={() => setTout(true)}
-          className="mt-3 w-full rounded-xl bg-card py-2.5 text-[15px] font-medium"
+          className="mt-3 w-full rounded-xl bg-card py-2.5 text-base font-medium"
         >
           {t("harmonie.voirPlus")}
         </button>
@@ -358,7 +358,7 @@ function Contenu({ slug, titre, sections, tonalite, tonaliteOrigine, instrument,
 
       {lignesEcartees.length > 0 && (
         <details className="mt-4">
-          <summary className="cursor-pointer text-[13px] text-muted-foreground">
+          <summary className="cursor-pointer text-sm text-muted-foreground">
             {t("harmonie.ecartees", { count: lignesEcartees.length })}
           </summary>
           <ul className="mt-2 space-y-1.5">
@@ -366,7 +366,7 @@ function Contenu({ slug, titre, sections, tonalite, tonaliteOrigine, instrument,
               // Qui a écarté l'idée (une fois chacun).
               const auteurs = [...new Set(ligne.rejets.map((r) => r.auteur).filter(Boolean))];
               return (
-                <li key={ligne.cle} className="flex items-center gap-2 rounded-xl bg-card px-3 py-2 text-[13px]">
+                <li key={ligne.cle} className="flex items-center gap-2 rounded-xl bg-card px-3 py-2 text-sm">
                   <span className="min-w-0 flex-1 truncate text-muted-foreground">
                     {/* Quelle idée, et qui l'a écartée. */}
                     {ligne.nom}
@@ -406,7 +406,7 @@ function Contenu({ slug, titre, sections, tonalite, tonaliteOrigine, instrument,
                   <Link href={`/harmonie/${fiche.id}`} className="font-semibold underline-offset-4 hover:underline">
                     {fiche.nom}
                   </Link>
-                  <p className="mt-0.5 text-[13px] text-muted-foreground">
+                  <p className="mt-0.5 text-sm text-muted-foreground">
                     {t("harmonie.modulation.ou", { section: prop.sectionNom, ton: prop.tonaliteCible })}
                     {prop.approche.length > 0 && (
                       <>
@@ -429,7 +429,7 @@ function Contenu({ slug, titre, sections, tonalite, tonaliteOrigine, instrument,
         <section className="mt-5">
           <h3 className="mb-1.5 text-sm font-semibold text-muted-foreground">{t("harmonie.transition.titre")}</h3>
           <div className="rounded-xl bg-card p-3">
-            <p className="text-[15px]">
+            <p className="text-base">
               {ficheTransition ? (
                 <Link href={`/harmonie/${ficheTransition.id}`} className="font-semibold underline-offset-4 hover:underline">
                   {ficheTransition.nom}
@@ -438,7 +438,7 @@ function Contenu({ slug, titre, sections, tonalite, tonaliteOrigine, instrument,
                 t("harmonie.transition.titre")
               )}
             </p>
-            <p className="mt-0.5 text-[13px] text-muted-foreground">
+            <p className="mt-0.5 text-sm text-muted-foreground">
               {suivant.titre} · {suivant.tonalite}
               {transition.approche && (
                 <>
@@ -524,33 +524,33 @@ function IdeesEquipe({
     <section className="mt-5">
       <h3 className="mb-1.5 text-sm font-semibold text-muted-foreground">{t("harmonie.idee.titre")}</h3>
       {idees.length === 0 && !ouvert && (
-        <p className="rounded-xl bg-card px-3 py-2.5 text-[13px] text-muted-foreground">{t("harmonie.idee.aucune")}</p>
+        <p className="rounded-xl bg-card px-3 py-2.5 text-sm text-muted-foreground">{t("harmonie.idee.aucune")}</p>
       )}
       <ul className="space-y-2">
         {idees.map((i) => (
           <li key={i.id} className="rounded-xl bg-card p-3" data-idee={i.id}>
-            <p className="text-[15px]">{i.texte}</p>
+            <p className="text-base">{i.texte}</p>
             {(i.avant || i.apres) && (
-              <p className="mt-1 text-[15px]">
+              <p className="mt-1 text-base">
                 <span className="font-chord font-semibold"><AccordTouchable etiquette={lire(i.avant)} visible /></span>
                 <span className="mx-1.5 text-muted-foreground">→</span>
                 <span className="font-chord font-semibold"><AccordTouchable etiquette={lire(i.apres)} visible /></span>
               </p>
             )}
             {i.ficheId && fiches.some((f) => f.id === i.ficheId) && (
-              <Link href={`/harmonie/${i.ficheId}`} className="mt-0.5 block text-[13px] underline underline-offset-4">
+              <Link href={`/harmonie/${i.ficheId}`} className="mt-0.5 block text-sm underline underline-offset-4">
                 {fiches.find((f) => f.id === i.ficheId)!.nom}
               </Link>
             )}
-            <p className="mt-1 text-[13px] text-muted-foreground">
+            <p className="mt-1 text-sm text-muted-foreground">
               {i.auteur}
               {i.instrument && ` · ${t(`harmonie.instrument.${i.instrument}`)}`}
               {!vues.includes(i.id) && (
-                <span className="ml-2 rounded-full bg-secondary px-1.5 py-0.5 text-[11px]">{t("harmonie.nouveau")}</span>
+                <span className="ml-2 rounded-full bg-secondary px-1.5 py-0.5 text-xs">{t("harmonie.nouveau")}</span>
               )}
             </p>
             {(i.uid === moi?.uid || admin) && (
-              <div className="mt-2 flex gap-3 text-[13px]">
+              <div className="mt-2 flex gap-3 text-sm">
                 {i.uid === moi?.uid && (
                   <button
                     type="button"
@@ -584,7 +584,7 @@ function IdeesEquipe({
             placeholder={t("harmonie.idee.texte")}
             aria-label={t("harmonie.idee.texte")}
             rows={2}
-            className="w-full rounded-lg bg-secondary px-3 py-2 text-[15px]"
+            className="w-full rounded-lg bg-secondary px-3 py-2 text-base"
           />
           <div className="flex gap-2">
             <input
@@ -592,14 +592,14 @@ function IdeesEquipe({
               onChange={(e) => setAvant(e.target.value)}
               placeholder={t("harmonie.idee.avant")}
               aria-label={t("harmonie.idee.avant")}
-              className="h-10 min-w-0 flex-1 rounded-lg bg-secondary px-3 text-[15px]"
+              className="h-10 min-w-0 flex-1 rounded-lg bg-secondary px-3 text-base"
             />
             <input
               value={apres}
               onChange={(e) => setApres(e.target.value)}
               placeholder={t("harmonie.idee.apres")}
               aria-label={t("harmonie.idee.apres")}
-              className="h-10 min-w-0 flex-1 rounded-lg bg-secondary px-3 text-[15px]"
+              className="h-10 min-w-0 flex-1 rounded-lg bg-secondary px-3 text-base"
             />
           </div>
           <ChampSelect
@@ -622,7 +622,7 @@ function IdeesEquipe({
           <button
             type="button"
             onClick={() => setOuvert(true)}
-            className="mt-2 w-full rounded-xl bg-card py-2.5 text-[15px] font-medium"
+            className="mt-2 w-full rounded-xl bg-card py-2.5 text-base font-medium"
           >
             {t("harmonie.idee.ajouter")}
           </button>

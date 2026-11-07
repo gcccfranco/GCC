@@ -241,7 +241,7 @@ export function FeteGestion({ fete }: { fete: Fete }) {
   const enTeteEdition = (
     <div>
       <div className="flex flex-wrap items-center gap-2">
-        <h2 className="text-[22px] leading-tight font-bold tracking-tight text-foreground">
+        <h2 className="text-xl leading-tight font-bold tracking-tight text-foreground">
           <DropdownMenu modal={false}>
             <DropdownMenuTrigger className="inline-flex items-center gap-1 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
               {titre}
@@ -258,7 +258,7 @@ export function FeteGestion({ fete }: { fete: Fete }) {
         </h2>
         {pastilleEtat("etat-edition")}
       </div>
-      <p className="mt-1 text-[13.5px] text-muted-foreground">
+      <p className="mt-1 text-sm text-muted-foreground">
         {t("planning.programmes.jourJLabel", { date: dateDuJour(programme.jourJ) })}
         {(etat === "bientot" || etat === "ouvertes") && jours.length > 0 && <> · {t("planning.fete.jusquau", { date: jourEnLettres(jours.at(-1)!, lang) })}</>}
       </p>
@@ -296,13 +296,13 @@ export function FeteGestion({ fete }: { fete: Fete }) {
     </>
   )
   const texteBrouillon = avantLancement && (
-    <p className="px-1 text-[13px] text-muted-foreground">{t("planning.gestion.brouillonTexte", { phrase: phraseMembres })}</p>
+    <p className="px-1 text-sm text-muted-foreground">{t("planning.gestion.brouillonTexte", { phrase: phraseMembres })}</p>
   )
   const anneesPassees = avantLancement && (
     <>
       {passees.length > 0 && (
         <section aria-labelledby="scene-gestion-annees" className="space-y-1">
-          <h3 id="scene-gestion-annees" className="px-1 text-[13px] font-semibold text-muted-foreground">{t("planning.fete.anneesPassees")}</h3>
+          <h3 id="scene-gestion-annees" className="px-1 text-sm font-semibold text-muted-foreground">{t("planning.fete.anneesPassees")}</h3>
           {passees.map((p) => (
             <Entree
               key={p.id}
@@ -333,7 +333,7 @@ export function FeteGestion({ fete }: { fete: Fete }) {
       {enTeteEdition}
       {erreurEcriture}
       <div className="space-y-1">
-        <p className="px-1 text-[13px] font-semibold text-muted-foreground">{t("planning.gestion.cetteFete")}</p>
+        <p className="px-1 text-sm font-semibold text-muted-foreground">{t("planning.gestion.cetteFete")}</p>
         {entrees}
         {entreeOrdre}
       </div>
@@ -359,14 +359,14 @@ export function FeteGestion({ fete }: { fete: Fete }) {
   const apercu = <Apercu key={`apercu-${programme.id}`} programme={programme} creneaux={creneaux} />
   // Sur une colonne, pleine largeur sous la saison (planche `v18-scene-a-coord-avant-telephone`).
   const boutonLancer = (
-    <Button className={deuxVolets ? "rounded-full" : "h-12 w-full rounded-full text-[15px]"} disabled={bloque} onClick={lancer}>
+    <Button className={deuxVolets ? "rounded-full" : "h-12 w-full rounded-full text-base"} disabled={bloque} onClick={lancer}>
       <Send aria-hidden /> {t("planning.gestion.lancer")}
     </Button>
   )
   // FR6, FR7 : à la place de « Lancer », une fois lancée et jusqu'au jour J ; après, l'édition est passée.
   const fermeeALaMain = edition.programme?.fermees === true
   const boutonFermer = lance && etat !== "passee" && (
-    <Button variant="outline" className={deuxVolets ? "rounded-full" : "h-12 w-full rounded-full text-[15px]"}
+    <Button variant="outline" className={deuxVolets ? "rounded-full" : "h-12 w-full rounded-full text-base"}
       onClick={fermeeALaMain ? () => ecrire({ fermees: false }) : fermer}>
       {fermeeALaMain ? <LockOpen aria-hidden /> : <Lock aria-hidden />}
       {t(fermeeALaMain ? "planning.gestion.rouvrir" : "planning.gestion.fermer")}
@@ -377,10 +377,10 @@ export function FeteGestion({ fete }: { fete: Fete }) {
       <header className="flex flex-wrap items-start gap-3">
         <div className="min-w-[min(100%,320px)] flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <h2 className="text-[24px] leading-tight font-bold tracking-tight text-foreground">{t("planning.gestion.titreSaison", { edition: titre })}</h2>
+            <h2 className="text-xl leading-tight font-bold tracking-tight text-foreground">{t("planning.gestion.titreSaison", { edition: titre })}</h2>
             {pastilleEtat()}
           </div>
-          <p className="mt-1 text-[13.5px] text-muted-foreground">{t("planning.gestion.sousTitreSaison")}</p>
+          <p className="mt-1 text-sm text-muted-foreground">{t("planning.gestion.sousTitreSaison")}</p>
         </div>
         {deuxVolets && (lance ? boutonFermer : boutonLancer)}
       </header>
@@ -419,8 +419,8 @@ export function FeteGestion({ fete }: { fete: Fete }) {
         <CircleCheck className="h-5 w-5" aria-hidden />
       </span>
       <div className="min-w-[min(100%,240px)] flex-1">
-        <h3 id="scene-gestion-passee" className="text-[17px] font-bold text-foreground">{t("planning.gestion.passeeTitre", { edition: titre })}</h3>
-        <p className="mt-1 text-[13.5px] text-muted-foreground">
+        <h3 id="scene-gestion-passee" className="text-lg font-bold text-foreground">{t("planning.gestion.passeeTitre", { edition: titre })}</h3>
+        <p className="mt-1 text-sm text-muted-foreground">
           {t("planning.gestion.passeeTexte", { date: jourEnLettres(archiveDate(programme.jourJ), lang), suivante: titreSuivante })}
         </p>
       </div>
@@ -440,14 +440,14 @@ export function FeteGestion({ fete }: { fete: Fete }) {
       <section className="scene-imprimer space-y-3" aria-labelledby="scene-gestion-ordre">
         <div className="flex flex-wrap items-start gap-3">
           <div className="min-w-0 flex-1">
-            <h2 id="scene-gestion-ordre" className="text-[24px] leading-tight font-bold tracking-tight text-foreground">
+            <h2 id="scene-gestion-ordre" className="text-xl leading-tight font-bold tracking-tight text-foreground">
               {t("planning.fete.ordreTitre", { edition: titre })}
             </h2>
-            <p className="mt-1 text-[13.5px] text-muted-foreground">{majuscule(fdFullL(programme.jourJ, lang))}</p>
+            <p className="mt-1 text-sm text-muted-foreground">{majuscule(fdFullL(programme.jourJ, lang))}</p>
           </div>
           {enLecture && (
             <button type="button" onClick={() => window.print()}
-              className="inline-flex h-10 shrink-0 items-center gap-2 rounded-full bg-secondary px-4 text-[15px] font-semibold text-foreground transition-colors hover:bg-secondary/70 print:hidden">
+              className="inline-flex h-10 shrink-0 items-center gap-2 rounded-full bg-secondary px-4 text-base font-semibold text-foreground transition-colors hover:bg-secondary/70 print:hidden">
               <Printer className="h-4 w-4" aria-hidden /> {t("planning.gestion.imprimer")}
             </button>
           )}
@@ -555,8 +555,8 @@ function Entree({ icone: Icone, titre, sous, actif, disabled, onClick }: {
         <Icone className="h-[18px] w-[18px]" aria-hidden />
       </span>
       <span className="min-w-0 flex-1">
-        <span className="block text-[15px] font-semibold">{titre}</span>
-        <span className={`block text-[13px] ${actif ? "opacity-75" : "text-muted-foreground"}`}>{sous}</span>
+        <span className="block text-base font-semibold">{titre}</span>
+        <span className={`block text-sm ${actif ? "opacity-75" : "text-muted-foreground"}`}>{sous}</span>
       </span>
       <ChevronRight className="h-4 w-4 shrink-0 opacity-60" aria-hidden />
     </button>

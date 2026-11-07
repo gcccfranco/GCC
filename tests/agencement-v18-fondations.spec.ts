@@ -70,9 +70,9 @@ test.describe("EnTetePage (R1, R2, R3, R8)", () => {
     const y = async (l: typeof h1) => (await l.boundingBox())!.y;
     expect(await y(retour)).toBeLessThan(await y(h1));
     expect(await y(h1)).toBeLessThan(await y(sous));
-    // Le seul retour : « ‹ Section », 14 px gras gris, vers la section.
+    // Le seul retour : « ‹ Section », 13 px gras gris, vers la section.
     await expect(retour).toHaveAttribute("href", /^\/moi\/?$/); // trailingSlash de next.config
-    expect(await retour.evaluate((el) => [getComputedStyle(el).fontSize, getComputedStyle(el).fontWeight])).toEqual(["14px", "600"]);
+    expect(await retour.evaluate((el) => [getComputedStyle(el).fontSize, getComputedStyle(el).fontWeight])).toEqual(["13px", "600"]);
     expect(await sous.evaluate((el) => getComputedStyle(el).fontSize)).toBe("13px");
     if (!estTelephone(info)) {
       // L'action principale est à droite du titre, sur sa ligne.

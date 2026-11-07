@@ -163,7 +163,7 @@ function TableDuSeigneur({ rows, annee, tri }: { rows: string[][]; annee: number
   return (
     <section aria-labelledby={titreId} className="carte-groupe min-w-0 rounded-2xl px-4 pt-3 pb-1.5">
       <div className="flex items-baseline gap-2 pb-2">
-        <h3 id={titreId} className="text-[17px] font-bold text-foreground">{t("planning.pages.table")}</h3>
+        <h3 id={titreId} className="text-lg font-bold text-foreground">{t("planning.pages.table")}</h3>
       </div>
       {lignes.length ? (
         // Les dimanches passés se replient devant les à venir (plannings-7) ; tous passés ou tous à venir, rien ne se replie.

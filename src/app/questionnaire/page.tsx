@@ -42,7 +42,7 @@ function QuestionField({
 
   return (
     <div className="space-y-2.5 py-3.5">
-      <p className="text-[15px] font-semibold text-foreground leading-snug">
+      <p className="text-base font-semibold text-foreground leading-snug">
         {t(`survey.q.${q.id}.label`)}
         {q.required ? (
           <span className="text-destructive"> *</span>
@@ -79,7 +79,7 @@ function QuestionField({
               );
             })}
           </div>
-          <div className="flex justify-between text-[11px] text-muted-foreground max-w-[224px]">
+          <div className="flex justify-between text-xs text-muted-foreground max-w-[224px]">
             <span>{t(`survey.q.${q.id}.low`)}</span>
             <span>{t(`survey.q.${q.id}.high`)}</span>
           </div>
@@ -110,7 +110,7 @@ function QuestionField({
                   );
                 }}
                 aria-pressed={checked}
-                className={`inline-flex h-9 items-center gap-1.5 rounded-full px-3.5 text-[14px] font-semibold transition-colors duration-150 ${
+                className={`inline-flex h-9 items-center gap-1.5 rounded-full px-3.5 text-sm font-semibold transition-colors duration-150 ${
                   checked
                     ? "bg-foreground text-background"
                     : "bg-card text-foreground/80 ring-1 ring-inset ring-border hover:text-foreground"
@@ -293,7 +293,7 @@ export default function QuestionnairePage() {
   // En grand : les étapes, l'étape en cours en encre (on y avance par « Suivant », comme avant).
   const sommaire = grand ? (
     <nav aria-label={t("survey.etapes")} className="sticky top-[calc(var(--nav-h)+24px)] self-start">
-      <p className="px-2.5 pb-2 pt-1 text-[13px] font-semibold text-muted-foreground">{etapeSur}</p>
+      <p className="px-2.5 pb-2 pt-1 text-sm font-semibold text-muted-foreground">{etapeSur}</p>
       <ol className="flex flex-col gap-0.5">
         {steps.map((s, i) => {
           const courante = i === step;
@@ -301,7 +301,7 @@ export default function QuestionnairePage() {
             <li
               key={s.id}
               aria-current={courante ? "step" : undefined}
-              className={`flex items-center gap-3 rounded-[10px] px-2.5 py-2 text-[14.5px] ${courante ? "bg-foreground font-semibold text-background" : "text-foreground/80"}`}
+              className={`flex items-center gap-3 rounded-[10px] px-2.5 py-2 text-base ${courante ? "bg-foreground font-semibold text-background" : "text-foreground/80"}`}
             >
               <span
                 aria-hidden
@@ -314,7 +314,7 @@ export default function QuestionnairePage() {
           );
         })}
       </ol>
-      <p className="px-2.5 pt-3.5 text-[13px] leading-[19px] text-muted-foreground">
+      <p className="px-2.5 pt-3.5 text-sm leading-[19px] text-muted-foreground">
         {t("survey.sautees")} {t("survey.autosave")}
       </p>
     </nav>
@@ -361,8 +361,8 @@ export default function QuestionnairePage() {
             <section data-testid="questions" aria-label={t(`survey.steps.${current.id}`)} className="pb-4 pt-5">
               {groups.map((group, i) => (
                 <div key={group.id} className={i > 0 ? "mt-4 border-t border-border pt-5" : ""}>
-                  <h2 className="text-[19px] font-bold leading-tight text-foreground">{t(`survey.s.${group.id}.title`)}</h2>
-                  <p className="mt-0.5 text-[14px] text-muted-foreground">{t(`survey.s.${group.id}.hint`)}</p>
+                  <h2 className="text-lg font-bold leading-tight text-foreground">{t(`survey.s.${group.id}.title`)}</h2>
+                  <p className="mt-0.5 text-sm text-muted-foreground">{t(`survey.s.${group.id}.hint`)}</p>
                   <div className="mt-2 divide-y divide-border border-t border-border">
                     {group.questions.map((q) => (
                       <QuestionField

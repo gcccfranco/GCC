@@ -69,7 +69,7 @@ export function ChordPad({
 
   const keyBtn = (active: boolean, small = false) =>
     `h-10 min-w-10 rounded-sm border font-bold transition-colors ${
-      small ? "px-1 text-[12.5px]" : "px-2 text-[14px]"
+      small ? "px-1 text-xs" : "px-2 text-sm"
     } ${
       active
         ? "border-transparent bg-primary text-primary-foreground"
@@ -85,7 +85,7 @@ export function ChordPad({
         </span>
       </div>
       {isSpacer && (
-        <p className="text-[11px] text-muted-foreground text-center">
+        <p className="text-xs text-muted-foreground text-center">
           {t("setlists.contentEdit.spacerKept", {
             defaultValue: "Colonne vide conservée — choisis une note pour la remplacer par un accord.",
           })}
@@ -129,7 +129,7 @@ export function ChordPad({
       </div>
       {/* Qualité inconnue du pavé (accord importé) : conservée telle quelle */}
       {!isKnownQuality && (
-        <p className="text-[11px] text-muted-foreground text-center">
+        <p className="text-xs text-muted-foreground text-center">
           {t("setlists.contentEdit.customQuality", {
             defaultValue: "Qualité « {{quality}} » conservée",
             quality,
@@ -142,7 +142,7 @@ export function ChordPad({
         <div className="flex items-center gap-2">
           <button
             type="button"
-            className={`h-8 px-2.5 rounded-sm border text-[12px] font-semibold ${
+            className={`h-8 px-2.5 rounded-sm border text-xs font-semibold ${
               showBass ? "border-transparent bg-secondary text-foreground" : "border-border bg-card text-muted-foreground"
             }`}
             onClick={() =>
@@ -158,7 +158,7 @@ export function ChordPad({
               Choix terminal → insertion immédiate, sans passer par Valider. */}
           <button
             type="button"
-            className="h-8 px-2.5 rounded-sm border border-dashed border-border bg-card text-[12px] font-semibold text-muted-foreground hover:text-foreground"
+            className="h-8 px-2.5 rounded-sm border border-dashed border-border bg-card text-xs font-semibold text-muted-foreground hover:text-foreground"
             onClick={() => onSubmit(" ")}
           >
             ␣ {t("setlists.contentEdit.emptyColumn", { defaultValue: "colonne vide" })}

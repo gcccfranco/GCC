@@ -91,7 +91,7 @@ export function NuanceFieldInput({
               type="button"
               title={nuanceFull(n.id)}
               onClick={() => toggle(n.id)}
-              className={`text-[11px] px-1.5 py-0.5 rounded border transition-colors ${
+              className={`text-xs px-1.5 py-0.5 rounded border transition-colors ${
                 on
                   ? "border-violet-400 bg-violet-100 text-violet-700 dark:bg-violet-500/20 dark:text-violet-300 dark:border-violet-500/50 font-semibold"
                   : "border-border text-muted-foreground hover:text-foreground hover:bg-muted"
@@ -107,7 +107,7 @@ export function NuanceFieldInput({
         placeholder={t("setlists.form.nuanceNotePlaceholder", { defaultValue: "Précision libre…" })}
         value={note}
         onChange={(e) => onNoteChange(e.target.value)}
-        className="w-full text-[11px] px-1.5 py-1 border border-violet-300/70 dark:border-violet-700/60 rounded bg-violet-50/50 dark:bg-violet-950/10 text-foreground placeholder:text-violet-400/70 dark:placeholder:text-violet-600/60 focus:outline-none focus:ring-1 focus:ring-violet-400/40"
+        className="w-full text-xs px-1.5 py-1 border border-violet-300/70 dark:border-violet-700/60 rounded bg-violet-50/50 dark:bg-violet-950/10 text-foreground placeholder:text-violet-400/70 dark:placeholder:text-violet-600/60 focus:outline-none focus:ring-1 focus:ring-violet-400/40"
       />
     </div>
   );
@@ -130,7 +130,7 @@ export function KeyChangeFieldInput({
             key={k}
             type="button"
             onClick={() => onChange(value === k ? "" : k)}
-            className={`text-[11px] min-w-7 px-1 py-0.5 rounded border font-semibold transition-colors ${
+            className={`text-xs min-w-7 px-1 py-0.5 rounded border font-semibold transition-colors ${
               value === k
                 ? "border-emerald-400 bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300 dark:border-emerald-500/50"
                 : "border-border text-muted-foreground hover:text-foreground hover:bg-muted"
@@ -182,8 +182,8 @@ export function AnnotationFieldInput({
         }}
         className={
           isNote
-            ? "w-full text-[11px] px-1.5 py-1 border border-border rounded bg-muted/50 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/30"
-            : "w-full text-[11px] px-1.5 py-1 border border-dashed border-amber-300/80 dark:border-amber-700/60 rounded bg-amber-50/50 dark:bg-amber-950/10 text-foreground placeholder:text-amber-400/70 dark:placeholder:text-amber-600/60 focus:outline-none focus:ring-1 focus:ring-amber-400/40"
+            ? "w-full text-xs px-1.5 py-1 border border-border rounded bg-muted/50 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/30"
+            : "w-full text-xs px-1.5 py-1 border border-dashed border-amber-300/80 dark:border-amber-700/60 rounded bg-amber-50/50 dark:bg-amber-950/10 text-foreground placeholder:text-amber-400/70 dark:placeholder:text-amber-600/60 focus:outline-none focus:ring-1 focus:ring-amber-400/40"
         }
       />
     </div>
@@ -378,7 +378,7 @@ export function SectionStructureEditor({
                 { uid, sectionId: s.id, name: s.name, note: "", transition: "", nuanceTags: [], nuanceNote: "", keyChange: "" },
               ]);
             }}
-            className="flex items-center gap-0.5 text-[11px] px-2 py-0.5 rounded border border-border hover:bg-muted text-foreground transition-colors"
+            className="flex items-center gap-0.5 text-xs px-2 py-0.5 rounded border border-border hover:bg-muted text-foreground transition-colors"
           >
             <Plus className="h-2.5 w-2.5" />
             {s.name}
@@ -388,7 +388,7 @@ export function SectionStructureEditor({
           <button
             type="button"
             onClick={() => setLastPhraseOpen(true)}
-            className="flex items-center gap-0.5 text-[11px] px-2 py-0.5 rounded border border-dashed border-border hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+            className="flex items-center gap-0.5 text-xs px-2 py-0.5 rounded border border-dashed border-border hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
           >
             <Plus className="h-2.5 w-2.5" />
             {t("setlists.form.lastPhrase.add")}
@@ -454,7 +454,7 @@ export function SectionStructureEditor({
         </SortableContext>
       </DndContext>
       {sectionItems.length === 0 && (
-        <p className="text-[11px] text-muted-foreground text-center py-1">
+        <p className="text-xs text-muted-foreground text-center py-1">
           {t("setlists.form.emptySections")}
         </p>
       )}
@@ -621,7 +621,7 @@ export function MixedStructureEditor({
                   key={si.uid}
                   type="button"
                   onClick={() => addSection(song, si)}
-                  className="flex items-center gap-0.5 text-[11px] px-2 py-0.5 rounded border border-border hover:bg-muted text-foreground transition-colors"
+                  className="flex items-center gap-0.5 text-xs px-2 py-0.5 rounded border border-border hover:bg-muted text-foreground transition-colors"
                 >
                   <Plus className="h-2.5 w-2.5" />
                   {si.name}
@@ -630,7 +630,7 @@ export function MixedStructureEditor({
               <button
                 type="button"
                 onClick={() => setDpSong(song)}
-                className="flex items-center gap-0.5 text-[11px] px-2 py-0.5 rounded border border-dashed border-border hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+                className="flex items-center gap-0.5 text-xs px-2 py-0.5 rounded border border-dashed border-border hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
               >
                 <Plus className="h-2.5 w-2.5" />
                 {t("setlists.form.lastPhrase.add")}
@@ -707,7 +707,7 @@ export function MixedStructureEditor({
       </DndContext>
 
       {mixed.length === 0 && (
-        <p className="text-[11px] text-muted-foreground text-center py-1">
+        <p className="text-xs text-muted-foreground text-center py-1">
           {t("setlists.form.mixedStructureEmpty")}
         </p>
       )}

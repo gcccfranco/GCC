@@ -31,8 +31,8 @@ export function RangeeAFaire({ ligne, today }: { ligne: LigneAFaire; today: stri
       </span>
       <span className="min-w-0 flex-1">
         {/* BO-G, 14 : le titre se coupe (deux lignes, puis « … ») avant que le verbe ne quitte la ligne. */}
-        <b className="line-clamp-2 text-balance break-words text-[15px] font-semibold text-foreground" title={titre}>{titre}</b>
-        <span className="block text-balance break-words text-[13px] text-muted-foreground">
+        <b className="line-clamp-2 text-balance break-words text-base font-semibold text-foreground" title={titre}>{titre}</b>
+        <span className="block text-balance break-words text-sm text-muted-foreground">
           {contexte}
           {retard && <span className={enRetard ? "whitespace-nowrap font-semibold text-red-700 dark:text-red-400" : "whitespace-nowrap"}>{retard}</span>}
         </span>

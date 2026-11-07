@@ -49,7 +49,7 @@ export function LigneJour({ ligne, droite, badges, conflit, sous }: {
             <span className="min-w-0">
               <span className="block font-semibold svc-ink">{reserve.creneau.quoi} · {reserve.creneau.qui.map((q) => libelleQui(q, langueCourte(i18n.language))).join(", ")}</span>
               {heures && (
-                <span className="block text-[12.5px] text-muted-foreground">
+                <span className="block text-xs text-muted-foreground">
                   {ligne.debut} – {ligne.fin} · {t("planning.saison.prendAussi", { count: reserve.aussi.length, heures })}
                 </span>
               )}

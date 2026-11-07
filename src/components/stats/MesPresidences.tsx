@@ -76,15 +76,15 @@ export function MesPresidences({ profile }: { profile: Pick<UserProfile, "planni
         className="carte-groupe block w-full min-w-0 rounded-2xl px-4 pb-3.5 pt-3.5 text-left transition-colors hover:bg-secondary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       >
         <span className="flex flex-wrap items-baseline gap-x-2">
-          <span className="text-[16px] font-bold text-foreground">{t("stats.presidences.titre")}</span>
-          <span className="text-[12px] text-muted-foreground">{t("stats.presidences.visible")}</span>
+          <span className="text-base font-bold text-foreground">{t("stats.presidences.titre")}</span>
+          <span className="text-xs text-muted-foreground">{t("stats.presidences.visible")}</span>
         </span>
         <dl className="mt-2.5 grid grid-cols-3 gap-2">
           <Chiffre cle="presidences" libelle={t("stats.presidences.nombre")} valeur={String(depuisLeDebut.total)} />
           <Chiffre cle="derniere" libelle={t("stats.presidences.derniere")} valeur={depuisLeDebut.derniere ? jour(depuisLeDebut.derniere.jour) : "—"} />
           <Chiffre cle="groupes" libelle={t("stats.presidences.groupes")} valeur={String(depuisLeDebut.parService.length)} />
         </dl>
-        <span className="mt-2.5 flex items-center gap-0.5 text-[13px] leading-snug text-muted-foreground">
+        <span className="mt-2.5 flex items-center gap-0.5 text-sm leading-snug text-muted-foreground">
           <span data-testid="mes-presidences-ligne" className="min-w-0">
             {premier && t("stats.presidences.surtout", { service: nom(premier.service), count: premier.fois })}
             {premier && depuisLeDebut.prochaine && " · "}
@@ -110,8 +110,8 @@ export function MesPresidences({ profile }: { profile: Pick<UserProfile, "planni
 function Chiffre({ cle, libelle, valeur }: { cle: string; libelle: string; valeur: string }) {
   return (
     <div data-testid={`chiffre-${cle}`} className="min-w-0 rounded-2xl bg-secondary px-3 py-2.5">
-      <dt className="text-[11px] leading-tight text-muted-foreground">{libelle}</dt>
-      <dd className="mt-1 break-words text-[17px] font-semibold tabular-nums leading-tight text-foreground">{valeur}</dd>
+      <dt className="text-xs leading-tight text-muted-foreground">{libelle}</dt>
+      <dd className="mt-1 break-words text-lg font-semibold tabular-nums leading-tight text-foreground">{valeur}</dd>
     </div>
   );
 }
@@ -142,9 +142,9 @@ function Detail({ stats, nom, jour, titres, periode, setPeriode, nomPresidence }
       />
 
       {stats.parService.length > 0 ? (
-        <table data-testid="mes-presidences-tableau" className="w-full border-collapse text-[14px]">
+        <table data-testid="mes-presidences-tableau" className="w-full border-collapse text-sm">
           <thead>
-            <tr className="text-left text-[11px] font-medium text-muted-foreground">
+            <tr className="text-left text-xs font-medium text-muted-foreground">
               <th scope="col" className="pb-1.5 font-medium">{t("stats.presidences.groupe")}</th>
               <th scope="col" className="pb-1.5 text-right font-medium">{t("stats.chant.fois")}</th>
               <th scope="col" className="pb-1.5 pl-3 text-right font-medium">{t("stats.chant.derniereCol")}</th>
@@ -166,13 +166,13 @@ function Detail({ stats, nom, jour, titres, periode, setPeriode, nomPresidence }
           </tbody>
         </table>
       ) : (
-        <p data-testid="mes-presidences-aucune" className="text-[14px] text-muted-foreground">{t("stats.presidences.aucune")}</p>
+        <p data-testid="mes-presidences-aucune" className="text-sm text-muted-foreground">{t("stats.presidences.aucune")}</p>
       )}
 
       {stats.chants.length > 0 && (
         <div className="space-y-1">
-          <h3 className="text-[13px] font-semibold">{t("stats.presidences.chants")}</h3>
-          <ul data-testid="mes-chants" className="text-[14px]">
+          <h3 className="text-sm font-semibold">{t("stats.presidences.chants")}</h3>
+          <ul data-testid="mes-chants" className="text-sm">
             {stats.chants.slice(0, 5).map((c) => (
               <li key={c.slug} data-testid="mon-chant" className="flex items-baseline gap-3 border-t border-border/60 py-1.5 first:border-t-0">
                 <Link href={`/songs/${c.slug}`} className="min-w-0 flex-1 truncate underline-offset-4 hover:underline">
@@ -186,7 +186,7 @@ function Detail({ stats, nom, jour, titres, periode, setPeriode, nomPresidence }
       )}
 
       {stats.jamaisChoisis > 0 && (
-        <p className="text-[14px]">
+        <p className="text-sm">
           <Link
             data-testid="jamais-choisis" href="/songs/statistiques?vue=jamais-joues"
             className="inline-flex min-h-8 items-center gap-0.5 underline underline-offset-4 decoration-1 [@media(pointer:coarse)]:min-h-11"
@@ -197,14 +197,14 @@ function Detail({ stats, nom, jour, titres, periode, setPeriode, nomPresidence }
       )}
 
       {stats.prochaine && (
-        <p data-testid="prochaine" className="text-[14px]">
+        <p data-testid="prochaine" className="text-sm">
           <Link href={`/setlists/${stats.prochaine.setlistId}`} className="underline underline-offset-4 decoration-1">
             {t("stats.chant.prochaine", { date: jour(stats.prochaine.jour), service: nom(stats.prochaine.service) })}
           </Link>
         </p>
       )}
 
-      <p className="border-t border-border pt-3 text-[12px] text-muted-foreground">
+      <p className="border-t border-border pt-3 text-xs text-muted-foreground">
         {t("stats.presidences.note", { nom: nomPresidence })}
       </p>
     </div>

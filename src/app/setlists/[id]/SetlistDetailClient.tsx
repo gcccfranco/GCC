@@ -93,8 +93,8 @@ import { structUidAt, revertSectionOrigins, idDeSection } from "@/lib/setlist/se
 import { TOUCHER_44 } from "@/lib/toucher44";
 
 // Sous 1024 px, où `.libelle-outil` est masqué : l'icône et un libellé court dessous (G15, audit 24/10/2026).
-const PILULE_EMPILEE = "max-lg:h-auto max-lg:min-h-8 max-lg:flex-col max-lg:justify-center max-lg:gap-0.5 max-lg:px-1 max-lg:py-1 max-lg:rounded-2xl";
-const LIBELLE_COURT = "hidden max-lg:block max-w-[64px] truncate text-[10px] font-medium leading-tight";
+const PILULE_EMPILEE = "max-lg:h-auto max-lg:min-h-8 max-lg:flex-col max-lg:justify-center max-lg:gap-0.5 max-lg:px-2 max-lg:py-1 max-lg:rounded-2xl";
+const LIBELLE_COURT = "hidden max-lg:block max-w-[64px] truncate text-xs font-medium leading-tight";
 
 /** Cible d'édition de ligne + indices source nécessaires à la sauvegarde. */
 type LineEditState = EditLineTarget & {
@@ -127,12 +127,12 @@ const COPIE_APRES_MS = 3000;
 /** Boutons de l'en-tête des deux volets (planche `setlist-deux-volets`) : pilules
  *  libellées, l'état actif en encre comme la barre de G. */
 const PILULE =
-  "flex h-10 items-center gap-2 rounded-full bg-secondary px-4 text-[14px] font-semibold text-foreground transition-[background-color,color,transform] duration-150 hover:bg-muted active:scale-[.97] disabled:opacity-60";
+  "flex h-10 items-center gap-2 rounded-full bg-secondary px-4 text-sm font-semibold text-foreground transition-[background-color,color,transform] duration-150 hover:bg-muted active:scale-[.97] disabled:opacity-60";
 /** Bouton rond sans libellé (PDF, ⋯) : l'icône seule, nom en `aria-label`. */
 const PILULE_ICONE =
   "flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-secondary text-foreground transition-[background-color,color,transform] duration-150 hover:bg-muted active:scale-[.97] disabled:opacity-60";
 const PILULE_ACTIVE =
-  "flex h-10 items-center gap-2 rounded-full bg-foreground px-4 text-[14px] font-semibold text-background transition-[background-color,color,transform] duration-150 active:scale-[.97]";
+  "flex h-10 items-center gap-2 rounded-full bg-foreground px-4 text-sm font-semibold text-background transition-[background-color,color,transform] duration-150 active:scale-[.97]";
 
 type EditBase = {
   source: string;
@@ -1672,7 +1672,7 @@ export function SetlistDetailClient() {
                   onClick={ouvrirModeLouange}
                   // 5C1 : un bouton plein est en encre, sauf sur l'écran d'un culte, où il en prend la couleur.
                   style={{ backgroundColor: serviceButtonFill(categoryColor(setlist.category)) }}
-                  className="flex h-10 items-center gap-2 rounded-full px-4 text-[14px] font-semibold text-white transition-all duration-150 hover:brightness-95 active:scale-[.97] dark:ring-1 dark:ring-white/15"
+                  className="flex h-10 items-center gap-2 rounded-full px-4 text-sm font-semibold text-white transition-all duration-150 hover:brightness-95 active:scale-[.97] dark:ring-1 dark:ring-white/15"
                 >
                   <Play className="h-4 w-4" aria-hidden />
                   {t("setlists.detail.performanceMode")}
@@ -1789,7 +1789,7 @@ export function SetlistDetailClient() {
                   <button aria-label={t("setlists.contentEdit.toggle", { defaultValue: "Adapter" })}
                     aria-pressed={editPartitions}
                     onClick={toggleAdapter}
-                    className={`${TOUCHER_44} ${PILULE_EMPILEE} max-[389px]:hidden h-8 px-2.5 rounded-full text-sm font-semibold flex items-center gap-1.5 transition-[background-color,color,transform] duration-150 active:scale-[.96] ${
+                    className={`${TOUCHER_44} ${PILULE_EMPILEE} max-[430px]:hidden h-8 px-2.5 rounded-full text-sm font-semibold flex items-center gap-1.5 transition-[background-color,color,transform] duration-150 active:scale-[.96] ${
                       editPartitions
                         ? "bg-foreground text-background"
                         : "bg-secondary text-muted-foreground hover:text-foreground"
@@ -1826,7 +1826,7 @@ export function SetlistDetailClient() {
                   <button aria-label={t("setlists.myVersion.toggle")}
                     aria-pressed={editMine}
                     onClick={toggleMaVersion}
-                    className={`${TOUCHER_44} ${PILULE_EMPILEE} max-[389px]:hidden h-8 px-2.5 rounded-full text-sm font-semibold flex items-center gap-1.5 transition-[background-color,color,transform] duration-150 active:scale-[.96] ${
+                    className={`${TOUCHER_44} ${PILULE_EMPILEE} max-[430px]:hidden h-8 px-2.5 rounded-full text-sm font-semibold flex items-center gap-1.5 transition-[background-color,color,transform] duration-150 active:scale-[.96] ${
                       editMine
                         ? "bg-foreground text-background"
                         : "bg-secondary text-muted-foreground hover:text-foreground"
@@ -1847,7 +1847,7 @@ export function SetlistDetailClient() {
                     aria-label={t("setlists.detail.performanceMode")}
                     // 5C1 : un bouton plein est en encre, sauf sur l'écran d'un culte, où il en prend la couleur.
                     style={{ backgroundColor: serviceButtonFill(categoryColor(setlist.category ?? "")) }}
-                    className={`${TOUCHER_44} ${PILULE_EMPILEE} h-8 px-2.5 sm:px-3 rounded-full text-white text-[12.5px] font-semibold flex items-center gap-1.5 hover:brightness-95 dark:ring-1 dark:ring-white/15 transition-all duration-150`}
+                    className={`${TOUCHER_44} ${PILULE_EMPILEE} h-8 px-2.5 sm:px-3 rounded-full text-white text-xs font-semibold flex items-center gap-1.5 hover:brightness-95 dark:ring-1 dark:ring-white/15 transition-all duration-150`}
                   >
                     <Play className="h-3.5 w-3.5" />
                     <span className="libelle-outil">{t("setlists.detail.performanceMode")}</span>
@@ -1869,16 +1869,16 @@ export function SetlistDetailClient() {
                     <DropdownMenuContent align="end" className="w-56">
                       {/* Téléphone étroit : les deux modes d'édition, sortis de la barre. */}
                       {canEdit && (
-                        <DropdownMenuCheckboxItem className="min-[390px]:hidden" checked={editPartitions} onCheckedChange={toggleAdapter}>
+                        <DropdownMenuCheckboxItem className="min-[431px]:hidden" checked={editPartitions} onCheckedChange={toggleAdapter}>
                           {t("setlists.contentEdit.toggle", { defaultValue: "Adapter" })}
                         </DropdownMenuCheckboxItem>
                       )}
                       {(!horsLigne && canHaveSetlistVersion(user, profile, setlist)) && (
-                        <DropdownMenuCheckboxItem className="min-[390px]:hidden" checked={editMine} onCheckedChange={toggleMaVersion}>
+                        <DropdownMenuCheckboxItem className="min-[431px]:hidden" checked={editMine} onCheckedChange={toggleMaVersion}>
                           {t("setlists.myVersion.toggle")}
                         </DropdownMenuCheckboxItem>
                       )}
-                      {(canEdit || (!horsLigne && canHaveSetlistVersion(user, profile, setlist))) && <DropdownMenuSeparator className="min-[390px]:hidden" />}
+                      {(canEdit || (!horsLigne && canHaveSetlistVersion(user, profile, setlist))) && <DropdownMenuSeparator className="min-[431px]:hidden" />}
                       {canEdit && (
                         <DropdownMenuItem asChild>
                           <Link href={`/setlists/${id}/edit`}>

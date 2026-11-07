@@ -122,7 +122,7 @@ export default function ProfilPage() {
         titre={t("profile.title")}
         sousTitre={user.email}
         action={canEdit && (
-          <Button type="submit" form={FORMULAIRE} disabled={saving} aria-label={t("profile.save")} className="hidden h-10 gap-2 rounded-full px-[18px] text-[14.5px] font-semibold md:inline-flex">
+          <Button type="submit" form={FORMULAIRE} disabled={saving} aria-label={t("profile.save")} className="hidden h-10 gap-2 rounded-full px-[18px] text-base font-semibold md:inline-flex">
             <Check className="h-4 w-4" strokeWidth={2.4} aria-hidden />
             {enregistrer}
           </Button>

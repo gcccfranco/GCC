@@ -212,14 +212,14 @@ test.describe("T2a : les adresses /back-office/reunions/*", () => {
 
   // Corrections du design (bo-reunions-taches-5, -6, -9) : un seul grand titre par page, le retour dit « Calendrier »,
   // « Modifier » n'est écrit qu'une fois. Quatre dispositions plus 1 440 px (les cinq projets).
-  test("la fiche : un seul h1 (le titre de la réunion, 28 px) ; ni « Réunions » ni sous-titre ; retour « ‹ Calendrier »", async ({ page }, info) => {
+  test("la fiche : un seul h1 (le titre de la réunion, 30 px) ; ni « Réunions » ni sous-titre ; retour « ‹ Calendrier »", async ({ page }, info) => {
     await ouvrir(page, DA, "/back-office/reunions/reu-da");
     await expect(page.getByRole("heading", { level: 1, name: "Réunion DA", exact: true })).toBeVisible();
     await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1);
     await expect(page.getByRole("heading", { name: "Réunions", exact: true })).toHaveCount(0);
     await expect(page.getByText("Les réunions de tes équipes")).toHaveCount(0);
     if (estGrandEcran(info)) {
-      await expect(page.getByRole("heading", { level: 1 })).toHaveCSS("font-size", "28px");
+      await expect(page.getByRole("heading", { level: 1 })).toHaveCSS("font-size", "30px");
       await expect(page.getByRole("heading", { level: 1 })).toHaveCSS("font-weight", "700");
     }
     const retour = page.locator("header[data-entete-page]").getByRole("link", { name: "Calendrier" }).first();

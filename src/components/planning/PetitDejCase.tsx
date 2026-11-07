@@ -100,7 +100,7 @@ export function usePetitDejGrille(actif: boolean, onLignes: (lignes: LignePetitD
 
 type EtatPetitDejGrille = ReturnType<typeof usePetitDejGrille>
 
-const BORD = "min-h-8 rounded-md border border-dashed px-1.5 py-1 text-[13px] sm:text-sm hover:bg-secondary active:bg-secondary disabled:opacity-60"
+const BORD = "min-h-8 rounded-md border border-dashed px-1.5 py-1 text-sm hover:bg-secondary active:bg-secondary disabled:opacity-60"
 const CHAMP = "w-full min-w-0 rounded-md border bg-background px-2 py-1 text-[16px] sm:text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/20"
 
 /** Le champ d'ajout : plusieurs noms. Entrée valide (Maj+Entrée : retour à la ligne), Échap annule,
@@ -217,7 +217,7 @@ export function CasePetitDej({ etat, dimanche }: { etat: EtatPetitDejGrille; dim
           {siennes.length ? <Plus className="h-4 w-4" aria-hidden /> : <span className="text-muted-foreground">+</span>}
         </button>
       )}
-      {annonce?.dimanche === dimanche && <p role="status" className="text-[13px] text-muted-foreground">{annonce.texte}</p>}
+      {annonce?.dimanche === dimanche && <p role="status" className="text-sm text-muted-foreground">{annonce.texte}</p>}
     </div>
   )
 }

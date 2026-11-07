@@ -64,19 +64,19 @@ export function CarteJourCampus({ day, seances, entrainement }: { day: string; s
                 </span>
               </div>
             )}
-            <div className={`px-4 py-2 text-[13px] font-semibold ${isSoir ? "bg-muted/60 text-muted-foreground" : "bg-secondary text-secondary-foreground"}`}>
+            <div className={`px-4 py-2 text-sm font-semibold ${isSoir ? "bg-muted/60 text-muted-foreground" : "bg-secondary text-secondary-foreground"}`}>
               {entrainement ? seanceLibelle(t, zh, s.d) : moment}
             </div>
             <div className="grid grid-cols-2 border-b border-border">
               <div className="px-4 py-3 border-r border-border">
-                <p className="text-[13px] font-semibold text-muted-foreground mb-2">{t("planning.campus.presChoristes")}</p>
+                <p className="text-sm font-semibold text-muted-foreground mb-2">{t("planning.campus.presChoristes")}</p>
                 {s.pres && (
                   <p className="text-sm font-semibold mb-1 texte-service" style={styleTexteService(COLOR)}>{s.pres}</p>
                 )}
                 {choristes.map(c => <Chip key={c} label={c} />)}
               </div>
               <div className="px-4 py-3">
-                <p className="text-[13px] font-semibold text-muted-foreground mb-2">{t("planning.campus.musiciens")}</p>
+                <p className="text-sm font-semibold text-muted-foreground mb-2">{t("planning.campus.musiciens")}</p>
                 {musiciens.map(m => <Chip key={m} label={cellulePoste(t, zh, m)} />)}
               </div>
             </div>
@@ -94,7 +94,7 @@ export function CarteJourCampus({ day, seances, entrainement }: { day: string; s
               </div>
             )}
             <div className="px-4 py-3 bg-secondary/30">
-              <p className="text-[13px] font-semibold text-muted-foreground mb-2">{t("planning.campus.chants")}</p>
+              <p className="text-sm font-semibold text-muted-foreground mb-2">{t("planning.campus.chants")}</p>
               {s.chants.some(c => c?.trim()) ? (
                 <div className="space-y-1">
                   {s.chants.filter(c => c?.trim()).map((c, ci) => (

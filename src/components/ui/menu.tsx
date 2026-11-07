@@ -75,7 +75,7 @@ export function Menu<T extends string = string>({
         data-menu=""
         data-pose={posee ? "" : undefined}
         className={cn(
-          "inline-flex h-7 max-w-full shrink-0 items-center gap-1 whitespace-nowrap rounded-full border-0 px-3 text-[13px] font-semibold transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring [@media(pointer:coarse)]:h-8 [@media(pointer:coarse)]:text-[14px]",
+          "inline-flex h-7 max-w-full shrink-0 items-center gap-1 whitespace-nowrap rounded-full border-0 px-3 text-sm font-semibold transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring [@media(pointer:coarse)]:h-8",
           TOUCHER_PILULE,
           posee ? "bg-primary text-primary-foreground" : cn("text-foreground active:bg-secondary/70", surGris ? "bg-secondary-fond dark:bg-secondary" : "bg-secondary"),
           className,
@@ -95,7 +95,7 @@ export function Menu<T extends string = string>({
             estGroupe(e) ? (
               <React.Fragment key={`g-${e.groupe}`}>
                 {i > 0 && <DropdownMenuSeparator className="mx-1" />}
-                {e.groupe && <DropdownMenuLabel className="px-3 pb-1 pt-2 text-[12px] font-semibold text-muted-foreground">{e.groupe}</DropdownMenuLabel>}
+                {e.groupe && <DropdownMenuLabel className="px-3 pb-1 pt-2 text-xs font-semibold text-muted-foreground">{e.groupe}</DropdownMenuLabel>}
                 {e.options.map((o) => <LigneMenu key={o.valeur} option={o} />)}
               </React.Fragment>
             ) : (
@@ -112,7 +112,7 @@ function LigneMenu({ option }: { option: OptionMenu }) {
   return (
     <DropdownMenuPrimitive.RadioItem
       value={option.valeur}
-      className="relative flex h-9 cursor-default select-none items-center rounded-lg pl-8 pr-3 text-[14px] outline-none transition-colors focus:bg-accent focus:text-accent-foreground data-[highlighted]:bg-accent [@media(pointer:coarse)]:h-11"
+      className="relative flex h-9 cursor-default select-none items-center rounded-lg pl-8 pr-3 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground data-[highlighted]:bg-accent [@media(pointer:coarse)]:h-11"
     >
       <span className="absolute left-2.5 flex h-4 w-4 items-center justify-center">
         <DropdownMenuPrimitive.ItemIndicator>

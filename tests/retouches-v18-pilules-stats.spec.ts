@@ -6,7 +6,7 @@ import {
 
 // Retouches v18, tranches R5 et R6 (docs/spec-retouches-v18.md, D9 et D11).
 // - R5 (D9), reprise par le lot CD, T3a (jeu B) : les pilules (`Pilules`) font 28 px (13 px, semi-gras) au pointeur
-//   fin et 32 px (14 px) au toucher, portées à 44 px par un `::after` (au toucher seulement), qui s'arrête à mi-écart
+//   fin et 32 px au toucher (texte de 13 px dans les deux cas, échelle B), portées à 44 px par un `::after` (au toucher seulement), qui s'arrête à mi-écart
 //   de la voisine. Une règle du composant commun : la rangée des plannings du Back-Office la suit aussi.
 //   Le rail (`OngletsRail`) : piste de 36 px au pointeur fin, 40 px au toucher, onglets de 30 / 34 px dedans, zone de 44 px.
 // - R6 (D11) : Statistiques › « Les plus joués » : sous ≈ 1 100 px de conteneur, les chiffres passent
@@ -83,7 +83,7 @@ function verifierTaille(mesures: { nom: string; hauteur: number; texte: number }
   const hauteur = hauteurAttendue(projet);
   for (const m of mesures) {
     expect(Math.abs(m.hauteur - hauteur), `« ${m.nom} » : ${m.hauteur} px, attendu ≈ ${hauteur} px`).toBeLessThanOrEqual(1);
-    expect(m.texte, `« ${m.nom} » : texte`).toBe(hauteur === 28 ? 13 : 14);
+    expect(m.texte, `« ${m.nom} » : texte`).toBe(13);
   }
 }
 

@@ -34,10 +34,10 @@ export function SectionCorbeille({
         className="flex min-h-11 w-full items-center justify-between gap-3 text-left"
       >
         <span className="min-w-0">
-          <span className="block text-[15px] font-semibold text-foreground">
+          <span className="block text-base font-semibold text-foreground">
             {t("setlists.corbeille.titre", { count: setlists.length })}
           </span>
-          <span className="block text-[13px] text-muted-foreground">{t("setlists.corbeille.aide")}</span>
+          <span className="block text-sm text-muted-foreground">{t("setlists.corbeille.aide")}</span>
         </span>
         <ChevronDown className={`h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-150 ${ouverte ? "rotate-180" : ""}`} aria-hidden />
       </button>
@@ -45,8 +45,8 @@ export function SectionCorbeille({
         <ul className="mt-1">
           {setlists.map((s) => (
             <li key={s.id} className="border-t border-border/70 py-3">
-              <p className="text-[15px] font-semibold text-foreground">{titreAffiche(s, langueCourte(i18n.language))}</p>
-              <p className="text-[13px] text-muted-foreground">
+              <p className="text-base font-semibold text-foreground">{titreAffiche(s, langueCourte(i18n.language))}</p>
+              <p className="text-sm text-muted-foreground">
                 <span className="inline-block first-letter:uppercase">{formatDate(s.date, i18n.language)}</span>
                 {" · "}
                 {t("setlists.corbeille.supprimeeLe", { date: dateCourte(s.supprimeeLe!) })}

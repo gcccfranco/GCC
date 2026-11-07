@@ -167,8 +167,8 @@ export function SelecteurEspace({ pleineLargeur = false, compact = false, onChoi
     // Barre du haut : au téléphone (< 640 px) l'espace courant garde icône et libellé, les autres une icône de 36 px
     // (back-office-1) ; sous 375 px le courant lui aussi n'est plus qu'une icône de 36 px (la pastille le marque) ; au-delà rien ne change. Le nom reste en `aria-label` et `title`.
     const forme = pleineLargeur
-      ? "h-[30px] min-w-0 flex-auto px-2 text-[12px] tracking-[-0.01em]"
-      : `py-1.5 text-[13px] ${ZONE_ICONE} ${courant ? "px-3.5 max-sm:h-9 max-sm:px-2.5 max-[374px]:w-9 max-[374px]:px-0" : "px-3.5 max-sm:h-9 max-sm:w-9 max-sm:px-0"}`;
+      ? "h-[30px] min-w-0 flex-auto px-2 text-xs tracking-[-0.01em]"
+      : `py-1.5 text-sm ${ZONE_ICONE} ${courant ? "px-3.5 max-sm:h-9 max-sm:px-2.5 max-[374px]:w-9 max-[374px]:px-0" : "px-3.5 max-sm:h-9 max-sm:w-9 max-sm:px-0"}`;
     return (
       <Link
         href={cibles[e]}

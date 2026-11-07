@@ -68,12 +68,12 @@ export function ToutesReservations({ programme, creneaux, titre, voirCommeMembre
     <section aria-labelledby={titreId} className={`${styles.cadre} space-y-4`}>
       <header className="flex flex-wrap items-start gap-3">
         <div className="min-w-[min(100%,280px)] flex-1">
-          <h2 id={titreId} className="text-[24px] leading-tight font-bold tracking-tight text-foreground">{t("planning.gestion.toutes")}</h2>
-          <p className="mt-1 text-[13.5px] text-muted-foreground">{t("planning.gestion.toutesSousTitre", { edition: titre })}</p>
+          <h2 id={titreId} className="text-xl leading-tight font-bold tracking-tight text-foreground">{t("planning.gestion.toutes")}</h2>
+          <p className="mt-1 text-sm text-muted-foreground">{t("planning.gestion.toutesSousTitre", { edition: titre })}</p>
         </div>
         <Link
           href={voirCommeMembre}
-          className="inline-flex h-10 shrink-0 items-center gap-2 rounded-full bg-secondary px-4 text-[15px] font-semibold text-foreground transition-colors hover:bg-secondary/70"
+          className="inline-flex h-10 shrink-0 items-center gap-2 rounded-full bg-secondary px-4 text-base font-semibold text-foreground transition-colors hover:bg-secondary/70"
         >
           <Eye className="h-4 w-4" aria-hidden /> {t("planning.gestion.voirCommeMembre")}
         </Link>
@@ -96,9 +96,9 @@ export function ToutesReservations({ programme, creneaux, titre, voirCommeMembre
         <div className="carte-groupe rounded-2xl"><p className="px-4 py-4 text-sm text-muted-foreground">{t("planning.gestion.aucuneReservation")}</p></div>
       ) : (<>
       <div data-testid="reservations-tableau" className={`${styles.tableau} carte-groupe overflow-x-auto rounded-2xl`}>
-        <table aria-labelledby={titreId} className="w-full border-collapse text-left text-[14px]">
+        <table aria-labelledby={titreId} className="w-full border-collapse text-left text-sm">
           <thead>
-            <tr className="border-b border-border text-[12.5px] whitespace-nowrap text-muted-foreground">
+            <tr className="border-b border-border text-xs whitespace-nowrap text-muted-foreground">
               <th scope="col" className="px-4 py-3 font-medium">{t("planning.gestion.colonnes.jour")}</th>
               <th scope="col" className="px-3 py-3 font-medium">{t("planning.gestion.colonnes.creneau")}</th>
               <th scope="col" className="px-3 py-3 font-medium">{t("planning.gestion.colonnes.quoi")}</th>
@@ -122,7 +122,7 @@ export function ToutesReservations({ programme, creneaux, titre, voirCommeMembre
                     <span className="inline-flex flex-wrap items-center gap-x-2 gap-y-1"><span className="whitespace-nowrap">{c.debut} – {c.fin}</span>{estHors && <BadgeHorsGrille />}</span>
                   </td>
                   <td className="px-3 py-3">
-                    <span className="inline-block whitespace-nowrap rounded-full px-2 py-0.5 text-[12.5px] font-semibold svc-ink"
+                    <span className="inline-block whitespace-nowrap rounded-full px-2 py-0.5 text-xs font-semibold svc-ink"
                       style={{ "--svc": COLOR, background: `color-mix(in srgb, ${COLOR} 12%, transparent)` } as CSSProperties}>
                       {quoi(c)}
                     </span>
@@ -132,7 +132,7 @@ export function ToutesReservations({ programme, creneaux, titre, voirCommeMembre
                   <td className="px-3 py-2 text-right">
                     {estHors ? (
                       <button type="button" onClick={() => deplacer(c)}
-                        className="inline-flex h-9 items-center gap-1.5 whitespace-nowrap rounded-full bg-background px-3 text-[13.5px] font-semibold text-foreground shadow-[inset_0_0_0_1px_hsl(var(--border))] hover:bg-secondary">
+                        className="inline-flex h-9 items-center gap-1.5 whitespace-nowrap rounded-full bg-background px-3 text-sm font-semibold text-foreground shadow-[inset_0_0_0_1px_hsl(var(--border))] hover:bg-secondary">
                         <ArrowLeftRight className="h-4 w-4" aria-hidden /> {t("planning.saison.deplacer")}
                       </button>
                     ) : menu(c)}
@@ -149,7 +149,7 @@ export function ToutesReservations({ programme, creneaux, titre, voirCommeMembre
         <div className="space-y-3">
           {jours.map(([d, duJour]) => (
             <section key={d} aria-label={jourCourt(d, lang)} className="carte-groupe overflow-hidden rounded-2xl">
-              <h3 className="px-4 pt-3 pb-2 text-[15px] leading-[21px] font-semibold text-foreground">{jourCourt(d, lang)}</h3>
+              <h3 className="px-4 pt-3 pb-2 text-base leading-[21px] font-semibold text-foreground">{jourCourt(d, lang)}</h3>
               <ul>
                 {duJour.map((c) => {
                   const estHors = hors.includes(c)
@@ -160,20 +160,20 @@ export function ToutesReservations({ programme, creneaux, titre, voirCommeMembre
                       className={`flex items-center gap-2 border-t border-border py-2.5 pr-4 pl-4 ${estHors ? "bg-secondary/70" : ""}`}
                     >
                       <div className="min-w-0 flex-1 space-y-0.5">
-                        <p className="flex flex-wrap items-center gap-2 text-[15px] font-semibold tabular-nums text-foreground">
+                        <p className="flex flex-wrap items-center gap-2 text-base font-semibold tabular-nums text-foreground">
                           {c.debut} – {c.fin}
-                          <span className="inline-block whitespace-nowrap rounded-full px-2 py-0.5 text-[12.5px] font-semibold svc-ink"
+                          <span className="inline-block whitespace-nowrap rounded-full px-2 py-0.5 text-xs font-semibold svc-ink"
                             style={{ "--svc": COLOR, background: `color-mix(in srgb, ${COLOR} 12%, transparent)` } as CSSProperties}>
                             {quoi(c)}
                           </span>
                           {estHors && <BadgeHorsGrille />}
                         </p>
-                        <p className="text-[15px] text-foreground">{qui(c)}</p>
-                        <p className="text-[13px] text-muted-foreground">{lang === "zh-CN" ? `${t("planning.gestion.colonnes.par")}：` : `${t("planning.gestion.colonnes.par")} `}{c.auteurNom}</p>
+                        <p className="text-base text-foreground">{qui(c)}</p>
+                        <p className="text-sm text-muted-foreground">{lang === "zh-CN" ? `${t("planning.gestion.colonnes.par")}：` : `${t("planning.gestion.colonnes.par")} `}{c.auteurNom}</p>
                       </div>
                       {estHors ? (
                         <button type="button" onClick={() => deplacer(c)}
-                          className={`${TOUCHER_44} inline-flex h-9 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full bg-background px-3 text-[13.5px] font-semibold text-foreground shadow-[inset_0_0_0_1px_hsl(var(--border))] hover:bg-secondary`}>
+                          className={`${TOUCHER_44} inline-flex h-9 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full bg-background px-3 text-sm font-semibold text-foreground shadow-[inset_0_0_0_1px_hsl(var(--border))] hover:bg-secondary`}>
                           <ArrowLeftRight className="h-4 w-4" aria-hidden /> {t("planning.saison.deplacer")}
                         </button>
                       ) : menu(c)}

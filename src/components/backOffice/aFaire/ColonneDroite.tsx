@@ -52,10 +52,10 @@ export function ColonneDroite() {
       {/* BO-G, 9 : les deux cartes restent quand il n'y a rien, avec « Rien de prévu » (omises seulement si leur lecture échoue). */}
       {etats && (
         <section aria-labelledby="a-faire-dimanche" className={CARTE}>
-          <h2 id="a-faire-dimanche" className="text-[15px] font-semibold text-foreground">
+          <h2 id="a-faire-dimanche" className="text-base font-semibold text-foreground">
             {t("backOffice.aFaire.dimanche.titre", { date: jourLong(dimanche, i18n.language) })}
           </h2>
-          {etats.length === 0 && <p className="mt-2 text-[13px] text-muted-foreground">{t("backOffice.aFaire.rienDePrevu")}</p>}
+          {etats.length === 0 && <p className="mt-2 text-sm text-muted-foreground">{t("backOffice.aFaire.rienDePrevu")}</p>}
           <div className={etats.length > 0 ? "mt-2 space-y-2.5" : "hidden"}>
             {etats.map((e) => {
               const heure = HEURE_DU_SERVICE(e.categorie);
@@ -66,7 +66,7 @@ export function ColonneDroite() {
                     <dl className="mt-0.5">
                       {e.lignes.map((l) => (
                         <div key={l.cle} className="flex min-w-0 gap-2.5 border-t border-border/70 py-1.5 text-sm">
-                          <dt className="w-[88px] shrink-0 text-[13px] text-muted-foreground">{t(l.i18n)}</dt>
+                          <dt className="w-[88px] shrink-0 text-sm text-muted-foreground">{t(l.i18n)}</dt>
                           <dd className="min-w-0 break-words text-foreground">
                             {l.valeur || (
                               <Link href="/back-office/planning" className="texte-service font-semibold underline-offset-2 hover:underline" style={styleTexteService(categoryColor(e.categorie))}>
@@ -82,17 +82,17 @@ export function ColonneDroite() {
               );
             })}
           </div>
-          <Link href="/back-office/planning" className="mt-3 inline-block text-[13px] font-semibold text-foreground underline underline-offset-2">
+          <Link href="/back-office/planning" className="mt-3 inline-block text-sm font-semibold text-foreground underline underline-offset-2">
             {t("backOffice.aFaire.dimanche.ouvrir")}
           </Link>
         </section>
       )}
       {lue && (
         <section aria-labelledby="a-faire-reunion" className={CARTE}>
-          <h2 id="a-faire-reunion" className="text-[15px] font-semibold text-foreground">{t("backOffice.aFaire.reunion.titre")}</h2>
-          {!reunion ? <p className="mt-2 text-[13px] text-muted-foreground">{t("backOffice.aFaire.rienDePrevu")}</p> : <Link href={ficheEvenement(reunion)} className="mt-2 block rounded-md hover:underline">
+          <h2 id="a-faire-reunion" className="text-base font-semibold text-foreground">{t("backOffice.aFaire.reunion.titre")}</h2>
+          {!reunion ? <p className="mt-2 text-sm text-muted-foreground">{t("backOffice.aFaire.rienDePrevu")}</p> : <Link href={ficheEvenement(reunion)} className="mt-2 block rounded-md hover:underline">
             <b className="block break-words text-sm font-semibold text-foreground">{reunion.titre}</b>
-            <span className="block break-words text-[13px] text-muted-foreground">{quand}</span>
+            <span className="block break-words text-sm text-muted-foreground">{quand}</span>
           </Link>}
         </section>
       )}

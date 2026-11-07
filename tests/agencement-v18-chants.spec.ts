@@ -87,7 +87,7 @@ test.describe("en-tête et liste (A5, R1 à R3, R7, R10)", () => {
     await capture(page, "v18-chants-visiteur");
   });
 
-  test("deux volets : la liste est une carte, le titre au-dessus des deux, « Choisis un chant » en h2 de 24 px (grands écrans)", async ({ page }, info) => {
+  test("deux volets : la liste est une carte, le titre au-dessus des deux, « Choisis un chant » en h2 de 22 px (grands écrans)", async ({ page }, info) => {
     test.skip(!estGrandEcran(info), "deux volets : ordinateur et tablette couchée");
     await page.goto("/songs");
     await listePrete(page);
@@ -101,7 +101,7 @@ test.describe("en-tête et liste (A5, R1 à R3, R7, R10)", () => {
     expect(bListe!.x + bListe!.width).toBeLessThan(bDroite!.x);
     const choisis = droite(page).getByRole("heading", { level: 2, name: "Choisis un chant" });
     await expect(choisis).toBeVisible();
-    expect(await choisis.evaluate((el) => getComputedStyle(el).fontSize)).toBe("24px");
+    expect(await choisis.evaluate((el) => getComputedStyle(el).fontSize)).toBe("22px");
     // Le volet de droite va jusqu'à la marge de droite ; son contenu rentre de 24 px (corrections du design, T2a reprise).
     const marge = await page.evaluate(() => parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--marge-page")));
     const largeurFenetre = await page.evaluate(() => document.documentElement.clientWidth);

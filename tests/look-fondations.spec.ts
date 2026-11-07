@@ -60,7 +60,7 @@ test.describe("fondations du nouveau look (T1)", () => {
   });
 
   for (const chemin of ["/songs", "/login"]) {
-    test(`aucun texte sous 11 px sur ${chemin}`, async ({ page }) => {
+    test(`aucun texte sous 12 px sur ${chemin}`, async ({ page }) => {
       await page.goto(chemin);
       await page.locator("main").first().waitFor();
       const petits = await page.evaluate(() => {
@@ -74,7 +74,7 @@ test.describe("fondations du nouveau look (T1)", () => {
           const style = getComputedStyle(el);
           if (style.display === "none" || style.visibility === "hidden") continue;
           const taille = parseFloat(style.fontSize);
-          if (taille < 11) trouves.push(`${el.tagName.toLowerCase()} « ${texte.slice(0, 24)} » ${taille}px`);
+          if (taille < 12) trouves.push(`${el.tagName.toLowerCase()} « ${texte.slice(0, 24)} » ${taille}px`);
         }
         return trouves;
       });
@@ -332,4 +332,125 @@ test("la variante `outline` de button.tsx est posée sur `--pose` (une seule mod
   const outline = source.split("\n").find((l) => l.includes("border border-input")) ?? "";
   expect(outline).toContain("bg-pose");
   expect(outline).not.toContain("bg-background");
+});
+
+// Lot CD, T4a (docs/spec-corrections-design/partout.md, P12 et P13) : aucun texte sous 12 px, et à partir de 1 024 px
+// de fenêtre le gris (`--muted-foreground`) ne descend pas sous 13 px. Compte simulé, noms inventés pour ce test.
+// Exceptions par sélecteur explicite (partitions, 简谱, pastille de 16 px), jamais par taille.
+test.describe("plancher de texte et gris à 13 px en grand (CD, T4a)", () => {
+  const BASILE = { uid: "uid-basile", email: ADMIN_EMAIL, firstName: "Basile", lastName: "Q.", planningName: "Basile Q.", serviceRoles: { "Culte Francophone": ["musicien"] } };
+  const csv = (rows: string[][]) => rows.map((r) => r.map((c) => `"${c}"`).join(",")).join("\n");
+  const ENTETE = ["2026 DATE", "Présidence", "Choristes", "", "Pianiste", "Guitariste", "Batterie", "Sono + Live", "PPT", "Orateur", "Traducteur", "Sainte cène", "Notes"];
+  const culte = (date: string) => [date, "Odile M.", "Noé T.", "Ysée V.", "Basile Q.", "Samuel K.", "Gaëtan D.", "Marc A.", "Rémi K.", "Clotilde W.", "Jun L.", "", ""];
+  const FEUILLES: Record<string, string> = { Franco_Louange: csv([ENTETE, culte("08/11"), culte("14/11"), culte("22/11")]) };
+  const DOCS = {
+    "setlists/sl-t4a": {
+      title: "Culte du 14 novembre", leader: "Odile M.", category: "Culte Francophone", date: "2026-11-14",
+      language: "mixed", notes: "", ownerId: "uid-basile", isPrivate: false, items: [],
+    },
+  };
+  const EXCEPTIONS = "[data-jianpu-filtre], [data-partition], [data-pastille-compteur]";
+
+  async function ouvrir(page: Page, adresse: string) {
+    await page.clock.setFixedTime(new Date("2026-11-07T10:00:00"));
+    await page.route(/docs\.google\.com\/spreadsheets/, (route) => {
+      const feuille = new URL(route.request().url()).searchParams.get("sheet") ?? "";
+      return route.fulfill({ status: 200, contentType: "text/csv", body: FEUILLES[feuille] ?? "" });
+    });
+    await signInAs(page, BASILE, DOCS, adresse);
+    await page.locator("main").first().waitFor();
+    await page.evaluate(() => document.fonts.ready);
+    await page.waitForTimeout(800); // laisse les listes se remplir (pas de `networkidle` : Mes services garde une requête ouverte)
+  }
+
+  for (const chemin of ["/planning", "/setlists", "/mes-services", "/songs/statistiques"]) {
+    test(`P12/P13 : aucun texte sous 12 px, gris à 13 px en grand sur ${chemin}`, async ({ page }) => {
+      await ouvrir(page, chemin);
+      const trop = await page.evaluate((exceptions) => {
+        const sonde = document.createElement("span");
+        sonde.style.color = "hsl(var(--muted-foreground))";
+        document.body.appendChild(sonde);
+        const canaux = (c: string) => (c.match(/[\d.]+/g) ?? []).slice(0, 3).join(",");
+        const gris = canaux(getComputedStyle(sonde).color);
+        sonde.remove();
+        const grand = window.innerWidth >= 1024;
+        const fautes: string[] = [];
+        const marcheur = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+        let noeud: Node | null;
+        while ((noeud = marcheur.nextNode())) {
+          const texte = noeud.textContent?.trim();
+          if (!texte) continue;
+          const el = noeud.parentElement!;
+          if (el.closest(exceptions) || el.closest("script, style, noscript")) continue;
+          const style = getComputedStyle(el);
+          if (style.display === "none" || style.visibility === "hidden" || el.getClientRects().length === 0) continue;
+          const taille = parseFloat(style.fontSize);
+          const decrit = `${el.tagName.toLowerCase()}.${String(el.className).slice(0, 60)} « ${texte.slice(0, 24)} » ${taille}px`;
+          if (taille < 12) fautes.push(`< 12 : ${decrit}`);
+          else if (grand && taille < 13 && canaux(style.color) === gris) fautes.push(`gris < 13 : ${decrit}`);
+        }
+        return fautes;
+      }, EXCEPTIONS);
+      expect(trop).toEqual([]);
+    });
+
+    test(`vignettes de date et badges sans débordement sur ${chemin}`, async ({ page }) => {
+      await ouvrir(page, chemin);
+      const debordent = await page.evaluate(() => {
+        const sortie: string[] = [];
+        const date = /^\d{1,2}\s\p{L}+\.?$/u;
+        for (const el of document.querySelectorAll<HTMLElement>("main *, header *")) {
+          const texte = el.textContent?.trim() ?? "";
+          if (!texte || texte.length > 24 || el.children.length > 2) continue;
+          if (!(date.test(texte) || /rounded/.test(String(el.className)))) continue;
+          if (el.clientWidth === 0 || getComputedStyle(el).display === "inline") continue;
+          if (el.scrollWidth <= el.clientWidth) continue;
+          // Les pastilles tactiles portent une zone de toucher qui dépasse de 3 px (pseudo-élément) et gonfle
+          // `scrollWidth` sans toucher au texte : on ne retient que le texte réellement hors de la boîte.
+          const zone = document.createRange();
+          zone.selectNodeContents(el);
+          const [t, b] = [zone.getBoundingClientRect(), el.getBoundingClientRect()];
+          if (t.right > b.right + 0.5 || t.left < b.left - 0.5) sortie.push(`${el.tagName.toLowerCase()} « ${texte} » ${el.scrollWidth} > ${el.clientWidth}`);
+        }
+        return sortie;
+      });
+      expect(debordent).toEqual([]);
+    });
+  }
+
+  // La règle P13 elle-même (globals.css), sur des sondes : le gris relevé à 13 / 18 en grand, sans écraser une taille
+  // plus grande posée par une variante ni un `leading-*` posé exprès ; l'encre et un gris au survol restent à 12.
+  test("P13 : la règle relève le gris en grand sans écraser une variante ni un interligne", async ({ page }) => {
+    await page.goto("/songs");
+    await page.locator("main").first().waitFor();
+    const mesures = await page.evaluate(() => {
+      const sondes: Record<string, string> = {
+        gris: "text-xs text-muted-foreground",
+        grisOpacite: "text-xs text-muted-foreground/70",
+        grisSerre: "text-xs text-muted-foreground leading-none",
+        grisVariante: "text-xs text-muted-foreground md:text-base",
+        encre: "text-xs text-foreground",
+        survol: "text-xs text-foreground hover:text-muted-foreground",
+      };
+      const sortie: Record<string, [number, number]> = {};
+      for (const [nom, classes] of Object.entries(sondes)) {
+        const el = document.createElement("span");
+        el.className = classes;
+        el.style.display = "block";
+        el.textContent = "Sonde";
+        document.body.appendChild(el);
+        const c = getComputedStyle(el);
+        sortie[nom] = [parseFloat(c.fontSize), parseFloat(c.lineHeight)];
+        el.remove();
+      }
+      return { grand: window.innerWidth >= 1024, largeur: window.innerWidth, sortie };
+    });
+    const { grand, largeur, sortie } = mesures;
+    expect(sortie.gris).toEqual(grand ? [13, 18] : [12, 16]);
+    expect(sortie.grisOpacite).toEqual(grand ? [13, 18] : [12, 16]);
+    expect(sortie.grisSerre, "leading-none garde son interligne (1 × la taille)").toEqual(grand ? [13, 13] : [12, 12]);
+    expect(sortie.grisVariante, "md:text-base l'emporte dès 768 px").toEqual(largeur >= 768 ? [15, 21] : [12, 16]);
+    expect(sortie.encre).toEqual([12, 16]);
+    expect(sortie.survol).toEqual([12, 16]);
+  });
 });

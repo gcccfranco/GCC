@@ -67,8 +67,8 @@ export function ResumeSaison({ programme, onSave, jourJCalcule, autre, onErreur 
               onClick={() => { setMontre(l.cle); setOuverte(true) }}
               className="flex min-h-[52px] w-full items-center gap-3 py-2 pr-3 pl-4 text-left transition-colors hover:bg-secondary"
             >
-              <span className="shrink-0 text-[15px] font-semibold text-foreground">{l.titre}</span>
-              <span className="ml-auto min-w-0 text-right text-[14px] text-muted-foreground">{l.valeur}</span>
+              <span className="shrink-0 text-base font-semibold text-foreground">{l.titre}</span>
+              <span className="ml-auto min-w-0 text-right text-sm text-muted-foreground">{l.valeur}</span>
               <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
             </button>
           </li>
@@ -91,7 +91,7 @@ export function ResumeSaison({ programme, onSave, jourJCalcule, autre, onErreur 
                 onErreur={onErreur}
               />
             )}
-            <Button type="button" className="h-12 w-full rounded-full text-[15px]" onClick={fermer}>{t("planning.gestion.termine")}</Button>
+            <Button type="button" className="h-12 w-full rounded-full text-base" onClick={fermer}>{t("planning.gestion.termine")}</Button>
           </div>
         </DrawerContent>
       </Drawer>

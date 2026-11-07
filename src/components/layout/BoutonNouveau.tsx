@@ -19,14 +19,14 @@ const CLASSE = cn(
   "fixed bottom-[calc(var(--tabbar-bottom)+76px)] right-4 z-40 flex h-[52px] w-[52px] items-center justify-center rounded-full",
   "bg-primary text-primary-foreground max-md:[box-shadow:var(--shadow-raised)] transition-transform duration-150 active:scale-[.97] print:hidden",
   // Dès 768 px : la pilule à libellé, dans le flux de l'en-tête.
-  "md:static md:h-10 md:w-auto md:gap-2 md:px-[18px] md:text-[14.5px] md:font-semibold",
+  "md:static md:h-10 md:w-auto md:gap-2 md:px-[18px] md:text-base md:font-semibold",
 );
 
 // `dansLeFlux` (agenda des évènements, téléphone) : pas de rond fixe qui couvre le contenu, une pilule de 44 px
 // posée dans le flux, en bas de la liste (comme « Proposer un chant » sur Chants) ; dès 768 px elle disparaît, la
 // pilule d'en-tête prend le relais.
 const CLASSE_FLUX =
-  "inline-flex h-11 items-center justify-center gap-2 rounded-full bg-primary px-5 text-[15px] font-semibold text-primary-foreground transition-transform duration-150 active:scale-[.97] md:hidden print:hidden";
+  "inline-flex h-11 items-center justify-center gap-2 rounded-full bg-primary px-5 text-base font-semibold text-primary-foreground transition-transform duration-150 active:scale-[.97] md:hidden print:hidden";
 
 export function BoutonNouveau({ label, href, onClick, dansLeFlux = false }: { label: string; href?: string; onClick?: () => void; dansLeFlux?: boolean }) {
   const contenu = dansLeFlux ? (

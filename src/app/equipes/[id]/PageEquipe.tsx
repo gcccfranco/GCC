@@ -123,7 +123,7 @@ function CorpsEquipe({ id, nom, retour, backOffice }: { id: string; nom: string;
 function TitreSection({ id, titre, action }: { id: string; titre: string; action?: React.ReactNode }) {
   return (
     <div className="mb-2 flex min-h-9 items-center gap-3">
-      <h2 id={id} className="min-w-0 flex-1 text-[17px] font-semibold text-foreground">{titre}</h2>
+      <h2 id={id} className="min-w-0 flex-1 text-lg font-semibold text-foreground">{titre}</h2>
       {action}
     </div>
   );
@@ -243,12 +243,12 @@ function SectionReunions({ id, backOffice }: { id: string; backOffice: boolean }
   const ligne = (e: Evenement, etiquette: string | null, passee: boolean) => (
     <Link key={e.id} href={href(e)} className={LIEN_LIGNE}>
       <span className="min-w-0 flex-1">
-        <span className="block truncate text-[15px] font-semibold text-foreground">{e.titre}</span>
-        <span className="block truncate text-[13px] text-muted-foreground">
+        <span className="block truncate text-base font-semibold text-foreground">{e.titre}</span>
+        <span className="block truncate text-sm text-muted-foreground">
           {[e.date ? dateCourte(e.date, i18n.language) : null, e.heure || null, passee ? (e.compteRendu ? t("equipes.page.compteRendu") : t("equipes.page.sansCompteRendu")) : null].filter(Boolean).join(" · ")}
         </span>
       </span>
-      {etiquette && <span className="shrink-0 rounded-full bg-secondary px-2 py-0.5 text-[12px] font-semibold text-foreground">{etiquette}</span>}
+      {etiquette && <span className="shrink-0 rounded-full bg-secondary px-2 py-0.5 text-xs font-semibold text-foreground">{etiquette}</span>}
       <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground/60" aria-hidden />
     </Link>
   );
@@ -290,7 +290,7 @@ function SectionMembres({ id, membres, lue, backOffice }: { id: string; membres:
         {sansDocument && (
           <>
             <p className="mb-1 px-1 text-sm text-muted-foreground">{t("equipes.page.comiteAide")}</p>
-            <Link href={`${backOffice ? "/back-office" : ""}/equipes?groupe=${groupe.id}`} className={cn(LIEN_LIGNE, "text-[15px] font-semibold text-foreground")}>
+            <Link href={`${backOffice ? "/back-office" : ""}/equipes?groupe=${groupe.id}`} className={cn(LIEN_LIGNE, "text-base font-semibold text-foreground")}>
               <span className="min-w-0 flex-1">{t("equipes.page.organigrammeGroupe")}</span>
               <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground/60" aria-hidden />
             </Link>
@@ -300,7 +300,7 @@ function SectionMembres({ id, membres, lue, backOffice }: { id: string; membres:
         {membres.length > 0 && (
           <ul className="flex flex-wrap gap-2">
             {membres.map((m, i) => (
-              <li key={`${m.nom}-${i}`} className="rounded-full bg-secondary px-3 py-1 text-[14px] text-foreground">
+              <li key={`${m.nom}-${i}`} className="rounded-full bg-secondary px-3 py-1 text-sm text-foreground">
                 {m.referent ? `${m.nom}, ${t("equipes.referent").toLowerCase()}` : m.nom}
               </li>
             ))}

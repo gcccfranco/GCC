@@ -77,10 +77,12 @@ const config: Config = {
         mono: ["JetBrains Mono", "Courier New", "monospace"],
       },
       // Échelle de texte de l'interface (hors chants) : six crans, interligne
-      // et interlettrage liés à la taille (audit F1). Les chants gardent
-      // --lyric-size.
+      // et interlettrage liés à la taille (audit F1). Échelle B (T4a, 2026-11) :
+      // plancher de 12 px (`xs`), plus aucune taille arbitraire `text-[Npx]` hors
+      // exceptions (champs à 16 px, mode louange, 简谱, PDF, pastilles de ton).
+      // Les chants gardent --lyric-size.
       fontSize: {
-        xs: ["11px", { lineHeight: "14px", letterSpacing: "0.01em" }],
+        xs: ["12px", { lineHeight: "16px", letterSpacing: "0.005em" }],
         sm: ["13px", { lineHeight: "18px" }],
         base: ["15px", { lineHeight: "21px" }],
         lg: ["17px", { lineHeight: "23px", letterSpacing: "-0.01em" }],

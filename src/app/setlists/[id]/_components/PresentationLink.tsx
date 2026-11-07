@@ -142,7 +142,7 @@ export function PresentationLink({
           href={href}
           target="_blank"
           rel="noopener noreferrer"
-          className="h-8 px-3 rounded-sm border border-border bg-card text-[12.5px] font-semibold text-foreground hover:bg-muted flex items-center gap-1.5 transition-colors"
+          className="h-8 px-3 rounded-sm border border-border bg-card text-xs font-semibold text-foreground hover:bg-muted flex items-center gap-1.5 transition-colors"
         >
           <Presentation className="h-3.5 w-3.5 text-foreground" />
           {t("setlists.detail.presentation")}

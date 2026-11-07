@@ -139,8 +139,8 @@ export function FeteClient({ fete }: { fete: Fete }) {
 
   const enTeteEdition = (
     <div>
-      <h2 className="text-[22px] leading-tight font-bold tracking-tight text-foreground">{titre}</h2>
-      <p className="mt-1 text-[13.5px] text-muted-foreground">
+      <h2 className="text-xl leading-tight font-bold tracking-tight text-foreground">{titre}</h2>
+      <p className="mt-1 text-sm text-muted-foreground">
         {t("planning.programmes.jourJLabel", { date: dateDuJour(jourJ) })}
         {(etat === "bientot" || etat === "ouvertes") && jours.length > 0 && <> · {t("planning.fete.jusquau", { date: jourEnLettres(jours.at(-1)!, lang) })}</>}
       </p>
@@ -165,7 +165,7 @@ export function FeteClient({ fete }: { fete: Fete }) {
     if (etat === "passee") {
       return (
         <section className="carte-groupe rounded-2xl p-4 space-y-1.5" aria-labelledby="scene-passee-titre">
-          <h3 id="scene-passee-titre" className="text-[15px] font-bold texte-service" style={styleTexteService(COLOR)}>{t("planning.scene.passed", { nom: titre })}</h3>
+          <h3 id="scene-passee-titre" className="text-base font-bold texte-service" style={styleTexteService(COLOR)}>{t("planning.scene.passed", { nom: titre })}</h3>
           <p className="text-sm text-muted-foreground">{t("planning.scene.passedHint")}</p>
         </section>
       )
@@ -175,7 +175,7 @@ export function FeteClient({ fete }: { fete: Fete }) {
 
   const anneesPassees = avantOuverture && passees.length > 0 && (
     <section aria-labelledby="scene-annees-passees" className="space-y-1">
-      <h3 id="scene-annees-passees" className="px-1 text-[13px] font-semibold text-muted-foreground">{t("planning.fete.anneesPassees")}</h3>
+      <h3 id="scene-annees-passees" className="px-1 text-sm font-semibold text-muted-foreground">{t("planning.fete.anneesPassees")}</h3>
       <div className="space-y-1">
         {passees.map((p) => {
           const choisie = p.id === passeeChoisie?.id
@@ -188,8 +188,8 @@ export function FeteClient({ fete }: { fete: Fete }) {
               className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-colors ${choisie ? "bg-foreground text-background" : "hover:bg-secondary"}`}
             >
               <span className="min-w-0 flex-1">
-                <span className="block text-[15px] font-semibold">{libelleEdition(fete, anneeDe(p)!, langue)}</span>
-                <span className={`block text-[13px] ${choisie ? "opacity-75" : "text-muted-foreground"}`}>{jourEnLettres(p.jourJ, lang)} · {numeros(p)}</span>
+                <span className="block text-base font-semibold">{libelleEdition(fete, anneeDe(p)!, langue)}</span>
+                <span className={`block text-sm ${choisie ? "opacity-75" : "text-muted-foreground"}`}>{jourEnLettres(p.jourJ, lang)} · {numeros(p)}</span>
               </span>
               <ChevronRight className="h-4 w-4 shrink-0 opacity-60" aria-hidden />
             </button>
@@ -213,8 +213,8 @@ export function FeteClient({ fete }: { fete: Fete }) {
         <ListOrdered className="h-[18px] w-[18px]" aria-hidden />
       </span>
       <span className="min-w-0 flex-1">
-        <span className="block text-[15px] font-semibold">{t("planning.fete.ordreEntree")}</span>
-        <span className="block text-[13px] text-muted-foreground [text-wrap:pretty]">{jourEnLettres(jourJ, lang)} · {programme!.passages.length ? t("planning.fete.passagesEtChants", { count: programme!.passages.length }) : t("planning.fete.aucunNumero")}</span>
+        <span className="block text-base font-semibold">{t("planning.fete.ordreEntree")}</span>
+        <span className="block text-sm text-muted-foreground [text-wrap:pretty]">{jourEnLettres(jourJ, lang)} · {programme!.passages.length ? t("planning.fete.passagesEtChants", { count: programme!.passages.length }) : t("planning.fete.aucunNumero")}</span>
       </span>
       <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
     </button>
@@ -232,10 +232,10 @@ export function FeteClient({ fete }: { fete: Fete }) {
   const ordreDe = (p: Programme, sousTitre: string, courante = false) => {
     const entete = (
       <div>
-        <h2 id={`ordre-${p.id}`} className="text-[22px] leading-tight font-bold tracking-tight text-foreground">
+        <h2 id={`ordre-${p.id}`} className="text-xl leading-tight font-bold tracking-tight text-foreground">
           {t("planning.fete.ordreTitre", { edition: libelleEdition(fete, anneeDe(p)!, langue) })}
         </h2>
-        <p className="mt-1 text-[13.5px] text-muted-foreground">{sousTitre}</p>
+        <p className="mt-1 text-sm text-muted-foreground">{sousTitre}</p>
       </div>
     )
     return (
@@ -254,8 +254,8 @@ export function FeteClient({ fete }: { fete: Fete }) {
     <div className="carte-groupe rounded-2xl flex items-start gap-3 p-4">
       <CircleHelp className="mt-0.5 h-5 w-5 shrink-0 text-foreground" aria-hidden />
       <div>
-        <p className="text-[15px] font-semibold">{t("planning.fete.commentReserver")}</p>
-        <p className="text-[13.5px] text-muted-foreground">
+        <p className="text-base font-semibold">{t("planning.fete.commentReserver")}</p>
+        <p className="text-sm text-muted-foreground">
           {t("planning.fete.commentReserverTexte", { duree: t(`planning.saison.dureeCourte.${saison.duree}`) })}
         </p>
       </div>
@@ -341,8 +341,8 @@ function CarteInfo({ titre, texte }: { titre: string; texte?: string }) {
         <CalendarClock className="h-5 w-5" aria-hidden />
       </span>
       <div className="min-w-0">
-        <p className="text-[16px] leading-snug font-bold text-foreground">{titre}</p>
-        {texte && <p className="mt-1 text-[13.5px] text-muted-foreground">{texte}</p>}
+        <p className="text-base leading-snug font-bold text-foreground">{titre}</p>
+        {texte && <p className="mt-1 text-sm text-muted-foreground">{texte}</p>}
       </div>
     </div>
   )

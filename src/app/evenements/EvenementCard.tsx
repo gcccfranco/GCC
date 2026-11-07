@@ -77,7 +77,7 @@ export function TitreEvenement({ e, niveau = "h2", grand = false, actions }: { e
         <TypePour e={e} />
         {actions && <div className="ml-auto flex items-center gap-2">{actions}</div>}
       </div>
-      <Titre className={`mt-2 font-bold text-foreground text-balance ${grand ? "text-[24px] leading-[29px] tracking-tight" : "text-xl"}`}>{e.titre}</Titre>
+      <Titre className={`mt-2 font-bold text-foreground text-balance ${grand ? "text-xl leading-[29px] tracking-tight" : "text-xl"}`}>{e.titre}</Titre>
     </div>
   )
 }
@@ -108,7 +108,7 @@ export function InfosEvenement({ e, titrees = false }: { e: Evenement; titrees?:
           <Icone className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
           {titrees ? (
             <span className="min-w-0">
-              <span className="block text-[13px] text-muted-foreground">{libelle}</span>
+              <span className="block text-sm text-muted-foreground">{libelle}</span>
               <span className={`${classe || "block"} font-medium break-words`}>{valeur}</span>
             </span>
           ) : (

@@ -77,7 +77,7 @@ export function EditeurFeuilles({
           {t("setlists.form.addTransition")}
         </button>
         {champs.fete && <LienMusiquesEtDanses fete={champs.fete} />}
-        {items.length > 0 && <p className="mt-4 text-[13px] text-muted-foreground">{t("setlists.editeur.aideListe")}</p>}
+        {items.length > 0 && <p className="mt-4 text-sm text-muted-foreground">{t("setlists.editeur.aideListe")}</p>}
       </div>
 
       {/* Barre du bas. z-50 : devant la barre d'onglets (z-40, fixée en bas elle aussi) ;

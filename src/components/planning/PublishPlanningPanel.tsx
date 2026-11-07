@@ -145,13 +145,13 @@ export function PublishPlanningPanel({
                     {tri} {year}
                   </span>
                   {isPublished ? (
-                    <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-green-700">
+                    <span className="inline-flex items-center gap-1 text-xs font-semibold text-green-700">
                       <Check className="h-3.5 w-3.5" /> {t("backOffice.boE1.publier.publie")}
                     </span>
                   ) : isPastOrCurrent ? (
-                    <span className="text-[11px] text-muted-foreground">{t("backOffice.boE1.publier.visibleAuto")}</span>
+                    <span className="text-xs text-muted-foreground">{t("backOffice.boE1.publier.visibleAuto")}</span>
                   ) : (
-                    <span className="inline-flex items-center gap-1 text-[11px] text-muted-foreground">
+                    <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
                       <EyeOff className="h-3.5 w-3.5" /> {t("backOffice.boE1.publier.masque")}
                     </span>
                   )}

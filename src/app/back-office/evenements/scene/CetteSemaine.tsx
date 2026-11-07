@@ -46,27 +46,27 @@ export function CetteSemaine({ programme, creneaux, menu, erreur }: {
   return (
     <section aria-labelledby="scene-cette-semaine" className="space-y-3">
       <div className="flex items-baseline justify-between gap-3">
-        <h3 id="scene-cette-semaine" className="text-[17px] font-bold text-foreground">{t("planning.gestion.cetteSemaine")}</h3>
-        <span className="text-[13px] tabular-nums text-muted-foreground">{semaineCourte(jours, lang)}</span>
+        <h3 id="scene-cette-semaine" className="text-lg font-bold text-foreground">{t("planning.gestion.cetteSemaine")}</h3>
+        <span className="text-sm tabular-nums text-muted-foreground">{semaineCourte(jours, lang)}</span>
       </div>
       {erreur}
       {jours.map((d) => {
         const duJour = resas.filter((c) => c.dimanche === d).sort((a, b) => a.debut.localeCompare(b.debut))
         return (
           <section key={d} aria-label={titreDuJour(d, lang)} className="carte-groupe overflow-hidden rounded-2xl">
-            <h4 className="px-4 pt-3 pb-2 text-[14px] font-bold text-foreground">{titreDuJour(d, lang)}</h4>
+            <h4 className="px-4 pt-3 pb-2 text-sm font-bold text-foreground">{titreDuJour(d, lang)}</h4>
             <ul>
               {duJour.length === 0 && (
-                <li className="border-t border-border px-4 py-3 text-[13.5px] text-muted-foreground">{t("planning.gestion.aucuneReservation")}</li>
+                <li className="border-t border-border px-4 py-3 text-sm text-muted-foreground">{t("planning.gestion.aucuneReservation")}</li>
               )}
               {duJour.map((c) => (
                 <li key={c.id} className="flex items-center gap-2 border-t border-border py-2.5 pr-4 pl-4">
                   <div className="min-w-0 flex-1">
-                    <p className="flex flex-wrap items-center gap-2 text-[15px] font-semibold tabular-nums text-foreground">
+                    <p className="flex flex-wrap items-center gap-2 text-base font-semibold tabular-nums text-foreground">
                       {c.debut} – {c.fin}
                       {hors.has(c.id) && <BadgeHorsGrille />}
                     </p>
-                    <p className="text-[13px] text-muted-foreground">{[t(`planning.quoi.${c.quoi}`, { defaultValue: c.quoi }), c.qui.map((q) => libelleQui(q, langueCourte(i18n.language))).join(", "), c.auteurNom].join(" · ")}</p>
+                    <p className="text-sm text-muted-foreground">{[t(`planning.quoi.${c.quoi}`, { defaultValue: c.quoi }), c.qui.map((q) => libelleQui(q, langueCourte(i18n.language))).join(", "), c.auteurNom].join(" · ")}</p>
                   </div>
                   {menu(c)}
                 </li>

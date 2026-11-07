@@ -58,7 +58,7 @@ function Bloc({ bloc, schemas }: { bloc: BlocCours; schemas: Record<string, Reac
     case "paragraphe":
       return <p><Texte texte={bloc.texte} /></p>;
     case "titre":
-      return <h3 className="pt-1 text-[17px] font-semibold">{bloc.texte}</h3>;
+      return <h3 className="pt-1 text-lg font-semibold">{bloc.texte}</h3>;
     case "liste":
       return <Liste ordonnee={bloc.ordonnee} items={bloc.items} />;
     case "tableau": {
@@ -73,11 +73,11 @@ function Bloc({ bloc, schemas }: { bloc: BlocCours; schemas: Record<string, Reac
           className={cn("overflow-x-auto rounded-xl border border-border", empile && "max-sm:overflow-visible")}
           data-cours-tableau
         >
-          <table className={cn("w-full border-collapse text-[15px]", empile && "max-sm:block")}>
+          <table className={cn("w-full border-collapse text-base", empile && "max-sm:block")}>
             <thead className={cn(empile && "max-sm:hidden")}>
               <tr className="bg-secondary/60">
                 {bloc.entetes.map((e, i) => (
-                  <th key={i} className={cn("py-2 text-left text-[13px] font-semibold leading-[18px]", courtes[i] ? "w-px px-2 first:pl-3 last:pr-3" : "px-3")}>
+                  <th key={i} className={cn("py-2 text-left text-sm font-semibold leading-[18px]", courtes[i] ? "w-px px-2 first:pl-3 last:pr-3" : "px-3")}>
                     {/* Tête de plusieurs mots d'une colonne courte : deux lignes au plus, pas une par mot (au téléphone, la place va au texte). */}
                     {courtes[i] && /\s/.test(brut(e).trim()) ? <span className="block sm:min-w-24"><Texte texte={e.replace(/\(([^)]*)\)/g, (m) => m.replace(/ /g, "\u00A0"))} /></span> : <Texte texte={e} />}
                   </th>
@@ -91,17 +91,17 @@ function Bloc({ bloc, schemas }: { bloc: BlocCours; schemas: Record<string, Reac
                     <td
                       key={j}
                       className={cn(
-                        "py-2 align-top text-[15px] leading-[21px]",
+                        "py-2 align-top text-base leading-[21px]",
                         courtes[j] ? (empile ? "px-2 sm:first:pl-3 sm:last:pr-3" : "px-2 first:pl-3 last:pr-3") : "px-3",
-                        SEULEMENT_ALTERATIONS.test(brut(c).trim()) && "text-[17px] leading-[23px]",
+                        SEULEMENT_ALTERATIONS.test(brut(c).trim()) && "text-lg leading-[23px]",
                         courtes[j] && (empile ? "sm:w-px sm:whitespace-nowrap" : "w-px whitespace-nowrap"),
                         empile && (j === 0
-                          ? "max-sm:block max-sm:px-0 max-sm:pt-0 max-sm:pb-1 max-sm:text-[17px] max-sm:font-semibold"
+                          ? "max-sm:block max-sm:px-0 max-sm:pt-0 max-sm:pb-1 max-sm:text-lg max-sm:font-semibold"
                           : "max-sm:block max-sm:px-0 max-sm:py-1"),
                       )}
                     >
                       {empile && j > 0 && (
-                        <span className="block text-[13px] leading-[18px] text-muted-foreground sm:hidden"><Texte texte={bloc.entetes[j] ?? ""} /></span>
+                        <span className="block text-sm leading-[18px] text-muted-foreground sm:hidden"><Texte texte={bloc.entetes[j] ?? ""} /></span>
                       )}
                       <span><Texte texte={c} /></span>
                     </td>
@@ -115,7 +115,7 @@ function Bloc({ bloc, schemas }: { bloc: BlocCours; schemas: Record<string, Reac
     }
     case "code":
       return (
-        <pre className="overflow-x-auto rounded-xl bg-secondary/60 px-3 py-2.5 font-chord text-[15px] leading-relaxed" data-cours-grille>
+        <pre className="overflow-x-auto rounded-xl bg-secondary/60 px-3 py-2.5 font-chord text-base leading-relaxed" data-cours-grille>
           {bloc.texte}
         </pre>
       );
@@ -130,7 +130,7 @@ function Bloc({ bloc, schemas }: { bloc: BlocCours; schemas: Record<string, Reac
       return (
         <figure className="space-y-2" data-cours-schema={bloc.nom}>
           {Schema && <Schema />}
-          <figcaption className="text-[13px] text-muted-foreground">{t(`harmonie.cours.schema.${bloc.nom}`)}</figcaption>
+          <figcaption className="text-sm text-muted-foreground">{t(`harmonie.cours.schema.${bloc.nom}`)}</figcaption>
         </figure>
       );
     }
@@ -139,7 +139,7 @@ function Bloc({ bloc, schemas }: { bloc: BlocCours; schemas: Record<string, Reac
 
 export function LecteurCours({ blocs, schemas = {} }: { blocs: BlocCours[]; schemas?: Record<string, React.ComponentType> }) {
   return (
-    <div className="space-y-3 text-[17px] leading-relaxed">
+    <div className="space-y-3 text-lg leading-relaxed">
       {blocs.map((b, i) => <Bloc key={i} bloc={b} schemas={schemas} />)}
     </div>
   );

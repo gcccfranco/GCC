@@ -144,7 +144,7 @@ export function PanneauAccord({
           >
             {accord.texte}
           </div>
-          <p className={`mt-1 text-muted-foreground ${bulle ? "text-[13px] leading-[18px]" : "text-sm leading-5"}`}>
+          <p className={`mt-1 text-muted-foreground ${bulle ? "text-sm leading-[18px]" : "text-sm leading-5"}`}>
             {decrire(accord, t)}
             {" · "}
             {t("accords.notesLigne", { notes: notesEnLettres(accord) })}
@@ -211,7 +211,7 @@ export function PanneauAccord({
                 />
               )}
               {!carte && (
-                <p className="accords-legende mt-3 text-center text-xs text-muted-foreground">
+                <p className="accords-legende mt-3 text-center text-sm text-muted-foreground">
                   <Insecables
                     elements={[
                       doigte.doigts.includes("P") && t("accords.legendePouce"),

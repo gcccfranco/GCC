@@ -148,7 +148,7 @@ export default function GuidePage() {
                   if (telephone) setOuvert(false);
                 }}
                 className={`flex items-center gap-2.5 rounded-lg px-2.5 text-sm font-medium transition-colors ${
-                  disposition === "telephone" ? "min-h-11 py-2.5 text-[15px]" : "py-1.5"
+                  disposition === "telephone" ? "min-h-11 py-2.5 text-base" : "py-1.5"
                 } ${
                   allume
                     ? "bg-foreground text-background"
@@ -181,7 +181,7 @@ export default function GuidePage() {
           aria-expanded={ouvert}
           aria-controls={idListe}
           onClick={() => setOuvert((o) => !o)}
-          className="flex h-[52px] w-full items-center gap-2.5 rounded-2xl px-4 text-left text-[15px] font-semibold text-foreground"
+          className="flex h-[52px] w-full items-center gap-2.5 rounded-2xl px-4 text-left text-base font-semibold text-foreground"
         >
           <List className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
           <span className="min-w-0 flex-1 truncate">{t("guide.tocReplie", { count: SECTIONS.length })}</span>
@@ -232,7 +232,7 @@ export default function GuidePage() {
                 (ses bords tombent sur ceux du sommaire et de la colonne de lecture). */}
             {user && !loading && (
               <div data-testid="bande-pour-toi" className={`col-span-full flex items-center justify-between gap-3 rounded-2xl bg-secondary px-4 py-3 ${grand ? "mb-6" : ""}`}>
-                <p className="min-w-0 text-[15px] font-semibold text-foreground">{t("accueil.pourToi", { count: nCartes })}</p>
+                <p className="min-w-0 text-base font-semibold text-foreground">{t("accueil.pourToi", { count: nCartes })}</p>
                 <button
                   type="button"
                   onClick={ouvrirVisite}
@@ -274,7 +274,7 @@ export default function GuidePage() {
                       )}
                     </div>
 
-                    <p className="text-[15px] leading-relaxed text-muted-foreground">
+                    <p className="text-base leading-relaxed text-muted-foreground">
                       <RichText text={t(`guide.sections.${key}.body`)} />
                     </p>
 
@@ -287,7 +287,7 @@ export default function GuidePage() {
                         {points.map((point, i) => (
                           <li
                             key={i}
-                            className="flex gap-2 text-[15px] leading-relaxed text-muted-foreground"
+                            className="flex gap-2 text-base leading-relaxed text-muted-foreground"
                           >
                             <span className="mt-[9px] h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
                             <span>
@@ -299,8 +299,8 @@ export default function GuidePage() {
                     )}
 
                     {tip && (
-                      <div className="flex gap-2 rounded-lg bg-secondary/60 px-3 py-2 text-xs leading-relaxed text-muted-foreground">
-                        <Lightbulb className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                      <div className="flex gap-2 rounded-lg bg-secondary/60 px-3 py-2 text-base leading-relaxed text-foreground/80">
+                        <Lightbulb className="mt-1 h-4 w-4 shrink-0 text-muted-foreground" />
                         <span>
                           <RichText text={tip} />
                         </span>

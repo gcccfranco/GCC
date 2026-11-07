@@ -19,7 +19,7 @@ import type { NotifLang } from "@/types/user";
 import { ICONES, styleCase } from "./apparence";
 
 const PAR_CASE = 3;
-const PASTILLE = "flex min-w-0 items-center gap-1 rounded-md px-1 py-0.5 text-[11.5px] font-semibold leading-[15px] lg:px-1.5";
+const PASTILLE = "flex min-w-0 items-center gap-1 rounded-md px-1 py-0.5 text-xs font-semibold leading-[15px] lg:px-1.5";
 /** Les annonces de dnd-kit sont en anglais et ne servent qu'au glisser à la souris ou au
  *  doigt : la confirmation dit tout. Le clavier a « Déplacer… ». */
 const SILENCE = { onDragStart: () => undefined, onDragOver: () => undefined, onDragEnd: () => undefined, onDragCancel: () => undefined };
@@ -122,11 +122,11 @@ function Case({
         deplacable && e.deplacable ? <PastilleDeplacable key={e.cle} e={e} lang={lang} /> : <Pastille key={e.cle} e={e} lang={lang} />,
       )}
       {entrees.length > PAR_CASE && (
-        <span data-testid="plus-n" className="px-1 text-[11.5px] font-semibold text-muted-foreground">
+        <span data-testid="plus-n" className="px-1 text-xs font-semibold text-muted-foreground">
           +{entrees.length - PAR_CASE}
         </span>
       )}
-      {visee && <span className="px-1 text-[11px] leading-tight text-muted-foreground">{t("calendrier.deplacer.deposer")}</span>}
+      {visee && <span className="px-1 text-xs leading-tight text-muted-foreground">{t("calendrier.deplacer.deposer")}</span>}
     </button>
   );
 }

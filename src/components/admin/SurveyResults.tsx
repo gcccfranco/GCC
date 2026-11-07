@@ -135,7 +135,7 @@ function QuestionBlock({
           {(showTexts ? texts : texts.slice(0, 3)).map((x, i) => (
             <div key={i} className="rounded-lg border border-transparent bg-secondary px-3 py-2">
               <p className="text-xs text-foreground whitespace-pre-wrap">{x.text}</p>
-              <p className="text-[11px] text-muted-foreground mt-1">— {x.name}</p>
+              <p className="text-xs text-muted-foreground mt-1">— {x.name}</p>
             </div>
           ))}
           {texts.length > 3 && (
@@ -264,7 +264,7 @@ export function SurveyResults({ backOffice = false }: { backOffice?: boolean }) 
                       <div className="border-t border-border px-4 py-3 space-y-2">
                         {SURVEY_QUESTIONS.filter((q) => r.answers[q.id] !== undefined).map((q) => (
                           <div key={q.id}>
-                            <p className="text-[11px] font-semibold text-muted-foreground">
+                            <p className="text-xs font-semibold text-muted-foreground">
                               {t(`survey.q.${q.id}.label`)}
                             </p>
                             <p className="text-xs text-foreground whitespace-pre-wrap">
@@ -309,10 +309,10 @@ export function SurveyResults({ backOffice = false }: { backOffice?: boolean }) 
           }`}
         >
           <span className="min-w-0 flex-1">
-            <span className="block truncate text-[15px] font-semibold">{titre}</span>
-            <span className={`block text-[13px] ${actif ? "text-background/75" : "text-muted-foreground"}`}>{detail}</span>
+            <span className="block truncate text-base font-semibold">{titre}</span>
+            <span className={`block text-sm ${actif ? "text-background/75" : "text-muted-foreground"}`}>{detail}</span>
           </span>
-          {note && <span className="shrink-0 text-[14px] font-semibold tabular-nums">{note}</span>}
+          {note && <span className="shrink-0 text-sm font-semibold tabular-nums">{note}</span>}
           <ChevronRight className={`h-4 w-4 shrink-0 ${actif ? "text-background" : "text-muted-foreground/60"}`} aria-hidden />
         </button>
       );
@@ -321,18 +321,18 @@ export function SurveyResults({ backOffice = false }: { backOffice?: boolean }) 
     const vide = !loading && responses.length === 0;
     const liste = (
       <div className="px-2.5 pb-4 pt-4">
-        <p className="px-2.5 pb-3 text-[13px] text-muted-foreground">
-          <span className="mr-1.5 text-[28px] font-bold leading-none text-foreground tabular-nums">{all.length}</span>{" "}
+        <p className="px-2.5 pb-3 text-sm text-muted-foreground">
+          <span className="mr-1.5 text-2xl font-bold leading-none text-foreground tabular-nums">{all.length}</span>{" "}
           {t("admin.questionnaire.reponses", { count: all.length })}
           {derniere ? ` · ${t("admin.questionnaire.derniere", { date: derniere.toLocaleDateString(lieu, { day: "numeric", month: "short" }) })}` : ""}
           {drafts > 0 ? ` · ${t("admin.questionnaire.nEnCours", { count: drafts })}` : ""}
         </p>
         {/* bo-messages-planning-3 : même ordre partout (chiffre, lien, aide, contenu) ; l'aide parle des questions, elle attend une réponse. */}
         <div className="mb-3 space-y-1.5 px-2.5">
-          <Link href="/questionnaire" className="block text-[13px] font-semibold text-muted-foreground underline underline-offset-2 hover:text-foreground">
+          <Link href="/questionnaire" className="block text-sm font-semibold text-muted-foreground underline underline-offset-2 hover:text-foreground">
             {t("admin.questionnaire.ouvrir")}
           </Link>
-          {!vide && <p className="text-[13px] text-muted-foreground">{t("admin.questionnaire.aideCourte")}</p>}
+          {!vide && <p className="text-sm text-muted-foreground">{t("admin.questionnaire.aideCourte")}</p>}
         </div>
         {drafts > 0 && (
           <button
@@ -363,12 +363,12 @@ export function SurveyResults({ backOffice = false }: { backOffice?: boolean }) 
       <p className="py-10 text-sm text-muted-foreground">{t("admin.questionnaire.aucuneReponsePourLInstant")}</p>
     ) : partie === "personnes" ? (
       <div className="space-y-2">
-        <h2 className="text-[24px] font-bold leading-tight tracking-tight text-foreground">{t("admin.questionnaire.parPersonne")}</h2>
+        <h2 className="text-xl font-bold leading-tight tracking-tight text-foreground">{t("admin.questionnaire.parPersonne")}</h2>
         {parPersonne}
       </div>
     ) : (
       <div>
-        <h2 className="text-[24px] font-bold leading-tight tracking-tight text-foreground">{t(`survey.s.${partie}.title`)}</h2>
+        <h2 className="text-xl font-bold leading-tight tracking-tight text-foreground">{t(`survey.s.${partie}.title`)}</h2>
         <p className="mb-4 mt-0.5 text-sm text-muted-foreground">
           {t("admin.questionnaire.questions", { count: questions.length })}
           {moyenne !== null ? ` · ${t("admin.questionnaire.moyenne", { moyenne: virgule(moyenne), max: RATING_MAX })}` : ""}
@@ -391,16 +391,16 @@ export function SurveyResults({ backOffice = false }: { backOffice?: boolean }) 
 
   const carte = (
     <div className="carte-groupe rounded-2xl p-5 space-y-4">
-      <p className="text-[15px] text-muted-foreground">
-        <span className="mr-1.5 text-[28px] font-bold leading-none text-foreground tabular-nums">{all.length}</span>{" "}
+      <p className="text-base text-muted-foreground">
+        <span className="mr-1.5 text-2xl font-bold leading-none text-foreground tabular-nums">{all.length}</span>{" "}
         {t("admin.questionnaire.reponses", { count: all.length })}
         {drafts > 0 ? ` · ${t("admin.questionnaire.nEnCours", { count: drafts })}` : ""}
       </p>
       <div className="space-y-1.5">
-        <Link href="/questionnaire" className="block text-[13px] font-semibold text-muted-foreground underline underline-offset-2 hover:text-foreground">
+        <Link href="/questionnaire" className="block text-sm font-semibold text-muted-foreground underline underline-offset-2 hover:text-foreground">
           {t("admin.questionnaire.ouvrir")}
         </Link>
-        {!loading && responses.length > 0 && <p className="text-[13px] text-muted-foreground">{t("admin.questionnaire.aideCourte")}</p>}
+        {!loading && responses.length > 0 && <p className="text-sm text-muted-foreground">{t("admin.questionnaire.aideCourte")}</p>}
       </div>
 
       {drafts > 0 && (

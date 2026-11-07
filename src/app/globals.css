@@ -984,3 +984,28 @@
 @media (prefers-reduced-transparency: reduce) {
   .capture-scrim { background-color: #0b0b0c; }
 }
+
+/* P13 (T4a, 2026-11) : à partir de 1 024 px, le texte gris en `text-xs` passe de 12/16 à
+   13/18 ; l'encre en 12 px (badges) ne bouge pas. Mécanisme : `:where()` ramène la
+   spécificité du sélecteur à celle d'une classe seule (0,1,0), la même que `.text-xs` et
+   que `.lg:text-sm`, `.sm:text-base`… ; entre égaux l'ordre du CSS produit décide, et
+   cette règle, rangée dans `@layer utilities`, sort après `.text-xs` mais avant les
+   variantes responsives de Tailwind : elle relève donc le gris sans écraser une taille
+   plus grande posée par une variante (`text-xs md:text-base` reste à 15, `text-xs lg:text-lg`
+   à 17). Le gris est lu dans l'attribut `class` et non par `.text-muted-foreground` : avec
+   cette classe dans le sélecteur, Tailwind fabriquait des variantes `marker:` de la règle.
+   `[class~=…]` vaut la classe ; le gris à opacité (`text-muted-foreground/70`) est pris en
+   tête de liste ou après une espace (un `hover:text-muted-foreground/70` n'est pas du gris
+   au repos). L'interligne de 18 px ne se pose que sans `leading-*` : la
+   règle sort après les `.leading-*` et les écraserait (relecture du 07/11/2026). Le gris
+   hérité d'un parent (enfant `text-xs` sans classe grise) n'est pas couvert. */
+@layer utilities {
+  @media (min-width: 1024px) {
+    .text-xs:where([class~="text-muted-foreground"], [class^="text-muted-foreground/"], [class*=" text-muted-foreground/"]) {
+      font-size: 13px;
+    }
+    .text-xs:where([class~="text-muted-foreground"], [class^="text-muted-foreground/"], [class*=" text-muted-foreground/"]):where(:not([class*="leading-"])) {
+      line-height: 18px;
+    }
+  }
+}

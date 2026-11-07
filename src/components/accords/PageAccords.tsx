@@ -65,8 +65,8 @@ export function PageAccords() {
   return (
     <div className="w-full max-w-[1120px] px-[var(--marge-page)] pb-28 pt-6">
       <Retour href="/">{t("accords.retour")}</Retour>
-      <h1 className="text-[32px] font-bold leading-10 tracking-tight text-foreground">{t("accords.titre")}</h1>
-      <p className="mt-1 text-[15px] leading-6 text-muted-foreground">{t("accords.sousTitre")}</p>
+      <h1 className="text-2xl font-bold leading-10 tracking-tight text-foreground">{t("accords.titre")}</h1>
+      <p className="mt-1 text-base leading-6 text-muted-foreground">{t("accords.sousTitre")}</p>
 
       <div className="mt-5 flex flex-wrap items-center gap-3">
         <ChampRecherche
@@ -84,7 +84,7 @@ export function PageAccords() {
         <ChoixInstrument instrument={instrument} onChange={setInstrument} />
       </div>
       {inconnu && <p role="status" className="mt-2 pl-4 text-sm text-muted-foreground">{t("accords.inconnu")}</p>}
-      <p className="mt-3 text-xs leading-5 text-muted-foreground">{t("accords.aideNotes")}</p>
+      <p className="mt-3 text-sm leading-5 text-muted-foreground">{t("accords.aideNotes")}</p>
 
       <div className="mt-5">
         <p className="mb-2 text-sm font-semibold text-muted-foreground" id="accords-note">{t("accords.note")}</p>
@@ -140,7 +140,7 @@ export function PageAccords() {
               </div>
             </section>
           ))}
-          <p className="text-xs leading-5 text-muted-foreground">{t("accords.dansLesChants", { n: note, a: note, b: quinte })}</p>
+          <p className="text-sm leading-5 text-muted-foreground">{t("accords.dansLesChants", { n: note, a: note, b: quinte })}</p>
         </div>
       </div>
 

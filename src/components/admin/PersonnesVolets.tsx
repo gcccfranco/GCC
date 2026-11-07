@@ -47,7 +47,7 @@ const RACINE = "/back-office/equipes/personnes";
 const nom = (p: UserProfile) => `${p.firstName} ${p.lastName}`.trim() || p.email;
 
 /** Un bouton-lien ou un bouton secondaire de la fiche : 32 px de dessin, 44 px de zone au toucher (bo-equipes-6, 7). */
-const BOUTON_CONTOUR = `inline-flex h-8 shrink-0 items-center rounded-full bg-background px-3 text-[13px] font-semibold text-foreground shadow-[inset_0_0_0_1px_hsl(var(--border))] hover:bg-secondary ${TOUCHER_44}`;
+const BOUTON_CONTOUR = `inline-flex h-8 shrink-0 items-center rounded-full bg-background px-3 text-sm font-semibold text-foreground shadow-[inset_0_0_0_1px_hsl(var(--border))] hover:bg-secondary ${TOUCHER_44}`;
 
 /** La première ligne de la liste (bo-equipes-1) : les noms du planning sans compte, avec leur nombre ; elle ouvre la page « Sans compte ». */
 function RangeeSansCompte({ n }: { n: number | null }) {
@@ -59,8 +59,8 @@ function RangeeSansCompte({ n }: { n: number | null }) {
       data-testid="rangee-sans-compte"
       className="flex h-[52px] items-center gap-3 rounded-xl bg-secondary/60 px-4 hover:bg-secondary"
     >
-      <span className="min-w-0 flex-1 line-clamp-2 text-balance text-[15px] leading-[18px] font-semibold text-foreground">{t("backOffice.equipe.sansCompte")}</span>
-      <span className="shrink-0 text-[13px] text-muted-foreground">{t("groupes.personnes.sansCompteNombre", { count: n })}</span>
+      <span className="min-w-0 flex-1 line-clamp-2 text-balance text-base leading-[18px] font-semibold text-foreground">{t("backOffice.equipe.sansCompte")}</span>
+      <span className="shrink-0 text-sm text-muted-foreground">{t("groupes.personnes.sansCompteNombre", { count: n })}</span>
       <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground/60" aria-hidden />
     </Link>
   );
@@ -120,7 +120,7 @@ export function PersonnesVolets() {
         </button>
         {modif ? (
           <div className="carte-groupe rounded-2xl p-4 space-y-4">
-            <h2 className="text-[22px] font-bold leading-tight text-foreground">{nom(ouvertHorsGrand)}</h2>
+            <h2 className="text-xl font-bold leading-tight text-foreground">{nom(ouvertHorsGrand)}</h2>
             <FormulairePersonne
               key={ouvertHorsGrand.uid}
               p={ouvertHorsGrand}
@@ -188,7 +188,7 @@ export function PersonnesVolets() {
     <div className="max-w-[760px] space-y-4">
       <div className="flex items-center gap-4">
         <Avatar p={choisi} grand />
-        <h2 className="text-[24px] font-bold leading-tight tracking-tight text-foreground">{nom(choisi)}</h2>
+        <h2 className="text-xl font-bold leading-tight tracking-tight text-foreground">{nom(choisi)}</h2>
       </div>
       <div className="carte-groupe rounded-2xl p-5">
         <FormulairePersonne
@@ -230,8 +230,8 @@ function Carte({ titre, note, children, className }: { titre: string; note?: Rea
   return (
     <section aria-label={titre} className={`carte-groupe rounded-2xl px-5 py-4 ${className ?? ""}`}>
       <div className="mb-2 flex items-center justify-between gap-3">
-        <h3 className="text-[16px] font-bold text-foreground">{titre}</h3>
-        {note && <span className="text-[12px] text-muted-foreground">{note}</span>}
+        <h3 className="text-base font-bold text-foreground">{titre}</h3>
+        {note && <span className="text-xs text-muted-foreground">{note}</span>}
       </div>
       {children}
     </section>
@@ -296,7 +296,7 @@ function FicheDuMembre({
       <header className="flex items-center gap-4">
         <Avatar p={p} grand />
         <div className="min-w-0 flex-1">
-          <h2 className="truncate text-[24px] font-bold leading-tight tracking-tight text-foreground">{nom(p)}</h2>
+          <h2 className="truncate text-xl font-bold leading-tight tracking-tight text-foreground">{nom(p)}</h2>
           <p className="truncate text-sm text-muted-foreground">
             {p.email}
             {p.createdAt ? ` · ${t("admin.membre.inscritLe", { date: p.createdAt.toLocaleDateString(zh ? "zh-CN" : "fr-FR", { day: "numeric", month: "long", year: "numeric" }) })}` : ""}
@@ -305,7 +305,7 @@ function FicheDuMembre({
         <button
           type="button"
           onClick={onModifier}
-          className={`inline-flex h-10 shrink-0 items-center gap-2 rounded-full bg-background px-4 text-[14px] font-semibold text-foreground shadow-[inset_0_0_0_1px_hsl(var(--border))] hover:bg-secondary ${TOUCHER_44}`}
+          className={`inline-flex h-10 shrink-0 items-center gap-2 rounded-full bg-background px-4 text-sm font-semibold text-foreground shadow-[inset_0_0_0_1px_hsl(var(--border))] hover:bg-secondary ${TOUCHER_44}`}
         >
           <Pencil className="h-4 w-4" aria-hidden />
           {t("common.buttons.edit")}
@@ -323,7 +323,7 @@ function FicheDuMembre({
                 onClick={() => setFeuille(true)}
                 disabled={enCours}
                 aria-busy={enCours}
-                className={`inline-flex h-9 items-center rounded-full bg-background px-3 text-[13px] font-semibold text-foreground shadow-[inset_0_0_0_1px_hsl(var(--border))] hover:bg-secondary ${TOUCHER_44}`}
+                className={`inline-flex h-9 items-center rounded-full bg-background px-3 text-sm font-semibold text-foreground shadow-[inset_0_0_0_1px_hsl(var(--border))] hover:bg-secondary ${TOUCHER_44}`}
               >
                 {t("groupes.personnes.changer")}
               </button>
@@ -335,10 +335,10 @@ function FicheDuMembre({
                 {def ? nomGroupe : t("groupes.personnes.sansGroupe")}
               </span>
             </p>
-            <p className="mt-2 text-[12px] text-muted-foreground">
+            <p className="mt-2 text-xs text-muted-foreground">
               {def ? t("groupes.personnes.changerAide", { groupe: nomGroupe }) : t("groupes.personnes.changerAideSans")}
             </p>
-            {erreur && <p role="alert" className="mt-2 text-[12px] text-destructive">{erreur}</p>}
+            {erreur && <p role="alert" className="mt-2 text-xs text-destructive">{erreur}</p>}
           </Carte>
           {def && (
             <Carte
@@ -358,7 +358,7 @@ function FicheDuMembre({
                       {x.role && zh && x.role.nomZh && <span className="text-muted-foreground">{x.role.nom}</span>}
                       {x.role && !zh && x.role.nomZh && <span className="text-muted-foreground">{x.role.nomZh}</span>}
                     </span>
-                    <span className="flex flex-wrap justify-end gap-1.5 text-[11px] font-semibold">
+                    <span className="flex flex-wrap justify-end gap-1.5 text-xs font-semibold">
                       {x.role?.comite && <span className="rounded-full bg-secondary px-2 py-0.5 text-muted-foreground">{t("groupes.auComite")}</span>}
                       {col && (
                         <span className="inline-flex items-center gap-1 rounded-full bg-secondary px-2 py-0.5 text-muted-foreground">
@@ -490,8 +490,8 @@ function FicheDuMembre({
               <div key={`${s.date}-${s.service}-${s.role}-${i}`} className={ligne}>
                 <span className="flex items-center gap-3">
                   <span className="flex h-10 w-10 flex-col items-center justify-center rounded-lg bg-secondary leading-none">
-                    <span className="text-[15px] font-bold text-foreground">{date.getDate()}</span>
-                    <span className="text-[10px] text-muted-foreground">{date.toLocaleDateString(zh ? "zh-CN" : "fr-FR", { month: "short" })}</span>
+                    <span className="text-base font-bold text-foreground">{date.getDate()}</span>
+                    <span className="text-xs text-muted-foreground">{date.toLocaleDateString(zh ? "zh-CN" : "fr-FR", { month: "short" })}</span>
                   </span>
                   <span className="font-semibold text-foreground">{libelleServicePlanning(t, zh, s.service)}</span>
                 </span>
@@ -523,7 +523,7 @@ function FicheDuMembre({
                   <span aria-hidden className="h-2.5 w-2.5 rounded-full" style={{ background: id ? categoryColor(groupeDef(id)!.categorie) : "#94a3b8" }} />
                   {label}
                 </span>
-                {actuel && <span className="text-[12px] font-normal text-muted-foreground">{t("groupes.personnes.actuel")}</span>}
+                {actuel && <span className="text-xs font-normal text-muted-foreground">{t("groupes.personnes.actuel")}</span>}
               </button>
             );
           })}

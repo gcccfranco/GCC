@@ -7,7 +7,7 @@ export function Initiales({ nom, pointille = false, sombre = false }: { nom: str
   return (
     <span
       aria-hidden
-      className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[11px] font-bold ${
+      className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
         pointille
           ? "border border-dashed border-muted-foreground/50 text-muted-foreground"
           : sombre ? "bg-foreground text-background" : "bg-secondary text-foreground/80"

@@ -417,7 +417,7 @@ export function Notifier({ backOffice = false, titre }: { backOffice?: boolean; 
       <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-4 px-[var(--marge-page)] pb-10 lg:grid-cols-[minmax(0,1fr)_minmax(300px,0.72fr)]">
         <div className="carte-groupe rounded-2xl p-5 space-y-4 sm:p-6">
           <div>
-            <h2 className="text-[18px] font-bold text-foreground">{t("notifier.prevenir")}</h2>
+            <h2 className="text-lg font-bold text-foreground">{t("notifier.prevenir")}</h2>
             <p className="text-sm text-muted-foreground">
               {t("notifier.prevenirAide")}
             </p>

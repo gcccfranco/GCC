@@ -63,7 +63,7 @@ export function AncienneAdmin() {
               <button
                 key={key}
                 onClick={() => setTab(key)}
-                className={`shrink-0 inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[13px] font-semibold transition-colors ${
+                className={`shrink-0 inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-sm font-semibold transition-colors ${
                   active
                     ? "bg-foreground text-background"
                     : "bg-secondary text-muted-foreground hover:text-foreground"

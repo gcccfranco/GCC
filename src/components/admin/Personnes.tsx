@@ -204,7 +204,7 @@ export function FiltresPersonnes({ f }: { f: ReturnType<typeof useFiltresPersonn
       </div>
       <div className="flex items-center justify-end gap-2">
         {/* Le mot visible : sans lui, le rail se lit comme un choix de vue (critique-design, T3c). */}
-        <span aria-hidden className="text-[13px] font-semibold text-muted-foreground">{t("admin.membre.trier")}</span>
+        <span aria-hidden className="text-sm font-semibold text-muted-foreground">{t("admin.membre.trier")}</span>
         <OngletsRail
           etiquette={t("admin.membre.trier").replace(/\s*[:：]$/, "")}
           surGris
@@ -292,12 +292,12 @@ export function LignePersonne({
       <Avatar p={p} />
       <div className="min-w-0 flex-1 space-y-1">
         <p className="flex items-center gap-2">
-          <span className="min-w-0 truncate text-[15px] font-semibold leading-[21px] text-foreground">{p.firstName} {p.lastName}</span>
+          <span className="min-w-0 truncate text-base font-semibold leading-[21px] text-foreground">{p.firstName} {p.lastName}</span>
           {isAdminUser(p) && (
-            <span className="inline-flex h-5 shrink-0 items-center rounded-full bg-secondary px-2 text-[12px] font-semibold leading-4 text-muted-foreground group-aria-[current=true]:bg-background">{t("admin.membre.admin")}</span>
+            <span className="inline-flex h-5 shrink-0 items-center rounded-full bg-secondary px-2 text-xs font-semibold leading-4 text-muted-foreground group-aria-[current=true]:bg-background">{t("admin.membre.admin")}</span>
           )}
         </p>
-        <p className="truncate text-[13px] leading-[18px] text-muted-foreground">{p.email}</p>
+        <p className="truncate text-sm leading-[18px] text-muted-foreground">{p.email}</p>
         <ServicesDuMembre p={p} groupes={groupes} />
       </div>
       {fin}

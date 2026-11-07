@@ -58,23 +58,23 @@ export function InscriptionsComptes({
             aria-label={t("admin.inscr.ouvertes")}
           />
           <div className="min-w-0 flex-1">
-            <p className="text-[15px] font-semibold text-foreground">
+            <p className="text-base font-semibold text-foreground">
               {regOpen === null ? t("common.loading") : regOpen ? t("admin.inscr.ouvertes") : t("admin.inscr.fermees")}
             </p>
-            <p className="text-[13px] text-muted-foreground">
+            <p className="text-sm text-muted-foreground">
               {regOpen ? t("admin.inscr.aideOuvertes") : t("admin.inscr.aideFermees")}
             </p>
           </div>
           {nouveaux > 0 && (
             <div className="flex items-center gap-2">
-              <span className="rounded-full bg-amber-100 px-2.5 py-1 text-[12px] font-bold text-amber-700 dark:bg-amber-950/60 dark:text-amber-300">
+              <span className="rounded-full bg-amber-100 px-2.5 py-1 text-xs font-bold text-amber-700 dark:bg-amber-950/60 dark:text-amber-300">
                 {t("admin.inscr.nouveaux", { count: nouveaux })}
               </span>
               {onVoir && (
                 <button
                   type="button"
                   onClick={onVoir}
-                  className="h-9 rounded-full bg-background px-3.5 text-[13px] font-semibold text-foreground shadow-[inset_0_0_0_1px_hsl(var(--border))] hover:bg-secondary"
+                  className="h-9 rounded-full bg-background px-3.5 text-sm font-semibold text-foreground shadow-[inset_0_0_0_1px_hsl(var(--border))] hover:bg-secondary"
                 >
                   {t("admin.inscr.voir", { count: nouveaux })}
                 </button>

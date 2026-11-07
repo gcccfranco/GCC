@@ -57,7 +57,7 @@ function MenuPilule({ label, vide, valeur, options, onChange }: {
   );
 }
 
-const PASTILLE = "inline-flex h-5 items-center rounded-full px-2 text-[11.5px] font-semibold leading-none";
+const PASTILLE = "inline-flex h-5 items-center rounded-full px-2 text-xs font-semibold leading-none";
 const VERTE = `${PASTILLE} bg-emerald-500/10 text-emerald-700 dark:text-emerald-400`;
 const ORANGE = `${PASTILLE} bg-orange-500/10 text-orange-700 dark:text-orange-400`;
 
@@ -110,7 +110,7 @@ function LigneStats({ st, colonnes, service, nomService, jour }: {
   } else texte = <span>{total}</span>;
   if (!texte && !recent) return null;
   return (
-    <span data-stats-ligne className="mt-0.5 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-[12.5px] leading-snug text-muted-foreground">
+    <span data-stats-ligne className="mt-0.5 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-xs leading-snug text-muted-foreground">
       {texte}
       {recent}
     </span>
@@ -146,9 +146,9 @@ function ApercuChant({ song }: { song: SongIndexEntry }) {
       )}
       <div className="mt-2.5 min-h-[3.25rem]" aria-busy={lignes === undefined}>
         {lignes === undefined ? (
-          <p className="text-[13px] text-muted-foreground">{t("setlists.editeur.apercuChargement")}</p>
+          <p className="text-sm text-muted-foreground">{t("setlists.editeur.apercuChargement")}</p>
         ) : lignes === null || lignes.length === 0 ? (
-          <p className="text-[13px] text-muted-foreground">{t("setlists.editeur.apercuIndisponible")}</p>
+          <p className="text-sm text-muted-foreground">{t("setlists.editeur.apercuIndisponible")}</p>
         ) : (
           lignes.map((tokens, i) => (
             <div key={i} data-apercu-ligne>
@@ -161,7 +161,7 @@ function ApercuChant({ song }: { song: SongIndexEntry }) {
         href={lienPartition(song.slug, song.recommendedKey ?? null)}
         target="_blank"
         rel="noopener noreferrer"
-        className="mt-1.5 inline-block text-[13px] font-medium text-foreground underline underline-offset-2 hover:text-muted-foreground"
+        className="mt-1.5 inline-block text-sm font-medium text-foreground underline underline-offset-2 hover:text-muted-foreground"
       >
         {t("setlists.editeur.voirPartition")}
       </a>
@@ -297,10 +297,10 @@ export function Bibliotheque({
         )}
       </div>
       {stats && service === null && (
-        <p id="aide-moins-joues" className="mt-1.5 text-[12.5px] text-muted-foreground">{t("stats.biblio.choisirService")}</p>
+        <p id="aide-moins-joues" className="mt-1.5 text-xs text-muted-foreground">{t("stats.biblio.choisirService")}</p>
       )}
 
-      <p role="status" className="mt-4 text-[13px] text-muted-foreground">
+      <p role="status" className="mt-4 text-sm text-muted-foreground">
         {t("setlists.editeur.nChants", { count: resultats.length })}
       </p>
 
@@ -317,7 +317,7 @@ export function Bibliotheque({
                 <Plus className="h-4 w-4 shrink-0" aria-hidden />
                 {t("setlists.fete.proposer", { titre: filtres.recherche.trim() })}
               </button>
-              <p className="mx-auto max-w-sm text-[13px] text-muted-foreground">{t("setlists.fete.propositionAide")}</p>
+              <p className="mx-auto max-w-sm text-sm text-muted-foreground">{t("setlists.fete.propositionAide")}</p>
             </div>
           )}
         </div>
@@ -349,7 +349,7 @@ export function Bibliotheque({
                     className="min-w-0 flex-1 rounded-lg text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   >
                     <span className="flex items-baseline gap-1.5">
-                      <span className="truncate text-[15px] font-semibold text-foreground">{song.title}</span>
+                      <span className="truncate text-base font-semibold text-foreground">{song.title}</span>
                       {song.titlePinyin && <span className="truncate text-sm text-muted-foreground">{song.titlePinyin}</span>}
                       {ouvert ? (
                         <ChevronUp className="h-3.5 w-3.5 shrink-0 self-center text-muted-foreground" aria-hidden />
@@ -357,7 +357,7 @@ export function Bibliotheque({
                         <ChevronDown className="h-3.5 w-3.5 shrink-0 self-center text-muted-foreground" aria-hidden />
                       )}
                     </span>
-                    {song.artist && <span className="block truncate text-[13px] text-muted-foreground">{song.artist}</span>}
+                    {song.artist && <span className="block truncate text-sm text-muted-foreground">{song.artist}</span>}
                     {st && (
                       <LigneStats
                         st={st} colonnes={colonnes} service={service} nomService={nomService} jour={jour}
@@ -367,28 +367,28 @@ export function Bibliotheque({
                   {st && colonnes && (
                     <>
                       {service !== null && (
-                        <span data-stats-col-service className="flex w-24 shrink-0 justify-end text-[13px] text-muted-foreground">
+                        <span data-stats-col-service className="flex w-24 shrink-0 justify-end text-sm text-muted-foreground">
                           {st.dansService ? jour(st.dansService.derniere)
                             : st.jamaisDansService && !st.jamaisNullePart ? (
                               <span className={VERTE}><span aria-hidden>{t("stats.biblio.jamaisCourt")}</span><span className="sr-only">{t("stats.biblio.jamaisA", { service: nomService })}</span></span>
                             ) : "—"}
                         </span>
                       )}
-                      <span data-stats-col-total className="w-12 shrink-0 text-right text-[13px] tabular-nums text-muted-foreground">{st.total}</span>
+                      <span data-stats-col-total className="w-12 shrink-0 text-right text-sm tabular-nums text-muted-foreground">{st.total}</span>
                     </>
                   )}
                   <span className={colonnes && stats ? "flex w-[11rem] shrink-0 items-center justify-end gap-3" : "contents"}>
                   <span className="flex flex-col items-center gap-0.5">
                     <KeyPill tonalite={cle} langue={song.language === "zh" ? "zh" : "fr"} />
-                    {song.recommendedKey && <span className="text-[11px] leading-none text-muted-foreground">{t("setlists.editeur.reco")}</span>}
+                    {song.recommendedKey && <span className="text-xs leading-none text-muted-foreground">{t("setlists.editeur.reco")}</span>}
                   </span>
                   {ajoute ? (
-                    <span className="flex h-8 items-center gap-1 rounded-full bg-emerald-500/10 px-3 text-[13px] font-semibold text-emerald-700 dark:text-emerald-400">
+                    <span className="flex h-8 items-center gap-1 rounded-full bg-emerald-500/10 px-3 text-sm font-semibold text-emerald-700 dark:text-emerald-400">
                       <Check className="h-3.5 w-3.5" aria-hidden />
                       {t("setlists.editeur.ajoute")}
                     </span>
                   ) : dedans ? (
-                    <span className="flex h-8 items-center gap-1 px-1 text-[13px] font-semibold text-emerald-700 dark:text-emerald-400">
+                    <span className="flex h-8 items-center gap-1 px-1 text-sm font-semibold text-emerald-700 dark:text-emerald-400">
                       <Check className="h-3.5 w-3.5" aria-hidden />
                       {t("setlists.editeur.dansLaSetlist")}
                     </span>
@@ -424,7 +424,7 @@ export function Bibliotheque({
           </button>
         </div>
       ) : (
-        <p className="sticky bottom-0 mt-auto border-t border-border bg-background py-3 text-[13px] text-muted-foreground">
+        <p className="sticky bottom-0 mt-auto border-t border-border bg-background py-3 text-sm text-muted-foreground">
           {t("setlists.editeur.aideBibliotheque")}
         </p>
       )}

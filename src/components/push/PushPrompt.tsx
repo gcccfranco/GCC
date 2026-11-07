@@ -87,11 +87,11 @@ export function PushPrompt({ surGris }: { surGris?: boolean } = {}) {
         <div className="flex-1">
           <p className="text-sm font-semibold text-foreground">{t("push.promptTitle")}</p>
           {needsInstall ? (
-            <p className="text-[13px] text-muted-foreground mt-0.5">
+            <p className="text-sm text-muted-foreground mt-0.5">
               {t("push.iosInstall")}
             </p>
           ) : (
-            <p className="text-[13px] text-muted-foreground mt-0.5">
+            <p className="text-sm text-muted-foreground mt-0.5">
               {t("push.promptText")}
             </p>
           )}

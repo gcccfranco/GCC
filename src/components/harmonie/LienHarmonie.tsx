@@ -22,8 +22,8 @@ export function LienHarmonie() {
     >
       <Sparkles className="h-[18px] w-[18px] shrink-0 text-muted-foreground" aria-hidden />
       <span className="min-w-0 flex-1">
-        <span className="block text-[15px] font-semibold text-foreground">{t("harmonie.titre")}</span>
-        <span className="block truncate text-[13px] text-muted-foreground">{t("harmonie.sousTitre")}</span>
+        <span className="block text-base font-semibold text-foreground">{t("harmonie.titre")}</span>
+        <span className="block truncate text-sm text-muted-foreground">{t("harmonie.sousTitre")}</span>
       </span>
       <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground/60" aria-hidden />
     </Link>

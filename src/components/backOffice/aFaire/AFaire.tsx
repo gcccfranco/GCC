@@ -59,7 +59,7 @@ export function AFaire({ titre }: { titre: string }) {
       />
       <div className={`px-[var(--marge-page)] pb-10 ${montree ? "grid grid-cols-[minmax(0,1fr)_300px] items-start gap-8" : ""}`}>
         <div>
-          {incomplet && <p role="alert" className="mb-3 text-[13px] text-muted-foreground">{t("backOffice.aFaire.incomplet")}</p>}
+          {incomplet && <p role="alert" className="mb-3 text-sm text-muted-foreground">{t("backOffice.aFaire.incomplet")}</p>}
           {!resultat ? (
             !erreur && <Squelette enTete={false} className="p-0" />
           ) : resultat.total === 0 ? (
@@ -70,7 +70,7 @@ export function AFaire({ titre }: { titre: string }) {
             <div className="space-y-6">
               {resultat.groupes.map((g) => (
                 <section key={g.id} aria-labelledby={`a-faire-${g.id}`} data-testid={`groupe-${g.id}`}>
-                  <h2 id={`a-faire-${g.id}`} className="mb-2 px-1 text-[13px] font-semibold text-muted-foreground">
+                  <h2 id={`a-faire-${g.id}`} className="mb-2 px-1 text-sm font-semibold text-muted-foreground">
                     {t(`backOffice.aFaire.groupe.${g.id}`)}
                   </h2>
                   <ul className="divide-y divide-border/60 overflow-hidden carte-groupe">
@@ -90,8 +90,8 @@ export function AFaire({ titre }: { titre: string }) {
                 <Drama className="h-[18px] w-[18px]" />
               </span>
               <span className="min-w-0 flex-1">
-                <b className="block text-balance break-words text-[15px] font-semibold text-foreground">{t("backOffice.aFaire.sceneDesFetes.titre")}</b>
-                <span className="block text-balance break-words text-[13px] text-muted-foreground">{t("backOffice.aFaire.sceneDesFetes.sousTitre")}</span>
+                <b className="block text-balance break-words text-base font-semibold text-foreground">{t("backOffice.aFaire.sceneDesFetes.titre")}</b>
+                <span className="block text-balance break-words text-sm text-muted-foreground">{t("backOffice.aFaire.sceneDesFetes.sousTitre")}</span>
               </span>
               <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
             </Link>

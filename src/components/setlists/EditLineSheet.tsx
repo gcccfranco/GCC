@@ -89,7 +89,7 @@ function Chip({ chord, selected, onTap }: { chord: string; selected: boolean; on
     <button
       type="button"
       onClick={onTap}
-      className={`h-8 px-2 mb-0.5 rounded-sm border text-[15px] font-bold whitespace-nowrap transition-colors ${
+      className={`h-8 px-2 mb-0.5 rounded-sm border text-base font-bold whitespace-nowrap transition-colors ${
         selected
           ? "border-foreground bg-foreground text-background"
           : "border-[color:var(--chord-color,#3f63cf)]/40 bg-[color:var(--chord-color,#3f63cf)]/10 text-[color:var(--chord-color,#3f63cf)]"
@@ -372,7 +372,7 @@ function SheetBody({
         : t("setlists.contentEdit.lineTitle", { defaultValue: "Modifier la ligne" });
 
   const actionBtn =
-    "h-10 px-3 rounded-sm border border-border bg-card text-[13px] font-semibold text-muted-foreground hover:text-foreground flex items-center gap-1.5 transition-colors";
+    "h-10 px-3 rounded-sm border border-border bg-card text-sm font-semibold text-muted-foreground hover:text-foreground flex items-center gap-1.5 transition-colors";
 
   return (
     <>
@@ -380,7 +380,7 @@ function SheetBody({
         <DrawerTitle className="flex items-center justify-between gap-2">
           <span>{title}</span>
           {target.semitones !== 0 && (
-            <span className="text-[11px] font-normal text-muted-foreground">
+            <span className="text-xs font-normal text-muted-foreground">
               {t("setlists.contentEdit.displayedKey", {
                 defaultValue: "Tonalité affichée : {{key}}",
                 key: target.targetKey,
@@ -400,7 +400,7 @@ function SheetBody({
                 type="button"
                 aria-pressed={repeatScope === scope}
                 onClick={() => onRepeatScope?.(scope)}
-                className={`h-8 px-3 rounded-full text-[13px] font-semibold transition-colors ${
+                className={`h-8 px-3 rounded-full text-sm font-semibold transition-colors ${
                   repeatScope === scope
                     ? "bg-card text-foreground shadow-sm"
                     : "text-muted-foreground hover:text-foreground"
@@ -490,7 +490,7 @@ function SheetBody({
               <button
                 type="button"
                 onClick={() => setInstrPad(-1)}
-                className={`h-8 px-2.5 rounded-sm border border-dashed text-[13px] font-semibold flex items-center gap-1 ${
+                className={`h-8 px-2.5 rounded-sm border border-dashed text-sm font-semibold flex items-center gap-1 ${
                   instrPad === -1 ? "border-foreground text-foreground" : "border-border text-muted-foreground"
                 }`}
               >
@@ -572,7 +572,7 @@ function SheetBody({
               onInsert={(offset) => setPadTarget({ kind: "add", offset })}
             />
             {target.language === "fr" && !padTarget && (
-              <p className="text-[11px] text-muted-foreground -mt-1">
+              <p className="text-xs text-muted-foreground -mt-1">
                 {t("setlists.contentEdit.tapWordHint", {
                   defaultValue:
                     "Touche un mot pour choisir la lettre exacte où placer l'accord.",

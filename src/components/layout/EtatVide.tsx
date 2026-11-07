@@ -32,7 +32,7 @@ export function EtatVide({
       role={role}
       className={cn("rounded-2xl px-4 text-center", sansFond ? undefined : surGris ? "carte-groupe" : "bloc-info", compact ? "py-6" : "py-12", className)}
     >
-      {titre && <p className="text-[15px] font-semibold text-foreground">{titre}</p>}
+      {titre && <p className="text-base font-semibold text-foreground">{titre}</p>}
       {children && <p className={cn("text-sm text-muted-foreground", titre && "mt-1")}>{children}</p>}
       {action && <div className="mt-3">{action}</div>}
     </div>

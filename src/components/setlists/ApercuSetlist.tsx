@@ -70,14 +70,14 @@ export function ApercuSetlist({
     <section aria-label={t("setlists.apercu.region")} className="apercu-setlist space-y-5 pb-10">
       <div className="flex flex-wrap items-start gap-x-6 gap-y-3">
         <div className="min-w-0 flex-1 basis-72">
-          <p className="flex items-center gap-2 text-[13px] font-semibold">
+          <p className="flex items-center gap-2 text-sm font-semibold">
             <span aria-hidden className="h-2 w-2 shrink-0 rounded-full" style={{ background: couleur }} />
             <span className="svc-ink" style={{ "--svc": couleur } as React.CSSProperties}>
               {i18n.language === "zh-CN" ? t("categories." + setlist.category, { defaultValue: setlist.category }) : categoryLabel(setlist.category)}
               {" · "}{formatDate(setlist.date, i18n.language)}
             </span>
           </p>
-          <h2 className="mt-1 text-[24px] font-bold leading-tight tracking-tight text-foreground text-balance">{titreAffiche(setlist, langueCourte(i18n.language))}</h2>
+          <h2 className="mt-1 text-xl font-bold leading-tight tracking-tight text-foreground text-balance">{titreAffiche(setlist, langueCourte(i18n.language))}</h2>
           {(setlist.leader || presentation) && (
             <p className="mt-0.5 flex flex-wrap items-center gap-x-1.5 text-sm text-muted-foreground">
               {setlist.leader && <span>{t("planning.accueil.presidence", { nom: setlist.leader })}</span>}

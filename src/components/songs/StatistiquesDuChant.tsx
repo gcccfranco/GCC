@@ -79,7 +79,7 @@ export function StatistiquesDuChant({ slug }: { slug: string }) {
         data-testid="statistiques-chant"
         aria-haspopup="dialog"
         onClick={(e) => { e.stopPropagation(); setOuvert(true); }}
-        className="page-fade mt-2 -ml-1 flex min-h-8 max-w-full items-center gap-0.5 rounded-md px-1 text-left text-[13px] leading-snug text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring print:hidden [@media(pointer:coarse)]:min-h-11"
+        className="page-fade mt-2 -ml-1 flex min-h-8 max-w-full items-center gap-0.5 rounded-md px-1 text-left text-sm leading-snug text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring print:hidden [@media(pointer:coarse)]:min-h-11"
       >
         <span className="min-w-0">
           {depuisLeDebut.derniere ? (
@@ -128,8 +128,8 @@ function DetailContenu({ stats, nom, nomEntier, jour, periode, setPeriode, note 
       <dl className="grid grid-cols-3 gap-2">
         {chiffres.map((c) => (
           <div key={c.cle} data-testid={`chiffre-${c.cle}`} className="min-w-0 rounded-2xl bg-secondary px-3 py-2.5">
-            <dt className="text-[11px] leading-tight text-muted-foreground">{c.libelle}</dt>
-            <dd className="mt-1 break-words text-[17px] font-semibold tabular-nums leading-tight">{c.valeur}</dd>
+            <dt className="text-xs leading-tight text-muted-foreground">{c.libelle}</dt>
+            <dd className="mt-1 break-words text-lg font-semibold tabular-nums leading-tight">{c.valeur}</dd>
           </div>
         ))}
       </dl>
@@ -141,9 +141,9 @@ function DetailContenu({ stats, nom, nomEntier, jour, periode, setPeriode, note 
       />
 
       {stats.parService.length > 0 ? (
-        <table data-testid="statistiques-chant-tableau" className="w-full border-collapse text-[14px]">
+        <table data-testid="statistiques-chant-tableau" className="w-full border-collapse text-sm">
           <thead>
-            <tr className="text-left text-[11px] font-medium text-muted-foreground">
+            <tr className="text-left text-xs font-medium text-muted-foreground">
               <th scope="col" className="pb-1.5 font-medium">{t("stats.chant.service")}</th>
               <th scope="col" className="pb-1.5 text-right font-medium">{t("stats.chant.fois")}</th>
               <th scope="col" className="pb-1.5 pl-3 text-right font-medium">{t("stats.chant.derniereCol")}</th>
@@ -165,17 +165,17 @@ function DetailContenu({ stats, nom, nomEntier, jour, periode, setPeriode, note 
           </tbody>
         </table>
       ) : (
-        <p data-testid="statistiques-chant-aucune" className="text-[14px] text-muted-foreground">{t("stats.chant.aucune")}</p>
+        <p data-testid="statistiques-chant-aucune" className="text-sm text-muted-foreground">{t("stats.chant.aucune")}</p>
       )}
 
       {stats.jamaisDans.length > 0 && (
-        <p data-testid="jamais-dans" className="text-[14px] text-muted-foreground">
+        <p data-testid="jamais-dans" className="text-sm text-muted-foreground">
           {t("stats.chant.jamaisDans", { services: stats.jamaisDans.map(nomEntier).join(", ") })}
         </p>
       )}
 
       {stats.prochaine && (
-        <p data-testid="prochaine" className="text-[14px]">
+        <p data-testid="prochaine" className="text-sm">
           <Link href={`/setlists/${stats.prochaine.setlistId}`} className="underline underline-offset-4 decoration-1">
             {t("stats.chant.prochaine", { date: jour(stats.prochaine.jour), service: nom(stats.prochaine.service) })}
           </Link>
@@ -183,10 +183,10 @@ function DetailContenu({ stats, nom, nomEntier, jour, periode, setPeriode, note 
       )}
 
       <div className="space-y-1.5 border-t border-border pt-3">
-        {note && <p className="text-[12px] text-muted-foreground">{note}</p>}
+        {note && <p className="text-xs text-muted-foreground">{note}</p>}
         <Link
           href="/songs/statistiques"
-          className="inline-flex min-h-8 items-center gap-0.5 text-[14px] font-medium underline-offset-4 hover:underline [@media(pointer:coarse)]:min-h-11"
+          className="inline-flex min-h-8 items-center gap-0.5 text-sm font-medium underline-offset-4 hover:underline [@media(pointer:coarse)]:min-h-11"
         >
           {t("stats.chant.toutes")}<ChevronRight aria-hidden className="h-4 w-4" />
         </Link>

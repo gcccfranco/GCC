@@ -370,7 +370,7 @@ export default function SetlistsPage() {
       type="button"
       aria-pressed={onlyMine}
       onClick={() => setOnlyMine((v) => !v)}
-      className={`inline-flex h-7 shrink-0 items-center whitespace-nowrap rounded-full px-3 text-[13px] font-semibold transition-colors duration-150 [@media(pointer:coarse)]:h-8 [@media(pointer:coarse)]:text-[14px] ${TOUCHER_PILULE} ${
+      className={`inline-flex h-7 shrink-0 items-center whitespace-nowrap rounded-full px-3 text-sm font-semibold transition-colors duration-150 [@media(pointer:coarse)]:h-8 ${TOUCHER_PILULE} ${
         onlyMine
           ? "bg-primary text-primary-foreground"
           : "bg-secondary-fond dark:bg-secondary text-foreground active:bg-secondary/70"
@@ -396,7 +396,7 @@ export default function SetlistsPage() {
     : [];
   const enteteFete = editionFiltree && (
     <div className="mb-4 space-y-1">
-      <h2 className="text-[15px] font-semibold text-foreground">
+      <h2 className="text-base font-semibold text-foreground">
         {libelleEdition(feteDe(editionFiltree)!, anneeDe(editionFiltree) ?? 0, langueCourte(i18n.language))}
         {" · "}
         {jourEnLettres(editionFiltree.jourJ, i18n.language)}
@@ -405,7 +405,7 @@ export default function SetlistsPage() {
   );
   // « Sans chant » en bas de la liste (CF13) ; pas pendant une recherche, qui réduit la liste.
   const piedFete = editionFiltree && sansChant.length > 0 && !loading && !query.trim() && (
-    <p className="mt-4 text-[13px] text-muted-foreground">{t("setlists.fete.sansChant", { liste: sansChant.join(", ") })}</p>
+    <p className="mt-4 text-sm text-muted-foreground">{t("setlists.fete.sansChant", { liste: sansChant.join(", ") })}</p>
   );
 
   const rail = (

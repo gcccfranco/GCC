@@ -29,8 +29,8 @@ export function Tile({
       )}
       style={{ background: `color-mix(in srgb, ${color} var(--svc-tint), transparent)`, "--svc": color } as React.CSSProperties}
     >
-      <span className={size === "xl" ? "text-[22px]" : "text-[15px]"}>{big}</span>
-      {small && <span className={cn("font-semibold", size === "xl" ? "mt-1 text-[12px]" : "mt-0.5 text-xs")}>{small}</span>}
+      <span className={size === "xl" ? "text-xl" : "text-base"}>{big}</span>
+      {small && <span className={cn("font-semibold", size === "xl" ? "mt-1 text-xs" : "mt-0.5 text-xs")}>{small}</span>}
     </span>
   );
 }

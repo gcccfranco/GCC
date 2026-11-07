@@ -63,7 +63,7 @@ export function ExportModele({
         // Agencement v18 (B6) : un outil de l'en-tête, en contour, « Exporter » ; le nom complet
         // reste celui que lisent les lecteurs d'écran.
         aria-label={t("planning.export.bouton")}
-        className="h-9 px-3.5 rounded-full border border-border bg-card text-[13px] font-semibold text-foreground hover:bg-secondary inline-flex items-center gap-1.5 transition-[background-color,color,transform] duration-150 active:scale-[.96] cursor-pointer"
+        className="h-9 px-3.5 rounded-full border border-border bg-card text-sm font-semibold text-foreground hover:bg-secondary inline-flex items-center gap-1.5 transition-[background-color,color,transform] duration-150 active:scale-[.96] cursor-pointer"
       >
         <FileText className="h-3.5 w-3.5" aria-hidden />
         {titre}

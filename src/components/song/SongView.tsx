@@ -416,8 +416,8 @@ function NuanceBadge({ nuance, size = "sm", variant = "badge" }: { nuance?: Sect
             aria-label={arrowOnly ? nuanceLabel(id) : undefined}
             className={`inline-flex items-center gap-[0.25em] leading-none normal-case tracking-normal ${
               text
-                ? `text-[14px] font-semibold ${def?.intensity ? NUANCE_TEXT_INTENSITY_CLASS[def.intensity] : NUANCE_TEXT_NEUTRAL_CLASS}`
-                : `${lg ? "text-[0.8125rem] font-bold px-2 py-1 rounded-md" : "text-[10px] font-semibold px-1.5 py-0.5 rounded"} ${def?.intensity ? NUANCE_INTENSITY_CLASS[def.intensity] : NUANCE_NEUTRAL_CLASS}`
+                ? `text-sm font-semibold ${def?.intensity ? NUANCE_TEXT_INTENSITY_CLASS[def.intensity] : NUANCE_TEXT_NEUTRAL_CLASS}`
+                : `${lg ? "text-sm font-bold px-2 py-1 rounded-md" : "text-xs font-semibold px-1.5 py-0.5 rounded"} ${def?.intensity ? NUANCE_INTENSITY_CLASS[def.intensity] : NUANCE_NEUTRAL_CLASS}`
             }`}
           >
             {Icon && <Icon aria-hidden="true" className={arrowOnly ? "h-[1.5em] w-[1.5em] shrink-0" : "h-[1.1em] w-[1.1em] shrink-0"} strokeWidth={2.5} />}
@@ -426,7 +426,7 @@ function NuanceBadge({ nuance, size = "sm", variant = "badge" }: { nuance?: Sect
         );
       })}
       {nuance.note && (
-        <span className={`normal-case tracking-normal text-stone-600 dark:text-stone-300 ${text ? "text-[13px] font-normal" : lg ? "text-[0.8125rem] font-semibold" : "text-[11px] font-normal"}`}>
+        <span className={`normal-case tracking-normal text-stone-600 dark:text-stone-300 ${text ? "text-sm font-normal" : lg ? "text-sm font-semibold" : "text-xs font-normal"}`}>
           {nuance.note}
         </span>
       )}
@@ -493,7 +493,7 @@ export function StructureStrip({
   const nuancesOf = (g: { nuances: SectionNuance[] }) =>
     g.nuances.map((n, k) => (
       <Fragment key={k}>
-        {k > 0 && <span aria-hidden="true" className="text-[14px] font-semibold leading-none text-muted-foreground">→</span>}
+        {k > 0 && <span aria-hidden="true" className="text-sm font-semibold leading-none text-muted-foreground">→</span>}
         <NuanceBadge nuance={n} variant="text" />
       </Fragment>
     ));
@@ -501,7 +501,7 @@ export function StructureStrip({
   // dans la liste sous le bandeau (quand le corps ne les porte pas).
   const notes = details ? groups.filter((g) => g.step.note || g.step.transition) : [];
   const noteNumber = new Map(notes.map((g, i) => [g, i + 1]));
-  const numberBadge = "inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-foreground px-1 text-[11px] font-bold leading-none text-background";
+  const numberBadge = "inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-foreground px-1 text-xs font-bold leading-none text-background";
   return (
     <div className={className}>
       <div className="flex flex-wrap items-start gap-x-3 gap-y-2">
@@ -532,9 +532,9 @@ export function StructureStrip({
                       : { background: tintOf(g.step.section), color: colorOf(g.step.section) }
                   }
                 >
-                  <span className={`inline-flex items-baseline font-bold leading-none tracking-[0.02em] ${compacte ? "text-[13px] sm:text-[14px]" : "text-[14px] sm:text-[17px]"}`}>
+                  <span className={`inline-flex items-baseline font-bold leading-none tracking-[0.02em] ${compacte ? "text-sm" : "text-sm sm:text-lg"}`}>
                     <abbr title={g.full} className="no-underline [text-decoration:none]">{g.abbr}</abbr>
-                    {g.repeat > 1 && <span className={`ml-px font-semibold ${compacte ? "text-[10px]" : "text-[11px] sm:text-[13px]"}`}>×{g.repeat}</span>}
+                    {g.repeat > 1 && <span className={`ml-px font-semibold ${compacte ? "text-xs" : "text-xs sm:text-sm"}`}>×{g.repeat}</span>}
                   </span>
                   {n !== undefined && (
                     <span aria-label={`${n}`} className={`absolute -right-1 -top-1 max-sm:h-4 max-sm:min-w-4 ${numberBadge}`}>{n}</span>
@@ -543,16 +543,16 @@ export function StructureStrip({
                 {colonne ? (
                   // Nom, modulation et nuance passent à la ligne dans la largeur de la colonne.
                   <span className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
-                    <span className="text-[15px] font-semibold leading-tight text-foreground">{dpFullName(g.step.section, t) ?? g.full}</span>
-                    {targetKey && <span className="font-mono text-[12px] leading-none text-muted-foreground">→ {targetKey}</span>}
+                    <span className="text-base font-semibold leading-tight text-foreground">{dpFullName(g.step.section, t) ?? g.full}</span>
+                    {targetKey && <span className="font-mono text-xs leading-none text-muted-foreground">→ {targetKey}</span>}
                     {nuancesOf(g)}
                   </span>
                 ) : (
                   <>
-                    {targetKey && !compacte && <span className="font-mono text-[12px] leading-none text-muted-foreground">→ {targetKey}</span>}
+                    {targetKey && !compacte && <span className="font-mono text-xs leading-none text-muted-foreground">→ {targetKey}</span>}
                     {!compacte && g.nuances.length > 0 && <span className="inline-flex flex-wrap items-center justify-center gap-x-1.5">{nuancesOf(g)}</span>}
                     {compacte && pleine.has(i) && g.nuances.length > 0 && (
-                      <span className="inline-flex flex-wrap items-center justify-center gap-x-1 [&_span]:!text-[12px] [&_span]:!font-bold">{nuancesOf(g)}</span>
+                      <span className="inline-flex flex-wrap items-center justify-center gap-x-1 [&_span]:!text-xs [&_span]:!font-bold">{nuancesOf(g)}</span>
                     )}
                   </>
                 )}
@@ -563,7 +563,7 @@ export function StructureStrip({
         {children && <span className="ml-auto inline-flex flex-wrap items-center gap-2">{children}</span>}
       </div>
       {notes.length > 0 && (
-        <ol className="mt-3 space-y-1.5 border-t border-border pt-3 text-[14px] text-foreground/80">
+        <ol className="mt-3 space-y-1.5 border-t border-border pt-3 text-sm text-foreground/80">
           {notes.map((g, i) => (
             <li key={i} className="flex items-start gap-2">
               <span className={`${numberBadge} mt-px shrink-0`}>{i + 1}</span>
@@ -632,7 +632,7 @@ export function SectionView({ section, language, showChords, showPinyin, useJian
             display: "inline-block",
           }}
         />
-        <span className={`text-[0.75rem] font-bold uppercase tracking-[0.1em] ${uiIsZh ? zh_lyric_font.className : chord_font.className}`}
+        <span className={`text-xs font-bold uppercase tracking-[0.1em] ${uiIsZh ? zh_lyric_font.className : chord_font.className}`}
               style={{ color: "var(--sec-c, #6b7080)" }}>
           {label}
           {repeat > 1 && <span className="ml-1 normal-case">×{repeat}</span>}
@@ -642,7 +642,7 @@ export function SectionView({ section, language, showChords, showPinyin, useJian
             </span>
           )}
           {songSourceLabel && (
-            <span className="ml-2 text-[10px] font-normal normal-case tracking-normal" style={{ color: "var(--sec-c, currentColor)", opacity: 0.7 }}>
+            <span className="ml-2 text-xs font-normal normal-case tracking-normal" style={{ color: "var(--sec-c, currentColor)", opacity: 0.7 }}>
               · {songSourceLabel}
             </span>
           )}
@@ -824,7 +824,7 @@ export function SongView({
       <div className="mb-0 pb-3 print:mb-3 border-b border-border">
         <div className="flex items-start justify-between gap-5">
           <div className="min-w-0">
-            <h1 className={`text-[26px] font-bold text-foreground leading-[1.05] tracking-[-0.02em] ${isZh ? KaiTiFont.className : chord_font.className}`}>
+            <h1 className={`text-xl font-bold text-foreground leading-[1.05] tracking-[-0.02em] ${isZh ? KaiTiFont.className : chord_font.className}`}>
               {titleHref ? (
                 <Link href={titleHref} className="hover:underline underline-offset-4 decoration-2">
                   {ast.metadata.title}
@@ -834,20 +834,20 @@ export function SongView({
               )}
             </h1>
             {ast.metadata.titlePinyin && (
-              <p className={`text-muted-foreground text-[13px] mt-1 ${pinyin_font.className}`}>
+              <p className={`text-muted-foreground text-sm mt-1 ${pinyin_font.className}`}>
                 {ast.metadata.titlePinyin}
               </p>
             )}
             {pageChant && ast.metadata.subtitle && (
-              <p data-testid="sous-titre" className={`text-muted-foreground text-[13px] mt-1 ${pinyin_font.className}`}>
+              <p data-testid="sous-titre" className={`text-muted-foreground text-sm mt-1 ${pinyin_font.className}`}>
                 {ast.metadata.subtitle}
               </p>
             )}
-            <p data-testid="auteur" className={`text-muted-foreground text-[12px] leading-4 mt-2 ${chord_font.className}`} style={pileCredit}>
+            <p data-testid="auteur" className={`text-muted-foreground text-xs leading-4 mt-2 ${chord_font.className}`} style={pileCredit}>
               {ast.metadata.artist}
             </p>
             {pageChant && ast.metadata.bible && (
-              <p data-testid="reference-biblique" className={`text-muted-foreground/80 text-[12px] mt-0.5 ${chord_font.className}`} style={pileCredit}>
+              <p data-testid="reference-biblique" className={`text-muted-foreground/80 text-xs mt-0.5 ${chord_font.className}`} style={pileCredit}>
                 {ast.metadata.bible}
               </p>
             )}
@@ -864,7 +864,7 @@ export function SongView({
             )}
             {pageChant ? (
               ligneTempo.length > 0 && (
-                <span data-testid="ligne-tempo" className="text-foreground/70 text-[12px] md:text-[13px] font-medium flex flex-wrap items-baseline justify-end gap-x-1 whitespace-nowrap">
+                <span data-testid="ligne-tempo" className="text-foreground/70 text-xs md:text-sm font-medium flex flex-wrap items-baseline justify-end gap-x-1 whitespace-nowrap">
                   {ligneTempo.map((element, i) => (
                     <Fragment key={i}>
                       {i > 0 && <span aria-hidden="true">{" · "}</span>}
@@ -875,8 +875,8 @@ export function SongView({
               )
             ) : (
               ast.metadata.tempo && (
-                <span className="text-muted-foreground text-[11px] font-medium flex items-baseline gap-0.5">
-                  <span className="text-foreground/70 text-[15px] leading-none">♩</span>
+                <span className="text-muted-foreground text-xs font-medium flex items-baseline gap-0.5">
+                  <span className="text-foreground/70 text-base leading-none">♩</span>
                   {` = ${ast.metadata.tempo}`}
                 </span>
               )

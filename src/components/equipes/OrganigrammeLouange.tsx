@@ -55,7 +55,7 @@ export function CeQueCaOuvre({
     <div data-testid="ce-que-ca-ouvre" className={nu ? "space-y-2" : "space-y-1.5 rounded-xl bg-secondary/70 p-3"}>
       {nu ? (
         <div className="flex items-center justify-between gap-3">
-          <h3 className="text-[15px] font-semibold leading-[21px] text-foreground">{t("equipes.organigramme.ceQueCaOuvre")}</h3>
+          <h3 className="text-base font-semibold leading-[21px] text-foreground">{t("equipes.organigramme.ceQueCaOuvre")}</h3>
           {note}
         </div>
       ) : (
@@ -92,7 +92,7 @@ export function CorpsLouange({
   const { parSous, sans, referents } = colonnesLouange(membres);
   const colonne = (id: string, titre: string, liste: MembreEquipe[], sous: SousEquipe | null) => (
     <div key={id} data-testid={`louange-${id}`} className="break-inside-avoid space-y-0.5">
-      <p className="break-words hyphens-auto text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{titre}</p>
+      <p className="break-words hyphens-auto text-xs font-semibold uppercase tracking-wide text-muted-foreground">{titre}</p>
       {liste.map((m, i) => (
         <div key={`${m.uid || m.nom}-${i}`}>
           {ligne(m, {

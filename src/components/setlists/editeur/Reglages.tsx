@@ -50,7 +50,7 @@ export function PastilleSection({ abbr, cle, grande, className = "" }: { abbr: s
     <span
       data-pastille
       className={`inline-flex shrink-0 items-center justify-center rounded-full font-semibold leading-none ${
-        grande ? "h-10 min-w-10 px-1.5 text-[13px]" : "h-[22px] min-w-[22px] px-1 text-[10.5px]"
+        grande ? "h-10 min-w-10 px-1.5 text-sm" : "h-[22px] min-w-[22px] px-1 text-xs"
       } ${className}`}
       style={{ color: `var(--sec-${cle})`, background: `var(--sec-${cle}-tint)` }}
     >
@@ -115,7 +115,7 @@ export function Tonalites({
             >
               {k}
             </span>
-            {legende && <span className="text-[11px] leading-none text-muted-foreground">{legende}</span>}
+            {legende && <span className="text-xs leading-none text-muted-foreground">{legende}</span>}
           </button>
         );
       })}
@@ -249,7 +249,7 @@ export function StructurePastilles({
 
   return (
     <section className="space-y-2.5">
-      <h3 className="text-[13px] font-semibold text-muted-foreground">{t("setlists.editeur.structure")}</h3>
+      <h3 className="text-sm font-semibold text-muted-foreground">{t("setlists.editeur.structure")}</h3>
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
         <SortableContext items={sectionItems.map((s) => s.uid)} strategy={rectSortingStrategy}>
           {/* `data-vaul-no-drag` : dans une feuille (T4), glisser une pastille ne tire pas la feuille. */}
@@ -286,7 +286,7 @@ export function StructurePastilles({
             key={s.id}
             type="button"
             onClick={() => onChange([...sectionItems, nouvelleEtape(s.id, s.name)])}
-            className="flex h-8 items-center gap-1 rounded-full border border-border px-3 text-[13px] font-medium text-foreground transition-colors hover:bg-muted"
+            className="flex h-8 items-center gap-1 rounded-full border border-border px-3 text-sm font-medium text-foreground transition-colors hover:bg-muted"
           >
             <Plus className="h-3.5 w-3.5" aria-hidden />
             {formatSectionName(s, t)}
@@ -296,7 +296,7 @@ export function StructurePastilles({
           <button
             type="button"
             onClick={() => setDpOuverte(true)}
-            className="flex h-8 items-center gap-1 rounded-full border border-dashed border-border px-3 text-[13px] font-medium text-foreground transition-colors hover:bg-muted"
+            className="flex h-8 items-center gap-1 rounded-full border border-dashed border-border px-3 text-sm font-medium text-foreground transition-colors hover:bg-muted"
           >
             <Plus className="h-3.5 w-3.5" aria-hidden />
             {t("setlists.form.lastPhrase.add")}
@@ -346,7 +346,7 @@ function BoutonChamp({
       title={title}
       aria-expanded={ouvert}
       onClick={onClick}
-      className={`flex h-[26px] max-w-[14rem] items-center gap-1 rounded-md px-2 text-[12.5px] font-medium transition-colors ${
+      className={`flex h-[26px] max-w-[14rem] items-center gap-1 rounded-md px-2 text-xs font-medium transition-colors ${
         rempli ? filled : "text-muted-foreground shadow-[inset_0_0_0_1px_hsl(var(--border))] hover:text-foreground hover:bg-muted"
       } ${ouvert ? ring : ""}`}
     >
@@ -450,7 +450,7 @@ export function ParSection({
   if (sectionItems.length === 0) return null;
   return (
     <section className="space-y-1">
-      <h3 className="text-[13px] font-semibold text-muted-foreground">{t("setlists.editeur.parSection")}</h3>
+      <h3 className="text-sm font-semibold text-muted-foreground">{t("setlists.editeur.parSection")}</h3>
       <div className="border-t border-border">
         {sectionItems.map((si, i) => (
           <LigneParSection

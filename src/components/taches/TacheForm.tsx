@@ -144,7 +144,7 @@ function Champs({ enLigne, equipe: equipeDepart, equipes, evenement, echeance, i
       {enLigne && (
         <div className="flex items-baseline justify-between gap-3">
           <h2 id={titreId} className="text-lg font-bold">{initial ? t("taches.modifier") : t("taches.nouvelle")}</h2>
-          <span className="text-[13px] text-muted-foreground">{t(cleNomEquipe(equipe, true))}</span>
+          <span className="text-sm text-muted-foreground">{t(cleNomEquipe(equipe, true))}</span>
         </div>
       )}
       {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
@@ -152,7 +152,7 @@ function Champs({ enLigne, equipe: equipeDepart, equipes, evenement, echeance, i
         <Champ label={t("taches.champs.equipe")}>
           <Menu label={t("taches.champs.equipe")} value={equipe} defaultValue={equipe}
             options={equipes.map((e) => ({ valeur: e, libelle: t(cleNomEquipe(e, true)) }))} onChange={changerEquipe}
-            className="h-11 w-full justify-between rounded-[12px] px-3 text-base font-normal [@media(pointer:coarse)]:h-11 [@media(pointer:coarse)]:text-base" />
+            className="h-11 w-full justify-between rounded-[12px] px-3 text-base font-normal [@media(pointer:coarse)]:h-11" />
         </Champ>
       )}
       <Champ id="tache-titre" label={t("taches.champs.titre")}>

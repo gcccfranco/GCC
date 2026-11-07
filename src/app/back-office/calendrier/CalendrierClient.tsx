@@ -110,15 +110,15 @@ const filtreDeLAdresse = (v: string | null): Filtre => FILTRES.find((f) => f ===
 const vueDeLAdresse = (v: string | null): Vue | null => (v === "agenda" || v === "mois" ? v : null);
 
 const BOUTON_ROND =
-  "sur-gris inline-flex h-8 min-w-8 items-center justify-center rounded-full px-2 text-[13px] font-bold text-foreground transition-opacity duration-150 hover:opacity-80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground";
+  "sur-gris inline-flex h-8 min-w-8 items-center justify-center rounded-full px-2 text-sm font-bold text-foreground transition-opacity duration-150 hover:opacity-80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground";
 /** La hauteur de `Pilules` (28 px, 13 px ; 32 px et 14 px au toucher, zone de 44 px) : « Seulement moi » et « Sources » en sont les sœurs. */
 const PASTILLE = cn(
-  "inline-flex h-7 shrink-0 items-center whitespace-nowrap gap-1.5 rounded-full px-3 text-[13px] font-semibold transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground [@media(pointer:coarse)]:h-8 [@media(pointer:coarse)]:text-[14px]",
+  "inline-flex h-7 shrink-0 items-center whitespace-nowrap gap-1.5 rounded-full px-3 text-sm font-semibold transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground [@media(pointer:coarse)]:h-8",
   TOUCHER_PILULE,
 );
 /** « Ajouter » (BO8) : la pilule md de `BoutonNouveau`, avec son menu. */
 const BOUTON_AJOUTER =
-  "inline-flex h-10 items-center gap-2 rounded-full bg-primary px-[18px] text-[14.5px] font-semibold text-primary-foreground transition-transform duration-150 active:scale-[.97] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground";
+  "inline-flex h-10 items-center gap-2 rounded-full bg-primary px-[18px] text-base font-semibold text-primary-foreground transition-transform duration-150 active:scale-[.97] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground";
 
 export function CalendrierClient() {
   const { t, i18n } = useTranslation();
@@ -309,7 +309,7 @@ export function CalendrierClient() {
       <button type="button" className={BOUTON_ROND} aria-label={t("calendrier.precedent")} onClick={() => allerA(moisVoisin(mois, -1))}>
         <ChevronLeft aria-hidden className="h-4 w-4" />
       </button>
-      <span data-testid="mois-affiche" aria-live="polite" className="min-w-[92px] whitespace-nowrap text-center text-[17px] font-bold text-foreground md:min-w-[128px]">
+      <span data-testid="mois-affiche" aria-live="polite" className="min-w-[92px] whitespace-nowrap text-center text-lg font-bold text-foreground md:min-w-[128px]">
         {titreMois(mois, lang)}
       </span>
       <button type="button" className={BOUTON_ROND} aria-label={t("calendrier.suivant")} onClick={() => allerA(moisVoisin(mois, 1))}>
@@ -396,7 +396,7 @@ export function CalendrierClient() {
   // L'action principale (R7, BO8, BO-G 4) : sur toutes les tailles les trois mêmes créations, chacune seulement pour qui
   // en a le droit : Évènement, Réunion, Tâche, à la date choisie (le jour touché du Mois ; aujourd'hui en Agenda), avec
   // les adresses de la feuille du jour. Dès 768 px un menu sous « Ajouter » ; sur téléphone, le rond « Ajouter » et sa feuille.
-  const ENTREE = "min-h-11 cursor-pointer gap-2.5 px-3 text-[15px]";
+  const ENTREE = "min-h-11 cursor-pointer gap-2.5 px-3 text-base";
   const action = telephone ? (
     peutCreer && <BoutonNouveau label={t("backOffice.calendrier.ajouter")} onClick={() => setFeuilleCreer(true)} />
   ) : (
@@ -508,7 +508,7 @@ export function CalendrierClient() {
             <div>
               <GrillePoints mois={mois} jours={jours} parJour={parJour} aujourdhui={aujourdhui} choisi={choisi} lang={lang} onChoisir={choisir} />
               <section data-testid="jour-choisi" aria-labelledby="calendrier-jour-choisi" className="mt-2">
-                <h2 id="calendrier-jour-choisi" className="mx-0.5 mb-1.5 mt-4 text-[13px] font-semibold text-muted-foreground">
+                <h2 id="calendrier-jour-choisi" className="mx-0.5 mb-1.5 mt-4 text-sm font-semibold text-muted-foreground">
                   {titreDuJour(choisi)}
                 </h2>
                 {duJour.length > 0 ? (
@@ -542,7 +542,7 @@ export function CalendrierClient() {
           // page, comme « Ajouter » au-dessus (elles la dépassaient de 20 px).
           <aside aria-labelledby="calendrier-jour" className="w-[300px] shrink-0 border-l border-border">
             <div className="sticky top-[var(--nav-h)] flex max-h-[calc(100dvh-var(--nav-h))] flex-col gap-3 overflow-y-auto pb-6 pl-5 pr-[var(--marge-page)] pt-1">
-              <h2 id="calendrier-jour" className="text-[17px] font-bold text-foreground">
+              <h2 id="calendrier-jour" className="text-lg font-bold text-foreground">
                 {titreJour(choisi, lang)}
               </h2>
               <AjouterCeJour date={choisi} lang={lang} droits={droits} onNouvelleTache={nouvelleTache(choisi)} />
@@ -563,7 +563,7 @@ export function CalendrierClient() {
             >
               <div className="flex flex-col gap-3 p-4 pt-3">
                 <div className="flex items-center justify-between gap-2">
-                  <h2 id="calendrier-jour" className="text-[17px] leading-[23px] font-bold text-foreground">
+                  <h2 id="calendrier-jour" className="text-lg leading-[23px] font-bold text-foreground">
                     {titreJour(choisi, lang)}
                   </h2>
                   <button

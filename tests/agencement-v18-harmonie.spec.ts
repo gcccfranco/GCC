@@ -9,7 +9,7 @@ import { enTete, estGrandEcran, estTelephone, interdireDialoguesNatifs, verifier
 // (docs/spec-espace-musiciens.md) : le rail Fiches · Cours · Sons du RD-2000 est parti, les entrées
 // Harmonie · Théorie musicale · RD-2000 de la barre de l'espace Musiciens (barre latérale en grand, barre
 // du bas sinon) le remplacent ; les cartes Cours et Sons du catalogue restent sur téléphone seulement. Un lien
-// direct vers une fiche, une leçon, un son garde ses deux volets (la fiche s'y titre en h2 de 24 px).
+// direct vers une fiche, une leçon, un son garde ses deux volets (la fiche s'y titre en h2 de 22 px).
 // Plannings simulés ; personnes fictives. Cinq projets.
 
 const csv = (rows: string[][]) => rows.map((r) => r.map((c) => `"${c}"`).join(",")).join("\n");
@@ -210,9 +210,9 @@ test.describe("Harmonie en onglets (T11)", () => {
         await expect(detail(page).locator(d.fiche)).toBeVisible();
         await expect(liste(page)).toBeVisible();
         expect(await nomCourant(page, info)).toMatch(new RegExp(`^${d.onglet}`));
-        // La fiche du volet de droite : un h2 de 24 px, sans marge à gauche (elle part du bord du volet).
+        // La fiche du volet de droite : un h2 de 22 px, sans marge à gauche (elle part du bord du volet).
         const titre = detail(page).locator("h2").first();
-        expect(await titre.evaluate((el) => parseFloat(getComputedStyle(el).fontSize)), "titre de fiche : 24 px").toBe(24);
+        expect(await titre.evaluate((el) => parseFloat(getComputedStyle(el).fontSize)), "titre de fiche : 22 px").toBe(22);
         const fiche = detail(page).locator(d.fiche);
         const [volet, boiteFiche] = [(await detail(page).boundingBox())!, (await fiche.boundingBox())!];
         expect(Math.abs(boiteFiche.x - volet.x), "la fiche part du bord du volet").toBeLessThanOrEqual(1);

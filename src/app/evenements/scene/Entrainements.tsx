@@ -236,7 +236,7 @@ export function Entrainements({ programme, creneaux, user, profile, onChanged, o
   const mesResas = creneaux
     .filter((c) => c.auteurUid === user.uid && (c.dimanche > today || (c.dimanche === today && c.fin > maintenant)))
     .sort((a, b) => (a.dimanche + a.debut).localeCompare(b.dimanche + b.debut))
-  const titreSection = deuxVolets ? "px-1 text-[13px] font-semibold text-muted-foreground" : "text-[17px] font-bold text-foreground"
+  const titreSection = deuxVolets ? "px-1 text-sm font-semibold text-muted-foreground" : "text-lg font-bold text-foreground"
 
   // ─── Mes réservations (Q14) ──────────────────────────────────────────────
 
@@ -244,7 +244,7 @@ export function Entrainements({ programme, creneaux, user, profile, onChanged, o
     <section aria-labelledby="scene-mes" className="space-y-2">
       <div className="flex items-baseline justify-between gap-3">
         <h3 id="scene-mes" className={titreSection}>{t("planning.semaines.mes")}</h3>
-        <span data-testid="compte" className="px-1 text-[13px] tabular-nums text-muted-foreground">{mesResas.length}</span>
+        <span data-testid="compte" className="px-1 text-sm tabular-nums text-muted-foreground">{mesResas.length}</span>
       </div>
       <ul className="carte-groupe rounded-2xl p-1.5">
         {mesResas.map((c) => (
@@ -256,8 +256,8 @@ export function Entrainements({ programme, creneaux, user, profile, onChanged, o
             >
               <TuileDate iso={c.dimanche} lang={lang} />
               <span className="min-w-0 flex-1">
-                <span className="block truncate text-[15px] font-semibold">{c.quoi} · {quiDe(c)}</span>
-                <span className="block text-[13px] text-muted-foreground tabular-nums">{jourCourt(c.dimanche, lang)} · {c.debut} – {c.fin}</span>
+                <span className="block truncate text-base font-semibold">{c.quoi} · {quiDe(c)}</span>
+                <span className="block text-sm text-muted-foreground tabular-nums">{jourCourt(c.dimanche, lang)} · {c.debut} – {c.fin}</span>
               </span>
             </button>
             {menu(c)}
@@ -276,7 +276,7 @@ export function Entrainements({ programme, creneaux, user, profile, onChanged, o
         <h3 id="scene-entrainements" className={titreSection}>{t("planning.programme.entrainements")}</h3>
         {passees.length > 0 && (
           <button type="button" aria-expanded={voirPassees} onClick={() => setShowPast(!voirPassees)}
-            className="inline-flex min-h-11 items-center gap-1 px-1 text-[13px] font-semibold text-muted-foreground hover:text-foreground">
+            className="inline-flex min-h-11 items-center gap-1 px-1 text-sm font-semibold text-muted-foreground hover:text-foreground">
             {voirPassees ? t("planning.semaines.masquerPassees") : t("planning.semaines.passees", { n: passees.length })}
             <ChevronDown className={`h-3.5 w-3.5 transition-transform duration-200 motion-reduce:transition-none ${voirPassees ? "rotate-180" : ""}`} aria-hidden />
           </button>
@@ -305,10 +305,10 @@ export function Entrainements({ programme, creneaux, user, profile, onChanged, o
                   : `flex min-w-[124px] flex-col gap-1.5 whitespace-nowrap rounded-2xl px-3 py-2.5 text-left transition-colors ${actif ? "bg-foreground text-background" : "sur-gris"}`}
               >
                 <span className={deuxVolets ? "min-w-0 flex-1" : "contents"}>
-                  <span className="block text-[15px] font-semibold tabular-nums">{semaineCourte(s.jours, lang)}</span>
+                  <span className="block text-base font-semibold tabular-nums">{semaineCourte(s.jours, lang)}</span>
                   {detailCourt === null
-                    ? <span className={`block text-[13px] ${actif ? "opacity-75" : "text-muted-foreground"}`}>{detailLong}</span>
-                    : <><span aria-hidden className={`block text-[13px] ${actif ? "opacity-75" : "text-muted-foreground"}`}>{detailCourt}</span><span className="sr-only">{detailLong}</span></>}
+                    ? <span className={`block text-sm ${actif ? "opacity-75" : "text-muted-foreground"}`}>{detailLong}</span>
+                    : <><span aria-hidden className={`block text-sm ${actif ? "opacity-75" : "text-muted-foreground"}`}>{detailCourt}</span><span className="sr-only">{detailLong}</span></>}
                 </span>
                 <Cases cases={s.cases} actif={actif} />
                 {deuxVolets && <ChevronRight className="h-4 w-4 shrink-0 opacity-60" aria-hidden />}
@@ -330,10 +330,10 @@ export function Entrainements({ programme, creneaux, user, profile, onChanged, o
       {deuxVolets && (
         <div className="flex items-start justify-between gap-3">
           <div>
-            <h2 className="text-[24px] leading-tight font-bold tracking-tight text-foreground">
+            <h2 className="text-xl leading-tight font-bold tracking-tight text-foreground">
               {bornes!.au ? t("planning.semaines.titre", bornes!) : t("planning.semaines.titreJour", { du: bornes!.du })}
             </h2>
-            <p className="mt-1 text-[13.5px] text-muted-foreground">
+            <p className="mt-1 text-sm text-muted-foreground">
               {[places(choisie.libres, choisie.cases.length), t("planning.semaines.unCreneau", { duree: t(`planning.saison.dureeCourte.${saison.duree}`) })].filter(Boolean).join(" · ")}
             </p>
           </div>
@@ -356,8 +356,8 @@ export function Entrainements({ programme, creneaux, user, profile, onChanged, o
           <section key={d} id={`scene-jour-${d}`} aria-label={label} className="carte-groupe rounded-2xl scroll-mt-[calc(var(--nav-h)+12px)]">
             <div className="flex items-center gap-3 px-4 pt-3.5 pb-2">
               <TuileDate iso={d} lang={lang} />
-              <h3 className="min-w-0 flex-1 text-[17px] font-bold text-foreground">{label}</h3>
-              {d >= today && <span className="shrink-0 text-[13px] text-muted-foreground">{places(libres, grille)}</span>}
+              <h3 className="min-w-0 flex-1 text-lg font-bold text-foreground">{label}</h3>
+              {d >= today && <span className="shrink-0 text-sm text-muted-foreground">{places(libres, grille)}</span>}
             </div>
             <ul className="px-3 pb-3 space-y-1.5">
               {lignes.map((l) => {
@@ -394,7 +394,7 @@ export function Entrainements({ programme, creneaux, user, profile, onChanged, o
                     droite={
                       <>
                         {c.auteurUid === user.uid
-                          ? <span className="rounded-full bg-foreground px-2.5 py-0.5 text-[12px] font-semibold text-background">{t("planning.semaines.aMoi")}</span>
+                          ? <span className="rounded-full bg-foreground px-2.5 py-0.5 text-xs font-semibold text-background">{t("planning.semaines.aMoi")}</span>
                           : <span className="text-foreground/80">{c.auteurNom}</span>}
                         {menu(c)}
                       </>

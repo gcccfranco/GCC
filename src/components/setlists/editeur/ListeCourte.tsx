@@ -73,7 +73,7 @@ function BoutonInserer({ label, actif, onClick }: { label: string; actif: boolea
       }`}
     >
       <span className="h-[1.5px] flex-1 rounded-full bg-current" aria-hidden />
-      <span className="flex items-center gap-1 rounded-full bg-background px-1.5 text-[13px] font-semibold leading-none">
+      <span className="flex items-center gap-1 rounded-full bg-background px-1.5 text-sm font-semibold leading-none">
         <CirclePlus className="h-3.5 w-3.5" aria-hidden />
         {t("setlists.editeur.insererIci")}
       </span>
@@ -160,7 +160,7 @@ function LigneElement({
           <div className="min-w-0 flex-1">
             {bouton(
               <span className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
-                <span className="text-[15px] font-semibold leading-snug">{titre}</span>
+                <span className="text-base font-semibold leading-snug">{titre}</span>
                 <span className="rounded-full px-2 py-0.5 text-xs font-semibold text-orange-700 dark:text-orange-300" style={{ background: "#ea580c1f" }}>
                   {t("planning.fete.propositionEnAttente")}
                 </span>
@@ -192,23 +192,23 @@ function LigneElement({
         <div className="min-w-0 flex-1">
           {bouton(
             <span className="flex flex-wrap items-baseline gap-x-1.5">
-              <span className="text-[15px] font-semibold leading-snug">{titre}</span>
+              <span className="text-base font-semibold leading-snug">{titre}</span>
               {chant?.song.titlePinyin && (
-                <span className={`text-[13px] ${choisi ? "text-background/70" : "text-muted-foreground"}`}>{chant.song.titlePinyin}</span>
+                <span className={`text-sm ${choisi ? "text-background/70" : "text-muted-foreground"}`}>{chant.song.titlePinyin}</span>
               )}
               {scan && chant?.jianpuSheet !== false && (
-                <span className={`rounded px-1 text-[11px] font-semibold ${choisi ? "bg-background/15" : "bg-secondary text-foreground"}`}>
+                <span className={`rounded px-1 text-xs font-semibold ${choisi ? "bg-background/15" : "bg-secondary text-foreground"}`}>
                   {t("setlists.form.jianpuSheet")}
                 </span>
               )}
             </span>,
           )}
-          <p className={`text-[13px] ${choisi ? "text-background/70" : "text-muted-foreground"}`}>
+          <p className={`text-sm ${choisi ? "text-background/70" : "text-muted-foreground"}`}>
             {fusion ? t("setlists.editeur.fusion") : chant?.song.artist}
           </p>
           {chant && chant.sectionItems.length > 0 && <Pastilles chant={chant} choisi={choisi} />}
           {chant?.notes.trim() && (
-            <p className={`mt-1.5 text-[13px] italic ${choisi ? "text-background/80" : "text-muted-foreground"}`}>{chant.notes}</p>
+            <p className={`mt-1.5 text-sm italic ${choisi ? "text-background/80" : "text-muted-foreground"}`}>{chant.notes}</p>
           )}
         </div>
         {chant && (

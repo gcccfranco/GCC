@@ -113,7 +113,7 @@ export function ReceptionVolets() {
     const texte = m.r?.description;
     const contenu = (
       <>
-        {texte && <p className={cn("whitespace-pre-wrap text-foreground", grand ? "text-[15px] leading-[23px]" : "text-sm leading-[21px]")}>{texte}</p>}
+        {texte && <p className={cn("whitespace-pre-wrap text-foreground", grand ? "text-base leading-[23px]" : "text-sm leading-[21px]")}>{texte}</p>}
         {liens.some(Boolean) && <div className={cn("flex flex-wrap gap-x-4 gap-y-2", texte && "mt-3")}>{liens}</div>}
       </>
     );
@@ -179,7 +179,7 @@ export function ReceptionVolets() {
     return (
       <section aria-labelledby={id} className="carte-groupe rounded-2xl px-5 py-4">
         <div className="flex items-center justify-between gap-3">
-          <h3 id={id} className="text-[15px] font-bold text-foreground">{t("backOffice.reception.chantSignale")}</h3>
+          <h3 id={id} className="text-base font-bold text-foreground">{t("backOffice.reception.chantSignale")}</h3>
           <Link href={`/songs/${m.r.songSlug}`} className={BOUTON}>
             <FileText className="h-4 w-4" aria-hidden />{t("backOffice.reception.ouvrirPartition")}
           </Link>
@@ -211,7 +211,7 @@ export function ReceptionVolets() {
     };
     return (
       <section aria-labelledby={id} className="carte-groupe rounded-2xl px-5 py-4">
-        <h3 id={id} className="text-[15px] font-bold text-foreground">{t("backOffice.reception.memeMembre")}</h3>
+        <h3 id={id} className="text-base font-bold text-foreground">{t("backOffice.reception.memeMembre")}</h3>
         <ul className="mt-2">
           {autres.map((x) => (
             <li key={x.cle} className="border-t border-border first:border-t-0">
@@ -219,7 +219,7 @@ export function ReceptionVolets() {
                 <span className="block text-sm font-semibold text-foreground hover:underline">
                   {x.r ? x.r.title : t("backOffice.reception.proposition", { titre: x.p.title })}
                 </span>
-                <span className="block text-[12px] text-muted-foreground">{statut(x)}{date((x.r ?? x.p).createdAt)}</span>
+                <span className="block text-xs text-muted-foreground">{statut(x)}{date((x.r ?? x.p).createdAt)}</span>
               </button>
             </li>
           ))}
@@ -238,8 +238,8 @@ export function ReceptionVolets() {
           className={cn("flex w-full items-center gap-2.5 rounded-xl px-2.5 py-2.5 text-left transition-colors duration-150",
             actif ? "bg-foreground text-background" : "hover:bg-secondary", traite && !actif && "opacity-60")}>
           <span className="min-w-0 flex-1">
-            <span className="block truncate text-[15px] font-semibold">{titre}</span>
-            <span className={cn("block truncate text-[13px]", actif ? "text-background/75" : "text-muted-foreground")}>{auteur(m)}</span>
+            <span className="block truncate text-base font-semibold">{titre}</span>
+            <span className={cn("block truncate text-sm", actif ? "text-background/75" : "text-muted-foreground")}>{auteur(m)}</span>
           </span>
           <span className="flex shrink-0 items-center gap-1.5">{badges(m, actif)}</span>
           <ChevronRight className={cn("h-4 w-4 shrink-0", actif ? "text-background" : "text-muted-foreground/60")} aria-hidden />
@@ -252,8 +252,8 @@ export function ReceptionVolets() {
         <button type="button" aria-expanded={deplie} onClick={() => setOuvert(deplie ? null : m.cle)}
           className="flex w-full items-center gap-2.5 py-2.5 text-left">
           <span className="min-w-0 flex-1">
-            <span className="block truncate text-[15px] font-bold text-foreground">{titre}</span>
-            <span className="block truncate text-[13px] text-muted-foreground">{auteur(m)}</span>
+            <span className="block truncate text-base font-bold text-foreground">{titre}</span>
+            <span className="block truncate text-sm text-muted-foreground">{auteur(m)}</span>
           </span>
           <span className="flex shrink-0 items-center gap-1.5">{badges(m)}</span>
           {deplie ? <ChevronUp className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden /> : <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />}
@@ -274,17 +274,17 @@ export function ReceptionVolets() {
     return (
       <section aria-labelledby={id} className={cn(disposition === "tablette" && "carte-groupe min-w-0 rounded-2xl px-[18px] py-3.5")}>
         <div className={cn("flex items-center gap-2", grand ? "px-2.5 pb-1 pt-3" : "pb-1")}>
-          <h2 id={id} className={grand ? "text-[13px] font-semibold text-muted-foreground" : "text-[15px] font-bold text-foreground"}>
+          <h2 id={id} className={grand ? "text-sm font-semibold text-muted-foreground" : "text-base font-bold text-foreground"}>
             {t(type === "s" ? "backOffice.reception.titreSignalements" : "backOffice.reception.titrePropositions")}
           </h2>
           {attente.length > 0 && (
-            <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-bold text-amber-700 dark:bg-amber-950/60 dark:text-amber-300">
+            <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-bold text-amber-700 dark:bg-amber-950/60 dark:text-amber-300">
               {t("backOffice.reception.enAttente", { n: attente.length })}
             </span>
           )}
         </div>
         {disposition === "tablette" && (
-          <p className="mb-2 text-[13px] text-muted-foreground">{t(type === "s" ? "backOffice.reception.aideSignalements" : "backOffice.reception.aidePropositions")}</p>
+          <p className="mb-2 text-sm text-muted-foreground">{t(type === "s" ? "backOffice.reception.aideSignalements" : "backOffice.reception.aidePropositions")}</p>
         )}
         {chargement ? (
           <p className="py-4 text-center text-sm text-muted-foreground">{t("common.loading")}</p>
@@ -297,7 +297,7 @@ export function ReceptionVolets() {
             <div className={grand ? "space-y-0.5" : undefined}>{vus.map((m) => <Fragment key={m.cle}>{ligne(m)}</Fragment>)}</div>
             {traites > 0 && (
               <button type="button" onClick={() => setTraitesVus((v) => ({ ...v, [type]: !v[type] }))}
-                className={cn("block w-full border-t border-border py-2.5 text-left text-[13px] font-semibold text-muted-foreground hover:text-foreground", grand && "px-2.5")}>
+                className={cn("block w-full border-t border-border py-2.5 text-left text-sm font-semibold text-muted-foreground hover:text-foreground", grand && "px-2.5")}>
                 {traitesVus[type] ? t("backOffice.reception.masquerTraites") : t("backOffice.reception.voirTraites", { n: traites })}
               </button>
             )}
@@ -332,7 +332,7 @@ export function ReceptionVolets() {
     return (
       <div>
         <div className="flex gap-1.5">{badges(m)}</div>
-        <h2 className="mt-2 text-[24px] font-bold leading-[30px] tracking-tight text-foreground text-balance">{(m.r ?? m.p).title}</h2>
+        <h2 className="mt-2 text-xl font-bold leading-[30px] tracking-tight text-foreground text-balance">{(m.r ?? m.p).title}</h2>
         <p className="mb-4 mt-0.5 text-sm text-muted-foreground">{auteur(m)}</p>
         {m.p?.setlistId && <p className="mb-4 text-sm text-muted-foreground">{t("backOffice.reception.pourSetlist", { setlist: m.p.setlistTitre, id: m.p.id })}</p>}
         {corps(m, true)}
@@ -384,7 +384,7 @@ export function ReceptionVolets() {
 
 function Etiquette({ couleur, plein, children }: { couleur: string; plein?: boolean; children: ReactNode }) {
   return (
-    <span className={`rounded-full px-1.5 py-px text-[11px] font-bold${plein ? "" : " texte-service"}`}
+    <span className={`rounded-full px-1.5 py-px text-xs font-bold${plein ? "" : " texte-service"}`}
       style={{ ...(plein ? { color: couleur } : styleTexteService(couleur)), background: plein ? "#fff" : `${couleur}17`, boxShadow: `inset 0 0 0 1px ${couleur}4d` }}>
       {children}
     </span>

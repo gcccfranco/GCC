@@ -81,7 +81,7 @@ export function DetailService({ s }: { s: ServiceGroupe }) {
       <header className="flex items-start gap-4">
         <Tile color={couleur} big={jour.getDate()} small={mois} size="lg" className="h-14 w-14 rounded-xl [&>span:first-child]:text-2xl" />
         <div className="min-w-0 flex-1">
-          <p className="svc-ink text-[13px] font-semibold" style={{ "--svc": couleur } as React.CSSProperties}>{nomDuService(s.service, t)}</p>
+          <p className="svc-ink text-sm font-semibold" style={{ "--svc": couleur } as React.CSSProperties}>{nomDuService(s.service, t)}</p>
           <Titre className={cn("font-bold leading-tight tracking-tight", deuxVolets ? "text-xl" : "text-xl md:text-2xl")}>{dateLongue(s.date, i18n.language)}</Titre>
           <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1">
             {quand && <span className="text-sm text-muted-foreground">{quand}</span>}
@@ -97,7 +97,7 @@ export function DetailService({ s }: { s: ServiceGroupe }) {
             <Clock className="h-5 w-5" aria-hidden />
           </span>
           <div className="min-w-0 flex-1">
-            <p className="text-[13px] text-muted-foreground">{nomDuService(r.service, t)}</p>
+            <p className="text-sm text-muted-foreground">{nomDuService(r.service, t)}</p>
             <p className="text-base font-bold">{dateLongue(r.date, i18n.language)}{r.time && ` · ${r.time}`}</p>
             {r.location && <p className="inline-flex items-center gap-1 text-sm"><MapPin className="h-3.5 w-3.5" aria-hidden />{r.location}</p>}
           </div>
@@ -143,9 +143,9 @@ function CarteSetlist({ setlist, songs, couleur, boutonsEnTete }: {
   return (
     <section aria-labelledby={id} className="carte-groupe space-y-3 rounded-2xl px-5 pb-4 pt-4">
       <div>
-        <h2 id={id} className="text-[13px] font-semibold text-muted-foreground">{t("planning.accueil.setlistDuService")}</h2>
+        <h2 id={id} className="text-sm font-semibold text-muted-foreground">{t("planning.accueil.setlistDuService")}</h2>
         <p className="text-lg font-bold leading-snug">{setlist.title}</p>
-        {setlist.leader && <p className="text-[13px] text-muted-foreground">{t("planning.accueil.presidence", { nom: setlist.leader })}</p>}
+        {setlist.leader && <p className="text-sm text-muted-foreground">{t("planning.accueil.presidence", { nom: setlist.leader })}</p>}
       </div>
       {boutonsEnTete && boutons}
       <ol>
@@ -158,8 +158,8 @@ function CarteSetlist({ setlist, songs, couleur, boutonsEnTete }: {
             <li key={it.position} className="flex min-h-12 items-center gap-3 border-t border-border/70 py-1.5">
               <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-secondary text-xs font-bold tabular-nums text-muted-foreground">{i + 1}</span>
               <span className="min-w-0 flex-1">
-                <span className="block truncate text-[15px] font-semibold">{titre}</span>
-                {!fusion && song?.artist && <span className="block truncate text-[13px] text-muted-foreground">{song.artist}</span>}
+                <span className="block truncate text-base font-semibold">{titre}</span>
+                {!fusion && song?.artist && <span className="block truncate text-sm text-muted-foreground">{song.artist}</span>}
               </span>
               {!fusion && tonalite && <KeyPill tonalite={tonalite} langue={song?.language === "zh" ? "zh" : "fr"} />}
             </li>

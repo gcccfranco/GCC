@@ -27,8 +27,8 @@ export function ApercuNotification({ titre, message }: { titre: string; message:
             </span>
             <div className="min-w-0 flex-1">
               <div className="flex items-baseline justify-between gap-2">
-                <p className="text-[12px] font-semibold">{t("common.header.title")}</p>
-                <p className="shrink-0 text-[11px] text-muted-foreground">{t("notifier.maintenant")}</p>
+                <p className="text-xs font-semibold">{t("common.header.title")}</p>
+                <p className="shrink-0 text-xs text-muted-foreground">{t("notifier.maintenant")}</p>
               </div>
               <p className={`truncate text-sm font-semibold ${titre.trim() ? "" : "text-muted-foreground"}`}>
                 {titre.trim() || t("notifier.titreApercu")}
@@ -59,7 +59,7 @@ export function DerniersEnvois({ cle = 0 }: { cle?: number }) {
 
   return (
     <section aria-label={t("notifier.derniersEnvois")} className="carte-groupe rounded-2xl p-5 sm:p-6">
-      <h2 className="text-[16px] font-bold text-foreground">{t("notifier.derniersEnvois")}</h2>
+      <h2 className="text-base font-bold text-foreground">{t("notifier.derniersEnvois")}</h2>
       {envois === null ? (
         <p className="mt-2 text-sm text-muted-foreground">{t("common.loading")}</p>
       ) : envois === "erreur" ? (
@@ -70,8 +70,8 @@ export function DerniersEnvois({ cle = 0 }: { cle?: number }) {
         <ul className="mt-1">
           {envois.map((n) => (
             <li key={n.id} className="border-t border-border py-2.5 first:border-t-0">
-              <p className="truncate text-[15px] font-semibold text-foreground">{n.title}</p>
-              <p className="text-[13px] text-muted-foreground">
+              <p className="truncate text-base font-semibold text-foreground">{n.title}</p>
+              <p className="text-sm text-muted-foreground">
                 {n.everyone ? t("notifier.toutLeMonde") : t("notifier.personnes", { count: n.recipients.length })}
                 {n.createdAt ? ` · ${n.createdAt.toLocaleDateString(i18n.language === "zh-CN" ? "zh-CN" : "fr-FR", { day: "numeric", month: "short" })}` : ""}
               </p>

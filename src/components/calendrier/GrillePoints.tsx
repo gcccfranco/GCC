@@ -43,7 +43,7 @@ export function GrillePoints({
     <div>
       <div data-testid="grille-points" className="grid grid-cols-7 gap-1">
         {joursDeLaSemaine(lang).map((j) => (
-          <div key={j} aria-hidden className="pb-0.5 text-center text-[11px] text-muted-foreground">
+          <div key={j} aria-hidden className="pb-0.5 text-center text-xs text-muted-foreground">
             {j}
           </div>
         ))}

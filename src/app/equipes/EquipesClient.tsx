@@ -310,7 +310,7 @@ function CarteEquipe({
   const groupe = (g: string) => (
     <div key={g} className="break-inside-avoid space-y-0.5">
       {g && (
-        <p className="break-words hyphens-auto text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{g}</p>
+        <p className="break-words hyphens-auto text-xs font-semibold uppercase tracking-wide text-muted-foreground">{g}</p>
       )}
       {membres.filter((m) => m.groupe === g).sort(referentsDabord).map((m, i) => (
         <LigneMembre key={`${m.nom}-${i}`} membre={m} onFiche={onFiche} detail={nouveauRegie ? ligneGrise(t, m, false) : undefined} />
@@ -321,7 +321,7 @@ function CarteEquipe({
   const colonneEdd = (id: string, titre: string | null, liste: MembreEquipe[]) => (
     <div key={id} data-testid={`edd-${id}`} className="break-inside-avoid space-y-0.5">
       {titre && (
-        <p className="break-words hyphens-auto text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{titre}</p>
+        <p className="break-words hyphens-auto text-xs font-semibold uppercase tracking-wide text-muted-foreground">{titre}</p>
       )}
       {liste.map((m, i) => (
         <LigneMembre key={`${m.uid || m.nom}-${i}`} membre={m} onFiche={onFiche} />
@@ -345,7 +345,7 @@ function CarteEquipe({
     >
       <header className="space-y-1">
         <div className="flex items-start justify-between gap-2">
-          <h2 className="min-w-0 break-words hyphens-auto text-[17px] font-bold leading-[23px] text-foreground">
+          <h2 className="min-w-0 break-words hyphens-auto text-lg font-bold leading-[23px] text-foreground">
             {href ? <Link href={href} className="rounded-sm hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">{nom}</Link> : nom}
           </h2>
           {peutEditer && (
@@ -360,10 +360,10 @@ function CarteEquipe({
             </button>
           )}
         </div>
-        {soustitre && <p className="text-[13px] leading-[18px] text-muted-foreground">{soustitre}</p>}
+        {soustitre && <p className="text-sm leading-[18px] text-muted-foreground">{soustitre}</p>}
         <div className="flex flex-wrap items-center gap-1.5">
           {membres.length > 0 && (
-            <span className="text-[11px] text-muted-foreground">
+            <span className="text-xs text-muted-foreground">
               {t("equipes.membres", { count: membres.length })}
             </span>
           )}
@@ -412,10 +412,10 @@ function LigneMembre({
       {membre.mention && <span className="text-muted-foreground"> — {membre.mention}</span>}
       {nouveau && referentTexte && <span className="text-muted-foreground"> — {referentTexte}</span>}
       {!nouveau && membre.referent && !/^R[ée]f/i.test(membre.mention) && (
-        <span className="ml-1.5 text-[11px] font-semibold text-muted-foreground">{t("equipes.referent")}</span>
+        <span className="ml-1.5 text-xs font-semibold text-muted-foreground">{t("equipes.referent")}</span>
       )}
       {membre.essai && (
-        <span className="ml-1.5 text-[11px] font-semibold px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300">
+        <span className="ml-1.5 text-xs font-semibold px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300">
           {t("equipes.essai")}
         </span>
       )}
