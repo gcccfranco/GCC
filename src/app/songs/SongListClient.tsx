@@ -218,6 +218,7 @@ export function SongListClient({ songs, themes, actif = null, erreur = false, on
     scrollToLetter(slug);
   }
   function releasePointer() {
+    libererIndex();
     pressingRef.current = false;
     swipeLetterRef.current = null;
     setActiveIndex(null);
@@ -257,7 +258,60 @@ export function SongListClient({ songs, themes, actif = null, erreur = false, on
   const showIndex = letterIndex.length > 1 && filtered.length > 30;
   // 24 px par lettre (cible de l'ancien h-6) + py-1 ; rétréci si l'écran est court, ou si la part
   // de la carte toujours à l'écran l'est (deux volets), à 12 px au moins de ses bords.
-  const indexHeight = `min(78svh, ${letterIndex.length * 24 + 8}px, var(--cadre-index, 100svh) - 24px)`;
+  // V1 (validation du 07/11/2026) : au repos l'index part de la première ligne de la liste
+  // (`--liste-haut`, son haut dans le cadre, relu au défilement) ; il se raccourcit alors pour finir
+  // où finit l'index centré (jamais sous la barre d'onglets ni hors de la carte), puis reprend sa
+  // hauteur et son centre dès que la liste remonte.
+  const hauteurPleine = `min(78svh, ${letterIndex.length * 24 + 8}px, var(--cadre-index, 100svh) - 24px)`;
+  const indexHeight = `min(${hauteurPleine}, (var(--cadre-index, 100svh) + ${hauteurPleine}) / 2 - var(--liste-haut, 0px))`;
+  const repereListe = useRef<HTMLDivElement>(null);
+  const indexRef = useRef<HTMLElement>(null);
+  const indexTop = `calc((var(--cadre-index, 100svh) - ${indexHeight}) / 2)`;
+  // Pendant un geste, l'index ne bouge plus : la liste défile sous le doigt, et l'index au repos
+  // (pas encore collé) monterait avec elle. Figé en px au toucher, rendu à sa règle au relâcher.
+  function figerIndex(el: HTMLElement) {
+    const repere = repereListe.current;
+    const carte = repere?.closest<HTMLElement>(".chants-liste");
+    const defile = carte && /auto|scroll/.test(getComputedStyle(carte).overflowY) ? carte : null;
+    const r = el.getBoundingClientRect();
+    el.style.top = `${r.top - (defile ? defile.getBoundingClientRect().top : 0)}px`;
+    el.style.height = `${r.height}px`;
+  }
+  function libererIndex() {
+    const el = indexRef.current;
+    if (!el) return;
+    el.style.top = indexTop;
+    el.style.height = indexHeight;
+  }
+  useEffect(() => {
+    const repere = repereListe.current;
+    if (!repere || !showIndex) return;
+    let image = 0;
+    const relire = () => {
+      cancelAnimationFrame(image);
+      image = requestAnimationFrame(() => {
+        // Le cadre : la carte quand c'est elle qui défile (deux volets), sinon la fenêtre.
+        const carte = repere.closest<HTMLElement>(".chants-liste");
+        const defile = carte && /auto|scroll/.test(getComputedStyle(carte).overflowY) ? carte : null;
+        const haut = repere.getBoundingClientRect().top - (defile ? defile.getBoundingClientRect().top : 0);
+        repere.style.setProperty("--liste-haut", `${Math.round(haut)}px`);
+      });
+    };
+    relire();
+    window.addEventListener("scroll", relire, { passive: true });
+    window.addEventListener("resize", relire);
+    // La carte qui défile seule (deux volets) : son défilement ne remonte pas à la fenêtre.
+    document.addEventListener("scroll", relire, { passive: true, capture: true });
+    const taille = new ResizeObserver(relire);
+    taille.observe(document.documentElement);
+    return () => {
+      cancelAnimationFrame(image);
+      window.removeEventListener("scroll", relire);
+      window.removeEventListener("resize", relire);
+      document.removeEventListener("scroll", relire, { capture: true });
+      taille.disconnect();
+    };
+  }, [showIndex]);
 
   return (
     // pr-7 : gouttière fixe de l'index A–Z. Elle ne dépend pas de la recherche,
@@ -313,7 +367,7 @@ export function SongListClient({ songs, themes, actif = null, erreur = false, on
 
       {/* La liste et tout ce qui la suit : le repère de l'index A–Z (V1, validation du 07/11/2026).
           Sa colonne commence ici, à la première ligne de la liste, et non au-dessus des filtres. */}
-      <div className="relative">
+      <div ref={repereListe} className="relative">
       {/* Récemment consultés */}
       {!hasFilter && recentSongs.length > 0 && (
         <div className="mb-4">
@@ -429,9 +483,11 @@ export function SongListClient({ songs, themes, actif = null, erreur = false, on
         // (1rem + 1.75rem, `--index-hors` s'annule) ; elle l'emporte sur la règle de globals.css.
         <div className="index-az-colonne absolute top-0 bottom-0 w-11 flex justify-end pointer-events-none" style={{ right: "-2.75rem" }}>
           <nav
+            ref={indexRef}
             aria-label={t("common.aria.indexAlphabetique")}
             onPointerDown={(e) => {
               e.currentTarget.setPointerCapture(e.pointerId);
+              figerIndex(e.currentTarget);
               pressingRef.current = true;
               lockNav();
               swipeLetterRef.current = null;
@@ -450,7 +506,7 @@ export function SongListClient({ songs, themes, actif = null, erreur = false, on
             // toujours à l'écran en deux volets (globals.css, `.chants-volets`).
             style={{
               height: indexHeight,
-              top: `calc((var(--cadre-index, 100svh) - ${indexHeight}) / 2)`,
+              top: indexTop,
             }}
           >
             {activeIndex !== null && (
