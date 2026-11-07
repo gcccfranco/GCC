@@ -1362,7 +1362,10 @@ piste A (barre, menus, points, « Je joue », feuille de route du batteur gardé
 reste rouge** en mode Bleu. **Nouvelle demande du même soir** : « propose-moi plus de dispositions pour les
 partitions, pour que je choisisse ; on va mettre 3-4 types que les gens peuvent choisir sur le site » : le réglage
 « Couleurs par section » deviendrait un choix entre 3 ou 4 dispositions, partagé par la page du chant, la vue
-partitions et le mode louange (planche `docs/planches/planche-dispositions-partition.html`, en cours). **Le mode
+partitions et le mode louange (planche `docs/planches/planche-dispositions-partition.html`, en cours). **Premier
+critère** (Timothée, même soir) : « les partitions doivent être lisibles, on doit pouvoir bien voir la structure
+des chants et tout » : lisible de loin au pupitre, et le début, le type de chaque section, les reprises et l'ordre
+joué visibles d'un coup d'œil. **Le mode
 louange suit le réglage du site** (Timothée, 07/11/2026 : « si sur le site ils sont en couleur par section, dans le
 mode louange on le met en couleur par section ») : c'est déjà le cas, un seul réglage « Couleurs par section » par
 appareil partagé par la page du chant, la vue partitions de la setlist et le mode louange (`src/lib/chartStylePref.ts`) ;
