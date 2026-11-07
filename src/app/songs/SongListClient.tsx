@@ -479,9 +479,10 @@ export function SongListClient({ songs, themes, actif = null, erreur = false, on
         // La colonne commence à la première ligne de la liste (V1) : au repos l'index y reste, à sa
         // place naturelle, jamais à hauteur de la recherche ; dès que la page ou la carte défile,
         // le collant le recentre dans `--cadre-index`. `right` en ligne : cette colonne n'est plus
-        // dans la gouttière `pr-7` mais dans son contenu, 1.75rem plus à gauche que le bord
-        // (1rem + 1.75rem, `--index-hors` s'annule) ; elle l'emporte sur la règle de globals.css.
-        <div className="index-az-colonne absolute top-0 bottom-0 w-11 flex justify-end pointer-events-none" style={{ right: "-2.75rem" }}>
+        // dans la gouttière mais dans le contenu, plus à gauche que le bord de la gouttière
+        // (`padding-right` de `.chants-liste-contenu` : 1.75rem − `--index-hors`, jamais négatif) ;
+        // on la retranche à la règle de globals.css, qu'elle remplace.
+        <div className="index-az-colonne absolute top-0 bottom-0 w-11 flex justify-end pointer-events-none" style={{ right: "calc(-1rem - var(--index-hors, 0px) - max(0px, 1.75rem - var(--index-hors, 0px)))" }}>
           <nav
             ref={indexRef}
             aria-label={t("common.aria.indexAlphabetique")}
