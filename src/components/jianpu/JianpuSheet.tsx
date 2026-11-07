@@ -4,7 +4,7 @@ import { Fragment, useMemo, useState, type CSSProperties } from "react";
 import { Trans, useTranslation } from "react-i18next";
 import Image from "next/image";
 import type { JianpuEntry } from "@/lib/jianpu/images";
-import { cleJouee, jianpuImageUrl, useJianpuCadrage, useJianpuChords } from "@/lib/jianpu/images";
+import { cleJouee, jianpuImageUrl, useJianpuCadrage, useJianpuChords, useJianpuMarges } from "@/lib/jianpu/images";
 import { aDesRetouches, cibleRetouche, type CibleRetouche } from "@/lib/jianpu/retouches";
 import { JianpuChordSheet } from "@/components/jianpu/JianpuChordSheet";
 import { AccordTouchable } from "@/components/accords/AccordTouchable";
@@ -200,6 +200,7 @@ export function JianpuSheet({ entry, title, slug, layout = "flow", playedKey: de
   const fit = layout === "fit";
   const chords = useJianpuChords(slug);
   const cadrage = useJianpuCadrage(slug);
+  const marges = useJianpuMarges(slug);
   const playedKey = cleJouee(demandee, originalKey, chords?.printedKey);
   // Retouches (lot 9) : l'accord retouché remplace le gravé partout où le
   // calque parle de lui, y compris dans l'ordre de peinture.
@@ -621,6 +622,7 @@ export function JianpuSheet({ entry, title, slug, layout = "flow", playedKey: de
         // s'affiche entière : un fichier lent ne doit jamais cacher le scan.
         const top = cadrage?.[i] ?? 0;
         const visible = page.h - top;
+        const decalage = marges?.[i] ? (marges[i][1] - marges[i][0]) / 2 : 0;
         return (
         <Fragment key={page.file}>
         {!fit && pageNonTransposee(i) && avertissementPage(i)}
@@ -633,8 +635,13 @@ export function JianpuSheet({ entry, title, slug, layout = "flow", playedKey: de
               ? { width: `min(100%, calc(100cqh * ${page.w} / ${visible}))` }
               : {
                   // Page chant, vue Partitions : la marge blanche déborde de la colonne.
+                  // V6 (validation du 07/11/2026) : la page glisse de d = (droite − gauche) / 2
+                  // pixels image vers la droite pour centrer l'encre (d = 0 tant que les marges
+                  // ne sont pas chargées ou si la page n'y figure pas). Seule la boîte de page
+                  // bouge, image et calque ensemble : aucune coordonnée du calque ne change.
                   width: `calc(100% * ${page.w} / ${page.w - 2 * MARGE_SOURCE})`,
-                  marginInline: `calc(-100% * ${MARGE_SOURCE} / ${page.w - 2 * MARGE_SOURCE})`,
+                  marginLeft: `calc(-100% * ${MARGE_SOURCE - decalage} / ${page.w - 2 * MARGE_SOURCE})`,
+                  marginRight: `calc(-100% * ${MARGE_SOURCE + decalage} / ${page.w - 2 * MARGE_SOURCE})`,
                 }),
           }}
         >

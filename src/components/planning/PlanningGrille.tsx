@@ -254,6 +254,37 @@ export function PlanningGrille({
   )
 
   const sansLigne = affichees.length === 0
+
+  // `?case=grille|date|cle` (le lien d'une case vide de « À faire ») : la case défile au centre, porte un anneau
+  // ~2,5 s et reçoit le focus. Lu dans l'adresse (pas `useSearchParams`, qui veut un Suspense autour de chaque page).
+  // Une fois par adresse, quand la case existe (les lignes arrivent du Sheet / de Firestore, donc après le montage).
+  const racine = useRef<HTMLDivElement>(null)
+  const casesVisees = useRef(new Set<string>())
+  useEffect(() => {
+    const visee = new URLSearchParams(window.location.search).get("case")
+    if (!visee || casesVisees.current.has(visee)) return
+    const [grille, date, cle] = visee.split("|")
+    if (grille !== definition.key || !date || !cle) return
+    const vu = (el: Element) => el.getClientRects().length > 0
+    // La grille et les cartes sont toutes deux dans le DOM (l'une masquée par CSS) : on prend celle qu'on voit.
+    const cible = [...(racine.current?.querySelectorAll<HTMLElement>(`[data-case="${date}|${cle}"]`) ?? [])].find(vu)
+      ?? [...(racine.current?.querySelectorAll<HTMLElement>(`[data-date-carte="${date}"]`) ?? [])].find(vu)
+    if (!cible) return
+    casesVisees.current.add(visee)
+    const reduit = window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    cible.scrollIntoView({ block: "center", inline: "center", behavior: reduit ? "auto" : "smooth" })
+    cible.setAttribute("data-cible", "")
+    cible.style.outline = "2px solid hsl(var(--ring))"
+    cible.style.outlineOffset = "-2px"
+    cible.querySelector<HTMLElement>("[data-ouvrir], button")?.focus({ preventScroll: true })
+    // Pas de nettoyage au démontage de l'effet : un rendu de plus ne doit pas effacer l'anneau avant la fin.
+    window.setTimeout(() => {
+      cible.removeAttribute("data-cible")
+      cible.style.outline = ""
+      cible.style.outlineOffset = ""
+    }, 2500)
+  }, [definition.key, lignes.length, sansLigne])
+
   // plannings-1 : l'enveloppe qui défile s'estompe à droite seulement (la colonne Date est collante à gauche) ;
   // les ronds « ‹ » « › » (pointeur fin) et le filet de la colonne Date se lisent dans `defile`.
   const defilement = useFonduLateral<HTMLDivElement>(`${colonnes.length}-${sansLigne}`, { gauche: false })
@@ -753,7 +784,7 @@ export function PlanningGrille({
   }
 
   return (
-    <div className="space-y-3" data-grille={definition.key}>
+    <div ref={racine} className="space-y-3" data-grille={definition.key}>
       {/* Agencement v18 (B6) : l'export et « Enregistré » dans les outils de l'en-tête ; le service,
           la période et les filtres dans la rangée de la grille (BarreDeGrille). */}
       <DansLEnTete ou="outils">

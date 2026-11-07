@@ -4,7 +4,7 @@
 // `mes-services-detail-telephone`) : la date, le service à sa couleur et les rôles, la
 // répétition (Campus), la setlist liée (« Ouvrir », « Mode louange ») et l'équipe du service
 // d'après le planning. En grand, la setlist et l'équipe côte à côte, sans « Retour » ; en un
-// volet, « ‹ Mes services », puis l'équipe avant la setlist.
+// volet, « ‹ Mes services », puis l'équipe avant la setlist. Sans setlist, une carte simple tient sa place (V4).
 // Agencement v18 (A11, R3, R8, R10) : en deux volets, le titre est un h2 de 22 px (`xl`) (le h1 est celui
 // de l'en-tête de la section) et la fiche ne pose plus de marge ; en un volet, le service en page
 // garde son h1 et le seul retour du site, `Retour`.
@@ -72,7 +72,18 @@ export function DetailService({ s }: { s: ServiceGroupe }) {
 
   const Titre = deuxVolets ? "h2" : "h1";
   const carteEquipe = equipe.length > 0 && <CarteEquipe equipe={equipe} monNom={monNom} niveau={2} />;
-  const carteSetlist = setlist && <CarteSetlist setlist={setlist} songs={songs} couleur={couleur} boutonsEnTete={!deuxVolets} />;
+  // La place de la setlist : sa carte, ou, quand le service a une équipe mais pas de setlist, une carte simple (V4, 07/11/2026).
+  const carteSetlist = setlist
+    ? <CarteSetlist setlist={setlist} songs={songs} couleur={couleur} boutonsEnTete={!deuxVolets} />
+    : equipe.length > 0 && (
+      <section className="carte-groupe rounded-2xl px-5 pb-3 pt-4">
+        <p className="text-sm text-muted-foreground">{t("mesServices.pasDeSetlist")}</p>
+      </section>
+    );
+  // Côte à côte (dès 680 px de volet, `.service-colonnes`), la setlist est toujours dans la colonne large (la première)
+  // et l'équipe dans l'étroite, quel que soit l'ordre du DOM (qui garde, en dessous, l'ordre de la pile).
+  const enColonne = (large: boolean, carte: React.ReactNode) =>
+    carte && <div className={cn("min-w-0", large ? "[@container(min-width:680px)]:order-1" : "[@container(min-width:680px)]:order-2")}>{carte}</div>;
 
   // En deux volets, `DeuxVolets` pose déjà la marge basse (pb-6) : pas de seconde (lot CD, T4b).
   return (
@@ -108,7 +119,9 @@ export function DetailService({ s }: { s: ServiceGroupe }) {
 
       {(carteEquipe || carteSetlist) && (
         <div className="service-colonnes grid items-start gap-4">
-          {deuxVolets ? <>{carteSetlist}{carteEquipe}</> : <>{carteEquipe}{carteSetlist}</>}
+          {deuxVolets
+            ? <>{enColonne(true, carteSetlist)}{enColonne(false, carteEquipe)}</>
+            : <>{enColonne(false, carteEquipe)}{enColonne(true, carteSetlist)}</>}
         </div>
       )}
     </div>

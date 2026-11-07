@@ -304,6 +304,7 @@ test("11 Adapter : toucher une écriture ouvre le pavé sur la bonne étiquette,
 
 const CADRAGE = lire<Record<string, number[]>>("public/jianpu/cadrage.json");
 const INDEX = lire<Manifeste>("public/jianpu/index.json");
+const MARGES = lire<Record<string, [number, number][]>>("public/jianpu/marges.json");
 
 /** Les fenêtres affichées et ce qu'elles montrent, en px CSS. `colonne` : la boîte du
  *  premier ancêtre qui en a une (le conteneur du scan, `display: contents` sauté). */
@@ -348,10 +349,48 @@ test("5 fenêtre (page chant) : ratio w / (h − top), « 1=D » et titre gravé
   expect(f.cadre[0].bottom).toBeLessThanOrEqual(f.fenetre.top + 0.5);
   // Compensation (P5) : la marge blanche de 14 px rognée à la source déborde de la
   // colonne, le bord de l'encre tombe sur celui des paroles.
-  expect(Math.abs(f.fenetre.left + 14 * k - f.colonne.left), "bord gauche de l'encre").toBeLessThan(1);
-  expect(Math.abs(f.fenetre.right - 14 * k - f.colonne.right), "bord droit de l'encre").toBeLessThan(1);
+  // V6 (07/11/2026) : la page glisse en plus de (droite − gauche) / 2 pixels image (marges.json) pour centrer l'encre.
+  const [mg, md] = MARGES[SLUG][0];
+  const dec = (md - mg) / 2;
+  await expect.poll(async () => Math.abs((await fenetres(page))[0].fenetre.left + (14 - dec) * k - (await fenetres(page))[0].colonne.left), "bord gauche de l'encre").toBeLessThan(1);
+  const [g] = await fenetres(page);
+  expect(Math.abs(g.fenetre.right - (14 + dec) * k - g.colonne.right), "bord droit de l'encre").toBeLessThan(1);
   // `<main>` défile en largeur (`overflow-x-auto`) : c'est lui qui déborderait, pas le document.
   expect(await page.evaluate(() => [...document.querySelectorAll("main")].every((m) => m.scrollWidth <= m.clientWidth)), "pas de défilement horizontal").toBe(true);
+});
+
+// V6 (validation du 07/11/2026) : 恩典之路 a 10 px de blanc à gauche et 179 à droite sur 1 600 ; la page glisse pour que
+// l'écart entre l'encre et les bords de la colonne soit le même des deux côtés, et un scan déjà équilibré ne bouge pas.
+test("V6 简谱 centrée : 恩典之路, écart de l'encre aux bords de la colonne égal à gauche et à droite ; un scan équilibré ne bouge pas", async ({ page }) => {
+  const slug = "恩典之路";
+  const [mg, md] = MARGES[slug][0];
+  expect(Math.abs(md - mg), "scan désaxé").toBeGreaterThan(100);
+  await openSheet(page, slug);
+  await expect.poll(async () => (await fenetres(page)).length).toBe(1);
+  // Attendre le fichier des marges : tant qu'il n'est pas là, la page n'est pas décalée.
+  await expect.poll(async () => {
+    const [f] = await fenetres(page);
+    const k = f.img.width / f.naturel;
+    return Math.abs(f.fenetre.left - (f.colonne.left - (14 - (md - mg) / 2) * k));
+  }).toBeLessThan(1);
+  const [f] = await fenetres(page);
+  const k = f.img.width / f.naturel;
+  // Bords de l'encre à l'écran : la boîte de l'image (qui porte toute la largeur du scan) plus les marges mesurées.
+  const gauche = f.img.left + mg * k - f.colonne.left;
+  const droite = f.colonne.right - (f.img.right - md * k);
+  expect(Math.abs(gauche - droite), "écarts gauche et droit égaux").toBeLessThan(4);
+});
+
+test("V6 简谱 centrée : un scan équilibré (|droite − gauche| ≤ 4 px) bouge de 2 px au plus", async ({ page }) => {
+  const slug = Object.keys(MARGES).find((s) => INDEX[s]?.pages.length === 1 && Math.abs(MARGES[s][0][1] - MARGES[s][0][0]) <= 4)!;
+  expect(slug, "un scan équilibré existe").toBeTruthy();
+  const [mg, md] = MARGES[slug][0];
+  await openSheet(page, slug);
+  await expect.poll(async () => (await fenetres(page)).length).toBe(1);
+  const [f] = await fenetres(page);
+  const k = f.img.width / f.naturel;
+  // Sans décalage, la fenêtre part de `colonne.left − 14 k` ; avec, d'au plus (md − mg) / 2 pixels image.
+  expect(Math.abs(f.fenetre.left - (f.colonne.left - 14 * k)), "page à sa place").toBeLessThanOrEqual(2 + Math.abs(md - mg) / 2 * k);
 });
 
 test("5 fenêtre (page chant, deux pages) : 为我而来 p. 1 recadrée, p. 2 entière", async ({ page }) => {
@@ -514,7 +553,7 @@ test("7 page chant : en-tête du site au-dessus du scan, segment « 简谱 · Pa
   expect(seg!.y).toBeGreaterThanOrEqual(pastilles!.y - 1);
   expect(seg!.y + seg!.height).toBeLessThanOrEqual(fenetre!.y);
   expect(Math.round(seg!.height), "32 px").toBe(32);
-  const bordDroit = await titre.evaluate((h) => h.closest(".max-w-2xl")!.getBoundingClientRect().right);
+  const bordDroit = await titre.evaluate((h) => h.closest("[class*='max-w-[var(--colonne-partition']")!.getBoundingClientRect().right);
   expect(Math.abs(seg!.x + seg!.width - bordDroit), "calé à droite").toBeLessThan(1);
   // Piste --secondary, segment actif à l'encre.
   const couleurs = await segment.evaluate((g) => {

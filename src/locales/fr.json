@@ -831,6 +831,7 @@
   },
   "mesServices": {
     "title": "Mes services",
+    "pasDeSetlist": "Pas encore de setlist pour ce service.",
     "loading": "Chargement…",
     "loginPrompt": "Connecte-toi pour voir tes prochains services.",
     "login": "Se connecter",

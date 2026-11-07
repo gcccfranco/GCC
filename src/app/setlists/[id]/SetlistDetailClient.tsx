@@ -1594,9 +1594,10 @@ export function SetlistDetailClient() {
             }}
           >
             <FondDeBarre />
-            {/* L1 (dimanche-7, lot CD T4b) : la rangée finit où finit la colonne de lecture (partition plafonnée à `max-w-2xl`, 672 px,
-                dans `PartitionView`) : 380 px de sommaire + 28 + 672 + 28 de marges = 1 108 px, à 1 440 px « Mode Louange » finit à x ≈ 1 328. */}
-            <div className="flex max-w-[1108px] flex-wrap items-end gap-x-6 gap-y-3 px-7 pb-4 pt-5">
+            {/* L1 (dimanche-7, lot CD T4b ; V5, validation du 07/11/2026) : la rangée finit où finit la colonne de lecture
+                (860 px, `--colonne-partition`, centrée dans le volet de droite) : 380 px de sommaire + 28 de marge + 860 centrés
+                dans le reste, plus 28 de marge = 50 % + 648 px ; vaut toute la largeur sous 1 296 px. */}
+            <div className="flex max-w-[calc(50%+648px)] flex-wrap items-end gap-x-6 gap-y-3 px-7 pb-4 pt-5">
               {/* Le titre garde 18rem au moins : sinon les boutons passent dessous. */}
               <TitreEnTete setlist={setlist} passage={passageFete} />
               {/* Présentation · Adapter · Ma version · Modifier · PDF · ⋯ · Mode louange,
@@ -1713,6 +1714,8 @@ export function SetlistDetailClient() {
               />
             </div>
             <div className="min-w-0 px-7 pb-16 pt-6">
+              {/* V5 : colonne de lecture de 860 px (au lieu de 42rem), centrée dans le volet ; seul ce volet pose la variable. */}
+              <div className="mx-auto w-full max-w-[860px] [--colonne-partition:860px]">
               {/* Ce que garde la question 4, sous le titre : historique, langue, qui peut
                   modifier ; la régie ajoute ou change ici le lien de la présentation. */}
               <div className="mb-4 print:hidden">
@@ -1741,6 +1744,7 @@ export function SetlistDetailClient() {
                 partitions
               )}
               {passageFete && <CartesFete passage={passageFete} />}
+              </div>
             </div>
           </div>
         </div>

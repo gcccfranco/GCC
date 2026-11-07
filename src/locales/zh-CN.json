@@ -827,6 +827,7 @@
   },
   "mesServices": {
     "title": "我的服事",
+    "pasDeSetlist": "这次服事还没有歌单。",
     "loading": "加载中…",
     "loginPrompt": "登录后查看你即将到来的服事。",
     "login": "登录",

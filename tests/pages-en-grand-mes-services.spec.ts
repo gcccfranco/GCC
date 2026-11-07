@@ -134,18 +134,41 @@ test.describe("Mes services en grand", () => {
     await expect(laSetlist(page).getByText("Culte du 4 octobre")).toBeVisible();
     await expect(laSetlist(page).getByRole("link", { name: "Ouvrir" })).toHaveAttribute("href", /^\/setlists\/sl-1\/?$/);
     await expect(laSetlist(page).getByRole("link", { name: "Mode Louange" })).toHaveAttribute("href", /^\/setlists\/sl-1\/?\?louange=1$/);
-    // services-4 (L1, lot CD T4b) : les cartes suivent `auto-fill minmax(280px, 1fr)` : côte à côte (la setlist à gauche, l'équipe
-    // à droite) dès que le volet offre 2 x 280 + 16 px, l'une sous l'autre (la setlist d'abord) sinon.
+    // V4 (validation du 07/11/2026) : la grille pose la setlist (large, 1,6fr) et l'équipe (étroite, 1fr) côte à côte dès
+    // 680 px de volet, l'une sous l'autre (la setlist d'abord) sinon.
     const [a, b] = [(await laSetlist(page).boundingBox())!, (await equipe(page).boundingBox())!];
     const place = await page.locator(".service-colonnes").evaluate((el) => el.getBoundingClientRect().width);
-    if (place >= 2 * 280 + 16) expect(b.x, `côte à côte dans ${place} px`).toBeGreaterThan(a.x + a.width - 1);
-    else {
+    if (place >= 680) {
+      expect(b.x, `côte à côte dans ${place} px`).toBeGreaterThan(a.x + a.width - 1);
+      expect(a.width, "la setlist dans la colonne large").toBeGreaterThan(b.width);
+    } else {
       expect(b.y, `l'une sous l'autre dans ${place} px`).toBeGreaterThan(a.y + a.height - 1);
       expect(Math.abs(b.x - a.x)).toBeLessThan(2);
       expect(Math.abs(b.width - a.width)).toBeLessThan(2);
     }
     expect(await sansDefilementLateral(page)).toBe(true);
   });
+
+  // V4 : à 1 440 et à 1 940 px de fenêtre (ordinateur), la setlist, ou la carte « pas encore de setlist » quand le service n'en a
+  // pas (le 18 octobre n'a que son équipe), est plus large que l'équipe et à sa gauche.
+  for (const largeur of [1440, 1940]) {
+    for (const [adresse, avec] of [["/mes-services/2026-10-04?service=Culte%20Franco", true], ["/mes-services/2026-10-18", false]] as const) {
+      test(`à ${largeur} px : ${avec ? "la setlist" : "la carte « pas encore de setlist »"} est dans la colonne large, l'équipe dans l'étroite`, async ({ page }, info) => {
+        test.skip(info.project.name !== "ordinateur-1440", "ordinateur : fenêtre redimensionnée");
+        await page.setViewportSize({ width: largeur, height: 900 });
+        await ouvrir(page, adresse);
+        const carte = avec ? laSetlist(page) : detail(page).getByText("Pas encore de setlist pour ce service.");
+        await expect(carte).toBeVisible();
+        await expect(equipe(page)).toBeVisible();
+        if (!avec) await expect(detail(page).getByRole("link", { name: "Ouvrir" }), "aucun bouton sur la carte vide").toHaveCount(0);
+        const boite = (await (avec ? carte : carte.locator("xpath=ancestor::section[1]")).boundingBox())!;
+        const eq = (await equipe(page).boundingBox())!;
+        expect(eq.x, "côte à côte").toBeGreaterThan(boite.x + boite.width - 1);
+        expect(boite.width, "colonne large").toBeGreaterThan(eq.width * 1.3);
+        expect(Math.abs(eq.y - boite.y), "mêmes hauts").toBeLessThan(2);
+      });
+    }
+  }
 
   test("un lien direct vers un service : la liste à gauche, le service à droite ; retour arrière rend le précédent", async ({ page }) => {
     await ouvrir(page, "/mes-services/2026-10-18");

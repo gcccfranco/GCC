@@ -40,12 +40,18 @@ test("accueil du Planning : cartes et verset dans la même colonne", async ({ pa
   for (const w of largeurs) expect(Math.abs(w - wV), "bloc à la largeur du verset").toBeLessThanOrEqual(2);
 });
 
-test("/setlists sans setlist choisie : la liste prend la colonne (plus de 600 px) ; une setlist choisie rend les deux volets", async ({ page }, info) => {
+test("/setlists sans setlist choisie : la première est montrée (deux volets) ; sans aucune setlist, la liste prend la colonne", async ({ page }, info) => {
   test.skip(!estGrandEcran(info), "deux volets : ordinateur et tablette couchée");
+  // V3 (validation du 07/11/2026) : l'aperçu de la première setlist, d'emblée.
   await ouvrir(page, "/setlists", SETLISTS, SANS_NOM);
   const liste = page.locator('[data-volet="liste"]');
   await expect(liste).toBeVisible();
   await expect(page.getByText("Culte test un").first()).toBeVisible();
+  await expect(page.locator('[data-volet="detail"]')).toBeVisible();
+  expect(await largeur(liste), "le volet de la liste, ~400 px").toBeLessThan(450);
+  // Les Archives, vides : plus rien à montrer, la liste seule dans la colonne de 720 px.
+  await ouvrir(page, "/setlists?tab=archived", SETLISTS, SANS_NOM);
+  await expect(liste).toBeVisible();
   expect(Math.abs((await largeur(liste)) - 720), "la liste seule dans la colonne de 720 px").toBeLessThanOrEqual(2);
   await expect(page.locator('[data-volet="detail"]')).toHaveCount(0);
   // Une setlist choisie : les deux volets d'avant.

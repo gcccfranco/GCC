@@ -101,8 +101,8 @@ test.describe("EnTetePage (R1, R2, R3, R8)", () => {
     const jeton = await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue("--marge-page").trim());
     expect(jeton).toBe(`${await margeAttendue(page)}px`);
     // En grand, les deux volets prennent toute la zone (un volet : la liste de la page elle-même).
-    // (Règle de largeur du 25/10/2026 : sans setlist choisie, la liste seule tient dans la colonne de 720 px.)
-    await verifierAgencement(page, { contenu: estGrandEcran(info) ? page.locator("[data-deux-volets]") : undefined, colonne: estGrandEcran(info) ? 720 : undefined });
+    // (V3, validation du 07/11/2026 : la première setlist est montrée d'emblée, donc deux volets pleine zone.)
+    await verifierAgencement(page, { contenu: estGrandEcran(info) ? page.locator("[data-deux-volets]") : undefined });
     // La vérification de pleine largeur mord : le titre n'occupe pas la zone.
     await expect(verifierPleineLargeur(page, enTete(page).locator("h1"))).rejects.toThrow();
   });
@@ -112,7 +112,7 @@ test.describe("EnTetePage (R1, R2, R3, R8)", () => {
     await ouvrirAvecBarre(page, "reduite");
     await ouvrir(page, "/setlists");
     expect(await margeAttendue(page)).toBe(28);
-    await verifierAgencement(page, { colonne: 720 });
+    await verifierAgencement(page);
   });
 });
 

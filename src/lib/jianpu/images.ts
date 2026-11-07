@@ -145,6 +145,43 @@ export function useJianpuCadrage(slug: string | null | undefined): number[] | un
   return (slug && cadrage[slug]) || [];
 }
 
+/** Marges blanches des scans (V6, validation du 07/11/2026) : pour chaque page,
+ *  `[gauche, droite]` en pixels image, mesurées par `scripts/jianpu/marges.py`.
+ *  Sert à centrer l'encre dans la colonne ; un chant ou une page absents ne
+ *  sont pas décalés. */
+export type JianpuMarges = Record<string, [number, number][]>;
+
+let margesPromise: Promise<JianpuMarges> | null = null;
+/** Le fichier une fois arrivé : un scan monté ensuite part directement centré. */
+let margesChargees: JianpuMarges | null = null;
+
+export function loadJianpuMarges(): Promise<JianpuMarges> {
+  margesPromise ??= fetch("/jianpu/marges.json")
+    .then((r) => (r.ok ? (r.json() as Promise<JianpuMarges>) : {}))
+    .catch(() => ({}))
+    .then((m) => (margesChargees = m));
+  return margesPromise;
+}
+
+/** Les marges des pages d'un chant (`[]` s'il n'est pas mesuré), ou
+ *  `undefined` tant que le fichier n'est pas chargé. */
+export function useJianpuMarges(slug: string | null | undefined): [number, number][] | undefined {
+  const [marges, setMarges] = useState<JianpuMarges | null>(margesChargees);
+
+  useEffect(() => {
+    let alive = true;
+    loadJianpuMarges().then((m) => {
+      if (alive) setMarges(m);
+    });
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  if (!marges) return undefined;
+  return (slug && marges[slug]) || [];
+}
+
 /** Manifeste des partitions 简谱 disponibles en image (généré par
  *  scripts/jianpu/build-images.py). Chargé une seule fois par session. */
 let manifestPromise: Promise<JianpuManifest> | null = null;

@@ -246,7 +246,7 @@ export function PartitionsView({
                     targetKey,
                   }))}
                 />
-                <div className="max-w-2xl print:max-w-none pt-2">
+                <div className="max-w-[var(--colonne-partition,42rem)] print:max-w-none pt-2">
                   {shownPassages.map(({ ms, ast, section, fusionSong, keyChange }, msIdx) => {
                     const sectionNote = ms.note ?? fusionSong?.sectionNotes?.[ms.sectionId];
                     const sectionNuance = ms.nuance ?? fusionSong?.sectionNuances?.[ms.sectionId];

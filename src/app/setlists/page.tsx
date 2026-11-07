@@ -578,7 +578,7 @@ export default function SetlistsPage() {
                   selected={coches.has(s.id)}
                   onToggle={() => basculer(s.id)}
                   onApercu={grand ? () => setApercu(s.id) : undefined}
-                  actif={grand && !selectionMode && !!apercu && s.id === choisie?.id}
+                  actif={grand && !selectionMode && s.id === choisie?.id}
                   dansLEquipe={dansLEquipe(s)}
                   fete={s.fete ? infosFete(s) : undefined}
                 />
@@ -609,7 +609,9 @@ export default function SetlistsPage() {
         <DeuxVolets
           racine="/setlists"
           largeurListe={400}
-          colonneSeule={!apercu}
+          // V3 (validation du 07/11/2026) : plus de colonne seule tant qu'on n'a rien touché ; la première
+          // setlist de la liste est montrée d'emblée (`choisie`). Seule une liste vide reste en colonne seule.
+          colonneSeule={!choisie}
           liste={<div className="relative px-4 pb-4 pt-4">{contenuListe}</div>}
           premier={choisie && (
             <ApercuSetlist setlist={choisie} songsMap={songsMap} planning={planning} monNom={profile ? nomCourt(profile) : ""} />

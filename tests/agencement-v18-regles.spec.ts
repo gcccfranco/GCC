@@ -61,7 +61,7 @@ const SOUS_LE_PLANNING = "header[data-entete-page] ~ main";
 const APP: PageAVerifier[] = [
   { chemin: "/planning", premierBloc: SOUS_LE_PLANNING }, { chemin: "/planning/culte", premierBloc: SOUS_LE_PLANNING },
   { chemin: "/planning/groupes", premierBloc: SOUS_LE_PLANNING }, { chemin: "/planning/table", premierBloc: SOUS_LE_PLANNING },
-  { chemin: "/songs" }, { chemin: "/setlists", colonne: 720 }, { chemin: "/setlists/new" }, { chemin: "/setlists/new?depuis=passee" },
+  { chemin: "/songs" }, { chemin: "/setlists" }, { chemin: "/setlists/new" }, { chemin: "/setlists/new?depuis=passee" },
   { chemin: "/evenements" }, { chemin: "/evenements/scene/noel" }, { chemin: "/mes-services" }, { chemin: "/moi" },
   { chemin: "/profil" }, { chemin: "/guide", lecture: true }, { chemin: "/questionnaire", lecture: true },
   { chemin: "/harmonie" }, { chemin: "/taches" }, { chemin: "/equipes" }, { chemin: "/songs/statistiques" },

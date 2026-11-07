@@ -908,7 +908,7 @@ export function SongView({
       </>
   );
   return (
-    <div className="max-w-2xl print:max-w-none">
+    <div className="max-w-[var(--colonne-partition,42rem)] print:max-w-none">
       {enTete}
       {bandeau}
 

@@ -279,6 +279,7 @@ test.describe("Tableau de bord (B4) : données des widgets, règles pures", () =
     const [culte] = ceDimanche({ culte: [["2026-10-04", ...plein]] }, [setlist], ["Culte Francophone"], "2026-10-04");
     expect(culte.libelle).toBe("Culte Franco");
     expect(culte.vides).toBe(1);
+    expect([culte.grille, culte.date]).toEqual(["culte", "2026-10-04"]);
     expect(culte.setlist).toBe(true);
     expect(culte.presentation).toBe(true);
     expect(culte.lignes.map((l) => l.cle)).not.toContain("sainteCene");
@@ -697,10 +698,11 @@ test.describe("À faire (BO-B) : équivalents des écrans du tableau de bord (B4
     await expect(colonne.getByRole("heading", { name: "Ce dimanche, 4 octobre" })).toBeVisible();
     const culte = colonne.getByTestId("service-dimanche").filter({ hasText: "Culte Franco" });
     await expect(culte).toContainText("10:30");
-    // Une paire rôle / nom est un dt / dd (bo-messages-planning-4) ; un poste vide dit « à choisir » et mène au planning.
+    // Une paire rôle / nom est un dt / dd (bo-messages-planning-4) ; un poste vide s'écrit « — » et mène à sa case du planning (V2).
     const rang = (poste: string) => culte.locator("dl > div").filter({ has: page.locator("dt", { hasText: poste }) });
     await expect(rang("Présidence").locator("dd")).toHaveText("Pers. A");
-    await expect(rang("Batterie").locator("dd").getByRole("link", { name: "à choisir" })).toHaveAttribute("href", /\/back-office\/planning\/?$/);
+    await expect(rang("Batterie").locator("dd").getByRole("link", { name: "à choisir — Ouvrir le planning" }))
+      .toHaveAttribute("href", /\/back-office\/planning\/culte\/?\?case=culte%7C2026-10-04%7Cbatterie$/);
   });
 
   test("Ce dimanche : sans réglage de services, le Culte Franco par défaut (le réglage de services n'existe plus)", async ({ page }) => {

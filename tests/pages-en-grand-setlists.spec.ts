@@ -113,9 +113,9 @@ test.describe("L'équipe du service, sans navigateur", () => {
 });
 
 test.describe("Setlists : les dispositions", () => {
-  test("en grand : la liste à gauche, l'aperçu de la setlist choisie à droite ; sans choix, la liste seule", async ({ page }, info) => {
+  test("en grand : la liste à gauche, l'aperçu de la setlist choisie à droite ; sans choix, la première", async ({ page }, info) => {
     test.skip(disposition(info) !== "grand", "deux volets : ordinateur et iPad paysage");
-    // Règle de largeur du 25/10/2026 : sur /setlists, aucun aperçu tant qu'aucune setlist n'est choisie (voir largeurs-b4 et le test suivant).
+    // V3 (validation du 07/11/2026) : sans setlist choisie, la première de la liste est montrée d'emblée (voir largeurs-b4 pour la liste vide).
     await ouvrir(page, "/setlists?apercu=sl-1");
     const a = apercu(page);
     await expect(a.getByRole("heading", { name: "Culte du 4 octobre" })).toBeVisible();
@@ -141,9 +141,9 @@ test.describe("Setlists : les dispositions", () => {
   test("en grand : toucher une setlist ouvre son aperçu, l'adresse est remplacée, « Ouvrir » mène à la setlist", async ({ page }, info) => {
     test.skip(disposition(info) !== "grand", "deux volets : ordinateur et iPad paysage");
     await ouvrir(page);
-    await expect(apercu(page)).toHaveCount(0);
-    await ligne(page, "Culte du 4 octobre").click();
+    // V3 : la première setlist est déjà montrée et sa ligne marquée, sans rien toucher.
     await expect(apercu(page).getByRole("heading", { name: "Culte du 4 octobre" })).toBeVisible();
+    await expect(ligne(page, "Culte du 4 octobre")).toHaveAttribute("aria-current", "true");
     const historique = await page.evaluate(() => history.length);
     await ligne(page, "Culte du 18 octobre").click();
     await expect(apercu(page).getByRole("heading", { name: "Culte du 18 octobre" })).toBeVisible();
@@ -216,9 +216,10 @@ test.describe("Setlists : les dispositions", () => {
   });
 
   // dimanche-7 et L1 (lot CD, T4b) : la liste seule est une colonne de 720 px calée sur le titre ; « Nouvelle setlist » finit à son bord droit.
-  test("en grand : liste seule, colonne de 720 px calée sur le titre, action de l'en-tête au bord droit de la colonne", async ({ page }, info) => {
+  // V3 (validation du 07/11/2026) : seulement quand il n'y a aucune setlist à montrer (ici les Archives, vides à cette date).
+  test("en grand : liste vide seule, colonne de 720 px calée sur le titre, action de l'en-tête au bord droit de la colonne", async ({ page }, info) => {
     test.skip(disposition(info) !== "grand", "colonne seule : grand écran");
-    await ouvrir(page, "/setlists");
+    await ouvrir(page, "/setlists?tab=archived");
     const volet = page.locator('[data-volet="liste"]');
     await expect(volet).toBeVisible();
     const entete = page.locator("header[data-entete-page]");
@@ -230,22 +231,34 @@ test.describe("Setlists : les dispositions", () => {
     expect(Math.abs(action.x + action.width - (colonne.x + colonne.width)), "action au bord droit de la colonne").toBeLessThan(2);
   });
 
-  // dimanche-7, seconde moitié (lot CD, T4b) : à 1 440 px, la rangée de boutons de l'en-tête de la page finit au bord droit de la colonne de lecture.
-  test("ordinateur-1440 : « Mode Louange » finit au bord droit de la colonne de lecture", async ({ page }, info) => {
-    test.skip(info.project.name !== "ordinateur-1440", "1 440 px : la partition est plafonnée à 672 px");
-    await ouvrir(page, "/setlists/sl-1");
-    const partition = page.locator(".grid > .min-w-0 .max-w-2xl").first();
-    await expect(partition).toBeVisible();
-    // La rangée de l'en-tête (son contenu, marge de 28 px ôtée) finit où finit la partition ; « Mode Louange » finit là aussi
-    // quand les boutons tiennent à côté du titre (à 1 440 px avec tous les boutons, ils passent sous le titre).
-    const bouton = page.locator("[data-en-tete]").getByRole("button", { name: "Mode Louange" });
-    const rangee = bouton.locator("xpath=ancestor::div[contains(@class,'px-7')][1]");
-    const r = await rangee.evaluate((el) => ({ droite: el.getBoundingClientRect().right - parseFloat(getComputedStyle(el).paddingRight) }));
-    const lecture = (await partition.boundingBox())!;
-    expect(Math.abs(r.droite - (lecture.x + lecture.width)), "un seul bord droit pour l'en-tête et la colonne de lecture").toBeLessThan(2);
-    const louange = (await bouton.boundingBox())!;
-    expect(louange.x + louange.width, "« Mode Louange » ne dépasse pas la colonne").toBeLessThanOrEqual(lecture.x + lecture.width + 1);
-  });
+  // dimanche-7, seconde moitié (lot CD, T4b ; V5, validation du 07/11/2026) : la colonne de lecture va jusqu'à 860 px, centrée dans le volet de
+  // droite, et la rangée de boutons de l'en-tête finit à son bord droit, à 1 440 px comme à 1 940 px de fenêtre.
+  for (const largeur of [1440, 1940]) {
+    test(`ordinateur-1440 : à ${largeur} px, « Mode Louange » finit au bord droit de la colonne de lecture, centrée dans son volet`, async ({ page }, info) => {
+      test.skip(info.project.name !== "ordinateur-1440", "ordinateur large : la partition est plafonnée à 860 px");
+      await page.setViewportSize({ width: largeur, height: 900 });
+      await ouvrir(page, "/setlists/sl-1");
+      const partition = page.locator(".grid > .min-w-0 [class*='max-w-[var(--colonne-partition']").first();
+      await expect(partition).toBeVisible();
+      // La rangée de l'en-tête (son contenu, marge de 28 px ôtée) finit où finit la partition ; « Mode Louange » finit là aussi
+      // quand les boutons tiennent à côté du titre (avec tous les boutons, ils peuvent passer sous le titre).
+      const bouton = page.locator("[data-en-tete]").getByRole("button", { name: "Mode Louange" });
+      const rangee = bouton.locator("xpath=ancestor::div[contains(@class,'px-7')][1]");
+      const r = await rangee.evaluate((el) => ({ droite: el.getBoundingClientRect().right - parseFloat(getComputedStyle(el).paddingRight) }));
+      const lecture = (await partition.boundingBox())!;
+      expect(Math.abs(r.droite - (lecture.x + lecture.width)), "un seul bord droit pour l'en-tête et la colonne de lecture").toBeLessThan(2);
+      const louange = (await bouton.boundingBox())!;
+      expect(louange.x + louange.width, "« Mode Louange » ne dépasse pas la colonne").toBeLessThanOrEqual(lecture.x + lecture.width + 1);
+      // La colonne fait min(860, place) et laisse autant d'espace à gauche qu'à droite dans son volet (marges de 28 px ôtées).
+      const volet = await page.locator(".grid > .min-w-0").first().evaluate((el) => {
+        const b = el.getBoundingClientRect();
+        const c = getComputedStyle(el);
+        return { gauche: b.left + parseFloat(c.paddingLeft), droite: b.right - parseFloat(c.paddingRight) };
+      });
+      expect(Math.abs(lecture.width - Math.min(860, volet.droite - volet.gauche)), "min(860, place)").toBeLessThan(2);
+      expect(Math.abs(lecture.x - volet.gauche - (volet.droite - lecture.x - lecture.width)), "écarts gauche et droit égaux").toBeLessThan(2);
+    });
+  }
 
   // dimanche-9 (lot CD, T4b) : en tablette portrait, le contenu va jusqu'à la barre d'outils, à `--marge-page` ; la note est plafonnée à 680 px.
   test("tablette portrait : la page d'une setlist part de la marge de page, comme sa barre d'outils ; la note ne dépasse pas 680 px", async ({ page }, info) => {

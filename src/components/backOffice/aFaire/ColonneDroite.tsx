@@ -4,14 +4,12 @@
 // (par service, qui sert) et « Prochaine réunion ». Une lecture qui échoue omet son bloc, jamais la liste.
 import Link from "next/link";
 import { useTranslation } from "react-i18next";
-import { widgetsPermis } from "@/lib/access";
-import { styleTexteService } from "@/lib/couleurSombre";
+import { ongletDeLaGrille, planningsDuBackOffice, widgetsPermis } from "@/lib/access";
 import { nowIsoParis } from "@/lib/evenements/agenda";
 import { useProfile } from "@/lib/firebase/users";
 import { ficheEvenement } from "@/lib/navigation";
 import { todayIso } from "@/lib/scene/dimanches";
 import { EDD_CLASSES } from "@/lib/planning/utils";
-import { categoryColor } from "@/lib/serviceColors";
 import { GRILLES_DU_SERVICE, ceDimanche, prochainDimanche, reunionsDuTableau, servicesDuDimanche } from "@/lib/tableauDeBord/donnees";
 import { lireEvenements, lireGrilles, lireSetlists, useLecture } from "@/lib/tableauDeBord/lecture";
 import { jourComplet, jourLong } from "./texte";
@@ -41,6 +39,15 @@ export function ColonneDroite() {
     return { reunion: reunionsDuTableau(await lireEvenements(today), user, profile, nowIsoParis(), 1)[0]?.reunion ?? null };
   }, `${user?.uid ?? ""}|${today}|${lireReunion}`);
   const reunion = lue?.reunion ?? null;
+  const libelleVide = `${t("backOffice.aFaire.dimanche.aChoisir")} — ${t("backOffice.aFaire.dimanche.ouvrir")}`;
+  const onglets = planningsDuBackOffice(user, profile);
+  /** Le lien d'une case vide : sa case dans le planning (`?case=grille|date|clé`), sinon le planning seul. */
+  const lienDeLaCase = (e: { grille: string; date: string }, cle: string) => {
+    const onglet = ongletDeLaGrille(e.grille);
+    return onglet && onglets.includes(onglet)
+      ? `/back-office/planning/${onglet}?case=${encodeURIComponent(`${e.grille}|${e.date}|${cle}`)}`
+      : "/back-office/planning";
+  };
 
   const quand = reunion && [
     jourComplet(reunion.date, i18n.language),
@@ -69,8 +76,8 @@ export function ColonneDroite() {
                           <dt className="w-[88px] shrink-0 text-sm text-muted-foreground">{t(l.i18n)}</dt>
                           <dd className="min-w-0 break-words text-foreground">
                             {l.valeur || (
-                              <Link href="/back-office/planning" className="texte-service font-semibold underline-offset-2 hover:underline" style={styleTexteService(categoryColor(e.categorie))}>
-                                {t("backOffice.aFaire.dimanche.aChoisir")}
+                              <Link href={lienDeLaCase(e, l.cle)} title={libelleVide} aria-label={libelleVide} className="text-muted-foreground underline-offset-2 hover:underline">
+                                <span aria-hidden>—</span>
                               </Link>
                             )}
                           </dd>

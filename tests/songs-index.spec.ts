@@ -82,6 +82,26 @@ test.describe("index A–Z sur ordinateur", () => {
   });
 });
 
+// V1 (validation du 07/11/2026) : au repos, l'index démarre à la première ligne de la liste
+// (« Récemment consultés » ou compte des chants), jamais à hauteur de la recherche ou des filtres.
+for (const [nom, viewport] of [
+  ["téléphone", { width: 390, height: 664 }],
+  ["tablette portrait", { width: 820, height: 1180 }],
+  ["ordinateur", { width: 1280, height: 800 }],
+  ["ordinateur large", { width: 1940, height: 900 }],
+] as const) {
+  test.describe(`index A–Z au repos (${nom})`, () => {
+    test.use({ viewport });
+
+    test("son haut est au niveau de la première ligne de la liste, pas au-dessus", async ({ page }) => {
+      await openSongs(page);
+      const premiere = (await page.locator(".chants-liste-contenu > div.relative > *").first().boundingBox())!;
+      const idx = (await index(page).boundingBox())!;
+      expect(idx.y, "l'index ne remonte pas à hauteur de la recherche et des filtres").toBeGreaterThanOrEqual(premiere.y - 4);
+    });
+  });
+}
+
 test.describe("index A–Z en bas de liste", () => {
   test.use(phone);
 

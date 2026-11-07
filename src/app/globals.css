@@ -694,10 +694,13 @@
 
 /* Un service de Mes services (lot U4 bis, B4, Q7) : la setlist et l'équipe côte à côte quand le
    volet en a la place, l'une sous l'autre sinon. Agencement v18 (T9) : la liste en carte à la
-   marge laisse au volet ~530 px à 1 280 px et sur iPad couché. Lot CD, T4b (services-4, L1) : plus de seuil, les cartes
-   suivent la grille des blocs — autant de colonnes de 280 px au moins que la place en offre, une sinon. */
+   marge laisse au volet ~530 px à 1 280 px et sur iPad couché. Lot CD, V4 (validation du 07/11/2026) : comme l'aperçu
+   d'une setlist, setlist et équipe côte à côte dès 680 px de volet (la grille `auto-fill` de T4b laissait la carte
+   d'équipe seule dans une case de 300 px) ; sans setlist, une carte « pas encore de setlist » tient sa place. */
 .service-detail { container-type: inline-size; }
-.service-colonnes { grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); }
+@container (min-width: 680px) {
+  .service-colonnes { grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); }
+}
 
 /* Fiche d'un évènement à droite de l'agenda (lot U4 bis, B2, Q5) : deux colonnes quand le volet
    en a la place, une sinon. Agencement v18 (A10, R15 ; planches `v18-app-evenements*`) : une colonne

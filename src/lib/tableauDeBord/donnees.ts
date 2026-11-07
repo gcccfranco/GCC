@@ -76,6 +76,8 @@ export function servicesDuDimanche(r: Reglages, _user: AuthUser | null, profile:
 type LigneDuDimanche = { cle: string; i18n: string; valeur: string };
 type ServiceDuDimanche = {
   categorie: string; libelle: string; lignes: LigneDuDimanche[]; vides: number; setlist: boolean; presentation: boolean;
+  /** La clé de la grille et la date de la ligne (`row[0]`, le format de `data-case` de PlanningGrille) : de quoi viser une case. */
+  grille: string; date: string;
 };
 type SetlistDuDimanche = Pick<FSSetlist, "category" | "date"> &
   Partial<Pick<FSSetlist, "moment" | "isDraft" | "isPrivate" | "presentationUrl" | "leader">>;
@@ -103,6 +105,8 @@ export function ceDimanche(
       vides: colonnesVides(def, row).length,
       setlist: !!setlist,
       presentation: !!setlist?.presentationUrl,
+      grille: def.key,
+      date: row[0],
     }];
   }));
 }

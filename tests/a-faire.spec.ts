@@ -384,6 +384,29 @@ test.describe("À faire (BO-B) : l'écran", () => {
     await expect(alerte(page)).toHaveCount(0);
   });
 
+  test("V2 · un poste vide : « — » mène à sa case du planning, qui défile au centre et porte l'anneau", async ({ page }) => {
+    await ouvrir(page, ADMIN);
+    await expect(lignes(page).first()).toBeVisible();
+    const adresse = "/back-office/planning/culte?case=culte%7C2026-10-25%7Cbatterie";
+    if (await barreMontree(page)) {
+      const vide = page.getByTestId("colonne-droite").getByRole("link", { name: "à choisir — Ouvrir le planning" }).first();
+      await expect(vide).toHaveText("—");
+      await expect(vide).toHaveClass(/text-muted-foreground/);
+      await vide.click();
+    } else {
+      // Pas de colonne de droite sous 1024 px : la même adresse, à la main.
+      await page.goto(adresse);
+    }
+    await expect(page).toHaveURL(/\/back-office\/planning\/culte\/?\?case=culte%7C2026-10-25%7Cbatterie$/);
+    // La grille (ordinateur, tablette) ou la carte (téléphone) : celle qu'on voit.
+    const cible = page.locator('[data-grille="culte"] [data-case="2026-10-25|batterie"], [data-grille="culte"] [data-date-carte="2026-10-25"]').filter({ visible: true }).first();
+    await expect(cible).toHaveAttribute("data-cible", "");
+    await expect(cible).toBeInViewport({ ratio: 1 });
+    await expect(cible).toHaveCSS("outline-width", "2px");
+    // Au bout de ~2,5 s l'anneau part.
+    await expect(cible).not.toHaveAttribute("data-cible", "", { timeout: 6000 });
+  });
+
   test("« Mes équipes » sans rien pour ses équipes : « Rien pour tes équipes. »", async ({ page }) => {
     await ouvrir(page, { ...ADMIN, dansEquipes: [] }, { "reports/rp1": JEU["reports/rp1"] });
     // Messages, et les noms du planning sans compte : aucun n'est à une équipe.
@@ -409,10 +432,11 @@ test.describe("À faire (BO-B) : l'écran", () => {
     await expect(culte.locator("dt", { hasText: /^Présidence$/ })).toBeVisible();
     await expect(culte.locator("dt", { hasText: /^Présidence$/ }).locator("xpath=following-sibling::dd[1]")).toHaveText("Pers. A");
     await expect(culte.locator("dt", { hasText: /^Sono$/ }).locator("xpath=following-sibling::dd[1]")).toHaveText("Pers. G");
-    // Un poste vide dit « à choisir » et mène au planning.
-    await expect(culte.locator("dt", { hasText: /^Batterie$/ }).locator("xpath=following-sibling::dd[1]").getByRole("link", { name: "à choisir" }))
-      .toHaveAttribute("href", /\/back-office\/planning\/?$/);
-    await expect(colonne.getByRole("link", { name: "Ouvrir le planning" })).toHaveAttribute("href", /\/back-office\/planning\/?$/);
+    // Un poste vide s'écrit « — » en gris et mène à sa case du planning (V2).
+    const vide = culte.locator("dt", { hasText: /^Batterie$/ }).locator("xpath=following-sibling::dd[1]").getByRole("link", { name: "à choisir — Ouvrir le planning" });
+    await expect(vide).toHaveText("—");
+    await expect(vide).toHaveAttribute("href", /\/back-office\/planning\/culte\/?\?case=culte%7C2026-10-25%7Cbatterie$/);
+    await expect(colonne.getByRole("link", { name: "Ouvrir le planning", exact: true })).toHaveAttribute("href", /\/back-office\/planning\/?$/);
     await expect(colonne.getByRole("heading", { name: "Prochaine réunion" })).toBeVisible();
     const prochaine = colonne.getByRole("link", { name: /Point des bâtisseurs/ });
     await expect(prochaine).toContainText("Mardi 3 novembre, 20:00, salle 2");

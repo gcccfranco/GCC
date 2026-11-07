@@ -311,6 +311,9 @@ export function SongListClient({ songs, themes, actif = null, erreur = false, on
         )}
       </div>
 
+      {/* La liste et tout ce qui la suit : le repère de l'index A–Z (V1, validation du 07/11/2026).
+          Sa colonne commence ici, à la première ligne de la liste, et non au-dessus des filtres. */}
+      <div className="relative">
       {/* Récemment consultés */}
       {!hasFilter && recentSongs.length > 0 && (
         <div className="mb-4">
@@ -419,10 +422,12 @@ export function SongListClient({ songs, themes, actif = null, erreur = false, on
           débordant sur la marge de page pour rester au bord de l'écran sur
           téléphone et collé à la liste sur ordinateur. On le balaye du doigt. */}
       {showIndex && (
-        // La colonne remonte bien au-dessus de la liste (jusqu'au-dessus de l'en-tête de la
-        // page, agencement v18), pour que l'index soit déjà à sa place collante avant le
-        // premier défilement : sinon il glisserait sous le doigt au premier geste.
-        <div className="index-az-colonne absolute -top-[100svh] bottom-0 -right-4 w-11 flex justify-end pointer-events-none">
+        // La colonne commence à la première ligne de la liste (V1) : au repos l'index y reste, à sa
+        // place naturelle, jamais à hauteur de la recherche ; dès que la page ou la carte défile,
+        // le collant le recentre dans `--cadre-index`. `right` en ligne : cette colonne n'est plus
+        // dans la gouttière `pr-7` mais dans son contenu, 1.75rem plus à gauche que le bord
+        // (1rem + 1.75rem, `--index-hors` s'annule) ; elle l'emporte sur la règle de globals.css.
+        <div className="index-az-colonne absolute top-0 bottom-0 w-11 flex justify-end pointer-events-none" style={{ right: "-2.75rem" }}>
           <nav
             aria-label={t("common.aria.indexAlphabetique")}
             onPointerDown={(e) => {
@@ -474,6 +479,7 @@ export function SongListClient({ songs, themes, actif = null, erreur = false, on
           </nav>
         </div>
       )}
+      </div>
     </div>
   );
 }
