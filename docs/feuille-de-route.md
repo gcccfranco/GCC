@@ -1679,6 +1679,14 @@ valider par Timothée** : relecture des textes 中文, regard sur les cartes (r�
 - 02/11/2026 : **audit du design** par l'équipe design (demande de Timothée : « la DA est correcte, voir ce qui va et ce qui ne va pas ») : 314 captures, 93 constats retenus après contre-vérification, six visibles au premier coup d'œil ; rapport `audit-design-2026-11-02.md` (§ 4 : quatre chantiers proposés, § 5 : questions à trancher). Rien de codé, go attendu.
 - 03/11/2026 : planches de corrections (sept groupes, propositions et recommandations), revue des 28 constats « à confirmer » (18 confirmés, 9 écartés, 1 gelé) ; préférences provisoires de Timothée, à valider après avoir tout vu : surface C (fond gris), contrôles B (trois), titres C (mixte), halos B (porteurs de couleur) — `audit-design-2026-11-02.md` § 5 bis. Audit des 55 pages restantes en cours. Rien de codé.
 - 03/11/2026 : **go de Timothée** sur les corrections du design, « comme recommandé pour tout » (lot CD) : spec `spec-corrections-design.md` et 17 annexes (204 entrées, tranches T1a à T5), branche `claude/corrections-design`, rien sur `main`.
+- 07/11/2026 : **lot CD codé jusqu'au bout** sur `claude/corrections-design` (rien sur `main`) : T4a échelle de texte B
+  (12 / 13 / 15 / 17 / 22 / 30 px, plus de taille au pixel hors exceptions) et plancher (12 px, gris à 13 px dès
+  1 024 px) ; T4b largeurs L1 (liste seule en colonne de 720 px alignée à gauche, en-tête à la même largeur, Mes
+  services, fiche de gestion d'un évènement, Scène sur tablette, Setlists et page d'une setlist en tablette) ; T5 guide
+  en 中文 (13 captures) et avis de langue unique dans Harmonie ; questions de T4 tranchées par la session (consigne de
+  Timothée). Passes de tests divisées en sessions parallèles ; suite complète (18 403 tests, six sessions) : rouges
+  réglés sauf trois antérieurs à T4 et T5 (`spec-corrections-design.md`, « Fin de lot »). Traductions 中文 à faire relire
+  (Harmonie, 复制链接). **À valider en local par Timothée**, puis mise en ligne sur son ordre.
 
 ## 7. Relecture adversariale (14/09/2026)
 
