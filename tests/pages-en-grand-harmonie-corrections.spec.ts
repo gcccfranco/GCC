@@ -26,7 +26,13 @@ const LECON1 = COURS.chapitres.find((c) => c.numero === 1)!;
 const LECONS = COURS.chapitres.filter((c) => c.niveau !== null).length;
 
 async function entrer(page: Page, to: string, zh = false) {
-  if (zh) await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
+  // Une seule fois par onglet : un init script se rejoue à chaque navigation, `reload()` compris, et remettrait le
+  // 中文 après un passage au français (relecture de T5).
+  if (zh) await page.addInitScript(() => {
+    if (sessionStorage.getItem("langue-de-test")) return;
+    sessionStorage.setItem("langue-de-test", "zh-CN");
+    localStorage.setItem("i18nextLng", "zh-CN");
+  });
   await page.route(/docs\.google\.com\/spreadsheets/, (route) => {
     const sheet = new URL(route.request().url()).searchParams.get("sheet");
     return route.fulfill({ status: 200, contentType: "text/csv", body: sheet === "Franco_Louange" ? CULTE : "" });
@@ -226,6 +232,7 @@ test.describe("harmonie-5 : un seul avis de langue par page en 中文, aucun en 
       await page.evaluate(() => localStorage.setItem("i18nextLng", "fr"));
       await page.reload();
       await expect(page.locator("main").first()).toBeVisible();
+      await expect.poll(() => page.evaluate(() => document.documentElement.lang), { message: "la page est repassée en français" }).toMatch(/^fr/);
       await expect(page.locator("[data-avis-langue]")).toHaveCount(0);
     });
   }
