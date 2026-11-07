@@ -545,8 +545,9 @@ d'audit de tout le site ; `--workers=2` pour Playwright (le serveur de test meur
 1. **T4a** et **T4b** faits (07/11/2026, sections ci-dessus).
 2. **T5** fait (07/11/2026, section ci-dessus).
 3. **Fin de lot** faite (07/11/2026, section ci-dessus), puis **retouches V1 à V6** de sa validation (section
-   ci-dessus). Reste : validation de Timothée en local, puis mise en ligne sur son ordre ; les trois rouges antérieurs
-   listés plus haut.
+   ci-dessus). Validé par Timothée en local ; **en ligne le 07/11/2026** sur son ordre (`main` fusionné dans la branche,
+   `fb3744f`, puis `main` avancé à `afcf898` ; build de production, 1 477 tests des zones touchées, fusion
+   contre-vérifiée). Reste : les trois rouges antérieurs listés plus haut, dans un lot à part.
 4. **Questions ouvertes pour Timothée** (à poser en une fois) : 调 D ou D调 ; mode louange (barre du haut sur le titre
    quand les barres s'affichent ; bulle d'indice ; liseré ; FreeShow/PDF même icône) ; questionnaire laissé blanc ;
    `theme-color` #fff ; bo-evenements Q1/Q4/Q5 ; « + Nouvelle réunion » sur /reunions/nouvelle ; « Mes services » seul
