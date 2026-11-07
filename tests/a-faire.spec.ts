@@ -392,19 +392,22 @@ test.describe("À faire (BO-B) : l'écran", () => {
       const vide = page.getByTestId("colonne-droite").getByRole("link", { name: "à choisir — Ouvrir le planning" }).first();
       await expect(vide).toHaveText("—");
       await expect(vide).toHaveClass(/text-muted-foreground/);
+      // Le lien ne vise sa case qu'une fois le profil lu (avant : repli sur l'accueil du planning).
+      await expect(vide).toHaveAttribute("href", /\?case=/);
       await vide.click();
     } else {
       // Pas de colonne de droite sous 1024 px : la même adresse, à la main.
       await page.goto(adresse);
     }
     await expect(page).toHaveURL(/\/back-office\/planning\/culte\/?\?case=culte%7C2026-10-25%7Cbatterie$/);
-    // La grille (ordinateur, tablette) ou la carte (téléphone) : celle qu'on voit.
-    const cible = page.locator('[data-grille="culte"] [data-case="2026-10-25|batterie"], [data-grille="culte"] [data-date-carte="2026-10-25"]').filter({ visible: true }).first();
-    await expect(cible).toHaveAttribute("data-cible", "");
+    // La case qu'on voit (grille, ou case de la carte au téléphone en édition), sinon la carte du dimanche.
+    const cible = page.locator('[data-grille="culte"] [data-cible]');
+    await expect(cible).toHaveCount(1);
+    expect(await cible.evaluate((e) => e.getAttribute("data-case") ?? e.getAttribute("data-date-carte"))).toMatch(/^2026-10-25(\|batterie)?$/);
     await expect(cible).toBeInViewport({ ratio: 1 });
     await expect(cible).toHaveCSS("outline-width", "2px");
     // Au bout de ~2,5 s l'anneau part.
-    await expect(cible).not.toHaveAttribute("data-cible", "", { timeout: 6000 });
+    await expect(cible).toHaveCount(0, { timeout: 6000 });
   });
 
   test("« Mes équipes » sans rien pour ses équipes : « Rien pour tes équipes. »", async ({ page }) => {

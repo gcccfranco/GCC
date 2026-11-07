@@ -94,7 +94,8 @@ export function ApercuSetlist({
           <SetlistHistory key={setlist.id} setlistId={setlist.id} songsMap={songsMap} />
         </div>
         <div className="flex shrink-0 flex-wrap gap-2">
-          <Link href={lien} className="inline-flex h-10 items-center gap-1.5 rounded-full bg-secondary px-4 text-sm font-semibold text-foreground transition-transform duration-150 active:scale-[.97]">
+          {/* Sur le gris de la page (V3 : l'aperçu est montré d'emblée) : la recette « outline » du bouton, pas l'aplat --secondary. */}
+          <Link href={lien} className="inline-flex h-10 items-center gap-1.5 rounded-full border border-input bg-pose px-4 text-sm font-semibold text-foreground transition-transform duration-150 hover:bg-accent active:scale-[.97]">
             <ListMusic className="h-4 w-4" aria-hidden />
             {t("planning.accueil.ouvrir")}
           </Link>
