@@ -4,6 +4,7 @@ import { readFileSync } from "node:fs";
 import { attendreMiseEnPage } from "./helpers/louange";
 import { ouvrirPartitions } from "./helpers/setlist";
 import { suivreLeCompte } from "../src/lib/setlist/copieHorsLigne";
+import { verifierMode } from "./helpers/menuSetlist";
 
 // Dimanche hors ligne (audit du 24/10/2026, D1 et D4 ; docs/spec-corrections-audit.md, tranche A3).
 // Setlist et compte simulés : aucune lecture ni écriture du Firestore de production. Le service
@@ -92,7 +93,7 @@ test.describe("copie hors ligne d'une setlist", () => {
     // Le PROPRIÉTAIRE de la setlist : en ligne il peut tout, hors ligne (copie) plus rien n'est offert.
     const db = await signInAsPuisCopie(page, { setlist: { ...SETLIST, ownerId: MUSICIEN.uid } });
     // « Adapter » est dans la barre ; « Modifier » dans la barre (grand écran) ou dans le menu ⋯ (téléphone, tablette).
-    await expect(page.getByRole("button", { name: "Adapter" })).toBeVisible();
+    await verifierMode(page, "Adapter");
     const modifier = page.getByRole("link", { name: "Modifier" }).or(page.getByRole("menuitem", { name: "Modifier" }));
     if (!(await modifier.first().isVisible())) await page.getByRole("button", { name: "Plus d'actions" }).first().click();
     await expect(modifier.first()).toBeVisible();

@@ -3,6 +3,7 @@ import { expect, test, type Locator, type Page } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { compterLesRendus, defilerImageParImage } from "./helpers/rendus";
 import { issueDuGeste, lireIntention, projection } from "../src/hooks/useSwipeViews";
+import { basculerMode, verifierMode } from "./helpers/menuSetlist";
 
 // Lot U5, tranche T2 (docs/spec-deux-volets.md, questions 3, 9 à 12 et 14) :
 // sur téléphone et tablette portrait, la setlist relie Liste et Partitions (G).
@@ -286,7 +287,10 @@ test.describe("setlist G, téléphone et tablette portrait", () => {
     await ouvrir(page);
     await expect(barre(page).getByRole("button", { name: "Mode Louange" })).toBeVisible();
     const cote = await commandes(page);
-    expect(cote).toEqual(["Retour", "Affichage", "Adapter", "Accords", "Ma version", "Mode Louange", "Plus d'actions"]);
+    // Sous 431 px (lot CD, T4a, dimanche-15), « Adapter » et « Ma version » vivent dans le menu « ⋯ ».
+    expect(cote).toEqual(page.viewportSize()!.width >= 431
+      ? ["Retour", "Affichage", "Adapter", "Accords", "Ma version", "Mode Louange", "Plus d'actions"]
+      : ["Retour", "Affichage", "Accords", "Mode Louange", "Plus d'actions"]);
     await boutonVue(page, "Partitions").click();
     await expect(chant(page, 1)).toBeVisible();
     expect(await commandes(page)).toEqual(cote);
@@ -297,15 +301,15 @@ test.describe("setlist G, téléphone et tablette portrait", () => {
     await lienLigne(page, 2).click();
     await expect.poll(() => ecartSousLaBarre(page, 2)).toBe(SOUS_LA_BARRE);
     await boutonVue(page, "Liste").click();
-    await barre(page).getByRole("button", { name: "Adapter" }).click();
+    await basculerMode(page, "Adapter");
     await expect(page.getByText(/Mode adaptation/)).toBeVisible();
     expect(params(page)).toEqual({ vue: "partitions", chant: "2" });
-    await expect(barre(page).getByRole("button", { name: "Adapter" })).toHaveAttribute("aria-pressed", "true");
+    await verifierMode(page, "Adapter", true);
   });
 
   test("Ma version depuis la Liste ouvre les partitions dans ce mode", async ({ page }) => {
     await ouvrir(page);
-    await barre(page).getByRole("button", { name: "Ma version" }).click();
+    await basculerMode(page, "Ma version");
     await expect(page.getByText(/^Ma version :/)).toBeVisible();
     expect(params(page)).toEqual({ vue: "partitions", chant: "1" });
   });

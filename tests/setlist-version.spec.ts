@@ -4,6 +4,7 @@ import { signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { attendreMiseEnPage } from "./helpers/louange";
 import { enDeuxVolets, ouvrirAffichage, ouvrirListe, ouvrirPartitions } from "./helpers/setlist";
 import { verifierPuce } from "./helpers/puce";
+import { basculerMode } from "./helpers/menuSetlist";
 
 // Version perso d'un chant dans une setlist (docs/spec-version-perso.md).
 // V1 : « Ma version » — accords et paroles retouchés pour soi, enregistrés
@@ -94,7 +95,7 @@ async function deleteLine(page: Page, text: string | RegExp) {
 test("« Ma version » : retoucher une ligne écrit dans mon document, jamais dans la setlist", async ({ page }) => {
   const db = await openPartitions(page);
   await expect(lyricLine(page, "planait")).toHaveCount(1);
-  await page.getByRole("button", { name: "Ma version" }).click();
+  await basculerMode(page, "Ma version");
   await expect(page.getByText(/Toi seul vois ces changements/)).toBeVisible();
   await capture(page, "v1-mode-ma-version");
   await deleteLine(page, "planait");
@@ -133,7 +134,7 @@ test("revenir à la présidence retire ma version", async ({ page }) => {
   const db = await openPartitions(page, {
     [VERSION_DOC]: myDoc({ "abba-pere": { content: MY_ABBA, structure: null, shared: false } }),
   });
-  await page.getByRole("button", { name: "Ma version" }).click();
+  await basculerMode(page, "Ma version");
   await page.getByRole("button", { name: "Revenir à la présidence" }).click();
   await capture(page, "v1-revenir-presidence");
   await page.getByRole("button", { name: "Rétablir", exact: true }).click();
@@ -151,18 +152,18 @@ test("un responsable en mode « Adapter » voit la version de la présidence, pa
     [VERSION_DOC]: myDoc({ "abba-pere": { content: MY_ABBA, structure: null, shared: false } }),
   });
   await expect(lyricLine(page, "flottait")).toHaveCount(1);
-  await page.getByRole("button", { name: "Adapter" }).click();
+  await basculerMode(page, "Adapter");
   await expect(lyricLine(page, "planait")).toHaveCount(1);
   await expect(lyricLine(page, "flottait")).toHaveCount(0);
   await expect(song(page, 1).getByText("Ma version", { exact: true })).toHaveCount(0);
-  await page.getByRole("button", { name: "Adapter" }).click();
+  await basculerMode(page, "Adapter");
   await expect(lyricLine(page, "flottait")).toHaveCount(1);
 });
 
 test("chant chinois : ma version garde les caractères et le pinyin des autres lignes", async ({ page }) => {
   await enParoles(page);
   const db = await openPartitions(page);
-  await page.getByRole("button", { name: "Ma version" }).click();
+  await basculerMode(page, "Ma version");
   await deleteLine(page, "宝");
 
   await expect(song(page, 2).getByText("Ma version", { exact: true })).toBeVisible();
@@ -210,7 +211,7 @@ test("ma structure : le corps la suit, le bandeau, le sommaire et la liste reste
 test("la feuille « Sections » enregistre ma structure sans toucher la setlist", async ({ page }) => {
   const db = await openPartitions(page);
   await expect(bodySections(page, 1)).toHaveCount(6);
-  await page.getByRole("button", { name: "Ma version" }).click();
+  await basculerMode(page, "Ma version");
   await song(page, 1).getByRole("button", { name: "Sections" }).click();
   const sheet = page.getByRole("dialog", { name: "Sections" });
   await expect(sheet).toBeVisible();
@@ -232,7 +233,7 @@ test("« Réinitialiser » dans la feuille revient à la structure de la présid
   const db = await openPartitions(page, {
     [VERSION_DOC]: myDoc({ "abba-pere": { content: null, structure: MY_STRUCTURE, shared: false } }),
   });
-  await page.getByRole("button", { name: "Ma version" }).click();
+  await basculerMode(page, "Ma version");
   await song(page, 1).getByRole("button", { name: "Sections" }).click();
   await page.getByRole("dialog", { name: "Sections" }).getByRole("button", { name: "Réinitialiser" }).click();
 
@@ -347,7 +348,7 @@ test("les actions de « Ma version » sont des puces de 32 px, 12 px au moins, z
   await openPartitions(page, {
     [VERSION_DOC]: myDoc({ "abba-pere": { content: MY_ABBA, structure: null, shared: false } }),
   });
-  await page.getByRole("button", { name: "Ma version" }).click();
+  await basculerMode(page, "Ma version");
   for (const nom of ["Partager ma version", "Sections"]) {
     await verifierPuce(song(page, 1).getByRole("button", { name: nom }), info);
   }
@@ -357,7 +358,7 @@ test("partager ma version, puis retirer le partage", async ({ page }) => {
   const db = await openPartitions(page, {
     [VERSION_DOC]: myDoc({ "abba-pere": { content: MY_ABBA, structure: null, shared: false } }),
   });
-  await page.getByRole("button", { name: "Ma version" }).click();
+  await basculerMode(page, "Ma version");
   const share = song(page, 1).getByRole("button", { name: "Partager ma version" });
   await expect(share).toHaveAttribute("aria-pressed", "false");
   await share.click();

@@ -4,6 +4,7 @@ import { attendreMiseEnPage, onStage } from "./helpers/louange";
 import { ouvrirPartitions } from "./helpers/setlist";
 import { openSheet } from "./helpers/jianpu";
 import { transposeLabel } from "../src/lib/transpose";
+import { basculerMode } from "./helpers/menuSetlist";
 
 // Lot DA / DA-3 (docs/spec-dictionnaire-accords.md, Q13, Q15, Q16) : toucher un accord ouvre son panneau, en
 // lecture seulement — page chant, partition d'une setlist hors édition, calque des accords sur la 简谱 —,
@@ -201,10 +202,10 @@ test.describe("setlist", () => {
     await expect(nom(page)).toHaveText("E");
   });
 
-  for (const mode of ["Ma version", "Adapter"]) {
+  for (const mode of ["Ma version", "Adapter"] as const) {
     test(`en « ${mode} » : aucun accord touchable, la ligne s'édite comme avant`, async ({ page }) => {
       await ouvrirLaSetlist(page);
-      await page.getByRole("button", { name: mode, exact: true }).click();
+      await basculerMode(page, mode);
       await expect(page.locator('[data-outline-item="1"] [role="button"]').first()).toBeVisible();
       await expect(touchables(page), "aucun accord n'a le rôle de bouton").toHaveCount(0);
       const accord = page.locator('[data-outline-item="1"] [data-copy-line]', { hasText: "planait" }).locator(".font-chord").first();
@@ -285,7 +286,7 @@ test.describe("bulle d'aide", () => {
     await page.addInitScript(() => localStorage.setItem("perf-role-preset", "pianiste"));
     await signInAs(page, MUSICIENNE, { [`setlists/${SETLIST_ID}`]: setlist }, `/setlists/${SETLIST_ID}`);
     await ouvrirPartitions(page);
-    await page.getByRole("button", { name: "Adapter", exact: true }).click();
+    await basculerMode(page, "Adapter");
     await expect(page.locator('[data-outline-item="1"] [data-section] .font-chord').first()).toBeVisible();
     await page.waitForTimeout(1500);
     await expect(aide(page)).toHaveCount(0);

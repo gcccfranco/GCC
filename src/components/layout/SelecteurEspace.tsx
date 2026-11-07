@@ -156,8 +156,10 @@ export function SelecteurEspace({ pleineLargeur = false, compact = false, onChoi
 
   // Au toucher, une icône de 36 px n'a que 36 px de large (TOUCHER_SEGMENT suit le segment) : la zone s'étend de 8 px vers
   // l'extérieur du groupe pour le premier et le dernier segment (rien à recouvrir), de 4 px de chaque côté au milieu (44 px).
+  // Les segments se touchent (pas d'écart) : seul le premier et le dernier débordent, vers l'extérieur ; celui du milieu
+  // garde sa largeur, sinon sa zone mordait de 4 px sur ses voisins (fin de lot CD, back-office-espace:330).
   const ZONE_ICONE =
-    "max-sm:[@media(pointer:coarse)]:after:-inset-x-1 max-sm:[@media(pointer:coarse)]:first:after:left-[-8px] max-sm:[@media(pointer:coarse)]:first:after:right-0 " +
+    "max-sm:[@media(pointer:coarse)]:first:after:left-[-8px] max-sm:[@media(pointer:coarse)]:first:after:right-0 " +
     "max-sm:[@media(pointer:coarse)]:last:after:right-[-8px] max-sm:[@media(pointer:coarse)]:last:after:left-0";
 
   const lien = (e: Espace, libelle: string) => {

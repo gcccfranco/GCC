@@ -6,6 +6,7 @@ import { parseChordPro } from "../src/lib/chordpro/parser";
 import { materializeSectionCopy } from "../src/lib/chordpro/editSource";
 import { buildDefaultStructure, resolveStructureOverride } from "../src/lib/chordpro/structure";
 import { repairCopyIds } from "../src/lib/setlist/sectionOrigins";
+import { basculerMode } from "./helpers/menuSetlist";
 
 // Mode Adapter : modifier une ligne d'une section qui passe deux fois copie la
 // section en fin de source et fait pointer cette occurrence vers la copie. Du
@@ -95,7 +96,7 @@ for (const c of CAS) {
     test.slow(); // deux chargements de la page
     const db = await ouvrir(page, setlist([item({ songSlug: c.slug, position: 1, structureOverride: c.structure })]));
     await expect(sections(page)).toHaveCount(c.structure.length);
-    await page.getByRole("button", { name: "Adapter", exact: true }).click();
+    await basculerMode(page, "Adapter");
     await changerAccord(page, c.texte, 2, c.de, c.vers);
 
     await expect(sections(page), "aucune section perdue en mode Adapter").toHaveCount(c.structure.length);
@@ -133,7 +134,7 @@ test("setlist déjà cassée (copie à l'id de son original) : le passage réapp
 test("Ma version › Seulement ce passage, moi-et-ma-maison : le passage modifié reste", async ({ page }) => {
   test.slow(); // deux chargements de la page
   const db = await ouvrir(page, setlist([item({ songSlug: "moi-et-ma-maison", position: 1, structureOverride: MAISON })]));
-  await page.getByRole("button", { name: "Ma version", exact: true }).click();
+  await basculerMode(page, "Ma version");
   await changerAccord(page, "Dans chaque lie", 2, "A", "C", "Seulement ce passage");
   await expect(sections(page)).toHaveCount(MAISON.length);
   const doc = `${SETLIST_DOC}/versions/${AUTRICE.uid}`;

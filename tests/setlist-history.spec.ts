@@ -3,6 +3,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { attendreEditeur, champNoteDuChant, champNotes, champPresidence, choisirTonalite, fermerFeuille, ligneSection, reglerElement, retirerChant, retirerSection } from "./helpers/editeurSetlist";
 import { ouvrirPartitions } from "./helpers/setlist";
+import { basculerMode } from "./helpers/menuSetlist";
 
 // Chantier Setlist, lot 2 (docs/spec-setlist.md) : historique des
 // modifications, une entrée par passage, lu depuis la page de la setlist.
@@ -204,7 +205,7 @@ test("rétablir l'original d'un chant adapté (vue partitions) s'écrit dans l'h
   ] };
   await signInAs(page, MUSICIEN, { [`setlists/${SETLIST_ID}`]: adapted }, `/setlists/${SETLIST_ID}`);
   await ouvrirPartitions(page);
-  await page.getByRole("button", { name: "Adapter" }).click();
+  await basculerMode(page, "Adapter");
   await page.getByRole("button", { name: "Rétablir l'original" }).click();
   await page.getByRole("button", { name: "Rétablir", exact: true }).click();
   await page.getByRole("button", { name: /Modifiée par Ruth K\./ }).click();
@@ -215,7 +216,7 @@ test("vue partitions : adapter une ligne puis rétablir l'original ne laisse pas
   const db = await signInAs(page, MUSICIEN, { [`setlists/${SETLIST_ID}`]: { ...SETLIST, ownerId: MUSICIEN.uid } }, `/setlists/${SETLIST_ID}`);
   const phrases = () => db.list(`setlists/${SETLIST_ID}/history`).map((p) => (db.doc(p)?.changes as unknown[]).length);
   await ouvrirPartitions(page);
-  await page.getByRole("button", { name: "Adapter" }).click();
+  await basculerMode(page, "Adapter");
   await page.getByRole("button").filter({ hasText: "planait" }).first().click();
   await page.getByRole("button", { name: "Supprimer la ligne" }).click();
   await page.getByRole("button", { name: "Supprimer", exact: true }).click();
@@ -481,7 +482,7 @@ test("H1 — mode Adapter, copie d'une section répétée : pas de phrase de str
   };
   const db = await signInAs(page, MUSICIEN, { [`setlists/${SETLIST_ID}`]: repeated }, `/setlists/${SETLIST_ID}`);
   await ouvrirPartitions(page);
-  await page.getByRole("button", { name: "Adapter" }).click();
+  await basculerMode(page, "Adapter");
   // Ligne du 2e Couplet 1 : l'édition matérialise une copie de la section.
   await page.getByRole("button").filter({ hasText: "planait" }).last().click();
   await page.getByRole("button", { name: "Supprimer la ligne" }).click();
