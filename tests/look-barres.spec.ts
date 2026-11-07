@@ -131,6 +131,10 @@ async function sansEnTeteDeChants(page: Page) {
   await page.evaluate(() => window.scrollTo(0, 0));
   await expect.poll(() => page.locator(".material-chrome:not(.material-steady)").evaluateAll((els) =>
     els.filter((el) => el.getClientRects().length > 0).every((el) => getComputedStyle(el).transform === "matrix(1, 0, 0, 1, 0, 0)"))).toBe(true);
+  // Chant en deux volets (reprise 1b0c716) : sans l'en-tête, le haut du panneau tombe pile au seuil où la barre se dit
+  // collée (haut du panneau + 16 = son haut collant) et un demi-pixel en décide. Sur le vrai site, l'en-tête est là et
+  // la barre n'est jamais collée en haut de page : on la remet dans cet état. Défilée, elle se recolle (étape 2).
+  await page.evaluate(() => document.querySelector(".barre-chant")?.removeAttribute("data-collee"));
 }
 
 /**

@@ -538,6 +538,24 @@ le lot a été réglé. Chaque test d'agencement ajouté mesure aussi à **1 700
   porteur de l'anneau (au téléphone en édition, la case de la carte). 56 scans ont |droite − gauche| > 30 (critère
   sous le recadrage). Vu à l'œil à 1 280 × 720, 1 440 × 900, 1 940 × 1 300 et au téléphone.
 
+### Les trois rouges antérieurs — réglés (07/11/2026, go de Timothée « corrige ça » et « revois juste le test pour la cloche »)
+Après enquête, aucun n'était un défaut du site ; aucun fichier de `src/` ne change.
+- `navigation-grand-ecran:52` (cloche) : le test simulait un retour sur la page 1,5 s après le chargement, sous l'écart
+  minimal de 60 s voulu par le lot LF (`ECART_MIN_MS`). L'horloge de la page avance d'une minute (`page.clock`) avant le
+  retour ; le test vérifie toujours qu'une seule cloche interroge Firestore.
+- `barre-rappelee:8` (barre rappelée à 36 px) : en deux volets, la barre se pose dans le panneau, 16 px sous son haut
+  aligné sur la carte de la liste, comme la barre collée au défilement ; c'est la reprise du 05/11, qui corrigeait
+  « barre collée au bord de l'écran ». Le test, du 18/10, attendait 0 : il attend maintenant le haut de la carte + 16 en
+  deux volets, 0 en un volet. Démarrage rendu robuste (hydratation, page qui défile vraiment) ; reste une course rare à
+  l'ouverture sous charge (la barre revient juste après le premier défilement, 1 passe complète sur 3, jamais vue avec
+  un journal des défilements) : le test redéfile depuis le haut, trois essais au plus. **À surveiller** : si un
+  utilisateur voit la page d'un chant s'ouvrir défilée sur un appareil lent, chercher un défilement tardif de
+  l'ouverture (`SongListClient`, ligne du chant ouvert, `scrollIntoView` quand la liste n'est pas encore bornée).
+- `look-barres:239` (fond des barres) : en retirant l'en-tête « Chants », le test posait le haut du panneau pile au
+  seuil où la barre se dit collée ; un demi-pixel en décidait, et collée, sa bande `::before` faussait la référence.
+  Sur le vrai site l'en-tête est là et la barre n'est jamais collée en haut de page (écart nul mesuré) : le test la
+  remet dans cet état. Contre-vérifié par deux relecteurs (aucune réfutation). Trois specs : 119 / 119, deux fois à froid.
+
 ## Reprendre ici (pour une nouvelle session, 05/11/2026)
 Lire seulement : `CLAUDE.md`, ce fichier (§ 2 arbitrages, § 3 règles, et cette section), puis l'annexe de la tranche
 en cours. Ne pas relire les sections « État » plus haut sauf besoin précis. Agents quelques-uns à la fois ; pas
@@ -547,7 +565,7 @@ d'audit de tout le site ; `--workers=2` pour Playwright (le serveur de test meur
 3. **Fin de lot** faite (07/11/2026, section ci-dessus), puis **retouches V1 à V6** de sa validation (section
    ci-dessus). Validé par Timothée en local ; **en ligne le 07/11/2026** sur son ordre (`main` fusionné dans la branche,
    `fb3744f`, puis `main` avancé à `afcf898` ; build de production, 1 477 tests des zones touchées, fusion
-   contre-vérifiée). Reste : les trois rouges antérieurs listés plus haut, dans un lot à part.
+   contre-vérifiée). Les trois rouges antérieurs réglés ensuite (section ci-dessus) : des tests, pas le site.
 4. **Questions ouvertes pour Timothée** (à poser en une fois) : 调 D ou D调 ; mode louange (barre du haut sur le titre
    quand les barres s'affichent ; bulle d'indice ; liseré ; FreeShow/PDF même icône) ; questionnaire laissé blanc ;
    `theme-color` #fff ; bo-evenements Q1/Q4/Q5 ; « + Nouvelle réunion » sur /reunions/nouvelle ; « Mes services » seul

@@ -54,10 +54,14 @@ test.describe("navigation sur grand écran (U4) : une seule cloche", () => {
     page.on("request", (r) => {
       if (r.method() === "POST" && r.url().includes(":runQuery") && (r.postData() ?? "").includes('"collectionId":"notifications"')) requetes++;
     });
+    // Lot LF (LF4) : un retour sur la page ne relit pas les notifications moins de 60 s après la passe précédente
+    // (`ECART_MIN_MS`, useNotifications.ts). L'horloge de la page avance donc d'une minute avant le retour.
+    await page.clock.install();
     await signInAs(page, MEMBRE, {}, "/songs");
     await page.getByRole("searchbox").waitFor();
     await expect.poll(() => requetes, { message: "la cloche a chargé" }).toBeGreaterThan(0);
     await page.waitForTimeout(1500);
+    await page.clock.fastForward("01:01");
     requetes = 0;
     await page.evaluate(() => window.dispatchEvent(new Event("focus")));
     await page.waitForTimeout(1500);
