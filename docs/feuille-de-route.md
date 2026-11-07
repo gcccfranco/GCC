@@ -1346,7 +1346,8 @@ guitariste, choriste, batteur), précisé le jour même. Le chantier d'octobre (
 n'avait repris que les gestes et gardé l'apparence du site : captures de l'existant (barre haute sans commande, tout
 dans la barre basse, tiroir de liste, longue feuille de réglages, cartes de section façon appli web, vue batteur en
 cadres vides). Cette demande **rouvre toute l'apparence du mode louange** ; restent gelées les couleurs d'accords, de
-sections et du 简谱, les calques 简谱 et le PDF. Planche `/planche` en cours (`docs/planches/planche-mode-louange-forscore-2.html`).
+sections et du 简谱, les calques 简谱 et le PDF. Planche du 07/11/2026 (`docs/planches/planche-mode-louange-forscore-2.html`,
+https://claude.ai/artifact/AuYFVmjUN6UAZhUVxBHBr8) : A « Pupitre » recommandée, neuf questions à trancher.
 **Vue par rôle proposée d'après le planning** (question du jour, étude `chantier-forscore/04-role-suggere.md`) :
 **proposer, pas imposer** ; **cajon → vue Batteur** ; **rôle retenu par compte sur un iPad partagé** (tranché par
 Timothée le 07/11/2026) ; **plusieurs services le même jour sont toujours dans des lieux différents** (jamais présidence
