@@ -65,4 +65,6 @@ Signalement d'un membre du 06/11/2026, tranché par Timothée le 07/11/2026 (« 
 
 ## État
 
-Codé le 07/11/2026 sur `claude/cool-allen-pkzti6`. Pas en ligne : `main` attend l'ordre de Timothée.
+Codé le 07/11/2026 sur `claude/cool-allen-pkzti6` (`b538acc`) : 428 tests verts sur trois appareils (un échec de
+clavier sans rapport, vert à la relance), bandeaux regardés sur les quatre dispositions et à 1 440 px. **En ligne le
+07/11/2026** sur ordre de Timothée (« pousse sur main »).
