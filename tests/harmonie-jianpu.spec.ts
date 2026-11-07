@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { basculerMode } from "./helpers/menuSetlist";
 import { musicien, signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { ouvrirPartitions } from "./helpers/setlist";
 import { loadChords } from "./helpers/jianpu";
@@ -106,7 +107,7 @@ const scanItem = (db: Parameters<typeof itemsEcrits>[0]) => itemsEcrits(db)[1];
 
 test("Adapter : toucher un accord imprimé le change, et l'historique le dit", async ({ page }) => {
   const db = await openPartitions(page);
-  await page.getByRole("button", { name: "Adapter" }).click();
+  await basculerMode(page, "Adapter");
   // Étiquette 0 : « G » gravé en haut à gauche (x 80, y 344).
   await toucher(page, 90, 356);
   await capture(page, "jianpu-pave");
@@ -126,7 +127,7 @@ test("Adapter : toucher un accord imprimé le change, et l'historique le dit", a
 
 test("Adapter : un accord touché puis effacé disparaît du scan", async ({ page }) => {
   const db = await openPartitions(page);
-  await page.getByRole("button", { name: "Adapter" }).click();
+  await basculerMode(page, "Adapter");
   // Étiquette 1 : « G7 » (x 638, y 344).
   await toucher(page, 655, 356);
   await page.getByRole("dialog").getByRole("button", { name: "Supprimer l'accord" }).click();
@@ -140,7 +141,7 @@ test("Adapter : toucher la ligne d'accords en ajoute un à la hauteur des autres
   // Setlist jouée en A : le calque est entièrement écrit, l'accord ajouté doit
   // s'aligner sur ses voisins gravés.
   const db = await openPartitions(page, { [SETLIST_DOC]: setlist({ keyOverride: "A" }) });
-  await page.getByRole("button", { name: "Adapter" }).click();
+  await basculerMode(page, "Adapter");
   // Rangée du bas (y 1163), entre le « C » (x 662) et le « D » (x 920).
   await toucher(page, 800, 1176);
   await pave(page, "A");
@@ -158,7 +159,7 @@ test("Adapter : toucher la ligne d'accords en ajoute un à la hauteur des autres
 
 test("retouche transposée : saisie dans la tonalité jouée, stockée dans celle de la gravure", async ({ page }) => {
   const db = await openPartitions(page, { [SETLIST_DOC]: setlist({ keyOverride: "A" }) });
-  await page.getByRole("button", { name: "Adapter" }).click();
+  await basculerMode(page, "Adapter");
   // Le « G » gravé s'affiche « A » : on le remplace par F#m, qui vaut Em en G.
   await expect(page.locator('[data-jianpu-label="G"]').first()).toHaveText("A");
   await toucher(page, 90, 356);
@@ -171,7 +172,7 @@ test("retouche transposée : saisie dans la tonalité jouée, stockée dans cell
 
 test("Ma version : même geste, écrit dans mon document et jamais dans la setlist", async ({ page }) => {
   const db = await openPartitions(page);
-  await page.getByRole("button", { name: "Ma version" }).click();
+  await basculerMode(page, "Ma version");
   await toucher(page, 90, 356);
   await pave(page, "C");
 

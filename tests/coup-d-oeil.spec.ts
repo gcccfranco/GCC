@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { basculerMode } from "./helpers/menuSetlist";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { attendreEditeur, reglerElement } from "./helpers/editeurSetlist";
 import { fermerMenus, ouvrirAffichage, ouvrirPartitions } from "./helpers/setlist";
@@ -247,7 +248,7 @@ test.describe("modes d'affichage de la vue partitions", () => {
     // Depuis SC1 (18/10/2026), seul le créateur adapte et modifie une setlist : la musicienne est la créatrice de la sienne.
     await openPartitions(page, setlist({ ownerId: MUSICIEN.uid }));
     await expect(song1Sections(page)).toHaveCount(2);
-    await page.getByRole("button", { name: "Adapter" }).click();
+    await basculerMode(page, "Adapter");
     await expect(song1Sections(page)).toHaveCount(3);
     await expect(page.getByRole("list", { name: "Structure" }).first()).toBeVisible();
   });

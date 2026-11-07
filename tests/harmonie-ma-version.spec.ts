@@ -1,4 +1,5 @@
 import { readFileSync } from "node:fs";
+import { basculerMode } from "./helpers/menuSetlist";
 import { expect, test, type Page } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { attendreMiseEnPage } from "./helpers/louange";
@@ -149,7 +150,7 @@ const myItems = (db: Awaited<ReturnType<typeof openPartitions>>) =>
 
 test("le choix de portée n'apparaît que dans une section répétée", async ({ page }) => {
   await openPartitions(page);
-  await page.getByRole("button", { name: "Ma version" }).click();
+  await basculerMode(page, "Ma version");
 
   await tapLine(page, 1, "verse-2-0", "planait");
   await expect(page.getByRole("button", { name: "Seulement ce passage" }), "un couplet joué une fois").toHaveCount(0);
@@ -163,7 +164,7 @@ test("le choix de portée n'apparaît que dans une section répétée", async ({
 
 test("« Toutes les répétitions » (par défaut) retouche les deux refrains", async ({ page }) => {
   const db = await openPartitions(page);
-  await page.getByRole("button", { name: "Ma version" }).click();
+  await basculerMode(page, "Ma version");
   await editLyrics(page, "chorus-3-3", "Abba", LIGNE_PAPA);
 
   await expect(lyricLine(page, "Papa"), "les deux refrains changent").toHaveCount(2);
@@ -174,7 +175,7 @@ test("« Toutes les répétitions » (par défaut) retouche les deux refrains", 
 
 test("« Seulement ce passage » ne retouche que le refrain touché", async ({ page }) => {
   const db = await openPartitions(page);
-  await page.getByRole("button", { name: "Ma version" }).click();
+  await basculerMode(page, "Ma version");
   await editLyrics(page, "chorus-3-3", "Abba", LIGNE_PAPA, "Seulement ce passage");
 
   await expect(lyricLine(page, "Papa")).toHaveCount(1);
@@ -256,7 +257,7 @@ test("chant chinois : « Seulement ce passage » garde le pinyin de l'autre refr
   // 一生爱你 a un scan, affiché par défaut : on retouche ici ses paroles.
   await page.addInitScript(() => localStorage.setItem("jianpu-sheet-pref", "never"));
   const db = await openPartitions(page);
-  await page.getByRole("button", { name: "Ma version" }).click();
+  await basculerMode(page, "Ma version");
   await expect(lyricLine(page, "敬")).toHaveCount(2);
 
   await sectionAt(page, 2, "chorus-3-2").getByRole("button").filter({ hasText: "敬" }).first().click();

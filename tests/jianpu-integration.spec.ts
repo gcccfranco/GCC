@@ -1,4 +1,5 @@
 import { createHash } from "crypto";
+import { basculerMode } from "./helpers/menuSetlist";
 import { readFileSync, existsSync } from "fs";
 import { inflateSync } from "zlib";
 import { expect, test, type Page } from "@playwright/test";
@@ -274,7 +275,7 @@ test("11 Adapter : toucher une écriture ouvre le pavé sur la bonne étiquette,
   await page.locator('[data-jianpu-page="0"] img').waitFor();
   await page.waitForFunction(() =>
     Array.from(document.querySelectorAll<HTMLImageElement>("[data-jianpu-page] img")).every((i) => i.complete && i.naturalWidth > 0));
-  await page.getByRole("button", { name: "Adapter" }).click();
+  await basculerMode(page, "Adapter");
 
   // L'étiquette 1 (« G7 », x 638, y 344) : on touche au centre de l'écriture qui l'a retouchée.
   const c = loadChords()[ADAPTER_SLUG];

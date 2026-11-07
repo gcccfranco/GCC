@@ -1,4 +1,5 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
+import { basculerMode } from "./helpers/menuSetlist";
 import * as fs from "fs";
 import * as path from "path";
 import { musicien, signInAs, type FakeProfile } from "./helpers/fakeSession";
@@ -157,7 +158,7 @@ test("Essayer dans Ma version : on choisit la section, et seule celle-ci change"
   await routeSheet(page);
   const db = await signInAs(page, AMBROISE, { [SETLIST_DOC]: SETLIST }, `/setlists/${SETLIST_ID}`);
   await ouvrirPartitions(page);
-  await page.getByRole("button", { name: "Ma version" }).click();
+  await basculerMode(page, "Ma version");
   await page.getByRole("button", { name: "Idées d'harmonie" }).first().click();
   await expect(page.locator("[data-idees-harmonie]")).toBeVisible();
 

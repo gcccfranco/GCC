@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { basculerMode } from "./helpers/menuSetlist";
 import { musicien, signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { ouvrirPartitions } from "./helpers/setlist";
 import { verifierPuce } from "./helpers/puce";
@@ -98,7 +99,7 @@ test("hors « Ma version », l'idée se lit mais ne s'applique pas", async ({ pa
 
 test("« Essayer dans Ma version » écrit dans mon document, jamais dans la setlist", async ({ page }) => {
   const db = await openPartitions(page);
-  await page.getByRole("button", { name: "Ma version" }).click();
+  await basculerMode(page, "Ma version");
   await ouvrirLesIdees(page);
   const premiere = uneSection(page);
   // Les accords proposés sont les seconds de la ligne « avant → après ».
@@ -136,7 +137,7 @@ test("chant lu sur son scan 简谱 : l'app rappelle de reporter le changement", 
   // texte, mais l'image ne bouge pas — l'app doit le dire.
   await page.addInitScript(() => localStorage.setItem("jianpu-sheet-pref", "always"));
   await openPartitions(page);
-  await page.getByRole("button", { name: "Ma version" }).click();
+  await basculerMode(page, "Ma version");
   // Le chant à scan est le second (Abba Père, en premier, n'en a pas).
   await page.locator('[data-outline-item="2"]').getByRole("button", { name: "Idées d'harmonie" }).click();
   await expect(page.locator("[data-idees-harmonie]")).toBeVisible();
@@ -149,7 +150,7 @@ test("chant sans scan 简谱 : pas de rappel « À reporter sur la partition 简
   // Sans préférence stockée, le scan est le défaut — mais Abba Père n'en a pas :
   // la retouche se voit directement dans la version texte.
   const db = await openPartitions(page);
-  await page.getByRole("button", { name: "Ma version" }).click();
+  await basculerMode(page, "Ma version");
   await page.locator('[data-outline-item="1"]').getByRole("button", { name: "Idées d'harmonie" }).click();
   await expect(page.locator("[data-idees-harmonie]")).toBeVisible();
   const premiere = uneSection(page);
