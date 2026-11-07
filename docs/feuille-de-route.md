@@ -1352,7 +1352,14 @@ https://claude.ai/artifact/AuYFVmjUN6UAZhUVxBHBr8) : A « Pupitre » recommandé
 **proposer, pas imposer** ; **cajon → vue Batteur** ; **rôle retenu par compte sur un iPad partagé** (tranché par
 Timothée le 07/11/2026) ; **plusieurs services le même jour sont toujours dans des lieux différents** (jamais présidence
 et piano au même service) : un service, un rôle. Restent ouverts : « Musicien » sans instrument, Percussion.
-Rien n'est codé : planche, puis spec, puis go.
+**Paroles du site dans le mode louange** (demande du 07/11/2026 : « les dispositions des paroles qui existent déjà
+sur le site, le mode par défaut en bleu et le mode section en couleur ») : planche à part
+(`docs/planches/planche-mode-louange-paroles-site.html`), vraies captures sous le chrome de la piste A. **Le mode
+louange suit le réglage du site** (Timothée, 07/11/2026 : « si sur le site ils sont en couleur par section, dans le
+mode louange on le met en couleur par section ») : c'est déjà le cas, un seul réglage « Couleurs par section » par
+appareil partagé par la page du chant, la vue partitions de la setlist et le mode louange (`src/lib/chartStylePref.ts`) ;
+la refonte doit le garder (le bouton « Couleurs » de Display Options = ce même réglage). Rien n'est codé : planche,
+puis spec, puis go.
 
 ## 4. Carte des modules de l'app « GCC »
 
