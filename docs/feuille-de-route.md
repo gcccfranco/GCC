@@ -1349,7 +1349,8 @@ cadres vides). Cette demande **rouvre toute l'apparence du mode louange** ; rest
 sections et du 简谱, les calques 简谱 et le PDF. Planche `/planche` en cours (`docs/planches/planche-mode-louange-forscore-2.html`).
 **Vue par rôle proposée d'après le planning** (question du jour, étude `chantier-forscore/04-role-suggere.md`) :
 **proposer, pas imposer** ; **cajon → vue Batteur** ; **rôle retenu par compte sur un iPad partagé** (tranché par
-Timothée le 07/11/2026). Restent ouverts : deux rôles le même jour, « Musicien » sans instrument, Percussion.
+Timothée le 07/11/2026) ; **plusieurs services le même jour sont toujours dans des lieux différents** (jamais présidence
+et piano au même service) : un service, un rôle. Restent ouverts : « Musicien » sans instrument, Percussion.
 Rien n'est codé : planche, puis spec, puis go.
 
 ## 4. Carte des modules de l'app « GCC »

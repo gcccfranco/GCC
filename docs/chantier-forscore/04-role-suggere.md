@@ -13,8 +13,12 @@ Rien n'est codé. Spec à venir avec celle de l'apparence (`../feuille-de-route.
    Percussion (groupes) ; la réponse « Batteur pour le cajon » est appliquée aux trois, Percussion à confirmer.
 3. **iPad partagé : oui**, le rôle se retient **par compte** sur un appareil partagé (aujourd'hui `perf-role-preset`
    est une clé d'appareil, sans uid : `PerformanceMode.tsx:314`, `:405-421`).
+4. **Plusieurs services le même jour sont toujours dans des lieux différents** : jamais présidence et piano, ni
+   guitare et présidence au même service. Le rôle se lit donc dans le seul service de la setlist (date, catégorie,
+   moment au Campus) : un service, un rôle. Si les données en donnaient quand même deux pour ce service (erreur de
+   saisie), aucune proposition.
 
-Restent à trancher (propositions de l'étude) : deux rôles le même jour ; « Musicien » sans instrument ; accepter la
+Restent à trancher (propositions de l'étude) : « Musicien » sans instrument ; Percussion ; accepter la
 suggestion = mémoriser le rôle (proposé : oui, comme un choix dans Réglages) ; pas de suggestion pour un appareil qui a
 répondu « Aucun, je règle moi-même » (proposé : aucune) ; place et apparence de la pastille (planche).
 
@@ -53,8 +57,8 @@ la règle doit exiger une date commune, pas compter sur leur absence : `names.ts
 1. Rôle suggéré : celui du lien, sinon celui du planning à la date et dans la catégorie de la setlist (entrées Campus
    séance et répétition dédoublonnées d'abord, `names.ts:349-351`), sinon rien. Rien non plus : sans compte, hors
    ligne ou Sheet en panne, sans `planningName`, setlist sans date, catégorie sans planning, trimestre non publié.
-2. Deux rôles le même jour (proposition) : Piano ou Guitare l'emporte sur Présidence ou Choriste ; Présidence avec
-   Choriste → Présidence ; Piano avec Guitare, ou Batterie avec un autre rôle → **rien** (mieux vaut pas de
+2. Un service, un rôle (décision 4) : seuls les rôles du service de la setlist comptent, les services du même jour
+   ailleurs sont ignorés. Deux rôles pour ce même service (erreur de saisie) → **rien** (mieux vaut pas de
    suggestion qu'une mauvaise, comme `accueil.ts:41-43`).
 3. Appareil (et compte) sans rôle retenu : la feuille de rôle s'ouvre comme aujourd'hui, le rôle du planning en tête,
    marqué « d'après le planning » ; rien ne s'applique sans toucher.
