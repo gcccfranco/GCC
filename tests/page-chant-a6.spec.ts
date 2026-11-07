@@ -115,7 +115,9 @@ test.describe("barre de la setlist sur téléphone (G15)", () => {
     await expect(barre.getByRole("button", { name: "Accords" })).toBeVisible();
     for (const libelle of ["Affichage", "Accords", "Louange"]) await expect(barre.locator("span[aria-hidden=true]", { hasText: libelle }).first()).toBeVisible();
     // Une seule rangée : les contrôles se suivent de gauche à droite, sans retour à la ligne.
-    const gauches = await barre.locator(".rangee-outils > *").evaluateAll((els) => els.map((e) => e.getBoundingClientRect().left));
+    // Les contrôles affichés seulement : sous 431 px, « Adapter » et « Ma version » sont rangés dans « ⋯ » (lot CD, T4a).
+    const gauches = await barre.locator(".rangee-outils > *").evaluateAll((els) =>
+      els.filter((e) => e.getClientRects().length > 0).map((e) => e.getBoundingClientRect().left));
     expect(gauches.every((g, k) => k === 0 || g > gauches[k - 1]), "une seule rangée").toBe(true);
     const phrase = page.getByText(/Modifiable par/).first();
     await expect(phrase).toBeHidden();
