@@ -10,6 +10,7 @@
 import { Retour } from "@/components/layout/EnTetePage";
 import { useTranslation } from "react-i18next";
 import { Group, GroupRow } from "@/components/ui/group";
+import { AvisLangue } from "@/components/harmonie/AvisLangue";
 import { useRd2000Charge } from "@/components/harmonie/rd2000/contexte";
 import { useDeuxVolets } from "@/hooks/useDeuxVolets";
 import { couperEnDeuxColonnes, etoiles, parEcran, type Fiche, type Reglage } from "@/lib/harmonie/rd2000";
@@ -107,15 +108,16 @@ export function SonRd2000({ n }: { n: string }) {
             <div className="flex items-center gap-4">
               <p className="text-2xl font-bold leading-none tabular-nums">{son.n}</p>
               <div className="min-w-0">
-                <Titre className={titre}>{son.nom}</Titre>
-                <p className="text-sm text-muted-foreground">{son.categorie} › {son.sousCategorie}</p>
+                <Titre className={titre} lang="fr">{son.nom}</Titre>
+                <p className="text-sm text-muted-foreground" lang="fr">{son.categorie} › {son.sousCategorie}</p>
               </div>
             </div>
             <p className="text-base">
               <span aria-label={`${son.louange} / 3`}>{etoiles(son.louange)}</span>
               {son.premier && <span className="ml-2 align-middle rounded-full bg-secondary px-1.5 py-0.5 text-xs font-medium text-foreground">{t("harmonie.rd2000.premierChoix")}</span>}
-              {son.commentaire && <span className="text-muted-foreground"> · {son.commentaire}</span>}
+              {son.commentaire && <span className="text-muted-foreground" lang="fr"> · {son.commentaire}</span>}
             </p>
+            {!deuxVolets && <AvisLangue />}
           </header>
           <div className="bloc-info divide-y divide-border rounded-2xl px-4 text-base">
             <p className="py-3"><span className="text-muted-foreground">{t("harmonie.rd2000.edition")} : </span>{son.edition}</p>
@@ -127,8 +129,8 @@ export function SonRd2000({ n }: { n: string }) {
             <section className="space-y-4">
               <div className="space-y-1">
                 <h2 className="text-lg font-bold">{t("harmonie.rd2000.reglages")}</h2>
-                <p className="text-base font-medium">{fiche.intention}</p>
-                {fiche.pourquoi && <p className="text-base text-muted-foreground">{fiche.pourquoi}</p>}
+                <p className="text-base font-medium" lang="fr">{fiche.intention}</p>
+                {fiche.pourquoi && <p className="text-base text-muted-foreground" lang="fr">{fiche.pourquoi}</p>}
               </div>
               <Reglages fiche={fiche} />
             </section>
@@ -144,8 +146,9 @@ export function SonRd2000({ n }: { n: string }) {
           <>
             <header className="space-y-1">
               <p className="text-2xl font-bold leading-none tabular-nums">{recette.n}</p>
-              <Titre className={titre}>{recette.nom}</Titre>
-              {recette.pourquoi && <p className="text-base text-muted-foreground">{recette.pourquoi}</p>}
+              <Titre className={titre} lang="fr">{recette.nom}</Titre>
+              {recette.pourquoi && <p className="text-base text-muted-foreground" lang="fr">{recette.pourquoi}</p>}
+              {!deuxVolets && <AvisLangue />}
             </header>
             {recette.exemples.length > 0 && (
               <Group title={t("harmonie.rd2000.exemples")} className={cn(CARTE, "pb-2")}>

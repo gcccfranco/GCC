@@ -204,3 +204,29 @@ test.describe("harmonie-10 : la phrase « Dans le répertoire »", () => {
     await capture(page, "harmonie-10-fiche");
   });
 });
+
+test.describe("harmonie-5 : un seul avis de langue par page en 中文, aucun en français", () => {
+  const pages = (sonN: string) => [
+    ["fiche", "/harmonie/substitutions/2m7-pour-4"],
+    ["chapitre", `/harmonie/cours/${LECON1.id}`],
+    ["liste RD-2000", "/harmonie/rd2000"],
+    ["détail d'un son", `/harmonie/rd2000/${sonN}`],
+  ] as const;
+  const SON = (JSON.parse(readFileSync("public/rd2000.json", "utf8")) as { sons: { n: string; premier?: boolean }[] }).sons.find((s) => s.premier)!.n;
+
+  for (const [nom, adresse] of pages(SON)) {
+    test(`${nom}`, async ({ page }) => {
+      await entrer(page, adresse, true);
+      const avis = page.locator("[data-avis-langue]");
+      await expect(avis).toHaveCount(1);
+      await expect(avis).toBeVisible();
+      await expect(avis).toContainText("以下内容尚未翻译，暂以法文显示。");
+      expect(await sansDefilementHorizontal(page)).toBe(true);
+      await capture(page, `harmonie-5-${nom.replace(/\W+/g, "-")}`);
+      await page.evaluate(() => localStorage.setItem("i18nextLng", "fr"));
+      await page.reload();
+      await expect(page.locator("main").first()).toBeVisible();
+      await expect(page.locator("[data-avis-langue]")).toHaveCount(0);
+    });
+  }
+});

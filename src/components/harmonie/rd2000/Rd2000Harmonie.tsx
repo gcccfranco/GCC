@@ -23,6 +23,7 @@ import { useDeuxVolets } from "@/hooks/useDeuxVolets";
 import { useAccesHarmonie } from "@/lib/harmonie/useHarmonie";
 import { etoiles, pourChercher, useRd2000, type Rd2000, type Son } from "@/lib/harmonie/rd2000";
 import { cn } from "@/lib/utils";
+import { AvisLangue, useTerme } from "@/components/harmonie/AvisLangue";
 import { ImpasseHarmonie } from "@/components/harmonie/ImpasseHarmonie";
 
 type Vue = "moment" | "sons" | "parametres" | "legende";
@@ -94,7 +95,7 @@ function LigneSon({ son, layer, actif }: { son: Son; layer?: boolean; actif?: bo
           </span>
         )}
         <span className="shrink-0 text-lg font-semibold tabular-nums" data-son={son.n}>{son.n}</span>
-        <span className="min-w-0 font-medium [overflow-wrap:anywhere]">{son.nom}</span>
+        <span className="min-w-0 font-medium [overflow-wrap:anywhere]" lang="fr">{son.nom}</span>
         {son.premier && (
           <span className={cn("shrink-0 rounded-full px-1.5 py-0.5 text-xs font-medium", actif ? "bg-background text-foreground" : "bg-secondary text-foreground")}>
             {t("harmonie.rd2000.premierChoix")}
@@ -102,13 +103,14 @@ function LigneSon({ son, layer, actif }: { son: Son; layer?: boolean; actif?: bo
         )}
         <span className="ml-auto shrink-0 text-sm text-muted-foreground" aria-label={`${son.louange} / 3`}>{etoiles(son.louange)}</span>
       </span>
-      {son.commentaire && <span className="line-clamp-2 text-sm leading-[18px] text-muted-foreground">{son.commentaire}</span>}
+      {son.commentaire && <span className="line-clamp-2 text-sm leading-[18px] text-muted-foreground" lang="fr">{son.commentaire}</span>}
     </GroupRow>
   );
 }
 
 function ParMoment({ ouvert, cartes }: { ouvert?: string; cartes: boolean }) {
   const { t } = useTranslation();
+  const terme = useTerme();
   const { donnees, parN } = useRd2000Charge();
   const groupes = useMemo(() => {
     const out = new Map<string, Rd2000["moments"]>();
@@ -117,21 +119,24 @@ function ParMoment({ ouvert, cartes }: { ouvert?: string; cartes: boolean }) {
   }, [donnees]);
   return (
     <div className="space-y-6" data-vue="moment">
-      {groupes.map(([groupe, moments]) => (
+      {groupes.map(([groupe, moments]) => {
+        const g = terme(`harmonie.rd2000.groupes.${groupe}`, groupe);
+        return (
         <section key={groupe}>
-          <h2 className="mb-1.5 text-sm font-semibold uppercase tracking-wide text-muted-foreground">{groupe}</h2>
+          <h2 className="mb-1.5 text-sm font-semibold uppercase tracking-wide text-muted-foreground" lang={g.lang}>{g.texte}</h2>
           <div className={cn(cartes && "md:grid md:grid-cols-2 md:items-start md:gap-4")}>
             {moments.map((m) => {
               const son = parN.get(m.son);
               const layer = m.layer ? parN.get(m.layer) : undefined;
+              const nomMoment = terme(`harmonie.rd2000.moments.${m.moment}`, m.moment);
               return (
                 <div
                   key={m.moment}
                   className={cn("border-t border-border py-2 first:border-t-0", cartes && "md:bloc-info md:blanc-sur-gris md:rounded-2xl md:border-t-0 md:px-5 md:py-3")}
                   data-moment={m.moment}
                 >
-                  <p className="text-base font-semibold">{m.moment}</p>
-                  {m.conseil && <p className="mb-1.5 text-base leading-[21px] text-foreground/80">{m.conseil}</p>}
+                  <p className="text-base font-semibold" lang={nomMoment.lang}>{nomMoment.texte}</p>
+                  {m.conseil && <p className="mb-1.5 text-base leading-[21px] text-foreground/80" lang="fr">{m.conseil}</p>}
                   {son && <LigneSon son={son} actif={son.n === ouvert} />}
                   {layer && <LigneSon son={layer} layer actif={layer.n === ouvert} />}
                 </div>
@@ -139,9 +144,10 @@ function ParMoment({ ouvert, cartes }: { ouvert?: string; cartes: boolean }) {
             })}
           </div>
         </section>
-      ))}
+        );
+      })}
       <Group title={t("harmonie.rd2000.regle")}>
-        <p className="text-base leading-relaxed" data-regle>{donnees.regleMoments}</p>
+        <p className="text-base leading-relaxed" data-regle lang="fr">{donnees.regleMoments}</p>
       </Group>
     </div>
   );
@@ -275,6 +281,7 @@ function ListeRd2000({ vue, setVue, filtres, setFiltres, parCategorie, premier }
 
   return (
     <div className={cn("space-y-6", deuxVolets ? "px-5 pt-4 pb-10" : "mx-auto max-w-2xl px-[var(--marge-page)] pb-10 md:max-w-none")} data-rd2000>
+      <AvisLangue />
       <OngletsRail
         etiquette={t("harmonie.rd2000.titre")}
         onglets={(["moment", "sons", "parametres"] as const).map((v) => ({ id: v, label: t(`harmonie.rd2000.vues.${v}`) }))}
@@ -291,8 +298,6 @@ function ListeRd2000({ vue, setVue, filtres, setFiltres, parCategorie, premier }
         <button type="button" onClick={() => setVue("legende")} className="underline underline-offset-4">
           {t("harmonie.rd2000.modeEmploi")}
         </button>
-        {" · "}
-        {t("harmonie.rd2000.contenuFr")}
       </p>
     </div>
   );

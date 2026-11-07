@@ -133,6 +133,26 @@ test("musiciens-8 : toutes les fiches sont à relire, donc aucune ne porte de ba
   await expect(page.locator("[data-harmonie]").getByText(/Les fiches sont en relecture/)).toBeVisible();
 });
 
+test("harmonie-5 : en 中文, la fiche porte l'avis de langue et de relecture dans un seul bloc, la famille est traduite ; en français, pas d'avis de langue", async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
+  await ouvrir(page, JO, "/harmonie/substitutions/2m7-pour-4");
+  const avis = page.locator("[data-avis-langue]");
+  await expect(avis).toHaveCount(1);
+  await expect(avis).toContainText("以下内容尚未翻译，暂以法文显示。");
+  await expect(avis).toContainText("这些卡片仍在校对中");
+  await expect(page.locator("[data-fiche]").getByText("替代和弦", { exact: false }).first()).toBeVisible();
+  await expect(page.locator("[data-fiche] [lang=fr]").first()).toBeVisible();
+  await page.goto("/harmonie");
+  await expect(page.locator("[data-famille]").first()).toBeVisible();
+  await expect(page.getByRole("heading", { name: "替代和弦" }).first()).toBeVisible();
+});
+
+test("harmonie-5 : en français, la fiche n'a pas d'avis de langue", async ({ page }) => {
+  await ouvrir(page, JO, "/harmonie/substitutions/2m7-pour-4");
+  await expect(page.locator("[data-fiche]")).toBeVisible();
+  await expect(page.locator("[data-avis-langue]")).toHaveCount(0);
+});
+
 test("musiciens-5 : les guillemets et la flèche d'une fiche sont liés par des espaces insécables", async ({ page }) => {
   await ouvrir(page, JO, "/harmonie/substitutions/2m7-pour-4");
   const fiche = page.locator("[data-fiche]");

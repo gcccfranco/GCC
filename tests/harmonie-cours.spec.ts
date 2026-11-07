@@ -103,7 +103,8 @@ test("une liste à cocher du texte (20.5) se dessine avec ses cases, sans les cr
 test("interface 中文 : libellés chinois, et une ligne dit que le chapitre est en français", async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
   await entrer(page, RUTH, `/harmonie/cours/${CH(1).id}`);
-  await expect(page.getByText("本章尚未翻译，暂以法文显示。")).toBeVisible();
+  await expect(page.locator("[data-avis-langue]")).toHaveText("以下内容尚未翻译，暂以法文显示。");
+  await expect(page.locator("[data-avis-langue]")).toHaveCount(1);
   await expect(page.getByRole("button", { name: "我学完了" })).toBeVisible();
   await page.goto("/harmonie/cours");
   await expect(page.getByRole("heading", { name: "第 1 级 · 基础 · 0 / 5" })).toBeVisible();

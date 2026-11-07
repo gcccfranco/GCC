@@ -153,5 +153,9 @@ test("interface 中文 : libellés chinois, et le contenu est annoncé en franç
   await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
   await entrer(page, JO, "/harmonie/rd2000");
   await expect(page.getByRole("tab", { name: "按环节" })).toBeVisible();
-  await expect(page.getByText("内容为法文。").first()).toBeVisible();
+  await expect(page.locator("[data-avis-langue]")).toHaveText("以下内容尚未翻译，暂以法文显示。");
+  await expect(page.locator("[data-avis-langue]")).toHaveCount(1);
+  // Le groupe et le moment sont traduits ; le conseil et le nom du son restent en français, balisés lang="fr".
+  await expect(page.locator("[data-moment]").first().locator("p").first()).toHaveText("迎宾时的背景音乐");
+  await expect(page.locator("[data-son]").first().locator("xpath=..").locator("[lang=fr]").first()).toBeVisible();
 });

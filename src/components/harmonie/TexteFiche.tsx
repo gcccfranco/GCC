@@ -63,7 +63,7 @@ export function ParagrapheFiche({
   className?: string;
 }) {
   return (
-    <p className={className}>
+    <p className={className} lang="fr">
       <TexteFiche texte={texte.replace(/\s*\n\s*/g, " ")} demiTons={demiTons} tonalite={tonalite} />
     </p>
   );

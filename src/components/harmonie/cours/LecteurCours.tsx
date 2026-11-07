@@ -139,7 +139,7 @@ function Bloc({ bloc, schemas }: { bloc: BlocCours; schemas: Record<string, Reac
 
 export function LecteurCours({ blocs, schemas = {} }: { blocs: BlocCours[]; schemas?: Record<string, React.ComponentType> }) {
   return (
-    <div className="space-y-3 text-lg leading-relaxed">
+    <div className="space-y-3 text-lg leading-relaxed" lang="fr">
       {blocs.map((b, i) => <Bloc key={i} bloc={b} schemas={schemas} />)}
     </div>
   );

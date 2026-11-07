@@ -18,6 +18,7 @@ import { Group, GroupRow } from "@/components/ui/group";
 import { OngletsRail } from "@/components/layout/Onglets";
 import { Menu } from "@/components/ui/menu";
 import { Clavier, DiagrammeGuitare, doigtesDe, notesDe } from "@/components/harmonie/Diagrammes";
+import { AvisLangue, useTerme } from "@/components/harmonie/AvisLangue";
 import { ParagrapheFiche, TexteFiche, TON_DES_FICHES } from "@/components/harmonie/TexteFiche";
 import { useCatalogueHarmonie } from "@/components/harmonie/catalogueContexte";
 import { decouperRepertoire } from "@/lib/harmonie/repertoire";
@@ -34,6 +35,7 @@ const CARTE = "bloc-info rounded-2xl pt-3.5 pb-1 [&>h2]:px-4";
 
 export function FicheHarmonie({ id }: { id: string }) {
   const { t } = useTranslation();
+  const terme = useTerme();
   const { acces, fiches, instrument, setInstrument, comptesDesChants } = useCatalogueHarmonie();
   const deuxVolets = useDeuxVolets();
   const [tonalite, setTonalite] = useState(TON_DES_FICHES);
@@ -76,6 +78,7 @@ export function FicheHarmonie({ id }: { id: string }) {
   }
 
   const Titre = deuxVolets ? "h2" : "h1";
+  const famille = terme(`harmonie.familles.${fiche.famille}`, fiche.familleNom);
   const colonnesRepertoire = deuxVolets ? "grid-cols-2 gap-x-8 min-[1440px]:grid-cols-3" : "md:grid-cols-2 md:gap-x-8";
   const phrase = fiche.repertoire ? decouperRepertoire(fiche.repertoire) : null;
   const texteInstrument = instrument === "piano" ? fiche.piano : fiche.guitare;
@@ -108,20 +111,18 @@ export function FicheHarmonie({ id }: { id: string }) {
         <div>
           <div className="min-w-0">
             {/* En grand, sous l'en-tête « Harmonie » : un h2 de 24 px (agencement v18, R3) ; seule, le h1. */}
-            <Titre className="text-xl font-bold leading-tight">{fiche.nom}</Titre>
+            <Titre className="text-xl font-bold leading-tight" lang="fr">{fiche.nom}</Titre>
             <p className="mt-1 text-sm text-muted-foreground">
-              {fiche.familleNom} · {fiche.sensations.map((s) => t(`harmonie.sensation.${s}`)).join(" · ")}
+              <span lang={famille.lang}>{famille.texte}</span> · {fiche.sensations.map((s) => t(`harmonie.sensation.${s}`)).join(" · ")}
             </p>
             <p className="mt-0.5 text-sm text-muted-foreground">
               {fiche.moments.map((m) => t(`harmonie.moment.${m}`)).join(" · ")}
               {fiche.niveau[instrument] && ` · ${t(`harmonie.niveau.${fiche.niveau[instrument]}`)}`}
-              {fiche.niveauNote && ` · ${fiche.niveauNote}`}
+              {fiche.niveauNote && <> · <span lang="fr">{fiche.niveauNote}</span></>}
             </p>
           </div>
         </div>
-        {fiche.statut !== "validee" && (
-          <p className="rounded-xl border border-border bg-card px-3 py-2 text-sm text-muted-foreground">{t("harmonie.aRelireTout")}</p>
-        )}
+        <AvisLangue relecture={fiche.statut !== "validee"} />
       </header>
 
       {!deuxVolets && choixInstrument}
@@ -129,7 +130,7 @@ export function FicheHarmonie({ id }: { id: string }) {
       {/* Avant → après, le cœur de la fiche */}
       {fiche.avantApres && (
         <Group title={t("harmonie.avantApres")} className={CARTE}>
-          <div className="px-4 py-2 text-lg leading-relaxed">
+          <div className="px-4 py-2 text-lg leading-relaxed" lang="fr">
             <ParagrapheFiche texte={fiche.avantApres} demiTons={demiTons} tonalite={tonalite} />
           </div>
           <div className="flex flex-wrap items-center gap-3 border-t border-border px-4 py-2.5">
@@ -210,7 +211,7 @@ export function FicheHarmonie({ id }: { id: string }) {
           <Group title={t("harmonie.eviter")} className={CARTE}>
             <ul className="divide-y divide-border">
               {fiche.eviter.map((e, i) => (
-                <li key={i} className="px-4 py-2.5 text-base leading-relaxed">
+                <li key={i} className="px-4 py-2.5 text-base leading-relaxed" lang="fr">
                   <TexteFiche texte={e.replace(/\s*\n\s*/g, " ")} demiTons={0} tonalite={TON_DES_FICHES} />
                 </li>
               ))}
@@ -224,7 +225,7 @@ export function FicheHarmonie({ id }: { id: string }) {
       {(fiche.repertoire || exemples.length > 0) && (
         <Group title={t("harmonie.repertoire")} className={cn(CARTE, "pb-2")}>
           {fiche.repertoire && (phrase ? (
-            <div className="px-4 pb-2" data-ou-l-entendre>
+            <div className="px-4 pb-2" data-ou-l-entendre lang="fr">
               <h3 className="mb-1 text-sm font-semibold text-muted-foreground">{t("harmonie.ouLEntendre")}</h3>
               <ul className={cn("grid", colonnesRepertoire)}>
                 {phrase.map((e, i) => (
@@ -276,7 +277,7 @@ export function FicheHarmonie({ id }: { id: string }) {
       )}
 
       {fiche.regle && (
-        <p className="text-sm leading-relaxed text-muted-foreground">
+        <p className="text-sm leading-relaxed text-muted-foreground" lang="fr">
           <TexteFiche texte={fiche.regle.replace(/\s*\n\s*/g, " ")} demiTons={0} tonalite={TON_DES_FICHES} />
         </p>
       )}

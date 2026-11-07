@@ -20,6 +20,7 @@ import { OngletsRail, Pilules } from "@/components/layout/Onglets";
 import { Group, GroupRow } from "@/components/ui/group";
 import { Menu } from "@/components/ui/menu";
 import { FicheHarmonie } from "@/components/harmonie/FicheHarmonie";
+import { useTerme } from "@/components/harmonie/AvisLangue";
 import { ContexteCatalogue, useCatalogueHarmonie } from "@/components/harmonie/catalogueContexte";
 import { useDeuxVolets } from "@/hooks/useDeuxVolets";
 import { useAccesHarmonie, useCatalogue, useInstrument } from "@/lib/harmonie/useHarmonie";
@@ -116,6 +117,7 @@ function ListeCatalogue({
   setFiltres: (f: Filtres) => void;
 }) {
   const { t } = useTranslation();
+  const terme = useTerme();
   const { acces, fiches, instrument, setInstrument } = useCatalogueHarmonie();
   const deuxVolets = useDeuxVolets();
   const ouverte = ficheDeLAdresse(usePathname() ?? "/harmonie") ?? (deuxVolets ? visibles[0]?.id : null);
@@ -124,8 +126,8 @@ function ListeCatalogue({
   const [parcoursOuvert, setParcoursOuvert] = useState(false);
 
   const familles = useMemo(() => {
-    const out = new Map<string, Fiche[]>();
-    for (const f of visibles) out.set(f.familleNom, [...(out.get(f.familleNom) ?? []), f]);
+    const out = new Map<string, { nom: string; liste: Fiche[] }>();
+    for (const f of visibles) out.set(f.famille, { nom: f.familleNom, liste: [...(out.get(f.famille)?.liste ?? []), f] });
     return [...out.entries()];
   }, [visibles]);
 
@@ -218,8 +220,8 @@ function ListeCatalogue({
                   <span className="flex items-center gap-3">
                     {numero}
                     <span className="min-w-0">
-                      <span className="block truncate font-medium">{fiche.nom}</span>
-                      <span className="block truncate text-sm text-muted-foreground">{fiche.familleNom}</span>
+                      <span className="block truncate font-medium" lang="fr">{fiche.nom}</span>
+                      <span className="block truncate text-sm text-muted-foreground" lang={terme(`harmonie.familles.${fiche.famille}`, fiche.familleNom).lang}>{terme(`harmonie.familles.${fiche.famille}`, fiche.familleNom).texte}</span>
                     </span>
                   </span>
                 </GroupRow>
@@ -250,13 +252,13 @@ function ListeCatalogue({
         </div>
       ) : (
         <div className={cn(cartes ? "max-md:space-y-5 md:columns-2 md:gap-4" : "space-y-5")}>
-          {familles.map(([nom, liste]) => (
-            <div key={nom} data-famille className={cn(cartes && "md:bloc-info md:blanc-sur-gris md:mb-4 md:break-inside-avoid md:rounded-2xl md:px-5 md:pt-3.5 md:pb-1.5")}>
-              <Group title={nom} className={cn(cartes && "md:[&>h2]:text-lg md:[&>h2]:text-foreground")}>
+          {familles.map(([idFamille, { nom, liste }]) => (
+            <div key={idFamille} data-famille className={cn(cartes && "md:bloc-info md:blanc-sur-gris md:mb-4 md:break-inside-avoid md:rounded-2xl md:px-5 md:pt-3.5 md:pb-1.5")}>
+              <Group title={terme(`harmonie.familles.${idFamille}`, nom).texte} className={cn(cartes && "md:[&>h2]:text-lg md:[&>h2]:text-foreground")}>
                 {liste.map((f) => (
                   <GroupRow key={f.id} href={`/harmonie/${f.id}`} chevron actif={f.id === ouverte} className={cn(cartes && f.id !== ouverte && "md:hover:bg-secondary-fond md:active:bg-secondary-fond")}>
                     <span className="flex items-center gap-2">
-                      <span className="line-clamp-2 font-medium">{f.nom}</span>
+                      <span className="line-clamp-2 font-medium" lang="fr">{f.nom}</span>
                       {badgeARelire && f.statut !== "validee" && (
                         <span className={cn("shrink-0 rounded-full px-1.5 py-0.5 text-xs", f.id === ouverte ? "bg-background font-medium text-foreground" : "bg-secondary text-muted-foreground")}>
                           {t("harmonie.aRelire")}
