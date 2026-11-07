@@ -534,7 +534,7 @@ export function StructureStrip({
                 >
                   <span className={`inline-flex items-baseline font-bold leading-none tracking-[0.02em] ${compacte ? "text-sm" : "text-sm sm:text-lg"}`}>
                     <abbr title={g.full} className="no-underline [text-decoration:none]">{g.abbr}</abbr>
-                    {g.repeat > 1 && <span className={`ml-px font-semibold ${compacte ? "text-xs" : "text-xs sm:text-sm"}`}>×{g.repeat}</span>}
+                    {g.repeat > 1 && <span className={`ml-px font-semibold leading-none ${compacte ? "text-xs" : "text-xs sm:text-sm"}`}>×{g.repeat}</span>}
                   </span>
                   {n !== undefined && (
                     <span aria-label={`${n}`} className={`absolute -right-1 -top-1 max-sm:h-4 max-sm:min-w-4 ${numberBadge}`}>{n}</span>

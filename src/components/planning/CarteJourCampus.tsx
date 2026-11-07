@@ -86,7 +86,7 @@ export function CarteJourCampus({ day, seances, entrainement }: { day: string; s
                   const [role, name] = r.split(":").map(x => x.trim())
                   return (
                     <span key={r}>
-                      <span className="text-muted-foreground">{zh ? poste(t, role) : role}</span>
+                      <span className="text-xs text-muted-foreground">{zh ? poste(t, role) : role}</span>
                       {name && <span className="font-semibold text-foreground ml-1">{name}</span>}
                     </span>
                   )

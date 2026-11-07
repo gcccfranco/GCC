@@ -343,10 +343,16 @@ test.describe("plancher de texte et gris à 13 px en grand (CD, T4a)", () => {
   const ENTETE = ["2026 DATE", "Présidence", "Choristes", "", "Pianiste", "Guitariste", "Batterie", "Sono + Live", "PPT", "Orateur", "Traducteur", "Sainte cène", "Notes"];
   const culte = (date: string) => [date, "Odile M.", "Noé T.", "Ysée V.", "Basile Q.", "Samuel K.", "Gaëtan D.", "Marc A.", "Rémi K.", "Clotilde W.", "Jun L.", "", ""];
   const FEUILLES: Record<string, string> = { Franco_Louange: csv([ENTETE, culte("08/11"), culte("14/11"), culte("22/11")]) };
+  const chant = (songSlug: string, position: number) => ({
+    songSlug, position, keyOverride: null, showChords: true, showPinyin: true, useJianpu: false,
+    structureOverride: null, sectionNotes: {}, notes: "",
+  });
   const DOCS = {
     "setlists/sl-t4a": {
       title: "Culte du 14 novembre", leader: "Odile M.", category: "Culte Francophone", date: "2026-11-14",
-      language: "mixed", notes: "", ownerId: "uid-basile", isPrivate: false, items: [],
+      language: "mixed", notes: "", ownerId: "uid-basile", isPrivate: false,
+      // Deux chants (slugs de content/songs/) : la page de la setlist rend `ListView` (lignes, gris hérité).
+      items: [chant("hosanna", 1), chant("abba-pere", 2)],
     },
   };
   const EXCEPTIONS = "[data-jianpu-filtre], [data-partition], [data-pastille-compteur]";
@@ -363,7 +369,7 @@ test.describe("plancher de texte et gris à 13 px en grand (CD, T4a)", () => {
     await page.waitForTimeout(800); // laisse les listes se remplir (pas de `networkidle` : Mes services garde une requête ouverte)
   }
 
-  for (const chemin of ["/planning", "/setlists", "/mes-services", "/songs/statistiques"]) {
+  for (const chemin of ["/planning", "/setlists", "/setlists/sl-t4a", "/mes-services", "/songs/statistiques"]) {
     test(`P12/P13 : aucun texte sous 12 px, gris à 13 px en grand sur ${chemin}`, async ({ page }) => {
       await ouvrir(page, chemin);
       const trop = await page.evaluate((exceptions) => {
@@ -411,6 +417,22 @@ test.describe("plancher de texte et gris à 13 px en grand (CD, T4a)", () => {
           zone.selectNodeContents(el);
           const [t, b] = [zone.getBoundingClientRect(), el.getBoundingClientRect()];
           if (t.right > b.right + 0.5 || t.left < b.left - 0.5) sortie.push(`${el.tagName.toLowerCase()} « ${texte} » ${el.scrollWidth} > ${el.clientWidth}`);
+        }
+        // En hauteur : dans une vignette de date (jour au-dessus, mois dessous), le texte garde au moins 2 px d'air en
+        // haut et en bas. Un cran de taille pose son propre interligne ; sans `leading-none` sur les deux lignes, le
+        // mois venait toucher le bord bas de la boîte.
+        const vignette = /^\d{1,2}\s?\p{L}+\.?$/u;
+        for (const el of document.querySelectorAll<HTMLElement>("main *, header *")) {
+          const texte = el.textContent?.trim() ?? "";
+          const estVignette = el.matches('[data-testid="tuile"]') || (vignette.test(texte) && getComputedStyle(el).flexDirection === "column");
+          if (!estVignette || el.clientHeight === 0 || getComputedStyle(el).display === "none") continue;
+          const zone = document.createRange();
+          zone.selectNodeContents(el);
+          const [t, b] = [zone.getBoundingClientRect(), el.getBoundingClientRect()];
+          if (t.height === 0) continue;
+          if (t.top < b.top + 2 || t.bottom > b.bottom - 2) {
+            sortie.push(`vignette « ${texte} » : air ${(t.top - b.top).toFixed(1)} px en haut, ${(b.bottom - t.bottom).toFixed(1)} px en bas`);
+          }
         }
         return sortie;
       });

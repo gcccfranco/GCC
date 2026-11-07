@@ -65,8 +65,8 @@ export function PageAccords() {
   return (
     <div className="w-full max-w-[1120px] px-[var(--marge-page)] pb-28 pt-6">
       <Retour href="/">{t("accords.retour")}</Retour>
-      <h1 className="text-2xl font-bold leading-10 tracking-tight text-foreground">{t("accords.titre")}</h1>
-      <p className="mt-1 text-base leading-6 text-muted-foreground">{t("accords.sousTitre")}</p>
+      <h1 className="titre-page text-foreground">{t("accords.titre")}</h1>
+      <p className="mt-1 text-sm text-muted-foreground">{t("accords.sousTitre")}</p>
 
       <div className="mt-5 flex flex-wrap items-center gap-3">
         <ChampRecherche

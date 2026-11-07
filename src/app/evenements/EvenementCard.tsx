@@ -77,7 +77,7 @@ export function TitreEvenement({ e, niveau = "h2", grand = false, actions }: { e
         <TypePour e={e} />
         {actions && <div className="ml-auto flex items-center gap-2">{actions}</div>}
       </div>
-      <Titre className={`mt-2 font-bold text-foreground text-balance ${grand ? "text-xl leading-[29px] tracking-tight" : "text-xl"}`}>{e.titre}</Titre>
+      <Titre className={`mt-2 font-bold text-foreground text-balance ${grand ? "text-xl tracking-tight" : "text-xl"}`}>{e.titre}</Titre>
     </div>
   )
 }

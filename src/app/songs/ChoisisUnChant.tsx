@@ -140,7 +140,7 @@ export function ChoisisUnChant() {
   return (
     <div data-choisis-un-chant className="relative flex flex-col gap-4 pb-12 [container-type:inline-size]">
       <div>
-        <h2 className="text-xl font-bold leading-[29px] tracking-[-0.02em] text-foreground">{t("songs.choose.title")}</h2>
+        <h2 className="text-xl font-bold tracking-[-0.02em] text-foreground">{t("songs.choose.title")}</h2>
         <p className="mt-1 text-sm text-muted-foreground">
           {prochaines.length > 0 ? t("songs.choose.subtitle") : recents.length > 0 ? t("songs.choose.subtitleRecents") : t("songs.choose.subtitleListOnly")}
         </p>

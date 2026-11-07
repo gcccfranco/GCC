@@ -88,7 +88,7 @@ export function SonRd2000({ n }: { n: string }) {
   const fiche = donnees.fiches.find((f) => f.n === n);
   // En grand, sous l'en-tête « Harmonie » : un h2 de 24 px (agencement v18, R3) ; seul, le h1.
   const Titre = deuxVolets ? "h2" : "h1";
-  const titre = cn("font-bold leading-tight", deuxVolets ? "text-xl" : "text-xl");
+  const titre = "text-xl font-bold leading-tight";
 
   return (
     <div

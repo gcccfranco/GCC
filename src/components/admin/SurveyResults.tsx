@@ -31,7 +31,7 @@ function CountBar({ label, count, total }: { label: string; count: number; total
     <div className="space-y-1">
       <div className="flex items-baseline justify-between gap-2 text-xs">
         <span className="text-foreground">{label}</span>
-        <span className="text-muted-foreground shrink-0 tabular-nums">
+        <span className="text-xs text-muted-foreground shrink-0 tabular-nums">
           {count} · {pct}%
         </span>
       </div>

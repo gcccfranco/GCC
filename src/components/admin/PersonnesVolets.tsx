@@ -359,9 +359,9 @@ function FicheDuMembre({
                       {x.role && !zh && x.role.nomZh && <span className="text-muted-foreground">{x.role.nomZh}</span>}
                     </span>
                     <span className="flex flex-wrap justify-end gap-1.5 text-xs font-semibold">
-                      {x.role?.comite && <span className="rounded-full bg-secondary px-2 py-0.5 text-muted-foreground">{t("groupes.auComite")}</span>}
+                      {x.role?.comite && <span className="rounded-full bg-secondary px-2 py-0.5 text-xs text-muted-foreground">{t("groupes.auComite")}</span>}
                       {col && (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-secondary px-2 py-0.5 text-muted-foreground">
+                        <span className="inline-flex items-center gap-1 rounded-full bg-secondary px-2 py-0.5 text-xs text-muted-foreground">
                           <Link2 className="h-3 w-3" aria-hidden />{t("groupes.pastille.colonne", { colonne: col })}
                         </span>
                       )}
@@ -490,8 +490,8 @@ function FicheDuMembre({
               <div key={`${s.date}-${s.service}-${s.role}-${i}`} className={ligne}>
                 <span className="flex items-center gap-3">
                   <span className="flex h-10 w-10 flex-col items-center justify-center rounded-lg bg-secondary leading-none">
-                    <span className="text-base font-bold text-foreground">{date.getDate()}</span>
-                    <span className="text-xs text-muted-foreground">{date.toLocaleDateString(zh ? "zh-CN" : "fr-FR", { month: "short" })}</span>
+                    <span className="text-base font-bold leading-none text-foreground">{date.getDate()}</span>
+                    <span className="text-xs leading-none text-muted-foreground">{date.toLocaleDateString(zh ? "zh-CN" : "fr-FR", { month: "short" })}</span>
                   </span>
                   <span className="font-semibold text-foreground">{libelleServicePlanning(t, zh, s.service)}</span>
                 </span>

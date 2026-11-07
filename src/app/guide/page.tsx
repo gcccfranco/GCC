@@ -299,7 +299,7 @@ export default function GuidePage() {
                     )}
 
                     {tip && (
-                      <div className="flex gap-2 rounded-lg bg-secondary/60 px-3 py-2 text-base leading-relaxed text-foreground/80">
+                      <div className="flex gap-2 rounded-lg bg-background px-3 py-2 text-base leading-relaxed text-foreground/80">
                         <Lightbulb className="mt-1 h-4 w-4 shrink-0 text-muted-foreground" />
                         <span>
                           <RichText text={tip} />

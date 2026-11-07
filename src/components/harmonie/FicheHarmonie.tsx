@@ -108,7 +108,7 @@ export function FicheHarmonie({ id }: { id: string }) {
         <div>
           <div className="min-w-0">
             {/* En grand, sous l'en-tête « Harmonie » : un h2 de 24 px (agencement v18, R3) ; seule, le h1. */}
-            <Titre className={deuxVolets ? "text-xl font-bold leading-tight" : "text-xl font-bold leading-tight"}>{fiche.nom}</Titre>
+            <Titre className="text-xl font-bold leading-tight">{fiche.nom}</Titre>
             <p className="mt-1 text-sm text-muted-foreground">
               {fiche.familleNom} · {fiche.sensations.map((s) => t(`harmonie.sensation.${s}`)).join(" · ")}
             </p>

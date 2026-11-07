@@ -174,7 +174,7 @@ export function ListView({
                         <>
                           <div className="space-y-0.5">
                             {runs.map((run, i) => (
-                              <p key={i} className="text-xs leading-tight">
+                              <p key={i} className="text-xs leading-tight text-muted-foreground">
                                 <span className="font-medium text-muted-foreground/90">{run.title}</span>
                                 <span className="text-muted-foreground/40"> · </span>
                                 <span className="text-muted-foreground">

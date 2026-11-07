@@ -19,8 +19,8 @@ export function TuileDate({ iso, lang }: { iso: string; lang: string }) {
   return (
     <span className="flex h-10 w-10 shrink-0 flex-col items-center justify-center rounded-xl leading-none svc-ink"
       style={{ "--svc": COLOR, background: `color-mix(in srgb, ${COLOR} 10%, transparent)` } as CSSProperties}>
-      <span className="text-base font-bold tabular-nums">{jour}</span>
-      <span className="mt-0.5 text-xs font-semibold">{mois}</span>
+      <span className="text-base font-bold leading-none tabular-nums">{jour}</span>
+      <span className="mt-0.5 text-xs font-semibold leading-none">{mois}</span>
     </span>
   )
 }
