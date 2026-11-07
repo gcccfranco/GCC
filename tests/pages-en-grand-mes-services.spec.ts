@@ -134,9 +134,16 @@ test.describe("Mes services en grand", () => {
     await expect(laSetlist(page).getByText("Culte du 4 octobre")).toBeVisible();
     await expect(laSetlist(page).getByRole("link", { name: "Ouvrir" })).toHaveAttribute("href", /^\/setlists\/sl-1\/?$/);
     await expect(laSetlist(page).getByRole("link", { name: "Mode Louange" })).toHaveAttribute("href", /^\/setlists\/sl-1\/?\?louange=1$/);
-    // Côte à côte : la setlist à gauche, l'équipe à droite (planche `mes-services-ordinateur`).
+    // services-4 (L1, lot CD T4b) : les cartes suivent `auto-fill minmax(280px, 1fr)` : côte à côte (la setlist à gauche, l'équipe
+    // à droite) dès que le volet offre 2 x 280 + 16 px, l'une sous l'autre (la setlist d'abord) sinon.
     const [a, b] = [(await laSetlist(page).boundingBox())!, (await equipe(page).boundingBox())!];
-    expect(b.x).toBeGreaterThan(a.x + a.width - 1);
+    const place = await page.locator(".service-colonnes").evaluate((el) => el.getBoundingClientRect().width);
+    if (place >= 2 * 280 + 16) expect(b.x, `côte à côte dans ${place} px`).toBeGreaterThan(a.x + a.width - 1);
+    else {
+      expect(b.y, `l'une sous l'autre dans ${place} px`).toBeGreaterThan(a.y + a.height - 1);
+      expect(Math.abs(b.x - a.x)).toBeLessThan(2);
+      expect(Math.abs(b.width - a.width)).toBeLessThan(2);
+    }
     expect(await sansDefilementLateral(page)).toBe(true);
   });
 
@@ -183,6 +190,10 @@ test("tablette portrait : cartes sur deux colonnes ; le service seul sur son adr
   await expect(page.getByRole("heading", { name: "Dimanche 18 octobre", level: 1 })).toBeVisible();
   await expect(liste(page)).toHaveCount(0);
   await expect(page.getByRole("link", { name: "Mes services", exact: true })).toBeVisible();
+  // services-8 (L1, lot CD T4b) : plus de centrage ni de largeur de 768 px : le service part de `--marge-page` (24 px), comme le titre des autres pages.
+  const marge = await page.evaluate(() => parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--marge-page")));
+  expect(marge).toBe(24);
+  expect(Math.abs((await page.locator(".service-detail header").boundingBox())!.x - marge), "bord gauche du service").toBeLessThan(1);
   expect(await sansDefilementLateral(page)).toBe(true);
 });
 
@@ -219,17 +230,40 @@ test("bannière des rappels : encadré sans filet coloré, croix de 44 px au tou
   if (croix.coarse) for (const c of croix.zone) expect(c, "zone de la croix").toBeGreaterThanOrEqual(44);
 });
 
-// quotidien-5 : la colonne seule part du bord du titre (plus de carte centrée).
-test("liste seule : le bord gauche de la carte est celui du titre", async ({ page }, info) => {
+// quotidien-5, puis L1 (lot CD, T4b, `partout-largeurs`, cas pilote) : la liste seule est une colonne de 720 px de
+// contenu (`--colonne-liste`), alignée à gauche sur le titre ; l'en-tête prend la même largeur ; le bandeau de rappels et
+// l'état vide sont chacun un groupe blanc sur le gris (état vide : 720 × 96), le rail est posé sur le gris, à son contenu.
+test("liste seule : colonne de 720 px calée sur le titre, en-tête à sa largeur, bandeau et état vide en groupes blancs", async ({ page }, info) => {
   test.skip(disposition(info) !== "grand", "colonne seule : grand écran");
   await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
   await page.route(/docs\.google\.com\/spreadsheets/, (route) => route.fulfill({ status: 200, contentType: "text/csv", body: "" }));
   await signInAs(page, RUTH, {}, "/mes-services");
   const seule = page.locator("[data-colonne-seule]");
   await expect(seule).toBeVisible();
-  const titre = (await page.locator("header[data-entete-page]").getByRole("heading", { name: "Mes services", level: 1 }).boundingBox())!;
-  const carte = (await seule.locator(".raised").first().boundingBox())!;
-  expect(Math.abs(carte.x - titre.x), "bord de la carte = bord du titre").toBeLessThan(2);
+  const entete = page.locator("header[data-entete-page]");
+  const titre = (await entete.getByRole("heading", { name: "Mes services", level: 1 }).boundingBox())!;
+  const volet = (await seule.locator('[data-volet="liste"]').boundingBox())!;
+  expect(Math.abs(volet.x - titre.x), "bord de la colonne = bord du titre").toBeLessThan(2);
+  expect(Math.abs(volet.width - 720), "colonne de 720 px").toBeLessThan(2);
+  // L'en-tête : 720 px de contenu et les deux marges, partie du bord gauche de la zone.
+  const marge = await page.evaluate(() => parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--marge-page")));
+  const e = (await entete.boundingBox())!;
+  expect(Math.abs(e.width - (720 + 2 * marge)), "en-tête à la largeur de la colonne").toBeLessThan(2);
+  // Bandeau de rappels : un groupe blanc (`carte-groupe`) sur le gris, sans la carte qui l'entourait.
+  const bandeau = page.getByText("Active les rappels de service").locator("xpath=ancestor::div[contains(@class,'rounded-2xl')][1]");
+  await expect(bandeau).toHaveClass(/carte-groupe/);
+  expect(await bandeau.evaluate((el) => getComputedStyle(el).backgroundColor), "groupe blanc").toBe("rgb(255, 255, 255)");
+  const b = (await bandeau.boundingBox())!;
+  expect(Math.abs(b.width - 720), "bandeau à la largeur de la colonne").toBeLessThan(2);
+  await expect(bandeau.getByText("Active les rappels de service")).toHaveCSS("font-size", "15px");
+  // Rail à son contenu ; état vide de la largeur de la colonne × 96 px, sans pointillés.
+  const rail = (await seule.locator('[data-onglets="rail"]').boundingBox())!;
+  expect(rail.width, "rail à la largeur de son contenu").toBeLessThan(360);
+  const vide = seule.getByText("Aucun service à venir").locator("xpath=..");
+  const v = (await vide.boundingBox())!;
+  expect(Math.abs(v.width - 720)).toBeLessThan(2);
+  expect(Math.abs(v.height - 96)).toBeLessThan(2);
+  expect(await vide.evaluate((el) => getComputedStyle(el).borderTopWidth), "sans bordure ni pointillés").toBe("0px");
 });
 
 test("capture : Mes services", async ({ page }, info) => {

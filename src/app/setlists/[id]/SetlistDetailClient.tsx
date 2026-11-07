@@ -36,6 +36,7 @@ import { formatDate, langueCourte } from "@/lib/utils/formatDate";
 import { useScrollDirection } from "@/hooks/useScrollDirection";
 import { useSwipeViews } from "@/hooks/useSwipeViews";
 import { useDeuxVolets } from "@/hooks/useDeuxVolets";
+import { useDisposition } from "@/hooks/useDisposition";
 import { chargerIndexChants } from "@/hooks/useSongsIndex";
 import { useContenusChants } from "./_hooks/useContenusChants";
 import { usePreferencesAffichage } from "./_hooks/usePreferencesAffichage";
@@ -174,6 +175,8 @@ export function SetlistDetailClient() {
   // 900 px utiles au moins (Q1). Le sommaire à gauche, les partitions toujours à
   // droite : ni bascule, ni Liste, ni geste ; `view` n'y sert plus qu'à G.
   const deuxVolets = useDeuxVolets();
+  // dimanche-9 (lot CD, T4b) : en tablette portrait, le contenu va jusqu'à la barre d'outils, à `--marge-page` des bords.
+  const enTablette = useDisposition() === "tablette";
   /** En-tête collant des deux volets, et sa hauteur (le sommaire colle dessous). */
   const enTeteRef = useRef<HTMLElement>(null);
   const [enTeteH, setEnTeteH] = useState(0);
@@ -1591,7 +1594,9 @@ export function SetlistDetailClient() {
             }}
           >
             <FondDeBarre />
-            <div className="flex flex-wrap items-end gap-x-6 gap-y-3 px-7 pb-4 pt-5">
+            {/* L1 (dimanche-7, lot CD T4b) : la rangée finit où finit la colonne de lecture (partition plafonnée à `max-w-2xl`, 672 px,
+                dans `PartitionView`) : 380 px de sommaire + 28 + 672 + 28 de marges = 1 108 px, à 1 440 px « Mode Louange » finit à x ≈ 1 328. */}
+            <div className="flex max-w-[1108px] flex-wrap items-end gap-x-6 gap-y-3 px-7 pb-4 pt-5">
               {/* Le titre garde 18rem au moins : sinon les boutons passent dessous. */}
               <TitreEnTete setlist={setlist} passage={passageFete} />
               {/* Présentation · Adapter · Ma version · Modifier · PDF · ⋯ · Mode louange,
@@ -1744,7 +1749,7 @@ export function SetlistDetailClient() {
           {/* Top bar — même style que SongDetailClient */}
           <div ref={toolbarRef} data-testid="barre-outils" className={`print:hidden fixed left-[var(--barre-laterale)] right-0 top-[var(--nav-h)] [--barre-top:var(--nav-h)] [--barre-left:var(--barre-laterale)] z-10 material-chrome transition-transform duration-300 ${ scrollVisible ? "translate-y-0" : "-translate-y-[calc(100%+var(--nav-h))]"}`}>
             <FondDeBarre sousNavbar />
-            <div className="max-w-[1080px] mx-auto px-4">
+            <div className="max-w-[1080px] mx-auto px-[var(--marge-page)]">
               {/* Une seule ligne sur téléphone (retour du 20/09/2026) : 9 commandes de 32 px
                   tiennent à partir de 390 px ; en dessous, « Adapter » et « Ma version »
                   passent dans le menu « ⋯ ». Les libellés n'arrivent qu'à 1024 px :
@@ -1904,7 +1909,7 @@ export function SetlistDetailClient() {
             </div>
           </div>
 
-          <div ref={zoneRef} className="relative max-w-2xl mx-auto px-4 pb-8 pt-6 print:px-0 print:py-4" style={{ marginTop: toolbarH }}>
+          <div ref={zoneRef} className={`relative pb-8 pt-6 print:px-0 print:py-4 ${enTablette ? "px-[var(--marge-page)]" : "max-w-2xl mx-auto px-4"}`} style={{ marginTop: toolbarH }}>
             {copieLueLe !== null && (
               <div role="status" data-copie-hors-ligne className="mb-4 flex items-center justify-between gap-2 rounded-lg bg-muted py-1 pl-3 pr-1 text-xs text-muted-foreground print:hidden">
                 <span>{texteCopie}</span>
@@ -1949,7 +1954,7 @@ export function SetlistDetailClient() {
                 />
               </div>
               {setlist.notes && (
-                <p className="mt-3 whitespace-pre-line text-sm text-muted-foreground italic">{setlist.notes}</p>
+                <p className="mt-3 max-w-[680px] whitespace-pre-line text-sm text-muted-foreground italic">{setlist.notes}</p>
               )}
             </div>
 

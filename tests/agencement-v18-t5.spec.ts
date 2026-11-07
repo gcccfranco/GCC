@@ -438,8 +438,8 @@ test.describe("T5 : Messages", () => {
     await ongletsRail(page).getByRole("link", { name: "Questionnaire" }).click();
     await expect(page).toHaveURL(/\/back-office\/messages\/questionnaire\/?$/);
     await expect(page.getByText("Aucune réponse pour l'instant.").filter({ visible: true }).first()).toBeVisible();
-    // Sans réponse, en grand, l'état vide est une colonne de 960 px calée sur le titre (BO9, `colonneSeule`).
-    await verifierAgencement(page, { contenu: sousEnTete(page), colonne: 960, onglets: { rail: 1, pilules: 0 } });
+    // Sans réponse, en grand, l'état vide est une colonne de 720 px calée sur le titre (BO9, `colonneSeule`).
+    await verifierAgencement(page, { contenu: sousEnTete(page), colonne: 720, onglets: { rail: 1, pilules: 0 } });
     const c = await ici();
     for (const r of [b, c]) {
       expect(Math.abs(r.x - a.x)).toBeLessThan(1);

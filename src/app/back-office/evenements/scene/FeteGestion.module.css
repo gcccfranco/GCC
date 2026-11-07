@@ -1,0 +1,23 @@
+/* Scène sur une colonne (bo-evenements-12, lot CD T4b) : à partir de 720 px de conteneur, deux colonnes de groupes ;
+   à gauche « Cette fête » (l'ordre de passage en troisième ligne de sa carte) puis les années passées, à droite
+   « Cette semaine » et « Entraînements » ; dessous, l'empilement d'avant (la fête, la semaine, les années passées,
+   l'ordre de passage en carte tout en bas). Les zones se rangent par `grid-template-areas` à partir de 720 px, sans doubler le contenu ;
+   seule l'entrée de l'ordre de passage existe deux fois, une seule visible (`display: none` la retire aussi aux
+   lecteurs d'écran). Requête de conteneur en CSS de module (Tailwind 3.4 n'a pas `@container`). */
+.cadre { container-type: inline-size; }
+.deux { display: grid; gap: 1.5rem; align-items: start; grid-template-columns: minmax(0, 1fr); }
+.deux > [data-zone="droite"] { min-width: 0; }
+.deux > [data-zone="annees"]:empty { display: none; }
+.ordreDansCarte { display: none; }
+@container (min-width: 720px) {
+  .deux {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-rows: auto 1fr;
+    grid-template-areas: "fete droite" "annees droite";
+  }
+  .deux > [data-zone="fete"] { grid-area: fete; }
+  .deux > [data-zone="droite"] { grid-area: droite; }
+  .deux > [data-zone="annees"] { grid-area: annees; }
+  .deux > [data-zone="ordre"].ordreBas { display: none; }
+  .ordreDansCarte { display: block; }
+}

@@ -76,7 +76,7 @@ async function ouvrir(page: Page, etat: "reduite" | "depliee", to: string, donne
 }
 
 // Règle de largeur du 25/10/2026 (tranche B4b de docs/spec-corrections-audit.md, § 5 ; commit bc613d14) : une
-// liste sans rien à montrer à droite prend seule une colonne de 960 px (`DeuxVolets colonneSeule` : /setlists
+// liste sans rien à montrer à droite prend seule une colonne de 720 px (`DeuxVolets colonneSeule` : /setlists
 // sans aperçu, Mes services sans service ; mesuré par largeurs-b4.spec.ts). Ici, les deux volets : une setlist
 // choisie (`?apercu=`, comme agencement-v18-setlists) et un service à venir.
 const PAGES_EN_DEUX_VOLETS: { nom: string; to: string; volets: (page: Page) => Locator; donnees?: typeof UN_SERVICE }[] = [

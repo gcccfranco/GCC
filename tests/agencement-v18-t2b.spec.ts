@@ -326,14 +326,20 @@ test.describe("T2b : Back-Office › Réunions", () => {
     expect(taches.x).toBeGreaterThan(sujets.x + sujets.width - 1);
   });
 
-  test("ordinateur-1440 : la fiche d'un évènement sur deux colonnes, Inscrits à gauche", async ({ page }, info) => {
+  // bo-evenements-5 (lot CD, T4b) : deux colonnes à partir de 1 024 px de conteneur ; dessous, une colonne de 720 px au plus.
+  test("ordinateur-1440 : la fiche d'un évènement, Inscrits à gauche à partir de 1 024 px de volet, une colonne sinon", async ({ page }, info) => {
     test.skip(info.project.name !== "ordinateur-1440", "1 440 px, barre dépliée");
     await ouvrir(page, COORD, "/back-office/evenements/foot");
     const fiche = volet(page);
     await expect(fiche.getByRole("region", { name: "Inscrits" })).toBeVisible();
     const inscrits = (await fiche.getByRole("region", { name: "Inscrits" }).boundingBox())!;
     const periode = (await fiche.getByRole("region", { name: "Période d'inscription" }).boundingBox())!;
-    expect(periode.x).toBeGreaterThan(inscrits.x + inscrits.width - 1);
+    const conteneur = (await page.getByTestId("fiche-gestion").boundingBox())!.width;
+    if (conteneur >= 1024) expect(periode.x, `deux colonnes dans ${conteneur} px`).toBeGreaterThan(inscrits.x + inscrits.width - 1);
+    else {
+      expect(periode.y, `une colonne dans ${conteneur} px`).toBeGreaterThan(inscrits.y + inscrits.height - 1);
+      expect(Math.abs(periode.x - inscrits.x)).toBeLessThan(2);
+    }
   });
 
   test("un lien direct vers une réunion ouvre liste et fiche sous l'entrée Réunions", async ({ page }, info) => {

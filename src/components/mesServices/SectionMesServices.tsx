@@ -4,7 +4,7 @@
 // la section lit tout une fois (plannings, petits déj, setlists, index des chants) et la liste
 // vit ici, dans le layout de `/mes-services` (Q2). En grand, la liste à gauche, le service à
 // droite (la page `/mes-services/[date]`), ou le premier de la liste sur son adresse (Q3) ; sans
-// aucun service, la liste seule dans la colonne de lecture de 960 px (règle de largeur du 25/10/2026, B4b).
+// aucun service, la liste seule dans la colonne de 720 px (`--colonne-liste`) (règle de largeur du 25/10/2026, B4b).
 // Un volet : la liste, puis le service en page.
 
 import { useEffect, useMemo, useState } from "react";
@@ -154,6 +154,7 @@ export function SectionMesServices({ children }: { children: React.ReactNode }) 
       aujourdhui={aujourdhui}
       actif={choisi ? cleDuService(choisi) : undefined}
       setlistDe={valeur?.setlistDe}
+      seule={deuxVolets && !affiches[0] && !date}
     />
   );
 
@@ -180,6 +181,7 @@ export function SectionMesServices({ children }: { children: React.ReactNode }) 
           racine="/mes-services"
           largeurListe={400}
           colonneSeule={!affiches[0]}
+          groupeSeule={false}
           liste={liste}
           premier={valeur && affiches[0] ? <DetailService s={affiches[0]} /> : null}
         >

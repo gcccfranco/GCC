@@ -25,6 +25,7 @@ import { useCallback, useEffect, useRef, useState, type ReactNode } from "react"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { useTranslation } from "react-i18next"
 import { CircleCheck, ChevronDown, ChevronRight, History, List, ListOrdered, Lock, LockOpen, Plus, Printer, Send, SlidersHorizontal, type LucideIcon } from "lucide-react"
+import styles from "./FeteGestion.module.css"
 import { useAuth } from "@/lib/firebase/auth"
 import { useProfile } from "@/lib/firebase/users"
 import { isCoordination } from "@/lib/access"
@@ -492,28 +493,38 @@ export function FeteGestion({ fete }: { fete: Fete }) {
         </DeuxVolets>
       )
     }
-    // Une colonne (P9) : une vue autre que celle par défaut s'ouvre en page, avec un retour.
+    // Une colonne (P9) : une vue autre que celle par défaut s'ouvre en page, avec un retour, plafonnée à
+    // `--colonne-liste` (720 px, L1) et alignée à gauche.
     if (vue !== vueParDefaut) {
       return (
-        <div className="space-y-3 px-[var(--marge-page)]">
+        <div className="max-w-[calc(var(--colonne-liste)+2*var(--marge-page))] space-y-3 px-[var(--marge-page)]">
           <Retour href={retourFete}>{titre}</Retour>
           {erreurEcriture}
           {droite(m)}
         </div>
       )
     }
-    // Sinon la fête, ce qui se lit par défaut, puis l'ordre de passage en carte tout en bas.
+    // Sinon la fête, ce qui se lit par défaut, puis l'ordre de passage en carte tout en bas ; à partir de 720 px de
+    // conteneur, deux colonnes (bo-evenements-12, `FeteGestion.module.css`).
+    const ordreEnBas = vue !== "ordre"
     return (
-      <div className="space-y-6 px-[var(--marge-page)]">
-        <section aria-label={t("planning.gestion.cetteFete")} className="space-y-4">
-          {enTeteEdition}
-          {texteBrouillon}
-          {erreurEcriture}
-          {lance && <div className="carte-groupe space-y-1 rounded-2xl p-1.5">{entrees}</div>}
-        </section>
-        {droite(m)}
-        {anneesPassees}
-        {vue !== "ordre" && <div className="carte-groupe rounded-2xl p-1.5">{entreeOrdre}</div>}
+      <div className={styles.cadre}>
+        <div className={`${styles.deux} px-[var(--marge-page)]`}>
+          <section data-zone="fete" aria-label={t("planning.gestion.cetteFete")} className="min-w-0 space-y-4">
+            {enTeteEdition}
+            {texteBrouillon}
+            {erreurEcriture}
+            {lance && (
+              <div className="carte-groupe space-y-1 rounded-2xl p-1.5">
+                {entrees}
+                {ordreEnBas && <div className={styles.ordreDansCarte}>{entreeOrdre}</div>}
+              </div>
+            )}
+          </section>
+          <div data-zone="droite">{droite(m)}</div>
+          <div data-zone="annees" className="min-w-0">{anneesPassees}</div>
+          {ordreEnBas && <div data-zone="ordre" className={`${lance ? styles.ordreBas : ""} carte-groupe min-w-0 rounded-2xl p-1.5`}>{entreeOrdre}</div>}
+        </div>
       </div>
     )
   }

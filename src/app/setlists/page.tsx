@@ -553,7 +553,7 @@ export default function SetlistsPage() {
           </EtatVide>
         ) : (
           disposition === "tablette" ? (
-            <ul className="grid grid-cols-2 items-start gap-4">
+            <ul className="space-y-4">
               {displayed.map((s) => (
                 <li key={s.id}>
                   <SetlistCarteChants

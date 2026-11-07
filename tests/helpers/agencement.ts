@@ -68,7 +68,7 @@ export const pilules = (page: Page) => page.locator('[data-onglets="pilules"]');
  * Un seul `header[data-entete-page]` visible, un seul h1 dedans, à la bonne taille ; le h1 part de
  * la zone + la marge (au pixel près) ; `premierBloc` (le premier bloc de contenu sous l'en-tête,
  * par défaut l'élément qui suit l'en-tête) commence au même x. Avec `colonne` (règle de largeur du
- * 25/10/2026 : une lecture ou une liste seule tient dans une colonne de 960 px, calée sur le titre
+ * 25/10/2026 : une lecture ou une liste seule tient dans une colonne de 720 px, calée sur le titre
  * depuis quotidien-5), le bloc commence au x du titre ; `colonne` ne sert plus qu'au contrôle de largeur.
  */
 export async function verifierEnTete(page: Page, options: { premierBloc?: Locator; colonne?: number; titreDansLeVolet?: boolean } = {}) {

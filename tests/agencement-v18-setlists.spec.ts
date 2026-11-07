@@ -87,8 +87,8 @@ test.describe("Setlists (A9)", () => {
     await expect(ligneSetlist(page, "Culte du 4 octobre")).toBeVisible();
     await expect(enTete(page).getByRole("heading", { level: 1, name: "Setlists", exact: true })).toBeVisible();
     await expect(enTete(page).getByText("Les chants prévus pour chaque service", { exact: true })).toBeVisible();
-    // Règle de largeur du 25/10/2026 : sans setlist choisie, la liste seule tient dans la colonne de 960 px.
-    await verifierAgencement(page, { contenu: blocSetlists(page, info), colonne: estGrandEcran(info) ? 960 : undefined, onglets: { rail: 1, pilules: 0 } });
+    // Règle de largeur du 25/10/2026 : sans setlist choisie, la liste seule tient dans la colonne de 720 px.
+    await verifierAgencement(page, { contenu: blocSetlists(page, info), colonne: estGrandEcran(info) ? 720 : undefined, onglets: { rail: 1, pilules: 0 } });
     // Plus de titre dans la liste ; les vues dans le rail.
     await expect(page.getByRole("heading", { name: "Setlists" })).toHaveCount(1);
     const rail = ongletsRail(page).filter({ visible: true });

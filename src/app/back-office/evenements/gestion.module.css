@@ -3,10 +3,29 @@
    1 440 px), une seule sinon (barre dépliée à 1 280 px, iPad en paysage, téléphone). */
 .cadre { container-type: inline-size; }
 
-/* Fiche d'un évènement : « Inscrits » à gauche ; « Tâches » et « Période d'inscription » à droite. */
-.colonnes { display: grid; gap: 1rem; align-items: start; }
-@container (min-width: 640px) {
-  .colonnes { grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); }
+/* Fiche d'un évènement (bo-evenements-5, L1, lot CD T4b) : sous 1 024 px de conteneur, une colonne de 720 px au plus,
+   alignée à gauche, dans l'ordre de lecture « Inscrits », « Période d'inscription » (avec le lien), « Tâches » ; à
+   partir de 1 024 px, « Inscrits » à gauche, « Tâches » puis « Période » à droite (`grid-template-areas`). Les zones
+   absentes (`:empty`) ne laissent pas de trou. Sans inscriptions (une information) : la colonne seule, « Tâches » puis
+   la carte du lien. */
+.colonnes { display: flex; flex-direction: column; gap: 1rem; max-width: 720px; }
+.colonnes > [data-zone] { min-width: 0; }
+.colonnes > [data-zone]:empty { display: none; }
+.colonnes > [data-zone="inscrits"] { order: 0; }
+.colonnes > [data-zone="periode"] { order: 1; }
+.colonnes > [data-zone="taches"] { order: 2; }
+.sansInscrits > [data-zone="taches"] { order: 0; }
+@container (min-width: 1024px) {
+  .colonnes:not(.sansInscrits) {
+    display: grid; align-items: start; max-width: none;
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+    grid-template-rows: auto 1fr;
+    grid-template-areas: "inscrits taches" "inscrits periode";
+  }
+  .colonnes:not(.sansInscrits):has(> [data-zone="taches"]:empty) { grid-template-rows: auto; grid-template-areas: "inscrits periode"; }
+  .colonnes:not(.sansInscrits) > [data-zone="inscrits"] { grid-area: inscrits; }
+  .colonnes:not(.sansInscrits) > [data-zone="taches"] { grid-area: taches; }
+  .colonnes:not(.sansInscrits) > [data-zone="periode"] { grid-area: periode; }
 }
 
 /* Fiche d'une réunion : « Sujets à aborder » (large) à gauche ; compte rendu, réunions précédentes

@@ -298,19 +298,19 @@ export function FeteClient({ fete }: { fete: Fete }) {
       )
     }
 
-    // Une colonne : l'ordre de passage en page, ou la colonne puis ce qui se lit dessous (l'ordre
+    // Une colonne, plafonnée à `--colonne-liste` (720 px) et alignée à gauche (evenements-app-3, L1) : l'ordre de passage en page, ou la colonne puis ce qui se lit dessous (l'ordre
     // de l'année passée choisie, la semaine choisie, l'ordre de l'édition), et l'entrée de l'ordre
     // de passage en carte tout en bas (planche `v18-scene-a-membres-telephone`).
     if (vueOrdre) {
       return (
-        <div className="space-y-3 px-[var(--marge-page)]">
+        <div data-colonne-plafonnee="" className="space-y-3 px-[var(--marge-page)] max-w-[calc(var(--colonne-liste)+2*var(--marge-page))]">
           <Retour href={pathname}>{titre}</Retour>
           {ordreCourant}
         </div>
       )
     }
     return (
-      <div className="space-y-5 px-[var(--marge-page)]">
+      <div data-colonne-plafonnee="" className="space-y-5 px-[var(--marge-page)] max-w-[calc(var(--colonne-liste)+2*var(--marge-page))]">
         {colonne}
         {aDroite}
         {entreeOrdre && <div className="carte-groupe rounded-2xl p-1">{entreeOrdre}</div>}

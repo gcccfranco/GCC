@@ -75,7 +75,7 @@ export function DetailService({ s }: { s: ServiceGroupe }) {
   const carteSetlist = setlist && <CarteSetlist setlist={setlist} songs={songs} couleur={couleur} boutonsEnTete={!deuxVolets} />;
 
   return (
-    <div className={cn("service-detail space-y-4 pb-10", !deuxVolets && "mx-auto max-w-2xl px-4 pt-3 md:max-w-3xl md:px-6")}>
+    <div className={cn("service-detail space-y-4 pb-10", !deuxVolets && "px-[var(--marge-page)] pt-3")}>
       {!deuxVolets && <Retour href="/mes-services">{t("mesServices.title")}</Retour>}
 
       <header className="flex items-start gap-4">
@@ -125,7 +125,7 @@ function CarteSetlist({ setlist, songs, couleur, boutonsEnTete }: {
   const { t } = useTranslation();
   const id = useId();
   const boutons = (
-    <div className="flex flex-wrap gap-2 [&>a]:flex-1 [&>a]:justify-center sm:[&>a]:flex-none">
+    <div className="flex flex-wrap gap-2 [&>a]:flex-[1_1_136px] [&>a]:justify-center">
       <Link href={`/setlists/${setlist.id}`} className="inline-flex h-10 items-center gap-1.5 rounded-full bg-secondary px-4 text-sm font-semibold text-foreground transition-transform duration-150 active:scale-[.97]">
         <ListMusic className="h-4 w-4" aria-hidden />
         {t("planning.accueil.ouvrir")}

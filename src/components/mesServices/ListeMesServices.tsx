@@ -50,7 +50,7 @@ function parMois(entries: ServiceGroupe[], lang: string): { label: string; items
 }
 
 export function ListeMesServices({
-  services, affiches, charge, onglet, setOnglet, aujourdhui, actif, setlistDe,
+  services, affiches, charge, onglet, setOnglet, aujourdhui, actif, setlistDe, seule = false,
 }: {
   services: ServiceGroupe[];
   affiches: ServiceGroupe[];
@@ -61,14 +61,17 @@ export function ListeMesServices({
   /** Clé du service ouvert à droite (en grand). */
   actif?: string;
   setlistDe?: (s: ServiceGroupe) => FSSetlist | undefined;
+  /** Colonne seule en grand (L1, `DeuxVolets colonneSeule`, sans groupe autour) : le bandeau et l'état vide sont chacun
+   *  un groupe blanc sur le gris, le rail est posé sur le gris. */
+  seule?: boolean;
 }) {
   const { t, i18n } = useTranslation();
   const disposition = useDisposition();
   const mois = parMois(affiches, i18n.language);
 
   return (
-    <div className={cn("space-y-4", disposition === "grand" ? "px-4 pb-4 pt-4" : "px-[var(--marge-page)] pb-10")}>
-      <PushPrompt surGris={disposition !== "grand"} />
+    <div className={cn("space-y-4", seule ? "pb-4" : disposition === "grand" ? "px-4 pb-4 pt-4" : "px-[var(--marge-page)] pb-10")}>
+      <PushPrompt surGris={disposition !== "grand" || seule} />
 
       {/* Vues : le rail (R4). */}
       <OngletsRail
@@ -85,7 +88,7 @@ export function ListeMesServices({
       {!charge ? (
         <p className="text-sm text-muted-foreground text-center py-16">{t("mesServices.loading")}</p>
       ) : affiches.length === 0 ? (
-        <EtatVide surGris={disposition !== "grand"}>{onglet === "upcoming" ? t("mesServices.emptyUpcoming") : t("mesServices.emptyPast")}</EtatVide>
+        <EtatVide surGris={disposition !== "grand" || seule} className={seule ? "flex h-24 items-center justify-center py-0" : undefined}>{onglet === "upcoming" ? t("mesServices.emptyUpcoming") : t("mesServices.emptyPast")}</EtatVide>
       ) : (
         <div className="space-y-5">
           {mois.map((m) => (

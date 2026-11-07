@@ -196,20 +196,70 @@ test.describe("Setlists : les dispositions", () => {
     await expect.poll(() => volet.evaluate((el) => el.scrollTop), "la liste revient où elle était").toBeGreaterThan(position - 50);
   });
 
-  test("tablette portrait : cartes sur deux colonnes qui listent leurs chants ; toucher ouvre la setlist", async ({ page }, info) => {
+  // dimanche-8 (lot CD, T4b) : une colonne, chaque carte à la largeur de la recherche et des filtres, l'aperçu des chants gardé.
+  test("tablette portrait : une colonne de cartes pleine largeur qui listent leurs chants ; toucher ouvre la setlist", async ({ page }, info) => {
     test.skip(disposition(info) !== "tablette", "tablette portrait");
     await ouvrir(page);
     const cartes = page.getByTestId("carte-setlist");
     await expect(cartes).toHaveCount(2);
     await expect(cartes.first().getByText("一生爱你", { exact: true })).toBeVisible();
     await expect(cartes.first().getByTestId("tonalite")).toHaveCount(5);
+    const recherche = (await page.getByRole("searchbox").first().boundingBox())!;
     const [b1, b2] = [(await cartes.nth(0).boundingBox())!, (await cartes.nth(1).boundingBox())!];
-    expect(b2.x, "deux colonnes").toBeGreaterThan(b1.x + b1.width - 1);
-    expect(Math.abs(b2.y - b1.y)).toBeLessThan(2);
+    for (const b of [b1, b2]) expect(b.width, "carte à la largeur de la recherche").toBeGreaterThanOrEqual(recherche.width - 2);
+    expect(Math.abs(b2.x - b1.x), "une seule colonne").toBeLessThan(2);
+    expect(b2.y, "la seconde sous la première").toBeGreaterThan(b1.y + b1.height - 1);
     expect(await sansDefilementLateral(page), "pas de défilement horizontal").toBe(true);
     await expect(apercu(page)).toHaveCount(0);
     await cartes.first().getByRole("link", { name: /Culte du 4 octobre/ }).click();
     await expect(page).toHaveURL(/\/setlists\/sl-1\/?$/);
+  });
+
+  // dimanche-7 et L1 (lot CD, T4b) : la liste seule est une colonne de 720 px calée sur le titre ; « Nouvelle setlist » finit à son bord droit.
+  test("en grand : liste seule, colonne de 720 px calée sur le titre, action de l'en-tête au bord droit de la colonne", async ({ page }, info) => {
+    test.skip(disposition(info) !== "grand", "colonne seule : grand écran");
+    await ouvrir(page, "/setlists");
+    const volet = page.locator('[data-volet="liste"]');
+    await expect(volet).toBeVisible();
+    const entete = page.locator("header[data-entete-page]");
+    const titre = (await entete.getByRole("heading", { name: "Setlists", level: 1 }).boundingBox())!;
+    const colonne = (await volet.boundingBox())!;
+    const action = (await entete.getByRole("link", { name: /Nouvelle setlist/ }).boundingBox())!;
+    expect(Math.abs(colonne.width - 720), "colonne de 720 px").toBeLessThan(2);
+    expect(Math.abs(colonne.x - titre.x), "bord gauche de la colonne = celui du titre").toBeLessThan(2);
+    expect(Math.abs(action.x + action.width - (colonne.x + colonne.width)), "action au bord droit de la colonne").toBeLessThan(2);
+  });
+
+  // dimanche-7, seconde moitié (lot CD, T4b) : à 1 440 px, la rangée de boutons de l'en-tête de la page finit au bord droit de la colonne de lecture.
+  test("ordinateur-1440 : « Mode Louange » finit au bord droit de la colonne de lecture", async ({ page }, info) => {
+    test.skip(info.project.name !== "ordinateur-1440", "1 440 px : la partition est plafonnée à 672 px");
+    await ouvrir(page, "/setlists/sl-1");
+    const partition = page.locator(".grid > .min-w-0 .max-w-2xl").first();
+    await expect(partition).toBeVisible();
+    // La rangée de l'en-tête (son contenu, marge de 28 px ôtée) finit où finit la partition ; « Mode Louange » finit là aussi
+    // quand les boutons tiennent à côté du titre (à 1 440 px avec tous les boutons, ils passent sous le titre).
+    const bouton = page.locator("[data-en-tete]").getByRole("button", { name: "Mode Louange" });
+    const rangee = bouton.locator("xpath=ancestor::div[contains(@class,'px-7')][1]");
+    const r = await rangee.evaluate((el) => ({ droite: el.getBoundingClientRect().right - parseFloat(getComputedStyle(el).paddingRight) }));
+    const lecture = (await partition.boundingBox())!;
+    expect(Math.abs(r.droite - (lecture.x + lecture.width)), "un seul bord droit pour l'en-tête et la colonne de lecture").toBeLessThan(2);
+    const louange = (await bouton.boundingBox())!;
+    expect(louange.x + louange.width, "« Mode Louange » ne dépasse pas la colonne").toBeLessThanOrEqual(lecture.x + lecture.width + 1);
+  });
+
+  // dimanche-9 (lot CD, T4b) : en tablette portrait, le contenu va jusqu'à la barre d'outils, à `--marge-page` ; la note est plafonnée à 680 px.
+  test("tablette portrait : la page d'une setlist part de la marge de page, comme sa barre d'outils ; la note ne dépasse pas 680 px", async ({ page }, info) => {
+    test.skip(disposition(info) !== "tablette", "tablette portrait");
+    await ouvrir(page, "/setlists/sl-1");
+    const note = page.getByText("Thème : la grâce.");
+    await expect(note).toBeVisible();
+    const marge = await page.evaluate(() => parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--marge-page")));
+    const n = (await note.boundingBox())!;
+    expect(Math.abs(n.x - marge), "la note part de la marge de page").toBeLessThan(1);
+    expect(n.width).toBeLessThanOrEqual(681);
+    const retour = (await page.getByTestId("barre-outils").getByRole("link").first().boundingBox())!;
+    expect(Math.abs(retour.x - marge), "la barre d'outils part du même bord").toBeLessThan(1);
+    expect(await sansDefilementLateral(page)).toBe(true);
   });
 
   test("téléphone : inchangé, une ligne par setlist, toucher ouvre la setlist", async ({ page }, info) => {

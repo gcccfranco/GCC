@@ -128,12 +128,12 @@ export function FicheGestion({ e, user, profile, onSupprimer, erreur, onChange }
         {e.description && <p className="border-t border-border pt-3 text-sm whitespace-pre-wrap break-words text-muted-foreground">{e.description}</p>}
       </section>
 
-      <div className={styles.colonnes}>
-        {avecInscriptions && <CarteInscrits e={e} onChange={onChange} />}
-        <div className="space-y-4">
-          {e.date && <TachesEvenement evenement={e} user={user} profile={profile} />}
+      <div className={cn(styles.colonnes, !avecInscriptions && styles.sansInscrits)}>
+        {avecInscriptions && <div data-zone="inscrits"><CarteInscrits e={e} onChange={onChange} /></div>}
+        <div data-zone="taches">{e.date ? <TachesEvenement evenement={e} user={user} profile={profile} /> : null}</div>
+        <div data-zone="periode">
           {avecInscriptions && <CartePeriode e={e} onChange={onChange} />}
-          {!avecInscriptions && <div className={carte}><QrCodeLink path={`/evenements/${e.id}`} label={e.titre} avecInscriptions={false} /></div>}
+          {!avecInscriptions && <div className={carte}><QrCodeLink path={`/evenements/${e.id}`} label={e.titre} avecInscriptions={false} copier /></div>}
         </div>
       </div>
     </article>
@@ -236,7 +236,7 @@ function CartePeriode({ e, onChange }: { e: Evenement; onChange: (e: Evenement) 
           }} />
       )}
       {refus && refus !== "complet" && <p className="text-sm text-muted-foreground">{raison(e, refus)}</p>}
-      <QrCodeLink path={`/evenements/${e.id}`} label={e.titre} avecInscriptions />
+      <QrCodeLink path={`/evenements/${e.id}`} label={e.titre} avecInscriptions copier />
     </section>
   )
 }

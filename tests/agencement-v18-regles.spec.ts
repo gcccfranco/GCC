@@ -61,7 +61,7 @@ const SOUS_LE_PLANNING = "header[data-entete-page] ~ main";
 const APP: PageAVerifier[] = [
   { chemin: "/planning", premierBloc: SOUS_LE_PLANNING }, { chemin: "/planning/culte", premierBloc: SOUS_LE_PLANNING },
   { chemin: "/planning/groupes", premierBloc: SOUS_LE_PLANNING }, { chemin: "/planning/table", premierBloc: SOUS_LE_PLANNING },
-  { chemin: "/songs" }, { chemin: "/setlists", colonne: 960 }, { chemin: "/setlists/new" }, { chemin: "/setlists/new?depuis=passee" },
+  { chemin: "/songs" }, { chemin: "/setlists", colonne: 720 }, { chemin: "/setlists/new" }, { chemin: "/setlists/new?depuis=passee" },
   { chemin: "/evenements" }, { chemin: "/evenements/scene/noel" }, { chemin: "/mes-services" }, { chemin: "/moi" },
   { chemin: "/profil" }, { chemin: "/guide", lecture: true }, { chemin: "/questionnaire", lecture: true },
   { chemin: "/harmonie" }, { chemin: "/taches" }, { chemin: "/equipes" }, { chemin: "/songs/statistiques" },
@@ -70,9 +70,9 @@ const BACK_OFFICE: PageAVerifier[] = [
   { chemin: "/back-office" }, { chemin: "/back-office/equipes/da" }, { chemin: "/back-office/evenements" },
   { chemin: "/back-office/evenements/scene/noel" }, { chemin: "/back-office/reunions" }, { chemin: "/back-office/calendrier" },
   { chemin: "/back-office/planning" }, { chemin: "/back-office/equipes" }, { chemin: "/back-office/equipes/personnes" },
-  // Réception et Questionnaire sans message ni réponse : la liste seule dans la colonne de 960 px calée sur le titre (BO9).
-  { chemin: "/back-office/messages", colonne: 960 }, { chemin: "/back-office/messages/notifier" },
-  { chemin: "/back-office/messages/questionnaire", colonne: 960 },
+  // Réception et Questionnaire sans message ni réponse : la liste seule dans la colonne de 720 px calée sur le titre (BO9).
+  { chemin: "/back-office/messages", colonne: 720 }, { chemin: "/back-office/messages/notifier" },
+  { chemin: "/back-office/messages/questionnaire", colonne: 720 },
   { chemin: "/back-office/plus" },
 ];
 
@@ -97,7 +97,7 @@ async function capture(page: Page, nom: string) {
   await page.screenshot({ path: `${dir}/${nom}-${test.info().project.name}.png` });
 }
 
-// `colonne` : liste seule dans la colonne de 960 px, centrée (règle de largeur du 25/10/2026, B4b), en grand seulement.
+// `colonne` : liste seule dans la colonne de 720 px, alignée à gauche (règle de largeur du 25/10/2026, B4b), en grand seulement.
 async function verifierPage(page: Page, { chemin, lecture, premierBloc, colonne }: PageAVerifier, grand: boolean) {
   const col = grand ? colonne : undefined;
   await verifierAgencement(page, { premierBloc: premierBloc ? page.locator(premierBloc) : undefined, colonne: col });

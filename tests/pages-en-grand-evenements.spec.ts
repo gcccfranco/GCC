@@ -363,3 +363,41 @@ test("bo-evenements-4 — à 1 280 px, le titre de la fiche de gestion tient sur
   await entrees.first().click();
   await expect(page).toHaveURL(/\/evenements\/foot\/?$/);
 });
+
+// ─── bo-evenements-5 (lot CD, T4b) : la fiche de gestion en colonne de 720 px, le lien et « Copier le lien » ──────────
+
+test("bo-evenements-5 — fiche de gestion : une colonne de 720 px sous 1 024 px de volet (Inscrits, Période, Tâches), le lien se copie en entier", async ({ page, context }) => {
+  await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+  await membre(page, ALICE, "/back-office/evenements/foot");
+  const gestion = page.getByTestId("fiche-gestion");
+  const inscrits = gestion.getByRole("region", { name: "Inscrits" });
+  const periode = gestion.getByRole("region", { name: "Période d'inscription" });
+  const taches = gestion.getByTestId("taches-carte");
+  await expect(inscrits).toBeVisible();
+  await expect(periode).toBeVisible();
+  await expect(taches).toBeVisible();
+  const [i, p, t] = [(await inscrits.boundingBox())!, (await periode.boundingBox())!, (await taches.boundingBox())!];
+  const conteneur = (await gestion.boundingBox())!.width;
+  if (conteneur >= 1024) {
+    expect(t.x, `deux colonnes dans ${conteneur} px : Tâches à droite d'Inscrits`).toBeGreaterThan(i.x + i.width - 1);
+    expect(Math.abs(p.x - t.x), "Période sous Tâches").toBeLessThan(2);
+  } else {
+    expect(Math.abs(p.x - i.x) + Math.abs(t.x - i.x), `une colonne dans ${conteneur} px : même bord gauche`).toBeLessThan(3);
+    expect(p.y, "Période sous Inscrits").toBeGreaterThan(i.y + i.height - 1);
+    expect(t.y, "Tâches sous Période").toBeGreaterThan(p.y + p.height - 1);
+    for (const b of [i, p, t]) expect(b.width, "colonne de 720 px au plus").toBeLessThanOrEqual(721);
+  }
+  // Le lien tient sur deux lignes au plus ; « Copier le lien » met l'adresse complète dans le presse-papiers, « Lien copié » pendant 2 s.
+  const lien = periode.getByRole("link", { name: /\/evenements\/foot$/ });
+  const { hauteur, interligne } = await lien.evaluate((el) => ({ hauteur: el.getBoundingClientRect().height, interligne: parseFloat(getComputedStyle(el).lineHeight) }));
+  expect(hauteur, "deux lignes au plus").toBeLessThanOrEqual(interligne * 2 + 1);
+  await periode.getByRole("button", { name: "Copier le lien" }).click();
+  await expect(periode.getByRole("button", { name: "Lien copié" })).toBeVisible();
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(`${new URL(page.url()).origin}/evenements/foot`);
+  await expect(periode.getByRole("button", { name: "Copier le lien" }), "revient après 2 s").toBeVisible({ timeout: 4000 });
+  expect(await sansDefilementLateral(page)).toBe(true);
+  // La page membre n'a pas ce bouton (elle a « Partager »).
+  await page.goto("/evenements/foot");
+  await expect(page.getByRole("heading", { name: "Foot au parc" }).first()).toBeVisible();
+  await expect(page.getByRole("button", { name: "Copier le lien" })).toHaveCount(0);
+});

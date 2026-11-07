@@ -4,7 +4,7 @@ import { estGrandEcran } from "./helpers/agencement";
 
 // Tranche B4b de docs/spec-corrections-audit.md : la règle de largeur du 25/10/2026. Blocs d'une page d'accueil à
 // la même largeur ; tableaux et grilles = pleine largeur de la zone ; une liste sans élément choisi (et sans
-// premier élément montré d'office) prend une colonne de 960 px au lieu d'un volet collé à gauche. Cinq projets.
+// premier élément montré d'office) prend une colonne de 720 px (`--colonne-liste`, L1 du lot CD) au lieu d'un volet collé à gauche. Cinq projets.
 // Personnes fictives.
 
 const MEMBRE: FakeProfile = { uid: "u-eve", email: "eve.test@example.com", firstName: "Eve", lastName: "T.", planningName: "Eve T." };
@@ -46,8 +46,7 @@ test("/setlists sans setlist choisie : la liste prend la colonne (plus de 600 px
   const liste = page.locator('[data-volet="liste"]');
   await expect(liste).toBeVisible();
   await expect(page.getByText("Culte test un").first()).toBeVisible();
-  expect(await largeur(liste), "la liste seule dans la colonne").toBeGreaterThan(600);
-  expect(await largeur(liste)).toBeLessThanOrEqual(960 + 2);
+  expect(Math.abs((await largeur(liste)) - 720), "la liste seule dans la colonne de 720 px").toBeLessThanOrEqual(2);
   await expect(page.locator('[data-volet="detail"]')).toHaveCount(0);
   // Une setlist choisie : les deux volets d'avant.
   await ouvrir(page, "/setlists?apercu=sl-2", SETLISTS, SANS_NOM);
@@ -60,7 +59,7 @@ test("/mes-services sans service choisi : la liste prend la colonne", async ({ p
   await ouvrir(page, "/mes-services");
   const liste = page.locator('[data-volet="liste"]');
   await expect(liste).toBeVisible();
-  expect(await largeur(liste)).toBeGreaterThan(600);
+  expect(Math.abs((await largeur(liste)) - 720), "la liste seule dans la colonne de 720 px").toBeLessThanOrEqual(2);
   await expect(page.locator('[data-volet="detail"]')).toHaveCount(0);
 });
 

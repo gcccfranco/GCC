@@ -31,6 +31,7 @@ export function DeuxVolets({
   premier = null,
   largeurListe = 380,
   colonneSeule = false,
+  groupeSeule = true,
   listeNaturelle = false,
   fond = "groupe",
   children,
@@ -45,11 +46,14 @@ export function DeuxVolets({
   /** Largeur du volet de gauche en grand, en px (380 à 420 sur la planche). */
   largeurListe?: number;
   /** Règle de largeur du 25/10/2026 : sur l'adresse de la liste, sans élément choisi, la liste
-   *  prend seule la colonne de lecture (960 px, centrée) au lieu d'un volet collé à gauche avec un
+   *  prend seule la colonne de lecture (`--colonne-liste`, 720 px, alignée à gauche sur le titre) au lieu d'un volet collé à gauche avec un
    *  vide à droite ; `premier` n'est alors pas montré. Dès qu'un élément est choisi (une fiche à
    *  l'adresse, ou `colonneSeule` retiré par la page), les deux volets reviennent. Le même arbre :
    *  seules les classes changent, la liste n'est pas remontée. */
   colonneSeule?: boolean;
+  /** Avec `colonneSeule` : la liste seule est posée dans un groupe blanc (défaut). Faux : la colonne est transparente et
+   *  la page y pose ses propres groupes sur le gris (Mes services, lot CD T4b, cas pilote de L1). */
+  groupeSeule?: boolean;
   /** La carte de liste prend sa hauteur naturelle : ni collante ni bornée, c'est la page qui défile
    *  (bo-evenements-13, la scène des fêtes). Le volet de droite s'étire alors sur la rangée, pour que la page
    *  puisse y coller son contenu. */
@@ -108,7 +112,7 @@ export function DeuxVolets({
       data-fond-groupe={fond === "groupe" ? "" : undefined}
       className={
         seule
-          ? "w-full max-w-[calc(960px+2*var(--marge-page))] px-[var(--marge-page)] pb-6"
+          ? "w-full max-w-[calc(var(--colonne-liste)+2*var(--marge-page))] px-[var(--marge-page)] pb-6"
           : deuxVolets ? `flex ${bornee ? "items-start" : "items-stretch"} gap-[var(--ecart-volets)] px-[var(--marge-page)] pb-6` : undefined
       }
       style={deuxVolets ? ({ "--largeur-liste": `${largeurListe}px` } as CSSProperties) : undefined}
@@ -119,7 +123,7 @@ export function DeuxVolets({
           data-volet="liste"
           className={
             seule
-              ? `page-fade ${surface} rounded-groupe`
+              ? `page-fade ${groupeSeule ? `${surface} rounded-groupe` : ""}`
               : deuxVolets && !bornee
               ? `page-fade ${surface} w-[var(--largeur-liste)] shrink-0 self-start rounded-groupe`
               : deuxVolets

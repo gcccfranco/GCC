@@ -694,11 +694,10 @@
 
 /* Un service de Mes services (lot U4 bis, B4, Q7) : la setlist et l'équipe côte à côte quand le
    volet en a la place, l'une sous l'autre sinon. Agencement v18 (T9) : la liste en carte à la
-   marge laisse au volet ~530 px à 1 280 px et sur iPad couché, d'où le seuil à 520 px. */
+   marge laisse au volet ~530 px à 1 280 px et sur iPad couché. Lot CD, T4b (services-4, L1) : plus de seuil, les cartes
+   suivent la grille des blocs — autant de colonnes de 280 px au moins que la place en offre, une sinon. */
 .service-detail { container-type: inline-size; }
-@container (min-width: 520px) {
-  .service-colonnes { grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); }
-}
+.service-colonnes { grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); }
 
 /* Fiche d'un évènement à droite de l'agenda (lot U4 bis, B2, Q5) : deux colonnes quand le volet
    en a la place, une sinon. Agencement v18 (A10, R15 ; planches `v18-app-evenements*`) : une colonne
@@ -928,11 +927,15 @@
                        tablette couchée. Rien n'est centré dans une borne : la place gagnée en
                        réduisant la barre va au contenu.
    --ecart-volets      entre la liste-carte et la fiche : 24 px, 20 px barre réduite.
+   --colonne-liste     largeur de contenu d'une liste ou d'un formulaire seul (L1, lot CD T4b) : 720 px, alignée
+                       à gauche sur le titre, jamais centrée ; `DeuxVolets` (`colonneSeule`), l'en-tête qui la
+                       suit (règle plus bas), les vues en page de la scène.
    Mêmes requêtes que le bloc « Lot U4 » : la disposition se décide ici. */
 @layer base {
   :root {
     --marge-page: 16px;
     --ecart-volets: 24px;
+    --colonne-liste: 720px;
   }
   @media screen and (min-width: 768px) {
     :root { --marge-page: 24px; }
@@ -947,6 +950,10 @@
 }
 
 @layer components {
+  /* L1 (lot CD T4b, dimanche-7) : quand la page montre une liste seule (`DeuxVolets` pose `data-colonne-seule`),
+     l'en-tête prend la largeur de cette colonne : le titre part de son bord gauche, l'action finit à son bord droit. */
+  body:has([data-colonne-seule]) header[data-entete-page] { max-width: calc(var(--colonne-liste) + 2 * var(--marge-page)); }
+
   /* Le titre de la page, le h1 de `EnTetePage` (R2) : 24 px sur téléphone, 30 px dès 768 px. */
   .titre-page { font-size: 24px; line-height: 30px; font-weight: 700; letter-spacing: -0.02em; text-wrap: balance; }
   @media (min-width: 768px) {

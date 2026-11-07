@@ -189,3 +189,61 @@ test.describe("bo-evenements-13 : la scène des fêtes, en deux volets", () => {
     expect(await carte.evaluate((el) => getComputedStyle(el).maxHeight)).not.toBe("none");
   });
 });
+
+// ─── bo-evenements-12 et evenements-app-3 (lot CD, T4b, L1) : la scène sur une colonne ───────────────────────
+
+test.describe("la scène des fêtes sur une colonne : deux colonnes de groupes au Back-Office, colonne de 720 px côté membre", () => {
+  test.beforeEach(({}, info) => { test.skip(estGrandEcran(info), "une colonne : tablette portrait et téléphone"); });
+
+  test("bo-evenements-12 : Back-Office, « Cette fête » à gauche et « Cette semaine » à droite dès 720 px de conteneur, empilés au téléphone", async ({ page }, info) => {
+    await sansSheet(page);
+    await page.clock.setFixedTime(new Date("2026-10-09T10:00:00"));
+    await signInAs(page, COMITE, { "programmes/noel-2026": NOEL_OUVERT }, "/back-office/evenements/scene/noel");
+    const fete = page.getByRole("region", { name: "Cette fête" });
+    const semaine = page.getByRole("region", { name: "Cette semaine" });
+    await expect(fete.getByRole("heading", { level: 2 })).toHaveText("Noël 2026");
+    await expect(semaine).toBeVisible();
+    // Une seule entrée visible : troisième ligne de la carte de « Cette fête » dès 720 px, carte à part tout en bas sinon.
+    const ordre = page.getByRole("button", { name: /Ordre de passage du jour J/ });
+    await expect(ordre).toHaveCount(1);
+    const [f, s, o] = [(await fete.boundingBox())!, (await semaine.boundingBox())!, (await ordre.boundingBox())!];
+    if (info.project.name === "tablette") {
+      expect(o.y, "dans la carte de « Cette fête »").toBeLessThan(f.y + f.height);
+      expect(o.x).toBeGreaterThanOrEqual(f.x);
+      expect(s.x, "à droite de « Cette fête »").toBeGreaterThan(f.x + f.width - 1);
+      expect(Math.abs(s.width - f.width), "deux colonnes égales").toBeLessThan(2);
+      expect(Math.abs(s.y - f.y), "en haut des deux colonnes").toBeLessThan(40);
+    } else {
+      expect(s.y, "dessous").toBeGreaterThan(f.y + f.height - 1);
+      expect(Math.abs(s.x - f.x)).toBeLessThan(2);
+      expect(o.y, "carte à part, tout en bas").toBeGreaterThan(s.y + s.height - 1);
+    }
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+  });
+
+  test("bo-evenements-12 : une vue ouverte en page (Saison) est une colonne de 720 px au plus, alignée à gauche", async ({ page }, info) => {
+    test.skip(info.project.name === "telephone", "au téléphone, la saison est un résumé dont chaque ligne ouvre une feuille");
+    await sansSheet(page);
+    await page.clock.setFixedTime(new Date("2026-10-09T10:00:00"));
+    await signInAs(page, COMITE, { "programmes/noel-2026": NOEL_OUVERT }, "/back-office/evenements/scene/noel?vue=saison");
+    const reglages = page.getByRole("region", { name: "Mettre en place la saison" });
+    await expect(reglages).toBeVisible();
+    const b = (await reglages.boundingBox())!;
+    expect(b.width, "720 px au plus").toBeLessThanOrEqual(721);
+    const marge = await page.evaluate(() => parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--marge-page")));
+    expect(Math.abs(b.x - marge), "alignée à gauche, jamais centrée").toBeLessThan(2);
+  });
+
+  test("evenements-app-3 : côté membre, la colonne est plafonnée à 720 px et alignée à gauche", async ({ page }) => {
+    await sansSheet(page);
+    await page.clock.setFixedTime(new Date("2026-10-09T10:00:00"));
+    await signInAs(page, { uid: "uid-bastien", email: "bastien@example.com", firstName: "Bastien", lastName: "M.", ...musicien("piano") }, { "programmes/noel-2026": NOEL_OUVERT }, "/evenements/scene/noel");
+    const colonne = page.locator("[data-colonne-plafonnee]");
+    await expect(colonne).toBeVisible();
+    const marge = await page.evaluate(() => parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--marge-page")));
+    const b = (await colonne.boundingBox())!;
+    expect(b.width, "720 px de contenu et les marges au plus").toBeLessThanOrEqual(720 + 2 * marge + 1);
+    expect(Math.abs(b.x), "alignée à gauche").toBeLessThan(2);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+  });
+});

@@ -85,7 +85,7 @@ export function PushPrompt({ surGris }: { surGris?: boolean } = {}) {
       <div className="flex items-start gap-3 pr-5">
         <BellRing className="h-5 w-5 text-muted-foreground mt-0.5 shrink-0" />
         <div className="flex-1">
-          <p className="text-sm font-semibold text-foreground">{t("push.promptTitle")}</p>
+          <p className="text-base font-semibold text-foreground">{t("push.promptTitle")}</p>
           {needsInstall ? (
             <p className="text-sm text-muted-foreground mt-0.5">
               {t("push.iosInstall")}

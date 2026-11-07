@@ -332,7 +332,7 @@ const mesurerListe = (page: Page) => page.evaluate(() => {
 });
 
 const PAGES_R3 = [
-  // Une setlist choisie : sans elle, la liste seule dans la colonne de 960 px (B4b), sans volet collant.
+  // Une setlist choisie : sans elle, la liste seule dans la colonne de 720 px (B4b), sans volet collant.
   { nom: "Setlists", adresse: "/setlists?apercu=s0" },
   { nom: "Mes services", adresse: "/mes-services" },
   { nom: "Tâches", adresse: "/taches" },
