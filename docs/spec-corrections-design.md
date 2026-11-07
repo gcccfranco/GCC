@@ -489,6 +489,48 @@ Back-office à 7 px du bord à 360 px en français (sélecteur de T1a, espace Ba
   `barre-rappelee:8` (ordinateur : la barre du chant rappelée reste à 36 px du haut, page du chant en deux volets) ;
   `look-barres:239` (ordinateur : le fond des barres d'un chant ne repeint pas exactement la page).
 
+### Retouches de la validation V1 à V6 (Timothée, 07/11/2026, go « 1 à 6 avec l'option A »)
+Vu en local sur un écran large : ≈ 1 700 px de contenu à côté de la barre latérale, au-delà des 1 280 / 1 440 px où
+le lot a été réglé. Chaque test d'agencement ajouté mesure aussi à **1 700 px** de contenu (fenêtre de 1 940 px).
+- **V1 · Index A–Z des Chants** (`src/app/songs/SongListClient.tsx`). Centré sur toute la carte, il démarre à hauteur
+  de la recherche et des filtres. À faire : au repos, son haut est au niveau de la première ligne de la liste (titre
+  « Récemment consultés » ou compte des chants), jamais au-dessus ; une fois la page ou la carte défilée, il reste
+  centré dans `--cadre-index` comme aujourd'hui. Critère : au repos, haut de l'index ≥ haut de la première ligne de la
+  liste − 4 px, sur les quatre dispositions ; tests existants de l'index inchangés.
+- **V2 · « à choisir » → « — »** (`src/components/backOffice/aFaire/ColonneDroite.tsx`). Une case vide du planning
+  du dimanche s'écrit « — » en gris (`text-muted-foreground`, graisse normale), lien souligné au survol, `title` et
+  `aria-label` composés des clés existantes (« à choisir — Ouvrir le planning », aucune clé nouvelle). Le lien ouvre
+  **la bonne case** : `/back-office/planning/<onglet>?case=<grille>|<date>|<cle>` (onglet par `ongletDeLaGrille`,
+  date au format de `data-case` de `PlanningGrille`) ; repli sur `/back-office/planning` si l'onglet n'est pas dans
+  `planningsDuBackOffice`. Sur la page du planning : la case `[data-grille] [data-case="date|cle"]` (au téléphone,
+  la carte `[data-date-carte]`) défile au centre et porte un anneau (`--ring`, 2 px) pendant ≈ 2,5 s, sans animation
+  si `prefers-reduced-motion` ; le focus va sur son bouton (`preventScroll`). `ServiceDuDimanche`
+  (`src/lib/tableauDeBord/donnees.ts`) porte la clé de grille et la date de la ligne.
+- **V3 · Setlists sans setlist choisie** (`src/app/setlists/page.tsx`). Fin de la colonne seule de 720 px sur cette
+  page : en grand, l'aperçu de la première setlist de la liste filtrée est montré d'emblée (`choisie` le calcule déjà,
+  Q3), sa ligne marquée active ; la colonne seule ne reste que pour une liste vide. Les autres listes montrent déjà
+  leur premier élément (Tâches, Réception, Personnes, Mes services) : inchangées.
+- **V4 · Fiche de Mes services** (`DetailService.tsx`, `.service-colonnes` de `globals.css`). Fin de la grille
+  `auto-fill minmax(280px, 1fr)` (T4b) qui laissait la carte d'équipe seule dans une case de ≈ 300 px : comme
+  l'aperçu d'une setlist, setlist et équipe côte à côte (`minmax(0, 1.6fr) minmax(0, 1fr)`) dès 680 px de volet,
+  l'une sous l'autre sinon. Sans setlist, la place de la setlist porte une carte simple « pas encore de setlist »
+  (clé existante si elle existe, sinon nouvelle clé fr / zh-CN), sans bouton.
+- **V5 · Partitions d'une setlist, option A** (`SetlistDetailClient.tsx`, `PartitionView.tsx`, `SongView.tsx`). En
+  deux volets, la colonne de lecture va jusqu'à **860 px** (au lieu de 672) et se centre dans l'espace à droite du
+  sommaire ; `max-w-2xl` de `SongView` et de la fusion lisent une variable (`--colonne-partition`, 42rem par défaut),
+  posée à 860 px dans ce volet seulement (page du chant, téléphone et tablette inchangés). La rangée d'en-tête finit
+  où finit la colonne : `max-w` = `calc(50% + 648px)` (380 de sommaire + 28 + 860 centrés dans le reste ; égal à
+  100 % sous 1 296 px), au lieu de 1 108 px. Critère : à 1 440 et à 1 700 px de contenu, bord droit de « Mode
+  Louange » = bord droit de la colonne (± 2 px) ; écarts gauche et droit de la colonne dans son volet égaux (± 2 px).
+- **V6 · 简谱 centrée**. Cause mesurée : 46 scans sur 191 ont une marge blanche droite bien plus large que la gauche
+  (恩典之路 : 10 px à gauche, 179 px à droite sur 1 600). À faire : `scripts/jianpu/marges.py` écrit
+  `public/jianpu/marges.json` (`slug → [[gauche, droite], …]` par page, encre = pixel < 128, lignes sous le recadrage
+  de `cadrage.json`, colonnes d'au moins 3 pixels d'encre) ; `JianpuSheet` le lit comme le recadrage (repli : rien ne
+  bouge) et, **hors mode `fit`** (mode louange inchangé), décale la page de (droite − gauche) / 2 px image par des
+  `marginInline` inégales. Seule la position de la page change : aucune coordonnée du calque (zone gelée) ne bouge,
+  image et calque se déplacent ensemble. Critère : pour 恩典之路, écart entre l'encre et les bords de la colonne égal
+  à gauche et à droite (± 4 px) ; un scan déjà équilibré ne bouge pas de plus de 2 px.
+
 ## Reprendre ici (pour une nouvelle session, 05/11/2026)
 Lire seulement : `CLAUDE.md`, ce fichier (§ 2 arbitrages, § 3 règles, et cette section), puis l'annexe de la tranche
 en cours. Ne pas relire les sections « État » plus haut sauf besoin précis. Agents quelques-uns à la fois ; pas
