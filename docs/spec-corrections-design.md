@@ -460,14 +460,29 @@ Back-office à 7 px du bord à 360 px en français (sélecteur de T1a, espace Ba
   fait ≈ 690 px même à 1 440 px : elle reste en une colonne partout (gardé, voir « Reprendre ici », 5).
 - Passe Playwright divisée en trois sessions (`--shard`, 28 specs, ≈ 3 950 tests).
 
+### T5 · Contenu chinois — fait (07/11/2026, `09ff29f`, `75f3aa6`, corrections jusqu'à `7bece9a`)
+- Guide (eglise-5, partout-q3-guide) : `GUIDE_LANGUE=zh-CN` dans `tests/guide-captures.spec.ts`, 13 captures chinoises
+  (`public/guide/zh/`, 3,5 Mo) et le jeu français refait après T2 à T4 ; `GuideFigure` lit la capture et les
+  annotations `zh` en 中文, repli sur le français. annonces.png et notifier.png ne sont référencés nulle part (laissés).
+  Pas de jeu sombre (filtre CSS d'eglise-6).
+- Harmonie (harmonie-5, avec musiciens-10 et partout-q3-harmonie) : `AvisLangue`, un avis par page en 中文 (fiche avec
+  la relecture dans le même bloc, chapitre, liste et détail RD-2000, recette) ; `lang="fr"` sur le contenu ; tables de
+  12 familles, 7 groupes et 22 moments (à faire relire, les moins sûres : 渐升, 和弦排法, 铺底音色, 灵魂乐色彩, 福音音乐).
+- Titre de la page d'un chant 22 / 30 px (question de T4 tranchée).
+- Passe en trois sessions (24 specs, 1 122 tests) : 969 verts ; rouges réglés (crédit d'auteur à 13 px en grand par
+  P13 ; « Adapter » / « Ma version » par le menu « ⋯ » au téléphone, helper `basculerMode` ; avis de langue : retour
+  au français prouvé). Rouge antérieur au lot de T4, à régler en fin de lot : `rd2000.spec.ts:41` au téléphone (la
+  carte « Sons du RD-2000 » n'est plus dans le catalogue depuis T1g).
+
 ## Reprendre ici (pour une nouvelle session, 05/11/2026)
 Lire seulement : `CLAUDE.md`, ce fichier (§ 2 arbitrages, § 3 règles, et cette section), puis l'annexe de la tranche
 en cours. Ne pas relire les sections « État » plus haut sauf besoin précis. Agents quelques-uns à la fois ; pas
 d'audit de tout le site ; `--workers=2` pour Playwright (le serveur de test meurt faute de mémoire au-delà).
 1. **T4a** et **T4b** faits (07/11/2026, sections ci-dessus).
-2. **T5** (en dernier) : captures du guide en 中文 (eglise-5, partout-q3-guide), bandeau d'Harmonie (harmonie-5).
+2. **T5** fait (07/11/2026, section ci-dessus).
 3. **Fin de lot** : suite complète en trois tiers dans trois sessions parallèles (`--shard=1/3` … ; ~18 000 tests,
-   trop pour un conteneur), relecture finale, feuille de route, puis annoncer à Timothée ce qu'il valide en local.
+   trop pour un conteneur), relecture finale, feuille de route, puis annoncer à Timothée ce qu'il valide en local. Y régler
+   `rd2000.spec.ts:41` (téléphone, rouge depuis T1g).
 4. **Questions ouvertes pour Timothée** (à poser en une fois) : 调 D ou D调 ; mode louange (barre du haut sur le titre
    quand les barres s'affichent ; bulle d'indice ; liseré ; FreeShow/PDF même icône) ; questionnaire laissé blanc ;
    `theme-color` #fff ; bo-evenements Q1/Q4/Q5 ; « + Nouvelle réunion » sur /reunions/nouvelle ; « Mes services » seul
