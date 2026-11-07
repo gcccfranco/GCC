@@ -445,8 +445,8 @@ Back-office à 7 px du bord à 360 px en français (sélecteur de T1a, espace Ba
   (vignettes de date, « ×N » des sections). Gris hérité à 12 px en grand (P13) corrigé (vue liste d'une setlist,
   questionnaire, Personnes, campus) ; interlignes en px de l'ancienne taille retirés des titres à 22 px ; en-tête
   d'Accords comme `EnTetePage` ; astuce du guide sur `bg-background` ; « C = Do » insécables dans l'aide d'Accords.
-- Questions pour Timothée : titre de la page d'un chant à 22 px (26 avant, plus petit que les titres de page) ; titres
-  d'Harmonie (fiche 22, chapitre 30) ; titre d'une setlist en 中文 sur deux lignes au téléphone.
+- Tranché ensuite (« Reprendre ici », 5) : titre de la page d'un chant 22 / 30 px ; titres d'Harmonie et titre de
+  setlist en 中文 gardés.
 
 ### T4b · Largeurs L1 — fait (07/11/2026, `2457eda`)
 - Liste seule : colonne de 720 px (`--colonne-liste`), alignée à gauche, en-tête à la même largeur
@@ -456,8 +456,8 @@ Back-office à 7 px du bord à 360 px en français (sélecteur de T1a, espace Ba
 - Écarts : barre d'outils de la setlist en tablette portrait posée sur la marge (dimanche-9, pour un seul bord) ;
   blocs de l'accueil du Planning et cartes d'équipes non convertis (grille déjà pleine largeur ; bandeau à défilement
   imposé par ses specs) ; paragraphes à 65 caractères non posés (aucune page nommée).
-- Question pour Timothée : la fiche de gestion d'un évènement ne passe en deux colonnes qu'au-delà de 1 024 px de
-  volet (annexe), or le volet fait ≈ 690 px même à 1 440 px : elle reste en une colonne partout.
+- La fiche de gestion d'un évènement ne passe en deux colonnes qu'au-delà de 1 024 px de volet (annexe), or le volet
+  fait ≈ 690 px même à 1 440 px : elle reste en une colonne partout (gardé, voir « Reprendre ici », 5).
 - Passe Playwright divisée en trois sessions (`--shard`, 28 specs, ≈ 3 950 tests).
 
 ## Reprendre ici (pour une nouvelle session, 05/11/2026)
@@ -473,7 +473,11 @@ d'audit de tout le site ; `--workers=2` pour Playwright (le serveur de test meur
    `theme-color` #fff ; bo-evenements Q1/Q4/Q5 ; « + Nouvelle réunion » sur /reunions/nouvelle ; « Mes services » seul
    sur sa rangée (Setlists, téléphone) ; trois rails empilés au téléphone du Back-office ; curseur du rail peu
    contrasté en sombre ; n° 8 ci-dessus ; traductions 中文 à faire relire (listées dans les sections T1 à T3c, et
-   复制链接 de T4b) ; T4 : titre de la page d'un chant à 22 px, titres d'Harmonie (fiche 22, chapitre 30), fiche de
-   gestion d'un évènement toujours en une colonne (seuil de 1 024 px de volet), blocs du Planning et cartes d'équipes
-   en `auto-fill`, paragraphes à 65 caractères, menu « ⋯ » de la setlist sous 431 px au lieu de 412.
+   复制链接 de T4b).
+5. **Questions de T4 tranchées par la conversation principale** (Timothée, 07/11/2026 : « tranche par toi-même ») :
+   titre de la page d'un chant 22 px au téléphone, 30 px dès 768 px (`text-xl md:text-2xl`) ; titres d'Harmonie
+   gardés (fiche en volet 22, chapitre 30 : deux niveaux) ; fiche de gestion d'un évènement en une colonne ≤ 720 px
+   gardée (baisser le seuil ramènerait le déséquilibre de la tablette portrait) ; menu « ⋯ » de la setlist sous 431 px
+   gardé ; blocs du Planning, cartes d'équipes en `auto-fill` et paragraphes à 65 caractères écartés ; 复制链接 gardé
+   (terme d'interface courant) ; titre de setlist en 中文 sur deux lignes au téléphone gardé (titre saisi).
 
