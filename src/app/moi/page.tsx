@@ -123,7 +123,7 @@ function MoiClient() {
   const { compte, notifierAdmin, reglages, deconnexion } = blocs;
 
   // A12 (agencement v18) : des aperçus utiles à la place des lignes de liens d'avant (Mes services,
-  // Équipes, Harmonie, Tâches) ; leur « Tout voir » mène aux pages, rien ne disparaît.
+  // Équipes, Tâches ; Harmonie retiré le 02/11/2026) ; leur « Tout voir » mène aux pages, rien ne disparaît.
   const apercus = (
     <div key="apercus" className="min-w-0 [container-type:inline-size]">
       <div className="grid items-start gap-4 [@container(min-width:720px)]:grid-cols-2">
