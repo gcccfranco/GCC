@@ -180,8 +180,8 @@ test("la liste courte : transition, note du chant, tonalité et « orig. », pas
   const yisheng = liste.locator("[data-element]").filter({ hasText: "一生爱你" });
   await expect(yisheng.getByTestId("tonalite")).toHaveText("F");
   await expect(yisheng.getByTestId("tonalite-origine")).toHaveText("orig. E");
-  // Pastilles de structure d'Abba Père : I C1 R Pm C2 P.
-  await expect(liste.locator("[data-element]").first().locator("[data-pastille]")).toHaveText(["I", "C1", "R", "Pm", "C2", "P"]);
+  // Pastilles de structure d'Abba Père : I C1 R Int C2 P.
+  await expect(liste.locator("[data-element]").first().locator("[data-pastille]")).toHaveText(["I", "C1", "R", "Int", "C2", "P"]);
   // Ni « Sélectionner » ni recherche à côté de la liste : elle est courte.
   await expect(page.getByRole("button", { name: "Sélectionner" })).toHaveCount(0);
   await expect(page.getByPlaceholder("Chercher un chant à ajouter…")).toHaveCount(0);

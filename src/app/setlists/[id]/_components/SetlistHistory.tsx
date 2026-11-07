@@ -84,6 +84,15 @@ const TYPE_OF_ABBREVIATION: Record<string, string> = {
   I: "intro", C: "verse", Pr: "prechorus", R: "chorus", Po: "postchorus", P: "bridge", F: "outro",
 };
 
+/** Libellé d'une section tel que l'historique l'a écrit : interlude et
+ *  instrumental s'abrégeaient « Pm » avant le 07/11/2026 (« Int », « Inst »
+ *  depuis), et les entrées déjà enregistrées le gardent. */
+const OLD_LABEL = /^(?:Int|Inst)(\d*)$/;
+const writtenAs = (section: { type: string; name?: string; number?: string }, abbr: string) => {
+  const current = abbreviateSection(section);
+  return current === abbr || current.replace(OLD_LABEL, "Pm$1") === abbr;
+};
+
 /** Avant : seul le retiré est marqué ; après : l'ajouté et le déplacé. */
 function shownMark(mark: SequenceMark, side: "before" | "after"): SequenceMark {
   if (side === "before") return mark === "removed" ? mark : "same";
@@ -101,7 +110,7 @@ function SectionPill({ label, songs, mark, side, songsMap }: {
   const { t } = useTranslation();
   const [, number, abbr] = label.match(/^(?:(\d+) )?(.*)$/) ?? [];
   const slug = songs[number ? Number(number) - 1 : 0];
-  const section = songsMap[slug]?.sections?.find((s) => abbreviateSection(s) === abbr);
+  const section = songsMap[slug]?.sections?.find((s) => writtenAs(s, abbr));
   const type = section?.type ?? TYPE_OF_ABBREVIATION[abbr.replace(/\d+$/, "")] ?? "other";
   const key = SECTION_PALETTE_KEY[type] ?? "other";
   const shown = shownMark(mark, side);

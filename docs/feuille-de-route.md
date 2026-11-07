@@ -1329,6 +1329,14 @@ tablette en portrait. Aucune règle Firestore. **Codé le 02/11/2026** (go du jo
 `claude/espace-musiciens-scene` : EM `e50abce`, SF `8f9db55` ; **en ligne le 02/11/2026** (`main` = `780a849`, ordre de Timothée). Écarts et
 deux tests rouges antérieurs aux lots : § État de la spec.
 
+### AN. Pastilles « Int » et « Inst » au lieu de « Pm » (signalement du 06/11/2026) → `spec-abreviation-interlude.md`
+
+Un membre signale que l'Interlude donne une pastille « Pm », qui se lit comme une sorte de Pont (« P ») ; il propose
+« Tag » ou « Int ». « Tag » écarté : dans le corpus, les Tag sont de courtes reprises chantées, les interludes des
+passages instrumentaux. **Tranché par Timothée le 07/11/2026 : interlude « Int », instrumental « Inst »** (revient
+sur le constat 16 du § 7). Les « Dernière phrase – Pm » et l'historique déjà enregistrés restent lisibles, sans
+migration. **Lot AB-I codé le 07/11/2026** (go du jour) sur `claude/cool-allen-pkzti6` ; pas en ligne.
+
 ## 4. Carte des modules de l'app « GCC »
 
 À valider par Timothée avant toute spec de module (les modules existants ne
@@ -1676,6 +1684,7 @@ valider par Timothée** : relecture des textes 中文, regard sur les cartes (r�
 - 01/11/2026 : **export FreeShow** (lot FS) : sept projets de la régie décortiqués, réponses de Timothée (setlist entière en `.project`, chinois + pinyin, bouton régie seule, fin vide, pas de traduction, Century Gothic) ; spec `spec-export-freeshow.md` (FS1 à FS9). Rien de codé, go attendu.
 - 01/11/2026 : **lot FS codé** sur `claude/export-freeshow` (go du jour) : fabrication du `.project` dans le navigateur (`src/lib/setlist/freeshow.ts`), bouton « Exporter pour FreeShow » pour la régie seule ; exemple à essayer dans FreeShow : `docs/freeshow/011126.project`. Pas en ligne ; seuils de découpe à régler après l'essai de la régie.
 - 02/11/2026 : **espace Musiciens et scène des fêtes** (AM) : planche, Q1 à Q6 tranchées, spec `spec-espace-musiciens.md` ; lots EM (`e50abce`) et SF (`8f9db55`) codés sur `claude/espace-musiciens-scene` (go du jour), en ligne le jour même (`780a849`) : troisième espace Musiciens (Accords · Harmonie · Théorie musicale · RD-2000), Harmonie hors du menu du compte, « Cours » → « Théorie musicale » ; entrée Scène du Back-Office et carte d'À faire pour la coordination. Passes complètes : EM 1 029 verts puis corrections, SF 765 verts ; deux tests rouges antérieurs aux lots (spec, § État).
+- 07/11/2026 : **pastilles Int et Inst** (AN) : signalement d'un membre (« Pm » se confond avec « P »), Timothée tranche « Int + Inst » ; spec `spec-abreviation-interlude.md`, lot AB-I codé sur `claude/cool-allen-pkzti6` (go du jour), pas en ligne.
 
 ## 7. Relecture adversariale (14/09/2026)
 
@@ -1704,7 +1713,7 @@ contre le code. Classement : **agir** (le plan change), **arbitrer**
 | 13 | Évènements « église » publics vs annonces (texte, section, épinglé) vs planning (dimanches spéciaux, réservé aux connectés) : trois canaux pour une même date. | arbitrer | **Tranché** : les annonces fusionnent dans le calendrier (page Annonces supprimée, annonce sans date = entrée épinglée) ; migration au lot 6. | 6 |
 | 14 | Inscriptions sans compte et places max : écritures anonymes et comptage concurrent. | agir | Lot 6 : inscriptions via route serveur (Admin SDK), comptage transactionnel, `events` en lecture publique, protection contre l'abus. | 6 |
 | 15 | Nouveaux envois automatiques (échéances, chaîne, évènements) sans type de préférence. | agir | `NOTIF_TYPES` gagne `evenements` et `taches`, filtrés comme les autres. | 6–7 |
-| 16 | Table d'abréviations incomplète (post-refrain, final, tag, interlude, sections « autre » à nom libre, 中文) ; « Pm » vs nuance « instrumental » ; type « final » inexistant. | agir + arbitrer | **Tranché** : I · C1 C2… · Pr · R · Po (post-refrain) · P (pont) · Pm (interlude / instrumental) · F (final) · Tag · Dp · ×2 ; sections « autre » = nom écrit (ex. 间奏). La nuance « instrumental » reste une nuance (jouer sans voix), Pm est une section. | 3 |
+| 16 | Table d'abréviations incomplète (post-refrain, final, tag, interlude, sections « autre » à nom libre, 中文) ; « Pm » vs nuance « instrumental » ; type « final » inexistant. | agir + arbitrer | **Tranché** : I · C1 C2… · Pr · R · Po (post-refrain) · P (pont) · ~~Pm (interlude / instrumental)~~ Int (interlude) · Inst (instrumental), *revu le 07/11/2026 (§ 3.AN)* · F (final) · Tag · Dp · ×2 ; sections « autre » = nom écrit (ex. 间奏). La nuance « instrumental » reste une nuance (jouer sans voix), ~~Pm~~ Int / Inst est une section. | 3 |
 | 17 | Le bandeau « nuance sous chaque étape + notes + transitions » ne tient pas sur une ligne à 390 px. | agir | Bandeau en grille qui passe à la ligne (étape = abréviation au-dessus de sa nuance) ; notes et transitions sur une ligne fine en dessous, pas en ligne ; **testé sur les trois appareils** avec un pire cas (fusion mélangée, 12 étapes). | 3 |
 | 18 | Menu par sections vs barre du bas à 4 onglets figée et navigation sans compte (pas d'entrée vers le calendrier public). | arbitrer (lot 4) | Prérequis écrit du lot 4 : correspondance sections → onglets et navigation anonyme. | 4 |
 | 19 | Règle `onboarding/{uid}` à rétablir (permissions en double) ; l'inscription est centrée sur le nom de planning alors que l'assemblée arrive au lot 6. | agir | Lot 8 : règle rétablie. Lot 6 : parcours d'inscription **sans** nom de planning déplacé en prérequis (`comptes-roles`). | 6, 8 |

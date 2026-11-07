@@ -74,7 +74,7 @@ async function openPartitions(page: Page, data = setlist()) {
 
 // ── Abréviations (fonction pure) ────────────────────────────────────────────
 
-test("abréviations : une lettre par sorte de section, le numéro des couplets, Dp et Pm", () => {
+test("abréviations : une lettre par sorte de section, le numéro des couplets, Dp, Int et Inst", () => {
   const s = (type: string, name?: string, number?: string) => ({ type, name, number });
   expect(abbreviateSection(s("intro", "Intro"))).toBe("I");
   expect(abbreviateSection(s("verse", "Couplet 1", "1"))).toBe("C1");
@@ -85,9 +85,9 @@ test("abréviations : une lettre par sorte de section, le numéro des couplets, 
   expect(abbreviateSection(s("postchorus", "Post-refrain"))).toBe("Po");
   expect(abbreviateSection(s("bridge", "Pont"))).toBe("P");
   // Le nom écrit l'emporte sur le type, comme pour le libellé complet.
-  expect(abbreviateSection(s("intro", "Interlude"))).toBe("Pm");
-  expect(abbreviateSection(s("other", "Instrumental"))).toBe("Pm");
-  expect(abbreviateSection(s("other", "间奏"))).toBe("Pm");
+  expect(abbreviateSection(s("intro", "Interlude"))).toBe("Int");
+  expect(abbreviateSection(s("other", "Instrumental"))).toBe("Inst");
+  expect(abbreviateSection(s("other", "间奏"))).toBe("Int");
   expect(abbreviateSection(s("outro", "Outro"))).toBe("F");
   // « Final » sous une directive outro (01) s'abrège comme une outro, en 中文 aussi.
   expect(abbreviateSection(s("outro", "Final"))).toBe("F");
@@ -132,7 +132,7 @@ test("page du chant : même bandeau, sans nuances, plus de ligne ORDRE", async (
   await page.goto("/songs/abba-pere");
   await expect(page.getByText("ORDRE", { exact: true })).toHaveCount(0);
   const strip = page.getByRole("list", { name: "Structure" });
-  await expect(strip.getByRole("listitem")).toHaveText(["I", "C1", "R", "Pm", "C2", "P"]);
+  await expect(strip.getByRole("listitem")).toHaveText(["I", "C1", "R", "Int", "C2", "P"]);
   // L'abréviation garde son nom complet pour les lecteurs d'écran.
   await expect(strip.getByRole("listitem").nth(3).locator("abbr")).toHaveAttribute("title", "Interlude");
 });
