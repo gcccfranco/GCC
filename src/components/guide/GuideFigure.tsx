@@ -102,12 +102,14 @@ function Labels({ items, figureId }: { items: Annotation[]; figureId: string }) 
 }
 
 /** Annotations posées sur l'image (communes à la figure et à la feuille). */
-function Surimpression({ figure }: { figure: Figure }) {
-  if (!figure.annotations || figure.annotations.length === 0) return null;
+function Surimpression({ figure, zh }: { figure: Figure; zh: boolean }) {
+  // Capture chinoise : ses coordonnées `zh` si la figure en a, sinon celles du français.
+  const items = (zh && figure.zh) || figure.annotations;
+  if (!items || items.length === 0) return null;
   return (
     <>
-      <Shapes items={figure.annotations} />
-      <Labels items={figure.annotations} figureId={figure.id} />
+      <Shapes items={items} />
+      <Labels items={items} figureId={figure.id} />
     </>
   );
 }
@@ -118,14 +120,17 @@ const IMG_SOMBRE = "dark:[filter:brightness(.85)_contrast(.95)]";
 /** Capture annotée d'une section du guide (masquée si l'image manque). Le bouton « Agrandir la capture »
  *  ouvre une feuille où l'image garde sa largeur réelle (1 280 px) : on la fait défiler ou on la pince. */
 export function GuideFigure({ figure }: { figure: Figure }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [hidden, setHidden] = useState(false);
   const [ouvert, setOuvert] = useState(false);
+  // En 中文, la capture chinoise ; si elle manque, repli sur la capture française et ses coordonnées.
+  const [zhAbsent, setZhAbsent] = useState(false);
   const [origine, setOrigine] = useState("50% 50%");
   const cadre = useRef<HTMLDivElement>(null);
   if (hidden) return null;
 
-  const src = `/guide/${figure.id}.png`;
+  const zh = (i18n.language ?? "").startsWith("zh") && !zhAbsent;
+  const src = zh ? `/guide/zh/${figure.id}.png` : `/guide/${figure.id}.png`;
   const alt = t(`guide.captures.${figure.id}.caption`, { defaultValue: "" });
 
   function agrandir() {
@@ -148,9 +153,9 @@ export function GuideFigure({ figure }: { figure: Figure }) {
             alt={alt}
             loading="lazy"
             className={`h-full w-full object-cover ${IMG_SOMBRE}`}
-            onError={() => setHidden(true)}
+            onError={() => (zh ? setZhAbsent(true) : setHidden(true))}
           />
-          <Surimpression figure={figure} />
+          <Surimpression figure={figure} zh={zh} />
         </div>
       </div>
       {/* R2 : le bouton « Agrandir » sort de la capture, dans la ligne de légende, à droite (zone de 44 px au doigt) :
@@ -202,7 +207,7 @@ export function GuideFigure({ figure }: { figure: Figure }) {
               <div className="relative" style={{ width: 1280, aspectRatio: String(figure.aspect ?? 1.6) }}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={src} alt={alt} data-testid="capture-agrandie" className={`h-full w-full max-w-none ${IMG_SOMBRE}`} />
-                <Surimpression figure={figure} />
+                <Surimpression figure={figure} zh={zh} />
               </div>
             </div>
           </div>

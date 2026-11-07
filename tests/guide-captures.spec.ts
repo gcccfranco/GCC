@@ -8,6 +8,10 @@ import { FIGURES } from "../src/lib/guide/figures";
 // Captures du guide d'utilisation (/guide) : refaites par ce script, pas à la main.
 //
 //   GUIDE_CAPTURES=1 npx playwright test tests/guide-captures.spec.ts --project=ordinateur
+//   GUIDE_CAPTURES=1 GUIDE_LANGUE=zh-CN npx playwright test tests/guide-captures.spec.ts --project=ordinateur
+//
+// Avec GUIDE_LANGUE=zh-CN : le jeu chinois (locale et langue d'interface zh-CN), écrit dans public/guide/zh/ ;
+// les mesures vont dans scripts/guide/mesures-zh.json. Sans la variable : le jeu français, inchangé.
 //
 // Sans GUIDE_CAPTURES=1, la spec ne fait rien (elle écrase les PNG de public/guide/).
 // Ordinateur 1280×800, ×2 (les PNG font 2560×1600), thème clair, français, contre le SERVEUR COUPÉ
@@ -23,19 +27,25 @@ import { FIGURES } from "../src/lib/guide/figures";
 // Les PNG sont ensuite passés par PIL (`python3 scripts/guide/optimiser.py`, si PIL est là).
 
 test.skip(process.env.GUIDE_CAPTURES !== "1", "GUIDE_CAPTURES=1 pour refaire les captures du guide");
+const ZH = process.env.GUIDE_LANGUE === "zh-CN";
+/** Libellé selon la langue des captures : `tr(français, chinois)`. */
+const tr = (fr: string, zh: string) => (ZH ? zh : fr);
+/** Même chose pour une expression régulière. */
+const trRe = (fr: RegExp, zh: RegExp) => (ZH ? zh : fr);
 test.use({
   baseURL: BASE_URL_COUPE,
   viewport: { width: 1280, height: 800 },
   deviceScaleFactor: 2,
   colorScheme: "light",
-  locale: "fr-FR",
+  locale: ZH ? "zh-CN" : "fr-FR",
   permissions: ["notifications"],
   actionTimeout: 20_000,
 });
 
 const L = 1280;
 const H = 800;
-const SORTIE = "public/guide";
+const SORTIE = ZH ? "public/guide/zh" : "public/guide";
+const FICHIER_MESURES = ZH ? "scripts/guide/mesures-zh.json" : "scripts/guide/mesures.json";
 
 // Profil fictif, membre ordinaire (son adresse s'affiche dans Moi et Mon profil).
 const MOI: FakeProfile = {
@@ -66,7 +76,7 @@ const DIM = dimanches(6);
 // Léa est au piano deux dimanches sur trois (« Mes services »). Tous les noms sont inventés.
 const PRESIDENTS = ["Océane R.", "Gaspard T.", "Mireille V.", "Basile D.", "Yaëlle N.", "Octave F."];
 const CULTE_CSV = DIM.map((d, i) =>
-  [fr(d), PRESIDENTS[i % 6], "Solène K.", "Hugo L.", i % 3 === 2 ? "Noé P." : "Léa", "Octave F.", "Marius C.", "Basile D.", "Yaëlle N.", "Pasteur Marchand", "", ""].join(","),
+  [fr(d), PRESIDENTS[i % 6], "Solène K.", "Hugo L.", i % 3 === 2 ? "Noé P." : "Léa", "Octave F.", "Marius C.", "Basile D.", "Yaëlle N.", tr("Pasteur Marchand", "牧师 Marchand"), "", ""].join(","),
 ).join("\n");
 
 async function sheetSimule(page: Page) {
@@ -81,7 +91,9 @@ const item = (o: Record<string, unknown>) => ({
   keyOverride: null, showChords: true, showPinyin: true, useJianpu: false, structureOverride: null, sectionNotes: {}, notes: "", ...o,
 });
 const SETLIST = {
-  title: `Culte du ${DIM[1].getDate()} ${DIM[1].toLocaleDateString("fr-FR", { month: "long" })}`,
+  title: ZH
+    ? `${DIM[1].getMonth() + 1}月${DIM[1].getDate()}日崇拜`
+    : `Culte du ${DIM[1].getDate()} ${DIM[1].toLocaleDateString("fr-FR", { month: "long" })}`,
   leader: "Océane R.", category: "Culte Francophone", date: iso(DIM[1]), language: "mixed", notes: "",
   ownerId: MOI.uid, isPrivate: false,
   items: [item({ songSlug: "abba-pere", position: 1 }), item({ songSlug: "abrite-moi", position: 2 })],
@@ -137,7 +149,7 @@ async function aller(page: Page, url: string, attendre: Locator) {
 
 /** La bulle d'aide « Clique sur un accord… » (première visite d'un chant) masquerait la partition. */
 async function fermerBulle(page: Page) {
-  await page.getByRole("button", { name: "OK", exact: true }).click({ timeout: 4_000 }).catch(() => {});
+  await page.getByRole("button", { name: tr("OK", "好的"), exact: true }).click({ timeout: 4_000 }).catch(() => {});
   await page.waitForTimeout(300);
 }
 
@@ -154,6 +166,7 @@ test("captures du guide", async ({ page }, testInfo) => {
     // Chromium sans interface refuse les notifications : on montre l'interrupteur, resté sur « désactivé ».
     try { Object.defineProperty(Notification, "permission", { get: () => "default" }); } catch { /* sans Notification */ }
   });
+  if (ZH) await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
   await sheetSimule(page);
   await signInAs(page, MOI, DOCS, "/songs");
   await page.getByRole("searchbox").first().waitFor();
@@ -164,7 +177,7 @@ test("captures du guide", async ({ page }, testInfo) => {
 
   await aller(page, "/songs", page.getByRole("searchbox"));
   await figure(page, "songs", {
-    tab: lienNav(page, "Chants"),
+    tab: lienNav(page, tr("Chants", "诗歌")),
     search: page.getByRole("searchbox").first(),
     dot: page.getByRole("link", { name: /Abrite-moi/ }).first().locator("span").last(),
   });
@@ -172,83 +185,83 @@ test("captures du guide", async ({ page }, testInfo) => {
   // song : la barre du chant et le menu ⋯.
   await aller(page, "/songs/abba-pere", page.getByRole("heading", { name: /Abba/i }));
   await fermerBulle(page);
-  const barre = page.getByRole("button", { name: "Plus d'actions" }).first();
+  const barre = page.getByRole("button", { name: tr("Plus d'actions", "更多操作") }).first();
   // Menu ouvert, Radix masque le reste de la page aux rôles : on mesure avant d'ouvrir.
   mesures.song = {
     tonalite: await mesurer(page.getByTestId("pilule-tonalite")),
     menu: await mesurer(barre),
   };
   await barre.click();
-  const personnaliser = page.getByRole("menuitem", { name: "Personnaliser" });
+  const personnaliser = page.getByRole("menuitem", { name: tr("Personnaliser", "个性化设置") });
   await personnaliser.waitFor();
   await figure(page, "song", { customize: personnaliser });
 
   // customize : le panneau Personnaliser.
   await personnaliser.click();
-  const panneau = page.getByRole("dialog", { name: "Personnaliser" });
+  const panneau = page.getByRole("dialog", { name: tr("Personnaliser", "个性化设置") });
   await panneau.waitFor();
   await page.waitForTimeout(600);
   await figure(page, "customize", {
     transpose: page.getByTestId("pilule-tonalite"),
-    sections: panneau.getByText("Structure", { exact: true }),
-    reinit: panneau.getByRole("button", { name: "Réinitialiser" }),
+    sections: panneau.getByText(tr("Structure", "歌单结构"), { exact: true }),
+    reinit: panneau.getByRole("button", { name: tr("Réinitialiser", "重置") }),
   });
   await page.keyboard.press("Escape");
 
   // performance : le mode louange, barre rappelée.
-  await aller(page, "/setlists/sl-guide", page.getByRole("button", { name: /Mode Louange/ }));
-  await page.getByRole("button", { name: /Mode Louange/ }).click();
+  await aller(page, "/setlists/sl-guide", page.getByRole("button", { name: trRe(/Mode Louange/, /敬拜模式/) }));
+  await page.getByRole("button", { name: trRe(/Mode Louange/, /敬拜模式/) }).click();
   await attendreMiseEnPage(page);
   await page.waitForTimeout(1500); // fin de la transition d'ouverture
   // La barre s'escamote après 3 s : un toucher au centre la rappelle.
-  const reglages = page.getByRole("button", { name: "Réglages" });
+  const reglages = page.getByRole("button", { name: tr("Réglages", "设置") });
   await expect(async () => {
     if (!(await reglages.isVisible())) await page.mouse.click(L / 2, H / 2);
     await expect(reglages).toBeVisible({ timeout: 1_500 });
   }).toPass({ timeout: 20_000 });
   await figure(page, "performance", {
-    annoter: page.getByRole("button", { name: "Annoter" }),
+    annoter: page.getByRole("button", { name: tr("Annoter", "批注") }),
     reglages,
-    page: page.getByRole("button", { name: "Page suivante" }),
-    quitter: page.getByRole("button", { name: "Quitter" }),
+    page: page.getByRole("button", { name: tr("Page suivante", "下一页") }),
+    quitter: page.getByRole("button", { name: tr("Quitter", "退出") }),
   });
 
   // setlists : la liste « À venir ».
-  await aller(page, "/setlists", page.getByText("Nouvelle setlist", { exact: true }));
+  await aller(page, "/setlists", page.getByText(tr("Nouvelle setlist", "新建歌单"), { exact: true }));
   await figure(page, "setlists", {
     open: page.getByRole("link", { name: new RegExp(SETLIST.title) }).first(),
-    nouvelle: page.getByText("Nouvelle setlist", { exact: true }),
+    nouvelle: page.getByText(tr("Nouvelle setlist", "新建歌单"), { exact: true }),
   });
 
   // composeInfos : le cadre (titre, catégorie, visibilité).
-  await aller(page, "/setlists/new", page.getByText("Autre setlist"));
-  await page.getByText("Autre setlist").click();
+  await aller(page, "/setlists/new", page.getByText(tr("Autre setlist", "其他歌单")));
+  await page.getByText(tr("Autre setlist", "其他歌单")).click();
   const titre = page.getByRole("textbox").first();
   await titre.waitFor();
-  await titre.fill("Culte du 8 novembre");
-  const categorie = page.locator("select").filter({ hasText: "Choisir une catégorie" }).first();
-  await categorie.selectOption({ label: "Culte Francophone" });
+  await titre.fill(tr("Culte du 8 novembre", "11月8日崇拜"));
+  const categorie = page.locator("select").filter({ hasText: tr("Choisir une catégorie", "请选择类型") }).first();
+  await categorie.selectOption({ label: tr("Culte Francophone", "法语崇拜") });
   await page.waitForTimeout(400);
   await figure(page, "composeInfos", {
     titre,
     categorie,
-    publier: page.getByRole("button", { name: "Publier" }),
+    publier: page.getByRole("button", { name: tr("Publier", "发布") }),
   });
 
   // composeSongs : ajouter des chants.
-  const ajouter = page.getByRole("button", { name: /^Ajouter (Abba|Abrite)/ });
+  const ajouter = page.getByRole("button", { name: trRe(/^Ajouter (Abba|Abrite)/, /^添加 (Abba|Abrite)/) });
   await ajouter.first().click();
   await page.waitForTimeout(300);
-  await page.getByRole("button", { name: /^Ajouter Abrite-moi/ }).click().catch(() => {});
+  await page.getByRole("button", { name: trRe(/^Ajouter Abrite-moi/, /^添加 Abrite-moi/) }).click().catch(() => {});
   await page.waitForTimeout(500);
   await figure(page, "composeSongs", {
-    recherche: page.getByRole("searchbox").or(page.getByPlaceholder("Chercher un chant à ajouter…")).first(),
-    plus: page.getByRole("button", { name: /^Ajouter 爱的约定/ }),
+    recherche: page.getByRole("searchbox").or(page.getByPlaceholder(tr("Chercher un chant à ajouter…", "搜索并添加诗歌…"))).first(),
+    plus: page.getByRole("button", { name: trRe(/^Ajouter 爱的约定/, /^添加 爱的约定/) }),
   });
 
   // composeAdvanced : les réglages d'un chant d'une setlist (tonalité, structure, fusion).
-  await aller(page, "/setlists/sl-guide/edit", page.getByText("Réglages du chant"));
-  const fusionner = page.getByRole("button", { name: "Fusionner", exact: true });
+  await aller(page, "/setlists/sl-guide/edit", page.getByText(tr("Réglages du chant", "诗歌设置")));
+  const fusionner = page.getByRole("button", { name: tr("Fusionner", "合并"), exact: true });
   await fusionner.scrollIntoViewIfNeeded();
   // Remonte un peu le volet : « Tonalité » reste lisible en haut, « Fusionner » encore en bas.
   await fusionner.evaluate((el) => {
@@ -258,44 +271,44 @@ test("captures du guide", async ({ page }, testInfo) => {
   });
   await page.waitForTimeout(500);
   await figure(page, "composeAdvanced", {
-    tonalites: page.getByRole("radiogroup", { name: /Tonalité/ }).first(),
-    structure: page.getByText("Structure", { exact: true }).first(),
-    derniere: page.getByRole("button", { name: /Dernière phrase/ }),
+    tonalites: page.getByRole("radiogroup", { name: trRe(/Tonalité/, /调/) }).first(),
+    structure: page.getByText(tr("Structure", "结构"), { exact: true }).first(),
+    derniere: page.getByRole("button", { name: trRe(/Dernière phrase/, /最后一句/) }),
     fusionner,
   });
 
   // planning : l'accueil du planning.
-  await aller(page, "/planning", page.getByRole("heading", { name: "Planning", level: 1 }));
+  await aller(page, "/planning", page.getByRole("heading", { name: tr("Planning", "排班表"), level: 1 }));
   await page.waitForTimeout(1200);
   await figure(page, "planning", {
-    premier: page.getByText("Accueil", { exact: true }).first(),
-    dernier: page.getByText("Interfranco", { exact: true }).first(),
-    tab: lienNav(page, "Planning"),
-    pourMoi: page.getByRole("link", { name: /Mes services/ }).filter({ visible: true }).first(),
+    premier: page.getByText(tr("Accueil", "首页"), { exact: true }).first(),
+    dernier: page.getByText(tr("Interfranco", "法语联合聚会"), { exact: true }).first(),
+    tab: lienNav(page, tr("Planning", "排班表")),
+    pourMoi: page.getByRole("link", { name: trRe(/Mes services/, /我的服事/) }).filter({ visible: true }).first(),
   });
 
   // services : Mes services (page ouverte depuis Moi).
-  await aller(page, "/mes-services", page.getByRole("heading", { name: "Mes services", level: 1 }));
+  await aller(page, "/mes-services", page.getByRole("heading", { name: tr("Mes services", "我的服事"), level: 1 }));
   await page.waitForTimeout(1000);
   await figure(page, "services", {
-    moi: lienNav(page, "Moi"),
-    titre: page.getByRole("heading", { name: "Mes services", level: 1 }),
-    onglets: page.getByText("À venir", { exact: true }).first(),
-    ligne: page.getByText(/^Dim\. \d+ /).first(),
+    moi: lienNav(page, tr("Moi", "我")),
+    titre: page.getByRole("heading", { name: tr("Mes services", "我的服事"), level: 1 }),
+    onglets: page.getByText(tr("À venir", "即将到来"), { exact: true }).first(),
+    ligne: page.getByText(trRe(/^Dim\. \d+ /, /^\d+月\d+日周日/)).first(),
   });
 
   // notifications : la feuille Notifications de Moi.
-  await aller(page, "/moi", page.getByRole("heading", { name: "Moi", level: 1 }));
-  await page.getByText("Notifications", { exact: true }).first().click();
+  await aller(page, "/moi", page.getByRole("heading", { name: tr("Moi", "我"), level: 1 }));
+  await page.getByText(tr("Notifications", "通知"), { exact: true }).first().click();
   const interrupteur = page.getByRole("switch").first();
   await interrupteur.waitFor();
   await figure(page, "notifications", { toggle: interrupteur });
   await page.keyboard.press("Escape");
 
   // profile : Mon profil, avec « Ton nom dans les plannings ».
-  await aller(page, "/profil", page.getByText("Ton nom dans les plannings").first());
+  await aller(page, "/profil", page.getByText(tr("Ton nom dans les plannings", "你在排班表中的名字")).first());
   await figure(page, "profile", {
-    planningName: page.getByText("Ton nom dans les plannings").first(),
+    planningName: page.getByText(tr("Ton nom dans les plannings", "你在排班表中的名字")).first(),
   });
 
 });
@@ -303,14 +316,15 @@ test("captures du guide", async ({ page }, testInfo) => {
 test("captures du guide : Admin (compte admin, adresse fictive à l'écran)", async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== "ordinateur", "projet ordinateur seulement");
   test.setTimeout(120_000);
+  if (ZH) await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
   await sheetSimule(page);
   await signInAs(page, ADMIN, DOCS, "/songs");
   await page.getByRole("searchbox").first().waitFor();
   // admin : les comptes et rôles.
-  await aller(page, "/admin", page.getByRole("heading", { name: /Administration/ }));
+  await aller(page, "/admin", page.getByRole("heading", { name: trRe(/Administration/, /管理/) }));
   await page.waitForTimeout(800);
   await figure(page, "admin", {
-    membres: page.getByRole("tab", { name: /Membres/ }).or(page.getByRole("button", { name: /Membres/ })).first(),
+    membres: page.getByRole("tab", { name: trRe(/Membres/, /成员/) }).or(page.getByRole("button", { name: trRe(/Membres/, /成员/) })).first(),
     liste: page.getByText("Mireille Vasseur").first(),
   });
 });
@@ -321,5 +335,5 @@ test.afterAll(({}, testInfo) => {
   const attendues = Object.values(FIGURES).flat().map((f) => f.id);
   for (const id of attendues) if (!mesures[id]) throw new Error(`capture manquante : ${id}`);
   mkdirSync("scripts/guide", { recursive: true });
-  writeFileSync("scripts/guide/mesures.json", JSON.stringify(mesures, null, 2) + "\n");
+  writeFileSync(FICHIER_MESURES, JSON.stringify(mesures, null, 2) + "\n");
 });

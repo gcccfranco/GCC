@@ -4,7 +4,7 @@ import { signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { FIGURES } from "../src/lib/guide/figures";
 
 // Tranche B6b (docs/spec-corrections-audit.md, G11) : le guide d'utilisation. Chaque figure a sa capture
-// (public/guide/<id>.png, 2560×1600), le texte dit « Chants » et non « Louange » pour l'onglet, et aucun
+// (public/guide/<id>.png, et public/guide/zh/<id>.png en 中文 ; 2560×1600), le texte dit « Chants » et non « Louange » pour l'onglet, et aucun
 // nombre de chants n'y est écrit en dur. Compte fictif ; Sheets simulés.
 // Les captures se refont avec `GUIDE_CAPTURES=1 npx playwright test tests/guide-captures.spec.ts --project=ordinateur`.
 
@@ -25,7 +25,7 @@ async function ouvrirGuide(page: Page, langue: "fr" | "zh") {
 /** Toutes les images des figures sont chargées (le défilement les amène : elles sont paresseuses). */
 async function imagesChargees(page: Page) {
   for (const id of IDS) {
-    const img = page.locator(`img[src*="/guide/${id}.png"]`).first();
+    const img = page.locator(`img[src*="${id}.png"]`).first();
     await img.scrollIntoViewIfNeeded();
     await expect.poll(() => img.evaluate((el) => (el as HTMLImageElement).naturalWidth), { message: `image ${id}` }).toBeGreaterThan(0);
   }
@@ -43,15 +43,46 @@ for (const [langue, titre] of [["fr", "français"], ["zh", "中文"]] as const) 
   });
 }
 
-test("figures : chaque capture référencée existe et fait 2560×1600", () => {
+test("figures : chaque capture référencée existe et fait 2560×1600, en français et en 中文", () => {
   expect(IDS.length).toBeGreaterThan(10);
-  for (const id of IDS) {
-    const png = readFileSync(`public/guide/${id}.png`);
-    // En-tête PNG : signature (8 octets), « IHDR » (8), largeur puis hauteur sur 4 octets chacune.
-    expect(png.subarray(1, 4).toString("latin1"), `${id}.png est un PNG`).toBe("PNG");
-    expect({ id, largeur: png.readUInt32BE(16), hauteur: png.readUInt32BE(20) }).toEqual({ id, largeur: 2560, hauteur: 1600 });
+  for (const dossier of ["public/guide", "public/guide/zh"]) {
+    for (const id of IDS) {
+      const png = readFileSync(`${dossier}/${id}.png`);
+      // En-tête PNG : signature (8 octets), « IHDR » (8), largeur puis hauteur sur 4 octets chacune.
+      expect(png.subarray(1, 4).toString("latin1"), `${dossier}/${id}.png est un PNG`).toBe("PNG");
+      expect({ dossier, id, largeur: png.readUInt32BE(16), hauteur: png.readUInt32BE(20) }).toEqual({ dossier, id, largeur: 2560, hauteur: 1600 });
+    }
   }
 });
+
+// Capture de la langue : en 中文 l'image est /guide/zh/<id>.png, en français /guide/<id>.png (jamais /zh/) ;
+// dans les deux langues, chaque annotation (forme ou légende) tombe dans le cadre de l'image.
+for (const [langue, titre] of [["fr", "français"], ["zh", "中文"]] as const) {
+  test(`/guide en ${titre} : capture de la langue, annotations dans l'image`, async ({ page }) => {
+    await ouvrirGuide(page, langue);
+    await imagesChargees(page);
+    for (const id of IDS) {
+      const figure = page.locator("figure").filter({ has: page.locator(`img[src*="${id}.png"]`) }).first();
+      await figure.scrollIntoViewIfNeeded();
+      const img = figure.locator("img").first();
+      const src = (await img.getAttribute("src")) ?? "";
+      if (langue === "zh") expect(src, `${id} en 中文`).toContain(`/guide/zh/${id}.png`);
+      else expect(src, `${id} en français`).not.toContain("/zh/");
+      const cadre = await img.boundingBox();
+      expect(cadre, `cadre de ${id}`).not.toBeNull();
+      const marge = cadre!.width * 0.012; // la boîte d'une forme SVG compte son trait (1,8 % du cadre au plus)
+      const dedans = (b: { x: number; y: number; width: number; height: number }) =>
+        b.x >= cadre!.x - marge && b.y >= cadre!.y - marge && b.x + b.width <= cadre!.x + cadre!.width + marge && b.y + b.height <= cadre!.y + cadre!.height + marge;
+      const pastilles = figure.locator("span.absolute.inline-block, svg ellipse, svg rect, svg line");
+      const n = await pastilles.count();
+      expect(n, `annotations de ${id}`).toBeGreaterThan(0);
+      for (let i = 0; i < n; i++) {
+        const b = await pastilles.nth(i).boundingBox();
+        if (b) expect(dedans(b), `${langue} ${id} : annotation ${i} hors de l'image`).toBe(true);
+      }
+    }
+  });
+}
 
 // Vues à regarder à l'œil (test-results/guide-b6/) : chaque figure annotée du guide, ordinateur 1440 en français
 // clair puis téléphone en 中文 sombre. On vérifie à la main que cercles, flèches et légendes tombent sur leurs cibles.
@@ -65,7 +96,7 @@ for (const vue of [
     await ouvrirGuide(page, vue.langue);
     await imagesChargees(page);
     for (const id of IDS) {
-      const figure = page.locator("figure").filter({ has: page.locator(`img[src*="/guide/${id}.png"]`) });
+      const figure = page.locator("figure").filter({ has: page.locator(`img[src*="${id}.png"]`) });
       await figure.scrollIntoViewIfNeeded();
       await figure.screenshot({ path: `test-results/guide-b6/${vue.nom}-${id}.png` });
     }
