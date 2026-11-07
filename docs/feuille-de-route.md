@@ -1687,6 +1687,11 @@ valider par Timothée** : relecture des textes 中文, regard sur les cartes (r�
   Timothée). Passes de tests divisées en sessions parallèles ; suite complète (18 403 tests, six sessions) : rouges
   réglés sauf trois antérieurs à T4 et T5 (`spec-corrections-design.md`, « Fin de lot »). Traductions 中文 à faire relire
   (Harmonie, 复制链接). **À valider en local par Timothée**, puis mise en ligne sur son ordre.
+- 07/11/2026 (soir) : **retouches V1 à V6** de la validation de Timothée sur écran large (go « 1 à 6 avec l'option A ») :
+  index A–Z des Chants à hauteur de la liste ; case vide du dimanche (À faire) en « — » qui ouvre sa case du planning ;
+  Setlists avec l'aperçu de la première setlist d'emblée ; fiche de Mes services en setlist + équipe ; colonne des
+  partitions d'une setlist à 860 px centrée ; 简谱 centrée malgré les marges inégales des scans (`marges.json`). Tests
+  ciblés en quatre sessions (2 659 tests), rouges réglés. Toujours sur la branche, à valider en local.
 
 ## 7. Relecture adversariale (14/09/2026)
 

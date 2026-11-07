@@ -530,6 +530,13 @@ le lot a été réglé. Chaque test d'agencement ajouté mesure aussi à **1 700
   `marginInline` inégales. Seule la position de la page change : aucune coordonnée du calque (zone gelée) ne bouge,
   image et calque se déplacent ensemble. Critère : pour 恩典之路, écart entre l'encre et les bords de la colonne égal
   à gauche et à droite (± 4 px) ; un scan déjà équilibré ne bouge pas de plus de 2 px.
+- **État — fait** (07/11/2026, `b04dca6`, corrections `32d0cb6`, `b744653`, `40bd5ad`) : trois executants en parallèle,
+  puis tests ciblés en quatre sessions (23 specs, 2 659 tests). Corrigé ensuite : V1, l'index au repos se raccourcit
+  pour finir où finit l'index centré (`--liste-haut`) et se fige en px pendant un geste (il glissait sous le doigt) ;
+  son décalage retranche la gouttière réelle (au téléphone il mordait de 16 px sur la carte) ; V3, « Ouvrir » de
+  l'aperçu en recette « outline » (aplat `--secondary` sur le gris, agencement-groupes) ; test V2 qui suit l'élément
+  porteur de l'anneau (au téléphone en édition, la case de la carte). 56 scans ont |droite − gauche| > 30 (critère
+  sous le recadrage). Vu à l'œil à 1 280 × 720, 1 440 × 900, 1 940 × 1 300 et au téléphone.
 
 ## Reprendre ici (pour une nouvelle session, 05/11/2026)
 Lire seulement : `CLAUDE.md`, ce fichier (§ 2 arbitrages, § 3 règles, et cette section), puis l'annexe de la tranche
@@ -537,8 +544,9 @@ en cours. Ne pas relire les sections « État » plus haut sauf besoin précis. 
 d'audit de tout le site ; `--workers=2` pour Playwright (le serveur de test meurt faute de mémoire au-delà).
 1. **T4a** et **T4b** faits (07/11/2026, sections ci-dessus).
 2. **T5** fait (07/11/2026, section ci-dessus).
-3. **Fin de lot** faite (07/11/2026, section ci-dessus). Reste : validation de Timothée en local, puis mise en ligne
-   sur son ordre ; les trois rouges antérieurs listés plus haut.
+3. **Fin de lot** faite (07/11/2026, section ci-dessus), puis **retouches V1 à V6** de sa validation (section
+   ci-dessus). Reste : validation de Timothée en local, puis mise en ligne sur son ordre ; les trois rouges antérieurs
+   listés plus haut.
 4. **Questions ouvertes pour Timothée** (à poser en une fois) : 调 D ou D调 ; mode louange (barre du haut sur le titre
    quand les barres s'affichent ; bulle d'indice ; liseré ; FreeShow/PDF même icône) ; questionnaire laissé blanc ;
    `theme-color` #fff ; bo-evenements Q1/Q4/Q5 ; « + Nouvelle réunion » sur /reunions/nouvelle ; « Mes services » seul
