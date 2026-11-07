@@ -440,15 +440,31 @@ Back-office à 7 px du bord à 360 px en français (sélecteur de T1a, espace Ba
   look-louange). Rouge sur la base, laissé à T4b : `pages-en-grand-mes-services:223` (cherche `.raised`, absent de
   Mes services depuis T2).
 
+### T4a · retouches de la critique de design — fait (07/11/2026, `29ce362`)
+- Un cran (`text-xs`…) pose son interligne : les éléments convertis qui héritaient d'un `leading-*` le reprennent
+  (vignettes de date, « ×N » des sections). Gris hérité à 12 px en grand (P13) corrigé (vue liste d'une setlist,
+  questionnaire, Personnes, campus) ; interlignes en px de l'ancienne taille retirés des titres à 22 px ; en-tête
+  d'Accords comme `EnTetePage` ; astuce du guide sur `bg-background` ; « C = Do » insécables dans l'aide d'Accords.
+- Questions pour Timothée : titre de la page d'un chant à 22 px (26 avant, plus petit que les titres de page) ; titres
+  d'Harmonie (fiche 22, chapitre 30) ; titre d'une setlist en 中文 sur deux lignes au téléphone.
+
+### T4b · Largeurs L1 — fait (07/11/2026, `2457eda`)
+- Liste seule : colonne de 720 px (`--colonne-liste`), alignée à gauche, en-tête à la même largeur
+  (`body:has([data-colonne-seule])`) : Mes services, Setlists, Tâches, Réception, Personnes, questionnaire. Pilote Mes
+  services (groupes sur le gris, bandeau en groupe blanc, état vide 720 × 96). Entrées bo-evenements-5 et -12,
+  dimanche-7, -8, -9, evenements-app-3, services-4 et -8. Clé `evenements.copierLien` (复制链接 à faire relire).
+- Écarts : barre d'outils de la setlist en tablette portrait posée sur la marge (dimanche-9, pour un seul bord) ;
+  blocs de l'accueil du Planning et cartes d'équipes non convertis (grille déjà pleine largeur ; bandeau à défilement
+  imposé par ses specs) ; paragraphes à 65 caractères non posés (aucune page nommée).
+- Question pour Timothée : la fiche de gestion d'un évènement ne passe en deux colonnes qu'au-delà de 1 024 px de
+  volet (annexe), or le volet fait ≈ 690 px même à 1 440 px : elle reste en une colonne partout.
+- Passe Playwright divisée en trois sessions (`--shard`, 28 specs, ≈ 3 950 tests).
+
 ## Reprendre ici (pour une nouvelle session, 05/11/2026)
 Lire seulement : `CLAUDE.md`, ce fichier (§ 2 arbitrages, § 3 règles, et cette section), puis l'annexe de la tranche
 en cours. Ne pas relire les sections « État » plus haut sauf besoin précis. Agents quelques-uns à la fois ; pas
 d'audit de tout le site ; `--workers=2` pour Playwright (le serveur de test meurt faute de mémoire au-delà).
-1. **T4a** fait (07/11/2026, section « T4a » ci-dessus). **T4b** (go séparé, annexe `partout.md`) : largeurs L1 et
-   entrées T4 de largeur listées dans la section T4a ; un `/tranche`, captures de quatre dispositions + 1 440 px,
-   `tests/agencement-groupes.spec.ts` vert, `pages-en-grand-mes-services:223` à adapter. La passe Playwright d'une
-   tranche (≈ 1 800 tests, 30 min à deux workers) peut se diviser en sessions parallèles (`--shard`) une fois la
-   tranche poussée.
+1. **T4a** et **T4b** faits (07/11/2026, sections ci-dessus).
 2. **T5** (en dernier) : captures du guide en 中文 (eglise-5, partout-q3-guide), bandeau d'Harmonie (harmonie-5).
 3. **Fin de lot** : suite complète en trois tiers dans trois sessions parallèles (`--shard=1/3` … ; ~18 000 tests,
    trop pour un conteneur), relecture finale, feuille de route, puis annoncer à Timothée ce qu'il valide en local.
@@ -456,5 +472,8 @@ d'audit de tout le site ; `--workers=2` pour Playwright (le serveur de test meur
    quand les barres s'affichent ; bulle d'indice ; liseré ; FreeShow/PDF même icône) ; questionnaire laissé blanc ;
    `theme-color` #fff ; bo-evenements Q1/Q4/Q5 ; « + Nouvelle réunion » sur /reunions/nouvelle ; « Mes services » seul
    sur sa rangée (Setlists, téléphone) ; trois rails empilés au téléphone du Back-office ; curseur du rail peu
-   contrasté en sombre ; n° 8 ci-dessus ; traductions 中文 à faire relire (listées dans les sections T1 à T3c).
+   contrasté en sombre ; n° 8 ci-dessus ; traductions 中文 à faire relire (listées dans les sections T1 à T3c, et
+   复制链接 de T4b) ; T4 : titre de la page d'un chant à 22 px, titres d'Harmonie (fiche 22, chapitre 30), fiche de
+   gestion d'un évènement toujours en une colonne (seuil de 1 024 px de volet), blocs du Planning et cartes d'équipes
+   en `auto-fill`, paragraphes à 65 caractères, menu « ⋯ » de la setlist sous 431 px au lieu de 412.
 
