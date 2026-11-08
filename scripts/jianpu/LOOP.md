@@ -426,6 +426,26 @@ la **ligne** du scan (comptées depuis 1, L1 de la planche = ligne 1) où elle c
    int|null, "ligne": int|null, "anacrouse": bool}]}}}`, dans l'ordre du .cho, clés triées, une ligne par chant, UTF-8. Une section
    absente du scan : `page` et `ligne` null.
 
+### Bilan de la certification (JP-A3, 08/11/2026)
+
+**187 scans sur 190 certifiés** dans `systemes.json` et `sections.json`, chaque planche `--systemes` regardée.
+Corrections à la main les plus fréquentes (dans `scripts/jianpu/debug/*-propose.json`, puis `certifier`) :
+- **le pied** (ligne de crédit « 灵栖清泉制谱… », logo, note de bas de page, bloc « Rap ») entré dans la dernière
+  ligne : `y1` ramené au bas des paroles ;
+- **l'en-tête** (♩=, crédits) au-dessus de L1 : `y0` descendu ;
+- **les hymnaires en gros caractères** (一生跟随, 十字架的传达者, 你们要赞美耶和华, 哦十字架) : chaque rangée de
+  paroles prise pour une ligne ; les rangées refondues dans leur système, barres de la rangée de chiffres gardées ;
+- **les sections** : couplets gravés sur les mêmes lignes (couplets 1 et 2 sous une seule portée → même ligne),
+  refrain qui commence par une anacrouse en fin de ligne précédente (`anacrouse: true`), refrain ou pont repris
+  dans une autre tonalité (« Refrain 2 (G) ») ou non gravé → la ligne où il est gravé ; `certifier` avertit alors
+  « avant la section précédente », c'est attendu.
+
+**Laissés non certifiés** (le site garde l'affichage d'aujourd'hui) :
+- 十字架 : hymnaire en gros caractères, cinq rangées par système ; le chiffre 1 et les traits des caractères passent
+  pour des barres, les barres vraies ne se distinguent pas ;
+- 大手牵着小手, 荣耀至高神 : lignes imbriquées ; la seconde rangée de paroles d'une ligne partage sa hauteur avec les
+  accords ou le repère de la suivante, aucune coupe horizontale ne les sépare.
+
 ## Critère d'arrêt
 
 ≥ 95 % des 124 partitions résolues, **ou** deux itérations consécutives sans
