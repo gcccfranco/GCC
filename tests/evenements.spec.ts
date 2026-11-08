@@ -317,7 +317,8 @@ test("supprimer : l'organisateur confirme, la fiche disparaît", async ({ page }
   const db = await member(page, STEPH, "/back-office/evenements/foot");
   await dansLeMenu(page, "Supprimer");
   await repondreDansLeSite(page, "Supprimer");
-  await expect(page).toHaveURL(/\/evenements\/?$/);
+  // `/back-office/evenements` mène à l'Agenda filtré (BO-C) : l'une ou l'autre adresse, selon la vitesse de l'appareil.
+  await expect(page).toHaveURL(/\/evenements\/?$|\/back-office\/calendrier\/?\?vue=agenda&filtre=evenements$/);
   expect(db.writes.find((w) => w.method === "DELETE")?.path).toBe("evenements/foot");
 });
 
