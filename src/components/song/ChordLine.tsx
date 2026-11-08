@@ -4,7 +4,7 @@ import type { Token } from "@/types/chordPro";
 import { AccordTouchable } from "@/components/accords/AccordTouchable";
 import localFont from "next/font/local";
 import { useContext, useLayoutEffect, useRef, useState } from "react";
-import { LargeurCoupureContext, CoupureMesureContext } from "@/components/song/LargeurCoupure";
+import { LargeurCoupureContext, CoupureMesureContext, bordCoupure } from "@/components/song/LargeurCoupure";
 import { signalerCoupure } from "@/lib/song/coupureSignal";
 import { choisirCoupure, DEBORD, type Unite } from "@/lib/song/coupure";
 type Segment = { chord: string | null; lyric: string };
@@ -205,7 +205,7 @@ export function ChordLine({ tokens, showChords = true, hideLyrics = false, fontS
     const rect = el.getBoundingClientRect();
     const echelle = rect.width / (el.offsetWidth || 1) || 1;
     // Jusqu'au bord du cadre de zoom (ou de la fenêtre) : rien ne doit élargir ni la page ni ce cadre.
-    const bord = Math.min(document.documentElement.clientWidth, el.closest(".song-zoom")?.getBoundingClientRect().right ?? Infinity);
+    const bord = bordCoupure(el);
     const place = (bord - rect.right) / echelle - 4;
     const unites: Unite[] = words.map((mot, w) => {
       const noeud = motRefs.current[w];

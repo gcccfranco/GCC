@@ -1270,7 +1270,7 @@ export function PerformanceMode({
         {/* Mesure à l'échelle 1, à la largeur de mise en page du contenu
             (100%/fontScale) : mêmes conditions de layout que le rendu (qui est
             agrandi par transform, sans reflow) → hauteurs exactes au pixel. */}
-        <div ref={measureInnerRef} style={{ width: `calc(100% / ${fontScale})`, ...contentPadding }}>
+        <div ref={measureInnerRef} data-bord-coupure style={{ width: `calc(100% / ${fontScale})`, ...contentPadding }}>
           <ConteneurCoupure mesure>
           {blocks.map((block, i) => (
             <div
@@ -1325,7 +1325,7 @@ export function PerformanceMode({
             de 2rem, comme le rendu). Seuls les blocs qui vont en colonne y sont
             rendus : l'en-tête reste en pleine largeur, un scan 简谱 sur sa page. */}
         {twoColumns && (
-          <div className="absolute top-0 left-0" style={{ width: `calc(100% / ${fontScale})`, ...contentPadding }}>
+          <div className="absolute top-0 left-0" data-bord-coupure style={{ width: `calc(100% / ${fontScale})`, ...contentPadding }}>
             <div style={{ width: "calc(50% - 1rem)" }}>
               <ConteneurCoupure mesure>
               {blocks.map((block, i) => (
@@ -1358,6 +1358,7 @@ export function PerformanceMode({
           même facteur, en miroir exact du canvas d'annotation (origine (0,0)). */}
       <div
         ref={contentAreaRef}
+        data-bord-coupure
         className="absolute top-0 left-0 overflow-hidden"
         style={{
           zIndex: 1,

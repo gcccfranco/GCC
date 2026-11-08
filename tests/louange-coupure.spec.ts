@@ -186,6 +186,25 @@ test.describe("louange : la copie de mesure et l'écran coupent les vers pareil"
     }
 });
 
+test.describe("louange : texte réduit (A−, 80 %)", () => {
+  // La copie de mesure est large de 100 % / échelle à l'échelle 1 : sa place jusqu'au bord de la page doit être celle de
+  // l'écran (data-bord-coupure), sinon un vers qui dépasse de 0 à 8 px se coupe dans la copie et pas à l'écran.
+  for (const [nom, it] of CHANTS)
+    test(`${nom} à 80 % : mêmes hauteurs et mêmes coupures dans la copie et à l'écran`, async ({ page }) => {
+      await ouvrirMode(page, [it], { echelle: "0.8" });
+      let marge = 0;
+      await premierePage(page);
+      const total = await totalPages(page);
+      for (let p = 1; p <= total; p++) {
+        await attendreCompteur(page, new RegExp(`^${p} /`));
+        marge += (await etatsDePage(page)).filter((e) => e.startsWith("marge")).length;
+        if (p < total) await page.keyboard.press("ArrowRight");
+      }
+      test.info().annotations.push({ type: "lignes en marge", description: String(marge) });
+      expect(await verifieEgalite(page, 12), "des sections ont été comparées").toBeGreaterThan(0);
+    });
+});
+
 test.describe("louange : clé de page", () => {
   test("une page dont une ligne est coupée porte v2, une page sans ligne coupée garde sa clé d'avant (FR, écran de 1,5)", async ({ page }) => {
     await ouvrirAvecCoupure(page);

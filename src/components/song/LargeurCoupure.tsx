@@ -34,3 +34,12 @@ export function ConteneurCoupure({ className, children, mesure = false }: { clas
     </LargeurCoupureContext.Provider>
   );
 }
+
+/** Bord droit (px écran) jusqu'où une ligne peut déborder dans la marge : celui de l'élément `data-bord-coupure` le plus
+ *  proche (la page entière, à l'écran du mode louange comme dans ses copies de mesure : même place en unités non mises
+ *  à l'échelle), sinon le plus étroit de la fenêtre et du cadre de zoom de la page du chant. */
+export function bordCoupure(el: Element): number {
+  const page = el.closest("[data-bord-coupure]");
+  if (page) return page.getBoundingClientRect().right;
+  return Math.min(document.documentElement.clientWidth, el.closest(".song-zoom")?.getBoundingClientRect().right ?? Infinity);
+}

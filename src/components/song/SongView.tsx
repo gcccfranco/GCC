@@ -3,7 +3,7 @@ import { Fragment, useContext, useLayoutEffect, useRef, useState } from "react";
 import localFont from "next/font/local";
 import Link, { type LinkProps } from "next/link";
 import { ChordLine } from "@/components/song/ChordLine";
-import { ConteneurCoupure, LargeurCoupureContext, CoupureMesureContext } from "@/components/song/LargeurCoupure";
+import { ConteneurCoupure, LargeurCoupureContext, CoupureMesureContext, bordCoupure } from "@/components/song/LargeurCoupure";
 import { signalerCoupure } from "@/lib/song/coupureSignal";
 import { choisirCoupureZh, DEBORD, type UniteZh } from "@/lib/song/coupure";
 import { motsDuTexte, type MotZh } from "@/lib/song/motsChinois";
@@ -327,7 +327,7 @@ function ZhLine({ tokens, pinyin, showChords, showPinyin, hideLyrics = false, ch
     const rect = el.getBoundingClientRect();
     const echelle = rect.width / (el.offsetWidth || 1) || 1;
     // Jusqu'au bord du cadre de zoom (ou de la fenêtre) : rien ne doit élargir ni la page ni ce cadre.
-    const bord = Math.min(document.documentElement.clientWidth, el.closest(".song-zoom")?.getBoundingClientRect().right ?? Infinity);
+    const bord = bordCoupure(el);
     const place = (bord - rect.right) / echelle - 4;
     const mesures: UniteZh[] = unites.map((u, i) => {
       const noeud = uniteRefs.current[i];
