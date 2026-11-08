@@ -214,7 +214,7 @@ test("captures du guide", async ({ page }, testInfo) => {
   await attendreMiseEnPage(page);
   await page.waitForTimeout(1500); // fin de la transition d'ouverture
   // La barre s'escamote après 3 s : un toucher au centre la rappelle.
-  const reglages = page.getByRole("button", { name: tr("Réglages", "设置") });
+  const reglages = page.getByRole("button", { name: tr("Options d'affichage", "显示选项") });
   await expect(async () => {
     if (!(await reglages.isVisible())) await page.mouse.click(L / 2, H / 2);
     await expect(reglages).toBeVisible({ timeout: 1_500 });
@@ -222,7 +222,7 @@ test("captures du guide", async ({ page }, testInfo) => {
   await figure(page, "performance", {
     annoter: page.getByRole("button", { name: tr("Annoter", "批注") }),
     reglages,
-    page: page.getByRole("button", { name: tr("Page suivante", "下一页") }),
+    page: page.getByRole("slider", { name: tr("Aller à la page", "跳转到页面") }),
     quitter: page.getByRole("button", { name: tr("Quitter", "退出") }),
   });
 

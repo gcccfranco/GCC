@@ -7,7 +7,7 @@ import { buildPerformanceBlocks, computePageKey, type PerformanceBlock, type Sec
 import { deserializeAnnotations, recaler, serializeAnnotations } from "../src/lib/annotations/strokes";
 import type { SectionNuance, SetlistItem } from "../src/types/setList";
 import { signInAs, type FakeDb, type FakeProfile } from "./helpers/fakeSession";
-import { onStage } from "./helpers/louange";
+import { attendreCompteur, basculerAnnoter, lireCompteur, onStage } from "./helpers/louange";
 
 // Lot RS, tranche RS-C (docs/spec-rappel-structure-louange.md) : rappel en Ordre joué
 // (points / pleines / claires), réserve mesurée, Dp imprimé une fois dans le corps,
@@ -174,7 +174,6 @@ const MUSICIEN: FakeProfile = {
   serviceRoles: { "Culte Francophone": ["musicien"] },
 };
 
-const compteur = (page: Page) => page.locator("[data-performance-mode] span.tabular-nums").last();
 
 async function ouvrirMode(page: Page, items: SetlistItem[], affichage: string | null = null, echelle = "1.5"): Promise<FakeDb> {
   await page.addInitScript(({ a, e }) => {
@@ -206,16 +205,16 @@ async function ouvrirMode(page: Page, items: SetlistItem[], affichage: string | 
 
 async function lancer(page: Page) {
   await page.getByRole("button", { name: /Mode Louange/ }).click();
-  await expect(compteur(page)).toHaveText(/^\d+ \/ \d+$/);
+  await attendreCompteur(page, /^\d+ \/ \d+$/);
   await expect(page.getByText("Mise en page…")).toHaveCount(0, { timeout: 20_000 });
 }
 
-const totalPages = async (page: Page) => Number((await compteur(page).innerText()).split("/")[1]);
+const totalPages = async (page: Page) => Number((await lireCompteur(page)).split("/")[1]);
 async function allerPage(page: Page, n: number) {
   expect(await totalPages(page), `au moins ${n} pages`).toBeGreaterThanOrEqual(n);
   for (let p = 1; p < n; p++) {
     await page.keyboard.press("ArrowRight");
-    await expect(compteur(page)).toHaveText(new RegExp(`^${p + 1} /`));
+    await attendreCompteur(page, new RegExp(`^${p + 1} /`));
   }
 }
 const telephone = (page: Page) => page.viewportSize()!.width < 640;
@@ -329,7 +328,7 @@ test.describe("rappel en Ordre joué", () => {
       expect(total).toBeGreaterThan(2);
       const f = Number(echelle);
       for (let p = 1; p <= total; p++) {
-        await expect(compteur(page)).toHaveText(`${p} / ${total}`);
+        await attendreCompteur(page, `${p} / ${total}`);
         if (p > 1) {
           const { depasse, bas, hauteur } = await page.evaluate((k) => {
             const visible = (sel: string) => [...document.querySelectorAll<HTMLElement>(`[data-performance-mode] ${sel}`)].filter((e) => !e.closest("[aria-hidden=true]"));
@@ -384,7 +383,7 @@ async function montrerChrome(page: Page) {
 
 async function tracer(page: Page, db: FakeDb) {
   await montrerChrome(page);
-  await page.getByRole("button", { name: "Annoter" }).click();
+  await basculerAnnoter(page);
   await expect(calque(page)).toHaveCount(1);
   const ecran = page.viewportSize()!;
   const x = ecran.width * 0.4;
@@ -395,7 +394,7 @@ async function tracer(page: Page, db: FakeDb) {
   await page.mouse.move(x + 90, y + 30, { steps: 4 });
   await page.mouse.up();
   await expect.poll(() => ecritesAnnot(db).length).toBeGreaterThan(0);
-  await page.getByRole("button", { name: "Annoter" }).click();
+  await basculerAnnoter(page);
 }
 
 /** Hauteur actuelle du rappel (marge comprise), en px d'écran, et haut de la 1re section. */
@@ -422,7 +421,7 @@ test.describe("annotations avec le rappel", () => {
     await page.reload();
     await lancer(page);
     await page.keyboard.press("ArrowRight");
-    await expect(compteur(page)).toHaveText(/^2 \//);
+    await attendreCompteur(page, /^2 \//);
     await expect.poll(() => boite(page)).not.toBeNull();
     const apres = (await boite(page))!;
     avant.forEach((v, i) => expect(Math.abs(v - apres[i]), `bord ${i}`).toBeLessThanOrEqual(2));
@@ -453,7 +452,7 @@ test.describe("annotations avec le rappel", () => {
       await page.reload();
       await lancer(page);
       await page.keyboard.press("ArrowRight");
-      await expect(compteur(page)).toHaveText(/^2 \//);
+      await attendreCompteur(page, /^2 \//);
       await expect.poll(() => boite(page)).not.toBeNull();
       const [, y0, , y1] = (await boite(page))!;
       expect(Math.abs((y0 + y1) / 2 - haut), `trait à ${((y0 + y1) / 2).toFixed(1)} px, haut de la section à ${haut.toFixed(1)} px`).toBeLessThanOrEqual(3);
@@ -475,7 +474,7 @@ test.describe("annotations avec le rappel", () => {
       let ancienne: string | null = null;
       for (let p = 2; p <= total && !ancienne; p++) {
         await page.keyboard.press("ArrowRight");
-        await expect(compteur(page)).toHaveText(`${p} / ${total}`);
+        await attendreCompteur(page, `${p} / ${total}`);
         ancienne = await scene.getAttribute("data-cle-ancienne");
         numero = p;
       }
@@ -494,7 +493,7 @@ test.describe("annotations avec le rappel", () => {
       await page.reload();
       await lancer(page);
       for (let p = 2; p <= numero; p++) await page.keyboard.press("ArrowRight");
-      await expect(compteur(page)).toHaveText(new RegExp(`^${numero} /`));
+      await attendreCompteur(page, new RegExp(`^${numero} /`));
       await expect.poll(() => boite(page)).not.toBeNull();
       const [, y0, , y1] = (await boite(page))!;
       expect(Math.abs((y0 + y1) / 2 - haut), `trait à ${((y0 + y1) / 2).toFixed(1)} px, haut de la section à ${haut.toFixed(1)} px`).toBeLessThanOrEqual(3);

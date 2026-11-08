@@ -7,6 +7,7 @@ import { paginateColumns, pagesUneColonne } from "../src/lib/performance/columns
 import type { SetlistItem } from "../src/types/setList";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { fermerMenus, ouvrirAffichage, ouvrirPartitions } from "./helpers/setlist";
+import { attendreCompteur, basculerAnnoter, lireCompteur } from "./helpers/louange";
 
 // Lot 2 du chantier 简谱 (docs/spec-jianpu-integration.md) : « Sections uniques » et
 // structure dans le mode louange. Setlist « Culte du 11 octobre » (fictive) :
@@ -197,7 +198,6 @@ const setlist = (items: SetlistItem[]) => ({
 /** Page affichée du mode louange, sans la page setlist dessous ni les copies de mesure. */
 const onStage = (page: Page, selector: string) =>
   page.locator(`[data-performance-mode] ${selector}:not([aria-hidden=true] *)`);
-const compteur = (page: Page) => page.locator("[data-performance-mode] span.tabular-nums").last();
 
 /** Ouvre la setlist et lance le mode louange (rôle déjà choisi, `null` = aucun). */
 async function ouvrirMode(page: Page, items: SetlistItem[], { role = "pianiste" as string | null, affichage = null as string | null } = {}) {
@@ -213,7 +213,7 @@ async function ouvrirMode(page: Page, items: SetlistItem[], { role = "pianiste" 
 
 async function lancer(page: Page) {
   await page.getByRole("button", { name: /Mode Louange/ }).click();
-  await expect(compteur(page)).toHaveText(/^\d+ \/ \d+$/);
+  await attendreCompteur(page, /^\d+ \/ \d+$/);
 }
 
 /** Les barres s'effacent après 3 s : un toucher au centre les rappelle. */
@@ -226,7 +226,7 @@ async function montrerChrome(page: Page) {
 
 async function reglages(page: Page) {
   await montrerChrome(page);
-  await page.getByRole("button", { name: "Réglages" }).click();
+  await page.getByRole("button", { name: "Options d'affichage" }).click();
   const feuille = page.getByRole("dialog", { name: "Réglages" });
   await expect(feuille).toBeVisible();
   return feuille;
@@ -251,11 +251,11 @@ const titreBarre = (page: Page) => page.locator("[data-performance-mode] p.trunc
 
 /** Tourne les pages jusqu'à l'en-tête de ce chant. */
 async function allerAuChant(page: Page, titre: string) {
-  const total = Number((await compteur(page).innerText()).split("/")[1]);
+  const total = Number((await lireCompteur(page)).split("/")[1]);
   for (let p = 1; p <= total; p++) {
     if ((await onStage(page, "h2").filter({ hasText: titre }).count()) > 0) return;
     await page.keyboard.press("ArrowRight");
-    await expect(compteur(page)).toHaveText(`${p + 1} / ${total}`);
+    await attendreCompteur(page, `${p + 1} / ${total}`);
   }
   throw new Error(`en-tête de « ${titre} » introuvable sur ${total} pages`);
 }
@@ -310,7 +310,8 @@ test.describe("Réglages : Rôle et Affichage", () => {
 
     await affichage.getByRole("radio", { name: "Ordre joué" }).click();
     await expect(affichage.getByRole("radio", { name: "Ordre joué" })).toHaveAttribute("aria-checked", "true");
-    await expect(feuille.locator("button[aria-pressed=true]")).toHaveCount(0);
+    // Plus aucun rôle pressé (le bouton « 2 colonnes », déplacé dans ce tiroir par FS-A, a aussi un aria-pressed).
+    await expect(feuille.locator("button[aria-pressed=true]").filter({ hasNotText: "2 colonnes" })).toHaveCount(0);
     expect(await page.evaluate(() => localStorage.getItem("partition-layout"))).toBe("played");
     await page.keyboard.press("Escape");
     await expect(onStage(page, "[data-section] [data-copy-line]").first()).toBeVisible();
@@ -437,14 +438,14 @@ test.describe("Réglages : corrections de la relecture", () => {
 
 /** Bandeau de structure de l'en-tête de chant affiché. */
 const bandeauEntete = (page: Page) => onStage(page, "[data-entete-chant]").getByRole("list", { name: "Structure" });
-const totalPages = async (page: Page) => Number((await compteur(page).innerText()).split("/")[1]);
+const totalPages = async (page: Page) => Number((await lireCompteur(page)).split("/")[1]);
 
 /** Compte `selector` sur chaque page affichée, de la première à la dernière. */
 async function surToutesLesPages(page: Page, selector: string): Promise<number> {
   const total = await totalPages(page);
   let n = 0;
   for (let p = 1; p <= total; p++) {
-    await expect(compteur(page)).toHaveText(`${p} / ${total}`);
+    await attendreCompteur(page, `${p} / ${total}`);
     n += await onStage(page, selector).count();
     await page.keyboard.press("ArrowRight");
   }
@@ -556,7 +557,7 @@ test.describe("rappel de structure (Sections uniques)", () => {
     await expect(onStage(page, "[data-section]").first()).toBeVisible();
     expect(await totalPages(page), "Abba Père en Sections uniques tient sur plusieurs pages").toBeGreaterThan(1);
     await page.keyboard.press("ArrowRight");
-    await expect(compteur(page)).toHaveText(/^2 \//);
+    await attendreCompteur(page, /^2 \//);
   }
 
   /** Abba Père avec trois nuances (inventées pour le test) : sur les refrains et le pont. */
@@ -657,10 +658,10 @@ test.describe("rappel de structure (Sections uniques)", () => {
     await page.addInitScript(() => localStorage.setItem("perf-font-scale", "2"));
     await ouvrirMode(page, [zh], { affichage: "unique" });
     // Tablette paysage et 1 440 px : deux colonnes, le chant (sections uniques) tient sur une page, donc pas de rappel.
-    test.skip(await compteur(page).innerText() === "1 / 1", "deux colonnes : le chant tient sur une page, pas de rappel à voir");
-    await expect(compteur(page)).toHaveText(/^1 \/ [2-9]/);
+    test.skip(await lireCompteur(page) === "1 / 1", "deux colonnes : le chant tient sur une page, pas de rappel à voir");
+    await attendreCompteur(page, /^1 \/ [2-9]/);
     await page.keyboard.press("ArrowRight");
-    await expect(compteur(page)).toHaveText(/^2 \//);
+    await attendreCompteur(page, /^2 \//);
     const rappel = onStage(page, "[data-rappel]");
     await expect(rappel).toBeVisible();
     const pastilles = await lirePastilles(page);
@@ -685,15 +686,15 @@ test.describe("rappel de structure (Sections uniques)", () => {
     test(`texte à 150 % : le rappel passe à la ligne, la réserve le suit et rien ne déborde, ${slug} (C3) (FR)`, async ({ page }) => {
       await page.addInitScript(() => localStorage.setItem("perf-font-scale", "1.5"));
       await ouvrirMode(page, [item({ songSlug: slug, position: 1 })], { affichage: "unique" });
-      await expect(compteur(page)).toHaveText(/^1 \/ [2-9]/);
+      await attendreCompteur(page, /^1 \/ [2-9]/);
       await page.keyboard.press("ArrowRight");
-      await expect(compteur(page)).toHaveText(/^2 \//);
+      await attendreCompteur(page, /^2 \//);
       const rappel = onStage(page, "[data-rappel]");
       const une = await rappel.locator("li > span").first().evaluate((el) => (el as HTMLElement).offsetHeight);
       test.skip((await rappel.evaluate((el) => (el as HTMLElement).offsetHeight)) < 2 * une, "le rappel tient sur une rangée : la réserve fixe suffit");
       const total = await totalPages(page);
       for (let p = 2; p <= total; p++) {
-        await expect(compteur(page)).toHaveText(`${p} / ${total}`);
+        await attendreCompteur(page, `${p} / ${total}`);
         // Rappel (marge comprise) et sections tiennent dans le budget de la page :
         // hauteur visible − marges de page (16 + 16) − sécurité (24), en px de mise en page.
         const { depasse, bas, hauteur } = await page.evaluate(() => {
@@ -751,7 +752,7 @@ test.describe("rappel de structure (Sections uniques)", () => {
         return n < 20 ? null : [x0 * k, y0 * k, x1 * k, y1 * k];
       });
     await montrerChrome(page);
-    await page.getByRole("button", { name: "Annoter" }).click();
+    await basculerAnnoter(page);
     await expect(calque).toHaveCount(1);
     const ecran = page.viewportSize()!;
     const x = ecran.width * 0.4;
@@ -761,7 +762,7 @@ test.describe("rappel de structure (Sections uniques)", () => {
     await page.mouse.move(x + 40, y + 15, { steps: 4 });
     await page.mouse.move(x + 90, y + 30, { steps: 4 });
     await page.mouse.up();
-    await page.getByRole("button", { name: "Annoter" }).click();
+    await basculerAnnoter(page);
     await expect.poll(boite, { message: "le trait est lu sur la page 2" }).not.toBeNull();
     const avant = (await boite())!;
     // Le trait est sous le rappel, dans la page : il est sur les sections, pas sur la rangée.
@@ -774,13 +775,13 @@ test.describe("rappel de structure (Sections uniques)", () => {
     await lancer(page);
     await expect(onStage(page, "[data-section]").first()).toBeVisible();
     await page.keyboard.press("ArrowRight");
-    await expect(compteur(page)).toHaveText(/^2 \//);
+    await attendreCompteur(page, /^2 \//);
     await expect.poll(boite, { message: "le trait revient sur la page 2" }).not.toBeNull();
     const apres = (await boite())!;
     avant.forEach((v, i) => expect(Math.abs(v - apres[i]), `bord ${i} du trait`).toBeLessThanOrEqual(2));
     // Pas sur la page 1.
     await page.keyboard.press("ArrowLeft");
-    await expect(compteur(page)).toHaveText(/^1 \//);
+    await attendreCompteur(page, /^1 \//);
     await expect(calque, "aucun trait sur la page 1").toHaveCount(0);
   });
 

@@ -1,105 +1,156 @@
 "use client";
 
-import type { RefObject } from "react";
+import type { ComponentType, ReactNode, RefObject } from "react";
 import { useTranslation } from "react-i18next";
-import { Columns2 } from "lucide-react";
+import { Drum, Guitar, ListMusic, Mic, MicVocal, Music, PenLine, Piano, Type, Wrench, X } from "lucide-react";
 import type { JianpuSheetBlock, SectionBlock } from "@/lib/performance/blocks";
 
-/** Barre du haut du mode louange : titre, tonalité, progression, deux colonnes.
- *  `barreRef` est la ref de mesure lue par PerformanceMode (hauteur des barres). */
+const ICONES_ROLE: Record<string, ComponentType<{ className?: string }>> = {
+  pianiste: Piano,
+  guitariste: Guitar,
+  presidence: Mic,
+  choriste: MicVocal,
+  batteur: Drum,
+};
+
+/** Barre de titre du mode louange (forScore, piste A « Pupitre », FS-A) : à gauche Setlist et Je joue,
+ *  au centre le titre et « compositeur · tonalité », à droite ♩ tempo, Annoter, Outils, Options
+ *  d'affichage, ✕. Au téléphone : Setlist, Je joue | titre | Options, ✕.
+ *  `barreRef` est la ref de mesure lue par PerformanceMode (hauteur des barres).
+ *  `onAnnoter` absent = bouton « Annoter » masqué. Les icônes prennent `--couleur-icones`. */
 export function BarreHaut({
   barreRef,
   showChrome,
   currentSong,
   setlistTitle,
+  compositeur,
   personalKey,
-  songPageCount,
-  songPageIdx,
-  pageCount,
-  currentPage,
-  twoColumnsAvailable,
-  twoColumns,
-  onToggleTwoColumns,
+  rolePreset,
+  annotateMode,
+  reglagesOuverts,
+  onAnnoter,
+  onSetlist,
+  onJeJoue,
+  onTempo,
+  onOutils,
+  onOptions,
+  onQuitter,
 }: {
   barreRef: RefObject<HTMLDivElement | null>;
   showChrome: boolean;
   currentSong: SectionBlock | JianpuSheetBlock | undefined;
   setlistTitle: string;
+  compositeur: string | undefined;
   personalKey: string | undefined;
-  songPageCount: number;
-  songPageIdx: number;
-  pageCount: number;
-  currentPage: number;
-  twoColumnsAvailable: boolean;
-  twoColumns: boolean;
-  onToggleTwoColumns: () => void;
+  rolePreset: string | null;
+  annotateMode: boolean;
+  reglagesOuverts: boolean;
+  onAnnoter: (() => void) | undefined;
+  onSetlist: () => void;
+  onJeJoue: () => void;
+  onTempo: () => void;
+  onOutils: () => void;
+  onOptions: () => void;
+  onQuitter: () => void;
 }) {
   const { t } = useTranslation();
+  const IconeRole = (rolePreset && ICONES_ROLE[rolePreset]) || Music;
+  const tempo = currentSong?.tempo;
   return (
     <div
       ref={barreRef}
-      className={`absolute top-0 left-0 right-0 ${showChrome ? "pointer-events-auto" : "pointer-events-none"} material-chrome material-steady shadow-[0_1px_0_hsl(var(--border))] py-3 [--marge-barre:1rem] md:[--marge-barre:1.5rem] flex items-center gap-3`}
+      data-barre-haut
+      className={`absolute top-0 left-0 right-0 ${showChrome ? "pointer-events-auto" : "pointer-events-none"} material-chrome material-steady shadow-[0_1px_0_hsl(var(--border))] py-2 [--marge-barre:0.5rem] md:[--marge-barre:1rem] flex items-center gap-1`}
       style={{
-        paddingTop: "calc(0.75rem + var(--sat, 0px))",
+        paddingTop: "calc(0.5rem + var(--sat, 0px))",
         paddingLeft: "calc(var(--marge-barre) + var(--sal, 0px))",
         paddingRight: "calc(var(--marge-barre) + var(--sar, 0px))",
       }}
       onPointerDown={(e) => e.stopPropagation()}
       onPointerUp={(e) => e.stopPropagation()}
     >
-      <div className="flex-1 min-w-0">
-        <p className="text-sm font-semibold text-foreground truncate leading-tight">
+      <div className="flex shrink-0 items-center gap-0.5">
+        <BtnBarre label={t("performance.songList")} onClick={onSetlist} texte>
+          <ListMusic className="h-5 w-5" />
+        </BtnBarre>
+        <BtnBarre label={t("performance.iPlay")} onClick={onJeJoue} texte>
+          <IconeRole className="h-5 w-5" />
+        </BtnBarre>
+      </div>
+
+      <div className="min-w-0 flex-1 px-1 text-center">
+        <p className="truncate text-sm font-semibold leading-tight text-foreground">
           {currentSong?.songTitle ?? setlistTitle}
         </p>
-        {currentSong?.songKey && (
-          <p className="text-xs text-muted-foreground font-mono leading-tight mt-0.5">
-            {currentSong.songKey}
-            {personalKey && (
+        {(compositeur || currentSong?.songKey) && (
+          <p className="mt-0.5 truncate text-xs leading-tight text-muted-foreground">
+            {compositeur}
+            {compositeur && currentSong?.songKey ? " · " : null}
+            {currentSong?.songKey && <span className="font-mono">{currentSong.songKey}</span>}
+            {currentSong?.songKey && personalKey && (
               <>
                 {" · "}
-                <span className="font-sans">{t("performance.personalKey", { key: personalKey })}</span>
+                <span>{t("performance.personalKey", { key: personalKey })}</span>
               </>
             )}
-            {currentSong.tempo ? (
-              <span data-tempo-barre className="font-sans text-muted-foreground tabular-nums">
-                {" · "}♩ {currentSong.tempo}
-              </span>
-            ) : null}
           </p>
         )}
       </div>
-      <div className="flex flex-col items-end gap-1 shrink-0">
-        {/* Points de progression du chant courant */}
-        {songPageCount > 1 && songPageCount <= 8 && (
-          <div className="flex items-center gap-1" aria-label={t("performance.pageOfSong", { current: songPageIdx + 1, total: songPageCount })}>
-            {Array.from({ length: songPageCount }).map((_, i) => (
-              <span
-                key={i}
-                className={`w-1.5 h-1.5 rounded-full transition-colors ${
-                  i === songPageIdx ? "bg-primary" : "bg-muted-foreground/30"
-                }`}
-              />
-            ))}
-          </div>
+
+      <div className="flex shrink-0 items-center gap-0.5">
+        {tempo ? (
+          <BtnBarre label={t("performance.tempo")} onClick={onTempo} cacheTel>
+            <span data-tempo-barre className="text-sm font-semibold tabular-nums">♩ {tempo}</span>
+          </BtnBarre>
+        ) : null}
+        {onAnnoter && (
+          <BtnBarre label={t("performance.annotate")} active={annotateMode} onClick={onAnnoter} cacheTel>
+            <PenLine className="h-5 w-5" />
+          </BtnBarre>
         )}
-        <span className="text-xs text-muted-foreground tabular-nums">
-          {pageCount > 0 ? `${currentPage + 1} / ${pageCount}` : "—"}
-        </span>
+        <BtnBarre label={t("performance.toolsMenu")} onClick={onOutils} cacheTel>
+          <Wrench className="h-5 w-5" />
+        </BtnBarre>
+        <BtnBarre label={t("performance.displayOptions")} active={reglagesOuverts} onClick={onOptions}>
+          <Type className="h-5 w-5" />
+        </BtnBarre>
+        <BtnBarre label={t("performance.exit")} onClick={onQuitter}>
+          <X className="h-5 w-5" />
+        </BtnBarre>
       </div>
-      {/* Deux colonnes : à côté du compteur, seulement quand elles sont possibles. */}
-      {twoColumnsAvailable && (
-        <button
-          type="button"
-          aria-pressed={twoColumns}
-          onClick={onToggleTwoColumns}
-          className={`h-11 px-3 shrink-0 flex items-center gap-1.5 rounded-full border text-xs font-semibold transition-colors active:bg-muted ${
-            twoColumns ? "bg-secondary text-foreground border-transparent" : "border-border text-muted-foreground hover:text-foreground"
-          }`}
-        >
-          <Columns2 className="h-4 w-4" />
-          {t("performance.twoColumns")}
-        </button>
-      )}
     </div>
+  );
+}
+
+/** Bouton sans bordure façon forScore : icône dans `--couleur-icones`, fond teinté quand il est actif.
+ *  `texte` : le libellé s'écrit à côté de l'icône à partir de md ; `cacheTel` : absent de la barre au téléphone. */
+function BtnBarre({
+  label,
+  active = false,
+  texte = false,
+  cacheTel = false,
+  onClick,
+  children,
+}: {
+  label: string;
+  active?: boolean;
+  texte?: boolean;
+  cacheTel?: boolean;
+  onClick: () => void;
+  children: ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={label}
+      title={label}
+      className={`${cacheTel ? "hidden md:flex" : "flex"} h-11 min-w-11 items-center justify-center gap-1.5 rounded-lg px-2.5 text-[color:var(--couleur-icones)] transition-colors active:bg-muted ${
+        active ? "bg-[color-mix(in_srgb,var(--couleur-icones)_16%,transparent)]" : "hover:bg-muted/60"
+      }`}
+    >
+      {children}
+      {texte && <span className="hidden text-xs font-semibold md:inline" aria-hidden="true">{label}</span>}
+    </button>
   );
 }

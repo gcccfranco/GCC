@@ -5,6 +5,7 @@ import { inflateSync } from "zlib";
 import { expect, test, type Page } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { loadChords, openSheet } from "./helpers/jianpu";
+import { attendreCompteur } from "./helpers/louange";
 import { enDeuxVolets, ouvrirPartitions } from "./helpers/setlist";
 import { parseChordPro } from "../src/lib/chordpro/parser";
 import { SetlistFullPDF } from "../src/components/pdf/SetlistFullPDF";
@@ -423,7 +424,7 @@ test("5 fenêtre (mode louange, fit) : ratio w / (h − top), la page tient à l
   }, "/setlists/setlist-fenetre");
   await page.getByRole("button", { name: /Mode Louange/ }).click();
   // Serveur froid ou chargé : la mise en page (polices chinoises) prend plusieurs secondes.
-  await expect(page.locator("[data-performance-mode] span.tabular-nums").last()).toHaveText(/^\d+ \/ \d+$/, { timeout: 30_000 });
+  await attendreCompteur(page, /^\d+ \/ \d+$/, 30_000);
   const { w, h } = INDEX[SLUG].pages[0];
   const top = CADRAGE[SLUG][0];
   await expect.poll(async () => (await fenetres(page, "[data-performance-mode]")).length).toBe(1);
@@ -736,7 +737,7 @@ async function ouvrirLouangeT5(page: Page, role = "pianiste") {
     },
   }, "/setlists/setlist-t5");
   await page.getByRole("button", { name: /Mode Louange/ }).click();
-  await expect(page.locator("[data-performance-mode] span.tabular-nums").last()).toHaveText(/^\d+ \/ \d+$/, { timeout: 30_000 });
+  await attendreCompteur(page, /^\d+ \/ \d+$/, 30_000);
   await expect.poll(async () => (await fenetres(page, "[data-performance-mode]")).length, { timeout: 30_000 }).toBe(1);
   // Recadrage arrivé (cadrage.json) : la fenêtre ne bouge plus.
   const { w, h } = INDEX[SLUG].pages[0];
@@ -746,15 +747,15 @@ async function ouvrirLouangeT5(page: Page, role = "pianiste") {
 
 /** Bas de la barre du haut, haut de la barre du bas (elles restent en place, escamotées). */
 async function barres(page: Page) {
-  const haut = (await page.locator("[data-performance-mode] .material-chrome:has(span.tabular-nums)").boundingBox())!;
-  const bas = (await page.locator("[data-performance-mode] .material-chrome:has(button[aria-label='Quitter'])").boundingBox())!;
+  const haut = (await page.locator("[data-performance-mode] [data-barre-haut]").boundingBox())!;
+  const bas = (await page.locator("[data-performance-mode] [data-barre-bas]").boundingBox())!;
   return { hautBas: haut.y + haut.height, basHaut: bas.y };
 }
 
 test("8 K1 (mode louange) : le scan et son en-tête tiennent entre les deux barres, affichées puis escamotées", async ({ page }) => {
   test.setTimeout(90_000);
   await ouvrirLouangeT5(page);
-  const chrome = page.locator("[data-performance-mode] .material-chrome:has(span.tabular-nums)").locator("xpath=..");
+  const chrome = page.locator("[data-performance-mode] [data-barre-haut]").locator("xpath=..");
   // Barres affichées (elles s'escamotent après 3 s : un toucher au centre les rappelle).
   const { w, h } = await page.evaluate(() => ({ w: innerWidth, h: innerHeight }));
   if ((await chrome.evaluate((el) => getComputedStyle(el).opacity)) !== "1") await page.mouse.click(w / 2, h / 2);
@@ -851,7 +852,7 @@ async function ouvrirLouangeT5b(page: Page, over: Record<string, unknown> = {}, 
     },
   }, "/setlists/setlist-t5b");
   await page.getByRole("button", { name: /Mode Louange/ }).click();
-  await expect(page.locator("[data-performance-mode] span.tabular-nums").last()).toHaveText(/^\d+ \/ \d+$/, { timeout: 30_000 });
+  await attendreCompteur(page, /^\d+ \/ \d+$/, 30_000);
   const { w, h } = INDEX[SLUG].pages[0];
   const top = CADRAGE[SLUG][0];
   await expect.poll(async () => (await fenetres(page, "[data-performance-mode]")).length, { timeout: 30_000 }).toBe(1);

@@ -7,13 +7,14 @@ import { BarreHaut } from "./BarreHaut";
 import { BarreBas } from "./BarreBas";
 import { SommaireChants } from "./SommaireChants";
 import { FeuilleRole } from "./FeuilleRole";
+import { CercleChromatique } from "./CercleChromatique";
 import { PageScan } from "./PageScan";
 import { PageTexte } from "./PageTexte";
 import { useThemeScene } from "./hooks/useThemeScene";
 import { useWakeLock } from "./hooks/useWakeLock";
 import { useTempoChant } from "./hooks/useTempoChant";
 import { useAnnotationsPage } from "./hooks/useAnnotationsPage";
-import { Link2, MessageSquare, Sun, Moon } from "lucide-react";
+import { Link2, MessageSquare, PenLine, Sun, Moon, Columns2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import {
@@ -43,6 +44,7 @@ import { classerGeste, largeurZoneLaterale } from "@/lib/performance/gestes";
 import { LiseretTempo } from "@/components/performance/LiseretTempo";
 import { getTailleAnnotee } from "@/lib/performance/tailleAnnotee";
 import { barreDejaVue, marquerBarreVue } from "@/lib/performance/barreVue";
+import { FOND_CLAIR, FOND_SOMBRE, TEINTES, garderContraste, getCouleurIcones, setCouleurIcones } from "@/lib/performance/couleurIcones";
 import { getMetronomePref, setMetronomePref, TEMPO_DEPART, TEMPO_MAX, TEMPO_MIN } from "@/lib/performance/tempo";
 import { getFontScalePref, setFontScalePref, MIN_FONT_SCALE, MAX_FONT_SCALE } from "@/lib/fontScalePref";
 import { useAuth } from "@/lib/firebase/auth";
@@ -372,6 +374,13 @@ export function PerformanceMode({
   const [showChrome, setShowChrome] = useState(() => !barreDejaVue());
   const [songListOpen, setSongListOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  // Couleur des icônes (FS-A) : le choix de l'appareil, corrigé pour garder 3:1 contre le fond de la barre.
+  const [couleurChoix, setCouleurChoix] = useState(getCouleurIcones);
+  const [cercleOuvert, setCercleOuvert] = useState(false);
+  const choisirCouleur = useCallback((hex: string) => {
+    setCouleurChoix(hex);
+    setCouleurIcones(hex);
+  }, []);
   const [layout, setLayout] = useState<PerfPage[]>([]);
   // Pagination d'avant le rappel refait (lot RS-C) : retrouve les annotations sous leurs anciennes clés.
   const [layoutAncien, setLayoutAncien] = useState<PerfPage[]>([]);
@@ -1074,6 +1083,7 @@ export function PerformanceMode({
         "--sab": "env(safe-area-inset-bottom, 0px)",
         "--sal": "env(safe-area-inset-left, 0px)",
         "--sar": "env(safe-area-inset-right, 0px)",
+        "--couleur-icones": garderContraste(couleurChoix, stageTheme === "dark" ? FOND_SOMBRE : FOND_CLAIR),
       } as React.CSSProperties}
       onPointerDown={handlePointerDown}
       onPointerUp={handlePointerUp}
@@ -1338,14 +1348,18 @@ export function PerformanceMode({
           showChrome={showChrome}
           currentSong={currentSong}
           setlistTitle={setlistTitle}
+          compositeur={currentEntry?.block.artist || undefined}
           personalKey={currentEntry?.block.setlistKey}
-          songPageCount={songPageCount}
-          songPageIdx={songPageIdx}
-          pageCount={pages.length}
-          currentPage={currentPage}
-          twoColumnsAvailable={twoColumnsAvailable}
-          twoColumns={twoColumns}
-          onToggleTwoColumns={toggleTwoColumns}
+          rolePreset={rolePreset}
+          annotateMode={annotateMode}
+          reglagesOuverts={settingsOpen}
+          onAnnoter={user && !horsLigne ? basculerAnnotation : undefined}
+          onSetlist={() => { setSettingsOpen(false); setSongListOpen(true); }}
+          onJeJoue={() => setAskRole(true)}
+          onTempo={() => setSettingsOpen(true)}
+          onOutils={() => setSettingsOpen(true)}
+          onOptions={() => setSettingsOpen(true)}
+          onQuitter={onClose}
         />
 
         <BarreBas
@@ -1355,12 +1369,6 @@ export function PerformanceMode({
           currentPage={currentPage}
           reperesChants={reperesChants}
           goToPage={goToPage}
-          settingsOpen={settingsOpen}
-          annotateMode={annotateMode}
-          onAnnoter={user && !horsLigne ? basculerAnnotation : undefined}
-          onSommaire={() => { setSettingsOpen(false); setSongListOpen(true); }}
-          onReglages={() => setSettingsOpen(true)}
-          onQuitter={onClose}
         />
       </div>
 
@@ -1379,7 +1387,7 @@ export function PerformanceMode({
             <DrawerTitle>{t("performance.settings")}</DrawerTitle>
           </DrawerHeader>
           <div
-            className="w-full max-w-md mx-auto px-4 pt-1 space-y-4"
+            className="w-full max-w-md mx-auto px-4 pt-1 space-y-4 max-h-[calc(90dvh-5rem)] overflow-y-auto"
             style={{ paddingBottom: "calc(1.5rem + env(safe-area-inset-bottom, 0px))" }}
           >
             <div className="space-y-2">
@@ -1473,6 +1481,39 @@ export function PerformanceMode({
                   </Button>
                 </div>
               </div>
+            )}
+            {user && !horsLigne && (
+              // Au téléphone la barre n'a plus « Annoter » : la fonction passe ici (le popover Outils viendra en FS-B).
+              <div className="md:hidden">
+                <SettingRow label={t("performance.annotate")}>
+                  <Button
+                    variant="outline"
+                    size="lg"
+                    aria-label={t("performance.annotate")}
+                    onClick={basculerAnnotation}
+                    className="text-xs font-semibold"
+                  >
+                    <PenLine className="h-4 w-4" />
+                    {t("performance.annotate")}
+                  </Button>
+                </SettingRow>
+              </div>
+            )}
+            {twoColumnsAvailable && (
+              // Quitte la barre de titre (FS-A) ; FS-B en fera un bouton rond des options.
+              <SettingRow label={t("performance.twoColumns")}>
+                <button
+                  type="button"
+                  aria-pressed={twoColumns}
+                  onClick={toggleTwoColumns}
+                  className={`h-11 px-3 flex items-center gap-1.5 rounded-full border text-xs font-semibold transition-colors active:bg-muted ${
+                    twoColumns ? "bg-secondary text-foreground border-transparent" : "border-border text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  <Columns2 className="h-4 w-4" />
+                  {t("performance.twoColumns")}
+                </button>
+              </SettingRow>
             )}
             <SettingRow label={t("performance.chords")}>
               <Switch
@@ -1636,6 +1677,42 @@ export function PerformanceMode({
                 </div>
               </SettingRow>
             )}
+            <div className="space-y-2">
+              <span id="perf-couleur-icones" className="text-sm font-medium text-foreground">{t("performance.iconColor")}</span>
+              <div role="radiogroup" aria-labelledby="perf-couleur-icones" className="flex flex-wrap gap-2">
+                {TEINTES.map((c) => {
+                  const choisie = !cercleOuvert && couleurChoix === c.hex;
+                  return (
+                    <button
+                      key={c.id}
+                      type="button"
+                      role="radio"
+                      aria-checked={choisie}
+                      aria-label={t(`performance.iconColors.${c.id}`)}
+                      data-teinte={c.id}
+                      onClick={() => { setCercleOuvert(false); choisirCouleur(c.hex); }}
+                      className={`h-11 w-11 rounded-full border-2 transition-shadow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+                        choisie ? "border-foreground ring-2 ring-offset-2 ring-offset-background ring-foreground/30" : "border-transparent"
+                      }`}
+                      style={{ background: c.hex }}
+                    />
+                  );
+                })}
+                <button
+                  type="button"
+                  role="radio"
+                  aria-checked={cercleOuvert || !TEINTES.some((c) => c.hex === couleurChoix)}
+                  aria-label={t("performance.iconColors.autre")}
+                  data-teinte="autre"
+                  onClick={() => setCercleOuvert((o) => !o)}
+                  className={`h-11 w-11 rounded-full border-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+                    cercleOuvert || !TEINTES.some((c) => c.hex === couleurChoix) ? "border-foreground" : "border-transparent"
+                  }`}
+                  style={{ background: "conic-gradient(hsl(0 70% 50%), hsl(60 70% 50%), hsl(120 70% 50%), hsl(180 70% 50%), hsl(240 70% 50%), hsl(300 70% 50%), hsl(360 70% 50%))" }}
+                />
+              </div>
+              {cercleOuvert && <CercleChromatique valeur={couleurChoix} onChange={choisirCouleur} />}
+            </div>
           </div>
         </DrawerContent>
       </Drawer>

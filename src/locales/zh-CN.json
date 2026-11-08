@@ -646,7 +646,7 @@
     "indiceRappelUnique": "实心：在本页，下方为力度",
     "layout": "排版中…",
     "next": "接下来：",
-    "songList": "歌曲列表",
+    "songList": "歌单",
     "twoColumns": "双栏",
     "settings": "设置",
     "view": "角色",
@@ -711,6 +711,26 @@
     "pageSlider": "跳转到页面",
     "pageSliderValue": "第 {{n}} 页，共 {{total}} 页",
     "pageEtiquette": "第 {{n}} / {{total}} 页",
+    "iPlay": "我演奏",
+    "tempo": "节拍",
+    "toolsMenu": "工具",
+    "displayOptions": "显示选项",
+    "pagePoint": "第 {{n}} 页",
+    "iconColor": "图标颜色",
+    "iconColors": {
+      "bleu": "蓝色",
+      "encre": "墨黑",
+      "vert": "绿色",
+      "violet": "紫色",
+      "framboise": "覆盆子红",
+      "gris": "灰色",
+      "autre": "其他颜色"
+    },
+    "cercle": {
+      "teinte": "色相",
+      "luminosite": "亮度",
+      "apercu": "预览"
+    },
     "tools": {
       "pen": "画笔",
       "highlighter": "荧光笔",

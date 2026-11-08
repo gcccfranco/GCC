@@ -650,7 +650,7 @@
     "indiceRappelUnique": "Pleines : sur cette page, avec leur nuance",
     "layout": "Mise en page…",
     "next": "Ensuite :",
-    "songList": "Liste des chants",
+    "songList": "Setlist",
     "twoColumns": "2 colonnes",
     "settings": "Réglages",
     "view": "Rôle",
@@ -715,6 +715,26 @@
     "pageSlider": "Aller à la page",
     "pageSliderValue": "Page {{n}} sur {{total}}",
     "pageEtiquette": "page {{n}} / {{total}}",
+    "iPlay": "Je joue",
+    "tempo": "Tempo",
+    "toolsMenu": "Outils",
+    "displayOptions": "Options d'affichage",
+    "pagePoint": "page {{n}}",
+    "iconColor": "Couleur des icônes",
+    "iconColors": {
+      "bleu": "Bleu",
+      "encre": "Encre",
+      "vert": "Vert",
+      "violet": "Violet",
+      "framboise": "Framboise",
+      "gris": "Gris",
+      "autre": "Autre couleur"
+    },
+    "cercle": {
+      "teinte": "Teinte",
+      "luminosite": "Luminosité",
+      "apercu": "Aperçu"
+    },
     "tools": {
       "pen": "Crayon",
       "highlighter": "Surligneur",

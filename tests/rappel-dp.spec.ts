@@ -6,7 +6,7 @@ import { dpFullName, dpOrigin, groupSteps, isDp, paletteKeyOf } from "../src/lib
 import type { SectionOccurrence } from "../src/lib/setlist/sectionSteps";
 import type { SectionNuance, SetlistItem } from "../src/types/setList";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
-import { onStage } from "./helpers/louange";
+import { attendreCompteur, onStage } from "./helpers/louange";
 
 // Lot RS, tranche RS-A (docs/spec-rappel-structure-louange.md) : les règles des
 // « Dernière phrase » (Dp) dans les bandeaux de structure et en Structure seule —
@@ -182,7 +182,7 @@ async function ouvrirMode(page: Page, items: SetlistItem[], affichage: string | 
     `/setlists/${SETLIST_ID}`,
   );
   await page.getByRole("button", { name: /Mode Louange/ }).click();
-  await expect(page.locator("[data-performance-mode] span.tabular-nums").last()).toHaveText(/^\d+ \/ \d+$/);
+  await attendreCompteur(page, /^\d+ \/ \d+$/);
   await expect(page.getByText("Mise en page…")).toHaveCount(0, { timeout: 20_000 });
 }
 
