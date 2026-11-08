@@ -84,8 +84,12 @@ Du 08/11/2026 :
     louange aussi, pour les actions et tout, il faut qu'ils puissent choisir leur propre ton de couleur ») : la couleur
     choisie (décision 19) vaut pour tout le chrome du mode louange (icônes, actions des menus, boutons allumés, poignée
     de la rangée de points) et pour la barre d'annotation ; jamais pour la page.
-24. **Scans 简谱 sans coupe propre** (十字架, 大手牵着小手, 荣耀至高神) : **affichés comme aujourd'hui**, sans tranches ;
-    pas de coupe qui laisserait dépasser une ligne voisine (Timothée, 08/11/2026 : « fais ce qui est bien selon toi »).
+24. **Scans 简谱 sans coupe propre** (十字架, 大手牵着小手, 荣耀至高神) : **découpés eux aussi, à la main**, pour être
+    lisibles au téléphone comme les autres (en page entière, leurs chiffres feraient environ 8 px à 390 px de large) :
+    barres de mesure placées à l'œil pour 十字架 ; pour les deux autres, chaque ligne porte des **masques** qui cachent,
+    dans sa tranche, ce qui appartient à la ligne voisine. Jamais une tranche qui laisse dépasser une ligne voisine
+    (Timothée, 08/11/2026 : « fais ce qui est bien selon toi », puis « pour les pages entières, ça dépend du
+    responsive ? »).
 25. **Section reprise dans une autre tonalité sans être regravée** (« Refrain 2 (G) ») : **gardée dans les repères**,
     elle renvoie à la ligne où sa musique est gravée, et son nom porte la tonalité (même réponse).
 
@@ -364,7 +368,8 @@ mesure).
 **JP-A Données des scans** (M, données certifiées à l'œil) : un script `scripts/jianpu/systemes.py` (sur le modèle de
 `cadrage.py` : `propose` puis `certifier`) écrit `public/jianpu/systemes.json` (pour chaque page : les y de début et de
 fin de chaque ligne, et les x des barres de mesure de chaque ligne, tirés de `unbarred()`, `segment.py:57-75`, qui les
-retire aujourd'hui sans les garder) et `public/jianpu/sections.json` (pour chaque chant : la ligne du scan où commence
+retire aujourd'hui sans les garder ; une ligne imbriquée dans sa voisine porte en plus des `masques`, rectangles
+`[x0, y0, x1, y1]` en pixels image à couvrir dans sa tranche, décision 24) et `public/jianpu/sections.json` (pour chaque chant : la ligne du scan où commence
 chaque section du `.cho`). Certification par la planche d'audit (`npm run jianpu:audit <slug>`, rendu réel, à
 **regarder**), scan par scan ; tant qu'un scan n'est pas certifié, il garde l'affichage d'aujourd'hui. **Fait en JP-B**
 (reporté le 08/11/2026 : la session de JP-A ne touchait pas à `public/sw.js`) : les nouveaux fichiers JSON s'ajoutent à la liste gardée hors ligne pour une setlist (`urlsJianpuAGarder`, `public/sw.js`, qui ne
@@ -383,7 +388,9 @@ recouvre jamais une ligne d'accords) : feuille de route de ce dimanche (repères
 l'encre, Dp en pointillé), ♩ et « 1 = E » (« gravé en E » quand transposé) ; la ligne courante allumée dans la feuille de
 route grâce à `sections.json` ; **demi-page** sur les scans (la ligne bleue tombe entre deux lignes) ; **tablette en
 paysage : une seule feuille de scan large** ; **ordinateur : une seule feuille plus grande** ; thème sombre par le
-filtre d'encre existant ; le menu Repères saute à la ligne de la section.
+filtre d'encre existant ; le menu Repères saute à la ligne de la section ; les **masques** d'une ligne (décision 24)
+sont couverts de la couleur du fond de la page, sous le filtre d'encre (donc justes en sombre), et une étiquette du
+calque qui tombe dans un masque n'est pas affichée dans cette tranche.
 
 **JP-C Téléphone** (M) : en portrait, chaque ligne du scan coupée en deux sur la barre de mesure la plus proche du
 milieu (`systemes.json`), les deux moitiés empilées ; en paysage, lignes entières ; sans coupes certifiées, lignes
