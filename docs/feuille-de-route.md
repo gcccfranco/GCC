@@ -1390,7 +1390,15 @@ feuille large en tablette paysage, une feuille plus grande sur ordinateur, débu
 **choriste et présidence : paroles avec pinyin par défaut sur un chant à scan, le 简谱 à leur choix** ; **pas de
 sépia pour l'instant**. Spec : `spec-mode-louange-forscore-2.md` (écrite et contre-vérifiée le 08/11/2026 : lots CV, DP, FS, RP, JP, AN ;
 en attente de go, lot par lot). **Go de Timothée le 08/11/2026 pour la vague 1** : CV, JP-A et FS-A + FS-B, trois
-sessions de code en parallèle sur la branche de la session ; rien en ligne sans son ordre.
+sessions de code en parallèle sur la branche de la session ; rien en ligne sans son ordre. **JP-A terminé le 08/11/2026** (données
+seulement, rien de visible sur le site) : **190 scans sur 190** ont leurs lignes, barres de mesure et débuts de section
+certifiés à l'œil (`public/jianpu/systemes.json`, `sections.json`) ; après relecture, sections de 29 chants et première
+ligne de 14 scans corrigées ; 十字架, 大手牵着小手 et 荣耀至高神 découpés à la main (barres à l'œil, caches sur les lignes
+imbriquées, décision 24 de la spec). **À trancher plus tard par Timothée** : cinq chants dont le `.cho` n'a pas les
+mêmes accords que le scan (不停赞美你 : C dans le `.cho`, Cmaj7 gravé ; 是耶稣的名 : Emaj7 contre une triade gravée ;
+我需要有你在我生命中 couplet 2, 只需要你 intro, 打开天窗 intro et interlude : réharmonisés dans le `.cho`) ; la vue
+paroles et la vue 简谱 montrent donc des accords différents ; liste complète : `python3 scripts/jianpu/sections.py
+controle`.
 **Annotations façon forScore** (Timothée, 08/11/2026 : « comment fonctionnent les annotations maintenant ? il faut que
 ce soit comme forScore », puis « oui go » à la proposition) : lot à part, option (a) — les outils façon forScore
 maintenant (appui long et stylet qui dessine seul, barre d'outils déplaçable, tourner les pages en annotant, stylos
