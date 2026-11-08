@@ -362,8 +362,8 @@ mesure).
 fin de chaque ligne, et les x des barres de mesure de chaque ligne, tirés de `unbarred()`, `segment.py:57-75`, qui les
 retire aujourd'hui sans les garder) et `public/jianpu/sections.json` (pour chaque chant : la ligne du scan où commence
 chaque section du `.cho`). Certification par la planche d'audit (`npm run jianpu:audit <slug>`, rendu réel, à
-**regarder**), scan par scan ; tant qu'un scan n'est pas certifié, il garde l'affichage d'aujourd'hui. Les nouveaux
-fichiers JSON s'ajoutent à la liste gardée hors ligne pour une setlist (`urlsJianpuAGarder`, `public/sw.js`, qui ne
+**regarder**), scan par scan ; tant qu'un scan n'est pas certifié, il garde l'affichage d'aujourd'hui. **Fait en JP-B**
+(reporté le 08/11/2026 : la session de JP-A ne touchait pas à `public/sw.js`) : les nouveaux fichiers JSON s'ajoutent à la liste gardée hors ligne pour une setlist (`urlsJianpuAGarder`, `public/sw.js`, qui ne
 connaît aujourd'hui que `index.json`, `chords.json`, `cadrage.json`), avec une version dans le JSON vérifiée contre
 `index.json`, hors du plafond des 250 entrées ; hors ligne, un scan certifié dont les données manquent retombe sur
 l'affichage d'aujourd'hui ; `CACHE` passe à
@@ -577,5 +577,5 @@ nom réel de membre dans les tests. Mise en ligne sur ordre de Timothée seuleme
 | DP | spec écrite, en attente de go |
 | FS | **go le 08/11/2026 pour FS-A et FS-B** (vague 1), session de code lancée ; FS-C et FS-D en attente de go |
 | RP | spec écrite, en attente de go |
-| JP | **go le 08/11/2026 pour JP-A** (vague 1, données seulement) : JP-A1 fait (`scripts/jianpu/systemes.py`, planche `npm run jianpu:audit -- --systemes`, `public/jianpu/systemes.json` : 11 scans du pilote certifiés à l'œil) ; JP-A2 fait (`scripts/jianpu/sections.py`, `public/jianpu/sections.json` : sections des 11 chants du pilote certifiées, 4 corrigées à la main) ; JP-A3 fait (**187 scans sur 190 certifiés à l'œil**, lignes et sections ; 十字架, 大手牵着小手, 荣耀至高神 laissés non certifiés, raisons dans `scripts/jianpu/LOOP.md`) ; **JP-A terminé** ; JP-B à JP-D en attente de go |
+| JP | **go le 08/11/2026 pour JP-A** (vague 1, données seulement) : JP-A1 fait (`scripts/jianpu/systemes.py`, planche `npm run jianpu:audit -- --systemes`, `public/jianpu/systemes.json` : 11 scans du pilote certifiés à l'œil) ; JP-A2 fait (`scripts/jianpu/sections.py`, `public/jianpu/sections.json` : sections des 11 chants du pilote certifiées, 4 corrigées à la main) ; JP-A3 fait (**187 scans sur 190 certifiés à l'œil**, lignes et sections ; 十字架, 大手牵着小手, 荣耀至高神 laissés non certifiés, raisons dans `scripts/jianpu/LOOP.md`) ; **relu le 08/11 : lignes et barres bonnes dans l'ensemble, sections à reprendre** (une trentaine de sections sur la mauvaise ligne ou avec une anacrouse dans le mauvais sens, tempo d'en-tête dans L1 sur 4 scans, étiquettes du calque hors ligne sur 3 scans, certificateur trop permissif) : corrections et contrôle systématique en cours dans la session JP-A ; JP-B à JP-D en attente de go |
 | AN | planche tranchée le 08/11 (piste A, couleurs au choix : décisions 21 à 23), spec écrite ; en attente de go (vague 3, après FS-A, FS-B et DP) |
