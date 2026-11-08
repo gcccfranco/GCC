@@ -28,6 +28,8 @@ export const NOM_MENU: Record<Langue, Record<Menu, string>> = {
  *  jusqu'à un toucher au centre, qui la montre ou la cache : si le bouton n'est pas visible on la rappelle, et on clique
  *  jusqu'à ce que le dialogue s'ouvre. Rend le dialogue. */
 export async function ouvrirMenu(page: Page, menu: Menu, langue: Langue = "fr") {
+  // Au téléphone (< 768 px) Outils n'a plus de bouton dans la barre : son contenu est en tête de la feuille Options d'affichage.
+  if (menu === "outils" && page.viewportSize()!.width < 768) menu = "options";
   const nom = NOM_MENU[langue][menu];
   const bouton = page.locator("[data-performance-mode]").getByRole("button", { name: nom, exact: true });
   const dialogue = page.getByRole("dialog", { name: nom, exact: true });
@@ -49,6 +51,7 @@ export async function ouvrirMenu(page: Page, menu: Menu, langue: Langue = "fr") 
 export const ouvrirOptions = (page: Page, langue: Langue = "fr") => ouvrirMenu(page, "options", langue);
 /** Ancien nom d'`ouvrirOptions`, gardé pour les specs qui le citent. */
 export const ouvrirReglages = ouvrirOptions;
+/** Ouvre Outils : son menu à partir de 768 px, la feuille Options d'affichage (dont il est la tête) au téléphone. */
 export const ouvrirOutils = (page: Page, langue: Langue = "fr") => ouvrirMenu(page, "outils", langue);
 
 /** Le curseur de page du mode louange (il n'y a plus d'étiquette « page n / N » : FS-A). */
@@ -74,11 +77,12 @@ export async function attendreCompteur(page: Page, motif: string | RegExp, timeo
 }
 
 /** Entre dans l'annotation ou en sort. Au téléphone (< 768 px) la barre de titre n'a plus « Annoter » (FS-A) :
- *  la fonction est une ligne du menu Outils (FS-B), qu'on ouvre d'abord (elle le referme en s'exécutant). */
+ *  la fonction est une ligne d'Outils, en tête de la feuille Options d'affichage (FS-B), qu'on ouvre d'abord
+ *  (elle la referme en s'exécutant). */
 export async function basculerAnnoter(page: Page) {
   if (page.viewportSize()!.width < 768) {
     const outils = await ouvrirOutils(page);
-    await outils.getByRole("button", { name: "Annoter" }).click();
+    await outils.getByRole("button", { name: "Annoter", exact: true }).click();
     await expect(outils).toBeHidden();
     return;
   }

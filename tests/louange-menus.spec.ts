@@ -64,6 +64,26 @@ async function toucher(page: Page, testInfo: TestInfo, x: number, y: number) {
   else await page.mouse.click(x, y);
 }
 
+/** Écran tactile (pointeur grossier) : un doigt, pas une souris. */
+const tactile = (page: Page) => page.evaluate(() => matchMedia("(pointer: coarse)").matches);
+
+/** Points d'un menu où l'élément sous le doigt n'est ni un bouton ni un lien ni un champ : en-tête, titre de rubrique, espace
+ *  entre deux lignes. Un point par abscisse demandée (part de la largeur du menu). */
+async function pointsInertes(page: Page, boite: { x: number; y: number; width: number; height: number }, parts: number[]) {
+  return page.evaluate(({ b, ps }) => {
+    const dialogue = document.querySelector("[data-menu-louange]");
+    return ps.map((part) => {
+      const x = b.x + b.width * part;
+      for (let y = b.y + 2; y < b.y + b.height - 2; y += 3) {
+        const el = document.elementFromPoint(x, y);
+        if (!el || !dialogue?.contains(el)) continue;
+        if (!el.closest("button, a, input, [role=radio], [role=slider], [role=switch]")) return { x, y, tag: el.tagName };
+      }
+      return null;
+    });
+  }, { b: boite, ps: parts });
+}
+
 /** Passe à la page 2 (le clavier ne touche pas à la barre) : de là, un toucher à gauche ou à droite changerait la page. */
 async function allerPage2(page: Page) {
   await page.keyboard.press("ArrowRight");
@@ -75,8 +95,8 @@ const attendreOuverture = (page: Page) => page.waitForTimeout(500);
 const MENUS: Menu[] = ["setlist", "reperes", "outils", "tempo", "options"];
 
 for (const menu of MENUS) {
-  test(`${menu} : s'ouvre sous son icône (feuille du bas au téléphone) ; un toucher dedans ne tourne jamais la page`, async ({ page }, testInfo) => {
-    test.skip(menu === "tempo" && telephone(page), "au téléphone le tempo est une ligne du menu Outils");
+  test(`${menu} : s'ouvre sous son icône (feuille du bas au téléphone) ; un toucher dedans ne tourne jamais la page`, async ({ page }) => {
+    test.skip((menu === "tempo" || menu === "outils") && telephone(page), "au téléphone le tempo et Outils sont en tête de la feuille Options d'affichage (testée sous « options »)");
     await ouvrir(page);
     await allerPage2(page);
     const avant = await lireCompteur(page);
@@ -98,14 +118,19 @@ for (const menu of MENUS) {
       expect(boite.y, `${nom} : bord haut sous la barre`).toBeGreaterThanOrEqual(barre.y + barre.height - 1);
       expect(boite.x, `${nom} : le menu couvre l'icône (à gauche)`).toBeLessThanOrEqual(centre + 1);
       expect(boite.x + boite.width, `${nom} : le menu couvre l'icône (à droite)`).toBeGreaterThanOrEqual(centre - 1);
-      expect(boite.width).toBeLessThanOrEqual(400);
+      expect(boite.width).toBeLessThanOrEqual(420);
       expect(boite.x).toBeGreaterThanOrEqual(0);
       expect(boite.x + boite.width).toBeLessThanOrEqual(ecran.width);
     }
-    // Toucher dans le menu, sur un fond sans bouton (le haut), à 15 %, 50 % et 85 % de sa largeur. À la souris : un doigt
-    // est « aimanté » par Chrome vers le bouton le plus proche (une ligne de Repères), qui irait à sa page.
-    for (const part of [0.15, 0.5, 0.85]) {
-      await page.mouse.click(boite.x + boite.width * part, boite.y + 4);
+    // Toucher dans le menu, sur une zone non interactive (en-tête, titre de rubrique, espace entre lignes), à 15 %, 50 % et
+    // 85 % de sa largeur : au doigt sur téléphone et tablette, à la souris sur ordinateur.
+    const doigt = await tactile(page);
+    const points = await pointsInertes(page, boite, [0.15, 0.5, 0.85]);
+    for (const [i, part] of [0.15, 0.5, 0.85].entries()) {
+      const pt = points[i];
+      expect(pt, `${nom} : un point inerte existe à ${part * 100} %`).not.toBeNull();
+      if (doigt) await page.touchscreen.tap(pt!.x, pt!.y);
+      else await page.mouse.click(pt!.x, pt!.y);
       await page.waitForTimeout(250);
       await expect(dialogue, `${nom} : toujours ouvert après un toucher à ${part * 100} %`).toBeVisible();
       expect(await lireCompteur(page), `${nom} : la page n'a pas tourné (${part * 100} %)`).toBe(avant);
@@ -113,7 +138,7 @@ for (const menu of MENUS) {
   });
 
   test(`${menu} : un toucher dehors le ferme sans tourner la page ni masquer la barre ; flèches sans effet ; Échap ferme puis quitte`, async ({ page }, testInfo) => {
-    test.skip(menu === "tempo" && telephone(page), "au téléphone le tempo est une ligne du menu Outils");
+    test.skip((menu === "tempo" || menu === "outils") && telephone(page), "au téléphone le tempo et Outils sont en tête de la feuille Options d'affichage (testée sous « options »)");
     await ouvrir(page);
     await allerPage2(page);
     const avant = await lireCompteur(page);
@@ -124,7 +149,15 @@ for (const menu of MENUS) {
     for (const part of [0.15, 0.5, 0.85]) {
       const dialogue = await ouvrirMenu(page, menu);
       await attendreOuverture(page);
-      await toucher(page, testInfo, ecran.width * part, y);
+      // Le popover n'est plus plafonné en hauteur : si le point tombe dessus, on touche plus bas ou à côté de lui.
+      const boite = (await dialogue.boundingBox())!;
+      const dedans = (px: number, py: number) => px >= boite.x && px <= boite.x + boite.width && py >= boite.y && py <= boite.y + boite.height;
+      let px = ecran.width * part, py = y;
+      if (!telephone(page) && dedans(px, py)) {
+        py = Math.min(ecran.height - 4, boite.y + boite.height + 8);
+        if (dedans(px, py) || py > ecran.height - 6) { py = ecran.height * 0.88; px = boite.x > 40 ? boite.x - 12 : boite.x + boite.width + 12; }
+      }
+      await toucher(page, testInfo, px, py);
       await expect(dialogue, `dehors à ${part * 100} % : le menu se ferme`).toBeHidden();
       await page.waitForTimeout(400);
       expect(await lireCompteur(page), `dehors à ${part * 100} % : la page n'a pas tourné`).toBe(avant);
@@ -241,12 +274,19 @@ test("Outils : + monte d'un demi-ton (barre), « Revenir à X » apparaît puis 
     await expect(outils.getByRole("button", { name: "Annoter" })).toHaveCount(0);
     await expect(outils.locator("[data-tempo-plus]")).toHaveCount(0);
   }
-  outils = page.getByRole("dialog", { name: "Outils" });
-  await expect(outils).toBeVisible();
+  // Au téléphone Outils est la tête de la feuille Options d'affichage : un titre de rubrique « Outils », pas de bouton dans la barre.
+  if (telephone(page)) {
+    await expect(page.locator('[data-menu-declencheur="outils"]')).toBeHidden();
+    await expect(outils.getByText("Outils", { exact: true })).toBeVisible();
+    await expect(outils.getByRole("radiogroup", { name: "Couleur des icônes" })).toBeVisible();
+  } else {
+    outils = page.getByRole("dialog", { name: "Outils" });
+    await expect(outils).toBeVisible();
+  }
 });
 
 test("Tempo : − / +, « Tempo du fichier », métronome visuel (bouton rond on/off)", async ({ page }) => {
-  test.skip(telephone(page), "au téléphone le tempo est une ligne du menu Outils");
+  test.skip(telephone(page), "au téléphone le tempo est une ligne d'Outils, en tête d'Options");
   await ouvrir(page);
   const tempo = await ouvrirMenu(page, "tempo");
   await expect(tempo.locator("[data-tempo-valeur]")).toHaveText(/♩\s*94/);
@@ -257,6 +297,18 @@ test("Tempo : − / +, « Tempo du fichier », métronome visuel (bouton rond on
   await tempo.locator("[data-tempo-fichier]").click();
   await expect(tempo.locator("[data-tempo-valeur]")).toHaveText(/♩\s*94/);
   const metronome = tempo.getByRole("button", { name: "Métronome visuel" });
+  await expect(metronome).toHaveAttribute("aria-pressed", "false");
+  await metronome.click();
+  await expect(metronome).toHaveAttribute("aria-pressed", "true");
+  await expect(page.locator("[data-liseret]")).toHaveCount(1);
+});
+
+test("Métronome visuel : un bouton rond allumé / éteint dans Options aussi (plus de segmenté Activé / Désactivé)", async ({ page }) => {
+  await ouvrir(page);
+  const options = await ouvrirMenu(page, "options");
+  await expect(options.getByText("Activé", { exact: true })).toHaveCount(0);
+  const metronome = options.getByRole("button", { name: "Métronome visuel" });
+  await expect(metronome).toHaveCount(1);
   await expect(metronome).toHaveAttribute("aria-pressed", "false");
   await metronome.click();
   await expect(metronome).toHaveAttribute("aria-pressed", "true");
@@ -285,6 +337,126 @@ test("Options : bouton rond Accords (aria-pressed) bascule les accords ; ronds d
   await page.keyboard.press("Escape");
   await expect(encore).toBeHidden();
   await expect(onStage(page, ".font-chord").first()).toBeVisible({ timeout: 15_000 });
+});
+
+test("stylet : un toucher au stylet hors du menu ne laisse pas le menu avaler le toucher du doigt qui suit", async ({ page }) => {
+  await ouvrir(page);
+  await allerPage2(page);
+  const ecran = page.viewportSize()!;
+  const dialogue = await ouvrirMenu(page, "setlist");
+  await attendreOuverture(page);
+  // Le stylet touche la page (hors du menu) : évènements de pointeur de type « pen », sans clic.
+  await page.evaluate(({ x, y }) => {
+    const cible = document.elementFromPoint(x, y) ?? document.body;
+    const init = { bubbles: true, cancelable: true, composed: true, pointerType: "pen", pointerId: 7, isPrimary: true, clientX: x, clientY: y, button: 0, buttons: 1 };
+    cible.dispatchEvent(new PointerEvent("pointerdown", init));
+    cible.dispatchEvent(new PointerEvent("pointerup", { ...init, buttons: 0 }));
+  }, { x: ecran.width * 0.5, y: telephone(page) ? ecran.height * 0.02 : ecran.height * 0.88 });
+  await expect(dialogue).toBeHidden();
+  await page.waitForTimeout(400);
+  const avant = await lireCompteur(page);
+  // Un doigt (ou la souris) sur la zone de droite : la page tourne, un seul toucher suffit.
+  const x = ecran.width * 0.95, y = ecran.height * 0.5;
+  if (await tactile(page)) await page.touchscreen.tap(x, y);
+  else await page.mouse.click(x, y);
+  await expect.poll(() => lireCompteur(page)).not.toBe(avant);
+});
+
+test("plein écran : le bouton suit document.fullscreenElement (allumé en plein écran, éteint après en être sorti)", async ({ page }) => {
+  await ouvrir(page);
+  const outils = await ouvrirMenu(page, "outils");
+  const plein = outils.locator("[data-plein-ecran]");
+  await expect(plein).toHaveCount(1);
+  // Ouvrir le mode louange demande le plein écran : l'état affiché est celui du document, jamais l'inverse.
+  const enPleinEcran = await page.evaluate(() => document.fullscreenElement !== null);
+  await expect(plein).toHaveAttribute("aria-pressed", String(enPleinEcran));
+  await page.evaluate(() => document.fullscreenElement && document.exitFullscreen());
+  await expect.poll(() => page.evaluate(() => document.fullscreenElement === null)).toBe(true);
+  await expect(plein).toHaveAttribute("aria-pressed", "false");
+  // Menu fermé puis rouvert : toujours éteint, le document n'est plus en plein écran.
+  await page.keyboard.press("Escape");
+  await expect(outils).toBeHidden();
+  const encore = await ouvrirMenu(page, "outils");
+  await expect(encore.locator("[data-plein-ecran]")).toHaveAttribute("aria-pressed", "false");
+});
+
+test("raccourcis clavier : absents au téléphone et sur tablette sans frappe (Échap n'y change rien), visibles après une frappe", async ({ page }, testInfo) => {
+  test.skip(ordinateur(testInfo), "sur ordinateur (pointeur précis) les raccourcis sont toujours affichés");
+  await ouvrir(page);
+  // Aucune touche frappée avant : le menu s'ouvre sans raccourcis.
+  const outils = await ouvrirMenu(page, "outils");
+  await expect(outils.locator("[data-raccourcis]")).toHaveCount(0);
+  // Échap (ferme le menu) n'allume pas le clavier.
+  await page.keyboard.press("Escape");
+  await expect(outils).toBeHidden();
+  const encore = await ouvrirMenu(page, "outils");
+  await expect(encore.locator("[data-raccourcis]")).toHaveCount(0);
+  await page.keyboard.press("Escape");
+  await expect(encore).toBeHidden();
+  // Une touche de navigation les fait apparaître.
+  await page.keyboard.press("ArrowRight");
+  const enfin = await ouvrirMenu(page, "outils");
+  await expect(enfin.locator("[data-raccourcis]")).toBeVisible();
+  for (const kbd of await enfin.locator("[data-raccourcis] kbd").all()) expect((await kbd.innerText()).includes("·")).toBe(false);
+  expect(await enfin.locator("[data-raccourcis] kbd").count()).toBeGreaterThanOrEqual(5);
+});
+
+test("Setlist et Repères : la ligne en cours est teintée (couleur des icônes à 12 %) et porte aria-current", async ({ page }) => {
+  await ouvrir(page);
+  await page.mouse.move(0, 0);
+  const setlist = await ouvrirMenu(page, "setlist");
+  await attendreOuverture(page);
+  const fonds = await setlist.locator("li button").evaluateAll((els) => els.map((el) => getComputedStyle(el).backgroundColor));
+  const transparent = "rgba(0, 0, 0, 0)";
+  expect(fonds[0], "chant en cours teinté").not.toBe(transparent);
+  expect(fonds[1], "autre chant non teinté").toBe(transparent);
+  await expect(setlist.locator('[aria-current="true"]')).toHaveCount(1);
+  await page.keyboard.press("Escape");
+  await expect(setlist).toBeHidden();
+
+  const reperes = await ouvrirMenu(page, "reperes");
+  await attendreOuverture(page);
+  const lignes = reperes.locator("li button");
+  await expect(reperes.locator('[aria-current="true"]')).toHaveCount(1);
+  await expect(lignes.first()).toHaveAttribute("aria-current", "true");
+  const f = await lignes.evaluateAll((els) => els.map((el) => getComputedStyle(el).backgroundColor));
+  expect(f[0], "section en cours teintée").not.toBe(transparent);
+  expect(f[f.length - 1], "autre section non teintée").toBe(transparent);
+  // Aller à la dernière section : c'est elle (ou la première de sa page) qui devient la section en cours.
+  await lignes.last().click();
+  await expect(reperes).toBeHidden();
+  const apres = await ouvrirMenu(page, "reperes");
+  await attendreOuverture(page);
+  await expect(apres.locator('[aria-current="true"]')).toHaveCount(1);
+  const pages = await apres.locator("li button").evaluateAll((els) => els.map((el) => Number(el.textContent!.match(/(\d+)\s*$/)![1])));
+  const courant = await apres.locator("li button").evaluateAll((els) => els.findIndex((el) => el.getAttribute("aria-current") === "true"));
+  expect(courant).toBe(pages.indexOf(pages[pages.length - 1]));
+});
+
+test("Options : aucune 2e ligne d'un seul élément (ronds « Sur la page » et pastilles de couleur)", async ({ page }) => {
+  await ouvrir(page);
+  const options = await ouvrirMenu(page, "options");
+  await attendreOuverture(page);
+  const lignes = async (selecteur: string) => {
+    const ys = await options.locator(selecteur).evaluateAll((els) => els.map((el) => Math.round(el.getBoundingClientRect().top)));
+    const parLigne = new Map<number, number>();
+    for (const y of ys) {
+      const cle = [...parLigne.keys()].find((k) => Math.abs(k - y) <= 4) ?? y;
+      parLigne.set(cle, (parLigne.get(cle) ?? 0) + 1);
+    }
+    return [...parLigne.values()];
+  };
+  const ronds = await lignes('[role=group][aria-labelledby="perf-sur-page"] > button');
+  expect(ronds.reduce((a, b) => a + b, 0)).toBeGreaterThanOrEqual(4);
+  if (ronds.length > 1) for (const n of ronds) expect(n, `ronds par ligne : ${ronds}`).toBeGreaterThanOrEqual(2);
+  if (!telephone(page)) expect(ronds, "tous les ronds sur une ligne dans le popover").toHaveLength(1);
+  const pastilles = await lignes('[role=radiogroup][aria-labelledby="perf-couleur-icones"] > button');
+  expect(pastilles, `pastilles : ${pastilles}`).toEqual([7]);
+  // Le popover garde sa largeur d'environ 26 rem et n'est pas plafonné en hauteur à 34 rem.
+  if (!telephone(page)) {
+    const boite = (await options.boundingBox())!;
+    expect(boite.width).toBeGreaterThan(400);
+  }
 });
 
 test("palette : framboise retenue après rechargement, et les actions des menus prennent la couleur corrigée (décision 23)", async ({ page }) => {
@@ -316,7 +488,7 @@ for (const langue of ["fr", "zh"] as const) {
     test(`captures FS-B : chaque menu ouvert, ${langue}, ${theme}`, async ({ page }, testInfo) => {
       await ouvrir(page, { langue, theme });
       for (const menu of MENUS) {
-        if (menu === "tempo" && telephone(page)) continue;
+        if ((menu === "tempo" || menu === "outils") && telephone(page)) continue;
         const dialogue = await ouvrirMenu(page, menu, langue);
         await attendreOuverture(page);
         await page.screenshot({ path: `${SORTIE}/menu-${menu}-${langue}-${theme}-${testInfo.project.name}.png` });

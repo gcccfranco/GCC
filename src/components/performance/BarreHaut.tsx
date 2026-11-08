@@ -16,7 +16,7 @@ const ICONES_ROLE: Record<string, ComponentType<{ className?: string }>> = {
 
 /** Barre de titre du mode louange (forScore, piste A « Pupitre », FS-A) : à gauche Setlist et Je joue,
  *  au centre le titre et « compositeur · tonalité », à droite ♩ tempo, Annoter, Outils, Options
- *  d'affichage, ✕. Au téléphone : Setlist, Repères, Je joue | titre | Outils, Options, ✕ (Annoter et ♩ y passent dans Outils). Setlist, Repères, ♩, Outils et
+ *  d'affichage, ✕. Au téléphone : Setlist, Repères, Je joue | titre | Options, ✕ (Annoter, ♩ et Outils passent en tête de la feuille Options). Setlist, Repères, ♩, Outils et
  *  Options ouvrent chacun leur menu (FS-B, `MenuLouange`) : `menuOuvert` dit lequel, `onMenu` le bascule.
  *  `avecReperes` : le chant courant a des sections (un scan seul n'en a pas).
  *  `barreRef` est la ref de mesure lue par PerformanceMode (hauteur des barres).
@@ -68,7 +68,7 @@ export function BarreHaut({
       onPointerDown={(e) => e.stopPropagation()}
       onPointerUp={(e) => e.stopPropagation()}
     >
-      <div className="flex flex-1 basis-0 items-center justify-start gap-0.5">
+      <div className="flex min-w-[8.25rem] flex-1 basis-0 items-center justify-start gap-0.5 md:min-w-0">
         <BtnBarre label={t("performance.songList")} menu="setlist" menuOuvert={menuOuvert} onClick={() => onMenu("setlist")} texte>
           <ListMusic className="h-5 w-5" />
         </BtnBarre>
@@ -103,7 +103,7 @@ export function BarreHaut({
         )}
       </div>
 
-      <div className="flex flex-1 basis-0 items-center justify-end gap-0.5">
+      <div className="flex min-w-[8.25rem] flex-1 basis-0 items-center justify-end gap-0.5 md:min-w-0">
         {tempo ? (
           <BtnBarre label={t("performance.tempo")} menu="tempo" menuOuvert={menuOuvert} onClick={() => onMenu("tempo")} cacheTel>
             <span data-tempo-barre className="flex items-center gap-1 text-sm font-semibold tabular-nums">
@@ -117,7 +117,7 @@ export function BarreHaut({
             <PenLine className="h-5 w-5" />
           </BtnBarre>
         )}
-        <BtnBarre label={t("performance.toolsMenu")} menu="outils" menuOuvert={menuOuvert} onClick={() => onMenu("outils")}>
+        <BtnBarre label={t("performance.toolsMenu")} menu="outils" menuOuvert={menuOuvert} onClick={() => onMenu("outils")} cacheTel>
           <Wrench className="h-5 w-5" />
         </BtnBarre>
         <BtnBarre label={t("performance.displayOptions")} menu="options" menuOuvert={menuOuvert} onClick={() => onMenu("options")}>
@@ -164,7 +164,7 @@ function BtnBarre({
       aria-haspopup={menu ? "dialog" : undefined}
       aria-expanded={menu ? ouvert : undefined}
       className={`${cacheTel ? "hidden md:flex" : "flex"} h-11 min-w-11 items-center justify-center gap-1.5 rounded-lg px-2.5 text-[color:var(--couleur-icones)] transition-colors active:bg-muted ${
-        active || ouvert ? "bg-[color-mix(in_srgb,var(--couleur-icones)_16%,transparent)]" : "hover:bg-muted/60"
+        active || ouvert ? "bg-[color-mix(in_srgb,var(--couleur-icones)_16%,transparent)] dark:bg-[color-mix(in_srgb,var(--couleur-icones)_28%,transparent)]" : "hover:bg-muted/60"
       }`}
     >
       {children}

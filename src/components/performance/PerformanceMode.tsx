@@ -6,7 +6,7 @@ import { langAccent } from "./langAccent";
 import { BarreHaut } from "./BarreHaut";
 import { BarreBas } from "./BarreBas";
 import { MenuLouange, type MenuId } from "./MenuLouange";
-import { BoutonSurPage, ContenuOutils, ContenuReperes, ContenuSetlist, ContenuTempo } from "./ContenusMenus";
+import { BoutonRond, BoutonSurPage, ContenuOutils, ContenuReperes, ContenuSetlist, ContenuTempo, LignesTempo, TitreRubrique, VALEUR } from "./ContenusMenus";
 import { FeuilleRole } from "./FeuilleRole";
 import { CercleChromatique } from "./CercleChromatique";
 import { PageScan } from "./PageScan";
@@ -15,8 +15,7 @@ import { useThemeScene } from "./hooks/useThemeScene";
 import { useWakeLock } from "./hooks/useWakeLock";
 import { useTempoChant } from "./hooks/useTempoChant";
 import { useAnnotationsPage } from "./hooks/useAnnotationsPage";
-import { Link2, MessageSquare, PenLine, Sun, Moon, Columns2, FileMusic, Languages, Music, Palette } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Link2, MessageSquare, PenLine, Sun, Moon, Columns2, FileMusic, Languages, Minus, Music, Palette, Plus, Waves } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import type { PerformanceBlock, SectionBlock, JianpuSheetBlock, SongHeaderBlock } from "@/lib/performance/blocks";
 import { ancreDeLecture, buildPerformanceBlocks, computePageKey, signatureAffichage, type AncreLecture } from "@/lib/performance/blocks";
@@ -380,7 +379,9 @@ export function PerformanceMode({
   const popoverRef = useRef<MenuId | null>(null);
   popoverRef.current = popoverOuvert;
   // Le menu était ouvert au pointerdown en cours : le pointerup qui suit ne tourne pas la page et ne bascule pas la barre.
-  const menuAuToucher = useRef(false);
+  // On garde l'évènement (`t` = horodatage du pointerdown) : le pointerdown suivant, menu fermé, remet le drapeau à zéro,
+  // il n'avale donc qu'UN toucher (un pointerdown sans pointerup, ou un pointerup du stylet, ne le laisse pas collé).
+  const menuAuToucher = useRef<{ t: number } | null>(null);
   const basculerMenu = useCallback((id: MenuId) => setPopoverOuvert((cur) => (cur === id ? null : id)), []);
   const fermerMenu = useCallback((id: MenuId) => setPopoverOuvert((cur) => (cur === id ? null : cur)), []);
   // Un toucher hors du menu le ferme, y compris sur les barres (qui arrêtent la propagation et cachent le toucher à Radix,
@@ -389,8 +390,9 @@ export function PerformanceMode({
     if (popoverOuvert === null) return;
     const hors = (e: PointerEvent) => {
       const cible = e.target instanceof Element ? e.target : null;
+      if (e.pointerType === "pen") return;
       if (!cible || cible.closest("[data-menu-louange], [data-menu-declencheur], [data-vaul-overlay]")) return;
-      if (!cible.closest("[data-barre-haut], [data-barre-bas]")) menuAuToucher.current = true;
+      if (!cible.closest("[data-barre-haut], [data-barre-bas]")) menuAuToucher.current = { t: e.timeStamp };
       setPopoverOuvert(null);
     };
     document.addEventListener("pointerdown", hors, true);
@@ -399,8 +401,14 @@ export function PerformanceMode({
   // Raccourcis clavier du menu Outils : sur ordinateur (pointeur précis) ou dès qu'une touche a été frappée dans le mode.
   const [clavierVu, setClavierVu] = useState(false);
   useEffect(() => {
-    const vu = () => setClavierVu(true);
-    window.addEventListener("keydown", vu, { once: true });
+    // Une touche de navigation ou un caractère : ni Échap, ni une touche de modification seule.
+    const vu = (e: KeyboardEvent) => {
+      const navigation = ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "PageUp", "PageDown", "Home", "End"].includes(e.key);
+      if (!navigation && e.key.length !== 1) return;
+      setClavierVu(true);
+      window.removeEventListener("keydown", vu);
+    };
+    window.addEventListener("keydown", vu);
     return () => window.removeEventListener("keydown", vu);
   }, []);
   const [pointeurFin] = useState(() => {
@@ -962,7 +970,8 @@ export function PerformanceMode({
     // (Pas de stopPropagation sur le fond : Radix y détecte le toucher extérieur qui ferme la feuille.)
     if ((e.target as HTMLElement).closest("[data-vaul-overlay]")) return;
     // Un menu est ouvert : ce toucher le ferme (Radix), il ne tourne pas la page et ne bascule pas la barre.
-    if (popoverRef.current !== null) menuAuToucher.current = true;
+    if (popoverRef.current !== null) menuAuToucher.current = { t: e.nativeEvent.timeStamp };
+    else if (menuAuToucher.current && menuAuToucher.current.t !== e.nativeEvent.timeStamp) menuAuToucher.current = null;
     if (e.pointerType === "mouse") pointeursActifs.current.clear();
     pointeursActifs.current.add(e.pointerId);
     if (pointeursActifs.current.size > 1) {
@@ -977,7 +986,7 @@ export function PerformanceMode({
 
   const handlePointerCancel = useCallback((e: React.PointerEvent) => {
     pointeursActifs.current.delete(e.pointerId);
-    menuAuToucher.current = false;
+    menuAuToucher.current = null;
     tapStart.current = null;
   }, []);
 
@@ -986,7 +995,7 @@ export function PerformanceMode({
     pointeursActifs.current.delete(e.pointerId);
     if ((e.target as HTMLElement).closest("[data-vaul-overlay]")) { tapStart.current = null; return; }
     if (menuAuToucher.current || popoverRef.current !== null) {
-      menuAuToucher.current = false;
+      menuAuToucher.current = null;
       tapStart.current = null;
       return;
     }
@@ -1142,6 +1151,29 @@ export function PerformanceMode({
   const apercu = isLastPageOfSong && nextEntry ? null : apercuPossible;
   // Les calques d'annotation ne couvrent pas la bande (bas de page + 16 px de marge + sab).
   const rogneBas = apercuPossible ? `calc(${(APERCU_H + 16) * fontScale}px + var(--sab, 0px))` : undefined;
+
+  // Ronds « Sur la page » : tous sur une ligne dans le popover (jusqu'à 6) ; au téléphone, par 3 plutôt qu'un rond seul en dessous.
+  const nRonds = 2 + [blocks.some((b) => b.kind === "section" && b.showPinyin), hasJianpuSheets && !structureMode, !!user, twoColumnsAvailable].filter(Boolean).length;
+  const colonnesRonds = telephone && nRonds > 4 ? 3 : nRonds;
+  // Le contenu d'Outils : le même élément dans le menu Outils (md et plus) et en tête d'Options au téléphone.
+  const contenuOutils = (
+    <ContenuOutils
+      cle={cleModifiable ? cleJouee : undefined}
+      cleSetlist={cleBase}
+      decalerCle={decalerCle}
+      revenirCle={() => entreeSlug && resetPersonalKey(entreeSlug)}
+      capo={capoActive && entreeSlug && currentEntry ? { frets: currentCapo, set: (f) => setCapo(entreeSlug, f), titre: currentEntry.block.title } : undefined}
+      showTransitions={showTransitions}
+      setShowTransitions={setShowTransitions}
+      onAnnoter={telephone && user && !horsLigne ? basculerAnnotation : undefined}
+      tempoLignes={
+        telephone && tempoChantId ? (
+          <LignesTempo tempo={tempoLiseret} tempoAppareil={tempoAppareil} changerTempo={changerTempo} effacerTempo={effacerTempo} />
+        ) : undefined
+      }
+      raccourcis={pointeurFin || clavierVu}
+    />
+  );
 
   return (
     <div
@@ -1432,7 +1464,7 @@ export function PerformanceMode({
       <FeuilleRole open={askRole} roleIds={ROLE_PRESET_IDS} onFermer={() => setAskRole(false)} onChoisir={answerRole} />
 
       {/* ── Menus du mode (FS-B) : popover sous l'icône à partir de md, feuille du bas au téléphone ── */}
-      <MenuLouange id="setlist" titre={t("performance.songList")} ouvert={popoverOuvert === "setlist"} onOuvertChange={(o) => !o && fermerMenu("setlist")} align="start" couleur={couleurIcones}>
+      <MenuLouange id="setlist" titre={t("performance.songList")} ouvert={popoverOuvert === "setlist"} onOuvertChange={(o) => !o && fermerMenu("setlist")} align="start" couleur={couleurIcones} titreCache>
         <ContenuSetlist
           setlistTitle={setlistTitle}
           setlistDate={setlistDate}
@@ -1445,7 +1477,7 @@ export function PerformanceMode({
       </MenuLouange>
 
       <MenuLouange id="reperes" titre={t("performance.reperes")} ouvert={popoverOuvert === "reperes"} onOuvertChange={(o) => !o && fermerMenu("reperes")} align="start" couleur={couleurIcones}>
-        <ContenuReperes reperes={reperes} goToPage={goToPage} pageCount={pages.length} onFermer={() => fermerMenu("reperes")} />
+        <ContenuReperes reperes={reperes} currentPage={currentPage} goToPage={goToPage} pageCount={pages.length} onFermer={() => fermerMenu("reperes")} />
       </MenuLouange>
 
       <MenuLouange id="tempo" titre={t("performance.tempo")} ouvert={popoverOuvert === "tempo"} onOuvertChange={(o) => !o && fermerMenu("tempo")} couleur={couleurIcones}>
@@ -1460,29 +1492,20 @@ export function PerformanceMode({
       </MenuLouange>
 
       <MenuLouange id="outils" titre={t("performance.toolsMenu")} ouvert={popoverOuvert === "outils"} onOuvertChange={(o) => !o && fermerMenu("outils")} couleur={couleurIcones}>
-        <ContenuOutils
-          cle={cleModifiable ? cleJouee : undefined}
-          cleSetlist={cleBase}
-          decalerCle={decalerCle}
-          revenirCle={() => entreeSlug && resetPersonalKey(entreeSlug)}
-          capo={capoActive && entreeSlug && currentEntry ? { frets: currentCapo, set: (f) => setCapo(entreeSlug, f), titre: currentEntry.block.title } : undefined}
-          showTransitions={showTransitions}
-          setShowTransitions={setShowTransitions}
-          onAnnoter={telephone && user && !horsLigne ? basculerAnnotation : undefined}
-          tempoLignes={
-            telephone && tempoChantId ? (
-              <ContenuTempo tempo={tempoLiseret} tempoAppareil={tempoAppareil} changerTempo={changerTempo} effacerTempo={effacerTempo} metronome={metronome} setMetronome={setMetronome} />
-            ) : undefined
-          }
-          raccourcis={pointeurFin || clavierVu}
-        />
+        {contenuOutils}
       </MenuLouange>
 
       <MenuLouange id="options" titre={t("performance.displayOptions")} ouvert={popoverOuvert === "options"} onOuvertChange={(o) => !o && fermerMenu("options")} couleur={couleurIcones}>
         <div className="space-y-4">
+          {telephone && (
+            <div className="space-y-1 border-b border-border pb-4">
+              <TitreRubrique>{t("performance.toolsMenu")}</TitreRubrique>
+              {contenuOutils}
+            </div>
+          )}
           <div className="space-y-2">
-            <span id="perf-sur-page" className="text-sm font-medium text-foreground">{t("performance.onPage")}</span>
-            <div role="group" aria-labelledby="perf-sur-page" className="flex flex-wrap gap-x-1 gap-y-2">
+            <TitreRubrique id="perf-sur-page">{t("performance.onPage")}</TitreRubrique>
+            <div role="group" aria-labelledby="perf-sur-page" className="grid gap-y-2" style={{ gridTemplateColumns: `repeat(${colonnesRonds}, minmax(0, 1fr))` }}>
               <BoutonSurPage
                 label={t("performance.chords")}
                 allume={chordsShown}
@@ -1529,45 +1552,31 @@ export function PerformanceMode({
           </div>
             <SettingRow label={t("performance.text")}>
               <div className="flex items-center gap-1.5">
-                <Button
-                  variant="outline"
-                  size="icon-lg"
-                  onClick={() => changeFontScale(-0.1)}
-                  disabled={fontScale <= MIN_FONT_SCALE || annotateMode}
-                  aria-label={t("performance.textSmaller")}
-                  className="text-xs font-bold"
-                >
-                  A−
-                </Button>
-                <span className="text-xs text-muted-foreground tabular-nums w-10 text-center">
-                  {Math.round(fontScale * 100)}%
-                </span>
-                <Button
-                  variant="outline"
-                  size="icon-lg"
-                  onClick={() => changeFontScale(0.1)}
-                  disabled={fontScale >= MAX_FONT_SCALE || annotateMode}
-                  aria-label={t("performance.textLarger")}
-                  className="text-sm font-bold"
-                >
-                  A+
-                </Button>
+                <BoutonRond label={t("performance.textSmaller")} onClick={() => changeFontScale(-0.1)} disabled={fontScale <= MIN_FONT_SCALE || annotateMode}>
+                  <span aria-hidden="true" className="text-xs font-bold">A−</span>
+                </BoutonRond>
+                <span className={VALEUR}>{Math.round(fontScale * 100)}%</span>
+                <BoutonRond label={t("performance.textLarger")} onClick={() => changeFontScale(0.1)} disabled={fontScale >= MAX_FONT_SCALE || annotateMode}>
+                  <span aria-hidden="true" className="text-sm font-bold">A+</span>
+                </BoutonRond>
               </div>
             </SettingRow>
             <SettingRow label={t("performance.theme")}>
               <div className="flex rounded-lg border border-border overflow-hidden">
                 <button
                   onClick={() => setTheme("light")}
+                  aria-pressed={stageTheme === "light"}
                   className={`h-11 px-4 flex items-center gap-1.5 text-xs font-semibold transition-colors ${
-                    stageTheme === "light" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+                    stageTheme === "light" ? SEGMENT_CHOISI : "text-muted-foreground hover:text-foreground"
                   }`}
                 >
                   <Sun className="h-3.5 w-3.5" /> {t("performance.light")}
                 </button>
                 <button
                   onClick={() => setTheme("dark")}
+                  aria-pressed={stageTheme === "dark"}
                   className={`h-11 px-4 flex items-center gap-1.5 text-xs font-semibold border-l border-border transition-colors ${
-                    stageTheme === "dark" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+                    stageTheme === "dark" ? SEGMENT_CHOISI : "text-muted-foreground hover:text-foreground"
                   }`}
                 >
                   <Moon className="h-3.5 w-3.5" /> {t("performance.dark")}
@@ -1575,33 +1584,16 @@ export function PerformanceMode({
               </div>
             </SettingRow>
             <SettingRow label={t("performance.metronome")}>
-              <div className="flex rounded-lg border border-border overflow-hidden">
-                <button
-                  data-metronome-on
-                  onClick={() => setMetronome(true)}
-                  className={`h-11 px-4 flex items-center gap-1.5 text-xs font-semibold transition-colors ${
-                    metronome ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  {t("performance.metronomeOn")}
-                </button>
-                <button
-                  data-metronome-off
-                  onClick={() => setMetronome(false)}
-                  className={`h-11 px-4 flex items-center gap-1.5 text-xs font-semibold border-l border-border transition-colors ${
-                    !metronome ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  {t("performance.metronomeOff")}
-                </button>
-              </div>
+              <BoutonRond label={t("performance.metronome")} allume={metronome} onClick={() => setMetronome(!metronome)} data-metronome="">
+                <Waves className="h-5 w-5" />
+              </BoutonRond>
             </SettingRow>
             <div className="space-y-2">
-              <span id="perf-couleur-icones" className="text-sm font-medium text-foreground">{t("performance.iconColor")}</span>
+              <TitreRubrique id="perf-couleur-icones">{t("performance.iconColor")}</TitreRubrique>
               <div
                 role="radiogroup"
                 aria-labelledby="perf-couleur-icones"
-                className="flex flex-wrap gap-2"
+                className="flex justify-between gap-1"
                 onKeyDown={(e) => {
                   // Radiogroup standard : ← ↑ et → ↓ passent à la teinte voisine en la choisissant (« Autre couleur » en dernier).
                   const d = e.key === "ArrowRight" || e.key === "ArrowDown" ? 1 : e.key === "ArrowLeft" || e.key === "ArrowUp" ? -1 : 0;
@@ -1653,9 +1645,9 @@ export function PerformanceMode({
             </div>
           {/* En attendant FS-C (Je joue) : la vue et l'affichage restent ici, comme dans l'ancien tiroir. */}
           <div className="space-y-4 border-t border-border pt-4">
-            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t("performance.viewSection")}</p>
+            <TitreRubrique>{t("performance.viewSection")}</TitreRubrique>
             <div className="space-y-2">
-              <span className="text-sm font-medium text-foreground">{t("performance.view")}</span>
+              <TitreRubrique>{t("performance.view")}</TitreRubrique>
               <div className="flex flex-wrap gap-1.5">
                 {ROLE_PRESET_IDS.map((id) => (
                   <button
@@ -1665,7 +1657,7 @@ export function PerformanceMode({
                     onClick={() => (rolePreset === id ? clearRolePreset() : applyRolePreset(id))}
                     className={`h-11 px-3 rounded-lg border text-xs font-semibold transition-colors ${
                       rolePreset === id
-                        ? "bg-primary text-primary-foreground border-transparent"
+                        ? `${SEGMENT_CHOISI} border-transparent`
                         : "border-border text-muted-foreground hover:text-foreground"
                     }`}
                   >
@@ -1676,7 +1668,7 @@ export function PerformanceMode({
             </div>
             {/* Affichage (D15) : le même réglage que le menu Affichage de la setlist. */}
             <div className="space-y-2">
-              <span id="perf-affichage" className="text-sm font-medium text-foreground">{t("setlists.detail.layout.label")}</span>
+              <TitreRubrique id="perf-affichage">{t("setlists.detail.layout.label")}</TitreRubrique>
               <div role="radiogroup" aria-labelledby="perf-affichage" className="flex rounded-lg bg-secondary p-1">
                 {(["played", "unique", "structure"] as const).map((v) => (
                   <button
@@ -1686,7 +1678,7 @@ export function PerformanceMode({
                     aria-checked={affichageVu === v}
                     onClick={() => changeAffichage(v)}
                     className={`h-11 min-w-0 flex-1 rounded-md px-2 text-[13px] font-semibold whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
-                      affichageVu === v ? "bg-background text-foreground" : "text-muted-foreground hover:text-foreground"
+                      affichageVu === v ? SEGMENT_CHOISI : "text-muted-foreground hover:text-foreground"
                     }`}
                   >
                     {t(`setlists.detail.layout.${v}`)}
@@ -1712,6 +1704,9 @@ export function PerformanceMode({
     </div>
   );
 }
+
+/** Choix sélectionné d'un segmenté : le même langage que les ronds allumés (couleur des icônes, texte contrasté). */
+const SEGMENT_CHOISI = "bg-[color:var(--couleur-icones)] text-background";
 
 // ─── Petits composants de la barre ────────────────────────────────────────────
 

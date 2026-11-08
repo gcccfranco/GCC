@@ -99,12 +99,12 @@ const fondBarre = (page: Page) => page.locator("[data-barre-haut]").evaluate((el
 
 // ─── La barre de titre ────────────────────────────────────────────────────────
 
-test("barre de titre : Setlist, Repères et Je joue à gauche, titre au centre, ♩ Annoter Outils Options ✕ à droite (téléphone : Setlist, Repères, Je joue | titre | Outils, Options, ✕)", async ({ page }) => {
+test("barre de titre : Setlist, Repères et Je joue à gauche, titre au centre, ♩ Annoter Outils Options ✕ à droite (téléphone : Setlist, Repères, Je joue | titre | Options, ✕)", async ({ page }) => {
   await ouvrir(page);
   const boutons = await boutonsHaut(page);
   const noms = boutons.map((b) => b.nom);
   if (telephone(page)) {
-    expect(noms).toEqual(["Setlist", "Repères", "Je joue", "Outils", "Options d'affichage", "Quitter"]);
+    expect(noms).toEqual(["Setlist", "Repères", "Je joue", "Options d'affichage", "Quitter"]);
   } else {
     expect(noms).toEqual(["Setlist", "Repères", "Je joue", "Tempo", "Annoter", "Outils", "Options d'affichage", "Quitter"]);
   }
@@ -132,7 +132,7 @@ test("barre de titre en 中文 : mêmes boutons, noms chinois", async ({ page })
   const noms = (await boutonsHaut(page)).map((b) => b.nom);
   // Ces deux chants sont des scans 简谱 : pas de section, donc pas de bouton Repères (段落).
   await expect(page.getByRole("button", { name: "段落" })).toHaveCount(0);
-  if (telephone(page)) expect(noms).toEqual(["歌单", "我演奏", "工具", "显示选项", "退出"]);
+  if (telephone(page)) expect(noms).toEqual(["歌单", "我演奏", "显示选项", "退出"]);
   else expect(noms.filter((n) => n !== "节拍" && n !== "批注")).toEqual(["歌单", "我演奏", "工具", "显示选项", "退出"]);
 });
 
@@ -147,10 +147,10 @@ test("Setlist ouvre son menu, Je joue la feuille du rôle, Options le menu « Op
   await expect(options).toBeVisible();
   await page.keyboard.press("Escape");
   await expect(options).toBeHidden();
-  // Au téléphone, Annoter est une ligne du menu Outils (FS-B), plus de la barre.
+  // Au téléphone, Annoter est une ligne d'Outils, en tête de la feuille Options d'affichage, plus de la barre.
   if (telephone(page)) {
     const outils = await ouvrirMenu(page, "outils");
-    await expect(outils.getByRole("button", { name: "Annoter" })).toBeVisible();
+    await expect(outils.getByRole("button", { name: "Annoter", exact: true })).toBeVisible();
     await page.keyboard.press("Escape");
     await expect(outils).toBeHidden();
   }
@@ -263,6 +263,14 @@ test("barre de titre : le titre est centré sur l'écran, groupes alignés à le
   expect(boutons[0].x).toBeLessThan(24);
   const dernier = boutons[boutons.length - 1];
   expect(ecran.width - (dernier.x + dernier.w)).toBeLessThan(24);
+});
+
+test("barre de titre : le titre reste centré sur un chant sans Repères (scan 简谱, zh)", async ({ page }) => {
+  await ouvrir(page, { slugs: ZH, zh: true });
+  await expect(page.getByRole("button", { name: "段落" })).toHaveCount(0);
+  const titre = (await page.locator("[data-barre-haut] p").first().boundingBox())!;
+  const ecran = page.viewportSize()!;
+  expect(Math.abs(titre.x + titre.width / 2 - ecran.width / 2)).toBeLessThanOrEqual(4);
 });
 
 // ─── La couleur des icônes ────────────────────────────────────────────────────

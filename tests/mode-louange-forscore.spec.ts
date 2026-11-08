@@ -411,8 +411,9 @@ test("tempo réglé par chant : gardé après rechargement, « Tempo du fichier 
   const erreurs = surveillerErreurs(page);
   await ouvrirChantL4(page, "avec-nous");
   const options = await ouvrirReglages(page);
-  await expect(options.locator("[data-tempo-valeur]")).toHaveCount(0);
-  await options.locator("[data-metronome-on]").click();
+  // Au téléphone, Options porte aussi Outils en tête, donc les lignes du tempo.
+  if (page.viewportSize()!.width >= 768) await expect(options.locator("[data-tempo-valeur]")).toHaveCount(0);
+  await options.locator("[data-metronome]").click();
   await page.keyboard.press("Escape");
   await expect(options).toBeHidden();
   let reglages = await ouvrirTempo(page);
@@ -912,7 +913,7 @@ test("forScore, clavier : Réglages ouverts, Espace et flèche droite ne tournen
   await ouvrir(page, { chants: 4 });
   const avant = await lirePage(page);
   const reglages = await ouvrirReglages(page);
-  await reglages.locator("[data-metronome-on]").focus();
+  await reglages.locator("[data-metronome]").focus();
   await page.keyboard.press("Space");
   await page.keyboard.press("ArrowRight");
   await page.keyboard.press("PageDown");

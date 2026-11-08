@@ -14,6 +14,20 @@ import type { SectionBlock, SongHeaderBlock } from "@/lib/performance/blocks";
 // ─── Briques communes ─────────────────────────────────────────────────────────
 
 const COULEUR = "text-[color:var(--couleur-icones)]";
+/** Ligne en cours (Setlist, Repères) : la couleur des icônes à 12 %. */
+const LIGNE_COURANTE = "bg-[color-mix(in_srgb,var(--couleur-icones)_12%,transparent)]";
+
+/** Titre de rubrique, le même partout dans les menus : casse de phrase, 13 px, gris, demi-gras. */
+export function TitreRubrique({ children, id }: { children: ReactNode; id?: string }) {
+  return (
+    <p id={id} className="px-1 pb-1 text-[13px] font-semibold leading-tight text-muted-foreground">
+      {children}
+    </p>
+  );
+}
+
+/** Valeur entre deux ronds (tonalité, tempo, capo, taille) : même largeur, même corps partout, colonnes − / + alignées. */
+export const VALEUR = "w-16 text-center text-xl font-semibold leading-none tabular-nums text-foreground";
 
 /** Bouton rond de 44 px (ou 48). Sans `allume`, une action : contour neutre, glyphe dans la couleur des icônes.
  *  Avec `allume` (aria-pressed) : allumé = fond dans la couleur des icônes, glyphe de la couleur du fond de la page. */
@@ -68,7 +82,7 @@ export function BoutonSurPage({
       type="button"
       aria-pressed={allume}
       onClick={onClick}
-      className="flex w-[4.5rem] flex-col items-center gap-1 rounded-lg py-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      className="flex w-full min-w-0 flex-col items-center gap-1 rounded-lg py-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
     >
       <span
         aria-hidden="true"
@@ -120,7 +134,7 @@ export function ContenuSetlist({
     <div>
       <div className="px-1 pb-2">
         <p className="truncate text-base font-semibold text-foreground">{setlistTitle}</p>
-        <p className="truncate text-xs text-muted-foreground">
+        <p className="truncate text-[13px] text-muted-foreground">
           {setlistDate ? `${formatDate(setlistDate, i18n.language)} · ` : null}
           {t("performance.songCount", { count: songEntries.length })}
         </p>
@@ -139,18 +153,18 @@ export function ContenuSetlist({
                   if (page >= 0) goToPage(page, pages.length);
                   onFermer();
                 }}
-                className="flex min-h-12 w-full items-center gap-2.5 rounded-lg px-2 py-1.5 text-left transition-colors hover:bg-muted/60 active:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className={`flex min-h-12 w-full items-center gap-2.5 rounded-lg px-2 py-1.5 text-left transition-colors ${courant ? LIGNE_COURANTE : "hover:bg-muted/60 active:bg-muted"} focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring`}
               >
                 <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-bold text-muted-foreground">
                   {courant ? <Check aria-hidden="true" className={`h-4 w-4 ${COULEUR}`} /> : block.position}
                 </span>
                 <span className="min-w-0 flex-1">
-                  <span className={`block truncate text-sm ${courant ? "font-semibold" : "font-medium"} text-foreground`}>{block.title}</span>
+                  <span className={`block truncate text-base ${courant ? "font-semibold" : "font-medium"} text-foreground`}>{block.title}</span>
                   {sous && (
-                    <span className={`block truncate text-[11px] text-muted-foreground ${block.titlePinyin ? pinyin_font.className : ""}`}>{sous}</span>
+                    <span className={`block truncate text-[13px] text-muted-foreground ${block.titlePinyin ? pinyin_font.className : ""}`}>{sous}</span>
                   )}
                 </span>
-                <span className="shrink-0 font-mono text-xs text-muted-foreground">{block.songKey}</span>
+                <span className="shrink-0 text-[13px] tabular-nums text-muted-foreground">{block.songKey}</span>
               </button>
             </li>
           );
@@ -164,40 +178,47 @@ export function ContenuSetlist({
 
 export function ContenuReperes({
   reperes,
+  currentPage,
   goToPage,
   pageCount,
   onFermer,
 }: {
   reperes: { uid: string; section: SectionBlock["section"]; page: number }[];
+  /** Page affichée : la section en cours est la première de celles qui commencent sur la plus récente page ≤ elle. */
+  currentPage: number;
   goToPage: (p: number, pgCount: number) => void;
   pageCount: number;
   onFermer: () => void;
 }) {
   const { t } = useTranslation();
+  const pageCourante = reperes.reduce((m, r) => (r.page <= currentPage && r.page > m ? r.page : m), -1);
+  const courante = pageCourante >= 0 ? reperes.find((r) => r.page === pageCourante)?.uid : undefined;
   return (
     <ol className="-mx-1">
       {reperes.map((r) => {
         const cle = paletteKeyOf(r.section);
+        const enCours = r.uid === courante;
         return (
           <li key={r.uid}>
             <button
               type="button"
+              aria-current={enCours ? "true" : undefined}
               onClick={() => {
                 goToPage(r.page, pageCount);
                 onFermer();
               }}
-              className="flex min-h-12 w-full items-center gap-3 rounded-lg px-2 py-1.5 text-left transition-colors hover:bg-muted/60 active:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className={`flex min-h-12 w-full items-center gap-3 rounded-lg px-2 py-1.5 text-left transition-colors ${enCours ? LIGNE_COURANTE : "hover:bg-muted/60 active:bg-muted"} focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring`}
             >
               <span
                 aria-hidden="true"
                 data-repere-sigle
-                className="inline-flex h-8 min-w-8 shrink-0 items-center justify-center rounded-full px-2 text-sm font-bold leading-none"
+                className="inline-flex h-8 w-9 shrink-0 items-center justify-center rounded-full text-sm font-bold leading-none"
                 style={{ background: `var(--sec-${cle}-tint)`, color: `var(--sec-${cle})` }}
               >
                 {isDp(r.section) ? "Dp" : abbreviateSection(r.section)}
               </span>
-              <span className="min-w-0 flex-1 truncate text-sm font-medium text-foreground">{formatSectionName(r.section, t)}</span>
-              <span className={`shrink-0 text-xs tabular-nums ${COULEUR}`}>{t("performance.pageShort", { n: r.page + 1 })}</span>
+              <span className="min-w-0 flex-1 truncate text-base font-medium text-foreground">{formatSectionName(r.section, t)}</span>
+              <span className={`shrink-0 text-[13px] tabular-nums ${COULEUR}`}>{t("performance.pageShort", { n: r.page + 1 })}</span>
             </button>
           </li>
         );
@@ -229,7 +250,10 @@ export function LignesTempo({
         <BoutonRond label={t("performance.tempoDown")} onClick={() => changerTempo(-1)} disabled={valeur <= TEMPO_MIN} data-tempo-moins="">
           <Minus className="h-4 w-4" />
         </BoutonRond>
-        <span data-tempo-valeur className="w-14 text-center text-sm font-semibold tabular-nums text-foreground">♩ {valeur}</span>
+        <span data-tempo-valeur className={`${VALEUR} inline-flex items-baseline justify-center gap-1`}>
+          <span aria-hidden="true">♩</span>
+          {valeur}
+        </span>
         <BoutonRond label={t("performance.tempoUp")} onClick={() => changerTempo(1)} disabled={valeur >= TEMPO_MAX} data-tempo-plus="">
           <Plus className="h-4 w-4" />
         </BoutonRond>
@@ -268,7 +292,7 @@ export function ContenuTempo({
     <div className="space-y-1">
       <LignesTempo tempo={tempo} tempoAppareil={tempoAppareil} changerTempo={changerTempo} effacerTempo={effacerTempo} />
       <LigneMenu label={t("performance.metronome")}>
-        <BoutonRond label={t("performance.metronome")} allume={metronome} onClick={() => setMetronome(!metronome)} taille={44}>
+        <BoutonRond label={t("performance.metronome")} allume={metronome} onClick={() => setMetronome(!metronome)} taille={44} data-metronome="">
           <Waves className="h-5 w-5" />
         </BoutonRond>
       </LigneMenu>
@@ -280,7 +304,7 @@ export function ContenuTempo({
 
 /** Plein écran : l'état se lit sur `fullscreenchange` (la touche Échap du navigateur le quitte aussi). */
 function usePleinEcran() {
-  const [actif, setActif] = useState(() => typeof document !== "undefined" && !!document.fullscreenElement);
+  const [actif, setActif] = useState(false);
   useEffect(() => {
     const maj = () => setActif(!!document.fullscreenElement);
     maj();
@@ -331,7 +355,7 @@ export function ContenuOutils({
             <BoutonRond label={t("performance.keyDown")} onClick={() => decalerCle(-1)} data-cle-moins="">
               <Minus className="h-4 w-4" />
             </BoutonRond>
-            <span data-cle-valeur className="w-12 text-center font-mono text-sm font-semibold text-foreground">{cle}</span>
+            <span data-cle-valeur className={VALEUR}>{cle}</span>
             <BoutonRond label={t("performance.keyUp")} onClick={() => decalerCle(1)} data-cle-plus="">
               <Plus className="h-4 w-4" />
             </BoutonRond>
@@ -352,7 +376,7 @@ export function ContenuOutils({
           <BoutonRond label={t("performance.capoLower")} onClick={() => capo.set(capo.frets - 1)} disabled={capo.frets <= 0}>
             <Minus className="h-4 w-4" />
           </BoutonRond>
-          <span className="w-10 text-center text-sm font-semibold tabular-nums text-foreground">{capo.frets}</span>
+          <span className={VALEUR}>{capo.frets}</span>
           <BoutonRond label={t("performance.capoRaise")} onClick={() => capo.set(capo.frets + 1)} disabled={capo.frets >= 11}>
             <Plus className="h-4 w-4" />
           </BoutonRond>
@@ -365,7 +389,7 @@ export function ContenuOutils({
       </LigneMenu>
       {pleinEcran.disponible && (
         <LigneMenu label={t("performance.fullscreen")}>
-          <BoutonRond label={t("performance.fullscreen")} allume={pleinEcran.actif} onClick={pleinEcran.basculer}>
+          <BoutonRond label={t("performance.fullscreen")} allume={pleinEcran.actif} data-plein-ecran="" onClick={pleinEcran.basculer}>
             <Maximize className="h-5 w-5" />
           </BoutonRond>
         </LigneMenu>
@@ -380,16 +404,20 @@ export function ContenuOutils({
       {tempoLignes}
       {raccourcis && (
         <div data-raccourcis className="mt-2 border-t border-border pt-3">
-          <p className="pb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t("performance.shortcuts")}</p>
-          <dl className="space-y-1 text-sm">
-            {[
-              [t("performance.prevPage"), "← · Page↑"],
-              [t("performance.nextPage"), `→ · Page↓ · ${t("performance.keySpace")}`],
-              [t("performance.shortcutEsc"), t("performance.keyEsc")],
-            ].map(([nom, touches]) => (
-              <div key={nom} className="flex items-center justify-between gap-3">
+          <TitreRubrique>{t("performance.shortcuts")}</TitreRubrique>
+          <dl className="space-y-1.5 text-sm">
+            {([
+              [t("performance.prevPage"), ["←", "Page↑"]],
+              [t("performance.nextPage"), ["→", "Page↓", t("performance.keySpace")]],
+              [t("performance.shortcutEsc"), [t("performance.keyEsc")]],
+            ] as [string, string[]][]).map(([nom, touches]) => (
+              <div key={nom} className="flex items-center justify-between gap-3 px-1">
                 <dt className="text-foreground">{nom}</dt>
-                <dd className="font-mono text-xs text-muted-foreground">{touches}</dd>
+                <dd className="flex shrink-0 items-center gap-1">
+                  {touches.map((k) => (
+                    <kbd key={k} className="rounded-[5px] bg-muted px-1.5 py-[3px] text-xs font-semibold leading-none text-foreground">{k}</kbd>
+                  ))}
+                </dd>
               </div>
             ))}
           </dl>
