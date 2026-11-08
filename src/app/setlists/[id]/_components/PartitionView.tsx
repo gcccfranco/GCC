@@ -269,6 +269,7 @@ export function PartitionsView({
                           songSourceLabel={showSongLabel ? ast.metadata.title : undefined}
                           chartStyle={chartStyle}
                           occurrenceUids={[section.uid]}
+                          slug={ms.songSlug}
                         />
                         </ChantDesAccords>
                         {withDetails && ms.transition && <TransitionNote text={ms.transition} />}
@@ -319,6 +320,7 @@ export function PartitionsView({
                         sectionKeys={fs.sectionKeys ?? {}}
                         chartStyle={chartStyle}
                         layout={layout}
+                        slug={fs.songSlug}
                         titleHref={songHref(fs.songSlug, fs, setlistId, item.position)}
                       />
                       </ChantDesAccords>
@@ -574,6 +576,7 @@ function NormalSongItem({
         sectionKeys={item.sectionKeys ?? {}}
         chartStyle={chartStyle}
         layout={layout}
+        slug={item.songSlug}
         bodyStructure={version?.bodyStructure}
         titleHref={titleHref}
         onLineSelect={editMode ? (line, sectionUid) => onSelectLine?.(origIndex, line, sectionUid) : undefined}

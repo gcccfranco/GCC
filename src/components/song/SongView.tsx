@@ -1,9 +1,11 @@
 "use client";
-import { Fragment } from "react";
+import { Fragment, useContext, useLayoutEffect, useRef, useState } from "react";
 import localFont from "next/font/local";
 import Link, { type LinkProps } from "next/link";
 import { ChordLine } from "@/components/song/ChordLine";
-import { ConteneurCoupure } from "@/components/song/LargeurCoupure";
+import { ConteneurCoupure, LargeurCoupureContext } from "@/components/song/LargeurCoupure";
+import { choisirCoupureZh, DEBORD, type UniteZh } from "@/lib/song/coupure";
+import { motsDuTexte, type MotZh } from "@/lib/song/motsChinois";
 import { JianpuLine } from "@/components/song/JianpuLine";
 import { AccordsInactifs } from "@/components/accords/AccordsProvider";
 import { AccordTouchable } from "@/components/accords/AccordTouchable";
@@ -183,9 +185,18 @@ interface ZhLineProps {
   chord_font: ReturnType<typeof localFont>;
   zh_lyric_font: ReturnType<typeof localFont>;
   typography?: "web" | "pdf";
+  /** Slug du chant : les exceptions de mots (motsChinois.ts) en dépendent. Absent : segmentation seule. */
+  slug?: string;
 }
 
-function ZhLine({ tokens, pinyin, showChords, showPinyin, hideLyrics = false, chord_font, zh_lyric_font, typography = "web" }: ZhLineProps) {
+/** Finit par une ponctuation de pause : la coupure est naturelle juste après (R1). */
+const ZH_PAUSE = /[，。；：！？、,;:!?]$/;
+
+type ZhCol = { char: string; chord: string | null; py: string; seul: boolean };
+type ZhCoupe = { coupures: number[]; etat: string; relache: string[] };
+const UNE_RANGEE_ZH: ZhCoupe = { coupures: [], etat: "une", relache: [] };
+
+function ZhLine({ tokens, pinyin, showChords, showPinyin, hideLyrics = false, chord_font, zh_lyric_font, typography = "web", slug }: ZhLineProps) {
   // Typographie « pdf » : tailles des PDF exportés (accords 17px, chars 15px, pinyin 10.5px)
   const isPdfTypo = typography === "pdf";
   const baseSize = isPdfTypo ? "0.9375rem" : "var(--lyric-size)";
@@ -196,31 +207,34 @@ function ZhLine({ tokens, pinyin, showChords, showPinyin, hideLyrics = false, ch
   const pyWords = pinyin?.split(/\s+/).filter(Boolean) ?? [];
   let pIdx = 0;
 
-  type Col = { char: string; chord: string | null; py: string };
+  type Col = ZhCol;
   const cols: Col[] = [];
 
   for (const seg of toSegments(tokens)) {
     const chars = [...(showChords ? seg.lyric : (seg.lyric?.trimStart() ?? ""))];
     if (chars.length === 0) {
-      if (seg.chord) cols.push({ char: " ", chord: seg.chord, py: "" });
+      if (seg.chord) cols.push({ char: " ", chord: seg.chord, py: "", seul: true });
     } else {
       chars.forEach((ch, ci) => {
         cols.push({
           char: ch,
           chord: ci === 0 ? seg.chord : null,
           py: isCJK(ch) ? (pyWords[pIdx++] ?? "") : "",
+          seul: false,
         });
       });
     }
   }
 
   const hasAnyChord = showChords && cols.some((c) => c.chord !== null);
+  // Aucune parole (que des accords) : ni caractère ni pinyin vide sous les accords (R2).
+  const aucuneParole = !cols.some((c) => c.char.trim() !== "");
   // Air au-dessus de la ligne quand elle porte des accords : sinon
   // l'accord (haut de colonne) vient « manger » le pinyin de la ligne
   // précédente (bas de colonne).
   const chordAir = hasAnyChord ? (isPdfTypo ? "0.2em" : "0.35em") : undefined;
 
-  // Une ligne trop longue passe à la ligne colonne par colonne. Ce qui n'a pas
+  // Une ligne trop longue passe à la ligne par unités insécables. D'abord les groupes : ce qui n'a pas
   // de caractère à soi (accord seul, espace) et la ponctuation restent collés
   // au caractère qui précède : sinon, sur téléphone, un accord de fin de ligne
   // ou une virgule ouvrait seul la rangée suivante, sous les paroles.
@@ -237,20 +251,105 @@ function ZhLine({ tokens, pinyin, showChords, showPinyin, hideLyrics = false, ch
     else groups.push({ cols: [col], lyric });
   }
 
-  // La ligne ne se coupe qu'avant un accord : un groupe qui ouvre sur un accord ouvre une rangée
-  // insécable, les groupes sans accord se collent au précédent (ceux d'avant le premier accord
-  // restent séparés). Plus large que la ligne, la rangée se coupe de nouveau entre ses groupes.
-  const chunks: { group: (typeof groups)[number]; gi: number }[][] = [];
-  if (hasAnyChord) {
-    let accordVu = false;
+  // Puis les mots (lot CV, R1) : les groupes d'un même mot de 2 à 4 caractères forment une seule unité.
+  // Les accords seuls en fin de ligne restent collés à la dernière unité (ils sont dans son groupe).
+  // Sans les espaces : « 释[E2/G#] 放 » (accord posé sur une espace) reste le mot 释放 pour le segmenteur.
+  const texte = groups.map((g) => g.cols.filter((c) => !c.seul && c.char.trim() !== "").map((c) => c.char).join(""));
+  const debuts = texte.reduce<number[]>((acc, t, i) => (acc.push(i ? acc[i - 1] + texte[i - 1].length : 0), acc), []);
+  const mots = motsDuTexte(texte.join(""), slug);
+  const unites: { cols: Col[]; mot: MotZh | null }[] = [];
+  {
+    let m = 0;
     groups.forEach((group, gi) => {
-      const accorde = group.cols[0].chord !== null;
-      if (accorde || !accordVu) chunks.push([{ group, gi }]);
-      else chunks[chunks.length - 1].push({ group, gi });
-      accordVu ||= accorde;
+      while (m < mots.length && mots[m].fin <= debuts[gi]) m++;
+      const mot = mots[m] && mots[m].debut <= debuts[gi] && texte[gi] ? mots[m] : null;
+      const derniere = unites[unites.length - 1];
+      if (mot && derniere?.mot === mot) derniere.cols.push(...group.cols);
+      else unites.push({ cols: [...group.cols], mot });
     });
-  } else {
-    groups.forEach((group, gi) => chunks.push([{ group, gi }]));
+  }
+  const cle = unites.map((u) => u.cols.map((c) => `${c.chord ?? ""}|${c.char}|${c.py}`).join("¦")).join("§");
+
+  const ligne = useRef<HTMLDivElement>(null);
+  const uniteRefs = useRef<(HTMLElement | null)[]>([]);
+  const derniere = useRef("");
+  const [coupe, setCoupe] = useState<ZhCoupe>(UNE_RANGEE_ZH);
+  const [polices, setPolices] = useState(0);
+  const [propre, setPropre] = useState(0);
+  const version = useContext(LargeurCoupureContext);
+
+  // Sans conteneur de chant, la ligne observe sa propre largeur.
+  useLayoutEffect(() => {
+    const el = ligne.current;
+    if (version !== null || !el) return;
+    let largeur = el.clientWidth;
+    const obs = new ResizeObserver(() => {
+      if (el.clientWidth === largeur) return;
+      largeur = el.clientWidth;
+      setPropre((v) => v + 1);
+    });
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [version]);
+
+  // Les largeurs changent quand la police arrive.
+  useLayoutEffect(() => {
+    let vivant = true;
+    document.fonts?.ready.then(() => vivant && setPolices((v) => v + 1));
+    return () => {
+      vivant = false;
+    };
+  }, []);
+
+  // Après chaque rendu : on ne mesure que si la largeur, le corps ou le contenu ont changé (aucune boucle).
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- sans liste volontairement : l'empreinte ci-dessous évite toute boucle
+  useLayoutEffect(() => {
+    const el = ligne.current;
+    if (!el) return;
+    // La réserve de droite (ci-dessous) est comptée dans clientWidth : on la retire pour retrouver la largeur de la colonne.
+    const largeur = el.clientWidth - (parseFloat(el.style.paddingRight) || 0);
+    if (!largeur) return;
+    const em = parseFloat(getComputedStyle(el).fontSize);
+    const empreinte = [largeur, em, cle, showChords, showPinyin, hideLyrics, isPdfTypo, version, propre, polices].join("/");
+    if (empreinte === derniere.current) return;
+    derniere.current = empreinte;
+    el.style.paddingRight = "";
+    el.style.marginRight = "";
+    const rect = el.getBoundingClientRect();
+    const echelle = rect.width / (el.offsetWidth || 1) || 1;
+    // Jusqu'au bord du cadre de zoom (ou de la fenêtre) : rien ne doit élargir ni la page ni ce cadre.
+    const bord = Math.min(document.documentElement.clientWidth, el.closest(".song-zoom")?.getBoundingClientRect().right ?? Infinity);
+    const place = (bord - rect.right) / echelle - 4;
+    const mesures: UniteZh[] = unites.map((u, i) => {
+      const noeud = uniteRefs.current[i];
+      const lettres = u.cols.filter((c) => c.char.trim() !== "");
+      return {
+        largeur: noeud ? noeud.getBoundingClientRect().width / echelle : 0,
+        caracteres: lettres.length,
+        ponctue: ZH_PAUSE.test(lettres[lettres.length - 1]?.char ?? ""),
+      };
+    });
+    const r = choisirCoupureZh(mesures, { largeur, em, debord: Math.max(0, Math.min(DEBORD, place)) });
+    // Ce qui dépasse dans la marge reste dans le cadre de la ligne (padding compensé par une marge négative).
+    const reserve = Math.max(0, Math.min(20, place));
+    if (reserve > 0) {
+      el.style.paddingRight = `${reserve}px`;
+      el.style.marginRight = `-${reserve}px`;
+    }
+    setCoupe((avant) =>
+      avant.etat === r.etat && avant.coupures.join() === r.coupures.join() && avant.relache.join() === r.relache.join()
+        ? avant
+        : { coupures: r.coupures, etat: r.etat, relache: r.relache },
+    );
+  });
+
+  const rangees: { unites: typeof unites; depart: number }[] = [];
+  {
+    let depart = 0;
+    for (const fin of unites.length ? [...coupe.coupures, unites.length - 1] : []) {
+      rangees.push({ unites: unites.slice(depart, fin + 1), depart });
+      depart = fin + 1;
+    }
   }
 
   const cellMinWidth = (col: Col): string | undefined => {
@@ -265,9 +364,11 @@ function ZhLine({ tokens, pinyin, showChords, showPinyin, hideLyrics = false, ch
 
   return (
     <div
+      ref={ligne}
       data-copy-line
       data-copy-pinyin={pinyin ?? undefined}
-      className="flex flex-wrap items-start mb-[3px]"
+      data-coupe={coupe.etat + (coupe.relache.length ? `:${coupe.relache.join(", ")}` : "")}
+      className="flex flex-col items-start mb-[3px]"
       style={{
         fontSize: baseSize,
         marginTop: chordAir,
@@ -276,74 +377,87 @@ function ZhLine({ tokens, pinyin, showChords, showPinyin, hideLyrics = false, ch
         rowGap: chordAir,
       }}
     >
-      {chunks.map((chunk) => (
-      <span key={chunk[0].gi} style={{ display: "flex", flexWrap: "wrap", alignItems: "flex-start", maxWidth: "100%", flexShrink: 0, rowGap: chordAir }}>
-      {chunk.map(({ group, gi }) => (
-        <span key={gi} style={{ display: "inline-flex", alignItems: "flex-start" }}>
-          {group.cols.map((col, i) => {
-            if (!showChords && col.char === " " && col.chord !== null) return null;
-            return (
-              <span
-                key={i}
-                style={{
-                  display: "inline-flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                  minWidth: cellMinWidth(col),
-                }}
-              >
-                {showChords && (
-                  <span
-                    data-copy-ignore
-                    style={{
-                      fontWeight: 700,
-                      fontSize: chordEm,
-                      lineHeight: "0.7",
-                      minHeight: hasAnyChord ? "1.1em" : undefined,
-                      color: "var(--jianpu-color, #b3261d)",
-                      visibility: col.chord ? "visible" : "hidden",
-                      whiteSpace: "nowrap",
-                      // Deux accords longs sur deux caractères voisins se touchaient
-                      // (« Am7/EDsus4 », relevé le 26/09/2026 sur 向主欢呼) : la colonne
-                      // s'élargit bien à l'accord, mais rien ne séparait deux étiquettes.
-                      // Symétrique, pour que l'accord reste centré sur son caractère.
-                      paddingInline: "0.25em",
-                    }}
-                    className={chord_font.className}
-                  >
-                    {col.chord ? <AccordTouchable etiquette={col.chord} /> : "x"}
-                  </span>
-                )}
-                <span
-                  className={zh_lyric_font.className}
-                  style={{ fontSize: charEm, lineHeight: 1.35, visibility: hideLyrics ? "hidden" : undefined }}
-                >
-                  {col.char}
-                </span>
-                {showPinyin && !hideLyrics && (
-                  <span
-                    data-copy-ignore
-                    className={pinyin_font.className}
-                    style={{
-                      fontSize: pinyinEm,
-                      lineHeight: 1.2,
-                      color: "var(--muted-foreground)",
-                      whiteSpace: "nowrap",
-                      // Une syllabe plus large que la colonne (« chuàng ») l'élargit :
-                      // cette marge garde un espace avec sa voisine.
-                      paddingInline: "0.15em",
-                    }}
-                  >
-                    {col.py || " "}
-                  </span>
-                )}
+      {rangees.map(({ unites: rangee, depart }, r) => {
+        // R2 : une rangée sans accord ne réserve pas la bande d'accords.
+        const rangeeAvecAccord = showChords && rangee.some((u) => u.cols.some((c) => c.chord !== null));
+        // `span` et non `div` : la copie (copyLyrics.ts) met un retour à la ligne après chaque bloc. R5 : retrait en padding.
+        return (
+          <span
+            key={depart}
+            data-rangee
+            style={{ display: "flex", flexWrap: "nowrap", alignItems: "flex-start", whiteSpace: "nowrap", paddingLeft: r > 0 ? "1em" : undefined }}
+          >
+            {rangee.map((unite, ui) => (
+              <span key={depart + ui} ref={(n) => { uniteRefs.current[depart + ui] = n; }} style={{ display: "inline-flex", alignItems: "flex-start" }}>
+                {unite.cols.map((col, i) => {
+                  if (!showChords && col.char === " " && col.chord !== null) return null;
+                  return (
+                    <span
+                      key={i}
+                      style={{
+                        display: "inline-flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        minWidth: cellMinWidth(col),
+                      }}
+                    >
+                      {rangeeAvecAccord && (
+                        <span
+                          data-copy-ignore
+                          data-accord
+                          style={{
+                            fontWeight: 700,
+                            fontSize: chordEm,
+                            lineHeight: "0.7",
+                            minHeight: "1.1em",
+                            color: "var(--jianpu-color, #b3261d)",
+                            visibility: col.chord ? "visible" : "hidden",
+                            whiteSpace: "nowrap",
+                            // Deux accords longs sur deux caractères voisins se touchaient
+                            // (« Am7/EDsus4 », relevé le 26/09/2026 sur 向主欢呼) : la colonne
+                            // s'élargit bien à l'accord, mais rien ne séparait deux étiquettes.
+                            // Symétrique, pour que l'accord reste centré sur son caractère.
+                            paddingInline: "0.25em",
+                          }}
+                          className={chord_font.className}
+                        >
+                          {col.chord ? <AccordTouchable etiquette={col.chord} /> : "x"}
+                        </span>
+                      )}
+                      {!aucuneParole && (
+                        <span
+                          data-car
+                          className={zh_lyric_font.className}
+                          style={{ fontSize: charEm, lineHeight: 1.35, visibility: hideLyrics ? "hidden" : undefined }}
+                        >
+                          {col.char}
+                        </span>
+                      )}
+                      {showPinyin && !hideLyrics && !aucuneParole && (
+                        <span
+                          data-copy-ignore
+                          className={pinyin_font.className}
+                          style={{
+                            fontSize: pinyinEm,
+                            lineHeight: 1.2,
+                            color: "var(--muted-foreground)",
+                            whiteSpace: "nowrap",
+                            // Une syllabe plus large que la colonne (« chuàng ») l'élargit :
+                            // cette marge garde un espace avec sa voisine.
+                            paddingInline: "0.15em",
+                          }}
+                        >
+                          {col.py || " "}
+                        </span>
+                      )}
+                    </span>
+                  );
+                })}
               </span>
-            );
-          })}
-        </span>
-      ))}
-      </span>
-      ))}
+            ))}
+          </span>
+        );
+      })}
     </div>
   );
 }
@@ -609,9 +723,11 @@ interface SectionViewProps {
   /** Sorte de section dont le bloc emprunte la couleur du cadre (un Dp prend
    *  celle de son origine, en Structure seule du mode louange). */
   couleurDe?: string;
+  /** Slug du chant (exceptions de mots chinois, motsChinois.ts) ; absent : segmentation seule. */
+  slug?: string;
 }
 
-export function SectionView({ section, language, showChords, showPinyin, useJianpu, hideLyrics = false, note, nuance, keyChange, songSourceLabel, typography = "web", chartStyle = false, onLineSelect, nuanceSize = "sm", repeat = 1, occurrenceUids, couleurDe }: SectionViewProps) {
+export function SectionView({ section, language, showChords, showPinyin, useJianpu, hideLyrics = false, note, nuance, keyChange, songSourceLabel, typography = "web", chartStyle = false, onLineSelect, nuanceSize = "sm", repeat = 1, occurrenceUids, couleurDe, slug }: SectionViewProps) {
   const isPdfTypo = typography === "pdf";
   const { t, i18n } = useTranslation();
   const isZh = language === "zh";
@@ -685,6 +801,7 @@ export function SectionView({ section, language, showChords, showPinyin, useJian
                   chord_font={isPdfTypo ? liberation_font : chord_font}
                   zh_lyric_font={zh_lyric_font}
                   typography={typography}
+                  slug={slug}
                 />
               );
             } else {
@@ -765,6 +882,8 @@ interface SongViewProps {
   /** Page chant (lot JE, JE3) : sous-titre, référence biblique et ligne « 1= · mesure · ♩ » dans l'en-tête.
    *  Une seule colonne à toutes les tailles (Timothée, 31/10/2026 : les deux colonnes A2 sont retirées). */
   pageChant?: boolean;
+  /** Slug du chant (exceptions de mots chinois, motsChinois.ts) ; absent : segmentation seule. */
+  slug?: string;
 }
 
 export function SongView({
@@ -786,6 +905,7 @@ export function SongView({
   corps,
   statistiques,
   pageChant = false,
+  slug,
 }: SongViewProps) {
   const { t } = useTranslation();
   const isZh = ast.metadata.language === "zh";
@@ -937,6 +1057,7 @@ export function SongView({
                 chartStyle={chartStyle}
                 onLineSelect={onLineSelect}
                 occurrenceUids={uids}
+                slug={slug}
               />
               {withDetails && step.transition && <TransitionNote text={step.transition} />}
             </div>

@@ -197,3 +197,125 @@ export function choisirCoupure(unites: Unite[], opts: OptionsCoupure): ResultatC
   }
   return vide("deborde");
 }
+
+// ---------------------------------------------------------------------------
+// Chinois (CV-2) : mêmes règles, mais des unités insécables (un caractère et sa ponctuation, un mot de 2 à 4
+// caractères) et pas d'interlettrage. Logique de `cutZh` dans docs/planches/planche-dispositions-partition.html.
+// ---------------------------------------------------------------------------
+
+export type UniteZh = {
+  /** Largeur de l'unité (caractère, accord et pinyin compris, la plus large des trois). */
+  largeur: number;
+  /** Caractères comptés, ponctuation comprise (les accords seuls ne comptent pas). */
+  caracteres: number;
+  /** Finit par ， 。 ； ： ！ ？ 、 ou , ; : ! ? */
+  ponctue: boolean;
+};
+
+export type OptionsCoupureZh = {
+  /** Largeur disponible d'une rangée. */
+  largeur: number;
+  /** Corps du texte en px (1 em). */
+  em: number;
+  /** Débordement permis dans la marge droite (R4). */
+  debord: number;
+};
+
+export type ResultatCoupureZh = {
+  /** Indices d'unité APRÈS lesquels on passe à la rangée suivante ; [] = une seule rangée. */
+  coupures: number[];
+  etat: "une" | "marge" | "rangees" | "deborde";
+  /** Règles tolérées : « déséquilibre », « plus de deux rangées », « rangée courte ». */
+  relache: string[];
+};
+
+/** Rangée la plus courte tolérée en première passe (en caractères). */
+const MIN_CARACTERES_ZH = 3;
+
+export function choisirCoupureZh(unites: UniteZh[], opts: OptionsCoupureZh): ResultatCoupureZh {
+  const { largeur: A, em, debord } = opts;
+  const n = unites.length;
+  const vide = (etat: ResultatCoupureZh["etat"]): ResultatCoupureZh => ({ coupures: [], etat, relache: [] });
+  if (n === 0) return vide("une");
+
+  const somme = [0];
+  const nombre = [0];
+  unites.forEach((u, i) => {
+    somme.push(somme[i] + u.largeur);
+    nombre.push(nombre[i] + u.caracteres);
+  });
+  const larg = (a: number, b: number) => somme[b + 1] - somme[a];
+  const compte = (a: number, b: number) => nombre[b + 1] - nombre[a];
+  const dispo = (r: number) => (r ? A - em : A) + debord + TOLERANCE;
+
+  const tout = larg(0, n - 1);
+  if (tout <= A + debord + TOLERANCE) return vide(tout > A + TOLERANCE ? "marge" : "une");
+
+  if (n > MAX_UNITES) {
+    // Repli glouton : chaque rangée prend le plus d'unités possible.
+    const coupures: number[] = [];
+    let a = 0;
+    for (let b = 0; b < n - 1; b++) {
+      if (larg(a, b + 1) <= dispo(coupures.length)) continue;
+      if (b < a || larg(a, b) > dispo(coupures.length)) return vide("deborde");
+      coupures.push(b);
+      a = b + 1;
+    }
+    if (larg(a, n - 1) > dispo(coupures.length)) return vide("deborde");
+    return { coupures, etat: "rangees", relache: ["repli glouton"] };
+  }
+
+  const candidates = (k: number, minCar: number): Candidate[] => {
+    const ok: Candidate[] = [];
+    combinaisons(n, k, (coupures) => {
+      const rangees: [number, number][] = [];
+      let a = 0;
+      for (const b of [...coupures, n - 1]) {
+        rangees.push([a, b]);
+        a = b + 1;
+      }
+      if (!rangees.every(([x, y], r) => larg(x, y) <= dispo(r) && compte(x, y) >= minCar)) return;
+      const ws = rangees.map(([x, y]) => larg(x, y));
+      ok.push({
+        coupures: coupures.slice(),
+        equilibre: Math.min(...ws) / Math.max(...ws),
+        ponctue: coupures.every((b) => unites[b].ponctue),
+      });
+    });
+    return ok;
+  };
+  const meilleur = (pool: Candidate[]) => [...pool].sort((x, y) => y.equilibre - x.equilibre)[0];
+
+  // Passe 0 : chaque rangée compte au moins 3 caractères ; passe 1 : on tolère une rangée plus courte.
+  for (let passe = 0; passe < 2; passe++) {
+    // Une ligne sans aucun caractère (que des accords) n'a pas de rangée « courte » à éviter.
+    const minCar = nombre[n] === 0 ? 0 : passe ? 1 : MIN_CARACTERES_ZH;
+    const parK: Record<number, Candidate[]> = {};
+    for (let k = 2; k <= Math.min(MAX_RANGEES, n); k++) parK[k] = candidates(k, minCar);
+    const relache: string[] = [];
+    let choix: Candidate | undefined;
+    if (parK[2]?.length) {
+      // Deux rangées : équilibrées d'abord, puis coupées après une ponctuation, puis le meilleur équilibre.
+      let pool = parK[2];
+      const equilibrees = pool.filter((c) => c.equilibre >= EQUILIBRE);
+      if (equilibrees.length) pool = equilibrees;
+      else relache.push("déséquilibre");
+      const ponctuees = pool.filter((c) => c.ponctue);
+      choix = meilleur(ponctuees.length ? ponctuees : pool);
+    } else {
+      // Deux ne suffisent pas : le moins de rangées possible, toutes coupées après une ponctuation si on le peut.
+      for (let k = 3; k <= MAX_RANGEES && !choix; k++) {
+        const pool = (parK[k] ?? []).filter((c) => c.ponctue);
+        if (pool.length) choix = meilleur(pool);
+      }
+      for (let k = 3; k <= MAX_RANGEES && !choix; k++) {
+        if (parK[k]?.length) choix = meilleur(parK[k]);
+      }
+      if (choix) relache.push("plus de deux rangées");
+    }
+    if (!choix) continue;
+    if (passe) relache.push("rangée courte");
+    return { coupures: choix.coupures, etat: "rangees", relache };
+  }
+  return vide("deborde");
+}

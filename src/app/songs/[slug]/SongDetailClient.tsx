@@ -477,6 +477,7 @@ function useVersionDeLaSetlist(slug: string, setlistId: string | null, position:
               à droite des pastilles règle la préférence de l'appareil (D5). */}
             <SongView
               pageChant
+              slug={song.slug}
               statistiques={<StatistiquesDuChant slug={song.slug} />}
               bascule={
                 jianpuScore ? (

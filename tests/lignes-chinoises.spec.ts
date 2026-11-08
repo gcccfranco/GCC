@@ -1,5 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import index from "../public/songs-index.json";
+import { motsChinoisCoupes } from "./helpers/motsZh";
 
 // Une ligne chinoise trop longue pour l'écran (téléphone surtout) passe à la
 // ligne colonne par colonne (accord, caractère, pinyin). Relevé le 17/09/2026 :
@@ -16,7 +17,7 @@ const CHANTS = process.env.PW_CHANTS_ZH === "all"
   ? index.songs.filter((s) => s.language === "zh").map((s) => s.slug)
   : ["我能给你什么", "大手牵着小手", "爱的彰显", "奔跑不放弃"];
 
-type Mesure = { orphelins: string[]; ponctuations: string[]; debords: string[]; ecartDansLigne: number | null; ecartEntreLignes: number | null };
+type Mesure = { orphelins: string[]; ponctuations: string[]; courtes: string[]; debords: string[]; ecartDansLigne: number | null; ecartEntreLignes: number | null };
 
 /** Les rangées de chaque ligne chinoise telles que le navigateur les pose. */
 function mesurer(page: Page): Promise<Mesure> {
@@ -32,7 +33,7 @@ function mesurer(page: Page): Promise<Mesure> {
       const b = r.getBoundingClientRect();
       return b.height ? b : null;
     };
-    const out: Mesure = { orphelins: [], ponctuations: [], debords: [], ecartDansLigne: null, ecartEntreLignes: null };
+    const out: Mesure = { orphelins: [], ponctuations: [], courtes: [], debords: [], ecartDansLigne: null, ecartEntreLignes: null };
     // Bord droit de la page : un accord ne doit jamais le dépasser (rogné à l'écran).
     const bord = document.documentElement.clientWidth;
     const min = (a: number | null, b: number) => (a === null ? b : Math.min(a, b));
@@ -40,9 +41,12 @@ function mesurer(page: Page): Promise<Mesure> {
     // `div`, la section est au-dessus) : d'une section à l'autre, un titre s'intercale.
     let precedente: { section: Element | null | undefined; basPinyin: number } | null = null;
 
-    for (const ligne of Array.from(document.querySelectorAll<HTMLElement>("[data-copy-line].flex-wrap"))) {
+    for (const ligne of Array.from(document.querySelectorAll<HTMLElement>("[data-copy-line][data-coupe].items-start"))) {
       const colonnes = Array.from(ligne.querySelectorAll<HTMLElement>("span[style*='column']")).map((c) => {
-        const [accord, caractere, pinyin] = Array.from(c.children) as HTMLElement[];
+        // Une rangée sans accord n'a pas de bande d'accords (R2) : on les repère par leurs attributs.
+        const accord = c.querySelector<HTMLElement>("[data-accord]");
+        const caractere = c.querySelector<HTMLElement>("[data-car]");
+        const pinyin = (Array.from(c.children) as HTMLElement[]).find((e) => e !== accord && e !== caractere);
         return {
           el: c,
           accord: accord && getComputedStyle(accord).visibility === "visible" ? accord : undefined,
@@ -50,12 +54,8 @@ function mesurer(page: Page): Promise<Mesure> {
           pinyin,
         };
       });
-      const rangees: (typeof colonnes)[] = [];
-      let haut = -Infinity;
-      for (const c of colonnes) {
-        const t = c.el.getBoundingClientRect().top;
-        if (Math.abs(t - haut) > 4) { rangees.push([c]); haut = t; } else rangees[rangees.length - 1].push(c);
-      }
+      // Les rangées posées par ZhLine (`data-rangee`).
+      const rangees = Array.from(ligne.querySelectorAll("[data-rangee]")).map((r) => colonnes.filter((c) => r.contains(c.el)));
       const texte = (r: typeof colonnes) => r.map((c) => (c.accord ? `[${c.accord.textContent}]` : "") + c.caractere).join("");
       const hautAccords = (r: typeof colonnes) => Math.min(...r.flatMap((c) => (c.accord ? [boiteTexte(c.accord)?.top ?? Infinity] : [])));
       const basPinyin = (r: typeof colonnes) => Math.max(...r.map((c) => boiteTexte(c.pinyin)?.bottom ?? -Infinity));
@@ -64,6 +64,10 @@ function mesurer(page: Page): Promise<Mesure> {
       for (const c of colonnes) {
         const droite = c.accord ? boiteTexte(c.accord)?.right ?? 0 : 0;
         if (droite > bord + 0.5) out.debords.push(`[${c.accord!.textContent}] ${Math.round(droite)} > ${bord}`);
+      }
+      // Aucune rangée de moins de trois caractères (ponctuation comprise), sauf « rangée courte » signalée (ligne d'accords seuls exceptée).
+      if (rangees.length > 1 && aDesParoles && !/rangée courte/.test(ligne.getAttribute("data-coupe") ?? "")) {
+        for (const r of rangees) if (r.filter((c) => c.caractere.trim()).length < 3) out.courtes.push(texte(r));
       }
       rangees.forEach((r, i) => {
         if (i > 0 && aDesParoles && !r.some((c) => PAROLE.test(c.caractere)) && r.some((c) => c.accord)) {
@@ -88,6 +92,11 @@ async function ouvrir(page: Page, slug: string): Promise<Mesure> {
   await page.addInitScript(() => localStorage.setItem("jianpu-sheet-pref", "never"));
   await page.goto(`/songs/${encodeURIComponent(slug)}`);
   await page.locator("[data-copy-line]").first().waitFor();
+  // Avant l'hydratation la ligne n'est pas coupée (la coupure se mesure dans le navigateur) : on attend que React tienne la page.
+  await page.waitForFunction(() => {
+    const b = document.querySelector("[data-testid='barre-outils'] button[aria-label='Accords']");
+    return !!b && Object.keys(b).some((k) => k.startsWith("__reactProps"));
+  });
   await page.evaluate(() => document.fonts.ready);
   return mesurer(page);
 }
@@ -99,6 +108,15 @@ for (const slug of CHANTS) {
 
   test(`${slug} — ligne coupée : aucune rangée ne commence par une ponctuation`, async ({ page }) => {
     expect((await ouvrir(page, slug)).ponctuations).toEqual([]);
+  });
+
+  test(`${slug} — ligne coupée : aucune rangée de moins de trois caractères`, async ({ page }) => {
+    expect((await ouvrir(page, slug)).courtes).toEqual([]);
+  });
+
+  test(`${slug} — ligne coupée : aucun mot de deux caractères ou plus coupé entre deux rangées`, async ({ page }) => {
+    await ouvrir(page, slug);
+    expect(await motsChinoisCoupes(page, slug)).toEqual([]);
   });
 
   test(`${slug} — aucun accord ne dépasse le bord de l'écran`, async ({ page }) => {
