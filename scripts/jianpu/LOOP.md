@@ -514,9 +514,21 @@ sections corrigées sur 29 chants (anacrouse au sens documenté, couplets sous u
 et 爱使我们勇敢, les crédits « 游智婷 曲 » sont imprimés à droite, à la hauteur des premiers accords de L1 (« Dm(b5)/C »,
 « Bm », « C ») : aucune coupe horizontale ne les sépare ; ils restent dans L1. Leur cadre « 1=X » est entier dans L1.
 
+### Les trois derniers scans (décision 24 révisée, 08/11/2026)
+
+Une page entière met les chiffres à ~8 px au téléphone : les trois scans d'abord laissés de côté sont découpés à la main.
+- **十字架** : 4 systèmes ; les rangées de paroles (4 couplets) refondues dans leur système ; barres placées à la main au
+  centre des traits pleine hauteur de la rangée de chiffres (le « 1 » et les traits des hanzi n'en sont pas).
+- **大手牵着小手** : la 2ᵉ rangée de paroles de L2, L4, L5 partage sa hauteur avec les accords ou les annotations de la ligne
+  suivante, de l'autre côté de la page ; frontières posées par `bord` (ligne du haut d'un côté de x, ligne du bas de l'autre),
+  masques complémentaires sur la bande commune. L6 reprend sa 2ᵉ rangée « 望，期待那一天… » qui était dans L7. L9 masque le
+  coin du logo du pied.
+- **荣耀至高神** : même chose pour L1/L2 (« 耶稣基督神爱子… » à droite, « [先低后高] Bm7 » à gauche) et L4/L5
+  (« 配得所有赞美… » à droite, volta de L5 à gauche) ; L2 reprend sa 2ᵉ rangée « 向你跪拜 ».
+
 ### Bilan de la certification (JP-A3, 08/11/2026)
 
-**187 scans sur 190 certifiés** dans `systemes.json` et `sections.json`, chaque planche `--systemes` regardée.
+**187 scans sur 190 certifiés** (190 depuis la décision 24 révisée, ci-dessus) dans `systemes.json` et `sections.json`, chaque planche `--systemes` regardée.
 Corrections à la main les plus fréquentes (dans `scripts/jianpu/debug/*-propose.json`, puis `certifier`) :
 - **le pied** (ligne de crédit « 灵栖清泉制谱… », logo, note de bas de page, bloc « Rap ») entré dans la dernière
   ligne : `y1` ramené au bas des paroles ;
