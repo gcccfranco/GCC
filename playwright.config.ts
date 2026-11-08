@@ -43,6 +43,8 @@ const SPECS_GRAND_ECRAN = [
   /mode-louange-forscore\.spec\.ts/,
   // Lot FS-A (docs/spec-mode-louange-forscore-2.md) : barre de titre, rangée de points, couleur des icônes.
   /louange-barre-titre\.spec\.ts/,
+  // Lot FS-B (docs/spec-mode-louange-forscore-2.md) : les menus du mode louange (Setlist, Repères, Outils, Tempo, Options).
+  /louange-menus\.spec\.ts/,
   /setlist-regie\.spec\.ts/,
   /setlist-partage\.spec\.ts/,
   /coup-d-oeil\.spec\.ts/,

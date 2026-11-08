@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
-import { attendreCompteur, basculerAnnoter, attendreMiseEnPage, lireCompteur, onStage, ouvrirReglages } from "./helpers/louange";
+import { attendreCompteur, basculerAnnoter, attendreMiseEnPage, lireCompteur, onStage, ouvrirMenu, ouvrirOutils, ouvrirReglages } from "./helpers/louange";
 
 // Mode louange « façon forScore » (docs/spec-mode-louange-forscore.md), seul mode depuis le 27/10/2026.
 // Setlist et compte simulés : aucun accès au Firestore réel.
@@ -404,12 +404,18 @@ test("mouvement réduit : le liseré ne bouge pas", async ({ page }) => {
   expect(new Set(vus.map((w) => Math.round(w))).size).toBe(1);
 });
 
+/** Le menu du tempo : « Tempo » (♩ de la barre) à partir de md ; au téléphone, ses lignes sont dans Outils. */
+const ouvrirTempo = (page: Page) => (page.viewportSize()!.width < 768 ? ouvrirOutils(page) : ouvrirMenu(page, "tempo"));
+
 test("tempo réglé par chant : gardé après rechargement, « Tempo du fichier » l'efface", async ({ page }) => {
   const erreurs = surveillerErreurs(page);
   await ouvrirChantL4(page, "avec-nous");
-  let reglages = await ouvrirReglages(page);
-  await expect(reglages.locator("[data-tempo-valeur]")).toHaveCount(0);
-  await reglages.locator("[data-metronome-on]").click();
+  const options = await ouvrirReglages(page);
+  await expect(options.locator("[data-tempo-valeur]")).toHaveCount(0);
+  await options.locator("[data-metronome-on]").click();
+  await page.keyboard.press("Escape");
+  await expect(options).toBeHidden();
+  let reglages = await ouvrirTempo(page);
   const valeur = reglages.locator("[data-tempo-valeur]");
   await expect(valeur).toHaveText(/♩\s*94/);
   await expect(reglages.locator("[data-tempo-fichier]")).toHaveCount(0);
@@ -421,7 +427,7 @@ test("tempo réglé par chant : gardé après rechargement, « Tempo du fichier 
   await page.reload();
   await page.getByRole("button", { name: /Mode Louange/ }).click();
   await attendreMiseEnPage(page);
-  reglages = await ouvrirReglages(page);
+  reglages = await ouvrirTempo(page);
   await expect(reglages.locator("[data-tempo-valeur]")).toHaveText(/♩\s*96/);
   await reglages.locator("[data-tempo-fichier]").click();
   await expect(reglages.locator("[data-tempo-valeur]")).toHaveText(/♩\s*94/);

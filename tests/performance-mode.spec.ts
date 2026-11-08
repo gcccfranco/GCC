@@ -1,6 +1,6 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
-import { attendreMiseEnPage, onStage, ouvrirReglages } from "./helpers/louange";
+import { attendreMiseEnPage, onStage, ouvrirOutils, ouvrirReglages } from "./helpers/louange";
 import { basculerAccords, fermerMenus, ouvrirAffichage, ouvrirPartitions } from "./helpers/setlist";
 
 // Chantier Mode louange (docs/spec-mode-louange.md). Setlist et compte
@@ -340,8 +340,8 @@ test.describe("tonalité choisie sur la page du chant", () => {
       await expect(mark.first()).toBeVisible();
       await expect(onStage(page, "*").getByText(c.after, { exact: true }).first()).toBeVisible();
 
-      // Retour à la tonalité de la setlist : dans les réglages du chant en cours.
-      const settings = await ouvrirReglages(page);
+      // Retour à la tonalité de la setlist : dans le menu Outils, pour le chant en cours.
+      const settings = await ouvrirOutils(page);
       await settings.getByRole("button", { name: `Revenir à ${c.setlistKey}` }).click();
       await page.keyboard.press("Escape");
       await expect(settings).toBeHidden();

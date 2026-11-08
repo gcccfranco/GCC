@@ -5,7 +5,8 @@ import { useTranslation } from "react-i18next";
 import { langAccent } from "./langAccent";
 import { BarreHaut } from "./BarreHaut";
 import { BarreBas } from "./BarreBas";
-import { SommaireChants } from "./SommaireChants";
+import { MenuLouange, type MenuId } from "./MenuLouange";
+import { BoutonSurPage, ContenuOutils, ContenuReperes, ContenuSetlist, ContenuTempo } from "./ContenusMenus";
 import { FeuilleRole } from "./FeuilleRole";
 import { CercleChromatique } from "./CercleChromatique";
 import { PageScan } from "./PageScan";
@@ -14,15 +15,9 @@ import { useThemeScene } from "./hooks/useThemeScene";
 import { useWakeLock } from "./hooks/useWakeLock";
 import { useTempoChant } from "./hooks/useTempoChant";
 import { useAnnotationsPage } from "./hooks/useAnnotationsPage";
-import { Link2, MessageSquare, PenLine, Sun, Moon, Columns2 } from "lucide-react";
+import { Link2, MessageSquare, PenLine, Sun, Moon, Columns2, FileMusic, Languages, Music, Palette } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import {
-  Drawer,
-  DrawerContent,
-  DrawerHeader,
-  DrawerTitle,
-} from "@/components/ui/drawer";
 import type { PerformanceBlock, SectionBlock, JianpuSheetBlock, SongHeaderBlock } from "@/lib/performance/blocks";
 import { ancreDeLecture, buildPerformanceBlocks, computePageKey, signatureAffichage, type AncreLecture } from "@/lib/performance/blocks";
 import { PASTILLE_SUIVANT_H, twoColumnsPossible, type PerfPage } from "@/lib/performance/columns";
@@ -38,6 +33,7 @@ import { AnnotationCanvas, StrokesLayer } from "./AnnotationCanvas";
 import { ANCIEN_RAPPEL } from "@/lib/annotations/strokes";
 import { getChartStylePref, setChartStylePref } from "@/lib/chartStylePref";
 import { getPersonalKeys, setPersonalKey } from "@/lib/setlist/personalKeys";
+import { getTransposedKey, noteToIndex } from "@/lib/transpose";
 import type { PartitionLayout } from "@/lib/partitionLayoutPref";
 import { getPinyinPref, setPinyinPref } from "@/lib/pinyinPref";
 import { classerGeste, largeurZoneLaterale } from "@/lib/performance/gestes";
@@ -45,7 +41,7 @@ import { LiseretTempo } from "@/components/performance/LiseretTempo";
 import { getTailleAnnotee } from "@/lib/performance/tailleAnnotee";
 import { barreDejaVue, marquerBarreVue } from "@/lib/performance/barreVue";
 import { FOND_CLAIR, FOND_SOMBRE, TEINTES, garderContraste, getCouleurIcones, setCouleurIcones } from "@/lib/performance/couleurIcones";
-import { getMetronomePref, setMetronomePref, TEMPO_DEPART, TEMPO_MAX, TEMPO_MIN } from "@/lib/performance/tempo";
+import { getMetronomePref, setMetronomePref } from "@/lib/performance/tempo";
 import { getFontScalePref, setFontScalePref, MIN_FONT_SCALE, MAX_FONT_SCALE } from "@/lib/fontScalePref";
 import { useAuth } from "@/lib/firebase/auth";
 import type { SetlistItem } from "@/types/setList";
@@ -286,6 +282,8 @@ interface PerformanceModeProps {
   initialShowChords?: boolean;
   setlistId: string;
   setlistTitle: string;
+  /** Date de la setlist (AAAA-MM-JJ), affichée en tête du menu Setlist ; absente = pas de date. */
+  setlistDate?: string;
   /** Affichage (D15) : la préférence `partition-layout`, tenue par la page
    *  setlist pour que son menu Affichage soit à jour en sortant du mode. */
   affichage: PartitionLayout;
@@ -305,6 +303,7 @@ export function PerformanceMode({
   initialShowChords,
   setlistId,
   setlistTitle,
+  setlistDate,
   affichage,
   onAffichageChange,
   jianpuPref,
@@ -375,8 +374,38 @@ export function PerformanceMode({
   const [annotPan, setAnnotPan] = useState({ x: 0, y: 0 });
   // Barre visible à la toute première ouverture du mode sur l'appareil, masquée ensuite (drapeau posé par l'effet ci-dessous).
   const [showChrome, setShowChrome] = useState(() => !barreDejaVue());
-  const [songListOpen, setSongListOpen] = useState(false);
-  const [settingsOpen, setSettingsOpen] = useState(false);
+  // FS-B : un seul menu ouvert à la fois ; lu par les trois gardes (toucher, clavier, Échap). `popoverRef` : la valeur
+  // à jour pour les gestionnaires de pointeur, qui ne se recréent pas à chaque rendu.
+  const [popoverOuvert, setPopoverOuvert] = useState<MenuId | null>(null);
+  const popoverRef = useRef<MenuId | null>(null);
+  popoverRef.current = popoverOuvert;
+  // Le menu était ouvert au pointerdown en cours : le pointerup qui suit ne tourne pas la page et ne bascule pas la barre.
+  const menuAuToucher = useRef(false);
+  const basculerMenu = useCallback((id: MenuId) => setPopoverOuvert((cur) => (cur === id ? null : id)), []);
+  const fermerMenu = useCallback((id: MenuId) => setPopoverOuvert((cur) => (cur === id ? null : cur)), []);
+  // Un toucher hors du menu le ferme, y compris sur les barres (qui arrêtent la propagation et cachent le toucher à Radix,
+  // écouté plus haut dans le document) : écoute en capture. Sur la page, il est marqué pour que son pointerup ne tourne rien.
+  useEffect(() => {
+    if (popoverOuvert === null) return;
+    const hors = (e: PointerEvent) => {
+      const cible = e.target instanceof Element ? e.target : null;
+      if (!cible || cible.closest("[data-menu-louange], [data-menu-declencheur], [data-vaul-overlay]")) return;
+      if (!cible.closest("[data-barre-haut], [data-barre-bas]")) menuAuToucher.current = true;
+      setPopoverOuvert(null);
+    };
+    document.addEventListener("pointerdown", hors, true);
+    return () => document.removeEventListener("pointerdown", hors, true);
+  }, [popoverOuvert]);
+  // Raccourcis clavier du menu Outils : sur ordinateur (pointeur précis) ou dès qu'une touche a été frappée dans le mode.
+  const [clavierVu, setClavierVu] = useState(false);
+  useEffect(() => {
+    const vu = () => setClavierVu(true);
+    window.addEventListener("keydown", vu, { once: true });
+    return () => window.removeEventListener("keydown", vu);
+  }, []);
+  const [pointeurFin] = useState(() => {
+    try { return window.matchMedia("(pointer: fine)").matches; } catch { return false; }
+  });
   // Couleur des icônes (FS-A) : le choix de l'appareil, corrigé pour garder 4,5:1 contre le fond de la barre.
   const [couleurChoix, setCouleurChoix] = useState(getCouleurIcones);
   const [cercleOuvert, setCercleOuvert] = useState(false);
@@ -400,6 +429,8 @@ export function PerformanceMode({
 
   // ── Thème scène (indépendant du thème du site, mémorisé) ──
   const { stageTheme, setTheme } = useThemeScene();
+  // La couleur affichée : le choix, corrigé pour garder 4,5:1 contre le fond. Posée sur la racine du mode et sur chaque menu (Portal).
+  const couleurIcones = garderContraste(couleurChoix, stageTheme === "dark" ? FOND_SOMBRE : FOND_CLAIR);
 
   const toggleHideLyrics = useCallback((v: boolean) => {
     setHideLyrics(v);
@@ -581,6 +612,11 @@ export function PerformanceMode({
       delete next[slug];
       return next;
     });
+  }, [setlistId]);
+
+  const choisirCle = useCallback((slug: string, cle: string) => {
+    setPersonalKey(setlistId, slug, cle);
+    setPersonalKeysState((prev) => ({ ...prev, [slug]: cle }));
   }, [setlistId]);
 
   const blocks = useMemo(
@@ -867,7 +903,7 @@ export function PerformanceMode({
 
   // L5 : à l'entrée en annotation, la taille mémorisée du chant revient avant qu'on dessine.
   const basculerAnnotation = () => {
-    setSettingsOpen(false);
+    setPopoverOuvert(null);
     if (!annotateMode && slugAnnote) {
       const memo = getTailleAnnotee(setlistId, slugAnnote);
       if (memo !== null && Math.round(memo * 100) !== Math.round(fontScale * 100)) appliquerTaille(memo);
@@ -891,7 +927,7 @@ export function PerformanceMode({
       if (e.key !== "Escape") {
         // Curseur de page, feuilles et sommaire ouverts : flèches, PageUp/Down et Espace leur appartiennent.
         if (cible instanceof HTMLInputElement) return;
-        if (settingsOpen || songListOpen || askRole) return;
+        if (popoverOuvert || askRole) return;
         if (cible?.closest("[role=dialog]")) return;
       }
       if (e.key === "ArrowLeft" || e.key === "PageUp") {
@@ -904,9 +940,8 @@ export function PerformanceMode({
         // Échap déjà consommé par une feuille (Radix le marque en la fermant) :
         // il ne doit pas aussi quitter le mode louange.
         if (e.defaultPrevented) return;
-        if (settingsOpen || songListOpen || askRole) {
-          setSettingsOpen(false);
-          setSongListOpen(false);
+        if (popoverOuvert || askRole) {
+          setPopoverOuvert(null);
           setAskRole(false);
           return;
         }
@@ -915,7 +950,7 @@ export function PerformanceMode({
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [currentPage, pages.length, goToPage, onClose, settingsOpen, songListOpen, askRole]);
+  }, [currentPage, pages.length, goToPage, onClose, popoverOuvert, askRole]);
 
   // Touch/pointer tap handling
   // Pointeurs actifs. Un second doigt qui descend annule le geste en cours (zoom à deux doigts).
@@ -926,6 +961,8 @@ export function PerformanceMode({
     // Fond d'une feuille : React fait remonter ses évènements jusqu'ici, ce n'est pas un toucher sur la page.
     // (Pas de stopPropagation sur le fond : Radix y détecte le toucher extérieur qui ferme la feuille.)
     if ((e.target as HTMLElement).closest("[data-vaul-overlay]")) return;
+    // Un menu est ouvert : ce toucher le ferme (Radix), il ne tourne pas la page et ne bascule pas la barre.
+    if (popoverRef.current !== null) menuAuToucher.current = true;
     if (e.pointerType === "mouse") pointeursActifs.current.clear();
     pointeursActifs.current.add(e.pointerId);
     if (pointeursActifs.current.size > 1) {
@@ -940,6 +977,7 @@ export function PerformanceMode({
 
   const handlePointerCancel = useCallback((e: React.PointerEvent) => {
     pointeursActifs.current.delete(e.pointerId);
+    menuAuToucher.current = false;
     tapStart.current = null;
   }, []);
 
@@ -947,6 +985,11 @@ export function PerformanceMode({
     if (e.pointerType === "pen") return;
     pointeursActifs.current.delete(e.pointerId);
     if ((e.target as HTMLElement).closest("[data-vaul-overlay]")) { tapStart.current = null; return; }
+    if (menuAuToucher.current || popoverRef.current !== null) {
+      menuAuToucher.current = false;
+      tapStart.current = null;
+      return;
+    }
     if (!tapStart.current) return;
     const dx = e.clientX - tapStart.current.x;
     const dy = e.clientY - tapStart.current.y;
@@ -999,6 +1042,28 @@ export function PerformanceMode({
   const reperesChants = songEntries
     .map(({ block, index }) => ({ page: pages.findIndex((p) => p.includes(index)), titre: block.title }))
     .filter((r) => r.page >= 0);
+
+  // Repères (FS-B) : les sections du chant en cours, dans l'ordre de la page (un scan seul n'en a pas).
+  const reperes = currentEntry
+    ? blocks.flatMap((b, i) => {
+        if (b.kind !== "section" || i <= currentEntry.index || (nextEntry && i >= nextEntry.index) || repeatHidden.has(i)) return [];
+        const page = pages.findIndex((p) => p.includes(i));
+        return page >= 0 ? [{ uid: b.uid, section: b.section, page }] : [];
+      })
+    : [];
+  // Tonalité (menu Outils) : d'un demi-ton, par la tonalité personnelle de l'appareil ; revenir à celle de la setlist l'oublie.
+  const entreeSlug = currentEntry?.block.songSlug;
+  const cleJouee = currentEntry?.block.songKey;
+  const cleBase = currentEntry?.block.setlistKey ?? cleJouee;
+  const cleModifiable = !!entreeSlug && !!cleJouee && !!cleBase && noteToIndex(cleJouee) !== -1 && noteToIndex(cleBase) !== -1;
+  const decalerCle = (demiTons: number) => {
+    if (!cleModifiable || !entreeSlug) return;
+    const nouvelle = getTransposedKey(cleJouee!, demiTons);
+    if (noteToIndex(nouvelle) === noteToIndex(cleBase!)) resetPersonalKey(entreeSlug);
+    else choisirCle(entreeSlug, nouvelle);
+  };
+  // Sous md la barre n'a que Setlist, Repères, Je joue, Options : Annoter et le tempo passent dans Outils.
+  const telephone = ecran.largeur < 768;
 
   // Padding interne des conteneurs mis à l'échelle : px-6 py-4 + safe areas.
   // Les insets sont divisés par le facteur d'échelle pour rester exacts en
@@ -1088,7 +1153,7 @@ export function PerformanceMode({
         "--sab": "env(safe-area-inset-bottom, 0px)",
         "--sal": "env(safe-area-inset-left, 0px)",
         "--sar": "env(safe-area-inset-right, 0px)",
-        "--couleur-icones": garderContraste(couleurChoix, stageTheme === "dark" ? FOND_SOMBRE : FOND_CLAIR),
+        "--couleur-icones": couleurIcones,
       } as React.CSSProperties}
       onPointerDown={handlePointerDown}
       onPointerUp={handlePointerUp}
@@ -1326,18 +1391,6 @@ export function PerformanceMode({
         />
       )}
 
-      {/* ── Sommaire des chants ── */}
-      {songListOpen && (
-        <SommaireChants
-          setlistTitle={setlistTitle}
-          songEntries={songEntries}
-          pages={pages}
-          currentSongEntryIdx={currentSongEntryIdx}
-          goToPage={goToPage}
-          onClose={() => setSongListOpen(false)}
-        />
-      )}
-
       {/* ── Métronome visuel : liseré silencieux, sous le chrome ── */}
       {metronome && tempoLiseret ? <LiseretTempo tempo={tempoLiseret} top={showChrome ? `${barres.haut}px` : "var(--sat, 0px)"} /> : null}
 
@@ -1352,18 +1405,16 @@ export function PerformanceMode({
           barreRef={barreHautRef}
           showChrome={showChrome}
           currentSong={currentSong}
-          setlistTitle={setlistTitle}
+          setlistTitle={currentSong ? setlistTitle : currentEntry?.block.title ?? setlistTitle}
           compositeur={currentEntry?.block.artist || undefined}
           personalKey={currentEntry?.block.setlistKey}
           rolePreset={rolePreset}
           annotateMode={annotateMode}
-          reglagesOuverts={settingsOpen}
+          menuOuvert={popoverOuvert}
+          avecReperes={reperes.length > 0}
           onAnnoter={user && !horsLigne ? basculerAnnotation : undefined}
-          onSetlist={() => { setSettingsOpen(false); setSongListOpen(true); }}
-          onJeJoue={() => setAskRole(true)}
-          onTempo={() => setSettingsOpen(true)}
-          onOutils={() => setSettingsOpen(true)}
-          onOptions={() => setSettingsOpen(true)}
+          onMenu={basculerMenu}
+          onJeJoue={() => { setPopoverOuvert(null); setAskRole(true); }}
           onQuitter={onClose}
         />
 
@@ -1380,199 +1431,102 @@ export function PerformanceMode({
       {/* ── Choix du rôle à la première ouverture ── */}
       <FeuilleRole open={askRole} roleIds={ROLE_PRESET_IDS} onFermer={() => setAskRole(false)} onChoisir={answerRole} />
 
-      {/* ── Réglages : bottom-sheet (au-dessus du z-9999 du mode) ── */}
-      <Drawer open={settingsOpen} onOpenChange={setSettingsOpen}>
-        <DrawerContent
-          className="z-[10000]"
-          overlayClassName="z-[10000] bg-black/40"
-          onPointerDown={(e) => e.stopPropagation()}
-          onPointerUp={(e) => e.stopPropagation()}
-        >
-          <DrawerHeader className="pb-1">
-            <DrawerTitle>{t("performance.settings")}</DrawerTitle>
-          </DrawerHeader>
-          <div
-            className="w-full max-w-md mx-auto px-4 pt-1 space-y-4 max-h-[calc(90dvh-5rem)] overflow-y-auto"
-            style={{ paddingBottom: "calc(1.5rem + env(safe-area-inset-bottom, 0px))" }}
-          >
-            <div className="space-y-2">
-              <span className="text-sm font-medium text-foreground">{t("performance.view")}</span>
-              <div className="flex flex-wrap gap-1.5">
-                {ROLE_PRESET_IDS.map((id) => (
-                  <button
-                    key={id}
-                    type="button"
-                    aria-pressed={rolePreset === id}
-                    onClick={() => (rolePreset === id ? clearRolePreset() : applyRolePreset(id))}
-                    className={`h-11 px-3 rounded-lg border text-xs font-semibold transition-colors ${
-                      rolePreset === id
-                        ? "bg-primary text-primary-foreground border-transparent"
-                        : "border-border text-muted-foreground hover:text-foreground"
-                    }`}
-                  >
-                    {t(`performance.roles.${id}`)}
-                  </button>
-                ))}
-              </div>
-            </div>
-            {/* Affichage (D15) : le même réglage que le menu Affichage de la setlist. */}
-            <div className="space-y-2">
-              <span id="perf-affichage" className="text-sm font-medium text-foreground">{t("setlists.detail.layout.label")}</span>
-              <div role="radiogroup" aria-labelledby="perf-affichage" className="flex rounded-lg bg-secondary p-1">
-                {(["played", "unique", "structure"] as const).map((v) => (
-                  <button
-                    key={v}
-                    type="button"
-                    role="radio"
-                    aria-checked={affichageVu === v}
-                    onClick={() => changeAffichage(v)}
-                    className={`h-11 min-w-0 flex-1 rounded-md px-2 text-[13px] font-semibold whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
-                      affichageVu === v ? "bg-background text-foreground" : "text-muted-foreground hover:text-foreground"
-                    }`}
-                  >
-                    {t(`setlists.detail.layout.${v}`)}
-                  </button>
-                ))}
-              </div>
-              <p className="text-xs text-muted-foreground">{t("performance.affichageHint")}</p>
-            </div>
-            {currentEntry?.block.setlistKey && currentEntry.block.songSlug && (
-              <div className="flex items-center justify-between gap-3">
-                <div className="min-w-0">
-                  <span className="text-sm font-medium text-foreground">{t("performance.key")}</span>
-                  <p className="text-xs text-muted-foreground truncate">
-                    {t("performance.personalKeyHint", { key: currentEntry.block.songKey, setlistKey: currentEntry.block.setlistKey })}
-                  </p>
-                </div>
-                <Button
-                  variant="outline"
-                  size="lg"
-                  onClick={() => resetPersonalKey(currentEntry.block.songSlug!)}
-                  className="text-xs font-semibold shrink-0"
-                >
-                  {t("performance.personalKeyReset", { key: currentEntry.block.setlistKey })}
-                </Button>
-              </div>
-            )}
-            {capoActive && currentEntry?.block.songSlug && (
-              <div className="flex items-center justify-between gap-3">
-                <div className="min-w-0">
-                  <span className="text-sm font-medium text-foreground">{t("performance.capo")}</span>
-                  <p className="text-xs text-muted-foreground truncate">{currentEntry.block.title}</p>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <Button
-                    variant="outline"
-                    size="icon-lg"
-                    onClick={() => setCapo(currentEntry.block.songSlug!, currentCapo - 1)}
-                    disabled={currentCapo <= 0}
-                    aria-label={t("performance.capoLower")}
-                    className="text-sm font-bold"
-                  >
-                    −
-                  </Button>
-                  <span className="text-xs text-muted-foreground tabular-nums w-10 text-center">
-                    {currentCapo}
-                  </span>
-                  <Button
-                    variant="outline"
-                    size="icon-lg"
-                    onClick={() => setCapo(currentEntry.block.songSlug!, currentCapo + 1)}
-                    disabled={currentCapo >= 11}
-                    aria-label={t("performance.capoRaise")}
-                    className="text-sm font-bold"
-                  >
-                    +
-                  </Button>
-                </div>
-              </div>
-            )}
-            {user && !horsLigne && (
-              // Au téléphone la barre n'a plus « Annoter » : la fonction passe ici (le popover Outils viendra en FS-B).
-              <div className="md:hidden">
-                <SettingRow label={t("performance.annotate")}>
-                  <Button
-                    variant="outline"
-                    size="lg"
-                    aria-label={t("performance.annotate")}
-                    onClick={basculerAnnotation}
-                    className="text-xs font-semibold"
-                  >
-                    <PenLine className="h-4 w-4" />
-                    {t("performance.annotate")}
-                  </Button>
-                </SettingRow>
-              </div>
-            )}
-            {twoColumnsAvailable && (
-              // Quitte la barre de titre (FS-A) ; FS-B en fera un bouton rond des options.
-              <SettingRow label={t("performance.twoColumns")}>
-                <button
-                  type="button"
-                  aria-pressed={twoColumns}
-                  onClick={toggleTwoColumns}
-                  className={`h-11 px-3 flex items-center gap-1.5 rounded-full border text-xs font-semibold transition-colors active:bg-muted ${
-                    twoColumns ? "bg-secondary text-foreground border-transparent" : "border-border text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  <Columns2 className="h-4 w-4" />
-                  {t("performance.twoColumns")}
-                </button>
-              </SettingRow>
-            )}
-            <SettingRow label={t("performance.chords")}>
-              <Switch
-                aria-label={t("performance.chords")}
-                checked={chordsShown}
-                onCheckedChange={(v) => {
+      {/* ── Menus du mode (FS-B) : popover sous l'icône à partir de md, feuille du bas au téléphone ── */}
+      <MenuLouange id="setlist" titre={t("performance.songList")} ouvert={popoverOuvert === "setlist"} onOuvertChange={(o) => !o && fermerMenu("setlist")} align="start" couleur={couleurIcones}>
+        <ContenuSetlist
+          setlistTitle={setlistTitle}
+          setlistDate={setlistDate}
+          songEntries={songEntries}
+          pages={pages}
+          currentSongEntryIdx={currentSongEntryIdx}
+          goToPage={goToPage}
+          onFermer={() => fermerMenu("setlist")}
+        />
+      </MenuLouange>
+
+      <MenuLouange id="reperes" titre={t("performance.reperes")} ouvert={popoverOuvert === "reperes"} onOuvertChange={(o) => !o && fermerMenu("reperes")} align="start" couleur={couleurIcones}>
+        <ContenuReperes reperes={reperes} goToPage={goToPage} pageCount={pages.length} onFermer={() => fermerMenu("reperes")} />
+      </MenuLouange>
+
+      <MenuLouange id="tempo" titre={t("performance.tempo")} ouvert={popoverOuvert === "tempo"} onOuvertChange={(o) => !o && fermerMenu("tempo")} couleur={couleurIcones}>
+        <ContenuTempo
+          tempo={tempoLiseret}
+          tempoAppareil={tempoAppareil}
+          changerTempo={changerTempo}
+          effacerTempo={effacerTempo}
+          metronome={metronome}
+          setMetronome={setMetronome}
+        />
+      </MenuLouange>
+
+      <MenuLouange id="outils" titre={t("performance.toolsMenu")} ouvert={popoverOuvert === "outils"} onOuvertChange={(o) => !o && fermerMenu("outils")} couleur={couleurIcones}>
+        <ContenuOutils
+          cle={cleModifiable ? cleJouee : undefined}
+          cleSetlist={cleBase}
+          decalerCle={decalerCle}
+          revenirCle={() => entreeSlug && resetPersonalKey(entreeSlug)}
+          capo={capoActive && entreeSlug && currentEntry ? { frets: currentCapo, set: (f) => setCapo(entreeSlug, f), titre: currentEntry.block.title } : undefined}
+          showTransitions={showTransitions}
+          setShowTransitions={setShowTransitions}
+          onAnnoter={telephone && user && !horsLigne ? basculerAnnotation : undefined}
+          tempoLignes={
+            telephone && tempoChantId ? (
+              <ContenuTempo tempo={tempoLiseret} tempoAppareil={tempoAppareil} changerTempo={changerTempo} effacerTempo={effacerTempo} metronome={metronome} setMetronome={setMetronome} />
+            ) : undefined
+          }
+          raccourcis={pointeurFin || clavierVu}
+        />
+      </MenuLouange>
+
+      <MenuLouange id="options" titre={t("performance.displayOptions")} ouvert={popoverOuvert === "options"} onOuvertChange={(o) => !o && fermerMenu("options")} couleur={couleurIcones}>
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <span id="perf-sur-page" className="text-sm font-medium text-foreground">{t("performance.onPage")}</span>
+            <div role="group" aria-labelledby="perf-sur-page" className="flex flex-wrap gap-x-1 gap-y-2">
+              <BoutonSurPage
+                label={t("performance.chords")}
+                allume={chordsShown}
+                onClick={() => {
                   clearRolePreset();
                   quitterStructureSeule();
-                  setShowChords(v);
+                  setShowChords(!chordsShown);
                 }}
-              />
-            </SettingRow>
-            <SettingRow label={t("performance.transitions")}>
-              <Switch checked={showTransitions} onCheckedChange={setShowTransitions} />
-            </SettingRow>
-            <SettingRow label={t("performance.hideLyrics")}>
-              <Switch
-                aria-label={t("performance.hideLyrics")}
-                checked={lyricsHidden}
-                onCheckedChange={(v) => {
-                  clearRolePreset();
-                  quitterStructureSeule();
-                  toggleHideLyrics(v);
-                }}
-              />
-            </SettingRow>
-            {blocks.some((b) => b.kind === "section" && b.showPinyin) && (
-              <SettingRow label={t("performance.pinyin")}>
-                <Switch checked={showPinyin} onCheckedChange={toggleShowPinyin} />
-              </SettingRow>
-            )}
-            <SettingRow label={t("performance.chartStyle")}>
-              <Switch checked={chartStyle} onCheckedChange={toggleChartStyle} />
-            </SettingRow>
-            {hasJianpuSheets && !structureMode && (
-              // Partition 简谱 : par appareil — le pianiste lit le scan pendant
-              // que le guitariste lit la grille, sur la même setlist.
-              <div className="flex items-center justify-between gap-3">
-                <div className="min-w-0">
-                  <span className="text-sm font-medium text-foreground">{t("performance.jianpuSheet")}</span>
-                  <p className="text-xs text-muted-foreground">{t("performance.jianpuSheetHint")}</p>
-                </div>
-                <Switch
-                  aria-label={t("performance.jianpuSheet")}
-                  checked={interrupteurAllume(jianpuPref)}
-                  onCheckedChange={(on) => onJianpuPrefChange(prefDepuisInterrupteur(on))}
-                />
-              </div>
-            )}
-            {user && (
-              <SettingRow label={t("performance.annotations")}>
-                <Switch checked={showAnnotations} onCheckedChange={setShowAnnotations} />
-              </SettingRow>
-            )}
+              >
+                <Music className="h-5 w-5" />
+              </BoutonSurPage>
+              {blocks.some((b) => b.kind === "section" && b.showPinyin) && (
+                <BoutonSurPage label={t("performance.pinyin")} allume={showPinyin} onClick={() => toggleShowPinyin(!showPinyin)}>
+                  <Languages className="h-5 w-5" />
+                </BoutonSurPage>
+              )}
+              {hasJianpuSheets && !structureMode && (
+                // Partition 简谱 : par appareil — le pianiste lit le scan pendant
+                // que le guitariste lit la grille, sur la même setlist.
+                <BoutonSurPage
+                  label={t("performance.jianpuSheet")}
+                  allume={interrupteurAllume(jianpuPref)}
+                  onClick={() => onJianpuPrefChange(prefDepuisInterrupteur(!interrupteurAllume(jianpuPref)))}
+                >
+                  <FileMusic className="h-5 w-5" />
+                </BoutonSurPage>
+              )}
+              {user && (
+                <BoutonSurPage label={t("performance.annotations")} allume={showAnnotations} onClick={() => setShowAnnotations(!showAnnotations)}>
+                  <PenLine className="h-5 w-5" />
+                </BoutonSurPage>
+              )}
+              {twoColumnsAvailable && (
+                <BoutonSurPage label={t("performance.twoColumns")} allume={twoColumns} onClick={toggleTwoColumns}>
+                  <Columns2 className="h-5 w-5" />
+                </BoutonSurPage>
+              )}
+              {/* En attendant DP-A (Disposition à miniatures) : l'interrupteur « Couleurs par section » actuel. */}
+              <BoutonSurPage label={t("performance.chartStyle")} allume={chartStyle} onClick={() => toggleChartStyle(!chartStyle)}>
+                <Palette className="h-5 w-5" />
+              </BoutonSurPage>
+            </div>
+            {hasJianpuSheets && !structureMode && <p className="text-xs text-muted-foreground">{t("performance.jianpuSheetHint")}</p>}
+          </div>
             <SettingRow label={t("performance.text")}>
               <div className="flex items-center gap-1.5">
                 <Button
@@ -1642,46 +1596,6 @@ export function PerformanceMode({
                 </button>
               </div>
             </SettingRow>
-            {metronome && tempoChantId && (
-              <SettingRow label={t("performance.tempoSong")}>
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="outline"
-                    size="icon-lg"
-                    onClick={() => changerTempo(-1)}
-                    disabled={(tempoLiseret ?? TEMPO_DEPART) <= TEMPO_MIN}
-                    aria-label={t("performance.tempoDown")}
-                    data-tempo-moins
-                    className="text-sm font-bold"
-                  >
-                    −
-                  </Button>
-                  <span data-tempo-valeur className="text-xs text-muted-foreground tabular-nums w-14 text-center">
-                    ♩ {tempoLiseret ?? TEMPO_DEPART}
-                  </span>
-                  <Button
-                    variant="outline"
-                    size="icon-lg"
-                    onClick={() => changerTempo(1)}
-                    disabled={(tempoLiseret ?? TEMPO_DEPART) >= TEMPO_MAX}
-                    aria-label={t("performance.tempoUp")}
-                    data-tempo-plus
-                    className="text-sm font-bold"
-                  >
-                    +
-                  </Button>
-                  {tempoAppareil !== null && (
-                    <button
-                      data-tempo-fichier
-                      onClick={effacerTempo}
-                      className="h-11 px-3 rounded-lg border border-border text-xs font-semibold text-muted-foreground hover:text-foreground"
-                    >
-                      {t("performance.tempoFile")}
-                    </button>
-                  )}
-                </div>
-              </SettingRow>
-            )}
             <div className="space-y-2">
               <span id="perf-couleur-icones" className="text-sm font-medium text-foreground">{t("performance.iconColor")}</span>
               <div
@@ -1737,9 +1651,64 @@ export function PerformanceMode({
               </div>
               {cercleOuvert && <CercleChromatique valeur={couleurChoix} fond={stageTheme === "dark" ? FOND_SOMBRE : FOND_CLAIR} onChange={choisirCouleur} />}
             </div>
+          {/* En attendant FS-C (Je joue) : la vue et l'affichage restent ici, comme dans l'ancien tiroir. */}
+          <div className="space-y-4 border-t border-border pt-4">
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t("performance.viewSection")}</p>
+            <div className="space-y-2">
+              <span className="text-sm font-medium text-foreground">{t("performance.view")}</span>
+              <div className="flex flex-wrap gap-1.5">
+                {ROLE_PRESET_IDS.map((id) => (
+                  <button
+                    key={id}
+                    type="button"
+                    aria-pressed={rolePreset === id}
+                    onClick={() => (rolePreset === id ? clearRolePreset() : applyRolePreset(id))}
+                    className={`h-11 px-3 rounded-lg border text-xs font-semibold transition-colors ${
+                      rolePreset === id
+                        ? "bg-primary text-primary-foreground border-transparent"
+                        : "border-border text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    {t(`performance.roles.${id}`)}
+                  </button>
+                ))}
+              </div>
+            </div>
+            {/* Affichage (D15) : le même réglage que le menu Affichage de la setlist. */}
+            <div className="space-y-2">
+              <span id="perf-affichage" className="text-sm font-medium text-foreground">{t("setlists.detail.layout.label")}</span>
+              <div role="radiogroup" aria-labelledby="perf-affichage" className="flex rounded-lg bg-secondary p-1">
+                {(["played", "unique", "structure"] as const).map((v) => (
+                  <button
+                    key={v}
+                    type="button"
+                    role="radio"
+                    aria-checked={affichageVu === v}
+                    onClick={() => changeAffichage(v)}
+                    className={`h-11 min-w-0 flex-1 rounded-md px-2 text-[13px] font-semibold whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+                      affichageVu === v ? "bg-background text-foreground" : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    {t(`setlists.detail.layout.${v}`)}
+                  </button>
+                ))}
+              </div>
+              <p className="text-xs text-muted-foreground">{t("performance.affichageHint")}</p>
+            </div>
+            <SettingRow label={t("performance.hideLyrics")}>
+              <Switch
+                aria-label={t("performance.hideLyrics")}
+                checked={lyricsHidden}
+                onCheckedChange={(v) => {
+                  clearRolePreset();
+                  quitterStructureSeule();
+                  toggleHideLyrics(v);
+                }}
+              />
+            </SettingRow>
           </div>
-        </DrawerContent>
-      </Drawer>
+        </div>
+      </MenuLouange>
     </div>
   );
 }

@@ -2,8 +2,9 @@
 
 import type { ComponentType, ReactNode, RefObject } from "react";
 import { useTranslation } from "react-i18next";
-import { Drum, Guitar, ListMusic, Mic, MicVocal, Music, PenLine, Piano, Type, Wrench, X } from "lucide-react";
+import { Bookmark, Drum, Guitar, ListMusic, Mic, MicVocal, Music, PenLine, Piano, Type, Wrench, X } from "lucide-react";
 import type { JianpuSheetBlock, SectionBlock } from "@/lib/performance/blocks";
+import type { MenuId } from "./MenuLouange";
 
 const ICONES_ROLE: Record<string, ComponentType<{ className?: string }>> = {
   pianiste: Piano,
@@ -15,7 +16,9 @@ const ICONES_ROLE: Record<string, ComponentType<{ className?: string }>> = {
 
 /** Barre de titre du mode louange (forScore, piste A « Pupitre », FS-A) : à gauche Setlist et Je joue,
  *  au centre le titre et « compositeur · tonalité », à droite ♩ tempo, Annoter, Outils, Options
- *  d'affichage, ✕. Au téléphone : Setlist, Je joue | titre | Options, ✕.
+ *  d'affichage, ✕. Au téléphone : Setlist, Repères, Je joue | titre | Outils, Options, ✕ (Annoter et ♩ y passent dans Outils). Setlist, Repères, ♩, Outils et
+ *  Options ouvrent chacun leur menu (FS-B, `MenuLouange`) : `menuOuvert` dit lequel, `onMenu` le bascule.
+ *  `avecReperes` : le chant courant a des sections (un scan seul n'en a pas).
  *  `barreRef` est la ref de mesure lue par PerformanceMode (hauteur des barres).
  *  `onAnnoter` absent = bouton « Annoter » masqué. Les icônes prennent `--couleur-icones`. */
 export function BarreHaut({
@@ -27,13 +30,11 @@ export function BarreHaut({
   personalKey,
   rolePreset,
   annotateMode,
-  reglagesOuverts,
+  menuOuvert,
+  avecReperes,
   onAnnoter,
-  onSetlist,
+  onMenu,
   onJeJoue,
-  onTempo,
-  onOutils,
-  onOptions,
   onQuitter,
 }: {
   barreRef: RefObject<HTMLDivElement | null>;
@@ -44,13 +45,11 @@ export function BarreHaut({
   personalKey: string | undefined;
   rolePreset: string | null;
   annotateMode: boolean;
-  reglagesOuverts: boolean;
+  menuOuvert: MenuId | null;
+  avecReperes: boolean;
   onAnnoter: (() => void) | undefined;
-  onSetlist: () => void;
+  onMenu: (id: MenuId) => void;
   onJeJoue: () => void;
-  onTempo: () => void;
-  onOutils: () => void;
-  onOptions: () => void;
   onQuitter: () => void;
 }) {
   const { t } = useTranslation();
@@ -70,9 +69,14 @@ export function BarreHaut({
       onPointerUp={(e) => e.stopPropagation()}
     >
       <div className="flex flex-1 basis-0 items-center justify-start gap-0.5">
-        <BtnBarre label={t("performance.songList")} onClick={onSetlist} texte>
+        <BtnBarre label={t("performance.songList")} menu="setlist" menuOuvert={menuOuvert} onClick={() => onMenu("setlist")} texte>
           <ListMusic className="h-5 w-5" />
         </BtnBarre>
+        {avecReperes && (
+          <BtnBarre label={t("performance.reperes")} menu="reperes" menuOuvert={menuOuvert} onClick={() => onMenu("reperes")} texte>
+            <Bookmark className="h-5 w-5" />
+          </BtnBarre>
+        )}
         <BtnBarre label={t("performance.iPlay")} onClick={onJeJoue} texte>
           <IconeRole className="h-5 w-5" />
         </BtnBarre>
@@ -101,7 +105,7 @@ export function BarreHaut({
 
       <div className="flex flex-1 basis-0 items-center justify-end gap-0.5">
         {tempo ? (
-          <BtnBarre label={t("performance.tempo")} onClick={onTempo} cacheTel>
+          <BtnBarre label={t("performance.tempo")} menu="tempo" menuOuvert={menuOuvert} onClick={() => onMenu("tempo")} cacheTel>
             <span data-tempo-barre className="flex items-center gap-1 text-sm font-semibold tabular-nums">
               <span aria-hidden="true" className="text-xl leading-none">♩</span>
               {tempo}
@@ -113,10 +117,10 @@ export function BarreHaut({
             <PenLine className="h-5 w-5" />
           </BtnBarre>
         )}
-        <BtnBarre label={t("performance.toolsMenu")} onClick={onOutils} cacheTel>
+        <BtnBarre label={t("performance.toolsMenu")} menu="outils" menuOuvert={menuOuvert} onClick={() => onMenu("outils")}>
           <Wrench className="h-5 w-5" />
         </BtnBarre>
-        <BtnBarre label={t("performance.displayOptions")} active={reglagesOuverts} onClick={onOptions}>
+        <BtnBarre label={t("performance.displayOptions")} menu="options" menuOuvert={menuOuvert} onClick={() => onMenu("options")}>
           <Type className="h-5 w-5" />
         </BtnBarre>
         <BtnBarre label={t("performance.exit")} onClick={onQuitter}>
@@ -132,6 +136,8 @@ export function BarreHaut({
 function BtnBarre({
   label,
   active = false,
+  menu,
+  menuOuvert,
   texte = false,
   cacheTel = false,
   onClick,
@@ -139,19 +145,26 @@ function BtnBarre({
 }: {
   label: string;
   active?: boolean;
+  /** Le bouton ouvre ce menu : `aria-haspopup`, `aria-expanded`, fond teinté tant qu'il est ouvert. */
+  menu?: MenuId;
+  menuOuvert?: MenuId | null;
   texte?: boolean;
   cacheTel?: boolean;
   onClick: () => void;
   children: ReactNode;
 }) {
+  const ouvert = menu !== undefined && menuOuvert === menu;
   return (
     <button
       type="button"
       onClick={onClick}
       aria-label={label}
       title={label}
+      data-menu-declencheur={menu}
+      aria-haspopup={menu ? "dialog" : undefined}
+      aria-expanded={menu ? ouvert : undefined}
       className={`${cacheTel ? "hidden md:flex" : "flex"} h-11 min-w-11 items-center justify-center gap-1.5 rounded-lg px-2.5 text-[color:var(--couleur-icones)] transition-colors active:bg-muted ${
-        active ? "bg-[color-mix(in_srgb,var(--couleur-icones)_16%,transparent)]" : "hover:bg-muted/60"
+        active || ouvert ? "bg-[color-mix(in_srgb,var(--couleur-icones)_16%,transparent)]" : "hover:bg-muted/60"
       }`}
     >
       {children}

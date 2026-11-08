@@ -2095,6 +2095,7 @@ export function SetlistDetailClient() {
           initialShowChords={chordsTouched ? showChords : undefined}
           setlistId={id}
           setlistTitle={setlist.title}
+          setlistDate={setlist.date || undefined}
           affichage={layout}
           onAffichageChange={changeLayout}
           jianpuPref={jianpuPref}

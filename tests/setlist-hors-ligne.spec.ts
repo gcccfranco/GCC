@@ -1,7 +1,7 @@
 import { expect, test, type Page, type Route } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { readFileSync } from "node:fs";
-import { attendreMiseEnPage, basculerAnnoter, ouvrirReglages } from "./helpers/louange";
+import { attendreMiseEnPage, basculerAnnoter, ouvrirOutils } from "./helpers/louange";
 import { ouvrirPartitions } from "./helpers/setlist";
 import { suivreLeCompte } from "../src/lib/setlist/copieHorsLigne";
 import { verifierMode } from "./helpers/menuSetlist";
@@ -379,10 +379,10 @@ test("annotations : copie hors ligne → « Annoter » est masqué, rien n'est e
   await attendreMiseEnPage(page);
   await expect(page.getByRole("button", { name: "Options d'affichage" }).or(page.getByRole("button", { name: "Quitter" })).first()).toBeVisible();
   await expect(page.getByRole("button", { name: "Annoter" })).toHaveCount(0);
-  // Au téléphone « Annoter » est une ligne du tiroir des options : absente aussi hors ligne.
+  // Au téléphone « Annoter » est une ligne du menu Outils : absente aussi hors ligne.
   if (page.viewportSize()!.width < 768) {
-    const reglages = await ouvrirReglages(page);
-    await expect(reglages.getByRole("button", { name: "Annoter" })).toHaveCount(0);
+    const outils = await ouvrirOutils(page);
+    await expect(outils.getByRole("button", { name: "Annoter" })).toHaveCount(0);
   }
   expect(ecritesAnnotations(db)).toEqual([]);
 });

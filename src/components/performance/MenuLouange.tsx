@@ -1,0 +1,120 @@
+"use client";
+
+import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { Popover, PopoverAnchor, PopoverContent } from "@/components/ui/popover";
+import { Drawer, DrawerContent, DrawerTitle } from "@/components/ui/drawer";
+
+/** Les menus du mode louange (FS-B) : un seul est ouvert à la fois (`popoverOuvert` de PerformanceMode). */
+export type MenuId = "setlist" | "reperes" | "outils" | "options" | "tempo";
+
+/** Largeur de la dernière disposition où les menus sont des feuilles du bas (md de Tailwind). */
+const MD = "(min-width: 768px)";
+
+function useAuMoinsMd(): boolean {
+  const [md, setMd] = useState(() => {
+    try { return window.matchMedia(MD).matches; } catch { return true; }
+  });
+  useEffect(() => {
+    let mq: MediaQueryList;
+    try { mq = window.matchMedia(MD); } catch { return; }
+    const maj = () => setMd(mq.matches);
+    maj();
+    mq.addEventListener("change", maj);
+    return () => mq.removeEventListener("change", maj);
+  }, []);
+  return md;
+}
+
+/** Un menu de la barre de titre : à partir de md un popover sous son icône (ancré sous la barre, à la verticale
+ *  de l'icône), sous md une feuille depuis le bas. Rôle `dialog`, nom accessible = `titre`. Tout toucher dans le menu
+ *  s'arrête ici (il ne tourne pas la page) ; le toucher dehors est géré par PerformanceMode (ferme sans tourner).
+ *  `couleur` : `--couleur-icones` corrigée, reposée sur le menu (le Portal sort de la racine du mode). */
+export function MenuLouange({
+  id,
+  titre,
+  ouvert,
+  onOuvertChange,
+  align = "end",
+  couleur,
+  children,
+}: {
+  id: MenuId;
+  titre: string;
+  ouvert: boolean;
+  onOuvertChange: (ouvert: boolean) => void;
+  /** Côté de l'icône où le menu s'aligne : « start » pour les boutons de gauche, « end » pour ceux de droite. */
+  align?: "start" | "end";
+  couleur: string;
+  children: ReactNode;
+}) {
+  const md = useAuMoinsMd();
+  // Ancre virtuelle : la largeur et la place de l'icône, la hauteur de la barre (le menu s'ouvre sous la barre).
+  const ancre = useRef({
+    getBoundingClientRect: () => {
+      const bouton = document.querySelector(`[data-menu-declencheur="${id}"]`);
+      const barre = document.querySelector("[data-barre-haut]");
+      if (!bouton || !barre) return new DOMRect();
+      const b = bouton.getBoundingClientRect();
+      const h = barre.getBoundingClientRect();
+      return new DOMRect(b.left, h.top, b.width, h.height);
+    },
+  });
+  const rendreLeFocus = (e: Event) => {
+    e.preventDefault();
+    document.querySelector<HTMLElement>(`[data-menu-declencheur="${id}"]`)?.focus({ preventScroll: true });
+  };
+  const style = { "--couleur-icones": couleur } as CSSProperties;
+  const arreter = {
+    onPointerDown: (e: React.PointerEvent) => e.stopPropagation(),
+    onPointerUp: (e: React.PointerEvent) => e.stopPropagation(),
+  };
+
+  if (!md) {
+    return (
+      <Drawer open={ouvert} onOpenChange={onOuvertChange}>
+        <DrawerContent
+          className="z-[10000]"
+          overlayClassName="z-[10000] bg-black/40"
+          aria-describedby={undefined}
+          data-menu-louange={id}
+          style={style}
+          onCloseAutoFocus={rendreLeFocus}
+          {...arreter}
+        >
+          <DrawerTitle className="px-4 pt-3 text-center text-base">{titre}</DrawerTitle>
+          <div
+            className="mx-auto w-full max-w-md overflow-y-auto px-4 pt-3 max-h-[calc(85dvh-4rem)]"
+            style={{ paddingBottom: "calc(1.5rem + env(safe-area-inset-bottom, 0px))" }}
+          >
+            {children}
+          </div>
+        </DrawerContent>
+      </Drawer>
+    );
+  }
+
+  return (
+    <Popover open={ouvert} onOpenChange={onOuvertChange}>
+      <PopoverAnchor virtualRef={ancre} />
+      <PopoverContent
+        aria-label={titre}
+        side="bottom"
+        align={align}
+        sideOffset={4}
+        collisionPadding={8}
+        data-menu-louange={id}
+        style={style}
+        className="z-[10000] w-[min(23rem,calc(100vw-1rem))] max-h-[min(var(--radix-popover-content-available-height),34rem)] overflow-y-auto bg-background p-3"
+        onOpenAutoFocus={(e) => {
+          // Le focus va au menu lui-même : le premier bouton ne s'allume pas à l'ouverture.
+          e.preventDefault();
+          (e.currentTarget as HTMLElement).focus({ preventScroll: true });
+        }}
+        onCloseAutoFocus={rendreLeFocus}
+        {...arreter}
+      >
+        {children}
+      </PopoverContent>
+    </Popover>
+  );
+}

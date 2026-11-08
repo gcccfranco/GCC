@@ -7,7 +7,7 @@ import { paginateColumns, pagesUneColonne } from "../src/lib/performance/columns
 import type { SetlistItem } from "../src/types/setList";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { fermerMenus, ouvrirAffichage, ouvrirPartitions } from "./helpers/setlist";
-import { attendreCompteur, basculerAnnoter, lireCompteur } from "./helpers/louange";
+import { attendreCompteur, basculerAnnoter, lireCompteur, ouvrirOutils } from "./helpers/louange";
 
 // Lot 2 du chantier 简谱 (docs/spec-jianpu-integration.md) : « Sections uniques » et
 // structure dans le mode louange. Setlist « Culte du 11 octobre » (fictive) :
@@ -227,7 +227,7 @@ async function montrerChrome(page: Page) {
 async function reglages(page: Page) {
   await montrerChrome(page);
   await page.getByRole("button", { name: "Options d'affichage" }).click();
-  const feuille = page.getByRole("dialog", { name: "Réglages" });
+  const feuille = page.getByRole("dialog", { name: "Options d'affichage" });
   await expect(feuille).toBeVisible();
   return feuille;
 }
@@ -310,8 +310,10 @@ test.describe("Réglages : Rôle et Affichage", () => {
 
     await affichage.getByRole("radio", { name: "Ordre joué" }).click();
     await expect(affichage.getByRole("radio", { name: "Ordre joué" })).toHaveAttribute("aria-checked", "true");
-    // Plus aucun rôle pressé (le bouton « 2 colonnes », déplacé dans ce tiroir par FS-A, a aussi un aria-pressed).
-    await expect(feuille.locator("button[aria-pressed=true]").filter({ hasNotText: "2 colonnes" })).toHaveCount(0);
+    // Plus aucun rôle pressé (les boutons ronds « Sur la page » de FS-B ont aussi un aria-pressed : on ne compte que les rôles).
+    for (const role of ["Pianiste", "Guitariste", "Présidence", "Choriste", "Batteur"]) {
+      await expect(feuille.getByRole("button", { name: role, exact: true })).toHaveAttribute("aria-pressed", "false");
+    }
     expect(await page.evaluate(() => localStorage.getItem("partition-layout"))).toBe("played");
     await page.keyboard.press("Escape");
     await expect(onStage(page, "[data-section] [data-copy-line]").first()).toBeVisible();
@@ -334,12 +336,12 @@ test.describe("Réglages : Rôle et Affichage", () => {
     await page.addInitScript(() => localStorage.setItem("perf-hide-lyrics", "1"));
     await ouvrirMode(page, [ABBA], { role: null });
     const feuille = await reglages(page);
-    await feuille.getByRole("switch", { name: "Accords" }).click();
+    await feuille.getByRole("button", { name: "Accords" }).click();
     const affichage = feuille.getByRole("radiogroup", { name: "Affichage" });
     await expect(affichage.getByRole("radio", { name: "Structure seule" })).toHaveAttribute("aria-checked", "true");
     // Sections uniques depuis la vue structure : paroles et accords reviennent.
     await affichage.getByRole("radio", { name: "Sections uniques" }).click();
-    await expect(feuille.getByRole("switch", { name: "Accords" })).toBeChecked();
+    await expect(feuille.getByRole("button", { name: "Accords" })).toHaveAttribute("aria-pressed", "true");
     await expect(feuille.getByRole("switch", { name: "Masquer les paroles" })).not.toBeChecked();
     expect(await page.evaluate(() => localStorage.getItem("perf-hide-lyrics"))).toBe("0");
   });
@@ -403,10 +405,10 @@ test.describe("Réglages : corrections de la relecture", () => {
   test("Structure seule venue d'Affichage : « Accords » décoché et « Masquer les paroles » coché, comme l'écran (C4) (FR)", async ({ page }) => {
     await ouvrirMode(page, [ABBA], { role: null });
     const feuille = await reglages(page);
-    await expect(feuille.getByRole("switch", { name: "Accords" })).toBeChecked();
+    await expect(feuille.getByRole("button", { name: "Accords" })).toHaveAttribute("aria-pressed", "true");
     await expect(feuille.getByRole("switch", { name: "Masquer les paroles" })).not.toBeChecked();
     await feuille.getByRole("radiogroup", { name: "Affichage" }).getByRole("radio", { name: "Structure seule" }).click();
-    await expect(feuille.getByRole("switch", { name: "Accords" })).not.toBeChecked();
+    await expect(feuille.getByRole("button", { name: "Accords" })).toHaveAttribute("aria-pressed", "false");
     await expect(feuille.getByRole("switch", { name: "Masquer les paroles" })).toBeChecked();
   });
 
@@ -414,8 +416,8 @@ test.describe("Réglages : corrections de la relecture", () => {
     await ouvrirMode(page, [ABBA], { affichage: "unique" });
     const entete = onStage(page, "[data-entete-chant]");
     await expect(entete.getByText("→ Montée de la batterie")).toBeVisible();
-    const feuille = await reglages(page);
-    await feuille.getByText("Transitions", { exact: true }).locator("xpath=..").getByRole("switch").click();
+    const feuille = await ouvrirOutils(page);
+    await feuille.getByRole("button", { name: "Transitions" }).click();
     await page.keyboard.press("Escape");
     await expect(page.getByRole("dialog")).toHaveCount(0);
     await expect(entete.getByText("Piano seul, voix douces")).toBeVisible();
@@ -425,7 +427,7 @@ test.describe("Réglages : corrections de la relecture", () => {
   test("« Partition 简谱 » n'est proposé qu'hors Structure seule (C8) (ZH)", async ({ page }) => {
     await ouvrirMode(page, [YISHENG], { role: null });
     const feuille = await reglages(page);
-    const interrupteur = feuille.getByRole("switch", { name: "Partition 简谱" });
+    const interrupteur = feuille.getByRole("button", { name: "Partition 简谱" });
     await expect(interrupteur, "Ordre joué : le réglage est là").toBeVisible();
     await feuille.getByRole("radiogroup", { name: "Affichage" }).getByRole("radio", { name: "Structure seule" }).click();
     await expect(interrupteur, "Structure seule : sans effet, donc absent").toHaveCount(0);

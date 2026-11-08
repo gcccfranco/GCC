@@ -156,8 +156,8 @@ async function quitter(page: Page) {
 const onStage = (page: Page, selector: string) =>
   page.locator(`[data-performance-mode] ${selector}:not([aria-hidden=true] *)`);
 
-/** FS-A : « 2 colonnes » a quitté la barre de titre pour le tiroir des options (dialogue « Réglages »). */
-const interrupteur = (page: Page) => page.getByRole("dialog", { name: "Réglages" }).getByRole("button", { name: "2 colonnes" });
+/** FS-A : « 2 colonnes » a quitté la barre de titre pour le menu Options d'affichage. */
+const interrupteur = (page: Page) => page.getByRole("dialog", { name: "Options d'affichage" }).getByRole("button", { name: "2 colonnes" });
 
 /** Ouvre les options, vérifie l'état de l'interrupteur (« true » / « false », ou « absent »), les referme. */
 async function verifierInterrupteur(page: Page, etat: "true" | "false" | "absent") {

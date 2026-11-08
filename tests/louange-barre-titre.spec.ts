@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
-import { attendreMiseEnPage, ouvrirReglages } from "./helpers/louange";
+import { attendreMiseEnPage, ouvrirMenu, ouvrirReglages } from "./helpers/louange";
 import {
   COULEUR_DEFAUT, FOND_CLAIR, FOND_SOMBRE, TEINTES, contraste, garderContraste, hexVersHsl, hslVersHex,
 } from "../src/lib/performance/couleurIcones";
@@ -99,14 +99,14 @@ const fondBarre = (page: Page) => page.locator("[data-barre-haut]").evaluate((el
 
 // ─── La barre de titre ────────────────────────────────────────────────────────
 
-test("barre de titre : Setlist et Je joue à gauche, titre au centre, ♩ Annoter Outils Options ✕ à droite (téléphone : Setlist, Je joue | titre | Options, ✕)", async ({ page }) => {
+test("barre de titre : Setlist, Repères et Je joue à gauche, titre au centre, ♩ Annoter Outils Options ✕ à droite (téléphone : Setlist, Repères, Je joue | titre | Outils, Options, ✕)", async ({ page }) => {
   await ouvrir(page);
   const boutons = await boutonsHaut(page);
   const noms = boutons.map((b) => b.nom);
   if (telephone(page)) {
-    expect(noms).toEqual(["Setlist", "Je joue", "Options d'affichage", "Quitter"]);
+    expect(noms).toEqual(["Setlist", "Repères", "Je joue", "Outils", "Options d'affichage", "Quitter"]);
   } else {
-    expect(noms).toEqual(["Setlist", "Je joue", "Tempo", "Annoter", "Outils", "Options d'affichage", "Quitter"]);
+    expect(noms).toEqual(["Setlist", "Repères", "Je joue", "Tempo", "Annoter", "Outils", "Options d'affichage", "Quitter"]);
   }
   for (const b of boutons) {
     expect(b.h, `${b.nom} : cible haute d'au moins 44 px`).toBeGreaterThanOrEqual(43.5);
@@ -130,23 +130,30 @@ test("barre de titre : Setlist et Je joue à gauche, titre au centre, ♩ Annote
 test("barre de titre en 中文 : mêmes boutons, noms chinois", async ({ page }) => {
   await ouvrir(page, { slugs: ZH, zh: true });
   const noms = (await boutonsHaut(page)).map((b) => b.nom);
-  if (telephone(page)) expect(noms).toEqual(["歌单", "我演奏", "显示选项", "退出"]);
+  // Ces deux chants sont des scans 简谱 : pas de section, donc pas de bouton Repères (段落).
+  await expect(page.getByRole("button", { name: "段落" })).toHaveCount(0);
+  if (telephone(page)) expect(noms).toEqual(["歌单", "我演奏", "工具", "显示选项", "退出"]);
   else expect(noms.filter((n) => n !== "节拍" && n !== "批注")).toEqual(["歌单", "我演奏", "工具", "显示选项", "退出"]);
 });
 
-test("Setlist ouvre le sommaire, Je joue la feuille du rôle, Options le tiroir « Réglages »", async ({ page }) => {
+test("Setlist ouvre son menu, Je joue la feuille du rôle, Options le menu « Options d'affichage »", async ({ page }) => {
   await ouvrir(page);
-  await page.getByRole("button", { name: "Setlist" }).click();
-  const sommaire = page.locator("[data-performance-mode]").getByText("Culte d'essai de la barre");
-  await expect(sommaire).toBeVisible();
+  const setlist = await ouvrirMenu(page, "setlist");
+  await expect(setlist.getByText("Culte d'essai de la barre")).toBeVisible();
   await page.keyboard.press("Escape");
-  await expect(sommaire).toHaveCount(0);
+  await expect(setlist).toBeHidden();
   await expect(page.locator("[data-performance-mode]")).toBeVisible();
-  const reglages = await ouvrirReglages(page);
-  // Deux colonnes et Annoter (téléphone) sont dans le tiroir, plus dans la barre.
-  if (telephone(page)) await expect(reglages.getByRole("button", { name: "Annoter" })).toBeVisible();
+  const options = await ouvrirReglages(page);
+  await expect(options).toBeVisible();
   await page.keyboard.press("Escape");
-  await expect(reglages).toBeHidden();
+  await expect(options).toBeHidden();
+  // Au téléphone, Annoter est une ligne du menu Outils (FS-B), plus de la barre.
+  if (telephone(page)) {
+    const outils = await ouvrirMenu(page, "outils");
+    await expect(outils.getByRole("button", { name: "Annoter" })).toBeVisible();
+    await page.keyboard.press("Escape");
+    await expect(outils).toBeHidden();
+  }
   await page.getByRole("button", { name: "Je joue" }).click();
   await expect(page.getByRole("dialog", { name: /rôle/i })).toBeVisible();
 });
@@ -433,11 +440,9 @@ for (const [langue, zh] of [["fr", false], ["zh", true]] as const) {
 }
 
 for (const [nom, theme, zh] of [["fr-dark", "dark", false], ["fr-light", "light", false], ["zh-dark", "dark", true]] as const) {
-  test(`captures FS-A : tiroir avec la palette, puis le cercle ouvert (${nom})`, async ({ page }, testInfo) => {
+  test(`captures FS-A : menu Options avec la palette, puis le cercle ouvert (${nom})`, async ({ page }, testInfo) => {
     await ouvrir(page, { theme, zh, slugs: zh ? ZH : FR });
-    const reglages = zh
-      ? (await page.getByRole("button", { name: "显示选项" }).click(), page.getByRole("dialog"))
-      : await ouvrirReglages(page);
+    const reglages = await ouvrirReglages(page, zh ? "zh" : "fr");
     await expect(reglages).toBeVisible();
     const palette = reglages.locator("[aria-labelledby=perf-couleur-icones]");
     await palette.scrollIntoViewIfNeeded();

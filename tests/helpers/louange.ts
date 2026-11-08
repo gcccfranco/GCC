@@ -16,26 +16,40 @@ export async function attendreMiseEnPage(page: Page) {
   await expect(page.getByText("Mise en page…")).toHaveCount(0, { timeout: 20_000 });
 }
 
-/** Ouvre les Réglages du mode louange (FS-A : le bouton de la barre s'appelle « Options d'affichage », le
- *  dialogue qu'il ouvre garde le nom « Réglages »). La barre reste ouverte jusqu'à un
- *  toucher au centre, qui la montre ou la cache : si le bouton n'est pas
- *  visible on la rappelle, et on clique jusqu'à ce que la fenêtre s'ouvre. */
-export async function ouvrirReglages(page: Page) {
-  const bouton = page.getByRole("button", { name: "Options d'affichage" });
-  const reglages = page.getByRole("dialog", { name: "Réglages" });
+export type Langue = "fr" | "zh";
+export type Menu = "setlist" | "reperes" | "outils" | "tempo" | "options";
+/** Nom du bouton de la barre de titre, qui est aussi le nom du dialogue qu'il ouvre (FS-B). */
+export const NOM_MENU: Record<Langue, Record<Menu, string>> = {
+  fr: { setlist: "Setlist", reperes: "Repères", outils: "Outils", tempo: "Tempo", options: "Options d'affichage" },
+  zh: { setlist: "歌单", reperes: "段落", outils: "工具", tempo: "节拍", options: "显示选项" },
+};
+
+/** Ouvre un menu du mode louange (FS-B : Setlist, Repères, Outils, Tempo, Options d'affichage). La barre reste ouverte
+ *  jusqu'à un toucher au centre, qui la montre ou la cache : si le bouton n'est pas visible on la rappelle, et on clique
+ *  jusqu'à ce que le dialogue s'ouvre. Rend le dialogue. */
+export async function ouvrirMenu(page: Page, menu: Menu, langue: Langue = "fr") {
+  const nom = NOM_MENU[langue][menu];
+  const bouton = page.locator("[data-performance-mode]").getByRole("button", { name: nom, exact: true });
+  const dialogue = page.getByRole("dialog", { name: nom, exact: true });
   await expect(async () => {
-    // Une tentative précédente a pu ouvrir la feuille (animation lente) : ne pas recommencer.
-    if (await reglages.isVisible()) return;
+    // Une tentative précédente a pu ouvrir le menu (animation lente) : ne pas recommencer.
+    if (await dialogue.isVisible()) return;
     // Barre masquée = opacity 0 + aria-hidden : isVisible() la dit visible, le rôle (count) non.
     if ((await bouton.count()) === 0) {
       const ecran = page.viewportSize()!;
       await page.mouse.click(ecran.width / 2, ecran.height / 2);
     }
     await bouton.click({ timeout: 2_000 });
-    await expect(reglages).toBeVisible({ timeout: 2_000 });
+    await expect(dialogue).toBeVisible({ timeout: 2_000 });
   }).toPass({ timeout: 20_000 });
-  return reglages;
+  return dialogue;
 }
+
+/** Ouvre le menu « Options d'affichage » du mode louange (c'était le tiroir « Réglages » avant FS-B). */
+export const ouvrirOptions = (page: Page, langue: Langue = "fr") => ouvrirMenu(page, "options", langue);
+/** Ancien nom d'`ouvrirOptions`, gardé pour les specs qui le citent. */
+export const ouvrirReglages = ouvrirOptions;
+export const ouvrirOutils = (page: Page, langue: Langue = "fr") => ouvrirMenu(page, "outils", langue);
 
 /** Le curseur de page du mode louange (il n'y a plus d'étiquette « page n / N » : FS-A). */
 export const curseurPage = (page: Page) => page.locator("[data-performance-mode] [data-curseur-page] input[type=range]");
@@ -60,12 +74,12 @@ export async function attendreCompteur(page: Page, motif: string | RegExp, timeo
 }
 
 /** Entre dans l'annotation ou en sort. Au téléphone (< 768 px) la barre de titre n'a plus « Annoter » (FS-A) :
- *  la fonction est une ligne du tiroir des options, qu'on ouvre d'abord (elle le referme en s'exécutant). */
+ *  la fonction est une ligne du menu Outils (FS-B), qu'on ouvre d'abord (elle le referme en s'exécutant). */
 export async function basculerAnnoter(page: Page) {
   if (page.viewportSize()!.width < 768) {
-    const reglages = await ouvrirReglages(page);
-    await reglages.getByRole("button", { name: "Annoter" }).click();
-    await expect(reglages).toBeHidden();
+    const outils = await ouvrirOutils(page);
+    await outils.getByRole("button", { name: "Annoter" }).click();
+    await expect(outils).toBeHidden();
     return;
   }
   await page.getByRole("button", { name: "Annoter" }).click();
