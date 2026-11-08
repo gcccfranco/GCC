@@ -1,7 +1,7 @@
 import { expect, test, type Page, type TestInfo } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { attendreMiseEnPage, lireCompteur, NOM_MENU, onStage, ouvrirMenu, type Langue, type Menu } from "./helpers/louange";
-import { FOND_CLAIR, garderContraste } from "../src/lib/performance/couleurIcones";
+import { CONTRASTE_MIN, FOND_CLAIR, SURFACE_MENU_CLAIRE, SURFACE_MENU_SOMBRE, TEINTES, contraste, garderContraste, hslVersHex } from "../src/lib/performance/couleurIcones";
 import { getTransposedKey } from "../src/lib/transpose";
 
 // Lot FS-B (docs/spec-mode-louange-forscore-2.md) : les menus du mode louange (Setlist, Repères, Outils, Tempo, Options
@@ -479,6 +479,40 @@ test("palette : framboise retenue après rechargement, et les actions des menus 
   await expect(plus).toBeVisible();
   expect(await plus.evaluate((el) => getComputedStyle(el).color)).toBe(attendue);
 });
+
+// Correction 1 de la relecture FS-A/FS-B : dans les menus, la couleur est corrigée contre la SURFACE du menu (#ffffff en clair,
+// #1c1c1e en sombre), pas contre le fond de la barre (#000 en sombre) : le texte coloré y descendait à ~3,7:1.
+
+test("garderContraste contre la surface des menus : au moins 4,5:1 pour les six teintes et une couleur sombre du cercle, en clair et en sombre", () => {
+  const cercle = hslVersHex(240, 70, 20);
+  for (const surface of [SURFACE_MENU_CLAIRE, SURFACE_MENU_SOMBRE]) {
+    for (const hex of [...TEINTES.map((t) => t.hex), cercle]) {
+      expect(contraste(garderContraste(hex, surface), surface), `${hex} sur ${surface}`).toBeGreaterThanOrEqual(CONTRASTE_MIN);
+    }
+  }
+});
+
+const rvb = (css: string) => (css.match(/\d+(\.\d+)?/g) ?? []).slice(0, 3).map(Number);
+const versHex = (c: number[]) => `#${c.map((x) => Math.round(x).toString(16).padStart(2, "0")).join("")}`;
+
+const CHOIX: Array<[string, string]> = [...TEINTES.map((t): [string, string] => [t.id, t.hex]), ["cercle 240°, sombre", hslVersHex(240, 70, 20)]];
+for (const theme of ["light", "dark"] as const) {
+  for (const [nom, hex] of CHOIX) {
+    test(`menus (${theme}) : l'action « ${nom} » contraste au moins 4,5:1 avec la surface du menu, mesuré à l'écran`, async ({ page }) => {
+      await page.addInitScript((h) => { try { localStorage.setItem("perf-couleur-icones", h); } catch { /* ignore */ } }, hex);
+      await ouvrir(page, { theme });
+      const outils = await ouvrirMenu(page, "outils");
+      const plus = outils.locator("[data-cle-plus]");
+      await expect(plus).toBeVisible();
+      await attendreOuverture(page);
+      const [texte, surface] = await Promise.all([
+        plus.evaluate((el) => getComputedStyle(el).color),
+        outils.evaluate((el) => getComputedStyle(el).backgroundColor),
+      ]);
+      expect(contraste(versHex(rvb(texte)), versHex(rvb(surface))), `${texte} sur ${surface}`).toBeGreaterThanOrEqual(CONTRASTE_MIN);
+    });
+  }
+}
 
 // ─── Captures à regarder (test-results/fs-b/) ─────────────────────────────────
 

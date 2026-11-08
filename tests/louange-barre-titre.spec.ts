@@ -434,6 +434,54 @@ test("hexVersHsl / hslVersHex : aller-retour à un cran près", async () => {
   }
 });
 
+// Correction 2 de la relecture FS-A/FS-B : barre ouverte, les lignes de texte de l'en-tête du chant (qui répète le titre de la barre)
+// sont soit entièrement sous la barre, soit invisibles (visibility: hidden, la place reste) : jamais visibles et à cheval.
+// Barre fermée, titre, pinyin et crédits sont visibles. La pagination n'en dépend pas (nombre de pages relevé en annotation).
+
+const SORTIE_CORR = "test-results/fs-corr";
+for (const [langue, zh] of [["fr", false], ["zh", true]] as const) {
+  for (const [theme, echelle] of [["light", "1"], ["dark", "1"], ["light", "1.5"], ["dark", "1.25"]] as const) {
+    test(`en-tête du chant et barre de titre (${langue}, ${theme}, texte ×${echelle}) : jamais visible et à cheval ; visible barre fermée`, async ({ page }, testInfo) => {
+      await page.addInitScript((e) => { try { localStorage.setItem("perf-font-scale", e); } catch { /* ignore */ } }, echelle);
+      // Chants chinois sans scan 简谱 : titre avec pinyin et crédits pour le premier.
+      await ouvrir(page, { slugs: zh ? ["谢谢你", "活着为要敬拜你", "耶和华所定的日子"] : FR, zh, theme });
+      await page.waitForTimeout(400);
+      const entete = page.locator("[data-performance-mode] [data-entete-chant]:not([aria-hidden=true] *)").first();
+      await expect(entete).toBeAttached();
+      const lignes = entete.locator(":scope > div").first().locator("h2, p");
+      const n = await lignes.count();
+      // Le titre est là ; en 中文 le pinyin et les crédits aussi (sinon le test ne prouverait rien).
+      expect(n).toBeGreaterThanOrEqual(zh ? 3 : 2);
+      const max = await page.locator("[data-barre-bas] input[type=range]").getAttribute("max");
+      testInfo.annotations.push({ type: "pages", description: String(max) });
+      console.log(`PAGES ${langue}-${theme}-x${echelle} max=${max}`);
+      const lire = () => lignes.evaluateAll((els) => els.map((el) => {
+        const r = el.getBoundingClientRect();
+        return { haut: r.top, bas: r.bottom, visibilite: getComputedStyle(el).visibility, texte: (el.textContent ?? "").slice(0, 20) };
+      }));
+      // Barre ouverte.
+      await expect(page.locator("[data-performance-mode]")).toHaveAttribute("data-barre-ouverte", "");
+      await page.waitForTimeout(300);
+      const barreBas = await page.locator("[data-barre-haut]").evaluate((el) => el.getBoundingClientRect().bottom);
+      for (const l of await lire()) {
+        const dessous = l.bas <= barreBas + 0.5;
+        expect(dessous || l.visibilite === "hidden", `« ${l.texte} » ${l.haut.toFixed(1)}–${l.bas.toFixed(1)} px, visibility ${l.visibilite}, bas de la barre ${barreBas.toFixed(1)} px`).toBe(true);
+      }
+      await page.screenshot({ path: `${SORTIE_CORR}/entete-ouverte-${langue}-${theme}-x${echelle}-${testInfo.project.name}.png` });
+      // Barre fermée.
+      await toucherCentre(page);
+      await expect(page.locator("[data-performance-mode]")).not.toHaveAttribute("data-barre-ouverte", /.*/);
+      await page.waitForTimeout(400);
+      const ecran = page.viewportSize()!;
+      for (const l of await lire()) {
+        expect(l.visibilite, `« ${l.texte} » barre fermée`).toBe("visible");
+        expect(l.haut >= 0 && l.bas <= ecran.height, `« ${l.texte} » dans l'écran`).toBe(true);
+      }
+      await page.screenshot({ path: `${SORTIE_CORR}/entete-fermee-${langue}-${theme}-x${echelle}-${testInfo.project.name}.png` });
+    });
+  }
+}
+
 // ─── Captures à regarder (test-results/fs-a/) ─────────────────────────────────
 
 const SORTIE = "test-results/fs-a";

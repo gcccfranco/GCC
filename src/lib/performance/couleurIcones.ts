@@ -15,6 +15,10 @@ export const TEINTES = [
 export const COULEUR_DEFAUT = TEINTES[0].hex;
 export const FOND_CLAIR = "#ffffff";
 export const FOND_SOMBRE = "#000000";
+/** Surface des menus (popover et feuille du bas) : `--raised` / `--background` en clair, `--raised` en sombre
+ *  (globals.css). Les actions des menus sont corrigées contre elle, pas contre le fond de la barre. */
+export const SURFACE_MENU_CLAIRE = "#ffffff";
+export const SURFACE_MENU_SOMBRE = "#1c1c1e";
 /** Texte de la barre en sombre (`--foreground` du thème sombre) : l'encre le devient. */
 export const TEXTE_SOMBRE = "#f2f2f7";
 /** Contraste visé contre le fond de la barre : les libellés de la barre sont du texte (WCAG 1.4.3). */

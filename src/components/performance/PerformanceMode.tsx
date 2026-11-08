@@ -41,7 +41,7 @@ import { classerGeste, largeurZoneLaterale } from "@/lib/performance/gestes";
 import { LiseretTempo } from "@/components/performance/LiseretTempo";
 import { getTailleAnnotee } from "@/lib/performance/tailleAnnotee";
 import { barreDejaVue, marquerBarreVue } from "@/lib/performance/barreVue";
-import { FOND_CLAIR, FOND_SOMBRE, TEINTES, garderContraste, getCouleurIcones, setCouleurIcones } from "@/lib/performance/couleurIcones";
+import { FOND_CLAIR, FOND_SOMBRE, SURFACE_MENU_CLAIRE, SURFACE_MENU_SOMBRE, TEINTES, garderContraste, getCouleurIcones, setCouleurIcones } from "@/lib/performance/couleurIcones";
 import { getMetronomePref, setMetronomePref } from "@/lib/performance/tempo";
 import { getFontScalePref, setFontScalePref, MIN_FONT_SCALE, MAX_FONT_SCALE } from "@/lib/fontScalePref";
 import { useAuth } from "@/lib/firebase/auth";
@@ -169,7 +169,8 @@ function SongHeader({ block, bandeau, showTransitions }: { block: SongHeaderBloc
   if (block.fusionSongs?.length) {
     return (
       <div data-entete-chant className="mb-3 pb-3 border-b border-border">
-        <div className="flex items-start gap-2">
+        {/* Barre de titre ouverte : ces lignes (qu'elle répète) sont masquées sans changer de place, jamais coupées à mi-hauteur. */}
+        <div className="flex items-start gap-2 [[data-barre-ouverte]_&]:invisible [[data-barre-ouverte]_&]:opacity-0 transition-[opacity,visibility] duration-150">
           <span className="w-5 h-5 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">
             {block.position}
           </span>
@@ -197,7 +198,8 @@ function SongHeader({ block, bandeau, showTransitions }: { block: SongHeaderBloc
   }
   return (
     <div data-entete-chant className="mb-3 pb-3 border-b border-border">
-      <div className="flex items-start justify-between gap-4">
+      {/* Barre de titre ouverte : titre, pinyin, crédits et tonalité (qu'elle répète) sont masqués sans changer de place, jamais coupés à mi-hauteur ; la structure reste. */}
+      <div className="flex items-start justify-between gap-4 [[data-barre-ouverte]_&]:invisible [[data-barre-ouverte]_&]:opacity-0 transition-[opacity,visibility] duration-150">
         <div className="min-w-0">
           <div className="flex items-center gap-2">
             <span className="w-5 h-5 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center shrink-0">
@@ -445,6 +447,8 @@ export function PerformanceMode({
   const { stageTheme, setTheme } = useThemeScene();
   // La couleur affichée : le choix, corrigé pour garder 4,5:1 contre le fond. Posée sur la racine du mode et sur chaque menu (Portal).
   const couleurIcones = garderContraste(couleurChoix, stageTheme === "dark" ? FOND_SOMBRE : FOND_CLAIR);
+  // Dans les menus (popover, feuille du bas) la surface n'est pas le fond de la barre : la couleur y est corrigée contre elle.
+  const couleurMenus = garderContraste(couleurChoix, stageTheme === "dark" ? SURFACE_MENU_SOMBRE : SURFACE_MENU_CLAIRE);
 
   const toggleHideLyrics = useCallback((v: boolean) => {
     setHideLyrics(v);
@@ -1246,6 +1250,7 @@ export function PerformanceMode({
   return (
     <div
       data-performance-mode
+      data-barre-ouverte={showChrome ? "" : undefined}
       data-cle-ancienne={cleAncienne ?? undefined}
       data-cle-page={currentPageKey}
       data-passes-pagination={passesPagination}
@@ -1554,7 +1559,7 @@ export function PerformanceMode({
       <FeuilleRole open={askRole} roleIds={ROLE_PRESET_IDS} onFermer={() => setAskRole(false)} onChoisir={answerRole} />
 
       {/* ── Menus du mode (FS-B) : popover sous l'icône à partir de md, feuille du bas au téléphone ── */}
-      <MenuLouange id="setlist" titre={t("performance.songList")} ouvert={popoverOuvert === "setlist"} onOuvertChange={(o) => !o && fermerMenu("setlist")} align="start" couleur={couleurIcones} titreCache>
+      <MenuLouange id="setlist" titre={t("performance.songList")} ouvert={popoverOuvert === "setlist"} onOuvertChange={(o) => !o && fermerMenu("setlist")} align="start" couleur={couleurMenus} titreCache>
         <ContenuSetlist
           setlistTitle={setlistTitle}
           setlistDate={setlistDate}
@@ -1566,11 +1571,11 @@ export function PerformanceMode({
         />
       </MenuLouange>
 
-      <MenuLouange id="reperes" titre={t("performance.reperes")} ouvert={popoverOuvert === "reperes"} onOuvertChange={(o) => !o && fermerMenu("reperes")} align="start" couleur={couleurIcones}>
+      <MenuLouange id="reperes" titre={t("performance.reperes")} ouvert={popoverOuvert === "reperes"} onOuvertChange={(o) => !o && fermerMenu("reperes")} align="start" couleur={couleurMenus}>
         <ContenuReperes reperes={reperes} currentPage={currentPage} goToPage={goToPage} pageCount={pages.length} onFermer={() => fermerMenu("reperes")} />
       </MenuLouange>
 
-      <MenuLouange id="tempo" titre={t("performance.tempo")} ouvert={popoverOuvert === "tempo"} onOuvertChange={(o) => !o && fermerMenu("tempo")} couleur={couleurIcones}>
+      <MenuLouange id="tempo" titre={t("performance.tempo")} ouvert={popoverOuvert === "tempo"} onOuvertChange={(o) => !o && fermerMenu("tempo")} couleur={couleurMenus}>
         <ContenuTempo
           tempo={tempoLiseret}
           tempoAppareil={tempoAppareil}
@@ -1581,11 +1586,11 @@ export function PerformanceMode({
         />
       </MenuLouange>
 
-      <MenuLouange id="outils" titre={t("performance.toolsMenu")} ouvert={popoverOuvert === "outils"} onOuvertChange={(o) => !o && fermerMenu("outils")} couleur={couleurIcones}>
+      <MenuLouange id="outils" titre={t("performance.toolsMenu")} ouvert={popoverOuvert === "outils"} onOuvertChange={(o) => !o && fermerMenu("outils")} couleur={couleurMenus}>
         {contenuOutils}
       </MenuLouange>
 
-      <MenuLouange id="options" titre={t("performance.displayOptions")} ouvert={popoverOuvert === "options"} onOuvertChange={(o) => !o && fermerMenu("options")} couleur={couleurIcones}>
+      <MenuLouange id="options" titre={t("performance.displayOptions")} ouvert={popoverOuvert === "options"} onOuvertChange={(o) => !o && fermerMenu("options")} couleur={couleurMenus}>
         <div className="space-y-4">
           {telephone && (
             <div className="space-y-1 border-b border-border pb-4">
