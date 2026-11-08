@@ -510,9 +510,10 @@ couverts par une exception ci-dessus, 0 non justifié. 20 lignes corrigées (ét
 tempo et « 4/4 » hors de L1, repère 【Bridge】 de 为我而来 p.2 rendu à L3, fausses barres autour de « 1= D » retirées) ;
 sections corrigées sur 29 chants (anacrouse au sens documenté, couplets sous une même portée, refrains repris).
 
-**Limite qui reste** (la donnée ne peut pas la corriger, une ligne est une bande horizontale pleine largeur) : sur 复兴的火
-et 爱使我们勇敢, les crédits « 游智婷 曲 » sont imprimés à droite, à la hauteur des premiers accords de L1 (« Dm(b5)/C »,
-« Bm », « C ») : aucune coupe horizontale ne les sépare ; ils restent dans L1. Leur cadre « 1=X » est entier dans L1.
+**Crédits dans la bande de L1** : sur 复兴的火 et 爱使我们勇敢, les crédits « 游智婷 曲 » sont imprimés à droite, à la hauteur
+des premiers accords de L1 (« Dm(b5)/C », « Bm », « C ») ; aucune coupe horizontale ne les sépare : ils sont **masqués** dans L1
+(champ `masques`), ainsi que la fin de la note « [原调F->G。制作了很多张不同组合] » d'爱使我们勇敢. Leur cadre « 1=X » reste entier
+dans L1.
 
 ### Les trois derniers scans (décision 24 révisée, 08/11/2026)
 
