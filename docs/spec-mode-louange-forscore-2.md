@@ -84,6 +84,10 @@ Du 08/11/2026 :
     louange aussi, pour les actions et tout, il faut qu'ils puissent choisir leur propre ton de couleur ») : la couleur
     choisie (décision 19) vaut pour tout le chrome du mode louange (icônes, actions des menus, boutons allumés, poignée
     de la rangée de points) et pour la barre d'annotation ; jamais pour la page.
+24. **Scans 简谱 sans coupe propre** (十字架, 大手牵着小手, 荣耀至高神) : **affichés comme aujourd'hui**, sans tranches ;
+    pas de coupe qui laisserait dépasser une ligne voisine (Timothée, 08/11/2026 : « fais ce qui est bien selon toi »).
+25. **Section reprise dans une autre tonalité sans être regravée** (« Refrain 2 (G) ») : **gardée dans les repères**,
+    elle renvoie à la ligne où sa musique est gravée, et son nom porte la tonalité (même réponse).
 
 ## Ce qui change, ce qui reste gelé
 
