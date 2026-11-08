@@ -7,7 +7,8 @@ page et la LIGNE du scan (système de `public/jianpu/systemes.json`) où elle co
 
 **Sections du .cho** : chaque directive `{start_of_<type>[: libellé]}` hors `{start_of_jianpu}` ; id = `<type>-<n>`, n =
 rang (depuis 1) de la directive parmi toutes les `start_of_` du fichier hors jianpu (src/lib/chordpro/parser.ts : même
-compteur, `start_of_grid` compris) ; label = la valeur après « : » (vide sinon).
+compteur, `start_of_grid` compris) ; label = la valeur après « : » (vide sinon). Une ligne `{section_id: X}` à
+l'intérieur de la section remplace l'id par X (comme le parseur ; le compteur n avance quand même).
 
 **La règle** (proposition) :
 1. Les lignes viennent de `systemes.json` si le chant y est certifié, sinon de `debug/systemes-propose.json` (que `propose`
@@ -132,6 +133,10 @@ def lire_cho(slug: str) -> tuple[list[dict], str | None]:
                     typ = k[len("start_of_"):]
                     courante = {"id": f"{typ}-{len(sections) + 1}", "label": v, "type": typ, "accords": []}
                     sections.append(courante)
+                elif k == "section_id":
+                    # Même règle que le parseur : l'id gardé remplace `<type>-<n>` (le compteur, lui, avance).
+                    if courante is not None and v.strip():
+                        courante["id"] = v.strip()
                 elif k.startswith("end_of_"):
                     courante = None
                 continue
