@@ -23,11 +23,31 @@ l'intérieur de la section remplace l'id par X (comme le parseur ; le compteur n
 4. Une section que le .cho **répète** (même type et même suite d'accords qu'une section plus haut) alors que le scan ne la
    grave pas (moins des trois quarts de ses accords appariés : une gravure séparée s'apparie presque entièrement) va à la ligne de la section qu'elle répète (reprise ; les couplets
    suivants d'un même système de paroles suivent la même règle : mêmes accords, mêmes lignes).
-5. ANACROUSE : si le premier accord de la section tombe dans la dernière mesure de sa ligne (x au-delà de la dernière
+5. ANACROUSE (production) : si le premier accord de la section tombe dans la dernière mesure de sa ligne (x au-delà de la dernière
    barre intérieure ; la dernière barre d'une ligne, au bord droit de la page à 4 % de la largeur près, est celle du bord) et qu'une
    ligne suit (même page, sinon la 1re ligne de la page suivante), la section va à la ligne suivante avec `anacrouse: true`.
 6. Sans calque (page 2 de 为我而来), sans accord, ou sans appariement : `page` et `ligne` = null avec un ⚠ « à placer à la
    main » (apparier par les paroles est hors de portée). Une section absente du scan est aussi null.
+
+**Sens d'`anacrouse`** : `ligne` = la ligne où commence le CORPS de la section ; `anacrouse: true` = sa levée (quelques notes,
+souvent sans accord) est gravée en fin de `ligne − 1` (même page).
+
+**Contrôle indépendant** (`controle`, et refus de `certifier`) : le proposeur peut se tromper de façon cohérente, le contrôle
+relit donc les données sans lui. Pour chaque section dont page et ligne ne sont pas null, le PREMIER accord de la section dans
+le .cho (tonalité d'origine, tel qu'écrit ; crochets vides ou d'espace ignorés ; « X (Y) » : X et Y sont tous deux candidats ;
+les parenthèses d'un « (A/C#) » sont retirées) doit se trouver parmi les étiquettes `c` non vides de chords.json dont le centre
+vertical est dans [y0, y1] de la ligne (lignes de systemes.json certifié). Si `anacrouse` est vrai, il peut AUSSI se trouver dans
+la dernière mesure de la ligne précédente (étiquette au-delà de la dernière barre intérieure ; `derniere_barre()`). Comparaison :
+en DEGRÉS comme `propose` (accord du .cho relatif à {key}, étiquettes relatives à printedKey, à défaut {key} ; fondamentale,
+qualité et basse ; les enharmoniques s'équivalent), après normalisation (espaces et parenthèses retirés, ♭→b, ♯→#) ; « X » + « /Y » voisines
+(la seconde commence par « / », écart de x < 3 × labelH) se recollent en « X/Y » ; une étiquette qui contient un espace ou des parenthèses
+(« X (Y) ») est aussi comparée partie par partie. Une section dont la page n'a pas de calque (page ≥ 2) ou sans accord dans le
+.cho est « invérifiable ». Un écart se justifie par une **exception** écrite dans LOOP.md, sous « ### Exceptions du contrôle des
+sections » (une par ligne : tiret, slug et id entre apostrophes inverses, deux-points, raison) ; `certifier` refuse tout écart non couvert.
+
+**Empreinte** : `empreinte(entrée de systemes.json du chant)` = 12 premiers caractères du sha1 de l'entrée des lignes. `propose`
+l'écrit dans chaque entrée (`"empreinte"`) ; `certifier` refuse si elle diffère de celle des lignes CERTIFIÉES actuelles (les lignes
+ont changé depuis la proposition : regarder la planche, puis `rattacher`) et l'écrit dans l'entrée certifiée (le site l'ignore).
 
 **La proposition n'est pas la donnée.** `public/jianpu/sections.json` n'est écrit que par `certifier`, après certification
 à l'œil sur la planche (`npm run jianpu:audit -- --systemes <slug…>`, scripts/jianpu/LOOP.md). Une correction à la main
@@ -41,11 +61,15 @@ dans l'ordre du .cho. `public/jianpu/sections.json` = {"version": 1, "chants": {
 **Contrôles de `propose`** (une ligne par chant : slug, puis `id→p.L` par section, puis les ⚠) : section null · section
 sans accord · lignes non croissantes dans l'ordre du .cho (hors reprises).
 **Contrôles de `certifier`** (refus) : chant sans lignes CERTIFIÉES dans systemes.json · source ≠ index.json · ids ou
-libellés ≠ ceux du .cho · page/ligne inexistantes (ou un seul des deux null). Avertissement seulement : lignes non
+libellés ≠ ceux du .cho · page/ligne inexistantes (ou un seul des deux null) · écart du contrôle non couvert par une exception · empreinte ≠ celle des
+lignes certifiées. Avertissement seulement : lignes non
 croissantes.
 
 Usage (depuis la racine du dépôt) :
     python3 scripts/jianpu/sections.py propose [slug…]     # tableau + debug/sections-propose.json
+    python3 scripts/jianpu/sections.py controle [slug…] [--propose]  # contrôle indépendant (sans slug : tous les chants qui ont une entrée)
+    python3 scripts/jianpu/sections.py rattacher slug…     # recalcule l'empreinte de la proposition sur les lignes certifiées ACTUELLES,
+                                                           # rien d'autre : seulement après avoir REGARDÉ la planche
     python3 scripts/jianpu/sections.py certifier slug…     # copie la proposition dans public/jianpu/sections.json
     python3 scripts/jianpu/sections.py retirer slug…       # enlève un chant du fichier certifié
     python3 scripts/jianpu/sections.py etat                # certifiés / restants
@@ -54,6 +78,7 @@ Usage (depuis la racine du dépôt) :
 from __future__ import annotations
 
 import difflib
+import hashlib
 import json
 import os
 import re
@@ -349,6 +374,99 @@ def proposer_chant(slug: str, index: dict, calques: dict, lignes_entree: dict) -
     return {"source": index[slug]["source"], "sections": sortie}, avertissements
 
 
+def empreinte(entree_systemes: dict) -> str:
+    """Empreinte des lignes d'un chant : 12 premiers caractères du sha1 de l'entrée, JSON trié."""
+    return hashlib.sha1(json.dumps(entree_systemes, sort_keys=True, ensure_ascii=False).encode("utf-8")).hexdigest()[:12]
+
+
+def norm_accord(a: str) -> str:
+    return re.sub(r"[\s()]", "", a).replace("♭", "b").replace("♯", "#")
+
+
+def candidats(accord: str) -> list[str]:
+    """Formes admises du premier accord d'une section : « X (Y) » donne X et Y ; « (A/C#) » donne A/C#."""
+    a = accord.strip()
+    m = re.match(r"^(\S+)\s*\(([^)]+)\)$", a)
+    return [norm_accord(m.group(1)), norm_accord(m.group(2))] if m else [norm_accord(a)]
+
+
+def formes_etiquette(c: str) -> set[str]:
+    f = {norm_accord(c)}
+    if re.search(r"[\s()]", c):
+        f |= {norm_accord(p) for p in re.split(r"[\s()]+", c) if p}
+    return f
+
+
+def recoller(etiq: list[dict], ecart: float) -> list[str]:
+    """Textes « X/Y » des étiquettes voisines « X » + « /Y » (la seconde commence par « / », à moins de `ecart` px en x)."""
+    return [a["c"].strip() + b["c"].strip() for a, b in zip(etiq, etiq[1:]) if b["c"].strip().startswith("/") and b["x"] - a["x"] < ecart]
+
+
+EXCEPTIONS_TITRE = "### Exceptions du contrôle des sections"
+
+
+def lire_exceptions() -> dict[tuple[str, str], str]:
+    """Exceptions écrites dans LOOP.md, sous le titre dédié et jusqu'au titre suivant : (slug, id) → raison."""
+    out: dict[tuple[str, str], str] = {}
+    actif = False
+    with open(os.path.join(HERE, "LOOP.md"), encoding="utf-8") as f:
+        for ligne in f:
+            if ligne.startswith("#"):
+                actif = ligne.strip() == EXCEPTIONS_TITRE
+                continue
+            if actif:
+                m = re.match(r"^- `([^`]+)` `([^`]+)` :\s*(.+?)\s*$", ligne)
+                if m:
+                    out[m.group(1), m.group(2)] = m.group(3)
+    return out
+
+
+def controle(slug: str, entree: dict, lignes_entree: dict, calque: dict | None, exceptions: dict | None = None) -> list[dict]:
+    """Écarts d'une entrée de sections : le premier accord de chaque section doit être gravé sur sa ligne (ou, en anacrouse, à la fin de la précédente)."""
+    exceptions = exceptions or {}
+    cho, cle = lire_cho(slug)
+    ton_cho = semitons(cle) if cle else None
+    ton_scan = semitons(calque["printedKey"]) if calque and calque.get("printedKey") else ton_cho
+    par_id = {s["id"]: s for s in cho}
+    pages = lignes_entree["pages"]
+    ecarts = []
+    for e in entree.get("sections", []):
+        if e.get("page") is None or e.get("ligne") is None:
+            continue
+        s = par_id.get(e["id"])
+        premier = next((c for c in (s["accords"] if s else []) if c.strip()), None)
+        ecart = {"id": e["id"], "page": e["page"], "ligne": e["ligne"], "anacrouse": bool(e.get("anacrouse")),
+                 "cherche": premier, "etiquettes": [], "invérifiable": False}
+        if premier is None:
+            ecart["invérifiable"] = True
+            ecart["raison"] = "aucun accord dans le .cho"
+        elif e["page"] != 1 or not calque or not pages:
+            ecart["invérifiable"] = True
+            ecart["raison"] = f"p.{e['page']} sans calque"
+        else:
+            lignes = pages[0]["lignes"]
+            etiq = [x for x in calque.get("labels", []) if x.get("c")]
+
+            def dans(li: int) -> list[dict]:
+                g = lignes[li]
+                return sorted((x for x in etiq if g["y0"] <= x["y"] + x["h"] / 2 <= g["y1"]), key=lambda x: x["x"])
+
+            courantes = dans(e["ligne"] - 1)
+            ecart["etiquettes"] = [x["c"] for x in courantes]
+            textes = [x["c"] for x in courantes] + recoller(courantes, 3 * calque.get("labelH", 25))
+            if ecart["anacrouse"] and e["ligne"] >= 2:
+                lim = derniere_barre(lignes[e["ligne"] - 2], pages[0])
+                fin = [x for x in dans(e["ligne"] - 2) if x["x"] > lim]
+                ecart["etiquettes"] = [x["c"] for x in fin] + ["|"] + ecart["etiquettes"]
+                textes += [x["c"] for x in fin] + recoller(fin, 3 * calque.get("labelH", 25))
+            voulus = {relatif(c, ton_cho) for c in candidats(premier)}
+            if any(voulus & {relatif(f, ton_scan) for f in formes_etiquette(c)} for c in textes):
+                continue
+        ecart["couvert"] = (slug, e["id"]) in exceptions
+        ecarts.append(ecart)
+    return ecarts
+
+
 def lire_json(chemin: str) -> dict:
     if not os.path.exists(chemin):
         return {}
@@ -372,6 +490,7 @@ def proposer(slugs: list[str]) -> dict:
     for slug in slugs:
         entree_lignes, certifie = lignes_du_chant(slug, certifies, proposes)
         sections, av = proposer_chant(slug, index, calques, entree_lignes)
+        sections["empreinte"] = empreinte(entree_lignes)
         out[slug] = sections
         trajet = " ".join(
             f"{e['id']}→" + (f"p.{e['page']}L{e['ligne']}" + ("↑" if e["anacrouse"] else "") if e["ligne"] else "null") for e in sections["sections"]
@@ -443,12 +562,67 @@ def certifier(slugs: list[str]) -> None:
         err, av = verifier(slug, propose[slug], index, lignes)
         if err:
             sys.exit(f"{slug} refusé : " + " ; ".join(err))
+        exceptions = lire_exceptions()
+        nouveaux = [x for x in controle(slug, propose[slug], lignes[slug], sy.charger("chords.json").get(slug), exceptions) if not x["couvert"]]
+        if nouveaux:
+            sys.exit(f"{slug} refusé : " + " ; ".join(f"{x['id']} p.{x['page']} L{x['ligne']} : « {x['cherche']} » absent ({x.get('raison') or ' '.join(x['etiquettes'])})" for x in nouveaux)
+                     + " (corriger, ou justifier dans LOOP.md « Exceptions du contrôle des sections »)")
+        actuelle = empreinte(lignes[slug])
+        if propose[slug].get("empreinte") != actuelle:
+            sys.exit(f"{slug} refusé : lignes changées depuis la proposition (empreinte {propose[slug].get('empreinte')} ≠ {actuelle}) ; "
+                     "regarder la planche, puis `rattacher`")
         for a in av:
             print(f"{slug} ⚠ {a}")
-        certifies[slug] = propose[slug]
+        certifies[slug] = dict(propose[slug], empreinte=actuelle)
         nulles = sum(1 for e in propose[slug]["sections"] if e["ligne"] is None)
         print(f"{slug} certifié : {len(propose[slug]['sections'])} sections" + (f", dont {nulles} non gravée(s)" if nulles else ""))
     sy.ecrire(SECTIONS, certifies, VERSION)
+
+
+def controle_commande(args: list[str]) -> None:
+    """`controle [slug…] [--propose]` : écarts entre le premier accord de chaque section et les étiquettes de sa ligne."""
+    avec_propose = "--propose" in args
+    slugs = [a for a in args if a != "--propose"]
+    donnees = lire_json(PROPOSE) if avec_propose else lire_certifie()
+    slugs = slugs or sorted(donnees)
+    calques = sy.charger("chords.json")
+    certifies = sy.lire_certifie()
+    proposes = lire_json(SYSTEMES_PROPOSE)
+    exceptions = lire_exceptions()
+    n_chants = n_ecarts = n_couverts = 0
+    for slug in slugs:
+        if slug not in donnees:
+            print(f"{slug} : pas {'de proposition' if avec_propose else 'certifié'}")
+            continue
+        lignes, _ = lignes_du_chant(slug, certifies, proposes) if avec_propose else (certifies.get(slug), True)
+        if not lignes:
+            print(f"{slug} : pas de lignes certifiées")
+            continue
+        n_chants += 1
+        for x in controle(slug, donnees[slug], lignes, calques.get(slug), exceptions):
+            n_ecarts += 1
+            n_couverts += x["couvert"]
+            print(f"{slug}\t{x['id']}\tp.{x['page']} L{x['ligne']}\tanacrouse={'oui' if x['anacrouse'] else 'non'}\tcherché « {x['cherche']} »\t"
+                  + (f"invérifiable ({x['raison']})" if x["invérifiable"] else "étiquettes : " + " ".join(x["etiquettes"]))
+                  + ("\tCOUVERT : " + exceptions[slug, x["id"]] if x["couvert"] else ""))
+    print(f"{n_chants} chant(s) contrôlé(s), {n_ecarts} écart(s), {n_couverts} couvert(s), {n_ecarts - n_couverts} non justifié(s)")
+
+
+def rattacher(slugs: list[str]) -> None:
+    """Recalcule l'empreinte de la proposition sur les lignes certifiées ACTUELLES, sans rien changer d'autre.
+    À n'utiliser qu'après avoir regardé la planche : c'est l'aveu que les sections vont toujours avec les nouvelles lignes."""
+    if not slugs:
+        sys.exit("rattacher : au moins un slug")
+    propose = lire_json(PROPOSE)
+    lignes = sy.lire_certifie()
+    for slug in slugs:
+        if slug not in propose:
+            sys.exit(f"{slug} : pas de proposition")
+        if slug not in lignes:
+            sys.exit(f"{slug} : lignes non certifiées")
+        propose[slug]["empreinte"] = empreinte(lignes[slug])
+        print(f"{slug} rattaché ({propose[slug]['empreinte']})")
+    sy.ecrire(PROPOSE, propose, None)
 
 
 def retirer(slugs: list[str]) -> None:
@@ -474,11 +648,15 @@ def etat() -> None:
 
 
 if __name__ == "__main__":
-    if len(sys.argv) < 2 or sys.argv[1] not in {"propose", "certifier", "retirer", "etat"}:
+    if len(sys.argv) < 2 or sys.argv[1] not in {"propose", "controle", "rattacher", "certifier", "retirer", "etat"}:
         sys.exit(__doc__)
     commande, args = sys.argv[1], sys.argv[2:]
     if commande == "propose":
         proposer(args)
+    elif commande == "controle":
+        controle_commande(args)
+    elif commande == "rattacher":
+        rattacher(args)
     elif commande == "certifier":
         certifier(args)
     elif commande == "retirer":

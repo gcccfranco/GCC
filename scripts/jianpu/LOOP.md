@@ -426,6 +426,48 @@ la **ligne** du scan (comptées depuis 1, L1 de la planche = ligne 1) où elle c
    int|null, "ligne": int|null, "anacrouse": bool}]}}}`, dans l'ordre du .cho, clés triées, une ligne par chant, UTF-8. Une section
    absente du scan : `page` et `ligne` null.
 
+### Contrôles, étiquettes et procédure (corrections de JP-A)
+
+**Conventions des données**
+- `y1` est **inclusif** : c'est la dernière rangée d'encre de la ligne (y0 ≤ y ≤ y1 est « dans la ligne »).
+- **Sens d'`anacrouse`** : `ligne` = la ligne où commence le CORPS de la section ; `anacrouse: true` = sa levée (quelques
+  notes, souvent sans accord) est gravée en fin de `ligne − 1` (même page).
+
+**Règle des étiquettes** (`systemes.py verifier`, refus de `certifier`) : `chords.json[slug]` ne s'applique qu'à la **page 1**
+(les pages suivantes n'ont pas de calque). Toute étiquette dont `c` n'est pas vide (accord ou avis de modulation) appartient à
+la ligne qui contient son centre vertical (y + h/2) ; il faut y0_ligne ≤ y_étiquette, tolérance 0. Une étiquette dont le centre
+n'est dans aucune ligne, ou qui déborde au-dessus du haut de sa ligne, est refusée (« p.N : étiquette « C » (y=…) hors ligne /
+au-dessus du haut de Lk (y0=…) »). Refusés aussi : une page sans aucune ligne, une ligne à moins de 2 barres.
+
+**Cadre « 1=X »** : la boîte `keyLabel` de `chords.json` (page 1) est **entièrement dans L1 ou entièrement dehors, jamais
+tranchée** ; `verifier()` refuse si 0 < chevauchement < hauteur avec une ligne. (Les six cas connus — 一切都更新, 旷野中唯一的力量,
+求充满这地, 握住幸福, 复兴的火, 爱使我们勇敢 — sont corrigés dans les données.) `sections.py` ne lit que le calque de la page 1 :
+une section de la page 2 ou suivante est « invérifiable ».
+
+**Commandes**
+- `python3 scripts/jianpu/systemes.py verifier [slug…] [--propose]` : applique `verifier()` au fichier certifié (ou à la proposition)
+  sans rien écrire et imprime les refus ; sans slug, tous les chants certifiés.
+- `python3 scripts/jianpu/sections.py controle [slug…] [--propose]` : **contrôle indépendant** des sections. Le premier accord de
+  chaque section (dans le .cho, tonalité d'origine, tel qu'écrit entre crochets ; « X (Y) » : X et Y candidats) doit figurer parmi
+  les étiquettes de sa ligne (centre vertical dans [y0, y1]) ; si `anacrouse`, aussi dans la dernière mesure de la ligne précédente
+  (étiquette au-delà de la dernière barre intérieure). Égalité après normalisation (espaces et parenthèses retirés, ♭→b, ♯→#) ;
+  une étiquette « X (Y) » est comparée partie par partie. Page sans calque (≥ 2) ou section sans accord : « invérifiable ». Imprime
+  chaque écart (slug, id, page, ligne, anacrouse, accord cherché, étiquettes de la ligne), marque les écarts couverts par une
+  exception, puis un résumé (chants contrôlés, écarts, couverts, non justifiés). `certifier` refuse tout écart non couvert.
+- `sections.py rattacher <slug…>` : recalcule l'**empreinte** de la proposition sur les lignes certifiées actuelles, sans rien changer
+  d'autre. `propose` écrit l'empreinte (12 premiers caractères du sha1 des lignes du chant) dans chaque entrée ; `certifier` refuse
+  si elle diffère de celle des lignes certifiées (« lignes changées depuis la proposition ») et l'écrit dans l'entrée certifiée (le
+  site l'ignore). **À n'utiliser qu'après avoir regardé la planche** : c'est l'aveu que les sections vont toujours avec les lignes.
+
+**Procédure** : corriger (lignes, puis sections) → regarder la planche (`--systemes <slug…> --propose`) → `rattacher` si les lignes
+ont changé depuis la proposition → `systemes.py certifier` → `sections.py controle <slug>` → `sections.py certifier`.
+
+### Exceptions du contrôle des sections
+
+Un écart du contrôle se justifie ici, une exception par ligne, au format exact `- \`slug\` \`id\` : raison` (sections.py lit ces
+lignes, et elles seules, sous ce titre jusqu'au titre suivant). Raisons admises : reprise non regravée, section sans accord, page
+sans calque, levée sans accord.
+
 ### Bilan de la certification (JP-A3, 08/11/2026)
 
 **187 scans sur 190 certifiés** dans `systemes.json` et `sections.json`, chaque planche `--systemes` regardée.

@@ -60,11 +60,22 @@ une entrée qui ne correspond plus.
 étiquette de chords.json (c non vide) hors de toute ligne · deux lignes qui se recouvrent ou espacées de moins de 4 px ·
 ligne à moins de 2 barres · hauteur de ligne hors de [0,5 ; 1,8] × la médiane de la page · page sans aucune ligne.
 
+**Refus de `verifier()`** (utilisé par `certifier` et par la commande `verifier`) : source/file/w/h ≠ index.json · ligne hors de la page,
+qui recouvre la précédente, barres hors de [0, w] ou non croissantes · **page sans aucune ligne** · **ligne à moins de 2 barres** ·
+**étiquette du calque** (page 1 seulement : chords.json[slug] ne s'applique qu'à elle) dont `c` n'est pas vide (accord ou avis de
+modulation) qui n'est dans aucune ligne ou qui est à cheval sur le haut de sa ligne. Règle exacte (tolérance 0) : l'étiquette
+appartient à la ligne qui contient son centre vertical (y + h/2, y0 ≤ centre ≤ y1) ; il faut y0_ligne ≤ y_étiquette. `y1` est
+inclusif (dernière rangée d'encre de la ligne).
+
+**Cadre « 1=X »** : la boîte `keyLabel` de chords.json (page 1) est entièrement dans une ligne (L1) ou entièrement dehors, jamais tranchée
+(refus si 0 < chevauchement < hauteur avec une ligne).
+
 **Correction à la main** : éditer `scripts/jianpu/debug/systemes-propose.json` (la proposition du slug : y0/y1/barres),
 regarder la planche avec `--propose`, puis `certifier` (qui revérifie tout).
 
 Usage (depuis la racine du dépôt) :
     python3 scripts/jianpu/systemes.py propose [slug…]     # tableau + debug/systemes-propose.json
+    python3 scripts/jianpu/systemes.py verifier [slug…] [--propose]  # applique verifier() sans rien écrire (sans slug : tous les certifiés)
     python3 scripts/jianpu/systemes.py certifier slug…     # copie la proposition dans public/jianpu/systemes.json
     python3 scripts/jianpu/systemes.py retirer slug…       # enlève un chant du fichier certifié
     python3 scripts/jianpu/systemes.py etat                # certifiés / restants
@@ -362,7 +373,7 @@ def ecrire(chemin: str, chants: dict, version: int | None) -> None:
 
 
 def verifier(slug: str, entree: dict, index: dict) -> list[str]:
-    """Revérifie une entrée contre index.json et sa géométrie ; renvoie les erreurs."""
+    """Revérifie une entrée contre index.json, sa géométrie et le calque d'accords ; renvoie les erreurs."""
     if slug not in index:
         return [f"{slug} absent de index.json"]
     ref = index[slug]
@@ -372,17 +383,25 @@ def verifier(slug: str, entree: dict, index: dict) -> list[str]:
     pages = entree.get("pages", [])
     if len(pages) != len(ref["pages"]):
         return err + [f"{len(pages)} page(s) au lieu de {len(ref['pages'])}"]
+    calque = charger("chords.json").get(slug)
     for n, (p, r) in enumerate(zip(pages, ref["pages"]), 1):
+        avant = len(err)
         for k in ("file", "w", "h"):
             if p.get(k) != r[k]:
                 err.append(f"p.{n} : {k} {p.get(k)!r} ≠ {r[k]!r}")
-        if err:
+        if len(err) > avant:
+            continue
+        lignes = p.get("lignes", [])
+        if not lignes:
+            err.append(f"p.{n} : aucune ligne")
             continue
         dernier = None
-        for i, g in enumerate(p.get("lignes", []), 1):
+        propres = True
+        for i, g in enumerate(lignes, 1):
             manque = [k for k in ("y0", "y1", "barres") if k not in g]
             if manque:
                 err.append(f"p.{n} L{i} : clé(s) manquante(s) {', '.join(manque)}")
+                propres = False
                 continue
             if not 0 <= g["y0"] < g["y1"] <= r["h"]:
                 err.append(f"p.{n} L{i} : y0={g['y0']} y1={g['y1']} hors de [0, {r['h']}]")
@@ -390,8 +409,27 @@ def verifier(slug: str, entree: dict, index: dict) -> list[str]:
                 err.append(f"p.{n} L{i} : recouvre la ligne précédente")
             dernier = g["y1"]
             b = g["barres"]
+            if len(b) < 2:
+                err.append(f"p.{n} L{i} : {len(b)} barre(s), au moins 2")
             if any(not 0 <= x <= r["w"] for x in b) or any(x >= y for x, y in zip(b, b[1:])):
                 err.append(f"p.{n} L{i} : barres hors de [0, {r['w']}] ou non croissantes")
+        # Le calque ne couvre que la page 1.
+        if n == 1 and calque and propres:
+            kl = calque.get("keyLabel")
+            if kl:
+                for j, g in enumerate(lignes):
+                    chev = min(kl["y"] + kl["h"], g["y1"]) - max(kl["y"], g["y0"])
+                    if 0 < chev < kl["h"]:
+                        err.append(f"p.{n} : cadre « 1=X » (y={kl['y']}, h={kl['h']}) tranché par L{j + 1} (y0={g['y0']}, y1={g['y1']}) : entièrement dedans ou dehors")
+            for e in calque.get("labels", []):
+                if not e.get("c"):
+                    continue
+                cy = e["y"] + e["h"] / 2
+                k = next((j for j, g in enumerate(lignes) if g["y0"] <= cy <= g["y1"]), None)
+                if k is None:
+                    err.append(f"p.{n} : étiquette « {e['c']} » (y={e['y']}) hors ligne")
+                elif lignes[k]["y0"] > e["y"]:
+                    err.append(f"p.{n} : étiquette « {e['c']} » (y={e['y']}) au-dessus du haut de L{k + 1} (y0={lignes[k]['y0']})")
     return err
 
 
@@ -400,6 +438,31 @@ def lire_certifie() -> dict:
         return {}
     with open(SYSTEMES, encoding="utf-8") as f:
         return json.load(f)["chants"]
+
+
+def verifier_commande(args: list[str]) -> None:
+    """`verifier [slug…] [--propose]` : applique verifier() sans rien écrire et imprime les refus."""
+    avec_propose = "--propose" in args
+    slugs = [a for a in args if a != "--propose"]
+    index = charger("index.json")
+    if avec_propose:
+        donnees = {}
+        if os.path.exists(PROPOSE):
+            with open(PROPOSE, encoding="utf-8") as f:
+                donnees = json.load(f)
+    else:
+        donnees = lire_certifie()
+    slugs = slugs or sorted(donnees)
+    refus = 0
+    for slug in slugs:
+        if slug not in donnees:
+            print(f"{slug} : {'pas de proposition' if avec_propose else 'pas certifié'}")
+            continue
+        err = verifier(slug, donnees[slug], index)
+        for e in err:
+            print(f"{slug}\t{e}")
+        refus += bool(err)
+    print(f"{len(slugs)} chant(s) vérifié(s), {refus} refusé(s)")
 
 
 def certifier(slugs: list[str]) -> None:
@@ -450,11 +513,13 @@ def etat() -> None:
 
 
 if __name__ == "__main__":
-    if len(sys.argv) < 2 or sys.argv[1] not in {"propose", "certifier", "retirer", "etat"}:
+    if len(sys.argv) < 2 or sys.argv[1] not in {"propose", "verifier", "certifier", "retirer", "etat"}:
         sys.exit(__doc__)
     commande, args = sys.argv[1], sys.argv[2:]
     if commande == "propose":
         proposer(args)
+    elif commande == "verifier":
+        verifier_commande(args)
     elif commande == "certifier":
         certifier(args)
     elif commande == "retirer":
