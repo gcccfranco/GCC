@@ -58,6 +58,9 @@ Du 08/11/2026 :
     liste d'exceptions vérifiée**.
 12. **Couleur des icônes de la barre au choix de chacun, dans une palette.**
 13. **Pas de sépia** pour l'instant.
+19. Couleur des icônes : **les six teintes proposées et un cercle chromatique** pour choisir vraiment sa couleur.
+20. Q2 à Q5 ci-dessous acceptées telles que proposées ; **sessions en parallèle** pour aller plus vite (Timothée,
+    08/11/2026).
 14. Bouton **« Je joue »** et **pastille du planning** ; **menu Repères** ; en paysage et sur ordinateur, les **deux
     colonnes actuelles** du site pour le texte.
 15. Rôle « Musicien » sans instrument : l'instrument écrit dans la case du Campus (« Piano: … ») ou celui du profil
@@ -245,9 +248,12 @@ Réglages, Annoter, ‹ ›, Quitter), Réglages en tiroir vaul (`PerformanceMod
 - En bas, **seulement la rangée de points** (un point par page de toute la setlist, écart entre deux chants, poignée
   ronde, vignette de la page pendant le glissé) : `CurseurPage.tsx` garde son fonctionnement (rôle `slider`, repères de
   chant, PageUp/PageDown/Espace) et change d'apparence. Plus de « page 1/4 » ni de ‹ ›.
-- **Couleur des icônes au choix** (décision 12) : palette par appareil `src/lib/performance/couleurIcones.ts`
-  (localStorage) ; six teintes proposées (question Q1 ci-dessous), défaut le bleu des accords ; s'applique aux icônes et
-  à la poignée, jamais à la page.
+- **Couleur des icônes au choix** (décisions 12 et 19) : réglage par appareil `src/lib/performance/couleurIcones.ts`
+  (localStorage) ; **six teintes prêtes** (bleu des accords #3f63cf par défaut, encre #1c1c1e, vert #1f7a5c, violet
+  #6d4bc3, framboise #c2185b, gris #636872) **et un cercle chromatique** pour choisir n'importe quelle couleur (teinte
+  au tour du cercle, luminosité au centre ; au toucher comme à la souris, réglable au clavier) ; **garde-fou de
+  contraste** : la couleur choisie est éclaircie ou assombrie automatiquement pour garder au moins 3:1 contre le fond de
+  la barre, en clair comme en sombre, et l'aperçu le montre ; s'applique aux icônes et à la poignée, jamais à la page.
 - Garde-fous : la barre reste sous le bloc `inert` / `aria-hidden` / `opacity` quand elle est masquée
   (`PerformanceMode.tsx:1328-1335`, test `mode-louange-forscore.spec.ts:914-920`) ; ses mesures (`barreHautRef`,
   `barreBasRef`, `:526-535`) continuent d'alimenter le liseré du tempo et l'annotation ; barre masquée à l'ouverture
@@ -393,21 +399,17 @@ sur un PDF fixe) vient avec la migration de la base (décision 18). Enregistreme
 coupe : à corriger dans le lot AN (vérifier `res.ok`, délai maximal, file locale par compte, indicateur « enregistré /
 en attente »), sans changer le format.
 
-## Questions encore ouvertes (avec proposition)
+## Questions tranchées le 08/11/2026
 
-- **Q1 Palette des icônes** : six teintes — bleu des accords #3f63cf (défaut), encre #1c1c1e, vert #1f7a5c, violet
-  #6d4bc3, framboise #c2185b, gris #636872 ; en sombre, leurs versions claires. Proposition : celles-ci.
-- **Q2 Appareils sans clé `chart-style`** : un appareil déjà utilisé (une clé du site présente, y compris `recentSongs` ou
-  `i18nextLng`, posées sans geste) garde Couleurs par section, un appareil vraiment neuf démarre en Classique.
-  Proposition : oui (sinon, des musiciens qui n'ont jamais touché ce réglage verraient leur page changer du jour au
-  lendemain) ; l'heuristique est approximative : un appareil dont le stockage a été vidé passe en Classique.
-- **Q3 Traits déjà posés et coupure** : accepter, comme le 13/09/2026, que des traits ne s'affichent plus sur les pages
-  dont la coupure change (bandeau, équipe prévenue, rien de supprimé) jusqu'à l'accrochage des traits avec la migration ?
-  Proposition : oui.
-- **Q4 Annoter dans une autre orientation** : une page annotée en portrait se recompose en paysage. Proposition : les
-  traits restent rangés par orientation (comme aujourd'hui par la clé `x2`), le bandeau le dit.
-- **Q5 Ordre des lots** : CV, puis DP, puis FS, puis RP, puis JP. Proposition : celui-ci ; JP-A (données des scans)
-  peut commencer en parallèle, il ne touche pas au site.
+- **Q1 Palette des icônes** : les six teintes et un cercle chromatique (décision 19).
+- **Q2 Appareils sans clé `chart-style`** : oui — un appareil déjà utilisé (une clé du site présente, y compris
+  `recentSongs` ou `i18nextLng`) garde Couleurs par section, un appareil vraiment neuf démarre en Classique ; un appareil
+  dont le stockage a été vidé passe en Classique.
+- **Q3 Traits déjà posés et coupure** : oui — des traits ne s'afficheront plus sur les pages dont la coupure change
+  (bandeau, équipe prévenue, rien de supprimé) jusqu'à l'accrochage des traits avec la migration.
+- **Q4 Annoter dans une autre orientation** : oui — les traits restent rangés par orientation, le bandeau le dit.
+- **Q5 Ordre des lots** : oui, et des sessions en parallèle quand les lots ne touchent pas les mêmes fichiers (voir
+  « Méthode »).
 
 ## Hors périmètre
 
@@ -430,6 +432,15 @@ Une section par écran, Pour chanter, Recueil) ; le PDF.
 | `PerformanceMode.tsx` (1 655 lignes) | Chaque tranche extrait ses morceaux (`src/components/performance/`, `src/lib/performance/`) |
 
 ## Méthode
+
+**Parallélisme** (décision 20) : vague 1 en parallèle, sur des fichiers disjoints — **CV** (`ChordLine.tsx`, `ZhLine`
+dans `SongView.tsx`, `src/lib/song/coupure.ts`, tests de lignes), **JP-A** (`scripts/jianpu/`, `public/jianpu/`, données
+seulement) et **FS-A + FS-B** (`src/components/performance/*`, chrome et options de `PerformanceMode.tsx`,
+`tests/helpers/louange.ts`) ; vague 2 : **DP** (après CV : `SectionView` dans le même fichier que `ZhLine`, et le choix
+de disposition dans les options de FS-B), **FS-C + FS-D** puis **RP** (après FS-B), **JP-B** (après JP-A et FS-B) ;
+vague 3 : **JP-C**, **JP-D**, **AN**. Toutes les sessions poussent sur la branche de la session avec `git pull --rebase`
+avant chaque push (CLAUDE.md) ; trois sessions au plus en même temps (limite de dépense).
+
 
 Sur go, lot par lot : une session orchestratrice (`create_session`, CLAUDE.md « Coder = une session orchestratrice »)
 code la tranche avec `/tranche` (executant → testeur → relecteur), sur la branche de la session ; la conversation
