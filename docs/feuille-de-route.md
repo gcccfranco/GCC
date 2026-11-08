@@ -1389,7 +1389,8 @@ du Campus ou du profil, sinon rien, Percussion → Batteur ; 简谱 : ligne coup
 feuille large en tablette paysage, une feuille plus grande sur ordinateur, début de chaque section noté par scan ;
 **choriste et présidence : paroles avec pinyin par défaut sur un chant à scan, le 简谱 à leur choix** ; **pas de
 sépia pour l'instant**. Spec : `spec-mode-louange-forscore-2.md` (écrite et contre-vérifiée le 08/11/2026 : lots CV, DP, FS, RP, JP, AN ;
-en attente de go, lot par lot).
+en attente de go, lot par lot). **Go de Timothée le 08/11/2026 pour la vague 1** : CV, JP-A et FS-A + FS-B, trois
+sessions de code en parallèle sur la branche de la session ; rien en ligne sans son ordre.
 **Annotations façon forScore** (Timothée, 08/11/2026 : « comment fonctionnent les annotations maintenant ? il faut que
 ce soit comme forScore », puis « oui go » à la proposition) : lot à part, option (a) — les outils façon forScore
 maintenant (appui long et stylet qui dessine seul, barre d'outils déplaçable, tourner les pages en annotant, stylos

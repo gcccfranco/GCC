@@ -452,9 +452,9 @@ nom réel de membre dans les tests. Mise en ligne sur ordre de Timothée seuleme
 
 | Lot | État |
 | --- | --- |
-| CV | spec écrite, en attente de go |
+| CV | **go le 08/11/2026** (vague 1), session de code lancée |
 | DP | spec écrite, en attente de go |
-| FS | spec écrite, en attente de go |
+| FS | **go le 08/11/2026 pour FS-A et FS-B** (vague 1), session de code lancée ; FS-C et FS-D en attente de go |
 | RP | spec écrite, en attente de go |
-| JP | spec écrite, en attente de go |
+| JP | **go le 08/11/2026 pour JP-A** (vague 1, données seulement), session lancée ; JP-B à JP-D en attente de go |
 | AN | planche en cours (`docs/planches/planche-annotations-forscore.html`) |
