@@ -73,6 +73,17 @@ Du 08/11/2026 :
     l'appareil, clair par défaut.
 18. **Annotations façon forScore** : lot à part (AN), option (a) — les outils maintenant, sans changer le stockage ;
     l'accrochage des traits à la ligne ou à la section avec la migration de la base ; calques plus tard.
+21. **Annotations : piste A « Barre forScore »** de la planche des annotations ; les autres propositions acceptées
+    telles quelles : « le doigt ne dessine pas » coupé au départ et allumé au premier trait au stylet, sortie
+    automatique après 8 s seulement si l'on est entré au stylet, tourner la page par les côtés et jamais au stylet,
+    repères au-dessus de l'encre, « seul » / « tutti » dans la langue de l'interface, cinq préréglages (trois visibles
+    au téléphone), barre en haut sur tablette et ordinateur et en bas au téléphone, pas de blanc « correcteur ».
+22. **Couleur des stylos au choix de chacun** : chaque préréglage se règle à sa guise (couleur avec les teintes prêtes et
+    le cercle chromatique, épaisseur, transparence) ; aucune couleur n'est interdite. Remplace la question des encres.
+23. **Couleur personnelle pour toute la barre et les actions** (Timothée, 08/11/2026 : « pour la barre d'outils du mode
+    louange aussi, pour les actions et tout, il faut qu'ils puissent choisir leur propre ton de couleur ») : la couleur
+    choisie (décision 19) vaut pour tout le chrome du mode louange (icônes, actions des menus, boutons allumés, poignée
+    de la rangée de points) et pour la barre d'annotation ; jamais pour la page.
 
 ## Ce qui change, ce qui reste gelé
 
@@ -118,7 +129,7 @@ louange passent par un seul helper (`tests/helpers/louange.ts`).
 | **FS** | Chrome forScore du mode louange (FS-A barre et points, FS-B menus et options, FS-C Je joue et rôle par compte, FS-D feuille de route du batteur) | L |
 | **RP** | Rôle proposé d'après le planning | S à M |
 | **JP** | 简谱 dans le mode louange (JP-A données des scans, JP-B tranches et feuille, JP-C téléphone, JP-D rôles) | L |
-| **AN** | Annotations façon forScore (planche prête le 08/11, à trancher ; spec à compléter ensuite) | M à L |
+| **AN** | Annotations façon forScore (AN-1 enregistrement fiable, AN-2 entrer et sortir, AN-3 barre d'annotation, AN-4 préréglages et couleurs, AN-5 texte, tampons et formes) | L |
 
 ### CV — Coupure des vers (site entier)
 
@@ -253,7 +264,8 @@ Réglages, Annoter, ‹ ›, Quitter), Réglages en tiroir vaul (`PerformanceMod
   #6d4bc3, framboise #c2185b, gris #636872) **et un cercle chromatique** pour choisir n'importe quelle couleur (teinte
   au tour du cercle, luminosité au centre ; au toucher comme à la souris, réglable au clavier) ; **garde-fou de
   contraste** : la couleur choisie est éclaircie ou assombrie automatiquement pour garder au moins 3:1 contre le fond de
-  la barre, en clair comme en sombre, et l'aperçu le montre ; s'applique aux icônes et à la poignée, jamais à la page.
+  la barre, en clair comme en sombre, et l'aperçu le montre ; s'applique aux icônes, à la poignée et, avec FS-B, aux actions des menus et aux boutons
+  ronds allumés (décision 23) ; jamais à la page.
 - Garde-fous : la barre reste sous le bloc `inert` / `aria-hidden` / `opacity` quand elle est masquée
   (`PerformanceMode.tsx:1328-1335`, test `mode-louange-forscore.spec.ts:914-920`) ; ses mesures (`barreHautRef`,
   `barreBasRef`, `:526-535`) continuent d'alimenter le liseré du tempo et l'annotation ; barre masquée à l'ouverture
@@ -273,7 +285,8 @@ Réglages, Annoter, ‹ ›, Quitter), Réglages en tiroir vaul (`PerformanceMod
   guitare, transitions, plein écran ; raccourcis clavier affichés seulement sur ordinateur ou clavier détecté.
 - **Options d'affichage** (remplace le tiroir Réglages) : boutons ronds « Sur la page » (Accords, Pinyin, 简谱,
   Annotations, Demi-page, Deux colonnes), **Disposition** (les cinq, à miniatures, DP-A), A− taille A+, Clair / Sombre,
-  Métronome visuel, Couleur des icônes. Le dialogue garde le nom accessible « Réglages », ou le helper `ouvrirReglages`
+  Métronome visuel, Couleur des icônes. **Les actions des menus** (« Revenir à X », tonalité − / +, capo, liens) **et les
+  boutons ronds allumés prennent la couleur choisie** (décision 23), avec le même garde-fou de contraste. Le dialogue garde le nom accessible « Réglages », ou le helper `ouvrirReglages`
   (`tests/helpers/louange.ts:22-34`) et les specs qui le citent sont mises à jour dans la même tranche : celles qui
   utilisent `ouvrirReglages` ou écrivent « Réglages » en dur pour le mode louange (`coup-d-oeil`, `guide-captures`,
   `jianpu-par-defaut`, `louange-sections-uniques`, `mode-louange-forscore`, `performance-mode`, et, à vérifier,
@@ -384,6 +397,115 @@ hauteur de chiffre ≥ 17 px mesurée sur la tranche à 390, 768, 1 024 et 1 440
 ligne d'accords ; un scan non certifié s'affiche comme aujourd'hui ; transposition : le calque reste aligné sur chaque
 tranche ; **planches `npm run jianpu:audit` regardées** pour chaque scan certifié.
 
+### AN — Annotations façon forScore
+
+Planche : `docs/planches/planche-annotations-forscore.html` (artefact, carte 3), **piste A « Barre forScore »**
+(décisions 21 à 23). Aujourd'hui : bouton « Annoter » (connecté, setlist qui ne vient pas de la copie hors ligne :
+`PerformanceMode.tsx:1360`), barre d'outils fixe dans `AnnotationCanvas.tsx` (514 lignes : loupe, stylo, surligneur,
+gomme, trois épaisseurs `SIZES` l.27, sept couleurs `COLORS` l.25, annuler sur 30 états l.118 et l.338, tout effacer) ;
+un stylet ne fait rien hors annotation (`PerformanceMode.tsx:910` et `:933`, `if (e.pointerType === "pen") return`) ;
+traits vectoriels `{w, h, strokes, rappel?}` (`src/lib/annotations/strokes.ts`), sérialisés dans le champ `strokes` du
+document `annotations/{uid}__{setlistId}__{pageKey}` (`src/lib/firebase/annotations.ts`) ; un document par écran, deux
+colonnes comprises (suffixe `x2` de la clé, `PerformanceMode.tsx:804`).
+
+**Ce qui ne change pas** (décision 18) : le document, son nom, son champ `strokes` et son enveloppe JSON ; aucune autre
+écriture Firestore ; pas de calques ni de partage d'annotations ; les traits restent en pixels d'écran sous la clé de
+page (l'accrochage viendra avec la migration). Les nouveautés tiennent dans la liste `strokes` (types d'AN-5, champ
+optionnel `alpha` d'AN-4) ou restent sur l'appareil (préréglages, position de la barre, « le doigt ne dessine pas »).
+
+Dépendances : FS-A (barre de titre, réglage de couleur et sélecteur à cercle chromatique), FS-B (popover, état
+`popoverOuvert`), DP (traits rangés par disposition), CV (marque `v2`). Vague 3.
+
+**AN-1 Enregistrement fiable** (S) : `saveAnnotation` vérifie `res.ok`, a un délai maximal (`delaiMax`) et ne se tait
+plus ; un enregistrement en échec va dans une file locale par compte (effacée à la déconnexion ou au changement de compte,
+comme `src/lib/setlist/copieHorsLigne.ts`), renvoyée au retour du réseau ; un petit indicateur « Enregistré » /
+« En attente » dans la barre d'annotation. Même document, même format.
+
+**AN-2 Entrer et sortir** (M) :
+- **Appui long** n'importe où sur la page (hors barre et popovers) : un anneau se remplit sous le doigt de 200 à
+  500 ms ; à 500 ms on entre en annotation ; un toucher rapide ne montre rien. Les gestes acquis (côtés = tourner,
+  centre = barre, balayage) ne changent pas. Nouveau geste pur dans `src/lib/performance/gestes.ts`, testé.
+- **Stylet** : le trait commence dès que le stylet touche la page (le `return` des lignes 910 et 933 est levé pour ce
+  cas) ; le mode annotation s'ouvre avec ce premier trait.
+- **« Le doigt ne dessine pas »** : coupé sur un appareil neuf ; s'allume seul au premier trait fait au stylet sur
+  l'appareil, avec un avis une seule fois (« Le doigt tourne et zoome, le stylet dessine ») ; interrupteur dans le
+  menu ⋯ de la barre ; retenu par appareil (localStorage).
+- **Sortir** : « Terminé », Échap ; sortie automatique après 8 s sans toucher **seulement** si l'on est entré au stylet.
+- Le bouton Annoter de la barre de titre (FS-A) reste ; l'appui long et le stylet suivent la même condition que lui
+  (connecté, pas sur la copie hors ligne) et ne font rien sinon.
+
+**AN-3 Barre d'annotation** (L) :
+- Attachée, elle **prend la place de la barre de titre** (même hauteur, même matière opaque, les contenus changent en
+  fondu enchaîné, la barre ne bouge pas) sur la tablette et l'ordinateur (ordinateur : capsule centrée dans la colonne
+  de lecture de 1 440 px) ; **en bas au téléphone**, avec en haut Annuler, Rétablir · ‹ p. 1/2 › · Terminé.
+- Tablette portrait (768 px) : poignée (zone de 44 × 44 px), ‹ ›, Annuler, Rétablir | les cinq préréglages en
+  **traits témoins** (le trait qu'on va faire, à sa couleur, son épaisseur et sa transparence) | Gomme, Texte, Tampons
+  et formes (un seul menu) | ⋯ (Loupe, « Le doigt ne dessine pas », Modifier les préréglages, Raccourcis, Tout
+  effacer…), Terminé. La Loupe sort du menu ⋯ à partir de 1 024 px. Téléphone : trois préréglages, Gomme, Tampons, ⋯.
+- **Détacher** par la poignée : suivi 1:1 (capture du pointeur) ; au lâcher, la barre s'accroche au point le plus
+  proche (haut, bas, bord gauche, bord droit, en colonne contre un bord latéral, contenus en fondu, sans rotation) ou
+  reste libre si on la lâche lentement ; ressort, élastique aux bords ; position retenue par appareil.
+  `prefers-reduced-motion` : fondus de 150 ms, pas de ressort.
+- **Tourner la page en annotant** : ‹ › de la barre, ← → au clavier, et les côtés : onglets de 44 px aux bords quand
+  le doigt dessine, zones latérales habituelles quand il ne dessine pas ; **le stylet ne tourne jamais la page**. La
+  page suivante charge ses traits (état « chargement » visible ; rien ne s'enregistre avant la fin du chargement, comme
+  aujourd'hui avec `loadAnnotation`). En deux colonnes, le trait va à la feuille sous la pointe, dans le document de
+  l'écran.
+- **Annuler / Rétablir** par page, historique gardé en changeant de page pendant la séance ; ⌘Z / ⇧⌘Z sur Apple,
+  Ctrl+Z / Ctrl+Y ailleurs (les deux combinaisons acceptées partout, libellés selon le système).
+- **Tout effacer** (la page) avec confirmation. Bulles d'aide au survol, montrées aussi à l'appui long sur un outil.
+- En annotation, les **repères de section passent au-dessus de l'encre** et sont inertes ; l'onglet de page passe
+  devant eux (en Scène, il se pose sur la colonne de gauche).
+
+**AN-4 Préréglages et couleurs** (M), décisions 22 et 23 :
+- **Cinq préréglages**, chacun réglable à sa guise : outil (stylo ou surligneur), **couleur** (teintes prêtes et le
+  cercle chromatique de FS-A ; aucune couleur interdite), **épaisseur** (curseur), **transparence** (curseur). Un
+  toucher prend le préréglage ; un second toucher, ou un appui long, ouvre son réglage ; « Modifier les préréglages »
+  dans ⋯. Par défaut : Graphite fin (#2b2b2e), Magenta moyen (#b8188c), Vert moyen (#1d7a3e), Surligneur jaune
+  (#ffd60a), Graphite épais. Teintes prêtes du réglage : celles-ci, la Menthe (#6ee7a8) et quelques autres ; le blanc
+  « correcteur » n'est plus proposé (le cercle le permet toujours).
+- Retenus **par compte sur l'appareil** (`annot-prereglages-<uid>`, localStorage), comme le rôle (FS-C) ; rien dans
+  Firestore.
+- Le trait garde la couleur choisie (champ `color`) ; la transparence va dans un champ optionnel `alpha` du trait
+  (absent = rendu d'aujourd'hui : 1 pour le stylo, 0,35 pour le surligneur). Les anciens traits gardent leur couleur.
+- **Garde de lisibilité au rendu**, jamais à l'enregistrement : un trait de stylo à moins de 3:1 contre le fond de la
+  page est dessiné éclairci ou assombri, même teinte (c'est ce qui rend lisible en sombre un ancien #1a1a1a) ; le
+  surligneur a son rendu sombre (fusion « écran », 45 %). Même calcul que le garde-fou de la couleur des icônes.
+- **Couleur de la barre** (décision 23) : la barre d'annotation suit la couleur choisie dans FS-A (icônes, ‹ ›,
+  Annuler, Rétablir, Terminé, pastille de l'outil actif avec un glyphe à la couleur du fond si le contraste l'exige),
+  avec le même garde-fou de 3:1.
+
+**AN-5 Texte, tampons et formes** (M) :
+- **Texte** : une note courte tapée, posée là où l'on touche ; police système demi-gras, 17 px à la loupe 100 %,
+  liseré de 3 px de la couleur du fond ; déplaçable et modifiable tant qu'on annote ; la gomme l'efface.
+- **Tampons** : p, mf, f, ff, crescendo, decrescendo, respiration, point d'orgue, ×2, seul, tutti ; **formes** :
+  flèche, cercle, trait. Un seul menu « Tampons et formes » ; sous chaque signe, son sens (piano, mezzo-forte, forte,
+  fortissimo, crescendo, decrescendo, respiration, point d'orgue, reprise, solo, tous ensemble ; 中文 : 弱, 中强, 强,
+  很强, 渐强, 渐弱, 换气, 延长, 反复, 单独, 全体).
+- Enregistrement : formes, soufflets, respiration et point d'orgue sont des traits `pen` ordinaires (aucun type
+  nouveau) ; nuances, ×2, seul et tutti sont un élément `{tool: "stamp", kind, points: [[x, y]], size, color}` ; le
+  texte est `{tool: "text", text, points: [[x, y]], size, color}`. Une ancienne version (copie en cache du service
+  worker) les dessine au pire comme un point, sans planter. Seul et tutti s'affichent dans la langue de l'interface
+  (seul, tutti ; 独, 齐) : on enregistre le genre, pas le texte. `drawStrokes`, `strokeHitTest` (gomme),
+  `serializeAnnotations` et `deserializeAnnotations` les gèrent ; nouveau `src/lib/annotations/tampons.ts`.
+- Glyphes Noto Music U+1D18F à U+1D193, U+1D110 et U+1D112 ajoutés au sous-ensemble (`scripts/build-fonts.py`),
+  couverture vérifiée au build ; la police est chargée avant de dessiner sur le canvas.
+
+Critères (AN) : nouvelle spec `tests/annotations-forscore.spec.ts`, ajoutée à `SPECS_GRAND_ECRAN` (cinq projets) :
+l'appui long entre en annotation, un toucher rapide non ; un stylet simulé (`pointerType: "pen"`) dessine dès le contact
+et ne tourne jamais la page ; « le doigt ne dessine pas » s'allume au premier trait au stylet ; tourner la page en
+annotant garde les traits des deux pages ; Annuler / Rétablir ; Échap = Terminé ; un préréglage modifié est retenu après
+rechargement, par compte (deux comptes simulés, noms inventés) ; tampon et texte enregistrés dans le même document
+(`db.writes` lu après un signe à l'écran) et relus ; un ancien document (sept couleurs, sans `alpha`) s'affiche comme
+avant ; un document avec `stamp` et `text` ne fait pas planter la lecture ; aucune écriture hors
+`annotations/{uid}__…` ; un enregistrement en échec affiche « En attente » puis part au retour du réseau ; repères
+au-dessus de l'encre ; la barre tient à 768 px sans débordement ; la barre et ses actions prennent la couleur choisie.
+Tests existants d'annotation verts (`performance-mode`, `mode-louange-forscore`, `jianpu-integration` pour les clés
+`j2`, `j3`, `j4`). Captures **regardées** : quatre dispositions + 1 440 px, FR et 中文, clair et sombre, une page
+Classique et un scan 简谱. Libellés chinois nouveaux relus par un responsable sinophone avant la mise en ligne. Essai
+sur un iPad avec Apple Pencil (pression, paume posée sur l'écran) par Timothée avant la mise en ligne : Playwright ne
+le voit pas.
+
 ## Annotations et coupure
 
 Aujourd'hui, un trait est enregistré en pixels de l'écran sous une clé de page faite des sections de la page et de la
@@ -396,8 +518,7 @@ traits et la nouvelle aucun, le bandeau du lot L5 (« Des annotations existent a
 on prévient l'équipe avant la mise en ligne de CV. La vraie solution (traits accrochés à la ligne ou à la section, comme
 sur un PDF fixe) vient avec la migration de la base (décision 18). Enregistrement : `saveAnnotation` ne regarde pas
 `res.ok` et avale les erreurs (`annotations.ts:31-47`) ; un trait peut donc se perdre sans rien dire sur un réseau qui
-coupe : à corriger dans le lot AN (vérifier `res.ok`, délai maximal, file locale par compte, indicateur « enregistré /
-en attente »), sans changer le format.
+coupe : à corriger dans le lot AN (tranche AN-1), sans changer le format.
 
 ## Questions tranchées le 08/11/2026
 
@@ -457,4 +578,4 @@ nom réel de membre dans les tests. Mise en ligne sur ordre de Timothée seuleme
 | FS | **go le 08/11/2026 pour FS-A et FS-B** (vague 1), session de code lancée ; FS-C et FS-D en attente de go |
 | RP | spec écrite, en attente de go |
 | JP | **go le 08/11/2026 pour JP-A** (vague 1, données seulement) : JP-A1 fait (`scripts/jianpu/systemes.py`, planche `npm run jianpu:audit -- --systemes`, `public/jianpu/systemes.json` : 11 scans du pilote certifiés à l'œil) ; JP-A2 (sections) et JP-A3 (tous les scans) en cours ; JP-B à JP-D en attente de go |
-| AN | planche prête le 08/11 (`docs/planches/planche-annotations-forscore.html`, piste A recommandée), à trancher |
+| AN | planche tranchée le 08/11 (piste A, couleurs au choix : décisions 21 à 23), spec écrite ; en attente de go (vague 3, après FS-A, FS-B et DP) |

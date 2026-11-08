@@ -1396,7 +1396,13 @@ ce soit comme forScore », puis « oui go » à la proposition) : lot à part, o
 maintenant (appui long et stylet qui dessine seul, barre d'outils déplaçable, tourner les pages en annotant, stylos
 préréglés, texte, tampons utiles au culte, annuler/rétablir), **sans changer le stockage** ; l'accrochage des traits à
 la ligne ou à la section (pour qu'un trait ne bouge plus, comme sur un PDF) se fera **avec la migration de la base** ;
-calques plus tard. Planche lancée le 08/11/2026 ; ce « go » vaut pour la planche, pas pour le code. **Le mode
+calques plus tard. Planche lancée le 08/11/2026 ; ce « go » vaut pour la planche, pas pour le code. Planche publiée le
+08/11/2026 (https://claude.ai/artifact/AuYFVmjUN6UAZhUVxBHBr8, carte 3). **Tranché par Timothée le 08/11/2026** :
+**piste A « Barre forScore »** (en annotation, la barre de titre devient la barre d'outils) et les autres propositions de
+la planche ; **chacun choisit la couleur de ses stylos** et les règle à sa guise (couleur, épaisseur, transparence) ; **la
+couleur personnelle vaut aussi pour toute la barre du mode louange et ses actions** (« pour les actions et tout »), pas
+pour la page. Spec AN écrite (cinq tranches : enregistrement fiable, entrer et sortir, barre d'annotation, préréglages
+et couleurs, texte et tampons) ; en attente de go, vague 3. **Le mode
 louange suit le réglage du site** (Timothée, 07/11/2026 : « si sur le site ils sont en couleur par section, dans le
 mode louange on le met en couleur par section ») : c'est déjà le cas, un seul réglage « Couleurs par section » par
 appareil partagé par la page du chant, la vue partitions de la setlist et le mode louange (`src/lib/chartStylePref.ts`) ;
