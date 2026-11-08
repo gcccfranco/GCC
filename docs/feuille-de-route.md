@@ -1372,7 +1372,13 @@ escalier « Ton / E Nom… », mot seul « suivront ») : règle corrigée propo
 après une ponctuation, jamais un mot seul ; accord toujours sur sa syllabe, rangée d'accords vide repliée ; fin
 d'accords sans paroles qui déborde un peu ; espaces resserrés si la ligne dépasse de 5 % au plus ; suite en retrait
 de 1 em), montrée dans la planche pour les huit dispositions ; (2) la **marge de « Repères en marge »** resserrée au
-téléphone. Corriger le site lui-même = un lot à part, sur go. **Le mode
+téléphone. Corriger le site lui-même = un lot à part, sur go. **Choix de Timothée (08/11/2026, captures à l'appui) : quatre
+dispositions au menu** — **Bleu** (l'actuelle, appareil neuf), **Repères en marge** (planche des dispositions,
+n° 3), la **page de la piste B « Grille de scène »** de la planche forScore (bandes de section pleine largeur, grande
+lettre de section dans la colonne de gauche, thème clair) et la **page de la piste A « Pupitre »** (partition
+imprimée : titre gravé centré, ♩ et tonalité, repères encadrés). Écartées : Couleurs par section (sort du menu),
+Bandeaux, Grille, Une section par écran, Pour chanter, Recueil. La règle de coupure corrigée vaut pour les quatre
+(la capture de la piste A au téléphone montrait encore l'ancienne). Spec à écrire. **Le mode
 louange suit le réglage du site** (Timothée, 07/11/2026 : « si sur le site ils sont en couleur par section, dans le
 mode louange on le met en couleur par section ») : c'est déjà le cas, un seul réglage « Couleurs par section » par
 appareil partagé par la page du chant, la vue partitions de la setlist et le mode louange (`src/lib/chartStylePref.ts`) ;
