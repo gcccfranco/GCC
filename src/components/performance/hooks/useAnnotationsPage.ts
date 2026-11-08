@@ -50,20 +50,6 @@ export function useAnnotationsPage({
         // Rien sous la nouvelle clé : l'annotation de l'ancienne page (jamais effacée) ; la première
         // modification l'enregistre sous la nouvelle clé.
         if (raw === null && cleAncienne) raw = await loadAnnotation(user.uid, setlistId, cleAncienne);
-        // Page `v2` sans trait : les anciens traits ne s'affichent pas, on sait seulement s'il en existe (lecture seule).
-        if (raw === null && anciennesStr) {
-          for (const cle of anciennesStr.split("\n")) {
-            try {
-              const ancien = await loadAnnotation(user.uid, setlistId, cle);
-              if (ancien && (deserializeAnnotations(ancien)?.strokes.length ?? 0) > 0) {
-                if (!stale) setAncienneCompositionTraits(true);
-                break;
-              }
-            } catch {
-              // Lecture d'information seulement : un échec ne rend pas la page indisponible.
-            }
-          }
-        }
         return raw;
       }).then((raw) => {
         if (stale) return;
@@ -71,6 +57,24 @@ export function useAnnotationsPage({
         setPageAnnotations(
           parsed ?? { w: window.innerWidth, h: window.innerHeight, strokes: [] },
         );
+        // Page `v2` sans trait : les anciens traits ne s'affichent pas, on sait seulement s'il en existe (lecture seule).
+        // Lue après la publication des traits de la page : sur réseau lent, elle ne retarde ni l'affichage ni l'annotation.
+        if (raw === null && anciennesStr) {
+          void (async () => {
+            for (const cle of anciennesStr.split("\n")) {
+              if (stale) return;
+              try {
+                const ancien = await loadAnnotation(user.uid, setlistId, cle);
+                if (ancien && (deserializeAnnotations(ancien)?.strokes.length ?? 0) > 0) {
+                  if (!stale) setAncienneCompositionTraits(true);
+                  return;
+                }
+              } catch {
+                // Lecture d'information seulement : un échec ne rend pas la page indisponible.
+              }
+            }
+          })();
+        }
       }).catch(() => {
         // Lecture impossible ≠ page vide : sans calque, ni canvas ni enregistrement.
         if (!stale) setAnnotationsIndispo(true);
