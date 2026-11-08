@@ -145,6 +145,7 @@ html.lp-open{overflow:hidden}
 .cl .kp{font-size:var(--ce);line-height:.7}
 .cl .sgm{display:inline-flex;flex-direction:column;white-space:nowrap}
 .cl .tx{white-space:pre;font:400 1em/1.5 var(--lat)}
+.cl .sgm.li{position:relative}.cl .sgm.li .tx::after{content:"\2013";position:absolute;right:0;bottom:0;width:var(--gw,0);overflow:hidden;text-align:center;visibility:var(--tlv,hidden)}
 .cl .wd{display:inline-flex;align-items:flex-end}
 .rr{display:flex;flex-wrap:nowrap;align-items:flex-end;white-space:nowrap}
 .rr .wd{flex:none}
@@ -647,7 +648,21 @@ html.lp-open{overflow:hidden}
   function fold(cl) { // la rangée d'accords se replie quand elle est vide
     [].forEach.call(cl.querySelectorAll(':scope>.rr'), function (r) { r.classList.toggle('nk', !r.querySelector('.kk, .zk:not(.v)')); });
   }
-  window.GCCcut = function (root) { [].forEach.call((root || document).querySelectorAll('.cl.rc'), cut); };
+  function liaisons(cl) { // tiret de liaison dans un mot coupé par un accord, comme le site (ChordLine, TiretLiaison) : visible seulement s'il tient
+    var s = scale(cl), pr = document.createElement('span'); pr.className = 'tx'; pr.textContent = '\u2013'; pr.style.cssText = 'position:absolute;visibility:hidden;padding:0 .2em';
+    cl.appendChild(pr); var dw = pr.getBoundingClientRect().width / s; cl.removeChild(pr);
+    [].forEach.call(cl.querySelectorAll('.wd'), function (wd) {
+      var sg = wd.querySelectorAll(':scope>.sgm');
+      for (var i = 0; i < sg.length - 1; i++) {
+        var tx = sg[i].querySelector('.tx'), nd = tx && tx.firstChild;
+        if (!nd || nd.nodeType !== 3 || /\s$/.test(nd.data)) continue;
+        var rg = document.createRange(); rg.selectNodeContents(nd);
+        var gap = (sg[i].getBoundingClientRect().width - rg.getBoundingClientRect().width) / s;
+        sg[i].classList.add('li'); sg[i].style.setProperty('--gw', Math.max(0, gap) + 'px'); sg[i].style.setProperty('--tlv', gap >= dw ? 'visible' : 'hidden');
+      }
+    });
+  }
+  window.GCCcut = function (root) { [].forEach.call((root || document).querySelectorAll('.cl.rc'), function (cl) { cut(cl); liaisons(cl); }); };
 })();
 
 </script>

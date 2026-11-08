@@ -118,7 +118,7 @@ louange passent par un seul helper (`tests/helpers/louange.ts`).
 | **FS** | Chrome forScore du mode louange (FS-A barre et points, FS-B menus et options, FS-C Je joue et rôle par compte, FS-D feuille de route du batteur) | L |
 | **RP** | Rôle proposé d'après le planning | S à M |
 | **JP** | 简谱 dans le mode louange (JP-A données des scans, JP-B tranches et feuille, JP-C téléphone, JP-D rôles) | L |
-| **AN** | Annotations façon forScore (planche en cours ; spec à compléter après la planche) | M à L |
+| **AN** | Annotations façon forScore (planche prête le 08/11, à trancher ; spec à compléter ensuite) | M à L |
 
 ### CV — Coupure des vers (site entier)
 
@@ -457,4 +457,4 @@ nom réel de membre dans les tests. Mise en ligne sur ordre de Timothée seuleme
 | FS | **go le 08/11/2026 pour FS-A et FS-B** (vague 1), session de code lancée ; FS-C et FS-D en attente de go |
 | RP | spec écrite, en attente de go |
 | JP | **go le 08/11/2026 pour JP-A** (vague 1, données seulement) : JP-A1 fait (`scripts/jianpu/systemes.py`, planche `npm run jianpu:audit -- --systemes`, `public/jianpu/systemes.json` : 11 scans du pilote certifiés à l'œil) ; JP-A2 (sections) et JP-A3 (tous les scans) en cours ; JP-B à JP-D en attente de go |
-| AN | planche en cours (`docs/planches/planche-annotations-forscore.html`) |
+| AN | planche prête le 08/11 (`docs/planches/planche-annotations-forscore.html`, piste A recommandée), à trancher |
