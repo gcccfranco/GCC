@@ -115,8 +115,26 @@ interface ChordLineProps {
   ecartApres?: boolean;
 }
 
-type Coupe = { coupures: number[]; etat: string; relache: string[] };
-const UNE_RANGEE: Coupe = { coupures: [], etat: "une", relache: [] };
+type Coupe = { coupures: number[]; etat: string; relache: string[]; retrait: number | null };
+const UNE_RANGEE: Coupe = { coupures: [], etat: "une", relache: [], retrait: null };
+
+/** Position (px non mis à l'échelle, depuis le bord gauche de la rangée) du premier caractère de paroles de la rangée,
+ *  ou null s'il n'y en a pas (accords seuls) : le retrait des rangées de suite part de là (R5). */
+function debutParoles(rangee: HTMLElement | null, echelle: number): number | null {
+  if (!rangee) return null;
+  const bord = rangee.getBoundingClientRect().left;
+  for (const p of rangee.querySelectorAll("[data-paroles]")) {
+    const noeud = p.firstChild;
+    if (!noeud || noeud.nodeType !== Node.TEXT_NODE) continue;
+    const i = (noeud as Text).data.search(/\S/);
+    if (i < 0) continue;
+    const plage = document.createRange();
+    plage.setStart(noeud, i);
+    plage.setEnd(noeud, i + 1);
+    return (plage.getBoundingClientRect().left - bord) / echelle;
+  }
+  return null;
+}
 
 const nettoie = (lyric: string) => lyric.replace(/\s?-\s/g, "").trimStart();
 
@@ -216,13 +234,24 @@ export function ChordLine({ tokens, showChords = true, hideLyrics = false, fontS
         queue: w >= nTexte,
       };
     });
-    const r = choisirCoupure(unites, {
-      largeur,
-      em,
-      debord: Math.max(0, Math.min(DEBORD, place)),
-      debordQueue: Math.max(0, Math.min(20, place)),
-      resserrer: true,
-    });
+    // R5 : retrait de 1 em par rapport au début des paroles de la première rangée (qui n'a pas de retrait).
+    const debut = debutParoles(el.querySelector<HTMLElement>("[data-rangee]"), echelle);
+    let retrait = em + (debut && debut > 0 ? Math.round(debut * 100) / 100 : 0);
+    const choisir = () =>
+      choisirCoupure(unites, {
+        largeur,
+        em,
+        retrait,
+        debord: Math.max(0, Math.min(DEBORD, place)),
+        debordQueue: Math.max(0, Math.min(20, place)),
+        resserrer: true,
+      });
+    let r = choisir();
+    // Colonne très étroite : plutôt que déborder, on retombe sur le retrait d'un em.
+    if (r.etat === "deborde" && retrait > em) {
+      retrait = em;
+      r = choisir();
+    }
     // Ce qui dépasse dans la marge reste dans le cadre de la ligne (padding compensé par une marge négative) :
     // la ligne ne défile pas, la page ne s'élargit pas.
     const reserve = Math.max(0, Math.min(20, place));
@@ -232,9 +261,9 @@ export function ChordLine({ tokens, showChords = true, hideLyrics = false, fontS
     }
     el.style.letterSpacing = r.interlettrage > 0 ? `-${r.interlettrage.toFixed(3)}px` : "";
     setCoupe((avant) =>
-      avant.etat === r.etat && avant.coupures.join() === r.coupures.join() && avant.relache.join() === r.relache.join()
+      avant.etat === r.etat && avant.coupures.join() === r.coupures.join() && avant.relache.join() === r.relache.join() && avant.retrait === retrait
         ? avant
-        : { coupures: r.coupures, etat: r.etat, relache: r.relache },
+        : { coupures: r.coupures, etat: r.etat, relache: r.relache, retrait },
     );
   });
 
@@ -272,7 +301,7 @@ export function ChordLine({ tokens, showChords = true, hideLyrics = false, fontS
         key={depart}
         data-rangee
         className="flex flex-nowrap items-end whitespace-nowrap"
-        style={r > 0 ? { paddingLeft: "1em" } : undefined}
+        style={r > 0 ? { paddingLeft: coupe.retrait === null ? "1em" : `${coupe.retrait}px` } : undefined}
       >
       {mots.map((word, m) => (
       <span key={word[0].i} ref={(n) => { motRefs.current[depart + m] = n; }} className="inline-flex items-end">

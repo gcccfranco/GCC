@@ -99,6 +99,45 @@ async function capture(page: Page, path: string) {
   await page.screenshot({ path, fullPage: true });
 }
 
+/** R5 : pour chaque ligne coupée, le bord gauche des paroles de chaque rangée de suite est à droite de celui de la
+ *  première rangée d'au moins 0,9 em (même quand la première rangée commence par un accord seul). Renvoie les écarts
+ *  fautifs et le nombre de lignes coupées examinées ; `accordSeul` compte celles dont la tête est un accord sans paroles. */
+function retraits(page: Page) {
+  return page.evaluate(() => {
+    const out: string[] = [];
+    let coupees = 0;
+    let accordSeul = 0;
+    const debut = (r: Element): number | null => {
+      for (const n of Array.from(r.querySelectorAll("[data-paroles], [data-car]"))) {
+        const t = n.firstChild;
+        if (!t || t.nodeType !== Node.TEXT_NODE) continue;
+        const i = (t as Text).data.search(/\S/);
+        if (i < 0) continue;
+        const plage = document.createRange();
+        plage.setStart(t, i);
+        plage.setEnd(t, i + 1);
+        return plage.getBoundingClientRect().left;
+      }
+      return null;
+    };
+    for (const ligne of Array.from(document.querySelectorAll<HTMLElement>("main.song-zoom [data-copy-line][data-coupe]"))) {
+      const rangees = Array.from(ligne.querySelectorAll("[data-rangee]"));
+      if (rangees.length < 2) continue;
+      coupees++;
+      const em = parseFloat(getComputedStyle(ligne).fontSize);
+      const premier = debut(rangees[0]);
+      if (premier === null) continue;
+      const gauche = rangees[0].getBoundingClientRect().left;
+      if (premier - gauche > 0.5 * em) accordSeul++;
+      rangees.slice(1).forEach((r, i) => {
+        const d = debut(r);
+        if (d !== null && d - premier < 0.9 * em) out.push(`rangée ${i + 2} : retrait ${((d - premier) / em).toFixed(2)} em — ${(ligne.textContent ?? "").slice(0, 25)}`);
+      });
+    }
+    return { out, coupees, accordSeul };
+  });
+}
+
 for (const sombre of [false, true]) {
   const theme = sombre ? "sombre" : "clair";
 
@@ -252,6 +291,10 @@ for (const sombre of [false, true]) {
       expect(await motsChinoisCoupes(page, SLUG_ZH)).toEqual([]);
       expect(await debordement(page)).toBe(true);
       expect(await colonnesAlignees(page)).toEqual([]);
+      const ret = await retraits(page);
+      expect(ret.coupees).toBeGreaterThan(0);
+      expect(ret.accordSeul).toBeGreaterThan(0); // le refrain commence par « [A/B] » posé sur une espace
+      expect(ret.out).toEqual([]);
 
       const ligne = page.locator(LIGNE_ZH);
       const rangees = await ligne.evaluate((l) =>
@@ -284,6 +327,21 @@ for (const sombre of [false, true]) {
     expect(await motsChinoisCoupes(page, SLUG_ZH)).toEqual([]);
     expect(await debordement(page)).toBe(true);
     expect(await colonnesAlignees(page)).toEqual([]);
+    expect((await retraits(page)).out).toEqual([]);
     await capture(page, `${DOSSIER}/zh-${info.project.name}-${theme}.png`);
   });
 }
+
+// R5 en français : un accord seul en tête de ligne (« [E] À la croix… ») ne doit pas inverser le retrait.
+test("retrait des rangées de suite compté depuis les paroles, accord seul en tête (français, téléphone 390 et 412 px)", async ({ page }, info) => {
+  test.skip(info.project.name !== "telephone", "largeurs propres au téléphone");
+  for (const largeur of LARGEURS) {
+    await page.setViewportSize({ width: largeur, height: 844 });
+    await ouvrir(page, false, "/songs/a-la-croix");
+    const ret = await retraits(page);
+    expect(ret.coupees).toBeGreaterThan(0);
+    expect(ret.accordSeul).toBeGreaterThan(0);
+    expect(ret.out).toEqual([]);
+    await capture(page, `${DOSSIER}/fr-retrait-${largeur}.png`);
+  }
+});

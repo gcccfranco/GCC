@@ -238,3 +238,20 @@ test("segmentation : les exceptions « separer » libèrent un mot, « joindre �
     delete EXCEPTIONS_MOTS["chant-d-essai"];
   }
 });
+
+test("retrait des rangées de suite : elles disposent de largeur − retrait (R5), par défaut un em", () => {
+  // « aaaa bbbb cccc dddd » : 4 × 40 px + 3 espaces = 190 px de texte, rangées de deux mots = 90 px.
+  const phrase = "aaaa bbbb cccc dddd ";
+  const sans = choisirCoupure(mots(phrase), opts(120, { resserrer: false }));
+  expect(sans.coupures).toEqual([1]); // 2e rangée : 90 ≤ 120 − 16 + 8
+  // Retrait de 40 px : 2e rangée = 90 > 120 − 40 + 8 = 88, elle ne tient plus ; on coupe en trois (ou on déborde).
+  const avec = choisirCoupure(mots(phrase), opts(120, { resserrer: false, retrait: 40 }));
+  expect(avec.coupures).not.toEqual([1]);
+  // Retrait égal à em : même résultat que sans l'option.
+  expect(choisirCoupure(mots(phrase), opts(120, { resserrer: false, retrait: 16 }))).toEqual(sans);
+  // Chinois : 8 caractères de 20 px = 160 px dans 120 px ; deux rangées de 4 (80 px) tiennent avec 16 px, pas avec 50 px.
+  const zh: UniteZh[] = Array.from({ length: 8 }, (_, i) => ({ largeur: 20, caracteres: 1, ponctue: i === 3 }));
+  expect(choisirCoupureZh(zh, { largeur: 100, em: 16, debord: DEBORD }).coupures).toEqual([3]);
+  const r = choisirCoupureZh(zh, { largeur: 100, em: 16, retrait: 60, debord: 0 });
+  expect(r.coupures.length).toBeGreaterThan(1); // 2e rangée limitée à 40 px = 2 caractères
+});

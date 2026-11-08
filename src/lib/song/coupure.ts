@@ -34,6 +34,8 @@ export type OptionsCoupure = {
   largeur: number;
   /** Corps du texte en px (1 em). */
   em: number;
+  /** Retrait des rangées de suite (R5) : 1 em par rapport au début des paroles de la première rangée. Défaut : em. */
+  retrait?: number;
   /** Débordement permis du texte dans la marge droite. */
   debord: number;
   /** Débordement permis de la queue d'accords (R3). */
@@ -89,6 +91,7 @@ function combinaisons(n: number, k: number, visiter: (coupures: number[]) => voi
 
 export function choisirCoupure(unites: Unite[], opts: OptionsCoupure): ResultatCoupure {
   const { largeur: A, em, debord, debordQueue, resserrer } = opts;
+  const retrait = opts.retrait ?? em;
   const vide = (etat: EtatCoupure): ResultatCoupure => ({ coupures: [], interlettrage: 0, etat, relache: [] });
 
   // Les unités « queue » (accords de fin sans paroles) ne sont jamais des points de coupure : elles collent à la
@@ -118,7 +121,7 @@ export function choisirCoupure(unites: Unite[], opts: OptionsCoupure): ResultatC
     }
   }
 
-  // R1 : la dernière rangée peut porter la queue ; les rangées de suite disposent d'un em de moins (R5).
+  // R1 : la dernière rangée peut porter la queue ; les rangées de suite disposent du retrait de moins (R5).
   const tient = (a: number, b: number, dispo: number) => {
     if (b === nu - 1 && aQueue) return texteL(a, b) <= dispo + debord + TOLERANCE && totalL(a, b) <= dispo + debordQueue + TOLERANCE;
     return totalL(a, b) <= dispo + debord + TOLERANCE;
@@ -136,7 +139,7 @@ export function choisirCoupure(unites: Unite[], opts: OptionsCoupure): ResultatC
     const rangees = rangeesDe(coupures);
     if (!seul && rangees.some(([a, b]) => b === a)) return null;
     if (!courtOk && coupures.some((b) => court(unites[b].texte))) return null;
-    if (!rangees.every(([a, b], r) => tient(a, b, r ? A - em : A))) return null;
+    if (!rangees.every(([a, b], r) => tient(a, b, r ? A - retrait : A))) return null;
     const ws = rangees.map(([a, b]) => totalL(a, b));
     return {
       coupures: coupures.slice(),
@@ -151,12 +154,12 @@ export function choisirCoupure(unites: Unite[], opts: OptionsCoupure): ResultatC
     const coupures: number[] = [];
     let a = 0;
     for (let b = 0; b < nu - 1; b++) {
-      if (tient(a, b + 1, coupures.length ? A - em : A)) continue;
-      if (b < a || !tient(a, b, coupures.length ? A - em : A)) return vide("deborde");
+      if (tient(a, b + 1, coupures.length ? A - retrait : A)) continue;
+      if (b < a || !tient(a, b, coupures.length ? A - retrait : A)) return vide("deborde");
       coupures.push(b);
       a = b + 1;
     }
-    if (!tient(a, nu - 1, coupures.length ? A - em : A)) return vide("deborde");
+    if (!tient(a, nu - 1, coupures.length ? A - retrait : A)) return vide("deborde");
     return coupures.length ? fini({ coupures, equilibre: 0, ponctue: false }, ["repli glouton"]) : vide("une");
   }
 
@@ -217,6 +220,8 @@ export type OptionsCoupureZh = {
   largeur: number;
   /** Corps du texte en px (1 em). */
   em: number;
+  /** Retrait des rangées de suite (R5) : 1 em par rapport au début des paroles de la première rangée. Défaut : em. */
+  retrait?: number;
   /** Débordement permis dans la marge droite (R4). */
   debord: number;
 };
@@ -233,7 +238,8 @@ export type ResultatCoupureZh = {
 const MIN_CARACTERES_ZH = 3;
 
 export function choisirCoupureZh(unites: UniteZh[], opts: OptionsCoupureZh): ResultatCoupureZh {
-  const { largeur: A, em, debord } = opts;
+  const { largeur: A, debord } = opts;
+  const retrait = opts.retrait ?? opts.em;
   const n = unites.length;
   const vide = (etat: ResultatCoupureZh["etat"]): ResultatCoupureZh => ({ coupures: [], etat, relache: [] });
   if (n === 0) return vide("une");
@@ -246,7 +252,7 @@ export function choisirCoupureZh(unites: UniteZh[], opts: OptionsCoupureZh): Res
   });
   const larg = (a: number, b: number) => somme[b + 1] - somme[a];
   const compte = (a: number, b: number) => nombre[b + 1] - nombre[a];
-  const dispo = (r: number) => (r ? A - em : A) + debord + TOLERANCE;
+  const dispo = (r: number) => (r ? A - retrait : A) + debord + TOLERANCE;
 
   const tout = larg(0, n - 1);
   if (tout <= A + debord + TOLERANCE) return vide(tout > A + TOLERANCE ? "marge" : "une");

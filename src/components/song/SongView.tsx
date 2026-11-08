@@ -194,8 +194,8 @@ interface ZhLineProps {
 const ZH_PAUSE = /[，。；：！？、,;:!?]$/;
 
 type ZhCol = { char: string; chord: string | null; py: string; seul: boolean };
-type ZhCoupe = { coupures: number[]; etat: string; relache: string[] };
-const UNE_RANGEE_ZH: ZhCoupe = { coupures: [], etat: "une", relache: [] };
+type ZhCoupe = { coupures: number[]; etat: string; relache: string[]; retrait: number | null };
+const UNE_RANGEE_ZH: ZhCoupe = { coupures: [], etat: "une", relache: [], retrait: null };
 
 function ZhLine({ tokens, pinyin, showChords, showPinyin, hideLyrics = false, chord_font, zh_lyric_font, typography = "web", slug }: ZhLineProps) {
   // Typographie « pdf » : tailles des PDF exportés (accords 17px, chars 15px, pinyin 10.5px)
@@ -338,7 +338,22 @@ function ZhLine({ tokens, pinyin, showChords, showPinyin, hideLyrics = false, ch
         ponctue: ZH_PAUSE.test(lettres[lettres.length - 1]?.char ?? ""),
       };
     });
-    const r = choisirCoupureZh(mesures, { largeur, em, debord: Math.max(0, Math.min(DEBORD, place)) });
+    // R5 : retrait de 1 em par rapport au premier caractère de la première rangée (qui n'a pas de retrait).
+    const premiere = el.querySelector<HTMLElement>("[data-rangee]");
+    let debut = 0;
+    for (const c of premiere?.querySelectorAll<HTMLElement>("[data-car]") ?? []) {
+      if (!c.textContent?.trim()) continue;
+      debut = (c.getBoundingClientRect().left - premiere!.getBoundingClientRect().left) / echelle;
+      break;
+    }
+    let retrait = em + (debut > 0 ? Math.round(debut * 100) / 100 : 0);
+    const debordPermis = Math.max(0, Math.min(DEBORD, place));
+    let r = choisirCoupureZh(mesures, { largeur, em, retrait, debord: debordPermis });
+    // Colonne très étroite : plutôt que déborder, on retombe sur le retrait d'un em.
+    if (r.etat === "deborde" && retrait > em) {
+      retrait = em;
+      r = choisirCoupureZh(mesures, { largeur, em, retrait, debord: debordPermis });
+    }
     // Ce qui dépasse dans la marge reste dans le cadre de la ligne (padding compensé par une marge négative).
     const reserve = Math.max(0, Math.min(20, place));
     if (reserve > 0) {
@@ -346,9 +361,9 @@ function ZhLine({ tokens, pinyin, showChords, showPinyin, hideLyrics = false, ch
       el.style.marginRight = `-${reserve}px`;
     }
     setCoupe((avant) =>
-      avant.etat === r.etat && avant.coupures.join() === r.coupures.join() && avant.relache.join() === r.relache.join()
+      avant.etat === r.etat && avant.coupures.join() === r.coupures.join() && avant.relache.join() === r.relache.join() && avant.retrait === retrait
         ? avant
-        : { coupures: r.coupures, etat: r.etat, relache: r.relache },
+        : { coupures: r.coupures, etat: r.etat, relache: r.relache, retrait },
     );
   });
 
@@ -394,7 +409,7 @@ function ZhLine({ tokens, pinyin, showChords, showPinyin, hideLyrics = false, ch
           <span
             key={depart}
             data-rangee
-            style={{ display: "flex", flexWrap: "nowrap", alignItems: "flex-start", whiteSpace: "nowrap", paddingLeft: r > 0 ? "1em" : undefined }}
+            style={{ display: "flex", flexWrap: "nowrap", alignItems: "flex-start", whiteSpace: "nowrap", paddingLeft: r > 0 ? (coupe.retrait === null ? "1em" : `${coupe.retrait}px`) : undefined }}
           >
             {rangee.map((unite, ui) => (
               <span key={depart + ui} ref={(n) => { uniteRefs.current[depart + ui] = n; }} style={{ display: "inline-flex", alignItems: "flex-start" }}>
