@@ -1365,7 +1365,14 @@ partitions, pour que je choisisse ; on va mettre 3-4 types que les gens peuvent 
 partitions et le mode louange (planche `docs/planches/planche-dispositions-partition.html`, en cours). **Premier
 critère** (Timothée, même soir) : « les partitions doivent être lisibles, on doit pouvoir bien voir la structure
 des chants et tout » : lisible de loin au pupitre, et le début, le type de chaque section, les reprises et l'ordre
-joué visibles d'un coup d'œil. **Le mode
+joué visibles d'un coup d'œil. Planche publiée le 08/11/2026 (https://claude.ai/artifact/AuYFVmjUN6UAZhUVxBHBr8, carte 2) :
+huit dispositions, quatre proposées. **Avant de choisir** (Timothée, 08/11/2026 : « corrige ça d'abord ») :
+(1) la **coupure des vers au téléphone**, défaut du site actuel (`ChordLine.tsx:61-90` ne coupe qu'avant un accord :
+escalier « Ton / E Nom… », mot seul « suivront ») : règle corrigée proposée (deux rangées équilibrées, de préférence
+après une ponctuation, jamais un mot seul ; accord toujours sur sa syllabe, rangée d'accords vide repliée ; fin
+d'accords sans paroles qui déborde un peu ; espaces resserrés si la ligne dépasse de 5 % au plus ; suite en retrait
+de 1 em), montrée dans la planche pour les huit dispositions ; (2) la **marge de « Repères en marge »** resserrée au
+téléphone. Corriger le site lui-même = un lot à part, sur go. **Le mode
 louange suit le réglage du site** (Timothée, 07/11/2026 : « si sur le site ils sont en couleur par section, dans le
 mode louange on le met en couleur par section ») : c'est déjà le cas, un seul réglage « Couleurs par section » par
 appareil partagé par la page du chant, la vue partitions de la setlist et le mode louange (`src/lib/chartStylePref.ts`) ;
