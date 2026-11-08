@@ -8,6 +8,8 @@ type Params = {
   setlistId: string;
   currentPageKey: string | undefined;
   cleAncienne: string | null;
+  /** Lot CV : sur une page `v2`, les clés de composition d'avant (lecture seule, pour le seul bandeau). */
+  anciennesCompositions: string[];
   rappelEcran: number;
   affichageVu: string;
   fontScale: number;
@@ -17,10 +19,13 @@ type Params = {
 
 /** Traits de la page courante : chargement, recalage, enregistrement à chaque modification. */
 export function useAnnotationsPage({
-  user, setlistId, currentPageKey, cleAncienne, rappelEcran, affichageVu, fontScale, horsLigne, slugAnnote,
+  user, setlistId, currentPageKey, cleAncienne, anciennesCompositions, rappelEcran, affichageVu, fontScale, horsLigne, slugAnnote,
 }: Params) {
   // Les traits de la page n'ont pas pu être lus (réseau, 5xx) : page non initialisée, rien n'est enregistré.
   const [annotationsIndispo, setAnnotationsIndispo] = useState(false);
+  // Lot CV : des traits existent sous une ancienne composition de la page, aucun sous la nouvelle.
+  const [ancienneCompositionTraits, setAncienneCompositionTraits] = useState(false);
+  const anciennesStr = anciennesCompositions.join("\n");
   const [pageAnnotations, setPageAnnotations] = useState<AnnotationData | null>(null);
   // Annotations d'avant le lot : Sections uniques avec rappel = ancienne réserve, sinon 0.
   const annotations = useMemo(
@@ -34,16 +39,33 @@ export function useAnnotationsPage({
   // Charger les traits de la page courante (toujours — affichage permanent)
   useEffect(() => {
     setAnnotationsIndispo(false);
+    setAncienneCompositionTraits(false);
     if (!user || !currentPageKey) { setPageAnnotations(null); return; }
     let stale = false;
     setPageAnnotations(null);
     // Temporisé : glisser le curseur de page change la clé à chaque cran, une requête par page serait perdue.
     const minuterie = setTimeout(() => {
-      loadAnnotation(user.uid, setlistId, currentPageKey).then((raw) =>
+      loadAnnotation(user.uid, setlistId, currentPageKey).then(async (lu) => {
+        let raw = lu;
         // Rien sous la nouvelle clé : l'annotation de l'ancienne page (jamais effacée) ; la première
         // modification l'enregistre sous la nouvelle clé.
-        raw === null && cleAncienne ? loadAnnotation(user.uid, setlistId, cleAncienne) : raw,
-      ).then((raw) => {
+        if (raw === null && cleAncienne) raw = await loadAnnotation(user.uid, setlistId, cleAncienne);
+        // Page `v2` sans trait : les anciens traits ne s'affichent pas, on sait seulement s'il en existe (lecture seule).
+        if (raw === null && anciennesStr) {
+          for (const cle of anciennesStr.split("\n")) {
+            try {
+              const ancien = await loadAnnotation(user.uid, setlistId, cle);
+              if (ancien && (deserializeAnnotations(ancien)?.strokes.length ?? 0) > 0) {
+                if (!stale) setAncienneCompositionTraits(true);
+                break;
+              }
+            } catch {
+              // Lecture d'information seulement : un échec ne rend pas la page indisponible.
+            }
+          }
+        }
+        return raw;
+      }).then((raw) => {
         if (stale) return;
         const parsed = raw ? deserializeAnnotations(raw) : null;
         setPageAnnotations(
@@ -55,7 +77,7 @@ export function useAnnotationsPage({
       });
     }, 150);
     return () => { stale = true; clearTimeout(minuterie); };
-  }, [user, setlistId, currentPageKey, cleAncienne]);
+  }, [user, setlistId, currentPageKey, cleAncienne, anciennesStr]);
 
   // Chaque modification (trait fini, gomme, annuler) est sauvegardée aussitôt
   const handleAnnotationsChange = useCallback(
@@ -72,5 +94,5 @@ export function useAnnotationsPage({
     [user, setlistId, currentPageKey, horsLigne, slugAnnote, fontScale],
   );
 
-  return { annotationsIndispo, annotations, handleAnnotationsChange };
+  return { annotationsIndispo, annotations, handleAnnotationsChange, ancienneCompositionTraits };
 }

@@ -39,6 +39,8 @@ const SPECS_GRAND_ECRAN = [
   /rappel-indice\.spec\.ts/,
   // Lot CV (docs/spec-mode-louange-forscore-2.md) : la coupure des vers français sur les quatre dispositions.
   /coupure-vers\.spec\.ts/,
+  // Lot CV, CV-3 : copie de mesure et rendu au même calcul de coupure, clé de page « v2 », bandeau de composition.
+  /louange-coupure\.spec\.ts/,
   /performance-mode\.spec\.ts/,
   /mode-louange-forscore\.spec\.ts/,
   // Lot FS-A (docs/spec-mode-louange-forscore-2.md) : barre de titre, rangée de points, couleur des icônes.

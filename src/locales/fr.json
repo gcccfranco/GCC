@@ -721,6 +721,7 @@
     "annotationsIndisponibles": "Annotations indisponibles pour l'instant",
     "annotAutreTaille": "Des annotations existent à une autre taille ({{taille}} %)",
     "annotRevenir": "Revenir à cette taille",
+    "annotAncienneMiseEnPage": "Des annotations existent avec l'ancienne mise en page",
     "exit": "Quitter",
     "prevPage": "Page précédente",
     "nextPage": "Page suivante",

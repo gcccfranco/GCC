@@ -3,7 +3,8 @@ import { Fragment, useContext, useLayoutEffect, useRef, useState } from "react";
 import localFont from "next/font/local";
 import Link, { type LinkProps } from "next/link";
 import { ChordLine } from "@/components/song/ChordLine";
-import { ConteneurCoupure, LargeurCoupureContext } from "@/components/song/LargeurCoupure";
+import { ConteneurCoupure, LargeurCoupureContext, CoupureMesureContext } from "@/components/song/LargeurCoupure";
+import { signalerCoupure } from "@/lib/song/coupureSignal";
 import { choisirCoupureZh, DEBORD, type UniteZh } from "@/lib/song/coupure";
 import { motsDuTexte, type MotZh } from "@/lib/song/motsChinois";
 import { JianpuLine } from "@/components/song/JianpuLine";
@@ -274,6 +275,14 @@ function ZhLine({ tokens, pinyin, showChords, showPinyin, hideLyrics = false, ch
   const uniteRefs = useRef<(HTMLElement | null)[]>([]);
   const derniere = useRef("");
   const [coupe, setCoupe] = useState<ZhCoupe>(UNE_RANGEE_ZH);
+  // Une coupure qui change déplace les hauteurs : le mode louange refait sa pagination (rien au premier rendu).
+  const coupePrec = useRef(coupe);
+  const copieMesure = useContext(CoupureMesureContext);
+  useLayoutEffect(() => {
+    if (coupePrec.current === coupe) return;
+    coupePrec.current = coupe;
+    signalerCoupure(copieMesure);
+  }, [coupe, copieMesure]);
   const [polices, setPolices] = useState(0);
   const [propre, setPropre] = useState(0);
   const version = useContext(LargeurCoupureContext);

@@ -716,6 +716,7 @@
     "annotationsIndisponibles": "批注暂时无法使用",
     "annotAutreTaille": "批注是在另一种字号下写的（{{taille}}%）",
     "annotRevenir": "回到这个字号",
+    "annotAncienneMiseEnPage": "批注是在旧版排版下写的",
     "exit": "退出",
     "prevPage": "上一页",
     "nextPage": "下一页",

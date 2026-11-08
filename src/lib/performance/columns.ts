@@ -10,6 +10,9 @@
  *  coupe pas). `twoColumns` : page posée en deux colonnes hors vue structure ;
  *  ses annotations ont leur propre clé (« x2 »). */
 export type PerfPage = { header: number | null; cols: number[][]; scale: number; fit?: boolean; twoColumns?: boolean;
+  /** Lot CV : au moins une ligne de la page n'est pas posée en une seule rangée (coupure des vers). Sa clé de
+   *  page porte « v2 » ; une page dont tous les vers tiennent sur une rangée garde sa clé d'avant CV. */
+  coupe?: boolean;
   /** Dernière page d'un chant suivi d'un autre : indice de la colonne qui porte la pastille « Ensuite »
    *  (posée à la fin de cette colonne, dans le flux). Absent : pas de pastille dans le flux. */
   suivant?: number };

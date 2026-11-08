@@ -18,6 +18,8 @@ import { useAnnotationsPage } from "./hooks/useAnnotationsPage";
 import { Link2, MessageSquare, PenLine, Sun, Moon, Columns2, FileMusic, Languages, Minus, Music, Palette, Plus, Waves } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import type { PerformanceBlock, SectionBlock, JianpuSheetBlock, SongHeaderBlock } from "@/lib/performance/blocks";
+import { ecouterCoupure, versionCoupure } from "@/lib/song/coupureSignal";
+import { ConteneurCoupure } from "@/components/song/LargeurCoupure";
 import { ancreDeLecture, buildPerformanceBlocks, computePageKey, signatureAffichage, type AncreLecture } from "@/lib/performance/blocks";
 import { PASTILLE_SUIVANT_H, twoColumnsPossible, type PerfPage } from "@/lib/performance/columns";
 import { NEXT_PILL_RESERVE, layoutSong, lireEcran, pageAncree, paginer, replisStructure, sansTransitions, splitSheetPages } from "@/lib/performance/pagination";
@@ -424,6 +426,8 @@ export function PerformanceMode({
     setCouleurIcones(hex);
   }, []);
   const [layout, setLayout] = useState<PerfPage[]>([]);
+  // Nombre de paginations publiées (attribut de test : tourner la page ne doit pas la relancer).
+  const [passesPagination, setPassesPagination] = useState(0);
   // Pagination d'avant le rappel refait (lot RS-C) : retrouve les annotations sous leurs anciennes clés.
   const [layoutAncien, setLayoutAncien] = useState<PerfPage[]>([]);
   const [currentPage, setCurrentPage] = useState(0);
@@ -583,6 +587,8 @@ export function PerformanceMode({
   // s'efface et la pastille flottante se pose au-dessus de la barre, comme avant ; barre escamotée, elle reste dans le flux.
   const refPastilleFlux = useRef<HTMLButtonElement>(null);
   const [pastilleCouverte, setPastilleCouverte] = useState(false);
+  // Lot CV : les lignes affichées posent leur coupure après le contrôle de la pastille (effets des enfants) : on le refait.
+  const [coupureEcran, setCoupureEcran] = useState(0);
   useLayoutEffect(() => {
     const haut = barreHautRef.current;
     const bas = barreBasRef.current;
@@ -654,10 +660,39 @@ export function PerformanceMode({
     return () => window.removeEventListener("resize", onResize);
   }, []);
 
+  // Lot CV : les lignes recalculent leur coupure après les polices, un changement de largeur ou de corps ;
+  // la pagination lit des hauteurs qui en dépendent. Quand une coupure change, on remesure (regroupé à
+  // l'image suivante ; sans boucle : une coupure ne change que si sa largeur, son corps ou son contenu ont changé).
+  useEffect(() => {
+    let raf = 0;
+    const off = ecouterCoupure((mesure) => {
+      // Une ligne affichée qui se coupe ne change pas la pagination, seulement la place de la pastille (plus bas).
+      if (!mesure) {
+        setCoupureEcran((n) => n + 1);
+        return;
+      }
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => setRemeasureKey((k) => k + 1));
+    });
+    return () => {
+      off();
+      cancelAnimationFrame(raf);
+    };
+  }, []);
+
   // Measure block heights → compute pages
   useEffect(() => {
+    let annule = false;
     const run = async () => {
       await document.fonts.ready;
+      // Lot CV-3 : les lignes posent leur coupure après les polices ; on attend qu'elle ne bouge plus (au plus 6
+      // tours de deux images) avant de lire les hauteurs, pour ne publier qu'une pagination et une clé de page.
+      for (let n = 0; n < 6; n++) {
+        const v = versionCoupure();
+        await new Promise<void>((ok) => requestAnimationFrame(() => requestAnimationFrame(() => ok())));
+        if (v === versionCoupure()) break;
+      }
+      if (annule) return;
       // Budget de hauteur en px CSS à l'échelle 1 (la mesure se fait hors
       // échelle) : hauteur visible ÷ fontScale, moins les paddings RÉELS du
       // conteneur de mesure (py-4 + safe areas), et une marge de sécurité pour
@@ -733,9 +768,22 @@ export function PerformanceMode({
         if (affichageVu === "unique") reserves.forEach((_, i) => anciennes.set(i, ANCIEN_RAPPEL));
         ancienne = paginer(anciennes, ctxPagination);
       }
+      // Lot CV : une page dont une ligne n'est pas posée en une rangée (lue dans la copie de mesure, à la largeur
+      // où la page est posée) a une autre composition qu'avant : sa clé de page porte « v2 ».
+      const ligneCoupee = (i: number, colonne: boolean) => {
+        const el = (colonne ? blockColRefs.current[i] : blockRefs.current[i]) ?? blockRefs.current[i];
+        return !!el && Array.from(el.querySelectorAll("[data-coupe]")).some((n) => !(n.getAttribute("data-coupe") ?? "une").startsWith("une"));
+      };
+      computed = computed.map((p) => {
+        const colonne = !!p.twoColumns && heightsColumn.length > 0;
+        const idx = [...(p.header != null ? [p.header] : []), ...p.cols.flat()];
+        const coupe = !p.fit && idx.some((i) => ligneCoupee(i, colonne && i !== p.header));
+        return coupe ? { ...p, coupe } : p;
+      });
       layoutBlocksRef.current = blocks;
       setLayout(computed);
       setLayoutAncien(ancienne);
+      setPassesPagination((n) => n + 1);
       // La lecture reste à l'écran quand la mise en page change (« 2 colonnes »,
       // rotation, taille du texte) : la page qui contient le premier bloc de la
       // page lue. Une page tournée entre-temps n'est pas déplacée. Si les blocs
@@ -747,6 +795,9 @@ export function PerformanceMode({
       });
     };
     run();
+    return () => {
+      annule = true;
+    };
   }, [blocks, remeasureKey, fontScale, structureMode, twoColumns, affichageVu, apercuActif]);
 
   // Vue structure agrandie : la mesure se fait à l'échelle 1, mais à l'écran
@@ -859,7 +910,13 @@ export function PerformanceMode({
   // en colonne et le scan glisse à droite en grandissant (L3-T5b). À incrémenter si le scan
   // bouge encore.
   const cleScan = layout[currentPage]?.fit ? (ecran.grand ? "j3" : "j2") : "";
-  const currentPageKey = computePageKey(blocks, currentPageIndices, `${layoutSig}${layout[currentPage]?.twoColumns ? "x2" : ""}${cleScan}${apercuActif && !layout[currentPage]?.fit ? "ap" : ""}`);
+  const cleSansV2 = computePageKey(blocks, currentPageIndices, `${layoutSig}${layout[currentPage]?.twoColumns ? "x2" : ""}${cleScan}${apercuActif && !layout[currentPage]?.fit ? "ap" : ""}`);
+  // Lot CV : « v2 » seulement sur une page dont une ligne est coupée (la composition a changé). La clé sans « v2 »
+  // est alors l'ancienne clé de composition : ses traits ne s'affichent pas ici, ils ne sont jamais supprimés.
+  const pageV2 = !!layout[currentPage]?.coupe;
+  const currentPageKey = pageV2
+    ? computePageKey(blocks, currentPageIndices, `${layoutSig}${layout[currentPage]?.twoColumns ? "x2" : ""}${cleScan}${apercuActif && !layout[currentPage]?.fit ? "ap" : ""}v2`)
+    : cleSansV2;
 
   // Lot RS-C : le rappel plus haut déplace les fins de page (pages 2 et suivantes d'un chant). Une page dont la
   // composition a changé a une nouvelle clé : on garde la clé qu'aurait eue, dans l'ancienne pagination, la page
@@ -874,11 +931,12 @@ export function PerformanceMode({
       const idx = p.header != null ? [p.header, ...p.cols.flat()] : p.cols.flat();
       if (p.fit || idx.find((i) => blocks[i]?.kind === "section") !== premiereSection) continue;
       const cle = computePageKey(blocks, idx, `${layoutSig}${p.twoColumns ? "x2" : ""}${apercuActif ? "ap" : ""}`);
-      return cle === currentPageKey ? null : cle;
+      // Sur une page « v2 », la clé sans « v2 » est l'ancienne clé de composition (bandeau), pas une clé RS-C.
+      return cle === currentPageKey || cle === cleSansV2 ? null : cle;
     }
     return null;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [layoutAncien, layout, currentPage, blocks, layoutSig, apercuActif, affichageVu, currentPageKey]);
+  }, [layoutAncien, layout, currentPage, blocks, layoutSig, apercuActif, affichageVu, currentPageKey, cleSansV2]);
 
   // L5 : chant de la page courante, et taille à laquelle il a été annoté sur cet appareil.
   const slugAnnote = currentEntry?.block.songSlug;
@@ -905,9 +963,17 @@ export function PerformanceMode({
     obs.observe(el);
     return () => obs.disconnect();
   }, [rappelPresent, currentPage, fontScale, currentPageKey]);
-  const { annotationsIndispo, annotations, handleAnnotationsChange } = useAnnotationsPage({
-    user, setlistId, currentPageKey, cleAncienne, rappelEcran, affichageVu, fontScale, horsLigne, slugAnnote,
+  // Ordre de lecture des traits (lot CV) : 1. la clé courante ; 2. si elle est vide, la clé de la pagination d'avant
+  // le rappel (RS-C, ci-dessus) ; 3. sur une page « v2 » seulement, si rien n'a été trouvé, l'ancienne clé de
+  // composition (la même sans « v2 »), lue pour le seul bandeau : ses traits ne s'affichent pas (ils ne sont plus à
+  // leur place) et ne sont jamais supprimés. La clé RS-C n'est jamais l'ancienne clé de composition (écartée dans
+  // `cleAncienne`).
+  const anciennesCompositions = useMemo(() => (pageV2 ? [cleSansV2] : []), [pageV2, cleSansV2]);
+  const { annotationsIndispo, annotations, handleAnnotationsChange, ancienneCompositionTraits } = useAnnotationsPage({
+    user, setlistId, currentPageKey, cleAncienne, anciennesCompositions, rappelEcran, affichageVu, fontScale, horsLigne, slugAnnote,
   });
+  // Un seul bandeau : celui de la taille (il a un bouton qui règle le problème) passe avant.
+  const alerteComposition = !!user && !annotateMode && showAnnotations && ancienneCompositionTraits && !alerteAnnotations;
 
   // L5 : à l'entrée en annotation, la taille mémorisée du chant revient avant qu'on dessine.
   const basculerAnnotation = () => {
@@ -1146,7 +1212,7 @@ export function PerformanceMode({
     const el = refPastilleFlux.current;
     const couverte = !!el && showChrome && el.getBoundingClientRect().bottom > window.innerHeight - barres.bas;
     setPastilleCouverte(couverte);
-  }, [showChrome, currentPage, layout, barres.bas]);
+  }, [showChrome, currentPage, layout, barres.bas, coupureEcran]);
   // Sur la dernière page d'un chant, la pastille « Ensuite » occupe déjà la bande : pas d'aperçu par-dessous.
   const apercu = isLastPageOfSong && nextEntry ? null : apercuPossible;
   // Les calques d'annotation ne couvrent pas la bande (bas de page + 16 px de marge + sab).
@@ -1179,6 +1245,8 @@ export function PerformanceMode({
     <div
       data-performance-mode
       data-cle-ancienne={cleAncienne ?? undefined}
+      data-cle-page={currentPageKey}
+      data-passes-pagination={passesPagination}
       className="fixed inset-0 z-[9999] bg-background overflow-hidden select-none"
       style={{
         "--sat": "env(safe-area-inset-top, 0px)",
@@ -1201,6 +1269,7 @@ export function PerformanceMode({
             (100%/fontScale) : mêmes conditions de layout que le rendu (qui est
             agrandi par transform, sans reflow) → hauteurs exactes au pixel. */}
         <div ref={measureInnerRef} style={{ width: `calc(100% / ${fontScale})`, ...contentPadding }}>
+          <ConteneurCoupure mesure>
           {blocks.map((block, i) => (
             <div
               key={block.uid}
@@ -1232,6 +1301,7 @@ export function PerformanceMode({
               )}
             </div>
           ))}
+          </ConteneurCoupure>
         </div>
         {/* Sections uniques : le rappel de chaque chant, à la largeur de la page, pour
             réserver sa vraie hauteur (il passe à la ligne quand le texte grossit). */}
@@ -1255,6 +1325,7 @@ export function PerformanceMode({
         {twoColumns && (
           <div className="absolute top-0 left-0" style={{ width: `calc(100% / ${fontScale})`, ...contentPadding }}>
             <div style={{ width: "calc(50% - 1rem)" }}>
+              <ConteneurCoupure mesure>
               {blocks.map((block, i) => (
                 <div key={block.uid} ref={(el) => { blockColRefs.current[i] = el; }}>
                   {block.kind !== "song-header" && block.kind !== "jianpu-sheet" && (
@@ -1269,6 +1340,7 @@ export function PerformanceMode({
                   )}
                 </div>
               ))}
+              </ConteneurCoupure>
             </div>
           </div>
         )}
@@ -1341,6 +1413,7 @@ export function PerformanceMode({
             );
           }
           return (
+            <ConteneurCoupure>
             <PageTexte
               page={page}
               rappel={rappel}
@@ -1356,6 +1429,7 @@ export function PerformanceMode({
               showChrome={showChrome}
               pastille={isLastPageOfSong && nextEntry && !colonneScan ? pastilleSuivant(`pointer-events-auto max-w-full border-border/60 ${pastilleCouverte ? "invisible" : ""}`, refPastilleFlux, pastilleCouverte) : null}
             />
+            </ConteneurCoupure>
           );
         })()}
       </div>
@@ -1391,6 +1465,19 @@ export function PerformanceMode({
             >
               {t("performance.annotRevenir")}
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* ── Lot CV : des traits existent sous l'ancienne composition de la page (vers coupés depuis) ── */}
+      {alerteComposition && (
+        <div
+          data-alerte-composition
+          className="absolute left-0 right-0 flex justify-center pointer-events-none"
+          style={{ zIndex: 6, top: showChrome ? `${barres.haut + 8}px` : "calc(var(--sat, 0px) + 0.5rem)" }}
+        >
+          <div className="flex max-w-[92%] flex-wrap items-center justify-center gap-x-3 gap-y-1 rounded-2xl border border-border/60 bg-background/90 px-4 py-1 text-sm text-muted-foreground backdrop-blur">
+            <span>{t("performance.annotAncienneMiseEnPage")}</span>
           </div>
         </div>
       )}

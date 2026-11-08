@@ -4,7 +4,8 @@ import type { Token } from "@/types/chordPro";
 import { AccordTouchable } from "@/components/accords/AccordTouchable";
 import localFont from "next/font/local";
 import { useContext, useLayoutEffect, useRef, useState } from "react";
-import { LargeurCoupureContext } from "@/components/song/LargeurCoupure";
+import { LargeurCoupureContext, CoupureMesureContext } from "@/components/song/LargeurCoupure";
+import { signalerCoupure } from "@/lib/song/coupureSignal";
 import { choisirCoupure, DEBORD, type Unite } from "@/lib/song/coupure";
 type Segment = { chord: string | null; lyric: string };
 
@@ -150,6 +151,14 @@ export function ChordLine({ tokens, showChords = true, hideLyrics = false, fontS
   const motRefs = useRef<(HTMLElement | null)[]>([]);
   const derniere = useRef("");
   const [coupe, setCoupe] = useState<Coupe>(UNE_RANGEE);
+  // Une coupure qui change déplace les hauteurs : le mode louange refait sa pagination (rien au premier rendu).
+  const coupePrec = useRef(coupe);
+  const copieMesure = useContext(CoupureMesureContext);
+  useLayoutEffect(() => {
+    if (coupePrec.current === coupe) return;
+    coupePrec.current = coupe;
+    signalerCoupure(copieMesure);
+  }, [coupe, copieMesure]);
   const [polices, setPolices] = useState(0);
   const [propre, setPropre] = useState(0);
   const version = useContext(LargeurCoupureContext);
