@@ -3,6 +3,7 @@ import { Fragment } from "react";
 import localFont from "next/font/local";
 import Link, { type LinkProps } from "next/link";
 import { ChordLine } from "@/components/song/ChordLine";
+import { ConteneurCoupure } from "@/components/song/LargeurCoupure";
 import { JianpuLine } from "@/components/song/JianpuLine";
 import { AccordsInactifs } from "@/components/accords/AccordsProvider";
 import { AccordTouchable } from "@/components/accords/AccordTouchable";
@@ -908,7 +909,7 @@ export function SongView({
       </>
   );
   return (
-    <div className="max-w-[var(--colonne-partition,42rem)] print:max-w-none">
+    <ConteneurCoupure className="max-w-[var(--colonne-partition,42rem)] print:max-w-none">
       {enTete}
       {bandeau}
 
@@ -942,6 +943,6 @@ export function SongView({
           );
         })}
       </div>}
-    </div>
+    </ConteneurCoupure>
   );
 }

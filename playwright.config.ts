@@ -37,6 +37,8 @@ const SPECS_GRAND_ECRAN = [
   /rappel-dp\.spec\.ts/,
   /rappel-ordre-joue\.spec\.ts/,
   /rappel-indice\.spec\.ts/,
+  // Lot CV (docs/spec-mode-louange-forscore-2.md) : la coupure des vers français sur les quatre dispositions.
+  /coupure-vers\.spec\.ts/,
   /performance-mode\.spec\.ts/,
   /mode-louange-forscore\.spec\.ts/,
   /setlist-regie\.spec\.ts/,

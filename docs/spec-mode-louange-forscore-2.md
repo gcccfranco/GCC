@@ -452,7 +452,7 @@ nom réel de membre dans les tests. Mise en ligne sur ordre de Timothée seuleme
 
 | Lot | État |
 | --- | --- |
-| CV | **go le 08/11/2026** (vague 1), session de code lancée |
+| CV | **go le 08/11/2026** (vague 1). **CV-1 fait** (08/11) : module pur `src/lib/song/coupure.ts`, vers français en rangées (`ChordLine.tsx`), un `ResizeObserver` par chant (`LargeurCoupure.tsx`), tests `coupure-pures` et `coupure-vers` (cinq projets). Essai : à 390 px « Ton Nom est le plus grand, / Ton Nom est tout-puissant, » ; à 412 px le vers tient dans les 8 px de R4 et reste sur une rangée. Écart voulu à la planche : un vers français qui ne tient pas en deux rangées passe à trois ou quatre (le corps ne baisse pas seul sur le site). Seuils 40 %, mots courts, 0,03 em gardés. CV-2 (chinois) et CV-3 (mode louange) à suivre |
 | DP | spec écrite, en attente de go |
 | FS | **go le 08/11/2026 pour FS-A et FS-B** (vague 1), session de code lancée ; FS-C et FS-D en attente de go |
 | RP | spec écrite, en attente de go |

@@ -3,7 +3,9 @@
 import type { Token } from "@/types/chordPro";
 import { AccordTouchable } from "@/components/accords/AccordTouchable";
 import localFont from "next/font/local";
-import { useLayoutEffect, useRef, useState } from "react";
+import { useContext, useLayoutEffect, useRef, useState } from "react";
+import { LargeurCoupureContext } from "@/components/song/LargeurCoupure";
+import { choisirCoupure, DEBORD, type Unite } from "@/lib/song/coupure";
 type Segment = { chord: string | null; lyric: string };
 
 function toSegments(tokens: Token[], joinSyllables: boolean): Segment[] {
@@ -71,25 +73,6 @@ function toWords(segments: Segment[]): { seg: Segment; i: number }[][] {
   return words;
 }
 
-/** Regroupe les mots en rangées insécables : un accord ouvre un groupe, qui prend tous les
- *  mots sans accord jusqu'à l'accord suivant. La ligne ne passe à la ligne qu'avant un accord
- *  (sinon une rangée d'accords restait vide au-dessus d'un mot orphelin, 03/11/2026). Les mots
- *  d'avant le premier accord restent séparés, la ligne peut se couper entre eux. Sans accord affiché : un groupe par mot. */
-function toChunks<T extends { seg: Segment }>(words: T[][], avecAccords: boolean): T[][][] {
-  if (!avecAccords) return words.map((w) => [w]);
-  const chunks: T[][][] = [];
-  let accordVu = false;
-  for (const word of words) {
-    const accorde = word.some((w) => w.seg.chord !== null);
-    // Avant le premier accord : un groupe par mot, la ligne peut se couper entre eux (sinon le groupe du premier
-    // accord, trop large, se recoupait en laissant une rangée d'accords vide, critique du 04/11/2026).
-    if (accorde || !accordVu) chunks.push([word]);
-    else chunks[chunks.length - 1].push(word);
-    accordVu ||= accorde;
-  }
-  return chunks;
-}
-
 const LETTRE_LATINE = /^\p{Script=Latin}$/u;
 
 /** Tiret de liaison dans un mot coupé par un accord, là où l'accord laisse un espace (« re – culé », C10, audit 24/10/2026) :
@@ -131,13 +114,136 @@ interface ChordLineProps {
   ecartApres?: boolean;
 }
 
+type Coupe = { coupures: number[]; etat: string; relache: string[] };
+const UNE_RANGEE: Coupe = { coupures: [], etat: "une", relache: [] };
+
+const nettoie = (lyric: string) => lyric.replace(/\s?-\s/g, "").trimStart();
+
+/** Largeur de l'espace final d'un mot (le dernier nœud de paroles), pour le retirer quand le mot finit une rangée. */
+function espaceFinDe(mot: HTMLElement, echelle: number): number {
+  const paroles = mot.querySelectorAll("[data-paroles]");
+  const noeud = paroles[paroles.length - 1]?.firstChild;
+  if (!noeud || noeud.nodeType !== Node.TEXT_NODE) return 0;
+  const data = (noeud as Text).data;
+  const fin = /\s+$/.exec(data);
+  if (!fin) return 0;
+  const plage = document.createRange();
+  plage.setStart(noeud, data.length - fin[0].length);
+  plage.setEnd(noeud, data.length);
+  return plage.getBoundingClientRect().width / echelle;
+}
+
 export function ChordLine({ tokens, showChords = true, hideLyrics = false, fontSize, chordEm = 0.9, chord_font, fr_lyric_font, ecartApres = false }: ChordLineProps) {
   const segments = toSegments(tokens, !showChords);
   const hasAnyChord = showChords && segments.some((s) => s.chord !== null);
+  // Sans accords, un mot dont rien ne s'affiche n'est pas une unité de coupure.
+  const words = toWords(segments).filter((w) => showChords || w.some(({ seg }) => nettoie(seg.lyric)));
+  // R3 : des accords sans paroles après la dernière parole forment la « queue » de la ligne.
+  let nTexte = words.length;
+  if (hasAnyChord) {
+    while (nTexte > 0 && words[nTexte - 1].every(({ seg }) => seg.chord !== null && !seg.lyric.trim())) nTexte--;
+    if (nTexte === 0) nTexte = words.length;
+  }
+  const cle = words.map((w) => w.map(({ seg }) => `${seg.chord ?? ""}|${seg.lyric}`).join("¦")).join("§");
+
+  const ligne = useRef<HTMLDivElement>(null);
+  const motRefs = useRef<(HTMLElement | null)[]>([]);
+  const derniere = useRef("");
+  const [coupe, setCoupe] = useState<Coupe>(UNE_RANGEE);
+  const [polices, setPolices] = useState(0);
+  const [propre, setPropre] = useState(0);
+  const version = useContext(LargeurCoupureContext);
+
+  // Sans conteneur de chant (Bibliothèque), la ligne observe sa propre largeur.
+  useLayoutEffect(() => {
+    const el = ligne.current;
+    if (version !== null || !el) return;
+    let largeur = el.clientWidth;
+    const obs = new ResizeObserver(() => {
+      if (el.clientWidth === largeur) return;
+      largeur = el.clientWidth;
+      setPropre((v) => v + 1);
+    });
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [version]);
+
+  // Les largeurs de mots changent quand la police arrive.
+  useLayoutEffect(() => {
+    let vivant = true;
+    document.fonts?.ready.then(() => vivant && setPolices((v) => v + 1));
+    return () => {
+      vivant = false;
+    };
+  }, []);
+
+  // Après chaque rendu : on ne mesure que si la largeur, le corps ou le contenu ont changé (aucune boucle).
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- sans liste volontairement : l'empreinte ci-dessous évite toute boucle
+  useLayoutEffect(() => {
+    const el = ligne.current;
+    if (!el) return;
+    // La réserve de droite (ci-dessous) est comptée dans clientWidth : on la retire pour retrouver la largeur de la colonne.
+    const largeur = el.clientWidth - (parseFloat(el.style.paddingRight) || 0);
+    if (!largeur) return;
+    const em = parseFloat(getComputedStyle(el).fontSize);
+    const empreinte = [largeur, em, cle, nTexte, showChords, hideLyrics, version, propre, polices].join("/");
+    if (empreinte === derniere.current) return;
+    derniere.current = empreinte;
+    // R4 retiré avant de mesurer : les largeurs sont celles du texte non resserré.
+    el.style.letterSpacing = "";
+    el.style.paddingRight = "";
+    el.style.marginRight = "";
+    const rect = el.getBoundingClientRect();
+    const echelle = rect.width / (el.offsetWidth || 1) || 1;
+    // Jusqu'au bord du cadre de zoom (ou de la fenêtre) : rien ne doit élargir ni la page ni ce cadre.
+    const bord = Math.min(document.documentElement.clientWidth, el.closest(".song-zoom")?.getBoundingClientRect().right ?? Infinity);
+    const place = (bord - rect.right) / echelle - 4;
+    const unites: Unite[] = words.map((mot, w) => {
+      const noeud = motRefs.current[w];
+      return {
+        largeur: noeud ? noeud.getBoundingClientRect().width / echelle : 0,
+        espaceFin: noeud ? espaceFinDe(noeud, echelle) : 0,
+        texte: mot.map(({ seg }) => (showChords ? seg.lyric : nettoie(seg.lyric))).join(""),
+        queue: w >= nTexte,
+      };
+    });
+    const r = choisirCoupure(unites, {
+      largeur,
+      em,
+      debord: Math.max(0, Math.min(DEBORD, place)),
+      debordQueue: Math.max(0, Math.min(20, place)),
+      resserrer: true,
+    });
+    // Ce qui dépasse dans la marge reste dans le cadre de la ligne (padding compensé par une marge négative) :
+    // la ligne ne défile pas, la page ne s'élargit pas.
+    const reserve = Math.max(0, Math.min(20, place));
+    if (reserve > 0) {
+      el.style.paddingRight = `${reserve}px`;
+      el.style.marginRight = `-${reserve}px`;
+    }
+    el.style.letterSpacing = r.interlettrage > 0 ? `-${r.interlettrage.toFixed(3)}px` : "";
+    setCoupe((avant) =>
+      avant.etat === r.etat && avant.coupures.join() === r.coupures.join() && avant.relache.join() === r.relache.join()
+        ? avant
+        : { coupures: r.coupures, etat: r.etat, relache: r.relache },
+    );
+  });
+
+  const rangees: { mots: typeof words; depart: number }[] = [];
+  {
+    let depart = 0;
+    for (const fin of words.length ? [...coupe.coupures, words.length - 1] : []) {
+      rangees.push({ mots: words.slice(depart, fin + 1), depart });
+      depart = fin + 1;
+    }
+  }
+
   return (
     <div
+      ref={ligne}
       data-copy-line
-      className="font-sans leading-normal select-text flex flex-wrap items-end"
+      data-coupe={coupe.etat + (coupe.relache.length ? `:${coupe.relache.join(", ")}` : "")}
+      className="font-sans leading-normal select-text"
       style={{
         // Sans taille imposée (typographie PDF), taille par défaut de l'écran (globals.css).
         fontSize: fontSize !== undefined ? `${fontSize}rem` : "var(--lyric-size)",
@@ -146,13 +252,21 @@ export function ChordLine({ tokens, showChords = true, hideLyrics = false, fontS
         lineHeight: segments.every(s => !s.lyric?.trim()) ? "0" : undefined,
         // Rangée d'accords sans paroles suivie d'une ligne avec paroles : l'écart normal entre deux lignes.
         marginBottom: ecartApres ? "0.5em" : undefined,
-      }}  
+      }}
     >
-      {toChunks(toWords(segments), hasAnyChord).map((chunk) => (
-      // Une rangée ne se coupe qu'avant un accord ; plus large que la ligne, elle se coupe de nouveau entre ses mots.
-      <span key={chunk[0][0].i} className="flex max-w-full shrink-0 flex-wrap items-end">
-      {chunk.map((word) => (
-      <span key={word[0].i} className="inline-flex items-end">
+      {rangees.map(({ mots, depart }, r) => {
+        // R2 : une rangée sans accord ne réserve pas la bande d'accords.
+        const rangeeAvecAccord = showChords && mots.some((w) => w.some(({ seg }) => seg.chord !== null));
+        // `span` et non `div` : la copie (copyLyrics.ts) met un retour à la ligne après chaque bloc. R5 : retrait en padding, pas en texte.
+        return (
+      <span
+        key={depart}
+        data-rangee
+        className="flex flex-nowrap items-end whitespace-nowrap"
+        style={r > 0 ? { paddingLeft: "1em" } : undefined}
+      >
+      {mots.map((word, m) => (
+      <span key={word[0].i} ref={(n) => { motRefs.current[depart + m] = n; }} className="inline-flex items-end">
       {word.map(({ seg, i }, k) => {
         const chordLen = seg.chord?.length ?? 0;
         const lyricLen = [...(seg.lyric)].length;
@@ -172,7 +286,7 @@ export function ChordLine({ tokens, showChords = true, hideLyrics = false, fontS
               LETTRE_LATINE.test([...avant].at(-1) ?? "") && LETTRE_LATINE.test([...apres][0] ?? "")
             : suivant !== undefined &&
               LETTRE_LATINE.test([...seg.lyric].at(-1) ?? "") && LETTRE_LATINE.test([...suivant][0] ?? ""));
-        const lyric = seg.lyric?.replace(/\s?-\s/g,'').trimStart()
+        const lyric = nettoie(seg.lyric)
         if (!showChords && !lyric){return null} else
         return (
           <span
@@ -192,7 +306,7 @@ export function ChordLine({ tokens, showChords = true, hideLyrics = false, fontS
                 <AccordTouchable etiquette={seg.chord} />
               </span>
             ) : 
-              (showChords && hasAnyChord && <span data-copy-ignore className="leading-[0.7]" style={{ fontSize: `${chordEm}em` }}>&nbsp;</span>)
+              (rangeeAvecAccord && <span data-copy-ignore className="leading-[0.7]" style={{ fontSize: `${chordEm}em` }}>&nbsp;</span>)
             }
             {/* `whitespace-pre` toujours : un accord de fin de ligne n'a qu'une espace
                 sous lui ; effacée, sa colonne perd sa hauteur et l'accord tombe au
@@ -200,6 +314,7 @@ export function ChordLine({ tokens, showChords = true, hideLyrics = false, fontS
             {(() => {
               const paroles = (
                 <span
+                  data-paroles
                   className={`text-foreground whitespace-pre ${fr_lyric_font?.className}`}
                   style={hideLyrics ? { visibility: "hidden" } : undefined}
                 >
@@ -221,7 +336,8 @@ export function ChordLine({ tokens, showChords = true, hideLyrics = false, fontS
       </span>
       ))}
       </span>
-      ))}
+        );
+      })}
     </div>
   );
 }

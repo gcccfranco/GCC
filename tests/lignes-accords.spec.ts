@@ -112,7 +112,9 @@ test("grace-infinie — accords masqués, les syllabes se recollent", async ({ p
 function motsCoupes(page: Page): Promise<string[]> {
   return page.evaluate(() => {
     const out: string[] = [];
-    for (const ligne of Array.from(document.querySelectorAll<HTMLElement>("[data-copy-line].items-end"))) {
+    const lignes = Array.from(document.querySelectorAll<HTMLElement>("[data-copy-line][data-coupe]"));
+    if (!lignes.length) throw new Error("motsCoupes : aucune ligne française examinée");
+    for (const ligne of lignes) {
       const morceaux = Array.from(ligne.querySelectorAll<HTMLElement>("span.flex-col"));
       for (let i = 1; i < morceaux.length; i++) {
         const avant = morceaux[i - 1].lastElementChild?.textContent ?? "";
