@@ -335,6 +335,57 @@ sur la bande du « 1=X », filigrane), la valeur se règle à la main au mieux, 
 et la référence biblique se relèvent sur la partie coupée et s'écrivent dans le `.cho` (`{time}`, `{subtitle}`, `{bible}`).
 Le PDF de setlist coupe son calque au cadre de l'image (`overflow: hidden`) : le « 1=X » réécrit n'y déborde plus.
 
+## Lignes et barres des scans (lot AO, JP-A)
+
+Le mode louange affiche une **tranche** de la page du scan (jamais un chiffre rapetissé) et, au téléphone, coupe chaque ligne
+sur une barre de mesure (`docs/spec-mode-louange-forscore-2.md`, § JP). Il lui faut, par page : les **lignes** (systèmes)
+et les x de leurs **barres**, en pixels du WebP. Même méthode que le recadrage : proposer, regarder, certifier à l'œil.
+Un scan absent de `public/jianpu/systemes.json` n'est pas certifié et garde l'affichage d'aujourd'hui.
+
+Une **ligne** = un système complet : repère gravé au-dessus (【Chorus】, crochets de volta, « 先低后高 »), rangée d'accords,
+rangée de chiffres (points d'octave, liaisons, triolets) et **toutes** les rangées de paroles qui la suivent (1 à 4
+couplets), jusqu'au blanc qui précède le système suivant. L'en-tête de la page 1 (titre, album, versets, crédits, « 1=E 4/4 »,
+♩=65) et le pied (crédit « 灵栖清泉制谱… », numéro de page, logo) ne sont **pas** des lignes.
+
+1. **Proposer** : `python3 scripts/jianpu/systemes.py propose [slug…]` (sans argument : les 190 chants, ~20 s). Une ligne par
+   page : slug, page, nombre de lignes, barres par ligne, puis les ⚠ (étiquette de `chords.json` hors de toute ligne ·
+   lignes qui se recouvrent ou à moins de 4 px · ligne à moins de 2 barres · hauteur hors de [0,5 ; 1,8] × la médiane ·
+   page sans ligne). Écrit `scripts/jianpu/debug/systemes-propose.json` (ignoré par git, fusionné avec l'existant). Règle :
+   docstring de `systemes.py` (barres = traits verticaux fins plus hauts qu'un chiffre ; coupe entre deux systèmes au
+   plus grand blanc, après la première rangée de paroles, au-dessus des accords du dessous).
+2. **Regarder** : `PW_PORT=<port> npm run jianpu:audit -- --systemes <slug…> [--propose]` (plusieurs slugs, un seul serveur et
+   un seul navigateur ; ou `npm run jianpu:audit <slug> -- --systemes`) → `scripts/jianpu/debug/_pw-<slug>-systemes-p<n>.png`,
+   une PNG par page, 1 000 px de large : le scan entier tel que le navigateur le rend, bandeau « slug — p.N — proposé |
+   certifié — n lignes » en tête ; chaque ligne en bande translucide bleue / verte alternée (bords haut et bas pleins),
+   son numéro L1, L2… dans la marge gauche ; chaque barre en trait rouge ; **la barre la plus proche du milieu de la ligne**
+   (celle où JP-C coupera au téléphone) en magenta épais ; le `top` de `cadrage.json` en pointillé gris ; les sections
+   (JP-A2, `debug/sections-propose.json` ou `public/jianpu/sections.json`) en étiquettes jaunes à gauche de leur ligne. Les
+   données viennent de `systemes.json` si le chant y est, sinon de la proposition (`--propose` : la proposition d'abord).
+   **Lire chaque PNG** (Read), jamais sur parole.
+3. **Accepter** si, sur chaque page : chaque bande enferme son système entier (repère, accords, chiffres, **toutes** les
+   rangées de paroles) ; l'en-tête et le pied sont hors de toute bande ; chaque barre de mesure a son trait rouge et rien
+   d'autre n'en porte un. **Refuser** si une bande coupe une rangée de chiffres, d'accords ou de paroles ; si une rangée de
+   paroles est rattachée au mauvais système (la bande du dessous les avale, ou celle du dessus avale les accords du suivant) ;
+   si l'en-tête (♩=65, « 1=X », crédits) ou le pied (ligne de crédit, logo) est dans une ligne ; si une barre manque (une
+   mesure sans trait) ou si un trait qui n'est pas une barre est marqué (un « 1 », un trait de caractère, un « ⊕ »). Une
+   barre double, de reprise (« |: », « :‖ ») ou finale = un seul trait. Les limites connues (docstring de `systemes.py`) sont
+   à regarder en premier : repère collé aux paroles, 2 rangées d'accords, hymnaire en gros caractères, bloc de texte sous le
+   dernier système.
+4. **Corriger** : éditer `scripts/jianpu/debug/systemes-propose.json` à la main (y0 / y1 / `barres` du chant et de la page),
+   relancer la planche avec `--propose`, regarder de nouveau. `propose` écrase la proposition d'un slug : ne le relancer
+   qu'avant de corriger. Une correction à la main ne se reconstruit pas, elle se certifie aussitôt.
+5. **Certifier** : `python3 scripts/jianpu/systemes.py certifier <slug…>` copie la proposition (la proposer si absente) dans
+   `public/jianpu/systemes.json`, **après** avoir revérifié contre `index.json` la `source`, et pour chaque page `file`, `w`,
+   `h`, puis que chaque ligne a 0 ≤ y0 < y1 ≤ h, que les lignes sont croissantes sans recouvrement, que les barres sont dans
+   [0, w] et croissantes ; il refuse sinon. `retirer <slug…>` enlève un chant du fichier ; `etat` donne le nombre de chants
+   certifiés et les restants.
+6. **Format et version** : `public/jianpu/systemes.json` = `{"version": 1, "chants": {slug: entrée}}`, une entrée =
+   `{"source", "pages": [{"file", "w", "h", "lignes": [{"y0", "y1", "barres": [x…]}]}]}`, clés triées, une ligne par chant,
+   UTF-8 sans échappement. `version` est la version du **format** (elle change si la forme change). La **validité d'une
+   entrée se vérifie contre `index.json`** : même `source` et, pour chaque page, mêmes `file`, `w`, `h` ; le site ignore une
+   entrée qui ne correspond plus (scan refait) et un scan absent garde l'affichage d'aujourd'hui. `index.json`, `chords.json`,
+   `cadrage.json` et `marges.json` ne changent jamais.
+
 ## Critère d'arrêt
 
 ≥ 95 % des 124 partitions résolues, **ou** deux itérations consécutives sans
