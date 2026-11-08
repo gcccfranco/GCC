@@ -1337,7 +1337,7 @@ passages instrumentaux. **Tranché par Timothée le 07/11/2026 : interlude « In
 sur le constat 16 du § 7). Les « Dernière phrase – Pm » et l'historique déjà enregistrés restent lisibles, sans
 migration. **Lot AB-I codé le 07/11/2026** (go du jour) sur `claude/cool-allen-pkzti6` (`b538acc`) ; **en ligne le 07/11/2026** (ordre de Timothée).
 
-### AO. Mode louange façon forScore, apparence comprise (Timothée, 07/11/2026) → spec à écrire après la planche
+### AO. Mode louange façon forScore, apparence comprise (Timothée, 07/11/2026) → `spec-mode-louange-forscore-2.md`
 
 « J'aime pas le mode louange, je trouve qu'il ressemble pas assez à forScore alors que je t'avais [dit] de faire tout
 comme forScore, de la navigation à l'apparence etc. ; l'UI du mode louange est bof, que ce soit la vue des musiciens
@@ -1388,7 +1388,8 @@ planning ; menu Repères ; deux colonnes actuelles en paysage et sur ordinateur 
 du Campus ou du profil, sinon rien, Percussion → Batteur ; 简谱 : ligne coupée en deux au téléphone en portrait, une
 feuille large en tablette paysage, une feuille plus grande sur ordinateur, début de chaque section noté par scan ;
 **choriste et présidence : paroles avec pinyin par défaut sur un chant à scan, le 简谱 à leur choix** ; **pas de
-sépia pour l'instant**. Spec : `spec-mode-louange-forscore-2.md` (en cours).
+sépia pour l'instant**. Spec : `spec-mode-louange-forscore-2.md` (écrite et contre-vérifiée le 08/11/2026 : lots CV, DP, FS, RP, JP, AN ;
+en attente de go, lot par lot).
 **Annotations façon forScore** (Timothée, 08/11/2026 : « comment fonctionnent les annotations maintenant ? il faut que
 ce soit comme forScore », puis « oui go » à la proposition) : lot à part, option (a) — les outils façon forScore
 maintenant (appui long et stylet qui dessine seul, barre d'outils déplaçable, tourner les pages en annotant, stylos
