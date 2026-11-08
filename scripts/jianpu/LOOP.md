@@ -386,6 +386,46 @@ couplets), jusqu'au blanc qui précède le système suivant. L'en-tête de la pa
    entrée qui ne correspond plus (scan refait) et un scan absent garde l'affichage d'aujourd'hui. `index.json`, `chords.json`,
    `cadrage.json` et `marges.json` ne changent jamais.
 
+### Sections (JP-A2)
+
+Le mode louange saute d'une section à l'autre : pour chaque section de `content/songs/<slug>.cho`, il lui faut la **page** et
+la **ligne** du scan (comptées depuis 1, L1 de la planche = ligne 1) où elle commence. Sections du .cho = chaque
+`{start_of_<type>[: libellé]}` hors `{start_of_jianpu}` ; id = `<type>-<n>`, n = rang parmi toutes les `start_of_` hors jianpu
+(la convention de `src/lib/chordpro/parser.ts`) ; libellé = la valeur après « : ».
+
+1. **Proposer** : `python3 scripts/jianpu/sections.py propose [slug…]` (sans argument : les 190 chants, < 5 s). Une ligne par
+   chant : slug, `lignes certifiées` ou `proposées` (celles de `systemes.json` si le chant y est, sinon de
+   `debug/systemes-propose.json`, fabriquée au besoin), `id→pPLn` par section (`↑` = anacrouse, `null` = à placer à la main), puis
+   les ⚠. Écrit `scripts/jianpu/debug/sections-propose.json` (ignoré par git, fusionné). Méthode (docstring de `sections.py`) :
+   les accords du .cho sont comparés, relativement à la tonalité, aux étiquettes de `chords.json` (page 1 seulement) rangées par
+   ligne ; une programmation dynamique découpe la suite des étiquettes en tranches de lignes, une par section dans l'ordre du
+   .cho, en maximisant le rappel (part des accords de la section retrouvée dans la plus longue sous-suite commune), le Dice ne départageant
+   que les égalités (les étiquettes qui suivent le dernier accord apparié, interlude compris, ne comptent pas). Une section que le
+   .cho répète à l'identique n'est tenue pour gravée à part qu'avec un rappel ≥ 75 % ; sinon, comme toute section répétée que le
+   scan ne grave pas (couplet 2 sous le couplet 1), elle prend la ligne de la section qu'elle répète. **Anacrouse** : le premier accord
+   de la section tombe dans la dernière mesure de sa ligne (après la dernière barre intérieure ; la barre du bord droit n'en est
+   pas une) → la section va à la ligne suivante avec `anacrouse: true`.
+2. **Lire les ⚠** : `null` (page sans calque, comme la p. 2 de 为我而来 ; accords non appariés) · `appariement faible (xx %)` (la
+   tranche de lignes ressemble peu aux accords : le .cho et le scan n'ont pas la même harmonie, ou la ligne est fausse) ·
+   `commence comme X : mis sur sa ligne` (début identique à une section plus haut : couplet gravé sous le précédent, ou gravure
+   séparée ?) · `a les accords de X mais est placée…` (même question pour un .cho identique). Un chant sans ⚠ n'est pas pour autant
+   juste : il se regarde.
+3. **Regarder** : `npm run jianpu:audit -- --systemes <slug…> [--propose]` ajoute à chaque planche le libellé de chaque section
+   (fond jaune, texte noir, 18 px, `[id]`) à gauche du bord haut de la ligne où elle commence, `↑ anacrouse` devant quand
+   l'anacrouse est vraie, empilés sans recouvrement quand plusieurs sections tombent sur la même ligne ; le bandeau liste les
+   sections `null` (`⚠ sections à placer : …`). Certifié (`public/jianpu/sections.json`) d'abord, sinon la proposition (`--propose`
+   : la proposition d'abord). **Lire chaque PNG** avec le .cho à côté : chaque section est-elle sur la ligne où son premier
+   accord (ou sa première syllabe, en anacrouse) est gravé ?
+4. **Corriger** : éditer `scripts/jianpu/debug/sections-propose.json` (page, ligne, anacrouse du chant), relancer la planche avec
+   `--propose`. `propose` écrase la proposition d'un slug : ne le relancer qu'avant de corriger.
+5. **Certifier** : `python3 scripts/jianpu/sections.py certifier <slug…>` ; il **refuse** si le chant n'a pas ses lignes
+   certifiées dans `systemes.json`, si `source` ≠ `index.json`, si les ids/libellés ne sont pas ceux du .cho, ou si une page/ligne
+   n'existe pas (ou si un seul des deux est null) ; il **avertit** (sans refuser) si les lignes ne croissent pas dans l'ordre du
+   .cho hors reprises. `retirer <slug…>` et `etat` comme pour les lignes.
+6. **Format** : `public/jianpu/sections.json` = `{"version": 1, "chants": {slug: {"source", "sections": [{"id", "label", "page":
+   int|null, "ligne": int|null, "anacrouse": bool}]}}}`, dans l'ordre du .cho, clés triées, une ligne par chant, UTF-8. Une section
+   absente du scan : `page` et `ligne` null.
+
 ## Critère d'arrêt
 
 ≥ 95 % des 124 partitions résolues, **ou** deux itérations consécutives sans

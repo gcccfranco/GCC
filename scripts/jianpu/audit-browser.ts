@@ -264,7 +264,7 @@ async function planchecadrage(browser: Browser) {
 type Ligne = { y0: number; y1: number; barres: number[] };
 type PageSystemes = { file: string; w: number; h: number; lignes: Ligne[] };
 type EntreeSystemes = { source: string; pages: PageSystemes[] };
-type Section = { id: string; label: string; page: number; ligne: number; anacrouse?: boolean };
+type Section = { id: string; label: string; page: number | null; ligne: number | null; anacrouse?: boolean };
 
 const PUBLIC_JIANPU = path.resolve(__dirname, "..", "..", "public", "jianpu");
 
@@ -304,6 +304,8 @@ async function planchesystemes(browser: Browser, slugs: string[]) {
   for (const s of slugs) {
     const { entree, certifie } = donneesSystemes(s);
     const sections = sectionsDuChant(s);
+    // Sections sans page ni ligne (non gravées ou à placer à la main) : listées dans le bandeau de la page 1.
+    const nulles = sections.filter((x) => x.ligne === null || x.page === null);
     const context = await browser.newContext({
       baseURL: BASE_URL,
       viewport: { width: 1600, height: 1000 },
@@ -361,10 +363,17 @@ async function planchesystemes(browser: Browser, slugs: string[]) {
               poser(`left:${x * k - (choisie ? 3 : 1)}px;top:${l.y0 * k}px;width:${choisie ? 6 : 2}px;height:${h}px;background:${choisie ? "rgb(217,0,217)" : "rgb(220,38,38)"}`);
             }
           });
+          // Plusieurs sections sur la même ligne s'empilent (26 px chacune) à partir du bord haut de la ligne.
+          const empilees = new Map<number, number>();
           arg.sections.forEach((sec) => {
-            const l = arg.lignes[sec.ligne - 1];
+            const l = arg.lignes[(sec.ligne ?? 0) - 1];
             if (!l || sec.page !== arg.n) return;
-            poser(`left:60px;top:${l.y0 * k + 2}px;background:#fde047;color:#000;font:700 20px/24px ui-sans-serif,system-ui;padding:0 8px;border:1px solid #000${sec.anacrouse ? ";border-style:dashed" : ""}`, sec.label + (sec.anacrouse ? " (anacrouse)" : ""));
+            const rang = empilees.get(sec.ligne!) ?? 0;
+            empilees.set(sec.ligne!, rang + 1);
+            poser(
+              `left:70px;top:${l.y0 * k + 2 + rang * 28}px;background:#fde047;color:#000;font:700 18px/24px ui-sans-serif,system-ui;padding:0 8px;border:1px solid #000;white-space:nowrap`,
+              (sec.anacrouse ? "↑ anacrouse " : "") + (sec.label || sec.id) + " [" + sec.id + "]",
+            );
           });
           if (arg.top) poser(`left:0;right:0;top:${arg.top * k}px;border-top:2px dashed rgb(120,120,120)`);
           // Le bandeau est posé au-dessus de l'image, hors du scan : il ne recouvre aucune ligne.
@@ -380,7 +389,7 @@ async function planchesystemes(browser: Browser, slugs: string[]) {
           sections,
           n: i + 1,
           top: cadrageJson?.[s]?.[i] ?? 0,
-          bandeau: `${s} — p.${i + 1} — ${certifie ? "certifié" : "proposé"} — ${donnees.lignes.length} lignes`,
+          bandeau: `${s} — p.${i + 1} — ${certifie ? "certifié" : "proposé"} — ${donnees.lignes.length} lignes${nulles.length ? ` — ⚠ sections à placer : ${nulles.map((x) => x.id).join(", ")}` : ""}`,
         },
       );
       const file = path.join(OUT_DIR, `_pw-${s}-systemes-p${i + 1}.png`);
