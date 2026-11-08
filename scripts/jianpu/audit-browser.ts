@@ -261,7 +261,7 @@ async function planchecadrage(browser: Browser) {
   console.log(`\n${slug} p.${pageIndex + 1} : coupe à ${coupe.top} px (${coupe.certifie ? "certifiée" : "proposée"})`);
 }
 
-type Ligne = { y0: number; y1: number; barres: number[] };
+type Ligne = { y0: number; y1: number; barres: number[]; masques?: number[][] };
 type PageSystemes = { file: string; w: number; h: number; lignes: Ligne[] };
 type EntreeSystemes = { source: string; pages: PageSystemes[] };
 type Section = { id: string; label: string; page: number | null; ligne: number | null; anacrouse?: boolean };
@@ -354,6 +354,10 @@ async function planchesystemes(browser: Browser, slugs: string[]) {
             const h = Math.max(1, (l.y1 - l.y0) * k);
             poser(`left:0;right:0;top:${l.y0 * k}px;height:${h}px;background:rgba(${teinte},.14);border-top:2px solid rgb(${teinte});border-bottom:2px solid rgb(${teinte})`);
             poser(`left:4px;top:${l.y0 * k + h / 2 - 22}px;font:700 40px/44px ui-sans-serif,system-ui;color:rgb(${teinte});text-shadow:0 0 4px #fff,0 0 4px #fff,0 0 4px #fff`, `L${j + 1}`);
+            // Masques (bornes inclusives) : hachures grises semi-transparentes, bord gris pointillé ; le scan reste lisible dessous.
+            for (const m of l.masques ?? []) {
+              poser(`left:${m[0] * k}px;top:${m[1] * k}px;width:${(m[2] - m[0] + 1) * k}px;height:${(m[3] - m[1] + 1) * k}px;background:repeating-linear-gradient(45deg,rgba(90,90,90,.28) 0 4px,transparent 4px 10px);border:2px dashed rgb(110,110,110);box-sizing:border-box`);
+            }
             // « le milieu de la ligne » : la barre la plus proche du milieu de la feuille (w / 2, en pixels du WebP).
             // L'étendue d'encre de la ligne n'est pas connue du navigateur (la proposition ne la porte pas) ; w / 2 est simple.
             const milieu = arg.w / 2;

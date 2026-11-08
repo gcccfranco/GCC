@@ -64,11 +64,18 @@ ligne à moins de 2 barres · hauteur de ligne hors de [0,5 ; 1,8] × la médian
 qui recouvre la précédente, barres hors de [0, w] ou non croissantes · **page sans aucune ligne** · **ligne à moins de 2 barres** ·
 **étiquette du calque** (page 1 seulement : chords.json[slug] ne s'applique qu'à elle) dont `c` n'est pas vide (accord ou avis de
 modulation) qui n'est dans aucune ligne ou qui est à cheval sur le haut de sa ligne. Règle exacte (tolérance 0) : l'étiquette
-appartient à la ligne qui contient son centre vertical (y + h/2, y0 ≤ centre ≤ y1) ; il faut y0_ligne ≤ y_étiquette. `y1` est
+appartient à la ligne où elle est visible (centre (x + w/2, y + h/2) dans [y0, y1] et hors des masques) ; il faut y0_ligne ≤ y_étiquette. `y1` est
 inclusif (dernière rangée d'encre de la ligne).
 
 **Cadre « 1=X »** : la boîte `keyLabel` de chords.json (page 1) est entièrement dans une ligne (L1) ou entièrement dehors, jamais tranchée
 (refus si 0 < chevauchement < hauteur avec une ligne).
+
+**Masques** (champ optionnel `"masques": [[x0, y0, x1, y1], …]` d'une ligne, pixels du WebP, bornes **inclusives** comme `y1`) :
+rectangles à couvrir dans la tranche de cette ligne parce qu'ils appartiennent à la ligne voisine (2e rangée de paroles de L(n) à
+gauche, accords de L(n+1) à droite : leurs tranches se recouvrent en y). Refus : masque qui n'est pas un rectangle [x0, y0, x1, y1]
+valide dans [0, w] × [y0, y1] de sa ligne ; recouvrement en y de deux lignes successives si un point de la bande commune est visible
+dans les deux (visible = hors des masques de la ligne) ; étiquette visible dans 0 ou 2 lignes (`visible()` : centre dans [y0, y1] et
+hors des masques). Le cadre « 1=X » n'est pas jugé tranché dans une ligne où son centre est masqué. Sans masque, tout est comme avant.
 
 **Correction à la main** : éditer `scripts/jianpu/debug/systemes-propose.json` (la proposition du slug : y0/y1/barres),
 regarder la planche avec `--propose`, puis `certifier` (qui revérifie tout).
@@ -372,6 +379,36 @@ def ecrire(chemin: str, chants: dict, version: int | None) -> None:
             f.write('{"version": ' + str(version) + ', "chants": {\n' + lignes + "\n}}\n")
 
 
+def masque_couvre(m: list, x: float, y: float) -> bool:
+    """Masque [x0, y0, x1, y1] **inclusif** (x0 ≤ x ≤ x1, y0 ≤ y ≤ y1), en pixels du WebP, comme `y1` d'une ligne."""
+    return m[0] <= x <= m[2] and m[1] <= y <= m[3]
+
+
+def visible(e: dict, g: dict) -> bool:
+    """Une étiquette du calque est visible dans la ligne `g` : son centre (x + w/2, y + h/2) est dans [y0, y1] de la ligne et
+    hors de ses masques. Règle unique de `verifier()` et de sections.py."""
+    cx, cy = e["x"] + e.get("w", 0) / 2, e["y"] + e["h"] / 2
+    return g["y0"] <= cy <= g["y1"] and not any(masque_couvre(m, cx, cy) for m in g.get("masques", []))
+
+
+def intervalles_visibles(g: dict, y: int, w: int) -> list[tuple[int, int]]:
+    """Intervalles x (inclus) de [0, w] visibles à la hauteur y dans la ligne `g` : le complément de ses masques à ce y."""
+    libre = [(0, w)]
+    for m in g.get("masques", []):
+        if m[1] <= y <= m[3]:
+            libre = [t for a, b in libre for t in ((a, min(b, m[0] - 1)), (max(a, m[2] + 1), b)) if t[0] <= t[1]]
+    return libre
+
+
+def recouvrement_visible(a: dict, b: dict, w: int) -> int | None:
+    """Premier y de la bande commune de deux lignes où un point est visible dans les deux (None : aucun)."""
+    for y in range(max(a["y0"], b["y0"]), min(a["y1"], b["y1"]) + 1):
+        va, vb = intervalles_visibles(a, y, w), intervalles_visibles(b, y, w)
+        if any(p0 <= q1 and q0 <= p1 for p0, p1 in va for q0, q1 in vb):
+            return y
+    return None
+
+
 def verifier(slug: str, entree: dict, index: dict) -> list[str]:
     """Revérifie une entrée contre index.json, sa géométrie et le calque d'accords ; renvoie les erreurs."""
     if slug not in index:
@@ -395,7 +432,6 @@ def verifier(slug: str, entree: dict, index: dict) -> list[str]:
         if not lignes:
             err.append(f"p.{n} : aucune ligne")
             continue
-        dernier = None
         propres = True
         for i, g in enumerate(lignes, 1):
             manque = [k for k in ("y0", "y1", "barres") if k not in g]
@@ -405,9 +441,18 @@ def verifier(slug: str, entree: dict, index: dict) -> list[str]:
                 continue
             if not 0 <= g["y0"] < g["y1"] <= r["h"]:
                 err.append(f"p.{n} L{i} : y0={g['y0']} y1={g['y1']} hors de [0, {r['h']}]")
-            if dernier is not None and g["y0"] <= dernier:
-                err.append(f"p.{n} L{i} : recouvre la ligne précédente")
-            dernier = g["y1"]
+            if i > 1 and "y0" in lignes[i - 2] and g["y0"] <= lignes[i - 2]["y0"]:
+                err.append(f"p.{n} L{i} : commence avant la ligne précédente")
+            elif i > 1 and all(k in lignes[i - 2] for k in ("y0", "y1")) and g["y0"] <= lignes[i - 2]["y1"]:
+                # Recouvrement permis seulement si aucun point de la bande commune n'est visible dans les deux lignes.
+                y = recouvrement_visible(lignes[i - 2], g, r["w"])
+                if y is not None:
+                    err.append(f"p.{n} L{i} : recouvre la ligne précédente (visible dans les deux à y={y})")
+            for m in g.get("masques", []):
+                if not (isinstance(m, list) and len(m) == 4 and all(isinstance(v, (int, float)) and not isinstance(v, bool) for v in m)):
+                    err.append(f"p.{n} L{i} : masque {m!r} : [x0, y0, x1, y1] attendu")
+                elif not (0 <= m[0] <= m[2] <= r["w"] and g["y0"] <= m[1] <= m[3] <= g["y1"]):
+                    err.append(f"p.{n} L{i} : masque {m} hors de [0, {r['w']}] × [{g['y0']}, {g['y1']}] ou à l'envers")
             b = g["barres"]
             if len(b) < 2:
                 err.append(f"p.{n} L{i} : {len(b)} barre(s), au moins 2")
@@ -418,18 +463,22 @@ def verifier(slug: str, entree: dict, index: dict) -> list[str]:
             kl = calque.get("keyLabel")
             if kl:
                 for j, g in enumerate(lignes):
+                    # Masqué dans cette ligne (centre sous un masque) : le cadre n'en fait pas partie, il n'y est pas tranché.
+                    if any(masque_couvre(m, kl["x"] + kl.get("w", 0) / 2, kl["y"] + kl["h"] / 2) for m in g.get("masques", [])):
+                        continue
                     chev = min(kl["y"] + kl["h"], g["y1"]) - max(kl["y"], g["y0"])
                     if 0 < chev < kl["h"]:
                         err.append(f"p.{n} : cadre « 1=X » (y={kl['y']}, h={kl['h']}) tranché par L{j + 1} (y0={g['y0']}, y1={g['y1']}) : entièrement dedans ou dehors")
             for e in calque.get("labels", []):
                 if not e.get("c"):
                     continue
-                cy = e["y"] + e["h"] / 2
-                k = next((j for j, g in enumerate(lignes) if g["y0"] <= cy <= g["y1"]), None)
-                if k is None:
+                vues = [j for j, g in enumerate(lignes) if visible(e, g)]
+                if not vues:
                     err.append(f"p.{n} : étiquette « {e['c']} » (y={e['y']}) hors ligne")
-                elif lignes[k]["y0"] > e["y"]:
-                    err.append(f"p.{n} : étiquette « {e['c']} » (y={e['y']}) au-dessus du haut de L{k + 1} (y0={lignes[k]['y0']})")
+                elif len(vues) > 1:
+                    err.append(f"p.{n} : étiquette « {e['c']} » (y={e['y']}) visible dans {len(vues)} lignes (" + ", ".join(f"L{j + 1}" for j in vues) + ") : un masque manque")
+                elif lignes[vues[0]]["y0"] > e["y"]:
+                    err.append(f"p.{n} : étiquette « {e['c']} » (y={e['y']}) au-dessus du haut de L{vues[0] + 1} (y0={lignes[vues[0]]['y0']})")
     return err
 
 

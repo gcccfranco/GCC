@@ -444,6 +444,20 @@ tranchée** ; `verifier()` refuse si 0 < chevauchement < hauteur avec une ligne.
 求充满这地, 握住幸福, 复兴的火, 爱使我们勇敢 — sont corrigés dans les données.) `sections.py` ne lit que le calque de la page 1 :
 une section de la page 2 ou suivante est « invérifiable ».
 
+**Masques (champ optionnel `"masques": [[x0, y0, x1, y1], …]` d'une ligne de `systemes.json`)** : rectangles en pixels du WebP,
+bornes **inclusives** (x0 ≤ x ≤ x1, y0 ≤ y ≤ y1, comme `y1` d'une ligne), à couvrir dans la tranche de cette ligne parce qu'ils
+appartiennent à la ligne voisine (ex. la 2e rangée de paroles de L(n), à gauche, partage sa hauteur avec les accords de L(n+1), à
+droite : les tranches de deux lignes se recouvrent alors en y). Règles de `verifier()` :
+- (a) un masque est un rectangle valide, dans [0, w] × [y0, y1] de sa ligne ;
+- (b) le recouvrement en y de deux lignes successives n'est permis que si, pour chaque y de la bande commune, les intervalles x
+  visibles dans L(n) (le complément de ses masques à ce y) et dans L(n+1) ne se chevauchent pas ; refus « visible dans les deux à y=… » ;
+- (c) chaque étiquette non vide du calque est visible dans **exactement une** ligne (`systemes.visible()`, aussi utilisée par
+  `sections.py`) : son centre (x + w/2, y + h/2) est dans [y0, y1] de la ligne et hors de ses masques, avec toujours y0_ligne ≤ y
+  de l'étiquette ; 0 ou 2 lignes = refus. Le cadre « 1=X » n'est pas jugé tranché dans une ligne où son centre est masqué.
+Sans masque, rien ne change (0 refus sur les 187 certifiés). La planche `--systemes` dessine chaque masque en hachures grises
+semi-transparentes à bord pointillé (le scan reste lisible dessous). **JP-B les rendra** (couleur du fond sous le filtre d'encre) ;
+dans cette tranche (JP-A) les étiquettes masquées ne sont pas affichées, seulement contrôlées.
+
 **Commandes**
 - `python3 scripts/jianpu/systemes.py verifier [slug…] [--propose]` : applique `verifier()` au fichier certifié (ou à la proposition)
   sans rien écrire et imprime les refus ; sans slug, tous les chants certifiés.

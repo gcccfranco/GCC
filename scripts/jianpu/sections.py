@@ -178,8 +178,7 @@ def etiquettes(calque: dict | None, lignes: list[dict]) -> list[dict]:
     for e in calque.get("labels", []):
         if not e.get("c"):
             continue
-        cy = e["y"] + e["h"] / 2
-        ligne = next((i for i, g in enumerate(lignes) if g["y0"] <= cy <= g["y1"]), None)
+        ligne = next((i for i, g in enumerate(lignes) if sy.visible(e, g)), None)
         out.append({"c": e["c"], "x": e["x"], "ligne": ligne, "y": e["y"]})
     # Lecture : ligne, puis x. Un label hors de toute ligne (⚠ de systemes.py) se range par sa hauteur.
     out.sort(key=lambda e: (e["ligne"] if e["ligne"] is not None else 10**6, e["x"] if e["ligne"] is not None else e["y"]))
@@ -449,7 +448,7 @@ def controle(slug: str, entree: dict, lignes_entree: dict, calque: dict | None, 
 
             def dans(li: int) -> list[dict]:
                 g = lignes[li]
-                return sorted((x for x in etiq if g["y0"] <= x["y"] + x["h"] / 2 <= g["y1"]), key=lambda x: x["x"])
+                return sorted((x for x in etiq if sy.visible(x, g)), key=lambda x: x["x"])
 
             courantes = dans(e["ligne"] - 1)
             ecart["etiquettes"] = [x["c"] for x in courantes]
