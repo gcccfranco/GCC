@@ -556,6 +556,25 @@ Après enquête, aucun n'était un défaut du site ; aucun fichier de `src/` ne 
   Sur le vrai site l'en-tête est là et la barre n'est jamais collée en haut de page (écart nul mesuré) : le test la
   remet dans cet état. Contre-vérifié par deux relecteurs (aucune réfutation). Trois specs : 119 / 119, deux fois à froid.
 
+### Formulaire de réunion à part et retouches iPhone (Timothée, 08/11/2026, go « tout puis main »)
+Vu sur iPhone (Back-Office › Calendrier › « Nouvelle réunion ») : champs date et heure qui débordent de la carte,
+« Fin de l'évènement (heure) » sur deux lignes, triangle brut de « Plus d'options » ; et « une réunion n'est pas un
+évènement » : pas de fin ni de bannière, un formulaire par sorte de fiche (tâche, réunion, évènement).
+- **Réunion** (`src/components/reunions/ReunionForm.tsx`, création et modification) : Nom de la réunion, Équipe (ses
+  équipes seulement), Date | Horaire, Lieu, Responsable, Description, Liens visibles d'emblée, Prévenir les membres
+  (allumé à la création, duplication comprise), Créer / Annuler. Ni bannière, ni fin, ni inscriptions, ni « Plus
+  d'options ». Stockée comme avant (`reunion: true`) ; bannière et fin d'une réunion plus ancienne restent en base,
+  sauf une date de fin dépassée par un report (effacée avec son heure : la réunion passerait sinon dans « passé »).
+  Sujets à aborder, compte rendu et réunions précédentes restent sur la fiche. La tâche avait déjà son formulaire.
+- **Champs date et heure du site** (`Input`, classes `champ-date` / `champ-heure` ; `globals.css`, fin du fichier, hors
+  couches) : apparence native retirée, largeur libre, valeur à gauche (iOS : le sélecteur natif imposait sa largeur) ;
+  pictogramme calendrier ou horloge à droite, l'indicateur de Chromium transparent par-dessus ; pas de second
+  pictogramme sous Firefox, qui a le sien. Les `<input>` bruts gardent l'apparence native. Heures de plage de la saison
+  (scène) élargies (`w-32`) pour garder la place du pictogramme.
+- **Évènement** : rangée de fin « Date de fin | Heure de fin » (fr ; zh-CN 结束日期 | 结束时间), dans l'ordre de
+  « Date | Horaire » ; chevron au lieu du triangle natif (« Plus d'options », et la liste des idées écartées d'Harmonie).
+- Non vérifiable ici (Chromium seul) : le rendu natif iOS ; à regarder sur l'iPhone.
+
 ## Reprendre ici (pour une nouvelle session, 05/11/2026)
 Lire seulement : `CLAUDE.md`, ce fichier (§ 2 arbitrages, § 3 règles, et cette section), puis l'annexe de la tranche
 en cours. Ne pas relire les sections « État » plus haut sauf besoin précis. Agents quelques-uns à la fois ; pas

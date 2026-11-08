@@ -243,19 +243,70 @@ test.describe("T2a : les adresses /back-office/reunions/*", () => {
     }
   });
 
-  test("« Nouvelle réunion » parle de réunion : ni « évènement », ni « Catégorie », bannière sous « Plus d'options »", async ({ page }) => {
+  // Timothée, 08/11/2026 : « une réunion n'est pas un évènement » — son propre formulaire (ReunionForm).
+  test("« Nouvelle réunion » : son formulaire, sans bannière, ni fin, ni « Plus d'options » ; liens visibles, membres prévenus", async ({ page }) => {
     await ouvrir(page, DA, "/back-office/reunions/nouvelle");
     await expect(page.getByLabel("Nom de la réunion")).toBeVisible();
-    await expect(page.getByLabel("Équipe", { exact: true })).toBeVisible();
+    const labels = await page.locator("form label[for]").evaluateAll((els) => els.map((el) => el.textContent?.trim()));
+    expect(labels.slice(0, 7)).toEqual(["Nom de la réunion", "Équipe", "Date", "Horaire", "Lieu", "Responsable", "Description"]);
     await expect(page.getByLabel("Catégorie")).toHaveCount(0);
     await expect(page.getByRole("button", { name: "Créer la réunion" })).toBeVisible();
     await expect(page.getByRole("button", { name: "Annuler" })).toBeVisible();
-    // Le texte visible du formulaire (« Plus d'options » est replié) ne dit pas « évènement ».
     expect(await page.locator("form").innerText()).not.toMatch(/évènement/i);
-    const banniere = page.getByText("Ajouter une bannière");
-    await expect(banniere).toBeHidden();
-    await page.getByText("Plus d'options").click();
-    await expect(banniere).toBeVisible();
+    await expect(page.getByText("Ajouter une bannière")).toHaveCount(0);
+    await expect(page.getByText("Plus d'options")).toHaveCount(0);
+    await expect(page.getByLabel("Heure de fin", { exact: true })).toHaveCount(0);
+    await expect(page.getByLabel("Date de fin", { exact: true })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Ajouter un lien" })).toBeVisible();
+    await expect(page.getByRole("switch", { name: "Prévenir les membres" })).toBeChecked();
+  });
+
+  test("modifier une réunion : son formulaire, seules ses équipes au choix ; bannière et fin plus anciennes gardées", async ({ page }) => {
+    const db = await ouvrir(page, DA, "/back-office/reunions/reu-da/modifier", {
+      ...DOCS, "evenements/reu-da": { ...REU, titre: "Réunion DA", date: "2026-10-10", heureFin: "21:30", images: ["data:image/png;base64,AAAA"] },
+    });
+    await expect(page.getByLabel("Nom de la réunion")).toHaveValue("Réunion DA");
+    await expect(page.getByText("Ajouter une bannière")).toHaveCount(0);
+    await expect(page.getByLabel("Heure de fin", { exact: true })).toHaveCount(0);
+    const publics = await page.getByLabel("Équipe", { exact: true }).locator("option").allTextContents();
+    expect(publics.some((p) => /église/i.test(p)), "pas « toute l'église » : la réunion deviendrait un évènement").toBe(false);
+    await page.getByLabel("Lieu").fill("Salle 3");
+    await page.getByRole("button", { name: "Enregistrer" }).click();
+    await expect(page).toHaveURL(/\/back-office\/reunions\/reu-da\/?$/);
+    const ecrit = db.writes.filter((w) => w.method === "PATCH" && w.path === "evenements/reu-da").pop()!;
+    expect(ecrit, "la réunion est enregistrée").toBeTruthy();
+    expect(JSON.stringify(ecrit.data)).toContain("Salle 3");
+    expect(db.doc("evenements/reu-da")?.heureFin, "la fin d'une réunion plus ancienne reste").toBe("21:30");
+    expect((db.doc("evenements/reu-da")?.images as string[] | undefined)?.length, "sa bannière aussi").toBe(1);
+  });
+
+  test("modifier une réunion : reportée après son ancienne fin, elle la perd", async ({ page }) => {
+    const db = await ouvrir(page, DA, "/back-office/reunions/reu-da/modifier", {
+      ...DOCS, "evenements/reu-da": { ...REU, titre: "Réunion DA", date: "2026-10-10", dateFin: "2026-10-10", heureFin: "21:30" },
+    });
+    await page.getByLabel("Date", { exact: true }).fill("2026-12-01");
+    await page.getByRole("button", { name: "Enregistrer" }).click();
+    await expect(page).toHaveURL(/\/back-office\/reunions\/reu-da\/?$/);
+    expect(db.doc("evenements/reu-da")?.date).toBe("2026-12-01");
+    expect(db.doc("evenements/reu-da")?.dateFin, "pas de fin avant le début").toBe("");
+    expect(db.doc("evenements/reu-da")?.heureFin).toBe("");
+  });
+
+  test("champs de date et d'heure : dans leur colonne, pictogramme, sans apparence native (iPhone)", async ({ page }) => {
+    await ouvrir(page, DA, "/back-office/reunions/nouvelle");
+    const carte = (await page.getByTestId("form-carte").boundingBox())!;
+    for (const [nom, classe] of [["Date", "champ-date"], ["Horaire", "champ-heure"]] as const) {
+      const champ = page.getByLabel(nom, { exact: true });
+      await expect(champ).toHaveClass(new RegExp(classe));
+      expect(await champ.evaluate((el) => getComputedStyle(el).appearance)).toBe("none");
+      expect(await champ.evaluate((el) => getComputedStyle(el).minWidth)).toBe("0px");
+      const b = (await champ.boundingBox())!;
+      expect(b.x + b.width, `${nom} reste dans la carte`).toBeLessThanOrEqual(carte.x + carte.width - 15);
+    }
+    const date = (await page.getByLabel("Date", { exact: true }).boundingBox())!;
+    const heure = (await page.getByLabel("Horaire", { exact: true }).boundingBox())!;
+    expect(Math.abs(date.y - heure.y), "même rangée").toBeLessThan(1);
+    expect(heure.x, "l'heure ne chevauche pas la date").toBeGreaterThanOrEqual(date.x + date.width);
   });
 
   test("créer une réunion : seulement les réunions au choix, puis sa fiche sous Réunions", async ({ page }) => {

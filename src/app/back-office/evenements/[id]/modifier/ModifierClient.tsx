@@ -17,6 +17,7 @@ import { getEvenement, updateEvenement } from "@/lib/firebase/evenements"
 import { ANNONCE_SECTIONS } from "@/types/annonce"
 import type { Evenement } from "@/types/evenement"
 import { EvenementForm } from "@/components/evenements/EvenementForm"
+import { ReunionForm } from "@/components/reunions/ReunionForm"
 import { EnTetePage } from "@/components/layout/EnTetePage"
 import { useDeuxVolets } from "@/hooks/useDeuxVolets"
 import { Squelette } from "@/components/layout/Squelette";
@@ -67,6 +68,21 @@ export function ModifierClient() {
   // L'organisateur garde le public de sa fiche même s'il ne pourrait plus le choisir aujourd'hui.
   const pours = Array.from(new Set([evenement.pour, ...creatableEvenementPours(user, profile, ANNONCE_SECTIONS)]))
 
+  // Une réunion a son propre formulaire (Timothée, 08/11/2026 : « une réunion n'est pas un évènement ») ; ses champs
+  // d'évènement (bannière, fin) restent en base tels quels.
+  if (reunion) return page(
+    <ReunionForm
+      initial={initial}
+      pours={pours}
+      creation={false}
+      titreCache={!deuxVolets}
+      onSubmit={async (values) => {
+        await updateEvenement(evenement.id, values)
+        router.push(`${base}/${evenement.id}`)
+      }}
+      onCancel={() => router.push(`${base}/${evenement.id}`)}
+    />
+  )
   return page(
     <EvenementForm
       initial={initial}

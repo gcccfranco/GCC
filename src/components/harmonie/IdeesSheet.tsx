@@ -9,6 +9,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useTranslation } from "react-i18next";
+import { ChevronDown } from "lucide-react";
 import type { TFunction } from "i18next";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
@@ -357,9 +358,11 @@ function Contenu({ slug, titre, sections, tonalite, tonaliteOrigine, instrument,
       )}
 
       {lignesEcartees.length > 0 && (
-        <details className="mt-4">
-          <summary className="cursor-pointer text-sm text-muted-foreground">
+        <details className="group mt-4">
+          {/* Chevron du site au lieu du triangle du navigateur (retouche du 08/11/2026). */}
+          <summary className="flex cursor-pointer list-none items-center gap-1.5 text-sm text-muted-foreground [&::-webkit-details-marker]:hidden">
             {t("harmonie.ecartees", { count: lignesEcartees.length })}
+            <ChevronDown aria-hidden className="h-3.5 w-3.5 shrink-0 transition-transform duration-200 group-open:rotate-180" />
           </summary>
           <ul className="mt-2 space-y-1.5">
             {lignesEcartees.map((ligne) => {

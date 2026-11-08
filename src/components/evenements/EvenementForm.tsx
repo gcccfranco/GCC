@@ -9,11 +9,12 @@
 // « info » n'a ni date ni inscription : elle est épinglée et expire.
 // Corrections du design (bo-reunions-taches-8, -13) : en mode réunion, le même formulaire parle de réunion
 // (« Nom de la réunion », « Équipe », ni « Catégorie », bannière sous « Plus d'options », « Créer la réunion ») ;
-// libellés par `Champ` (13 px semi-gras gris), champs de 44 px.
+// libellés par `Champ` (13 px semi-gras gris), champs de 44 px. Depuis le 08/11/2026, une réunion a son propre
+// formulaire (`ReunionForm`) : les pages de réunion n'arrivent plus ici, ce mode ne sert plus qu'à un cas limite.
 
 import { useState, type FormEvent } from "react"
 import { useTranslation } from "react-i18next"
-import { ImagePlus, Trash2 } from "lucide-react"
+import { ChevronDown, ImagePlus, Trash2 } from "lucide-react"
 import { compressImage } from "@/lib/utils/compressImage"
 import { categoryLabel } from "@/lib/serviceColors"
 import { equipeDuPour, estReunion, publicDeReunion } from "@/lib/access"
@@ -317,16 +318,21 @@ export function EvenementForm({ initial, pours, creation, inscrits = 0, titreCac
         </div>
       )}
 
-      <details>
-        <summary className="cursor-pointer px-4 py-3.5 text-sm text-foreground">{t("evenements.form.plusOptions")}</summary>
+      {/* Chevron du site au lieu du triangle du navigateur (retouche iPhone du 08/11/2026). */}
+      <details className="group">
+        <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3.5 text-sm text-foreground [&::-webkit-details-marker]:hidden">
+          {t("evenements.form.plusOptions")}
+          <ChevronDown aria-hidden className="h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200 group-open:rotate-180" />
+        </summary>
         <div className="space-y-4 border-t border-border p-4">
+          {/* Fin : même ordre que « Date | Horaire » plus haut, libellés courts (sur une ligne au téléphone). */}
           {!info && (
             <div className="grid grid-cols-2 gap-3">
-              <Champ id="ev-heure-fin" label={t("evenements.form.heureFin")}>
-                <Input id="ev-heure-fin" className="h-11" type="time" value={v.heureFin} onChange={(e) => set({ heureFin: e.target.value })} />
-              </Champ>
               <Champ id="ev-date-fin" label={t("evenements.form.dateFin")}>
                 <Input id="ev-date-fin" className="h-11" type="date" max={DATE_MAX} value={v.dateFin} onChange={(e) => set({ dateFin: e.target.value })} />
+              </Champ>
+              <Champ id="ev-heure-fin" label={t("evenements.form.heureFin")}>
+                <Input id="ev-heure-fin" className="h-11" type="time" value={v.heureFin} onChange={(e) => set({ heureFin: e.target.value })} />
               </Champ>
             </div>
           )}

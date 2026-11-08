@@ -664,10 +664,17 @@ test("L4 formulaire : champs courants dans l'ordre de la maquette, responsable p
   await expect(page.getByLabel("Responsable")).toHaveValue("Alice Q.");
   await expect(page.getByText("Ajouter une bannière")).toBeVisible();
   await expect(page.getByRole("radio", { name: "Automatique" })).toBeChecked();
-  await expect(page.getByLabel("Fin de l'évènement (heure)")).toBeHidden();
+  await expect(page.getByLabel("Heure de fin", { exact: true })).toBeHidden();
   await expect(page.getByLabel("Places")).toBeHidden();
+  // Chevron du site, pas le triangle du navigateur (retouche iPhone du 08/11/2026).
+  expect(await page.locator("summary", { hasText: "Plus d'options" }).evaluate((el) => getComputedStyle(el).listStyleType)).toBe("none");
   await page.getByText("Plus d'options").click();
-  await expect(page.getByLabel("Fin de l'évènement (heure)")).toBeVisible();
+  await expect(page.getByLabel("Heure de fin", { exact: true })).toBeVisible();
+  // Fin : « Date de fin | Heure de fin », dans l'ordre de « Date | Horaire », sur la même rangée.
+  const finDate = (await page.getByLabel("Date de fin", { exact: true }).boundingBox())!;
+  const finHeure = (await page.getByLabel("Heure de fin", { exact: true }).boundingBox())!;
+  expect(Math.abs(finDate.y - finHeure.y), "même rangée").toBeLessThan(1);
+  expect(finHeure.x, "la date de fin d'abord").toBeGreaterThan(finDate.x);
   await expect(page.getByLabel("Places")).toBeVisible();
   await expect(page.getByLabel("Les personnes sans compte peuvent s'inscrire")).toBeVisible();
 });

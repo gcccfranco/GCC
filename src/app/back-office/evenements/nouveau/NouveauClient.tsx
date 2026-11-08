@@ -38,6 +38,7 @@ import { useTaches } from "@/lib/taches/useTaches"
 import { ANNONCE_SECTIONS } from "@/types/annonce"
 import type { EvenementPour } from "@/types/evenement"
 import { EMPTY_EVENEMENT, EvenementForm, type EvenementValues } from "@/components/evenements/EvenementForm"
+import { ReunionForm } from "@/components/reunions/ReunionForm"
 import { Squelette } from "@/components/layout/Squelette";
 
 export function NouveauClient({ reunion = false }: { reunion?: boolean }) {
@@ -104,9 +105,11 @@ export function NouveauClient({ reunion = false }: { reunion?: boolean }) {
 
   const nom = profile ? `${profile.firstName} ${profile.lastName}`.trim() || profile.email : user.email ?? ""
 
+  // Une réunion a son propre formulaire (Timothée, 08/11/2026 : « une réunion n'est pas un évènement »).
+  const Formulaire = reunion ? ReunionForm : EvenementForm
   return page(
     <>
-      <EvenementForm
+      <Formulaire
         initial={{ ...initial, contact: initial.contact || nom, ...(!from && pours.includes(pourDeLEquipe) ? { pour: pourDeLEquipe } : {}) }}
         pours={pours}
         titreCache={!reunion || !deuxVolets}

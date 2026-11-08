@@ -275,12 +275,12 @@ export function SaisonForm({ programme, onSave, jourJCalcule, autre, onErreur, s
             </label>
             <label className="space-y-1 text-xs font-semibold">
               <span className="block">{t("planning.programme.debut")}</span>
-              <Input type="time" step={900} aria-label={t("planning.saison.debutPlage")} value={editeur.plage.debut} className="w-28"
+              <Input type="time" step={900} aria-label={t("planning.saison.debutPlage")} value={editeur.plage.debut} className="w-32"
                 onChange={(e) => setEditeur({ ...editeur, plage: { ...editeur.plage, debut: e.target.value } })} />
             </label>
             <label className="space-y-1 text-xs font-semibold">
               <span className="block">{t("planning.programme.fin")}</span>
-              <Input type="time" step={900} aria-label={t("planning.saison.finPlage")} value={editeur.plage.fin} className="w-28"
+              <Input type="time" step={900} aria-label={t("planning.saison.finPlage")} value={editeur.plage.fin} className="w-32"
                 onChange={(e) => setEditeur({ ...editeur, plage: { ...editeur.plage, fin: e.target.value } })} />
             </label>
             <div className="flex gap-1">

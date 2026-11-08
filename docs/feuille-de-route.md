@@ -1705,6 +1705,11 @@ valider par Timothée** : relecture des textes 中文, regard sur les cartes (r�
   ciblés en quatre sessions (2 659 tests), rouges réglés. Validé par Timothée en local, puis **lot CD en ligne le
   07/11/2026** (ordre de Timothée) : `main` fusionné dans la branche (Moi sans Harmonie, AB-I, Tu es notre Dieu en A,
   saison de scène gardés), puis `main` avancé jusqu'à elle.
+- 08/11/2026 : **formulaire de réunion à part et retouches iPhone** (go « tout puis main ») : « une réunion n'est pas un
+  évènement » → `ReunionForm` (sans bannière, fin, inscriptions ni « Plus d'options », liens visibles, prévenir allumé) ;
+  champs date et heure du site qui débordaient sur iPhone (apparence native retirée, pictogramme) ; « Date de fin |
+  Heure de fin » ; chevrons au lieu des triangles natifs. Spec `spec-corrections-design.md` ; rendu iOS à vérifier sur
+  l'iPhone (Chromium seul ici).
 
 ## 7. Relecture adversariale (14/09/2026)
 
