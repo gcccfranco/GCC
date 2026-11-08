@@ -1378,7 +1378,16 @@ n° 3), la **page de la piste B « Grille de scène »** de la planche forScore 
 lettre de section dans la colonne de gauche, thème clair) et la **page de la piste A « Pupitre »** (partition
 imprimée : titre gravé centré, ♩ et tonalité, repères encadrés). Écartées : Couleurs par section (sort du menu),
 Bandeaux, Grille, Une section par écran, Pour chanter, Recueil. La règle de coupure corrigée vaut pour les quatre
-(la capture de la piste A au téléphone montrait encore l'ancienne). Spec à écrire. **Le mode
+(la capture de la piste A au téléphone montrait encore l'ancienne). **Puis (même jour) : « Couleurs par section »
+reste aussi au menu** — cinq dispositions : Classique (ex-Bleu), Couleurs par section, Repères, Scène, Partition, avec
+une miniature de la page à côté de chaque nom. **Réponses du 08/11/2026 aux questions de la spec** : choix dans les
+options d'affichage du mode louange et le menu ⋯ de la page du chant, la vue partitions suit, retenu par appareil ;
+débordement de 8 px avant de couper ; mots chinois de deux caractères par découpage automatique + liste d'exceptions
+vérifiée ; **couleur des icônes de la barre au choix de chacun dans une palette** ; « Je joue » et pastille du
+planning ; menu Repères ; deux colonnes actuelles en paysage et sur ordinateur ; « Musicien » : instrument de la case
+du Campus ou du profil, sinon rien, Percussion → Batteur ; 简谱 : ligne coupée en deux au téléphone en portrait, une
+feuille large en tablette paysage, une feuille plus grande sur ordinateur, début de chaque section noté par scan ;
+**choriste et présidence : les paroles avec pinyin ET le scan**. Sépia : expliqué, en attente. **Le mode
 louange suit le réglage du site** (Timothée, 07/11/2026 : « si sur le site ils sont en couleur par section, dans le
 mode louange on le met en couleur par section ») : c'est déjà le cas, un seul réglage « Couleurs par section » par
 appareil partagé par la page du chant, la vue partitions de la setlist et le mode louange (`src/lib/chartStylePref.ts`) ;
