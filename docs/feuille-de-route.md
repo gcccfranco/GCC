@@ -1387,7 +1387,8 @@ vérifiée ; **couleur des icônes de la barre au choix de chacun dans une palet
 planning ; menu Repères ; deux colonnes actuelles en paysage et sur ordinateur ; « Musicien » : instrument de la case
 du Campus ou du profil, sinon rien, Percussion → Batteur ; 简谱 : ligne coupée en deux au téléphone en portrait, une
 feuille large en tablette paysage, une feuille plus grande sur ordinateur, début de chaque section noté par scan ;
-**choriste et présidence : les paroles avec pinyin ET le scan**. Sépia : expliqué, en attente. **Le mode
+**choriste et présidence : paroles avec pinyin par défaut sur un chant à scan, le 简谱 à leur choix** ; **pas de
+sépia pour l'instant**. Spec : `spec-mode-louange-forscore-2.md` (en cours). **Le mode
 louange suit le réglage du site** (Timothée, 07/11/2026 : « si sur le site ils sont en couleur par section, dans le
 mode louange on le met en couleur par section ») : c'est déjà le cas, un seul réglage « Couleurs par section » par
 appareil partagé par la page du chant, la vue partitions de la setlist et le mode louange (`src/lib/chartStylePref.ts`) ;
