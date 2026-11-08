@@ -320,8 +320,11 @@ vides.
 
 **FS-E Demi-page** (M ; ajoutée le 08/11/2026 : le bouton « Demi-page » des options d'affichage n'avait pas de
 fonction derrière lui, et Timothée a répondu « faut la coder je pense ») :
-- Ce qui existe : rien. Le mot n'apparaît que dans la planche (case « Demi-page activée » : filet bleu fin et poignée
-  à trois traits ; « la demi-page n'apparaît que quand on l'active » ; « interdite sur un scan » aujourd'hui).
+- Ce qui existe : pas de bouton, mais l'**aperçu de la page suivante du lot L6** (octobre 2026,
+  `docs/spec-mode-louange-forscore.md` § L6 et Q3) : en **tablette portrait seulement**, une bande fixe de 96 px en bas
+  montre les premières lignes de la page suivante sous une ligne bleue (`apercuActif`, `PerformanceMode.tsx:554`,
+  suffixe `ap` de la clé de page) ; à l'époque, « le vrai demi-tour seulement si l'équipe le réclame après essai ». La
+  planche forScore-2 montre la case « Demi-page activée » (filet bleu fin et poignée à trois traits).
 - Comportement proposé, **comme forScore** (décision 1) : interrupteur rond « Demi-page » dans les options
   d'affichage, retenu par appareil (`perf-demi-page`, localStorage). Activé, **un tour de page avance d'une demi-page** :
   la moitié haute de l'écran montre déjà le haut de la page suivante, la moitié basse garde la fin de la page en cours,
@@ -330,9 +333,11 @@ fonction derrière lui, et Timothée a répondu « faut la coder je pense ») :
   demi-page. La pagination ne change pas (mêmes pages, mêmes clés d'annotation) : seul l'affichage passe par un état
   intermédiaire. La ligne tombe **entre deux blocs** (jamais au milieu d'une ligne d'accords) : la coupe se cale sur le
   bord de bloc le plus proche de la moitié. Le filet se déplace au doigt (poignée) pour régler la proportion, retenue.
-- Variante écartée sauf avis contraire : bande d'aperçu fixe en bas (« les deux premières lignes de la page
-  suivante », lecture littérale de la case de la planche) — elle prend de la place sur chaque page sans servir au
-  tour de page.
+- **Aperçu L6 et demi-page** (relecture du 08/11/2026) : demi-page **coupée**, la tablette portrait garde l'aperçu L6
+  tel qu'aujourd'hui ; demi-page **allumée**, l'aperçu L6 se retire (la demi-page montre déjà le haut de la page
+  suivante) et la pagination reprend la hauteur de la bande. La clé de page suit l'état réel de l'aperçu (suffixe `ap`
+  présent seulement quand la bande est là), donc des traits posés avec l'aperçu ne s'affichent pas en demi-page sur
+  la même page ; le bandeau du lot L5 le dit.
 - Hors champ : les pages de scan 简谱 (demi-page désactivée dessus, comme aujourd'hui ; JP-B l'ouvre sur les scans,
   ligne entre deux systèmes) ; l'annotation (l'annotation se fait sur une page entière : activer « Annoter » remet la
   page entière).
