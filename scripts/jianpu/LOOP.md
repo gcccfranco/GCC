@@ -467,6 +467,38 @@ ont changé depuis la proposition → `systemes.py certifier` → `sections.py c
 Un écart du contrôle se justifie ici, une exception par ligne, au format exact `- \`slug\` \`id\` : raison` (sections.py lit ces
 lignes, et elles seules, sous ce titre jusqu'au titre suivant). Raisons admises : reprise non regravée, section sans accord, page
 sans calque, levée sans accord.
+Raisons ajoutées après relecture des planches (08/11/2026) : accord du `.cho` écrit autrement que la gravure (triade
+contre maj7, intro ou interlude réharmonisés) quand la planche montre la section à cette ligne.
+
+- `为我而来` `bridge-4` : page sans calque (p.2) ; 【Bridge】 gravé en p.2 L3, levée « 在 » en fin de L2
+- `从早晨到夜晚` `chorus-6` : reprise non regravée (« Refrain 2 (G) »), pointée vers le refrain gravé en L4
+- `唯独依靠你` `chorus-5` : reprise non regravée (« Refrain (F#) »), pointée vers le refrain gravé en L3
+- `在这里` `chorus-4` : reprise non regravée (« Refrain 2 (G) »), pointée vers le refrain gravé en L3
+- `旷野中唯一的力量` `chorus-5` : reprise non regravée (« Refrain 2 (G) »), même ligne que le refrain 1 (L4)
+- `不停赞美你` `intro-1` : accord écrit autrement (.cho « C », gravé « Cmaj7 »)
+- `不停赞美你` `verse-2` : accord écrit autrement (.cho « C », gravé « Cmaj7 »)
+- `不停赞美你` `chorus-3` : accord écrit autrement (.cho « C », gravé « Cmaj7 »)
+- `是耶稣的名` `intro-1` : accord écrit autrement (.cho « Emaj7 », gravé triade « G » un ton et demi plus haut)
+- `是耶稣的名` `chorus-3` : accord écrit autrement (.cho « Emaj7 », gravé triade ; corps du refrain en L4)
+- `我需要有你在我生命中` `verse-2` : accord écrit autrement (couplet 2 réharmonisé dans le .cho, gravé sous la même portée que le couplet 1)
+- `只需要你` `intro-1` : intro réharmonisée dans le .cho (gravée F G C/E Am en L1)
+- `打开天窗` `intro-1` : intro réharmonisée dans le .cho ([D] ×4 ; gravée Bm F#m G A en L1)
+- `打开天窗` `intro-4` : interlude réharmonisé dans le .cho (gravé en L6)
+- `握住幸福` `chorus-5` : levée sans accord gravé à l'identique (« Cm6/Eb D) » gravé, « Cm6/D » dans le .cho), corps en L5
+- `永恒唯一的盼望` `intro-1` : section sans accord gravé (intro « W » gravée sans étiquette en L1)
+- `求充满这地` `verse-2` : levée sans accord (« [A/B] » du .cho non gravé), couplet 2 sous la même portée que le couplet 1 (L1)
+- `遇见你` `verse-2` : levée sans accord (« [A] » du .cho non gravé), corps en L3
+
+### Corrections après relecture (08/11/2026)
+
+Contrôles rejoués sur les 187 chants certifiés : `systemes.py verifier` 0 refus ; `sections.py controle` 18 écarts, tous
+couverts par une exception ci-dessus, 0 non justifié. 20 lignes corrigées (étiquettes et cadres « 1=X » jamais tranchés,
+tempo et « 4/4 » hors de L1, repère 【Bridge】 de 为我而来 p.2 rendu à L3, fausses barres autour de « 1= D » retirées) ;
+sections corrigées sur 29 chants (anacrouse au sens documenté, couplets sous une même portée, refrains repris).
+
+**Limite qui reste** (la donnée ne peut pas la corriger, une ligne est une bande horizontale pleine largeur) : sur 复兴的火
+et 爱使我们勇敢, les crédits « 游智婷 曲 » sont imprimés à droite, à la hauteur des premiers accords de L1 (« Dm(b5)/C »,
+« Bm », « C ») : aucune coupe horizontale ne les sépare ; ils restent dans L1. Leur cadre « 1=X » est entier dans L1.
 
 ### Bilan de la certification (JP-A3, 08/11/2026)
 
