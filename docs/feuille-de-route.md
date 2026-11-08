@@ -1388,7 +1388,13 @@ planning ; menu Repères ; deux colonnes actuelles en paysage et sur ordinateur 
 du Campus ou du profil, sinon rien, Percussion → Batteur ; 简谱 : ligne coupée en deux au téléphone en portrait, une
 feuille large en tablette paysage, une feuille plus grande sur ordinateur, début de chaque section noté par scan ;
 **choriste et présidence : paroles avec pinyin par défaut sur un chant à scan, le 简谱 à leur choix** ; **pas de
-sépia pour l'instant**. Spec : `spec-mode-louange-forscore-2.md` (en cours). **Le mode
+sépia pour l'instant**. Spec : `spec-mode-louange-forscore-2.md` (en cours).
+**Annotations façon forScore** (Timothée, 08/11/2026 : « comment fonctionnent les annotations maintenant ? il faut que
+ce soit comme forScore », puis « oui go » à la proposition) : lot à part, option (a) — les outils façon forScore
+maintenant (appui long et stylet qui dessine seul, barre d'outils déplaçable, tourner les pages en annotant, stylos
+préréglés, texte, tampons utiles au culte, annuler/rétablir), **sans changer le stockage** ; l'accrochage des traits à
+la ligne ou à la section (pour qu'un trait ne bouge plus, comme sur un PDF) se fera **avec la migration de la base** ;
+calques plus tard. Planche lancée le 08/11/2026 ; ce « go » vaut pour la planche, pas pour le code. **Le mode
 louange suit le réglage du site** (Timothée, 07/11/2026 : « si sur le site ils sont en couleur par section, dans le
 mode louange on le met en couleur par section ») : c'est déjà le cas, un seul réglage « Couleurs par section » par
 appareil partagé par la page du chant, la vue partitions de la setlist et le mode louange (`src/lib/chartStylePref.ts`) ;
