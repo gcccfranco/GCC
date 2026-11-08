@@ -15,8 +15,10 @@ export const TEINTES = [
 export const COULEUR_DEFAUT = TEINTES[0].hex;
 export const FOND_CLAIR = "#ffffff";
 export const FOND_SOMBRE = "#000000";
-/** Contraste visé contre le fond de la barre (WCAG 1.4.11, composants d'interface). */
-export const CONTRASTE_MIN = 3;
+/** Texte de la barre en sombre (`--foreground` du thème sombre) : l'encre le devient. */
+export const TEXTE_SOMBRE = "#f2f2f7";
+/** Contraste visé contre le fond de la barre : les libellés de la barre sont du texte (WCAG 1.4.3). */
+export const CONTRASTE_MIN = 4.5;
 
 const HEX = /^#[0-9a-f]{6}$/;
 
@@ -88,9 +90,11 @@ export function hslVersHex(h: number, s: number, l: number): string {
 }
 
 /** Éclaircit (fond sombre) ou assombrit (fond clair) la couleur, en HSL, jusqu'à un contraste
- *  d'au moins 3:1 contre le fond. Une couleur déjà assez contrastée ne bouge pas. */
+ *  d'au moins 4,5:1 contre le fond. Une couleur déjà assez contrastée ne bouge pas. En sombre,
+ *  l'encre devient la couleur du texte du thème, pas un gris. */
 export function garderContraste(hex: string, fond: string): string {
   const base = normaliserHex(hex) ?? COULEUR_DEFAUT;
+  if (base === TEINTES[1].hex && luminance(fond) < 0.5) return TEXTE_SOMBRE;
   if (contraste(base, fond) >= CONTRASTE_MIN) return base;
   const [h, s, l] = hexVersHsl(base);
   const pas = luminance(fond) < 0.5 ? 1 : -1;

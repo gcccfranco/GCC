@@ -259,7 +259,7 @@ Réglages, Annoter, ‹ ›, Quitter), Réglages en tiroir vaul (`PerformanceMod
 (tiroir gauche), `FeuilleRole.tsx` (tiroir). Icônes `lucide-react`. Aucun composant popover dans `src/components/ui/`.
 
 **FS-A Barre de titre et rangée de points** (M) :
-- Barre de titre (piste A) : à gauche **Setlist**, **Repères**, **Je joue** (icône de l'instrument, libellé court sur
+- Barre de titre (piste A) : à gauche **Setlist**, **Repères** (bouton ajouté en FS-B avec son menu), **Je joue** (icône de l'instrument, libellé court sur
   tablette et ordinateur) ; au centre le titre et, dessous, compositeur · tonalité ; à droite **♩ tempo**, **Annoter**
   (connecté et en ligne seulement, condition de `PerformanceMode.tsx:1360` gardée), **Outils**, **Options
   d'affichage**, **✕**. Au téléphone : Setlist, Repères, Je joue | titre | Options, ✕ (Annoter, ♩ et Outils passent dans
@@ -270,8 +270,8 @@ Réglages, Annoter, ‹ ›, Quitter), Réglages en tiroir vaul (`PerformanceMod
 - **Couleur des icônes au choix** (décisions 12 et 19) : réglage par appareil `src/lib/performance/couleurIcones.ts`
   (localStorage) ; **six teintes prêtes** (bleu des accords #3f63cf par défaut, encre #1c1c1e, vert #1f7a5c, violet
   #6d4bc3, framboise #c2185b, gris #636872) **et un cercle chromatique** pour choisir n'importe quelle couleur (teinte
-  au tour du cercle, luminosité au centre ; au toucher comme à la souris, réglable au clavier) ; **garde-fou de
-  contraste** : la couleur choisie est éclaircie ou assombrie automatiquement pour garder au moins 3:1 contre le fond de
+  au tour du cercle, aperçu au centre, luminosité juste dessous ; au toucher comme à la souris, réglable au clavier) ; **garde-fou de
+  contraste** : la couleur choisie est éclaircie ou assombrie automatiquement pour garder au moins 4,5:1 (et non 3:1 : « Setlist », « Je joue », « ♩ 94 » sont du texte ; relevé en codant FS-A) contre le fond de
   la barre, en clair comme en sombre, et l'aperçu le montre ; s'applique aux icônes, à la poignée et, avec FS-B, aux actions des menus et aux boutons
   ronds allumés (décision 23) ; jamais à la page.
 - Garde-fous : la barre reste sous le bloc `inert` / `aria-hidden` / `opacity` quand elle est masquée

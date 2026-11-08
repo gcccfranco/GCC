@@ -204,6 +204,60 @@ test("barre masquée : sous inert / aria-hidden, aucun élément focalisable, sa
   expect((await page.locator("[data-barre-bas]").boundingBox())!.height).toBeGreaterThan(40);
 });
 
+test("rangée de points : pas fixe, centrée dans la barre quand il y a peu de pages, points inactifs ≥ 3:1", async ({ page }) => {
+  await ouvrir(page);
+  const bas = (await page.locator("[data-barre-bas]").boundingBox())!;
+  const rangee = (await page.locator("[data-barre-bas] [data-curseur-page]").boundingBox())!;
+  expect(rangee.width).toBeLessThan(bas.width - 40);
+  expect(Math.abs(rangee.x + rangee.width / 2 - (bas.x + bas.width / 2))).toBeLessThanOrEqual(2);
+  // La poignée et les repères suivent la rangée : le premier repère est à sa marge gauche.
+  const repere = (await page.locator("[data-repere-chant]").first().boundingBox())!;
+  expect(Math.abs(repere.x + repere.width / 2 - (rangee.x + 14))).toBeLessThanOrEqual(2);
+  // Un toucher sur le dernier point de la rangée mène à la dernière page.
+  await page.mouse.click(rangee.x + rangee.width - 14, rangee.y + rangee.height / 2);
+  const max = Number(await page.locator("[data-barre-bas] input[type=range]").getAttribute("max"));
+  await expect(page.locator("[data-barre-bas] input[type=range]")).toHaveValue(String(max));
+  const fond = await fondBarre(page);
+  const inactif = await page.locator("[data-point=inactif]").first().evaluate((el) => getComputedStyle(el).backgroundColor);
+  expect(contrasteEcran(inactif, fond)).toBeGreaterThanOrEqual(3);
+});
+
+test("rangée de points : un toucher dans la zone d'un repère mène à la page la plus proche, un clic au centre du repère au début du chant", async ({ page }) => {
+  await ouvrir(page);
+  const entree = page.locator("[data-barre-bas] input[type=range]");
+  const reperes = page.locator("[data-repere-chant]");
+  // Les repères ne captent aucun pointeur : ils restent dans le DOM, focalisables, sans recouvrir la rangée.
+  await expect(reperes.nth(1)).toHaveCSS("pointer-events", "none");
+  const centres = await page.locator("[data-point=inactif]").evaluateAll((els) =>
+    els.map((e) => { const r = e.getBoundingClientRect(); return { x: r.x + r.width / 2, y: r.y + r.height / 2 }; }),
+  );
+  const repere = (await reperes.nth(1).boundingBox())!;
+  const pageRepere = Number(await reperes.nth(1).getAttribute("data-page"));
+  const cx = repere.x + repere.width / 2;
+  const suivant = centres[pageRepere + 1];
+  expect(suivant, "un point suit le repère du 2e chant").toBeTruthy();
+  // Clic au centre du repère : début du chant.
+  await page.mouse.click(cx, suivant.y);
+  await expect(entree).toHaveValue(String(pageRepere));
+  // Clic entre le repère et le point suivant (aux 70 %, donc dans la zone de 44 px du repère) : le plus proche des points.
+  const x = cx + 0.7 * (suivant.x - cx);
+  const attendue = centres.reduce((m, c, i) => (Math.abs(c.x - x) < Math.abs(centres[m].x - x) ? i : m), 0);
+  expect(attendue).toBe(pageRepere + 1);
+  await page.mouse.click(x, suivant.y);
+  await expect(entree).toHaveValue(String(attendue));
+});
+
+test("barre de titre : le titre est centré sur l'écran, groupes alignés à leurs bords", async ({ page }) => {
+  await ouvrir(page);
+  const titre = (await page.locator("[data-barre-haut] p").first().boundingBox())!;
+  const ecran = page.viewportSize()!;
+  expect(Math.abs(titre.x + titre.width / 2 - ecran.width / 2)).toBeLessThanOrEqual(4);
+  const boutons = await boutonsHaut(page);
+  expect(boutons[0].x).toBeLessThan(24);
+  const dernier = boutons[boutons.length - 1];
+  expect(ecran.width - (dernier.x + dernier.w)).toBeLessThan(24);
+});
+
 // ─── La couleur des icônes ────────────────────────────────────────────────────
 
 test("couleur des icônes : bleu par défaut ; framboise choisie, retenue après rechargement (couleur corrigée mesurée)", async ({ page }) => {
@@ -238,6 +292,38 @@ test("couleur des icônes : bleu par défaut ; framboise choisie, retenue après
   await expect.poll(() => couleurIcone(page)).toBe(attendue);
   reglages = await ouvrirReglages(page);
   await expect(reglages.getByRole("radiogroup", { name: "Couleur des icônes" }).getByRole("radio", { name: "Framboise" })).toHaveAttribute("aria-checked", "true");
+});
+
+test("palette : un seul arrêt de tabulation, les flèches passent d'une teinte à l'autre en la choisissant", async ({ page }) => {
+  await ouvrir(page);
+  const reglages = await ouvrirReglages(page);
+  const palette = reglages.getByRole("radiogroup", { name: "Couleur des icônes" });
+  await expect(palette.locator('[role=radio][tabindex="0"]')).toHaveCount(1);
+  const bleu = palette.getByRole("radio", { name: "Bleu" });
+  await bleu.focus();
+  await page.keyboard.press("ArrowRight");
+  const encre = palette.getByRole("radio", { name: "Encre" });
+  await expect(encre).toBeFocused();
+  await expect(encre).toHaveAttribute("aria-checked", "true");
+  await expect(encre).toHaveAttribute("tabindex", "0");
+  await expect(bleu).toHaveAttribute("aria-checked", "false");
+  await expect(bleu).toHaveAttribute("tabindex", "-1");
+  expect(await page.evaluate(() => localStorage.getItem("perf-couleur-icones"))).toBe("#1c1c1e");
+  await page.keyboard.press("ArrowDown");
+  await expect(palette.getByRole("radio", { name: "Vert" })).toBeFocused();
+  await page.keyboard.press("ArrowUp");
+  await page.keyboard.press("ArrowLeft");
+  await expect(bleu).toBeFocused();
+  // Retour au bout : « Autre couleur » ouvre le cercle, puis on revient à la première teinte.
+  await page.keyboard.press("ArrowLeft");
+  const autre = palette.getByRole("radio", { name: "Autre couleur" });
+  await expect(autre).toBeFocused();
+  await expect(autre).toHaveAttribute("aria-checked", "true");
+  await expect(reglages.getByRole("slider", { name: "Teinte" })).toBeVisible();
+  await page.keyboard.press("ArrowRight");
+  await expect(bleu).toBeFocused();
+  await expect(bleu).toHaveAttribute("aria-checked", "true");
+  await expect(reglages.getByRole("slider", { name: "Teinte" })).toHaveCount(0);
 });
 
 test("cercle chromatique : flèche droite sur la teinte change la couleur, retenue après rechargement", async ({ page }) => {
@@ -280,26 +366,29 @@ test("cercle chromatique : un toucher sur l'anneau choisit la teinte (pointer ev
 
 for (const theme of ["light", "dark"] as const) {
   for (const couleur of ["#1c1c1e", "#ffff00", "#3f63cf", "#ffffff", "#000000"]) {
-    test(`contraste des icônes ≥ 3:1 contre le fond de la barre, mesuré à l'écran (${theme}, ${couleur})`, async ({ page }) => {
+    test(`contraste des icônes ≥ 4,5:1 contre le fond de la barre, mesuré à l'écran (${theme}, ${couleur})`, async ({ page }) => {
       await ouvrir(page, { theme, couleur });
       const icone = await couleurIcone(page);
       const fond = await fondBarre(page);
-      expect(contrasteEcran(icone, fond), `${icone} sur ${fond}`).toBeGreaterThanOrEqual(3);
+      expect(contrasteEcran(icone, fond), `${icone} sur ${fond}`).toBeGreaterThanOrEqual(4.5);
       // Le point courant et la poignée suivent la même couleur corrigée.
       const poignee = await page.locator("[data-poignee-curseur]").evaluate((el) => getComputedStyle(el).backgroundColor);
-      expect(contrasteEcran(poignee, fond)).toBeGreaterThanOrEqual(3);
+      expect(contrasteEcran(poignee, fond)).toBeGreaterThanOrEqual(4.5);
+      // Les points pas encore atteints : teinte neutre, au moins 3:1 (élément graphique).
+      const inactif = await page.locator("[data-point=inactif]").last().evaluate((el) => getComputedStyle(el).backgroundColor);
+      expect(contrasteEcran(inactif, fond), `point inactif ${inactif} sur ${fond}`).toBeGreaterThanOrEqual(3);
     });
   }
 }
 
 // ─── Fonctions pures ──────────────────────────────────────────────────────────
 
-test("garderContraste : chaque teinte prête et les couleurs limites sortent à ≥ 3:1 contre blanc et noir", async () => {
+test("garderContraste : chaque teinte prête et les couleurs limites sortent à ≥ 4,5:1 contre blanc et noir", async () => {
   const entrees = [...TEINTES.map((c) => c.hex), "#ffff00", "#ffffff", "#000000", "#808080", "#00ffff", "#ff00ff"];
   for (const hex of entrees) {
     for (const fond of [FOND_CLAIR, FOND_SOMBRE]) {
       const sortie = garderContraste(hex, fond);
-      expect(contraste(sortie, fond), `${hex} sur ${fond} → ${sortie}`).toBeGreaterThanOrEqual(3);
+      expect(contraste(sortie, fond), `${hex} sur ${fond} → ${sortie}`).toBeGreaterThanOrEqual(4.5);
     }
   }
 });
@@ -307,9 +396,13 @@ test("garderContraste : chaque teinte prête et les couleurs limites sortent à 
 test("garderContraste : ne touche pas une couleur déjà assez contrastée ; l'encre devient claire en sombre ; sens de la correction", async () => {
   expect(garderContraste("#3f63cf", FOND_CLAIR)).toBe("#3f63cf");
   expect(garderContraste("#1c1c1e", FOND_CLAIR)).toBe("#1c1c1e");
-  const encreSombre = garderContraste("#1c1c1e", FOND_SOMBRE);
-  expect(encreSombre).not.toBe("#1c1c1e");
-  expect(hexVersHsl(encreSombre)[2]).toBeGreaterThan(hexVersHsl("#1c1c1e")[2]);
+  // En sombre l'encre devient la couleur du texte du thème, pas un gris.
+  expect(garderContraste("#1c1c1e", FOND_SOMBRE)).toBe("#f2f2f7");
+  // Les teintes prêtes ne bougent pas en clair (toutes au-dessus de 4,5:1 sur blanc) et s'éclaircissent en sombre.
+  for (const c of TEINTES) {
+    expect(garderContraste(c.hex, FOND_CLAIR), c.id).toBe(c.hex);
+    if (c.id !== "encre") expect(hexVersHsl(garderContraste(c.hex, FOND_SOMBRE))[2], c.id).toBeGreaterThan(hexVersHsl(c.hex)[2]);
+  }
   const jauneClair = garderContraste("#ffff00", FOND_CLAIR);
   expect(hexVersHsl(jauneClair)[2]).toBeLessThan(hexVersHsl("#ffff00")[2]);
   // La teinte est gardée (au degré près) quand la couleur n'est pas grise.
@@ -339,15 +432,31 @@ for (const [langue, zh] of [["fr", false], ["zh", true]] as const) {
   }
 }
 
-test("captures FS-A : tiroir avec la palette, puis le cercle ouvert", async ({ page }, testInfo) => {
-  await ouvrir(page, { theme: "dark" });
-  const reglages = await ouvrirReglages(page);
-  const palette = reglages.getByRole("radiogroup", { name: "Couleur des icônes" });
-  await palette.scrollIntoViewIfNeeded();
-  await page.waitForTimeout(400);
-  await page.screenshot({ path: `${SORTIE}/tiroir-palette-${testInfo.project.name}.png` });
-  await reglages.getByRole("radio", { name: "Autre couleur" }).click();
-  await reglages.getByRole("slider", { name: "Teinte" }).scrollIntoViewIfNeeded();
-  await page.waitForTimeout(400);
-  await page.screenshot({ path: `${SORTIE}/cercle-${testInfo.project.name}.png` });
+for (const [nom, theme, zh] of [["fr-dark", "dark", false], ["fr-light", "light", false], ["zh-dark", "dark", true]] as const) {
+  test(`captures FS-A : tiroir avec la palette, puis le cercle ouvert (${nom})`, async ({ page }, testInfo) => {
+    await ouvrir(page, { theme, zh, slugs: zh ? ZH : FR });
+    const reglages = zh
+      ? (await page.getByRole("button", { name: "显示选项" }).click(), page.getByRole("dialog"))
+      : await ouvrirReglages(page);
+    await expect(reglages).toBeVisible();
+    const palette = reglages.locator("[aria-labelledby=perf-couleur-icones]");
+    await palette.scrollIntoViewIfNeeded();
+    await page.waitForTimeout(400);
+    await page.screenshot({ path: `${SORTIE}/tiroir-palette-${nom}-${testInfo.project.name}.png` });
+    await palette.locator('[data-teinte="autre"]').click();
+    await reglages.getByRole("slider").first().waitFor();
+    await page.waitForTimeout(400);
+    await page.screenshot({ path: `${SORTIE}/cercle-${nom}-${testInfo.project.name}.png` });
+  });
+}
+
+test("captures FS-A : pendant le glissé, la vignette du chant visé", async ({ page }, testInfo) => {
+  await ouvrir(page);
+  const b = (await page.locator("[data-barre-bas] [data-curseur-page]").boundingBox())!;
+  await page.mouse.move(b.x + 20, b.y + b.height / 2 + 4);
+  await page.mouse.down();
+  await page.mouse.move(b.x + b.width * 0.6, b.y + b.height / 2 + 4, { steps: 8 });
+  await expect(page.locator("[data-bulle-curseur]")).toBeVisible();
+  await page.screenshot({ path: `${SORTIE}/glisse-${testInfo.project.name}.png` });
+  await page.mouse.up();
 });

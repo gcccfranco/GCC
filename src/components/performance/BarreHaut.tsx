@@ -60,16 +60,16 @@ export function BarreHaut({
     <div
       ref={barreRef}
       data-barre-haut
-      className={`absolute top-0 left-0 right-0 ${showChrome ? "pointer-events-auto" : "pointer-events-none"} material-chrome material-steady shadow-[0_1px_0_hsl(var(--border))] py-2 [--marge-barre:0.5rem] md:[--marge-barre:1rem] flex items-center gap-1`}
+      className={`absolute top-0 left-0 right-0 ${showChrome ? "pointer-events-auto" : "pointer-events-none"} material-chrome material-steady shadow-[0_1px_0_hsl(var(--border))] py-3 [--marge-barre:0.5rem] md:[--marge-barre:1rem] flex items-center gap-1`}
       style={{
-        paddingTop: "calc(0.5rem + var(--sat, 0px))",
+        paddingTop: "calc(0.75rem + var(--sat, 0px))",
         paddingLeft: "calc(var(--marge-barre) + var(--sal, 0px))",
         paddingRight: "calc(var(--marge-barre) + var(--sar, 0px))",
       }}
       onPointerDown={(e) => e.stopPropagation()}
       onPointerUp={(e) => e.stopPropagation()}
     >
-      <div className="flex shrink-0 items-center gap-0.5">
+      <div className="flex flex-1 basis-0 items-center justify-start gap-0.5">
         <BtnBarre label={t("performance.songList")} onClick={onSetlist} texte>
           <ListMusic className="h-5 w-5" />
         </BtnBarre>
@@ -78,12 +78,14 @@ export function BarreHaut({
         </BtnBarre>
       </div>
 
-      <div className="min-w-0 flex-1 px-1 text-center">
-        <p className="truncate text-sm font-semibold leading-tight text-foreground">
+      {/* Les deux groupes latéraux prennent la même largeur (flex-1, base 0) tant que la place suffit : le titre est
+          alors centré sur l'écran. Quand elle manque, seul le titre rétrécit (il se tronque), jamais un débordement. */}
+      <div className="min-w-0 shrink px-1 text-center">
+        <p className="truncate text-sm font-semibold leading-tight text-foreground md:text-base">
           {currentSong?.songTitle ?? setlistTitle}
         </p>
         {(compositeur || currentSong?.songKey) && (
-          <p className="mt-0.5 truncate text-xs leading-tight text-muted-foreground">
+          <p className="mt-0.5 truncate text-xs leading-tight text-muted-foreground md:text-[13px]">
             {compositeur}
             {compositeur && currentSong?.songKey ? " · " : null}
             {currentSong?.songKey && <span className="font-mono">{currentSong.songKey}</span>}
@@ -97,10 +99,13 @@ export function BarreHaut({
         )}
       </div>
 
-      <div className="flex shrink-0 items-center gap-0.5">
+      <div className="flex flex-1 basis-0 items-center justify-end gap-0.5">
         {tempo ? (
           <BtnBarre label={t("performance.tempo")} onClick={onTempo} cacheTel>
-            <span data-tempo-barre className="text-sm font-semibold tabular-nums">♩ {tempo}</span>
+            <span data-tempo-barre className="flex items-center gap-1 text-sm font-semibold tabular-nums">
+              <span aria-hidden="true" className="text-xl leading-none">♩</span>
+              {tempo}
+            </span>
           </BtnBarre>
         ) : null}
         {onAnnoter && (

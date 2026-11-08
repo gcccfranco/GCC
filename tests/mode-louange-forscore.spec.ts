@@ -717,7 +717,7 @@ test("forScore, L7 : le curseur couvre toute la setlist, 3 repères = débuts de
   // On visite les repères du dernier au premier : chaque clic amène au 1er page du chant, titre en barre haute.
   for (const i of [2, 1, 0]) {
     await barreVisible(page);
-    await reperes.nth(i).click();
+    await reperes.nth(i).click({ force: true }); // le repère ne capte aucun pointeur : le clic est reçu par la rangée
     await expect.poll(() => numero(page)).toBe(debuts[i].page + 1);
     await expect(curseur).toHaveValue(String(debuts[i].page));
     await expect(titreBarreHaute(page)).toHaveText(debuts[i].titre);
@@ -739,7 +739,7 @@ test("forScore, FS-A : plus d'étiquette « page n / N » ni de flèches ‹ ›
   await expect(titreBarreHaute(page)).toHaveText(debuts[0].titre);
   await expect(curseur).toHaveAttribute("aria-valuetext", `Page 1 sur ${total}`);
   // Saut au dernier chant : le titre, la valeur et son texte suivent.
-  await reperes.nth(2).click();
+  await reperes.nth(2).click({ force: true });
   await expect(titreBarreHaute(page)).toHaveText(debuts[2].titre);
   await expect(curseur).toHaveValue(String(debuts[2].page));
   await expect(curseur).toHaveAttribute("aria-valuetext", `Page ${debuts[2].page + 1} sur ${total}`);

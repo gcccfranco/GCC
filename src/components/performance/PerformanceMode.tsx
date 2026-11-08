@@ -51,6 +51,9 @@ import { useAuth } from "@/lib/firebase/auth";
 import type { SetlistItem } from "@/types/setList";
 import type { SongContent } from "@/lib/api/songs";
 
+/** Marque de la pastille cochée dans la palette de couleur : double anneau, le même pour les sept. */
+const PASTILLE_CHOISIE = "ring-2 ring-foreground ring-offset-2 ring-offset-background";
+
 // ─── TransitionBanner (local copy — same style as PartitionView) ──────────────
 
 function TransitionBanner({ text }: { text: string }) {
@@ -374,9 +377,11 @@ export function PerformanceMode({
   const [showChrome, setShowChrome] = useState(() => !barreDejaVue());
   const [songListOpen, setSongListOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
-  // Couleur des icônes (FS-A) : le choix de l'appareil, corrigé pour garder 3:1 contre le fond de la barre.
+  // Couleur des icônes (FS-A) : le choix de l'appareil, corrigé pour garder 4,5:1 contre le fond de la barre.
   const [couleurChoix, setCouleurChoix] = useState(getCouleurIcones);
   const [cercleOuvert, setCercleOuvert] = useState(false);
+  // Pastille cochée de la palette : « autre » quand le cercle est ouvert ou que la couleur n'est pas une teinte prête.
+  const teinteChoisie = cercleOuvert ? "autre" : TEINTES.find((c) => c.hex === couleurChoix)?.id ?? "autre";
   const choisirCouleur = useCallback((hex: string) => {
     setCouleurChoix(hex);
     setCouleurIcones(hex);
@@ -1679,39 +1684,58 @@ export function PerformanceMode({
             )}
             <div className="space-y-2">
               <span id="perf-couleur-icones" className="text-sm font-medium text-foreground">{t("performance.iconColor")}</span>
-              <div role="radiogroup" aria-labelledby="perf-couleur-icones" className="flex flex-wrap gap-2">
-                {TEINTES.map((c) => {
-                  const choisie = !cercleOuvert && couleurChoix === c.hex;
-                  return (
-                    <button
-                      key={c.id}
-                      type="button"
-                      role="radio"
-                      aria-checked={choisie}
-                      aria-label={t(`performance.iconColors.${c.id}`)}
-                      data-teinte={c.id}
-                      onClick={() => { setCercleOuvert(false); choisirCouleur(c.hex); }}
-                      className={`h-11 w-11 rounded-full border-2 transition-shadow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
-                        choisie ? "border-foreground ring-2 ring-offset-2 ring-offset-background ring-foreground/30" : "border-transparent"
-                      }`}
-                      style={{ background: c.hex }}
-                    />
-                  );
-                })}
+              <div
+                role="radiogroup"
+                aria-labelledby="perf-couleur-icones"
+                className="flex flex-wrap gap-2"
+                onKeyDown={(e) => {
+                  // Radiogroup standard : ← ↑ et → ↓ passent à la teinte voisine en la choisissant (« Autre couleur » en dernier).
+                  const d = e.key === "ArrowRight" || e.key === "ArrowDown" ? 1 : e.key === "ArrowLeft" || e.key === "ArrowUp" ? -1 : 0;
+                  if (d === 0) return;
+                  e.preventDefault();
+                  e.stopPropagation();
+                  const ids = [...TEINTES.map((c) => c.id), "autre"];
+                  const suivant = ids[(ids.indexOf(teinteChoisie) + d + ids.length) % ids.length];
+                  if (suivant === "autre") setCercleOuvert(true);
+                  else {
+                    setCercleOuvert(false);
+                    choisirCouleur(TEINTES.find((c) => c.id === suivant)!.hex);
+                  }
+                  e.currentTarget.querySelector<HTMLElement>(`[data-teinte="${suivant}"]`)?.focus();
+                }}
+              >
+                {TEINTES.map((c) => (
+                  <button
+                    key={c.id}
+                    type="button"
+                    role="radio"
+                    aria-checked={teinteChoisie === c.id}
+                    aria-label={t(`performance.iconColors.${c.id}`)}
+                    data-teinte={c.id}
+                    tabIndex={teinteChoisie === c.id ? 0 : -1}
+                    onClick={() => { setCercleOuvert(false); choisirCouleur(c.hex); }}
+                    className={`h-11 w-11 rounded-full border border-border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+                      teinteChoisie === c.id ? PASTILLE_CHOISIE : ""
+                    }`}
+                    // La pastille montre la couleur telle qu'elle sera dans la barre, sur le thème courant.
+                    style={{ background: garderContraste(c.hex, stageTheme === "dark" ? FOND_SOMBRE : FOND_CLAIR) }}
+                  />
+                ))}
                 <button
                   type="button"
                   role="radio"
-                  aria-checked={cercleOuvert || !TEINTES.some((c) => c.hex === couleurChoix)}
+                  aria-checked={teinteChoisie === "autre"}
                   aria-label={t("performance.iconColors.autre")}
                   data-teinte="autre"
+                  tabIndex={teinteChoisie === "autre" ? 0 : -1}
                   onClick={() => setCercleOuvert((o) => !o)}
-                  className={`h-11 w-11 rounded-full border-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
-                    cercleOuvert || !TEINTES.some((c) => c.hex === couleurChoix) ? "border-foreground" : "border-transparent"
+                  className={`h-11 w-11 rounded-full border border-border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+                    teinteChoisie === "autre" ? PASTILLE_CHOISIE : ""
                   }`}
                   style={{ background: "conic-gradient(hsl(0 70% 50%), hsl(60 70% 50%), hsl(120 70% 50%), hsl(180 70% 50%), hsl(240 70% 50%), hsl(300 70% 50%), hsl(360 70% 50%))" }}
                 />
               </div>
-              {cercleOuvert && <CercleChromatique valeur={couleurChoix} onChange={choisirCouleur} />}
+              {cercleOuvert && <CercleChromatique valeur={couleurChoix} fond={stageTheme === "dark" ? FOND_SOMBRE : FOND_CLAIR} onChange={choisirCouleur} />}
             </div>
           </div>
         </DrawerContent>
