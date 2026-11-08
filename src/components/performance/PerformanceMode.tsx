@@ -147,6 +147,8 @@ function BlockRenderer({
       repeat={repeat ?? block.repeat}
       occurrenceUids={block.occurrenceUids}
       couleurDe={couleurDe}
+      // Lot CV : les exceptions de mots chinois du chant (motsChinois.ts) s'appliquent au pupitre comme sur la page du chant.
+      slug={block.songSlug}
     />
   );
 }

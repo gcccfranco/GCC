@@ -299,6 +299,74 @@ test.describe("louange : tourner la page ne relance pas la pagination", () => {
   });
 });
 
+test.describe("louange : exceptions de mots chinois", () => {
+  // Lot CV : EXCEPTIONS_MOTS (src/lib/song/motsChinois.ts) joint 得着 dans « 大手牵着小手 » ; le mode louange passe le slug
+  // du chant à la coupure, à l'écran comme dans la copie de mesure.
+  const DEFAUT = item({ songSlug: "大手牵着小手" });
+  const VERS = "受伤的心得着安抚";
+
+  /** Pour chaque ligne coupée-ou-non qui contient 得着 (en ne lisant que les idéogrammes, le pinyin s'intercale dans le
+   *  texte), l'état de coupure et si une même rangée porte les deux caractères. `copie` : la copie de mesure. */
+  const lignes = (page: Page, copie: boolean) =>
+    page.evaluate(({ copie, vers }) => {
+      const han = (t: string) => (t.match(/\p{Script=Han}/gu) ?? []).join("");
+      const scene = document.querySelector("[data-performance-mode]")!;
+      const toutes = Array.from(scene.querySelectorAll<HTMLElement>("[data-coupe]")).filter((n) => !!n.closest("[aria-hidden=true]") === copie);
+      return toutes
+        .map((n) => ({ n, rangees: Array.from(n.querySelectorAll<HTMLElement>("[data-rangee]")).map((r) => han(r.textContent ?? "")) }))
+        .filter(({ rangees }) => rangees.join("").includes("得着"))
+        .map(({ n, rangees }) => ({
+          coupe: n.getAttribute("data-coupe") ?? "une",
+          vers: rangees.join("").includes(vers),
+          ensemble: rangees.some((r) => r.includes("得着")),
+          rangees,
+        }));
+    }, { copie, vers: VERS });
+
+  test("mode louange, téléphone : les exceptions de mots du chant s'appliquent au pupitre", async ({ page }, info) => {
+    test.skip(info.project.name !== "telephone", "propre au téléphone");
+    await ouvrirMode(page, [DEFAUT], { echelle: "1.5" });
+    // Largeur d'origine, puis 336 px : sans l'exception, le segmenteur lit 心得 et 得着 ne se coupe nulle part, la ligne
+    // « deborde » au lieu de passer en rangées ; avec elle, la coupure tombe entre 心 et 得着 (vérifié à l'essai).
+    // (`setViewportSize` est refusé sur la fenêtre émulée d'un téléphone : protocole.)
+    const cdp = await page.context().newCDPSession(page);
+    for (const largeur of [null, 336]) {
+      if (largeur) {
+        await cdp.send("Emulation.setDeviceMetricsOverride", { width: largeur, height: 800, deviceScaleFactor: 2, mobile: true });
+        await page.waitForTimeout(1500);
+      }
+      await premierePage(page);
+      const total = await totalPages(page);
+      let vue = 0;
+      let coupees = 0;
+      let copiees = 0;
+      for (let p = 1; p <= total; p++) {
+        await attendreCompteur(page, new RegExp(`^${p} /`));
+        const ou = `${largeur ?? "largeur d'origine"}, page ${p}`;
+        for (const l of await lignes(page, false)) {
+          vue++;
+          expect(l.ensemble, `écran, ${ou} : 得 et 着 sur la même rangée (${JSON.stringify(l.rangees)})`).toBe(true);
+          if (l.vers) {
+            expect(l.coupe, `écran, ${ou} : ${VERS} est coupée`).toMatch(/^rangees/);
+            coupees++;
+          }
+        }
+        // Copie de mesure : mêmes lignes, même règle.
+        for (const l of await lignes(page, true)) {
+          copiees++;
+          expect(l.ensemble, `copie, ${ou} : 得 et 着 sur la même rangée (${JSON.stringify(l.rangees)})`).toBe(true);
+          if (l.vers) expect(l.coupe, `copie, ${ou} : ${VERS} est coupée`).toMatch(/^rangees/);
+        }
+        if (p < total) await page.keyboard.press("ArrowRight");
+      }
+      const qui = largeur ?? "largeur d'origine";
+      expect(vue, `${qui} : des lignes contenant 得着 vues à l'écran`).toBeGreaterThan(0);
+      expect(coupees, `${qui} : la ligne « ${VERS} » vue coupée à l'écran`).toBeGreaterThan(0);
+      expect(copiees, `${qui} : des lignes contenant 得着 dans la copie de mesure`).toBeGreaterThan(0);
+    }
+  });
+});
+
 test.describe("louange : captures de la coupure", () => {
   for (const [nom, it] of CHANTS)
     for (const sombre of [false, true]) {

@@ -48,6 +48,8 @@ export type SectionBlock = {
   keyChange?: string;
   songTitle: string;
   songKey: string;
+  /** Lot CV : le chant de la section, pour ses exceptions de mots chinois (motsChinois.ts). */
+  songSlug?: string;
   songSourceLabel?: string;
   /** Tempo du `.cho` (♩), repris par la barre haute. */
   tempo?: number;
@@ -242,6 +244,7 @@ export function buildPerformanceBlocks(
           blocks.push({
             kind: "section",
             uid: uid(),
+            songSlug: ms.songSlug,
             section: msKeyChange
               ? transposeSection(section, semitonesTo(fusionKey, msKeyChange), msKeyChange)
               : section,
@@ -286,6 +289,7 @@ export function buildPerformanceBlocks(
             blocks.push({
               kind: "section",
               uid: uid(),
+              songSlug: item.songSlug,
               section: secKeyChange
                 ? transposeSection(sec, semitonesTo(fusionKey, secKeyChange), secKeyChange)
                 : sec,
@@ -390,6 +394,7 @@ export function buildPerformanceBlocks(
       blocks.push({
         kind: "section",
         uid: uid(),
+        songSlug: item.songSlug,
         section: shownSec,
         language: ast.metadata.language,
         chordsEnabled: showChordsGlobal && item.showChords,
