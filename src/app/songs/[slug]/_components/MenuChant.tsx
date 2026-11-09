@@ -9,7 +9,8 @@ import { ChoixDisposition } from "@/components/song/ChoixDisposition";
 import type { Disposition } from "@/lib/dispositionPref";
 
 /** Menu ⋯ (spec-barre-chant.md, Q3, Q5) : disposition, Personnaliser, Signaler. */
-export function MenuChant({ disposition, changeDisposition, setShowPanel, setShowReport }: {
+export function MenuChant({ langue, disposition, changeDisposition, setShowPanel, setShowReport }: {
+  langue: "fr" | "zh";
   disposition: Disposition;
   changeDisposition: (d: Disposition) => void;
   setShowPanel: (v: boolean) => void;
@@ -18,7 +19,7 @@ export function MenuChant({ disposition, changeDisposition, setShowPanel, setSho
   const { t } = useTranslation();
   return (
     <DropdownMenuContent align="end" className="w-auto min-w-52 max-w-[calc(100vw-1rem)]">
-      <ChoixDisposition variante="menu" disposition={disposition} changeDisposition={changeDisposition} />
+      <ChoixDisposition variante="menu" langue={langue} disposition={disposition} changeDisposition={changeDisposition} />
       <DropdownMenuSeparator />
       <DropdownMenuItem onClick={() => setShowPanel(true)}>
         <Settings className="h-3.5 w-3.5 text-muted-foreground" />

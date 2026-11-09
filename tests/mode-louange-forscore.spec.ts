@@ -1269,3 +1269,28 @@ test("forScore : un clic droit au bord droit ne tourne pas la page", async ({ pa
   await page.mouse.click(ecran.width - 20, ecran.height / 2);
   await expect.poll(() => numero(page)).toBe(2);
 });
+
+// DP-E, B1 : la pastille des Repères ouvre sa bulle ; le toucher ne tourne pas la page et n'ouvre pas la barre.
+test("forScore, Repères : toucher la pastille d'une section ouvre sa bulle, sans tourner la page ni rappeler la barre", async ({ page }) => {
+  // L'indice de rappel (première fois par appareil) se pose sur la pastille en paysage : déjà vu ici.
+  await page.addInitScript(() => {
+    localStorage.setItem("disposition", "reperes");
+    localStorage.setItem("perf-astuce-rappel-joue", "1");
+    localStorage.setItem("perf-astuce-rappel-unique", "1");
+  });
+  await ouvrir(page, { chants: 4 });
+  await toucherCentre(page); // barre masquée
+  await expect(page.getByRole("button", { name: "Options d'affichage" })).toBeHidden();
+  const ecran = page.viewportSize()!;
+  // Une page plus loin : un toucher dans la zone de gauche tournerait en arrière.
+  const premiere = await lireCompteur(page);
+  await page.mouse.click(ecran.width - 20, ecran.height / 2);
+  await expect.poll(() => lireCompteur(page)).not.toBe(premiere);
+  const avant = await lireCompteur(page);
+  const pastille = onStage(page, "[data-repere-pastille]").last();
+  await expect(pastille).toBeVisible();
+  await pastille.click();
+  await expect(page.locator("[data-repere-bulle]")).toHaveCount(1);
+  expect(await lireCompteur(page), "la page n'a pas tourné").toBe(avant);
+  await expect(page.getByRole("button", { name: "Options d'affichage" }), "la barre ne s'est pas ouverte").toBeHidden();
+});

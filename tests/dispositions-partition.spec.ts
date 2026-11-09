@@ -222,6 +222,8 @@ for (const langue of ["fr", "zh"] as const) {
         localStorage.setItem("perf-role-preset", "pianiste");
         localStorage.setItem("perf-theme", sombre ? "dark" : "light");
         if (zh) localStorage.setItem("i18nextLng", "zh-CN");
+        // Sans le scan 简谱 : la disposition se voit en chinois (par défaut la page montre le scan de la partition).
+        localStorage.setItem("jianpu-sheet-pref", "never");
       }, [langue === "zh", theme === "sombre"] as const);
       const slugsLouange = langue === "zh" ? LOUANGE_ZH : LOUANGE_FR;
       await signInAs(page, MUSICIEN, { [`setlists/${SETLIST_ID}`]: setlist(slugsLouange) }, `/songs/${encodeURIComponent(slug)}`);
@@ -292,6 +294,15 @@ for (const [langue, slug] of [["FR", CHANT_FR], ["ZH", CHANT_ZH]] as const) {
         filet: f ? Math.round(f.getBoundingClientRect().width) : 0,
         filetHaut: f ? f.getBoundingClientRect().height : 0,
         copie: g.hasAttribute("data-copy-ignore"),
+        // DP-E : mêmes cotes pour toutes les sections d'un chant, sigle dans la pastille, filet recentré, cible de 44 px.
+        largeurPastille: Math.round(p.getBoundingClientRect().width),
+        sigleLarg: (el.querySelector("[data-repere-sigle]") as HTMLElement).getBoundingClientRect().width,
+        tailleSigle: parseFloat(getComputedStyle(el.querySelector("[data-repere-sigle]")!).fontSize),
+        debutTexte: Math.round((g.nextElementSibling as HTMLElement).getBoundingClientRect().left),
+        ecartFilet: f ? Math.round((g.nextElementSibling as HTMLElement).getBoundingClientRect().left - f.getBoundingClientRect().right) : null,
+        decentre: f ? Math.abs(f.getBoundingClientRect().left + f.getBoundingClientRect().width / 2 - (p.getBoundingClientRect().left + p.getBoundingClientRect().width / 2)) : 0,
+        cible: [getComputedStyle(p, "::before").width, getComputedStyle(p, "::before").height],
+        expanded: p.hasAttribute("aria-expanded"),
       };
     }));
     for (const l of lignes) {
@@ -299,10 +310,21 @@ for (const [langue, slug] of [["FR", CHANT_FR], ["ZH", CHANT_ZH]] as const) {
       expect(l.titre, "title = nom complet").toBe(l.lecteur);
       expect(l.titre.length, "nom complet plus long que le sigle ou égal").toBeGreaterThanOrEqual(l.sigle.length);
       expect(l.copie, "gouttière hors copie").toBe(true);
-      expect(l.pastille, "hauteur de pastille").toBe(telephone(page) ? 24 : 32);
-      expect(l.filetHaut, "filet visible").toBeGreaterThan(8);
-      if (l.sigle.length <= 2) expect(l.gouttiere, "gouttière").toBe(telephone(page) ? 36 : 44);
+      expect(l.pastille, "hauteur de pastille").toBe(telephone(page) ? 24 : 38);
+      expect(l.largeurPastille, "largeur de pastille, fixe").toBe(telephone(page) ? 24 : 44);
+      // Dès la tablette un filet n'existe que s'il couvre 24 px au moins (jamais un bout isolé) ; au téléphone il longe la pastille.
+      if (telephone(page)) expect(l.filetHaut, "filet visible").toBeGreaterThan(8);
+      else expect(l.filetHaut === 0 || l.filetHaut >= 24, `filet de ${l.filetHaut} px`).toBe(true);
+      expect(l.gouttiere, "gouttière fixe").toBe(telephone(page) ? 36 : 56);
+      expect(l.sigleLarg, "sigle dans la pastille").toBeLessThanOrEqual(l.largeurPastille);
+      if (l.sigle.length <= 2) expect(l.tailleSigle, "corps du sigle").toBe(telephone(page) ? 14 : 21);
+      else expect(l.tailleSigle, "sigle long, corps réduit").toBe(telephone(page) ? 11 : 15);
+      expect(l.cible, "cible de toucher de 44 × 44").toEqual(["44px", "44px"]);
+      expect(l.expanded, "pas d'aria-expanded").toBe(false);
+      if (telephone(page) && l.filet) expect(l.ecartFilet, "texte à 6 px du filet").toBe(6);
+      if (!telephone(page) && l.filet) expect(l.decentre, "filet centré sous la pastille").toBeLessThanOrEqual(1);
     }
+    expect(new Set(lignes.map((l) => l.debutTexte)).size, "même début de texte pour toutes les sections").toBe(1);
     // Refrain (R, R1, R2…) : filet de 5 px ; couplet (C…) et intro : 3 px.
     const refrains = lignes.filter((l) => /^R\d*$/.test(l.sigle));
     const couplets = lignes.filter((l) => /^C\d*$/.test(l.sigle));
@@ -449,18 +471,26 @@ for (const [langue, slug] of [["FR", CHANT_FR], ["ZH", CHANT_ZH]] as const) {
           copie: col.hasAttribute("data-copy-ignore"),
           largeur: Math.round(col.getBoundingClientRect().width),
           tailleLettre: parseFloat(getComputedStyle(lettre).fontSize),
+          lettreLarg: lettre.scrollWidth,
+          colLarg: col.clientWidth,
+          nomAffiche: (() => { const nom = el.querySelector("[data-scene-nom]"); return nom ? getComputedStyle(nom).display !== "none" : null; })(),
+          separation: [cs.borderBottomWidth, cs.borderBottomStyle],
         };
       });
     });
     for (const l of lignes) {
       expect(l.teinte, "type reconnu").not.toBeNull();
       expect(l.fond, "fond = teinte de son type").toBe(l.teinte);
-      expect(l.filetLarg, "filet").toBe(4);
+      expect(l.filetLarg, "filet").toBe(6);
       expect(l.lettre.length).toBeGreaterThan(0);
       expect(l.lettre, "capitales").toBe(l.lettre.toUpperCase());
       expect(l.titre).toBe(l.lecteur);
       expect(l.copie, "colonne hors copie").toBe(true);
-      expect(l.largeur, "colonne").toBe(telephone(page) ? 44 : 56);
+      expect(l.largeur, "colonne").toBe(telephone(page) ? 40 : 64);
+      expect(l.lettreLarg, "lettre dans la colonne").toBeLessThanOrEqual(l.colLarg);
+      expect(l.separation, "filet de 1 px entre deux bandes").toEqual(["1px", "solid"]);
+      // Nom de section : caché sous la tablette, lisible au toucher de la lettre ; dès la tablette coupé aux espaces seulement.
+      if (l.nomAffiche !== null) expect(l.nomAffiche, "nom de section").toBe(!telephone(page));
     }
     expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth), "débordement horizontal").toBeLessThanOrEqual(0);
   });
@@ -495,31 +525,21 @@ for (const [langue, slug] of [["FR", CHANT_FR], ["ZH", CHANT_ZH]] as const) {
   });
 }
 
-test("Scène : une bande remplit son conteneur (de bord à bord, sans arrondi), lettre ≈ 1,6 fois le texte", async ({ page }) => {
+test("Scène : une bande remplit la page (de bord à bord, sans arrondi), lettre de 26 px au téléphone, 32 px dès la tablette", async ({ page }) => {
   await scene(page);
   await page.goto(`/songs/${CHANT_FR}`);
   const bande = page.locator("main [data-scene]").first();
   await expect(bande).toBeVisible();
+  // Pleine largeur : la bande sort du remplissage de la page (px-4) et va d'un bord de la page à l'autre.
   const m = await bande.evaluate((el) => {
-    const r = el.getBoundingClientRect(), p = el.parentElement!.getBoundingClientRect();
+    const r = el.getBoundingClientRect(), p = el.closest("main")!.getBoundingClientRect();
     return { g: r.left - p.left, d: p.right - r.right, rayon: getComputedStyle(el).borderTopLeftRadius, boite: getComputedStyle(el).boxShadow };
   });
   expect(Math.abs(m.g), "bord gauche").toBeLessThanOrEqual(1);
   expect(Math.abs(m.d), "bord droit").toBeLessThanOrEqual(1);
   expect(m.rayon).toBe("0px");
-  const tailles = await page.evaluate(() => ({
-    lettre: parseFloat(getComputedStyle(document.querySelector("main [data-scene-lettre]")!).fontSize),
-    texte: (() => {
-      const sonde = document.createElement("span");
-      sonde.style.fontSize = "var(--lyric-size)";
-      document.body.appendChild(sonde);
-      const t = parseFloat(getComputedStyle(sonde).fontSize);
-      sonde.remove();
-      return t;
-    })(),
-  }));
-  expect(tailles.lettre / tailles.texte).toBeGreaterThan(1.5);
-  expect(tailles.lettre / tailles.texte).toBeLessThan(1.7);
+  const lettre = await page.evaluate(() => parseFloat(getComputedStyle(document.querySelector("main [data-scene-lettre]")!).fontSize));
+  expect(lettre).toBe(telephone(page) ? 26 : 32);
 });
 
 test("Scène : le mode louange garde ses deux colonnes sur grand écran (data-disposition = scene), bandes pleine colonne", async ({ page }) => {
@@ -707,4 +727,259 @@ test("Partition : le mode louange (data-disposition = partition), en-tête en se
   if (!grand) return;
   const gauches = await onStage(page, "[data-section]").evaluateAll((els) => els.map((e) => Math.round(e.getBoundingClientRect().left)));
   expect(new Set(gauches.map((x) => Math.round(x / 8))).size, "deux colonnes").toBe(2);
+});
+
+// ─── (h) DP-E : corrections de relecture et finitions ────────────────────────────────────────────────────────────
+
+
+test("A : menu ⋯ du chant, cinq colonnes égales, entrée choisie marquée (cadre 2 px, gras, bleu), pas de fond gris de focus", async ({ page }) => {
+  await page.addInitScript(() => { if (!localStorage.getItem("disposition")) localStorage.setItem("disposition", "classique"); });
+  await page.goto(`/songs/${CHANT_FR}`);
+  await page.getByRole("button", { name: "Plus d'actions" }).click();
+  const entrees = page.getByRole("menuitemradio");
+  await expect(entrees).toHaveCount(5);
+  await page.waitForTimeout(400); // fin de l'animation d'ouverture du menu
+  const m = await entrees.evaluateAll((els) => els.map((el) => {
+    const r = el.getBoundingClientRect();
+    const mini = el.querySelector("svg.block") as SVGElement;
+    const nom = el.lastElementChild as HTMLElement;
+    return { x: r.left, y: Math.round(r.top), w: Math.round(r.width), svgW: Math.round(mini.getBoundingClientRect().width), svgH: Math.round(mini.getBoundingClientRect().height), nomH: Math.round(nom.getBoundingClientRect().height), poids: getComputedStyle(nom).fontWeight, couleur: getComputedStyle(nom).color, ombre: getComputedStyle(mini.parentElement!).boxShadow, coche: el.getAttribute("aria-checked") };
+  }));
+  expect(new Set(m.map((e) => e.y)).size, "une seule rangée de cinq").toBe(1);
+  expect(Math.max(...m.map((e) => e.w)) - Math.min(...m.map((e) => e.w)), "colonnes égales").toBeLessThanOrEqual(1);
+  expect(new Set(m.map((e) => e.nomH)).size, "noms à hauteur égale " + JSON.stringify(m.map((e) => e.nomH))).toBe(1);
+  for (const e of m) { expect(e.svgW, "miniature de 64 px " + JSON.stringify(m.map((x) => [x.w, x.svgW]))).toBe(64); expect(e.svgH).toBe(82); }
+  const menu = (await page.getByRole("menu").boundingBox())!;
+  expect(menu.x).toBeGreaterThanOrEqual(0);
+  expect(menu.x + menu.width, "menu ≤ 100vw − 1 rem").toBeLessThanOrEqual(page.viewportSize()!.width - 8);
+  const choisie = m.find((e) => e.coche === "true")!;
+  const autre = m.find((e) => e.coche === "false")!;
+  expect(choisie.poids).toBe("700");
+  expect(autre.poids, "nom non choisi en encre medium").toBe("500");
+  expect(choisie.ombre, "cadre de 2 px").toMatch(/0px 0px 0px 2px|2px/);
+  expect(autre.ombre).toBe("none");
+  const accent = await page.evaluate(() => { const s = document.createElement("span"); s.style.color = "var(--chord-color)"; document.body.appendChild(s); const c = getComputedStyle(s).color; s.remove(); return c; });
+  expect(choisie.couleur, "nom choisi dans l'accent bleu").toBe(accent);
+  expect(choisie.ombre).toContain(accent);
+  // Le survol et le focus ne posent aucun fond gris.
+  await entrees.nth(2).hover();
+  expect(await entrees.nth(2).evaluate((el) => getComputedStyle(el).backgroundColor), "pas de fond gris").toBe("rgba(0, 0, 0, 0)");
+});
+
+for (const [langue, slug, variable] of [["FR", CHANT_FR, "--fr-accent"], ["ZH", CHANT_ZH, "--zh-accent"]] as const) {
+  test(`A : ${langue}, la miniature Classique prend l'accent de la langue du chant (${variable}), couplet sans cadre, refrain en boîte`, async ({ page }) => {
+    await page.addInitScript(() => { if (!localStorage.getItem("disposition")) localStorage.setItem("disposition", "classique"); });
+    await page.goto(`/songs/${encodeURIComponent(slug)}`);
+    await page.getByRole("button", { name: /Plus d'actions|更多操作/ }).click();
+    const mini = page.getByRole("menuitemradio").first().locator("svg.block");
+    await expect(mini).toBeVisible();
+    const fills = await mini.locator("rect").evaluateAll((els) => els.map((e) => e.getAttribute("fill")));
+    expect(fills.some((f) => f === `var(${variable})`), `accent ${variable}`).toBe(true);
+    const autre = variable === "--fr-accent" ? "--zh-accent" : "--fr-accent";
+    expect(fills.some((f) => f === `var(${autre})`), "pas l'autre accent").toBe(false);
+  });
+}
+
+test("A : Options du mode louange, cinq colonnes égales sur une rangée, miniatures qui remplissent leur colonne sans déborder, anneau de focus clavier", async ({ page }) => {
+  await page.addInitScript(() => { localStorage.setItem("perf-role-preset", "pianiste"); localStorage.setItem("disposition", "classique"); });
+  await signInAs(page, MUSICIEN, { [`setlists/${SETLIST_ID}`]: setlist(LOUANGE_FR) }, `/setlists/${SETLIST_ID}`);
+  await page.getByRole("button", { name: /Mode Louange/ }).click();
+  await attendreMiseEnPage(page);
+  const options = await ouvrirOptions(page);
+  const radios = options.locator('[role=radiogroup][aria-labelledby="perf-disposition"]').getByRole("radio");
+  await expect(radios).toHaveCount(5);
+  const m = await radios.evaluateAll((els) => els.map((el) => ({ y: Math.round(el.getBoundingClientRect().top), w: Math.round(el.getBoundingClientRect().width), svg: Math.round(el.querySelector("svg.block")!.getBoundingClientRect().width), nomH: Math.round((el.lastElementChild as HTMLElement).getBoundingClientRect().height) })));
+  expect(new Set(m.map((e) => e.y)).size, "une seule rangée").toBe(1);
+  expect(Math.max(...m.map((e) => e.w)) - Math.min(...m.map((e) => e.w)), "colonnes égales").toBeLessThanOrEqual(1);
+  expect(new Set(m.map((e) => e.nomH)).size, JSON.stringify(m)).toBe(1);
+  // Miniature de 80 px au plus, réduite à la largeur de sa colonne (≈ 71 px dans le panneau d'environ 26 rem) : jamais de débordement sur la voisine.
+  for (const e of m) {
+    expect(e.svg, "miniature dans sa colonne").toBeLessThanOrEqual(e.w);
+    expect(e.svg, "miniature lisible").toBeGreaterThanOrEqual(60);
+    expect(e.svg, "miniature de 80 px au plus").toBeLessThanOrEqual(80);
+  }
+  // Focus clavier : les flèches choisissent l'entrée voisine et y posent l'anneau des ronds de la page.
+  await radios.nth(0).focus();
+  await page.keyboard.press("ArrowRight");
+  const focus = radios.nth(1);
+  await expect(focus).toBeFocused();
+  expect(await focus.evaluate((el) => getComputedStyle(el).boxShadow), "anneau focus-visible").not.toBe("none");
+});
+
+test("C1 : en Scène les accords sont bleus en chinois comme en français, clair et sombre ; Repères garde la couleur de la langue", async ({ page }) => {
+  const couleurAccord = async (slug: string, disposition: string, sombre: boolean) => {
+    await page.addInitScript((d) => { localStorage.setItem("disposition", d); localStorage.setItem("jianpu-sheet-pref", "never"); }, disposition);
+    await page.goto(`/songs/${encodeURIComponent(slug)}`);
+    // La page est rendue côté serveur en Classique : attendre la disposition lue après montage avant de lire la couleur.
+    await expect(page.locator(`main [data-disposition="${disposition}"]`).first()).toBeAttached();
+    await page.evaluate((s) => document.documentElement.classList.toggle("dark", s), sombre);
+    const accord = page.locator("main [data-accord], main [data-section] .font-chord").first();
+    await expect(accord).toBeVisible();
+    return page.evaluate(() => {
+      const el = document.querySelector("main [data-accord], main [data-section] .font-chord") as HTMLElement;
+      const s = document.createElement("span"); s.style.color = "var(--chord-color)"; document.body.appendChild(s);
+      const bleu = getComputedStyle(s).color; s.remove();
+      return { accord: getComputedStyle(el).color, bleu };
+    });
+  };
+  for (const sombre of [false, true]) {
+    for (const slug of [CHANT_FR, CHANT_ZH]) {
+      const c = await couleurAccord(slug, "scene", sombre);
+      expect(c.accord, `accord de ${slug} en Scène (${sombre ? "sombre" : "clair"})`).toBe(c.bleu);
+    }
+  }
+  const rouge = await couleurAccord(CHANT_ZH, "reperes", false);
+  expect(rouge.accord, "Repères : accord chinois dans la couleur de la langue").not.toBe(rouge.bleu);
+});
+
+test("B2 : le changement de ton (升调) se voit en Repères, sur la section qui monte", async ({ page }) => {
+  await page.addInitScript(() => { localStorage.setItem("disposition", "reperes"); localStorage.setItem("jianpu-sheet-pref", "never"); });
+  const avecTon = { ...setlist([]), items: [{ ...item("一生爱你", 1), sectionKeys: { "chorus-3": "F#" } }] };
+  await signInAs(page, MUSICIEN, { [`setlists/${SETLIST_ID}`]: avecTon }, `/setlists/${SETLIST_ID}`);
+  await ouvrirPartitions(page);
+  const montee = page.locator("[data-repere]").filter({ hasText: /\(F#\)/ });
+  await expect(montee.first()).toBeVisible();
+  // Une seule fois par section (pas répété dans le nom).
+  await expect(montee.first().locator("span.font-semibold", { hasText: /F#/ })).toHaveCount(1);
+});
+
+test("B3 B5 : Repères, Abba Père, même début de texte pour toutes les sections, sigles dans la pastille, section d'une rangée sans vide", async ({ page }) => {
+  await reperes(page);
+  await page.goto("/songs/abba-pere");
+  const sections = page.locator("main [data-repere]");
+  await expect(sections.first()).toBeVisible();
+  const lignes = await sections.evaluateAll((els) => els.map((el) => {
+    const g = el.querySelector("[data-repere-gouttiere]") as HTMLElement;
+    const p = el.querySelector("[data-repere-pastille]") as HTMLElement;
+    const corps = g.nextElementSibling as HTMLElement;
+    return {
+      sigle: el.querySelector("[data-repere-sigle]")!.textContent!,
+      x: Math.round(corps.getBoundingClientRect().left),
+      pastille: p.getBoundingClientRect().height + (el.querySelector("[data-repere-repeat]") ? 16 : 0),
+      section: el.getBoundingClientRect().height,
+      corps: corps.getBoundingClientRect().height,
+      dans: (el.querySelector("[data-repere-sigle]") as HTMLElement).getBoundingClientRect().width <= p.getBoundingClientRect().width,
+    };
+  }));
+  expect(lignes.map((l) => l.sigle).join(" ")).toMatch(/I.*C1.*R.*Int.*C2.*P/);
+  expect(new Set(lignes.map((l) => l.x)).size, "même x de début de texte").toBe(1);
+  for (const l of lignes) {
+    expect(l.dans, `sigle ${l.sigle} dans sa pastille`).toBe(true);
+    // Aucun vide de plus : la section fait la hauteur du plus haut de ses deux côtés, à 1 px près.
+    expect(l.section, `section ${l.sigle}`).toBeLessThanOrEqual(Math.max(l.corps, l.pastille) + 1);
+  }
+});
+
+test("C4 : Scène, sigles longs (Pr1, Pr2, Tag) dans la colonne de lettre, « ×2 » sous la lettre", async ({ page }) => {
+  await scene(page);
+  await page.goto("/songs/grace-en-grace");
+  const bandes = page.locator("main [data-scene]");
+  await expect(bandes.first()).toBeVisible();
+  const lignes = await bandes.evaluateAll((els) => els.map((el) => {
+    const col = el.querySelector("[data-scene-colonne]") as HTMLElement;
+    const lettre = el.querySelector("[data-scene-lettre]") as HTMLElement;
+    const rep = el.querySelector("[data-scene-repeat]") as HTMLElement | null;
+    return { lettre: lettre.textContent!, dedans: lettre.scrollWidth <= col.clientWidth, taille: parseFloat(getComputedStyle(lettre).fontSize), sous: rep ? rep.getBoundingClientRect().top >= lettre.getBoundingClientRect().bottom - 1 : true };
+  }));
+  const longs = lignes.filter((l) => l.lettre.length > 2);
+  expect(longs.length, "des sigles longs").toBeGreaterThan(0);
+  for (const l of lignes) {
+    expect(l.dedans, `lettre ${l.lettre} dans la colonne`).toBe(true);
+    expect(l.sous, "×2 sous la lettre").toBe(true);
+  }
+  for (const l of longs) expect(l.taille, "corps réduit").toBeLessThan(telephone(page) ? 26 : 32);
+});
+
+test("C3 : Scène, le nom de section est caché sous la tablette et s'ouvre au toucher de la lettre", async ({ page }) => {
+  test.skip(!telephone(page), "téléphone seulement");
+  await scene(page);
+  await page.goto(`/songs/${CHANT_FR}`);
+  const lettre = page.locator("main [data-scene-bouton]").first();
+  await expect(lettre).toBeVisible();
+  await expect(page.locator("main [data-scene-nom]").first()).toBeHidden();
+  await expect(page.locator("[data-repere-bulle]")).toHaveCount(0);
+  await lettre.click();
+  await expect(page.locator("[data-repere-bulle]")).toHaveCount(1);
+  await page.keyboard.press("Escape");
+  await expect(page.locator("[data-repere-bulle]")).toHaveCount(0);
+});
+
+test("C5 : Scène au téléphone, les vers d'Abba Père tiennent sur autant de rangées qu'en Classique", async ({ page }) => {
+  test.skip(page.viewportSize()!.width !== 390, "téléphone 390 px");
+  const rangees = async (disposition: string) => {
+    await page.addInitScript((d) => { localStorage.setItem("disposition", d); localStorage.setItem("perf-role-preset", "pianiste"); localStorage.setItem("perf-font-scale", "1"); }, disposition);
+    await signInAs(page, MUSICIEN, { [`setlists/${SETLIST_ID}`]: setlist(["abba-pere"]) }, `/setlists/${SETLIST_ID}`);
+    await page.getByRole("button", { name: /Mode Louange/ }).click();
+    await attendreMiseEnPage(page);
+    await expect(onStage(page, "[data-section]").first()).toBeVisible();
+    return page.evaluate(() => {
+      const vers = ["que Tu me formes", "les premiers", "mes doutes"];
+      const lignes = [...document.querySelectorAll("[data-performance-mode] [data-copy-line]")].filter((l) => !l.closest("[aria-hidden=true]"));
+      return vers.map((v) => {
+        const l = lignes.find((x) => (x.textContent ?? "").includes(v));
+        if (!l) return -1;
+        return new Set([...l.querySelectorAll("span, div")].filter((e) => e.children.length === 0 && (e.textContent ?? "").trim()).map((e) => Math.round(e.getBoundingClientRect().top / 10))).size > 0 ? Math.round(l.getBoundingClientRect().height) : 0;
+      });
+    });
+  };
+  const classique = await rangees("classique");
+  expect(classique.every((h) => h > 0), "les trois vers trouvés").toBe(true);
+  await page.goto("about:blank");
+  const sceneH = await rangees("scene");
+  expect(sceneH.every((h) => h > 0)).toBe(true);
+  sceneH.forEach((h, i) => expect(h, `vers ${i + 1} : même hauteur (même nombre de rangées) qu'en Classique`).toBeLessThanOrEqual(classique[i] + 1));
+});
+
+test("D1 : Partition, l'en-tête d'un chant fusionné est en serif centré (vue partitions)", async ({ page }) => {
+  await page.addInitScript(() => { localStorage.setItem("disposition", "partition"); });
+  const fusion = {
+    type: "fusion", songSlug: "", position: 1, keyOverride: null, showChords: true, showPinyin: true, useJianpu: false, structureOverride: null, sectionNotes: {}, notes: "",
+    fusionSongs: [
+      { songSlug: "abba-pere", keyOverride: null, structureOverride: null, sectionNotes: {} },
+      { songSlug: "一生爱你", keyOverride: null, structureOverride: null, sectionNotes: {} },
+    ],
+    mixedStructure: [{ songSlug: "abba-pere", sectionId: "chorus-3" }, { songSlug: "一生爱你", sectionId: "chorus-3" }],
+  };
+  await signInAs(page, MUSICIEN, { [`setlists/${SETLIST_ID}`]: { ...setlist([]), items: [fusion] } }, `/setlists/${SETLIST_ID}`);
+  await ouvrirPartitions(page);
+  const titres = page.locator('[data-outline-item="1"] [data-titre-partition]');
+  await expect(titres).toHaveCount(2);
+  const style = await titres.first().evaluate((el) => ({ f: getComputedStyle(el).fontFamily, a: getComputedStyle(el).textAlign }));
+  expect(style.f).toMatch(/gelasio/i);
+  expect(style.a).toBe("center");
+});
+
+test("D1 : Partition, l'en-tête d'un chant fusionné est en serif centré (mode louange)", async ({ page }) => {
+  await page.addInitScript(() => { localStorage.setItem("disposition", "partition"); localStorage.setItem("perf-role-preset", "pianiste"); });
+  const fusion = {
+    type: "fusion", songSlug: "", position: 1, keyOverride: null, showChords: true, showPinyin: true, useJianpu: false, structureOverride: null, sectionNotes: {}, notes: "",
+    fusionSongs: [
+      { songSlug: "abba-pere", keyOverride: null, structureOverride: null, sectionNotes: {} },
+      { songSlug: "avec-nous", keyOverride: null, structureOverride: null, sectionNotes: {} },
+    ],
+    mixedStructure: null,
+  };
+  await signInAs(page, MUSICIEN, { [`setlists/${SETLIST_ID}`]: { ...setlist([]), items: [fusion] } }, `/setlists/${SETLIST_ID}`);
+  await page.getByRole("button", { name: /Mode Louange/ }).click();
+  await attendreMiseEnPage(page);
+  const titre = onStage(page, "[data-entete-partition] [data-titre-partition]");
+  await expect(titre.first()).toBeAttached();
+  const style = await titre.first().evaluate((el) => ({ f: getComputedStyle(el).fontFamily, a: getComputedStyle(el).textAlign }));
+  expect(style.f).toMatch(/gelasio/i);
+  expect(style.a).toBe("center");
+});
+
+test("D2 D3 : Partition, compositeur chinois en police des paroles et sans italique ; les data-testid de l'en-tête classique", async ({ page }) => {
+  await partition(page);
+  await signInAs(page, MUSICIEN, { [`setlists/${SETLIST_ID}`]: setlist([CHANT_ZH, "avec-nous"]) }, `/setlists/${SETLIST_ID}`);
+  await ouvrirPartitions(page);
+  const zh = page.locator('[data-outline-item="1"] [data-partition-compositeur]');
+  await expect(zh).toBeVisible();
+  const st = await zh.evaluate((el) => ({ f: getComputedStyle(el).fontFamily, i: getComputedStyle(el).fontStyle }));
+  expect(st.f, "pas KaiTi-titres").not.toMatch(/kaiti/i);
+  expect(st.i, "pas d'italique en chinois").toBe("normal");
+  const fr = page.locator('[data-outline-item="2"] [data-partition-compositeur]');
+  expect(await fr.evaluate((el) => getComputedStyle(el).fontStyle), "italique en français").toBe("italic");
+  await expect(zh).toHaveAttribute("data-testid", "auteur");
+  await expect(page.locator('[data-outline-item="2"] [data-partition-tempo]')).toHaveAttribute("data-testid", "ligne-tempo");
 });

@@ -344,7 +344,7 @@ function useVersionDeLaSetlist(slug: string, setlistId: string | null, position:
 
   // Menu ⋯ (spec-barre-chant.md, Q3, Q5) : Vidéo, PDF et Idées sont dans la barre partout ; plus
   // de Spotify ni d'Apple Music (Timothée, 18/10/2026 : les chants n'ont que YouTube).
-  const menuChant = <MenuChant disposition={disposition} changeDisposition={changeDisposition} setShowPanel={setShowPanel} setShowReport={setShowReport} />;
+  const menuChant = <MenuChant langue={song.language === "zh" ? "zh" : "fr"} disposition={disposition} changeDisposition={changeDisposition} setShowPanel={setShowPanel} setShowReport={setShowReport} />;
 
   return (
     <AccordsProvider aide chant={{ slug: song.slug, titre: song.title }}>
@@ -463,7 +463,7 @@ function useVersionDeLaSetlist(slug: string, setlistId: string | null, position:
         )}
         {/* Contenu — un tap rappelle la barre d'outils (sans gêner la sélection de texte) */}
         <main
-          className="song-zoom px-4 py-6 print:px-0 print:py-2 print:max-w-none max-w-2xl mx-auto overflow-x-auto mt-[48px]"
+          className="song-zoom px-4 py-6 print:px-0 print:py-2 print:max-w-none max-w-2xl mx-auto overflow-x-auto mt-[48px] [--marge-bande:1rem] print:[--marge-bande:0px]"
           style={{
             transform: `scale(${fontScale})`,
             transformOrigin: 'top left  ',

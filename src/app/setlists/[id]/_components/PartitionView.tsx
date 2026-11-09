@@ -3,7 +3,7 @@ import Link from "next/link";
 import { songHref } from "@/lib/setlist/songHref";
 import type { JianpuChords, SetlistItem } from "@/types/setList";
 import type { SongContent } from "@/lib/api/songs";
-import { SongView, SectionView, StructureStrip, TransitionNote } from "@/components/song/SongView";
+import { SongView, SectionView, StructureStrip, TransitionNote, KaiTiFont, gelasio_font } from "@/components/song/SongView";
 import { JianpuSheet } from "@/components/jianpu/JianpuSheet";
 import { AccordsProvider, ChantDesAccords } from "@/components/accords/AccordsProvider";
 import { resolveSectionOccurrences, type SectionOccurrence } from "@/lib/setlist/sectionSteps";
@@ -216,12 +216,14 @@ export function PartitionsView({
                   </span>
                   <Link2 className="h-3.5 w-3.5 text-foreground shrink-0" />
                   <CopyLyricsButton sections={playedSections(item, contents)} />
-                  <div className="flex flex-wrap gap-x-3 gap-y-0.5">
+                  <div className={disposition === "partition" ? "flex min-w-0 flex-1 flex-col items-center gap-y-0.5" : "flex flex-wrap gap-x-3 gap-y-0.5"}>
                     {item.fusionSongs.map((fs) => {
                       const ast = transposedAsts[fs.songSlug];
                       if (!ast) return null;
+                      // Partition : titres en serif centrés, comme l'en-tête d'un chant seul.
+                      const titrePartition = disposition === "partition" ? `text-center text-2xl font-bold leading-[1.15] ${ast.metadata.language === "zh" ? KaiTiFont.className : gelasio_font.className}` : "text-sm font-bold";
                       return (
-                        <span key={fs.songSlug} className="text-sm font-bold text-foreground">
+                        <span key={fs.songSlug} {...(disposition === "partition" ? { "data-titre-partition": true } : null)} className={`${titrePartition} text-foreground`}>
                           <Link href={songHref(fs.songSlug, fs, setlistId, item.position)} className="hover:underline underline-offset-2">
                             {ast.metadata.title}
                           </Link>

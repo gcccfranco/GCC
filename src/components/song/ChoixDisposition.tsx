@@ -13,33 +13,41 @@ import { MiniatureDisposition } from "@/components/song/MiniatureDisposition";
 //    rôle menuitemradio et les flèches ; le menu reste ouvert au choix ;
 //  - « panneau » : boutons radio dans un panneau (Options d'affichage du mode louange),
 //    la couleur d'accent est passée par `couleur` (couleur personnelle des icônes).
+// Cinq colonnes égales dans les deux hôtes (jamais une entrée seule sur sa ligne), noms sur deux lignes au plus.
+// `langue` : celle du chant affiché, la miniature Classique en prend les couleurs.
 type Props = {
   disposition: Disposition;
   changeDisposition: (d: Disposition) => void;
+  langue?: "fr" | "zh";
 };
+// Accent de l'entrée choisie dans les menus du site : le bleu des actions (le primaire du site est noir et blanc).
+const ACCENT_SITE = "var(--chord-color)";
+const NOM = "block min-h-[2.5em] w-full text-center text-xs leading-tight";
 
 export function ChoixDisposition(props: Props & { variante: "menu" | "panneau"; couleur?: string; labelledBy?: string }) {
   return props.variante === "menu" ? <ChoixMenu {...props} /> : <ChoixPanneau {...props} />;
 }
 
-function ChoixMenu({ disposition, changeDisposition }: Props) {
+function ChoixMenu({ disposition, changeDisposition, langue }: Props) {
   const { t } = useTranslation();
   return (
     <>
       <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">{t("dispositions.titre")}</DropdownMenuLabel>
-      <DropdownMenuRadioGroup value={disposition} onValueChange={(v) => changeDisposition(v as Disposition)} className="flex flex-wrap gap-1 px-1">
+      <DropdownMenuRadioGroup value={disposition} onValueChange={(v) => changeDisposition(v as Disposition)} className="grid w-[min(25rem,calc(100vw-2.5rem))] grid-cols-5 gap-0.5 px-1">
         {DISPOSITIONS_AU_MENU.map((d) => (
           <DropdownMenuRadioItem
             key={d}
             value={d}
             onSelect={(e) => e.preventDefault()}
-            // Le rond indicateur de shadcn (premier enfant) est masqué : la miniature encadrée en tient lieu.
-            className="group min-h-11 flex-col items-center gap-1 px-1.5 py-1.5 text-center text-xs [&>span:first-child]:hidden"
+            // Le rond indicateur de shadcn (premier enfant) est masqué : la miniature encadrée en tient lieu. Pas de fond gris de focus :
+            // le focus clavier est l'anneau de la miniature.
+            className="group min-h-11 min-w-0 flex-col items-center justify-start gap-1 px-0 py-1.5 focus:bg-transparent data-[highlighted]:bg-transparent [&>span:first-child]:hidden"
+            style={{ "--accent-choix": ACCENT_SITE } as React.CSSProperties}
           >
-            <span className="rounded-md p-0.5 ring-1 ring-transparent group-data-[state=checked]:ring-2 group-data-[state=checked]:ring-primary">
-              <MiniatureDisposition disposition={d} />
+            <span className="block max-w-full rounded-md p-0.5 group-focus-visible:ring-2 group-focus-visible:ring-ring group-data-[state=checked]:ring-2 group-data-[state=checked]:ring-[color:var(--accent-choix)]">
+              <MiniatureDisposition disposition={d} langue={langue} />
             </span>
-            <span className="font-normal group-data-[state=checked]:font-bold group-data-[state=checked]:text-primary">{t(`dispositions.${d}`)}</span>
+            <span className={`${NOM} font-medium group-data-[state=checked]:font-bold group-data-[state=checked]:text-[color:var(--accent-choix)]`}>{t(`dispositions.${d}`)}</span>
           </DropdownMenuRadioItem>
         ))}
       </DropdownMenuRadioGroup>
@@ -48,14 +56,14 @@ function ChoixMenu({ disposition, changeDisposition }: Props) {
   );
 }
 
-function ChoixPanneau({ disposition, changeDisposition, couleur = "hsl(var(--primary))", labelledBy }: Props & { couleur?: string; labelledBy?: string }) {
+function ChoixPanneau({ disposition, changeDisposition, langue, couleur = ACCENT_SITE, labelledBy }: Props & { couleur?: string; labelledBy?: string }) {
   const { t } = useTranslation();
   const refs = useRef<(HTMLButtonElement | null)[]>([]);
   return (
     <div
       role="radiogroup"
       aria-labelledby={labelledBy}
-      className="flex flex-wrap gap-2"
+      className="grid grid-cols-5 gap-1"
       onKeyDown={(e) => {
         // Radiogroup standard : ← ↑ et → ↓ passent à l'entrée voisine en la choisissant.
         const d = e.key === "ArrowRight" || e.key === "ArrowDown" ? 1 : e.key === "ArrowLeft" || e.key === "ArrowUp" ? -1 : 0;
@@ -78,12 +86,12 @@ function ChoixPanneau({ disposition, changeDisposition, couleur = "hsl(var(--pri
             aria-checked={choisie}
             tabIndex={choisie ? 0 : -1}
             onClick={() => changeDisposition(d)}
-            className="flex min-h-11 min-w-11 flex-col items-center gap-1 rounded-md p-1 text-xs"
+            className="flex min-h-11 min-w-0 flex-col items-center gap-1 rounded-md px-0 py-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
-            <span className="rounded-md p-0.5" style={{ boxShadow: choisie ? `0 0 0 2px ${couleur}` : "0 0 0 1px transparent" }}>
-              <MiniatureDisposition disposition={d} />
+            <span className="block max-w-full rounded-md p-0.5" style={{ boxShadow: choisie ? `0 0 0 2px ${couleur}` : "0 0 0 1px transparent" }}>
+              <MiniatureDisposition disposition={d} langue={langue} taille="panneau" />
             </span>
-            <span className={choisie ? "font-bold" : "font-normal text-muted-foreground"} style={choisie ? { color: couleur } : undefined}>
+            <span className={`${NOM} ${choisie ? "font-bold" : "font-medium"}`} style={choisie ? { color: couleur } : undefined}>
               {t(`dispositions.${d}`)}
             </span>
           </button>

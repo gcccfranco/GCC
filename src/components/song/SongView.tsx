@@ -75,6 +75,7 @@ const CHART_TYPE_COLOR: Record<string, string> = {
   bridge: "var(--sec-bridge)",
   outro: "var(--sec-outro)",
   coda: "var(--sec-coda)",
+  tag: "var(--sec-tag)",
 };
 
 // Clé --sec-* d'un type de section : voir src/lib/sectionPalette.ts.
@@ -736,16 +737,19 @@ export function StructureStrip({
   );
 }
 
-// Repères (lot DP-B) : sigle de la section dans une pastille de sa couleur, « ×2 » dessous, filet vertical le long
-// de la section. Mesures : gouttière de 36 px au téléphone (pastille 24, filet à 3 px, texte à 6 px du filet), case de
-// 44 px à partir de la tablette (pastille 32, filet centré sous elle). Sigle long (« Inst ») : la pastille s'allonge
-// et la gouttière de cette section avec elle. Au toucher la pastille ouvre le nom complet dans une petite bulle.
+// Repères (lot DP-B, finitions DP-E) : sigle de la section dans une pastille de sa couleur, « ×2 » dessous, filet vertical le
+// long de la section. Gouttière FIXE pour toutes les sections d'un chant : 36 px au téléphone (pastille ronde de 24, filet à
+// 3 px, texte à 6 px du filet), 56 px à partir de la tablette (pastille gélule de 44 × 38, sigle de 21 px, filet centré
+// dessous). Au-delà de deux signes (« Int », « Inst »), le sigle passe à 11 px (15 px dès la tablette) au lieu d'élargir la
+// pastille. Dès la tablette le filet ne se montre que s'il couvre au moins 24 px (jamais un bout isolé sous une section d'une
+// rangée). Au toucher la pastille ouvre le nom complet dans une petite bulle (cible de 44 × 44).
 const FILET_EPAIS = new Set(["chorus", "postchorus", "outro", "final", "coda"]);
 // Encre du sigle : celle qui contraste le plus avec la pastille (≥ 4,5:1). En clair, le pont (#7a5bcb), la fin et la
 // coda (#4f6477) et le gris « autre » (#6b7280) prennent le blanc ; les autres et tout le thème sombre, l'encre #0e0e10.
 const PASTILLE_FONCEE = new Set(["var(--sec-bridge)", "var(--sec-outro)", "var(--sec-coda)", "var(--sec-other)"]);
 
-function GouttiereReperes({ sigle, nom, epais, repeat, sansFilet, fontClass }: { sigle: string; nom: string; epais: boolean; repeat: number; sansFilet: boolean; fontClass: string }) {
+/** Bulle du nom d'une section (Repères, Scène sous la tablette) : ouverte au toucher, fermée par un toucher dehors ou Échap. */
+function useBulleNom() {
   const [ouvert, setOuvert] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -756,21 +760,29 @@ function GouttiereReperes({ sigle, nom, epais, repeat, sansFilet, fontClass }: {
     document.addEventListener("keydown", echap);
     return () => { document.removeEventListener("pointerdown", dehors); document.removeEventListener("keydown", echap); };
   }, [ouvert]);
+  return { ouvert, setOuvert, ref };
+}
+
+function GouttiereReperes({ sigle, nom, epais, repeat, sansFilet, fontClass }: { sigle: string; nom: string; epais: boolean; repeat: number; sansFilet: boolean; fontClass: string }) {
+  const { ouvert, setOuvert, ref } = useBulleNom();
+  const long = sigle.length > 2;
   return (
     <div
       ref={ref}
       data-copy-ignore
       data-repere-gouttiere
-      className={`relative flex w-fit min-w-9 flex-row md:min-w-11 md:flex-col md:items-center md:pr-3 ${epais ? "pr-[5px]" : "pr-[6px]"}`}
+      className="relative"
+      // Début du filet dès la tablette : sous la pastille (38 px) et, s'il y a un « ×2 », sous lui (16 px), 6 px d'air.
+      style={{ "--filet-haut": repeat > 1 ? "60px" : "44px" } as React.CSSProperties}
     >
-      <div className="flex shrink-0 flex-col items-center">
+      <div className="flex w-6 flex-col items-center md:w-11">
         <button
           type="button"
           title={nom}
-          aria-expanded={ouvert}
           onClick={() => setOuvert((o) => !o)}
           data-repere-pastille
-          className={`inline-flex h-6 min-w-6 cursor-pointer select-none items-center justify-center whitespace-nowrap rounded-full text-[14px] font-bold leading-none md:h-8 md:min-w-8 md:text-[18px] ${sigle.length > 2 ? "px-[5px] md:px-2" : ""} ${fontClass}`}
+          // Cible de toucher de 44 × 44 : un pseudo-élément transparent centré sur la pastille.
+          className={`relative inline-flex h-6 w-6 cursor-pointer select-none items-center justify-center whitespace-nowrap rounded-full font-bold leading-none before:absolute before:left-1/2 before:top-1/2 before:h-11 before:w-11 before:-translate-x-1/2 before:-translate-y-1/2 before:content-[''] md:h-[38px] md:w-11 ${long ? "text-[11px] md:text-[15px]" : "text-[14px] md:text-[21px]"} ${fontClass}`}
           style={{ background: "var(--rep-c)", color: "var(--rep-encre)" }}
         >
           <span aria-hidden="true" data-repere-sigle>{sigle}</span>
@@ -784,13 +796,40 @@ function GouttiereReperes({ sigle, nom, epais, repeat, sansFilet, fontClass }: {
         <span
           aria-hidden="true"
           data-repere-filet
-          className={`mb-1 shrink-0 rounded-[3px] md:mt-[6px] md:min-h-3 md:flex-1 md:ml-0 ${epais ? "ml-[2px] w-[5px]" : "ml-[3px] w-[3px]"}`}
+          // Téléphone : à droite de la pastille, de haut en bas (texte à 6 px du filet, 3 ou 5 px). Tablette : centré sous elle,
+          // et masqué tant que la section ne lui laisse pas 24 px (la hauteur s'annule sous ce seuil).
+          className={`absolute bottom-1 top-0 rounded-[3px] md:bottom-auto md:top-[var(--filet-haut)] md:h-[clamp(0px,calc((100%-var(--filet-haut)-28px)*1000),calc(100%-var(--filet-haut)-4px))] ${epais ? "left-[25px] w-[5px] md:left-[19.5px]" : "left-[27px] w-[3px] md:left-[20.5px]"}`}
           style={{ background: "var(--rep-c)" }}
         />
       )}
       {ouvert && (
         <span aria-hidden="true" data-repere-bulle className="absolute left-full top-0 z-30 ml-1 whitespace-nowrap rounded-md border bg-popover px-2 py-1 text-xs font-medium text-popover-foreground shadow-md">
           {nom}
+        </span>
+      )}
+    </div>
+  );
+}
+
+/** Colonne de gauche d'une bande de la disposition Scène : grande lettre (26 px, 32 px dès la tablette ; 13 / 20 px au-delà de
+ *  deux signes, pour tenir dans la colonne), « ×2 » dessous, puis le nom de la section (dès la tablette seulement ; en dessous,
+ *  un toucher sur la lettre l'ouvre dans la même bulle que les Repères). */
+function ColonneScene({ sigle, label, nomComplet, repeat, nomVisible, police }: { sigle: string; label: string; nomComplet: string; repeat: number; nomVisible: boolean; police: string }) {
+  const { ouvert, setOuvert, ref } = useBulleNom();
+  const long = sigle.length > 2;
+  return (
+    <div ref={ref} data-copy-ignore data-scene-colonne title={nomComplet} className="relative min-w-0">
+      <button type="button" data-scene-bouton onClick={() => setOuvert((o) => !o)} className="block max-w-full text-left leading-none md:pointer-events-none md:cursor-default">
+        <span aria-hidden="true" data-scene-lettre className={`block whitespace-nowrap font-bold leading-none ${long ? "text-[13px] md:text-[20px]" : "text-[26px] md:text-[32px]"} ${police}`} style={{ color: "var(--scene-lettre)" }}>{sigle}</span>
+        {repeat > 1 && <span aria-hidden="true" data-scene-repeat className="mt-1 block text-[13px] font-semibold leading-none md:text-sm" style={{ color: "var(--scene-nom)" }}>×{repeat}</span>}
+        <span className="sr-only">{nomComplet}</span>
+      </button>
+      {nomVisible && (
+        <span aria-hidden="true" data-scene-nom className={`mt-[5px] hidden text-xs leading-tight md:block ${police}`} style={{ color: "var(--scene-nom)" }}>{label}</span>
+      )}
+      {ouvert && (
+        <span aria-hidden="true" data-repere-bulle className="absolute left-full top-0 z-30 ml-1 whitespace-nowrap rounded-md border bg-popover px-2 py-1 text-xs font-medium text-popover-foreground shadow-md md:hidden">
+          {nomComplet}
         </span>
       )}
     </div>
@@ -848,9 +887,10 @@ export function SectionView({ section, language, showChords, showPinyin, useJian
   ].filter(Boolean).join(" · ");
   // Ce que portait la rangée d'intitulé en plus du nom (Repères : une ligne fine en tête du corps).
   const aSuite = songSourceLabel || note || (nuance && (nuance.tags.length > 0 || nuance.note));
-  const suite = (disposition === "reperes" || disposition === "partition" ? aSuite : disposition === "scene" ? aSuite || keyChange : false) ? (
+  // Partition : la modulation a sa place dans la rangée d'intitulé ; Repères et Scène la portent dans cette ligne fine.
+  const suite = (disposition === "partition" ? aSuite : disposition === "reperes" || disposition === "scene" ? aSuite || keyChange : false) ? (
     <>
-      {disposition === "scene" && keyChange && <span className="font-semibold">{t("setlists.detail.sectionKeyChange", { defaultValue: "升调 ({{key}})", key: keyChange })}</span>}
+      {disposition !== "partition" && keyChange && <span className="font-semibold">{t("setlists.detail.sectionKeyChange", { defaultValue: "升调 ({{key}})", key: keyChange })}</span>}
       {songSourceLabel && <span className="font-normal text-muted-foreground">{songSourceLabel}</span>}
       {note && <span className="font-normal text-muted-foreground">{note}</span>}
       {nuance && (nuance.tags.length > 0 || nuance.note) && <NuanceBadge nuance={nuance} size={nuanceSize} />}
@@ -923,7 +963,7 @@ export function SectionView({ section, language, showChords, showPinyin, useJian
         data-section
         data-section-uids={occurrenceUids?.join(" ")}
         data-repere
-        className="mb-[22px] md:mb-[30px] print:mb-4 grid grid-cols-[auto_minmax(0,1fr)] [--rep-p:24px] md:[--rep-p:32px]"
+        className="mb-[22px] md:mb-[30px] print:mb-4 grid grid-cols-[36px_minmax(0,1fr)] md:grid-cols-[56px_minmax(0,1fr)] [--rep-p:24px] md:[--rep-p:38px]"
         style={{ breakInside: "avoid", "--sec-c": LANG_THEME[isZh ? "zh" : "fr"].accent, "--rep-c": couleurRepere, "--rep-encre": PASTILLE_FONCEE.has(couleurRepere) ? "var(--rep-encre-claire)" : "#0e0e10" } as React.CSSProperties}
       >
         <GouttiereReperes
@@ -936,7 +976,8 @@ export function SectionView({ section, language, showChords, showPinyin, useJian
         />
         {bodyHidden ? (
           <div data-copy-ignore className="flex min-h-[var(--rep-p)] min-w-0 flex-wrap items-center gap-x-2 text-sm font-semibold">
-            <span>{nomComplet}</span>
+            {/* Le nom sans la modulation : la ligne de suite la porte. */}
+            <span>{label + (repeat > 1 ? ` ×${repeat}` : "")}</span>
             {suite}
           </div>
         ) : (
@@ -988,39 +1029,31 @@ export function SectionView({ section, language, showChords, showPinyin, useJian
     );
   }
   if (disposition === "scene") {
-    // Scène (lot DP-C) : une bande pleine largeur teintée, filet de 4 px de la couleur de section, grande lettre et nom
-    // dans la colonne de gauche (44 px au téléphone, 56 px dès la tablette). Lettre : 70 % de la couleur mêlée de noir en
-    // clair (AA sur la teinte), la couleur telle quelle en sombre ; la teinte `--sec-*-tint` suit le thème de l'appareil.
+    // Scène (lot DP-C, cotes de la planche B en DP-E) : une bande pleine largeur teintée, filet de 6 px de la couleur de section,
+    // colonne de lettre de 40 px au téléphone, 64 px dès la tablette. La bande sort des marges de la page (`--marge-bande`)
+    // et les bandes se joignent par un filet de 1 px. Lettre : 70 % de la couleur mêlée de noir en clair (AA sur la teinte),
+    // la couleur telle quelle en sombre ; la teinte `--sec-*-tint` suit le thème de l'appareil.
     const couleurScene = CHART_TYPE_COLOR[couleurDe ?? section.type] ?? "var(--sec-other)";
     const police = uiIsZh ? zh_lyric_font.className : chord_font.className;
-    const lettre = (
-      <span className="flex items-baseline gap-[3px] whitespace-nowrap leading-none">
-        <span aria-hidden="true" data-scene-lettre className={`font-bold ${police}`} style={{ fontSize: "calc(var(--lyric-size) * 1.6)", color: "var(--scene-lettre)" }}>{abbreviateSection(section).toUpperCase()}</span>
-        {repeat > 1 && <span aria-hidden="true" data-scene-repeat className="text-[13px] font-semibold md:text-sm" style={{ color: "var(--scene-nom)" }}>×{repeat}</span>}
-      </span>
-    );
     return (
       <div
         data-section
         data-section-uids={occurrenceUids?.join(" ")}
         data-scene
-        className="mb-0.5 grid grid-cols-[44px_minmax(0,1fr)] gap-x-3 py-2.5 pl-3 pr-3 md:grid-cols-[56px_minmax(0,1fr)] md:pl-4 md:pr-5 print:mb-0 [--scene-lettre:color-mix(in_srgb,var(--rep-c)_70%,black)] dark:[--scene-lettre:var(--rep-c)]"
+        className="grid grid-cols-[40px_minmax(0,1fr)] gap-x-3 border-b border-b-[#d1d1d6] pb-[6px] pl-[10px] pr-[14px] pt-3 dark:border-b-[#3a3a3c] md:grid-cols-[64px_minmax(0,1fr)] md:gap-x-[18px] md:pb-[10px] md:pl-[18px] md:pr-7 md:pt-4 [--scene-lettre:color-mix(in_srgb,var(--rep-c)_70%,black)] dark:[--scene-lettre:var(--rep-c)]"
         style={{
           breakInside: "avoid",
           "--sec-c": LANG_THEME[isZh ? "zh" : "fr"].accent,
           "--rep-c": couleurScene,
+          // Les accords restent bleus, en chinois aussi (Repères et Partition gardent la couleur de la langue).
+          "--jianpu-color": "var(--chord-color)",
           "--scene-nom": `color-mix(in srgb, hsl(var(--foreground)) 72%, ${couleurScene.replace(")", "-tint)")})`,
           background: couleurScene.replace(")", "-tint)"),
-          borderLeft: "4px solid var(--rep-c)",
+          borderLeft: "6px solid var(--rep-c)",
+          marginInline: "calc(-1 * var(--marge-bande, 0px))",
         } as React.CSSProperties}
       >
-        <div data-copy-ignore data-scene-colonne title={nomComplet} className="min-w-0">
-          {lettre}
-          {!bodyHidden && (
-            <span aria-hidden="true" data-scene-nom className={`mt-1 block break-words text-[11px] leading-tight md:text-xs ${police}`} style={{ color: "var(--scene-nom)", overflowWrap: "anywhere" }}>{label}</span>
-          )}
-          <span className="sr-only">{nomComplet}</span>
-        </div>
+        <ColonneScene sigle={abbreviateSection(section).toUpperCase()} label={label} nomComplet={nomComplet} repeat={repeat} nomVisible={!bodyHidden} police={police} />
         {bodyHidden ? (
           <div data-copy-ignore className="flex min-w-0 flex-wrap items-center gap-x-2 text-sm font-semibold">
             <span data-scene-nom-ligne>{label}</span>
@@ -1198,13 +1231,14 @@ export function SongView({
           <p className={`text-center text-muted-foreground text-sm mt-0.5 ${pinyin_font.className}`}>{ast.metadata.titlePinyin}</p>
         )}
         <div className="mt-2 flex items-start justify-between gap-4">
-          <div data-partition-tempo className={`min-w-0 text-[15px] font-bold leading-[1.3] ${chord_font.className}`}>
+          <div data-partition-tempo data-testid={ast.metadata.tempo || ast.metadata.time ? "ligne-tempo" : undefined} className={`min-w-0 text-[15px] font-bold leading-[1.3] ${chord_font.className}`}>
             {ast.metadata.tempo ? <span><span aria-hidden="true">♩</span>{`\u202f=\u202f${ast.metadata.tempo}`}</span> : null}
             {ast.metadata.key && (
               <small className="block text-sm font-normal text-muted-foreground">{t("performance.key")} {ast.metadata.key}</small>
             )}
           </div>
-          <p data-partition-compositeur className={`max-w-[55%] text-right text-[15px] italic leading-[1.3] text-foreground/80 ${isZh ? KaiTiFont.className : gelasio_font.className}`}>
+          {/* Compositeur chinois : police des paroles (KaiTi-titres n'a que les caractères des titres), jamais d'italique synthétique. */}
+          <p data-partition-compositeur data-testid="auteur" className={`max-w-[55%] text-right text-[15px] leading-[1.3] text-foreground/80 ${isZh ? zh_lyric_font.className : `italic ${gelasio_font.className}`}`} style={pileCredit}>
             {ast.metadata.artist}
           </p>
         </div>

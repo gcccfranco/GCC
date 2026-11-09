@@ -27,7 +27,7 @@ import { layoutFeuilleDeRoute, lireEcran, pageAncree, paginer, replisStructure, 
 import { useJianpuManifest } from "@/lib/jianpu/images";
 import { interrupteurAllume, prefDepuisInterrupteur, type JianpuPref } from "@/lib/jianpu/preference";
 import { JianpuSheet } from "@/components/jianpu/JianpuSheet";
-import { SectionView, StructureStrip, TransitionNote, KaiTiFont, gelasio_font } from "@/components/song/SongView";
+import { SectionView, StructureStrip, TransitionNote, KaiTiFont, gelasio_font, zh_lyric_font } from "@/components/song/SongView";
 import { pinyin_font } from "@/components/song/pinyinFont";
 import type { SectionOccurrence } from "@/lib/setlist/sectionSteps";
 import { dpOrigin } from "@/lib/setlist/dp";
@@ -199,6 +199,22 @@ function SongHeader({ block, bandeau, showTransitions, feuilleRoute, tempo, disp
     <StructureStrip steps={sansTransitions(block.steps, showTransitions)} details={bandeau === "details"} disposition={disposition} className="mt-3" />
   ) : null;
   if (block.fusionSongs?.length) {
+    // Partition : l'en-tête d'un chant fusionné prend l'apparence de l'autre (titres en serif centrés, structure dessous).
+    if (disposition === "partition") {
+      return (
+        <div data-entete-chant data-entete-partition className="mb-3 pb-3 border-b border-border">
+          <div className="space-y-0.5 [[data-barre-ouverte]_&]:invisible [[data-barre-ouverte]_&]:opacity-0 transition-[opacity,visibility] duration-150">
+            {block.fusionSongs.map((s, i) => (
+              <h2 key={i} data-titre-partition className={`text-center text-[26px] font-bold leading-[1.15] text-foreground ${s.language === "zh" ? KaiTiFont.className : gelasio_font.className}`}>
+                {s.title}
+                <small className="ml-1.5 text-sm font-normal text-muted-foreground">{s.key}</small>
+              </h2>
+            ))}
+          </div>
+          {strip}
+        </div>
+      );
+    }
     return (
       <div data-entete-chant className="mb-3 pb-3 border-b border-border">
         {/* Barre de titre ouverte : ces lignes (qu'elle répète) sont masquées sans changer de place, jamais coupées à mi-hauteur. */}
@@ -239,11 +255,11 @@ function SongHeader({ block, bandeau, showTransitions, feuilleRoute, tempo, disp
           </h2>
           {block.titlePinyin && <p className={`text-center text-xs text-muted-foreground mt-0.5 ${pinyin_font.className}`}>{block.titlePinyin}</p>}
           <div className="mt-2 flex items-start justify-between gap-4">
-            <div data-partition-tempo className="min-w-0 text-[15px] font-bold leading-[1.3]">
+            <div data-partition-tempo data-testid={block.tempo ? "ligne-tempo" : undefined} className="min-w-0 text-[15px] font-bold leading-[1.3]">
               {block.tempo ? <span><span aria-hidden="true">♩</span>{`\u202f=\u202f${block.tempo}`}</span> : null}
               <small className="block text-sm font-normal text-muted-foreground">{t("performance.key")} {block.songKey}</small>
             </div>
-            <p data-partition-compositeur className={`max-w-[55%] text-right text-[15px] italic leading-[1.3] text-foreground/80 ${zh ? KaiTiFont.className : gelasio_font.className}`}>{block.artist}</p>
+            <p data-partition-compositeur data-testid="auteur" className={`max-w-[55%] text-right text-[15px] leading-[1.3] text-foreground/80 ${zh ? zh_lyric_font.className : `italic ${gelasio_font.className}`}`}>{block.artist}</p>
           </div>
         </div>
         {strip}
@@ -1182,6 +1198,8 @@ export function PerformanceMode({
     // Fond d'une feuille : React fait remonter ses évènements jusqu'ici, ce n'est pas un toucher sur la page.
     // (Pas de stopPropagation sur le fond : Radix y détecte le toucher extérieur qui ferme la feuille.)
     if ((e.target as HTMLElement).closest("[data-vaul-overlay]")) return;
+    // Pastille des Repères : son toucher ouvre le nom de la section, il ne tourne pas la page et n'ouvre pas la barre.
+    if ((e.target as Element).closest("[data-repere-pastille], [data-scene-bouton]")) { tapStart.current = null; return; }
     // Un menu est ouvert : ce toucher le ferme (Radix), il ne tourne pas la page et ne bascule pas la barre.
     if (popoverRef.current !== null) menuAuToucher.current = { t: e.nativeEvent.timeStamp };
     else if (menuAuToucher.current && menuAuToucher.current.t !== e.nativeEvent.timeStamp) menuAuToucher.current = null;
@@ -1207,6 +1225,7 @@ export function PerformanceMode({
     if (e.pointerType === "pen") return;
     pointeursActifs.current.delete(e.pointerId);
     if ((e.target as HTMLElement).closest("[data-vaul-overlay]")) { tapStart.current = null; return; }
+    if ((e.target as Element).closest("[data-repere-pastille], [data-scene-bouton]")) { tapStart.current = null; return; }
     if (menuAuToucher.current || popoverRef.current !== null) {
       menuAuToucher.current = null;
       tapStart.current = null;
@@ -1291,12 +1310,14 @@ export function PerformanceMode({
   // Les insets sont divisés par le facteur d'échelle pour rester exacts en
   // pixels physiques (16px + inset une fois multipliés par fontScale) — 0 hors
   // encoche.
-  const contentPadding: React.CSSProperties = {
+  // « --marge-bande » : la bande de la disposition Scène sort de cette marge pour couvrir toute la largeur de la page (rien en deux colonnes : elle resterait dans sa colonne).
+  const contentPadding = {
+    "--marge-bande": twoColumns ? "0px" : "1.5rem",
     paddingTop: `calc(1rem + var(--sat, 0px) / ${fontScale})`,
     paddingBottom: `calc(1rem + var(--sab, 0px) / ${fontScale})`,
     paddingLeft: `calc(1.5rem + var(--sal, 0px) / ${fontScale})`,
     paddingRight: `calc(1.5rem + var(--sar, 0px) / ${fontScale})`,
-  };
+  } as React.CSSProperties;
   // Page 简谱 : marges resserrées. Le scan est déjà recadré au plus juste et se
   // met à l'échelle de la place disponible — chaque pixel de marge est un pixel
   // de partition en moins. Seul le conteneur de rendu change : la mesure garde
@@ -1923,10 +1944,9 @@ export function PerformanceMode({
             </div>
             {hasJianpuSheets && !structureMode && <p className="text-xs text-muted-foreground">{t("performance.jianpuSheetHint")}</p>}
           </div>
-          {/* Cinq entrées : en grille de cinq colonnes (les noms longs passent à la ligne) pour ne jamais laisser une miniature seule sur la 2e ligne. */}
-          <div className="space-y-2 [&>[role=radiogroup]]:grid [&>[role=radiogroup]]:grid-cols-5 [&>[role=radiogroup]]:gap-1 [&>[role=radiogroup]>button]:min-w-0 [&>[role=radiogroup]>button]:text-center">
+          <div className="space-y-2">
             <TitreRubrique id="perf-disposition">{t("dispositions.titre")}</TitreRubrique>
-            <ChoixDisposition variante="panneau" labelledBy="perf-disposition" couleur="var(--couleur-icones)" disposition={disposition} changeDisposition={changeDisposition} />
+            <ChoixDisposition variante="panneau" langue={currentEntry?.block.language === "zh" ? "zh" : "fr"} labelledBy="perf-disposition" couleur="var(--couleur-icones)" disposition={disposition} changeDisposition={changeDisposition} />
           </div>
             <SettingRow label={t("performance.text")}>
               <div className="flex items-center gap-1.5">

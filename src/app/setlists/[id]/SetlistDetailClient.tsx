@@ -1913,7 +1913,7 @@ export function SetlistDetailClient() {
             </div>
           </div>
 
-          <div ref={zoneRef} className={`relative pb-8 pt-6 print:px-0 print:py-4 ${enTablette ? "px-[var(--marge-page)]" : "max-w-2xl mx-auto px-4"}`} style={{ marginTop: toolbarH }}>
+          <div ref={zoneRef} className={`relative pb-8 pt-6 print:px-0 print:py-4 ${enTablette ? "px-[var(--marge-page)] [--marge-bande:var(--marge-page)]" : "max-w-2xl mx-auto px-4 [--marge-bande:1rem]"} print:[--marge-bande:0px]`} style={{ marginTop: toolbarH }}>
             {copieLueLe !== null && (
               <div role="status" data-copie-hors-ligne className="mb-4 flex items-center justify-between gap-2 rounded-lg bg-muted py-1 pl-3 pr-1 text-xs text-muted-foreground print:hidden">
                 <span>{texteCopie}</span>

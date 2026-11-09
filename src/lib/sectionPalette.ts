@@ -11,4 +11,5 @@ export const SECTION_PALETTE_KEY: Record<string, string> = {
   bridge: "bridge",
   outro: "outro",
   coda: "coda",
+  tag: "tag",
 };
