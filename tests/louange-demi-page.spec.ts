@@ -471,6 +471,61 @@ test("demi-page : à la part 0,5 le filet tient entre 40 % et 60 % de la hauteur
   }
 });
 
+test("demi-page : une part de poignée qui rend la coupe impossible est refusée (calques et poignée restent, rien d'inutilisable n'est retenu)", async ({ page }) => {
+  await ouvrir(page, { uneColonne: true });
+  await expect.poll(() => lireCompteur(page)).toMatch(/^1 \/ \d+$/);
+  // Le premier bloc de la page suivante commence à 30 % de la hauteur : à la part 0,5 la coupe existe, à 0,25 aucun bord ne tient
+  // au-dessus du filet.
+  await page.addStyleTag({ content: "[data-demi-haut] :is([data-entete-chant], [data-col-page] > :first-child) { padding-top: 30vh !important; }" });
+  await page.keyboard.press("ArrowRight");
+  await expect(enDemi(page)).toHaveCount(1);
+  const p = poignee(page);
+  await expect(p).toBeVisible();
+  await p.focus();
+  // ↓ descend le filet (la part du haut grandit) puis ↑ le remonte : on pousse jusqu'à la butée à 25 % (valeur 75).
+  for (let i = 0; i < 8; i++) await page.keyboard.press("ArrowDown");
+  for (let i = 0; i < 8; i++) await page.keyboard.press("ArrowUp");
+  await expect(p, "la poignée reste montée").toBeVisible();
+  await expect(page.locator("[data-performance-mode] [data-demi-haut]"), "les calques ne se masquent pas").toBeVisible();
+  await expect(page.locator("[data-performance-mode] [data-demi-bas]")).toBeVisible();
+  await expect(filet(page)).toBeVisible();
+  await expect(p, "la part refusée n'est pas atteinte").not.toHaveAttribute("aria-valuenow", "75");
+  const retenue = await page.evaluate(() => localStorage.getItem("perf-demi-page-part"));
+  expect(retenue === null || Number(retenue) > 0.26, `part retenue : ${retenue}`).toBe(true);
+});
+
+test("demi-page : une reprise posée au libellé d'une section ne montre pas de rappel du même nom", async ({ page }) => {
+  await ouvrir(page);
+  await expect.poll(() => lireCompteur(page)).toMatch(/^1 \/ \d+$/);
+  let auLibelle = 0;
+  for (let tour = 0; tour < 8; tour++) {
+    await page.keyboard.press("ArrowRight");
+    if ((await enDemi(page).count()) !== 1) continue;
+    await expect(filet(page)).toBeVisible();
+    const r = await page.evaluate(() => {
+      const racine = document.querySelector("[data-performance-mode]")!;
+      if (racine.querySelector("[data-demi-colonnes]")) return null;
+      const bas = racine.querySelector<HTMLElement>("[data-demi-bas]")!;
+      const zones = JSON.parse(bas.dataset.demiZones ?? "[]") as Array<[number, number, number, number]>;
+      const libelles = Array.from(bas.querySelectorAll("[data-section] > [data-copy-ignore]:first-child:not([data-repere-gouttiere])"), (e) => e.getBoundingClientRect());
+      // Une zone dont la reprise tombe au haut d'un libellé : aucun rappel ne doit se loger au-dessus de lui.
+      const rappels = Array.from(racine.querySelectorAll<HTMLElement>("[data-demi-rappel]"), (e) => e.getBoundingClientRect());
+      let auLibelle = 0;
+      const doubles: number[] = [];
+      for (const [x0, y0, x1] of zones) {
+        if (!libelles.some((q) => Math.abs(q.top - y0) < 1.5 && q.left < x1 && q.right > x0)) continue;
+        auLibelle++;
+        if (rappels.some((q) => q.left < x1 && q.right > x0 && Math.abs(q.bottom - y0) < 1.5)) doubles.push(y0);
+      }
+      return { auLibelle, doubles };
+    });
+    if (!r) continue;
+    auLibelle += r.auLibelle;
+    expect(r.doubles, "aucun rappel au-dessus d'un libellé de section").toEqual([]);
+  }
+  test.info().annotations.push({ type: "mesure", description: `${auLibelle} reprises au libellé vues` });
+});
+
 test("demi-page : le rappel de section a l'allure du libellé (tiret, couleur de la section), et un cadre rogné se prolonge jusqu'au filet", async ({ page }) => {
   await ouvrir(page);
   await expect.poll(() => lireCompteur(page)).toMatch(/^1 \/ \d+$/);

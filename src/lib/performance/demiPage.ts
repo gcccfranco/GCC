@@ -39,11 +39,12 @@ export function setDemiPart(v: number) {
 }
 
 /** Une section d'un groupe : bords haut et bas mesurés à l'écran (px), son nom, sa couleur (`--sec-c` posée sur la section),
- *  le retrait de son libellé (x écran) pour le rappel de la moitié basse, et les bords latéraux de son cadre (x, épaisseur,
+ *  le retrait de son libellé (x écran), le haut de ce libellé (`libelleTop` : une reprise posée à son niveau n'a pas besoin
+ *  de rappel, le nom est déjà là) pour le rappel de la moitié basse, et les bords latéraux de son cadre (x, épaisseur,
  *  couleur) que le filet prolonge quand la coupe rogne le cadre. */
 export type SectionDemi = {
   top: number; bottom: number; nom: string;
-  couleur?: string; retrait?: number;
+  couleur?: string; retrait?: number; libelleTop?: number;
   bords?: Array<{ x: number; w: number; c: string }>;
 };
 
@@ -103,6 +104,8 @@ export function choisirCoupe(bords: BordsDemi, limite: number, hauteur: number =
   const repriseA = (g: GroupeDemi, y: number): Reprise => {
     if (!Number.isFinite(y)) return { y };
     const s = g.sections.find((e) => e.top < y - 0.5 && e.bottom > y + 0.5);
+    // Reprise au libellé même (le cadre commence un peu au-dessus de lui) : le nom est déjà à l'écran, pas de rappel doublé.
+    if (s && s.libelleTop !== undefined && y <= s.libelleTop + 0.5) return { y };
     return { y, rappel: s?.nom || undefined, rappelCouleur: s?.couleur, rappelX: s?.retrait };
   };
   // Reprise de chaque groupe du bas pour une ligne de coupe `c` (px écran, avant décalage).
@@ -118,9 +121,7 @@ export function choisirCoupe(bords: BordsDemi, limite: number, hauteur: number =
     let rep = reprises(c);
     let decalage = 0;
     let yCoupe = limite;
-    // Une rangée masquée (avant la reprise) ne doit pas se retrouver sous le filet une fois décalée : elle aurait disparu ;
-    // la reprise du groupe la reprend alors (elle ne fait que remonter ; au-delà de deux reprises la ligne est écartée).
-    for (let tour = 0; tour < 3; tour++) {
+    const calculer = () => {
       const tops = rep.filter((r) => Number.isFinite(r.y)).map((r) => r.y - (r.rappel ? reserve : 0));
       decalage = 0;
       yCoupe = limite;
@@ -129,6 +130,11 @@ export function choisirCoupe(bords: BordsDemi, limite: number, hauteur: number =
         decalage = Math.min(DECALAGE_MAX, Math.max(0, limite + MARGE_FILET - tmin));
         yCoupe = tmin + decalage - MARGE_FILET;
       }
+    };
+    // Une rangée masquée (avant la reprise) ne doit pas se retrouver sous le filet une fois décalée : elle aurait disparu ;
+    // la reprise du groupe la reprend alors (elle ne fait que remonter ; au-delà de deux reprises la ligne est écartée).
+    for (let tour = 0; tour < 3; tour++) {
+      calculer();
       let change = false;
       rep = rep.map((r, k) => {
         if (!Number.isFinite(r.y)) return r;
@@ -141,6 +147,8 @@ export function choisirCoupe(bords: BordsDemi, limite: number, hauteur: number =
       // Deux reprises de suite ne suffisent pas : cette ligne de coupe ne convient pas (une autre sera meilleure).
       if (tour === 2 && !tolerant) return;
     }
+    // Repli tolérant : la dernière réécriture des reprises change `decalage` et `yCoupe`, à recalculer (sans effet sinon).
+    calculer();
     const haut = hautPour(yCoupe - MARGE_FILET);
     if (!haut) return;
     const score = Math.abs(yCoupe - limite) + 0.01 * decalage;

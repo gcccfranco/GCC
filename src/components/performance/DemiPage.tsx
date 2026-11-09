@@ -29,6 +29,7 @@ export function DemiPage({
   /** Aucune coupe ne convient : le parent passe en tour normal. */
   onEchec: () => void;
 }) {
+  const [glisse, setGlisse] = useState(false);
   const hautRef = useRef<HTMLDivElement>(null);
   const basRef = useRef<HTMLDivElement>(null);
   const basInterieurRef = useRef<HTMLDivElement>(null);
@@ -80,7 +81,7 @@ export function DemiPage({
           const droite = parseFloat(cs.borderRightWidth || "0");
           if (gauche > 0 && cs.borderLeftStyle !== "none") bords.push({ x: r.left, w: gauche, c: cs.borderLeftColor });
           if (droite > 0 && cs.borderRightStyle !== "none") bords.push({ x: r.right - droite, w: droite, c: cs.borderRightColor });
-          return { top: r.top, bottom: r.bottom, nom, couleur: cs.getPropertyValue("--sec-c").trim() || cs.color, retrait, bords };
+          return { top: r.top, bottom: r.bottom, libelleTop: etiquette?.getBoundingClientRect().top, nom, couleur: cs.getPropertyValue("--sec-c").trim() || cs.color, retrait, bords };
         });
         groupes.push({
           x0: q.left, x1: q.right, top: q.top,
@@ -143,7 +144,11 @@ export function DemiPage({
   }, [clePage, mesurer]);
 
   const hauteurFenetre = typeof window === "undefined" ? 0 : window.innerHeight;
-  const coupe = useMemo(() => (mesure && !mesure.colonnes ? choisirCoupe(mesure.bords, part * hauteurFenetre, hauteurFenetre, RESERVE_RAPPEL) : null), [mesure, part, hauteurFenetre]);
+  const coupeCalculee = useMemo(() => (mesure && !mesure.colonnes ? choisirCoupe(mesure.bords, part * hauteurFenetre, hauteurFenetre, RESERVE_RAPPEL) : null), [mesure, part, hauteurFenetre]);
+  // Dernière coupe valide : pendant un geste, les calques ne se masquent jamais (la poignée resterait démontée, sans pointerup).
+  const derniereCoupe = useRef<typeof coupeCalculee>(null);
+  if (coupeCalculee) derniereCoupe.current = coupeCalculee;
+  const coupe = coupeCalculee ?? (glisse && mesure && !mesure.colonnes ? derniereCoupe.current : null);
   const aLocal = (y: number) => (y - (mesure?.top ?? 0)) / fontScale;
   const yFiletLocal = coupe && mesure ? aLocal(coupe.yCoupe) : 0;
   const pret = !!mesure && (!!mesure.colonnes || !!coupe);
@@ -197,9 +202,10 @@ export function DemiPage({
     return `path("${rects.map(([x0, y0, x1, y1]) => `M${lx(x0)} ${ly(y0)}H${lx(x1)}V${ly(y1)}H${lx(x0)}Z`).join("")}")`;
   };
 
-  const [glisse, setGlisse] = useState(false);
   const partDe = (e: React.PointerEvent) => bornerPart(e.clientY / window.innerHeight);
   const derniere = useRef(part);
+  // Une part qui ne laisse aucune coupe possible (page suivante à en-tête haut, par exemple) est refusée : on garde l'ancienne.
+  const partUtilisable = (v: number) => !mesure || !!mesure.colonnes || !!choisirCoupe(mesure.bords, v * hauteurFenetre, hauteurFenetre, RESERVE_RAPPEL);
   // Valeur du curseur : la part de la moitié basse (la page en cours), de 25 à 75. ↑ monte le filet, donc la valeur augmente.
   const valeur = Math.round((1 - part) * 100);
 
@@ -318,14 +324,16 @@ export function DemiPage({
             }}
             onPointerMove={(e) => {
               if (!glisse) return;
-              derniere.current = partDe(e);
-              onPart(derniere.current);
+              const v = partDe(e);
+              if (!partUtilisable(v)) return;
+              derniere.current = v;
+              onPart(v);
             }}
             onPointerUp={(e) => {
               e.stopPropagation();
               if (!glisse) return;
               setGlisse(false);
-              onPartFin(partDe(e));
+              onPartFin(derniere.current);
             }}
             onPointerCancel={() => {
               setGlisse(false);
@@ -337,6 +345,7 @@ export function DemiPage({
               e.stopPropagation();
               // ↑ monte le filet : la part du haut diminue, celle du bas (la valeur) augmente.
               const v = bornerPart(Math.round((partRef.current + (e.key === "ArrowUp" ? -0.05 : 0.05)) * 100) / 100);
+              if (!partUtilisable(v)) return;
               onPart(v);
               onPartFin(v);
             }}
