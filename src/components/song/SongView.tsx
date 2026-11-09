@@ -34,7 +34,6 @@ import {
 } from "lucide-react";
 import type { SectionNuance } from "@/types/setList";
 import { nuanceDef, nuanceLabel, nuanceFull } from "@/lib/setlist/nuances";
-import { cp } from "fs";
 
 // ---------------------------------------------------------------------------
 // Thèmes et styles de sections
