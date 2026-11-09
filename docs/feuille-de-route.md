@@ -1421,7 +1421,7 @@ avec la prochaine mise en ligne (Timothée, 09/11/2026). **Fin de chantier pour 
 « après la vague 2 je pense qu'on va s'arrêter », « on reprendra plus tard dans une nouvelle session ») : on finit la
 vague 2 (corrections de DP, RP lancé le 09/11 au soir, puis JP-B), avec des relectures légères (un relecteur et les
 captures regardées) ; **CA reporté**, go et spec gardés. **Pour reprendre** : lire « Avancement » de
-`spec-mode-louange-forscore-2.md` (état de chaque lot), puis lancer CA (spec complète, section « CA ») et, sur nouveau
+`spec-mode-louange-forscore-2.md` (état de chaque lot), puis lancer CA (spec complète, section « CA ») et FS-F (décision 30, reportée le 09/11 : « plus tard »), sur un go chacun, et, sur nouveau
 go, la vague 3 (JP-C, JP-D, AN) ; avant toute mise en ligne : **une relecture complète de toute la vague 2**
 (Timothée, 09/11/2026 : « ok pour la relecture complète avant la mise en ligne » ; relecteurs par angle, suite des specs
 touchées sur les cinq projets, captures triées, critique de design contre les planches, constats contre-vérifiés), passe sur le guide, relecture des libellés chinois
