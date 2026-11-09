@@ -22,6 +22,8 @@ export type SongHeaderBlock = {
   songKey: string;
   position: number;
   language?: "fr" | "zh";
+  /** Tempo du chant (♩ = …) : l'en-tête de la disposition Partition l'affiche sous le titre. */
+  tempo?: number;
   /** Slug du chant (absent pour les fusions) — cible du réglage capo */
   songSlug?: string;
   /** Capo appliqué (frets) : les accords des sections sont déjà transposés */
@@ -279,6 +281,7 @@ export function buildPerformanceBlocks(
             songKey: fusionKey,
             position: item.position,
             language: ast.metadata.language,
+            tempo: ast.metadata.tempo ?? undefined,
             steps: bandeau(occurrences, fusionKey),
           });
           const shown = unique
@@ -339,6 +342,7 @@ export function buildPerformanceBlocks(
       songKey: playedKey,
       position: item.position,
       language: ast.metadata.language,
+      tempo: ast.metadata.tempo ?? undefined,
       songSlug: item.songSlug,
       capo: capo || undefined,
       setlistKey: personalKey ? setlistKey : undefined,

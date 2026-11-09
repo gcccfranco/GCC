@@ -238,6 +238,7 @@ export function PartitionsView({
                 {/* Le bandeau porte notes et transitions dès que le corps ne les porte plus. */}
                 <StructureStrip
                   className="pt-2 pb-1"
+                  disposition={disposition}
                   details={layout !== "played"}
                   steps={passages.map(({ ms, section, fusionSong, targetKey }): SectionOccurrence => ({
                     section,

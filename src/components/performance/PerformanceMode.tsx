@@ -27,7 +27,7 @@ import { layoutFeuilleDeRoute, lireEcran, pageAncree, paginer, replisStructure, 
 import { useJianpuManifest } from "@/lib/jianpu/images";
 import { interrupteurAllume, prefDepuisInterrupteur, type JianpuPref } from "@/lib/jianpu/preference";
 import { JianpuSheet } from "@/components/jianpu/JianpuSheet";
-import { SectionView, StructureStrip, TransitionNote } from "@/components/song/SongView";
+import { SectionView, StructureStrip, TransitionNote, KaiTiFont, gelasio_font } from "@/components/song/SongView";
 import { pinyin_font } from "@/components/song/pinyinFont";
 import type { SectionOccurrence } from "@/lib/setlist/sectionSteps";
 import { dpOrigin } from "@/lib/setlist/dp";
@@ -118,7 +118,7 @@ function BlockRenderer({
   tempoChant?: number;
 }) {
   if (block.kind === "song-header") {
-    return <SongHeader block={block} bandeau={bandeau} showTransitions={showTransitions} feuilleRoute={feuilleRoute} tempo={tempoChant} />;
+    return <SongHeader block={block} bandeau={bandeau} showTransitions={showTransitions} feuilleRoute={feuilleRoute} tempo={tempoChant} disposition={disposition} />;
   }
   if (block.kind === "transition-intra") {
     if (!showTransitions || feuilleRoute) return null;
@@ -173,7 +173,7 @@ function BlockRenderer({
 type Bandeau = "aucun" | "simple" | "details";
 
 
-function SongHeader({ block, bandeau, showTransitions, feuilleRoute, tempo }: { block: SongHeaderBlock; bandeau: Bandeau; showTransitions: boolean; feuilleRoute?: boolean; tempo?: number }) {
+function SongHeader({ block, bandeau, showTransitions, feuilleRoute, tempo, disposition }: { block: SongHeaderBlock; bandeau: Bandeau; showTransitions: boolean; feuilleRoute?: boolean; tempo?: number; disposition?: Disposition }) {
   const { t } = useTranslation();
   // Vue structure (FS-D) : la barre du haut porte le titre ; l'en-tête montre en grand le tempo et la tonalité, toujours
   // visibles (pas de bande vide ni de filet orphelin sous la barre ouverte).
@@ -190,7 +190,7 @@ function SongHeader({ block, bandeau, showTransitions, feuilleRoute, tempo }: { 
   }
   // Mesuré avec l'en-tête : en deux colonnes, il reste en pleine largeur au-dessus.
   const strip = bandeau !== "aucun" && block.steps?.length ? (
-    <StructureStrip steps={sansTransitions(block.steps, showTransitions)} details={bandeau === "details"} className="mt-3" />
+    <StructureStrip steps={sansTransitions(block.steps, showTransitions)} details={bandeau === "details"} disposition={disposition} className="mt-3" />
   ) : null;
   if (block.fusionSongs?.length) {
     return (
@@ -216,6 +216,28 @@ function SongHeader({ block, bandeau, showTransitions, feuilleRoute, tempo }: { 
                 </span>
               </span>
             ))}
+          </div>
+        </div>
+        {strip}
+      </div>
+    );
+  }
+  // Partition (lot DP-D) : titre centré en serif, tempo et tonalité à gauche, compositeur en italique à droite.
+  if (disposition === "partition") {
+    const zh = block.language === "zh";
+    return (
+      <div data-entete-chant data-entete-partition className="mb-3 pb-3 border-b border-border">
+        <div className="[[data-barre-ouverte]_&]:invisible [[data-barre-ouverte]_&]:opacity-0 transition-[opacity,visibility] duration-150">
+          <h2 data-titre-partition className={`text-center text-[26px] font-bold leading-[1.15] text-foreground ${zh ? KaiTiFont.className : gelasio_font.className}`}>
+            {block.title}
+          </h2>
+          {block.titlePinyin && <p className={`text-center text-xs text-muted-foreground mt-0.5 ${pinyin_font.className}`}>{block.titlePinyin}</p>}
+          <div className="mt-2 flex items-start justify-between gap-4">
+            <div data-partition-tempo className="min-w-0 text-[15px] font-bold leading-[1.3]">
+              {block.tempo ? <span><span aria-hidden="true">♩</span>{`\u202f=\u202f${block.tempo}`}</span> : null}
+              <small className="block text-sm font-normal text-muted-foreground">{t("performance.key")} {block.songKey}</small>
+            </div>
+            <p data-partition-compositeur className={`max-w-[55%] text-right text-[15px] italic leading-[1.3] text-foreground/80 ${zh ? KaiTiFont.className : gelasio_font.className}`}>{block.artist}</p>
           </div>
         </div>
         {strip}
@@ -1888,7 +1910,8 @@ export function PerformanceMode({
             </div>
             {hasJianpuSheets && !structureMode && <p className="text-xs text-muted-foreground">{t("performance.jianpuSheetHint")}</p>}
           </div>
-          <div className="space-y-2">
+          {/* Cinq entrées : en grille de cinq colonnes (les noms longs passent à la ligne) pour ne jamais laisser une miniature seule sur la 2e ligne. */}
+          <div className="space-y-2 [&>[role=radiogroup]]:grid [&>[role=radiogroup]]:grid-cols-5 [&>[role=radiogroup]]:gap-1 [&>[role=radiogroup]>button]:min-w-0 [&>[role=radiogroup]>button]:text-center">
             <TitreRubrique id="perf-disposition">{t("dispositions.titre")}</TitreRubrique>
             <ChoixDisposition variante="panneau" labelledBy="perf-disposition" couleur="var(--couleur-icones)" disposition={disposition} changeDisposition={changeDisposition} />
           </div>

@@ -96,8 +96,18 @@ export function getChartSectionStyle(type: string): React.CSSProperties {
 // Polices CJK : sous-ensembles woff2 (scripts/build-fonts.py ; originaux KaiTi ~11 Mo, Source Han Sans ~8 Mo) : preload désactivé
 // pour ne pas les précharger sur toute page rendant une partition (y compris
 // les chants FR). Elles se chargent à la demande quand un chant zh s'affiche.
-const KaiTiFont = localFont({
+export const KaiTiFont = localFont({
   src: [{ path: "../../../public/fonts/KaiTi-titres.woff2", weight: "400", style: "normal" }],
+  preload: false,
+});
+// Gelasio (OFL) : le serif des titres de la disposition Partition (lot DP-D) ; sous-ensemble latin en woff2, les .ttf
+// restent pour le PDF. Chargée à la demande, seule cette disposition s'en sert.
+export const gelasio_font = localFont({
+  src: [
+    { path: "../../../public/fonts/Gelasio-Regular.woff2", weight: "400", style: "normal" },
+    { path: "../../../public/fonts/Gelasio-Bold.woff2", weight: "700", style: "normal" },
+  ],
+  display: "swap",
   preload: false,
 });
 // Paroles FR, accords et libellés : Atkinson Hyperlegible Next (OFL), dessinée
@@ -590,6 +600,7 @@ export function StructureStrip({
   colonne = false,
   pleines,
   rappel = "unique",
+  disposition = "classique",
   className = "",
   children,
 }: {
@@ -613,6 +624,8 @@ export function StructureStrip({
    *  au téléphone) ; « joue » = Ordre joué : points (déjà joué), pleines (sur la page),
    *  claires (à venir), tout gardé au téléphone. */
   rappel?: "joue" | "unique";
+  /** Partition (lot DP-D) : repères encadrés (lettre à l'encre, cadre de la couleur de section) à la place des pastilles rondes. */
+  disposition?: Disposition;
   className?: string;
   /** Badges d'état propres au contexte (copie des paroles, version modifiée…). */
   children?: React.ReactNode;
@@ -667,13 +680,16 @@ export function StructureStrip({
               <li key={i} className={colonne ? "flex items-center gap-3" : `flex flex-col items-center ${compacte ? `gap-1 ${pleines && rappel === "unique" && !pleine.has(i) ? "max-sm:hidden" : ""}` : "gap-1.5"}`}>
                 <span
                   data-pleine={pleine.has(i) || undefined}
-                  className={`relative inline-flex items-center justify-center rounded-full ${
+                  data-repere-encadre={disposition === "partition" || undefined}
+                  className={`relative inline-flex items-center justify-center ${disposition === "partition" ? "rounded-[5px] border-[1.5px]" : "rounded-full"} ${
                     compacte ? "h-[26px] min-w-[26px] px-1.5 sm:h-[30px] sm:min-w-[30px]" : "h-8 min-w-8 px-2 sm:h-11 sm:min-w-11 sm:px-2.5"
                   }`}
                   style={
-                    pleine.has(i)
-                      ? { background: colorOf(g.step.section), color: "hsl(var(--background))" }
-                      : { background: tintOf(g.step.section), color: colorOf(g.step.section) }
+                    disposition === "partition"
+                      ? { borderColor: colorOf(g.step.section), color: "hsl(var(--foreground))", background: pleine.has(i) ? tintOf(g.step.section) : "transparent" }
+                      : pleine.has(i)
+                        ? { background: colorOf(g.step.section), color: "hsl(var(--background))" }
+                        : { background: tintOf(g.step.section), color: colorOf(g.step.section) }
                   }
                 >
                   <span className={`inline-flex items-baseline font-bold leading-none tracking-[0.02em] ${compacte ? "text-[13px] sm:text-[14px]" : "text-sm sm:text-lg"}`}>
@@ -832,7 +848,7 @@ export function SectionView({ section, language, showChords, showPinyin, useJian
   ].filter(Boolean).join(" · ");
   // Ce que portait la rangée d'intitulé en plus du nom (Repères : une ligne fine en tête du corps).
   const aSuite = songSourceLabel || note || (nuance && (nuance.tags.length > 0 || nuance.note));
-  const suite = (disposition === "reperes" ? aSuite : disposition === "scene" ? aSuite || keyChange : false) ? (
+  const suite = (disposition === "reperes" || disposition === "partition" ? aSuite : disposition === "scene" ? aSuite || keyChange : false) ? (
     <>
       {disposition === "scene" && keyChange && <span className="font-semibold">{t("setlists.detail.sectionKeyChange", { defaultValue: "升调 ({{key}})", key: keyChange })}</span>}
       {songSourceLabel && <span className="font-normal text-muted-foreground">{songSourceLabel}</span>}
@@ -929,6 +945,45 @@ export function SectionView({ section, language, showChords, showPinyin, useJian
             {corps}
           </div>
         )}
+      </div>
+    );
+  }
+  if (disposition === "partition") {
+    // Partition (lot DP-D) : page gravée, sans fond ni cadre de section. Chaque section s'ouvre sur une rangée : repère
+    // encadré (lettre à l'encre, cadre de la couleur de section), nom en casse normale, « ×2 », modulation, source,
+    // note et nuance ; le corps suit en pleine largeur de colonne, les sections se séparent par du blanc.
+    const couleurPartition = CHART_TYPE_COLOR[couleurDe ?? section.type] ?? "var(--sec-other)";
+    const police = uiIsZh ? zh_lyric_font.className : chord_font.className;
+    return (
+      <div
+        data-section
+        data-section-uids={occurrenceUids?.join(" ")}
+        data-partition
+        className="mb-5 print:mb-4"
+        style={{ breakInside: "avoid", "--sec-c": LANG_THEME[isZh ? "zh" : "fr"].accent, "--rep-c": couleurPartition } as React.CSSProperties}
+      >
+        <div data-copy-ignore data-partition-rangee className={`flex flex-wrap items-center gap-x-2.5 gap-y-1 ${bodyHidden ? "" : "mb-1.5"}`}>
+          <span
+            data-repere-encadre
+            title={nomComplet}
+            aria-hidden="true"
+            className={`inline-flex h-6 min-w-6 shrink-0 select-none items-center justify-center whitespace-nowrap rounded-[5px] border-[1.5px] text-[13px] font-bold leading-none text-foreground md:h-[26px] md:min-w-[26px] md:text-sm ${abbreviateSection(section).length > 2 ? "px-1.5" : ""} ${police}`}
+            style={{ borderColor: "var(--rep-c)" }}
+          >
+            {abbreviateSection(section)}
+          </span>
+          <span data-partition-nom className={`text-[13px] font-medium text-muted-foreground md:text-sm ${police}`}>
+            {label}
+            {repeat > 1 && <span className="ml-1">×{repeat}</span>}
+          </span>
+          {keyChange && (
+            <span data-partition-modulation className="text-[13px] font-semibold text-muted-foreground md:text-sm">
+              {t("setlists.detail.sectionKeyChange", { defaultValue: "升调 ({{key}})", key: keyChange })}
+            </span>
+          )}
+          {suite && <span className="flex flex-wrap items-center gap-x-2 text-xs">{suite}</span>}
+        </div>
+        {corps}
       </div>
     );
   }
@@ -1129,7 +1184,38 @@ export function SongView({
   const pileCredit: React.CSSProperties | undefined = isZh
     ? { fontFamily: `${chord_font.style.fontFamily}, ${zh_lyric_font.style.fontFamily}` }
     : undefined;
-  const enTete = (
+  // Partition (lot DP-D) : titre centré en serif, tempo et tonalité à gauche, compositeur en italique à droite. Sur la
+  // page du chant l'en-tête du site reste tel quel : seule la partition prend la disposition.
+  const titrePartition = titleHref ? (
+    <Link href={titleHref} className="hover:underline underline-offset-4 decoration-2">{ast.metadata.title}</Link>
+  ) : ast.metadata.title;
+  const enTetePartition = (
+      <div data-entete-partition className="mb-0 pb-3 print:mb-3 border-b border-border">
+        <h1 data-titre-partition className={`text-center text-2xl md:text-[30px] font-bold leading-[1.15] text-foreground ${isZh ? KaiTiFont.className : gelasio_font.className}`}>
+          {titrePartition}
+        </h1>
+        {ast.metadata.titlePinyin && (
+          <p className={`text-center text-muted-foreground text-sm mt-0.5 ${pinyin_font.className}`}>{ast.metadata.titlePinyin}</p>
+        )}
+        <div className="mt-2 flex items-start justify-between gap-4">
+          <div data-partition-tempo className={`min-w-0 text-[15px] font-bold leading-[1.3] ${chord_font.className}`}>
+            {ast.metadata.tempo ? <span><span aria-hidden="true">♩</span>{`\u202f=\u202f${ast.metadata.tempo}`}</span> : null}
+            {ast.metadata.key && (
+              <small className="block text-sm font-normal text-muted-foreground">{t("performance.key")} {ast.metadata.key}</small>
+            )}
+          </div>
+          <p data-partition-compositeur className={`max-w-[55%] text-right text-[15px] italic leading-[1.3] text-foreground/80 ${isZh ? KaiTiFont.className : gelasio_font.className}`}>
+            {ast.metadata.artist}
+          </p>
+        </div>
+        {canUseJianpu && structureOverride && (
+          <p className="mt-2 text-xs text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950 px-2 py-1 rounded">
+            {t("songs.view.jianpuWarning")}
+          </p>
+        )}
+      </div>
+  );
+  const enTete = disposition === "partition" && !pageChant ? enTetePartition : (
       <div className="mb-0 pb-3 print:mb-3 border-b border-border">
         <div className="flex items-start justify-between gap-5">
           <div className="min-w-0">
@@ -1208,7 +1294,7 @@ export function SongView({
           dès que le corps ne les porte plus (sections uniques, structure seule,
           structure perso — même en ordre joué, défaut depuis le 20/09/2026). */}
       {/* Sur le scan (`corps`), le bandeau porte seul notes, transitions et nuances. */}
-      <StructureStrip steps={steps} songKey={ast.metadata.key} details={corps !== undefined || layout !== "played" || personalSteps !== null} className="pt-2 pb-3">
+      <StructureStrip steps={steps} songKey={ast.metadata.key} disposition={disposition} details={corps !== undefined || layout !== "played" || personalSteps !== null} className="pt-2 pb-3">
         {bascule}
       </StructureStrip>
       </>

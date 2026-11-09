@@ -140,7 +140,14 @@ async function verifieEgalite(page: Page, max = 6) {
     await page.keyboard.press("ArrowLeft");
     await attendreCompteur(page, /^1 \//, 400);
   }).toPass({ timeout: 15_000 });
-  const total = await totalPages(page);
+  // Nombre de pages stable (après une rotation, la pagination peut encore passer de 2 à 1).
+  let total = await totalPages(page);
+  await expect(async () => {
+    const avant = total;
+    await page.waitForTimeout(400);
+    total = await totalPages(page);
+    expect(total).toBe(avant);
+  }).toPass({ timeout: 10_000 });
   for (let p = 1; p <= Math.min(total, max); p++) {
     await attendreCompteur(page, new RegExp(`^${p} /`));
     // Au moins une section retrouvée dans la copie (après une rotation, la remise en page peut être en cours), et aucun écart.
@@ -161,7 +168,7 @@ test.describe("louange : la copie de mesure et l'écran coupent les vers pareil"
   // Repères (DP-B), Scène (DP-C) : la gouttière réduit le corps de section, la copie et l'écran doivent poser les mêmes rangées.
   for (const [affichage, nomAffichage] of AFFICHAGES)
     for (const [nom, it] of CHANTS)
-      for (const disposition of affichage === "played" ? [undefined, "reperes", "scene"] : [undefined]) {
+      for (const disposition of affichage === "played" ? [undefined, "reperes", "scene", "partition"] : [undefined]) {
       test(`${nom}, ${nomAffichage}${disposition ? `, ${disposition}` : ""} : mêmes hauteurs et mêmes coupures, puis après A+ et après une rotation`, async ({ page }, info) => {
         await ouvrirMode(page, [it], { affichage, echelle: "1", disposition });
         expect(await verifieEgalite(page), "des sections ont été comparées").toBeGreaterThan(0);
