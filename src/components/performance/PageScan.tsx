@@ -128,7 +128,7 @@ export function PageScan({
         // Retrait des autres pages (px-6) : la page de scan n'a que 0,25rem de marge.
         <div className="shrink-0 px-5">
           {/* En-tête du chant sur une ligne (K3) : le titre gravé est coupé. */}
-          <div data-entete-scan className="mb-2 flex items-center gap-2">
+          <div data-entete-scan className="mb-2 flex items-center gap-2 [[data-barre-ouverte]_&]:invisible [[data-barre-ouverte]_&]:opacity-0 transition-[opacity,visibility] duration-150">
             {rond}
             <h2 className="min-w-[3em] truncate text-[22px] font-bold text-foreground leading-tight uppercase tracking-tight">
               {enTete.songTitle}

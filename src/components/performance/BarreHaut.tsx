@@ -108,7 +108,7 @@ export function BarreHaut({
         {tempo ? (
           <BtnBarre label={t("performance.tempo")} menu="tempo" menuOuvert={menuOuvert} onClick={() => onMenu("tempo")} cacheTel>
             <span data-tempo-barre className="flex items-center gap-0.5 text-sm font-semibold tabular-nums">
-              <span aria-hidden="true" className="text-xl leading-none">♩</span>
+              <span aria-hidden="true" className="-mr-2 text-xl leading-none">♩</span>
               {tempo}
             </span>
           </BtnBarre>

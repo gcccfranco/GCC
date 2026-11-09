@@ -2,7 +2,7 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { Check, Maximize, Minus, PenLine, Plus, Timer, Waves } from "lucide-react";
+import { Check, Highlighter, Maximize, Minus, Plus, Timer, Waves } from "lucide-react";
 import { pinyin_font } from "@/components/song/pinyinFont";
 import { abbreviateSection } from "@/lib/chordpro/abbreviations";
 import { formatSectionName } from "@/lib/chordpro/parser";
@@ -57,7 +57,7 @@ export function BoutonRond({
       onClick={onClick}
       {...reste}
       className={`inline-flex ${taille === 48 ? "h-12 w-12" : "h-11 w-11"} shrink-0 items-center justify-center rounded-full border text-sm font-bold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-40 ${
-        allume ? "border-transparent bg-[color:var(--couleur-icones)] text-background" : `border-border ${COULEUR} active:bg-muted`
+        allume === undefined ? `border-border ${COULEUR} active:bg-muted` : allume ? "border-transparent bg-[color:var(--couleur-icones)] text-background" : "border-border text-muted-foreground active:bg-muted"
       }`}
     >
       {children}
@@ -402,9 +402,9 @@ export function ContenuOutils({
           type="button"
           data-annoter
           onClick={onAnnoter}
-          className={`flex min-h-11 w-full items-center gap-2 rounded-lg px-1 text-left text-sm font-semibold ${COULEUR} hover:bg-muted/60 active:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring`}
+          className={`flex min-h-11 w-full items-center gap-2 rounded-lg text-left text-sm font-semibold ${COULEUR} hover:bg-muted/60 active:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring`}
         >
-          <PenLine aria-hidden="true" className="h-5 w-5 shrink-0" />
+          <Highlighter aria-hidden="true" className="h-5 w-5 shrink-0" />
           {t("performance.annotate")}
         </button>
       )}

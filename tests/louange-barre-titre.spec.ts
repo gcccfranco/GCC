@@ -121,6 +121,15 @@ test("barre de titre : Setlist, Repères et Je joue à gauche, titre au centre, 
   await expect(page.locator("[data-barre-haut] p").first()).toHaveText("Avec nous (Emmanuel)");
   // Le tempo (♩ 94) reste dans la barre, sur l'élément repéré.
   await expect(page.locator("[data-tempo-barre]")).toHaveText(/♩\s*94/);
+  // La croche est collée au nombre : écart mesuré entre le glyphe et le chiffre ≤ 6 px.
+  const ecartCroche = await page.locator("[data-tempo-barre]").evaluate((el) => {
+    const glyphe = el.firstElementChild!.getBoundingClientRect();
+    const texte = [...el.childNodes].find((n) => n.nodeType === 3 && (n.textContent ?? "").trim())!;
+    const r = document.createRange();
+    r.selectNodeContents(texte);
+    return r.getBoundingClientRect().left - glyphe.right;
+  });
+  expect(ecartCroche, "écart entre ♩ et le nombre du tempo").toBeLessThanOrEqual(6);
   // Plus de « Deux colonnes » dans la barre.
   await expect(page.locator("[data-barre-haut]").getByRole("button", { name: /2 colonnes/ })).toHaveCount(0);
   const debord = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
@@ -482,6 +491,25 @@ for (const [langue, zh] of [["fr", false], ["zh", true]] as const) {
     });
   }
 }
+
+// Page de scan 简谱 (一生爱你) : la ligne d'en-tête du scan répète le titre de la barre, comme l'en-tête texte.
+test("en-tête d'une page de scan 简谱 : barre ouverte, invisible ou sous la barre ; barre fermée, visible", async ({ page }) => {
+  await ouvrir(page, { slugs: ZH, zh: true });
+  await page.waitForTimeout(400);
+  const ligne = page.locator("[data-performance-mode] [data-entete-scan]:not([aria-hidden=true] *)").first();
+  await expect(ligne).toBeAttached();
+  // Paysage sur grand écran : l'en-tête est dans la colonne latérale (hors du propos, gelée), pas sous la barre.
+  test.skip((await page.locator("[data-colonne-scan]").count()) > 0, "en-tête dans la colonne latérale du paysage");
+  await expect(page.locator("[data-performance-mode]")).toHaveAttribute("data-barre-ouverte", "");
+  await page.waitForTimeout(300);
+  const barreBas = await page.locator("[data-barre-haut]").evaluate((el) => el.getBoundingClientRect().bottom);
+  const ouverte = await ligne.evaluate((el) => ({ bas: el.getBoundingClientRect().bottom, visibilite: getComputedStyle(el).visibility }));
+  expect(ouverte.bas <= barreBas + 0.5 || ouverte.visibilite === "hidden", `ligne ${ouverte.bas.toFixed(1)} px, visibility ${ouverte.visibilite}, barre ${barreBas.toFixed(1)} px`).toBe(true);
+  await toucherCentre(page);
+  await expect(page.locator("[data-performance-mode]")).not.toHaveAttribute("data-barre-ouverte", /.*/);
+  await page.waitForTimeout(400);
+  await expect(ligne).toHaveCSS("visibility", "visible");
+});
 
 // ─── Captures à regarder (test-results/fs-a/) ─────────────────────────────────
 
