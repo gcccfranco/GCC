@@ -15,7 +15,7 @@ import { useThemeScene } from "./hooks/useThemeScene";
 import { useWakeLock } from "./hooks/useWakeLock";
 import { useTempoChant } from "./hooks/useTempoChant";
 import { useAnnotationsPage } from "./hooks/useAnnotationsPage";
-import { Check, Link2, MessageSquare, PenLine, Sun, Moon, Columns2, EyeOff, FileMusic, Languages, Minus, Music, Plus, Waves } from "lucide-react";
+import { Check, SlidersHorizontal, Link2, MessageSquare, PenLine, Sun, Moon, Columns2, EyeOff, FileMusic, Languages, Minus, Music, Plus, Waves } from "lucide-react";
 import type { PerformanceBlock, SectionBlock, JianpuSheetBlock, SongHeaderBlock } from "@/lib/performance/blocks";
 import { ecouterCoupure, versionCoupure } from "@/lib/song/coupureSignal";
 import { ConteneurCoupure } from "@/components/song/LargeurCoupure";
@@ -1559,11 +1559,11 @@ export function PerformanceMode({
         <div className="space-y-4">
           <div>
             {accueilRole && (
-              <p className="px-1 pb-2 text-sm font-medium text-foreground">
+              <p className="mb-3 border-b border-border px-2 pb-3 text-base font-semibold text-foreground">
                 {t(uid ? "performance.rolePrompt.welcome" : "performance.rolePrompt.welcomeDevice")}
               </p>
             )}
-            <TitreRubrique>{t("performance.rolePrompt.subtitle")}</TitreRubrique>
+            <div className="px-1"><TitreRubrique>{t("performance.rolePrompt.subtitle")}</TitreRubrique></div>
             <div className="flex flex-col">
               {ROLE_IDS.map((id) => {
                 const Icone = ICONES_ROLE[id];
@@ -1578,30 +1578,40 @@ export function PerformanceMode({
                       else applyRolePreset(id);
                       setAccueilRole(false);
                     }}
-                    className="flex min-h-11 w-full items-center gap-3 rounded-lg px-2 py-1.5 text-left transition-colors hover:bg-muted/60 active:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    className={`flex min-h-14 w-full items-center gap-3 rounded-lg px-2 py-2 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${actif ? "" : "hover:bg-muted/60 active:bg-muted"}`}
+                    // Rôle retenu : fond léger de la couleur personnelle (décision 23), comme la planche.
+                    style={actif ? { background: "color-mix(in srgb, var(--couleur-icones) 12%, transparent)" } : undefined}
                   >
                     <Icone className="h-5 w-5 shrink-0 text-[color:var(--couleur-icones)]" />
                     <span className="min-w-0 flex-1">
-                      <span className="block text-sm font-semibold text-foreground">{t(`performance.roles.${id}`)}</span>
-                      <span className="block text-xs text-muted-foreground">{t(`performance.rolePrompt.hints.${id}`)}</span>
+                      <span className="block text-base font-semibold text-foreground">{t(`performance.roles.${id}`)}</span>
+                      <span className="block text-[13px] text-muted-foreground">{t(`performance.rolePrompt.hints.${id}`)}</span>
                     </span>
                     {actif && <Check className="h-5 w-5 shrink-0 text-[color:var(--couleur-icones)]" aria-hidden="true" />}
                   </button>
                 );
               })}
+              {/* « Aucun » : un sixième choix comme les rôles, coché quand aucun rôle n'est retenu (après réponse). */}
               <button
                 type="button"
+                aria-pressed={rolePreset === null && !accueilRole}
                 onClick={() => { clearRolePreset(); setAccueilRole(false); }}
-                className="flex min-h-11 w-full items-center rounded-lg px-2 py-1.5 text-left text-xs text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground active:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className={`flex min-h-14 w-full items-center gap-3 rounded-lg px-2 py-2 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${rolePreset === null && !accueilRole ? "" : "hover:bg-muted/60 active:bg-muted"}`}
+                style={rolePreset === null && !accueilRole ? { background: "color-mix(in srgb, var(--couleur-icones) 12%, transparent)" } : undefined}
               >
-                {t("performance.rolePrompt.none")} · {t("performance.rolePrompt.hints.none")}
+                <SlidersHorizontal className="h-5 w-5 shrink-0 text-muted-foreground" />
+                <span className="min-w-0 flex-1">
+                  <span className="block text-base font-semibold text-foreground">{t("performance.rolePrompt.none")}</span>
+                  <span className="block text-[13px] text-muted-foreground">{t("performance.rolePrompt.hints.none")}</span>
+                </span>
+                {rolePreset === null && !accueilRole && <Check className="h-5 w-5 shrink-0 text-[color:var(--couleur-icones)]" aria-hidden="true" />}
               </button>
             </div>
           </div>
           <div className="space-y-4 border-t border-border pt-4">
             {/* Affichage (D15) : le même réglage que le menu Affichage de la setlist. */}
             <div className="space-y-2">
-              <TitreRubrique id="perf-ordre-sections">{t("performance.sectionOrder")}</TitreRubrique>
+              <div className="px-1"><TitreRubrique id="perf-ordre-sections">{t("performance.sectionOrder")}</TitreRubrique></div>
               <div role="radiogroup" aria-labelledby="perf-ordre-sections" className="flex rounded-lg bg-secondary p-1">
                 {(["played", "unique", "structure"] as const).map((v) => (
                   <button
@@ -1618,8 +1628,9 @@ export function PerformanceMode({
                   </button>
                 ))}
               </div>
-              <p className="text-xs text-muted-foreground">{t("performance.affichageHint")}</p>
+              <p className="px-2 text-xs text-muted-foreground">{t("performance.affichageHint")}</p>
             </div>
+            <div className="px-2">
             <SettingRow label={t("performance.hideLyrics")}>
               <BoutonRond
                 label={t("performance.hideLyrics")}
@@ -1633,6 +1644,7 @@ export function PerformanceMode({
                 <EyeOff className="h-5 w-5" />
               </BoutonRond>
             </SettingRow>
+            </div>
           </div>
         </div>
       </MenuLouange>

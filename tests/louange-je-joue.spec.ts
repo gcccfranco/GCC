@@ -131,7 +131,7 @@ test("Je joue : s'ouvre sous son icône, cinq rôles et « Aucun », le rôle ac
     await expect(bouton).toHaveAttribute("aria-pressed", role === "Guitariste" ? "true" : "false");
   }
   await expect(dialogue.getByText("Accords, paroles et capo")).toBeVisible();
-  await expect(dialogue.getByRole("button", { name: "Aucun · je règle moi-même" })).toBeVisible();
+  await expect(dialogue.getByRole("button", { name: /^Aucun/ })).toBeVisible();
   await expect(dialogue.getByRole("radiogroup", { name: "Ordre des sections" })).toBeVisible();
   await expect(dialogue.getByRole("button", { name: "Masquer les paroles" })).toBeVisible();
 

@@ -212,7 +212,7 @@ test.describe("choix du rôle à la première ouverture", () => {
 
   test("« Aucun » : rien n'est imposé et la question n'est plus redemandée", async ({ page }) => {
     await openPerformance(page, ITEMS, null);
-    await roleSheet(page).getByRole("button", { name: /Aucun · je règle moi-même/ }).click();
+    await roleSheet(page).getByRole("button", { name: /^Aucun/ }).click();
     await page.keyboard.press("Escape");
     await expect(roleSheet(page)).toBeHidden();
     await reopen(page);
