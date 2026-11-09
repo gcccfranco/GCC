@@ -1417,7 +1417,14 @@ décision 27 ; planche acceptée, décision 28 : une couleur par langue, dans le
 l'appareil, la couleur des icônes aussi par compte) ; spec du lot **CA**, **go le 09/11/2026**, après la seconde
 relecture de DP. Import inutilisé de `fs` dans `SongView.tsx` (déjà sur `main`) retiré dans une session à part
 (commit 8e6572a, branche `claude/laughing-cerf-hznlxc`) : à reprendre sur la branche de la session après DP, il partira
-avec la prochaine mise en ligne (Timothée, 09/11/2026).
+avec la prochaine mise en ligne (Timothée, 09/11/2026). **Fin de chantier pour l'instant** (Timothée, 09/11/2026 au soir :
+« après la vague 2 je pense qu'on va s'arrêter », « on reprendra plus tard dans une nouvelle session ») : on finit la
+vague 2 (corrections de DP, RP lancé le 09/11 au soir, puis JP-B), avec des relectures légères (un relecteur et les
+captures regardées) ; **CA reporté**, go et spec gardés. **Pour reprendre** : lire « Avancement » de
+`spec-mode-louange-forscore-2.md` (état de chaque lot), puis lancer CA (spec complète, section « CA ») et, sur nouveau
+go, la vague 3 (JP-C, JP-D, AN) ; avant toute mise en ligne : passe sur le guide, relecture des libellés chinois
+nouveaux par un responsable sinophone, prévenir l'équipe (coupure des vers et annotations rangées par disposition),
+essai sur iPad.
 **Annotations façon forScore** (Timothée, 08/11/2026 : « comment fonctionnent les annotations maintenant ? il faut que
 ce soit comme forScore », puis « oui go » à la proposition) : lot à part, option (a) — les outils façon forScore
 maintenant (appui long et stylet qui dessine seul, barre d'outils déplaçable, tourner les pages en annotant, stylos
