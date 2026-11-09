@@ -69,14 +69,15 @@ export function MiniatureDisposition({ disposition }: { disposition: Disposition
         </Page>
       );
     case "reperes":
-      // Pastilles rondes dans une gouttière gauche, reliées par un filet vertical.
+      // Pastilles rondes de la couleur de la section dans une gouttière gauche, filet vertical de la même
+      // couleur dessous (plus épais au refrain), pas de cadre.
       return (
         <Page>
-          <rect x={9.6} y={17} width={0.8} height={46} fill={CADRE} />
-          {[[17, V], [46, R]].map(([y, c]) => (
+          {[[14, V, 1.2], [43, R, 2]].map(([y, c, w]) => (
             <g key={y as number}>
-              <circle cx={10} cy={(y as number) + 2} r={3.6} fill={c as string} />
-              <Rangees x={19} y={(y as number) - 2} w={31} />
+              <circle cx={10} cy={(y as number) + 4} r={3.6} fill={c as string} />
+              <rect x={10 - (w as number) / 2} y={(y as number) + 9.5} width={w as number} height={17} rx={0.6} fill={c as string} />
+              <Rangees x={19} y={(y as number) + 1} w={31} />
             </g>
           ))}
         </Page>

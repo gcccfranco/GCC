@@ -453,9 +453,9 @@ test("Options : aucune 2e ligne d'un seul élément (ronds « Sur la page » et 
   if (!telephone(page)) expect(ronds, "tous les ronds sur une ligne dans le popover").toHaveLength(1);
   const pastilles = await lignes('[role=radiogroup][aria-labelledby="perf-couleur-icones"] > button');
   expect(pastilles, `pastilles : ${pastilles}`).toEqual([7]);
-  // Bloc Disposition (DP-A) : jamais une miniature seule sur sa ligne.
+  // Bloc Disposition (DP-A, trois entrées avec Repères en DP-B) : jamais une miniature seule sur sa ligne.
   const dispositions = await lignes('[role=radiogroup][aria-labelledby="perf-disposition"] > button');
-  expect(dispositions.reduce((a, b) => a + b, 0)).toBeGreaterThanOrEqual(2);
+  expect(dispositions.reduce((a, b) => a + b, 0)).toBe(3);
   if (dispositions.length > 1) for (const n of dispositions) expect(n, `miniatures par ligne : ${dispositions}`).toBeGreaterThanOrEqual(2);
   // Le popover garde sa largeur d'environ 26 rem et n'est pas plafonné en hauteur à 34 rem.
   if (!telephone(page)) {

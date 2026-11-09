@@ -265,6 +265,8 @@
     --sheet-accent: #1c6e7c;
 
     /* Section identity — accent (label / rail) + tint (block bg) */
+    /* Repères (DP-B) : encre du sigle sur les pastilles foncées (pont, fin, autre) — blanc en clair, encre en sombre. */
+    --rep-encre-claire: #ffffff;
     --sec-intro: #5b7fa6;        --sec-intro-tint: #eef3f9;
     --sec-verse: #2c8a7d;        --sec-verse-tint: #e8f3f0;
     --sec-prechorus: #c1871f;    --sec-prechorus-tint: #faf2e1;
@@ -332,6 +334,7 @@
     --pinyin-color: #888e98;
     --sheet-accent: #63c3cf;
 
+    --rep-encre-claire: #0e0e10;
     --sec-intro: #8fb2dc;        --sec-intro-tint: #161f2a;
     --sec-verse: #59bdac;        --sec-verse-tint: #112320;
     --sec-prechorus: #e0b35b;    --sec-prechorus-tint: #251e0f;

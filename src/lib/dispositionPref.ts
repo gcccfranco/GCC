@@ -16,9 +16,9 @@ export type Disposition = "classique" | "sections" | "reperes" | "scene" | "part
 
 export const DISPOSITIONS: Disposition[] = ["classique", "sections", "reperes", "scene", "partition"];
 
-// Les tranches DP-B, DP-C, DP-D y ajoutent reperes, scene, partition quand
+// Les tranches DP-C, DP-D y ajoutent scene, partition quand
 // leur rendu existe : rien d'inachevé n'apparaît au menu.
-export const DISPOSITIONS_AU_MENU: Disposition[] = ["classique", "sections"];
+export const DISPOSITIONS_AU_MENU: Disposition[] = ["classique", "sections", "reperes"];
 
 const KEY = "disposition";
 const MARQUE = "disposition-migree";

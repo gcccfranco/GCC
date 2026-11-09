@@ -1,5 +1,5 @@
 "use client";
-import { Fragment, useContext, useLayoutEffect, useRef, useState } from "react";
+import { Fragment, useContext, useEffect, useLayoutEffect, useRef, useState } from "react";
 import localFont from "next/font/local";
 import Link, { type LinkProps } from "next/link";
 import { ChordLine } from "@/components/song/ChordLine";
@@ -15,6 +15,7 @@ import { pinyin_font } from "@/components/song/pinyinFont";
 import type { ChordProAST, ChordProLine, ChordProSection, Token } from "@/types/chordPro";
 import { useTranslation } from "react-i18next";
 import { formatSectionName } from "@/lib/chordpro/parser";
+import { abbreviateSection } from "@/lib/chordpro/abbreviations";
 import { resolveSectionOccurrences, type SectionOccurrence } from "@/lib/setlist/sectionSteps";
 import { SECTION_PALETTE_KEY } from "@/lib/sectionPalette";
 import { dpFullName, groupSteps, paletteKeyOf } from "@/lib/setlist/dp";
@@ -719,6 +720,67 @@ export function StructureStrip({
   );
 }
 
+// Repères (lot DP-B) : sigle de la section dans une pastille de sa couleur, « ×2 » dessous, filet vertical le long
+// de la section. Mesures : gouttière de 36 px au téléphone (pastille 24, filet à 3 px, texte à 6 px du filet), case de
+// 44 px à partir de la tablette (pastille 32, filet centré sous elle). Sigle long (« Inst ») : la pastille s'allonge
+// et la gouttière de cette section avec elle. Au toucher la pastille ouvre le nom complet dans une petite bulle.
+const FILET_EPAIS = new Set(["chorus", "postchorus", "outro", "final", "coda"]);
+// Encre du sigle : celle qui contraste le plus avec la pastille (≥ 4,5:1). En clair, le pont (#7a5bcb), la fin et la
+// coda (#4f6477) et le gris « autre » (#6b7280) prennent le blanc ; les autres et tout le thème sombre, l'encre #0e0e10.
+const PASTILLE_FONCEE = new Set(["var(--sec-bridge)", "var(--sec-outro)", "var(--sec-coda)", "var(--sec-other)"]);
+
+function GouttiereReperes({ sigle, nom, epais, repeat, sansFilet, fontClass }: { sigle: string; nom: string; epais: boolean; repeat: number; sansFilet: boolean; fontClass: string }) {
+  const [ouvert, setOuvert] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!ouvert) return;
+    const dehors = (e: PointerEvent) => { if (!ref.current?.contains(e.target as Node)) setOuvert(false); };
+    const echap = (e: KeyboardEvent) => { if (e.key === "Escape") setOuvert(false); };
+    document.addEventListener("pointerdown", dehors);
+    document.addEventListener("keydown", echap);
+    return () => { document.removeEventListener("pointerdown", dehors); document.removeEventListener("keydown", echap); };
+  }, [ouvert]);
+  return (
+    <div
+      ref={ref}
+      data-copy-ignore
+      data-repere-gouttiere
+      className={`relative flex w-fit min-w-9 flex-row md:min-w-11 md:flex-col md:items-center md:pr-3 ${epais ? "pr-[5px]" : "pr-[6px]"}`}
+    >
+      <div className="flex shrink-0 flex-col items-center">
+        <button
+          type="button"
+          title={nom}
+          aria-expanded={ouvert}
+          onClick={() => setOuvert((o) => !o)}
+          data-repere-pastille
+          className={`inline-flex h-6 min-w-6 cursor-pointer select-none items-center justify-center whitespace-nowrap rounded-full text-[14px] font-bold leading-none md:h-8 md:min-w-8 md:text-[18px] ${sigle.length > 2 ? "px-[5px] md:px-2" : ""} ${fontClass}`}
+          style={{ background: "var(--rep-c)", color: "var(--rep-encre)" }}
+        >
+          <span aria-hidden="true" data-repere-sigle>{sigle}</span>
+          <span className="sr-only">{nom}</span>
+        </button>
+        {repeat > 1 && (
+          <span aria-hidden="true" data-repere-repeat className="mt-0.5 text-[13px] font-semibold leading-none text-foreground md:text-sm">×{repeat}</span>
+        )}
+      </div>
+      {!sansFilet && (
+        <span
+          aria-hidden="true"
+          data-repere-filet
+          className={`mb-1 shrink-0 rounded-[3px] md:mt-[6px] md:min-h-3 md:flex-1 md:ml-0 ${epais ? "ml-[2px] w-[5px]" : "ml-[3px] w-[3px]"}`}
+          style={{ background: "var(--rep-c)" }}
+        />
+      )}
+      {ouvert && (
+        <span aria-hidden="true" data-repere-bulle className="absolute left-full top-0 z-30 ml-1 whitespace-nowrap rounded-md border bg-popover px-2 py-1 text-xs font-medium text-popover-foreground shadow-md">
+          {nom}
+        </span>
+      )}
+    </div>
+  );
+}
+
 interface SectionViewProps {
   section: ChordProSection;
   language: "fr" | "zh";
@@ -735,8 +797,8 @@ interface SectionViewProps {
   /** « pdf » = typographie des PDF exportés (Mode Louange) ; « web » = défaut. */
   typography?: "web" | "pdf";
   /** Disposition de la partition (dispositionPref.ts) : « sections » = couleur par type de section, cadre gris fin,
-   *  accords neutres ; « classique » = cadre de la couleur de langue. Repères, scène et partition : rendu classique
-   *  en attendant leurs tranches. */
+   *  accords neutres ; « reperes » = pastille et filet dans une gouttière, sans cadre ; « classique » = cadre de la
+   *  couleur de langue. Scène et partition : rendu classique en attendant leurs tranches. */
   disposition?: Disposition;
   /** Mode édition setlist : rend chaque ligne tappable (ouvre la sheet d'édition). */
   onLineSelect?: (line: ChordProLine, sectionUid?: string) => void;
@@ -764,6 +826,110 @@ export function SectionView({ section, language, showChords, showPinyin, useJian
   // sous le libellé ni padding bas plus grand que le haut — le libellé reste
   // centré dans son cadre, même agrandi en vue structure.
   const bodyHidden = hideLyrics && !showChords;
+  const nomComplet = [
+    label + (repeat > 1 ? ` ×${repeat}` : ""),
+    keyChange ? t("setlists.detail.sectionKeyChange", { defaultValue: "升调 ({{key}})", key: keyChange }) : "",
+  ].filter(Boolean).join(" · ");
+  // Ce que portait la rangée d'intitulé en plus du nom (Repères : une ligne fine en tête du corps).
+  const suite = disposition === "reperes" && (songSourceLabel || note || (nuance && (nuance.tags.length > 0 || nuance.note))) ? (
+    <>
+      {songSourceLabel && <span className="font-normal text-muted-foreground">{songSourceLabel}</span>}
+      {note && <span className="font-normal text-muted-foreground">{note}</span>}
+      {nuance && (nuance.tags.length > 0 || nuance.note) && <NuanceBadge nuance={nuance} size={nuanceSize} />}
+    </>
+  ) : null;
+  // Lignes — corps vide quand paroles ET accords masqués (ossature seule).
+  const corps = !bodyHidden ? (
+    <div>
+      {section.lines.map((line, i) => {
+        if (line.tokens.length === 0 && !line.jianpu) {
+          return <div key={i} data-copy-line className="h-5" />;
+        }
+
+        let rendered: React.ReactNode;
+        if (isZh && useJianpu) {
+          rendered = <JianpuLine line={line} showChords={showChords} showPinyin={showPinyin} />;
+        } else if (isZh) {
+          rendered = (
+            <ZhLine
+              tokens={line.tokens}
+              pinyin={line.pinyin ?? null}
+              showChords={showChords}
+              showPinyin={showPinyin}
+              hideLyrics={hideLyrics}
+              chord_font={isPdfTypo ? liberation_font : chord_font}
+              zh_lyric_font={zh_lyric_font}
+              typography={typography}
+              slug={slug}
+            />
+          );
+        } else {
+          rendered = (
+            <ChordLine
+              tokens={line.tokens}
+              showChords={showChords}
+              hideLyrics={hideLyrics}
+              chord_font={isPdfTypo ? liberation_font : chord_font}
+              fr_lyric_font={fr_lyric_font}
+              fontSize={isPdfTypo ? 0.9375 : undefined}
+              chordEm={isPdfTypo ? 1.13 : undefined}
+              ecartApres={!isPdfTypo && section.type !== "intro" && sansParoles(line.tokens) && avecParoles(section.lines[i + 1]?.tokens)}
+            />
+          );
+        }
+
+        // Mode édition : la ligne devient une cible tactile qui ouvre la sheet.
+        if (onLineSelect && line.srcLine !== undefined) {
+          return (
+            <div
+              key={i}
+              role="button"
+              tabIndex={0}
+              onClick={() => onLineSelect(line, section.uid)}
+              onKeyDown={(e) => e.key === "Enter" && onLineSelect(line, section.uid)}
+              className="cursor-pointer rounded-md -mx-1.5 px-1.5 border border-dashed border-primary/25 hover:border-primary/60 hover:bg-primary/5 active:bg-primary/10 transition-colors my-0.5 print:border-transparent print:bg-transparent print:mx-0 print:px-0 print:my-0"
+            >
+              {/* Édition : toucher la ligne ouvre la feuille d'édition, jamais le panneau d'un accord. */}
+              <AccordsInactifs>{rendered}</AccordsInactifs>
+            </div>
+          );
+        }
+        return <div key={i}>{rendered}</div>;
+      })}
+    </div>
+  ) : null;
+  if (disposition === "reperes") {
+    const couleurRepere = CHART_TYPE_COLOR[couleurDe ?? section.type] ?? "var(--sec-other)";
+    return (
+      <div
+        data-section
+        data-section-uids={occurrenceUids?.join(" ")}
+        data-repere
+        className="mb-[22px] md:mb-[30px] print:mb-4 grid grid-cols-[auto_minmax(0,1fr)] [--rep-p:24px] md:[--rep-p:32px]"
+        style={{ breakInside: "avoid", "--sec-c": LANG_THEME[isZh ? "zh" : "fr"].accent, "--rep-c": couleurRepere, "--rep-encre": PASTILLE_FONCEE.has(couleurRepere) ? "var(--rep-encre-claire)" : "#0e0e10" } as React.CSSProperties}
+      >
+        <GouttiereReperes
+          sigle={abbreviateSection(section)}
+          nom={nomComplet}
+          epais={FILET_EPAIS.has(couleurDe ?? section.type)}
+          repeat={repeat}
+          sansFilet={bodyHidden}
+          fontClass={uiIsZh ? zh_lyric_font.className : chord_font.className}
+        />
+        {bodyHidden ? (
+          <div data-copy-ignore className="flex min-h-[var(--rep-p)] min-w-0 flex-wrap items-center gap-x-2 text-sm font-semibold">
+            <span>{nomComplet}</span>
+            {suite}
+          </div>
+        ) : (
+          <div className="min-w-0">
+            {suite && <div data-copy-ignore className="mb-1 flex flex-wrap items-center gap-x-2 text-xs">{suite}</div>}
+            {corps}
+          </div>
+        )}
+      </div>
+    );
+  }
   return (
     <div data-section data-section-uids={occurrenceUids?.join(" ")} className="mb-5 print:mb-4" style={{ breakInside: "avoid", ...(disposition === "sections" ? getChartSectionStyle(couleurDe ?? section.type) : getSectionStyle(couleurDe ?? section.type, isZh)), ...(bodyHidden ? { paddingBottom: 10 } : null) }}>
       {/* Label de section — hors copie : la régie colle les paroles seules. */}
@@ -807,65 +973,7 @@ export function SectionView({ section, language, showChords, showPinyin, useJian
       </div>
 
       {/* Lignes — corps vide quand paroles ET accords masqués (ossature seule). */}
-      {!bodyHidden && (
-        <div>
-          {section.lines.map((line, i) => {
-            if (line.tokens.length === 0 && !line.jianpu) {
-              return <div key={i} data-copy-line className="h-5" />;
-            }
-
-            let rendered: React.ReactNode;
-            if (isZh && useJianpu) {
-              rendered = <JianpuLine line={line} showChords={showChords} showPinyin={showPinyin} />;
-            } else if (isZh) {
-              rendered = (
-                <ZhLine
-                  tokens={line.tokens}
-                  pinyin={line.pinyin ?? null}
-                  showChords={showChords}
-                  showPinyin={showPinyin}
-                  hideLyrics={hideLyrics}
-                  chord_font={isPdfTypo ? liberation_font : chord_font}
-                  zh_lyric_font={zh_lyric_font}
-                  typography={typography}
-                  slug={slug}
-                />
-              );
-            } else {
-              rendered = (
-                <ChordLine
-                  tokens={line.tokens}
-                  showChords={showChords}
-                  hideLyrics={hideLyrics}
-                  chord_font={isPdfTypo ? liberation_font : chord_font}
-                  fr_lyric_font={fr_lyric_font}
-                  fontSize={isPdfTypo ? 0.9375 : undefined}
-                  chordEm={isPdfTypo ? 1.13 : undefined}
-                  ecartApres={!isPdfTypo && section.type !== "intro" && sansParoles(line.tokens) && avecParoles(section.lines[i + 1]?.tokens)}
-                />
-              );
-            }
-
-            // Mode édition : la ligne devient une cible tactile qui ouvre la sheet.
-            if (onLineSelect && line.srcLine !== undefined) {
-              return (
-                <div
-                  key={i}
-                  role="button"
-                  tabIndex={0}
-                  onClick={() => onLineSelect(line, section.uid)}
-                  onKeyDown={(e) => e.key === "Enter" && onLineSelect(line, section.uid)}
-                  className="cursor-pointer rounded-md -mx-1.5 px-1.5 border border-dashed border-primary/25 hover:border-primary/60 hover:bg-primary/5 active:bg-primary/10 transition-colors my-0.5 print:border-transparent print:bg-transparent print:mx-0 print:px-0 print:my-0"
-                >
-                  {/* Édition : toucher la ligne ouvre la feuille d'édition, jamais le panneau d'un accord. */}
-                  <AccordsInactifs>{rendered}</AccordsInactifs>
-                </div>
-              );
-            }
-            return <div key={i}>{rendered}</div>;
-          })}
-        </div>
-      )}
+      {corps}
     </div>
   );
 }

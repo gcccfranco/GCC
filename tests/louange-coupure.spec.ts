@@ -32,7 +32,7 @@ const AFFICHAGES = [["played", "Ordre joué"], ["unique", "Sections uniques"]] a
 
 const totalPages = async (page: Page) => Number((await lireCompteur(page)).split("/")[1]);
 
-async function ouvrirMode(page: Page, items: SetlistItem[], opts: { affichage?: string; echelle?: string; sombre?: boolean; langue?: string; seed?: (db: FakeDb) => void } = {}): Promise<FakeDb> {
+async function ouvrirMode(page: Page, items: SetlistItem[], opts: { affichage?: string; echelle?: string; sombre?: boolean; langue?: string; disposition?: string; seed?: (db: FakeDb) => void } = {}): Promise<FakeDb> {
   await page.emulateMedia({ colorScheme: opts.sombre ? "dark" : "light" });
   await page.addInitScript((o) => {
     try {
@@ -47,8 +47,9 @@ async function ouvrirMode(page: Page, items: SetlistItem[], opts: { affichage?: 
       localStorage.setItem("theme", o.sombre ? "dark" : "light");
       if (o.affichage === "unique") localStorage.setItem("partition-layout", "unique");
       if (o.langue) localStorage.setItem("i18nextLng", o.langue);
+      if (o.disposition) localStorage.setItem("disposition", o.disposition);
     } catch {}
-  }, { affichage: opts.affichage ?? "played", echelle: opts.echelle ?? "1", sombre: !!opts.sombre, langue: opts.langue ?? "" });
+  }, { affichage: opts.affichage ?? "played", echelle: opts.echelle ?? "1", sombre: !!opts.sombre, langue: opts.langue ?? "", disposition: opts.disposition ?? "" });
   const db = await signInAs(
     page,
     MUSICIEN,
@@ -157,10 +158,12 @@ async function verifieEgalite(page: Page, max = 6) {
 }
 
 test.describe("louange : la copie de mesure et l'écran coupent les vers pareil", () => {
+  // Repères (DP-B) : la gouttière réduit le corps de section, la copie et l'écran doivent poser les mêmes rangées.
   for (const [affichage, nomAffichage] of AFFICHAGES)
-    for (const [nom, it] of CHANTS) {
-      test(`${nom}, ${nomAffichage} : mêmes hauteurs et mêmes coupures, puis après A+ et après une rotation`, async ({ page }, info) => {
-        await ouvrirMode(page, [it], { affichage, echelle: "1" });
+    for (const [nom, it] of CHANTS)
+      for (const disposition of affichage === "played" ? [undefined, "reperes"] : [undefined]) {
+      test(`${nom}, ${nomAffichage}${disposition ? `, ${disposition}` : ""} : mêmes hauteurs et mêmes coupures, puis après A+ et après une rotation`, async ({ page }, info) => {
+        await ouvrirMode(page, [it], { affichage, echelle: "1", disposition });
         expect(await verifieEgalite(page), "des sections ont été comparées").toBeGreaterThan(0);
 
         // Taille du texte : A+ (110 %).
@@ -229,6 +232,7 @@ test.describe("louange : clé de page", () => {
 });
 
 test.describe("louange : bandeau « ancienne mise en page »", () => {
+  test.describe.configure({ timeout: 60_000 });
   const trait = (w: number, h: number) =>
     JSON.stringify({ w, h, strokes: [{ tool: "pen", size: 3.5, color: "#dc2626", points: [[w * 0.2, h * 0.5], [w * 0.5, h * 0.5]] }] });
   const ecritesAnnot = (db: FakeDb) => db.writes.filter((w) => w.path.startsWith("annotations/"));

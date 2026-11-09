@@ -61,14 +61,17 @@ export const curseurPage = (page: Page) => page.locator("[data-performance-mode]
 
 /** « n / N » lu sur le curseur de page (valeur 0-based, max = N - 1) ; sans curseur, une seule page. */
 export async function lireCompteur(page: Page): Promise<string> {
-  const curseur = curseurPage(page);
-  if ((await curseur.count()) === 0) {
+  // Une seule lecture, sans attente automatique : le curseur disparaît du DOM quand le chant tient sur une page.
+  const lu = await page.evaluate(() => {
+    const c = document.querySelector<HTMLInputElement>("[data-performance-mode] [data-curseur-page] input[type=range]");
+    return c ? { valeur: c.value, max: c.max } : null;
+  });
+  if (!lu) {
     // Pas de curseur : une seule page, une fois le mode ouvert et sa mise en page faite (« — » avant).
     const pret = (await page.locator("[data-performance-mode]").count()) > 0 && (await page.getByText("Mise en page…").count()) === 0;
     return pret ? "1 / 1" : "—";
   }
-  const [valeur, max] = await Promise.all([curseur.inputValue(), curseur.getAttribute("max")]);
-  return `${Number(valeur) + 1} / ${Number(max) + 1}`;
+  return `${Number(lu.valeur) + 1} / ${Number(lu.max) + 1}`;
 }
 
 /** Attend que le compteur « n / N » (lu sur le curseur) corresponde à un motif ou soit égal à un texte. */
