@@ -668,6 +668,8 @@
     "keySpace": "空格",
     "onPage": "页面显示",
     "twoColumns": "双栏",
+    "halfPage": "半页翻页",
+    "halfPageHandle": "半页",
     "settings": "设置",
     "sectionOrder": "段落顺序",
     "rolePrompt": {

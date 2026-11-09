@@ -673,6 +673,8 @@
     "keySpace": "Espace",
     "onPage": "Sur la page",
     "twoColumns": "2 colonnes",
+    "halfPage": "Demi-page",
+    "halfPageHandle": "Demi-page",
     "settings": "Réglages",
     "sectionOrder": "Ordre des sections",
     "rolePrompt": {

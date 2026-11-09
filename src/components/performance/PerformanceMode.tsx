@@ -11,11 +11,13 @@ import { BoutonRond, BoutonSurPage, ContenuOutils, ContenuReperes, ContenuSetlis
 import { CercleChromatique } from "./CercleChromatique";
 import { PageScan } from "./PageScan";
 import { PageTexte } from "./PageTexte";
+import { DemiPage } from "./DemiPage";
+import { getDemiPagePref, getDemiPart, setDemiPagePref, setDemiPart as setDemiPartPref } from "@/lib/performance/demiPage";
 import { useThemeScene } from "./hooks/useThemeScene";
 import { useWakeLock } from "./hooks/useWakeLock";
 import { useTempoChant } from "./hooks/useTempoChant";
 import { useAnnotationsPage } from "./hooks/useAnnotationsPage";
-import { Check, SlidersHorizontal, Link2, MessageSquare, PenLine, Sun, Moon, Columns2, EyeOff, FileMusic, Languages, Minus, Music, Plus, Waves } from "lucide-react";
+import { Check, SlidersHorizontal, Link2, MessageSquare, PenLine, Sun, Moon, Columns2, EyeOff, FileMusic, Languages, Minus, Music, PanelTopBottomDashed, Plus, Waves } from "lucide-react";
 import type { PerformanceBlock, SectionBlock, JianpuSheetBlock, SongHeaderBlock } from "@/lib/performance/blocks";
 import { ecouterCoupure, versionCoupure } from "@/lib/song/coupureSignal";
 import { ConteneurCoupure } from "@/components/song/LargeurCoupure";
@@ -570,9 +572,24 @@ export function PerformanceMode({
   const twoColumns = twoColumnsAvailable && twoColumnsPref !== "0";
   // Aperçu de la page suivante (L6) : tablette portrait, hors vue structure, et
   // seulement si la bande tient (≤ 25 % de la hauteur) ; sinon la pagination garde son budget.
-  const apercuActif =
-    ecran.tabletteVerticale && !structureMode &&
-    APERCU_H * fontScale <= ecran.hauteur * APERCU_PART_MAX;
+  // Demi-page allumée (FS-E) : la demi-page montre déjà le haut de la page suivante, l'aperçu se retire et la pagination
+  // reprend la hauteur de la bande (la clé de page perd alors son suffixe « ap »).
+  const [demiOn, setDemiOn] = useState(getDemiPagePref);
+  const [demiPart, setDemiPartEtat] = useState(getDemiPart);
+  // Demi-page en cours : la page lue est `currentPage`, le haut de l'écran montre déjà le début de la suivante.
+  const [demi, setDemi] = useState(false);
+  const demiSens = useRef<1 | -1>(1);
+  const refDemiRappel = useRef<HTMLDivElement>(null);
+  const refDemiCorps = useRef<HTMLDivElement>(null);
+  const apercuPlace = ecran.tabletteVerticale && !structureMode && APERCU_H * fontScale <= ecran.hauteur * APERCU_PART_MAX;
+  const apercuActif = apercuPlace && !demiOn;
+  const apercuEteint = apercuPlace && demiOn;
+  const basculerDemi = () => {
+    const next = !demiOn;
+    setDemiOn(next);
+    setDemiPagePref(next);
+    setDemi(false);
+  };
   const toggleTwoColumns = useCallback(() => {
     const next = twoColumns ? "0" : "1";
     setTwoColumnsPref(next);
@@ -922,7 +939,16 @@ export function PerformanceMode({
   // en colonne et le scan glisse à droite en grandissant (L3-T5b). À incrémenter si le scan
   // bouge encore.
   const cleScan = layout[currentPage]?.fit ? (ecran.grand ? "j3" : "j2") : "";
+  // FS-E : la demi-page entre les pages `n` et `n + 1` (texte ; ni scan 简谱, ni annotation, ni loupe).
+  const demiPossible = useCallback(
+    (n: number) => demiOn && !annotateMode && annotZoom === 1 && !!layout[n] && !layout[n].fit && !!layout[n + 1] && !layout[n + 1].fit,
+    [demiOn, annotateMode, annotZoom, layout],
+  );
+  const demiActif = demi && demiPossible(currentPage);
   const cleSansV2 = computePageKey(blocks, currentPageIndices, `${layoutSig}${layout[currentPage]?.twoColumns ? "x2" : ""}${cleScan}${apercuActif && !layout[currentPage]?.fit ? "ap" : ""}`);
+  // FS-E : la clé qu'aurait eue la page avec l'aperçu de la page suivante (éteint par la demi-page), sans « v2 » puis avec.
+  const cleAvecApercuSansV2 = computePageKey(blocks, currentPageIndices, `${layoutSig}${layout[currentPage]?.twoColumns ? "x2" : ""}${cleScan}ap`);
+  const cleAvecApercuV2 = computePageKey(blocks, currentPageIndices, `${layoutSig}${layout[currentPage]?.twoColumns ? "x2" : ""}${cleScan}apv2`);
   // Lot CV : « v2 » seulement sur une page dont une ligne est coupée (la composition a changé). La clé sans « v2 »
   // est alors l'ancienne clé de composition : ses traits ne s'affichent pas ici, ils ne sont jamais supprimés.
   const pageV2 = !!layout[currentPage]?.coupe;
@@ -974,13 +1000,19 @@ export function PerformanceMode({
     const obs = new ResizeObserver(mesurer);
     obs.observe(el);
     return () => obs.disconnect();
-  }, [rappelPresent, currentPage, fontScale, currentPageKey]);
+  }, [rappelPresent, currentPage, fontScale, currentPageKey, demiActif]);
   // Ordre de lecture des traits (lot CV) : 1. la clé courante ; 2. si elle est vide, la clé de la pagination d'avant
   // le rappel (RS-C, ci-dessus) ; 3. sur une page « v2 » seulement, si rien n'a été trouvé, l'ancienne clé de
   // composition (la même sans « v2 »), lue pour le seul bandeau : ses traits ne s'affichent pas (ils ne sont plus à
   // leur place) et ne sont jamais supprimés. La clé RS-C n'est jamais l'ancienne clé de composition (écartée dans
   // `cleAncienne`).
-  const anciennesCompositions = useMemo(() => (pageV2 ? [cleSansV2] : []), [pageV2, cleSansV2]);
+  // FS-E : demi-page allumée sur une tablette portrait, les traits posés avec l'aperçu (clé « ap ») ne se montrent plus ici.
+  const anciennesCompositions = useMemo(() => {
+    const l: string[] = [];
+    if (pageV2) l.push(cleSansV2);
+    if (apercuEteint && !layout[currentPage]?.fit) l.push(pageV2 ? cleAvecApercuV2 : cleAvecApercuSansV2);
+    return l;
+  }, [pageV2, cleSansV2, apercuEteint, layout, currentPage, cleAvecApercuV2, cleAvecApercuSansV2]);
   const { annotationsIndispo, annotations, handleAnnotationsChange, ancienneCompositionTraits } = useAnnotationsPage({
     user, setlistId, currentPageKey, cleAncienne, anciennesCompositions, rappelEcran, affichageVu, fontScale, horsLigne, slugAnnote,
   });
@@ -994,6 +1026,7 @@ export function PerformanceMode({
       const memo = getTailleAnnotee(uid, setlistId, slugAnnote);
       if (memo !== null && Math.round(memo * 100) !== Math.round(fontScale * 100)) appliquerTaille(memo);
     }
+    setDemi(false);
     setAnnotateMode((v) => !v);
   };
 
@@ -1001,8 +1034,59 @@ export function PerformanceMode({
 
   const goToPage = useCallback((p: number, pgCount: number) => {
     if (p < 0 || p >= pgCount) return;
+    setDemi(false);
     setCurrentPage(p);
   }, []);
+
+  // Lot FS-E : tous les tours de page relatifs (zones, balayage, flèches, PageUp/PageDown, Espace, pédale) passent ici.
+  // Demi-page allumée : page n entière → (n, demi) → page n + 1 entière ; et dans l'autre sens, sans toucher à la pagination.
+  // L'état (demi, page) se lit dans des refs, écrites aussi au tour même : une pédale qui répète envoie deux tours avant que
+  // React ait rendu le premier.
+  const demiRef = useRef(false);
+  demiRef.current = demi;
+  const pageRef = useRef(currentPage);
+  pageRef.current = currentPage;
+  const tourner = useCallback((sens: 1 | -1) => {
+    const n = pageRef.current;
+    if (demiOn) {
+      if (demiRef.current && demiPossible(n)) {
+        if (sens === 1) {
+          demiRef.current = false;
+          pageRef.current = n + 1;
+          goToPage(n + 1, pages.length);
+        } else {
+          demiRef.current = false;
+          setDemi(false);
+        }
+        return;
+      }
+      if (sens === 1 && demiPossible(n)) {
+        demiSens.current = 1;
+        demiRef.current = true;
+        setDemi(true);
+        return;
+      }
+      if (sens === -1 && n > 0 && demiPossible(n - 1)) {
+        demiSens.current = -1;
+        demiRef.current = true;
+        pageRef.current = n - 1;
+        setCurrentPage(n - 1);
+        setDemi(true);
+        return;
+      }
+    }
+    if (n + sens >= 0 && n + sens < pages.length) pageRef.current = n + sens;
+    demiRef.current = false;
+    goToPage(n + sens, pages.length);
+  }, [demiOn, demiPossible, pages.length, goToPage]);
+  // Aucune coupe ne convient entre les deux pages : tour normal.
+  const echecDemi = useCallback(() => {
+    setDemi(false);
+    if (demiSens.current === 1) goToPage(currentPage + 1, pages.length);
+  }, [currentPage, pages.length, goToPage]);
+  // Une demi-page ne survit ni à un changement de mise en page ni à une pagination qui la rend impossible.
+  useEffect(() => { setDemi(false); }, [showChords, showTransitions, hideLyrics, disposition, fontScale, twoColumns, structureMode, affichageVu]);
+  useEffect(() => { if (demi && !demiPossible(currentPage)) setDemi(false); }, [demi, demiPossible, currentPage]);
 
   // Dernier moyen de déplacer le focus : le pointeur (clic, toucher) ou le clavier (Tab, Échap). Chromium marque
   // :focus-visible dès qu'une touche est pressée, Espace compris : la pédale ne peut pas s'y fier.
@@ -1037,10 +1121,10 @@ export function PerformanceMode({
       }
       if (e.key === "ArrowLeft" || e.key === "PageUp") {
         e.preventDefault();
-        goToPage(currentPage - 1, pages.length);
+        tourner(-1);
       } else if (e.key === "ArrowRight" || e.key === "PageDown" || e.key === " ") {
         e.preventDefault();
-        goToPage(currentPage + 1, pages.length);
+        tourner(1);
       } else if (e.key === "Escape") {
         // Échap déjà consommé par une feuille (Radix le marque en la fermant) :
         // il ne doit pas aussi quitter le mode louange.
@@ -1054,7 +1138,7 @@ export function PerformanceMode({
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [currentPage, pages.length, goToPage, onClose, popoverOuvert]);
+  }, [tourner, onClose, popoverOuvert]);
 
   // Touch/pointer tap handling
   // Pointeurs actifs. Un second doigt qui descend annule le geste en cours (zoom à deux doigts).
@@ -1106,7 +1190,7 @@ export function PerformanceMode({
     if (geste !== "toucher") {
       // Un balayage tourne la page, ne bascule jamais la barre, et se tait pendant l'annotation.
       if (annotateModeRef.current) return;
-      goToPage(currentPage + (geste === "balayage-gauche" ? 1 : -1), pages.length);
+      tourner(geste === "balayage-gauche" ? 1 : -1);
       return;
     }
     let grossier = false;
@@ -1114,13 +1198,13 @@ export function PerformanceMode({
     const zone = largeurZoneLaterale(window.innerWidth, window.innerHeight, grossier);
 
     if (e.clientX < window.innerWidth * zone) {
-      goToPage(currentPage - 1, pages.length);
+      tourner(-1);
     } else if (e.clientX > window.innerWidth * (1 - zone)) {
-      goToPage(currentPage + 1, pages.length);
+      tourner(1);
     } else {
       setShowChrome(!showChrome);
     }
-  }, [currentPage, pages.length, showChrome, goToPage]);
+  }, [showChrome, tourner]);
 
   // Current page song info for chrome
   // Un chant joué sur sa partition 简谱 n'a pas de bloc « section » : la barre
@@ -1240,16 +1324,17 @@ export function PerformanceMode({
 
   useLayoutEffect(() => {
     const el = refPastilleFlux.current;
-    const couverte = !!el && showChrome && el.getBoundingClientRect().bottom > window.innerHeight - barres.bas;
+    // Demi-page (FS-E) : la pastille du flux n'est pas rendue, la flottante la remplace (rien à recouvrir).
+    const couverte = !demiActif && !!el && showChrome && el.getBoundingClientRect().bottom > window.innerHeight - barres.bas;
     setPastilleCouverte(couverte);
-  }, [showChrome, currentPage, layout, barres.bas, coupureEcran]);
+  }, [showChrome, currentPage, layout, barres.bas, coupureEcran, demiActif]);
   // Sur la dernière page d'un chant, la pastille « Ensuite » occupe déjà la bande : pas d'aperçu par-dessous.
   const apercu = isLastPageOfSong && nextEntry ? null : apercuPossible;
   // Les calques d'annotation ne couvrent pas la bande (bas de page + 16 px de marge + sab).
   const rogneBas = apercuPossible ? `calc(${(APERCU_H + 16) * fontScale}px + var(--sab, 0px))` : undefined;
 
   // Ronds « Sur la page » : tous sur une ligne dans le popover (jusqu'à 6) ; au téléphone, par 3 plutôt qu'un rond seul en dessous.
-  const nRonds = 1 + [blocks.some((b) => b.kind === "section" && b.showPinyin), hasJianpuSheets && !structureMode, !!user, twoColumnsAvailable].filter(Boolean).length;
+  const nRonds = 1 + [blocks.some((b) => b.kind === "section" && b.showPinyin), hasJianpuSheets && !structureMode, !!user, twoColumnsAvailable, true].filter(Boolean).length;
   const colonnesRonds = telephone && nRonds > 4 ? 3 : nRonds;
   // Le contenu d'Outils : le même élément dans le menu Outils (md et plus) et en tête d'Options au téléphone.
   const contenuOutils = (
@@ -1276,6 +1361,7 @@ export function PerformanceMode({
       data-performance-mode
       data-disposition={disposition}
       data-barre-ouverte={showChrome ? "" : undefined}
+      data-demi-page={demiActif ? "" : undefined}
       data-cle-ancienne={cleAncienne ?? undefined}
       data-cle-page={currentPageKey}
       data-passes-pagination={passesPagination}
@@ -1426,6 +1512,51 @@ export function PerformanceMode({
               />
             );
           };
+          if (demiActif) {
+            // Lot FS-E : le haut de la page suivante au-dessus du filet, la fin de la page en cours dessous.
+            const texteDePage = (p: number) => {
+              const idx = pages[p] ?? [];
+              const entree = songEntries.reduce((acc, e) => (e.index <= (idx[0] ?? 0) ? e : acc), songEntries[0]);
+              const r = (affichageVu === "unique" || affichageVu === "played") && entree && (idx[0] ?? -1) > entree.index ? entree.block.steps : undefined;
+              const pleines = new Set(idx.flatMap((i) => {
+                const b = blocks[i];
+                return b?.kind === "section" ? (b.occurrenceUids ?? []) : [];
+              }));
+              return (
+                <ConteneurCoupure className={layout[p].etire ? "h-full" : undefined}>
+                  <PageTexte
+                    page={layout[p]}
+                    rappel={r}
+                    rappelRef={refDemiRappel}
+                    rappelTrame={r ? <RappelRangee titre={entree?.block.title} steps={r} pleines={pleines} rappel={affichageVu === "played" ? "joue" : "unique"} /> : null}
+                    affichageVu={affichageVu}
+                    currentPage={p}
+                    scaledBodyRef={refDemiCorps}
+                    renderBlock={renderBlock}
+                    apercu={null}
+                    apercuHauteur={0}
+                    contentPadding={contentPadding}
+                    showChrome={false}
+                    sansIndice
+                  />
+                </ConteneurCoupure>
+              );
+            };
+            return (
+              <DemiPage
+                clePage={`${currentPage}|${fontScale}|${showChords}${showTransitions}${hideLyrics}${disposition}|${affichageVu}|${twoColumns}|${passesPagination}|${coupureEcran}`}
+                rendreHaut={() => texteDePage(currentPage + 1)}
+                rendreBas={() => texteDePage(currentPage)}
+                part={demiPart}
+                onPart={setDemiPartEtat}
+                onPartFin={(v) => { setDemiPartEtat(v); setDemiPartPref(v); }}
+                fontScale={fontScale}
+                contentPadding={contentPadding}
+                nom={t("performance.halfPageHandle")}
+                onEchec={echecDemi}
+              />
+            );
+          }
           if (page.fit) {
             return (
               <PageScan
@@ -1515,7 +1646,7 @@ export function PerformanceMode({
       {/* ── « Ensuite : … » sur la dernière page d'un chant : touchable, sans confirmation.
           Dans le flux (PageTexte) quand la pagination lui a gardé la place ; posée en absolu sinon (vue structure),
           ou quand la barre du bas, affichée, couvre la pastille du flux. ── */}
-      {isLastPageOfSong && nextEntry && !colonneScan && (layout[currentPage]?.suivant === undefined || pastilleCouverte) && (
+      {isLastPageOfSong && nextEntry && !colonneScan && (layout[currentPage]?.suivant === undefined || pastilleCouverte || demiActif) && (
         <div
           className="absolute left-0 right-0 flex justify-center pointer-events-none"
           style={{ zIndex: 5, bottom: showChrome ? `${barres.bas + 8}px` : "calc(0.625rem + var(--sab, 0px))" }}
@@ -1525,7 +1656,7 @@ export function PerformanceMode({
       )}
 
       {/* ── Annotations : calque de lecture permanent + canvas d'édition ── */}
-      {showAnnotations && !annotateMode && annotations && annotations.strokes.length > 0 && (
+      {showAnnotations && !annotateMode && !demiActif && annotations && annotations.strokes.length > 0 && (
         <StrokesLayer data={annotations} rogneBas={rogneBas} />
       )}
       {annotateMode && annotations && (
@@ -1751,6 +1882,9 @@ export function PerformanceMode({
                   <Columns2 className="h-5 w-5" />
                 </BoutonSurPage>
               )}
+              <BoutonSurPage label={t("performance.halfPage")} allume={demiOn} onClick={basculerDemi}>
+                <PanelTopBottomDashed className="h-5 w-5" />
+              </BoutonSurPage>
             </div>
             {hasJianpuSheets && !structureMode && <p className="text-xs text-muted-foreground">{t("performance.jianpuSheetHint")}</p>}
           </div>

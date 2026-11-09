@@ -28,6 +28,7 @@ export function PageTexte({
   contentPadding,
   showChrome,
   pastille,
+  sansIndice = false,
 }: {
   page: PerfPage;
   rappel: SectionOccurrence[] | undefined;
@@ -44,6 +45,8 @@ export function PageTexte({
   showChrome: boolean;
   /** Pastille « Ensuite » : rendue à la fin de la colonne `page.suivant`, dans le flux. */
   pastille?: ReactNode;
+  /** Calques de la demi-page (FS-E) : pas d'indice du rappel (il appartient à la page lue). */
+  sansIndice?: boolean;
 }) {
   const multiCol = page.cols.length > 1;
   // Vue structure : le contenu des lignes grossit avec la place libre (`--fdr-echelle` sur la colonne).
@@ -55,7 +58,7 @@ export function PageTexte({
       {rappel && (
         <div ref={rappelRef} data-rappel className="relative mb-2">
           {rappelTrame}
-          {(affichageVu === "played" || affichageVu === "unique") && <IndiceRappel mode={affichageVu} page={currentPage} />}
+          {!sansIndice && (affichageVu === "played" || affichageVu === "unique") && <IndiceRappel mode={affichageVu} page={currentPage} />}
         </div>
       )}
       {/* En-tête hors échelle, en pleine largeur : vue structure et
@@ -83,7 +86,7 @@ export function PageTexte({
         {/* Deux colonnes : gouttière de 2rem, celle de la mesure en colonne. */}
         <div className={multiCol ? `flex items-start ${page.twoColumns ? "gap-x-8" : "gap-x-4"}` : page.etire ? "flex min-h-0 flex-1 flex-col" : undefined}>
           {page.cols.map((colIdxs, ci) => (
-            <div key={ci} ref={page.etire ? lignesRef : undefined} className={multiCol ? "flex-1 min-w-0" : page.etire ? "flex min-h-0 flex-1 flex-col" : undefined}>
+            <div key={ci} data-col-page ref={page.etire ? lignesRef : undefined} className={multiCol ? "flex-1 min-w-0" : page.etire ? "flex min-h-0 flex-1 flex-col" : undefined}>
               {colIdxs.map((i) => renderBlock(i))}
               {pastille && page.suivant === ci && <div className="mt-4 flex">{pastille}</div>}
             </div>

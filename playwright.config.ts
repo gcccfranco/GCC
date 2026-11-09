@@ -14,6 +14,8 @@ export const BASE_URL_COUPE = `http://localhost:${PORT + 1}`;
  *  la navigation, le halo qui part du bord de la barre, et le dimanche (setlist,
  *  barre d'outils, sommaire, mode louange). */
 const SPECS_GRAND_ECRAN = [
+  // Lot FS-E : la demi-page du mode louange (filet et poignée, coupe entre deux blocs) sur les quatre dispositions.
+  /louange-demi-page\.spec\.ts/,
   // Lot FS-D : la feuille de route du batteur (lignes à la hauteur de l'écran) sur les quatre dispositions.
   /louange-feuille-route\.spec\.ts/,
   // Lot DP (docs/spec-mode-louange-forscore-2.md) : la disposition de la partition, ses menus à miniatures et le mode louange.
