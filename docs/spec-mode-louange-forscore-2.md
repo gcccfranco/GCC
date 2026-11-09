@@ -111,6 +111,11 @@ Du 08/11/2026 :
     une couleur proche de celle d'une section est **acceptée telle quelle** ; **retenue par compte sur l'appareil**,
     comme le rôle et les stylos, et **la couleur des icônes passe aussi par compte** ; en Classique, **l'étiquette, le
     filet et le fond des sections suivent la couleur** choisie. Spec : section « CA » ci-dessous.
+29. **La disposition « Repères » s'appelle « Marge »** (Timothée, 09/11/2026 : « ok » à la proposition) : « Repères »
+    nommait aussi le bouton signet de la barre (menu des sections, FS-B), et en chinois 段落 et 段落标记 se ressemblaient.
+    Libellé seulement : « Marge » / « 页边标记 » (à relire par un responsable sinophone) ; l'identifiant `reperes`, la clé
+    de stockage et le suffixe d'annotation `dR` ne changent pas. Le bouton de la barre garde « Repères » / « 段落 ». Dans
+    cette spec, « Repères » désigne encore la disposition dans les sections écrites avant (DP-B, CA).
 
 ## Ce qui change, ce qui reste gelé
 
