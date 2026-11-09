@@ -1398,7 +1398,14 @@ imbriquées, décision 24 de la spec). **À trancher plus tard par Timothée** :
 mêmes accords que le scan (不停赞美你 : C dans le `.cho`, Cmaj7 gravé ; 是耶稣的名 : Emaj7 contre une triade gravée ;
 我需要有你在我生命中 couplet 2, 只需要你 intro, 打开天窗 intro et interlude : réharmonisés dans le `.cho`) ; la vue
 paroles et la vue 简谱 montrent donc des accords différents ; liste complète : `python3 scripts/jianpu/sections.py
-controle`.
+controle`. **Vague 1 codée et relue le 09/11/2026** (rien en ligne) :
+CV (coupure des vers, page du chant, vue partitions et mode louange, marque `v2` et bandeau des annotations) et FS-A +
+FS-B (barre de titre forScore, rangée de points, couleur des icônes avec cercle chromatique étendue aux actions,
+menus Setlist, Repères, Outils, Tempo, Options d'affichage) ; relecture indépendante (diffs, 195 captures, critique de
+design), défauts confirmés corrigés par les deux sessions ; 592 tests verts sur les cinq projets. Captures et questions
+en attente dans l'artefact (carte « À voir d'abord »). **Ouvert** : FS-E Demi-page (spec écrite, attend un go) ; une
+passe sur tout le guide (plusieurs images ne correspondent plus au site) ; prévenir l'équipe avant la mise en ligne de
+CV (annotations des pages dont la coupure change).
 **Annotations façon forScore** (Timothée, 08/11/2026 : « comment fonctionnent les annotations maintenant ? il faut que
 ce soit comme forScore », puis « oui go » à la proposition) : lot à part, option (a) — les outils façon forScore
 maintenant (appui long et stylet qui dessine seul, barre d'outils déplaçable, tourner les pages en annotant, stylos
