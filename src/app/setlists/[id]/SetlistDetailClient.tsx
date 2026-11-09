@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { Pencil, SlidersHorizontal, PenLine, UserRound, Play, MoreHorizontal, Download, Copy, FileText, Presentation } from "lucide-react";
@@ -25,7 +25,8 @@ import type { FSSetlist } from "@/types/setList";
 import { RELIRE_PROFIL, useProfile } from "@/lib/firebase/users";
 import { ecrireCopie } from "@/lib/setlist/copieHorsLigne";
 import { BACK_OFFICE } from "@/lib/backOffice";
-import { datesServies, loadPlanningData } from "@/lib/planning/names";
+import { datesServies, findMyServices, loadPlanningData, type ServiceEntry } from "@/lib/planning/names";
+import { roleDuPlanning } from "@/lib/planning/rolePlanning";
 import type { DateServie } from "@/types/planning";
 import { canSeeSetlist, canEditSetlist, canDeleteSetlist, canDuplicateSetlist, canSetPresentationLink, canHaveSetlistVersion, estRegieDeLaSetlist, peutExporterFreeShow } from "@/lib/access";
 import { useTranslation } from "react-i18next";
@@ -159,13 +160,16 @@ export function SetlistDetailClient() {
   // Lot AO (F1) : les dates où l'on sert, tirées du planning — la setlist de cette date se lit même sans équipe.
   // Chargées sans bloquer la page (qui voit déjà la setlist ne les attend pas) ; `undefined` = pas encore lues.
   const [datesDuCompte, setDatesDuCompte] = useState<DateServie[] | undefined>(undefined);
+  // Lot RP : les services du compte (rôle compris), gardés du même chargement pour proposer une vue dans le mode louange ;
+  // avec le nom lu, pour qu'un autre compte connecté par-dessus n'hérite jamais du rôle du précédent.
+  const [servicesDuCompte, setServicesDuCompte] = useState<{ nom: string; services: ServiceEntry[] } | undefined>(undefined);
   const planningName = profile?.planningName ?? "";
   useEffect(() => {
     if (!BACK_OFFICE || !planningName) return;
     let annule = false;
     loadPlanningData().then(
-      (d) => { if (!annule) setDatesDuCompte(datesServies(d, planningName)); },
-      () => { if (!annule) setDatesDuCompte([]); },
+      (d) => { if (!annule) { setDatesDuCompte(datesServies(d, planningName)); setServicesDuCompte({ nom: planningName, services: findMyServices(d, planningName) }); } },
+      () => { if (!annule) { setDatesDuCompte([]); setServicesDuCompte({ nom: planningName, services: [] }); } },
     );
     return () => { annule = true; };
   }, [planningName]);
@@ -268,6 +272,13 @@ export function SetlistDetailClient() {
   const [loadError, setLoadError] = useState(false);
   // Hors ligne (D1, décision C2) : date de lecture de la copie locale servie à la place de la setlist, sinon null.
   const [copieLueLe, setCopieLueLe] = useState<number | null>(null);
+  // Lot RP : la vue du planning pour le service de cette setlist (proposée par le mode louange, jamais appliquée seule).
+  const rolePlanning = useMemo(
+    () => (user && planningName && servicesDuCompte?.nom === planningName && setlist && copieLueLe === null
+      ? roleDuPlanning(servicesDuCompte.services, { date: setlist.date, category: setlist.category, moment: setlist.moment }, profile?.joue)
+      : null),
+    [user, planningName, servicesDuCompte, setlist, copieLueLe, profile?.joue],
+  );
   // Mode louange (D4) : chants qui n'ont pas pu être chargés ; null = pas de bandeau.
   const [chantsManquants, setChantsManquants] = useState<string[] | null>(null);
   const [retryKey, setRetryKey] = useState(0);
@@ -2102,6 +2113,7 @@ export function SetlistDetailClient() {
           jianpuPref={jianpuPref}
           onJianpuPrefChange={changeJianpuPref}
           horsLigne={horsLigne}
+          rolePlanning={rolePlanning}
           onClose={() => {
             if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
             setPerformanceMode(false);

@@ -698,6 +698,21 @@
       "choriste": "Choriste",
       "batteur": "Batteur"
     },
+    "planning": {
+      "label": "d'après le planning",
+      "today": "Planning : {{instrument}} aujourd'hui",
+      "switch": "Passer en vue {{role}}",
+      "done": "Vue {{role}}",
+      "undo": "Annuler",
+      "dismiss": "Fermer la proposition",
+      "instrument": {
+        "pianiste": "Piano",
+        "guitariste": "Guitare",
+        "batteur": "Batterie",
+        "choriste": "Chant",
+        "presidence": "Présidence"
+      }
+    },
     "chords": "Accords",
     "capo": "Capo",
     "capoBadge": "Capo {{n}}",

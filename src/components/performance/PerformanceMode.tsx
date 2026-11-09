@@ -17,7 +17,7 @@ import { useThemeScene } from "./hooks/useThemeScene";
 import { useWakeLock } from "./hooks/useWakeLock";
 import { useTempoChant } from "./hooks/useTempoChant";
 import { useAnnotationsPage } from "./hooks/useAnnotationsPage";
-import { Check, SlidersHorizontal, Link2, MessageSquare, PenLine, Sun, Moon, Columns2, EyeOff, FileMusic, Languages, Minus, Music, PanelTopBottomDashed, Plus, Waves } from "lucide-react";
+import { Check, SlidersHorizontal, Link2, MessageSquare, PenLine, Sun, Moon, Columns2, EyeOff, FileMusic, Languages, Minus, Music, PanelTopBottomDashed, Plus, Waves, X } from "lucide-react";
 import type { PerformanceBlock, SectionBlock, JianpuSheetBlock, SongHeaderBlock } from "@/lib/performance/blocks";
 import { ecouterCoupure, versionCoupure } from "@/lib/song/coupureSignal";
 import { ConteneurCoupure } from "@/components/song/LargeurCoupure";
@@ -370,6 +370,8 @@ interface PerformanceModeProps {
   onJianpuPrefChange: (v: JianpuPref) => void;
   /** La setlist vient de la copie hors ligne : « Annoter » est masqué et rien ne s'enregistre. */
   horsLigne?: boolean;
+  /** Lot RP : rôle d'après le planning pour le service de cette setlist ; proposé, jamais appliqué seul. */
+  rolePlanning?: RolePreset | null;
   onClose: () => void;
 }
 
@@ -386,6 +388,7 @@ export function PerformanceMode({
   jianpuPref,
   onJianpuPrefChange,
   horsLigne = false,
+  rolePlanning = null,
   onClose,
 }: PerformanceModeProps) {
   const { t } = useTranslation();
@@ -547,6 +550,43 @@ export function PerformanceMode({
     else if (affichage === "structure") onAffichageChange("played");
     setRole(uid, id);
   }, [toggleHideLyrics, affichage, onAffichageChange, uid]);
+
+  // Lot RP : le rôle du planning à l'ouverture du mode, figé : un planning arrivé après n'ajoute pas l'étiquette de Je joue.
+  const [rolePlanningOuverture] = useState<RolePreset | null>(rolePlanning);
+  // Pastille « Planning : … » : proposée, puis acceptée (« Annuler » pendant 6 s), puis finie (croix, tour de page, délai).
+  const [etatPastille, setEtatPastille] = useState<"propose" | "accepte" | "fini">("propose");
+  const [avantPlanning, setAvantPlanning] = useState<{ role: RolePreset | null; affichage: PartitionLayout } | null>(null);
+  const [pageDePastille, setPageDePastille] = useState<number | null>(null);
+  const pastilleProposee =
+    etatPastille === "propose" && rolePlanning !== null && storedRole !== null && rolePreset !== null && !roleOverridden &&
+    initialShowChords === undefined && rolePlanning !== rolePreset && !horsLigne;
+  // Sous un menu ouvert, la pastille s'efface : un toucher ne doit pas à la fois fermer le menu et choisir un rôle.
+  const pastilleVisible = (pastilleProposee || etatPastille === "accepte") && !annotateMode && popoverOuvert === null;
+  useEffect(() => {
+    // Masquée avant tout tour de page : le compte des tours repart à sa prochaine apparition.
+    if (!pastilleVisible) { if (etatPastille === "propose") setPageDePastille(null); return; }
+    if (pageDePastille === null) setPageDePastille(currentPage);
+    else if (currentPage !== pageDePastille) setEtatPastille("fini");
+  }, [pastilleVisible, currentPage, pageDePastille, etatPastille]);
+  useEffect(() => {
+    if (etatPastille !== "accepte") return;
+    const minuteur = setTimeout(() => setEtatPastille("fini"), 6000);
+    return () => clearTimeout(minuteur);
+  }, [etatPastille]);
+  const accepterRolePlanning = () => {
+    if (!rolePlanning) return;
+    setAvantPlanning({ role: rolePreset, affichage });
+    applyRolePreset(rolePlanning);
+    setEtatPastille("accepte");
+  };
+  const annulerRolePlanning = () => {
+    if (avantPlanning) {
+      if (avantPlanning.role) applyRolePreset(avantPlanning.role);
+      else clearRolePreset();
+      if (avantPlanning.affichage !== affichage) onAffichageChange(avantPlanning.affichage);
+    }
+    setEtatPastille("fini");
+  };
 
   // Première ouverture de ce compte : « Je joue » s'ouvre seul avec la phrase d'accueil ; le rôle choisi (ou « Aucun »)
   // est retenu ensuite. Fermer sans répondre reporte la question à la prochaine ouverture.
@@ -1650,6 +1690,58 @@ export function PerformanceMode({
         })()}
       </div>
 
+      {pastilleVisible && rolePlanning && (
+        <div
+          data-pastille-planning
+          role="status"
+          className="fixed left-1/2 flex w-[304px] max-w-[calc(100vw-16px)] -translate-x-1/2 items-center gap-1 rounded-2xl border border-border bg-popover/90 py-1 pl-4 pr-1 text-foreground shadow-[0_8px_28px_rgba(28,28,30,.22)] backdrop-blur-xl dark:shadow-[0_8px_28px_rgba(0,0,0,.5)] max-[430px]:w-[358px]"
+          style={{ zIndex: 25, top: showChrome ? `${barres.haut + 4}px` : "calc(var(--sat, 0px) + 4px)" }}
+          onPointerDown={(e) => e.stopPropagation()}
+          onPointerUp={(e) => e.stopPropagation()}
+          onPointerCancel={(e) => e.stopPropagation()}
+          onClick={(e) => e.stopPropagation()}
+        >
+          {etatPastille === "accepte" ? (
+            <>
+              <span className="min-w-0 flex-1 text-[15px] font-bold leading-snug text-[color:var(--couleur-icones)]">
+                {t("performance.planning.done", { role: t(`performance.roles.${rolePlanning}`) })}
+              </span>
+              <button
+                type="button"
+                data-pastille-annuler
+                onClick={annulerRolePlanning}
+                className="min-h-11 shrink-0 rounded-lg px-3 text-[15px] font-semibold text-[color:var(--couleur-icones)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                {t("performance.planning.undo")}
+              </button>
+            </>
+          ) : (
+            <button
+              type="button"
+              data-pastille-accepter
+              onClick={accepterRolePlanning}
+              className="min-h-11 min-w-0 flex-1 rounded-lg py-1 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <span className="block text-[13.5px] leading-snug text-muted-foreground">
+                {t("performance.planning.today", { instrument: t(`performance.planning.instrument.${rolePlanning}`) })}
+              </span>
+              <span className="block text-[15px] font-bold leading-snug text-[color:var(--couleur-icones)]">
+                {t("performance.planning.switch", { role: t(`performance.roles.${rolePlanning}`) })}
+              </span>
+            </button>
+          )}
+          <button
+            type="button"
+            data-pastille-fermer
+            aria-label={t("performance.planning.dismiss")}
+            onClick={() => setEtatPastille("fini")}
+            className="grid h-11 w-11 shrink-0 place-items-center rounded-full text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            <X className="h-5 w-5" strokeWidth={2.2} aria-hidden="true" />
+          </button>
+        </div>
+      )}
+
       {annotationsIndispo && (
         <div
           data-annotations-indisponibles
@@ -1814,6 +1906,9 @@ export function PerformanceMode({
                       <span className="block text-base font-semibold text-foreground">{t(`performance.roles.${id}`)}</span>
                       <span className="block text-[13px] text-muted-foreground">{t(`performance.rolePrompt.hints.${id}`)}</span>
                     </span>
+                    {id === rolePlanningOuverture && (
+                      <span data-role-planning className="shrink-0 text-[13px] text-[color:var(--couleur-icones)]">{t("performance.planning.label")}</span>
+                    )}
                     {actif && <Check className="h-5 w-5 shrink-0 text-[color:var(--couleur-icones)]" aria-hidden="true" />}
                   </button>
                 );
